@@ -67,7 +67,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  const listingCategories = [
+  const allListingCategories = [
     { id: 'all', label: 'Tüm İlanlar & Eşleşmeler' },
     { id: 'high_match', label: 'Bana Özel En Yüksek Uyum (%80+)' },
     { id: 'public_sector', label: 'Kamu Stajları (Ulusal Staj / Bakanlıklar) ⭐' },
@@ -76,6 +76,50 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     { id: 'remote_hybrid', label: 'Uzaktan & Hibrit' },
     { id: 'paid', label: 'Maaşlı / Burslu' },
   ];
+
+  /**
+   * Kategori filtresi. Hem listeyi süzmek hem de her sekmenin kaç ilan
+   * içerdiğini saymak için kullanılıyor — ikisi ayrı yazılsaydı sayı ile
+   * sonuç birbirini tutmayabilirdi.
+   */
+  function matchesCategory(
+    listing: InternshipListing,
+    match: MatchBreakdown,
+    categoryId?: string
+  ): boolean {
+    switch (categoryId) {
+      case 'high_match':
+        return match.overallScore >= 80;
+      case 'public_sector':
+        return (
+          listing.category === 'public_sector' ||
+          listing.companyIndustry.toLowerCase().includes('kamu') ||
+          listing.companyIndustry.toLowerCase().includes('ulusal') ||
+          listing.companyIndustry.toLowerCase().includes('bakanlık') ||
+          listing.title.toLowerCase().includes('ulusal staj') ||
+          listing.companyName.toLowerCase().includes('bakanlığı') ||
+          listing.companyName.toLowerCase().includes('cumhurbaşkanlığı')
+        );
+      case 'global':
+        return (
+          listing.category === 'global' ||
+          listing.companyIndustry.toLowerCase().includes('erasmus') ||
+          listing.companyIndustry.toLowerCase().includes('global') ||
+          listing.title.toLowerCase().includes('erasmus') ||
+          listing.title.toLowerCase().includes('global') ||
+          listing.city.toLowerCase().includes('almanya') ||
+          listing.city.toLowerCase().includes('berlin')
+        );
+      case 'mandatory_sgk':
+        return listing.mandatoryStajAccepted;
+      case 'remote_hybrid':
+        return listing.workType === 'Remote' || listing.workType === 'Hybrid';
+      case 'paid':
+        return listing.stipend.isPaid;
+      default:
+        return true;
+    }
+  }
 
   const checkCategoryScroll = () => {
     const el = categoryScrollRef.current;
@@ -111,45 +155,33 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     });
   }, [student, allListings, applications]);
 
+  /**
+   * Sekmeleri sayılarıyla göster ve boş olanları gizle.
+   *
+   * Tıklayınca boş sonuç veren bir sekme, az ilan görmekten daha çok güven
+   * kaybettirir. Kaynak sayısı arttıkça bu sekmeler kendiliğinden geri gelir.
+   * Seçili sekme boşalsa bile gizlenmiyor — yoksa kullanıcı filtreyi
+   * temizleyemeden sekme kaybolurdu.
+   */
+  const listingCategories = useMemo(() => {
+    return allListingCategories
+      .map((cat) => ({
+        ...cat,
+        count:
+          cat.id === 'all'
+            ? matchedData.length
+            : matchedData.filter(({ listing, match }) => matchesCategory(listing, match, cat.id))
+                .length,
+      }))
+      .filter((cat) => cat.id === 'all' || cat.count > 0 || cat.id === subTab);
+  }, [matchedData, subTab]);
+
   // Filter & sort
   const filteredListings = useMemo(() => {
     return matchedData
       .filter(({ listing, match }) => {
         // Contextual Sub-Menu Filter from Top Header
-        if (subTab === 'high_match' && match.overallScore < 80) {
-          return false;
-        }
-        if (subTab === 'public_sector') {
-          const isPublic =
-            listing.category === 'public_sector' ||
-            listing.companyIndustry.toLowerCase().includes('kamu') ||
-            listing.companyIndustry.toLowerCase().includes('ulusal') ||
-            listing.companyIndustry.toLowerCase().includes('bakanlık') ||
-            listing.title.toLowerCase().includes('ulusal staj') ||
-            listing.companyName.toLowerCase().includes('bakanlığı') ||
-            listing.companyName.toLowerCase().includes('cumhurbaşkanlığı');
-          if (!isPublic) return false;
-        }
-        if (subTab === 'global') {
-          const isGlobal =
-            listing.category === 'global' ||
-            listing.companyIndustry.toLowerCase().includes('erasmus') ||
-            listing.companyIndustry.toLowerCase().includes('global') ||
-            listing.title.toLowerCase().includes('erasmus') ||
-            listing.title.toLowerCase().includes('global') ||
-            listing.city.toLowerCase().includes('almanya') ||
-            listing.city.toLowerCase().includes('berlin');
-          if (!isGlobal) return false;
-        }
-        if (subTab === 'mandatory_sgk' && !listing.mandatoryStajAccepted) {
-          return false;
-        }
-        if (subTab === 'remote_hybrid' && listing.workType !== 'Remote' && listing.workType !== 'Hybrid') {
-          return false;
-        }
-        if (subTab === 'paid' && !listing.stipend.isPaid) {
-          return false;
-        }
+        if (!matchesCategory(listing, match, subTab)) return false;
 
         // Search query
         if (searchQuery.trim()) {
@@ -233,6 +265,30 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
   const topMatch = matchedData.sort((a, b) => b.match.overallScore - a.match.overallScore)[0];
 
+  /** Listedeki kaç ilan zorunlu staj kabul ediyor. Sabit bir iddia yerine sayım. */
+  const mandatoryCount = filteredListings.filter((item) => item.listing.mandatoryStajAccepted).length;
+
+  /**
+   * Profil doldurma oranı. Eskiden sabit "%85" yazıyordu; artık gerçekten
+   * dolu olan alanlardan hesaplanıyor, yoksa öğrenci hiç dokunmadığı bir
+   * profil için "neredeyse bitti" mesajı görüyordu.
+   */
+  const profileChecks: boolean[] = [
+    Boolean(student.university),
+    Boolean(student.department),
+    Boolean(student.bio),
+    Boolean(student.gpa),
+    student.skills.length > 0,
+    (student.languages?.length ?? 0) > 0,
+    student.projects.length > 0,
+    student.targetRoles.length > 0,
+    student.preferences.cities.length > 0,
+    Boolean(student.phone),
+  ];
+  const profileCompletion = Math.round(
+    (profileChecks.filter(Boolean).length / profileChecks.length) * 100
+  );
+
   return (
     <div className="w-full space-y-8 pb-12">
       {/* Clean Hero Section */}
@@ -249,7 +305,9 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               <span className="text-gray-900 dark:text-white">gizli.</span>
             </h1>
             <p className="text-sm sm:text-base text-gray-600 dark:text-slate-300 max-w-xl leading-relaxed">
-              Yeteneklerini listele, algoritma seni en uygun staj ve iş pozisyonlarıyla eşleştirsin. Sadece başvuru yapma, doğrudan şirketlerden mülakat daveti al.
+              Yeteneklerini listele, ilanlar becerilerine göre sıralansın. İlanları
+              şirketlerin kendi kariyer sayfalarından topluyoruz, başvurunu tek
+              profille yapıyorsun.
             </p>
 
             {/* Clean Blue/White Search Input Box */}
@@ -296,15 +354,23 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                 Zirve Uyum
               </p>
               <p className="text-2xl font-black text-orange-500 dark:text-orange-400 mt-0.5">
-                %{topMatch ? topMatch.match.overallScore : 98}
+                {/* Eşleşme yoksa uydurma bir puan gösterme. */}
+                {topMatch ? `%${topMatch.match.overallScore}` : '—'}
               </p>
             </div>
             <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-200/90 dark:border-slate-800 shadow-xs">
               <p className="text-[10px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
                 Zorunlu Staj
               </p>
+              {/*
+                Eskiden burada sabit "%100 SGK" yazıyordu. Topladığımız ilanların
+                sigorta durumunu çoğu zaman bilmiyoruz; sayıyı veriden üretiyoruz.
+              */}
               <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
-                %100 SGK
+                {mandatoryCount}
+                <span className="text-base text-gray-400 dark:text-slate-500 font-bold">
+                  /{filteredListings.length}
+                </span>
               </p>
             </div>
           </div>
@@ -326,7 +392,11 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                 Hoş geldin, {student.fullName.split(' ')[0]}!
               </h2>
               <p className="text-gray-600 dark:text-slate-300 text-xs sm:text-sm">
-                Profilin şu an <strong className="text-emerald-600 dark:text-emerald-400 font-bold">%85 tamamlanmış</strong> durumda.
+                Profilin şu an{' '}
+                <strong className="text-emerald-600 dark:text-emerald-400 font-bold">
+                  %{profileCompletion} tamamlanmış
+                </strong>{' '}
+                durumda.
               </p>
             </div>
 
@@ -422,6 +492,13 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                   }`}
                 >
                   {cat.label}
+                  <span
+                    className={`ml-1.5 tabular-nums ${
+                      isActive ? 'text-blue-100' : 'text-gray-400 dark:text-slate-500'
+                    }`}
+                  >
+                    {cat.count}
+                  </span>
                 </button>
               );
             })}
@@ -565,22 +642,12 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
                   {/* 1st In-Feed Native Google Ad (After 2nd listing) */}
                   {index === 1 && (
-                    <GoogleAdBanner
-                      format="in-feed"
-                      adIndex={0}
-                      adCategory="education"
-                      showInspectorButton={true}
-                    />
+                    <GoogleAdBanner format="in-feed" />
                   )}
 
                   {/* 2nd In-Feed Native Google Ad (After 5th listing if long list) */}
                   {index === 4 && filteredListings.length > 5 && (
-                    <GoogleAdBanner
-                      format="in-feed"
-                      adIndex={1}
-                      adCategory="language"
-                      showInspectorButton={true}
-                    />
+                    <GoogleAdBanner format="in-feed" />
                   )}
                 </React.Fragment>
               ))}
@@ -591,20 +658,10 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         {/* Right Column: Sticky Sidebar with Google Ad & Career Highlights */}
         <div className="lg:col-span-4 space-y-4 sticky top-6">
           {/* Main Sidebar Responsive Google Ad */}
-          <GoogleAdBanner
-            format="sidebar-rectangle"
-            adIndex={2}
-            adCategory="tech"
-            showInspectorButton={true}
-          />
+          <GoogleAdBanner format="sidebar-rectangle" />
 
           {/* Erasmus & Global Staj Opportunity Card */}
-          <GoogleAdBanner
-            format="sidebar-rectangle"
-            adIndex={3}
-            adCategory="career"
-            showInspectorButton={true}
-          />
+          <GoogleAdBanner format="sidebar-rectangle" />
 
           {/* Quick Helper Badge Box */}
           <div className="bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 dark:from-slate-900 dark:to-slate-800 rounded-2xl p-4 border border-indigo-100 dark:border-slate-700 text-xs space-y-2">

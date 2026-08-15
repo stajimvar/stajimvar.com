@@ -198,11 +198,7 @@ export const SkillAssessmentModal: React.FC<SkillAssessmentModalProps> = ({
 
               {/* Contextual Career & Education Ad on Quiz Results */}
               <div className="pt-2">
-                <GoogleAdBanner
-                  format="modal-footer"
-                  adCategory={quiz.skillName.includes('İngilizce') || quiz.skillName.includes('Almanca') ? 'language' : 'education'}
-                  adIndex={0}
-                />
+                <GoogleAdBanner format="modal-footer" />
               </div>
             </div>
           )}

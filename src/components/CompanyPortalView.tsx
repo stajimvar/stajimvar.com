@@ -651,12 +651,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
 
           {/* Corporate B2B HR Tools Sponsored Ad */}
           <div className="pt-2">
-            <GoogleAdBanner
-              format="sidebar-rectangle"
-              isCorporateMode={true}
-              adCategory="hr_b2b"
-              showInspectorButton={true}
-            />
+            <GoogleAdBanner format="sidebar-rectangle" />
           </div>
         </div>
 
