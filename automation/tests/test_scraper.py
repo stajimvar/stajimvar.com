@@ -2,6 +2,7 @@ import pathlib, sys, unittest
 from datetime import UTC, datetime, timedelta
 from unittest.mock import Mock, patch
 sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
+import repository
 import scraper
 import stale_safety
 
@@ -31,14 +32,35 @@ class ScraperFixtureTests(unittest.TestCase):
         self.assertEqual(scraper.city_of([]), None)
         self.assertEqual(scraper.location_text(["Istanbul", "Ankara"]), "Istanbul Ankara")
 
-    def test_new_import_row_has_reconciliation_state(self):
-        row = scraper.listing_row(scraper.Job("Source", "https://example.com/jobs/1?utm=x", "Intern"), "2026-08-11T00:00:00+00:00")
-        self.assertTrue(row["importer_managed"])
+    def test_raw_listing_payload_has_reconciliation_state(self):
+        job = scraper.Job("Source", "https://example.com/jobs/1?utm=x", "Intern")
+        row = repository.raw_listing_payload(
+            job, "src-1", scraper.canonical(job.source_url), "2026-08-11T00:00:00+00:00"
+        )
+        self.assertEqual(row["source_id"], "src-1")
         self.assertEqual(row["canonical_url"], "https://example.com/jobs/1")
-        self.assertEqual(row["first_seen_at"], row["last_seen_at"])
         self.assertEqual(row["source_last_checked_at"], row["last_seen_at"])
         self.assertEqual(row["consecutive_missing_runs"], 0)
         self.assertIsNone(row["stale_eligible_at"])
+        self.assertEqual(len(row["content_hash"]), 64)
+
+    def test_raw_listing_payload_never_carries_hr_email(self):
+        """İK adresi ancak application_channels üzerinden, kanıtıyla kaydedilir.
+
+        Adaptör açıklamadan bir e-posta yakalasa bile keşif kaydına yazılmamalı;
+        yoksa doğrulanmamış bir adres sisteme sızmış olur.
+        """
+        job = scraper.Job(
+            "Source", "https://example.com/jobs/2", "Intern",
+            description="Başvuru: kariyer@ornek.com", hr_email="kariyer@ornek.com",
+        )
+        row = repository.raw_listing_payload(job, "src-1", "https://example.com/jobs/2", "2026-08-11T00:00:00+00:00")
+        self.assertNotIn("hr_email", row)
+        self.assertNotIn("hr_email", row["raw"])
+
+    def test_company_slugs_fold_turkish_characters(self):
+        self.assertEqual(repository.slugify("Vertigo Games"), "vertigo-games")
+        self.assertEqual(repository.slugify("Şişecam Ürün A.Ş."), "sisecam-urun-a-s")
 
     @patch("scraper.requests.post")
     def test_workday_public_cxs_fixture(self, post):

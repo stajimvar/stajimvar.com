@@ -1,70 +1,57 @@
-name: Stajım Var otomasyonları
+name: StajımVar otomasyonları
 
 on:
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Hiçbir şey yazma, sadece raporla"
+        type: boolean
+        default: false
   schedule:
-    - cron: "17 * * * *" # İlan kaynaklarını saatte bir yeniler.
-    - cron: "*/5 * * * *" # Başvuru bildirim kuyruğunu beş dakikada bir işler.
+    # İlan kaynaklarını saatte bir tarar.
+    - cron: "17 * * * *"
 
 permissions:
   contents: read
 
 concurrency:
-  group: stajimvar-automation-${{ github.workflow }}
+  group: stajimvar-discover
   cancel-in-progress: false
 
 jobs:
-  scrape:
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '17 * * * *'
+  discover:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      SOURCES_JSON: ${{ secrets.SOURCES_JSON }}
+      # Yazma açık; pasifleştirme ayrı bir şalter ve şimdilik kapalı.
+      # Açmadan önce birkaç sağlıklı taramanın geçmişi birikmeli, yoksa
+      # ilk çalıştırma her ilanı "kaybolmuş" sayar.
       ALLOW_INSERT_UPDATE: "true"
       ALLOW_DEACTIVATION: "false"
+      DEACTIVATION_ENABLED_SOURCES: ""
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: pip
       - run: pip install -r automation/requirements-scraper.txt
-      - run: python automation/scraper.py
+      - name: Testler
+        run: python -m pytest tests/ -q
+        working-directory: automation
+      - name: Kaynakları tara
+        run: python discover.py ${{ inputs.dry_run && '--dry-run' || '' }}
+        working-directory: automation
 
-  notify:
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '*/5 * * * *'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-      RESEND_FROM: ${{ secrets.RESEND_FROM }}
-      APPLICATION_REVIEW_BASE_URL: ${{ secrets.APPLICATION_REVIEW_BASE_URL }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: pip install -r automation/requirements.txt
-      - run: python automation/notifier.py
-
-  match-alerts:
-    needs: scrape
-    if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Trigger in-app match alert job
-        env:
-          AUTOMATION_JOB_SECRET: ${{ secrets.AUTOMATION_JOB_SECRET }}
-        run: |
-          if [ -z "${AUTOMATION_JOB_SECRET}" ]; then
-            echo "AUTOMATION_JOB_SECRET is not configured; skipping match alert job."
-            exit 0
-          fi
-          curl --fail --silent --show-error --request POST 'https://stajimvar.com/api/jobs/match-alerts' \
-            --header "x-automation-job-secret: ${AUTOMATION_JOB_SECRET}" \
-            --header 'content-type: application/json' \
-            --data '{"dryRun":true}'
+# --- Devre dışı: başvuru e-postası gönderimi ---------------------------------
+# Eski repodaki `notify` işi, henüz kurmadığımız bir e-posta sağlayıcısına ve
+# `claim_application_notifications` RPC'sine bağlıydı; bu şemada ikisi de yok.
+# Bilerek kaldırıldı — çalışmayacak bir işi zamanlanmış bırakmak her beş
+# dakikada bir kırmızı bildirim üretirdi.
+#
+# Geri açmak için gerekenler:
+#   1. E-posta sağlayıcısı seçimi ve stajimvar.com için SPF/DKIM doğrulaması
+#   2. Başvuru gönderim kuyruğu (applications.email_delivery_status = 'pending')
+#   3. automation/notifier.py'nin yeni şemaya uyarlanması

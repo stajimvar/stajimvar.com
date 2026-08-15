@@ -1,14 +1,19 @@
-"""İzinli RSS/JSON partnerlerinden staj ilanlarını mevcut `listings` tablosuna aktarır."""
+"""Kaynak adaptörleri: resmî ATS/RSS uç noktalarından staj ilanı çeker.
+
+Bu dosya SAF bir kütüphanedir — veritabanına yazmaz, ağ dışında yan etkisi yoktur.
+Kalıcılık `repository.py`'de, koşucu `discover.py`'de.
+
+Ayrım bilinçli: adaptörler dış API'lerin şekline bağlı ve kırılgan; şema ise bizim
+kontrolümüzde. İkisi aynı dosyada olsaydı şema her değiştiğinde çalışan
+adaptörleri riske atardık.
+"""
 from __future__ import annotations
-import argparse, hashlib, json, os, re, unicodedata
+import hashlib, json, os, re, unicodedata
 from dataclasses import dataclass, replace
-from datetime import UTC, datetime
 from html import unescape
 from typing import Any, Iterable
 from urllib.parse import urlsplit, urlunsplit
 import feedparser, requests
-from dotenv import load_dotenv
-from supabase import create_client
 from translation import translate_text, translate_title
 
 @dataclass(frozen=True)
@@ -23,29 +28,6 @@ def canonical(url: str) -> str:
     if p.scheme.lower() not in {"http", "https"} or not p.netloc: raise ValueError("unsafe or malformed URL")
     return urlunsplit((p.scheme.lower(), p.netloc.lower(), p.path.rstrip("/"), "", ""))
 def key(job: Job) -> str: return hashlib.sha256(f"{job.source_name}|{canonical(job.source_url)}".encode()).hexdigest()
-def listing_row(job: Job, now: str) -> dict[str, Any]:
-    """Build an importer-owned external listing payload for a newly discovered URL."""
-    source_url = canonical(job.source_url)
-    return {
-        "type": "external", "application_method": "external", "application_url": source_url,
-        "title": job.title, "organization_name": job.organization_name, "city": job.city,
-        "work_mode": job.work_mode, "description": job.description or "Detay için kaynak ilana gidin.",
-        "apply_url": job.source_url, "source_name": job.source_name, "source_url": source_url,
-        "canonical_url": source_url,
-        "content_fingerprint": hashlib.sha256(f"{job.title}|{job.description}|{source_url}".encode()).hexdigest(),
-        "external_key": key(job), "hr_email": job.hr_email, "scraped_at": now,
-        "first_seen_at": now, "last_seen_at": now, "source_last_checked_at": now,
-        "importer_managed": True, "consecutive_missing_runs": 0, "stale_eligible_at": None,
-        "is_active": True,
-    }
-
-def seen_update(row: dict[str, Any], now: str) -> dict[str, Any]:
-    """Only an importer-owned record may be refreshed or reactivated by a source."""
-    payload = {key: value for key, value in row.items() if key not in {"first_seen_at", "is_active"}}
-    payload.update({"last_seen_at": now, "source_last_checked_at": now, "consecutive_missing_runs": 0, "stale_eligible_at": None})
-    if row.get("deactivation_reason") in {"stale", "explicit_closed"}:
-        payload.update({"is_active": True, "deactivated_at": None, "deactivation_reason": None})
-    return payload
 def mode(text: str) -> str | None:
     text = text.casefold()
     if "uzaktan" in text or "remote" in text: return "remote"
@@ -190,48 +172,13 @@ def source_configs() -> list[dict[str, Any]]:
     # A checked-in verified registry is preferred; legacy SOURCES_JSON remains a fallback.
     return registry or json.loads(os.getenv("SOURCES_JSON", "[]"))
 
-def main() -> None:
-    parser = argparse.ArgumentParser(); parser.add_argument("--dry-run", action="store_true"); parser.add_argument("--source")
-    args = parser.parse_args(); load_dotenv(); total = 0
-    configs = [c for c in source_configs() if c.get("enabled", True) and (not args.source or args.source in {c.get("id"), c.get("name")})]
-    if args.source and not configs: raise SystemExit("Unknown enabled source")
-    if not args.dry_run and os.getenv("ALLOW_INSERT_UPDATE") != "true":
-        raise SystemExit("Write mode requires ALLOW_INSERT_UPDATE=true")
-    if os.getenv("ALLOW_DEACTIVATION", "false").lower() == "true":
-        raise SystemExit("Deactivation is disabled until the stale engine is finalized")
-    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
-    adapters = {"rss": rss, "json": json_api, "greenhouse": greenhouse, "ashby": ashby, "lever": lever, "workable": workable, "workday": workday, "smartrecruiters": smartrecruiters}
-    successful_sources = 0
-    failures: list[str] = []
-    for config in configs:
-        source_name = config.get("name", "Adsız kaynak")
-        try:
-            if config["type"] not in adapters: raise ValueError(f"Bilinmeyen kaynak tipi: {config['type']}")
-            jobs = [translate_job(job, config) for job in adapters[config["type"]](config)]; now = datetime.now(UTC).isoformat()
-            rows = [listing_row(job, now) for job in jobs]
-            rows = list({row["source_url"]: row for row in rows}.values())
-            # Do not merge different import histories on a URL match; preserving an
-            # existing row is safer than overwriting a claimed or legacy import.
-            existing = db.table("listings").select("id,source_url,importer_managed,deactivation_reason").eq("type", "external").execute().data or []
-            existing_by_url = {row.get("source_url"): row for row in existing if row.get("source_url")}
-            inserts: list[dict[str, Any]] = []
-            updates: list[tuple[str, dict[str, Any]]] = []
-            for row in rows:
-                old = existing_by_url.get(row["source_url"])
-                if old is None:
-                    inserts.append(row)
-                elif old.get("importer_managed") is True:
-                    updates.append((old["id"], seen_update({**row, "deactivation_reason": old.get("deactivation_reason")}, now)))
-            if not args.dry_run:
-                if inserts: db.table("listings").upsert(inserts, on_conflict="external_key").execute()
-                for listing_id, payload in updates: db.table("listings").update(payload).eq("id", listing_id).execute()
-            total += len(inserts); successful_sources += 1; print(f"{source_name}: {len(inserts)} yeni, {len(updates)} importer-owned yenilendi")
-        except Exception as error:
-            failures.append(f"{source_name}: {error}")
-            print(f"{source_name}: kaynak atlandı ({error})")
-    if configs and successful_sources == 0:
-        raise RuntimeError("Hiçbir ilan kaynağı işlenemedi: " + "; ".join(failures))
-    if failures:
-        print("Uyarı: bazı kaynaklar işlenemedi; diğer kaynaklardan veri akışı sürdü.")
-    print(f"Toplam: {total}")
-if __name__ == "__main__": main()
+ADAPTERS = {
+    "rss": rss,
+    "json": json_api,
+    "greenhouse": greenhouse,
+    "ashby": ashby,
+    "lever": lever,
+    "workable": workable,
+    "workday": workday,
+    "smartrecruiters": smartrecruiters,
+}
