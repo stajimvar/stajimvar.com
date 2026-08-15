@@ -1,0 +1,470 @@
+import React, { useState } from 'react';
+import {
+  mockStudentProfiles,
+  mockInternshipListings,
+  initialApplications,
+  mockSkillQuizzes,
+  mockCompanyAccounts,
+} from './data/mockData';
+import {
+  StudentProfile,
+  InternshipListing,
+  ApplicationRecord,
+  SkillQuiz,
+  MatchBreakdown,
+  CompanyAccount,
+} from './types';
+import { Header } from './components/Header';
+import { MatchedInternshipsView } from './components/MatchedInternshipsView';
+import { SkillQuizzesView } from './components/SkillQuizzesView';
+import { ApplicationsTrackerView } from './components/ApplicationsTrackerView';
+import { StudentProfileView } from './components/StudentProfileView';
+import { CompanyPortalView } from './components/CompanyPortalView';
+import { InternshipDetailModal } from './components/InternshipDetailModal';
+import { SkillAssessmentModal } from './components/SkillAssessmentModal';
+import { AuthModal } from './components/AuthModal';
+import { Logo } from './components/Logo';
+import confetti from 'canvas-confetti';
+import { CheckCircle2 } from 'lucide-react';
+
+export default function App() {
+  // Global State
+  const [allStudents, setAllStudents] = useState<StudentProfile[]>(mockStudentProfiles);
+  const [activeStudentId, setActiveStudentId] = useState<string>(mockStudentProfiles[0].id);
+  const [allListings, setAllListings] = useState<InternshipListing[]>(mockInternshipListings);
+  const [applications, setApplications] = useState<ApplicationRecord[]>(initialApplications);
+  const [quizzes] = useState<SkillQuiz[]>(mockSkillQuizzes);
+
+  // Company Accounts State
+  const [allCompanies, setAllCompanies] = useState<CompanyAccount[]>(mockCompanyAccounts);
+  const [activeCompanyId, setActiveCompanyId] = useState<string>(mockCompanyAccounts[0].id);
+  const activeCompany =
+    allCompanies.find((c) => c.id === activeCompanyId) || allCompanies[0];
+
+  const handleSelectCompany = (companyId: string) => {
+    setActiveCompanyId(companyId);
+    const comp = allCompanies.find((c) => c.id === companyId);
+    if (comp) {
+      showToast(`${comp.name} şirket hesabına geçiş yapıldı.`);
+    }
+  };
+
+  const handleUpdateCompany = (updated: Partial<CompanyAccount>) => {
+    setAllCompanies((prev) =>
+      prev.map((c) => (c.id === activeCompany.id ? { ...c, ...updated } : c))
+    );
+    showToast('Şirket profili başarıyla güncellendi!');
+  };
+
+  const handleCreateCompany = (newComp: CompanyAccount) => {
+    setAllCompanies((prev) => [newComp, ...prev]);
+    setActiveCompanyId(newComp.id);
+    showToast(`"${newComp.name}" kurumsal şirket hesabı oluşturuldu!`);
+  };
+
+  // Navigation State
+  const [activeTab, setActiveTab] = useState<
+    'internships' | 'badges' | 'applications' | 'profile' | 'company-portal'
+  >('internships');
+  const [activeSubTab, setActiveSubTab] = useState<string>('all');
+  const [userRole, setUserRole] = useState<'student' | 'company'>('student');
+
+  const handleTabChange = (
+    newTab: 'internships' | 'badges' | 'applications' | 'profile' | 'company-portal'
+  ) => {
+    setActiveTab(newTab);
+    setActiveSubTab('all');
+  };
+
+  // Modal States
+  const [selectedListingDetail, setSelectedListingDetail] = useState<{
+    listing: InternshipListing;
+    match: MatchBreakdown;
+  } | null>(null);
+
+  const [activeQuiz, setActiveQuiz] = useState<SkillQuiz | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Authentication State
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
+
+  const handleOpenLogin = () => {
+    setAuthModalMode('login');
+    setIsAuthModalOpen(true);
+  };
+
+  const handleOpenRegister = () => {
+    setAuthModalMode('register');
+    setIsAuthModalOpen(true);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    showToast('Hesabınızdan güvenle çıkış yapıldı.');
+  };
+
+  const handleAuthSuccess = (role: 'student' | 'company', name: string) => {
+    setIsLoggedIn(true);
+    setUserRole(role);
+    if (role === 'student') {
+      setActiveTab('internships');
+      showToast(`Hoş geldiniz, ${name}!`);
+    } else {
+      setActiveTab('company-portal');
+      showToast(`Hoş geldiniz, ${name} Şirket Portalı aktif.`);
+    }
+  };
+
+  // Dark Theme State (persisted in localStorage)
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('stajimvar_theme');
+      if (saved) return saved === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
+
+  const toggleDarkMode = () => {
+    setIsDarkMode((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('stajimvar_theme', next ? 'dark' : 'light');
+        if (next) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+      return next;
+    });
+  };
+
+  // Sync dark class on mount
+  React.useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3500);
+  };
+
+  // Current Active Student
+  const activeStudent =
+    allStudents.find((s) => s.id === activeStudentId) || allStudents[0];
+
+  // Handler: Update Student Profile
+  const handleUpdateProfile = (updated: Partial<StudentProfile>) => {
+    setAllStudents((prev) =>
+      prev.map((s) => {
+        if (s.id === activeStudent.id) {
+          return {
+            ...s,
+            ...updated,
+            skills: updated.skills || s.skills,
+            preferences: updated.preferences
+              ? { ...s.preferences, ...updated.preferences }
+              : s.preferences,
+          };
+        }
+        return s;
+      })
+    );
+    showToast('Profil ve yetenekleriniz başarıyla güncellendi!');
+  };
+
+  // Handler: Earn Badge from Quiz
+  const handleEarnBadge = (badgeId: string, skillName: string) => {
+    const currentBadges = activeStudent.earnedBadges || [];
+    if (!currentBadges.includes(badgeId)) {
+      const updatedBadges = [...currentBadges, badgeId];
+      // Also mark the corresponding skill as verified
+      const updatedSkills = activeStudent.skills.map((sk) => {
+        if (sk.name.toLowerCase() === skillName.toLowerCase()) {
+          return { ...sk, verified: true };
+        }
+        return sk;
+      });
+
+      handleUpdateProfile({
+        earnedBadges: updatedBadges,
+        skills: updatedSkills,
+      });
+    }
+  };
+
+  // Handler: Apply to Internship
+  const handleApplyToJob = (
+    listing: InternshipListing,
+    matchScore: number,
+    coverLetter?: string
+  ) => {
+    const alreadyApplied = applications.some((a) => a.listingId === listing.id);
+    if (alreadyApplied) {
+      showToast(`${listing.companyName} ilanına zaten başvurunuz bulunmaktadır.`);
+      return;
+    }
+
+    const newApp: ApplicationRecord = {
+      id: `app-${Date.now()}`,
+      listingId: listing.id,
+      studentId: activeStudent.id,
+      status: 'submitted',
+      appliedAt: 'Bugün',
+      coverLetter: coverLetter,
+      matchScore: matchScore,
+    };
+
+    setApplications((prev) => [newApp, ...prev]);
+
+    // Increase applicants count
+    setAllListings((prev) =>
+      prev.map((l) => (l.id === listing.id ? { ...l, applicantsCount: l.applicantsCount + 1 } : l))
+    );
+
+    confetti({
+      particleCount: 60,
+      spread: 60,
+      origin: { y: 0.7 },
+    });
+
+    showToast(`🎉 ${listing.companyName} (${listing.title}) başvurunuz başarıyla iletildi!`);
+  };
+
+  // Handler: Add New Listing (Company portal)
+  const handleAddNewListing = (listing: InternshipListing) => {
+    setAllListings((prev) => [listing, ...prev]);
+    showToast(`"${listing.title}" staj ilanı başarıyla yayınlandı ve adaylarla eşleştirildi.`);
+  };
+
+  // Handler: Delete Listing
+  const handleDeleteListing = (listingId: string) => {
+    setAllListings((prev) => prev.filter((l) => l.id !== listingId));
+    showToast('Staj ilanı kaldırıldı.');
+  };
+
+  // Handler: Update Application Status & Notes (Company portal)
+  const handleUpdateApplicationStatus = (
+    applicationId: string,
+    newStatus: ApplicationRecord['status'],
+    feedback?: string,
+    interviewDate?: string
+  ) => {
+    setApplications((prev) =>
+      prev.map((app) => {
+        if (app.id === applicationId) {
+          return {
+            ...app,
+            status: newStatus,
+            ...(feedback !== undefined ? { companyFeedback: feedback } : {}),
+            ...(interviewDate !== undefined ? { interviewDate } : {}),
+          };
+        }
+        return app;
+      })
+    );
+    showToast('Aday başvuru durumu başarıyla güncellendi.');
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0B0F17] font-sans text-[#111827] dark:text-slate-100 flex flex-col selection:bg-blue-600 selection:text-white transition-colors duration-200">
+      {/* Toast Banner */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-gray-900 dark:bg-slate-800 text-white px-5 py-3 rounded-2xl shadow-xl border border-gray-800 dark:border-slate-700 flex items-center gap-2.5 text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Navigation Header */}
+      <Header
+        activeTab={activeTab}
+        setActiveTab={handleTabChange}
+        activeSubTab={activeSubTab}
+        setActiveSubTab={setActiveSubTab}
+        userRole={userRole}
+        setUserRole={setUserRole}
+        activeStudent={activeStudent}
+        allStudents={allStudents}
+        onSelectStudent={(s) => setActiveStudentId(s.id)}
+        activeCompany={activeCompany}
+        allCompanies={allCompanies}
+        onSelectCompany={handleSelectCompany}
+        applicationsCount={applications.length}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={toggleDarkMode}
+        isLoggedIn={isLoggedIn}
+        onOpenLogin={handleOpenLogin}
+        onOpenRegister={handleOpenRegister}
+        onLogout={handleLogout}
+      />
+
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-[1536px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-6 pb-24 lg:pb-8">
+        {userRole === 'company' || activeTab === 'company-portal' ? (
+          <CompanyPortalView
+            allListings={allListings}
+            allStudents={allStudents}
+            applications={applications}
+            onUpdateApplicationStatus={handleUpdateApplicationStatus}
+            subTab={activeSubTab}
+            onSubTabChange={setActiveSubTab}
+            onAddNewListing={handleAddNewListing}
+            onDeleteListing={handleDeleteListing}
+            activeCompany={activeCompany}
+            allCompanies={allCompanies}
+            onSelectCompany={handleSelectCompany}
+            onUpdateCompany={handleUpdateCompany}
+            onCreateCompany={handleCreateCompany}
+          />
+        ) : (
+          <>
+            {activeTab === 'internships' && (
+              <MatchedInternshipsView
+                student={activeStudent}
+                allListings={allListings}
+                applications={applications}
+                subTab={activeSubTab}
+                onSubTabChange={setActiveSubTab}
+                onViewDetails={(listing, match) =>
+                  setSelectedListingDetail({ listing, match })
+                }
+                onQuickApply={(listing, match) =>
+                  handleApplyToJob(listing, match.overallScore)
+                }
+              />
+            )}
+
+            {activeTab === 'badges' && (
+              <SkillQuizzesView
+                quizzes={quizzes}
+                student={activeStudent}
+                subTab={activeSubTab}
+                onSubTabChange={setActiveSubTab}
+                onStartQuiz={(quiz) => setActiveQuiz(quiz)}
+              />
+            )}
+
+            {activeTab === 'applications' && (
+              <ApplicationsTrackerView
+                applications={applications}
+                allListings={allListings}
+                subTab={activeSubTab}
+                onSubTabChange={setActiveSubTab}
+                onExploreInternships={() => handleTabChange('internships')}
+              />
+            )}
+
+            {activeTab === 'profile' && (
+              <StudentProfileView
+                student={activeStudent}
+                subTab={activeSubTab}
+                onSubTabChange={setActiveSubTab}
+                onUpdateProfile={handleUpdateProfile}
+                onOpenQuiz={(skillName) => {
+                  const matchedQ =
+                    quizzes.find((q) => q.skillName.toLowerCase() === skillName.toLowerCase()) ||
+                    quizzes[0];
+                  setActiveQuiz(matchedQ);
+                }}
+              />
+            )}
+          </>
+        )}
+      </main>
+
+      {/* Modals */}
+      {selectedListingDetail && (
+        <InternshipDetailModal
+          listing={selectedListingDetail.listing}
+          match={selectedListingDetail.match}
+          student={activeStudent}
+          hasApplied={applications.some(
+            (a) => a.listingId === selectedListingDetail.listing.id
+          )}
+          onClose={() => setSelectedListingDetail(null)}
+          onApply={(coverLetter) => {
+            handleApplyToJob(
+              selectedListingDetail.listing,
+              selectedListingDetail.match.overallScore,
+              coverLetter
+            );
+            setSelectedListingDetail(null);
+          }}
+        />
+      )}
+
+      {activeQuiz && (
+        <SkillAssessmentModal
+          quiz={activeQuiz}
+          student={activeStudent}
+          onClose={() => setActiveQuiz(null)}
+          onEarnBadge={handleEarnBadge}
+        />
+      )}
+
+      {/* Authentication Modal (Giriş Yap / Kayıt Ol) */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authModalMode}
+        allCompanies={allCompanies}
+        activeCompanyId={activeCompanyId}
+        onSelectCompany={handleSelectCompany}
+        onCreateCompany={handleCreateCompany}
+        onSuccess={handleAuthSuccess}
+      />
+
+      {/* Clean Minimalism Footer */}
+      <footer className="border-t border-gray-200 dark:border-slate-800/80 bg-white dark:bg-[#0F172A] mt-auto py-6 text-xs text-gray-500 dark:text-slate-400 shrink-0 transition-colors duration-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Logo
+              size="sm"
+              showTagline={false}
+              onClick={() => {
+                setUserRole('student');
+                setActiveTab('internships');
+              }}
+            />
+            <span className="text-[11px] text-gray-400 dark:text-slate-500">
+              &copy; 2026 StajımVar • Tüm hakları saklıdır.
+            </span>
+          </div>
+          <p className="text-[11px] text-gray-400 dark:text-slate-400 text-center sm:text-left">
+            Yetenek Odaklı İş & Stajyer Eşleştirme Platformu
+          </p>
+          <div className="flex items-center gap-6 text-[11px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-widest">
+            <button
+              onClick={() => showToast('StajımVar: Üniversite öğrencilerini yetenek odaklı şirketlerle buluşturur.')}
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+            >
+              Hakkımızda
+            </button>
+            <button
+              onClick={() => showToast('İletişim: contact@stajimvar.com')}
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+            >
+              İletişim
+            </button>
+            <button
+              onClick={() => showToast('KVKK ve Veri Güvenliği Politikası')}
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+            >
+              KVKK
+            </button>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

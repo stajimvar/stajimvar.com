@@ -1,0 +1,16 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# Cloudflare local secrets
+.dev.vars
+.wrangler/
+
+# Devralınan artıklar — repoya girmesin
+_eski-wrangler/
+*.zip
