@@ -26,5 +26,8 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  // supabase/functions Deno runtime'ında çalışır; kendi tip evreni var,
+  // tarayıcı derlemesine dahil edilmez.
+  "include": ["src"]
 }

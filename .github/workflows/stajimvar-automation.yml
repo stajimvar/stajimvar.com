@@ -1,0 +1,70 @@
+name: Stajım Var otomasyonları
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *" # İlan kaynaklarını saatte bir yeniler.
+    - cron: "*/5 * * * *" # Başvuru bildirim kuyruğunu beş dakikada bir işler.
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stajimvar-automation-${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '17 * * * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SOURCES_JSON: ${{ secrets.SOURCES_JSON }}
+      ALLOW_INSERT_UPDATE: "true"
+      ALLOW_DEACTIVATION: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r automation/requirements-scraper.txt
+      - run: python automation/scraper.py
+
+  notify:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '*/5 * * * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      RESEND_FROM: ${{ secrets.RESEND_FROM }}
+      APPLICATION_REVIEW_BASE_URL: ${{ secrets.APPLICATION_REVIEW_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r automation/requirements.txt
+      - run: python automation/notifier.py
+
+  match-alerts:
+    needs: scrape
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Trigger in-app match alert job
+        env:
+          AUTOMATION_JOB_SECRET: ${{ secrets.AUTOMATION_JOB_SECRET }}
+        run: |
+          if [ -z "${AUTOMATION_JOB_SECRET}" ]; then
+            echo "AUTOMATION_JOB_SECRET is not configured; skipping match alert job."
+            exit 0
+          fi
+          curl --fail --silent --show-error --request POST 'https://stajimvar.com/api/jobs/match-alerts' \
+            --header "x-automation-job-secret: ${AUTOMATION_JOB_SECRET}" \
+            --header 'content-type: application/json' \
+            --data '{"dryRun":true}'
