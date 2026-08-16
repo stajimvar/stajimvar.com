@@ -278,6 +278,86 @@
       "company_name": "Binance",
       "careers_url": "https://jobs.lever.co/binance",
       "website": "binance.com"
+    },
+    {
+      "id": "spyke-games-lever",
+      "name": "Spyke Games",
+      "type": "lever",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Spyke Games",
+      "site": "spyke-games",
+      "careers_url": "https://jobs.lever.co/spyke-games"
+    },
+    {
+      "id": "biggergames-ashby",
+      "name": "Bigger Games",
+      "type": "ashby",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Bigger Games",
+      "job_board": "biggergames",
+      "careers_url": "https://jobs.ashbyhq.com/biggergames"
+    },
+    {
+      "id": "ace-games-workable",
+      "name": "Ace Games",
+      "type": "workable",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Ace Games",
+      "account": "ace-games",
+      "careers_url": "https://apply.workable.com/ace-games"
+    },
+    {
+      "id": "goodjobgames-greenhouse",
+      "name": "Good Job Games",
+      "type": "greenhouse",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Good Job Games",
+      "board_token": "goodjobgames",
+      "careers_url": "https://job-boards.greenhouse.io/goodjobgames"
+    },
+    {
+      "id": "ciceksepeti-lever",
+      "name": "Çiçeksepeti",
+      "type": "lever",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Çiçeksepeti",
+      "site": "ciceksepeti",
+      "careers_url": "https://jobs.lever.co/ciceksepeti"
+    },
+    {
+      "id": "iyzico-lever",
+      "name": "Iyzico",
+      "type": "lever",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Iyzico",
+      "site": "iyzico",
+      "careers_url": "https://jobs.lever.co/iyzico"
+    },
+    {
+      "id": "dataroid-lever",
+      "name": "Dataroid",
+      "type": "lever",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Dataroid",
+      "site": "dataroid",
+      "careers_url": "https://jobs.lever.co/dataroid"
+    },
+    {
+      "id": "doktortakvimi-ashby",
+      "name": "Doktortakvimi",
+      "type": "ashby",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Doktortakvimi",
+      "job_board": "doktortakvimi",
+      "careers_url": "https://jobs.ashbyhq.com/doktortakvimi"
     }
   ],
   "notes": "Only add verified public ATS/API endpoints. Keep credentials in environment variables, never here."

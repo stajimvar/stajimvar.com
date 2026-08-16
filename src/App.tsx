@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
+import { mockSkillQuizzes, mockCompanyAccounts } from './data/mockData';
 import {
-  mockStudentProfiles,
-  initialApplications,
-  mockSkillQuizzes,
-  mockCompanyAccounts,
-} from './data/mockData';
-import { fetchPublishedListings } from './lib/queries';
+  fetchPublishedListings,
+  fetchStudentProfile,
+  fetchStudentApplications,
+} from './lib/queries';
+import { getCurrentUser, onAuthChange, signOut, type AuthResult } from './lib/auth';
 import {
   StudentProfile,
   InternshipListing,
@@ -53,8 +53,11 @@ export default function App() {
   const goHome = () => navigate('/');
 
   // Global State
-  const [allStudents, setAllStudents] = useState<StudentProfile[]>(mockStudentProfiles);
-  const [activeStudentId, setActiveStudentId] = useState<string>(mockStudentProfiles[0].id);
+  /** Supabase oturumu. null = ziyaretçi. */
+  const [session, setSession] = useState<AuthResult | null>(null);
+  const [sessionReady, setSessionReady] = useState(false);
+  /** Giriş yapmış öğrencinin gerçek profili. */
+  const [student, setStudent] = useState<StudentProfile | null>(null);
   // İlanlar artık Supabase'den geliyor. Boş başlıyor; yükleme durumu aşağıda.
   const [allListings, setAllListings] = useState<InternshipListing[]>([]);
   const [listingsStatus, setListingsStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -78,7 +81,7 @@ export default function App() {
       cancelled = true;
     };
   }, []);
-  const [applications, setApplications] = useState<ApplicationRecord[]>(initialApplications);
+  const [applications, setApplications] = useState<ApplicationRecord[]>([]);
   const [quizzes] = useState<SkillQuiz[]>(mockSkillQuizzes);
 
   // Company Accounts State
@@ -132,18 +135,11 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Authentication State
-  /**
-   * Ziyaretçi gerçekten ziyaretçi. Eskiden `true` idi ve siteye giren herkes
-   * "Hoş geldin, Mustafa" diye karşılanıp sahte bir profil görüyordu.
-   */
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  /** Oturumdan türüyor; ayrı bir bayrak tutmak ikisini ayrı düşürebilirdi. */
+  const isLoggedIn = Boolean(session);
 
-  /**
-   * Kayıt/giriş akışı henüz gerçek oturuma bağlı değil (src/lib/auth.ts yazıldı
-   * ama App bu profili Supabase'den okumuyor). Çalışmayan bir kayıt formunu
-   * yayında tutmak yerine giriş noktaları kapalı; auth bağlanınca `true` yap.
-   */
-  const AUTH_ENABLED = false;
+  /** Öğrenci kaydı/girişi artık gerçek Supabase oturumuna bağlı. */
+  const AUTH_ENABLED = true;
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
@@ -157,13 +153,22 @@ export default function App() {
     setIsAuthModalOpen(true);
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch {
+      // Oturum sunucuda zaten düşmüş olabilir; yerel durumu yine de temizle.
+    }
+    setSession(null);
+    setStudent(null);
+    setApplications([]);
+    setActiveTab('internships');
     showToast('Hesabınızdan güvenle çıkış yapıldı.');
   };
 
   const handleAuthSuccess = (role: 'student' | 'company', name: string) => {
-    setIsLoggedIn(true);
+    // Oturumun kendisi onAuthChange üzerinden geliyor; burada yalnızca
+    // arayüzü kullanıcının rolüne göre konumlandırıyoruz.
     setUserRole(role);
     if (role === 'student') {
       setActiveTab('internships');
@@ -215,28 +220,84 @@ export default function App() {
     }, 3500);
   };
 
-  // Current Active Student
-  const activeStudent =
-    allStudents.find((s) => s.id === activeStudentId) || allStudents[0];
+  // --- Oturum ---------------------------------------------------------
+  /**
+   * Sayfa açıldığında mevcut oturumu okur, sonra değişiklikleri dinler.
+   * Dinleyici başka sekmede yapılan çıkışı da yakalar.
+   */
+  React.useEffect(() => {
+    let cancelled = false;
+
+    getCurrentUser()
+      .then((user) => {
+        if (cancelled) return;
+        setSession(user);
+      })
+      .catch(() => {
+        if (!cancelled) setSession(null);
+      })
+      .finally(() => {
+        if (!cancelled) setSessionReady(true);
+      });
+
+    const unsubscribe = onAuthChange((user) => {
+      setSession(user);
+      setSessionReady(true);
+    });
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
+
+  /** Oturum değiştikçe gerçek profili ve başvuruları çeker. */
+  React.useEffect(() => {
+    if (!session || session.role !== 'student') {
+      setStudent(null);
+      setApplications([]);
+      return;
+    }
+    let cancelled = false;
+
+    fetchStudentProfile(session.userId)
+      .then((profile) => {
+        if (!cancelled) setStudent(profile);
+      })
+      .catch(() => {
+        if (!cancelled) setStudent(null);
+      });
+
+    fetchStudentApplications(session.userId)
+      .then((rows) => {
+        if (!cancelled) setApplications(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setApplications([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
+
+  const activeStudent = student;
 
   // Handler: Update Student Profile
   const handleUpdateProfile = (updated: Partial<StudentProfile>) => {
-    setAllStudents((prev) =>
-      prev.map((s) => {
-        if (s.id === activeStudent.id) {
-          return {
-            ...s,
+    // Yerel önizleme; kalıcı kayıt profil ekranı Supabase'e bağlanınca gelecek.
+    setStudent((prev) =>
+      prev
+        ? {
+            ...prev,
             ...updated,
-            skills: updated.skills || s.skills,
+            skills: updated.skills || prev.skills,
             preferences: updated.preferences
-              ? { ...s.preferences, ...updated.preferences }
-              : s.preferences,
-          };
-        }
-        return s;
-      })
+              ? { ...prev.preferences, ...updated.preferences }
+              : prev.preferences,
+          }
+        : prev
     );
-    showToast('Profil ve yetenekleriniz başarıyla güncellendi!');
+    showToast('Profil güncellendi.');
   };
 
   // Handler: Earn Badge from Quiz
@@ -364,8 +425,6 @@ export default function App() {
         userRole={userRole}
         setUserRole={setUserRole}
         activeStudent={activeStudent}
-        allStudents={allStudents}
-        onSelectStudent={(s) => setActiveStudentId(s.id)}
         activeCompany={activeCompany}
         allCompanies={allCompanies}
         onSelectCompany={handleSelectCompany}
@@ -383,7 +442,7 @@ export default function App() {
         {userRole === 'company' || safeTab === 'company-portal' ? (
           <CompanyPortalView
             allListings={allListings}
-            allStudents={allStudents}
+            allStudents={[]}
             applications={applications}
             onUpdateApplicationStatus={handleUpdateApplicationStatus}
             subTab={activeSubTab}
@@ -443,7 +502,7 @@ export default function App() {
               />
             )}
 
-            {safeTab === 'badges' && (
+            {safeTab === 'badges' && activeStudent && (
               <SkillQuizzesView
                 quizzes={quizzes}
                 student={activeStudent}
@@ -453,7 +512,7 @@ export default function App() {
               />
             )}
 
-            {safeTab === 'applications' && (
+            {safeTab === 'applications' && activeStudent && (
               <ApplicationsTrackerView
                 applications={applications}
                 allListings={allListings}
@@ -463,7 +522,7 @@ export default function App() {
               />
             )}
 
-            {safeTab === 'profile' && (
+            {safeTab === 'profile' && activeStudent && (
               <StudentProfileView
                 student={activeStudent}
                 subTab={activeSubTab}
@@ -502,7 +561,7 @@ export default function App() {
         />
       )}
 
-      {activeQuiz && (
+      {activeQuiz && activeStudent && (
         <SkillAssessmentModal
           quiz={activeQuiz}
           student={activeStudent}

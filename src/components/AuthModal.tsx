@@ -29,10 +29,13 @@ interface AuthModalProps {
   onSelectCompany: (companyId: string) => void;
   onCreateCompany: (newCompany: CompanyAccount) => void;
   onSuccess: (role: 'student' | 'company', name: string) => void;
+  /** Şirket kaydı akışı hazır olana kadar kapalı. */
+  allowCompanySignUp?: boolean;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
+  allowCompanySignUp = false,
   onClose,
   initialMode = 'login',
   allCompanies,
@@ -199,7 +202,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </p>
         </div>
 
-        {/* Role Switcher */}
+        {/*
+          Role Switcher
+          Şirket kaydı şimdilik kapalı: şirketler siteye kendileri kaydolarak
+          değil, ilanlarına gelen başvuru üzerine gönderilen doğrulama
+          bağlantısıyla katılacak. Çalışmayan bir sekme göstermek yerine
+          gizliyoruz.
+        */}
+        {allowCompanySignUp && (
         <div className="flex items-center gap-2 mb-4 bg-gray-100 dark:bg-slate-800/80 p-1 rounded-2xl">
           <button
             type="button"
@@ -226,6 +236,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <span>Şirket / İK Portalı</span>
           </button>
         </div>
+        )}
 
         {/* Mode Switcher Tabs */}
         <div className="flex border-b border-gray-200 dark:border-slate-800 mb-5">

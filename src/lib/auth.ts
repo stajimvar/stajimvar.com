@@ -98,8 +98,19 @@ export async function signUpStudent(input: StudentSignUpInput): Promise<AuthResu
     email: input.email.trim(),
     password: input.password,
     options: {
-      // handle_new_user trigger'ı bunları profiles tablosuna yazıyor.
-      data: { full_name: input.fullName.trim(), role: 'student' },
+      /*
+        handle_new_user tetikleyicisi bunları okuyup profiles ve
+        student_profiles satırlarını açıyor. KVKK onayı da buradan gidiyor:
+        "Confirm email" açıkken signUp oturum döndürmediği için istemci
+        onayı sonradan yazamıyor, onay kanıtı kaybolurdu.
+      */
+      data: {
+        full_name: input.fullName.trim(),
+        role: 'student',
+        kvkk_consent: true,
+        kvkk_consent_version: KVKK_VERSION,
+        marketing_consent: input.marketingConsent ?? false,
+      },
     },
   });
   if (error) fail(error.message);
@@ -107,15 +118,6 @@ export async function signUpStudent(input: StudentSignUpInput): Promise<AuthResu
 
   // E-posta doğrulaması açıksa session henüz yok; profil satırları
   // trigger ile oluştu, geri kalanı ilk girişte tamamlanır.
-  if (data.session) {
-    await supabase.from('profiles').update({
-      kvkk_consent_at: new Date().toISOString(),
-      kvkk_consent_version: KVKK_VERSION,
-      marketing_consent: input.marketingConsent ?? false,
-    }).eq('id', data.user.id);
-
-    await supabase.from('student_profiles').insert({ id: data.user.id });
-  }
 
   return {
     userId: data.user.id,

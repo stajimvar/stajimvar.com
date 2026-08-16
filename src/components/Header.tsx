@@ -37,9 +37,8 @@ interface HeaderProps {
   setActiveSubTab: (subTab: string) => void;
   userRole: 'student' | 'company';
   setUserRole: (role: 'student' | 'company') => void;
-  activeStudent: StudentProfile;
-  allStudents?: StudentProfile[];
-  onSelectStudent?: (student: StudentProfile) => void;
+  /** Giriş yapılmamışsa null. */
+  activeStudent: StudentProfile | null;
   activeCompany?: CompanyAccount;
   allCompanies?: CompanyAccount[];
   onSelectCompany?: (companyId: string) => void;
@@ -60,8 +59,6 @@ export const Header: React.FC<HeaderProps> = ({
   userRole,
   setUserRole,
   activeStudent,
-  allStudents,
-  onSelectStudent,
   activeCompany,
   allCompanies = [],
   onSelectCompany,

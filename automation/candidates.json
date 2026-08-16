@@ -1,0 +1,58 @@
+{
+  "_not": "ATS panosu aranacak şirketler. find_sources.py bu adlardan slug türetip Lever/Greenhouse/Ashby/Workable uç noktalarını dener; yalnızca gerçekten cevap veren panolar kaynak olur.",
+  "companies": [
+    "Getir", "Peak Games", "Dream Games", "Rollic", "Spyke Games", "Bigger Games",
+    "Ace Games", "Panteon Games", "Masomo", "Gram Games", "Ruby Games", "Sanalika",
+    "Vertigo Games", "Agave Games", "Good Job Games", "Zynga", "Codeway",
+
+    "Trendyol", "Hepsiburada", "Yemeksepeti", "Sahibinden", "Dolap", "Modanisa",
+    "Çiçeksepeti", "Migros", "Getir Finans", "Boyner", "LC Waikiki", "DeFacto",
+    "Koton", "Flo", "Vakko", "Beymen", "n11", "PttAVM",
+
+    "Papara", "Param", "Iyzico", "PayTR", "Paribu", "BtcTurk", "Icrypex", "Bitexen",
+    "Midas", "Colendi", "Figopara", "Ininal", "Tosla", "Multinet", "Edenred",
+
+    "Insider", "Segmentify", "Related Digital", "Useinsider", "Dataroid",
+    "Firmasoft", "Logo Yazılım", "Netcad", "Sestek", "Karel", "Airties", "Vispera",
+    "Kron Technologies", "Netaş", "Turkcell", "Vodafone", "Türk Telekom",
+    "Turkcell Teknoloji", "Turk Telekom",
+
+    "Akbank", "Garanti BBVA", "Yapı Kredi", "İş Bankası", "QNB Finansbank",
+    "DenizBank", "TEB", "ING", "Ziraat Bankası", "Halkbank", "VakıfBank",
+    "Odeabank", "Fibabanka", "Şekerbank", "Albaraka Türk", "Kuveyt Türk",
+
+    "Arçelik", "Vestel", "Beko", "Ford Otosan", "Tofaş", "TOGG", "Otokar",
+    "Temsa", "Karsan", "BMC", "Anadolu Isuzu", "Mercedes-Benz Türk",
+    "Bosch Türkiye", "Siemens Türkiye", "Schneider Electric",
+
+    "Aselsan", "Havelsan", "Roketsan", "TUSAŞ", "Baykar", "STM", "Fnss",
+    "Nurol Teknoloji", "Meteksan",
+
+    "Türk Hava Yolları", "Pegasus", "SunExpress", "AJet", "Çelebi",
+    "TAV Havalimanları",
+
+    "Sabancı", "Koç Holding", "Eczacıbaşı", "Zorlu", "Doğuş", "Yıldız Holding",
+    "Anadolu Grubu", "Borusan", "Enerjisa", "Aygaz", "Opet", "Petrol Ofisi",
+    "Şişecam", "Sasa", "Hektaş",
+
+    "Marti", "Scotty", "BiTaksi", "Obilet", "Enuygun", "Biletix", "Armut",
+    "Doktortakvimi", "Sikayetvar", "Gittigidiyor", "Yemeksepeti Market",
+
+    "Commencis", "AppSamurai", "Pointr", "Colonist", "Medsien", "Xometry",
+    "Appier", "Bybit", "Binance", "Lalamove", "Aleph", "Alumil", "Lucida AI",
+    "Constructor Tech", "Oliver Agency", "AstraZeneca", "Diageo",
+
+    "Coca-Cola İçecek", "Anadolu Efes", "Ülker", "Eti", "Pınar", "Banvit",
+    "Namet", "Torku", "Dimes", "Sütaş",
+
+    "Unilever", "Procter Gamble", "Nestlé", "PepsiCo", "Mondelez", "Danone",
+    "L'Oréal", "Henkel", "Reckitt", "Colgate",
+
+    "Deloitte", "PwC", "KPMG", "EY", "McKinsey", "BCG", "Bain",
+    "Accenture", "Capgemini", "Cognizant", "Infosys",
+
+    "Microsoft", "Google", "Amazon", "Meta", "IBM", "Oracle", "SAP",
+    "Salesforce", "Nvidia", "Intel", "Qualcomm", "Ericsson", "Nokia",
+    "Huawei", "Samsung", "LG Electronics"
+  ]
+}

@@ -24,7 +24,8 @@ import { CompanyLogo } from './CompanyLogo';
 interface InternshipDetailModalProps {
   listing: InternshipListing | null;
   match: MatchBreakdown | null;
-  student: StudentProfile;
+  /** Giriş yapılmamışsa null — modal ziyaretçiye de açılıyor. */
+  student: StudentProfile | null;
   hasApplied: boolean;
   onClose: () => void;
   onApply: (coverLetterText?: string) => void;
@@ -304,8 +305,14 @@ export const InternshipDetailModal: React.FC<InternshipDetailModalProps> = ({
         {/* Modal Footer */}
         <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between gap-3 z-10">
           <div className="text-xs text-gray-500">
-            <span>Başvuru Profili: </span>
-            <strong className="text-gray-800">{student.fullName}</strong>
+            {student ? (
+              <>
+                <span>Başvuru Profili: </span>
+                <strong className="text-gray-800">{student.fullName}</strong>
+              </>
+            ) : (
+              <span>Başvurmak için giriş yapman gerekiyor.</span>
+            )}
           </div>
 
           <div className="flex items-center gap-3">

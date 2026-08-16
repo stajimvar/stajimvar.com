@@ -5,13 +5,14 @@ import { Logo } from './Logo';
 /**
  * Yasal metin sayfaları.
  *
- * İçerik, sitenin BUGÜN gerçekten yaptığı işe göre yazıldı. Sürüm 1'de site
- * salt okunur: kullanıcı hesabı yok, kayıt yok, kişisel veri toplanmıyor.
- * Toplanmayan veriyi anlatan bir metin yazmak, ileride toplanacak diye
- * şimdiden "CV'nizi işliyoruz" demekten dürüsttür.
+ * İçerik sitenin BUGÜN gerçekten yaptığı işe göre yazılır; ne eksik ne fazla.
+ * Şu anki durum: öğrenci hesabı açılabiliyor (ad, e-posta, profil alanları),
+ * özgeçmiş yükleme ve platform içi başvuru ise kapalı — başvurular hâlâ
+ * şirketin kendi sayfasında yapılıyor.
  *
- * ÖNEMLİ: Kayıt/başvuru akışı açıldığında bu metinler yeniden yazılmalı —
- * o noktada KVKK aydınlatma metni ve açık rıza akışı zorunlu hale gelir.
+ * ÖNEMLİ: CV yükleme veya platform üzerinden başvuru açıldığında bu metinler
+ * yeniden yazılmalı ve `KVKK_VERSION` (src/lib/auth.ts) artırılmalı; sürüm
+ * artmazsa eski onayla yeni işleme yapılmış olur.
  */
 
 export type LegalSlug = 'gizlilik' | 'cerez-politikasi' | 'kvkk-aydinlatma-metni';
@@ -67,17 +68,27 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
 
             <Section title="Kısa özet">
               <p>
-                StajımVar şu anda <strong>hesap açmadan kullanılan</strong> bir staj ilanı
-                arama sitesidir. Kayıt olma, giriş yapma veya CV yükleme özelliği henüz
-                açık değildir. Bu nedenle sizden ad, e-posta, telefon veya özgeçmiş gibi
-                hiçbir kişisel veri toplamıyoruz.
+                İlanlara bakmak için hesap açmanız gerekmez. Hesap açarsanız yalnızca
+                <strong> adınız, e-posta adresiniz</strong> ve profilinize kendi
+                girdiğiniz bilgiler (üniversite, bölüm, yetenekler, tercihler) saklanır.
+                Özgeçmiş yükleme ve platform üzerinden başvuru henüz açık değildir;
+                başvurular şirketin kendi sayfasında yapılır.
               </p>
             </Section>
 
             <Section title="Hangi verileri işliyoruz">
               <p>
-                <strong>Kişisel veri:</strong> Toplamıyoruz. Site üzerinde form, kayıt veya
-                giriş bulunmuyor.
+                <strong>Hesap verisi:</strong> Kayıt olursanız ad, e-posta ve şifrenizin
+                şifrelenmiş özeti. Şifrenin kendisi hiçbir yerde açık tutulmaz.
+              </p>
+              <p>
+                <strong>Profil verisi:</strong> Üniversite, bölüm, sınıf, yetenekler,
+                projeler ve çalışma tercihleri gibi profilinize <em>sizin girdiğiniz</em>
+                alanlar. Hepsi isteğe bağlıdır.
+              </p>
+              <p>
+                <strong>Onay kaydı:</strong> Kayıt sırasında bu metni onayladığınız an ve
+                metnin sürümü. Onayın kanıtı olarak tutulur.
               </p>
               <p>
                 <strong>Teknik veri:</strong> Site Cloudflare üzerinde barındırılıyor.
@@ -94,10 +105,15 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
 
             <Section title="Başvurular nasıl çalışıyor">
               <p>
-                Bir ilana başvurmak istediğinizde sizi <strong>şirketin kendi başvuru
-                sayfasına</strong> yönlendiriyoruz. Başvuru bilgileriniz StajımVar üzerinden
-                geçmez, bize ulaşmaz ve bizde saklanmaz. Yönlendirildiğiniz sitede
-                paylaştığınız veriler o şirketin gizlilik politikasına tabidir.
+                Şu anda tüm ilanlarda başvuru <strong>şirketin kendi başvuru
+                sayfasında</strong> yapılır. Sizi oraya yönlendiririz; başvuru bilgileriniz
+                StajımVar üzerinden geçmez ve bizde saklanmaz.
+              </p>
+              <p>
+                İleride platform üzerinden başvuru açıldığında verileriniz şirkete ancak
+                her başvuru için ayrı vereceğiniz açık rıza ile ve yalnızca doğrulanmış
+                işveren adreslerine iletilecektir. Doğrulanmamış bir adrese hiçbir koşulda
+                veri gönderilmez; bu kural veritabanı kısıtıyla bağlanmıştır.
               </p>
             </Section>
 
@@ -112,9 +128,9 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
 
             <Section title="Haklarınız">
               <p>
-                Kişisel veri toplamadığımız için silme veya erişim talebine konu olacak bir
-                kaydımız bulunmuyor. Yine de bir sorunuz olursa aşağıdaki adresten
-                ulaşabilirsiniz.
+                KVKK madde 11 kapsamında verilerinize erişme, düzeltme, silme ve
+                işlemeye itiraz etme haklarına sahipsiniz. Hesabınızı silmek isterseniz
+                aşağıdaki adrese yazmanız yeterli; hesap ve profil kayıtları silinir.
               </p>
             </Section>
 
@@ -144,7 +160,12 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 aracı da bulunmuyor.
               </p>
               <p>
-                Tarayıcınızın yerel deposunda yalnızca bir tercih saklanıyor:
+                Hesabınız varsa oturumunuzu açık tutmak için bir <strong>oturum
+                belirteci</strong> tarayıcınızda saklanır. Zorunludur; olmadan her sayfada
+                yeniden giriş yapmanız gerekirdi. Çıkışta silinir.
+              </p>
+              <p>
+                Ayrıca yerel depoda bir tercih saklanıyor:
                 <code className="mx-1 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-slate-800 text-xs">
                   stajimvar_theme
                 </code>
@@ -181,29 +202,43 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
               </p>
             </div>
 
-            <Section title="Şu an geçerli durum">
+            <Section title="İşlenen veriler ve amaçları">
               <p>
-                6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında bilgilendirme
-                yükümlülüğü, kişisel veri işlendiği durumlarda doğar. StajımVar sürüm 1'de
-                <strong> kişisel veri işlemiyor</strong>: üyelik, giriş, form ve CV yükleme
-                özellikleri açık değildir.
+                6698 sayılı Kanun kapsamında veri sorumlusu StajımVar'dır. İlanlara
+                bakmak için hesap gerekmez; hesap açtığınızda aşağıdaki veriler işlenir.
               </p>
               <p>
-                İlana başvurmak istediğinizde şirketin kendi başvuru sistemine
-                yönlendirilirsiniz; verileriniz bizden geçmez.
+                <strong>Ad ve e-posta</strong> — hesabı oluşturmak ve girişi doğrulamak
+                için; hukuki sebep sözleşmenin kurulması (m.5/2-c).
+              </p>
+              <p>
+                <strong>Profil bilgileri</strong> — ilanları uygunluğa göre sıralamak için;
+                hukuki sebep açık rıza (m.5/1). Doldurmak zorunlu değildir.
+              </p>
+              <p>
+                <strong>Onay kaydı</strong> — bu metni onayladığınız an ve sürümü; hukuki
+                sebep hukuki yükümlülük (m.5/2-ç).
+              </p>
+              <p>
+                <strong>Aktarım:</strong> Verileriniz üçüncü taraflara aktarılmaz.
+                Barındırma Supabase (Frankfurt) ve Cloudflare altyapısındadır; bu
+                sağlayıcılar veriyi bizim adımıza saklar.
+              </p>
+              <p>
+                <strong>Saklama:</strong> Hesabınız açık kaldığı sürece. Hesap silindiğinde
+                profil ve hesap kayıtları silinir; onay kaydı ispat yükümlülüğü nedeniyle
+                kanuni zamanaşımı süresince saklanır.
               </p>
             </Section>
 
-            <Section title="Üyelik açıldığında ne olacak">
+            <Section title="Henüz yapılmayanlar">
               <p>
-                Öğrenci hesapları ve platform içi başvuru devreye girdiğinde bu metin
-                yeniden yazılacak ve şunları içerecektir: veri sorumlusunun kimliği, işlenen
-                veri kategorileri, işleme amaçları ve hukuki sebebi, aktarım yapılan taraflar
-                ve ülkeler, saklama süresi ve KVKK madde 11 kapsamındaki haklarınız.
+                Özgeçmiş yükleme ve platform üzerinden başvuru <strong>henüz açık
+                değildir</strong>. Bu özellikler devreye girdiğinde metin güncellenecek ve
+                yeniden onayınız istenecektir.
               </p>
               <p>
-                O aşamada CV'niz ve iletişim bilgileriniz, yalnızca <strong>açık rızanızla</strong>{' '}
-                ve yalnızca doğrulanmış işveren başvuru kanallarına iletilecektir.
+                KVKK m.11 kapsamındaki taleplerinizi aşağıdaki adrese iletebilirsiniz.
               </p>
             </Section>
           </>
