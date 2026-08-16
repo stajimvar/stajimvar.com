@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { ApplicationRecord, InternshipListing } from '../types';
+import { CompanyLogo } from './CompanyLogo';
 
 interface ApplicationsTrackerViewProps {
   applications: ApplicationRecord[];
@@ -159,10 +160,10 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-start sm:items-center gap-3 sm:gap-3.5">
                     {listing ? (
-                      <img
-                        src={listing.companyLogo}
-                        alt={listing.companyName}
-                        className="w-12 h-12 rounded-xl object-cover border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 shrink-0 shadow-2xs"
+                      <CompanyLogo
+                        name={listing.companyName}
+                        logoUrl={listing.companyLogo || undefined}
+                        className="w-11 h-11 rounded-xl p-1 text-sm shrink-0"
                       />
                     ) : (
                       <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">

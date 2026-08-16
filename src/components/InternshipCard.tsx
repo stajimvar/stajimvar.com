@@ -11,6 +11,7 @@ import {
   Star,
 } from 'lucide-react';
 import { InternshipListing, MatchBreakdown } from '../types';
+import { CompanyLogo } from './CompanyLogo';
 
 interface InternshipCardProps {
   listing: InternshipListing;
@@ -43,10 +44,10 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
       {/* Left & Middle Info Area */}
       <div className="flex items-start gap-3 sm:gap-3.5 flex-1 min-w-0 w-full">
         {/* Company Logo */}
-        <img
-          src={listing.companyLogo}
-          alt={listing.companyName}
-          className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-800 shrink-0 group-hover:scale-105 transition-transform shadow-2xs"
+        <CompanyLogo
+          name={listing.companyName}
+          logoUrl={listing.companyLogo || undefined}
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl shrink-0 group-hover:scale-105 transition-transform shadow-2xs text-base sm:text-lg p-1.5"
         />
 
         {/* Text Details */}

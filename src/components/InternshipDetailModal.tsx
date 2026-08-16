@@ -19,6 +19,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { InternshipListing, MatchBreakdown, StudentProfile } from '../types';
+import { CompanyLogo } from './CompanyLogo';
 
 interface InternshipDetailModalProps {
   listing: InternshipListing | null;
@@ -51,10 +52,10 @@ export const InternshipDetailModal: React.FC<InternshipDetailModalProps> = ({
         {/* Modal Top Header */}
         <div className="sticky top-0 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-gray-200 flex items-center justify-between z-10">
           <div className="flex items-center gap-3">
-            <img
-              src={listing.companyLogo}
-              alt={listing.companyName}
-              className="w-11 h-11 rounded-xl object-cover border border-gray-200"
+            <CompanyLogo
+              name={listing.companyName}
+              logoUrl={listing.companyLogo || undefined}
+              className="w-11 h-11 rounded-xl p-1 text-sm"
             />
             <div>
               <div className="flex items-center gap-2">
