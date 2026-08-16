@@ -154,6 +154,50 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
               </p>
             </Section>
 
+            <Section title="Verilerinizi nasıl koruyoruz">
+              <p>
+                <strong>Satır düzeyinde erişim denetimi.</strong> Veritabanındaki her
+                tabloda satır bazlı güvenlik açık. Bir öğrenci yalnızca kendi profilini
+                ve kendi başvurularını okuyabilir; bu kural uygulama kodunda değil,
+                veritabanının kendisinde tanımlı. Uygulama hata yapsa bile başkasının
+                verisi dönmez.
+              </p>
+              <p>
+                <strong>Kolon düzeyinde kısıtlama.</strong> Şirketlerin işe alım e-posta
+                adresi gibi hassas alanlar tarayıcıya hiç gönderilmez; bu alanlarda
+                okuma yetkisi tarayıcıdan tamamen alınmıştır.
+              </p>
+              <p>
+                <strong>Şifreler.</strong> Şifreniz hiçbir yerde açık tutulmaz; yalnızca
+                geri döndürülemez şifreli özeti saklanır. Biz de göremeyiz.
+              </p>
+              <p>
+                <strong>Yönetici anahtarları.</strong> Veritabanına tam yetkiyle erişen
+                anahtarlar yalnızca sunucu tarafında bulunur, hiçbir koşulda tarayıcıya
+                gönderilmez. Her yayın öncesi paketin içinde bu anahtarların bulunmadığı
+                otomatik olarak denetlenir.
+              </p>
+              <p>
+                <strong>Bağlantı güvenliği.</strong> Site ve veritabanı arasındaki tüm
+                trafik şifrelidir (HTTPS/TLS).
+              </p>
+              <p>
+                <strong>Dosyalar.</strong> Özgeçmişler için ayrılmış depolama alanı
+                herkese kapalıdır ve yalnızca dosyanın sahibi ile başvurulan şirket
+                erişebilir. Şirket logoları gibi kamuya açık görseller ayrı bir alanda
+                tutulur.
+              </p>
+            </Section>
+
+            <Section title="Bir ihlal olursa">
+              <p>
+                Kişisel verilerin hukuka aykırı biçimde ele geçirildiğini tespit edersek,
+                KVKK'nın öngördüğü şekilde en kısa sürede (en geç 72 saat içinde) Kişisel
+                Verileri Koruma Kurulu'na bildiririz ve etkilenen kullanıcılara e-posta
+                ile haber veririz.
+              </p>
+            </Section>
+
             <Section title="Haklarınız">
               <p>
                 KVKK madde 11 kapsamında verilerinize erişme, düzeltme, silme ve
@@ -256,6 +300,22 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 <strong>Saklama:</strong> Hesabınız açık kaldığı sürece. Hesap silindiğinde
                 profil ve hesap kayıtları silinir; onay kaydı ispat yükümlülüğü nedeniyle
                 kanuni zamanaşımı süresince saklanır.
+              </p>
+            </Section>
+
+            <Section title="Veri güvenliği">
+              <p>
+                Verileriniz satır bazlı erişim denetimiyle korunur: bir kullanıcı
+                yalnızca kendi kaydını okuyabilir ve bu kural veritabanı düzeyinde
+                tanımlıdır. Şifreler geri döndürülemez biçimde saklanır. Yönetici
+                anahtarları yalnızca sunucuda bulunur. Ayrıntılar için{' '}
+                <a
+                  className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+                  href="/gizlilik"
+                >
+                  Gizlilik Politikası
+                </a>
+                .
               </p>
             </Section>
 
