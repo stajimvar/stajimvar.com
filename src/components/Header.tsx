@@ -26,6 +26,7 @@ import {
   Inbox,
 } from 'lucide-react';
 import { StudentProfile, CompanyAccount } from '../types';
+import { Avatar } from './Avatar';
 import { Logo } from './Logo';
 
 interface HeaderProps {
@@ -501,10 +502,10 @@ export const Header: React.FC<HeaderProps> = ({
                       className="flex items-center gap-1.5 sm:gap-2 py-1 px-1.5 sm:px-2 rounded-xl text-gray-800 dark:text-slate-100 hover:bg-gray-100/80 dark:hover:bg-slate-800/80 border border-gray-200/80 dark:border-slate-700/80 transition-all text-left cursor-pointer select-none shadow-2xs"
                       title="Hesap Menüsü"
                     >
-                      <img
-                        src={activeStudent.avatarUrl}
-                        alt={activeStudent.fullName}
-                        className="w-7 h-7 rounded-full object-cover shrink-0 ring-1 ring-gray-200 dark:ring-slate-700"
+                      <Avatar
+                        name={activeStudent.fullName}
+                        url={activeStudent.avatarUrl || undefined}
+                        className="w-7 h-7 rounded-full shrink-0 ring-1 ring-gray-200 dark:ring-slate-700 text-[10px]"
                       />
                       <span className="hidden md:inline text-xs font-bold text-gray-900 dark:text-white truncate">
                         {activeStudent.fullName}
@@ -520,10 +521,10 @@ export const Header: React.FC<HeaderProps> = ({
                       <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-gray-200/90 dark:border-slate-800 py-3 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
                         {/* Top Profile Header */}
                         <div className="px-4 pb-3 flex items-center gap-3">
-                          <img
-                            src={activeStudent.avatarUrl}
-                            alt={activeStudent.fullName}
-                            className="w-11 h-11 rounded-full object-cover shrink-0 ring-1 ring-blue-500/30"
+                          <Avatar
+                            name={activeStudent.fullName}
+                            url={activeStudent.avatarUrl || undefined}
+                            className="w-11 h-11 rounded-full shrink-0 ring-1 ring-blue-500/30 text-sm"
                           />
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-extrabold text-gray-900 dark:text-slate-100 truncate leading-tight">

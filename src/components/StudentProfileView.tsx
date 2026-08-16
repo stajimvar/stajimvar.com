@@ -34,6 +34,7 @@ import {
 } from '../types';
 import { uploadAvatar } from '../lib/queries';
 import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
+import { Avatar } from './Avatar';
 import { PredictiveInput } from './PredictiveInput';
 import {
   HARD_SKILLS_DICTIONARY,
@@ -377,10 +378,10 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               className="relative cursor-pointer rounded-2xl overflow-hidden"
               title="Fotoğrafı Değiştirmek İçin Tıklayın"
             >
-              <img
-                src={student.avatarUrl}
-                alt={student.fullName}
-                className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-blue-600 shadow-xs shrink-0 transition-transform group-hover:scale-105"
+              <Avatar
+                name={student.fullName}
+                url={student.avatarUrl || undefined}
+                className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl border-2 border-blue-600 shadow-xs shrink-0 transition-transform group-hover:scale-105 text-2xl"
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white rounded-2xl">
                 <Camera className="w-5 h-5 mb-0.5" />
@@ -533,10 +534,10 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
 
                 <div className="flex items-center gap-4">
                   <div className="relative shrink-0">
-                    <img
-                      src={editAvatarUrl}
-                      alt="Seçili Profil"
-                      className="w-14 h-14 rounded-2xl object-cover border-2 border-blue-600 shadow-xs"
+                    <Avatar
+                      name={student.fullName}
+                      url={editAvatarUrl || undefined}
+                      className="w-14 h-14 rounded-2xl border-2 border-blue-600 shadow-xs text-lg"
                     />
                   </div>
                   
