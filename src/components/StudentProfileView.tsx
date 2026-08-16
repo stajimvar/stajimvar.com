@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  X,
   Code2,
   FolderGit2,
   Settings,
@@ -31,6 +32,8 @@ import {
   StudentLanguage,
   SkillLevel,
 } from '../types';
+import { uploadAvatar } from '../lib/queries';
+import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
 import { PredictiveInput } from './PredictiveInput';
 import {
   HARD_SKILLS_DICTIONARY,
@@ -101,32 +104,62 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   const avatarFileInputRef = React.useRef<HTMLInputElement>(null);
   const modalAvatarFileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Handle direct file upload from computer/device
-  const handleDirectAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          onUpdateProfile({ avatarUrl: reader.result });
-        }
-      };
-      reader.readAsDataURL(file);
+  /**
+   * Profil doluluk oranı ve sıradaki eksik alan.
+   * Ağırlıklar kabaca işverenin bakacağı sıraya göre: önce yetenek, sonra
+   * eğitim bilgisi, sonra projeler.
+   */
+  const tamlikAlanlari: Array<{ etiket: string; dolu: boolean }> = [
+    { etiket: 'yeteneklerini ekle', dolu: student.skills.length > 0 },
+    { etiket: 'üniversiteni gir', dolu: Boolean(student.university) },
+    { etiket: 'bölümünü gir', dolu: Boolean(student.department) },
+    { etiket: 'kendini tanıt', dolu: Boolean(student.bio) },
+    { etiket: 'bir proje ekle', dolu: student.projects.length > 0 },
+    { etiket: 'dil ekle', dolu: (student.languages?.length ?? 0) > 0 },
+    { etiket: 'hedef pozisyon seç', dolu: student.targetRoles.length > 0 },
+    { etiket: 'şehir tercihini seç', dolu: student.preferences.cities.length > 0 },
+    { etiket: 'telefon ekle', dolu: Boolean(student.phone) },
+    { etiket: 'fotoğraf ekle', dolu: Boolean(student.avatarUrl) },
+  ];
+  const profilTamlik = Math.round(
+    (tamlikAlanlari.filter((a) => a.dolu).length / tamlikAlanlari.length) * 100
+  );
+  const eksikAlan = tamlikAlanlari.find((a) => !a.dolu)?.etiket ?? '';
+
+  const [avatarYukleniyor, setAvatarYukleniyor] = useState(false);
+  const [avatarHatasi, setAvatarHatasi] = useState<string | null>(null);
+
+  /**
+   * Fotoğrafı depolamaya yükler.
+   *
+   * Eskiden dosya base64'e çevrilip doğrudan profile yazılıyordu; kalıcı
+   * değildi ve veritabanını şişiriyordu. Artık `avatars` kovasına gidiyor,
+   * profilde yalnızca adresi duruyor.
+   */
+  const yukleVeAyarla = async (
+    file: File,
+    uygula: (url: string) => void
+  ): Promise<void> => {
+    setAvatarHatasi(null);
+    setAvatarYukleniyor(true);
+    try {
+      const url = await uploadAvatar(student.id, file);
+      uygula(url);
+    } catch (error) {
+      setAvatarHatasi(error instanceof Error ? error.message : 'Fotoğraf yüklenemedi.');
+    } finally {
+      setAvatarYukleniyor(false);
     }
   };
 
-  // Handle modal avatar file upload
+  const handleDirectAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) void yukleVeAyarla(file, (url) => onUpdateProfile({ avatarUrl: url }));
+  };
+
   const handleModalAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          setEditAvatarUrl(reader.result);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
+    if (file) void yukleVeAyarla(file, setEditAvatarUrl);
   };
 
   // Sync edit modal state when student changes
@@ -396,14 +429,47 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           </div>
         </div>
 
-        <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3 shrink-0 shadow-2xs">
-          <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shadow-xs">
-            %90
+        {/*
+          Bu kutu sabit "%90 — Başvurularına Hazır" yazıyordu; profilde tek
+          yetenek yokken bile. Artık gerçekten dolu alanlardan hesaplanıyor
+          ve eksikse ne yapılacağını söylüyor.
+        */}
+        <div
+          className={`p-4 rounded-2xl border flex items-center gap-3 shrink-0 shadow-2xs ${
+            profilTamlik >= 70
+              ? 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 border-emerald-200 dark:border-emerald-800/60'
+              : 'bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 border-amber-200 dark:border-amber-800/60'
+          }`}
+        >
+          <div
+            className={`w-12 h-12 rounded-xl text-white flex items-center justify-center font-bold text-lg shadow-xs ${
+              profilTamlik >= 70 ? 'bg-emerald-600' : 'bg-amber-500'
+            }`}
+          >
+            %{profilTamlik}
           </div>
           <div>
-            <span className="text-xs font-semibold text-emerald-900 dark:text-emerald-300">CV Doluluk Oranı</span>
-            <p className="text-sm font-bold text-emerald-950 dark:text-emerald-100">
-              Mülakat & Staj Başvurularına Hazır
+            <span
+              className={`text-xs font-semibold ${
+                profilTamlik >= 70
+                  ? 'text-emerald-900 dark:text-emerald-300'
+                  : 'text-amber-900 dark:text-amber-300'
+              }`}
+            >
+              Profil doluluk oranı
+            </span>
+            <p
+              className={`text-sm font-bold ${
+                profilTamlik >= 70
+                  ? 'text-emerald-950 dark:text-emerald-100'
+                  : 'text-amber-950 dark:text-amber-100'
+              }`}
+            >
+              {profilTamlik >= 70
+                ? 'Başvurulara hazır'
+                : eksikAlan
+                ? `Sıradaki adım: ${eksikAlan}`
+                : 'Profilini tamamla'}
             </p>
           </div>
         </div>
@@ -538,14 +604,25 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                   <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
                     Üniversite
                   </label>
+                  {/*
+                    Öneri listesi kapalı bir seçim değil: listede olmayan
+                    üniversite de yazılabilir. Amaç yazım birliği sağlamak —
+                    "İTÜ" ve "İstanbul Teknik Üniversitesi" ayrı kayıt olmasın.
+                  */}
                   <input
                     type="text"
                     required
+                    list="tr-universiteler"
                     value={editUniversity}
                     onChange={(e) => setEditUniversity(e.target.value)}
                     className="w-full p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600"
-                    placeholder="Üniversite Adı"
+                    placeholder="Yazmaya başla, listeden seç"
                   />
+                  <datalist id="tr-universiteler">
+                    {TR_UNIVERSITIES.map((u) => (
+                      <option key={u} value={u} />
+                    ))}
+                  </datalist>
                 </div>
                 <div>
                   <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
@@ -554,11 +631,17 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                   <input
                     type="text"
                     required
+                    list="tr-bolumler"
                     value={editDepartment}
                     onChange={(e) => setEditDepartment(e.target.value)}
                     className="w-full p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600"
-                    placeholder="Bölüm Adı"
+                    placeholder="Yazmaya başla, listeden seç"
                   />
+                  <datalist id="tr-bolumler">
+                    {TR_DEPARTMENTS.map((d) => (
+                      <option key={d} value={d} />
+                    ))}
+                  </datalist>
                 </div>
               </div>
 
@@ -1206,6 +1289,70 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             </div>
 
             <div className="space-y-3 text-xs">
+              {/*
+                Şehir tercihi eskiden hiçbir yerden düzenlenemiyordu, oysa
+                eşleştirme motoru bu alanı kullanıyor (locationScore). Yani
+                kullanıcı puanını etkileyen bir alanı göremiyordu.
+              */}
+              <div>
+                <label className="text-gray-500 dark:text-slate-400 font-medium block mb-1">
+                  Çalışmak İstediğin Şehirler
+                </label>
+
+                {student.preferences.cities.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {student.preferences.cities.map((sehir) => (
+                      <span
+                        key={sehir}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-semibold border border-blue-100 dark:border-blue-900/50"
+                      >
+                        {sehir}
+                        <button
+                          type="button"
+                          aria-label={`${sehir} tercihini kaldır`}
+                          onClick={() =>
+                            onUpdateProfile({
+                              preferences: {
+                                ...student.preferences,
+                                cities: student.preferences.cities.filter((c) => c !== sehir),
+                              },
+                            })
+                          }
+                          className="text-blue-400 hover:text-red-600 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const secilen = e.target.value;
+                    if (!secilen || student.preferences.cities.includes(secilen)) return;
+                    onUpdateProfile({
+                      preferences: {
+                        ...student.preferences,
+                        cities: [...student.preferences.cities, secilen],
+                      },
+                    });
+                  }}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600"
+                >
+                  <option value="">+ Şehir ekle</option>
+                  {TR_CITIES.filter((c) => !student.preferences.cities.includes(c)).map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
+                  Hiç şehir seçmezsen tüm şehirlerdeki ilanlar eşit değerlendirilir.
+                </p>
+              </div>
+
               <div>
                 <label className="text-gray-500 dark:text-slate-400 font-medium block mb-1">
                   Çalışma Şekli Tercihi

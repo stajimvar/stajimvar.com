@@ -5,6 +5,7 @@ import {
   fetchStudentProfile,
   fetchStudentApplications,
   createApplication,
+  saveStudentProfile,
 } from './lib/queries';
 import { getCurrentUser, onAuthChange, signOut, KVKK_VERSION, type AuthResult } from './lib/auth';
 import {
@@ -289,9 +290,17 @@ export default function App() {
 
   const activeStudent = student;
 
-  // Handler: Update Student Profile
-  const handleUpdateProfile = (updated: Partial<StudentProfile>) => {
-    // Yerel önizleme; kalıcı kayıt profil ekranı Supabase'e bağlanınca gelecek.
+  /**
+   * Profil güncelleme. Önce ekranda gösterir, sonra Supabase'e yazar.
+   *
+   * Eskiden yalnızca yerel state'i değiştiriyordu; kullanıcı fotoğraf ekleyip
+   * sayfayı yenileyince her şey kayboluyordu. Yazma başarısız olursa değişiklik
+   * geri alınıyor — "kaydedildi" deyip kaybetmek en kötüsü.
+   */
+  const handleUpdateProfile = async (updated: Partial<StudentProfile>) => {
+    if (!session || !activeStudent) return;
+    const onceki = activeStudent;
+
     setStudent((prev) =>
       prev
         ? {
@@ -304,7 +313,16 @@ export default function App() {
           }
         : prev
     );
-    showToast('Profil güncellendi.');
+
+    try {
+      await saveStudentProfile(session.userId, updated);
+      showToast('Profil kaydedildi.');
+    } catch (error) {
+      setStudent(onceki);
+      showToast(
+        error instanceof Error ? `Kaydedilemedi: ${error.message}` : 'Profil kaydedilemedi.'
+      );
+    }
   };
 
   // Handler: Earn Badge from Quiz
@@ -538,8 +556,18 @@ export default function App() {
                 onUpdateProfile={handleUpdateProfile}
                 onOpenQuiz={(skillName) => {
                   const matchedQ =
-                    quizzes.find((q) => q.skillName.toLowerCase() === skillName.toLowerCase()) ||
-                    quizzes[0];
+                    quizzes.find(
+                      (q) => q.skillName.toLowerCase() === skillName.toLowerCase()
+                    );
+                  /*
+                    Eskiden eşleşme yoksa quizzes[0]'a düşüyordu: Rusça
+                    doğrulamak isteyen kullanıcıya React sorusu geliyordu.
+                    Olmayan sınavı uydurmak yerine durumu söylüyoruz.
+                  */
+                  if (!matchedQ) {
+                    showToast(`${skillName} için henüz doğrulama sınavı yok.`);
+                    return;
+                  }
                   setActiveQuiz(matchedQ);
                 }}
               />

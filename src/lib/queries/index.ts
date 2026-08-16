@@ -181,6 +181,108 @@ export async function replaceStudentSkills(
   if (error) fail('Beceriler kaydedilemedi', error);
 }
 
+/**
+ * Profil fotoğrafını `avatars` kovasına yükler ve herkese açık adresi döndürür.
+ *
+ * Eskiden fotoğraf `FileReader.readAsDataURL` ile base64'e çevrilip doğrudan
+ * `profiles.avatar_url` alanına yazılıyordu: 2 MB'lık bir fotoğraf ~2.7 MB
+ * metne dönüşüp her profil okumasında geri geliyordu. Artık dosya depolamada,
+ * veritabanında yalnızca adresi duruyor.
+ */
+export async function uploadAvatar(userId: string, file: File): Promise<string> {
+  const allowed = ['image/png', 'image/jpeg', 'image/webp'];
+  if (!allowed.includes(file.type)) {
+    throw new Error('Yalnızca PNG, JPEG veya WEBP yükleyebilirsin.');
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    throw new Error('Fotoğraf en fazla 2 MB olabilir.');
+  }
+
+  const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+  // Klasör adı kullanıcı kimliği olmak zorunda: storage politikası bunu şart koşuyor.
+  const path = `${userId}/avatar.${ext}`;
+
+  const { error } = await supabase.storage
+    .from('avatars')
+    .upload(path, file, { upsert: true, contentType: file.type });
+  if (error) throw new Error(`Fotoğraf yüklenemedi: ${error.message}`);
+
+  const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+  // Tarayıcı eski fotoğrafı önbellekten göstermesin.
+  return `${data.publicUrl}?v=${Date.now()}`;
+}
+
+/**
+ * Dilleri toptan değiştirir. `verified` gönderilmiyor: doğrulama yalnızca
+ * sınav üzerinden gelir, öğrenci kendi dilini onaylayamaz.
+ */
+export async function replaceStudentLanguages(
+  userId: string,
+  languages: NonNullable<StudentProfile['languages']>
+): Promise<void> {
+  const { error: delError } = await supabase
+    .from('student_languages')
+    .delete()
+    .eq('student_id', userId);
+  if (delError) fail('Diller temizlenemedi', delError);
+
+  if (languages.length === 0) return;
+
+  const { error } = await supabase.from('student_languages').insert(
+    languages.map((l) => ({
+      student_id: userId,
+      language: l.language,
+      level: l.level,
+      proficiency_text: l.proficiencyText || null,
+    }))
+  );
+  if (error) fail('Diller kaydedilemedi', error);
+}
+
+/** Projeleri toptan değiştirir; sıra korunur. */
+export async function replaceStudentProjects(
+  userId: string,
+  projects: StudentProfile['projects']
+): Promise<void> {
+  const { error: delError } = await supabase
+    .from('student_projects')
+    .delete()
+    .eq('student_id', userId);
+  if (delError) fail('Projeler temizlenemedi', delError);
+
+  if (projects.length === 0) return;
+
+  const { error } = await supabase.from('student_projects').insert(
+    projects.map((project, index) => ({
+      student_id: userId,
+      title: project.title,
+      description: project.description || null,
+      tech_stack: project.techStack ?? [],
+      github_url: project.githubUrl || null,
+      live_url: project.liveUrl || null,
+      sort_order: index,
+    }))
+  );
+  if (error) fail('Projeler kaydedilemedi', error);
+}
+
+/**
+ * Profil yamasını ilgili tablolara dağıtır.
+ *
+ * Arayüz tek bir `Partial<StudentProfile>` gönderiyor ama veri dört tabloya
+ * yayılmış durumda. Bu dağıtımı bileşenlere bırakmak, her düzenleme ekranının
+ * şemayı bilmesini gerektirirdi.
+ */
+export async function saveStudentProfile(
+  userId: string,
+  patch: Partial<StudentProfile>
+): Promise<void> {
+  await updateStudentProfile(userId, patch);
+  if (patch.skills) await replaceStudentSkills(userId, patch.skills);
+  if (patch.languages) await replaceStudentLanguages(userId, patch.languages);
+  if (patch.projects) await replaceStudentProjects(userId, patch.projects);
+}
+
 // ---------------------------------------------------------------- Şirket
 
 const COMPANY_SELECT = `
