@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
+  ExternalLink,
   ShieldCheck,
   Star,
 } from 'lucide-react';
@@ -58,13 +59,33 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             >
               {listing.companyName}
             </h3>
-            <span className="text-gray-300 dark:text-slate-600">•</span>
-            <span className="truncate">{listing.companyIndustry}</span>
-            <span className="text-gray-300 dark:text-slate-600">•</span>
-            <div className="flex items-center text-amber-500 dark:text-amber-400 font-bold">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 inline mr-1" />
-              <span>{listing.companyRating}</span>
-            </div>
+            {/*
+              Toplanan şirketlerde sektör ve puan bilgisi yok. Boş bir alanı
+              ayraçla göstermek "• • 0" gibi bozuk bir satır üretiyordu;
+              bilinmeyen alanlar artık hiç çizilmiyor.
+            */}
+            {listing.companyIndustry && (
+              <>
+                <span className="text-gray-300 dark:text-slate-600">•</span>
+                <span className="truncate">{listing.companyIndustry}</span>
+              </>
+            )}
+            {listing.companyRating > 0 && (
+              <>
+                <span className="text-gray-300 dark:text-slate-600">•</span>
+                <div className="flex items-center text-amber-500 dark:text-amber-400 font-bold">
+                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 inline mr-1" />
+                  <span>{listing.companyRating}</span>
+                </div>
+              </>
+            )}
+            {listing.origin === 'scraped' && (
+              // Asıl güven sinyali: ilan şirketin kendi sisteminden geliyor.
+              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Şirketin kariyer sayfasından
+              </span>
+            )}
           </div>
 
           {/* Row 2: Job Title (Bold & Clear) */}
@@ -142,15 +163,34 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
       <div className="flex lg:flex-col items-center lg:items-end justify-between w-full lg:w-auto shrink-0 gap-2.5 pt-2.5 lg:pt-0 border-t lg:border-t-0 border-gray-100 dark:border-slate-800">
         <div className="flex items-center gap-2">
           {/* Match Score */}
-          <span
-            className={`text-[11px] px-3 py-1 rounded-full uppercase tracking-wider ${scoreBadge}`}
-          >
-            %{match.overallScore} UYUMLU
-          </span>
+          {/*
+            İlanda beceri şartı yoksa uyum hesaplanamaz. Uydurma bir yüzde
+            yerine durumu açıkça yazıyoruz.
+          */}
+          {match.isScorable ? (
+            <span
+              className={`text-[11px] px-3 py-1 rounded-full uppercase tracking-wider ${scoreBadge}`}
+              title={match.summaryInsight}
+            >
+              %{match.overallScore} UYUMLU
+            </span>
+          ) : (
+            <span
+              className="text-[11px] px-3 py-1 rounded-full tracking-wide bg-gray-100 text-gray-500 border border-gray-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 font-semibold"
+              title="İlanda beceri şartı belirtilmemiş, uyum hesaplanamıyor."
+            >
+              Uyum hesaplanamadı
+            </span>
+          )}
 
-          <span className="text-[11px] text-gray-400 dark:text-slate-400 hidden sm:inline">
-            Son: <strong className="text-gray-700 dark:text-slate-200">{listing.applicationDeadline}</strong>
-          </span>
+          {listing.applicationDeadline && (
+            <span className="text-[11px] text-gray-400 dark:text-slate-400 hidden sm:inline">
+              Son:{' '}
+              <strong className="text-gray-700 dark:text-slate-200">
+                {listing.applicationDeadline}
+              </strong>
+            </span>
+          )}
         </div>
 
         {/* Buttons */}
@@ -163,7 +203,23 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             Detaylar
           </button>
 
-          {hasApplied ? (
+          {/*
+            Başvuru yöntemi üç farklı davranış gerektiriyor. `external` ilanlarda
+            başvuru şirketin kendi sisteminden yapılır; burada "Hemen Başvur"
+            demek, tıklayınca hiçbir şey olmadığı için kullanıcıyı yanıltırdı.
+          */}
+          {listing.applicationMethod === 'external' ? (
+            <a
+              id={`external-apply-btn-${listing.id}`}
+              href={listing.applyUrl}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="flex items-center gap-1 px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-xs transition-all cursor-pointer"
+            >
+              <span>İlana Git</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          ) : hasApplied ? (
             <span className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>Başvuruldu</span>

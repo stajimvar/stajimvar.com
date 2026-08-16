@@ -64,8 +64,11 @@ export function calculateInternshipMatch(
     }
   }
 
+  // DİKKAT: şart yoksa 100 vermek, "hiçbir şey istemiyor" ilanını "her şeyi
+  // karşılıyorsun" diye ödüllendirir ve listeyi tersine çevirir. Şartsız
+  // ilanlar aşağıda `isScorable = false` ile ayrı ele alınıyor.
   const coreSkillsMatchScore =
-    reqSkills.length > 0 ? Math.round((reqScoreSum / reqSkills.length) * 100) : 100;
+    reqSkills.length > 0 ? Math.round((reqScoreSum / reqSkills.length) * 100) : 0;
 
   // 2. Bonus / Preferred Skills Match
   const prefSkills = listing?.preferredSkills || [];
@@ -90,7 +93,15 @@ export function calculateInternshipMatch(
   }
 
   const bonusSkillsScore =
-    prefSkills.length > 0 ? Math.round((prefScoreSum / prefSkills.length) * 100) : 80;
+    prefSkills.length > 0 ? Math.round((prefScoreSum / prefSkills.length) * 100) : 0;
+
+  /**
+   * İlanda hiç beceri bilgisi yoksa uyum ölçülemez. Bu, toplanan ilanlarda
+   * sık görülüyor: kaynak metninde araç/teknoloji adı geçmiyorsa çıkarım
+   * boş dönüyor. Böyle ilanlar için yüzde uydurmak yerine "hesaplanamıyor"
+   * denecek.
+   */
+  const isScorable = reqSkills.length > 0 || prefSkills.length > 0;
 
   // 3. Location / WorkType compatibility
   let locationScore = 100;
@@ -123,23 +134,29 @@ export function calculateInternshipMatch(
 
   // 5. Total Weighted Overall Score
   // Core skills 55%, Bonus skills 20%, Location 15%, Availability/Staj type 10%
-  const overallScore = Math.min(
-    100,
-    Math.max(
-      15,
-      Math.round(
-        coreSkillsMatchScore * 0.55 +
-          bonusSkillsScore * 0.2 +
-          locationScore * 0.15 +
-          availabilityScore * 0.1
-      )
-    )
-  );
+  const overallScore = !isScorable
+    ? 0
+    : Math.min(
+        100,
+        Math.max(
+          15,
+          Math.round(
+            coreSkillsMatchScore * 0.55 +
+              bonusSkillsScore * 0.2 +
+              locationScore * 0.15 +
+              availabilityScore * 0.1
+          )
+        )
+      );
 
   let verdict: MatchBreakdown['verdict'] = 'Good Potential';
   let summaryInsight = '';
 
-  if (overallScore >= 88) {
+  if (!isScorable) {
+    verdict = 'Insufficient Data';
+    summaryInsight =
+      'İlanda beceri şartı belirtilmemiş, uyum hesaplanamıyor. Ayrıntılar için ilana göz at.';
+  } else if (overallScore >= 88) {
     verdict = 'Excellent Match';
     summaryInsight = `Mükemmel uyum! İlandaki zorunlu yetkinliklerin %${coreSkillsMatchScore}'ine sahipsiniz.`;
   } else if (overallScore >= 75) {
@@ -165,6 +182,7 @@ export function calculateInternshipMatch(
     missingPreferredSkills: missingPref,
     isEligibleForMandatory,
     isWorkTypeCompatible,
+    isScorable,
     verdict,
     summaryInsight,
   };

@@ -172,7 +172,19 @@ export interface MatchBreakdown {
   missingPreferredSkills: string[];
   isEligibleForMandatory: boolean;
   isWorkTypeCompatible: boolean;
-  verdict: 'Excellent Match' | 'Great Match' | 'Good Potential' | 'Skill Gap Exists';
+  /**
+   * İlanda hiç beceri şartı yoksa uyum hesaplanamaz.
+   * "Şart yok" ile "bütün şartları karşılıyor" aynı şey değildir —
+   * bu ayrım yapılmazsa şartsız ilanlar listenin başına çıkar.
+   * `false` olduğunda arayüz yüzde göstermemeli.
+   */
+  isScorable: boolean;
+  verdict:
+    | 'Excellent Match'
+    | 'Great Match'
+    | 'Good Potential'
+    | 'Skill Gap Exists'
+    | 'Insufficient Data';
   summaryInsight: string;
 }
 

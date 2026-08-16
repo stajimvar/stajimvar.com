@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import {
   mockStudentProfiles,
-  mockInternshipListings,
   initialApplications,
   mockSkillQuizzes,
   mockCompanyAccounts,
 } from './data/mockData';
+import { fetchPublishedListings } from './lib/queries';
 import {
   StudentProfile,
   InternshipListing,
@@ -31,7 +31,29 @@ export default function App() {
   // Global State
   const [allStudents, setAllStudents] = useState<StudentProfile[]>(mockStudentProfiles);
   const [activeStudentId, setActiveStudentId] = useState<string>(mockStudentProfiles[0].id);
-  const [allListings, setAllListings] = useState<InternshipListing[]>(mockInternshipListings);
+  // İlanlar artık Supabase'den geliyor. Boş başlıyor; yükleme durumu aşağıda.
+  const [allListings, setAllListings] = useState<InternshipListing[]>([]);
+  const [listingsStatus, setListingsStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [listingsError, setListingsError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    fetchPublishedListings()
+      .then((rows) => {
+        if (cancelled) return;
+        setAllListings(rows);
+        setListingsStatus('ready');
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        // Hatayı yutma: kullanıcı boş liste ile "ilan yok" sanmasın.
+        setListingsError(error instanceof Error ? error.message : 'Bilinmeyen hata');
+        setListingsStatus('error');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [applications, setApplications] = useState<ApplicationRecord[]>(initialApplications);
   const [quizzes] = useState<SkillQuiz[]>(mockSkillQuizzes);
 
@@ -328,7 +350,36 @@ export default function App() {
           />
         ) : (
           <>
-            {activeTab === 'internships' && (
+            {activeTab === 'internships' && listingsStatus === 'loading' && (
+              <div className="w-full space-y-4 py-10" role="status" aria-live="polite">
+                <div className="h-40 rounded-3xl bg-gray-100 dark:bg-slate-900 animate-pulse" />
+                <div className="h-28 rounded-2xl bg-gray-100 dark:bg-slate-900 animate-pulse" />
+                <div className="h-28 rounded-2xl bg-gray-100 dark:bg-slate-900 animate-pulse" />
+                <p className="text-center text-xs text-gray-500 dark:text-slate-400">
+                  İlanlar yükleniyor…
+                </p>
+              </div>
+            )}
+
+            {activeTab === 'internships' && listingsStatus === 'error' && (
+              <div className="w-full my-10 rounded-2xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 p-6 text-center space-y-3">
+                <p className="font-bold text-red-800 dark:text-red-300">
+                  İlanlar yüklenemedi
+                </p>
+                <p className="text-xs text-red-700 dark:text-red-400 max-w-lg mx-auto">
+                  {listingsError}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="text-xs font-bold px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors"
+                >
+                  Tekrar dene
+                </button>
+              </div>
+            )}
+
+            {activeTab === 'internships' && listingsStatus === 'ready' && (
               <MatchedInternshipsView
                 student={activeStudent}
                 allListings={allListings}
