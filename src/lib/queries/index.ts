@@ -662,3 +662,85 @@ export async function fetchIsAdmin(): Promise<boolean> {
   if (error) return false;
   return Boolean(data);
 }
+
+// ---------------------------------------------------------------- İlan onay kuyruğu
+
+export interface PendingListing {
+  id: string;
+  title: string;
+  companyId: string;
+  companyName: string;
+  city?: string;
+  workType: string;
+  description?: string;
+  requiredSkills: string[];
+  isPaid: boolean;
+  stipendText?: string;
+  applicationDeadline?: string;
+  createdAt: string;
+}
+
+/**
+ * Onay bekleyen ilanlar.
+ *
+ * Yalnızca `origin = 'internal'` olanlar: şirketin kendi girdiği ilanlar.
+ * Otomasyonun derlediği ilanlar (`scraped`) bu kuyruğa girmiyor — onlar
+ * zaten şirketin kendi sayfasında yayınlanmış, ayrıca onaylamak anlamsız
+ * ve kuyruğu boğardı.
+ */
+export async function fetchPendingListings(): Promise<PendingListing[]> {
+  const { data, error } = await supabase
+    .from('listings')
+    .select(
+      'id,title,company_id,city,work_type,description,required_skills,is_paid,' +
+        'stipend_text,application_deadline,created_at,companies(name)'
+    )
+    .eq('status', 'draft')
+    .eq('origin', 'internal')
+    .order('created_at', { ascending: true });
+
+  if (error) fail('Bekleyen ilanlar yüklenemedi', error);
+
+  return (data ?? []).map((r) => {
+    const row = r as Record<string, any>;
+    return {
+      id: row.id,
+      title: row.title,
+      companyId: row.company_id,
+      companyName: row.companies?.name ?? '(şirket yok)',
+      city: row.city ?? undefined,
+      workType: row.work_type,
+      description: row.description ?? undefined,
+      requiredSkills: row.required_skills ?? [],
+      isPaid: row.is_paid,
+      stipendText: row.stipend_text ?? undefined,
+      applicationDeadline: row.application_deadline ?? undefined,
+      createdAt: row.created_at,
+    };
+  });
+}
+
+/**
+ * İlanı yayına alır.
+ *
+ * Yetki kontrolü burada değil veritabanında: `listings_publish_guard`
+ * tetikleyicisi yönetici olmayan hiç kimsenin bir ilanı 'published'
+ * durumuna geçirmesine izin vermiyor. Buradaki çağrı yalnızca isteği
+ * iletiyor; reddedilirse hata yükseliyor.
+ */
+export async function publishListing(listingId: string): Promise<void> {
+  const { error } = await supabase
+    .from('listings')
+    .update({ status: 'published', posted_at: new Date().toISOString() })
+    .eq('id', listingId);
+  if (error) fail('İlan yayına alınamadı', error);
+}
+
+/** Reddedilen ilan silinmiyor, arşivleniyor: şirket ne olduğunu görebilmeli. */
+export async function archiveListing(listingId: string): Promise<void> {
+  const { error } = await supabase
+    .from('listings')
+    .update({ status: 'archived' })
+    .eq('id', listingId);
+  if (error) fail('İlan arşivlenemedi', error);
+}

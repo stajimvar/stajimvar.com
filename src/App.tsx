@@ -32,6 +32,7 @@ import { ApplyDialog } from './components/ApplyDialog';
 import { ListingPage } from './components/ListingPage';
 import { CompanyPage } from './components/CompanyPage';
 import { AdminClaimsView } from './components/AdminClaimsView';
+import { AdminListingsQueue } from './components/AdminListingsQueue';
 import { listingSlug, idPrefixFromSlug } from './lib/slug';
 import confetti from 'canvas-confetti';
 import { CheckCircle2 } from 'lucide-react';
@@ -489,7 +490,13 @@ export default function App() {
           &larr; Siteye don
         </button>
         {isAdmin ? (
-          <AdminClaimsView onToast={showToast} />
+          <div className="max-w-3xl mx-auto space-y-8">
+            <section className="space-y-3">
+              <h2 className="text-lg font-bold text-gray-900">Onay bekleyen ilanlar</h2>
+              <AdminListingsQueue onToast={showToast} />
+            </section>
+            <AdminClaimsView onToast={showToast} />
+          </div>
         ) : (
           <p className="max-w-3xl mx-auto bg-white rounded-2xl border border-gray-200 p-8 text-center text-sm text-gray-600">
             Bu sayfa yalnizca yoneticiye acik.
