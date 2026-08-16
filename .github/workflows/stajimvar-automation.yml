@@ -24,7 +24,17 @@ jobs:
     timeout-minutes: 20
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      # İki isim de kabul ediliyor, önce yenisi.
+      #
+      # NEDEN: anahtar iptal edilip yenisi üretildiğinde GitHub'ın "mevcut
+      # sırrı düzenle" ekranı kaydetmedi — listede "Last updated" değişmedi ve
+      # çalıştırmalar iptal edilmiş anahtarla "Unregistered API key" almaya
+      # devam etti. Var olan sırrı güncellemek yerine YENİ bir sır eklemek
+      # farklı bir yol izliyor ve sorunsuz çalışıyor.
+      #
+      # SUPABASE_SECRET_KEY tanımlıysa o kullanılır; tanımlı değilse eski
+      # isme düşer. Böylece eski sırrı silmek de gerekmiyor.
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
       # Yazma açık; pasifleştirme ayrı bir şalter ve şimdilik kapalı.
       # Açmadan önce birkaç sağlıklı taramanın geçmişi birikmeli, yoksa
       # ilk çalıştırma her ilanı "kaybolmuş" sayar.
@@ -48,7 +58,7 @@ jobs:
           [ -z "$SUPABASE_URL" ] && eksik="$eksik SUPABASE_URL"
           [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] && eksik="$eksik SUPABASE_SERVICE_ROLE_KEY"
           if [ -n "$eksik" ]; then
-            echo "::error::Depo sırları eksik:$eksik — GitHub > Settings > Secrets and variables > Actions bölümünden ekleyin."
+            echo "::error::Depo sırları eksik:$eksik — GitHub > Settings > Secrets and variables > Actions bölümünden ekleyin. Anahtar için SUPABASE_SECRET_KEY adıyla YENİ bir sır ekleyin."
             exit 1
           fi
           echo "Sırlar tanımlı."
