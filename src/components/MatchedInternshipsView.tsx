@@ -20,6 +20,7 @@ import {
   Building2,
   Calendar,
   Users,
+  X,
 } from 'lucide-react';
 import { InternshipListing, StudentProfile, MatchBreakdown, ApplicationRecord } from '../types';
 import { calculateInternshipMatch } from '../utils/matchingEngine';
@@ -296,102 +297,90 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   const companyCount = new Set(filteredListings.map((item) => item.listing.companyName)).size;
 
   return (
-    <div className="w-full space-y-8 pb-12">
+    <div className="w-full space-y-4 sm:space-y-8 pb-12">
       {/* Clean Hero Section */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 items-stretch">
         {/*
           Left Hero Search Column
           Aday kartı yalnızca giriş yapmış öğrenciye çiziliyor. Sütun genişliği
           sabit 7/12 kalırsa kart olmadığında sağda 5 sütunluk boşluk kalıyor ve
           sayfa sola yaslanmış görünüyor.
         */}
-        <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
+        <div className="lg:col-span-7 flex flex-col justify-between space-y-4 sm:space-y-6">
           <header className="space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"/>
-              <span>Yetenek Odaklı Akıllı Kariyer Platformu</span>
-            </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-gray-900">
-              Geleceğine giden en kısa yol <span className="text-blue-600">yeteneklerinde</span>{' '}
-              <span className="text-gray-900">gizli.</span>
+            {/*
+              Buradaki "Yetenek Odaklı Akıllı Kariyer Platformu" rozeti
+              kaldırıldı. Hiçbir şey anlatmayan, herkesin kendi hakkında
+              yazabileceği bir cümleydi; siteyi olduğundan iddialı ve amatör
+              gösteriyordu. Yerine ne yaptığımızı söyleyen bir başlık var.
+            */}
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-gray-900">
+              Staj ilanları, <span className="text-blue-600">şirketin kendi</span> sayfasından.
             </h1>
             <p className="text-sm sm:text-base text-gray-600 max-w-xl leading-relaxed">
-              Yeteneklerini listele, ilanlar becerilerine göre sıralansın. İlanları
-              şirketlerin kendi kariyer sayfalarından topluyoruz, başvurunu tek
-              profille yapıyorsun.
+              Aracı sitelerde değil, şirketlerin kariyer sayfalarında yayınlanan
+              staj ilanlarını topluyoruz. Kapanan ilan listeden düşer.
             </p>
 
-            {/* Clean Blue/White Search Input Box */}
-            <div className="mt-4 flex flex-col sm:flex-row gap-2 p-2 bg-white border-2 border-gray-200 focus-within:border-blue-600 rounded-2xl shadow-xs transition-colors">
-              <div className="flex-1 flex items-center px-3 gap-2.5">
-                <Search className="w-4 h-4 text-blue-600 shrink-0"/>
-                <input
-                  type="text"
-                  placeholder="Yeteneklerin veya şirket: Python, React, İstanbul..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full outline-none text-xs sm:text-sm font-medium bg-transparent text-gray-900 placeholder:text-gray-400"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="text-xs text-gray-400 hover:text-gray-600 font-semibold"
-                  >
-                    Temizle
-                  </button>
-                )}
-              </div>
-              <button
-                onClick={() => {}}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-xs shrink-0 flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <span>Eşleşmeleri Bul</span>
-              </button>
+            {/*
+              "Eşleşmeleri Bul" düğmesi kaldırıldı: onClick'i boştu, hiçbir şey
+              yapmıyordu. Liste zaten yazdıkça anında süzülüyor. Basınca hiçbir
+              şey olmayan büyük mavi bir düğme, siteye olan güveni doğrudan
+              zedeliyor.
+            */}
+            <div className="mt-4 relative">
+              <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Şehir, şirket veya yetenek ara"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-11 py-3.5 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-600 transition-colors"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Aramayı temizle"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-700 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </header>
 
-          {/* Quick Metrics Bar (Semantic Colors: Blue count, Orange match score %, Green SGK) */}
-          <div className="grid grid-cols-3 gap-3 pt-2">
-            <div className="bg-white p-4 rounded-2xl border border-gray-200/90 shadow-xs">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                Eşleşen İlan
-              </p>
-              <p className="text-2xl font-black text-blue-600 mt-0.5">
-                {filteredListings.length}
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded-2xl border border-gray-200/90 shadow-xs">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                {student ? 'Zirve Uyum' : 'Şirket'}
-              </p>
-              <p className="text-2xl font-black text-orange-500 mt-0.5">
-                {/*
-                  Profili olmayan ziyaretçiye uyum puanı göstermek anlamsız:
-                  karşılaştırılacak bir profil yok. Onun yerine ilan veren
-                  şirket sayısı gösteriliyor.
-                */}
-                {!student
-                  ? companyCount
-                  : topMatch && topMatch.match.isScorable
-                  ? `%${topMatch.match.overallScore}`
-                  : '—'}
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded-2xl border border-gray-200/90 shadow-xs">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                Zorunlu Staj
-              </p>
-              {/*
-                Eskiden burada sabit "%100 SGK" yazıyordu. Topladığımız ilanların
-                sigorta durumunu çoğu zaman bilmiyoruz; sayıyı veriden üretiyoruz.
-              */}
-              <p className="text-2xl font-black text-emerald-600 mt-0.5">
-                {mandatoryCount}
-                <span className="text-base text-gray-400 font-bold">
-                  /{filteredListings.length}
-                </span>
-              </p>
-            </div>
+          {/*
+            Sayaç şeridi.
+
+            "Zirve Uyum" kaldırıldı: en iyi eşleşmenin yüzdesini turuncu punto
+            ile sayfanın tepesine yazmak, %25 gibi düşük bir değerde siteyi
+            kötü gösteriyordu — üstelik bu sayı ilanların kalitesini değil,
+            profilin ne kadar dolu olduğunu ölçüyor. Yerine sayılabilen ve
+            doğrulanabilen üç şey var. Renk vurgusu da kalktı; üç farklı
+            renkte kocaman rakam bir gösterge paneli gibi duruyordu.
+          */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-2">
+            {[
+              { etiket: 'Açık ilan', deger: String(filteredListings.length) },
+              { etiket: 'Şirket', deger: String(companyCount) },
+              {
+                etiket: 'Zorunlu staj',
+                deger: `${mandatoryCount}/${filteredListings.length}`,
+              },
+            ].map((kutu) => (
+              <div
+                key={kutu.etiket}
+                className="bg-white p-3 sm:p-4 rounded-2xl border border-gray-200"
+              >
+                <p className="text-xl sm:text-2xl font-black text-gray-900 tabular-nums">
+                  {kutu.deger}
+                </p>
+                <p className="text-[11px] font-semibold text-gray-500 mt-0.5">
+                  {kutu.etiket}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -442,75 +431,94 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           </aside>
         )}
 
-        {student && (
-        <div className="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-8 text-gray-900 relative overflow-hidden flex flex-col justify-between shadow-xs border border-gray-200">
-          <div className="relative z-10 space-y-6">
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1 rounded-full">
-                  Canlı Aday Kartı
-                </span>
-                <span className="text-xs text-gray-500 font-semibold">
-                  {student.university.split(' ')[0]}
-                </span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-bold mt-2 mb-1 text-gray-900">
-                Hoş geldin, {student.fullName.split(' ')[0]}!
-              </h2>
-              <p className="text-gray-600 text-xs sm:text-sm">
-                Profilin şu an{' '}
-                <strong className="text-emerald-600 font-bold">
-                  %{profileCompletion} tamamlanmış
-                </strong>{' '}
-                durumda.
-              </p>
-            </div>
+        {/*
+          Giriş yapmış öğrencinin kartı.
 
-            {/* Approved Skills (Emerald Green for verified skills) */}
-            <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-2.5">
-                Onaylanmış Yeteneklerin
+          Eskiden üstünde "CANLI ADAY KARTI" yazan bir rozet, sağ köşesinde de
+          `university.split(' ')[0]` vardı — "Mimar Sinan Güzel Sanatlar
+          Üniversitesi" okuyan birine köşede tek başına "Mimar" yazıyordu.
+          İkisi de kaldırıldı.
+
+          Yetenek listesi "Onaylanmış Yeteneklerin" başlığıyla çiziliyor ve her
+          yeteneğin yanına yeşil tik koyuyordu; oysa listede doğrulanmamışlar
+          da vardı. Kendi profilinde olmayan bir onayı görmek, dil listesindeki
+          uydurma kayıtlarla aynı hata. Artık yalnızca gerçekten doğrulanmış
+          olanlar tikli ve yeşil.
+        */}
+        {student && (
+        <div className="lg:col-span-5 bg-white rounded-3xl p-5 sm:p-7 flex flex-col shadow-xs border border-gray-200 space-y-5">
+          <div className="space-y-2">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+              Merhaba {student.fullName.split(' ')[0]}
+            </h2>
+
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    profileCompletion === 100 ? 'bg-emerald-500' : 'bg-blue-600'
+                  }`}
+                  style={{ width: `${profileCompletion}%` }}
+                />
+              </div>
+              <span className="text-xs font-bold text-gray-500 tabular-nums shrink-0">
+                %{profileCompletion}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500">
+              {profileCompletion === 100
+                ? 'Profilin tamam. İlanlara başvurabilirsin.'
+                : 'Profilin doldukça eşleşmeler isabetlenir.'}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-gray-600">Yeteneklerin</p>
+            {student.skills.length === 0 ? (
+              <p className="text-xs text-gray-400">
+                Henüz yetenek eklemedin. Profil sekmesinden ekleyebilirsin.
               </p>
-              <div className="flex flex-wrap gap-2">
-                {student.skills.slice(0, 4).map((sk) => (
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {student.skills.slice(0, 6).map((sk) => (
                   <span
                     key={sk.name}
-                    className="bg-emerald-50 text-xs px-3 py-1.5 rounded-xl border border-emerald-200 text-emerald-800 font-semibold flex items-center gap-1.5"
+                    className={`text-xs px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1 ${
+                      sk.verified
+                        ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}
+                    title={sk.verified ? 'Testle doğrulandı' : 'Henüz doğrulanmadı'}
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600"/>
-                    <span>{sk.name}</span>
+                    {sk.verified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                    {sk.name}
                   </span>
                 ))}
-                <span className="bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5 rounded-xl font-bold text-white transition-colors cursor-default shadow-xs">
-                  +{student.skills.length > 4 ? student.skills.length - 4 : 'Ekle'}
-                </span>
-              </div>
-            </div>
-
-            {/* Incoming Status / Best Match Insight (Orange for match metrics) */}
-            <div className="pt-4 border-t border-gray-100">
-              <p className="text-[10px] text-orange-700 uppercase tracking-widest font-bold mb-2">
-                Algoritma Önerisi
-              </p>
-              <div className="bg-orange-50/70 rounded-2xl p-4 border border-orange-200/80">
-                {topMatch ? (
-                  <>
-                    <p className="text-xs font-bold text-gray-900 flex items-center justify-between">
-                      <span className="truncate pr-2">{topMatch.listing.companyName} • {topMatch.listing.title}</span>
-                      <span className="text-orange-600 font-black shrink-0">%{topMatch.match.overallScore}</span>
-                    </p>
-                    <p className="text-[11px] text-gray-600 mt-1 line-clamp-2">
-                      {topMatch.match.summaryInsight || 'Yetenekleriniz pozisyonla yüksek oranda örtüşüyor.'}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-xs text-gray-600">
-                    Becerilerinize göre gerçek zamanlı staj eşleştirmeleri listeleniyor.
-                  </p>
+                {student.skills.length > 6 && (
+                  <span className="text-xs px-2.5 py-1 rounded-lg bg-gray-100 text-gray-500 font-semibold">
+                    +{student.skills.length - 6}
+                  </span>
                 )}
               </div>
-            </div>
+            )}
           </div>
+
+          {/*
+            "Algoritma Önerisi" başlığı ve turuncu kutu gitti. Turuncu karttaki
+            tek sıcak renkti, gözü oraya çekiyordu; oysa orada duran şey
+            basitçe listenin en üstündeki ilan.
+          */}
+          {topMatch && topMatch.match.isScorable && (
+            <div className="pt-4 border-t border-gray-100 space-y-1">
+              <p className="text-xs font-semibold text-gray-600">Sana en yakın ilan</p>
+              <p className="text-sm font-bold text-gray-900">
+                {topMatch.listing.title}
+              </p>
+              <p className="text-xs text-gray-500">
+                {topMatch.listing.companyName} · %{topMatch.match.overallScore} uyum
+              </p>
+            </div>
+          )}
         </div>
         )}
       </section>

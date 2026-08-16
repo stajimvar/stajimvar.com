@@ -28,12 +28,16 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
   onViewDetails,
   onQuickApply,
 }) => {
-  // Score Badge (Orange role strictly for match scoring)
-  let scoreBadge ='bg-orange-50 text-orange-600 border border-orange-200 font-black';
-  if (match.overallScore < 70) {
-    scoreBadge ='bg-gray-100 text-gray-700 border border-gray-200 font-bold';
-  } else if (match.overallScore < 85) {
-    scoreBadge ='bg-orange-50/80 text-orange-700 border border-orange-200/80 font-bold';
+  /*
+    Uyum rozetinin rengi. Turuncu kaldırıldı: turuncu uyarı rengi gibi
+    okunuyor ve düşük puanlı ilanları "sorunlu" göstermek istemiyoruz.
+    Düşük puan sessiz gri, iyi puan yeşil.
+  */
+  let scoreBadge = 'bg-gray-100 text-gray-600 border border-gray-200 font-semibold';
+  if (match.overallScore >= 75) {
+    scoreBadge = 'bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold';
+  } else if (match.overallScore >= 50) {
+    scoreBadge = 'bg-blue-50 text-blue-700 border border-blue-200 font-semibold';
   }
 
   return (
@@ -81,10 +85,17 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               </>
             )}
             {listing.origin === 'scraped' && (
-              // Asıl güven sinyali: ilan şirketin kendi sisteminden geliyor.
-              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-semibold">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                Şirketin kariyer sayfasından
+              /*
+                Güven sinyali kalıyor ama ağırlığı düştü: her kartta tekrar
+                eden koyu yeşil bir cümle, on bir ilanda on bir kez okunacak
+                bir şey değil. İkon + kısa etiket aynı şeyi söylüyor.
+              */
+              <span
+                className="inline-flex items-center gap-1 text-[11px] text-gray-400 font-medium"
+                title="Bu ilan şirketin kendi kariyer sayfasından alındı"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                Kariyer sayfasından
               </span>
             )}
           </div>
@@ -128,13 +139,17 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               </span>
             )}
 
-            {/* Duration */}
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-100 text-gray-600 font-medium">
-              <Calendar className="w-3.5 h-3.5 text-gray-400" />
-              <span>{listing.duration}</span>
-            </span>
-
-            <span className="text-gray-300 hidden sm:inline">|</span>
+            {/*
+              Süre bilgisi toplanan ilanların çoğunda yok. Koşulsuz çizilince
+              içi boş, yalnızca takvim ikonu olan bir rozet kalıyordu — kartın
+              bozuk görünmesinin başlıca sebebi buydu.
+            */}
+            {listing.duration?.trim() && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-100 text-gray-600 font-medium">
+                <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                <span>{listing.duration}</span>
+              </span>
+            )}
 
             {/* Matched Skills */}
             {match.matchedRequiredSkills.slice(0, 3).map((skill) => (
@@ -147,13 +162,18 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               </span>
             ))}
 
+            {/*
+              Eksik beceri, sahip olunan becerilerle aynı biçimde çizilince
+              ikisi ayırt edilemiyordu. Başına "Eksik:" geldi.
+            */}
             {match.missingRequiredSkills.slice(0, 1).map((skill) => (
               <span
                 key={skill}
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-gray-50 text-gray-500 border border-gray-200"
+                title="İlanın istediği ama profilinde olmayan beceri"
               >
                 <AlertCircle className="w-3 h-3 text-gray-400 shrink-0" />
-                <span>{skill}</span>
+                <span>Eksik: {skill}</span>
               </span>
             ))}
           </div>
@@ -168,24 +188,21 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
       */}
       <div className="flex flex-wrap lg:flex-col items-center lg:items-end justify-between w-full lg:w-auto gap-2.5 pt-2.5 lg:pt-0 border-t lg:border-t-0 border-gray-100 min-w-0">
         <div className="flex items-center gap-2 flex-wrap min-w-0">
-          {/* Match Score */}
           {/*
-            İlanda beceri şartı yoksa uyum hesaplanamaz. Uydurma bir yüzde
-            yerine durumu açıkça yazıyoruz.
+            Uyum puanı yalnızca hesaplanabildiğinde çiziliyor.
+
+            Eskiden hesaplanamayan ilanlarda "Uyum hesaplanamadı" yazan gri bir
+            rozet vardı. İlanların çoğunda beceri şartı olmadığı için liste
+            boyunca aynı gri cümle tekrar ediyor, hiçbir şey söylemeden yer
+            kaplıyordu. Açıklama ilan detayında duruyor; uydurma bir yüzde
+            gösterilmiyor, sadece boş rozet çizilmiyor.
           */}
-          {match.isScorable ? (
+          {match.isScorable && (
             <span
-              className={`text-[11px] px-3 py-1 rounded-full uppercase tracking-wider ${scoreBadge}`}
+              className={`text-[11px] px-3 py-1 rounded-full ${scoreBadge}`}
               title={match.summaryInsight}
             >
-              %{match.overallScore} UYUMLU
-            </span>
-          ) : (
-            <span
-              className="text-[11px] px-3 py-1 rounded-full tracking-wide bg-gray-100 text-gray-500 border border-gray-200 font-semibold"
-              title="İlanda beceri şartı belirtilmemiş, uyum hesaplanamıyor."
-            >
-              Uyum hesaplanamadı
+              %{match.overallScore} uyum
             </span>
           )}
 
@@ -201,10 +218,15 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
 
         {/* Buttons */}
         <div className="flex items-center gap-2">
+          {/*
+            Üç çerçeveli düğme yan yana durunca kartın alt yarısı düğme
+            tarlasına dönüyordu. Detaylar çerçevesiz metin bağlantısı oldu:
+            aynı iş, dörtte bir görsel ağırlık. Başlığa dokunmak da açıyor.
+          */}
           <button
             id={`view-details-btn-${listing.id}`}
             onClick={onViewDetails}
-            className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 hover:text-blue-600 transition-all shadow-2xs cursor-pointer"
+            className="px-2 py-1.5 text-xs font-semibold text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
           >
             Detaylar
           </button>
