@@ -4,8 +4,9 @@ import {
   fetchPublishedListings,
   fetchStudentProfile,
   fetchStudentApplications,
+  createApplication,
 } from './lib/queries';
-import { getCurrentUser, onAuthChange, signOut, type AuthResult } from './lib/auth';
+import { getCurrentUser, onAuthChange, signOut, KVKK_VERSION, type AuthResult } from './lib/auth';
 import {
   StudentProfile,
   InternshipListing,
@@ -25,6 +26,7 @@ import { SkillAssessmentModal } from './components/SkillAssessmentModal';
 import { AuthModal } from './components/AuthModal';
 import { Logo } from './components/Logo';
 import { LegalPage, LEGAL_ROUTES } from './components/LegalPage';
+import { ApplyDialog } from './components/ApplyDialog';
 import confetti from 'canvas-confetti';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -132,6 +134,11 @@ export default function App() {
   } | null>(null);
 
   const [activeQuiz, setActiveQuiz] = useState<SkillQuiz | null>(null);
+  /** StajımVar üzerinden başvuru diyaloğu. */
+  const [applyTarget, setApplyTarget] = useState<{
+    listing: InternshipListing;
+    matchScore: number;
+  } | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Authentication State
@@ -320,42 +327,43 @@ export default function App() {
     }
   };
 
-  // Handler: Apply to Internship
-  const handleApplyToJob = (
-    listing: InternshipListing,
-    matchScore: number,
-    coverLetter?: string
-  ) => {
-    const alreadyApplied = applications.some((a) => a.listingId === listing.id);
-    if (alreadyApplied) {
-      showToast(`${listing.companyName} ilanına zaten başvurunuz bulunmaktadır.`);
+  /**
+   * Başvuru akışı. Giriş yoksa önce kayıt/giriş açılır — başvuruyu kime
+   * yazacağımızı bilmeden kaydetmenin anlamı yok.
+   */
+  const handleApplyToJob = (listing: InternshipListing, matchScore: number) => {
+    if (!session || !activeStudent) {
+      setAuthModalMode('register');
+      setIsAuthModalOpen(true);
+      showToast('Başvurmak için önce hesap açman gerekiyor.');
       return;
     }
+    setApplyTarget({ listing, matchScore });
+  };
 
-    const newApp: ApplicationRecord = {
-      id: `app-${Date.now()}`,
-      listingId: listing.id,
+  const submitApplication = async (consent: boolean) => {
+    if (!applyTarget || !activeStudent) return;
+
+    const created = await createApplication({
+      listingId: applyTarget.listing.id,
       studentId: activeStudent.id,
-      status: 'submitted',
-      appliedAt: 'Bugün',
-      coverLetter: coverLetter,
-      matchScore: matchScore,
-    };
-
-    setApplications((prev) => [newApp, ...prev]);
-
-    // Increase applicants count
-    setAllListings((prev) =>
-      prev.map((l) => (l.id === listing.id ? { ...l, applicantsCount: l.applicantsCount + 1 } : l))
-    );
-
-    confetti({
-      particleCount: 60,
-      spread: 60,
-      origin: { y: 0.7 },
+      matchScore: applyTarget.matchScore,
+      applicationMethod: applyTarget.listing.applicationMethod,
+      contactShareConsent: consent,
+      consentVersion: KVKK_VERSION,
     });
 
-    showToast(`🎉 ${listing.companyName} (${listing.title}) başvurunuz başarıyla iletildi!`);
+    setApplications((prev) => [created, ...prev]);
+    setApplyTarget(null);
+
+    confetti({ particleCount: 60, spread: 60, origin: { y: 0.7 } });
+
+    // Dış ilanlarda başvuru şirkete iletilmedi; mesaj bunu gizlememeli.
+    showToast(
+      applyTarget.listing.applicationMethod === 'external'
+        ? 'Başvurun kaydedildi. Şirkete ulaşıp başvuru kanalını doğrulamalarını isteyeceğiz.'
+        : `${applyTarget.listing.companyName} başvurun iletildi.`
+    );
   };
 
   // Handler: Add New Listing (Company portal)
@@ -550,14 +558,22 @@ export default function App() {
             (a) => a.listingId === selectedListingDetail.listing.id
           )}
           onClose={() => setSelectedListingDetail(null)}
-          onApply={(coverLetter) => {
+          onApply={() => {
             handleApplyToJob(
               selectedListingDetail.listing,
-              selectedListingDetail.match.overallScore,
-              coverLetter
+              selectedListingDetail.match.overallScore
             );
             setSelectedListingDetail(null);
           }}
+        />
+      )}
+
+      {applyTarget && (
+        <ApplyDialog
+          listing={applyTarget.listing}
+          alreadyApplied={applications.some((a) => a.listingId === applyTarget.listing.id)}
+          onClose={() => setApplyTarget(null)}
+          onSubmit={submitApplication}
         />
       )}
 

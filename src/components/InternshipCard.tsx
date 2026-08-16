@@ -205,22 +205,26 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           </button>
 
           {/*
-            Başvuru yöntemi üç farklı davranış gerektiriyor. `external` ilanlarda
-            başvuru şirketin kendi sisteminden yapılır; burada "Hemen Başvur"
-            demek, tıklayınca hiçbir şey olmadığı için kullanıcıyı yanıltırdı.
+            İki yol birlikte sunuluyor: StajımVar üzerinden başvuru (kayda geçer,
+            şirketi platforma davet etmemizi sağlar) ve ilanın kendi sayfası.
+            Dış ilanlarda başvurunun şirkete henüz iletilmediğini ApplyDialog
+            açıkça söylüyor — öğrenci "başvurdum" sanıp beklememeli.
           */}
-          {listing.applicationMethod === 'external' ? (
+          {listing.applyUrl && (
             <a
               id={`external-apply-btn-${listing.id}`}
               href={listing.applyUrl}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className="flex items-center gap-1 px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-xs transition-all cursor-pointer"
+              title="İlanın kendi sayfasında başvur"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all shadow-2xs cursor-pointer"
             >
               <span>İlana Git</span>
               <ExternalLink className="w-3 h-3" />
             </a>
-          ) : hasApplied ? (
+          )}
+
+          {hasApplied ? (
             <span className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>Başvuruldu</span>
@@ -229,9 +233,9 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             <button
               id={`quick-apply-btn-${listing.id}`}
               onClick={onQuickApply}
-              className="flex items-center gap-1 px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-xs transition-all cursor-pointer"
+              className="flex items-center gap-1 px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-xs transition-all cursor-pointer whitespace-nowrap"
             >
-              <span>Hemen Başvur</span>
+              <span>StajımVar ile Başvur</span>
               <ArrowRight className="w-3 h-3" />
             </button>
           )}

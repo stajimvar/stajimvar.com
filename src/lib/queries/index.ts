@@ -255,7 +255,28 @@ export async function createApplication(params: {
   studentId: string;
   matchScore: number;
   coverLetter?: string;
+  /** İlanın başvuru yöntemi; teslim davranışını bu belirliyor. */
+  applicationMethod: 'external' | 'internal' | 'email_application';
+  /** KVKK açık rızası. Olmadan başvuru kaydedilmez. */
+  contactShareConsent: boolean;
+  consentVersion: string;
 }): Promise<ApplicationRecord> {
+  if (!params.contactShareConsent) {
+    throw new Error('Bilgilerinin şirketle paylaşılmasına izin vermeden başvuru gönderilemez.');
+  }
+
+  /*
+    Teslim durumu bilinçli olarak burada belirleniyor:
+    - internal      → başvuru platformda kalıyor, e-posta yok
+    - external      → şirketin kendi sistemi asıl kanal; bizdeki kayıt talep
+                      sinyali. Doğrulanmış bir adres olmadığı için gönderilmedi
+                      olarak işaretleniyor, "bekliyor" demek yanıltıcı olurdu.
+    - email_application → doğrulanmış kanala gönderilmek üzere kuyruğa girer
+  */
+  const deliveryStatus =
+    params.applicationMethod === 'email_application' ? 'pending' :
+    params.applicationMethod === 'external' ? 'skipped_unverified' : 'not_required';
+
   const { data, error } = await supabase
     .from('applications')
     .insert({
@@ -263,6 +284,11 @@ export async function createApplication(params: {
       student_id: params.studentId,
       match_score: Math.round(params.matchScore),
       cover_letter: params.coverLetter ?? null,
+      application_method: params.applicationMethod,
+      contact_share_consent_at: new Date().toISOString(),
+      contact_share_consent_version: params.consentVersion,
+      email_delivery_status: deliveryStatus,
+      created_via: 'web',
     })
     .select('*')
     .single();
