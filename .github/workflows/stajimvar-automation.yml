@@ -63,6 +63,22 @@ jobs:
           fi
           echo "Sırlar tanımlı."
 
+      # Tanı adımı: anahtarın DEĞERİNİ açığa çıkarmadan hangi anahtarın
+      # kullanıldığını anlamak için. Uzunluk ve SHA-256 özeti yazdırılıyor;
+      # ikisi de anahtarı geri vermez ama yereldeki değerle karşılaştırmaya
+      # yeter. "Unregistered API key" hatası iki turdur tekrarlandığı için
+      # eklendi; hangi sırrın devrede olduğu başka türlü görünmüyor.
+      - name: Anahtar tanısı
+        env:
+          YENI_AD_TANIMLI: ${{ secrets.SUPABASE_SECRET_KEY != '' }}
+          ESKI_AD_TANIMLI: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY != '' }}
+        run: |
+          echo "SUPABASE_SECRET_KEY tanimli mi      : $YENI_AD_TANIMLI"
+          echo "SUPABASE_SERVICE_ROLE_KEY tanimli mi: $ESKI_AD_TANIMLI"
+          echo "kullanilan anahtarin uzunlugu       : ${#SUPABASE_SERVICE_ROLE_KEY}"
+          echo "kullanilan anahtarin sha256'si      : $(printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | sha256sum | cut -c1-16)"
+          echo "SUPABASE_URL uzunlugu               : ${#SUPABASE_URL}"
+
       - name: Testler
         run: python -m pytest tests/ -q
         working-directory: automation
