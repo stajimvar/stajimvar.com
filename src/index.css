@@ -34,3 +34,48 @@
   }
 }
 
+
+@layer base {
+  /*
+    Yatay taşmaya karşı güvenlik ağı.
+
+    Tek bir bileşen taşsa bile mobil tarayıcı tüm sayfayı küçültüyor ve
+    kullanıcı sağa sola kaydırabiliyordu. Kök taşmayı gizlemek, bu durumu
+    tek bir hatanın tüm siteyi bozmasından çıkarıp yalnızca o bileşenin
+    kırpılmasına indiriyor.
+
+    Not: bu bir örtbas değil, sigorta. Taşan bileşen yine düzeltilmeli —
+    bu yüzden taşmalar geliştirme sırasında ölçülüyor.
+  */
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /*
+    Kenarlarda "lastik" etkisi ve yanlışlıkla sayfa yenileme olmasın.
+    Uygulama gibi hissettiren en belirgin ayrıntılardan biri.
+  */
+  body {
+    overscroll-behavior-y: contain;
+  }
+
+  /*
+    iOS'ta 16px'ten küçük yazı tipli bir alana dokununca Safari sayfayı
+    otomatik yakınlaştırıyor ve geri çıkmıyor. Form alanlarında en az 16px
+    kullanmak bunu tamamen engelliyor.
+  */
+  @media (max-width: 640px) {
+    input:not([type='checkbox']):not([type='radio']),
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+
+  /* Çentikli ekranlarda alt menü sistem çubuğunun altında kalmasın. */
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

@@ -782,7 +782,14 @@ export const Header: React.FC<HeaderProps> = ({
               onMouseUp={handleMouseUpOrLeave}
               onMouseLeave={handleMouseUpOrLeave}
               onScroll={checkScrollState}
-              className={`flex items-center gap-2 overflow-x-auto py-1 no-scrollbar select-none cursor-grab active:cursor-grabbing w-full ${
+              /*
+                min-w-0 şart: flex öğelerinin varsayılan min-width'i `auto`,
+                yani içerikten daha dar olmayı reddediyorlar. Bu yüzden
+                overflow-x-auto olmasına rağmen kutu içerik kadar genişliyor,
+                taşma dışarı vuruyor ve mobil tarayıcı tüm sayfayı
+                küçültüyordu. (375px ekranda belge 500px oluyordu.)
+              */
+              className={`flex items-center gap-2 overflow-x-auto py-1 no-scrollbar select-none cursor-grab active:cursor-grabbing w-full min-w-0 ${
                 isDragging ? 'cursor-grabbing' : ''
               }`}
               style={{
