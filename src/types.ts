@@ -106,6 +106,8 @@ export interface InternshipListing {
   id: string;
   companyId?: string;
   companyName: string;
+  /** Şirket sayfası adresi için. Yeniden slug üretmek yazım farkı riski taşır. */
+  companySlug?: string;
   companyLogo: string;
   companyIndustry: string;
   companySize: string;

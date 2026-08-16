@@ -28,6 +28,9 @@ import { AuthModal } from './components/AuthModal';
 import { Logo } from './components/Logo';
 import { LegalPage, LEGAL_ROUTES } from './components/LegalPage';
 import { ApplyDialog } from './components/ApplyDialog';
+import { ListingPage } from './components/ListingPage';
+import { CompanyPage } from './components/CompanyPage';
+import { listingSlug, idPrefixFromSlug } from './lib/slug';
 import confetti from 'canvas-confetti';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -427,9 +430,34 @@ export default function App() {
    */
   const safeTab = !isLoggedIn && activeTab !== 'internships' ? 'internships' : activeTab;
 
-  const legalSlug = LEGAL_ROUTES[path.replace(/\/+$/, '') || '/'];
+  const temizYol = path.replace(/\/+$/, '') || '/';
+
+  const legalSlug = LEGAL_ROUTES[temizYol];
   if (legalSlug) {
     return <LegalPage slug={legalSlug} onBack={goHome} />;
+  }
+
+  /* /ilan/frontend-stajyeri-3f2a1b9c */
+  if (temizYol.startsWith('/ilan/')) {
+    const onek = idPrefixFromSlug(temizYol.slice('/ilan/'.length));
+    if (onek) {
+      return (
+        <ListingPage
+          idPrefix={onek}
+          onBack={goHome}
+          onNavigate={navigate}
+          onApply={(ilan) => handleApplyToJob(ilan, 0)}
+        />
+      );
+    }
+  }
+
+  /* /sirket/vertigo-games */
+  if (temizYol.startsWith('/sirket/')) {
+    const sirketSlug = temizYol.slice('/sirket/'.length);
+    if (sirketSlug) {
+      return <CompanyPage slug={sirketSlug} onBack={goHome} onNavigate={navigate} />;
+    }
   }
 
   return (
@@ -519,9 +547,7 @@ export default function App() {
                 applications={applications}
                 subTab={activeSubTab}
                 onSubTabChange={setActiveSubTab}
-                onViewDetails={(listing, match) =>
-                  setSelectedListingDetail({ listing, match })
-                }
+                onViewDetails={(listing) => navigate(`/ilan/${listingSlug(listing)}`)}
                 onQuickApply={(listing, match) =>
                   handleApplyToJob(listing, match.overallScore)
                 }

@@ -40,7 +40,7 @@ function fail(context: string, error: { message: string } | null): never {
 
 const LISTING_SELECT = `
   ${LISTING_COLUMNS},
-  companies ( name, logo_url, industry, size, location, description, rating )
+  companies ( name, slug, logo_url, industry, size, location, description, rating )
 `;
 
 /**
@@ -56,6 +56,77 @@ export async function fetchPublishedListings(): Promise<InternshipListing[]> {
 
   if (error) fail('İlanlar yüklenemedi', error);
   return (data as unknown as ListingRowWithCompany[]).map(toInternshipListing);
+}
+
+/**
+ * Tek ilan, adresteki kimlik önekiyle.
+ *
+ * `LIKE` kullanılamıyor: Postgres'te uuid tipiyle metin karşılaştırma operatörü
+ * yok (`operator does not exist: uuid ~~ unknown`). Bunun yerine aralık
+ * karşılaştırması yapılıyor — UUID sıralı olduğu için 8 haneli önek bitişik bir
+ * aralık tanımlar ve bu birincil anahtar indeksini de kullanır.
+ *
+ * Birden çok eşleşirse ilki değil `null` dönüyor: yanlış ilanı göstermektense
+ * bulunamadı demek doğru.
+ */
+export async function fetchListingByIdPrefix(
+  prefix: string
+): Promise<InternshipListing | null> {
+  const alt = `${prefix}-0000-0000-0000-000000000000`;
+  const ust = `${prefix}-ffff-ffff-ffff-ffffffffffff`;
+
+  const { data, error } = await supabase
+    .from('listings')
+    .select(LISTING_SELECT)
+    .eq('status', 'published')
+    .gte('id', alt)
+    .lte('id', ust)
+    .limit(2);
+
+  if (error) fail('İlan yüklenemedi', error);
+  const rows = (data as unknown as ListingRowWithCompany[]) ?? [];
+  if (rows.length !== 1) return null;
+  return toInternshipListing(rows[0]);
+}
+
+/** Şirket sayfası için: şirket bilgisi ve yayındaki ilanları. */
+export async function fetchCompanyPage(slug: string): Promise<{
+  company: { id: string; name: string; slug: string; logoUrl?: string; websiteUrl?: string;
+             industry?: string; location?: string; description?: string; verified: boolean };
+  listings: InternshipListing[];
+} | null> {
+  const { data: company, error } = await supabase
+    .from('companies')
+    .select('id,name,slug,logo_url,website_url,industry,location,description,verified')
+    .eq('slug', slug)
+    .maybeSingle();
+
+  if (error) fail('Şirket yüklenemedi', error);
+  if (!company) return null;
+
+  const { data: rows, error: listErr } = await supabase
+    .from('listings')
+    .select(LISTING_SELECT)
+    .eq('company_id', company.id)
+    .eq('status', 'published')
+    .order('posted_at', { ascending: false, nullsFirst: false });
+
+  if (listErr) fail('Şirket ilanları yüklenemedi', listErr);
+
+  return {
+    company: {
+      id: company.id,
+      name: company.name,
+      slug: company.slug,
+      logoUrl: company.logo_url ?? undefined,
+      websiteUrl: company.website_url ?? undefined,
+      industry: company.industry ?? undefined,
+      location: company.location ?? undefined,
+      description: company.description ?? undefined,
+      verified: company.verified,
+    },
+    listings: (rows as unknown as ListingRowWithCompany[]).map(toInternshipListing),
+  };
 }
 
 /** Şirketin kendi ilanları — taslaklar dahil. RLS üyelik kontrolünü yapıyor. */

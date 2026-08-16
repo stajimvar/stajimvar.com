@@ -104,7 +104,7 @@ type ReadableListingRow = Omit<
 export type ListingRowWithCompany = ReadableListingRow & {
   companies: Pick<
     Tables<'companies'>,
-    'name' | 'logo_url' | 'industry' | 'size' | 'location' | 'description' | 'rating'
+    'name' | 'slug' | 'logo_url' | 'industry' | 'size' | 'location' | 'description' | 'rating'
   > | null;
 };
 
@@ -114,6 +114,7 @@ export function toInternshipListing(row: ListingRowWithCompany): InternshipListi
     id: row.id,
     companyId: row.company_id,
     companyName: c?.name ?? 'Bilinmeyen Şirket',
+    companySlug: c?.slug ?? undefined,
     companyLogo: c?.logo_url ?? '',
     companyIndustry: c?.industry ?? '',
     companySize: c?.size ?? '',
