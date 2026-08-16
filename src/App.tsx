@@ -529,6 +529,7 @@ export default function App() {
                 onQuickApply={(listing, match) =>
                   handleApplyToJob(listing, match.overallScore)
                 }
+                onGoToProfile={() => setActiveTab('profile')}
               />
             )}
 

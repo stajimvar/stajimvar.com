@@ -27,6 +27,7 @@ import { InternshipListing, StudentProfile, MatchBreakdown, ApplicationRecord } 
 import { calculateInternshipMatch } from '../utils/matchingEngine';
 import { InternshipCard } from './InternshipCard';
 import { ilBul } from '../lib/sehir';
+import { GoogleAdBanner } from './GoogleAdBanner';
 
 /**
  * İlanın listeye eklenme zamanı (ms).
@@ -41,7 +42,6 @@ function eklenmeZamani(deger: string | null | undefined): number {
   const ms = new Date(deger).getTime();
   return Number.isNaN(ms) ? 0 : ms;
 }
-import { GoogleAdBanner } from './GoogleAdBanner';
 
 interface MatchedInternshipsViewProps {
   /** Giriş yapılmamışsa null; o durumda uyum hesaplanmaz. */
@@ -52,6 +52,8 @@ interface MatchedInternshipsViewProps {
   onSubTabChange?: (subTab: string) => void;
   onViewDetails: (listing: InternshipListing, match: MatchBreakdown) => void;
   onQuickApply: (listing: InternshipListing, match: MatchBreakdown) => void;
+  /** Profil sekmesine geçiş. Verilmezse profil çubuğu bir şey yapmaz. */
+  onGoToProfile?: () => void;
 }
 
 export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
@@ -62,6 +64,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   onSubTabChange,
   onViewDetails,
   onQuickApply,
+  onGoToProfile,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState<string>('all');
@@ -419,7 +422,11 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           sabit 7/12 kalırsa kart olmadığında sağda 5 sütunluk boşluk kalıyor ve
           sayfa sola yaslanmış görünüyor.
         */}
-        <div className="lg:col-span-7 flex flex-col justify-between space-y-4 sm:space-y-6">
+        <div
+          className={`flex flex-col justify-between space-y-4 sm:space-y-6 ${
+            student ? 'lg:col-span-12' : 'lg:col-span-7'
+          }`}
+        >
           <header className="space-y-3">
             {/*
               Buradaki "Yetenek Odaklı Akıllı Kariyer Platformu" rozeti
@@ -516,6 +523,42 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               </div>
             ))}
           </div>
+
+          {/*
+            Profil eksikse tek satırlık uyarı.
+
+            Burada eskiden büyük bir "Merhaba Mustafa" kartı vardı: selamlama,
+            doluluk çubuğu, "yetenek eklemedin" satırı ve "sana en yakın ilan"
+            kutusu. Dördü de ya bilgi taşımıyordu ya da zaten ekranda olan bir
+            şeyi tekrar ediyordu — en yakın ilan, hemen altındaki listenin ilk
+            kartının aynısıydı. Üstelik "profilini doldur" diyip profile
+            gitmenin bir yolunu sunmuyordu.
+
+            Kalan tek gerçek bilgi şu: profil boşken eşleşme puanları anlamsız
+            çıkıyor ve kullanıcı nedenini bilmiyor. O yüzden yalnızca profil
+            eksikken, tek satır ve dokununca profili açan bir çubuk kaldı.
+            Profil tamamlandığında hiçbir şey gösterilmiyor.
+          */}
+          {student && profileCompletion < 100 && (
+            <button
+              type="button"
+              onClick={onGoToProfile}
+              className="w-full flex items-center gap-3 p-3 rounded-2xl border border-blue-100 bg-blue-50/70 text-left cursor-pointer hover:bg-blue-100/70 transition-colors"
+            >
+              <span className="shrink-0 text-xs font-bold text-blue-700 tabular-nums">
+                %{profileCompletion}
+              </span>
+              <span className="flex-1 h-1.5 rounded-full bg-blue-200/70 overflow-hidden">
+                <span
+                  className="block h-full rounded-full bg-blue-600"
+                  style={{ width: `${profileCompletion}%` }}
+                />
+              </span>
+              <span className="shrink-0 text-xs font-semibold text-blue-800">
+                Profilini tamamla →
+              </span>
+            </button>
+          )}
         </div>
 
         {/*
@@ -565,96 +608,6 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           </aside>
         )}
 
-        {/*
-          Giriş yapmış öğrencinin kartı.
-
-          Eskiden üstünde "CANLI ADAY KARTI" yazan bir rozet, sağ köşesinde de
-          `university.split(' ')[0]` vardı — "Mimar Sinan Güzel Sanatlar
-          Üniversitesi" okuyan birine köşede tek başına "Mimar" yazıyordu.
-          İkisi de kaldırıldı.
-
-          Yetenek listesi "Onaylanmış Yeteneklerin" başlığıyla çiziliyor ve her
-          yeteneğin yanına yeşil tik koyuyordu; oysa listede doğrulanmamışlar
-          da vardı. Kendi profilinde olmayan bir onayı görmek, dil listesindeki
-          uydurma kayıtlarla aynı hata. Artık yalnızca gerçekten doğrulanmış
-          olanlar tikli ve yeşil.
-        */}
-        {student && (
-        <div className="lg:col-span-5 bg-white rounded-3xl p-5 sm:p-7 flex flex-col shadow-xs border border-gray-200 space-y-5">
-          <div className="space-y-2">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900">
-              Merhaba {student.fullName.split(' ')[0]}
-            </h2>
-
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    profileCompletion === 100 ? 'bg-emerald-500' : 'bg-blue-600'
-                  }`}
-                  style={{ width: `${profileCompletion}%` }}
-                />
-              </div>
-              <span className="text-xs font-bold text-gray-500 tabular-nums shrink-0">
-                %{profileCompletion}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500">
-              {profileCompletion === 100
-                ? 'Profilin tamam. İlanlara başvurabilirsin.'
-                : 'Profilin doldukça eşleşmeler isabetlenir.'}
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-gray-600">Yeteneklerin</p>
-            {student.skills.length === 0 ? (
-              <p className="text-xs text-gray-400">
-                Henüz yetenek eklemedin. Profil sekmesinden ekleyebilirsin.
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {student.skills.slice(0, 6).map((sk) => (
-                  <span
-                    key={sk.name}
-                    className={`text-xs px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1 ${
-                      sk.verified
-                        ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
-                        : 'bg-gray-100 text-gray-700'
-                    }`}
-                    title={sk.verified ? 'Testle doğrulandı' : 'Henüz doğrulanmadı'}
-                  >
-                    {sk.verified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
-                    {sk.name}
-                  </span>
-                ))}
-                {student.skills.length > 6 && (
-                  <span className="text-xs px-2.5 py-1 rounded-lg bg-gray-100 text-gray-500 font-semibold">
-                    +{student.skills.length - 6}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/*
-            "Algoritma Önerisi" başlığı ve turuncu kutu gitti. Turuncu karttaki
-            tek sıcak renkti, gözü oraya çekiyordu; oysa orada duran şey
-            basitçe listenin en üstündeki ilan.
-          */}
-          {topMatch && topMatch.match.isScorable && (
-            <div className="pt-4 border-t border-gray-100 space-y-1">
-              <p className="text-xs font-semibold text-gray-600">Sana en yakın ilan</p>
-              <p className="text-sm font-bold text-gray-900">
-                {topMatch.listing.title}
-              </p>
-              <p className="text-xs text-gray-500">
-                {topMatch.listing.companyName} · %{topMatch.match.overallScore} uyum
-              </p>
-            </div>
-          )}
-        </div>
-        )}
       </section>
 
       {/* Clean Filters & Controls Bar (Unified & Mobile-Optimized) */}
