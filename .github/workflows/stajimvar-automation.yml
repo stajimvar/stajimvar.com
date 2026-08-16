@@ -45,6 +45,21 @@ jobs:
         run: python discover.py ${{ inputs.dry_run && '--dry-run' || '' }}
         working-directory: automation
 
+      # Keşif havuzundan yayına geçiş. Bu adım olmadan bulunan ilanlar
+      # raw_listings içinde birikir ve sitede hiç görünmezdi.
+      - name: Yayına al
+        if: ${{ !inputs.dry_run }}
+        run: python promote.py
+        working-directory: automation
+
+      # Yeni şirketlerin logosunu kendi sitelerinden çeker. Logosu olanları
+      # atlar, yani her çalıştırmada yalnızca yeni gelenler işlenir.
+      - name: Eksik logoları tamamla
+        if: ${{ !inputs.dry_run }}
+        run: python logos.py
+        working-directory: automation
+        continue-on-error: true
+
 # --- Devre dışı: başvuru e-postası gönderimi ---------------------------------
 # Eski repodaki `notify` işi, henüz kurmadığımız bir e-posta sağlayıcısına ve
 # `claim_application_notifications` RPC'sine bağlıydı; bu şemada ikisi de yok.

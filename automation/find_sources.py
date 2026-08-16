@@ -116,8 +116,23 @@ def probe_workable(slug: str) -> list | None:
     return jobs or None
 
 
+def probe_smartrecruiters(slug: str) -> list | None:
+    """SmartRecruiters herkese açık postings API'si — anahtar gerekmiyor."""
+    r = polite_get(
+        f"https://api.smartrecruiters.com/v1/companies/{slug}/postings?limit=100",
+        "smartrecruiters",
+    )
+    if r is None or r.status_code != 200:
+        return None
+    try:
+        return r.json().get("content", []) or None
+    except Exception:
+        return None
+
+
 PROBES = {
     "lever": probe_lever,
+    "smartrecruiters": probe_smartrecruiters,
     "greenhouse": probe_greenhouse,
     "ashby": probe_ashby,
     "workable": probe_workable,
@@ -144,6 +159,13 @@ def summarize(kind: str, jobs: list) -> tuple[int, int]:
             )
             title = job.get("title", "")
             desc = job.get("descriptionPlain", "") or ""
+        elif kind == "smartrecruiters":
+            loc = " ".join(
+                filter(None, [(job.get("location") or {}).get("city"),
+                              (job.get("location") or {}).get("country")])
+            )
+            title = job.get("name", "")
+            desc = ""
         else:  # workable
             loc = " ".join(str(v) for v in (job.get("locations") or []) if v)
             title = job.get("title", "")
@@ -174,6 +196,9 @@ def source_entry(name: str, kind: str, slug: str) -> dict:
     elif kind == "ashby":
         base["job_board"] = slug
         base["careers_url"] = f"https://jobs.ashbyhq.com/{slug}"
+    elif kind == "smartrecruiters":
+        base["company_identifier"] = slug
+        base["careers_url"] = f"https://jobs.smartrecruiters.com/{slug}"
     elif kind == "workable":
         base["account"] = slug
         base["careers_url"] = f"https://apply.workable.com/{slug}"

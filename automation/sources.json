@@ -7,15 +7,28 @@
       "enabled": true,
       "country": "TR",
       "careers_url": "https://jobs.workable.com/",
-      "location": "Turkey",
       "queries": [
         "intern",
         "internship",
         "trainee",
-        "co-op"
+        "co-op",
+        "junior",
+        "graduate",
+        "student",
+        "entry level"
       ],
       "max_pages": 5,
-      "_not": "Çok şirketli kaynak: company_name yok, şirket her ilandan çözülür."
+      "_not": "Çok şirketli kaynak: company_name yok, şirket her ilandan çözülür.",
+      "locations": [
+        "Turkey",
+        "Istanbul",
+        "Ankara",
+        "Izmir",
+        "Bursa",
+        "Antalya",
+        "Kocaeli",
+        "Eskisehir"
+      ]
     },
     {
       "id": "commencis-lever",

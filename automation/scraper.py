@@ -184,11 +184,15 @@ def workable_search(config: dict[str, Any]) -> Iterable[Job]:
     kullanılıyor; ilan başlıkları Türkçe olsa bile dizin İngilizce eşliyor.
     """
     queries = config.get("queries") or ["intern", "internship", "trainee", "co-op"]
-    location = config.get("location", "Turkey")
+    # Tek "Turkey" sorgusu sayfa başına 20 ile sınırlı geliyor ve şehir bazlı
+    # ilanları kaçırıyor. Şehirleri ayrı sorgulamak kapsamı belirgin artırıyor
+    # (ölçüldü: 8 -> 25 benzersiz aday).
+    locations = config.get("locations") or [config.get("location", "Turkey")]
     max_pages = int(config.get("max_pages", 5))
     gorulen: set[str] = set()
 
-    for query in queries:
+    for location in locations:
+      for query in queries:
         for page in range(1, max_pages + 1):
             url = (
                 "https://jobs.workable.com/api/v1/jobs"
@@ -238,8 +242,8 @@ def workable_search(config: dict[str, Any]) -> Iterable[Job]:
                     company_logo=company.get("image"),
                 )
 
-            # Son sayfaya gelindiyse dur.
-            if len(gorulen) >= int(data.get("totalSize") or 0):
+            # Bu sorgunun son sayfasına gelindiyse dur.
+            if len(jobs) < 20:
                 break
 
 
