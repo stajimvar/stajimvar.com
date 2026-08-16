@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { mockSkillQuizzes, mockCompanyAccounts } from './data/mockData';
+import { SKILL_QUIZZES } from './data/skillQuizzes';
 import {
   fetchPublishedListings,
   fetchStudentProfile,
@@ -88,13 +88,20 @@ export default function App() {
     };
   }, []);
   const [applications, setApplications] = useState<ApplicationRecord[]>([]);
-  const [quizzes] = useState<SkillQuiz[]>(mockSkillQuizzes);
+  const [quizzes] = useState<SkillQuiz[]>(SKILL_QUIZZES);
 
-  // Company Accounts State
-  const [allCompanies, setAllCompanies] = useState<CompanyAccount[]>(mockCompanyAccounts);
-  const [activeCompanyId, setActiveCompanyId] = useState<string>(mockCompanyAccounts[0].id);
-  const activeCompany =
-    allCompanies.find((c) => c.id === activeCompanyId) || allCompanies[0];
+  /*
+    Şirket hesapları.
+
+    Eskiden uydurma üç şirketle başlıyordu ve arayüzde gerçek hesap gibi
+    görünüyorlardı — biri seçili bile geliyordu. Artık boş başlıyor: gerçek
+    şirket kaydı akışı kurulana kadar (Faz 2.5) burada hesap olmayacak.
+    `activeCompany` bu yüzden tanımsız olabilir; portal öyleyse çizilmiyor.
+  */
+  const [allCompanies, setAllCompanies] = useState<CompanyAccount[]>([]);
+  const [activeCompanyId, setActiveCompanyId] = useState<string>('');
+  const activeCompany: CompanyAccount | undefined =
+    allCompanies.find((c) => c.id === activeCompanyId) ?? allCompanies[0];
 
   const handleSelectCompany = (companyId: string) => {
     setActiveCompanyId(companyId);
@@ -105,6 +112,7 @@ export default function App() {
   };
 
   const handleUpdateCompany = (updated: Partial<CompanyAccount>) => {
+    if (!activeCompany) return;
     setAllCompanies((prev) =>
       prev.map((c) => (c.id === activeCompany.id ? { ...c, ...updated } : c))
     );
@@ -471,7 +479,31 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-[1536px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-6 pb-24 lg:pb-8">
-        {userRole === 'company' || safeTab === 'company-portal' ? (
+        {(userRole === 'company' || safeTab === 'company-portal') && !activeCompany ? (
+          /*
+            Şirket hesabı yokken portalı çizmek, uydurma bir şirketin panelini
+            göstermek demekti. Gerçek kayıt akışı kurulana kadar durumu
+            olduğu gibi söylüyoruz.
+          */
+          <div className="max-w-xl mx-auto my-16 bg-white rounded-2xl border border-gray-200 p-8 text-center space-y-3">
+            <h2 className="text-lg font-bold text-gray-900">Şirket hesabı henüz yok</h2>
+            <p className="text-sm text-gray-600">
+              Şirket kaydı ve ilan girişi üzerinde çalışıyoruz. Şirketinizin ilanının
+              StajımVar'da olduğunu gördüyseniz ve sahiplenmek istiyorsanız
+              iletişim sayfasından bize yazın.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setUserRole('student');
+                setActiveTab('internships');
+              }}
+              className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
+            >
+              İlanlara dön
+            </button>
+          </div>
+        ) : userRole === 'company' || safeTab === 'company-portal' ? (
           <CompanyPortalView
             allListings={allListings}
             allStudents={[]}
