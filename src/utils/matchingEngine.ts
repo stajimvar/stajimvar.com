@@ -25,10 +25,42 @@ export function normalizeSkill(name: string): string {
   return aliases[clean] || clean;
 }
 
+/**
+ * Profili olmayan ziyaretçi için nötr sonuç.
+ *
+ * Giriş yapmamış birine "%16 uyumlusun" demek anlamsız: karşılaştırılacak bir
+ * "sen" yok. Bu durumda puan üretmek yerine hesaplanamaz işaretleniyor.
+ */
+function unscorableMatch(listing: InternshipListing, insight: string): MatchBreakdown {
+  return {
+    coreSkillsMatchScore: 0,
+    bonusSkillsScore: 0,
+    locationScore: 0,
+    availabilityScore: 0,
+    overallScore: 0,
+    matchedRequiredSkills: [],
+    missingRequiredSkills: listing?.requiredSkills || [],
+    matchedPreferredSkills: [],
+    missingPreferredSkills: listing?.preferredSkills || [],
+    isEligibleForMandatory: true,
+    isWorkTypeCompatible: true,
+    isScorable: false,
+    verdict: 'Insufficient Data',
+    summaryInsight: insight,
+  };
+}
+
 export function calculateInternshipMatch(
-  student: StudentProfile,
+  student: StudentProfile | null | undefined,
   listing: InternshipListing
 ): MatchBreakdown {
+  if (!student) {
+    return unscorableMatch(
+      listing,
+      'Uyum puanı için profilinde yeteneklerini listelemen gerekiyor.'
+    );
+  }
+
   const studentSkillMap = new Map<string, { level: string; verified?: boolean }>();
   const studentSkills = student?.skills || [];
   for (const s of studentSkills) {

@@ -24,10 +24,34 @@ import { InternshipDetailModal } from './components/InternshipDetailModal';
 import { SkillAssessmentModal } from './components/SkillAssessmentModal';
 import { AuthModal } from './components/AuthModal';
 import { Logo } from './components/Logo';
+import { LegalPage, LEGAL_ROUTES } from './components/LegalPage';
 import confetti from 'canvas-confetti';
 import { CheckCircle2 } from 'lucide-react';
 
 export default function App() {
+  /**
+   * Yasal sayfalar için hafif yol tabanlı geçiş. Uygulama tek sayfa olduğu için
+   * tam bir router eklemek yerine yalnızca bu üç yol ayrıştırılıyor; Cloudflare
+   * Pages tarafında public/_redirects ile bilinmeyen yollar index.html'e düşüyor.
+   */
+  const [path, setPath] = React.useState<string>(
+    typeof window === 'undefined' ? '/' : window.location.pathname
+  );
+
+  React.useEffect(() => {
+    const onPop = () => setPath(window.location.pathname);
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  const navigate = (to: string) => {
+    window.history.pushState({}, '', to);
+    setPath(to);
+    window.scrollTo(0, 0);
+  };
+
+  const goHome = () => navigate('/');
+
   // Global State
   const [allStudents, setAllStudents] = useState<StudentProfile[]>(mockStudentProfiles);
   const [activeStudentId, setActiveStudentId] = useState<string>(mockStudentProfiles[0].id);
@@ -108,7 +132,18 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Authentication State
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
+  /**
+   * Ziyaretçi gerçekten ziyaretçi. Eskiden `true` idi ve siteye giren herkes
+   * "Hoş geldin, Mustafa" diye karşılanıp sahte bir profil görüyordu.
+   */
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+
+  /**
+   * Kayıt/giriş akışı henüz gerçek oturuma bağlı değil (src/lib/auth.ts yazıldı
+   * ama App bu profili Supabase'den okumuyor). Çalışmayan bir kayıt formunu
+   * yayında tutmak yerine giriş noktaları kapalı; auth bağlanınca `true` yap.
+   */
+  const AUTH_ENABLED = false;
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
@@ -297,6 +332,11 @@ export default function App() {
     showToast('Aday başvuru durumu başarıyla güncellendi.');
   };
 
+  const legalSlug = LEGAL_ROUTES[path.replace(/\/+$/, '') || '/'];
+  if (legalSlug) {
+    return <LegalPage slug={legalSlug} onBack={goHome} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0B0F17] font-sans text-[#111827] dark:text-slate-100 flex flex-col selection:bg-blue-600 selection:text-white transition-colors duration-200">
       {/* Toast Banner */}
@@ -325,8 +365,8 @@ export default function App() {
         isDarkMode={isDarkMode}
         onToggleDarkMode={toggleDarkMode}
         isLoggedIn={isLoggedIn}
-        onOpenLogin={handleOpenLogin}
-        onOpenRegister={handleOpenRegister}
+        onOpenLogin={AUTH_ENABLED ? handleOpenLogin : undefined}
+        onOpenRegister={AUTH_ENABLED ? handleOpenRegister : undefined}
         onLogout={handleLogout}
       />
 
@@ -381,7 +421,7 @@ export default function App() {
 
             {activeTab === 'internships' && listingsStatus === 'ready' && (
               <MatchedInternshipsView
-                student={activeStudent}
+                student={isLoggedIn ? activeStudent : null}
                 allListings={allListings}
                 applications={applications}
                 subTab={activeSubTab}
@@ -501,18 +541,37 @@ export default function App() {
             >
               Hakkımızda
             </button>
-            <button
-              onClick={() => showToast('İletişim: contact@stajimvar.com')}
+            <a
+              href="mailto:iletisim@stajimvar.com"
               className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
             >
               İletişim
-            </button>
-            <button
-              onClick={() => showToast('KVKK ve Veri Güvenliği Politikası')}
+            </a>
+            {/*
+              Bu üçü gerçek sayfalara gidiyor. Eskiden yalnızca bildirim
+              gösteren düğmelerdi; yasal metin yerine geçmezler.
+            */}
+            <a
+              href="/gizlilik"
+              onClick={(e) => { e.preventDefault(); navigate('/gizlilik'); }}
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+            >
+              Gizlilik
+            </a>
+            <a
+              href="/cerez-politikasi"
+              onClick={(e) => { e.preventDefault(); navigate('/cerez-politikasi'); }}
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+            >
+              Çerezler
+            </a>
+            <a
+              href="/kvkk-aydinlatma-metni"
+              onClick={(e) => { e.preventDefault(); navigate('/kvkk-aydinlatma-metni'); }}
               className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
             >
               KVKK
-            </button>
+            </a>
           </div>
         </div>
       </footer>

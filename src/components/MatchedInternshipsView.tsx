@@ -27,7 +27,8 @@ import { InternshipCard } from './InternshipCard';
 import { GoogleAdBanner } from './GoogleAdBanner';
 
 interface MatchedInternshipsViewProps {
-  student: StudentProfile;
+  /** Giriş yapılmamışsa null; o durumda uyum hesaplanmaz. */
+  student: StudentProfile | null;
   allListings: InternshipListing[];
   applications: ApplicationRecord[];
   subTab?: string;
@@ -273,21 +274,26 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
    * dolu olan alanlardan hesaplanıyor, yoksa öğrenci hiç dokunmadığı bir
    * profil için "neredeyse bitti" mesajı görüyordu.
    */
-  const profileChecks: boolean[] = [
-    Boolean(student.university),
-    Boolean(student.department),
-    Boolean(student.bio),
-    Boolean(student.gpa),
-    student.skills.length > 0,
-    (student.languages?.length ?? 0) > 0,
-    student.projects.length > 0,
-    student.targetRoles.length > 0,
-    student.preferences.cities.length > 0,
-    Boolean(student.phone),
-  ];
-  const profileCompletion = Math.round(
-    (profileChecks.filter(Boolean).length / profileChecks.length) * 100
-  );
+  const profileChecks: boolean[] = student
+    ? [
+        Boolean(student.university),
+        Boolean(student.department),
+        Boolean(student.bio),
+        Boolean(student.gpa),
+        student.skills.length > 0,
+        (student.languages?.length ?? 0) > 0,
+        student.projects.length > 0,
+        student.targetRoles.length > 0,
+        student.preferences.cities.length > 0,
+        Boolean(student.phone),
+      ]
+    : [];
+  const profileCompletion = profileChecks.length
+    ? Math.round((profileChecks.filter(Boolean).length / profileChecks.length) * 100)
+    : 0;
+
+  /** İlan veren farklı şirket sayısı. Profil yokken uyum yerine bu gösteriliyor. */
+  const companyCount = new Set(filteredListings.map((item) => item.listing.companyName)).size;
 
   return (
     <div className="w-full space-y-8 pb-12">
@@ -351,11 +357,19 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             </div>
             <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-200/90 dark:border-slate-800 shadow-xs">
               <p className="text-[10px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-                Zirve Uyum
+                {student ? 'Zirve Uyum' : 'Şirket'}
               </p>
               <p className="text-2xl font-black text-orange-500 dark:text-orange-400 mt-0.5">
-                {/* Eşleşme yoksa uydurma bir puan gösterme. */}
-                {topMatch ? `%${topMatch.match.overallScore}` : '—'}
+                {/*
+                  Profili olmayan ziyaretçiye uyum puanı göstermek anlamsız:
+                  karşılaştırılacak bir profil yok. Onun yerine ilan veren
+                  şirket sayısı gösteriliyor.
+                */}
+                {!student
+                  ? companyCount
+                  : topMatch && topMatch.match.isScorable
+                  ? `%${topMatch.match.overallScore}`
+                  : '—'}
               </p>
             </div>
             <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-200/90 dark:border-slate-800 shadow-xs">
@@ -376,7 +390,13 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           </div>
         </div>
 
-        {/* Right Candidate Card (Clean White & Slate Theme) */}
+        {/*
+          Right Candidate Card
+          Yalnızca giriş yapmış öğrenciye çizilir. Ziyaretçiye kendi profiliymiş
+          gibi görünen bir kart göstermek, sitenin ilk izlenimini yalan üstüne
+          kuruyordu.
+        */}
+        {student && (
         <div className="lg:col-span-5 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 text-gray-900 dark:text-slate-100 relative overflow-hidden flex flex-col justify-between shadow-xs border border-gray-200 dark:border-slate-800">
           <div className="relative z-10 space-y-6">
             <div>
@@ -446,6 +466,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             </div>
           </div>
         </div>
+        )}
       </section>
 
       {/* Clean Filters & Controls Bar (Unified & Mobile-Optimized) */}
@@ -599,11 +620,18 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         {/* Left Column: Listings & In-Feed Native Ads */}
         <div className="lg:col-span-8 space-y-4">
           <div className="flex items-center justify-between px-1">
+            {/*
+              Profili olmayan ziyaretçiye "sana uygun" ve "eşleşme puanına göre
+              sıralı" demek yanlış: ortada kişiselleştirme yok.
+            */}
             <h2 className="text-xs font-bold text-gray-400 dark:text-slate-400 uppercase tracking-widest">
-              Sana Uygun Staj İlanları ({filteredListings.length})
+              {student ? 'Sana Uygun Staj İlanları' : 'Açık Staj İlanları'} (
+              {filteredListings.length})
             </h2>
             <span className="text-xs text-gray-500 dark:text-slate-400 font-medium">
-              Gerçek zamanlı eşleşme puanına göre sıralı
+              {student
+                ? 'Gerçek zamanlı eşleşme puanına göre sıralı'
+                : 'Şirketlerin kendi kariyer sayfalarından derlendi'}
             </span>
           </div>
 

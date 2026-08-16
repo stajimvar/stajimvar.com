@@ -1,0 +1,4 @@
+# Tek sayfa uygulaması: /gizlilik gibi yollar doğrudan açıldığında da
+# index.html sunulsun, Cloudflare Pages 404 vermesin.
+# Durum kodu 200 — yönlendirme değil, yeniden yazma.
+/*    /index.html   200

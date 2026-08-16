@@ -440,8 +440,13 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
-            {/* Auth Buttons or User Profile / Logout */}
+            {/*
+              Auth Buttons or User Profile / Logout
+              onOpenLogin/onOpenRegister verilmediyse kayıt akışı henüz hazır
+              değil demektir; çalışmayan düğme göstermek yerine hiç çizmiyoruz.
+            */}
             {!isLoggedIn ? (
+              onOpenLogin || onOpenRegister ? (
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                 <button
                   id="header-login-btn"
@@ -458,6 +463,7 @@ export const Header: React.FC<HeaderProps> = ({
                   Kayıt Ol
                 </button>
               </div>
+              ) : null
             ) : (
               <div className="flex items-center gap-1 sm:gap-2">
                 {/* Messages / Notifications Envelope Icon */}
