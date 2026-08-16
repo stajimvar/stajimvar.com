@@ -388,6 +388,36 @@
       "company_name": "Doktortakvimi",
       "job_board": "doktortakvimi",
       "careers_url": "https://jobs.ashbyhq.com/doktortakvimi"
+    },
+    {
+      "id": "wundermanthompson-greenhouse",
+      "name": "Wunderman Thompson",
+      "type": "greenhouse",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Wunderman Thompson",
+      "board_token": "wundermanthompson",
+      "careers_url": "https://job-boards.greenhouse.io/wundermanthompson"
+    },
+    {
+      "id": "spotify-lever",
+      "name": "Spotify",
+      "type": "lever",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Spotify",
+      "site": "spotify",
+      "careers_url": "https://jobs.lever.co/spotify"
+    },
+    {
+      "id": "deliveryhero-smartrecruiters",
+      "name": "Delivery Hero",
+      "type": "smartrecruiters",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Delivery Hero",
+      "company_identifier": "deliveryhero",
+      "careers_url": "https://jobs.smartrecruiters.com/deliveryhero"
     }
   ],
   "notes": "Only add verified public ATS/API endpoints. Keep credentials in environment variables, never here."

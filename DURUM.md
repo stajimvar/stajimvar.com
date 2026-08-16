@@ -124,6 +124,37 @@ ve üyelik açıldığında yeniden yazılmaları gerekiyor.
 
 Bilinen eksik: bilinmeyen yollar 404 yerine 200 + ana sayfa dönüyor (soft 404).
 
+
+## 📊 Kaynak arayışı: denenenler ve sonuçları
+
+16 Ağustos'ta ilan sayısını artırmak için sistematik bir arama yapıldı.
+**Bu bölüm aynı yolların tekrar denenmemesi için tutuluyor.**
+
+| Yöntem | Sonuç |
+|---|---|
+| 413 şirkette ATS panosu araması (Lever/Greenhouse/Ashby/Workable/Workday/SmartRecruiters) | 37 kaynak kaydı, 11 ilan |
+| Workable şirketler arası arama (`jobs.workable.com/api/v1/jobs`) | Çalışıyor, 8 ilan. Sorgu ve şehir çeşitlendirmesi ham adayı 8→25 çıkardı ama staj filtresinden yine 8 geçti |
+| Arbeitnow / Remotive / Jobicy / Himalayas | Dördü de erişilebilir, **0 Türkiye stajı** — uzaktan panolar ABD/AB odaklı |
+| Ulusal Staj Programı (`uspapi.iskur.gov.tr`) | robots.txt serbest ama **API e-Devlet girişi arkasında (401)** |
+| Türk kariyer sayfalarında JSON-LD `JobPosting` | 9 büyük şirkette **hiç bulunamadı** |
+| Kariyer sayfasından ATS imzası tespiti | 16 şirkette 2 (biri yanlış eşleşme) |
+| Üniversite kariyer merkezleri | Çoğu alan adı çözülmüyor; çözülen ikisinde robots kısıtlı, besleme yok |
+
+**Yapısal sonuç:** Türkiye'de işe alım büyük ölçüde Kariyer.net üzerinden yürüyor;
+batılı ATS'ler yaygın değil. İzinli erişilebilir havuz bugün gerçekten küçük —
+11 ilan, serbestçe ulaşılabilenin tavanına yakın.
+
+**Bilinçli olarak yapılmayan:** Kariyer.net, Youthall, Indeed gibi siteleri
+kullanım şartlarını ihlal ederek veya tespit edilmemek için kullanıcı taklidi
+yaparak taramak. Bu karar projenin kendi kuruluş ilkesi (bkz. `sources.trust`).
+
+**Gerçek kaldıraçlar:**
+1. Şirket daveti çarkı — başvuru gelen şirkete ulaşıp platforma davet etmek.
+   Tek "özel ilan" kaynağı ve asıl rekabet avantajı.
+2. Resmî iş ortaklığı — Indeed yayıncı programı, Kariyer.net/Youthall kurumsal kanalları.
+3. Sezon — Türkiye'de staj sezonu şubat-mayıs. 37 kaynak saatlik taranıyor;
+   sezon açıldığında ilk yakalayan biz oluruz.
+
 ## ⏳ Sıradaki iş
 
 ### 1. Kaynak adaptörleri (server-side, Supabase Edge Function)
