@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { InternshipListing, MatchBreakdown } from '../types';
 import { CompanyLogo } from './CompanyLogo';
+import { konumEtiketi } from '../lib/sehir';
 
 interface InternshipCardProps {
   listing: InternshipListing;
@@ -120,7 +121,12 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             {/* Work Type & City */}
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50/80 text-blue-700 font-medium border border-blue-100">
               <MapPin className="w-3.5 h-3.5 text-blue-600"/>
-              <span>{listing.city} ({listing.workType})</span>
+              {/*
+                Ham konum metni "Turkey - Istanbul" gibi gelebiliyor.
+                konumEtiketi ülke önekini atıyor ve ilçeyi iliyle birlikte
+                yazıyor: "Şişli, İstanbul".
+              */}
+              <span>{konumEtiketi(listing.city)} ({listing.workType})</span>
             </span>
 
             {/* Mandatory SGK Badge */}

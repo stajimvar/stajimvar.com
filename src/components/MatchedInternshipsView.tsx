@@ -14,6 +14,7 @@ import {
   Star,
   Award,
   Zap,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Send,
@@ -25,6 +26,7 @@ import {
 import { InternshipListing, StudentProfile, MatchBreakdown, ApplicationRecord } from '../types';
 import { calculateInternshipMatch } from '../utils/matchingEngine';
 import { InternshipCard } from './InternshipCard';
+import { ilBul } from '../lib/sehir';
 import { GoogleAdBanner } from './GoogleAdBanner';
 
 interface MatchedInternshipsViewProps {
@@ -48,6 +50,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   onQuickApply,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCity, setSelectedCity] = useState<string>('all');
   const [selectedWorkType, setSelectedWorkType] = useState<string>('all');
   const [onlyMandatory, setOnlyMandatory] = useState<boolean>(false);
   const [onlyPaid, setOnlyPaid] = useState<boolean>(false);
@@ -197,6 +200,18 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           }
         }
 
+        /*
+          Şehir filtresi il düzeyinde çalışıyor. Ham konum metniyle
+          karşılaştırmak "İstanbul" seçen kullanıcıya Şişli'deki ilanı
+          göstermezdi — bkz. lib/sehir.ts.
+        */
+        if (selectedCity !== 'all') {
+          const il = ilBul(listing.city);
+          if (selectedCity === 'diger' ? il !== null : il !== selectedCity) {
+            return false;
+          }
+        }
+
         // Work type
         if (selectedWorkType !== 'all' && listing.workType !== selectedWorkType) {
           return false;
@@ -258,6 +273,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   }, [
     matchedData,
     searchQuery,
+    selectedCity,
     selectedWorkType,
     onlyMandatory,
     onlyPaid,
@@ -296,6 +312,39 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   /** İlan veren farklı şirket sayısı. Profil yokken uyum yerine bu gösteriliyor. */
   const companyCount = new Set(filteredListings.map((item) => item.listing.companyName)).size;
 
+  /**
+   * Şehir menüsü.
+   *
+   * Seçenekler sabit 81 il listesinden değil, elimizdeki ilanlardan üretiliyor:
+   * ilanı olmayan bir ili menüye koymak, seçildiğinde boş sonuç veren bir
+   * seçenek demek. Sayılar da gösteriliyor ki kullanıcı seçmeden önce ne
+   * bulacağını bilsin.
+   *
+   * DİKKAT: sayım şehir filtresi UYGULANMADAN yapılıyor. `filteredListings`
+   * üzerinden sayılsaydı bir şehir seçildiği anda diğer şehirler 0 görünür ve
+   * kullanıcı geri dönemezdi.
+   */
+  const cityOptions = useMemo(() => {
+    const sayim = new Map<string, number>();
+    let bilinmeyen = 0;
+
+    for (const { listing, match } of matchedData) {
+      if (!matchesCategory(listing, match, subTab)) continue;
+      const il = ilBul(listing.city);
+      if (il) sayim.set(il, (sayim.get(il) ?? 0) + 1);
+      else bilinmeyen += 1;
+    }
+
+    const liste = [...sayim.entries()]
+      .map(([il, adet]) => ({ id: il, etiket: il, adet }))
+      .sort((a, b) => b.adet - a.adet || a.etiket.localeCompare(b.etiket, 'tr'));
+
+    if (bilinmeyen > 0) {
+      liste.push({ id: 'diger', etiket: 'Diğer / belirtilmemiş', adet: bilinmeyen });
+    }
+    return liste;
+  }, [matchedData, subTab]);
+
   return (
     <div className="w-full space-y-4 sm:space-y-8 pb-12">
       {/* Clean Hero Section */}
@@ -328,25 +377,49 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               şey olmayan büyük mavi bir düğme, siteye olan güveni doğrudan
               zedeliyor.
             */}
-            <div className="mt-4 relative">
-              <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Şehir, şirket veya yetenek ara"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-11 py-3.5 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-600 transition-colors"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  aria-label="Aramayı temizle"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-700 cursor-pointer"
+            <div className="mt-4 flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1 min-w-0">
+                <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Pozisyon, şirket veya yetenek"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-11 pr-11 py-3.5 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-600 transition-colors"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    aria-label="Aramayı temizle"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-700 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/*
+                Şehir seçici. Menüde yalnızca gerçekten ilanı olan iller var;
+                seçilince boş sonuç veren bir seçenek göstermiyoruz.
+              */}
+              <div className="relative sm:w-56 shrink-0">
+                <MapPin className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <select
+                  value={selectedCity}
+                  onChange={(e) => setSelectedCity(e.target.value)}
+                  aria-label="Şehir seç"
+                  className="w-full pl-11 pr-8 py-3.5 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-900 focus:outline-none focus:border-blue-600 transition-colors appearance-none cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+                  <option value="all">Tüm Türkiye</option>
+                  {cityOptions.map((sehir) => (
+                    <option key={sehir.id} value={sehir.id}>
+                      {sehir.etiket} ({sehir.adet})
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
           </header>
 
