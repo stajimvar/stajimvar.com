@@ -631,10 +631,67 @@ export default function App() {
         onSuccess={handleAuthSuccess}
       />
 
-      {/* Clean Minimalism Footer */}
-      <footer className="border-t border-gray-200 bg-white mt-auto py-6 text-xs text-gray-500 shrink-0 transition-colors duration-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+      {/*
+        Alt bilgi.
+
+        Önceki hali sekiz bağlantıyı tek satırda, BÜYÜK HARF ve geniş harf
+        aralığıyla yan yana diziyordu. Telefonda satır ekrana sığmıyor, kök
+        taşma koruması yüzünden de kaydırılamıyordu: kenardaki bağlantılar
+        kırpılıp tıklanamaz hale geliyordu — ekran görüntüsünde "LETİŞİM" ve
+        "ÇE" diye yarım görünen kısım buydu. KVKK aydınlatma metnine mobilden
+        ulaşılamıyor olması yalnızca çirkin değil, yasal olarak da sorun.
+
+        Artık bağlantılar sarabiliyor ve iki gruba ayrıldı: sitenin sayfaları
+        ve yasal metinler. Büyük harf ve geniş aralık kalktı; ikisi de satırı
+        gereksiz uzatıp okumayı zorlaştırıyordu.
+      */}
+      <footer className="border-t border-gray-200 bg-white mt-auto py-8 text-xs text-gray-500 shrink-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
+          <nav className="flex flex-col sm:flex-row sm:justify-center gap-3 sm:gap-8">
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+              {[
+                { yol: '/hakkimizda', etiket: 'Hakkımızda' },
+                { yol: '/iletisim', etiket: 'İletişim' },
+                { yol: '/ilan-kurallari', etiket: 'İlan kuralları' },
+                { yol: '/ilan-bildir', etiket: 'İlan bildir' },
+              ].map((bag) => (
+                <a
+                  key={bag.yol}
+                  href={bag.yol}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(bag.yol);
+                  }}
+                  className="font-semibold text-gray-600 hover:text-blue-600 transition-colors cursor-pointer"
+                >
+                  {bag.etiket}
+                </a>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+              {[
+                { yol: '/kvkk-aydinlatma-metni', etiket: 'KVKK aydınlatma metni' },
+                { yol: '/gizlilik', etiket: 'Gizlilik' },
+                { yol: '/cerez-politikasi', etiket: 'Çerezler' },
+                { yol: '/kullanim-kosullari', etiket: 'Kullanım koşulları' },
+              ].map((bag) => (
+                <a
+                  key={bag.yol}
+                  href={bag.yol}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(bag.yol);
+                  }}
+                  className="font-semibold text-gray-600 hover:text-blue-600 transition-colors cursor-pointer"
+                >
+                  {bag.etiket}
+                </a>
+              ))}
+            </div>
+          </nav>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 pt-4 border-t border-gray-100">
             <Logo
               size="sm"
               showTagline={false}
@@ -643,62 +700,14 @@ export default function App() {
                 setActiveTab('internships');
               }}
             />
+            {/*
+              "Yetenek Odaklı İş & Stajyer Eşleştirme Platformu" satırı
+              kaldırıldı: anasayfanın tepesinden aynı gerekçeyle çıkardığımız
+              cümlenin ikizi.
+            */}
             <span className="text-[11px] text-gray-400">
-              &copy; 2026 StajımVar • Tüm hakları saklıdır.
+              &copy; 2026 StajımVar
             </span>
-          </div>
-          <p className="text-[11px] text-gray-400 text-center sm:text-left">
-            Yetenek Odaklı İş & Stajyer Eşleştirme Platformu
-          </p>
-          <div className="flex items-center gap-6 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-            {/*
-              Hepsi gerçek sayfalara gidiyor. "Hakkımızda" eskiden yalnızca
-              bildirim gösteren bir düğmeydi.
-            */}
-            {[
-              { yol: '/hakkimizda', etiket: 'Hakkımızda' },
-              { yol: '/iletisim', etiket: 'İletişim' },
-              { yol: '/kullanim-kosullari', etiket: 'Koşullar' },
-              { yol: '/ilan-kurallari', etiket: 'İlan Kuralları' },
-              { yol: '/ilan-bildir', etiket: 'İlan Bildir' },
-            ].map((bag) => (
-              <a
-                key={bag.yol}
-                href={bag.yol}
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate(bag.yol);
-                }}
-                className="hover:text-blue-600 transition-colors cursor-pointer"
-              >
-                {bag.etiket}
-              </a>
-            ))}
-            {/*
-              Bu üçü gerçek sayfalara gidiyor. Eskiden yalnızca bildirim
-              gösteren düğmelerdi; yasal metin yerine geçmezler.
-            */}
-            <a
-              href="/gizlilik"
-              onClick={(e) => { e.preventDefault(); navigate('/gizlilik'); }}
-              className="hover:text-blue-600 transition-colors cursor-pointer"
-            >
-              Gizlilik
-            </a>
-            <a
-              href="/cerez-politikasi"
-              onClick={(e) => { e.preventDefault(); navigate('/cerez-politikasi'); }}
-              className="hover:text-blue-600 transition-colors cursor-pointer"
-            >
-              Çerezler
-            </a>
-            <a
-              href="/kvkk-aydinlatma-metni"
-              onClick={(e) => { e.preventDefault(); navigate('/kvkk-aydinlatma-metni'); }}
-              className="hover:text-blue-600 transition-colors cursor-pointer"
-            >
-              KVKK
-            </a>
           </div>
         </div>
       </footer>
