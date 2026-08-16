@@ -429,17 +429,22 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         >
           <header className="space-y-3">
             {/*
-              Buradaki "Yetenek Odaklı Akıllı Kariyer Platformu" rozeti
-              kaldırıldı. Hiçbir şey anlatmayan, herkesin kendi hakkında
-              yazabileceği bir cümleydi; siteyi olduğundan iddialı ve amatör
-              gösteriyordu. Yerine ne yaptığımızı söyleyen bir başlık var.
+              Başlık öğrenciye ne kazandığını söylüyor, bize ne yaptığımızı
+              değil.
+
+              Önceki hali "Staj ilanları, şirketin kendi sayfasından." idi:
+              doğru ama bizim yöntemimizi anlatıyordu. Staj arayan biri ilk
+              saniyede "burada iş var mı" sorusunun cevabını arıyor; nereden
+              topladığımız onun için ikinci sıradaki bilgi — o yüzden alt
+              satıra, kanıt olarak indi.
             */}
             <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-gray-900">
-              Staj ilanları, <span className="text-blue-600">şirketin kendi</span> sayfasından.
+              Şirketlerin staj ilanları, <span className="text-blue-600">tek listede</span>.
             </h1>
             <p className="text-sm sm:text-base text-gray-600 max-w-xl leading-relaxed">
-              Aracı sitelerde değil, şirketlerin kariyer sayfalarında yayınlanan
-              staj ilanlarını topluyoruz. Kapanan ilan listeden düşer.
+              Sekiz ayrı kariyer sayfasını tek tek gezme. İlanları aracı
+              sitelerden değil, şirketlerin kendi kariyer sayfalarından
+              derliyoruz; her ilanda şirketin kendi başvuru bağlantısı var.
             </p>
 
             {/*
@@ -602,8 +607,15 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               ))}
             </div>
 
+            {/*
+              DİKKAT: burada "kapanan ilanlar listeden düşürülüyor" yazıyordu
+              ama otomatik pasifleştirme şalteri (ALLOW_DEACTIVATION) hâlâ
+              kapalı — ilk sağlıklı taramaların geçmişi birikmeden açılırsa
+              her ilanı "kaybolmuş" sayar. Şalter açılana kadar bunu olmuş bir
+              şey gibi yazmıyoruz.
+            */}
             <p className="text-[11px] text-gray-400 leading-relaxed">
-              Kaynaklar saatlik taranıyor. Kapanan ilanlar listeden düşürülüyor.
+              Her ilanın başvuru adresi, şirketin kendi sayfasıdır.
             </p>
           </aside>
         )}
@@ -867,9 +879,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               <span>İlanlar doğrudan kaynağından</span>
             </div>
             <p className="text-gray-600 text-[11px] leading-relaxed">
-              Her ilan, şirketin kendi kariyer sisteminden alınır ve kaynakta
-              kapandığında listeden düşürülür. Başvuru adresi de ilanın kendi
-              sayfasıdır; araya kimse girmez.
+              Her ilan, şirketin kendi kariyer sisteminden alınır. Başvuru
+              adresi de ilanın kendi sayfasıdır; araya kimse girmez.
             </p>
           </div>
         </div>

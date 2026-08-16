@@ -128,8 +128,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
           <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center space-y-3">
             <p className="font-bold">Bu ilan bulunamadı</p>
             <p className="text-sm text-gray-600">
-              İlan kaynağında kapanmış ve listeden düşürülmüş olabilir. Kapanan ilanları
-              yayında tutmuyoruz.
+              Bağlantı hatalı olabilir ya da ilan yayından kaldırılmış olabilir.
             </p>
             <button
               type="button"

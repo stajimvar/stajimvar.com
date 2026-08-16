@@ -62,9 +62,11 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
         <S baslik="Neden böyle">
           <p>
             Staj arayan bir öğrencinin en büyük derdi, ilanın hâlâ açık olup olmadığını
-            bilememek. Aracı sitelerde kapanmış ilanlar aylarca durabiliyor. Biz her ilanı
-            kaynağında düzenli olarak kontrol ediyoruz; kaynakta kapandığında listeden
-            düşürüyoruz.
+            bilememek. Aracı sitelerde kapanmış ilanlar aylarca durabiliyor. Bunu çözmek
+            için her ilanı kaynağında düzenli kontrol eden bir sistem kurduk; kapanan
+            ilanları otomatik düşürme kısmı ise henüz açılmadı — ayrıntısı
+            <strong> İlan kuralları</strong> sayfasında. O zamana kadar kapanmış ilanları
+            elle kaldırıyoruz.
           </p>
           <p>
             Başvuru adresi de her zaman ilanın kendi sayfasıdır. Araya girmiyoruz,
@@ -230,8 +232,12 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
             için de aynı adrese yazabilirsiniz.
           </p>
           <p>
-            Kaynağında kapanan ilanlar, üç ardışık kontrolde görülmezse ve en az 48 saat
-            geçmişse otomatik olarak listeden düşürülür.
+            Kaynağında kapanan ilanlar için kurduğumuz kural şu: bir ilan üç ardışık
+            kontrolde görülmezse ve en az 48 saat geçmişse otomatik olarak listeden
+            düşürülür. <strong>Bu otomatik düşürme şu an devre dışı</strong> — sağlıklı
+            tarama geçmişi birikmeden açılırsa sistem ilk çalıştırmada her ilanı
+            kaybolmuş sayar. O zamana kadar kapanmış bir ilan görürseniz bize bildirin,
+            elle kaldırıyoruz.
           </p>
         </S>
       </>
