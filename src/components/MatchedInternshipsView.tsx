@@ -88,14 +88,25 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
+  /*
+    Kategori sekmeleri.
+
+    Üç sekme buradan çıkarıldı çünkü hemen altlarındaki denetimlerin birebir
+    kopyasıydılar:
+
+      "Uzaktan & Hibrit"    →  ÇALIŞMA satırı (Uzaktan / Hibrit / Ofis)
+      "Zorunlu Staj (SGK)"  →  Zorunlu Staj kutucuğu
+      "Maaşlı / Burslu"     →  Ücretli kutucuğu
+
+    Aynı filtreyi iki ayrı yerde sunmak kullanıcıya ikisinin farklı şeyler
+    olduğunu düşündürüyor; üstelik ÇALIŞMA satırı daha hassas (Uzaktan ile
+    Hibrit'i ayırabiliyor). Kalanlar gerçekten başka bir şey süzüyor.
+  */
   const allListingCategories = [
-    { id: 'all', label: 'Tüm İlanlar & Eşleşmeler' },
-    { id: 'high_match', label: 'Bana Özel En Yüksek Uyum (%80+)' },
-    { id: 'public_sector', label: 'Kamu Stajları (Ulusal Staj / Bakanlıklar) ⭐' },
-    { id: 'global', label: 'Yurtdışı / Global Stajlar (Erasmus+ / Remote Global) ⭐' },
-    { id: 'mandatory_sgk', label: 'Zorunlu Staj (SGK Onaylı)' },
-    { id: 'remote_hybrid', label: 'Uzaktan & Hibrit' },
-    { id: 'paid', label: 'Maaşlı / Burslu' },
+    { id: 'all', label: 'Tüm İlanlar' },
+    { id: 'high_match', label: 'Sana En Uygun (%80+)' },
+    { id: 'public_sector', label: 'Kamu Stajları' },
+    { id: 'global', label: 'Yurtdışı / Global' },
   ];
 
   /**
@@ -131,13 +142,13 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           listing.city.toLowerCase().includes('almanya') ||
           listing.city.toLowerCase().includes('berlin')
         );
-      case 'mandatory_sgk':
-        return listing.mandatoryStajAccepted;
-      case 'remote_hybrid':
-        return listing.workType === 'Remote' || listing.workType === 'Hybrid';
-      case 'paid':
-        return listing.stipend.isPaid;
       default:
+        /*
+          Bilinmeyen bir sekme değeri geldiğinde süzme yapılmıyor. `subTab`
+          sekmeler arasında ortak bir durum: kullanıcı Yetenekler sekmesinde
+          bir kategori seçip İlanlar'a dönerse buraya oradaki değer geliyor.
+          Böyle bir durumda listeyi boşaltmak yerine hepsini göstermek doğru.
+        */
         return true;
     }
   }
@@ -648,7 +659,13 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
       {/* Clean Filters & Controls Bar (Unified & Mobile-Optimized) */}
       <div className="bg-white rounded-2xl p-3 sm:p-5 border border-gray-200 shadow-xs space-y-3 sm:space-y-4">
-        {/* Row 1: İLAN FİLTRELERİ */}
+        {/*
+          Tek seçenek kaldıysa şerit çizilmiyor: içinde yalnızca "Tüm İlanlar"
+          olan bir filtre satırı hiçbir şey süzmüyor, sadece yer kaplıyor.
+          Kaynaklar çoğalıp kamu veya yurtdışı ilanları geldiğinde kendiliğinden
+          geri geliyor.
+        */}
+        {listingCategories.length > 1 && (
         <div className="relative flex items-center">
           {/* Left Scroll Button (Desktop only) */}
           {canScrollLeft && (
@@ -714,9 +731,10 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             </button>
           )}
         </div>
+        )}
 
-        {/* Divider */}
-        <div className="border-t border-gray-100"/>
+        {/* Ayraç yalnızca üstünde bir şerit varsa anlamlı. */}
+        {listingCategories.length > 1 && <div className="border-t border-gray-100" />}
 
         {/* Row 2: ÇALIŞMA TÜRÜ + ONAY KUTULARI + SIRALAMA */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-0.5">
