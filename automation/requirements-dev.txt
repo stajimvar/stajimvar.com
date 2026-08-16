@@ -1,0 +1,7 @@
+# Testleri çalıştırmak için gerekenler.
+#
+# pytest bilerek çalışma zamanı bağımlılıklarından ayrı: sunucuda tarama
+# yaparken gerekmiyor. Ama CI yalnızca requirements-scraper.txt kurduğu için
+# "No module named pytest" ile her saat başı kırmızıya düşüyordu.
+-r requirements-scraper.txt
+pytest>=8,<9

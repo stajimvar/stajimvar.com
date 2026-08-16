@@ -37,7 +37,22 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-      - run: pip install -r automation/requirements-scraper.txt
+      - run: pip install -r automation/requirements-dev.txt
+
+      # Sırlar tanımlı değilse hemen ve anlaşılır biçimde dur. Yoksa hata
+      # taramanın ortasında bir Python yığın izi olarak çıkıyor ve e-postadan
+      # neyin eksik olduğu anlaşılmıyor.
+      - name: Sırları doğrula
+        run: |
+          eksik=""
+          [ -z "$SUPABASE_URL" ] && eksik="$eksik SUPABASE_URL"
+          [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] && eksik="$eksik SUPABASE_SERVICE_ROLE_KEY"
+          if [ -n "$eksik" ]; then
+            echo "::error::Depo sırları eksik:$eksik — GitHub > Settings > Secrets and variables > Actions bölümünden ekleyin."
+            exit 1
+          fi
+          echo "Sırlar tanımlı."
+
       - name: Testler
         run: python -m pytest tests/ -q
         working-directory: automation
