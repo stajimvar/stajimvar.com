@@ -13,8 +13,6 @@ import {
   Briefcase,
   Send,
   UserCheck,
-  Moon,
-  Sun,
   Settings,
   LogOut,
   ArrowRight,
@@ -44,8 +42,6 @@ interface HeaderProps {
   allCompanies?: CompanyAccount[];
   onSelectCompany?: (companyId: string) => void;
   applicationsCount: number;
-  isDarkMode?: boolean;
-  onToggleDarkMode?: () => void;
   isLoggedIn?: boolean;
   onOpenLogin?: () => void;
   onOpenRegister?: () => void;
@@ -64,8 +60,6 @@ export const Header: React.FC<HeaderProps> = ({
   allCompanies = [],
   onSelectCompany,
   applicationsCount,
-  isDarkMode = false,
-  onToggleDarkMode,
   isLoggedIn = true,
   onOpenLogin,
   onOpenRegister,
@@ -174,7 +168,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md border-b border-gray-200/80 dark:border-slate-800/80 shadow-2xs transition-colors duration-200">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-2xs transition-colors duration-200">
         <div className="max-w-[1536px] mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10">
         {/* Main Nav Bar */}
         <div className="flex items-center justify-between h-15 sm:h-18 gap-2 sm:gap-4">
@@ -191,7 +185,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Desktop Student Navigation Bar */}
             {userRole === 'student' && activeTab !== 'company-portal' && (
-              <nav className="hidden lg:flex items-center p-1 bg-gray-100/90 dark:bg-slate-800/80 rounded-2xl border border-gray-200/90 dark:border-slate-700/80 shadow-2xs transition-all gap-0.5 shrink-0">
+              <nav className="hidden lg:flex items-center p-1 bg-gray-100/90 rounded-2xl border border-gray-200/90 shadow-2xs transition-all gap-0.5 shrink-0">
                 {/* 1. İş & Staj İlanları */}
                 <button
                   id="nav-tab-internships"
@@ -201,19 +195,19 @@ export const Header: React.FC<HeaderProps> = ({
                   }}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
                     activeTab === 'internships'
-                      ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-xs border border-blue-200/80 dark:border-blue-500/30 ring-1 ring-blue-500/10 font-extrabold'
-                      : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/50'
+                      ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
+                      :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
                   <Briefcase
                     className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                      activeTab === 'internships' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-slate-400'
+                      activeTab ==='internships'?'text-blue-600':'text-gray-400'
                     }`}
                   />
                   <span className="hidden xl:inline">İş & Staj İlanları</span>
                   <span className="inline xl:hidden">İlanlar</span>
                   {activeTab === 'internships' && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>
                   )}
                 </button>
 
@@ -233,13 +227,13 @@ export const Header: React.FC<HeaderProps> = ({
                   }}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
                     activeTab === 'badges'
-                      ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-xs border border-blue-200/80 dark:border-blue-500/30 ring-1 ring-blue-500/10 font-extrabold'
-                      : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/50'
+                      ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
+                      :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
                   <Award
                     className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                      activeTab === 'badges' ? 'text-amber-500' : 'text-gray-400 dark:text-slate-400'
+                      activeTab ==='badges'?'text-amber-500':'text-gray-400'
                     }`}
                   />
                   <span className="hidden xl:inline">Yetenek Doğrulama</span>
@@ -258,13 +252,13 @@ export const Header: React.FC<HeaderProps> = ({
                   }}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
                     activeTab === 'applications'
-                      ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-xs border border-blue-200/80 dark:border-blue-500/30 ring-1 ring-blue-500/10 font-extrabold'
-                      : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/50'
+                      ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
+                      :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
                   <Send
                     className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                      activeTab === 'applications' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-slate-400'
+                      activeTab ==='applications'?'text-blue-600':'text-gray-400'
                     }`}
                   />
                   <span>Başvurularım</span>
@@ -273,14 +267,14 @@ export const Header: React.FC<HeaderProps> = ({
                       className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full transition-all shrink-0 leading-none ${
                         activeTab === 'applications'
                           ? 'bg-blue-600 text-white shadow-2xs'
-                          : 'bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300'
+                          :'bg-blue-100 text-blue-800'
                       }`}
                     >
                       {applicationsCount}
                     </span>
                   )}
                   {activeTab === 'applications' && applicationsCount === 0 && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>
                   )}
                 </button>
 
@@ -293,13 +287,13 @@ export const Header: React.FC<HeaderProps> = ({
                   }}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
                     activeTab === 'profile'
-                      ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-xs border border-blue-200/80 dark:border-blue-500/30 ring-1 ring-blue-500/10 font-extrabold'
-                      : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/50'
+                      ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
+                      :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
                   <UserCheck
                     className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                      activeTab === 'profile' ? 'text-teal-600 dark:text-teal-400' : 'text-gray-400 dark:text-slate-400'
+                      activeTab ==='profile'?'text-teal-600':'text-gray-400'
                     }`}
                   />
                   <span className="hidden xl:inline">Özgeçmiş & Profil</span>
@@ -316,7 +310,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Desktop Company Navigation Bar - Simple & Clean matching Student Navbar */}
             {(userRole === 'company' || activeTab === 'company-portal') && (
-              <nav className="hidden lg:flex items-center p-1 bg-gray-100/90 dark:bg-slate-800/80 rounded-2xl border border-gray-200/90 dark:border-slate-700/80 shadow-2xs transition-all gap-0.5 shrink-0">
+              <nav className="hidden lg:flex items-center p-1 bg-gray-100/90 rounded-2xl border border-gray-200/90 shadow-2xs transition-all gap-0.5 shrink-0">
                 {/* 1. İlana Başvuranlar */}
                 <button
                   id="nav-company-applicants"
@@ -326,21 +320,21 @@ export const Header: React.FC<HeaderProps> = ({
                   }}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
                     activeSubTab === 'applicants'
-                      ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-xs border border-blue-200/80 dark:border-blue-500/30 ring-1 ring-blue-500/10 font-extrabold'
-                      : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/50'
+                      ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
+                      :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
                   <Inbox
                     className={`w-3.5 h-3.5 shrink-0 transition-colors ${
                       activeSubTab === 'applicants'
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-gray-400 dark:text-slate-400'
+                        ?'text-blue-600'
+                        :'text-gray-400'
                     }`}
                   />
                   <span className="hidden xl:inline">İlana Başvuranlar</span>
                   <span className="inline xl:hidden">Başvuranlar</span>
                   {activeSubTab === 'applicants' && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>
                   )}
                 </button>
 
@@ -353,21 +347,21 @@ export const Header: React.FC<HeaderProps> = ({
                   }}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
                     activeSubTab === 'all_candidates' || activeSubTab === 'all'
-                      ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-xs border border-blue-200/80 dark:border-blue-500/30 ring-1 ring-blue-500/10 font-extrabold'
-                      : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/50'
+                      ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
+                      :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
                   <Users
                     className={`w-3.5 h-3.5 shrink-0 transition-colors ${
                       activeSubTab === 'all_candidates' || activeSubTab === 'all'
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-gray-400 dark:text-slate-400'
+                        ?'text-blue-600'
+                        :'text-gray-400'
                     }`}
                   />
                   <span className="hidden xl:inline">Eşleşen Aday Havuzu</span>
                   <span className="inline xl:hidden">Aday Havuzu</span>
                   {(activeSubTab === 'all_candidates' || activeSubTab === 'all') && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>
                   )}
                 </button>
 
@@ -380,21 +374,21 @@ export const Header: React.FC<HeaderProps> = ({
                   }}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
                     activeSubTab === 'kanban'
-                      ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-xs border border-blue-200/80 dark:border-blue-500/30 ring-1 ring-blue-500/10 font-extrabold'
-                      : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/50'
+                      ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
+                      :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
                   <Columns
                     className={`w-3.5 h-3.5 shrink-0 transition-colors ${
                       activeSubTab === 'kanban'
-                        ? 'text-purple-600 dark:text-purple-400'
-                        : 'text-gray-400 dark:text-slate-400'
+                        ?'text-purple-600'
+                        :'text-gray-400'
                     }`}
                   />
                   <span className="hidden xl:inline">Kanban Süreç Panosu</span>
                   <span className="inline xl:hidden">Kanban Panosu</span>
                   {activeSubTab === 'kanban' && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-600 dark:bg-purple-400 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-600 shrink-0"/>
                   )}
                 </button>
 
@@ -407,47 +401,29 @@ export const Header: React.FC<HeaderProps> = ({
                   }}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
                     activeSubTab === 'post_new'
-                      ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-xs border border-blue-200/80 dark:border-blue-500/30 ring-1 ring-blue-500/10 font-extrabold'
-                      : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/50'
+                      ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
+                      :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
                   <Plus
                     className={`w-3.5 h-3.5 shrink-0 transition-colors ${
                       activeSubTab === 'post_new'
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-gray-400 dark:text-slate-400'
+                        ?'text-blue-600'
+                        :'text-gray-400'
                     }`}
                   />
                   <span className="hidden xl:inline">+ Yeni İlan Yayınla</span>
                   <span className="inline xl:hidden">+ Yeni İlan</span>
                   {activeSubTab === 'post_new' && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>
                   )}
                 </button>
               </nav>
             )}
           </div>
 
-          {/* Right Action Controls: Role Switcher + Dark Theme Toggle + Profile Selector */}
+          {/* Sağ taraf: rol değiştirici ve profil */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto">
-            {/* Dark Mode Toggle Button */}
-            {onToggleDarkMode && (
-              <button
-                id="theme-toggle-btn"
-                type="button"
-                onClick={onToggleDarkMode}
-                aria-label={isDarkMode ? 'Açık Temaya Geç' : 'Karanlık Temaya Geç'}
-                title={isDarkMode ? 'Açık Tema (Clean Light)' : 'Karanlık Tema (Clean Dark)'}
-                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-all shadow-2xs cursor-pointer shrink-0"
-              >
-                {isDarkMode ? (
-                  <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 animate-in spin-in-180 duration-200" />
-                ) : (
-                  <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-700 animate-in spin-in-180 duration-200" />
-                )}
-              </button>
-            )}
-
             {/*
               Auth Buttons or User Profile / Logout
               onOpenLogin/onOpenRegister verilmediyse kayıt akışı henüz hazır
@@ -459,7 +435,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   id="header-login-btn"
                   onClick={onOpenLogin}
-                  className="px-2.5 sm:px-4 py-1.5 rounded-full text-xs font-bold text-gray-700 dark:text-slate-200 hover:text-blue-600 hover:bg-gray-100 dark:hover:bg-slate-800 transition-all cursor-pointer whitespace-nowrap"
+                  className="px-2.5 sm:px-4 py-1.5 rounded-full text-xs font-bold text-gray-700 hover:text-blue-600 hover:bg-gray-100 transition-all cursor-pointer whitespace-nowrap"
                 >
                   Giriş Yap
                 </button>
@@ -488,7 +464,7 @@ export const Header: React.FC<HeaderProps> = ({
                     }
                   }}
                   title="Mesajlar ve Bildirimler"
-                  className="p-1.5 text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800"
+                  className="p-1.5 text-gray-700 hover:text-gray-900 transition-colors cursor-pointer rounded-lg hover:bg-gray-100"
                 >
                   <Mail className="w-4.5 sm:w-5 h-4.5 sm:h-5" />
                 </button>
@@ -499,26 +475,26 @@ export const Header: React.FC<HeaderProps> = ({
                     <button
                       id="user-profile-menu-btn"
                       onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                      className="flex items-center gap-1.5 sm:gap-2 py-1 px-1.5 sm:px-2 rounded-xl text-gray-800 dark:text-slate-100 hover:bg-gray-100/80 dark:hover:bg-slate-800/80 border border-gray-200/80 dark:border-slate-700/80 transition-all text-left cursor-pointer select-none shadow-2xs"
+                      className="flex items-center gap-1.5 sm:gap-2 py-1 px-1.5 sm:px-2 rounded-xl text-gray-800 hover:bg-gray-100/80 border border-gray-200/80 transition-all text-left cursor-pointer select-none shadow-2xs"
                       title="Hesap Menüsü"
                     >
                       <Avatar
                         name={activeStudent.fullName}
                         url={activeStudent.avatarUrl || undefined}
-                        className="w-7 h-7 rounded-full shrink-0 ring-1 ring-gray-200 dark:ring-slate-700 text-[10px]"
+                        className="w-7 h-7 rounded-full shrink-0 ring-1 ring-gray-200 text-[10px]"
                       />
-                      <span className="hidden md:inline text-xs font-bold text-gray-900 dark:text-white truncate">
+                      <span className="hidden md:inline text-xs font-bold text-gray-900 truncate">
                         {activeStudent.fullName}
                       </span>
                       <ChevronDown
-                        className={`w-3.5 sm:w-4 h-3.5 sm:h-4 text-gray-600 dark:text-slate-300 transition-transform duration-150 shrink-0 ${
+                        className={`w-3.5 sm:w-4 h-3.5 sm:h-4 text-gray-600 transition-transform duration-150 shrink-0 ${
                           profileDropdownOpen ? 'rotate-180' : ''
                         }`}
                       />
                     </button>
 
                     {profileDropdownOpen && (
-                      <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-gray-200/90 dark:border-slate-800 py-3 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-200/90 py-3 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
                         {/* Top Profile Header */}
                         <div className="px-4 pb-3 flex items-center gap-3">
                           <Avatar
@@ -527,23 +503,23 @@ export const Header: React.FC<HeaderProps> = ({
                             className="w-11 h-11 rounded-full shrink-0 ring-1 ring-blue-500/30 text-sm"
                           />
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-extrabold text-gray-900 dark:text-slate-100 truncate leading-tight">
+                            <p className="text-sm font-extrabold text-gray-900 truncate leading-tight">
                               {activeStudent.fullName}
                             </p>
-                            <p className="text-[11px] text-gray-500 dark:text-slate-400 truncate">
+                            <p className="text-[11px] text-gray-500 truncate">
                               {activeStudent.university}
                             </p>
-                            <span className="inline-block text-[10px] font-bold text-blue-600 dark:text-blue-400 mt-0.5">
+                            <span className="inline-block text-[10px] font-bold text-blue-600 mt-0.5">
                               {activeStudent.department}
                             </span>
                           </div>
                         </div>
 
                         {/* Divider */}
-                        <div className="border-t border-gray-100 dark:border-slate-800 my-1" />
+                        <div className="border-t border-gray-100 my-1"/>
 
                         {/* Menu Options */}
-                        <div className="py-1 text-xs text-gray-800 dark:text-slate-200 font-medium">
+                        <div className="py-1 text-xs text-gray-800 font-medium">
                           <button
                             type="button"
                             onClick={() => {
@@ -551,7 +527,7 @@ export const Header: React.FC<HeaderProps> = ({
                               setActiveSubTab('all');
                               setProfileDropdownOpen(false);
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800/70 transition-colors cursor-pointer flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
                           >
                             <User className="w-3.5 h-3.5 text-gray-400" />
                             <span>Öğrenci Profilim & CV</span>
@@ -564,7 +540,7 @@ export const Header: React.FC<HeaderProps> = ({
                               setActiveSubTab('all');
                               setProfileDropdownOpen(false);
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800/70 transition-colors cursor-pointer flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
                           >
                             <Send className="w-3.5 h-3.5 text-gray-400" />
                             <span>Başvurularım ({applicationsCount})</span>
@@ -577,7 +553,7 @@ export const Header: React.FC<HeaderProps> = ({
                               setActiveSubTab('all');
                               setProfileDropdownOpen(false);
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800/70 transition-colors cursor-pointer flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
                           >
                             <Award className="w-3.5 h-3.5 text-gray-400" />
                             <span>Rozetlerim & Testler</span>
@@ -585,7 +561,7 @@ export const Header: React.FC<HeaderProps> = ({
                         </div>
 
                         {/* Divider */}
-                        <div className="border-t border-gray-100 dark:border-slate-800 my-1" />
+                        <div className="border-t border-gray-100 my-1"/>
 
                         {/* Logout Option */}
                         <div className="px-2 pt-1">
@@ -595,7 +571,7 @@ export const Header: React.FC<HeaderProps> = ({
                               onLogout?.();
                               setProfileDropdownOpen(false);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-colors cursor-pointer"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
                           >
                             <LogOut className="w-3.5 h-3.5" />
                             <span>Çıkış Yap</span>
@@ -612,66 +588,66 @@ export const Header: React.FC<HeaderProps> = ({
                     <button
                       id="company-account-menu-btn"
                       onClick={() => setCompanyDropdownOpen(!companyDropdownOpen)}
-                      className="flex items-center gap-1.5 sm:gap-2 py-1 px-1.5 sm:px-2 rounded-xl text-gray-800 dark:text-slate-100 hover:bg-gray-100/80 dark:hover:bg-slate-800/80 border border-gray-200/80 dark:border-slate-700/80 transition-all text-left cursor-pointer select-none shadow-2xs"
+                      className="flex items-center gap-1.5 sm:gap-2 py-1 px-1.5 sm:px-2 rounded-xl text-gray-800 hover:bg-gray-100/80 border border-gray-200/80 transition-all text-left cursor-pointer select-none shadow-2xs"
                       title="Şirket Hesabı Menüsü"
                     >
                       <img
                         src={activeCompany.logo}
                         alt={activeCompany.name}
-                        className="w-7 h-7 rounded-lg object-cover shrink-0 ring-1 ring-gray-200 dark:ring-slate-700 bg-white"
+                        className="w-7 h-7 rounded-lg object-cover shrink-0 ring-1 ring-gray-200 bg-white"
                       />
                       <div className="hidden md:block min-w-0 max-w-[140px] leading-tight">
                         <div className="flex items-center gap-1">
-                          <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                          <span className="text-xs font-bold text-gray-900 truncate">
                             {activeCompany.name}
                           </span>
                           {activeCompany.verified && (
-                            <ShieldCheck className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
+                            <ShieldCheck className="w-3 h-3 text-blue-600 shrink-0"/>
                           )}
                         </div>
-                        <span className="text-[10px] text-gray-500 dark:text-slate-400 truncate block">
+                        <span className="text-[10px] text-gray-500 truncate block">
                           {activeCompany.recruiterName.split(' ')[0]} (İK)
                         </span>
                       </div>
                       <ChevronDown
-                        className={`w-3.5 h-3.5 text-gray-600 dark:text-slate-300 transition-transform duration-150 shrink-0 ${
+                        className={`w-3.5 h-3.5 text-gray-600 transition-transform duration-150 shrink-0 ${
                           companyDropdownOpen ? 'rotate-180' : ''
                         }`}
                       />
                     </button>
 
                     {companyDropdownOpen && (
-                      <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200/90 dark:border-slate-800 py-3 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                      <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200/90 py-3 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
                         {/* Top Active Company Card */}
                         <div className="px-4 pb-3 flex items-center gap-3">
                           <img
                             src={activeCompany.logo}
                             alt={activeCompany.name}
-                            className="w-12 h-12 rounded-xl object-cover shrink-0 ring-1 ring-gray-200 dark:ring-slate-700 bg-white shadow-2xs"
+                            className="w-12 h-12 rounded-xl object-cover shrink-0 ring-1 ring-gray-200 bg-white shadow-2xs"
                           />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5">
-                              <p className="text-sm font-extrabold text-gray-900 dark:text-slate-100 truncate">
+                              <p className="text-sm font-extrabold text-gray-900 truncate">
                                 {activeCompany.name}
                               </p>
                               {activeCompany.verified && (
-                                <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                                <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0"/>
                               )}
                             </div>
-                            <p className="text-[11px] text-gray-500 dark:text-slate-400 truncate">
+                            <p className="text-[11px] text-gray-500 truncate">
                               {activeCompany.industry}
                             </p>
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded-md mt-1">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md mt-1">
                               {activeCompany.recruiterName} • {activeCompany.recruiterRole}
                             </span>
                           </div>
                         </div>
 
                         {/* Divider */}
-                        <div className="border-t border-gray-100 dark:border-slate-800 my-2" />
+                        <div className="border-t border-gray-100 my-2"/>
 
                         {/* Company Portal Navigation Links */}
-                        <div className="py-1 text-xs text-gray-800 dark:text-slate-200 font-medium">
+                        <div className="py-1 text-xs text-gray-800 font-medium">
                           <button
                             type="button"
                             onClick={() => {
@@ -679,9 +655,9 @@ export const Header: React.FC<HeaderProps> = ({
                               setActiveSubTab('applicants');
                               setCompanyDropdownOpen(false);
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800/70 transition-colors cursor-pointer flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
                           >
-                            <Inbox className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                            <Inbox className="w-3.5 h-3.5 text-blue-600"/>
                             <span>İlana Başvuranlar</span>
                           </button>
 
@@ -692,7 +668,7 @@ export const Header: React.FC<HeaderProps> = ({
                               setActiveSubTab('all_candidates');
                               setCompanyDropdownOpen(false);
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800/70 transition-colors cursor-pointer flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
                           >
                             <Users className="w-3.5 h-3.5 text-gray-400" />
                             <span>Aday Havuzu & Eşleşmeler</span>
@@ -705,7 +681,7 @@ export const Header: React.FC<HeaderProps> = ({
                               setActiveSubTab('kanban');
                               setCompanyDropdownOpen(false);
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800/70 transition-colors cursor-pointer flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
                           >
                             <Columns className="w-3.5 h-3.5 text-gray-400" />
                             <span>Kanban Süreç Panosu</span>
@@ -718,15 +694,15 @@ export const Header: React.FC<HeaderProps> = ({
                               setActiveSubTab('post_new');
                               setCompanyDropdownOpen(false);
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800/70 transition-colors cursor-pointer flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold"
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2 text-blue-600 font-bold"
                           >
-                            <Plus className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                            <Plus className="w-3.5 h-3.5 text-blue-600"/>
                             <span>+ Yeni İlan Yayınla</span>
                           </button>
                         </div>
 
                         {/* Divider */}
-                        <div className="border-t border-gray-100 dark:border-slate-800 my-2" />
+                        <div className="border-t border-gray-100 my-2"/>
 
                         {/* Logout Option */}
                         <div className="px-2">
@@ -736,7 +712,7 @@ export const Header: React.FC<HeaderProps> = ({
                               onLogout?.();
                               setCompanyDropdownOpen(false);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-colors cursor-pointer"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
                           >
                             <LogOut className="w-3.5 h-3.5" />
                             <span>Şirket Portalından Çıkış Yap</span>
@@ -753,8 +729,8 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Dynamic Contextual Sub-Menu Bar (for Student views) */}
         {subMenuItems.length > 0 && (
-          <div className="relative border-t border-gray-100 dark:border-slate-800 flex items-center py-2 group/subnav">
-            <span className="text-[11px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider shrink-0 mr-2 hidden sm:inline">
+          <div className="relative border-t border-gray-100 flex items-center py-2 group/subnav">
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mr-2 hidden sm:inline">
               {activeTab === 'internships' && 'İlan Filtreleri:'}
               {activeTab === 'applications' && 'Başvuru Durumu:'}
               {activeTab === 'badges' && 'Kategori:'}
@@ -766,7 +742,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={() => scrollByAmount(-220)}
-                className="absolute left-0 z-10 p-1.5 rounded-full bg-white/95 dark:bg-slate-800/95 shadow-md border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all cursor-pointer"
+                className="absolute left-0 z-10 p-1.5 rounded-full bg-white/95 shadow-md border border-gray-200 text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-all cursor-pointer"
                 title="Sola Kaydır"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -808,7 +784,7 @@ export const Header: React.FC<HeaderProps> = ({
                     className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                       isActive
                         ? 'bg-blue-600 text-white shadow-xs font-bold'
-                        : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/80 dark:hover:bg-slate-700'
+                        :'bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200/80'
                     }`}
                   >
                     <span>{item.label}</span>
@@ -822,7 +798,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={() => scrollByAmount(220)}
-                className="absolute right-0 z-10 p-1.5 rounded-full bg-white/95 dark:bg-slate-800/95 shadow-md border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all cursor-pointer"
+                className="absolute right-0 z-10 p-1.5 rounded-full bg-white/95 shadow-md border border-gray-200 text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-all cursor-pointer"
                 title="Sağa Kaydır"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -837,7 +813,7 @@ export const Header: React.FC<HeaderProps> = ({
     {userRole === 'student' ? (
       <nav
         aria-label="Mobil Alt Navigasyon"
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-xl border-t border-gray-200/90 dark:border-slate-800 shadow-2xl px-2 py-1.5 flex items-center justify-around"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-gray-200/90 shadow-2xl px-2 py-1.5 flex items-center justify-around"
       >
         {/* 1. İlanlar */}
         <button
@@ -847,14 +823,14 @@ export const Header: React.FC<HeaderProps> = ({
           }}
           className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
             activeTab === 'internships'
-              ? 'text-blue-600 dark:text-blue-400 font-bold'
-              : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
+              ?'text-blue-600 font-bold'
+              :'text-gray-500 hover:text-gray-900'
           }`}
         >
           <div className="relative">
             <Briefcase className="w-5 h-5" />
             {activeTab === 'internships' && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600"/>
             )}
           </div>
           <span className="text-[10px] mt-0.5 font-semibold">İlanlar</span>
@@ -871,8 +847,8 @@ export const Header: React.FC<HeaderProps> = ({
           }}
           className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
             activeTab === 'badges'
-              ? 'text-blue-600 dark:text-blue-400 font-bold'
-              : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
+              ?'text-blue-600 font-bold'
+              :'text-gray-500 hover:text-gray-900'
           }`}
         >
           <div className="relative">
@@ -892,8 +868,8 @@ export const Header: React.FC<HeaderProps> = ({
           }}
           className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
             activeTab === 'applications'
-              ? 'text-blue-600 dark:text-blue-400 font-bold'
-              : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
+              ?'text-blue-600 font-bold'
+              :'text-gray-500 hover:text-gray-900'
           }`}
         >
           <div className="relative">
@@ -915,8 +891,8 @@ export const Header: React.FC<HeaderProps> = ({
           }}
           className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
             activeTab === 'profile'
-              ? 'text-blue-600 dark:text-blue-400 font-bold'
-              : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
+              ?'text-blue-600 font-bold'
+              :'text-gray-500 hover:text-gray-900'
           }`}
         >
           <div className="relative">
@@ -935,7 +911,7 @@ export const Header: React.FC<HeaderProps> = ({
       /* Mobile Bottom Navigation for Company */
       <nav
         aria-label="Mobil Alt Şirket Navigasyon"
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-xl border-t border-gray-200/90 dark:border-slate-800 shadow-2xl px-2 py-1.5 flex items-center justify-around"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-gray-200/90 shadow-2xl px-2 py-1.5 flex items-center justify-around"
       >
         <button
           onClick={() => {
@@ -944,8 +920,8 @@ export const Header: React.FC<HeaderProps> = ({
           }}
           className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
             activeSubTab === 'all_candidates' || activeSubTab === 'all'
-              ? 'text-blue-600 dark:text-blue-400 font-bold'
-              : 'text-gray-500 dark:text-slate-400'
+              ?'text-blue-600 font-bold'
+              :'text-gray-500'
           }`}
         >
           <Users className="w-5 h-5" />
@@ -959,8 +935,8 @@ export const Header: React.FC<HeaderProps> = ({
           }}
           className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
             activeSubTab === 'top_matches'
-              ? 'text-orange-600 dark:text-orange-400 font-bold'
-              : 'text-gray-500 dark:text-slate-400'
+              ?'text-orange-600 font-bold'
+              :'text-gray-500'
           }`}
         >
           <Sparkles className="w-5 h-5" />
@@ -974,8 +950,8 @@ export const Header: React.FC<HeaderProps> = ({
           }}
           className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
             activeSubTab === 'kanban'
-              ? 'text-purple-600 dark:text-purple-400 font-bold'
-              : 'text-gray-500 dark:text-slate-400'
+              ?'text-purple-600 font-bold'
+              :'text-gray-500'
           }`}
         >
           <Columns className="w-5 h-5" />
@@ -987,7 +963,7 @@ export const Header: React.FC<HeaderProps> = ({
             setActiveTab('company-portal');
             setActiveSubTab('post_new');
           }}
-          className="flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl text-blue-600 dark:text-blue-400 font-bold cursor-pointer"
+          className="flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl text-blue-600 font-bold cursor-pointer"
         >
           <Plus className="w-5 h-5" />
           <span className="text-[10px] mt-0.5 font-semibold">İlan Ekle</span>

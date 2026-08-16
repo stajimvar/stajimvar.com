@@ -42,8 +42,8 @@ interface LegalPageProps {
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <section className="space-y-2">
-    <h2 className="text-base font-bold text-gray-900 dark:text-white">{title}</h2>
-    <div className="text-sm text-gray-600 dark:text-slate-300 leading-relaxed space-y-2">
+    <h2 className="text-base font-bold text-gray-900">{title}</h2>
+    <div className="text-sm text-gray-600 leading-relaxed space-y-2">
       {children}
     </div>
   </section>
@@ -55,14 +55,14 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
     : null;
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0B0F17] text-gray-900 dark:text-slate-100">
-      <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+    <div className="min-h-screen bg-[#F9FAFB] text-gray-900">
+      <header className="border-b border-gray-200 bg-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <Logo />
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-blue-600 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             İlanlara dön
@@ -77,7 +77,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
               <h1 className="text-2xl sm:text-3xl font-extrabold">
                 {CORPORATE_TITLES[kurumsal]}
               </h1>
-              <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 Son güncelleme: {UPDATED}
               </p>
             </div>
@@ -89,7 +89,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
           <>
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold">Gizlilik Politikası</h1>
-              <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 Son güncelleme: {UPDATED}
               </p>
             </div>
@@ -221,7 +221,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
           <>
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold">Çerez Politikası</h1>
-              <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 Son güncelleme: {UPDATED}
               </p>
             </div>
@@ -237,13 +237,14 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 yeniden giriş yapmanız gerekirdi. Çıkışta silinir.
               </p>
               <p>
-                Ayrıca yerel depoda bir tercih saklanıyor:
-                <code className="mx-1 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-slate-800 text-xs">
+                Bunun dışında yerel depoda hiçbir tercih saklamıyoruz. Daha önce
+                tema tercihiniz için
+                <code className="mx-1 px-1.5 py-0.5 rounded bg-gray-100 text-xs">
                   stajimvar_theme
                 </code>
-                — siteyi açık mı koyu temada mı görmek istediğiniz. Bu bilgi
-                tarayıcınızdan dışarı çıkmaz ve kimliğinizle ilişkilendirilmez.
-                Tarayıcı ayarlarınızdan site verilerini silerek kaldırabilirsiniz.
+                adlı bir kayıt tutuluyordu; karanlık tema kaldırıldığı için bu
+                kayıt artık oluşturulmuyor ve siteyi bir sonraki açışınızda
+                tarayıcınızdan otomatik olarak siliniyor.
               </p>
             </Section>
 
@@ -269,7 +270,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
           <>
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold">KVKK Aydınlatma Metni</h1>
-              <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 Son güncelleme: {UPDATED}
               </p>
             </div>
@@ -310,7 +311,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 tanımlıdır. Şifreler geri döndürülemez biçimde saklanır. Yönetici
                 anahtarları yalnızca sunucuda bulunur. Ayrıntılar için{' '}
                 <a
-                  className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+                  className="text-blue-600 font-semibold hover:underline"
                   href="/gizlilik"
                 >
                   Gizlilik Politikası
@@ -332,11 +333,11 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
           </>
         )}
 
-        <div className="pt-6 border-t border-gray-200 dark:border-slate-800 text-sm text-gray-600 dark:text-slate-300">
+        <div className="pt-6 border-t border-gray-200 text-sm text-gray-600">
           <p>
             Sorularınız için:{' '}
             <a
-              className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+              className="text-blue-600 font-semibold hover:underline"
               href="mailto:iletisim@stajimvar.com"
             >
               iletisim@stajimvar.com

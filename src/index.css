@@ -1,9 +1,20 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+/*
+  Site tek temalı: yalnızca açık tema var.
 
+  Karanlık tema kaldırıldı — yarım kalmış bir özellikti ve her ekranda iki
+  ayrı renk kümesini birlikte doğru tutmak gerekiyordu.
+
+  `color-scheme: light` önemli: telefonun işletim sistemi karanlık moddayken
+  tarayıcı, açılır menü ve metin alanı gibi yerleşik denetimleri kendiliğinden
+  koyu çiziyordu. Bu satır olmadan sayfa beyaz, içindeki seçim kutuları siyah
+  kalıyordu.
+*/
 @layer base {
   :root {
+    color-scheme: light;
+
     --bg-page: #F9FAFB;
     --bg-card: #FFFFFF;
     --bg-muted: #F3F4F6;
@@ -11,16 +22,6 @@
     --text-secondary: #4B5563;
     --text-muted: #9CA3AF;
     --border-color: #E5E7EB;
-  }
-
-  .dark {
-    --bg-page: #0B0F17;
-    --bg-card: #131B2A;
-    --bg-muted: #1A2436;
-    --text-primary: #F9FAFB;
-    --text-secondary: #94A3B8;
-    --text-muted: #64748B;
-    --border-color: #1E293B;
   }
 }
 
@@ -51,6 +52,17 @@
   body {
     max-width: 100%;
     overflow-x: hidden;
+  }
+
+  /*
+    Sayfa zemini gövdede açıkça tanımlı. Zemin yalnızca uygulama sarmalayıcı
+    div'inde olsaydı, kaydırma sınırının ötesinde tarayıcının kendi zemini
+    görünürdü — telefon karanlık moddayken bu, sayfanın kenarında koyu bir
+    şerit demek.
+  */
+  body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
   }
 
   /*

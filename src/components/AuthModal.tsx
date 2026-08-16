@@ -172,11 +172,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-gray-200 dark:border-slate-800 shadow-2xl relative my-8 animate-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-gray-200 shadow-2xl relative my-8 animate-in zoom-in-95 duration-200">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 text-gray-500 hover:text-gray-900 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:text-gray-900 flex items-center justify-center transition-colors cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
@@ -186,7 +186,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div className="inline-block mb-3">
             <Logo size="md" />
           </div>
-          <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
+          <h3 className="text-xl font-black text-gray-900 tracking-tight">
             {role === 'company'
               ? mode === 'login'
                 ? 'Şirket Hesabınıza Giriş Yapın'
@@ -195,7 +195,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               ? 'Öğrenci Hesabınıza Giriş Yapın'
               : 'Öğrenci Hesabı Oluşturun'}
           </h3>
-          <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-gray-500 mt-1">
             {role === 'company'
               ? 'Her şirketin kendine ait bağımsız yetenek havuzu, ilan yönetimi ve İK paneli bulunur.'
               : 'Yeteneklerinizi doğrulayın, zorunlu ve gönüllü staj ilanlarına tek tıkla başvurun.'}
@@ -210,14 +210,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           gizliyoruz.
         */}
         {allowCompanySignUp && (
-        <div className="flex items-center gap-2 mb-4 bg-gray-100 dark:bg-slate-800/80 p-1 rounded-2xl">
+        <div className="flex items-center gap-2 mb-4 bg-gray-100 p-1 rounded-2xl">
           <button
             type="button"
             onClick={() => setRole('student')}
             className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
               role === 'student'
-                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs ring-1 ring-blue-500/20'
-                : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
+                ?'bg-white text-blue-600 shadow-xs ring-1 ring-blue-500/20'
+                :'text-gray-600 hover:text-gray-900'
             }`}
           >
             <User className="w-3.5 h-3.5" />
@@ -228,8 +228,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             onClick={() => setRole('company')}
             className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
               role === 'company'
-                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs ring-1 ring-blue-500/20'
-                : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
+                ?'bg-white text-blue-600 shadow-xs ring-1 ring-blue-500/20'
+                :'text-gray-600 hover:text-gray-900'
             }`}
           >
             <Building2 className="w-3.5 h-3.5" />
@@ -239,14 +239,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         )}
 
         {/* Mode Switcher Tabs */}
-        <div className="flex border-b border-gray-200 dark:border-slate-800 mb-5">
+        <div className="flex border-b border-gray-200 mb-5">
           <button
             type="button"
             onClick={() => setMode('login')}
             className={`flex-1 pb-2.5 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border-b-2 ${
               mode === 'login'
-                ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-black'
-                : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-800'
+                ?'border-blue-600 text-blue-600 font-black'
+                :'border-transparent text-gray-500 hover:text-gray-800'
             }`}
           >
             <LogIn className="w-3.5 h-3.5" />
@@ -257,8 +257,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             onClick={() => setMode('register')}
             className={`flex-1 pb-2.5 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border-b-2 ${
               mode === 'register'
-                ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-black'
-                : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-800'
+                ?'border-blue-600 text-blue-600 font-black'
+                :'border-transparent text-gray-500 hover:text-gray-800'
             }`}
           >
             <UserPlus className="w-3.5 h-3.5" />
@@ -272,7 +272,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {role === 'company' && mode === 'login' && (
             <div className="space-y-3">
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1.5">
+                <label className="block font-bold text-gray-700 mb-1.5">
                   Giriş Yapılacak Şirket Hesabı Seçin:
                 </label>
                 <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-1">
@@ -288,8 +288,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         }}
                         className={`flex items-center gap-3 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                           isSelected
-                            ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 ring-1 ring-blue-500/20'
-                            : 'border-gray-200 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/70'
+                            ?'border-blue-500 bg-blue-50/70 text-blue-900 ring-1 ring-blue-500/20'
+                            :'border-gray-200 hover:bg-gray-50'
                         }`}
                       >
                         <img
@@ -299,19 +299,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
-                            <span className="font-bold text-xs text-gray-900 dark:text-white truncate">
+                            <span className="font-bold text-xs text-gray-900 truncate">
                               {comp.name}
                             </span>
                             {comp.verified && (
-                              <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                              <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0"/>
                             )}
                           </div>
-                          <span className="text-[10px] text-gray-500 dark:text-slate-400 block truncate">
+                          <span className="text-[10px] text-gray-500 block truncate">
                             {comp.recruiterName} ({comp.recruiterRole})
                           </span>
                         </div>
                         {isSelected && (
-                          <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0"/>
                         )}
                       </button>
                     );
@@ -320,7 +320,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                <label className="block font-bold text-gray-700 mb-1">
                   Kurumsal Yetkili E-posta
                 </label>
                 <div className="relative">
@@ -331,13 +331,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={email || (allCompanies.find((c) => c.id === selectedCompId)?.recruiterEmail ?? '')}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="ik@sirketiniz.com"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                <label className="block font-bold text-gray-700 mb-1">
                   Şifre
                 </label>
                 <div className="relative">
@@ -347,7 +347,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     defaultValue="demo1234"
                     required
                     placeholder="••••••••"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
               </div>
@@ -358,7 +358,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {role === 'company' && mode === 'register' && (
             <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                <label className="block font-bold text-gray-700 mb-1">
                   Şirket / Kurum Adı *
                 </label>
                 <div className="relative">
@@ -369,20 +369,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     placeholder="Örn: Akbank Tech / Getir / ASELSAN"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                  <label className="block font-bold text-gray-700 mb-1">
                     Sektör *
                   </label>
                   <select
                     value={companyIndustry}
                     onChange={(e) => setCompanyIndustry(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   >
                     <option value="Yazılım & Bilişim">Yazılım & Bilişim</option>
                     <option value="Fintech & Bankacılık">Fintech & Bankacılık</option>
@@ -394,13 +394,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                  <label className="block font-bold text-gray-700 mb-1">
                     Şirket Ölçeği
                   </label>
                   <select
                     value={companySize}
                     onChange={(e) => setCompanySize(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   >
                     <option value="1-20 Çalışan (Startup)">1-20 (Startup)</option>
                     <option value="50-250 Çalışan">50-250 Çalışan</option>
@@ -411,7 +411,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                <label className="block font-bold text-gray-700 mb-1">
                   Şirket Lokasyonu & Çalışma Modeli
                 </label>
                 <div className="relative">
@@ -421,14 +421,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={companyLocation}
                     onChange={(e) => setCompanyLocation(e.target.value)}
                     placeholder="Örn: İstanbul (Levent) / Hibrit"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                  <label className="block font-bold text-gray-700 mb-1">
                     İK / Yetkili Ad Soyad *
                   </label>
                   <input
@@ -437,11 +437,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={recruiterName}
                     onChange={(e) => setRecruiterName(e.target.value)}
                     placeholder="Örn: Zeynep Kaya"
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                  <label className="block font-bold text-gray-700 mb-1">
                     Yetkili Ünvanı
                   </label>
                   <input
@@ -449,13 +449,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={recruiterRole}
                     onChange={(e) => setRecruiterRole(e.target.value)}
                     placeholder="Örn: İK Lideri"
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                <label className="block font-bold text-gray-700 mb-1">
                   Kurumsal E-Posta *
                 </label>
                 <div className="relative">
@@ -466,13 +466,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="ik@sirketiniz.com"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                <label className="block font-bold text-gray-700 mb-1">
                   Şifre Belirleyin *
                 </label>
                 <div className="relative">
@@ -483,7 +483,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
               </div>
@@ -495,7 +495,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <div className="space-y-3">
               {mode === 'register' && (
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                  <label className="block font-bold text-gray-700 mb-1">
                     Ad Soyad *
                   </label>
                   <div className="relative">
@@ -506,14 +506,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Örn: Mustafa Oğulcan Doğan"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                     />
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                <label className="block font-bold text-gray-700 mb-1">
                   Öğrenci / Kişisel E-Posta
                 </label>
                 <div className="relative">
@@ -524,13 +524,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="ogulcan@itu.edu.tr"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                <label className="block font-bold text-gray-700 mb-1">
                   Şifre
                 </label>
                 <div className="relative">
@@ -541,7 +541,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
               </div>
@@ -550,19 +550,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           {/* KVKK açık rızası — kayıt akışında zorunlu */}
           {mode === 'register' && (
-            <label className="flex items-start gap-2.5 p-3 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 cursor-pointer">
+            <label className="flex items-start gap-2.5 p-3 rounded-xl bg-gray-50 border border-gray-200 cursor-pointer">
               <input
                 type="checkbox"
                 checked={kvkkConsent}
                 onChange={(e) => setKvkkConsent(e.target.checked)}
                 className="mt-0.5 w-4 h-4 rounded accent-blue-600 shrink-0 cursor-pointer"
               />
-              <span className="text-[11px] leading-relaxed text-gray-600 dark:text-slate-300">
+              <span className="text-[11px] leading-relaxed text-gray-600">
                 <a
                   href="/kvkk-aydinlatma-metni"
                   target="_blank"
                   rel="noreferrer"
-                  className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                  className="font-semibold text-blue-600 hover:underline"
                   onClick={(e) => e.stopPropagation()}
                 >
                   Aydınlatma metnini
@@ -575,7 +575,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {authError && (
             <div
               role="alert"
-              className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-[11px] font-medium text-red-700 dark:text-red-300"
+              className="p-3 rounded-xl bg-red-50 border border-red-200 text-[11px] font-medium text-red-700"
             >
               {authError}
             </div>
@@ -584,7 +584,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {infoMessage && (
             <div
               role="status"
-              className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-[11px] font-medium text-emerald-700 dark:text-emerald-300"
+              className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] font-medium text-emerald-700"
             >
               {infoMessage}
             </div>
@@ -593,7 +593,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button
             type="submit"
             disabled={submitting || (mode === 'register' && !kvkkConsent)}
-            className="w-full mt-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full mt-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             {submitting && (
               <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />

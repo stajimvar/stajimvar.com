@@ -131,31 +131,31 @@ const Bolum: React.FC<BolumProps> = ({
 }) => (
   <section
     id={`bolum-${id}`}
-    className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 overflow-hidden scroll-mt-28"
+    className="bg-white rounded-2xl border border-gray-200 overflow-hidden scroll-mt-28"
   >
     <button
       type="button"
       onClick={() => onToggle(id)}
       aria-expanded={acik}
-      className="w-full flex items-center gap-3 p-4 text-left cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors"
+      className="w-full flex items-center gap-3 p-4 text-left cursor-pointer hover:bg-gray-50 transition-colors"
     >
       <span
         aria-hidden
-        className="w-10 h-10 shrink-0 rounded-xl bg-gray-100 dark:bg-slate-800 flex items-center justify-center text-lg"
+        className="w-10 h-10 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center text-lg"
       >
         {emoji}
       </span>
 
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
-          <span className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">
+          <span className="font-bold text-gray-900 text-sm sm:text-base">
             {baslik}
           </span>
           {tamam && (
-            <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <Check className="w-4 h-4 text-emerald-600 shrink-0"/>
           )}
         </span>
-        <span className="block text-xs text-gray-500 dark:text-slate-400 truncate">
+        <span className="block text-xs text-gray-500 truncate">
           {ozet}
         </span>
       </span>
@@ -166,7 +166,7 @@ const Bolum: React.FC<BolumProps> = ({
     </button>
 
     {acik && (
-      <div className="px-4 pb-5 pt-1 space-y-4 border-t border-gray-100 dark:border-slate-800">
+      <div className="px-4 pb-5 pt-1 space-y-4 border-t border-gray-100">
         {children}
       </div>
     )}
@@ -175,13 +175,13 @@ const Bolum: React.FC<BolumProps> = ({
 
 /* Boş bölümlerde tek satırlık yönlendirme. */
 const BosDurum: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <p className="text-xs text-gray-400 dark:text-slate-500 py-1">{children}</p>
+  <p className="text-xs text-gray-400 py-1">{children}</p>
 );
 
 const alanClass =
-  'w-full p-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600';
+  'w-full p-3 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-800 focus:outline-none focus:border-blue-600';
 
-const etiketClass = 'block text-xs font-semibold text-gray-600 dark:text-slate-400 mb-1.5';
+const etiketClass ='block text-xs font-semibold text-gray-600 mb-1.5';
 
 /* ------------------------------------------------------------------ */
 
@@ -445,7 +445,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   return (
     <div className="max-w-3xl mx-auto space-y-3 pb-16 animate-in fade-in duration-200">
       {/* ---------------- Üst kart: kim olduğun + ilerleme ---------------- */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-4 sm:p-5 space-y-4">
+      <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 space-y-4">
         <div className="flex items-center gap-4">
           <input
             type="file"
@@ -465,7 +465,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               url={student.avatarUrl || undefined}
               className="w-16 h-16 rounded-2xl text-xl"
             />
-            <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center border-2 border-white dark:border-slate-900">
+            <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center border-2 border-white">
               {avatarYukleniyor
                 ? <Loader2 className="w-3 h-3 animate-spin" />
                 : <Camera className="w-3 h-3" />}
@@ -473,31 +473,31 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           </button>
 
           <div className="min-w-0 flex-1">
-            <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
               {student.fullName}
             </h1>
-            <p className="text-xs text-gray-500 dark:text-slate-400 truncate">
+            <p className="text-xs text-gray-500 truncate">
               {student.university || 'Okulun eksik'}
               {student.department ? ` · ${student.department}` : ''}
             </p>
-            <p className="text-xs text-gray-400 dark:text-slate-500">{student.gradeLevel}</p>
+            <p className="text-xs text-gray-400">{student.gradeLevel}</p>
           </div>
         </div>
 
         {avatarHatasi && (
-          <p className="text-xs text-rose-600 dark:text-rose-400">{avatarHatasi}</p>
+          <p className="text-xs text-rose-600">{avatarHatasi}</p>
         )}
 
         {/* ilerleme */}
         <div className="space-y-2">
           <div className="flex items-baseline justify-between gap-2">
-            <span className="text-sm font-bold text-gray-900 dark:text-white">{tonu}</span>
-            <span className="text-xs font-bold text-gray-500 dark:text-slate-400 tabular-nums">
+            <span className="text-sm font-bold text-gray-900">{tonu}</span>
+            <span className="text-xs font-bold text-gray-500 tabular-nums">
               {tamamlanan}/{adimlar.length}
             </span>
           </div>
 
-          <div className="h-2 rounded-full bg-gray-100 dark:bg-slate-800 overflow-hidden">
+          <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
                 oran === 100 ? 'bg-emerald-500' : 'bg-blue-600'
@@ -510,17 +510,17 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             <button
               type="button"
               onClick={siradakineGit}
-              className="w-full flex items-center justify-between gap-2 p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 text-left cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-950/70 transition-colors"
+              className="w-full flex items-center justify-between gap-2 p-3 rounded-xl bg-blue-50 border border-blue-100 text-left cursor-pointer hover:bg-blue-100 transition-colors"
             >
-              <span className="text-sm font-semibold text-blue-800 dark:text-blue-200 min-w-0">
+              <span className="text-sm font-semibold text-blue-800 min-w-0">
                 Sıradaki: {siradaki.etiket}
               </span>
-              <span className="text-xs font-bold text-blue-700 dark:text-blue-300 shrink-0">
+              <span className="text-xs font-bold text-blue-700 shrink-0">
                 Aç →
               </span>
             </button>
           ) : (
-            <p className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
+            <p className="text-xs text-emerald-700 font-semibold">
               Her alanı doldurdun. Artık ilanlara başvurabilirsin.
             </p>
           )}
@@ -624,7 +624,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               placeholder="05XX XXX XX XX"
               className={alanClass}
             />
-            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
+            <p className="text-[11px] text-gray-400 mt-1">
               Telefonun yalnızca başvurduğun ilanın şirketiyle paylaşılır.
             </p>
           </div>
@@ -649,7 +649,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               Kaydet
             </button>
             {kaydedildi && (
-              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+              <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
                 <Check className="w-4 h-4" /> Kaydedildi
               </span>
             )}
@@ -674,27 +674,27 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             {yetenekler.map((skill) => (
               <span
                 key={skill.name}
-                className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm"
+                className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl bg-gray-50 border border-gray-200 text-sm"
               >
-                <span className="font-semibold text-gray-900 dark:text-slate-100">{skill.name}</span>
+                <span className="font-semibold text-gray-900">{skill.name}</span>
 
                 <button
                   type="button"
                   onClick={() => seviyeDondur(skill.name)}
                   title="Seviyeyi değiştirmek için dokun"
-                  className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 cursor-pointer hover:border-blue-400"
+                  className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-white border border-gray-200 text-gray-600 cursor-pointer hover:border-blue-400"
                 >
                   {SEVIYE_ETIKET[skill.level]}
                 </button>
 
                 {skill.verified ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600"/>
                 ) : (
                   <button
                     type="button"
                     onClick={() => onOpenQuiz(skill.name)}
                     title="Testi çöz, rozet kazan"
-                    className="p-1 text-blue-600 dark:text-blue-400 cursor-pointer"
+                    className="p-1 text-blue-600 cursor-pointer"
                   >
                     <Award className="w-4 h-4" />
                   </button>
@@ -704,7 +704,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                   type="button"
                   onClick={() => yetenekSil(skill.name)}
                   aria-label={`${skill.name} kaldır`}
-                  className="p-1 text-gray-300 dark:text-slate-500 hover:text-rose-600 cursor-pointer"
+                  className="p-1 text-gray-300 hover:text-rose-600 cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -721,7 +721,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                 key={tool}
                 type="button"
                 onClick={() => yetenekEkle(tool)}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-dashed border-gray-300 dark:border-slate-600 text-xs font-semibold text-gray-600 dark:text-slate-300 hover:border-blue-500 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer transition-colors"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-dashed border-gray-300 text-xs font-semibold text-gray-600 hover:border-blue-500 hover:text-blue-700 cursor-pointer transition-colors"
               >
                 <Plus className="w-3 h-3" />
                 {tool}
@@ -740,7 +740,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           buttonText="Ekle"
           accentColor="blue"
         />
-        <p className="text-[11px] text-gray-400 dark:text-slate-500">
+        <p className="text-[11px] text-gray-400">
           Seviyeyi değiştirmek için rozetin üstündeki yazıya dokun.
         </p>
       </Bolum>
@@ -760,7 +760,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             {sosyal.map((beceri) => (
               <span
                 key={beceri}
-                className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 text-sm font-semibold text-blue-900 dark:text-blue-200"
+                className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl bg-blue-50 border border-blue-100 text-sm font-semibold text-blue-900"
               >
                 {beceri}
                 <button
@@ -782,7 +782,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               key={oneri}
               type="button"
               onClick={() => sosyalEkle(oneri)}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-dashed border-gray-300 dark:border-slate-600 text-xs font-semibold text-gray-600 dark:text-slate-300 hover:border-blue-500 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-dashed border-gray-300 text-xs font-semibold text-gray-600 hover:border-blue-500 hover:text-blue-700 cursor-pointer transition-colors"
             >
               <Plus className="w-3 h-3" />
               {oneri}
@@ -821,13 +821,13 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           {diller.map((lang) => (
             <div
               key={lang.id}
-              className="p-3 rounded-xl bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 space-y-2"
+              className="p-3 rounded-xl bg-gray-50 border border-gray-200 space-y-2"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="font-bold text-sm text-gray-900 dark:text-slate-100 flex items-center gap-1.5 min-w-0">
+                <span className="font-bold text-sm text-gray-900 flex items-center gap-1.5 min-w-0">
                   <span className="truncate">{lang.language}</span>
                   {lang.verified && (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0"/>
                   )}
                 </span>
                 <div className="flex items-center gap-1 shrink-0">
@@ -835,7 +835,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                     <button
                       type="button"
                       onClick={() => onOpenQuiz(lang.language)}
-                      className="text-xs font-bold text-blue-600 dark:text-blue-400 px-2 py-1 cursor-pointer"
+                      className="text-xs font-bold text-blue-600 px-2 py-1 cursor-pointer"
                     >
                       Doğrula
                     </button>
@@ -844,7 +844,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                     type="button"
                     onClick={() => dilSil(lang.id)}
                     aria-label={`${lang.language} kaldır`}
-                    className="p-1.5 text-gray-300 dark:text-slate-500 hover:text-rose-600 cursor-pointer"
+                    className="p-1.5 text-gray-300 hover:text-rose-600 cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -860,20 +860,20 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                     className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                       lang.level === sv
                         ? 'bg-blue-600 text-white'
-                        : 'bg-white dark:bg-slate-700 text-gray-500 dark:text-slate-300 border border-gray-200 dark:border-slate-600'
+                        :'bg-white text-gray-500 border border-gray-200'
                     }`}
                   >
                     {sv}
                   </button>
                 ))}
               </div>
-              <p className="text-[11px] text-gray-500 dark:text-slate-400">{lang.proficiencyText}</p>
+              <p className="text-[11px] text-gray-500">{lang.proficiencyText}</p>
             </div>
           ))}
         </div>
 
         {dilFormu ? (
-          <form onSubmit={dilEkle} className="p-3 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/30 space-y-3">
+          <form onSubmit={dilEkle} className="p-3 rounded-xl border border-blue-200 bg-blue-50/50 space-y-3">
             <PredictiveInput
               id="yeni-dil"
               value={yeniDil}
@@ -895,14 +895,14 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                   className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                     yeniDilSeviye === sv
                       ? 'bg-blue-600 text-white'
-                      : 'bg-white dark:bg-slate-800 text-gray-500 dark:text-slate-300 border border-gray-200 dark:border-slate-600'
+                      :'bg-white text-gray-500 border border-gray-200'
                   }`}
                 >
                   {sv}
                 </button>
               ))}
             </div>
-            <p className="text-[11px] text-gray-500 dark:text-slate-400">
+            <p className="text-[11px] text-gray-500">
               {DIL_SEVIYE_METNI[yeniDilSeviye]}
             </p>
 
@@ -917,7 +917,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               <button
                 type="button"
                 onClick={() => setDilFormu(false)}
-                className="px-3 py-2 rounded-xl text-sm font-semibold text-gray-500 dark:text-slate-400 cursor-pointer"
+                className="px-3 py-2 rounded-xl text-sm font-semibold text-gray-500 cursor-pointer"
               >
                 Vazgeç
               </button>
@@ -927,7 +927,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           <button
             type="button"
             onClick={() => setDilFormu(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 dark:border-slate-600 text-sm font-semibold text-gray-600 dark:text-slate-300 hover:border-blue-500 hover:text-blue-700 cursor-pointer transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-sm font-semibold text-gray-600 hover:border-blue-500 hover:text-blue-700 cursor-pointer transition-colors"
           >
             <Plus className="w-4 h-4" /> Dil ekle
           </button>
@@ -954,11 +954,11 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           {projeler.map((p) => (
             <div
               key={p.id}
-              className="p-3 rounded-xl bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex items-start justify-between gap-3"
+              className="p-3 rounded-xl bg-gray-50 border border-gray-200 flex items-start justify-between gap-3"
             >
               <div className="min-w-0 space-y-1">
                 <div className="flex items-center gap-1.5">
-                  <h4 className="font-bold text-sm text-gray-900 dark:text-slate-100">{p.title}</h4>
+                  <h4 className="font-bold text-sm text-gray-900">{p.title}</h4>
                   {p.githubUrl && (
                     <a
                       href={p.githubUrl}
@@ -972,14 +972,14 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                   )}
                 </div>
                 {p.description && (
-                  <p className="text-xs text-gray-600 dark:text-slate-300">{p.description}</p>
+                  <p className="text-xs text-gray-600">{p.description}</p>
                 )}
                 {p.techStack.length > 0 && (
                   <div className="flex flex-wrap gap-1 pt-0.5">
                     {p.techStack.map((tech) => (
                       <span
                         key={tech}
-                        className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-[10px] font-semibold text-gray-600 dark:text-slate-300"
+                        className="px-2 py-0.5 rounded-md bg-white border border-gray-200 text-[10px] font-semibold text-gray-600"
                       >
                         {tech}
                       </span>
@@ -991,7 +991,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                 type="button"
                 onClick={() => projeSil(p.id)}
                 aria-label={`${p.title} sil`}
-                className="p-1.5 shrink-0 text-gray-300 dark:text-slate-500 hover:text-rose-600 cursor-pointer"
+                className="p-1.5 shrink-0 text-gray-300 hover:text-rose-600 cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -1000,7 +1000,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         </div>
 
         {projeFormu ? (
-          <form onSubmit={projeEkle} className="p-3 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/30 space-y-3">
+          <form onSubmit={projeEkle} className="p-3 rounded-xl border border-blue-200 bg-blue-50/50 space-y-3">
             <input
               type="text"
               value={projeBaslik}
@@ -1040,7 +1040,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               <button
                 type="button"
                 onClick={() => setProjeFormu(false)}
-                className="px-3 py-2 rounded-xl text-sm font-semibold text-gray-500 dark:text-slate-400 cursor-pointer"
+                className="px-3 py-2 rounded-xl text-sm font-semibold text-gray-500 cursor-pointer"
               >
                 Vazgeç
               </button>
@@ -1050,7 +1050,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           <button
             type="button"
             onClick={() => setProjeFormu(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 dark:border-slate-600 text-sm font-semibold text-gray-600 dark:text-slate-300 hover:border-blue-500 hover:text-blue-700 cursor-pointer transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-sm font-semibold text-gray-600 hover:border-blue-500 hover:text-blue-700 cursor-pointer transition-colors"
           >
             <Plus className="w-4 h-4" /> Proje ekle
           </button>
@@ -1078,7 +1078,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               {hedefler.map((rol) => (
                 <span
                   key={rol}
-                  className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 text-sm font-semibold text-blue-900 dark:text-blue-200"
+                  className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl bg-blue-50 border border-blue-100 text-sm font-semibold text-blue-900"
                 >
                   {rol}
                   <button
@@ -1102,7 +1102,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                   key={rol}
                   type="button"
                   onClick={() => hedefDegistir(rol)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-dashed border-gray-300 dark:border-slate-600 text-xs font-semibold text-gray-600 dark:text-slate-300 hover:border-blue-500 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer transition-colors"
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-dashed border-gray-300 text-xs font-semibold text-gray-600 hover:border-blue-500 hover:text-blue-700 cursor-pointer transition-colors"
                 >
                   <Plus className="w-3 h-3" />
                   {rol}
@@ -1111,7 +1111,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             <button
               type="button"
               onClick={() => setTumHedefler((v) => !v)}
-              className="px-2.5 py-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 cursor-pointer"
+              className="px-2.5 py-1.5 text-xs font-bold text-blue-600 cursor-pointer"
             >
               {tumHedefler ? 'Daha az göster' : 'Tümünü göster'}
             </button>
@@ -1125,7 +1125,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               {sehirler.map((sehir) => (
                 <span
                   key={sehir}
-                  className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 text-sm font-semibold text-blue-900 dark:text-blue-200"
+                  className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl bg-blue-50 border border-blue-100 text-sm font-semibold text-blue-900"
                 >
                   {sehir}
                   <button
@@ -1154,7 +1154,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
-          <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
+          <p className="text-[11px] text-gray-400 mt-1">
             Hiç seçmezsen tüm şehirlerdeki ilanlar eşit değerlendirilir.
           </p>
         </div>
@@ -1187,8 +1187,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           </div>
         </div>
 
-        <label className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 cursor-pointer">
-          <span className="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-slate-200">
+        <label className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200 cursor-pointer">
+          <span className="flex items-center gap-2 text-sm font-semibold text-gray-800">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
             Sigortamı üniversite karşılıyor
           </span>
@@ -1216,7 +1216,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             {rozetler.map((b) => (
               <span
                 key={b}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-sm font-semibold text-emerald-900 dark:text-emerald-200"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-sm font-semibold text-emerald-900"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 {b.replace(/^(badge|quiz)-/, '')}

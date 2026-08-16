@@ -307,35 +307,35 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         */}
         <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
           <header className="space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-              <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400 animate-pulse" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"/>
               <span>Yetenek Odaklı Akıllı Kariyer Platformu</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-gray-900 dark:text-white">
-              Geleceğine giden en kısa yol <span className="text-blue-600 dark:text-blue-400">yeteneklerinde</span>{' '}
-              <span className="text-gray-900 dark:text-white">gizli.</span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-gray-900">
+              Geleceğine giden en kısa yol <span className="text-blue-600">yeteneklerinde</span>{' '}
+              <span className="text-gray-900">gizli.</span>
             </h1>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-slate-300 max-w-xl leading-relaxed">
+            <p className="text-sm sm:text-base text-gray-600 max-w-xl leading-relaxed">
               Yeteneklerini listele, ilanlar becerilerine göre sıralansın. İlanları
               şirketlerin kendi kariyer sayfalarından topluyoruz, başvurunu tek
               profille yapıyorsun.
             </p>
 
             {/* Clean Blue/White Search Input Box */}
-            <div className="mt-4 flex flex-col sm:flex-row gap-2 p-2 bg-white dark:bg-slate-900 border-2 border-gray-200 dark:border-slate-700 focus-within:border-blue-600 dark:focus-within:border-blue-500 rounded-2xl shadow-xs transition-colors">
+            <div className="mt-4 flex flex-col sm:flex-row gap-2 p-2 bg-white border-2 border-gray-200 focus-within:border-blue-600 rounded-2xl shadow-xs transition-colors">
               <div className="flex-1 flex items-center px-3 gap-2.5">
-                <Search className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                <Search className="w-4 h-4 text-blue-600 shrink-0"/>
                 <input
                   type="text"
                   placeholder="Yeteneklerin veya şirket: Python, React, İstanbul..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full outline-none text-xs sm:text-sm font-medium bg-transparent text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500"
+                  className="w-full outline-none text-xs sm:text-sm font-medium bg-transparent text-gray-900 placeholder:text-gray-400"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
-                    className="text-xs text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-200 font-semibold"
+                    className="text-xs text-gray-400 hover:text-gray-600 font-semibold"
                   >
                     Temizle
                   </button>
@@ -352,19 +352,19 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
           {/* Quick Metrics Bar (Semantic Colors: Blue count, Orange match score %, Green SGK) */}
           <div className="grid grid-cols-3 gap-3 pt-2">
-            <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-200/90 dark:border-slate-800 shadow-xs">
-              <p className="text-[10px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
+            <div className="bg-white p-4 rounded-2xl border border-gray-200/90 shadow-xs">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                 Eşleşen İlan
               </p>
-              <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-0.5">
+              <p className="text-2xl font-black text-blue-600 mt-0.5">
                 {filteredListings.length}
               </p>
             </div>
-            <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-200/90 dark:border-slate-800 shadow-xs">
-              <p className="text-[10px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
+            <div className="bg-white p-4 rounded-2xl border border-gray-200/90 shadow-xs">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                 {student ? 'Zirve Uyum' : 'Şirket'}
               </p>
-              <p className="text-2xl font-black text-orange-500 dark:text-orange-400 mt-0.5">
+              <p className="text-2xl font-black text-orange-500 mt-0.5">
                 {/*
                   Profili olmayan ziyaretçiye uyum puanı göstermek anlamsız:
                   karşılaştırılacak bir profil yok. Onun yerine ilan veren
@@ -377,17 +377,17 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                   : '—'}
               </p>
             </div>
-            <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-200/90 dark:border-slate-800 shadow-xs">
-              <p className="text-[10px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
+            <div className="bg-white p-4 rounded-2xl border border-gray-200/90 shadow-xs">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                 Zorunlu Staj
               </p>
               {/*
                 Eskiden burada sabit "%100 SGK" yazıyordu. Topladığımız ilanların
                 sigorta durumunu çoğu zaman bilmiyoruz; sayıyı veriden üretiyoruz.
               */}
-              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+              <p className="text-2xl font-black text-emerald-600 mt-0.5">
                 {mandatoryCount}
-                <span className="text-base text-gray-400 dark:text-slate-500 font-bold">
+                <span className="text-base text-gray-400 font-bold">
                   /{filteredListings.length}
                 </span>
               </p>
@@ -401,13 +401,13 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           bilgi paneli. Sütunu boş bırakmak sayfayı sola yaslanmış gösteriyordu.
         */}
         {!student && (
-          <aside className="lg:col-span-5 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xs border border-gray-200 dark:border-slate-800 space-y-5">
-            <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-3 py-1 rounded-full">
+          <aside className="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-8 shadow-xs border border-gray-200 space-y-5">
+            <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
               İlanlar nereden geliyor
             </span>
 
-            <p className="text-sm text-gray-600 dark:text-slate-300 leading-relaxed">
-              İlanları aracı sitelerden değil, <strong className="text-gray-900 dark:text-white">şirketlerin
+            <p className="text-sm text-gray-600 leading-relaxed">
+              İlanları aracı sitelerden değil, <strong className="text-gray-900">şirketlerin
               kendi kariyer sistemlerinden</strong> topluyoruz. Başvurunu doğrudan
               şirketin sayfasında yapıyorsun; arada kimse yok.
             </p>
@@ -424,42 +424,42 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               ].map((satir) => (
                 <div
                   key={satir.etiket}
-                  className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-2.5 last:border-0 last:pb-0"
+                  className="flex items-center justify-between border-b border-gray-100 pb-2.5 last:border-0 last:pb-0"
                 >
-                  <span className="text-xs text-gray-500 dark:text-slate-400 font-semibold">
+                  <span className="text-xs text-gray-500 font-semibold">
                     {satir.etiket}
                   </span>
-                  <span className="text-lg font-black text-gray-900 dark:text-white tabular-nums">
+                  <span className="text-lg font-black text-gray-900 tabular-nums">
                     {satir.deger}
                   </span>
                 </div>
               ))}
             </div>
 
-            <p className="text-[11px] text-gray-400 dark:text-slate-500 leading-relaxed">
+            <p className="text-[11px] text-gray-400 leading-relaxed">
               Kaynaklar saatlik taranıyor. Kapanan ilanlar listeden düşürülüyor.
             </p>
           </aside>
         )}
 
         {student && (
-        <div className="lg:col-span-5 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 text-gray-900 dark:text-slate-100 relative overflow-hidden flex flex-col justify-between shadow-xs border border-gray-200 dark:border-slate-800">
+        <div className="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-8 text-gray-900 relative overflow-hidden flex flex-col justify-between shadow-xs border border-gray-200">
           <div className="relative z-10 space-y-6">
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 px-3 py-1 rounded-full">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1 rounded-full">
                   Canlı Aday Kartı
                 </span>
-                <span className="text-xs text-gray-500 dark:text-slate-400 font-semibold">
+                <span className="text-xs text-gray-500 font-semibold">
                   {student.university.split(' ')[0]}
                 </span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold mt-2 mb-1 text-gray-900 dark:text-white">
+              <h2 className="text-xl sm:text-2xl font-bold mt-2 mb-1 text-gray-900">
                 Hoş geldin, {student.fullName.split(' ')[0]}!
               </h2>
-              <p className="text-gray-600 dark:text-slate-300 text-xs sm:text-sm">
+              <p className="text-gray-600 text-xs sm:text-sm">
                 Profilin şu an{' '}
-                <strong className="text-emerald-600 dark:text-emerald-400 font-bold">
+                <strong className="text-emerald-600 font-bold">
                   %{profileCompletion} tamamlanmış
                 </strong>{' '}
                 durumda.
@@ -468,16 +468,16 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
             {/* Approved Skills (Emerald Green for verified skills) */}
             <div>
-              <p className="text-[10px] text-gray-500 dark:text-slate-400 uppercase tracking-widest font-bold mb-2.5">
+              <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-2.5">
                 Onaylanmış Yeteneklerin
               </p>
               <div className="flex flex-wrap gap-2">
                 {student.skills.slice(0, 4).map((sk) => (
                   <span
                     key={sk.name}
-                    className="bg-emerald-50 dark:bg-emerald-950/40 text-xs px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 font-semibold flex items-center gap-1.5"
+                    className="bg-emerald-50 text-xs px-3 py-1.5 rounded-xl border border-emerald-200 text-emerald-800 font-semibold flex items-center gap-1.5"
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600"/>
                     <span>{sk.name}</span>
                   </span>
                 ))}
@@ -488,23 +488,23 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             </div>
 
             {/* Incoming Status / Best Match Insight (Orange for match metrics) */}
-            <div className="pt-4 border-t border-gray-100 dark:border-slate-800">
-              <p className="text-[10px] text-orange-700 dark:text-orange-400 uppercase tracking-widest font-bold mb-2">
+            <div className="pt-4 border-t border-gray-100">
+              <p className="text-[10px] text-orange-700 uppercase tracking-widest font-bold mb-2">
                 Algoritma Önerisi
               </p>
-              <div className="bg-orange-50/70 dark:bg-orange-950/30 rounded-2xl p-4 border border-orange-200/80 dark:border-orange-800/40">
+              <div className="bg-orange-50/70 rounded-2xl p-4 border border-orange-200/80">
                 {topMatch ? (
                   <>
-                    <p className="text-xs font-bold text-gray-900 dark:text-slate-100 flex items-center justify-between">
+                    <p className="text-xs font-bold text-gray-900 flex items-center justify-between">
                       <span className="truncate pr-2">{topMatch.listing.companyName} • {topMatch.listing.title}</span>
-                      <span className="text-orange-600 dark:text-orange-400 font-black shrink-0">%{topMatch.match.overallScore}</span>
+                      <span className="text-orange-600 font-black shrink-0">%{topMatch.match.overallScore}</span>
                     </p>
-                    <p className="text-[11px] text-gray-600 dark:text-slate-300 mt-1 line-clamp-2">
+                    <p className="text-[11px] text-gray-600 mt-1 line-clamp-2">
                       {topMatch.match.summaryInsight || 'Yetenekleriniz pozisyonla yüksek oranda örtüşüyor.'}
                     </p>
                   </>
                 ) : (
-                  <p className="text-xs text-gray-600 dark:text-slate-400">
+                  <p className="text-xs text-gray-600">
                     Becerilerinize göre gerçek zamanlı staj eşleştirmeleri listeleniyor.
                   </p>
                 )}
@@ -516,7 +516,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       </section>
 
       {/* Clean Filters & Controls Bar (Unified & Mobile-Optimized) */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-3 sm:p-5 border border-gray-200 dark:border-slate-800 shadow-xs space-y-3 sm:space-y-4">
+      <div className="bg-white rounded-2xl p-3 sm:p-5 border border-gray-200 shadow-xs space-y-3 sm:space-y-4">
         {/* Row 1: İLAN FİLTRELERİ */}
         <div className="relative flex items-center">
           {/* Left Scroll Button (Desktop only) */}
@@ -524,7 +524,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             <button
               type="button"
               onClick={() => scrollCategory(-200)}
-              className="hidden md:flex absolute -left-2 z-10 p-1.5 rounded-full bg-white dark:bg-slate-800 shadow-md border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-200 hover:text-blue-600 transition-all cursor-pointer"
+              className="hidden md:flex absolute -left-2 z-10 p-1.5 rounded-full bg-white shadow-md border border-gray-200 text-gray-700 hover:text-blue-600 transition-all cursor-pointer"
               title="Sola Kaydır"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -542,7 +542,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               touchAction: 'pan-x',
             }}
           >
-            <span className="text-[11px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider shrink-0 mr-1 hidden lg:inline">
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mr-1 hidden lg:inline">
               İlan Filtreleri:
             </span>
             {listingCategories.map((cat) => {
@@ -555,13 +555,13 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                   className={`px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                     isActive
                       ? 'bg-blue-600 text-white shadow-xs font-bold ring-1 ring-blue-600'
-                      : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/80 dark:hover:bg-slate-700'
+                      :'bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200/80'
                   }`}
                 >
                   {cat.label}
                   <span
                     className={`ml-1.5 tabular-nums ${
-                      isActive ? 'text-blue-100' : 'text-gray-400 dark:text-slate-500'
+                      isActive ?'text-blue-100':'text-gray-400'
                     }`}
                   >
                     {cat.count}
@@ -576,7 +576,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             <button
               type="button"
               onClick={() => scrollCategory(200)}
-              className="hidden md:flex absolute -right-2 z-10 p-1.5 rounded-full bg-white dark:bg-slate-800 shadow-md border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-200 hover:text-blue-600 transition-all cursor-pointer"
+              className="hidden md:flex absolute -right-2 z-10 p-1.5 rounded-full bg-white shadow-md border border-gray-200 text-gray-700 hover:text-blue-600 transition-all cursor-pointer"
               title="Sağa Kaydır"
             >
               <ChevronRight className="w-3.5 h-3.5" />
@@ -585,13 +585,13 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         </div>
 
         {/* Divider */}
-        <div className="border-t border-gray-100 dark:border-slate-800" />
+        <div className="border-t border-gray-100"/>
 
         {/* Row 2: ÇALIŞMA TÜRÜ + ONAY KUTULARI + SIRALAMA */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-0.5">
           {/* Work type filter pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-            <span className="text-[11px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider shrink-0 mr-1">
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mr-1">
               Çalışma:
             </span>
             <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
@@ -603,7 +603,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                   className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     selectedWorkType === type
                       ? 'bg-blue-600 text-white shadow-xs font-bold'
-                      : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200/80 dark:hover:bg-slate-700'
+                      :'bg-gray-100 text-gray-600 hover:bg-gray-200/80'
                   }`}
                 >
                   {type === 'all'
@@ -619,9 +619,9 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           </div>
 
           {/* Checkboxes & Sort Container */}
-          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2.5 sm:gap-3 text-xs pt-1 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-slate-800/60">
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2.5 sm:gap-3 text-xs pt-1 sm:pt-0 border-t sm:border-t-0 border-gray-100">
             <div className="flex items-center gap-3">
-              <label className="flex items-center gap-1.5 cursor-pointer select-none font-semibold text-gray-700 dark:text-slate-300 whitespace-nowrap">
+              <label className="flex items-center gap-1.5 cursor-pointer select-none font-semibold text-gray-700 whitespace-nowrap">
                 <input
                   type="checkbox"
                   checked={onlyMandatory}
@@ -631,7 +631,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                 <span>Zorunlu Staj</span>
               </label>
 
-              <label className="flex items-center gap-1.5 cursor-pointer select-none font-semibold text-gray-700 dark:text-slate-300 whitespace-nowrap">
+              <label className="flex items-center gap-1.5 cursor-pointer select-none font-semibold text-gray-700 whitespace-nowrap">
                 <input
                   type="checkbox"
                   checked={onlyPaid}
@@ -643,12 +643,12 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             </div>
 
             <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-start">
-              <span className="text-gray-400 dark:text-slate-400 font-semibold shrink-0 text-xs">Sırala:</span>
+              <span className="text-gray-400 font-semibold shrink-0 text-xs">Sırala:</span>
               <select
                 id="internships-sort-select"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="flex-1 sm:flex-initial text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-medium text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 cursor-pointer shadow-2xs"
+                className="flex-1 sm:flex-initial text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white font-medium text-gray-800 focus:outline-none focus:border-blue-600 cursor-pointer shadow-2xs"
               >
                 <option value="match">En Yüksek Uyum</option>
                 <option value="deadline_asc">Son Başvuru Tarihi</option>
@@ -670,11 +670,11 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               Profili olmayan ziyaretçiye "sana uygun" ve "eşleşme puanına göre
               sıralı" demek yanlış: ortada kişiselleştirme yok.
             */}
-            <h2 className="text-xs font-bold text-gray-400 dark:text-slate-400 uppercase tracking-widest">
+            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
               {student ? 'Sana Uygun Staj İlanları' : 'Açık Staj İlanları'} (
               {filteredListings.length})
             </h2>
-            <span className="text-xs text-gray-500 dark:text-slate-400 font-medium">
+            <span className="text-xs text-gray-500 font-medium">
               {student
                 ? 'Gerçek zamanlı eşleşme puanına göre sıralı'
                 : 'Şirketlerin kendi kariyer sayfalarından derlendi'}
@@ -682,11 +682,11 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           </div>
 
           {filteredListings.length === 0 ? (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center border border-gray-200 dark:border-slate-800 shadow-sm space-y-4">
-              <p className="text-base font-bold text-gray-900 dark:text-white">
+            <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 shadow-sm space-y-4">
+              <p className="text-base font-bold text-gray-900">
                 Seçilen filtrelere uygun staj ilanı bulunamadı.
               </p>
-              <p className="text-xs text-gray-500 dark:text-slate-400 max-w-sm mx-auto">
+              <p className="text-xs text-gray-500 max-w-sm mx-auto">
                 Filtreleri sıfırlayarak veya arama teriminizi değiştirerek tüm fırsatları görebilirsiniz.
               </p>
               <button
@@ -744,12 +744,12 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             platformda şirketlerin sıralama yaptığı bir mekanizma yok.
             Yerine, gerçekten yaptığımız işi anlatan bir kutu kondu.
           */}
-          <div className="bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 dark:from-slate-900 dark:to-slate-800 rounded-2xl p-4 border border-indigo-100 dark:border-slate-700 text-xs space-y-2">
-            <div className="flex items-center gap-1.5 text-indigo-900 dark:text-indigo-300 font-bold">
+          <div className="bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 rounded-2xl p-4 border border-indigo-100 text-xs space-y-2">
+            <div className="flex items-center gap-1.5 text-indigo-900 font-bold">
               <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
               <span>İlanlar doğrudan kaynağından</span>
             </div>
-            <p className="text-gray-600 dark:text-slate-300 text-[11px] leading-relaxed">
+            <p className="text-gray-600 text-[11px] leading-relaxed">
               Her ilan, şirketin kendi kariyer sisteminden alınır ve kaynakta
               kapandığında listeden düşürülür. Başvuru adresi de ilanın kendi
               sayfasıdır; araya kimse girmez.

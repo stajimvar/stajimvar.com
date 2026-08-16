@@ -91,14 +91,14 @@ export const GoogleAdBanner: React.FC<GoogleAdBannerProps> = ({
 
     return (
       <div
-        className={`rounded-2xl border border-dashed border-gray-300 dark:border-slate-700 bg-gray-50/60 dark:bg-slate-900/40 flex flex-col items-center justify-center gap-1 text-center px-4 ${className}`}
+        className={`rounded-2xl border border-dashed border-gray-300 bg-gray-50/60 flex flex-col items-center justify-center gap-1 text-center px-4 ${className}`}
         style={{ minHeight: spec.minHeight }}
         aria-hidden="true"
       >
-        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
           Reklam yuvası
         </span>
-        <span className="text-[11px] text-gray-400 dark:text-slate-600">
+        <span className="text-[11px] text-gray-400">
           {spec.label} · VITE_ADSENSE_CLIENT tanımlı değil
         </span>
       </div>
@@ -108,7 +108,7 @@ export const GoogleAdBanner: React.FC<GoogleAdBannerProps> = ({
   return (
     <div className={className}>
       {/* Reklam olduğu görsel olarak da belli olmalı; Google'ın politikası da bunu ister. */}
-      <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 mb-1">
+      <div className="text-[10px] uppercase tracking-wider text-gray-400 mb-1">
         Reklam
       </div>
       <ins

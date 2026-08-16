@@ -39,8 +39,8 @@ const ILETISIM = 'iletisim@stajimvar.com';
 
 const S: React.FC<{ baslik: string; children: React.ReactNode }> = ({ baslik, children }) => (
   <section className="space-y-2">
-    <h2 className="text-base font-bold text-gray-900 dark:text-white">{baslik}</h2>
-    <div className="text-sm text-gray-600 dark:text-slate-300 leading-relaxed space-y-2">
+    <h2 className="text-base font-bold text-gray-900">{baslik}</h2>
+    <div className="text-sm text-gray-600 leading-relaxed space-y-2">
       {children}
     </div>
   </section>
@@ -103,7 +103,7 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
           <p>
             Her konu için tek adres:{' '}
             <a
-              className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+              className="text-blue-600 font-semibold hover:underline"
               href={`mailto:${ILETISIM}`}
             >
               {ILETISIM}
@@ -165,7 +165,7 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
           <p>
             Öğrenciler için hizmet ücretsizdir. Herhangi bir aşamada öğrencilerden ücret
             talep etmiyoruz. Sizden ücret isteyen bir ilan görürseniz{' '}
-            <a className="text-blue-600 dark:text-blue-400 font-semibold hover:underline" href="/ilan-bildir">
+            <a className="text-blue-600 font-semibold hover:underline"href="/ilan-bildir">
               bize bildirin
             </a>
             .
@@ -245,7 +245,7 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
           Sitede gördüğünüz bir ilan veya içerik hatalıysa, güncelliğini yitirmişse ya da
           kurallarımıza aykırıysa bize bildirin. Bildirimler için özel bir form henüz yok;{' '}
           <a
-            className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+            className="text-blue-600 font-semibold hover:underline"
             href={`mailto:${ILETISIM}?subject=${encodeURIComponent('İlan bildirimi')}`}
           >
             {ILETISIM}

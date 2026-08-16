@@ -82,18 +82,18 @@ export const Logo: React.FC<LogoProps> = ({
       {/* Monochromatic Pure Brand Wordmark */}
       <div className="relative inline-flex items-baseline leading-none">
         <span
-          className={`font-black text-gray-900 dark:text-white leading-none ${textClass}`}
+          className={`font-black text-gray-900 leading-none ${textClass}`}
           style={{
             fontFamily:
               '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           }}
         >
-          Stajım<span className="text-blue-600 dark:text-blue-400 font-black">Var</span>
+          Stajım<span className="text-blue-600 font-black">Var</span>
         </span>
-        <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 ml-1 mb-0.5 inline-block group-hover:scale-125 transition-transform" />
+        <span className="w-1.5 h-1.5 rounded-full bg-blue-600 ml-1 mb-0.5 inline-block group-hover:scale-125 transition-transform"/>
 
         {showTagline && (
-          <span className="hidden lg:inline-block ml-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider pl-2 border-l border-gray-200 dark:border-gray-800">
+          <span className="hidden lg:inline-block ml-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider pl-2 border-l border-gray-200">
             Kariyer & Yetenek
           </span>
         )}

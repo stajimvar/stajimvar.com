@@ -52,15 +52,15 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
       aria-modal="true"
     >
       <div
-        className="bg-white dark:bg-slate-900 w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-gray-200 dark:border-slate-800 shadow-xl max-h-[92vh] overflow-y-auto"
+        className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-gray-200 shadow-xl max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-3 p-5 sm:p-6 border-b border-gray-100 dark:border-slate-800">
+        <div className="flex items-start justify-between gap-3 p-5 sm:p-6 border-b border-gray-100">
           <div className="min-w-0">
-            <p className="text-xs font-bold text-blue-600 dark:text-blue-400">
+            <p className="text-xs font-bold text-blue-600">
               {listing.companyName}
             </p>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white leading-snug">
+            <h2 className="text-lg font-bold text-gray-900 leading-snug">
               {listing.title}
             </h2>
           </div>
@@ -68,7 +68,7 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Kapat"
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -76,11 +76,11 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
 
         <div className="p-5 sm:p-6 space-y-5">
           {alreadyApplied ? (
-            <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/30 p-4 space-y-2">
-              <p className="text-sm font-bold text-emerald-900 dark:text-emerald-200">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 space-y-2">
+              <p className="text-sm font-bold text-emerald-900">
                 Bu ilana zaten başvurdun.
               </p>
-              <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
+              <p className="text-xs text-emerald-800 leading-relaxed">
                 Başvurun "Başvurularım" sekmesinde. Şirketin kendi sayfasından da
                 başvurmak istersen aşağıdaki bağlantıyı kullanabilirsin.
               </p>
@@ -89,10 +89,10 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
             <>
               {/* Ne olacağını adım adım söyle. */}
               <div className="space-y-3">
-                <p className="text-sm font-bold text-gray-900 dark:text-white">
+                <p className="text-sm font-bold text-gray-900">
                   Başvurunca ne olacak?
                 </p>
-                <ol className="space-y-2.5 text-sm text-gray-600 dark:text-slate-300">
+                <ol className="space-y-2.5 text-sm text-gray-600">
                   <li className="flex gap-2.5">
                     <span className="shrink-0 w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center">
                       1
@@ -125,13 +125,13 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
                   Bu uyarı olmazsa öğrenci başvurusunun şirkete ulaştığını sanır.
                   Ulaşmıyor — henüz doğrulanmış bir kanal yok.
                 */
-                <div className="rounded-2xl border border-amber-300 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/30 p-4 flex gap-3">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 flex gap-3">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5"/>
                   <div className="space-y-1.5">
-                    <p className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                    <p className="text-xs font-bold text-amber-900">
                       Bu başvuru şirkete henüz iletilmiyor.
                     </p>
-                    <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                    <p className="text-xs text-amber-800 leading-relaxed">
                       Bu ilanın başvuruları şirketin kendi sisteminden alınıyor. Stajı
                       kaçırmamak için <strong>ilana doğrudan da başvurmanı öneririz</strong>;
                       StajımVar kaydın, şirketi buraya davet etmemizi sağlıyor.
@@ -141,14 +141,14 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
               )}
 
               {/* KVKK açık rızası */}
-              <label className="flex gap-2.5 items-start cursor-pointer rounded-2xl border border-gray-200 dark:border-slate-800 p-3.5 hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
+              <label className="flex gap-2.5 items-start cursor-pointer rounded-2xl border border-gray-200 p-3.5 hover:border-blue-300 transition-colors">
                 <input
                   type="checkbox"
                   checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
                   className="mt-0.5 w-4 h-4 accent-blue-600 shrink-0"
                 />
-                <span className="text-xs text-gray-600 dark:text-slate-300 leading-relaxed">
+                <span className="text-xs text-gray-600 leading-relaxed">
                   Profilimin ve iletişim bilgilerimin, <strong>yalnızca doğrulanmış</strong>{' '}
                   başvuru kanalı üzerinden {listing.companyName} ile paylaşılmasına izin
                   veriyorum.{' '}
@@ -156,7 +156,7 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
                     href="/kvkk-aydinlatma-metni"
                     target="_blank"
                     rel="noopener"
-                    className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+                    className="text-blue-600 font-semibold hover:underline"
                   >
                     Aydınlatma metni
                   </a>
@@ -164,7 +164,7 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
               </label>
 
               {error && (
-                <p className="text-xs text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 rounded-xl p-3">
+                <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
                   {error}
                 </p>
               )}
@@ -178,7 +178,7 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
               href={listing.applyUrl}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
             >
               İlana git
               <ExternalLink className="w-3.5 h-3.5" />
@@ -190,7 +190,7 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
               type="button"
               onClick={handleSubmit}
               disabled={!consent || busy}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
               {busy ? (
                 <>

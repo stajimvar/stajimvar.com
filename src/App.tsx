@@ -190,39 +190,19 @@ export default function App() {
     }
   };
 
-  // Dark Theme State (persisted in localStorage)
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('stajimvar_theme');
-      if (saved) return saved === 'dark';
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    return false;
-  });
+  /*
+    Karanlık tema kaldırıldı; site tek temalı.
 
-  const toggleDarkMode = () => {
-    setIsDarkMode((prev) => {
-      const next = !prev;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('stajimvar_theme', next ? 'dark' : 'light');
-        if (next) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      }
-      return next;
-    });
-  };
-
-  // Sync dark class on mount
+    Özelliği kullanmış olanların tarayıcısında `stajimvar_theme` anahtarı ve
+    kökte `dark` sınıfı kalmış olabiliyor. İkisini de temizliyoruz: sınıf
+    kalırsa artık hiçbir kural onunla eşleşmediği için görünürde bir şey
+    olmaz, ama çerez politikasında "saklamıyoruz" yazarken veriyi kullanıcının
+    tarayıcısında bırakmak doğru olmaz.
+  */
   React.useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
+    document.documentElement.classList.remove('dark');
+    localStorage.removeItem('stajimvar_theme');
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -461,10 +441,10 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0B0F17] font-sans text-[#111827] dark:text-slate-100 flex flex-col selection:bg-blue-600 selection:text-white transition-colors duration-200">
+    <div className="min-h-screen bg-[#F9FAFB] font-sans text-[#111827] flex flex-col selection:bg-blue-600 selection:text-white transition-colors duration-200">
       {/* Toast Banner */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-gray-900 dark:bg-slate-800 text-white px-5 py-3 rounded-2xl shadow-xl border border-gray-800 dark:border-slate-700 flex items-center gap-2.5 text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-gray-800 flex items-center gap-2.5 text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-200">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{toastMessage}</span>
         </div>
@@ -483,8 +463,6 @@ export default function App() {
         allCompanies={allCompanies}
         onSelectCompany={handleSelectCompany}
         applicationsCount={applications.length}
-        isDarkMode={isDarkMode}
-        onToggleDarkMode={toggleDarkMode}
         isLoggedIn={isLoggedIn}
         onOpenLogin={AUTH_ENABLED ? handleOpenLogin : undefined}
         onOpenRegister={AUTH_ENABLED ? handleOpenRegister : undefined}
@@ -513,21 +491,21 @@ export default function App() {
           <>
             {safeTab === 'internships' && listingsStatus === 'loading' && (
               <div className="w-full space-y-4 py-10" role="status" aria-live="polite">
-                <div className="h-40 rounded-3xl bg-gray-100 dark:bg-slate-900 animate-pulse" />
-                <div className="h-28 rounded-2xl bg-gray-100 dark:bg-slate-900 animate-pulse" />
-                <div className="h-28 rounded-2xl bg-gray-100 dark:bg-slate-900 animate-pulse" />
-                <p className="text-center text-xs text-gray-500 dark:text-slate-400">
+                <div className="h-40 rounded-3xl bg-gray-100 animate-pulse"/>
+                <div className="h-28 rounded-2xl bg-gray-100 animate-pulse"/>
+                <div className="h-28 rounded-2xl bg-gray-100 animate-pulse"/>
+                <p className="text-center text-xs text-gray-500">
                   İlanlar yükleniyor…
                 </p>
               </div>
             )}
 
             {safeTab === 'internships' && listingsStatus === 'error' && (
-              <div className="w-full my-10 rounded-2xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 p-6 text-center space-y-3">
-                <p className="font-bold text-red-800 dark:text-red-300">
+              <div className="w-full my-10 rounded-2xl border border-red-200 bg-red-50 p-6 text-center space-y-3">
+                <p className="font-bold text-red-800">
                   İlanlar yüklenemedi
                 </p>
-                <p className="text-xs text-red-700 dark:text-red-400 max-w-lg mx-auto">
+                <p className="text-xs text-red-700 max-w-lg mx-auto">
                   {listingsError}
                 </p>
                 <button
@@ -653,7 +631,7 @@ export default function App() {
       />
 
       {/* Clean Minimalism Footer */}
-      <footer className="border-t border-gray-200 dark:border-slate-800/80 bg-white dark:bg-[#0F172A] mt-auto py-6 text-xs text-gray-500 dark:text-slate-400 shrink-0 transition-colors duration-200">
+      <footer className="border-t border-gray-200 bg-white mt-auto py-6 text-xs text-gray-500 shrink-0 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Logo
@@ -664,14 +642,14 @@ export default function App() {
                 setActiveTab('internships');
               }}
             />
-            <span className="text-[11px] text-gray-400 dark:text-slate-500">
+            <span className="text-[11px] text-gray-400">
               &copy; 2026 StajımVar • Tüm hakları saklıdır.
             </span>
           </div>
-          <p className="text-[11px] text-gray-400 dark:text-slate-400 text-center sm:text-left">
+          <p className="text-[11px] text-gray-400 text-center sm:text-left">
             Yetenek Odaklı İş & Stajyer Eşleştirme Platformu
           </p>
-          <div className="flex items-center gap-6 text-[11px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-widest">
+          <div className="flex items-center gap-6 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
             {/*
               Hepsi gerçek sayfalara gidiyor. "Hakkımızda" eskiden yalnızca
               bildirim gösteren bir düğmeydi.
@@ -690,7 +668,7 @@ export default function App() {
                   e.preventDefault();
                   navigate(bag.yol);
                 }}
-                className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                className="hover:text-blue-600 transition-colors cursor-pointer"
               >
                 {bag.etiket}
               </a>
@@ -702,21 +680,21 @@ export default function App() {
             <a
               href="/gizlilik"
               onClick={(e) => { e.preventDefault(); navigate('/gizlilik'); }}
-              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+              className="hover:text-blue-600 transition-colors cursor-pointer"
             >
               Gizlilik
             </a>
             <a
               href="/cerez-politikasi"
               onClick={(e) => { e.preventDefault(); navigate('/cerez-politikasi'); }}
-              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+              className="hover:text-blue-600 transition-colors cursor-pointer"
             >
               Çerezler
             </a>
             <a
               href="/kvkk-aydinlatma-metni"
               onClick={(e) => { e.preventDefault(); navigate('/kvkk-aydinlatma-metni'); }}
-              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+              className="hover:text-blue-600 transition-colors cursor-pointer"
             >
               KVKK
             </a>

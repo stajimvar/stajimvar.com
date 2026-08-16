@@ -36,22 +36,22 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
       case 'submitted':
         return {
           label: 'Başvuru Gönderildi',
-          color: 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 border-gray-200 dark:border-slate-700',
+          color:'bg-gray-100 text-gray-700 border-gray-200',
         };
       case 'under_review':
         return {
           label: 'İK İnceliyor',
-          color: 'bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-semibold',
+          color:'bg-blue-50 text-blue-800 border-blue-200 font-semibold',
         };
       case 'technical_assessment':
         return {
           label: 'Teknik Case Aşamasında',
-          color: 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-semibold',
+          color:'bg-blue-50 text-blue-700 border-blue-200 font-semibold',
         };
       case 'interview_scheduled':
         return {
           label: 'Mülakat Daveti Geldi',
-          color: 'bg-blue-100 dark:bg-blue-900/60 text-blue-900 dark:text-blue-200 border-blue-300 dark:border-blue-700 font-bold',
+          color:'bg-blue-100 text-blue-900 border-blue-300 font-bold',
         };
       case 'offer_extended':
         return {
@@ -61,12 +61,12 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
       case 'rejected':
         return {
           label: 'Olumsuz Sonuçlandı',
-          color: 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 border-gray-200 dark:border-slate-700',
+          color:'bg-gray-100 text-gray-700 border-gray-200',
         };
       default:
         return {
           label: 'İşlemde',
-          color: 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 border-gray-200 dark:border-slate-700',
+          color:'bg-gray-100 text-gray-700 border-gray-200',
         };
     }
   };
@@ -87,25 +87,25 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-12">
       {/* Header Banner */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 lg:p-8 border border-gray-200 dark:border-slate-800 shadow-xs flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 overflow-hidden">
+      <div className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 border border-gray-200 shadow-xs flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 overflow-hidden">
         <div className="space-y-1">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
             Staj Başvurularım & Süreç Takibi
           </h1>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300">
+          <p className="text-xs sm:text-sm text-gray-600">
             Başvurduğunuz ilanların anlık aşamalarını, mülakat randevularını ve tekliflerini buradan takip edin.
           </p>
         </div>
 
         {/* Filter Pills */}
         <div className="w-full lg:w-auto overflow-x-auto no-scrollbar py-0.5">
-          <div className="inline-flex items-center gap-1 bg-gray-100 dark:bg-slate-800 p-1 rounded-xl sm:rounded-full border border-gray-200 dark:border-slate-700 text-xs font-semibold shrink-0">
+          <div className="inline-flex items-center gap-1 bg-gray-100 p-1 rounded-xl sm:rounded-full border border-gray-200 text-xs font-semibold shrink-0">
             <button
               onClick={() => onSubTabChange && onSubTabChange('all')}
               className={`px-3 py-1.5 rounded-lg sm:rounded-full transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 effectiveFilter === 'all'
                   ? 'bg-blue-600 text-white shadow-xs font-bold'
-                  : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white'
+                  :'text-gray-600 hover:text-gray-900'
               }`}
             >
               Tümü ({applications.length})
@@ -115,7 +115,7 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
               className={`px-3 py-1.5 rounded-lg sm:rounded-full transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 effectiveFilter === 'under_review'
                   ? 'bg-blue-600 text-white shadow-xs font-bold'
-                  : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white'
+                  :'text-gray-600 hover:text-gray-900'
               }`}
             >
               İncelenenler
@@ -125,7 +125,7 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
               className={`px-3 py-1.5 rounded-lg sm:rounded-full transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 effectiveFilter === 'interviews'
                   ? 'bg-blue-600 text-white shadow-xs font-bold'
-                  : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white'
+                  :'text-gray-600 hover:text-gray-900'
               }`}
             >
               Mülakatlar ({interviewCount})
@@ -135,7 +135,7 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
               className={`px-3 py-1.5 rounded-lg sm:rounded-full transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 effectiveFilter === 'offers'
                   ? 'bg-blue-600 text-white shadow-xs font-bold'
-                  : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white'
+                  :'text-gray-600 hover:text-gray-900'
               }`}
             >
               Teklifler ({offerCount})
@@ -154,7 +154,7 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
             return (
               <div
                 key={app.id}
-                className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-slate-800 shadow-xs hover:border-blue-300 dark:hover:border-blue-700 transition-all space-y-3.5 sm:space-y-4 overflow-hidden"
+                className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-xs hover:border-blue-300 transition-all space-y-3.5 sm:space-y-4 overflow-hidden"
               >
                 {/* Top Line */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -166,20 +166,20 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                         className="w-11 h-11 rounded-xl p-1 text-sm shrink-0"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                      <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
                         <Building2 className="w-6 h-6" />
                       </div>
                     )}
 
                     <div className="space-y-0.5">
-                      <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
+                      <span className="text-xs font-bold text-blue-600">
                         {listing?.companyName || 'Şirket'}
                       </span>
-                      <h3 className="font-bold text-gray-900 dark:text-slate-100 text-base leading-snug">
+                      <h3 className="font-bold text-gray-900 text-base leading-snug">
                         {listing?.title || 'Staj Başvurusu'}
                       </h3>
                       {listing?.department && (
-                        <p className="text-xs text-gray-400 dark:text-slate-400">
+                        <p className="text-xs text-gray-400">
                           ({listing.department})
                         </p>
                       )}
@@ -196,17 +196,17 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                 </div>
 
                 {/* Info Bar */}
-                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-500 dark:text-slate-400 pt-2 border-t border-gray-100 dark:border-slate-800">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-500 pt-2 border-t border-gray-100">
                   <span className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-gray-400 dark:text-slate-500" />
+                    <Calendar className="w-3.5 h-3.5 text-gray-400"/>
                     <span>Başvuru: {app.appliedAt}</span>
                   </span>
                   <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    <Clock className="w-3.5 h-3.5 text-blue-600"/>
                     <span>Son Güncelleme: {app.updatedAt ?? app.appliedAt}</span>
                   </span>
                   {app.matchScore > 0 && (
-                    <span className="font-bold text-orange-600 dark:text-orange-400">
+                    <span className="font-bold text-orange-600">
                       %{app.matchScore} Yetenek Uyumu
                     </span>
                   )}
@@ -214,19 +214,19 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
 
                 {/* Next Step / Action Box */}
                 {app.status === 'interview_scheduled' && listing && (
-                  <div className="bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div className="space-y-0.5">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900 dark:text-blue-200">
-                        <Video className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
+                        <Video className="w-4 h-4 text-blue-600"/>
                         <span>Online Teknik Mülakat Daveti • 18 Haziran 14:00</span>
                       </div>
-                      <p className="text-xs text-blue-800/80 dark:text-blue-300/80">
+                      <p className="text-xs text-blue-800/80">
                         Şirket yetkilileri mülakat bağlantısını e-posta adresinize iletmiştir. Görüşme öncesinde portfolyo ve projelerinizi hazır bulundurmanız önerilir.
                       </p>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="px-3.5 py-1.5 rounded-full text-xs font-bold text-blue-800 dark:text-blue-200 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-800">
+                      <span className="px-3.5 py-1.5 rounded-full text-xs font-bold text-blue-800 bg-white border border-blue-200">
                         Google Meet Linki İletildi
                       </span>
                     </div>
@@ -237,8 +237,8 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
           })}
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 border border-gray-200 dark:border-slate-800 text-center space-y-4">
-          <p className="text-sm text-gray-500 dark:text-slate-400">
+        <div className="bg-white rounded-3xl p-12 border border-gray-200 text-center space-y-4">
+          <p className="text-sm text-gray-500">
             Bu filtreye uygun herhangi bir staj başvurusu bulunmuyor.
           </p>
           <button

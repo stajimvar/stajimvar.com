@@ -129,14 +129,14 @@ export const AutocompleteField: React.FC<AutocompleteFieldProps> = ({
         onKeyDown={klavye}
         className={
           className ||
-          'w-full p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600'
+          'w-full p-2.5 rounded-xl border border-gray-200 bg-white font-semibold text-gray-800 focus:outline-none focus:border-blue-600'
         }
       />
 
       {gosterilecek && (
         <ul
           role="listbox"
-          className="absolute z-30 left-0 right-0 mt-1 max-h-60 overflow-y-auto rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg py-1"
+          className="absolute z-30 left-0 right-0 mt-1 max-h-60 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg py-1"
         >
           {oneriler.map((secenek, i) => {
             const secili = katla(secenek) === katla(value);
@@ -160,8 +160,8 @@ export const AutocompleteField: React.FC<AutocompleteFieldProps> = ({
                   }}
                   className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between gap-2 transition-colors ${
                     i === vurgulu
-                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300'
-                      : 'text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-800'
+                      ?'bg-blue-50 text-blue-700'
+                      :'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   <span className="min-w-0 break-words">{secenek}</span>

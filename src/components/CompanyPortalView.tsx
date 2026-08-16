@@ -321,43 +321,43 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
       case 'submitted':
         return {
           label: 'Yeni Başvuru',
-          bg: 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+          bg:'bg-blue-50 text-blue-700 border-blue-200',
           icon: Inbox,
         };
       case 'under_review':
         return {
           label: 'Ön İncelemede',
-          bg: 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+          bg:'bg-amber-50 text-amber-700 border-amber-200',
           icon: Clock,
         };
       case 'technical_assessment':
         return {
           label: 'Teknik Değerlendirme / Case',
-          bg: 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
+          bg:'bg-indigo-50 text-indigo-700 border-indigo-200',
           icon: FileCheck,
         };
       case 'interview_scheduled':
         return {
           label: 'Mülakat Planlandı',
-          bg: 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+          bg:'bg-purple-50 text-purple-700 border-purple-200',
           icon: Video,
         };
       case 'offer_extended':
         return {
           label: 'Teklif İletildi 🎉',
-          bg: 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+          bg:'bg-emerald-50 text-emerald-700 border-emerald-200',
           icon: Award,
         };
       case 'rejected':
         return {
           label: 'Olumsuz Sonuçlandı',
-          bg: 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+          bg:'bg-rose-50 text-rose-700 border-rose-200',
           icon: XCircle,
         };
       case 'withdrawn':
         return {
           label: 'Aday Geri Çekti',
-          bg: 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 border-gray-200 dark:border-slate-700',
+          bg:'bg-gray-100 text-gray-600 border-gray-200',
           icon: AlertCircle,
         };
       default:
@@ -496,33 +496,33 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Active Company Identity Header Card */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 border border-gray-200 dark:border-slate-800 shadow-2xs">
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200 shadow-2xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <img
               src={activeCompany.logo}
               alt={activeCompany.name}
-              className="w-14 h-14 rounded-2xl object-cover ring-2 ring-blue-100 dark:ring-blue-900/40 bg-white shrink-0 shadow-2xs"
+              className="w-14 h-14 rounded-2xl object-cover ring-2 ring-blue-100 bg-white shrink-0 shadow-2xs"
             />
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-black text-gray-900 dark:text-white">
+                <h2 className="text-xl font-black text-gray-900">
                   {activeCompany.name}
                 </h2>
                 {activeCompany.verified && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200">
                     <ShieldCheck className="w-3 h-3" />
                     Doğrulanmış Kurum
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs text-gray-500 mt-0.5">
                 {activeCompany.industry} • {activeCompany.location} • {activeCompany.size}
               </p>
-              <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1 flex items-center gap-1.5">
+              <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-1.5">
                 <Mail className="w-3 h-3 text-gray-400" />
                 <span>
-                  Yetkili İK: <strong className="text-gray-700 dark:text-slate-300">{activeCompany.recruiterName}</strong> ({activeCompany.recruiterRole})
+                  Yetkili İK: <strong className="text-gray-700">{activeCompany.recruiterName}</strong> ({activeCompany.recruiterRole})
                 </span>
               </p>
             </div>
@@ -533,7 +533,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
             <button
               type="button"
               onClick={() => setShowEditProfileModal(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-gray-700 dark:text-slate-200 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
             >
               <Edit3 className="w-3.5 h-3.5 text-gray-500" />
               <span>Profili Düzenle</span>
@@ -557,15 +557,15 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
         <div className="lg:col-span-4 space-y-4">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <h3 className="text-sm font-extrabold text-gray-900 dark:text-slate-100">
+              <Briefcase className="w-4 h-4 text-blue-600"/>
+              <h3 className="text-sm font-extrabold text-gray-900">
                 Staj İlanlarınız ({displayedListings.length})
               </h3>
             </div>
             <button
               type="button"
               onClick={() => setShowPostModal(true)}
-              className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-1"
+              className="text-xs font-bold text-blue-600 hover:underline cursor-pointer flex items-center gap-1"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Yeni İlan</span>
@@ -575,13 +575,13 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
           {/* Listings List Cards */}
           <div className="space-y-2.5">
             {displayedListings.length === 0 ? (
-              <div className="p-6 rounded-2xl border border-dashed border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-center space-y-3">
+              <div className="p-6 rounded-2xl border border-dashed border-gray-300 bg-white text-center space-y-3">
                 <Building2 className="w-8 h-8 text-gray-400 mx-auto" />
                 <div>
-                  <p className="text-xs font-bold text-gray-800 dark:text-slate-200">
+                  <p className="text-xs font-bold text-gray-800">
                     {activeCompany.name} adına yayınlanmış ilan bulunmuyor.
                   </p>
-                  <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-1">
+                  <p className="text-[11px] text-gray-500 mt-1">
                     İlk stajyer ilanınızı hemen oluşturup başvuruları kabul etmeye başlayın.
                   </p>
                 </div>
@@ -605,26 +605,26 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                     onClick={() => setSelectedListingId(listing.id)}
                     className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
                       isSelected
-                        ? 'bg-blue-50/80 dark:bg-blue-950/40 border-blue-400 dark:border-blue-600 shadow-xs ring-2 ring-blue-500/10'
-                        : 'bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 hover:border-gray-300 dark:hover:border-slate-700'
+                        ?'bg-blue-50/80 border-blue-400 shadow-xs ring-2 ring-blue-500/10'
+                        :'bg-white border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
-                          <p className="text-xs font-bold text-blue-600 dark:text-blue-400 truncate">
+                          <p className="text-xs font-bold text-blue-600 truncate">
                             {listing.department}
                           </p>
                           {listing.companyId === activeCompany.id && (
-                            <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 shrink-0">
+                            <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 shrink-0">
                               Aktif
                             </span>
                           )}
                         </div>
-                        <h4 className="text-sm font-bold text-gray-900 dark:text-slate-100 leading-snug mt-0.5 truncate">
+                        <h4 className="text-sm font-bold text-gray-900 leading-snug mt-0.5 truncate">
                           {listing.title}
                         </h4>
-                        <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-1">
+                        <p className="text-[11px] text-gray-500 mt-1">
                           {listing.city} • {listing.workType}
                         </p>
                       </div>
@@ -635,7 +635,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                           className={`text-[11px] font-black px-2.5 py-1 rounded-xl flex items-center gap-1 shadow-2xs ${
                             thisListingApps.length > 0
                               ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400'
+                              :'bg-gray-100 text-gray-600'
                           }`}
                         >
                           <Inbox className="w-3 h-3" />
@@ -658,24 +658,24 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
         {/* Right Column (8 Cols): Applicants View / Matched Candidate Pool / Kanban Pipeline */}
         <div className="lg:col-span-8 space-y-4">
           {/* Selected Listing Header Banner & Active Tab Selector */}
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-gray-200 dark:border-slate-800 shadow-2xs space-y-3.5">
+          <div className="bg-white p-4 rounded-3xl border border-gray-200 shadow-2xs space-y-3.5">
             {/* Listing Summary Bar */}
             {selectedListing ? (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100 dark:border-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-600">
                     Seçili Staj Pozisyonu
                   </span>
-                  <h3 className="text-base font-extrabold text-gray-900 dark:text-white">
+                  <h3 className="text-base font-extrabold text-gray-900">
                     {selectedListing.title}
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs text-gray-500 mt-0.5">
                     {selectedListing.department} • {selectedListing.city} ({selectedListing.workType}) • {selectedListing.stipend?.amountText || 'Ücretli Staj'}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-                  <span className="text-xs font-bold text-gray-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-slate-700 flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-gray-600 bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200 flex items-center gap-1.5">
                     <Inbox className="w-3.5 h-3.5 text-blue-600" />
                     <strong>{listingApplicants.length} Doğrudan Başvuran</strong>
                   </span>
@@ -686,7 +686,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
             {/* Navigation Toolbar (Tabs + Search + Blind Hiring Mode) */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               {/* 3 Main Portal Tabs */}
-              <div className="inline-flex items-center bg-gray-100 dark:bg-slate-800 p-1 rounded-2xl shrink-0 overflow-x-auto">
+              <div className="inline-flex items-center bg-gray-100 p-1 rounded-2xl shrink-0 overflow-x-auto">
                 {/* 1. İlana Başvuranlar Tab */}
                 <button
                   id="tab-btn-applicants"
@@ -696,8 +696,8 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                   }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                     activePortalTab === 'applicants'
-                      ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-2xs'
-                      : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
+                      ?'bg-white text-blue-600 shadow-2xs'
+                      :'text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   <Inbox className="w-3.5 h-3.5" />
@@ -713,8 +713,8 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                   }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                     activePortalTab === 'ranked'
-                      ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-2xs'
-                      : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
+                      ?'bg-white text-blue-600 shadow-2xs'
+                      :'text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
@@ -730,8 +730,8 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                   }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                     activePortalTab === 'kanban'
-                      ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-2xs'
-                      : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
+                      ?'bg-white text-blue-600 shadow-2xs'
+                      :'text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   <Columns className="w-3.5 h-3.5 text-purple-500" />
@@ -740,20 +740,20 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
               </div>
 
               {/* Quick Candidate Search Box */}
-              <div className="flex-1 max-w-xs flex items-center px-3 py-1.5 bg-gray-50 dark:bg-slate-800/90 border border-gray-200 dark:border-slate-700 rounded-xl focus-within:border-blue-500">
+              <div className="flex-1 max-w-xs flex items-center px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl focus-within:border-blue-500">
                 <Search className="w-3.5 h-3.5 text-gray-400 shrink-0 mr-2" />
                 <input
                   type="text"
                   placeholder="Aday, üniversite, yetenek..."
                   value={candidateSearchQuery}
                   onChange={(e) => setCandidateSearchQuery(e.target.value)}
-                  className="w-full text-xs bg-transparent text-gray-900 dark:text-slate-100 placeholder-gray-400 focus:outline-none"
+                  className="w-full text-xs bg-transparent text-gray-900 placeholder-gray-400 focus:outline-none"
                 />
                 {candidateSearchQuery && (
                   <button
                     type="button"
                     onClick={() => setCandidateSearchQuery('')}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs font-bold ml-1 cursor-pointer"
+                    className="text-gray-400 hover:text-gray-600 text-xs font-bold ml-1 cursor-pointer"
                   >
                     ✕
                   </button>
@@ -767,8 +767,8 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                 title="İsim ve fotoğrafları gizleyerek yetenek odaklı önyargısız değerlendirme modu"
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 ${
                   blindHiringMode
-                    ? 'bg-purple-50 dark:bg-purple-950/50 border-purple-300 dark:border-purple-800 text-purple-700 dark:text-purple-300'
-                    : 'bg-gray-50 dark:bg-slate-800/80 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-100'
+                    ?'bg-purple-50 border-purple-300 text-purple-700'
+                    :'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 {blindHiringMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -778,8 +778,8 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
 
             {/* Sub-Filter Pills for 'applicants' Tab */}
             {activePortalTab === 'applicants' && (
-              <div className="pt-2 border-t border-gray-100 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-                <span className="text-[11px] font-bold text-gray-400 dark:text-slate-500 mr-1 shrink-0">
+              <div className="pt-2 border-t border-gray-100 flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                <span className="text-[11px] font-bold text-gray-400 mr-1 shrink-0">
                   Durum Filtresi:
                 </span>
                 {[
@@ -798,7 +798,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                       applicantStatusFilter === st.id
                         ? 'bg-blue-600 text-white shadow-2xs'
-                        : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
+                        :'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
                     {st.label}
@@ -814,15 +814,15 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
           {activePortalTab === 'applicants' && (
             <div className="space-y-4">
               {filteredApplicants.length === 0 ? (
-                <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 border border-gray-200 dark:border-slate-800 text-center space-y-3 shadow-2xs">
+                <div className="bg-white rounded-3xl p-10 border border-gray-200 text-center space-y-3 shadow-2xs">
                   <Inbox className="w-10 h-10 text-gray-400 mx-auto" />
                   <div>
-                    <h4 className="text-sm font-bold text-gray-800 dark:text-slate-200">
+                    <h4 className="text-sm font-bold text-gray-800">
                       {applicantStatusFilter !== 'all'
                         ? 'Bu filtrede başvuran aday bulunmuyor.'
                         : 'Bu ilana henüz doğrudan başvuru yapılmadı.'}
                     </h4>
-                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
+                    <p className="text-xs text-gray-500 mt-1 max-w-md mx-auto">
                       {applicantStatusFilter !== 'all'
                         ? 'Farklı bir filtre seçerek veya filtreleri temizleyerek diğer başvuruları görüntüleyebilirsiniz.'
                         : '"Eşleşen Yetenek Havuzu" sekmesinden kriterlerinize tam uyan adayları inceleyebilir veya öğrencilere doğrudan davet gönderebilirsiniz.'}
@@ -832,7 +832,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                     <button
                       type="button"
                       onClick={() => setApplicantStatusFilter('all')}
-                      className="px-4 py-2 rounded-xl text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer inline-flex items-center gap-1.5"
                     >
                       Tüm Başvuruları Göster
                     </button>
@@ -857,7 +857,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                   return (
                     <div
                       key={app.id}
-                      className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 border border-gray-200 dark:border-slate-800 shadow-2xs hover:shadow-xs transition-all space-y-4"
+                      className="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200 shadow-2xs hover:shadow-xs transition-all space-y-4"
                     >
                       {/* Top Row: Candidate Avatar, Identity, Match Score & Status Badge */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -870,26 +870,26 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                                 : student.avatarUrl
                             }
                             alt="Aday"
-                            className="w-13 h-13 rounded-2xl object-cover ring-2 ring-gray-100 dark:ring-slate-800 shrink-0"
+                            className="w-13 h-13 rounded-2xl object-cover ring-2 ring-gray-100 shrink-0"
                           />
                           <div>
                             <div className="flex items-center gap-2">
-                              <h4 className="text-base font-extrabold text-gray-900 dark:text-white">
+                              <h4 className="text-base font-extrabold text-gray-900">
                                 {blindHiringMode
                                   ? `Aday #${student.id.slice(-4).toUpperCase()}`
                                   : student.fullName}
                               </h4>
                               {isTopMatch && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                                   <Sparkles className="w-3 h-3" />
                                   Zirve Uyum
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+                            <p className="text-xs text-gray-500 mt-0.5">
                               {student.university} • {student.department} ({student.gradeLevel}) • GPA: <strong>{student.gpa.toFixed(2)}</strong>
                             </p>
-                            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">
+                            <p className="text-[11px] text-gray-400 mt-0.5">
                               Başvuru Tarihi: {app.appliedAt}
                             </p>
                           </div>
@@ -904,17 +904,17 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                           </div>
 
                           {/* Match Score */}
-                          <div className="text-right pl-2 border-l border-gray-200 dark:border-slate-800">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500 block">
+                          <div className="text-right pl-2 border-l border-gray-200">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">
                               Uyum Skoru
                             </span>
                             <span
                               className={`text-2xl font-black ${
                                 score >= 85
-                                  ? 'text-emerald-600 dark:text-emerald-400'
+                                  ?'text-emerald-600'
                                   : score >= 70
-                                  ? 'text-blue-600 dark:text-blue-400'
-                                  : 'text-amber-600 dark:text-amber-400'
+                                  ?'text-blue-600'
+                                  :'text-amber-600'
                               }`}
                             >
                               %{score}
@@ -925,12 +925,12 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
 
                       {/* Candidate Cover Letter / Note (If submitted) */}
                       {app.coverLetter && (
-                        <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200/80 dark:border-slate-700/60 text-xs">
-                          <span className="font-bold text-gray-600 dark:text-slate-300 block mb-1 flex items-center gap-1.5">
-                            <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                        <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-200/80 text-xs">
+                          <span className="font-bold text-gray-600 block mb-1 flex items-center gap-1.5">
+                            <FileText className="w-3.5 h-3.5 text-blue-600"/>
                             Adayın Ön Yazısı / Başvuru Notu:
                           </span>
-                          <p className="text-gray-700 dark:text-slate-200 italic leading-relaxed">
+                          <p className="text-gray-700 italic leading-relaxed">
                             "{app.coverLetter}"
                           </p>
                         </div>
@@ -938,15 +938,15 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
 
                       {/* Scheduled Interview or Feedback Banner */}
                       {app.interviewDate && (
-                        <div className="p-3 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-xs flex items-center justify-between gap-2">
+                        <div className="p-3 rounded-2xl bg-purple-50 border border-purple-200 text-xs flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
-                            <Video className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
-                            <span className="text-purple-900 dark:text-purple-200 font-bold">
+                            <Video className="w-4 h-4 text-purple-600 shrink-0"/>
+                            <span className="text-purple-900 font-bold">
                               Planlanan Mülakat: {app.interviewDate}
                             </span>
                           </div>
                           {app.interviewNotes && (
-                            <span className="text-[11px] text-purple-700 dark:text-purple-300 truncate max-w-xs">
+                            <span className="text-[11px] text-purple-700 truncate max-w-xs">
                               {app.interviewNotes}
                             </span>
                           )}
@@ -954,13 +954,13 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                       )}
 
                       {app.companyFeedback && (
-                        <div className="p-3 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs flex items-start gap-2">
-                          <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                        <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-200 text-xs flex items-start gap-2">
+                          <MessageSquare className="w-4 h-4 text-blue-600 shrink-0 mt-0.5"/>
                           <div>
-                            <span className="font-bold text-blue-900 dark:text-blue-200">
+                            <span className="font-bold text-blue-900">
                               İK Notu / Adaya İletilen Geri Bildirim:
                             </span>
-                            <p className="text-blue-800 dark:text-blue-300 mt-0.5">
+                            <p className="text-blue-800 mt-0.5">
                               {app.companyFeedback}
                             </p>
                           </div>
@@ -968,16 +968,16 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                       )}
 
                       {/* Matching Skills vs Missing Skills */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-gray-100 dark:border-slate-800/80 text-xs">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-gray-100 text-xs">
                         <div className="space-y-1.5">
-                          <span className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+                          <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
                             Eşleşen Yetkinlikler ({(match?.matchedRequiredSkills || []).length}):
                           </span>
                           <div className="flex flex-wrap gap-1.5">
                             {(match?.matchedRequiredSkills || []).map((sk) => (
                               <span
                                 key={sk}
-                                className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50"
+                                className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"
                               >
                                 ✓ {sk}
                               </span>
@@ -986,19 +986,19 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                         </div>
 
                         <div className="space-y-1.5">
-                          <span className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+                          <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
                             Gelişime Açık / Eksik:
                           </span>
                           <div className="flex flex-wrap gap-1.5">
                             {(match?.missingRequiredSkills || []).length === 0 ? (
-                              <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                              <span className="text-[11px] font-bold text-emerald-600">
                                 🌟 Pozisyonun tüm şartlarını eksiksiz karşılıyor!
                               </span>
                             ) : (
                               (match?.missingRequiredSkills || []).map((sk) => (
                                 <span
                                   key={sk}
-                                  className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 border border-gray-200 dark:border-slate-700"
+                                  className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-50 text-gray-500 border border-gray-200"
                                 >
                                   - {sk}
                                 </span>
@@ -1009,10 +1009,10 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                       </div>
 
                       {/* Recruiter Action Bar: Change Stage, Schedule Interview, View Profile, Add Note */}
-                      <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 pt-3 border-t border-gray-100 dark:border-slate-800/80">
+                      <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 pt-3 border-t border-gray-100">
                         {/* Quick Stage Progression Buttons */}
                         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 xl:pb-0">
-                          <span className="text-[11px] font-bold text-gray-400 dark:text-slate-500 mr-1 shrink-0">
+                          <span className="text-[11px] font-bold text-gray-400 mr-1 shrink-0">
                             Aşama Değiştir:
                           </span>
                           {(
@@ -1041,7 +1041,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                               className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer shrink-0 ${
                                 app.status === st.key
                                   ? 'bg-blue-600 text-white shadow-2xs'
-                                  : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
+                                  :'bg-gray-100 text-gray-600 hover:bg-gray-200'
                               }`}
                             >
                               {st.label}
@@ -1062,7 +1062,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                               });
                               setFeedbackInput(app.companyFeedback || '');
                             }}
-                            className="px-3 py-1.5 rounded-xl text-xs font-bold text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors cursor-pointer flex items-center gap-1.5"
+                            className="px-3 py-1.5 rounded-xl text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer flex items-center gap-1.5"
                           >
                             <MessageSquare className="w-3.5 h-3.5 text-gray-500" />
                             <span>İK Notu</span>
@@ -1078,7 +1078,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                                 listingTitle: selectedListing?.title || '',
                               })
                             }
-                            className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 transition-colors cursor-pointer flex items-center gap-1.5"
+                            className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-purple-700 bg-purple-50 border border-purple-200 hover:bg-purple-100 transition-colors cursor-pointer flex items-center gap-1.5"
                           >
                             <Video className="w-3.5 h-3.5" />
                             <span>Mülakat Planla</span>
@@ -1108,12 +1108,12 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
           {activePortalTab === 'ranked' && (
             <div className="space-y-4">
               {filteredRankedCandidates.length === 0 ? (
-                <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-gray-200 dark:border-slate-800 text-center space-y-2 shadow-2xs">
+                <div className="bg-white rounded-3xl p-8 border border-gray-200 text-center space-y-2 shadow-2xs">
                   <Users className="w-8 h-8 text-gray-400 mx-auto" />
-                  <p className="text-sm font-bold text-gray-700 dark:text-slate-200">
+                  <p className="text-sm font-bold text-gray-700">
                     Arama kriterlerinize uygun aday bulunamadı.
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-slate-400">
+                  <p className="text-xs text-gray-500">
                     Farklı bir arama terimi deneyebilir veya filtreleri temizleyebilirsiniz.
                   </p>
                 </div>
@@ -1125,7 +1125,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                   return (
                     <div
                       key={student.id}
-                      className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 border border-gray-200 dark:border-slate-800 shadow-2xs hover:shadow-xs transition-all space-y-4"
+                      className="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200 shadow-2xs hover:shadow-xs transition-all space-y-4"
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         {/* Student Avatar & Identity */}
@@ -1137,23 +1137,23 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                                 : student.avatarUrl
                             }
                             alt="Aday"
-                            className="w-12 h-12 rounded-2xl object-cover ring-2 ring-gray-100 dark:ring-slate-800 shrink-0"
+                            className="w-12 h-12 rounded-2xl object-cover ring-2 ring-gray-100 shrink-0"
                           />
                           <div>
                             <div className="flex items-center gap-2">
-                              <h4 className="text-base font-bold text-gray-900 dark:text-white">
+                              <h4 className="text-base font-bold text-gray-900">
                                 {blindHiringMode
                                   ? `Aday #${student.id.slice(-4).toUpperCase()}`
                                   : student.fullName}
                               </h4>
                               {isTopMatch && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                                   <Sparkles className="w-3 h-3" />
                                   Zirve Uyum
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+                            <p className="text-xs text-gray-500 mt-0.5">
                               {student.university} • {student.department} ({student.gradeLevel}) • GPA: {student.gpa.toFixed(2)}
                             </p>
                           </div>
@@ -1162,16 +1162,16 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                         {/* Overall Match Score Badge */}
                         <div className="flex items-center gap-3 self-end sm:self-center">
                           <div className="text-right">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-400 block">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">
                               Uyum Skoru
                             </span>
                             <span
                               className={`text-2xl font-black ${
                                 score >= 85
-                                  ? 'text-emerald-600 dark:text-emerald-400'
+                                  ?'text-emerald-600'
                                   : score >= 70
-                                  ? 'text-blue-600 dark:text-blue-400'
-                                  : 'text-amber-600 dark:text-amber-400'
+                                  ?'text-blue-600'
+                                  :'text-amber-600'
                               }`}
                             >
                               %{score}
@@ -1181,16 +1181,16 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                       </div>
 
                       {/* Matching Skills vs Missing Skills */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-gray-100 dark:border-slate-800/80 text-xs">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-gray-100 text-xs">
                         <div className="space-y-1.5">
-                          <span className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+                          <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
                             Eşleşen Yetkinlikler ({(match?.matchedRequiredSkills || []).length}):
                           </span>
                           <div className="flex flex-wrap gap-1.5">
                             {(match?.matchedRequiredSkills || []).map((sk) => (
                               <span
                                 key={sk}
-                                className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50"
+                                className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"
                               >
                                 ✓ {sk}
                               </span>
@@ -1199,19 +1199,19 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                         </div>
 
                         <div className="space-y-1.5">
-                          <span className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+                          <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
                             Gelişime Açık / Eksik:
                           </span>
                           <div className="flex flex-wrap gap-1.5">
                             {(match?.missingRequiredSkills || []).length === 0 ? (
-                              <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                              <span className="text-[11px] font-bold text-emerald-600">
                                 🌟 Pozisyonun tüm şartlarını karşılıyor!
                               </span>
                             ) : (
                               (match?.missingRequiredSkills || []).map((sk) => (
                                 <span
                                   key={sk}
-                                  className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 border border-gray-200 dark:border-slate-700"
+                                  className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-50 text-gray-500 border border-gray-200"
                                 >
                                   - {sk}
                                 </span>
@@ -1222,10 +1222,10 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                       </div>
 
                       {/* Action Bar: Pipeline Stage Selector + Schedule Interview Button */}
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-gray-100 dark:border-slate-800/80">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-gray-100">
                         {/* Pipeline Stage Quick Pills */}
                         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-                          <span className="text-[11px] font-bold text-gray-400 dark:text-slate-500 mr-1 shrink-0">
+                          <span className="text-[11px] font-bold text-gray-400 mr-1 shrink-0">
                             Aşama:
                           </span>
                           {(
@@ -1243,7 +1243,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                               className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer shrink-0 ${
                                 stage === st.key
                                   ? 'bg-blue-600 text-white shadow-2xs'
-                                  : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
+                                  :'bg-gray-100 text-gray-600 hover:bg-gray-200'
                               }`}
                             >
                               {st.label}
@@ -1255,7 +1255,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                           <button
                             type="button"
                             onClick={() => setViewingStudent(student)}
-                            className="px-3 py-1.5 rounded-xl text-xs font-bold text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
                           >
                             Profili İncele
                           </button>
@@ -1325,55 +1325,55 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                 return (
                   <div
                     key={col.key}
-                    className={`bg-white dark:bg-slate-900 rounded-3xl p-4 border-t-4 ${col.color} border-x border-b border-gray-200 dark:border-slate-800 shadow-2xs space-y-3 min-h-[400px]`}
+                    className={`bg-white rounded-3xl p-4 border-t-4 ${col.color} border-x border-b border-gray-200 shadow-2xs space-y-3 min-h-[400px]`}
                   >
-                    <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-slate-800">
-                      <h4 className="text-xs font-black text-gray-800 dark:text-slate-200">
+                    <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                      <h4 className="text-xs font-black text-gray-800">
                         {col.title}
                       </h4>
-                      <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400">
+                      <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
                         {colApplicants.length}
                       </span>
                     </div>
 
                     <div className="space-y-2.5">
                       {colApplicants.length === 0 ? (
-                        <p className="text-[11px] text-gray-400 dark:text-slate-500 text-center py-8">
+                        <p className="text-[11px] text-gray-400 text-center py-8">
                           Bu aşamada aday yok
                         </p>
                       ) : (
                         colApplicants.map(({ app, student, match }) => (
                           <div
                             key={app.id}
-                            className="bg-gray-50 dark:bg-slate-800/80 p-3 rounded-2xl border border-gray-200 dark:border-slate-700 space-y-2.5 shadow-2xs hover:shadow-xs transition-all"
+                            className="bg-gray-50 p-3 rounded-2xl border border-gray-200 space-y-2.5 shadow-2xs hover:shadow-xs transition-all"
                           >
                             <div className="flex items-center justify-between gap-1">
-                              <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                              <p className="text-xs font-bold text-gray-900 truncate">
                                 {blindHiringMode
                                   ? `Aday #${student.id.slice(-4).toUpperCase()}`
                                   : student.fullName}
                               </p>
-                              <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 shrink-0">
+                              <span className="text-[10px] font-black text-blue-600 shrink-0">
                                 %{match?.overallScore || app.matchScore}
                               </span>
                             </div>
 
-                            <p className="text-[10px] text-gray-500 dark:text-slate-400 truncate">
+                            <p className="text-[10px] text-gray-500 truncate">
                               {student.university} • {student.department}
                             </p>
 
                             {app.interviewDate && (
-                              <p className="text-[10px] font-bold text-purple-600 dark:text-purple-400 truncate">
+                              <p className="text-[10px] font-bold text-purple-600 truncate">
                                 📅 {app.interviewDate}
                               </p>
                             )}
 
                             {/* Move Stage Quick Action */}
-                            <div className="pt-2 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between gap-1">
+                            <div className="pt-2 border-t border-gray-200/60 flex items-center justify-between gap-1">
                               <button
                                 type="button"
                                 onClick={() => setViewingStudent(student)}
-                                className="text-[10px] font-bold text-gray-600 dark:text-slate-400 hover:text-blue-600"
+                                className="text-[10px] font-bold text-gray-600 hover:text-blue-600"
                               >
                                 Profil
                               </button>
@@ -1387,7 +1387,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                                       if (col.key === 'interview') onUpdateApplicationStatus?.(app.id, 'under_review');
                                       if (col.key === 'offer') onUpdateApplicationStatus?.(app.id, 'interview_scheduled');
                                     }}
-                                    className="text-[10px] font-bold text-gray-500 hover:text-gray-800 dark:hover:text-slate-200 cursor-pointer"
+                                    className="text-[10px] font-bold text-gray-500 hover:text-gray-800 cursor-pointer"
                                   >
                                     ←
                                   </button>
@@ -1406,7 +1406,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                                       }
                                       if (col.key === 'interview') onUpdateApplicationStatus?.(app.id, 'offer_extended');
                                     }}
-                                    className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                                    className="text-[10px] font-bold text-blue-600 hover:underline cursor-pointer"
                                   >
                                     İlerlet →
                                   </button>
@@ -1430,9 +1430,9 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
       {/* ========================================================================= */}
       {viewingStudent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 sm:p-7 border border-gray-200 dark:border-slate-800 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 border border-gray-200 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex items-start justify-between pb-4 border-b border-gray-100 dark:border-slate-800">
+            <div className="flex items-start justify-between pb-4 border-b border-gray-100">
               <div className="flex items-center gap-4">
                 <img
                   src={
@@ -1441,18 +1441,18 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                       : viewingStudent.avatarUrl
                   }
                   alt={viewingStudent.fullName}
-                  className="w-16 h-16 rounded-2xl object-cover ring-2 ring-gray-100 dark:ring-slate-800 shrink-0"
+                  className="w-16 h-16 rounded-2xl object-cover ring-2 ring-gray-100 shrink-0"
                 />
                 <div>
-                  <h3 className="text-xl font-black text-gray-900 dark:text-white">
+                  <h3 className="text-xl font-black text-gray-900">
                     {blindHiringMode
                       ? `Aday #${viewingStudent.id.slice(-4).toUpperCase()}`
                       : viewingStudent.fullName}
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs text-gray-500 mt-0.5">
                     {viewingStudent.university} • {viewingStudent.department}
                   </p>
-                  <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">
+                  <p className="text-[11px] text-gray-400 mt-0.5">
                     {viewingStudent.gradeLevel} • Mezuniyet: {viewingStudent.graduationYear} • GPA: <strong>{viewingStudent.gpa.toFixed(2)} / 4.00</strong>
                   </p>
                 </div>
@@ -1460,7 +1460,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
               <button
                 type="button"
                 onClick={() => setViewingStudent(null)}
-                className="text-xs font-bold text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer p-1 rounded-lg"
+                className="text-xs font-bold text-gray-400 hover:text-gray-700 cursor-pointer p-1 rounded-lg"
               >
                 ✕ Kapat
               </button>
@@ -1469,8 +1469,8 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
             {/* Candidate Bio */}
             {viewingStudent.bio && (
               <div className="space-y-1 text-xs">
-                <h4 className="font-extrabold text-gray-800 dark:text-slate-200">Hakkında / Özet</h4>
-                <p className="text-gray-600 dark:text-slate-300 leading-relaxed bg-gray-50 dark:bg-slate-800/60 p-3 rounded-2xl border border-gray-100 dark:border-slate-800">
+                <h4 className="font-extrabold text-gray-800">Hakkında / Özet</h4>
+                <p className="text-gray-600 leading-relaxed bg-gray-50 p-3 rounded-2xl border border-gray-100">
                   {viewingStudent.bio}
                 </p>
               </div>
@@ -1478,7 +1478,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
 
             {/* Technical Skills & Badges */}
             <div className="space-y-2 text-xs">
-              <h4 className="font-extrabold text-gray-800 dark:text-slate-200 flex items-center gap-1.5">
+              <h4 className="font-extrabold text-gray-800 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-blue-600" />
                 Teknik Yetkinlikler ({viewingStudent.skills.length})
               </h4>
@@ -1486,7 +1486,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                 {viewingStudent.skills.map((sk) => (
                   <span
                     key={sk.name}
-                    className="px-2.5 py-1 rounded-xl text-xs font-bold bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200 border border-gray-200 dark:border-slate-700 flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-xl text-xs font-bold bg-gray-100 text-gray-800 border border-gray-200 flex items-center gap-1"
                   >
                     <span>{sk.name}</span>
                     <span className="text-[10px] text-gray-400 font-normal">({sk.level})</span>
@@ -1501,7 +1501,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
             {/* Projects */}
             {viewingStudent.projects && viewingStudent.projects.length > 0 && (
               <div className="space-y-2 text-xs">
-                <h4 className="font-extrabold text-gray-800 dark:text-slate-200 flex items-center gap-1.5">
+                <h4 className="font-extrabold text-gray-800 flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5 text-purple-600" />
                   Geliştirdiği Projeler
                 </h4>
@@ -1509,30 +1509,30 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                   {viewingStudent.projects.map((proj) => (
                     <div
                       key={proj.id}
-                      className="p-3 rounded-2xl bg-gray-50 dark:bg-slate-800/60 border border-gray-100 dark:border-slate-800 space-y-1"
+                      className="p-3 rounded-2xl bg-gray-50 border border-gray-100 space-y-1"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-bold text-gray-900 dark:text-white">{proj.title}</p>
+                        <p className="font-bold text-gray-900">{proj.title}</p>
                         {proj.githubUrl && (
                           <a
                             href={proj.githubUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                            className="text-[11px] font-bold text-blue-600 hover:underline flex items-center gap-1"
                           >
                             <Github className="w-3 h-3" />
                             GitHub İncele
                           </a>
                         )}
                       </div>
-                      <p className="text-gray-600 dark:text-slate-300 text-[11px]">
+                      <p className="text-gray-600 text-[11px]">
                         {proj.description}
                       </p>
                       <div className="flex flex-wrap gap-1 pt-1">
                         {proj.techStack.map((tech) => (
                           <span
                             key={tech}
-                            className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-white dark:bg-slate-700 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600"
+                            className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-white text-gray-600 border border-gray-200"
                           >
                             {tech}
                           </span>
@@ -1547,14 +1547,14 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
             {/* Languages & Soft Skills */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="space-y-1.5">
-                <h4 className="font-extrabold text-gray-800 dark:text-slate-200">Yabancı Diller</h4>
+                <h4 className="font-extrabold text-gray-800">Yabancı Diller</h4>
                 <div className="space-y-1">
                   {viewingStudent.languages.map((l) => (
                     <div
                       key={l.id}
-                      className="p-2 rounded-xl bg-gray-50 dark:bg-slate-800 flex items-center justify-between"
+                      className="p-2 rounded-xl bg-gray-50 flex items-center justify-between"
                     >
-                      <span className="font-bold text-gray-800 dark:text-slate-200">{l.language}</span>
+                      <span className="font-bold text-gray-800">{l.language}</span>
                       <span className="text-gray-500 font-semibold">{l.proficiencyText || l.level}</span>
                     </div>
                   ))}
@@ -1562,12 +1562,12 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <h4 className="font-extrabold text-gray-800 dark:text-slate-200">Sosyal Yetkinlikler</h4>
+                <h4 className="font-extrabold text-gray-800">Sosyal Yetkinlikler</h4>
                 <div className="flex flex-wrap gap-1.5">
                   {viewingStudent.softSkills.map((sk) => (
                     <span
                       key={sk}
-                      className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                      className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200"
                     >
                       {sk}
                     </span>
@@ -1577,11 +1577,11 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
             </div>
 
             {/* Modal Bottom Actions */}
-            <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-100 dark:border-slate-800">
+            <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-100">
               <button
                 type="button"
                 onClick={() => setViewingStudent(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 cursor-pointer"
               >
                 Kapat
               </button>
@@ -1610,11 +1610,11 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
       {/* ========================================================================= */}
       {interviewModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 sm:p-7 border border-gray-200 dark:border-slate-800 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-800">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 border border-gray-200 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <Video className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                <Video className="w-5 h-5 text-blue-600"/>
+                <h3 className="text-base font-bold text-gray-900">
                   Mülakat Daveti Planla
                 </h3>
               </div>
@@ -1629,27 +1629,27 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
             {interviewSuccessNotice ? (
               <div className="py-6 text-center space-y-2">
                 <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto animate-bounce" />
-                <h4 className="text-base font-bold text-gray-900 dark:text-white">
+                <h4 className="text-base font-bold text-gray-900">
                   Mülakat Daveti Gönderildi!
                 </h4>
-                <p className="text-xs text-gray-500 dark:text-slate-400">
+                <p className="text-xs text-gray-500">
                   Adaya e-posta ve StajımVar bildirimleri ile görüşme bağlantısı iletildi.
                 </p>
               </div>
             ) : (
               <form onSubmit={handleScheduleInterviewSubmit} className="space-y-3.5 text-xs">
-                <div className="p-3 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800">
-                  <p className="font-bold text-blue-900 dark:text-blue-200">
+                <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-200">
+                  <p className="font-bold text-blue-900">
                     Aday: {interviewModalData.student.fullName}
                   </p>
-                  <p className="text-[11px] text-blue-700 dark:text-blue-300">
+                  <p className="text-[11px] text-blue-700">
                     {interviewModalData.student.university} • {interviewModalData.student.department}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                    <label className="block font-bold text-gray-700 mb-1">
                       Tarih *
                     </label>
                     <input
@@ -1657,11 +1657,11 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                       required
                       value={interviewDate}
                       onChange={(e) => setInterviewDate(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                    <label className="block font-bold text-gray-700 mb-1">
                       Saat *
                     </label>
                     <input
@@ -1669,19 +1669,19 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                       required
                       value={interviewTime}
                       onChange={(e) => setInterviewTime(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                  <label className="block font-bold text-gray-700 mb-1">
                     Görüşme Platformu / Mekanı
                   </label>
                   <select
                     value={interviewPlatform}
                     onChange={(e) => setInterviewPlatform(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   >
                     <option value="Google Meet">Google Meet (Otomatik Video Bağlantısı)</option>
                     <option value="Zoom">Zoom Video Mülakat</option>
@@ -1691,7 +1691,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                  <label className="block font-bold text-gray-700 mb-1">
                     Adaya İletilecek Not veya Mülakat Konusu (Opsiyonel)
                   </label>
                   <textarea
@@ -1699,15 +1699,15 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                     value={interviewNotesInput}
                     onChange={(e) => setInterviewNotesInput(e.target.value)}
                     placeholder="Örn: 45 dk teknik case ve geçmiş projeler üzerine değerlendirme..."
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-slate-800">
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
                   <button
                     type="button"
                     onClick={() => setInterviewModalData(null)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer"
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 cursor-pointer"
                   >
                     İptal
                   </button>
@@ -1730,11 +1730,11 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
       {/* ========================================================================= */}
       {feedbackModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 sm:p-7 border border-gray-200 dark:border-slate-800 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-800">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 border border-gray-200 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                <MessageSquare className="w-5 h-5 text-blue-600"/>
+                <h3 className="text-base font-bold text-gray-900">
                   İK Notu / Aday Geri Bildirimi
                 </h3>
               </div>
@@ -1747,7 +1747,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
             </div>
 
             <form onSubmit={handleSaveFeedbackSubmit} className="space-y-3.5 text-xs">
-              <p className="text-gray-600 dark:text-slate-400">
+              <p className="text-gray-600">
                 <strong>{feedbackModalData.studentName}</strong> adlı adayın başvurusuna ait değerlendirme notu veya adaya gösterilecek sistem mesajı:
               </p>
 
@@ -1758,15 +1758,15 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                   value={feedbackInput}
                   onChange={(e) => setFeedbackInput(e.target.value)}
                   placeholder="Örn: Teknik case çalışması başarıyla tamamlandı. İkinci tur liderlik mülakatı için değerlendiriliyor..."
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => setFeedbackModalData(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 cursor-pointer"
                 >
                   İptal
                 </button>
@@ -1787,11 +1787,11 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
       {/* ========================================================================= */}
       {showEditProfileModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-7 border border-gray-200 dark:border-slate-800 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-800">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 border border-gray-200 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                <Building2 className="w-5 h-5 text-blue-600"/>
+                <h3 className="text-lg font-bold text-gray-900">
                   Şirket Profilini Düzenle
                 </h3>
               </div>
@@ -1805,7 +1805,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
 
             <form onSubmit={handleSaveCompanyProfile} className="space-y-3.5 text-xs">
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                <label className="block font-bold text-gray-700 mb-1">
                   Şirket / Kurum Adı *
                 </label>
                 <input
@@ -1813,13 +1813,13 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                   required
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                  <label className="block font-bold text-gray-700 mb-1">
                     Sektör
                   </label>
                   <input
@@ -1827,11 +1827,11 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                     value={editIndustry}
                     onChange={(e) => setEditIndustry(e.target.value)}
                     placeholder="Örn: E-Ticaret & Tech"
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                  <label className="block font-bold text-gray-700 mb-1">
                     Şirket Ölçeği
                   </label>
                   <input
@@ -1839,13 +1839,13 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                     value={editSize}
                     onChange={(e) => setEditSize(e.target.value)}
                     placeholder="Örn: 5000+ Çalışan"
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                <label className="block font-bold text-gray-700 mb-1">
                   Konum & Çalışma Modeli
                 </label>
                 <input
@@ -1853,64 +1853,64 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                   value={editLocation}
                   onChange={(e) => setEditLocation(e.target.value)}
                   placeholder="Örn: İstanbul (Maslak) / Hibrit"
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                <label className="block font-bold text-gray-700 mb-1">
                   Şirket Açıklaması / Genç Yetenek Programı
                 </label>
                 <textarea
                   rows={2}
                   value={editDesc}
                   onChange={(e) => setEditDesc(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                  <label className="block font-bold text-gray-700 mb-1">
                     İK / Yetkili Adı
                   </label>
                   <input
                     type="text"
                     value={editRecruiterName}
                     onChange={(e) => setEditRecruiterName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                  <label className="block font-bold text-gray-700 mb-1">
                     Yetkili Ünvanı
                   </label>
                   <input
                     type="text"
                     value={editRecruiterRole}
                     onChange={(e) => setEditRecruiterRole(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                <label className="block font-bold text-gray-700 mb-1">
                   Kurumsal Yetkili E-postası
                 </label>
                 <input
                   type="email"
                   value={editRecruiterEmail}
                   onChange={(e) => setEditRecruiterEmail(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => setShowEditProfileModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 cursor-pointer"
                 >
                   İptal
                 </button>
@@ -1931,11 +1931,11 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
       {/* ========================================================================= */}
       {showPostModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-7 border border-gray-200 dark:border-slate-800 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-800">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 border border-gray-200 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                <Briefcase className="w-5 h-5 text-blue-600"/>
+                <h3 className="text-lg font-bold text-gray-900">
                   {activeCompany.name} İçin Yeni İlan Yayınla
                 </h3>
               </div>
@@ -1949,7 +1949,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
 
             <form onSubmit={handleCreateListing} className="space-y-3.5 text-xs">
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                <label className="block font-bold text-gray-700 mb-1">
                   Pozisyon Başlığı *
                 </label>
                 <input
@@ -1958,13 +1958,13 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                   placeholder="Örn: Frontend Developer Stajyeri (React & TS)"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                  <label className="block font-bold text-gray-700 mb-1">
                     Departman
                   </label>
                   <input
@@ -1972,17 +1972,17 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                     value={newDepartment}
                     onChange={(e) => setNewDepartment(e.target.value)}
                     placeholder="Örn: Yazılım Geliştirme"
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                  <label className="block font-bold text-gray-700 mb-1">
                     Çalışma Şekli
                   </label>
                   <select
                     value={newWorkType}
                     onChange={(e) => setNewWorkType(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   >
                     <option value="Hybrid">Hibrit (Hybrid)</option>
                     <option value="Remote">Uzaktan (Remote)</option>
@@ -1993,7 +1993,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                  <label className="block font-bold text-gray-700 mb-1">
                     Şehir
                   </label>
                   <input
@@ -2001,11 +2001,11 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                     value={newCity}
                     onChange={(e) => setNewCity(e.target.value)}
                     placeholder="Örn: İstanbul"
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                  <label className="block font-bold text-gray-700 mb-1">
                     Staj Süresi
                   </label>
                   <input
@@ -2013,13 +2013,13 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                     value={newDuration}
                     onChange={(e) => setNewDuration(e.target.value)}
                     placeholder="Örn: 20-30 İş Günü"
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                <label className="block font-bold text-gray-700 mb-1">
                   Staj Ücreti / Destek
                 </label>
                 <input
@@ -2027,12 +2027,12 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                   value={newStipend}
                   onChange={(e) => setNewStipend(e.target.value)}
                   placeholder="Örn: 28.500 ₺ / Ay + Yemek"
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                <label className="block font-bold text-gray-700 mb-1">
                   Zorunlu Yetenekler (Virgülle ayırın) *
                 </label>
                 <input
@@ -2041,12 +2041,12 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                   value={newReqSkills}
                   onChange={(e) => setNewReqSkills(e.target.value)}
                   placeholder="React, TypeScript, Git"
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
+                <label className="block font-bold text-gray-700 mb-1">
                   Pozisyon Açıklaması
                 </label>
                 <textarea
@@ -2054,7 +2054,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
                   placeholder="Stajyerin üstleneceği sorumluluklar ve projeler..."
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                 />
               </div>
 
@@ -2068,17 +2068,17 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                 />
                 <label
                   htmlFor="modal-mandatory"
-                  className="text-xs text-gray-700 dark:text-slate-300 cursor-pointer font-medium"
+                  className="text-xs text-gray-700 cursor-pointer font-medium"
                 >
                   Üniversite zorunlu staj belgesini kabul ediyoruz (SGK üniversite karşılar)
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => setShowPostModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 cursor-pointer"
                 >
                   İptal
                 </button>

@@ -28,12 +28,12 @@ const Bilgi: React.FC<{ ikon: React.ReactNode; etiket: string; deger: string }> 
   ikon, etiket, deger,
 }) => (
   <div className="flex items-start gap-2.5">
-    <div className="text-gray-400 dark:text-slate-500 mt-0.5 shrink-0">{ikon}</div>
+    <div className="text-gray-400 mt-0.5 shrink-0">{ikon}</div>
     <div className="min-w-0">
-      <p className="text-[11px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-bold">
+      <p className="text-[11px] uppercase tracking-wider text-gray-400 font-bold">
         {etiket}
       </p>
-      <p className="text-sm font-semibold text-gray-900 dark:text-white break-words">{deger}</p>
+      <p className="text-sm font-semibold text-gray-900 break-words">{deger}</p>
     </div>
   </div>
 );
@@ -98,8 +98,8 @@ export const ListingPage: React.FC<ListingPageProps> = ({
   }, [listing]);
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0B0F17] text-gray-900 dark:text-slate-100">
-      <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+    <div className="min-h-screen bg-[#F9FAFB] text-gray-900">
+      <header className="border-b border-gray-200 bg-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <button type="button" onClick={onBack} aria-label="Ana sayfa">
             <Logo />
@@ -107,7 +107,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-blue-600 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Tüm ilanlar
@@ -118,16 +118,16 @@ export const ListingPage: React.FC<ListingPageProps> = ({
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         {durum === 'yukleniyor' && (
           <div className="space-y-4" role="status" aria-live="polite">
-            <div className="h-28 rounded-3xl bg-gray-100 dark:bg-slate-900 animate-pulse" />
-            <div className="h-52 rounded-2xl bg-gray-100 dark:bg-slate-900 animate-pulse" />
-            <p className="text-center text-xs text-gray-500 dark:text-slate-400">Yükleniyor…</p>
+            <div className="h-28 rounded-3xl bg-gray-100 animate-pulse"/>
+            <div className="h-52 rounded-2xl bg-gray-100 animate-pulse"/>
+            <p className="text-center text-xs text-gray-500">Yükleniyor…</p>
           </div>
         )}
 
         {durum === 'yok' && (
-          <div className="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center space-y-3">
+          <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center space-y-3">
             <p className="font-bold">Bu ilan bulunamadı</p>
-            <p className="text-sm text-gray-600 dark:text-slate-300">
+            <p className="text-sm text-gray-600">
               İlan kaynağında kapanmış ve listeden düşürülmüş olabilir. Kapanan ilanları
               yayında tutmuyoruz.
             </p>
@@ -142,8 +142,8 @@ export const ListingPage: React.FC<ListingPageProps> = ({
         )}
 
         {durum === 'hata' && (
-          <div className="rounded-2xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 p-6 text-center space-y-3">
-            <p className="font-bold text-red-800 dark:text-red-300">İlan yüklenemedi</p>
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center space-y-3">
+            <p className="font-bold text-red-800">İlan yüklenemedi</p>
             <button
               type="button"
               onClick={() => window.location.reload()}
@@ -156,7 +156,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
 
         {durum === 'hazir' && listing && (
           <>
-            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-gray-200 dark:border-slate-800 p-5 sm:p-7 space-y-4">
+            <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-7 space-y-4">
               <div className="flex items-start gap-4">
                 <CompanyLogo
                   name={listing.companyName}
@@ -167,7 +167,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                   <button
                     type="button"
                     onClick={() => onNavigate(`/sirket/${listing.companySlug ?? slugify(listing.companyName)}`)}
-                    className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                    className="text-sm font-bold text-blue-600 hover:underline"
                   >
                     {listing.companyName}
                   </button>
@@ -180,7 +180,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                       onClick={() => paylas(listing)}
                       aria-label="İlanı paylaş"
                       title="İlanı paylaş"
-                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       {paylasimDurumu === 'kopyalandi' ? (
                         <>
@@ -196,7 +196,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                     </button>
                   </div>
                   {listing.origin === 'scraped' && (
-                    <p className="inline-flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
+                    <p className="inline-flex items-center gap-1.5 text-xs text-emerald-700 font-semibold">
                       <ShieldCheck className="w-3.5 h-3.5" />
                       Şirketin kendi kariyer sayfasından alındı
                     </p>
@@ -204,7 +204,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-100 dark:border-slate-800">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-100">
                 <Bilgi
                   ikon={<MapPin className="w-4 h-4" />}
                   etiket="Konum"
@@ -245,44 +245,44 @@ export const ListingPage: React.FC<ListingPageProps> = ({
             </div>
 
             {listing.requiredSkills.length > 0 && (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-5 sm:p-6 space-y-3">
+              <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-3">
                 <h2 className="text-sm font-bold">İlanda geçen beceriler</h2>
                 <div className="flex flex-wrap gap-1.5">
                   {[...listing.requiredSkills, ...listing.preferredSkills].map((s) => (
                     <span
                       key={s}
-                      className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-900/50"
+                      className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100"
                     >
                       {s}
                     </span>
                   ))}
                 </div>
-                <p className="text-[11px] text-gray-400 dark:text-slate-500">
+                <p className="text-[11px] text-gray-400">
                   Beceriler ilan metninden otomatik çıkarıldı; eksik olabilir.
                 </p>
               </div>
             )}
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-5 sm:p-6 space-y-3">
+            <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-3">
               <h2 className="text-sm font-bold">İlan açıklaması</h2>
               {/*
                 Metin kaynaktan geldiği gibi gösteriliyor. HTML olarak basmıyoruz:
                 dışarıdan gelen içeriği işaretleme olarak yorumlamak XSS kapısıdır.
               */}
-              <p className="text-sm text-gray-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
                 {listing.description}
               </p>
               {listing.sourceUrl && (
-                <p className="text-[11px] text-gray-400 dark:text-slate-500 pt-2 border-t border-gray-100 dark:border-slate-800">
+                <p className="text-[11px] text-gray-400 pt-2 border-t border-gray-100">
                   Kaynak: {new URL(listing.sourceUrl).hostname}
                 </p>
               )}
             </div>
 
             {listing.applicationMethod === 'external' && (
-              <div className="rounded-2xl border border-amber-300 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/30 p-4 flex gap-3">
-                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+              <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 flex gap-3">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5"/>
+                <p className="text-xs text-amber-900 leading-relaxed">
                   Bu ilanın başvuruları şirketin kendi sisteminden alınıyor. StajımVar
                   üzerinden başvurursan kaydını tutarız ve şirkete talebi bildiririz, ama
                   başvurun şirkete anında ulaşmaz — <strong>ilana doğrudan da başvurmanı
@@ -297,7 +297,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                   href={listing.applyUrl}
                   target="_blank"
                   rel="noopener noreferrer nofollow"
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-5 py-3 rounded-2xl text-sm font-bold border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors shadow-xs"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-5 py-3 rounded-2xl text-sm font-bold border border-gray-200 bg-white hover:bg-gray-50 transition-colors shadow-xs"
                 >
                   İlana git
                   <ExternalLink className="w-4 h-4" />
