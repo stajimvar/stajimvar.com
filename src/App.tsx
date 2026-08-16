@@ -332,6 +332,14 @@ export default function App() {
     showToast('Aday başvuru durumu başarıyla güncellendi.');
   };
 
+  /**
+   * Savunma katmanı: giriş yapılmamışken öğrenciye özel sekmeler açılamaz.
+   * Sekmeleri Header'da gizlemek yeterli değil — durum başka bir yoldan da
+   * (eski state, geri tuşu) o değere düşebilir ve ziyaretçi kendisine aitmiş
+   * gibi görünen örnek verileri görür.
+   */
+  const safeTab = !isLoggedIn && activeTab !== 'internships' ? 'internships' : activeTab;
+
   const legalSlug = LEGAL_ROUTES[path.replace(/\/+$/, '') || '/'];
   if (legalSlug) {
     return <LegalPage slug={legalSlug} onBack={goHome} />;
@@ -349,7 +357,7 @@ export default function App() {
 
       {/* Navigation Header */}
       <Header
-        activeTab={activeTab}
+        activeTab={safeTab}
         setActiveTab={handleTabChange}
         activeSubTab={activeSubTab}
         setActiveSubTab={setActiveSubTab}
@@ -372,7 +380,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-[1536px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-6 pb-24 lg:pb-8">
-        {userRole === 'company' || activeTab === 'company-portal' ? (
+        {userRole === 'company' || safeTab === 'company-portal' ? (
           <CompanyPortalView
             allListings={allListings}
             allStudents={allStudents}
@@ -390,7 +398,7 @@ export default function App() {
           />
         ) : (
           <>
-            {activeTab === 'internships' && listingsStatus === 'loading' && (
+            {safeTab === 'internships' && listingsStatus === 'loading' && (
               <div className="w-full space-y-4 py-10" role="status" aria-live="polite">
                 <div className="h-40 rounded-3xl bg-gray-100 dark:bg-slate-900 animate-pulse" />
                 <div className="h-28 rounded-2xl bg-gray-100 dark:bg-slate-900 animate-pulse" />
@@ -401,7 +409,7 @@ export default function App() {
               </div>
             )}
 
-            {activeTab === 'internships' && listingsStatus === 'error' && (
+            {safeTab === 'internships' && listingsStatus === 'error' && (
               <div className="w-full my-10 rounded-2xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 p-6 text-center space-y-3">
                 <p className="font-bold text-red-800 dark:text-red-300">
                   İlanlar yüklenemedi
@@ -419,7 +427,7 @@ export default function App() {
               </div>
             )}
 
-            {activeTab === 'internships' && listingsStatus === 'ready' && (
+            {safeTab === 'internships' && listingsStatus === 'ready' && (
               <MatchedInternshipsView
                 student={isLoggedIn ? activeStudent : null}
                 allListings={allListings}
@@ -435,7 +443,7 @@ export default function App() {
               />
             )}
 
-            {activeTab === 'badges' && (
+            {safeTab === 'badges' && (
               <SkillQuizzesView
                 quizzes={quizzes}
                 student={activeStudent}
@@ -445,7 +453,7 @@ export default function App() {
               />
             )}
 
-            {activeTab === 'applications' && (
+            {safeTab === 'applications' && (
               <ApplicationsTrackerView
                 applications={applications}
                 allListings={allListings}
@@ -455,7 +463,7 @@ export default function App() {
               />
             )}
 
-            {activeTab === 'profile' && (
+            {safeTab === 'profile' && (
               <StudentProfileView
                 student={activeStudent}
                 subTab={activeSubTab}

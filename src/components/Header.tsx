@@ -219,6 +219,13 @@ export const Header: React.FC<HeaderProps> = ({
                   )}
                 </button>
 
+                {/*
+                  Öğrenciye özel sekmeler yalnızca giriş yapılmışken çizilir.
+                  Aksi halde ziyaretçi "Başvurularım" sekmesinde kendisine ait
+                  sanacağı örnek verileri görüyordu.
+                */}
+                {isLoggedIn && (
+                  <>
                 {/* 2. Yetenek Doğrulama */}
                 <button
                   id="nav-tab-badges"
@@ -303,6 +310,9 @@ export const Header: React.FC<HeaderProps> = ({
                     <span className="w-1.5 h-1.5 rounded-full bg-teal-600 shrink-0" />
                   )}
                 </button>
+                  </>
+                )}
+
               </nav>
             )}
 
@@ -845,6 +855,9 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="text-[10px] mt-0.5 font-semibold">İlanlar</span>
         </button>
 
+        {/* Öğrenciye özel mobil sekmeler de giriş şartına bağlı. */}
+        {isLoggedIn && (
+          <>
         {/* 2. Yetenekler */}
         <button
           onClick={() => {
@@ -909,6 +922,9 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <span className="text-[10px] mt-0.5 font-semibold">Profil</span>
         </button>
+          </>
+        )}
+
       </nav>
     ) : (
       /* Mobile Bottom Navigation for Company */
