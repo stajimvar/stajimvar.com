@@ -207,7 +207,11 @@ export interface ApplicationRecord {
   matchScore: number;
   coverLetter?: string;
   interviewDate?: string;
-  interviewNotes?: string;
+  /*
+    interviewNotes KALDIRILDI. Sirketin dahili notu artik application_notes
+    tablosunda; basvuru satirinda durdugu surece ogrenci kendi satirini
+    okurken onu da goruyordu. Adaya gosterilecek metin company_feedback.
+  */
   companyFeedback?: string;
 }
 

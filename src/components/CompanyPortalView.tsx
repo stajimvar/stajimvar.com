@@ -376,10 +376,17 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
 
     const formattedDate = `${interviewDate}, ${interviewTime} (${interviewPlatform})`;
     if (interviewModalData.appId && onUpdateApplicationStatus) {
+      /*
+        DİKKAT: buradaki üçüncü parametre `companyFeedback` — yani ADAYA
+        GÖSTERİLEN metin. Eskiden mülakat notu buraya geçiriliyordu, yani
+        şirketin kendi arasında tuttuğu değerlendirme doğrudan öğrenciye
+        gidiyordu. Dahili not artık application_notes tablosuna yazılıyor;
+        buraya yalnızca adayın görmesi amaçlanan bilgi geçiyor.
+      */
       onUpdateApplicationStatus(
         interviewModalData.appId,
         'interview_scheduled',
-        interviewNotesInput ? `Mülakat Notu: ${interviewNotesInput}` : undefined,
+        undefined,
         formattedDate
       );
     } else {
@@ -945,11 +952,12 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                               Planlanan Mülakat: {app.interviewDate}
                             </span>
                           </div>
-                          {app.interviewNotes && (
-                            <span className="text-[11px] text-purple-700 truncate max-w-xs">
-                              {app.interviewNotes}
-                            </span>
-                          )}
+                          {/*
+                            Dahili not burada gösterilmiyor: bu bileşen hem
+                            şirkete hem öğrenciye çizilebiliyor. Notlar
+                            application_notes tablosundan, yalnızca şirket
+                            üyeliği doğrulanmış oturumda okunur.
+                          */}
                         </div>
                       )}
 

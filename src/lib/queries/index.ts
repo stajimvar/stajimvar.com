@@ -489,12 +489,19 @@ export async function withdrawApplication(applicationId: string): Promise<void> 
 export async function updateApplicationStatus(
   applicationId: string,
   status: ApplicationRecord['status'],
-  extras: { companyFeedback?: string; interviewDate?: string; interviewNotes?: string } = {}
+  /*
+    `interviewNotes` buradan cikarildi: dahili not artik ayri bir tabloda.
+    Not yazmak icin addApplicationNote kullanilmali.
+
+    `companyFeedback` OGRENCIYE GORUNUR. Adi bunu soyluyor ama cagiran taraf
+    yanlislikla dahili not gecirebiliyordu -- sirket portali tam olarak bunu
+    yapiyordu.
+  */
+  extras: { companyFeedback?: string; interviewDate?: string } = {}
 ): Promise<void> {
   const body: TablesUpdate<'applications'> = { status };
   if (extras.companyFeedback !== undefined) body.company_feedback = extras.companyFeedback;
   if (extras.interviewDate !== undefined) body.interview_date = extras.interviewDate || null;
-  if (extras.interviewNotes !== undefined) body.interview_notes = extras.interviewNotes;
 
   const { error } = await supabase.from('applications').update(body).eq('id', applicationId);
   if (error) fail('Başvuru durumu güncellenemedi', error);
@@ -743,4 +750,47 @@ export async function archiveListing(listingId: string): Promise<void> {
     .update({ status: 'archived' })
     .eq('id', listingId);
   if (error) fail('İlan arşivlenemedi', error);
+}
+
+
+// ---------------------------------------------------------------- Dahili notlar
+
+export interface ApplicationNote {
+  id: string;
+  note: string;
+  createdAt: string;
+}
+
+/**
+ * Şirketin başvuru hakkındaki dahili notları.
+ *
+ * Öğrenci bu tabloyu HİÇBİR koşulda göremiyor: `application_notes` üzerinde
+ * öğrenciye açık tek bir politika yok, dolayısıyla RLS onu tamamen dışarıda
+ * bırakıyor. Adaya gösterilecek metin `applications.company_feedback`.
+ */
+export async function fetchApplicationNotes(applicationId: string): Promise<ApplicationNote[]> {
+  const { data, error } = await supabase
+    .from('application_notes')
+    .select('id,note,created_at')
+    .eq('application_id', applicationId)
+    .order('created_at', { ascending: false });
+
+  if (error) fail('Notlar yüklenemedi', error);
+  return (data ?? []).map((r) => {
+    const row = r as Record<string, string>;
+    return { id: row.id, note: row.note, createdAt: row.created_at };
+  });
+}
+
+export async function addApplicationNote(
+  applicationId: string,
+  authorId: string,
+  note: string
+): Promise<void> {
+  const { error } = await supabase.from('application_notes').insert({
+    application_id: applicationId,
+    author_id: authorId,
+    note: note.trim(),
+  } as never);
+  if (error) fail('Not eklenemedi', error);
 }

@@ -373,7 +373,6 @@ export function toApplicationRecord(row: Tables<'applications'>): ApplicationRec
     matchScore: row.match_score ?? 0,
     coverLetter: row.cover_letter ?? undefined,
     interviewDate: row.interview_date ?? undefined,
-    interviewNotes: row.interview_notes ?? undefined,
     companyFeedback: row.company_feedback ?? undefined,
   };
 }

@@ -14,6 +14,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      application_notes: {
+        Row: {
+          application_id: string;
+          author_id: string | null;
+          created_at: string;
+          id: string;
+          note: string;
+        };
+        Insert: {
+          application_id: string;
+          author_id?: string | null;
+          created_at?: string;
+          id?: string;
+          note: string;
+        };
+        Update: {
+          application_id?: string;
+          author_id?: string | null;
+          created_at?: string;
+          id?: string;
+          note?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'application_notes_application_id_fkey';
+            columns: ['application_id'];
+            isOneToOne: false;
+            referencedRelation: 'applications';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'application_notes_author_id_fkey';
+            columns: ['author_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       applications: {
         Row: {
           application_method: Database['public']['Enums']['application_method'];
@@ -31,7 +70,6 @@ export type Database = {
           email_provider_message_id: string | null;
           id: string;
           interview_date: string | null;
-          interview_notes: string | null;
           listing_id: string;
           match_score: number | null;
           profile_snapshot: Json | null;
@@ -60,7 +98,6 @@ export type Database = {
           submitted_at?: string | null;
           id?: string;
           interview_date?: string | null;
-          interview_notes?: string | null;
           listing_id: string;
           match_score?: number | null;
           status?: Database['public']['Enums']['application_status'];
@@ -86,7 +123,6 @@ export type Database = {
           submitted_at?: string | null;
           id?: string;
           interview_date?: string | null;
-          interview_notes?: string | null;
           listing_id?: string;
           match_score?: number | null;
           status?: Database['public']['Enums']['application_status'];
