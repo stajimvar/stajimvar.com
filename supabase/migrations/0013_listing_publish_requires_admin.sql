@@ -57,3 +57,11 @@ create trigger listings_publish_guard
 drop policy if exists "yonetici ilanlari yonetir" on public.listings;
 create policy "yonetici ilanlari yonetir" on public.listings
   for all using (public.is_admin()) with check (public.is_admin());
+
+-- DOGRULAMA (gecici bir test kullanicisiyla, gercek HTTP uzerinden olculdu)
+--   sirket uyesi TASLAK olusturur          -> 201  izin veriliyor
+--   sirket uyesi kendi taslagini yayinlar  -> 400  "Ilan yayina ancak yonetici onayiyla alinir"
+--   sirket uyesi dogrudan published ekler  -> 400  ayni hata
+--   service_role taslak olusturup yayinlar -> 201 / 204  otomasyon bozulmadi
+--   anon yayina almayi dener               -> 401  yetki katmaninda duruyor
+-- Test kullanicisi ve ilanlari sonrasinda silindi; yayindaki ilan sayisi 11.
