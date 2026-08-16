@@ -283,8 +283,35 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
   const topMatch = matchedData.sort((a, b) => b.match.overallScore - a.match.overallScore)[0];
 
-  /** Listedeki kaç ilan zorunlu staj kabul ediyor. Sabit bir iddia yerine sayım. */
-  const mandatoryCount = filteredListings.filter((item) => item.listing.mandatoryStajAccepted).length;
+  /**
+   * Sayaç şeridindeki üçüncü kutu.
+   *
+   * Burada "Zorunlu staj: 0/11" yazıyordu ve bu YANLIŞ BİR İDDİAYDI.
+   * `mandatoryStajAccepted` alanı, şirketin kariyer sayfasından toplanan
+   * ilanlarda hiçbir zaman doldurulmuyor; varsayılan değeri false kalıyor.
+   * Yani "0/11", "hiçbiri zorunlu staj kabul etmiyor" demek değil,
+   * "hiçbirinde bu bilgi yok" demekti — ekranda ise birincisi okunuyordu.
+   *
+   * Yerine gerçekten bildiğimiz bir sayı var: ilan bulunan il sayısı. Yeni
+   * şehir seçicisiyle de aynı şeyi ölçüyor.
+   */
+  const cityCount = new Set(
+    filteredListings.map((item) => ilBul(item.listing.city) ?? item.listing.city)
+  ).size;
+
+  /*
+    Bir filtre hiçbir ilanı getirmiyorsa gösterilmiyor.
+
+    Kategori sekmeleri için zaten uygulanan kural: tıklayınca boş sonuç veren
+    bir filtre, az ilan görmekten daha çok güven kaybettiriyor. Zorunlu staj
+    ve ücret bilgisi toplanan ilanlarda çoğu zaman bulunmadığı için bu iki
+    kutucuk şu an her seferinde boş liste üretiyordu.
+
+    Kullanıcı kutucuğu işaretlemişse gizlenmiyor — yoksa filtreyi
+    kapatamadan seçenek ekrandan kaybolurdu.
+  */
+  const mandatoryCount = matchedData.filter((item) => item.listing.mandatoryStajAccepted).length;
+  const paidCount = matchedData.filter((item) => item.listing.stipend.isPaid).length;
 
   /**
    * Profil doldurma oranı. Eskiden sabit "%85" yazıyordu; artık gerçekten
@@ -437,10 +464,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             {[
               { etiket: 'Açık ilan', deger: String(filteredListings.length) },
               { etiket: 'Şirket', deger: String(companyCount) },
-              {
-                etiket: 'Zorunlu staj',
-                deger: `${mandatoryCount}/${filteredListings.length}`,
-              },
+              { etiket: 'Şehir', deger: String(cityCount) },
             ].map((kutu) => (
               <div
                 key={kutu.etiket}
@@ -702,25 +726,29 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           {/* Checkboxes & Sort Container */}
           <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2.5 sm:gap-3 text-xs pt-1 sm:pt-0 border-t sm:border-t-0 border-gray-100">
             <div className="flex items-center gap-3">
-              <label className="flex items-center gap-1.5 cursor-pointer select-none font-semibold text-gray-700 whitespace-nowrap">
-                <input
-                  type="checkbox"
-                  checked={onlyMandatory}
-                  onChange={(e) => setOnlyMandatory(e.target.checked)}
-                  className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
-                />
-                <span>Zorunlu Staj</span>
-              </label>
+              {(mandatoryCount > 0 || onlyMandatory) && (
+                <label className="flex items-center gap-1.5 cursor-pointer select-none font-semibold text-gray-700 whitespace-nowrap">
+                  <input
+                    type="checkbox"
+                    checked={onlyMandatory}
+                    onChange={(e) => setOnlyMandatory(e.target.checked)}
+                    className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                  />
+                  <span>Zorunlu Staj</span>
+                </label>
+              )}
 
-              <label className="flex items-center gap-1.5 cursor-pointer select-none font-semibold text-gray-700 whitespace-nowrap">
-                <input
-                  type="checkbox"
-                  checked={onlyPaid}
-                  onChange={(e) => setOnlyPaid(e.target.checked)}
-                  className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
-                />
-                <span>Ücretli</span>
-              </label>
+              {(paidCount > 0 || onlyPaid) && (
+                <label className="flex items-center gap-1.5 cursor-pointer select-none font-semibold text-gray-700 whitespace-nowrap">
+                  <input
+                    type="checkbox"
+                    checked={onlyPaid}
+                    onChange={(e) => setOnlyPaid(e.target.checked)}
+                    className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                  />
+                  <span>Ücretli</span>
+                </label>
+              )}
             </div>
 
             <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-start">
