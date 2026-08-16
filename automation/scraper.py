@@ -21,6 +21,9 @@ class Job:
     source_name: str; source_url: str; title: str
     organization_name: str | None = None; city: str | None = None; work_mode: str | None = None
     description: str = ""; hr_email: str | None = None
+    # Bazı kaynaklar şirket sitesini ve logosunu ilanla birlikte veriyor;
+    # bunlar şirket kaydını zenginleştirmek için taşınıyor.
+    company_website: str | None = None; company_logo: str | None = None
 
 def clean(text: str) -> str: return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", unescape(text))).strip()
 def canonical(url: str) -> str:
@@ -156,15 +159,89 @@ def workday(config: dict[str, Any]) -> Iterable[Job]:
         if len(postings) < 20: break
 
 def smartrecruiters(config: dict[str, Any]) -> Iterable[Job]:
-    """SmartRecruiters Posting API. Bu sağlayıcı için işletmenin verdiği API anahtarı gerekir."""
-    token = os.getenv("SMARTRECRUITERS_API_KEY")
-    if not token: raise RuntimeError("SMARTRECRUITERS_API_KEY ayarlı değil")
+    """SmartRecruiters herkese açık Posting API'si.
+
+    Eskiden burada SMARTRECRUITERS_API_KEY zorunlu tutuluyordu; oysa
+    `/v1/companies/{id}/postings` uç noktası anahtarsız çalışıyor (test edildi).
+    Anahtar şartı, çalışabilecek bir kaynağı gereksiz yere kapatıyordu.
+    """
     url = f"https://api.smartrecruiters.com/v1/companies/{config['company_identifier']}/postings?country=TR&limit=100"
-    response = requests.get(url, timeout=25, headers={"X-SmartToken":token,"User-Agent":"StajimVarJobs/1.0"}); response.raise_for_status()
+    response = requests.get(url, timeout=25, headers={"User-Agent":"StajimVarJobs/1.0"}); response.raise_for_status()
     for item in response.json().get("content", []):
         location = " ".join(filter(None, [item.get("location", {}).get("city"), item.get("location", {}).get("country")])); title = clean(item.get("name", ""))
         if not is_turkey_location(location) or not is_early_career(title, ""): continue
         yield Job(config["name"], item["ref"], title, config.get("organization_name"), location, None, "Detay için kaynak ilana gidin.")
+
+def workable_search(config: dict[str, Any]) -> Iterable[Job]:
+    """Workable'ın şirketler arası herkese açık iş arama uç noktası.
+
+    Diğer adaptörler tek bir şirketin panosunu okur; bu adaptör konuma göre
+    TÜM Workable müşterilerini tarar. Yani hangi şirketin Workable kullandığını
+    önceden bilmemize gerek kalmıyor — kaynak keşfi ile ilan keşfi tek adımda.
+
+    Sınırlar: sayfa başına 20 kayıt, `page` ile sayfalama. Türkçe sorgular
+    ("staj", "stajyer") sonuç döndürmüyor, bu yüzden İngilizce terimler
+    kullanılıyor; ilan başlıkları Türkçe olsa bile dizin İngilizce eşliyor.
+    """
+    queries = config.get("queries") or ["intern", "internship", "trainee", "co-op"]
+    location = config.get("location", "Turkey")
+    max_pages = int(config.get("max_pages", 5))
+    gorulen: set[str] = set()
+
+    for query in queries:
+        for page in range(1, max_pages + 1):
+            url = (
+                "https://jobs.workable.com/api/v1/jobs"
+                f"?query={requests.utils.quote(query)}"
+                f"&location={requests.utils.quote(location)}&page={page}"
+            )
+            response = requests.get(
+                url, timeout=25,
+                headers={"User-Agent": "StajimVarJobs/1.0", "Accept": "application/json"},
+            )
+            response.raise_for_status()
+            data = response.json()
+            jobs = data.get("jobs") or []
+            if not jobs:
+                break
+
+            for item in jobs:
+                job_url = item.get("url")
+                if not job_url or job_url in gorulen:
+                    continue
+                gorulen.add(job_url)
+
+                title = clean(item.get("title", ""))
+                description = clean(
+                    item.get("description", "") or item.get("socialSharingDescription", "")
+                )
+                loc = item.get("location") or {}
+                location_text = " ".join(
+                    str(v) for v in [loc.get("city"), loc.get("region"), loc.get("countryName")] if v
+                )
+                if not is_turkey_location(location_text):
+                    continue
+                if not is_early_career(title, description):
+                    continue
+
+                company = item.get("company") or {}
+                yield Job(
+                    config["name"],
+                    job_url,
+                    title,
+                    company.get("title"),
+                    loc.get("city"),
+                    mode(f"{title} {description} {item.get('workplace', '')}"),
+                    description,
+                    email(description),
+                    company_website=company.get("website"),
+                    company_logo=company.get("image"),
+                )
+
+            # Son sayfaya gelindiyse dur.
+            if len(gorulen) >= int(data.get("totalSize") or 0):
+                break
+
 
 def source_configs() -> list[dict[str, Any]]:
     with open(os.path.join(os.path.dirname(__file__), "sources.json"), encoding="utf-8") as handle:
@@ -181,4 +258,5 @@ ADAPTERS = {
     "workable": workable,
     "workday": workday,
     "smartrecruiters": smartrecruiters,
+    "workable_search": workable_search,
 }

@@ -35,12 +35,16 @@ KIND_BY_ADAPTER = {
     "smartrecruiters": "api",
     "json": "api",
     "rss": "rss",
+    "workable_search": "api",
 }
 
 # Resmî ATS iş panosu API'leri: sağlayıcıların ilanların dışarıdan okunması
 # için yayımladığı, belgelenmiş herkese açık uç noktalar. Bunlar "kazıma"
 # değil, amacına uygun kullanım.
-OFFICIAL_ADAPTERS = {"lever", "greenhouse", "ashby", "workable", "workday", "smartrecruiters"}
+OFFICIAL_ADAPTERS = {
+    "lever", "greenhouse", "ashby", "workable", "workday",
+    "smartrecruiters", "workable_search",
+}
 
 TOS_NOTE = (
     "Resmî ATS iş panosu API'si. Sağlayıcı bu uç noktayı ilanların dışarıdan "
@@ -80,26 +84,62 @@ def now_iso() -> str:
 # ---------------------------------------------------------------- şirketler
 
 
-def ensure_company(db: Client, name: str) -> str:
+def domain_of(url: str | None) -> str | None:
+    """Adresten karşılaştırılabilir alan adı çıkarır: www ve şema atılır."""
+    if not url:
+        return None
+    temiz = re.sub(r"^https?://", "", url.strip().lower())
+    temiz = temiz.split("/")[0].split("?")[0]
+    temiz = re.sub(r"^www\.", "", temiz)
+    return temiz or None
+
+
+def ensure_company(db: Client, name: str, website: str | None = None,
+                   logo: str | None = None) -> str:
     """Şirket kaydını bulur, yoksa oluşturur ve id'sini döndürür.
 
-    Şemadaki `companies.name_normalized` üretilmiş kolonu ve benzersiz indeksi
-    sayesinde "Trendyol Group" ile "TRENDYOL GROUP" tek kayda düşer. Burada
-    yalnızca slug üzerinden arama yapılıyor; isim çakışması olursa veritabanı
-    zaten reddeder ve mevcut kayıt okunur.
+    Eşleştirme sırası bilinçli:
+
+    1. **Alan adı.** En güvenilir sinyal. Workable araması şirketi "Vertigo",
+       doğrudan panosu "Vertigo Games" diye veriyordu; ikisi ayrı kayda düşünce
+       aynı ilan sitede iki kez göründü. İkisinin de sitesi vertigogames.com
+       olduğu için alan adı üzerinden birleşiyorlar.
+    2. **Slug.** Alan adı bilinmiyorsa ada göre.
+
+    `companies.name_normalized` benzersiz indeksi yalnızca yazım farklarını
+    (büyük/küçük harf, noktalama) yakalar; kelime farkını yakalayamaz.
     """
+    site = domain_of(website)
+    if site:
+        eslesen = (
+            db.table("companies").select("id,logo_url,website_url")
+            .ilike("website_url", f"%{site}%").limit(1).execute().data
+        )
+        if eslesen:
+            kayit = eslesen[0]
+            # Eksik logo varsa bu fırsatta tamamla.
+            if logo and not kayit.get("logo_url"):
+                db.table("companies").update({"logo_url": logo}).eq("id", kayit["id"]).execute()
+            return kayit["id"]
+
     slug = slugify(name)
-    found = db.table("companies").select("id").eq("slug", slug).limit(1).execute().data
+    found = db.table("companies").select("id,website_url").eq("slug", slug).limit(1).execute().data
     if found:
-        return found[0]["id"]
+        kayit = found[0]
+        # Adres sonradan öğrenildiyse kaydet: bir dahaki eşleştirme kolaylaşır.
+        if site and not kayit.get("website_url"):
+            db.table("companies").update({"website_url": website}).eq("id", kayit["id"]).execute()
+        return kayit["id"]
 
     try:
-        created = (
-            db.table("companies")
-            .insert({"name": name, "slug": slug, "origin": "scraped", "verified": False})
-            .execute()
-            .data
-        )
+        payload: dict[str, Any] = {
+            "name": name, "slug": slug, "origin": "scraped", "verified": False,
+        }
+        if website:
+            payload["website_url"] = website
+        if logo:
+            payload["logo_url"] = logo
+        created = db.table("companies").insert(payload).execute().data
         return created[0]["id"]
     except Exception:
         # name_normalized benzersizliği devreye girdiyse aynı şirket başka bir
@@ -128,7 +168,11 @@ def sync_sources(db: Client, configs: Iterable[dict[str, Any]]) -> dict[str, str
         adapter = config["type"]
         slug = str(config.get("id") or slugify(config["name"]))
         company_name = config.get("company_name") or config.get("organization_name")
-        company_id = ensure_company(db, company_name) if company_name else None
+        company_id = (
+            ensure_company(db, company_name, website=config.get("website"))
+            if company_name
+            else None
+        )
         official = adapter in OFFICIAL_ADAPTERS
 
         payload: dict[str, Any] = {
@@ -230,6 +274,10 @@ def raw_listing_payload(job: Any, source_id: str, canonical_url: str, now: str) 
             "city": job.city,
             "work_mode": job.work_mode,
             "source_name": job.source_name,
+            # Bazı kaynaklar şirket sitesini ve logosunu ilanla veriyor;
+            # promote adımı yeni şirket açarken bunları kullanıyor.
+            "company_website": getattr(job, "company_website", None),
+            "company_logo": getattr(job, "company_logo", None),
             # DİKKAT: job.hr_email bilerek `raw` içine yazılmıyor.
             # İK adresi ancak application_channels üzerinden, kanıtıyla
             # doğrulanarak kaydedilir.

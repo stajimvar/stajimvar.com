@@ -136,7 +136,20 @@ def promote_one(db, raw: dict, source: dict, *, dry: bool) -> str:
     # 4. Şirket kim?
     company_id = source.get("company_id")
     if not company_id and raw.get("company_name_raw"):
-        company_id = repository.ensure_company(db, raw["company_name_raw"]) if not dry else "dry"
+        # Çok şirketli kaynaklarda şirket her ilandan çözülür. Kaynak site ve
+        # logo verdiyse yeni şirket kaydı bunlarla açılır — logos.py'nin ayrıca
+        # tahmin yürütmesine gerek kalmaz.
+        ham = raw.get("raw") or {}
+        company_id = (
+            repository.ensure_company(
+                db,
+                raw["company_name_raw"],
+                website=ham.get("company_website"),
+                logo=ham.get("company_logo"),
+            )
+            if not dry
+            else "dry"
+        )
     if not company_id:
         reject(db, raw_id, "company_unresolved", run_source=source_id, dry=dry)
         return "company_unresolved"
@@ -149,11 +162,29 @@ def promote_one(db, raw: dict, source: dict, *, dry: bool) -> str:
         return "no_application_channel"
 
     # 6. Duplicate mi?
+    #
+    # İki katman gerekiyor. Kanonik URL yalnızca aynı adresten gelen tekrarları
+    # yakalar; aynı ilan iki farklı kaynaktan gelirse (Workable araması
+    # jobs.workable.com/view/..., doğrudan pano apply.workable.com/j/...)
+    # adresler farklı olur ve ilan sitede iki kez görünür. İkinci katman
+    # şirket + başlık + şehir imzasına bakıyor.
     canonical = raw.get("canonical_url") or apply_url
     if not dry:
         existing = (
             db.table("listings").select("id").eq("canonical_url", canonical).limit(1).execute().data
         )
+        if not existing:
+            ayni_sirket = (
+                db.table("listings").select("id,title,city")
+                .eq("company_id", company_id).execute().data
+                or []
+            )
+            imza = (_fold(raw["title"] or ""), _fold(raw.get("city") or ""))
+            for aday in ayni_sirket:
+                if (_fold(aday.get("title") or ""), _fold(aday.get("city") or "")) == imza:
+                    existing = [aday]
+                    break
+
         if existing:
             db.table("raw_listings").update(
                 {"status": "promoted", "promoted_listing_id": existing[0]["id"],

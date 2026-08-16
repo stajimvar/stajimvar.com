@@ -1,6 +1,23 @@
 {
   "sources": [
     {
+      "id": "workable-tr-arama",
+      "name": "Workable Türkiye Araması",
+      "type": "workable_search",
+      "enabled": true,
+      "country": "TR",
+      "careers_url": "https://jobs.workable.com/",
+      "location": "Turkey",
+      "queries": [
+        "intern",
+        "internship",
+        "trainee",
+        "co-op"
+      ],
+      "max_pages": 5,
+      "_not": "Çok şirketli kaynak: company_name yok, şirket her ilandan çözülür."
+    },
+    {
       "id": "commencis-lever",
       "name": "Commencis",
       "type": "lever",
