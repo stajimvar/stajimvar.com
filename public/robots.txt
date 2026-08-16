@@ -1,0 +1,9 @@
+# StajımVar — arama motorları için
+
+User-agent: *
+Allow: /
+
+# Yönetim ekranları dizine girmesin: içerik değil, işlem sayfaları.
+Disallow: /yonetim/
+
+Sitemap: https://stajimvar.com/sitemap.xml

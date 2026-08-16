@@ -794,3 +794,51 @@ export async function addApplicationNote(
   } as never);
   if (error) fail('Not eklenemedi', error);
 }
+
+// ---------------------------------------------------------------- Yetenek havuzu
+
+export interface TalentPoolStat {
+  toplam: number;
+  enCokBolum: Array<{ ad: string; sayi: number }>;
+  enCokSehir: Array<{ ad: string; sayi: number }>;
+}
+
+/**
+ * İşveren rehberindeki "şu anda staj arayan öğrenciler" sayısı.
+ *
+ * TOPLU sayı döndürüyor, kişi listesi değil. Sebep KVKK: bir işverene tek tek
+ * öğrenci profili göstermek, öğrencinin açık rızası ve şirketin doğrulanmış
+ * olması şartlarına bağlı. Toplu sayı ise kimseyi tanımlanabilir kılmıyor ve
+ * ilk günden çalışıyor — 5 öğrenci varsa "5" yazar, dürüst ve yine ikna edici.
+ *
+ * Sayım yalnızca teklife açık öğrencileri kapsıyor; profilini kapalı tutan
+ * öğrenci bu sayıya girmiyor.
+ */
+export async function fetchTalentPoolStats(): Promise<TalentPoolStat> {
+  const { data, error } = await supabase
+    .from('student_profiles')
+    .select('department, pref_cities')
+    .eq('is_open_to_offers', true);
+
+  if (error) fail('Öğrenci sayısı okunamadı', error);
+
+  const rows = (data ?? []) as Array<{ department: string | null; pref_cities: string[] | null }>;
+
+  const say = (degerler: string[]) => {
+    const harita = new Map<string, number>();
+    for (const d of degerler) {
+      const temiz = (d ?? '').trim();
+      if (temiz) harita.set(temiz, (harita.get(temiz) ?? 0) + 1);
+    }
+    return [...harita.entries()]
+      .map(([ad, sayi]) => ({ ad, sayi }))
+      .sort((a, b) => b.sayi - a.sayi || a.ad.localeCompare(b.ad, 'tr'))
+      .slice(0, 4);
+  };
+
+  return {
+    toplam: rows.length,
+    enCokBolum: say(rows.map((r) => r.department ?? '')),
+    enCokSehir: say(rows.flatMap((r) => r.pref_cities ?? [])),
+  };
+}

@@ -77,6 +77,15 @@ jobs:
         run: python promote.py
         working-directory: automation
 
+      # İlan listesi her turda değişiyor; sitemap de değişmeli. Elle
+      # yazılan bir sitemap bir gün sonra kapanan ilana yönlendirir ve yeni
+      # ilanı hiç tanıtmaz. Çıktı bir sonraki dağıtımda yayına giriyor.
+      - name: Sitemap üret
+        if: ${{ !inputs.dry_run }}
+        run: python sitemap.py
+        working-directory: automation
+        continue-on-error: true
+
       # Yeni şirketlerin logosunu kendi sitelerinden çeker. Logosu olanları
       # atlar, yani her çalıştırmada yalnızca yeni gelenler işlenir.
       - name: Eksik logoları tamamla

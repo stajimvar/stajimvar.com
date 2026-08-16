@@ -31,6 +31,7 @@ import { LegalPage, LEGAL_ROUTES } from './components/LegalPage';
 import { ApplyDialog } from './components/ApplyDialog';
 import { ListingPage } from './components/ListingPage';
 import { CompanyPage } from './components/CompanyPage';
+import { EmployerGuide } from './components/EmployerGuide';
 import { AdminClaimsView } from './components/AdminClaimsView';
 import { AdminListingsQueue } from './components/AdminListingsQueue';
 import { listingSlug, idPrefixFromSlug } from './lib/slug';
@@ -471,6 +472,11 @@ export default function App() {
     }
   }
 
+  /* İşveren rehberi: şirketin bizi bulmasının ana yolu. */
+  if (temizYol === '/isveren' || temizYol === '/stajyer-nasil-alinir') {
+    return <EmployerGuide onBack={goHome} onNavigate={navigate} />;
+  }
+
   /*
     /yonetim/talepler
 
@@ -757,6 +763,7 @@ export default function App() {
           <nav className="flex flex-col sm:flex-row sm:justify-center gap-3 sm:gap-8">
             <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
               {[
+                { yol: '/isveren', etiket: 'İşveren rehberi' },
                 { yol: '/hakkimizda', etiket: 'Hakkımızda' },
                 { yol: '/iletisim', etiket: 'İletişim' },
                 { yol: '/ilan-kurallari', etiket: 'İlan kuralları' },
