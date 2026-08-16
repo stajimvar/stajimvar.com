@@ -1,6 +1,6 @@
 # StajımVar — Proje Durumu
 
-Son güncelleme: 16 Ağustos 2026
+Son güncelleme: 16 Ağustos 2026 — **stajimvar.com yayında**
 
 ## Ne yapıyoruz
 
@@ -12,7 +12,10 @@ profille başvurmasını sağlar. Başvurular platformun kendi verisi olarak tut
 
 - **Frontend:** Vite 6 + React 19 + TypeScript + Tailwind 4
 - **Veritabanı/Auth/Storage:** Supabase (`gdumgdgwlfnohkaucfow`, eu-central-1 Frankfurt, PG17)
-- **Hosting (planlanan):** Cloudflare Pages — domain zaten Cloudflare'de
+- **Hosting:** Cloudflare Pages, proje adı `stajimvar`. `stajimvar.com` bu projeye
+  bağlı. Eski Next.js Worker'ı (`ai-chat-cloudflare`) hâlâ duruyor ama route'u yok;
+  geri dönmek gerekirse `stajimvar.com/*` route'unu ona geri eklemek yeterli.
+  Eski verinin bulunduğu Supabase projesi ayrı: `ruavwcganeyacrmfhldk`.
 - **Dış AI servisi yok.**
 
 > **Not:** Yeni Supabase projesi açılmadı. Mevcut proje zaten boştu, doğru bölgedeydi
@@ -107,6 +110,19 @@ Doğrulandı: anon rolüyle `select=*` **401**, izinli kolonlar 200 dönüyor.
 Başvuru kanalının değeri (e-posta adresi) `anon`'a tamamen kapalı.
 
 ---
+
+## 🟢 Yayındaki sürüm (v1) neyi yapar
+
+Salt okunur ilan sitesi: ziyaretçi ilanları görür, "İlana Git" ile şirketin kendi
+başvuru sayfasına gider. Kayıt/giriş **bilerek kapalı** (`AUTH_ENABLED = false`
+içinde `src/App.tsx`) — `src/lib/auth.ts` yazılı ama App profili henüz Supabase'den
+okumuyor, çalışmayan bir kayıt formu yayında durmasın diye giriş noktaları gizli.
+
+Kişisel veri toplanmadığı için KVKK açık rıza akışı gerekmiyor; yasal metinler
+(`/gizlilik`, `/cerez-politikasi`, `/kvkk-aydinlatma-metni`) bu duruma göre yazıldı
+ve üyelik açıldığında yeniden yazılmaları gerekiyor.
+
+Bilinen eksik: bilinmeyen yollar 404 yerine 200 + ana sayfa dönüyor (soft 404).
 
 ## ⏳ Sıradaki iş
 
