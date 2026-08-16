@@ -161,8 +161,13 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
       </div>
 
       {/* Right Actions & Match Score Area */}
-      <div className="flex lg:flex-col items-center lg:items-end justify-between w-full lg:w-auto shrink-0 gap-2.5 pt-2.5 lg:pt-0 border-t lg:border-t-0 border-gray-100 dark:border-slate-800">
-        <div className="flex items-center gap-2">
+      {/*
+        Mobilde bu alan tek satıra sığmıyordu: iki buton eklendikten sonra
+        "StajımVar ile Başvur" kartın 109px dışına taşıyordu. Artık satır
+        sarabiliyor ve shrink-0 kaldırıldı (o, daralmayı engelliyordu).
+      */}
+      <div className="flex flex-wrap lg:flex-col items-center lg:items-end justify-between w-full lg:w-auto gap-2.5 pt-2.5 lg:pt-0 border-t lg:border-t-0 border-gray-100 dark:border-slate-800 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
           {/* Match Score */}
           {/*
             İlanda beceri şartı yoksa uyum hesaplanamaz. Uydurma bir yüzde
@@ -233,7 +238,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             <button
               id={`quick-apply-btn-${listing.id}`}
               onClick={onQuickApply}
-              className="flex items-center gap-1 px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-xs transition-all cursor-pointer whitespace-nowrap"
+              className="flex items-center justify-center gap-1 px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-xs transition-all cursor-pointer flex-1 sm:flex-none min-w-0"
             >
               <span>StajımVar ile Başvur</span>
               <ArrowRight className="w-3 h-3" />

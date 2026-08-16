@@ -737,14 +737,22 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           {/* Erasmus & Global Staj Opportunity Card */}
           <GoogleAdBanner format="sidebar-rectangle" />
 
-          {/* Quick Helper Badge Box */}
+          {/*
+            Burada "Yetenek Rozetleri ile %80 Daha Hızlı Kabul" yazıyordu ve
+            altında şirketlerin rozetli adayları mülakat listesinde öne aldığı
+            iddia ediliyordu. İkisi de doğru değil: böyle bir ölçüm yok ve
+            platformda şirketlerin sıralama yaptığı bir mekanizma yok.
+            Yerine, gerçekten yaptığımız işi anlatan bir kutu kondu.
+          */}
           <div className="bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 dark:from-slate-900 dark:to-slate-800 rounded-2xl p-4 border border-indigo-100 dark:border-slate-700 text-xs space-y-2">
             <div className="flex items-center gap-1.5 text-indigo-900 dark:text-indigo-300 font-bold">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Yetenek Rozetleri ile %80 Daha Hızlı Kabul</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
+              <span>İlanlar doğrudan kaynağından</span>
             </div>
             <p className="text-gray-600 dark:text-slate-300 text-[11px] leading-relaxed">
-              Şirketler, doğrulanmış yetenek rozetine sahip adayların başvurularını mülakat listesinde en üste alır.
+              Her ilan, şirketin kendi kariyer sisteminden alınır ve kaynakta
+              kapandığında listeden düşürülür. Başvuru adresi de ilanın kendi
+              sayfasıdır; araya kimse girmez.
             </p>
           </div>
         </div>
