@@ -299,7 +299,12 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     <div className="w-full space-y-8 pb-12">
       {/* Clean Hero Section */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-        {/* Left Hero Search Column */}
+        {/*
+          Left Hero Search Column
+          Aday kartı yalnızca giriş yapmış öğrenciye çiziliyor. Sütun genişliği
+          sabit 7/12 kalırsa kart olmadığında sağda 5 sütunluk boşluk kalıyor ve
+          sayfa sola yaslanmış görünüyor.
+        */}
         <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
           <header className="space-y-3">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
@@ -391,11 +396,52 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         </div>
 
         {/*
-          Right Candidate Card
-          Yalnızca giriş yapmış öğrenciye çizilir. Ziyaretçiye kendi profiliymiş
-          gibi görünen bir kart göstermek, sitenin ilk izlenimini yalan üstüne
-          kuruyordu.
+          Right column.
+          Giriş yapmışsa aday kartı; yapmamışsa sitenin nasıl çalıştığını anlatan
+          bilgi paneli. Sütunu boş bırakmak sayfayı sola yaslanmış gösteriyordu.
         */}
+        {!student && (
+          <aside className="lg:col-span-5 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xs border border-gray-200 dark:border-slate-800 space-y-5">
+            <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-3 py-1 rounded-full">
+              İlanlar nereden geliyor
+            </span>
+
+            <p className="text-sm text-gray-600 dark:text-slate-300 leading-relaxed">
+              İlanları aracı sitelerden değil, <strong className="text-gray-900 dark:text-white">şirketlerin
+              kendi kariyer sistemlerinden</strong> topluyoruz. Başvurunu doğrudan
+              şirketin sayfasında yapıyorsun; arada kimse yok.
+            </p>
+
+            <div className="space-y-3">
+              {/*
+                Yalnızca gerçekten okunabilen sayılar. "Takip edilen kaynak"
+                satırı vardı ama istemci `sources` tablosunu göremiyor (RLS
+                admin'e kapatıyor); sayıyı sabit yazmak uydurma olurdu.
+              */}
+              {[
+                { etiket: 'Açık ilan', deger: String(allListings.length) },
+                { etiket: 'İlan veren şirket', deger: String(companyCount) },
+              ].map((satir) => (
+                <div
+                  key={satir.etiket}
+                  className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-2.5 last:border-0 last:pb-0"
+                >
+                  <span className="text-xs text-gray-500 dark:text-slate-400 font-semibold">
+                    {satir.etiket}
+                  </span>
+                  <span className="text-lg font-black text-gray-900 dark:text-white tabular-nums">
+                    {satir.deger}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-[11px] text-gray-400 dark:text-slate-500 leading-relaxed">
+              Kaynaklar saatlik taranıyor. Kapanan ilanlar listeden düşürülüyor.
+            </p>
+          </aside>
+        )}
+
         {student && (
         <div className="lg:col-span-5 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 text-gray-900 dark:text-slate-100 relative overflow-hidden flex flex-col justify-between shadow-xs border border-gray-200 dark:border-slate-800">
           <div className="relative z-10 space-y-6">
