@@ -27,6 +27,20 @@ import { InternshipListing, StudentProfile, MatchBreakdown, ApplicationRecord } 
 import { calculateInternshipMatch } from '../utils/matchingEngine';
 import { InternshipCard } from './InternshipCard';
 import { ilBul } from '../lib/sehir';
+
+/**
+ * İlanın listeye eklenme zamanı (ms).
+ *
+ * `postedAt`, veritabanında `posted_at ?? created_at` olarak eşleniyor:
+ * şirket kendi ilanını girdiyse yayın tarihi, biz topladıysak sisteme
+ * eklendiği an. Bilinmeyen veya bozuk tarihler sıralamanın sonuna düşsün
+ * diye 0 dönüyor — NaN ile karşılaştırma sıralamayı tamamen bozardı.
+ */
+function eklenmeZamani(deger: string | null | undefined): number {
+  if (!deger) return 0;
+  const ms = new Date(deger).getTime();
+  return Number.isNaN(ms) ? 0 : ms;
+}
 import { GoogleAdBanner } from './GoogleAdBanner';
 
 interface MatchedInternshipsViewProps {
@@ -66,6 +80,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     | 'company_asc'
     | 'company_desc'
     | 'city_asc'
+    | 'newest'
+    | 'oldest'
   >('match');
 
   const categoryScrollRef = useRef<HTMLDivElement>(null);
@@ -268,6 +284,11 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         if (sortBy === 'city_asc') {
           return a.listing.city.localeCompare(b.listing.city, 'tr');
         }
+        if (sortBy === 'newest' || sortBy === 'oldest') {
+          const at = eklenmeZamani(a.listing.postedAt);
+          const bt = eklenmeZamani(b.listing.postedAt);
+          return sortBy === 'newest' ? bt - at : at - bt;
+        }
         return 0;
       });
   }, [
@@ -312,6 +333,11 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   */
   const mandatoryCount = matchedData.filter((item) => item.listing.mandatoryStajAccepted).length;
   const paidCount = matchedData.filter((item) => item.listing.stipend.isPaid).length;
+
+  /* Sıralama menüsü için aynı kural: verisi olmayan ölçüte göre sıralatma. */
+  const applicantsKnown = matchedData.some((item) => item.listing.applicantsCount > 0);
+  const deadlineKnown = matchedData.some((item) => Boolean(item.listing.applicationDeadline));
+  const ratingKnown = matchedData.some((item) => item.listing.companyRating > 0);
 
   /**
    * Profil doldurma oranı. Eskiden sabit "%85" yazıyordu; artık gerçekten
@@ -759,10 +785,21 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="flex-1 sm:flex-initial text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white font-medium text-gray-800 focus:outline-none focus:border-blue-600 cursor-pointer shadow-2xs"
               >
+                {/*
+                  Menüde yalnızca gerçekten işleyen sıralamalar var.
+
+                  "Son Başvuru Tarihi" ve "Şirket Puanı" kaldırıldı: canlıda
+                  11 ilanın 11'inde de son başvuru tarihi boş, şirket puanı 0.
+                  Hepsi aynı değere sahip bir alana göre sıralamak, kullanıcıya
+                  rastgele bir dizilim verip "sıralama bozuk" dedirtiyordu.
+                  Bu alanlar dolmaya başlarsa seçenekler geri gelir.
+                */}
                 <option value="match">En Yüksek Uyum</option>
-                <option value="deadline_asc">Son Başvuru Tarihi</option>
-                <option value="applicants_desc">En Çok Başvuran</option>
-                <option value="rating_desc">Şirket Puanı</option>
+                <option value="newest">Önce Yeni Eklenenler</option>
+                <option value="oldest">Önce Eski Eklenenler</option>
+                {applicantsKnown && <option value="applicants_desc">En Çok Başvuran</option>}
+                {deadlineKnown && <option value="deadline_asc">Son Başvuru Tarihi</option>}
+                {ratingKnown && <option value="rating_desc">Şirket Puanı</option>}
                 <option value="company_asc">Şirket Adı (A - Z)</option>
               </select>
             </div>

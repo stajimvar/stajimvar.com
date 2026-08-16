@@ -13,6 +13,7 @@ import {
 import { InternshipListing, MatchBreakdown } from '../types';
 import { CompanyLogo } from './CompanyLogo';
 import { konumEtiketi } from '../lib/sehir';
+import { eklenmeMetni } from '../lib/zaman';
 
 interface InternshipCardProps {
   listing: InternshipListing;
@@ -167,6 +168,17 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                 <span>{skill}</span>
               </span>
             ))}
+
+            {/*
+              Ne zaman eklendiği. Sıralamada "Önce Yeni Eklenenler" seçeneği
+              var; kartta karşılığı görünmezse kullanıcı sıralamanın işleyip
+              işlemediğini anlayamaz.
+            */}
+            {eklenmeMetni(listing.postedAt) && (
+              <span className="text-[11px] text-gray-400">
+                {eklenmeMetni(listing.postedAt)}
+              </span>
+            )}
 
             {/*
               Eksik beceri, sahip olunan becerilerle aynı biçimde çizilince
