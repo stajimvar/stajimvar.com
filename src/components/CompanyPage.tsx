@@ -5,6 +5,7 @@ import { fetchCompanyPage } from '../lib/queries';
 import { CompanyLogo } from './CompanyLogo';
 import { Logo } from './Logo';
 import { listingSlug } from '../lib/slug';
+import { CompanyClaimForm } from './CompanyClaimForm';
 
 /**
  * Şirket sayfası.
@@ -21,12 +22,23 @@ interface CompanyPageProps {
   slug: string;
   onBack: () => void;
   onNavigate: (path: string) => void;
+  /** Giriş yapan kullanıcı; sahiplenme formu için gerekiyor. */
+  userId?: string | null;
+  userEmail?: string;
+  onRequireLogin?: () => void;
 }
 
 type Durum = 'yukleniyor' | 'hazir' | 'yok' | 'hata';
 type Veri = Awaited<ReturnType<typeof fetchCompanyPage>>;
 
-export const CompanyPage: React.FC<CompanyPageProps> = ({ slug, onBack, onNavigate }) => {
+export const CompanyPage: React.FC<CompanyPageProps> = ({
+  slug,
+  onBack,
+  onNavigate,
+  userId = null,
+  userEmail,
+  onRequireLogin,
+}) => {
   const [veri, setVeri] = useState<Veri>(null);
   const [durum, setDurum] = useState<Durum>('yukleniyor');
 
@@ -207,6 +219,22 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({ slug, onBack, onNaviga
                   </button>
                 ))
               )}
+            </div>
+
+            {/*
+              Sahiplenme çağrısı sayfanın altında, ilanlardan sonra.
+              Sayfanın asıl işi öğrenciye ilanları göstermek; şirket
+              yetkilisi zaten kendi şirketini arayarak buraya geliyor
+              ve sonuna kadar bakıyor.
+            */}
+            <div className="mt-8">
+              <CompanyClaimForm
+                companyId={veri.company.id}
+                companyName={veri.company.name}
+                userId={userId}
+                userEmail={userEmail}
+                onRequireLogin={onRequireLogin ?? (() => undefined)}
+              />
             </div>
           </>
         )}

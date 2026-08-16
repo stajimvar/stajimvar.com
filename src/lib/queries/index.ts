@@ -515,3 +515,150 @@ export async function fetchQuizzes(): Promise<SkillQuiz[]> {
   if (error) fail('Quizler yüklenemedi', error);
   return (data as unknown as QuizRowWithQuestions[]).map(toSkillQuiz);
 }
+
+// ---------------------------------------------------------------- Şirket sahiplenme
+
+export interface CompanyClaim {
+  id: string;
+  companyId: string;
+  companyName: string;
+  companySlug: string;
+  companyWebsite?: string;
+  contactName: string;
+  contactTitle?: string;
+  workEmail: string;
+  phone?: string;
+  note?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  rejectReason?: string;
+  createdAt: string;
+}
+
+/**
+ * Sahiplenme talebi oluşturur.
+ *
+ * `user_id` istemciden gelmiyor gibi görünse de RLS politikası
+ * `user_id = auth.uid()` şartını koyuyor; başkasının adına talep açılamıyor.
+ * E-posta küçük harfe çevriliyor çünkü veritabanında citext yok.
+ */
+export async function createCompanyClaim(params: {
+  companyId: string;
+  userId: string;
+  contactName: string;
+  contactTitle?: string;
+  workEmail: string;
+  phone?: string;
+  note?: string;
+}): Promise<void> {
+  const { error } = await supabase.from('company_claims').insert({
+    company_id: params.companyId,
+    user_id: params.userId,
+    contact_name: params.contactName.trim(),
+    contact_title: params.contactTitle?.trim() || null,
+    work_email: params.workEmail.trim().toLowerCase(),
+    phone: params.phone?.trim() || null,
+    note: params.note?.trim() || null,
+  } as never);
+
+  if (error) {
+    // Kısmi tekil index: aynı şirket için bekleyen ikinci talep açılamıyor.
+    if (error.code === '23505') {
+      throw new Error('Bu şirket için zaten bekleyen bir talebiniz var.');
+    }
+    fail('Talep gönderilemedi', error);
+  }
+}
+
+/** Kullanıcının bu şirket için mevcut talebi (varsa). */
+export async function fetchMyClaim(
+  companyId: string,
+  userId: string
+): Promise<CompanyClaim | null> {
+  const { data, error } = await supabase
+    .from('company_claims')
+    .select('id,company_id,contact_name,contact_title,work_email,phone,note,status,reject_reason,created_at')
+    .eq('company_id', companyId)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) fail('Talep durumu okunamadı', error);
+  if (!data) return null;
+
+  const row = data as Record<string, string | null>;
+  return {
+    id: row.id!,
+    companyId: row.company_id!,
+    companyName: '',
+    companySlug: '',
+    contactName: row.contact_name!,
+    contactTitle: row.contact_title ?? undefined,
+    workEmail: row.work_email!,
+    phone: row.phone ?? undefined,
+    note: row.note ?? undefined,
+    status: row.status as CompanyClaim['status'],
+    rejectReason: row.reject_reason ?? undefined,
+    createdAt: row.created_at!,
+  };
+}
+
+/** Yönetici kuyruğu. RLS yalnızca admin'e tüm satırları veriyor. */
+export async function fetchPendingClaims(): Promise<CompanyClaim[]> {
+  const { data, error } = await supabase
+    .from('company_claims')
+    .select(
+      'id,company_id,contact_name,contact_title,work_email,phone,note,status,created_at,' +
+        'companies(name,slug,website_url)'
+    )
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true });
+
+  if (error) fail('Talepler yüklenemedi', error);
+
+  return (data ?? []).map((r) => {
+    const row = r as Record<string, any>;
+    const sirket = row.companies ?? {};
+    return {
+      id: row.id,
+      companyId: row.company_id,
+      companyName: sirket.name ?? '(şirket silinmiş)',
+      companySlug: sirket.slug ?? '',
+      companyWebsite: sirket.website_url ?? undefined,
+      contactName: row.contact_name,
+      contactTitle: row.contact_title ?? undefined,
+      workEmail: row.work_email,
+      phone: row.phone ?? undefined,
+      note: row.note ?? undefined,
+      status: row.status,
+      createdAt: row.created_at,
+    };
+  });
+}
+
+/**
+ * Onay ve ret sunucudaki fonksiyonlar üzerinden yapılıyor.
+ *
+ * Doğrudan UPDATE yolu bilerek kapalı: onay üç tabloya birden yazıyor
+ * (talep, üyelik, şirket) ve bunların yarısı yazılıp yarısı yazılmasa
+ * yetki yarım kalırdı. Ayrıca yetki kontrolü fonksiyonun içinde.
+ */
+export async function approveCompanyClaim(claimId: string): Promise<void> {
+  const { error } = await supabase.rpc('approve_company_claim', { claim_id: claimId } as never);
+  if (error) fail('Talep onaylanamadı', error);
+}
+
+export async function rejectCompanyClaim(claimId: string, reason: string): Promise<void> {
+  const { error } = await supabase.rpc('reject_company_claim', {
+    claim_id: claimId,
+    reason,
+  } as never);
+  if (error) fail('Talep reddedilemedi', error);
+}
+
+/** Giriş yapan kişi yönetici mi? RLS politikalarının kullandığı fonksiyon. */
+export async function fetchIsAdmin(): Promise<boolean> {
+  const { data, error } = await supabase.rpc('is_admin');
+  if (error) return false;
+  return Boolean(data);
+}

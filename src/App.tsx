@@ -6,6 +6,7 @@ import {
   fetchStudentApplications,
   createApplication,
   saveStudentProfile,
+  fetchIsAdmin,
 } from './lib/queries';
 import { getCurrentUser, onAuthChange, signOut, KVKK_VERSION, type AuthResult } from './lib/auth';
 import {
@@ -30,6 +31,7 @@ import { LegalPage, LEGAL_ROUTES } from './components/LegalPage';
 import { ApplyDialog } from './components/ApplyDialog';
 import { ListingPage } from './components/ListingPage';
 import { CompanyPage } from './components/CompanyPage';
+import { AdminClaimsView } from './components/AdminClaimsView';
 import { listingSlug, idPrefixFromSlug } from './lib/slug';
 import confetti from 'canvas-confetti';
 import { CheckCircle2 } from 'lucide-react';
@@ -124,6 +126,34 @@ export default function App() {
     setActiveCompanyId(newComp.id);
     showToast(`"${newComp.name}" kurumsal şirket hesabı oluşturuldu!`);
   };
+
+  /*
+    Yonetici mi?
+
+    Rol istemcide tutulan bir bayrakla degil, veritabanindaki is_admin()
+    fonksiyonuna sorularak belirleniyor. Istemcideki bir degeri degistirmek
+    kimseye yetki vermez -- onay ve ret islemleri zaten sunucuda ayni
+    fonksiyonla korunuyor. Buradaki bayrak yalnizca menuyu gostermek icin.
+  */
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  React.useEffect(() => {
+    if (!session) {
+      setIsAdmin(false);
+      return;
+    }
+    let iptal = false;
+    fetchIsAdmin()
+      .then((sonuc) => {
+        if (!iptal) setIsAdmin(sonuc);
+      })
+      .catch(() => {
+        if (!iptal) setIsAdmin(false);
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [session]);
 
   // Navigation State
   const [activeTab, setActiveTab] = useState<
@@ -440,11 +470,49 @@ export default function App() {
     }
   }
 
+  /*
+    /yonetim/talepler
+
+    Ayri bir yol, sekme degil: yonetici ekrani gunluk kullanimda degil ve
+    ogrenci menusunde yer kaplamamali. Yetkisiz biri adresi bilse bile
+    listeyi goremiyor -- RLS yalnizca admin'e satirlari veriyor, kuyruk
+    bos gorunur ve onay fonksiyonu hata dondurur.
+  */
+  if (temizYol === '/yonetim/talepler') {
+    return (
+      <div className="min-h-screen bg-[#F9FAFB] font-sans text-[#111827] p-4 sm:p-8">
+        <button
+          type="button"
+          onClick={goHome}
+          className="mb-4 text-sm font-semibold text-blue-600 hover:underline cursor-pointer"
+        >
+          &larr; Siteye don
+        </button>
+        {isAdmin ? (
+          <AdminClaimsView onToast={showToast} />
+        ) : (
+          <p className="max-w-3xl mx-auto bg-white rounded-2xl border border-gray-200 p-8 text-center text-sm text-gray-600">
+            Bu sayfa yalnizca yoneticiye acik.
+          </p>
+        )}
+      </div>
+    );
+  }
+
   /* /sirket/vertigo-games */
   if (temizYol.startsWith('/sirket/')) {
     const sirketSlug = temizYol.slice('/sirket/'.length);
     if (sirketSlug) {
-      return <CompanyPage slug={sirketSlug} onBack={goHome} onNavigate={navigate} />;
+      return (
+        <CompanyPage
+          slug={sirketSlug}
+          onBack={goHome}
+          onNavigate={navigate}
+          userId={session?.userId ?? null}
+          userEmail={student?.email}
+          onRequireLogin={handleOpenLogin}
+        />
+      );
     }
   }
 

@@ -183,6 +183,69 @@ export type Database = {
           },
         ];
       };
+      company_claims: {
+        Row: {
+          company_id: string;
+          contact_name: string;
+          contact_title: string | null;
+          created_at: string;
+          id: string;
+          note: string | null;
+          phone: string | null;
+          reject_reason: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          status: string;
+          user_id: string;
+          work_email: string;
+        };
+        Insert: {
+          company_id: string;
+          contact_name: string;
+          contact_title?: string | null;
+          created_at?: string;
+          id?: string;
+          note?: string | null;
+          phone?: string | null;
+          reject_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          status?: string;
+          user_id: string;
+          work_email: string;
+        };
+        Update: {
+          company_id?: string;
+          contact_name?: string;
+          contact_title?: string | null;
+          created_at?: string;
+          id?: string;
+          note?: string | null;
+          phone?: string | null;
+          reject_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          status?: string;
+          user_id?: string;
+          work_email?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'company_claims_company_id_fkey';
+            columns: ['company_id'];
+            isOneToOne: false;
+            referencedRelation: 'companies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'company_claims_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       company_members: {
         Row: {
           company_id: string;
@@ -1099,6 +1162,8 @@ export type Database = {
       };
       is_admin: { Args: Record<string, never>; Returns: boolean };
       is_company_member: { Args: { target_company: string }; Returns: boolean };
+      approve_company_claim: { Args: { claim_id: string }; Returns: undefined };
+      reject_company_claim: { Args: { claim_id: string; reason: string }; Returns: undefined };
     };
     Enums: {
       application_method: 'email_application' | 'external' | 'internal';
