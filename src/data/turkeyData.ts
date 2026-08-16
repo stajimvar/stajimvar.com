@@ -5,9 +5,12 @@
  * daha az yazıyor ve veri tutarlı giriliyor — "İTÜ", "ITU", "İstanbul Teknik
  * Ünv." aynı kaydı üç farklı şekilde doldurmuyor.
  *
- * Listeler `<datalist>` ile ÖNERİ olarak sunuluyor: kapalı seçim değil,
- * listede olmayan bir kurum veya bölüm de yazılabiliyor. Bu bilinçli —
+ * Listeler `AutocompleteField` ile ÖNERİ olarak sunuluyor: kapalı seçim
+ * değil, listede olmayan bir kurum veya bölüm de yazılabiliyor. Bu bilinçli —
  * kapalı liste, unuttuğumuz her okulu kaydolamaz hale getirirdi.
+ *
+ * Bölüm listesi hem lisans hem ön lisans (MYO) programlarını içeriyor.
+ * Ön lisans kısmı önemli: zorunlu staj yükümlülüğü en yoğun orada.
  */
 
 /** 81 il. */
@@ -434,4 +437,174 @@ export const TR_DEPARTMENTS: string[] = [
   'Gıda Teknolojisi',
   'Bilgi ve Belge Yönetimi',
   'Halkbilimi',
+  'Mütercim-Tercümanlık (İngilizce)',
+  'Uluslararası Ticaret ve Finansman',
+  'Yönetim Bilişim Sistemleri (Lisans)',
+  'Gastronomi (Lisans)',
+  'Moda ve Tekstil Tasarımı',
+  'Tekstil Tasarımı',
+  'Kültür Varlıklarını Koruma ve Onarım',
+  'Müze Yönetimi',
+  'Deniz Ulaştırma ve İşletme',
+  'Gemi Makineleri İşletme',
+  'Acil Yardım ve Afet Yönetimi (Lisans)',
+  'Odyoloji (Lisans)',
+  'Genetik ve Biyoinformatik',
+  'Yazılım Geliştirme',
+
+  // ================= ÖN LİSANS (MYO) PROGRAMLARI =================
+  // Meslek yüksekokulu programları. Zorunlu staj yükümlülüğü en yoğun
+  // burada olduğu için listenin en çok kullanılan kısmı olması bekleniyor.
+
+  // Tekstil, moda ve giyim
+  'Giyim Üretim Teknolojisi',
+  'Moda Tasarımı (Ön Lisans)',
+  'Tekstil Teknolojisi',
+  'Ayakkabı Tasarım ve Üretimi',
+  'Deri Teknolojisi',
+  'Halı ve Kilim Desinatörlüğü',
+  'Kuyumculuk ve Takı Tasarımı',
+
+  // Bilişim
+  'Bilgisayar Programcılığı',
+  'Web Tasarımı ve Kodlama',
+  'İnternet ve Ağ Teknolojileri',
+  'Bilgi Güvenliği Teknolojisi',
+  'Bilgisayar Destekli Tasarım ve Animasyon',
+  'Coğrafi Bilgi Sistemleri',
+  'Bilişim Güvenliği Teknolojisi',
+
+  // Elektrik, elektronik, otomasyon
+  'Elektrik',
+  'Elektronik Teknolojisi',
+  'Elektrikli Cihaz Teknolojisi',
+  'Kontrol ve Otomasyon Teknolojisi',
+  'Mekatronik (Ön Lisans)',
+  'Haberleşme Teknolojisi',
+  'Biyomedikal Cihaz Teknolojisi',
+  'Alternatif Enerji Kaynakları Teknolojisi',
+  'Elektrik Enerjisi Üretim, İletim ve Dağıtımı',
+
+  // Makine, üretim, otomotiv
+  'Makine (Ön Lisans)',
+  'Makine Resim ve Konstrüksiyon',
+  'Otomotiv Teknolojisi',
+  'Raylı Sistemler Makine Teknolojisi',
+  'Endüstriyel Kalıpçılık',
+  'Kaynak Teknolojisi',
+  'Metalurji (Ön Lisans)',
+  'Döküm',
+  'İmalat Teknolojileri',
+  'İklimlendirme ve Soğutma Teknolojisi',
+  'Doğalgaz ve Tesisat Teknolojisi',
+  'Gemi İnşaatı (Ön Lisans)',
+  'Uçak Teknolojisi',
+  'Sivil Havacılık Kabin Hizmetleri',
+  'Uçuş Harekat Yöneticiliği',
+
+  // İnşaat, mimarlık, çevre
+  'İnşaat Teknolojisi',
+  'Mimari Restorasyon',
+  'Harita ve Kadastro',
+  'Yapı Denetimi',
+  'İç Mekan Tasarımı',
+  'Peyzaj ve Süs Bitkileri Yetiştiriciliği',
+  'Çevre Koruma ve Kontrol',
+  'Maden Teknolojisi',
+  'Sondaj Teknolojisi',
+
+  // Sağlık
+  'Tıbbi Dokümantasyon ve Sekreterlik',
+  'Tıbbi Laboratuvar Teknikleri (Ön Lisans)',
+  'Tıbbi Görüntüleme Teknikleri',
+  'Radyoterapi',
+  'Diyaliz',
+  'Anestezi (Ön Lisans)',
+  'Ameliyathane Hizmetleri (Ön Lisans)',
+  'İlk ve Acil Yardım (Ön Lisans)',
+  'Fizyoterapi (Ön Lisans)',
+  'Odyometri',
+  'Optisyenlik',
+  'Ağız ve Diş Sağlığı',
+  'Diş Protez Teknolojisi',
+  'Eczane Hizmetleri',
+  'Patoloji Laboratuvar Teknikleri',
+  'Perfüzyon Teknikleri',
+  'Yaşlı Bakımı',
+  'Engelli Bakımı ve Rehabilitasyon',
+  'Çocuk Gelişimi (Ön Lisans)',
+  'Sağlık Kurumları İşletmeciliği',
+  'Evde Hasta Bakımı',
+  'Podoloji',
+
+  // İşletme, finans, hukuk
+  'Muhasebe ve Vergi Uygulamaları',
+  'İşletme Yönetimi (Ön Lisans)',
+  'Dış Ticaret (Ön Lisans)',
+  'Lojistik (Ön Lisans)',
+  'Bankacılık ve Sigortacılık (Ön Lisans)',
+  'Menkul Kıymetler ve Sermaye Piyasası',
+  'Emlak Yönetimi',
+  'Maliye (Ön Lisans)',
+  'İnsan Kaynakları Yönetimi (Ön Lisans)',
+  'Halkla İlişkiler ve Tanıtım (Ön Lisans)',
+  'Pazarlama (Ön Lisans)',
+  'Perakende Satış ve Mağaza Yönetimi',
+  'Çağrı Merkezi Hizmetleri',
+  'Büro Yönetimi ve Yönetici Asistanlığı',
+  'Adalet',
+  'Ceza İnfaz ve Güvenlik Hizmetleri',
+  'Sosyal Güvenlik',
+  'Yerel Yönetimler',
+  'Sivil Savunma ve İtfaiyecilik',
+  'Özel Güvenlik ve Koruma',
+  'İş Sağlığı ve Güvenliği (Ön Lisans)',
+
+  // Turizm, gastronomi, hizmet
+  'Turizm ve Otel İşletmeciliği',
+  'Turizm Rehberliği (Ön Lisans)',
+  'Aşçılık (Ön Lisans)',
+  'İkram Hizmetleri',
+  'Turist Rehberliği',
+  'Seyahat İşletmeciliği',
+  'Spor Yönetimi (Ön Lisans)',
+  'Rekreasyon (Ön Lisans)',
+
+  // Tarım, gıda, hayvancılık
+  'Gıda Teknolojisi (Ön Lisans)',
+  'Süt ve Ürünleri Teknolojisi',
+  'Et ve Ürünleri Teknolojisi',
+  'Bahçe Tarımı',
+  'Tarla Bitkileri',
+  'Seracılık',
+  'Organik Tarım',
+  'Tarım Makineleri',
+  'Laborant ve Veteriner Sağlık',
+  'Atçılık ve Antrenörlüğü',
+  'Su Ürünleri (Ön Lisans)',
+  'Arıcılık',
+  'Ormancılık ve Orman Ürünleri',
+
+  // Medya, tasarım, sanat
+  'Grafik Tasarımı (Ön Lisans)',
+  'Fotoğrafçılık ve Kameramanlık',
+  'Radyo ve Televizyon Programcılığı',
+  'Basım ve Yayın Teknolojileri',
+  'Görsel İletişim (Ön Lisans)',
+  'Müzik Teknolojileri (Ön Lisans)',
+  'Sahne ve Gösteri Sanatları Teknolojisi',
+  'Mobilya ve Dekorasyon',
+  'Seramik, Cam ve Çinicilik',
+  'El Sanatları',
+  'Mimari Dekoratif Sanatlar',
+
+  // Eğitim ve sosyal
+  'Sosyal Hizmetler (Ön Lisans)',
+  'Okul Öncesi Öğretmenliği (Ön Lisans)',
+  'Uygulamalı İngilizce ve Çevirmenlik',
+  'Uygulamalı Almanca ve Çevirmenlik',
+  'Uygulamalı Rusça ve Çevirmenlik',
+  'Turizm Animasyonu',
+  'Posta Hizmetleri',
 ];
+
