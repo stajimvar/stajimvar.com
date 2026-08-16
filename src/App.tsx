@@ -646,18 +646,29 @@ export default function App() {
             Yetenek Odaklı İş & Stajyer Eşleştirme Platformu
           </p>
           <div className="flex items-center gap-6 text-[11px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-widest">
-            <button
-              onClick={() => showToast('StajımVar: Üniversite öğrencilerini yetenek odaklı şirketlerle buluşturur.')}
-              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
-            >
-              Hakkımızda
-            </button>
-            <a
-              href="mailto:iletisim@stajimvar.com"
-              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
-            >
-              İletişim
-            </a>
+            {/*
+              Hepsi gerçek sayfalara gidiyor. "Hakkımızda" eskiden yalnızca
+              bildirim gösteren bir düğmeydi.
+            */}
+            {[
+              { yol: '/hakkimizda', etiket: 'Hakkımızda' },
+              { yol: '/iletisim', etiket: 'İletişim' },
+              { yol: '/kullanim-kosullari', etiket: 'Koşullar' },
+              { yol: '/ilan-kurallari', etiket: 'İlan Kuralları' },
+              { yol: '/ilan-bildir', etiket: 'İlan Bildir' },
+            ].map((bag) => (
+              <a
+                key={bag.yol}
+                href={bag.yol}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(bag.yol);
+                }}
+                className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+              >
+                {bag.etiket}
+              </a>
+            ))}
             {/*
               Bu üçü gerçek sayfalara gidiyor. Eskiden yalnızca bildirim
               gösteren düğmelerdi; yasal metin yerine geçmezler.

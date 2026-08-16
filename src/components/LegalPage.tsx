@@ -1,6 +1,12 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Logo } from './Logo';
+import {
+  CorporateContent,
+  CORPORATE_ROUTES,
+  CORPORATE_TITLES,
+  type CorporateSlug,
+} from './CorporatePages';
 
 /**
  * Yasal metin sayfaları.
@@ -15,12 +21,16 @@ import { Logo } from './Logo';
  * artmazsa eski onayla yeni işleme yapılmış olur.
  */
 
-export type LegalSlug = 'gizlilik' | 'cerez-politikasi' | 'kvkk-aydinlatma-metni';
+type YasalSlug = 'gizlilik' | 'cerez-politikasi' | 'kvkk-aydinlatma-metni';
+
+/** Yasal ve kurumsal sayfalar aynı kabuğu paylaşıyor. */
+export type LegalSlug = YasalSlug | CorporateSlug;
 
 export const LEGAL_ROUTES: Record<string, LegalSlug> = {
   '/gizlilik': 'gizlilik',
   '/cerez-politikasi': 'cerez-politikasi',
   '/kvkk-aydinlatma-metni': 'kvkk-aydinlatma-metni',
+  ...CORPORATE_ROUTES,
 };
 
 const UPDATED = '16 Ağustos 2026';
@@ -40,6 +50,10 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 );
 
 export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
+  const kurumsal = (Object.values(CORPORATE_ROUTES) as string[]).includes(slug)
+    ? (slug as CorporateSlug)
+    : null;
+
   return (
     <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0B0F17] text-gray-900 dark:text-slate-100">
       <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900">
@@ -57,6 +71,20 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+        {kurumsal && (
+          <>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold">
+                {CORPORATE_TITLES[kurumsal]}
+              </h1>
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+                Son güncelleme: {UPDATED}
+              </p>
+            </div>
+            <CorporateContent slug={kurumsal} />
+          </>
+        )}
+
         {slug === 'gizlilik' && (
           <>
             <div>
