@@ -61,21 +61,26 @@
     overscroll-behavior-y: contain;
   }
 
-  /*
-    iOS'ta 16px'ten küçük yazı tipli bir alana dokununca Safari sayfayı
-    otomatik yakınlaştırıyor ve geri çıkmıyor. Form alanlarında en az 16px
-    kullanmak bunu tamamen engelliyor.
-  */
-  @media (max-width: 640px) {
-    input:not([type='checkbox']):not([type='radio']),
-    select,
-    textarea {
-      font-size: 16px;
-    }
-  }
-
   /* Çentikli ekranlarda alt menü sistem çubuğunun altında kalmasın. */
   body {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/*
+  iOS'ta 16px'ten küçük yazı tipli bir alana dokununca Safari sayfayı
+  otomatik yakınlaştırıyor ve geri çıkmıyor. Form alanlarında en az 16px
+  kullanmak bunu tamamen engelliyor.
+
+  DİKKAT: bu kural bilerek katman dışında. `@layer base` içindeyken
+  Tailwind'in `text-sm` gibi utility sınıfları katman sırası nedeniyle onu
+  eziyordu; alanlar 14px kalıyor ve iOS yine yakınlaştırıyordu. Katmansız
+  CSS bütün katmanları geçtiği için kural burada gerçekten uygulanıyor.
+*/
+@media (max-width: 640px) {
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    font-size: 16px;
   }
 }
