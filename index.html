@@ -4,7 +4,19 @@
     <meta charset="UTF-8" />
     <!-- viewport-fit=cover: çentikli ekranlarda kenarlara kadar uzansın -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#2563eb" />
+    <!--
+      Tarayıcının sayfa çevresindeki şeridinin rengi.
+
+      Eskiden koyu maviydi ve telefon karanlık moddayken sayfanın üstünde
+      açık zemine oturmayan koyu bir bant kalıyordu. Artık sayfa zeminiyle
+      aynı: şerit görünmez oluyor, site uygulama gibi kenara kadar uzanıyor.
+
+      İki şema için de aynı değer bilerek yazıldı: yalnızca tek bir renk
+      verilse bazı tarayıcılar karanlık modda kendi koyu karşılığını üretiyor.
+    -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F9FAFB" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#F9FAFB" />
+    <meta name="theme-color" content="#F9FAFB" />
 
     <!-- Ana ekrana eklendiğinde tarayıcı çubuğu olmadan, uygulama gibi açılsın -->
     <meta name="mobile-web-app-capable" content="yes" />

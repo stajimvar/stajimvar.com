@@ -9,7 +9,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#F9FAFB",
-  "theme_color": "#2563eb",
+  "theme_color": "#F9FAFB",
   "categories": ["education", "business"],
   "icons": [
     {
