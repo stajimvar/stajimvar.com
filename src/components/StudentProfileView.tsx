@@ -35,6 +35,7 @@ import {
 import { uploadAvatar } from '../lib/queries';
 import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
 import { Avatar } from './Avatar';
+import { AutocompleteField } from './AutocompleteField';
 import { PredictiveInput } from './PredictiveInput';
 import {
   HARD_SKILLS_DICTIONARY,
@@ -383,7 +384,13 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                 url={student.avatarUrl || undefined}
                 className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl border-2 border-blue-600 shadow-xs shrink-0 transition-transform group-hover:scale-105 text-2xl"
               />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white rounded-2xl">
+              {/*
+                Dokunmatik cihazda hover yok: bu katman yalnızca fareyle
+                üstüne gelince görünüyordu, yani telefonda fotoğrafın
+                değiştirilebildiği hiç belli olmuyordu. Artık dokunmatikte
+                sürekli görünür (hafif), fareyle üstüne gelince belirginleşir.
+              */}
+              <div className="absolute inset-0 bg-black/30 sm:bg-black/40 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white rounded-2xl pointer-events-none">
                 <Camera className="w-5 h-5 mb-0.5" />
                 <span className="text-[9px] font-bold">Değiştir</span>
               </div>
@@ -607,42 +614,28 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                   </label>
                   {/*
                     Öneri listesi kapalı bir seçim değil: listede olmayan
-                    üniversite de yazılabilir. Amaç yazım birliği sağlamak —
-                    "İTÜ" ve "İstanbul Teknik Üniversitesi" ayrı kayıt olmasın.
+                    üniversite de yazılabilir. Amaç yazım birliği sağlamak.
+                    <datalist> kullanılmıyor — iOS Safari onu göstermiyor.
                   */}
-                  <input
-                    type="text"
+                  <AutocompleteField
                     required
-                    list="tr-universiteler"
                     value={editUniversity}
-                    onChange={(e) => setEditUniversity(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600"
+                    onChange={setEditUniversity}
+                    options={TR_UNIVERSITIES}
                     placeholder="Yazmaya başla, listeden seç"
                   />
-                  <datalist id="tr-universiteler">
-                    {TR_UNIVERSITIES.map((u) => (
-                      <option key={u} value={u} />
-                    ))}
-                  </datalist>
                 </div>
                 <div>
                   <label className="block font-bold text-gray-700 dark:text-slate-300 mb-1">
                     Bölüm
                   </label>
-                  <input
-                    type="text"
+                  <AutocompleteField
                     required
-                    list="tr-bolumler"
                     value={editDepartment}
-                    onChange={(e) => setEditDepartment(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600"
+                    onChange={setEditDepartment}
+                    options={TR_DEPARTMENTS}
                     placeholder="Yazmaya başla, listeden seç"
                   />
-                  <datalist id="tr-bolumler">
-                    {TR_DEPARTMENTS.map((d) => (
-                      <option key={d} value={d} />
-                    ))}
-                  </datalist>
                 </div>
               </div>
 

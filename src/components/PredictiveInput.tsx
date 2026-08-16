@@ -275,6 +275,11 @@ export const PredictiveInput: React.FC<PredictiveInputProps> = ({
               return (
                 <div
                   key={pred}
+                  /* Dokunmatikte de seçilebilsin; mousedown her cihazda güvenilir değil. */
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    handleSelectPrediction(pred);
+                  }}
                   onMouseDown={(e) => {
                     e.preventDefault(); // Prevent input blur
                     handleSelectPrediction(pred);
