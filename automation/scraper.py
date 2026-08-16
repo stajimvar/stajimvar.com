@@ -247,6 +247,95 @@ def workable_search(config: dict[str, Any]) -> Iterable[Job]:
                 break
 
 
+
+def personio(config: dict[str, Any]) -> Iterable[Job]:
+    """Personio'nun herkese açık XML iş akışı.
+
+    Personio her müşteriye `https://<tenant>.jobs.personio.de/xml` adresinde
+    kimlik doğrulaması istemeyen bir XML akışı veriyor. Bu akış ilanların
+    dışarıdan okunması için yayınlanıyor — kazıma değil.
+
+    `seniority` alanı ayrıca işe yarıyor: Personio "intern" ve "student"
+    değerlerini kendi ayırıyor, yani başlıkta "staj" geçmese bile stajı
+    yakalayabiliyoruz. Başlığa güvenen diğer adaptörlerde bu bilgi yok.
+    """
+    import xml.etree.ElementTree as ET
+
+    tenant = config["tenant"]
+    alan = config.get("domain", "de")  # personio.de veya personio.com
+    url = f"https://{tenant}.jobs.personio.{alan}/xml"
+    response = requests.get(url, timeout=25, headers={"User-Agent": "StajimVarJobs/1.0"})
+    response.raise_for_status()
+
+    kok = ET.fromstring(response.content)
+    for item in kok.findall("position"):
+        def al(etiket: str) -> str:
+            dugum = item.find(etiket)
+            return clean(dugum.text or "") if dugum is not None and dugum.text else ""
+
+        ilan_id = al("id")
+        title = al("name")
+        if not ilan_id or not title:
+            continue
+
+        ofisler = " ".join(filter(None, [al("office"), al("additionalOffices")]))
+        # Açıklama iç içe düğümlerde duruyor; hepsini düz metne indiriyoruz.
+        aciklama_dugumu = item.find("jobDescriptions")
+        description = clean(ET.tostring(aciklama_dugumu, encoding="unicode")) if aciklama_dugumu is not None else ""
+
+        kidem = al("seniority").casefold()
+        erken_kariyer = kidem in {"intern", "student", "entry"} or is_early_career(title, description)
+
+        if not is_turkey_location(ofisler) or not erken_kariyer:
+            continue
+
+        yield Job(
+            config["name"],
+            f"https://{tenant}.jobs.personio.{alan}/job/{ilan_id}",
+            title,
+            config.get("organization_name") or al("subcompany") or None,
+            al("office") or None,
+            mode(f"{title} {description} {al('schedule')}"),
+            description,
+            email(description),
+        )
+
+
+def recruitee(config: dict[str, Any]) -> Iterable[Job]:
+    """Recruitee'nin herkese açık teklif (offers) API'si.
+
+    `https://<tenant>.recruitee.com/api/offers/` kimlik doğrulaması istemiyor
+    ve Recruitee bunu kariyer sayfalarının kendi verisini çekmesi için
+    yayınlıyor.
+    """
+    tenant = config["tenant"]
+    url = f"https://{tenant}.recruitee.com/api/offers/"
+    response = requests.get(url, timeout=25, headers={"User-Agent": "StajimVarJobs/1.0"})
+    response.raise_for_status()
+
+    for item in response.json().get("offers", []):
+        if item.get("status") and item["status"] != "published":
+            continue
+        title = clean(item.get("title", ""))
+        description = clean(f"{item.get('description', '')} {item.get('requirements', '')}")
+        location = " ".join(
+            str(v) for v in [item.get("city"), item.get("country_code"), item.get("location")] if v
+        )
+        if not is_turkey_location(location) or not is_early_career(title, description):
+            continue
+
+        yield Job(
+            config["name"],
+            item.get("careers_url") or item.get("url"),
+            title,
+            config.get("organization_name") or item.get("company_name"),
+            item.get("city"),
+            mode(f"{title} {description} {item.get('remote', '')}"),
+            description,
+            email(description),
+        )
+
+
 def source_configs() -> list[dict[str, Any]]:
     with open(os.path.join(os.path.dirname(__file__), "sources.json"), encoding="utf-8") as handle:
         registry = json.load(handle).get("sources", [])
@@ -263,4 +352,6 @@ ADAPTERS = {
     "workday": workday,
     "smartrecruiters": smartrecruiters,
     "workable_search": workable_search,
+    "personio": personio,
+    "recruitee": recruitee,
 }

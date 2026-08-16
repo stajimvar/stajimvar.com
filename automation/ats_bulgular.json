@@ -1,0 +1,46 @@
+[
+ {
+  "sirket": "Arçelik",
+  "site": "https://www.arcelikglobal.com",
+  "kariyer_url": "https://www.arcelikglobal.com",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Ford Otosan",
+  "site": "https://www.fordotosan.com.tr",
+  "kariyer_url": "https://www.fordotosan.com.tr",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Tofaş",
+  "site": "https://www.tofas.com.tr",
+  "kariyer_url": "https://www.tofas.com.tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "TürkTraktör",
+  "site": "https://www.turktraktor.com.tr",
+  "kariyer_url": null,
+  "ats": {}
+ },
+ {
+  "sirket": "Aselsan",
+  "site": "https://www.aselsan.com",
+  "kariyer_url": "https://www.aselsan.com/en/careers",
+  "ats": {}
+ },
+ {
+  "sirket": "TUSAŞ",
+  "site": "https://www.tusas.com",
+  "kariyer_url": "https://www.tusas.com/insan-kaynaklari",
+  "ats": {
+   "linkedin": "?"
+  }
+ }
+]
