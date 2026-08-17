@@ -50,6 +50,88 @@ import confetti from 'canvas-confetti';
 import { CheckCircle2 } from 'lucide-react';
 import { SAYFA_GENISLIGI } from './lib/duzen';
 
+/**
+ * Adres bulunamadı sayfası.
+ *
+ * İki iş yapıyor: kullanıcıya çıkış yolu gösteriyor ve tarayıcıya bu adresi
+ * dizine almamasını söylüyor. `noindex` etiketi bileşen ekrandayken ekleniyor,
+ * ayrılırken kaldırılıyor — kalıcı bırakılsaydı uygulama içinde bu sayfadan
+ * geçen bir kullanıcı sonraki gerçek sayfayı da dizin dışı bırakırdı.
+ */
+const BulunamadiSayfasi: React.FC<{
+  yol: string;
+  ustCubuk: React.ReactNode;
+  onNavigate: (p: string) => void;
+}> = ({ yol, ustCubuk, onNavigate }) => {
+  React.useEffect(() => {
+    const eskiBaslik = document.title;
+    document.title = 'Sayfa bulunamadı | StajımVar';
+
+    const etiket = document.createElement('meta');
+    etiket.name = 'robots';
+    etiket.content = 'noindex, follow';
+    document.head.appendChild(etiket);
+
+    return () => {
+      document.title = eskiBaslik;
+      etiket.remove();
+    };
+  }, []);
+
+  const yollar: [string, string][] = [
+    ['/', 'Staj ilanları'],
+    ['/rehber', 'Staj rehberi'],
+    ['/bolumler', 'Bölüme göre staj'],
+    ['/araclar', 'Hesaplama araçları'],
+  ];
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#F9FAFB]">
+      {ustCubuk}
+      <main className="flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 py-16 pb-24 lg:pb-16 space-y-6">
+        <div className="space-y-3">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">
+            Bu sayfa bulunamadı
+          </h1>
+          <p className="text-gray-600 leading-relaxed">
+            Aradığın adres yok ya da taşınmış olabilir. Adres:{' '}
+            <span className="font-mono text-sm text-gray-500 break-all">{yol}</span>
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {yollar.map(([y, etiket]) => (
+            <a
+              key={y}
+              href={y}
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate(y);
+              }}
+              className="px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 bg-white border border-gray-200 hover:border-gray-300 cursor-pointer"
+            >
+              {etiket}
+            </a>
+          ))}
+        </div>
+        <p className="text-sm text-gray-500 leading-relaxed">
+          Kırık bir bağlantı bulduysan{' '}
+          <a
+            href="/iletisim"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate('/iletisim');
+            }}
+            className="text-blue-600 hover:underline font-semibold"
+          >
+            iletişim sayfasından
+          </a>{' '}
+          bize yazabilirsin.
+        </p>
+      </main>
+    </div>
+  );
+};
+
 export default function App() {
   /**
    * Yasal sayfalar için hafif yol tabanlı geçiş. Uygulama tek sayfa olduğu için
@@ -729,6 +811,27 @@ export default function App() {
         />
       );
     }
+  }
+
+  /*
+    BİLİNMEYEN ADRES: YUMUŞAK 404 ÜRETMEYİ BIRAK
+
+    Buraya kadar hiçbir kural eşleşmediyse adres yok demektir. Önce bu
+    durumda da ana sayfa çiziliyordu ve sonuç şuydu: sitedeki HER hatalı
+    adres, HTTP 200 ile ana sayfayı döndürüyordu. Ölçüldü — var olmayan
+    "/kullanim-sartlari" adresi 200 ve ana sayfa içeriğiyle cevap veriyordu.
+
+    Google buna yumuşak 404 diyor ve iki zararı var: hatalı bağlantılar
+    dizine giriyor, ayrıca aynı içerik onlarca adreste görünüyor.
+
+    Sunucu tarafında gerçek 404 kodu veremiyoruz: Cloudflare Pages'te SPA
+    yedeği bütün adresleri 200 ile index.html'e düşürüyor ve bu yedek
+    /cv, /profil gibi ön render edilmeyen uygulama adresleri için gerekli.
+    Yapılabilecek en doğru şey, sayfanın kendisinin "burada bir şey yok"
+    demesi ve dizine girmeyi reddetmesi.
+  */
+  if (temizYol !== '/') {
+    return <BulunamadiSayfasi yol={temizYol} ustCubuk={ustCubuk} onNavigate={navigate} />;
   }
 
   return (

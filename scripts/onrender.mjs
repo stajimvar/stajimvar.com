@@ -270,6 +270,81 @@ async function bolumleriCiz() {
   }
 }
 
+/**
+ * Kurumsal ve yasal sayfaların içeriğini statik HTML'e çevirir.
+ *
+ * NEDEN ÖNEMLİ
+ * ------------
+ * Hakkımızda, İletişim, Gizlilik ve Kullanım Koşulları sayfaları AdSense
+ * incelemesinde ve arama motorunun güven değerlendirmesinde ilk bakılan
+ * yerler. Sayfaların hepsi vardı ve doluydu — ama ön render edilmiyordu:
+ * dist içinde hakkimizda.html hiç yoktu, adres SPA yedeğine düşüyordu.
+ *
+ * Yani inceleyen taraf o adreslere gidince boş bir gövde görüyordu.
+ * İçeriğin var olması yetmiyor; JavaScript çalıştırmayan bir denetçi için
+ * yok sayılıyor.
+ *
+ * LegalPage tek kaynak: tarayıcıda da bu bileşen çiziliyor.
+ */
+async function yasalSayfalariCiz() {
+  try {
+    const modul = await icerikDerle(
+      path.join(kok, 'src', 'components', 'LegalPage.tsx'),
+      'yasal'
+    );
+    const { renderToStaticMarkup } = await import('react-dom/server');
+    const React = (await import('react')).default;
+
+    const sonuc = {};
+    for (const [yol, slug] of Object.entries(modul.LEGAL_ROUTES)) {
+      sonuc[yol] = renderToStaticMarkup(
+        React.createElement(modul.LegalPage, { slug, onBack: () => {} })
+      );
+    }
+    return sonuc;
+  } catch (hata) {
+    console.error('ön render DURDU: yasal sayfalar çizilemedi.');
+    console.error(hata?.message || hata);
+    process.exit(1);
+  }
+}
+
+/** Yasal ve kurumsal sayfaların başlık ve açıklamaları. */
+const YASAL_BILGI = {
+  '/hakkimizda': [
+    'Hakkımızda | StajımVar',
+    'StajımVar kimdir, neden kuruldu ve ilanları nasıl derliyor? Çalışma biçimimiz ve iletişim bilgilerimiz.',
+  ],
+  '/iletisim': [
+    'İletişim | StajımVar',
+    'StajımVar ile iletişime geç: soru, öneri, ilan bildirimi ve şirket başvuruları için e-posta adresimiz.',
+  ],
+  '/kullanim-kosullari': [
+    'Kullanım Koşulları | StajımVar',
+    'StajımVar kullanım koşulları: hizmetin kapsamı, kullanıcı yükümlülükleri ve sorumluluk sınırları.',
+  ],
+  '/ilan-kurallari': [
+    'İlan Yayınlama Kuralları | StajımVar',
+    'StajımVar’da hangi ilanlar yayımlanır, hangileri yayımlanmaz? Şirketler için ilan kuralları.',
+  ],
+  '/ilan-bildir': [
+    'İçerik ve İlan Bildirimi | StajımVar',
+    'Hatalı, süresi geçmiş ya da kurallara aykırı bir ilan gördüysen nasıl bildireceğini anlatıyoruz.',
+  ],
+  '/gizlilik': [
+    'Gizlilik Politikası | StajımVar',
+    'Hangi kişisel verileri topluyoruz, neden topluyoruz, ne kadar saklıyoruz ve kimlerle paylaşıyoruz.',
+  ],
+  '/cerez-politikasi': [
+    'Çerez Politikası | StajımVar',
+    'StajımVar’da hangi çerezler kullanılıyor, ne işe yarıyorlar ve tarayıcıdan nasıl kapatılır.',
+  ],
+  '/kvkk-aydinlatma-metni': [
+    'KVKK Aydınlatma Metni | StajımVar',
+    '6698 sayılı kanun kapsamında veri sorumlusu, işleme amaçları, hukuki sebepler ve ilgili kişinin hakları.',
+  ],
+};
+
 async function rehberleriCiz() {
   const gecici = path.join(kok, 'node_modules', '.cache', 'onrender-rehberler.mjs');
   try {
@@ -599,6 +674,23 @@ async function main() {
         '</main>',
       jsonLd: { '@context': 'https://schema.org', '@graph': grafik },
     });
+    sayac++;
+  }
+
+  /* ---- kurumsal ve yasal sayfalar ---- */
+  const yasalCizimler = await yasalSayfalariCiz();
+  for (const [yol, cizim] of Object.entries(yasalCizimler)) {
+    const bilgi = YASAL_BILGI[yol];
+    if (!bilgi) {
+      /*
+        Yeni bir yasal sayfa eklenip başlığı yazılmazsa sessizce genel
+        başlıkla yayımlanmasın: aynı <title> taşıyan iki sayfa, tarayıcı
+        için ikisini de zayıflatıyor.
+      */
+      console.error(`ön render DURDU: ${yol} için başlık ve açıklama tanımlı değil.`);
+      process.exit(1);
+    }
+    sayfaYaz(yol, { baslik: bilgi[0], aciklama: bilgi[1], govde: cizim });
     sayac++;
   }
 
