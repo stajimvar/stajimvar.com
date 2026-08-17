@@ -41,6 +41,11 @@ jobs:
       ALLOW_INSERT_UPDATE: "true"
       ALLOW_DEACTIVATION: "false"
       DEACTIVATION_ENABLED_SOURCES: ""
+      # Dağıtım sırları. `if` koşulunda secrets.* doğrudan okunamıyor,
+      # env.* okunabiliyor — bu yüzden buraya taşınıyorlar. Tanımlı
+      # değillerse boş dize oluyor ve dağıtım adımları atlanıyor.
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -93,6 +98,49 @@ jobs:
         run: python logos.py
         working-directory: automation
         continue-on-error: true
+
+      # --- Siteyi yayına al ------------------------------------------------
+      #
+      # NEDEN GEREKLİ
+      # Site artık ön render ediliyor: ilan sayfalarının HTML'i, JobPosting
+      # yapısal verisi ve site haritası DERLEME anında üretiliyor. Tarama
+      # yeni bir ilan bulup veritabanına yazsa bile, dağıtım olmadan o ilanın
+      # arama motorunun göreceği sayfası oluşmuyor.
+      #
+      # Google for Jobs'ta tazelik her şey; bir ilanı elle dağıtım
+      # bekletmek onu değersizleştiriyor.
+      #
+      # SIR YOKSA SESSİZCE ATLANIR
+      # `if` koşulu token'ın varlığına bakıyor. Sırlar tanımlanmadan bu adım
+      # hiç çalışmıyor — çalışmayacak bir işi kırmızı bildirimle her saat
+      # tekrarlatmak, bu dosyada zaten bilerek kaçınılan bir şey.
+      - name: Node kur
+        if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Bağımlılıklar
+        if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' }}
+        run: npm ci
+
+      # Derleme ön render betiğini de çalıştırıyor; o betik ilanları
+      # Supabase'ten okuyor, bu yüzden VITE_* değişkenleri gerekiyor.
+      - name: Derle
+        if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' }}
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_ADSENSE_CLIENT: ${{ secrets.VITE_ADSENSE_CLIENT }}
+
+      - name: Cloudflare Pages'e yükle
+        if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' }}
+        run: npx wrangler pages deploy dist --project-name stajimvar --commit-dirty=true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ env.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
 
 # --- Devre dışı: başvuru e-postası gönderimi ---------------------------------
 # Eski repodaki `notify` işi, henüz kurmadığımız bir e-posta sağlayıcısına ve
