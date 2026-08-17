@@ -57,6 +57,10 @@
   <url><loc>https://stajimvar.com/rehber/staj-basvuru-epostasi</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://stajimvar.com/rehber/staj-defteri-nasil-doldurulur</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://stajimvar.com/rehber/kyk-burs-ve-kredi</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://stajimvar.com/rehber/staj-nasil-bulunur</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://stajimvar.com/rehber/gonullu-staj-rehberi</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://stajimvar.com/rehber/universite-staj-birimi</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://stajimvar.com/rehber/stajdan-ise-gecis</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://stajimvar.com/ilan/insan-kaynaklari-yonetici-adayi-mt-76364c89</loc><lastmod>2026-08-16</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://stajimvar.com/ilan/alumil-nextgen-staj-programi-kariyerinize-alumil-ile-baslayin-d52ee0cf</loc><lastmod>2026-08-16</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://stajimvar.com/ilan/az201-astrazeneca-staj-programi-pazarlama-stajyeri-metabolizma-4ac8b2c2</loc><lastmod>2026-08-16</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
@@ -68,10 +72,14 @@
   <url><loc>https://stajimvar.com/ilan/alumil-nextgen-staj-programi-kariyerinize-alumil-ile-baslayin-27d7f86f</loc><lastmod>2026-08-16</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://stajimvar.com/ilan/arastirma-stajyeri-e2ad254a</loc><lastmod>2026-08-17</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://stajimvar.com/ilan/oyun-gelistiricisi-stajyer-a8426c88</loc><lastmod>2026-08-17</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://stajimvar.com/ilan/yazilim-muhendisligi-degerlendirme-uzmani-16993982</loc><lastmod>2026-08-17</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://stajimvar.com/ilan/pazarlama-stajyeri-b96176ca</loc><lastmod>2026-08-17</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://stajimvar.com/sirket/alumil</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://stajimvar.com/sirket/astrazeneca</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://stajimvar.com/sirket/ciceksepeti</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://stajimvar.com/sirket/insider-one</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://stajimvar.com/sirket/lalamove</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://stajimvar.com/sirket/mindrift</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://stajimvar.com/sirket/newmind-ai</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://stajimvar.com/sirket/rapsodo</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://stajimvar.com/sirket/sanction-scanner</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>

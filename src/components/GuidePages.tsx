@@ -368,6 +368,42 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
           {rehber.baslik}
         </h1>
         <div className="space-y-3">{rehber.icerik}</div>
+
+        {/*
+          SIK SORULANLAR
+
+          Aynı liste ön render'da FAQPage yapısal verisine de çevriliyor;
+          Google arama sonucunda soruları açılır kapanır gösterebiliyor.
+          Burada görünmesi şart: yapısal veride olup sayfada olmayan içerik
+          Google'ın kurallarına aykırı.
+        */}
+        {rehber.sss && rehber.sss.length > 0 && (
+          <section className="mt-10 space-y-3">
+            <h2 className="text-lg font-bold text-gray-900">Sık sorulanlar</h2>
+            <div className="rounded-2xl border border-gray-200 bg-white divide-y divide-gray-100">
+              {rehber.sss.map((s) => (
+                <details key={s.soru} className="group px-4 py-3.5">
+                  <summary className="flex items-center gap-3 cursor-pointer list-none font-semibold text-gray-900 text-sm sm:text-base">
+                    <ChevronRight className="w-4 h-4 shrink-0 text-gray-400 transition-transform group-open:rotate-90" />
+                    {s.soru}
+                  </summary>
+                  <p className="mt-2 pl-7 text-sm text-gray-600 leading-relaxed">{s.cevap}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {rehber.guncelleme && (
+          <p className="mt-6 text-xs text-gray-400">
+            Son gözden geçirme:{' '}
+            {new Date(rehber.guncelleme).toLocaleDateString('tr-TR', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}
+          </p>
+        )}
       </article>
 
       {digerleri.length > 0 && (

@@ -101,9 +101,26 @@ function kayittanOku(dosya, alanlar) {
   const metin = fs.readFileSync(yol, 'utf8');
   const kayitlar = [];
   const slugKalibi = /^\s{4}slug: '([a-z0-9-]+)',$/gm;
-  let e;
-  while ((e = slugKalibi.exec(metin))) {
-    const parca = metin.slice(e.index, e.index + 2400);
+
+  /*
+    Girdinin sınırı bir SONRAKİ slug; sabit karakter penceresi değil.
+
+    Önce `e.index + 2400` kullanılıyordu. Rehberler uzayınca son alanlar
+    (guncelleme gibi) pencerenin dışında kalıp okunamadı — ölçüldü:
+    dateModified boş çıkıyordu. Sabit pencere, içerik büyüdükçe sessizce
+    veri kaybettiren bir varsayım.
+  */
+  const yerler = [];
+  let ee;
+  while ((ee = slugKalibi.exec(metin))) yerler.push({ slug: ee[1], i: ee.index });
+
+  for (let n = 0; n < yerler.length; n++) {
+    const e = [null, yerler[n].slug];
+    e.index = yerler[n].i;
+    const parca = metin.slice(
+      yerler[n].i,
+      n + 1 < yerler.length ? yerler[n + 1].i : metin.length
+    );
     const kayit = { slug: e[1] };
     for (const alan of alanlar) {
       // Tek satırlık ya da ' + ' ile bölünmüş çok satırlı dizeler
@@ -120,6 +137,45 @@ function kayittanOku(dosya, alanlar) {
     kayitlar.push(kayit);
   }
   return kayitlar;
+}
+
+/**
+ * Rehber kayitindaki `sss` dizilerini slug -> [{soru, cevap}] olarak okur.
+ *
+ * kayittanOku tek satirlik alanlar icin yazilmisti; sss ic ice nesne dizisi
+ * oldugu icin ayri bir gecis gerekiyor. Yine duzenli ifade kullaniliyor
+ * (Node TS dosyasini import edemiyor) ama yapi sabit: her girdi
+ * `soru: '...'` ve `cevap:` + dize satirlarindan olusuyor.
+ */
+function sssOku() {
+  const yol = path.join(kok, 'src', 'data', 'rehberler.tsx');
+  if (!fs.existsSync(yol)) return {};
+  const metin = fs.readFileSync(yol, 'utf8');
+  const sonuc = {};
+
+  const slugKalibi = /^\s{4}slug: '([a-z0-9-]+)',$/gm;
+  const yerler = [];
+  let e;
+  while ((e = slugKalibi.exec(metin))) yerler.push({ slug: e[1], i: e.index });
+
+  yerler.forEach((y, n) => {
+    const parca = metin.slice(y.i, n + 1 < yerler.length ? yerler[n + 1].i : metin.length);
+    const sssBas = parca.indexOf('sss: [');
+    if (sssBas === -1) return;
+    const sssSon = parca.indexOf('\n    ],', sssBas);
+    const alan = parca.slice(sssBas, sssSon === -1 ? parca.length : sssSon);
+    const sorular = [];
+    const ciftKalibi = /soru: '((?:[^'\\]|\\.)*)',\s*cevap:\s*'((?:[^'\\]|\\.)*)'/g;
+    let c;
+    while ((c = ciftKalibi.exec(alan))) {
+      sorular.push({
+        soru: c[1].replace(/\\'/g, "'"),
+        cevap: c[2].replace(/\\'/g, "'"),
+      });
+    }
+    if (sorular.length) sonuc[y.slug] = sorular;
+  });
+  return sonuc;
 }
 
 /* ------------------------------------------------------- Supabase'ten ilanlar */
@@ -146,7 +202,30 @@ async function ilanlariGetir() {
 
 /* --------------------------------------------------------------- HTML üretimi */
 
-const kabuk = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
+/*
+  KABUK HER ZAMAN BOŞ KÖKLE BAŞLAR.
+
+  Kabuk dist/index.html'den okunuyor ama bu betik ana sayfayı da AYNI
+  dosyaya yazıyor. Yani ikinci kez `vite build` olmadan çalıştırıldığında
+  kökün içi doluydu, `<div id="root"></div>` kalıbı eşleşmiyordu ve her
+  sayfa sessizce ANA SAYFANIN gövdesini alıyordu.
+
+  Ölçüldü: on rehberin onunda da görünür metin 217 karakter ve birebir
+  aynıydı; SSS bölümü hiçbirine basılmamıştı. Yapısal veride soru vardı,
+  sayfada yoktu — tam da kaçındığımız durum.
+
+  Çözüm: kabuğu okur okumaz kökü boşalt. Böylece betik kaç kez çalışırsa
+  çalışsın aynı çıktıyı üretiyor.
+*/
+const kabuk = fs
+  .readFileSync(path.join(dist, 'index.html'), 'utf8')
+  .replace(/<div id="root">[\s\S]*?<\/div>(?=\s*<\/body>)/, '<div id="root"></div>');
+
+// Boşaltma tutmadıysa devam etmek, yanlış gövdeli 66 sayfa yazmak demek.
+if (!/<div id="root">\s*<\/div>/.test(kabuk)) {
+  console.error('ön render DURDU: dist/index.html içindeki #root boşaltılamadı.');
+  process.exit(1);
+}
 
 /**
  * Tek bir sayfanın HTML'ini yazar.
@@ -276,12 +355,56 @@ async function main() {
   }
 
   /* ---- rehberler ---- */
-  const rehberler = kayittanOku('rehberler.tsx', ['baslik', 'ozet', 'aciklama']);
+  const rehberler = kayittanOku('rehberler.tsx', ['baslik', 'ozet', 'aciklama', 'guncelleme']);
+  const sssHaritasi = sssOku();
   for (const r of rehberler) {
+    const sorular = sssHaritasi[r.slug] || [];
+
+    /*
+      Article + FAQPage.
+
+      FAQPage yalnizca sayfada GERCEKTEN gorunen sorular icin uretiliyor
+      (GuidePages.tsx ayni listeyi ciziyor). Yapisal veride olup sayfada
+      olmayan icerik Google'in kurallarina aykiri ve elle ceza sebebi.
+    */
+    const grafik = [
+      {
+        '@type': 'Article',
+        headline: r.baslik,
+        description: ozetle(r.aciklama || r.ozet),
+        inLanguage: 'tr-TR',
+        ...(r.guncelleme ? { dateModified: r.guncelleme } : {}),
+        author: { '@type': 'Organization', name: 'StajımVar', url: SITE },
+        publisher: {
+          '@type': 'Organization',
+          name: 'StajımVar',
+          logo: { '@type': 'ImageObject', url: `${SITE}/icon-512.png` },
+        },
+        mainEntityOfPage: `${SITE}/rehber/${r.slug}`,
+      },
+    ];
+    if (sorular.length > 0) {
+      grafik.push({
+        '@type': 'FAQPage',
+        mainEntity: sorular.map((s) => ({
+          '@type': 'Question',
+          name: s.soru,
+          acceptedAnswer: { '@type': 'Answer', text: s.cevap },
+        })),
+      });
+    }
+
     sayfaYaz(`/rehber/${r.slug}`, {
       baslik: `${r.baslik} | StajımVar`,
       aciklama: ozetle(r.aciklama || r.ozet),
-      govde: govde(r.baslik, r.ozet || ''),
+      govde:
+        govde(r.baslik, r.ozet || '') +
+        (sorular.length
+          ? `<section><h2>Sık sorulanlar</h2>${sorular
+              .map((s) => `<h3>${kacir(s.soru)}</h3><p>${kacir(s.cevap)}</p>`)
+              .join('')}</section>`
+          : ''),
+      jsonLd: { '@context': 'https://schema.org', '@graph': grafik },
     });
     sayac++;
   }
