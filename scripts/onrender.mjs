@@ -178,6 +178,88 @@ function sssOku() {
   return sonuc;
 }
 
+/* --------------------------------------------- rehber gövdesini gerçekten çiz */
+
+/**
+ * Rehberlerin JSX içeriğini statik HTML'e çevirir.
+ *
+ * NEDEN GEREKLİ
+ * -------------
+ * Ön render bu adımdan önce her rehbere yalnızca başlık, özet ve sık
+ * sorulanları basıyordu. Rehberin ASIL metni — tablolar, akışlar,
+ * karşılaştırmalar — yalnızca tarayıcıda React çizince ortaya çıkıyordu.
+ *
+ * Ölçüldü: staj-nasil-bulunur sayfasında "Hangi kanal ne zaman işe yarıyor"
+ * bölümünün tamamı ön render çıktısında YOKTU. Yani içeriği derinleştirmek
+ * Googlebot'un ilk turunda hiçbir şey değiştirmiyordu; her şey JavaScript
+ * çalıştıran ikinci tura kalıyordu. Bir ilan sitesi için bu, bütün ön render
+ * işini yarım bırakmak demek.
+ *
+ * NASIL
+ * -----
+ * İçerik TSX; Node onu doğrudan içe aktaramıyor. esbuild (zaten Vite'ın
+ * bağımlılığı) dosyayı geçici bir ESM paketine derliyor, sonra React'in
+ * kendi sunucu çizicisi aynı ağacı HTML'e çeviriyor.
+ *
+ * Böylece basılan metin, kullanıcının gördüğü metnin BİREBİR aynısı oluyor —
+ * elle yazılmış bir özet değil. Gizleme riski tanım gereği ortadan kalkıyor.
+ *
+ * Düzenli ifadeyle metin ayıklamak da denenebilirdi ama o yol bugün iki kez
+ * sessiz veri kaybı üretti; asıl bileşenleri çalıştırmak tek doğru kaynak.
+ */
+async function rehberleriCiz() {
+  const gecici = path.join(kok, 'node_modules', '.cache', 'onrender-rehberler.mjs');
+  try {
+    const esbuild = await import('esbuild');
+    fs.mkdirSync(path.dirname(gecici), { recursive: true });
+    await (esbuild.build || esbuild.default.build)({
+      entryPoints: [path.join(kok, 'src', 'data', 'rehberler.tsx')],
+      outfile: gecici,
+      bundle: true,
+      format: 'esm',
+      platform: 'node',
+      jsx: 'automatic',
+      logLevel: 'silent',
+      /*
+        Bağımlılıklar paketlenmiyor, Node'a bırakılıyor.
+
+        Önce yalnızca react dışarıda bırakılmıştı; o zaman lucide-react'in
+        CommonJS sürümü pakete giriyor ve esbuild'in require köprüsü
+        "Dynamic require of react is not supported" hatasıyla düşüyordu
+        (ölçüldü). Node bu paketleri zaten çözebiliyor; ayrıca React'in tek
+        kopya kalmasını da bu garanti ediyor.
+      */
+      packages: 'external',
+    });
+
+    const { REHBERLER } = await import(url.pathToFileURL(gecici).href + `?t=${Date.now()}`);
+    const { renderToStaticMarkup } = await import('react-dom/server');
+
+    const sonuc = {};
+    for (const r of REHBERLER) {
+      sonuc[r.slug] = {
+        baslik: r.baslik,
+        ozet: r.ozet,
+        aciklama: r.aciklama,
+        guncelleme: r.guncelleme,
+        sss: r.sss || [],
+        govde: renderToStaticMarkup(r.icerik),
+      };
+    }
+    return sonuc;
+  } catch (hata) {
+    /*
+      Çizim tutmazsa sessizce devam ETME.
+
+      Sessiz geri düşüş, sayfaların içeriksiz yayımlanması demek olurdu ve
+      bunu ancak haftalar sonra arama sonuçlarından fark ederdik.
+    */
+    console.error('ön render DURDU: rehber içeriği çizilemedi.');
+    console.error(hata?.message || hata);
+    process.exit(1);
+  }
+}
+
 /* ------------------------------------------------------- Supabase'ten ilanlar */
 
 async function ilanlariGetir() {
@@ -354,11 +436,18 @@ async function main() {
     sayac++;
   }
 
-  /* ---- rehberler ---- */
-  const rehberler = kayittanOku('rehberler.tsx', ['baslik', 'ozet', 'aciklama', 'guncelleme']);
-  const sssHaritasi = sssOku();
+  /*
+    ---- rehberler ----
+
+    Alanlar artık düzenli ifadeyle değil, kaydın kendisinden okunuyor:
+    rehberleriCiz() dosyayı derleyip gerçek nesneyi döndürüyor. Böylece
+    "bu alan kaç karakter içeride kaldı" sınıfından hatalar tanım gereği
+    ortadan kalkıyor.
+  */
+  const cizilen = await rehberleriCiz();
+  const rehberler = Object.entries(cizilen).map(([slug, r]) => ({ slug, ...r }));
   for (const r of rehberler) {
-    const sorular = sssHaritasi[r.slug] || [];
+    const sorular = r.sss;
 
     /*
       Article + FAQPage.
@@ -397,13 +486,22 @@ async function main() {
     sayfaYaz(`/rehber/${r.slug}`, {
       baslik: `${r.baslik} | StajımVar`,
       aciklama: ozetle(r.aciklama || r.ozet),
+      /*
+        Gövde = başlık + rehberin ÇİZİLMİŞ tam içeriği + sık sorulanlar.
+
+        r.govde, React'in aynı bileşenlerden ürettiği HTML — yani kullanıcının
+        gördüğü metnin birebir aynısı. Elle özetlenmiş bir sürüm olsaydı iki
+        metin zamanla birbirinden ayrılır ve fark gizlemeye dönerdi.
+      */
       govde:
-        govde(r.baslik, r.ozet || '') +
+        `<main><h1>${kacir(r.baslik)}</h1><p>${kacir(r.ozet || '')}</p>` +
+        r.govde +
         (sorular.length
           ? `<section><h2>Sık sorulanlar</h2>${sorular
               .map((s) => `<h3>${kacir(s.soru)}</h3><p>${kacir(s.cevap)}</p>`)
               .join('')}</section>`
-          : ''),
+          : '') +
+        '</main>',
       jsonLd: { '@context': 'https://schema.org', '@graph': grafik },
     });
     sayac++;

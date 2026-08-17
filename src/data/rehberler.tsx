@@ -1,5 +1,10 @@
 import React from 'react';
-import { Akis, Karsilastirma, KontrolListesi } from '../components/RehberGorseller';
+import {
+  Akis,
+  Karsilastirma,
+  KarsilastirmaTablosu,
+  KontrolListesi,
+} from '../components/RehberGorseller';
 
 /**
  * Rehber içerikleri.
@@ -251,6 +256,101 @@ export const REHBERLER: Rehber[] = [
             müşteriyle iletişim ve sorumluluk gösterir.
           </li>
         </L>
+
+        <B>Bir projeyi CV'ye nasıl çevirirsin</B>
+        <P>
+          Öğrenci CV'lerindeki en yaygın satır şu: "Bitirme projesi". Bu, okuyan kişiye
+          hiçbir şey söylemiyor. Aynı projenin iki yazılışı:
+        </P>
+        <Karsilastirma
+          kotuBaslik="Okunmayan"
+          iyiBaslik="Okunan"
+          kotu={[
+            'Bitirme projesi',
+            'Arduino ile çalıştım',
+            'Grup projesinde yer aldım',
+          ]}
+          iyi={[
+            'Bitirme projesi — üç kişilik ekipte sensör verisini toplayan arayüzü yazdım',
+            'Arduino ve sıcaklık sensörüyle sera nemini ölçen bir düzenek kurdum; verileri SD karta kaydettim',
+            'Dört kişilik grup projesinde maliyet tablosunu ve sunumu ben hazırladım',
+          ]}
+        />
+        <P>
+          Fark tek bir soruda: <strong>sen ne yaptın?</strong> Ekip projesinde bile senin
+          payını yaz. "Yer aldım" cümlesi, hiçbir şey yapmamış olmakla aynı görünüyor.
+        </P>
+
+        <B>Bölüme göre ne öne çıkar</B>
+        <P>
+          Hangi bölümde olursan ol yazacak bir şeyin var; sadece işverenin baktığı yer
+          değişiyor:
+        </P>
+        <KarsilastirmaTablosu
+          sutunlar={['Alan', 'Öne çıkar', 'Somut örnek']}
+          satirlar={[
+            [
+              'Yazılım / bilişim',
+              'Çalışan bir şey',
+              'Küçük bir uygulama, kod deposu bağlantısı, okulda yazdığın bir betik',
+            ],
+            [
+              'Makine / elektrik / inşaat',
+              'Araç ve ölçü',
+              'Kullandığın çizim programı, atölye deneyimi, ölçüm aleti, bir imalat sürecini görmüş olman',
+            ],
+            [
+              'İşletme / iktisat',
+              'Sayıyla anlatılan iş',
+              'Kulüp bütçesi, etkinlik katılımcı sayısı, hazırladığın rapor ya da analiz',
+            ],
+            [
+              'Tasarım / mimarlık',
+              'Portfolyo',
+              'CV\'ye bir bağlantı ya da QR; işveren yazıyı değil işi görmek istiyor',
+            ],
+            [
+              'Sosyal / eğitim',
+              'İnsanla temas',
+              'Gönüllü çalışma, saha anketi, düzenlediğin etkinlik, kaç kişiye ulaştığın',
+            ],
+          ]}
+        />
+
+        <B>CV'ni önce bir yazılım okuyabilir</B>
+        <P>
+          Büyük şirketlerin çoğu başvuruları bir başvuru takip sistemi (ATS) üzerinden
+          topluyor. Bu sistem CV'ni metne çevirip anahtar kelimelere bakıyor. Elemeyi
+          yazılımın yaptığı doğru değil — insan yine okuyor — ama <strong>düzgün
+          okunamayan bir CV eksik görünüyor</strong>. Riski düşüren birkaç şey:
+        </P>
+        <L>
+          <li>
+            <strong>PDF gönder, çok sütunlu şablon kullanma.</strong> İki sütunlu şık
+            şablonlar metne çevrilince satırlar birbirine karışabiliyor.
+          </li>
+          <li>
+            <strong>Başlıkları herkesin kullandığı gibi yaz.</strong> "Eğitim",
+            "Deneyim", "Beceriler", "Projeler". Yaratıcı başlıklar eşleşmiyor.
+          </li>
+          <li>
+            <strong>Bilgiyi görsele gömme.</strong> Beceri çubukları ve grafik ikonlar
+            metin olarak çıkmıyor; yanına yazıyla da yaz.
+          </li>
+          <li>
+            <strong>İletişim bilgisini üst bilgi (header) alanına koyma.</strong> Bazı
+            sistemler sayfa üst-alt bilgisini hiç okumuyor.
+          </li>
+          <li>
+            <strong>İlandaki kelimeleri kullan.</strong> İlan "üretim planlama" diyorsa
+            CV'nde "operasyon takibi" yazmak eşleşmeyi bozuyor.
+          </li>
+        </L>
+        <P>
+          Küçük ve orta ölçekli işletmelerde böyle bir sistem genelde yok; CV'ni doğrudan
+          bir insan açıyor. Yani bu kurallar CV'ni çirkinleştirecek kadar abartılmamalı —
+          sadeleştirmek zaten ikisine de yarıyor.
+        </P>
 
         <B>Beceri yazarken seviye belirt</B>
         <P>
@@ -571,6 +671,42 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
           </li>
         </L>
 
+        <B>Başka bölümlerde nasıl görünüyor</B>
+        <P>
+          Yukarıdaki örnek makine tarafından. Aynı üç parça (ne yapıldı, nasıl yapıldı, ne
+          öğrenildi) her bölümde çalışıyor; değişen sadece terimler:
+        </P>
+        <KarsilastirmaTablosu
+          sutunlar={['Bölüm', 'Zayıf kayıt', 'İyi kayıt']}
+          satirlar={[
+            [
+              'Yazılım',
+              'Kod yazdım.',
+              'Müşteri kayıt formundaki e-posta doğrulamasını yazdım. Girilen adresi düzenli ifadeyle kontrol edip hatalı girişte uyarı gösteriyor. Aynı kontrolü sunucu tarafında da yapmak gerektiğini öğrendim.',
+            ],
+            [
+              'İnşaat',
+              'Şantiyeyi gezdim.',
+              'B blok kalıp sökümünü izledim. Betonun priz süresi dolmadan kalıbın alınamayacağını, kontrolün numune basınç sonucuna göre yapıldığını öğrendim. Kot ölçümünde nivo kullanımını gördüm.',
+            ],
+            [
+              'İşletme / muhasebe',
+              'Ofis işlerine yardım ettim.',
+              'Gelen faturaların ön muhasebe programına girişini yaptım. KDV oranına göre hangi hesaba işlendiğini ve fatura tarihinin dönem kapanışında neden önemli olduğunu öğrendim.',
+            ],
+            [
+              'Elektrik',
+              'Panoya baktım.',
+              'Dağıtım panosunda termik manyetik şalter değişimini izledim. Şalter seçiminin hat akımına göre yapıldığını, enerji kesilmeden işlem yapılmadığını ve kilitleme-etiketleme kuralını öğrendim.',
+            ],
+            [
+              'Mimarlık',
+              'Çizim yaptım.',
+              'Zemin kat planında ıslak hacim detayını çizdim. Kapı genişliklerinin erişilebilirlik ölçülerine göre belirlendiğini ve tesisat şaftının plan üzerinde nasıl konumlandığını öğrendim.',
+            ],
+          ]}
+        />
+
         <B>Yazma düzeni</B>
         <L>
           <li>
@@ -591,13 +727,72 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
           </li>
         </L>
 
-        <B>İmza ve kaşe</B>
+        <B>Sık yapılan hatalar</B>
+        <Karsilastirma
+          kotuBaslik="Puan kaybettiren"
+          iyiBaslik="Puan getiren"
+          kotu={[
+            'Bütün defteri son hafta doldurmak',
+            'Her güne aynı cümleyi yazmak',
+            'Yaptığın işi değil şirketin ne ürettiğini anlatmak',
+            'İnternetten bulunan hazır metni kopyalamak',
+            'Hafta sonu ve resmî tatili çalışılmış gün gibi yazmak',
+            'İmzaları en sona bırakmak',
+          ]}
+          iyi={[
+            'Her gün akşam on dakika ayırmak',
+            'Her güne o güne özgü bir ölçü, terim ya da sayı koymak',
+            'Senin elinin değdiği işi anlatmak',
+            'Kendi cümlelerinle yazmak — hoca üslup farkını görüyor',
+            'Takvimi işletmenin çalışma günleriyle birebir tutmak',
+            'Her hafta sonunda imzayı almak',
+          ]}
+        />
+        <P>
+          Kopyalanan metin en ağır sonucu doğuran hata: çoğu okulda staj tekrarı, bazı
+          okullarda disiplin konusu. Zayıf ama kendi yazdığın bir defter, mükemmel ama
+          kopyalanmış bir defterden her zaman iyi.
+        </P>
+
+        <B>İmza ve kaşe süreci</B>
         <P>
           Genelde her sayfanın ya da her haftanın sonunda işletmedeki sorumlunun imzası ve
-          şirket kaşesi isteniyor. Bunu <strong>staj bitmeden</strong> hallet. Staj bittikten
-          sonra şirkete kaşe için dönmek en sık yaşanan sıkıntı; kimse seni tanımıyor
-          olabiliyor ya da yetkili izinde oluyor.
+          şirket kaşesi isteniyor. Sıra şöyle işliyor:
         </P>
+        <Akis
+          adimlar={[
+            {
+              baslik: 'İlk gün: kim imzalayacak, öğren',
+              aciklama:
+                'Defteri imzalayacak kişi genelde sana bakan mühendis ya da usta değil, imza yetkisi olan bir yönetici oluyor. Kim olduğunu ilk gün öğren; son gün aramaya başlamak geç kalmak demek.',
+            },
+            {
+              baslik: 'Her hafta sonunda imzalat',
+              aciklama:
+                'Haftalık ritim en güvenlisi. Yetkili izne çıkarsa ya da işten ayrılırsa yalnızca o haftayı çözersin, bütün defteri değil.',
+            },
+            {
+              baslik: 'Kaşenin okunur olduğundan emin ol',
+              aciklama:
+                'Silik ya da yarım basılmış kaşe kabul edilmeyebiliyor. Basıldıktan sonra bak; gerekiyorsa yanına yeniden bastır.',
+            },
+            {
+              baslik: 'Son gün: değerlendirme formunu da al',
+              aciklama:
+                'Çoğu okulda işletme değerlendirme formu kapalı ve kaşeli zarfta isteniyor. Bunu defterle aynı gün hallet; ikinci kez şirkete gitmek zorunda kalma.',
+            },
+            {
+              baslik: 'Teslimden önce fotoğrafla',
+              aciklama:
+                'Defterin tamamının fotoğrafını çek. Kaybolan defter geri gelmiyor ve sonucu çoğunlukla staj tekrarı oluyor.',
+            },
+          ]}
+        />
+        <Uyari>
+          İmzaları <strong>staj bitmeden</strong> tamamla. Staj bittikten sonra kaşe için
+          şirkete dönmek en sık yaşanan sıkıntı: yetkili izinde olabiliyor, seni tanıyan
+          kimse kalmamış olabiliyor ya da şirket "artık bizim öğrencimiz değil" diyebiliyor.
+        </Uyari>
 
         <B>Teslimden önce kontrol et</B>
         <L>
@@ -605,10 +800,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
           <li>Her gerekli sayfada imza ve kaşe var mı?</li>
           <li>İşletme değerlendirme formu dolduruldu mu, kapalı zarfta mı?</li>
           <li>Kapak bilgileri, öğrenci numarası ve tarih aralığı doğru mu?</li>
-          <li>
-            Teslim etmeden önce defterin tamamının fotoğrafını çek. Kaybolan defter geri
-            gelmiyor.
-          </li>
+          <li>Defterin tamamının fotoğrafı çekildi mi?</li>
         </L>
       </>
     ),
@@ -804,12 +996,98 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
           ]}
         />
 
-        <B>Nereden başlanır</B>
+        <B>Hangi kanal ne zaman işe yarıyor</B>
         <P>
-          Sırayla değil, paralel. Ama ilk hafta şunu yap: bölümünle ilgili{' '}
-          <strong>yirmi şirket</strong> listele — büyük olmasınlar, yakınında olsunlar.
-          Sonra o yirmisine tek tek yaz. Yirmi başvurudan iki cevap gelirse iyi bir orandır
-          ve iki cevap sana yeter.
+          Beşi de aynı işi yapmıyor. Kanalları birbirinin alternatifi değil, farklı
+          durumlarda devreye giren araçlar olarak düşün:
+        </P>
+        <KarsilastirmaTablosu
+          sutunlar={['Kanal', 'Rekabet', 'Cevap hızı', 'Ne zaman kullan']}
+          satirlar={[
+            [
+              'Doğrudan başvuru',
+              'Çok düşük',
+              'Günler',
+              'Her zaman. Bütün aramanın omurgası bu olmalı.',
+            ],
+            [
+              'Okulun staj birimi',
+              'Düşük',
+              'Günler',
+              'İlk hafta. Geçmiş yılların firma listesi hazır bekliyor.',
+            ],
+            [
+              'Hocalar ve mezunlar',
+              'Düşük',
+              'Değişken',
+              'Belirli bir alanda staj arıyorsan; bir isim on ilana bedel.',
+            ],
+            [
+              'İlan siteleri',
+              'Yüksek',
+              'Haftalar',
+              'Sürekli takip; başvuru kolay olduğu için maliyeti düşük.',
+            ],
+            [
+              'LinkedIn',
+              'Orta',
+              'Saatler–günler',
+              'Hedeflediğin şirket belliyse, ilan yoksa bile.',
+            ],
+          ]}
+        />
+        <P>
+          Tablodaki "cevap hızı" bir söz değil, gözlenen eğilim. Ama sıralama şunu
+          anlatıyor: en hızlı cevap veren kanallar, en az başvurulan kanallar.
+        </P>
+
+        <B>İlk hafta: somut plan</B>
+        <P>
+          "Staj aramaya başladım" cümlesi çoğu zaman bir hafta boyunca ilan sitelerine
+          bakmak anlamına geliyor. Bunun yerine beş güne bölünmüş bir plan:
+        </P>
+        <Akis
+          adimlar={[
+            {
+              baslik: '1. gün — Listeyi kur',
+              aciklama:
+                'Bölümünle ilgili yirmi şirket yaz. Büyük olmasınlar, yakınında olsunlar. Her satırda şirket adı, şehir, e-posta ve "yazdım mı" sütunu olsun. Basit bir tablo yeterli; aynı yere ikinci kez yazmak kötü görünüyor.',
+            },
+            {
+              baslik: '2. gün — Okulu devreye sok',
+              aciklama:
+                'Bölüm sekreterliğine ve varsa kariyer merkezine git, geçmiş yıllarda öğrenci alan firma listesini iste. Aynı gün staj yönergesini de al: kaç iş günü, hangi dönem, hangi işletmeler kabul ediliyor.',
+            },
+            {
+              baslik: '3. gün — CV\'yi bitir',
+              aciklama:
+                'Tek sayfa, PDF, dosya adı AdSoyad-CV.pdf. Yirmi başvuruyu aynı CV\'yi düzeltmeden yapmak, yirmi fırsatı aynı hatayla harcamak demek.',
+            },
+            {
+              baslik: '4. gün — İlk on e-posta',
+              aciklama:
+                'Her birine o şirkete dair tek bir cümle ekle. On tanesi bir günde bitiyor; otuz tanesini birden göndermeye çalışmak metnin kişiselliğini bitiriyor.',
+            },
+            {
+              baslik: '5. gün — Kalan on ve hocalar',
+              aciklama:
+                'Kalan on e-postayı gönder, ardından bölüm hocalarına sor. Bir hafta sonra cevap gelmeyenlere tek bir hatırlatma yaz ve orada bırak.',
+            },
+          ]}
+        />
+        <P>
+          E-postanın kendisini nasıl yazacağın ayrı bir konu — konu satırı, şablon ve en
+          sık yapılan altı hata{' '}
+          <a href="/rehber/staj-basvuru-epostasi" className="text-blue-600 hover:underline font-semibold">
+            staj başvuru e-postası rehberinde
+          </a>
+          .
+        </P>
+
+        <P>
+          Kanalları sırayla değil paralel kullan. Ve beklentini baştan ayarla:{' '}
+          <strong>yirmi başvurudan iki cevap gelirse iyi bir orandır</strong> — iki cevap
+          da sana yeter. Onsekiz sessizliği başarısızlık sayarsan üçüncü günde bırakırsın.
         </P>
 
         <B>Sık yapılan hata</B>

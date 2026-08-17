@@ -367,7 +367,38 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">
           {rehber.baslik}
         </h1>
-        <div className="space-y-3">{rehber.icerik}</div>
+        {/*
+          İÇERİK İÇİ BAĞLANTILARI YAKALA
+
+          Rehber metinleri düz JSX; navigate işlevine erişimleri yok. Bir
+          rehberden diğerine bağlanmak için düz `<a href="/rehber/...">`
+          yazılıyor ve bu bilinçli: tarayıcı yalnızca gerçek `<a href>`
+          görüyor, düğmeye bastırılan bir geçişi bağlantı saymıyor. İç
+          bağlantı da sayfalar arası sinyal taşıdığı için bu şart.
+
+          Ama tıklamayı olduğu gibi bırakırsak tam sayfa yenileniyor:
+          uygulama baştan kuruluyor, kaydırma sıfırlanıyor. Burada tek bir
+          yakalayıcı ikisini birden veriyor — işaretlemede gerçek bağlantı,
+          kullanıcıda anında geçiş.
+
+          Yeni sekmede açma (Ctrl/Cmd/orta tuş) ve dış bağlantılar
+          dokunulmadan geçiyor.
+        */}
+        <div
+          className="space-y-3"
+          onClick={(e) => {
+            const bag = (e.target as HTMLElement).closest('a');
+            if (!bag) return;
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+            if (bag.target === '_blank') return;
+            const adres = bag.getAttribute('href');
+            if (!adres || !adres.startsWith('/')) return;
+            e.preventDefault();
+            onNavigate(adres);
+          }}
+        >
+          {rehber.icerik}
+        </div>
 
         {/*
           SIK SORULANLAR

@@ -186,6 +186,71 @@ export const SorumlulukTablosu: React.FC<{
   );
 };
 
+/**
+ * Serbest karşılaştırma tablosu.
+ *
+ * SorumlulukTablosu "kim yapar" sorusuna özel: rozetleri okul/öğrenci/işveren
+ * olarak sabit. Kanal karşılaştırması gibi başka eksenler için o kalıp
+ * uymuyordu; bu bileşen sütunları çağıran taraftan alıyor.
+ *
+ * DAR EKRAN
+ * ---------
+ * Tablo mobilde satır satır karta dönüşüyor. Yatay kaydırmalı tablo
+ * telefonda okunmuyor: kullanıcı sağdaki sütunun varlığını fark etmiyor.
+ * 640 pikselin altında her satır kendi kartı, sütun adları etiket oluyor.
+ *
+ * Bu dönüşüm TEK DOM üzerinde, yalnızca CSS ile yapılıyor. Önce iki ayrı
+ * blok vardı (biri masaüstü tablosu, biri mobil kartlar) ve karşıt olan
+ * CSS ile gizleniyordu; ama ön render statik HTML ürettiği için aynı metin
+ * dosyaya İKİ KEZ yazılıyordu — tarayıcı açısından sayfa kendi içeriğini
+ * tekrar ediyor gibi görünüyordu. Sütun adları ::before ile geldiği için
+ * artık etiketler de metne karışmıyor.
+ */
+export const KarsilastirmaTablosu: React.FC<{
+  sutunlar: string[];
+  satirlar: string[][];
+}> = ({ sutunlar, satirlar }) => (
+  <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+    <table className="w-full text-sm">
+      <thead className="hidden sm:table-header-group">
+        <tr className="bg-gray-50 border-b border-gray-200">
+          {sutunlar.map((s) => (
+            <th key={s} className="text-left font-bold text-gray-900 px-4 py-3">
+              {s}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {satirlar.map((satir) => (
+          <tr
+            key={satir[0]}
+            className="block sm:table-row border-b border-gray-100 last:border-b-0 align-top py-2 sm:py-0"
+          >
+            {satir.map((hucre, i) => (
+              <td
+                key={sutunlar[i]}
+                data-etiket={`${sutunlar[i]}:`}
+                className={
+                  'block sm:table-cell px-4 py-1 sm:py-3 leading-relaxed ' +
+                  (i === 0
+                    ? 'text-sm font-bold sm:font-semibold text-gray-900'
+                    : 'text-xs sm:text-sm text-gray-600 ' +
+                      // dar ekranda sütun adı hücrenin başına etiket olarak geliyor
+                      "before:content-[attr(data-etiket)] before:mr-1.5 before:font-semibold before:text-gray-500 sm:before:content-['']" +
+                      ' sm:before:mr-0')
+                }
+              >
+                {hucre}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
 /* ================================================================ illüstrasyon */
 
 /**
