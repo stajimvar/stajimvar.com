@@ -162,11 +162,34 @@ export async function signUpCompany(input: CompanySignUpInput): Promise<AuthResu
     throw new Error('Şifre en az 8 karakter olmalı.');
   }
 
+  /*
+    KULLANIM DIŞI.
+
+    Bu akış kayıt sırasında `role: 'company'` göndererek şirket hesabı
+    açıyordu. Rol artık kayıttan seçilemiyor: veritabanı tetikleyicisi her
+    yeni kullanıcıyı `student` olarak yazıyor. Sebebi ciddiydi — o meta veriyi
+    istemci gönderdiği için, kayıt olurken kendini şirket ilan eden herkes
+    teklife açık tüm öğrenci profillerini okuyabiliyordu.
+
+    Sessizce öğrenci hesabı üretmek yerine burada duruyoruz: yoksa form bir
+    gün tekrar açıldığında "şirket hesabı açtım ama şirket portalı yok"
+    diyen kullanıcılar üretirdi.
+
+    Şirket olmanın yolu artık şu: kişi normal kayıt olur, şirket sayfasından
+    sahiplenme talebi gönderir, yönetici onaylar (approve_company_claim).
+  */
+  throw new Error(
+    'Şirket hesabı doğrudan açılamıyor. Şirketinizin sayfasından ' +
+      '"Bu şirketin yetkilisi misiniz?" formunu doldurun; onaydan sonra ' +
+      'şirket yetkisi tanımlanır.'
+  );
+
+  // eslint-disable-next-line no-unreachable
   const { data, error } = await supabase.auth.signUp({
     email: input.email.trim(),
     password: input.password,
     options: {
-      data: { full_name: input.recruiterName.trim(), role: 'company' },
+      data: { full_name: input.recruiterName.trim() },
     },
   });
   if (error) fail(error.message);
