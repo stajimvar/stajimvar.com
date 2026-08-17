@@ -1,0 +1,3 @@
+# Bu dosya otomatik üretiliyor: scripts/ads-txt.mjs
+# Elle düzenleme; .env içindeki VITE_ADSENSE_CLIENT değerini değiştir.
+google.com, pub-2635670487159819, DIRECT, f08c47fec0942fa0

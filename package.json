@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/ads-txt.mjs && vite build && node scripts/onrender.mjs",
     "preview": "wrangler pages dev dist",
     "deploy": "wrangler pages deploy dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "ads-txt": "node scripts/ads-txt.mjs",
+    "onrender": "node scripts/onrender.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",

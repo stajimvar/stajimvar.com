@@ -76,6 +76,27 @@ function ensureAdsenseScript(client: string): void {
   document.head.appendChild(script);
 }
 
+/**
+ * AdSense betiğini uygulama açılışında yükler.
+ *
+ * NEDEN AYRI BİR GİRİŞ NOKTASI
+ * ----------------------------
+ * Betik önce yalnızca bir reklam yuvası çizilirken yükleniyordu; yuva
+ * çizilmesi için de HEM yayıncı kimliği HEM yuva kimliği gerekiyordu.
+ *
+ * Ama AdSense'in site doğrulaması tam tersini istiyor: hesap henüz
+ * onaylanmadığı için ortada hiç yuva kimliği yok, Google ise sayfayı açıp
+ * betiği arıyor. Betik yüklenmediği için doğrulama sonsuza kadar
+ * başarısız oluyordu.
+ *
+ * Artık yayıncı kimliği tanımlıysa betik açılışta yükleniyor — yuva olsun
+ * olmasın. Kimlik yoksa hiçbir şey yapılmıyor; boşuna istek atılmıyor.
+ */
+export function adsenseBetiginiBaslat(): void {
+  if (!ADSENSE_CLIENT) return;
+  ensureAdsenseScript(ADSENSE_CLIENT);
+}
+
 export const GoogleAdBanner: React.FC<GoogleAdBannerProps> = ({
   format = 'in-feed',
   adSlotId,
