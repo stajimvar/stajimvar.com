@@ -687,6 +687,79 @@ export const BOLUMLER: Bolum[] = [
       'Sağlık belgelerini başvuru sırasında hazırlamaya başla. Kabul aldıktan sonra ' +
       'belge bekleyip staja geç başlayan çok kişi var.',
     aramaKelimeleri: ['gıda', 'kalite', 'laboratuvar'],
+    giris:
+      'Gıda mühendisliği stajı, üretimin içinde geçen bir staj: laboratuvar analizi kadar ' +
+      'hattın kendisini de görüyorsun. Bu bölümde en sık yaşanan hayal kırıklığı, öğrencinin ' +
+      'Ar-Ge ve ürün geliştirme beklentisiyle gidip kendini kalite kontrol kayıtlarında ' +
+      'bulması. Oysa gıda güvenliği bu sektörün omurgası ve o kayıtlar işin en kritik parçası; ' +
+      'bunu bilerek gitmek stajı çok daha verimli kılıyor. Bu sayfada hangi tesislerin stajyer ' +
+      'aldığını, stajyere verilen gerçek işleri, hangi standartları önceden tanımanın işe ' +
+      'yaradığını ve başvuru ipuçlarını bulacaksın.',
+    pozisyonlar: [
+      'Kalite kontrol ve gıda güvenliği',
+      'Üretim ve proses takibi',
+      'Ar-Ge ve ürün geliştirme',
+      'Duyusal analiz ve raf ömrü çalışmaları',
+      'Tedarikçi ve hammadde kabul kontrolü',
+    ],
+    dikkat: [
+      'Ar-Ge kontenjanı az; stajların çoğu kalite kontrol ve üretim tarafında geçiyor. Bunu ' +
+        'bilerek gitmek hayal kırıklığını önlüyor.',
+      'Hijyen kuralları katı: bone, önlük, takı yasağı ve bazı tesislerde sağlık raporu. ' +
+        'Kurallara uymayan stajyer üretim alanına alınmıyor.',
+      'Gıda güvenliği standartlarının (HACCP gibi) ne olduğunu önceden okumak, mülakatta ve ilk ' +
+        'günde belirgin fark yaratıyor.',
+      'Mevsimlik üretim yapan tesislerde (konserve, salça, meyve suyu) staj dönemi üretim ' +
+        'sezonuna denk gelmeli; kapalı dönemde gidersen görecek bir şey olmuyor.',
+    ],
+    cvIpucu:
+      'Laboratuvarda yaptığın analizleri adıyla yaz: nem, asitlik, mikrobiyolojik ekim gibi. ' +
+      'Gıda güvenliği ya da hijyen eğitimi aldıysan mutlaka belirt — üretim tesisleri buna ' +
+      'doğrudan bakıyor. Hangi ürün grubuyla ilgilendiğini bir cümleyle söylemek de başvuruyu ' +
+      'kişiselleştiriyor: süt, et, unlu mamul, içecek çok farklı süreçler.',
+    sss: [
+      {
+        soru: 'Gıda mühendisliği stajı nerede yapılır?',
+        cevap:
+          'Süt, et, unlu mamul, içecek, konserve ve hazır gıda üreten tesisler; ayrıca gıda analiz ' +
+          'laboratuvarları, market zincirlerinin kalite birimleri ve kamu denetim kurumları.',
+      },
+      {
+        soru: 'Stajda gerçekte ne yapıyorum?',
+        cevap:
+          'Hammadde ve ürün numunelerinin analizi, hijyen ve sıcaklık kayıtlarının tutulması, ' +
+          'üretim hattının izlenmesi, kalite kayıtlarının düzenlenmesi ve raf ömrü çalışmalarına ' +
+          'destek.',
+      },
+      {
+        soru: 'HACCP nedir, bilmem gerekiyor mu?',
+        cevap:
+          'Gıda üretiminde tehlikelerin nerede oluşabileceğini belirleyip kontrol altına alma ' +
+          'sistemi. Stajyerden uzmanlık beklenmiyor ama ne olduğunu bilmek mülakatta ve ilk günde ' +
+          'fark yaratıyor.',
+      },
+      {
+        soru: 'Ar-Ge stajı bulmak mümkün mü?',
+        cevap:
+          'Mümkün ama kontenjan az ve genellikle büyük firmalarda. Kalite ve üretim tarafında ' +
+          'geçirilen bir staj da Ar-Ge\'ye giden yolu açıyor: ürünün nasıl üretildiğini bilmeden ' +
+          'geliştirmek mümkün olmuyor.',
+      },
+      {
+        soru: 'Mevsimlik üretim yapan tesiste staj yapmalı mıyım?',
+        cevap:
+          'Üretim sezonuna denk getirebilirsen çok verimli oluyor: hattın tam kapasite çalıştığını ' +
+          'görüyorsun. Sezon dışında gidersen tesis büyük ölçüde duruyor.',
+      },
+      {
+        soru: 'Sağlık raporu isteniyor mu?',
+        cevap:
+          'Gıda üretim alanına girecek herkesten portör muayenesi ya da benzeri bir sağlık kaydı ' +
+          'isteniyor. Süreci başlatmak birkaç gün aldığı için staj başlangıcından önce halletmek ' +
+          'gerekiyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
 
   /* -------------------------------------------------------------------- MYO */
@@ -1237,6 +1310,74 @@ export const BOLUMLER: Bolum[] = [
       'Portfolyona her işini koyma. Beş güçlü iş, on beş ortalama işten iyi; ' +
       'değerlendiren kişi en zayıf işine bakarak karar veriyor.',
     aramaKelimeleri: ['tasarım', 'grafik', 'sosyal medya'],
+    giris:
+      'Grafik tasarımda staj başvurusunun kaderini CV değil portfolyo belirliyor. İşveren önce ' +
+      'işine bakıyor, sonra kim olduğuna. Bu bölümün öğrencileri için asıl sorun da burada: ' +
+      'okul projeleri var ama toparlanmış, gösterilebilir bir portfolyo yok. Oysa portfolyo ' +
+      'hazırlamak birkaç günlük iş ve başvurunun tamamını değiştiriyor. Bu sayfada hangi tür ' +
+      'yerlerin stajyer aldığını, stajyere verilen gerçek işleri, portfolyoda nelerin işe ' +
+      'yaradığını ve başvururken atlanan noktaları bulacaksın.',
+    pozisyonlar: [
+      'Reklam ve dijital ajanslar',
+      'Markaların kendi tasarım ve pazarlama ekipleri',
+      'Matbaa ve baskı öncesi hazırlık',
+      'Oyun ve yazılım şirketlerinde arayüz tasarımı',
+      'Yayıncılık ve editoryal tasarım',
+    ],
+    dikkat: [
+      'Portfolyosuz başvuru bu alanda neredeyse hiç cevap almıyor. Üç beş işi düzgün bir ' +
+        'sunumda toplamak, başvurunun en belirleyici parçası.',
+      'Ajansta tempo yüksek ve çok iş görüyorsun; marka tarafında ise tek bir görsel dili ' +
+        'derinlemesine öğreniyorsun. İkisini karıştırma.',
+      'Baskı tarafı okulda az anlatılıyor ama piyasada çok isteniyor: renk profili, taşma payı, ' +
+        'çözünürlük. Bunları bilmek stajda hemen fark ediliyor.',
+      '"Görünürlük karşılığı ücretsiz iş" teklifleri bu alanda yaygın. Zorunlu stajda 3308 ' +
+        'kapsamındaysan ücret ödenmesi gerektiğini bil ve baştan sor.',
+    ],
+    cvIpucu:
+      'CV\'nin en üstünde portfolyo bağlantısı olsun ve mutlaka açılıyor mu diye kontrol et. ' +
+      'Her işin yanına bir cümle koy: sorun neydi, ne çözdün. Görsel yığını, seçilmiş beş iş ' +
+      'kadar etkili olmuyor. Kullandığın programları ve baskı bilgini yazmayı unutma; işverenin ' +
+      'ilk sorularından biri bu.',
+    sss: [
+      {
+        soru: 'Portfolyoda ne olmalı?',
+        cevap:
+          'Seçilmiş beş sekiz iş ve her birinin yanında kısa bir açıklama: sorun neydi, ne yaptın, ' +
+          'neden öyle yaptın. Okul projesi olması sorun değil; anlatabiliyor olman önemli.',
+      },
+      {
+        soru: 'Grafik tasarım stajı için hangi programlar isteniyor?',
+        cevap:
+          'Vektör ve piksel tarafında birer program temel şart. Arayüz tasarımı hedefliyorsan bir ' +
+          'arayüz aracı, hareketli içerik için basit bir animasyon aracı ekleniyor.',
+      },
+      {
+        soru: 'Ajans mı, marka tarafı mı daha iyi?',
+        cevap:
+          'Ajansta kısa sürede çok iş ve çok marka görüyorsun; marka tarafında tek bir görsel dili ' +
+          'derinleştiriyorsun. Ne öğrenmek istediğine göre değişiyor.',
+      },
+      {
+        soru: 'Baskı bilgisi gerçekten gerekli mi?',
+        cevap:
+          'Matbaa ve ambalaj tarafında evet, ve okulda çoğunlukla yüzeysel geçiliyor. Taşma payı, ' +
+          'renk profili ve çözünürlüğü bilen stajyer, ilk günden gerçek iş alıyor.',
+      },
+      {
+        soru: 'Freelance yaptığım işleri CV\'ye yazabilir miyim?',
+        cevap:
+          'Yazmalısın. Ücretli ya da gönüllü fark etmez; gerçek bir müşteri için yapılmış iş, okul ' +
+          'projesinden daha güçlü bir satır. Müşteri adını paylaşmadan önce izin al.',
+      },
+      {
+        soru: 'Uzaktan tasarım stajı olur mu?',
+        cevap:
+          'Bu alanda uzaktan staj yaygın. Ancak okulunun kabul edip etmediğini staj yönergesinden ' +
+          'teyit et; bazı bölümler iş yerinde bulunmayı şart koşuyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'halkla-iliskiler-ve-pazarlama',
@@ -1273,6 +1414,81 @@ export const BOLUMLER: Bolum[] = [
       'Başvuru yazın zaten bir yazma örneğidir. Özensiz bir e-posta, bu alanda ' +
       'CV\'deki her şeyi geçersiz kılıyor.',
     aramaKelimeleri: ['pazarlama', 'sosyal medya', 'iletişim'],
+    giris:
+      'Pazarlama, staj ilanı görece çok çıkan alanlardan biri — ama başvuranların çoğu aynı ' +
+      'cümleyle geliyor: "sosyal medyayı iyi kullanıyorum". Bu, işverene hiçbir şey anlatmıyor, ' +
+      'çünkü herkes kullanıyor. Ayrıştıran şey, bir hesabı ya da içeriği gerçekten yönetmiş ' +
+      'olmak: kaç kişiye ulaştı, ne değişti, neyi denedin. Bu bölümde staj bulmanın yolu da ' +
+      'buradan geçiyor. Bu sayfada hangi tür kurumların stajyer aldığını, stajyere verilen ' +
+      'gerçek işleri, hangi araçları öğrenmenin işe yaradığını ve başvuruda nelere dikkat etmen ' +
+      'gerektiğini bulacaksın.',
+    pozisyonlar: [
+      'Dijital pazarlama ve sosyal medya stajı',
+      'İçerik üretimi ve metin yazarlığı',
+      'Marka ve iletişim ajanslarında müşteri ilişkileri',
+      'Etkinlik ve organizasyon tarafı',
+      'Pazar araştırması ve rakip analizi',
+    ],
+    dikkat: [
+      '"Sosyal medyayı iyi kullanıyorum" cümlesi başvuruda bir şey ifade etmiyor. Yönettiğin ' +
+        'bir hesap, yazdığın bir metin ya da düzenlediğin bir etkinlik varsa onu göster.',
+      'Ajanslarda tempo yüksek ve aynı anda birçok markaya dokunuyorsun; marka tarafında ise ' +
+        'tek bir işi derinlemesine öğreniyorsun. İkisi çok farklı deneyimler.',
+      'Bu alanda "portfolyo" beklentisi var ama kimse söylemiyor. Üç beş örnek çalışmayı bir ' +
+        'araya getirmek, başvurunun en güçlü parçası oluyor.',
+      'Ücretsiz staj teklifleri bu alanda yaygın. Zorunlu stajda 3308 kapsamındaysan ücret ' +
+        'ödenmesi gerektiğini bil ve baştan sor.',
+    ],
+    cvIpucu:
+      'Yaptığın işi sayıyla anlat: kaç gönderi, kaç katılımcı, ne kadar erişim. Sayısı olmayan ' +
+      'bir pazarlama satırı okuyanın kafasında yer kaplamıyor. Kullandığın araçları listele ' +
+      '(tasarım, planlama, analiz) ve varsa örnek çalışmalarına bir bağlantı ekle. Kendi ' +
+      'yürüttüğün küçük bir hesap bile, hiç örneği olmayan onlarca CV\'nin arasından seni ' +
+      'ayırıyor.',
+    sss: [
+      {
+        soru: 'Pazarlama stajı için tasarım bilmek şart mı?',
+        cevap:
+          'Şart değil ama basit görsel hazırlayabilmek neredeyse her ilanda işe yarıyor. Bir ' +
+          'tasarım aracını temel düzeyde kullanabilmek, stajın ilk gününden itibaren iş almanı ' +
+          'sağlıyor.',
+      },
+      {
+        soru: 'Ajansta mı, markanın kendi ekibinde mi staj yapmalıyım?',
+        cevap:
+          'Ajans hızlı ve çeşitli: kısa sürede çok iş görüyorsun. Marka tarafı yavaş ve derin: tek ' +
+          'bir işin tamamını öğreniyorsun. Ne öğrenmek istediğine göre seç; ikisi de değerli.',
+      },
+      {
+        soru: 'Portfolyom yoksa ne yapmalıyım?',
+        cevap:
+          'Bir hafta içinde kurabilirsin. Kendi seçtiğin bir marka için üç örnek gönderi tasarla, ' +
+          'bir tanıtım metni yaz, kısa bir rakip analizi çıkar. Hayali bile olsa, çalışma ' +
+          'gösterebilmek hiçbir şey göstermemekten çok daha güçlü.',
+      },
+      {
+        soru: 'Hangi araçları öğrenmeliyim?',
+        cevap:
+          'Bir tasarım aracı, bir içerik planlama aracı ve temel analiz okuma becerisi. Bunun ' +
+          'üstüne Excel\'de veri düzenleyebilmek, çoğu adayın atladığı ve işverenin çok değer ' +
+          'verdiği bir şey.',
+      },
+      {
+        soru: 'Halkla ilişkiler ile pazarlama aynı şey mi?',
+        cevap:
+          'Aynı değil ama iç içe. Halkla ilişkiler kurumun itibarını ve iletişimini yönetiyor, ' +
+          'pazarlama ürünün satışını hedefliyor. Staj ilanlarında ikisi çoğu zaman aynı ekipte ' +
+          'birleşiyor.',
+      },
+      {
+        soru: 'Uzaktan pazarlama stajı yapabilir miyim?',
+        cevap:
+          'Bu alanda uzaktan staj mümkün ve ilanı da var. Ancak okulunun uzaktan yapılan stajı ' +
+          'kabul edip etmediğini staj yönergesinden teyit et; bazı bölümler iş yerinde fiziken ' +
+          'bulunmayı şart koşuyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'moda-tasarimi',
@@ -1419,6 +1635,78 @@ export const BOLUMLER: Bolum[] = [
       'Portfolyonu PDF olarak ve 10 MB altında hazırla. Açılmayan ya da indirilemeyen ' +
       'portfolyo yüzünden okunmayan başvuru çok fazla.',
     aramaKelimeleri: ['mimar', 'proje', 'inşaat'],
+    giris:
+      'Mimarlık öğrencisinin staj tarafındaki ilk sorusu genelde şu oluyor: ofis stajı mı, ' +
+      'şantiye stajı mı? Çoğu bölüm ikisini de istiyor ve ikisi tamamen farklı ortamlar. Ofiste ' +
+      'çizim, sunum ve proje geliştirme var; şantiyede projenin gerçekte nasıl uygulandığını, ' +
+      'çizimle imalatın nerede ayrıldığını görüyorsun. İkincisini görmemiş bir mimarın çizimi ' +
+      'kâğıtta kalıyor. Bu sayfada iki staj türünün nerede yapıldığını, stajyere verilen gerçek ' +
+      'işleri, hangi programların beklendiğini ve portfolyo tarafında nelere dikkat etmen ' +
+      'gerektiğini bulacaksın.',
+    pozisyonlar: [
+      'Mimari proje ofisleri (ofis stajı)',
+      'Şantiye ve uygulama tarafı',
+      'İç mekân ve tasarım stüdyoları',
+      'Restorasyon ve koruma projeleri',
+      'Belediyelerin imar ve ruhsat birimleri',
+    ],
+    dikkat: [
+      'Ofis stajı ile şantiye stajının hangisini nerede yapabileceğini okulun staj ' +
+        'yönergesinden teyit et; yanlış yerde yapılan staj çoğu bölümde sayılmıyor.',
+      'Küçük ofisler stajyerden gerçek üretim bekliyor, büyük ofisler ise sürecin bir parçasını ' +
+        'gösteriyor. Küçük ofiste daha çok iş yapıyorsun, büyük ofiste daha kurumsal bir süreç ' +
+        'görüyorsun.',
+      'Portfolyo bu bölümde CV\'den önce bakılan şey. Bağlantısı olmayan ya da açılmayan bir ' +
+        'portfolyo, başvurunun en zayıf noktası oluyor.',
+      'Şantiyeye kişisel koruyucu donanımsız girilmiyor ve ortam tozlu, gürültülü. Ofis ' +
+        'stajıyla karıştırılmasın.',
+    ],
+    cvIpucu:
+      'CV\'nin başına portfolyo bağlantısını koy ve açıldığından emin ol; bu bölümde ilk ' +
+      'bakılan yer orası. Kullandığın programları seviye vererek yaz: çizim, modelleme ve ' +
+      'görselleştirme ayrı ayrı. Stüdyo projelerinden en güçlü ikisini seç ve ne yaptığını ' +
+      'kısaca anlat — otuz proje listelemek yerine iki projeyi iyi anlatmak daha güçlü.',
+    sss: [
+      {
+        soru: 'Ofis stajı ile şantiye stajı arasındaki fark nedir?',
+        cevap:
+          'Ofis stajında çizim, sunum ve proje geliştirme yapıyorsun. Şantiye stajında projenin ' +
+          'nasıl uygulandığını yerinde görüyorsun: kalıp, imalat, detayların sahada nasıl ' +
+          'çözüldüğü. Çoğu bölüm ikisini ayrı ayrı istiyor.',
+      },
+      {
+        soru: 'Hangi programları bilmem gerekiyor?',
+        cevap:
+          'Çizim tarafında AutoCAD, modelleme tarafında bir bina bilgi modelleme aracı ve SketchUp ' +
+          'yaygın. Görselleştirme ve grafik programları ise sunum tarafında ayırt edici oluyor.',
+      },
+      {
+        soru: 'Portfolyoda kaç proje olmalı?',
+        cevap:
+          'Az ve iyi. Beş projeyi düzgün anlatmak, yirmi projeyi görsel yığını hâlinde koymaktan ' +
+          'güçlü. Her projede fikri, çözümü ve senin katkını bir iki cümleyle yaz.',
+      },
+      {
+        soru: 'Küçük ofiste staj yapmak dezavantaj mı?',
+        cevap:
+          'Tam tersi olabiliyor. Küçük ofiste projenin tamamına dokunuyorsun; büyük ofiste genelde ' +
+          'tek bir aşamayı görüyorsun. CV\'de anlatacak şey açısından küçük ofis çoğu zaman daha ' +
+          'zengin.',
+      },
+      {
+        soru: 'Belediyede staj yapılabilir mi?',
+        cevap:
+          'Yapılabiliyor; imar ve ruhsat birimleri stajyer alıyor. Mevzuat ve onay süreçlerini ' +
+          'içeriden görmek, serbest çalışacaksan doğrudan işine yarayan bir deneyim.',
+      },
+      {
+        soru: 'Staj için çizim yarışması deneyimi işe yarar mı?',
+        cevap:
+          'Yarıyor. Katıldığın bir yarışma, teslim disiplinini ve fikir üretebildiğini gösteriyor. ' +
+          'Derece almamış olman önemli değil; süreci tamamlamış olman önemli.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'kimya-muhendisligi',
@@ -1455,6 +1743,78 @@ export const BOLUMLER: Bolum[] = [
       'Tesis stajlarında güvenlik eğitimi ilk gün veriliyor ve ciddiye alınıyor. ' +
       'Buradaki tavrın, staj sonu değerlendirmenin yarısı.',
     aramaKelimeleri: ['kimya', 'proses', 'laboratuvar'],
+    giris:
+      'Kimya mühendisliğinde staj yeri bulmanın önündeki en büyük engel, öğrencilerin çoğunun ' +
+      'yalnızca büyük kimya ve ilaç şirketlerine bakması. Oysa bu bölümün mezunları gıdadan ' +
+      'boyaya, kozmetikten arıtmaya çok geniş bir alanda çalışıyor ve o tesislerin hepsinde ' +
+      'laboratuvar ve üretim birimi var. Bir de güvenlik tarafı var: kimyasalla çalışılan her ' +
+      'yerde stajyerden önce iş güvenliği eğitimi bekleniyor. Bu sayfada hangi tesislerin ' +
+      'stajyer aldığını, stajyere verilen gerçek işleri ve başvurmadan önce bilmen gerekenleri ' +
+      'bulacaksın.',
+    pozisyonlar: [
+      'Üretim ve proses tarafı',
+      'Kalite kontrol laboratuvarı',
+      'Ar-Ge ve ürün geliştirme',
+      'Arıtma ve çevre tesisleri',
+      'İlaç, kozmetik ve gıda üretim tesisleri',
+    ],
+    dikkat: [
+      'Yalnızca büyük kimya ve ilaç şirketlerine bakma. Boya, deterjan, kozmetik, gıda, plastik ' +
+        've arıtma tesislerinin hepsinde bu bölümün işi var ve rekabet çok daha düşük.',
+      'Laboratuvara girmeden önce iş güvenliği eğitimi ve kişisel koruyucu donanım şart. ' +
+        'Gözlük, önlük ve eldiven konusunda esneklik olmuyor.',
+      'İlaç ve gıda tesislerinde hijyen ve giriş kuralları katı: bazı alanlara girmek için ayrı ' +
+        'eğitim ve sağlık raporu isteniyor. Bunlar birkaç gün alabiliyor.',
+      'Ar-Ge stajlarının kontenjanı az ve başvuru dönemi erken kapanıyor. Bu tarafı ' +
+        'hedefliyorsan kışın başla.',
+    ],
+    cvIpucu:
+      'Okulda kullandığın laboratuvar cihazlarını adıyla yaz — bu bölümde en çok atlanan ve en ' +
+      'çok işe yarayan satır bu. Yaptığın deneyleri ve analiz yöntemlerini belirt. Kalite ve ' +
+      'güvenlik standartlarına dair bir eğitim aldıysan (iş güvenliği, kalite yönetimi) mutlaka ' +
+      'yaz; üretim tesisleri buna doğrudan bakıyor.',
+    sss: [
+      {
+        soru: 'Kimya mühendisliği stajı nerede yapılır?',
+        cevap:
+          'Kimya ve ilaç tesisleri en bilinenleri ama gıda, boya, deterjan, kozmetik, plastik ve ' +
+          'arıtma tesisleri de bu bölümden stajyer alıyor. Alanı geniş tutmak staj bulma sorununu ' +
+          'büyük ölçüde çözüyor.',
+      },
+      {
+        soru: 'Stajda laboratuvarda mı çalışırım, üretimde mi?',
+        cevap:
+          'İkisi de olabiliyor. Kalite kontrol laboratuvarında numune analizi ve kayıt, üretim ' +
+          'tarafında ise proses takibi ve veri toplama yapıyorsun. Hangisini istediğini başvuruda ' +
+          'söylemek işe yarıyor.',
+      },
+      {
+        soru: 'Hangi cihazları bilmem gerekiyor?',
+        cevap:
+          'Okul laboratuvarında gördüğün temel analiz cihazları yeterli başlangıç. Kromatografi ve ' +
+          'spektroskopi cihazlarının ne işe yaradığını bilmek, laboratuvar stajında ilk günü ' +
+          'kolaylaştırıyor.',
+      },
+      {
+        soru: 'İlaç sektöründe staj bulmak zor mu?',
+        cevap:
+          'Kontenjan sınırlı ve başvuru dönemleri erken kapanıyor. Kozmetik ve gıda tesisleri ' +
+          'benzer üretim mantığını öğretiyor ve stajyer almaya çok daha açık.',
+      },
+      {
+        soru: 'Güvenlik eğitimi almadan laboratuvara girebilir miyim?',
+        cevap:
+          'Giremezsin ve girmemelisin. Kimyasalla çalışılan her tesiste eğitim ve koruyucu donanım ' +
+          'şart; bunu atlayan bir yer, kendi çalışanını da korumuyor demektir.',
+      },
+      {
+        soru: 'Simülasyon programı bilmem gerekir mi?',
+        cevap:
+          'Stajyerden beklenmiyor ama proses tarafında kullanılan bir simülasyon programını temel ' +
+          'düzeyde görmüş olmak, Ar-Ge ve proses stajı başvurularında ayırt edici oluyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'cevre-muhendisligi',
@@ -1636,6 +1996,76 @@ export const BOLUMLER: Bolum[] = [
       'Bu alanda stajyer kalıcı işe en çok dönüşen alanlardan biri. Depo operasyonunda ' +
       'başlayıp planlama tarafına geçmek yaygın bir yol.',
     aramaKelimeleri: ['lojistik', 'depo', 'operasyon'],
+    giris:
+      'Lojistik, staj bulmanın görece kolay olduğu alanlardan biri: depolar, nakliye şirketleri ' +
+      've dağıtım merkezleri sürekli iş yükü altında ve stajyer almaya açık. Asıl mesele hangi ' +
+      'tarafta çalışmak istediğine karar vermek — depo operasyonu, taşımacılık planlaması ve ' +
+      'dış ticaret tarafı birbirinden oldukça farklı işler. Bir de vardiya gerçeği var: bu ' +
+      'alanda çalışma saatleri ofis düzeninden farklı olabiliyor. Bu sayfada nerede staj ' +
+      'yapıldığını, stajyere verilen gerçek işleri ve başvururken bilmen gerekenleri ' +
+      'bulacaksın.',
+    pozisyonlar: [
+      'Depo ve dağıtım merkezi operasyonu',
+      'Nakliye ve sevkiyat planlama',
+      'Gümrük ve dış ticaret operasyonu',
+      'Tedarik zinciri ve stok takibi',
+      'Kargo ve son kilometre dağıtım',
+    ],
+    dikkat: [
+      'Depo tarafında çalışma vardiyalı olabiliyor ve iş ayakta geçiyor. Bunu bilerek seçmek, ' +
+        'ilk hafta pes etmemeni sağlıyor.',
+      'Sevkiyat ve dağıtım merkezleri şehir dışında, sanayi bölgelerinde oluyor. Ulaşımı ' +
+        'başvurmadan önce hesapla; servis olup olmadığını sor.',
+      'Bu alanda her şey sistem üzerinden yürüyor. Kullanılan depo ya da taşıma yazılımının ' +
+        'adını öğrenmek, mülakatta doğrudan ilgi göstergesi oluyor.',
+      'Yılın belirli dönemleri (kampanya sezonları, yıl sonu) aşırı yoğun geçiyor. O dönemlerde ' +
+        'stajyer olarak işin içine girme şansın yüksek ama tempo da yüksek.',
+    ],
+    cvIpucu:
+      'Excel seviyeni mutlaka yaz; bu alanda gün boyu tablo ile çalışılıyor. Daha önce depo, ' +
+      'kasa, sayım ya da sevkiyat gibi bir işte çalıştıysan alanla ilgisiz görünse bile yaz — ' +
+      'operasyon deneyimi burada doğrudan karşılık buluyor. Ehliyetin ve varsa forklift gibi ' +
+      'operatör belgen varsa belirt.',
+    sss: [
+      {
+        soru: 'Lojistik stajı nerede yapılır?',
+        cevap:
+          'Nakliye ve kargo şirketleri, depo ve dağıtım merkezleri, gümrük müşavirlikleri, üretici ' +
+          'firmaların sevkiyat birimleri ve perakende zincirlerinin tedarik ekipleri.',
+      },
+      {
+        soru: 'Stajda hangi işler veriliyor?',
+        cevap:
+          'Sevkiyat kayıtlarının takibi, stok sayımı ve fark analizi, araç ve rota planlamasına ' +
+          'destek, irsaliye ve teslim belgelerinin düzeni, gecikme ve hasar kayıtlarının tutulması.',
+      },
+      {
+        soru: 'Depo stajı ağır bir iş mi?',
+        cevap:
+          'Fiziksel olarak yorucu olabiliyor ve vardiyalı çalışma yaygın. Karşılığında işin ' +
+          'gerçekte nasıl yürüdüğünü ofisten görülemeyecek kadar net öğreniyorsun.',
+      },
+      {
+        soru: 'Hangi yazılımları bilmek işe yarar?',
+        cevap:
+          'Excel her yerde. Bunun üstüne bir depo yönetim sistemi ya da ERP arayüzü tecrübesi ayırt ' +
+          'edici; markalar değişse de mantık aynı olduğu için biri diğerine geçişi kolaylaştırıyor.',
+      },
+      {
+        soru: 'Ehliyet gerekli mi?',
+        cevap:
+          'Zorunlu değil ama saha tarafında işe yarıyor ve bazı ilanlarda isteniyor. Forklift gibi ' +
+          'operatör belgesi ise depo tarafında doğrudan avantaj.',
+      },
+      {
+        soru: 'Lojistik stajı işe dönüşür mü?',
+        cevap:
+          'Bu alanda ihtimal görece yüksek: sektörde eleman ihtiyacı sürekli ve işi bilen bir ' +
+          'stajyeri yetiştirmek şirket için en kolay yol. Niyetini staj bitmeden söylemek ' +
+          'belirleyici oluyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'is-sagligi-ve-guvenligi',
@@ -1744,6 +2174,79 @@ export const BOLUMLER: Bolum[] = [
       'Mezuniyet sonrası yapılan avukatlık stajı ayrı bir süreç ve baroya bağlı. ' +
       'Öğrencilikte yaptığın büro stajı ise seni oraya hazırlayan deneyim; ikisini karıştırma.',
     aramaKelimeleri: ['hukuk', 'avukat', 'mevzuat'],
+    giris:
+      'Hukuk fakültesinde "staj" kelimesi iki ayrı şeyi anlatıyor ve karıştırılması sık yaşanan ' +
+      'bir sorun. Mezuniyet sonrası yapılan avukatlık stajı ayrı bir süreç: baroya kayıt, ' +
+      'adliye ve avukat yanı dönemleri, kendi mevzuatı var. Öğrencilik döneminde yapılan staj ' +
+      'ise bundan farklı — bir büroda ya da hukuk biriminde çalışmayı görmek, dosya takibini ' +
+      'öğrenmek ve alanı tanımak için yapılıyor. Bu sayfa ikincisini anlatıyor: öğrenci olarak ' +
+      'nerede staj yapabileceğini, sana verilen gerçek işleri ve başvururken nelere dikkat ' +
+      'etmen gerektiğini.',
+    pozisyonlar: [
+      'Avukatlık büroları — bireysel ya da kurumsal',
+      'Şirketlerin hukuk müşavirliği birimleri',
+      'Kamu kurumlarının hukuk birimleri',
+      'Sivil toplum kuruluşlarında hak temelli çalışmalar',
+      'Bankaların ve sigorta şirketlerinin hukuk servisleri',
+    ],
+    dikkat: [
+      'Öğrenci stajı ile mezuniyet sonrası avukatlık stajı farklı süreçler. Bu sayfadaki her ' +
+        'şey öğrencilik dönemi için; avukatlık stajının şartlarını baroya sormalısın.',
+      'Öğrenci olarak duruşmaya giremez, dilekçe imzalayamaz ve müvekkil temsil edemezsin. ' +
+        'Yaptığın iş gözlem, araştırma ve dosya hazırlığına destek oluyor.',
+      'Gördüğün her dosya gizli. İsim, olay ayrıntısı ve belge fotoğrafı büro dışına çıkmıyor; ' +
+        'staj defterine yazarken bile sorumluna sor.',
+      'Büroyu seçerken çalıştığı alanı öğren: ceza, ticaret, iş hukuku, aile hukuku çok farklı ' +
+        'günlük işler demek. Alanı sevmediğin bir büroda iki ay uzun geçiyor.',
+    ],
+    cvIpucu:
+      'İlgilendiğin hukuk alanını CV\'nin en üstünde tek cümleyle söyle; "hukuk öğrencisiyim" ' +
+      'cümlesi hiçbir büroya bir şey anlatmıyor. Farazi dava yarışması, hukuk kliniği, ' +
+      'araştırma ödevi ya da yayımlanmış bir çalışman varsa yaz — bu bölümde en çok değer ' +
+      'verilen şey yazma ve araştırma becerisi. Yabancı dil seviyeni de mutlaka belirt.',
+    sss: [
+      {
+        soru: 'Öğrenci stajı ile avukatlık stajı aynı şey mi?',
+        cevap:
+          'Değil. Avukatlık stajı mezuniyetten sonra, baro kaydıyla ve kendi mevzuatına göre ' +
+          'yapılıyor. Öğrencilik döneminde yapılan staj ise alanı tanımak ve büro işleyişini görmek ' +
+          'için yapılan farklı bir süreç.',
+      },
+      {
+        soru: 'Hukuk stajında ne iş yapılıyor?',
+        cevap:
+          'Mevzuat ve içtihat araştırması, dosya düzeni, duruşma ve müzakerelerin gözlemlenmesi, ' +
+          'dilekçe taslaklarının hazırlığına destek. İmza ve temsil yetkisi gerektiren hiçbir iş ' +
+          'öğrenciye verilmiyor.',
+      },
+      {
+        soru: 'Hangi büroda staj yapmalıyım?',
+        cevap:
+          'Çalışmak istediğin alanda çalışan bir büroda. Ceza, ticaret, iş ve aile hukuku çok ' +
+          'farklı günlük işler demek. Büyük büro daha kurumsal, küçük büro ise dosyanın tamamını ' +
+          'görme imkânı veriyor.',
+      },
+      {
+        soru: 'Şirketin hukuk biriminde staj yapmak mantıklı mı?',
+        cevap:
+          'Fazlasıyla. Sözleşme yönetimi, uyum ve iş hukuku tarafını içeriden görüyorsun; avukatlık ' +
+          'dışında kariyer düşünüyorsan bu deneyim doğrudan işine yarıyor.',
+      },
+      {
+        soru: 'Not ortalaması hukuk stajında önemli mi?',
+        cevap:
+          'Bazı büyük bürolar ve kurumsal hukuk birimleri bakıyor, çoğu büro bakmıyor. Bakılan asıl ' +
+          'şey yazma becerisi ve araştırma disiplini; bunu bir çalışmayla göstermek ortalamadan ' +
+          'güçlü.',
+      },
+      {
+        soru: 'Staj sırasında duruşmaya girebilir miyim?',
+        cevap:
+          'Avukatın yanında izleyici olarak salonda bulunabilirsin ama dosyada taraf ya da vekil ' +
+          'değilsin. Kapalı duruşmalarda bu da mümkün olmuyor; kararı hâkim veriyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'psikoloji',
@@ -1889,6 +2392,80 @@ export const BOLUMLER: Bolum[] = [
       'İkinci bir dil (Almanca, Rusça, Arapça) bu alanda İngilizceden daha çok ' +
       'ayrıştırıyor; firmalar o pazarlarda yazışacak kişi arıyor.',
     aramaKelimeleri: ['dış ticaret', 'ihracat', 'lojistik'],
+    giris:
+      'Uluslararası ticaret, staj bulurken en çok atlanan avantaja sahip bölümlerden biri: ' +
+      'ihracat yapan her şirketin dış ticaret işlemlerini yürüten bir birimi var ve bu birimler ' +
+      'sürekli iş yükü altında. Yani ilan az çıksa da ihtiyaç fazla. Şartı ise net: yabancı dil ' +
+      'gerçekten kullanılabilir seviyede olmalı, çünkü işin büyük kısmı yazışma ve belge. Bu ' +
+      'sayfada hangi tür şirketlerin stajyer aldığını, dış ticaret stajyerine verilen gerçek ' +
+      'işleri, hangi belgeleri önceden tanımanın işe yaradığını ve başvuru ipuçlarını ' +
+      'bulacaksın.',
+    pozisyonlar: [
+      'İhracat ve ithalat operasyon birimleri',
+      'Gümrük müşavirlik firmaları',
+      'Lojistik ve nakliye şirketlerinin dış ticaret masaları',
+      'Üretici firmaların yurt dışı satış ekipleri',
+      'Ticaret odaları ve ihracatçı birlikleri',
+    ],
+    dikkat: [
+      'Yabancı dil bu bölümde süs değil, işin kendisi. Yazışmaların ve belgelerin çoğu ' +
+        'İngilizce; seviyeni abartmak stajın ilk haftasında ortaya çıkıyor.',
+      'İhracat yapan üretici firmalar ilan açmadan stajyer alıyor. Şehrindeki sanayi sitesinde ' +
+        'ihracat yapan firmaları listeleyip doğrudan yazmak en verimli yol.',
+      'İşin büyük kısmı belge ve mevzuat: fatura, konşimento, menşe belgesi, akreditif. Detaya ' +
+        'dikkat edemeyen biri için bu iş yorucu oluyor.',
+      'Gümrük müşavirlik firmalarında öğrenilen şey yoğun ve hızlı; alanı tanımak için en ' +
+        'verimli yerlerden biri ama tempoyu bilerek gitmek gerekiyor.',
+    ],
+    cvIpucu:
+      'Yabancı dil seviyeni somut yaz: "İngilizce — iş yazışması ve telefon görüşmesi" gibi. Bu ' +
+      'bölümde CV\'nin en çok bakılan satırı orası. Excel seviyeni ve varsa bir ERP ya da ' +
+      'gümrük yazılımı deneyimini belirt. Dış ticaret belgelerinin adlarını biliyorsan bunu ' +
+      'yazmak, alana gerçekten ilgi duyduğunu gösteriyor.',
+    sss: [
+      {
+        soru: 'Dış ticaret stajı için hangi dil gerekiyor?',
+        cevap:
+          'İngilizce neredeyse her yerde şart. İkinci bir dil (Almanca, Rusça, Arapça, Fransızca) ' +
+          'ise hangi pazara çalıştığına göre büyük avantaj sağlıyor ve rekabeti ciddi biçimde ' +
+          'azaltıyor.',
+      },
+      {
+        soru: 'Dış ticaret stajyerine hangi işler veriliyor?',
+        cevap:
+          'Yurt dışı yazışmaların takibi, teklif ve sipariş kayıtları, dış ticaret belgelerinin ' +
+          'hazırlığı ve kontrolü, navlun ve teslim sürelerinin izlenmesi, gümrük süreçlerinin ' +
+          'takibi.',
+      },
+      {
+        soru: 'Gümrük müşavirliği bürosunda staj yapmak mantıklı mı?',
+        cevap:
+          'Alanı en hızlı öğreten yerlerden biri: belgelerin tamamı oradan geçiyor. Tempo yüksek ' +
+          'ama iki ayda gördüğün işlem çeşitliliği başka hiçbir yerde bulunmuyor.',
+      },
+      {
+        soru: 'Hangi belgeleri önceden öğrenmeliyim?',
+        cevap:
+          'Proforma fatura, ticari fatura, konşimento, menşe şahadetnamesi ve akreditifin ne işe ' +
+          'yaradığını bilmek yeterli. Ayrıntısını stajda öğreniyorsun ama adlarını bilmek ilk günü ' +
+          'çok kolaylaştırıyor.',
+      },
+      {
+        soru: 'İhracat yapan firmaları nasıl bulurum?',
+        cevap:
+          'Şehrinin ticaret odası ve ihracatçı birlikleri üye listesi tutuyor. Organize sanayi ' +
+          'bölgelerinin firma rehberleri de açık. Bu listeler doğrudan başvuru için hazır bir ' +
+          'kaynak.',
+      },
+      {
+        soru: 'Bu bölümün stajı sadece İstanbul\'da mı bulunur?',
+        cevap:
+          'Hayır. İhracat yapan üretici her sanayi şehrinde var: Bursa, İzmir, Gaziantep, Denizli, ' +
+          'Kayseri ve daha fazlası. Küçük şehirde rekabet düşük olduğu için kabul alma ihtimali ' +
+          'genellikle daha yüksek.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
 
   /* ------------------------------------------------------------- sağlık */
