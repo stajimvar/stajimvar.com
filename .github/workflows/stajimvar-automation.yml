@@ -46,6 +46,10 @@ jobs:
       # değillerse boş dize oluyor ve dağıtım adımları atlanıyor.
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      # Tarayıcı tarafı anahtarı. Gizli değil (her ziyaretçi görüyor, RLS
+      # koruyor) ama derlemede BULUNMAK ZORUNDA: boş bir anahtarla üretilen
+      # paket veritabanına bağlanamıyor ve site ilan gösteremiyor.
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -65,6 +69,9 @@ jobs:
           if [ -n "$eksik" ]; then
             echo "::error::Depo sırları eksik:$eksik — GitHub > Settings > Secrets and variables > Actions bölümünden ekleyin. Anahtar için SUPABASE_SECRET_KEY adıyla YENİ bir sır ekleyin."
             exit 1
+          fi
+          if [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
+            echo "::warning::VITE_SUPABASE_ANON_KEY tanımlı değil — tarama çalışacak ama SİTE DAĞITILMAYACAK. Boş anahtarla derlenen paket veritabanına bağlanamaz ve canlı siteyi kırar; bu yüzden dağıtım bilerek atlanıyor."
           fi
           echo "Sırlar tanımlı."
 
@@ -115,28 +122,28 @@ jobs:
       # hiç çalışmıyor — çalışmayacak bir işi kırmızı bildirimle her saat
       # tekrarlatmak, bu dosyada zaten bilerek kaçınılan bir şey.
       - name: Node kur
-        if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' }}
+        if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
 
       - name: Bağımlılıklar
-        if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' }}
+        if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
         run: npm ci
 
       # Derleme ön render betiğini de çalıştırıyor; o betik ilanları
       # Supabase'ten okuyor, bu yüzden VITE_* değişkenleri gerekiyor.
       - name: Derle
-        if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' }}
+        if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
         run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_ANON_KEY: ${{ env.VITE_SUPABASE_ANON_KEY }}
           VITE_ADSENSE_CLIENT: ${{ secrets.VITE_ADSENSE_CLIENT }}
 
       - name: Cloudflare Pages'e yükle
-        if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' }}
+        if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
         run: npx wrangler pages deploy dist --project-name stajimvar --commit-dirty=true
         env:
           CLOUDFLARE_API_TOKEN: ${{ env.CLOUDFLARE_API_TOKEN }}
