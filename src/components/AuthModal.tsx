@@ -28,7 +28,7 @@ interface AuthModalProps {
   activeCompanyId: string;
   onSelectCompany: (companyId: string) => void;
   onCreateCompany: (newCompany: CompanyAccount) => void;
-  onSuccess: (role: 'student' | 'company', name: string) => void;
+  onSuccess: (role: 'student' | 'company' | 'admin', name: string) => void;
   /** Şirket kaydı akışı hazır olana kadar kapalı. */
   allowCompanySignUp?: boolean;
 }

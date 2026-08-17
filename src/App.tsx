@@ -184,6 +184,11 @@ export default function App() {
     'internships' | 'badges' | 'applications' | 'profile' | 'company-portal'
   >('internships');
   const [activeSubTab, setActiveSubTab] = useState<string>('all');
+  /*
+    Arayüz rolü yalnızca iki durum tanıyor: öğrenci görünümü ya da şirket
+    portalı. Yönetici öğrenci görünümünü kullanıyor, fazladan menüsü
+    `isAdmin` ile geliyor.
+  */
   const [userRole, setUserRole] = useState<'student' | 'company'>('student');
 
   const handleTabChange = (
@@ -239,11 +244,12 @@ export default function App() {
     showToast('Hesabınızdan güvenle çıkış yapıldı.');
   };
 
-  const handleAuthSuccess = (role: 'student' | 'company', name: string) => {
+  const handleAuthSuccess = (role: 'student' | 'company' | 'admin', name: string) => {
     // Oturumun kendisi onAuthChange üzerinden geliyor; burada yalnızca
     // arayüzü kullanıcının rolüne göre konumlandırıyoruz.
-    setUserRole(role);
-    if (role === 'student') {
+    // Yönetici de öğrenci görünümünü kullanıyor.
+    setUserRole(role === 'company' ? 'company' : 'student');
+    if (role !== 'company') {
       setActiveTab('internships');
       showToast(`Hoş geldiniz, ${name}!`);
     } else {
@@ -305,7 +311,15 @@ export default function App() {
 
   /** Oturum değiştikçe gerçek profili ve başvuruları çeker. */
   React.useEffect(() => {
-    if (!session || session.role !== 'student') {
+    /*
+      Şirket hesabı dışındaki herkesin öğrenci profili yüklenir.
+
+      Eskiden koşul `session.role !== 'student'` idi. Hesabı yönetici
+      yapınca kendi profilim de yüklenmez oldu: avatar, profil menüsü ve
+      ONUN İÇİNDEKİ ÇIKIŞ DÜĞMESİ kayboldu. Kullanıcı giriş yapmış halde
+      kilitli kalıyordu.
+    */
+    if (!session || session.role === 'company') {
       setStudent(null);
       setApplications([]);
       return;

@@ -479,6 +479,26 @@ export const Header: React.FC<HeaderProps> = ({
                   <Mail className="w-4.5 sm:w-5 h-4.5 sm:h-5" />
                 </button>
 
+                {/*
+                  GÜVENLİK AĞI: profil herhangi bir sebeple yüklenemezse
+                  (ağ hatası, eksik satır, rol değişikliği) kullanıcı giriş
+                  yapmış halde kilitli kalmasın diye tek başına bir çıkış
+                  düğmesi çiziliyor. Bu bir kez gerçekten yaşandı: hesap
+                  yönetici yapılınca öğrenci profili yüklenmedi ve menüyle
+                  birlikte çıkış düğmesi de kayboldu.
+                */}
+                {userRole === 'student' && !activeStudent && onLogout && (
+                  <button
+                    type="button"
+                    onClick={onLogout}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-gray-700 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
+                    title="Çıkış yap"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Çıkış</span>
+                  </button>
+                )}
+
                 {/* User Profile Navigation & Account Menu (Student) */}
                 {userRole === 'student' && activeStudent && (
                   <div className="relative shrink-0">

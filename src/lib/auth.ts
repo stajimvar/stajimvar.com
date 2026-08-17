@@ -12,7 +12,14 @@ import type { CompanyAccount, StudentProfile } from '../types';
  *  eski onaylar geçersiz sayılıp kullanıcıdan yeniden onay istenebilir. */
 export const KVKK_VERSION = '2026-08-v1';
 
-export type UserRole = 'student' | 'company';
+/*
+  'admin' de gerçek bir rol. Yönetici, siteyi kullanan bir kişi olmaktan
+  çıkmıyor: kendi öğrenci profili, başvuruları ve CV'si duruyor. Rol
+  listesinde yer almadığında `session.role !== 'student'` kontrolleri
+  yöneticiyi profilsiz bırakıyordu — çıkış düğmesi dahil hiçbir şey
+  görünmüyordu.
+*/
+export type UserRole = 'student' | 'company' | 'admin';
 
 export interface AuthResult {
   userId: string;
