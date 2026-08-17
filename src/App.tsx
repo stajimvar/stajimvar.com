@@ -608,6 +608,8 @@ export default function App() {
         allCompanies={allCompanies}
         onSelectCompany={handleSelectCompany}
         applicationsCount={applications.length}
+        isAdmin={isAdmin}
+        onOpenAdmin={() => navigate('/yonetim')}
         isLoggedIn={isLoggedIn}
         onOpenLogin={AUTH_ENABLED ? handleOpenLogin : undefined}
         onOpenRegister={AUTH_ENABLED ? handleOpenRegister : undefined}

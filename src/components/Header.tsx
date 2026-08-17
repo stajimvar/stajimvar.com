@@ -46,6 +46,14 @@ interface HeaderProps {
   onOpenLogin?: () => void;
   onOpenRegister?: () => void;
   onLogout?: () => void;
+  /*
+    Yönetici menüsü. Bu bayrak yalnızca MENÜYÜ gösteriyor — yetkinin kendisi
+    veritabanında. Tarayıcıda değerini değiştiren biri menüyü görebilir ama
+    sayfayı açtığında boş kalır: veriyi getiren sorgular ve onay fonksiyonları
+    is_admin() kontrolünden geçiyor.
+  */
+  isAdmin?: boolean;
+  onOpenAdmin?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -64,6 +72,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenLogin,
   onOpenRegister,
   onLogout,
+  isAdmin = false,
+  onOpenAdmin,
 }) => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [companyDropdownOpen, setCompanyDropdownOpen] = useState(false);
@@ -559,6 +569,25 @@ export const Header: React.FC<HeaderProps> = ({
                             <span>Rozetlerim & Testler</span>
                           </button>
                         </div>
+
+                        {isAdmin && onOpenAdmin && (
+                          <>
+                            <div className="border-t border-gray-100 my-1"/>
+                            <div className="px-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onOpenAdmin();
+                                  setProfileDropdownOpen(false);
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-50 rounded-xl transition-colors cursor-pointer"
+                              >
+                                <Settings className="w-3.5 h-3.5" />
+                                <span>Yönetim paneli</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
 
                         {/* Divider */}
                         <div className="border-t border-gray-100 my-1"/>
