@@ -56,13 +56,14 @@ interface HubProps {
   davranışlar da kendiliğinden geliyor — düğmede bunlar hiç yoktu.
 */
 /** Bölüm kartı: geniş ekranda üçlü ızgara. */
-const Kart: React.FC<{ bolum: Bolum; onNavigate: (p: string) => void }> = ({
+const Kart: React.FC<{ bolum: Bolum; onNavigate?: (p: string) => void }> = ({
   bolum,
   onNavigate,
 }) => (
   <a
     href={`/bolum/${bolum.slug}`}
     onClick={(e) => {
+      if (!onNavigate) return;
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
       e.preventDefault();
       onNavigate(`/bolum/${bolum.slug}`);
@@ -76,6 +77,42 @@ const Kart: React.FC<{ bolum: Bolum; onNavigate: (p: string) => void }> = ({
       <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
     </span>
   </a>
+);
+
+/**
+ * Bölüm ızgarası — merkez sayfanın ASIL içeriği.
+ *
+ * Ayrı bileşen, çünkü bu ağaç iki yerde çiziliyor: tarayıcıda BolumHub
+ * içinde, derleme sırasında ön render tarafında. Önce yalnızca BolumHub
+ * içindeydi ve /bolumler adresinin statik HTML'inde HİÇ bağlantı yoktu
+ * (ölçüldü) — yani tarayıcı otuz dört bölüm sayfasına bu sayfadan
+ * geçemiyordu.
+ *
+ * onNavigate isteğe bağlı: ön render tarafında öyle bir şey yok ve
+ * gerçek <a href> zaten kendi başına çalışıyor.
+ */
+export const BolumListesi: React.FC<{ onNavigate?: (p: string) => void }> = ({
+  onNavigate,
+}) => (
+  <>
+    {GRUP_SIRASI.map((grup) => {
+      const liste = BOLUMLER.filter((b) => b.grup === grup);
+      if (liste.length === 0) return null;
+      return (
+        <section key={grup} className="space-y-4">
+          <div className="flex items-baseline gap-3">
+            <h2 className="text-xl font-bold text-gray-900">{BOLUM_GRUPLARI[grup]}</h2>
+            <span className="text-sm text-gray-400">{liste.length} bölüm</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {liste.map((b) => (
+              <Kart key={b.slug} bolum={b} onNavigate={onNavigate} />
+            ))}
+          </div>
+        </section>
+      );
+    })}
+  </>
 );
 
 export const BolumHub: React.FC<HubProps> = ({ onBack, onNavigate }) => {
@@ -104,23 +141,7 @@ export const BolumHub: React.FC<HubProps> = ({ onBack, onNavigate }) => {
           </p>
         </div>
 
-        {GRUP_SIRASI.map((grup) => {
-          const liste = BOLUMLER.filter((b) => b.grup === grup);
-          if (liste.length === 0) return null;
-          return (
-            <section key={grup} className="space-y-4">
-              <div className="flex items-baseline gap-3">
-                <h2 className="text-xl font-bold text-gray-900">{BOLUM_GRUPLARI[grup]}</h2>
-                <span className="text-sm text-gray-400">{liste.length} bölüm</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {liste.map((b) => (
-                  <Kart key={b.slug} bolum={b} onNavigate={onNavigate} />
-                ))}
-              </div>
-            </section>
-          );
-        })}
+        <BolumListesi onNavigate={onNavigate} />
 
         <p className="text-xs text-gray-400 leading-relaxed max-w-2xl">
           Bölümün burada yok mu? Sürekli ekliyoruz. Hangi bölümü istediğini bize yazarsan

@@ -309,6 +309,40 @@ async function yasalSayfalariCiz() {
   }
 }
 
+/**
+ * Merkez sayfaların listelerini çizer.
+ *
+ * /rehber ve /bolumler bu sitenin taranma kapıları: tarayıcı oradan tek
+ * tek sayfalara geçiyor. Ama ölçüldü — statik HTML'lerinde HİÇ bağlantı
+ * yoktu; liste yalnızca tarayıcıda React çizince ortaya çıkıyordu. Yani
+ * otuz dört bölüm ve on rehber sayfasına yalnızca site haritasından
+ * ulaşılabiliyordu ve aralarında sinyal taşınmıyordu.
+ *
+ * Çizilen şey listenin kendisi; sayfanın kabuğu değil.
+ */
+async function merkezListeleriniCiz() {
+  try {
+    const bolumModul = await icerikDerle(
+      path.join(kok, 'src', 'components', 'BolumPages.tsx'),
+      'bolum-listesi'
+    );
+    const rehberModul = await icerikDerle(
+      path.join(kok, 'src', 'components', 'GuidePages.tsx'),
+      'rehber-listesi'
+    );
+    const { renderToStaticMarkup } = await import('react-dom/server');
+    const React = (await import('react')).default;
+    return {
+      bolumler: renderToStaticMarkup(React.createElement(bolumModul.BolumListesi, {})),
+      rehberler: renderToStaticMarkup(React.createElement(rehberModul.RehberListesi, {})),
+    };
+  } catch (hata) {
+    console.error('ön render DURDU: merkez listeleri çizilemedi.');
+    console.error(hata?.message || hata);
+    process.exit(1);
+  }
+}
+
 /** Yasal ve kurumsal sayfaların başlık ve açıklamaları. */
 const YASAL_BILGI = {
   '/hakkimizda': [
@@ -531,38 +565,6 @@ async function main() {
 
   let sayac = 0;
 
-  /* ---- ana sayfa: Organization + WebSite ---- */
-  sayfaYaz('/', {
-    baslik: 'StajımVar — Şirketlerin staj ilanları, tek listede',
-    aciklama:
-      "Türkiye'deki staj ilanlarını şirketlerin kendi kariyer sayfalarından derliyoruz. " +
-      'Her ilanda şirketin kendi başvuru bağlantısı var.',
-    govde: govde(
-      'Şirketlerin staj ilanları, tek listede',
-      'Sekiz ayrı kariyer sayfasını tek tek gezme. İlanları aracı sitelerden değil, ' +
-        'şirketlerin kendi kariyer sayfalarından derliyoruz; her ilanda şirketin kendi ' +
-        'başvuru bağlantısı var.'
-    ),
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@graph': [
-        {
-          '@type': 'Organization',
-          name: 'StajımVar',
-          url: SITE,
-          logo: `${SITE}/icon-512.png`,
-        },
-        {
-          '@type': 'WebSite',
-          name: 'StajımVar',
-          url: SITE,
-          inLanguage: 'tr-TR',
-        },
-      ],
-    },
-  });
-  sayac++;
-
   /* ---- bölümler ---- */
   const bolumHaritasi = await bolumleriCiz();
   const bolumler = Object.values(bolumHaritasi);
@@ -705,8 +707,24 @@ async function main() {
     ['/araclar/staj-gunu-hesaplama', 'Staj günü hesaplama | StajımVar', '20 veya 30 iş günü staj hangi tarihte biter? Resmî tatiller düşülerek.', 'Staj günü hesaplama'],
     ['/isveren', 'Stajyer nasıl alınır? İşveren rehberi | StajımVar', 'Sigorta kimde, ücret zorunlu mu, okulla hangi evrak imzalanır — sırayla.', 'Stajyer almak sandığınızdan kolay.'],
   ];
+  /*
+    /rehber ve /bolumler'e listeleri de basılıyor: bu iki sayfa tarayıcının
+    tek tek içerik sayfalarına geçtiği kapı. Listesiz hâlleri yalnızca
+    başlık ve tek cümleden ibaretti ve hiçbir bağlantı taşımıyorlardı.
+  */
+  const merkezListeleri = await merkezListeleriniCiz();
+  const EK_LISTE = {
+    '/rehber': merkezListeleri.rehberler,
+    '/bolumler': merkezListeleri.bolumler,
+  };
+
   for (const [yol, baslik, aciklama, h1] of sabitler) {
-    sayfaYaz(yol, { baslik, aciklama, govde: govde(h1, aciklama) });
+    const ek = EK_LISTE[yol] || '';
+    sayfaYaz(yol, {
+      baslik,
+      aciklama,
+      govde: `<main><h1>${kacir(h1)}</h1><p>${kacir(aciklama)}</p>${ek}</main>`,
+    });
     sayac++;
   }
 
@@ -767,6 +785,81 @@ async function main() {
     });
     sayac++;
   }
+
+  /*
+    ---- ana sayfa ----
+
+    En sona bırakıldı: gövdesine gerçek ilan listesi giriyor ve ilanlar
+    Supabase'ten bu noktada alınmış oluyor.
+
+    Ana sayfa ön render'da yalnızca başlık ve bir cümleden ibaretti: 28
+    kelime, sıfır bağlantı (ölçüldü). Oysa kullanıcının gördüğü şey ilan
+    listesi. Tarayıcıya da aynı listeyi veriyoruz — uydurma değil, sayfada
+    gerçekten duran ilanlar; her biri kendi sayfasına bağlanıyor.
+  */
+  const anaSayfaBaglantilari = [
+    ['/rehber', 'Staj rehberi'],
+    ['/bolumler', 'Bölüme göre staj'],
+    ['/araclar', 'Hesaplama araçları'],
+    ['/isveren', 'İşveren rehberi'],
+    ['/hakkimizda', 'Hakkımızda'],
+    ['/iletisim', 'İletişim'],
+  ];
+
+  const ilanListesi = ilanlar.length
+    ? '<h2>Yayındaki staj ilanları</h2><ul>' +
+      ilanlar
+        .map((i) => {
+          const yol = `/ilan/${slugla(i.title)}-${String(i.id).split('-')[0]}`;
+          const sirket = (i.companies || {}).name || '';
+          const yer = i.city || '';
+          return (
+            `<li><a href="${yol}">${kacir(i.title)}</a>` +
+            (sirket ? ` — ${kacir(sirket)}` : '') +
+            (yer ? `, ${kacir(yer)}` : '') +
+            '</li>'
+          );
+        })
+        .join('') +
+      '</ul>'
+    : '';
+
+  sayfaYaz('/', {
+    baslik: 'StajımVar — Şirketlerin staj ilanları, tek listede',
+    aciklama:
+      "Türkiye'deki staj ilanlarını şirketlerin kendi kariyer sayfalarından derliyoruz. " +
+      'Her ilanda şirketin kendi başvuru bağlantısı var.',
+    govde:
+      '<main><h1>Şirketlerin staj ilanları, tek listede</h1>' +
+      '<p>Sekiz ayrı kariyer sayfasını tek tek gezme. İlanları aracı sitelerden değil, ' +
+      'şirketlerin kendi kariyer sayfalarından derliyoruz; her ilanda şirketin kendi ' +
+      'başvuru bağlantısı var.</p>' +
+      ilanListesi +
+      '<nav><ul>' +
+      anaSayfaBaglantilari
+        .map(([y, e]) => `<li><a href="${y}">${kacir(e)}</a></li>`)
+        .join('') +
+      '</ul></nav></main>',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'Organization',
+          name: 'StajımVar',
+          url: SITE,
+          logo: `${SITE}/icon-512.png`,
+        },
+        {
+          '@type': 'WebSite',
+          name: 'StajımVar',
+          url: SITE,
+          inLanguage: 'tr-TR',
+        },
+      ],
+    },
+  });
+  sayac++;
+
 
   console.log(
     `ön render: ${sayac} sayfa yazıldı ` +

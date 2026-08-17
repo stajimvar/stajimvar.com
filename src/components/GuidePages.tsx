@@ -134,7 +134,7 @@ const SERIT = [
   'from-rose-500 to-rose-400',
 ];
 
-const Kart: React.FC<{ rehber: Rehber; sira?: number; onNavigate: (p: string) => void }> = ({
+const Kart: React.FC<{ rehber: Rehber; sira?: number; onNavigate?: (p: string) => void }> = ({
   rehber,
   sira = 0,
   onNavigate,
@@ -142,6 +142,7 @@ const Kart: React.FC<{ rehber: Rehber; sira?: number; onNavigate: (p: string) =>
   <a
     href={`/rehber/${rehber.slug}`}
     onClick={(e) => {
+      if (!onNavigate) return;
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
       e.preventDefault();
       onNavigate(`/rehber/${rehber.slug}`);
@@ -160,6 +161,46 @@ const Kart: React.FC<{ rehber: Rehber; sira?: number; onNavigate: (p: string) =>
     </span>
   </a>
 );
+
+/**
+ * Rehber ızgarası — merkez sayfanın ASIL içeriği.
+ *
+ * BolumListesi ile aynı gerekçe: bu ağaç hem tarayıcıda hem ön render'da
+ * çiziliyor. Önce yalnızca GuideHub içindeydi ve /rehber adresinin statik
+ * HTML'inde hiç bağlantı yoktu.
+ */
+export const RehberListesi: React.FC<{ onNavigate?: (p: string) => void }> = ({
+  onNavigate,
+}) => {
+  const ogrenci = REHBERLER.filter((r) => r.kategori === 'ogrenci');
+  const isveren = REHBERLER.filter((r) => r.kategori === 'isveren');
+  return (
+    <>
+      <section className="space-y-4">
+        <div className="flex items-baseline gap-3">
+          <h2 className="text-xl font-bold text-gray-900">Tüm rehberler</h2>
+          <span className="text-sm text-gray-400">{ogrenci.length} yazı</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {ogrenci.map((r, i) => (
+            <Kart key={r.slug} rehber={r} sira={i} onNavigate={onNavigate} />
+          ))}
+        </div>
+      </section>
+
+      {isveren.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="text-xl font-bold text-gray-900">İşverenler için</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {isveren.map((r, i) => (
+              <Kart key={r.slug} rehber={r} sira={i} onNavigate={onNavigate} />
+            ))}
+          </div>
+        </section>
+      )}
+    </>
+  );
+};
 
 export const GuideHub: React.FC<GuideHubProps> = ({ onBack, onNavigate }) => {
   useEffect(() => {
@@ -303,29 +344,7 @@ export const GuideHub: React.FC<GuideHubProps> = ({ onBack, onNavigate }) => {
           </div>
         </section>
 
-        {/* ================================================ tüm rehberler */}
-        <section className="space-y-4">
-          <div className="flex items-baseline gap-3">
-            <h2 className="text-xl font-bold text-gray-900">Tüm rehberler</h2>
-            <span className="text-sm text-gray-400">{ogrenci.length} yazı</span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {ogrenci.map((r, i) => (
-              <Kart key={r.slug} rehber={r} sira={i} onNavigate={onNavigate} />
-            ))}
-          </div>
-        </section>
-
-        {isveren.length > 0 && (
-          <section className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900">İşverenler için</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {isveren.map((r, i) => (
-                <Kart key={r.slug} rehber={r} sira={i} onNavigate={onNavigate} />
-              ))}
-            </div>
-          </section>
-        )}
+        <RehberListesi onNavigate={onNavigate} />
 
         <p className="text-xs text-gray-400 leading-relaxed max-w-2xl">
           Rehberlerde yıldan yıla değişen oran ve tutarlar yazılmıyor; mekanizma anlatılıp
