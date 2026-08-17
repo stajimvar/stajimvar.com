@@ -32,12 +32,13 @@ DURAGAN = [
     ("/", "daily", "1.0"),
     ("/isveren", "weekly", "0.9"),
     ("/rehber", "weekly", "0.9"),
-    # Rehber sayfalari src/data/rehberler.tsx icinde tanimli. Yeni bir rehber
-    # eklendiginde bu listeye de bir satir eklenmeli; kayit TypeScript
-    # tarafinda oldugu icin Python buradan okuyamiyor.
-    ("/rehber/zorunlu-staj-rehberi", "monthly", "0.8"),
-    ("/rehber/staj-cv-nasil-yazilir", "monthly", "0.8"),
-    ("/rehber/staj-mulakati", "monthly", "0.8"),
+    ("/bolumler", "weekly", "0.9"),
+    # Hesaplama araclari. Arama trafiginin buyuk kismini bunlar getiriyor.
+    ("/araclar", "monthly", "0.8"),
+    ("/araclar/net-hesaplama", "monthly", "0.8"),
+    ("/araclar/siralama-tahmini", "monthly", "0.8"),
+    ("/araclar/staj-ucreti-hesaplama", "monthly", "0.8"),
+    ("/araclar/staj-gunu-hesaplama", "monthly", "0.8"),
     ("/hakkimizda", "monthly", "0.5"),
     ("/iletisim", "monthly", "0.5"),
     ("/ilan-kurallari", "monthly", "0.4"),
@@ -47,6 +48,26 @@ DURAGAN = [
     ("/cerez-politikasi", "yearly", "0.3"),
     ("/kvkk-aydinlatma-metni", "yearly", "0.3"),
 ]
+
+
+def kayit_sluglari(dosya: str) -> list[str]:
+    """src/data altindaki bir kayittan slug'lari okur.
+
+    NEDEN AYRISTIRIYORUZ, ELLE YAZMIYORUZ
+    -------------------------------------
+    Once bu listeler burada elle tutuluyordu. Yeni bir bolum ya da rehber
+    eklerken sitemap'e satir eklemeyi unutmak, sayfanin var olup Google'a hic
+    bildirilmemesi demek -- sessiz bir hata, kimse fark etmiyor.
+
+    Iki kayit da duz bir dizi ve her girdi `slug: '...'` ile basliyor; tek
+    satirlik bir duzenli ifade yetiyor. Dosya bulunamazsa bos donuyoruz:
+    sitemap uretimi bu yuzden tur bosa dusmesin.
+    """
+    kaynak = Path(__file__).parent.parent / "src" / "data" / dosya
+    if not kaynak.exists():
+        print(f"UYARI: {dosya} bulunamadi, o sayfalar sitemap'e girmedi")
+        return []
+    return re.findall(r"^\s{4}slug: '([a-z0-9-]+)',", kaynak.read_text(encoding="utf-8"), re.M)
 
 
 def slugla(metin: str) -> str:
@@ -78,8 +99,16 @@ def main() -> None:
         or []
     )
 
+    bolumler = kayit_sluglari("bolumler.ts")
+    rehberler = kayit_sluglari("rehberler.tsx")
+    duragan = (
+        DURAGAN
+        + [(f"/bolum/{s}", "monthly", "0.8") for s in bolumler]
+        + [(f"/rehber/{s}", "monthly", "0.8") for s in rehberler]
+    )
+
     satirlar: list[str] = []
-    for yol, sik, oncelik in DURAGAN:
+    for yol, sik, oncelik in duragan:
         satirlar.append(
             f"  <url><loc>{SITE}{yol}</loc>"
             f"<changefreq>{sik}</changefreq><priority>{oncelik}</priority></url>"
@@ -116,7 +145,8 @@ def main() -> None:
     hedef = Path(__file__).parent.parent / "public" / "sitemap.xml"
     hedef.write_text(xml, encoding="utf-8")
     print(
-        f"sitemap.xml yazildi: {len(DURAGAN)} duragan + {len(ilanlar)} ilan "
+        f"sitemap.xml yazildi: {len(duragan)} duragan ({len(bolumler)} bolum) "
+        f"+ {len(ilanlar)} ilan "
         f"+ {len(sirketler)} sirket = {len(satirlar)} adres "
         f"({datetime.now(UTC).isoformat(timespec='seconds')})"
     )

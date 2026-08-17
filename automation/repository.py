@@ -298,14 +298,31 @@ def raw_listing_payload(job: Any, source_id: str, canonical_url: str, now: str) 
 def upsert_raw_listing(db: Client, payload: dict[str, Any]) -> tuple[str, bool]:
     """Keşif kaydını yazar. (raw_listing_id, yeni_mi) döndürür.
 
-    Aynı kaynakta aynı içerik hash'i varsa yalnızca "görüldü" bilgisi tazelenir;
-    içerik değişmediği için gereksiz yazma yapılmaz.
+    KİMLİK = (kaynak, canonical_url). İÇERİK HASH'İ KİMLİK DEĞİL.
+    ---------------------------------------------------------------
+    Önce kayıt `content_hash` ile aranıyordu ve hash `title|description|url`
+    üzerinden üretiliyor. Ama açıklamayı Türkçeye ÇEVİRİYORUZ ve çeviri her
+    turda birebir aynı gelmiyor — birkaç karakterlik fark bile hash'i
+    değiştiriyor.
+
+    Sonuç ölçüldü: 14 benzersiz ilan adresi için 21 satır oluşmuştu. Aynı
+    Alumil ilanı üç kez kayıtlıydı, açıklamaları 3231 / 3227 / 3148 karakter.
+    Her yeni satır açıldığında eskisi "kaynakta görünmüyor" sayılıp
+    `consecutive_missing_runs` sayacı tırmanıyordu.
+
+    Bunun bir sonucu var ve önemli: ALLOW_DEACTIVATION açılsaydı sistem
+    AÇIK ilanları kapanmış sanıp listeden düşürecekti. Şalterin kapalı
+    kalmasının gerçek sebebi buymuş.
+
+    Artık bir ilanın kimliği adresidir. İçerik hash'i yalnızca "metin
+    değişmiş mi" sorusunu cevaplıyor; değiştiyse alanlar tazeleniyor,
+    yeni satır açılmıyor.
     """
     existing = (
         db.table("raw_listings")
-        .select("id,status")
+        .select("id,status,content_hash")
         .eq("source_id", payload["source_id"])
-        .eq("content_hash", payload["content_hash"])
+        .eq("canonical_url", payload["canonical_url"])
         .limit(1)
         .execute()
         .data
@@ -322,6 +339,22 @@ def upsert_raw_listing(db: Client, payload: dict[str, Any]) -> tuple[str, bool]:
         # Kaynakta yeniden görülen bir kayıt artık bayat değildir.
         if existing[0]["status"] == "stale":
             refresh["status"] = "discovered"
+
+        # Metin gerçekten değiştiyse içeriği de tazele; değişmediyse dokunma.
+        if existing[0].get("content_hash") != payload["content_hash"]:
+            for alan in (
+                "content_hash",
+                "raw",
+                "title",
+                "company_name_raw",
+                "description",
+                "city",
+                "work_type_guess",
+                "url",
+                "apply_url",
+            ):
+                refresh[alan] = payload[alan]
+
         db.table("raw_listings").update(refresh).eq("id", row_id).execute()
         return row_id, False
 
