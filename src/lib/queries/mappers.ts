@@ -396,8 +396,11 @@ export function toSkillQuiz(row: QuizRowWithQuestions): SkillQuiz {
       question: q.question ?? '',
       codeSnippet: q.code_snippet ?? undefined,
       options: q.options ?? [],
-      correctIndex: -1,
-      explanation: '',
+      /*
+        Dogru cevap ve aciklama istemciye HIC gelmiyor: quiz_questions
+        uzerinde bu iki sutun icin API rollerine SELECT verilmedi.
+        Alanlar tipte istege bagli, burada da doldurulmuyor.
+      */
     }));
 
   return {

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { SKILL_QUIZZES } from './data/skillQuizzes';
 import {
   fetchPublishedListings,
   fetchStudentProfile,
@@ -7,6 +6,7 @@ import {
   createApplication,
   saveStudentProfile,
   fetchIsAdmin,
+  fetchQuizzes,
 } from './lib/queries';
 import { getCurrentUser, onAuthChange, signOut, KVKK_VERSION, type AuthResult } from './lib/auth';
 import {
@@ -92,7 +92,27 @@ export default function App() {
     };
   }, []);
   const [applications, setApplications] = useState<ApplicationRecord[]>([]);
-  const [quizzes] = useState<SkillQuiz[]>(SKILL_QUIZZES);
+  /*
+    Testler veritabanindan geliyor. Eskiden uygulamayla birlikte gonderilen
+    duragan bir dosyadan okunuyordu ve o dosyada DOGRU CEVAPLAR vardi --
+    paketi acan herkes hepsini gorebiliyordu. Sorular artik cevapsiz
+    gorunumden aliniyor, puanlama sunucuda yapiliyor.
+  */
+  const [quizzes, setQuizzes] = useState<SkillQuiz[]>([]);
+
+  React.useEffect(() => {
+    let iptal = false;
+    fetchQuizzes()
+      .then((v) => {
+        if (!iptal) setQuizzes(v);
+      })
+      .catch(() => {
+        // Testler yuklenemezse sekme bos kalir; site geri kalani calisir.
+      });
+    return () => {
+      iptal = true;
+    };
+  }, []);
 
   /*
     Şirket hesapları.

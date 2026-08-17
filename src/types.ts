@@ -220,8 +220,16 @@ export interface QuizQuestion {
   question: string;
   codeSnippet?: string;
   options: string[];
-  correctIndex: number;
-  explanation: string;
+  /*
+    correctIndex ve explanation ARTIK ISTEMCIYE GELMIYOR.
+
+    Ikisi de sunucuda kaliyor: quiz_questions uzerinde bu iki sutun icin
+    hicbir API rolune SELECT verilmedi. Puanlama submit_quiz_attempt
+    fonksiyonunda yapiliyor ve dogru cevap yalnizca sonuc ekraninda,
+    fonksiyonun donusunde geliyor.
+  */
+  correctIndex?: number;
+  explanation?: string;
 }
 
 export interface SkillQuiz {

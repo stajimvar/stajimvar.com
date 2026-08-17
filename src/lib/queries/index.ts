@@ -842,3 +842,39 @@ export async function fetchTalentPoolStats(): Promise<TalentPoolStat> {
     enCokSehir: say(rows.flatMap((r) => r.pref_cities ?? [])),
   };
 }
+
+
+// ---------------------------------------------------------------- Test sonucu
+
+export interface QuizResult {
+  toplam: number;
+  dogru: number;
+  gecmeNotu: number;
+  gecti: boolean;
+  rozet: string | null;
+  yetenek: string;
+}
+
+/**
+ * Test cevaplarını sunucuya gönderir ve puanı SUNUCUDAN alır.
+ *
+ * Puan istemcide hesaplanmıyor. Doğru cevaplar veritabanından hiç çıkmıyor:
+ * `quiz_questions.correct_index` sütununda hiçbir API rolünün SELECT hakkı
+ * yok. `quiz_attempts` tablosuna doğrudan INSERT de kapalı — tek yazma yolu
+ * bu fonksiyon. Olmasaydı öğrenci kendine 5/5 yazıp rozet alabilirdi.
+ *
+ * Rozeti de sunucu veriyor: geçildiyse `student_profiles.earned_badges`
+ * dizisine ekleniyor.
+ */
+export async function submitQuizAttempt(
+  quizId: string,
+  answers: Record<string, number>
+): Promise<QuizResult> {
+  const { data, error } = await supabase.rpc('submit_quiz_attempt', {
+    p_quiz_id: quizId,
+    p_answers: answers,
+  } as never);
+
+  if (error) fail('Test sonucu kaydedilemedi', error);
+  return data as unknown as QuizResult;
+}

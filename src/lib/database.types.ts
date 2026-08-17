@@ -1198,6 +1198,10 @@ export type Database = {
       };
       is_admin: { Args: Record<string, never>; Returns: boolean };
       is_company_member: { Args: { target_company: string }; Returns: boolean };
+      submit_quiz_attempt: {
+        Args: { p_quiz_id: string; p_answers: Json };
+        Returns: Json;
+      };
       approve_company_claim: { Args: { claim_id: string }; Returns: undefined };
       reject_company_claim: { Args: { claim_id: string; reason: string }; Returns: undefined };
     };
