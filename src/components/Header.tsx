@@ -505,16 +505,27 @@ export const Header: React.FC<HeaderProps> = ({
                     <button
                       id="user-profile-menu-btn"
                       onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                      className="flex items-center gap-1.5 sm:gap-2 py-1 px-1.5 sm:px-2 rounded-xl text-gray-800 hover:bg-gray-100/80 border border-gray-200/80 transition-all text-left cursor-pointer select-none shadow-2xs"
+                      className="flex items-center gap-2 sm:gap-2.5 py-1.5 px-2 sm:px-3 rounded-2xl text-gray-800 hover:bg-gray-50 border border-gray-200 transition-all text-left cursor-pointer select-none shadow-2xs"
                       title="Hesap Menüsü"
                     >
                       <Avatar
                         name={activeStudent.fullName}
                         url={activeStudent.avatarUrl || undefined}
-                        className="w-7 h-7 rounded-full shrink-0 ring-1 ring-gray-200 text-[10px]"
+                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-full shrink-0 ring-1 ring-gray-200 text-xs"
                       />
-                      <span className="hidden md:inline text-xs font-bold text-gray-900 truncate">
-                        {activeStudent.fullName}
+                      {/*
+                        İki satır: ad ve altında okul. Düğmeye hacim vermek için
+                        boşluk büyütmek yerine bilgi eklendi — kullanıcı hangi
+                        hesapla girdiğini tek bakışta görüyor. Dar ekranda
+                        yalnızca avatar kalıyor.
+                      */}
+                      <span className="hidden md:flex flex-col min-w-0 max-w-[11rem] leading-tight">
+                        <span className="text-sm font-bold text-gray-900 truncate">
+                          {activeStudent.fullName}
+                        </span>
+                        <span className="text-[11px] text-gray-500 truncate">
+                          {activeStudent.university || 'Öğrenci'}
+                        </span>
                       </span>
                       <ChevronDown
                         className={`w-3.5 sm:w-4 h-3.5 sm:h-4 text-gray-600 transition-transform duration-150 shrink-0 ${
