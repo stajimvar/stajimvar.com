@@ -22,6 +22,19 @@ interface ApplicationsTrackerViewProps {
   onExploreInternships: () => void;
 }
 
+/**
+ * Tarihi okunur hale getirir.
+ *
+ * Ekranda ham ISO damgasi duruyordu: "2026-08-16T09:03:14.642169+00:00".
+ * Kullaniciya gosterilecek bir bicim degil.
+ */
+function tarihMetni(deger?: string | null): string {
+  if (!deger) return '—';
+  const t = new Date(deger);
+  if (Number.isNaN(t.getTime())) return '—';
+  return t.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = ({
   applications,
   allListings,
@@ -199,11 +212,11 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-500 pt-2 border-t border-gray-100">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5 text-gray-400"/>
-                    <span>Başvuru: {app.appliedAt}</span>
+                    <span>Başvuru: {tarihMetni(app.appliedAt)}</span>
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5 text-blue-600"/>
-                    <span>Son Güncelleme: {app.updatedAt ?? app.appliedAt}</span>
+                    <span>Güncelleme: {tarihMetni(app.updatedAt ?? app.appliedAt)}</span>
                   </span>
                   {app.matchScore > 0 && (
                     <span className="font-bold text-orange-600">

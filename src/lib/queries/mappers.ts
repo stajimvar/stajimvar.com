@@ -7,6 +7,7 @@
 
 import type { Enums, Tables, TablesUpdate } from '../database.types';
 import type {
+  QuizGroup,
   ApplicationRecord,
   CompanyAccount,
   InternshipListing,
@@ -387,6 +388,12 @@ export type QuizRowWithQuestions = Tables<'quizzes'> & {
  * DİKKAT: `correctIndex` istemciye hiç gelmiyor — `quiz_questions_public` view'ında o kolon yok.
  * Arayüz tipi alanı zorunlu tuttuğu için -1 konuyor; puanlama sunucuda yapılmalı.
  */
+/** skill_category enum -> Yetenek Doğrulama sayfasının grup kimlikleri. */
+const KATEGORI_GRUBU: Record<string, QuizGroup> = {
+  'Soft Skills': 'soft_skills',
+  Languages: 'languages',
+};
+
 export function toSkillQuiz(row: QuizRowWithQuestions): SkillQuiz {
   const questions: QuizQuestion[] = (row.quiz_questions_public ?? [])
     .slice()
@@ -408,7 +415,15 @@ export function toSkillQuiz(row: QuizRowWithQuestions): SkillQuiz {
     skillName: row.skill_name,
     badgeName: row.badge_name,
     badgeIcon: row.badge_icon ?? '🏅',
-    category: row.category,
+    /*
+      Veritabanindaki skill_category enum'u ile arayuzun gruplama kimlikleri
+      ayni degil: enum 'General' / 'Soft Skills' / 'Languages' tutuyor,
+      Yetenek Dogrulama sayfasi 'hard_skills' / 'soft_skills' / 'languages'
+      bekliyor. Testleri veritabanina tasirken bu esleme atlanmisti ve
+      SAYFADA HIC TEST GORUNMUYORDU -- 12 test vardi, uc grup da "0 test"
+      diyordu. Ceviri tek yerde, burada.
+    */
+    category: KATEGORI_GRUBU[row.category] ?? 'hard_skills',
     questions,
   };
 }

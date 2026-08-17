@@ -232,11 +232,18 @@ export interface QuizQuestion {
   explanation?: string;
 }
 
+export type QuizGroup = 'hard_skills' | 'soft_skills' | 'languages';
+
 export interface SkillQuiz {
   id: string;
   skillName: string;
   badgeName: string;
   badgeIcon: string;
-  category: SkillCategory;
+  /*
+    Yetenek Doğrulama sayfasının GRUP kimliği — veritabanındaki
+    `skill_category` enum'u değil. İkisi karıştırıldığında sayfada hiç test
+    görünmüyordu; çeviri mappers.ts içinde tek yerde yapılıyor.
+  */
+  category: QuizGroup;
   questions: QuizQuestion[];
 }
