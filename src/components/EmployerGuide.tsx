@@ -1,6 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, ExternalLink, GraduationCap } from 'lucide-react';
-import { Logo } from './Logo';
+import {
+  Building2,
+  ExternalLink,
+  GraduationCap,
+  Lightbulb,
+  UserPlus,
+  Search,
+  HeartHandshake,
+} from 'lucide-react';
+import {
+  Akis,
+  SorumlulukTablosu,
+  KazancKartlari,
+  EkipCizimi,
+  BelgeCizimi,
+  KontrolListesi,
+} from './RehberGorseller';
+import { SayfaKabugu } from './SayfaKabugu';
 import { fetchTalentPoolStats, type TalentPoolStat } from '../lib/queries';
 
 /**
@@ -87,33 +103,94 @@ export const EmployerGuide: React.FC<EmployerGuideProps> = ({ onBack, onNavigate
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-[#111827]">
-      <header className="border-b border-gray-200 bg-white">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onBack}
-            className="p-2 -ml-2 text-gray-500 hover:text-gray-900 cursor-pointer"
-            aria-label="Geri"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <Logo size="sm" showTagline={false} onClick={onBack} />
-        </div>
-      </header>
+    <SayfaKabugu onBack={onBack}>
+      <div className="space-y-6">
+        {/*
+          GİRİŞ ALANI
 
-      <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-        <div className="space-y-3">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">
-            Stajyer almak istiyorsunuz ama nereden başlayacağınızı bilmiyorsunuz
-          </h1>
-          <p className="text-base text-gray-600 leading-relaxed">
-            Çoğu küçük ve orta ölçekli işletme stajyer çalıştırabilecek durumda. Başlamamasının
-            sebebi genelde isteksizlik değil: sigortayı kimin yapacağı, ücret ödemenin zorunlu
-            olup olmadığı ve okulla hangi evrakın imzalanacağı bilinmiyor. Bu sayfa o soruları
-            sırayla cevaplıyor.
-          </p>
+          Başlık "Stajyer almak istiyorsunuz ama nereden başlayacağınızı
+          bilmiyorsunuz" idi: telefonda ÜÇ satır kaplıyor ve okumadan önce
+          yoruyordu. Kısaltıldı; uzun hâlin anlattığı şey zaten hemen
+          altındaki paragrafta duruyor.
+
+          Zemin renklendi ve rozet eklendi — sayfa artık bir metin dosyası
+          gibi değil, bir rehber gibi açılıyor.
+        */}
+        <div className="relative overflow-hidden rounded-3xl border border-amber-100 bg-gradient-to-br from-amber-50 via-white to-blue-50/40 p-5 sm:p-8">
+          <span
+            aria-hidden="true"
+            className="absolute -right-16 -top-16 w-52 h-52 rounded-full bg-amber-100/40"
+          />
+          <div className="relative space-y-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/80 border border-amber-200 text-[11px] font-bold uppercase tracking-wider text-amber-700">
+              <Building2 className="w-3.5 h-3.5" />
+              İşveren rehberi
+            </span>
+            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-gray-900">
+              Stajyer almak sandığınızdan kolay.
+            </h1>
+            <p className="text-base text-gray-600 leading-relaxed max-w-2xl">
+              Çoğu küçük ve orta ölçekli işletme stajyer çalıştırabilecek durumda.
+              Başlamamasının sebebi genelde isteksizlik değil: sigortayı kimin yapacağı,
+              ücret ödemenin zorunlu olup olmadığı ve okulla hangi evrakın imzalanacağı
+              bilinmiyor. Bu sayfa o soruları sırayla cevaplıyor.
+            </p>
+          </div>
         </div>
+
+        {/*
+          SORUMLULUK TABLOSU EN ÜSTE ALINDI
+
+          Önce sayfanın ortasındaydı, "zorunlu/gönüllü" ayrımından sonra.
+          Ama işverenin kafasındaki ilk soru bu: "sigortayı ben mi yapacağım,
+          ücreti ben mi ödeyeceğim?" Cevabı görmek için üç bölüm aşağı inmesi
+          gerekiyordu; çoğu kişi o kadar inmiyor.
+
+          Artık giriş cümlesinin hemen altında. Tablodaki notlar zaten
+          "zorunlu stajda" diyerek hangi durumdan bahsettiğini söylüyor;
+          ayrımın ayrıntısı aşağıda duruyor.
+        */}
+        <Baslik>Kim ne yapar?</Baslik>
+        <SorumlulukTablosu
+          satirlar={[
+            {
+              kim: 'okul',
+              is: 'Staj belgesini hazırlar',
+              not: 'Stajın müfredat kapsamında olduğunu gösteren form.',
+            },
+            {
+              kim: 'okul',
+              is: 'İş kazası ve meslek hastalığı sigortasını yapar',
+              not: 'Zorunlu stajda genellikle okul; primi de okul öder. İşverenlerin en çok yanıldığı nokta burası.',
+            },
+            {
+              kim: 'ogrenci',
+              is: 'Belgeyi işletmeye getirir ve imzalatır',
+              not: 'Staja başlamadan önce. İmzasız form geçerli değil.',
+            },
+            {
+              kim: 'ogrenci',
+              is: 'Staj defterini doldurur',
+              not: 'İşletmedeki sorumlusuna imzalatarak.',
+            },
+            {
+              kim: 'isveren',
+              is: 'Öğrenciye bir iş ve bir sorumlu tanımlar',
+              not: 'Kime soracağını bilmeyen stajyer, üç hafta boş oturuyor.',
+            },
+            {
+              kim: 'isveren',
+              is: 'Ücreti öder',
+              not: '3308 kapsamındaki stajlarda zorunlu. Bir kısmı için devlet katkısı var.',
+            },
+            {
+              kim: 'isveren',
+              is: 'Staj sonu değerlendirme formunu doldurur',
+              not: 'Öğrencinin notu buna bağlı; kapalı zarfta teslim ediliyor.',
+            },
+          ]}
+        />
+
 
         {/* ---- talep kanıtı ---- */}
         {havuz && havuz.toplam > 0 && (
@@ -143,6 +220,48 @@ export const EmployerGuide: React.FC<EmployerGuideProps> = ({ onBack, onNavigate
           </div>
         )}
 
+        {/*
+          EKİP ÇİZİMİ + KAZANÇ KARTLARI
+
+          Sayfa yalnızca yükümlülük anlatıyordu: belge, sigorta, ücret. Hepsi
+          doğru ama okuyan işverende "başıma iş alacağım" hissi bırakıyordu.
+          Oysa karşılığında ne kazandığı da gerçek. Önce onu gösteriyoruz;
+          yükümlülükler zaten hemen altında duruyor.
+        */}
+        <div className="rounded-2xl border border-gray-200 bg-gradient-to-b from-blue-50/60 to-white p-4 sm:p-6">
+          <EkipCizimi />
+        </div>
+
+        <Baslik>Stajyer almak size ne kazandırır?</Baslik>
+        <KazancKartlari
+          kartlar={[
+            {
+              ikon: <UserPlus className="w-5 h-5" />,
+              baslik: 'Denenmiş eleman',
+              aciklama:
+                'İşe alım kararını özgeçmişe bakarak değil, birlikte çalışarak veriyorsunuz. Yanlış işe alımın maliyeti düşünüldüğünde bu tek başına değerli.',
+            },
+            {
+              ikon: <Lightbulb className="w-5 h-5" />,
+              baslik: 'Taze bakış',
+              aciklama:
+                'Alışkanlık hâline gelmiş işleri ilk kez gören biri "bu neden böyle yapılıyor?" diye soruyor. Cevabı olmayan sorular iyileştirme fırsatı.',
+            },
+            {
+              ikon: <Search className="w-5 h-5" />,
+              baslik: 'Görünürlük',
+              aciklama:
+                'Stajyer okuluna döndüğünde sizi anlatıyor. Küçük ve orta ölçekli işletmeler için bu, reklamla satın alınamayacak bir tanınırlık.',
+            },
+            {
+              ikon: <HeartHandshake className="w-5 h-5" />,
+              baslik: 'Ekibe iyi geliyor',
+              aciklama:
+                'Birine iş öğretmek, öğretenin de işi netleştirmesini gerektiriyor. Kıdemli çalışan kendi bildiğini toparlamak zorunda kalıyor.',
+            },
+          ]}
+        />
+
         <Baslik>Önce şunu ayırın: zorunlu staj mı, gönüllü staj mı?</Baslik>
         <div className="text-sm text-gray-600 leading-relaxed space-y-2">
           <p>
@@ -162,57 +281,52 @@ export const EmployerGuide: React.FC<EmployerGuideProps> = ({ onBack, onNavigate
           </p>
         </div>
 
-        <Baslik>Dört adımda stajyer almak</Baslik>
-        <div className="space-y-5">
-          <Adim no={1} baslik="Kaç kişiye, hangi bölümden ihtiyacınız olduğunu belirleyin">
-            <p>
-              Stajyerin yapacağı işi bir cümleyle yazabiliyorsanız hazırsınız demektir.
-              Belirsiz bir "yardımcı olsun" tanımı hem sizi hem öğrenciyi zorlar.
-            </p>
-          </Adim>
+        {/*
+          BELGE AKIŞ ÇİZİMİ
 
-          <Adim no={2} baslik="Öğrencinin okulundan gelen belgeyi isteyin">
-            <p>
-              Zorunlu stajda öğrenci, okulunun hazırladığı staj formunu getirir. Bu belge
-              stajın müfredat kapsamında olduğunu ve okulun süreçte taraf olduğunu gösterir.
-              Formu imzalamadan staja başlatmayın.
-            </p>
-          </Adim>
-
-          <Adim no={3} baslik="Sigorta yükümlülüğünün kimde olduğunu okulla teyit edin">
-            <p>
-              İşverenlerin en çok yanıldığı nokta burası.{' '}
-              <strong className="text-gray-900">
-                Zorunlu stajda öğrencinin iş kazası ve meslek hastalığı sigortası genellikle
-                okul tarafından yapılır ve primi okul öder.
-              </strong>{' '}
-              Yani "stajyer alırsam SGK maliyeti çıkar" endişesi çoğu durumda yersizdir.
-            </p>
-            <p>
-              Ama bu her durumda böyle değil: gönüllü stajda ve bazı program türlerinde
-              yükümlülük değişiyor. Öğrencinin okulunun staj biriminden{' '}
-              <strong className="text-gray-900">yazılı olarak</strong> teyit alın — tek bir
-              e-posta yeterli.
-            </p>
-          </Adim>
-
-          <Adim no={4} baslik="Ücret yükümlülüğünüzü kontrol edin">
-            <p>
-              3308 sayılı Mesleki Eğitim Kanunu kapsamındaki stajlarda öğrenciye ücret
-              ödenmesi zorunludur. Ödenecek tutar asgari ücrete endekslidir ve{' '}
-              <strong className="text-gray-900">işletmenizdeki personel sayısına göre
-              değişir</strong>; belirli bir kısmı için devlet katkısı bulunur.
-            </p>
-            <p>
-              Oranlar ve tutarlar her yıl güncellendiği için burada rakam vermiyoruz.
-              Güncel değerler için:{' '}
-              <Kaynak href="https://www.sgk.gov.tr">SGK</Kaynak>,{' '}
-              <Kaynak href="https://www.meb.gov.tr">MEB</Kaynak> ve{' '}
-              <Kaynak href="https://www.iskur.gov.tr">İŞKUR</Kaynak>. Öğrencinin okulunun staj
-              birimi de o yılın tutarını size söyleyebilir.
-            </p>
-          </Adim>
+          Belgenin okuldan çıkıp öğrenci üzerinden işletmeye ulaştığı yol,
+          cümleyle anlatılınca soyut kalıyor.
+        */}
+        <div className="rounded-2xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white p-4 sm:p-6">
+          <BelgeCizimi />
         </div>
+
+        <Baslik>Dört adımda stajyer almak</Baslik>
+        <Akis
+          adimlar={[
+            {
+              baslik: 'İhtiyacı tek cümleyle yazın',
+              aciklama:
+                'Stajyerin yapacağı işi bir cümleyle yazabiliyorsanız hazırsınız. Belirsiz bir "yardımcı olsun" tanımı hem sizi hem öğrenciyi zorlar.',
+            },
+            {
+              baslik: 'Okuldan gelen belgeyi isteyin',
+              aciklama:
+                'Zorunlu stajda öğrenci, okulunun hazırladığı staj formunu getirir. Bu belge stajın müfredat kapsamında olduğunu ve okulun süreçte taraf olduğunu gösterir. Formu imzalamadan staja başlatmayın.',
+            },
+            {
+              baslik: 'Sigortanın kimde olduğunu okulla yazılı teyit edin',
+              aciklama:
+                'Zorunlu stajda iş kazası ve meslek hastalığı sigortası genellikle okul tarafından yapılır ve primi okul öder — "stajyer alırsam SGK maliyeti çıkar" endişesi çoğu durumda yersiz. Ama gönüllü stajda ve bazı program türlerinde değişiyor. Okulun staj biriminden tek bir e-postayla teyit alın.',
+            },
+            {
+              baslik: 'Ücret yükümlülüğünüzü kontrol edin',
+              aciklama:
+                '3308 sayılı Mesleki Eğitim Kanunu kapsamındaki stajlarda ücret ödenmesi zorunlu. Tutar asgari ücrete endeksli ve işletmedeki personel sayısına göre değişiyor; belirli bir kısmı için devlet katkısı var. Rakamlar her yıl güncellendiği için burada yazmıyoruz — hesaplama aracımızı kullanabilir ya da okulun staj birimine sorabilirsiniz.',
+            },
+          ]}
+        />
+
+        <KontrolListesi
+          baslik="Staj başlamadan önce elinizde olması gerekenler"
+          maddeler={[
+            'Okulun hazırladığı, sizin imzaladığınız staj formu',
+            'Sigortanın kimde olduğuna dair okuldan yazılı teyit',
+            'Öğrencinin başlangıç ve bitiş tarihleri, haftalık gün sayısı',
+            'İşletmede öğrencinin soru soracağı tek bir sorumlu kişi',
+            'Öğrenciye ödenecek aylık tutar ve ödeme günü',
+          ]}
+        />
 
         <Baslik>Sık sorulanlar</Baslik>
         <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
@@ -279,7 +393,7 @@ export const EmployerGuide: React.FC<EmployerGuideProps> = ({ onBack, onNavigate
             </button>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </SayfaKabugu>
   );
 };

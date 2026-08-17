@@ -1,7 +1,22 @@
 import React, { useEffect } from 'react';
-import { ArrowLeft, ChevronRight, GraduationCap, Building2 } from 'lucide-react';
-import { Logo } from './Logo';
+import {
+  ArrowLeft,
+  ChevronRight,
+  GraduationCap,
+  Building2,
+  Calculator,
+  Sparkles,
+  Compass,
+  FileText,
+  Send,
+  MessageSquare,
+  BookCheck,
+} from 'lucide-react';
+import { SayfaKabugu } from './SayfaKabugu';
+import { YolculukHaritasi, RenkliKart } from './RehberGorseller';
 import { REHBERLER, rehberBul, type Rehber } from '../data/rehberler';
+import { BOLUMLER } from '../data/bolumler';
+import { ARACLAR } from './Araclar';
 
 /**
  * Rehber merkezi ve tek rehber sayfası.
@@ -15,27 +30,14 @@ import { REHBERLER, rehberBul, type Rehber } from '../data/rehberler';
  * geliyor — davet e-postası gönderemediğimiz için tek keşif kanalı bu.
  */
 
+/**
+ * Ortak kabuk kullaniliyor: baslik cubugu ana sayfayla ayni genislikte,
+ * logo hep sol ust kosede. Ayrintisi SayfaKabugu.tsx icinde.
+ */
 const Kabuk: React.FC<{ onBack: () => void; children: React.ReactNode }> = ({
   onBack,
   children,
-}) => (
-  <div className="min-h-screen bg-[#F9FAFB] text-[#111827]">
-    <header className="border-b border-gray-200 bg-white">
-      <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onBack}
-          className="p-2 -ml-2 text-gray-500 hover:text-gray-900 cursor-pointer"
-          aria-label="Geri"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <Logo size="sm" showTagline={false} onClick={onBack} />
-      </div>
-    </header>
-    <main className="max-w-3xl mx-auto px-4 py-8">{children}</main>
-  </div>
-);
+}) => <SayfaKabugu onBack={onBack}>{children}</SayfaKabugu>;
 
 /* ------------------------------------------------------------------ merkez */
 
@@ -63,6 +65,79 @@ const Satir: React.FC<{ rehber: Rehber; onNavigate: (p: string) => void }> = ({
   </li>
 );
 
+/**
+ * Üstteki büyük kısayol kartı.
+ *
+ * Sayı (34 bölüm, 4 araç) bilerek gösteriliyor: "Bölüme göre staj" tek
+ * başına ne kadar şey olduğunu anlatmıyor, "34 bölüm" anlatıyor.
+ */
+const Kisayol: React.FC<{
+  ikon: React.ReactNode;
+  renk: string;
+  baslik: string;
+  ozet: string;
+  sayi: string;
+  onClick: () => void;
+}> = ({ ikon, renk, baslik, ozet, sayi, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="group flex flex-col gap-3 p-5 rounded-2xl bg-white border border-gray-200 text-left cursor-pointer transition-all hover:border-blue-300 hover:shadow-sm"
+  >
+    <span className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center ${renk}`}>
+      {ikon}
+    </span>
+    <span className="min-w-0 space-y-1">
+      <span className="block font-bold text-gray-900">{baslik}</span>
+      <span className="block text-sm text-gray-500 leading-snug">{ozet}</span>
+    </span>
+    <span className="mt-auto pt-1 flex items-center gap-1.5 text-xs font-bold text-blue-600">
+      {sayi}
+      <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+    </span>
+  </button>
+);
+
+/**
+ * Rehber kartı.
+ *
+ * Her kartın üstünde ince bir renk şeridi var ve renk sırayla değişiyor.
+ * Hepsi beyazken ızgara tek bir gri blok gibi duruyordu; şerit kartları
+ * birbirinden ayırıyor ve sayfayı canlandırıyor. Renk bir anlam taşımıyor,
+ * yalnızca ayırt edici — o yüzden sırayla dağıtılıyor.
+ */
+const SERIT = [
+  'from-violet-500 to-violet-400',
+  'from-blue-500 to-blue-400',
+  'from-cyan-500 to-cyan-400',
+  'from-emerald-500 to-emerald-400',
+  'from-amber-500 to-amber-400',
+  'from-rose-500 to-rose-400',
+];
+
+const Kart: React.FC<{ rehber: Rehber; sira?: number; onNavigate: (p: string) => void }> = ({
+  rehber,
+  sira = 0,
+  onNavigate,
+}) => (
+  <button
+    type="button"
+    onClick={() => onNavigate(`/rehber/${rehber.slug}`)}
+    className="group relative overflow-hidden flex flex-col gap-1.5 p-5 pt-6 rounded-2xl bg-white border border-gray-200 text-left cursor-pointer transition-all hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 h-full"
+  >
+    <span
+      aria-hidden="true"
+      className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${SERIT[sira % SERIT.length]}`}
+    />
+    <span className="block font-bold text-gray-900 leading-snug">{rehber.baslik}</span>
+    <span className="block text-sm text-gray-500 leading-relaxed">{rehber.ozet}</span>
+    <span className="mt-auto pt-3 flex items-center gap-1.5 text-xs font-bold text-blue-600">
+      Oku
+      <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+    </span>
+  </button>
+);
+
 export const GuideHub: React.FC<GuideHubProps> = ({ onBack, onNavigate }) => {
   useEffect(() => {
     document.title = 'Staj rehberi | StajımVar';
@@ -72,71 +147,170 @@ export const GuideHub: React.FC<GuideHubProps> = ({ onBack, onNavigate }) => {
   const isveren = REHBERLER.filter((r) => r.kategori === 'isveren');
 
   return (
-    <Kabuk onBack={onBack}>
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">
-            Staj rehberi
-          </h1>
-          <p className="text-gray-600 leading-relaxed">
-            Staj sürecinin bilinmeyen kısımları: belgeler, sigorta, CV, mülakat. Bilmediği
-            için başlayamayan çok kişi var — hem öğrenci hem işveren tarafında.
-          </p>
+    <SayfaKabugu onBack={onBack} icerikGenisligi="max-w-6xl">
+      <div className="space-y-8 sm:space-y-10">
+        {/* ======================================================= giriş */}
+        {/*
+          Başlık artık renkli bir alanın içinde ve yanında rakamlar var.
+
+          Önce düz bir h1 + paragraftı; sayfa "bir metin dosyası" gibi
+          açılıyordu. Rakamlar hem sayfanın dolu olduğunu gösteriyor hem de
+          "34 bölüm" gibi somut bir vaat veriyor — "rehber" kelimesinin tek
+          başına söylemediği şey.
+        */}
+        <div className="relative overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-emerald-50/50 p-5 sm:p-8">
+          <span
+            aria-hidden="true"
+            className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-blue-100/40"
+          />
+          <span
+            aria-hidden="true"
+            className="absolute -right-4 top-24 w-24 h-24 rounded-full bg-emerald-100/50"
+          />
+          <div className="relative max-w-2xl space-y-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/80 border border-blue-200 text-[11px] font-bold uppercase tracking-wider text-blue-700">
+              <Sparkles className="w-3.5 h-3.5" />
+              Staj rehberi
+            </span>
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900">
+              Staj, işini bilene kolay.
+            </h1>
+            <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
+              Belgeler, sigorta, CV, mülakat… Çoğu kişi istemediği için değil, nasıl
+              olduğunu bilmediği için başlayamıyor. Burada sırayla anlatıyoruz.
+            </p>
+            <div className="flex flex-wrap gap-x-5 gap-y-1 pt-1">
+              {[
+                { sayi: BOLUMLER.length, etiket: 'bölüm' },
+                { sayi: ARACLAR.length, etiket: 'hesaplama aracı' },
+                { sayi: ogrenci.length + isveren.length + 1, etiket: 'rehber' },
+              ].map((s) => (
+                <span key={s.etiket} className="text-sm text-gray-600">
+                  <strong className="text-gray-900 text-lg tabular-nums">{s.sayi}</strong>{' '}
+                  {s.etiket}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <section className="space-y-2">
-          <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-gray-400">
-            <GraduationCap className="w-4 h-4" />
-            Öğrenciler için
-          </h2>
-          <ul className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            {ogrenci.map((r) => (
-              <Satir key={r.slug} rehber={r} onNavigate={onNavigate} />
-            ))}
-          </ul>
+        {/* ==================================================== yolculuk */}
+        <section className="space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-gray-900">Staj yolculuğun</h2>
+            <p className="text-sm text-gray-500">
+              Baştan sona beş durak. Hangisindeysen oradan devam et.
+            </p>
+          </div>
+          <div className="rounded-3xl border border-gray-200 bg-white p-5 sm:p-7">
+            <YolculukHaritasi
+              onGit={onNavigate}
+              duraklar={[
+                {
+                  ikon: <Compass className="w-7 h-7 text-white" />,
+                  baslik: 'Bölümünü tanı',
+                  ozet: 'Nerede staj yapılır',
+                  yol: '/bolumler',
+                  renk: 'bg-gradient-to-br from-violet-500 to-violet-600',
+                },
+                {
+                  ikon: <FileText className="w-7 h-7 text-white" />,
+                  baslik: 'CV hazırla',
+                  ozet: 'Deneyimin yokken',
+                  yol: '/rehber/staj-cv-nasil-yazilir',
+                  renk: 'bg-gradient-to-br from-blue-500 to-blue-600',
+                },
+                {
+                  ikon: <Send className="w-7 h-7 text-white" />,
+                  baslik: 'Başvur',
+                  ozet: 'E-posta şablonu',
+                  yol: '/rehber/staj-basvuru-epostasi',
+                  renk: 'bg-gradient-to-br from-cyan-500 to-cyan-600',
+                },
+                {
+                  ikon: <MessageSquare className="w-7 h-7 text-white" />,
+                  baslik: 'Mülakata gir',
+                  ozet: 'Sorular ve hatalar',
+                  yol: '/rehber/staj-mulakati',
+                  renk: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
+                },
+                {
+                  ikon: <BookCheck className="w-7 h-7 text-white" />,
+                  baslik: 'Stajı tamamla',
+                  ozet: 'Defter ve belgeler',
+                  yol: '/rehber/staj-defteri-nasil-doldurulur',
+                  renk: 'bg-gradient-to-br from-amber-500 to-amber-600',
+                },
+              ]}
+            />
+          </div>
         </section>
 
-        <section className="space-y-2">
-          <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-gray-400">
-            <Building2 className="w-4 h-4" />
-            İşverenler için
-          </h2>
-          <ul className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            {/*
-              İşveren rehberi ayrı bir bileşen: içinde canlı öğrenci sayısı
-              gösteriliyor, durağan bir metin değil. Kayıttan değil elle
-              bağlanıyor.
-            */}
-            <li className="border-b border-gray-100 last:border-b-0">
-              <button
-                type="button"
-                onClick={() => onNavigate('/isveren')}
-                className="w-full flex items-center gap-3 px-4 py-4 text-left cursor-pointer hover:bg-blue-50/60 transition-colors"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block font-bold text-gray-900">
-                    Stajyer nasıl alınır
-                  </span>
-                  <span className="block text-sm text-gray-500">
-                    Sigorta kimde, ücret zorunlu mu, okulla hangi evrak imzalanır.
-                  </span>
-                </span>
-                <ChevronRight className="w-5 h-5 shrink-0 text-gray-300" />
-              </button>
-            </li>
-            {isveren.map((r) => (
-              <Satir key={r.slug} rehber={r} onNavigate={onNavigate} />
-            ))}
-          </ul>
+        {/* ================================================== kestirmeler */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-bold text-gray-900">Kestirmeler</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <RenkliKart
+              ikon={<GraduationCap className="w-6 h-6 text-white" />}
+              baslik="Bölüme göre staj"
+              ozet="Kendi bölümünde staj nerede yapılır, stajyer ne iş yapar"
+              rozet={`${BOLUMLER.length} bölüm`}
+              zemin="bg-gradient-to-br from-violet-50 to-white border-violet-200"
+              ikonZemin="bg-gradient-to-br from-violet-500 to-violet-600"
+              onClick={() => onNavigate('/bolumler')}
+            />
+            <RenkliKart
+              ikon={<Calculator className="w-6 h-6 text-white" />}
+              baslik="Hesaplama araçları"
+              ozet="Net, sıralama, staj ücreti ve staj günü"
+              rozet={`${ARACLAR.length} araç`}
+              zemin="bg-gradient-to-br from-emerald-50 to-white border-emerald-200"
+              ikonZemin="bg-gradient-to-br from-emerald-500 to-emerald-600"
+              onClick={() => onNavigate('/araclar')}
+            />
+            <RenkliKart
+              ikon={<Building2 className="w-6 h-6 text-white" />}
+              baslik="İşveren rehberi"
+              ozet="Stajyer nasıl alınır: sigorta, ücret, evrak"
+              rozet="Şirketler için"
+              zemin="bg-gradient-to-br from-amber-50 to-white border-amber-200"
+              ikonZemin="bg-gradient-to-br from-amber-500 to-amber-600"
+              onClick={() => onNavigate('/isveren')}
+            />
+          </div>
         </section>
 
-        <p className="text-xs text-gray-400 leading-relaxed">
+        {/* ================================================ tüm rehberler */}
+        <section className="space-y-4">
+          <div className="flex items-baseline gap-3">
+            <h2 className="text-xl font-bold text-gray-900">Tüm rehberler</h2>
+            <span className="text-sm text-gray-400">{ogrenci.length} yazı</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {ogrenci.map((r, i) => (
+              <Kart key={r.slug} rehber={r} sira={i} onNavigate={onNavigate} />
+            ))}
+          </div>
+        </section>
+
+        {isveren.length > 0 && (
+          <section className="space-y-4">
+            <h2 className="text-xl font-bold text-gray-900">İşverenler için</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {isveren.map((r, i) => (
+                <Kart key={r.slug} rehber={r} sira={i} onNavigate={onNavigate} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <p className="text-xs text-gray-400 leading-relaxed max-w-2xl">
           Rehberlerde yıldan yıla değişen oran ve tutarlar yazılmıyor; mekanizma anlatılıp
           güncel rakam için resmî kaynağa yönlendiriliyor. Eksik veya hatalı gördüğün bir
           şey olursa bize yaz.
         </p>
       </div>
-    </Kabuk>
+    </SayfaKabugu>
   );
 };
 
