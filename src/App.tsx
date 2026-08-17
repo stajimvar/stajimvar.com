@@ -35,6 +35,7 @@ import { EmployerGuide } from './components/EmployerGuide';
 import { CvPage } from './components/CvPage';
 import { AdminClaimsView } from './components/AdminClaimsView';
 import { AdminListingsQueue } from './components/AdminListingsQueue';
+import { AdminDashboard } from './components/AdminDashboard';
 import { listingSlug, idPrefixFromSlug } from './lib/slug';
 import confetti from 'canvas-confetti';
 import { CheckCircle2 } from 'lucide-react';
@@ -533,7 +534,8 @@ export default function App() {
     listeyi goremiyor -- RLS yalnizca admin'e satirlari veriyor, kuyruk
     bos gorunur ve onay fonksiyonu hata dondurur.
   */
-  if (temizYol === '/yonetim/talepler') {
+  if (temizYol === '/yonetim' || temizYol === '/yonetim/talepler') {
+    const kuyrukSayfasi = temizYol === '/yonetim/talepler';
     return (
       <div className="min-h-screen bg-[#F9FAFB] font-sans text-[#111827] p-4 sm:p-8">
         <button
@@ -545,11 +547,17 @@ export default function App() {
         </button>
         {isAdmin ? (
           <div className="max-w-3xl mx-auto space-y-8">
-            <section className="space-y-3">
-              <h2 className="text-lg font-bold text-gray-900">Onay bekleyen ilanlar</h2>
-              <AdminListingsQueue onToast={showToast} />
-            </section>
-            <AdminClaimsView onToast={showToast} />
+            {kuyrukSayfasi ? (
+              <>
+                <section className="space-y-3">
+                  <h2 className="text-lg font-bold text-gray-900">Onay bekleyen ilanlar</h2>
+                  <AdminListingsQueue onToast={showToast} />
+                </section>
+                <AdminClaimsView onToast={showToast} />
+              </>
+            ) : (
+              <AdminDashboard onNavigate={navigate} />
+            )}
           </div>
         ) : (
           <p className="max-w-3xl mx-auto bg-white rounded-2xl border border-gray-200 p-8 text-center text-sm text-gray-600">

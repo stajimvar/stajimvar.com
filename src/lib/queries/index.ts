@@ -878,3 +878,97 @@ export async function submitQuizAttempt(
   if (error) fail('Test sonucu kaydedilemedi', error);
   return data as unknown as QuizResult;
 }
+
+// ---------------------------------------------------------------- Yönetim özeti
+
+export interface AdminOzet {
+  ogrenci: number;
+  profilDolu: number;
+  teklifeAcik: number;
+  basvuru: number;
+  ilan: number;
+  taslakIlan: number;
+  sirket: number;
+  sahiplenmis: number;
+  bekleyenTalep: number;
+  rozet: number;
+  sonTarama: { zaman: string; durum: string; bulunan: number } | null;
+  sonKayitlar: Array<{ tarih: string; sayi: number }>;
+}
+
+/**
+ * Yönetim panelindeki sayılar.
+ *
+ * Hepsi `count` ile alınıyor, satırlar çekilmiyor: panelin kaç öğrencinin
+ * kayıtlı olduğunu bilmesi yeterli, kimlerin kayıtlı olduğunu tek tek
+ * listelemesi gerekmiyor. Kişisel veriyi gereksiz yere dolaştırmıyoruz.
+ *
+ * Yalnızca yönetici çağırabiliyor: RLS bu tabloların çoğunu zaten
+ * kısıtlıyor, admin politikaları sayımı mümkün kılıyor.
+ */
+export async function fetchAdminOzet(): Promise<AdminOzet> {
+  const say = async (tablo: string, filtre?: (q: any) => any) => {
+    let q = supabase.from(tablo as never).select('*', { count: 'exact', head: true });
+    if (filtre) q = filtre(q);
+    const { count, error } = await q;
+    if (error) return 0;
+    return count ?? 0;
+  };
+
+  const [
+    ogrenci, profilDolu, teklifeAcik, basvuru, ilan, taslakIlan,
+    sirket, sahiplenmis, bekleyenTalep,
+  ] = await Promise.all([
+    say('student_profiles'),
+    say('student_profiles', (q) => q.not('university', 'is', null).neq('university', '')),
+    say('student_profiles', (q) => q.eq('is_open_to_offers', true)),
+    say('applications'),
+    say('listings', (q) => q.eq('status', 'published')),
+    say('listings', (q) => q.eq('status', 'draft').eq('origin', 'internal')),
+    say('companies'),
+    say('companies', (q) => q.not('claimed_at', 'is', null)),
+    say('company_claims', (q) => q.eq('status', 'pending')),
+  ]);
+
+  const { data: rozetSatir } = await supabase
+    .from('student_profiles')
+    .select('earned_badges');
+  const rozet = (rozetSatir ?? []).reduce(
+    (t: number, r: { earned_badges: string[] | null }) => t + (r.earned_badges?.length ?? 0),
+    0
+  );
+
+  const { data: tarama } = await supabase
+    .from('import_runs')
+    .select('started_at,status,fetched_count')
+    .order('started_at', { ascending: false })
+    .limit(1);
+
+  /* Son 7 günün kayıt dağılımı — sadece gün ve sayı, kişi bilgisi yok. */
+  const yediGunOnce = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: yeniler } = await supabase
+    .from('profiles')
+    .select('created_at')
+    .gte('created_at', yediGunOnce);
+
+  const gunler = new Map<string, number>();
+  for (const r of (yeniler ?? []) as Array<{ created_at: string }>) {
+    const gun = r.created_at.slice(0, 10);
+    gunler.set(gun, (gunler.get(gun) ?? 0) + 1);
+  }
+
+  const t = (tarama ?? [])[0] as
+    | { started_at: string; status: string; fetched_count: number }
+    | undefined;
+
+  return {
+    ogrenci, profilDolu, teklifeAcik, basvuru, ilan, taslakIlan,
+    sirket, sahiplenmis, bekleyenTalep, rozet,
+    sonTarama: t
+      ? { zaman: t.started_at, durum: t.status, bulunan: t.fetched_count ?? 0 }
+      : null,
+    sonKayitlar: [...gunler.entries()]
+      .map(([tarih, sayi]) => ({ tarih, sayi }))
+      .sort((a, b) => a.tarih.localeCompare(b.tarih)),
+  };
+}
