@@ -154,21 +154,21 @@ export const Header: React.FC<HeaderProps> = ({
         // Embedded directly in the ApplicationsTrackerView banner
         return [];
       case 'badges':
-        return [
-          { id: 'all', label: 'Tüm Yetenek Testleri' },
-          { id: 'hard_skills', label: '🛠️ Teknik & Mesleki Yetenekler' },
-          { id: 'soft_skills', label: '🤝 Sosyal & Kişisel Beceriler' },
-          { id: 'languages', label: '🌐 Yabancı Diller' },
-          { id: 'earned', label: `Kazanılan Rozetler (${activeStudent?.earnedBadges?.length || 0})` },
-        ];
+        /*
+          Kaldırıldı: sayfadaki gruplar zaten "Teknik yetenekler / Sosyal
+          beceriler / Yabancı diller" başlıklarıyla ve test sayılarıyla
+          duruyor. Şerit bunların birebir kopyasıydı — aynı seçimi iki
+          ayrı yerde sunmak, ikisinin farklı şeyler olduğunu düşündürüyor.
+        */
+        return [];
       case 'profile':
-        return [
-          { id: 'all', label: 'Genel Bakış' },
-          { id: 'skills', label: 'Yeteneklerim & Beceriler' },
-          { id: 'projects', label: 'Projelerim & Portfolyo' },
-          { id: 'preferences', label: 'Staj Tercihlerim & SGK' },
-          { id: 'badges', label: 'Doğrulanmış Rozetler' },
-        ];
+        /*
+          Kaldırıldı ve ARTIK ÇALIŞMIYORDU. Profil sayfası açılır bölümlere
+          çevrildiğinde bu şeridin bağlandığı yapı ortadan kalktı;
+          StudentProfileView `subTab` değerini hiç okumuyor. Yani sekmelere
+          basmak görünüşte bir şey seçiyor ama sayfada hiçbir şey olmuyordu.
+        */
+        return [];
       default:
         return [];
     }
@@ -791,10 +791,7 @@ export const Header: React.FC<HeaderProps> = ({
         {subMenuItems.length > 0 && (
           <div className="relative border-t border-gray-100 flex items-center py-2 group/subnav">
             <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mr-2 hidden sm:inline">
-              {activeTab === 'internships' && 'İlan Filtreleri:'}
-              {activeTab === 'applications' && 'Başvuru Durumu:'}
-              {activeTab === 'badges' && 'Kategori:'}
-              {activeTab === 'profile' && 'Profil Bölümü:'}
+              {/* Şu an hiçbir sekme alt menü üretmiyor; şerit de çizilmiyor. */}
             </span>
 
             {/* Left Scroll Arrow */}
