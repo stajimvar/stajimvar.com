@@ -46,14 +46,33 @@ interface GuideHubProps {
   onNavigate: (path: string) => void;
 }
 
+/*
+  LİSTE ÖĞELERİ DÜĞME DEĞİL BAĞLANTI.
+
+  Önce hepsi <button onClick={onNavigate(...)}> idi. Görsel olarak
+  çalışıyordu ama tarayıcı bir düğmeyi bağlantı saymıyor: ölçüldü,
+  /rehber ve /bolumler sayfalarının statik HTML'inde HİÇ bağlantı yoktu.
+  Yani otuz dört bölüm ve on rehber sayfası birbirinden kopuk adalardı;
+  aralarında sinyal taşınmıyordu ve tarayıcı onlara yalnızca site
+  haritasından ulaşabiliyordu.
+
+  Şimdi gerçek <a href>. Tıklama yakalanıp uygulama içi geçişe çevriliyor,
+  yani kullanıcı için hiçbir şey değişmiyor: tam sayfa yenilenmesi yok.
+  Karşılığında orta tuşla yeni sekmede açma ve bağlantıyı kopyalama gibi
+  davranışlar da kendiliğinden geliyor — düğmede bunlar hiç yoktu.
+*/
 const Satir: React.FC<{ rehber: Rehber; onNavigate: (p: string) => void }> = ({
   rehber,
   onNavigate,
 }) => (
   <li className="border-b border-gray-100 last:border-b-0">
-    <button
-      type="button"
-      onClick={() => onNavigate(`/rehber/${rehber.slug}`)}
+    <a
+      href={`/rehber/${rehber.slug}`}
+      onClick={(e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+        e.preventDefault();
+        onNavigate(`/rehber/${rehber.slug}`);
+      }}
       className="w-full flex items-center gap-3 px-4 py-4 text-left cursor-pointer hover:bg-blue-50/60 transition-colors"
     >
       <span className="min-w-0 flex-1">
@@ -61,7 +80,7 @@ const Satir: React.FC<{ rehber: Rehber; onNavigate: (p: string) => void }> = ({
         <span className="block text-sm text-gray-500">{rehber.ozet}</span>
       </span>
       <ChevronRight className="w-5 h-5 shrink-0 text-gray-300" />
-    </button>
+    </a>
   </li>
 );
 
@@ -120,9 +139,13 @@ const Kart: React.FC<{ rehber: Rehber; sira?: number; onNavigate: (p: string) =>
   sira = 0,
   onNavigate,
 }) => (
-  <button
-    type="button"
-    onClick={() => onNavigate(`/rehber/${rehber.slug}`)}
+  <a
+    href={`/rehber/${rehber.slug}`}
+    onClick={(e) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+      e.preventDefault();
+      onNavigate(`/rehber/${rehber.slug}`);
+    }}
     className="group relative overflow-hidden flex flex-col gap-1.5 p-5 pt-6 rounded-2xl bg-white border border-gray-200 text-left cursor-pointer transition-all hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 h-full"
   >
     <span
@@ -135,7 +158,7 @@ const Kart: React.FC<{ rehber: Rehber; sira?: number; onNavigate: (p: string) =>
       Oku
       <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
     </span>
-  </button>
+  </a>
 );
 
 export const GuideHub: React.FC<GuideHubProps> = ({ onBack, onNavigate }) => {

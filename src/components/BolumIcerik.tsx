@@ -1,5 +1,5 @@
 import React from 'react';
-import { OKUL_YERLESTIRIR, type Bolum } from '../data/bolumler';
+import { BOLUMLER, OKUL_YERLESTIRIR, type Bolum } from '../data/bolumler';
 
 /**
  * Bölüm sayfasının İÇERİĞİ — kabuğu değil.
@@ -36,6 +36,7 @@ const Blok: React.FC<{ baslik: string; maddeler: string[] }> = ({ baslik, maddel
 export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
   const okulYerlestirir = OKUL_YERLESTIRIR.includes(bolum.grup);
   const aramaYolu = `/?q=${encodeURIComponent(bolum.aramaKelimeleri[0])}`;
+  const digerleri = BOLUMLER.filter((b) => b.slug !== bolum.slug && b.grup === bolum.grup);
 
   return (
     <div className="space-y-4">
@@ -193,6 +194,61 @@ export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
           </a>
         </section>
       )}
+
+      {/*
+        AYNI GRUPTAKİ DİĞER BÖLÜMLER
+
+        Bu liste önce BolumPage içindeydi, yani yalnızca tarayıcıda çizilen
+        kısımdaydı ve ön render çıktısına hiç girmiyordu. Sonuç: otuz dört
+        bölüm sayfası birbirine hiç bağlanmıyordu; tarayıcı için hepsi ayrı
+        birer adaydı ve aralarında sinyal taşınmıyordu.
+
+        İçeriğin parçası olduğu için buraya taşındı: hem kullanıcı hem
+        tarayıcı aynı bağlantıları görüyor.
+      */}
+      {digerleri.length > 0 && (
+        <section className="pt-2 space-y-2">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+            Aynı gruptaki diğer bölümler
+          </h2>
+          <ul className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            {digerleri.map((b) => (
+              <li key={b.slug} className="border-b border-gray-100 last:border-b-0">
+                <a
+                  href={`/bolum/${b.slug}`}
+                  className="block px-4 py-3.5 hover:bg-blue-50/60 transition-colors"
+                >
+                  <span className="block font-bold text-gray-900 text-sm">{b.ad}</span>
+                  <span className="block text-xs text-gray-500 mt-0.5">{b.ozet}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/*
+        İLGİLİ REHBERLER
+
+        Bölüm sayfasından rehberlere giden bağlantılar önce düğmeydi;
+        tarayıcı görmüyordu. Artık gerçek bağlantı ve içeriğin parçası.
+      */}
+      <section className="pt-1 flex flex-wrap gap-2">
+        {[
+          ['/rehber/staj-cv-nasil-yazilir', "Staj CV'si nasıl yazılır"],
+          ['/rehber/zorunlu-staj-rehberi', 'Zorunlu staj rehberi'],
+          ['/rehber/staj-nasil-bulunur', 'Staj nasıl bulunur'],
+          ['/bolumler', 'Tüm bölümler'],
+        ].map(([yol, etiket]) => (
+          <a
+            key={yol}
+            href={yol}
+            className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-700 bg-white border border-gray-200 hover:border-gray-300"
+          >
+            {etiket}
+          </a>
+        ))}
+      </section>
 
       {bolum.guncelleme && (
         <p className="text-xs text-gray-400">

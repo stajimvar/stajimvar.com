@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { SayfaKabugu } from './SayfaKabugu';
 import { BolumIcerik } from './BolumIcerik';
 import {
@@ -33,25 +33,6 @@ const Kabuk: React.FC<{ onBack: () => void; children: React.ReactNode }> = ({
   children,
 }) => <SayfaKabugu onBack={onBack}>{children}</SayfaKabugu>;
 
-const Satir: React.FC<{ bolum: Bolum; onNavigate: (p: string) => void }> = ({
-  bolum,
-  onNavigate,
-}) => (
-  <li className="border-b border-gray-100 last:border-b-0">
-    <button
-      type="button"
-      onClick={() => onNavigate(`/bolum/${bolum.slug}`)}
-      className="w-full flex items-center gap-3 px-4 py-4 text-left cursor-pointer hover:bg-blue-50/60 transition-colors"
-    >
-      <span className="min-w-0 flex-1">
-        <span className="block font-bold text-gray-900">{bolum.ad}</span>
-        <span className="block text-sm text-gray-500">{bolum.ozet}</span>
-      </span>
-      <ChevronRight className="w-5 h-5 shrink-0 text-gray-300" />
-    </button>
-  </li>
-);
-
 /* --------------------------------------------------------------- liste */
 
 interface HubProps {
@@ -59,14 +40,33 @@ interface HubProps {
   onNavigate: (path: string) => void;
 }
 
-/** Bölüm kartı. Liste satırının yerini aldı: geniş ekranda üçlü ızgara. */
+/*
+  LİSTE ÖĞELERİ DÜĞME DEĞİL BAĞLANTI.
+
+  Önce hepsi <button onClick={onNavigate(...)}> idi. Görsel olarak
+  çalışıyordu ama tarayıcı bir düğmeyi bağlantı saymıyor: ölçüldü,
+  /rehber ve /bolumler sayfalarının statik HTML'inde HİÇ bağlantı yoktu.
+  Yani otuz dört bölüm ve on rehber sayfası birbirinden kopuk adalardı;
+  aralarında sinyal taşınmıyordu ve tarayıcı onlara yalnızca site
+  haritasından ulaşabiliyordu.
+
+  Şimdi gerçek <a href>. Tıklama yakalanıp uygulama içi geçişe çevriliyor,
+  yani kullanıcı için hiçbir şey değişmiyor: tam sayfa yenilenmesi yok.
+  Karşılığında orta tuşla yeni sekmede açma ve bağlantıyı kopyalama gibi
+  davranışlar da kendiliğinden geliyor — düğmede bunlar hiç yoktu.
+*/
+/** Bölüm kartı: geniş ekranda üçlü ızgara. */
 const Kart: React.FC<{ bolum: Bolum; onNavigate: (p: string) => void }> = ({
   bolum,
   onNavigate,
 }) => (
-  <button
-    type="button"
-    onClick={() => onNavigate(`/bolum/${bolum.slug}`)}
+  <a
+    href={`/bolum/${bolum.slug}`}
+    onClick={(e) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+      e.preventDefault();
+      onNavigate(`/bolum/${bolum.slug}`);
+    }}
     className="group flex flex-col gap-1.5 p-5 rounded-2xl bg-white border border-gray-200 text-left cursor-pointer transition-all hover:border-blue-300 hover:shadow-sm h-full"
   >
     <span className="block font-bold text-gray-900 leading-snug">{bolum.ad}</span>
@@ -75,7 +75,7 @@ const Kart: React.FC<{ bolum: Bolum; onNavigate: (p: string) => void }> = ({
       İncele
       <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
     </span>
-  </button>
+  </a>
 );
 
 export const BolumHub: React.FC<HubProps> = ({ onBack, onNavigate }) => {
@@ -171,8 +171,6 @@ export const BolumPage: React.FC<SayfaProps> = ({ slug, onBack, onNavigate, onSe
     );
   }
 
-  const digerleri = BOLUMLER.filter((b) => b.slug !== bolum.slug && b.grup === bolum.grup);
-
   /*
     İÇERİK İÇİ BAĞLANTILARI YAKALA
 
@@ -217,37 +215,7 @@ export const BolumPage: React.FC<SayfaProps> = ({ slug, onBack, onNavigate, onSe
         <div onClick={baglantiyiYakala}>
           <BolumIcerik bolum={bolum} />
         </div>
-
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => onNavigate('/rehber/staj-cv-nasil-yazilir')}
-            className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-700 bg-white border border-gray-200 hover:border-gray-300 cursor-pointer"
-          >
-            Staj CV'si nasıl yazılır
-          </button>
-          <button
-            type="button"
-            onClick={() => onNavigate('/rehber/zorunlu-staj-rehberi')}
-            className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-700 bg-white border border-gray-200 hover:border-gray-300 cursor-pointer"
-          >
-            Zorunlu staj rehberi
-          </button>
-        </div>
       </article>
-
-      {digerleri.length > 0 && (
-        <section className="mt-10 space-y-2">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400">
-            Aynı gruptaki diğer bölümler
-          </h2>
-          <ul className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            {digerleri.map((b) => (
-              <Satir key={b.slug} bolum={b} onNavigate={onNavigate} />
-            ))}
-          </ul>
-        </section>
-      )}
     </Kabuk>
   );
 };
