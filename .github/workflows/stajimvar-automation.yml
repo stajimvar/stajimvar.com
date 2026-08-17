@@ -125,7 +125,10 @@ jobs:
         if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Wrangler 4 en az Node 22 istiyor; 20 ile 'requires at least
+          # Node.js v22' diyip cikiyor (olculdu, dagitim adimi bu yuzden
+          # dustu). Derleme 20 ile de calisiyordu, kiran yalnizca yukleme.
+          node-version: '22'
           cache: npm
 
       - name: Bağımlılıklar
