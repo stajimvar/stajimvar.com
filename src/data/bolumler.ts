@@ -957,7 +957,7 @@ export const BOLUMLER: Bolum[] = [
           'mantığı öğrenmek demek; ikinci programa geçiş birkaç gün sürüyor.',
       },
       {
-        soru: 'Staj sonunda işe alınma ihtimalim var mı?',
+        soru: 'Muhasebe bürosunda staj işe dönüşür mü?',
         cevap:
           'Bu bölümde ihtimal görece yüksek: bürolar güvendikleri stajyeri yanlarında tutmayı ' +
           'tercih ediyor. Niyetini staj bitmeden açıkça söylemek, bu ihtimali gerçeğe çeviren şey ' +
@@ -1015,6 +1015,75 @@ export const BOLUMLER: Bolum[] = [
       'Kendi diktiğin ya da kalıbını çıkardığın işlerin fotoğrafını bir dosyada topla. ' +
       'Bu bölümde gösterilebilir iş, yazılı CV\'den daha hızlı sonuç veriyor.',
     aramaKelimeleri: ['tekstil', 'konfeksiyon', 'üretim'],
+    giris:
+      'Giyim üretim teknolojisi, staj yeri bulmanın görece kolay olduğu alanlardan biri: ' +
+      'Türkiye\'nin konfeksiyon üretimi büyük ve neredeyse her sanayi şehrinde fabrika var. ' +
+      'Asıl mesele hangi bölümde çalışacağın — kesimhane, dikimhane, kalite kontrol ve numune ' +
+      'bölümü birbirinden oldukça farklı işler ve öğrettikleri de farklı. Bir de ihracat ' +
+      'gerçeği var: bu sektörün büyük kısmı yurt dışına üretiyor ve o yüzden kalite ' +
+      'standartları katı. Bu sayfada hangi bölümlerin ne öğrettiğini, stajyere verilen gerçek ' +
+      'işleri ve başvuru ipuçlarını bulacaksın.',
+    pozisyonlar: [
+      'Numune ve model bölümü — en çok öğreten yer',
+      'Kesimhane ve serim',
+      'Dikimhane ve hat takibi',
+      'Kalite kontrol ve son kontrol',
+      'Planlama ve sipariş takibi',
+    ],
+    dikkat: [
+      'Numune bölümü bu sektörde en çok öğreten yer: ürünün nasıl doğduğunu baştan sona ' +
+        'görüyorsun. Başvuruda bu bölümü açıkça istemek işe yarıyor.',
+      'İhracat yapan fabrikalarda kalite standartları katı ve müşteri denetimleri var. Bunu ' +
+        'görmek, sektörün gerçekte nasıl işlediğini anlamanın en hızlı yolu.',
+      'Üretim hattında tempo yüksek ve iş ayakta geçiyor. Vardiya düzeni olan fabrikalar da ' +
+        'var; başvurmadan önce çalışma saatlerini sor.',
+      'Fabrikalar sanayi bölgelerinde ve şehir dışında olabiliyor. Servis olup olmadığını ' +
+        'önceden öğren.',
+    ],
+    cvIpucu:
+      'Kullandığın kalıp ve tasarım programlarını yaz; bu sektörde bilgisayarlı kalıp hazırlama ' +
+      'bilen öğrenci sayısı az ve doğrudan ayırt edici. Dikiş makinesi kullanabilme, kalıp ' +
+      'çıkarma ve ölçü alma gibi el becerilerini de belirt. Okulun atölyesinde diktiğin ' +
+      'ürünlerin fotoğraflarını bir araya getirmek küçük bir portfolyo işi görüyor.',
+    sss: [
+      {
+        soru: 'Bu bölümün stajı nerede yapılır?',
+        cevap:
+          'Konfeksiyon fabrikaları, model ve numune evleri, markaların üretim takip birimleri, ' +
+          'tekstil üreticileri ve kalite kontrol firmaları.',
+      },
+      {
+        soru: 'Hangi bölümde staj yapmak daha çok öğretir?',
+        cevap:
+          'Numune ve model bölümü: ürünün tasarımdan üretime nasıl geçtiğini baştan sona ' +
+          'görüyorsun. Kesimhane ve dikimhane ise üretimin kendisini öğretiyor.',
+      },
+      {
+        soru: 'Dikiş bilmem şart mı?',
+        cevap:
+          'Şart değil ama işi anlamak için çok yardımcı. Dikişi bilen stajyer, hattaki bir sorunun ' +
+          'neden çıktığını daha hızlı görüyor ve bu hemen fark ediliyor.',
+      },
+      {
+        soru: 'Kalıp programı bilmek gerekiyor mu?',
+        cevap:
+          'Zorunlu değil ama bilgisayarlı kalıp hazırlama bilen öğrenci az. Temel düzeyde bile ' +
+          'kullanabiliyorsan bunu CV\'ye yazmak seni belirgin biçimde öne çıkarıyor.',
+      },
+      {
+        soru: 'Fabrikada çalışma saatleri nasıl?',
+        cevap:
+          'Üretim düzenine göre değişiyor ve bazı fabrikalarda vardiya var. Sipariş teslim ' +
+          'dönemleri yoğun geçiyor; o dönemlerde işin içine girme şansın yüksek.',
+      },
+      {
+        soru: 'Konfeksiyon stajı işe dönüşür mü?',
+        cevap:
+          'Sektörde nitelikli eleman ihtiyacı sürekli ve stajyeri yetiştirip tutmak fabrikalar için ' +
+          'en kolay yol. Numune ve kalite bölümlerinde ihtimal özellikle yüksek.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'mekatronik',
@@ -1051,6 +1120,75 @@ export const BOLUMLER: Bolum[] = [
       'Küçük bir otomasyon firmasında bakım ekibine takılmak, büyük fabrikada ' +
       'ofiste oturmaktan çok daha fazla şey öğretiyor.',
     aramaKelimeleri: ['mekatronik', 'bakım', 'otomasyon'],
+    giris:
+      'Mekatronik, mekanik ile elektroniğin kesiştiği yerde duruyor ve staj tarafındaki en ' +
+      'büyük avantajı da bu: fabrikaların bakım ve otomasyon ekipleri tam olarak bu ikisini ' +
+      'birden bilen kişiyi arıyor. Üretim duran bir hatta hem mekanik hem elektriksel arızayı ' +
+      'ayırt edebilmek, sahada en çok değer verilen beceri. Zorluğu ise şu: alan geniş olduğu ' +
+      'için okulda her şey yüzeysel geçiyor, bir tarafı kendin derinleştirmen gerekiyor. Bu ' +
+      'sayfada nerede staj yapıldığını, stajyere verilen gerçek işleri ve başvurmadan önce ' +
+      'öğrenmen gerekenleri bulacaksın.',
+    pozisyonlar: [
+      'Fabrikaların bakım ve onarım ekipleri',
+      'Endüstriyel otomasyon ve PLC firmaları',
+      'Robot ve üretim hücresi entegratörleri',
+      'Makine imalatçılarının montaj ve devreye alma birimleri',
+      'Teknik servis ve arıza giderme',
+    ],
+    dikkat: [
+      'Bakım ekiplerinde arıza her an çıkıyor ve iş planlı ilerlemiyor. Bu, öğrenmek için en ' +
+        'verimli ama en yorucu ortam.',
+      'Otomasyon tarafında temel PLC mantığını önceden görmek stajın ilk haftasını tamamen ' +
+        'değiştiriyor; internetteki ücretsiz kaynaklar bunun için yeterli.',
+      'Enerji altındaki panolarda çalışma yetkili kişinin işi. Stajyer gözlem yapıyor ve ' +
+        'gözetim altında destek oluyor; bunu talep eden bir yer varsa uzak dur.',
+      'Fabrikalar sanayi bölgelerinde ve vardiya düzeni olabiliyor. Ulaşımı ve çalışma ' +
+        'saatlerini başvurmadan önce sor.',
+    ],
+    cvIpucu:
+      'Hem mekanik hem elektronik tarafta ne yapabildiğini ayrı ayrı yaz; bu bölümün avantajı ' +
+      'ikisini birden bilmek ve CV\'de bunu göstermek gerekiyor. Kullandığın ölçü aletlerini, ' +
+      'PLC ya da mikrodenetleyici deneyimini ve varsa yaptığın bir düzeneği belirt. Küçük bir ' +
+      'otomasyon projesi, bu alanda en güçlü CV satırı.',
+    sss: [
+      {
+        soru: 'Mekatronik stajı nerede yapılır?',
+        cevap:
+          'Fabrikaların bakım ekipleri, endüstriyel otomasyon firmaları, robot entegratörleri, ' +
+          'makine imalatçılarının montaj birimleri ve teknik servisler.',
+      },
+      {
+        soru: 'PLC bilmeden staja başvurabilir miyim?',
+        cevap:
+          'Başvurabilirsin, öğretiliyor. Ama temel merdiven mantığını önceden görmek ilk haftayı ' +
+          'çok kolaylaştırıyor ve mülakatta ilgi göstergesi olarak okunuyor.',
+      },
+      {
+        soru: 'Bakım ekibinde staj yapmak nasıl?',
+        cevap:
+          'Plansız ve hızlı: arıza çıkıyor, ekiple gidiyorsun. Öğrenmek açısından en verimli ' +
+          'ortamlardan biri çünkü sistemin nerede kırıldığını canlı görüyorsun.',
+      },
+      {
+        soru: 'Mekanik mi elektronik mi tarafına yönelmeliyim?',
+        cevap:
+          'İkisini birden bilmek bu bölümün asıl değeri. Yine de birini biraz daha derinleştirmek, ' +
+          'başvuruda ne yapabileceğini net söylemeni sağlıyor.',
+      },
+      {
+        soru: 'Robot programlama öğrenmeli miyim?',
+        cevap:
+          'Üretim hücrelerinde robot kullanımı artıyor ve bilen teknik eleman az. Temel düzeyde ' +
+          'bile görmüş olmak entegratör firmalarında doğrudan avantaj.',
+      },
+      {
+        soru: 'Mekatronik stajı işe dönüşür mü?',
+        cevap:
+          'Sanayide bakım ve otomasyon tarafında eleman ihtiyacı sürekli. İşi öğrenen bir stajyeri ' +
+          'tutmak işletme için en kolay yol; ihtimal bu alanda görece yüksek.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
 
   /* ----------------------------------------------------- iktisadi ve idari */
@@ -1341,7 +1479,7 @@ export const BOLUMLER: Bolum[] = [
       'ilk sorularından biri bu.',
     sss: [
       {
-        soru: 'Portfolyoda ne olmalı?',
+        soru: 'Grafik tasarım portfolyosunda ne olmalı?',
         cevap:
           'Seçilmiş beş sekiz iş ve her birinin yanında kısa bir açıklama: sorun neydi, ne yaptın, ' +
           'neden öyle yaptın. Okul projesi olması sorun değil; anlatabiliyor olman önemli.',
@@ -1525,6 +1663,76 @@ export const BOLUMLER: Bolum[] = [
       'Portfolyona sadece çizim koyma. Çizimin yanına dikilmiş hâlinin fotoğrafını ' +
       'koyduğunda değerlendiren kişi senin üretimi bildiğini anlıyor.',
     aramaKelimeleri: ['moda', 'tasarım', 'tekstil'],
+    giris:
+      'Moda tasarımı stajında, tasarım fikrinin üretimle karşılaştığı yeri görüyorsun ve okulda ' +
+      'öğrenilemeyen tarafın tamamı orada: kalıp tutmayan bir tasarım, maliyeti çıkmayan bir ' +
+      'kumaş, dikilemeyen bir detay. Bu yüzden yalnızca çizim yapılan bir yerde kalmak eksik ' +
+      'bir staj oluyor; numune ve kalıp tarafını da görmek gerekiyor. Bir de portfolyo gerçeği ' +
+      'var: bu alanda başvurunun kaderini CV değil, gösterdiğin işler belirliyor. Bu sayfada ' +
+      'nerede staj yapıldığını, stajyere verilen gerçek işleri ve portfolyoda nelerin işe ' +
+      'yaradığını bulacaksın.',
+    pozisyonlar: [
+      'Model evleri ve numune bölümleri',
+      'Markaların tasarım ekipleri',
+      'Konfeksiyon üreticilerinin ürün geliştirme birimleri',
+      'Kumaş ve aksesuar tedarikçileri',
+      'Bağımsız tasarımcı atölyeleri',
+    ],
+    dikkat: [
+      'Sadece çizim yapılan bir yerde kalmak eksik. Numune ve kalıp bölümünü görmek, tasarımın ' +
+        'üretime nasıl döndüğünü öğretiyor.',
+      'Kumaş bilgisi bu bölümün en zayıf kaldığı yer ve piyasada en çok sorulan şey. Staj ' +
+        'boyunca gördüğün her kumaşın adını ve davranışını not al.',
+      'Portfolyo başvurunun en belirleyici parçası; çizim kadar teknik çizim ve kalıp ' +
+        'çalışmalarını da koymak, seni sadece çizim yapan adaylardan ayırıyor.',
+      '"Görünürlük karşılığı ücretsiz çalışma" teklifleri bu alanda yaygın. Zorunlu stajda 3308 ' +
+        'kapsamındaysan ücret ödenmesi gerektiğini bil ve baştan sor.',
+    ],
+    cvIpucu:
+      'Portfolyo bağlantısı CV\'nin en üstünde olsun; bu alanda ilk bakılan yer orası. ' +
+      'Portfolyoya sadece illüstrasyon değil, teknik çizim ve dikilmiş ürün fotoğrafı da koy — ' +
+      'üretimi bildiğini gösteren şey bu. Kalıp ve tasarım programlarını seviye vererek yaz; ' +
+      'dikiş ve kalıp becerini belirtmeyi unutma.',
+    sss: [
+      {
+        soru: 'Moda tasarımı stajı nerede yapılır?',
+        cevap:
+          'Model evleri, markaların tasarım ekipleri, konfeksiyon üreticilerinin ürün geliştirme ' +
+          'birimleri, kumaş ve aksesuar tedarikçileri, bağımsız tasarımcı atölyeleri.',
+      },
+      {
+        soru: 'Stajda tasarım yapıyor muyum?',
+        cevap:
+          'İlk dönem çoğunlukla araştırma, kumaş ve aksesuar takibi, numune sürecine destek. Güven ' +
+          'kazandıkça tasarım kararlarına dahil oluyorsun; küçük atölyelerde bu çok daha hızlı ' +
+          'oluyor.',
+      },
+      {
+        soru: 'Moda tasarımı portfolyosunda ne olmalı?',
+        cevap:
+          'İllüstrasyonun yanında teknik çizim ve dikilmiş ürün fotoğrafı. Üretim tarafını ' +
+          'bildiğini gösteren portfolyo, sadece çizimden oluşandan çok daha güçlü.',
+      },
+      {
+        soru: 'Kalıp bilmem gerekiyor mu?',
+        cevap:
+          'Zorunlu değil ama bilen tasarımcı sayısı az. Kalıbı anlayan biri, dikilemeyecek bir ' +
+          'tasarım çizmiyor ve bu piyasada hemen fark ediliyor.',
+      },
+      {
+        soru: 'Marka tarafında mı, üreticide mi staj yapmalıyım?',
+        cevap:
+          'Marka tarafı koleksiyon ve trend kararlarını, üretici ise ürünün nasıl doğduğunu ' +
+          'gösteriyor. İkincisini görmemiş bir tasarımcı hep eksik kalıyor.',
+      },
+      {
+        soru: 'Kumaş bilgisi neden bu kadar önemli?',
+        cevap:
+          'Çünkü tasarımın davranışını kumaş belirliyor: dökümü, esnemesi, dikilebilirliği. Kumaşı ' +
+          'tanımayan bir tasarım kâğıtta güzel, üründe sorunlu oluyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'ic-mimarlik',
@@ -1561,6 +1769,77 @@ export const BOLUMLER: Bolum[] = [
       'Okul projelerinin render\'ı herkeste güzel. Ofisler asıl uygulama detayı çizebilen ' +
       'stajyer arıyor — bir detay çizimini portfolyona koy.',
     aramaKelimeleri: ['iç mimarlık', 'mimar', 'tasarım'],
+    giris:
+      'İç mimarlıkta staj, tasarımın kâğıttan çıkıp gerçek bir mekâna dönüştüğü yeri görme ' +
+      'fırsatı ve bu, okulda öğrenilemeyen tarafın tamamı. Ölçü tutmayan bir detay, bulunamayan ' +
+      'bir malzeme, bütçeye sığmayan bir fikir — bunlar ancak sahada öğreniliyor. Bu yüzden ' +
+      'yalnızca çizim yapılan bir stüdyoda kalmak eksik bir staj oluyor; uygulama tarafını da ' +
+      'görmek gerekiyor. Bu sayfada hangi tür ofis ve firmaların stajyer aldığını, stajyere ' +
+      'verilen gerçek işleri, portfolyoda nelerin işe yaradığını ve başvuru ipuçlarını ' +
+      'bulacaksın.',
+    pozisyonlar: [
+      'İç mimarlık ve tasarım stüdyoları',
+      'Uygulama ve taahhüt firmaları (şantiye tarafı)',
+      'Mobilya üreticilerinin tasarım birimleri',
+      'Mağaza ve zincir marka konsept ekipleri',
+      'Otel ve restoran projeleri yürüten ofisler',
+    ],
+    dikkat: [
+      'Sadece çizim yapılan bir stüdyoda kalmak eksik bir staj. Uygulamayı da görmek, çizdiğin ' +
+        'detayın sahada nasıl çözüldüğünü öğretiyor.',
+      'Malzeme bilgisi bu bölümün en zayıf kaldığı yer ve piyasada en çok sorulan şey. Staj ' +
+        'sırasında gördüğün her malzemenin adını ve kullanım yerini not al.',
+      'Portfolyo başvurunun en belirleyici parçası. Bağlantısı açılmayan bir portfolyo, hiç ' +
+        'portfolyo olmamasıyla aynı sonucu veriyor.',
+      'Küçük ofislerde stajyerden gerçek üretim bekleniyor; büyük ofislerde sürecin bir ' +
+        'parçasını görüyorsun. Ne öğrenmek istediğine göre seç.',
+    ],
+    cvIpucu:
+      'Portfolyo bağlantısını CV\'nin en üstüne koy ve açıldığını kontrol et. Kullandığın ' +
+      'çizim, modelleme ve görselleştirme programlarını ayrı ayrı yaz. Stüdyo projelerinden iki ' +
+      'tanesini seçip ne yaptığını anlatmak, on projeyi listelemekten güçlü. Malzeme ve detay ' +
+      'bilgin varsa bunu belirtmek, çoğu adayın atladığı bir avantaj.',
+    sss: [
+      {
+        soru: 'İç mimarlık stajı nerede yapılır?',
+        cevap:
+          'Tasarım stüdyoları, uygulama ve taahhüt firmaları, mobilya üreticilerinin tasarım ' +
+          'birimleri, mağaza konsept ekipleri ve otel-restoran projeleri yürüten ofisler.',
+      },
+      {
+        soru: 'Stajda gerçekten tasarım yapıyor muyum?',
+        cevap:
+          'Genelde önce çizim, ölçü alma ve sunum hazırlığı veriliyor. Güven kazandıkça detay ' +
+          'çözümüne ve tasarım kararlarına dahil oluyorsun. Küçük ofislerde bu çok daha hızlı ' +
+          'oluyor.',
+      },
+      {
+        soru: 'İç mimarlık stajı için hangi programlar isteniyor?',
+        cevap:
+          'Çizim tarafında AutoCAD, modelleme tarafında SketchUp ya da bir bina bilgi modelleme ' +
+          'aracı, sunum tarafında görselleştirme ve grafik programları.',
+      },
+      {
+        soru: 'Uygulama firmasında staj yapmak mantıklı mı?',
+        cevap:
+          'Çok mantıklı. Çizdiğin detayın sahada nasıl imal edildiğini, hangi malzemenin nerede ' +
+          'çalışmadığını orada öğreniyorsun. Bunu görmemiş bir tasarımcı aynı hatayı yıllarca ' +
+          'tekrarlıyor.',
+      },
+      {
+        soru: 'İç mimarlık ile mimarlık stajı aynı yerde yapılabilir mi?',
+        cevap:
+          'Bazı ofisler ikisini birden yürütüyor ama okulun yönergesi kabul edilen iş yerini ' +
+          'tanımlıyor. Belge sürecine girmeden önce bölüm staj sorumlusuna sor.',
+      },
+      {
+        soru: 'Portfolyoda okul projeleri yeterli mi?',
+        cevap:
+          'Yeterli. Önemli olan projenin nerede yapıldığı değil, fikri ve çözümü anlatabilmen. Her ' +
+          'projenin yanına bir iki cümlelik açıklama koymak fark yaratıyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'radyo-televizyon-ve-sinema',
@@ -1597,6 +1876,74 @@ export const BOLUMLER: Bolum[] = [
       'Set stajı fiziksel olarak zor ve çoğu zaman ücretsiz başlıyor. Buna rağmen bu ' +
       'sektörde işe girmenin neredeyse tek yolu; tanıdığın herkese haber ver.',
     aramaKelimeleri: ['medya', 'video', 'prodüksiyon'],
+    giris:
+      'Radyo, televizyon ve sinema bölümünde staj, sektöre girmenin neredeyse tek kapısı: bu ' +
+      'alanda işe alım büyük ölçüde tanışıklıkla yürüyor ve set ortamına ilk kez stajyer olarak ' +
+      'giriliyor. Bunun karşılığı ise ağır çalışma koşulları — uzun saatler, düzensiz program, ' +
+      'hafta sonu çekimleri. Bunu bilerek gitmek şart. Bir de şu var: sette hiyerarşi net ve ' +
+      'stajyerin işi genelde en temelden başlıyor. Bu sayfada hangi tür yerlerin stajyer ' +
+      'aldığını, stajyerin gerçekte ne yaptığını ve başvururken bilmen gerekenleri bulacaksın.',
+    pozisyonlar: [
+      'Yapım şirketleri — dizi, film ve program setleri',
+      'Televizyon kanallarının yayın ve haber birimleri',
+      'Reklam prodüksiyon şirketleri',
+      'Dijital içerik ve sosyal medya prodüksiyonu',
+      'Kurgu, ses ve post prodüksiyon stüdyoları',
+    ],
+    dikkat: [
+      'Set çalışması uzun ve düzensiz saatlere yayılıyor; hafta sonu çekimi normal. Bunu ' +
+        'bilerek gitmek, ilk hafta bırakmamanın şartı.',
+      'Bu sektörde işe alım büyük ölçüde tanışıklıkla yürüyor. Staj, sadece deneyim değil ' +
+        'bağlantı kurma fırsatı; birlikte çalıştığın herkesle iletişimi koparma.',
+      'Stajyerin işi en temelden başlıyor: ekipman taşıma, set düzeni, not tutma. Bu ' +
+        'küçümsenecek bir şey değil — sette işleyişi böyle öğreniyorsun.',
+      'Post prodüksiyon tarafı (kurgu, ses, renk) daha düzenli saatlerde çalışıyor. Set temposu ' +
+        'sana uymuyorsa bu tarafa yönelmek mantıklı.',
+    ],
+    cvIpucu:
+      'Kendi çektiğin ya da kurguladığın işlere bağlantı koy; bu alanda gösterilebilir iş her ' +
+      'şeyden önemli. Kısa bir film, bir tanıtım videosu ya da düzenli ürettiğin içerik olsun ' +
+      'fark etmez. Kullandığın kurgu ve ses programlarını, kamera deneyimini yaz. Sette hangi ' +
+      'bölümde çalışmak istediğini belirtmek başvuruyu kişiselleştiriyor.',
+    sss: [
+      {
+        soru: 'RTS stajı nerede yapılır?',
+        cevap:
+          'Yapım şirketleri, televizyon kanalları, reklam prodüksiyon şirketleri, dijital içerik ' +
+          'üreticileri ve post prodüksiyon stüdyoları.',
+      },
+      {
+        soru: 'Sette stajyer ne iş yapıyor?',
+        cevap:
+          'Set düzeni, ekipman taşıma ve hazırlık, not tutma, ekipler arası iletişim. İş temel ' +
+          'görünüyor ama setin nasıl işlediğini öğrenmenin başka yolu yok.',
+      },
+      {
+        soru: 'Çalışma saatleri gerçekten çok uzun mu?',
+        cevap:
+          'Set tarafında evet: çekim günleri uzun ve program düzensiz olabiliyor. Post prodüksiyon ' +
+          've kanal içi birimler daha düzenli saatlerde çalışıyor.',
+      },
+      {
+        soru: 'Kurgu programı bilmem gerekiyor mu?',
+        cevap:
+          'Post prodüksiyon tarafını hedefliyorsan şart. Set tarafında beklenmiyor ama bilmek, ' +
+          'çekilen malzemenin nasıl kullanılacağını anlamanı sağlıyor.',
+      },
+      {
+        soru: 'Kendi işim yoksa başvurabilir miyim?',
+        cevap:
+          'Başvurabilirsin ama küçük bir iş üretmek birkaç gününü alır ve başvurunun tamamını ' +
+          'değiştirir. Telefonla çekilmiş, düzgün kurgulanmış kısa bir iş bile yeterli.',
+      },
+      {
+        soru: 'Sette yapılan staj işe dönüşür mü?',
+        cevap:
+          'Sektörün işe alım biçimi buna dayanıyor: setteki ekipler tanıdıkları kişilerle çalışmayı ' +
+          'tercih ediyor. Staj sonunda bağlantıyı korumak burada başka her yerden önemli.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
 
   /* --------------------------------------------------- mühendislik (devam) */
@@ -1675,7 +2022,7 @@ export const BOLUMLER: Bolum[] = [
           'çözüldüğü. Çoğu bölüm ikisini ayrı ayrı istiyor.',
       },
       {
-        soru: 'Hangi programları bilmem gerekiyor?',
+        soru: 'Mimarlık stajı için hangi programlar isteniyor?',
         cevap:
           'Çizim tarafında AutoCAD, modelleme tarafında bir bina bilgi modelleme aracı ve SketchUp ' +
           'yaygın. Görselleştirme ve grafik programları ise sunum tarafında ayırt edici oluyor.',
@@ -1851,6 +2198,74 @@ export const BOLUMLER: Bolum[] = [
       'Danışmanlık firmaları rapor yazan stajyeri çok seviyor. Bir çevre raporunun ' +
       'yapısını önceden incelemek seni hemen öne çıkarıyor.',
     aramaKelimeleri: ['çevre', 'arıtma', 'atık'],
+    giris:
+      'Çevre mühendisliğinde staj arayan öğrencinin ilk şaşırdığı şey, işin ne kadar mevzuata ' +
+      'dayandığı: bu alanda yapılan işlerin büyük kısmı yasal bir yükümlülükten doğuyor. Arıtma ' +
+      'tesisi de, atık kaydı da, izin dosyası da bir düzenlemenin karşılığı. Bu yüzden staj ' +
+      'yerleri de iki gruba ayrılıyor: mevzuatı uygulayan tesisler ve o mevzuatı takip eden ' +
+      'danışmanlık firmaları. Bu sayfada iki tarafın da nerede olduğunu, stajyere verilen ' +
+      'gerçek işleri ve başvurmadan önce bilmen gerekenleri bulacaksın.',
+    pozisyonlar: [
+      'Atıksu ve içme suyu arıtma tesisleri',
+      'Çevre danışmanlık firmaları ve izin dosyaları',
+      'Atık yönetimi ve geri kazanım tesisleri',
+      'Sanayi tesislerinin çevre birimleri',
+      'Belediyelerin çevre koruma müdürlükleri',
+    ],
+    dikkat: [
+      'Bu alanda işin omurgası mevzuat. Çevre izinleri ve atık yönetimiyle ilgili temel ' +
+        'kavramları önceden okumak, stajın ilk gününden itibaren işin içine girmeni sağlıyor.',
+      'Arıtma tesisleri genellikle şehir dışında ve ulaşımı zor. Servis olup olmadığını ' +
+        'başvurmadan önce sor.',
+      'Danışmanlık firmalarında iş masa başında ve rapor ağırlıklı; tesiste ise saha ve numune ' +
+        'ağırlıklı. İkisi çok farklı deneyimler.',
+      'Sanayi tesislerinin çevre birimleri stajyer alıyor ama neredeyse hiç ilan açmıyor. ' +
+        'Şehrindeki organize sanayi bölgesine doğrudan yazmak en verimli yol.',
+    ],
+    cvIpucu:
+      'Laboratuvarda yaptığın analizleri adıyla yaz: KOİ, BOİ, askıda katı madde, pH gibi. Bu ' +
+      'bölümde en çok atlanan satır bu. Coğrafi bilgi sistemleri ya da bir modelleme programı ' +
+      'kullanabiliyorsan mutlaka belirt. Çevre mevzuatına dair bir eğitim ya da sertifikan ' +
+      'varsa yaz; danışmanlık firmaları buna doğrudan bakıyor.',
+    sss: [
+      {
+        soru: 'Çevre mühendisliği stajı nerede yapılır?',
+        cevap:
+          'Arıtma tesisleri, atık yönetimi ve geri kazanım tesisleri, çevre danışmanlık firmaları, ' +
+          'sanayi tesislerinin çevre birimleri ve belediyelerin çevre müdürlükleri.',
+      },
+      {
+        soru: 'Çevre stajında hangi işler veriliyor?',
+        cevap:
+          'Numune alma ve laboratuvar analizi, arıtma tesisi işletme verilerinin kaydı, atık ' +
+          'beyanlarının hazırlığı, izin dosyalarının derlenmesi ve saha ölçümlerine destek.',
+      },
+      {
+        soru: 'Danışmanlık firmasında mı, tesiste mi staj yapmalıyım?',
+        cevap:
+          'Tesis işin nasıl işlediğini gösteriyor, danışmanlık ise mevzuatın nasıl uygulandığını. ' +
+          'İkisini farklı dönemlerde yapabilirsen alanın tamamını görmüş olursun.',
+      },
+      {
+        soru: 'Çevre mevzuatını bilmem gerekiyor mu?',
+        cevap:
+          'Uzmanlık beklenmiyor ama çevre izni, atık kodları ve ÇED sürecinin ne olduğunu bilmek ' +
+          'hem mülakatta hem ilk günde belirgin fark yaratıyor.',
+      },
+      {
+        soru: 'Coğrafi bilgi sistemleri bu bölümde işe yarıyor mu?',
+        cevap:
+          'Fazlasıyla. Kirlilik haritalama, saha planlama ve raporlama tarafında kullanılıyor ve ' +
+          'bilen öğrenci sayısı az olduğu için doğrudan ayırt edici oluyor.',
+      },
+      {
+        soru: 'Belediyede staj yapabilir miyim?',
+        cevap:
+          'Yapabilirsin; çevre koruma ve kontrol müdürlükleri stajyer alıyor. Evrak süreci uzun ' +
+          'olduğu için başvuruyu aylar öncesinden başlatmak gerekiyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'harita-ve-geomatik-muhendisligi',
@@ -1887,6 +2302,75 @@ export const BOLUMLER: Bolum[] = [
       'QGIS ücretsiz. Staj öncesi birkaç hafta kendi başına çalışıp bir harita üretmek, ' +
       'CBS tarafındaki ofis stajlarında seni doğrudan işe alır hâle getiriyor.',
     aramaKelimeleri: ['harita', 'ölçüm', 'cbs'],
+    giris:
+      'Harita ve geomatik mühendisliğinin stajı büyük ölçüde arazide geçiyor ve bu, bölümün hem ' +
+      'en güzel hem en zorlayıcı tarafı: hava koşulları, arazi şartları ve erken saatler işin ' +
+      'bir parçası. Karşılığında ölçtüğün şeyin doğrudan bir yapıya, bir tapuya ya da bir plana ' +
+      'dönüştüğünü görüyorsun. Staj yerleri üç ana gruba ayrılıyor: ölçüm yapan harita ' +
+      'büroları, uygulama yapan şantiyeler ve veriyi yöneten kamu kurumları. Bu sayfada üçünün ' +
+      'de ne öğrettiğini, stajyere verilen gerçek işleri ve hangi cihazları tanımanın işe ' +
+      'yaradığını bulacaksın.',
+    pozisyonlar: [
+      'Harita ve ölçüm büroları',
+      'İnşaat şantiyelerinde aplikasyon ve kot kontrolü',
+      'Kadastro ve tapu müdürlükleri',
+      'Belediyelerin imar ve harita birimleri',
+      'Coğrafi bilgi sistemleri ve uzaktan algılama projeleri',
+    ],
+    dikkat: [
+      'Arazi çalışması erken başlıyor ve hava koşullarına bağlı. Yazın sıcak, kışın soğukta ' +
+        'çalışmak işin normali; bunu bilerek gitmek gerekiyor.',
+      'Cihazlar pahalı ve hassas. Kullanmayı öğrenirken acele etmemek, hem cihazı hem ölçümü ' +
+        'koruyor.',
+      'Kamu kurumlarında staj kontenjanı var ama evrak süreci uzun; başvuruyu aylar öncesinden ' +
+        'başlatmak gerekiyor.',
+      'Ofis tarafı da işin yarısı: arazide toplanan veri büroda işleniyor. Sadece arazi ya da ' +
+        'sadece ofis gören bir staj eksik kalıyor.',
+    ],
+    cvIpucu:
+      'Kullandığın cihazları adıyla yaz: total station, GNSS alıcısı, nivo. Bu bölümde CV\'nin ' +
+      'en çok bakılan satırı orası. Coğrafi bilgi sistemleri ve çizim programlarını seviye ' +
+      'vererek belirt. İnsansız hava aracıyla veri toplama ya da fotogrametri deneyimin varsa ' +
+      'mutlaka yaz; bilen öğrenci sayısı az ve talep artıyor.',
+    sss: [
+      {
+        soru: 'Harita mühendisliği stajı nerede yapılır?',
+        cevap:
+          'Harita ve ölçüm büroları, inşaat şantiyeleri, kadastro müdürlükleri, belediyelerin imar ' +
+          've harita birimleri ve coğrafi bilgi sistemleri projeleri yürüten kurumlar.',
+      },
+      {
+        soru: 'Stajda hangi cihazları kullanıyorum?',
+        cevap:
+          'Total station, GNSS alıcısı ve nivo en yaygınları. Kullanımı gözetim altında ' +
+          'öğretiliyor; önceden görmüş olmak ilk günü çok kolaylaştırıyor.',
+      },
+      {
+        soru: 'Şantiyede harita mühendisi ne yapıyor?',
+        cevap:
+          'Projenin araziye aktarılması, aks ve kot kontrolü, imalat sonrası ölçüm ve hakediş için ' +
+          'metraj alınması. Yapının doğru yerde ve doğru kotta olmasının sorumluluğu bu işte.',
+      },
+      {
+        soru: 'Coğrafi bilgi sistemleri öğrenmeli miyim?',
+        cevap:
+          'Öğrenmelisin. Verinin toplanması kadar yönetilmesi de bu bölümün işi ve kamu ' +
+          'kurumlarından özel projelere kadar her yerde kullanılıyor.',
+      },
+      {
+        soru: 'İnsansız hava aracı bilgisi işe yarar mı?',
+        cevap:
+          'Fazlasıyla. Fotogrametrik veri toplama hızla yaygınlaşıyor ve bu tarafı bilen öğrenci ' +
+          'sayısı hâlâ az. CV\'de belirgin bir fark yaratıyor.',
+      },
+      {
+        soru: 'Kadastroda staj yapmak mantıklı mı?',
+        cevap:
+          'Mülkiyet ve tapu tarafının nasıl işlediğini öğrenmek için en doğrudan yer. Serbest ' +
+          'çalışmayı düşünüyorsan bu süreci içeriden görmüş olmak doğrudan işine yarıyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'metalurji-ve-malzeme-muhendisligi',
@@ -1922,6 +2406,75 @@ export const BOLUMLER: Bolum[] = [
       'Dökümhane stajı zorlu ama bu alanda en çok iş teklifi buradan çıkıyor; ' +
       'ofis stajı arayanlara göre rekabet çok daha az.',
     aramaKelimeleri: ['metalurji', 'malzeme', 'üretim'],
+    giris:
+      'Metalurji ve malzeme mühendisliğinde staj arayan öğrencinin en sık düştüğü hata, ' +
+      'yalnızca büyük demir-çelik tesislerine bakmak. Oysa malzeme her üretimin içinde: döküm ' +
+      'atölyesinden ısıl işlem tesisine, otomotiv yan sanayiden kaynak imalatına kadar geniş ' +
+      'bir alanda bu bölümün işi var ve o küçük tesislerde rekabet neredeyse yok. Bir de ' +
+      'laboratuvar tarafı var: malzeme test laboratuvarları alanı en hızlı öğreten yerlerden ' +
+      'biri. Bu sayfada nerede staj yapıldığını, stajyere verilen gerçek işleri ve başvurmadan ' +
+      'önce bilmen gerekenleri bulacaksın.',
+    pozisyonlar: [
+      'Döküm ve dövme tesisleri',
+      'Isıl işlem ve yüzey işlem tesisleri',
+      'Malzeme test ve analiz laboratuvarları',
+      'Otomotiv yan sanayi üretim tesisleri',
+      'Kaynak ve metal imalat atölyeleri',
+    ],
+    dikkat: [
+      'Yalnızca büyük demir-çelik tesislerine bakma. Döküm, ısıl işlem ve kaplama tesisleri de ' +
+        'bu bölümden stajyer alıyor ve rekabet çok daha düşük.',
+      'Sıcak proses ortamlarında (döküm, ısıl işlem) çalışma koşulları ağır: yüksek sıcaklık ve ' +
+        'koruyucu donanım. Bunu bilerek seçmek gerekiyor.',
+      'Laboratuvar tarafı alanı en hızlı öğreten yerlerden biri: malzemenin neden kırıldığını ' +
+        'orada görüyorsun. Üretim stajından sonra bunu da görmek tamamlıyor.',
+      'Bazı analiz cihazları pahalı ve kullanımı yetkiye bağlı. Gözlem yapmak bile öğretici; ' +
+        'cihazın ne ölçtüğünü ve sonucun ne anlama geldiğini not al.',
+    ],
+    cvIpucu:
+      'Okulda kullandığın test ve analiz yöntemlerini adıyla yaz: çekme testi, sertlik ölçümü, ' +
+      'metalografik inceleme, mikroskopla yapı analizi. Bu bölümde en çok atlanan ve en çok işe ' +
+      'yarayan satır bu. Isıl işlem ve kaynak yöntemlerine dair bildiklerini de belirt; üretim ' +
+      'tesisleri doğrudan buna bakıyor.',
+    sss: [
+      {
+        soru: 'Metalurji stajı nerede yapılır?',
+        cevap:
+          'Döküm ve dövme tesisleri, ısıl işlem ve kaplama tesisleri, malzeme test laboratuvarları, ' +
+          'otomotiv yan sanayi ve metal imalat atölyeleri.',
+      },
+      {
+        soru: 'Metalurji stajyerine hangi işler veriliyor?',
+        cevap:
+          'Numune hazırlama ve test, üretim parametrelerinin kaydı, hata ve ıskarta incelemesi, ' +
+          'ısıl işlem fırın kayıtlarının takibi, kalite raporlarının hazırlığı.',
+      },
+      {
+        soru: 'Laboratuvarda mı, üretimde mi staj yapmalıyım?',
+        cevap:
+          'Üretim malzemenin nasıl şekillendiğini, laboratuvar neden öyle davrandığını öğretiyor. ' +
+          'İkisini farklı dönemlerde görmek alanı tamamlıyor.',
+      },
+      {
+        soru: 'Döküm tesisinde çalışma koşulları nasıl?',
+        cevap:
+          'Sıcak ve koruyucu donanım gerektiren bir ortam. Karşılığında metalin sıvıdan katıya ' +
+          'geçişini yerinde görmek, bu bölümün en öğretici deneyimlerinden biri.',
+      },
+      {
+        soru: 'Hangi analiz yöntemlerini bilmem gerekiyor?',
+        cevap:
+          'Sertlik ölçümü, çekme testi ve metalografik inceleme temel başlangıç. Bunları okulda ' +
+          'yaptıysan CV\'ye yazmak doğrudan karşılık buluyor.',
+      },
+      {
+        soru: 'Kaynak bilgisi bu bölümde işe yarıyor mu?',
+        cevap:
+          'Fazlasıyla. Kaynak yöntemlerini ve kaynak hatalarını bilmek, metal imalat yapan her ' +
+          'tesiste seni hemen kullanışlı hale getiriyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'ziraat-muhendisligi',
@@ -1958,6 +2511,74 @@ export const BOLUMLER: Bolum[] = [
       'Bu bölümde stajın zamanı içeriğini belirliyor. Hangi ürünün hangi ayda ne ' +
       'aşamada olduğunu bilip başvurunu ona göre planla.',
     aramaKelimeleri: ['ziraat', 'tarım', 'gıda'],
+    giris:
+      'Ziraat mühendisliğinde stajın en belirleyici tarafı takvim: tarım mevsime bağlı ve ' +
+      'yanlış dönemde yapılan staj boş geçiyor. Ekim, bakım ve hasat dönemleri farklı işler ' +
+      'gösteriyor; tesis ya da işletme o dönemde ne yapıyorsa sen onu öğreniyorsun. Bir de alan ' +
+      'genişliği var: bitkisel üretim, hayvansal üretim, toprak, gıda ve tarım ekonomisi çok ' +
+      'farklı işler. Bu sayfada hangi tür işletmelerin stajyer aldığını, stajyere verilen ' +
+      'gerçek işleri ve dönem seçerken nelere dikkat etmen gerektiğini bulacaksın.',
+    pozisyonlar: [
+      'Tarım işletmeleri ve büyük ölçekli üretim çiftlikleri',
+      'Sera işletmeleri ve fide üretimi',
+      'Tohum, gübre ve tarım ilacı firmalarının saha ekipleri',
+      'Gıda sanayinin hammadde tedarik birimleri',
+      'Tarım kredi kooperatifleri, ziraat odaları ve kamu kurumları',
+    ],
+    dikkat: [
+      'Staj dönemini üretim takvimine göre seç. Ekim, bakım ve hasat farklı işler gösteriyor; ' +
+        'yanlış dönemde gidersen görecek bir şey olmuyor.',
+      'Saha çalışması açık havada ve erken saatlerde başlıyor. Sıcak, toz ve tarla şartları ' +
+        'işin bir parçası.',
+      'Tarım ilacı ve gübre ile çalışılan yerlerde koruyucu donanım ve uygulama kuralları ' +
+        'kesin. Bu konuda esneklik gösteren bir yerden uzak dur.',
+      'Tohum ve tarım ilacı firmalarının saha ekipleri stajyer alıyor ve bu taraf hem üreticiyi ' +
+        'hem ürünü tanımanı sağlıyor — çoğu öğrencinin hiç düşünmediği bir yol.',
+    ],
+    cvIpucu:
+      'Hangi alanla ilgilendiğini açıkça yaz: bitkisel üretim, hayvansal üretim, toprak, gıda ' +
+      'ya da tarım ekonomisi. "Ziraat mühendisliği öğrencisiyim" cümlesi çok geniş. ' +
+      'Laboratuvarda yaptığın analizleri ve arazi çalışmalarını belirt. Ehliyet bu alanda işe ' +
+      'yarıyor; saha ekipleri sürekli yolda oluyor.',
+    sss: [
+      {
+        soru: 'Ziraat mühendisliği stajı nerede yapılır?',
+        cevap:
+          'Tarım işletmeleri ve çiftlikler, sera ve fide üreticileri, tohum-gübre-ilaç firmalarının ' +
+          'saha ekipleri, gıda sanayinin hammadde birimleri, kooperatifler ve kamu kurumları.',
+      },
+      {
+        soru: 'Staj dönemini nasıl seçmeliyim?',
+        cevap:
+          'Üretim takvimine göre. İlgilendiğin ürünün hangi ayda ne aşamada olduğunu öğren ve stajı ' +
+          'ona göre planla; boş dönemde gidilen staj gözlem bile üretmiyor.',
+      },
+      {
+        soru: 'Sahada mı, laboratuvarda mı çalışıyorum?',
+        cevap:
+          'İşletmeye göre değişiyor. Üretim işletmelerinde saha ağırlıklı, tohum ve gıda ' +
+          'firmalarında laboratuvar ve analiz tarafı daha yoğun.',
+      },
+      {
+        soru: 'Tarım ilacı ile çalışırken ne yapmalıyım?',
+        cevap:
+          'Koruyucu donanım ve uygulama kurallarına harfiyen uymalısın. Bu konuda gevşek davranan ' +
+          'bir işletme kendi çalışanını da korumuyor demektir.',
+      },
+      {
+        soru: 'Hayvansal üretim tarafında staj yapılabilir mi?',
+        cevap:
+          'Yapılabiliyor: süt ve besi işletmeleri, kuluçkahaneler ve yem fabrikaları stajyer ' +
+          'alıyor. Çalışma saatleri hayvanın düzenine göre olduğu için erken başlıyor.',
+      },
+      {
+        soru: 'Ziraat stajı için ehliyet gerekli mi?',
+        cevap:
+          'Zorunlu değil ama saha ekiplerinde çok işe yarıyor: bu iş sürekli üreticiden üreticiye ' +
+          'gitmeyi gerektiriyor ve ehliyetli stajyer ekibe daha kolay katılıyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
 
   /* --------------------------------------------------------- MYO (devam) */
@@ -2034,7 +2655,7 @@ export const BOLUMLER: Bolum[] = [
           'firmaların sevkiyat birimleri ve perakende zincirlerinin tedarik ekipleri.',
       },
       {
-        soru: 'Stajda hangi işler veriliyor?',
+        soru: 'Lojistik stajyerine hangi işler veriliyor?',
         cevap:
           'Sevkiyat kayıtlarının takibi, stok sayımı ve fark analizi, araç ve rota planlamasına ' +
           'destek, irsaliye ve teslim belgelerinin düzeni, gecikme ve hasar kayıtlarının tutulması.',
@@ -2052,7 +2673,7 @@ export const BOLUMLER: Bolum[] = [
           'edici; markalar değişse de mantık aynı olduğu için biri diğerine geçişi kolaylaştırıyor.',
       },
       {
-        soru: 'Ehliyet gerekli mi?',
+        soru: 'Lojistik stajı için ehliyet gerekli mi?',
         cevap:
           'Zorunlu değil ama saha tarafında işe yarıyor ve bazı ilanlarda isteniyor. Forklift gibi ' +
           'operatör belgesi ise depo tarafında doğrudan avantaj.',
@@ -2101,6 +2722,76 @@ export const BOLUMLER: Bolum[] = [
       'Sahada çalışanlar İSG\'yi çoğu zaman engel görüyor. Kural okumak yerine ' +
       'nedenini anlatabilen stajyer çok daha hızlı kabul görüyor.',
     aramaKelimeleri: ['iş güvenliği', 'isg', 'saha'],
+    giris:
+      'İş sağlığı ve güvenliği stajında öğrencinin ilk anlaması gereken şey şu: iş güvenliği ' +
+      'uzmanı olmak ayrı bir süreç ve sertifikaya bağlı. Öğrenci olarak sahada gözlemci ve ' +
+      'destek konumundasın; denetim yapma ya da tutanak imzalama yetkin yok. Bu sınırı bilmek ' +
+      'hem seni korur hem işletmeyi. Karşılığında bu staj, bir işletmenin gerçekte nasıl ' +
+      'çalıştığını en yakından gösteren stajlardan biri: üretimin her adımını risk gözüyle ' +
+      'izliyorsun. Bu sayfada nerede staj yapıldığını, stajyerin gerçekte ne yaptığını ve ' +
+      'başvururken bilmen gerekenleri bulacaksın.',
+    pozisyonlar: [
+      'Ortak sağlık ve güvenlik birimleri (OSGB)',
+      'Fabrikaların iş güvenliği birimleri',
+      'İnşaat şantiyeleri',
+      'Enerji ve kimya tesisleri',
+      'Lojistik ve depo işletmeleri',
+    ],
+    dikkat: [
+      'İş güvenliği uzmanlığı sertifikaya bağlı ayrı bir süreç. Öğrenci olarak gözlemci ve ' +
+        'destek konumundasın; denetim ve tutanak yetkisi uzmanda.',
+      'Sahaya çıkarken kişisel koruyucu donanım şart ve kurala uymayan stajyer içeri alınmıyor. ' +
+        'Bu alanda kuralı ilk uygulayan kişi sensin.',
+      'OSGB\'lerde birçok farklı işletmeyi görüyorsun, tek bir fabrikada ise bir işletmeyi ' +
+        'derinlemesine. İkisi farklı şeyler öğretiyor.',
+      'Kaza ve ramak kala kayıtları gizli bilgi. Staj defterine yazarken işletme adını ve ' +
+        'kişileri belirtme; nasıl yazacağını sorumluna sor.',
+    ],
+    cvIpucu:
+      'Aldığın eğitimleri ve sertifikaları listele: ilk yardım, yangın, yüksekte çalışma. Bu ' +
+      'bölümde CV\'de en çok bakılan yer orası. Risk değerlendirme yöntemlerinden hangilerini ' +
+      'bildiğini yaz. Daha önce bir üretim ya da şantiye ortamında bulunduysan mutlaka belirt; ' +
+      'sahayı tanımak bu işte doğrudan avantaj.',
+    sss: [
+      {
+        soru: 'İş güvenliği stajı nerede yapılır?',
+        cevap:
+          'Ortak sağlık ve güvenlik birimleri, fabrikaların iş güvenliği birimleri, inşaat ' +
+          'şantiyeleri, enerji ve kimya tesisleri, lojistik ve depo işletmeleri.',
+      },
+      {
+        soru: 'Staj yaparken denetim yapabilir miyim?',
+        cevap:
+          'Hayır. Denetim ve tutanak yetkisi sertifikalı iş güvenliği uzmanında. Sen saha turlarına ' +
+          'katılıyor, gözlem yapıyor ve kayıtların hazırlığına destek oluyorsun.',
+      },
+      {
+        soru: 'Risk değerlendirmesi nedir, stajda yapar mıyım?',
+        cevap:
+          'Bir işte hangi tehlikelerin bulunduğunu ve ne kadar riskli olduğunu sistemli biçimde ' +
+          'belirleme çalışması. Stajyer genelde veri toplama ve tablo hazırlığı tarafında yer ' +
+          'alıyor.',
+      },
+      {
+        soru: 'OSGB\'de mi, fabrikada mı staj yapmalıyım?',
+        cevap:
+          'OSGB\'de kısa sürede çok farklı işletme görüyorsun; fabrikada tek bir işletmeyi derinden ' +
+          'öğreniyorsun. Alanı tanımak için OSGB, bir sektörü öğrenmek için fabrika daha uygun.',
+      },
+      {
+        soru: 'Hangi sertifikalar işe yarıyor?',
+        cevap:
+          'İlk yardım, yangın güvenliği ve yüksekte çalışma eğitimleri stajyer için doğrudan ' +
+          'avantaj. Bunlar kısa süreli eğitimler ve CV\'de somut karşılık buluyor.',
+      },
+      {
+        soru: 'Bu bölümün stajı işe dönüşür mü?',
+        cevap:
+          'Sahayı tanıyan ve kayıt disiplini olan stajyeri işletmeler tutmak istiyor. Ancak uzman ' +
+          'olarak çalışmak için sertifika süreci gerekiyor; bunu baştan planlamak gerek.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'cocuk-gelisimi',
@@ -2136,6 +2827,76 @@ export const BOLUMLER: Bolum[] = [
       'Belgeleri (adli sicil, sağlık raporu, portör) başvurudan önce hazırla. ' +
       'Kurumlar çocuk güvenliği nedeniyle bu konuda hiç esnemiyor.',
     aramaKelimeleri: ['çocuk', 'eğitim', 'anaokulu'],
+    giris:
+      'Çocuk gelişimi stajı, doğrudan çocuklarla aynı ortamda geçen bir staj ve bu onu diğer ' +
+      'bölümlerden ayıran her şeyi belirliyor: kurumlar sana güvenmek zorunda, o yüzden belge ' +
+      'süreci daha ayrıntılı ve kurallar daha katı. Gördüğün her çocuk hakkında öğrendiğin şey ' +
+      'gizli bilgi; fotoğraf, isim ve durum ayrıntısı kurum dışına çıkmıyor. Bunu baştan bilmek ' +
+      'hem doğru davranmanı sağlıyor hem de kurumun sana güvenmesini kolaylaştırıyor. Bu ' +
+      'sayfada hangi kurumların stajyer aldığını, stajyerin gerçekte ne yaptığını ve ' +
+      'başvurmadan önce hazırlaman gerekenleri bulacaksın.',
+    pozisyonlar: [
+      'Anaokulu ve kreşler',
+      'Özel eğitim ve rehabilitasyon merkezleri',
+      'Hastanelerin çocuk servisleri ve oyun odaları',
+      'Belediyelerin çocuk ve gençlik merkezleri',
+      'Sivil toplum kuruluşlarının çocuk çalışmaları',
+    ],
+    dikkat: [
+      'Çocukla çalışılan kurumlarda sağlık raporu ve adli sicil belgesi istenebiliyor. Bu ' +
+        'belgeleri toplamak birkaç gün sürüyor; staj başlangıcından önce başlat.',
+      'Fotoğraf ve video kesin kural: çocukların görüntüsü izinsiz çekilmez ve hiçbir yerde ' +
+        'paylaşılmaz. Sosyal medya paylaşımı en sık yapılan ve en ağır sonuçlanan hata.',
+      'Gördüğün her durum gizli. Çocuğun adı, ailesi ve gelişim durumu staj defterine bile ' +
+        'yazılmaz; nasıl yazacağını sorumluna sor.',
+      'Özel eğitim merkezlerinde çalışmak duygusal olarak yorucu olabiliyor. Bunu bilerek ' +
+        'gitmek, hem sana hem çocuğa iyi geliyor.',
+    ],
+    cvIpucu:
+      'Çocuklarla geçirdiğin her deneyimi yaz: gönüllü çalışma, yaz kursu, kardeş bakımı bile ' +
+      'olsa. Bu bölümde işverenin aradığı ilk şey sabır ve sorumluluk. İlk yardım, çocuk ' +
+      'gelişimi ya da özel eğitim alanında aldığın kurslar varsa mutlaka belirt. Hangi yaş ' +
+      'grubuyla çalışmak istediğini yazmak da başvuruyu kişiselleştiriyor.',
+    sss: [
+      {
+        soru: 'Çocuk gelişimi stajı nerede yapılır?',
+        cevap:
+          'Anaokulları ve kreşler, özel eğitim ve rehabilitasyon merkezleri, hastanelerin çocuk ' +
+          'servisleri, belediyelerin çocuk merkezleri ve çocuk alanında çalışan sivil toplum ' +
+          'kuruluşları.',
+      },
+      {
+        soru: 'Stajda çocuklarla doğrudan çalışıyor muyum?',
+        cevap:
+          'Evet ama gözetim altında. Etkinliklere katılıyor, oyun ve öğrenme süreçlerine destek ' +
+          'oluyorsun. Değerlendirme ve program hazırlama sorumluluğu kurumun uzmanında kalıyor.',
+      },
+      {
+        soru: 'Çocuk gelişimi stajı için hangi belgeler isteniyor?',
+        cevap:
+          'Okulun staj belgesi ve sigorta girişinin yanında, çoğu kurum sağlık raporu ve adli sicil ' +
+          'belgesi istiyor. Kurumun kendi ek şartları da olabiliyor; başvuruda sor.',
+      },
+      {
+        soru: 'Çocukların fotoğrafını çekebilir miyim?',
+        cevap:
+          'Hayır. İzinsiz görüntü almak ve paylaşmak hem kurumun kuralı hem hukuki bir sorun. Staj ' +
+          'defterine görsel eklemen gerekiyorsa bunu sorumlunla konuş.',
+      },
+      {
+        soru: 'Özel eğitim merkezinde staj yapmak zor mu?',
+        cevap:
+          'Duygusal olarak yorucu olabiliyor ve sabır istiyor. Karşılığında alanı en derin öğreten ' +
+          'yerlerden biri; bu tarafta çalışmayı düşünüyorsan görmen gereken bir deneyim.',
+      },
+      {
+        soru: 'Kreş ya da rehabilitasyon merkezinde staj işe dönüşür mü?',
+        cevap:
+          'Bu alanda ihtimal görece yüksek: kurumlar tanıdıkları ve çocuklarla uyum sağlamış birini ' +
+          'işe almayı tercih ediyor. Niyetini staj bitmeden söylemek belirleyici oluyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
 
   /* ---------------------------------------------- iktisadi ve idari (devam) */
@@ -2504,6 +3265,76 @@ export const BOLUMLER: Bolum[] = [
       'Bu bölümde staj yeri aramıyorsun; okulun yerleştiriyor. Enerjini yer aramaya ' +
       'değil, gittiğin klinikte soru sormaya harca — değerlendirme oradan geliyor.',
     aramaKelimeleri: ['sağlık', 'hastane', 'hemşire'],
+    giris:
+      'Hemşirelikte staj, diğer bölümlerdekinden farklı işliyor ve bu farkı bilmek zaman ' +
+      'kazandırıyor: klinik uygulamanı okulun anlaşmalı olduğu kuruma okul yerleştiriyor, sen ' +
+      'ilan aramıyorsun. Yani enerjini yer bulmaya değil, gittiğin klinikte ne öğrendiğine ' +
+      'harcaman gerekiyor. Değerlendirme de oradan geliyor: sorumlu hemşirenin gözlemi, senin ' +
+      'soru sorman ve kayıt disiplinin. Bu sayfada uygulamanın hangi birimlerde yapıldığını, ' +
+      'öğrencinin gerçekte ne yaptığını, başlamadan önce nelerin hazır olması gerektiğini ve ' +
+      'klinikte hangi kuralların kesin olduğunu bulacaksın.',
+    pozisyonlar: [
+      'Dahiliye ve cerrahi servisler',
+      'Acil servis',
+      'Yoğun bakım üniteleri',
+      'Çocuk ve doğum servisleri',
+      'Aile sağlığı merkezleri ve toplum sağlığı',
+    ],
+    dikkat: [
+      'Hasta mahremiyeti kesin kural. Hasta adı, tanısı ve dosya bilgisi klinik dışına çıkmaz; ' +
+        'sosyal medya paylaşımı en ağır sonuçlanan hata.',
+      'İlaç hesaplama hata payı sıfır olan konu. Uygulamaya başlamadan önce tekrar et; emin ' +
+        'olmadığın hiçbir işlemi sorumlu hemşireye sormadan yapma.',
+      'Aşı kartı ve sağlık raporu genellikle uygulamadan önce isteniyor. Süreci erken başlat; ' +
+        'eksik belge uygulamanın gecikmesine yol açıyor.',
+      'Vardiya düzeni gece ve hafta sonunu içerebiliyor. Ulaşım ve dinlenme planını buna göre ' +
+        'yapmak, ilk haftayı çok kolaylaştırıyor.',
+    ],
+    cvIpucu:
+      'Mezuniyet sonrası başvurularda hangi birimlerde uygulama yaptığını yaz: yoğun bakım, ' +
+      'acil, cerrahi ayrı ayrı. Bu, işverenin gördüğü ilk şey. Aldığın sertifikaları (ilk ' +
+      'yardım, temel yaşam desteği) ve gönüllü sağlık çalışmalarını da belirt. Klinik uygulama ' +
+      'gerçek bir deneyim satırı; "okul stajı" diye küçültme.',
+    sss: [
+      {
+        soru: 'Hemşirelik stajı için yer aramam gerekiyor mu?',
+        cevap:
+          'Hayır. Klinik uygulamanı okulun anlaşmalı olduğu kuruma okul yerleştiriyor. Sana düşen, ' +
+          'okulunun staj birimiyle takvimi ve belgeleri konuşmak.',
+      },
+      {
+        soru: 'Klinik uygulamada öğrenci ne yapabiliyor?',
+        cevap:
+          'Sorumlu hemşire gözetiminde hasta bakımına katılıyor, vital bulguları ölçüp kaydediyor, ' +
+          'ilaç hazırlığını gözlemliyor ve kayıt sistemini öğreniyor. Yetki ve sorumluluk sorumlu ' +
+          'hemşirede kalıyor.',
+      },
+      {
+        soru: 'Klinik uygulama için hangi belgeler isteniyor?',
+        cevap:
+          'Genellikle aşı kartı ve sağlık raporu; kuruma göre ek belge istenebiliyor. Okulun staj ' +
+          'biriminden kesin listeyi al ve süreci erken başlat.',
+      },
+      {
+        soru: 'Vardiyaya kalmak zorunda mıyım?',
+        cevap:
+          'Uygulama programını okul ve kurum belirliyor; gece ve hafta sonu vardiyası programın ' +
+          'parçası olabiliyor. Kesin bilgi kendi bölümünün uygulama takviminde.',
+      },
+      {
+        soru: 'Klinikte hata yapmaktan korkuyorum, ne yapmalıyım?',
+        cevap:
+          'Emin olmadığın hiçbir işlemi tek başına yapma ve sormaktan çekinme. Klinikte sorulmayan ' +
+          'soru, yapılan hatadan çok daha tehlikeli sayılıyor.',
+      },
+      {
+        soru: 'Uygulamadan iyi not almanın yolu nedir?',
+        cevap:
+          'Soru sormak, kayıtları düzgün tutmak ve zamanında gelmek. Değerlendirme büyük ölçüde ' +
+          'sorumlu hemşirenin gözlemine dayanıyor ve bu üçü en çok göze çarpan şeyler.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'fizyoterapi-ve-rehabilitasyon',
@@ -2539,6 +3370,74 @@ export const BOLUMLER: Bolum[] = [
       'Zorunlu klinik uygulamanın dışında, spor kulüpleri ve özel merkezlerde gözlemci ' +
       'olarak bulunmak mezuniyet sonrası iş bulmayı ciddi biçimde kolaylaştırıyor.',
     aramaKelimeleri: ['fizyoterapi', 'sağlık', 'rehabilitasyon'],
+    giris:
+      'Fizyoterapi ve rehabilitasyon bölümünde klinik uygulamayı okul yerleştiriyor; ilan ' +
+      'aramıyorsun. Bu, yer bulma derdini ortadan kaldırıyor ama yerine başka bir soruyu ' +
+      'koyuyor: iki ayı nasıl değerlendireceksin? Bu alanda öğrenmenin büyük kısmı izlemekten ' +
+      'değil, hastayla kurulan temastan geliyor — ölçüm yapmak, egzersizi gözlemlemek, hastanın ' +
+      'nasıl ilerlediğini takip etmek. Bu sayfada uygulamanın hangi birimlerde yapıldığını, ' +
+      'öğrencinin gerçekte ne yaptığını ve uygulamayı verimli geçirmenin yollarını bulacaksın.',
+    pozisyonlar: [
+      'Fizik tedavi ve rehabilitasyon üniteleri',
+      'Ortopedi ve nöroloji servisleri',
+      'Özel rehabilitasyon merkezleri',
+      'Pediatrik rehabilitasyon birimleri',
+      'Spor sağlığı ve performans merkezleri',
+    ],
+    dikkat: [
+      'Hasta bilgisi gizli: tanı, seyir ve kişisel bilgiler klinik dışına çıkmaz. Uygulama ' +
+        'defterine yazarken bile sorumlu fizyoterapiste sor.',
+      'Uygulamayı yürüten kişi fizyoterapist; öğrenci gözetim altında destek oluyor. Tedavi ' +
+        'programı belirlemek ve değiştirmek öğrencinin işi değil.',
+      'Hastayla fiziksel temas eden bir alan: pozisyon verme ve transfer tekniklerini doğru ' +
+        'öğrenmek hem hastayı hem seni koruyor.',
+      'Nöroloji ve pediatri tarafı duygusal olarak yorucu olabiliyor. Bunu bilerek gitmek, hem ' +
+        'sana hem hastaya iyi geliyor.',
+    ],
+    cvIpucu:
+      'Mezuniyet sonrası başvurularda hangi hasta gruplarıyla çalıştığını yaz: ortopedik, ' +
+      'nörolojik, pediatrik ayrı ayrı. İşverenin bakacağı ilk şey bu. Kullanabildiğin ' +
+      'değerlendirme ölçeklerini ve cihazları belirt. Spor kulübü, gönüllü sağlık çalışması ya ' +
+      'da yaşlı bakımı deneyimin varsa mutlaka yaz.',
+    sss: [
+      {
+        soru: 'Fizyoterapi stajı için yer aramam gerekiyor mu?',
+        cevap:
+          'Hayır. Klinik uygulamanı okul yerleştiriyor. Yapman gereken, okulunun staj birimiyle ' +
+          'takvimi ve belgeleri konuşmak.',
+      },
+      {
+        soru: 'Uygulamada hastaya doğrudan tedavi uygulayabiliyor muyum?',
+        cevap:
+          'Gözetim altında destek oluyorsun. Tedavi programını belirlemek ve değiştirmek ' +
+          'fizyoterapistin sorumluluğunda; öğrenci uygulamaya katılıyor ama programı yürütmüyor.',
+      },
+      {
+        soru: 'Hangi birimlerde uygulama yapılıyor?',
+        cevap:
+          'Fizik tedavi ve rehabilitasyon üniteleri, ortopedi ve nöroloji servisleri, özel ' +
+          'rehabilitasyon merkezleri, pediatrik birimler ve spor sağlığı merkezleri.',
+      },
+      {
+        soru: 'Uygulamayı verimli geçirmenin yolu nedir?',
+        cevap:
+          'Her hastada üç şeyi not al: hangi sorun, hangi yaklaşım, ne değişti. İzleyip geçmek ' +
+          'yerine bu üçlüyü tutmak, iki ayın sonunda elinde gerçek bir birikim bırakıyor.',
+      },
+      {
+        soru: 'Değerlendirme ölçeklerini bilmem gerekiyor mu?',
+        cevap:
+          'Uzmanlık beklenmiyor ama temel ölçeklerin ne işe yaradığını bilmek ilk haftayı çok ' +
+          'kolaylaştırıyor ve sorumlu fizyoterapistin sana daha çok iş vermesini sağlıyor.',
+      },
+      {
+        soru: 'Pediatrik rehabilitasyon zor mu?',
+        cevap:
+          'Sabır isteyen ve duygusal olarak yorucu olabilen bir alan. Karşılığında alanı en derin ' +
+          'öğreten yerlerden biri; bu tarafta çalışmayı düşünüyorsan görmen gereken bir deneyim.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'tibbi-laboratuvar-teknikleri',
@@ -2574,6 +3473,75 @@ export const BOLUMLER: Bolum[] = [
       'Numune etiketleme ve kabul süreci sıkıcı görünüyor ama laboratuvar hatalarının ' +
       'çoğu orada oluyor. Orayı iyi öğrenen stajyer fark ediliyor.',
     aramaKelimeleri: ['laboratuvar', 'sağlık', 'analiz'],
+    giris:
+      'Tıbbi laboratuvar teknikleri bölümünde uygulama yerini okul belirliyor; ilan ' +
+      'aramıyorsun. Bu bölümün uygulaması, sonucu doğrudan bir hastanın tedavisini etkileyen ' +
+      'bir işin içinde geçiyor — yanlış etiketlenmiş bir tüp ya da atlanmış bir adım, yanlış ' +
+      'bir tanıya yol açabiliyor. Bu yüzden laboratuvarda en çok değer verilen şey hız değil, ' +
+      'izlenebilirlik ve dikkat. Bu sayfada uygulamanın hangi birimlerde yapıldığını, ' +
+      'öğrencinin gerçekte ne yaptığını ve laboratuvarda hangi kuralların kesin olduğunu ' +
+      'bulacaksın.',
+    pozisyonlar: [
+      'Biyokimya laboratuvarı',
+      'Mikrobiyoloji laboratuvarı',
+      'Hematoloji ve kan bankası',
+      'Patoloji laboratuvarı',
+      'Numune kabul ve kan alma birimi',
+    ],
+    dikkat: [
+      'Numune etiketi ve kayıt zinciri bu işin omurgası. Yanlış etiketlenmiş bir tüp, yanlış ' +
+        'hastaya ait bir sonuç demek; bu alanda en ağır hata budur.',
+      'Biyolojik materyalle çalışıyorsun: eldiven, önlük ve atık ayrımı kuralları kesin. ' +
+        'Kesici-delici alet yaralanmalarında ne yapılacağını ilk gün öğren.',
+      'Hasta bilgisi ve test sonucu gizli. Sonuç hastaya laboratuvar tarafından değil, hekim ' +
+        'tarafından açıklanıyor; öğrencinin sonuç yorumlama yetkisi yok.',
+      'Cihazlar kalibrasyon ve kalite kontrol düzenine bağlı çalışıyor. Bu kayıtları izlemek, ' +
+        'laboratuvarın nasıl güvenilir sonuç ürettiğini gösteriyor.',
+    ],
+    cvIpucu:
+      'Mezuniyet sonrası başvurularda hangi laboratuvar birimlerinde çalıştığını yaz: ' +
+      'biyokimya, mikrobiyoloji, hematoloji ayrı ayrı. Kullandığın cihazları ve yaptığın ' +
+      'testleri adıyla belirt — bu bölümde en çok bakılan satır orası. Kan alma deneyimin varsa ' +
+      'mutlaka yaz; özel laboratuvarlar buna doğrudan bakıyor.',
+    sss: [
+      {
+        soru: 'Tıbbi laboratuvar stajı için yer aramam gerekiyor mu?',
+        cevap:
+          'Hayır. Uygulama yerini okul belirliyor ve anlaşmalı kuruma yerleştiriyor. Sana düşen, ' +
+          'okulunun staj birimiyle takvimi ve belgeleri konuşmak.',
+      },
+      {
+        soru: 'Laboratuvarda öğrenci ne yapabiliyor?',
+        cevap:
+          'Numune kabul ve kayıt, numune hazırlama, cihaz çalıştırma süreçlerine gözetim altında ' +
+          'katılma, kalite kontrol kayıtlarını izleme. Sonuç onayı ve yorum uzmanın işi.',
+      },
+      {
+        soru: 'Kan alabiliyor muyum?',
+        cevap:
+          'Kurumun ve okulun kurallarına bağlı; yapılıyorsa gözetim altında ve eğitim sonrası ' +
+          'oluyor. Kendi başına işlem yapmadan önce mutlaka sorumluna sor.',
+      },
+      {
+        soru: 'Numune etiketleme neden bu kadar önemli?',
+        cevap:
+          'Çünkü sonuç doğrudan bir hastanın tedavisini belirliyor. Yanlış etiket, yanlış hastaya ' +
+          'ait bir sonuç demek ve bu laboratuvarda en ağır hata sayılıyor.',
+      },
+      {
+        soru: 'Hangi birimde uygulama yapmak daha çok öğretir?',
+        cevap:
+          'Hepsi farklı şey öğretiyor: biyokimya cihaz ve otomasyonu, mikrobiyoloji kültür ve ' +
+          'değerlendirmeyi, hematoloji mikroskop becerisini. Mümkünse rotasyon iste.',
+      },
+      {
+        soru: 'Test sonucunu hastaya söyleyebilir miyim?',
+        cevap:
+          'Hayır. Sonuç hekim tarafından değerlendirilip hastaya aktarılıyor. Laboratuvar ' +
+          'çalışanının ve özellikle öğrencinin sonuç yorumlama yetkisi bulunmuyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
 
   /* ---------------------------------------------------- turizm ve hizmet */
@@ -2612,6 +3580,75 @@ export const BOLUMLER: Bolum[] = [
       'Sezonluk oteller staj başvurularını sezondan aylar önce topluyor. İlkbaharda ' +
       'aramaya başlayan çoğu öğrenci geç kalmış oluyor — kışın başvur.',
     aramaKelimeleri: ['turizm', 'otel', 'ön büro'],
+    giris:
+      'Turizm ve otel yöneticiliğinde staj, sektörün kendisi kadar mevsime bağlı: yazın sahil ' +
+      'otellerinde çok sayıda staj yeri açılıyor, kışın ise şehir otelleri ve kayak bölgeleri ' +
+      'devrede oluyor. Bir de departman gerçeği var — önbüro, kat hizmetleri, yiyecek-içecek ve ' +
+      'satış birbirinden tamamen farklı işler ve birinde çalışmak diğerini öğretmiyor. ' +
+      'Rotasyonlu staj veren tesisleri tercih etmek, iki ayda otelin tamamını görmek demek. Bu ' +
+      'sayfada departmanları, stajyere verilen gerçek işleri ve başvururken bilmen gerekenleri ' +
+      'bulacaksın.',
+    pozisyonlar: [
+      'Önbüro ve rezervasyon',
+      'Yiyecek-içecek servisi ve restoran operasyonu',
+      'Kat hizmetleri ve housekeeping',
+      'Satış, pazarlama ve etkinlik organizasyonu',
+      'Seyahat acenteleri ve tur operatörleri',
+    ],
+    dikkat: [
+      'Rotasyonlu staj veren tesisleri tercih et: tek bir departmanda kalmak, otelin nasıl ' +
+        'işlediğini öğrenmeni engelliyor.',
+      'Sahil otellerinde staj sezonluk; sezon dışında tesis kapalı oluyor. Şehir otelleri yıl ' +
+        'boyunca açık ve kurumsal süreçleri daha net.',
+      'Yabancı dil bu sektörde doğrudan iş aracı. Konuşma seviyesinde bilmek, seni ön büroya ve ' +
+        'misafirle temas eden pozisyonlara taşıyor.',
+      'Sezonluk tesislerde konaklama ve yemek genelde sağlanıyor ama şartları baştan yazılı ' +
+        'olarak netleştir; sonradan anlaşmazlık en sık burada çıkıyor.',
+    ],
+    cvIpucu:
+      'Yabancı dil seviyeni somut yaz: "İngilizce — misafirle konuşma seviyesinde" gibi. Bu ' +
+      'sektörde CV\'nin en çok bakılan satırı orası ve ikinci bir dil (Rusça, Almanca, Arapça) ' +
+      'rekabeti ciddi biçimde azaltıyor. Müşteriyle temas eden herhangi bir işte çalıştıysan ' +
+      'yaz; bu sektörde iletişim en değerli beceri.',
+    sss: [
+      {
+        soru: 'Turizm stajı hangi departmanlarda yapılır?',
+        cevap:
+          'Önbüro ve rezervasyon, yiyecek-içecek, kat hizmetleri, satış ve pazarlama. Ayrıca ' +
+          'seyahat acenteleri ve tur operatörleri de stajyer alıyor.',
+      },
+      {
+        soru: 'Sahil oteli mi, şehir oteli mi daha iyi?',
+        cevap:
+          'Sahil oteli sezonda yoğun ve çok misafir görüyorsun; şehir oteli yıl boyu açık ve ' +
+          'kurumsal süreçleri daha net. İş temposu ve öğrenme biçimi farklı.',
+      },
+      {
+        soru: 'Yabancı dil şart mı?',
+        cevap:
+          'Misafirle temas eden pozisyonlarda evet. İkinci bir dil ise doğrudan avantaj: aynı ' +
+          'tesise başvuran adaylar arasında seni öne çıkaran şey çoğu zaman bu oluyor.',
+      },
+      {
+        soru: 'Konaklama ve yemek sağlanıyor mu?',
+        cevap:
+          'Sezonluk tesislerde genellikle sağlanıyor ama şartlar tesise göre değişiyor. Başlamadan ' +
+          'önce yazılı olarak netleştirmek, sonradan çıkan anlaşmazlıkları önlüyor.',
+      },
+      {
+        soru: 'Kat hizmetlerinde staj yapmak gereksiz mi?',
+        cevap:
+          'Tam tersi. Otel yöneticiliğinde bu departmanı bilmeden operasyonu yönetmek mümkün ' +
+          'olmuyor; maliyetin ve misafir memnuniyetinin büyük kısmı orada belirleniyor.',
+      },
+      {
+        soru: 'Otel stajı sonrasında kadroya alınıyor mu?',
+        cevap:
+          'Sektörde eleman devri yüksek ve tesisler tanıdıkları stajyeri sezonluk ya da sürekli ' +
+          'kadroya almayı tercih ediyor. Niyetini sezon bitmeden söylemek belirleyici oluyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'gastronomi-ve-mutfak',
@@ -2648,6 +3685,74 @@ export const BOLUMLER: Bolum[] = [
       'Mutfak stajında ilk hafta genelde en basit işler verilir ve bu bir sınavdır. ' +
       'Sebze doğramayı ciddiye alan stajyer ikinci hafta ocağa geçiyor.',
     aramaKelimeleri: ['mutfak', 'aşçı', 'gastronomi'],
+    giris:
+      'Gastronomi stajı, okulda öğrendiğinle mutfakta yaşadığın arasındaki farkı en sert ' +
+      'gösteren stajlardan biri. Profesyonel mutfak bir hiyerarşiyle çalışıyor, servis saatinde ' +
+      'tempo çok yüksek ve mesai saatleri ofis düzenine benzemiyor: akşam ve hafta sonu ' +
+      'çalışması bu işin normali. Bunu bilerek gitmek, ilk haftada pes etmemenin en önemli ' +
+      'şartı. Bu sayfada hangi tür mutfakların stajyer aldığını, stajyere verilen gerçek ' +
+      'işleri, hijyen tarafında nelerin beklendiğini ve başvuru ipuçlarını bulacaksın.',
+    pozisyonlar: [
+      'Otel mutfakları — en yapılandırılmış eğitim burada',
+      'Restoran ve bistro mutfakları',
+      'Pastane, fırın ve çikolata atölyeleri',
+      'Toplu yemek ve catering üretimi',
+      'Yiyecek-içecek üreten şirketlerin mutfak Ar-Ge birimleri',
+    ],
+    dikkat: [
+      'Mesai saatleri akşam ve hafta sonuna kayıyor; servis saatlerinde tempo çok yüksek. Bunu ' +
+        'bilerek başlamak, ilk hafta bırakmamanın en önemli şartı.',
+      'Mutfakta hiyerarşi var ve bu keyfî değil: aynı anda çok kişinin güvenle çalışması için ' +
+        'gerekiyor. Verilen işi sorgusuz değil ama kurala uygun yapmak öğreniyor.',
+      'Hijyen kuralları kesin: bone, sakal filesi, takı yasağı ve el yıkama düzeni. Çoğu kurum ' +
+        'portör muayenesi de istiyor; süreci önceden başlat.',
+      'Turizm bölgelerinde mutfaklar sezonluk çalışıyor. Sezon dışında gidersen mutfak kapalı ' +
+        'ya da çok düşük kapasitede oluyor.',
+    ],
+    cvIpucu:
+      'Hangi mutfakta hangi bölümde çalıştığını yaz: soğuk mutfak, sıcak mutfak, pastane. ' +
+      '"Mutfakta çalıştım" cümlesi hiçbir şef için bilgi taşımıyor. Hijyen belgesi ve portör ' +
+      'muayenen varsa belirt. Kendi denediğin tarifler ya da katıldığın yarışmalar da gerçek ' +
+      'deneyim; bu alanda merak en çok değer verilen şey.',
+    sss: [
+      {
+        soru: 'Gastronomi stajı nerede yapılır?',
+        cevap:
+          'Otel mutfakları, restoranlar, pastane ve fırınlar, toplu yemek ve catering üretim ' +
+          'tesisleri, yiyecek-içecek şirketlerinin Ar-Ge mutfakları.',
+      },
+      {
+        soru: 'Otelde mi, restoranda mı staj yapmalıyım?',
+        cevap:
+          'Otel mutfağı en yapılandırılmış eğitimi veriyor: bölümler ayrı ve rotasyon mümkün. ' +
+          'Restoran daha küçük ama işin tamamına dokunuyorsun. İkisi farklı şeyler öğretiyor.',
+      },
+      {
+        soru: 'Stajda gerçekten yemek yapıyor muyum?',
+        cevap:
+          'İlk dönem çoğunlukla hazırlık: doğrama, porsiyonlama, mizanplas. Bu bilinçli — mutfakta ' +
+          'hız ve düzen bu işlerle öğreniliyor. Güven kazandıkça pişirme tarafına geçiyorsun.',
+      },
+      {
+        soru: 'Hijyen belgesi gerekiyor mu?',
+        cevap:
+          'Gıda üretilen alanda çalışacak herkesten portör muayenesi ya da benzeri bir sağlık kaydı ' +
+          'isteniyor. Süreci başlatmak birkaç gün aldığı için staj öncesinde halletmek gerekiyor.',
+      },
+      {
+        soru: 'Sezon dışında turizm bölgesinde staj yapabilir miyim?',
+        cevap:
+          'Çoğu tesis sezon dışında kapalı ya da çok düşük kapasitede çalışıyor. Şehir otelleri ve ' +
+          'restoranlar ise yıl boyunca açık; sezon dışında oralara yönelmek daha verimli.',
+      },
+      {
+        soru: 'Mutfakta çalışma saatleri nasıl?',
+        cevap:
+          'Servis saatlerine göre düzenleniyor: öğle ve akşam yoğun, aralarda hazırlık. Hafta sonu ' +
+          'bu sektörün en yoğun günü, o yüzden izinler hafta içine denk geliyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
 ];
 

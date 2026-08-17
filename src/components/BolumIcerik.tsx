@@ -50,24 +50,60 @@ export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
         <p className="text-gray-600 leading-relaxed">{bolum.ozet}</p>
       )}
 
-      <Blok baslik="Nerede staj yapılır" maddeler={bolum.nerede} />
+      <Blok
+        baslik={okulYerlestirir ? 'Klinik uygulama nerede yapılıyor' : 'Nerede staj yapılır'}
+        maddeler={bolum.nerede}
+      />
 
+      {/*
+        BAŞLIKLAR SAĞLIK BÖLÜMLERİNDE FARKLI.
+
+        "Bu bölümde staj ararken dikkat et" başlığı hemşirelik öğrencisine
+        yanlış bir şey söylüyor: o öğrenci staj aramıyor, okul yerleştiriyor.
+        Aynı içeriği aynı başlıkla vermek, sayfanın kime seslendiğini
+        bilmediğini gösteriyor.
+      */}
       {bolum.pozisyonlar && bolum.pozisyonlar.length > 0 && (
-        <Blok baslik="Sık karşılaşılan staj alanları" maddeler={bolum.pozisyonlar} />
+        <Blok
+          baslik={
+            okulYerlestirir
+              ? 'Hangi birimlerde uygulama yapılıyor'
+              : 'Sık karşılaşılan staj alanları'
+          }
+          maddeler={bolum.pozisyonlar}
+        />
       )}
 
-      <Blok baslik="Stajyer ne iş yapar" maddeler={bolum.isler} />
+      <Blok
+        baslik={okulYerlestirir ? 'Öğrenci ne yapıyor' : 'Stajyer ne iş yapar'}
+        maddeler={bolum.isler}
+      />
 
       {bolum.dikkat && bolum.dikkat.length > 0 && (
-        <Blok baslik="Bu bölümde staj ararken dikkat et" maddeler={bolum.dikkat} />
+        <Blok
+          baslik={
+            okulYerlestirir
+              ? 'Klinik uygulamada dikkat edilmesi gerekenler'
+              : 'Bu bölümde staj ararken dikkat et'
+          }
+          maddeler={bolum.dikkat}
+        />
       )}
 
-      <Blok baslik="Başvurmadan önce öğren" maddeler={bolum.hazirlik} />
-      <Blok baslik="İlanlarda ne aranıyor" maddeler={bolum.aranan} />
+      <Blok
+        baslik={okulYerlestirir ? 'Uygulamaya başlamadan önce öğren' : 'Başvurmadan önce öğren'}
+        maddeler={bolum.hazirlik}
+      />
+      <Blok
+        baslik={okulYerlestirir ? 'Kurumun beklediği şeyler' : 'İlanlarda ne aranıyor'}
+        maddeler={bolum.aranan}
+      />
 
       {bolum.cvIpucu && (
         <section className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 space-y-2">
-          <h2 className="font-bold text-gray-900">CV ve başvuru</h2>
+          <h2 className="font-bold text-gray-900">
+            {okulYerlestirir ? 'Mezuniyet sonrası için CV' : 'CV ve başvuru'}
+          </h2>
           <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{bolum.cvIpucu}</p>
           <p className="text-sm text-gray-600 leading-relaxed">
             Genel kurallar için{' '}
