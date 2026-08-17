@@ -745,6 +745,8 @@ export default function App() {
                 onSubTabChange={setActiveSubTab}
                 onUpdateProfile={handleUpdateProfile}
                 onOpenCv={() => navigate('/cv')}
+                quizzes={quizzes}
+                onStartQuiz={(quiz) => setActiveQuiz(quiz)}
                 onOpenQuiz={(skillName) => {
                   const matchedQ =
                     quizzes.find(

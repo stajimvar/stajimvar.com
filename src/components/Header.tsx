@@ -228,32 +228,20 @@ export const Header: React.FC<HeaderProps> = ({
                 */}
                 {isLoggedIn && (
                   <>
-                {/* 2. Yetenek Doğrulama */}
-                <button
-                  id="nav-tab-badges"
-                  onClick={() => {
-                    setActiveTab('badges');
-                    setActiveSubTab('all');
-                  }}
-                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    activeTab === 'badges'
-                      ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
-                      :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
-                  }`}
-                >
-                  <Award
-                    className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                      activeTab ==='badges'?'text-amber-500':'text-gray-400'
-                    }`}
-                  />
-                  <span className="hidden xl:inline">Yetenek Doğrulama</span>
-                  <span className="inline xl:hidden">Yetenekler</span>
-                  {activeTab === 'badges' && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                  )}
-                </button>
+                {/*
+                  "Yetenek Doğrulama" sekmesi kaldırıldı.
 
-                {/* 3. Başvurularım */}
+                  Test çözmek ayrı bir iş değil, profil doldurmanın parçası:
+                  kişi yeteneğini yazıyor, sonra o yeteneği doğruluyor. İkisini
+                  ayrı sekmelere bölmek aynı işi iki yere dağıtıyordu — kullanıcı
+                  yeteneğini profile ekliyor, doğrulamak için başka sekmeye
+                  gidiyordu.
+
+                  Testler artık Özgeçmiş & Profil sayfasının içinde, eklenen
+                  yeteneklerin hemen altında.
+                */}
+
+                {/* 2. Başvurularım */}
                 <button
                   id="nav-tab-applications"
                   onClick={() => {

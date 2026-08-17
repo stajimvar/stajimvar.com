@@ -19,6 +19,7 @@ import {
   StudentProject,
   StudentLanguage,
   SkillLevel,
+  SkillQuiz,
 } from '../types';
 import { uploadAvatar } from '../lib/queries';
 import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
@@ -54,6 +55,9 @@ interface StudentProfileViewProps {
   onSubTabChange?: (subTab: string) => void;
   onUpdateProfile: (updated: Partial<StudentProfile>) => void;
   onOpenQuiz: (skillName: string) => void;
+  /** Yetenek testleri artık bu sayfanın içinde. */
+  quizzes?: SkillQuiz[];
+  onStartQuiz?: (quiz: SkillQuiz) => void;
   /** Yazdırılabilir CV sayfasına geçiş. */
   onOpenCv?: () => void;
 }
@@ -192,6 +196,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   onUpdateProfile,
   onOpenQuiz,
   onOpenCv,
+  quizzes = [],
+  onStartQuiz,
 }) => {
   const [acikBolum, setAcikBolum] = useState<BolumId | null>(null);
 
@@ -1223,16 +1229,28 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       </Bolum>
 
       {/* ---------------- 7. Rozetler ---------------- */}
+      {/*
+        Testler ve rozetler tek bölümde.
+
+        Ayrı bir "Yetenek Doğrulama" sekmesindeydi. Ama test çözmek profil
+        doldurmanın parçası: kişi yeteneğini yazıyor, sonra doğruluyor. İkisi
+        ayrı sekmelerdeyken kullanıcı yeteneği ekliyor, doğrulamak için başka
+        yere gidiyordu.
+      */}
       <Bolum
         id="rozet"
         emoji="🏅"
-        baslik="Rozetler"
-        ozet={rozetler.length > 0 ? `${rozetler.length} doğrulanmış rozet` : 'Test çözerek rozet kazan'}
+        baslik="Testler ve rozetler"
+        ozet={
+          rozetler.length > 0
+            ? `${rozetler.length} rozet · ${quizzes.length} test var`
+            : `${quizzes.length} kısa test — çözünce yeteneğinin yanında doğrulanmış işareti çıkar`
+        }
         tamam={rozetler.length > 0}
         acik={acikBolum === 'rozet'}
         onToggle={bolumAc}
       >
-        {rozetler.length > 0 ? (
+        {rozetler.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {rozetler.map((b) => (
               <span
@@ -1244,11 +1262,53 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               </span>
             ))}
           </div>
+        )}
+
+        {quizzes.length === 0 ? (
+          <BosDurum>Şu an gösterilecek test yok.</BosDurum>
         ) : (
-          <BosDurum>
-            "Yetenekler" sekmesindeki kısa testleri çözersen yeteneklerinin yanında
-            doğrulanmış işareti çıkar.
-          </BosDurum>
+          <>
+            <p className="text-xs text-gray-500">
+              5 soruluk kısa testler, yaklaşık 5 dakika. 3 doğru yeterli.
+            </p>
+            <ul className="divide-y divide-gray-100">
+              {quizzes.map((quiz) => {
+                const kazanildi = rozetler.includes(quiz.badgeName);
+                return (
+                  <li key={quiz.id}>
+                    <button
+                      type="button"
+                      onClick={() => onStartQuiz?.(quiz)}
+                      className="w-full flex items-center gap-3 py-3 text-left cursor-pointer hover:bg-blue-50/60 transition-colors rounded-xl px-2 -mx-2"
+                    >
+                      <span
+                        className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center ${
+                          kazanildi ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
+                        }`}
+                      >
+                        {kazanildi ? (
+                          <CheckCircle2 className="w-4.5 h-4.5" />
+                        ) : (
+                          <Award className="w-4.5 h-4.5" />
+                        )}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-semibold text-sm text-gray-900 truncate">
+                          {quiz.skillName}
+                        </span>
+                        <span className="block text-xs text-gray-500">
+                          {kazanildi
+                            ? 'Rozet kazanıldı · tekrar çözebilirsin'
+                            : `${quiz.questions.length} soru · ~5 dk`}
+                        </span>
+                      </span>
+                      <ChevronDown className="w-5 h-5 shrink-0 text-gray-300 -rotate-90" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
         )}
       </Bolum>
     </div>
