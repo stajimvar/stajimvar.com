@@ -21,19 +21,21 @@ import url from 'node:url';
 const kok = path.dirname(path.dirname(url.fileURLToPath(import.meta.url)));
 const hedef = path.join(kok, 'public', 'ads.txt');
 
-/** .env dosyasından tek bir anahtarı okur (dotenv bağımlılığı olmadan). */
-function envOku(anahtar) {
-  if (process.env[anahtar]) return process.env[anahtar];
-  const envYolu = path.join(kok, '.env');
-  if (!fs.existsSync(envYolu)) return undefined;
-  for (const satir of fs.readFileSync(envYolu, 'utf8').split(/\r?\n/)) {
-    const esles = satir.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-    if (esles && esles[1] === anahtar) return esles[2].replace(/^["']|["']$/g, '');
-  }
-  return undefined;
-}
+/*
+  Yayinci kimligi reklam.json'dan; .env'den DEGIL.
 
-const client = envOku('VITE_ADSENSE_CLIENT');
+  .env yalnizca bu bilgisayarda var; dagitim CI'ya tasininca deger
+  bosaldi ve bu betik ads.txt'i URETMEDIGI gibi var olani SILDI.
+  Sonuc: canli sitede ads.txt kayboldu (olculdu, HTTP 200 donuyordu
+  ama icerik SPA yedegiydi).
+
+  Deger gizli degil - sayfa kaynaginda zaten aciktan goruluyor.
+*/
+const ayarYolu = path.join(kok, 'reklam.json');
+const ayar = fs.existsSync(ayarYolu)
+  ? JSON.parse(fs.readFileSync(ayarYolu, 'utf8'))
+  : {};
+const client = ayar.yayinciKimligi || process.env.VITE_ADSENSE_CLIENT;
 
 if (!client) {
   // Kimlik yokken varsa eski dosyayı da kaldır: yanlış kimlikle yayında kalmasın.

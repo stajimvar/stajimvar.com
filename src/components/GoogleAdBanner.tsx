@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import reklamAyari from '../../reklam.json';
 
 /**
  * Gerçek Google AdSense reklam yuvası.
@@ -43,7 +44,18 @@ interface GoogleAdBannerProps {
   className?: string;
 }
 
-const ADSENSE_CLIENT: string | undefined = import.meta.env.VITE_ADSENSE_CLIENT;
+/*
+  Yapilandirma reklam.json'dan geliyor, ortam degiskeninden DEGIL.
+
+  Once VITE_ADSENSE_CLIENT ile .env'den okunuyordu. Dagitim CI'ya
+  tasininca .env orada olmadigi icin deger bosaldi ve CI'nin ilk
+  dagitimi reklam yapilandirmasini sessizce sildi (olculdu: ads.txt
+  kayboldu, pakette yayinci kimligi kalmadi).
+
+  Bu degerler gizli degil - sayfa kaynaginda zaten aciktan goruluyor.
+  Depoya yazilinca her ortamda ayni ve kaybolmuyor.
+*/
+const ADSENSE_CLIENT: string | undefined = reklamAyari.yayinciKimligi || undefined;
 
 /**
  * Yuva kimlikleri ortam değişkeninden.
@@ -52,13 +64,8 @@ const ADSENSE_CLIENT: string | undefined = import.meta.env.VITE_ADSENSE_CLIENT;
  * onayı geldiğinde yalnızca `.env` doldurulacak, tek satır kod
  * değişmeyecek. Tanımlı olmayan biçim sessizce boş kalıyor.
  */
-const SLOT_ENV: Partial<Record<AdFormat, string | undefined>> = {
-  'in-feed': import.meta.env.VITE_AD_SLOT_FEED,
-  'sidebar-rectangle': import.meta.env.VITE_AD_SLOT_SIDEBAR,
-  'sidebar-halfpage': import.meta.env.VITE_AD_SLOT_SIDEBAR_TALL,
-  'top-leaderboard': import.meta.env.VITE_AD_SLOT_TOP,
-  'modal-footer': import.meta.env.VITE_AD_SLOT_MODAL,
-};
+const SLOT_ENV: Partial<Record<AdFormat, string | undefined>> =
+  (reklamAyari.yuvalar ?? {}) as Partial<Record<AdFormat, string>>;
 
 /** AdSense betiği sayfa başına bir kez yüklenir. */
 let scriptRequested = false;

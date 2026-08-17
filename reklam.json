@@ -1,0 +1,38 @@
+{
+  "_aciklama": [
+    "Google AdSense kimlikleri. GIZLI DEGIL: yayinci kimligi ve yuva",
+    "numaralari her ziyaretcinin sayfa kaynaginda zaten aciktan goruluyor.",
+    "",
+    "NEDEN .env DEGIL DE BURADA",
+    "Once .env icindeydi. Ama dagitim CI'ya tasininca .env orada olmadigi",
+    "icin degerler bosaldi: ads.txt uretilmedi ve pakette yayinci kimligi",
+    "kalmadi - yani CI'nin ilk dagitimi reklam yapilandirmasini sessizce",
+    "sildi (olculdu). Gizli olmayan bir degeri sir olarak tasimak hem",
+    "gereksiz hem de bu tur kayiplara aciktı.",
+    "",
+    "Burasi tek kaynak: hem src/components/GoogleAdBanner.tsx hem",
+    "scripts/ads-txt.mjs bu dosyayi okuyor. Yeni yuva eklerken yalnizca",
+    "buraya yazmak yeterli.",
+    "",
+    "yayinciKimligi bos birakilirsa reklam betigi hic yuklenmiyor ve",
+    "ads.txt uretilmiyor - gelistirme icin guvenli varsayilan."
+  ],
+
+  "yayinciKimligi": "ca-pub-2635670487159819",
+
+  "yuvalar": {
+    "sidebar-rectangle": "2940163101",
+    "in-feed": "4372664276"
+  },
+
+  "_yuvaNotu": [
+    "AdSense panelindeki adlar ve buradaki karsiliklari:",
+    "  stajimvar-content-top      -> sidebar-rectangle  (sag sutun, 300x250)",
+    "  stajimvar-listing-inline   -> in-feed            (ilan aralari)",
+    "",
+    "Panelde 'content-top' adi verilmis ama bizde o birim sag sutunda",
+    "kullaniliyor. AdSense tarafindaki ad yalnizca senin raporlarinda",
+    "gorunuyor, yerlesimi belirlemiyor - istersen panelden yeniden",
+    "adlandirabilirsin, kod etkilenmez."
+  ]
+}
