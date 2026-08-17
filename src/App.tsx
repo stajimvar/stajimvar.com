@@ -34,12 +34,21 @@ import { CompanyPage } from './components/CompanyPage';
 import { EmployerGuide } from './components/EmployerGuide';
 import { GuideHub, GuidePage } from './components/GuidePages';
 import { CvPage } from './components/CvPage';
+import { BolumHub, BolumPage } from './components/BolumPages';
+import {
+  AracHub,
+  NetHesaplama,
+  SiralamaTahmini,
+  StajUcretiHesaplama,
+  StajGunuHesaplama,
+} from './components/Araclar';
 import { AdminClaimsView } from './components/AdminClaimsView';
 import { AdminListingsQueue } from './components/AdminListingsQueue';
 import { AdminDashboard } from './components/AdminDashboard';
 import { listingSlug, idPrefixFromSlug } from './lib/slug';
 import confetti from 'canvas-confetti';
 import { CheckCircle2 } from 'lucide-react';
+import { SAYFA_GENISLIGI } from './lib/duzen';
 
 export default function App() {
   /**
@@ -63,7 +72,25 @@ export default function App() {
     window.scrollTo(0, 0);
   };
 
+  /**
+   * İlan araması.
+   *
+   * Durum burada, çünkü kutu iki yerde çiziliyor: geniş ekranda üst çubukta
+   * (Header), mobilde ilan listesinin başında. İkisi de aynı değeri yazıp
+   * okuyor. Bölüm sayfalarındaki "ilanlara bak" düğmesi de buraya yazıyor.
+   *
+   * Adres çubuğunda ?q= tutmuyoruz: `path` yalnızca pathname'i izliyor,
+   * sorgu dizesi geri/ileri tuşlarında kaybolurdu.
+   */
+  const [aramaTerimi, setAramaTerimi] = React.useState('');
+
   const goHome = () => navigate('/');
+
+  /** Bolum sayfasindan ilan listesine gecis. */
+  const bolumdenAra = (terim: string) => {
+    setAramaTerimi(terim);
+    navigate('/');
+  };
 
   // Global State
   /** Supabase oturumu. null = ziyaretçi. */
@@ -485,13 +512,71 @@ export default function App() {
    * (eski state, geri tuşu) o değere düşebilir ve ziyaretçi kendisine aitmiş
    * gibi görünen örnek verileri görür.
    */
-  const safeTab = !isLoggedIn && activeTab !== 'internships' ? 'internships' : activeTab;
+  /*
+    "Başvurularım" sekmesi profile taşındı. Eski bağlantılar ve kayıtlı durum
+    kırılmasın diye 'applications' burada 'profile'a çevriliyor.
+  */
+  const istenenTab = activeTab === 'applications' ? 'profile' : activeTab;
+  const safeTab = !isLoggedIn && istenenTab !== 'internships' ? 'internships' : istenenTab;
 
   const temizYol = path.replace(/\/+$/, '') || '/';
 
+  /**
+   * ÜST ÇUBUK HER SAYFADA SABİT
+   *
+   * Önce yalnızca ana sekmelerde vardı: rehber, bölüm, araç, işveren ve
+   * yasal sayfalar kendi sade başlığını (geri oku + logo) çiziyordu.
+   * Kullanıcı rehbere girdiğinde arama kutusu, sekmeler ve profili
+   * kayboluyordu; siteden çıkmış gibi oluyordu ve geri dönmenin tek yolu
+   * geri okuydu.
+   *
+   * Artık aynı çubuk her yerde. Alt sayfalar `SayfaKabugu` ile çiziliyor ve
+   * o bileşen kendi başlığını artık çizmiyor — iki başlık üst üste binmesin.
+   */
+  const ustCubuk = (
+    <Header
+      activeTab={safeTab}
+      setActiveTab={(sekme) => {
+        // Alt sayfadayken sekmeye basılırsa önce ana sayfaya dönülüyor.
+        if (temizYol !== '/') navigate('/');
+        handleTabChange(sekme);
+      }}
+      activeSubTab={activeSubTab}
+      setActiveSubTab={setActiveSubTab}
+      userRole={userRole}
+      setUserRole={setUserRole}
+      activeStudent={activeStudent}
+      activeCompany={activeCompany}
+      allCompanies={allCompanies}
+      onSelectCompany={handleSelectCompany}
+      applicationsCount={applications.length}
+      onOpenGuides={() => navigate('/rehber')}
+      searchQuery={aramaTerimi}
+      onSearchChange={(q) => {
+        setAramaTerimi(q);
+        // Arama ilan listesinde işliyor; başka sayfadayken oraya götürüyor.
+        if (q && temizYol !== '/') navigate('/');
+      }}
+      isAdmin={isAdmin}
+      onOpenAdmin={() => navigate('/yonetim')}
+      isLoggedIn={isLoggedIn}
+      onOpenLogin={AUTH_ENABLED ? handleOpenLogin : undefined}
+      onOpenRegister={AUTH_ENABLED ? handleOpenRegister : undefined}
+      onLogout={handleLogout}
+    />
+  );
+
+  /** İçerik sayfalarını üst çubukla birlikte çizer. */
+  const icerikSayfasi = (icerik: React.ReactNode) => (
+    <div className="min-h-screen flex flex-col bg-[#F9FAFB]">
+      {ustCubuk}
+      {icerik}
+    </div>
+  );
+
   const legalSlug = LEGAL_ROUTES[temizYol];
   if (legalSlug) {
-    return <LegalPage slug={legalSlug} onBack={goHome} />;
+    return icerikSayfasi(<LegalPage slug={legalSlug} onBack={goHome} />);
   }
 
   /* /ilan/frontend-stajyeri-3f2a1b9c */
@@ -538,10 +623,10 @@ export default function App() {
 
   /* Rehber merkezi ve tek rehber sayfaları. */
   if (temizYol === '/rehber') {
-    return <GuideHub onBack={goHome} onNavigate={navigate} />;
+    return icerikSayfasi(<GuideHub onBack={goHome} onNavigate={navigate} />);
   }
   if (temizYol.startsWith('/rehber/')) {
-    return (
+    return icerikSayfasi(
       <GuidePage
         slug={temizYol.slice('/rehber/'.length)}
         onBack={() => navigate('/rehber')}
@@ -550,9 +635,41 @@ export default function App() {
     );
   }
 
+  /* Bölüme göre staj rehberi. */
+  if (temizYol === '/bolumler') {
+    return icerikSayfasi(<BolumHub onBack={goHome} onNavigate={navigate} />);
+  }
+  if (temizYol.startsWith('/bolum/')) {
+    return icerikSayfasi(
+      <BolumPage
+        slug={temizYol.slice('/bolum/'.length)}
+        onBack={() => navigate('/bolumler')}
+        onNavigate={navigate}
+        onSearch={bolumdenAra}
+      />
+    );
+  }
+
+  /* Hesaplama araçları. */
+  if (temizYol === '/araclar') {
+    return icerikSayfasi(<AracHub onBack={goHome} onNavigate={navigate} />);
+  }
+  if (temizYol === '/araclar/net-hesaplama') {
+    return icerikSayfasi(<NetHesaplama onBack={() => navigate('/araclar')} onNavigate={navigate} />);
+  }
+  if (temizYol === '/araclar/siralama-tahmini') {
+    return icerikSayfasi(<SiralamaTahmini onBack={() => navigate('/araclar')} onNavigate={navigate} />);
+  }
+  if (temizYol === '/araclar/staj-ucreti-hesaplama') {
+    return icerikSayfasi(<StajUcretiHesaplama onBack={() => navigate('/araclar')} onNavigate={navigate} />);
+  }
+  if (temizYol === '/araclar/staj-gunu-hesaplama') {
+    return icerikSayfasi(<StajGunuHesaplama onBack={() => navigate('/araclar')} onNavigate={navigate} />);
+  }
+
   /* İşveren rehberi: şirketin bizi bulmasının ana yolu. */
   if (temizYol === '/isveren' || temizYol === '/stajyer-nasil-alinir') {
-    return <EmployerGuide onBack={goHome} onNavigate={navigate} />;
+    return icerikSayfasi(<EmployerGuide onBack={goHome} onNavigate={navigate} />);
   }
 
   /*
@@ -624,30 +741,11 @@ export default function App() {
         </div>
       )}
 
-      {/* Navigation Header */}
-      <Header
-        activeTab={safeTab}
-        setActiveTab={handleTabChange}
-        activeSubTab={activeSubTab}
-        setActiveSubTab={setActiveSubTab}
-        userRole={userRole}
-        setUserRole={setUserRole}
-        activeStudent={activeStudent}
-        activeCompany={activeCompany}
-        allCompanies={allCompanies}
-        onSelectCompany={handleSelectCompany}
-        applicationsCount={applications.length}
-        onOpenGuides={() => navigate('/rehber')}
-        isAdmin={isAdmin}
-        onOpenAdmin={() => navigate('/yonetim')}
-        isLoggedIn={isLoggedIn}
-        onOpenLogin={AUTH_ENABLED ? handleOpenLogin : undefined}
-        onOpenRegister={AUTH_ENABLED ? handleOpenRegister : undefined}
-        onLogout={handleLogout}
-      />
+      {/* Üst çubuk: içerik sayfalarıyla aynı bileşen, tek yerden. */}
+      {ustCubuk}
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-[1536px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-6 pb-24 lg:pb-8">
+      <main className={`flex-1 ${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-6 pb-24 lg:pb-8`}>
         {(userRole === 'company' || safeTab === 'company-portal') && !activeCompany ? (
           /*
             Şirket hesabı yokken portalı çizmek, uydurma bir şirketin panelini
@@ -731,6 +829,8 @@ export default function App() {
                   handleApplyToJob(listing, match.overallScore)
                 }
                 onGoToProfile={() => setActiveTab('profile')}
+                searchQuery={aramaTerimi}
+                onSearchChange={setAramaTerimi}
               />
             )}
 
@@ -744,16 +844,6 @@ export default function App() {
               />
             )}
 
-            {safeTab === 'applications' && activeStudent && (
-              <ApplicationsTrackerView
-                applications={applications}
-                allListings={allListings}
-                subTab={activeSubTab}
-                onSubTabChange={setActiveSubTab}
-                onExploreInternships={() => handleTabChange('internships')}
-              />
-            )}
-
             {safeTab === 'profile' && activeStudent && (
               <StudentProfileView
                 student={activeStudent}
@@ -761,6 +851,16 @@ export default function App() {
                 onSubTabChange={setActiveSubTab}
                 onUpdateProfile={handleUpdateProfile}
                 onOpenCv={() => navigate('/cv')}
+                basvuruSayisi={applications.length}
+                basvuruListesi={
+                  <ApplicationsTrackerView
+                    applications={applications}
+                    allListings={allListings}
+                    subTab={activeSubTab}
+                    onSubTabChange={setActiveSubTab}
+                    onExploreInternships={() => handleTabChange('internships')}
+                  />
+                }
                 quizzes={quizzes}
                 onStartQuiz={(quiz) => setActiveQuiz(quiz)}
                 onOpenQuiz={(skillName) => {
@@ -855,6 +955,8 @@ export default function App() {
             <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
               {[
                 { yol: '/rehber', etiket: 'Staj rehberi' },
+                { yol: '/bolumler', etiket: 'Bölüme göre staj' },
+                { yol: '/araclar', etiket: 'Hesaplama araçları' },
                 { yol: '/isveren', etiket: 'İşveren rehberi' },
                 { yol: '/hakkimizda', etiket: 'Hakkımızda' },
                 { yol: '/iletisim', etiket: 'İletişim' },

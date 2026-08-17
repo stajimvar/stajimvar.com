@@ -6,10 +6,17 @@ import {
   CheckCircle2,
   ChevronDown,
   ExternalLink,
+  FolderOpen,
+  GraduationCap,
+  Languages,
   Loader2,
+  MessageSquare,
   Plus,
+  Send,
   ShieldCheck,
+  Target,
   Trash2,
+  Wrench,
   X,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -60,9 +67,24 @@ interface StudentProfileViewProps {
   onStartQuiz?: (quiz: SkillQuiz) => void;
   /** Yazdırılabilir CV sayfasına geçiş. */
   onOpenCv?: () => void;
+  /**
+   * Başvuru takibi artık bu sayfanın içinde; ayrı sekme kaldırıldı.
+   * Liste bileşeni App tarafından hazır veriliyor — bu bileşen başvuru
+   * verisini kendisi çekmiyor, sadece yerleştiriyor.
+   */
+  basvuruSayisi?: number;
+  basvuruListesi?: React.ReactNode;
 }
 
-type BolumId = 'kisisel' | 'teknik' | 'sosyal' | 'dil' | 'proje' | 'tercih' | 'rozet';
+type BolumId =
+  | 'basvuru'
+  | 'kisisel'
+  | 'teknik'
+  | 'sosyal'
+  | 'dil'
+  | 'proje'
+  | 'tercih'
+  | 'rozet';
 
 const POPULER_ARACLAR = [
   'Python', 'JavaScript', 'React', 'SQL', 'Git & GitHub', 'HTML / CSS',
@@ -118,7 +140,9 @@ const DIL_SEVIYE_METNI: Record<string, string> = {
 
 interface BolumProps {
   id: BolumId;
-  emoji: string;
+  ikon: React.ReactNode;
+  /** Tailwind zemin sınıfı; her bölümün kendi rengi var. */
+  renk: string;
   baslik: string;
   ozet: string;
   tamam: boolean;
@@ -133,7 +157,7 @@ interface BolumProps {
   kurar ve yazarken imleç kaybolurdu.
 */
 const Bolum: React.FC<BolumProps> = ({
-  id, emoji, baslik, ozet, tamam, acik, onToggle, children,
+  id, ikon, renk, baslik, ozet, tamam, acik, onToggle, children,
 }) => (
   <section
     id={`bolum-${id}`}
@@ -145,11 +169,21 @@ const Bolum: React.FC<BolumProps> = ({
       aria-expanded={acik}
       className="w-full flex items-center gap-3 p-4 text-left cursor-pointer hover:bg-gray-50 transition-colors"
     >
+      {/*
+        EMOJİ YERİNE RENKLİ İKON
+
+        Sekiz bölümün sekizi de gri kutuda emoji taşıyordu. Emoji her
+        işletim sisteminde farklı çiziliyor (Windows'ta başka, iPhone'da
+        başka) ve gri kutular sayfayı tek düze bir liste hâline getiriyordu.
+
+        Her bölümün artık kendi rengi ve çizgi ikonu var: göz bölümü
+        okumadan ayırt ediyor, renk sayfaya canlılık veriyor.
+      */}
       <span
         aria-hidden
-        className="w-10 h-10 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center text-lg"
+        className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-white shadow-sm ${renk}`}
       >
-        {emoji}
+        {ikon}
       </span>
 
       <span className="min-w-0 flex-1">
@@ -198,6 +232,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   onOpenCv,
   quizzes = [],
   onStartQuiz,
+  basvuruSayisi = 0,
+  basvuruListesi,
 }) => {
   const [acikBolum, setAcikBolum] = useState<BolumId | null>(null);
 
@@ -452,10 +488,29 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   const rozetler = student.earnedBadges ?? [];
 
   return (
-    <div className="max-w-3xl mx-auto space-y-3 pb-16 animate-in fade-in duration-200">
-      {/* ---------------- Üst kart: kim olduğun + ilerleme ---------------- */}
+    /*
+      İKİ SÜTUNLU DÜZEN (yalnızca lg ve üstü)
+
+      Sayfa `max-w-3xl` idi: geniş ekranda içerik ortada dar bir şerit
+      hâlinde duruyor, iki yanı boş kalıyordu. Anasayfa ise tam genişlikte.
+      Aynı sitede iki farklı sayfa genişliği vardı.
+
+      Artık anasayfayla aynı: solda kimlik kartı (kaydırınca yapışık kalıyor),
+      sağda doldurulacak bölümler. Mobilde hiçbir şey değişmiyor — sütunlar
+      alt alta diziliyor ve sıra aynı.
+    */
+    <div className="w-full pb-16 animate-in fade-in duration-200">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
+
+        {/* ---------------- SOL: kimlik kartı ---------------- */}
+        <div className="lg:col-span-4 lg:sticky lg:top-4 space-y-3">
       <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 space-y-4">
-        <div className="flex items-center gap-4">
+        {/*
+          Mobilde yatay (fotoğraf solda, ad sağda) — orası zaten iyiydi.
+          Geniş ekranda kimlik kartına dönüşüyor: fotoğraf büyük ve üstte,
+          bilgiler altında ortalanmış.
+        */}
+        <div className="flex items-center gap-4 lg:flex-col lg:items-center lg:gap-3 lg:text-center">
           <input
             type="file"
             ref={dosyaRef}
@@ -472,24 +527,32 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             <Avatar
               name={student.fullName}
               url={student.avatarUrl || undefined}
-              className="w-16 h-16 rounded-2xl text-xl"
+              className="w-16 h-16 lg:w-40 lg:h-40 rounded-2xl text-xl lg:text-5xl"
             />
-            <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center border-2 border-white">
+            <span className="absolute -bottom-1 -right-1 w-6 h-6 lg:w-9 lg:h-9 rounded-full bg-blue-600 text-white flex items-center justify-center border-2 border-white">
               {avatarYukleniyor
-                ? <Loader2 className="w-3 h-3 animate-spin" />
-                : <Camera className="w-3 h-3" />}
+                ? <Loader2 className="w-3 h-3 lg:w-4 lg:h-4 animate-spin" />
+                : <Camera className="w-3 h-3 lg:w-4 lg:h-4" />}
             </span>
           </button>
 
-          <div className="min-w-0 flex-1">
-            <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
+          <div className="min-w-0 flex-1 lg:flex-none lg:w-full">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate lg:whitespace-normal lg:break-words">
               {student.fullName}
             </h1>
-            <p className="text-xs text-gray-500 truncate">
+            {/*
+              Geniş ekranda `truncate` kaldırılıyor: kimlik kartında uzun
+              üniversite adının "..." ile kesilmesi kartı eksik gösteriyordu.
+            */}
+            <p className="text-xs lg:text-sm text-gray-500 truncate lg:whitespace-normal">
               {student.university || 'Okulun eksik'}
-              {student.department ? ` · ${student.department}` : ''}
             </p>
-            <p className="text-xs text-gray-400">{student.gradeLevel}</p>
+            {student.department && (
+              <p className="text-xs lg:text-sm font-semibold text-gray-700 truncate lg:whitespace-normal">
+                {student.department}
+              </p>
+            )}
+            <p className="text-xs text-gray-400 lg:mt-1">{student.gradeLevel}</p>
           </div>
         </div>
 
@@ -553,11 +616,36 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           )}
         </div>
       </div>
+        </div>
+
+        {/* ---------------- SAĞ: doldurulacak bölümler ---------------- */}
+        <div className="lg:col-span-8 space-y-3 min-w-0">
+
+      {/* ---------------- 0. Başvurularım ---------------- */}
+      {basvuruListesi && (
+        <Bolum
+          id="basvuru"
+          ikon={<Send className="w-5 h-5" />}
+          renk="bg-gradient-to-br from-rose-500 to-rose-600"
+          baslik="Başvurularım"
+          ozet={
+            basvuruSayisi > 0
+              ? `${basvuruSayisi} başvuru`
+              : 'Henüz başvuru yok — ilanlara göz at'
+          }
+          tamam={basvuruSayisi > 0}
+          acik={acikBolum === 'basvuru'}
+          onToggle={bolumAc}
+        >
+          {basvuruListesi}
+        </Bolum>
+      )}
 
       {/* ---------------- 1. Kişisel bilgiler ---------------- */}
       <Bolum
         id="kisisel"
-        emoji="🎓"
+        ikon={<GraduationCap className="w-5 h-5" />}
+        renk="bg-gradient-to-br from-violet-500 to-violet-600"
         baslik="Okul ve iletişim"
         ozet={
           student.university && student.department
@@ -687,7 +775,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       {/* ---------------- 2. Teknik yetenekler ---------------- */}
       <Bolum
         id="teknik"
-        emoji="🧰"
+        ikon={<Wrench className="w-5 h-5" />}
+        renk="bg-gradient-to-br from-blue-500 to-blue-600"
         baslik="Kullandığın programlar"
         ozet={listeOzeti(yetenekler.map((s) => s.name), 'Excel, AutoCAD, Python… hangilerini biliyorsun?')}
         tamam={yetenekler.length > 0}
@@ -775,7 +864,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       {/* ---------------- 3. Sosyal beceriler ---------------- */}
       <Bolum
         id="sosyal"
-        emoji="💬"
+        ikon={<MessageSquare className="w-5 h-5" />}
+        renk="bg-gradient-to-br from-cyan-500 to-cyan-600"
         baslik="Sosyal becerilerin"
         ozet={listeOzeti(sosyal, 'Ekip çalışması, iletişim, problem çözme…')}
         tamam={sosyal.length > 0}
@@ -833,7 +923,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       {/* ---------------- 4. Diller ---------------- */}
       <Bolum
         id="dil"
-        emoji="🌍"
+        ikon={<Languages className="w-5 h-5" />}
+        renk="bg-gradient-to-br from-teal-500 to-teal-600"
         baslik="Yabancı diller"
         ozet={listeOzeti(diller.map((l) => `${l.language} (${l.level})`), 'Bildiğin dil varsa ekle')}
         tamam={diller.length > 0}
@@ -964,7 +1055,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       {/* ---------------- 5. Projeler ---------------- */}
       <Bolum
         id="proje"
-        emoji="📁"
+        ikon={<FolderOpen className="w-5 h-5" />}
+        renk="bg-gradient-to-br from-amber-500 to-amber-600"
         baslik="Projeler ve çalışmalar"
         ozet={listeOzeti(projeler.map((p) => p.title), 'Okul projesi, ödev, kişisel çalışma — hepsi sayılır')}
         tamam={projeler.length > 0}
@@ -1087,7 +1179,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       {/* ---------------- 6. Tercihler ---------------- */}
       <Bolum
         id="tercih"
-        emoji="🎯"
+        ikon={<Target className="w-5 h-5" />}
+        renk="bg-gradient-to-br from-orange-500 to-orange-600"
         baslik="Ne arıyorsun?"
         ozet={
           hedefler.length > 0 || sehirler.length > 0
@@ -1239,7 +1332,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       */}
       <Bolum
         id="rozet"
-        emoji="🏅"
+        ikon={<Award className="w-5 h-5" />}
+        renk="bg-gradient-to-br from-emerald-500 to-emerald-600"
         baslik="Testler ve rozetler"
         ozet={
           rozetler.length > 0
@@ -1311,6 +1405,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           </>
         )}
       </Bolum>
+        </div>
+      </div>
     </div>
   );
 };

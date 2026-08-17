@@ -55,22 +55,26 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
     : null;
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-gray-900">
-      <header className="border-b border-gray-200 bg-white">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <Logo />
-          <button
-            type="button"
-            onClick={onBack}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-blue-600 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            İlanlara dön
-          </button>
-        </div>
-      </header>
+    <div className="text-gray-900">
+      {/*
+        Kendi başlık çubuğu kaldırıldı: uygulamanın üst çubuğu (arama,
+        sekmeler, profil) artık her sayfada App tarafından çiziliyordu ve
+        burada bir başlık daha çizilince ikisi üst üste biniyordu — ölçüldü,
+        sayfada iki <header> vardı.
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+        "İlanlara dön" bağlantısı içeriğin üstünde ince bir satır olarak kaldı.
+      */}
+      {/* Alt boşluk mobil gezinme çubuğu için; ayrıntı SayfaKabugu.tsx içinde. */}
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24 lg:pb-10 space-y-8">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          İlanlara dön
+        </button>
+
         {kurumsal && (
           <>
             <div>

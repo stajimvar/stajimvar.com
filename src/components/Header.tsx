@@ -23,10 +23,12 @@ import {
   Columns,
   Plus,
   Inbox,
+  Search,
 } from 'lucide-react';
 import { StudentProfile, CompanyAccount } from '../types';
 import { Avatar } from './Avatar';
 import { Logo } from './Logo';
+import { SAYFA_GENISLIGI } from '../lib/duzen';
 
 interface HeaderProps {
   activeTab: 'internships' | 'badges' | 'applications' | 'profile' | 'company-portal';
@@ -49,6 +51,18 @@ interface HeaderProps {
   onLogout?: () => void;
   /** Rehber merkezine geçiş. */
   onOpenGuides?: () => void;
+  /**
+   * İlan araması.
+   *
+   * Kutu eskiden sol sütundaydı; başlık çubuğunun ortası ise boştu. Arama
+   * sitenin en çok kullanılan işi olduğu için oraya taşındı — Kariyer.net'te
+   * de arama üst çubukta duruyor.
+   *
+   * Durum App'te; burası yalnızca çiziyor. Verilmezse kutu hiç çizilmiyor,
+   * yani ilan listesi dışındaki sayfalarda üst çubuk eskisi gibi kalıyor.
+   */
+  searchQuery?: string;
+  onSearchChange?: (q: string) => void;
   /*
     Yönetici menüsü. Bu bayrak yalnızca MENÜYÜ gösteriyor — yetkinin kendisi
     veritabanında. Tarayıcıda değerini değiştiren biri menüyü görebilir ama
@@ -76,6 +90,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenRegister,
   onLogout,
   onOpenGuides,
+  searchQuery,
+  onSearchChange,
   isAdmin = false,
   onOpenAdmin,
 }) => {
@@ -183,7 +199,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <>
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-2xs transition-colors duration-200">
-        <div className="max-w-[1536px] mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10">
+        <div className={`${SAYFA_GENISLIGI} mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10`}>
         {/* Main Nav Bar */}
         <div className="flex items-center justify-between h-15 sm:h-18 gap-2 sm:gap-4">
           {/* Left: Brand Logo & Segmented Navigation */}
@@ -261,42 +277,20 @@ export const Header: React.FC<HeaderProps> = ({
                   <span>Rehber</span>
                 </button>
 
-                {/* 2. Başvurularım */}
-                <button
-                  id="nav-tab-applications"
-                  onClick={() => {
-                    setActiveTab('applications');
-                    setActiveSubTab('all');
-                  }}
-                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    activeTab === 'applications'
-                      ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
-                      :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
-                  }`}
-                >
-                  <Send
-                    className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                      activeTab ==='applications'?'text-blue-600':'text-gray-400'
-                    }`}
-                  />
-                  <span>Başvurularım</span>
-                  {applicationsCount > 0 && (
-                    <span
-                      className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full transition-all shrink-0 leading-none ${
-                        activeTab === 'applications'
-                          ? 'bg-blue-600 text-white shadow-2xs'
-                          :'bg-blue-100 text-blue-800'
-                      }`}
-                    >
-                      {applicationsCount}
-                    </span>
-                  )}
-                  {activeTab === 'applications' && applicationsCount === 0 && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>
-                  )}
-                </button>
+                {/*
+                  "Başvurularım" sekmesi kaldırıldı.
 
-                {/* 4. Özgeçmiş & Profil */}
+                  Aynı gerekçe "Yetenek Doğrulama"da olduğu gibi: başvuru takibi
+                  ayrı bir iş değil, kişinin kendi dosyasının parçası. Kullanıcı
+                  profilini dolduruyor, başvuruyor, sonra ne olduğuna bakıyor —
+                  bunlar tek bir yerde olmalı. Üç sekme arasında gidip gelmek
+                  aynı işi bölüyordu.
+
+                  Başvurular artık Özgeçmiş & Profil sayfasının en üstünde;
+                  sayaç da o sekmenin üstünde duruyor.
+                */}
+
+                {/* 3. Özgeçmiş & Profil */}
                 <button
                   id="nav-tab-profile"
                   onClick={() => {
@@ -316,7 +310,23 @@ export const Header: React.FC<HeaderProps> = ({
                   />
                   <span className="hidden xl:inline">Özgeçmiş & Profil</span>
                   <span className="inline xl:hidden">Profil</span>
-                  {activeTab === 'profile' && (
+                  {/*
+                    Başvuru sayacı buraya taşındı: başvurular artık bu sayfanın
+                    içinde. Kullanıcı kaç başvurusu olduğunu sekmeye bakarak
+                    görebilmeli, açmak zorunda kalmamalı.
+                  */}
+                  {applicationsCount > 0 && (
+                    <span
+                      className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full transition-all shrink-0 leading-none ${
+                        activeTab === 'profile'
+                          ? 'bg-teal-600 text-white shadow-2xs'
+                          : 'bg-teal-100 text-teal-800'
+                      }`}
+                    >
+                      {applicationsCount}
+                    </span>
+                  )}
+                  {activeTab === 'profile' && applicationsCount === 0 && (
                     <span className="w-1.5 h-1.5 rounded-full bg-teal-600 shrink-0" />
                   )}
                 </button>
@@ -439,6 +449,34 @@ export const Header: React.FC<HeaderProps> = ({
               </nav>
             )}
           </div>
+
+          {/*
+            Orta: arama kutusu.
+
+            `flex-1` ile logo/sekmeler ile profil arasındaki tüm boşluğu
+            alıyor; ekran genişledikçe kutu da genişliyor, boşluk kalmıyor.
+            Yalnızca lg ve üstü: mobilde burada yer yok, orada kutu ilan
+            listesinin başında duruyor.
+          */}
+          {onSearchChange && userRole === 'student' && activeTab !== 'company-portal' && (
+            <div className="hidden lg:block flex-1 min-w-0 max-w-xl mx-4">
+              <div className="relative">
+                <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="search"
+                  value={searchQuery ?? ''}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  onFocus={() => {
+                    // Arama yapan kişi ilan listesini görmek istiyor.
+                    if (activeTab !== 'internships') setActiveTab('internships');
+                  }}
+                  placeholder="Pozisyon, şirket veya yetenek ara"
+                  aria-label="İlan ara"
+                  className="w-full pl-10 pr-3 py-2.5 rounded-2xl border border-gray-200 bg-gray-50/80 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-600 focus:bg-white transition-colors"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Sağ taraf: rol değiştirici ve profil */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto">
@@ -901,54 +939,31 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="text-[10px] mt-0.5 font-semibold">İlanlar</span>
         </button>
 
-        {/* Öğrenciye özel mobil sekmeler de giriş şartına bağlı. */}
+        {/*
+          MOBİL ALT BAR = MASAÜSTÜ SEKMELERİ
+
+          Eskiden burada dört sekme vardı: İlanlar, Yetenekler, Başvurularım,
+          Profil. Masaüstünde ise Yetenekler profile taşınmış, Başvurularım da
+          öyle. İki taraf ayrı yapıdaydı; aynı sitede telefonla ve bilgisayarla
+          gezen kişi farklı bir uygulama görüyordu.
+
+          Artık ikisi de aynı: İlanlar · Rehber · Profil.
+        */}
+
+        {/* 2. Rehber — giriş şartı yok, herkese açık */}
+        <button
+          onClick={() => onOpenGuides?.()}
+          className="flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative text-gray-500 hover:text-gray-900"
+        >
+          <div className="relative">
+            <BookOpen className="w-5 h-5" />
+          </div>
+          <span className="text-[10px] mt-0.5 font-semibold">Rehber</span>
+        </button>
+
         {isLoggedIn && (
           <>
-        {/* 2. Yetenekler */}
-        <button
-          onClick={() => {
-            setActiveTab('badges');
-            setActiveSubTab('all');
-          }}
-          className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
-            activeTab === 'badges'
-              ?'text-blue-600 font-bold'
-              :'text-gray-500 hover:text-gray-900'
-          }`}
-        >
-          <div className="relative">
-            <Award className="w-5 h-5" />
-            {activeTab === 'badges' && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-500" />
-            )}
-          </div>
-          <span className="text-[10px] mt-0.5 font-semibold">Yetenekler</span>
-        </button>
-
-        {/* 3. Başvurularım */}
-        <button
-          onClick={() => {
-            setActiveTab('applications');
-            setActiveSubTab('all');
-          }}
-          className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
-            activeTab === 'applications'
-              ?'text-blue-600 font-bold'
-              :'text-gray-500 hover:text-gray-900'
-          }`}
-        >
-          <div className="relative">
-            <Send className="w-5 h-5" />
-            {applicationsCount > 0 && (
-              <span className="absolute -top-1.5 -right-2 bg-blue-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full leading-none shadow-xs">
-                {applicationsCount}
-              </span>
-            )}
-          </div>
-          <span className="text-[10px] mt-0.5 font-semibold">Başvurularım</span>
-        </button>
-
-        {/* 4. Profil */}
+        {/* 3. Profil — başvuru sayacı burada */}
         <button
           onClick={() => {
             setActiveTab('profile');
@@ -962,8 +977,14 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <div className="relative">
             <UserCheck className="w-5 h-5" />
-            {activeTab === 'profile' && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-teal-500" />
+            {applicationsCount > 0 ? (
+              <span className="absolute -top-1.5 -right-2 bg-teal-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full leading-none shadow-xs">
+                {applicationsCount}
+              </span>
+            ) : (
+              activeTab === 'profile' && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-teal-500" />
+              )
             )}
           </div>
           <span className="text-[10px] mt-0.5 font-semibold">Profil</span>

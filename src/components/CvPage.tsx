@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { ArrowLeft, CheckCircle2, Printer } from 'lucide-react';
 import type { StudentProfile } from '../types';
+import { SAYFA_GENISLIGI } from '../lib/duzen';
 
 /**
  * Yazdırılabilir CV.
@@ -76,7 +77,8 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack }) => {
       `}</style>
 
       <div className="yazdirma-disi sticky top-0 bg-white border-b border-gray-200 z-10">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        {/* Baslik cubugu ana sayfayla ayni genislikte. */}
+        <div className={`${SAYFA_GENISLIGI} mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10 py-3 flex items-center justify-between gap-3`}>
           <button
             type="button"
             onClick={onBack}

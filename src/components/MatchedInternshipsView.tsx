@@ -43,6 +43,60 @@ function eklenmeZamani(deger: string | null | undefined): number {
   return Number.isNaN(ms) ? 0 : ms;
 }
 
+/**
+ * Filtre panelindeki tek bir blok: baslik + icerik.
+ *
+ * Kariyer.net'in soldaki panelinde her olcut kendi basligiyla ayri bir
+ * bolumde duruyor. Ayni yapiyi kuruyoruz: kisi aradigi olcutu basligindan
+ * buluyor, secenekleri tek tek okumak zorunda kalmiyor.
+ */
+const FiltreBlogu: React.FC<{ baslik: string; children: React.ReactNode }> = ({
+  baslik,
+  children,
+}) => (
+  <div className="px-4 py-3.5 space-y-2">
+    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">{baslik}</h3>
+    {children}
+  </div>
+);
+
+/**
+ * Filtre secenegi: onay kutusu veya radyo, yaninda ilan sayisi.
+ *
+ * Sayi bilerek var: "Uzaktan" secenegi tek basina kac ilan oldugunu
+ * soylemiyor, "Uzaktan 2" soyluyor. Sifir ilanli secenek zaten cizilmiyor;
+ * secince bos liste veren bir dugme kullaniciyi yaniltiyor.
+ */
+const SecenekSatiri: React.FC<{
+  tip: 'checkbox' | 'radio';
+  etiket: string;
+  adet?: number;
+  secili: boolean;
+  onChange: () => void;
+}> = ({ tip, etiket, adet, secili, onChange }) => (
+  <label className="flex items-center gap-2.5 py-1.5 cursor-pointer select-none group">
+    <input
+      type={tip}
+      checked={secili}
+      onChange={onChange}
+      className={`w-4 h-4 shrink-0 border-gray-300 text-blue-600 focus:ring-blue-500/30 cursor-pointer ${
+        tip === 'checkbox' ? 'rounded' : 'rounded-full'
+      }`}
+    />
+    <span
+      className={`min-w-0 flex-1 text-sm truncate transition-colors ${
+        secili ? 'font-semibold text-gray-900' : 'text-gray-700 group-hover:text-gray-900'
+      }`}
+      title={etiket}
+    >
+      {etiket}
+    </span>
+    {adet !== undefined && (
+      <span className="text-xs text-gray-400 tabular-nums shrink-0">{adet}</span>
+    )}
+  </label>
+);
+
 interface MatchedInternshipsViewProps {
   /** Giriş yapılmamışsa null; o durumda uyum hesaplanmaz. */
   student: StudentProfile | null;
@@ -54,6 +108,15 @@ interface MatchedInternshipsViewProps {
   onQuickApply: (listing: InternshipListing, match: MatchBreakdown) => void;
   /** Profil sekmesine geçiş. Verilmezse profil çubuğu bir şey yapmaz. */
   onGoToProfile?: () => void;
+  /**
+   * Disaridan gelen arama terimi.
+   *
+   * Bolum sayfalari ("Makine muhendisligi staj ilanlarina bak") kisiyi
+   * listeye o bolumun kelimesiyle getiriyor. Yoksa bos listeye dusuyor ve
+   * okudugu seyin karsiligini goremiyor.
+   */
+  searchQuery: string;
+  onSearchChange: (q: string) => void;
 }
 
 export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
@@ -65,10 +128,47 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   onViewDetails,
   onQuickApply,
   onGoToProfile,
+  searchQuery,
+  onSearchChange,
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  /*
+    ARAMA KUTUSU ARTIK ÜST ÇUBUKTA
+
+    Kutu bu bileşenin içindeydi ve durumu da burada tutuluyordu. Üst çubuğa
+    taşınınca iki yerden yazılabilir hâle geldi (geniş ekranda başlık,
+    mobilde sütun), o yüzden durum yukarı — App'e — taşındı. Burası artık
+    yalnızca okuyor ve değişikliği yukarı bildiriyor.
+  */
+  const setSearchQuery = onSearchChange;
   const [selectedCity, setSelectedCity] = useState<string>('all');
-  const [selectedWorkType, setSelectedWorkType] = useState<string>('all');
+  /*
+    Calisma tercihi COKLU secim oldu.
+
+    Onceden tek secimli bir sirayd: "Uzaktan" secince ofis ilanlarini
+    goremiyordun, ikisini birden gormek icin "Tumu"ne donmen gerekiyordu.
+    Oysa "uzaktan VEYA hibrit olsun, ofise gitmeyeyim" gercek bir istek.
+    Bos dizi = hicbir sinirlama.
+  */
+  const [workTypes, setWorkTypes] = useState<string[]>([]);
+
+  /** Tarih araligi: ilanin eklenme zamanina gore. */
+  const [dateRange, setDateRange] = useState<'all' | '1' | '3' | '7' | '30'>('all');
+
+  /** Secili sirketler. Bos dizi = hepsi. */
+  const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
+  const [companySearch, setCompanySearch] = useState('');
+
+  /**
+   * Filtre paneli MOBİLDE kapalı başlıyor.
+   *
+   * Telefonda panel tüm ekranı kaplıyordu: konum, çalışma tercihi, tarih ve
+   * sekiz şirket alt alta dizilince ilanlar ancak iki ekran aşağıda
+   * başlıyordu. Oysa telefonu açan kişi önce ilan görmek istiyor.
+   *
+   * Geniş ekranda bu değerin bir etkisi yok: orada panel `lg:block` ile
+   * her zaman açık, sol sütunda zaten yeri var.
+   */
+  const [filtreAcik, setFiltreAcik] = useState(false);
   const [onlyMandatory, setOnlyMandatory] = useState<boolean>(false);
   const [onlyPaid, setOnlyPaid] = useState<boolean>(false);
   const [minMatchScore, setMinMatchScore] = useState<number>(0);
@@ -243,11 +343,29 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         }
 
         // Work type
-        if (selectedWorkType !== 'all' && listing.workType !== selectedWorkType) {
+        if (workTypes.length > 0 && !workTypes.includes(listing.workType)) {
           return false;
         }
 
         // Mandatory
+        if (selectedCompanies.length > 0 && !selectedCompanies.includes(listing.companyName)) {
+          return false;
+        }
+
+        /*
+          Tarih suzgeci. Olcut `postedAt ?? created_at`; yani "ilan ne zaman
+          yayinlandi" degil "bizde ne zaman gorundu". Etiketlerde de
+          "eklendi" diyoruz, "yayinlandi" demiyoruz.
+        */
+        if (dateRange !== 'all') {
+          const eklenme = eklenmeZamani(listing.postedAt);
+          if (!eklenme) return false;
+          const gun = Number(dateRange);
+          if (Date.now() - eklenme > gun * 86400000) {
+            return false;
+          }
+        }
+
         if (onlyMandatory && !listing.mandatoryStajAccepted) {
           return false;
         }
@@ -309,7 +427,9 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     matchedData,
     searchQuery,
     selectedCity,
-    selectedWorkType,
+    workTypes,
+    dateRange,
+    selectedCompanies,
     onlyMandatory,
     onlyPaid,
     minMatchScore,
@@ -406,6 +526,71 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
    * üzerinden sayılsaydı bir şehir seçildiği anda diğer şehirler 0 görünür ve
    * kullanıcı geri dönemezdi.
    */
+  /**
+   * Sirket suzgeci secenekleri.
+   *
+   * Kariyer.net'in "Sektor" ve "Departman" bloklarinin bizdeki karsiligi.
+   * Sektor verimiz yok -- ilanlari sirketin kendi kariyer sayfasindan
+   * aliyoruz, sektor etiketi gelmiyor. Uydurmak yerine gercekten elimizde
+   * olani suzduruyoruz: sirket adi.
+   */
+  /** Calisma turu basina ilan sayisi; secenegin yaninda gosteriliyor. */
+  const workTypeCounts = useMemo(() => {
+    const sayim: Record<string, number> = {};
+    for (const { listing, match } of matchedData) {
+      if (!matchesCategory(listing, match, subTab)) continue;
+      const tur = listing.workType;
+      if (tur) sayim[tur] = (sayim[tur] ?? 0) + 1;
+    }
+    return sayim;
+  }, [matchedData, subTab]);
+
+  const companyOptions = useMemo(() => {
+    const sayim = new Map<string, number>();
+    for (const { listing, match } of matchedData) {
+      if (!matchesCategory(listing, match, subTab)) continue;
+      const ad = listing.companyName?.trim();
+      if (ad) sayim.set(ad, (sayim.get(ad) ?? 0) + 1);
+    }
+    return [...sayim.entries()]
+      .map(([ad, adet]) => ({ ad, adet }))
+      .sort((a, b) => b.adet - a.adet || a.ad.localeCompare(b.ad, 'tr'));
+  }, [matchedData, subTab]);
+
+  /** Arama kutusuyla suzulmus sirket listesi. */
+  const gorunenSirketler = useMemo(() => {
+    const q = companySearch.trim().toLocaleLowerCase('tr');
+    if (!q) return companyOptions;
+    return companyOptions.filter((s) => s.ad.toLocaleLowerCase('tr').includes(q));
+  }, [companyOptions, companySearch]);
+
+  /** Kac suzgec acik? "Temizle" dugmesini ve sayiyi bununla gosteriyoruz. */
+  const acikSuzgecSayisi =
+    (selectedCity !== 'all' ? 1 : 0) +
+    workTypes.length +
+    (dateRange !== 'all' ? 1 : 0) +
+    selectedCompanies.length +
+    (onlyMandatory ? 1 : 0) +
+    (onlyPaid ? 1 : 0) +
+    (minMatchScore > 0 ? 1 : 0);
+
+  const suzgecleriTemizle = () => {
+    setSelectedCity('all');
+    setWorkTypes([]);
+    setDateRange('all');
+    setSelectedCompanies([]);
+    setCompanySearch('');
+    setOnlyMandatory(false);
+    setOnlyPaid(false);
+    setMinMatchScore(0);
+  };
+
+  const calismaSec = (tur: string) =>
+    setWorkTypes((o) => (o.includes(tur) ? o.filter((x) => x !== tur) : [...o, tur]));
+
+  const sirketSec = (ad: string) =>
+    setSelectedCompanies((o) => (o.includes(ad) ? o.filter((x) => x !== ad) : [...o, ad]));
+
   const cityOptions = useMemo(() => {
     const sayim = new Map<string, number>();
     let bilinmeyen = 0;
@@ -441,28 +626,95 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         ilanlar sayfanın en üstünden başlıyor. Mobilde hiçbir şey değişmiyor:
         sütunlar alt alta diziliyor ve sıra aynen korunuyor.
       */}
+      {/*
+        BAŞLIK ARTIK IZGARANIN ÜSTÜNDE, TAM GENİŞLİKTE
+
+        Sol sütunun içindeydi. Sütun üç kolona (≈318 piksel) daralınca
+        "Şirketlerin staj ilanları, tek listede." üç satıra bölünüyor ve
+        sayfanın en tepesindeki cümle kırık görünüyordu.
+
+        Başlık sayfanın tamamına ait: hangi sütunda durduğunun bir anlamı
+        yok. Izgaranın dışına, tam genişliğe alındı.
+      */}
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
 
-        <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-4">
-          <header className="space-y-3">
-            {/*
-              Başlık öğrenciye ne kazandığını söylüyor, bize ne yaptığımızı
-              değil.
+        <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-4">
+          {/*
+            BAŞLIK SOL SÜTUNDA
 
-              Önceki hali "Staj ilanları, şirketin kendi sayfasından." idi:
-              doğru ama bizim yöntemimizi anlatıyordu. Staj arayan biri ilk
-              saniyede "burada iş var mı" sorusunun cevabını arıyor; nereden
-              topladığımız onun için ikinci sıradaki bilgi — o yüzden alt
-              satıra, kanıt olarak indi.
-            */}
-            <h1 className="text-2xl sm:text-4xl lg:text-3xl font-extrabold leading-tight tracking-tight text-gray-900">
-              Şirketlerin staj ilanları, <span className="text-blue-600">tek listede</span>.
-            </h1>
-            <p className="text-sm sm:text-base text-gray-600 max-w-xl leading-relaxed">
-              Sekiz ayrı kariyer sayfasını tek tek gezme. İlanları aracı
-              sitelerden değil, şirketlerin kendi kariyer sayfalarından
-              derliyoruz; her ilanda şirketin kendi başvuru bağlantısı var.
-            </p>
+            Önce ızgaranın üstünde tam genişlikteydi; o satır tek başına bir
+            şerit kaplıyor ve ilanları aşağı itiyordu. Sol sütuna alınınca üst
+            şerit tamamen kalktı: ilanlar artık sayfanın en tepesinden
+            başlıyor.
+
+            Satır kırılması virgülde sabit — dar sütunda tarayıcı bırakılırsa
+            "Şirketlerin staj / ilanları, tek / listede." gibi rastgele
+            bölüyordu. Cümlenin doğal durağı virgül.
+          */}
+          {/*
+            Punto sütun genişliğiyle ÖLÇEKLENİYOR.
+
+            Sabit bir punto burada işe yaramıyor: sol sütun 1024 pikselde
+            218, 1440'ta 318, 1536 ve üstünde ~346 piksel. 24 punto 1440'ta
+            satırın yalnızca %84'ünü dolduruyor, 1024'te ise taşırıyordu.
+
+            `1.82vw` sütunla aynı oranda büyüyüp küçülüyor.
+
+            ÜST SINIR ÖNEMLİ: sayfa `max-w-[1536px]` olduğu için sütun o
+            noktadan sonra büyümeyi bırakıyor, ama vw büyümeye devam ediyor.
+            Sınır konmazsa 1920 piksellik ekranda punto sütunu taşırıp başlığı
+            ÜÇ satıra bölüyor — ölçüldü, oluyordu. 1.85rem tam orada duruyor.
+
+            Ölçüm: "Şirketlerin staj ilanları," satırı her genişlikte sütunun
+            %88-95'ini dolduruyor ve başlık iki satır kalıyor.
+
+            MOBİLDE TEK SATIR, GENİŞ EKRANDA İKİ SATIR
+
+            İkisi farklı iş yapıyor:
+
+            - Telefonda başlık iki satıra bölününce 60 piksel kaplıyor ve
+              ilanları aşağı itiyor. Tek satır 30 piksel; kazanılan yer
+              doğrudan ilana gidiyor.
+            - Geniş ekranda başlık dar bir sütunun içinde ve orayı DOLDURMASI
+              isteniyor; tek satır olsaydı sütunun yarısı boş kalırdı.
+
+            Bu yüzden `<span>`ler mobilde `inline` (aynı satırda akıyor),
+            lg'de `block` (virgülden kırılıyor). Punto da mobilde ekran
+            genişliğiyle ölçekleniyor: ölçüm, cümlenin 24 puntoda ~405 piksel
+            sürdüğünü söylüyor; 375 piksellik telefonda 343 piksel yer var,
+            yani punto en fazla ~20 olabiliyor. 5vw tam oraya oturuyor ve
+            küçük telefonlarda da orantılı küçülüyor.
+          */}
+          <h1 className="text-center lg:text-left [font-size:clamp(1rem,5vw,1.5rem)] lg:[font-size:clamp(1.125rem,1.82vw,1.85rem)] font-extrabold leading-tight tracking-tight text-gray-900 break-words">
+            <span className="inline lg:block">Şirketlerin staj ilanları, </span>
+            <span className="inline lg:block">
+              <span className="text-blue-600">tek listede</span>.
+            </span>
+          </h1>
+
+          {/*
+            Sayaçlar — MOBİL kopya.
+
+            Asıl kopya sağ sütunda bir kart; o sütun `hidden lg:block` olduğu
+            için telefonda hiç çizilmiyor.
+
+            Mobilde kart değil TEK SATIR: üç rakam iri puntoyla alt alta
+            etiketleriyle dururken 45 piksel yer kaplıyordu ve ilanları aşağı
+            itiyordu. Aynı bilgi tek satırda 20 pikselde veriliyor — telefonda
+            yer, ilanın hakkı.
+          */}
+          {/* Mobilde ortalı: başlıkla aynı eksende dursun. Geniş ekranda bu
+              kopya zaten gizli. */}
+          <p className="lg:hidden text-center text-xs text-gray-500 tabular-nums">
+            <strong className="text-gray-900">{filteredListings.length}</strong> açık ilan
+            {' · '}
+            <strong className="text-gray-900">{companyCount}</strong> şirket
+            {' · '}
+            <strong className="text-gray-900">{cityCount}</strong> şehir
+          </p>
+
+          <div className="space-y-3">
 
             {/*
               "Eşleşmeleri Bul" düğmesi kaldırıldı: onClick'i boştu, hiçbir şey
@@ -471,7 +723,12 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               zedeliyor.
             */}
             <div className="mt-4 flex flex-col sm:flex-row lg:flex-col gap-2">
-              <div className="relative flex-1 min-w-0">
+              {/*
+                Geniş ekranda gizli: arama kutusu üst çubukta duruyor, aynı
+                kutuyu iki kez göstermek hangisinin çalıştığını belirsizleştirir.
+                Mobilde üst çubukta yer olmadığı için burada kalıyor.
+              */}
+              <div className="relative flex-1 min-w-0 lg:hidden">
                 <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
@@ -493,58 +750,20 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               </div>
 
               {/*
-                Şehir seçici. Menüde yalnızca gerçekten ilanı olan iller var;
-                seçilince boş sonuç veren bir seçenek göstermiyoruz.
+                Şehir seçici buradan kaldırıldı.
+
+                Filtre panelinin "Konum" bloğunda aynısı var ve o her ekran
+                boyutunda görünüyor. İki kutu aynı değeri yazıp okuyordu;
+                kullanıcı birini değiştirince diğeri de değişiyor, hangisinin
+                geçerli olduğu belirsiz kalıyordu.
               */}
-              <div className="relative sm:w-56 lg:w-full shrink-0">
-                <MapPin className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <select
-                  value={selectedCity}
-                  onChange={(e) => setSelectedCity(e.target.value)}
-                  aria-label="Şehir seç"
-                  className="w-full pl-11 pr-8 py-3.5 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-900 focus:outline-none focus:border-blue-600 transition-colors appearance-none cursor-pointer"
-                >
-                  <option value="all">Tüm Türkiye</option>
-                  {cityOptions.map((sehir) => (
-                    <option key={sehir.id} value={sehir.id}>
-                      {sehir.etiket} ({sehir.adet})
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
             </div>
-          </header>
+          </div>
 
           {/*
-            Sayaç şeridi.
-
-            "Zirve Uyum" kaldırıldı: en iyi eşleşmenin yüzdesini turuncu punto
-            ile sayfanın tepesine yazmak, %25 gibi düşük bir değerde siteyi
-            kötü gösteriyordu — üstelik bu sayı ilanların kalitesini değil,
-            profilin ne kadar dolu olduğunu ölçüyor. Yerine sayılabilen ve
-            doğrulanabilen üç şey var. Renk vurgusu da kalktı; üç farklı
-            renkte kocaman rakam bir gösterge paneli gibi duruyordu.
+            Sayaç şeridi başlığın yanına taşındı; oradaki boşluğu dolduruyor
+            ve sol sütun yalnızca filtrelere kaldı.
           */}
-          <div className="grid grid-cols-3 gap-2 pt-2">
-            {[
-              { etiket: 'Açık ilan', deger: String(filteredListings.length) },
-              { etiket: 'Şirket', deger: String(companyCount) },
-              { etiket: 'Şehir', deger: String(cityCount) },
-            ].map((kutu) => (
-              <div
-                key={kutu.etiket}
-                className="bg-white p-3 sm:p-4 rounded-2xl border border-gray-200"
-              >
-                <p className="text-xl sm:text-2xl font-black text-gray-900 tabular-nums">
-                  {kutu.deger}
-                </p>
-                <p className="text-[11px] font-semibold text-gray-500 mt-0.5">
-                  {kutu.etiket}
-                </p>
-              </div>
-            ))}
-          </div>
 
           {/*
             Profil eksikse tek satırlık uyarı.
@@ -581,238 +800,223 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               </span>
             </button>
           )}
-      <div className="bg-white rounded-2xl p-3 sm:p-5 border border-gray-200 shadow-xs space-y-3 sm:space-y-4">
-        {/*
-          Tek seçenek kaldıysa şerit çizilmiyor: içinde yalnızca "Tüm İlanlar"
-          olan bir filtre satırı hiçbir şey süzmüyor, sadece yer kaplıyor.
-          Kaynaklar çoğalıp kamu veya yurtdışı ilanları geldiğinde kendiliğinden
-          geri geliyor.
-        */}
-        {listingCategories.length > 1 && (
-        <div className="relative flex items-center">
-          {/* Left Scroll Button (Desktop only) */}
-          {canScrollLeft && (
+      {/*
+        FİLTRE PANELİ
+
+        Eskiden tek bir kutuydu: çalışma türü hapları, iki onay kutusu ve
+        sıralama menüsü yan yana duruyordu. Filtre sayısı arttıkça bu düzen
+        tutmuyor — hangi seçeneğin neyi süzdüğü belirsizleşiyor.
+
+        Şimdi her ölçüt kendi başlıklı bloğunda: Konum, Çalışma tercihi,
+        Tarih, Şirket, İlan özellikleri. Kişi aradığı ölçütü başlığından
+        buluyor.
+
+        Sıralama buradan çıkarıldı; ilan listesinin başına taşındı. Sıralama
+        bir süzgeç değil — hiçbir ilanı elemiyor, sadece diziyor. Süzgeçlerin
+        arasında durması ikisini aynı şey sanmaya yol açıyordu.
+      */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
+
+        {/* ---- başlık: mobilde açma/kapama düğmesi ---- */}
+        <div className="flex items-center gap-2 px-4 py-3">
+          <button
+            type="button"
+            onClick={() => setFiltreAcik((o) => !o)}
+            aria-expanded={filtreAcik}
+            className="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer lg:cursor-default"
+          >
+            <SlidersHorizontal className="w-4 h-4 text-gray-400 shrink-0" />
+            <span className="text-sm font-bold text-gray-900">Filtreler</span>
+            {acikSuzgecSayisi > 0 && (
+              <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-blue-600 text-white leading-none shrink-0">
+                {acikSuzgecSayisi}
+              </span>
+            )}
+            {/* Ok yalnızca mobilde: geniş ekranda panel zaten hep açık. */}
+            <ChevronDown
+              className={`lg:hidden w-4 h-4 text-gray-400 shrink-0 ml-auto transition-transform ${
+                filtreAcik ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+          {acikSuzgecSayisi > 0 && (
             <button
               type="button"
-              onClick={() => scrollCategory(-200)}
-              className="hidden md:flex absolute -left-2 z-10 p-1.5 rounded-full bg-white shadow-md border border-gray-200 text-gray-700 hover:text-blue-600 transition-all cursor-pointer"
-              title="Sola Kaydır"
+              onClick={suzgecleriTemizle}
+              className="text-xs font-bold text-blue-600 hover:underline cursor-pointer shrink-0"
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
+              Temizle
             </button>
           )}
+        </div>
 
-          {/* Categories Horizontal Scroll with smooth touch panning */}
-          <div
-            ref={categoryScrollRef}
-            onScroll={checkCategoryScroll}
-            className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5 w-full select-none overscroll-x-contain"
-            style={{
-              scrollBehavior: 'smooth',
-              WebkitOverflowScrolling: 'touch',
-              touchAction: 'pan-x',
-            }}
-          >
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mr-1 hidden lg:inline">
-              İlan Filtreleri:
-            </span>
-            {listingCategories.map((cat) => {
-              const isActive = (subTab || 'all') === cat.id;
+        {/*
+          Süzgeçler. Mobilde `filtreAcik` kapalıyken çizilmiyor; geniş ekranda
+          `lg:block` her durumda gösteriyor.
+        */}
+        <div
+          className={`${filtreAcik ? 'block' : 'hidden'} lg:block divide-y divide-gray-100 border-t border-gray-100`}
+        >
+
+        {/* ---- konum ---- */}
+        <FiltreBlogu baslik="Konum">
+          <div className="relative">
+            <MapPin className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <select
+              value={selectedCity}
+              onChange={(e) => setSelectedCity(e.target.value)}
+              aria-label="Şehir seç"
+              className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-900 focus:outline-none focus:border-blue-600 appearance-none cursor-pointer"
+            >
+              <option value="all">Tüm Türkiye</option>
+              {cityOptions.map((sehir) => (
+                <option key={sehir.id} value={sehir.id}>
+                  {sehir.etiket} ({sehir.adet})
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        </FiltreBlogu>
+
+        {/* ---- çalışma tercihi ---- */}
+        <FiltreBlogu baslik="Çalışma tercihi">
+          <div className="space-y-0.5">
+            {[
+              { id: 'On-site', etiket: 'İş yerinde' },
+              { id: 'Remote', etiket: 'Uzaktan' },
+              { id: 'Hybrid', etiket: 'Hibrit' },
+            ].map((tur) => {
+              const adet = workTypeCounts[tur.id] ?? 0;
+              if (adet === 0 && !workTypes.includes(tur.id)) return null;
               return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => onSubTabChange?.(cat.id)}
-                  className={`px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
-                    isActive
-                      ? 'bg-blue-600 text-white shadow-xs font-bold ring-1 ring-blue-600'
-                      :'bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200/80'
-                  }`}
-                >
-                  {cat.label}
-                  <span
-                    className={`ml-1.5 tabular-nums ${
-                      isActive ?'text-blue-100':'text-gray-400'
-                    }`}
-                  >
-                    {cat.count}
-                  </span>
-                </button>
+                <SecenekSatiri
+                  key={tur.id}
+                  tip="checkbox"
+                  etiket={tur.etiket}
+                  adet={adet}
+                  secili={workTypes.includes(tur.id)}
+                  onChange={() => calismaSec(tur.id)}
+                />
               );
             })}
           </div>
+        </FiltreBlogu>
 
-          {/* Right Scroll Button (Desktop only) */}
-          {canScrollRight && (
-            <button
-              type="button"
-              onClick={() => scrollCategory(200)}
-              className="hidden md:flex absolute -right-2 z-10 p-1.5 rounded-full bg-white shadow-md border border-gray-200 text-gray-700 hover:text-blue-600 transition-all cursor-pointer"
-              title="Sağa Kaydır"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
+        {/* ---- tarih ---- */}
+        <FiltreBlogu baslik="Tarih">
+          <div className="space-y-0.5">
+            {[
+              { id: 'all', etiket: 'Tümü' },
+              { id: '1', etiket: 'Son 24 saat' },
+              { id: '3', etiket: 'Son 3 gün' },
+              { id: '7', etiket: 'Son 7 gün' },
+              { id: '30', etiket: 'Son 30 gün' },
+            ].map((a) => (
+              <SecenekSatiri
+                key={a.id}
+                tip="radio"
+                etiket={a.etiket}
+                secili={dateRange === a.id}
+                onChange={() => setDateRange(a.id as typeof dateRange)}
+              />
+            ))}
+          </div>
+        </FiltreBlogu>
+
+        {/* ---- ilan özellikleri ---- */}
+        {(mandatoryCount > 0 || paidCount > 0 || onlyMandatory || onlyPaid) && (
+          <FiltreBlogu baslik="İlan özellikleri">
+            <div className="space-y-0.5">
+              {(mandatoryCount > 0 || onlyMandatory) && (
+                <SecenekSatiri
+                  tip="checkbox"
+                  etiket="Zorunlu staja uygun"
+                  adet={mandatoryCount}
+                  secili={onlyMandatory}
+                  onChange={() => setOnlyMandatory(!onlyMandatory)}
+                />
+              )}
+              {(paidCount > 0 || onlyPaid) && (
+                <SecenekSatiri
+                  tip="checkbox"
+                  etiket="Ücretli"
+                  adet={paidCount}
+                  secili={onlyPaid}
+                  onChange={() => setOnlyPaid(!onlyPaid)}
+                />
+              )}
+            </div>
+          </FiltreBlogu>
         )}
 
-        {/* Ayraç yalnızca üstünde bir şerit varsa anlamlı. */}
-        {listingCategories.length > 1 && <div className="border-t border-gray-100" />}
-
-        {/* Row 2: ÇALIŞMA TÜRÜ + ONAY KUTULARI + SIRALAMA */}
-        <div className="flex flex-col gap-3 pt-0.5">
-          {/* Work type filter pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mr-1">
-              Çalışma:
-            </span>
-            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-              {['all', 'Remote', 'Hybrid', 'On-site'].map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setSelectedWorkType(type)}
-                  className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                    selectedWorkType === type
-                      ? 'bg-blue-600 text-white shadow-xs font-bold'
-                      :'bg-gray-100 text-gray-600 hover:bg-gray-200/80'
-                  }`}
-                >
-                  {type === 'all'
-                    ? 'Tümü'
-                    : type === 'Remote'
-                    ? 'Uzaktan'
-                    : type === 'Hybrid'
-                    ? 'Hibrit'
-                    : 'Ofis'}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Checkboxes & Sort Container */}
-          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2.5 sm:gap-3 text-xs pt-1 sm:pt-0 border-t sm:border-t-0 border-gray-100">
-            <div className="flex items-center gap-3">
-              {(mandatoryCount > 0 || onlyMandatory) && (
-                <label className="flex items-center gap-1.5 cursor-pointer select-none font-semibold text-gray-700 whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    checked={onlyMandatory}
-                    onChange={(e) => setOnlyMandatory(e.target.checked)}
-                    className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+        {/* ---- şirket ---- */}
+        {companyOptions.length > 1 && (
+          <FiltreBlogu baslik="Şirket">
+            {/*
+              Arama kutusu yalnızca liste uzunsa. Sekiz şirket varken arama
+              kutusu koymak, aramaya gerek olmayan bir yere kutu koymak olur.
+            */}
+            {companyOptions.length > 8 && (
+              <div className="relative mb-2">
+                <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  value={companySearch}
+                  onChange={(e) => setCompanySearch(e.target.value)}
+                  placeholder="Şirket ara"
+                  aria-label="Şirket ara"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-600"
+                />
+              </div>
+            )}
+            <div className="space-y-0.5 max-h-56 overflow-y-auto -mr-1 pr-1">
+              {gorunenSirketler.length === 0 ? (
+                <p className="text-xs text-gray-400 py-1">Eşleşen şirket yok.</p>
+              ) : (
+                gorunenSirketler.map((s) => (
+                  <SecenekSatiri
+                    key={s.ad}
+                    tip="checkbox"
+                    etiket={s.ad}
+                    adet={s.adet}
+                    secili={selectedCompanies.includes(s.ad)}
+                    onChange={() => sirketSec(s.ad)}
                   />
-                  <span>Zorunlu Staj</span>
-                </label>
-              )}
-
-              {(paidCount > 0 || onlyPaid) && (
-                <label className="flex items-center gap-1.5 cursor-pointer select-none font-semibold text-gray-700 whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    checked={onlyPaid}
-                    onChange={(e) => setOnlyPaid(e.target.checked)}
-                    className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
-                  />
-                  <span>Ücretli</span>
-                </label>
+                ))
               )}
             </div>
+          </FiltreBlogu>
+        )}
 
-            <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-start">
-              <span className="text-gray-400 font-semibold shrink-0 text-xs">Sırala:</span>
-              <select
-                id="internships-sort-select"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="flex-1 sm:flex-initial text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white font-medium text-gray-800 focus:outline-none focus:border-blue-600 cursor-pointer shadow-2xs"
-              >
-                {/*
-                  Menüde yalnızca gerçekten işleyen sıralamalar var.
+        {/*
+          Mobilde paneli kapatan düğme.
 
-                  "Son Başvuru Tarihi" ve "Şirket Puanı" kaldırıldı: canlıda
-                  11 ilanın 11'inde de son başvuru tarihi boş, şirket puanı 0.
-                  Hepsi aynı değere sahip bir alana göre sıralamak, kullanıcıya
-                  rastgele bir dizilim verip "sıralama bozuk" dedirtiyordu.
-                  Bu alanlar dolmaya başlarsa seçenekler geri gelir.
-                */}
-                <option value="match">En Yüksek Uyum</option>
-                <option value="newest">Önce Yeni Eklenenler</option>
-                <option value="oldest">Önce Eski Eklenenler</option>
-                {applicantsKnown && <option value="applicants_desc">En Çok Başvuran</option>}
-                {deadlineKnown && <option value="deadline_asc">Son Başvuru Tarihi</option>}
-                {ratingKnown && <option value="rating_desc">Şirket Puanı</option>}
-                <option value="company_asc">Şirket Adı (A - Z)</option>
-              </select>
-            </div>
-          </div>
+          Kişi filtreyi ayarladıktan sonra sonuçları görmek istiyor; paneli
+          elle kapatmak için yukarı kaydırmak zorunda kalmasın diye kaç ilan
+          kaldığını da söyleyip burada kapatıyoruz.
+        */}
+        <div className="lg:hidden p-3">
+          <button
+            type="button"
+            onClick={() => setFiltreAcik(false)}
+            className="w-full py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
+          >
+            {filteredListings.length} ilanı göster
+          </button>
+        </div>
         </div>
       </div>
         {/*
-          Bu kutu yalnizca genis ekranda. Mobilde sol sutun ilanlarin ustune
-          diziliyor ve kutu ilanlari 380 piksel asagi itiyordu -- oysa
-          telefonda once ilan gorunmeli. Genis ekranda sol sutunda zaten bos
-          yer var, orada bir maliyeti yok.
+          "İlanlar nereden geliyor" kutusu sağ sütuna taşındı.
+
+          Burada yalnızca giriş yapmamış ziyaretçiye gösteriliyordu; giriş
+          yapan kişi aynı bilgiyi hiç görmüyordu. Üstelik başlığın altındaki
+          paragraf da aynı şeyi söylüyordu — aynı cümle sayfada iki yerdeydi.
+          Tek kopya kaldı ve herkese görünüyor.
         */}
-        {!student && (
-          <aside className="hidden lg:block bg-white rounded-3xl p-6 shadow-xs border border-gray-200 space-y-5">
-            <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
-              İlanlar nereden geliyor
-            </span>
-
-            <p className="text-sm text-gray-600 leading-relaxed">
-              İlanları aracı sitelerden değil, <strong className="text-gray-900">şirketlerin
-              kendi kariyer sistemlerinden</strong> topluyoruz. Başvurunu doğrudan
-              şirketin sayfasında yapıyorsun; arada kimse yok.
-            </p>
-
-            <div className="space-y-3">
-              {/*
-                Yalnızca gerçekten okunabilen sayılar. "Takip edilen kaynak"
-                satırı vardı ama istemci `sources` tablosunu göremiyor (RLS
-                admin'e kapatıyor); sayıyı sabit yazmak uydurma olurdu.
-              */}
-              {[
-                { etiket: 'Açık ilan', deger: String(allListings.length) },
-                { etiket: 'İlan veren şirket', deger: String(companyCount) },
-              ].map((satir) => (
-                <div
-                  key={satir.etiket}
-                  className="flex items-center justify-between border-b border-gray-100 pb-2.5 last:border-0 last:pb-0"
-                >
-                  <span className="text-xs text-gray-500 font-semibold">
-                    {satir.etiket}
-                  </span>
-                  <span className="text-lg font-black text-gray-900 tabular-nums">
-                    {satir.deger}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/*
-              DİKKAT: burada "kapanan ilanlar listeden düşürülüyor" yazıyordu
-              ama otomatik pasifleştirme şalteri (ALLOW_DEACTIVATION) hâlâ
-              kapalı — ilk sağlıklı taramaların geçmişi birikmeden açılırsa
-              her ilanı "kaybolmuş" sayar. Şalter açılana kadar bunu olmuş bir
-              şey gibi yazmıyoruz.
-            */}
-            <p className="text-[11px] text-gray-400 leading-relaxed">
-              Her ilanın başvuru adresi, şirketin kendi sayfasıdır.
-            </p>
-          </aside>
-        )}
-          {/*
-            Kenar reklamı sol sütunun EN ALTINDA: filtrelerin ve bilgi
-            kutusunun altında, yani kullanıcının aradığı hiçbir şeyin önüne
-            geçmiyor. Yalnızca geniş ekranda; mobilde sol sütun ilanların
-            üstüne dizildiği için orada reklam ilk görülen şey olurdu.
-          */}
-          <div className="hidden lg:block">
-            <GoogleAdBanner format="sidebar-rectangle" />
-          </div>
         </div>
 
-        <div className="lg:col-span-8 space-y-4 min-w-0">
+        <div className="lg:col-span-6 space-y-4 min-w-0">
           <div className="flex items-center justify-between px-1">
             {/*
               Profili olmayan ziyaretçiye "sana uygun" ve "eşleşme puanına göre
@@ -822,7 +1026,18 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               {student ? 'Sana Uygun Staj İlanları' : 'Açık Staj İlanları'} (
               {filteredListings.length})
             </h2>
-            <span className="text-xs text-gray-500 font-medium">
+            {/*
+              Açıklama metni mobilde gizli.
+
+              Telefonda başlıkla yan yana sıkışıp ikisi de iki satıra
+              bölünüyordu: solda "SANA UYGUN STAJ / İLANLARI (11)", sağda
+              "Gerçek zamanlı eşleşme puanına / göre sıralı". Dört satırlık bir
+              blok, hiçbiri okunmuyor.
+
+              Bilgi olarak da ikincil: sıralamanın neye göre olduğunu bilmek
+              hoş ama telefonda yeri ilan göstermek.
+            */}
+            <span className="hidden sm:block text-xs text-gray-500 font-medium">
               {student
                 ? 'Gerçek zamanlı eşleşme puanına göre sıralı'
                 : 'Şirketlerin kendi kariyer sayfalarından derlendi'}
@@ -840,9 +1055,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               <button
                 onClick={() => {
                   setSearchQuery('');
-                  setSelectedWorkType('all');
-                  setOnlyMandatory(false);
-                  setOnlyPaid(false);
+                  suzgecleriTemizle();
                 }}
                 className="px-5 py-2 rounded-full text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer"
               >
@@ -885,6 +1098,87 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               ))}
             </div>
           )}
+        </div>
+
+        {/*
+          SAĞ SÜTUN — reklam alanı
+
+          Şimdilik yalnızca yer tutuyor: AdSense anahtarı tanımlı değilken
+          GoogleAdBanner hiçbir şey çizmiyor, dolayısıyla burada boş bir
+          kutu görünmüyor, sütun sessizce daralıyor.
+
+          Neden şimdiden ayrıldı: reklam sonradan araya sıkıştırılınca
+          düzen kayıyor ve kullanıcı gördüğü sayfanın değiştiğini fark
+          ediyor. Yer baştan ayrılırsa reklam geldiğinde sayfa oynamıyor.
+
+          Yalnızca geniş ekranda. Mobilde sütunlar alt alta dizildiği için
+          reklam ilanların arasına düşerdi; orada zaten akış içi reklam var.
+        */}
+        <div className="hidden lg:block lg:col-span-3 space-y-4 lg:sticky lg:top-4">
+          {/*
+            Sayaçlar. Başlık sol sütuna inince üst şerit kalktı; sayaçlar da
+            sağ sütunun en üstüne, bilgi kutusunun üzerine geçti. Kart görünümü
+            korunuyor, altındaki kutuyla aynı genişlikte.
+          */}
+          <div className="grid grid-cols-3 gap-2 bg-white rounded-2xl border border-gray-200 px-4 py-3.5">
+            {[
+              { etiket: 'Açık ilan', deger: String(filteredListings.length) },
+              { etiket: 'Şirket', deger: String(companyCount) },
+              { etiket: 'Şehir', deger: String(cityCount) },
+            ].map((kutu) => (
+              <div key={kutu.etiket} className="min-w-0 text-center">
+                <p className="text-2xl font-black text-gray-900 tabular-nums leading-none">
+                  {kutu.deger}
+                </p>
+                <p className="text-[11px] font-semibold text-gray-500 mt-1 truncate">
+                  {kutu.etiket}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/*
+            Sağ sütunun üstü: sitenin ne yaptığını anlatan kutu.
+
+            Bu metin önce başlığın altında tam genişlikteydi, bir kopyası da
+            sol sütunda duruyordu. İkisi de kaldırıldı; tek kopya burada.
+          */}
+          <aside className="bg-white rounded-2xl p-5 border border-gray-200 space-y-4">
+            <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+              İlanlar nereden geliyor
+            </span>
+
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Sekiz ayrı kariyer sayfasını tek tek gezme. İlanları aracı sitelerden değil,{' '}
+              <strong className="text-gray-900">şirketlerin kendi kariyer sayfalarından</strong>{' '}
+              derliyoruz; her ilanda şirketin kendi başvuru bağlantısı var.
+            </p>
+
+            {/*
+              Açık ilan ve şirket sayıları buradan kaldırıldı.
+
+              Sayaçlar başlığın yanına taşınınca aynı iki rakam ekranda iki
+              yerde göründü — üstelik ikisi de aynı anda görünüyordu, aralarında
+              300 piksel vardı. Aynı sayıyı iki yerde göstermek, ikisinin farklı
+              şeyleri saydığını düşündürüyor.
+
+              Sayılar başlıkta kaldı; bu kutuya anlatım kaldı.
+            */}
+
+            {/*
+              Alttaki "Her ilanın başvuru adresi, şirketin kendi sayfasıdır."
+              satırı kaldırıldı: üstteki paragraf zaten "her ilanda şirketin
+              kendi başvuru bağlantısı var" diyor. Aynı cümle 200 piksellik
+              bir kutuda iki kez yazıyordu.
+
+              DİKKAT: burada bir zamanlar "kapanan ilanlar listeden
+              düşürülüyor" da yazıyordu; otomatik pasifleştirme şalteri
+              (ALLOW_DEACTIVATION) hâlâ kapalı olduğu için geri yazılmamalı.
+            */}
+          </aside>
+
+          {/* Altı reklam için ayrıldı; anahtar tanımlı değilken boş kalıyor. */}
+          <GoogleAdBanner format="sidebar-rectangle" />
         </div>
       </div>
     </div>
