@@ -48,7 +48,25 @@
     Not: bu bir örtbas değil, sigorta. Taşan bileşen yine düzeltilmeli —
     bu yüzden taşmalar geliştirme sırasında ölçülüyor.
   */
-  html,
+  html {
+    max-width: 100%;
+    /*
+      DİKKAT: buraya `overflow-x: hidden` YAZILMAMALI.
+
+      CSS'te bir eksende `hidden` verilince diğer eksen `visible` kalamaz,
+      `auto`ya döner. `html` ve `body`'nin ikisine birden verilince ikisi de
+      birer kaydırma kabına dönüşüyordu: gövde, içeriğiyle aynı yükseklikte
+      olduğu için kendi içinde kaydıramıyor, aşağıdaki `overscroll-behavior`
+      da kaydırmanın kök öğeye zincirlenmesini kestiği için fare tekerleği
+      MASAÜSTÜNDE hiç çalışmıyordu. Dokunmatik kaydırma farklı bir yol
+      izlediği için mobilde fark edilmemişti.
+
+      Doğrusu: kural yalnızca `body`'de dursun. Kök öğe `visible` kaldığında
+      tarayıcı gövdenin overflow değerini görüntü alanına taşır — yatay
+      kırpma yine çalışır ama gövde ayrı bir kaydırma kabı olmaz.
+    */
+  }
+
   body {
     max-width: 100%;
     overflow-x: hidden;
@@ -67,9 +85,10 @@
 
   /*
     Kenarlarda "lastik" etkisi ve yanlışlıkla sayfa yenileme olmasın.
-    Uygulama gibi hissettiren en belirgin ayrıntılardan biri.
+    Kök öğede: gövde artık ayrı bir kaydırma kabı değil, kaydıran taraf
+    görüntü alanı.
   */
-  body {
+  html {
     overscroll-behavior-y: contain;
   }
 
