@@ -207,6 +207,69 @@ function sssOku() {
  * Düzenli ifadeyle metin ayıklamak da denenebilirdi ama o yol bugün iki kez
  * sessiz veri kaybı üretti; asıl bileşenleri çalıştırmak tek doğru kaynak.
  */
+async function icerikDerle(girisDosyasi, ad) {
+  const gecici = path.join(kok, 'node_modules', '.cache', `onrender-${ad}.mjs`);
+  const esbuild = await import('esbuild');
+  fs.mkdirSync(path.dirname(gecici), { recursive: true });
+  await (esbuild.build || esbuild.default.build)({
+    entryPoints: [girisDosyasi],
+    outfile: gecici,
+    bundle: true,
+    format: 'esm',
+    platform: 'node',
+    jsx: 'automatic',
+    logLevel: 'silent',
+    /*
+      Bağımlılıklar paketlenmiyor, Node'a bırakılıyor.
+
+      Önce yalnızca react dışarıda bırakılmıştı; o zaman lucide-react'in
+      CommonJS sürümü pakete giriyor ve esbuild'in require köprüsü
+      "Dynamic require of react is not supported" hatasıyla düşüyordu
+      (ölçüldü). Node bu paketleri zaten çözebiliyor; ayrıca React'in tek
+      kopya kalmasını da bu garanti ediyor.
+    */
+    packages: 'external',
+  });
+  return import(url.pathToFileURL(gecici).href + `?t=${Date.now()}`);
+}
+
+/**
+ * Bölüm sayfalarının içeriğini statik HTML'e çevirir.
+ *
+ * Rehberlerle aynı gerekçe: bölüm sayfaları da tarayıcıya yalnızca başlık ve
+ * tek cümlelik özet gösteriyordu. Otuz dört sayfayla bunlar sitenin en
+ * kalabalık grubu; hepsinin ince içerik görünmesi tek tek sayfalardan daha
+ * ağır bir sorun.
+ *
+ * Kabuk/içerik ayrımı burada kritik: çizilen şey BolumIcerik, sayfanın
+ * kabuğu değil. Kabuk çizilseydi her sayfa aynı başlık çubuğunu ve aynı
+ * menüyü içerir, otuz dört sayfa birbirinin kopyası gibi görünürdü.
+ */
+async function bolumleriCiz() {
+  try {
+    const { BOLUMLER } = await icerikDerle(path.join(kok, 'src', 'data', 'bolumler.ts'), 'bolumler');
+    const { BolumIcerik } = await icerikDerle(
+      path.join(kok, 'src', 'components', 'BolumIcerik.tsx'),
+      'bolum-icerik'
+    );
+    const { renderToStaticMarkup } = await import('react-dom/server');
+    const React = (await import('react')).default;
+
+    const sonuc = {};
+    for (const b of BOLUMLER) {
+      sonuc[b.slug] = {
+        ...b,
+        cizim: renderToStaticMarkup(React.createElement(BolumIcerik, { bolum: b })),
+      };
+    }
+    return sonuc;
+  } catch (hata) {
+    console.error('ön render DURDU: bölüm içeriği çizilemedi.');
+    console.error(hata?.message || hata);
+    process.exit(1);
+  }
+}
+
 async function rehberleriCiz() {
   const gecici = path.join(kok, 'node_modules', '.cache', 'onrender-rehberler.mjs');
   try {
@@ -426,12 +489,44 @@ async function main() {
   sayac++;
 
   /* ---- bölümler ---- */
-  const bolumler = kayittanOku('bolumler.ts', ['ad', 'ozet', 'aciklama']);
+  const bolumHaritasi = await bolumleriCiz();
+  const bolumler = Object.values(bolumHaritasi);
   for (const b of bolumler) {
+    const sorular = b.sss || [];
+
+    const bolumGrafik = [
+      {
+        '@type': 'Article',
+        headline: `${b.ad} stajı`,
+        description: ozetle(b.aciklama || b.ozet),
+        inLanguage: 'tr-TR',
+        ...(b.guncelleme ? { dateModified: b.guncelleme } : {}),
+        author: { '@type': 'Organization', name: 'StajımVar', url: SITE },
+        publisher: {
+          '@type': 'Organization',
+          name: 'StajımVar',
+          logo: { '@type': 'ImageObject', url: `${SITE}/icon-512.png` },
+        },
+        mainEntityOfPage: `${SITE}/bolum/${b.slug}`,
+      },
+    ];
+    if (sorular.length > 0) {
+      bolumGrafik.push({
+        '@type': 'FAQPage',
+        mainEntity: sorular.map((s) => ({
+          '@type': 'Question',
+          name: s.soru,
+          acceptedAnswer: { '@type': 'Answer', text: s.cevap },
+        })),
+      });
+    }
+
     sayfaYaz(`/bolum/${b.slug}`, {
       baslik: `${b.ad} stajı | StajımVar`,
       aciklama: ozetle(b.aciklama || b.ozet),
-      govde: govde(`${b.ad} stajı`, b.ozet || ''),
+      // Gövde = başlık + BolumIcerik'in çizilmiş hâli (kullanıcının gördüğünün aynısı).
+      govde: `<main><h1>${kacir(b.ad)} stajı</h1>${b.cizim}</main>`,
+      jsonLd: { '@context': 'https://schema.org', '@graph': bolumGrafik },
     });
     sayac++;
   }

@@ -33,12 +33,41 @@ export type BolumGrubu =
   | 'saglik'
   | 'hizmet';
 
+export interface BolumSoruCevap {
+  soru: string;
+  cevap: string;
+}
+
 export interface Bolum {
   slug: string;
   ad: string;
   grup: BolumGrubu;
   /** Liste satırında görünen tek cümle. */
   ozet: string;
+  /**
+   * Açılış paragrafı (80–120 kelime).
+   *
+   * NEDEN EKLENDİ
+   * -------------
+   * Sayfalar madde listelerinden ibaretti. Liste bilgi veriyor ama sayfanın
+   * neyi vaat ettiğini söylemiyor; arama sonucundan gelen kişi ilk üç saniyede
+   * "burası benim sorunumu biliyor mu" diye bakıyor. Bir de ölçülebilir tarafı
+   * var: yalnız listeden oluşan sayfa Google için ince içerik.
+   *
+   * Bu alanı olmayan bölümlerde sayfa eskisi gibi çiziliyor — eksik içerik
+   * uydurmaktansa kısa kalması iyi.
+   */
+  giris?: string;
+  /** Bu bölümde stajyerin karşısına çıkan pozisyon/alan adları. */
+  pozisyonlar?: string[];
+  /** Bu bölüme özgü, staj ararken atlanan şeyler. */
+  dikkat?: string[];
+  /** CV ve başvuru tarafında bu bölüme özgü 2–3 cümle. */
+  cvIpucu?: string;
+  /** Sık sorulanlar; ön render'da FAQPage yapısal verisine de çevriliyor. */
+  sss?: BolumSoruCevap[];
+  /** Son gözden geçirme (YYYY-AA-GG). Elle güncelleniyor. */
+  guncelleme?: string;
   /** Arama motorunun göreceği açıklama. */
   aciklama: string;
   /** Bu bölümün stajı hangi tür yerlerde yapılır. */
@@ -111,6 +140,82 @@ export const BOLUMLER: Bolum[] = [
       'Ödev projelerini "okul ödevi" diye küçültme. Ne yaptığını ve neden öyle yaptığını ' +
       'anlatabildiğin her proje, anlatamadığın on projeden değerli.',
     aramaKelimeleri: ['yazılım', 'developer', 'bilgisayar'],
+    giris:
+      'Bilgisayar mühendisliği, staj ilanı en çok bulunan bölüm — ve tam bu yüzden rekabetin en ' +
+      'yüksek olduğu yer. Tek bir yazılım stajı ilanına yüzlerce başvuru gelebiliyor ve ' +
+      'başvuranların çoğu birbirinin aynısı bir CV gönderiyor: aynı dersler, aynı notlar, ' +
+      'gösterilebilir tek bir çalışma yok. Ayrıştıran şey ortalama değil, çalıştırıp ' +
+      'gösterebildiğin bir şey oluyor. Bu sayfada bu bölümün stajının gerçekte nerede ' +
+      'yapıldığını, stajyerin ilk hafta hangi işleri aldığını, başvurmadan önce hangi araçları ' +
+      'öğrenmenin işe yaradığını ve ilanlarda somut olarak neye bakıldığını bulacaksın.',
+    pozisyonlar: [
+      'Yazılım geliştirme stajı (backend, frontend ya da mobil)',
+      'Test ve kalite güvence stajı — stajyer alımı en çok buradan oluyor',
+      'Veri ve raporlama stajı: SQL, panolar, veri temizliği',
+      'Bilgi teknolojileri destek ve sistem stajı',
+      'Siber güvenlik stajı — kontenjan az, çoğunlukla büyük kurumlarda',
+    ],
+    dikkat: [
+      'Yaz stajı kontenjanları erken doluyor. Büyük şirketlerin programları genellikle ' +
+        'şubat-nisan arasında başvuru alıyor; mayısta aramaya başlamak çoğu kapıyı kapatıyor.',
+      'İlan sayısı çok diye yalnız ilanlara yüklenme. Rekabetin düşük olduğu yer, ilan açmamış ' +
+        'küçük yazılım şirketleri ve sanayi şirketlerinin kendi yazılım ekipleri.',
+      '"Staj ücreti yok" diyen her yeri eleme — ama zorunlu stajda 3308 kapsamındaysan ücret ' +
+        'ödenmesi gerektiğini bil ve baştan sor.',
+      'Uzaktan staj ilanlarında sigorta ve okul onayı tarafını başlamadan netleştir; bazı ' +
+        'bölümler uzaktan yapılan stajı saymıyor.',
+    ],
+    cvIpucu:
+      'CV\'ye mutlaka bir kod deposu bağlantısı koy ve o bağlantının açıldığından emin ol — boş ' +
+      'ya da erişilemeyen bir GitHub adresi, hiç olmamasından kötü. Proje satırlarında "Bitirme ' +
+      'projesi" yazmak yerine ne yaptığını ve hangi araçları kullandığını yaz. Bildiğin dilleri ' +
+      'seviye belirterek listele; mülakatta "bunu CV\'ne yazmışsın" diye sorulduğunda ' +
+      'cevaplayamayacağın hiçbir şeyi yazma.',
+    sss: [
+      {
+        soru: 'Bilgisayar mühendisliği stajı için hangi dili bilmek gerekir?',
+        cevap:
+          'Belirli bir dil şartı yok; bir dili yüzeysel değil doğru düzgün bilmek yeterli. Python, ' +
+          'Java, C# ve JavaScript ilanlarda en çok geçenler. Bir dili iyi bilen öğrenci, ikinci ' +
+          'dile birkaç haftada geçebiliyor ve işverenler de bunu biliyor.',
+      },
+      {
+        soru: 'Stajyer olarak gerçekten kod yazdırılıyor mu?',
+        cevap:
+          'Genellikle evet ama ilk iş büyük bir geliştirme olmuyor. Çoğu stajyer var olan bir ' +
+          'projede küçük hata düzeltmeleriyle ve test yazarak başlıyor. Bu bilinçli: kod tabanını ' +
+          'en hızlı böyle öğreniyorsun.',
+      },
+      {
+        soru: 'GitHub hesabım yoksa başvurmayayım mı?',
+        cevap:
+          'Başvur, ama açman yarım saatini alır ve fark yaratır. Okulda yazdığın ödevleri bile ' +
+          'yüklemek, işverene çalışan bir şey gösterebilmek demek. Bitmemiş olması sorun değil; ' +
+          'olmaması sorun.',
+      },
+      {
+        soru: 'Uzaktan (remote) staj yapabilir miyim?',
+        cevap:
+          'Yazılım tarafında uzaktan staj mümkün ve ilanı da var. Ancak okulunun bunu kabul edip ' +
+          'etmediğini staj yönergesinden teyit et; bazı bölümler iş yerinde fiziken bulunmayı şart ' +
+          'koşuyor.',
+      },
+      {
+        soru: 'Yazılım stajına ne zaman başvurmalıyım?',
+        cevap:
+          'Yaz stajı için kışın. Büyük şirketlerin staj programları genellikle şubat-nisan arasında ' +
+          'başvuru alıp mayısta kapanıyor. Küçük şirketlerde böyle bir takvim yok ama orada da ' +
+          'erken yazan öne geçiyor.',
+      },
+      {
+        soru: 'Şirketin kullandığı dili bilmiyorum, başvurayım mı?',
+        cevap:
+          'Başvur. Stajyerden o dili bilmesi değil, bir dili iyi bilip ikincisine geçebilmesi ' +
+          'bekleniyor. Başvuruda bunu açıkça yazmak — hangi dili bildiğin ve öğrenmeye açık olduğun ' +
+          '— çekingen davranmaktan daha iyi sonuç veriyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'makine-muhendisligi',
@@ -147,6 +252,77 @@ export const BOLUMLER: Bolum[] = [
       'Okulun istediği staj türünü (atölye mi büro mu) başvuru yazına açıkça yaz. ' +
       'Şirket hangi bölüme yerleştireceğini bilemediği için cevapsız kalan çok başvuru var.',
     aramaKelimeleri: ['makine', 'üretim', 'mühendis'],
+    giris:
+      'Makine mühendisliğinde staj tek bir şey değil: çoğu bölüm atölye stajı ile büro stajını ' +
+      'ayrı ayrı istiyor ve ikisi farklı yerlerde yapılıyor. Atölye stajında imalatın nasıl ' +
+      'yapıldığını göreceksin, büro stajında tasarım ve hesap tarafını. Bunu bilmeden tek bir ' +
+      'yere başvurup iki stajı da orada yapmayı planlamak, çoğu öğrencinin sonradan fark ettiği ' +
+      'hata. Bu sayfada hangi tür iş yerinin hangi stajı karşıladığını, stajyerin sahada ' +
+      'gerçekte ne yaptığını ve fabrika ortamına girmeden önce bilmen gerekenleri bulacaksın.',
+    pozisyonlar: [
+      'Üretim ve imalat stajı — talaşlı imalat, kalıp, kaynak',
+      'Tasarım ve teknik resim stajı (büro stajı olarak sayılıyor)',
+      'Bakım ve teknik servis stajı',
+      'Kalite kontrol ve ölçüm stajı',
+      'İklimlendirme, tesisat ve enerji tarafı',
+    ],
+    dikkat: [
+      'Atölye ve büro stajının hangisini nerede yapabileceğini okulun staj yönergesinden teyit ' +
+        'et. Yanlış yerde yapılan staj çoğu bölümde sayılmıyor.',
+      'Fabrika stajında iş güvenliği eğitimi ve kişisel koruyucu donanım şart. Baret ve çelik ' +
+        'burunlu ayakkabıyı kendin götürmen istenebiliyor.',
+      'Küçük atölyeler stajyer almaya açık ama ilan açmıyor. Bu bölümde staj çoğunlukla ' +
+        'doğrudan gidip sorarak bulunuyor.',
+      'Yaz aylarında birçok fabrika toplu izne çıkıyor. Tarihleri seçerken işletmenin kapalı ' +
+        'olacağı haftaları baştan sor.',
+    ],
+    cvIpucu:
+      'Kullandığın çizim programını sürüm belirtmeden, ama seviye vererek yaz: "SolidWorks — ' +
+      'parça ve montaj" gibi. Atölye deneyimi varsa (okulun atölye dersi de sayılır) hangi ' +
+      'tezgâhı gördüğünü yaz; işverenin en çok merak ettiği şey, üretim ortamına daha önce ' +
+      'girip girmediğin. Teknik resim okuyabildiğini açıkça belirt.',
+    sss: [
+      {
+        soru: 'Atölye stajı ile büro stajı arasındaki fark nedir?',
+        cevap:
+          'Atölye stajında imalatın nasıl yapıldığını yerinde görüyorsun: tezgâhlar, kaynak, ' +
+          'montaj. Büro stajında tasarım, teknik resim ve hesap tarafında çalışıyorsun. Çoğu bölüm ' +
+          'ikisini ayrı ayrı istiyor ve ayrı defter tutturuyor.',
+      },
+      {
+        soru: 'Hangi çizim programını öğrenmeliyim?',
+        cevap:
+          'SolidWorks, CATIA ve AutoCAD ilanlarda en çok geçenler. Birini iyi öğrenmek üçünü ' +
+          'yüzeysel bilmekten iyi; mantık aynı olduğu için ikinciye geçiş kolay oluyor.',
+      },
+      {
+        soru: 'Küçük bir atölyede yapılan staj kabul edilir mi?',
+        cevap:
+          'Çoğu bölümde ediliyor ama şartı okul koyuyor: bazı yönergeler asgari çalışan sayısı ya ' +
+          'da faaliyet alanı şartı arıyor. Belge sürecine girmeden önce staj sorumlusu hocana sor.',
+      },
+      {
+        soru: 'Staj yerinde bana iş verilmezse ne yapmalıyım?',
+        cevap:
+          'Sormak serbest. "Şu işi izleyebilir miyim, notunu alabilir miyim" demek çoğu atölyede ' +
+          'kapı açıyor. Defterin de bu gözlemlerle doluyor: ne yapıldı, nasıl yapıldı, ne ' +
+          'öğrenildi.',
+      },
+      {
+        soru: 'Hangi ölçü aletlerini bilmem gerekiyor?',
+        cevap:
+          'Kumpas ve mikrometre başta geliyor; komparatör ve mastar da atölyede sık kullanılıyor. ' +
+          'Bunları kullanmayı bilmek, atölye stajının ilk gününden itibaren iş almanı sağlıyor.',
+      },
+      {
+        soru: 'Otomotiv ana sanayide staj bulmak zor mu?',
+        cevap:
+          'Kontenjan sınırlı ve başvuru dönemi erken kapanıyor. Yan sanayi ise çok daha fazla ' +
+          'stajyer alıyor ve öğrettiği şey çoğu zaman daha kapsamlı oluyor: küçük ekipte üretimin ' +
+          'tamamını görüyorsun.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'elektrik-elektronik-muhendisligi',
@@ -183,6 +359,80 @@ export const BOLUMLER: Bolum[] = [
       'Bu bölümün üç ayrı dünyası var. "Elektrik-elektronik okuyorum" demek yerine ' +
       '"enerji tarafında staj arıyorum" demek başvuruyu doğru masaya düşürüyor.',
     aramaKelimeleri: ['elektrik', 'elektronik', 'otomasyon'],
+    giris:
+      'Elektrik-elektronik mühendisliği geniş bir alan ve staj tarafı da öyle: aynı bölümden ' +
+      'iki öğrenci, biri şantiyede elektrik tesisatı görürken diğeri laboratuvarda kart ' +
+      'tasarımı yapabiliyor. Bu yüzden "elektrik stajı" diye tek bir şey aramak yerine hangi ' +
+      'tarafta çalışmak istediğine baştan karar vermek, doğru yeri bulmayı çok kolaylaştırıyor. ' +
+      'Bu sayfada bölümün stajının hangi tür iş yerlerinde yapıldığını, stajyere verilen gerçek ' +
+      'işleri, başvurmadan önce öğrenilmesi işe yarayanları ve ilanlarda aranan somut şeyleri ' +
+      'bulacaksın.',
+    pozisyonlar: [
+      'Enerji dağıtım ve şebeke tarafı',
+      'Elektrik projelendirme ve tesisat (şantiye ve büro)',
+      'Otomasyon ve PLC — sanayi tesislerinde',
+      'Gömülü sistem ve kart tasarımı (Ar-Ge merkezleri)',
+      'Test, ölçüm ve kalite laboratuvarları',
+    ],
+    dikkat: [
+      'Enerji tarafındaki stajlarda iş güvenliği eğitimi ve yüksek gerilim kuralları başlangıç ' +
+        'şartı; bunu ciddiye almayan öğrenci sahaya alınmıyor.',
+      'Ar-Ge ve gömülü sistem stajlarının kontenjanı az ve başvuru dönemi erken kapanıyor. Bu ' +
+        'tarafı hedefliyorsan kışın başla.',
+      'Şantiye stajında çalışma ortamı tozlu, gürültülü ve ayakta geçiyor. Büro stajıyla ' +
+        'karıştırılmasın; ikisi çok farklı deneyimler.',
+      'Bazı bölümler stajın enerji ve elektronik taraflarını ayrı ayrı istiyor. Yönergeye ' +
+        'bakmadan iki stajı aynı yerde planlama.',
+    ],
+    cvIpucu:
+      'Hangi tarafta çalışmak istediğini CV\'nin en üstünde bir cümleyle söyle; ' +
+      '"elektrik-elektronik öğrencisiyim" cümlesi işverene hiçbir şey anlatmıyor. Laboratuvar ' +
+      'derslerinde kullandığın ölçü aletlerini ve kurduğun devreleri yaz. Bir mikrodenetleyici ' +
+      'ile yaptığın küçük bir çalışma bile, hiç projesi olmayan onlarca CV\'nin arasından seni ' +
+      'ayırıyor.',
+    sss: [
+      {
+        soru: 'Elektrik stajını hangi tür şirkette yapmalıyım?',
+        cevap:
+          'Neyi öğrenmek istediğine bağlı. Enerji ve tesisat tarafı için elektrik taahhüt firmaları ' +
+          've dağıtım şirketleri, otomasyon için sanayi tesisleri, elektronik için Ar-Ge merkezleri ' +
+          've teknoparklar.',
+      },
+      {
+        soru: 'PLC bilmeden otomasyon stajına başvurabilir miyim?',
+        cevap:
+          'Başvurabilirsin; stajın tanımı zaten öğrenmek. Ancak temel merdiven mantığını önceden ' +
+          'görmek ilk haftayı çok kolaylaştırıyor ve mülakatta ilgi göstergesi olarak okunuyor.',
+      },
+      {
+        soru: 'Şantiye stajı mı, büro stajı mı daha iyi?',
+        cevap:
+          'İkisi farklı şeyler öğretiyor. Şantiye işin nasıl uygulandığını, büro nasıl ' +
+          'tasarlandığını gösteriyor. Mümkünse ikisini farklı dönemlerde yapmak en iyisi.',
+      },
+      {
+        soru: 'Staj için hangi programları öğrenmeliyim?',
+        cevap:
+          'AutoCAD elektrik projelerinde yaygın; otomasyon tarafında kullanılan PLC yazılımları ' +
+          'markaya göre değişiyor. Birini öğrenmek diğerine geçişi kolaylaştırıyor, o yüzden ' +
+          'hangisiyle başladığın çok önemli değil.',
+      },
+      {
+        soru: 'Stajda elektrikli sistemlere doğrudan müdahale edebilir miyim?',
+        cevap:
+          'Hayır. Stajyer enerji altındaki bir sistemde çalışmıyor; gözlem yapıyor ve yetkili ' +
+          'kişinin gözetiminde destek oluyor. Bunu talep eden bir yer varsa hem seni hem kendini ' +
+          'riske atıyor demektir.',
+      },
+      {
+        soru: 'Enerji sektöründe staj için sertifika gerekiyor mu?',
+        cevap:
+          'Stajyerden mesleki yeterlilik belgesi beklenmiyor ama işletmenin kendi iş güvenliği ' +
+          'eğitimini alman ve katılım kaydının tutulması gerekiyor. Bu eğitim olmadan sahaya ' +
+          'çıkarılmıyorsun.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'endustri-muhendisligi',
@@ -219,6 +469,79 @@ export const BOLUMLER: Bolum[] = [
       'Endüstri stajyerine çoğu şirket ne iş vereceğini bilmiyor. İlk gün "hangi süreci ' +
       'inceleyeyim?" diye sormak, üç hafta boş oturmakla dolu bir staj arasındaki fark.',
     aramaKelimeleri: ['endüstri', 'planlama', 'tedarik'],
+    giris:
+      'Endüstri mühendisliği stajında en sık yaşanan sorun şu: öğrenci ne iş yapacağını ' +
+      'bilmiyor, işveren de stajyere ne verebileceğini bilmiyor. Bölümün alanı geniş olduğu ' +
+      'için "süreçleri iyileştirmek" gibi soyut bir tanımla gidilince iki hafta boyunca kimse ' +
+      'kimseden ne isteyeceğini bulamıyor. Oysa bu bölümün stajyerine verilebilecek çok somut ' +
+      'işler var: veri toplamak, süre ölçmek, akış çıkarmak, stok kaydı düzenlemek. Bu sayfada ' +
+      'o somut işleri, staja hangi tür şirketlerde başvurulacağını ve başvurmadan önce hangi ' +
+      'araçları öğrenmenin işe yaradığını bulacaksın.',
+    pozisyonlar: [
+      'Üretim planlama ve çizelgeleme',
+      'Kalite yönetimi ve süreç iyileştirme',
+      'Tedarik zinciri, satın alma ve stok yönetimi',
+      'Lojistik ve depo operasyonu',
+      'İş analizi ve raporlama (üretim dışı sektörlerde de)',
+    ],
+    dikkat: [
+      '"Süreç iyileştirme" diye başvurma; hangi somut işi yapabileceğini söyle. Veri toplayıp ' +
+        'analiz edebildiğini yazmak, işverenin kafasındaki soru işaretini kaldırıyor.',
+      'Bu bölümün stajı yalnız fabrikalarda değil: bankalar, perakende zincirleri, lojistik ' +
+        'şirketleri ve hastaneler de endüstri mühendisi stajyeri alıyor.',
+      'Excel\'i "biliyorum" demek yetmiyor. Pivot tablo ve arama fonksiyonlarını gerçekten ' +
+        'kullanabilmek, stajın ilk gününden itibaren iş almanı sağlıyor.',
+      'Staj sonunda somut bir çıktı bırakmaya çalış — bir tablo, bir akış şeması, bir rapor. ' +
+        'İşe dönüşen stajların çoğu bu şekilde başlıyor.',
+    ],
+    cvIpucu:
+      'Yaptığın işleri sayıyla anlat: kaç kişilik ekip, kaç veri satırı, ne kadar süre. Bu ' +
+      'bölümün işvereni sayıyla düşünüyor ve CV\'de de onu arıyor. Excel, SQL ve varsa Minitab, ' +
+      'Python ya da bir simülasyon programını seviye belirterek yaz. Kulüp ya da okul ' +
+      'projesinde bir süreci ölçüp iyileştirdiysen, o satır bütün CV\'nin en güçlü yeri.',
+    sss: [
+      {
+        soru: 'Endüstri mühendisliği stajı sadece fabrikada mı yapılır?',
+        cevap:
+          'Hayır. Fabrikalar en yaygın yer ama lojistik şirketleri, perakende zincirleri, bankalar, ' +
+          'hastaneler ve danışmanlık şirketleri de stajyer alıyor. Süreç, veri ve planlama olan her ' +
+          'yerde bu bölümün işi var.',
+      },
+      {
+        soru: 'Stajda gerçekte hangi işler veriliyor?',
+        cevap:
+          'En yaygınları: üretim hattında süre ölçümü, veri toplama ve tabloya dökme, süreç akışı ' +
+          'çıkarma, stok ve sipariş kayıtlarını düzenleme, hazır raporları güncelleme.',
+      },
+      {
+        soru: 'Hangi programları bilmek gerekiyor?',
+        cevap:
+          'Excel her ilanda geçiyor ve sadece açabilmek yetmiyor. Bunun üstüne SQL temel sorguları, ' +
+          'varsa bir ERP arayüzü tecrübesi ve veri analizi için Python ya da Minitab fark ' +
+          'yaratıyor.',
+      },
+      {
+        soru: 'Yalın üretim terimlerini bilmem şart mı?',
+        cevap:
+          'Şart değil ama mülakatta konu açılıyor. Kaizen, kanban, 5S gibi kavramların ne olduğunu ' +
+          'bir okumak, bilmediğin bir alanda konuşmak zorunda kalmanı önlüyor.',
+      },
+      {
+        soru: 'Zaman etüdü nedir, stajda yapar mıyım?',
+        cevap:
+          'Bir işin ne kadar sürdüğünü ölçüp kayda geçirmek. Endüstri mühendisliği stajyerine en ' +
+          'sık verilen işlerden biri, çünkü hem öğretici hem de işletmeye doğrudan fayda sağlıyor. ' +
+          'Kronometre ve bir tablo yeterli.',
+      },
+      {
+        soru: 'Endüstri mühendisliği stajı işe dönüşür mü?',
+        cevap:
+          'Dönüşme ihtimali görece yüksek, çünkü stajyerin bıraktığı çıktı ölçülebilir oluyor: bir ' +
+          'tablo, bir akış şeması, düzenlenmiş bir stok kaydı. Staj biterken somut bir iş ' +
+          'tamamlamak bu ihtimali en çok artıran şey.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'insaat-muhendisligi',
@@ -255,6 +578,80 @@ export const BOLUMLER: Bolum[] = [
       'Şantiye stajı için başvururken hangi tarih aralığında tam zamanlı olabileceğini yaz. ' +
       'Şantiyeler yarım gün gelen stajyerle çalışamıyor.',
     aramaKelimeleri: ['inşaat', 'şantiye', 'proje'],
+    giris:
+      'İnşaat mühendisliğinde staj çoğu bölümde ikiye ayrılıyor: şantiye stajı ve büro stajı. ' +
+      'Şantiyede yapının nasıl kurulduğunu yerinde görüyorsun, büroda projenin nasıl ' +
+      'hesaplandığını ve çizildiğini. İkisi çok farklı ortamlar ve çoğu öğrenci ilk stajını ' +
+      'hangisi olduğuna bakmadan alıp sonradan eksik kalıyor. Bir de mevsim tarafı var: ' +
+      'şantiyeler kış aylarında yavaşlıyor, yaz ise en yoğun dönem. Bu sayfada iki staj türünün ' +
+      'nerede yapıldığını, stajyerin sahada gerçekte ne yaptığını ve başvurmadan önce bilmen ' +
+      'gerekenleri bulacaksın.',
+    pozisyonlar: [
+      'Şantiye stajı — bina, altyapı ya da yol projelerinde',
+      'Proje ve statik hesap bürosu (büro stajı)',
+      'Kalite kontrol ve malzeme laboratuvarı',
+      'Metraj, hakediş ve maliyet tarafı',
+      'Kamu kurumlarının yapı işleri birimleri',
+    ],
+    dikkat: [
+      'Şantiyeye kişisel koruyucu donanım olmadan girilmiyor: baret, çelik burunlu ayakkabı ve ' +
+        'yelek. Bazı şantiyeler veriyor, bazıları senden bekliyor — önceden sor.',
+      'Şantiye stajı yaz aylarında sıcak ve tozlu bir ortamda, ayakta geçiyor. Bunu bilerek ' +
+        'seçmek, ilk hafta pes etmemeni sağlıyor.',
+      'Büro stajı için AutoCAD neredeyse şart; statik program bilgisi ise beklenmiyor ama bilen ' +
+        'öğrenci hemen fark ediliyor.',
+      'Kamu kurumlarında staj kontenjanları erken açılıyor ve belge süreci uzun. Bu tarafı ' +
+        'hedefliyorsan aylar öncesinden başla.',
+    ],
+    cvIpucu:
+      'Şantiye mi büro mu istediğini CV\'de açıkça yaz; ikisine aynı CV\'yi göndermek her ' +
+      'ikisinde de zayıf duruyor. Gördüğün yapı türlerini ve kullandığın programları listele. ' +
+      'Okulun malzeme laboratuvarında yaptığın deneyler (beton basınç, agrega analizi) gerçek ' +
+      'bir deneyim satırı — "sadece ders" diye atlamamalısın.',
+    sss: [
+      {
+        soru: 'Şantiye stajı ile büro stajı arasındaki fark nedir?',
+        cevap:
+          'Şantiye stajında imalatı yerinde görüyorsun: kalıp, demir, beton döküm, kot ölçümü. Büro ' +
+          'stajında proje çizimi, statik hesap ve metraj tarafında çalışıyorsun. Çoğu bölüm ikisini ' +
+          'ayrı ayrı istiyor.',
+      },
+      {
+        soru: 'Staja hangi mevsimde başvurmalıyım?',
+        cevap:
+          'Şantiye stajı için yaz en yoğun dönem ve en çok yer o zaman açılıyor. Ama başvuruyu ' +
+          'yazın yapmak geç: kışın yazmaya başlamak, yaz kontenjanına yetişmek demek.',
+      },
+      {
+        soru: 'İnşaat stajında hangi programlar isteniyor?',
+        cevap:
+          'AutoCAD en yaygını. Bunun üstüne metraj ve hakediş programları, bina bilgi modelleme ' +
+          'araçları ve statik hesap yazılımları geliyor; stajyerden bunlar beklenmiyor ama bilmek ' +
+          'ayırt edici.',
+      },
+      {
+        soru: 'Kamu kurumunda staj yapabilir miyim?',
+        cevap:
+          'Yapabilirsin; belediyeler, karayolları ve DSİ gibi kurumlar stajyer alıyor. Ancak ' +
+          'başvuru takvimi erken ve evrak süreci uzun; aynı anda özel sektöre de başvurup seçenek ' +
+          'bırakmak akıllıca.',
+      },
+      {
+        soru: 'Şantiyeye stajyer olarak girerken ne isteniyor?',
+        cevap:
+          'Okulun staj belgesi ve sigorta girişinin yapılmış olması, işletmenin iş güvenliği ' +
+          'eğitimi ve kişisel koruyucu donanım. Bazı büyük şantiyeler ayrıca sağlık raporu ve giriş ' +
+          'kartı süreci işletiyor; bunlar birkaç gün alabiliyor.',
+      },
+      {
+        soru: 'Kış döneminde şantiye stajı yapabilir miyim?',
+        cevap:
+          'Yapabilirsin ama iş hacmi düşüyor: soğuk havada beton döküm ve bazı imalatlar duruyor. ' +
+          'Kışın büro stajı, yazın şantiye stajı yapmak çoğu öğrenci için daha verimli bir ' +
+          'sıralama.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'gida-muhendisligi',
@@ -328,6 +725,79 @@ export const BOLUMLER: Bolum[] = [
       'Büyük şirketlerin stajyer programları çoğunlukla dört yıllık bölümlere açık. ' +
       'Önlisans için küçük firmalara doğrudan başvurmak çok daha yüksek dönüş alıyor.',
     aramaKelimeleri: ['yazılım', 'web', 'destek'],
+    giris:
+      'Bilgisayar programcılığı, meslek yüksekokulunun staj bulması en kolay bölümlerinden ' +
+      'biri: piyasada yazılım işi çok ve iki yıllık öğrenciden beklenen şey diploma değil, ' +
+      'çalışan bir şey gösterebilmek. Bu bölümün asıl avantajı da bu — dört yıllık öğrencilerle ' +
+      'aynı ilana başvururken elinde bitirmiş bir projen varsa fark kapanıyor. Zorluk şurada: ' +
+      'müfredat geniş ama yüzeysel geçiyor, o yüzden bir konuyu kendi başına derinleştirmek ' +
+      'gerekiyor. Bu sayfada staj yerlerini, stajyere verilen gerçek işleri ve başvurmadan önce ' +
+      'öğrenmen gerekenleri bulacaksın.',
+    pozisyonlar: [
+      'Web geliştirme stajı (ön yüz ya da arka uç)',
+      'Mobil uygulama stajı',
+      'Test ve hata kaydı tutma',
+      'Veri tabanı ve raporlama desteği',
+      'Bilgi işlem ve teknik destek',
+    ],
+    dikkat: [
+      'Dört yıllık bölümlerle aynı ilanlara başvuruyorsun. Ayrıştıran şey unvan değil, ' +
+        'gösterebildiğin çalışma — bir tane bitmiş küçük proje, on yarım projeden değerli.',
+      'İki yıllık programda staj dönemi genellikle daha kısıtlı. Okulunun takvimini erken ' +
+        'öğren, çünkü şirketlerin staj programları o tarihlere uymayabiliyor.',
+      'Küçük yazılım şirketleri ve dijital ajanslar bu bölümden stajyer almaya çok açık ama ' +
+        'neredeyse hiç ilan açmıyor. Doğrudan yazmak en verimli yol.',
+      'Dikey geçiş planın varsa staj yerini ona göre seç: bir alanı gerçekten öğrendiğin bir ' +
+        'staj, hem işe hem okula devam kararında elini güçlendiriyor.',
+    ],
+    cvIpucu:
+      'Kod deposu bağlantısı olmayan bir CV bu bölümde en büyük eksik. Okul ödevlerini bile ' +
+      'yüklemek, işverene bakabileceği bir şey vermek demek. Hangi dille ne yaptığını yaz; ' +
+      '"HTML, CSS, JavaScript, Python, Java, C#" diye altı dili alt alta sıralamak inandırıcı ' +
+      'durmuyor. İkisini iyi bilmek ve bunu bir projeyle göstermek yeterli.',
+    sss: [
+      {
+        soru: 'İki yıllık mezunu olarak yazılım stajı bulabilir miyim?',
+        cevap:
+          'Bulabilirsin. Bu alanda işverenin baktığı şey bölüm süresi değil, çalışan bir şey ' +
+          'gösterip gösteremediğin. Bitmiş küçük bir proje, çoğu ilanda dört yıllık öğrencilerle ' +
+          'aranı kapatıyor.',
+      },
+      {
+        soru: 'Hangi alanda uzmanlaşmalıyım?',
+        cevap:
+          'Web ve mobil, staj bulma açısından en çok kapı açan iki alan. Birini seçip derinleşmek, ' +
+          'hepsine yüzeysel dokunmaktan çok daha hızlı sonuç veriyor.',
+      },
+      {
+        soru: 'Staj sırasında bana gerçek proje verilir mi?',
+        cevap:
+          'Küçük şirketlerde büyük ihtimalle evet — ekip küçük olduğu için stajyer hızla işin içine ' +
+          'giriyor. Büyük şirketlerde ise genelde var olan bir projede küçük görevlerle ' +
+          'başlıyorsun.',
+      },
+      {
+        soru: 'Sertifika kursları işe yarıyor mu?',
+        cevap:
+          'Sertifikanın kendisi tek başına ayırt edici değil; o kursta yaptığın proje ayırt edici. ' +
+          'İşveren sertifikayı değil, onunla ne ürettiğini soruyor.',
+      },
+      {
+        soru: 'Dijital ajansta staj yapmak nasıl?',
+        cevap:
+          'Ajanslarda tempo yüksek ve aynı anda birden çok projeye dokunuyorsun; bu, kısa sürede ' +
+          'çok şey görmek demek. Karşılığında derinleşme az oluyor. Ne öğrenmek istediğine göre ' +
+          'avantaj ya da dezavantaj.',
+      },
+      {
+        soru: 'Dikey geçiş planım varsa staj yerimi ona göre mi seçmeliyim?',
+        cevap:
+          'Seçebilirsen iyi olur. Bir alanı gerçekten öğrendiğin staj, hem dikey geçiş sonrası ' +
+          'derslerde hem de doğrudan işe başlama kararında elini güçlendiriyor. İki seçeneği de ' +
+          'açık tutmak en sağlamı.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'muhasebe-ve-vergi-uygulamalari',
@@ -362,6 +832,80 @@ export const BOLUMLER: Bolum[] = [
       'Mali müşavir ofisleri en çok beyanname dönemlerinde yardıma ihtiyaç duyuyor. ' +
       'Başvuru zamanlamanı buna göre ayarlamak kabul şansını artırıyor.',
     aramaKelimeleri: ['muhasebe', 'finans', 'ön muhasebe'],
+    giris:
+      'Muhasebe, staj yeri bulmanın görece kolay olduğu bölümlerden biri: her şehirde çok ' +
+      'sayıda serbest muhasebeci mali müşavir bürosu var ve çoğu stajyer alıyor. Asıl mesele ' +
+      'yer bulmak değil, doğru yeri bulmak — çünkü stajın kalitesi büroya göre ciddi biçimde ' +
+      'değişiyor. Bir yerde gerçekten fiş kesip beyanname hazırlığı görürken, başka bir yerde ' +
+      'iki ay boyunca evrak taşımakla geçebiliyor. Bu sayfada nerede staj yapıldığını, stajyere ' +
+      'verilen gerçek işleri, hangi programları öğrenmenin işe yaradığını ve başvururken nelere ' +
+      'dikkat etmen gerektiğini bulacaksın.',
+    pozisyonlar: [
+      'Serbest muhasebeci mali müşavir bürosu',
+      'Şirketlerin ön muhasebe ve finans birimleri',
+      'Bağımsız denetim şirketleri',
+      'Bordro ve özlük işleri',
+      'Perakende ve ticaret şirketlerinin cari hesap tarafı',
+    ],
+    dikkat: [
+      'Büroyu seçerken ne öğreneceğini baştan sor. "Stajyerinize hangi işleri veriyorsunuz?" ' +
+        'sorusu, iki ayını evrak taşıyarak geçirmeni önlüyor.',
+      'Beyanname dönemleri (ay başları ve geçici vergi dönemleri) çok yoğun geçiyor. O ' +
+        'haftalarda işin içine girme şansın yüksek ama tempo da yüksek.',
+      'Muhasebe programlarının arayüzü markaya göre değişiyor; birini öğrenmek diğerine geçişi ' +
+        'kolaylaştırıyor. Hangisiyle başladığın çok önemli değil.',
+      'Gördüğün her şey müşteri bilgisi. Rakam, isim ve belge fotoğrafını dışarı çıkarmamak bu ' +
+        'bölümde meslek kuralı; staj defterine yazarken bile sorumluna sor.',
+    ],
+    cvIpucu:
+      'Kullandığın muhasebe programını ve Excel seviyeni yaz; "Excel" tek başına bir şey ' +
+      'anlatmıyor, "Excel — DÜŞEYARA ve pivot tablo" anlatıyor. Daha önce bir işletmede kasa, ' +
+      'fatura ya da cari hesap tuttuysan, alanla ilgisiz görünse bile yaz: bu bölümde işverenin ' +
+      'aradığı ilk şey dikkat ve düzen.',
+    sss: [
+      {
+        soru: 'Muhasebe stajı nerede yapılır?',
+        cevap:
+          'En yaygını serbest muhasebeci mali müşavir büroları. Bunun dışında şirketlerin kendi ' +
+          'muhasebe ve finans birimleri, bağımsız denetim şirketleri ve büyük ticaret şirketlerinin ' +
+          'cari hesap birimleri stajyer alıyor.',
+      },
+      {
+        soru: 'Stajda hangi işler verilir?',
+        cevap:
+          'Fatura ve fiş kaydı, cari hesap takibi, banka hareketlerinin eşleştirilmesi, evrak ' +
+          'düzeni ve beyanname hazırlığına destek. Beyannameyi stajyer imzalamıyor ama hazırlık ' +
+          'sürecini görüyor.',
+      },
+      {
+        soru: 'Hangi muhasebe programını öğrenmeliyim?',
+        cevap:
+          'Piyasada birkaç program yaygın ve her büro farklısını kullanıyor. Birini öğrenmek ' +
+          'mantığı öğrenmek demek; ikinci programa geçiş birkaç gün sürüyor.',
+      },
+      {
+        soru: 'Staj sonunda işe alınma ihtimalim var mı?',
+        cevap:
+          'Bu bölümde ihtimal görece yüksek: bürolar güvendikleri stajyeri yanlarında tutmayı ' +
+          'tercih ediyor. Niyetini staj bitmeden açıkça söylemek, bu ihtimali gerçeğe çeviren şey ' +
+          'oluyor.',
+      },
+      {
+        soru: 'Bu staj, mali müşavirlik staj süresinden sayılır mı?',
+        cevap:
+          'Okul stajı ile meslek mensubu olmak için yapılan staj farklı süreçler ve farklı mevzuata ' +
+          'tabi. Kendi durumun için bağlayıcı cevabı bağlı olduğun serbest muhasebeci mali ' +
+          'müşavirler odasından almalısın.',
+      },
+      {
+        soru: 'Beyanname döneminde staja başlamak avantaj mı?',
+        cevap:
+          'Öğrenmek açısından evet: işin en yoğun ve en öğretici kısmı o dönemlerde yaşanıyor. ' +
+          'Dezavantajı, herkesin çok meşgul olması ve sana ayrılan zamanın azalması. İkisini ' +
+          'bilerek seçmek en iyisi.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'giyim-uretim-teknolojisi',
@@ -471,6 +1015,80 @@ export const BOLUMLER: Bolum[] = [
       '"İşletme okuyorum, staj arıyorum" cümlesi hiçbir kapıyı açmıyor. "Pazarlama ' +
       'biriminde staj arıyorum" cümlesi açıyor. Bir birim seç.',
     aramaKelimeleri: ['işletme', 'insan kaynakları', 'pazarlama'],
+    giris:
+      'İşletme, öğrenci sayısı en yüksek bölümlerden biri ve staj tarafındaki asıl zorluk da ' +
+      'buradan geliyor: alan çok geniş olduğu için "işletme stajı" diye başvurmak, işverene ne ' +
+      'yapabileceğin hakkında hiçbir şey söylemiyor. Aynı bölümden bir öğrenci insan ' +
+      'kaynaklarında, diğeri pazarlamada, üçüncüsü finansta staj yapıyor ve üçünün işi ' +
+      'birbirine benzemiyor. Hangi tarafa gitmek istediğine baştan karar vermek, hem doğru yeri ' +
+      'bulmayı hem de kabul alma ihtimalini ciddi biçimde artırıyor. Bu sayfada o tarafları, ' +
+      'stajyere verilen gerçek işleri ve başvuru ipuçlarını bulacaksın.',
+    pozisyonlar: [
+      'İnsan kaynakları — işe alım ve özlük tarafı',
+      'Pazarlama ve dijital pazarlama',
+      'Finans, bütçe ve raporlama',
+      'Satın alma ve tedarik',
+      'Satış ve müşteri ilişkileri',
+    ],
+    dikkat: [
+      'Tek bir tarafı seç ve başvuruda onu söyle. "İşletme öğrencisiyim, her işi yaparım" ' +
+        'cümlesi, hiçbir işe uygun görünmemekle aynı sonucu veriyor.',
+      'Bu bölümde rekabet yüksek çünkü aday çok. Ayrıştıran şey not ortalaması değil, ' +
+        'gösterebildiğin bir çalışma: kulüp bütçesi, düzenlediğin etkinlik, hazırladığın rapor.',
+      'İnsan kaynakları stajı en çok istenen ama kontenjanı en az olan taraf. Finans ve satın ' +
+        'alma tarafında rekabet belirgin biçimde daha düşük.',
+      'Küçük ve orta ölçekli işletmeler bu bölümden stajyer almaya açık ama ilan açmıyor. ' +
+        'Doğrudan yazmak, ilan beklemekten çok daha hızlı sonuç veriyor.',
+    ],
+    cvIpucu:
+      'Her satırı sayıyla destekle: kaç kişilik ekip, kaç katılımcı, ne kadar bütçe. Sayısı ' +
+      'olmayan bir başarı, okuyanın kafasında hiçbir yer kaplamıyor. Excel seviyeni belirt ve ' +
+      'hedeflediğin tarafa göre CV\'nin en üstüne tek cümlelik bir yön koy: "finans alanında ' +
+      'staj arıyorum" gibi. Aynı CV\'yi beş farklı alana göndermek en yaygın hata.',
+    sss: [
+      {
+        soru: 'İşletme stajı hangi alanlarda yapılabilir?',
+        cevap:
+          'İnsan kaynakları, pazarlama, finans ve muhasebe, satın alma, satış ve operasyon. Bunlar ' +
+          'birbirinden oldukça farklı işler; hangisini istediğine baştan karar vermek başvurunun ' +
+          'kabul alma ihtimalini artırıyor.',
+      },
+      {
+        soru: 'Staja hangi sınıfta başvurmalıyım?',
+        cevap:
+          'Zorunlu stajın hangi sınıfta olduğunu okulun yönergesi belirliyor. Ama gönüllü staj için ' +
+          'beklemeye gerek yok; erken yapılan bir staj, zorunlu staj başvurusunda seni diğer ' +
+          'adaylardan öne çıkarıyor.',
+      },
+      {
+        soru: 'Not ortalamam düşükse şansım var mı?',
+        cevap:
+          'Çoğu işveren stajyerde ortalamaya bakmıyor. Baktığı şey gösterebildiğin bir çalışma ve ' +
+          'iletişim. Kulüp, gönüllü iş ya da yarı zamanlı bir iş deneyimi, ortalamadan daha güçlü ' +
+          'bir sinyal.',
+      },
+      {
+        soru: 'İnsan kaynakları stajı bulmak neden zor?',
+        cevap:
+          'Talep çok, kontenjan az: her işletme öğrencisi oraya başvuruyor ama İK ekipleri genelde ' +
+          'küçük. Finans, satın alma ve operasyon taraflarında aynı şirkette bile rekabet çok daha ' +
+          'düşük olabiliyor.',
+      },
+      {
+        soru: 'Küçük bir şirkette staj yapmak CV\'de zayıf durur mu?',
+        cevap:
+          'Durmuyor. Okuyan kişi şirketin adına değil, senin ne yaptığına bakıyor. Küçük şirkette ' +
+          'stajyer genelde işin tamamını görüyor; büyük şirkette tek bir alt sürecin küçük bir ' +
+          'parçasını. Anlatacak şey açısından küçük şirket çoğu zaman daha zengin.',
+      },
+      {
+        soru: 'İşletme stajında bana gerçek iş verilir mi?',
+        cevap:
+          'Verilmesi büyük ölçüde senin talebine bağlı. "Şu raporu ben hazırlayabilir miyim" demek, ' +
+          'çoğu ekipte kapı açıyor. Sormayan stajyer genelde izleyerek geçiriyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'iktisat',
@@ -507,6 +1125,80 @@ export const BOLUMLER: Bolum[] = [
       'Teorik ders notu herkeste var. Gerçek bir veri setiyle yapılmış küçük bir analiz ' +
       'çok az kişide var — ayrışmak istiyorsan orada ayrış.',
     aramaKelimeleri: ['ekonomi', 'analiz', 'finans'],
+    giris:
+      'İktisat bölümünün staj tarafındaki en büyük sorunu, mezuniyet sonrası çalışılan ' +
+      'alanların net olmaması: öğrenci "iktisatçı stajyer" diye bir ilan aradığında karşısına ' +
+      'çok az şey çıkıyor. Oysa bu bölümün mezunları bankacılıktan araştırma birimlerine, kamu ' +
+      'kurumlarından veri analizi işlerine kadar geniş bir alanda çalışıyor. Yapılması gereken, ' +
+      'bölüm adıyla değil yapılacak işle aramak. Bu sayfada hangi tür kurumların bu bölümden ' +
+      'stajyer aldığını, stajyere verilen gerçek işleri ve başvurmadan önce hangi araçları ' +
+      'öğrenmenin işe yaradığını bulacaksın.',
+    pozisyonlar: [
+      'Bankaların şube ve genel müdürlük birimleri',
+      'Araştırma ve ekonomi analiz birimleri',
+      'Kamu kurumları ve düzenleyici kuruluşlar',
+      'Danışmanlık ve denetim şirketleri',
+      'Şirketlerin finans, bütçe ve raporlama birimleri',
+    ],
+    dikkat: [
+      'İlan ararken bölüm adını değil işi ara: "analiz", "raporlama", "bütçe", "araştırma". Bu ' +
+        'bölümden stajyer alan çok kurum ilanında iktisat kelimesini hiç geçirmiyor.',
+      'Banka staj programlarının başvuru dönemi erken açılıp erken kapanıyor ve genellikle ' +
+        'kendi kariyer sayfaları üzerinden yürüyor.',
+      'Kamu kurumlarında staj için evrak süreci uzun; başvuruyu aylar öncesinden başlatmak ' +
+        'gerekiyor.',
+      'Veri ile çalışabilmek bu bölümde en büyük fark yaratıcı. Excel\'in ötesine geçen (SQL, ' +
+        'Python, R, Stata gibi) tek bir araç bile CV\'ni ayırıyor.',
+    ],
+    cvIpucu:
+      'Kullandığın analiz araçlarını seviye belirterek yaz — bu bölümde en çok atlanan ve en ' +
+      'çok işe yarayan satır bu. Bir ders projesinde veri toplayıp analiz ettiysen onu bir iş ' +
+      'deneyimi gibi anlat: hangi veriyi, hangi yöntemle, ne sonuçla. İngilizce seviyeni de ' +
+      'belirt; araştırma ve bankacılık tarafında kaynakların çoğu İngilizce.',
+    sss: [
+      {
+        soru: 'İktisat stajı nerede yapılır?',
+        cevap:
+          'Bankalar, araştırma birimleri, kamu kurumları, danışmanlık ve denetim şirketleri, ' +
+          'şirketlerin finans ve bütçe birimleri. Sanayi şirketlerinin raporlama tarafı da bu ' +
+          'bölümden stajyer alıyor.',
+      },
+      {
+        soru: 'Banka stajına nasıl başvurulur?',
+        cevap:
+          'Çoğu banka staj programını kendi kariyer sayfasından duyuruyor ve başvuru dönemi erken ' +
+          'kapanıyor. Aracı sitelerde çıkmadan önce ilan orada yayımlanıyor, o yüzden doğrudan ' +
+          'takip etmek gerekiyor.',
+      },
+      {
+        soru: 'Hangi programları öğrenmeliyim?',
+        cevap:
+          'Önce Excel\'i gerçekten öğren: pivot tablo, arama fonksiyonları, temel grafikler. Sonra ' +
+          'bir veri aracı ekle — SQL en çok işe yarayanı, Python ya da R ise araştırma tarafında ' +
+          'ayırt edici.',
+      },
+      {
+        soru: 'İktisat mezunu olarak sadece bankada mı çalışılır?',
+        cevap:
+          'Hayır. Veri, analiz ve raporlama olan her yerde iş var. Staj yerini seçerken de bunu ' +
+          'esas almak, ilan bulma sorununu büyük ölçüde çözüyor.',
+      },
+      {
+        soru: 'İktisat stajı için İngilizce şart mı?',
+        cevap:
+          'Şart değil ama araştırma ve bankacılık tarafında kaynakların çoğu İngilizce, o yüzden ' +
+          'okuma seviyesinde bilmek belirgin fark yaratıyor. CV\'de seviyeni belirtmek, ' +
+          'belirtmemekten iyi.',
+      },
+      {
+        soru: 'Kamu kurumunda staj başvurusu nasıl yapılır?',
+        cevap:
+          'Kurumun kendi duyuru sayfası üzerinden; aracı sitelerde genelde yayımlanmıyor. Evrak ' +
+          'süreci uzun olduğu için aylar öncesinden başlamak ve aynı anda özel sektöre de başvurup ' +
+          'seçenek bırakmak gerekiyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
 
   /* ------------------------------------------------------ tasarım/iletişim */
@@ -1088,6 +1780,79 @@ export const BOLUMLER: Bolum[] = [
       'Klinik alan lisans düzeyinde büyük ölçüde kapalı ve bu normal. Araştırma ya da ' +
       'İK tarafında deneyim biriktirmek, yüksek lisans başvurunda da işine yarıyor.',
     aramaKelimeleri: ['psikoloji', 'insan kaynakları', 'araştırma'],
+    giris:
+      'Psikoloji bölümünde staj, diğer bölümlerdeki gibi işlemiyor ve bunu baştan bilmek ' +
+      'gerekiyor: lisans öğrencisi klinik uygulama yapamıyor, danışan göremiyor ve test ' +
+      'uygulayamıyor. Bu yasal bir sınır, kurumların keyfî tercihi değil. Dolayısıyla bu ' +
+      'bölümde staj çoğunlukla gözlem, kurum tanıma, araştırma desteği ve sosyal proje ' +
+      'tarafında yapılıyor. Bunu bilerek başvurmak hem doğru yere gitmeni sağlıyor hem de ' +
+      'kurumla yaşanan yanlış anlaşmaları önlüyor. Bu sayfada hangi kurumların stajyer ' +
+      'aldığını, stajyerin gerçekte ne yaptığını ve nelere dikkat etmen gerektiğini bulacaksın.',
+    pozisyonlar: [
+      'Kurum içi gözlem stajı (hastane, rehabilitasyon merkezi, özel eğitim kurumu)',
+      'Araştırma asistanlığı — üniversite laboratuvarları',
+      'İnsan kaynakları ve endüstri-örgüt psikolojisi tarafı',
+      'Sivil toplum kuruluşlarında sosyal proje desteği',
+      'Rehberlik ve danışma merkezlerinde gözlem',
+    ],
+    dikkat: [
+      'Lisans öğrencisi olarak danışan göremez, test uygulayamaz ve terapi süreci yürütemezsin. ' +
+        'Bunu vaat eden bir yer varsa orası hem seni hem danışanı riske atıyor.',
+      'Gördüğün her şey gizli bilgi. İsim, olay ayrıntısı ve kurum bilgisi staj defterine bile ' +
+        'yazılmaz; yazmadan önce sorumluna sor.',
+      'Endüstri-örgüt tarafı (insan kaynakları) bu bölüm için en çok staj imkânı olan alan ve ' +
+        'çoğu öğrenci hiç düşünmüyor.',
+      'Araştırma asistanlığı için kendi bölümündeki hocalara sormak en kolay yol; çoğu ' +
+        'laboratuvar öğrenci arıyor ama ilan açmıyor.',
+    ],
+    cvIpucu:
+      'Araştırma tarafında ne yaptığını somut yaz: hangi veri toplama yöntemi, kaç katılımcı, ' +
+      'hangi analiz programı. SPSS ya da benzeri bir programı kullanabiliyorsan bunu mutlaka ' +
+      'belirt — bu bölümde en çok aranan ve en az yazılan beceri. Gönüllü çalışma ve sosyal ' +
+      'sorumluluk projeleri de gerçek deneyim satırı; küçültmeden yaz.',
+    sss: [
+      {
+        soru: 'Psikoloji öğrencisi klinik staj yapabilir mi?',
+        cevap:
+          'Lisans öğrencisi olarak danışan görmen, test uygulaman ya da terapi yürütmen mümkün ' +
+          'değil. Kurumlarda yapılan staj gözlem ve kurum tanıma niteliğinde oluyor; klinik ' +
+          'uygulama yüksek lisans ve sonrasına ait.',
+      },
+      {
+        soru: 'Psikoloji stajı nerede yapılır?',
+        cevap:
+          'Hastanelerin ilgili birimleri, rehabilitasyon ve özel eğitim merkezleri, üniversite ' +
+          'araştırma laboratuvarları, sivil toplum kuruluşları ve şirketlerin insan kaynakları ' +
+          'birimleri.',
+      },
+      {
+        soru: 'İnsan kaynakları psikoloji mezunu için uygun mu?',
+        cevap:
+          'Fazlasıyla. Endüstri ve örgüt psikolojisi bu bölümün alanı; işe alım, değerlendirme ve ' +
+          'eğitim tarafında psikoloji arka planı doğrudan işe yarıyor. Staj imkânı da klinik tarafa ' +
+          'göre çok daha fazla.',
+      },
+      {
+        soru: 'SPSS bilmem gerekiyor mu?',
+        cevap:
+          'Zorunlu değil ama araştırma tarafında en çok istenen şey. Temel düzeyde kullanabilmek ' +
+          'bile araştırma asistanlığı başvurusunda seni öne çıkarıyor.',
+      },
+      {
+        soru: 'Psikoloji bölümünde staj zorunlu mu?',
+        cevap:
+          'Okuluna göre değişiyor: bazı bölümlerde zorunlu staj var, bazılarında yok ve öğrenci ' +
+          'gönüllü staj yapıyor. Kesin bilgi kendi bölümünün staj yönergesinde.',
+      },
+      {
+        soru: 'Yüksek lisans başvurusunda staj deneyimi işe yarar mı?',
+        cevap:
+          'Özellikle araştırma deneyimi yarıyor. Bir laboratuvarda veri toplama ya da analiz ' +
+          'sürecine katılmış olmak, başvuru dosyasında anlatabileceğin en somut şey. Kurum gözlem ' +
+          'stajı da alanı tanıdığını gösteriyor.',
+      },
+    ],
+    guncelleme: '2026-08-17',
   },
   {
     slug: 'uluslararasi-ticaret',

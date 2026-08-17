@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
-import { ArrowLeft, ChevronRight, Search } from 'lucide-react';
+import { ArrowLeft, ChevronRight } from 'lucide-react';
 import { SayfaKabugu } from './SayfaKabugu';
+import { BolumIcerik } from './BolumIcerik';
 import {
   BOLUMLER,
   BOLUM_GRUPLARI,
   GRUP_SIRASI,
   bolumBul,
-  OKUL_YERLESTIRIR,
   type Bolum,
 } from '../data/bolumler';
 
@@ -141,17 +141,6 @@ interface SayfaProps {
   onSearch?: (terim: string) => void;
 }
 
-const Blok: React.FC<{ baslik: string; maddeler: string[] }> = ({ baslik, maddeler }) => (
-  <section className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 space-y-2">
-    <h2 className="font-bold text-gray-900">{baslik}</h2>
-    <ul className="list-disc pl-5 space-y-1.5 text-sm sm:text-base text-gray-600 leading-relaxed">
-      {maddeler.map((m) => (
-        <li key={m}>{m}</li>
-      ))}
-    </ul>
-  </section>
-);
-
 export const BolumPage: React.FC<SayfaProps> = ({ slug, onBack, onNavigate, onSearch }) => {
   const bolum = bolumBul(slug);
 
@@ -182,14 +171,32 @@ export const BolumPage: React.FC<SayfaProps> = ({ slug, onBack, onNavigate, onSe
     );
   }
 
-  const ara = () => {
-    const terim = bolum.aramaKelimeleri[0];
-    if (onSearch) onSearch(terim);
-    else onNavigate(`/?q=${encodeURIComponent(terim)}`);
-  };
-
-  const okulYerlestirir = OKUL_YERLESTIRIR.includes(bolum.grup);
   const digerleri = BOLUMLER.filter((b) => b.slug !== bolum.slug && b.grup === bolum.grup);
+
+  /*
+    İÇERİK İÇİ BAĞLANTILARI YAKALA
+
+    BolumIcerik yalnızca gerçek `<a href>` üretiyor; tarayıcı bağlantı
+    saymak için bunu istiyor ve bu ağaç derleme sırasında Node tarafında da
+    çiziliyor, orada onNavigate diye bir şey yok. Tıklamayı burada yakalayıp
+    uygulama içi geçişe çeviriyoruz: işaretlemede gerçek bağlantı,
+    kullanıcıda tam sayfa yenilenmesi yok.
+
+    "/?q=..." ayrı ele alınıyor: ilan araması sayfa değiştirmek değil, ana
+    sayfadaki arama kutusuna yazmak demek.
+  */
+  const baglantiyiYakala = (e: React.MouseEvent<HTMLDivElement>) => {
+    const bag = (e.target as HTMLElement).closest('a');
+    if (!bag) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    if (bag.target === '_blank') return;
+    const adres = bag.getAttribute('href');
+    if (!adres || !adres.startsWith('/')) return;
+    e.preventDefault();
+    const aramaEki = adres.match(/^\/\?q=(.*)$/);
+    if (aramaEki && onSearch) onSearch(decodeURIComponent(aramaEki[1]));
+    else onNavigate(adres);
+  };
 
   return (
     <Kabuk onBack={onBack}>
@@ -202,58 +209,14 @@ export const BolumPage: React.FC<SayfaProps> = ({ slug, onBack, onNavigate, onSe
           &larr; Tüm bölümler
         </button>
 
-        <div className="space-y-2">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">
-            {bolum.ad} stajı
-          </h1>
-          <p className="text-gray-600 leading-relaxed">{bolum.ozet}</p>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">
+          {bolum.ad} stajı
+        </h1>
+
+        {/* İçerik ön render ile ortak; ayrıntısı BolumIcerik.tsx içinde. */}
+        <div onClick={baglantiyiYakala}>
+          <BolumIcerik bolum={bolum} />
         </div>
-
-        <Blok baslik="Nerede staj yapılır" maddeler={bolum.nerede} />
-        <Blok baslik="Stajyer ne iş yapar" maddeler={bolum.isler} />
-        <Blok baslik="Başvurmadan önce öğren" maddeler={bolum.hazirlik} />
-        <Blok baslik="İlanlarda ne aranıyor" maddeler={bolum.aranan} />
-
-        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 sm:p-5">
-          <p className="text-sm font-bold text-blue-900 mb-1">Püf nokta</p>
-          <p className="text-sm text-blue-900/90 leading-relaxed">{bolum.ipucu}</p>
-        </div>
-
-        {/*
-          Sayfanın sonu boş kalmasın: okuyan kişi burada ilanlara geçiyor.
-          Bölümün kendi arama kelimesiyle gidiyor, boş listeye düşmesin diye.
-
-          Sağlık bölümlerinde bu düğme yanlış olurdu: hemşirelik ve fizyoterapi
-          stajı okulun anlaşmalı hastanesinde yapılıyor, öğrenci ilan aramıyor.
-          Orada onun yerine ne yapması gerektiğini söylüyoruz.
-        */}
-        {okulYerlestirir ? (
-          <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 space-y-2">
-            <p className="font-bold text-gray-900">Bu bölümde staj yeri aranmıyor</p>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              Klinik uygulamanı okulun anlaşmalı olduğu kuruma yerleştiriyor. Yapman
-              gereken, okulunun staj birimiyle takvimi ve belgeleri konuşmak. Yine de
-              sektörde ne olduğunu görmek istersen ilanlara göz atabilirsin.
-            </p>
-            <button
-              type="button"
-              onClick={ara}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-gray-700 bg-white border border-gray-200 hover:border-gray-300 cursor-pointer"
-            >
-              <Search className="w-4 h-4" />
-              Sağlık alanındaki ilanlara bak
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={ara}
-            className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
-          >
-            <Search className="w-4 h-4" />
-            {bolum.ad} staj ilanlarına bak
-          </button>
-        )}
 
         <div className="flex flex-wrap gap-2">
           <button
