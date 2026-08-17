@@ -45,6 +45,21 @@ interface GoogleAdBannerProps {
 
 const ADSENSE_CLIENT: string | undefined = import.meta.env.VITE_ADSENSE_CLIENT;
 
+/**
+ * Yuva kimlikleri ortam değişkeninden.
+ *
+ * Her çağrı yerine elle kimlik yazmak yerine biçime göre okunuyor: AdSense
+ * onayı geldiğinde yalnızca `.env` doldurulacak, tek satır kod
+ * değişmeyecek. Tanımlı olmayan biçim sessizce boş kalıyor.
+ */
+const SLOT_ENV: Partial<Record<AdFormat, string | undefined>> = {
+  'in-feed': import.meta.env.VITE_AD_SLOT_FEED,
+  'sidebar-rectangle': import.meta.env.VITE_AD_SLOT_SIDEBAR,
+  'sidebar-halfpage': import.meta.env.VITE_AD_SLOT_SIDEBAR_TALL,
+  'top-leaderboard': import.meta.env.VITE_AD_SLOT_TOP,
+  'modal-footer': import.meta.env.VITE_AD_SLOT_MODAL,
+};
+
 /** AdSense betiği sayfa başına bir kez yüklenir. */
 let scriptRequested = false;
 
@@ -68,7 +83,8 @@ export const GoogleAdBanner: React.FC<GoogleAdBannerProps> = ({
 }) => {
   const spec = FORMATS[format];
   const pushed = useRef(false);
-  const configured = Boolean(ADSENSE_CLIENT && adSlotId);
+  const slot = adSlotId ?? SLOT_ENV[format];
+  const configured = Boolean(ADSENSE_CLIENT && slot);
 
   useEffect(() => {
     if (!configured || pushed.current) return;
@@ -99,7 +115,7 @@ export const GoogleAdBanner: React.FC<GoogleAdBannerProps> = ({
           Reklam yuvası
         </span>
         <span className="text-[11px] text-gray-400">
-          {spec.label} · VITE_ADSENSE_CLIENT tanımlı değil
+          {spec.label} · reklam anahtarı tanımlı değil
         </span>
       </div>
     );
@@ -115,7 +131,7 @@ export const GoogleAdBanner: React.FC<GoogleAdBannerProps> = ({
         className="adsbygoogle block"
         style={{ display: 'block', minHeight: spec.minHeight }}
         data-ad-client={ADSENSE_CLIENT}
-        data-ad-slot={adSlotId}
+        data-ad-slot={slot}
         data-ad-format={spec.adFormat}
         data-full-width-responsive="true"
       />

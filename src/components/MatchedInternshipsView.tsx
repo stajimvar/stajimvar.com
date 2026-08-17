@@ -376,6 +376,21 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     ? Math.round((profileChecks.filter(Boolean).length / profileChecks.length) * 100)
     : 0;
 
+  /**
+   * Akış içi reklamların hangi ilandan SONRA çıkacağı.
+   *
+   * İlk reklam 4. ilandan (index 3) sonra, sonrakiler altı ilanda bir,
+   * sayfa başına en fazla iki tane. Liste kısaldığında reklam sayısı da
+   * kendiliğinden azalıyor: 4 ilanlık bir listede hiç reklam çıkmıyor.
+   */
+  const reklamYerleri = useMemo(() => {
+    const yerler: number[] = [];
+    for (let i = 3; i < filteredListings.length - 1 && yerler.length < 2; i += 6) {
+      yerler.push(i);
+    }
+    return yerler;
+  }, [filteredListings.length]);
+
   /** İlan veren farklı şirket sayısı. Profil yokken uyum yerine bu gösteriliyor. */
   const companyCount = new Set(filteredListings.map((item) => item.listing.companyName)).size;
 
@@ -786,6 +801,15 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             </p>
           </aside>
         )}
+          {/*
+            Kenar reklamı sol sütunun EN ALTINDA: filtrelerin ve bilgi
+            kutusunun altında, yani kullanıcının aradığı hiçbir şeyin önüne
+            geçmiyor. Yalnızca geniş ekranda; mobilde sol sütun ilanların
+            üstüne dizildiği için orada reklam ilk görülen şey olurdu.
+          */}
+          <div className="hidden lg:block">
+            <GoogleAdBanner format="sidebar-rectangle" />
+          </div>
         </div>
 
         <div className="lg:col-span-8 space-y-4 min-w-0">
@@ -838,13 +862,23 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                     onQuickApply={() => onQuickApply(listing, match)}
                   />
 
-                  {/* 1st In-Feed Native Google Ad (After 2nd listing) */}
-                  {index === 1 && (
-                    <GoogleAdBanner format="in-feed" />
-                  )}
+                  {/*
+                    AKIŞ İÇİ REKLAM KURALI
 
-                  {/* 2nd In-Feed Native Google Ad (After 5th listing if long list) */}
-                  {index === 4 && filteredListings.length > 5 && (
+                    Üç kısıt birden geçerli, üçü de kullanıcıyı boğmamak için:
+
+                    1. İlk reklam 4. ilandan önce çıkmıyor. Ziyaretçi önce
+                       gerçek içerik görmeli; ilk ekranda reklamla karşılaşan
+                       kullanıcı siteyi bırakıyor.
+                    2. Sonrakiler 6 ilanda bir. Kariyer.net'te aralık daha
+                       sık ama onların yüzlerce ilanı var; 11 ilanda aynı
+                       sıklık listeyi reklam listesine çevirirdi.
+                    3. Sayfa başına en fazla 2 tane.
+
+                    Anahtar tanımlı değilken bu yuvalar hiçbir şey çizmiyor,
+                    yani boşluk da bırakmıyorlar.
+                  */}
+                  {reklamYerleri.includes(index) && (
                     <GoogleAdBanner format="in-feed" />
                   )}
                 </React.Fragment>
