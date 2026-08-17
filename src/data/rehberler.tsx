@@ -363,6 +363,39 @@ export const REHBERLER: Rehber[] = [
         </P>
       </>
     ),
+    guncelleme: '2026-08-17',
+    sss: [
+      {
+        soru: 'Staj mülakatında ne sorulur?',
+        cevap:
+          'Neredeyse her mülakatta aynı beş soru çıkıyor: kendinden kısaca bahset, neden bu alan, okulda en çok hangi dersten keyif aldın, zorlandığın bir proje anı, staj süren ve hangi günler gelebileceğin. İşveren teknik derinlik değil, öğrenmeye açıklık ve devamlılık arıyor.',
+      },
+      {
+        soru: 'Staj mülakatına nasıl hazırlanılır?',
+        cevap:
+          'Üç şey yeterli: şirketin ne ürettiğine beş dakika bak, anlatacağın bir projeyi hazırla (ne yaptın, neden öyle yaptın, ne öğrendin), kendi soruna hazırla. Tek bir örneği iyi anlatmak, beş örneği yüzeysel saymaktan güçlü.',
+      },
+      {
+        soru: 'Mülakatta bilmediğim bir soru gelirse ne demeliyim?',
+        cevap:
+          '\'Bilmiyorum ama öğrenirim\' kabul edilebilir bir cevap. Bilmediğine bilmiyorum diyememek stajyer mülakatlarında en sık yapılan hata; uydurulan cevap tek soruyla ortaya çıkıyor.',
+      },
+      {
+        soru: 'Mülakatta soru sormalı mıyım?',
+        cevap:
+          'Evet. Soru sormamak ilgisizlik olarak okunuyor. \'Stajyer olarak günlük olarak ne yapacağım?\' gibi tek bir somut soru yeterli.',
+      },
+      {
+        soru: 'Tecrübem yokken mülakatta ne anlatırım?',
+        cevap:
+          'Bir okul projesi, kişisel bir çalışma ya da kulüp deneyimi. Önemli olan işin büyüklüğü değil, neden o yolu seçtiğini ve ne öğrendiğini anlatabilmen. Stajın tanımı zaten deneyimsiz olmak.',
+      },
+      {
+        soru: 'Mülakattan sonra ne yapmalıyım?',
+        cevap:
+          'Kısa bir teşekkür mesajı gönder. Cevap gelmezse bir hafta sonra bir kez daha yaz; ikiden fazla ısrar ters etki yapıyor.',
+      },
+    ],
   },
   {
     slug: 'staj-basvuru-epostasi',
@@ -467,6 +500,39 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </P>
       </>
     ),
+    guncelleme: '2026-08-17',
+    sss: [
+      {
+        soru: 'Staj başvuru e-postasının konu satırı ne olmalı?',
+        cevap:
+          '\'Staj Başvurusu — [Bölümün] — [Tarih aralığı]\' biçimi işe yarıyor. Örnek: Staj Başvurusu — Makine Mühendisliği — Temmuz/Ağustos. \'Merhaba\', tek başına \'Staj\' ya da boş konu satırı doğrudan çöpe gidiyor.',
+      },
+      {
+        soru: 'E-postada sigortadan bahsetmeli miyim?',
+        cevap:
+          'Evet, tek cümleyle. Küçük işletmelerin stajyer almama sebebi çoğu zaman maliyet korkusu. Zorunlu stajda sigortayı genellikle okul yapıyor; bunu yazmak tereddüt eden işvereni rahatlatıyor.',
+      },
+      {
+        soru: 'CV\'yi hangi biçimde eklemeliyim?',
+        cevap:
+          'PDF olarak. Word dosyası karşı tarafta bozuk açılabiliyor. Dosya adı da \'cv.pdf\' değil \'AdSoyad-CV.pdf\' olsun; İK klasöründe kaybolmasın.',
+      },
+      {
+        soru: 'Aynı e-postayı birçok şirkete birden gönderebilir miyim?',
+        cevap:
+          'Gönderme. Otuz adresi \'Kime\' satırına yazmak en hızlı elenme yolu: herkes birbirini görüyor ve hiçbiri cevap vermiyor. Her e-postada şirketin adını doğru yazdığından da emin ol.',
+      },
+      {
+        soru: 'Staj e-postasını kime göndermeliyim?',
+        cevap:
+          'Küçük firmalarda genel iletişim adresi yeterli. Orta ve büyük şirketlerde insan kaynakları adresini ara. Bulamazsan LinkedIn üzerinden İK\'da çalışan birine kısa bir mesaj çoğu zaman e-postadan hızlı sonuç veriyor.',
+      },
+      {
+        soru: 'Staj başvuru e-postası ne kadar uzun olmalı?',
+        cevap:
+          'Kısa. Bu e-posta çoğunlukla telefondan okunuyor; ekranı aşan metin okunmadan kapanıyor. Kendini tanıt, neden orası olduğunu bir cümleyle söyle, tarihi ver ve görüşme iste.',
+      },
+    ],
   },
   {
     slug: 'staj-defteri-nasil-doldurulur',
@@ -651,6 +717,44 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </P>
       </>
     ),
+    guncelleme: '2026-08-17',
+    sss: [
+      {
+        soru: 'KYK bursu ile öğrenim kredisi arasındaki fark nedir?',
+        cevap:
+          'Bursun geri ödemesi yok, kontenjanı sınırlı ve belirli önceliklere göre veriliyor. Öğrenim kredisi ise geri ödemeli; mezuniyetten sonra kanunda belirlenen bir sürenin ardından taksitle ödeniyor. \'KYK aldım\' diyen çoğu öğrenci aslında kredi alıyor.',
+      },
+      {
+        soru: 'Burs ve kredi için ayrı ayrı başvuru yapmam gerekir mi?',
+        cevap:
+          'Başvuru genelde tek form üzerinden yapılıyor ve bursa hak kazanamayan öğrenci kredi için değerlendirilebiliyor. Ancak yurt başvurusu ayrı bir süreç; onu ayrıca yapman gerekiyor.',
+      },
+      {
+        soru: 'KYK başvurusu ne zaman yapılır?',
+        cevap:
+          'Başvurular genellikle üniversite yerleştirme sonuçları açıklandıktan sonra, güz dönemi başlamadan alınıyor ve süre kısa oluyor. Kesin takvim her yıl değiştiği için sonucun açıklandığı hafta resmî duyuruları takip etmeye başla.',
+      },
+      {
+        soru: 'Barınma kredisi nedir, yurtta kalan öğrenci alabilir mi?',
+        cevap:
+          'Barınma desteği yurtta kalmayan öğrenciler için. Yurtta kalan öğrenci bundan yararlanamıyor.',
+      },
+      {
+        soru: 'KYK bursu veya kredisi hangi durumlarda kesilir?',
+        cevap:
+          'Kayıt dondurmak veya okuldan ilişik kesmek, öğrenim süresini aşmak, başka bir kamu kurumundan aynı nitelikte destek almak ve beyan edilen bilgilerin gerçeğe aykırı çıkması başlıca kesilme sebepleri.',
+      },
+      {
+        soru: 'Öğrenim kredisinin geri ödemesi ne zaman başlar?',
+        cevap:
+          'Mezuniyetin ardından belirli bir süre sonra başlıyor ve taksitlendiriliyor. Ödenecek tutar, alınan tutara kanunda tanımlı bir artış uygulanarak hesaplanıyor. Oran ve süre mevzuatla değiştiği için kendi durumunu e-Devlet üzerinden görmen gerekiyor.',
+      },
+      {
+        soru: 'Staj ücreti KYK bursunu etkiler mi?',
+        cevap:
+          'Staj ücreti bir maaş değil, mesleki eğitim kapsamında yapılan bir ödeme. Yine de bağlayıcı cevap için başvuru şartlarındaki gelir ve çalışma maddelerini oku ya da doğrudan kuruma sor.',
+      },
+    ],
   },
   {
     slug: 'staj-nasil-bulunur',
@@ -859,6 +963,16 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
     guncelleme: '2026-08-17',
     sss: [
       {
+        soru: 'Gönüllü staj ne kadar sürer?',
+        cevap:
+          'Süreyi sen ve işletme belirliyorsunuz; zorunlu stajdaki gibi okulun dayattığı bir iş günü sayısı yok. Başlamadan önce başlangıç ve bitiş tarihini, haftada kaç gün geleceğini ve işletmede sana bakacak sorumluyu netleştir.',
+      },
+      {
+        soru: 'Gönüllü stajda defter tutmam gerekir mi?',
+        cevap:
+          'Gerekmiyor; defter ve değerlendirme formu zorunlu stajın parçası. Yine de kendin için kısa bir kayıt tutmak işe yarıyor: aradan birkaç ay geçince ne yaptığını hatırlamıyorsun ve CV\'ye yazacak somut bir şey kalmıyor.',
+      },
+      {
         soru: 'Gönüllü stajda sigorta kimde?',
         cevap:
           'Zorunlu stajda okulun yaptığı sigorta gönüllü stajda otomatik devreye girmiyor. Kimin yapacağı duruma göre değişiyor; başlamadan önce hem okuluna hem işletmeye sor ve cevabı yazılı al.',
@@ -966,6 +1080,39 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </L>
       </>
     ),
+    guncelleme: '2026-08-17',
+    sss: [
+      {
+        soru: 'Staj işlemlerine ne zaman başlamalıyım?',
+        cevap:
+          'Staj başlangıcından en az üç hafta önce. İmza, kaşe ve sigorta girişi toplamda iki haftayı bulabiliyor; ara tatil ya da bayram denk gelirse daha da uzuyor.',
+      },
+      {
+        soru: 'Staj için okulda kime gidilir?',
+        cevap:
+          'Üç yer var: bölüm staj komisyonu ya da staj sorumlusu hocası stajın içeriğini ve yerin uygunluğunu onaylıyor, bölüm sekreterliği belgeyi hazırlıyor, kariyer merkezi (her okulda yok) firma bağlantılarını ve geçmiş staj listelerini tutuyor.',
+      },
+      {
+        soru: 'Okulun staj yönergesi nedir, nereden bulurum?',
+        cevap:
+          'Bölümün sayfasında PDF olarak duruyor. Kaç iş günü gerektiği, hangi dönemde yapılabileceği ve hangi işletmelerin kabul edildiği orada yazıyor. Herkesin atladığı ilk adım bu.',
+      },
+      {
+        soru: 'Sigorta girişi yapılmadan staja başlayabilir miyim?',
+        cevap:
+          'Başlamamalısın. Okul sigorta girişini birkaç iş gününde yapıyor ve giriş yapılmadan geçen gün çoğu okulda sayılmıyor; kaza durumunda koruma da olmuyor.',
+      },
+      {
+        soru: 'Okul staj yerimi uygun bulmazsa ne olur?',
+        cevap:
+          'Belge süreci durur. Ret genelde işletmenin faaliyet alanı bölümle örtüşmediği için geliyor. Belge sürecine girmeden önce staj sorumlusu hocaya sormak bu riski ortadan kaldırıyor.',
+      },
+      {
+        soru: 'Staj formuna yanlış tarih yazarsam ne olur?',
+        cevap:
+          'Düzeltmek çoğu zaman süreci baştan almak demek. Ayrıca başlangıç tarihini erken yazıp geç başlarsan günler eksik sayılabiliyor — gerçekçi tarih yaz.',
+      },
+    ],
   },
   {
     slug: 'stajdan-ise-gecis',
@@ -1046,6 +1193,39 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         />
       </>
     ),
+    guncelleme: '2026-08-17',
+    sss: [
+      {
+        soru: 'Staj işe dönüşür mü?',
+        cevap:
+          'Dönüşebiliyor ama tesadüfen değil. Çoğu zaman son iki haftada verilen birkaç kararın sonucu: tamamlanmış bir iş bırakmak, niyetini açıkça söylemek ve referans istemek. Staj bitip evine döndükten sonra yapabileceğin fazla bir şey kalmıyor.',
+      },
+      {
+        soru: 'Staj sonunda referans nasıl istenir?',
+        cevap:
+          'Staj biterken, hafıza tazeyken. Sorumlunun adını, unvanını ve iletişim bilgisini not al ve ileride referans olarak yazabilmek için önce ondan sözlü izin al.',
+      },
+      {
+        soru: 'İşe alınmak istediğimi söylemeli miyim?',
+        cevap:
+          'Söyle. \'Mezun olunca burada çalışmak isterim\' cümlesini kimse senin aklından okumuyor. Söylemek bir şey kaybettirmiyor, söylememek fırsat kaybettiriyor.',
+      },
+      {
+        soru: 'Staj bitmeden neleri halletmiş olmam gerekir?',
+        cevap:
+          'Staj defterinin tamamlanmış, imzalanmış ve kaşelenmiş olması; işletme değerlendirme formunun doldurulmuş olması; sorumlunun iletişim bilgisi; referans için sözlü izin; yaptığın işlerin kısa listesi ve defterin tamamının fotoğrafı.',
+      },
+      {
+        soru: 'Staj bittikten sonra bağlantıyı nasıl korurum?',
+        cevap:
+          'Son gün kısa bir teşekkür mesajı, ardından LinkedIn\'de sorumlunla ve birlikte çalıştığın kişilerle bağlantı. Altı ay sonra tek bir hatırlatma yeterli: \'Mezuniyetime bir dönem kaldı, hâlâ ilgileniyorum\' gibi.',
+      },
+      {
+        soru: 'Staj işe dönüşmezse ne kaybederim?',
+        cevap:
+          'Bir şey kaybetmiyorsun. Çoğu staj işe dönüşmüyor ve bu bir başarısızlık değil. Elinde CV\'de gerçek bir deneyim satırı, anlatabileceğin bir proje, bir referans ve sektörün nasıl işlediğine dair fikir kalıyor.',
+      },
+    ],
   },
 ];
 
