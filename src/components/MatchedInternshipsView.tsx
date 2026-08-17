@@ -413,20 +413,22 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   }, [matchedData, subTab]);
 
   return (
-    <div className="w-full space-y-4 sm:space-y-8 pb-12">
-      {/* Clean Hero Section */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 items-stretch">
-        {/*
-          Left Hero Search Column
-          Aday kartı yalnızca giriş yapmış öğrenciye çiziliyor. Sütun genişliği
-          sabit 7/12 kalırsa kart olmadığında sağda 5 sütunluk boşluk kalıyor ve
-          sayfa sola yaslanmış görünüyor.
-        */}
-        <div
-          className={`flex flex-col justify-between space-y-4 sm:space-y-6 ${
-            student ? 'lg:col-span-12' : 'lg:col-span-7'
-          }`}
-        >
+    <div className="w-full pb-12">
+      {/*
+        İKİ SÜTUNLU DÜZEN (yalnızca lg ve üstü)
+
+        Önce tek sütundu: başlık, arama, sayaçlar ve filtreler tam genişlik
+        kaplıyor, ilanlar ancak 900 piksel aşağıda başlıyordu. Geniş ekranda
+        açılışta görünen tek şey bir arama kutusuydu — oysa sitenin işi ilan
+        göstermek.
+
+        Artık solda arama ve filtreler (kaydırınca yapışık kalıyor), sağda
+        ilanlar sayfanın en üstünden başlıyor. Mobilde hiçbir şey değişmiyor:
+        sütunlar alt alta diziliyor ve sıra aynen korunuyor.
+      */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
+
+        <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-4">
           <header className="space-y-3">
             {/*
               Başlık öğrenciye ne kazandığını söylüyor, bize ne yaptığımızı
@@ -438,7 +440,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               topladığımız onun için ikinci sıradaki bilgi — o yüzden alt
               satıra, kanıt olarak indi.
             */}
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-gray-900">
+            <h1 className="text-2xl sm:text-4xl lg:text-3xl font-extrabold leading-tight tracking-tight text-gray-900">
               Şirketlerin staj ilanları, <span className="text-blue-600">tek listede</span>.
             </h1>
             <p className="text-sm sm:text-base text-gray-600 max-w-xl leading-relaxed">
@@ -453,7 +455,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               şey olmayan büyük mavi bir düğme, siteye olan güveni doğrudan
               zedeliyor.
             */}
-            <div className="mt-4 flex flex-col sm:flex-row gap-2">
+            <div className="mt-4 flex flex-col sm:flex-row lg:flex-col gap-2">
               <div className="relative flex-1 min-w-0">
                 <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
@@ -479,7 +481,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                 Şehir seçici. Menüde yalnızca gerçekten ilanı olan iller var;
                 seçilince boş sonuç veren bir seçenek göstermiyoruz.
               */}
-              <div className="relative sm:w-56 shrink-0">
+              <div className="relative sm:w-56 lg:w-full shrink-0">
                 <MapPin className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <select
                   value={selectedCity}
@@ -509,7 +511,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             doğrulanabilen üç şey var. Renk vurgusu da kalktı; üç farklı
             renkte kocaman rakam bir gösterge paneli gibi duruyordu.
           */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-2">
+          <div className="grid grid-cols-3 gap-2 pt-2">
             {[
               { etiket: 'Açık ilan', deger: String(filteredListings.length) },
               { etiket: 'Şirket', deger: String(companyCount) },
@@ -564,65 +566,6 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               </span>
             </button>
           )}
-        </div>
-
-        {/*
-          Right column.
-          Giriş yapmışsa aday kartı; yapmamışsa sitenin nasıl çalıştığını anlatan
-          bilgi paneli. Sütunu boş bırakmak sayfayı sola yaslanmış gösteriyordu.
-        */}
-        {!student && (
-          <aside className="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-8 shadow-xs border border-gray-200 space-y-5">
-            <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
-              İlanlar nereden geliyor
-            </span>
-
-            <p className="text-sm text-gray-600 leading-relaxed">
-              İlanları aracı sitelerden değil, <strong className="text-gray-900">şirketlerin
-              kendi kariyer sistemlerinden</strong> topluyoruz. Başvurunu doğrudan
-              şirketin sayfasında yapıyorsun; arada kimse yok.
-            </p>
-
-            <div className="space-y-3">
-              {/*
-                Yalnızca gerçekten okunabilen sayılar. "Takip edilen kaynak"
-                satırı vardı ama istemci `sources` tablosunu göremiyor (RLS
-                admin'e kapatıyor); sayıyı sabit yazmak uydurma olurdu.
-              */}
-              {[
-                { etiket: 'Açık ilan', deger: String(allListings.length) },
-                { etiket: 'İlan veren şirket', deger: String(companyCount) },
-              ].map((satir) => (
-                <div
-                  key={satir.etiket}
-                  className="flex items-center justify-between border-b border-gray-100 pb-2.5 last:border-0 last:pb-0"
-                >
-                  <span className="text-xs text-gray-500 font-semibold">
-                    {satir.etiket}
-                  </span>
-                  <span className="text-lg font-black text-gray-900 tabular-nums">
-                    {satir.deger}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/*
-              DİKKAT: burada "kapanan ilanlar listeden düşürülüyor" yazıyordu
-              ama otomatik pasifleştirme şalteri (ALLOW_DEACTIVATION) hâlâ
-              kapalı — ilk sağlıklı taramaların geçmişi birikmeden açılırsa
-              her ilanı "kaybolmuş" sayar. Şalter açılana kadar bunu olmuş bir
-              şey gibi yazmıyoruz.
-            */}
-            <p className="text-[11px] text-gray-400 leading-relaxed">
-              Her ilanın başvuru adresi, şirketin kendi sayfasıdır.
-            </p>
-          </aside>
-        )}
-
-      </section>
-
-      {/* Clean Filters & Controls Bar (Unified & Mobile-Optimized) */}
       <div className="bg-white rounded-2xl p-3 sm:p-5 border border-gray-200 shadow-xs space-y-3 sm:space-y-4">
         {/*
           Tek seçenek kaldıysa şerit çizilmiyor: içinde yalnızca "Tüm İlanlar"
@@ -702,7 +645,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         {listingCategories.length > 1 && <div className="border-t border-gray-100" />}
 
         {/* Row 2: ÇALIŞMA TÜRÜ + ONAY KUTULARI + SIRALAMA */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-0.5">
+        <div className="flex flex-col gap-3 pt-0.5">
           {/* Work type filter pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
             <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mr-1">
@@ -789,11 +732,63 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           </div>
         </div>
       </div>
+        {/*
+          Bu kutu yalnizca genis ekranda. Mobilde sol sutun ilanlarin ustune
+          diziliyor ve kutu ilanlari 380 piksel asagi itiyordu -- oysa
+          telefonda once ilan gorunmeli. Genis ekranda sol sutunda zaten bos
+          yer var, orada bir maliyeti yok.
+        */}
+        {!student && (
+          <aside className="hidden lg:block bg-white rounded-3xl p-6 shadow-xs border border-gray-200 space-y-5">
+            <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+              İlanlar nereden geliyor
+            </span>
 
-      {/* Main Listings Layout (Geniş Liste) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Listings & In-Feed Native Ads */}
-        <div className="lg:col-span-8 space-y-4">
+            <p className="text-sm text-gray-600 leading-relaxed">
+              İlanları aracı sitelerden değil, <strong className="text-gray-900">şirketlerin
+              kendi kariyer sistemlerinden</strong> topluyoruz. Başvurunu doğrudan
+              şirketin sayfasında yapıyorsun; arada kimse yok.
+            </p>
+
+            <div className="space-y-3">
+              {/*
+                Yalnızca gerçekten okunabilen sayılar. "Takip edilen kaynak"
+                satırı vardı ama istemci `sources` tablosunu göremiyor (RLS
+                admin'e kapatıyor); sayıyı sabit yazmak uydurma olurdu.
+              */}
+              {[
+                { etiket: 'Açık ilan', deger: String(allListings.length) },
+                { etiket: 'İlan veren şirket', deger: String(companyCount) },
+              ].map((satir) => (
+                <div
+                  key={satir.etiket}
+                  className="flex items-center justify-between border-b border-gray-100 pb-2.5 last:border-0 last:pb-0"
+                >
+                  <span className="text-xs text-gray-500 font-semibold">
+                    {satir.etiket}
+                  </span>
+                  <span className="text-lg font-black text-gray-900 tabular-nums">
+                    {satir.deger}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/*
+              DİKKAT: burada "kapanan ilanlar listeden düşürülüyor" yazıyordu
+              ama otomatik pasifleştirme şalteri (ALLOW_DEACTIVATION) hâlâ
+              kapalı — ilk sağlıklı taramaların geçmişi birikmeden açılırsa
+              her ilanı "kaybolmuş" sayar. Şalter açılana kadar bunu olmuş bir
+              şey gibi yazmıyoruz.
+            */}
+            <p className="text-[11px] text-gray-400 leading-relaxed">
+              Her ilanın başvuru adresi, şirketin kendi sayfasıdır.
+            </p>
+          </aside>
+        )}
+        </div>
+
+        <div className="lg:col-span-8 space-y-4 min-w-0">
           <div className="flex items-center justify-between px-1">
             {/*
               Profili olmayan ziyaretçiye "sana uygun" ve "eşleşme puanına göre
@@ -856,33 +851,6 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               ))}
             </div>
           )}
-        </div>
-
-        {/* Right Column: Sticky Sidebar with Google Ad & Career Highlights */}
-        <div className="lg:col-span-4 space-y-4 sticky top-6">
-          {/* Main Sidebar Responsive Google Ad */}
-          <GoogleAdBanner format="sidebar-rectangle" />
-
-          {/* Erasmus & Global Staj Opportunity Card */}
-          <GoogleAdBanner format="sidebar-rectangle" />
-
-          {/*
-            Burada "Yetenek Rozetleri ile %80 Daha Hızlı Kabul" yazıyordu ve
-            altında şirketlerin rozetli adayları mülakat listesinde öne aldığı
-            iddia ediliyordu. İkisi de doğru değil: böyle bir ölçüm yok ve
-            platformda şirketlerin sıralama yaptığı bir mekanizma yok.
-            Yerine, gerçekten yaptığımız işi anlatan bir kutu kondu.
-          */}
-          <div className="bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 rounded-2xl p-4 border border-indigo-100 text-xs space-y-2">
-            <div className="flex items-center gap-1.5 text-indigo-900 font-bold">
-              <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
-              <span>İlanlar doğrudan kaynağından</span>
-            </div>
-            <p className="text-gray-600 text-[11px] leading-relaxed">
-              Her ilan, şirketin kendi kariyer sisteminden alınır. Başvuru
-              adresi de ilanın kendi sayfasıdır; araya kimse girmez.
-            </p>
-          </div>
         </div>
       </div>
     </div>
