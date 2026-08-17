@@ -32,6 +32,7 @@ import { ApplyDialog } from './components/ApplyDialog';
 import { ListingPage } from './components/ListingPage';
 import { CompanyPage } from './components/CompanyPage';
 import { EmployerGuide } from './components/EmployerGuide';
+import { CvPage } from './components/CvPage';
 import { AdminClaimsView } from './components/AdminClaimsView';
 import { AdminListingsQueue } from './components/AdminListingsQueue';
 import { listingSlug, idPrefixFromSlug } from './lib/slug';
@@ -492,6 +493,33 @@ export default function App() {
     }
   }
 
+  /*
+    Yazdırılabilir CV. Oturum gerekiyor: sayfa kişinin kendi profilinden
+    üretiliyor, başkasının CV'si buradan görüntülenemiyor.
+  */
+  if (temizYol === '/cv') {
+    if (!student) {
+      return (
+        <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center p-6">
+          <div className="max-w-md bg-white rounded-2xl border border-gray-200 p-8 text-center space-y-3">
+            <p className="font-bold text-gray-900">CV oluşturmak için giriş yapın</p>
+            <p className="text-sm text-gray-600">
+              CV, profilindeki bilgilerden oluşturuluyor.
+            </p>
+            <button
+              type="button"
+              onClick={goHome}
+              className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
+            >
+              Ana sayfaya dön
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return <CvPage student={student} onBack={() => navigate('/')} />;
+  }
+
   /* İşveren rehberi: şirketin bizi bulmasının ana yolu. */
   if (temizYol === '/isveren' || temizYol === '/stajyer-nasil-alinir') {
     return <EmployerGuide onBack={goHome} onNavigate={navigate} />;
@@ -692,6 +720,7 @@ export default function App() {
                 subTab={activeSubTab}
                 onSubTabChange={setActiveSubTab}
                 onUpdateProfile={handleUpdateProfile}
+                onOpenCv={() => navigate('/cv')}
                 onOpenQuiz={(skillName) => {
                   const matchedQ =
                     quizzes.find(

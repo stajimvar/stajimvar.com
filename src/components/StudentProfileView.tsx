@@ -54,6 +54,8 @@ interface StudentProfileViewProps {
   onSubTabChange?: (subTab: string) => void;
   onUpdateProfile: (updated: Partial<StudentProfile>) => void;
   onOpenQuiz: (skillName: string) => void;
+  /** Yazdırılabilir CV sayfasına geçiş. */
+  onOpenCv?: () => void;
 }
 
 type BolumId = 'kisisel' | 'teknik' | 'sosyal' | 'dil' | 'proje' | 'tercih' | 'rozet';
@@ -189,6 +191,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   student,
   onUpdateProfile,
   onOpenQuiz,
+  onOpenCv,
 }) => {
   const [acikBolum, setAcikBolum] = useState<BolumId | null>(null);
 
@@ -505,6 +508,24 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               style={{ width: `${oran}%` }}
             />
           </div>
+
+          {/*
+            CV çıktısı: profil doldurmanın somut karşılığı. Başvuruların
+            şirkete iletilmesi henüz çözülmedi; o çözülene kadar da
+            öğrencinin elinde kullanabileceği bir şey olsun.
+          */}
+          {onOpenCv && (
+            <button
+              type="button"
+              onClick={onOpenCv}
+              className="w-full flex items-center justify-between gap-2 p-3 rounded-xl border border-gray-200 bg-white text-left cursor-pointer hover:border-blue-500 transition-colors"
+            >
+              <span className="text-sm font-semibold text-gray-800">
+                CV'ni indir
+              </span>
+              <span className="text-xs font-bold text-blue-600 shrink-0">PDF →</span>
+            </button>
+          )}
 
           {siradaki ? (
             <button
