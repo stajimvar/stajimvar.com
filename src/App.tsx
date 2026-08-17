@@ -32,6 +32,7 @@ import { ApplyDialog } from './components/ApplyDialog';
 import { ListingPage } from './components/ListingPage';
 import { CompanyPage } from './components/CompanyPage';
 import { EmployerGuide } from './components/EmployerGuide';
+import { GuideHub, GuidePage } from './components/GuidePages';
 import { CvPage } from './components/CvPage';
 import { AdminClaimsView } from './components/AdminClaimsView';
 import { AdminListingsQueue } from './components/AdminListingsQueue';
@@ -535,6 +536,20 @@ export default function App() {
     return <CvPage student={student} onBack={() => navigate('/')} />;
   }
 
+  /* Rehber merkezi ve tek rehber sayfaları. */
+  if (temizYol === '/rehber') {
+    return <GuideHub onBack={goHome} onNavigate={navigate} />;
+  }
+  if (temizYol.startsWith('/rehber/')) {
+    return (
+      <GuidePage
+        slug={temizYol.slice('/rehber/'.length)}
+        onBack={() => navigate('/rehber')}
+        onNavigate={navigate}
+      />
+    );
+  }
+
   /* İşveren rehberi: şirketin bizi bulmasının ana yolu. */
   if (temizYol === '/isveren' || temizYol === '/stajyer-nasil-alinir') {
     return <EmployerGuide onBack={goHome} onNavigate={navigate} />;
@@ -622,6 +637,7 @@ export default function App() {
         allCompanies={allCompanies}
         onSelectCompany={handleSelectCompany}
         applicationsCount={applications.length}
+        onOpenGuides={() => navigate('/rehber')}
         isAdmin={isAdmin}
         onOpenAdmin={() => navigate('/yonetim')}
         isLoggedIn={isLoggedIn}
@@ -838,6 +854,7 @@ export default function App() {
           <nav className="flex flex-col sm:flex-row sm:justify-center gap-3 sm:gap-8">
             <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
               {[
+                { yol: '/rehber', etiket: 'Staj rehberi' },
                 { yol: '/isveren', etiket: 'İşveren rehberi' },
                 { yol: '/hakkimizda', etiket: 'Hakkımızda' },
                 { yol: '/iletisim', etiket: 'İletişim' },

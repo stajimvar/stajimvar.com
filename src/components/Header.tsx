@@ -14,6 +14,7 @@ import {
   Send,
   UserCheck,
   Settings,
+  BookOpen,
   LogOut,
   ArrowRight,
   ShieldCheck,
@@ -46,6 +47,8 @@ interface HeaderProps {
   onOpenLogin?: () => void;
   onOpenRegister?: () => void;
   onLogout?: () => void;
+  /** Rehber merkezine geçiş. */
+  onOpenGuides?: () => void;
   /*
     Yönetici menüsü. Bu bayrak yalnızca MENÜYÜ gösteriyor — yetkinin kendisi
     veritabanında. Tarayıcıda değerini değiştiren biri menüyü görebilir ama
@@ -72,6 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenLogin,
   onOpenRegister,
   onLogout,
+  onOpenGuides,
   isAdmin = false,
   onOpenAdmin,
 }) => {
@@ -240,6 +244,22 @@ export const Header: React.FC<HeaderProps> = ({
                   Testler artık Özgeçmiş & Profil sayfasının içinde, eklenen
                   yeteneklerin hemen altında.
                 */}
+
+                {/*
+                  Rehber sekmesi. Boşalan yere içerik geldi: staj sürecinin
+                  bilinmeyen kısımları (belge, sigorta, CV, mülakat). Aynı
+                  zamanda sitenin keşif kanalı — davet e-postası
+                  gönderemediğimiz için hem öğrenci hem işveren bize arama
+                  motorundan, bu sayfalar üzerinden geliyor.
+                */}
+                <button
+                  id="nav-tab-guides"
+                  onClick={() => onOpenGuides?.()}
+                  className="flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 text-gray-600 hover:text-gray-900 hover:bg-white/60"
+                >
+                  <BookOpen className="w-3.5 h-3.5 shrink-0 text-gray-400" />
+                  <span>Rehber</span>
+                </button>
 
                 {/* 2. Başvurularım */}
                 <button

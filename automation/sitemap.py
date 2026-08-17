@@ -31,6 +31,13 @@ SITE = "https://stajimvar.com"
 DURAGAN = [
     ("/", "daily", "1.0"),
     ("/isveren", "weekly", "0.9"),
+    ("/rehber", "weekly", "0.9"),
+    # Rehber sayfalari src/data/rehberler.tsx icinde tanimli. Yeni bir rehber
+    # eklendiginde bu listeye de bir satir eklenmeli; kayit TypeScript
+    # tarafinda oldugu icin Python buradan okuyamiyor.
+    ("/rehber/zorunlu-staj-rehberi", "monthly", "0.8"),
+    ("/rehber/staj-cv-nasil-yazilir", "monthly", "0.8"),
+    ("/rehber/staj-mulakati", "monthly", "0.8"),
     ("/hakkimizda", "monthly", "0.5"),
     ("/iletisim", "monthly", "0.5"),
     ("/ilan-kurallari", "monthly", "0.4"),
