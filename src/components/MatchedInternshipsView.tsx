@@ -728,25 +728,16 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           </h1>
 
           {/*
-            Sayaçlar — MOBİL kopya.
+            Mobildeki "13 açık ilan · 10 şirket · 4 şehir" satırı kaldırıldı.
 
-            Asıl kopya sağ sütunda bir kart; o sütun `hidden lg:block` olduğu
-            için telefonda hiç çizilmiyor.
+            Şirket şeridi eklenince aynı bilgiyi zaten söylüyor: ilk daire
+            "Tümü — 13 ilan" yazıyor ve şirket sayısı daire sayısı kadar.
+            Telefonda dikey yer ilanın hakkı; aynı sayıyı iki kez göstermek
+            için harcanmamalı.
 
-            Mobilde kart değil TEK SATIR: üç rakam iri puntoyla alt alta
-            etiketleriyle dururken 45 piksel yer kaplıyordu ve ilanları aşağı
-            itiyordu. Aynı bilgi tek satırda 20 pikselde veriliyor — telefonda
-            yer, ilanın hakkı.
+            Geniş ekrandaki sayaç kartı duruyor: sağ sütunda kendi yeri var
+            ve şeridin göstermediği "şehir" sayısını da veriyor.
           */}
-          {/* Mobilde ortalı: başlıkla aynı eksende dursun. Geniş ekranda bu
-              kopya zaten gizli. */}
-          <p className="lg:hidden text-center text-xs text-gray-500 tabular-nums">
-            <strong className="text-gray-900">{filteredListings.length}</strong> açık ilan
-            {' · '}
-            <strong className="text-gray-900">{companyCount}</strong> şirket
-            {' · '}
-            <strong className="text-gray-900">{cityCount}</strong> şehir
-          </p>
 
           <div className="space-y-3">
 
