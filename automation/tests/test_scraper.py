@@ -16,6 +16,45 @@ class ScraperFixtureTests(unittest.TestCase):
         self.assertFalse(scraper.is_turkey_location("Berlin, Germany"))
         self.assertEqual(scraper.canonical("https://Example.com/jobs/?utm=x"), "https://example.com/jobs")
         with self.assertRaises(ValueError): scraper.canonical("javascript:alert(1)")
+    def test_turkey_location_covers_all_provinces(self):
+        """Konum filtresi 81 ili taniyor, yabanci yer adlarini reddediyor.
+
+        NEDEN BU TEST VAR
+        -----------------
+        Filtre uzun sure yalnizca alti sehir taniyordu (istanbul, ankara,
+        izmir, bursa, kocaeli + "turkey"). Konumu sadece "Antalya" yazan
+        ilan eleniyordu ve bu sessizce oluyordu — kimse fark etmiyordu.
+
+        Iki yon de sinaniyor: kacirmamak kadar YANLIS ALMAMAK da onemli.
+        Yurt disi bir ilani Turkiye ilani diye gostermek, bir ilani
+        kacirmaktan daha cok zarar veriyor.
+        """
+        for konum in [
+            "Antalya", "Gaziantep", "Konya", "Samsun", "Trabzon", "Denizli",
+            # Noktasiz i: normalized() bu harfi AYRISTIRMIYOR, ilanlar ise
+            # cogunlukla ASCII yaziyor. Iki yazim da gecmeli.
+            "Diyarbakır", "Diyarbakir", "Balıkesir", "Balikesir",
+            "Şanlıurfa", "Sanliurfa", "Aydın", "Aydin", "Elazığ", "Tekirdağ",
+            # Il adi hic gecmeden semt yazan ilanlar
+            "Şişli", "Gebze", "Maslak",
+            # Eskiden de calisan bicimler bozulmasin
+            "İstanbul, Türkiye", "Izmir, Turkey", "Remote (Turkey)",
+        ]:
+            with self.subTest(konum=konum):
+                self.assertTrue(scraper.is_turkey_location(konum))
+
+        for konum in [
+            "Berlin, Germany", "London, UK", "Amsterdam, Netherlands",
+            "New York, USA", "Paris, France", "Bologna, Italy",
+            # Van, Batman ve Mus bilerek listede yok: tek baslarina yabanci
+            # metinlerde de geciyorlar.
+            "Van Nuys, California", "Vancouver, Canada", "Muscat, Oman",
+            # Ulke belirtmeyen uzaktan ilan Turkiye ilani sayilmiyor.
+            "Remote", "Remote (Germany)",
+        ]:
+            with self.subTest(konum=konum):
+                self.assertFalse(scraper.is_turkey_location(konum))
+
     def test_stable_key(self):
         job=scraper.Job("S","https://example.com/a?x=1","Intern")
         self.assertEqual(scraper.key(job), scraper.key(job))

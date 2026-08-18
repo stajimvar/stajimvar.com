@@ -41,7 +41,47 @@ def email(text: str) -> str | None:
     found = re.search(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", text, re.I); return found.group(0).lower() if found else None
 
 EARLY_CAREER = re.compile(r"\b(staj(?:yer)?|intern(?:ship)?|summer\s+intern|winter\s+intern|trainee|co-op)\b", re.I)
-TURKEY_LOCATION = re.compile(r"(?:turkey|turkiye|istanbul|ankara|izmir|bursa|kocaeli|remote\s*\(\s*turkey\s*\))", re.I)
+# TURKIYE KONUM FILTRESI
+#
+# Once yalnizca alti sehir taniniyordu: istanbul, ankara, izmir, bursa,
+# kocaeli ve "turkey/turkiye". Konumu SADECE "Antalya" veya "Gaziantep"
+# yazan bir ilan eleniyordu. Kendi arama kaynagimiz yirmi sehri ayri ayri
+# sorgularken filtrenin altisini tanimasi tutarsizdi.
+#
+# NOKTASIZ I TUZAGI
+# normalized() NFKD uygulayip birlesen isaretleri atiyor: s<-s, g<-g,
+# u<-u, o<-o, c<-c ve I<-i doniyor. Ama noktasiz "i" (U+0131) AYRISMIYOR,
+# oldugu gibi kaliyor. Yani "Diyarbakir" normalize edilince icinde noktasiz
+# i tasiyor, oysa ilanlarin cogu ASCII yaziyor. Bu yuzden o harflerin
+# gectigi yerlerde [ii] siniflari var — iki yazim da esleser.
+#
+# VAN, BATMAN VE MUS BILEREK YOK
+# Tek baslarina yabanci metinlerde de geciyorlar ("Van Nuys", "van der",
+# Batman markasi). Yanlis eslesme, bir ilani kacirmaktan kotu: yurt disi
+# bir ilani Turkiye ilani diye gostermek guveni bozar. O illerdeki ilanlar
+# zaten "Van, Turkey" yazarsa "turkey" uzerinden geciyor.
+_ILLER = (
+    "adana|ad[ii]yaman|afyon(?:karahisar)?|agr[ii]|aksaray|amasya|ankara|antalya|ardahan|"
+    "artvin|ayd[ii]n|bal[ii]kesir|bart[ii]n|bayburt|bilecik|bingol|bitlis|bolu|burdur|bursa|"
+    "canakkale|cank[ii]r[ii]|corum|denizli|diyarbak[ii]r|duzce|edirne|elaz[ii]g|erzincan|"
+    "erzurum|eskisehir|gaziantep|giresun|gumushane|hakkari|hatay|[ii]gd[ii]r|isparta|istanbul|"
+    "izmir|kahramanmaras|karabuk|karaman|kars|kastamonu|kayseri|kilis|k[ii]r[ii]kkale|"
+    "k[ii]rklareli|k[ii]rsehir|kocaeli|konya|kutahya|malatya|manisa|mardin|mersin|mugla|"
+    "nevsehir|nigde|ordu|osmaniye|rize|sakarya|samsun|sanl[ii]urfa|siirt|sinop|s[ii]rnak|"
+    "sivas|tekirdag|tokat|trabzon|tunceli|usak|yalova|yozgat|zonguldak"
+)
+
+# Ilan metinlerinde il yerine dogrudan gecen, baska hicbir seye benzemeyen
+# is merkezleri. "Sisli" veya "Gebze" yazan ilan il adi hic gecmeden geliyor.
+_SEMTLER = (
+    "maslak|levent|sisli|kad[ii]koy|atasehir|umraniye|besiktas|sar[ii]yer|"
+    "gebze|cay[ii]rova|tuzla|kozyatag[ii]|altunizade|bomonti"
+)
+
+TURKEY_LOCATION = re.compile(
+    rf"(?:turkey|turkiye|remote\s*\(\s*turkey\s*\)|\b(?:{_ILLER}|{_SEMTLER})\b)",
+    re.I,
+)
 def normalized(text: str) -> str:
     return "".join(char for char in unicodedata.normalize("NFKD", text).casefold() if not unicodedata.combining(char))
 def is_turkey_location(location: str | None) -> bool: return bool(TURKEY_LOCATION.search(normalized(location or "")))
