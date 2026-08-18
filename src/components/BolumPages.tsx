@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { SayfaKabugu } from './SayfaKabugu';
 import { BolumIcerik } from './BolumIcerik';
+import { BolumRozeti } from './BolumGorseli';
 import {
   BOLUMLER,
   BOLUM_GRUPLARI,
@@ -68,13 +69,22 @@ const Kart: React.FC<{ bolum: Bolum; onNavigate?: (p: string) => void }> = ({
       e.preventDefault();
       onNavigate(`/bolum/${bolum.slug}`);
     }}
-    className="group flex flex-col gap-1.5 p-5 rounded-2xl bg-white border border-gray-200 text-left cursor-pointer transition-all hover:border-blue-300 hover:shadow-sm h-full"
+    className="group flex items-start gap-4 p-4 sm:p-5 rounded-2xl bg-white border border-gray-200 text-left cursor-pointer transition-all hover:border-blue-300 hover:shadow-sm h-full"
   >
-    <span className="block font-bold text-gray-900 leading-snug">{bolum.ad}</span>
-    <span className="block text-sm text-gray-500 leading-relaxed">{bolum.ozet}</span>
-    <span className="mt-auto pt-3 flex items-center gap-1.5 text-xs font-bold text-blue-600">
-      İncele
-      <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+    {/*
+      Renkli ikon karesi. Otuz dört kart yan yana dizilince başlıklar
+      birbirine karışıyordu; renk ve şekil, kişinin kendi bölümünü okumadan
+      tanımasını sağlıyor. Ayrıntısı BolumGorseli.tsx içinde.
+    */}
+    <BolumRozeti bolum={bolum} className="transition-transform group-hover:scale-105" />
+
+    <span className="flex flex-col gap-1.5 min-w-0 flex-1 h-full">
+      <span className="block font-bold text-gray-900 leading-snug">{bolum.ad}</span>
+      <span className="block text-sm text-gray-500 leading-relaxed">{bolum.ozet}</span>
+      <span className="mt-auto pt-3 flex items-center gap-1.5 text-xs font-bold text-blue-600">
+        İncele
+        <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+      </span>
     </span>
   </a>
 );

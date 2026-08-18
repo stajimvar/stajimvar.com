@@ -1,5 +1,6 @@
 import React from 'react';
-import { BOLUMLER, OKUL_YERLESTIRIR, type Bolum } from '../data/bolumler';
+import { BOLUMLER, BOLUM_GRUPLARI, OKUL_YERLESTIRIR, type Bolum } from '../data/bolumler';
+import { BolumKapagi } from './BolumGorseli';
 
 /**
  * Bölüm sayfasının İÇERİĞİ — kabuğu değil.
@@ -15,9 +16,15 @@ import { BOLUMLER, OKUL_YERLESTIRIR, type Bolum } from '../data/bolumler';
  * zamanla birbirinden ayrılırdı ve fark, Google'ın gizleme (cloaking)
  * dediği şeye dönerdi. Aynı bileşeni çalıştırınca ikisi tanım gereği aynı.
  *
- * Bu yüzden burada hiçbir şey etkileşimli değil: durum yok, olay yok, ikon
- * yok. Düğme gibi görünen tek şey gerçek bir `<a href>` — tarayıcı bağlantı
+ * Bu yüzden burada hiçbir şey etkileşimli değil: durum yok, olay yok.
+ * Düğme gibi görünen tek şey gerçek bir `<a href>` — tarayıcı bağlantı
  * olarak sayıyor, BolumPage tıklamayı yakalayıp uygulama içinde açıyor.
+ *
+ * İkon KULLANILIYOR ama yalnızca çizim olarak: lucide ikonları durumu
+ * olmayan saf SVG bileşenleri, sunucu çizicisinde de aynı işaretlemeyi
+ * üretiyorlar. Sayfa kapağı önce BolumPage içindeydi — ölçüldü, statik
+ * HTML'de hiç görünmüyordu. Tarayıcıda olup ön render'da olmayan içerik
+ * tam da kaçındığımız ayrım, o yüzden buraya taşındı.
  *
  * Kabuk (başlık çubuğu, geri düğmesi, yan sütun) BolumPage'de kalıyor.
  */
@@ -40,6 +47,9 @@ export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
 
   return (
     <div className="space-y-4">
+      {/* Grup rengi + bölüm ikonu; ayrıntısı BolumGorseli.tsx içinde. */}
+      <BolumKapagi bolum={bolum} grupAdi={BOLUM_GRUPLARI[bolum.grup]} />
+
       {/*
         Açılış paragrafı özetin yerine değil, önüne geçiyor: özet liste
         satırında da kullanılıyor ve tek cümle. Girişi olmayan bölümlerde

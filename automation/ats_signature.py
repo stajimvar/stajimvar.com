@@ -136,7 +136,11 @@ def imza_ara(metin: str) -> dict[str, str]:
     for ad, kalip in IMZALAR:
         m = kalip.search(metin)
         if m:
-            bulunan[ad] = (m.group(1) if m.groups() else "").lower() or "?"
+            # Kalip birden fazla secenekli: SuccessFactors'ta "sapsf.com"
+            # seceneği eslesince grup HIC katilmiyor ve group(1) None donuyor.
+            # `or ""` olmadan burada AttributeError aliniyordu.
+            kimlik = (m.group(1) or "") if m.groups() else ""
+            bulunan[ad] = kimlik.lower() or "?"
     return bulunan
 
 
@@ -186,7 +190,14 @@ def main() -> None:
         durum = ", ".join(f"{k}:{v}" for k, v in r["ats"].items()) or "-"
         print(f"[{i}/{len(sirketler)}] {s['ad']:32s} {durum}", flush=True)
 
-    (Path(__file__).parent / args.out).write_text(
+    # --out cikti yolu: yalin dosya adi betigin yanina yaziliyor, icinde
+    # dizin gecen bir yol ise oldugu gibi kullaniliyor. Once kosulsuz
+    # birlestiriliyordu ve "automation/x.json" verilince yol
+    # "automation/automation/x.json" olup FileNotFoundError aliniyordu.
+    hedef = Path(args.out)
+    if not hedef.is_absolute() and hedef.parent == Path("."):
+        hedef = Path(__file__).parent / hedef
+    hedef.write_text(
         json.dumps(bulgular, ensure_ascii=False, indent=1), encoding="utf-8"
     )
     print("\n=== SAGLAYICI DAGILIMI ===")
