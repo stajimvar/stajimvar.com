@@ -1,0 +1,80 @@
+name: Yayına al
+
+# NEDEN AYRI BİR İŞ AKIŞI
+# -----------------------
+# Dağıtım adımı `stajimvar-automation.yml` içindeki tarama işinin sonunda
+# duruyor ve o iş yalnızca saatte bir (cron "17 * * * *") ya da elle
+# çalışıyor. Yani `main`'e push etmek siteyi GÜNCELLEMİYORDU: kod gidiyor,
+# site bir sonraki saat başını bekliyordu.
+#
+# Ölçüldü (18 Ağustos): art arda yapılan beş dağıtımın hiçbiri canlıya
+# çıkmamıştı. Canlı /bolumler eski sürümü sunuyor, yeni açılan iki adres
+# SPA yedeğine düşüyordu. Acil bir düzeltmede en kötü ihtimalle 59 dakika
+# bekleniyor demekti.
+#
+# O iş akışına `on: push` eklemek yanlış olurdu: her commit'te ilan
+# kaynaklarının tamamı yeniden taranırdı. Burada yalnızca derleyip
+# yüklüyoruz — veritabanına hiçbir şey yazılmıyor.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      # Yalnızca otomasyon veya belge değiştiyse siteyi yeniden kurmaya
+      # gerek yok; site çıktısı bunlardan etkilenmiyor.
+      - 'automation/**'
+      - 'supabase/**'
+      - '**.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Saatlik tarama işi de dağıtım yapıyor. İkisi aynı anda yüklerse hangisinin
+# kazandığı belirsiz kalır; aynı gruba alıp sıraya sokuyoruz.
+concurrency:
+  group: stajimvar-deploy
+  cancel-in-progress: false
+
+jobs:
+  yayin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Wrangler 4 en az Node 22 istiyor; 20 ile "requires at least
+      # Node.js v22" diyip çıkıyor. Diğer iş akışında ölçülmüştü.
+      - name: Node kur
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Bağımlılıklar
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
+        run: npm ci
+
+      # Tip hatası olan bir sürümü yayına almanın anlamı yok; derlemeden
+      # önce burada duruyoruz.
+      - name: Tip kontrolü
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
+        run: npx tsc --noEmit
+
+      # Derleme ön render betiğini de çalıştırıyor; o betik ilanları
+      # Supabase'ten okuduğu için VITE_* değişkenleri gerekiyor.
+      - name: Derle
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ env.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Cloudflare Pages'e yükle
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
+        run: npx wrangler pages deploy dist --project-name stajimvar --commit-dirty=true
