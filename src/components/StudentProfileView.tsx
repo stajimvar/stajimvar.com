@@ -201,7 +201,7 @@ const Bolum: React.FC<BolumProps> = ({
       */}
       <span
         aria-hidden
-        className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-white shadow-sm ${renk}`}
+        className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-white shadow-sm ${renk}`}
       >
         {ikon}
       </span>

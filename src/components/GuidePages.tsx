@@ -104,7 +104,7 @@ const Kisayol: React.FC<{
     onClick={onClick}
     className="group flex flex-col gap-3 p-5 rounded-2xl bg-white border border-gray-200 text-left cursor-pointer transition-all hover:border-blue-300 hover:shadow-sm"
   >
-    <span className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center ${renk}`}>
+    <span className={`w-12 h-12 shrink-0 rounded-full flex items-center justify-center ${renk}`}>
       {ikon}
     </span>
     <span className="min-w-0 space-y-1">

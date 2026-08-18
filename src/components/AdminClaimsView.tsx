@@ -122,7 +122,7 @@ export const AdminClaimsView: React.FC<AdminClaimsViewProps> = ({ onToast }) => 
         return (
           <div key={t.id} className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3">
             <div className="flex items-start gap-3">
-              <span className="w-10 h-10 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center">
+              <span className="w-10 h-10 shrink-0 rounded-full bg-gray-100 flex items-center justify-center">
                 <Building2 className="w-5 h-5 text-gray-500" />
               </span>
               <div className="min-w-0 flex-1">

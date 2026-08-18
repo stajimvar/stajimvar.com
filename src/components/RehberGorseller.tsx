@@ -391,7 +391,7 @@ export const KazancKartlari: React.FC<{
         key={k.baslik}
         className="rounded-2xl border border-gray-200 bg-white p-4 space-y-2"
       >
-        <span className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+        <span className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
           {k.ikon}
         </span>
         <p className="font-bold text-gray-900">{k.baslik}</p>
@@ -477,7 +477,7 @@ export const YolculukHaritasi: React.FC<{
             className="flex gap-4 text-left w-full cursor-pointer group"
           >
             <span
-              className={`relative z-10 w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-105 group-active:scale-95 ${d.renk}`}
+              className={`relative z-10 w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm transition-transform group-hover:scale-105 group-active:scale-95 ${d.renk}`}
             >
               {d.ikon}
             </span>
@@ -504,7 +504,7 @@ export const YolculukHaritasi: React.FC<{
               className="w-full flex flex-col items-center text-center gap-2 cursor-pointer group px-1"
             >
               <span
-                className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-110 group-hover:-rotate-3 ${d.renk}`}
+                className={`w-16 h-16 rounded-full flex items-center justify-center shadow-sm transition-transform group-hover:scale-110 group-hover:-rotate-3 ${d.renk}`}
               >
                 {d.ikon}
               </span>
@@ -555,7 +555,7 @@ export const RenkliKart: React.FC<{
       className="absolute -right-8 -top-8 w-28 h-28 rounded-full bg-white/40 transition-transform group-hover:scale-110"
     />
     <span
-      className={`relative w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${ikonZemin}`}
+      className={`relative w-12 h-12 rounded-full flex items-center justify-center shadow-sm ${ikonZemin}`}
     >
       {ikon}
     </span>

@@ -115,7 +115,7 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                 <CompanyLogo
                   name={veri.company.name}
                   logoUrl={veri.company.logoUrl}
-                  className="w-16 h-16 rounded-2xl shrink-0 p-2 text-xl"
+                  className="w-16 h-16 rounded-full shrink-0 p-2 text-xl border border-gray-100"
                 />
                 <div className="min-w-0 space-y-1.5">
                   <div className="flex items-center gap-2 flex-wrap">

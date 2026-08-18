@@ -761,7 +761,7 @@ export const Header: React.FC<HeaderProps> = ({
                           <img
                             src={activeCompany.logo}
                             alt={activeCompany.name}
-                            className="w-12 h-12 rounded-xl object-cover shrink-0 ring-1 ring-gray-200 bg-white shadow-2xs"
+                            className="w-12 h-12 rounded-full object-cover shrink-0 ring-1 ring-gray-200 bg-white shadow-2xs"
                           />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5">

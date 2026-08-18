@@ -509,7 +509,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
             <img
               src={activeCompany.logo}
               alt={activeCompany.name}
-              className="w-14 h-14 rounded-2xl object-cover ring-2 ring-blue-100 bg-white shrink-0 shadow-2xs"
+              className="w-14 h-14 rounded-full object-cover ring-2 ring-blue-100 bg-white shrink-0 shadow-2xs"
             />
             <div>
               <div className="flex items-center gap-2">
@@ -1145,7 +1145,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                                 : student.avatarUrl
                             }
                             alt="Aday"
-                            className="w-12 h-12 rounded-2xl object-cover ring-2 ring-gray-100 shrink-0"
+                            className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100 shrink-0"
                           />
                           <div>
                             <div className="flex items-center gap-2">
@@ -1449,7 +1449,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                       : viewingStudent.avatarUrl
                   }
                   alt={viewingStudent.fullName}
-                  className="w-16 h-16 rounded-2xl object-cover ring-2 ring-gray-100 shrink-0"
+                  className="w-16 h-16 rounded-full object-cover ring-2 ring-gray-100 shrink-0"
                 />
                 <div>
                   <h3 className="text-xl font-black text-gray-900">
