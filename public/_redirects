@@ -1,24 +1,21 @@
-# VARLIKLAR ÖNCE: eksik dosya SPA yedeğine DÜŞMESİN.
-#
-# Aşağıdaki genel kural bir zamanlar tek başınaydı ve şu hatayı üretiyordu:
-# dağıtımda varlık adları değişiyor (index-ABC.css -> index-XYZ.css) ve eski
-# HTML'i elinde tutan bir tarayıcı silinmiş dosyayı istiyor. Genel kural o
-# isteği de yakalayıp index.html döndürüyordu — hem de 200 ile.
-#
-# Ölçüldü: /assets/index-Cue0zjry.css (artık yok) "200 text/html" dönüyordu.
-# Tarayıcı stil dosyası bekleyip HTML alınca, nosniff yüzünden uygulamıyor:
-# sayfa tamamen STİLSİZ açılıyor ve hiçbir hata görünmüyor.
-#
-# HEDEF NEDEN .txt
-# ----------------
-# Önce hedef `404.html` yapılmıştı. Cloudflare Pages çıktıda `404.html`
-# görünce onu BÜTÜN bulunamayan yollar için kullanıyor ve alttaki SPA
-# yedeğini eziyor — ölçüldü: /cv ve /sirket/deneme 404 döndü, uygulama
-# kabuğu hiç gelmedi. Adı 404.html olmayan bir dosya bu davranışı
-# tetiklemiyor.
-/assets/*   /varlik-yok.txt   404
-
 # Tek sayfa uygulaması: /gizlilik gibi yollar doğrudan açıldığında da
 # index.html sunulsun, Cloudflare Pages 404 vermesin.
 # Durum kodu 200 — yönlendirme değil, yeniden yazma.
+#
+# BURAYA "/assets/* -> 404" KURALI EKLEMEYİ DENEME
+# ------------------------------------------------
+# Denendi ve iki kez ters tepti:
+#
+# 1) Hedef `404.html` olunca Cloudflare Pages o dosyayı BÜTÜN bulunamayan
+#    yollar için kullanmaya başlıyor ve aşağıdaki SPA yedeğini eziyor.
+#    Ölçüldü: /cv ve /sirket/deneme 404 döndü, uygulama kabuğu hiç gelmedi —
+#    yani ön render edilmeyen uygulama adresleri açılmaz oldu.
+#
+# 2) Hedef `.txt` olunca Pages kuralı sessizce yok sayıyor; eksik varlık
+#    yine 200 + text/html dönüyor.
+#
+# GEREK DE YOK: tarayıcı, stil dosyası isteyip HTML alınca (nosniff) `error`
+# olayını tetikliyor. Ölçüldü — canlı sitede silinmiş bir css adresi için
+# link öğesinde error olayı geldi. index.html'deki kurtarma betiği o olayı
+# yakalayıp sayfayı bir kez yeniliyor.
 /*    /index.html   200
