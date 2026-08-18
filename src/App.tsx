@@ -26,6 +26,7 @@ import { ApplyDialog } from './components/ApplyDialog';
 import { ListingPage } from './components/ListingPage';
 import { GuideHub, GuidePage } from './components/GuidePages';
 import { BolumHub, BolumPage } from './components/BolumPages';
+import { StajProgramlariSayfasi } from './components/StajProgramlari';
 /*
   Bu ikisi bilerek gecikmeli DEĞİL: /araclar, /araclar/* ve /isveren
   ön render edilen adresler. React kabı temizlediği için gecikmeli
@@ -128,6 +129,7 @@ const BulunamadiSayfasi: React.FC<{
     ['/', 'Staj ilanları'],
     ['/rehber', 'Staj rehberi'],
     ['/bolumler', 'Bölüme göre staj'],
+    ['/staj-programlari', 'Büyük işverenlerde staj'],
     ['/araclar', 'Hesaplama araçları'],
   ];
 
@@ -768,6 +770,15 @@ export default function App() {
   if (temizYol === '/bolumler') {
     return icerikSayfasi(<BolumHub onBack={goHome} onNavigate={navigate} />);
   }
+  /*
+    Buyuk isverenler dizini.
+
+    Ilan DEGIL: bu sayfa isverenin kendi basvuru sayfasina yonlendiriyor.
+    Gerekcesi src/data/stajProgramlari.ts basinda.
+  */
+  if (temizYol === '/staj-programlari') {
+    return icerikSayfasi(<StajProgramlariSayfasi onBack={goHome} onNavigate={navigate} />);
+  }
   if (temizYol.startsWith('/bolum/')) {
     return icerikSayfasi(
       <BolumPage
@@ -1106,6 +1117,7 @@ export default function App() {
               {[
                 { yol: '/rehber', etiket: 'Staj rehberi' },
                 { yol: '/bolumler', etiket: 'Bölüme göre staj' },
+                { yol: '/staj-programlari', etiket: 'Büyük işverenlerde staj' },
                 { yol: '/araclar', etiket: 'Hesaplama araçları' },
                 { yol: '/isveren', etiket: 'İşveren rehberi' },
                 { yol: '/hakkimizda', etiket: 'Hakkımızda' },

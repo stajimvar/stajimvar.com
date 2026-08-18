@@ -362,9 +362,20 @@ async function merkezListeleriniCiz() {
         React.createElement(rehberModul.RehberBaglantilari, { slug, kategori })
       );
 
+    /*
+      Buyuk isverenler dizini de burada ciziliyor. Bu sayfanin TEK icerigi
+      kirk dort dis baglanti; on render'a girmezse tarayici basliktan baska
+      hicbir sey gormuyor ve sayfa bos sayiliyor.
+    */
+    const programModul = await icerikDerle(
+      path.join(kok, 'src', 'components', 'StajProgramlari.tsx'),
+      'staj-programlari'
+    );
+
     return {
       bolumler: renderToStaticMarkup(React.createElement(bolumModul.BolumListesi, {})),
       rehberler: renderToStaticMarkup(React.createElement(rehberModul.RehberListesi, {})),
+      programlar: renderToStaticMarkup(React.createElement(programModul.ProgramListesi, {})),
       rehberBaglantilari,
     };
   } catch (hata) {
@@ -740,6 +751,7 @@ async function main() {
     ['/araclar/staj-ucreti-hesaplama', 'Staj ücreti hesaplama | StajımVar', '3308 sayılı kanuna göre stajyere en az ne kadar ödenmesi gerektiğini hesapla.', 'Staj ücreti hesaplama'],
     ['/araclar/staj-gunu-hesaplama', 'Staj günü hesaplama | StajımVar', '20 veya 30 iş günü staj hangi tarihte biter? Resmî tatiller düşülerek.', 'Staj günü hesaplama'],
     ['/isveren', 'Stajyer nasıl alınır? İşveren rehberi | StajımVar', 'Sigorta kimde, ücret zorunlu mu, okulla hangi evrak imzalanır — sırayla.', 'Stajyer almak sandığınızdan kolay.'],
+    ['/staj-programlari', 'Büyük işverenlerde staj başvurusu | StajımVar', 'Aselsan, TUSAŞ, Turkcell, Tüpraş ve diğerleri stajı kendi kariyer sayfasından alıyor. Doğrulanmış başvuru adresleri.', 'Büyük işverenlerde staj'],
   ];
   /*
     /rehber ve /bolumler'e listeleri de basılıyor: bu iki sayfa tarayıcının
@@ -749,6 +761,7 @@ async function main() {
   const EK_LISTE = {
     '/rehber': merkezListeleri.rehberler,
     '/bolumler': merkezListeleri.bolumler,
+    '/staj-programlari': merkezListeleri.programlar,
   };
 
   for (const [yol, baslik, aciklama, h1] of sabitler) {

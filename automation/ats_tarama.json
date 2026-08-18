@@ -1,0 +1,593 @@
+[
+ {
+  "sirket": "Arçelik",
+  "site": "https://www.arcelikglobal.com",
+  "kariyer_url": "https://www.arcelikglobal.com/career",
+  "ats": {
+   "successfactors": "?"
+  }
+ },
+ {
+  "sirket": "Ford Otosan",
+  "site": "https://www.fordotosan.com.tr",
+  "kariyer_url": "https://www.fordotosan.com.tr",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Tofaş",
+  "site": "https://www.tofas.com.tr",
+  "kariyer_url": "https://www.tofas.com.tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "TürkTraktör",
+  "site": "https://www.turktraktor.com.tr",
+  "kariyer_url": null,
+  "ats": {}
+ },
+ {
+  "sirket": "Aselsan",
+  "site": "https://www.aselsan.com",
+  "kariyer_url": "https://www.aselsan.com/en/careers",
+  "ats": {}
+ },
+ {
+  "sirket": "TUSAŞ",
+  "site": "https://www.tusas.com",
+  "kariyer_url": "https://www.tusas.com/insan-kaynaklari",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Roketsan",
+  "site": "https://www.roketsan.com.tr",
+  "kariyer_url": "https://www.roketsan.com.tr/insan-kaynaklari",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Havelsan",
+  "site": "https://www.havelsan.com.tr",
+  "kariyer_url": null,
+  "ats": {}
+ },
+ {
+  "sirket": "Vestel",
+  "site": "https://www.vestel.com.tr",
+  "kariyer_url": "https://www.vestel.com.tr",
+  "ats": {}
+ },
+ {
+  "sirket": "BSH Türkiye",
+  "site": "https://www.bsh-group.com",
+  "kariyer_url": "https://www.bsh-group.com/career",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Eczacıbaşı",
+  "site": "https://www.eczacibasi.com.tr",
+  "kariyer_url": "https://www.eczacibasi.com.tr",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Abdi İbrahim",
+  "site": "https://www.abdiibrahim.com.tr",
+  "kariyer_url": "https://www.abdiibrahim.com.tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Bilim İlaç",
+  "site": "https://www.bilimilac.com.tr",
+  "kariyer_url": "https://www.bilimilac.com.tr/kariyer",
+  "ats": {
+   "kariyer_net": "?",
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Nobel İlaç",
+  "site": "https://www.nobel.com.tr",
+  "kariyer_url": "https://www.nobel.com.tr",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Türk Telekom",
+  "site": "https://www.turktelekom.com.tr",
+  "kariyer_url": "https://www.turktelekom.com.tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Turkcell",
+  "site": "https://www.turkcell.com.tr",
+  "kariyer_url": "https://www.turkcell.com.tr/insan-kaynaklari",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Vodafone Türkiye",
+  "site": "https://www.vodafone.com.tr",
+  "kariyer_url": "https://www.vodafone.com.tr/insan-kaynaklari",
+  "ats": {
+   "successfactors": "vodafone",
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Türk Hava Yolları",
+  "site": "https://www.turkishairlines.com",
+  "kariyer_url": null,
+  "ats": {}
+ },
+ {
+  "sirket": "Pegasus",
+  "site": "https://www.flypgs.com",
+  "kariyer_url": "https://www.flypgs.com/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Anadolu Efes",
+  "site": "https://www.anadoluefes.com",
+  "kariyer_url": "https://www.anadoluefes.com",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Coca-Cola İçecek",
+  "site": "https://www.cci.com.tr",
+  "kariyer_url": "https://www.cci.com.tr/en/careers",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Ülker",
+  "site": "https://www.ulker.com.tr",
+  "kariyer_url": "https://www.ulker.com.tr",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Eti",
+  "site": "https://www.etietieti.com",
+  "kariyer_url": "https://www.etietieti.com/careers",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Pınar",
+  "site": "https://www.pinar.com.tr",
+  "kariyer_url": "https://www.pinar.com.tr",
+  "ats": {}
+ },
+ {
+  "sirket": "Akbank",
+  "site": "https://www.akbank.com",
+  "kariyer_url": "https://www.akbank.com",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Garanti BBVA",
+  "site": "https://www.garantibbva.com.tr",
+  "kariyer_url": "https://www.garantibbva.com.tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "İş Bankası",
+  "site": "https://www.isbank.com.tr",
+  "kariyer_url": "https://www.isbank.com.tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Yapı Kredi",
+  "site": "https://www.yapikredi.com.tr",
+  "kariyer_url": "https://www.yapikredi.com.tr",
+  "ats": {}
+ },
+ {
+  "sirket": "QNB Finansbank",
+  "site": "https://www.qnb.com.tr",
+  "kariyer_url": "https://www.qnb.com.tr/insan-kaynaklari",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "DenizBank",
+  "site": "https://www.denizbank.com",
+  "kariyer_url": "https://www.denizbank.com",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "VakıfBank",
+  "site": "https://www.vakifbank.com.tr",
+  "kariyer_url": "https://www.vakifbank.com.tr",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Enka",
+  "site": "https://www.enka.com",
+  "kariyer_url": "https://www.enka.com/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Tekfen",
+  "site": "https://www.tekfen.com.tr",
+  "kariyer_url": null,
+  "ats": {}
+ },
+ {
+  "sirket": "Limak",
+  "site": "https://www.limak.com.tr",
+  "kariyer_url": "https://www.limak.com.tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Rönesans Holding",
+  "site": "https://www.ronesans.com",
+  "kariyer_url": "https://www.ronesans.com",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Nurol",
+  "site": "https://www.nurol.com.tr",
+  "kariyer_url": "https://www.nurol.com.tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Zorlu Holding",
+  "site": "https://www.zorlu.com.tr",
+  "kariyer_url": "https://www.zorlu.com.tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Şişecam",
+  "site": "https://www.sisecam.com.tr",
+  "kariyer_url": null,
+  "ats": {}
+ },
+ {
+  "sirket": "Kordsa",
+  "site": "https://www.kordsa.com",
+  "kariyer_url": "https://www.kordsa.com/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Sasa",
+  "site": "https://www.sasa.com.tr",
+  "kariyer_url": "https://www.sasa.com.tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Petkim",
+  "site": "https://www.petkim.com.tr",
+  "kariyer_url": "https://www.petkim.com.tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Tüpraş",
+  "site": "https://www.tupras.com.tr",
+  "kariyer_url": "https://www.tupras.com.tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Opet",
+  "site": "https://www.opet.com.tr",
+  "kariyer_url": "https://www.opet.com.tr/insan-kaynaklari",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Aygaz",
+  "site": "https://www.aygaz.com.tr",
+  "kariyer_url": "https://www.aygaz.com.tr/en/careers",
+  "ats": {}
+ },
+ {
+  "sirket": "Migros",
+  "site": "https://www.migroskurumsal.com",
+  "kariyer_url": "https://www.migroskurumsal.com/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "BİM",
+  "site": "https://www.bim.com.tr",
+  "kariyer_url": "https://www.bim.com.tr",
+  "ats": {}
+ },
+ {
+  "sirket": "A101",
+  "site": "https://www.a101.com.tr",
+  "kariyer_url": null,
+  "ats": {}
+ },
+ {
+  "sirket": "LC Waikiki",
+  "site": "https://www.lcwaikikikariyer.com",
+  "kariyer_url": null,
+  "ats": {}
+ },
+ {
+  "sirket": "Koton",
+  "site": "https://www.koton.com",
+  "kariyer_url": "https://www.koton.com",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Mavi",
+  "site": "https://www.mavicompany.com",
+  "kariyer_url": "https://www.mavicompany.com",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "DeFacto",
+  "site": "https://www.defacto.com.tr",
+  "kariyer_url": null,
+  "ats": {}
+ },
+ {
+  "sirket": "Boyner",
+  "site": "https://www.boynergrup.com",
+  "kariyer_url": "https://www.boynergrup.com/kariyer",
+  "ats": {
+   "kariyer_net": "?",
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Hepsiburada",
+  "site": "https://www.hepsiburada.com",
+  "kariyer_url": null,
+  "ats": {}
+ },
+ {
+  "sirket": "Getir",
+  "site": "https://www.getir.com",
+  "kariyer_url": null,
+  "ats": {}
+ },
+ {
+  "sirket": "Sahibinden",
+  "site": "https://www.sahibinden.com",
+  "kariyer_url": null,
+  "ats": {}
+ },
+ {
+  "sirket": "TAV Havalimanları",
+  "site": "https://www.tav.aero",
+  "kariyer_url": "https://www.tav.aero/kariyer",
+  "ats": {
+   "kariyer_net": "?",
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Borusan",
+  "site": "https://www.borusan.com",
+  "kariyer_url": "https://www.borusan.com/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Çimsa",
+  "site": "https://www.cimsa.com.tr",
+  "kariyer_url": "https://www.cimsa.com.tr/insan-kaynaklari",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Akçansa",
+  "site": "https://www.akcansa.com.tr",
+  "kariyer_url": "https://www.akcansa.com.tr/careers",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Erdemir",
+  "site": "https://www.erdemir.com.tr",
+  "kariyer_url": "https://www.erdemir.com.tr/kariyer",
+  "ats": {}
+ },
+ {
+  "sirket": "Kardemir",
+  "site": "https://www.kardemir.com",
+  "kariyer_url": "https://www.kardemir.com/insan-kaynaklari",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Tosyalı Holding",
+  "site": "https://www.tosyaliholding.com.tr",
+  "kariyer_url": "https://www.tosyaliholding.com.tr/insan-kaynaklari",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Bosch Türkiye",
+  "site": "https://www.bosch.com.tr",
+  "kariyer_url": "https://www.bosch.com.tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Siemens Türkiye",
+  "site": "https://www.siemens.com.tr",
+  "kariyer_url": null,
+  "ats": {}
+ },
+ {
+  "sirket": "Schneider Electric Türkiye",
+  "site": "https://www.se.com",
+  "kariyer_url": "https://www.se.com/careers",
+  "ats": {}
+ },
+ {
+  "sirket": "Unilever Türkiye",
+  "site": "https://www.unilever.com.tr",
+  "kariyer_url": null,
+  "ats": {}
+ },
+ {
+  "sirket": "Nestlé Türkiye",
+  "site": "https://www.nestle.com.tr",
+  "kariyer_url": null,
+  "ats": {}
+ },
+ {
+  "sirket": "Danone Türkiye",
+  "site": "https://www.danone.com.tr",
+  "kariyer_url": "https://www.danone.com.tr",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Henkel Türkiye",
+  "site": "https://www.henkel.com.tr",
+  "kariyer_url": "https://www.henkel.com.tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Acıbadem Sağlık",
+  "site": "https://www.acibadem.com.tr",
+  "kariyer_url": "https://www.acibadem.com.tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Memorial Sağlık",
+  "site": "https://www.memorial.com.tr",
+  "kariyer_url": null,
+  "ats": {}
+ },
+ {
+  "sirket": "Medical Park",
+  "site": "https://www.medicalpark.com.tr",
+  "kariyer_url": "https://www.medicalpark.com.tr",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Medicana",
+  "site": "https://www.medicana.com.tr",
+  "kariyer_url": "https://www.medicana.com.tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Doğuş Grubu",
+  "site": "https://www.dogusgrubu.com.tr",
+  "kariyer_url": "https://www.dogusgrubu.com.tr",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Sabancı Holding",
+  "site": "https://www.sabanci.com",
+  "kariyer_url": "https://www.sabanci.com/tr/kariyer",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Koç Holding",
+  "site": "https://www.koc.com.tr",
+  "kariyer_url": "https://www.koc.com.tr",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Oyak",
+  "site": "https://www.oyak.com.tr",
+  "kariyer_url": "https://www.oyak.com.tr/kariyer",
+  "ats": {
+   "kariyer_net": "?",
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Yıldız Holding",
+  "site": "https://www.yildizholding.com.tr",
+  "kariyer_url": "https://www.yildizholding.com.tr/insan-kaynaklari",
+  "ats": {
+   "linkedin": "?"
+  }
+ },
+ {
+  "sirket": "Anadolu Grubu",
+  "site": "https://www.anadolugrubu.com.tr",
+  "kariyer_url": "https://www.anadolugrubu.com.tr",
+  "ats": {
+   "linkedin": "?"
+  }
+ }
+]
