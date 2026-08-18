@@ -35,12 +35,33 @@ jobs:
       # SUPABASE_SECRET_KEY tanımlıysa o kullanılır; tanımlı değilse eski
       # isme düşer. Böylece eski sırrı silmek de gerekmiyor.
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      # Yazma açık; pasifleştirme ayrı bir şalter ve şimdilik kapalı.
-      # Açmadan önce birkaç sağlıklı taramanın geçmişi birikmeli, yoksa
-      # ilk çalıştırma her ilanı "kaybolmuş" sayar.
+      # PASİFLEŞTİRME: TEK KAYNAKTA AÇIK
+      #
+      # Şalter aylardır kapalıydı ve kapanan ilanları elle kaldırıyorduk.
+      # Açmadan önce üç şeyin doğrulanması gerekiyordu:
+      #
+      # 1. Yinelenen kayıt sorunu: aynı ilan için ikinci satır açılınca
+      #    eskisinin sayacı tırmanıyor ve AÇIK ilan kapanmış sanılıyordu.
+      #    Uygulama tarafı 17 Ağustos'ta düzeltildi, 18 Ağustos'ta
+      #    veritabanı kısıtı eklendi (0017) ve kalan tek çift temizlendi.
+      # 2. Düşürme yolu yayındaki ilana hiç dokunmuyordu; yalnızca keşif
+      #    kaydını bayat işaretliyordu. Yani şalter açılsa bile ilan sitede
+      #    kalacaktı — halka eklendi.
+      # 3. Devre kesici küçük kaynaklarda her zaman devredeydi: 4'ten az
+      #    ilanı olan bir kaynakta tek kayıp %25'i aştığı için pasifleştirme
+      #    hiç çalışamıyordu. Küçük kaynaklarda artık oran yerine mutlak
+      #    sınır var (tur başına en fazla bir ilan).
+      #
+      # İzin listesi tek kaynakla başlıyor: vertigogames-workable. İki ilanı
+      # var, yani bir kapanma gerçekten tespit edilebiliyor (tek ilanlı
+      # kaynakta sıfır sonuç ANOMALİ sayılıp sayaç hiç ilerlemiyor) ama iş
+      # ters giderse etkilenecek en fazla bir ilan var.
+      #
+      # Yanlış pozitif kalıcı değil: ilan kaynakta yeniden görülünce
+      # otomatik olarak yayına geri alınıyor.
       ALLOW_INSERT_UPDATE: "true"
-      ALLOW_DEACTIVATION: "false"
-      DEACTIVATION_ENABLED_SOURCES: ""
+      ALLOW_DEACTIVATION: "true"
+      DEACTIVATION_ENABLED_SOURCES: "vertigogames-workable"
       # Dağıtım sırları. `if` koşulunda secrets.* doğrudan okunamıyor,
       # env.* okunabiliyor — bu yüzden buraya taşınıyorlar. Tanımlı
       # değillerse boş dize oluyor ve dağıtım adımları atlanıyor.

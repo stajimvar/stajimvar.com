@@ -320,7 +320,7 @@ def upsert_raw_listing(db: Client, payload: dict[str, Any]) -> tuple[str, bool]:
     """
     existing = (
         db.table("raw_listings")
-        .select("id,status,content_hash")
+        .select("id,status,content_hash,promoted_listing_id")
         .eq("source_id", payload["source_id"])
         .eq("canonical_url", payload["canonical_url"])
         .limit(1)
@@ -339,6 +339,14 @@ def upsert_raw_listing(db: Client, payload: dict[str, Any]) -> tuple[str, bool]:
         # Kaynakta yeniden görülen bir kayıt artık bayat değildir.
         if existing[0]["status"] == "stale":
             refresh["status"] = "discovered"
+            # Ve yayından kaldırılmışsa geri açılır.
+            #
+            # Bu simetri şart: kapatma otomatikse açma da otomatik olmalı.
+            # Aksi hâlde tek bir yanlış pozitif — kaynağın bir tur boyunca
+            # ilanı döndürmemesi — ilanı kalıcı olarak siteden siliyordu ve
+            # kimse fark etmiyordu. Yalnızca BİZİM kapattığımız ilanlar
+            # açılıyor; elle kapatılana dokunulmuyor.
+            reopen_promoted_listing(db, existing[0])
 
         # Metin gerçekten değiştiyse içeriği de tazele; değişmediyse dokunma.
         if existing[0].get("content_hash") != payload["content_hash"]:
@@ -360,3 +368,83 @@ def upsert_raw_listing(db: Client, payload: dict[str, Any]) -> tuple[str, bool]:
 
     created = db.table("raw_listings").insert(payload).execute().data
     return created[0]["id"], True
+
+
+def close_promoted_listing(db: Client, raw_row: dict[str, Any], reason: str) -> bool:
+    """Bayatlayan keşif kaydının YAYINDAKİ ilanını da kapatır.
+
+    NEDEN AYRI BİR ADIM
+    -------------------
+    Düşürme yolu yalnızca `raw_listings.status = 'stale'` yazıyordu. Yani
+    otomatik düşürme açılsaydı bile kapanan ilan sitede durmaya devam
+    edecekti — şalterin asıl amacı tam olarak buydu ve halka eksikti.
+
+    `listings` tablosunda `deactivated_at` ve `deactivation_reason` sütunları
+    en baştan vardı; kimse bağlamamış.
+
+    İKİ KAYIT AYNI İLANI GÖSTEREBİLİR
+    ---------------------------------
+    Yinelenen satırlar temizlendi ve artık veritabanı kısıtı engelliyor, ama
+    farklı KAYNAKLAR aynı ilanı bulabiliyor (örneğin şirketin kendi Lever
+    sayfası ve çok şirketli Workable araması). O yüzden kapatmadan önce aynı
+    ilana bakan başka bir taze kayıt var mı diye bakılıyor: varsa ilan
+    kapanmıyor, çünkü hâlâ bir kaynakta görünüyor demektir.
+
+    Döndürdüğü değer: ilan gerçekten kapatıldı mı.
+    """
+    listing_id = raw_row.get("promoted_listing_id")
+    if not listing_id:
+        return False
+
+    hala_goruluyor = (
+        db.table("raw_listings")
+        .select("id")
+        .eq("promoted_listing_id", listing_id)
+        .neq("id", raw_row["id"])
+        .in_("status", ["discovered", "needs_verification", "promoted"])
+        .limit(1)
+        .execute()
+        .data
+    )
+    if hala_goruluyor:
+        return False
+
+    db.table("listings").update(
+        {
+            "status": "closed",
+            "deactivated_at": datetime.now(UTC).isoformat(),
+            "deactivation_reason": reason,
+        }
+    # origin süzgeci kasıtlı: yalnızca içe aktarılmış ilanlar kapatılabilir.
+    # Bir şirketin kendi girdiği ilana otomasyon dokunmamalı.
+    ).eq("id", listing_id).eq("origin", "scraped").execute()
+    return True
+
+
+def reopen_promoted_listing(db: Client, raw_row: dict[str, Any]) -> bool:
+    """Bizim bayat diye kapattığımız ilanı yeniden yayına alır.
+
+    `deactivation_reason` süzgeci kasıtlı: yalnızca otomasyonun `stale`
+    gerekçesiyle kapattığı ilanlar geri açılıyor. Yönetici elle kapattıysa
+    ya da şirket kendi kapattıysa otomasyon onu geri açmamalı.
+    """
+    listing_id = raw_row.get("promoted_listing_id")
+    if not listing_id:
+        return False
+
+    sonuc = (
+        db.table("listings")
+        .update(
+            {
+                "status": "published",
+                "deactivated_at": None,
+                "deactivation_reason": None,
+                "last_seen_at": datetime.now(UTC).isoformat(),
+            }
+        )
+        .eq("id", listing_id)
+        .eq("origin", "scraped")
+        .eq("deactivation_reason", "stale")
+        .execute()
+    )
+    return bool(sonuc.data)

@@ -14,6 +14,20 @@ MIN_STALE_AGE = timedelta(hours=48)
 COUNT_DROP_RATIO = 0.20
 MASS_DEACTIVATION_RATIO = 0.25
 
+# Oran kuralının anlamlı olduğu en küçük kaynak boyutu.
+#
+# Ölçüldü: yedi kaynağın altısında 4'ten az aktif ilan var. Orada tek bir
+# ilanın kaybolması oransal olarak %50–100 ediyor ve devre kesici her seferinde
+# devreye giriyordu — yani otomatik düşürme o kaynaklarda HİÇBİR ZAMAN
+# çalışamazdı. Şalteri açmak orada bir şey değiştirmezdi.
+#
+# Küçük kaynaklarda oran yerine mutlak sınır uygulanıyor: tur başına en fazla
+# bir ilan. Diğer korumalar yerinde duruyor (üç tur üst üste görülmeme, 48
+# saatlik yaş, sağlıklı tur şartı, kaynak izin listesi), o yüzden iki ilanı
+# olan bir kaynak ikisini de kaybederse bu iki ayrı turda ve her biri kendi
+# geçmişini biriktirerek olur.
+MIN_SOURCE_SIZE_FOR_RATIO = 8
+
 
 class Health(StrEnum):
     HEALTHY = "HEALTHY"
@@ -110,7 +124,16 @@ def eligible_for_deactivation(run: SourceRun, state: ListingState, seen: bool, n
 
 
 def mass_deactivation_blocked(candidate_count: int, managed_active_count: int) -> bool:
-    return managed_active_count > 0 and candidate_count / managed_active_count > MASS_DEACTIVATION_RATIO
+    """Bir turda toplu kapatmayı engelle.
+
+    Büyük kaynakta oran, küçük kaynakta mutlak sayı bakılıyor: gerekçesi
+    MIN_SOURCE_SIZE_FOR_RATIO'nun yanında.
+    """
+    if managed_active_count <= 0:
+        return False
+    if managed_active_count < MIN_SOURCE_SIZE_FOR_RATIO:
+        return candidate_count > 1
+    return candidate_count / managed_active_count > MASS_DEACTIVATION_RATIO
 
 
 def closed_signal(http_status: int | None, explicit_closed: bool = False) -> bool:

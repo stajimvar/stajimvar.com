@@ -1,5 +1,6 @@
 import pathlib, sys, unittest
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
 import repository
@@ -122,6 +123,31 @@ class ScraperFixtureTests(unittest.TestCase):
     def test_circuit_breaker_and_reactivation(self):
         self.assertTrue(stale_safety.mass_deactivation_blocked(3, 10))
         self.assertFalse(stale_safety.mass_deactivation_blocked(2, 10))
+
+    def test_circuit_breaker_uses_absolute_limit_on_small_sources(self):
+        """Kucuk kaynakta oran degil mutlak sinir uygulanmali.
+
+        Olculdu: yedi kaynagin altisinda 4'ten az aktif ilan var. Oran kurali
+        orada tek bir ilan icin bile %50-100 ediyordu ve devre kesici her
+        seferinde devreye giriyordu; yani otomatik dusurme o kaynaklarda hic
+        calisamazdi.
+        """
+        # Tek ilan kaybi her boyutta gecer.
+        for aktif in (1, 2, 3, 4, 9, 20):
+            self.assertFalse(
+                stale_safety.mass_deactivation_blocked(1, aktif),
+                f"{aktif} aktif ilanli kaynakta tek kayip engellenmemeli",
+            )
+        # Kucuk kaynakta ikinci kayip ayni turda gecmez.
+        self.assertTrue(stale_safety.mass_deactivation_blocked(2, 2))
+        self.assertTrue(stale_safety.mass_deactivation_blocked(2, 7))
+        # Buyuk kaynakta oran kurali gecerli kalir.
+        self.assertFalse(stale_safety.mass_deactivation_blocked(2, 9))
+        self.assertTrue(stale_safety.mass_deactivation_blocked(5, 9))
+        # Aktif ilani olmayan kaynakta bolme yapilmaz.
+        self.assertFalse(stale_safety.mass_deactivation_blocked(0, 0))
+
+    def test_reactivation_helpers(self):
         self.assertTrue(stale_safety.may_reactivate(self.state(deactivation_reason="stale"), True))
         self.assertFalse(stale_safety.may_reactivate(self.state(company_id="company", deactivation_reason="stale"), True))
 
@@ -160,3 +186,136 @@ class ScraperFixtureTests(unittest.TestCase):
         self.assertFalse(stale_safety.reconcile(failed, self.state(consecutive_missing_runs=2), False, datetime.now(UTC), True).would_deactivate)
 
 if __name__ == "__main__": unittest.main()
+
+
+class CloseListingTest(unittest.TestCase):
+    """close_promoted_listing: bayat kesif kaydi yayindaki ilani da kapatir.
+
+    Bu halka eksikti: dusurme yolu yalnizca raw_listings.status='stale'
+    yaziyordu, yani salter acilsa bile kapanan ilan sitede kaliyordu.
+    """
+
+    class SahteSorgu:
+        def __init__(self, tablo, gunluk, veri):
+            self.tablo, self.gunluk, self.veri = tablo, gunluk, veri
+            self.suzgecler = {}
+            self.guncelleme = None
+
+        def select(self, *_):
+            return self
+
+        def update(self, payload):
+            self.guncelleme = payload
+            return self
+
+        def eq(self, alan, deger):
+            self.suzgecler[alan] = deger
+            return self
+
+        def neq(self, alan, deger):
+            self.suzgecler["!" + alan] = deger
+            return self
+
+        def in_(self, alan, degerler):
+            self.suzgecler[alan + "@in"] = degerler
+            return self
+
+        def limit(self, _):
+            return self
+
+        def execute(self):
+            if self.guncelleme is not None:
+                self.gunluk.append((self.tablo, self.guncelleme, dict(self.suzgecler)))
+                return SimpleNamespace(data=[])
+            return SimpleNamespace(data=self.veri)
+
+    class SahteDb:
+        def __init__(self, kalan_kayitlar):
+            self.gunluk = []
+            self.kalan = kalan_kayitlar
+
+        def table(self, ad):
+            veri = self.kalan if ad == "raw_listings" else []
+            return CloseListingTest.SahteSorgu(ad, self.gunluk, veri)
+
+    def test_yayindaki_ilan_kapatilir(self):
+        db = self.SahteDb([])
+        sonuc = repository.close_promoted_listing(
+            db, {"id": "raw-1", "promoted_listing_id": "listing-1"}, "stale"
+        )
+        self.assertTrue(sonuc)
+        tablo, payload, suzgec = db.gunluk[0]
+        self.assertEqual(tablo, "listings")
+        self.assertEqual(payload["status"], "closed")
+        self.assertEqual(payload["deactivation_reason"], "stale")
+        self.assertIsNotNone(payload["deactivated_at"])
+        # Sirketin kendi girdigi ilana dokunulmamali.
+        self.assertEqual(suzgec["origin"], "scraped")
+
+    def test_baska_kaynak_hala_goruyorsa_kapatilmaz(self):
+        """Ayni ilani iki farkli kaynak bulabilir; biri bayatlayinca ilan kapanmaz."""
+        db = self.SahteDb([{"id": "raw-2"}])
+        sonuc = repository.close_promoted_listing(
+            db, {"id": "raw-1", "promoted_listing_id": "listing-1"}, "stale"
+        )
+        self.assertFalse(sonuc)
+        self.assertEqual(db.gunluk, [])
+
+    def test_yayinlanmamis_kayit_icin_islem_yok(self):
+        db = self.SahteDb([])
+        sonuc = repository.close_promoted_listing(db, {"id": "raw-1", "promoted_listing_id": None}, "stale")
+        self.assertFalse(sonuc)
+        self.assertEqual(db.gunluk, [])
+
+
+class ReopenListingTest(unittest.TestCase):
+    """reopen_promoted_listing: kapatma otomatikse acma da otomatik olmali."""
+
+    class SahteSorgu:
+        def __init__(self, tablo, gunluk, donen):
+            self.tablo, self.gunluk, self.donen = tablo, gunluk, donen
+            self.suzgecler, self.guncelleme = {}, None
+
+        def update(self, payload):
+            self.guncelleme = payload
+            return self
+
+        def eq(self, alan, deger):
+            self.suzgecler[alan] = deger
+            return self
+
+        def execute(self):
+            self.gunluk.append((self.tablo, self.guncelleme, dict(self.suzgecler)))
+            return SimpleNamespace(data=self.donen)
+
+    class SahteDb:
+        def __init__(self, donen):
+            self.gunluk, self.donen = [], donen
+
+        def table(self, ad):
+            return ReopenListingTest.SahteSorgu(ad, self.gunluk, self.donen)
+
+    def test_bayat_diye_kapatilan_ilan_geri_acilir(self):
+        db = self.SahteDb([{"id": "listing-1"}])
+        self.assertTrue(
+            repository.reopen_promoted_listing(db, {"promoted_listing_id": "listing-1"})
+        )
+        _, payload, suzgec = db.gunluk[0]
+        self.assertEqual(payload["status"], "published")
+        self.assertIsNone(payload["deactivated_at"])
+        self.assertIsNone(payload["deactivation_reason"])
+        # Yalnizca otomasyonun kapattigi ilan acilir.
+        self.assertEqual(suzgec["deactivation_reason"], "stale")
+        self.assertEqual(suzgec["origin"], "scraped")
+
+    def test_elle_kapatilan_ilana_dokunulmaz(self):
+        """Suzgec eslesmezse veritabani hicbir satir dondurmuyor."""
+        db = self.SahteDb([])
+        self.assertFalse(
+            repository.reopen_promoted_listing(db, {"promoted_listing_id": "listing-1"})
+        )
+
+    def test_yayinlanmamis_kayit_icin_islem_yok(self):
+        db = self.SahteDb([{"id": "x"}])
+        self.assertFalse(repository.reopen_promoted_listing(db, {"promoted_listing_id": None}))
+        self.assertEqual(db.gunluk, [])

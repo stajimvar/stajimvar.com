@@ -129,7 +129,7 @@ def process_source(db, config: dict, source_id: str, *, write: bool, allow_deact
     if write and run_health is Health.HEALTHY:
         known = (
             db.table("raw_listings")
-            .select("id,status,consecutive_missing_runs,last_seen_at")
+            .select("id,status,consecutive_missing_runs,last_seen_at,promoted_listing_id")
             .eq("source_id", source_id)
             .in_("status", ["discovered", "needs_verification", "promoted"])
             .execute()
@@ -167,9 +167,20 @@ def process_source(db, config: dict, source_id: str, *, write: bool, allow_deact
             if decision.would_deactivate and deactivation_allowed:
                 update["status"] = "stale"
                 stats["deactivated"] += 1
+
+                # Asıl iş burada: keşif kaydını bayat işaretlemek ilanı
+                # SİTEDEN DÜŞÜRMÜYOR. Önce yalnızca yukarıdaki satır vardı,
+                # yani şalter açılsa bile kapanan ilan yayında kalacaktı —
+                # şalterin bütün amacı buydu ve halka eksikti.
+                yayindan_kalkti = repository.close_promoted_listing(db, row, "stale")
+
                 repository.log_event(
                     db, run_id=run_id, source_id=source_id, raw_listing_id=row["id"],
-                    event_type="deactivated", message="kaynakta 3 taramadır görülmüyor",
+                    event_type="deactivated",
+                    message=(
+                        "kaynakta 3 taramadır görülmüyor"
+                        + ("; yayından kaldırıldı" if yayindan_kalkti else "")
+                    ),
                 )
             db.table("raw_listings").update(update).eq("id", row["id"]).execute()
 
