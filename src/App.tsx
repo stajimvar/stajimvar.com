@@ -679,6 +679,7 @@ export default function App() {
       onSelectCompany={handleSelectCompany}
       applicationsCount={applications.length}
       onOpenGuides={() => navigate('/rehber')}
+      bulunulanYol={temizYol}
       searchQuery={aramaTerimi}
       onSearchChange={(q) => {
         setAramaTerimi(q);

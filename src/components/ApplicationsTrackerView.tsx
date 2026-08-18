@@ -14,6 +14,13 @@ import {
 import { ApplicationRecord, InternshipListing } from '../types';
 import { CompanyLogo } from './CompanyLogo';
 
+/**
+ * Uyum halkasının rengi. Eşikler ilan kartıyla birebir aynı; iki ekranda
+ * farklı eşik kullanmak aynı puanı farklı renkte gösterirdi.
+ */
+const uyumRengi = (puan: number) =>
+  puan >= 75 ? '#10b981' : puan >= 50 ? '#2563eb' : '#9ca3af';
+
 interface ApplicationsTrackerViewProps {
   applications: ApplicationRecord[];
   allListings: InternshipListing[];
@@ -172,14 +179,47 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                 {/* Top Line */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-start sm:items-center gap-3 sm:gap-3.5">
+                    {/*
+                      Logo ilan kartlarıyla aynı: yuvarlak ve uyum puanı
+                      varsa etrafında halka.
+
+                      Burada kare duruyordu; aynı şirketin logosu ilan
+                      listesinde yuvarlak, başvurularda kare görünüyordu.
+                      Uyum puanı da alt satırda turuncu bir yazıydı —
+                      turuncu uyarı rengi gibi okunuyor ve ilan kartlarında
+                      bu yüzden kaldırılmıştı.
+                    */}
                     {listing ? (
-                      <CompanyLogo
-                        name={listing.companyName}
-                        logoUrl={listing.companyLogo || undefined}
-                        className="w-11 h-11 rounded-xl p-1 text-sm shrink-0"
-                      />
+                      <div className="shrink-0">
+                        <div
+                          className="rounded-full p-[3px]"
+                          style={{
+                            background:
+                              app.matchScore > 0
+                                ? `conic-gradient(${uyumRengi(app.matchScore)} ${app.matchScore * 3.6}deg, #e5e7eb ${app.matchScore * 3.6}deg)`
+                                : 'transparent',
+                          }}
+                          title={app.matchScore > 0 ? `%${app.matchScore} uyum` : listing.companyName}
+                        >
+                          <div className="rounded-full bg-white p-[2px]">
+                            <CompanyLogo
+                              name={listing.companyName}
+                              logoUrl={listing.companyLogo || undefined}
+                              className="w-10 h-10 rounded-full p-1 text-sm border border-gray-100"
+                            />
+                          </div>
+                        </div>
+                        {app.matchScore > 0 && (
+                          <span
+                            className="block text-center text-[10px] font-bold mt-1 tabular-nums"
+                            style={{ color: uyumRengi(app.matchScore) }}
+                          >
+                            %{app.matchScore}
+                          </span>
+                        )}
+                      </div>
                     ) : (
-                      <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                      <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold shrink-0">
                         <Building2 className="w-6 h-6" />
                       </div>
                     )}
@@ -218,11 +258,10 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                     <Clock className="w-3.5 h-3.5 text-blue-600"/>
                     <span>Güncelleme: {tarihMetni(app.updatedAt ?? app.appliedAt)}</span>
                   </span>
-                  {app.matchScore > 0 && (
-                    <span className="font-bold text-orange-600">
-                      %{app.matchScore} Yetenek Uyumu
-                    </span>
-                  )}
+                  {/*
+                    "%N Yetenek Uyumu" satırı kaldırıldı: aynı sayı artık
+                    logonun etrafındaki halkada ve altındaki rakamda.
+                  */}
                 </div>
 
                 {/* Next Step / Action Box */}

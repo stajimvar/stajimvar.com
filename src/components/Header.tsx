@@ -52,6 +52,17 @@ interface HeaderProps {
   /** Rehber merkezine geçiş. */
   onOpenGuides?: () => void;
   /**
+   * Bulunulan adres.
+   *
+   * Alt menü hangi sekmenin seçili olduğunu `activeTab`'e bakarak
+   * belirliyordu. Ama rehber ve bölüm sayfaları sekme değil ADRES: /rehber
+   * açıkken activeTab hâlâ 'internships' kalıyor ve alt menüde "İlanlar"
+   * mavi duruyordu — kullanıcı rehberdeyken ilanlarda görünüyordu.
+   *
+   * Verilmezse eski davranış sürüyor (yalnızca sekmeye bakılıyor).
+   */
+  bulunulanYol?: string;
+  /**
    * İlan araması.
    *
    * Kutu eskiden sol sütundaydı; başlık çubuğunun ortası ise boştu. Arama
@@ -90,6 +101,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenRegister,
   onLogout,
   onOpenGuides,
+  bulunulanYol = '/',
   searchQuery,
   onSearchChange,
   isAdmin = false,
@@ -195,6 +207,26 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const subMenuItems = getSubMenuItems();
+
+  /*
+    İçerik sayfaları: rehber merkezi, tek rehber, bölümler, tek bölüm,
+    hesaplama araçları ve işveren rehberi. Hepsi alt menüde "Rehber"
+    altında toplanıyor — kullanıcı için hepsi aynı yerin parçası.
+  */
+  const rehberdeMi = /^\/(rehber|bolum|bolumler|araclar|isveren)(\/|$)/.test(bulunulanYol);
+
+  /*
+    Kurumsal ve yasal sayfalar üçünden hiçbiri değil.
+
+    Gizlilik ya da Hakkımızda açıkken alt menüde "İlanlar" yanıyordu; oysa
+    kullanıcı ilanlarda değil. Hiçbiri seçili olmaması doğru bilgi.
+  */
+  const kurumsalSayfada = /^\/(hakkimizda|iletisim|gizlilik|cerez-politikasi|kvkk-aydinlatma-metni|kullanim-kosullari|ilan-kurallari|ilan-bildir)$/.test(
+    bulunulanYol
+  );
+
+  const ilanlardaMi = !rehberdeMi && !kurumsalSayfada && activeTab === 'internships';
+  const profildeMi = !rehberdeMi && !kurumsalSayfada && activeTab === 'profile';
 
   return (
     <>
@@ -912,6 +944,16 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
     </header>
 
+    {/*
+      ALT MENÜDE SEÇİLİ ÖĞE
+
+      Adres sekmeden önce geliyor: /rehber, /bolum/... ve /araclar birer
+      sayfa, sekme değil. Bunlara girildiğinde activeTab hâlâ 'internships'
+      kalıyordu ve alt menüde "İlanlar" mavi duruyordu — kullanıcı
+      rehberdeyken ilanlarda görünüyordu.
+
+      Profil ve ilanlar hâlâ sekmeyle belirleniyor; onlar gerçekten sekme.
+    */}
     {/* Mobile Bottom Navigation Bar (Rendered outside header to avoid backdrop-filter containing block issues) */}
     {userRole === 'student' ? (
       <nav
@@ -925,14 +967,14 @@ export const Header: React.FC<HeaderProps> = ({
             setActiveSubTab('all');
           }}
           className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
-            activeTab === 'internships'
+            ilanlardaMi
               ?'text-blue-600 font-bold'
               :'text-gray-500 hover:text-gray-900'
           }`}
         >
           <div className="relative">
             <Briefcase className="w-5 h-5" />
-            {activeTab === 'internships' && (
+            {ilanlardaMi && (
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600"/>
             )}
           </div>
@@ -953,10 +995,15 @@ export const Header: React.FC<HeaderProps> = ({
         {/* 2. Rehber — giriş şartı yok, herkese açık */}
         <button
           onClick={() => onOpenGuides?.()}
-          className="flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative text-gray-500 hover:text-gray-900"
+          className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
+            rehberdeMi ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-gray-900'
+          }`}
         >
           <div className="relative">
             <BookOpen className="w-5 h-5" />
+            {rehberdeMi && (
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600" />
+            )}
           </div>
           <span className="text-[10px] mt-0.5 font-semibold">Rehber</span>
         </button>
@@ -970,7 +1017,7 @@ export const Header: React.FC<HeaderProps> = ({
             setActiveSubTab('all');
           }}
           className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
-            activeTab === 'profile'
+            profildeMi
               ?'text-blue-600 font-bold'
               :'text-gray-500 hover:text-gray-900'
           }`}
@@ -982,7 +1029,7 @@ export const Header: React.FC<HeaderProps> = ({
                 {applicationsCount}
               </span>
             ) : (
-              activeTab === 'profile' && (
+              profildeMi && (
                 <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-teal-500" />
               )
             )}
