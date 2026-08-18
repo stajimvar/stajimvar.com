@@ -436,6 +436,36 @@
    "company_name": "Delivery Hero",
    "company_identifier": "deliveryhero",
    "careers_url": "https://jobs.smartrecruiters.com/deliveryhero"
+  },
+  {
+   "id": "sanction-scanner-workable",
+   "name": "Sanction Scanner",
+   "type": "workable",
+   "account": "sanction-scanner",
+   "enabled": true,
+   "country": "TR",
+   "company_name": "Sanction Scanner",
+   "careers_url": "https://apply.workable.com/sanction-scanner"
+  },
+  {
+   "id": "rapsodo-workable",
+   "name": "Rapsodo",
+   "type": "workable",
+   "account": "rapsodo",
+   "enabled": true,
+   "country": "TR",
+   "company_name": "Rapsodo",
+   "careers_url": "https://apply.workable.com/rapsodo"
+  },
+  {
+   "id": "newmindai-workable",
+   "name": "NewMind AI",
+   "type": "workable",
+   "account": "newmindai",
+   "enabled": true,
+   "country": "TR",
+   "company_name": "NewMind AI",
+   "careers_url": "https://apply.workable.com/newmindai"
   }
  ],
  "notes": "Only add verified public ATS/API endpoints. Keep credentials in environment variables, never here."
