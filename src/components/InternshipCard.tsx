@@ -31,16 +31,22 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
   onQuickApply,
 }) => {
   /*
-    Uyum rozetinin rengi. Turuncu kaldırıldı: turuncu uyarı rengi gibi
-    okunuyor ve düşük puanlı ilanları "sorunlu" göstermek istemiyoruz.
-    Düşük puan sessiz gri, iyi puan yeşil.
+    UYUM PUANI LOGONUN ETRAFINDA HALKA OLARAK
+
+    Önce kartın alt satırında "%38 uyum" yazan ayrı bir rozet vardı. Bilgi
+    doğruydu ama kendi satırını ve kendi çerçevesini istiyordu; kartın alt
+    yarısı zaten üç düğmeyle doluydu.
+
+    Halka, sitede üçüncü kez aynı işi yapıyor ve hep aynı anlamda: ölçülmüş
+    bir durumu göstermek. Profilde doluluk, şirket şeridinde "son 24 saatte
+    yeni ilan", burada uyum puanı. Dekor değil — yüzde neyse halkanın o
+    kadarı doluyor.
+
+    Renk: turuncu bilerek yok, uyarı gibi okunuyor ve düşük puanlı ilanı
+    "sorunlu" göstermek istemiyoruz. Düşük puan sessiz gri, iyisi yeşil.
   */
-  let scoreBadge = 'bg-gray-100 text-gray-600 border border-gray-200 font-semibold';
-  if (match.overallScore >= 75) {
-    scoreBadge = 'bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold';
-  } else if (match.overallScore >= 50) {
-    scoreBadge = 'bg-blue-50 text-blue-700 border border-blue-200 font-semibold';
-  }
+  const halkaRengi =
+    match.overallScore >= 75 ? '#10b981' : match.overallScore >= 50 ? '#2563eb' : '#9ca3af';
 
   return (
     <div
@@ -49,12 +55,52 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
     >
       {/* Left & Middle Info Area */}
       <div className="flex items-start gap-3 sm:gap-3.5 flex-1 min-w-0 w-full">
-        {/* Company Logo */}
-        <CompanyLogo
-          name={listing.companyName}
-          logoUrl={listing.companyLogo || undefined}
-          className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl shrink-0 group-hover:scale-105 transition-transform shadow-2xs text-base sm:text-lg p-1.5"
-        />
+        {/*
+          Şirket logosu — uyum puanı hesaplanabiliyorsa halkanın içinde.
+
+          Halka yalnızca puan varken çiziliyor. Hesaplanamayan ilanlarda
+          (öğrenci giriş yapmamış ya da ilanda beceri şartı yok) boş bir
+          halka çizmek, olmayan bir ölçümü varmış gibi gösterirdi.
+        */}
+        <div className="shrink-0">
+          {match.isScorable ? (
+            <div
+              className="rounded-full p-[3px]"
+              style={{
+                background: `conic-gradient(${halkaRengi} ${match.overallScore * 3.6}deg, #e5e7eb ${match.overallScore * 3.6}deg)`,
+              }}
+              title={`%${match.overallScore} uyum — ${match.summaryInsight}`}
+            >
+              <div className="rounded-full bg-white p-[2px]">
+                <CompanyLogo
+                  name={listing.companyName}
+                  logoUrl={listing.companyLogo || undefined}
+                  className="w-11 h-11 sm:w-12 sm:h-12 rounded-full group-hover:scale-105 transition-transform text-base sm:text-lg p-1.5"
+                />
+              </div>
+            </div>
+          ) : (
+            <CompanyLogo
+              name={listing.companyName}
+              logoUrl={listing.companyLogo || undefined}
+              className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl group-hover:scale-105 transition-transform shadow-2xs text-base sm:text-lg p-1.5"
+            />
+          )}
+
+          {/*
+            Sayı halkanın altında, şirket şeridindeki gibi. Halka oranı
+            gösteriyor ama kaç olduğunu söylemiyor; ikisi birlikte tam
+            bilgi veriyor ve yine tek bir yerde duruyor.
+          */}
+          {match.isScorable && (
+            <span
+              className="block text-center text-[10px] font-bold mt-1 tabular-nums"
+              style={{ color: halkaRengi }}
+            >
+              %{match.overallScore}
+            </span>
+          )}
+        </div>
 
         {/* Text Details */}
         <div className="space-y-1 sm:space-y-1.5 flex-1 min-w-0">
@@ -207,23 +253,10 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
       <div className="flex flex-wrap lg:flex-col items-center lg:items-end justify-between w-full lg:w-auto gap-2.5 pt-2.5 lg:pt-0 border-t lg:border-t-0 border-gray-100 min-w-0">
         <div className="flex items-center gap-2 flex-wrap min-w-0">
           {/*
-            Uyum puanı yalnızca hesaplanabildiğinde çiziliyor.
-
-            Eskiden hesaplanamayan ilanlarda "Uyum hesaplanamadı" yazan gri bir
-            rozet vardı. İlanların çoğunda beceri şartı olmadığı için liste
-            boyunca aynı gri cümle tekrar ediyor, hiçbir şey söylemeden yer
-            kaplıyordu. Açıklama ilan detayında duruyor; uydurma bir yüzde
-            gösterilmiyor, sadece boş rozet çizilmiyor.
+            Uyum rozeti buradan kaldırıldı: artık logonun etrafındaki halka
+            gösteriyor. Aynı sayıyı iki yerde göstermek kartın alt yarısını
+            gereksiz uzatıyordu.
           */}
-          {match.isScorable && (
-            <span
-              className={`text-[11px] px-3 py-1 rounded-full ${scoreBadge}`}
-              title={match.summaryInsight}
-            >
-              %{match.overallScore} uyum
-            </span>
-          )}
-
           {listing.applicationDeadline && (
             <span className="text-[11px] text-gray-400 hidden sm:inline">
               Son:{' '}
