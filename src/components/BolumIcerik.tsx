@@ -1,6 +1,7 @@
 import React from 'react';
 import { BOLUMLER, BOLUM_GRUPLARI, OKUL_YERLESTIRIR, type Bolum } from '../data/bolumler';
 import { BolumKapagi } from './BolumGorseli';
+import { bolumeGoreProgramlar } from '../data/stajProgramlari';
 
 /**
  * Bölüm sayfasının İÇERİĞİ — kabuğu değil.
@@ -204,6 +205,49 @@ export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
           </a>
         </section>
       )}
+
+      {/*
+        BU BÖLÜMDE STAJ ALAN BÜYÜK İŞVERENLER
+
+        Dizin (/staj-programlari) önce tek yönlüydü: dizinden bölüme
+        bağlantı vardı, bölümden dizine yoktu. Yani "makine mühendisliği
+        stajı" arayıp bu sayfaya düşen kişi, Tofaş'ın ve Erdemir'in
+        başvuru sayfalarının sitede durduğunu hiç öğrenmiyordu.
+
+        Liste uydurulmuyor: eşleştirme stajProgramlari.ts içinde yazılı ve
+        o kayıtların hepsi doğrulanmış adres. Eşleşme yoksa blok hiç
+        çizilmiyor — boş başlık göstermek, olmayan bir şey vaat etmek olur.
+      */}
+      {(() => {
+        const isverenler = bolumeGoreProgramlar(bolum.slug);
+        if (isverenler.length === 0) return null;
+        return (
+          <section className="space-y-2 pt-1">
+            <h2 className="text-lg font-bold text-gray-900">
+              Bu bölümde staj alan büyük işverenler
+            </h2>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Aşağıdaki işverenler staj başvurusunu ilan sitelerinden değil kendi kariyer
+              sayfalarından alıyor. Başvuru adresleri{' '}
+              <a href="/staj-programlari" className="font-semibold text-blue-600 hover:underline">
+                büyük işverenler dizininde
+              </a>
+              .
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {isverenler.map((i) => (
+                <a
+                  key={i.slug}
+                  href="/staj-programlari"
+                  className="px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-200 hover:border-blue-300 hover:text-blue-700"
+                >
+                  {i.isveren}
+                </a>
+              ))}
+            </div>
+          </section>
+        );
+      })()}
 
       {/*
         AYNI GRUPTAKİ DİĞER BÖLÜMLER
