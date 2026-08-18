@@ -69,7 +69,27 @@
 
   body {
     max-width: 100%;
+
+    /*
+      YATAY KIRPMA: `hidden` DEĞİL `clip`.
+
+      `overflow-x: hidden` gövdeyi bir kaydırma kabı hâline getiriyor
+      (bir eksen `hidden` olunca diğeri `auto`ya dönüyor). iOS Safari bu
+      durumda `position: fixed` öğeleri görüntü alanına değil BELGEYE göre
+      konumlandırıyor: mobil alt menü sayfanın ortasında bir yere
+      sabitlenip kalıyordu — kullanıcının ekran görüntüsünde menü ilan
+      kartlarının arasında duruyordu, altında da içerik devam ediyordu.
+
+      Chrome'da üretilemedi; her kaydırma konumunda menü doğru yerdeydi
+      (ölçüldü). Bu yüzden neden uzun süre görünmedi.
+
+      `clip` aynı kırpmayı yapıyor ama kaydırma kabı OLUŞTURMUYOR, yani
+      fixed konumlandırma bozulmuyor. `hidden` altında yedek olarak
+      duruyor: `clip` desteklemeyen eski tarayıcı ikinci satırı yok sayıp
+      birincisini kullanıyor.
+    */
     overflow-x: hidden;
+    overflow-x: clip;
   }
 
   /*
