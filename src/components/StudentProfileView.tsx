@@ -30,7 +30,7 @@ import {
 } from '../types';
 import { uploadAvatar } from '../lib/queries';
 import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
-import { Avatar } from './Avatar';
+import { ProfilBasligi, type OneCikan } from './ProfilBasligi';
 import { AutocompleteField } from './AutocompleteField';
 import { PredictiveInput } from './PredictiveInput';
 import {
@@ -268,6 +268,53 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       : oran >= 25 ? 'Isınıyorsun 🔥'
       : 'Hadi başlayalım 🌱';
 
+  /*
+    ÖNE ÇIKANLAR ŞERİDİ
+
+    Instagram'da hikâye vurguları duruyor; burada profilin bölümleri.
+    Dolu olan bölüm içeriğinin özetini gösteriyor, boş olan "+" ile ekleme
+    çağrısı yapıyor — yani şerit hem gezinme hem eksik listesi.
+
+    Her öğe ilgili bölümü açıyor: ayrı bir sayfa yok, kaydırma yok.
+  */
+  const oneCikanlar: OneCikan[] = [
+    {
+      id: 'teknik',
+      etiket: 'Programlar',
+      deger: yetenekler.length ? `${yetenekler.length} tane` : null,
+      ikon: <Wrench className="w-5 h-5" />,
+      onClick: () => bolumAc('teknik'),
+    },
+    {
+      id: 'sosyal',
+      etiket: 'Beceriler',
+      deger: sosyal.length ? `${sosyal.length} tane` : null,
+      ikon: <MessageSquare className="w-5 h-5" />,
+      onClick: () => bolumAc('sosyal'),
+    },
+    {
+      id: 'dil',
+      etiket: 'Diller',
+      deger: diller.length ? `${diller.length} dil` : null,
+      ikon: <Languages className="w-5 h-5" />,
+      onClick: () => bolumAc('dil'),
+    },
+    {
+      id: 'proje',
+      etiket: 'Çalışmalar',
+      deger: projeler.length ? `${projeler.length} tane` : null,
+      ikon: <FolderOpen className="w-5 h-5" />,
+      onClick: () => bolumAc('proje'),
+    },
+    {
+      id: 'tercih',
+      etiket: 'Hedefin',
+      deger: hedefler.length ? hedefler[0] : null,
+      ikon: <Target className="w-5 h-5" />,
+      onClick: () => bolumAc('tercih'),
+    },
+  ];
+
   /* %100'e ilk ulaşıldığında kutlama. Her render'da değil, geçişte. */
   const oncekiOran = useRef(oran);
   useEffect(() => {
@@ -502,15 +549,26 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     <div className="w-full pb-16 animate-in fade-in duration-200">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
 
-        {/* ---------------- SOL: kimlik kartı ---------------- */}
+        {/* ---------------- SOL: profil başlığı ---------------- */}
         <div className="lg:col-span-4 lg:sticky lg:top-4 space-y-3">
-      <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 space-y-4">
-        {/*
-          Mobilde yatay (fotoğraf solda, ad sağda) — orası zaten iyiydi.
-          Geniş ekranda kimlik kartına dönüşüyor: fotoğraf büyük ve üstte,
-          bilgiler altında ortalanmış.
-        */}
-        <div className="flex items-center gap-4 lg:flex-col lg:items-center lg:gap-3 lg:text-center">
+          <ProfilBasligi
+            ad={student.fullName}
+            avatarUrl={student.avatarUrl}
+            okul={student.university}
+            bolum={student.department}
+            sinif={student.gradeLevel}
+            bio={student.bio}
+            oran={oran}
+            basvuruSayisi={basvuruSayisi}
+            beceriSayisi={yetenekler.length + sosyal.length + diller.length}
+            avatarYukleniyor={avatarYukleniyor}
+            onFotografSec={() => dosyaRef.current?.click()}
+            onDuzenle={kisiselAc}
+            onCv={onOpenCv}
+            onBasvurulara={basvuruListesi ? () => bolumAc('basvuru') : undefined}
+            oneCikanlar={oneCikanlar}
+          />
+
           <input
             type="file"
             ref={dosyaRef}
@@ -518,104 +576,29 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             className="hidden"
             onChange={fotografSec}
           />
-          <button
-            type="button"
-            onClick={() => dosyaRef.current?.click()}
-            className="relative shrink-0 rounded-2xl cursor-pointer"
-            title="Fotoğrafını değiştir"
-          >
-            <Avatar
-              name={student.fullName}
-              url={student.avatarUrl || undefined}
-              className="w-16 h-16 lg:w-40 lg:h-40 rounded-2xl text-xl lg:text-5xl"
-            />
-            <span className="absolute -bottom-1 -right-1 w-6 h-6 lg:w-9 lg:h-9 rounded-full bg-blue-600 text-white flex items-center justify-center border-2 border-white">
-              {avatarYukleniyor
-                ? <Loader2 className="w-3 h-3 lg:w-4 lg:h-4 animate-spin" />
-                : <Camera className="w-3 h-3 lg:w-4 lg:h-4" />}
-            </span>
-          </button>
-
-          <div className="min-w-0 flex-1 lg:flex-none lg:w-full">
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate lg:whitespace-normal lg:break-words">
-              {student.fullName}
-            </h1>
-            {/*
-              Geniş ekranda `truncate` kaldırılıyor: kimlik kartında uzun
-              üniversite adının "..." ile kesilmesi kartı eksik gösteriyordu.
-            */}
-            <p className="text-xs lg:text-sm text-gray-500 truncate lg:whitespace-normal">
-              {student.university || 'Okulun eksik'}
-            </p>
-            {student.department && (
-              <p className="text-xs lg:text-sm font-semibold text-gray-700 truncate lg:whitespace-normal">
-                {student.department}
-              </p>
-            )}
-            <p className="text-xs text-gray-400 lg:mt-1">{student.gradeLevel}</p>
-          </div>
-        </div>
-
-        {avatarHatasi && (
-          <p className="text-xs text-rose-600">{avatarHatasi}</p>
-        )}
-
-        {/* ilerleme */}
-        <div className="space-y-2">
-          <div className="flex items-baseline justify-between gap-2">
-            <span className="text-sm font-bold text-gray-900">{tonu}</span>
-            <span className="text-xs font-bold text-gray-500 tabular-nums">
-              {tamamlanan}/{adimlar.length}
-            </span>
-          </div>
-
-          <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-500 ${
-                oran === 100 ? 'bg-emerald-500' : 'bg-blue-600'
-              }`}
-              style={{ width: `${oran}%` }}
-            />
-          </div>
+          {avatarHatasi && <p className="text-xs text-rose-600 px-1">{avatarHatasi}</p>}
 
           {/*
-            CV çıktısı: profil doldurmanın somut karşılığı. Başvuruların
-            şirkete iletilmesi henüz çözülmedi; o çözülene kadar da
-            öğrencinin elinde kullanabileceği bir şey olsun.
+            Sıradaki adım başlığın altında ayrı bir satır olarak duruyor.
+            Başlığın içine koymak onu kalabalıklaştırıyordu; Instagram'ın
+            başlığı da sade ve tek işi kimliği göstermek.
           */}
-          {onOpenCv && (
-            <button
-              type="button"
-              onClick={onOpenCv}
-              className="w-full flex items-center justify-between gap-2 p-3 rounded-xl border border-gray-200 bg-white text-left cursor-pointer hover:border-blue-500 transition-colors"
-            >
-              <span className="text-sm font-semibold text-gray-800">
-                CV'ni indir
-              </span>
-              <span className="text-xs font-bold text-blue-600 shrink-0">PDF →</span>
-            </button>
-          )}
-
           {siradaki ? (
             <button
               type="button"
               onClick={siradakineGit}
-              className="w-full flex items-center justify-between gap-2 p-3 rounded-xl bg-blue-50 border border-blue-100 text-left cursor-pointer hover:bg-blue-100 transition-colors"
+              className="w-full flex items-center justify-between gap-2 p-3 rounded-2xl bg-blue-50 border border-blue-100 text-left cursor-pointer hover:bg-blue-100 transition-colors"
             >
               <span className="text-sm font-semibold text-blue-800 min-w-0">
                 Sıradaki: {siradaki.etiket}
               </span>
-              <span className="text-xs font-bold text-blue-700 shrink-0">
-                Aç →
-              </span>
+              <span className="text-xs font-bold text-blue-700 shrink-0">Aç →</span>
             </button>
           ) : (
-            <p className="text-xs text-emerald-700 font-semibold">
+            <p className="text-xs text-emerald-700 font-semibold px-1">
               Her alanı doldurdun. Artık ilanlara başvurabilirsin.
             </p>
           )}
-        </div>
-      </div>
         </div>
 
         {/* ---------------- SAĞ: doldurulacak bölümler ---------------- */}
