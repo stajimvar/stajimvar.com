@@ -203,11 +203,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
 
         {/*
-          Role Switcher
-          Şirket kaydı şimdilik kapalı: şirketler siteye kendileri kaydolarak
-          değil, ilanlarına gelen başvuru üzerine gönderilen doğrulama
-          bağlantısıyla katılacak. Çalışmayan bir sekme göstermek yerine
-          gizliyoruz.
+          ROL SEÇİCİ — ŞİRKET SEKMESİ KAPALI.
+
+          Buradaki eski açıklama yanlıştı: "başvuru üzerine gönderilen
+          doğrulama bağlantısı" diye bir akış yok. Gerçek akış şu:
+
+            kayıt ol → /sirket/<slug> sayfasından sahiplenme talebi gönder
+            → yönetici onaylar (approve_company_claim) → şirket portalı açılır
+
+          Sebep güvenlik: rol kayıt sırasında istemciden gelseydi, kendini
+          şirket ilan eden herkes teklife açık öğrenci profillerini okurdu.
+
+          `allowCompanySignUp` hiçbir yerden true geçilmiyor ve geçilmemeli:
+          arkasındaki signUpCompany() zaten ilk satırda hata fırlatıyor.
+          Bayrağı açmak bozuk bir form göstermek olur.
+
+          İşverenin gireceği kapı: /isveren/ilan-ver (IsverenGirisi.tsx).
         */}
         {allowCompanySignUp && (
         <div className="flex items-center gap-2 mb-4 bg-gray-100 p-1 rounded-2xl">
