@@ -380,6 +380,10 @@ async function merkezListeleriniCiz() {
       path.join(kok, 'src', 'components', 'IsverenGirisiIcerik.tsx'),
       'isveren-girisi'
     );
+    const merkezModul = await icerikDerle(
+      path.join(kok, 'src', 'components', 'KariyerMerkezleri.tsx'),
+      'kariyer-merkezleri'
+    );
 
     return {
       bolumler: renderToStaticMarkup(React.createElement(bolumModul.BolumListesi, {})),
@@ -387,6 +391,9 @@ async function merkezListeleriniCiz() {
       programlar: renderToStaticMarkup(React.createElement(programModul.ProgramListesi, {})),
       isverenGirisi: renderToStaticMarkup(
         React.createElement(isverenModul.IsverenGirisiIcerik, {})
+      ),
+      kariyerMerkezleri: renderToStaticMarkup(
+        React.createElement(merkezModul.KariyerMerkezleriIcerik, {})
       ),
       rehberBaglantilari,
     };
@@ -765,6 +772,7 @@ async function main() {
     ['/isveren', 'Stajyer nasıl alınır? İşveren rehberi | StajımVar', 'Sigorta kimde, ücret zorunlu mu, okulla hangi evrak imzalanır — sırayla.', 'Stajyer almak sandığınızdan kolay.'],
     ['/staj-programlari', 'Büyük işverenlerde staj başvurusu | StajımVar', 'Aselsan, TUSAŞ, Turkcell, Tüpraş ve diğerleri stajı kendi kariyer sayfasından alıyor. Doğrulanmış başvuru adresleri.', 'Büyük işverenlerde staj'],
     ['/isveren/ilan-ver', 'Stajyer ilanı ver | StajımVar', 'Staj ilanı yayınlamak ücretsiz. Şirket sayfanızı sahiplenin, ilanlarınızı kendiniz girin.', 'Stajyer ilanı ver'],
+    ['/universite-kariyer-merkezleri', 'Üniversite kariyer merkezleri | StajımVar', 'Staj formu, sigorta yazısı ve onay imzası kendi okulundan çıkıyor. Kariyer merkezlerinin doğrulanmış adresleri.', 'Üniversite kariyer merkezleri'],
   ];
   /*
     /rehber ve /bolumler'e listeleri de basılıyor: bu iki sayfa tarayıcının
@@ -776,6 +784,7 @@ async function main() {
     '/bolumler': merkezListeleri.bolumler,
     '/staj-programlari': merkezListeleri.programlar,
     '/isveren/ilan-ver': merkezListeleri.isverenGirisi,
+    '/universite-kariyer-merkezleri': merkezListeleri.kariyerMerkezleri,
   };
 
   for (const [yol, baslik, aciklama, h1] of sabitler) {

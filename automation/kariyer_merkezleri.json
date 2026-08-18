@@ -1,0 +1,102 @@
+[
+ {
+  "universite": "Boğaziçi Üniversitesi",
+  "alan": "boun.edu.tr",
+  "url": "https://kariyermerkezi.bogazici.edu.tr/"
+ },
+ {
+  "universite": "İstanbul Üniversitesi",
+  "alan": "istanbul.edu.tr",
+  "url": "https://kariyer.istanbul.edu.tr/tr"
+ },
+ {
+  "universite": "Ege Üniversitesi",
+  "alan": "ege.edu.tr",
+  "url": "https://kariyer.ege.edu.tr/"
+ },
+ {
+  "universite": "Dokuz Eylül Üniversitesi",
+  "alan": "deu.edu.tr",
+  "url": "https://kariyer.deu.edu.tr/tr/"
+ },
+ {
+  "universite": "Gazi Üniversitesi",
+  "alan": "gazi.edu.tr",
+  "url": "https://kariyer.gazi.edu.tr/"
+ },
+ {
+  "universite": "Marmara Üniversitesi",
+  "alan": "marmara.edu.tr",
+  "url": "https://kariyermerkezi.marmara.edu.tr/"
+ },
+ {
+  "universite": "Yıldız Teknik Üniversitesi",
+  "alan": "yildiz.edu.tr",
+  "url": "https://kariyer.yildiz.edu.tr/"
+ },
+ {
+  "universite": "Akdeniz Üniversitesi",
+  "alan": "akdeniz.edu.tr",
+  "url": "https://kariyermerkezi.akdeniz.edu.tr/"
+ },
+ {
+  "universite": "Çukurova Üniversitesi",
+  "alan": "cu.edu.tr",
+  "url": "https://kariyer.cu.edu.tr/"
+ },
+ {
+  "universite": "Selçuk Üniversitesi",
+  "alan": "selcuk.edu.tr",
+  "url": "https://kariyer.selcuk.edu.tr/"
+ },
+ {
+  "universite": "Atatürk Üniversitesi",
+  "alan": "atauni.edu.tr",
+  "url": "https://atauni.edu.tr/kariyer/"
+ },
+ {
+  "universite": "Karadeniz Teknik Üniversitesi",
+  "alan": "ktu.edu.tr",
+  "url": "https://www.ktu.edu.tr/kariyer"
+ },
+ {
+  "universite": "Gebze Teknik Üniversitesi",
+  "alan": "gtu.edu.tr",
+  "url": "https://www.gtu.edu.tr"
+ },
+ {
+  "universite": "Eskişehir Osmangazi Üniversitesi",
+  "alan": "ogu.edu.tr",
+  "url": "https://kariyer.ogu.edu.tr/"
+ },
+ {
+  "universite": "Sakarya Üniversitesi",
+  "alan": "sakarya.edu.tr",
+  "url": "https://kariyer.sakarya.edu.tr/"
+ },
+ {
+  "universite": "Süleyman Demirel Üniversitesi",
+  "alan": "sdu.edu.tr",
+  "url": "https://kariyer.sdu.edu.tr/"
+ },
+ {
+  "universite": "Ondokuz Mayıs Üniversitesi",
+  "alan": "omu.edu.tr",
+  "url": "https://kariyer.omu.edu.tr/tr"
+ },
+ {
+  "universite": "Muğla Sıtkı Koçman Üniversitesi",
+  "alan": "mu.edu.tr",
+  "url": "https://kariyer.mu.edu.tr/"
+ },
+ {
+  "universite": "TOBB Ekonomi ve Teknoloji Üniversitesi",
+  "alan": "etu.edu.tr",
+  "url": "https://www.etu.edu.tr/tr/kariyer"
+ },
+ {
+  "universite": "İzmir Yüksek Teknoloji Enstitüsü",
+  "alan": "iyte.edu.tr",
+  "url": "https://kariyerimiyte.iyte.edu.tr/"
+ }
+]

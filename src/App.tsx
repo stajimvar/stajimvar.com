@@ -28,6 +28,7 @@ import { GuideHub, GuidePage } from './components/GuidePages';
 import { BolumHub, BolumPage } from './components/BolumPages';
 import { StajProgramlariSayfasi } from './components/StajProgramlari';
 import { IsverenGirisi } from './components/IsverenGirisi';
+import { KariyerMerkezleriSayfasi } from './components/KariyerMerkezleri';
 /*
   Bu ikisi bilerek gecikmeli DEĞİL: /araclar, /araclar/* ve /isveren
   ön render edilen adresler. React kabı temizlediği için gecikmeli
@@ -131,6 +132,7 @@ const BulunamadiSayfasi: React.FC<{
     ['/rehber', 'Staj rehberi'],
     ['/bolumler', 'Bölüme göre staj'],
     ['/staj-programlari', 'Büyük işverenlerde staj'],
+    ['/universite-kariyer-merkezleri', 'Üniversite kariyer merkezleri'],
     ['/isveren/ilan-ver', 'Stajyer ilanı ver'],
     ['/araclar', 'Hesaplama araçları'],
   ];
@@ -778,6 +780,10 @@ export default function App() {
     Ilan DEGIL: bu sayfa isverenin kendi basvuru sayfasina yonlendiriyor.
     Gerekcesi src/data/stajProgramlari.ts basinda.
   */
+  /* Universite kariyer merkezleri — dogrulanmis dis baglanti dizini. */
+  if (temizYol === '/universite-kariyer-merkezleri') {
+    return icerikSayfasi(<KariyerMerkezleriSayfasi onBack={goHome} />);
+  }
   if (temizYol === '/staj-programlari') {
     return icerikSayfasi(<StajProgramlariSayfasi onBack={goHome} onNavigate={navigate} />);
   }
@@ -1130,6 +1136,7 @@ export default function App() {
                 { yol: '/rehber', etiket: 'Staj rehberi' },
                 { yol: '/bolumler', etiket: 'Bölüme göre staj' },
                 { yol: '/staj-programlari', etiket: 'Büyük işverenlerde staj' },
+                { yol: '/universite-kariyer-merkezleri', etiket: 'Kariyer merkezleri' },
                 { yol: '/araclar', etiket: 'Hesaplama araçları' },
                 { yol: '/isveren', etiket: 'İşveren rehberi' },
                 { yol: '/isveren/ilan-ver', etiket: 'Stajyer ilanı ver' },
