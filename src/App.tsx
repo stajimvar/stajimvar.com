@@ -27,6 +27,7 @@ import { ListingPage } from './components/ListingPage';
 import { GuideHub, GuidePage } from './components/GuidePages';
 import { BolumHub, BolumPage } from './components/BolumPages';
 import { StajProgramlariSayfasi } from './components/StajProgramlari';
+import { IsverenGirisi } from './components/IsverenGirisi';
 /*
   Bu ikisi bilerek gecikmeli DEĞİL: /araclar, /araclar/* ve /isveren
   ön render edilen adresler. React kabı temizlediği için gecikmeli
@@ -130,6 +131,7 @@ const BulunamadiSayfasi: React.FC<{
     ['/rehber', 'Staj rehberi'],
     ['/bolumler', 'Bölüme göre staj'],
     ['/staj-programlari', 'Büyük işverenlerde staj'],
+    ['/isveren/ilan-ver', 'Stajyer ilanı ver'],
     ['/araclar', 'Hesaplama araçları'],
   ];
 
@@ -808,6 +810,16 @@ export default function App() {
   }
 
   /* İşveren rehberi: şirketin bizi bulmasının ana yolu. */
+  /*
+    Isverenin ilan verme kanalina giris kapisi.
+
+    /isveren'DEN ONCE geliyor: alt yol olmasaydi bile sira onemli, cunku
+    yukaridaki kosul tam esitlik ariyor ve bu bloktan sonra kalsaydi
+    /isveren/ilan-ver bilinmeyen adrese dusup 404 uretirdi.
+  */
+  if (temizYol === '/isveren/ilan-ver') {
+    return icerikSayfasi(<IsverenGirisi onBack={goHome} onNavigate={navigate} />);
+  }
   if (temizYol === '/isveren' || temizYol === '/stajyer-nasil-alinir') {
     return icerikSayfasi(<EmployerGuide onBack={goHome} onNavigate={navigate} />);
   }
@@ -1120,6 +1132,7 @@ export default function App() {
                 { yol: '/staj-programlari', etiket: 'Büyük işverenlerde staj' },
                 { yol: '/araclar', etiket: 'Hesaplama araçları' },
                 { yol: '/isveren', etiket: 'İşveren rehberi' },
+                { yol: '/isveren/ilan-ver', etiket: 'Stajyer ilanı ver' },
                 { yol: '/hakkimizda', etiket: 'Hakkımızda' },
                 { yol: '/iletisim', etiket: 'İletişim' },
                 { yol: '/ilan-kurallari', etiket: 'İlan kuralları' },

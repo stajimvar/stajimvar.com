@@ -129,6 +129,48 @@ export async function fetchCompanyPage(slug: string): Promise<{
   };
 }
 
+/**
+ * İşverenin kendi şirketini bulması için ada göre arama.
+ *
+ * NEDEN VAR
+ * ---------
+ * Şirket sahiplenme formu yalnızca /sirket/<slug> sayfasında duruyor. Ama o
+ * sayfaya giden tek yol ilan listesinden tıklamaktı: yani şirketi zaten
+ * ilanı derlenmiş olan işveren buraya gelebiliyordu, diğerleri hiç
+ * gelemiyordu. Aramasız hâlde kapı vardı ama tokmağı yoktu.
+ *
+ * Herkese açık: companies tablosunun okuma kuralı zaten anonim erişime
+ * izin veriyor (şirket sayfaları arama motoruna açık). Burada yalnızca
+ * ada göre filtreleme yapılıyor, ek bir alan sızmıyor.
+ */
+export async function searchCompanies(
+  term: string
+): Promise<{ id: string; name: string; slug: string; logoUrl?: string; verified: boolean }[]> {
+  const temiz = term.trim();
+  // İki harften kısa aramada tablonun yarısı dönerdi; anlamlı değil.
+  if (temiz.length < 2) return [];
+
+  const { data, error } = await supabase
+    .from('companies')
+    .select('id,name,slug,logo_url,verified')
+    // ilike: büyük-küçük harf duyarsız. Türkçe "İ/ı" eşleşmesi Postgres'in
+    // harmanlamasına bırakılıyor; kendi normalleştirmemizi eklemiyoruz çünkü
+    // yanlış eşleşme üretmesi doğru eşleşmeyi kaçırmasından daha kötü.
+    .ilike('name', `%${temiz}%`)
+    .order('name')
+    .limit(10);
+
+  if (error) fail('Şirket araması yapılamadı', error);
+
+  return (data ?? []).map((c: any) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    logoUrl: c.logo_url ?? undefined,
+    verified: c.verified,
+  }));
+}
+
 /** Şirketin kendi ilanları — taslaklar dahil. RLS üyelik kontrolünü yapıyor. */
 export async function fetchCompanyListings(companyId: string): Promise<InternshipListing[]> {
   const { data, error } = await supabase

@@ -376,10 +376,15 @@ export const EmployerGuide: React.FC<EmployerGuideProps> = ({ onBack, onNavigate
             Şirketinizin StajımVar'da bir sayfası zaten olabilir — ilanlarınızı kariyer
             sayfanızdan derliyoruz. Sayfanızı sahiplenip ilan girmeye başlayabilirsiniz.
           </p>
+          {/*
+            Bu düğme önce '/' adresine gidiyordu, yani öğrencinin ilan
+            akışına. İşveren için çıkmaz sokaktı: ilan verme kanalı yazılmış
+            olduğu hâlde ona giden hiçbir yol yoktu.
+          */}
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => onNavigate('/')}
+              onClick={() => onNavigate('/isveren/ilan-ver')}
               className="px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
             >
               Şirketimi bul

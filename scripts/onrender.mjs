@@ -371,11 +371,23 @@ async function merkezListeleriniCiz() {
       path.join(kok, 'src', 'components', 'StajProgramlari.tsx'),
       'staj-programlari'
     );
+    /*
+      Isveren giris sayfasinin METNI. Arama kutusu ciziLMIYOR: o etkilesimli
+      bir arac, icerik degil. Sayfanin anlattigi her sey (uc adim, bes soru,
+      "sirketiniz yoksa" yolu) statik HTML'de duruyor.
+    */
+    const isverenModul = await icerikDerle(
+      path.join(kok, 'src', 'components', 'IsverenGirisiIcerik.tsx'),
+      'isveren-girisi'
+    );
 
     return {
       bolumler: renderToStaticMarkup(React.createElement(bolumModul.BolumListesi, {})),
       rehberler: renderToStaticMarkup(React.createElement(rehberModul.RehberListesi, {})),
       programlar: renderToStaticMarkup(React.createElement(programModul.ProgramListesi, {})),
+      isverenGirisi: renderToStaticMarkup(
+        React.createElement(isverenModul.IsverenGirisiIcerik, {})
+      ),
       rehberBaglantilari,
     };
   } catch (hata) {
@@ -752,6 +764,7 @@ async function main() {
     ['/araclar/staj-gunu-hesaplama', 'Staj günü hesaplama | StajımVar', '20 veya 30 iş günü staj hangi tarihte biter? Resmî tatiller düşülerek.', 'Staj günü hesaplama'],
     ['/isveren', 'Stajyer nasıl alınır? İşveren rehberi | StajımVar', 'Sigorta kimde, ücret zorunlu mu, okulla hangi evrak imzalanır — sırayla.', 'Stajyer almak sandığınızdan kolay.'],
     ['/staj-programlari', 'Büyük işverenlerde staj başvurusu | StajımVar', 'Aselsan, TUSAŞ, Turkcell, Tüpraş ve diğerleri stajı kendi kariyer sayfasından alıyor. Doğrulanmış başvuru adresleri.', 'Büyük işverenlerde staj'],
+    ['/isveren/ilan-ver', 'Stajyer ilanı ver | StajımVar', 'Staj ilanı yayınlamak ücretsiz. Şirket sayfanızı sahiplenin, ilanlarınızı kendiniz girin.', 'Stajyer ilanı ver'],
   ];
   /*
     /rehber ve /bolumler'e listeleri de basılıyor: bu iki sayfa tarayıcının
@@ -762,6 +775,7 @@ async function main() {
     '/rehber': merkezListeleri.rehberler,
     '/bolumler': merkezListeleri.bolumler,
     '/staj-programlari': merkezListeleri.programlar,
+    '/isveren/ilan-ver': merkezListeleri.isverenGirisi,
   };
 
   for (const [yol, baslik, aciklama, h1] of sabitler) {

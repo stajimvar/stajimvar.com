@@ -34,6 +34,7 @@ DURAGAN = [
     ("/rehber", "weekly", "0.9"),
     ("/bolumler", "weekly", "0.9"),
     ("/staj-programlari", "weekly", "0.9"),
+    ("/isveren/ilan-ver", "monthly", "0.8"),
     # Hesaplama araclari. Arama trafiginin buyuk kismini bunlar getiriyor.
     ("/araclar", "monthly", "0.8"),
     ("/araclar/net-hesaplama", "monthly", "0.8"),
