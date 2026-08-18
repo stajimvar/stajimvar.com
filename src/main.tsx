@@ -2,6 +2,7 @@ import {StrictMode, Suspense} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import { adsenseBetiginiBaslat } from './components/GoogleAdBanner.tsx';
+import { olcumuBaslat } from './lib/olcum.ts';
 import './index.css';
 
 /*
@@ -15,6 +16,12 @@ import './index.css';
   yapmıyor; boşuna dış istek atılmıyor.
 */
 adsenseBetiginiBaslat();
+
+/*
+  Cerezsiz ziyaret olcumu. Belirtec tanimli degilse hicbir sey yapmiyor;
+  gerekcesi src/lib/olcum.ts basinda.
+*/
+olcumuBaslat();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

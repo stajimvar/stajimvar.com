@@ -49,6 +49,10 @@ const TEMEL_GUNCELLEME = '16 Ağustos 2026';
 
 const GUNCELLEME: Partial<Record<LegalSlug, string>> = {
   hakkimizda: '18 Ağustos 2026',
+  // Çerezsiz ziyaret ölçümü eklendi ve AdSense doğrulama betiğinin zaten
+  // yüklendiği açıkça yazıldı; ikisi de bu iki metni değiştirdi.
+  'cerez-politikasi': '19 Ağustos 2026',
+  gizlilik: '19 Ağustos 2026',
 };
 
 const guncellemeTarihi = (slug: LegalSlug) => GUNCELLEME[slug] || TEMEL_GUNCELLEME;
@@ -269,8 +273,23 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
 
             <Section title="Kullandığımız çerezler">
               <p>
-                Site şu anda <strong>takip veya reklam çerezi kullanmıyor</strong>. Analitik
-                aracı da bulunmuyor.
+                Site <strong>takip çerezi kullanmıyor</strong> ve ziyaretinizi kişi
+                bazında izlemiyor.
+              </p>
+              <p>
+                <strong>Ziyaret ölçümü:</strong> Hangi sayfaların ne kadar görüntülendiğini
+                Cloudflare Web Analytics ile sayıyoruz. Bu araç{' '}
+                <strong>çerez koymuyor</strong> ve parmak izi çıkarmıyor; ziyaret edilen
+                adres, yönlendiren site, ülke ve tarayıcı türü gibi toplu veriler
+                kaydediliyor. Sizi tanımlayan bir kayıt tutulmuyor, bu yüzden onay bandı da
+                göstermiyoruz.
+              </p>
+              <p>
+                <strong>Reklam:</strong> Sayfalarda Google AdSense doğrulama betiği
+                yükleniyor. Hesabımız henüz onaylanmadığı için şu anda reklam
+                gösterilmiyor; onaylandığında Google'ın reklam ve ölçüm çerezleri devreye
+                girecek ve bu sayfa o gün güncellenecek. Google'ın bu verileri nasıl
+                işlediğini kendi gizlilik politikasında açıklıyor.
               </p>
               <p>
                 Hesabınız varsa oturumunuzu açık tutmak için bir <strong>oturum
@@ -334,9 +353,15 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 sebep hukuki yükümlülük (m.5/2-ç).
               </p>
               <p>
-                <strong>Aktarım:</strong> Verileriniz üçüncü taraflara aktarılmaz.
-                Barındırma Supabase (Frankfurt) ve Cloudflare altyapısındadır; bu
-                sağlayıcılar veriyi bizim adımıza saklar.
+                <strong>Aktarım:</strong> Hesap ve profil verileriniz üçüncü taraflara
+                aktarılmaz. Barındırma Supabase (Frankfurt) ve Cloudflare
+                altyapısındadır; bu sağlayıcılar veriyi bizim adımıza saklar. Ziyaret
+                ölçümü Cloudflare Web Analytics ile yapılıyor ve kişisel veri içermiyor;
+                ayrıntısı{' '}
+                <a href="/cerez-politikasi" className="text-blue-600 hover:underline">
+                  Çerez Politikası
+                </a>{' '}
+                sayfasında.
               </p>
               <p>
                 <strong>Saklama:</strong> Hesabınız açık kaldığı sürece. Hesap silindiğinde

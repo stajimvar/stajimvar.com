@@ -102,6 +102,9 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ env.VITE_SUPABASE_ANON_KEY }}
+          # Cerezsiz ziyaret olcumu. Sir tanimli degilse olcum betigi
+          # hic yuklenmiyor; derleme yine de basariyla gecer.
+          VITE_CF_ANALYTICS_TOKEN: ${{ secrets.VITE_CF_ANALYTICS_TOKEN }}
 
       - name: Cloudflare Pages'e yükle
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
