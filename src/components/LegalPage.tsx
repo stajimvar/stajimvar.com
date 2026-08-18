@@ -33,7 +33,25 @@ export const LEGAL_ROUTES: Record<string, LegalSlug> = {
   ...CORPORATE_ROUTES,
 };
 
-const UPDATED = '16 Ağustos 2026';
+/*
+  Son güncelleme tarihi SAYFA BAŞINA.
+
+  Önce tek bir sabit vardı ve bütün yasal/kurumsal sayfalar onu gösteriyordu.
+  Sorun şu: Hakkımızda yeniden yazıldığında o sabiti güncellemek, hiç
+  dokunulmamış Gizlilik ve KVKK metinlerinin de "bugün güncellendi" demesine
+  yol açıyordu. Bu, okuyucuya yanlış bilgi vermek olur - üstelik tam da
+  güven kazanmak için koyduğumuz bir satırda.
+
+  Yeni bir sayfa eklenirse buraya tarihi yazılmalı; yazılmazsa TEMEL
+  kullanılıyor.
+*/
+const TEMEL_GUNCELLEME = '16 Ağustos 2026';
+
+const GUNCELLEME: Partial<Record<LegalSlug, string>> = {
+  hakkimizda: '18 Ağustos 2026',
+};
+
+const guncellemeTarihi = (slug: LegalSlug) => GUNCELLEME[slug] || TEMEL_GUNCELLEME;
 
 interface LegalPageProps {
   slug: LegalSlug;
@@ -49,10 +67,29 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
   </section>
 );
 
+const YASAL_BASLIK: Record<string, string> = {
+  gizlilik: 'Gizlilik Politikası',
+  'cerez-politikasi': 'Çerez Politikası',
+  'kvkk-aydinlatma-metni': 'KVKK Aydınlatma Metni',
+};
+
 export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
   const kurumsal = (Object.values(CORPORATE_ROUTES) as string[]).includes(slug)
     ? (slug as CorporateSlug)
     : null;
+
+  /*
+    Sayfa başlığı burada ayarlanıyor.
+
+    Önce hiç ayarlanmıyordu: doğrudan açıldığında ön render'ın yazdığı başlık
+    doğruydu ama uygulama içinden gezilince önceki sayfanın başlığı kalıyordu
+    (ölçüldü). Sekmede yanlış sayfa adı görünmek, paylaşılan bağlantıda da
+    yanlış ada dönüşüyor.
+  */
+  React.useEffect(() => {
+    const ad = kurumsal ? CORPORATE_TITLES[kurumsal] : YASAL_BASLIK[slug];
+    if (ad) document.title = `${ad} | StajımVar`;
+  }, [slug, kurumsal]);
 
   return (
     <div className="text-gray-900">
@@ -82,7 +119,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 {CORPORATE_TITLES[kurumsal]}
               </h1>
               <p className="text-xs text-gray-500 mt-1">
-                Son güncelleme: {UPDATED}
+                Son güncelleme: {guncellemeTarihi(slug)}
               </p>
             </div>
             <CorporateContent slug={kurumsal} />
@@ -94,7 +131,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold">Gizlilik Politikası</h1>
               <p className="text-xs text-gray-500 mt-1">
-                Son güncelleme: {UPDATED}
+                Son güncelleme: {guncellemeTarihi(slug)}
               </p>
             </div>
 
@@ -226,7 +263,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold">Çerez Politikası</h1>
               <p className="text-xs text-gray-500 mt-1">
-                Son güncelleme: {UPDATED}
+                Son güncelleme: {guncellemeTarihi(slug)}
               </p>
             </div>
 
@@ -275,7 +312,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold">KVKK Aydınlatma Metni</h1>
               <p className="text-xs text-gray-500 mt-1">
-                Son güncelleme: {UPDATED}
+                Son güncelleme: {guncellemeTarihi(slug)}
               </p>
             </div>
 

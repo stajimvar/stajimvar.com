@@ -1,4 +1,6 @@
 import React from 'react';
+import { BOLUMLER } from '../data/bolumler';
+import { REHBERLER } from '../data/rehberler';
 
 /**
  * Kurumsal sayfalar: Hakkımızda, İletişim, Kullanım Koşulları,
@@ -50,48 +52,135 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
   if (slug === 'hakkimizda') {
     return (
       <>
-        <S baslik="Ne yapıyoruz">
+        <S baslik="Neden var">
           <p>
-            StajımVar, Türkiye'deki staj ilanlarını tek yerde toplayan bir arama ve
-            başvuru platformudur. İlanları aracı sitelerden değil,{' '}
-            <strong>şirketlerin kendi kariyer sistemlerinden</strong> (Lever, Greenhouse,
-            Workable, Ashby, Workday gibi resmî işe alım platformları) alırız.
+            Staj arayan bir öğrencinin zamanının büyük kısmı ilan aramakla değil,
+            <strong> ilanın hâlâ açık olup olmadığını anlamaya çalışmakla</strong> geçiyor.
+            Aracı sitelerde kapanmış ilanlar aylarca durabiliyor; öğrenci başvuruyor, cevap
+            gelmiyor, sebebini de öğrenemiyor. Bir yandan da şirketlerin kendi kariyer
+            sayfaları dağınık: aynı öğrenci sekiz ayrı siteyi tek tek gezmek zorunda kalıyor.
+          </p>
+          <p>
+            StajımVar bu iki sorunu çözmek için var. İlanları{' '}
+            <strong>şirketlerin kendi işe alım sistemlerinden</strong> alıyoruz ve başvuru
+            bağlantısı her zaman ilanın kendi sayfasını gösteriyor. Araya girmiyoruz.
           </p>
         </S>
 
-        <S baslik="Neden böyle">
+        <S baslik="Nasıl çalışıyor">
           <p>
-            Staj arayan bir öğrencinin en büyük derdi, ilanın hâlâ açık olup olmadığını
-            bilememek. Aracı sitelerde kapanmış ilanlar aylarca durabiliyor. Bunu çözmek
-            için her ilanı kaynağında düzenli kontrol eden bir sistem kurduk; kapanan
-            ilanları otomatik düşürme kısmı ise henüz açılmadı — ayrıntısı
-            <strong> İlan kuralları</strong> sayfasında. O zamana kadar kapanmış ilanları
-            elle kaldırıyoruz.
+            Kaynaklarımızın tamamı, işe alım sistemlerinin dışarıdan okunmak üzere yayımladığı
+            resmî uç noktalar. Şu anda altı farklı sistemden ilan alıyoruz: Lever, Greenhouse,
+            Ashby, Workable, Workday ve SmartRecruiters. Her kaynak eklenmeden önce elle
+            inceleniyor ve <strong>robots kuralları kontrol ediliyor</strong>.
           </p>
           <p>
-            Başvuru adresi de her zaman ilanın kendi sayfasıdır. Araya girmiyoruz,
-            başvurunu bizim üzerimizden geçmeye zorlamıyoruz.
+            Kaynaklar saatte bir kontrol ediliyor. Yeni ilan çıktığında listeye giriyor;
+            kapanan ilanları şu anda elle kaldırıyoruz, otomatik düşürme henüz açık değil.
+            Bunu <strong>İlan kuralları</strong> sayfasında açıkça yazıyoruz çünkü bu, sitenin
+            bugünkü en zayıf noktası ve saklamanın anlamı yok.
+          </p>
+        </S>
+
+        <S baslik="Neyi yapmıyoruz">
+          <ul className="list-disc pl-5 space-y-1.5">
+            <li>
+              Başvuruyu kendi üzerimizden geçmeye zorlamıyoruz. Başvuru adresi her zaman
+              şirketin kendi sayfası.
+            </li>
+            <li>
+              Öğrenci bilgisi satmıyoruz, üçüncü taraflara pazarlama amacıyla aktarmıyoruz.
+            </li>
+            <li>
+              Sahte aciliyet üretmiyoruz: &quot;son 2 kişi&quot;, &quot;bugün bitiyor&quot;
+              gibi ifadeler kullanmıyoruz. İlanda ne yazıyorsa o.
+            </li>
+            <li>
+              Kullanım şartlarını ihlal eden veya erişim engeli aşan yöntemlerle veri
+              toplamıyoruz.
+            </li>
+            <li>
+              Var olmayan bir özelliği &quot;yakında&quot; diye sunmuyoruz. Hazır olmadan
+              &quot;var&quot; demiyoruz.
+            </li>
+          </ul>
+        </S>
+
+        <S baslik="Rehberleri nasıl yazıyoruz">
+          <p>
+            İlan listesinin yanında bir de rehber tarafı var: {REHBERLER.length} rehber ve{' '}
+            {BOLUMLER.length} bölüm sayfası. Bunları yazarken üç kuralımız var.
+          </p>
+          <p>
+            <strong>Yıldan yıla değişen rakam yazmıyoruz.</strong> Asgari ücrete endeksli staj
+            ödemeleri, prim oranları, KYK tutarları, taban puanlar her yıl güncelleniyor.
+            Sabit bir rakam bırakmak, bir süre sonra öğrenciyi yanlış yönlendirmek olur.
+            Mekanizmayı anlatıp güncel rakam için resmî kaynağa yönlendiriyoruz.
+          </p>
+          <p>
+            <strong>Okula göre değişen şeyi &quot;değişir&quot; diye yazıyoruz.</strong> Staj
+            süresi, defter biçimi, kabul edilen iş yeri türü okuldan okula farklı. Tek bir
+            cevap vermek yerine öğrenciyi kendi staj yönergesine yönlendiriyoruz.
+          </p>
+          <p>
+            <strong>Yetki sınırlarını saklamıyoruz.</strong> Psikoloji öğrencisi danışan
+            göremez, hukuk öğrencisi duruşmada taraf olamaz, hemşirelik öğrencisi sorumlu
+            hemşire gözetimi olmadan işlem yapamaz. Bunları yazmamak öğrenciyi zor durumda
+            bırakır.
           </p>
         </S>
 
         <S baslik="Şu an ne yapabiliyoruz, ne yapamıyoruz">
           <p>
-            <strong>Yapabiliyoruz:</strong> ilan arama ve filtreleme, öğrenci profili,
-            başvurularını tek yerden takip.
+            <strong>Yapabiliyoruz:</strong> ilan arama ve filtreleme, bölüme göre staj
+            rehberleri, hesaplama araçları, öğrenci profili ve profilden yazdırılabilir
+            özgeçmiş üretme.
           </p>
           <p>
-            <strong>Henüz yapamıyoruz:</strong> özgeçmiş yükleme, platform üzerinden
-            başvuruyu şirkete iletme, şirket hesapları. Bunlar üzerinde çalışıyoruz; hazır
-            olmadan "var" demiyoruz.
+            <strong>Henüz yapamıyoruz:</strong> özgeçmiş dosyası yükleme, platform üzerinden
+            başvuruyu şirkete iletme, şirketlerin kendi ilanlarını girmesi. Bunlar üzerinde
+            çalışıyoruz.
           </p>
         </S>
 
-        <S baslik="Kapsam">
+        <S baslik="Sitenin geliri ve bağımsızlığı">
           <p>
-            Kaynak sayımız sürekli artıyor ve her kaynak elle inceleniyor. Yalnızca
-            sağlayıcıların dışarıdan okunmak üzere yayımladığı resmî uç noktaları
-            kullanırız; kullanım şartlarını ihlal eden veya erişim engeli aşan yöntemler
-            kullanmayız.
+            StajımVar öğrenciye ücretsiz. Giderleri karşılamak için sayfalarda reklam
+            gösteriliyor ve bunu açıkça söylüyoruz. Reklamların içerikle bir ilgisi yok:{' '}
+            <strong>hiçbir şirket para karşılığı ilan sırası satın alamıyor</strong> ve hiçbir
+            reklamveren rehber metinlerine müdahale etmiyor.
+          </p>
+          <p>
+            İlanların sıralaması yayın tarihine ve arama terimine göre belirleniyor; ticari
+            bir anlaşmaya göre değil. Bir gün sponsorlu içerik yayımlarsak bunu ilgili
+            sayfada açıkça etiketleyeceğiz.
+          </p>
+        </S>
+
+        <S baslik="Kapsam ve sınırlar">
+          <p>
+            Kapsamımız Türkiye&apos;deki staj ilanları. Kaynak sayısı sürekli artıyor ama
+            hiçbir zaman &quot;bütün staj ilanları burada&quot; demiyoruz — çünkü doğru
+            olmaz. Kendi kariyer sayfası olmayan, ilanını yalnızca sosyal medyada duyuran ya
+            da hiç ilan açmayan çok sayıda işletme var.
+          </p>
+          <p>
+            Zaten rehberlerde ısrarla söylediğimiz şey de bu: stajların önemli bir kısmı ilan
+            üzerinden değil, ilan açmamış bir şirkete doğrudan yazarak bulunuyor. Sitede
+            aradığını bulamazsan bu bir çıkmaz değil; nasıl yapılacağını{' '}
+            <strong>Staj nasıl bulunur</strong> rehberinde adım adım anlatıyoruz.
+          </p>
+        </S>
+
+        <S baslik="Hata bulursanız">
+          <p>
+            Kapanmış bir ilan, yanlış bir bilgi ya da kırık bir bağlantı gördüyseniz{' '}
+            <strong>İçerik ve İlan Bildirimi</strong> sayfasından ya da doğrudan{' '}
+            <a href={`mailto:${ILETISIM}`} className="text-blue-600 hover:underline font-semibold">
+              {ILETISIM}
+            </a>{' '}
+            adresinden yazabilirsiniz. Rehberlerdeki bilgiler bilgilendirme amaçlı; hukuki
+            veya mali danışmanlık değil.
           </p>
         </S>
       </>
