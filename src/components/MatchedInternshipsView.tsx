@@ -28,6 +28,7 @@ import { calculateInternshipMatch } from '../utils/matchingEngine';
 import { InternshipCard } from './InternshipCard';
 import { ilBul } from '../lib/sehir';
 import { GoogleAdBanner } from './GoogleAdBanner';
+import { SirketSeridi } from './SirketSeridi';
 
 /**
  * İlanın listeye eklenme zamanı (ms).
@@ -557,6 +558,39 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       .sort((a, b) => b.adet - a.adet || a.ad.localeCompare(b.ad, 'tr'));
   }, [matchedData, subTab]);
 
+  /*
+    ŞERİT VERİSİ
+
+    companyOptions yalnızca ad ve adet tutuyor; şeritte logo ve "yeni ilan
+    var mı" bilgisi de lazım. İkisi de mevcut ilan kayıtlarından çıkıyor,
+    ek bir sorgu yok.
+
+"Yeni" ölçütü son 24 saat; gerekçesi SirketSeridi.tsx içinde. Kısaca:
+    yedi günle denendi ve on şirketin onu da yeni çıktı — hiçbir şey
+    ayırt etmeyen bir halka dekordan ibaret olurdu.
+  */
+  const seritSirketleri = useMemo(() => {
+    const YENI_PENCERE = 24 * 60 * 60 * 1000;
+    const simdi = Date.now();
+    const harita = new Map<string, { logo?: string; adet: number; yeni: boolean }>();
+
+    for (const { listing, match } of matchedData) {
+      if (!matchesCategory(listing, match, subTab)) continue;
+      const ad = listing.companyName?.trim();
+      if (!ad) continue;
+      const mevcut = harita.get(ad) ?? { logo: undefined, adet: 0, yeni: false };
+      mevcut.adet += 1;
+      if (!mevcut.logo && listing.companyLogo) mevcut.logo = listing.companyLogo;
+      if (simdi - eklenmeZamani(listing.postedAt) <= YENI_PENCERE) mevcut.yeni = true;
+      harita.set(ad, mevcut);
+    }
+
+    return [...harita.entries()]
+      .map(([ad, v]) => ({ ad, logo: v.logo, adet: v.adet, yeni: v.yeni }))
+      /* Yeni ilanı olanlar başta: şeridin başı en çok bakılan yer. */
+      .sort((a, b) => Number(b.yeni) - Number(a.yeni) || b.adet - a.adet || a.ad.localeCompare(b.ad, 'tr'));
+  }, [matchedData, subTab]);
+
   /** Arama kutusuyla suzulmus sirket listesi. */
   const gorunenSirketler = useMemo(() => {
     const q = companySearch.trim().toLocaleLowerCase('tr');
@@ -1043,6 +1077,22 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                 : 'Şirketlerin kendi kariyer sayfalarından derlendi'}
             </span>
           </div>
+
+          {/*
+            ŞİRKET ŞERİDİ
+
+            Instagram akışının üstündeki hikâye şeridinin karşılığı. Mevcut
+            şirket süzgecini kullanıyor: yeni bir durum eklemedik, var olanı
+            bir tık uzağa taşıdık. Süzgeç panelindeki şirket listesi de
+            çalışmaya devam ediyor, ikisi aynı seçimi paylaşıyor.
+          */}
+          <SirketSeridi
+            sirketler={seritSirketleri}
+            secili={selectedCompanies}
+            toplam={filteredListings.length}
+            onSec={sirketSec}
+            onTumu={() => setSelectedCompanies([])}
+          />
 
           {filteredListings.length === 0 ? (
             <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 shadow-sm space-y-4">
