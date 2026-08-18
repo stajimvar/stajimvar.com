@@ -1,3 +1,19 @@
+# VARLIKLAR ÖNCE: eksik dosya SPA yedeğine DÜŞMESİN.
+#
+# Aşağıdaki genel kural bir zamanlar tek başınaydı ve şu hatayı üretiyordu:
+# dağıtımda varlık adları değişiyor (index-ABC.css -> index-XYZ.css) ve eski
+# HTML'i elinde tutan bir tarayıcı silinmiş dosyayı istiyor. Genel kural o
+# isteği de yakalayıp index.html döndürüyordu — hem de 200 ile.
+#
+# Ölçüldü: /assets/index-Cue0zjry.css (artık yok) "200 text/html" dönüyordu.
+# Tarayıcı stil dosyası bekleyip HTML alınca, nosniff yüzünden uygulamıyor:
+# sayfa tamamen STİLSİZ açılıyor ve hiçbir hata görünmüyor.
+#
+# Artık eksik varlık gerçek 404 veriyor. Tarayıcı bunu bir yükleme hatası
+# olarak görüyor ve index.html'deki kurtarma betiği sayfayı bir kez
+# yeniliyor — güncel HTML gelince doğru dosya adı isteniyor.
+/assets/*   /404.html   404
+
 # Tek sayfa uygulaması: /gizlilik gibi yollar doğrudan açıldığında da
 # index.html sunulsun, Cloudflare Pages 404 vermesin.
 # Durum kodu 200 — yönlendirme değil, yeniden yazma.

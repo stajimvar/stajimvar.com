@@ -63,6 +63,48 @@
     <meta property="og:image:alt" content="StajımVar — Şirketlerin staj ilanları, tek listede" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://stajimvar.com/og-gorsel.png" />
+    <script>
+      /*
+        BAYAT HTML KURTARMASI
+
+        Dağıtımda varlık adları değişiyor (index-ABC.css -> index-XYZ.css).
+        Sayfayı açık tutan ya da geri/ileri belleğinden gelen bir tarayıcı,
+        elindeki eski HTML ile artık silinmiş bir dosyayı isteyebiliyor.
+
+        Ölçüldü: böyle bir istek stilsiz bir sayfa üretiyordu. _redirects
+        artık eksik varlığa gerçek 404 veriyor; bu betik de o hatayı yakalayıp
+        sayfayı BİR KEZ yeniliyor, böylece güncel HTML ve doğru dosya adları
+        geliyor.
+
+        Tek seferlik: bayrak sessionStorage'da. Sorun dosya adından değil de
+        ağdan kaynaklanıyorsa sonsuz yenileme döngüsüne girmiyoruz.
+      */
+      (function () {
+        var ANAHTAR = 'sv-varlik-yenilendi';
+        function kurtar() {
+          try {
+            if (sessionStorage.getItem(ANAHTAR)) return;
+            sessionStorage.setItem(ANAHTAR, '1');
+          } catch (e) {
+            return; // gizli sekmede depolama kapalı olabilir; döngü riskini alma
+          }
+          location.reload();
+        }
+        window.addEventListener(
+          'error',
+          function (olay) {
+            var el = olay.target;
+            if (!el || !el.tagName) return;
+            var etiket = el.tagName.toLowerCase();
+            var adres = el.href || el.src || '';
+            if ((etiket === 'link' || etiket === 'script') && adres.indexOf('/assets/') !== -1) {
+              kurtar();
+            }
+          },
+          true // yakalama aşaması: kaynak hataları balonlanmıyor
+        );
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
