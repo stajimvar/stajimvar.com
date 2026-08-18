@@ -268,29 +268,29 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   const hedefler = student.targetRoles ?? [];
   const sehirler = student.preferences.cities ?? [];
 
-  /* ---- doluluk ---- */
-  const adimlar: Array<{ bolum: BolumId; etiket: string; dolu: boolean }> = [
-    { bolum: 'kisisel', etiket: 'okulunu ve bölümünü gir', dolu: Boolean(student.university && student.department) },
-    { bolum: 'kisisel', etiket: 'kendini bir cümleyle tanıt', dolu: Boolean(student.bio) },
-    { bolum: 'kisisel', etiket: 'fotoğrafını ekle', dolu: Boolean(student.avatarUrl) },
-    { bolum: 'kisisel', etiket: 'telefonunu ekle', dolu: Boolean(student.phone) },
-    { bolum: 'teknik', etiket: 'bildiğin programları ekle', dolu: yetenekler.length > 0 },
-    { bolum: 'sosyal', etiket: 'sosyal becerilerini seç', dolu: sosyal.length > 0 },
-    { bolum: 'dil', etiket: 'bildiğin dilleri ekle', dolu: diller.length > 0 },
-    { bolum: 'proje', etiket: 'bir çalışmanı ekle', dolu: projeler.length > 0 },
-    { bolum: 'tercih', etiket: 'hangi işi aradığını seç', dolu: hedefler.length > 0 },
-    { bolum: 'tercih', etiket: 'şehir tercihini seç', dolu: sehirler.length > 0 },
-  ];
-  const tamamlanan = adimlar.filter((a) => a.dolu).length;
-  const oran = Math.round((tamamlanan / adimlar.length) * 100);
-  const siradaki = adimlar.find((a) => !a.dolu);
+  /*
+    DOLULUK
 
-  const tonu =
-    oran === 100 ? 'Profilin tamam 🎉'
-      : oran >= 75 ? 'Az kaldı ⭐'
-      : oran >= 50 ? 'İyi gidiyor 🚀'
-      : oran >= 25 ? 'Isınıyorsun 🔥'
-      : 'Hadi başlayalım 🌱';
+    Yalnızca yüzde hesaplanıyor; halka bunu gösteriyor. Her adımın hangi
+    bölüme ait olduğu da tutuluyordu ama onu kullanan "Sıradaki adım"
+    şeridi kaldırıldı — şerit zaten eksikleri gösteriyor. Kullanılmayan
+    alanı bırakmak sonradan okuyanı yanıltır.
+  */
+  const adimlar: boolean[] = [
+    Boolean(student.university && student.department),
+    Boolean(student.bio),
+    Boolean(student.avatarUrl),
+    Boolean(student.phone),
+    yetenekler.length > 0,
+    sosyal.length > 0,
+    diller.length > 0,
+    projeler.length > 0,
+    hedefler.length > 0,
+    sehirler.length > 0,
+  ];
+  const tamamlanan = adimlar.filter(Boolean).length;
+  const oran = Math.round((tamamlanan / adimlar.length) * 100);
+
 
   /*
     ÖNE ÇIKANLAR ŞERİDİ
@@ -383,18 +383,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     boşalıyordu — hiçbir şeye götürmeyen bir tıklama.
   */
   const bolumAc = (id: BolumId) => setAcikBolum(id);
-
-  const siradakineGit = () => {
-    if (!siradaki) return;
-    bolumeGit(siradaki.bolum);
-    /* Bölüm açıldıktan sonra kaydır. */
-    window.setTimeout(() => {
-      document.getElementById(`bolum-${siradaki.bolum}`)?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      });
-    }, 60);
-  };
 
   /* ---- fotoğraf ---- */
   const dosyaRef = useRef<HTMLInputElement>(null);
@@ -636,26 +624,13 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           {avatarHatasi && <p className="text-xs text-rose-600 px-1">{avatarHatasi}</p>}
 
           {/*
-            Sıradaki adım başlığın altında ayrı bir satır olarak duruyor.
-            Başlığın içine koymak onu kalabalıklaştırıyordu; Instagram'ın
-            başlığı da sade ve tek işi kimliği göstermek.
+            "Sıradaki adım" şeridi kaldırıldı.
+
+            Şerit zaten aynı şeyi söylüyor ve daha iyi söylüyor: boş bölüm
+            kesik çizgili çemberle ve "ekle" yazısıyla duruyor, hepsi aynı
+            anda görünüyor. Ayrı bir satırda tek bir eksiği tekrar etmek
+            aynı bilgiyi iki kez göstermekti.
           */}
-          {siradaki ? (
-            <button
-              type="button"
-              onClick={siradakineGit}
-              className="w-full flex items-center justify-between gap-2 p-3 rounded-2xl bg-blue-50 border border-blue-100 text-left cursor-pointer hover:bg-blue-100 transition-colors"
-            >
-              <span className="text-sm font-semibold text-blue-800 min-w-0">
-                Sıradaki: {siradaki.etiket}
-              </span>
-              <span className="text-xs font-bold text-blue-700 shrink-0">Aç →</span>
-            </button>
-          ) : (
-            <p className="text-xs text-emerald-700 font-semibold px-1">
-              Her alanı doldurdun. Artık ilanlara başvurabilirsin.
-            </p>
-          )}
         </div>
 
         {/* ---------------- SAĞ: sekmeler ve bölümler ---------------- */}
