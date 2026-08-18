@@ -1605,6 +1605,175 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
       },
     ],
   },
+  {
+    slug: 'yurtdisinda-staj',
+    baslik: 'Yurt dışında staj: Erasmus+ ve IAESTE',
+    ozet: 'Tek başına ilana başvurmak nadiren yürüyor; yol okulun kanalından geçiyor.',
+    kategori: 'ogrenci',
+    aciklama:
+      'Yurt dışında staj nasıl yapılır? Erasmus+ staj hareketliliği, IAESTE ve ' +
+      'kendi başına başvuru; zorunlu staj yerine sayılması ve vize tarafı.',
+    icerik: (
+      <>
+        <P>
+          Yurt dışında staj yapmak mümkün, ama internette gördüğün bir ilana tek başına
+          başvurarak nadiren yürüyor. Üç yol var ve ikisi kendi okulunun kanalından
+          geçiyor. Hangisinden gideceğini baştan bilmek, aylarca boşa başvuru yapmanı
+          önlüyor.
+        </P>
+
+        <B>Tek başına başvuru neden çoğu zaman tıkanıyor</B>
+        <P>
+          İki duvar var. Birincisi vize: Türk vatandaşı bir öğrencinin çoğu ülkede staj
+          için vize alması gerekiyor ve bu vize için ev sahibi iş yerinin staj sözleşmesi
+          düzenlemesi şart. Yani şirketin sadece "seni beğenmesi" yetmiyor, evrak sürecine
+          taraf olmayı kabul etmesi gerekiyor. Küçük şirketlerin çoğu bunu üstlenmiyor.
+        </P>
+        <P>
+          İkincisi ilanların kendi şartı: yurt dışı staj ilanlarının büyük kısmı
+          "çalışma iznine sahip olmak" koşulu taşıyor. Bu koşul yazıyorsa vize desteği
+          yok demektir. Uzaktan çalışmaya açık ve Türkiye'den başvuru kabul eden staj
+          ilanı ise çok az; şirketin Türkiye'deki birine sözleşme yapıp ödeme yapabilmesi
+          gerekiyor ve çoğu bunu kurmamış oluyor.
+        </P>
+
+        <B>1. Erasmus+ staj hareketliliği</B>
+        <P>
+          Yurt dışı stajının Türkiye'deki asıl kanalı bu. Öğrenciyi başka bir ülkedeki iş
+          yerine gönderiyor, süre boyunca hibe ödeniyor ve en önemlisi evrak tarafı
+          tanınıyor — yani okulun süreçte taraf oluyor.
+        </P>
+        <P>
+          Başvuru siteler üzerinden değil,{' '}
+          <strong className="text-gray-900">
+            kendi üniversitenin Erasmus veya Uluslararası İlişkiler ofisinden
+          </strong>{' '}
+          yapılıyor. İlk adımın o ofisin duyuru sayfasına bakmak olmalı; başvuru dönemi,
+          istenen belgeler ve dil şartı okuldan okula değişiyor.
+        </P>
+        <L>
+          <li>Staj yerini genellikle öğrenci kendisi buluyor; ofis kabul mektubunu istiyor.</li>
+          <li>Hibe miktarı gidilen ülkeye ve döneme göre değişiyor.</li>
+          <li>Başvuru takvimi her okulda ayrı; kaçırırsan bir sonraki dönemi bekliyorsun.</li>
+        </L>
+        <P>
+          Mezuniyet sonrası staj da programın parçası. Ama kritik ayrıntı şu:{' '}
+          <strong className="text-gray-900">
+            başvuruyu mezun olmadan yapmış olman gerekiyor.
+          </strong>{' '}
+          Mezun olduktan sonra "acaba yapabilir miyim" diye sormak çoğu durumda geç
+          kalmak oluyor.
+        </P>
+
+        <B>2. IAESTE</B>
+        <P>
+          Teknik bölümler ağırlıklı bir öğrenci değişim programı; mühendislik ve fen
+          bilimleri öğrencileri için işliyor. Mantığı karşılıklı: üniversiteler birbirine
+          öğrenci gönderiyor. Bu da kontenjanın okulunun programa dahil olmasına bağlı
+          olduğu anlamına geliyor.
+        </P>
+        <P>
+          Yapılacak ilk şey kendi okulunda IAESTE temsilciliği olup olmadığını sormak.
+          Varsa süreç oradan yürüyor, yoksa bu yol sana kapalı.
+        </P>
+
+        <B>3. Kendi başına bulmak</B>
+        <P>
+          Büyük şirketlerin yapılandırılmış staj programları vize sürecini destekleyebiliyor.
+          Ama iki şeyi bilerek gir: başvurular staj döneminden aylar önce açılıyor ve
+          kapanıyor, ve rekabet çok yüksek. Yaz stajı için ilkbaharda bakmaya başlamak
+          genellikle geç kalmak demek.
+        </P>
+        <P>
+          Bu yolu deneyeceksen ilanın koşullar kısmını en başta oku. "Çalışma izni
+          gerekli" yazıyorsa CV hazırlamaya girişmeden geç; zamanın vize desteği veren
+          ilanlara kalsın.
+        </P>
+
+        <B>Zorunlu staj yerine sayılır mı?</B>
+        <P>
+          Kararı veren tek yer{' '}
+          <strong className="text-gray-900">kendi bölümünün staj komisyonu.</strong>{' '}
+          Üniversiteler yurt dışı stajını genelde kabul ediyor, ama önceden onay istiyorlar
+          ve sigorta tarafı yurt içindekinden farklı işliyor.
+        </P>
+        <Uyari>
+          En pahalı hata: gidip stajı yapıp döndükten sonra saydırmaya çalışmak. Onay
+          alınmamış staj kabul edilmezse ne süre geri geliyor ne para. Gitmeden önce staj
+          komisyonundan yazılı onay al.
+        </Uyari>
+        <P>
+          Komisyona sorman gerekenler: bu iş yeri türü kabul ediliyor mu, kaç iş günü
+          sayılıyor, sigorta nasıl yapılacak, staj defteri ve değerlendirme formu yurt
+          dışında nasıl doldurulacak. Okulunun staj biriminin nasıl çalıştığını{' '}
+          <a
+            href="/rehber/universite-staj-birimi"
+            className="text-blue-600 hover:underline font-semibold"
+          >
+            ayrı bir rehberde
+          </a>{' '}
+          anlattık.
+        </P>
+
+        <B>Nereden başlanır</B>
+        <L>
+          <li>Okulunun Erasmus / Uluslararası İlişkiler ofisinin duyuru sayfasını aç.</li>
+          <li>Başvuru döneminin ne zaman açıldığını ve hangi belgelerin istendiğini not et.</li>
+          <li>Dil belgesi isteniyorsa hazırlığı erken başlat; sınav takvimi seni bekletiyor.</li>
+          <li>Staj komisyonuna "yurt dışında yaparsam sayılır mı" diye yazılı olarak sor.</li>
+        </L>
+        <P>
+          Okulunun kariyer merkezi de bu süreçte işine yarıyor: birçoğu Erasmus
+          duyurularını ve anlaşmalı kurumları kendi sayfasında paylaşıyor.{' '}
+          <a
+            href="/universite-kariyer-merkezleri"
+            className="text-blue-600 hover:underline font-semibold"
+          >
+            Kariyer merkezlerinin adreslerini
+          </a>{' '}
+          derledik.
+        </P>
+        <Uyari>
+          Hibe tutarları, başvuru takvimi ve istenen belgeler her yıl değişiyor. Bu sayfada
+          bilerek rakam ve tarih yazmıyoruz — geçerli bilgi yalnızca kendi okulunun güncel
+          duyurusunda.
+        </Uyari>
+      </>
+    ),
+    sss: [
+      {
+        soru: 'Erasmus+ stajı zorunlu staj yerine sayılır mı?',
+        cevap:
+          'Kararı kendi bölümünün staj komisyonu veriyor. Üniversiteler genelde kabul ediyor ama önceden onay istiyorlar. Gitmeden önce yazılı onay al; sonradan saydırmaya çalışmak kabul edilmezse ne süreyi ne parayı geri getiriyor.',
+      },
+      {
+        soru: 'Erasmus+ hibesi ne kadar?',
+        cevap:
+          'Tutar gidilen ülkeye ve döneme göre değişiyor, ayrıca her yıl güncelleniyor. Bu yüzden burada rakam yazmıyoruz: geçerli miktar kendi okulunun Erasmus ofisinin o dönem yayınladığı duyuruda yazıyor.',
+      },
+      {
+        soru: 'Staj yerini kim buluyor, okul mu ben mi?',
+        cevap:
+          'Erasmus+ staj hareketliliğinde yeri genellikle öğrenci kendisi buluyor ve iş yerinden aldığı kabul mektubunu okuluna veriyor. Bazı okulların anlaşmalı kurum listesi de oluyor; ofise sorduğunda söylüyorlar.',
+      },
+      {
+        soru: 'Mezun olduktan sonra Erasmus+ stajı yapabilir miyim?',
+        cevap:
+          'Mezuniyet sonrası staj programın parçası, ama başvuruyu mezun olmadan yapmış olman gerekiyor. Mezuniyetten sonra ilk kez başvurmak çoğu durumda mümkün olmuyor; bu yüzden son sınıftaysan takvimi şimdi öğren.',
+      },
+      {
+        soru: 'Dil belgesi şart mı?',
+        cevap:
+          'Okuldan okula ve gidilecek kuruma göre değişiyor. Bazı üniversiteler kendi sınavını yapıyor, bazıları belge istiyor, ev sahibi kurumun ayrı bir beklentisi olabiliyor. Erasmus ofisinin başvuru duyurusunda hangi belgenin kabul edildiği yazıyor.',
+      },
+      {
+        soru: 'Yurt dışında staj için vize gerekiyor mu?',
+        cevap:
+          'Çoğu ülke için evet ve staj vizesi başvurusunda ev sahibi iş yerinin düzenlediği staj sözleşmesi isteniyor. Yani şirketin evrak sürecine taraf olmayı kabul etmesi gerekiyor. İlanda "çalışma izni gerekli" yazıyorsa o ilan vize desteği vermiyor demektir.',
+      },
+    ],
+    guncelleme: '2026-08-18',
+  },
 ];
 
 export function rehberBul(slug: string): Rehber | undefined {
