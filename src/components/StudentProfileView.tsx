@@ -254,10 +254,15 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   basvuruListesi,
 }) => {
   /*
-    Açılışta 'kisisel' seçili: hiçbiri seçili değilken sayfanın altı boş
-    kalıyordu ve kullanıcı bir daireye basana kadar hiçbir şey görmüyordu.
+    Açılışta 'basvuru' seçili — şeritteki ilk daire.
+
+    Öğrenci profile en çok "başvurum ne oldu" diye giriyor. Başvuru listesi
+    hiç yoksa (bileşene geçirilmemişse) 'kisisel'e düşüyor: boş bir bölümle
+    karşılamak, dolu bir bölümle karşılamaktan kötü.
   */
-  const [acikBolum, setAcikBolum] = useState<BolumId>('kisisel');
+  const [acikBolum, setAcikBolum] = useState<BolumId>(
+    basvuruListesi ? 'basvuru' : 'kisisel'
+  );
   /** Bölüme git. Şerit, "Sıradaki" düğmesi ve sayılar hep buradan geçiyor. */
   const bolumeGit = (bolum: BolumId) => setAcikBolum(bolum);
 
@@ -302,6 +307,24 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     Her öğe ilgili bölümü açıyor: ayrı bir sayfa yok, kaydırma yok.
   */
   const oneCikanlar: OneCikan[] = [
+    /*
+      Başvurular en başta.
+
+      Öğrencinin profile girme sebebi çoğunlukla "başvurum ne oldu"
+      sorusu; profil doldurmak ikinci sırada geliyor. En çok bakılan şeyi
+      şeridin sonuna koymak, her seferinde kaydırmak demekti.
+    */
+    ...(basvuruListesi
+      ? [
+          {
+            id: 'basvuru',
+            etiket: 'Başvurular',
+            deger: basvuruSayisi ? `${basvuruSayisi} tane` : null,
+            ikon: <Send className="w-5 h-5" />,
+            onClick: () => bolumeGit('basvuru'),
+          } as OneCikan,
+        ]
+      : []),
     {
       id: 'kisisel',
       etiket: 'Okulun',
@@ -353,17 +376,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       ikon: <Award className="w-5 h-5" />,
       onClick: () => bolumeGit('rozet'),
     },
-    ...(basvuruListesi
-      ? [
-          {
-            id: 'basvuru',
-            etiket: 'Başvurular',
-            deger: basvuruSayisi ? `${basvuruSayisi} tane` : null,
-            ikon: <Send className="w-5 h-5" />,
-            onClick: () => bolumeGit('basvuru'),
-          } as OneCikan,
-        ]
-      : []),
   ];
 
   /* %100'e ilk ulaşıldığında kutlama. Her render'da değil, geçişte. */
