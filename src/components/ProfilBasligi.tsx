@@ -85,11 +85,12 @@ export interface OneCikan {
  * olan bölüm içeriğinin özetini gösteriyor, boş olan "+" ile ekleme
  * çağrısı yapıyor. Yani şerit hem gezinme hem eksik listesi.
  */
-const OneCikanlar: React.FC<{ ogeler: OneCikan[] }> = ({ ogeler }) => (
+const OneCikanlar: React.FC<{ ogeler: OneCikan[]; secili?: string }> = ({ ogeler, secili }) => (
   <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto">
     <div className="flex gap-4 sm:gap-5 min-w-max pb-1">
       {ogeler.map((o) => {
         const dolu = Boolean(o.deger);
+        const acik = o.id === secili;
         return (
           <button
             key={o.id}
@@ -98,17 +99,29 @@ const OneCikanlar: React.FC<{ ogeler: OneCikan[] }> = ({ ogeler }) => (
             className="w-[72px] shrink-0 flex flex-col items-center gap-1.5 cursor-pointer group"
             title={o.deger || `${o.etiket} ekle`}
           >
+            {/*
+              Seçili olan koyu çerçeveyle işaretleniyor. Şerit artık tek
+              gezinme olduğu için nerede olduğunu göstermesi şart: altta
+              yalnızca seçili bölüm duruyor ve kullanıcı hangisine bastığını
+              buradan görüyor.
+            */}
             <span
-              className={`w-16 h-16 rounded-full flex items-center justify-center border transition-colors ${
-                dolu
-                  ? 'bg-gray-50 border-gray-200 text-gray-700 group-hover:border-blue-400'
-                  : 'bg-white border-dashed border-gray-300 text-gray-400 group-hover:border-blue-400 group-hover:text-blue-500'
+              className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors ${
+                acik
+                  ? 'bg-gray-900 border-2 border-gray-900 text-white'
+                  : dolu
+                    ? 'bg-gray-50 border border-gray-200 text-gray-700 group-hover:border-blue-400'
+                    : 'bg-white border border-dashed border-gray-300 text-gray-400 group-hover:border-blue-400 group-hover:text-blue-500'
               }`}
             >
               {dolu ? o.ikon : <Plus className="w-5 h-5" />}
             </span>
             <span className="w-full text-center">
-              <span className="block text-[11px] font-semibold text-gray-800 truncate">
+              <span
+                className={`block text-[11px] truncate ${
+                  acik ? 'font-bold text-gray-900' : 'font-semibold text-gray-700'
+                }`}
+              >
                 {o.etiket}
               </span>
               <span className="block text-[10px] text-gray-400 truncate">
@@ -133,6 +146,8 @@ interface Props {
   basvuruSayisi: number;
   beceriSayisi: number;
   oneCikanlar: OneCikan[];
+  /** Aşağıda hangi bölümün açık olduğu; şeritte işaretleniyor. */
+  secili?: string;
   avatarYukleniyor: boolean;
   onFotografSec: () => void;
   onDuzenle: () => void;
@@ -151,6 +166,7 @@ export const ProfilBasligi: React.FC<Props> = ({
   basvuruSayisi,
   beceriSayisi,
   oneCikanlar,
+  secili,
   avatarYukleniyor,
   onFotografSec,
   onDuzenle,
@@ -227,6 +243,6 @@ export const ProfilBasligi: React.FC<Props> = ({
       )}
     </div>
 
-    <OneCikanlar ogeler={oneCikanlar} />
+    <OneCikanlar ogeler={oneCikanlar} secili={secili} />
   </div>
 );

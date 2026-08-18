@@ -76,24 +76,6 @@ interface StudentProfileViewProps {
   basvuruListesi?: React.ReactNode;
 }
 
-/**
- * SEKMELER
- *
- * Sekiz bölüm alt alta akordeon olarak duruyordu. Doldurmak için iyiydi ama
- * BAKMAK için değil: profili dolan öğrenci kendi profilini görmek istiyor,
- * sekiz kapalı kutu değil.
- *
- * Instagram'ın profilinde başlığın altında dört sekme var (kare, reels,
- * tekrar paylaşım, etiketli) ve her biri bir içerik türünü gösteriyor.
- * Buradaki dört sekme de aynı işi yapıyor: sekiz bölüm anlamlı dört gruba
- * indi ve aynı anda yalnızca bir grup görünüyor.
- *
- * Akordeon davranışı grubun İÇİNDE korundu — bölüm başlıklarına basınca
- * hâlâ açılıp kapanıyorlar. Sekmeye geçince o grubun ilk bölümü kendiliğinden
- * açılıyor, yani sekme boş bir liste gibi durmuyor.
- */
-type SekmeId = 'hakkinda' | 'yetenek' | 'calisma' | 'basvuru';
-
 type BolumId =
   | 'basvuru'
   | 'kisisel'
@@ -104,86 +86,20 @@ type BolumId =
   | 'tercih'
   | 'rozet';
 
-const SEKMELER: Array<{
-  id: SekmeId;
-  etiket: string;
-  ikon: React.ReactNode;
-  bolumler: BolumId[];
-}> = [
-  {
-    id: 'hakkinda',
-    etiket: 'Hakkında',
-    ikon: <GraduationCap className="w-5 h-5" />,
-    bolumler: ['kisisel', 'tercih'],
-  },
-  {
-    id: 'yetenek',
-    etiket: 'Yetenekler',
-    ikon: <Wrench className="w-5 h-5" />,
-    bolumler: ['teknik', 'sosyal', 'dil'],
-  },
-  {
-    id: 'calisma',
-    etiket: 'Çalışmalar',
-    ikon: <FolderOpen className="w-5 h-5" />,
-    bolumler: ['proje', 'rozet'],
-  },
-  {
-    id: 'basvuru',
-    etiket: 'Başvurular',
-    ikon: <Send className="w-5 h-5" />,
-    bolumler: ['basvuru'],
-  },
-];
+/*
+  TEK GEZİNME: ÖNE ÇIKANLAR ŞERİDİ
 
-/** Bir bölümün hangi sekmede olduğunu bulur. */
-const sekmeBul = (bolum: BolumId): SekmeId =>
-  SEKMELER.find((s) => s.bolumler.includes(bolum))?.id ?? 'hakkinda';
+  Bir ara hem daire şeridi hem de altında bir sekme çubuğu vardı. İkisi de
+  aynı bölümlere gidiyordu — kullanıcı aynı işi yapan iki kontrol görüyordu
+  ve hangisinin ne yaptığını anlamak için ikisini de denemesi gerekiyordu.
 
-/**
- * Sekme çubuğu. Instagram'daki gibi ikon + alt çizgi.
- *
- * Etiket mobilde de duruyor: Instagram'ın ikonları (kare ızgara, reels)
- * herkesin ezberinde, bizimkiler değil. Yalnızca ikon koymak kullanıcıyı
- * tahmin etmeye zorlardı.
- */
-const SekmeCubugu: React.FC<{
-  aktif: SekmeId;
-  onSec: (id: SekmeId) => void;
-  rozetler: Partial<Record<SekmeId, number>>;
-}> = ({ aktif, onSec, rozetler }) => (
-  <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-    <div className="flex">
-      {SEKMELER.map((s) => {
-        const secili = s.id === aktif;
-        const sayi = rozetler[s.id];
-        return (
-          <button
-            key={s.id}
-            type="button"
-            onClick={() => onSec(s.id)}
-            aria-current={secili ? 'page' : undefined}
-            className={`flex-1 flex flex-col items-center gap-1 py-3 px-1 cursor-pointer border-b-2 transition-colors ${
-              secili
-                ? 'border-gray-900 text-gray-900'
-                : 'border-transparent text-gray-400 hover:text-gray-600'
-            }`}
-          >
-            <span className="relative">
-              {s.ikon}
-              {sayi ? (
-                <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center">
-                  {sayi}
-                </span>
-              ) : null}
-            </span>
-            <span className="text-[11px] font-semibold">{s.etiket}</span>
-          </button>
-        );
-      })}
-    </div>
-  </div>
-);
+  Şerit kaldı çünkü daha çok iş yapıyor: gezinmenin yanında her bölümün
+  ne kadar dolu olduğunu da gösteriyor ("3 tane", "ekle"). Sekme çubuğu
+  yalnızca gezindiriyordu.
+
+  Artık şerit sekiz bölümün hepsini kapsıyor ve aşağıda yalnızca seçili
+  bölüm duruyor.
+*/
 
 const POPULER_ARACLAR = [
   'Python', 'JavaScript', 'React', 'SQL', 'Git & GitHub', 'HTML / CSS',
@@ -265,12 +181,14 @@ const Bolum: React.FC<BolumProps> = ({
     id={`bolum-${id}`}
     className="bg-white rounded-2xl border border-gray-200 overflow-hidden scroll-mt-28"
   >
-    <button
-      type="button"
-      onClick={() => onToggle(id)}
-      aria-expanded={acik}
-      className="w-full flex items-center gap-3 p-4 text-left cursor-pointer hover:bg-gray-50 transition-colors"
-    >
+    {/*
+      Başlık artık düğme değil.
+
+      Bölüm açıp kapatma şeride taşındı; burada bir aç/kapa düğmesi
+      bırakmak, basılınca hiçbir şey yapmayan (ya da alanı boşaltan) bir
+      kontrol olurdu. Şimdi yalnızca hangi bölümde olduğunu söylüyor.
+    */}
+    <div className="w-full flex items-center gap-3 p-4 text-left">
       {/*
         EMOJİ YERİNE RENKLİ İKON
 
@@ -302,10 +220,7 @@ const Bolum: React.FC<BolumProps> = ({
         </span>
       </span>
 
-      <ChevronDown
-        className={`w-5 h-5 shrink-0 text-gray-400 transition-transform ${acik ? 'rotate-180' : ''}`}
-      />
-    </button>
+    </div>
 
     {acik && (
       <div className="px-4 pb-5 pt-1 space-y-4 border-t border-gray-100">
@@ -338,27 +253,13 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   basvuruSayisi = 0,
   basvuruListesi,
 }) => {
-  const [acikBolum, setAcikBolum] = useState<BolumId | null>(null);
-  const [aktifSekme, setAktifSekme] = useState<SekmeId>('hakkinda');
-
   /*
-    Sekmeye geçince o grubun ilk bölümü açılıyor.
-
-    Aksi hâlde sekme boş bir başlık listesi gibi duruyordu: kullanıcı
-    sekmeye basıyor, hiçbir şey görünmüyor, bir kez daha basması
-    gerekiyordu.
+    Açılışta 'kisisel' seçili: hiçbiri seçili değilken sayfanın altı boş
+    kalıyordu ve kullanıcı bir daireye basana kadar hiçbir şey görmüyordu.
   */
-  const sekmeSec = (id: SekmeId) => {
-    setAktifSekme(id);
-    const ilk = SEKMELER.find((s) => s.id === id)?.bolumler[0];
-    if (ilk) setAcikBolum(ilk);
-  };
-
-  /** Bölüme git: hem doğru sekmeye geçer hem bölümü açar. */
-  const bolumeGit = (bolum: BolumId) => {
-    setAktifSekme(sekmeBul(bolum));
-    setAcikBolum(bolum);
-  };
+  const [acikBolum, setAcikBolum] = useState<BolumId>('kisisel');
+  /** Bölüme git. Şerit, "Sıradaki" düğmesi ve sayılar hep buradan geçiyor. */
+  const bolumeGit = (bolum: BolumId) => setAcikBolum(bolum);
 
   const yetenekler = student.skills ?? [];
   const sosyal = student.softSkills ?? [];
@@ -402,6 +303,13 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   */
   const oneCikanlar: OneCikan[] = [
     {
+      id: 'kisisel',
+      etiket: 'Okulun',
+      deger: student.university ? student.department || 'girildi' : null,
+      ikon: <GraduationCap className="w-5 h-5" />,
+      onClick: () => kisiselAc(),
+    },
+    {
       id: 'teknik',
       etiket: 'Programlar',
       deger: yetenekler.length ? `${yetenekler.length} tane` : null,
@@ -436,6 +344,26 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       ikon: <Target className="w-5 h-5" />,
       onClick: () => bolumeGit('tercih'),
     },
+    {
+      id: 'rozet',
+      etiket: 'Testler',
+      deger: (student.earnedBadges ?? []).length
+        ? `${(student.earnedBadges ?? []).length} rozet`
+        : null,
+      ikon: <Award className="w-5 h-5" />,
+      onClick: () => bolumeGit('rozet'),
+    },
+    ...(basvuruListesi
+      ? [
+          {
+            id: 'basvuru',
+            etiket: 'Başvurular',
+            deger: basvuruSayisi ? `${basvuruSayisi} tane` : null,
+            ikon: <Send className="w-5 h-5" />,
+            onClick: () => bolumeGit('basvuru'),
+          } as OneCikan,
+        ]
+      : []),
   ];
 
   /* %100'e ilk ulaşıldığında kutlama. Her render'da değil, geçişte. */
@@ -447,9 +375,14 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     oncekiOran.current = oran;
   }, [oran]);
 
-  const bolumAc = (id: BolumId) => {
-    setAcikBolum((mevcut) => (mevcut === id ? null : id));
-  };
+  /*
+    Bölüm kapatma kaldırıldı.
+
+    Şerit tek gezinme olduğu için aşağıda her zaman bir bölüm duruyor.
+    Kapatılabilir bırakılsaydı kullanıcı başlığa basınca alan tamamen
+    boşalıyordu — hiçbir şeye götürmeyen bir tıklama.
+  */
+  const bolumAc = (id: BolumId) => setAcikBolum(id);
 
   const siradakineGit = () => {
     if (!siradaki) return;
@@ -690,6 +623,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             onCv={onOpenCv}
             onBasvurulara={basvuruListesi ? () => bolumeGit('basvuru') : undefined}
             oneCikanlar={oneCikanlar}
+            secili={acikBolum}
           />
 
           <input
@@ -727,21 +661,11 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         {/* ---------------- SAĞ: sekmeler ve bölümler ---------------- */}
         <div className="lg:col-span-8 space-y-3 min-w-0">
 
-          {/*
-            Sekme çubuğu — Instagram'da başlığın hemen altında duruyor,
-            burada da öyle. Rozet yalnızca sayısı olan sekmede çıkıyor.
-          */}
-          <SekmeCubugu
-            aktif={aktifSekme}
-            onSec={sekmeSec}
-            rozetler={{ basvuru: basvuruSayisi || undefined }}
-          />
-
       {/* ---------------- 0. Başvurularım ---------------- */}
       {basvuruListesi && (
         <Bolum
           id="basvuru"
-          gorunur={aktifSekme === sekmeBul('basvuru')}
+          gorunur={acikBolum === 'basvuru'}
           ikon={<Send className="w-5 h-5" />}
           renk="bg-gradient-to-br from-rose-500 to-rose-600"
           baslik="Başvurularım"
@@ -761,7 +685,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       {/* ---------------- 1. Kişisel bilgiler ---------------- */}
       <Bolum
         id="kisisel"
-        gorunur={aktifSekme === sekmeBul('kisisel')}
+        gorunur={acikBolum === 'kisisel'}
         ikon={<GraduationCap className="w-5 h-5" />}
         renk="bg-gradient-to-br from-violet-500 to-violet-600"
         baslik="Okul ve iletişim"
@@ -893,7 +817,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       {/* ---------------- 2. Teknik yetenekler ---------------- */}
       <Bolum
         id="teknik"
-        gorunur={aktifSekme === sekmeBul('teknik')}
+        gorunur={acikBolum === 'teknik'}
         ikon={<Wrench className="w-5 h-5" />}
         renk="bg-gradient-to-br from-blue-500 to-blue-600"
         baslik="Kullandığın programlar"
@@ -983,7 +907,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       {/* ---------------- 3. Sosyal beceriler ---------------- */}
       <Bolum
         id="sosyal"
-        gorunur={aktifSekme === sekmeBul('sosyal')}
+        gorunur={acikBolum === 'sosyal'}
         ikon={<MessageSquare className="w-5 h-5" />}
         renk="bg-gradient-to-br from-cyan-500 to-cyan-600"
         baslik="Sosyal becerilerin"
@@ -1043,7 +967,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       {/* ---------------- 4. Diller ---------------- */}
       <Bolum
         id="dil"
-        gorunur={aktifSekme === sekmeBul('dil')}
+        gorunur={acikBolum === 'dil'}
         ikon={<Languages className="w-5 h-5" />}
         renk="bg-gradient-to-br from-teal-500 to-teal-600"
         baslik="Yabancı diller"
@@ -1176,7 +1100,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       {/* ---------------- 5. Projeler ---------------- */}
       <Bolum
         id="proje"
-        gorunur={aktifSekme === sekmeBul('proje')}
+        gorunur={acikBolum === 'proje'}
         ikon={<FolderOpen className="w-5 h-5" />}
         renk="bg-gradient-to-br from-amber-500 to-amber-600"
         baslik="Projeler ve çalışmalar"
@@ -1301,7 +1225,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       {/* ---------------- 6. Tercihler ---------------- */}
       <Bolum
         id="tercih"
-        gorunur={aktifSekme === sekmeBul('tercih')}
+        gorunur={acikBolum === 'tercih'}
         ikon={<Target className="w-5 h-5" />}
         renk="bg-gradient-to-br from-orange-500 to-orange-600"
         baslik="Ne arıyorsun?"
@@ -1455,7 +1379,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       */}
       <Bolum
         id="rozet"
-        gorunur={aktifSekme === sekmeBul('rozet')}
+        gorunur={acikBolum === 'rozet'}
         ikon={<Award className="w-5 h-5" />}
         renk="bg-gradient-to-br from-emerald-500 to-emerald-600"
         baslik="Testler ve rozetler"
