@@ -747,13 +747,22 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               şey olmayan büyük mavi bir düğme, siteye olan güveni doğrudan
               zedeliyor.
             */}
+            {/*
+              ARAMA VE FİLTRE TEK SATIRDA (mobil)
+
+              Önce alt alta iki ayrı kart vardı: arama kutusu, altında
+              "Filtreler" başlıklı bir açılır kart. İkisi de aynı işi yapıyor
+              — listeyi daraltmak — ve ikisi birlikte 130 pikselden fazla yer
+              kaplıyordu. Telefonda o yer ilanın hakkı.
+
+              Şimdi arama kutusu ve filtre düğmesi yan yana. Düğme açık
+              süzgeç sayısını rozetle gösteriyor, basınca panel altında
+              açılıyor. Geniş ekranda hiçbir şey değişmedi: orada arama üst
+              çubukta, filtre paneli sol sütunda hep açık.
+            */}
             <div className="mt-4 flex flex-col sm:flex-row lg:flex-col gap-2">
-              {/*
-                Geniş ekranda gizli: arama kutusu üst çubukta duruyor, aynı
-                kutuyu iki kez göstermek hangisinin çalıştığını belirsizleştirir.
-                Mobilde üst çubukta yer olmadığı için burada kalıyor.
-              */}
-              <div className="relative flex-1 min-w-0 lg:hidden">
+              <div className="flex items-center gap-2 lg:hidden">
+              <div className="relative flex-1 min-w-0">
                 <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
@@ -772,6 +781,35 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                     <X className="w-4 h-4" />
                   </button>
                 )}
+              </div>
+
+              {/*
+                Filtre düğmesi. Arama kutusuyla aynı yükseklikte ve aynı
+                köşe yarıçapında: ikisi tek bir kontrol gibi okunuyor.
+              */}
+              <button
+                type="button"
+                onClick={() => setFiltreAcik((o) => !o)}
+                aria-expanded={filtreAcik}
+                aria-label="Filtreler"
+                /*
+                  Yükseklik sabit değil, arama kutusundan geliyor (self-stretch).
+                  Sabit 52 piksel verilince kutu 53 çıkıyordu ve yan yana iki
+                  çerçevenin alt kenarı 1 piksel kayıyordu — ölçüldü.
+                */
+                className={`relative shrink-0 self-stretch w-[52px] rounded-2xl border flex items-center justify-center cursor-pointer transition-colors ${
+                  filtreAcik || acikSuzgecSayisi > 0
+                    ? 'border-blue-600 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
+                }`}
+              >
+                <SlidersHorizontal className="w-5 h-5" />
+                {acikSuzgecSayisi > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-blue-600 text-white text-[10px] font-extrabold flex items-center justify-center">
+                    {acikSuzgecSayisi}
+                  </span>
+                )}
+              </button>
               </div>
 
               {/*
@@ -842,8 +880,13 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
 
-        {/* ---- başlık: mobilde açma/kapama düğmesi ---- */}
-        <div className="flex items-center gap-2 px-4 py-3">
+        {/*
+          ---- başlık: yalnızca geniş ekran ----
+
+          Mobilde açma/kapama düğmesi arama kutusunun yanına taşındı; burada
+          bir başlık daha bırakmak aynı kontrolü iki kez göstermek olurdu.
+        */}
+        <div className="hidden lg:flex items-center gap-2 px-4 py-3">
           <button
             type="button"
             onClick={() => setFiltreAcik((o) => !o)}
@@ -880,8 +923,27 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           `lg:block` her durumda gösteriyor.
         */}
         <div
-          className={`${filtreAcik ? 'block' : 'hidden'} lg:block divide-y divide-gray-100 border-t border-gray-100`}
+          className={`${filtreAcik ? 'block' : 'hidden'} lg:block divide-y divide-gray-100 lg:border-t border-gray-100`}
         >
+
+        {/*
+          Mobilde "Temizle" panelin içinde: başlık satırı orada olmadığı için
+          süzgeçleri sıfırlamanın başka yolu kalmıyordu.
+        */}
+        {acikSuzgecSayisi > 0 && (
+          <div className="lg:hidden flex items-center justify-between px-4 py-2.5">
+            <span className="text-xs font-semibold text-gray-500">
+              {acikSuzgecSayisi} süzgeç açık
+            </span>
+            <button
+              type="button"
+              onClick={suzgecleriTemizle}
+              className="text-xs font-bold text-blue-600 hover:underline cursor-pointer"
+            >
+              Temizle
+            </button>
+          </div>
+        )}
 
         {/* ---- konum ---- */}
         <FiltreBlogu baslik="Konum">
