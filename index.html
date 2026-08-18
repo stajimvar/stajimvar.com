@@ -42,7 +42,27 @@
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="tr_TR" />
     <meta property="og:site_name" content="StajımVar" />
+    <!--
+      PAYLAŞIM ÖNİZLEME GÖRSELİ
+
+      `twitter:card=summary_large_image` vardı ama gösterilecek görsel
+      yoktu: Safari'nin "Öneriler" kutusunda site, mavi bir karenin içinde
+      "SV" yazısı olarak görünüyordu. Görsel yoksa istemciler baş harflere
+      düşüyor.
+
+      Adres MUTLAK olmalı — göreli adres çoğu paylaşım istemcisinde
+      çözülmüyor. Ön render her sayfaya kendi og:url'sini yazıyor ama
+      görsel sitenin tamamında aynı.
+
+      Görseli `npm run og` üretiyor (scripts/og-gorsel.mjs); logo oradaki
+      vektörden geliyor, elle çizilmiş bir kopya değil.
+    -->
+    <meta property="og:image" content="https://stajimvar.com/og-gorsel.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="StajımVar — Şirketlerin staj ilanları, tek listede" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://stajimvar.com/og-gorsel.png" />
   </head>
   <body>
     <div id="root"></div>

@@ -10,7 +10,8 @@
     "deploy": "wrangler pages deploy dist",
     "lint": "tsc --noEmit",
     "ads-txt": "node scripts/ads-txt.mjs",
-    "onrender": "node scripts/onrender.mjs"
+    "onrender": "node scripts/onrender.mjs",
+    "og": "node scripts/og-gorsel.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",
