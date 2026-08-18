@@ -44,8 +44,20 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      # Saatlik iş akışıyla aynı yedekli okuma: yeni sır varsa o, yoksa eskisi.
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
       - uses: actions/checkout@v4
+
+      # Site haritası betiği Python. Yalnızca supabase ve dotenv gerekiyor;
+      # tarama bağımlılıklarının tamamını kurmuyoruz çünkü bu iş kazıma
+      # yapmıyor.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install "supabase>=2.0,<3" "python-dotenv>=1.0,<2"
 
       # Wrangler 4 en az Node 22 istiyor; 20 ile "requires at least
       # Node.js v22" diyip çıkıyor. Diğer iş akışında ölçülmüştü.
@@ -65,6 +77,22 @@ jobs:
       - name: Tip kontrolü
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
         run: npx tsc --noEmit
+
+      # SİTE HARİTASI BURADA DA ÜRETİLİYOR
+      #
+      # public/sitemap.xml depoda duran bir dosya ve yalnızca saatlik iş
+      # akışı yeniden üretiyor. Bu iş onu üretmeseydi, her push canlıdaki
+      # taze haritanın üstüne depodaki bayat olanı yazardı — saatlik iş
+      # düzeltir, sonraki push yine bozardı. Ölçüldü: dört yeni sayfanın
+      # hiçbiri depodaki haritada yoktu.
+      #
+      # continue-on-error: harita üretilemezse dağıtımı durdurmuyoruz;
+      # eksik harita, hiç yayınlanmamış sayfadan iyi.
+      - name: Sitemap üret
+        if: ${{ env.SUPABASE_SERVICE_ROLE_KEY != '' }}
+        run: python sitemap.py
+        working-directory: automation
+        continue-on-error: true
 
       # Derleme ön render betiğini de çalıştırıyor; o betik ilanları
       # Supabase'ten okuduğu için VITE_* değişkenleri gerekiyor.
