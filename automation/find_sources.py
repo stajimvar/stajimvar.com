@@ -223,6 +223,8 @@ def main() -> None:
 
     kinds = [args.only] if args.only else list(PROBES)
     found: list[dict] = []
+    # Workable isabetleri: kaynak olarak eklenebilir ama yeni ilan getirmezler.
+    zaten_kapsanan: list[str] = []
 
     for name in candidates:
         if name.lower() in known_names:
@@ -237,12 +239,37 @@ def main() -> None:
                 if entry_id in known_ids:
                     continue
                 flag = "STAJ VAR" if intern else ("TR ilanı" if tr else "TR ilanı yok")
+                # WORKABLE ISABETI YENI ILAN DEMEK DEGIL
+                #
+                # 18 Agustos'ta olculdu: bu tarama uc Workable panosu buldu,
+                # ucunde de Turkiye staji vardi, ucu de kaynak olarak eklendi
+                # ve promote.py UCUNU DE "duplicate" diye reddetti.
+                #
+                # Sebep: workable-tr-arama kaynagi sirket adi bilmeden TUM
+                # Workable musterilerini Turkiye konumuyla tariyor. Yani bir
+                # sirket Workable kullaniyorsa ilanlari zaten geliyor.
+                #
+                # Lever, Greenhouse, Ashby, SmartRecruiters ve Workday'in
+                # sirketler arasi arama ucu YOK; oradaki isabetler gercekten
+                # yeni ilan getirebiliyor. Farki burada yaziyoruz ki bir
+                # dahaki taramada ayni yanlis umuda kapilmayalim.
+                if kind == "workable":
+                    flag += "  [zaten workable aramasinda kapsaniyor]"
+                    zaten_kapsanan.append(name)
                 print(f"  {name:<26} {kind:<11} {slug:<22} ilan={len(jobs):<4} TR={tr:<3} staj={intern}  {flag}")
                 if tr and (intern or not args.require_internship):
                     found.append(source_entry(name, kind, slug))
                 break  # bu şirket için pano bulundu, diğer slug'ı deneme
 
+    gercek_kazanc = len(found) - len(zaten_kapsanan)
     print(f"\n{len(found)} yeni kaynak bulundu")
+    if zaten_kapsanan:
+        print(
+            f"  bunlarin {len(zaten_kapsanan)} tanesi Workable ve zaten "
+            f"workable-tr-arama kaynagi tarafindan kapsaniyor:"
+        )
+        print(f"    {', '.join(zaten_kapsanan)}")
+        print(f"  YENI ILAN GETIREBILECEK kaynak sayisi: {gercek_kazanc}")
 
     if args.write and found:
         existing["sources"].extend(found)
