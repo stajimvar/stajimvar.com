@@ -433,6 +433,94 @@ export const REHBERLER: Rehber[] = [
           <li>Staj süren ne kadar, hangi günler gelebilirsin?</li>
         </L>
 
+        <B>Üç tür mülakat, üç farklı hazırlık</B>
+        <KarsilastirmaTablosu
+          sutunlar={['Tür', 'Ne kadar sürer', 'Asıl bakılan şey']}
+          satirlar={[
+            [
+              'Telefonla ön görüşme',
+              '10–15 dakika',
+              'Tarihlerin uyuyor mu, ulaşılabilir misin, ilgin gerçek mi',
+            ],
+            [
+              'Görüntülü görüşme',
+              '20–30 dakika',
+              'Kendini anlatabiliyor musun, hazırlanmış mısın',
+            ],
+            [
+              'Yüz yüze görüşme',
+              '30–45 dakika',
+              'Ekiple uyum, iş yerini gördüğünde ne sorduğun',
+            ],
+          ]}
+        />
+        <P>
+          Telefonla arandığında hazırlıksız yakalanmak en sık yaşanan durum. Uygun değilsen
+          <strong> "şu an müsait değilim, bir saat sonra arayabilir miyim"</strong> demek tamamen
+          normal ve kimse buna olumsuz bakmıyor. Hazırlıksız konuşmak, ertelemekten kötü.
+        </P>
+
+        <B>Görüntülü görüşmede değişen şeyler</B>
+        <L>
+          <li>
+            <strong>Bağlantıyı önceden dene.</strong> Toplantı bağlantısını on dakika önce aç;
+            kamera ve mikrofon izni ilk kez o an isteniyorsa süre kaybediyorsun.
+          </li>
+          <li>
+            <strong>Işık yüzüne gelsin.</strong> Arkanda pencere varsa siluet olarak
+            görünüyorsun. Karşındaki kişi yüzünü göremeyince görüşme mesafeli geçiyor.
+          </li>
+          <li>
+            <strong>Sessiz bir yer bul.</strong> Bulamıyorsan bunu baştan söyle; söylenen bir
+            gürültü sorun olmuyor, açıklanmayan gürültü dikkat dağıtıyor.
+          </li>
+          <li>
+            <strong>Notların yanında dursun.</strong> Görüntülü görüşmenin avantajı bu:
+            hazırladığın soruları ekranın kenarında tutabilirsin.
+          </li>
+        </L>
+
+        <B>Ne giyilir</B>
+        <P>
+          Kural basit: <strong>o iş yerinde çalışanlardan bir tık daha düzgün.</strong> Yazılım
+          şirketinde takım elbise fazla kaçıyor, bankada tişört eksik kalıyor. Bilmiyorsan
+          şirketin sosyal medya hesaplarındaki ekip fotoğraflarına bakmak beş dakika sürüyor.
+          Görüntülü görüşmede de üst giyim aynı kurala tabi.
+        </P>
+
+        <B>Aynı sorunun iki cevabı</B>
+        <P>
+          Sorular zaten belli; farkı cevabın kendisi yaratıyor. Aşağıdaki ikisi de doğru ama
+          biri seni hatırlatıyor, diğeri hatırlatmıyor:
+        </P>
+        <Karsilastirma
+          kotuBaslik="Hatırlanmayan"
+          iyiBaslik="Hatırlanan"
+          kotu={[
+            '"Kendimi geliştirmek istiyorum."',
+            '"Zorlandığım bir şey olmadı."',
+            '"Her işi yaparım."',
+            '"Staj yapmam gerekiyor."',
+            '"Sorum yok."',
+          ]}
+          iyi={[
+            '"Ölçme tarafını merak ediyorum, okulda o dersi çok sevdim."',
+            '"Projede sensör verisi tutmuyordu; kablolamayı baştan kontrol edip buldum."',
+            '"Kalite kontrolde başlamak isterim, sonra üretimi de görebilirsem daha iyi."',
+            '"Zorunlu stajım var ama sizi seçmemin sebebi şu ürününüz."',
+            '"Stajyer olarak ilk hafta ne yapacağım?"',
+          ]}
+        />
+
+        <B>Ücret ve günler nasıl konuşulur</B>
+        <P>
+          Öğrencilerin en çekindiği kısım bu, oysa işveren de aynı bilgiyi netleştirmek
+          istiyor. Sen sormazsan konu havada kalıyor ve staj başladıktan sonra sorun oluyor.
+          Sonda, doğal bir sırayla sor: hangi günler gelmem gerekiyor, çalışma saatleri ne,
+          ödeme yapılıyor mu. Zorunlu stajda 3308 kapsamındaysan ücret ödenmesi gerektiğini
+          bilerek sor — pazarlık değil, netleştirme.
+        </P>
+
         <B>Hazırlık: üç şey yeter</B>
         <L>
           <li>
@@ -461,6 +549,18 @@ export const REHBERLER: Rehber[] = [
           Kısa bir teşekkür mesajı gönder. Cevap gelmezse bir hafta sonra bir kez daha yaz;
           ikiden fazla ısrar ters etki yapıyor.
         </P>
+
+        <KontrolListesi
+          baslik="Görüşmeden önceki gün"
+          maddeler={[
+            'Şirketin ne ürettiğini bir cümleyle anlatabiliyorum',
+            'Anlatacağım projeyi seçtim: ne yaptım, neden öyle yaptım, ne öğrendim',
+            'Soracağım iki soru hazır',
+            'Hangi günler gelebileceğimi ve tarih aralığını biliyorum',
+            'Görüntülüyse bağlantıyı, kamerayı ve mikrofonu denedim',
+            'Adres ve saat teyit edildi; yüz yüzeyse yol süresini hesapladım',
+          ]}
+        />
       </>
     ),
     guncelleme: '2026-08-17',

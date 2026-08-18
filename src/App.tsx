@@ -19,22 +19,20 @@ import {
 } from './types';
 import { Header } from './components/Header';
 import { MatchedInternshipsView } from './components/MatchedInternshipsView';
-import { SkillQuizzesView } from './components/SkillQuizzesView';
-import { ApplicationsTrackerView } from './components/ApplicationsTrackerView';
-import { StudentProfileView } from './components/StudentProfileView';
-import { CompanyPortalView } from './components/CompanyPortalView';
 import { InternshipDetailModal } from './components/InternshipDetailModal';
-import { SkillAssessmentModal } from './components/SkillAssessmentModal';
-import { AuthModal } from './components/AuthModal';
 import { Logo } from './components/Logo';
 import { LegalPage, LEGAL_ROUTES } from './components/LegalPage';
 import { ApplyDialog } from './components/ApplyDialog';
 import { ListingPage } from './components/ListingPage';
-import { CompanyPage } from './components/CompanyPage';
-import { EmployerGuide } from './components/EmployerGuide';
 import { GuideHub, GuidePage } from './components/GuidePages';
-import { CvPage } from './components/CvPage';
 import { BolumHub, BolumPage } from './components/BolumPages';
+/*
+  Bu ikisi bilerek gecikmeli DEĞİL: /araclar, /araclar/* ve /isveren
+  ön render edilen adresler. React kabı temizlediği için gecikmeli
+  yüklemede parça inene kadar ekran boş kalıyor — yani ön render'ın
+  kazandırdığı şeyi geri vermiş oluyoruz.
+*/
+import { EmployerGuide } from './components/EmployerGuide';
 import {
   AracHub,
   NetHesaplama,
@@ -42,13 +40,61 @@ import {
   StajUcretiHesaplama,
   StajGunuHesaplama,
 } from './components/Araclar';
-import { AdminClaimsView } from './components/AdminClaimsView';
-import { AdminListingsQueue } from './components/AdminListingsQueue';
-import { AdminDashboard } from './components/AdminDashboard';
 import { listingSlug, idPrefixFromSlug } from './lib/slug';
 import confetti from 'canvas-confetti';
 import { CheckCircle2 } from 'lucide-react';
 import { SAYFA_GENISLIGI } from './lib/duzen';
+
+/*
+  GECİKMELİ YÜKLEME
+
+  Ölçüldü: uygulama kodu tek bir dosyada 770 KB (sıkıştırılmış 211 KB) ve
+  ilk açılışta tamamı iniyordu. Oysa bu ekranların çoğu ilk boyamada hiç
+  gerekmiyor: şirket portalı, yönetim ekranları, profil, hesaplama araçları,
+  giriş penceresi.
+
+  Ön render sayesinde metin zaten JavaScript'ten önce görünüyor. Buradaki
+  kazanç sayfanın ETKİLEŞİMLİ olma süresinde — mobil bağlantıda hissedilen
+  fark bu.
+
+  Ana sayfanın ilan listesi (MatchedInternshipsView), üst çubuk, rehber ve
+  bölüm sayfaları bilerek gecikmeli DEĞİL: onlar zaten ilk ekranda.
+*/
+const StudentProfileView = React.lazy(() =>
+  import('./components/StudentProfileView').then((m) => ({ default: m.StudentProfileView }))
+);
+const CompanyPortalView = React.lazy(() =>
+  import('./components/CompanyPortalView').then((m) => ({ default: m.CompanyPortalView }))
+);
+const SkillQuizzesView = React.lazy(() =>
+  import('./components/SkillQuizzesView').then((m) => ({ default: m.SkillQuizzesView }))
+);
+const ApplicationsTrackerView = React.lazy(() =>
+  import('./components/ApplicationsTrackerView').then((m) => ({
+    default: m.ApplicationsTrackerView,
+  }))
+);
+const SkillAssessmentModal = React.lazy(() =>
+  import('./components/SkillAssessmentModal').then((m) => ({ default: m.SkillAssessmentModal }))
+);
+const AuthModal = React.lazy(() =>
+  import('./components/AuthModal').then((m) => ({ default: m.AuthModal }))
+);
+const CvPage = React.lazy(() =>
+  import('./components/CvPage').then((m) => ({ default: m.CvPage }))
+);
+const CompanyPage = React.lazy(() =>
+  import('./components/CompanyPage').then((m) => ({ default: m.CompanyPage }))
+);
+const AdminClaimsView = React.lazy(() =>
+  import('./components/AdminClaimsView').then((m) => ({ default: m.AdminClaimsView }))
+);
+const AdminListingsQueue = React.lazy(() =>
+  import('./components/AdminListingsQueue').then((m) => ({ default: m.AdminListingsQueue }))
+);
+const AdminDashboard = React.lazy(() =>
+  import('./components/AdminDashboard').then((m) => ({ default: m.AdminDashboard }))
+);
 
 /**
  * Adres bulunamadı sayfası.

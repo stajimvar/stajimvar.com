@@ -76,32 +76,8 @@ const girdiSinifi =
 
 /* ==================================================================== hub */
 
-export const ARACLAR = [
-  {
-    slug: 'net-hesaplama',
-    baslik: 'Net hesaplama',
-    ozet: 'TYT, AYT ve KPSS — doğru ve yanlış sayısından net.',
-    ikon: Calculator,
-  },
-  {
-    slug: 'siralama-tahmini',
-    baslik: 'Sıralama tahmini',
-    ozet: 'Puanın 2025 verilerine göre kaçıncı sıraya denk geliyor.',
-    ikon: TrendingUp,
-  },
-  {
-    slug: 'staj-ucreti-hesaplama',
-    baslik: 'Staj ücreti hesaplama',
-    ozet: 'Sana en az ne kadar ödenmesi gerektiğini hesapla.',
-    ikon: Wallet,
-  },
-  {
-    slug: 'staj-gunu-hesaplama',
-    baslik: 'Staj günü hesaplama',
-    ozet: '20 veya 30 iş günü hangi tarihte biter?',
-    ikon: CalendarDays,
-  },
-];
+import { ARACLAR } from './AraclarListesi';
+export { ARACLAR };
 
 interface HubProps {
   onBack: () => void;

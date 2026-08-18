@@ -1,4 +1,4 @@
-import {StrictMode} from 'react';
+import {StrictMode, Suspense} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import { adsenseBetiginiBaslat } from './components/GoogleAdBanner.tsx';
@@ -18,6 +18,16 @@ adsenseBetiginiBaslat();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    {/*
+      Gecikmeli yüklenen ekranlar için tek bir sınır.
+
+      Yedek içerik bilerek BOŞ: ön render'ın bastığı metin ekranda duruyor ve
+      araya bir yükleniyor göstergesi koymak onu silip yerine dönen bir daire
+      koymak olurdu. Boş bırakınca kullanıcı mevcut içeriği görmeye devam
+      ediyor, parça inince yerini alıyor.
+    */}
+    <Suspense fallback={null}>
+      <App />
+    </Suspense>
   </StrictMode>,
 );

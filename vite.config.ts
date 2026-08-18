@@ -6,6 +6,31 @@ import {defineConfig} from 'vite';
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
+    build: {
+      rollupOptions: {
+        output: {
+          /*
+            PAKETİ PARÇALARA BÖL.
+
+            Ölçüldü: tek bir dosyada 1015 KB (sıkıştırılmış 272 KB). Ön render
+            sayesinde metin hemen görünüyor ama sayfa bu dosya inip
+            çalışmadan etkileşimli olmuyor — mobil bağlantıda bu fark
+            hissediliyor.
+
+            Buradaki bölme kütüphaneleri ayırıyor. Asıl kazanç şurada: bu
+            dosyalar sürüm değişmedikçe aynı kalıyor, yani ikinci ziyarette
+            yeniden indirilmiyorlar. Uygulama kodu her yayında değişiyor ama
+            artık yalnızca o parça yeniden iniyor.
+          */
+          manualChunks: {
+            react: ['react', 'react-dom'],
+            supabase: ['@supabase/supabase-js'],
+            ikonlar: ['lucide-react'],
+            konfeti: ['canvas-confetti'],
+          },
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

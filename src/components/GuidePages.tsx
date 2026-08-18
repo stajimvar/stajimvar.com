@@ -16,7 +16,7 @@ import { SayfaKabugu } from './SayfaKabugu';
 import { YolculukHaritasi, RenkliKart } from './RehberGorseller';
 import { REHBERLER, rehberBul, type Rehber } from '../data/rehberler';
 import { BOLUMLER } from '../data/bolumler';
-import { ARACLAR } from './Araclar';
+import { ARACLAR } from './AraclarListesi';
 
 /**
  * Rehber merkezi ve tek rehber sayfası.
