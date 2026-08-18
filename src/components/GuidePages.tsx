@@ -61,7 +61,7 @@ interface GuideHubProps {
   Karşılığında orta tuşla yeni sekmede açma ve bağlantıyı kopyalama gibi
   davranışlar da kendiliğinden geliyor — düğmede bunlar hiç yoktu.
 */
-const Satir: React.FC<{ rehber: Rehber; onNavigate: (p: string) => void }> = ({
+const Satir: React.FC<{ rehber: Rehber; onNavigate?: (p: string) => void }> = ({
   rehber,
   onNavigate,
 }) => (
@@ -69,6 +69,7 @@ const Satir: React.FC<{ rehber: Rehber; onNavigate: (p: string) => void }> = ({
     <a
       href={`/rehber/${rehber.slug}`}
       onClick={(e) => {
+        if (!onNavigate) return;
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
         e.preventDefault();
         onNavigate(`/rehber/${rehber.slug}`);
@@ -364,6 +365,80 @@ interface GuidePageProps {
   onNavigate: (path: string) => void;
 }
 
+/**
+ * Rehber sayfasının sonundaki bağlantılar.
+ *
+ * Önce bu blok GuidePage içindeydi, yani yalnızca tarayıcıda çizilen
+ * kısımdaydı ve ön render çıktısına hiç girmiyordu. Ölçüldü: on rehber
+ * sayfasının dokuzunda statik HTML'de SIFIR bağlantı vardı — yani her
+ * rehber çıkmaz sokaktı.
+ *
+ * Bölüm sayfalarına da bağlanıyor: rehberden bölüme giden hiçbir yol
+ * yoktu, bağlantı ağı tek yönlü işliyordu.
+ */
+export const RehberBaglantilari: React.FC<{
+  slug: string;
+  kategori: Rehber['kategori'];
+  onNavigate?: (p: string) => void;
+}> = ({ slug, kategori, onNavigate }) => {
+  const digerleri = REHBERLER.filter((r) => r.slug !== slug && r.kategori === kategori);
+  // Bölüm sayfalarının tamamı değil: en çok aranan birkaçı, sonra tam liste.
+  const bolumler = BOLUMLER.slice(0, 6);
+
+  /*
+    Tıklama yakalayıcı. `onNavigate` yoksa (ön render tarafı) hiçbir şey
+    yapmıyor ve tarayıcı bağlantıyı normal şekilde izliyor.
+  */
+  const yakala = (e: React.MouseEvent, yol: string) => {
+    if (!onNavigate) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    onNavigate(yol);
+  };
+
+  return (
+    <>
+      {digerleri.length > 0 && (
+        <section className="mt-10 space-y-2">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+            Bunlar da işine yarar
+          </h2>
+          <ul className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            {digerleri.map((r) => (
+              <Satir key={r.slug} rehber={r} onNavigate={onNavigate} />
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="mt-8 space-y-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+          Bölümüne göre staj
+        </h2>
+        <div className="flex flex-wrap gap-2">
+          {bolumler.map((b) => (
+            <a
+              key={b.slug}
+              href={`/bolum/${b.slug}`}
+              onClick={(e) => yakala(e, `/bolum/${b.slug}`)}
+              className="px-3.5 py-2 rounded-xl text-sm font-semibold text-gray-700 bg-white border border-gray-200 hover:border-gray-300"
+            >
+              {b.ad}
+            </a>
+          ))}
+          <a
+            href="/bolumler"
+            onClick={(e) => yakala(e, '/bolumler')}
+            className="px-3.5 py-2 rounded-xl text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 hover:border-blue-300"
+          >
+            Tüm bölümler
+          </a>
+        </div>
+      </section>
+    </>
+  );
+};
+
 export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }) => {
   const rehber = rehberBul(slug);
 
@@ -391,10 +466,6 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
       </Kabuk>
     );
   }
-
-  const digerleri = REHBERLER.filter(
-    (r) => r.slug !== rehber.slug && r.kategori === rehber.kategori
-  );
 
   return (
     <Kabuk onBack={onBack}>
@@ -479,18 +550,11 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
         )}
       </article>
 
-      {digerleri.length > 0 && (
-        <section className="mt-10 space-y-2">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400">
-            Bunlar da işine yarar
-          </h2>
-          <ul className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            {digerleri.map((r) => (
-              <Satir key={r.slug} rehber={r} onNavigate={onNavigate} />
-            ))}
-          </ul>
-        </section>
-      )}
+      <RehberBaglantilari
+        slug={rehber.slug}
+        kategori={rehber.kategori}
+        onNavigate={onNavigate}
+      />
     </Kabuk>
   );
 };

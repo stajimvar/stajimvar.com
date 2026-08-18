@@ -332,9 +332,21 @@ async function merkezListeleriniCiz() {
     );
     const { renderToStaticMarkup } = await import('react-dom/server');
     const React = (await import('react')).default;
+    /*
+      Rehber sayfalarinin sonundaki baglanti blogu da burada ciziliyor.
+      Olculdu: on rehberin dokuzunda statik HTML'de SIFIR baglanti vardi,
+      yani her rehber cikmaz sokakti ve rehberden bolume giden hicbir yol
+      yoktu - baglanti agi tek yonlu isliyordu.
+    */
+    const rehberBaglantilari = (slug, kategori) =>
+      renderToStaticMarkup(
+        React.createElement(rehberModul.RehberBaglantilari, { slug, kategori })
+      );
+
     return {
       bolumler: renderToStaticMarkup(React.createElement(bolumModul.BolumListesi, {})),
       rehberler: renderToStaticMarkup(React.createElement(rehberModul.RehberListesi, {})),
+      rehberBaglantilari,
     };
   } catch (hata) {
     console.error('ön render DURDU: merkez listeleri çizilemedi.');
@@ -413,6 +425,7 @@ async function rehberleriCiz() {
         baslik: r.baslik,
         ozet: r.ozet,
         aciklama: r.aciklama,
+        kategori: r.kategori,
         guncelleme: r.guncelleme,
         sss: r.sss || [],
         govde: renderToStaticMarkup(r.icerik),
@@ -616,6 +629,7 @@ async function main() {
     "bu alan kaç karakter içeride kaldı" sınıfından hatalar tanım gereği
     ortadan kalkıyor.
   */
+  const merkezListeleri = await merkezListeleriniCiz();
   const cizilen = await rehberleriCiz();
   const rehberler = Object.entries(cizilen).map(([slug, r]) => ({ slug, ...r }));
   for (const r of rehberler) {
@@ -673,6 +687,7 @@ async function main() {
               .map((s) => `<h3>${kacir(s.soru)}</h3><p>${kacir(s.cevap)}</p>`)
               .join('')}</section>`
           : '') +
+        merkezListeleri.rehberBaglantilari(r.slug, r.kategori) +
         '</main>',
       jsonLd: { '@context': 'https://schema.org', '@graph': grafik },
     });
@@ -712,7 +727,6 @@ async function main() {
     tek tek içerik sayfalarına geçtiği kapı. Listesiz hâlleri yalnızca
     başlık ve tek cümleden ibaretti ve hiçbir bağlantı taşımıyorlardı.
   */
-  const merkezListeleri = await merkezListeleriniCiz();
   const EK_LISTE = {
     '/rehber': merkezListeleri.rehberler,
     '/bolumler': merkezListeleri.bolumler,
