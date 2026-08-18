@@ -63,29 +63,40 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           halka çizmek, olmayan bir ölçümü varmış gibi gösterirdi.
         */}
         <div className="shrink-0">
-          {match.isScorable ? (
-            <div
-              className="rounded-full p-[3px]"
-              style={{
-                background: `conic-gradient(${halkaRengi} ${match.overallScore * 3.6}deg, #e5e7eb ${match.overallScore * 3.6}deg)`,
-              }}
-              title={`%${match.overallScore} uyum — ${match.summaryInsight}`}
-            >
-              <div className="rounded-full bg-white p-[2px]">
-                <CompanyLogo
-                  name={listing.companyName}
-                  logoUrl={listing.companyLogo || undefined}
-                  className="w-11 h-11 sm:w-12 sm:h-12 rounded-full group-hover:scale-105 transition-transform text-base sm:text-lg p-1.5"
-                />
-              </div>
+          {/*
+            Logo HER ZAMAN yuvarlak, halka yalnızca puan varken.
+
+            Önce iki ayrı biçim vardı: puanı olan ilanda yuvarlak, olmayanda
+            kare. Aynı listede iki farklı logo biçimi, sayfayı derli toplu
+            olmaktan çıkarıyordu — üstelik şirket şeridindeki logolar da
+            yuvarlak.
+
+            Yapı tek: sarmalayıcı hep aynı boyutta duruyor, yalnızca zemini
+            değişiyor. Puan yoksa zemin saydam, yani halka görünmüyor ama
+            logo aynı yerde ve aynı boyutta kalıyor — kartlar birbirinden
+            kaymıyor.
+          */}
+          <div
+            className="rounded-full p-[3px]"
+            style={{
+              background: match.isScorable
+                ? `conic-gradient(${halkaRengi} ${match.overallScore * 3.6}deg, #e5e7eb ${match.overallScore * 3.6}deg)`
+                : 'transparent',
+            }}
+            title={
+              match.isScorable
+                ? `%${match.overallScore} uyum — ${match.summaryInsight}`
+                : listing.companyName
+            }
+          >
+            <div className="rounded-full bg-white p-[2px]">
+              <CompanyLogo
+                name={listing.companyName}
+                logoUrl={listing.companyLogo || undefined}
+                className="w-11 h-11 sm:w-12 sm:h-12 rounded-full group-hover:scale-105 transition-transform text-base sm:text-lg p-1.5 border border-gray-100"
+              />
             </div>
-          ) : (
-            <CompanyLogo
-              name={listing.companyName}
-              logoUrl={listing.companyLogo || undefined}
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl group-hover:scale-105 transition-transform shadow-2xs text-base sm:text-lg p-1.5"
-            />
-          )}
+          </div>
 
           {/*
             Sayı halkanın altında, şirket şeridindeki gibi. Halka oranı
