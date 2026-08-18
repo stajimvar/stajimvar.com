@@ -9,10 +9,14 @@
 # Tarayıcı stil dosyası bekleyip HTML alınca, nosniff yüzünden uygulamıyor:
 # sayfa tamamen STİLSİZ açılıyor ve hiçbir hata görünmüyor.
 #
-# Artık eksik varlık gerçek 404 veriyor. Tarayıcı bunu bir yükleme hatası
-# olarak görüyor ve index.html'deki kurtarma betiği sayfayı bir kez
-# yeniliyor — güncel HTML gelince doğru dosya adı isteniyor.
-/assets/*   /404.html   404
+# HEDEF NEDEN .txt
+# ----------------
+# Önce hedef `404.html` yapılmıştı. Cloudflare Pages çıktıda `404.html`
+# görünce onu BÜTÜN bulunamayan yollar için kullanıyor ve alttaki SPA
+# yedeğini eziyor — ölçüldü: /cv ve /sirket/deneme 404 döndü, uygulama
+# kabuğu hiç gelmedi. Adı 404.html olmayan bir dosya bu davranışı
+# tetiklemiyor.
+/assets/*   /varlik-yok.txt   404
 
 # Tek sayfa uygulaması: /gizlilik gibi yollar doğrudan açıldığında da
 # index.html sunulsun, Cloudflare Pages 404 vermesin.
