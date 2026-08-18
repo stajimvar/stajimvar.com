@@ -297,9 +297,28 @@ async function yasalSayfalariCiz() {
 
     const sonuc = {};
     for (const [yol, slug] of Object.entries(modul.LEGAL_ROUTES)) {
-      sonuc[yol] = renderToStaticMarkup(
+      const cizim = renderToStaticMarkup(
         React.createElement(modul.LegalPage, { slug, onBack: () => {} })
       );
+
+      /*
+        CLOUDFLARE E-POSTA GİZLEMESİNİ KAPAT.
+
+        Cloudflare, yanıttaki mailto bağlantılarını otomatik olarak
+        `/cdn-cgi/l/email-protection#...` adresine çeviriyor ve görünen metni
+        JavaScript ile çözülen bir yer tutucuyla değiştiriyor.
+
+        Ölçüldü: canlı /iletisim ve /hakkimizda sayfalarında düz adres HİÇ
+        yoktu; yerine "[email protected]" yazıyordu. Spam botlarına karşı
+        yararlı ama bizim için ters çalışıyor — iletişim adresi, AdSense
+        incelemesinde ve arama motorunun güven değerlendirmesinde bakılan
+        şeylerden biri ve JavaScript çalıştırmayan bir denetçi onu göremiyor.
+
+        `email_off` yorumu Cloudflare'in bu bölümü atlamasını sağlıyor;
+        belgelenmiş bir kaçış yolu. Yalnızca iletişim adresinin geçtiği
+        kurumsal ve yasal sayfalarda kullanılıyor.
+      */
+      sonuc[yol] = `<!--email_off-->${cizim}<!--/email_off-->`;
     }
     return sonuc;
   } catch (hata) {
