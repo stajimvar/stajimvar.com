@@ -126,13 +126,24 @@ const Kisayol: React.FC<{
  * birbirinden ayırıyor ve sayfayı canlandırıyor. Renk bir anlam taşımıyor,
  * yalnızca ayırt edici — o yüzden sırayla dağıtılıyor.
  */
-const SERIT = [
-  'from-violet-500 to-violet-400',
-  'from-blue-500 to-blue-400',
-  'from-cyan-500 to-cyan-400',
-  'from-emerald-500 to-emerald-400',
+/*
+  KARO ZEMİNLERİ
+
+  Instagram'ın keşfet ızgarasında kareler fotoğraf. Bizde fotoğraf yok ve
+  uydurma görsel koymak sayfayı süslü ama bilgisiz yapardı. Onun yerine her
+  karo kendi renginde: göz ızgarayı tek düze bir metin bloğu olarak değil,
+  ayırt edilebilir kutular olarak okuyor.
+
+  Renk bir anlam taşımıyor, yalnızca ayırt edici — o yüzden sırayla
+  dağıtılıyor.
+*/
+const KARO_ZEMIN = [
+  'from-violet-600 to-violet-500',
+  'from-blue-600 to-blue-500',
+  'from-cyan-600 to-cyan-500',
+  'from-emerald-600 to-emerald-500',
   'from-amber-500 to-amber-400',
-  'from-rose-500 to-rose-400',
+  'from-rose-600 to-rose-500',
 ];
 
 const Kart: React.FC<{ rehber: Rehber; sira?: number; onNavigate?: (p: string) => void }> = ({
@@ -148,15 +159,35 @@ const Kart: React.FC<{ rehber: Rehber; sira?: number; onNavigate?: (p: string) =
       e.preventDefault();
       onNavigate(`/rehber/${rehber.slug}`);
     }}
-    className="group relative overflow-hidden flex flex-col gap-1.5 p-5 pt-6 rounded-2xl bg-white border border-gray-200 text-left cursor-pointer transition-all hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 h-full"
+    className={`group relative overflow-hidden flex flex-col justify-end aspect-square p-3.5 sm:p-4 rounded-2xl text-left cursor-pointer transition-transform hover:-translate-y-0.5 bg-gradient-to-br ${
+      KARO_ZEMIN[sira % KARO_ZEMIN.length]
+    }`}
   >
+    {/*
+      Alta doğru koyulaşan perde: başlık her zemin tonunda okunsun diye.
+      Instagram'ın karolarında da yazı böyle bir perdenin üzerinde duruyor.
+    */}
     <span
       aria-hidden="true"
-      className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${SERIT[sira % SERIT.length]}`}
+      className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/5 to-transparent"
     />
-    <span className="block font-bold text-gray-900 leading-snug">{rehber.baslik}</span>
-    <span className="block text-sm text-gray-500 leading-relaxed">{rehber.ozet}</span>
-    <span className="mt-auto pt-3 flex items-center gap-1.5 text-xs font-bold text-blue-600">
+
+    {/*
+      Sağ üstte soru sayısı — Instagram'ın karosundaki izlenme rozetinin
+      karşılığı. Orada "kaç kişi gördü", burada "kaç soru cevaplanıyor".
+      Uydurma bir sayı değil: doğrudan rehberin SSS listesinden geliyor ve
+      SSS'si olmayan rehberde hiç çizilmiyor.
+    */}
+    {rehber.sss && rehber.sss.length > 0 && (
+      <span className="absolute top-2.5 right-2.5 z-10 text-[10px] font-bold text-white/90 bg-black/25 backdrop-blur-sm px-2 py-0.5 rounded-full">
+        {rehber.sss.length} soru
+      </span>
+    )}
+
+    <span className="relative z-10 block font-bold text-white leading-snug text-sm sm:text-base drop-shadow-sm">
+      {rehber.baslik}
+    </span>
+    <span className="relative z-10 mt-1 flex items-center gap-1 text-[11px] font-semibold text-white/85">
       Oku
       <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
     </span>
@@ -182,7 +213,16 @@ export const RehberListesi: React.FC<{ onNavigate?: (p: string) => void }> = ({
           <h2 className="text-xl font-bold text-gray-900">Tüm rehberler</h2>
           <span className="text-sm text-gray-400">{ogrenci.length} yazı</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {/*
+          Mobilde İKİ sütun, geniş ekranda üç.
+
+          Instagram keşfette üç sütun kullanıyor ama oradaki karolar
+          fotoğraf; okunacak metin yok. Bizim karolarda başlık var ve 375
+          pikselde üç sütun karo başına ~110 piksel bırakıyor — "Staj defteri
+          nasıl doldurulur" oraya sığmıyor. İki sütunda ızgara hissi duruyor,
+          başlık okunuyor.
+        */}
+        <div className="grid grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-4">
           {ogrenci.map((r, i) => (
             <Kart key={r.slug} rehber={r} sira={i} onNavigate={onNavigate} />
           ))}
@@ -192,7 +232,7 @@ export const RehberListesi: React.FC<{ onNavigate?: (p: string) => void }> = ({
       {isveren.length > 0 && (
         <section className="space-y-4">
           <h2 className="text-xl font-bold text-gray-900">İşverenler için</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-4">
             {isveren.map((r, i) => (
               <Kart key={r.slug} rehber={r} sira={i} onNavigate={onNavigate} />
             ))}
