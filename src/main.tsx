@@ -2,7 +2,6 @@ import {StrictMode, Suspense} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import { adsenseBetiginiBaslat } from './components/GoogleAdBanner.tsx';
-import { olcumuBaslat } from './lib/olcum.ts';
 import './index.css';
 
 /*
@@ -18,10 +17,20 @@ import './index.css';
 adsenseBetiginiBaslat();
 
 /*
-  Cerezsiz ziyaret olcumu. Belirtec tanimli degilse hicbir sey yapmiyor;
-  gerekcesi src/lib/olcum.ts basinda.
+  ZIYARET OLCUMU BURADA DEGIL — CLOUDFLARE TARAFINDA.
+
+  Once burada kendi beacon betigimizi yukleyen bir modul vardi. Olculdu:
+  Cloudflare panelinden Web Analytics acilinca Cloudflare beacon'i ZATEN
+  kendisi enjekte ediyor (sayfadaki betigin data-cf-beacon verisinde
+  "version" ve "r" alanlari var; bizim kodumuz onlari yazmiyordu).
+
+  Yani kendi betigimiz de yuklenseydi sayfada iki beacon olacakti ve her
+  ziyaret iki kez sayilacakti. Kod kaldirildi; olcum Cloudflare panelinden
+  yonetiliyor ve hicbir sir gerektirmiyor.
+
+  DIKKAT: bu, sitenin Cloudflare uzerinden servis edilmesine bagli.
+  Barindirma baska yere tasinirsa olcum sessizce durur.
 */
-olcumuBaslat();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
