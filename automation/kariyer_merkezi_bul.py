@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import time
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -132,8 +133,22 @@ def izinli(url: str) -> bool:
     return rp.can_fetch("StajimVarBot", url)
 
 
+# YUMUSAK 404: 200 DONEN HATA SAYFASI
+#
+# Baskent Universitesi taramasi "https://www.baskent.edu.tr/tr/404"
+# adresini KABUL etti: sunucu 404 sayfasini 200 durum koduyla sunuyor ve
+# sayfada "kariyer" kelimesi geciyordu. Durum kodu tek basina yetmiyor.
+#
+# Iki savunma: son adreste hata izi aramak, ve gövdede hata ifadesi
+# aramak. Ikisi de gecerse sayfa gercek sayiliyor.
+HATA_ADRESI = re.compile(r"/(404|not-?found|hata|error)(/|$|\?)", re.I)
+HATA_METNI = re.compile(
+    r"sayfa\s+bulunamad|aradiginiz\s+sayfa|page\s+not\s+found|404\s+error", re.I
+)
+
+
 def dene(url: str) -> tuple[str, int] | None:
-    """200 donen ve icinde 'kariyer' gecen sayfayi kabul ediyor."""
+    """200 donen, hata sayfasi olmayan ve icinde 'kariyer' gecen sayfa."""
     if not izinli(url):
         return None
     try:
@@ -143,7 +158,14 @@ def dene(url: str) -> tuple[str, int] | None:
         return None
     if r.status_code != 200 or len(r.text) < 1500:
         return None
-    if "kariyer" not in r.text.lower():
+    # Yonlendirme sonrasi ADRES kontrol ediliyor: /kariyer istegi cogu
+    # sitede sessizce /404'e dusuyor ve durum kodu 200 kaliyor.
+    if HATA_ADRESI.search(urlsplit(r.url).path):
+        return None
+    if HATA_METNI.search(r.text[:20000]):
+        return None
+    metin = r.text.lower()
+    if "kariyer" not in metin and "career" not in metin:
         return None
     return r.url, len(r.text)
 

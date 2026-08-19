@@ -14,13 +14,21 @@
  * dönmeyen, gövdesi çok kısa olan veya içinde "kariyer" geçmeyen adres
  * listeye alınmıyor; robots.txt kapalıysa istek hiç atılmıyor.
  *
- * Taranan 42 üniversitenin 20'sinde sayfa bulundu, biri (Gebze Teknik) ana
- * sayfaya yönlendiği için elendi — kariyer merkezi diye ana sayfa göstermek
- * öğrenciyi boşuna dolaştırır. Kalan 19'u burada.
+ * Taranan 42 üniversitenin 24'ünde sayfa bulundu, ikisi elendi:
  *
- * Bulunamayanlar (ODTÜ, İTÜ, Hacettepe, Koç, Sabancı, Bilkent ve diğerleri)
- * kariyer merkezini başka bir adres kalıbında tutuyor olabilir. Uydurmak
- * yerine listede yoklar; kalıp genişletilince eklenecekler.
+ *   - Gebze Teknik: istek ana sayfaya düşüyor. Kariyer merkezi diye ana
+ *     sayfa göstermek öğrenciyi boşuna dolaştırır.
+ *   - Başkent: adres /tr/404. Sunucu hata sayfasını 200 durum koduyla
+ *     sunuyor ve içinde "kariyer" kelimesi geçtiği için tarayıcı önce
+ *     kabul etmişti. Durum kodu tek başına yetmiyormuş; betiğe yumuşak
+ *     404 koruması eklendi.
+ *
+ * Kalan 22'si burada. İlk tur 5 adres kalıbıyla 20 sonuç vermişti; kalıp
+ * sayısı 16'ya çıkarılınca Hacettepe, Sabancı ve Pamukkale de bulundu.
+ *
+ * Hâlâ bulunamayanlar (ODTÜ, İTÜ, Ankara, Koç, Bilkent, Anadolu, Erciyes,
+ * Kocaeli ve diğerleri) kariyer merkezini başka bir kalıpta tutuyor.
+ * Uydurmak yerine listede yoklar.
  */
 
 export interface KariyerMerkezi {
@@ -42,6 +50,11 @@ export const KARIYER_MERKEZLERI: KariyerMerkezi[] = [
     url: 'https://kariyer.gazi.edu.tr/',
   },
   {
+    universite: 'Hacettepe Üniversitesi',
+    sehir: 'Ankara',
+    url: 'https://www.hacettepe.edu.tr/ogrenci/kariyer',
+  },
+  {
     universite: 'TOBB Ekonomi ve Teknoloji Üniversitesi',
     sehir: 'Ankara',
     url: 'https://www.etu.edu.tr/tr/kariyer',
@@ -50,6 +63,11 @@ export const KARIYER_MERKEZLERI: KariyerMerkezi[] = [
     universite: 'Akdeniz Üniversitesi',
     sehir: 'Antalya',
     url: 'https://kariyermerkezi.akdeniz.edu.tr/',
+  },
+  {
+    universite: 'Pamukkale Üniversitesi',
+    sehir: 'Denizli',
+    url: 'https://www.pau.edu.tr/kariyer',
   },
   {
     universite: 'Atatürk Üniversitesi',
@@ -100,6 +118,11 @@ export const KARIYER_MERKEZLERI: KariyerMerkezi[] = [
     universite: 'Marmara Üniversitesi',
     sehir: 'İstanbul',
     url: 'https://kariyermerkezi.marmara.edu.tr/',
+  },
+  {
+    universite: 'Sabancı Üniversitesi',
+    sehir: 'İstanbul',
+    url: 'https://career.sabanciuniv.edu/',
   },
   {
     universite: 'Yıldız Teknik Üniversitesi',

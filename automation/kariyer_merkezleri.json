@@ -5,6 +5,11 @@
   "url": "https://kariyermerkezi.bogazici.edu.tr/"
  },
  {
+  "universite": "Hacettepe Üniversitesi",
+  "alan": "hacettepe.edu.tr",
+  "url": "https://www.hacettepe.edu.tr/ogrenci/kariyer"
+ },
+ {
   "universite": "İstanbul Üniversitesi",
   "alan": "istanbul.edu.tr",
   "url": "https://kariyer.istanbul.edu.tr/tr"
@@ -35,6 +40,11 @@
   "url": "https://kariyer.yildiz.edu.tr/"
  },
  {
+  "universite": "Sabancı Üniversitesi",
+  "alan": "sabanciuniv.edu",
+  "url": "https://career.sabanciuniv.edu/"
+ },
+ {
   "universite": "Akdeniz Üniversitesi",
   "alan": "akdeniz.edu.tr",
   "url": "https://kariyermerkezi.akdeniz.edu.tr/"
@@ -60,11 +70,6 @@
   "url": "https://www.ktu.edu.tr/kariyer"
  },
  {
-  "universite": "Gebze Teknik Üniversitesi",
-  "alan": "gtu.edu.tr",
-  "url": "https://www.gtu.edu.tr"
- },
- {
   "universite": "Eskişehir Osmangazi Üniversitesi",
   "alan": "ogu.edu.tr",
   "url": "https://kariyer.ogu.edu.tr/"
@@ -73,6 +78,11 @@
   "universite": "Sakarya Üniversitesi",
   "alan": "sakarya.edu.tr",
   "url": "https://kariyer.sakarya.edu.tr/"
+ },
+ {
+  "universite": "Pamukkale Üniversitesi",
+  "alan": "pau.edu.tr",
+  "url": "https://www.pau.edu.tr/kariyer"
  },
  {
   "universite": "Süleyman Demirel Üniversitesi",
