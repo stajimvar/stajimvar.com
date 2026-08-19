@@ -86,12 +86,27 @@ UNIVERSITELER: list[tuple[str, str]] = [
 
 # Once alt alan adi, sonra yol. Turkiye'de kariyer merkezleri cogunlukla
 # ayri bir alt alan adinda duruyor.
+# Ilk taramada 42 universitenin 20'sinde sayfa bulundu. Bulunamayanlarin
+# (ODTU, ITU, Hacettepe, Koc, Sabanci, Bilkent...) kariyer merkezi baska
+# kaliplarda duruyordu: kisaltma alt alan adlari (kkm., kariyermerkezimiz.),
+# Ingilizce yollar (/career-center), ve ogrenci alt yollari.
 KALIPLAR = [
     "https://kariyer.{d}",
     "https://kariyermerkezi.{d}",
+    "https://kkm.{d}",
+    "https://cc.{d}",
+    "https://career.{d}",
+    "https://careers.{d}",
+    "https://kariyermerkezi.{d}/tr",
     "https://www.{d}/kariyer",
     "https://www.{d}/kariyer-merkezi",
+    "https://www.{d}/kariyer-merkezimiz",
+    "https://www.{d}/tr/kariyer",
+    "https://www.{d}/career-center",
+    "https://www.{d}/careers",
+    "https://www.{d}/ogrenci/kariyer",
     "https://{d}/kariyer",
+    "https://{d}/kariyer-merkezi",
 ]
 
 _son: dict[str, float] = {}

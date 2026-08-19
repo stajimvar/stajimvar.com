@@ -1,3 +1,15 @@
+/*
+  PARK EDİLDİ — ÖLÜ KOD DEĞİL.
+
+  Bu dosyayı şu an hiçbir yer import etmiyor. Bilerek: ileride açılacak.
+
+  Durmasının maliyeti yok (ölçüldü): import edilmediği için Rollup paketten
+  eliyor, dist içinde tek satırı geçmiyor. Buna karşılık `tsc --noEmit`
+  dosyayı kontrol etmeye devam ediyor — yani çevresindeki tipler değişirse
+  burası da kırılır ve çürüdüğü sessizce anlaşılmaz.
+
+  Silmeden önce sor: bu özellik gerçekten rafa mı kalktı?
+*/
 import { parseResume } from '../lib/resumeParser';
 import React, { useState } from 'react';
 import {
