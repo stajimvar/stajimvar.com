@@ -1,0 +1,100 @@
+name: Supabase production schema baseline audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/supabase-schema-baseline-audit.yml'
+      - 'scripts/normalize-schema-dump.mjs'
+      - 'scripts/schema-semantic-diff.mjs'
+      - 'scripts/sql/verify-opportunity-source-0022.sql'
+      - 'supabase/migrations/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stajimvar-production-schema-audit
+  cancel-in-progress: false
+
+jobs:
+  snapshot_and_compare:
+    if: github.repository == 'stajimvar/stajimvar.com' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Require protected production credentials
+        run: |
+          for name in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD SUPABASE_PROJECT_ID; do
+            [ -n "${!name}" ] || { echo "::error::$name GitHub Actions secret'i eksik."; exit 1; }
+          done
+          [ "$SUPABASE_PROJECT_ID" = "gdumgdgwlfnohkaucfow" ] || { echo "::error::Unexpected Supabase production project id."; exit 1; }
+      - name: Link production for schema-only inspection
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+      - name: Dump production public schema and extensions without data
+        run: |
+          mkdir -p .schema-audit
+          supabase db dump --linked --schema public,extensions --file .schema-audit/production.sql
+      - name: Normalize and validate production snapshot
+        id: production_snapshot
+        run: |
+          node scripts/normalize-schema-dump.mjs .schema-audit/production.sql .schema-audit/production.normalized.sql | tee .schema-audit/production-fingerprint.json
+          grep -E '^(GRANT|REVOKE) ' .schema-audit/production.sql > .schema-audit/production-grants.sql || true
+      - name: Verify 0022 behavior in a rolled-back transaction
+        id: verify_0022
+        continue-on-error: true
+        run: supabase db query --linked --agent yes --output-format json -f scripts/sql/verify-opportunity-source-0022.sql > .schema-audit/0022-verification.json
+      - name: Start disposable local Supabase database
+        run: supabase start
+      - name: Rebuild local schema from 0001 through 0022
+        run: supabase db reset --local --no-seed
+      - name: Dump and normalize local schema
+        id: local_snapshot
+        run: |
+          supabase db dump --local --schema public,extensions --file .schema-audit/local.sql
+          node scripts/normalize-schema-dump.mjs .schema-audit/local.sql .schema-audit/local.normalized.sql | tee .schema-audit/local-fingerprint.json
+          grep -E '^(GRANT|REVOKE) ' .schema-audit/local.sql > .schema-audit/local-grants.sql || true
+      - name: Build semantic schema comparison
+        id: semantic_diff
+        continue-on-error: true
+        run: node scripts/schema-semantic-diff.mjs .schema-audit/production.normalized.sql .schema-audit/local.normalized.sql .schema-audit/schema-diff.json
+      - name: Upload schema-only audit artifact
+        if: always() && steps.production_snapshot.outcome == 'success' && steps.local_snapshot.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-schema-baseline-audit-${{ github.run_id }}
+          path: .schema-audit/
+          if-no-files-found: error
+          retention-days: 7
+      - name: Write audit summary
+        if: always()
+        run: |
+          {
+            echo '## Production schema baseline audit'
+            echo
+            echo '- Production snapshot: ${{ steps.production_snapshot.outcome }}'
+            echo '- Local rebuild: ${{ steps.local_snapshot.outcome }}'
+            echo '- Rolled-back 0022 verification: ${{ steps.verify_0022.outcome }}'
+            echo '- Semantic diff: ${{ steps.semantic_diff.outcome }}'
+            echo '- Data dump: not requested; schema dump defaults to schema-only.'
+            echo '- Migration repair: not run.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Fail closed on schema differences
+        if: steps.semantic_diff.outcome != 'success'
+        run: |
+          echo '::error::Production and local schemas are not semantically equivalent. Baseline, repair, migration push, Edge Function, and Cloudflare deployment are blocked.'
+          exit 1
+      - name: Stop disposable local Supabase database
+        if: always()
+        run: supabase stop --no-backup

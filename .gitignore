@@ -10,6 +10,7 @@ coverage/
 # Cloudflare local secrets
 .dev.vars
 .wrangler/
+supabase/.temp/
 
 # Devralınan artıklar — repoya girmesin
 _eski-wrangler/
