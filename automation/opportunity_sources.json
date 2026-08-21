@@ -1,0 +1,8 @@
+{
+  "sources": [
+    {"name":"KYK Kredi ve Burs Hizmetleri","base_url":"https://kygm.gsb.gov.tr/Sayfalar/2441/2390/GenelBilgiler","source_type":"government","trust_level":"official","discovery_method":"official_page","parser_type":"manual_review","enabled":true,"robots_allowed":true,"check_interval_minutes":1440},
+    {"name":"Vakıflar Genel Müdürlüğü Eğitim Yardımı","base_url":"https://www.vgm.gov.tr/faaliyetler/hayir-hizmetleri/egitim-yardimi-ve-burs-hizmetleri","source_type":"government","trust_level":"official","discovery_method":"official_page","parser_type":"manual_review","enabled":true,"robots_allowed":true,"check_interval_minutes":1440},
+    {"name":"TÜBİTAK Burs ve Destekler","base_url":"https://www.tubitak.gov.tr/tr/burslar","source_type":"government","trust_level":"official","discovery_method":"official_page","parser_type":"manual_review","enabled":true,"robots_allowed":true,"check_interval_minutes":1440}
+  ],
+  "notes":"Bu dosya aday resmî kaynak kaydıdır; burs ilanı değildir. Production’a yalnızca yönetici incelemesiyle aktarılır."
+}
