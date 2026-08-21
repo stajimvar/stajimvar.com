@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 const classes = ['tables', 'types', 'constraints', 'indexes', 'policies', 'functions', 'triggers', 'rls'];
 
@@ -70,4 +71,4 @@ function main() {
   if (differenceCount) process.exitCode = 1;
 }
 
-if (process.argv[1] && import.meta.url === new URL(`file:///${process.argv[1].replaceAll('\\', '/')}`).href) main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

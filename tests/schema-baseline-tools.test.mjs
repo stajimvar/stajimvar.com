@@ -1,5 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { normalizeSchemaDump } from '../scripts/normalize-schema-dump.mjs';
 import { compareSchemaObjects } from '../scripts/schema-semantic-diff.mjs';
 
@@ -28,4 +32,16 @@ test('extracts quoted pg_dump public objects after the dump preamble', async () 
   assert.equal(objects.functions.size, 1);
   assert.equal(objects.constraints.size, 1);
   assert.equal(objects.policies.size, 1);
+});
+
+test('runs both schema tools when invoked as CLI programs', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'schema-tool-test-'));
+  const source = path.join(directory, 'source.sql');
+  const normalized = path.join(directory, 'normalized.sql');
+  const report = path.join(directory, 'report.json');
+  fs.writeFileSync(source, 'CREATE TABLE public.a (id uuid);\n');
+  execFileSync(process.execPath, ['scripts/normalize-schema-dump.mjs', source, normalized]);
+  execFileSync(process.execPath, ['scripts/schema-semantic-diff.mjs', normalized, normalized, report]);
+  assert.match(fs.readFileSync(normalized, 'utf8'), /CREATE TABLE public\.a/);
+  assert.equal(JSON.parse(fs.readFileSync(report, 'utf8')).changed.tables.length, 0);
 });

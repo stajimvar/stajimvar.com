@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 const rowDataPatterns = [
   /^COPY\s+public\./im,
@@ -54,4 +55,4 @@ function main() {
   console.log(JSON.stringify({ sha256: result.sha256, bytes: Buffer.byteLength(result.normalized) }));
 }
 
-if (process.argv[1] && import.meta.url === new URL(`file:///${process.argv[1].replaceAll('\\', '/')}`).href) main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
