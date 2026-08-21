@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import { classifyChangedPaths } from '../scripts/detect-deploy-changes.mjs';
 
@@ -15,6 +16,16 @@ test('requires Supabase deployment for migrations and Edge Functions', () => {
   assert.equal(classifyChangedPaths(['supabase/functions/opportunity-source-check/index.ts']).supabaseChanged, true);
   assert.equal(classifyChangedPaths(['supabase/config.toml']).supabaseChanged, true);
   assert.equal(classifyChangedPaths(['.github/workflows/supabase-production.yml']).supabaseChanged, true);
+});
+
+test('writes GitHub job outputs when called with a relative script path', () => {
+  const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  const before = execFileSync('git', ['rev-parse', 'HEAD^'], { encoding: 'utf8' }).trim();
+  const output = execFileSync(process.execPath, ['scripts/detect-deploy-changes.mjs'], {
+    encoding: 'utf8',
+    env: { ...process.env, GITHUB_EVENT_BEFORE: before, GITHUB_SHA: head },
+  });
+  assert.match(output, /supabase_changed=true/);
 });
 
 test('keeps Cloudflare fail-closed while permitting a skipped Supabase job for UI-only changes', () => {

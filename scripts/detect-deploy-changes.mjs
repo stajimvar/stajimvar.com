@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const SUPABASE_PATHS = ['supabase/migrations/', 'supabase/functions/', 'supabase/config.toml', '.github/workflows/supabase-production.yml'];
 
@@ -41,6 +42,6 @@ function writeOutputs(result) {
   else process.stdout.write(lines);
 }
 
-if (import.meta.url === `file:///${process.argv[1]?.replaceAll('\\', '/')}`) {
+if (process.argv[1] && fs.realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   writeOutputs(classifyChangedPaths(changedPathsFromGit(process.env.GITHUB_EVENT_BEFORE, process.env.GITHUB_SHA)));
 }
