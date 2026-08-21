@@ -10,8 +10,59 @@ export function isSafeHttpsUrl(value) {
 
 export function isExpiredOpportunity(opportunity, now = new Date()) {
   if (!opportunity.applicationDeadline) return false;
+  if (isDateOnly(opportunity.applicationDeadline)) {
+    const deadlineDay = calendarDay(opportunity.applicationDeadline);
+    const currentDay = calendarDay(now);
+    return deadlineDay != null && currentDay != null && deadlineDay < currentDay;
+  }
   const deadline = new Date(opportunity.applicationDeadline);
   return Number.isFinite(deadline.getTime()) && deadline.getTime() < now.getTime();
+}
+
+export function getOpportunityOverview(items, now = new Date()) {
+  const openItems = Array.isArray(items) ? items.filter((item) => item && !isExpiredOpportunity(item, now)) : [];
+  const timedItems = openItems
+    .filter((item) => deadlineSortValue(item.applicationDeadline) != null)
+    .sort((left, right) => deadlineSortValue(left.applicationDeadline) - deadlineSortValue(right.applicationDeadline));
+  const nearest = timedItems[0] ?? null;
+
+  return {
+    openCount: openItems.length,
+    scholarshipAndCreditCount: openItems.filter((item) => item.opportunityType === 'scholarship' || item.opportunityType === 'kyk').length,
+    nearest,
+    daysLeft: nearest ? daysUntilDeadline(nearest.applicationDeadline, now) : null,
+  };
+}
+
+function isDateOnly(value) {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function calendarDay(value) {
+  if (isDateOnly(value)) {
+    const [year, month, day] = value.split('-').map(Number);
+    const normalized = new Date(Date.UTC(year, month - 1, day));
+    return normalized.getUTCFullYear() === year && normalized.getUTCMonth() === month - 1 && normalized.getUTCDate() === day ? normalized.getTime() : null;
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (!Number.isFinite(date.getTime())) return null;
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date);
+  const values = Object.fromEntries(parts.filter((part) => part.type !== 'literal').map((part) => [part.type, Number(part.value)]));
+  return Date.UTC(values.year, values.month - 1, values.day);
+}
+
+function deadlineSortValue(value) {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  if (isDateOnly(value)) return calendarDay(value);
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.getTime() : null;
+}
+
+function daysUntilDeadline(value, now) {
+  const deadlineDay = calendarDay(value);
+  const currentDay = calendarDay(now);
+  return deadlineDay == null || currentDay == null ? null : Math.max(0, Math.round((deadlineDay - currentDay) / 86400000));
 }
 
 export function readOpportunityFilters(search) {

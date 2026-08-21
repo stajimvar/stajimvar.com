@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   isSafeHttpsUrl,
   isExpiredOpportunity,
+  getOpportunityOverview,
   readOpportunityFilters,
   serializeOpportunityFilters,
   matchOpportunity,
@@ -19,6 +20,29 @@ test('treats an elapsed deadline as expired', () => {
   assert.equal(isExpiredOpportunity({ applicationDeadline: '2026-08-20T23:59:59.000Z' }, new Date('2026-08-21T00:00:00.000Z')), true);
   assert.equal(isExpiredOpportunity({ applicationDeadline: '2026-08-21T23:59:59.000Z' }, new Date('2026-08-21T00:00:00.000Z')), false);
   assert.equal(isExpiredOpportunity({ applicationDeadline: null }, new Date('2026-08-21T00:00:00.000Z')), false);
+});
+
+test('keeps date-only deadlines open through the end of their Turkey day', () => {
+  assert.equal(isExpiredOpportunity({ applicationDeadline: '2026-08-21' }, new Date('2026-08-21T18:00:00.000Z')), false);
+  assert.equal(isExpiredOpportunity({ applicationDeadline: '2026-08-21' }, new Date('2026-08-21T21:00:00.000Z')), true);
+});
+
+test('summarizes only real open opportunities without inventing a deadline', () => {
+  const now = new Date('2026-08-21T12:00:00.000Z');
+  const overview = getOpportunityOverview([
+    { title: 'Süresi geçmiş burs', opportunityType: 'scholarship', applicationDeadline: '2026-08-20' },
+    { title: 'Tarihsiz eğitim', opportunityType: 'education', applicationDeadline: null },
+    { title: 'KYK', opportunityType: 'kyk', applicationDeadline: '2026-08-23' },
+    { title: 'Burs', opportunityType: 'scholarship', applicationDeadline: '2026-08-22' },
+  ], now);
+
+  assert.deepEqual(overview, {
+    openCount: 3,
+    scholarshipAndCreditCount: 2,
+    nearest: { title: 'Burs', opportunityType: 'scholarship', applicationDeadline: '2026-08-22' },
+    daysLeft: 1,
+  });
+  assert.deepEqual(getOpportunityOverview([], now), { openCount: 0, scholarshipAndCreditCount: 0, nearest: null, daysLeft: null });
 });
 
 test('round-trips public opportunity filters through URL query state', () => {
