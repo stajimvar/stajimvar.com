@@ -9,7 +9,7 @@ export interface Opportunity {
   educationLevels: string[]; eligibleDepartments: string[]; eligibleClassYears: string[]; cities: string[]; countries: string[];
   minimumGpa?: number; languageRequirements: string[]; amountText?: string; supportType?: string;
   applicationStartAt?: string; applicationDeadline?: string; applicationUrl?: string; sourceUrl: string;
-  requiredDocuments: string[]; status: OpportunityStatus; verifiedAt?: string; lastCheckedAt?: string; publishedAt?: string;
+  requiredDocuments: string[]; status: OpportunityStatus; verifiedAt?: string; lastCheckedAt?: string; publishedAt?: string; updatedAt?: string;
 }
 
 const COLUMNS = 'id,slug,title,organization_name,organization_logo_url,opportunity_type,short_description,description,eligibility,education_levels,eligible_departments,eligible_class_years,cities,countries,minimum_gpa,language_requirements,amount_text,support_type,application_start_at,application_deadline,application_url,source_url,required_documents,status,verified_at,last_checked_at,published_at';

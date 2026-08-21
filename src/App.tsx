@@ -32,6 +32,7 @@ import { KariyerMerkezleriSayfasi } from './components/KariyerMerkezleri';
 import { OpportunitiesPage } from './components/OpportunitiesPage';
 import { OpportunityDetailPage } from './components/OpportunityDetailPage';
 import { OpportunitiesHomeSection } from './components/OpportunitiesHomeSection';
+import { AdminOpportunitiesView, AdminOpportunityCreate } from './components/AdminOpportunitiesView';
 /*
   Bu ikisi bilerek gecikmeli DEĞİL: /araclar, /araclar/* ve /isveren
   ön render edilen adresler. React kabı temizlediği için gecikmeli
@@ -101,6 +102,13 @@ const AdminListingsQueue = React.lazy(() =>
 const AdminDashboard = React.lazy(() =>
   import('./components/AdminDashboard').then((m) => ({ default: m.AdminDashboard }))
 );
+
+const AdminRouteGate: React.FC<{ authenticated: boolean; isAdmin: boolean; onLogin: () => void; children: React.ReactNode }> = ({ authenticated, isAdmin, onLogin, children }) => {
+  React.useEffect(() => { if (!authenticated) onLogin(); }, [authenticated, onLogin]);
+  if (!authenticated) return <main className="min-h-screen grid place-items-center p-6"><p className="rounded-2xl border bg-white p-6 text-center">Yönetim paneli için giriş yapmanız gerekiyor.</p></main>;
+  if (!isAdmin) return <main className="min-h-screen grid place-items-center p-6"><p className="rounded-2xl border bg-white p-6 text-center">403 — Bu alan yalnızca yöneticilere açıktır.</p></main>;
+  return <>{children}</>;
+};
 
 /**
  * Adres bulunamadı sayfası.
@@ -736,6 +744,13 @@ export default function App() {
   if (temizYol.startsWith('/firsatlar/')) {
     const slug = temizYol.slice('/firsatlar/'.length);
     if (slug) return icerikSayfasi(<OpportunityDetailPage slug={slug} userId={session?.userId ?? null} onBack={() => navigate('/firsatlar')} onRequireLogin={handleOpenLogin} />);
+  }
+
+  if (temizYol === '/yonetim/firsatlar' || temizYol === '/yonetim/firsatlar/yeni' || /^\/yonetim\/firsatlar\/[^/]+\/duzenle$/.test(temizYol)) {
+    const editId = /^\/yonetim\/firsatlar\/([^/]+)\/duzenle$/.exec(temizYol)?.[1];
+    return <AdminRouteGate authenticated={Boolean(session)} isAdmin={isAdmin} onLogin={handleOpenLogin}>
+      {temizYol.endsWith('/yeni') || editId ? <AdminOpportunityCreate onDone={navigate} editId={editId} /> : <AdminOpportunitiesView onNavigate={navigate} />}
+    </AdminRouteGate>;
   }
 
   /* /ilan/frontend-stajyeri-3f2a1b9c */
