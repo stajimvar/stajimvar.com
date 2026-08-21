@@ -82,6 +82,7 @@ jobs:
           path: .schema-audit/
           if-no-files-found: error
           retention-days: 7
+          include-hidden-files: true
       - name: Write audit summary
         if: always()
         run: |
