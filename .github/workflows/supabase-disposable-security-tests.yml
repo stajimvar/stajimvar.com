@@ -1,0 +1,19 @@
+name: Supabase disposable security tests
+on:
+  push:
+    branches: [main]
+    paths: ['supabase/migrations/**','scripts/sql/disposable-security-tests.sql','.github/workflows/supabase-disposable-security-tests.yml']
+  workflow_dispatch:
+permissions: { contents: read }
+jobs:
+  disposable:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - run: supabase start
+      - run: supabase db reset --local --no-seed
+      - run: supabase db query --local --agent yes --output-format json -f scripts/sql/disposable-security-tests.sql
+      - run: supabase stop --no-backup
