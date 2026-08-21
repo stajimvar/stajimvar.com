@@ -166,7 +166,9 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ env.VITE_SUPABASE_ANON_KEY }}
 
       - name: Cloudflare Pages'e yükle
-        if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
+        # Production yayın sırası Supabase migration/function başarılı olduktan
+        # sonra yalnızca supabase-production.yml tarafından yönetilir.
+        if: ${{ false }}
         run: npx wrangler pages deploy dist --project-name stajimvar --commit-dirty=true
         env:
           CLOUDFLARE_API_TOKEN: ${{ env.CLOUDFLARE_API_TOKEN }}

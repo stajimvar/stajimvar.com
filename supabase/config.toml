@@ -1,0 +1,4 @@
+project_id = "gdumgdgwlfnohkaucfow"
+
+[functions.opportunity-source-check]
+verify_jwt = true

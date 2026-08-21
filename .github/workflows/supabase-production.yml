@@ -1,0 +1,69 @@
+name: Supabase production release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stajimvar-production-release
+  cancel-in-progress: false
+
+env:
+  SUPABASE_PROJECT_REF: gdumgdgwlfnohkaucfow
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+jobs:
+  migrate_and_functions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Supabase erişimini doğrula
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::error::SUPABASE_ACCESS_TOKEN GitHub Actions secret'i eksik."
+            exit 1
+          fi
+          supabase migration list --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Migration planını doğrula
+        run: supabase db push --project-ref "$SUPABASE_PROJECT_REF" --dry-run
+      - name: Migrationları uygula
+        run: supabase db push --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Edge Functionları JWT doğrulamayla dağıt
+        run: supabase functions deploy opportunity-source-check --project-ref "$SUPABASE_PROJECT_REF"
+
+  cloudflare_production:
+    needs: migrate_and_functions
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Dağıtım sırlarını doğrula
+        run: |
+          for name in CLOUDFLARE_API_TOKEN VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY; do
+            [ -n "${!name}" ] || { echo "::error::$name GitHub Actions secret'i eksik."; exit 1; }
+          done
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npx wrangler pages deploy dist --project-name stajimvar --branch main --commit-dirty=true

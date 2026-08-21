@@ -17,14 +17,6 @@ name: Yayına al
 # yüklüyoruz — veritabanına hiçbir şey yazılmıyor.
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      # Yalnızca otomasyon veya belge değiştiyse siteyi yeniden kurmaya
-      # gerek yok; site çıktısı bunlardan etkilenmiyor.
-      - 'automation/**'
-      - 'supabase/**'
-      - '**.md'
   workflow_dispatch:
 
 permissions:
