@@ -1,0 +1,37 @@
+name: Supabase production catalog evidence
+on:
+  push:
+    branches: [main]
+    paths: ['scripts/sql/production-catalog-evidence.sql','.github/workflows/supabase-production-catalog-evidence.yml']
+  workflow_dispatch:
+permissions: { contents: read }
+concurrency:
+  group: stajimvar-production-catalog-evidence
+  cancel-in-progress: false
+jobs:
+  evidence:
+    if: github.repository == 'stajimvar/stajimvar.com' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_ID: gdumgdgwlfnohkaucfow
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - name: Require access token
+        run: '[ -n "$SUPABASE_ACCESS_TOKEN" ] || { echo "::error::SUPABASE_ACCESS_TOKEN GitHub Actions secreti eksik."; exit 1; }'
+      - name: Link production read-only session
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+      - name: Collect read-only catalog evidence
+        run: |
+          mkdir -p catalog-evidence
+          supabase db query --linked --agent yes --output-format json -f scripts/sql/production-catalog-evidence.sql > catalog-evidence/report.json
+          test -s catalog-evidence/report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: production-catalog-evidence-${{ github.run_id }}
+          path: catalog-evidence/
+          retention-days: 7
