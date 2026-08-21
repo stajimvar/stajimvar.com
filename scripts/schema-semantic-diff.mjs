@@ -11,35 +11,26 @@ function add(map, category, name, statement) {
   if (name) map[category].set(cleanIdentifier(name), statement.replace(/\s+/g, ' ').trim());
 }
 
+function publicObjectName(match, firstIndex) {
+  return `public.${match[firstIndex] || match[firstIndex + 1]}`;
+}
+
 export function extractSchemaObjects(sql) {
   const map = Object.fromEntries(classes.map((category) => [category, new Map()]));
-  const statements = sql.split(/;\s*(?=(?:CREATE|ALTER)\s)/i);
+  const object = '(?:"public"\\."([^"]+)"|public\\.([A-Za-z_][A-Za-z0-9_]*))';
+  const objectMatches = (pattern, callback) => {
+    for (const match of sql.matchAll(pattern)) callback(match);
+  };
 
-  for (const statement of statements) {
-    const table = statement.match(/^CREATE TABLE(?: IF NOT EXISTS)?\s+(public\.[\w"]+)/im);
-    if (table) add(map, 'tables', table[1], statement);
+  objectMatches(new RegExp(`^CREATE TABLE(?: IF NOT EXISTS)?\\s+${object}[\\s\\S]*?\\);`, 'gmi'), (match) => add(map, 'tables', publicObjectName(match, 1), match[0]));
+  objectMatches(new RegExp(`^CREATE TYPE\\s+${object}\\s+AS ENUM[\\s\\S]*?\\);`, 'gmi'), (match) => add(map, 'types', publicObjectName(match, 1), match[0]));
+  objectMatches(new RegExp(`^CREATE(?: OR REPLACE)? FUNCTION\\s+${object}\\s*\\([\\s\\S]*?\\$\\$;`, 'gmi'), (match) => add(map, 'functions', publicObjectName(match, 1), match[0]));
+  objectMatches(new RegExp(`^ALTER TABLE(?: ONLY)?\\s+${object}[\\s\\S]*?ADD CONSTRAINT\\s+"?([^"\\s]+)"?[\\s\\S]*?;\\s*$`, 'gmi'), (match) => add(map, 'constraints', `${publicObjectName(match, 1)}.${match[3]}`, match[0]));
+  objectMatches(new RegExp(`^CREATE(?: UNIQUE)? INDEX\\s+"?([^"\\s]+)"?[\\s\\S]*?;\\s*$`, 'gmi'), (match) => add(map, 'indexes', match[1], match[0]));
+  objectMatches(new RegExp(`^CREATE POLICY\\s+"?([^"\\s]+)"?\\s+ON\\s+${object}[\\s\\S]*?;\\s*$`, 'gmi'), (match) => add(map, 'policies', `${publicObjectName(match, 2)}.${match[1]}`, match[0]));
+  objectMatches(new RegExp(`^CREATE TRIGGER\\s+"?([^"\\s]+)"?[\\s\\S]*?\\sON\\s+${object}[\\s\\S]*?;\\s*$`, 'gmi'), (match) => add(map, 'triggers', `${publicObjectName(match, 2)}.${match[1]}`, match[0]));
+  objectMatches(new RegExp(`^ALTER TABLE(?: ONLY)?\\s+${object}\\s+ENABLE ROW LEVEL SECURITY\\s*;`, 'gmi'), (match) => add(map, 'rls', publicObjectName(match, 1), match[0]));
 
-    const type = statement.match(/^CREATE TYPE\s+(public\.[\w"]+)/im);
-    if (type) add(map, 'types', type[1], statement);
-
-    const constraint = statement.match(/^ALTER TABLE(?: ONLY)?\s+(public\.[\w"]+).*?ADD CONSTRAINT\s+([\w"]+)/ims);
-    if (constraint) add(map, 'constraints', `${constraint[1]}.${constraint[2]}`, statement);
-
-    const index = statement.match(/^CREATE(?: UNIQUE)? INDEX\s+([\w"]+)/im);
-    if (index) add(map, 'indexes', index[1], statement);
-
-    const policy = statement.match(/^CREATE POLICY\s+([\w"]+)\s+ON\s+(public\.[\w"]+)/im);
-    if (policy) add(map, 'policies', `${policy[2]}.${policy[1]}`, statement);
-
-    const fn = statement.match(/^CREATE(?: OR REPLACE)? FUNCTION\s+(public\.[\w"]+)\s*\(/im);
-    if (fn) add(map, 'functions', fn[1], statement);
-
-    const trigger = statement.match(/^CREATE TRIGGER\s+([\w"]+)\s+.*?\sON\s+(public\.[\w"]+)/ims);
-    if (trigger) add(map, 'triggers', `${trigger[2]}.${trigger[1]}`, statement);
-
-    const rls = statement.match(/^ALTER TABLE(?: ONLY)?\s+(public\.[\w"]+)\s+ENABLE ROW LEVEL SECURITY/im);
-    if (rls) add(map, 'rls', rls[1], statement);
-  }
   return map;
 }
 

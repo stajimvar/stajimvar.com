@@ -96,10 +96,10 @@ jobs:
             echo '- Data dump: not requested; schema dump defaults to schema-only.'
             echo '- Migration repair: not run.'
           } >> "$GITHUB_STEP_SUMMARY"
-      - name: Fail closed on schema differences
-        if: steps.semantic_diff.outcome != 'success'
+      - name: Fail closed on schema or 0022 differences
+        if: steps.semantic_diff.outcome != 'success' || steps.verify_0022.outcome != 'success'
         run: |
-          echo '::error::Production and local schemas are not semantically equivalent. Baseline, repair, migration push, Edge Function, and Cloudflare deployment are blocked.'
+          echo '::error::Production schema baseline is not verified. Baseline, repair, migration push, Edge Function, and Cloudflare deployment are blocked.'
           exit 1
       - name: Stop disposable local Supabase database
         if: always()
