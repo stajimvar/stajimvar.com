@@ -1,0 +1,26 @@
+name: Scholarship import preview
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Dry-run only; no database writes or publishing
+        required: true
+        default: true
+        type: boolean
+concurrency:
+  group: scholarship-import-preview
+  cancel-in-progress: false
+jobs:
+  preview:
+    if: ${{ inputs.dry_run == true }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -r automation/requirements.txt
+      - run: python automation/scholarship_import.py
+        env:
+          SCHOLARSHIP_DRY_RUN: 'true'
