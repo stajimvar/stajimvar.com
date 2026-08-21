@@ -51,6 +51,8 @@ interface HeaderProps {
   onLogout?: () => void;
   /** Rehber merkezine geçiş. */
   onOpenGuides?: () => void;
+  /** Öğrenci fırsatları merkezi. */
+  onOpenOpportunities?: () => void;
   /**
    * Bulunulan adres.
    *
@@ -101,6 +103,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenRegister,
   onLogout,
   onOpenGuides,
+  onOpenOpportunities,
   bulunulanYol = '/',
   searchQuery,
   onSearchChange,
@@ -214,6 +217,7 @@ export const Header: React.FC<HeaderProps> = ({
     altında toplanıyor — kullanıcı için hepsi aynı yerin parçası.
   */
   const rehberdeMi = /^\/(rehber|bolum|bolumler|araclar|isveren)(\/|$)/.test(bulunulanYol);
+  const firsatlardaMi = /^\/(firsatlar|burslar|kyk|yurtdisi-firsatlari|yarismalar|firsat-takvimi|bana-uygun|kaydedilen-firsatlar)(\/|$)/.test(bulunulanYol);
 
   /*
     Kurumsal ve yasal sayfalar üçünden hiçbiri değil.
@@ -225,7 +229,7 @@ export const Header: React.FC<HeaderProps> = ({
     bulunulanYol
   );
 
-  const ilanlardaMi = !rehberdeMi && !kurumsalSayfada && activeTab === 'internships';
+  const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kurumsalSayfada && activeTab === 'internships';
   const profildeMi = !rehberdeMi && !kurumsalSayfada && activeTab === 'profile';
 
   return (
@@ -307,6 +311,17 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <BookOpen className="w-3.5 h-3.5 shrink-0 text-gray-400" />
                   <span>Rehber</span>
+                </button>
+
+                <button
+                  id="nav-tab-opportunities"
+                  onClick={() => onOpenOpportunities?.()}
+                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
+                    firsatlardaMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                  }`}
+                >
+                  <Sparkles className={`w-3.5 h-3.5 shrink-0 ${firsatlardaMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span>Fırsatlar</span>
                 </button>
 
                 {/*
@@ -1106,4 +1121,3 @@ export const Header: React.FC<HeaderProps> = ({
   </>
   );
 };
-

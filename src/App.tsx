@@ -29,6 +29,9 @@ import { BolumHub, BolumPage } from './components/BolumPages';
 import { StajProgramlariSayfasi } from './components/StajProgramlari';
 import { IsverenGirisi } from './components/IsverenGirisi';
 import { KariyerMerkezleriSayfasi } from './components/KariyerMerkezleri';
+import { OpportunitiesPage } from './components/OpportunitiesPage';
+import { OpportunityDetailPage } from './components/OpportunityDetailPage';
+import { OpportunitiesHomeSection } from './components/OpportunitiesHomeSection';
 /*
   Bu ikisi bilerek gecikmeli DEĞİL: /araclar, /araclar/* ve /isveren
   ön render edilen adresler. React kabı temizlediği için gecikmeli
@@ -685,6 +688,7 @@ export default function App() {
       onSelectCompany={handleSelectCompany}
       applicationsCount={applications.length}
       onOpenGuides={() => navigate('/rehber')}
+      onOpenOpportunities={() => navigate('/firsatlar')}
       bulunulanYol={temizYol}
       searchQuery={aramaTerimi}
       onSearchChange={(q) => {
@@ -712,6 +716,26 @@ export default function App() {
   const legalSlug = LEGAL_ROUTES[temizYol];
   if (legalSlug) {
     return icerikSayfasi(<LegalPage slug={legalSlug} onBack={goHome} />);
+  }
+
+  const firsatSayfalari = new Set(['/firsatlar', '/burslar', '/kyk', '/yurtdisi-firsatlari', '/yarismalar', '/firsat-takvimi', '/bana-uygun', '/kaydedilen-firsatlar']);
+  if (firsatSayfalari.has(temizYol)) {
+    return icerikSayfasi(
+      <OpportunitiesPage
+        path={temizYol}
+        userId={session?.userId ?? null}
+        student={student}
+        onNavigate={(to) => {
+          if (to === '/profil') { setActiveTab('profile'); navigate('/'); return; }
+          navigate(to);
+        }}
+        onRequireLogin={handleOpenLogin}
+      />
+    );
+  }
+  if (temizYol.startsWith('/firsatlar/')) {
+    const slug = temizYol.slice('/firsatlar/'.length);
+    if (slug) return icerikSayfasi(<OpportunityDetailPage slug={slug} userId={session?.userId ?? null} onBack={() => navigate('/firsatlar')} onRequireLogin={handleOpenLogin} />);
   }
 
   /* /ilan/frontend-stajyeri-3f2a1b9c */
@@ -997,6 +1021,8 @@ export default function App() {
             )}
 
             {safeTab === 'internships' && listingsStatus === 'ready' && (
+              <>
+              <OpportunitiesHomeSection onNavigate={navigate} />
               <MatchedInternshipsView
                 student={isLoggedIn ? activeStudent : null}
                 allListings={allListings}
@@ -1011,6 +1037,7 @@ export default function App() {
                 searchQuery={aramaTerimi}
                 onSearchChange={setAramaTerimi}
               />
+              </>
             )}
 
             {safeTab === 'badges' && activeStudent && (

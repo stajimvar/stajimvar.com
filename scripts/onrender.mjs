@@ -516,6 +516,17 @@ async function ilanlariGetir() {
   return yanit.json();
 }
 
+async function firsatlariGetir() {
+  const urlAdres = envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL');
+  const anahtar = envOku('SUPABASE_SERVICE_ROLE_KEY') || envOku('VITE_SUPABASE_ANON_KEY');
+  if (!urlAdres || !anahtar) return [];
+  const secim = 'slug,title,organization_name,short_description,application_deadline,updated_at,status';
+  const istek = `${urlAdres}/rest/v1/opportunities?status=eq.published&select=${encodeURIComponent(secim)}`;
+  const yanit = await fetch(istek, { headers: { apikey: anahtar, Authorization: `Bearer ${anahtar}` } });
+  if (!yanit.ok) { console.log(`  fırsatlar alınamadı: HTTP ${yanit.status}`); return []; }
+  return yanit.json();
+}
+
 /* --------------------------------------------------------------- HTML üretimi */
 
 /*
@@ -773,6 +784,12 @@ async function main() {
     ['/staj-programlari', 'Büyük işverenlerde staj başvurusu | StajımVar', 'Aselsan, TUSAŞ, Turkcell, Tüpraş ve diğerleri stajı kendi kariyer sayfasından alıyor. Doğrulanmış başvuru adresleri.', 'Büyük işverenlerde staj'],
     ['/isveren/ilan-ver', 'Stajyer ilanı ver | StajımVar', 'Staj ilanı yayınlamak ücretsiz. Şirket sayfanızı sahiplenin, ilanlarınızı kendiniz girin.', 'Stajyer ilanı ver'],
     ['/universite-kariyer-merkezleri', 'Üniversite kariyer merkezleri | StajımVar', 'Staj formu, sigorta yazısı ve onay imzası kendi okulundan çıkıyor. Kariyer merkezlerinin doğrulanmış adresleri.', 'Üniversite kariyer merkezleri'],
+    ['/firsatlar', 'Öğrenci Fırsatları | StajımVar', 'Burs, eğitim, yurtdışı ve yarışma fırsatlarını tek yerden takip et.', 'Öğrenci Fırsatları'],
+    ['/burslar', 'Burs Fırsatları | StajımVar', 'Resmî kaynağı doğrulanmış burs fırsatlarını takip et.', 'Burs Fırsatları'],
+    ['/kyk', 'KYK Duyuruları | StajımVar', 'KYK burs, kredi ve resmî duyurularını takip et.', 'KYK Duyuruları'],
+    ['/yurtdisi-firsatlari', 'Yurtdışı Fırsatları | StajımVar', 'Yurtdışı eğitim, değişim ve hareketlilik fırsatlarını takip et.', 'Yurtdışı Fırsatları'],
+    ['/yarismalar', 'Yarışmalar ve Hackathonlar | StajımVar', 'Resmî kaynaklı öğrenci yarışmalarını ve hackathonları takip et.', 'Yarışmalar ve Hackathonlar'],
+    ['/firsat-takvimi', 'Fırsat Takvimi | StajımVar', 'Yaklaşan fırsat son başvuru tarihlerini takip et.', 'Fırsat Takvimi'],
   ];
   /*
     /rehber ve /bolumler'e listeleri de basılıyor: bu iki sayfa tarayıcının
@@ -799,6 +816,7 @@ async function main() {
 
   /* ---- ilanlar: JobPosting ---- */
   const ilanlar = await ilanlariGetir();
+  const firsatlar = await firsatlariGetir();
   for (const i of ilanlar) {
     const sirket = i.companies || {};
     const onek = String(i.id).split('-')[0];
@@ -855,6 +873,16 @@ async function main() {
     sayac++;
   }
 
+  for (const f of firsatlar) {
+    if (f.application_deadline && new Date(f.application_deadline).getTime() < Date.now()) continue;
+    sayfaYaz(`/firsatlar/${f.slug}`, {
+      baslik: `${f.title} — ${f.organization_name} | StajımVar`,
+      aciklama: ozetle(f.short_description || ''),
+      govde: govde(f.title, f.short_description || '', [f.organization_name, f.application_deadline && `Son başvuru: ${f.application_deadline.slice(0, 10)}`].filter(Boolean)),
+    });
+    sayac++;
+  }
+
   /*
     ---- ana sayfa ----
 
@@ -870,6 +898,7 @@ async function main() {
     ['/rehber', 'Staj rehberi'],
     ['/bolumler', 'Bölüme göre staj'],
     ['/araclar', 'Hesaplama araçları'],
+    ['/firsatlar', 'Öğrenci fırsatları'],
     ['/isveren', 'İşveren rehberi'],
     ['/hakkimizda', 'Hakkımızda'],
     ['/iletisim', 'İletişim'],

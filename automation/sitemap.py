@@ -36,6 +36,12 @@ DURAGAN = [
     ("/staj-programlari", "weekly", "0.9"),
     ("/isveren/ilan-ver", "monthly", "0.8"),
     ("/universite-kariyer-merkezleri", "monthly", "0.8"),
+    ("/firsatlar", "daily", "0.8"),
+    ("/burslar", "daily", "0.7"),
+    ("/kyk", "daily", "0.7"),
+    ("/yurtdisi-firsatlari", "daily", "0.7"),
+    ("/yarismalar", "daily", "0.7"),
+    ("/firsat-takvimi", "daily", "0.7"),
     # Hesaplama araclari. Arama trafiginin buyuk kismini bunlar getiriyor.
     ("/araclar", "monthly", "0.8"),
     ("/araclar/net-hesaplama", "monthly", "0.8"),
@@ -101,6 +107,15 @@ def main() -> None:
         .data
         or []
     )
+    firsatlar = (
+        db.table("opportunities")
+        .select("slug,updated_at")
+        .eq("status", "published")
+        .gte("application_deadline", datetime.now(UTC).isoformat())
+        .execute()
+        .data
+        or []
+    )
 
     bolumler = kayit_sluglari("bolumler.ts")
     rehberler = kayit_sluglari("rehberler.tsx")
@@ -131,6 +146,14 @@ def main() -> None:
         if sirket:
             sirketler.add(sirket)
 
+    for firsat in firsatlar:
+        tarih = (firsat.get("updated_at") or "")[:10]
+        tarih_etiketi = f"<lastmod>{tarih}</lastmod>" if tarih else ""
+        satirlar.append(
+            f"  <url><loc>{SITE}/firsatlar/{kacir(firsat['slug'])}</loc>{tarih_etiketi}"
+            f"<changefreq>daily</changefreq><priority>0.7</priority></url>"
+        )
+
     # Sirket sayfalari: sirketin kendi adini arayip bizi bulmasinin yolu.
     for slug in sorted(sirketler):
         satirlar.append(
@@ -149,7 +172,7 @@ def main() -> None:
     hedef.write_text(xml, encoding="utf-8")
     print(
         f"sitemap.xml yazildi: {len(duragan)} duragan ({len(bolumler)} bolum) "
-        f"+ {len(ilanlar)} ilan "
+        f"+ {len(ilanlar)} ilan + {len(firsatlar)} firsat "
         f"+ {len(sirketler)} sirket = {len(satirlar)} adres "
         f"({datetime.now(UTC).isoformat(timespec='seconds')})"
     )
