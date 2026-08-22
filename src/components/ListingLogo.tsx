@@ -13,14 +13,16 @@ import { CompanyLogo } from './CompanyLogo';
  * border-gray-100, kimi hiç). Aynı şirketin logosu sayfadan sayfaya
  * büyüyüp küçülüyor, listelerde göz hizası kayıyordu.
  *
- * Ölçü artık burada: 72×72. İş ilanı kartı esas alındı — en çok görülen
- * ve logonun en okunaklı çıktığı yer orasıydı.
+ * Ölçü artık burada: 56×56. Önce 72 denendi ve kartlarda fazla iri
+ * durdu; ölçü, hemen üstteki şirket şeridinin dairesiyle (w-14 = 56px)
+ * eşitlendi. Aynı ekranda iki farklı logo boyutu görmek, ikisinin farklı
+ * şeyler olduğunu düşündürüyordu.
  *
- * Kutu her yerde aynı: sabit 72×72, `shrink-0` (dar ekranda metin uzunsa
- * logo ezilmesin), dairesel, aynı kenarlık ve 8px iç boşluk. Görsel
- * `object-contain` ile duruyor — CompanyLogo'dan geliyor — yani geniş
- * logolar kırpılmıyor, logosu olmayan kurumda baş harfler aynı kutuda
- * ortalanıyor.
+ * Kutu her yerde aynı: sabit 56×56, `shrink-0` (dar ekranda metin uzunsa
+ * logo ezilmesin), dairesel, aynı kenarlık ve 6px iç boşluk — şeritteki
+ * p-1.5 ile aynı oran. Görsel `object-contain` ile duruyor —
+ * CompanyLogo'dan geliyor — yani geniş logolar kırpılmıyor, logosu
+ * olmayan kurumda baş harfler aynı kutuda ortalanıyor.
  *
  * `className` yalnızca kartın kendi etkileşimi içindir (örneğin hover
  * ölçeklemesi). Buraya ölçü sınıfı geçilirse standart bozulur.
@@ -35,6 +37,6 @@ export const ListingLogo: React.FC<ListingLogoProps> = ({ name, logoUrl, classNa
   <CompanyLogo
     name={name}
     logoUrl={logoUrl}
-    className={`w-[72px] h-[72px] shrink-0 rounded-full p-2 text-lg ${className}`}
+    className={`w-14 h-14 shrink-0 rounded-full p-1.5 text-base ${className}`}
   />
 );
