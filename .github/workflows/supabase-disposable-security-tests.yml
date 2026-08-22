@@ -17,11 +17,7 @@ jobs:
       - run: supabase db reset --local --no-seed
       - name: Run disposable SQL with local psql only
         run: |
-          local_db_url="$(supabase status -o env | sed -n 's/^DB_URL=//p' | head -n 1)"
-          case "$local_db_url" in
-            postgresql://postgres:postgres@127.0.0.1:54322/postgres) ;;
-            *) echo '::error::Unexpected disposable database URL.'; exit 1 ;;
-          esac
+          local_db_url="$(supabase status -o env | node scripts/assert-disposable-db-url.mjs)"
           psql -v ON_ERROR_STOP=1 -f scripts/sql/disposable-security-tests.sql "$local_db_url"
       - name: Clean disposable containers and volumes
         if: always()
