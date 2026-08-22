@@ -298,6 +298,28 @@ export const Header: React.FC<HeaderProps> = ({
                 */}
 
                 {/*
+                  Burs ilanları sekmesi. Rehberden ÖNCE geliyor: burs ve kredi
+                  başvurusu takvime bağlı, kaçırılınca bir yıl bekleniyor.
+                  Rehber ise her zaman orada duruyor.
+
+                  Sekmenin adı "Fırsatlar"dan "Burs İlanları"na çevrildi;
+                  "fırsat" ne olduğunu söylemeyen bir kelimeydi. Listede
+                  yarışma ve yurt dışı programı da var, yani ad tam kapsamıyor
+                  — ama on bir kaydın dokuzu burs ve kredi, ve öğrenci
+                  aradığında "burs" yazıyor.
+                */}
+                <button
+                  id="nav-tab-opportunities"
+                  onClick={() => onOpenOpportunities?.()}
+                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
+                    firsatlardaMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                  }`}
+                >
+                  <Sparkles className={`w-3.5 h-3.5 shrink-0 ${firsatlardaMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span>Burs İlanları</span>
+                </button>
+
+                {/*
                   Rehber sekmesi. Boşalan yere içerik geldi: staj sürecinin
                   bilinmeyen kısımları (belge, sigorta, CV, mülakat). Aynı
                   zamanda sitenin keşif kanalı — davet e-postası
@@ -313,17 +335,6 @@ export const Header: React.FC<HeaderProps> = ({
                   <span>Rehber</span>
                 </button>
 
-                <button
-                  id="nav-tab-opportunities"
-                  onClick={() => onOpenOpportunities?.()}
-                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    firsatlardaMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
-                  }`}
-                >
-                  <Sparkles className={`w-3.5 h-3.5 shrink-0 ${firsatlardaMi ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <span>Fırsatlar</span>
-                </button>
-
                 {/*
                   "Başvurularım" sekmesi kaldırıldı.
 
@@ -337,46 +348,18 @@ export const Header: React.FC<HeaderProps> = ({
                   sayaç da o sekmenin üstünde duruyor.
                 */}
 
-                {/* 3. Özgeçmiş & Profil */}
-                <button
-                  id="nav-tab-profile"
-                  onClick={() => {
-                    setActiveTab('profile');
-                    setActiveSubTab('all');
-                  }}
-                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    activeTab === 'profile'
-                      ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
-                      :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
-                  }`}
-                >
-                  <UserCheck
-                    className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                      activeTab ==='profile'?'text-teal-600':'text-gray-400'
-                    }`}
-                  />
-                  <span className="hidden xl:inline">Özgeçmiş & Profil</span>
-                  <span className="inline xl:hidden">Profil</span>
-                  {/*
-                    Başvuru sayacı buraya taşındı: başvurular artık bu sayfanın
-                    içinde. Kullanıcı kaç başvurusu olduğunu sekmeye bakarak
-                    görebilmeli, açmak zorunda kalmamalı.
-                  */}
-                  {applicationsCount > 0 && (
-                    <span
-                      className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full transition-all shrink-0 leading-none ${
-                        activeTab === 'profile'
-                          ? 'bg-teal-600 text-white shadow-2xs'
-                          : 'bg-teal-100 text-teal-800'
-                      }`}
-                    >
-                      {applicationsCount}
-                    </span>
-                  )}
-                  {activeTab === 'profile' && applicationsCount === 0 && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-teal-600 shrink-0" />
-                  )}
-                </button>
+                {/*
+                  "Özgeçmiş & Profil" SEKMESİ KALDIRILDI.
+
+                  Sağdaki avatar düğmesi zaten aynı yere götürüyordu: aynı
+                  hedefe iki ayrı düğme, üstelik yan yana. Kullanıcı hangisine
+                  bastığını değil, ikisinin farklı bir şey yapmasını bekliyor.
+
+                  Başvuru sayacı kaybolmadı — avatarın üstüne taşındı. Sekmeyi
+                  silip sayacı da silmek, düğmeyi kaldırmakla kalmayıp bilgiyi
+                  de kaldırmak olurdu.
+                */}
+
                   </>
                 )}
 
@@ -601,11 +584,24 @@ export const Header: React.FC<HeaderProps> = ({
                       className="flex items-center gap-2 sm:gap-2.5 py-1.5 px-2 sm:px-3 rounded-2xl text-gray-800 hover:bg-gray-50 border border-gray-200 transition-all text-left cursor-pointer select-none shadow-2xs"
                       title="Hesap Menüsü"
                     >
-                      <Avatar
-                        name={activeStudent.fullName}
-                        url={activeStudent.avatarUrl || undefined}
-                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-full shrink-0 ring-1 ring-gray-200 text-xs"
-                      />
+                      {/*
+                        Başvuru sayacı buraya taşındı. Eskiden "Özgeçmiş &
+                        Profil" sekmesinin üstündeydi; o sekme kaldırılınca
+                        masaüstünde sayaç görünecek hiçbir yer kalmıyordu.
+                        Mobil alt menüde zaten avatarın üstünde duruyor.
+                      */}
+                      <span className="relative shrink-0">
+                        <Avatar
+                          name={activeStudent.fullName}
+                          url={activeStudent.avatarUrl || undefined}
+                          className="w-8 h-8 sm:w-9 sm:h-9 rounded-full ring-1 ring-gray-200 text-xs"
+                        />
+                        {applicationsCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-teal-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none shadow-2xs">
+                            {applicationsCount}
+                          </span>
+                        )}
+                      </span>
                       {/*
                         İki satır: ad ve altında okul. Düğmeye hacim vermek için
                         boşluk büyütmek yerine bilgi eklendi — kullanıcı hangi
