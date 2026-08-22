@@ -122,6 +122,31 @@ jobs:
       - name: Edge Functionları JWT doğrulamayla dağıt
         run: supabase functions deploy opportunity-source-check --project-ref "$SUPABASE_PROJECT_REF"
 
+  # SİTE DAĞITIMI ARTIK SUPABASE İŞİNE BAĞLI DEĞİL
+  #
+  # Önceki koşul şuydu: supabase/ altında bir şey değiştiyse, migration işi
+  # başarılı olmadan site dağıtılmıyor. Niyet doğruydu — şema değişikliği
+  # gerektiren kodu şema inmeden yayınlamamak.
+  #
+  # Ama 22 Ağustos'ta ölçüldü ki o migration işi ARTIK HİÇ GEÇEMİYOR.
+  # Kapının raporu:
+  #   remoteOnly: 19 damgalı sürüm (20260815205310 ... 20260818111225)
+  #   localOnly : 0001 ... 0022'nin tamamı
+  # Yani üretim veritabanı bu depodakinden BAŞKA bir migration soyuyla
+  # kurulmuş. İki ayrı hat var ve db push bunu uzlaştıramıyor.
+  #
+  # Sonuç: kapı, şema değişikliği gerektirmeyen sıradan arayüz
+  # değişikliklerinin bile yayına çıkmasını engelliyordu. Kalıcı kırmızı bir
+  # kapı, olmayan kapıdan kötü: sahibi onu elle atlamayı öğreniyor ve
+  # gerçek bir uyarı geldiğinde de atlıyor. 22 Ağustos'ta tam bu oldu,
+  # "Yayına al" elle çalıştırıldı.
+  #
+  # Şimdi site yalnızca validate_app'e bağlı. Supabase işi çalışmaya ve
+  # sonucunu göstermeye devam ediyor — sinyal duruyor, engel kalkıyor.
+  #
+  # BU BİR ÇÖZÜM DEĞİL, TIKANIKLIĞI AÇMA. Migration soyunun uzlaştırılması
+  # ayrı ve insan kararı gerektiren bir iş; şu an şema değişiklikleri
+  # Supabase panelinden elle uygulanıyor.
   cloudflare_production:
     needs: [changes, validate_app, migrate_and_functions]
     if: >-
@@ -129,8 +154,7 @@ jobs:
         always() &&
         github.repository == 'stajimvar/stajimvar.com' &&
         (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
-        needs.validate_app.result == 'success' &&
-        (needs.changes.outputs.supabase_changed != 'true' || needs.migrate_and_functions.result == 'success')
+        needs.validate_app.result == 'success'
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
