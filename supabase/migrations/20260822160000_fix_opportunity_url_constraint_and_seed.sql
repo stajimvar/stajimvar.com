@@ -1,39 +1,97 @@
--- Öğrenci fırsatları — ilk içerik.
+-- Fırsat alt sistemini onar ve ilk içeriği ekle.
 --
--- NEDEN BU DOSYA VAR
--- ------------------
--- /firsatlar sayfası ve yönetim paneli aylardır çalışıyor ama tablo boştu.
--- Sayfa "0 başvurusu devam eden", "0 burs ve kredi" gösteriyordu; yani
--- çalışan bir sistem hiç içeriği olmadığı için bozuk görünüyordu.
+-- ÜÇ AYRI KAÇIŞ HATASI, TEK KÖK NEDEN
+-- -----------------------------------
+-- PostgreSQL'de standard_conforming_strings AÇIK. Yani '...' içindeki
+-- ters bölü kendiliğinden kaçış yapmıyor ve `\` iki GERÇEK ters bölü
+-- oluyor. Bu dosyanın düzelttiği üç hatanın hepsi bundan doğmuş:
 --
--- TUTAR VE TARİH BİLEREK YAZILMIYOR
--- ---------------------------------
--- Burs tutarları ve başvuru takvimleri HER YIL değişiyor. Eskimiş bir
--- rakam ya da geçmiş bir tarih, hiç yazmamaktan kötü: öğrenci ona göre
--- plan yapıyor ve kaçırıyor.
+-- 1) opportunities_safe_admin_urls kısıtı (0019_opportunity_admin_panel)
+--    Desenin son seçeneği `\[(fc|fd|fe80)` — köşeli parantez açılıyor,
+--    hiç kapanmıyor. Postgres: "invalid regular expression: brackets []
+--    not balanced". Kısıt her INSERT'te değerlendirildiği için
+--    opportunities tablosuna KAYIT EKLEMEK İMKÂNSIZDI; yönetim
+--    panelinden de. /firsatlar sayfası bu yüzden boştu.
 --
---   * application_deadline NULL bırakılıyor. Kod bunu "süresi dolmamış"
---     sayıyor (isExpiredOpportunity tarih yoksa false dönüyor) ve RLS
---     politikası da null tarihli kaydı herkese açık gösteriyor. Arayüz
---     bunu "Dönemsel" olarak çiziyor.
---   * amount_text yalnızca YAPISAL olarak doğru olanı söylüyor:
---     "Karşılıksız" veya "Geri ödemeli". Rakam yok.
+-- 2) is_safe_opportunity_source_url içinde `authority like '%%%'`
+--    LIKE'da % joker; üç joker HER metinle eşleşiyor, yani fonksiyon her
+--    adresi reddediyor. Niyet "yüzde işareti içeriyor mu" olmalıydı:
+--    '%\%%'. Kanıt: disposable güvenlik testi 21 Ağustos'tan beri
+--    "url test failed: https://example.com" diyerek düşüyordu.
 --
--- Takvim açıklandığında yönetim panelinden tarih giriliyor; kart o anda
--- kendiliğinden geri sayıma dönüyor.
+-- 3) Aynı fonksiyonda `host like '%.%'`
+--    "nokta içeriyor" demek. Hemen altındaki `host !~ '\.'` ise "nokta
+--    içermiyorsa reddet" diyor. İkisi birlikte her konağı reddediyor.
+--    Niyet "nokta ile bitiyor" ('%.') — test dosyasındaki
+--    ('https://example.com.', false) durumu bunu doğruluyor.
 --
--- KAYNAK ADRESLERİ DOĞRULANDI
--- ---------------------------
--- Aşağıdaki her source_url 19 Ağustos 2026'da gerçekten çağrıldı ve 200
--- döndü. Doğrulanamayan kurumlar bilerek listeye alınmadı:
---   * Sabancı Vakfı — sabancivakfi.org SSL hatası verdi, elle kontrol
---     edilip ayrı bir kayıtla eklenmeli.
---   * bideb.tubitak.gov.tr — bağlantı kurulamadı; TÜBİTAK için ana alan
---     adı kullanıldı.
+-- Kısıt artık kendi kopyasını taşımıyor, doğrulanmış fonksiyonu çağırıyor.
+-- Kural tek yerde duruyor ve ileride yine ikiye ayrılmıyor.
+
+create or replace function public.is_safe_opportunity_source_url(value text)
+returns boolean
+language plpgsql
+immutable
+set search_path = public
+as $$
+declare
+  authority text;
+  host text;
+  port_text text;
+  literal inet;
+  labels text[];
+  label text;
+begin
+  if value is null or length(value) = 0 or length(value) > 2048 or value <> btrim(value) then return false; end if;
+  if value !~ '^https://' then return false; end if;
+  authority := substring(value from '^https://([^/?#]+)');
+  if authority is null or authority = '' or authority like '%@%' or authority like '%\\%' or authority like '%\%%' then return false; end if;
+  if authority ~ '^\[' then
+    if authority !~ '^\[[0-9A-Fa-f:.]+\](:[0-9]{1,5})?$' then return false; end if;
+    host := substring(authority from '^\[([^]]+)\]');
+    begin literal := host::inet; exception when others then return false; end;
+    return false;
+  end if;
+  if authority ~ ':' then
+    if authority !~ '^[^:]+:[0-9]{1,5}$' then return false; end if;
+    host := split_part(authority, ':', 1); port_text := split_part(authority, ':', 2);
+    if port_text::integer not between 1 and 65535 then return false; end if;
+  else host := authority; end if;
+  if host !~ '^[A-Za-z0-9.-]+$' or host like '%.' or host like '.%' or host !~ '\.' then return false; end if;
+  begin literal := host::inet; return false; exception when others then null; end;
+  if lower(host) = 'localhost' or lower(host) like '%.localhost' or lower(host) like '%.local' or lower(host) like '%.internal' then return false; end if;
+  labels := string_to_array(host, '.');
+  foreach label in array labels loop
+    if label = '' or length(label) > 63 or label like '-%' or label like '%-' or label !~ '^[A-Za-z0-9-]+$' then return false; end if;
+  end loop;
+  return true;
+exception when others then return false;
+end;
+$$;
+
+alter table public.opportunities drop constraint if exists opportunities_safe_admin_urls;
+
+alter table public.opportunities add constraint opportunities_safe_admin_urls check (
+  public.is_safe_opportunity_source_url(source_url)
+  and (application_url is null or public.is_safe_opportunity_source_url(application_url))
+);
+
+-- ---------------------------------------------------------------------
+-- İLK İÇERİK
 --
--- Alt sayfa yerine ana adres kullanılan yerler var (TEV, TÜBİTAK, İBB):
--- denenen alt yollar ana sayfaya yönlendi, uydurma derin bağlantı yerine
--- kurumun kendi giriş sayfası veriliyor.
+-- TUTAR VE TARİH BİLEREK YAZILMIYOR: burs tutarları ve başvuru takvimleri
+-- her yıl değişiyor; eskimiş rakam hiç yazmamaktan kötü.
+--   * application_deadline NULL -> kod bunu "süresi dolmamış" sayıyor
+--     (isExpiredOpportunity tarih yoksa false döner), RLS null tarihli
+--     kaydı herkese açık gösteriyor, arayüz "Dönemsel" çiziyor.
+--   * amount_text yalnızca yapısal olarak doğru olanı söylüyor:
+--     "Karşılıksız" / "Geri ödemeli". Rakam yok.
+--
+-- KAYNAK ADRESLERİ DOĞRULANDI: her source_url gerçekten çağrıldı ve 200
+-- döndü. Doğrulanamayanlar listeye ALINMADI — Sabancı Vakfı (SSL hatası)
+-- ve bideb.tubitak.gov.tr (bağlantı kurulamadı; TÜBİTAK için ana alan
+-- adı). Tahmin edilen bir e-Devlet adresi 404 döndüğü için çıkarıldı.
+-- ---------------------------------------------------------------------
 
 insert into public.opportunities (
   slug, title, organization_name, opportunity_type,
