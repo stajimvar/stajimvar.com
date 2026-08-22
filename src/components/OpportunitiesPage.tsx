@@ -4,7 +4,7 @@ import type { StudentProfile } from '../types';
 import { GoogleAdBanner } from './GoogleAdBanner';
 import { CompanyLogo } from './CompanyLogo';
 import { fetchOpportunities, fetchSavedOpportunityIds, toggleSavedOpportunity, type Opportunity, type OpportunityType } from '../lib/opportunities';
-import { isExpiredOpportunity, matchOpportunity, readOpportunityFilters, serializeOpportunityFilters } from '../lib/opportunity-domain.mjs';
+import { getOpportunityOverview, isExpiredOpportunity, matchOpportunity, readOpportunityFilters, serializeOpportunityFilters } from '../lib/opportunity-domain.mjs';
 
 const LABELS: Record<OpportunityType, string> = { scholarship: 'Burs', kyk: 'KYK', international: 'Yurtdışı', competition: 'Yarışma', education: 'Eğitim', student_support: 'Öğrenci desteği', youth_program: 'Gençlik programı' };
 const categoryPath: Record<string, OpportunityType | ''> = { '/burslar': 'scholarship', '/kyk': 'kyk', '/yurtdisi-firsatlari': 'international', '/yarismalar': 'competition' };
@@ -51,6 +51,8 @@ export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; 
     /kaydedilen-firsatlar rotaları zaten çalışıyordu ama hiçbir yerden
     bağlantı verilmiyordu. Yani altı sayfa erişilemez duruyordu.
   */
+  const overview = getOpportunityOverview(items);
+
   const kategoriler: [string, string][] = [
     ['/firsatlar', 'Tümü'],
     ['/burslar', 'Burslar'],
@@ -62,29 +64,53 @@ export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; 
   ];
 
   return <main className="w-full max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-7 pb-24 lg:pb-10">
+    {/*
+      MAVİ BANT — YARI YÜKSEKLİKTE
+
+      Önce kaldırılmıştı çünkü ekranın üst yarısını kaplıyor ve fırsat
+      kartları kaydırmadan görünmüyordu. Geri istendi, bu sefer inceltilerek.
+
+      Yüksekliği yarıya indiren şey başlığı ve sayaçları AYNI SATIRA almak.
+      Eskiden alt alta dört blok vardı: üst etiket, başlık, açıklama, sayaç
+      ızgarası. Şimdi solda başlık + tek satır açıklama, sağda üç sayaç
+      yan yana. Dar ekranda alt alta düşüyorlar — orada zaten yer var.
+
+      Sayfa başlığı (h1) artık burada. Sol sütundaki ikinci başlık
+      kaldırıldı; iki h1 hem gereksiz tekrar hem de belge yapısı olarak
+      yanlıştı.
+    */}
+    <section className="mb-4 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white px-4 py-3.5 sm:px-5 sm:py-4">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl font-extrabold tracking-tight leading-tight">{heading}</h1>
+          <p className="text-[11px] sm:text-xs text-blue-100 leading-snug">{savedOnly ? 'Sonradan incelemek için takibe aldığın fırsatlar.' : calendar ? 'Yaklaşan son başvuru tarihlerini tek yerde izle.' : matching ? 'Profilindeki doğrulanabilir bilgilerle hesaplanan sonuçlar.' : 'Burs, kredi, eğitim, yurtdışı ve yarışma — hepsi resmî kaynağıyla doğrulanmış.'}</p>
+        </div>
+
+        {/*
+          Sayaçlar yalnızca ana listede. Kaydedilenler, takvim ve eşleşme
+          sayfalarında farklı bir kümeyi anlatırlar ve yanıltıcı olurlar.
+        */}
+        {!savedOnly && !calendar && !matching && state === 'ready' && (
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            {[
+              [overview.openCount, 'Başvurusu devam eden'],
+              [overview.scholarshipAndCreditCount, 'Burs ve kredi'],
+              [overview.nearest && overview.daysLeft != null ? `${overview.daysLeft} gün` : items.length, overview.nearest && overview.daysLeft != null ? 'En yakın son başvuru' : 'Takip ettiğimiz fırsat'],
+            ].map(([deger, etiket]) => (
+              <div key={String(etiket)} className="rounded-xl bg-white/10 px-3 py-1.5 leading-tight">
+                <b className="block text-base sm:text-lg font-extrabold">{deger}</b>
+                <span className="block text-[10px] text-blue-100 whitespace-nowrap">{etiket}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
 
       {/* ---------------------------------------------- sol: başlık + filtre */}
       <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-4">
-        {/*
-          Başlık ana sayfadaki muameleyi görüyor.
-
-          Düz bir h1 ve gri paragraf, sol sütunda "bilgilendirme metni" gibi
-          duruyordu — okunmadan geçiliyordu. Ana sayfada aynı yerde iki
-          satırlık, ikinci satırı mavi bir başlık var; aynı ritim buraya da
-          geldi ki iki sayfa arasında geçen kişi aynı arayüzde olduğunu
-          hissetsin.
-        */}
-        <div className="space-y-2">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 leading-tight">
-            {savedOnly ? <>Takip ettiğin<br/><span className="text-blue-600">fırsatlar.</span></>
-             : calendar ? <>Son başvuru<br/><span className="text-blue-600">takvimi.</span></>
-             : matching ? <>Sana uygun<br/><span className="text-blue-600">fırsatlar.</span></>
-             : <>Burs ve destekler,<br/><span className="text-blue-600">tek listede.</span></>}
-          </h1>
-          <p className="text-sm text-gray-600 leading-relaxed">{savedOnly ? 'Sonradan incelemek için takibe aldığın fırsatlar.' : calendar ? 'Yaklaşan son başvuru tarihlerini tek yerde izle.' : matching ? 'Profilindeki doğrulanabilir bilgilerle hesaplanan sonuçlar.' : 'Burs, kredi, eğitim, yurtdışı ve yarışma fırsatları — hepsi resmî kaynağıyla doğrulanmış.'}</p>
-        </div>
-
         {!savedOnly && !calendar && !matching && (
           <section className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
             <label className="relative block">
