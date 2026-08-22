@@ -11,15 +11,9 @@
  * ---------------------
  * Her biri kurumun KENDİ sitesinden, sayfasındaki logo/apple-touch-icon
  * bağlantısı okunarak bulundu ve tek tek çağrılıp içerik türü doğrulandı.
- * İKİ KURUM LİSTEDE YOK:
- *   - İstanbul Büyükşehir Belediyesi: sitesinde makine tarafından bulunabilen
- *     logo yok, og:image adresi 404 dönüyor.
- *   - Vehbi Koç Vakfı: bulunan tek dosya (vkvFooterLogo.jpg) BEYAZ bir logo.
- *     İndirilip ölçüldü, dönüştürülen görsel tamamen boş çıktı — beyaz kartın
- *     üzerinde görünmezdi. Gözle bakılmasaydı "logo var" sanılacaktı.
- *
- * İkisinde de arayüz baş harfleri gösteriyor. Yanlış ya da görünmez logo
- * koymak, hiç koymamaktan kötü.
+ * Dönüşen her görsele gözle de bakıldı: içerik türü "image" dönen ama boş
+ * ya da görünmez çıkan dosyalar var. Yanlış logo koymak, hiç koymamaktan
+ * kötü.
  *
  * Kullanım: node scripts/kurum-logolari.mjs
  */
@@ -58,15 +52,97 @@ const KURUMLAR = [
   // kilitti: 128'lik kareye oturunca 128x39 kalıyor, yuvarlak çerçevede
   // diğer kurumların üçte biri kadar görünüyordu. Bu dosya 881x881 kare
   // amblem — indirilip ölçüldü ve gözle bakıldı, kırmızı amblem görünür.
-  ['kyk', 'https://gsb.gov.tr/dist/images/logo-gsb.svg'],
-  ['tev', 'https://www.tev.org.tr/favicons/apple-touch-icon.png'],
-  ['tubitak', 'https://tubitak.gov.tr/sites/default/files/favicon.png'],
-  ['ua', 'https://www.ua.gov.tr/favicon/apple-icon-180x180.png'],
-  ['teknofest', 'https://cdn.teknofest.org/static/assets/favicons/apple-touch-icon-144x144.png'],
-  ['turgev', 'https://www.turgev.org/apple-icon.png'],
-  ['anadoluvakfi', 'https://anadoluvakfi.org/wp-content/uploads/2021/08/anadolu_vakfi_amblem-2-300x300.png'],
-  ['ted', 'https://ted.org.tr/wp-content/uploads/2024/02/cropped-favicon-180x180.png'],
+  { kod: 'kyk', adres: 'https://gsb.gov.tr/dist/images/logo-gsb.svg' },
+  { kod: 'tev', adres: 'https://www.tev.org.tr/favicons/apple-touch-icon.png' },
+  { kod: 'tubitak', adres: 'https://tubitak.gov.tr/sites/default/files/favicon.png' },
+  { kod: 'ua', adres: 'https://www.ua.gov.tr/favicon/apple-icon-180x180.png' },
+  { kod: 'teknofest', adres: 'https://cdn.teknofest.org/static/assets/favicons/apple-touch-icon-144x144.png' },
+  { kod: 'turgev', adres: 'https://www.turgev.org/apple-icon.png' },
+  { kod: 'anadoluvakfi', adres: 'https://anadoluvakfi.org/wp-content/uploads/2021/08/anadolu_vakfi_amblem-2-300x300.png' },
+  { kod: 'ted', adres: 'https://ted.org.tr/wp-content/uploads/2024/02/cropped-favicon-180x180.png' },
+
+  /*
+    İBB'nin sayfasındaki <link rel="icon"> adresi bozuk: sunucu onu
+    "https://uploads.ibb.istanbulundefined" diye basıyor — daha önce "logo
+    yok" denmesinin sebebi buydu. Sitenin kökündeki favicon.ico ise
+    duruyor ve içinde 256x256'lık PNG var: mavi kare zemine oturmuş beyaz
+    İBB amblemi. Çıkarılıp gözle bakıldı.
+  */
+  { kod: 'ibb', adres: 'https://www.ibb.istanbul/favicon.ico' },
+
+  /*
+    Vehbi Koç Vakfı'nın sitesindeki tek renkli logo, başlıktaki 277x35'lik
+    yatay kilit. Tamamı alınsaydı 72 piksellik yuvarlak çerçevede 7 piksel
+    yüksekliğinde bir şeride dönerdi; soldaki kırmızı amblem kırpılıyor.
+    Kırpma sınırı gözle değil, kırmızı piksellerin sınırı ölçülerek
+    bulundu: x 0-51, y 4-29.
+
+    Alt bilgideki yüksek çözünürlüklü dosya (vkvFooterLogo.jpg) BEYAZ:
+    beyaz kartın üzerinde görünmüyor, o yüzden kullanılmadı.
+  */
+  { kod: 'vkv', adres: 'https://www.vkv.org.tr/assets/img/vehbikocvakfi.jpg', kirp: { left: 0, top: 0, width: 56, height: 35 } },
 ];
+
+/**
+ * ICO kabını açar: içindeki en büyük PNG'yi döndürür.
+ *
+ * sharp .ico okumuyor ("unsupported image format"). Kap aslında basit:
+ * başlıkta kaç görsel olduğu, ardından her biri için boyut ve konum yazıyor.
+ * İçerik PNG değil de ham DIB ise bu iş burada bitmiyor — o durumda hata
+ * veriyoruz, sessizce bozuk dosya yazmaktansa.
+ */
+function icoyuAc(veri) {
+  const ico = veri.length > 6 && veri.readUInt32LE(0) === 0x00010000;
+  if (!ico) return veri;
+
+  const adet = veri.readUInt16LE(4);
+  let enIyi = null;
+  for (let i = 0; i < adet; i++) {
+    const o = 6 + i * 16;
+    const alan = (veri[o] || 256) * (veri[o + 1] || 256);
+    const boyut = veri.readUInt32LE(o + 8);
+    const konum = veri.readUInt32LE(o + 12);
+    if (!enIyi || alan > enIyi.alan) enIyi = { alan, boyut, konum };
+  }
+  if (!enIyi) throw new Error('ICO içinde görsel yok');
+
+  const ic = veri.subarray(enIyi.konum, enIyi.konum + enIyi.boyut);
+  if (ic.subarray(0, 4).toString('hex') !== '89504e47') {
+    throw new Error('ICO içinde PNG yok (ham DIB destelenmiyor)');
+  }
+  return ic;
+}
+
+/**
+ * Logonun kendi zemini var mı? Kenar halkasının neredeyse tamamı opak ve
+ * beyaz değilse evet.
+ *
+ * Bu ayrım gerekli: kendi zemini olan logoda (örneğin İBB'nin mavi karesi)
+ * boş kenar kırpılırsa zemin de gider, amblem çıplak kalır. Öyle logolar
+ * kırpılmadan çerçeveyi baştan başa dolduruyor — köşeleri yuvarlak kesim
+ * alıyor, orada zaten yalnızca zemin var.
+ */
+async function zeminliMi(veri) {
+  const { data, info } = await sharp(veri, { density: 300 })
+    .resize(32, 32, { fit: 'fill' })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const { width, height } = info;
+  let kenar = 0;
+  let dolu = 0;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (x !== 0 && y !== 0 && x !== width - 1 && y !== height - 1) continue;
+      const i = (y * width + x) * 4;
+      kenar++;
+      const beyaz = data[i] > 245 && data[i + 1] > 245 && data[i + 2] > 245;
+      if (data[i + 3] > 200 && !beyaz) dolu++;
+    }
+  }
+  return dolu / kenar >= 0.9;
+}
 
 /** Boyalı pikselin merkeze en uzak mesafesi (piksel). Beyaz ve saydam sayılmaz. */
 async function boyaYaricapi(png) {
@@ -96,6 +172,11 @@ async function boyaYaricapi(png) {
  */
 async function daireyeSigdir(veri) {
   const saydam = { r: 255, g: 255, b: 255, alpha: 0 };
+
+  if (await zeminliMi(veri)) {
+    return sharp(veri, { density: 300 }).resize(BOY, BOY, { fit: 'cover' }).png().toBuffer();
+  }
+
   const kirpik = await sharp(veri, { density: 300 }).trim({ threshold: 10 }).toBuffer();
 
   const kareye = async (girdi, ic) => {
@@ -128,7 +209,7 @@ const BASLIK = { 'User-Agent': 'StajimVarBot/1.0 (+https://stajimvar.com/bot)' }
 fs.mkdirSync(HEDEF, { recursive: true });
 
 let basarili = 0;
-for (const [kod, adres] of KURUMLAR) {
+for (const { kod, adres, kirp } of KURUMLAR) {
   try {
     const yanit = await fetch(adres, { headers: BASLIK });
     if (!yanit.ok) {
@@ -140,7 +221,8 @@ for (const [kod, adres] of KURUMLAR) {
       console.log(`${kod.padEnd(14)} ATLANDI  içerik türü ${tur}`);
       continue;
     }
-    const veri = Buffer.from(await yanit.arrayBuffer());
+    let veri = icoyuAc(Buffer.from(await yanit.arrayBuffer()));
+    if (kirp) veri = await sharp(veri).extract(kirp).png().toBuffer();
 
     const cikti = await daireyeSigdir(veri);
 

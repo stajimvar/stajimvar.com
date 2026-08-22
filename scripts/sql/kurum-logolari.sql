@@ -6,15 +6,15 @@
 -- ziyaretçinin IP'sini oraya sızdırmamak için (automation/logos.py ile
 -- aynı gerekçe).
 --
--- İKİ KURUMUN LOGOSU YOK, BİLEREK
---   * İstanbul Büyükşehir Belediyesi — sitesinde makine tarafından
---     bulunabilen logo yok, og:image adresi 404 dönüyor.
---   * Vehbi Koç Vakfı — bulunan tek dosya beyaz bir logoydu; indirilip
---     dönüştürülünce görsel tamamen boş çıktı. Gözle bakılmasaydı "logo
---     var" sanılacaktı, oysa beyaz kartın üzerinde görünmezdi.
---
--- İkisinde de arayüz kurumun baş harflerini çiziyor (CompanyLogo). Yanlış
--- ya da görünmez logo koymak, hiç koymamaktan kötü.
+-- İBB VE VEHBİ KOÇ VAKFI SONRADAN EKLENDİ
+-- İkisi bir süre baş harfleriyle duruyordu:
+--   * İBB'nin sayfasındaki <link rel="icon"> adresi bozuk çıkıyor
+--     ("...ibb.istanbulundefined"). Sitenin kökündeki favicon.ico duruyor
+--     ve içinde 256x256 PNG var; ICO kabı açılıp o PNG alınıyor.
+--   * Vehbi Koç Vakfı'nın yüksek çözünürlüklü dosyası beyaz, beyaz kartta
+--     görünmüyor. Başlıktaki renkli yatay kilidin kırmızı amblemi
+--     kırpılarak kullanılıyor.
+-- İkisi de kurumun kendi sitesinden; ayrıntısı scripts/kurum-logolari.mjs.
 --
 -- Bu dosya supabase/migrations altında DEĞİL: oraya konursa dağıtım kapısı
 -- (detect-deploy-changes.mjs) devreye giriyor ve migration geçmişi
@@ -44,6 +44,12 @@ update public.opportunities set organization_logo_url = '/kurum-logolari/anadolu
 
 update public.opportunities set organization_logo_url = '/kurum-logolari/ted.png'
   where organization_name = 'Türk Eğitim Derneği';
+
+update public.opportunities set organization_logo_url = '/kurum-logolari/ibb.png'
+  where organization_name = 'İstanbul Büyükşehir Belediyesi';
+
+update public.opportunities set organization_logo_url = '/kurum-logolari/vkv.png'
+  where organization_name = 'Vehbi Koç Vakfı';
 
 -- Kontrol: hangi kurumda logo var, hangisinde yok.
 select organization_name, coalesce(organization_logo_url, '(baş harfler)') as logo
