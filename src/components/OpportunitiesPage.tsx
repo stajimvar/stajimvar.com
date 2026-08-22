@@ -1,6 +1,7 @@
 import React from 'react';
 import { Bookmark, CheckCircle2, ChevronRight, ExternalLink, Filter, Search, Sparkles } from 'lucide-react';
 import type { StudentProfile } from '../types';
+import { GoogleAdBanner } from './GoogleAdBanner';
 import { fetchOpportunities, fetchSavedOpportunityIds, toggleSavedOpportunity, type Opportunity, type OpportunityType } from '../lib/opportunities';
 import { isExpiredOpportunity, matchOpportunity, readOpportunityFilters, serializeOpportunityFilters } from '../lib/opportunity-domain.mjs';
 
@@ -28,33 +29,116 @@ export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; 
   const missing = matching && profile ? Array.from(new Set(items.flatMap((item) => matchOpportunity(item, profile).missingProfileFields))) : [];
   const save = async (item: Opportunity) => { if (!userId) return onRequireLogin(); const isSaved = saved.includes(item.id); await toggleSavedOpportunity(userId, item.id, isSaved); setSaved((rows) => isSaved ? rows.filter((id) => id !== item.id) : [...rows, item.id]); };
   const heading = savedOnly ? 'Kaydedilen fırsatlar' : calendar ? 'Fırsat Takvimi' : matching ? 'Bana uygun fırsatlar' : 'Öğrenci Fırsatları';
-  return <main className="w-full max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-7 pb-24 lg:pb-10 space-y-6">
-    {/*
-      MAVİ KAHRAMAN BLOĞU KALDIRILDI.
+  /*
+    ANA SAYFAYLA AYNI DÜZEN: 3 / 6 / 3
 
-      İçinde başlık, tek cümlelik açıklama ve üç istatistik kartı vardı
-      (açık başvuru sayısı, burs+kredi sayısı, takip edilen fırsat).
-      Ekranın üst yarısını kaplıyordu ve asıl iş olan fırsat kartları
-      kaydırmadan görünmüyordu.
+    Sayfa önce tam genişlikte tek sütundu: filtreler yatay bir şerit,
+    kartlar üç sütunlu ızgara. İki sorunu vardı.
 
-      Sitenin geri kalanı zaten böyle: /bolumler, /staj-programlari ve
-      /universite-kariyer-merkezleri düz bir h1 ve tek satır açıklamayla
-      başlıyor. Bu sayfa tek başına renkli bir kutu taşıyordu.
+      1. Ana sayfadan farklı hissettiriyordu. Kullanıcı ilanlardan buraya
+         geçince arayüz değişiyor, filtreyi yeniden arıyordu.
+      2. Reklam koyacak yer yoktu. Ana sayfada akış arası ve kenar çubuğu
+         yuvaları var; burada tam genişlik ızgara hiçbir yer bırakmıyordu.
 
-      İstatistikler tamamen silindi, gizlenmedi: sayıyı görmek için
-      sayfayı açan kimse yok, fırsatı görmek için açıyorlar. Geri
-      istenirse filtre çubuğunun yanına tek satır olarak konabilir.
-    */}
-    <div className="space-y-2">
-      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">{heading}</h1>
-      <p className="text-sm sm:text-base text-gray-600 max-w-2xl leading-relaxed">{savedOnly ? 'Sonradan incelemek için takibe aldığın fırsatlar.' : calendar ? 'Yaklaşan son başvuru tarihlerini tek yerde izle.' : matching ? 'Profilindeki doğrulanabilir bilgilerle hesaplanan sonuçlar.' : 'Burs, kredi, eğitim, yurtdışı ve yarışma fırsatlarını resmî kaynaklarıyla tek yerden takip et.'}</p>
+    Artık MatchedInternshipsView ile aynı iskelet: solda yapışkan filtre
+    sütunu, ortada tek sütun kart akışı, sağda yapışkan kenar çubuğu.
+    `items-start` şart — onsuz yapışkan sütunlar ızgara hücresini kaplayıp
+    yapışma davranışını kaybediyor.
+
+    SAĞ SÜTUNDAKİ KATEGORİLER YENİ DEĞİL, SAKLIYDI
+    /burslar, /kyk, /yurtdisi-firsatlari, /yarismalar, /firsat-takvimi ve
+    /kaydedilen-firsatlar rotaları zaten çalışıyordu ama hiçbir yerden
+    bağlantı verilmiyordu. Yani altı sayfa erişilemez duruyordu.
+  */
+  const kategoriler: [string, string][] = [
+    ['/firsatlar', 'Tümü'],
+    ['/burslar', 'Burslar'],
+    ['/kyk', 'KYK'],
+    ['/yurtdisi-firsatlari', 'Yurt dışı'],
+    ['/yarismalar', 'Yarışmalar'],
+    ['/firsat-takvimi', 'Takvim'],
+    ['/kaydedilen-firsatlar', 'Takip ettiklerim'],
+  ];
+
+  return <main className="w-full max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-7 pb-24 lg:pb-10">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
+
+      {/* ---------------------------------------------- sol: başlık + filtre */}
+      <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-4">
+        <div className="space-y-1.5">
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900">{heading}</h1>
+          <p className="text-sm text-gray-600 leading-relaxed">{savedOnly ? 'Sonradan incelemek için takibe aldığın fırsatlar.' : calendar ? 'Yaklaşan son başvuru tarihlerini tek yerde izle.' : matching ? 'Profilindeki doğrulanabilir bilgilerle hesaplanan sonuçlar.' : 'Burs, kredi, eğitim, yurtdışı ve yarışma fırsatları — hepsi resmî kaynağıyla.'}</p>
+        </div>
+
+        {!savedOnly && !calendar && !matching && (
+          <section className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
+            <label className="relative block">
+              <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400"/>
+              <input aria-label="Fırsat ara" value={filters.query} onChange={(e) => set({ query: e.target.value })} placeholder="Burs, kurum veya program ara" className="w-full rounded-xl border border-gray-200 py-2.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"/>
+            </label>
+            <select aria-label="Fırsat türü" value={filters.type} onChange={(e) => set({ type: e.target.value })} className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm">
+              <option value="">Tüm türler</option>
+              {Object.entries(LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select>
+            <input aria-label="Eğitim seviyesi" value={filters.level} onChange={(e) => set({ level: e.target.value })} placeholder="Eğitim seviyesi" className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"/>
+            <input aria-label="Şehir veya ülke" value={filters.place} onChange={(e) => set({ place: e.target.value })} placeholder="Şehir veya ülke" className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"/>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button onClick={() => set({ openOnly: !filters.openOnly })} className={`rounded-full px-3 py-1.5 text-xs font-bold ${filters.openOnly ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}>Başvurusu devam edenler</button>
+              <button onClick={() => set({ query: '', type: categoryPath[path] || '', level: '', place: '', openOnly: false })} className="rounded-full px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-100">Temizle</button>
+            </div>
+          </section>
+        )}
+      </div>
+
+      {/* ------------------------------------------------- orta: kart akışı */}
+      <div className="lg:col-span-6 space-y-4 min-w-0">
+        {matching && !student && <Empty icon={<Sparkles />} title="Sana uygun fırsatları görmek için giriş yap" body="Eşleştirme yalnızca kendi profilindeki bilgilerle yapılır." action="Giriş yap" onClick={onRequireLogin} />}
+        {matching && student && missing.length > 0 && <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><b>Eşleştirme için profilinde eksik alanlar var:</b> {missing.join(', ')}</div>}
+
+        {state === 'loading' ? <div role="status" className="space-y-4">{[1,2,3].map((x) => <div key={x} className="h-56 rounded-2xl bg-gray-100 animate-pulse"/>)}</div>
+        : state === 'error' ? <Empty icon={<Filter />} title="Fırsatlar şu anda yüklenemedi" body="Bağlantını kontrol edip tekrar dene." />
+        : calendar ? <Calendar items={filtered.filter((item) => item.applicationDeadline)} onNavigate={onNavigate} />
+        : filtered.length ? <>
+            <p aria-live="polite" className="text-sm text-gray-600"><b>{filtered.length}</b> fırsat gösteriliyor</p>
+            <div className="space-y-4">
+              {filtered.map((item, sira) => <React.Fragment key={item.id}>
+                <Card item={item} saved={saved.includes(item.id)} onSave={() => save(item)} onNavigate={onNavigate} match={matching && profile ? matchOpportunity(item, profile) : null}/>
+                {/*
+                  Akış arası reklam, üçüncü karttan sonra. Yayıncı kimliği
+                  tanımlı değilse GoogleAdBanner hiçbir şey çizmiyor; boş
+                  bir kutu kalmıyor.
+                */}
+                {sira === 2 && <GoogleAdBanner format="in-feed" />}
+              </React.Fragment>)}
+            </div>
+          </>
+        : savedOnly ? <Empty icon={<Sparkles />} title="Henüz takip ettiğin fırsat yok" body="Fırsat kartlarındaki “Takip et” düğmesine bastıklarında burada birikiyor. Başvuru takvimi açıklandığında kartta tarih beliriyor." action="Fırsatlara göz at" onClick={() => onNavigate('/firsatlar')} />
+        : items.length ? <Empty icon={<Filter />} title="Bu filtrelere uyan fırsat yok" body={`Sitede ${items.length} fırsat var ama seçtiğin filtrelere uymuyor. Filtreleri temizleyip tekrar bak.`} action="Filtreleri temizle" onClick={() => set({ query: '', type: categoryPath[path] || '', level: '', place: '', openOnly: false })} />
+        : <Empty icon={<Sparkles />} title="Şu anda aktif başvuru dönemi olan fırsat bulunmuyor" body="Fırsatları resmî kaynağından doğrulayarak yayımlıyoruz; doğrulayamadığımız hiçbir burs veya yarışmayı listeye almıyoruz. Takvim açıldığında burada görünecek." action="Staj ilanlarına bak" onClick={() => onNavigate('/')} />}
+      </div>
+
+      {/* ------------------------------------------ sağ: kategoriler + reklam */}
+      <div className="hidden lg:block lg:col-span-3 space-y-4 lg:sticky lg:top-4">
+        <nav aria-label="Fırsat kategorileri" className="rounded-2xl border border-gray-200 bg-white p-4">
+          <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Kategoriler</p>
+          <div className="mt-2.5 flex flex-wrap gap-2">
+            {kategoriler.map(([yol, etiket]) => <button key={yol} onClick={() => onNavigate(yol)} className={`rounded-full px-3 py-1.5 text-xs font-bold ${path === yol ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>{etiket}</button>)}
+          </div>
+        </nav>
+
+        <aside className="rounded-2xl border border-gray-200 bg-white p-4 space-y-2">
+          <p className="text-sm font-bold text-gray-900">Fırsatları nasıl seçiyoruz</p>
+          <p className="text-xs text-gray-600 leading-relaxed">
+            Her kaydın resmî kaynağı doğrulanıyor; kurumun kendi sayfasında görmediğimiz
+            hiçbir burs veya yarışma listeye girmiyor. Tutar ve son başvuru tarihi her yıl
+            değiştiği için uydurmuyoruz — takvim açıklandığında karta tarih düşüyor.
+          </p>
+        </aside>
+
+        <GoogleAdBanner format="sidebar-rectangle" />
+      </div>
+
     </div>
-    {matching && !student && <Empty icon={<Sparkles />} title="Sana uygun fırsatları görmek için giriş yap" body="Eşleştirme yalnızca kendi profilindeki bilgilerle yapılır." action="Giriş yap" onClick={onRequireLogin} />}
-    {matching && student && missing.length > 0 && <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><b>Eşleştirme için profilinde eksik alanlar var:</b> {missing.map((item) => ({ department: 'bölüm', gradeLevel: 'sınıf', city: 'şehir', gpa: 'not ortalaması', languages: 'yabancı dil', educationLevel: 'eğitim seviyesi' }[item] || item)).join(', ')}. <button className="font-bold underline" onClick={() => onNavigate('/profil')}>Profili tamamla</button></div>}
-    {!savedOnly && !calendar && !matching && <section className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 space-y-3"><div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-2"><label className="relative sm:col-span-2"><Search className="absolute left-3 top-3 w-4 h-4 text-gray-400"/><input aria-label="Fırsat ara" value={filters.query} onChange={(e) => set({ query: e.target.value })} placeholder="Burs, kurum veya program ara" className="w-full rounded-xl border border-gray-200 py-2.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"/></label><select aria-label="Fırsat türü" value={filters.type} onChange={(e) => set({ type: e.target.value })} className="rounded-xl border border-gray-200 px-3 text-sm"><option value="">Tüm türler</option>{Object.entries(LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><input aria-label="Eğitim seviyesi" value={filters.level} onChange={(e) => set({ level: e.target.value })} placeholder="Eğitim seviyesi" className="rounded-xl border border-gray-200 px-3 text-sm"/><input aria-label="Şehir veya ülke" value={filters.place} onChange={(e) => set({ place: e.target.value })} placeholder="Şehir veya ülke" className="rounded-xl border border-gray-200 px-3 text-sm"/></div><div className="flex flex-wrap gap-2"><button onClick={() => set({ openOnly: !filters.openOnly })} className={`rounded-full px-3 py-1.5 text-xs font-bold ${filters.openOnly ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}>Başvurusu devam edenler</button><button onClick={() => set({ query: '', type: categoryPath[path] || '', level: '', place: '', openOnly: false })} className="rounded-full px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-100">Filtreleri temizle</button></div></section>}
-    {state === 'loading' ? <div role="status" className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">{[1,2,3].map((x) => <div key={x} className="h-56 rounded-2xl bg-gray-100 animate-pulse"/>)}</div> : state === 'error' ? <Empty icon={<Filter />} title="Fırsatlar şu anda yüklenemedi" body="Bağlantını kontrol edip tekrar dene." /> : calendar ? <Calendar items={filtered.filter((item) => item.applicationDeadline)} onNavigate={onNavigate} /> : filtered.length ? <><p aria-live="polite" className="text-sm text-gray-600"><b>{filtered.length}</b> gerçek fırsat gösteriliyor</p><div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">{filtered.map((item) => <Card key={item.id} item={item} saved={saved.includes(item.id)} onSave={() => save(item)} onNavigate={onNavigate} match={matching && profile ? matchOpportunity(item, profile) : null}/>)}</div></> : savedOnly ? <Empty icon={<Sparkles />} title="Henüz takip ettiğin fırsat yok" body="Fırsat kartlarındaki “Takip et” düğmesine bastıklarında burada birikiyor. Başvuru takvimi açıklandığında kartta tarih beliriyor." action="Fırsatlara göz at" onClick={() => onNavigate('/firsatlar')} />
-    : items.length ? <Empty icon={<Filter />} title="Bu filtrelere uyan fırsat yok" body={`Sitede ${items.length} fırsat var ama seçtiğin filtrelere uymuyor. Filtreleri temizleyip tekrar bak.`} action="Filtreleri temizle" onClick={() => set({ query: '', type: categoryPath[path] || '', level: '', place: '', openOnly: false })} />
-    : <Empty icon={<Sparkles />} title="Şu anda aktif başvuru dönemi olan fırsat bulunmuyor" body="Fırsatları resmî kaynağından doğrulayarak yayımlıyoruz; doğrulayamadığımız hiçbir burs veya yarışmayı listeye almıyoruz. Takvim açıldığında burada görünecek." action="Staj ilanlarına bak" onClick={() => onNavigate('/')} />}
   </main>;
 };
 
