@@ -1037,7 +1037,7 @@ export default function App() {
 
             {safeTab === 'internships' && listingsStatus === 'ready' && (
               <>
-              <OpportunitiesHomeSection onNavigate={navigate} />
+              <OpportunitiesHomeSection onNavigate={navigate} searchQuery={aramaTerimi} />
               <MatchedInternshipsView
                 student={isLoggedIn ? activeStudent : null}
                 allListings={allListings}
