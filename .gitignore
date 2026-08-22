@@ -15,3 +15,6 @@ supabase/.temp/
 # Devralınan artıklar — repoya girmesin
 _eski-wrangler/
 *.zip
+
+# Claude Code kisisel ayarlari
+.claude/settings.local.json
