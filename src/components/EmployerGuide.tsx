@@ -135,6 +135,27 @@ export const EmployerGuide: React.FC<EmployerGuideProps> = ({ onBack, onNavigate
               ücret ödemenin zorunlu olup olmadığı ve okulla hangi evrakın imzalanacağı
               bilinmiyor. Bu sayfa o soruları sırayla cevaplıyor.
             </p>
+
+            {/*
+              ANA İŞVEREN AKSİYONU EN ÜSTTE
+
+              Sayfanın tek somut eylemi (şirket sayfasını sahiplenmek) en altta,
+              üç ekran aşağıdaydı. Buraya "Hemen ilan ver" yazmak da yanlış
+              olurdu: doğrudan ilan yayınlama yok, akış sahiplenme onayından
+              geçiyor. Düğmenin adı yapacağı işi söylüyor.
+            */}
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => onNavigate('/isveren/ilan-ver')}
+                className="px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
+              >
+                Şirketini bul ve sahiplen
+              </button>
+              <span className="self-center text-xs text-gray-500">
+                İlan girişi, sahiplenme onaylandıktan sonra açılıyor.
+              </span>
+            </div>
           </div>
         </div>
 
@@ -387,7 +408,7 @@ export const EmployerGuide: React.FC<EmployerGuideProps> = ({ onBack, onNavigate
               onClick={() => onNavigate('/isveren/ilan-ver')}
               className="px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
             >
-              Şirketimi bul
+              Şirketini bul ve sahiplen
             </button>
             <button
               type="button"

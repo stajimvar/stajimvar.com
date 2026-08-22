@@ -144,8 +144,10 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 İlanlara bakmak için hesap açmanız gerekmez. Hesap açarsanız yalnızca
                 <strong> adınız, e-posta adresiniz</strong> ve profilinize kendi
                 girdiğiniz bilgiler (üniversite, bölüm, yetenekler, tercihler) saklanır.
-                Özgeçmiş yükleme ve platform üzerinden başvuru henüz açık değildir;
-                başvurular şirketin kendi sayfasında yapılır.
+                Başvurular şirketin kendi başvuru sayfasında yapılır. StajımVar'da
+                bir ilanı "başvurdum" diye işaretleyebilirsiniz; bu kayıt yalnızca
+                sizin takibiniz içindir, şirkete gönderilmez. Özgeçmiş dosyası
+                yükleme özelliği yoktur.
               </p>
             </Section>
 
@@ -253,10 +255,11 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
 
             <Section title="Bu metin ne zaman değişecek">
               <p>
-                Kayıt, giriş ve platform içi başvuru özellikleri açıldığında bu politika
-                yeniden yazılacak ve KVKK kapsamında ayrı bir aydınlatma metni ile açık rıza
-                akışı devreye girecektir. Değişiklik tarihini bu sayfanın başında
-                görebilirsiniz.
+                Kayıt ve giriş özellikleri açıktır; başvurunun şirkete iletilmesi
+                ise henüz yoktur. O gün geldiğinde — yani başvurunuz şirkete
+                gönderilmeye başladığında — bu politika yeniden yazılacak ve aktarım
+                için ayrı bir açık rıza alınacaktır. Değişiklik tarihini bu sayfanın
+                başında görebilirsiniz.
               </p>
             </Section>
           </>
@@ -345,8 +348,11 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 için; hukuki sebep sözleşmenin kurulması (m.5/2-c).
               </p>
               <p>
-                <strong>Profil bilgileri</strong> — ilanları uygunluğa göre sıralamak için;
-                hukuki sebep açık rıza (m.5/1). Doldurmak zorunlu değildir.
+                <strong>Profil bilgileri</strong> — ilanları uygunluğa göre sıralamak
+                için; tamamı isteğe bağlıdır ve yalnızca sizin girdiğiniz kadarıyla
+                işlenir. Bu bilgiler hiçbir şirketle paylaşılmaz: iletişim bilgisinin
+                aktarılması için açık rıza, başvuru sırasında ve yalnızca o ilan için
+                ayrıca istenir.
               </p>
               <p>
                 <strong>Onay kaydı</strong> — bu metni onayladığınız an ve sürümü; hukuki
@@ -388,9 +394,11 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
 
             <Section title="Henüz yapılmayanlar">
               <p>
-                Özgeçmiş yükleme ve platform üzerinden başvuru <strong>henüz açık
-                değildir</strong>. Bu özellikler devreye girdiğinde metin güncellenecek ve
-                yeniden onayınız istenecektir.
+                Özgeçmiş dosyası yükleme ve <strong>başvurunun şirkete iletilmesi</strong>
+                henüz yoktur. Bir ilanı "başvurdum" diye işaretlemek yalnızca kendi
+                takip listenizi oluşturur; bu kayıt şirkete gönderilmez, iletişim
+                bilgileriniz hiçbir şirketle paylaşılmaz. Aktarım devreye girdiğinde
+                metin güncellenecek ve her başvuru için ayrı açık rızanız istenecektir.
               </p>
               <p>
                 KVKK m.11 kapsamındaki taleplerinizi aşağıdaki adrese iletebilirsiniz.

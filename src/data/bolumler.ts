@@ -109,7 +109,7 @@ export const BOLUMLER: Bolum[] = [
     slug: 'bilgisayar-muhendisligi',
     ad: 'Bilgisayar Mühendisliği',
     grup: 'muhendislik',
-    ozet: 'Staj ilanı en çok bulunan bölüm; rekabet de en yüksek burada.',
+    ozet: 'Staj ilanlarının yoğunlaştığı bölümlerden; bir ilana gelen başvuru sayısı da yüksek.',
     aciklama:
       'Bilgisayar mühendisliği stajı nerede yapılır, stajyer ne iş yapar, ' +
       'başvurmadan önce ne öğrenilmeli ve ilanlarda ne aranıyor.',
@@ -141,8 +141,8 @@ export const BOLUMLER: Bolum[] = [
       'anlatabildiğin her proje, anlatamadığın on projeden değerli.',
     aramaKelimeleri: ['yazılım', 'developer', 'bilgisayar'],
     giris:
-      'Bilgisayar mühendisliği, staj ilanı en çok bulunan bölüm — ve tam bu yüzden rekabetin en ' +
-      'yüksek olduğu yer. Tek bir yazılım stajı ilanına yüzlerce başvuru gelebiliyor ve ' +
+      'Bilgisayar mühendisliği, staj ilanlarının yoğunlaştığı bölümlerden — ve başvuru sayısı da ' +
+      'aynı ölçüde yüksek. Tek bir yazılım stajı ilanına yüzlerce başvuru gelebiliyor ve ' +
       'başvuranların çoğu birbirinin aynısı bir CV gönderiyor: aynı dersler, aynı notlar, ' +
       'gösterilebilir tek bir çalışma yok. Ayrıştıran şey ortalama değil, çalıştırıp ' +
       'gösterebildiğin bir şey oluyor. Bu sayfada bu bölümün stajının gerçekte nerede ' +
@@ -2586,7 +2586,7 @@ export const BOLUMLER: Bolum[] = [
     slug: 'lojistik',
     ad: 'Lojistik (MYO)',
     grup: 'myo',
-    ozet: 'Depo, nakliye ve gümrük; işe alım oranı en yüksek MYO alanlarından.',
+    ozet: 'Depo, nakliye ve gümrük süreçlerinde staj; ilanlarda belirli programlar sık isteniyor.',
     aciklama:
       'Lojistik stajı nerede yapılır, stajyer hangi işlere bakar ve hangi ' +
       'programlar isteniyor.',

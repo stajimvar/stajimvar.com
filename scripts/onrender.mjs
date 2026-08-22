@@ -36,6 +36,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
+import { guvenliDisAdres } from '../src/lib/guvenli-url.mjs';
 
 const kok = path.dirname(path.dirname(url.fileURLToPath(import.meta.url)));
 const dist = path.join(kok, 'dist');
@@ -828,8 +829,15 @@ async function main() {
 
       DİKKAT: uydurma alan yazılmıyor. `validThrough` ancak veritabanında
       gerçek bir son başvuru tarihi varsa ekleniyor; Google süresi geçmiş
-      veya yanlış tarihli ilanları cezalandırıyor. `directApply` de yok:
-      başvuru şirketin kendi sayfasında tamamlanıyor, bizde değil.
+      veya yanlış tarihli ilanları cezalandırıyor.
+
+      `directApply: false` bilinçli: başvuru şirketin kendi sayfasında
+      tamamlanıyor, bizde değil. Alanı hiç yazmamak "bilmiyoruz" demek;
+      yanlışlıkla true yazmak ise arama sonucundan gelen kişiyi başvuru
+      yapamayacağı bir sayfaya göndermek olurdu.
+
+      Şirket adresi veritabanına şemasız giriliyor ("alumil.com"); yapısal
+      veri mutlak adres istiyor, göreli değer geçersiz sayılıyor.
     */
     const jsonLd = {
       '@context': 'https://schema.org',
@@ -838,11 +846,13 @@ async function main() {
       description: `<p>${kacir(ozetle(i.description, 1200))}</p>`,
       datePosted: (i.posted_at || i.created_at || '').slice(0, 10),
       employmentType: 'INTERN',
+      url: SITE + yol,
+      directApply: false,
       hiringOrganization: {
         '@type': 'Organization',
         name: sirket.name || 'Bilinmiyor',
-        ...(sirket.website_url ? { sameAs: sirket.website_url } : {}),
-        ...(sirket.logo_url ? { logo: sirket.logo_url } : {}),
+        ...(guvenliDisAdres(sirket.website_url) ? { sameAs: guvenliDisAdres(sirket.website_url) } : {}),
+        ...(guvenliDisAdres(sirket.logo_url) ? { logo: guvenliDisAdres(sirket.logo_url) } : {}),
       },
       jobLocation: {
         '@type': 'Place',

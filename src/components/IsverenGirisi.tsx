@@ -50,7 +50,12 @@ export const IsverenGirisi: React.FC<{
   const [hata, setHata] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = 'Stajyer ilanı ver | StajımVar';
+    /*
+      Başlık, sayfanın gerçekte sunduğu işi söylüyor. "Stajyer ilanı ver"
+      doğrudan ilan yayınlama vaadi veriyordu; oysa akış şirket sayfasını
+      sahiplenmek ve onaydan sonra ilan girmek üzerine kurulu.
+    */
+    document.title = 'Şirketini sahiplen, ilan gir | StajımVar';
   }, []);
 
   /*

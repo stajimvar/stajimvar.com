@@ -146,7 +146,7 @@ const BulunamadiSayfasi: React.FC<{
     ['/bolumler', 'Bölüme göre staj'],
     ['/staj-programlari', 'Büyük işverenlerde staj'],
     ['/universite-kariyer-merkezleri', 'Üniversite kariyer merkezleri'],
-    ['/isveren/ilan-ver', 'Stajyer ilanı ver'],
+    ['/isveren/ilan-ver', 'Şirketini sahiplen, ilan gir'],
     ['/araclar', 'Hesaplama araçları'],
   ];
 

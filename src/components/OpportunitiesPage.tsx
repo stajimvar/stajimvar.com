@@ -4,9 +4,10 @@ import type { StudentProfile } from '../types';
 import { GoogleAdBanner } from './GoogleAdBanner';
 import { ListingLogo } from './ListingLogo';
 import { fetchOpportunities, fetchSavedOpportunityIds, toggleSavedOpportunity, type Opportunity, type OpportunityType } from '../lib/opportunities';
-import { getOpportunityOverview, isExpiredOpportunity, matchOpportunity, readOpportunityFilters, serializeOpportunityFilters } from '../lib/opportunity-domain.mjs';
+import { getOpportunityOverview, isExpiredOpportunity, matchOpportunity, opportunityCta, opportunityStatus, opportunityTypeLabel, readOpportunityFilters, serializeOpportunityFilters, OPPORTUNITY_STATUS_LABELS } from '../lib/opportunity-domain.mjs';
 
-const LABELS: Record<OpportunityType, string> = { scholarship: 'Burs', kyk: 'KYK', international: 'Yurtdışı', competition: 'Yarışma', education: 'Eğitim', student_support: 'Öğrenci desteği', youth_program: 'Gençlik programı' };
+/* Etiketler lib/opportunity-domain.mjs'te: ham enum ('scholarship') hiçbir yerde ekrana çıkmasın. */
+const LABELS = (type: OpportunityType) => opportunityTypeLabel(type);
 const categoryPath: Record<string, OpportunityType | ''> = { '/burslar': 'scholarship', '/kyk': 'kyk', '/yurtdisi-firsatlari': 'international', '/yarismalar': 'competition' };
 const safeDate = (value?: string) => value ? new Intl.DateTimeFormat('tr-TR', { dateStyle: 'long' }).format(new Date(value)) : 'Tarih belirtilmemiş';
 const profileForMatch = (student: StudentProfile) => ({ educationLevel: student.gradeLevel === 'Yüksek Lisans / Mezun' ? 'Yüksek Lisans' : 'Lisans', department: student.department, gradeLevel: student.gradeLevel, city: student.preferences.cities[0] || '', gpa: student.gpa || null, languages: (student.languages ?? []).map((item) => item.language) });
@@ -22,7 +23,7 @@ export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; 
   const profile = student ? profileForMatch(student) : null;
   const filtered = items.filter((item) => {
     if (savedOnly && !saved.includes(item.id)) return false; if (filters.type && item.opportunityType !== filters.type) return false;
-    if (filters.openOnly && isExpiredOpportunity(item)) return false; if (filters.level && !item.educationLevels.includes(filters.level)) return false;
+    if (filters.openOnly && opportunityStatus(item) !== 'acik') return false; if (filters.level && !item.educationLevels.includes(filters.level)) return false;
     if (filters.place && ![...item.cities, ...item.countries].some((place) => place.toLocaleLowerCase('tr-TR').includes(filters.place.toLocaleLowerCase('tr-TR')))) return false;
     if (filters.query && !`${item.title} ${item.organizationName} ${item.shortDescription}`.toLocaleLowerCase('tr-TR').includes(filters.query.toLocaleLowerCase('tr-TR'))) return false;
     if (matching) return profile ? matchOpportunity(item, profile).isScorable && matchOpportunity(item, profile).score! > 0 : false; return true;
@@ -208,7 +209,12 @@ const SEVIYE_KISA = (levels: string[]) => levels.length ? (levels.length > 2 ? `
 const Card: React.FC<{ item: Opportunity; saved: boolean; onSave: () => void; onNavigate: (p: string) => void; match: any }> = ({ item, saved, onSave, onNavigate, match }) => {
   const expired = isExpiredOpportunity(item);
   const seviye = SEVIYE_KISA(item.educationLevels);
-  const basvuruAdresi = item.applicationUrl || item.sourceUrl;
+  /*
+    Düğmenin etiketi ve adresi tek kuraldan geliyor: kurumun ana sayfasına
+    giden bağlantıya "Başvur" yazmıyoruz.
+  */
+  const cta = opportunityCta(item);
+  const durum = opportunityStatus(item);
   return (
     <article className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm flex flex-col gap-4">
       <div className="flex gap-3">
@@ -227,7 +233,7 @@ const Card: React.FC<{ item: Opportunity; saved: boolean; onSave: () => void; on
         <ListingLogo name={item.organizationName} logoUrl={item.organizationLogoUrl} />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <span className="text-xs font-bold text-blue-700">{LABELS[item.opportunityType]}</span>
+            <span className="text-xs font-bold text-blue-700">{LABELS(item.opportunityType)}</span>
             {item.verifiedAt && <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 rounded-full px-2 py-0.5"><CheckCircle2 className="w-3 h-3"/>Resmî kaynak</span>}
           </div>
           <h2 className="mt-1 font-extrabold text-gray-950 leading-snug">{item.title}</h2>
@@ -237,12 +243,20 @@ const Card: React.FC<{ item: Opportunity; saved: boolean; onSave: () => void; on
 
       <p className="text-sm text-gray-600 line-clamp-2">{item.shortDescription}</p>
 
-      {/* Tarih bloğu: kartın en belirgin yeri. */}
-      <div className={`rounded-xl px-3 py-2.5 ${expired ? 'bg-gray-50' : item.applicationDeadline ? 'bg-rose-50' : 'bg-amber-50'}`}>
-        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Son başvuru</p>
-        {item.applicationDeadline
-          ? <p className={`text-lg font-extrabold leading-tight ${expired ? 'text-gray-500' : 'text-rose-700'}`}>{expired ? 'Süresi doldu' : safeDate(item.applicationDeadline)}</p>
-          : <><p className="text-lg font-extrabold leading-tight text-amber-800">Dönemsel</p><p className="text-[11px] text-amber-800/80">Takvim açıklanınca burada tarih görünecek.</p></>}
+      {/*
+        Durum bloğu: kartın en belirgin yeri.
+
+        Önce tarihi olmayan her fırsat "Dönemsel" diye gösteriliyor, sayaçta
+        da "başvurusu devam eden" sayılıyordu. Artık dört durumdan biri
+        yazıyor ve "Açık" yalnızca son başvuru tarihi bilinip geçmemişken
+        kullanılıyor.
+      */}
+      <div className={`rounded-xl px-3 py-2.5 ${durum === 'kapali' ? 'bg-gray-50' : durum === 'acik' ? 'bg-rose-50' : durum === 'yakinda' ? 'bg-blue-50' : 'bg-amber-50'}`}>
+        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">{OPPORTUNITY_STATUS_LABELS[durum]}</p>
+        {durum === 'acik' && <p className="text-lg font-extrabold leading-tight text-rose-700">Son başvuru: {safeDate(item.applicationDeadline)}</p>}
+        {durum === 'kapali' && <p className="text-lg font-extrabold leading-tight text-gray-500">Süresi doldu</p>}
+        {durum === 'yakinda' && <p className="text-lg font-extrabold leading-tight text-blue-800">Başvurular {safeDate(item.applicationStartAt)} tarihinde açılıyor</p>}
+        {durum === 'takvim_bekleniyor' && <p className="text-[13px] font-semibold leading-snug text-amber-800">Kurum bu dönemin takvimini açıklamadı; resmî kaynaktan takip et.</p>}
       </div>
 
       <div className="flex flex-wrap gap-2 text-xs">
@@ -253,7 +267,7 @@ const Card: React.FC<{ item: Opportunity; saved: boolean; onSave: () => void; on
       </div>
 
       <div className="mt-auto flex items-center gap-2">
-        <a href={basvuruAdresi} target="_blank" rel="noopener" className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2.5 text-sm font-bold text-white hover:bg-blue-700">Başvur <ExternalLink className="w-3.5 h-3.5"/></a>
+        {cta && <a href={cta.adres} target="_blank" rel="noopener noreferrer nofollow" className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-bold ${cta.birincil ? 'bg-blue-600 text-white hover:bg-blue-700' : 'border border-gray-200 text-gray-700 hover:bg-gray-50'}`}>{cta.etiket} <ExternalLink className="w-3.5 h-3.5"/></a>}
         <button onClick={onSave} aria-label={saved ? 'Takibi bırak' : 'Takip et'} className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-bold border ${saved ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}><Bookmark className="w-4 h-4" fill={saved ? 'currentColor' : 'none'}/>{saved ? 'Takipte' : 'Takip et'}</button>
       </div>
 

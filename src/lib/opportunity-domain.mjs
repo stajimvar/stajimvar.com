@@ -1,11 +1,43 @@
+import { yerelKonakMi } from './guvenli-url.mjs';
+
 export const OPPORTUNITY_TYPES = ['scholarship', 'kyk', 'international', 'competition', 'education', 'student_support', 'youth_program'];
 
 export function isSafeHttpsUrl(value) {
   try {
-    return new URL(value).protocol === 'https:';
+    const url = new URL(value);
+    // Yerel ve özel ağ adresleri: bağlantı ziyaretçiye bir işe yaramaz,
+    // sunucu tarafında çağrılırsa iç ağ taranabilir hale gelir.
+    return url.protocol === 'https:' && !yerelKonakMi(url.hostname);
   } catch {
     return false;
   }
+}
+
+/*
+  DIŞ BAĞLANTININ ETİKETİ GERÇEĞE UYSUN
+
+  Kartlarda mavi "Başvur" düğmesi vardı ve adres olarak applicationUrl yoksa
+  KURUMUN ANA SAYFASI kullanılıyordu. "Başvur" deyip ziyaretçiyi kurumun ana
+  sayfasına bırakmak, olmayan bir başvuru sayfası vaat etmek demek.
+
+  Kural: "Başvur" yalnızca doğrudan başvuru adresi VARSA ve dönem açıkken.
+  Adres var ama dönem açık değilse sayfaya götürüyoruz, ama "başvur"
+  demiyoruz. Yalnızca kaynak adresi varsa etiket "Resmî kaynak".
+*/
+export function opportunityCta(item, now = new Date()) {
+  const basvuru = isSafeHttpsUrl(item?.applicationUrl || '') ? item.applicationUrl : null;
+  const kaynak = isSafeHttpsUrl(item?.sourceUrl || '') ? item.sourceUrl : null;
+
+  if (basvuru && opportunityStatus(item, now) === 'acik') {
+    return { adres: basvuru, etiket: 'Başvur', birincil: true };
+  }
+  if (basvuru) {
+    return { adres: basvuru, etiket: 'Resmî başvuru sayfası', birincil: false };
+  }
+  if (kaynak) {
+    return { adres: kaynak, etiket: 'Resmî kaynak', birincil: false };
+  }
+  return null;
 }
 
 export function isExpiredOpportunity(opportunity, now = new Date()) {
@@ -19,6 +51,59 @@ export function isExpiredOpportunity(opportunity, now = new Date()) {
   return Number.isFinite(deadline.getTime()) && deadline.getTime() < now.getTime();
 }
 
+/*
+  DURUM MODELİ
+
+  Kartlarda "Son başvuru: Dönemsel" gibi ifadeler vardı ve tarihi bilinmeyen
+  her fırsat "açık" sayılıyordu: sayaçta "Başvurusu devam eden" yazan sayı,
+  takvimi hiç açıklanmamış kurumları da içeriyordu. Öğrenci başvurabileceğini
+  sanıp resmî sayfaya gidince kapalı buluyordu.
+
+  Dört durum var ve "Açık" yalnızca DOĞRULANMIŞ aktif dönem bilgisi varken
+  kullanılıyor: son başvuru tarihi biliniyor ve geçmemiş. Tarih yoksa ya da
+  yalnızca geçmiş döneme ait bilgi varsa "Takvim bekleniyor" deniyor —
+  bilmediğimizi söylemek, yanlış söylemekten iyi.
+*/
+export const OPPORTUNITY_STATUS_LABELS = {
+  acik: 'Açık',
+  yakinda: 'Yakında',
+  takvim_bekleniyor: 'Takvim bekleniyor',
+  kapali: 'Kapalı',
+};
+
+export function opportunityStatus(item, now = new Date()) {
+  if (!item) return 'takvim_bekleniyor';
+
+  if (item.applicationDeadline && isExpiredOpportunity(item, now)) return 'kapali';
+
+  const baslangic = calendarDay(item.applicationStartAt);
+  const bugun = calendarDay(now);
+  if (baslangic != null && bugun != null && baslangic > bugun) return 'yakinda';
+
+  if (item.applicationDeadline) return 'acik';
+
+  return 'takvim_bekleniyor';
+}
+
+export function opportunityStatusLabel(item, now = new Date()) {
+  return OPPORTUNITY_STATUS_LABELS[opportunityStatus(item, now)];
+}
+
+/* Kullanıcıya ham enum ("scholarship") gösterilmesin diye Türkçe karşılıklar. */
+export const OPPORTUNITY_TYPE_LABELS = {
+  scholarship: 'Burs',
+  kyk: 'KYK',
+  international: 'Yurtdışı',
+  competition: 'Yarışma',
+  education: 'Eğitim',
+  student_support: 'Öğrenci desteği',
+  youth_program: 'Gençlik programı',
+};
+
+export function opportunityTypeLabel(type) {
+  return OPPORTUNITY_TYPE_LABELS[type] ?? 'Fırsat';
+}
+
 export function getOpportunityOverview(items, now = new Date()) {
   const openItems = Array.isArray(items) ? items.filter((item) => item && !isExpiredOpportunity(item, now)) : [];
   const timedItems = openItems
@@ -27,7 +112,12 @@ export function getOpportunityOverview(items, now = new Date()) {
   const nearest = timedItems[0] ?? null;
 
   return {
-    openCount: openItems.length,
+    /*
+      "Başvurusu devam eden" sayacı yalnızca durumu Açık olanları sayıyor.
+      Önce süresi dolmamış her kayıt sayılıyordu; takvimi açıklanmamış
+      kurumlar da bu sayıya giriyor, sayaç olduğundan büyük görünüyordu.
+    */
+    openCount: openItems.filter((item) => opportunityStatus(item, now) === 'acik').length,
     scholarshipAndCreditCount: openItems.filter((item) => item.opportunityType === 'scholarship' || item.opportunityType === 'kyk').length,
     nearest,
     daysLeft: nearest ? daysUntilDeadline(nearest.applicationDeadline, now) : null,

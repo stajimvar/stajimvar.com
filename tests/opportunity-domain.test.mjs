@@ -27,6 +27,11 @@ test('keeps date-only deadlines open through the end of their Turkey day', () =>
   assert.equal(isExpiredOpportunity({ applicationDeadline: '2026-08-21' }, new Date('2026-08-21T21:00:00.000Z')), true);
 });
 
+/*
+  Sayaç kuralı değişti: "Başvurusu devam eden" yalnızca durumu Açık olanları
+  sayıyor. Önce süresi dolmamış her kayıt sayılıyordu ve takvimi hiç
+  açıklanmamış kurumlar da bu sayıya giriyordu (bkz. tests/firsat-durumu).
+*/
 test('summarizes only real open opportunities without inventing a deadline', () => {
   const now = new Date('2026-08-21T12:00:00.000Z');
   const overview = getOpportunityOverview([
@@ -37,7 +42,7 @@ test('summarizes only real open opportunities without inventing a deadline', () 
   ], now);
 
   assert.deepEqual(overview, {
-    openCount: 3,
+    openCount: 2,
     scholarshipAndCreditCount: 2,
     nearest: { title: 'Burs', opportunityType: 'scholarship', applicationDeadline: '2026-08-22' },
     daysLeft: 1,
