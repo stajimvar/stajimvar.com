@@ -1,0 +1,11 @@
+# Supabase panelinden ELLE çalıştırılmış migration sürümleri.
+#
+# Buraya yazılan sürüm, uzak geçmişte yoksa CI tarafından "uygulandı" diye
+# işaretlenir (supabase migration repair). Şema değiştirilmez — yalnızca
+# defter gerçeğe uydurulur.
+#
+# Bir satır = bir sürüm. Boş satır ve # ile başlayan satır atlanır.
+#
+# 20260822160000: fırsat kısıtı onarımı + ilk 11 fırsat. Dağıtım kapısı o
+# gün kilitlendiği için SQL Editor'den elle çalıştırıldı.
+20260822160000

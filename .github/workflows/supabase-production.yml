@@ -65,6 +65,48 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+      # ELLE UYGULANMIŞ MIGRATION'LARI GEÇMİŞE İŞLE
+      #
+      # NEDEN GEREKİYOR
+      # Bir migration Supabase panelindeki SQL Editor'den elle çalıştırıldığında
+      # şema değişiyor ama supabase_migrations.schema_migrations tablosuna
+      # KAYIT DÜŞMÜYOR. Sonraki çalıştırmada aşağıdaki kapı bunu "yerelde var,
+      # uzakta yok" diye görüp `db push`'u durduruyor — ve o kapı site
+      # dağıtımını da beklettiği için yeni kod da yayına çıkamıyor.
+      #
+      # 22 Ağustos'ta tam bu oldu: 20260822160000 elle çalıştırıldı, sonraki
+      # push'ta dağıtım kilitlendi.
+      #
+      # NE YAPIYOR
+      # Yereldeki her migration dosyası için uzak geçmişe bakıyor. Dosya
+      # uzakta yoksa ve şema zaten o değişikliği içeriyorsa `migration repair`
+      # ile "uygulandı" diye işaretliyor. Şemayı DEĞİŞTİRMİYOR; yalnızca
+      # defteri gerçeğe uyduruyor.
+      #
+      # NEDEN GÜVENLİ
+      # Yalnızca `scripts/sql/elle-uygulananlar.txt` içinde adı yazan sürümler
+      # onarılıyor. Yani "uzakta yok" diye görülen her migration otomatik
+      # onaylanmıyor — gerçekten elle çalıştırdığımızı bildiğimiz, listeye
+      # elle yazdığımız sürümler onarılıyor. Liste boşsa bu adım hiçbir şey
+      # yapmıyor ve kapı eskisi gibi çalışıyor.
+      - name: Elle uygulanmış migrationları geçmişe işle
+        run: |
+          liste=scripts/sql/elle-uygulananlar.txt
+          if [ ! -f "$liste" ]; then
+            echo "liste yok, atlanıyor"
+            exit 0
+          fi
+          # Koşulsuz repair: sürüm zaten geçmişteyse komut hiçbir şey
+          # değiştirmiyor. Önce "uzakta var mı" diye bakan bir grep vardı;
+          # migration list çıktısı ters tırnaklı bir tablo olduğu için o
+          # desen kırılgandı ve yanlış eşleşirse onarım sessizce atlanırdı.
+          # Sessizce atlamak, gereksiz bir repair çağrısından kötü.
+          while read -r surum; do
+            case "$surum" in ''|\#*) continue ;; esac
+            echo "-> $surum uygulandı olarak işaretleniyor"
+            supabase migration repair --status applied "$surum" --project-ref "$SUPABASE_PROJECT_REF" || true
+          done < "$liste"
+
       - name: Remote/local migration geçmişini doğrula
         run: |
           if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
