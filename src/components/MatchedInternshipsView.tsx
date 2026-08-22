@@ -319,7 +319,14 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         // Contextual Sub-Menu Filter from Top Header
         if (!matchesCategory(listing, match, subTab)) return false;
 
-        // Search query
+        /*
+          Arama dört alanda birden çalışıyor: başlık, şirket, şehir, yetenek.
+
+          Kutunun yazısı önce "Pozisyon, şirket veya yetenek" diyordu. İkisi
+          birden yanlıştı: taranan şehir yazmıyordu, ve kimse "yetenek aramaya"
+          gelmiyor — "Python" yazıyor, o da zaten yetenek eşleşmesine takılıyor.
+          Yani özellik duruyor, yalnızca kullanıcıya kendi diliyle anlatılıyor.
+        */
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
           const matchTitle = listing.title.toLowerCase().includes(q);
@@ -766,7 +773,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                 <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="Pozisyon, şirket veya yetenek"
+                  placeholder="Pozisyon, şirket veya şehir"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-11 pr-11 py-3.5 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-600 transition-colors"

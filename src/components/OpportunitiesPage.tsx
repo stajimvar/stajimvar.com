@@ -2,6 +2,7 @@ import React from 'react';
 import { Bookmark, CheckCircle2, ChevronRight, ExternalLink, Filter, Search, Sparkles } from 'lucide-react';
 import type { StudentProfile } from '../types';
 import { GoogleAdBanner } from './GoogleAdBanner';
+import { CompanyLogo } from './CompanyLogo';
 import { fetchOpportunities, fetchSavedOpportunityIds, toggleSavedOpportunity, type Opportunity, type OpportunityType } from '../lib/opportunities';
 import { isExpiredOpportunity, matchOpportunity, readOpportunityFilters, serializeOpportunityFilters } from '../lib/opportunity-domain.mjs';
 
@@ -65,9 +66,23 @@ export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; 
 
       {/* ---------------------------------------------- sol: başlık + filtre */}
       <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-4">
-        <div className="space-y-1.5">
-          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900">{heading}</h1>
-          <p className="text-sm text-gray-600 leading-relaxed">{savedOnly ? 'Sonradan incelemek için takibe aldığın fırsatlar.' : calendar ? 'Yaklaşan son başvuru tarihlerini tek yerde izle.' : matching ? 'Profilindeki doğrulanabilir bilgilerle hesaplanan sonuçlar.' : 'Burs, kredi, eğitim, yurtdışı ve yarışma fırsatları — hepsi resmî kaynağıyla.'}</p>
+        {/*
+          Başlık ana sayfadaki muameleyi görüyor.
+
+          Düz bir h1 ve gri paragraf, sol sütunda "bilgilendirme metni" gibi
+          duruyordu — okunmadan geçiliyordu. Ana sayfada aynı yerde iki
+          satırlık, ikinci satırı mavi bir başlık var; aynı ritim buraya da
+          geldi ki iki sayfa arasında geçen kişi aynı arayüzde olduğunu
+          hissetsin.
+        */}
+        <div className="space-y-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 leading-tight">
+            {savedOnly ? <>Takip ettiğin<br/><span className="text-blue-600">fırsatlar.</span></>
+             : calendar ? <>Son başvuru<br/><span className="text-blue-600">takvimi.</span></>
+             : matching ? <>Sana uygun<br/><span className="text-blue-600">fırsatlar.</span></>
+             : <>Burs ve destekler,<br/><span className="text-blue-600">tek listede.</span></>}
+          </h1>
+          <p className="text-sm text-gray-600 leading-relaxed">{savedOnly ? 'Sonradan incelemek için takibe aldığın fırsatlar.' : calendar ? 'Yaklaşan son başvuru tarihlerini tek yerde izle.' : matching ? 'Profilindeki doğrulanabilir bilgilerle hesaplanan sonuçlar.' : 'Burs, kredi, eğitim, yurtdışı ve yarışma fırsatları — hepsi resmî kaynağıyla doğrulanmış.'}</p>
         </div>
 
         {!savedOnly && !calendar && !matching && (
@@ -171,7 +186,22 @@ const Card: React.FC<{ item: Opportunity; saved: boolean; onSave: () => void; on
   return (
     <article className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm flex flex-col gap-4">
       <div className="flex gap-3">
-        <div className="w-11 h-11 shrink-0 rounded-xl bg-blue-50 text-blue-700 grid place-items-center font-black">{item.organizationName.slice(0, 1)}</div>
+        {/*
+          Kurum logosu YUVARLAK ve gerçek görsel.
+
+          Önce mavi bir kareye kurumun ilk harfi basılıyordu ("G", "T"...).
+          Aynı harfle başlayan iki kurum ayırt edilemiyordu ve sitedeki
+          diğer bütün logolar yuvarlakken burası kareydi.
+
+          CompanyLogo şirket kartlarında zaten kullanılıyor: organization_logo_url
+          doluysa görseli, boşsa kurumun baş harflerini çiziyor. Yani logo
+          gelmemiş kurum boş kutu göstermiyor.
+        */}
+        <CompanyLogo
+          name={item.organizationName}
+          logoUrl={item.organizationLogoUrl}
+          className="w-11 h-11 shrink-0 rounded-full"
+        />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <span className="text-xs font-bold text-blue-700">{LABELS[item.opportunityType]}</span>
