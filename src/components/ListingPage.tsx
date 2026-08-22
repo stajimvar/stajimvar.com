@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import type { InternshipListing } from '../types';
 import { fetchListingByIdPrefix } from '../lib/queries';
-import { CompanyLogo } from './CompanyLogo';
+import { ListingLogo } from './ListingLogo';
 import { Logo } from './Logo';
 import { slugify } from '../lib/slug';
 
@@ -157,10 +157,9 @@ export const ListingPage: React.FC<ListingPageProps> = ({
           <>
             <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-7 space-y-4">
               <div className="flex items-start gap-4">
-                <CompanyLogo
+                <ListingLogo
                   name={listing.companyName}
                   logoUrl={listing.companyLogo || undefined}
-                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl shrink-0 p-1.5 text-lg"
                 />
                 <div className="min-w-0 space-y-1">
                   <button

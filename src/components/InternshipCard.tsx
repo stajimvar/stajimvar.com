@@ -11,7 +11,7 @@ import {
   Star,
 } from 'lucide-react';
 import { InternshipListing, MatchBreakdown } from '../types';
-import { CompanyLogo } from './CompanyLogo';
+import { ListingLogo } from './ListingLogo';
 import { konumEtiketi } from '../lib/sehir';
 import { eklenmeMetni } from '../lib/zaman';
 
@@ -90,10 +90,10 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             }
           >
             <div className="rounded-full bg-white p-[2px]">
-              <CompanyLogo
+              <ListingLogo
                 name={listing.companyName}
                 logoUrl={listing.companyLogo || undefined}
-                className="w-11 h-11 sm:w-12 sm:h-12 rounded-full group-hover:scale-105 transition-transform text-base sm:text-lg p-1.5 border border-gray-100"
+                className="group-hover:scale-105 transition-transform"
               />
             </div>
           </div>

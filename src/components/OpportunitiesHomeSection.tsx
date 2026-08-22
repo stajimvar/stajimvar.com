@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowRight, CalendarDays } from 'lucide-react';
 import { fetchOpportunities, type Opportunity } from '../lib/opportunities';
-import { CompanyLogo } from './CompanyLogo';
+import { ListingLogo } from './ListingLogo';
 import { isExpiredOpportunity } from '../lib/opportunity-domain.mjs';
 
 export const OpportunitiesHomeSection: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate }) => {
@@ -29,10 +29,11 @@ export const OpportunitiesHomeSection: React.FC<{ onNavigate: (path: string) => 
     kurum logosuyla duruyordu. Aynı kayıt iki yerde iki farklı biçimde
     görününce liste ile ana sayfa birbirinden kopuk duruyordu.
 
-    Logo, ilan kartlarındaki CompanyLogo ile çiziliyor: görsel yoksa
-    kurumun baş harfleri geliyor, yani logosu derlenmemiş kurum boş kutu
-    bırakmıyor. Çap 36px — kartın iki metin satırı zaten o kadar yer
-    tuttuğu için bölümün yüksekliği değişmiyor.
+    Logo, sitedeki bütün ilan ve fırsat kartlarıyla aynı ListingLogo:
+    72×72 yuvarlak kutu, görsel yoksa kurumun baş harfleri. Önce buraya
+    özel 36px yazılmıştı; aynı fırsat listede iki katı boyutta duruyordu.
+    Ölçü tek yerden geldiği için bölüm bir tık uzadı, karşılığında ana
+    sayfa ile liste aynı görünüyor.
   */
-  return <section aria-labelledby="guncel-firsatlar" className="mb-4 rounded-2xl border border-blue-100 bg-white p-3 sm:p-4 shadow-sm"><div className="flex flex-wrap items-center justify-between gap-2"><h2 id="guncel-firsatlar" className="text-base font-extrabold text-gray-950">Güncel Öğrenci Fırsatları</h2><button onClick={() => onNavigate('/firsatlar')} className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:underline">Tüm fırsatları gör <ArrowRight className="w-3.5 h-3.5"/></button></div><div className="mt-2.5 grid md:grid-cols-3 gap-2">{items.map((item) => <button key={item.id} onClick={() => onNavigate(`/firsatlar/${item.slug}`)} className="flex min-w-0 items-center gap-2.5 rounded-xl border border-gray-200 px-3 py-2.5 text-left hover:border-blue-300 hover:bg-blue-50/30"><CompanyLogo name={item.organizationName} logoUrl={item.organizationLogoUrl} className="w-9 h-9 shrink-0 rounded-full text-xs"/><span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-bold text-blue-700">{item.organizationName}</span><b className="block truncate text-sm text-gray-900">{item.title}</b>{item.applicationDeadline && <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-gray-600"><CalendarDays className="w-3 h-3"/>Son: {new Intl.DateTimeFormat('tr-TR',{dateStyle:'medium'}).format(new Date(item.applicationDeadline))}</span>}</span></button>)}</div></section>;
+  return <section aria-labelledby="guncel-firsatlar" className="mb-4 rounded-2xl border border-blue-100 bg-white p-3 sm:p-4 shadow-sm"><div className="flex flex-wrap items-center justify-between gap-2"><h2 id="guncel-firsatlar" className="text-base font-extrabold text-gray-950">Güncel Öğrenci Fırsatları</h2><button onClick={() => onNavigate('/firsatlar')} className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:underline">Tüm fırsatları gör <ArrowRight className="w-3.5 h-3.5"/></button></div><div className="mt-2.5 grid md:grid-cols-3 gap-2">{items.map((item) => <button key={item.id} onClick={() => onNavigate(`/firsatlar/${item.slug}`)} className="flex min-w-0 items-center gap-2.5 rounded-xl border border-gray-200 px-3 py-2.5 text-left hover:border-blue-300 hover:bg-blue-50/30"><ListingLogo name={item.organizationName} logoUrl={item.organizationLogoUrl}/><span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-bold text-blue-700">{item.organizationName}</span><b className="block truncate text-sm text-gray-900">{item.title}</b>{item.applicationDeadline && <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-gray-600"><CalendarDays className="w-3 h-3"/>Son: {new Intl.DateTimeFormat('tr-TR',{dateStyle:'medium'}).format(new Date(item.applicationDeadline))}</span>}</span></button>)}</div></section>;
 };

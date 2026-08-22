@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Globe, MapPin, ShieldCheck, BadgeCheck } from 'lucide-react';
 import type { InternshipListing } from '../types';
 import { fetchCompanyPage } from '../lib/queries';
-import { CompanyLogo } from './CompanyLogo';
+import { ListingLogo } from './ListingLogo';
 import { Logo } from './Logo';
 import { listingSlug } from '../lib/slug';
 import { CompanyClaimForm } from './CompanyClaimForm';
@@ -112,11 +112,7 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
           <>
             <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-7 space-y-4">
               <div className="flex items-start gap-4">
-                <CompanyLogo
-                  name={veri.company.name}
-                  logoUrl={veri.company.logoUrl}
-                  className="w-16 h-16 rounded-full shrink-0 p-2 text-xl border border-gray-100"
-                />
+                <ListingLogo name={veri.company.name} logoUrl={veri.company.logoUrl} />
                 <div className="min-w-0 space-y-1.5">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h1 className="text-xl sm:text-2xl font-extrabold">{veri.company.name}</h1>

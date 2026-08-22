@@ -2,7 +2,7 @@ import React from 'react';
 import { Bookmark, CheckCircle2, ChevronRight, ExternalLink, Filter, Search, Sparkles } from 'lucide-react';
 import type { StudentProfile } from '../types';
 import { GoogleAdBanner } from './GoogleAdBanner';
-import { CompanyLogo } from './CompanyLogo';
+import { ListingLogo } from './ListingLogo';
 import { fetchOpportunities, fetchSavedOpportunityIds, toggleSavedOpportunity, type Opportunity, type OpportunityType } from '../lib/opportunities';
 import { getOpportunityOverview, isExpiredOpportunity, matchOpportunity, readOpportunityFilters, serializeOpportunityFilters } from '../lib/opportunity-domain.mjs';
 
@@ -219,15 +219,12 @@ const Card: React.FC<{ item: Opportunity; saved: boolean; onSave: () => void; on
           Aynı harfle başlayan iki kurum ayırt edilemiyordu ve sitedeki
           diğer bütün logolar yuvarlakken burası kareydi.
 
-          CompanyLogo şirket kartlarında zaten kullanılıyor: organization_logo_url
-          doluysa görseli, boşsa kurumun baş harflerini çiziyor. Yani logo
-          gelmemiş kurum boş kutu göstermiyor.
+          ListingLogo sitedeki bütün ilan ve fırsat kartlarında kullanılıyor:
+          organization_logo_url doluysa görseli, boşsa kurumun baş harflerini
+          çiziyor. Yani logo gelmemiş kurum boş kutu göstermiyor; ölçü de
+          ilan kartlarıyla aynı.
         */}
-        <CompanyLogo
-          name={item.organizationName}
-          logoUrl={item.organizationLogoUrl}
-          className="w-11 h-11 shrink-0 rounded-full"
-        />
+        <ListingLogo name={item.organizationName} logoUrl={item.organizationLogoUrl} />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <span className="text-xs font-bold text-blue-700">{LABELS[item.opportunityType]}</span>

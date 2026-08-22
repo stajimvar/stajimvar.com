@@ -12,7 +12,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { ApplicationRecord, InternshipListing } from '../types';
-import { CompanyLogo } from './CompanyLogo';
+import { ListingLogo } from './ListingLogo';
 
 /**
  * Uyum halkasının rengi. Eşikler ilan kartıyla birebir aynı; iki ekranda
@@ -202,10 +202,9 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                           title={app.matchScore > 0 ? `%${app.matchScore} uyum` : listing.companyName}
                         >
                           <div className="rounded-full bg-white p-[2px]">
-                            <CompanyLogo
+                            <ListingLogo
                               name={listing.companyName}
                               logoUrl={listing.companyLogo || undefined}
-                              className="w-10 h-10 rounded-full p-1 text-sm border border-gray-100"
                             />
                           </div>
                         </div>
