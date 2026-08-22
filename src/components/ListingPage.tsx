@@ -6,6 +6,7 @@ import {
 import type { InternshipListing } from '../types';
 import { fetchListingByIdPrefix } from '../lib/queries';
 import { ListingLogo } from './ListingLogo';
+import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { Logo } from './Logo';
 import { slugify } from '../lib/slug';
 
@@ -96,6 +97,9 @@ export const ListingPage: React.FC<ListingPageProps> = ({
       document.title = onceki;
     };
   }, [listing]);
+
+  /* Başvurunun gerçek işleyişi — açıklama ve düğmeler buradan besleniyor. */
+  const yol = basvuruYolu(listing ?? {});
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] text-gray-900">
@@ -277,36 +281,47 @@ export const ListingPage: React.FC<ListingPageProps> = ({
               )}
             </div>
 
-            {listing.applicationMethod === 'external' && (
+            {/*
+              Açıklama, kart ve başvuru diyaloğuyla aynı cümleyi kuruyor:
+              karar lib/basvuru-yolu.mjs'te. Önce burada "şirkete talebi
+              bildiririz" yazıyordu; böyle çalışan bir süreç yok.
+            */}
+            {!yol.teslimEdiliyor && (
               <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 flex gap-3">
                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5"/>
                 <p className="text-xs text-amber-900 leading-relaxed">
-                  Bu ilanın başvuruları şirketin kendi sisteminden alınıyor. StajımVar
-                  üzerinden başvurursan kaydını tutarız ve şirkete talebi bildiririz, ama
-                  başvurun şirkete anında ulaşmaz — <strong>ilana doğrudan da başvurmanı
-                  öneririz</strong>.
+                  {yol.ozet} StajımVar kaydı yalnızca senin takip listen içindir —{' '}
+                  <strong>resmî sayfadan başvurmayı unutma</strong>.
                 </p>
               </div>
             )}
 
             <div className="flex flex-col sm:flex-row gap-2.5 sticky bottom-4">
-              {listing.applyUrl && (
+              {yol.resmiAdres && (
                 <a
-                  href={listing.applyUrl}
+                  href={yol.resmiAdres}
                   target="_blank"
                   rel="noopener noreferrer nofollow"
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-5 py-3 rounded-2xl text-sm font-bold border border-gray-200 bg-white hover:bg-gray-50 transition-colors shadow-xs"
+                  className={`flex-1 inline-flex items-center justify-center gap-1.5 px-5 py-3 rounded-2xl text-sm font-bold transition-colors shadow-xs ${
+                    yol.anaEylem === 'resmi-site'
+                      ? 'text-white bg-blue-600 hover:bg-blue-700'
+                      : 'border border-gray-200 bg-white hover:bg-gray-50'
+                  }`}
                 >
-                  İlana git
+                  {yol.anaEylem === 'resmi-site' ? yol.anaEtiket : 'İlana git'}
                   <ExternalLink className="w-4 h-4" />
                 </a>
               )}
               <button
                 type="button"
                 onClick={() => onApply(listing)}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 px-5 py-3 rounded-2xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-xs"
+                className={`flex-1 inline-flex items-center justify-center gap-1.5 px-5 py-3 rounded-2xl text-sm font-bold transition-colors shadow-xs ${
+                  yol.anaEylem === 'resmi-site'
+                    ? 'border border-gray-200 bg-white hover:bg-gray-50 text-gray-800'
+                    : 'text-white bg-blue-600 hover:bg-blue-700'
+                }`}
               >
-                StajımVar ile Başvur
+                {yol.anaEylem === 'resmi-site' ? yol.takipEtiketi : yol.anaEtiket}
               </button>
             </div>
           </>

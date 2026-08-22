@@ -115,7 +115,7 @@ export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; 
           <section className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
             <label className="relative block">
               <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400"/>
-              <input aria-label="Fırsat ara" value={filters.query} onChange={(e) => set({ query: e.target.value })} placeholder="Burs, kurum veya program ara" className="w-full rounded-xl border border-gray-200 py-2.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"/>
+              <input aria-label="Fırsat ara" value={filters.query} onChange={(e) => set({ query: e.target.value })} placeholder="Burs veya fırsat ara" className="w-full rounded-xl border border-gray-200 py-2.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"/>
             </label>
             <select aria-label="Fırsat türü" value={filters.type} onChange={(e) => set({ type: e.target.value })} className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm">
               <option value="">Tüm türler</option>

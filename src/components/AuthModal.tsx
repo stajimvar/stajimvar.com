@@ -18,6 +18,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { Logo } from './Logo';
+import { useModalErisim } from '../lib/modal-erisim';
 import { CompanyAccount } from '../types';
 
 interface AuthModalProps {
@@ -45,6 +46,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onSuccess,
 }) => {
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
+
+  /*
+    Modal kapanınca bileşen ağaçta kalıyor; `useState(initialMode)` yalnızca
+    ilk kurulumda çalıştığı için "Kayıt Ol" düğmesi, daha önce giriş sekmesi
+    açılmışsa yine giriş sekmesini gösteriyordu. Her açılışta senkron.
+  */
+  React.useEffect(() => {
+    if (isOpen) setMode(initialMode);
+  }, [isOpen, initialMode]);
   const [role, setRole] = useState<'student' | 'company'>('student');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -66,7 +76,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
-  const [kvkkConsent, setKvkkConsent] = useState(false);
+  /*
+    Pazarlama izni AYRI ve İSTEĞE BAĞLI. Önce kayıt olmanın önünde zorunlu ve
+    genel bir "staj eşleştirmesine onay" kutusu vardı: hizmetin kendisi için
+    verilen bilgiyle, isteğe bağlı bildirimleri tek kutuda topluyordu. Açık
+    rıza "belirli bir konuya ilişkin" olmalı; artık aktarım rızası başvuru
+    anında, o ilana özel alınıyor (ApplyDialog).
+  */
+  const [bildirimIzni, setBildirimIzni] = useState(false);
+
+  /* Odak yönetimi, ESC, focus trap ve arka plan kilidi. */
+  const kutuRef = useModalErisim<HTMLDivElement>(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -89,7 +109,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           email,
           password,
           fullName: fullName.trim(),
-          kvkkConsent,
+          marketingConsent: bildirimIzni,
         });
         if ((result as any).needsEmailConfirmation) {
           setInfoMessage(
@@ -112,7 +132,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         description: companyDesc.trim(),
         recruiterName: recruiterName.trim(),
         recruiterRole: recruiterRole.trim(),
-        kvkkConsent,
+        marketingConsent: bildirimIzni,
       });
       if ((result as any).needsEmailConfirmation) {
         setInfoMessage(
@@ -172,10 +192,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-gray-200 shadow-2xl relative my-8 animate-in zoom-in-95 duration-200">
+      <div
+        ref={kutuRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-basligi"
+        className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-gray-200 shadow-2xl relative my-8 animate-in zoom-in-95 duration-200"
+      >
         {/* Close Button */}
         <button
+          type="button"
           onClick={onClose}
+          aria-label="Pencereyi kapat"
           className="absolute top-5 right-5 w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:text-gray-900 flex items-center justify-center transition-colors cursor-pointer"
         >
           <X className="w-4 h-4" />
@@ -186,7 +214,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div className="inline-block mb-3">
             <Logo size="md" />
           </div>
-          <h3 className="text-xl font-black text-gray-900 tracking-tight">
+          <h3 id="auth-modal-basligi" className="text-xl font-black text-gray-900 tracking-tight">
             {role === 'company'
               ? mode === 'login'
                 ? 'Şirket Hesabınıza Giriş Yapın'
@@ -559,28 +587,43 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
-          {/* KVKK açık rızası — kayıt akışında zorunlu */}
+          {/*
+            Kayıt, hiçbir onay kutusuna bağlı değil. Aydınlatma metni bir
+            BİLGİLENDİRME; okunması için kutu işaretletmek, verilmeyen bir
+            rızayı kayda geçirmek olurdu. İletişim bilgisinin şirkete
+            aktarılmasına açık rıza, başvuru sırasında ve o ilana özel
+            alınıyor.
+          */}
           {mode === 'register' && (
-            <label className="flex items-start gap-2.5 p-3 rounded-xl bg-gray-50 border border-gray-200 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={kvkkConsent}
-                onChange={(e) => setKvkkConsent(e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded accent-blue-600 shrink-0 cursor-pointer"
-              />
-              <span className="text-[11px] leading-relaxed text-gray-600">
+            <div className="space-y-2.5">
+              <p className="text-[11px] leading-relaxed text-gray-500">
+                Hesap oluşturduğunda kişisel verilerin, staj ilanlarını
+                eşleştirebilmek için işlenir. Ayrıntısı{' '}
                 <a
                   href="/kvkk-aydinlatma-metni"
                   target="_blank"
                   rel="noreferrer"
                   className="font-semibold text-blue-600 hover:underline"
-                  onClick={(e) => e.stopPropagation()}
                 >
-                  Aydınlatma metnini
-                </a>{' '}
-                okudum. Kişisel verilerimin staj eşleştirmesi amacıyla işlenmesine onay veriyorum.
-              </span>
-            </label>
+                  aydınlatma metninde
+                </a>
+                . Bilgilerin, sen başvuru sırasında ayrıca izin vermeden hiçbir
+                şirketle paylaşılmaz.
+              </p>
+
+              <label className="flex items-start gap-2.5 p-3 rounded-xl bg-gray-50 border border-gray-200 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={bildirimIzni}
+                  onChange={(e) => setBildirimIzni(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded accent-blue-600 shrink-0 cursor-pointer"
+                />
+                <span className="text-[11px] leading-relaxed text-gray-600">
+                  Yeni staj ilanı ve burs duyurularını e-posta ile almak
+                  istiyorum. <span className="text-gray-400">(isteğe bağlı)</span>
+                </span>
+              </label>
+            </div>
           )}
 
           {authError && (
@@ -603,7 +646,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           <button
             type="submit"
-            disabled={submitting || (mode === 'register' && !kvkkConsent)}
+            disabled={submitting}
             className="w-full mt-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             {submitting && (

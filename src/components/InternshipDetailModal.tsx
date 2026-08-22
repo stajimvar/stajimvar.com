@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import { InternshipListing, MatchBreakdown, StudentProfile } from '../types';
 import { ListingLogo } from './ListingLogo';
+import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
+import { useModalErisim } from '../lib/modal-erisim';
 
 interface InternshipDetailModalProps {
   listing: InternshipListing | null;
@@ -42,11 +44,21 @@ export const InternshipDetailModal: React.FC<InternshipDetailModalProps> = ({
   const [customLetter, setCustomLetter] = React.useState('');
   const [showCoverLetterInput, setShowCoverLetterInput] = React.useState(false);
 
+  /* Odak yönetimi, ESC, focus trap ve arka plan kilidi. */
+  const kutuRef = useModalErisim<HTMLDivElement>(Boolean(listing && match), onClose);
+
   if (!listing || !match) return null;
+
+  /* Başvurunun gerçek işleyişi; alt bardaki düğmeler buradan besleniyor. */
+  const yol = basvuruYolu(listing);
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
       <div
+        ref={kutuRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ilan-onizleme-basligi"
         className="relative bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -65,7 +77,7 @@ export const InternshipDetailModal: React.FC<InternshipDetailModalProps> = ({
                 <span className="text-gray-300">•</span>
                 <span className="text-xs text-gray-500">{listing.companyIndustry}</span>
               </div>
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">
+              <h2 id="ilan-onizleme-basligi" className="text-base sm:text-lg font-bold text-gray-900 leading-tight">
                 {listing.title}
               </h2>
             </div>
@@ -322,19 +334,44 @@ export const InternshipDetailModal: React.FC<InternshipDetailModalProps> = ({
               Kapat
             </button>
 
+            {/*
+              Önizlemedeki düğme de kartla aynı gerçeği söylüyor: başvuru
+              şirkete iletilmiyorsa "Gönderildi" yazmak yanıltıcı.
+            */}
+            {yol.resmiAdres && !yol.teslimEdiliyor && (
+              <a
+                href={yol.resmiAdres}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-xs transition-all"
+              >
+                <span>{yol.anaEtiket}</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            )}
+
             {hasApplied ? (
               <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>Başvurunuz Gönderildi</span>
+                <span>{yol.teslimEdiliyor ? 'Başvurunuz Gönderildi' : 'Takip listende'}</span>
               </span>
             ) : (
               <button
                 id="modal-submit-apply-btn"
                 onClick={() => onApply(customLetter)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-xs transition-all"
+                title={yol.ozet}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold shadow-xs transition-all ${
+                  yol.teslimEdiliyor
+                    ? 'text-white bg-blue-600 hover:bg-blue-700'
+                    : 'text-gray-800 bg-white border border-gray-300 hover:bg-gray-50'
+                }`}
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Staja Başvur (%{match.overallScore} Eşleşme ile)</span>
+                <span>
+                  {yol.teslimEdiliyor
+                    ? `Staja Başvur (%${match.overallScore} Eşleşme ile)`
+                    : 'Başvurduğumu işaretle'}
+                </span>
               </button>
             )}
           </div>

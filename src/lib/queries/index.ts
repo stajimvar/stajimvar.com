@@ -30,6 +30,7 @@ import {
   type QuizRowWithQuestions,
   type StudentRowBundle,
 } from './mappers';
+import { basvuruYolu } from '../basvuru-yolu.mjs';
 
 /** PostgREST hatalarını tek biçimde yükseltir. */
 function fail(context: string, error: { message: string } | null): never {
@@ -472,11 +473,22 @@ export async function createApplication(params: {
   coverLetter?: string;
   /** İlanın başvuru yöntemi; teslim davranışını bu belirliyor. */
   applicationMethod: 'external' | 'internal' | 'email_application';
-  /** KVKK açık rızası. Olmadan başvuru kaydedilmez. */
+  /** KVKK açık rızası. Veri aktarılan yöntemlerde zorunlu. */
   contactShareConsent: boolean;
   consentVersion: string;
+  /** Doğrulanmış başvuru kanalı varsa kimliği; teslim kararında kullanılıyor. */
+  applicationChannelId?: string;
 }): Promise<ApplicationRecord> {
-  if (!params.contactShareConsent) {
+  /*
+    Açık rıza yalnızca veri gerçekten aktarılıyorsa zorunlu. Dış ilanlarda
+    hiçbir şey aktarılmıyor — kayıt öğrencinin kendi takip listesi. Olmayan
+    bir aktarım için rıza toplamak hem gereksiz hem yanıltıcı.
+  */
+  const yol = basvuruYolu({
+    applicationMethod: params.applicationMethod,
+    applicationChannelId: params.applicationChannelId,
+  });
+  if (yol.teslimEdiliyor && !params.contactShareConsent) {
     throw new Error('Bilgilerinin şirketle paylaşılmasına izin vermeden başvuru gönderilemez.');
   }
 
@@ -488,9 +500,9 @@ export async function createApplication(params: {
                       olarak işaretleniyor, "bekliyor" demek yanıltıcı olurdu.
     - email_application → doğrulanmış kanala gönderilmek üzere kuyruğa girer
   */
-  const deliveryStatus =
-    params.applicationMethod === 'email_application' ? 'pending' :
-    params.applicationMethod === 'external' ? 'skipped_unverified' : 'not_required';
+  const deliveryStatus = yol.teslimEdiliyor
+    ? (params.applicationMethod === 'email_application' ? 'pending' : 'not_required')
+    : 'skipped_unverified';
 
   const { data, error } = await supabase
     .from('applications')
@@ -500,8 +512,9 @@ export async function createApplication(params: {
       match_score: Math.round(params.matchScore),
       cover_letter: params.coverLetter ?? null,
       application_method: params.applicationMethod,
-      contact_share_consent_at: new Date().toISOString(),
-      contact_share_consent_version: params.consentVersion,
+      // Rıza kaydı gerçeği yansıtsın: onay verilmediyse damga da atılmıyor.
+      contact_share_consent_at: params.contactShareConsent ? new Date().toISOString() : null,
+      contact_share_consent_version: params.contactShareConsent ? params.consentVersion : null,
       email_delivery_status: deliveryStatus,
       created_via: 'web',
     })

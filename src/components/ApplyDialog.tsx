@@ -1,15 +1,22 @@
 import React, { useState } from 'react';
 import { X, ExternalLink, ShieldCheck, AlertTriangle, Loader2 } from 'lucide-react';
 import type { InternshipListing } from '../types';
+import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
+import { useModalErisim } from '../lib/modal-erisim';
 
 /**
  * StajımVar üzerinden başvuru.
  *
- * En kritik nokta dürüstlük: `external` ilanlarda başvuruyu şirkete HEMEN
- * iletemiyoruz, çünkü şirketin doğrulanmış bir başvuru kanalı yok. Öğrenci
- * "başvurdum" sanıp beklerse stajı kaçırır — sitenin yapabileceği en kötü
- * hata bu. Bu yüzden diyalog ne olacağını açıkça yazıyor ve ilana doğrudan
- * gitme bağlantısını da aynı ekranda tutuyor.
+ * En kritik nokta dürüstlük: başvuru şirkete iletilmiyorsa bu diyalog bunu
+ * açıkça söylüyor. Öğrenci "başvurdum" sanıp beklerse stajı kaçırır —
+ * sitenin yapabileceği en kötü hata bu.
+ *
+ * Ne olduğunun kararı burada verilmiyor, lib/basvuru-yolu.mjs'ten geliyor;
+ * kart, ilan detayı ve bu diyalog aynı cümleyi kuruyor.
+ *
+ * Açık rıza yalnızca gerçekten aktarım yapılan yöntemlerde isteniyor.
+ * Aktarım yokken onay kutusu göstermek, olmayan bir veri aktarımına rıza
+ * toplamak olurdu.
  */
 
 interface ApplyDialogProps {
@@ -30,7 +37,11 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isExternal = listing.applicationMethod === 'external';
+  const yol = basvuruYolu(listing);
+  const rizaGerekli = yol.teslimEdiliyor;
+
+  /* Odak yönetimi, ESC, focus trap ve arka plan kilidi. */
+  const kutuRef = useModalErisim<HTMLDivElement>(true, onClose);
 
   const handleSubmit = async () => {
     setError(null);
@@ -48,10 +59,12 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
     <div
       className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
       onClick={onClose}
-      role="dialog"
-      aria-modal="true"
     >
       <div
+        ref={kutuRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="basvuru-diyalog-basligi"
         className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-gray-200 shadow-xl max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
@@ -60,7 +73,7 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
             <p className="text-xs font-bold text-blue-600">
               {listing.companyName}
             </p>
-            <h2 className="text-lg font-bold text-gray-900 leading-snug">
+            <h2 id="basvuru-diyalog-basligi" className="text-lg font-bold text-gray-900 leading-snug">
               {listing.title}
             </h2>
           </div>
@@ -78,11 +91,14 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
           {alreadyApplied ? (
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 space-y-2">
               <p className="text-sm font-bold text-emerald-900">
-                Bu ilana zaten başvurdun.
+                {rizaGerekli
+                  ? 'Bu ilana zaten başvurdun.'
+                  : 'Bu ilanı zaten işaretlemiştin.'}
               </p>
               <p className="text-xs text-emerald-800 leading-relaxed">
-                Başvurun "Başvurularım" sekmesinde. Şirketin kendi sayfasından da
-                başvurmak istersen aşağıdaki bağlantıyı kullanabilirsin.
+                {rizaGerekli
+                  ? 'Başvurun başvuru listende; durumu değiştiğinde orada görürsün.'
+                  : 'Kayıt başvuru listende duruyor. Bu kayıt şirkete gönderilmedi; resmî sayfadan başvurmadıysan aşağıdaki bağlantıyı kullan.'}
               </p>
             </div>
           ) : (
@@ -90,22 +106,27 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
               {/* Ne olacağını adım adım söyle. */}
               <div className="space-y-3">
                 <p className="text-sm font-bold text-gray-900">
-                  Başvurunca ne olacak?
+                  {rizaGerekli ? 'Başvurunca ne olacak?' : 'İşaretleyince ne olacak?'}
                 </p>
                 <ol className="space-y-2.5 text-sm text-gray-600">
                   <li className="flex gap-2.5">
                     <span className="shrink-0 w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center">
                       1
                     </span>
-                    <span>Başvurun StajımVar'a kaydedilir ve panelinden takip edebilirsin.</span>
+                    <span>
+                      {rizaGerekli
+                        ? "Başvurun StajımVar'a kaydedilir ve panelinden takip edebilirsin."
+                        : 'Bu ilan panelindeki başvuru listene eklenir; hangi ilana başvurduğunu takip edebilirsin.'}
+                    </span>
                   </li>
                   <li className="flex gap-2.5">
                     <span className="shrink-0 w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center">
                       2
                     </span>
                     <span>
-                      Bu ilana gelen talebi şirkete bildiririz ve başvuru kanallarını
-                      doğrulamalarını isteriz.
+                      {rizaGerekli
+                        ? 'Profilin ve iletişim bilgilerin, şirketin doğrulanmış başvuru kanalına iletilir.'
+                        : 'Bilgilerin şirkete iletilmez ve şirketle paylaşılmaz.'}
                     </span>
                   </li>
                   <li className="flex gap-2.5">
@@ -113,34 +134,35 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
                       3
                     </span>
                     <span>
-                      Şirket kanalını doğrulayınca profilini ve iletişim bilgilerini
-                      onlara iletiriz.
+                      {rizaGerekli
+                        ? 'Şirketin cevabı geldiğinde başvurunun durumu panelinde güncellenir.'
+                        : 'Gerçek başvuru şirketin kendi sayfasından yapılır — aşağıdaki bağlantı oraya götürür.'}
                     </span>
                   </li>
                 </ol>
               </div>
 
-              {isExternal && (
+              {!rizaGerekli && (
                 /*
                   Bu uyarı olmazsa öğrenci başvurusunun şirkete ulaştığını sanır.
-                  Ulaşmıyor — henüz doğrulanmış bir kanal yok.
+                  Ulaşmıyor: doğrulanmış bir başvuru kanalı yok.
                 */
                 <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 flex gap-3">
                   <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5"/>
                   <div className="space-y-1.5">
                     <p className="text-xs font-bold text-amber-900">
-                      Bu başvuru şirkete henüz iletilmiyor.
+                      Bu kayıt şirkete başvuru göndermez.
                     </p>
                     <p className="text-xs text-amber-800 leading-relaxed">
-                      Bu ilanın başvuruları şirketin kendi sisteminden alınıyor. Stajı
-                      kaçırmamak için <strong>ilana doğrudan da başvurmanı öneririz</strong>;
-                      StajımVar kaydın, şirketi buraya davet etmemizi sağlıyor.
+                      {yol.ozet} Stajı kaçırmamak için{' '}
+                      <strong>resmî sayfadan başvurmayı unutma</strong>.
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* KVKK açık rızası */}
+              {/* KVKK açık rızası — yalnızca gerçekten aktarım yapılıyorsa */}
+              {rizaGerekli && (
               <label className="flex gap-2.5 items-start cursor-pointer rounded-2xl border border-gray-200 p-3.5 hover:border-blue-300 transition-colors">
                 <input
                   type="checkbox"
@@ -162,9 +184,10 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
                   </a>
                 </span>
               </label>
+              )}
 
               {error && (
-                <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+                <p role="alert" aria-live="assertive" className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
                   {error}
                 </p>
               )}
@@ -173,14 +196,18 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
         </div>
 
         <div className="p-5 sm:p-6 pt-0 flex flex-col sm:flex-row gap-2.5">
-          {listing.applyUrl && (
+          {yol.resmiAdres && (
             <a
-              href={listing.applyUrl}
+              href={yol.resmiAdres}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+              className={`flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors ${
+                rizaGerekli
+                  ? 'border border-gray-200 text-gray-700 hover:bg-gray-50'
+                  : 'text-white bg-blue-600 hover:bg-blue-700'
+              }`}
             >
-              İlana git
+              {rizaGerekli ? 'İlana git' : 'Resmî sitede başvur'}
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           )}
@@ -189,18 +216,22 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={!consent || busy}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              disabled={(rizaGerekli && !consent) || busy}
+              className={`flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors disabled:bg-gray-300 disabled:text-white disabled:cursor-not-allowed ${
+                rizaGerekli
+                  ? 'text-white bg-blue-600 hover:bg-blue-700'
+                  : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
+              }`}
             >
               {busy ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Gönderiliyor
+                  Kaydediliyor
                 </>
               ) : (
                 <>
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  StajımVar ile Başvur
+                  {rizaGerekli ? 'StajımVar ile Başvur' : 'Başvurduğumu işaretle'}
                 </>
               )}
             </button>

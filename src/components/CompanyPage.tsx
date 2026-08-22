@@ -3,6 +3,7 @@ import { ArrowLeft, Globe, MapPin, ShieldCheck, BadgeCheck } from 'lucide-react'
 import type { InternshipListing } from '../types';
 import { fetchCompanyPage } from '../lib/queries';
 import { ListingLogo } from './ListingLogo';
+import { guvenliDisAdres } from '../lib/guvenli-url.mjs';
 import { Logo } from './Logo';
 import { listingSlug } from '../lib/slug';
 import { CompanyClaimForm } from './CompanyClaimForm';
@@ -141,9 +142,16 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                         {veri.company.location}
                       </span>
                     )}
-                    {veri.company.websiteUrl && (
+                    {/*
+                      Adres şemasız kaydediliyor ("alumil.com"). Şemasız href
+                      göreli yol sayıldığı için bağlantı /sirket/alumil.com'a
+                      gidiyordu; ziyaretçi şirketin sitesine hiç ulaşamıyordu.
+                      guvenliDisAdres şemayı tamamlıyor ve güvensiz değeri
+                      hiç bağlantıya çevirmiyor.
+                    */}
+                    {guvenliDisAdres(veri.company.websiteUrl) && (
                       <a
-                        href={veri.company.websiteUrl}
+                        href={guvenliDisAdres(veri.company.websiteUrl)!}
                         target="_blank"
                         rel="noopener noreferrer nofollow"
                         className="inline-flex items-center gap-1 text-blue-600 font-semibold hover:underline"

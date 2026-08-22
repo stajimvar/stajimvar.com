@@ -18,4 +18,17 @@
 # olayını tetikliyor. Ölçüldü — canlı sitede silinmiş bir css adresi için
 # link öğesinde error olayı geldi. index.html'deki kurtarma betiği o olayı
 # yakalayıp sayfayı bir kez yeniliyor.
+# ESKİ ADRES: /ilanlar
+#
+# İlan listesi ana sayfada duruyor; /ilanlar diye ayrı bir sayfa hiç
+# olmadı. Adres paylaşılmış ve arama motoruna düşmüş durumda, SPA yedeği
+# yüzünden 200 dönüyordu: ziyaretçi ana sayfayı görüyor ama adres çubuğunda
+# var olmayan bir yol kalıyor, arama motoru da aynı içeriği iki adreste
+# indeksliyordu. Kalıcı yönlendirme ikisini de düzeltiyor.
+#
+# Sıra önemli: SPA yedeği (/*) her şeyi yakaladığı için bu kural ondan
+# ÖNCE gelmeli.
+/ilanlar   /   301
+/ilanlar/*   /   301
+
 /*    /index.html   200

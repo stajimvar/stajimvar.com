@@ -32,6 +32,8 @@ import { KariyerMerkezleriSayfasi } from './components/KariyerMerkezleri';
 import { OpportunitiesPage } from './components/OpportunitiesPage';
 import { OpportunityDetailPage } from './components/OpportunityDetailPage';
 import { OpportunitiesHomeSection } from './components/OpportunitiesHomeSection';
+import { basvuruSonucMesaji } from './lib/basvuru-yolu.mjs';
+import { aramaTeriminiOku, aramaAdresi } from './lib/arama-url.mjs';
 import { AdminOpportunitiesView, AdminOpportunityCreate } from './components/AdminOpportunitiesView';
 /*
   Bu ikisi bilerek gecikmeli DEĞİL: /araclar, /araclar/* ve /isveren
@@ -211,6 +213,21 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
+  /*
+    ESKİ ADRES: /ilanlar
+
+    İlan listesi ana sayfada; /ilanlar diye bir sayfa hiç olmadı. Sunucu
+    tarafında kalıcı yönlendirme public/_redirects'te duruyor. Burası
+    uygulama içinden (geri tuşu, eski bağlantı) o yola düşen durumu
+    karşılıyor: 404 yerine ana sayfa, adres de düzeltilmiş oluyor.
+  */
+  React.useEffect(() => {
+    if (path.replace(/\/+$/, '') === '/ilanlar') {
+      window.history.replaceState({}, '', `/${window.location.search}`);
+      setPath('/');
+    }
+  }, [path]);
+
   const navigate = (to: string) => {
     window.history.pushState({}, '', to);
     setPath(to);
@@ -224,10 +241,22 @@ export default function App() {
    * (Header), mobilde ilan listesinin başında. İkisi de aynı değeri yazıp
    * okuyor. Bölüm sayfalarındaki "ilanlara bak" düğmesi de buraya yazıyor.
    *
-   * Adres çubuğunda ?q= tutmuyoruz: `path` yalnızca pathname'i izliyor,
-   * sorgu dizesi geri/ileri tuşlarında kaybolurdu.
+   * Terim adres çubuğunda `?q=` olarak tutuluyor: `stajimvar.com/?q=yazılım`
+   * bağlantısını açan kişi aramanın uygulanmış hâlini görüyor, sayfa
+   * yenilendiğinde terim kaybolmuyor ve arama paylaşılabiliyor. Yazarken
+   * `replaceState` kullanılıyor — her harf için geçmişe kayıt düşmesi geri
+   * tuşunu kullanılamaz hale getirirdi.
    */
-  const [aramaTerimi, setAramaTerimi] = React.useState('');
+  const [aramaTerimi, setAramaTerimi] = React.useState(() =>
+    typeof window === 'undefined' ? '' : aramaTeriminiOku(window.location.search)
+  );
+
+  React.useEffect(() => {
+    const yeniAdres = aramaAdresi(window.location.pathname, window.location.search, aramaTerimi);
+    if (yeniAdres !== window.location.pathname + window.location.search) {
+      window.history.replaceState({}, '', yeniAdres);
+    }
+  }, [aramaTerimi]);
 
   const goHome = () => navigate('/');
 
@@ -599,6 +628,7 @@ export default function App() {
       studentId: activeStudent.id,
       matchScore: applyTarget.matchScore,
       applicationMethod: applyTarget.listing.applicationMethod,
+      applicationChannelId: applyTarget.listing.applicationChannelId,
       contactShareConsent: consent,
       consentVersion: KVKK_VERSION,
     });
@@ -608,12 +638,13 @@ export default function App() {
 
     confetti({ particleCount: 60, spread: 60, origin: { y: 0.7 } });
 
-    // Dış ilanlarda başvuru şirkete iletilmedi; mesaj bunu gizlememeli.
-    showToast(
-      applyTarget.listing.applicationMethod === 'external'
-        ? 'Başvurun kaydedildi. Şirkete ulaşıp başvuru kanalını doğrulamalarını isteyeceğiz.'
-        : `${applyTarget.listing.companyName} başvurun iletildi.`
-    );
+    /*
+      Mesaj, gerçekte ne olduğunu söylüyor. Önce dış ilanlarda "şirkete
+      ulaşıp başvuru kanalını doğrulamalarını isteyeceğiz" deniyordu —
+      böyle çalışan bir süreç yok. Kaydın şirkete gitmediğini söylemek,
+      öğrencinin resmî sayfadan başvurmasını sağlayan tek şey.
+    */
+    showToast(basvuruSonucMesaji(applyTarget.listing, applyTarget.listing.companyName));
   };
 
   // Handler: Add New Listing (Company portal)

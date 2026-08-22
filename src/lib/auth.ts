@@ -89,14 +89,18 @@ export interface StudentSignUpInput {
   password: string;
   fullName: string;
   /** KVKK açık rızası. Onaysız kayıt yapılmaz. */
-  kvkkConsent: boolean;
+  /** Kayıt anında aydınlatma metninin gösterildiği damgalanır. */
   marketingConsent?: boolean;
 }
 
 export async function signUpStudent(input: StudentSignUpInput): Promise<AuthResult> {
-  if (!input.kvkkConsent) {
-    throw new Error('Devam edebilmek için aydınlatma metnini onaylaman gerekiyor.');
-  }
+  /*
+    Kayıt artık genel bir onay kutusuna bağlı değil: aydınlatma metni
+    bilgilendirmedir, rıza değil. Kayıt anında saklanan damga "bilgilendirme
+    gösterildi" kaydıdır. İletişim bilgisinin şirkete aktarılmasına açık rıza
+    başvuru sırasında, o ilana özel alınıyor (applications tablosundaki
+    contact_share_consent_at).
+  */
   if (input.password.length < 8) {
     throw new Error('Şifre en az 8 karakter olmalı.');
   }
@@ -148,7 +152,8 @@ export interface CompanySignUpInput {
   description: string;
   recruiterName: string;
   recruiterRole: string;
-  kvkkConsent: boolean;
+  /** Kayıt anında aydınlatma metninin gösterildiği damgalanır. */
+  marketingConsent?: boolean;
 }
 
 function slugify(name: string): string {
@@ -162,9 +167,6 @@ function slugify(name: string): string {
 }
 
 export async function signUpCompany(input: CompanySignUpInput): Promise<AuthResult> {
-  if (!input.kvkkConsent) {
-    throw new Error('Devam edebilmek için aydınlatma metnini onaylaman gerekiyor.');
-  }
   if (input.password.length < 8) {
     throw new Error('Şifre en az 8 karakter olmalı.');
   }
