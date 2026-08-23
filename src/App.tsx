@@ -1023,7 +1023,12 @@ export default function App() {
       {ustCubuk}
 
       {/* Main Content Area */}
-      <main className={`flex-1 ${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-6 pb-24 lg:pb-8`}>
+      {/*
+        Üst boşluk incelendi: başlık çubuğu ile ilk kart arasında 24 piksel
+        duruyordu ve sayfanın ilk ekranında boş bir bant gibi görünüyordu.
+        Alt boşluğa dokunulmadı; oradaki pay mobil gezinme çubuğu için.
+      */}
+      <main className={`flex-1 ${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-24 lg:pb-8`}>
         {(userRole === 'company' || safeTab === 'company-portal') && !activeCompany ? (
           /*
             Şirket hesabı yokken portalı çizmek, uydurma bir şirketin panelini
