@@ -54,5 +54,28 @@
       "/paylasim/hikaye/sik-sorulanlar/03.jpg",
       "/paylasim/hikaye/sik-sorulanlar/04.jpg"
     ]
+  },
+  {
+    "kod": "listedeki-kurumlar",
+    "ad": "Listedeki kurumlar",
+    "surum": "20260823",
+    "guncellendi": "2026-08-23",
+    "metin": "Listedeki burs ve programlar bu kurumlardan:\n\nAhmet ve Nezahat Keleşoğlu Vakfı · AKPA Kimya · Anadolu Vakfı · Ankara Bilim Üniversitesi · Avrupa Komisyonu · Avrupa Parlamentosu · Bayburt Üniversitesi · Bulgurcu Ailesi Vakfı · Bursa Ticaret ve Sanayi Odası · CERN · Cerrahpaşa Tıp Fakültesi Mezunlar Derneği · Chevening · Doğu Akdeniz Üniversitesi · Dokuz Eylül Üniversitesi · Erciyes Organ Nakli Vakfı · Esenler Belediyesi · Eskişehir Ticaret Odası · Faydasıçok Vakfı · Genç Girişimciler ve Yöneticiler Derneği · Gençlik ve Spor Bakanlığı · Güney Eğitim Vakfı · İhsan Arslan Vakfı · İstanbul Büyükşehir Belediyesi · İstanbul Üniversitesi-Cerrahpaşa Geliştirme Vakfı · İzzetpaşa Vakfı · Kadın Hekimler Eğitime Destek Vakfı · Mehmet Emin Akın Eğitim Vakfı · Mustafa Öncel Eğitim Vakfı · Mühendis Kadınlar Derneği · Orman Genel Müdürlüğü Eğitim Vakfı · Sağlık ve Sosyal Yardım Vakfı · Sütaş · Teknik Elemanlar Derneği · TEKNOFEST · TÜBİTAK · TÜRGEV · Türk Altın İşletmeleri · Türk Eğitim Derneği · Türk Eğitim Vakfı · Türkiye Fulbright Komisyonu · Türkiye Ulusal Ajansı · Türkiye Yeşilay Cemiyeti · Urla Eğitim Vakfı · Vehbi Koç Vakfı · Vitalen Vakfı · Yağmur Damlası Yardımlaşma ve Dayanışma Derneği · Yeni Dünya Vakfı · Yurtdışı Türkler ve Akraba Topluluklar Başkanlığı\n\nLogolar kurumların kendi sitelerinden alındı; her kaydın yanında resmî kaynağı yazılı. Kaynağı doğrulanmayan kayıt listeye girmiyor.\n\nHepsinin başvuru bağlantısı profildeki listede.",
+    "kartlar": [
+      "/paylasim/listedeki-kurumlar/01-20260823.jpg",
+      "/paylasim/listedeki-kurumlar/02-20260823.jpg",
+      "/paylasim/listedeki-kurumlar/03-20260823.jpg",
+      "/paylasim/listedeki-kurumlar/04-20260823.jpg",
+      "/paylasim/listedeki-kurumlar/05-20260823.jpg",
+      "/paylasim/listedeki-kurumlar/06-20260823.jpg"
+    ],
+    "hikayeler": [
+      "/paylasim/hikaye/listedeki-kurumlar/01.jpg",
+      "/paylasim/hikaye/listedeki-kurumlar/02.jpg",
+      "/paylasim/hikaye/listedeki-kurumlar/03.jpg",
+      "/paylasim/hikaye/listedeki-kurumlar/04.jpg",
+      "/paylasim/hikaye/listedeki-kurumlar/05.jpg",
+      "/paylasim/hikaye/listedeki-kurumlar/06.jpg"
+    ]
   }
 ]
