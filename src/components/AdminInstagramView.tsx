@@ -109,7 +109,13 @@ export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }
       try {
         const cevap = await fetch('/paylasim/setler.json', { cache: 'no-store' });
         if (!cevap.ok) return;
-        const gelen = (await cevap.json()) as PaylasimSeti[];
+        /*
+          En son üretilen set başta: panel açıldığında hazırlanan gönderi
+          seçili gelsin, listede aranmasın.
+        */
+        const gelen = ((await cevap.json()) as PaylasimSeti[])
+          .slice()
+          .sort((a, b) => String(b.guncellendi ?? '').localeCompare(String(a.guncellendi ?? '')));
         setSetler(gelen);
         if (gelen.length > 0) {
           setSecilenKod((onceki) => onceki || gelen[0].kod);
@@ -359,8 +365,10 @@ export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }
         <div>
           <h2 className="text-lg font-extrabold text-gray-950">Gönderi yayınla</h2>
           <p className="text-sm text-gray-600">
-            Kartlar <code>public/paylasim/setler.json</code> içinden geliyor; yeni set için{' '}
-            <code>npm run instagram-kartlari</code> ya da <code>npm run paylasim-burs-takvimi</code>.
+            Kartlar <code>public/paylasim/setler.json</code> içinden geliyor. Yeni set üreten
+            betikler: <code>instagram-kartlari</code>, <code>paylasim-burs-takvimi</code>,{' '}
+            <code>paylasim-sss</code>, <code>paylasim-kurumlar</code>. Betiği çalıştırıp siteyi
+            dağıtınca set bu listeye düşüyor.
           </p>
         </div>
 

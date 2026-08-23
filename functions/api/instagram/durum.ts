@@ -74,7 +74,7 @@ export const onRequestGet: PagesFunction<Ortam> = async ({ request, env }) => {
   const eksikler = eksikAyarlar(env as unknown as Record<string, unknown>);
   if (eksikler.length) {
     // Yalnızca ADLAR dönüyor; değerler hiçbir koşulda yanıta girmiyor.
-    return yanit({ bagli: false, eksikAyarlar: eksikler, sorunlar: ['Ortam değişkenleri eksik.'] }, 503);
+    return yanit({ bagli: false, eksikAyarlar: eksikler, sorunlar: ['Ortam değişkenleri eksik.'] });
   }
 
   /*
@@ -83,5 +83,14 @@ export const onRequestGet: PagesFunction<Ortam> = async ({ request, env }) => {
   */
   const ozet = await baglantiyiDogrula(env as unknown as Record<string, string>, fetch);
 
-  return yanit({ ...ozet, kontrolZamani: new Date().toISOString() }, ozet.bagli ? 200 : 502);
+  /*
+    BAĞLANTI SORUNLU OLSA DA HTTP 200
+
+    Önce "bağlı değil" durumunda 502 dönülüyordu. Cloudflare 5xx yanıtların
+    GÖVDESİNİ kendi HTML hata sayfasıyla değiştiriyor: tarayıcı JSON yerine
+    HTML alıp "Unexpected token '<'" diyordu ve asıl sorun — hangi izin
+    eksik, jeton ne durumda — hiç görünmüyordu. Sunucu hatası değil bu;
+    denetimin sonucu. Sonuç gövdede duruyor, ekran onu okuyup gösteriyor.
+  */
+  return yanit({ ...ozet, kontrolZamani: new Date().toISOString() });
 };
