@@ -55,17 +55,6 @@ export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; 
   */
   const overview = getOpportunityOverview(items);
 
-  /*
-    Kartın alt şeridi için iki gerçek ölçü. Uydurma yok: ikisi de
-    kayıtların kendi alanlarından geliyor, alan boşsa gösterilmiyor.
-  */
-  const dogrulanmisSayisi = items.filter((item) => Boolean(item.verifiedAt)).length;
-  const sonKontrol = items
-    .map((item) => item.lastCheckedAt)
-    .filter((tarih): tarih is string => Boolean(tarih))
-    .sort()
-    .pop();
-
   const kategoriler: [string, string][] = [
     ['/firsatlar', 'Tümü'],
     ['/burslar', 'Burslar'],
@@ -123,7 +112,7 @@ export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; 
       <div aria-hidden="true" className="h-1 bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500" />
 
       <div className="p-3 sm:p-4">
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 sm:min-h-[72px]">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 sm:min-h-[108px]">
           <div className="flex min-w-0 flex-1 items-start gap-3">
             {/*
               Simge, sekmedeki "Burs İlanları" simgesiyle aynı — kullanıcı
@@ -158,39 +147,6 @@ export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; 
         )}
         </div>
 
-        {/*
-          ALT ŞERİT: NEREDEN GELDİĞİ VE NE ZAMAN BAKILDIĞI
-
-          Kartın ortası boştu ve "hepsi resmî kaynağıyla doğrulanmış"
-          cümlesi bir iddia olarak havada kalıyordu. Buradaki iki bilgi o
-          cümlenin kanıtı: kaç kaydın resmî kaynağı doğrulanmış ve kayıtlara
-          en son ne zaman bakılmış. İkisi de gerçek veriden geliyor;
-          doğrulanmış kayıt yoksa şerit hiç çizilmiyor.
-        */}
-        {!savedOnly && !matching && state === 'ready' && (dogrulanmisSayisi > 0 || sonKontrol) && (
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-gray-100 pt-2.5 text-[11px] text-gray-500">
-            {dogrulanmisSayisi > 0 && (
-              <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                {dogrulanmisSayisi} kaydın resmî kaynağı doğrulandı
-              </span>
-            )}
-            {sonKontrol && (
-              <span className="inline-flex items-center gap-1.5">
-                <Search className="h-3.5 w-3.5 text-gray-400" />
-                Son kontrol: {safeDate(sonKontrol)}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={() => onNavigate('/firsat-takvimi')}
-              className="ml-auto inline-flex items-center gap-1 font-bold text-blue-700 hover:underline"
-            >
-              Fırsat takvimi
-              <ChevronRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        )}
       </div>
     </section>
 
