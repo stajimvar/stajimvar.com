@@ -359,12 +359,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 mb-1">
+                <label htmlFor="auth-email-sirket-giris" className="block font-bold text-gray-700 mb-1">
                   Kurumsal Yetkili E-posta
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
+                    id="auth-email-sirket-giris"
                     type="email"
                     required
                     value={email || (allCompanies.find((c) => c.id === selectedCompId)?.recruiterEmail ?? '')}
@@ -397,12 +398,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {role === 'company' && mode === 'register' && (
             <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
               <div>
-                <label className="block font-bold text-gray-700 mb-1">
+                <label htmlFor="auth-companyName" className="block font-bold text-gray-700 mb-1">
                   Şirket / Kurum Adı *
                 </label>
                 <div className="relative">
                   <Building2 className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
+                    id="auth-companyName"
                     type="text"
                     required
                     value={companyName}
@@ -415,10 +417,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">
+                  <label htmlFor="auth-companyIndustry" className="block font-bold text-gray-700 mb-1">
                     Sektör *
                   </label>
                   <select
+                    id="auth-companyIndustry"
                     value={companyIndustry}
                     onChange={(e) => setCompanyIndustry(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
@@ -433,10 +436,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">
+                  <label htmlFor="auth-companySize" className="block font-bold text-gray-700 mb-1">
                     Şirket Ölçeği
                   </label>
                   <select
+                    id="auth-companySize"
                     value={companySize}
                     onChange={(e) => setCompanySize(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
@@ -450,12 +454,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 mb-1">
+                <label htmlFor="auth-companyLocation" className="block font-bold text-gray-700 mb-1">
                   Şirket Lokasyonu & Çalışma Modeli
                 </label>
                 <div className="relative">
                   <MapPin className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
+                    id="auth-companyLocation"
                     type="text"
                     value={companyLocation}
                     onChange={(e) => setCompanyLocation(e.target.value)}
@@ -467,10 +472,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">
+                  <label htmlFor="auth-recruiterName" className="block font-bold text-gray-700 mb-1">
                     İK / Yetkili Ad Soyad *
                   </label>
                   <input
+                    id="auth-recruiterName"
                     type="text"
                     required
                     value={recruiterName}
@@ -480,10 +486,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">
+                  <label htmlFor="auth-recruiterRole" className="block font-bold text-gray-700 mb-1">
                     Yetkili Ünvanı
                   </label>
                   <input
+                    id="auth-recruiterRole"
                     type="text"
                     value={recruiterRole}
                     onChange={(e) => setRecruiterRole(e.target.value)}
@@ -494,12 +501,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 mb-1">
+                <label htmlFor="auth-email-sirket-kayit" className="block font-bold text-gray-700 mb-1">
                   Kurumsal E-Posta *
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
+                    id="auth-email-sirket-kayit"
                     type="email"
                     required
                     value={email}
@@ -511,12 +519,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 mb-1">
+                <label htmlFor="auth-password-sirket-kayit" className="block font-bold text-gray-700 mb-1">
                   Şifre Belirleyin *
                 </label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
+                    id="auth-password-sirket-kayit"
                     type="password"
                     required
                     value={password}
@@ -534,12 +543,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <div className="space-y-3">
               {mode === 'register' && (
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">
+                  <label htmlFor="auth-fullName" className="block font-bold text-gray-700 mb-1">
                     Ad Soyad *
                   </label>
                   <div className="relative">
                     <User className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
+                      id="auth-fullName"
                       type="text"
                       required
                       value={fullName}
@@ -552,12 +562,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               )}
 
               <div>
-                <label className="block font-bold text-gray-700 mb-1">
+                <label htmlFor="auth-email-ogrenci" className="block font-bold text-gray-700 mb-1">
                   Öğrenci / Kişisel E-Posta
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
+                    id="auth-email-ogrenci"
                     type="email"
                     required
                     value={email}
@@ -569,12 +580,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 mb-1">
+                <label htmlFor="auth-password-ogrenci" className="block font-bold text-gray-700 mb-1">
                   Şifre
                 </label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
+                    id="auth-password-ogrenci"
                     type="password"
                     required
                     value={password}

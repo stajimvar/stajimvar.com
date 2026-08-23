@@ -745,10 +745,33 @@ export default function App() {
   );
 
   /** İçerik sayfalarını üst çubukla birlikte çizer. */
+  /*
+    GİRİŞ MODALI İÇERİK SAYFALARINDA DA ÇİZİLMELİ
+
+    Modal yalnızca ana uygulama ağacında duruyordu; içerik sayfaları (fırsat
+    detayı, şirket sayfası, hukuki metinler) o ağaca hiç ulaşmadan erken
+    `return` ediyor. Sonuç: bu sayfalardaki "Giriş yap" ve "Kaydet"
+    düğmeleri durumu değiştiriyor ama ekranda hiçbir şey açılmıyordu —
+    ölçüldü, iki sayfada da tıklama sessizce kayboluyordu.
+  */
+  const girisModali = (
+    <AuthModal
+      isOpen={isAuthModalOpen}
+      onClose={() => setIsAuthModalOpen(false)}
+      initialMode={authModalMode}
+      allCompanies={allCompanies}
+      activeCompanyId={activeCompanyId}
+      onSelectCompany={handleSelectCompany}
+      onCreateCompany={handleCreateCompany}
+      onSuccess={handleAuthSuccess}
+    />
+  );
+
   const icerikSayfasi = (icerik: React.ReactNode) => (
     <div className="min-h-screen flex flex-col bg-[#F9FAFB]">
       {ustCubuk}
       {icerik}
+      {girisModali}
     </div>
   );
 
@@ -789,12 +812,15 @@ export default function App() {
     const onek = idPrefixFromSlug(temizYol.slice('/ilan/'.length));
     if (onek) {
       return (
-        <ListingPage
-          idPrefix={onek}
-          onBack={goHome}
-          onNavigate={navigate}
-          onApply={(ilan) => handleApplyToJob(ilan, 0)}
-        />
+        <>
+          <ListingPage
+            idPrefix={onek}
+            onBack={goHome}
+            onNavigate={navigate}
+            onApply={(ilan) => handleApplyToJob(ilan, 0)}
+          />
+          {girisModali}
+        </>
       );
     }
   }
@@ -947,14 +973,17 @@ export default function App() {
     const sirketSlug = temizYol.slice('/sirket/'.length);
     if (sirketSlug) {
       return (
-        <CompanyPage
-          slug={sirketSlug}
-          onBack={goHome}
-          onNavigate={navigate}
-          userId={session?.userId ?? null}
-          userEmail={student?.email}
-          onRequireLogin={handleOpenLogin}
-        />
+        <>
+          <CompanyPage
+            slug={sirketSlug}
+            onBack={goHome}
+            onNavigate={navigate}
+            userId={session?.userId ?? null}
+            userEmail={student?.email}
+            onRequireLogin={handleOpenLogin}
+          />
+          {girisModali}
+        </>
       );
     }
   }
@@ -1176,16 +1205,7 @@ export default function App() {
       )}
 
       {/* Authentication Modal (Giriş Yap / Kayıt Ol) */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        initialMode={authModalMode}
-        allCompanies={allCompanies}
-        activeCompanyId={activeCompanyId}
-        onSelectCompany={handleSelectCompany}
-        onCreateCompany={handleCreateCompany}
-        onSuccess={handleAuthSuccess}
-      />
+      {girisModali}
 
       {/*
         Alt bilgi.
