@@ -9,6 +9,14 @@
  * çıktı public/paylasim/ altına yazılıyor ve siteyle birlikte dağıtılıyor,
  * yani adres stajimvar.com üzerinden sabit.
  *
+ * KARTLAR ZAMANSIZ
+ * ----------------
+ * Kartlarda ilan/şirket sayısı gibi eskiyen veri yok. Sayı yazan bir kart,
+ * sayı her değiştiğinde yeniden üretilip yeniden paylaşılmayı gerektiriyor;
+ * gönderi bir hafta sonra kendi kendine yanlış hale geliyor. Zamana bağlı
+ * içerik (burs son başvuru tarihi, yeni ilan duyurusu) ayrı bir gönderi
+ * türü — orada tarih zaten konunun kendisi.
+ *
  * NEDEN SVG
  * ---------
  * og-gorsel.mjs ile aynı yol: sharp, SVG'yi tarayıcı olmadan PNG'ye
@@ -69,17 +77,14 @@ const kapak = () => sarmal(`
 
   ${satir(76, 818, 'Her ilanda şirketin kendi başvuru bağlantısı var.', { boyut: 30, renk: GRI })}
 
-  <rect x="76" y="876" width="270" height="128" rx="20" fill="#FFFFFF" stroke="${KENAR_MAVI}"/>
-  ${satir(102, 940, '13', { boyut: 46, renk: MAVI, kalin: 800 })}
-  ${satir(102, 976, 'açık staj ilanı', { boyut: 20, renk: GRI })}
+  <rect x="76" y="890" width="356" height="76" rx="38" fill="#FFFFFF" stroke="${KENAR_MAVI}"/>
+  ${satir(108, 938, 'Şirketin kendi sayfası', { boyut: 26, renk: SIYAH, kalin: 700 })}
 
-  <rect x="366" y="876" width="270" height="128" rx="20" fill="#FFFFFF" stroke="${KENAR_MAVI}"/>
-  ${satir(392, 940, '10', { boyut: 46, renk: MAVI, kalin: 800 })}
-  ${satir(392, 976, 'şirket', { boyut: 20, renk: GRI })}
+  <rect x="452" y="890" width="250" height="76" rx="38" fill="#FFFFFF" stroke="${KENAR_MAVI}"/>
+  ${satir(484, 938, 'Resmî kaynak', { boyut: 26, renk: SIYAH, kalin: 700 })}
 
-  <rect x="656" y="876" width="270" height="128" rx="20" fill="#FFFFFF" stroke="${KENAR_MAVI}"/>
-  ${satir(682, 940, '11', { boyut: 46, renk: MAVI, kalin: 800 })}
-  ${satir(682, 976, 'burs ve fırsat', { boyut: 20, renk: GRI })}
+  <rect x="722" y="890" width="282" height="76" rx="38" fill="#FFFFFF" stroke="${KENAR_MAVI}"/>
+  ${satir(754, 938, 'Süresi geçen düşer', { boyut: 26, renk: SIYAH, kalin: 700 })}
 `);
 
 /* ------------------------------------------------- 2. nasıl derliyoruz */
