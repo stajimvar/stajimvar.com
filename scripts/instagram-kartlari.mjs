@@ -35,6 +35,7 @@ import {
   siraliSatir,
   ustBant,
 } from './paylasim-sablonu.mjs';
+import { hikayeKarti, hikayeleriYaz } from './paylasim-hikaye-sablonu.mjs';
 
 const SERI = 'Nasıl çalışır';
 
@@ -136,3 +137,68 @@ await setiYaz({
   ].join('\n'),
   kartlar: [kapak(), nasil(), neVar(), kapanis()],
 });
+
+/*
+  HİKÂYE SÜRÜMÜ
+
+  Aynı içerik, 9:16 için baştan diziliyor — gönderi kartını hikâye zeminine
+  oturtmak "yapıştırılmış ekran görüntüsü" gibi duruyordu. Öne çıkanlarda
+  duracak sürüm bu.
+*/
+const hikayeler = [
+  hikayeKarti({
+    seri: SERI,
+    sayfa: '01/04',
+    bloklar: [
+      { tip: 'baslik', satirlar: ['İlanları aracı', 'sitelerden değil,', 'şirketin kendi', 'sayfasından.'], boyut: 92, vurgu: 3 },
+      { tip: 'ayrac' },
+      { tip: 'metin', satirlar: ['Her ilanda şirketin kendi başvuru', 'bağlantısı var; arada kimse yok.'] },
+      { tip: 'kutu', satirlar: ['Kaynağı doğrulanmayan kayıt listeye girmiyor.'] },
+    ],
+  }),
+  hikayeKarti({
+    seri: SERI,
+    sayfa: '02/04',
+    bloklar: [
+      { tip: 'baslik', satirlar: ['Bir ilan listeye', 'nasıl giriyor?'], boyut: 92, vurgu: 1 },
+      { tip: 'ayrac' },
+      {
+        tip: 'sirali',
+        ogeler: [
+          { ust: 'Kariyer sayfası taranır', alt: 'Aracı ilan sitesi kullanılmıyor.' },
+          { ust: 'Başvuru şirkete gider', alt: 'Bağlantı doğrudan orada.' },
+          { ust: 'Takvim yoksa öyle yazar', alt: '"Takvim bekleniyor" görürsün.' },
+          { ust: 'Süresi geçen düşer', alt: 'Eski ilan listede kalmaz.' },
+        ],
+      },
+    ],
+  }),
+  hikayeKarti({
+    seri: SERI,
+    sayfa: '03/04',
+    bloklar: [
+      { tip: 'baslik', satirlar: ['Staj, burs ve', 'yurt dışı —', 'tek listede.'], boyut: 92, vurgu: 2 },
+      { tip: 'ayrac' },
+      {
+        tip: 'sirali',
+        ogeler: [
+          { ust: 'Staj ve iş ilanları', alt: 'Şirketin kendi kariyer sayfasından.' },
+          { ust: 'Burslar ve destekler', alt: 'Vakıf, dernek, belediye, kurum.' },
+          { ust: 'Yurt dışı programları', alt: 'Erasmus, staj, araştırma.' },
+        ],
+      },
+    ],
+  }),
+  hikayeKarti({
+    seri: SERI,
+    sayfa: '04/04',
+    koyu: true,
+    bloklar: [
+      { tip: 'baslik', satirlar: ['Yeni ilan ve', 'burslar burada', 'duyurulacak.'], boyut: 98, vurgu: 2 },
+      { tip: 'ayrac' },
+      { tip: 'metin', satirlar: ['Staj ilanları, burslar, KYK ve yurt dışı', 'programları — hepsi resmî kaynağıyla.'] },
+    ],
+  }),
+];
+
+await hikayeleriYaz('nasil-calisir', hikayeler);
