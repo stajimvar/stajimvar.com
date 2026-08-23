@@ -98,12 +98,17 @@ export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; 
 
       Başlık solda, açıklaması hemen altında ve satırın boşluğunu dolduruyor;
       sayaçlar sağ kenarda mavi rozetler olarak duruyor.
+
+      YÜKSEKLİK DE AYNI: ana sayfadaki kart içindeki üç fırsat kartı yüzünden
+      145 piksel; burası 80'de kalınca aynı yerde duran iki kart farklı
+      ağırlıkta görünüyordu. İçerik satırına alt sınır verildi ve açıklama
+      büyütüldü — boşluk doldurma değil, aynı ölçüyü tutturmak için.
     */}
     <section className="mb-4 rounded-2xl border border-blue-100 bg-white p-3 sm:p-4 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-base font-extrabold tracking-tight leading-tight text-gray-950">{heading}</h1>
-          <p className="text-[11px] sm:text-xs text-gray-600 leading-snug">{savedOnly ? 'Sonradan incelemek için takibe aldığın fırsatlar.' : calendar ? 'Yaklaşan son başvuru tarihlerini tek yerde izle.' : matching ? 'Profilindeki doğrulanabilir bilgilerle hesaplanan sonuçlar.' : 'Burs, kredi, eğitim, yurtdışı ve yarışma — hepsi resmî kaynağıyla doğrulanmış.'}</p>
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 sm:min-h-[113px]">
+        <div className="min-w-0 flex-1 space-y-1">
+          <h1 className="text-base sm:text-lg font-extrabold tracking-tight leading-tight text-gray-950">{heading}</h1>
+          <p className="text-xs sm:text-sm text-gray-600 leading-relaxed max-w-2xl">{savedOnly ? 'Sonradan incelemek için takibe aldığın fırsatlar.' : calendar ? 'Yaklaşan son başvuru tarihlerini tek yerde izle.' : matching ? 'Profilindeki doğrulanabilir bilgilerle hesaplanan sonuçlar.' : 'Burs, kredi, eğitim, yurtdışı ve yarışma — hepsi resmî kaynağıyla doğrulanmış.'}</p>
         </div>
 
         {/*
