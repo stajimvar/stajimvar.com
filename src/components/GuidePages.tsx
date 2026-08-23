@@ -160,12 +160,36 @@ const Kart: React.FC<{ rehber: Rehber; sira?: number; onNavigate?: (p: string) =
     }`}
   >
     {/*
-      Alta doğru koyulaşan perde: başlık her zemin tonunda okunsun diye.
-      Instagram'ın karolarında da yazı böyle bir perdenin üzerinde duruyor.
+      ARKA PLAN FOTOĞRAFI
+
+      Karolar düz renk zeminlerdi; hepsi aynı görünüyor, hangisinin ne
+      anlattığı ancak yazısı okununca anlaşılıyordu. Her rehberin konusuna
+      uygun bir fotoğraf var: scripts/rehber-gorselleri.mjs ile indirilip
+      kareye kırpılıyor, kendi sunucumuzdan gidiyor (dış adrese bağlanmak
+      ziyaretçinin IP'sini oraya sızdırırdı).
+
+      Renk zemini altta duruyor: fotoğraf yüklenemezse karo boş kalmıyor,
+      eski hâline düşüyor. `onError` ile görsel gizleniyor.
+    */}
+    <img
+      src={`/rehber-gorselleri/${rehber.slug}.jpg`}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      onError={(e) => {
+        e.currentTarget.style.display = 'none';
+      }}
+      className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+    />
+
+    {/*
+      Alta doğru koyulaşan perde: başlık fotoğrafın her tonunda okunsun diye.
+      Fotoğrafla birlikte koyulaştırıldı — düz renkte yeten %35, ayrıntılı bir
+      fotoğrafın üstünde yazıyı okunur kılmıyordu.
     */}
     <span
       aria-hidden="true"
-      className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/5 to-transparent"
+      className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/10"
     />
 
     {/*
