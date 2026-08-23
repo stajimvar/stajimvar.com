@@ -1,0 +1,308 @@
+[
+  {
+    "kod": "ahmet-ve-nezahat-kelesoglu-vakfi",
+    "ad": "Ahmet ve Nezahat Keleşoğlu Vakfı",
+    "sayfa": "https://ankvakfi.org.tr/",
+    "adres": "https://ankvakfi.org.tr/images/ank_logo.png",
+    "etiket": "sayfa-logosu",
+    "puan": 153,
+    "olcu": "185x103"
+  },
+  {
+    "kod": "akpa-kimya",
+    "ad": "AKPA Kimya",
+    "sayfa": "https://akpakimya.com/",
+    "adres": "https://akpakimya.com/assets/image/trademark/favicon.png",
+    "etiket": "icon",
+    "puan": 208,
+    "olcu": "128x128"
+  },
+  {
+    "kod": "ankara-bilim-universitesi",
+    "ad": "Ankara Bilim Üniversitesi",
+    "sayfa": "https://ankarabilim.edu.tr/",
+    "adres": "https://ankarabilim.edu.tr/assets/frontside/img/favicon//apple-icon-152x152.png",
+    "etiket": "apple-touch-icon",
+    "puan": 272,
+    "olcu": "152x152"
+  },
+  {
+    "kod": "avrupa-komisyonu",
+    "ad": "Avrupa Komisyonu",
+    "sayfa": "https://erasmus-plus.ec.europa.eu/",
+    "adres": "https://erasmus-plus.ec.europa.eu/profiles/custom/eac_profile/themes/eac_theme/images/eche/ec_flag.svg",
+    "etiket": "icon",
+    "puan": 336,
+    "olcu": "3375x2250"
+  },
+  {
+    "kod": "avrupa-parlamentosu",
+    "ad": "Avrupa Parlamentosu",
+    "sayfa": "https://www.europarl.europa.eu/portal/en",
+    "adres": "https://www.europarl.europa.eu/portal/img/ep-logo.svg",
+    "etiket": "sayfa-logosu",
+    "puan": 306,
+    "olcu": "333x183"
+  },
+  {
+    "kod": "bastuzel-egitim-vakfi",
+    "ad": "Baştüzel Eğitim Vakfı",
+    "sayfa": "https://www.bastuzelvakfi.org/",
+    "adres": "https://www.bastuzelvakfi.org/img/logo.png",
+    "etiket": "sayfa-logosu",
+    "puan": 17,
+    "olcu": "179x57"
+  },
+  {
+    "kod": "bayburt-universitesi",
+    "ad": "Bayburt Üniversitesi",
+    "sayfa": "https://uluslararasi.bayburt.edu.tr/",
+    "adres": "https://uluslararasi.bayburt.edu.tr/assets/logo-DoGGysTF.png",
+    "etiket": "icon",
+    "puan": 336,
+    "olcu": "400x400"
+  },
+  {
+    "kod": "cern",
+    "ad": "CERN",
+    "sayfa": "https://home.cern/",
+    "adres": "https://home.cern/wp-content/uploads/2026/05/cropped-favicon-cern-180x180.png",
+    "etiket": "apple-touch-icon",
+    "puan": 300,
+    "olcu": "180x180"
+  },
+  {
+    "kod": "cerrahpasa-tip-mezunlar-dernegi",
+    "ad": "Cerrahpaşa Tıp Fakültesi Mezunlar Derneği",
+    "sayfa": "https://www.ctfmed.org.tr/",
+    "adres": "https://www.ctfmed.org.tr/wp-content/uploads/2024/02/cropped-8670da14-3005-44ec-ad72-666d9eac492a-180x180.png",
+    "etiket": "apple-touch-icon",
+    "puan": 300,
+    "olcu": "180x180"
+  },
+  {
+    "kod": "chevening",
+    "ad": "Chevening",
+    "sayfa": "https://www.chevening.org/",
+    "adres": "https://www.chevening.org/wp-content/themes/chevening/assets/images/logo.png",
+    "etiket": "sayfa-logosu",
+    "puan": 356,
+    "olcu": "2000x1989"
+  },
+  {
+    "kod": "dogu-akdeniz-universitesi",
+    "ad": "Doğu Akdeniz Üniversitesi",
+    "sayfa": "https://www.emu.edu.tr/",
+    "adres": "https://www.emu.edu.tr/static/images/logos/emu-logo-horizontalwhite-tr.svg",
+    "etiket": "sayfa-logosu",
+    "puan": 216,
+    "olcu": "1248x292"
+  },
+  {
+    "kod": "erciyes-organ-nakli-vakfi",
+    "ad": "Erciyes Organ Nakli Vakfı",
+    "sayfa": "https://erciyesorgannaklivakfi.org/",
+    "adres": "https://erciyesorgannaklivakfi.org/wp-content/uploads/2020/09/EONV_Logo-300x300.png",
+    "etiket": "sayfa-logosu",
+    "puan": 356,
+    "olcu": "300x300"
+  },
+  {
+    "kod": "esenler-belediyesi",
+    "ad": "Esenler Belediyesi",
+    "sayfa": "https://esenler.bel.tr/",
+    "adres": "https://esenler.bel.tr/wp-content/themes/muni/assets/images/head/152x152.png",
+    "etiket": "apple-touch-icon",
+    "puan": 272,
+    "olcu": "152x152"
+  },
+  {
+    "kod": "eskisehir-ticaret-odasi",
+    "ad": "Eskişehir Ticaret Odası",
+    "sayfa": "https://www.etonet.org.tr/",
+    "adres": "https://www.etonet.org.tr/static/img/pwa/apple-icon-180.png?v=2.1.0",
+    "etiket": "apple-touch-icon",
+    "puan": 300,
+    "olcu": "180x180"
+  },
+  {
+    "kod": "faydasicok-vakfi",
+    "ad": "Faydasıçok Vakfı",
+    "sayfa": "https://faydasicokvakfi.org/",
+    "adres": "https://faydasicokvakfi.org/wp-content/uploads/2024/05/fcv-favicon.png",
+    "etiket": "icon",
+    "puan": 336,
+    "olcu": "256x256"
+  },
+  {
+    "kod": "genc-girisimciler-ve-yoneticiler-dernegi",
+    "ad": "Genç Girişimciler ve Yöneticiler Derneği",
+    "sayfa": "https://www.ggyd.org.tr/",
+    "adres": "https://dersoft-production.s3.eu-central-1.amazonaws.com/public/corporation_logo/3a6643ee-275c-4bfc-a81c-10c62cdef7e1/kvfY2POisePhwu58hwvfe5EB2wBuz3-metaVVpyQVVqV1hDSTFydmxTT3ZBNGszY2RMaGM0eUlqLW1ldGFiRzluYnlBb01pa3VjRzVuLS5wbmc%3D-.png",
+    "etiket": "sayfa-logosu",
+    "puan": 356,
+    "olcu": "900x1112"
+  },
+  {
+    "kod": "guney-egitim-vakfi",
+    "ad": "Güney Eğitim Vakfı",
+    "sayfa": "https://guneyegitimvakfi.org.tr/",
+    "adres": "https://guneyegitimvakfi.org.tr/wp-content/uploads/2017/01/cropped-gev-512-180x180.png",
+    "etiket": "apple-touch-icon",
+    "puan": 300,
+    "olcu": "180x180"
+  },
+  {
+    "kod": "iu-cerrahpasa-gelistirme-vakfi",
+    "ad": "İstanbul Üniversitesi-Cerrahpaşa Geliştirme Vakfı",
+    "sayfa": "https://iucerrahpasavakfi.org.tr/",
+    "adres": "https://iucerrahpasavakfi.org.tr/wp-content/themes/consuloan/images/testimonial.svg",
+    "etiket": "sayfa-logosu",
+    "puan": 356,
+    "olcu": "250x233"
+  },
+  {
+    "kod": "izzetpasa-vakfi",
+    "ad": "İzzetpaşa Vakfı",
+    "sayfa": "https://www.izvak.org.tr/",
+    "adres": "https://www.izvak.org.tr/upload/manset/logo.png",
+    "etiket": "sayfa-logosu",
+    "puan": 50,
+    "olcu": "273x90"
+  },
+  {
+    "kod": "kahev",
+    "ad": "Kadın Hekimler Eğitime Destek Vakfı",
+    "sayfa": "https://kahev.org.tr/",
+    "adres": "https://kahev.org.tr/favicon.ico",
+    "etiket": "icon",
+    "puan": 336,
+    "olcu": "256x256"
+  },
+  {
+    "kod": "mehmet-emin-akin-egitim-vakfi",
+    "ad": "Mehmet Emin Akın Eğitim Vakfı",
+    "sayfa": "https://meav.org.tr/",
+    "adres": "https://meav.org.tr/wp-content/uploads/2021/07/MEAV-logo-favicon.png",
+    "etiket": "icon",
+    "puan": 162,
+    "olcu": "82x82"
+  },
+  {
+    "kod": "muhendis-kadinlar-dernegi",
+    "ad": "Mühendis Kadınlar Derneği",
+    "sayfa": "https://mukad.org.tr/",
+    "adres": "https://mukad.org.tr/wp-content/uploads/2026/03/cropped-android-chrome-512x512-1-180x180.png",
+    "etiket": "apple-touch-icon",
+    "puan": 300,
+    "olcu": "180x180"
+  },
+  {
+    "kod": "mustafa-oncel-egitim-vakfi",
+    "ad": "Mustafa Öncel Eğitim Vakfı",
+    "sayfa": "https://www.mustafaoncelvakfi.org/",
+    "adres": "https://www.mustafaoncelvakfi.org/static/img/logo-mustafaoncelvakfi.svg",
+    "etiket": "sayfa-logosu",
+    "puan": 356,
+    "olcu": "346x375"
+  },
+  {
+    "kod": "ogem-vakfi",
+    "ad": "Orman Genel Müdürlüğü Eğitim Vakfı",
+    "sayfa": "https://ogemvak.org.tr/",
+    "adres": "https://ogemvak.org.tr/wp-content/uploads/2022/12/OgemVakLogo2.png",
+    "etiket": "sayfa-logosu",
+    "puan": 68,
+    "olcu": "428x108"
+  },
+  {
+    "kod": "saglik-ve-sosyal-yardim-vakfi",
+    "ad": "Sağlık ve Sosyal Yardım Vakfı",
+    "sayfa": "https://ssyv.org.tr/",
+    "adres": "https://ssyv.org.tr/wp-content/uploads/2018/05/cropped-logo.png",
+    "etiket": "sayfa-logosu",
+    "puan": 45,
+    "olcu": "550x85"
+  },
+  {
+    "kod": "sutas",
+    "ad": "Sütaş",
+    "sayfa": "https://www.sutas.com.tr/",
+    "adres": "https://www.sutas.com.tr/assets/img/sutas-logo-2026.webp",
+    "etiket": "sayfa-logosu",
+    "puan": 356,
+    "olcu": "620x425"
+  },
+  {
+    "kod": "teknik-elemanlar-dernegi",
+    "ad": "Teknik Elemanlar Derneği",
+    "sayfa": "https://www.tekinder.org.tr/",
+    "adres": "https://www.tekinder.org.tr/assets/img/logo.svg",
+    "etiket": "sayfa-logosu",
+    "puan": 216,
+    "olcu": "23423x5802"
+  },
+  {
+    "kod": "turk-altin-isletmeleri",
+    "ad": "Türk Altın İşletmeleri",
+    "sayfa": "https://www.geleceginmadencileri.com/",
+    "adres": "https://www.geleceginmadencileri.com/gorseller/turkaltinlogo.png",
+    "etiket": "sayfa-logosu",
+    "puan": 356,
+    "olcu": "1667x1667"
+  },
+  {
+    "kod": "yesilay",
+    "ad": "Türkiye Yeşilay Cemiyeti",
+    "sayfa": "https://www.yesilay.org.tr/",
+    "adres": "https://www.yesilay.org.tr/media/p3rorjrv/logo.svg",
+    "etiket": "sayfa-logosu",
+    "puan": 216,
+    "olcu": "579x150"
+  },
+  {
+    "kod": "urla-egitim-vakfi",
+    "ad": "Urla Eğitim Vakfı",
+    "sayfa": "https://www.urev.org.tr/",
+    "adres": "https://www.urev.org.tr/skins/urev/assets/images/logo-250x204.png",
+    "etiket": "sayfa-logosu",
+    "puan": 304,
+    "olcu": "250x204"
+  },
+  {
+    "kod": "vitalen-vakfi",
+    "ad": "Vitalen Vakfı",
+    "sayfa": "https://vitalenvakfi.org/",
+    "adres": "https://vitalenvakfi.org/assets/content/img/logo-wide.png",
+    "etiket": "sayfa-logosu",
+    "puan": 10,
+    "olcu": "170x50"
+  },
+  {
+    "kod": "yagmur-damlasi-dernegi",
+    "ad": "Yağmur Damlası Yardımlaşma ve Dayanışma Derneği",
+    "sayfa": "https://www.yagmurdamlasi.org.tr/",
+    "adres": "https://www.yagmurdamlasi.org.tr/templates/beez5/images/fruits.jpg",
+    "etiket": "sayfa-logosu",
+    "puan": 216,
+    "olcu": "1050x260"
+  },
+  {
+    "kod": "yeni-dunya-vakfi",
+    "ad": "Yeni Dünya Vakfı",
+    "sayfa": "https://yenidunyavakfi.org/",
+    "adres": "https://yenidunyavakfi.org/images/logo3.png",
+    "etiket": "sayfa-logosu",
+    "puan": 216,
+    "olcu": "1071x386"
+  },
+  {
+    "kod": "ytb",
+    "ad": "Yurtdışı Türkler ve Akraba Topluluklar Başkanlığı",
+    "sayfa": "https://www.turkiyeburslari.gov.tr/",
+    "adres": "https://www.turkiyeburslari.gov.tr/YTB/images/Logolar/KTB.png",
+    "etiket": "sayfa-logosu",
+    "puan": 356,
+    "olcu": "260x260"
+  }
+]
