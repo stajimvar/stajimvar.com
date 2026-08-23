@@ -1,0 +1,482 @@
+[
+  {
+    "ad": "TEV Bursları",
+    "kurum": "Türk Eğitim Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://www.tev.org.tr/duyuru/tr/63/TEV-2026-2027-Burs-Basvuru-Tarihleri-Belli-Oldu",
+    "bas": null,
+    "son": null
+  },
+  {
+    "ad": "Faydasıçok Vakfı Bursu",
+    "kurum": "Faydasıçok Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://faydasicokvakfi.org/burslar/burs-basvurulari/",
+    "bas": "2026-08-03",
+    "son": "2026-09-03"
+  },
+  {
+    "ad": "TÜRGEV Eğitim Bursları",
+    "kurum": "TÜRGEV",
+    "tur": "scholarship",
+    "kaynak": "https://www.turgev.org/burslar?kategori=egitim",
+    "bas": "2026-08-05",
+    "son": "2026-09-01"
+  },
+  {
+    "ad": "Süreyya Ağaoğlu Derneği Bursu",
+    "kurum": "Süreyya Ağaoğlu Çocuk Dostları Derneği",
+    "tur": "scholarship",
+    "kaynak": "https://sacdd.org.tr/index.php/duyurular/399-2026-2027-egitim-oegretim-doenemi-burs-basvurulari-basliyor",
+    "bas": "2026-09-01",
+    "son": "2026-09-20"
+  },
+  {
+    "ad": "BTSO Yükseköğrenim Bursu",
+    "kurum": "Bursa Ticaret ve Sanayi Odası",
+    "tur": "scholarship",
+    "kaynak": "https://www.btso.org.tr/guncel/haberler-ve-duyurular/haber-duyuru-detay/60771",
+    "bas": "2026-08-10",
+    "son": "2026-09-15"
+  },
+  {
+    "ad": "CTFMED Bursu",
+    "kurum": "Cerrahpaşa Tıp Fakültesi Mezunlar Derneği",
+    "tur": "scholarship",
+    "kaynak": "https://www.ctfmed.org.tr/burs-basvurusu/",
+    "bas": null,
+    "son": "2026-09-20"
+  },
+  {
+    "ad": "Tekinder Bursu",
+    "kurum": "Teknik Elemanlar Derneği",
+    "tur": "scholarship",
+    "kaynak": "https://www.tekinder.org.tr/duyuru/2026-2027-donemi-burs-basvurulari-basladi%2C27.html",
+    "bas": "2026-08-18",
+    "son": "2026-09-20"
+  },
+  {
+    "ad": "YÜNDER Bursu",
+    "kurum": "Yüksek Öğrenim Kredi ve Yurtlar Derneği",
+    "tur": "scholarship",
+    "kaynak": "https://yurtburs.itu.edu.tr/haberler/2026/08/14/2026-2027-%C3%B6%C4%9Fretim-y%C4%B1l%C4%B1-y%C3%BCnder-burs-duyurusu",
+    "bas": null,
+    "son": "2026-09-01"
+  },
+  {
+    "ad": "MEAV Bursu",
+    "kurum": "Mehmet Emin Akın Eğitim Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://meav.org.tr/haberler/2026-2027-burs-basvuru-tarihleri-belli-oldu-10082026",
+    "bas": "2026-08-31",
+    "son": "2026-09-18"
+  },
+  {
+    "ad": "Yeni Dünya Vakfı Bursu",
+    "kurum": "Yeni Dünya Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://yenidunyavakfi.org/burs-basvurusu/",
+    "bas": "2026-08-31",
+    "son": "2026-09-13"
+  },
+  {
+    "ad": "Mustafa Öncel Vakfı Öğrenci Destek Bursu",
+    "kurum": "Mustafa Öncel Eğitim Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://www.mustafaoncelvakfi.org/faaliyetlerimiz/ogrenci-destek-bursu/basvuru",
+    "bas": "2026-08-31",
+    "son": "2026-09-14"
+  },
+  {
+    "ad": "Meliha Ercan Vakfı Bursu",
+    "kurum": "Meliha Ercan Eğitim Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://turizm.deu.edu.tr/duyurular/meliha-ercan-vakfi-2026-2027-egitim-ogretim-yili-burs-duyurusu/",
+    "bas": "2026-09-01",
+    "son": "2026-09-30"
+  },
+  {
+    "ad": "SSYV Sağlık Bursu",
+    "kurum": "Sağlık ve Sosyal Yardım Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://ssyv.org.tr/2026/06/16/karsiliksiz-burs-basvurulari-01-eylul-15-eylul-2026-tarileri-arasinda-kabul-edilecek/",
+    "bas": "2026-09-01",
+    "son": "2026-09-15"
+  },
+  {
+    "ad": "İzzetpaşa Vakfı Bursu",
+    "kurum": "İzzetpaşa Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://www.izvak.org.tr/haber-vakfimizin-burs-baSvurulari-baSliyor--298.html",
+    "bas": "2026-09-01",
+    "son": "2026-09-30"
+  },
+  {
+    "ad": "OGEMVAK Bursu",
+    "kurum": "Orman Genel Müdürlüğü Eğitim Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://ogemvak.org.tr/burs/",
+    "bas": "2026-09-01",
+    "son": "2026-09-30"
+  },
+  {
+    "ad": "Ahmet ve Nezahat Keleşoğlu Vakfı Bursu",
+    "kurum": "Ahmet ve Nezahat Keleşoğlu Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://ankvakfi.org.tr/burslar.php?sayfa=basvurukosullari",
+    "bas": "2026-09-15",
+    "son": "2026-09-30"
+  },
+  {
+    "ad": "İÜ-Cerrahpaşa Geliştirme Vakfı Bursu",
+    "kurum": "İstanbul Üniversitesi-Cerrahpaşa Geliştirme Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://iucerrahpasavakfi.org.tr/?p=4006",
+    "bas": "2026-09-21",
+    "son": "2026-10-02"
+  },
+  {
+    "ad": "Memur-Sen Lisansüstü Araştırma Bursu",
+    "kurum": "Memur-Sen",
+    "tur": "scholarship",
+    "kaynak": "https://www.memursen.org.tr/2026-lisansustu-arastirmalara-memur-sen-den-burs-destegi-yeni-donem-basvurulari-basliyor_11675",
+    "bas": null,
+    "son": "2026-10-02"
+  },
+  {
+    "ad": "Yeşilay Bilimsel Araştırma Bursu",
+    "kurum": "Türkiye Yeşilay Cemiyeti",
+    "tur": "scholarship",
+    "kaynak": "https://www.yesilay.org.tr/bilimsel-calismalar/burs-basvurusu/",
+    "bas": null,
+    "son": "2026-10-31"
+  },
+  {
+    "ad": "KAHEV Bursu",
+    "kurum": "Kadın Hekimler Eğitime Destek Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://kahev.org.tr/burs/",
+    "bas": "2026-08-15",
+    "son": "2026-09-15"
+  },
+  {
+    "ad": "Sütaş Bursu",
+    "kurum": "Sütaş",
+    "tur": "scholarship",
+    "kaynak": "https://www.sutas.com.tr/burs-basvurusu",
+    "bas": null,
+    "son": null
+  },
+  {
+    "ad": "Vitalen Vakfı Bursu",
+    "kurum": "Vitalen Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://vitalenvakfi.org/blog/Vitalen-Vakfi-2026-2027-Egitim-ogretim-Yili-Burs-Basvurusu-Bilgilendirme",
+    "bas": null,
+    "son": null
+  },
+  {
+    "ad": "Milli Sporcu Bursu",
+    "kurum": "Gençlik ve Spor Bakanlığı",
+    "tur": "scholarship",
+    "kaynak": "https://millisporcubursu.gsb.gov.tr/",
+    "bas": null,
+    "son": null
+  },
+  {
+    "ad": "Yağmur Damlası Bursu",
+    "kurum": "Yağmur Damlası Yardımlaşma ve Dayanışma Derneği",
+    "tur": "scholarship",
+    "kaynak": "https://www.yagmurdamlasi.org.tr/burs-duyuru.html",
+    "bas": "2026-09-26",
+    "son": "2026-10-27"
+  },
+  {
+    "ad": "DASEV Bursu",
+    "kurum": "Dünya Ahilik Sanat ve Eğitim Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://www.dasev.org/burslar/",
+    "bas": "2026-09-01",
+    "son": "2026-09-15"
+  },
+  {
+    "ad": "Baştüzel Eğitim Vakfı Bursu",
+    "kurum": "Baştüzel Eğitim Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://www.bastuzelvakfi.org/bursbasvuru.php",
+    "bas": "2026-09-01",
+    "son": "2026-09-15"
+  },
+  {
+    "ad": "İhsan Arslan Vakfı Bursu",
+    "kurum": "İhsan Arslan Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://ihsanarslanvakfi.org/burs-kosullari-ve-formu/",
+    "bas": null,
+    "son": "2026-09-15"
+  },
+  {
+    "ad": "Geleceğin Madencileri Programı",
+    "kurum": "Geleceğin Madencileri",
+    "tur": "scholarship",
+    "kaynak": "https://www.geleceginmadencileri.com/",
+    "bas": "2026-08-24",
+    "son": "2026-09-11"
+  },
+  {
+    "ad": "Hukuk ve Araştırma Vakfı Bursu",
+    "kurum": "Hukuk ve Araştırma Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://hukukarastirmavakfi.com/",
+    "bas": "2026-09-01",
+    "son": "2026-09-30"
+  },
+  {
+    "ad": "Güney Eğitim Vakfı Bursu",
+    "kurum": "Güney Eğitim Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://guneyegitimvakfi.org.tr/basvuru-rehberi/",
+    "bas": "2026-09-04",
+    "son": "2026-10-04"
+  },
+  {
+    "ad": "Bulgurcu Vakfı Bursu",
+    "kurum": "Bulgurcu Ailesi Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://www.bavak.org/burs-basvurusu/",
+    "bas": null,
+    "son": "2026-09-15"
+  },
+  {
+    "ad": "AKPA Kimya Bursu",
+    "kurum": "AKPA Kimya",
+    "tur": "scholarship",
+    "kaynak": "https://akpakimya.com/akpa-burslari",
+    "bas": "2026-08-15",
+    "son": "2026-09-15"
+  },
+  {
+    "ad": "Bir İyilik Yap Derneği Bursu",
+    "kurum": "Bir İyilik Yap Derneği",
+    "tur": "scholarship",
+    "kaynak": "https://www.biriyilikyap.org.tr/",
+    "bas": null,
+    "son": "2026-09-10"
+  },
+  {
+    "ad": "Eskişehir Ticaret Odası Yükseköğrenim Bursu",
+    "kurum": "Eskişehir Ticaret Odası",
+    "tur": "scholarship",
+    "kaynak": "https://www.etonet.org.tr/haber/eto-nun-karsiliksiz-yuksekogrenim-bursu-basvurulari-basladi",
+    "bas": null,
+    "son": "2026-09-15"
+  },
+  {
+    "ad": "GGYD Nilüferler Yetişiyor Bursu",
+    "kurum": "Genç Girişimciler ve Yöneticiler Derneği",
+    "tur": "scholarship",
+    "kaynak": "https://www.ggyd.org.tr/burs-basvurulari?lang=tr",
+    "bas": null,
+    "son": null
+  },
+  {
+    "ad": "Esenler Eğitim Desteği",
+    "kurum": "Esenler Belediyesi",
+    "tur": "student_support",
+    "kaynak": "https://esenler.bel.tr/haberler/genel/universiteli-genclere-200-bin-tlye-kadar-egitim-destegi/",
+    "bas": null,
+    "son": null
+  },
+  {
+    "ad": "MÜKAD Bursu",
+    "kurum": "Mühendis Kadınlar Derneği",
+    "tur": "scholarship",
+    "kaynak": "https://burs.mukad.org.tr/",
+    "bas": "2026-08-15",
+    "son": "2026-09-10"
+  },
+  {
+    "ad": "Urla Eğitim Vakfı Bursu",
+    "kurum": "Urla Eğitim Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://www.urev.org.tr/urla-da-biriz-2026-27-eylul-2026-5k-ve-10k-sosyal-sorumluluk-kosu-kayitlari-devam-ediyor-burs-basvurulari-01-15-09-2026-tarihleri-arasinda-online-olarak-yapilacaktir/174",
+    "bas": "2026-09-01",
+    "son": "2026-09-15"
+  },
+  {
+    "ad": "Erciyes Organ Nakli Vakfı Bursu",
+    "kurum": "Erciyes Organ Nakli Vakfı",
+    "tur": "scholarship",
+    "kaynak": "https://erciyesorgannaklivakfi.org/burs-basvuru-formu-2026-2027/",
+    "bas": null,
+    "son": "2026-09-25"
+  },
+  {
+    "ad": "TÜBİTAK 2205 Lisans Burs Programı",
+    "kurum": "TÜBİTAK",
+    "tur": "scholarship",
+    "kaynak": "https://tubitak.gov.tr/tr/duyuru/2205-lisans-burs-programi-2026-yili-1-donem-cagrisi-acildi",
+    "bas": "2026-10-05",
+    "son": "2026-10-27"
+  },
+  {
+    "ad": "TÜBİTAK 2250 Lisansüstü Bursları",
+    "kurum": "TÜBİTAK",
+    "tur": "scholarship",
+    "kaynak": "https://ebideb.tubitak.gov.tr/basvuruacikprogramlar.htm",
+    "bas": "2026-08-03",
+    "son": "2026-08-25"
+  },
+  {
+    "ad": "TÜBİTAK 2213-A Yurt Dışı Doktora Bursu",
+    "kurum": "TÜBİTAK",
+    "tur": "international",
+    "kaynak": "https://ebideb.tubitak.gov.tr/basvuruacikprogramlar.htm",
+    "bas": null,
+    "son": "2026-12-31"
+  },
+  {
+    "ad": "TÜBİTAK Prof. Dr. Fuat Sezgin Bursu",
+    "kurum": "TÜBİTAK",
+    "tur": "international",
+    "kaynak": "https://tubitak.gov.tr/tr/burslar/doktora-sonrasi/arastirma-burs-programlari/prof-dr-fuat-sezgin-burslari",
+    "bas": null,
+    "son": null
+  },
+  {
+    "ad": "Erasmus Mundus Ortak Yüksek Lisans Programları",
+    "kurum": "Avrupa Komisyonu",
+    "tur": "international",
+    "kaynak": "https://erasmus-plus.ec.europa.eu/opportunities/individuals/students/erasmus-mundus-joint-masters",
+    "bas": null,
+    "son": null
+  },
+  {
+    "ad": "Chevening Bursu (Türkiye)",
+    "kurum": "Chevening",
+    "tur": "international",
+    "kaynak": "https://www.chevening.org/scholarship/turkey/",
+    "bas": null,
+    "son": "2026-10-06"
+  },
+  {
+    "ad": "Fulbright Yabancı Dil Öğretim Asistanlığı (FLTA)",
+    "kurum": "Türkiye Fulbright Komisyonu",
+    "tur": "international",
+    "kaynak": "https://fulbright.org.tr/burs/9/Yabanc%C4%B1-Dil-%C3%96%C4%9Fretim-Asistanl%C4%B1%C4%9F%C4%B1-Bursu",
+    "bas": null,
+    "son": "2026-09-14"
+  },
+  {
+    "ad": "Fulbright Doktora Tezi Araştırma Bursu",
+    "kurum": "Türkiye Fulbright Komisyonu",
+    "tur": "international",
+    "kaynak": "https://fulbright.org.tr/burs/7/Doktora-Tezi-Ara%C5%9Ft%C4%B1rma-Bursu",
+    "bas": null,
+    "son": "2026-10-05"
+  },
+  {
+    "ad": "DiscoverEU Seyahat Fırsatı",
+    "kurum": "Avrupa Komisyonu",
+    "tur": "youth_program",
+    "kaynak": "https://youth.europa.eu/discovereu_en",
+    "bas": "2026-10-01",
+    "son": "2026-10-15"
+  },
+  {
+    "ad": "Avrupa Komisyonu Blue Book Stajı",
+    "kurum": "Avrupa Komisyonu",
+    "tur": "international",
+    "kaynak": "https://traineeships.ec.europa.eu/about/calendar-sessions_en",
+    "bas": "2026-07-22",
+    "son": "2026-09-04"
+  },
+  {
+    "ad": "Avrupa Parlamentosu Schuman Stajı",
+    "kurum": "Avrupa Parlamentosu",
+    "tur": "international",
+    "kaynak": "https://www.europarl.europa.eu/at-your-service/en/work-with-us/traineeships",
+    "bas": "2026-10-01",
+    "son": "2026-10-31"
+  },
+  {
+    "ad": "CERN Yaz Öğrencisi Programı",
+    "kurum": "CERN",
+    "tur": "international",
+    "kaynak": "https://home.cern/summer-student-programme/",
+    "bas": null,
+    "son": null
+  },
+  {
+    "ad": "Türkiye Bursları",
+    "kurum": "Yurtdışı Türkler ve Akraba Topluluklar Başkanlığı",
+    "tur": "international",
+    "kaynak": "https://www.turkiyeburslari.gov.tr/calendar",
+    "bas": null,
+    "son": null
+  },
+  {
+    "ad": "YTB Yurt Dışı Vatandaşlar Burs Programları",
+    "kurum": "Yurtdışı Türkler ve Akraba Topluluklar Başkanlığı",
+    "tur": "scholarship",
+    "kaynak": "https://ytb.gov.tr/haberler/ytb-yurt-disindaki-vatandaslarin-egitim-yolculugunu-burs-programlariyla-destekliyor",
+    "bas": null,
+    "son": "2026-08-31"
+  },
+  {
+    "ad": "DAÜ Giriş ve Burs Sınavı",
+    "kurum": "Doğu Akdeniz Üniversitesi",
+    "tur": "scholarship",
+    "kaynak": "https://osyb.emu.edu.tr/",
+    "bas": "2026-08-19",
+    "son": "2026-09-01"
+  },
+  {
+    "ad": "Yakın Doğu Üniversitesi Lisansüstü Eğitim Bursu",
+    "kurum": "Yakın Doğu Üniversitesi",
+    "tur": "scholarship",
+    "kaynak": "https://neu.edu.tr/yakin-dogu-universitesi-lisansustu-egitim-bursu-basvurusu-2026-2027-guz-donemi/",
+    "bas": "2026-05-11",
+    "son": "2026-09-18"
+  },
+  {
+    "ad": "Bayburt Üniversitesi Erasmus Öğrenim Hareketliliği",
+    "kurum": "Bayburt Üniversitesi",
+    "tur": "international",
+    "kaynak": "https://uluslararasi.bayburt.edu.tr/tr/medya/duyuru/erasmus-ogrenim-hareketliligi-basvurulari-basliyor-p9010",
+    "bas": "2026-08-31",
+    "son": "2026-09-15"
+  },
+  {
+    "ad": "Ankara Bilim Üniversitesi Erasmus Başvuruları",
+    "kurum": "Ankara Bilim Üniversitesi",
+    "tur": "international",
+    "kaynak": "https://ankarabilim.edu.tr/erasmus-koordinatorlugu/erasmus/2026-2027-erasmus-basvuru-ve-faaliyet-takvimi",
+    "bas": "2026-09-21",
+    "son": "2026-10-16"
+  },
+  {
+    "ad": "DEÜ Hibesiz Erasmus Öğrenim Hareketliliği",
+    "kurum": "Dokuz Eylül Üniversitesi",
+    "tur": "international",
+    "kaynak": "https://international.deu.edu.tr/news/2026-2027-akademik-yili-erasmus-ogrenim-hareketliliginden-hibesiz-olarak-yararlanmak-isteyen-yedek-aday-ogrenciler-icin-duyuru/",
+    "bas": "2026-08-05",
+    "son": "2026-08-31"
+  },
+  {
+    "ad": "İBB Öğrenci Yurtları Başvurusu",
+    "kurum": "İstanbul Büyükşehir Belediyesi",
+    "tur": "student_support",
+    "kaynak": "https://yurt.ibb.istanbul/",
+    "bas": "2026-08-18",
+    "son": "2026-08-25"
+  },
+  {
+    "ad": "İBB Teknoloji Atölyeleri",
+    "kurum": "İstanbul Büyükşehir Belediyesi",
+    "tur": "education",
+    "kaynak": "https://genclikspor.ibb.istanbul/ibb-teknoloji-atolyelerinin-ogrnci-secme-sinavi-basvurulari-basladi/",
+    "bas": null,
+    "son": null
+  }
+]
