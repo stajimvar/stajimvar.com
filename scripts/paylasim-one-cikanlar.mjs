@@ -27,6 +27,35 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { KOYU_MAVI, MAVI, PAYLASIM } from './paylasim-sablonu.mjs';
 
+/*
+  ÇERÇEVE KARTIN RENGİNE GÖRE SEÇİLİYOR
+
+  Hikâye çerçevesi sabit maviydi. Beyaz kartlarda iyi çalışıyordu — kontrast
+  var, kart çerçevenin üstünde duruyor. Ama karuselin son kartı tam mavi:
+  mavi zemine oturunca kenarı kayboluyor ve geriye ortada asılı bir yazı
+  bloğuyla iki boş bant kalıyor.
+
+  Çözüm kartın köşe rengini ölçmek: koyu kartlar açık çerçeveye, açık
+  kartlar mavi çerçeveye oturuyor. Kartın altına yumuşak bir gölge de
+  konuyor; kenar her iki durumda da belli oluyor.
+*/
+const ACIK_CERCEVE = '#EEF2F8';
+
+async function cerceveRengi(dosya) {
+  const { data } = await sharp(dosya).extract({ left: 0, top: 0, width: 64, height: 64 }).raw().toBuffer({ resolveWithObject: true });
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  for (let i = 0; i < data.length; i += 3) {
+    r += data[i];
+    g += data[i + 1];
+    b += data[i + 2];
+  }
+  const adet = data.length / 3;
+  const parlaklik = (0.2126 * (r / adet) + 0.7152 * (g / adet) + 0.0722 * (b / adet)) / 255;
+  return parlaklik < 0.6 ? ACIK_CERCEVE : MAVI;
+}
+
 const HIKAYE_EN = 1080;
 const HIKAYE_BOY = 1920;
 
@@ -105,6 +134,10 @@ async function hikayeleriYap(kod) {
     */
     const en = Math.round(HIKAYE_EN * 0.92);
     const boy = Math.round((en * 4) / 3);
+    const sol = Math.round((HIKAYE_EN - en) / 2);
+    const ust = Math.round((HIKAYE_BOY - boy) / 2);
+
+    const zemin = await cerceveRengi(path.join(kaynak, ad));
     const kart = await sharp(path.join(kaynak, ad)).resize(en, boy).toBuffer();
     const yuvarlak = await sharp(kart)
       .composite([
@@ -116,10 +149,21 @@ async function hikayeleriYap(kod) {
       .png()
       .toBuffer();
 
+    // Gölge: kartın kenarını çerçeveden ayırıyor, ikisi aynı aileden renk olsa bile.
+    const golge = Buffer.from(
+      `<svg width="${HIKAYE_EN}" height="${HIKAYE_BOY}">` +
+        `<defs><filter id="g" x="-20%" y="-20%" width="140%" height="140%">` +
+        `<feGaussianBlur stdDeviation="26"/></filter></defs>` +
+        `<rect x="${sol}" y="${ust + 14}" width="${en}" height="${boy}" rx="36" fill="#0B1220" opacity="0.28" filter="url(#g)"/></svg>`,
+    );
+
     const veri = await sharp({
-      create: { width: HIKAYE_EN, height: HIKAYE_BOY, channels: 3, background: MAVI },
+      create: { width: HIKAYE_EN, height: HIKAYE_BOY, channels: 3, background: zemin },
     })
-      .composite([{ input: yuvarlak, left: Math.round((HIKAYE_EN - en) / 2), top: Math.round((HIKAYE_BOY - boy) / 2) }])
+      .composite([
+        { input: await sharp(golge).png().toBuffer(), left: 0, top: 0 },
+        { input: yuvarlak, left: sol, top: ust },
+      ])
       .jpeg({ quality: 95, mozjpeg: true, chromaSubsampling: '4:4:4' })
       .toBuffer();
 
