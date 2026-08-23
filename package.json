@@ -16,8 +16,7 @@
     "instagram-kartlari": "node scripts/instagram-kartlari.mjs",
     "paylasim-burs-takvimi": "node scripts/paylasim-burs-takvimi.mjs",
     "paylasim-one-cikanlar": "node scripts/paylasim-one-cikanlar.mjs",
-    "paylasim-sss": "node scripts/paylasim-sss.mjs",
-    "paylasim-kurumlar": "node scripts/paylasim-kurumlar.mjs"
+    "paylasim-sss": "node scripts/paylasim-sss.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",

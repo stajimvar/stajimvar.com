@@ -31,7 +31,7 @@ import {
   ayrac,
   baslik,
   cagriKutusu,
-  maviCagriKarti,
+  kapanisKarti,
   sarmal,
   satir,
   setiYaz,
@@ -90,36 +90,18 @@ const digerIkisi = () => sarmal(`
 `);
 
 const kapanis = () =>
-  maviCagriKarti({
+  kapanisKarti({
     seri: SERI,
     sayfa: '04/04',
     satirlar: ['Sorunun', 'cevabı yoksa', 'yaz bize.'],
     altSatirlar: ['Mesaj kutusu açık; eksik kalan soruyu', 'bu listeye ekliyoruz.'],
+    kutu: ['Cevaplar sitenin gerçek davranışı.', 'Site değişirse kartlar da değişiyor.'],
   });
-
-/* Hikâyede mavi kart kullanılmıyor; dizi açık zeminli bir kapanışla bitiyor. */
-const hikayeKapanisi = () => sarmal(`
-  ${ustBant(SERI, '04/04')}
-
-  ${baslik(330, ['Sorunun', 'cevabı yoksa', 'yaz bize.'], { boyut: 88, vurguSatiri: 2 })}
-
-  ${ayrac(700)}
-
-  ${satir(KENAR, 782, 'Mesaj kutusu açık; eksik kalan soruyu', { boyut: 34, renk: GRI })}
-  ${satir(KENAR, 828, 'bu listeye ekliyoruz.', { boyut: 34, renk: GRI })}
-
-  ${altKutu(920, [
-    'Cevaplar sitenin gerçek davranışı.',
-    'Site değişirse kartlar da değişiyor.',
-  ])}
-
-  ${cagriKutusu(1178, 'Tüm liste ve', 'başvuru bağlantıları:')}
-`);
 
 await setiYaz({
   kod: 'sik-sorulanlar',
   ad: 'Sık sorulanlar',
-  surum: 'v1',
+  surum: 'v2',
   metin: [
     'En çok sorulan sorular ve kısa cevapları:',
     '',
@@ -133,5 +115,4 @@ await setiYaz({
     'Tüm ilanlar ve burslar profildeki bağlantıda.',
   ].join('\n'),
   kartlar: [kapak(), ilkIkisi(), digerIkisi(), kapanis()],
-  hikayeEk: [hikayeKapanisi()],
 });

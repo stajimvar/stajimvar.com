@@ -164,37 +164,30 @@ export const cagriKutusu = (y, ustSatir, altSatir) => `
 `;
 
 /**
- * Tam mavi kapanış kartı.
+ * Kapanış kartı — diğer kartlarla aynı beyaz zemin.
  *
- * Karuselin son karesi beyaz kartlardan ayrılıyor: baştan sona mavi zemin,
- * beyaz dev başlık, son satırı açık mavi. Sebebi ızgara: art arda beyaz
- * kartlar profil sayfasında tek bir gri lekeye dönüşüyor, aradaki mavi
- * kareler seriyi görünür kılıyor. Yumuşak koyu daireler zemine derinlik
- * veriyor — kartın söylediğiyle yarışmayacak kadar soluk.
+ * Önce tam mavi bir kart vardı. İki sorunu çıktı: karuselin sonunda düzeni
+ * bölüyordu ve mavi kart hikâye setine giremediği için (mavi kart mavi
+ * zeminde kayboluyor) her set için ayrı bir kapanış çizmek gerekiyordu.
+ * Tek beyaz kapanış ikisini de çözüyor: gönderi bütün duruyor, aynı kart
+ * hikâyeye de giriyor.
+ *
+ * Çağrı yine mavi — ama kartın tamamı değil, altındaki kutu.
  */
-export const maviCagriKarti = ({ seri, sayfa, satirlar, vurguSatiri = satirlar.length - 1, altSatirlar = [] }) =>
-  sarmal(
-    `
-  <circle cx="1010" cy="120" r="360" fill="${KOYU_MAVI}" opacity="0.55"/>
-  <circle cx="60" cy="1400" r="420" fill="${KOYU_MAVI}" opacity="0.55"/>
+export const kapanisKarti = ({ seri, sayfa, satirlar, vurguSatiri = satirlar.length - 1, altSatirlar = [], kutu = [] }) =>
+  sarmal(`
+  ${ustBant(seri, sayfa)}
 
-  ${ustBant(seri, sayfa, { koyu: true })}
+  ${baslik(330, satirlar, { boyut: satirlar.some((x) => x.length > 16) ? 84 : 92, vurguSatiri })}
 
-  ${baslik(400, satirlar, { boyut: 92, renk: '#FFFFFF', vurguSatiri, vurguRengi: VURGU_MAVI })}
+  ${ayrac(700)}
 
-  ${altSatirlar
-    .map((s, i) => satir(KENAR, 400 + satirlar.length * 108 + 60 + i * 48, s, { boyut: 34, renk: KENAR_MAVI }))
-    .join('')}
+  ${altSatirlar.map((x, i) => satir(KENAR, 782 + i * 46, x, { boyut: 34, renk: GRI })).join('')}
 
-  <rect x="${KENAR}" y="1216" width="470" height="116" rx="58" fill="#FFFFFF"/>
-  ${satir(KENAR + 52, 1290, 'stajimvar.com', { boyut: 36, renk: MAVI, kalin: 800 })}
-  <path d="M432 1274 h38 M460 1259 l17 15 -17 15" stroke="${MAVI}" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  ${kutu.length ? altKutu(920, kutu) : ''}
 
-  <path d="M600 1288 h44 M596 1272 a20 20 0 0 0 0 32 h12 M648 1272 a20 20 0 0 1 0 32 h-12" stroke="${VURGU_MAVI}" stroke-width="5" fill="none" stroke-linecap="round"/>
-  ${satir(676, 1298, 'Bağlantı profilde', { boyut: 30, renk: VURGU_MAVI, kalin: 600 })}
-`,
-    MAVI,
-  );
+  ${cagriKutusu(1178, 'Tüm liste ve', 'başvuru bağlantıları:')}
+`);
 
 /*
   HİKÂYE SÜRÜMÜ — ÇERÇEVELİ TEMA

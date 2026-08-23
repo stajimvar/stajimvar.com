@@ -34,7 +34,7 @@ import {
   altKutu,
   ayrac,
   baslik,
-  maviCagriKarti,
+  kapanisKarti,
   sarmal,
   satir,
   setiYaz,
@@ -155,14 +155,12 @@ const listeKarti = (kayitlar, sira) => sarmal(`
 `);
 
 const cagri = () =>
-  maviCagriKarti({
+  kapanisKarti({
     seri: SERI,
     sayfa: sayfaNo(toplamKart),
     satirlar: ['Kaçırmamak', 'için takip et.'],
-    altSatirlar: [
-      'Son başvurusu yaklaşan burslar her hafta',
-      'burada paylaşılıyor — hepsi resmî kaynağıyla.',
-    ],
+    altSatirlar: ['Son başvurusu yaklaşan burslar her hafta', 'burada paylaşılıyor.'],
+    kutu: ['Kaynağı doğrulanmayan kayıt listeye girmiyor.', 'Tarihi doğrulanmayan kayda tarih yazılmıyor.'],
   });
 
 const kartlar = [kapak(), ...sayfalar.map((s, i) => listeKarti(s, i + 2)), cagri()];

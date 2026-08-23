@@ -2,14 +2,14 @@
   {
     "kod": "nasil-calisir",
     "ad": "Nasıl çalışır",
-    "surum": "v5",
+    "surum": "v6",
     "guncellendi": "2026-08-23",
     "metin": "İlanları aracı sitelerden değil, şirketlerin kendi kariyer sayfalarından derliyoruz.\n\nHer ilanda şirketin kendi başvuru bağlantısı var; arada kimse yok. Burslarda da aynı kural geçerli: kaynağı doğrulanmayan kayıt listeye girmiyor, tarihi doğrulanmayan kayda tarih yazılmıyor — \"Takvim bekleniyor\" yazıyor.\n\nStaj ilanları, burslar, KYK ve yurt dışı programları tek listede. Bağlantı profilde.",
     "kartlar": [
-      "/paylasim/nasil-calisir/01-v5.jpg",
-      "/paylasim/nasil-calisir/02-v5.jpg",
-      "/paylasim/nasil-calisir/03-v5.jpg",
-      "/paylasim/nasil-calisir/04-v5.jpg"
+      "/paylasim/nasil-calisir/01-v6.jpg",
+      "/paylasim/nasil-calisir/02-v6.jpg",
+      "/paylasim/nasil-calisir/03-v6.jpg",
+      "/paylasim/nasil-calisir/04-v6.jpg"
     ],
     "hikayeler": [
       "/paylasim/hikaye/nasil-calisir/01.jpg",
@@ -33,49 +33,27 @@
     "hikayeler": [
       "/paylasim/hikaye/son-basvurular/01.jpg",
       "/paylasim/hikaye/son-basvurular/02.jpg",
-      "/paylasim/hikaye/son-basvurular/03.jpg"
+      "/paylasim/hikaye/son-basvurular/03.jpg",
+      "/paylasim/hikaye/son-basvurular/04.jpg"
     ]
   },
   {
     "kod": "sik-sorulanlar",
     "ad": "Sık sorulanlar",
-    "surum": "v1",
+    "surum": "v2",
     "guncellendi": "2026-08-23",
     "metin": "En çok sorulan sorular ve kısa cevapları:\n\n• Başvuru şu an kurumun kendi sayfasında yapılıyor; bağlantı doğrudan oraya gidiyor.\n• Öğrenci tarafında hiçbir ücret yok, üye olmadan da bakabilirsin.\n• Bir bursta tarih yazmıyorsa tarihi uydurmuyoruz: kartta \"Takvim bekleniyor\" yazıyor.\n• Son başvuru tarihi geçen kayıt listeden düşüyor.\n\nCevabı burada olmayan bir sorun varsa yaz; listeye ekliyoruz.\n\nTüm ilanlar ve burslar profildeki bağlantıda.",
     "kartlar": [
-      "/paylasim/sik-sorulanlar/01-v1.jpg",
-      "/paylasim/sik-sorulanlar/02-v1.jpg",
-      "/paylasim/sik-sorulanlar/03-v1.jpg",
-      "/paylasim/sik-sorulanlar/04-v1.jpg"
+      "/paylasim/sik-sorulanlar/01-v2.jpg",
+      "/paylasim/sik-sorulanlar/02-v2.jpg",
+      "/paylasim/sik-sorulanlar/03-v2.jpg",
+      "/paylasim/sik-sorulanlar/04-v2.jpg"
     ],
     "hikayeler": [
       "/paylasim/hikaye/sik-sorulanlar/01.jpg",
       "/paylasim/hikaye/sik-sorulanlar/02.jpg",
       "/paylasim/hikaye/sik-sorulanlar/03.jpg",
       "/paylasim/hikaye/sik-sorulanlar/04.jpg"
-    ]
-  },
-  {
-    "kod": "listedeki-kurumlar",
-    "ad": "Listedeki kurumlar",
-    "surum": "20260823",
-    "guncellendi": "2026-08-23",
-    "metin": "Listedeki burs ve programlar bu kurumlardan:\n\nAhmet ve Nezahat Keleşoğlu Vakfı · AKPA Kimya · Anadolu Vakfı · Ankara Bilim Üniversitesi · Avrupa Komisyonu · Avrupa Parlamentosu · Bayburt Üniversitesi · Bulgurcu Ailesi Vakfı · Bursa Ticaret ve Sanayi Odası · CERN · Cerrahpaşa Tıp Fakültesi Mezunlar Derneği · Chevening · Doğu Akdeniz Üniversitesi · Dokuz Eylül Üniversitesi · Erciyes Organ Nakli Vakfı · Esenler Belediyesi · Eskişehir Ticaret Odası · Faydasıçok Vakfı · Genç Girişimciler ve Yöneticiler Derneği · Gençlik ve Spor Bakanlığı · Güney Eğitim Vakfı · İhsan Arslan Vakfı · İstanbul Büyükşehir Belediyesi · İstanbul Üniversitesi-Cerrahpaşa Geliştirme Vakfı · İzzetpaşa Vakfı · Kadın Hekimler Eğitime Destek Vakfı · Mehmet Emin Akın Eğitim Vakfı · Mustafa Öncel Eğitim Vakfı · Mühendis Kadınlar Derneği · Orman Genel Müdürlüğü Eğitim Vakfı · Sağlık ve Sosyal Yardım Vakfı · Sütaş · Teknik Elemanlar Derneği · TEKNOFEST · TÜBİTAK · TÜRGEV · Türk Altın İşletmeleri · Türk Eğitim Derneği · Türk Eğitim Vakfı · Türkiye Fulbright Komisyonu · Türkiye Ulusal Ajansı · Türkiye Yeşilay Cemiyeti · Urla Eğitim Vakfı · Vehbi Koç Vakfı · Vitalen Vakfı · Yağmur Damlası Yardımlaşma ve Dayanışma Derneği · Yeni Dünya Vakfı · Yurtdışı Türkler ve Akraba Topluluklar Başkanlığı\n\nLogolar kurumların kendi sitelerinden alındı; her kaydın yanında resmî kaynağı yazılı. Kaynağı doğrulanmayan kayıt listeye girmiyor.\n\nHepsinin başvuru bağlantısı profildeki listede.",
-    "kartlar": [
-      "/paylasim/listedeki-kurumlar/01-20260823.jpg",
-      "/paylasim/listedeki-kurumlar/02-20260823.jpg",
-      "/paylasim/listedeki-kurumlar/03-20260823.jpg",
-      "/paylasim/listedeki-kurumlar/04-20260823.jpg",
-      "/paylasim/listedeki-kurumlar/05-20260823.jpg",
-      "/paylasim/listedeki-kurumlar/06-20260823.jpg"
-    ],
-    "hikayeler": [
-      "/paylasim/hikaye/listedeki-kurumlar/01.jpg",
-      "/paylasim/hikaye/listedeki-kurumlar/02.jpg",
-      "/paylasim/hikaye/listedeki-kurumlar/03.jpg",
-      "/paylasim/hikaye/listedeki-kurumlar/04.jpg",
-      "/paylasim/hikaye/listedeki-kurumlar/05.jpg",
-      "/paylasim/hikaye/listedeki-kurumlar/06.jpg"
     ]
   }
 ]
