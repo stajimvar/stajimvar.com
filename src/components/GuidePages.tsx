@@ -17,6 +17,7 @@ import { YolculukHaritasi, RenkliKart } from './RehberGorseller';
 import { REHBERLER, rehberBul, type Rehber } from '../data/rehberler';
 import { BOLUMLER } from '../data/bolumler';
 import { ARACLAR } from './AraclarListesi';
+import { SAYFA_GENISLIGI } from '../lib/duzen';
 
 /**
  * Rehber merkezi ve tek rehber sayfası.
@@ -252,7 +253,7 @@ export const GuideHub: React.FC<GuideHubProps> = ({ onBack, onNavigate }) => {
   const isveren = REHBERLER.filter((r) => r.kategori === 'isveren');
 
   return (
-    <SayfaKabugu onBack={onBack} icerikGenisligi="max-w-6xl">
+    <SayfaKabugu onBack={onBack} icerikGenisligi={SAYFA_GENISLIGI}>
       <div className="space-y-8 sm:space-y-10">
         {/* ======================================================= giriş */}
         {/*

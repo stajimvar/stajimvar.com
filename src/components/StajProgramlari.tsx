@@ -3,6 +3,7 @@ import { ExternalLink } from 'lucide-react';
 import { SayfaKabugu } from './SayfaKabugu';
 import { STAJ_PROGRAMLARI, type StajProgrami } from '../data/stajProgramlari';
 import { bolumBul } from '../data/bolumler';
+import { SAYFA_GENISLIGI } from '../lib/duzen';
 
 /**
  * /staj-programlari — büyük işverenlerin resmi staj sayfaları dizini.
@@ -123,7 +124,7 @@ export const StajProgramlariSayfasi: React.FC<{
   }, []);
 
   return (
-    <SayfaKabugu onBack={onBack} icerikGenisligi="max-w-6xl">
+    <SayfaKabugu onBack={onBack} icerikGenisligi={SAYFA_GENISLIGI}>
       <div className="space-y-8">
         <div className="max-w-2xl space-y-3">
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900">

@@ -3,6 +3,7 @@ import { Bookmark, CheckCircle2, ChevronRight, ExternalLink, Filter, Search, Spa
 import type { StudentProfile } from '../types';
 import { GoogleAdBanner } from './GoogleAdBanner';
 import { ListingLogo } from './ListingLogo';
+import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { fetchOpportunities, fetchSavedOpportunityIds, toggleSavedOpportunity, type Opportunity, type OpportunityType } from '../lib/opportunities';
 import { getOpportunityOverview, isExpiredOpportunity, matchOpportunity, opportunityCta, opportunityStatus, opportunityTypeLabel, readOpportunityFilters, serializeOpportunityFilters, OPPORTUNITY_STATUS_LABELS } from '../lib/opportunity-domain.mjs';
 
@@ -64,7 +65,14 @@ export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; 
     ['/kaydedilen-firsatlar', 'Takip ettiklerim'],
   ];
 
-  return <main className="w-full max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-7 pb-24 lg:pb-10">
+  /*
+    GENİŞLİK ANA SAYFAYLA AYNI
+
+    Burası 1536, ana sayfa 1440'tı. Geniş ekranda iki sayfa arasında
+    geçerken içerik kenarları oynuyordu: fırsatlar sayfası ana sayfadan
+    taşıyor gibi duruyordu. Ölçü tek yerden geliyor (lib/duzen.ts).
+  */
+  return <main className={`w-full ${SAYFA_GENISLIGI} mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-24 lg:pb-10`}>
     {/*
       MAVİ BANT — YARI YÜKSEKLİKTE
 
@@ -81,16 +89,21 @@ export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; 
       yanlıştı.
     */}
     {/*
-      Ölçü, ana sayfadaki "Güncel Öğrenci Fırsatları" kartıyla aynı: aynı
-      köşe yarıçapı, aynı iç boşluk (p-3 / sm:p-4) ve aynı başlık ölçeği.
-      Burası daha büyük yazı ve daha geniş boşlukla duruyordu; iki sayfa
-      arasında geçen kullanıcı aynı bölümü iki farklı ağırlıkta görüyordu.
+      KART, ANA SAYFADAKİNİN AYNISI
+
+      Burası mavi degradeli kalın bir banttı; ana sayfadaki "Güncel Öğrenci
+      Fırsatları" kartı ise beyaz ve ince. Aynı içerik iki sayfada iki farklı
+      ağırlıkta görünüyordu. Artık ikisi de aynı: beyaz zemin, ince mavi
+      kenarlık, aynı köşe yarıçapı ve aynı iç boşluk (p-3 / sm:p-4).
+
+      Başlık solda, açıklaması hemen altında ve satırın boşluğunu dolduruyor;
+      sayaçlar sağ kenarda mavi rozetler olarak duruyor.
     */}
-    <section className="mb-4 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-3 sm:p-4">
+    <section className="mb-4 rounded-2xl border border-blue-100 bg-white p-3 sm:p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-        <div className="min-w-0">
-          <h1 className="text-base font-extrabold tracking-tight leading-tight">{heading}</h1>
-          <p className="text-[11px] sm:text-xs text-blue-100 leading-snug">{savedOnly ? 'Sonradan incelemek için takibe aldığın fırsatlar.' : calendar ? 'Yaklaşan son başvuru tarihlerini tek yerde izle.' : matching ? 'Profilindeki doğrulanabilir bilgilerle hesaplanan sonuçlar.' : 'Burs, kredi, eğitim, yurtdışı ve yarışma — hepsi resmî kaynağıyla doğrulanmış.'}</p>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-base font-extrabold tracking-tight leading-tight text-gray-950">{heading}</h1>
+          <p className="text-[11px] sm:text-xs text-gray-600 leading-snug">{savedOnly ? 'Sonradan incelemek için takibe aldığın fırsatlar.' : calendar ? 'Yaklaşan son başvuru tarihlerini tek yerde izle.' : matching ? 'Profilindeki doğrulanabilir bilgilerle hesaplanan sonuçlar.' : 'Burs, kredi, eğitim, yurtdışı ve yarışma — hepsi resmî kaynağıyla doğrulanmış.'}</p>
         </div>
 
         {/*
@@ -104,9 +117,9 @@ export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; 
               [overview.scholarshipAndCreditCount, 'Burs ve kredi'],
               [overview.nearest && overview.daysLeft != null ? `${overview.daysLeft} gün` : items.length, overview.nearest && overview.daysLeft != null ? 'En yakın son başvuru' : 'Takip ettiğimiz fırsat'],
             ].map(([deger, etiket]) => (
-              <div key={String(etiket)} className="rounded-xl bg-white/10 px-2.5 py-1 leading-tight">
-                <b className="block text-sm sm:text-base font-extrabold">{deger}</b>
-                <span className="block text-[10px] text-blue-100 whitespace-nowrap">{etiket}</span>
+              <div key={String(etiket)} className="rounded-xl bg-blue-50 border border-blue-100 px-2.5 py-1 leading-tight">
+                <b className="block text-sm sm:text-base font-extrabold text-blue-700">{deger}</b>
+                <span className="block text-[10px] text-gray-600 whitespace-nowrap">{etiket}</span>
               </div>
             ))}
           </div>

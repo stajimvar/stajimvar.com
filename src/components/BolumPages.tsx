@@ -10,6 +10,7 @@ import {
   bolumBul,
   type Bolum,
 } from '../data/bolumler';
+import { SAYFA_GENISLIGI } from '../lib/duzen';
 
 /**
  * Bölüm listesi (/bolumler) ve tek bölüm sayfası (/bolum/<slug>).
@@ -138,7 +139,7 @@ export const BolumHub: React.FC<HubProps> = ({ onBack, onNavigate }) => {
       kişi kendi bölümünü bulmak için kaydırmak zorunda kalıyordu. Izgarada
       hepsi neredeyse tek ekranda görünüyor.
     */
-    <SayfaKabugu onBack={onBack} icerikGenisligi="max-w-6xl">
+    <SayfaKabugu onBack={onBack} icerikGenisligi={SAYFA_GENISLIGI}>
       <div className="space-y-8">
         <div className="max-w-2xl space-y-3">
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900">

@@ -56,7 +56,12 @@ export const SayfaKabugu: React.FC<SayfaKabuguProps> = ({
     en alttaki düğmesi çubuğun arkasında kalıyor, sayfa da daha aşağı
     kaymadığı için düğmeye basılamıyordu.
   */
-  <main className={`${icerikGenisligi} mx-auto w-full px-4 py-6 sm:py-8 pb-24 lg:pb-10`}>
+  /*
+    Kenar boşlukları ana sayfayla aynı ölçekte (px-4 → xl:px-10). Önce sabit
+    px-4'tü: geniş ekranda alt sayfaların içeriği, ana sayfanınkinden farklı
+    bir hizada başlıyordu.
+  */
+  <main className={`${icerikGenisligi} mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 pb-24 lg:pb-10`}>
     {(onBack || sag) && (
       <div className="flex items-center justify-between gap-3 mb-4">
         <button
