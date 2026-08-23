@@ -52,6 +52,20 @@ const yanit = (govde: unknown, durum = 200) =>
     headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
   });
 
+/*
+  HATA YANITI 5xx DEĞİL, 200 + { hata }
+
+  Cloudflare, 5xx dönen bir yanıtın GÖVDESİNİ kendi hata sayfasıyla
+  değiştiriyor: ekranda "<!DOCTYPE html> ... no-js ie6 oldie" görünen
+  buydu ve Meta'nın asıl hata mesajı onunla birlikte kayboluyordu.
+  Ölçüldü — 4xx yanıtlar olduğu gibi geçiyor, 5xx geçmiyor.
+
+  Bu yüzden sunucu hataları 200 ile dönüyor ve gövdedeki `hata` alanı
+  taşınıyor. Arayüz durum koduna değil, o alana bakıyor.
+*/
+const hataYaniti = (mesaj: string, ek: Record<string, unknown> = {}) =>
+  yanit({ hata: mesaj, ...ek }, 200);
+
 async function yoneticiMi(env: Ortam, jeton: string): Promise<boolean> {
   const adres = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
   const anahtar = env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY;
@@ -92,13 +106,9 @@ export const onRequestPost: PagesFunction<Ortam> = async (baglam) => {
   try {
     return await paylasimiIsle(baglam);
   } catch (hata) {
-    return yanit(
-      {
-        hata: 'Sunucu tarafında beklenmeyen hata.',
-        ayrinti: String((hata as Error)?.message ?? hata).slice(0, 300),
-      },
-      500
-    );
+    return hataYaniti('Sunucu tarafında beklenmeyen hata.', {
+      ayrinti: String((hata as Error)?.message ?? hata).slice(0, 300),
+    });
   }
 };
 
@@ -109,7 +119,7 @@ const paylasimiIsle: PagesFunction<Ortam> = async ({ request, env }) => {
   if (!(await yoneticiMi(env, jeton))) return yanit({ hata: 'Bu uç yalnızca yöneticilere açık.' }, 403);
 
   const eksikler = eksikAyarlar(env as unknown as Record<string, unknown>);
-  if (eksikler.length) return yanit({ hata: 'Ortam değişkenleri eksik.', eksikAyarlar: eksikler }, 503);
+  if (eksikler.length) return hataYaniti('Ortam değişkenleri eksik.', { eksikAyarlar: eksikler });
 
   let istek: {
     adim?: 'hazirla' | 'yayinla';
@@ -137,7 +147,7 @@ const paylasimiIsle: PagesFunction<Ortam> = async ({ request, env }) => {
 
     /* Bu adımdan sonra geri dönüş yok: gönderi API'den silinemiyor. */
     const yayin = await metaya(yayinlaAdresi(env as unknown as Record<string, string>, kapsayici));
-    if (yayin.hata) return yanit({ hata: `Yayınlanamadı: ${yayin.hata}` }, 502);
+    if (yayin.hata) return hataYaniti(`Yayınlanamadı: ${yayin.hata}`);
 
     return yanit({
       yayinlandi: true,
@@ -176,7 +186,7 @@ const paylasimiIsle: PagesFunction<Ortam> = async ({ request, env }) => {
 
   const basarisiz = sonuclar.find((sonuc) => sonuc.hata);
   if (basarisiz) {
-    return yanit({ hata: `Görsel kapsayıcısı oluşturulamadı: ${basarisiz.hata}` }, 502);
+    return hataYaniti(`Görsel kapsayıcısı oluşturulamadı: ${basarisiz.hata}`);
   }
 
   const cocuklar = sonuclar.map((sonuc) => sonuc.kimlik!);
@@ -186,7 +196,7 @@ const paylasimiIsle: PagesFunction<Ortam> = async ({ request, env }) => {
     const sonuc = await metaya(
       karuselKapsayiciAdresi(env as unknown as Record<string, string>, cocuklar, aciklama)
     );
-    if (sonuc.hata) return yanit({ hata: `Karusel kapsayıcısı oluşturulamadı: ${sonuc.hata}` }, 502);
+    if (sonuc.hata) return hataYaniti(`Karusel kapsayıcısı oluşturulamadı: ${sonuc.hata}`);
     kapsayici = sonuc.kimlik!;
   }
 

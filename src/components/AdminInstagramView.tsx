@@ -147,7 +147,12 @@ export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }
           cozulen = null;
         }
 
-        if (!cevap.ok || !cozulen) {
+        /*
+          Sunucu hataları 200 + { hata } olarak dönüyor (Cloudflare 5xx
+          gövdesini kendi hata sayfasıyla değiştirdiği için). Bu yüzden
+          durum koduna değil, gövdedeki `hata` alanına bakılıyor.
+        */
+        if (!cevap.ok || !cozulen || cozulen.hata) {
           const ayrinti = cozulen?.sorunlar?.length ? ` — ${cozulen.sorunlar.join(' ')}` : '';
           throw new Error(
             cozulen?.hata
