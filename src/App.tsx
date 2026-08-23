@@ -728,6 +728,7 @@ export default function App() {
       applicationsCount={applications.length}
       onOpenGuides={() => navigate('/rehber')}
       onOpenOpportunities={() => navigate('/firsatlar')}
+      onOpenEmployer={() => navigate('/isveren/ilan-ver')}
       bulunulanYol={temizYol}
       searchQuery={aramaTerimi}
       onSearchChange={(q) => {
@@ -1237,7 +1238,7 @@ export default function App() {
                 { yol: '/universite-kariyer-merkezleri', etiket: 'Kariyer merkezleri' },
                 { yol: '/araclar', etiket: 'Hesaplama araçları' },
                 { yol: '/isveren', etiket: 'İşveren rehberi' },
-                { yol: '/isveren/ilan-ver', etiket: 'Stajyer ilanı ver' },
+                { yol: '/isveren/ilan-ver', etiket: 'Şirketini sahiplen' },
                 { yol: '/hakkimizda', etiket: 'Hakkımızda' },
                 { yol: '/iletisim', etiket: 'İletişim' },
                 { yol: '/ilan-kurallari', etiket: 'İlan kuralları' },

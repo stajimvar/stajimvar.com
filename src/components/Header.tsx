@@ -53,6 +53,8 @@ interface HeaderProps {
   onOpenGuides?: () => void;
   /** Öğrenci fırsatları merkezi. */
   onOpenOpportunities?: () => void;
+  /** İşveren kapısı: şirket sayfasını sahiplenme akışı. */
+  onOpenEmployer?: () => void;
   /**
    * Bulunulan adres.
    *
@@ -104,6 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   onOpenGuides,
   onOpenOpportunities,
+  onOpenEmployer,
   bulunulanYol = '/',
   searchQuery,
   onSearchChange,
@@ -286,12 +289,19 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
 
                 {/*
-                  Öğrenciye özel sekmeler yalnızca giriş yapılmışken çizilir.
-                  Aksi halde ziyaretçi "Başvurularım" sekmesinde kendisine ait
-                  sanacağı örnek verileri görüyordu.
+                  BURS VE REHBER SEKMELERİ HERKESE AÇIK
+
+                  Bu iki sekme `isLoggedIn` koşulunun içindeydi. Koşul, artık
+                  var olmayan "Başvurularım" ve "Yetenek Doğrulama" sekmeleri
+                  için konmuştu (ziyaretçi kendisine ait sanacağı örnek veri
+                  görüyordu); onlar kaldırılınca koşul geride kaldı.
+
+                  Sonuç: gizli sekmede açan bir ziyaretçi yalnızca "İş & Staj
+                  İlanları"nı görüyordu — burs listesi ve rehber, sitenin
+                  arama motorundan gelen ziyaretçiye açılan iki kapısı olduğu
+                  hâlde menüde yoktu. İkisi de giriş istemeyen genel içerik.
                 */}
-                {isLoggedIn && (
-                  <>
+                <>
                 {/*
                   "Yetenek Doğrulama" sekmesi kaldırıldı.
 
@@ -372,8 +382,7 @@ export const Header: React.FC<HeaderProps> = ({
                   de kaldırmak olurdu.
                 */}
 
-                  </>
-                )}
+                </>
 
               </nav>
             )}
@@ -530,6 +539,21 @@ export const Header: React.FC<HeaderProps> = ({
             {!isLoggedIn ? (
               onOpenLogin || onOpenRegister ? (
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                {/*
+                  İŞVEREN KAPISI
+
+                  Şirket tarafına giden tek bağlantı alt bilginin en altındaydı;
+                  "şirketim nasıl profil açar" sorusunun cevabı üst menüde hiç
+                  görünmüyordu. Burada duruyor ve gerçek akışın adıyla:
+                  sayfa şirket sayfasını sahiplenmeyi anlatıyor.
+                */}
+                <button
+                  id="header-employer-btn"
+                  onClick={() => onOpenEmployer?.()}
+                  className="hidden sm:inline-flex px-2.5 py-1.5 rounded-full text-xs font-bold text-gray-600 hover:text-blue-700 hover:bg-gray-100 transition-all cursor-pointer whitespace-nowrap"
+                >
+                  İşveren misiniz?
+                </button>
                 <button
                   id="header-login-btn"
                   onClick={onOpenLogin}
