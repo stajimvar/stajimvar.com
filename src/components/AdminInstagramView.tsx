@@ -45,7 +45,7 @@ type Durum = {
   altına yazıldı; Instagram görseli kendi indirdiği için adres herkese açık
   ve kalıcı olmak zorunda.
 
-  Adreste sürüm var (-v3): Instagram indirdiği görseli adrese göre
+  Adreste sürüm var (-v4): Instagram indirdiği görseli adrese göre
   sakladığı için, kart yeniden tasarlanıp aynı ada yazılırsa gönderide eski
   kart çıkıyor. Tasarım değişince scripts/instagram-kartlari.mjs içindeki
   SURUM artıyor ve buradaki adresler de onunla birlikte güncelleniyor.
@@ -55,9 +55,9 @@ type Durum = {
   sinyali veriyor.
 */
 const KARTLAR = [
-  '/paylasim/01-kapak-v3.jpg',
-  '/paylasim/02-nasil-giriyor-v3.jpg',
-  '/paylasim/03-ne-var-v3.jpg',
+  '/paylasim/01-kapak-v4.jpg',
+  '/paylasim/02-nasil-giriyor-v4.jpg',
+  '/paylasim/03-ne-var-v4.jpg',
 ];
 
 const TASLAK_METIN = aciklamaKur(

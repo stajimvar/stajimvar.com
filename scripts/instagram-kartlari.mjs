@@ -47,6 +47,17 @@ const EN = 1080;
 const BOY = 1440;
 
 /*
+  TASARIM 1080'DE KURULU, DOSYA 1440'TA ÇIKIYOR
+
+  Yukarıdaki ölçüler tasarımın koordinat sistemi; SVG çözünürlükten bağımsız
+  olduğu için dosya daha büyük basılabiliyor. Instagram yüksek yoğunluklu
+  ekranlara 1440 piksel genişliğe kadar servis ediyor — 1080 yüklenince o
+  ekranlarda görsel büyütülüyor ve yumuşuyor. Oran aynı: 3:4.
+*/
+const CIKTI_EN = 1440;
+const CIKTI_BOY = 1920;
+
+/*
   KART BİR ŞABLON, TEK TEK ÇİZİM DEĞİL
 
   Üç kart da aynı iskeleti kullanıyor: üstte marka bandı ve sayfa numarası,
@@ -72,8 +83,12 @@ const GRI = '#4B5563';
 const CIZGI = '#E5E7EB';
 const YAZI = 'Segoe UI, Arial, Helvetica, sans-serif';
 
-/** Logo, SVG'ye gömülmek üzere base64'e çevriliyor (dış dosya çözülmüyor). */
-const logo64 = fs.readFileSync(path.join(KOK, 'public', 'logo.png')).toString('base64');
+/*
+  Logo SVG'ye gömülüyor (dış dosya çözülmüyor). Kaynak olarak public/logo.png
+  değil assets/logo-kaynak.png alınıyor: kart üç katı çözünürlükte basıldığı
+  için 512 piksellik dosya büyütülüp bulanıklaşıyordu.
+*/
+const logo64 = fs.readFileSync(path.join(KOK, 'assets', 'logo-kaynak.png')).toString('base64');
 const logo = (x, y, boyut) =>
   `<image href="data:image/png;base64,${logo64}" x="${x}" y="${y}" width="${boyut}" height="${boyut}"/>`;
 
@@ -250,10 +265,15 @@ const neVar = () => sarmal(`
   eski dosyalar siliniyor. Yayınlanmış gönderiler Instagram'ın kendi
   kopyasını gösterdiği için onlar etkilenmiyor.
 
+  Aynı kural dosyanın içeriği başka bir sebeple değişince de geçerli:
+  görselin basım kalitesi yükseltildiğinde sürüm artırıldı, çünkü hem
+  Instagram hem de bizim kenar önbelleğimiz o adresin eski baytlarını
+  tutuyor olabilir.
+
   SURUM değişince src/components/AdminInstagramView.tsx içindeki adresler
   de güncellenmeli.
 */
-const SURUM = 'v3';
+const SURUM = 'v4';
 
 const KARTLAR = [
   [`01-kapak-${SURUM}.jpg`, kapak()],
@@ -271,12 +291,38 @@ for (const eski of fs.readdirSync(HEDEF)) {
   }
 }
 
+/*
+  KALİTE: ÖNCE BÜYÜK BAS, SONRA KÜÇÜLT
+
+  Kart doğrudan hedef ölçüde basılınca yazı kenarları tek geçişte
+  yumuşatılıyor ve harfler pütürlü çıkıyor. Bunun yerine SVG üç katı
+  çözünürlükte (3240x4320) basılıyor, sonra lanczos ile 1440'a indiriliyor:
+  her son piksel birden çok pikselin ortalaması oluyor ve kenarlar temiz
+  kalıyor.
+
+  JPEG tarafında iki ayar önemli:
+    * chromaSubsampling 4:4:4 — varsayılan 4:2:0 renk bilgisini yarıya
+      düşürüyor ve beyaz zemindeki MAVİ yazının kenarını bulandırıyor.
+      Kartların yarısı mavi yazı olduğu için en çok fark ettiren ayar bu.
+    * kalite 96 + mozjpeg — düz zeminlerde halka izi bırakmıyor.
+
+  Instagram görseli kendi tarafında yeniden sıkıştırıyor; elimizden çıkanın
+  temiz olması o sıkıştırmanın neyi bozacağını da belirliyor.
+*/
+const OLCEK = 3;
+
 for (const [ad, svg] of KARTLAR) {
+  const buyuk = await sharp(Buffer.from(svg), { density: 72 * OLCEK }).png().toBuffer();
+
   /*
     JPEG: Instagram gönderi görselini JPEG olarak istiyor; PNG yüklenen
     kapsayıcılar "media type" hatası veriyor.
   */
-  const veri = await sharp(Buffer.from(svg)).jpeg({ quality: 92, mozjpeg: true }).toBuffer();
+  const veri = await sharp(buyuk)
+    .resize(CIKTI_EN, CIKTI_BOY, { kernel: 'lanczos3' })
+    .jpeg({ quality: 96, mozjpeg: true, chromaSubsampling: '4:4:4' })
+    .toBuffer();
+
   fs.writeFileSync(path.join(HEDEF, ad), veri);
   const olcu = await sharp(veri).metadata();
   console.log(`${ad.padEnd(26)} ${olcu.width}x${olcu.height}  ${(veri.length / 1024).toFixed(0)} KB`);
