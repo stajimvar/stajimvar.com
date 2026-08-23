@@ -232,6 +232,8 @@ export const Header: React.FC<HeaderProps> = ({
     bulunulanYol
   );
 
+  /* İşveren tarafı: rehber ve sahiplenme sayfaları. */
+  const isverendeMi = /^\/isveren(\/|$)/.test(bulunulanYol);
   const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kurumsalSayfada && activeTab === 'internships';
   const profildeMi = !rehberdeMi && !kurumsalSayfada && activeTab === 'profile';
 
@@ -1036,28 +1038,76 @@ export const Header: React.FC<HeaderProps> = ({
           öyle. İki taraf ayrı yapıdaydı; aynı sitede telefonla ve bilgisayarla
           gezen kişi farklı bir uygulama görüyordu.
 
-          Artık ikisi de aynı: İlanlar · Rehber · Profil.
+          Artık ikisi de aynı: İlanlar · Burs · Rehber · (Profil / İşveren).
         */}
 
-        {/* 2. Rehber — giriş şartı yok, herkese açık */}
+        {/* 2. Burs — masaüstündeki "Burs İlanları" sekmesinin karşılığı */}
+        <button
+          onClick={() => onOpenOpportunities?.()}
+          className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
+            firsatlardaMi ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-gray-900'
+          }`}
+        >
+          <div className="relative">
+            <Sparkles className="w-5 h-5" />
+            {firsatlardaMi && (
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600" />
+            )}
+          </div>
+          <span className="text-[10px] mt-0.5 font-semibold">Burs</span>
+        </button>
+
+        {/*
+          3. Rehber — giriş şartı yok, herkese açık.
+
+          `!isverendeMi`: işveren rehberi masaüstünde "Rehber" başlığının
+          altında sayılıyor, ama alt barda İşveren'in kendi öğesi var. İkisi
+          birden yanarsa hangisinde olunduğu belirsiz kalıyor.
+        */}
         <button
           onClick={() => onOpenGuides?.()}
           className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
-            rehberdeMi ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-gray-900'
+            rehberdeMi && !isverendeMi ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-gray-900'
           }`}
         >
           <div className="relative">
             <BookOpen className="w-5 h-5" />
-            {rehberdeMi && (
+            {rehberdeMi && !isverendeMi && (
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600" />
             )}
           </div>
           <span className="text-[10px] mt-0.5 font-semibold">Rehber</span>
         </button>
 
+        {/*
+          İŞVEREN KAPISI (yalnızca giriş yapılmamışken)
+
+          Telefonda şirket tarafına giden tek bağlantı alt bilginin dibindeydi.
+          Üst çubuktaki "İşveren misiniz?" düğmesi dar ekranda gizli olduğu
+          için mobil ziyaretçi hiç göremiyordu. Giriş yapılınca yerini Profil
+          alıyor: alt barda dörtten fazla öğe sıkışık duruyor.
+        */}
+        {!isLoggedIn && (
+          <button
+            id="mobil-isveren-btn"
+            onClick={() => onOpenEmployer?.()}
+            className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
+              isverendeMi ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            <div className="relative">
+              <Building2 className="w-5 h-5" />
+              {isverendeMi && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600" />
+              )}
+            </div>
+            <span className="text-[10px] mt-0.5 font-semibold">İşveren</span>
+          </button>
+        )}
+
         {isLoggedIn && (
           <>
-        {/* 3. Profil — başvuru sayacı burada */}
+        {/* 4. Profil — başvuru sayacı burada */}
         <button
           onClick={() => {
             setActiveTab('profile');
