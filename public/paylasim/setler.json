@@ -1,0 +1,28 @@
+[
+  {
+    "kod": "nasil-calisir",
+    "ad": "Nasıl çalışır",
+    "surum": "v5",
+    "guncellendi": "2026-08-23",
+    "metin": "İlanları aracı sitelerden değil, şirketlerin kendi kariyer sayfalarından derliyoruz.\n\nHer ilanda şirketin kendi başvuru bağlantısı var; arada kimse yok. Burslarda da aynı kural geçerli: kaynağı doğrulanmayan kayıt listeye girmiyor, tarihi doğrulanmayan kayda tarih yazılmıyor — \"Takvim bekleniyor\" yazıyor.\n\nStaj ilanları, burslar, KYK ve yurt dışı programları tek listede. Bağlantı profilde.",
+    "kartlar": [
+      "/paylasim/nasil-calisir/01-v5.jpg",
+      "/paylasim/nasil-calisir/02-v5.jpg",
+      "/paylasim/nasil-calisir/03-v5.jpg",
+      "/paylasim/nasil-calisir/04-v5.jpg"
+    ]
+  },
+  {
+    "kod": "son-basvurular",
+    "ad": "Son başvurular (2026-08-23)",
+    "surum": "20260823",
+    "guncellendi": "2026-08-23",
+    "metin": "Son başvurusu yaklaşan burslar — önümüzdeki 14 gün:\n\n• TÜBİTAK — 25 Ağustos\n• Yurtdışı Türkler ve Akraba Topluluklar Başkanlığı — 31 Ağustos\n• Dokuz Eylül Üniversitesi — 31 Ağustos\n• Yüksek Öğrenim Kredi ve Yurtlar Derneği — 1 Eylül\n• Doğu Akdeniz Üniversitesi — 1 Eylül\n• Faydasıçok Vakfı — 3 Eylül\n\nHepsinin başvuru bağlantısı ve koşulları resmî kaynağında; listeye kaynağı doğrulanmayan kayıt girmiyor.\n\nTümü profildeki bağlantıda.",
+    "kartlar": [
+      "/paylasim/son-basvurular/01-20260823.jpg",
+      "/paylasim/son-basvurular/02-20260823.jpg",
+      "/paylasim/son-basvurular/03-20260823.jpg",
+      "/paylasim/son-basvurular/04-20260823.jpg"
+    ]
+  }
+]

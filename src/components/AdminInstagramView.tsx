@@ -39,44 +39,35 @@ type Durum = {
 };
 
 /*
-  İlk gönderinin kartları ve metni.
+  GÖNDERİ SETLERİ DOSYADAN OKUNUYOR
 
-  Kartlar scripts/instagram-kartlari.mjs ile üretilip public/paylasim/
-  altına yazıldı; Instagram görseli kendi indirdiği için adres herkese açık
-  ve kalıcı olmak zorunda.
+  Kartlar ve gönderi metni public/paylasim/setler.json içinde; o dosyayı
+  kart üreten betikler yazıyor (scripts/instagram-kartlari.mjs,
+  scripts/paylasim-burs-takvimi.mjs). Böylece yeni bir gönderi hazırlamak
+  için bu ekranda kod değiştirmek gerekmiyor: betik çalıştırılıyor, site
+  dağıtılıyor, set burada listeye düşüyor.
 
-  Adreste sürüm var (-v4): Instagram indirdiği görseli adrese göre
-  sakladığı için, kart yeniden tasarlanıp aynı ada yazılırsa gönderide eski
-  kart çıkıyor. Tasarım değişince scripts/instagram-kartlari.mjs içindeki
-  SURUM artıyor ve buradaki adresler de onunla birlikte güncelleniyor.
-
-  Metin taslak: yayın düğmesine basmadan önce burada düzenlenebiliyor.
-  Etiketler ayrı blokta ve az sayıda — otuz etiket erişim değil spam
-  sinyali veriyor.
+  Adreslerde tasarım sürümü var. Instagram görseli KENDİ indiriyor ve
+  indirdiğini adrese göre saklıyor; aynı ada yazılan yeni tasarımı almıyor
+  ve gönderide eski kart çıkıyor.
 */
-const KARTLAR = [
-  '/paylasim/01-kapak-v4.jpg',
-  '/paylasim/02-nasil-giriyor-v4.jpg',
-  '/paylasim/03-ne-var-v4.jpg',
-];
-
-const TASLAK_METIN = aciklamaKur(
-  [
-    'İlanları aracı sitelerden değil, şirketlerin kendi kariyer sayfalarından derliyoruz.',
-    'Her ilanda şirketin kendi başvuru bağlantısı var; arada kimse yok.',
-    '',
-    'Bursta tarih doğrulanmadıysa "takvim bekleniyor" yazıyoruz — tahmin etmiyoruz.',
-    '',
-    'Staj ilanları, burslar, KYK ve yurt dışı programları: stajimvar.com (bağlantı profilde)',
-  ].join('\n')
-);
+type PaylasimSeti = {
+  kod: string;
+  ad: string;
+  surum: string;
+  guncellendi?: string;
+  metin: string;
+  kartlar: string[];
+};
 
 const tarih = (deger?: string | null) =>
   deger ? new Intl.DateTimeFormat('tr-TR', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(deger)) : '—';
 
 export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate }) => {
   const [durum, setDurum] = React.useState<Durum | null>(null);
-  const [metin, setMetin] = React.useState(TASLAK_METIN);
+  const [setler, setSetler] = React.useState<PaylasimSeti[]>([]);
+  const [secilenKod, setSecilenKod] = React.useState('');
+  const [metin, setMetin] = React.useState('');
   const [yayin, setYayin] = React.useState<{
     asama: 'bos' | 'gonderiliyor' | 'tamam' | 'hata';
     mesaj?: string;
@@ -107,6 +98,38 @@ export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }
   React.useEffect(() => {
     void sorgula();
   }, [sorgula]);
+
+  /*
+    Setler her açılışta yeniden okunuyor ve önbelleğe alınmıyor: kart
+    üretilip dağıtıldıktan hemen sonra eski listeyi görmek, yanlış gönderi
+    yayınlamaya yol açardı.
+  */
+  React.useEffect(() => {
+    void (async () => {
+      try {
+        const cevap = await fetch('/paylasim/setler.json', { cache: 'no-store' });
+        if (!cevap.ok) return;
+        const gelen = (await cevap.json()) as PaylasimSeti[];
+        setSetler(gelen);
+        if (gelen.length > 0) {
+          setSecilenKod((onceki) => onceki || gelen[0].kod);
+          setMetin((onceki) => onceki || aciklamaKur(gelen[0].metin));
+        }
+      } catch {
+        /* set listesi okunamazsa ekranın geri kalanı çalışmaya devam etsin */
+      }
+    })();
+  }, []);
+
+  const secilenSet = setler.find((s) => s.kod === secilenKod) ?? null;
+  const KARTLAR = secilenSet?.kartlar ?? [];
+
+  const setiSec = (kod: string) => {
+    const yeni = setler.find((s) => s.kod === kod);
+    setSecilenKod(kod);
+    if (yeni) setMetin(aciklamaKur(yeni.metin));
+    setYayin({ asama: 'bos' });
+  };
 
   const tamAdresler = KARTLAR.map((yol) => `https://stajimvar.com${yol}`);
   const sorunlar: string[] = paylasimSorunlari(
@@ -336,18 +359,39 @@ export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }
         <div>
           <h2 className="text-lg font-extrabold text-gray-950">Gönderi yayınla</h2>
           <p className="text-sm text-gray-600">
-            Kartlar <code>public/paylasim/</code> altından geliyor; yenilemek için{' '}
-            <code>npm run instagram-kartlari</code>.
+            Kartlar <code>public/paylasim/setler.json</code> içinden geliyor; yeni set için{' '}
+            <code>npm run instagram-kartlari</code> ya da <code>npm run paylasim-burs-takvimi</code>.
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        {setler.length === 0 ? (
+          <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+            Yayına hazır set bulunamadı. Kart üreten betiği çalıştırıp siteyi dağıtın.
+          </p>
+        ) : (
+          <label className="block text-sm font-semibold text-gray-800">
+            Gönderi seti
+            <select
+              value={secilenKod}
+              onChange={(e) => setiSec(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-gray-200 p-3 text-sm"
+            >
+              {setler.map((s) => (
+                <option key={s.kod} value={s.kod}>
+                  {s.ad} — {s.kartlar.length} kart{s.guncellendi ? ` · ${s.guncellendi}` : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
+        <div className="grid grid-cols-4 gap-3">
           {KARTLAR.map((yol) => (
             <img
               key={yol}
               src={yol}
               alt=""
-              className="aspect-square w-full rounded-xl border border-gray-200 object-cover"
+              className="aspect-[3/4] w-full rounded-xl border border-gray-200 object-cover"
             />
           ))}
         </div>
