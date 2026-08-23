@@ -32,7 +32,21 @@ import sharp from 'sharp';
 
 const KOK = path.dirname(path.dirname(url.fileURLToPath(import.meta.url)));
 const HEDEF = path.join(KOK, 'public', 'paylasim');
-const BOY = 1080;
+
+/*
+  4:5 DİKEY, KARE DEĞİL
+
+  Kare kartlar profil ızgarasında kenarlarından kırpılıyordu: Instagram
+  ızgarası artık 3:4 dikey, kareyi doldurmak için sağdan ve soldan %12,5
+  kesiyor — ilk gönderide başlığın ilk harfleri bu yüzden gitti.
+
+  1080x1350'de (4:5) aynı kırpma kenar başına ~%3'e iniyor ve akışta da
+  daha çok yer kaplıyor. İçerik dikeyde ortalanıyor: eski düzen olduğu
+  gibi duruyor, üstüne ve altına eşit bant ekleniyor.
+*/
+const EN = 1080;
+const BOY = 1350;
+const KAYMA = (BOY - EN) / 2;
 
 const MAVI = '#2563EB';
 const KOYU_MAVI = '#1D4ED8';
@@ -55,13 +69,14 @@ const kacir = (metin) =>
 const satir = (x, y, metin, { boyut = 32, renk = GRI, kalin = 400, aralik = 0 } = {}) =>
   `<text x="${x}" y="${y}" font-family="${YAZI}" font-size="${boyut}" font-weight="${kalin}" fill="${renk}" letter-spacing="${aralik}">${kacir(metin)}</text>`;
 
-const sarmal = (svg) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="${BOY}" height="${BOY}" viewBox="0 0 ${BOY} ${BOY}">${svg}</svg>`;
+const sarmal = (zemin, svg) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="${EN}" height="${BOY}" viewBox="0 0 ${EN} ${BOY}">` +
+  `<rect width="${EN}" height="${BOY}" fill="${zemin}"/>` +
+  `<g transform="translate(0 ${KAYMA})">${svg}</g></svg>`;
 
 /* ------------------------------------------------------------- 1. kapak */
 
-const kapak = () => sarmal(`
-  <rect width="${BOY}" height="${BOY}" fill="#FFFFFF"/>
+const kapak = () => sarmal('#FFFFFF', `
   <circle cx="1000" cy="80" r="310" fill="${ACIK_MAVI}"/>
 
   ${logo(76, 76, 72)}
@@ -97,8 +112,7 @@ const adim = (y, sira, baslik, aciklama) => `
   ${satir(196, y + 105, aciklama, { boyut: 24, renk: GRI })}
 `;
 
-const nasil = () => sarmal(`
-  <rect width="${BOY}" height="${BOY}" fill="#FFFFFF"/>
+const nasil = () => sarmal('#FFFFFF', `
 
   ${logo(76, 70, 56)}
   ${satir(148, 108, 'StajımVar', { boyut: 26, renk: SIYAH, kalin: 800 })}
@@ -116,8 +130,7 @@ const nasil = () => sarmal(`
 
 /* ------------------------------------------------------ 3. takip çağrısı */
 
-const cagri = () => sarmal(`
-  <rect width="${BOY}" height="${BOY}" fill="${MAVI}"/>
+const cagri = () => sarmal(MAVI, `
   <circle cx="150" cy="1000" r="330" fill="${KOYU_MAVI}"/>
 
   <circle cx="112" cy="112" r="36" fill="#FFFFFF"/>
