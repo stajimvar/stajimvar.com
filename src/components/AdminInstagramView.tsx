@@ -45,14 +45,19 @@ type Durum = {
   altına yazıldı; Instagram görseli kendi indirdiği için adres herkese açık
   ve kalıcı olmak zorunda.
 
+  Adreste sürüm var (-v3): Instagram indirdiği görseli adrese göre
+  sakladığı için, kart yeniden tasarlanıp aynı ada yazılırsa gönderide eski
+  kart çıkıyor. Tasarım değişince scripts/instagram-kartlari.mjs içindeki
+  SURUM artıyor ve buradaki adresler de onunla birlikte güncelleniyor.
+
   Metin taslak: yayın düğmesine basmadan önce burada düzenlenebiliyor.
   Etiketler ayrı blokta ve az sayıda — otuz etiket erişim değil spam
   sinyali veriyor.
 */
 const KARTLAR = [
-  '/paylasim/01-kapak.jpg',
-  '/paylasim/02-nasil-derliyoruz.jpg',
-  '/paylasim/03-takip.jpg',
+  '/paylasim/01-kapak-v3.jpg',
+  '/paylasim/02-nasil-giriyor-v3.jpg',
+  '/paylasim/03-ne-var-v3.jpg',
 ];
 
 const TASLAK_METIN = aciklamaKur(

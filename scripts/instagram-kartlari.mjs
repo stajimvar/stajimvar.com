@@ -1,5 +1,5 @@
 /**
- * Instagram gönderi kartlarını PNG olarak üretir (1080x1440, 3:4).
+ * Instagram gönderi kartlarını JPEG olarak üretir (1080x1440, 3:4).
  *
  * NEDEN BETİKLE
  * -------------
@@ -11,7 +11,7 @@
  *
  * KARTLAR ZAMANSIZ
  * ----------------
- * Kartlarda ilan/şirket sayısı gibi eskiyen veri yok. Sayı yazan bir kart,
+ * Kartlarda ilan/burs sayısı gibi eskiyen veri yok. Sayı yazan bir kart,
  * sayı her değiştiğinde yeniden üretilip yeniden paylaşılmayı gerektiriyor;
  * gönderi bir hafta sonra kendi kendine yanlış hale geliyor. Zamana bağlı
  * içerik (burs son başvuru tarihi, yeni ilan duyurusu) ayrı bir gönderi
@@ -19,9 +19,9 @@
  *
  * NEDEN SVG
  * ---------
- * og-gorsel.mjs ile aynı yol: sharp, SVG'yi tarayıcı olmadan PNG'ye
- * çeviriyor. Tasarım tuvalindeki üç kartın aynısı burada SVG olarak
- * duruyor; metin değişince kart yeniden üretiliyor.
+ * og-gorsel.mjs ile aynı yol: sharp, SVG'yi tarayıcı olmadan JPEG'e
+ * çeviriyor. Tasarım burada kodla duruyor; metin değişince kart yeniden
+ * üretiliyor.
  *
  * Kullanım: npm run instagram-kartlari
  */
@@ -40,27 +40,36 @@ const HEDEF = path.join(KOK, 'public', 'paylasim');
   orada sağdan ve soldan %12,5 kesiliyordu; ilk gönderide başlığın ilk
   harfleri bu yüzden gitti. 4:5 (1080x1350) kırpmayı azalttı ama bitirmedi.
 
-  Kart artık ızgaranın oranında üretiliyor: 1080x1440. Ölçü oradan alınıyor
-  çünkü insanlar gönderiyi önce ızgarada görüyor. Yayınlanan gönderide
+  Kart artık ızgaranın oranında üretiliyor: 1080x1440. Yayınlanan gönderide
   ölçüldü: akış görünümü de 3:4'ü tam gösteriyor, kırpmıyor.
-
-  DÜZEN 3:4 İÇİN KURULDU, KAREDEN GERİLMEDİ
-  İlk denemede kare tasarım olduğu gibi bırakılıp üstüne ve altına eşit bant
-  eklenmişti. Izgarada sorun yoktu ama gönderiye girince kart "kenarlarına
-  kaldırım döşenmiş" gibi duruyordu: logoyla başlık arasında bomboş bir
-  alan. Şimdi boşluk banda değil, kartın kendi ritmine dağılıyor — başlık
-  büyüdü, bloklar arası aralık açıldı, alt öğeler kartın altına oturdu.
 */
 const EN = 1080;
 const BOY = 1440;
 
+/*
+  KART BİR ŞABLON, TEK TEK ÇİZİM DEĞİL
+
+  Üç kart da aynı iskeleti kullanıyor: üstte marka bandı ve sayfa numarası,
+  altında dev başlık, başlığı ayıran kısa çizgi, ortada listelenmiş gövde,
+  en altta renkli çıkarım kutusu. Aynı sistem sonraki gönderilerde de
+  çalışsın diye parçalar ayrı fonksiyonlar; yeni bir kart yazmak, yeni bir
+  tasarım yapmak değil, aynı parçaları farklı metinle dizmek oluyor.
+
+  Ölçüler dikey biçime göre: göz yukarıdan aşağı iniyor, her şey alt alta.
+  Yazılar kasten büyük — gönderi çoğunlukla ızgarada, yani gerçek boyutunun
+  dörtte birinde görülüyor ve orada okunmayan yazı yok sayılıyor.
+*/
+const KENAR = 64;
+const IC_EN = EN - KENAR * 2;
+
 const MAVI = '#2563EB';
 const KOYU_MAVI = '#1D4ED8';
-const ACIK_MAVI = '#EFF6FF';
+const ACIK_MAVI = '#E8EFFF';
 const KENAR_MAVI = '#DBEAFE';
-const SIYAH = '#030712';
+const ZEMIN = '#FFFFFF';
+const SIYAH = '#0B1220';
 const GRI = '#4B5563';
-const KENAR_GRI = '#E5E7EB';
+const CIZGI = '#E5E7EB';
 const YAZI = 'Segoe UI, Arial, Helvetica, sans-serif';
 
 /** Logo, SVG'ye gömülmek üzere base64'e çevriliyor (dış dosya çözülmüyor). */
@@ -71,129 +80,196 @@ const logo = (x, y, boyut) =>
 const kacir = (metin) =>
   String(metin).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-/** Tek satır metin. Ölçüler tasarım tuvalindeki kartlarla aynı. */
-const satir = (x, y, metin, { boyut = 32, renk = GRI, kalin = 400, aralik = 0 } = {}) =>
-  `<text x="${x}" y="${y}" font-family="${YAZI}" font-size="${boyut}" font-weight="${kalin}" fill="${renk}" letter-spacing="${aralik}">${kacir(metin)}</text>`;
+/** Tek satır metin. */
+const satir = (x, y, metin, { boyut = 32, renk = GRI, kalin = 400, aralik = 0, hiza = 'start' } = {}) =>
+  `<text x="${x}" y="${y}" font-family="${YAZI}" font-size="${boyut}" font-weight="${kalin}" fill="${renk}" letter-spacing="${aralik}" text-anchor="${hiza}">${kacir(metin)}</text>`;
 
-const sarmal = (zemin, svg) =>
+const sarmal = (svg) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="${EN}" height="${BOY}" viewBox="0 0 ${EN} ${BOY}">` +
-  `<rect width="${EN}" height="${BOY}" fill="${zemin}"/>${svg}</svg>`;
+  `<rect width="${EN}" height="${BOY}" fill="${ZEMIN}"/>${svg}</svg>`;
 
 /*
-  DÜZEN DİKEY KURULUYOR
+  ÜST BANT
 
-  Üç kartın da omurgası aynı: üstte marka satırı, ortada tek bir cümlelik
-  ana mesaj, altta o mesajı taşıyan blok. Dikey biçimde göz yukarıdan
-  aşağıya iniyor; yan yana dizmek yerine alt alta dizmek hem daha okunur
-  hem de kartın boyunu kendiliğinden dolduruyor.
-
-  Yazı boyutları kasten büyük: gönderi çoğunlukla ızgarada, yani gerçek
-  boyutunun dörtte birinde görülüyor. Izgarada okunmayan yazı yok sayılır.
+  Marka, serinin adı ve kaçıncı kartta olduğun. Sayfa numarası süs değil:
+  karusel gönderide insan kaç kart olduğunu ancak kaydırınca anlıyor,
+  numara baştan söylüyor.
 */
+const ustBant = (seri, sayfa) => `
+  ${logo(KENAR, 62, 58)}
+  ${satir(KENAR + 76, 106, 'StajımVar', { boyut: 32, renk: SIYAH, kalin: 800 })}
+  ${satir(KENAR + 240, 106, '|', { boyut: 32, renk: CIZGI, kalin: 400 })}
+  ${satir(KENAR + 268, 106, seri, { boyut: 32, renk: MAVI, kalin: 600 })}
 
-/** Marka satırı: üç kartın da başında aynı yerde duruyor. */
-const marka = (renk, halka = null) => `
-  ${halka ? `<circle cx="114" cy="130" r="38" fill="${halka}"/>` : ''}
-  ${logo(76, 92, 76)}
-  ${satir(180, 148, 'StajımVar', { boyut: 38, renk, kalin: 800 })}
+  <rect x="${EN - KENAR - 132}" y="66" width="132" height="56" rx="28" fill="${ACIK_MAVI}"/>
+  ${satir(EN - KENAR - 66, 105, sayfa, { boyut: 26, renk: MAVI, kalin: 700, hiza: 'middle' })}
 `;
 
-/** Onay işareti: kapak kartındaki maddelerin başında. */
-const tik = (x, y) => `
-  <circle cx="${x}" cy="${y}" r="26" fill="${MAVI}"/>
-  <path d="M${x - 11} ${y} l8 9 15 -17" stroke="#FFFFFF" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+/** Başlığı gövdeden ayıran kısa çizgi. */
+const ayrac = (y) => `<rect x="${KENAR}" y="${y}" width="96" height="10" rx="5" fill="${MAVI}"/>`;
+
+/**
+ * Dev başlık. Satırlar dışarıdan geliyor çünkü Türkçe cümleyi nereden
+ * böleceğine ölçü değil anlam karar veriyor.
+ */
+const baslik = (y, satirlar, { boyut = 88, vurguSatiri = -1 } = {}) =>
+  satirlar
+    .map((s, i) =>
+      satir(KENAR, y + i * Math.round(boyut * 1.18), s, {
+        boyut,
+        renk: i === vurguSatiri ? MAVI : SIYAH,
+        kalin: 800,
+      }),
+    )
+    .join('');
+
+/**
+ * Numaralı satır: solda kare rozet, sağında başlık ve tek cümlelik açıklama.
+ * İlk sıra dolu mavi, diğerleri açık zeminli — göz nereden başlayacağını
+ * bilsin diye.
+ */
+const siraliSatir = (y, no, ust, alt, { ilk = false } = {}) => `
+  <rect x="${KENAR}" y="${y}" width="84" height="84" rx="24" fill="${ilk ? MAVI : ACIK_MAVI}"/>
+  ${satir(KENAR + 42, y + 56, no, { boyut: 38, renk: ilk ? '#FFFFFF' : MAVI, kalin: 800, hiza: 'middle' })}
+  ${satir(KENAR + 120, y + 40, ust, { boyut: 36, renk: SIYAH, kalin: 800 })}
+  ${satir(KENAR + 120, y + 84, alt, { boyut: 27, renk: GRI })}
+  <line x1="${KENAR}" y1="${y + 124}" x2="${EN - KENAR}" y2="${y + 124}" stroke="${CIZGI}" stroke-width="2"/>
 `;
+
+/** Çıkarım kutusu: kartın söylediğini tek cümlede toparlar. */
+const altKutu = (y, satirlar, { zemin = ACIK_MAVI, renk = SIYAH } = {}) => `
+  <rect x="${KENAR}" y="${y}" width="${IC_EN}" height="${76 + satirlar.length * 46}" rx="30" fill="${zemin}"/>
+  <rect x="${KENAR + 40}" y="${y + 40}" width="56" height="8" rx="4" fill="${MAVI}"/>
+  ${satirlar
+    .map((s, i) => satir(KENAR + 40, y + 104 + i * 46, s, { boyut: 29, renk, kalin: i === 0 ? 700 : 400 }))
+    .join('')}
+`;
+
+/*
+  KAPAKTAKİ ÇİZİM
+
+  Hazır görsel indirilmiyor: hem hakkı belirsiz görsellerle uğraşmamak hem
+  de kartların aynı dilde durması için. Biçim düz — kalın dış çizgi, tek
+  renk mavi daire, beyaz yüzey — küçültülünce dağılmıyor. Anlattığı şey
+  kartın cümlesiyle aynı: ilan şirketin kendi sayfasında duruyor ve
+  başvuru bağlantısı oraya gidiyor.
+*/
+const ilanCizimi = (y) => `
+  <circle cx="806" cy="${y + 186}" r="196" fill="${MAVI}"/>
+
+  <rect x="${KENAR}" y="${y}" width="700" height="372" rx="32" fill="#FFFFFF" stroke="${SIYAH}" stroke-width="7"/>
+  <path d="M${KENAR} ${y + 86} h700" stroke="${SIYAH}" stroke-width="7"/>
+  <circle cx="${KENAR + 48}" cy="${y + 44}" r="11" fill="${SIYAH}"/>
+  <circle cx="${KENAR + 86}" cy="${y + 44}" r="11" fill="${SIYAH}"/>
+  <circle cx="${KENAR + 124}" cy="${y + 44}" r="11" fill="${SIYAH}"/>
+
+  <circle cx="${KENAR + 106}" cy="${y + 168}" r="38" fill="${MAVI}"/>
+  <rect x="${KENAR + 168}" y="${y + 146}" width="318" height="22" rx="11" fill="${SIYAH}"/>
+  <rect x="${KENAR + 168}" y="${y + 182}" width="204" height="16" rx="8" fill="${CIZGI}"/>
+
+  <circle cx="${KENAR + 106}" cy="${y + 280}" r="38" fill="${KENAR_MAVI}"/>
+  <rect x="${KENAR + 168}" y="${y + 258}" width="252" height="22" rx="11" fill="${SIYAH}"/>
+  <rect x="${KENAR + 168}" y="${y + 294}" width="168" height="16" rx="8" fill="${CIZGI}"/>
+
+  <rect x="${KENAR + 520}" y="${y + 236}" width="170" height="64" rx="32" fill="${MAVI}"/>
+  ${satir(KENAR + 605, y + 278, 'Başvur', { boyut: 26, renk: '#FFFFFF', kalin: 800, hiza: 'middle' })}
+
+  <circle cx="878" cy="${y + 24}" r="70" fill="${SIYAH}"/>
+  <path d="M846 ${y + 24} l22 24 42 -46" stroke="#FFFFFF" stroke-width="11" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+`;
+
+const SERI = 'Nasıl çalışır';
 
 /* ------------------------------------------------------------- 1. kapak */
 
-const kapak = () => sarmal('#FFFFFF', `
-  <circle cx="1010" cy="40" r="330" fill="${ACIK_MAVI}"/>
+const kapak = () => sarmal(`
+  ${ustBant(SERI, '01/03')}
 
-  ${marka(SIYAH)}
+  ${baslik(320, ['İlanları aracı', 'sitelerden değil,', 'şirketin kendi', 'sayfasından.'], { boyut: 88, vurguSatiri: 3 })}
 
-  <rect x="76" y="360" width="214" height="58" rx="29" fill="${ACIK_MAVI}" stroke="${KENAR_MAVI}"/>
-  ${satir(104, 399, 'ARACI YOK', { boyut: 24, renk: MAVI, kalin: 800, aralik: 2.4 })}
+  ${ayrac(690)}
 
-  ${satir(76, 546, 'İlanları aracı', { boyut: 96, renk: SIYAH, kalin: 800 })}
-  ${satir(76, 656, 'sitelerden değil,', { boyut: 96, renk: SIYAH, kalin: 800 })}
-  ${satir(76, 766, 'şirketin kendi', { boyut: 96, renk: SIYAH, kalin: 800 })}
-  ${satir(76, 876, 'sayfasından.', { boyut: 96, renk: MAVI, kalin: 800 })}
+  ${satir(KENAR, 766, 'Her ilanda şirketin kendi başvuru', { boyut: 34, renk: GRI })}
+  ${satir(KENAR, 812, 'bağlantısı var; arada kimse yok.', { boyut: 34, renk: GRI })}
 
-  <rect x="48" y="1000" width="984" height="392" rx="48" fill="#F8FAFC" stroke="${KENAR_GRI}"/>
+  ${ilanCizimi(860)}
 
-  ${tik(122, 1102)}
-  ${satir(180, 1116, 'Başvuru bağlantısı şirkete gider', { boyut: 34, renk: SIYAH, kalin: 700 })}
-
-  ${tik(122, 1222)}
-  ${satir(180, 1236, 'Her ilanın resmî kaynağı yazılı', { boyut: 34, renk: SIYAH, kalin: 700 })}
-
-  ${tik(122, 1342)}
-  ${satir(180, 1356, 'Süresi geçen ilan listeden düşer', { boyut: 34, renk: SIYAH, kalin: 700 })}
+  ${altKutu(1254, ['Kaynağı doğrulanmayan kayıt listeye girmiyor.'])}
 `);
 
 /* ------------------------------------------------- 2. nasıl derliyoruz */
 
-const adim = (y, sira, baslik, aciklama) => `
-  <rect x="48" y="${y}" width="984" height="200" rx="32" fill="#FFFFFF" stroke="${KENAR_GRI}"/>
-  <circle cx="128" cy="${y + 100}" r="40" fill="${MAVI}"/>
-  ${satir(115, y + 114, sira, { boyut: 38, renk: '#FFFFFF', kalin: 800 })}
-  ${satir(200, y + 88, baslik, { boyut: 38, renk: SIYAH, kalin: 800 })}
-  ${satir(200, y + 140, aciklama, { boyut: 27, renk: GRI })}
-`;
+const nasil = () => sarmal(`
+  ${ustBant(SERI, '02/03')}
 
-const nasil = () => sarmal('#FFFFFF', `
-  <circle cx="1010" cy="40" r="330" fill="${ACIK_MAVI}"/>
+  ${baslik(316, ['Bir ilan listeye', 'nasıl giriyor?'], { boyut: 88, vurguSatiri: 1 })}
 
-  ${marka(SIYAH)}
+  ${ayrac(482)}
 
-  ${satir(76, 400, 'Bir ilan listeye', { boyut: 84, renk: SIYAH, kalin: 800 })}
-  ${satir(76, 496, 'nasıl giriyor?', { boyut: 84, renk: MAVI, kalin: 800 })}
+  ${siraliSatir(570, '1', 'Şirketin kariyer sayfası taranır', 'Aracı ilan sitesi kullanılmıyor.', { ilk: true })}
+  ${siraliSatir(724, '2', 'Başvuru bağlantısı şirkete gider', 'Başvurunu şirketin kendi sayfasında yaparsın.')}
+  ${siraliSatir(878, '3', 'Takvim bilinmiyorsa öyle yazar', '"Takvim bekleniyor" görürsün, uydurma tarih görmezsin.')}
+  ${siraliSatir(1032, '4', 'Süresi geçen ilan düşer', 'Eski ilan listede kalmaz.')}
 
-  ${adim(620, '1', 'Şirketin kariyer sayfası taranır', 'Aracı ilan sitesi kullanılmıyor.')}
-  ${adim(848, '2', 'Başvuru bağlantısı şirkete gider', 'Başvurunu şirketin kendi sayfasında yaparsın.')}
-  ${adim(1076, '3', 'Takvim bilinmiyorsa öyle yazar', 'Tarihi doğrulanmayan bursta "Takvim bekleniyor" görürsün.')}
-
-  ${satir(76, 1370, 'Kaynağı doğrulanmayan kayıt listeye girmiyor.', { boyut: 28, renk: GRI })}
+  ${altKutu(1254, ['Her kaydın yanında resmî kaynağı yazılı.'])}
 `);
 
-/* ------------------------------------------------------ 3. takip çağrısı */
+/* --------------------------------------------------- 3. ne bulacaksın */
 
-const kucukEtiket = (x, y, en, metin) => `
-  <rect x="${x}" y="${y}" width="${en}" height="76" rx="38" fill="none" stroke="#FFFFFF" stroke-opacity="0.45"/>
-  ${satir(x + 30, y + 50, metin, { boyut: 28, renk: '#FFFFFF', kalin: 600 })}
-`;
+const neVar = () => sarmal(`
+  ${ustBant(SERI, '03/03')}
 
-const cagri = () => sarmal(MAVI, `
-  <circle cx="100" cy="1400" r="420" fill="${KOYU_MAVI}"/>
+  ${baslik(316, ['Staj, burs ve', 'yurt dışı — hepsi', 'tek listede.'], { boyut: 84, vurguSatiri: 2 })}
 
-  ${marka('#FFFFFF', '#FFFFFF')}
+  ${ayrac(600)}
 
-  ${satir(76, 560, 'Yeni ilanlar', { boyut: 104, renk: '#FFFFFF', kalin: 800 })}
-  ${satir(76, 680, 've burslar', { boyut: 104, renk: '#FFFFFF', kalin: 800 })}
-  ${satir(76, 800, 'burada.', { boyut: 104, renk: '#FFFFFF', kalin: 800 })}
+  ${siraliSatir(688, '1', 'Staj ve iş ilanları', 'Şirketin kendi kariyer sayfasından.', { ilk: true })}
+  ${siraliSatir(842, '2', 'Burslar ve öğrenci destekleri', 'Vakıf, dernek, belediye ve kurum bursları.')}
+  ${siraliSatir(996, '3', 'Yurt dışı programları', 'Erasmus, staj ve araştırma programları.')}
 
-  ${satir(76, 890, 'Hepsi resmî kaynağıyla, tek listede.', { boyut: 34, renk: KENAR_MAVI })}
+  <rect x="${KENAR}" y="1178" width="${IC_EN}" height="196" rx="30" fill="${MAVI}"/>
+  ${satir(KENAR + 44, 1256, 'Yeni ilan ve burslar', { boyut: 34, renk: '#FFFFFF', kalin: 800 })}
+  ${satir(KENAR + 44, 1302, 'burada duyurulacak.', { boyut: 34, renk: KENAR_MAVI })}
 
-  ${kucukEtiket(76, 980, 268, 'Staj ilanları')}
-  ${kucukEtiket(360, 980, 208, 'Burslar')}
-  ${kucukEtiket(584, 980, 216, 'Yurt dışı')}
-
-  <rect x="76" y="1200" width="464" height="112" rx="56" fill="#FFFFFF"/>
-  ${satir(126, 1272, 'stajimvar.com', { boyut: 36, renk: MAVI, kalin: 800 })}
-  <path d="M438 1256 h38 M466 1242 l16 14 -16 14" stroke="${MAVI}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-
-  ${satir(600, 1272, 'Bağlantı profilde', { boyut: 28, renk: KENAR_MAVI, kalin: 600 })}
+  <rect x="${EN - KENAR - 344}" y="1240" width="300" height="80" rx="40" fill="#FFFFFF"/>
+  ${satir(EN - KENAR - 210, 1292, 'stajimvar.com', { boyut: 28, renk: MAVI, kalin: 800, hiza: 'middle' })}
+  <path d="M${EN - KENAR - 106} 1280 h30 M${EN - KENAR - 84} 1268 l14 12 -14 12" stroke="${MAVI}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 `);
 
 /* ----------------------------------------------------------------- yaz */
 
+/*
+  DOSYA ADINDA TASARIM SÜRÜMÜ
+
+  Instagram gönderiyi yayınlarken görseli KENDİ indiriyor ve indirdiğini
+  adrese göre saklıyor. Kart yeniden tasarlanıp aynı ada yazıldığında
+  Instagram yeni dosyayı almıyor: gönderide eski kart çıkıyor. 3:4'e
+  geçilen gönderide ilk kart tam bu yüzden eski kaldı.
+
+  Bu yüzden tasarım her değiştiğinde SURUM artıyor, adres yeni oluyor ve
+  eski dosyalar siliniyor. Yayınlanmış gönderiler Instagram'ın kendi
+  kopyasını gösterdiği için onlar etkilenmiyor.
+
+  SURUM değişince src/components/AdminInstagramView.tsx içindeki adresler
+  de güncellenmeli.
+*/
+const SURUM = 'v3';
+
 const KARTLAR = [
-  ['01-kapak.jpg', kapak()],
-  ['02-nasil-derliyoruz.jpg', nasil()],
-  ['03-takip.jpg', cagri()],
+  [`01-kapak-${SURUM}.jpg`, kapak()],
+  [`02-nasil-giriyor-${SURUM}.jpg`, nasil()],
+  [`03-ne-var-${SURUM}.jpg`, neVar()],
 ];
 
 fs.mkdirSync(HEDEF, { recursive: true });
+
+// Eski sürümler siliniyor: dağıtılan klasörde ölü dosya bırakmamak için.
+for (const eski of fs.readdirSync(HEDEF)) {
+  if (eski.endsWith('.jpg') && !KARTLAR.some(([ad]) => ad === eski)) {
+    fs.rmSync(path.join(HEDEF, eski));
+    console.log(`${eski.padEnd(26)} silindi (eski sürüm)`);
+  }
+}
 
 for (const [ad, svg] of KARTLAR) {
   /*
