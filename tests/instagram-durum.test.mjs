@@ -182,3 +182,91 @@ test('özet hiçbir koşulda jetonu ya da sırrı taşımıyor', () => {
   assert.equal(metin.includes(ORTAM.INSTAGRAM_ACCESS_TOKEN), false);
   assert.equal(metin.includes(ORTAM.INSTAGRAM_APP_SECRET), false);
 });
+
+/* --------------------------------------------------- Instagram Login yüzeyi */
+
+import { instagramAdresleri, instagramDurumOzeti, baglantiyiDogrula } from '../src/lib/instagram-durum.mjs';
+
+const igHesap = { id: '9876543210', user_id: ORTAM.INSTAGRAM_USER_ID, username: 'stajimvar', account_type: 'BUSINESS' };
+const igKota = { data: [{ quota_usage: 0, config: { quota_total: 100 } }] };
+
+/** fetch yerine geçen sahte: adres kalıbına göre hazır yanıt döndürür. */
+const sahteAg = (esleme) => async (adres) => {
+  for (const [kalip, govde] of esleme) {
+    if (adres.includes(kalip)) return { json: async () => govde };
+  }
+  return { json: async () => ({ error: { message: 'beklenmeyen adres', type: 'test' } }) };
+};
+
+test('Instagram Login adresleri graph.instagram.com kullanıyor', () => {
+  const adresler = instagramAdresleri(ORTAM);
+  assert.match(adresler.hesap, /^https:\/\/graph\.instagram\.com\//);
+  assert.match(adresler.hesap, /me\?fields=id,user_id,username,account_type/);
+  assert.match(adresler.kota, /content_publishing_limit/);
+});
+
+test('Instagram Login yüzeyinde kota okunabiliyorsa bağlantı kuruluyor', () => {
+  const ozet = instagramDurumOzeti({ hesap: igHesap, kota: igKota, beklenenKullaniciId: ORTAM.INSTAGRAM_USER_ID });
+  assert.equal(ozet.yuzey, 'instagram-login');
+  assert.equal(ozet.bagli, true);
+  assert.equal(ozet.hesap.kullaniciAdi, 'stajimvar');
+  assert.equal(ozet.jeton.yayinYetkisi, true);
+  assert.deepEqual(ozet.yayinKotasi, { kullanilan: 0, sinir: 100 });
+});
+
+test('Instagram Login yüzeyinde kota hatası paylaşım yetkisini düşürüyor', () => {
+  const ozet = instagramDurumOzeti({
+    hesap: igHesap,
+    kota: { error: { message: 'Insufficient permission', code: 200 } },
+    beklenenKullaniciId: ORTAM.INSTAGRAM_USER_ID,
+  });
+  assert.equal(ozet.bagli, false);
+  assert.equal(ozet.jeton.yayinYetkisi, false);
+  assert.match(ozet.sorunlar.join(' '), /Paylaşım yetkisi doğrulanamadı/);
+});
+
+test('Facebook yüzeyi jetonu çözemezse Instagram yüzeyine düşülüyor', async () => {
+  const cozemedi = { error: { message: 'Cannot parse access token', type: 'OAuthException', code: 190 } };
+  const ozet = await baglantiyiDogrula(
+    ORTAM,
+    sahteAg([
+      ['graph.facebook.com', cozemedi],
+      ['graph.instagram.com/v21.0/me', igHesap],
+      ['content_publishing_limit', igKota],
+    ])
+  );
+
+  assert.equal(ozet.yuzey, 'instagram-login');
+  assert.equal(ozet.bagli, true);
+  assert.equal(ozet.hesap.id, ORTAM.INSTAGRAM_USER_ID);
+});
+
+test('Facebook yüzeyi çalışıyorsa orada kalınıyor', async () => {
+  const ozet = await baglantiyiDogrula(
+    ORTAM,
+    sahteAg([
+      ['debug_token', saglikliDogrulama()],
+      ['graph.facebook.com/v21.0/17841400000000000/content_publishing_limit', saglikliKota],
+      ['graph.facebook.com', saglikliHesap],
+      ['graph.instagram.com', { error: { message: 'çağrılmamalıydı', code: 1 } }],
+    ])
+  );
+
+  assert.equal(ozet.yuzey, 'facebook-login');
+  assert.equal(ozet.bagli, true);
+});
+
+test('iki yüzey de olmazsa hesabı okuyabilen özet dönüyor', async () => {
+  const ozet = await baglantiyiDogrula(
+    ORTAM,
+    sahteAg([
+      ['graph.facebook.com', { error: { message: 'Cannot parse access token', code: 190 } }],
+      ['graph.instagram.com/v21.0/me', igHesap],
+      ['content_publishing_limit', { error: { message: 'Insufficient permission', code: 200 } }],
+    ])
+  );
+
+  assert.equal(ozet.yuzey, 'instagram-login');
+  assert.equal(ozet.bagli, false);
+  assert.equal(ozet.hesap.kullaniciAdi, 'stajimvar');
+});

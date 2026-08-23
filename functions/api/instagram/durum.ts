@@ -18,11 +18,7 @@
  * BU UÇ PAYLAŞIM YAPMAZ. Yalnızca bağlantıyı doğruluyor; içerik yayınlama
  * ayrı bir iş olarak sonra eklenecek.
  */
-import {
-  durumOzeti,
-  eksikAyarlar,
-  grafAdresleri,
-} from '../../../src/lib/instagram-durum.mjs';
+import { baglantiyiDogrula, eksikAyarlar } from '../../../src/lib/instagram-durum.mjs';
 
 interface Ortam {
   INSTAGRAM_APP_ID?: string;
@@ -65,15 +61,6 @@ async function yoneticiMi(env: Ortam, jeton: string): Promise<boolean> {
   return (await cevap.json()) === true;
 }
 
-async function jsonGetir(adres: string) {
-  const cevap = await fetch(adres, { headers: { accept: 'application/json' } });
-  try {
-    return await cevap.json();
-  } catch {
-    return { error: { message: `Yanıt okunamadı (HTTP ${cevap.status})`, type: 'agGecidi' } };
-  }
-}
-
 export const onRequestGet: PagesFunction<Ortam> = async ({ request, env }) => {
   const yetki = request.headers.get('authorization') || '';
   const jeton = yetki.toLowerCase().startsWith('bearer ') ? yetki.slice(7).trim() : '';
@@ -90,19 +77,11 @@ export const onRequestGet: PagesFunction<Ortam> = async ({ request, env }) => {
     return yanit({ bagli: false, eksikAyarlar: eksikler, sorunlar: ['Ortam değişkenleri eksik.'] }, 503);
   }
 
-  const adresler = grafAdresleri(env as unknown as Record<string, string>);
-  const [dogrulama, hesap, kota] = await Promise.all([
-    jsonGetir(adresler.dogrulama),
-    jsonGetir(adresler.hesap),
-    jsonGetir(adresler.kota),
-  ]);
-
-  const ozet = durumOzeti({
-    dogrulama,
-    hesap,
-    kota,
-    beklenenKullaniciId: String(env.INSTAGRAM_USER_ID),
-  });
+  /*
+    İki yüzey de deneniyor: Facebook Login ve Instagram Login. Hangi jeton
+    türü kullanıldığı ortamdan anlaşılmıyor, deneyerek anlaşılıyor.
+  */
+  const ozet = await baglantiyiDogrula(env as unknown as Record<string, string>, fetch);
 
   return yanit({ ...ozet, kontrolZamani: new Date().toISOString() }, ozet.bagli ? 200 : 502);
 };

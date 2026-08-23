@@ -68,6 +68,83 @@ export function grafHatasi(govde) {
 }
 
 /**
+ * Instagram Login (graph.instagram.com) adresleri.
+ *
+ * NEDEN İKİ YÜZEY VAR
+ * -------------------
+ * Meta'nın iki ayrı Instagram kurulumu var: Facebook Login ile bağlanan
+ * işletme hesapları graph.facebook.com'dan, "Instagram API with Instagram
+ * Login" jetonları ise graph.instagram.com'dan konuşuyor. İkinci tür jeton
+ * ilkine sorulduğunda "Cannot parse access token" hatası veriyor — ölçüldü,
+ * canlı kurulumda tam bu oldu.
+ *
+ * Bu yüzden doğrulama iki yüzeyi de deniyor ve hangisi cevap verdiyse onu
+ * kullanıyor.
+ */
+export function instagramAdresleri(env) {
+  const jeton = encodeURIComponent(env.INSTAGRAM_ACCESS_TOKEN);
+  const kullaniciId = encodeURIComponent(env.INSTAGRAM_USER_ID);
+
+  return {
+    hesap: `https://graph.instagram.com/${GRAF_SURUM}/me?fields=id,user_id,username,account_type&access_token=${jeton}`,
+    kota: `https://graph.instagram.com/${GRAF_SURUM}/${kullaniciId}/content_publishing_limit?fields=config,quota_usage&access_token=${jeton}`,
+  };
+}
+
+/**
+ * Instagram Login yüzeyi için özet.
+ *
+ * Bu yüzeyde debug_token yok: jetonun geçerliliği `me` çağrısının
+ * cevap vermesiyle, paylaşım yetkisi de content_publishing_limit ucunun
+ * hatasız dönmesiyle anlaşılıyor — o uç zaten yalnızca yayın izni olan
+ * jetonlara açık.
+ */
+export function instagramDurumOzeti({ hesap, kota, beklenenKullaniciId }) {
+  const sorunlar = [];
+
+  const hesapHatasi = grafHatasi(hesap);
+  if (hesapHatasi) sorunlar.push(`Hesap okunamadı: ${hesapHatasi}`);
+
+  // Instagram Login'de `id` uygulamaya özel, `user_id` ise hesabın kendi
+  // kimliği. INSTAGRAM_USER_ID ikisinden biriyle eşleşebilir.
+  const kimlikler = [hesap?.user_id, hesap?.id].filter((deger) => deger != null).map(String);
+  const eslesme = beklenenKullaniciId ? kimlikler.includes(String(beklenenKullaniciId)) : kimlikler.length > 0;
+  if (kimlikler.length && beklenenKullaniciId && !eslesme) {
+    sorunlar.push('Dönen hesap kimliği INSTAGRAM_USER_ID ile aynı değil.');
+  }
+
+  const kotaHatasi = grafHatasi(kota);
+  if (kotaHatasi) sorunlar.push(`Paylaşım yetkisi doğrulanamadı: ${kotaHatasi}`);
+
+  const kotaKaydi = Array.isArray(kota?.data) ? kota.data[0] : null;
+  const yayinYetkisi = Boolean(kotaKaydi) && !kotaHatasi;
+
+  return {
+    yuzey: 'instagram-login',
+    bagli: sorunlar.length === 0 && kimlikler.length > 0 && yayinYetkisi,
+    sorunlar,
+    hesap: kimlikler.length
+      ? {
+          id: String(hesap.user_id ?? hesap.id),
+          kullaniciAdi: hesap.username ?? null,
+          ad: hesap.account_type ?? null,
+        }
+      : null,
+    jeton: {
+      gecerli: kimlikler.length > 0,
+      suresiz: false,
+      biterTarih: null,
+      gunKaldi: null,
+      izinler: [],
+      yayinYetkisi,
+    },
+    yayinKotasi: kotaKaydi
+      ? { kullanilan: kotaKaydi.quota_usage ?? null, sinir: kotaKaydi.config?.quota_total ?? null }
+      : null,
+  };
+}
+
+/**
  * Üç yanıttan tek bir durum özeti çıkarır.
  *
  * @param {object} girdi
@@ -120,6 +197,7 @@ export function durumOzeti({ dogrulama, hesap, kota, beklenenKullaniciId, simdi 
   const kotaKaydi = Array.isArray(kota?.data) ? kota.data[0] : null;
 
   return {
+    yuzey: 'facebook-login',
     bagli: sorunlar.length === 0 && jetonGecerli && Boolean(hesapId),
     sorunlar,
     hesap: hesapId
@@ -140,4 +218,53 @@ export function durumOzeti({ dogrulama, hesap, kota, beklenenKullaniciId, simdi 
         }
       : null,
   };
+}
+/**
+ * Bağlantıyı iki yüzeyde de dener ve tek bir özet döndürür.
+ *
+ * Sıra önemli: önce Facebook Login yüzeyi, çünkü orada jetonun bitiş tarihi
+ * ve izin listesi de okunabiliyor. Jeton o yüzeyde çözülemiyorsa (Instagram
+ * Login jetonlarında olan tam bu) graph.instagram.com deneniyor.
+ *
+ * `getir` dışarıdan verilebiliyor: testler ağ çağrısı yapmadan koşuyor.
+ */
+export async function baglantiyiDogrula(env, getir) {
+  const cek = async (adres) => {
+    try {
+      const cevap = await getir(adres, { headers: { accept: 'application/json' } });
+      return await cevap.json();
+    } catch (hata) {
+      return { error: { message: String(hata?.message ?? hata).slice(0, 120), type: 'agGecidi' } };
+    }
+  };
+
+  const fbAdres = grafAdresleri(env);
+  const [dogrulama, fbHesap, fbKota] = await Promise.all([
+    cek(fbAdres.dogrulama),
+    cek(fbAdres.hesap),
+    cek(fbAdres.kota),
+  ]);
+
+  const fbOzet = durumOzeti({
+    dogrulama,
+    hesap: fbHesap,
+    kota: fbKota,
+    beklenenKullaniciId: String(env.INSTAGRAM_USER_ID),
+  });
+  if (fbOzet.bagli) return fbOzet;
+
+  const igAdres = instagramAdresleri(env);
+  const [igHesap, igKota] = await Promise.all([cek(igAdres.hesap), cek(igAdres.kota)]);
+  const igOzet = instagramDurumOzeti({
+    hesap: igHesap,
+    kota: igKota,
+    beklenenKullaniciId: String(env.INSTAGRAM_USER_ID),
+  });
+  if (igOzet.bagli) return igOzet;
+
+  /*
+    İkisi de olmadıysa hangi yüzeyin daha ileri gittiğini gösteriyoruz:
+    hesabı okuyabilen yüzey, hiç çözemeyenden daha bilgilendirici.
+  */
+  return igOzet.hesap ? igOzet : fbOzet;
 }
