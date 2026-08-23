@@ -35,6 +35,7 @@ import { OpportunitiesHomeSection } from './components/OpportunitiesHomeSection'
 import { basvuruSonucMesaji } from './lib/basvuru-yolu.mjs';
 import { aramaTeriminiOku, aramaAdresi } from './lib/arama-url.mjs';
 import { AdminOpportunitiesView, AdminOpportunityCreate } from './components/AdminOpportunitiesView';
+import { AdminInstagramView } from './components/AdminInstagramView';
 /*
   Bu ikisi bilerek gecikmeli DEĞİL: /araclar, /araclar/* ve /isveren
   ön render edilen adresler. React kabı temizlediği için gecikmeli
@@ -799,6 +800,13 @@ export default function App() {
   if (temizYol.startsWith('/firsatlar/')) {
     const slug = temizYol.slice('/firsatlar/'.length);
     if (slug) return icerikSayfasi(<OpportunityDetailPage slug={slug} userId={session?.userId ?? null} onBack={() => navigate('/firsatlar')} onRequireLogin={handleOpenLogin} />);
+  }
+
+  /* Yönetim → Instagram bağlantı durumu. Uç yönetici jetonu istiyor. */
+  if (temizYol === '/yonetim/instagram') {
+    return <AdminRouteGate authenticated={Boolean(session)} isAdmin={isAdmin} onLogin={handleOpenLogin}>
+      <AdminInstagramView onNavigate={navigate} />
+    </AdminRouteGate>;
   }
 
   if (temizYol === '/yonetim/firsatlar' || temizYol === '/yonetim/firsatlar/yeni' || /^\/yonetim\/firsatlar\/[^/]+\/duzenle$/.test(temizYol)) {
