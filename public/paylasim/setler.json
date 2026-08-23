@@ -95,5 +95,26 @@
       "/paylasim/hikaye/basvuru-epostasi/04.jpg",
       "/paylasim/hikaye/basvuru-epostasi/05.jpg"
     ]
+  },
+  {
+    "kod": "staj-cv",
+    "ad": "Staj CV’si: deneyimin yokken",
+    "surum": "v1",
+    "guncellendi": "2026-08-23",
+    "metin": "Staj CV’sinin en zor kısmı “iş deneyimi” başlığı. Hiç çalışmamışsan orası boş kalıyor ve CV eksik görünüyor. Çözüm o başlığı zorlamak değil, yerine ne koyacağını bilmek.\n\nDeneyim yerine yazılabilecekler: okul projeleri, kendi merakınla yaptığın çalışmalar, gönüllü işler ve kulüpler, yarı zamanlı işler.\n\nAynı projenin iki yazılışı:\n• “Bitirme projesi” — okuyan kişiye hiçbir şey söylemiyor.\n• “Bitirme projesinde üç kişilik ekipte sensör verisini toplayan arayüzü yazdım.”\n\nFark tek bir soruda: sen ne yaptın? Ekip projesinde bile senin payını yaz — “yer aldım” cümlesi, hiçbir şey yapmamış olmakla aynı görünüyor.\n\nBölüme göre neyin öne çıktığı ve örneklerin tamamı rehberde: stajimvar.com/rehber/staj-cv-nasil-yazilir",
+    "kartlar": [
+      "/paylasim/staj-cv/01-v1.jpg",
+      "/paylasim/staj-cv/02-v1.jpg",
+      "/paylasim/staj-cv/03-v1.jpg",
+      "/paylasim/staj-cv/04-v1.jpg",
+      "/paylasim/staj-cv/05-v1.jpg"
+    ],
+    "hikayeler": [
+      "/paylasim/hikaye/staj-cv/01.jpg",
+      "/paylasim/hikaye/staj-cv/02.jpg",
+      "/paylasim/hikaye/staj-cv/03.jpg",
+      "/paylasim/hikaye/staj-cv/04.jpg",
+      "/paylasim/hikaye/staj-cv/05.jpg"
+    ]
   }
 ]

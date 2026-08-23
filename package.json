@@ -18,7 +18,8 @@
     "paylasim-one-cikanlar": "node scripts/paylasim-one-cikanlar.mjs",
     "paylasim-sss": "node scripts/paylasim-sss.mjs",
     "paylasim-kyk": "node scripts/paylasim-kyk.mjs",
-    "paylasim-basvuru-epostasi": "node scripts/paylasim-basvuru-epostasi.mjs"
+    "paylasim-basvuru-epostasi": "node scripts/paylasim-basvuru-epostasi.mjs",
+    "paylasim-cv": "node scripts/paylasim-cv.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",
