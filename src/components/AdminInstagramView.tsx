@@ -171,8 +171,31 @@ export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }
       setYayin({ asama: 'gonderiliyor', mesaj: 'Kartlar Instagram tarafına hazırlanıyor…' });
       const hazirlik = await cagir({ adim: 'hazirla', gorseller: tamAdresler, aciklama: metin });
 
-      setYayin({ asama: 'gonderiliyor', mesaj: 'Gönderi yayınlanıyor…' });
-      const sonuc = await cagir({ adim: 'yayinla', kapsayici: hazirlik.kapsayici });
+      /*
+        Kapsayıcı hazır olana kadar bekleniyor: Instagram kartları kendi
+        indirip işliyor ve bu birkaç saniye sürüyor. Hazır değilken
+        yayınlamaya kalkmak "Media ID is not available" hatası veriyordu.
+      */
+      let sonuc: Record<string, unknown> | null = null;
+      for (let deneme = 1; deneme <= 12; deneme += 1) {
+        setYayin({
+          asama: 'gonderiliyor',
+          mesaj: deneme === 1 ? 'Gönderi yayınlanıyor…' : `Instagram kartları işliyor… (${deneme}/12)`,
+        });
+
+        const adim = await cagir({ adim: 'yayinla', kapsayici: hazirlik.kapsayici });
+        if (!adim.hazirDegil) {
+          sonuc = adim;
+          break;
+        }
+        await new Promise((bekle) => setTimeout(bekle, 4000));
+      }
+
+      if (!sonuc) {
+        throw new Error(
+          'Instagram kartları hâlâ işliyor. Birkaç dakika sonra "Instagram-da yayınla" ile yeniden deneyebilirsin.'
+        );
+      }
 
       setYayin({ asama: 'tamam', mesaj: `Yayınlandı. Gönderi kimliği: ${sonuc.gonderiKimligi}` });
     } catch (e) {

@@ -156,3 +156,44 @@ export function yayinlaAdresi(env, kapsayiciKimligi) {
 export function gonderiAdresi(kimlik) {
   return `https://www.instagram.com/p/${kimlik}`;
 }
+/**
+ * Kapsayıcının işlenme durumu.
+ *
+ * NEDEN GEREKLİ
+ * -------------
+ * Kapsayıcı kurulduğu anda yayınlanamıyor: Instagram görseli KENDİ
+ * indiriyor ve işliyor. Hazır olmadan yayınlamaya kalkınca Meta
+ * "Media ID is not available" (kod 9007) diyor — ölçüldü, ilk denemede
+ * tam bu hata geldi. Yayından önce durumu sormak gerekiyor.
+ */
+export function kapsayiciDurumAdresi(env, kimlik) {
+  const parametreler = new URLSearchParams({
+    fields: 'status_code,status',
+    access_token: env.INSTAGRAM_ACCESS_TOKEN,
+  });
+  return `https://graph.instagram.com/${GRAF_SURUM}/${encodeURIComponent(kimlik)}?${parametreler}`;
+}
+
+/**
+ * Durum yanıtını üç sonuca indirger: hazır, bekliyor, hata.
+ *
+ * @returns {{hazir: boolean, bekliyor: boolean, durum: string|null, hata: string|null}}
+ */
+export function kapsayiciDurumu(govde) {
+  const kod = String(govde?.status_code ?? '').toUpperCase();
+
+  if (kod === 'FINISHED') return { hazir: true, bekliyor: false, durum: kod, hata: null };
+  if (kod === 'IN_PROGRESS') return { hazir: false, bekliyor: true, durum: kod, hata: null };
+  if (kod === 'PUBLISHED') {
+    return { hazir: false, bekliyor: false, durum: kod, hata: 'Bu kapsayıcı zaten yayınlanmış.' };
+  }
+  if (kod === 'EXPIRED') {
+    return { hazir: false, bekliyor: false, durum: kod, hata: 'Kapsayıcının süresi doldu; yeniden hazırlanmalı.' };
+  }
+  if (kod === 'ERROR') {
+    const ayrinti = govde?.status ? ` (${govde.status})` : '';
+    return { hazir: false, bekliyor: false, durum: kod, hata: `Instagram görseli işleyemedi${ayrinti}.` };
+  }
+
+  return { hazir: false, bekliyor: false, durum: kod || null, hata: 'Kapsayıcı durumu okunamadı.' };
+}

@@ -105,3 +105,36 @@ test('jeton adreste var ama başka hiçbir yere sızmıyor', () => {
   const sorunlar = paylasimSorunlari({ gorseller: ['https://ornek.com/x.jpg'], aciklama: 'Metin' });
   assert.equal(sorunlar.join(' ').includes(ORTAM.INSTAGRAM_ACCESS_TOKEN), false);
 });
+
+/* ------------------------------------------------ kapsayıcı durumu */
+
+import { kapsayiciDurumAdresi, kapsayiciDurumu } from '../src/lib/instagram-paylasim.mjs';
+
+test('durum adresi status_code alanını istiyor', () => {
+  const adres = kapsayiciDurumAdresi(ORTAM, '178412345');
+  assert.match(adres, /^https:\/\/graph\.instagram\.com\/[^/]+\/178412345\?/);
+  assert.match(adres, /fields=status_code%2Cstatus/);
+});
+
+test('FINISHED yayınlanabilir, IN_PROGRESS beklenir', () => {
+  assert.deepEqual(kapsayiciDurumu({ status_code: 'FINISHED' }), {
+    hazir: true, bekliyor: false, durum: 'FINISHED', hata: null,
+  });
+  assert.deepEqual(kapsayiciDurumu({ status_code: 'IN_PROGRESS' }), {
+    hazir: false, bekliyor: true, durum: 'IN_PROGRESS', hata: null,
+  });
+});
+
+test('ERROR, EXPIRED ve PUBLISHED yayına izin vermiyor', () => {
+  const hatali = kapsayiciDurumu({ status_code: 'ERROR', status: 'Media download failed' });
+  assert.equal(hatali.hazir, false);
+  assert.match(hatali.hata, /Media download failed/);
+
+  assert.match(kapsayiciDurumu({ status_code: 'EXPIRED' }).hata, /süresi doldu/);
+  assert.match(kapsayiciDurumu({ status_code: 'PUBLISHED' }).hata, /zaten yayınlanmış/);
+});
+
+test('boş ya da tanınmayan durum yayına izin vermiyor', () => {
+  assert.match(kapsayiciDurumu({}).hata, /okunamadı/);
+  assert.match(kapsayiciDurumu(null).hata, /okunamadı/);
+});

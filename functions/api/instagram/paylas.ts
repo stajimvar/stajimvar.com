@@ -28,6 +28,8 @@
  */
 import {
   gorselKapsayiciAdresi,
+  kapsayiciDurumAdresi,
+  kapsayiciDurumu,
   karuselKapsayiciAdresi,
   paylasimSorunlari,
   yayinlaAdresi,
@@ -78,6 +80,16 @@ async function yoneticiMi(env: Ortam, jeton: string): Promise<boolean> {
   });
   if (!cevap.ok) return false;
   return (await cevap.json()) === true;
+}
+
+/** Meta'dan GET ile okur. */
+async function metadan(adres: string): Promise<Record<string, unknown>> {
+  try {
+    const cevap = await fetch(adres, { headers: { accept: 'application/json' } });
+    return (await cevap.json()) as Record<string, unknown>;
+  } catch (hata) {
+    return { error: { message: String((hata as Error).message).slice(0, 160), type: 'agGecidi' } };
+  }
 }
 
 /** Meta'ya POST atar; hata gövdesini okunur tek satıra çevirir. */
@@ -144,6 +156,25 @@ const paylasimiIsle: PagesFunction<Ortam> = async ({ request, env }) => {
     if (!/^[0-9]+$/.test(kapsayici)) {
       return yanit({ hata: 'Geçerli bir kapsayıcı kimliği gerekiyor.' }, 400);
     }
+
+    /*
+      ÖNCE DURUM, SONRA YAYIN
+
+      Kapsayıcı kurulduğu anda yayınlanamıyor: Instagram kartları kendi
+      indirip işliyor. Hazır değilken yayınlamaya kalkınca Meta
+      "Media ID is not available" (kod 9007) diyor — ilk denemede tam bu
+      oldu. Hazır değilse yayınlamıyoruz; arayüz birkaç saniye sonra
+      yeniden soruyor.
+    */
+    const durumGovdesi = await metadan(
+      kapsayiciDurumAdresi(env as unknown as Record<string, string>, kapsayici)
+    );
+    const grafHata = grafHatasi(durumGovdesi);
+    if (grafHata) return hataYaniti(`Kapsayıcı durumu okunamadı: ${grafHata}`);
+
+    const durum = kapsayiciDurumu(durumGovdesi);
+    if (durum.hata) return hataYaniti(durum.hata, { durum: durum.durum });
+    if (!durum.hazir) return yanit({ hazirDegil: true, durum: durum.durum });
 
     /* Bu adımdan sonra geri dönüş yok: gönderi API'den silinemiyor. */
     const yayin = await metaya(yayinlaAdresi(env as unknown as Record<string, string>, kapsayici));
