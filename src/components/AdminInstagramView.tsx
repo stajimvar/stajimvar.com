@@ -1,5 +1,11 @@
 import React from 'react';
 import { supabase } from '../lib/supabase';
+import {
+  ACIKLAMA_SINIRI,
+  aciklamaKur,
+  etiketleriBul,
+  paylasimSorunlari,
+} from '../lib/instagram-paylasim.mjs';
 
 /**
  * Yönetim → Instagram bağlantısı.
@@ -32,11 +38,44 @@ type Durum = {
   hata?: string;
 };
 
+/*
+  İlk gönderinin kartları ve metni.
+
+  Kartlar scripts/instagram-kartlari.mjs ile üretilip public/paylasim/
+  altına yazıldı; Instagram görseli kendi indirdiği için adres herkese açık
+  ve kalıcı olmak zorunda.
+
+  Metin taslak: yayın düğmesine basmadan önce burada düzenlenebiliyor.
+  Etiketler ayrı blokta ve az sayıda — otuz etiket erişim değil spam
+  sinyali veriyor.
+*/
+const KARTLAR = [
+  '/paylasim/01-kapak.jpg',
+  '/paylasim/02-nasil-derliyoruz.jpg',
+  '/paylasim/03-takip.jpg',
+];
+
+const TASLAK_METIN = aciklamaKur(
+  [
+    'İlanları aracı sitelerden değil, şirketlerin kendi kariyer sayfalarından derliyoruz.',
+    'Her ilanda şirketin kendi başvuru bağlantısı var; arada kimse yok.',
+    '',
+    'Bursta tarih doğrulanmadıysa "takvim bekleniyor" yazıyoruz — tahmin etmiyoruz.',
+    '',
+    'Staj ilanları, burslar, KYK ve yurt dışı programları: stajimvar.com (bağlantı profilde)',
+  ].join('\n')
+);
+
 const tarih = (deger?: string | null) =>
   deger ? new Intl.DateTimeFormat('tr-TR', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(deger)) : '—';
 
 export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate }) => {
   const [durum, setDurum] = React.useState<Durum | null>(null);
+  const [metin, setMetin] = React.useState(TASLAK_METIN);
+  const [yayin, setYayin] = React.useState<{
+    asama: 'bos' | 'gonderiliyor' | 'tamam' | 'hata';
+    mesaj?: string;
+  }>({ asama: 'bos' });
   const [asama, setAsama] = React.useState<'yukleniyor' | 'hazir' | 'hata'>('yukleniyor');
   const [hata, setHata] = React.useState('');
 
@@ -63,6 +102,42 @@ export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }
   React.useEffect(() => {
     void sorgula();
   }, [sorgula]);
+
+  const tamAdresler = KARTLAR.map((yol) => `https://stajimvar.com${yol}`);
+  const sorunlar: string[] = paylasimSorunlari(
+    { gorseller: tamAdresler, aciklama: metin },
+    'stajimvar.com'
+  );
+  const etiketSayisi = etiketleriBul(metin).length;
+
+  const yayinla = async () => {
+    /*
+      Yayınlanan gönderi API'den silinemiyor; bu yüzden önce tarayıcı onayı,
+      sonra istek gövdesinde ayrıca `onay: true`.
+    */
+    const emin = window.confirm(
+      `${KARTLAR.length} kartlık gönderi Instagram'da YAYINLANACAK. Yayınlanan gönderi buradan silinemez. Devam edilsin mi?`
+    );
+    if (!emin) return;
+
+    setYayin({ asama: 'gonderiliyor' });
+    try {
+      const { data } = await supabase.auth.getSession();
+      const jeton = data.session?.access_token;
+      if (!jeton) throw new Error('Oturum bulunamadı; yeniden giriş yapın.');
+
+      const cevap = await fetch('/api/instagram/paylas', {
+        method: 'POST',
+        headers: { authorization: `Bearer ${jeton}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ gorseller: tamAdresler, aciklama: metin, onay: true }),
+      });
+      const govde = await cevap.json();
+      if (!cevap.ok) throw new Error(govde?.hata ?? `Yayınlanamadı (HTTP ${cevap.status})`);
+      setYayin({ asama: 'tamam', mesaj: `Yayınlandı. Gönderi kimliği: ${govde.gonderiKimligi}` });
+    } catch (e) {
+      setYayin({ asama: 'hata', mesaj: e instanceof Error ? e.message : 'Bilinmeyen hata' });
+    }
+  };
 
   const rozet = durum?.bagli
     ? { metin: 'Bağlı', sinif: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
@@ -178,11 +253,83 @@ export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }
             </div>
           ) : null}
 
-          <p className="border-t border-gray-100 pt-3 text-xs text-gray-500">
-            Bu ekran yalnızca bağlantıyı doğruluyor. İçerik paylaşma özelliği henüz yok.
-          </p>
         </div>
       )}
+
+      {/*
+        GÖNDERİ YAYINLAMA
+
+        Yayın tek yönlü: gönderi API'den silinemiyor. Düğme yalnızca bağlantı
+        doğrulanmışsa ve metin doğrulamayı geçmişse etkin; basıldığında
+        ayrıca tarayıcı onayı isteniyor.
+      */}
+      <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5">
+        <div>
+          <h2 className="text-lg font-extrabold text-gray-950">Gönderi yayınla</h2>
+          <p className="text-sm text-gray-600">
+            Kartlar <code>public/paylasim/</code> altından geliyor; yenilemek için{' '}
+            <code>npm run instagram-kartlari</code>.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          {KARTLAR.map((yol) => (
+            <img
+              key={yol}
+              src={yol}
+              alt=""
+              className="aspect-square w-full rounded-xl border border-gray-200 object-cover"
+            />
+          ))}
+        </div>
+
+        <label className="block text-sm font-semibold text-gray-800">
+          Gönderi metni
+          <textarea
+            value={metin}
+            onChange={(e) => setMetin(e.target.value)}
+            className="mt-1 min-h-56 w-full rounded-xl border border-gray-200 p-3 font-mono text-xs leading-relaxed"
+          />
+        </label>
+
+        <p className="text-xs text-gray-500">
+          {metin.length} / {ACIKLAMA_SINIRI} karakter · {etiketSayisi} etiket
+        </p>
+
+        {sorunlar.length > 0 && (
+          <ul className="list-disc space-y-1 pl-5 text-sm text-red-700">
+            {sorunlar.map((sorun) => (
+              <li key={sorun}>{sorun}</li>
+            ))}
+          </ul>
+        )}
+
+        {yayin.mesaj && (
+          <p
+            role="status"
+            aria-live="polite"
+            className={`rounded-xl border p-3 text-sm ${
+              yayin.asama === 'hata'
+                ? 'border-red-200 bg-red-50 text-red-700'
+                : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+            }`}
+          >
+            {yayin.mesaj}
+          </p>
+        )}
+
+        <button
+          onClick={yayinla}
+          disabled={!durum?.bagli || sorunlar.length > 0 || yayin.asama === 'gonderiliyor'}
+          className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-gray-300"
+        >
+          {yayin.asama === 'gonderiliyor' ? 'Yayınlanıyor…' : 'Instagram-da yayınla'}
+        </button>
+
+        {!durum?.bagli && (
+          <p className="text-xs text-gray-500">Yayın düğmesi, bağlantı doğrulanana kadar kapalı.</p>
+        )}
+      </div>
     </main>
   );
 };

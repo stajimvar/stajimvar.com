@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+    a { color: #FFFFFF; } a:hover { color: #DBEAFE; }
+  </style>
+</helmet>
+<div style="width: 1080px; height: 1080px; box-sizing: border-box; background: #2563EB; padding: 76px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
+
+  <div aria-hidden="true" style="position: absolute; bottom: -260px; left: -160px; width: 700px; height: 700px; border-radius: 50%; background: #1D4ED8;"></div>
+
+  <div style="position: relative; display: flex; align-items: center; gap: 18px;">
+    <img src="logo.png" alt="" style="width: 72px; height: 72px; border-radius: 50%; background: #FFFFFF;">
+    <span style="font-size: 34px; font-weight: 800; letter-spacing: -0.02em; color: #FFFFFF;">StajımVar<span style="color: #BFDBFE;">.</span></span>
+  </div>
+
+  <div style="position: relative; display: flex; flex-direction: column; gap: 30px;">
+    <h2 style="margin: 0; font-size: 84px; line-height: 1.05; letter-spacing: -0.035em; font-weight: 800; color: #FFFFFF; text-wrap: balance;">
+      Yeni ilan ve burslar<br>burada duyurulacak.
+    </h2>
+    <p style="margin: 0; font-size: 32px; line-height: 1.45; color: #DBEAFE; max-width: 800px;">
+      Staj ilanları, burslar, KYK ve yurt dışı programları — hepsi resmî kaynağıyla.
+    </p>
+  </div>
+
+  <div style="position: relative; display: flex; align-items: center; justify-content: space-between; gap: 24px;">
+    <div style="display: flex; align-items: center; gap: 16px; background: #FFFFFF; border-radius: 999px; padding: 22px 38px;">
+      <span style="font-size: 30px; font-weight: 800; color: #2563EB;">stajimvar.com</span>
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M5 12h14"></path>
+        <path d="M13 6l6 6-6 6"></path>
+      </svg>
+    </div>
+    <span style="font-size: 26px; font-weight: 600; color: #DBEAFE;">Bağlantı profilde</span>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1080,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

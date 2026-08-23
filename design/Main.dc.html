@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+    a { color: #2563EB; } a:hover { color: #1D4ED8; }
+  </style>
+</helmet>
+<div style="width: 1080px; height: 1080px; box-sizing: border-box; background: #FFFFFF; padding: 76px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
+
+  <div aria-hidden="true" style="position: absolute; top: -220px; right: -180px; width: 620px; height: 620px; border-radius: 50%; background: #EFF6FF;"></div>
+
+  <div style="position: relative; display: flex; align-items: center; gap: 18px;">
+    <img src="logo.png" alt="" style="width: 72px; height: 72px; border-radius: 50%;">
+    <span style="font-size: 34px; font-weight: 800; letter-spacing: -0.02em; color: #030712;">Stajım<span style="color: #2563EB;">Var</span><span style="color: #2563EB;">.</span></span>
+  </div>
+
+  <div style="position: relative; display: flex; flex-direction: column; gap: 28px;">
+    <span style="align-self: flex-start; font-size: 22px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #2563EB; background: #EFF6FF; border: 1px solid #DBEAFE; border-radius: 999px; padding: 10px 22px;">Aracı yok</span>
+    <h1 style="margin: 0; font-size: 82px; line-height: 1.04; letter-spacing: -0.035em; font-weight: 800; color: #030712; text-wrap: balance;">
+      İlanları aracı sitelerden değil,<br>
+      <span style="color: #2563EB;">şirketlerin kendi kariyer<br>sayfalarından</span> derliyoruz.
+    </h1>
+    <p style="margin: 0; font-size: 32px; line-height: 1.45; color: #4B5563; max-width: 820px;">
+      Her ilanda şirketin kendi başvuru bağlantısı var. Arada kimse yok.
+    </p>
+  </div>
+
+  <div style="position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;">
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; flex-grow: 1; max-width: 720px;">
+      <div style="background: #FFFFFF; border: 1px solid #DBEAFE; border-radius: 20px; padding: 22px 24px;">
+        <b style="display: block; font-size: 46px; font-weight: 800; color: #2563EB; line-height: 1;">13</b>
+        <span style="display: block; margin-top: 8px; font-size: 20px; color: #4B5563;">açık staj ilanı</span>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #DBEAFE; border-radius: 20px; padding: 22px 24px;">
+        <b style="display: block; font-size: 46px; font-weight: 800; color: #2563EB; line-height: 1;">10</b>
+        <span style="display: block; margin-top: 8px; font-size: 20px; color: #4B5563;">şirket</span>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #DBEAFE; border-radius: 20px; padding: 22px 24px;">
+        <b style="display: block; font-size: 46px; font-weight: 800; color: #2563EB; line-height: 1;">11</b>
+        <span style="display: block; margin-top: 8px; font-size: 20px; color: #4B5563;">burs ve fırsat</span>
+      </div>
+    </div>
+    <span style="font-size: 26px; font-weight: 700; color: #030712; white-space: nowrap;">stajimvar.com</span>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1080,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -12,7 +12,8 @@
     "ads-txt": "node scripts/ads-txt.mjs",
     "onrender": "node scripts/onrender.mjs",
     "og": "node scripts/og-gorsel.mjs",
-    "ikonlar": "node scripts/ikonlar.mjs"
+    "ikonlar": "node scripts/ikonlar.mjs",
+    "instagram-kartlari": "node scripts/instagram-kartlari.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",

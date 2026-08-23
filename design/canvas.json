@@ -1,0 +1,8 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "1 — Kapak", "x": 0, "y": 0, "w": 1080, "h": 1080 },
+    { "file": "NasilDerliyoruz.dc.html", "title": "2 — Nasıl derliyoruz", "x": 1180, "y": 0, "w": 1080, "h": 1080 },
+    { "file": "TakipCagrisi.dc.html", "title": "3 — Takip çağrısı", "x": 2360, "y": 0, "w": 1080, "h": 1080 }
+  ],
+  "launch": { "view": "canvas" }
+}
