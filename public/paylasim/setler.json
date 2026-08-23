@@ -74,5 +74,26 @@
       "/paylasim/hikaye/kyk-burs-kredi/03.jpg",
       "/paylasim/hikaye/kyk-burs-kredi/04.jpg"
     ]
+  },
+  {
+    "kod": "basvuru-epostasi",
+    "ad": "Staj başvuru e-postası",
+    "surum": "v1",
+    "guncellendi": "2026-08-23",
+    "metin": "İlan olmayan şirkete doğrudan yazmak, staj bulmanın en çok sonuç veren yolu. Ama çoğu e-posta okunmadan kapanıyor — genelde aynı birkaç sebepten.\n\nKonu satırı: Staj Başvurusu — [Bölüm] — [Tarih aralığı]\n“Merhaba”, tek başına “Staj” ya da boş konu satırı doğrudan çöpe gidiyor.\n\nSık yapılan hatalar:\n• Otuz adresi “Kime” satırına yazmak — herkes birbirini görüyor, kimse cevap vermiyor.\n• CV’yi Word olarak eklemek. PDF gönder, adı “AdSoyad-CV.pdf” olsun.\n• Sigortadan hiç söz etmemek. Zorunlu stajda sigortayı genelde okul yapıyor; tek cümleyle söylemek tereddüt eden işvereni rahatlatıyor.\n• Şirket adını yanlış yazmak.\n\nKopyalanabilir şablon üçüncü kartta; tam hâli rehberde: stajimvar.com/rehber/staj-basvuru-epostasi",
+    "kartlar": [
+      "/paylasim/basvuru-epostasi/01-v1.jpg",
+      "/paylasim/basvuru-epostasi/02-v1.jpg",
+      "/paylasim/basvuru-epostasi/03-v1.jpg",
+      "/paylasim/basvuru-epostasi/04-v1.jpg",
+      "/paylasim/basvuru-epostasi/05-v1.jpg"
+    ],
+    "hikayeler": [
+      "/paylasim/hikaye/basvuru-epostasi/01.jpg",
+      "/paylasim/hikaye/basvuru-epostasi/02.jpg",
+      "/paylasim/hikaye/basvuru-epostasi/03.jpg",
+      "/paylasim/hikaye/basvuru-epostasi/04.jpg",
+      "/paylasim/hikaye/basvuru-epostasi/05.jpg"
+    ]
   }
 ]
