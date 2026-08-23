@@ -38,22 +38,21 @@ const HEDEF = path.join(KOK, 'public', 'paylasim');
 
   Instagram'ın profil ızgarası artık kare değil, 3:4 dikey. Kare kartlar
   orada sağdan ve soldan %12,5 kesiliyordu; ilk gönderide başlığın ilk
-  harfleri bu yüzden gitti. 4:5'e (1080x1350) geçmek kırpmayı kenar başına
-  ~%3'e indirdi ama bitirmedi — ızgara hâlâ kırpıyor.
+  harfleri bu yüzden gitti. 4:5 (1080x1350) kırpmayı azalttı ama bitirmedi.
 
-  Kart artık doğrudan ızgaranın oranında üretiliyor: 1080x1440. İnsanlar
-  gönderiyi önce ızgarada gördüğü için ölçü oradan alınıyor.
+  Kart artık ızgaranın oranında üretiliyor: 1080x1440. Ölçü oradan alınıyor
+  çünkü insanlar gönderiyi önce ızgarada görüyor. Yayınlanan gönderide
+  ölçüldü: akış görünümü de 3:4'ü tam gösteriyor, kırpmıyor.
 
-  AKIŞ İÇİN GÜVENLİ ALAN
-  Akış görünümü dikey görselleri 4:5'e kadar gösteriyor; 3:4 bir görsel
-  orada üstten ve alttan 45'er piksel kırpılabilir. Bu yüzden içerik
-  tuvalin ortasındaki 1080x1350'lik banda sığdırılıyor: tasarımın kendisi
-  1080x1080'lik blok olarak duruyor, üstüne ve altına eşit boşluk
-  ekleniyor. Kırpma olursa yalnız o boşluktan yiyor.
+  DÜZEN 3:4 İÇİN KURULDU, KAREDEN GERİLMEDİ
+  İlk denemede kare tasarım olduğu gibi bırakılıp üstüne ve altına eşit bant
+  eklenmişti. Izgarada sorun yoktu ama gönderiye girince kart "kenarlarına
+  kaldırım döşenmiş" gibi duruyordu: logoyla başlık arasında bomboş bir
+  alan. Şimdi boşluk banda değil, kartın kendi ritmine dağılıyor — başlık
+  büyüdü, bloklar arası aralık açıldı, alt öğeler kartın altına oturdu.
 */
 const EN = 1080;
 const BOY = 1440;
-const KAYMA = (BOY - EN) / 2;
 
 const MAVI = '#2563EB';
 const KOYU_MAVI = '#1D4ED8';
@@ -78,83 +77,112 @@ const satir = (x, y, metin, { boyut = 32, renk = GRI, kalin = 400, aralik = 0 } 
 
 const sarmal = (zemin, svg) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="${EN}" height="${BOY}" viewBox="0 0 ${EN} ${BOY}">` +
-  `<rect width="${EN}" height="${BOY}" fill="${zemin}"/>` +
-  `<g transform="translate(0 ${KAYMA})">${svg}</g></svg>`;
+  `<rect width="${EN}" height="${BOY}" fill="${zemin}"/>${svg}</svg>`;
+
+/*
+  DÜZEN DİKEY KURULUYOR
+
+  Üç kartın da omurgası aynı: üstte marka satırı, ortada tek bir cümlelik
+  ana mesaj, altta o mesajı taşıyan blok. Dikey biçimde göz yukarıdan
+  aşağıya iniyor; yan yana dizmek yerine alt alta dizmek hem daha okunur
+  hem de kartın boyunu kendiliğinden dolduruyor.
+
+  Yazı boyutları kasten büyük: gönderi çoğunlukla ızgarada, yani gerçek
+  boyutunun dörtte birinde görülüyor. Izgarada okunmayan yazı yok sayılır.
+*/
+
+/** Marka satırı: üç kartın da başında aynı yerde duruyor. */
+const marka = (renk, halka = null) => `
+  ${halka ? `<circle cx="114" cy="130" r="38" fill="${halka}"/>` : ''}
+  ${logo(76, 92, 76)}
+  ${satir(180, 148, 'StajımVar', { boyut: 38, renk, kalin: 800 })}
+`;
+
+/** Onay işareti: kapak kartındaki maddelerin başında. */
+const tik = (x, y) => `
+  <circle cx="${x}" cy="${y}" r="26" fill="${MAVI}"/>
+  <path d="M${x - 11} ${y} l8 9 15 -17" stroke="#FFFFFF" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+`;
 
 /* ------------------------------------------------------------- 1. kapak */
 
 const kapak = () => sarmal('#FFFFFF', `
-  <circle cx="1000" cy="80" r="310" fill="${ACIK_MAVI}"/>
+  <circle cx="1010" cy="40" r="330" fill="${ACIK_MAVI}"/>
 
-  ${logo(76, 76, 72)}
-  ${satir(166, 128, 'StajımVar', { boyut: 34, renk: SIYAH, kalin: 800 })}
+  ${marka(SIYAH)}
 
-  <rect x="76" y="352" width="196" height="52" rx="26" fill="${ACIK_MAVI}" stroke="${KENAR_MAVI}"/>
-  ${satir(100, 387, 'ARACI YOK', { boyut: 22, renk: MAVI, kalin: 800, aralik: 2.4 })}
+  <rect x="76" y="360" width="214" height="58" rx="29" fill="${ACIK_MAVI}" stroke="${KENAR_MAVI}"/>
+  ${satir(104, 399, 'ARACI YOK', { boyut: 24, renk: MAVI, kalin: 800, aralik: 2.4 })}
 
-  ${satir(76, 500, 'İlanları aracı sitelerden', { boyut: 74, renk: SIYAH, kalin: 800 })}
-  ${satir(76, 584, 'değil, şirketlerin kendi', { boyut: 74, renk: SIYAH, kalin: 800 })}
-  ${satir(76, 668, 'kariyer sayfalarından', { boyut: 74, renk: MAVI, kalin: 800 })}
-  ${satir(76, 752, 'derliyoruz.', { boyut: 74, renk: SIYAH, kalin: 800 })}
+  ${satir(76, 546, 'İlanları aracı', { boyut: 96, renk: SIYAH, kalin: 800 })}
+  ${satir(76, 656, 'sitelerden değil,', { boyut: 96, renk: SIYAH, kalin: 800 })}
+  ${satir(76, 766, 'şirketin kendi', { boyut: 96, renk: SIYAH, kalin: 800 })}
+  ${satir(76, 876, 'sayfasından.', { boyut: 96, renk: MAVI, kalin: 800 })}
 
-  ${satir(76, 818, 'Her ilanda şirketin kendi başvuru bağlantısı var.', { boyut: 30, renk: GRI })}
+  <rect x="48" y="1000" width="984" height="392" rx="48" fill="#F8FAFC" stroke="${KENAR_GRI}"/>
 
-  <rect x="76" y="890" width="356" height="76" rx="38" fill="#FFFFFF" stroke="${KENAR_MAVI}"/>
-  ${satir(108, 938, 'Şirketin kendi sayfası', { boyut: 26, renk: SIYAH, kalin: 700 })}
+  ${tik(122, 1102)}
+  ${satir(180, 1116, 'Başvuru bağlantısı şirkete gider', { boyut: 34, renk: SIYAH, kalin: 700 })}
 
-  <rect x="452" y="890" width="250" height="76" rx="38" fill="#FFFFFF" stroke="${KENAR_MAVI}"/>
-  ${satir(484, 938, 'Resmî kaynak', { boyut: 26, renk: SIYAH, kalin: 700 })}
+  ${tik(122, 1222)}
+  ${satir(180, 1236, 'Her ilanın resmî kaynağı yazılı', { boyut: 34, renk: SIYAH, kalin: 700 })}
 
-  <rect x="722" y="890" width="282" height="76" rx="38" fill="#FFFFFF" stroke="${KENAR_MAVI}"/>
-  ${satir(754, 938, 'Süresi geçen düşer', { boyut: 26, renk: SIYAH, kalin: 700 })}
+  ${tik(122, 1342)}
+  ${satir(180, 1356, 'Süresi geçen ilan listeden düşer', { boyut: 34, renk: SIYAH, kalin: 700 })}
 `);
 
 /* ------------------------------------------------- 2. nasıl derliyoruz */
 
 const adim = (y, sira, baslik, aciklama) => `
-  <rect x="76" y="${y}" width="928" height="150" rx="24" fill="#FFFFFF" stroke="${KENAR_GRI}"/>
-  <circle cx="139" cy="${y + 75}" r="31" fill="${ACIK_MAVI}"/>
-  ${satir(129, y + 87, sira, { boyut: 30, renk: MAVI, kalin: 800 })}
-  ${satir(196, y + 62, baslik, { boyut: 31, renk: SIYAH, kalin: 800 })}
-  ${satir(196, y + 105, aciklama, { boyut: 24, renk: GRI })}
+  <rect x="48" y="${y}" width="984" height="200" rx="32" fill="#FFFFFF" stroke="${KENAR_GRI}"/>
+  <circle cx="128" cy="${y + 100}" r="40" fill="${MAVI}"/>
+  ${satir(115, y + 114, sira, { boyut: 38, renk: '#FFFFFF', kalin: 800 })}
+  ${satir(200, y + 88, baslik, { boyut: 38, renk: SIYAH, kalin: 800 })}
+  ${satir(200, y + 140, aciklama, { boyut: 27, renk: GRI })}
 `;
 
 const nasil = () => sarmal('#FFFFFF', `
+  <circle cx="1010" cy="40" r="330" fill="${ACIK_MAVI}"/>
 
-  ${logo(76, 70, 56)}
-  ${satir(148, 108, 'StajımVar', { boyut: 26, renk: SIYAH, kalin: 800 })}
+  ${marka(SIYAH)}
 
-  ${satir(76, 240, 'Bir ilan listeye', { boyut: 64, renk: SIYAH, kalin: 800 })}
-  ${satir(76, 316, 'nasıl giriyor?', { boyut: 64, renk: SIYAH, kalin: 800 })}
+  ${satir(76, 400, 'Bir ilan listeye', { boyut: 84, renk: SIYAH, kalin: 800 })}
+  ${satir(76, 496, 'nasıl giriyor?', { boyut: 84, renk: MAVI, kalin: 800 })}
 
-  ${adim(400, '1', 'Şirketin kendi kariyer sayfası taranır', 'İlan buradan alınır; aracı ilan sitesi kullanılmaz.')}
-  ${adim(570, '2', 'Başvuru bağlantısı şirkete gider', 'Başvurunu şirketin resmî sayfasında yaparsın.')}
-  ${adim(740, '3', 'Takvim bilinmiyorsa öyle yazar', 'Tarihi doğrulanmayan bursta "Takvim bekleniyor" görürsün.')}
+  ${adim(620, '1', 'Şirketin kariyer sayfası taranır', 'Aracı ilan sitesi kullanılmıyor.')}
+  ${adim(848, '2', 'Başvuru bağlantısı şirkete gider', 'Başvurunu şirketin kendi sayfasında yaparsın.')}
+  ${adim(1076, '3', 'Takvim bilinmiyorsa öyle yazar', 'Tarihi doğrulanmayan bursta "Takvim bekleniyor" görürsün.')}
 
-  <line x1="76" y1="944" x2="1004" y2="944" stroke="${KENAR_GRI}"/>
-  ${satir(76, 996, 'Kaynağı doğrulanmayan kayıt listeye girmiyor.', { boyut: 24, renk: GRI })}
+  ${satir(76, 1370, 'Kaynağı doğrulanmayan kayıt listeye girmiyor.', { boyut: 28, renk: GRI })}
 `);
 
 /* ------------------------------------------------------ 3. takip çağrısı */
 
+const kucukEtiket = (x, y, en, metin) => `
+  <rect x="${x}" y="${y}" width="${en}" height="76" rx="38" fill="none" stroke="#FFFFFF" stroke-opacity="0.45"/>
+  ${satir(x + 30, y + 50, metin, { boyut: 28, renk: '#FFFFFF', kalin: 600 })}
+`;
+
 const cagri = () => sarmal(MAVI, `
-  <circle cx="150" cy="1000" r="330" fill="${KOYU_MAVI}"/>
+  <circle cx="100" cy="1400" r="420" fill="${KOYU_MAVI}"/>
 
-  <circle cx="112" cy="112" r="36" fill="#FFFFFF"/>
-  ${logo(76, 76, 72)}
-  ${satir(166, 128, 'StajımVar', { boyut: 34, renk: '#FFFFFF', kalin: 800 })}
+  ${marka('#FFFFFF', '#FFFFFF')}
 
-  ${satir(76, 470, 'Yeni ilan ve burslar', { boyut: 76, renk: '#FFFFFF', kalin: 800 })}
-  ${satir(76, 556, 'burada duyurulacak.', { boyut: 76, renk: '#FFFFFF', kalin: 800 })}
+  ${satir(76, 560, 'Yeni ilanlar', { boyut: 104, renk: '#FFFFFF', kalin: 800 })}
+  ${satir(76, 680, 've burslar', { boyut: 104, renk: '#FFFFFF', kalin: 800 })}
+  ${satir(76, 800, 'burada.', { boyut: 104, renk: '#FFFFFF', kalin: 800 })}
 
-  ${satir(76, 632, 'Staj ilanları, burslar, KYK ve yurt dışı programları', { boyut: 30, renk: KENAR_MAVI })}
-  ${satir(76, 676, '— hepsi resmî kaynağıyla.', { boyut: 30, renk: KENAR_MAVI })}
+  ${satir(76, 890, 'Hepsi resmî kaynağıyla, tek listede.', { boyut: 34, renk: KENAR_MAVI })}
 
-  <rect x="76" y="880" width="420" height="96" rx="48" fill="#FFFFFF"/>
-  ${satir(120, 942, 'stajimvar.com', { boyut: 32, renk: MAVI, kalin: 800 })}
-  <path d="M400 928 h34 M424 916 l14 12 -14 12" stroke="${MAVI}" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  ${kucukEtiket(76, 980, 268, 'Staj ilanları')}
+  ${kucukEtiket(360, 980, 208, 'Burslar')}
+  ${kucukEtiket(584, 980, 216, 'Yurt dışı')}
 
-  ${satir(700, 942, 'Bağlantı profilde', { boyut: 26, renk: KENAR_MAVI, kalin: 600 })}
+  <rect x="76" y="1200" width="464" height="112" rx="56" fill="#FFFFFF"/>
+  ${satir(126, 1272, 'stajimvar.com', { boyut: 36, renk: MAVI, kalin: 800 })}
+  <path d="M438 1256 h38 M466 1242 l16 14 -16 14" stroke="${MAVI}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  ${satir(600, 1272, 'Bağlantı profilde', { boyut: 28, renk: KENAR_MAVI, kalin: 600 })}
 `);
 
 /* ----------------------------------------------------------------- yaz */
