@@ -6,14 +6,9 @@ import {
   Building2,
   Calculator,
   Sparkles,
-  Compass,
-  FileText,
-  Send,
-  MessageSquare,
-  BookCheck,
 } from 'lucide-react';
 import { SayfaKabugu } from './SayfaKabugu';
-import { YolculukHaritasi, RenkliKart } from './RehberGorseller';
+import { RenkliKart } from './RehberGorseller';
 import { REHBERLER, rehberBul, type Rehber } from '../data/rehberler';
 import { BOLUMLER } from '../data/bolumler';
 import { ARACLAR } from './AraclarListesi';
@@ -299,58 +294,6 @@ export const GuideHub: React.FC<GuideHubProps> = ({ onBack, onNavigate }) => {
             </div>
           </div>
         </div>
-
-        {/* ==================================================== yolculuk */}
-        <section className="space-y-4">
-          <div className="space-y-1">
-            <h2 className="text-xl font-bold text-gray-900">Staj yolculuğun</h2>
-            <p className="text-sm text-gray-500">
-              Baştan sona beş durak. Hangisindeysen oradan devam et.
-            </p>
-          </div>
-          <div className="rounded-3xl border border-gray-200 bg-white p-5 sm:p-7">
-            <YolculukHaritasi
-              onGit={onNavigate}
-              duraklar={[
-                {
-                  ikon: <Compass className="w-7 h-7 text-white" />,
-                  baslik: 'Bölümünü tanı',
-                  ozet: 'Nerede staj yapılır',
-                  yol: '/bolumler',
-                  renk: 'bg-gradient-to-br from-violet-500 to-violet-600',
-                },
-                {
-                  ikon: <FileText className="w-7 h-7 text-white" />,
-                  baslik: 'CV hazırla',
-                  ozet: 'Deneyimin yokken',
-                  yol: '/rehber/staj-cv-nasil-yazilir',
-                  renk: 'bg-gradient-to-br from-blue-500 to-blue-600',
-                },
-                {
-                  ikon: <Send className="w-7 h-7 text-white" />,
-                  baslik: 'Başvur',
-                  ozet: 'E-posta şablonu',
-                  yol: '/rehber/staj-basvuru-epostasi',
-                  renk: 'bg-gradient-to-br from-cyan-500 to-cyan-600',
-                },
-                {
-                  ikon: <MessageSquare className="w-7 h-7 text-white" />,
-                  baslik: 'Mülakata gir',
-                  ozet: 'Sorular ve hatalar',
-                  yol: '/rehber/staj-mulakati',
-                  renk: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
-                },
-                {
-                  ikon: <BookCheck className="w-7 h-7 text-white" />,
-                  baslik: 'Stajı tamamla',
-                  ozet: 'Defter ve belgeler',
-                  yol: '/rehber/staj-defteri-nasil-doldurulur',
-                  renk: 'bg-gradient-to-br from-amber-500 to-amber-600',
-                },
-              ]}
-            />
-          </div>
-        </section>
 
         {/* ================================================== kestirmeler */}
         <section className="space-y-4">
