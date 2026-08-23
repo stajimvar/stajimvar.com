@@ -14,7 +14,8 @@
     "og": "node scripts/og-gorsel.mjs",
     "ikonlar": "node scripts/ikonlar.mjs",
     "instagram-kartlari": "node scripts/instagram-kartlari.mjs",
-    "paylasim-burs-takvimi": "node scripts/paylasim-burs-takvimi.mjs"
+    "paylasim-burs-takvimi": "node scripts/paylasim-burs-takvimi.mjs",
+    "paylasim-one-cikanlar": "node scripts/paylasim-one-cikanlar.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",
