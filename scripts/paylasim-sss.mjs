@@ -13,7 +13,14 @@
  * Buradaki her cevap kodun yaptığı şeyle bire bir aynı olmalı; pazarlama
  * cümlesi değil. Örnek: ilan taslak olarak oluşturuluyor ve yayına
  * alınmadan listede görünmüyor (listings.status varsayılanı 'draft').
- * Site davranışı değişirse bu set de güncellenmeli.
+ *
+ * BAŞVURU AKIŞI GEÇİCİ
+ * --------------------
+ * Başvuru bugün kurumun kendi sayfasına yönleniyor; hedef ise başvuruları
+ * StajımVar üzerinde toplamak, yani kullanıcıyı siteden çıkarmamak. Bu
+ * yüzden ilgili cevaplar "şu an" kaydıyla yazıldı: akış değiştiğinde kart
+ * yanlış duruma düşmesin, güncellenmesi yetsin. Kalıcı vaat gibi yazılan
+ * bir cümle sonradan geri alınamıyor — gönderi paylaşılmış oluyor.
  *
  * Kullanım: npm run paylasim-sss
  */
@@ -59,12 +66,12 @@ const ilkIkisi = () => sarmal(`
 
   ${ayrac(482)}
 
-  ${siraliSatir(570, '1', 'Başvuruyu StajımVar’a mı yapıyorum?', 'Hayır. Bağlantı kurumun kendi sayfasına gider.', { ilk: true })}
+  ${siraliSatir(570, '1', 'Başvuruyu StajımVar’a mı yapıyorum?', 'Şu an hayır: bağlantı kurumun kendi sayfasına gidiyor.', { ilk: true })}
   ${siraliSatir(724, '2', 'Aracı var mı, ücret alıyor musunuz?', 'Hayır. Öğrenci tarafında hiçbir ücret yok.')}
   ${siraliSatir(878, '3', 'Üye olmadan bakabilir miyim?', 'Evet, ilanlar ve burslar herkese açık.')}
-  ${siraliSatir(1032, '4', 'Başvurumu siz mi iletiyorsunuz?', 'Hayır, başvuruyu kurumun sayfasında sen yaparsın.')}
+  ${siraliSatir(1032, '4', 'Başvurumu siz mi iletiyorsunuz?', 'Şimdilik hayır; başvuruyu kurumun sayfasında yaparsın.')}
 
-  ${altKutu(1254, ['Arada kimse yok: bağlantı doğrudan kaynağa gidiyor.'])}
+  ${altKutu(1254, ['Aracı ücreti yok: başvuru doğrudan kaynağına gidiyor.'])}
 `);
 
 const digerIkisi = () => sarmal(`
@@ -116,7 +123,7 @@ await setiYaz({
   metin: [
     'En çok sorulan sorular ve kısa cevapları:',
     '',
-    '• Başvuruyu StajımVar’a yapmıyorsun; bağlantı kurumun kendi sayfasına gidiyor.',
+    '• Başvuru şu an kurumun kendi sayfasında yapılıyor; bağlantı doğrudan oraya gidiyor.',
     '• Öğrenci tarafında hiçbir ücret yok, üye olmadan da bakabilirsin.',
     '• Bir bursta tarih yazmıyorsa tarihi uydurmuyoruz: kartta "Takvim bekleniyor" yazıyor.',
     '• Son başvuru tarihi geçen kayıt listeden düşüyor.',
