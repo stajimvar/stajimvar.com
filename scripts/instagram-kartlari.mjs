@@ -1,5 +1,5 @@
 /**
- * Instagram gönderi kartlarını PNG olarak üretir (1080x1080).
+ * Instagram gönderi kartlarını PNG olarak üretir (1080x1440, 3:4).
  *
  * NEDEN BETİKLE
  * -------------
@@ -34,18 +34,25 @@ const KOK = path.dirname(path.dirname(url.fileURLToPath(import.meta.url)));
 const HEDEF = path.join(KOK, 'public', 'paylasim');
 
 /*
-  4:5 DİKEY, KARE DEĞİL
+  3:4 DİKEY — IZGARA NE GÖSTERİYORSA O
 
-  Kare kartlar profil ızgarasında kenarlarından kırpılıyordu: Instagram
-  ızgarası artık 3:4 dikey, kareyi doldurmak için sağdan ve soldan %12,5
-  kesiyor — ilk gönderide başlığın ilk harfleri bu yüzden gitti.
+  Instagram'ın profil ızgarası artık kare değil, 3:4 dikey. Kare kartlar
+  orada sağdan ve soldan %12,5 kesiliyordu; ilk gönderide başlığın ilk
+  harfleri bu yüzden gitti. 4:5'e (1080x1350) geçmek kırpmayı kenar başına
+  ~%3'e indirdi ama bitirmedi — ızgara hâlâ kırpıyor.
 
-  1080x1350'de (4:5) aynı kırpma kenar başına ~%3'e iniyor ve akışta da
-  daha çok yer kaplıyor. İçerik dikeyde ortalanıyor: eski düzen olduğu
-  gibi duruyor, üstüne ve altına eşit bant ekleniyor.
+  Kart artık doğrudan ızgaranın oranında üretiliyor: 1080x1440. İnsanlar
+  gönderiyi önce ızgarada gördüğü için ölçü oradan alınıyor.
+
+  AKIŞ İÇİN GÜVENLİ ALAN
+  Akış görünümü dikey görselleri 4:5'e kadar gösteriyor; 3:4 bir görsel
+  orada üstten ve alttan 45'er piksel kırpılabilir. Bu yüzden içerik
+  tuvalin ortasındaki 1080x1350'lik banda sığdırılıyor: tasarımın kendisi
+  1080x1080'lik blok olarak duruyor, üstüne ve altına eşit boşluk
+  ekleniyor. Kırpma olursa yalnız o boşluktan yiyor.
 */
 const EN = 1080;
-const BOY = 1350;
+const BOY = 1440;
 const KAYMA = (BOY - EN) / 2;
 
 const MAVI = '#2563EB';
