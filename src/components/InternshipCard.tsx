@@ -97,6 +97,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               <ListingLogo
                 name={listing.companyName}
                 logoUrl={listing.companyLogo || undefined}
+                halkaIcinde
                 className="group-hover:scale-105 transition-transform"
               />
             </div>
@@ -344,7 +345,12 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                   : 'text-white bg-blue-600 hover:bg-blue-700 shadow-xs flex-1 sm:flex-none min-w-0'
               }`}
             >
-              <span>{yol.anaEylem === 'resmi-site' ? yol.takipEtiketi : yol.anaEtiket}</span>
+              {/*
+                Kartta kısa etiket: "Başvurduğumu işaretle" iki düğmeyle
+                birlikte metin sütununu daraltıyor, başlık dört satıra
+                sarıyordu. Anlam aynı, tam cümle title'da ve diyalogda.
+              */}
+              <span>{yol.anaEylem === 'resmi-site' ? 'Başvurdum' : yol.anaEtiket}</span>
               <ArrowRight className="w-3 h-3" />
             </button>
           )}

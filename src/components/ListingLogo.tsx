@@ -26,17 +26,32 @@ import { CompanyLogo } from './CompanyLogo';
  *
  * `className` yalnızca kartın kendi etkileşimi içindir (örneğin hover
  * ölçeklemesi). Buraya ölçü sınıfı geçilirse standart bozulur.
+ *
+ * HALKA İÇİNDEYKEN
+ * ----------------
+ * İlan kartında logo, uyum puanını gösteren halkanın içinde duruyor ve halka
+ * çevresine 5px ekliyor. Logo yine 56 olunca kartta kapladığı yer 66'ya
+ * çıkıyor, yani fırsat kartlarındaki logodan gözle görülür biçimde büyük
+ * duruyordu — ilan kartları da bu yüzden şişmişti. `halkaIcinde` seçeneği
+ * logoyu 46'ya indiriyor; DIŞ ÖLÇÜ yine 56 oluyor ve iki kart aynı görünüyor.
  */
 interface ListingLogoProps {
   name: string;
   logoUrl?: string;
   className?: string;
+  /** Uyum halkasının içinde çiziliyorsa: dış ölçü 56'da kalsın diye küçülür. */
+  halkaIcinde?: boolean;
 }
 
-export const ListingLogo: React.FC<ListingLogoProps> = ({ name, logoUrl, className = '' }) => (
+export const ListingLogo: React.FC<ListingLogoProps> = ({
+  name,
+  logoUrl,
+  className = '',
+  halkaIcinde = false,
+}) => (
   <CompanyLogo
     name={name}
     logoUrl={logoUrl}
-    className={`w-14 h-14 shrink-0 rounded-full p-1.5 text-base ${className}`}
+    className={`${halkaIcinde ? 'w-[46px] h-[46px] p-1 text-sm' : 'w-14 h-14 p-1.5 text-base'} shrink-0 rounded-full ${className}`}
   />
 );
