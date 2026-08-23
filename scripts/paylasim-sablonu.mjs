@@ -213,8 +213,8 @@ export const maviCagriKarti = ({ seri, sayfa, satirlar, vurguSatiri = satirlar.l
 const HIKAYE_EN = 1080;
 const HIKAYE_BOY = 1920;
 
-async function acikZeminliMi(dosya) {
-  const { data } = await sharp(dosya).extract({ left: 0, top: 0, width: 64, height: 64 }).raw().toBuffer({ resolveWithObject: true });
+async function acikZeminliMi(veri) {
+  const { data } = await sharp(veri).extract({ left: 0, top: 0, width: 64, height: 64 }).raw().toBuffer({ resolveWithObject: true });
   let toplam = 0;
   for (let i = 0; i < data.length; i += 3) {
     toplam += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
@@ -222,7 +222,7 @@ async function acikZeminliMi(dosya) {
   return toplam / (data.length / 3) / 255 >= 0.6;
 }
 
-async function hikayeleriYaz(kod, dosyalar) {
+async function hikayeleriYaz(kod, kartVerileri) {
   const klasor = path.join(PAYLASIM, 'hikaye', kod);
   fs.mkdirSync(klasor, { recursive: true });
 
@@ -242,10 +242,10 @@ async function hikayeleriYaz(kod, dosyalar) {
     .toBuffer();
 
   const yazilan = [];
-  for (const dosya of dosyalar) {
-    if (!(await acikZeminliMi(dosya))) continue;
+  for (const kartVeri of kartVerileri) {
+    if (!(await acikZeminliMi(kartVeri))) continue;
 
-    const kart = await sharp(dosya).resize(en, boy).toBuffer();
+    const kart = await sharp(kartVeri).resize(en, boy).toBuffer();
     const yuvarlak = await sharp(kart)
       .composite([
         {
@@ -287,7 +287,7 @@ async function hikayeleriYaz(kod, dosyalar) {
  * tasarımı almıyor, gönderide eski kart çıkıyor. Sürüm artınca adres de
  * değişiyor.
  */
-export async function setiYaz({ kod, ad, surum, metin, kartlar }) {
+export async function setiYaz({ kod, ad, surum, metin, kartlar, hikayeEk = [] }) {
   const klasor = path.join(PAYLASIM, kod);
   fs.mkdirSync(klasor, { recursive: true });
 
@@ -301,6 +301,7 @@ export async function setiYaz({ kod, ad, surum, metin, kartlar }) {
     }
   }
 
+  const tamponlar = [];
   for (let i = 0; i < kartlar.length; i++) {
     const buyuk = await sharp(Buffer.from(kartlar[i]), { density: 72 * OLCEK }).png().toBuffer();
     /*
@@ -312,10 +313,26 @@ export async function setiYaz({ kod, ad, surum, metin, kartlar }) {
       .jpeg({ quality: 96, mozjpeg: true, chromaSubsampling: '4:4:4' })
       .toBuffer();
     fs.writeFileSync(path.join(klasor, adlar[i]), veri);
+    tamponlar.push(veri);
     console.log(`  ${adlar[i]}  ${CIKTI_EN}x${CIKTI_BOY}  ${(veri.length / 1024).toFixed(0)} KB`);
   }
 
-  const hikayeler = await hikayeleriYaz(kod, adlar.map((a) => path.join(klasor, a)));
+  /*
+    Hikâyeye özel kartlar gönderi klasörüne YAZILMIYOR. Karuselin kapanışı
+    mavi kart; hikâye setine mavi kart girmediği için hikâyenin kendi
+    kapanışı ayrı çiziliyor ve yalnız hikâye klasörüne düşüyor.
+  */
+  for (const ekKart of hikayeEk) {
+    const buyuk = await sharp(Buffer.from(ekKart), { density: 72 * OLCEK }).png().toBuffer();
+    tamponlar.push(
+      await sharp(buyuk)
+        .resize(CIKTI_EN, CIKTI_BOY, { kernel: 'lanczos3' })
+        .jpeg({ quality: 96, mozjpeg: true, chromaSubsampling: '4:4:4' })
+        .toBuffer(),
+    );
+  }
+
+  const hikayeler = await hikayeleriYaz(kod, tamponlar);
 
   const kunye = path.join(PAYLASIM, 'setler.json');
   const setler = fs.existsSync(kunye) ? JSON.parse(fs.readFileSync(kunye, 'utf8')) : [];

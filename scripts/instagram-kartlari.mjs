@@ -28,6 +28,7 @@ import {
   altKutu,
   ayrac,
   baslik,
+  cagriKutusu,
   maviCagriKarti,
   sarmal,
   satir,
@@ -123,6 +124,32 @@ const kapanis = () =>
     altSatirlar: ['Staj ilanları, burslar, KYK ve yurt dışı', 'programları — hepsi resmî kaynağıyla.'],
   });
 
+/*
+  HİKÂYENİN KAPANIŞI AYRI
+
+  Karuselin son karesi tam mavi ve hikâye setine mavi kart girmiyor (mavi
+  kart mavi zeminde kenarını kaybediyor). Hikâye dizisi de bir çağrıyla
+  bitsin diye aynı içerik açık zeminde ayrıca çiziliyor; bu kart yalnız
+  hikâye klasörüne yazılıyor, gönderide yer almıyor.
+*/
+const hikayeKapanisi = () => sarmal(`
+  ${ustBant(SERI, '04/04')}
+
+  ${baslik(330, ['Yeni ilan ve', 'burslar burada', 'duyurulacak.'], { boyut: 88, vurguSatiri: 2 })}
+
+  ${ayrac(700)}
+
+  ${satir(KENAR, 782, 'Staj ilanları, burslar, KYK ve yurt dışı', { boyut: 34, renk: GRI })}
+  ${satir(KENAR, 828, 'programları — hepsi resmî kaynağıyla.', { boyut: 34, renk: GRI })}
+
+  ${altKutu(920, [
+    'Kaynağı doğrulanmayan kayıt listeye girmiyor.',
+    'Tarihi doğrulanmayan kayda tarih yazılmıyor.',
+  ])}
+
+  ${cagriKutusu(1178, 'Tüm liste ve', 'başvuru bağlantıları:')}
+`);
+
 await setiYaz({
   kod: 'nasil-calisir',
   ad: 'Nasıl çalışır',
@@ -135,4 +162,5 @@ await setiYaz({
     'Staj ilanları, burslar, KYK ve yurt dışı programları tek listede. Bağlantı profilde.',
   ].join('\n'),
   kartlar: [kapak(), nasil(), neVar(), kapanis()],
+  hikayeEk: [hikayeKapanisi()],
 });
