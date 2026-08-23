@@ -252,7 +252,15 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Desktop Student Navigation Bar */}
             {userRole === 'student' && activeTab !== 'company-portal' && (
               <nav className="hidden lg:flex items-center p-1 bg-gray-100/90 rounded-2xl border border-gray-200/90 shadow-2xs transition-all gap-0.5 shrink-0">
-                {/* 1. İş & Staj İlanları */}
+                {/*
+                  1. İş & Staj İlanları
+
+                  Seçili görünme koşulu yalnızca `activeTab` idi. Rehber ya da
+                  burs sayfasına geçildiğinde o durum değişmediği için sekme
+                  ilanlarda takılı kalıyordu: kullanıcı rehberi okurken üstte
+                  hâlâ "İş & Staj İlanları" yanıyordu. Artık bulunulan yol da
+                  hesaba katılıyor (ilanlardaMi).
+                */}
                 <button
                   id="nav-tab-internships"
                   onClick={() => {
@@ -260,19 +268,19 @@ export const Header: React.FC<HeaderProps> = ({
                     setActiveSubTab('all');
                   }}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    activeTab === 'internships'
+                    ilanlardaMi
                       ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
                       :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
                   <Briefcase
                     className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                      activeTab ==='internships'?'text-blue-600':'text-gray-400'
+                      ilanlardaMi ? 'text-blue-600' : 'text-gray-400'
                     }`}
                   />
                   <span className="hidden xl:inline">İş & Staj İlanları</span>
                   <span className="inline xl:hidden">İlanlar</span>
-                  {activeTab === 'internships' && (
+                  {ilanlardaMi && (
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>
                   )}
                 </button>
@@ -317,6 +325,7 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <Sparkles className={`w-3.5 h-3.5 shrink-0 ${firsatlardaMi ? 'text-blue-600' : 'text-gray-400'}`} />
                   <span>Burs İlanları</span>
+                  {firsatlardaMi && <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>}
                 </button>
 
                 {/*
@@ -329,10 +338,13 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   id="nav-tab-guides"
                   onClick={() => onOpenGuides?.()}
-                  className="flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 text-gray-600 hover:text-gray-900 hover:bg-white/60"
+                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
+                    rehberdeMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                  }`}
                 >
-                  <BookOpen className="w-3.5 h-3.5 shrink-0 text-gray-400" />
+                  <BookOpen className={`w-3.5 h-3.5 shrink-0 ${rehberdeMi ? 'text-blue-600' : 'text-gray-400'}`} />
                   <span>Rehber</span>
+                  {rehberdeMi && <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>}
                 </button>
 
                 {/*
