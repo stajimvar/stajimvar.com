@@ -35,5 +35,24 @@
       "/paylasim/hikaye/son-basvurular/02.jpg",
       "/paylasim/hikaye/son-basvurular/03.jpg"
     ]
+  },
+  {
+    "kod": "sik-sorulanlar",
+    "ad": "Sık sorulanlar",
+    "surum": "v1",
+    "guncellendi": "2026-08-23",
+    "metin": "En çok sorulan sorular ve kısa cevapları:\n\n• Başvuruyu StajımVar’a yapmıyorsun; bağlantı kurumun kendi sayfasına gidiyor.\n• Öğrenci tarafında hiçbir ücret yok, üye olmadan da bakabilirsin.\n• Bir bursta tarih yazmıyorsa tarihi uydurmuyoruz: kartta \"Takvim bekleniyor\" yazıyor.\n• Son başvuru tarihi geçen kayıt listeden düşüyor.\n\nCevabı burada olmayan bir sorun varsa yaz; listeye ekliyoruz.\n\nTüm ilanlar ve burslar profildeki bağlantıda.",
+    "kartlar": [
+      "/paylasim/sik-sorulanlar/01-v1.jpg",
+      "/paylasim/sik-sorulanlar/02-v1.jpg",
+      "/paylasim/sik-sorulanlar/03-v1.jpg",
+      "/paylasim/sik-sorulanlar/04-v1.jpg"
+    ],
+    "hikayeler": [
+      "/paylasim/hikaye/sik-sorulanlar/01.jpg",
+      "/paylasim/hikaye/sik-sorulanlar/02.jpg",
+      "/paylasim/hikaye/sik-sorulanlar/03.jpg",
+      "/paylasim/hikaye/sik-sorulanlar/04.jpg"
+    ]
   }
 ]
