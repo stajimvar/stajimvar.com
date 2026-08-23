@@ -55,6 +55,17 @@ export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; 
   */
   const overview = getOpportunityOverview(items);
 
+  /*
+    Kartın alt şeridi için iki gerçek ölçü. Uydurma yok: ikisi de
+    kayıtların kendi alanlarından geliyor, alan boşsa gösterilmiyor.
+  */
+  const dogrulanmisSayisi = items.filter((item) => Boolean(item.verifiedAt)).length;
+  const sonKontrol = items
+    .map((item) => item.lastCheckedAt)
+    .filter((tarih): tarih is string => Boolean(tarih))
+    .sort()
+    .pop();
+
   const kategoriler: [string, string][] = [
     ['/firsatlar', 'Tümü'],
     ['/burslar', 'Burslar'],
@@ -104,29 +115,80 @@ export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; 
       ağırlıkta görünüyordu. İçerik satırına alt sınır verildi ve açıklama
       büyütüldü — boşluk doldurma değil, aynı ölçüyü tutturmak için.
     */}
-    <section className="mb-4 rounded-2xl border border-blue-100 bg-white p-3 sm:p-4 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 sm:min-h-[113px]">
-        <div className="min-w-0 flex-1 space-y-1">
-          <h1 className="text-base sm:text-lg font-extrabold tracking-tight leading-tight text-gray-950">{heading}</h1>
-          <p className="text-xs sm:text-sm text-gray-600 leading-relaxed max-w-2xl">{savedOnly ? 'Sonradan incelemek için takibe aldığın fırsatlar.' : calendar ? 'Yaklaşan son başvuru tarihlerini tek yerde izle.' : matching ? 'Profilindeki doğrulanabilir bilgilerle hesaplanan sonuçlar.' : 'Burs, kredi, eğitim, yurtdışı ve yarışma — hepsi resmî kaynağıyla doğrulanmış.'}</p>
-        </div>
+    <section className="mb-4 overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
+      {/*
+        Üstte ince mavi şerit: kart bembeyazken sayfanın en üstünde bir
+        başlangıç çizgisi yoktu, liste doğrudan başlıyormuş gibi duruyordu.
+      */}
+      <div aria-hidden="true" className="h-1 bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500" />
+
+      <div className="p-3 sm:p-4">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 sm:min-h-[72px]">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            {/*
+              Simge, sekmedeki "Burs İlanları" simgesiyle aynı — kullanıcı
+              tıkladığı yerin karşılığını sayfanın başında görüyor.
+            */}
+            <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 space-y-1">
+              <h1 className="text-base sm:text-lg font-extrabold tracking-tight leading-tight text-gray-950">{heading}</h1>
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed max-w-2xl">{savedOnly ? 'Sonradan incelemek için takibe aldığın fırsatlar.' : calendar ? 'Yaklaşan son başvuru tarihlerini tek yerde izle.' : matching ? 'Profilindeki doğrulanabilir bilgilerle hesaplanan sonuçlar.' : 'Burs, kredi, eğitim, yurtdışı ve yarışma — hepsi resmî kaynağıyla doğrulanmış.'}</p>
+            </div>
+          </div>
 
         {/*
           Sayaçlar yalnızca ana listede. Kaydedilenler, takvim ve eşleşme
           sayfalarında farklı bir kümeyi anlatırlar ve yanıltıcı olurlar.
         */}
         {!savedOnly && !calendar && !matching && state === 'ready' && (
-          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 sm:shrink-0">
             {[
               [overview.openCount, 'Başvurusu devam eden'],
               [overview.scholarshipAndCreditCount, 'Burs ve kredi'],
               [overview.nearest && overview.daysLeft != null ? `${overview.daysLeft} gün` : items.length, overview.nearest && overview.daysLeft != null ? 'En yakın son başvuru' : 'Takip ettiğimiz fırsat'],
             ].map(([deger, etiket]) => (
-              <div key={String(etiket)} className="rounded-xl bg-blue-50 border border-blue-100 px-2.5 py-1 leading-tight">
-                <b className="block text-sm sm:text-base font-extrabold text-blue-700">{deger}</b>
+              <div key={String(etiket)} className="rounded-xl bg-blue-50/70 border border-blue-100 px-3 py-1.5 leading-tight text-center">
+                <b className="block text-base sm:text-lg font-extrabold text-blue-700 tabular-nums">{deger}</b>
                 <span className="block text-[10px] text-gray-600 whitespace-nowrap">{etiket}</span>
               </div>
             ))}
+          </div>
+        )}
+        </div>
+
+        {/*
+          ALT ŞERİT: NEREDEN GELDİĞİ VE NE ZAMAN BAKILDIĞI
+
+          Kartın ortası boştu ve "hepsi resmî kaynağıyla doğrulanmış"
+          cümlesi bir iddia olarak havada kalıyordu. Buradaki iki bilgi o
+          cümlenin kanıtı: kaç kaydın resmî kaynağı doğrulanmış ve kayıtlara
+          en son ne zaman bakılmış. İkisi de gerçek veriden geliyor;
+          doğrulanmış kayıt yoksa şerit hiç çizilmiyor.
+        */}
+        {!savedOnly && !matching && state === 'ready' && (dogrulanmisSayisi > 0 || sonKontrol) && (
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-gray-100 pt-2.5 text-[11px] text-gray-500">
+            {dogrulanmisSayisi > 0 && (
+              <span className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                {dogrulanmisSayisi} kaydın resmî kaynağı doğrulandı
+              </span>
+            )}
+            {sonKontrol && (
+              <span className="inline-flex items-center gap-1.5">
+                <Search className="h-3.5 w-3.5 text-gray-400" />
+                Son kontrol: {safeDate(sonKontrol)}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => onNavigate('/firsat-takvimi')}
+              className="ml-auto inline-flex items-center gap-1 font-bold text-blue-700 hover:underline"
+            >
+              Fırsat takvimi
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
           </div>
         )}
       </div>
