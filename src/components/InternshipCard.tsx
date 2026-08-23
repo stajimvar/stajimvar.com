@@ -284,7 +284,11 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
         </div>
 
         {/* Buttons */}
-        <div className="flex items-center gap-2">
+        {/*
+          Dar ekranda satır sarabiliyor: üç düğme yan yana sığmadığında
+          `nowrap` ile kartın kenarından taşıyorlardı (375 pikselde ölçüldü).
+        */}
+        <div className="flex flex-wrap items-center gap-2">
           {/*
             Üç çerçeveli düğme yan yana durunca kartın alt yarısı düğme
             tarlasına dönüyordu. Detaylar çerçevesiz metin bağlantısı oldu:
@@ -299,61 +303,71 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           </button>
 
           {/*
-            ANA DÜĞME GERÇEĞE GÖRE DEĞİŞİYOR.
+            DÜĞME DÜZENİ: önce çerçeveli, en sağda mavi.
 
-            Önce her ilanda mavi "StajımVar ile Başvur" düğmesi vardı; oysa
-            yayındaki ilanların tamamı şirketin kendi sayfasından başvuru
-            alıyor ve başvuru oraya İLETİLMİYOR. Düğmeye bakan öğrenci
-            başvurduğunu sanıp bekliyordu.
+            Kartın eski düzeni buydu ("Detaylar · İlana Git · mavi düğme") ve
+            göz en sağdaki mavi düğmeyi arıyor. Doğruluk düzeltmesinde mavi
+            düğme ortaya kaymıştı; sıra eski hâline döndü, yalnızca hangi
+            eylemin mavi olduğu değişti.
 
-            Artık resmî başvuru adresi varsa ana eylem o: mavi düğme resmî
-            siteye gidiyor. StajımVar kaydı ise ikincil ve adı ne yaptığını
-            söylüyor — "Başvurduğumu işaretle". Karar tek yerde:
-            lib/basvuru-yolu.mjs.
+            Mavi olan hep ANA eylem: resmî başvuru adresi varsa o adres,
+            yoksa StajımVar üzerinden başvuru. Yayındaki ilanların tamamı
+            şirketin kendi sayfasından başvuru alıyor ve başvuru oraya
+            İLETİLMİYOR; bu yüzden StajımVar kaydı ikincil ve adı ne
+            yaptığını söylüyor. Karar tek yerde: lib/basvuru-yolu.mjs.
           */}
-          {yol.resmiAdres && (
-            <a
-              id={`external-apply-btn-${listing.id}`}
-              href={yol.resmiAdres}
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-              title="İlanın resmî başvuru sayfası"
-              className={`flex items-center justify-center gap-1 px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                yol.anaEylem === 'resmi-site'
-                  ? 'text-white bg-blue-600 hover:bg-blue-700 shadow-xs flex-1 sm:flex-none min-w-0'
-                  : 'text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 shadow-2xs'
-              }`}
-            >
-              <span>{yol.anaEylem === 'resmi-site' ? yol.anaEtiket : 'İlana Git'}</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          )}
+          {(() => {
+            const cerceveli =
+              'text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 shadow-2xs';
+            const mavi = 'text-white bg-blue-600 hover:bg-blue-700 shadow-xs';
+            const ortak =
+              'flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer';
 
-          {hasApplied ? (
-            <span className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-300">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600"/>
-              <span>{yol.teslimEdiliyor ? 'Başvuruldu' : 'İşaretlendi'}</span>
-            </span>
-          ) : (
-            <button
-              id={`quick-apply-btn-${listing.id}`}
-              onClick={onQuickApply}
-              title={yol.ozet}
-              className={`flex items-center justify-center gap-1 px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                yol.anaEylem === 'resmi-site'
-                  ? 'text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 shadow-2xs'
-                  : 'text-white bg-blue-600 hover:bg-blue-700 shadow-xs flex-1 sm:flex-none min-w-0'
-              }`}
-            >
-              {/*
-                Kartta kısa etiket: "Başvurduğumu işaretle" iki düğmeyle
-                birlikte metin sütununu daraltıyor, başlık dört satıra
-                sarıyordu. Anlam aynı, tam cümle title'da ve diyalogda.
-              */}
-              <span>{yol.anaEylem === 'resmi-site' ? 'Başvurdum' : yol.anaEtiket}</span>
-              <ArrowRight className="w-3 h-3" />
-            </button>
-          )}
+            const resmiSiteBirincil = yol.anaEylem === 'resmi-site';
+
+            const disBaglanti = yol.resmiAdres ? (
+              <a
+                key="dis"
+                id={`external-apply-btn-${listing.id}`}
+                href={yol.resmiAdres}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                title="İlanın resmî başvuru sayfası"
+                className={`${ortak} ${resmiSiteBirincil ? mavi : cerceveli}`}
+              >
+                <span>{resmiSiteBirincil ? yol.anaEtiket : 'İlana Git'}</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            ) : null;
+
+            const kayit = hasApplied ? (
+              <span
+                key="kayit"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 whitespace-nowrap"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{yol.teslimEdiliyor ? 'Başvuruldu' : 'İşaretlendi'}</span>
+              </span>
+            ) : (
+              <button
+                key="kayit"
+                id={`quick-apply-btn-${listing.id}`}
+                onClick={onQuickApply}
+                title={yol.ozet}
+                className={`${ortak} ${resmiSiteBirincil ? cerceveli : mavi}`}
+              >
+                {/*
+                  Kartta kısa etiket: "Başvurduğumu işaretle" iki düğmeyle
+                  birlikte metin sütununu daraltıyor, başlık dört satıra
+                  sarıyordu. Anlam aynı, tam cümle title'da ve diyalogda.
+                */}
+                <span>{resmiSiteBirincil ? 'Başvurdum' : yol.anaEtiket}</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            );
+
+            return resmiSiteBirincil ? [kayit, disBaglanti] : [disBaglanti, kayit];
+          })()}
         </div>
       </div>
     </div>
