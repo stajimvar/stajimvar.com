@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { Instagram, RefreshCw } from 'lucide-react';
 import { fetchAdminOzet, type AdminOzet } from '../lib/queries';
 
 /**
@@ -187,6 +187,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
           {ozet.bekleyenTalep + ozet.taslakIlan > 0 && (
             <span className="ml-1.5">({ozet.bekleyenTalep + ozet.taslakIlan})</span>
           )}
+        </button>
+        {/*
+          PAYLAŞIM EKRANINA GİDEN DÜĞME
+
+          Instagram sayfası şimdiye kadar yalnızca adresi elle yazarak
+          açılıyordu. Hazır gönderi setleri orada duruyor ve düzenli paylaşım
+          günlük bir iş; panelden bir tık uzakta olmalı.
+        */}
+        <button
+          type="button"
+          onClick={() => onNavigate('/yonetim/instagram')}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-gray-900 border border-gray-200 hover:bg-gray-50 cursor-pointer"
+        >
+          <Instagram className="w-4 h-4" />
+          Gönderi paylaş
         </button>
         <button
           type="button"
