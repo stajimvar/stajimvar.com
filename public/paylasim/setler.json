@@ -10,6 +10,11 @@
       "/paylasim/nasil-calisir/02-v5.jpg",
       "/paylasim/nasil-calisir/03-v5.jpg",
       "/paylasim/nasil-calisir/04-v5.jpg"
+    ],
+    "hikayeler": [
+      "/paylasim/hikaye/nasil-calisir/01.jpg",
+      "/paylasim/hikaye/nasil-calisir/02.jpg",
+      "/paylasim/hikaye/nasil-calisir/03.jpg"
     ]
   },
   {
@@ -23,6 +28,11 @@
       "/paylasim/son-basvurular/02-20260823.jpg",
       "/paylasim/son-basvurular/03-20260823.jpg",
       "/paylasim/son-basvurular/04-20260823.jpg"
+    ],
+    "hikayeler": [
+      "/paylasim/hikaye/son-basvurular/01.jpg",
+      "/paylasim/hikaye/son-basvurular/02.jpg",
+      "/paylasim/hikaye/son-basvurular/03.jpg"
     ]
   }
 ]

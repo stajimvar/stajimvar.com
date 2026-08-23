@@ -196,6 +196,86 @@ export const maviCagriKarti = ({ seri, sayfa, satirlar, vurguSatiri = satirlar.l
     MAVI,
   );
 
+/*
+  HİKÂYE SÜRÜMÜ — ÇERÇEVELİ TEMA
+
+  Gönderi kartı (3:4) mavi hikâye zeminine oturtuluyor ve altına yumuşak
+  gölge konuyor. Tema canlı hesapta denendi ve onaylandı; başka bir düzen
+  aranmıyor.
+
+  Kart genişliği hikâyenin %92'sine oturuyor: üstte ilerleme çubuğu, altta
+  yanıt kutusu var ve kalan bant kartın yazısını onlardan uzak tutuyor.
+
+  TAM MAVİ KARTLAR HİKÂYEYE GİRMİYOR: mavi kart mavi zeminde kayboluyor,
+  açık zemine alındığında da temanın dışına düşüyor. Karuselin mavi kapanış
+  kartı gönderide duruyor, hikâyede yok.
+*/
+const HIKAYE_EN = 1080;
+const HIKAYE_BOY = 1920;
+
+async function acikZeminliMi(dosya) {
+  const { data } = await sharp(dosya).extract({ left: 0, top: 0, width: 64, height: 64 }).raw().toBuffer({ resolveWithObject: true });
+  let toplam = 0;
+  for (let i = 0; i < data.length; i += 3) {
+    toplam += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+  }
+  return toplam / (data.length / 3) / 255 >= 0.6;
+}
+
+async function hikayeleriYaz(kod, dosyalar) {
+  const klasor = path.join(PAYLASIM, 'hikaye', kod);
+  fs.mkdirSync(klasor, { recursive: true });
+
+  const en = Math.round(HIKAYE_EN * 0.92);
+  const boy = Math.round((en * 4) / 3);
+  const sol = Math.round((HIKAYE_EN - en) / 2);
+  const ust = Math.round((HIKAYE_BOY - boy) / 2);
+
+  const golge = await sharp(
+    Buffer.from(
+      `<svg width="${HIKAYE_EN}" height="${HIKAYE_BOY}">` +
+        `<defs><filter id="g" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="26"/></filter></defs>` +
+        `<rect x="${sol}" y="${ust + 14}" width="${en}" height="${boy}" rx="36" fill="#0B1220" opacity="0.28" filter="url(#g)"/></svg>`,
+    ),
+  )
+    .png()
+    .toBuffer();
+
+  const yazilan = [];
+  for (const dosya of dosyalar) {
+    if (!(await acikZeminliMi(dosya))) continue;
+
+    const kart = await sharp(dosya).resize(en, boy).toBuffer();
+    const yuvarlak = await sharp(kart)
+      .composite([
+        {
+          input: Buffer.from(`<svg width="${en}" height="${boy}"><rect width="${en}" height="${boy}" rx="36" fill="#fff"/></svg>`),
+          blend: 'dest-in',
+        },
+      ])
+      .png()
+      .toBuffer();
+
+    const veri = await sharp({ create: { width: HIKAYE_EN, height: HIKAYE_BOY, channels: 3, background: MAVI } })
+      .composite([
+        { input: golge, left: 0, top: 0 },
+        { input: yuvarlak, left: sol, top: ust },
+      ])
+      .jpeg({ quality: 95, mozjpeg: true, chromaSubsampling: '4:4:4' })
+      .toBuffer();
+
+    const ad = `${String(yazilan.length + 1).padStart(2, '0')}.jpg`;
+    fs.writeFileSync(path.join(klasor, ad), veri);
+    yazilan.push(ad);
+    console.log(`  hikaye/${kod}/${ad}  ${HIKAYE_EN}x${HIKAYE_BOY}  ${(veri.length / 1024).toFixed(0)} KB`);
+  }
+
+  for (const eski of fs.readdirSync(klasor)) {
+    if (eski.endsWith('.jpg') && !yazilan.includes(eski)) fs.rmSync(path.join(klasor, eski));
+  }
+  return yazilan.map((a) => `/paylasim/hikaye/${kod}/${a}`);
+}
+
 /**
  * Kart setini JPEG olarak yazar ve setler.json'a işler.
  *
@@ -235,6 +315,8 @@ export async function setiYaz({ kod, ad, surum, metin, kartlar }) {
     console.log(`  ${adlar[i]}  ${CIKTI_EN}x${CIKTI_BOY}  ${(veri.length / 1024).toFixed(0)} KB`);
   }
 
+  const hikayeler = await hikayeleriYaz(kod, adlar.map((a) => path.join(klasor, a)));
+
   const kunye = path.join(PAYLASIM, 'setler.json');
   const setler = fs.existsSync(kunye) ? JSON.parse(fs.readFileSync(kunye, 'utf8')) : [];
   const kayit = {
@@ -244,6 +326,7 @@ export async function setiYaz({ kod, ad, surum, metin, kartlar }) {
     guncellendi: new Date().toISOString().slice(0, 10),
     metin,
     kartlar: adlar.map((a) => `/paylasim/${kod}/${a}`),
+    hikayeler,
   };
   const sira = setler.findIndex((s) => s.kod === kod);
   if (sira >= 0) setler[sira] = kayit;

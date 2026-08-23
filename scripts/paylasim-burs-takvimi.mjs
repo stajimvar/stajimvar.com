@@ -42,7 +42,6 @@ import {
   ustBant,
   KOK,
 } from './paylasim-sablonu.mjs';
-import { hikayeKarti, hikayeleriYaz } from './paylasim-hikaye-sablonu.mjs';
 
 const GUN = Number(process.argv[2] ?? 14);
 const SERI = 'Son başvurular';
@@ -189,57 +188,3 @@ await setiYaz({
 });
 
 console.log(`\n${yaklasan.length} kayıt, ${kartlar.length} kart. Gönderi metni setler.json içinde.`);
-
-/*
-  HİKÂYE SÜRÜMÜ
-
-  Aynı veriyle, 9:16 için baştan dizilmiş kartlar. Öne çıkanlarda ve günlük
-  hikâyede kullanılıyor; gönderi kartını hikâye zeminine oturtmak
-  "yapıştırılmış ekran görüntüsü" gibi duruyordu.
-*/
-// Sayfalama gönderiyle aynı: eşit dağıtım, son kartta tek satır kalmıyor.
-const hikayeSayfalari = sayfalar;
-
-const hikayeler = [
-  hikayeKarti({
-    seri: SERI,
-    sayfa: `01/${String(hikayeSayfalari.length + 1).padStart(2, '0')}`,
-    bloklar: [
-      { tip: 'baslik', satirlar: ['Son başvurusu', 'yaklaşan', 'burslar.'], boyut: 98, vurgu: 2 },
-      { tip: 'ayrac' },
-      {
-        tip: 'metin',
-        satirlar: [`Önümüzdeki ${GUN} günde başvurusu kapanan`, `${yaklasan.length} kayıt — hepsi resmî kaynağıyla.`],
-      },
-      {
-        tip: 'kutu',
-        satirlar: [
-          `En yakın: ${kisalt(enYakin.organization_name, 30)}`,
-          `${tarihYaz(enYakin.application_deadline)} · ${enYakin.kalan === 0 ? 'bugün' : `${enYakin.kalan} gün kaldı`}`,
-        ],
-      },
-    ],
-  }),
-  ...hikayeSayfalari.map((sayfa, i) =>
-    hikayeKarti({
-      seri: SERI,
-      sayfa: `${String(i + 2).padStart(2, '0')}/${String(hikayeSayfalari.length + 1).padStart(2, '0')}`,
-      koyu: i % 2 === 1,
-      bloklar: [
-        { tip: 'baslik', satirlar: ['Takvimde', 'sırada.'], boyut: 92, vurgu: 1 },
-        { tip: 'ayrac' },
-        {
-          tip: 'tarihli',
-          ogeler: sayfa.map((k) => ({
-            kurum: kisalt(k.organization_name, 26),
-            program: kisalt(k.title, 38),
-            tarih: tarihYaz(k.application_deadline),
-            yakin: k.kalan <= 3,
-          })),
-        },
-      ],
-    }),
-  ),
-];
-
-await hikayeleriYaz('son-basvurular', hikayeler);
