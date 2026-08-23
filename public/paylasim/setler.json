@@ -55,5 +55,24 @@
       "/paylasim/hikaye/sik-sorulanlar/03.jpg",
       "/paylasim/hikaye/sik-sorulanlar/04.jpg"
     ]
+  },
+  {
+    "kod": "kyk-burs-kredi",
+    "ad": "KYK: burs mu, kredi mi?",
+    "surum": "v1",
+    "guncellendi": "2026-08-23",
+    "metin": "KYK’da burs ile öğrenim kredisi aynı şey değil — “KYK aldım” diyen çoğu öğrenci aslında krediyi alıyor.\n\n• Burs: geri ödemesi yok, kontenjanı sınırlı.\n• Öğrenim kredisi: mezuniyetten sonra, kanundaki süre dolunca taksitle geri ödeniyor.\n• Başvuru genelde tek form; bursa hak kazanamayan öğrenci kredi için değerlendirilebiliyor.\n• Barınma kredisi ayrı bir destek ve yurt başvurusu da ayrı bir süreç.\n\nTutar yazmıyoruz: rakamlar her yıl yeniden belirleniyor, sabit bir sayı bir süre sonra yanlış bilgi oluyor. Güncel takvim ve tutar için Gençlik ve Spor Bakanlığı ile e-Devlet duyurularına bak.\n\nRehberin tamamı: stajimvar.com/rehber/kyk-burs-ve-kredi",
+    "kartlar": [
+      "/paylasim/kyk-burs-kredi/01-v1.jpg",
+      "/paylasim/kyk-burs-kredi/02-v1.jpg",
+      "/paylasim/kyk-burs-kredi/03-v1.jpg",
+      "/paylasim/kyk-burs-kredi/04-v1.jpg"
+    ],
+    "hikayeler": [
+      "/paylasim/hikaye/kyk-burs-kredi/01.jpg",
+      "/paylasim/hikaye/kyk-burs-kredi/02.jpg",
+      "/paylasim/hikaye/kyk-burs-kredi/03.jpg",
+      "/paylasim/hikaye/kyk-burs-kredi/04.jpg"
+    ]
   }
 ]
