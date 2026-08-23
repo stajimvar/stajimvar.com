@@ -71,7 +71,29 @@ async function metaya(adres: string): Promise<{ kimlik?: string; hata?: string }
   }
 }
 
-export const onRequestPost: PagesFunction<Ortam> = async ({ request, env }) => {
+/*
+  BEKLENMEYEN HATA DA JSON DÖNMELİ
+
+  İşleyici bir yerde patlarsa Cloudflare kendi HTML hata sayfasını
+  döndürüyor; tarayıcı tarafında bu "Unexpected token '<'" diye
+  görünüyor ve asıl sebep kayboluyor. Sarmalayıcı, hatayı okunur bir
+  JSON'a çeviriyor — jeton ya da sır taşımadan.
+*/
+export const onRequestPost: PagesFunction<Ortam> = async (baglam) => {
+  try {
+    return await paylasimiIsle(baglam);
+  } catch (hata) {
+    return yanit(
+      {
+        hata: 'Sunucu tarafında beklenmeyen hata.',
+        ayrinti: String((hata as Error)?.message ?? hata).slice(0, 300),
+      },
+      500
+    );
+  }
+};
+
+const paylasimiIsle: PagesFunction<Ortam> = async ({ request, env }) => {
   const yetki = request.headers.get('authorization') || '';
   const jeton = yetki.toLowerCase().startsWith('bearer ') ? yetki.slice(7).trim() : '';
   if (!jeton) return yanit({ hata: 'Yönetici oturumu gerekiyor.' }, 401);

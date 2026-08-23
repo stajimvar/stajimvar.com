@@ -131,8 +131,30 @@ export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }
         headers: { authorization: `Bearer ${jeton}`, 'content-type': 'application/json' },
         body: JSON.stringify({ gorseller: tamAdresler, aciklama: metin, onay: true }),
       });
-      const govde = await cevap.json();
-      if (!cevap.ok) throw new Error(govde?.hata ?? `Yayınlanamadı (HTTP ${cevap.status})`);
+
+      /*
+        Yanıt her zaman JSON olmayabiliyor: uç patlarsa Cloudflare HTML hata
+        sayfası döndürüyor ve JSON.parse "Unexpected token '<'" diyor —
+        ekranda asıl sebep kaybolmuş oluyordu. Önce metin okunuyor, JSON
+        çözülemezse ham yanıtın başı gösteriliyor.
+      */
+      const ham = await cevap.text();
+      let govde: { hata?: string; sorunlar?: string[]; gonderiKimligi?: string } | null = null;
+      try {
+        govde = JSON.parse(ham);
+      } catch {
+        govde = null;
+      }
+
+      if (!cevap.ok || !govde) {
+        const ayrinti = govde?.sorunlar?.length ? ` — ${govde.sorunlar.join(' ')}` : '';
+        throw new Error(
+          govde?.hata
+            ? `${govde.hata}${ayrinti}`
+            : `Yayınlanamadı (HTTP ${cevap.status}). Sunucu yanıtı: ${ham.slice(0, 200)}`
+        );
+      }
+
       setYayin({ asama: 'tamam', mesaj: `Yayınlandı. Gönderi kimliği: ${govde.gonderiKimligi}` });
     } catch (e) {
       setYayin({ asama: 'hata', mesaj: e instanceof Error ? e.message : 'Bilinmeyen hata' });
