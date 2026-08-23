@@ -1,11 +1,20 @@
 /**
  * POST /api/instagram/paylas — gönderiyi Instagram'da yayınlar.
  *
- * ÜÇ ADIM
- * -------
- * Meta tek istekte karusel yayınlamıyor: önce her görsel için bir kapsayıcı,
- * sonra onları toplayan karusel kapsayıcısı, en sonda yayınlama. Her adım
- * bir öncekinin kimliğine bağlı, bu yüzden sırayla çağrılıyor.
+ * İKİ İSTEK, ÜÇ ADIM
+ * ------------------
+ * Meta tek çağrıda karusel yayınlamıyor: önce her görsel için bir kapsayıcı,
+ * sonra onları toplayan karusel kapsayıcısı, en sonda yayınlama.
+ *
+ * Beşi de tek HTTP isteğinde yapılınca istek uzuyor — Instagram her kartı
+ * KENDİ indiriyor ve bu saniyeler sürüyor — ve Cloudflare süre aşımında
+ * kendi HTML hata sayfasını döndürüyor; tarayıcıda "Unexpected token '<'"
+ * olarak görünen buydu. Bu yüzden iş iki kısa isteğe bölündü:
+ *
+ *   adim: "hazirla" → kapsayıcılar kurulur, kapsayıcı kimliği döner
+ *   adim: "yayinla" → o kimlik yayına alınır
+ *
+ * Arayüz ikisini sırayla çağırıyor ve arada durumu gösteriyor.
  *
  * TEK YÖNLÜ
  * ---------
@@ -102,7 +111,13 @@ const paylasimiIsle: PagesFunction<Ortam> = async ({ request, env }) => {
   const eksikler = eksikAyarlar(env as unknown as Record<string, unknown>);
   if (eksikler.length) return yanit({ hata: 'Ortam değişkenleri eksik.', eksikAyarlar: eksikler }, 503);
 
-  let istek: { gorseller?: string[]; aciklama?: string; onay?: boolean };
+  let istek: {
+    adim?: 'hazirla' | 'yayinla';
+    gorseller?: string[];
+    aciklama?: string;
+    kapsayici?: string;
+    onay?: boolean;
+  };
   try {
     istek = await request.json();
   } catch {
@@ -113,6 +128,25 @@ const paylasimiIsle: PagesFunction<Ortam> = async ({ request, env }) => {
     return yanit({ hata: 'Yayın onayı verilmedi (onay: true bekleniyor).' }, 400);
   }
 
+  /* ---------------------------------------------------- adım: yayinla */
+  if (istek.adim === 'yayinla') {
+    const kapsayici = String(istek.kapsayici ?? '').trim();
+    if (!/^[0-9]+$/.test(kapsayici)) {
+      return yanit({ hata: 'Geçerli bir kapsayıcı kimliği gerekiyor.' }, 400);
+    }
+
+    /* Bu adımdan sonra geri dönüş yok: gönderi API'den silinemiyor. */
+    const yayin = await metaya(yayinlaAdresi(env as unknown as Record<string, string>, kapsayici));
+    if (yayin.hata) return yanit({ hata: `Yayınlanamadı: ${yayin.hata}` }, 502);
+
+    return yanit({
+      yayinlandi: true,
+      gonderiKimligi: yayin.kimlik,
+      yayinZamani: new Date().toISOString(),
+    });
+  }
+
+  /* ---------------------------------------------------- adım: hazirla */
   const sorunlar = paylasimSorunlari(
     { gorseller: istek.gorseller, aciklama: istek.aciklama },
     'stajimvar.com'
@@ -123,37 +157,38 @@ const paylasimiIsle: PagesFunction<Ortam> = async ({ request, env }) => {
   const aciklama = String(istek.aciklama);
   const karusel = gorseller.length >= KARUSEL_ARALIGI.en_az;
 
-  /* 1) Görsel kapsayıcıları. Sıra korunuyor: karuselde gösterim sırası bu. */
-  const cocuklar: string[] = [];
-  for (const gorsel of gorseller) {
-    const sonuc = await metaya(
-      gorselKapsayiciAdresi(env as unknown as Record<string, string>, gorsel, {
-        karuselParcasi: karusel,
-        aciklama: karusel ? undefined : aciklama,
-      })
-    );
-    if (sonuc.hata) return yanit({ hata: `Görsel kapsayıcısı oluşturulamadı: ${sonuc.hata}` }, 502);
-    cocuklar.push(sonuc.kimlik!);
+  /*
+    Görsel kapsayıcıları aynı anda kuruluyor: her biri bağımsız ve
+    Instagram görseli kendi indirdiği için sıralı beklemek isteği
+    gereksiz yere uzatıyordu. Sıra `Promise.all` çıktısında korunuyor —
+    karuseldeki gösterim sırası bu.
+  */
+  const sonuclar = await Promise.all(
+    gorseller.map((gorsel) =>
+      metaya(
+        gorselKapsayiciAdresi(env as unknown as Record<string, string>, gorsel, {
+          karuselParcasi: karusel,
+          aciklama: karusel ? undefined : aciklama,
+        })
+      )
+    )
+  );
+
+  const basarisiz = sonuclar.find((sonuc) => sonuc.hata);
+  if (basarisiz) {
+    return yanit({ hata: `Görsel kapsayıcısı oluşturulamadı: ${basarisiz.hata}` }, 502);
   }
 
-  /* 2) Karusel kapsayıcısı (tek görselde bu adım yok). */
-  let yayinlanacak = cocuklar[0];
+  const cocuklar = sonuclar.map((sonuc) => sonuc.kimlik!);
+  let kapsayici = cocuklar[0];
+
   if (karusel) {
     const sonuc = await metaya(
       karuselKapsayiciAdresi(env as unknown as Record<string, string>, cocuklar, aciklama)
     );
     if (sonuc.hata) return yanit({ hata: `Karusel kapsayıcısı oluşturulamadı: ${sonuc.hata}` }, 502);
-    yayinlanacak = sonuc.kimlik!;
+    kapsayici = sonuc.kimlik!;
   }
 
-  /* 3) Yayınla. Bu adımdan sonra geri dönüş yok. */
-  const yayin = await metaya(yayinlaAdresi(env as unknown as Record<string, string>, yayinlanacak));
-  if (yayin.hata) return yanit({ hata: `Yayınlanamadı: ${yayin.hata}` }, 502);
-
-  return yanit({
-    yayinlandi: true,
-    gonderiKimligi: yayin.kimlik,
-    gorselSayisi: gorseller.length,
-    yayinZamani: new Date().toISOString(),
-  });
+  return yanit({ hazir: true, kapsayici, gorselSayisi: gorseller.length });
 };

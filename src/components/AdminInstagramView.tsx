@@ -126,36 +126,50 @@ export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }
       const jeton = data.session?.access_token;
       if (!jeton) throw new Error('Oturum bulunamadı; yeniden giriş yapın.');
 
-      const cevap = await fetch('/api/instagram/paylas', {
-        method: 'POST',
-        headers: { authorization: `Bearer ${jeton}`, 'content-type': 'application/json' },
-        body: JSON.stringify({ gorseller: tamAdresler, aciklama: metin, onay: true }),
-      });
+      /*
+        Yanıt her zaman JSON olmayabiliyor: uç süre aşımına uğrarsa
+        Cloudflare HTML hata sayfası döndürüyor ve JSON.parse
+        "Unexpected token '<'" diyor. Önce metin okunuyor, çözülemezse ham
+        yanıtın başı gösteriliyor.
+      */
+      const cagir = async (govde: Record<string, unknown>) => {
+        const cevap = await fetch('/api/instagram/paylas', {
+          method: 'POST',
+          headers: { authorization: `Bearer ${jeton}`, 'content-type': 'application/json' },
+          body: JSON.stringify({ ...govde, onay: true }),
+        });
+
+        const ham = await cevap.text();
+        let cozulen: { hata?: string; sorunlar?: string[]; [k: string]: unknown } | null = null;
+        try {
+          cozulen = JSON.parse(ham);
+        } catch {
+          cozulen = null;
+        }
+
+        if (!cevap.ok || !cozulen) {
+          const ayrinti = cozulen?.sorunlar?.length ? ` — ${cozulen.sorunlar.join(' ')}` : '';
+          throw new Error(
+            cozulen?.hata
+              ? `${cozulen.hata}${ayrinti}`
+              : `İstek başarısız (HTTP ${cevap.status}). Sunucu yanıtı: ${ham.slice(0, 200)}`
+          );
+        }
+        return cozulen;
+      };
 
       /*
-        Yanıt her zaman JSON olmayabiliyor: uç patlarsa Cloudflare HTML hata
-        sayfası döndürüyor ve JSON.parse "Unexpected token '<'" diyor —
-        ekranda asıl sebep kaybolmuş oluyordu. Önce metin okunuyor, JSON
-        çözülemezse ham yanıtın başı gösteriliyor.
+        İki adım: önce kapsayıcılar kurulur (Instagram kartları kendi
+        indirir), sonra yayınlanır. Tek istekte beş Meta çağrısı süre
+        aşımına takılıyordu.
       */
-      const ham = await cevap.text();
-      let govde: { hata?: string; sorunlar?: string[]; gonderiKimligi?: string } | null = null;
-      try {
-        govde = JSON.parse(ham);
-      } catch {
-        govde = null;
-      }
+      setYayin({ asama: 'gonderiliyor', mesaj: 'Kartlar Instagram tarafına hazırlanıyor…' });
+      const hazirlik = await cagir({ adim: 'hazirla', gorseller: tamAdresler, aciklama: metin });
 
-      if (!cevap.ok || !govde) {
-        const ayrinti = govde?.sorunlar?.length ? ` — ${govde.sorunlar.join(' ')}` : '';
-        throw new Error(
-          govde?.hata
-            ? `${govde.hata}${ayrinti}`
-            : `Yayınlanamadı (HTTP ${cevap.status}). Sunucu yanıtı: ${ham.slice(0, 200)}`
-        );
-      }
+      setYayin({ asama: 'gonderiliyor', mesaj: 'Gönderi yayınlanıyor…' });
+      const sonuc = await cagir({ adim: 'yayinla', kapsayici: hazirlik.kapsayici });
 
-      setYayin({ asama: 'tamam', mesaj: `Yayınlandı. Gönderi kimliği: ${govde.gonderiKimligi}` });
+      setYayin({ asama: 'tamam', mesaj: `Yayınlandı. Gönderi kimliği: ${sonuc.gonderiKimligi}` });
     } catch (e) {
       setYayin({ asama: 'hata', mesaj: e instanceof Error ? e.message : 'Bilinmeyen hata' });
     }
