@@ -32,6 +32,7 @@ import {
 import { uploadAvatar } from '../lib/queries';
 import { fetchSavedListingIds } from '../lib/opportunities';
 import { adYazimi } from '../lib/ad';
+import { useModalErisim } from '../lib/modal-erisim';
 import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
 import { ProfilBasligi, type EksikAdim, type OneCikan } from './ProfilBasligi';
 import { AutocompleteField } from './AutocompleteField';
@@ -280,8 +281,25 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   const [acikBolum, setAcikBolum] = useState<BolumId>(
     basvuruListesi ? 'basvuru' : 'kisisel'
   );
-  /** Bölüme git. Şerit, "Sıradaki" düğmesi ve sayılar hep buradan geçiyor. */
-  const bolumeGit = (bolum: BolumId) => setAcikBolum(bolum);
+  /**
+   * Bölüme git. Izgara, sayılar ve eksik adımlar hep buradan geçiyor.
+   *
+   * MOBİLDE KAYDIRMA DA GEREKİYOR
+   * Telefonda bölümler başlık kartının ALTINDA duruyor. Sayıya basınca
+   * yalnızca durum değişiyordu; ekranda görünen şey değişmediği için
+   * tıklama hiçbir şey yapmamış gibi oluyordu. Geniş ekranda bölümler
+   * zaten yan sütunda ve görünüyor, orada kaydırma gereksiz.
+   */
+  const bolumeGit = (bolum: BolumId) => {
+    setAcikBolum(bolum);
+    if (typeof window === 'undefined' || window.innerWidth >= 1024) return;
+    /* Bölüm yalnızca seçiliyken çiziliyor; boyama bitmeden hedef yok. */
+    requestAnimationFrame(() => {
+      document
+        .getElementById(`bolum-${bolum}`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
 
   const yetenekler = student.skills ?? [];
   const sosyal = student.softSkills ?? [];
@@ -354,6 +372,11 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     yer "Kaydettiklerim" ilan kategorisi. Sayının gittiği yerde aynı
     sayıyı göremiyorsa, sayı yanlıştır.
   */
+  /* CV indirmeden önceki uyarı açık mı. */
+  const [cvUyarisi, setCvUyarisi] = useState(false);
+  /* ESC ile kapanma, odak tuzağı ve arka plan kilidi diğer modallarla aynı. */
+  const cvKutuRef = useModalErisim<HTMLDivElement>(cvUyarisi, () => setCvUyarisi(false));
+
   const [kaydedilenSayisi, setKaydedilenSayisi] = useState(0);
   useEffect(() => {
     let iptal = false;
@@ -491,9 +514,15 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       id: 'rozet',
       etiket: 'Testler',
       dolu: (student.earnedBadges ?? []).length > 0,
+      /*
+        Boşken "+" çiziliyordu ve kullanıcıya test OLUŞTURACAKMIŞ gibi
+        görünüyordu. Burada eklenecek bir şey yok: hazır testler var ve
+        çözülüyor. İkon da yazı da bunu söylüyor.
+      */
+      bosIkon: <Award className="w-5 h-5" />,
       alt: (student.earnedBadges ?? []).length
         ? `${(student.earnedBadges ?? []).length} rozet`
-        : undefined,
+        : 'teste başla',
       ikon: <Award className="w-5 h-5" />,
       onClick: () => bolumeGit('rozet'),
     },
@@ -744,7 +773,20 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             avatarYukleniyor={avatarYukleniyor}
             onFotografSec={() => dosyaRef.current?.click()}
             onDuzenle={kisiselAc}
-            onCv={onOpenCv}
+            onCv={
+              onOpenCv
+                ? () => {
+                    /*
+                      Eksik profilden indirilen CV de eksik çıkıyor ve
+                      öğrenci bunu ancak dosyayı açınca fark ediyordu.
+                      Uyarı indirmeyi engellemiyor — neyin eksik olduğunu
+                      söyleyip kararı öğrenciye bırakıyor.
+                    */
+                    if (eksikler.length > 0) setCvUyarisi(true);
+                    else onOpenCv();
+                  }
+                : undefined
+            }
             onKaydedilenlere={onKaydedilenlere}
             onBasvurulara={basvuruListesi ? () => bolumeGit('basvuru') : undefined}
             onMulakatlara={
@@ -768,6 +810,60 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             onChange={fotografSec}
           />
           {avatarHatasi && <p className="text-xs text-rose-600 px-1">{avatarHatasi}</p>}
+
+          {/*
+            CV UYARISI
+
+            İndirmeyi engellemiyor: öğrencinin eksik profille CV indirmesi
+            geçerli bir tercih olabilir (staja bugün başvuracaktır). Uyarı
+            yalnızca neyin eksik kalacağını söylüyor ve düzeltmeyi bir
+            dokunuş uzağa koyuyor.
+          */}
+          {cvUyarisi && onOpenCv && (
+            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
+              <div
+                ref={cvKutuRef}
+                role="dialog"
+                aria-modal="true"
+                className="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl p-5 space-y-4"
+              >
+                <div className="space-y-1.5">
+                  <h2 className="text-base font-extrabold text-gray-900">
+                    CV'n eksik bilgilerle inecek
+                  </h2>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    Şunlar henüz girilmedi:{' '}
+                    <strong className="text-gray-900">
+                      {eksikler.map((e) => e.etiket).join(', ')}
+                    </strong>
+                    . İşveren CV'de bu bölümleri boş görecek.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCvUyarisi(false);
+                      eksikler[0]?.onClick();
+                    }}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer"
+                  >
+                    Önce tamamla
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCvUyarisi(false);
+                      onOpenCv();
+                    }}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold text-gray-900 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
+                  >
+                    Yine de indir
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/*
             "Sıradaki adım" şeridi kaldırıldı.
@@ -800,7 +896,12 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               ? `${basvuruSayisi} başvuru · ${degerlendirmede} değerlendirmede · ${mulakatSayisi} mülakat`
               : 'Henüz başvuru yok — ilanlara göz at'
           }
-          tamam={basvuruSayisi > 0}
+          /*
+            Yeşil tik "bu bölüm tamamlandı" demek ve başvuru sürecinde
+            böyle bir tamamlanma yok — süreç işverende devam ediyor.
+            Başvuru yapmış olmak bir bitiş değil.
+          */
+          tamam={false}
           acik={acikBolum === 'basvuru'}
           onToggle={bolumAc}
         >

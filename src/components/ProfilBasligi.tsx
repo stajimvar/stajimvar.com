@@ -80,11 +80,20 @@ export interface OneCikan {
   /** Bölümde içerik var mı. Yoksa kesik çizgili çember ve "+" çiziliyor. */
   dolu: boolean;
   /**
-   * Etiketin altındaki kısa sayı: "8 beceri". Başka bir yerde zaten
-   * yazan sayılar için boş bırakılıyor.
+   * Etiketin altındaki kısa satır: dolu bölümde sayı ("8 beceri"), boş
+   * bölümde ne olacağı ("teste başla"). Başka bir yerde zaten yazan
+   * sayılar için boş bırakılıyor.
    */
   alt?: string;
   ikon: React.ReactNode;
+  /**
+   * Boşken çizilecek ikon. Verilmezse "+" çiziliyor.
+   *
+   * "+" bir şey EKLEYECEĞİNİ söyler. Testler bölümünde ekleyecek bir şey
+   * yok — orada çözülecek hazır testler var; "+" kullanıcıya test
+   * oluşturacakmış gibi görünüyordu.
+   */
+  bosIkon?: React.ReactNode;
   onClick: () => void;
 }
 
@@ -143,7 +152,7 @@ const Bolumler: React.FC<{ ogeler: OneCikan[]; secili?: string }> = ({ ogeler, s
                   : 'bg-white border border-dashed border-gray-300 text-gray-400 group-hover:border-blue-400 group-hover:text-blue-500'
             }`}
           >
-            {o.dolu ? o.ikon : <Plus className="w-5 h-5" />}
+            {o.dolu ? o.ikon : o.bosIkon || <Plus className="w-5 h-5" />}
           </span>
           <span className="w-full text-center px-0.5">
             <span
@@ -307,9 +316,15 @@ export const ProfilBasligi: React.FC<Props> = ({
           )}
         </>
       ) : (
-        <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700">
-          Staj tercihlerini ekle
-          <ChevronRight className="w-3.5 h-3.5" />
+        /*
+          Önce "Staj tercihlerini ekle →" yazıyordu ve hemen altındaki
+          eksik listesinde zaten "şehir seç" ile "hedefini seç" duruyordu:
+          aynı çağrı iki kez. Burası artık bir çağrı değil, biyografi
+          satırının yerini tutan bir DURUM cümlesi. Tıklanabilirliği
+          duruyor ama eksik listesiyle yarışmıyor.
+        */
+        <span className="block text-sm text-gray-400 group-hover:text-blue-700 transition-colors">
+          Henüz staj tercihlerini belirtmedin.
         </span>
       )}
     </button>
