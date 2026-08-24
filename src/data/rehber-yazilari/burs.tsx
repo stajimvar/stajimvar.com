@@ -162,6 +162,9 @@ export const BURS_REHBERLERI: Rehber[] = [
           'Genellikle sayılmıyor, ama başvuru formunda soruluyorsa yazmak gerekiyor. Kararı kurum verir.',
       },
     ],
+    kaynaklar: [
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
+    ],
     sonrakiAdim: {
       etiket: 'Açık bursları gör',
       yol: '/burslar',
@@ -340,6 +343,9 @@ export const BURS_REHBERLERI: Rehber[] = [
           'Bazı burslarda ortalama şartı var, bazılarında yok. Şart yoksa düşük ortalamayı açıklamak — çalıştığın bir dönem, bir sağlık sorunu — dürüst ve etkili bir yaklaşım.',
       },
     ],
+    kaynaklar: [
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
+    ],
     sonrakiAdim: {
       etiket: 'Açık bursları gör',
       yol: '/burslar',
@@ -419,6 +425,9 @@ export const BURS_REHBERLERI: Rehber[] = [
         cevap:
           'Çoğu kurumda staj ücreti gelir sayılmıyor, ama bazı kurumlar bildirim istiyor. Sözleşmeni okumak ve gerekiyorsa bildirmek en güvenlisi.',
       },
+    ],
+    kaynaklar: [
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
     ],
     sonrakiAdim: {
       etiket: 'KYK burs ve öğrenim kredisi',
@@ -592,6 +601,9 @@ export const BURS_REHBERLERI: Rehber[] = [
           'Senet ciddi bir mali yükümlülük. İmzalamadan önce sözleşmenin tamamını oku, anlamadığın maddeyi sor ve gerekirse bir yetişkinden görüş al.',
       },
     ],
+    kaynaklar: [
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
+    ],
     sonrakiAdim: {
       etiket: 'Açık bursları gör',
       yol: '/burslar',
@@ -672,6 +684,10 @@ export const BURS_REHBERLERI: Rehber[] = [
         cevap:
           'Başvuru için ad, öğrenci bilgisi ve iletişim gerekiyor; ancak banka şifresi, kart güvenlik kodu ve e-Devlet şifresi hiçbir başvuruda istenmez.',
       },
+    ],
+    kaynaklar: [
+      { etiket: 'USOM — Ulusal Siber Olaylara Müdahale Merkezi', adres: 'https://www.usom.gov.tr' },
+      { etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr' },
     ],
     sonrakiAdim: {
       etiket: 'Doğrulanmış bursları gör',

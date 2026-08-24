@@ -245,6 +245,10 @@ export const REHBERLER: Rehber[] = [
     etiketler: ['sigorta', 'belge', 'okul', 'sgk', 'zorunlu staj'],
     hizliCevap:
       'Zorunlu stajda sırayla üç şey yapılır: okulun staj birimine gidip yönergeyi ve zorunlu staj formunu almak, formu kabul eden bir işyerine imzalatmak, imzalı formu okula teslim edip sigorta girişini başlatmak. Sigortayı çoğu üniversitede okul yapar; kesin cevabı kendi okulunun yönergesindedir.',
+    kaynaklar: [
+      { etiket: 'Sosyal Güvenlik Kurumu', adres: 'https://www.sgk.gov.tr' },
+      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr' },
+    ],
     sonrakiAdim: { etiket: 'Staj gününü hesapla', yol: '/araclar/staj-gunu-hesaplama', aciklama: 'Kaç iş günü kaldığını tarih vererek gör.' },
     baslik: 'Zorunlu staj rehberi',
     ozet: 'Belge, sigorta, süre ve okulla olan süreç — sırayla.',
@@ -1228,6 +1232,9 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
     etiketler: ['staj bulma', 'ilan', 'başvuru kanalı'],
     hizliCevap:
       'Staj beş kanaldan bulunuyor: ilan siteleri, şirketlerin kendi kariyer sayfaları, okulun staj birimi, tanıdık ağı ve ilan açmayan şirkete doğrudan yazmak. Sonuncusu en az denenen ama rekabetin en düşük olduğu yol.',
+    kaynaklar: [
+      { etiket: 'Türkiye İş Kurumu (İŞKUR)', adres: 'https://www.iskur.gov.tr' },
+    ],
     sonrakiAdim: { etiket: 'Açık staj ilanlarına bak', yol: '/', aciklama: 'Tek listede toplanmış güncel ilanlar.' },
     baslik: 'Staj nasıl bulunur',
     ozet: 'Beş kanal, hangisi ne kadar işe yarıyor ve nereden başlanır.',
@@ -1444,6 +1451,9 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
     etiketler: ['gönüllü staj', 'isteğe bağlı', 'sigorta'],
     hizliCevap:
       'Gönüllü staj okul zorunluluğu olmadan yapılan stajdır; zorunlu stajdan asıl farkı sigorta ve belge tarafında ortaya çıkıyor. Okulun formu vermediği durumda sigorta yükümlülüğü işyerine geçebiliyor, o yüzden başlamadan önce bunu yazılı netleştir.',
+    kaynaklar: [
+      { etiket: 'Sosyal Güvenlik Kurumu', adres: 'https://www.sgk.gov.tr' },
+    ],
     sonrakiAdim: { etiket: 'Açık staj ilanlarına bak', yol: '/', aciklama: 'Gönüllü staja da açık ilanlar burada.' },
     baslik: 'Gönüllü staj: zorunlu stajdan farkı ne?',
     ozet: 'Sigorta, ücret ve belge tarafı zorunlu stajdan farklı işliyor.',
@@ -1562,6 +1572,9 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
     etiketler: ['staj komisyonu', 'okul', 'yönerge', 'belge'],
     hizliCevap:
       'Staj biriminden üç şey alınıyor: staj yönergesi, zorunlu staj formu ve sigorta girişi için gereken onay. Süreç okuldan okula değiştiği için ilk adım her zaman kendi bölümünün yönergesini okumak.',
+    kaynaklar: [
+      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr' },
+    ],
     sonrakiAdim: { etiket: 'Bölümüne göre staj sayfasını aç', yol: '/bolumler', aciklama: 'Kendi bölümünde staj nerede yapılır, stajyer ne iş yapar.' },
     baslik: 'Okulun staj birimiyle nasıl çalışılır',
     ozet: 'Kime gidilir, hangi belge istenir, ne zaman başvurulur.',
@@ -1806,6 +1819,9 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
     etiketler: ['erasmus', 'iaeste', 'yurtdışı', 'hibe'],
     hizliCevap:
       'Yurt dışında staj çoğunlukla tek başına ilana başvurarak değil, okulun kanalıyla yürüyor: Erasmus+ staj hareketliliği ve IAESTE başvuruları üniversitenin uluslararası ofisinden yapılıyor. Takvim okulun ilanına bağlı, o yüzden ofisi erken takip etmek gerekiyor.',
+    kaynaklar: [
+      { etiket: 'Türkiye Ulusal Ajansı', adres: 'https://www.ua.gov.tr' },
+    ],
     sonrakiAdim: { etiket: 'Yurtdışı fırsatlarını gör', yol: '/yurtdisi-firsatlari', aciklama: 'Erasmus ve yurt dışı programları tek listede.' },
     baslik: 'Yurt dışında staj: Erasmus+ ve IAESTE',
     ozet: 'Tek başına ilana başvurmak nadiren yürüyor; yol okulun kanalından geçiyor.',

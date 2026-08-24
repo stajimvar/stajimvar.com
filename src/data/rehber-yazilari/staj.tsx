@@ -582,6 +582,9 @@ export const STAJ_REHBERLERI: Rehber[] = [
           'Çoğu okulda sayılmaz ve telafi edilmesi istenir. Raporun kopyasını hem işyerine hem staj birimine ulaştır.',
       },
     ],
+    kaynaklar: [
+      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr' },
+    ],
     sonrakiAdim: {
       etiket: 'Staj gününü hesapla',
       yol: '/araclar/staj-gunu-hesaplama',
@@ -669,6 +672,9 @@ export const STAJ_REHBERLERI: Rehber[] = [
         cevap:
           'Defter aynı şekilde günlük doldurulur; yaptığın işi somut olarak yazarsın. İmza ve kaşe için işyeriyle önceden bir yöntem belirle — kargo ya da ıslak imza için tek bir gün ofise gitmek yaygın çözüm.',
       },
+    ],
+    kaynaklar: [
+      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr' },
     ],
     sonrakiAdim: {
       etiket: 'Okulun staj birimiyle nasıl çalışılır',
@@ -767,6 +773,9 @@ export const STAJ_REHBERLERI: Rehber[] = [
         cevap:
           'Yıllık izin hakkı doğmaz ama mazeret izni işyerinin insiyatifindedir. Devamsız geçen gün staj gününe sayılmadığı için telafi gerekir; ayrıntısı [stajda izin ve devamsızlık](/rehber/stajda-izin-ve-devamsizlik) sayfasında.',
       },
+    ],
+    kaynaklar: [
+      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr' },
     ],
     sonrakiAdim: {
       etiket: 'Staj defteri nasıl doldurulur',
@@ -874,6 +883,9 @@ export const STAJ_REHBERLERI: Rehber[] = [
         cevap:
           'Bazı okullar belirli koşullarda izin veriyor, bazıları vermiyor. Kararı staj komisyonu veriyor; kendi başına değiştirmek stajın sayılmamasına yol açabiliyor.',
       },
+    ],
+    kaynaklar: [
+      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr' },
     ],
     sonrakiAdim: {
       etiket: 'Okulun staj birimiyle nasıl çalışılır',

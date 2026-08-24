@@ -397,6 +397,9 @@ export const YURT_REHBERLERI: Rehber[] = [
           'Bildirimsiz uzun devamsızlıkta yer boşaltılabiliyor. Ayrılacağın süreyi önceden bildirmek gerekiyor.',
       },
     ],
+    kaynaklar: [
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
+    ],
     sonrakiAdim: {
       etiket: 'Yurttan kayıt silme',
       yol: '/rehber/yurttan-kayit-silme',
@@ -474,6 +477,9 @@ export const YURT_REHBERLERI: Rehber[] = [
         cevap:
           'Hasar bedeli depozitodan düşülebiliyor. Girişte var olan hasarları tutanağa yazdırmak, sana ait olmayan hasarın üstüne kalmasını önlüyor.',
       },
+    ],
+    kaynaklar: [
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
     ],
     sonrakiAdim: {
       etiket: 'Öğrenci evi kiralarken dikkat edilecekler',
@@ -567,6 +573,9 @@ export const YURT_REHBERLERI: Rehber[] = [
           'Kurumdan belge isteyebilir, ayrıca il millî eğitim ya da ilgili il müdürlüğüne sorabilirsin. Belge göstermekten kaçınan kurumdan uzak dur.',
       },
     ],
+    kaynaklar: [
+      { etiket: 'Millî Eğitim Bakanlığı', adres: 'https://www.meb.gov.tr' },
+    ],
     sonrakiAdim: {
       etiket: 'Depozito ve kira sözleşmesi',
       yol: '/rehber/depozito-ve-kira-sozlesmesi',
@@ -654,6 +663,9 @@ export const YURT_REHBERLERI: Rehber[] = [
         cevap:
           'Emlakçı aracılığıyla tutulan evlerde komisyon yaygın. Tutarı ve neyi kapsadığını baştan yazılı olarak netleştir.',
       },
+    ],
+    kaynaklar: [
+      { etiket: 'Ticaret Bakanlığı — Tüketici bilgi sistemi', adres: 'https://www.ticaret.gov.tr' },
     ],
     sonrakiAdim: {
       etiket: 'Depozito ve kira sözleşmesi',
@@ -750,6 +762,9 @@ export const YURT_REHBERLERI: Rehber[] = [
           'Evde oturacak kişilerin hepsinin imzalaması, sorumluluğun tek kişide kalmasını önlüyor.',
       },
     ],
+    kaynaklar: [
+      { etiket: 'Ticaret Bakanlığı — Tüketici bilgi sistemi', adres: 'https://www.ticaret.gov.tr' },
+    ],
     sonrakiAdim: {
       etiket: 'Öğrenci evi kiralarken dikkat edilecekler',
       yol: '/rehber/ogrenci-evi-kiralarken',
@@ -845,6 +860,9 @@ export const YURT_REHBERLERI: Rehber[] = [
         cevap:
           'Yapılabiliyor ama kısa süreli sözleşmelerde fiyat yükseliyor. Sözleşmeyi yine yazılı yapmak ve depozitoyu banka üzerinden ödemek gerekiyor.',
       },
+    ],
+    kaynaklar: [
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
     ],
     sonrakiAdim: {
       etiket: 'Staj gününü hesapla',

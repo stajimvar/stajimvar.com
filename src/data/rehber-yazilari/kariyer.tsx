@@ -391,6 +391,9 @@ export const KARIYER_REHBERLERI: Rehber[] = [
           'Hangisini konuştuğunuzu netleştir. Türkiye\'de genellikle net üzerinden konuşuluyor; teklifte ikisinin de yazılı olmasını iste.',
       },
     ],
+    kaynaklar: [
+      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr' },
+    ],
     sonrakiAdim: {
       etiket: 'İş teklifini değerlendirirken',
       yol: '/rehber/is-teklifini-degerlendirme',
@@ -568,6 +571,9 @@ export const KARIYER_REHBERLERI: Rehber[] = [
           'Yeterli değil. Koşulların yazılı olması hem seni hem işvereni koruyor; yazılı teklif istemek olağan.',
       },
     ],
+    kaynaklar: [
+      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr' },
+    ],
     sonrakiAdim: {
       etiket: 'Maaş beklentisi nasıl söylenir',
       yol: '/rehber/maas-beklentisi-nasil-soylenir',
@@ -651,6 +657,9 @@ export const KARIYER_REHBERLERI: Rehber[] = [
         cevap:
           'Yetenek testleri için deneme çözmek en etkili yöntem. Süre baskısına alışmak, soru tipini bilmekten daha çok fark yaratıyor.',
       },
+    ],
+    kaynaklar: [
+      { etiket: 'Türkiye İş Kurumu (İŞKUR)', adres: 'https://www.iskur.gov.tr' },
     ],
     sonrakiAdim: {
       etiket: 'Büyük işverenlerin staj programlarını gör',

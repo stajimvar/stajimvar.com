@@ -173,6 +173,9 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
           'Onaysız ders kaydı tamamlanmış sayılmıyor. Onay süresi dolmadan danışmanına ulaşmak, gerekirse bölüm sekreterliğine durumu bildirmek gerekiyor.',
       },
     ],
+    kaynaklar: [
+      { etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr' },
+    ],
     sonrakiAdim: {
       etiket: 'Okulun staj birimiyle nasıl çalışılır',
       yol: '/rehber/universite-staj-birimi',
@@ -249,6 +252,9 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
         cevap:
           'Bazı okullar bölünmüş stajı kabul ediyor, bazıları kesintisiz istiyor. Bölümünün yönergesine bakmak gerekiyor.',
       },
+    ],
+    kaynaklar: [
+      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr' },
     ],
     sonrakiAdim: {
       etiket: 'Staj gününü hesapla',
@@ -422,6 +428,9 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
           'Her iki programın da staj zorunluluğu olabiliyor. Başvurmadan önce ikisinin staj yükünü toplayıp takvime yerleştir.',
       },
     ],
+    kaynaklar: [
+      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr' },
+    ],
     sonrakiAdim: {
       etiket: 'Bölümüne göre staj sayfasını aç',
       yol: '/bolumler',
@@ -589,6 +598,10 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
           'Genellikle sayılmıyor; staj okulun onayladığı ve formu düzenlenen ayrı bir süreç. Bazı bölümler belirli koşullarda sayabiliyor, staj birimine sormak gerekiyor.',
       },
     ],
+    kaynaklar: [
+      { etiket: 'Sosyal Güvenlik Kurumu', adres: 'https://www.sgk.gov.tr' },
+      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr' },
+    ],
     sonrakiAdim: {
       etiket: 'Profilini tamamla ve CV\'ni indir',
       yol: '/cv',
@@ -684,6 +697,9 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
         cevap:
           'Birçok üniversite mezunlarına da hizmet veriyor. Mezun olmadan önce mezun ağına kaydolmak erişimi kolaylaştırıyor.',
       },
+    ],
+    kaynaklar: [
+      { etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr' },
     ],
     sonrakiAdim: {
       etiket: 'Yeni mezun CV\'si nasıl yazılır',

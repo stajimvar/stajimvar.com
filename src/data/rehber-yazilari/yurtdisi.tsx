@@ -368,6 +368,9 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
           'Vize başvurusu öğrencinin sorumluluğunda; program kabul belgesi ve davet yazısı sağlıyor. Ayrıntı: [yurtdışı staj vizesi](/rehber/yurtdisi-staj-vizesi).',
       },
     ],
+    kaynaklar: [
+      { etiket: 'IAESTE', adres: 'https://iaeste.org' },
+    ],
     sonrakiAdim: {
       etiket: 'Yurt dışında staj: Erasmus+ ve IAESTE',
       yol: '/rehber/yurtdisinda-staj',
@@ -459,6 +462,9 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
         cevap:
           'Ret gerekçesi bildiriliyor ve genellikle itiraz ya da yeniden başvuru hakkı oluyor. Programa ve işverene durumu hemen bildirmek gerekiyor.',
       },
+    ],
+    kaynaklar: [
+      { etiket: 'Dışişleri Bakanlığı', adres: 'https://www.mfa.gov.tr' },
     ],
     sonrakiAdim: {
       etiket: 'Yurtdışı fırsatlarını gör',
@@ -701,6 +707,10 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
           'Hayır. Erasmus değişim programı — kendi üniversitendeki öğrenciliğin devam ediyor. Yurt dışı bursları ise oradaki bir programa tam kayıt için veriliyor.',
       },
     ],
+    kaynaklar: [
+      { etiket: 'Millî Eğitim Bakanlığı', adres: 'https://www.meb.gov.tr' },
+      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr' },
+    ],
     sonrakiAdim: {
       etiket: 'Yurtdışı fırsatlarını gör',
       yol: '/yurtdisi-firsatlari',
@@ -782,6 +792,9 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
         cevap:
           'Ülkeye göre değişiyor. Gideceğin ülkenin konsolosluk sayfasında istenen asgari teminat yazıyor.',
       },
+    ],
+    kaynaklar: [
+      { etiket: 'Sosyal Güvenlik Kurumu', adres: 'https://www.sgk.gov.tr' },
     ],
     sonrakiAdim: {
       etiket: 'Yurt dışı staj vizesi nasıl alınır',
@@ -866,6 +879,9 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
         cevap:
           'Ev bulunmadıysa hostel ya da kısa süreli kiralama yaygın çözüm. Yerinde arama, uzaktan aramaya göre çok daha güvenli.',
       },
+    ],
+    kaynaklar: [
+      { etiket: 'Türkiye Ulusal Ajansı', adres: 'https://www.ua.gov.tr' },
     ],
     sonrakiAdim: {
       etiket: 'Yurtdışı fırsatlarını gör',
