@@ -1,7 +1,7 @@
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import React, { useEffect, useState } from 'react';
 import {
-  ArrowLeft, MapPin, Calendar, DollarSign, ShieldCheck, ExternalLink,
+  ArrowLeft, MapPin, Calendar, DollarSign, ShieldCheck, ExternalLink, RefreshCw,
   Building2, Clock, AlertTriangle, Share2, Check, Link2,
 } from 'lucide-react';
 import type { InternshipListing } from '../types';
@@ -9,6 +9,7 @@ import { fetchListingByIdPrefix } from '../lib/queries';
 import { ListingLogo } from './ListingLogo';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
+import { sonKontrolMetni } from '../lib/zaman';
 import { Logo } from './Logo';
 import { slugify } from '../lib/slug';
 
@@ -107,6 +108,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
 
   /* Başvurunun gerçek işleyişi — açıklama ve düğmeler buradan besleniyor. */
   const yol = basvuruYolu(listing ?? {});
+  const [metinAcik, setMetinAcik] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] text-gray-900">
@@ -250,6 +252,18 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                       : listing.insuranceNote || 'Kaynakta belirtilmemiş'
                   }
                 />
+                {/*
+                  Kaynağın en son ne zaman doğrulandığı. Kartta da var ama asıl
+                  yeri burası: başvurmadan önce insanın sorduğu soru "bu ilan
+                  hâlâ açık mı" ve cevabı bu tarih.
+                */}
+                {sonKontrolMetni(listing.lastSeenAt) && (
+                  <Bilgi
+                    ikon={<RefreshCw className="w-4 h-4" />}
+                    etiket="Son kaynak kontrolü"
+                    deger={sonKontrolMetni(listing.lastSeenAt)!.replace('Son kontrol: ', '')}
+                  />
+                )}
               </div>
             </div>
 
@@ -273,14 +287,39 @@ export const ListingPage: React.FC<ListingPageProps> = ({
             )}
 
             <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-3">
-              <h2 className="text-sm font-bold">İlan açıklaması</h2>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-sm font-bold">İlanın kaynak metni</h2>
+                <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">
+                  Şirketin kendi metni
+                </span>
+              </div>
               {/*
-                Metin kaynaktan geldiği gibi gösteriliyor. HTML olarak basmıyoruz:
-                dışarıdan gelen içeriği işaretleme olarak yorumlamak XSS kapısıdır.
+                METİN NEDEN DÜZENLENMİYOR
+
+                Buradaki metin şirketin kendi ilanından geldiği gibi duruyor:
+                özetlemek ya da yeniden yazmak, şirketin söylemediği bir şeyi
+                söyletme riski taşıyor. Yapılabilecek olan onu ağır
+                göstermemek — uzun metin katlanıyor, isteyen açıyor.
+
+                HTML olarak basmıyoruz: dışarıdan gelen içeriği işaretleme
+                olarak yorumlamak XSS kapısıdır.
               */}
-              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+              <p
+                className={`text-sm text-gray-600 leading-relaxed whitespace-pre-line ${
+                  metinAcik ? '' : 'line-clamp-[12]'
+                }`}
+              >
                 {listing.description}
               </p>
+              {(listing.description || '').length > 900 && (
+                <button
+                  type="button"
+                  onClick={() => setMetinAcik((a) => !a)}
+                  className="text-xs font-bold text-blue-700 hover:text-blue-800 cursor-pointer"
+                >
+                  {metinAcik ? 'Metni kısalt' : 'Kaynak metnin tamamını göster'}
+                </button>
+              )}
               {listing.sourceUrl && (
                 <p className="text-[11px] text-gray-400 pt-2 border-t border-gray-100">
                   Kaynak: {new URL(listing.sourceUrl).hostname}
