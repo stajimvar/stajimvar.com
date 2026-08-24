@@ -27,10 +27,12 @@ import {
   StudentLanguage,
   SkillLevel,
   SkillQuiz,
+  ApplicationRecord,
 } from '../types';
 import { uploadAvatar } from '../lib/queries';
+import { fetchSavedListingIds } from '../lib/opportunities';
 import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
-import { ProfilBasligi, type OneCikan } from './ProfilBasligi';
+import { ProfilBasligi, type EksikAdim, type OneCikan } from './ProfilBasligi';
 import { AutocompleteField } from './AutocompleteField';
 import { PredictiveInput } from './PredictiveInput';
 import {
@@ -72,8 +74,18 @@ interface StudentProfileViewProps {
    * Liste bileşeni App tarafından hazır veriliyor — bu bileşen başvuru
    * verisini kendisi çekmiyor, sadece yerleştiriyor.
    */
-  basvuruSayisi?: number;
+  /**
+   * Başvuru KAYITLARI — yalnızca sayısı değil.
+   *
+   * Önce sadece `basvuruSayisi` geliyordu; "kaç mülakat" gibi bir soruyu
+   * cevaplayabilmek için sayının yanında ikinci bir sayı daha geçirmek
+   * gerekirdi ve iki sayı ayrı hesaplandığında er geç birbirini tutmaz.
+   * Liste bir kez geçiyor, bütün sayılar ondan çıkıyor.
+   */
+  basvurular?: ApplicationRecord[];
   basvuruListesi?: React.ReactNode;
+  /** İlanlar sekmesindeki "Kaydettiklerim" kategorisine geçiş. */
+  onKaydedilenlere?: () => void;
 }
 
 type BolumId =
@@ -241,6 +253,35 @@ const alanClass =
 
 const etiketClass ='block text-xs font-semibold text-gray-600 mb-1.5';
 
+/**
+ * Adın Türkçe kurallarına göre yazılışı.
+ *
+ * NEDEN OTOMATİK DÜZELTİLMİYOR
+ * ----------------------------
+ * Ad "Mustafa oğulcan doğan" olarak kaydedilmişti ve profilde, CV'de,
+ * işverene giden başvuruda hep öyle görünüyordu. Görüntüyü kendi başımıza
+ * düzeltmek işi çözmezdi: kayıtlı değer yine yanlış kalır, CV ile ekran
+ * birbirini tutmazdı — üstelik adın nasıl yazılacağına karar vermek
+ * sahibinin işi ("van der Berg", "d'Arc" gibi yazımlar var).
+ *
+ * Onun yerine düzenleme ekranında tek dokunuşluk bir ÖNERİ duruyor.
+ * Kabul edilirse değer kaynağında düzeliyor ve her yerde düzeliyor.
+ *
+ * Türkçe küçültme/büyütme şart: 'i' harfinin büyüğü 'İ', 'ı' harfinin
+ * büyüğü 'I'. Varsayılan locale ile "ilker" -> "Ilker" olurdu.
+ */
+function adYazimi(ad: string): string {
+  return ad
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((kelime) => {
+      const kucuk = kelime.toLocaleLowerCase('tr-TR');
+      return kucuk.charAt(0).toLocaleUpperCase('tr-TR') + kucuk.slice(1);
+    })
+    .join(' ');
+}
+
 /* ------------------------------------------------------------------ */
 
 export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
@@ -250,8 +291,10 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   onOpenCv,
   quizzes = [],
   onStartQuiz,
-  basvuruSayisi = 0,
+  basvurular = [],
   basvuruListesi,
+  onKaydedilenlere,
+  onSubTabChange,
 }) => {
   /*
     Açılışta 'basvuru' seçili — şeritteki ilk daire.
@@ -281,20 +324,105 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     şeridi kaldırıldı — şerit zaten eksikleri gösteriyor. Kullanılmayan
     alanı bırakmak sonradan okuyanı yanıltır.
   */
-  const adimlar: boolean[] = [
-    Boolean(student.university && student.department),
-    Boolean(student.bio),
-    Boolean(student.avatarUrl),
-    Boolean(student.phone),
-    yetenekler.length > 0,
-    sosyal.length > 0,
-    diller.length > 0,
-    projeler.length > 0,
-    hedefler.length > 0,
-    sehirler.length > 0,
+  const adimlar: { tamam: boolean; etiket: string; bolum: BolumId }[] = [
+    { tamam: Boolean(student.university && student.department), etiket: 'okulunu gir', bolum: 'kisisel' },
+    { tamam: Boolean(student.bio), etiket: 'kendini tanıt', bolum: 'kisisel' },
+    { tamam: Boolean(student.avatarUrl), etiket: 'fotoğraf ekle', bolum: 'kisisel' },
+    { tamam: Boolean(student.phone), etiket: 'telefonunu gir', bolum: 'kisisel' },
+    { tamam: yetenekler.length > 0, etiket: 'program ekle', bolum: 'teknik' },
+    { tamam: sosyal.length > 0, etiket: 'beceri ekle', bolum: 'sosyal' },
+    { tamam: diller.length > 0, etiket: 'dil ekle', bolum: 'dil' },
+    { tamam: projeler.length > 0, etiket: 'çalışma ekle', bolum: 'proje' },
+    { tamam: hedefler.length > 0, etiket: 'hedefini seç', bolum: 'tercih' },
+    { tamam: sehirler.length > 0, etiket: 'şehir seç', bolum: 'tercih' },
   ];
-  const tamamlanan = adimlar.filter(Boolean).length;
+  const tamamlanan = adimlar.filter((a) => a.tamam).length;
   const oran = Math.round((tamamlanan / adimlar.length) * 100);
+
+  /*
+    EKSİKLER
+
+    Yüzde tek başına ne yapılacağını söylemiyordu. Eksik adımın ADI ve
+    gittiği bölüm birlikte taşınıyor: başlıktaki rozete basınca doğru
+    bölüm açılıyor, öğrenci aramak zorunda kalmıyor.
+  */
+  const eksikler: EksikAdim[] = adimlar
+    .filter((a) => !a.tamam)
+    .map((a) => ({
+      etiket: a.etiket,
+      onClick: () => (a.bolum === 'kisisel' ? kisiselAc() : bolumeGit(a.bolum)),
+    }));
+
+  /*
+    SÜREÇ SAYILARI — HEPSİ TEK LİSTEDEN
+
+    Mülakat sayısı burada bir kez tanımlanıyor. Başvuru listesindeki
+    "Mülakatlar (n)" süzgeci de aynı iki durumu sayıyor; ikisi ayrı
+    yazılsaydı biri değiştiğinde diğeri sessizce yanlış kalırdı.
+  */
+  const basvuruSayisi = basvurular.length;
+  const mulakatSayisi = basvurular.filter(
+    (b) => b.status === 'interview_scheduled' || b.status === 'technical_assessment'
+  ).length;
+  const degerlendirmede = basvurular.filter(
+    (b) => b.status === 'under_review' || b.status === 'technical_assessment'
+  ).length;
+
+  /*
+    KAYDEDİLEN İLAN SAYISI
+
+    Sunucudan çekiliyor çünkü kaydetme sunucuda tutuluyor ve profil
+    ekranı ilan listesini hiç görmüyor. Hata durumunda sayı 0 kalıyor:
+    çalışmayan bir sayı göstermektense göstermemek daha dürüst.
+
+    Yalnızca İLANLAR sayılıyor, burslar değil — sayıya basınca gidilen
+    yer "Kaydettiklerim" ilan kategorisi. Sayının gittiği yerde aynı
+    sayıyı göremiyorsa, sayı yanlıştır.
+  */
+  const [kaydedilenSayisi, setKaydedilenSayisi] = useState(0);
+  useEffect(() => {
+    let iptal = false;
+    if (!student.id) return;
+    fetchSavedListingIds(student.id)
+      .then((idler) => {
+        if (!iptal) setKaydedilenSayisi(idler.length);
+      })
+      .catch(() => {});
+    return () => {
+      iptal = true;
+    };
+  }, [student.id]);
+
+  /*
+    NE ARADIĞI — TERCİHLERDEN ÜRETİLEN ETİKETLER
+
+    Başlıkta "Staj yapmak için yer arıyorum" yazıyordu: herkeste aynı
+    cümle ve hiçbir şey söylemiyor. Bunun yerine öğrencinin GERÇEK
+    tercihleri okunabilir hâle getiriliyor. Uydurma yok: yalnızca
+    girilmiş olan alan etikete dönüşüyor, 'Any' (fark etmez) seçimi
+    etiket üretmiyor çünkü bir tercih bildirmiyor.
+  */
+  const etiketler: string[] = (() => {
+    const p = student.preferences;
+    const cikti: string[] = [];
+
+    const yil = p.earliestStartDate
+      ? new Date(p.earliestStartDate).getFullYear()
+      : NaN;
+    if (p.type === 'Summer Mandatory') {
+      cikti.push(Number.isNaN(yil) ? 'Zorunlu yaz stajı' : `${yil} yaz stajına açık`);
+    } else if (p.type === 'Long-term') cikti.push('Uzun dönem staj');
+    else if (p.type === 'Voluntary') cikti.push('Gönüllü staj');
+    else if (p.type === 'Part-time') cikti.push('Yarı zamanlı');
+
+    if (sehirler.length) cikti.push(sehirler.slice(0, 2).join(' / '));
+
+    if (p.workType === 'Remote') cikti.push('Uzaktan');
+    else if (p.workType === 'Hybrid') cikti.push('Hibrit');
+    else if (p.workType === 'On-site') cikti.push('Ofisten');
+
+    return cikti;
+  })();
 
 
   /*
@@ -320,6 +448,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             id: 'basvuru',
             etiket: 'Başvurular',
             deger: basvuruSayisi ? `${basvuruSayisi} tane` : null,
+            rozet: basvuruSayisi,
             ikon: <Send className="w-5 h-5" />,
             onClick: () => bolumeGit('basvuru'),
           } as OneCikan,
@@ -327,7 +456,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       : []),
     {
       id: 'kisisel',
-      etiket: 'Okulun',
+      /* "Okulun" bölümün adıyla ("Okul ve iletişim") uyuşmuyordu. */
+      etiket: 'Okul & Bölüm',
       deger: student.university ? student.department || 'girildi' : null,
       ikon: <GraduationCap className="w-5 h-5" />,
       onClick: () => kisiselAc(),
@@ -336,6 +466,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       id: 'teknik',
       etiket: 'Programlar',
       deger: yetenekler.length ? `${yetenekler.length} tane` : null,
+      rozet: yetenekler.length,
       ikon: <Wrench className="w-5 h-5" />,
       onClick: () => bolumeGit('teknik'),
     },
@@ -343,6 +474,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       id: 'sosyal',
       etiket: 'Beceriler',
       deger: sosyal.length ? `${sosyal.length} tane` : null,
+      rozet: sosyal.length,
       ikon: <MessageSquare className="w-5 h-5" />,
       onClick: () => bolumeGit('sosyal'),
     },
@@ -350,6 +482,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       id: 'dil',
       etiket: 'Diller',
       deger: diller.length ? `${diller.length} dil` : null,
+      rozet: diller.length,
       ikon: <Languages className="w-5 h-5" />,
       onClick: () => bolumeGit('dil'),
     },
@@ -357,6 +490,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       id: 'proje',
       etiket: 'Çalışmalar',
       deger: projeler.length ? `${projeler.length} tane` : null,
+      rozet: projeler.length,
       ikon: <FolderOpen className="w-5 h-5" />,
       onClick: () => bolumeGit('proje'),
     },
@@ -373,6 +507,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       deger: (student.earnedBadges ?? []).length
         ? `${(student.earnedBadges ?? []).length} rozet`
         : null,
+      rozet: (student.earnedBadges ?? []).length,
       ikon: <Award className="w-5 h-5" />,
       onClick: () => bolumeGit('rozet'),
     },
@@ -613,15 +748,28 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             okul={student.university}
             bolum={student.department}
             sinif={student.gradeLevel}
-            bio={student.bio}
+            etiketler={etiketler}
+            onEtiketDuzenle={() => bolumeGit('tercih')}
             oran={oran}
+            eksikler={eksikler}
+            kaydedilenSayisi={kaydedilenSayisi}
             basvuruSayisi={basvuruSayisi}
-            beceriSayisi={yetenekler.length + sosyal.length + diller.length}
+            mulakatSayisi={mulakatSayisi}
             avatarYukleniyor={avatarYukleniyor}
             onFotografSec={() => dosyaRef.current?.click()}
             onDuzenle={kisiselAc}
             onCv={onOpenCv}
+            onKaydedilenlere={onKaydedilenlere}
             onBasvurulara={basvuruListesi ? () => bolumeGit('basvuru') : undefined}
+            onMulakatlara={
+              basvuruListesi
+                ? () => {
+                    bolumeGit('basvuru');
+                    /* Mülakat sayısına basan kişi mülakatları görmek istiyor. */
+                    onSubTabChange?.('interviews');
+                  }
+                : undefined
+            }
             oneCikanlar={oneCikanlar}
             secili={acikBolum}
           />
@@ -656,9 +804,14 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           ikon={<Send className="w-5 h-5" />}
           renk="bg-gradient-to-br from-rose-500 to-rose-600"
           baslik="Başvurularım"
+          /*
+            Özet "2 başvuru" yazıyordu; hemen üstteki ızgarada zaten
+            "Başvurular · 2" duruyordu. Aynı sayıyı iki kez söylemek yerine
+            sürecin nerede olduğunu söylüyor.
+          */
           ozet={
             basvuruSayisi > 0
-              ? `${basvuruSayisi} başvuru`
+              ? `${basvuruSayisi} başvuru · ${degerlendirmede} değerlendirmede · ${mulakatSayisi} mülakat`
               : 'Henüz başvuru yok — ilanlara göz at'
           }
           tamam={basvuruSayisi > 0}
@@ -696,6 +849,19 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               onChange={(e) => setTaslak({ ...taslak, fullName: e.target.value })}
               className={alanClass}
             />
+            {taslak.fullName.trim() &&
+              adYazimi(taslak.fullName) !== taslak.fullName.trim() && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setTaslak({ ...taslak, fullName: adYazimi(taslak.fullName) })
+                  }
+                  className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 hover:underline cursor-pointer"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  {adYazimi(taslak.fullName)} olarak yaz
+                </button>
+              )}
           </div>
 
           <div>

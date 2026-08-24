@@ -154,7 +154,7 @@ const BulunamadiSayfasi: React.FC<{
   return (
     <div className="min-h-screen flex flex-col bg-[#F9FAFB]">
       {ustCubuk}
-      <main className="flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 py-16 pb-24 lg:pb-16 space-y-6">
+      <main className="flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 py-16 pb-[calc(110px+env(safe-area-inset-bottom))] lg:pb-16 space-y-6">
         <div className="space-y-3">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">
             Bu sayfa bulunamadı
@@ -1077,7 +1077,7 @@ export default function App() {
         duruyordu ve sayfanın ilk ekranında boş bir bant gibi görünüyordu.
         Alt boşluğa dokunulmadı; oradaki pay mobil gezinme çubuğu için.
       */}
-      <main className={`flex-1 ${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-24 lg:pb-8`}>
+      <main className={`flex-1 ${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-[calc(110px+env(safe-area-inset-bottom))] lg:pb-8`}>
         {(userRole === 'company' || safeTab === 'company-portal') && !activeCompany ? (
           /*
             Şirket hesabı yokken portalı çizmek, uydurma bir şirketin panelini
@@ -1198,7 +1198,16 @@ export default function App() {
                 onSubTabChange={setActiveSubTab}
                 onUpdateProfile={handleUpdateProfile}
                 onOpenCv={() => navigate('/cv')}
-                basvuruSayisi={applications.length}
+                basvurular={applications}
+                onKaydedilenlere={() => {
+                  /*
+                    Kaydedilen sayısı ilan listesindeki "Kaydettiklerim"
+                    kategorisini açıyor: sayının gittiği yerde aynı sayı
+                    duruyor.
+                  */
+                  setActiveTab('internships');
+                  setActiveSubTab('kaydettiklerim');
+                }}
                 basvuruListesi={
                   <ApplicationsTrackerView
                     applications={applications}

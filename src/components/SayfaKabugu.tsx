@@ -51,7 +51,7 @@ export const SayfaKabugu: React.FC<SayfaKabuguProps> = ({
     ALT BOŞLUK: mobil gezinme çubuğu için
 
     Telefonda ekranın altında sabit bir çubuk var (İlanlar · Rehber ·
-    Profil) ve içeriğin üstünü örtüyor. Ana sayfada bunun için `pb-24`
+    Profil) ve içeriğin üstünü örtüyor. Ana sayfada bunun için alt boşluk
     vardı ama içerik sayfalarında yoktu: rehber ve işveren sayfalarının
     en alttaki düğmesi çubuğun arkasında kalıyor, sayfa da daha aşağı
     kaymadığı için düğmeye basılamıyordu.
@@ -61,7 +61,7 @@ export const SayfaKabugu: React.FC<SayfaKabuguProps> = ({
     px-4'tü: geniş ekranda alt sayfaların içeriği, ana sayfanınkinden farklı
     bir hizada başlıyordu.
   */
-  <main className={`${icerikGenisligi} mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 pb-24 lg:pb-10`}>
+  <main className={`${icerikGenisligi} mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 pb-[calc(110px+env(safe-area-inset-bottom))] lg:pb-10`}>
     {(onBack || sag) && (
       <div className="flex items-center justify-between gap-3 mb-4">
         <button

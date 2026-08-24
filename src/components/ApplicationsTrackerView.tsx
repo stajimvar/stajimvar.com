@@ -105,19 +105,17 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
   const offerCount = applications.filter((a) => a.status === 'offer_extended').length;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-12">
-      {/* Header Banner */}
-      <div className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 border border-gray-200 shadow-xs flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 overflow-hidden">
-        <div className="space-y-1">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-            Staj Başvurularım & Süreç Takibi
-          </h1>
-          <p className="text-xs sm:text-sm text-gray-600">
-            Başvurduğunuz ilanların anlık aşamalarını, mülakat randevularını ve tekliflerini buradan takip edin.
-          </p>
-        </div>
+    <div className="max-w-5xl mx-auto space-y-4 pb-2">
+      {/*
+        BAŞLIK BANDI KALDIRILDI
 
-        {/* Filter Pills */}
+        Bu liste profil sayfasında "Başvurularım" başlıklı bölümün İÇİNDE
+        duruyor. Bandın kendisi bir kez daha "Staj Başvurularım & Süreç
+        Takibi" diyordu ve altına da ne işe yaradığını anlatan bir cümle
+        ekliyordu — aynı şeyin üçüncü kez söylenmesi. Bölüm başlığı zaten
+        adı ve özeti veriyor; burası doğrudan süzgeçlerle başlıyor.
+      */}
+      <div className="flex items-center justify-start">
         <div className="w-full lg:w-auto overflow-x-auto no-scrollbar py-0.5">
           <div className="inline-flex items-center gap-1 bg-gray-100 p-1 rounded-xl sm:rounded-full border border-gray-200 text-xs font-semibold shrink-0">
             <button
