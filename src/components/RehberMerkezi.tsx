@@ -100,16 +100,32 @@ export const RehberKarti: React.FC<{
       KARO_ZEMIN[sira % KARO_ZEMIN.length]
     }`}
   >
-    <img
-      src={`/rehber-gorselleri/${rehber.slug}.jpg`}
-      alt=""
-      aria-hidden="true"
-      loading="lazy"
-      onError={(e) => {
-        e.currentTarget.style.display = 'none';
-      }}
-      className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-    />
+    {/*
+      KAPAK: AVIF -> WEBP
+
+      Uzantı bütün kapaklarda aynı: fotoğraflı on bir kapak da aynı
+      biçimlere çevrildi, böylece burada slug'a göre istisna taşımıyoruz.
+      AVIF desteklemeyen tarayıcı webp'ye düşüyor.
+
+      `width`/`height` yazılı ve kart `aspect-square`: görsel yüklenirken
+      kart yüksekliği değişmiyor, ızgara zıplamıyor.
+    */}
+    <picture>
+      <source srcSet={`/rehber-gorselleri/${rehber.slug}.avif`} type="image/avif" />
+      <img
+        src={`/rehber-gorselleri/${rehber.slug}.webp`}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+        width={720}
+        height={720}
+        onError={(e) => {
+          e.currentTarget.style.display = 'none';
+        }}
+        className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+      />
+    </picture>
     <span
       aria-hidden="true"
       className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/10"

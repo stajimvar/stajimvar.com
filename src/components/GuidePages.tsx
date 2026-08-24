@@ -15,7 +15,7 @@ import { REHBERLER, konuEtiketi, rehberBul, rehberOkumaDakika, type Rehber } fro
 import { BOLUMLER } from '../data/bolumler';
 import { ARACLAR } from './AraclarListesi';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
-import { RehberMerkezi as RehberMerkeziBilesen } from './RehberMerkezi';
+import { RehberKarti, RehberMerkezi as RehberMerkeziBilesen } from './RehberMerkezi';
 import type { StudentProfile } from '../types';
 
 /**
@@ -127,96 +127,13 @@ const Kisayol: React.FC<{
  * yalnızca ayırt edici — o yüzden sırayla dağıtılıyor.
  */
 /*
-  KARO ZEMİNLERİ
+  KART TEK YERDE: RehberMerkezi.tsx
 
-  Instagram'ın keşfet ızgarasında kareler fotoğraf. Bizde fotoğraf yok ve
-  uydurma görsel koymak sayfayı süslü ama bilgisiz yapardı. Onun yerine her
-  karo kendi renginde: göz ızgarayı tek düze bir metin bloğu olarak değil,
-  ayırt edilebilir kutular olarak okuyor.
-
-  Renk bir anlam taşımıyor, yalnızca ayırt edici — o yüzden sırayla
-  dağıtılıyor.
+  Burada ikinci bir kart bileşeni duruyordu. İkisi de aynı işi yapıyordu ama
+  biri fotoğrafı `.jpg` ile, öteki `<picture>` ile istiyordu — yani
+  kullanıcının gördüğü kart ile ön render'ın yazdığı kart farklı dosyaya
+  bakıyordu. Aynı kart iki yerde yaşayınca fark er geç sessizce oluşuyor.
 */
-const KARO_ZEMIN = [
-  'from-violet-600 to-violet-500',
-  'from-blue-600 to-blue-500',
-  'from-cyan-600 to-cyan-500',
-  'from-emerald-600 to-emerald-500',
-  'from-amber-500 to-amber-400',
-  'from-rose-600 to-rose-500',
-];
-
-const Kart: React.FC<{ rehber: Rehber; sira?: number; onNavigate?: (p: string) => void }> = ({
-  rehber,
-  sira = 0,
-  onNavigate,
-}) => (
-  <a
-    href={`/rehber/${rehber.slug}`}
-    onClick={(e) => {
-      if (!onNavigate) return;
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-      e.preventDefault();
-      onNavigate(`/rehber/${rehber.slug}`);
-    }}
-    className={`group relative overflow-hidden flex flex-col justify-end aspect-square p-3.5 sm:p-4 rounded-2xl text-left cursor-pointer transition-transform hover:-translate-y-0.5 bg-gradient-to-br ${
-      KARO_ZEMIN[sira % KARO_ZEMIN.length]
-    }`}
-  >
-    {/*
-      ARKA PLAN FOTOĞRAFI
-
-      Karolar düz renk zeminlerdi; hepsi aynı görünüyor, hangisinin ne
-      anlattığı ancak yazısı okununca anlaşılıyordu. Her rehberin konusuna
-      uygun bir fotoğraf var: scripts/rehber-gorselleri.mjs ile indirilip
-      kareye kırpılıyor, kendi sunucumuzdan gidiyor (dış adrese bağlanmak
-      ziyaretçinin IP'sini oraya sızdırırdı).
-
-      Renk zemini altta duruyor: fotoğraf yüklenemezse karo boş kalmıyor,
-      eski hâline düşüyor. `onError` ile görsel gizleniyor.
-    */}
-    <img
-      src={`/rehber-gorselleri/${rehber.slug}.jpg`}
-      alt=""
-      aria-hidden="true"
-      loading="lazy"
-      onError={(e) => {
-        e.currentTarget.style.display = 'none';
-      }}
-      className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-    />
-
-    {/*
-      Alta doğru koyulaşan perde: başlık fotoğrafın her tonunda okunsun diye.
-      Fotoğrafla birlikte koyulaştırıldı — düz renkte yeten %35, ayrıntılı bir
-      fotoğrafın üstünde yazıyı okunur kılmıyordu.
-    */}
-    <span
-      aria-hidden="true"
-      className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/10"
-    />
-
-    {/*
-      Sağ üstte soru sayısı — Instagram'ın karosundaki izlenme rozetinin
-      karşılığı. Orada "kaç kişi gördü", burada "kaç soru cevaplanıyor".
-      Uydurma bir sayı değil: doğrudan rehberin SSS listesinden geliyor ve
-      SSS'si olmayan rehberde hiç çizilmiyor.
-    */}
-    {rehber.sss && rehber.sss.length > 0 && (
-      <span className="absolute top-2.5 right-2.5 z-10 text-[10px] font-bold text-white/90 bg-black/25 backdrop-blur-sm px-2 py-0.5 rounded-full">
-        {rehber.sss.length} soru
-      </span>
-    )}
-
-    <span className="relative z-10 block font-bold text-white leading-snug text-sm sm:text-base drop-shadow-sm">
-      {rehber.baslik}
-    </span>
-    <span className="relative z-10 mt-1 flex items-center gap-1 text-[11px] font-semibold text-white/85">
-      Oku
-      <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-    </span>
-  </a>
-);
 
 /**
  * Rehber ızgarası — merkez sayfanın ASIL içeriği.
@@ -248,7 +165,7 @@ export const RehberListesi: React.FC<{ onNavigate?: (p: string) => void }> = ({
         */}
         <div className="grid grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-4">
           {ogrenci.map((r, i) => (
-            <Kart key={r.slug} rehber={r} sira={i} onNavigate={onNavigate} />
+            <RehberKarti key={r.slug} rehber={r} sira={i} onNavigate={onNavigate} />
           ))}
         </div>
       </section>
@@ -258,7 +175,7 @@ export const RehberListesi: React.FC<{ onNavigate?: (p: string) => void }> = ({
           <h2 className="text-xl font-bold text-gray-900">İşverenler için</h2>
           <div className="grid grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-4">
             {isveren.map((r, i) => (
-              <Kart key={r.slug} rehber={r} sira={i} onNavigate={onNavigate} />
+              <RehberKarti key={r.slug} rehber={r} sira={i} onNavigate={onNavigate} />
             ))}
           </div>
         </section>
