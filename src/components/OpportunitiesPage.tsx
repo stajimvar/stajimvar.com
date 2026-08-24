@@ -33,7 +33,9 @@ import {
   OPPORTUNITY_TYPE_LABELS,
 } from '../lib/opportunity-domain.mjs';
 import {
+  ACILIYET_SINIFLARI,
   closingSoon,
+  deadlineTone,
   groupOpportunities,
   opportunityAmount,
   opportunityCalendar,
@@ -161,11 +163,30 @@ export const OpportunitiesPage: React.FC<{
   }, [filters, path]);
 
   const set = (patch: Partial<typeof filters>) => setFilters((current) => ({ ...current, ...patch }));
-  const temizle = () => set({ query: '', type: categoryPath[path] || '', level: '', place: '', openOnly: false });
+
+  /*
+    DURUM SÜZGECİ
+
+    Sayaçların üçü de birer süzgeç: "17 yakında"ya basan kişi o 17'yi
+    görmek istiyor. URL'de yalnızca `open=1` tutuluyor (paylaşılan
+    bağlantılarla uyumlu kalsın diye); "yakında" seçimi sayfa içi bir
+    durum, çünkü kimse "yakında açılacaklar" listesini paylaşmıyor.
+  */
+  const [durumSuzgeci, setDurumSuzgeci] = React.useState<'' | 'acik' | 'yakinda'>(
+    filters.openOnly ? 'acik' : ''
+  );
+  const durumSec = (yeni: '' | 'acik' | 'yakinda') => {
+    setDurumSuzgeci(yeni);
+    set({ openOnly: yeni === 'acik' });
+  };
+  const temizle = () => {
+    setDurumSuzgeci('');
+    set({ query: '', type: categoryPath[path] || '', level: '', place: '', openOnly: false });
+  };
 
   /* Aktif filtre sayısı düğmenin üzerinde: panel kapalıyken de görünsün. */
   const aktifSuzgecSayisi =
-    (filters.type ? 1 : 0) + (filters.level ? 1 : 0) + (filters.place ? 1 : 0) + (filters.openOnly ? 1 : 0);
+    (filters.type ? 1 : 0) + (filters.level ? 1 : 0) + (filters.place ? 1 : 0) + (durumSuzgeci ? 1 : 0);
 
   const gruplar = React.useMemo(() => groupOpportunities(items), [items]);
   const yarinKapananlar = React.useMemo(() => closingSoon(items, 1), [items]);
@@ -175,7 +196,7 @@ export const OpportunitiesPage: React.FC<{
     (item: Opportunity) => {
       if (savedOnly && !saved.includes(item.id)) return false;
       if (filters.type && item.opportunityType !== filters.type) return false;
-      if (filters.openOnly && opportunityStatus(item) !== 'acik') return false;
+      if (durumSuzgeci && opportunityStatus(item) !== durumSuzgeci) return false;
       if (filters.level && !item.educationLevels.includes(filters.level)) return false;
       if (
         filters.place &&
@@ -193,7 +214,7 @@ export const OpportunitiesPage: React.FC<{
         return false;
       return true;
     },
-    [filters, saved, savedOnly]
+    [filters, durumSuzgeci, saved, savedOnly]
   );
 
   const filtered = React.useMemo(() => {
@@ -300,10 +321,20 @@ export const OpportunitiesPage: React.FC<{
               gösteriyor ve üçü de tıklanabilir.
             */}
             {state === 'ready' && !savedOnly && (
-              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 sm:shrink-0">
-                <Sayac deger={gruplar.acik.length} etiket="açık fırsat" onClick={() => set({ openOnly: true })} />
-                <Sayac deger={gruplar.yakinda.length} etiket="yakında açılacak" />
-                <Sayac deger={saved.length} etiket="takip ettiğin" onClick={() => onNavigate('/kaydedilen-firsatlar')} />
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 sm:shrink-0">
+                <Sayac
+                  deger={gruplar.acik.length}
+                  etiket="açık"
+                  aktif={durumSuzgeci === 'acik'}
+                  onClick={() => durumSec(durumSuzgeci === 'acik' ? '' : 'acik')}
+                />
+                <Sayac
+                  deger={gruplar.yakinda.length}
+                  etiket="yakında"
+                  aktif={durumSuzgeci === 'yakinda'}
+                  onClick={() => durumSec(durumSuzgeci === 'yakinda' ? '' : 'yakinda')}
+                />
+                <Sayac deger={saved.length} etiket="takipte" onClick={() => onNavigate('/kaydedilen-firsatlar')} />
               </div>
             )}
           </div>
@@ -372,7 +403,7 @@ export const OpportunitiesPage: React.FC<{
       {/* -------- hızlı çipler -------- */}
       {sekme !== 'takvim' && !savedOnly && (
         <div className="mb-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <Cip aktif={filters.openOnly} onClick={() => set({ openOnly: !filters.openOnly })}>
+          <Cip aktif={durumSuzgeci === 'acik'} onClick={() => durumSec(durumSuzgeci === 'acik' ? '' : 'acik')}>
             Açık
           </Cip>
           <Cip aktif={filters.type === 'scholarship'} onClick={() => set({ type: filters.type === 'scholarship' ? '' : 'scholarship' })}>
@@ -440,14 +471,36 @@ export const OpportunitiesPage: React.FC<{
                   {arsivGoster && ' (süresi dolanlar)'}
                 </p>
                 <span className="flex flex-wrap gap-x-3 gap-y-1">
+                  {/*
+                    Bu bir anahtar, bir bağlantı değil. Düz metin olarak
+                    duruyordu ve tıklanabilir olduğu anlaşılmıyordu;
+                    listenin neyi gösterdiğini belirleyen bir kontrolün
+                    kendini kontrol gibi göstermesi gerekiyor.
+                  */}
                   {gruplar.takvim_bekleniyor.length > 0 && !savedOnly && !arsivGoster && (
                     <button
+                      role="switch"
+                      aria-checked={takvimsizGoster}
                       onClick={() => setTakvimsizGoster((a) => !a)}
-                      className="text-xs font-bold text-gray-500 hover:text-gray-900 hover:underline cursor-pointer"
+                      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
+                        takvimsizGoster
+                          ? 'border-blue-200 bg-blue-50 text-blue-800'
+                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                      }`}
                     >
-                      {takvimsizGoster
-                        ? 'Takvimi açıklananlara dön'
-                        : `Takvimi açıklanmayan ${gruplar.takvim_bekleniyor.length} fırsatı da göster`}
+                      <span
+                        aria-hidden
+                        className={`w-8 h-4 rounded-full relative transition-colors ${
+                          takvimsizGoster ? 'bg-blue-600' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${
+                            takvimsizGoster ? 'left-[18px]' : 'left-0.5'
+                          }`}
+                        />
+                      </span>
+                      Takvimi belli olmayanları da göster ({gruplar.takvim_bekleniyor.length})
                     </button>
                   )}
                   {gruplar.kapali.length > 0 && !savedOnly && (
@@ -581,17 +634,29 @@ export const OpportunitiesPage: React.FC<{
 
 /* ------------------------------------------------------------------ */
 
-const Sayac: React.FC<{ deger: number; etiket: string; onClick?: () => void }> = ({ deger, etiket, onClick }) => {
+/*
+  Sayaç iki satırdı: üstte rakam, altında açıklama. "21 açık" tek satırda
+  da anlaşılıyor ve mobilde üçü yan yana sığıyor. Üçü de bir SÜZGEÇ:
+  rakamın gösterdiği kümeyi listede açıyor, dolayısıyla seçili olduğunda
+  bunu göstermesi gerekiyor.
+*/
+const Sayac: React.FC<{ deger: number; etiket: string; aktif?: boolean; onClick?: () => void }> = ({
+  deger,
+  etiket,
+  aktif = false,
+  onClick,
+}) => {
   const icerik = (
     <>
-      <b className="block text-base sm:text-lg font-extrabold text-blue-700 tabular-nums">{deger}</b>
-      <span className="block text-[10px] text-gray-600 whitespace-nowrap">{etiket}</span>
+      <b className="font-extrabold tabular-nums">{deger}</b> {etiket}
     </>
   );
-  const sinif = 'rounded-xl bg-blue-50/70 border border-blue-100 px-3 py-1.5 leading-tight text-center';
+  const sinif = `rounded-full border px-3 py-1.5 text-xs leading-tight whitespace-nowrap ${
+    aktif ? 'bg-blue-600 border-blue-600 text-white' : 'bg-blue-50/70 border-blue-100 text-blue-900'
+  }`;
   if (!onClick) return <div className={sinif}>{icerik}</div>;
   return (
-    <button onClick={onClick} className={`${sinif} hover:bg-blue-100 transition-colors cursor-pointer`}>
+    <button onClick={onClick} className={`${sinif} hover:bg-blue-100 hover:text-blue-900 transition-colors cursor-pointer`}>
       {icerik}
     </button>
   );
@@ -700,6 +765,7 @@ const Card: React.FC<{
   const durum = opportunityStatus(item);
   const tutar = opportunityAmount(item);
   const kalan = kalanSureMetni(item);
+  const ton = (ACILIYET_SINIFLARI as any)[deadlineTone(item)] ?? ACILIYET_SINIFLARI.notr;
   const yer = [...item.cities, ...item.countries];
   const seviye = item.educationLevels.length ? item.educationLevels.join(', ') : null;
 
@@ -736,48 +802,55 @@ const Card: React.FC<{
         susmuyoruz da: "açıklanmadı" demek, boş bırakıp öğrenciyi aramaya
         göndermekten iyi.
       */}
-      <div className="rounded-xl bg-gray-50 px-3 py-2">
-        {tutar.bilinmiyor ? (
-          <p className="text-sm text-gray-500">
-            Tutar resmî kaynakta açıklanmadı
-            {tutar.geriOdeme && <span className="font-semibold text-gray-700"> · {tutar.geriOdeme}</span>}
+      {/*
+        BİLİNMEYEN TUTAR KUTU DEĞİL, SATIR
+
+        Fırsatların çoğunda tutar henüz doğrulanmadı ve her birine gri bir
+        kutu çizmek kartları boşuna uzatıyordu — hiçbir şey söylemeyen bir
+        alanın en büyük öğelerden biri olması yanlış. Bilinmiyorsa tek
+        satır; biliniyorsa vurgulu kutu, çünkü o zaman kararı belirleyen
+        bilgi orada.
+      */}
+      {tutar.bilinmiyor ? (
+        <p className="flex items-center gap-1.5 text-xs text-gray-500">
+          <span aria-hidden className="font-bold text-gray-400">
+            ₺
+          </span>
+          Tutar açıklanmadı
+          {tutar.geriOdeme && <span className="font-semibold text-gray-600">· {tutar.geriOdeme}</span>}
+        </p>
+      ) : (
+        <div className="rounded-xl bg-emerald-50 px-3 py-2">
+          <p className="text-base font-extrabold text-emerald-900 leading-tight">{tutar.metin}</p>
+          <p className="text-[11px] text-emerald-800">
+            {[tutar.donem, tutar.geriOdeme].filter(Boolean).join(' · ')}
           </p>
-        ) : (
-          <>
-            <p className="text-sm font-extrabold text-gray-900">
-              {tutar.metin}
-              {tutar.geriOdeme && <span className="font-semibold text-gray-600"> · {tutar.geriOdeme}</span>}
-            </p>
-            {tutar.donem && <p className="text-[11px] text-gray-500">{tutar.donem}</p>}
-          </>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* NE ZAMAN: aciliyet önde, kesin tarih arkada. */}
-      <div
-        className={`rounded-xl px-3 py-2 ${
-          durum === 'kapali'
-            ? 'bg-gray-50'
-            : durum === 'acik'
-              ? 'bg-rose-50'
-              : durum === 'yakinda'
-                ? 'bg-blue-50'
-                : 'bg-amber-50'
-        }`}
-      >
+      {/*
+        RENK ACİLİYETİ ANLATIYOR
+
+        Son başvuruya 17 gün kalan burs da kırmızı görünüyordu. Kırmızı bir
+        uyarı rengi — her şey kırmızı olunca hiçbir şey söylemiyor. Eşikler
+        kalan güne göre (0-3 kırmızı, 4-7 turuncu, 8+ nötr) ve yakında
+        açılacaklar yeşil: orada kaçırılacak bir şey yok, aksine iyi haber.
+      */}
+      <div className={`rounded-xl px-3 py-2 ${ton.kutu}`}>
         {durum === 'acik' && (
-          <p className="text-sm font-extrabold leading-snug text-rose-700">
+          <p className={`text-sm font-extrabold leading-snug ${ton.yazi}`}>
             {kalan ? `${kalan} · ` : ''}Son başvuru: {safeDate(item.applicationDeadline)}
           </p>
         )}
-        {durum === 'kapali' && <p className="text-sm font-bold text-gray-500">Süresi doldu</p>}
+        {durum === 'kapali' && <p className={`text-sm font-bold ${ton.yazi}`}>Süresi doldu</p>}
         {durum === 'yakinda' && (
-          <p className="text-sm font-extrabold leading-snug text-blue-800">
+          <p className={`text-sm font-extrabold leading-snug ${ton.yazi}`}>
             Başvurular {safeDate(item.applicationStartAt)} tarihinde açılıyor
           </p>
         )}
         {durum === 'takvim_bekleniyor' && (
-          <p className="text-[13px] font-semibold leading-snug text-amber-800">
+          <p className={`text-[13px] font-semibold leading-snug ${ton.yazi}`}>
             Kurum bu dönemin takvimini açıklamadı; resmî kaynaktan takip et.
           </p>
         )}
@@ -797,7 +870,6 @@ const Card: React.FC<{
           }`}
         >
           {fit.not}
-          {!fit.kesin && ' (başlıktan çıkarıldı, resmî kaynaktan doğrula)'}
         </p>
       )}
 

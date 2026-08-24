@@ -136,24 +136,38 @@ export function opportunityFit(item, ogrenci) {
     if (!uygun) {
       return {
         durum: 'sart_uymuyor',
-        not: `Bu fırsat ${item.educationLevels.join(', ')} şartı içeriyor.`,
+        not: `${item.educationLevels.join(', ')} öğrencisi olma şartı bulunuyor.`,
         kesin: true,
       };
     }
     return { durum: 'uygun_olabilir', not: 'Profil bilgilerine göre uygun olabilir.', kesin: true };
   }
 
-  /* 2. TAHMİN: başlıktaki açık sinyal. Yalnızca eleme yönünde. */
+  /*
+    2. TAHMİN: başlıktaki açık sinyal. Yalnızca eleme yönünde.
+
+    METİN NASIL ÇIKTIĞINI ANLATMIYOR
+
+    Önce "Başlığına göre lisansüstü öğrencisi olma şartı içeriyor
+    (başlıktan çıkarıldı, resmî kaynaktan doğrula)" yazıyordu. Bu bir
+    sistem günlüğü cümlesi: okuyan öğrenciye bilginin nereden geldiğini
+    değil, ne yapması gerektiğini söylemeliyiz. Belirsizlik artık
+    cümlenin kipinde ("olabilir") ve açık bir yönlendirmede.
+  */
   const yazi = kucult(`${item.title} ${item.shortDescription || ''}`);
   if (!mezunSayilir && LISANSUSTU_IZLERI.some((iz) => yazi.includes(iz))) {
     return {
       durum: 'sart_uymuyor',
-      not: 'Başlığına göre lisansüstü öğrencisi olma şartı içeriyor.',
+      not: 'Lisansüstü öğrencilerine yönelik olabilir. Kesin koşulları resmî kaynaktan kontrol et.',
       kesin: false,
     };
   }
   if (LISE_IZLERI.some((iz) => yazi.includes(iz)) && !yazi.includes('lisans')) {
-    return { durum: 'sart_uymuyor', not: 'Başlığına göre lise öğrencileri için.', kesin: false };
+    return {
+      durum: 'sart_uymuyor',
+      not: 'Lise öğrencilerine yönelik olabilir. Kesin koşulları resmî kaynaktan kontrol et.',
+      kesin: false,
+    };
   }
 
   return { durum: 'bilinmiyor', not: null, kesin: false };
@@ -232,3 +246,36 @@ export function opportunityCalendar(items, now = new Date()) {
   }
   return aylar;
 }
+
+/* ------------------------------------------------------------------ */
+/*  ACİLİYET RENGİ                                                     */
+/* ------------------------------------------------------------------ */
+
+/*
+  Kırmızı bir uyarı rengi: "şimdi bak, yoksa kaçıracaksın" demek. Son
+  başvuruya 17 gün kalan bir burs da kırmızı gösteriliyordu; her şey
+  kırmızı olunca kırmızı hiçbir şey söylemiyor.
+
+  Eşikler kalan güne göre: 0-3 kırmızı, 4-7 turuncu, 8+ nötr. Yakında
+  açılacaklar yeşil — orada kaçırılacak bir şey yok, aksine iyi haber.
+*/
+export function deadlineTone(item, now = new Date()) {
+  const durum = opportunityStatus(item, now);
+  if (durum === 'yakinda') return 'yakinda';
+  if (durum === 'kapali') return 'kapali';
+  if (durum === 'takvim_bekleniyor') return 'takvimsiz';
+  const gun = opportunityDaysLeft(item, now);
+  if (gun == null) return 'notr';
+  if (gun <= 3) return 'acil';
+  if (gun <= 7) return 'yakin';
+  return 'notr';
+}
+
+export const ACILIYET_SINIFLARI = {
+  acil: { kutu: 'bg-rose-50', yazi: 'text-rose-700' },
+  yakin: { kutu: 'bg-amber-50', yazi: 'text-amber-800' },
+  notr: { kutu: 'bg-sky-50', yazi: 'text-sky-900' },
+  yakinda: { kutu: 'bg-emerald-50', yazi: 'text-emerald-800' },
+  takvimsiz: { kutu: 'bg-gray-50', yazi: 'text-gray-700' },
+  kapali: { kutu: 'bg-gray-50', yazi: 'text-gray-500' },
+};

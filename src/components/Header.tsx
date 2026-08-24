@@ -145,7 +145,21 @@ export const Header: React.FC<HeaderProps> = ({
   }, []);
 
   const altMenuClass =
-    'lg:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 z-50 rounded-full bg-white/90 backdrop-blur-xl border border-gray-200/80 shadow-[0_10px_30px_rgba(15,23,42,0.16)] px-1.5 py-1.5 flex items-center justify-around gap-0.5 transition-transform duration-200';
+    'lg:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 z-50 rounded-full bg-white border border-gray-200 shadow-[0_10px_30px_rgba(15,23,42,0.18)] px-1.5 py-1.5 flex items-center justify-around gap-0.5 transition-transform duration-200';
+
+  /*
+    ÇUBUK ARTIK SAYDAM DEĞİL
+
+    Zemin `bg-white/90` + bulanıklıktı. Yüzen bir çubuk zaten içeriğin
+    üstünden geçiyor; yarı saydam olunca arkadaki yazı bulanık şekilde
+    görünüyor ve ekran bozuk gibi duruyor — kullanıcı "düğmelerim kalmış"
+    diyor. Opak zeminde örtme bir arayüz katmanı gibi okunuyor.
+
+    Ölçüldü: sayfanın en dibinde son kartın düğmeleri 685. pikselde
+    bitiyor, çubuğun üst kenarı 742'de — yani 57 piksel boşluk var ve
+    hiçbir düğme erişilemez değil. Kaydırırken üstünden geçmesi ise yüzen
+    tasarımın kendisi; onun için de aşağı kaydırınca çekiliyor.
+  */
 
   /*
     Kayma değeri Tailwind sınıfıyla değil, satır içi biçemle veriliyor.
