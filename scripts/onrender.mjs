@@ -478,6 +478,10 @@ async function rehberleriCiz() {
         kategori: r.kategori,
         guncelleme: r.guncelleme,
         sss: r.sss || [],
+        konu: r.konu,
+        hizliCevap: r.hizliCevap,
+        kaynaklar: r.kaynaklar || [],
+        sonrakiAdim: r.sonrakiAdim,
         govde: renderToStaticMarkup(r.icerik),
       };
     }
@@ -742,11 +746,33 @@ async function main() {
       */
       govde:
         `<main><h1>${kacir(r.baslik)}</h1><p>${kacir(r.ozet || '')}</p>` +
+        /*
+          HIZLI CEVAP ÖN RENDER'A DA GİRİYOR
+
+          Sayfanın en doğrudan cevabı bu iki cümle; yalnızca tarayıcıda
+          çizilseydi arama motoru onu hiç görmezdi. Sayfada görünen metin
+          ile statik HTML'in aynı şeyi söylemesi ayrıca bir kural: yapısal
+          veride ya da HTML'de olup ekranda olmayan içerik ceza sebebi.
+        */
+        (r.hizliCevap ? `<p><strong>${kacir(r.hizliCevap)}</strong></p>` : '') +
         r.govde +
         (sorular.length
           ? `<section><h2>Sık sorulanlar</h2>${sorular
               .map((s) => `<h3>${kacir(s.soru)}</h3><p>${kacir(s.cevap)}</p>`)
               .join('')}</section>`
+          : '') +
+        /* Resmî kaynaklar dış bağlantı: nofollow değil, gerçekten kaynak. */
+        (Array.isArray(r.kaynaklar) && r.kaynaklar.length
+          ? `<section><h2>Resmî kaynaklar</h2><ul>${r.kaynaklar
+              .map(
+                (k) =>
+                  `<li><a href="${kacir(k.adres)}" target="_blank" rel="noopener noreferrer">${kacir(k.etiket)}</a></li>`
+              )
+              .join('')}</ul></section>`
+          : '') +
+        /* Sıradaki adım bir İÇ bağlantı: rehberden ürüne sinyal taşıyor. */
+        (r.sonrakiAdim
+          ? `<p><a href="${kacir(r.sonrakiAdim.yol)}">${kacir(r.sonrakiAdim.etiket)}</a></p>`
           : '') +
         merkezListeleri.rehberBaglantilari(r.slug, r.kategori) +
         '</main>',

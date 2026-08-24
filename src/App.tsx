@@ -25,6 +25,7 @@ import { LegalPage, LEGAL_ROUTES } from './components/LegalPage';
 import { ApplyDialog } from './components/ApplyDialog';
 import { ListingPage } from './components/ListingPage';
 import { GuideHub, GuidePage } from './components/GuidePages';
+import { BasvuruSablonu } from './components/BasvuruSablonu';
 import { BolumHub, BolumPage } from './components/BolumPages';
 import { StajProgramlariSayfasi } from './components/StajProgramlari';
 import { IsverenGirisi } from './components/IsverenGirisi';
@@ -878,6 +879,24 @@ export default function App() {
     Yazdırılabilir CV. Oturum gerekiyor: sayfa kişinin kendi profilinden
     üretiliyor, başkasının CV'si buradan görüntülenemiyor.
   */
+  /*
+    BAŞVURU E-POSTASI ŞABLONU KENDİ ADRESİNDE
+
+    Şablon yalnızca sıfır sonuç ekranındaki bir düğmeden açılabiliyordu —
+    yani onu görebilmek için önce hiçbir ilan bulamamak gerekiyordu.
+    Rehberdeki "Sıradaki adım" buraya bağlanıyor ve adres paylaşılabilir
+    oluyor. Kapatınca rehbere dönüyor: kullanıcı buraya oradan geldi.
+  */
+  if (temizYol === '/basvuru-sablonu') {
+    return icerikSayfasi(
+      <BasvuruSablonu
+        acik
+        onKapat={() => navigate('/rehber/staj-basvuru-epostasi')}
+        ogrenci={isLoggedIn ? activeStudent : null}
+      />
+    );
+  }
+
   if (temizYol === '/cv') {
     if (!student) {
       return (
@@ -903,7 +922,7 @@ export default function App() {
 
   /* Rehber merkezi ve tek rehber sayfaları. */
   if (temizYol === '/rehber') {
-    return icerikSayfasi(<GuideHub onBack={goHome} onNavigate={navigate} />);
+    return icerikSayfasi(<GuideHub onBack={goHome} onNavigate={navigate} ogrenci={isLoggedIn ? activeStudent : null} />);
   }
   if (temizYol.startsWith('/rehber/')) {
     return icerikSayfasi(

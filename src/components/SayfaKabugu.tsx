@@ -22,7 +22,14 @@ import { ArrowLeft } from 'lucide-react';
  */
 
 interface SayfaKabuguProps {
-  onBack: () => void;
+  /**
+   * Geri düğmesi. Verilmezse hiç çizilmiyor.
+   *
+   * Alt menüdeki ANA sekmeler (Rehber gibi) için geri düğmesi gereksiz:
+   * kullanıcı oraya bir yerden gelmedi, sekmeye bastı. Mobilde de boşuna
+   * dikey yer kaplıyordu.
+   */
+  onBack?: () => void;
   children: React.ReactNode;
   /** Başlık çubuğunun sağına konacak şey (örn. CV sayfasındaki yazdır düğmesi). */
   sag?: React.ReactNode;

@@ -68,6 +68,123 @@ export interface Rehber {
    * basmak yalan olurdu.
    */
   guncelleme?: string;
+  /**
+   * Konu — Rehber sekmesindeki kategori süzgeci.
+   *
+   * `kategori` kime hitap ettiğini söylüyor (öğrenci / işveren); `konu` ise
+   * neyle ilgili olduğunu. İkisi ayrı sorular: bir öğrenci "burs" diye
+   * süzmek istiyor, "öğrenci içerikleri" diye değil.
+   */
+  konu: KonuId;
+  /** Arama bunlarda da eşleşiyor: başlık kelimesi olmayan sorgular için. */
+  etiketler?: string[];
+  /** Rehber merkezinde öne çıkanlar bölümünde görünsün mü. */
+  oneCikan?: boolean;
+  /**
+   * Hızlı cevap — sayfanın en başında iki üç cümle.
+   *
+   * Öğrencilerin çoğu tek bir soruyla geliyor ("sigortayı kim yapar").
+   * Cevabı bulmak için 1500 kelime okutmak, cevabı vermemekle aynı şey.
+   * Ayrıntı aşağıda duruyor; kısası yukarıda.
+   */
+  hizliCevap?: string;
+  /** Resmî kaynaklar: rakam ve mevzuat burada doğrulanıyor. */
+  kaynaklar?: { etiket: string; adres: string }[];
+  /**
+   * Okunduktan sonra yapılabilecek GERÇEK bir şey.
+   *
+   * Yazının sonunda yalnızca başka yazılar göstermek, okuyanı bir
+   * arşivde dolaştırmak demek. Var olmayan bir sayfaya bağlanmıyoruz:
+   * karşılığı olmayan rehberde bu alan boş kalıyor.
+   */
+  sonrakiAdim?: { etiket: string; yol: string; aciklama?: string };
+}
+
+/* ------------------------------------------------------------------ konular */
+
+/*
+  KONU LİSTESİ
+
+  Rehber sekmesi yalnızca staj yazılarının bulunduğu bir alan olmaktan
+  çıkıyor: burs, KYK, yurt, üniversite hayatı, yurtdışı ve ilk iş de
+  öğrencinin aynı yerde aradığı şeyler. Konu listesi bu genişlemenin
+  iskeleti — bugün hepsinde yazı yok, ama yazı geldikçe süzgeç hazır.
+*/
+export const KONULAR = [
+  { id: 'staj', etiket: 'Staj' },
+  { id: 'cv', etiket: 'CV ve başvuru' },
+  { id: 'burs', etiket: 'Burs ve KYK' },
+  { id: 'yurt', etiket: 'Yurt ve barınma' },
+  { id: 'universite', etiket: 'Üniversite hayatı' },
+  { id: 'yurtdisi', etiket: 'Yurtdışı' },
+  { id: 'kariyer', etiket: 'İlk iş ve kariyer' },
+] as const;
+
+export type KonuId = (typeof KONULAR)[number]['id'];
+
+export const konuEtiketi = (id: KonuId): string =>
+  KONULAR.find((k) => k.id === id)?.etiket ?? 'Rehber';
+
+/**
+ * Okuma süresi — kartlarda "6 soru" yerine.
+ *
+ * NEDEN HESAPLANIYOR, ELLE YAZILMIYOR
+ * -----------------------------------
+ * Kartta "6 soru" yazıyordu: doğru bir sayıydı ama okuyucunun sorduğu şey
+ * değil. "Kaç dakikamı alacak" sorusunun cevabı elle girilseydi metin
+ * uzadıkça sessizce yanlışlaşırdı.
+ *
+ * JSX ağacı düz veri: children'ları gezip metinleri topluyoruz. Aynı
+ * hesap hem tarayıcıda hem ön render'da (Node) çalışıyor, çünkü ortada
+ * DOM değil nesne var. Dakika = kelime / 200, en az 1.
+ */
+/*
+  METİN TOPLAMA
+
+  İlk sürüm yalnızca `children` içine iniyordu ve ölçüm yanlış çıkıyordu:
+  rehberlerin çoğu metni ÖZEL BİLEŞENLERİN PROP'LARINDA taşıyor
+  (`<Akis adimlar={[...]}/>`, `<KontrolListesi maddeler={[...]}/>`,
+  `<KarsilastirmaTablosu satirlar={[[...]]}/>`). KYK rehberi bu yüzden
+  "1 dk" görünüyordu.
+
+  Artık bütün prop'lar geziliyor. Sınıf adı, adres, ikon gibi metin
+  OLMAYAN prop'lar dışarıda: onları saymak dakikayı şişirirdi.
+*/
+const METIN_OLMAYAN_PROPLAR = new Set([
+  'className', 'style', 'href', 'src', 'id', 'key', 'ref', 'target', 'rel',
+  'type', 'width', 'height', 'viewBox', 'd', 'fill', 'stroke', 'xmlns',
+  'loading', 'role', 'aria-hidden', 'alt', 'onError', 'onClick',
+]);
+
+function metniTopla(dugum: unknown, kova: string[] = []): string[] {
+  if (dugum == null || typeof dugum === 'boolean' || typeof dugum === 'function') return kova;
+  if (typeof dugum === 'string' || typeof dugum === 'number') {
+    kova.push(String(dugum));
+    return kova;
+  }
+  if (Array.isArray(dugum)) {
+    for (const cocuk of dugum) metniTopla(cocuk, kova);
+    return kova;
+  }
+  const proplar = (dugum as any)?.props;
+  if (proplar && typeof proplar === 'object') {
+    for (const [ad, deger] of Object.entries(proplar)) {
+      if (METIN_OLMAYAN_PROPLAR.has(ad)) continue;
+      metniTopla(deger, kova);
+    }
+    return kova;
+  }
+  /* React öğesi değil, düz nesne: değerlerini gez (Akis adımları gibi). */
+  if (Object.getPrototypeOf(dugum) === Object.prototype) {
+    for (const deger of Object.values(dugum as Record<string, unknown>)) metniTopla(deger, kova);
+  }
+  return kova;
+}
+
+export function rehberOkumaDakika(rehber: Rehber): number {
+  const metin = metniTopla(rehber.icerik).join(' ');
+  const kelime = metin.split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(kelime / 200));
 }
 
 const B: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -105,6 +222,12 @@ export const REHBERLER: Rehber[] = [
   // ------------------------------------------------------------------ öğrenci
   {
     slug: 'zorunlu-staj-rehberi',
+    konu: 'staj',
+    oneCikan: true,
+    etiketler: ['sigorta', 'belge', 'okul', 'sgk', 'zorunlu staj'],
+    hizliCevap:
+      'Zorunlu stajda sırayla üç şey yapılır: okulun staj birimine gidip yönergeyi ve zorunlu staj formunu almak, formu kabul eden bir işyerine imzalatmak, imzalı formu okula teslim edip sigorta girişini başlatmak. Sigortayı çoğu üniversitede okul yapar; kesin cevabı kendi okulunun yönergesindedir.',
+    sonrakiAdim: { etiket: 'Staj gününü hesapla', yol: '/araclar/staj-gunu-hesaplama', aciklama: 'Kaç iş günü kaldığını tarih vererek gör.' },
     baslik: 'Zorunlu staj rehberi',
     ozet: 'Belge, sigorta, süre ve okulla olan süreç — sırayla.',
     kategori: 'ogrenci',
@@ -223,6 +346,12 @@ export const REHBERLER: Rehber[] = [
 
   {
     slug: 'staj-cv-nasil-yazilir',
+    konu: 'cv',
+    oneCikan: true,
+    etiketler: ['cv', 'özgeçmiş', 'deneyimsiz', 'ats'],
+    hizliCevap:
+      'Deneyimin yoksa CV’yi boş bırakmıyorsun: ders projeleri, kullandığın programlar, kulüp ve gönüllü işler gerçek içeriktir. İşveren stajyerde iş geçmişi değil, öğrenme hızı ve ne yaptığını anlatabilme becerisi arıyor.',
+    sonrakiAdim: { etiket: 'Profilini tamamla ve CV’ni indir', yol: '/cv', aciklama: 'Profilindeki bilgilerle hazır bir CV üretiliyor.' },
     baslik: 'Deneyimin yokken staj CV’si nasıl yazılır',
     ozet: 'Boş bir “iş deneyimi” bölümüyle ne yapacağını bilmiyorsan.',
     kategori: 'ogrenci',
@@ -410,6 +539,11 @@ export const REHBERLER: Rehber[] = [
 
   {
     slug: 'staj-mulakati',
+    konu: 'cv',
+    etiketler: ['mülakat', 'görüşme', 'sorular'],
+    hizliCevap:
+      'Staj mülakatında sorular kişiyi değil hazırlığı ölçüyor: neden bu şirket, hangi projeyi yaptın, bir sorunu nasıl çözdün. Cevapları ezberlemek yerine üç somut örnek hazırlamak yetiyor.',
+    sonrakiAdim: { etiket: 'Açık staj ilanlarına bak', yol: '/', aciklama: 'Hazırlandığın mülakatın çıkacağı yer burası.' },
     baslik: 'Staj mülakatına hazırlık',
     ozet: 'Sorulan sorular, hazırlanma yolu ve sık yapılan hatalar.',
     kategori: 'ogrenci',
@@ -599,6 +733,12 @@ export const REHBERLER: Rehber[] = [
   },
   {
     slug: 'staj-basvuru-epostasi',
+    konu: 'cv',
+    oneCikan: true,
+    etiketler: ['e-posta', 'başvuru', 'şablon', 'mail'],
+    hizliCevap:
+      'Başvuru e-postasının açılıp açılmayacağını konu satırı belirliyor; “Merhaba” ya da boş konu doğrudan çöpe gidiyor. Metinde üç şey olmalı: kim olduğun, neden o şirket, ne zaman müsait olduğun.',
+    sonrakiAdim: { etiket: 'Başvuru e-postası şablonunu aç', yol: '/basvuru-sablonu', aciklama: 'Profilindeki bilgilerle doldurulmuş, kopyalanabilir metin.' },
     baslik: 'Staj başvuru e-postası nasıl yazılır',
     ozet: 'Hazır şablon ve en sık yapılan altı hata.',
     kategori: 'ogrenci',
@@ -736,6 +876,11 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
   },
   {
     slug: 'staj-defteri-nasil-doldurulur',
+    konu: 'staj',
+    etiketler: ['staj defteri', 'imza', 'kaşe'],
+    hizliCevap:
+      'Staj defteri her gün ne yaptığını yazdığın bir kayıt; sonunda işyerinden imza ve kaşe, okuldan onay alıyor. En sık yapılan hata defteri stajın sonunda toplu doldurmak — imzayı alacak kişi o sırada izinde olabiliyor.',
+    sonrakiAdim: { etiket: 'Staj gününü hesapla', yol: '/araclar/staj-gunu-hesaplama', aciklama: 'Defterde kaç iş günü doldurman gerektiğini gör.' },
     baslik: 'Staj defteri nasıl doldurulur',
     ozet: 'Her gün ne yazılır, imza ve kaşe nereden alınır, en sık yapılan hata.',
     kategori: 'ogrenci',
@@ -935,6 +1080,16 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
   },
   {
     slug: 'kyk-burs-ve-kredi',
+    konu: 'burs',
+    oneCikan: true,
+    etiketler: ['kyk', 'burs', 'kredi', 'gsb', 'başvuru'],
+    hizliCevap:
+      'KYK bursu geri ödenmiyor, KYK öğrenim kredisi mezuniyetten sonra geri ödeniyor; başvuru ikisi için de aynı formdan yapılıyor. Tutarlar ve başvuru takvimi her yıl değiştiği için güncel rakamı resmî kaynaktan kontrol et.',
+    kaynaklar: [
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
+      { etiket: 'e-Devlet', adres: 'https://www.turkiye.gov.tr' },
+    ],
+    sonrakiAdim: { etiket: 'Açık bursları gör', yol: '/firsatlar', aciklama: 'Resmî kaynağıyla doğrulanmış burs ve kredi ilanları.' },
     baslik: 'KYK burs ve öğrenim kredisi',
     ozet: 'Burs ile kredi arasındaki fark, başvuru zamanı ve kesilme sebepleri.',
     kategori: 'ogrenci',
@@ -1050,6 +1205,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
   },
   {
     slug: 'staj-nasil-bulunur',
+    konu: 'staj',
+    oneCikan: true,
+    etiketler: ['staj bulma', 'ilan', 'başvuru kanalı'],
+    hizliCevap:
+      'Staj beş kanaldan bulunuyor: ilan siteleri, şirketlerin kendi kariyer sayfaları, okulun staj birimi, tanıdık ağı ve ilan açmayan şirkete doğrudan yazmak. Sonuncusu en az denenen ama rekabetin en düşük olduğu yol.',
+    sonrakiAdim: { etiket: 'Açık staj ilanlarına bak', yol: '/', aciklama: 'Tek listede toplanmış güncel ilanlar.' },
     baslik: 'Staj nasıl bulunur',
     ozet: 'Beş kanal, hangisi ne kadar işe yarıyor ve nereden başlanır.',
     kategori: 'ogrenci',
@@ -1261,6 +1422,11 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
   },
   {
     slug: 'gonullu-staj-rehberi',
+    konu: 'staj',
+    etiketler: ['gönüllü staj', 'isteğe bağlı', 'sigorta'],
+    hizliCevap:
+      'Gönüllü staj okul zorunluluğu olmadan yapılan stajdır; zorunlu stajdan asıl farkı sigorta ve belge tarafında ortaya çıkıyor. Okulun formu vermediği durumda sigorta yükümlülüğü işyerine geçebiliyor, o yüzden başlamadan önce bunu yazılı netleştir.',
+    sonrakiAdim: { etiket: 'Açık staj ilanlarına bak', yol: '/', aciklama: 'Gönüllü staja da açık ilanlar burada.' },
     baslik: 'Gönüllü staj: zorunlu stajdan farkı ne?',
     ozet: 'Sigorta, ücret ve belge tarafı zorunlu stajdan farklı işliyor.',
     kategori: 'ogrenci',
@@ -1374,6 +1540,11 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
   },
   {
     slug: 'universite-staj-birimi',
+    konu: 'universite',
+    etiketler: ['staj komisyonu', 'okul', 'yönerge', 'belge'],
+    hizliCevap:
+      'Staj biriminden üç şey alınıyor: staj yönergesi, zorunlu staj formu ve sigorta girişi için gereken onay. Süreç okuldan okula değiştiği için ilk adım her zaman kendi bölümünün yönergesini okumak.',
+    sonrakiAdim: { etiket: 'Bölümüne göre staj sayfasını aç', yol: '/bolumler', aciklama: 'Kendi bölümünde staj nerede yapılır, stajyer ne iş yapar.' },
     baslik: 'Okulun staj birimiyle nasıl çalışılır',
     ozet: 'Kime gidilir, hangi belge istenir, ne zaman başvurulur.',
     kategori: 'ogrenci',
@@ -1494,6 +1665,11 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
   },
   {
     slug: 'stajdan-ise-gecis',
+    konu: 'kariyer',
+    etiketler: ['işe geçiş', 'teklif', 'referans'],
+    hizliCevap:
+      'Stajın işe dönüşmesi son iki haftada belli oluyor: yaptığın işi görünür kılmak, niyetini açıkça söylemek ve ayrılırken referans istemek. Teklif gelmese bile referans ve somut bir çıktı bir sonraki başvuruda işe yarıyor.',
+    sonrakiAdim: { etiket: 'Profilini tamamla ve CV’ni indir', yol: '/cv', aciklama: 'Stajda yaptığın işi CV’ye geçir.' },
     baslik: 'Stajdan işe geçiş: staj bitince ne yapmalı',
     ozet: 'Stajın işe dönüşmesi için son iki hafta ve sonrası.',
     kategori: 'ogrenci',
@@ -1607,6 +1783,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
   },
   {
     slug: 'yurtdisinda-staj',
+    konu: 'yurtdisi',
+    oneCikan: true,
+    etiketler: ['erasmus', 'iaeste', 'yurtdışı', 'hibe'],
+    hizliCevap:
+      'Yurt dışında staj çoğunlukla tek başına ilana başvurarak değil, okulun kanalıyla yürüyor: Erasmus+ staj hareketliliği ve IAESTE başvuruları üniversitenin uluslararası ofisinden yapılıyor. Takvim okulun ilanına bağlı, o yüzden ofisi erken takip etmek gerekiyor.',
+    sonrakiAdim: { etiket: 'Yurtdışı fırsatlarını gör', yol: '/yurtdisi-firsatlari', aciklama: 'Erasmus ve yurt dışı programları tek listede.' },
     baslik: 'Yurt dışında staj: Erasmus+ ve IAESTE',
     ozet: 'Tek başına ilana başvurmak nadiren yürüyor; yol okulun kanalından geçiyor.',
     kategori: 'ogrenci',

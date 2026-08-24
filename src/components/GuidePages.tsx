@@ -6,13 +6,17 @@ import {
   Building2,
   Calculator,
   Sparkles,
+  ExternalLink,
+  List,
 } from 'lucide-react';
 import { SayfaKabugu } from './SayfaKabugu';
 import { RenkliKart } from './RehberGorseller';
-import { REHBERLER, rehberBul, type Rehber } from '../data/rehberler';
+import { REHBERLER, konuEtiketi, rehberBul, rehberOkumaDakika, type Rehber } from '../data/rehberler';
 import { BOLUMLER } from '../data/bolumler';
 import { ARACLAR } from './AraclarListesi';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
+import { RehberMerkezi as RehberMerkeziBilesen } from './RehberMerkezi';
+import type { StudentProfile } from '../types';
 
 /**
  * Rehber merkezi ve tek rehber sayfası.
@@ -263,107 +267,20 @@ export const RehberListesi: React.FC<{ onNavigate?: (p: string) => void }> = ({
   );
 };
 
-export const GuideHub: React.FC<GuideHubProps> = ({ onBack, onNavigate }) => {
-  useEffect(() => {
-    document.title = 'Staj rehberi | StajımVar';
-  }, []);
+/*
+  REHBER MERKEZİ AYRI DOSYADA
 
-  const ogrenci = REHBERLER.filter((r) => r.kategori === 'ogrenci');
-  const isveren = REHBERLER.filter((r) => r.kategori === 'isveren');
+  Merkez sayfası artık arama, konu süzgeci, öne çıkanlar ve keşif şeridi
+  taşıyor; bu dosyada tek rehber sayfasıyla iç içe durması ikisini de
+  okunmaz yapıyordu. Eski adı (`GuideHub`) korunuyor — App ve ön render
+  betiği bu adı kullanıyor.
+*/
+export { RehberMerkezi } from './RehberMerkezi';
 
-  return (
-    <SayfaKabugu onBack={onBack} icerikGenisligi={SAYFA_GENISLIGI}>
-      <div className="space-y-8 sm:space-y-10">
-        {/* ======================================================= giriş */}
-        {/*
-          Başlık artık renkli bir alanın içinde ve yanında rakamlar var.
-
-          Önce düz bir h1 + paragraftı; sayfa "bir metin dosyası" gibi
-          açılıyordu. Rakamlar hem sayfanın dolu olduğunu gösteriyor hem de
-          "34 bölüm" gibi somut bir vaat veriyor — "rehber" kelimesinin tek
-          başına söylemediği şey.
-        */}
-        <div className="relative overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-emerald-50/50 p-5 sm:p-8">
-          <span
-            aria-hidden="true"
-            className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-blue-100/40"
-          />
-          <span
-            aria-hidden="true"
-            className="absolute -right-4 top-24 w-24 h-24 rounded-full bg-emerald-100/50"
-          />
-          <div className="relative max-w-2xl space-y-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/80 border border-blue-200 text-[11px] font-bold uppercase tracking-wider text-blue-700">
-              <Sparkles className="w-3.5 h-3.5" />
-              Staj rehberi
-            </span>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900">
-              Staj, işini bilene kolay.
-            </h1>
-            <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
-              Belgeler, sigorta, CV, mülakat… Çoğu kişi istemediği için değil, nasıl
-              olduğunu bilmediği için başlayamıyor. Burada sırayla anlatıyoruz.
-            </p>
-            <div className="flex flex-wrap gap-x-5 gap-y-1 pt-1">
-              {[
-                { sayi: BOLUMLER.length, etiket: 'bölüm' },
-                { sayi: ARACLAR.length, etiket: 'hesaplama aracı' },
-                { sayi: ogrenci.length + isveren.length + 1, etiket: 'rehber' },
-              ].map((s) => (
-                <span key={s.etiket} className="text-sm text-gray-600">
-                  <strong className="text-gray-900 text-lg tabular-nums">{s.sayi}</strong>{' '}
-                  {s.etiket}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ================================================== kestirmeler */}
-        <section className="space-y-4">
-          <h2 className="text-xl font-bold text-gray-900">Kestirmeler</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <RenkliKart
-              ikon={<GraduationCap className="w-6 h-6 text-white" />}
-              baslik="Bölüme göre staj"
-              ozet="Kendi bölümünde staj nerede yapılır, stajyer ne iş yapar"
-              rozet={`${BOLUMLER.length} bölüm`}
-              zemin="bg-gradient-to-br from-violet-50 to-white border-violet-200"
-              ikonZemin="bg-gradient-to-br from-violet-500 to-violet-600"
-              onClick={() => onNavigate('/bolumler')}
-            />
-            <RenkliKart
-              ikon={<Calculator className="w-6 h-6 text-white" />}
-              baslik="Hesaplama araçları"
-              ozet="Net, sıralama, staj ücreti ve staj günü"
-              rozet={`${ARACLAR.length} araç`}
-              zemin="bg-gradient-to-br from-emerald-50 to-white border-emerald-200"
-              ikonZemin="bg-gradient-to-br from-emerald-500 to-emerald-600"
-              onClick={() => onNavigate('/araclar')}
-            />
-            <RenkliKart
-              ikon={<Building2 className="w-6 h-6 text-white" />}
-              baslik="İşveren rehberi"
-              ozet="Stajyer nasıl alınır: sigorta, ücret, evrak"
-              rozet="Şirketler için"
-              zemin="bg-gradient-to-br from-amber-50 to-white border-amber-200"
-              ikonZemin="bg-gradient-to-br from-amber-500 to-amber-600"
-              onClick={() => onNavigate('/isveren')}
-            />
-          </div>
-        </section>
-
-        <RehberListesi onNavigate={onNavigate} />
-
-        <p className="text-xs text-gray-400 leading-relaxed max-w-2xl">
-          Rehberlerde yıldan yıla değişen oran ve tutarlar yazılmıyor; mekanizma anlatılıp
-          güncel rakam için resmî kaynağa yönlendiriliyor. Eksik veya hatalı gördüğün bir
-          şey olursa bize yaz.
-        </p>
-      </div>
-    </SayfaKabugu>
-  );
-};
+export const GuideHub: React.FC<GuideHubProps & { ogrenci?: StudentProfile | null }> = ({
+  onNavigate,
+  ogrenci = null,
+}) => <RehberMerkeziBilesen onNavigate={onNavigate} ogrenci={ogrenci} />;
 
 /* ------------------------------------------------------------- tek rehber */
 
@@ -447,8 +364,68 @@ export const RehberBaglantilari: React.FC<{
   );
 };
 
+/**
+ * İçindekiler.
+ *
+ * NEDEN DOM'DAN OKUNUYOR
+ * ----------------------
+ * Rehber metinleri JSX; başlıklar ayrı bir alanda tutulmuyor ve her rehber
+ * için elle bir başlık listesi yazmak, metin değiştiğinde sessizce
+ * eskiyen ikinci bir kayıt demekti. Çizildikten sonra kabın içindeki h2
+ * öğeleri okunuyor: liste her zaman yazının kendisiyle aynı.
+ *
+ * Kısa yazılarda hiç çizilmiyor — üç başlıklı bir yazıda içindekiler
+ * gezinmeye yardım etmiyor, yalnızca yer kaplıyor.
+ */
+const Icindekiler: React.FC<{ kap: React.RefObject<HTMLDivElement | null>; anahtar: string }> = ({
+  kap,
+  anahtar,
+}) => {
+  const [basliklar, setBasliklar] = React.useState<{ id: string; metin: string }[]>([]);
+
+  React.useEffect(() => {
+    const kok = kap.current;
+    if (!kok) return;
+    const bulunan = Array.from(kok.querySelectorAll('h2')).map((h, i) => {
+      if (!h.id) h.id = `bolum-${i + 1}`;
+      /* scroll-mt: yapışkan başlık çubuğu hedefin üstünü örtmesin. */
+      h.classList.add('scroll-mt-24');
+      return { id: h.id, metin: h.textContent || '' };
+    });
+    setBasliklar(bulunan.length >= 4 ? bulunan : []);
+  }, [kap, anahtar]);
+
+  if (!basliklar.length) return null;
+
+  return (
+    <nav aria-label="İçindekiler" className="rounded-2xl border border-gray-200 bg-white p-4">
+      <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-500">
+        <List className="w-3.5 h-3.5" />
+        İçindekiler
+      </p>
+      <ol className="mt-2 space-y-1.5">
+        {basliklar.map((b, i) => (
+          <li key={b.id}>
+            <a
+              href={`#${b.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById(b.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className="text-sm text-blue-700 hover:underline"
+            >
+              {i + 1}. {b.metin}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+};
+
 export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }) => {
   const rehber = rehberBul(slug);
+  const icerikRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.title = rehber ? `${rehber.baslik} | StajımVar` : 'Rehber bulunamadı | StajımVar';
@@ -488,6 +465,28 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">
           {rehber.baslik}
         </h1>
+
+        <p className="text-xs text-gray-400">
+          {konuEtiketi(rehber.konu)} · {rehberOkumaDakika(rehber)} dk okuma
+        </p>
+
+        {/*
+          HIZLI CEVAP
+
+          Öğrencilerin çoğu tek bir soruyla geliyor ("sigortayı kim yapar").
+          Cevabı bulmak için 1500 kelime okutmak, cevabı vermemekle aynı şey.
+          Ayrıntı aşağıda duruyor; kısası burada.
+        */}
+        {rehber.hizliCevap && (
+          <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700">Kısa cevap</p>
+            <p className="mt-1 text-sm sm:text-base text-gray-800 leading-relaxed">
+              {rehber.hizliCevap}
+            </p>
+          </div>
+        )}
+
+        <Icindekiler kap={icerikRef} anahtar={rehber.slug} />
         {/*
           İÇERİK İÇİ BAĞLANTILARI YAKALA
 
@@ -506,6 +505,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
           dokunulmadan geçiyor.
         */}
         <div
+          ref={icerikRef}
           className="space-y-3"
           onClick={(e) => {
             const bag = (e.target as HTMLElement).closest('a');
@@ -544,6 +544,64 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
               ))}
             </div>
           </section>
+        )}
+
+        {/*
+          RESMÎ KAYNAKLAR
+
+          Rakam ve mevzuat burada doğrulanıyor. Rehberde yıldan yıla
+          değişen tutar yazmıyoruz; onun yerine nereden bakılacağını
+          söylüyoruz — kaynağı göstermeyen bir bilgi bir süre sonra
+          sessizce yanlış oluyor.
+        */}
+        {rehber.kaynaklar && rehber.kaynaklar.length > 0 && (
+          <section className="mt-8 space-y-2">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+              Resmî kaynaklar
+            </h2>
+            <ul className="rounded-2xl border border-gray-200 bg-white divide-y divide-gray-100">
+              {rehber.kaynaklar.map((k) => (
+                <li key={k.adres}>
+                  <a
+                    href={k.adres}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-50/60"
+                  >
+                    {k.etiket}
+                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/*
+          UYGULANABİLİR SONRAKİ ADIM
+
+          Yazının sonunda yalnızca başka yazılar göstermek, okuyanı bir
+          arşivde dolaştırmak demek. Buradaki bağlantı sitede GERÇEKTEN
+          var olan bir yere gidiyor; karşılığı olmayan rehberde bu blok
+          hiç çizilmiyor.
+        */}
+        {rehber.sonrakiAdim && (
+          <button
+            type="button"
+            onClick={() => onNavigate(rehber.sonrakiAdim!.yol)}
+            className="mt-8 w-full flex items-center justify-between gap-3 rounded-2xl bg-blue-600 px-4 py-4 text-left text-white hover:bg-blue-700 transition-colors cursor-pointer"
+          >
+            <span className="min-w-0">
+              <span className="block text-[11px] font-bold uppercase tracking-wide text-blue-100">
+                Sıradaki adım
+              </span>
+              <span className="block font-bold">{rehber.sonrakiAdim.etiket}</span>
+              {rehber.sonrakiAdim.aciklama && (
+                <span className="block text-xs text-blue-100">{rehber.sonrakiAdim.aciklama}</span>
+              )}
+            </span>
+            <ChevronRight className="w-5 h-5 shrink-0" />
+          </button>
         )}
 
         {rehber.guncelleme && (
