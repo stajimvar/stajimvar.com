@@ -14,7 +14,7 @@ import {
 import { InternshipListing, MatchBreakdown } from '../types';
 import { ListingLogo } from './ListingLogo';
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
-import { eklenmeMetni } from '../lib/zaman';
+import { eklenmeMetni, sonKontrolMetni } from '../lib/zaman';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 
 interface InternshipCardProps {
@@ -240,6 +240,23 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             {eklenmeMetni(listing.postedAt) && (
               <span className="text-[11px] text-gray-400">
                 {eklenmeMetni(listing.postedAt)}
+              </span>
+            )}
+
+            {/*
+              SON KONTROL
+
+              "1 hafta önce eklendi" ilanın hâlâ açık olduğunu söylemiyor;
+              "bugün kontrol edildi" söylüyor. Sitenin en ayırt edici
+              iddiası bu ve görünmediği sürece iddia olarak kalıyor.
+
+              Tarih tazelenmezse metin de eskiyor — bu doğru davranış:
+              kaynaktan kalkan ilanın kaç gündür doğrulanmadığı görünmeli.
+            */}
+            {sonKontrolMetni(listing.lastSeenAt) && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
+                <ShieldCheck className="w-3 h-3" />
+                {sonKontrolMetni(listing.lastSeenAt)}
               </span>
             )}
 

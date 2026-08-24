@@ -135,6 +135,8 @@ export interface InternshipListing {
   perks: string[];
   applicantsCount: number;
   postedAt: string;
+  /** Kaynağın en son doğrulandığı an; tarama ilanı yeniden gördükçe tazeleniyor. */
+  lastSeenAt?: string;
   featured?: boolean;
   category?: 'general' | 'public_sector' | 'global';
 

@@ -39,3 +39,32 @@ export function eklenmeMetni(deger: string | null | undefined): string | null {
     year: 'numeric',
   });
 }
+
+/*
+  SON KONTROL METNİ
+
+  Sitenin en ayırt edici iddiası "gösterdiğimiz ilanı gerçekten kontrol
+  ediyoruz". Bu iddia ancak tarih görünürse anlam taşıyor: "1 hafta önce
+  eklendi" ilanın hâlâ açık olduğunu söylemiyor, "bugün kontrol edildi"
+  söylüyor.
+
+  Tarama saatte bir çalışıyor ve ilanı kaynağında yeniden gördüğünde
+  listings.last_seen_at tazeleniyor. Kaynaktan kalkan ilanda tazelenme
+  durur; o zaman bu metin de eskir ve bu DOĞRUDUR — kullanıcı ilanın ne
+  kadar süredir doğrulanmadığını görmeli.
+
+  Üç günden eskiyse gün sayısı yazılıyor: "bugün" demek kolay ama yanlışsa
+  güveni bitiren şey tam olarak o oluyor.
+*/
+export function sonKontrolMetni(deger: string | null | undefined): string | null {
+  if (!deger) return null;
+
+  const ms = new Date(deger).getTime();
+  if (Number.isNaN(ms)) return null;
+
+  const gun = Math.floor(Math.max(0, Date.now() - ms) / GUN_MS);
+  if (gun === 0) return 'Son kontrol: bugün';
+  if (gun === 1) return 'Son kontrol: dün';
+  if (gun < 30) return `Son kontrol: ${gun} gün önce`;
+  return null;
+}

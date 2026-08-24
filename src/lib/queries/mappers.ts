@@ -76,6 +76,7 @@ export const LISTING_COLUMNS = [
   'status',
   'applicants_count',
   'posted_at',
+  'last_seen_at',
   'created_at',
   'updated_at',
   'origin',
@@ -96,7 +97,6 @@ type ReadableListingRow = Omit<
   | 'source_listing_id'
   | 'content_hash'
   | 'first_seen_at'
-  | 'last_seen_at'
   | 'imported_at'
   | 'deactivated_at'
   | 'deactivation_reason'
@@ -144,6 +144,12 @@ export function toInternshipListing(row: ListingRowWithCompany): InternshipListi
     applicantsCount: row.applicants_count,
     // posted_at yalnızca yayına alındığında dolar; taslakta created_at'e düş.
     postedAt: row.posted_at ?? row.created_at,
+    /*
+      Kaynağın en son ne zaman kontrol edildiği. Tarama saatte bir çalışıp
+      ilanı kaynağında yeniden gördüğünde bu alan tazeleniyor; ilan
+      kaynaktan kalkarsa tazelenmiyor ve kart eskimeye başlıyor.
+    */
+    lastSeenAt: row.last_seen_at ?? undefined,
     featured: row.featured,
     category: row.category,
     origin: row.origin,

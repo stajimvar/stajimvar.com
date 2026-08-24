@@ -364,6 +364,26 @@ def upsert_raw_listing(db: Client, payload: dict[str, Any]) -> tuple[str, bool]:
                 refresh[alan] = payload[alan]
 
         db.table("raw_listings").update(refresh).eq("id", row_id).execute()
+
+        # YAYINDAKI ILANIN "SON GORULME"SI DE TAZELENIYOR
+        #
+        # Bu adim eksikti ve sessizce yanlis veri uretiyordu: kesif kaydinin
+        # last_seen_at'i her turda guncelleniyor ama `listings` tablosundaki
+        # ayni alan ilk yayina alma anindan beri hic degismiyordu.
+        #
+        # Olculdu: 24 Agustos'ta 18 ham kayit yeniden gorulmus, bunlarin
+        # 8'inin yayinda karsiligi var; buna ragmen o ilanlarin last_seen_at
+        # degeri 17 Agustos'ta duruyordu. Yani ilan her saat dogrulaniyordu
+        # ama veritabani bir haftadir kontrol edilmemis gibi gorunuyordu.
+        #
+        # Bu alan arayuzde "Son kontrol" olarak gosteriliyor. Kaynagi surekli
+        # kontrol ettigimiz iddiasi, ancak bu tarih gercek oldugunda dogru.
+        promoted_id = existing[0].get("promoted_listing_id")
+        if promoted_id:
+            db.table("listings").update(
+                {"last_seen_at": payload["last_seen_at"]}
+            ).eq("id", promoted_id).execute()
+
         return row_id, False
 
     created = db.table("raw_listings").insert(payload).execute().data

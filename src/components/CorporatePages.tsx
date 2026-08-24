@@ -58,7 +58,7 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
             <strong> ilanın hâlâ açık olup olmadığını anlamaya çalışmakla</strong> geçiyor.
             Aracı sitelerde kapanmış ilanlar aylarca durabiliyor; öğrenci başvuruyor, cevap
             gelmiyor, sebebini de öğrenemiyor. Bir yandan da şirketlerin kendi kariyer
-            sayfaları dağınık: aynı öğrenci sekiz ayrı siteyi tek tek gezmek zorunda kalıyor.
+            sayfaları dağınık: aynı öğrenci onlarca siteyi tek tek gezmek zorunda kalıyor.
           </p>
           <p>
             StajımVar bu iki sorunu çözmek için var. İlanları{' '}

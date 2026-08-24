@@ -1261,7 +1261,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             </span>
 
             <p className="text-sm text-gray-600 leading-relaxed">
-              Sekiz ayrı kariyer sayfasını tek tek gezme. İlanları aracı sitelerden değil,{' '}
+              Farklı kariyer sayfalarını tek tek gezme. İlanları aracı sitelerden değil,{' '}
               <strong className="text-gray-900">şirketlerin kendi kariyer sayfalarından</strong>{' '}
               derliyoruz; her ilanda şirketin kendi başvuru bağlantısı var.
             </p>

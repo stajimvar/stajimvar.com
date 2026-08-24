@@ -25,7 +25,11 @@ export const Logo: React.FC<LogoProps> = ({
 
   return (
     <div
-      id="stajimvar-main-brand-logo"
+      /*
+        Buradaki sabit id kaldırıldı: logo başlıkta ve alt bilgide iki kez
+        çiziliyor, aynı id iki öğede birden bulunuyordu. HTML'de id benzersiz
+        olmak zorunda ve kimse bu id'yi kullanmıyordu.
+      */
       onClick={onClick}
       className={`inline-flex items-center gap-2 group select-none ${
         onClick ? 'cursor-pointer' : ''
