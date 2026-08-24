@@ -159,3 +159,27 @@ export function konumEtiketi(ham: string | null | undefined): string {
 
   return ilceler.length > 0 ? `${ilceler.join(', ')}, ${il}` : il;
 }
+
+/*
+  ÇALIŞMA BİÇİMİ TÜRKÇE GÖRÜNSÜN
+
+  Veritabanındaki değerler İngilizce ('On-site', 'Remote', 'Hybrid'):
+  şema öyle kurulmuş ve değiştirmek veri göçü gerektiriyor. Ama karta
+  "İstanbul (On-site)" diye basmak, sitenin geri kalanı Türkçeyken tek
+  başına yabancı duruyordu. Çeviri görüntüde yapılıyor, veride değil.
+
+  Bilinmeyen bir değer gelirse olduğu gibi gösteriliyor — sessizce boş
+  bırakmak, yanlış çevirmekten de kötü.
+*/
+const CALISMA_BICIMLERI: Record<string, string> = {
+  'on-site': 'Ofisten',
+  onsite: 'Ofisten',
+  remote: 'Uzaktan',
+  hybrid: 'Hibrit',
+};
+
+export function calismaEtiketi(ham: string | null | undefined): string | null {
+  if (!ham) return null;
+  const anahtar = String(ham).trim().toLowerCase();
+  return CALISMA_BICIMLERI[anahtar] ?? String(ham).trim();
+}

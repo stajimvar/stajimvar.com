@@ -137,9 +137,13 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
             özgeçmiş üretme.
           </p>
           <p>
-            <strong>Henüz yapamıyoruz:</strong> özgeçmiş dosyası yükleme, platform üzerinden
-            başvuruyu şirkete iletme, şirketlerin kendi ilanlarını girmesi. Bunlar üzerinde
-            çalışıyoruz.
+            <strong>Henüz yapamıyoruz:</strong> özgeçmiş dosyası yükleme ve platform
+            üzerinden başvuruyu şirkete iletme. Bunlar üzerinde çalışıyoruz.
+          </p>
+          <p>
+            Şirketler artık kendi ilanlarını girebiliyor: önce şirket sayfasını
+            sahipleniyor, ardından girdiği ilan yönetici onayından geçince yayına
+            çıkıyor. Onaydan geçmeyen ilan listede görünmüyor.
           </p>
         </S>
 

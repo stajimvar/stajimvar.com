@@ -6,13 +6,14 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
+  Check,
   ExternalLink,
   ShieldCheck,
   Star,
 } from 'lucide-react';
 import { InternshipListing, MatchBreakdown } from '../types';
 import { ListingLogo } from './ListingLogo';
-import { konumEtiketi } from '../lib/sehir';
+import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import { eklenmeMetni } from '../lib/zaman';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 
@@ -189,7 +190,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                 konumEtiketi ülke önekini atıyor ve ilçeyi iliyle birlikte
                 yazıyor: "Şişli, İstanbul".
               */}
-              <span>{konumEtiketi(listing.city)} ({listing.workType})</span>
+              <span>{konumEtiketi(listing.city)} ({calismaEtiketi(listing.workType)})</span>
             </span>
 
             {/* Mandatory SGK Badge */}
@@ -362,7 +363,13 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                   sarıyordu. Anlam aynı, tam cümle title'da ve diyalogda.
                 */}
                 <span>{resmiSiteBirincil ? 'Başvurdum' : yol.anaEtiket}</span>
-                <ArrowRight className="w-3 h-3" />
+                {/*
+                  İşaretleme düğmesinde ok değil onay simgesi: ok "bir yere
+                  gidiyorsun" diyor ve bu düğme hiçbir yere gitmiyor, sadece
+                  kaydı işaretliyor. Yanındaki asıl düğme zaten dışarı çıkan
+                  olan.
+                */}
+                {resmiSiteBirincil ? <Check className="w-3 h-3" /> : <ArrowRight className="w-3 h-3" />}
               </button>
             );
 

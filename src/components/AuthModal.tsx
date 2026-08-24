@@ -226,7 +226,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <p className="text-xs text-gray-500 mt-1">
             {role === 'company'
               ? 'Her şirketin kendine ait bağımsız yetenek havuzu, ilan yönetimi ve İK paneli bulunur.'
-              : 'Yeteneklerinizi doğrulayın, zorunlu ve gönüllü staj ilanlarına tek tıkla başvurun.'}
+              : /*
+                  VAAT, GERÇEKLE AYNI OLMALI
+
+                  Burada "tek tıkla başvurun" yazıyordu. Başvuru şu an
+                  StajımVar üzerinden iletilmiyor; kullanıcı kurumun kendi
+                  sayfasına gidiyor ve Hakkımızda sayfası da bunu açıkça
+                  söylüyor. Kayıt ekranının söylediğiyle sitenin yaptığı
+                  çelişince kaybedilen şey kayıt değil, güven oluyor.
+                */
+                'İlanları kaydet, başvurularını işaretleyip takip et, yeni fırsatlardan haberdar ol.'}
           </p>
         </div>
 

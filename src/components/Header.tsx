@@ -351,7 +351,7 @@ export const Header: React.FC<HeaderProps> = ({
                   id="nav-tab-guides"
                   onClick={() => onOpenGuides?.()}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    rehberdeMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                    rehberdeMi && !isverendeMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
                   <BookOpen className={`w-3.5 h-3.5 shrink-0 ${rehberdeMi ? 'text-blue-600' : 'text-gray-400'}`} />
