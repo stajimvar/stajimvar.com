@@ -158,7 +158,9 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
               </p>
               <p>
                 <strong>Profil verisi:</strong> Üniversite, bölüm, sınıf, yetenekler,
-                projeler ve çalışma tercihleri gibi profilinize <em>sizin girdiğiniz</em>
+                {/* Sondaki {' '}: JSX öğeden sonraki satır sonunu siliyor ve
+                    "girdiğinizalanlar" olarak basılıyordu. */}
+                projeler ve çalışma tercihleri gibi profilinize <em>sizin girdiğiniz</em>{' '}
                 alanlar. Hepsi isteğe bağlıdır.
               </p>
               <p>

@@ -354,9 +354,20 @@ export const Header: React.FC<HeaderProps> = ({
                     rehberdeMi && !isverendeMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
-                  <BookOpen className={`w-3.5 h-3.5 shrink-0 ${rehberdeMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <BookOpen
+                    className={`w-3.5 h-3.5 shrink-0 ${
+                      rehberdeMi && !isverendeMi ? 'text-blue-600' : 'text-gray-400'
+                    }`}
+                  />
                   <span>Rehber</span>
-                  {rehberdeMi && <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>}
+                  {/*
+                    İşveren sayfası alt menüde "Rehber" altında toplansa da orada
+                    seçili görünmemeli: kullanıcı rehber okumuyor, şirket tarafında.
+                    Zemin rengi düzeltilmişti, simge ve nokta geride kalmıştı.
+                  */}
+                  {rehberdeMi && !isverendeMi && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />
+                  )}
                 </button>
 
                 {/*

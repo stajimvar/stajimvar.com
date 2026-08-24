@@ -94,8 +94,8 @@ export const IsverenGirisi: React.FC<{
             Stajyer ilanı ver
           </h1>
           <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
-            Staj ilanı yayınlamak ücretsiz. Şirketinizin sayfasını sahiplenin, ilanlarınızı
-            kendiniz girin.
+            Staj ilanı yayınlamak ücretsiz. Akış şöyle: şirketinizin sayfasını
+            sahiplenin, ilanı girin, onaya gönderin — onaylandığında yayına çıkar.
           </p>
         </div>
 

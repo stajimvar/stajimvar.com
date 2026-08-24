@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
+  Bookmark,
   Check,
   ExternalLink,
   ShieldCheck,
@@ -23,6 +24,19 @@ interface InternshipCardProps {
   hasApplied: boolean;
   onViewDetails: () => void;
   onQuickApply: () => void;
+  /*
+    KAYDET, BAŞVURDUM'DAN AYRI
+
+    İkisi farklı niyet: kaydetmek "ilgileniyorum, henüz başvurmadım",
+    başvurdum işaretlemek "resmî sayfada tamamladım". Tek düğmede toplamak,
+    kullanıcıyı yapmadığı bir şeyi işaretlemeye zorluyordu.
+
+    Kaydet düğme sırasına DEĞİL kartın köşesine kondu: alt sıra zaten iki
+    düğme taşıyor ve üçüncüsü başlığı satırlara sarıyordu (daha önce
+    ölçüldü).
+  */
+  kayitli?: boolean;
+  onToggleKayit?: () => void;
 }
 
 export const InternshipCard: React.FC<InternshipCardProps> = ({
@@ -31,6 +45,8 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
   hasApplied,
   onViewDetails,
   onQuickApply,
+  kayitli = false,
+  onToggleKayit,
 }) => {
   /*
     UYUM PUANI LOGONUN ETRAFINDA HALKA OLARAK
@@ -139,6 +155,22 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                 <span className="text-gray-300">•</span>
                 <span className="truncate">{listing.companyIndustry}</span>
               </>
+            )}
+            {onToggleKayit && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleKayit();
+                }}
+                aria-pressed={kayitli}
+                title={kayitli ? 'Kayıtlardan çıkar' : 'Daha sonra bakmak için kaydet'}
+                className={`ml-auto shrink-0 p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  kayitli ? 'text-blue-600 bg-blue-50' : 'text-gray-300 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                <Bookmark className={`w-4 h-4 ${kayitli ? 'fill-blue-600' : ''}`} />
+              </button>
             )}
             {listing.companyRating > 0 && (
               <>

@@ -42,3 +42,38 @@ export async function toggleSavedOpportunity(userId: string, opportunityId: stri
   const { error } = saved ? await table.delete().eq('user_id', userId).eq('opportunity_id', opportunityId) : await table.insert({ user_id: userId, opportunity_id: opportunityId });
   if (error && error.code !== '23505') throw new Error(`Fırsat kaydı güncellenemedi: ${error.message}`);
 }
+
+/*
+  İLAN KAYDETME
+
+  Fırsat tarafındaki kaydetme ile aynı desen, ayrı tablo: saved_listings.
+  "Kaydet" ve "Başvurdum" farklı niyetler — biri "ilgileniyorum, henüz
+  başvurmadım", diğeri "resmî sayfada tamamladım". Tek düğmede toplamak,
+  kullanıcıyı yapmadığı bir şeyi işaretlemeye zorluyordu.
+
+  Tablo yoksa (SQL henüz çalıştırılmadıysa) arayüz çökmesin diye okuma
+  sessizce boş dönüyor; yazma ise hata veriyor, çünkü kullanıcı bir eylem
+  yaptığını sanıp kaybetmemeli.
+*/
+export async function fetchSavedListingIds(userId: string): Promise<string[]> {
+  const { data, error } = await (supabase.from('saved_listings' as any) as any)
+    .select('listing_id')
+    .eq('user_id', userId);
+  if (error) {
+    /* 42P01: tablo yok. Özellik açılmadan önce arayüz çalışmaya devam etsin. */
+    if ((error as any).code === '42P01') return [];
+    throw new Error(`Kaydedilen ilanlar yüklenemedi: ${error.message}`);
+  }
+  return (data ?? []).map((row: any) => row.listing_id);
+}
+
+export async function toggleSavedListing(userId: string, listingId: string, saved: boolean): Promise<void> {
+  const table = supabase.from('saved_listings' as any) as any;
+  const { error } = saved
+    ? await table.delete().eq('user_id', userId).eq('listing_id', listingId)
+    : await table.insert({ user_id: userId, listing_id: listingId });
+  /* 23505: zaten kayıtlı — kullanıcı için sonuç aynı, hata sayılmıyor. */
+  if (error && (error as any).code !== '23505') {
+    throw new Error(`İlan kaydı güncellenemedi: ${error.message}`);
+  }
+}

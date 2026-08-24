@@ -26,6 +26,7 @@ import {
 import { InternshipListing, StudentProfile, MatchBreakdown, ApplicationRecord } from '../types';
 import { calculateInternshipMatch } from '../utils/matchingEngine';
 import { InternshipCard } from './InternshipCard';
+import { fetchSavedListingIds, toggleSavedListing } from '../lib/opportunities';
 import { ilBul } from '../lib/sehir';
 import { GoogleAdBanner } from './GoogleAdBanner';
 import { SirketSeridi } from './SirketSeridi';
@@ -132,6 +133,63 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   searchQuery,
   onSearchChange,
 }) => {
+
+  /*
+    KAYDEDİLEN İLANLAR
+
+    "Kaydet" ile "Başvurdum" ayrı tutuluyor: biri ilgi, diğeri tamamlanmış
+    bir eylem. Kayıtlar sunucuda (saved_listings), çünkü öğrenci telefonda
+    kaydedip bilgisayarda bakabilmeli.
+
+    Giriş yapılmamışsa düğme hiç çizilmiyor — kaydedilen bir şeyin kaybolması
+    kaydetmemekten kötü.
+  */
+  const [kayitliIlanlar, setKayitliIlanlar] = React.useState<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    if (!student?.id) {
+      setKayitliIlanlar(new Set());
+      return;
+    }
+    let iptal = false;
+    void fetchSavedListingIds(student.id)
+      .then((idler) => {
+        if (!iptal) setKayitliIlanlar(new Set(idler));
+      })
+      .catch(() => {
+        /* Kayıt listesi okunamazsa liste yine çalışsın; düğme boş durumda kalır. */
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [student?.id]);
+
+  const kaydiDegistir = React.useCallback(
+    (ilanId: string) => {
+      if (!student?.id) return;
+      const kayitliydi = kayitliIlanlar.has(ilanId);
+
+      /* Önce arayüz: tıklama anında geri bildirim olsun, ağ beklenmesin. */
+      setKayitliIlanlar((onceki) => {
+        const yeni = new Set(onceki);
+        if (kayitliydi) yeni.delete(ilanId);
+        else yeni.add(ilanId);
+        return yeni;
+      });
+
+      void toggleSavedListing(student.id, ilanId, kayitliydi).catch(() => {
+        /* Sunucu kabul etmediyse arayüz gerçeğe dönsün. */
+        setKayitliIlanlar((onceki) => {
+          const yeni = new Set(onceki);
+          if (kayitliydi) yeni.add(ilanId);
+          else yeni.delete(ilanId);
+          return yeni;
+        });
+      });
+    },
+    [student?.id, kayitliIlanlar],
+  );
+
   /*
     ARAMA KUTUSU ARTIK ÜST ÇUBUKTA
 
@@ -1185,6 +1243,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                     hasApplied={hasApplied}
                     onViewDetails={() => onViewDetails(listing, match)}
                     onQuickApply={() => onQuickApply(listing, match)}
+                    kayitli={kayitliIlanlar.has(listing.id)}
+                    onToggleKayit={student?.id ? () => kaydiDegistir(listing.id) : undefined}
                   />
 
                   {/*
