@@ -31,6 +31,7 @@ import {
 } from '../types';
 import { uploadAvatar } from '../lib/queries';
 import { fetchSavedListingIds } from '../lib/opportunities';
+import { adYazimi } from '../lib/ad';
 import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
 import { ProfilBasligi, type EksikAdim, type OneCikan } from './ProfilBasligi';
 import { AutocompleteField } from './AutocompleteField';
@@ -253,34 +254,7 @@ const alanClass =
 
 const etiketClass ='block text-xs font-semibold text-gray-600 mb-1.5';
 
-/**
- * Adın Türkçe kurallarına göre yazılışı.
- *
- * NEDEN OTOMATİK DÜZELTİLMİYOR
- * ----------------------------
- * Ad "Mustafa oğulcan doğan" olarak kaydedilmişti ve profilde, CV'de,
- * işverene giden başvuruda hep öyle görünüyordu. Görüntüyü kendi başımıza
- * düzeltmek işi çözmezdi: kayıtlı değer yine yanlış kalır, CV ile ekran
- * birbirini tutmazdı — üstelik adın nasıl yazılacağına karar vermek
- * sahibinin işi ("van der Berg", "d'Arc" gibi yazımlar var).
- *
- * Onun yerine düzenleme ekranında tek dokunuşluk bir ÖNERİ duruyor.
- * Kabul edilirse değer kaynağında düzeliyor ve her yerde düzeliyor.
- *
- * Türkçe küçültme/büyütme şart: 'i' harfinin büyüğü 'İ', 'ı' harfinin
- * büyüğü 'I'. Varsayılan locale ile "ilker" -> "Ilker" olurdu.
- */
-function adYazimi(ad: string): string {
-  return ad
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((kelime) => {
-      const kucuk = kelime.toLocaleLowerCase('tr-TR');
-      return kucuk.charAt(0).toLocaleUpperCase('tr-TR') + kucuk.slice(1);
-    })
-    .join(' ');
-}
+/* Ad yazımı yardımcısı ortak dosyada: src/lib/ad.ts */
 
 /* ------------------------------------------------------------------ */
 
@@ -332,7 +306,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     { tamam: yetenekler.length > 0, etiket: 'program ekle', bolum: 'teknik' },
     { tamam: sosyal.length > 0, etiket: 'beceri ekle', bolum: 'sosyal' },
     { tamam: diller.length > 0, etiket: 'dil ekle', bolum: 'dil' },
-    { tamam: projeler.length > 0, etiket: 'çalışma ekle', bolum: 'proje' },
+    /* "çalışma ekle" iş deneyimi mi proje mi belli değildi; bölümde tutulan şey proje. */
+    { tamam: projeler.length > 0, etiket: 'proje ekle', bolum: 'proje' },
     { tamam: hedefler.length > 0, etiket: 'hedefini seç', bolum: 'tercih' },
     { tamam: sehirler.length > 0, etiket: 'şehir seç', bolum: 'tercih' },
   ];
@@ -402,26 +377,32 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     girilmiş olan alan etikete dönüşüyor, 'Any' (fark etmez) seçimi
     etiket üretmiyor çünkü bir tercih bildirmiyor.
   */
-  const etiketler: string[] = (() => {
+  const durum: { basSatir: string | null; altSatir: string | null } = (() => {
     const p = student.preferences;
-    const cikti: string[] = [];
 
-    const yil = p.earliestStartDate
-      ? new Date(p.earliestStartDate).getFullYear()
-      : NaN;
+    /* ÜST SATIR: zaman ve tür. */
+    const yil = p.earliestStartDate ? new Date(p.earliestStartDate).getFullYear() : NaN;
+    let basSatir: string | null = null;
     if (p.type === 'Summer Mandatory') {
-      cikti.push(Number.isNaN(yil) ? 'Zorunlu yaz stajı' : `${yil} yaz stajına açık`);
-    } else if (p.type === 'Long-term') cikti.push('Uzun dönem staj');
-    else if (p.type === 'Voluntary') cikti.push('Gönüllü staj');
-    else if (p.type === 'Part-time') cikti.push('Yarı zamanlı');
+      basSatir = Number.isNaN(yil)
+        ? 'Zorunlu staj arıyorum'
+        : `${yil} yaz stajına açığım`;
+    } else if (p.type === 'Long-term') basSatir = 'Uzun dönem staj arıyorum';
+    else if (p.type === 'Voluntary') basSatir = 'Gönüllü staj arıyorum';
+    else if (p.type === 'Part-time') basSatir = 'Yarı zamanlı staj arıyorum';
 
-    if (sehirler.length) cikti.push(sehirler.slice(0, 2).join(' / '));
+    /*
+      ALT SATIR: koşullar. Tür üst satırda geçtiği için burada tekrar
+      edilmiyor — "2026 yaz stajına açığım · Zorunlu staj" aynı şeyi iki
+      kez söylerdi.
+    */
+    const kosullar: string[] = [];
+    if (sehirler.length) kosullar.push(sehirler.slice(0, 2).join(' / '));
+    if (p.workType === 'Remote') kosullar.push('Uzaktan');
+    else if (p.workType === 'Hybrid') kosullar.push('Hibrit');
+    else if (p.workType === 'On-site') kosullar.push('Ofisten');
 
-    if (p.workType === 'Remote') cikti.push('Uzaktan');
-    else if (p.workType === 'Hybrid') cikti.push('Hibrit');
-    else if (p.workType === 'On-site') cikti.push('Ofisten');
-
-    return cikti;
+    return { basSatir, altSatir: kosullar.length ? kosullar.join(' · ') : null };
   })();
 
 
@@ -441,14 +422,17 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       Öğrencinin profile girme sebebi çoğunlukla "başvurum ne oldu"
       sorusu; profil doldurmak ikinci sırada geliyor. En çok bakılan şeyi
       şeridin sonuna koymak, her seferinde kaydırmak demekti.
+
+      SAYISI YAZMIYOR: aynı sayı hemen üstteki istatistikte duruyor.
+      Aynı ekranda üç kez tekrarlanıyordu (istatistik, ızgara, bölüm
+      başlığı); ilki en görünür olanı, o kaldı.
     */
     ...(basvuruListesi
       ? [
           {
             id: 'basvuru',
             etiket: 'Başvurular',
-            deger: basvuruSayisi ? `${basvuruSayisi} tane` : null,
-            rozet: basvuruSayisi,
+            dolu: basvuruSayisi > 0,
             ikon: <Send className="w-5 h-5" />,
             onClick: () => bolumeGit('basvuru'),
           } as OneCikan,
@@ -458,56 +442,58 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       id: 'kisisel',
       /* "Okulun" bölümün adıyla ("Okul ve iletişim") uyuşmuyordu. */
       etiket: 'Okul & Bölüm',
-      deger: student.university ? student.department || 'girildi' : null,
+      dolu: Boolean(student.university),
       ikon: <GraduationCap className="w-5 h-5" />,
       onClick: () => kisiselAc(),
     },
     {
       id: 'teknik',
       etiket: 'Programlar',
-      deger: yetenekler.length ? `${yetenekler.length} tane` : null,
-      rozet: yetenekler.length,
+      dolu: yetenekler.length > 0,
+      alt: yetenekler.length ? `${yetenekler.length} program` : undefined,
       ikon: <Wrench className="w-5 h-5" />,
       onClick: () => bolumeGit('teknik'),
     },
     {
       id: 'sosyal',
       etiket: 'Beceriler',
-      deger: sosyal.length ? `${sosyal.length} tane` : null,
-      rozet: sosyal.length,
+      dolu: sosyal.length > 0,
+      alt: sosyal.length ? `${sosyal.length} beceri` : undefined,
       ikon: <MessageSquare className="w-5 h-5" />,
       onClick: () => bolumeGit('sosyal'),
     },
     {
       id: 'dil',
       etiket: 'Diller',
-      deger: diller.length ? `${diller.length} dil` : null,
-      rozet: diller.length,
+      dolu: diller.length > 0,
+      alt: diller.length ? `${diller.length} dil` : undefined,
       ikon: <Languages className="w-5 h-5" />,
       onClick: () => bolumeGit('dil'),
     },
     {
       id: 'proje',
-      etiket: 'Çalışmalar',
-      deger: projeler.length ? `${projeler.length} tane` : null,
-      rozet: projeler.length,
+      /* Bölümün adı "Projeler ve çalışmalar"; "Çalışmalar" tek başına ne
+         kastedildiğini söylemiyordu. */
+      etiket: 'Projeler',
+      dolu: projeler.length > 0,
+      alt: projeler.length ? `${projeler.length} proje` : undefined,
       ikon: <FolderOpen className="w-5 h-5" />,
       onClick: () => bolumeGit('proje'),
     },
     {
       id: 'tercih',
       etiket: 'Hedefin',
-      deger: hedefler.length ? hedefler[0] : null,
+      dolu: hedefler.length > 0,
       ikon: <Target className="w-5 h-5" />,
       onClick: () => bolumeGit('tercih'),
     },
     {
       id: 'rozet',
       etiket: 'Testler',
-      deger: (student.earnedBadges ?? []).length
+      dolu: (student.earnedBadges ?? []).length > 0,
+      alt: (student.earnedBadges ?? []).length
         ? `${(student.earnedBadges ?? []).length} rozet`
-        : null,
-      rozet: (student.earnedBadges ?? []).length,
+        : undefined,
       ikon: <Award className="w-5 h-5" />,
       onClick: () => bolumeGit('rozet'),
     },
@@ -748,7 +734,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             okul={student.university}
             bolum={student.department}
             sinif={student.gradeLevel}
-            etiketler={etiketler}
+            durum={durum}
             onEtiketDuzenle={() => bolumeGit('tercih')}
             oran={oran}
             eksikler={eksikler}

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Camera, ChevronRight, Loader2, Plus } from 'lucide-react';
+import { Camera, Check, ChevronRight, Loader2, Plus } from 'lucide-react';
+import { adYazimi } from '../lib/ad';
 import { Avatar } from './Avatar';
 
 /**
@@ -76,10 +77,13 @@ const Sayi: React.FC<{ deger: number | string; etiket: string; onClick?: () => v
 export interface OneCikan {
   id: string;
   etiket: string;
-  /** Dolu olanlarda sayı/özet; boş olanlarda null — "+" çizilir. */
-  deger: string | null;
-  /** Rozete yazılacak kısa sayı. Yoksa yalnızca dolu işareti görünür. */
-  rozet?: number;
+  /** Bölümde içerik var mı. Yoksa kesik çizgili çember ve "+" çiziliyor. */
+  dolu: boolean;
+  /**
+   * Etiketin altındaki kısa sayı: "8 beceri". Başka bir yerde zaten
+   * yazan sayılar için boş bırakılıyor.
+   */
+  alt?: string;
   ikon: React.ReactNode;
   onClick: () => void;
 }
@@ -101,18 +105,21 @@ export interface EksikAdim {
  * bölümün hepsi ekrana zaten sığıyor: dört sütunlu ızgarada iki satır
  * ediyor, hiçbir şey kesilmiyor ve kaydırma gerekmiyor.
  *
- * Kesilen açıklama satırı da kalktı. Sayı artık dairenin üzerinde küçük
- * bir rozet: "3 tane" yazısından hem kısa hem de göz taramasında daha
- * hızlı okunuyor.
+ * SAYI NEDEN ROZET DEĞİL
+ * ----------------------
+ * Sayılar bir ara dairenin köşesinde mavi rozet olarak duruyordu.
+ * Rozet arayüzde belirli bir şey söyler: "burada senin görmediğin yeni
+ * bir şey var". Oysa bu sayılar öğrencinin kendi girdiği ve zaten bildiği
+ * şeyler — okunmamış bildirim gibi görünüp boşuna dikkat çekiyorlardı.
+ * Mavi rozet gerçekten yeni bir duruma saklanıyor.
  *
- * Daireler 56'dan 48 piksele indi. Izgara tek satır yerine iki satır
- * ettiği için eski ölçüsünde kalsaydı başlık kartı uzayacaktı; oysa
- * şikâyet edilen şey kartın yoğunluğuydu.
+ * Sayı artık etiketin altında sade gri bir satır: "8 beceri". Kesilme
+ * riski yok çünkü metinler kısa; uzun olan tek şey bölüm adıydı, o da
+ * artık sayı içermiyor.
  */
 const Bolumler: React.FC<{ ogeler: OneCikan[]; secili?: string }> = ({ ogeler, secili }) => (
   <div className="grid grid-cols-4 gap-x-1 gap-y-2.5">
     {ogeler.map((o) => {
-      const dolu = Boolean(o.deger);
       const acik = o.id === secili;
       return (
         <button
@@ -120,41 +127,35 @@ const Bolumler: React.FC<{ ogeler: OneCikan[]; secili?: string }> = ({ ogeler, s
           type="button"
           onClick={o.onClick}
           className="flex flex-col items-center gap-1 cursor-pointer group min-w-0"
-          title={o.deger || `${o.etiket} ekle`}
+          title={o.alt || `${o.etiket} ekle`}
         >
-          <span className="relative">
-            {/*
-              Seçili olan MARKA MAVİSİ. Önce siyahtı: sitenin geri kalanında
-              seçili olan her şey mavi, yalnızca burada siyahtı ve ayrı bir
-              anlamı varmış gibi duruyordu.
-            */}
-            <span
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                acik
-                  ? 'bg-blue-600 border-2 border-blue-600 text-white'
-                  : dolu
-                    ? 'bg-gray-50 border border-gray-200 text-gray-700 group-hover:border-blue-400'
-                    : 'bg-white border border-dashed border-gray-300 text-gray-400 group-hover:border-blue-400 group-hover:text-blue-500'
-              }`}
-            >
-              {dolu ? o.ikon : <Plus className="w-5 h-5" />}
-            </span>
-            {dolu && o.rozet ? (
-              <span
-                className={`absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center border-2 border-white ${
-                  acik ? 'bg-gray-900 text-white' : 'bg-blue-600 text-white'
-                }`}
-              >
-                {o.rozet}
-              </span>
-            ) : null}
-          </span>
+          {/*
+            Seçili olan MARKA MAVİSİ. Önce siyahtı: sitenin geri kalanında
+            seçili olan her şey mavi, yalnızca burada siyahtı ve ayrı bir
+            anlamı varmış gibi duruyordu.
+          */}
           <span
-            className={`w-full text-center text-[10px] leading-tight px-0.5 ${
-              acik ? 'font-bold text-blue-700' : 'font-semibold text-gray-700'
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+              acik
+                ? 'bg-blue-600 border-2 border-blue-600 text-white'
+                : o.dolu
+                  ? 'bg-gray-50 border border-gray-200 text-gray-700 group-hover:border-blue-400'
+                  : 'bg-white border border-dashed border-gray-300 text-gray-400 group-hover:border-blue-400 group-hover:text-blue-500'
             }`}
           >
-            {o.etiket}
+            {o.dolu ? o.ikon : <Plus className="w-5 h-5" />}
+          </span>
+          <span className="w-full text-center px-0.5">
+            <span
+              className={`block text-[10px] leading-tight ${
+                acik ? 'font-bold text-blue-700' : 'font-semibold text-gray-700'
+              }`}
+            >
+              {o.etiket}
+            </span>
+            {o.alt && (
+              <span className="block text-[10px] leading-tight text-gray-400">{o.alt}</span>
+            )}
           </span>
         </button>
       );
@@ -169,11 +170,13 @@ interface Props {
   bolum?: string;
   sinif: string;
   /**
-   * Öğrencinin ne aradığını anlatan etiketler — tercihlerinden üretiliyor.
-   * "Staj yapmak için yer arıyorum" cümlesi herkes için aynıydı; bu satır
-   * kişiye özel ve yazan şey ilanları süzen veriyle aynı veri.
+   * Ne aradığı — tercihlerinden üretilen iki satır.
+   *
+   * `basSatir` zamanı söylüyor ("2026 yaz stajına açığım"), `altSatir`
+   * koşulları ("İstanbul · Hibrit"). İkisi de boşsa tercih girilmemiştir
+   * ve yerine kısa bir çağrı çiziliyor.
    */
-  etiketler: string[];
+  durum: { basSatir: string | null; altSatir: string | null };
   onEtiketDuzenle: () => void;
   oran: number;
   eksikler: EksikAdim[];
@@ -198,7 +201,7 @@ export const ProfilBasligi: React.FC<Props> = ({
   okul,
   bolum,
   sinif,
-  etiketler,
+  durum,
   onEtiketDuzenle,
   oran,
   eksikler,
@@ -215,7 +218,12 @@ export const ProfilBasligi: React.FC<Props> = ({
   onBasvurulara,
   onMulakatlara,
 }) => (
-  <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 space-y-4">
+    /*
+    Bloklar arası boşluk mobilde 16'dan 12 piksele indi. Kartta yedi blok
+    var; her boşluktan kazanılan 4 piksel, altındaki başvuru bölümünü 24
+    piksel yukarı çekiyor. Geniş ekranda yer sorunu yok, orada 16 kalıyor.
+  */
+  <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 space-y-3 sm:space-y-4">
     <div className="flex items-center gap-4 sm:gap-8">
       <button
         type="button"
@@ -257,38 +265,51 @@ export const ProfilBasligi: React.FC<Props> = ({
     </div>
 
     <div className="space-y-0.5">
-      <h1 className="text-base font-bold text-gray-900">{ad}</h1>
+      <h1 className="text-base font-bold text-gray-900">{adYazimi(ad)}</h1>
+      {/*
+        Sınıf ayrı satırdaydı; okul satırının devamı olduğu için tek
+        satırda birleşti. Kart yüksekliğinden bir satır kazanmak,
+        altındaki başvuru bölümünü o kadar yukarı çekiyor.
+      */}
       <p className="text-sm text-gray-500">
         {okul || 'Okulun eksik'}
         {bolum ? ` · ${bolum}` : ''}
+        {sinif ? ` · ${sinif}` : ''}
       </p>
-      <p className="text-sm text-gray-400">{sinif}</p>
     </div>
 
     {/*
       NE ARADIĞI, TERCİHLERİNDEN
 
-      Bu satır elle yazılan bir cümle değil: öğrencinin staj tercihlerinin
-      okunabilir hâli. Böylece hem ekranda kişiye özel bir şey yazıyor hem
-      de yazan şey ilanları süzen veriyle AYNI veri — ikisi ayrılamaz.
+      Başlıkta "Staj yapmak için yer arıyorum" yazıyordu: herkeste aynı
+      cümle. Onun yerine öğrencinin GERÇEK tercihleri okunuyor — böylece
+      hem kişiye özel bir şey yazıyor hem de yazan şey ilanları süzen
+      veriyle aynı veri.
+
+      Boşken metin bir talimat değil, tek dokunuşluk bir çağrı: "Ne
+      aradığını yaz" ne yapılacağını anlatıyordu, "Staj tercihlerini ekle"
+      nereye gidileceğini söylüyor.
     */}
     <button
       type="button"
       onClick={onEtiketDuzenle}
-      className="flex flex-wrap items-center gap-1.5 w-full text-left cursor-pointer group"
+      className="block w-full text-left cursor-pointer group"
     >
-      {etiketler.length > 0 ? (
-        etiketler.map((etiket) => (
-          <span
-            key={etiket}
-            className="text-[11px] font-semibold text-gray-700 bg-gray-100 group-hover:bg-blue-50 group-hover:text-blue-700 rounded-full px-2.5 py-1 transition-colors"
-          >
-            {etiket}
-          </span>
-        ))
+      {durum.basSatir || durum.altSatir ? (
+        <>
+          {durum.basSatir && (
+            <span className="block text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+              {durum.basSatir}
+            </span>
+          )}
+          {durum.altSatir && (
+            <span className="block text-xs text-gray-500">{durum.altSatir}</span>
+          )}
+        </>
       ) : (
-        <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 rounded-full px-2.5 py-1">
-          Ne aradığını yaz — tercihlerini ekle
+        <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700">
+          Staj tercihlerini ekle
+          <ChevronRight className="w-3.5 h-3.5" />
         </span>
       )}
     </button>
@@ -319,6 +340,20 @@ export const ProfilBasligi: React.FC<Props> = ({
           ))}
         </div>
       </div>
+    )}
+
+    {/*
+      TAMAMLANINCA KART KÜÇÜLÜYOR
+
+      Eksik listesi profil dolduğunda anlamsız bir yer kaplıyordu ve
+      altındaki başvuru bölümünü aşağı itiyordu. Kutu tamamen kalkıyor,
+      yerine tek satır kalıyor.
+    */}
+    {eksikler.length === 0 && (
+      <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+        <Check className="w-3.5 h-3.5" />
+        Profilin tamamlandı
+      </p>
     )}
 
     {/*

@@ -113,6 +113,51 @@ export const Header: React.FC<HeaderProps> = ({
   isAdmin = false,
   onOpenAdmin,
 }) => {
+  /*
+    YÜZEN ÇUBUK AŞAĞI KAYDIRIRKEN ÇEKİLİYOR
+
+    Çubuk ekranın dibinde duruyor ve okunan içeriğin üstünden geçiyor —
+    yüzen tasarımın doğası bu. Sayfanın SONUNDA sorun yok (içeriğe çubuk
+    kadar alt boşluk verildi) ama ortasında, örneğin başvuru listesinin
+    süzgeç sekmeleri tam çubuğun arkasına denk geldiğinde, kullanıcı
+    okumak için ileri geri kaydırmak zorunda kalıyordu.
+
+    Aşağı kaydırmak "okumaya devam ediyorum" demek: çubuk çekiliyor.
+    Yukarı kaydırmak "bir şey arıyorum" demek: geri geliyor. Gezinme
+    her an bir parmak hareketi uzakta, ama okurken ekranı yemiyor.
+
+    Eşik 8 piksel: eşiksiz kurulumda küçük dokunmatik titremeler çubuğu
+    açıp kapatıyordu.
+  */
+  const [altMenuGorunur, setAltMenuGorunur] = useState(true);
+  useEffect(() => {
+    let sonY = window.scrollY;
+    const kaydir = () => {
+      const y = window.scrollY;
+      const fark = y - sonY;
+      if (Math.abs(fark) < 8) return;
+      /* Sayfanın en tepesinde her zaman görünsün. */
+      setAltMenuGorunur(fark < 0 || y < 80);
+      sonY = y;
+    };
+    window.addEventListener('scroll', kaydir, { passive: true });
+    return () => window.removeEventListener('scroll', kaydir);
+  }, []);
+
+  const altMenuClass =
+    'lg:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 z-50 rounded-full bg-white/90 backdrop-blur-xl border border-gray-200/80 shadow-[0_10px_30px_rgba(15,23,42,0.16)] px-1.5 py-1.5 flex items-center justify-around gap-0.5 transition-transform duration-200';
+
+  /*
+    Kayma değeri Tailwind sınıfıyla değil, satır içi biçemle veriliyor.
+    `translate-y-[160%]` derlenen CSS'e HİÇ girmedi (canlıda doğrulandı:
+    sınıf öğenin üzerindeydi ama computed `translate` 0% kalıyordu) —
+    tarayıcı tarafında sessizce hiçbir şey yapmayan bir sınıf, çalışmayan
+    bir özellik demek. Satır içi biçem tarama adımına bağlı değil.
+  */
+  const altMenuStil: React.CSSProperties = {
+    transform: altMenuGorunur ? 'none' : 'translateY(160%)',
+  };
+
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [companyDropdownOpen, setCompanyDropdownOpen] = useState(false);
   const subMenuScrollRef = useRef<HTMLDivElement>(null);
@@ -1029,7 +1074,8 @@ export const Header: React.FC<HeaderProps> = ({
     {userRole === 'student' ? (
       <nav
         aria-label="Mobil Alt Navigasyon"
-        className="lg:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 z-50 rounded-full bg-white/90 backdrop-blur-xl border border-gray-200/80 shadow-[0_10px_30px_rgba(15,23,42,0.16)] px-1.5 py-1.5 flex items-center justify-around gap-0.5"
+        className={altMenuClass}
+        style={altMenuStil}
       >
         {/* 1. İlanlar */}
         <button
@@ -1161,7 +1207,8 @@ export const Header: React.FC<HeaderProps> = ({
       /* Mobile Bottom Navigation for Company */
       <nav
         aria-label="Mobil Alt Şirket Navigasyon"
-        className="lg:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 z-50 rounded-full bg-white/90 backdrop-blur-xl border border-gray-200/80 shadow-[0_10px_30px_rgba(15,23,42,0.16)] px-1.5 py-1.5 flex items-center justify-around gap-0.5"
+        className={altMenuClass}
+        style={altMenuStil}
       >
         <button
           onClick={() => {

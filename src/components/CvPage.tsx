@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { ArrowLeft, CheckCircle2, Printer } from 'lucide-react';
 import type { StudentProfile } from '../types';
+import { adYazimi } from '../lib/ad';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 
 /**
@@ -105,7 +106,7 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack }) => {
 
       <main className="cv-kagit max-w-3xl mx-auto my-4 bg-white p-8 sm:p-10 shadow-sm rounded-lg space-y-5 text-gray-800">
         <header className="space-y-1">
-          <h1 className="text-2xl font-bold text-gray-900">{student.fullName}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{adYazimi(student.fullName)}</h1>
           <p className="text-sm text-gray-600">
             {student.department}
             {student.university ? ` · ${student.university}` : ''}
