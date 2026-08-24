@@ -373,7 +373,7 @@ export const RehberMerkezi: React.FC<{
               renk="bg-gradient-to-br from-amber-500 to-amber-600"
               baslik="Kariyer merkezleri"
               sayi="Üniversiteler"
-              onClick={() => onNavigate('/kariyer-merkezleri')}
+              onClick={() => onNavigate('/universite-kariyer-merkezleri')}
             />
             <span aria-hidden className="shrink-0 w-2" />
           </div>

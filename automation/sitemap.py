@@ -76,7 +76,31 @@ def kayit_sluglari(dosya: str) -> list[str]:
     if not kaynak.exists():
         print(f"UYARI: {dosya} bulunamadi, o sayfalar sitemap'e girmedi")
         return []
-    return re.findall(r"^\s{4}slug: '([a-z0-9-]+)',", kaynak.read_text(encoding="utf-8"), re.M)
+    return re.findall(r"^\s+slug: '([a-z0-9-]+)',", kaynak.read_text(encoding="utf-8"), re.M)
+
+
+def rehber_sluglari() -> list[str]:
+    """Butun rehber sluglari: eski kayit + konu konu dosyalar.
+
+    NEDEN AYRI FONKSIYON
+    --------------------
+    Ilk on bir rehber rehberler.tsx icinde duruyor; yeni yazilar
+    src/data/rehber-yazilari/ altinda konuya gore ayri dosyalarda. Yalnizca
+    rehberler.tsx okundugunda sitemap 70 sayfanin 11'ini bildiriyordu --
+    kalan 59 sayfa yayinda ama Google'a hic haber verilmemis oluyordu.
+    Sessiz ve pahali bir hata; o yuzden dizin de taraniyor.
+    """
+    sluglar = list(kayit_sluglari("rehberler.tsx"))
+    dizin = Path(__file__).parent.parent / "src" / "data" / "rehber-yazilari"
+    if not dizin.exists():
+        print("UYARI: rehber-yazilari dizini yok, yeni rehberler sitemap'e girmedi")
+        return sluglar
+    for dosya in sorted(dizin.glob("*.tsx")):
+        sluglar += re.findall(
+            r"^\s+slug: '([a-z0-9-]+)',", dosya.read_text(encoding="utf-8"), re.M
+        )
+    # Ayni slug iki yerde olmamali; olursa sitemap'te de tekrar etmesin.
+    return list(dict.fromkeys(sluglar))
 
 
 def slugla(metin: str) -> str:
@@ -118,7 +142,7 @@ def main() -> None:
     )
 
     bolumler = kayit_sluglari("bolumler.ts")
-    rehberler = kayit_sluglari("rehberler.tsx")
+    rehberler = rehber_sluglari()
     duragan = (
         DURAGAN
         + [(f"/bolum/{s}", "monthly", "0.8") for s in bolumler]

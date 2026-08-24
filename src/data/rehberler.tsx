@@ -3,6 +3,9 @@ import { STAJ_REHBERLERI } from './rehber-yazilari/staj';
 import { CV_REHBERLERI } from './rehber-yazilari/cv';
 import { BURS_REHBERLERI } from './rehber-yazilari/burs';
 import { YURT_REHBERLERI } from './rehber-yazilari/yurt';
+import { UNIVERSITE_REHBERLERI } from './rehber-yazilari/universite';
+import { YURTDISI_REHBERLERI } from './rehber-yazilari/yurtdisi';
+import { KARIYER_REHBERLERI } from './rehber-yazilari/kariyer';
 import {
   Akis,
   Karsilastirma,
@@ -1977,6 +1980,9 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
   ...CV_REHBERLERI,
   ...BURS_REHBERLERI,
   ...YURT_REHBERLERI,
+  ...UNIVERSITE_REHBERLERI,
+  ...YURTDISI_REHBERLERI,
+  ...KARIYER_REHBERLERI,
 ];
 
 export function rehberBul(slug: string): Rehber | undefined {

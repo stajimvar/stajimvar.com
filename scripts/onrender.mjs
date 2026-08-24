@@ -800,7 +800,7 @@ async function main() {
 
   /* ---- sabit sayfalar ---- */
   const sabitler = [
-    ['/rehber', 'Staj rehberi | StajımVar', 'Belgeler, sigorta, CV, mülakat — staj sürecinin bilinmeyen kısımları sırayla.', 'Staj, işini bilene kolay.'],
+    ['/rehber', 'Öğrenci rehberi | StajımVar', "Stajdan bursa, KYK'dan yurda; öğrencilikte ihtiyaç duyacağın bilgiler resmî kaynağıyla, adım adım.", 'Öğrencilik, işini bilene kolay.'],
     ['/bolumler', 'Bölüme göre staj rehberi | StajımVar', `${bolumler.length} bölüm için: staj nerede yapılır, stajyer ne iş yapar, ne öğrenmeli.`, 'Bölüme göre staj'],
     ['/araclar', 'Hesaplama araçları | StajımVar', 'Net hesaplama, YKS sıralama tahmini, staj ücreti ve staj günü hesaplama.', 'Hesaplama araçları'],
     ['/araclar/net-hesaplama', 'Net hesaplama (TYT, AYT, KPSS) | StajımVar', 'Doğru ve yanlış sayını gir, netini gör. TYT, AYT ve KPSS için.', 'Net hesaplama'],
@@ -1009,7 +1009,7 @@ async function main() {
     gerçekten duran ilanlar; her biri kendi sayfasına bağlanıyor.
   */
   const anaSayfaBaglantilari = [
-    ['/rehber', 'Staj rehberi'],
+    ['/rehber', 'Öğrenci rehberi'],
     ['/bolumler', 'Bölüme göre staj'],
     ['/araclar', 'Hesaplama araçları'],
     ['/firsatlar', 'Öğrenci fırsatları'],
