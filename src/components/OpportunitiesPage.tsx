@@ -1,59 +1,247 @@
 import React from 'react';
-import { Bookmark, CheckCircle2, ChevronRight, ExternalLink, Filter, Search, Sparkles } from 'lucide-react';
+import {
+  AlarmClock,
+  Bookmark,
+  CalendarDays,
+  CheckCircle2,
+  ChevronRight,
+  ExternalLink,
+  Filter,
+  Search,
+  Sparkles,
+  X,
+} from 'lucide-react';
 import type { StudentProfile } from '../types';
 import { GoogleAdBanner } from './GoogleAdBanner';
 import { ListingLogo } from './ListingLogo';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
-import { fetchOpportunities, fetchSavedOpportunityIds, toggleSavedOpportunity, type Opportunity, type OpportunityType } from '../lib/opportunities';
-import { getOpportunityOverview, isExpiredOpportunity, matchOpportunity, opportunityCta, opportunityStatus, opportunityTypeLabel, readOpportunityFilters, serializeOpportunityFilters, OPPORTUNITY_STATUS_LABELS } from '../lib/opportunity-domain.mjs';
+import {
+  fetchOpportunities,
+  fetchSavedOpportunityIds,
+  toggleSavedOpportunity,
+  type Opportunity,
+  type OpportunityType,
+} from '../lib/opportunities';
+import {
+  isExpiredOpportunity,
+  opportunityCta,
+  opportunityStatus,
+  opportunityTypeLabel,
+  readOpportunityFilters,
+  serializeOpportunityFilters,
+  OPPORTUNITY_STATUS_LABELS,
+  OPPORTUNITY_TYPE_LABELS,
+} from '../lib/opportunity-domain.mjs';
+import {
+  closingSoon,
+  groupOpportunities,
+  opportunityAmount,
+  opportunityCalendar,
+  opportunityDaysLeft,
+  opportunityFit,
+} from '../lib/firsat-degerlendirme.mjs';
 
-/* Etiketler lib/opportunity-domain.mjs'te: ham enum ('scholarship') hiçbir yerde ekrana çıkmasın. */
-const LABELS = (type: OpportunityType) => opportunityTypeLabel(type);
-const categoryPath: Record<string, OpportunityType | ''> = { '/burslar': 'scholarship', '/kyk': 'kyk', '/yurtdisi-firsatlari': 'international', '/yarismalar': 'competition' };
-const safeDate = (value?: string) => value ? new Intl.DateTimeFormat('tr-TR', { dateStyle: 'long' }).format(new Date(value)) : 'Tarih belirtilmemiş';
-const profileForMatch = (student: StudentProfile) => ({ educationLevel: student.gradeLevel === 'Yüksek Lisans / Mezun' ? 'Yüksek Lisans' : 'Lisans', department: student.department, gradeLevel: student.gradeLevel, city: student.preferences.cities[0] || '', gpa: student.gpa || null, languages: (student.languages ?? []).map((item) => item.language) });
+/**
+ * Öğrenci Fırsatları.
+ *
+ * SAYAÇ İLE LİSTE AYNI ŞEYİ SAYIYOR
+ * ---------------------------------
+ * Üstte "21 başvurusu devam eden" yazarken listede 68 fırsat
+ * gösteriliyordu: iki sayı aynı ekranda birbiriyle çelişiyordu. Sebebi
+ * sayacın yalnızca "Açık" olanları, listenin ise süresi dolmamış her şeyi
+ * göstermesiydi. Artık ikisi de aynı gruplardan geliyor ve sayaçlar
+ * kaçının açık, kaçının yakında olduğunu ayrı ayrı söylüyor.
+ *
+ * SÜRESİ DOLANLAR VARSAYILANDA YOK
+ * --------------------------------
+ * Kapanmış bir başvuru öğrencinin yapabileceği bir şey değil. Listeden
+ * çıkarıldı ama silinmedi: altta "süresi dolanları göster" bağlantısı
+ * duruyor, çünkü geçen yılın takvimi gelecek yılın tahmini için işe
+ * yarıyor.
+ *
+ * MOBİLDE FİLTRELER PANELDE
+ * -------------------------
+ * Filtre kutusu telefonda neredeyse bütün ekranı kaplıyor, ilk fırsatı
+ * ekranın dışına itiyordu. Telefonda yalnızca arama satırı ve "Filtreler"
+ * düğmesi duruyor; ayrıntılar alttan açılan panelde. Geniş ekranda yer
+ * sorunu yok, orada sol sütunda açık duruyor.
+ */
 
-export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; student: StudentProfile | null; onNavigate: (path: string) => void; onRequireLogin: () => void }> = ({ path, userId, student, onNavigate, onRequireLogin }) => {
-  const [items, setItems] = React.useState<Opportunity[]>([]); const [saved, setSaved] = React.useState<string[]>([]); const [state, setState] = React.useState<'loading' | 'ready' | 'error'>('loading');
-  const [filters, setFilters] = React.useState(() => ({ ...readOpportunityFilters(window.location.search), type: categoryPath[path] || readOpportunityFilters(window.location.search).type }));
-  const savedOnly = path === '/kaydedilen-firsatlar'; const calendar = path === '/firsat-takvimi'; const matching = path === '/bana-uygun';
-  React.useEffect(() => { document.title = `${matching ? 'Bana uygun fırsatlar' : calendar ? 'Fırsat takvimi' : 'Öğrenci Fırsatları'} | StajımVar`; const canonical = document.querySelector('link[rel="canonical"]') || Object.assign(document.createElement('link'), { rel: 'canonical' }); canonical.setAttribute('href', `${window.location.origin}${path}`); document.head.appendChild(canonical); }, [path, matching, calendar]);
-  React.useEffect(() => { let cancelled = false; Promise.all([fetchOpportunities(), userId ? fetchSavedOpportunityIds(userId) : Promise.resolve([])]).then(([rows, ids]) => { if (!cancelled) { setItems(rows); setSaved(ids); setState('ready'); } }).catch(() => { if (!cancelled) setState('error'); }); return () => { cancelled = true; }; }, [userId]);
-  React.useEffect(() => { const query = serializeOpportunityFilters(filters); if (path === '/firsatlar' && window.location.search !== query) window.history.replaceState({}, '', `${path}${query}`); }, [filters, path]);
-  const set = (patch: Partial<typeof filters>) => setFilters((current) => ({ ...current, ...patch }));
-  const profile = student ? profileForMatch(student) : null;
-  const filtered = items.filter((item) => {
-    if (savedOnly && !saved.includes(item.id)) return false; if (filters.type && item.opportunityType !== filters.type) return false;
-    if (filters.openOnly && opportunityStatus(item) !== 'acik') return false; if (filters.level && !item.educationLevels.includes(filters.level)) return false;
-    if (filters.place && ![...item.cities, ...item.countries].some((place) => place.toLocaleLowerCase('tr-TR').includes(filters.place.toLocaleLowerCase('tr-TR')))) return false;
-    if (filters.query && !`${item.title} ${item.organizationName} ${item.shortDescription}`.toLocaleLowerCase('tr-TR').includes(filters.query.toLocaleLowerCase('tr-TR'))) return false;
-    if (matching) return profile ? matchOpportunity(item, profile).isScorable && matchOpportunity(item, profile).score! > 0 : false; return true;
-  }).sort((a, b) => (a.applicationDeadline || '9999').localeCompare(b.applicationDeadline || '9999'));
-  const missing = matching && profile ? Array.from(new Set(items.flatMap((item) => matchOpportunity(item, profile).missingProfileFields))) : [];
-  const save = async (item: Opportunity) => { if (!userId) return onRequireLogin(); const isSaved = saved.includes(item.id); await toggleSavedOpportunity(userId, item.id, isSaved); setSaved((rows) => isSaved ? rows.filter((id) => id !== item.id) : [...rows, item.id]); };
-  const heading = savedOnly ? 'Kaydedilen fırsatlar' : calendar ? 'Fırsat Takvimi' : matching ? 'Bana uygun fırsatlar' : 'Öğrenci Fırsatları';
+const categoryPath: Record<string, OpportunityType | ''> = {
+  '/burslar': 'scholarship',
+  '/kyk': 'kyk',
+  '/yurtdisi-firsatlari': 'international',
+  '/yarismalar': 'competition',
+};
+
+const safeDate = (value?: string) =>
+  value ? new Intl.DateTimeFormat('tr-TR', { dateStyle: 'long' }).format(new Date(value)) : 'Tarih belirtilmemiş';
+
+const kisaTarih = (value?: string) =>
+  value ? new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short' }).format(new Date(value)) : null;
+
+/** Kalan süre insanın okuduğu gibi. Tarih bir sayı, aciliyet bir cümle. */
+function kalanSureMetni(item: Opportunity): string | null {
+  const gun = opportunityDaysLeft(item);
+  if (gun == null) return null;
+  if (gun === 0) return 'Bugün son gün';
+  if (gun === 1) return '1 gün kaldı';
+  if (gun <= 30) return `${gun} gün kaldı`;
+  return null;
+}
+
+type Sekme = 'uygun' | 'tumu' | 'takvim';
+
+export const OpportunitiesPage: React.FC<{
+  path: string;
+  userId: string | null;
+  student: StudentProfile | null;
+  onNavigate: (path: string) => void;
+  onRequireLogin: () => void;
+}> = ({ path, userId, student, onNavigate, onRequireLogin }) => {
+  const [items, setItems] = React.useState<Opportunity[]>([]);
+  const [saved, setSaved] = React.useState<string[]>([]);
+  const [state, setState] = React.useState<'loading' | 'ready' | 'error'>('loading');
+  const [panelAcik, setPanelAcik] = React.useState(false);
+  /* Süresi dolanlar varsayılanda gizli; isteyen açıyor. */
+  const [arsivGoster, setArsivGoster] = React.useState(false);
   /*
-    ANA SAYFAYLA AYNI DÜZEN: 3 / 6 / 3
+    TAKVİMİ AÇIKLANMAYANLAR DA VARSAYILANDA GİZLİ
 
-    Sayfa önce tam genişlikte tek sütundu: filtreler yatay bir şerit,
-    kartlar üç sütunlu ızgara. İki sorunu vardı.
+    Ölçüldü: 68 fırsatın 21'i açık, 17'si yakında, 30'unun takvimi henüz
+    açıklanmamış. Üstteki sayaç "21 açık" derken listenin 68 göstermesi
+    bundandı — iki sayı aynı ekranda çelişiyordu.
 
-      1. Ana sayfadan farklı hissettiriyordu. Kullanıcı ilanlardan buraya
-         geçince arayüz değişiyor, filtreyi yeniden arıyordu.
-      2. Reklam koyacak yer yoktu. Ana sayfada akış arası ve kenar çubuğu
-         yuvaları var; burada tam genişlik ızgara hiçbir yer bırakmıyordu.
-
-    Artık MatchedInternshipsView ile aynı iskelet: solda yapışkan filtre
-    sütunu, ortada tek sütun kart akışı, sağda yapışkan kenar çubuğu.
-    `items-start` şart — onsuz yapışkan sütunlar ızgara hücresini kaplayıp
-    yapışma davranışını kaybediyor.
-
-    SAĞ SÜTUNDAKİ KATEGORİLER YENİ DEĞİL, SAKLIYDI
-    /burslar, /kyk, /yurtdisi-firsatlari, /yarismalar, /firsat-takvimi ve
-    /kaydedilen-firsatlar rotaları zaten çalışıyordu ama hiçbir yerden
-    bağlantı verilmiyordu. Yani altı sayfa erişilemez duruyordu.
+    Varsayılan liste artık sayaçlarla aynı kümeyi gösteriyor. Takvimi
+    açıklanmayanlar silinmiyor: tek satırlık bir bağlantıyla açılıyorlar,
+    çünkü "bu kurum burs veriyor mu" sorusunun cevabı onlarda.
   */
-  const overview = getOpportunityOverview(items);
+  const [takvimsizGoster, setTakvimsizGoster] = React.useState(false);
+  const [filters, setFilters] = React.useState(() => ({
+    ...readOpportunityFilters(window.location.search),
+    type: categoryPath[path] || readOpportunityFilters(window.location.search).type,
+  }));
+
+  const savedOnly = path === '/kaydedilen-firsatlar';
+  const sekme: Sekme = path === '/bana-uygun' ? 'uygun' : path === '/firsat-takvimi' ? 'takvim' : 'tumu';
+
+  React.useEffect(() => {
+    document.title = `${
+      sekme === 'uygun' ? 'Sana uygun fırsatlar' : sekme === 'takvim' ? 'Fırsat takvimi' : 'Öğrenci Fırsatları'
+    } | StajımVar`;
+    const canonical =
+      document.querySelector('link[rel="canonical"]') || Object.assign(document.createElement('link'), { rel: 'canonical' });
+    canonical.setAttribute('href', `${window.location.origin}${path}`);
+    document.head.appendChild(canonical);
+  }, [path, sekme]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    Promise.all([fetchOpportunities(), userId ? fetchSavedOpportunityIds(userId) : Promise.resolve([])])
+      .then(([rows, ids]) => {
+        if (!cancelled) {
+          setItems(rows);
+          setSaved(ids);
+          setState('ready');
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setState('error');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  React.useEffect(() => {
+    const query = serializeOpportunityFilters(filters);
+    if (path === '/firsatlar' && window.location.search !== query) {
+      window.history.replaceState({}, '', `${path}${query}`);
+    }
+  }, [filters, path]);
+
+  const set = (patch: Partial<typeof filters>) => setFilters((current) => ({ ...current, ...patch }));
+  const temizle = () => set({ query: '', type: categoryPath[path] || '', level: '', place: '', openOnly: false });
+
+  /* Aktif filtre sayısı düğmenin üzerinde: panel kapalıyken de görünsün. */
+  const aktifSuzgecSayisi =
+    (filters.type ? 1 : 0) + (filters.level ? 1 : 0) + (filters.place ? 1 : 0) + (filters.openOnly ? 1 : 0);
+
+  const gruplar = React.useMemo(() => groupOpportunities(items), [items]);
+  const yarinKapananlar = React.useMemo(() => closingSoon(items, 1), [items]);
+
+  /* Metin ve tür süzgeçleri; durum ve profil ayrı aşamada. */
+  const metneUyar = React.useCallback(
+    (item: Opportunity) => {
+      if (savedOnly && !saved.includes(item.id)) return false;
+      if (filters.type && item.opportunityType !== filters.type) return false;
+      if (filters.openOnly && opportunityStatus(item) !== 'acik') return false;
+      if (filters.level && !item.educationLevels.includes(filters.level)) return false;
+      if (
+        filters.place &&
+        ![...item.cities, ...item.countries].some((place) =>
+          place.toLocaleLowerCase('tr-TR').includes(filters.place.toLocaleLowerCase('tr-TR'))
+        )
+      )
+        return false;
+      if (
+        filters.query &&
+        !`${item.title} ${item.organizationName} ${item.shortDescription}`
+          .toLocaleLowerCase('tr-TR')
+          .includes(filters.query.toLocaleLowerCase('tr-TR'))
+      )
+        return false;
+      return true;
+    },
+    [filters, saved, savedOnly]
+  );
+
+  const filtered = React.useMemo(() => {
+    let liste = items.filter(metneUyar);
+
+    /*
+      Süresi dolanlar ayrı. Arşiv açıkken YALNIZCA onlar görünüyor: iki
+      kümeyi karıştırmak, "bu hâlâ açık mı" sorusunu her kartta yeniden
+      sordururdu.
+    */
+    liste = arsivGoster
+      ? liste.filter((item) => isExpiredOpportunity(item))
+      : liste.filter((item) => !isExpiredOpportunity(item));
+
+    /* Takvimi açıklanmayanlar yalnızca istenirse. Arşiv görünümünde bu
+       ayrım anlamsız: orada zaten hepsinin tarihi var ve geçmiş. */
+    if (!arsivGoster && !takvimsizGoster && !savedOnly) {
+      liste = liste.filter((item) => opportunityStatus(item) !== 'takvim_bekleniyor');
+    }
+
+    if (sekme === 'uygun' && student) {
+      liste = liste.filter((item) => opportunityFit(item, student).durum !== 'sart_uymuyor');
+      /* Kesin bilgiyle uygun olanlar önce; tahminle elenmeyenler sonra. */
+      liste = [...liste].sort((a, b) => {
+        const fa = opportunityFit(a, student);
+        const fb = opportunityFit(b, student);
+        const puan = (f: typeof fa) => (f.durum === 'uygun_olabilir' && f.kesin ? 0 : 1);
+        return puan(fa) - puan(fb);
+      });
+    }
+
+    return [...liste].sort((a, b) => (a.applicationDeadline || '9999').localeCompare(b.applicationDeadline || '9999'));
+  }, [items, metneUyar, arsivGoster, takvimsizGoster, savedOnly, sekme, student]);
+
+  const save = async (item: Opportunity) => {
+    if (!userId) return onRequireLogin();
+    const isSaved = saved.includes(item.id);
+    await toggleSavedOpportunity(userId, item.id, isSaved);
+    setSaved((rows) => (isSaved ? rows.filter((id) => id !== item.id) : [...rows, item.id]));
+  };
+
+  const heading = savedOnly
+    ? 'Takip ettiğin fırsatlar'
+    : sekme === 'takvim'
+      ? 'Fırsat takvimi'
+      : sekme === 'uygun'
+        ? 'Sana uygun fırsatlar'
+        : 'Öğrenci Fırsatları';
 
   const kategoriler: [string, string][] = [
     ['/firsatlar', 'Tümü'],
@@ -61,262 +249,671 @@ export const OpportunitiesPage: React.FC<{ path: string; userId: string | null; 
     ['/kyk', 'KYK'],
     ['/yurtdisi-firsatlari', 'Yurt dışı'],
     ['/yarismalar', 'Yarışmalar'],
-    ['/firsat-takvimi', 'Takvim'],
     ['/kaydedilen-firsatlar', 'Takip ettiklerim'],
   ];
 
-  /*
-    GENİŞLİK ANA SAYFAYLA AYNI
+  const suzgecler = (
+    <Suzgecler filters={filters} set={set} temizle={temizle} />
+  );
 
-    Burası 1536, ana sayfa 1440'tı. Geniş ekranda iki sayfa arasında
-    geçerken içerik kenarları oynuyordu: fırsatlar sayfası ana sayfadan
-    taşıyor gibi duruyordu. Ölçü tek yerden geliyor (lib/duzen.ts).
-  */
-  return <main className={`w-full ${SAYFA_GENISLIGI} mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-24 lg:pb-10`}>
-    {/*
-      MAVİ BANT — YARI YÜKSEKLİKTE
+  return (
+    <main
+      className={`w-full ${SAYFA_GENISLIGI} mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-[calc(110px+env(safe-area-inset-bottom))] lg:pb-10`}
+    >
+      <section className="mb-3 overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
+        <div aria-hidden="true" className="h-1 bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500" />
 
-      Önce kaldırılmıştı çünkü ekranın üst yarısını kaplıyor ve fırsat
-      kartları kaydırmadan görünmüyordu. Geri istendi, bu sefer inceltilerek.
-
-      Yüksekliği yarıya indiren şey başlığı ve sayaçları AYNI SATIRA almak.
-      Eskiden alt alta dört blok vardı: üst etiket, başlık, açıklama, sayaç
-      ızgarası. Şimdi solda başlık + tek satır açıklama, sağda üç sayaç
-      yan yana. Dar ekranda alt alta düşüyorlar — orada zaten yer var.
-
-      Sayfa başlığı (h1) artık burada. Sol sütundaki ikinci başlık
-      kaldırıldı; iki h1 hem gereksiz tekrar hem de belge yapısı olarak
-      yanlıştı.
-    */}
-    {/*
-      KART, ANA SAYFADAKİNİN AYNISI
-
-      Burası mavi degradeli kalın bir banttı; ana sayfadaki "Güncel Öğrenci
-      Fırsatları" kartı ise beyaz ve ince. Aynı içerik iki sayfada iki farklı
-      ağırlıkta görünüyordu. Artık ikisi de aynı: beyaz zemin, ince mavi
-      kenarlık, aynı köşe yarıçapı ve aynı iç boşluk (p-3 / sm:p-4).
-
-      Başlık solda, açıklaması hemen altında ve satırın boşluğunu dolduruyor;
-      sayaçlar sağ kenarda mavi rozetler olarak duruyor.
-
-      YÜKSEKLİK DE AYNI: ana sayfadaki kart içindeki üç fırsat kartı yüzünden
-      145 piksel; burası 80'de kalınca aynı yerde duran iki kart farklı
-      ağırlıkta görünüyordu. İçerik satırına alt sınır verildi ve açıklama
-      büyütüldü — boşluk doldurma değil, aynı ölçüyü tutturmak için.
-    */}
-    <section className="mb-4 overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
-      {/*
-        Üstte ince mavi şerit: kart bembeyazken sayfanın en üstünde bir
-        başlangıç çizgisi yoktu, liste doğrudan başlıyormuş gibi duruyordu.
-      */}
-      <div aria-hidden="true" className="h-1 bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500" />
-
-      <div className="p-3 sm:p-4">
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 sm:min-h-[108px]">
-          <div className="flex min-w-0 flex-1 items-start gap-3">
-            {/*
-              Simge, sekmedeki "Burs İlanları" simgesiyle aynı — kullanıcı
-              tıkladığı yerin karşılığını sayfanın başında görüyor.
-            */}
-            <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
-              <Sparkles className="h-5 w-5" />
-            </span>
-            <div className="min-w-0 space-y-1">
-              <h1 className="text-base sm:text-lg font-extrabold tracking-tight leading-tight text-gray-950">{heading}</h1>
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed max-w-2xl">{savedOnly ? 'Sonradan incelemek için takibe aldığın fırsatlar.' : calendar ? 'Yaklaşan son başvuru tarihlerini tek yerde izle.' : matching ? 'Profilindeki doğrulanabilir bilgilerle hesaplanan sonuçlar.' : 'Burs, kredi, eğitim, yurtdışı ve yarışma — hepsi resmî kaynağıyla doğrulanmış.'}</p>
-            </div>
-          </div>
-
-        {/*
-          Sayaçlar yalnızca ana listede. Kaydedilenler, takvim ve eşleşme
-          sayfalarında farklı bir kümeyi anlatırlar ve yanıltıcı olurlar.
-        */}
-        {!savedOnly && !calendar && !matching && state === 'ready' && (
-          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 sm:shrink-0">
-            {[
-              [overview.openCount, 'Başvurusu devam eden'],
-              [overview.scholarshipAndCreditCount, 'Burs ve kredi'],
-              [overview.nearest && overview.daysLeft != null ? `${overview.daysLeft} gün` : items.length, overview.nearest && overview.daysLeft != null ? 'En yakın son başvuru' : 'Takip ettiğimiz fırsat'],
-            ].map(([deger, etiket]) => (
-              <div key={String(etiket)} className="rounded-xl bg-blue-50/70 border border-blue-100 px-3 py-1.5 leading-tight text-center">
-                <b className="block text-base sm:text-lg font-extrabold text-blue-700 tabular-nums">{deger}</b>
-                <span className="block text-[10px] text-gray-600 whitespace-nowrap">{etiket}</span>
+        <div className="p-3 sm:p-4">
+          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 sm:gap-y-3">
+            <div className="flex min-w-0 flex-1 items-start gap-3">
+              <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
+                <Sparkles className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 space-y-1">
+                <h1 className="text-base sm:text-lg font-extrabold tracking-tight leading-tight text-gray-950">{heading}</h1>
+                {/*
+                  Açıklama telefonda gizli. Ölçüldü: başlık kartı mobilde
+                  351 piksel tutuyordu ve ilk fırsat 646. pikselde
+                  başlıyordu — yani ekranın dışında. Açıklama başlığın
+                  söylemediği bir şey söylemiyor; asıl bilgi sayaçlarda ve
+                  kapanış uyarısında.
+                */}
+                <p className="hidden sm:block text-xs sm:text-sm text-gray-600 leading-relaxed max-w-2xl">
+                  {savedOnly
+                    ? 'Sonradan incelemek için takibe aldığın fırsatlar.'
+                    : sekme === 'takvim'
+                      ? 'Başvuruların açıldığı ve kapandığı günler, ay ay.'
+                      : sekme === 'uygun'
+                        ? 'Profilindeki bilgilere göre elenmeyen fırsatlar. Koşulları resmî kaynaktan doğrula.'
+                        : 'Burs, kredi, eğitim, yurtdışı ve yarışma — hepsi resmî kaynağıyla doğrulanmış.'}
+                </p>
               </div>
-            ))}
+            </div>
+
+            {/*
+              SAYAÇLAR EYLEME DÖNÜK
+
+              Önce "Başvurusu devam eden / Burs ve kredi / Takip ettiğimiz
+              fırsat" yazıyordu. İkincisi ve üçüncüsü öğrencinin
+              yapabileceği bir şey söylemiyordu — kaç burs olduğunu bilmek
+              bir karar değiştirmiyor. Üçü de artık bir sonraki hareketi
+              gösteriyor ve üçü de tıklanabilir.
+            */}
+            {state === 'ready' && !savedOnly && (
+              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 sm:shrink-0">
+                <Sayac deger={gruplar.acik.length} etiket="açık fırsat" onClick={() => set({ openOnly: true })} />
+                <Sayac deger={gruplar.yakinda.length} etiket="yakında açılacak" />
+                <Sayac deger={saved.length} etiket="takip ettiğin" onClick={() => onNavigate('/kaydedilen-firsatlar')} />
+              </div>
+            )}
           </div>
-        )}
+
+          {/* En yakın kapanış ayrı bir uyarı: tarih listede kaybolmasın. */}
+          {state === 'ready' && yarinKapananlar.length > 0 && (
+            <p className="mt-3 flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-100 px-3 py-2 text-xs font-bold text-rose-800">
+              <AlarmClock className="w-4 h-4 shrink-0" />
+              {yarinKapananlar.length === 1
+                ? `Yarına kadar açık 1 fırsat var: ${yarinKapananlar[0].title}`
+                : `Yarına kadar açık ${yarinKapananlar.length} fırsat var.`}
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* -------- sekmeler: sana uygun / tümü / takvim -------- */}
+      {!savedOnly && (
+        <nav aria-label="Fırsat görünümü" className="mb-3 flex items-center gap-1 rounded-full bg-gray-100 p-1 text-xs font-bold">
+          {(
+            [
+              ['/bana-uygun', 'Sana uygun', 'uygun'],
+              ['/firsatlar', 'Tüm fırsatlar', 'tumu'],
+              ['/firsat-takvimi', 'Takvim', 'takvim'],
+            ] as [string, string, Sekme][]
+          ).map(([yol, etiket, id]) => (
+            <button
+              key={yol}
+              onClick={() => onNavigate(yol)}
+              className={`flex-1 rounded-full px-3 py-2 transition-colors cursor-pointer ${
+                sekme === id ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {etiket}
+            </button>
+          ))}
+        </nav>
+      )}
+
+      {/* -------- mobil arama satırı -------- */}
+      {sekme !== 'takvim' && !savedOnly && (
+        <div className="lg:hidden mb-3 flex items-center gap-2">
+          <label className="relative flex-1 block">
+            <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+            <input
+              aria-label="Fırsat ara"
+              value={filters.query}
+              onChange={(e) => set({ query: e.target.value })}
+              placeholder="Burs veya fırsat ara"
+              className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </label>
+          <button
+            onClick={() => setPanelAcik(true)}
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-700 cursor-pointer"
+          >
+            <Filter className="w-4 h-4" />
+            Filtreler
+            {aktifSuzgecSayisi > 0 && (
+              <span className="ml-0.5 rounded-full bg-blue-600 px-1.5 text-[11px] text-white">{aktifSuzgecSayisi}</span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* -------- hızlı çipler -------- */}
+      {sekme !== 'takvim' && !savedOnly && (
+        <div className="mb-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <Cip aktif={filters.openOnly} onClick={() => set({ openOnly: !filters.openOnly })}>
+            Açık
+          </Cip>
+          <Cip aktif={filters.type === 'scholarship'} onClick={() => set({ type: filters.type === 'scholarship' ? '' : 'scholarship' })}>
+            Burs
+          </Cip>
+          <Cip aktif={filters.type === 'kyk'} onClick={() => set({ type: filters.type === 'kyk' ? '' : 'kyk' })}>
+            KYK
+          </Cip>
+          <Cip
+            aktif={filters.type === 'international'}
+            onClick={() => set({ type: filters.type === 'international' ? '' : 'international' })}
+          >
+            Yurtdışı
+          </Cip>
+          <Cip aktif={filters.level === 'Lisans'} onClick={() => set({ level: filters.level === 'Lisans' ? '' : 'Lisans' })}>
+            Lisans
+          </Cip>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
+        {/* ------------- sol: filtreler (yalnızca geniş ekran) ------------- */}
+        <div className="hidden lg:block lg:col-span-3 space-y-4 lg:sticky lg:top-4">
+          {!savedOnly && sekme !== 'takvim' && suzgecler}
         </div>
 
-      </div>
-    </section>
+        {/* ------------------------------------------- orta: kart akışı --- */}
+        <div className="lg:col-span-6 space-y-4 min-w-0">
+          {sekme === 'uygun' && student && (
+            <p className="rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-2.5 text-xs text-blue-900 leading-relaxed">
+              Bu liste bir <b>uygunluk garantisi değil</b>. Profiline açıkça uymayan fırsatlar
+              çıkarıldı; kalanların koşullarını resmî kaynağından kontrol et.
+            </p>
+          )}
 
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
-
-      {/* ---------------------------------------------- sol: başlık + filtre */}
-      <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-4">
-        {!savedOnly && !calendar && !matching && (
-          <section className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
-            <label className="relative block">
-              <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400"/>
-              <input aria-label="Fırsat ara" value={filters.query} onChange={(e) => set({ query: e.target.value })} placeholder="Burs veya fırsat ara" className="w-full rounded-xl border border-gray-200 py-2.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"/>
-            </label>
-            <select aria-label="Fırsat türü" value={filters.type} onChange={(e) => set({ type: e.target.value })} className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm">
-              <option value="">Tüm türler</option>
-              {Object.entries(LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-            </select>
-            <input aria-label="Eğitim seviyesi" value={filters.level} onChange={(e) => set({ level: e.target.value })} placeholder="Eğitim seviyesi" className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"/>
-            <input aria-label="Şehir veya ülke" value={filters.place} onChange={(e) => set({ place: e.target.value })} placeholder="Şehir veya ülke" className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"/>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <button onClick={() => set({ openOnly: !filters.openOnly })} className={`rounded-full px-3 py-1.5 text-xs font-bold ${filters.openOnly ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}>Başvurusu devam edenler</button>
-              <button onClick={() => set({ query: '', type: categoryPath[path] || '', level: '', place: '', openOnly: false })} className="rounded-full px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-100">Temizle</button>
+          {/*
+            Giriş yapılmamışken "Sana uygun" sekmesinde liste ÇİZİLMİYOR.
+            Önce giriş çağrısının altında 38 fırsat sıralanıyordu: sekmenin
+            adı "sana uygun" olduğu için o liste kişiselleştirilmiş
+            görünüyordu, oysa hiçbir eleme yapılmamıştı.
+          */}
+          {sekme === 'uygun' && !student ? (
+            <Empty
+              icon={<Sparkles />}
+              title="Sana uygun fırsatları görmek için giriş yap"
+              body="Eleme yalnızca kendi profilindeki bilgilerle yapılıyor. Giriş yapmadan bütün fırsatları “Tüm fırsatlar” sekmesinden görebilirsin."
+              action="Giriş yap"
+              onClick={onRequireLogin}
+            />
+          ) : state === 'loading' ? (
+            <div role="status" className="space-y-4">
+              {[1, 2, 3].map((x) => (
+                <div key={x} className="h-56 rounded-2xl bg-gray-100 animate-pulse" />
+              ))}
             </div>
-          </section>
-        )}
-      </div>
+          ) : state === 'error' ? (
+            <Empty icon={<Filter />} title="Fırsatlar şu anda yüklenemedi" body="Bağlantını kontrol edip tekrar dene." />
+          ) : sekme === 'takvim' ? (
+            <Takvim items={items.filter(metneUyar)} onNavigate={onNavigate} />
+          ) : filtered.length ? (
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p aria-live="polite" className="text-sm text-gray-600">
+                  <b>{filtered.length}</b> fırsat gösteriliyor
+                  {arsivGoster && ' (süresi dolanlar)'}
+                </p>
+                <span className="flex flex-wrap gap-x-3 gap-y-1">
+                  {gruplar.takvim_bekleniyor.length > 0 && !savedOnly && !arsivGoster && (
+                    <button
+                      onClick={() => setTakvimsizGoster((a) => !a)}
+                      className="text-xs font-bold text-gray-500 hover:text-gray-900 hover:underline cursor-pointer"
+                    >
+                      {takvimsizGoster
+                        ? 'Takvimi açıklananlara dön'
+                        : `Takvimi açıklanmayan ${gruplar.takvim_bekleniyor.length} fırsatı da göster`}
+                    </button>
+                  )}
+                  {gruplar.kapali.length > 0 && !savedOnly && (
+                    <button
+                      onClick={() => setArsivGoster((a) => !a)}
+                      className="text-xs font-bold text-gray-500 hover:text-gray-900 hover:underline cursor-pointer"
+                    >
+                      {arsivGoster
+                        ? 'Açık fırsatlara dön'
+                        : `Süresi dolan ${gruplar.kapali.length} fırsatı göster`}
+                    </button>
+                  )}
+                </span>
+              </div>
+              <div className="space-y-4">
+                {filtered.map((item, sira) => (
+                  <React.Fragment key={item.id}>
+                    <Card
+                      item={item}
+                      saved={saved.includes(item.id)}
+                      onSave={() => save(item)}
+                      onNavigate={onNavigate}
+                      fit={student ? opportunityFit(item, student) : null}
+                    />
+                    {/*
+                      Akış arası reklam, üçüncü karttan sonra. Yayıncı kimliği
+                      tanımlı değilse GoogleAdBanner hiçbir şey çizmiyor.
+                    */}
+                    {sira === 2 && <GoogleAdBanner format="in-feed" />}
+                  </React.Fragment>
+                ))}
+              </div>
+            </>
+          ) : savedOnly ? (
+            <Empty
+              icon={<Sparkles />}
+              title="Henüz takip ettiğin fırsat yok"
+              body="Fırsat kartlarındaki “Takip et” düğmesine bastıklarında burada birikiyor."
+              action="Fırsatlara göz at"
+              onClick={() => onNavigate('/firsatlar')}
+            />
+          ) : items.length ? (
+            <Empty
+              icon={<Filter />}
+              title="Bu filtrelere uyan fırsat yok"
+              body={
+                gruplar.takvim_bekleniyor.length > 0 && !takvimsizGoster
+                  ? `Sitede ${items.length} fırsat var. ${gruplar.takvim_bekleniyor.length} tanesinin takvimi henüz açıklanmadığı için varsayılan listede yok.`
+                  : `Sitede ${items.length} fırsat var ama seçtiğin filtrelere uymuyor.`
+              }
+              action="Filtreleri temizle"
+              onClick={temizle}
+            />
+          ) : (
+            <Empty
+              icon={<Sparkles />}
+              title="Şu anda aktif başvuru dönemi olan fırsat bulunmuyor"
+              body="Fırsatları resmî kaynağından doğrulayarak yayımlıyoruz; doğrulayamadığımız hiçbir burs veya yarışmayı listeye almıyoruz."
+              action="Staj ilanlarına bak"
+              onClick={() => onNavigate('/')}
+            />
+          )}
+        </div>
 
-      {/* ------------------------------------------------- orta: kart akışı */}
-      <div className="lg:col-span-6 space-y-4 min-w-0">
-        {matching && !student && <Empty icon={<Sparkles />} title="Sana uygun fırsatları görmek için giriş yap" body="Eşleştirme yalnızca kendi profilindeki bilgilerle yapılır." action="Giriş yap" onClick={onRequireLogin} />}
-        {matching && student && missing.length > 0 && <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><b>Eşleştirme için profilinde eksik alanlar var:</b> {missing.join(', ')}</div>}
-
-        {state === 'loading' ? <div role="status" className="space-y-4">{[1,2,3].map((x) => <div key={x} className="h-56 rounded-2xl bg-gray-100 animate-pulse"/>)}</div>
-        : state === 'error' ? <Empty icon={<Filter />} title="Fırsatlar şu anda yüklenemedi" body="Bağlantını kontrol edip tekrar dene." />
-        : calendar ? <Calendar items={filtered.filter((item) => item.applicationDeadline)} onNavigate={onNavigate} />
-        : filtered.length ? <>
-            <p aria-live="polite" className="text-sm text-gray-600"><b>{filtered.length}</b> fırsat gösteriliyor</p>
-            <div className="space-y-4">
-              {filtered.map((item, sira) => <React.Fragment key={item.id}>
-                <Card item={item} saved={saved.includes(item.id)} onSave={() => save(item)} onNavigate={onNavigate} match={matching && profile ? matchOpportunity(item, profile) : null}/>
-                {/*
-                  Akış arası reklam, üçüncü karttan sonra. Yayıncı kimliği
-                  tanımlı değilse GoogleAdBanner hiçbir şey çizmiyor; boş
-                  bir kutu kalmıyor.
-                */}
-                {sira === 2 && <GoogleAdBanner format="in-feed" />}
-              </React.Fragment>)}
+        {/* ------------------------------------ sağ: kategoriler + reklam --- */}
+        <div className="hidden lg:block lg:col-span-3 space-y-4 lg:sticky lg:top-4">
+          <nav aria-label="Fırsat kategorileri" className="rounded-2xl border border-gray-200 bg-white p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Kategoriler</p>
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              {kategoriler.map(([yol, etiket]) => (
+                <button
+                  key={yol}
+                  onClick={() => onNavigate(yol)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-bold cursor-pointer ${
+                    path === yol ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {etiket}
+                </button>
+              ))}
             </div>
-          </>
-        : savedOnly ? <Empty icon={<Sparkles />} title="Henüz takip ettiğin fırsat yok" body="Fırsat kartlarındaki “Takip et” düğmesine bastıklarında burada birikiyor. Başvuru takvimi açıklandığında kartta tarih beliriyor." action="Fırsatlara göz at" onClick={() => onNavigate('/firsatlar')} />
-        : items.length ? <Empty icon={<Filter />} title="Bu filtrelere uyan fırsat yok" body={`Sitede ${items.length} fırsat var ama seçtiğin filtrelere uymuyor. Filtreleri temizleyip tekrar bak.`} action="Filtreleri temizle" onClick={() => set({ query: '', type: categoryPath[path] || '', level: '', place: '', openOnly: false })} />
-        : <Empty icon={<Sparkles />} title="Şu anda aktif başvuru dönemi olan fırsat bulunmuyor" body="Fırsatları resmî kaynağından doğrulayarak yayımlıyoruz; doğrulayamadığımız hiçbir burs veya yarışmayı listeye almıyoruz. Takvim açıldığında burada görünecek." action="Staj ilanlarına bak" onClick={() => onNavigate('/')} />}
+          </nav>
+
+          <aside className="rounded-2xl border border-gray-200 bg-white p-4 space-y-2">
+            <p className="text-sm font-bold text-gray-900">Fırsatları nasıl seçiyoruz</p>
+            <p className="text-xs text-gray-600 leading-relaxed">
+              Her kaydın resmî kaynağı doğrulanıyor; kurumun kendi sayfasında görmediğimiz hiçbir burs
+              veya yarışma listeye girmiyor. Tutar ve son başvuru tarihi her yıl değiştiği için
+              uydurmuyoruz — yalnızca resmî kaynakta açıkça yazan tutarı, ait olduğu dönemle birlikte
+              gösteriyoruz.
+            </p>
+          </aside>
+
+          <GoogleAdBanner format="sidebar-rectangle" />
+        </div>
       </div>
 
-      {/* ------------------------------------------ sağ: kategoriler + reklam */}
-      <div className="hidden lg:block lg:col-span-3 space-y-4 lg:sticky lg:top-4">
-        <nav aria-label="Fırsat kategorileri" className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Kategoriler</p>
-          <div className="mt-2.5 flex flex-wrap gap-2">
-            {kategoriler.map(([yol, etiket]) => <button key={yol} onClick={() => onNavigate(yol)} className={`rounded-full px-3 py-1.5 text-xs font-bold ${path === yol ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>{etiket}</button>)}
+      {/* -------- mobil filtre paneli -------- */}
+      {panelAcik && (
+        <div className="lg:hidden fixed inset-0 z-50 flex items-end bg-black/40" onClick={() => setPanelAcik(false)}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Filtreler"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-h-[85vh] overflow-y-auto rounded-t-2xl bg-white p-4 space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-extrabold text-gray-900">Filtreler</h2>
+              <button
+                onClick={() => setPanelAcik(false)}
+                aria-label="Kapat"
+                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {suzgecler}
+            <button
+              onClick={() => setPanelAcik(false)}
+              className="w-full rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white cursor-pointer"
+            >
+              {filtered.length} fırsatı göster
+            </button>
           </div>
-        </nav>
-
-        <aside className="rounded-2xl border border-gray-200 bg-white p-4 space-y-2">
-          <p className="text-sm font-bold text-gray-900">Fırsatları nasıl seçiyoruz</p>
-          <p className="text-xs text-gray-600 leading-relaxed">
-            Her kaydın resmî kaynağı doğrulanıyor; kurumun kendi sayfasında görmediğimiz
-            hiçbir burs veya yarışma listeye girmiyor. Tutar ve son başvuru tarihi her yıl
-            değiştiği için uydurmuyoruz — takvim açıklandığında karta tarih düşüyor.
-          </p>
-        </aside>
-
-        <GoogleAdBanner format="sidebar-rectangle" />
-      </div>
-
-    </div>
-  </main>;
+        </div>
+      )}
+    </main>
+  );
 };
+
+/* ------------------------------------------------------------------ */
+
+const Sayac: React.FC<{ deger: number; etiket: string; onClick?: () => void }> = ({ deger, etiket, onClick }) => {
+  const icerik = (
+    <>
+      <b className="block text-base sm:text-lg font-extrabold text-blue-700 tabular-nums">{deger}</b>
+      <span className="block text-[10px] text-gray-600 whitespace-nowrap">{etiket}</span>
+    </>
+  );
+  const sinif = 'rounded-xl bg-blue-50/70 border border-blue-100 px-3 py-1.5 leading-tight text-center';
+  if (!onClick) return <div className={sinif}>{icerik}</div>;
+  return (
+    <button onClick={onClick} className={`${sinif} hover:bg-blue-100 transition-colors cursor-pointer`}>
+      {icerik}
+    </button>
+  );
+};
+
+const Cip: React.FC<{ aktif: boolean; onClick: () => void; children: React.ReactNode }> = ({ aktif, onClick, children }) => (
+  <button
+    onClick={onClick}
+    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
+      aktif ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+    }`}
+  >
+    {children}
+  </button>
+);
+
+const Suzgecler: React.FC<{
+  filters: { query: string; type: string; level: string; place: string; openOnly: boolean };
+  set: (patch: any) => void;
+  temizle: () => void;
+}> = ({ filters, set, temizle }) => (
+  <section className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
+    <label className="relative block">
+      <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+      <input
+        aria-label="Fırsat ara"
+        value={filters.query}
+        onChange={(e) => set({ query: e.target.value })}
+        placeholder="Burs veya fırsat ara"
+        className="w-full rounded-xl border border-gray-200 py-2.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </label>
+    {/*
+      Tür listesi boş çiziliyordu: `Object.entries(LABELS)` çağrılıyordu ama
+      LABELS bir FONKSİYONDU, dolayısıyla liste her zaman boş dönüyordu.
+      Seçenekler etiket sözlüğünden geliyor.
+    */}
+    <select
+      aria-label="Fırsat türü"
+      value={filters.type}
+      onChange={(e) => set({ type: e.target.value })}
+      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"
+    >
+      <option value="">Tüm türler</option>
+      {Object.entries(OPPORTUNITY_TYPE_LABELS).map(([value, label]) => (
+        <option key={value} value={value}>
+          {label as string}
+        </option>
+      ))}
+    </select>
+    <select
+      aria-label="Eğitim seviyesi"
+      value={filters.level}
+      onChange={(e) => set({ level: e.target.value })}
+      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"
+    >
+      <option value="">Tüm eğitim seviyeleri</option>
+      {['Lise', 'Ön lisans', 'Lisans', 'Yüksek Lisans', 'Doktora'].map((seviye) => (
+        <option key={seviye} value={seviye}>
+          {seviye}
+        </option>
+      ))}
+    </select>
+    <input
+      aria-label="Şehir veya ülke"
+      value={filters.place}
+      onChange={(e) => set({ place: e.target.value })}
+      placeholder="Şehir veya ülke"
+      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"
+    />
+    <div className="flex flex-wrap gap-2 pt-1">
+      <button
+        onClick={() => set({ openOnly: !filters.openOnly })}
+        className={`rounded-full px-3 py-1.5 text-xs font-bold cursor-pointer ${
+          filters.openOnly ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'
+        }`}
+      >
+        Yalnızca açık olanlar
+      </button>
+      <button onClick={temizle} className="rounded-full px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-100 cursor-pointer">
+        Temizle
+      </button>
+    </div>
+  </section>
+);
 
 /*
   FIRSAT KARTI
 
-  Staj kartından ayrılan üç yeri var, üçü de bilerek:
+  Kartın söylemesi gereken sıra: bu ne, kimden, kime, ne kadar, ne zaman.
+  Önce tarih dev punto ile kartın ortasındaydı ve tutar tek kelimelik gri
+  bir rozetti ("Karşılıksız") — oysa burs seçerken ilk sorulan iki şey
+  "kaç para" ve "geri ödeyecek miyim".
 
-  1. SON BAŞVURU TARİHİ EN BÜYÜK ÖĞE. Bursta karar veren şey ilanın
-     içeriği değil, kaçırıp kaçırmadığın. Tarih küçük bir etiketken
-     kartın en son okunan yeriydi.
-
-  2. TARİH YOKSA SUSMUYORUZ. Burs takvimleri yılın büyük bölümünde
-     açıklanmamış oluyor; eski kart bu durumda hiçbir şey yazmıyordu ve
-     fırsat "tarihi geçmiş" gibi duruyordu. Artık "Dönemsel" yazıyor ve
-     ne anlama geldiğini söylüyor.
-
-  3. "TAKİP ET" — "ALARM KUR" DEĞİL. Sitede bildirim altyapısı yok
-     (e-posta sağlayıcısı bağlı değil, notifier.py rafta). Alarm deyip
-     haber verememek, bekleteni hiç aramamak olur. Takip edilen fırsat
-     /kaydedilen-firsatlar sayfasında birikiyor; takvim açıklandığında
-     karta tarih düşüyor.
+  Başlık iki satıra kadar açılıyor: "TÜBİTAK 2250 Lisansüstü Bursları"
+  tek satırda kesilince hangi program olduğu okunmuyordu.
 */
-const SEVIYE_KISA = (levels: string[]) => levels.length ? (levels.length > 2 ? `${levels[0]} +${levels.length - 1}` : levels.join(', ')) : null;
-
-const Card: React.FC<{ item: Opportunity; saved: boolean; onSave: () => void; onNavigate: (p: string) => void; match: any }> = ({ item, saved, onSave, onNavigate, match }) => {
-  const expired = isExpiredOpportunity(item);
-  const seviye = SEVIYE_KISA(item.educationLevels);
-  /*
-    Düğmenin etiketi ve adresi tek kuraldan geliyor: kurumun ana sayfasına
-    giden bağlantıya "Başvur" yazmıyoruz.
-  */
+const Card: React.FC<{
+  item: Opportunity;
+  saved: boolean;
+  onSave: () => void;
+  onNavigate: (p: string) => void;
+  fit: { durum: string; not: string | null; kesin: boolean } | null;
+}> = ({ item, saved, onSave, onNavigate, fit }) => {
   const cta = opportunityCta(item);
   const durum = opportunityStatus(item);
+  const tutar = opportunityAmount(item);
+  const kalan = kalanSureMetni(item);
+  const yer = [...item.cities, ...item.countries];
+  const seviye = item.educationLevels.length ? item.educationLevels.join(', ') : null;
+
   return (
-    <article className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm flex flex-col gap-4">
+    <article className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm flex flex-col gap-3">
       <div className="flex gap-3">
-        {/*
-          Kurum logosu YUVARLAK ve gerçek görsel.
-
-          Önce mavi bir kareye kurumun ilk harfi basılıyordu ("G", "T"...).
-          Aynı harfle başlayan iki kurum ayırt edilemiyordu ve sitedeki
-          diğer bütün logolar yuvarlakken burası kareydi.
-
-          ListingLogo sitedeki bütün ilan ve fırsat kartlarında kullanılıyor:
-          organization_logo_url doluysa görseli, boşsa kurumun baş harflerini
-          çiziyor. Yani logo gelmemiş kurum boş kutu göstermiyor; ölçü de
-          ilan kartlarıyla aynı.
-        */}
         <ListingLogo name={item.organizationName} logoUrl={item.organizationLogoUrl} />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <span className="text-xs font-bold text-blue-700">{LABELS(item.opportunityType)}</span>
-            {item.verifiedAt && <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 rounded-full px-2 py-0.5"><CheckCircle2 className="w-3 h-3"/>Resmî kaynak</span>}
+            <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">
+              {opportunityTypeLabel(item.opportunityType)}
+            </span>
+            {item.verifiedAt && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 rounded-full px-2 py-0.5 shrink-0">
+                <CheckCircle2 className="w-3 h-3" />
+                Resmî kaynak
+              </span>
+            )}
           </div>
-          <h2 className="mt-1 font-extrabold text-gray-950 leading-snug">{item.title}</h2>
+          <h2 className="mt-1 font-extrabold text-gray-950 leading-snug line-clamp-2">{item.title}</h2>
           <p className="text-sm text-gray-600 truncate">{item.organizationName}</p>
         </div>
       </div>
 
-      <p className="text-sm text-gray-600 line-clamp-2">{item.shortDescription}</p>
+      {/* Kime: seviye ve yer. İkisi de yoksa satır hiç çizilmiyor. */}
+      {(seviye || yer.length > 0) && (
+        <p className="text-xs text-gray-500">{[seviye, yer.join(', ')].filter(Boolean).join(' · ')}</p>
+      )}
 
       {/*
-        Durum bloğu: kartın en belirgin yeri.
+        NE KADAR
 
-        Önce tarihi olmayan her fırsat "Dönemsel" diye gösteriliyor, sayaçta
-        da "başvurusu devam eden" sayılıyordu. Artık dört durumdan biri
-        yazıyor ve "Açık" yalnızca son başvuru tarihi bilinip geçmemişken
-        kullanılıyor.
+        Tutar yalnızca resmî kaynaktan doğrulanmışsa yazıyor. Doğrulanmamışsa
+        susmuyoruz da: "açıklanmadı" demek, boş bırakıp öğrenciyi aramaya
+        göndermekten iyi.
       */}
-      <div className={`rounded-xl px-3 py-2.5 ${durum === 'kapali' ? 'bg-gray-50' : durum === 'acik' ? 'bg-rose-50' : durum === 'yakinda' ? 'bg-blue-50' : 'bg-amber-50'}`}>
-        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">{OPPORTUNITY_STATUS_LABELS[durum]}</p>
-        {durum === 'acik' && <p className="text-lg font-extrabold leading-tight text-rose-700">Son başvuru: {safeDate(item.applicationDeadline)}</p>}
-        {durum === 'kapali' && <p className="text-lg font-extrabold leading-tight text-gray-500">Süresi doldu</p>}
-        {durum === 'yakinda' && <p className="text-lg font-extrabold leading-tight text-blue-800">Başvurular {safeDate(item.applicationStartAt)} tarihinde açılıyor</p>}
-        {durum === 'takvim_bekleniyor' && <p className="text-[13px] font-semibold leading-snug text-amber-800">Kurum bu dönemin takvimini açıklamadı; resmî kaynaktan takip et.</p>}
+      <div className="rounded-xl bg-gray-50 px-3 py-2">
+        {tutar.bilinmiyor ? (
+          <p className="text-sm text-gray-500">
+            Tutar resmî kaynakta açıklanmadı
+            {tutar.geriOdeme && <span className="font-semibold text-gray-700"> · {tutar.geriOdeme}</span>}
+          </p>
+        ) : (
+          <>
+            <p className="text-sm font-extrabold text-gray-900">
+              {tutar.metin}
+              {tutar.geriOdeme && <span className="font-semibold text-gray-600"> · {tutar.geriOdeme}</span>}
+            </p>
+            {tutar.donem && <p className="text-[11px] text-gray-500">{tutar.donem}</p>}
+          </>
+        )}
       </div>
 
-      <div className="flex flex-wrap gap-2 text-xs">
-        {item.amountText && <span className="rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 font-semibold">{item.amountText}</span>}
-        {seviye && <span className="rounded-full bg-gray-100 text-gray-700 px-2 py-0.5">{seviye}</span>}
-        {item.cities.length > 0 && <span className="rounded-full bg-gray-100 text-gray-700 px-2 py-0.5">{item.cities.join(', ')}</span>}
-        {match?.isScorable && <span className="rounded-full bg-indigo-50 text-indigo-700 px-2 py-0.5">%{match.score} uyum</span>}
+      {/* NE ZAMAN: aciliyet önde, kesin tarih arkada. */}
+      <div
+        className={`rounded-xl px-3 py-2 ${
+          durum === 'kapali'
+            ? 'bg-gray-50'
+            : durum === 'acik'
+              ? 'bg-rose-50'
+              : durum === 'yakinda'
+                ? 'bg-blue-50'
+                : 'bg-amber-50'
+        }`}
+      >
+        {durum === 'acik' && (
+          <p className="text-sm font-extrabold leading-snug text-rose-700">
+            {kalan ? `${kalan} · ` : ''}Son başvuru: {safeDate(item.applicationDeadline)}
+          </p>
+        )}
+        {durum === 'kapali' && <p className="text-sm font-bold text-gray-500">Süresi doldu</p>}
+        {durum === 'yakinda' && (
+          <p className="text-sm font-extrabold leading-snug text-blue-800">
+            Başvurular {safeDate(item.applicationStartAt)} tarihinde açılıyor
+          </p>
+        )}
+        {durum === 'takvim_bekleniyor' && (
+          <p className="text-[13px] font-semibold leading-snug text-amber-800">
+            Kurum bu dönemin takvimini açıklamadı; resmî kaynaktan takip et.
+          </p>
+        )}
       </div>
 
-      <div className="mt-auto flex items-center gap-2">
-        {cta && <a href={cta.adres} target="_blank" rel="noopener noreferrer nofollow" className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-bold ${cta.birincil ? 'bg-blue-600 text-white hover:bg-blue-700' : 'border border-gray-200 text-gray-700 hover:bg-gray-50'}`}>{cta.etiket} <ExternalLink className="w-3.5 h-3.5"/></a>}
-        <button onClick={onSave} aria-label={saved ? 'Takibi bırak' : 'Takip et'} className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-bold border ${saved ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}><Bookmark className="w-4 h-4" fill={saved ? 'currentColor' : 'none'}/>{saved ? 'Takipte' : 'Takip et'}</button>
-      </div>
+      {/*
+        UYGUNLUK — İDDİA DEĞİL, GEREKÇE
 
-      <button onClick={() => onNavigate(`/firsatlar/${item.slug}`)} className="inline-flex items-center gap-1 text-sm font-bold text-blue-700 hover:underline">Detayı gör <ChevronRight className="w-4 h-4"/></button>
+        "%84 uyum" gibi bir puan yazıyordu ve puanın neyden çıktığı
+        görünmüyordu. Şart varsa şartın kendisi yazıyor; yoksa en fazla
+        "uygun olabilir" deniyor.
+      */}
+      {fit?.not && (
+        <p
+          className={`text-xs leading-relaxed ${
+            fit.durum === 'sart_uymuyor' ? 'text-amber-800' : 'text-gray-500'
+          }`}
+        >
+          {fit.not}
+          {!fit.kesin && ' (başlıktan çıkarıldı, resmî kaynaktan doğrula)'}
+        </p>
+      )}
+
+      {item.lastCheckedAt && (
+        <p className="text-[11px] text-gray-400">
+          Son kontrol: {safeDate(item.lastCheckedAt)} · Bilgiler kurum tarafından değiştirilebilir.
+        </p>
+      )}
+
+      <div className="mt-auto flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => onNavigate(`/firsatlar/${item.slug}`)}
+          className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1 rounded-xl bg-blue-600 px-3 py-2.5 text-sm font-bold text-white hover:bg-blue-700 transition-colors cursor-pointer"
+        >
+          Detayı gör <ChevronRight className="w-4 h-4" />
+        </button>
+        <button
+          onClick={onSave}
+          aria-label={saved ? 'Takibi bırak' : 'Takip et'}
+          className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-bold border cursor-pointer ${
+            saved ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+          }`}
+        >
+          <Bookmark className="w-4 h-4" fill={saved ? 'currentColor' : 'none'} />
+          {saved ? 'Takipte' : 'Takip et'}
+        </button>
+        {cta && (
+          <a
+            href={cta.adres}
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50"
+          >
+            {cta.etiket} <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        )}
+      </div>
     </article>
   );
 };
 
-const Calendar: React.FC<{ items: Opportunity[]; onNavigate: (p: string) => void }> = ({ items, onNavigate }) => <section className="rounded-2xl border border-gray-200 bg-white divide-y divide-gray-100">{items.map((item) => <button key={item.id} onClick={() => onNavigate(`/firsatlar/${item.slug}`)} className="w-full text-left p-4 sm:p-5 hover:bg-gray-50 flex items-center gap-4"><time className="w-20 shrink-0 text-sm font-extrabold text-blue-700">{safeDate(item.applicationDeadline)}</time><span className="min-w-0 flex-1"><b className="block truncate">{item.title}</b><span className="text-sm text-gray-600">{item.organizationName}</span></span><ChevronRight className="w-4 h-4 text-gray-400"/></button>)}</section>;
-const Empty: React.FC<{ icon: React.ReactNode; title: string; body: string; action?: string; onClick?: () => void }> = ({ icon, title, body, action, onClick }) => <section className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center"><div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-gray-100 text-gray-500">{icon}</div><h2 className="font-extrabold text-gray-900">{title}</h2><p className="mt-1 text-sm text-gray-600">{body}</p>{action && <button onClick={onClick} className="mt-4 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white">{action}</button>}</section>;
+/*
+  TAKVİM
+
+  Önce yalnızca son başvuru tarihleri tek uzun liste hâlinde diziliyordu.
+  Takvimin işe yaraması için açılış günü de gerekiyor: "ne zaman
+  başvurabilirim" sorusu en az "ne zaman kapanıyor" kadar sık.
+
+  Aylara bölünüyor çünkü öğrenci "bu ay ne var" diye bakıyor.
+*/
+const Takvim: React.FC<{ items: Opportunity[]; onNavigate: (p: string) => void }> = ({ items, onNavigate }) => {
+  const aylar = React.useMemo(() => opportunityCalendar(items), [items]);
+
+  if (!aylar.length) {
+    return (
+      <Empty
+        icon={<CalendarDays />}
+        title="Takvimde yaklaşan tarih yok"
+        body="Kurumlar bu dönemin başvuru takvimini açıkladıkça buraya düşecek."
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {aylar.map((ay: any) => (
+        <section key={ay.anahtar} className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+          <h2 className="px-4 py-2.5 text-sm font-extrabold text-gray-900 bg-gray-50 border-b border-gray-100 capitalize">
+            {ay.etiket}
+          </h2>
+          <div className="divide-y divide-gray-100">
+            {ay.olaylar.map((olay: any) => (
+              <button
+                key={`${olay.item.id}-${olay.tur}`}
+                onClick={() => onNavigate(`/firsatlar/${olay.item.slug}`)}
+                className="w-full text-left p-3 sm:p-4 hover:bg-gray-50 flex items-center gap-3 cursor-pointer"
+              >
+                <time className="w-14 shrink-0 text-sm font-extrabold text-gray-900">
+                  {kisaTarih(olay.tur === 'acilis' ? olay.item.applicationStartAt : olay.item.applicationDeadline)}
+                </time>
+                <span className="min-w-0 flex-1">
+                  <span
+                    className={`inline-block text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 ${
+                      olay.tur === 'acilis' ? 'bg-blue-50 text-blue-700' : 'bg-rose-50 text-rose-700'
+                    }`}
+                  >
+                    {olay.tur === 'acilis' ? 'Başvuru açılıyor' : 'Son başvuru'}
+                  </span>
+                  <b className="mt-0.5 block text-sm text-gray-900 line-clamp-2 leading-snug">{olay.item.title}</b>
+                  <span className="text-xs text-gray-500">{olay.item.organizationName}</span>
+                </span>
+                <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
+              </button>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+};
+
+const Empty: React.FC<{ icon: React.ReactNode; title: string; body: string; action?: string; onClick?: () => void }> = ({
+  icon,
+  title,
+  body,
+  action,
+  onClick,
+}) => (
+  <section className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
+    <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-gray-100 text-gray-500">{icon}</div>
+    <h2 className="font-extrabold text-gray-900">{title}</h2>
+    <p className="mt-1 text-sm text-gray-600">{body}</p>
+    {action && (
+      <button onClick={onClick} className="mt-4 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white cursor-pointer">
+        {action}
+      </button>
+    )}
+  </section>
+);

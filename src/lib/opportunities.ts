@@ -8,16 +8,31 @@ export interface Opportunity {
   opportunityType: OpportunityType; shortDescription: string; description: string; eligibility: string;
   educationLevels: string[]; eligibleDepartments: string[]; eligibleClassYears: string[]; cities: string[]; countries: string[];
   minimumGpa?: number; languageRequirements: string[]; amountText?: string; supportType?: string;
+  /*
+    TUTAR — YAPISAL ALANLAR
+
+    amount_text bir NİTELİK alanı ("Karşılıksız", "Programa göre
+    değişiyor"); miktar taşımıyor. Miktar bu alanlarda ve yalnızca
+    amountVerifiedAt doluysa ekrana çıkıyor.
+  */
+  amountMin?: number; amountMax?: number; currency?: string; paymentPeriod?: string;
+  amountPeriodLabel?: string; amountNote?: string; repayable?: boolean; amountVerifiedAt?: string;
   applicationStartAt?: string; applicationDeadline?: string; applicationUrl?: string; sourceUrl: string;
   requiredDocuments: string[]; status: OpportunityStatus; verifiedAt?: string; lastCheckedAt?: string; publishedAt?: string; updatedAt?: string;
 }
 
-const COLUMNS = 'id,slug,title,organization_name,organization_logo_url,opportunity_type,short_description,description,eligibility,education_levels,eligible_departments,eligible_class_years,cities,countries,minimum_gpa,language_requirements,amount_text,support_type,application_start_at,application_deadline,application_url,source_url,required_documents,status,verified_at,last_checked_at,published_at';
+const COLUMNS = 'id,slug,title,organization_name,organization_logo_url,opportunity_type,short_description,description,eligibility,education_levels,eligible_departments,eligible_class_years,cities,countries,minimum_gpa,language_requirements,amount_text,support_type,amount_min,amount_max,currency,payment_period,amount_period_label,amount_note,repayable,amount_verified_at,application_start_at,application_deadline,application_url,source_url,required_documents,status,verified_at,last_checked_at,published_at';
 const map = (row: any): Opportunity => ({
   id: row.id, slug: row.slug, title: row.title, organizationName: row.organization_name, organizationLogoUrl: row.organization_logo_url ?? undefined,
   opportunityType: row.opportunity_type, shortDescription: row.short_description ?? '', description: row.description ?? '', eligibility: row.eligibility ?? '',
   educationLevels: row.education_levels ?? [], eligibleDepartments: row.eligible_departments ?? [], eligibleClassYears: row.eligible_class_years ?? [], cities: row.cities ?? [], countries: row.countries ?? [],
   minimumGpa: row.minimum_gpa == null ? undefined : Number(row.minimum_gpa), languageRequirements: row.language_requirements ?? [], amountText: row.amount_text ?? undefined, supportType: row.support_type ?? undefined,
+  amountMin: row.amount_min == null ? undefined : Number(row.amount_min),
+  amountMax: row.amount_max == null ? undefined : Number(row.amount_max),
+  currency: row.currency ?? undefined, paymentPeriod: row.payment_period ?? undefined,
+  amountPeriodLabel: row.amount_period_label ?? undefined, amountNote: row.amount_note ?? undefined,
+  repayable: row.repayable == null ? undefined : Boolean(row.repayable),
+  amountVerifiedAt: row.amount_verified_at ?? undefined,
   applicationStartAt: row.application_start_at ?? undefined, applicationDeadline: row.application_deadline ?? undefined, applicationUrl: row.application_url ?? undefined, sourceUrl: row.source_url,
   requiredDocuments: row.required_documents ?? [], status: row.status, verifiedAt: row.verified_at ?? undefined, lastCheckedAt: row.last_checked_at ?? undefined, publishedAt: row.published_at ?? undefined,
 });
@@ -76,4 +91,37 @@ export async function toggleSavedListing(userId: string, listingId: string, save
   if (error && (error as any).code !== '23505') {
     throw new Error(`İlan kaydı güncellenemedi: ${error.message}`);
   }
+}
+
+/*
+  BAŞVURU KONTROL LİSTESİ
+
+  Başvuru kurumun kendi sayfasında yapılıyor; StajımVar başvuruyu almıyor
+  ve alıyormuş gibi de yapmıyor. Tutulan tek şey öğrencinin KENDİ hazırlık
+  süreci: hangi belgeyi topladığını aklında tutmak zorunda kalmasın.
+
+  Tablo yoksa okuma sessizce boş dönüyor (özellik açılmadan arayüz
+  çalışsın), yazma ise hata veriyor — kullanıcı işaretlediğini sanıp
+  kaybetmemeli.
+*/
+export async function fetchOpportunityProgress(userId: string, opportunityId: string): Promise<string[]> {
+  const { data, error } = await (supabase.from('opportunity_application_progress' as any) as any)
+    .select('completed_steps')
+    .eq('user_id', userId)
+    .eq('opportunity_id', opportunityId)
+    .maybeSingle();
+  if (error) {
+    if ((error as any).code === '42P01') return [];
+    throw new Error(`Kontrol listesi yüklenemedi: ${error.message}`);
+  }
+  return data?.completed_steps ?? [];
+}
+
+export async function saveOpportunityProgress(userId: string, opportunityId: string, steps: string[]): Promise<void> {
+  const { error } = await (supabase.from('opportunity_application_progress' as any) as any)
+    .upsert(
+      { user_id: userId, opportunity_id: opportunityId, completed_steps: steps, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,opportunity_id' }
+    );
+  if (error) throw new Error(`Kontrol listesi kaydedilemedi: ${error.message}`);
 }

@@ -13,3 +13,27 @@ export async function fetchAdminOpportunity(id: string): Promise<any> { const { 
 export async function adminCreateOpportunity(payload: Record<string, unknown>) { const { data,error }=await (supabase.rpc as any)('admin_create_opportunity',{p:payload}); if(error) throw new Error(error.message); return data as string; }
 export async function adminUpdateOpportunity(id:string, expectedUpdatedAt:string, payload:Record<string,unknown>) { const {error}=await (supabase.rpc as any)('admin_update_opportunity',{p_id:id,p_expected_updated_at:expectedUpdatedAt,p:payload}); if(error) throw new Error(error.message); }
 export async function adminSetOpportunityStatus(id:string, expectedUpdatedAt:string, status:OpportunityStatus) { const {error}=await (supabase.rpc as any)('admin_set_opportunity_status',{p_id:id,p_expected_updated_at:expectedUpdatedAt,p_status:status}); if(error) throw new Error(error.message); }
+
+/*
+  TUTAR GİRİŞİ
+
+  Kaydın geri kalanına dokunmadan yalnızca tutar alanlarını yazıyor.
+  Doğrulama damgasını (amount_verified_at) sunucu koyuyor: tarihi elle
+  girilebilir bırakmak, doğrulanmamış bir tutarı doğrulanmış göstermenin
+  en kolay yolu olurdu.
+*/
+export async function adminSetOpportunityAmount(
+  id: string,
+  expectedUpdatedAt: string,
+  payload: Record<string, unknown>
+) : Promise<string> {
+  const { data, error } = await (supabase.rpc as any)('admin_set_opportunity_amount', {
+    p_id: id,
+    p_expected_updated_at: expectedUpdatedAt,
+    p: payload,
+  });
+  if (error) throw new Error(error.message);
+  /* Yeni updated_at geri veriliyor: aynı sayfadaki diğer form eşzamanlılık
+     korumasını kaybetmesin, kullanıcı sayfayı yenilemek zorunda kalmasın. */
+  return data as string;
+}

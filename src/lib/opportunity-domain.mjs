@@ -128,7 +128,7 @@ function isDateOnly(value) {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
-function calendarDay(value) {
+export function calendarDay(value) {
   if (isDateOnly(value)) {
     const [year, month, day] = value.split('-').map(Number);
     const normalized = new Date(Date.UTC(year, month - 1, day));
@@ -149,7 +149,7 @@ function deadlineSortValue(value) {
   return Number.isFinite(date.getTime()) ? date.getTime() : null;
 }
 
-function daysUntilDeadline(value, now) {
+export function daysUntilDeadline(value, now) {
   const deadlineDay = calendarDay(value);
   const currentDay = calendarDay(now);
   return deadlineDay == null || currentDay == null ? null : Math.max(0, Math.round((deadlineDay - currentDay) / 86400000));
