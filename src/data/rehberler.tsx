@@ -1,4 +1,8 @@
 import React from 'react';
+import { STAJ_REHBERLERI } from './rehber-yazilari/staj';
+import { CV_REHBERLERI } from './rehber-yazilari/cv';
+import { BURS_REHBERLERI } from './rehber-yazilari/burs';
+import { YURT_REHBERLERI } from './rehber-yazilari/yurt';
 import {
   Akis,
   Karsilastirma,
@@ -218,6 +222,17 @@ const Kaynak: React.FC<{ href: string; children: React.ReactNode }> = ({ href, c
   </a>
 );
 
+/*
+  YAZILAR KONUYA GÖRE AYRI DOSYALARDA
+
+  İlk on bir rehber bu dosyada, tek tek JSX olarak yazıldı. Yetmiş yazıda
+  aynı dosya okunmaz olurdu; yeni yazılar `rehber-yazilari/` altında konu
+  konu duruyor ve `rehber-govde.tsx` ile düz veriden çiziliyor.
+
+  Sıra önemli: liste hem rehber merkezinde hem ön render'da bu sırayla
+  geziliyor. Eski yazılar başta kalıyor — arama sonuçlarında yerleşmiş
+  sayfalar.
+*/
 export const REHBERLER: Rehber[] = [
   // ------------------------------------------------------------------ öğrenci
   {
@@ -1956,6 +1971,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
     ],
     guncelleme: '2026-08-18',
   },
+
+  /* Konu konu yazılan yeni rehberler. Sıra: eskiler önce. */
+  ...STAJ_REHBERLERI,
+  ...CV_REHBERLERI,
+  ...BURS_REHBERLERI,
+  ...YURT_REHBERLERI,
 ];
 
 export function rehberBul(slug: string): Rehber | undefined {
