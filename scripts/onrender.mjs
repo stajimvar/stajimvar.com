@@ -505,7 +505,7 @@ async function ilanlariGetir() {
     return [];
   }
   const secim =
-    'id,title,description,city,work_type,apply_url,posted_at,created_at,application_deadline,is_paid,stipend_text,companies(name,slug,website_url,logo_url)';
+    'id,title,description,city,work_type,apply_url,posted_at,created_at,application_deadline,is_paid,stipend_text,companies(name,slug,website_url,logo_url,industry,location,description)';
   const istek = `${urlAdres}/rest/v1/listings?status=eq.published&select=${encodeURIComponent(secim)}`;
   const yanit = await fetch(istek, {
     headers: { apikey: anahtar, Authorization: `Bearer ${anahtar}` },
@@ -818,6 +818,15 @@ async function main() {
   /* ---- ilanlar: JobPosting ---- */
   const ilanlar = await ilanlariGetir();
   const firsatlar = await firsatlariGetir();
+  /*
+    Şehir adı arayüzde konumEtiketi ile düzeltiliyor ("Turkey - Istanbul" →
+    "İstanbul", "Zincirlikuyu, Istanbul" → "Zincirlikuyu, İstanbul") ama ön
+    render edilen HTML ham hâlde kalıyordu — yani arama motorunun okuduğu
+    metin yanlış yazımdaydı. Aynı modül burada da derlenip kullanılıyor;
+    ikinci bir şehir sözlüğü tutmak ikisinin ayrışmasına davetiye olurdu.
+  */
+  const { konumEtiketi } = await icerikDerle(path.join(kok, 'src', 'lib', 'sehir.ts'), 'sehir');
+
   for (const i of ilanlar) {
     const sirket = i.companies || {};
     const onek = String(i.id).split('-')[0];
@@ -894,6 +903,75 @@ async function main() {
   }
 
   /*
+    ---- şirket sayfaları ----
+
+    NEDEN ÖN RENDER GEREKİYOR
+    -------------------------
+    /sirket/<slug> adresleri uygulama içinde çiziliyordu; ön render
+    edilmedikleri için sunucudan gelen HTML ana sayfanın kabuğuydu. Sonuç
+    ölçüldü: şirket sayfasının canonical'ı, paylaşım etiketleri ve yapısal
+    verisi ANA SAYFAYI gösteriyordu. Yani arama motoru için kırk şirket
+    sayfası da ana sayfanın kopyasıydı ve paylaşıldığında ana sayfa kartı
+    çıkıyordu.
+
+    Yalnızca yayında ilanı OLAN şirketler yazılıyor: ilanı olmayan şirket
+    sayfası boş bir kart demek ve ince içerik arama motorunda sitenin
+    tamamına zarar veriyor.
+  */
+  const sirketler = new Map();
+  for (const i of ilanlar) {
+    const s = i.companies || {};
+    if (!s.slug) continue;
+    if (!sirketler.has(s.slug)) sirketler.set(s.slug, { ...s, ilanlar: [] });
+    sirketler.get(s.slug).ilanlar.push(i);
+  }
+
+  for (const [slug, s] of sirketler) {
+    const adet = s.ilanlar.length;
+    const sehirler = [...new Set(s.ilanlar.map((i) => i.city).filter(Boolean))].map((c) => konumEtiketi(c));
+    const baslik = `${s.name} staj ilanları | StajımVar`;
+    const aciklama = ozetle(
+      s.description ||
+        `${s.name} şirketinin yayındaki ${adet} staj ilanı${
+          sehirler.length ? ` (${sehirler.slice(0, 3).join(', ')})` : ''
+        }. İlanlar şirketin kendi kariyer sayfasından derleniyor; başvuru doğrudan şirkete yapılıyor.`,
+      155,
+    );
+
+    const liste =
+      '<ul>' +
+      s.ilanlar
+        .map((i) => {
+          const yol = `/ilan/${slugla(i.title)}-${String(i.id).split('-')[0]}`;
+          const yer = i.city ? konumEtiketi(i.city) : '';
+          return `<li><a href="${yol}">${kacir(i.title)}</a>${yer ? ` — ${kacir(yer)}` : ''}</li>`;
+        })
+        .join('') +
+      '</ul>';
+
+    sayfaYaz(`/sirket/${slug}`, {
+      baslik,
+      aciklama,
+      govde:
+        `<main><h1>${kacir(s.name)} staj ilanları</h1>` +
+        `<p>${kacir(aciklama)}</p>` +
+        `<h2>Yayındaki ilanlar</h2>${liste}` +
+        `<p><a href="/">Tüm staj ilanları</a></p></main>`,
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: s.name,
+        ...(s.website_url
+          ? { url: /^https?:\/\//i.test(s.website_url) ? s.website_url : `https://${s.website_url}` }
+          : {}),
+        ...(s.logo_url ? { logo: s.logo_url } : {}),
+        ...(s.industry ? { industry: s.industry } : {}),
+      },
+    });
+    sayac++;
+  }
+
+  /*
     ---- ana sayfa ----
 
     En sona bırakıldı: gövdesine gerçek ilan listesi giriyor ve ilanlar
@@ -913,15 +991,6 @@ async function main() {
     ['/hakkimizda', 'Hakkımızda'],
     ['/iletisim', 'İletişim'],
   ];
-
-  /*
-    Şehir adı arayüzde konumEtiketi ile düzeltiliyor ("Turkey - Istanbul" →
-    "İstanbul", "Zincirlikuyu, Istanbul" → "Zincirlikuyu, İstanbul") ama ön
-    render edilen HTML ham hâlde kalıyordu — yani arama motorunun okuduğu
-    metin yanlış yazımdaydı. Aynı modül burada da derlenip kullanılıyor;
-    ikinci bir şehir sözlüğü tutmak ikisinin ayrışmasına davetiye olurdu.
-  */
-  const { konumEtiketi } = await icerikDerle(path.join(kok, 'src', 'lib', 'sehir.ts'), 'sehir');
 
   const ilanListesi = ilanlar.length
     ? '<h2>Yayındaki staj ilanları</h2><ul>' +
