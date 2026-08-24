@@ -71,10 +71,10 @@
         Sayfayı açık tutan ya da geri/ileri belleğinden gelen bir tarayıcı,
         elindeki eski HTML ile artık silinmiş bir dosyayı isteyebiliyor.
 
-        Ölçüldü: böyle bir istek stilsiz bir sayfa üretiyordu. _redirects
-        artık eksik varlığa gerçek 404 veriyor; bu betik de o hatayı yakalayıp
-        sayfayı BİR KEZ yeniliyor, böylece güncel HTML ve doğru dosya adları
-        geliyor.
+        Ölçüldü: böyle bir istek stilsiz bir sayfa üretiyordu. Eksik varlık
+        adresi SPA yedeği yüzünden 200 + text/html dönüyor; tarayıcı bunu
+        yükleyemiyor ve `error` olayı tetikleniyor. Bu betik o hatayı yakalayıp
+        sayfayı BİR KEZ, önbelleği aşarak yeniliyor.
 
         Tek seferlik: bayrak sessionStorage'da. Sorun dosya adından değil de
         ağdan kaynaklanıyorsa sonsuz yenileme döngüsüne girmiyoruz.
@@ -88,7 +88,23 @@
           } catch (e) {
             return; // gizli sekmede depolama kapalı olabilir; döngü riskini alma
           }
-          location.reload();
+          /*
+            location.reload() YETMİYOR
+
+            Ölçüldü: bir varlık adresi, dağıtım sırasındaki kısa boşlukta
+            uygulama kabuğunu (text/html) 200 ile döndürebiliyor ve TARAYICI
+            bu yanlış cevabı kendi önbelleğine yazıyor. O andan sonra aynı
+            adres önbellekten hep text/html geliyor; sıradan bir yenileme
+            aynı bozuk kaydı okuduğu için sayfa stilsiz ve boş kalmaya devam
+            ediyor.
+
+            Bu yüzden yenileme adrese zaman damgası ekleyerek yapılıyor:
+            HTML taze isteniyor, taze HTML de güncel varlık adlarını
+            getiriyor ve bozuk kayıt devre dışı kalıyor.
+          */
+          var adres = location.pathname + location.search;
+          adres += (location.search ? '&' : '?') + 'sv=' + Date.now();
+          location.replace(adres + location.hash);
         }
         window.addEventListener(
           'error',
