@@ -231,7 +231,13 @@ export default function App() {
 
   const navigate = (to: string) => {
     window.history.pushState({}, '', to);
-    setPath(to);
+    /*
+      Adres çubuğuna tamamı yazılıyor ama rota durumuna YALNIZCA yol
+      konuyor. Sorgu dizesi de duruma girseydi "/firsatlar?q=yazılım"
+      hiçbir rotayla eşleşmez ve sayfa bulunamadı ekranına düşerdi;
+      sayfalar sorguyu zaten window.location.search üzerinden okuyor.
+    */
+    setPath(to.split('?')[0].split('#')[0] || '/');
     window.scrollTo(0, 0);
   };
 
@@ -1159,6 +1165,7 @@ export default function App() {
                 onGoToProfile={() => setActiveTab('profile')}
                 searchQuery={aramaTerimi}
                 onSearchChange={setAramaTerimi}
+                onNavigate={navigate}
               />
               </>
             )}

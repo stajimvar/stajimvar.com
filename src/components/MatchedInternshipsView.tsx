@@ -26,7 +26,9 @@ import {
 import { InternshipListing, StudentProfile, MatchBreakdown, ApplicationRecord } from '../types';
 import { calculateInternshipMatch } from '../utils/matchingEngine';
 import { InternshipCard } from './InternshipCard';
-import { fetchSavedListingIds, toggleSavedListing } from '../lib/opportunities';
+import { fetchOpportunities, fetchSavedListingIds, toggleSavedListing } from '../lib/opportunities';
+import { SonucYok, type AktifSuzgec } from './SonucYok';
+import { BasvuruSablonu } from './BasvuruSablonu';
 import { ilBul } from '../lib/sehir';
 import { GoogleAdBanner } from './GoogleAdBanner';
 import { SirketSeridi } from './SirketSeridi';
@@ -119,6 +121,8 @@ interface MatchedInternshipsViewProps {
    */
   searchQuery: string;
   onSearchChange: (q: string) => void;
+  /** Sıfır sonuç ekranındaki yönlendirmeler için; verilmezse o düğmeler çizilmiyor. */
+  onNavigate?: (yol: string) => void;
 }
 
 export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
@@ -132,6 +136,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   onGoToProfile,
   searchQuery,
   onSearchChange,
+  onNavigate,
 }) => {
 
   /*
@@ -378,86 +383,71 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       .filter((cat) => cat.id === 'all' || cat.count > 0 || cat.id === subTab);
   }, [matchedData, subTab, kayitliIlanlar]);
 
+  /*
+    SÜZME TEK YERDE, "BİR FİLTREYİ ATLA" SEÇENEĞİYLE
+
+    Aynı koşullar iki yerde lazım: listeyi süzerken ve "şu filtre kaç ilanı
+    gizliyor" hesabını yaparken. İkinci bir kopya yazmak, ikisinin zamanla
+    ayrışması ve kullanıcıya yanlış sayı gösterilmesi demekti. `atla`
+    parametresi yalnız o filtreyi gevşetiyor, geri kalan aynen uygulanıyor.
+  */
+  type SuzgecAdi = 'arama' | 'sehir' | 'bicim' | 'sirket' | 'tarih' | 'zorunlu' | 'ucretli' | 'uyum';
+
+  const gecer = React.useCallback(
+    (listing: InternshipListing, match: MatchBreakdown, atla?: SuzgecAdi): boolean => {
+      if (!matchesCategory(listing, match, subTab)) return false;
+
+      if (atla !== 'arama' && searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const eslesti =
+          listing.title.toLowerCase().includes(q) ||
+          listing.companyName.toLowerCase().includes(q) ||
+          listing.city.toLowerCase().includes(q) ||
+          listing.requiredSkills.some((s) => s.toLowerCase().includes(q));
+        if (!eslesti) return false;
+      }
+
+      if (atla !== 'sehir' && selectedCity !== 'all') {
+        const il = ilBul(listing.city);
+        if (selectedCity === 'diger' ? il !== null : il !== selectedCity) return false;
+      }
+
+      if (atla !== 'bicim' && workTypes.length > 0 && !workTypes.includes(listing.workType)) return false;
+
+      if (atla !== 'sirket' && selectedCompanies.length > 0 && !selectedCompanies.includes(listing.companyName)) {
+        return false;
+      }
+
+      if (atla !== 'tarih' && dateRange !== 'all') {
+        const eklenme = eklenmeZamani(listing.postedAt);
+        if (!eklenme) return false;
+        if (Date.now() - eklenme > Number(dateRange) * 86400000) return false;
+      }
+
+      if (atla !== 'zorunlu' && onlyMandatory && !listing.mandatoryStajAccepted) return false;
+      if (atla !== 'ucretli' && onlyPaid && !listing.stipend.isPaid) return false;
+      if (atla !== 'uyum' && match.overallScore < minMatchScore) return false;
+
+      return true;
+    },
+    [
+      subTab,
+      searchQuery,
+      selectedCity,
+      workTypes,
+      selectedCompanies,
+      dateRange,
+      onlyMandatory,
+      onlyPaid,
+      minMatchScore,
+      kayitliIlanlar,
+    ],
+  );
+
   // Filter & sort
   const filteredListings = useMemo(() => {
     return matchedData
-      .filter(({ listing, match }) => {
-        // Contextual Sub-Menu Filter from Top Header
-        if (!matchesCategory(listing, match, subTab)) return false;
-
-        /*
-          Arama dört alanda birden çalışıyor: başlık, şirket, şehir, yetenek.
-          Şehir taraması duruyor — yalnızca kutunun yazısında anılmıyor.
-
-          Kutunun yazısı önce "Pozisyon, şirket veya yetenek", sonra
-          "...veya şehir" diyordu. Şimdi "...veya burs": arama artık
-          sayfanın tepesindeki burs/fırsat kartlarını da süzüyor
-          (OpportunitiesHomeSection), en görünür eksik oydu — "KYK" yazan
-          kişi hiç sonuç alamıyordu.
-        */
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase();
-          const matchTitle = listing.title.toLowerCase().includes(q);
-          const matchCompany = listing.companyName.toLowerCase().includes(q);
-          const matchCity = listing.city.toLowerCase().includes(q);
-          const matchSkills = listing.requiredSkills.some((s) => s.toLowerCase().includes(q));
-          if (!matchTitle && !matchCompany && !matchCity && !matchSkills) {
-            return false;
-          }
-        }
-
-        /*
-          Şehir filtresi il düzeyinde çalışıyor. Ham konum metniyle
-          karşılaştırmak "İstanbul" seçen kullanıcıya Şişli'deki ilanı
-          göstermezdi — bkz. lib/sehir.ts.
-        */
-        if (selectedCity !== 'all') {
-          const il = ilBul(listing.city);
-          if (selectedCity === 'diger' ? il !== null : il !== selectedCity) {
-            return false;
-          }
-        }
-
-        // Work type
-        if (workTypes.length > 0 && !workTypes.includes(listing.workType)) {
-          return false;
-        }
-
-        // Mandatory
-        if (selectedCompanies.length > 0 && !selectedCompanies.includes(listing.companyName)) {
-          return false;
-        }
-
-        /*
-          Tarih suzgeci. Olcut `postedAt ?? created_at`; yani "ilan ne zaman
-          yayinlandi" degil "bizde ne zaman gorundu". Etiketlerde de
-          "eklendi" diyoruz, "yayinlandi" demiyoruz.
-        */
-        if (dateRange !== 'all') {
-          const eklenme = eklenmeZamani(listing.postedAt);
-          if (!eklenme) return false;
-          const gun = Number(dateRange);
-          if (Date.now() - eklenme > gun * 86400000) {
-            return false;
-          }
-        }
-
-        if (onlyMandatory && !listing.mandatoryStajAccepted) {
-          return false;
-        }
-
-        // Paid
-        if (onlyPaid && !listing.stipend.isPaid) {
-          return false;
-        }
-
-        // Min match score
-        if (match.overallScore < minMatchScore) {
-          return false;
-        }
-
-        return true;
-      })
+      .filter(({ listing, match }) => gecer(listing, match))
       .sort((a, b) => {
         if (sortBy === 'match') {
           return b.match.overallScore - a.match.overallScore;
@@ -499,20 +489,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         }
         return 0;
       });
-  }, [
-    matchedData,
-    searchQuery,
-    selectedCity,
-    workTypes,
-    dateRange,
-    selectedCompanies,
-    onlyMandatory,
-    onlyPaid,
-    minMatchScore,
-    sortBy,
-    /* Kaydettiklerim sekmesi kayıt kümesine bakıyor; değişince liste yenilensin. */
-    kayitliIlanlar,
-  ]);
+  }, [matchedData, gecer, sortBy]);
 
   const topMatch = matchedData.sort((a, b) => b.match.overallScore - a.match.overallScore)[0];
 
@@ -684,6 +661,94 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     (onlyMandatory ? 1 : 0) +
     (onlyPaid ? 1 : 0) +
     (minMatchScore > 0 ? 1 : 0);
+
+  /*
+    SIFIR SONUÇ EKRANININ VERİSİ
+
+    Üç şey hesaplanıyor: aynı kelimeyle eşleşen fırsat sayısı, açık
+    filtrelerin listesi ve her filtrenin kaç ilanı gizlediği. Üçü de
+    ölçülüyor — "belki şu filtre yüzündendir" demek yerine kaldırıldığında
+    kaç ilan açıldığı sayılıyor.
+  */
+  const [firsatSayisi, setFirsatSayisi] = React.useState<number | null>(null);
+  const [sablonAcik, setSablonAcik] = React.useState(false);
+
+  const sonucYok = filteredListings.length === 0;
+
+  React.useEffect(() => {
+    if (!sonucYok) {
+      setFirsatSayisi(null);
+      return;
+    }
+    let iptal = false;
+    void fetchOpportunities()
+      .then((hepsi) => {
+        if (iptal) return;
+        const terim = searchQuery.trim().toLocaleLowerCase('tr-TR');
+        /* Arama boşsa "eşleşen" demek yanlış olur; o zaman tümü sayılıyor. */
+        const eslesen = terim
+          ? hepsi.filter((f) =>
+              [f.title, f.organizationName, f.shortDescription]
+                .filter(Boolean)
+                .some((alan) => String(alan).toLocaleLowerCase('tr-TR').includes(terim)),
+            )
+          : hepsi;
+        setFirsatSayisi(eslesen.length);
+      })
+      .catch(() => {
+        /* Fırsatlar okunamazsa ekran diğer önerilerle çalışmaya devam etsin. */
+        if (!iptal) setFirsatSayisi(null);
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [sonucYok, searchQuery]);
+
+  /*
+    Bir filtre kaldırılsa kaç ilan görünürdü? Diğer bütün filtreler açık
+    bırakılıp yalnız o filtre gevşetiliyor; fark, o filtrenin gizlediği
+    ilan sayısı.
+  */
+  const suzgecKazanci = React.useCallback(
+    (ad: SuzgecAdi) => {
+      let sayi = 0;
+      for (const { listing, match } of matchedData) {
+        if (gecer(listing, match, ad)) sayi++;
+      }
+      return Math.max(0, sayi - filteredListings.length);
+    },
+    [matchedData, gecer, filteredListings.length],
+  );
+
+  const aktifSuzgecler: AktifSuzgec[] = React.useMemo(() => {
+    const liste: AktifSuzgec[] = [];
+    const ekle = (kosul: boolean, etiket: string, ad: SuzgecAdi, kaldir: () => void) => {
+      if (kosul) liste.push({ etiket, kaldir, kazanc: suzgecKazanci(ad) });
+    };
+
+    ekle(selectedCity !== 'all', `Şehir: ${selectedCity === 'diger' ? 'Diğer' : selectedCity}`, 'sehir', () =>
+      setSelectedCity('all'),
+    );
+    ekle(workTypes.length > 0, `Çalışma biçimi (${workTypes.length})`, 'bicim', () => setWorkTypes([]));
+    ekle(dateRange !== 'all', 'Eklenme tarihi', 'tarih', () => setDateRange('all'));
+    ekle(selectedCompanies.length > 0, `Şirket (${selectedCompanies.length})`, 'sirket', () =>
+      setSelectedCompanies([]),
+    );
+    ekle(onlyMandatory, 'Zorunlu staj kabul', 'zorunlu', () => setOnlyMandatory(false));
+    ekle(onlyPaid, 'Ücretli', 'ucretli', () => setOnlyPaid(false));
+    ekle(minMatchScore > 0, `En az %${minMatchScore} uyum`, 'uyum', () => setMinMatchScore(0));
+
+    return liste;
+  }, [
+    selectedCity,
+    workTypes,
+    dateRange,
+    selectedCompanies,
+    onlyMandatory,
+    onlyPaid,
+    minMatchScore,
+    suzgecKazanci,
+  ]);
 
   const suzgecleriTemizle = () => {
     setSelectedCity('all');
@@ -1225,23 +1290,30 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           />
 
           {filteredListings.length === 0 ? (
-            <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 shadow-sm space-y-4">
-              <p className="text-base font-bold text-gray-900">
-                Seçilen filtrelere uygun staj ilanı bulunamadı.
-              </p>
-              <p className="text-xs text-gray-500 max-w-sm mx-auto">
-                Filtreleri sıfırlayarak veya arama teriminizi değiştirerek tüm fırsatları görebilirsiniz.
-              </p>
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  suzgecleriTemizle();
-                }}
-                className="px-5 py-2 rounded-full text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer"
-              >
-                Filtreleri Temizle
-              </button>
-            </div>
+            /*
+              Sıfır sonuç bir çıkmaz sokak değil: aynı kelimeyle eşleşen
+              burslar, hangi filtrenin listeyi daralttığı ve ilan açmamış
+              şirkete yazma yolu burada gösteriliyor.
+            */
+            <SonucYok
+              aramaTerimi={searchQuery.trim()}
+              suzgecler={aktifSuzgecler}
+              firsatSayisi={firsatSayisi}
+              onFirsatlaraGit={() =>
+                onNavigate?.(
+                  searchQuery.trim()
+                    ? `/firsatlar?q=${encodeURIComponent(searchQuery.trim())}`
+                    : '/firsatlar',
+                )
+              }
+              onTumunuTemizle={() => {
+                setSearchQuery('');
+                suzgecleriTemizle();
+              }}
+              onIsverenlereGit={() => onNavigate?.('/staj-programlari')}
+              onRehbereGit={() => onNavigate?.('/rehber/staj-basvuru-epostasi')}
+              onSablonAc={() => setSablonAcik(true)}
+            />
           ) : (
             <div className="flex flex-col gap-3">
               {filteredListings.map(({ listing, match, hasApplied }, index) => (
@@ -1363,6 +1435,18 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           <GoogleAdBanner format="sidebar-rectangle" />
         </div>
       </div>
+
+      {/*
+        Şablon üretici sıfır sonuç ekranından açılıyor ama görünümün
+        tepesinde duruyor: modal, listenin içinde çizilirse liste
+        kaydırıldığında altında kalıyor.
+      */}
+      <BasvuruSablonu
+        acik={sablonAcik}
+        onKapat={() => setSablonAcik(false)}
+        ogrenci={student}
+        aramaTerimi={searchQuery.trim()}
+      />
     </div>
   );
 };
