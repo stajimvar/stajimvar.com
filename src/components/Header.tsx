@@ -1014,11 +1014,22 @@ export const Header: React.FC<HeaderProps> = ({
 
       Profil ve ilanlar hâlâ sekmeyle belirleniyor; onlar gerçekten sekme.
     */}
+    {/*
+      ALT MENÜ: YÜZEN KAPSÜL
+
+      Ekranın dibine yapışık şerit yerine kenarlardan boşluklu, tam yuvarlak
+      köşeli bir çubuk. Seçili öğe açık mavi bir hapın içinde duruyor.
+
+      YAZI YALNIZ SEÇİLİ ÖĞEDE
+      Her öğede yazı dururken beş sekme 375 piksellik ekranda sıkışıyordu.
+      Seçili olanın yazısı görünüyor, diğerleri yalnız ikon — hangi sayfada
+      olduğun zaten seçili olanda yazılı.
+    */}
     {/* Mobile Bottom Navigation Bar (Rendered outside header to avoid backdrop-filter containing block issues) */}
     {userRole === 'student' ? (
       <nav
         aria-label="Mobil Alt Navigasyon"
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-gray-200/90 shadow-2xl px-2 py-1.5 flex items-center justify-around"
+        className="lg:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 z-50 rounded-full bg-white/90 backdrop-blur-xl border border-gray-200/80 shadow-[0_10px_30px_rgba(15,23,42,0.16)] px-1.5 py-1.5 flex items-center justify-around gap-0.5"
       >
         {/* 1. İlanlar */}
         <button
@@ -1026,10 +1037,8 @@ export const Header: React.FC<HeaderProps> = ({
             setActiveTab('internships');
             setActiveSubTab('all');
           }}
-          className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
-            ilanlardaMi
-              ?'text-blue-600 font-bold'
-              :'text-gray-500 hover:text-gray-900'
+          className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
+            ilanlardaMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
           }`}
         >
           <div className="relative">
@@ -1038,7 +1047,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600"/>
             )}
           </div>
-          <span className="text-[10px] mt-0.5 font-semibold">İlanlar</span>
+          {ilanlardaMi && <span className="text-[11px] font-bold truncate">İlanlar</span>}
         </button>
 
         {/*
@@ -1055,8 +1064,8 @@ export const Header: React.FC<HeaderProps> = ({
         {/* 2. Burs — masaüstündeki "Burs İlanları" sekmesinin karşılığı */}
         <button
           onClick={() => onOpenOpportunities?.()}
-          className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
-            firsatlardaMi ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-gray-900'
+          className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
+            firsatlardaMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
           }`}
         >
           <div className="relative">
@@ -1065,7 +1074,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600" />
             )}
           </div>
-          <span className="text-[10px] mt-0.5 font-semibold">Burs</span>
+          {firsatlardaMi && <span className="text-[11px] font-bold truncate">Burs</span>}
         </button>
 
         {/*
@@ -1077,8 +1086,8 @@ export const Header: React.FC<HeaderProps> = ({
         */}
         <button
           onClick={() => onOpenGuides?.()}
-          className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
-            rehberdeMi && !isverendeMi ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-gray-900'
+          className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
+            rehberdeMi && !isverendeMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
           }`}
         >
           <div className="relative">
@@ -1087,7 +1096,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600" />
             )}
           </div>
-          <span className="text-[10px] mt-0.5 font-semibold">Rehber</span>
+          {rehberdeMi && !isverendeMi && <span className="text-[11px] font-bold truncate">Rehber</span>}
         </button>
 
         {/*
@@ -1102,8 +1111,8 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             id="mobil-isveren-btn"
             onClick={() => onOpenEmployer?.()}
-            className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
-              isverendeMi ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-gray-900'
+            className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
+              isverendeMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
             }`}
           >
             <div className="relative">
@@ -1112,7 +1121,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600" />
               )}
             </div>
-            <span className="text-[10px] mt-0.5 font-semibold">İşveren</span>
+            {isverendeMi && <span className="text-[11px] font-bold truncate">İşveren</span>}
           </button>
         )}
 
@@ -1124,9 +1133,9 @@ export const Header: React.FC<HeaderProps> = ({
             setActiveTab('profile');
             setActiveSubTab('all');
           }}
-          className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
+          className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
             profildeMi
-              ?'text-blue-600 font-bold'
+              ? 'bg-blue-50 text-blue-700 font-bold'
               :'text-gray-500 hover:text-gray-900'
           }`}
         >
@@ -1142,7 +1151,7 @@ export const Header: React.FC<HeaderProps> = ({
               )
             )}
           </div>
-          <span className="text-[10px] mt-0.5 font-semibold">Profil</span>
+          {profildeMi && <span className="text-[11px] font-bold truncate">Profil</span>}
         </button>
           </>
         )}
@@ -1152,21 +1161,21 @@ export const Header: React.FC<HeaderProps> = ({
       /* Mobile Bottom Navigation for Company */
       <nav
         aria-label="Mobil Alt Şirket Navigasyon"
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-gray-200/90 shadow-2xl px-2 py-1.5 flex items-center justify-around"
+        className="lg:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 z-50 rounded-full bg-white/90 backdrop-blur-xl border border-gray-200/80 shadow-[0_10px_30px_rgba(15,23,42,0.16)] px-1.5 py-1.5 flex items-center justify-around gap-0.5"
       >
         <button
           onClick={() => {
             setActiveTab('company-portal');
             setActiveSubTab('all_candidates');
           }}
-          className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
+          className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
             activeSubTab === 'all_candidates' || activeSubTab === 'all'
-              ?'text-blue-600 font-bold'
+              ? 'bg-blue-50 text-blue-700 font-bold'
               :'text-gray-500'
           }`}
         >
           <Users className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5 font-semibold">Adaylar</span>
+          <span className="text-[11px] font-bold truncate">Adaylar</span>
         </button>
 
         <button
@@ -1174,14 +1183,14 @@ export const Header: React.FC<HeaderProps> = ({
             setActiveTab('company-portal');
             setActiveSubTab('top_matches');
           }}
-          className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
+          className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
             activeSubTab === 'top_matches'
               ?'text-orange-600 font-bold'
               :'text-gray-500'
           }`}
         >
           <Sparkles className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5 font-semibold">%80+ Uyum</span>
+          <span className="text-[11px] font-bold truncate">%80+ Uyum</span>
         </button>
 
         <button
@@ -1189,14 +1198,14 @@ export const Header: React.FC<HeaderProps> = ({
             setActiveTab('company-portal');
             setActiveSubTab('kanban');
           }}
-          className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
+          className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
             activeSubTab === 'kanban'
               ?'text-purple-600 font-bold'
               :'text-gray-500'
           }`}
         >
           <Columns className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5 font-semibold">Kanban</span>
+          <span className="text-[11px] font-bold truncate">Kanban</span>
         </button>
 
         <button
@@ -1204,10 +1213,10 @@ export const Header: React.FC<HeaderProps> = ({
             setActiveTab('company-portal');
             setActiveSubTab('post_new');
           }}
-          className="flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl text-blue-600 font-bold cursor-pointer"
+          className="flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full bg-blue-50 text-blue-700 font-bold cursor-pointer"
         >
           <Plus className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5 font-semibold">İlan Ekle</span>
+          <span className="text-[11px] font-bold truncate">İlan Ekle</span>
         </button>
       </nav>
     )}
