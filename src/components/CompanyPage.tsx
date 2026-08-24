@@ -1,3 +1,4 @@
+import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Globe, MapPin, ShieldCheck, BadgeCheck } from 'lucide-react';
 import type { InternshipListing } from '../types';
@@ -208,7 +209,7 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
                       <span className="inline-flex items-center gap-1">
                         <MapPin className="w-3.5 h-3.5" />
-                        {ilan.city || 'Belirtilmemiş'} ({ilan.workType})
+                        {konumEtiketi(ilan.city)} ({calismaEtiketi(ilan.workType)})
                       </span>
                       {ilan.stipend.isPaid && (
                         <span className="text-amber-700 font-semibold">Ücretli</span>

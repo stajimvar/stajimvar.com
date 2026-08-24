@@ -1,3 +1,4 @@
+import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Check, MapPin, X } from 'lucide-react';
 import {
@@ -111,7 +112,7 @@ export const AdminListingsQueue: React.FC<AdminListingsQueueProps> = ({ onToast 
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-medium border border-blue-100">
                 <MapPin className="w-3.5 h-3.5" />
-                {ilan.city || 'Konum belirtilmemiş'} ({ilan.workType})
+                {konumEtiketi(ilan.city)} ({calismaEtiketi(ilan.workType)})
               </span>
               {ilan.isPaid && (
                 <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 font-semibold border border-amber-200">

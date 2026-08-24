@@ -1,3 +1,4 @@
+import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import React, { useEffect, useState } from 'react';
 import {
   ArrowLeft, MapPin, Calendar, DollarSign, ShieldCheck, ExternalLink,
@@ -210,7 +211,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                 <Bilgi
                   ikon={<MapPin className="w-4 h-4" />}
                   etiket="Konum"
-                  deger={`${listing.city || 'Belirtilmemiş'} (${listing.workType})`}
+                  deger={`${konumEtiketi(listing.city)} (${calismaEtiketi(listing.workType)})`}
                 />
                 {listing.department && (
                   <Bilgi ikon={<Building2 className="w-4 h-4" />} etiket="Departman" deger={listing.department} />

@@ -1,3 +1,4 @@
+import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import React from 'react';
 import {
   X,
@@ -162,7 +163,7 @@ export const InternshipDetailModal: React.FC<InternshipDetailModalProps> = ({
                   <span className="text-sm font-bold text-gray-900">
                     %{match.locationScore}
                   </span>
-                  <span className="text-[10px] text-gray-500">{listing.workType}</span>
+                  <span className="text-[10px] text-gray-500">{calismaEtiketi(listing.workType)}</span>
                 </div>
                 <div className="w-full bg-gray-100 h-1.5 rounded-full mt-1 overflow-hidden">
                   <div
@@ -195,7 +196,7 @@ export const InternshipDetailModal: React.FC<InternshipDetailModalProps> = ({
             <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
               <p className="text-gray-500 font-medium">Çalışma Şekli</p>
               <p className="font-bold text-gray-900 mt-0.5">
-                {listing.city} ({listing.workType})
+                {konumEtiketi(listing.city)} ({calismaEtiketi(listing.workType)})
               </p>
             </div>
             <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">

@@ -394,7 +394,11 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
 
             <Section title="Henüz yapılmayanlar">
               <p>
-                Özgeçmiş dosyası yükleme ve <strong>başvurunun şirkete iletilmesi</strong>
+                {/*
+                  Sondaki {' '}: JSX, bir öğeden sonra gelen satır sonunu tamamen
+                  siliyor ve metin "iletilmesihenüz" olarak basılıyordu.
+                */}
+                Özgeçmiş dosyası yükleme ve <strong>başvurunun şirkete iletilmesi</strong>{' '}
                 henüz yoktur. Bir ilanı "başvurdum" diye işaretlemek yalnızca kendi
                 takip listenizi oluşturur; bu kayıt şirkete gönderilmez, iletişim
                 bilgileriniz hiçbir şirketle paylaşılmaz. Aktarım devreye girdiğinde
