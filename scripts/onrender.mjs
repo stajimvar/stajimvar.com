@@ -883,7 +883,7 @@ async function main() {
         ozet,
         [
           sirket.name && `Şirket: ${sirket.name}`,
-          i.city && `Şehir: ${i.city}`,
+          i.city && `Şehir: ${konumEtiketi(i.city)}`,
           i.work_type && `Çalışma şekli: ${i.work_type}`,
         ].filter(Boolean)
       ),

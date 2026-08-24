@@ -8,6 +8,7 @@ import type { InternshipListing } from '../types';
 import { fetchListingByIdPrefix } from '../lib/queries';
 import { ListingLogo } from './ListingLogo';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
+import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 import { Logo } from './Logo';
 import { slugify } from '../lib/slug';
 
@@ -89,14 +90,19 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     };
   }, [idPrefix]);
 
-  /* Sayfa başlığını ilana göre ayarla — paylaşıldığında anlamlı görünsün. */
+  /*
+    Sayfa üst bilgileri ilana göre ayarlanıyor.
+
+    Önce yalnızca başlık değişiyordu; canonical ve paylaşım etiketleri, ana
+    sayfadan tıklanarak gelindiğinde ANA SAYFAYI göstermeye devam ediyordu.
+    Yani ilanı paylaşan kişi ana sayfanın kartını gönderiyordu.
+  */
   useEffect(() => {
     if (!listing) return;
-    const onceki = document.title;
-    document.title = `${listing.title} — ${listing.companyName} | StajımVar`;
-    return () => {
-      document.title = onceki;
-    };
+    return sayfaMetaAyarla({
+      baslik: `${listing.title} — ${listing.companyName} | StajımVar`,
+      aciklama: (listing.description || '').replace(/\s+/g, ' ').trim().slice(0, 155) || undefined,
+    });
   }, [listing]);
 
   /* Başvurunun gerçek işleyişi — açıklama ve düğmeler buradan besleniyor. */

@@ -1,4 +1,5 @@
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
+import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Globe, MapPin, ShieldCheck, BadgeCheck } from 'lucide-react';
 import type { InternshipListing } from '../types';
@@ -63,11 +64,12 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
 
   useEffect(() => {
     if (!veri) return;
-    const onceki = document.title;
-    document.title = `${veri.company.name} staj ilanları | StajımVar`;
-    return () => {
-      document.title = onceki;
-    };
+    return sayfaMetaAyarla({
+      baslik: `${veri.company.name} staj ilanları | StajımVar`,
+      aciklama:
+        (veri.company.description || '').replace(/\s+/g, ' ').trim().slice(0, 155) ||
+        `${veri.company.name} şirketinin yayındaki staj ilanları. İlanlar şirketin kendi kariyer sayfasından derleniyor.`,
+    });
   }, [veri]);
 
   return (
