@@ -1445,7 +1445,6 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         acik={sablonAcik}
         onKapat={() => setSablonAcik(false)}
         ogrenci={student}
-        aramaTerimi={searchQuery.trim()}
       />
     </div>
   );

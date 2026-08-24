@@ -30,17 +30,23 @@ type BasvuruSablonuProps = {
   acik: boolean;
   onKapat: () => void;
   ogrenci: StudentProfile | null;
-  /** Aramada yazdığı kelime; ilgi alanı cümlesine ipucu olarak giriyor. */
-  aramaTerimi?: string;
 };
 
-function sablonKur(ogrenci: StudentProfile | null, aramaTerimi?: string): string {
+function sablonKur(ogrenci: StudentProfile | null): string {
   const universite = ogrenci?.university || '[Üniversite]';
   const bolum = ogrenci?.department || ogrenci?.faculty || '[Bölüm]';
   const sinif = ogrenci?.gradeLevel || '[sınıf]';
   const ad = ogrenci?.fullName || '[Ad Soyad]';
   const telefon = ogrenci?.phone || '[Telefon]';
-  const alan = (aramaTerimi || '').trim();
+  /*
+    ARAMA KELİMESİ CÜMLEYE GÖMÜLMÜYOR
+
+    Önce "[Şirket adı]'nın <arama kelimesi> tarafıyla ilgileniyorum" diye
+    yazılıyordu. Canlıda denendi: "kyk" arayan biri için cümle "kyk
+    tarafıyla ilgileniyorum" oluyor — öğrencinin adına saçma bir e-posta.
+    Kelimenin bir alan adı mı, kurum adı mı, rastgele bir sorgu mu olduğunu
+    bilemiyoruz; yeri boş bırakmak, yanlış doldurmaktan iyi.
+  */
 
   return [
     'Merhaba,',
@@ -48,9 +54,8 @@ function sablonKur(ogrenci: StudentProfile | null, aramaTerimi?: string): string
     `${universite} ${bolum} ${sinif} öğrencisiyim. Zorunlu stajım kapsamında`,
     '[tarih] – [tarih] arasında 20 iş günü staj yapmam gerekiyor.',
     '',
-    alan
-      ? `[Şirket adı]'nın ${alan} tarafıyla ilgileniyorum çünkü [tek cümle sebep].`
-      : "[Şirket adı]'nın [somut bir konu: ürün, proje, alan] tarafıyla ilgileniyorum çünkü [tek cümle sebep].",
+    "[Şirket adı]'nın [somut bir konu: ürün, proje, alan] tarafıyla",
+    'ilgileniyorum çünkü [tek cümle sebep].',
     '',
     'Şu ana kadar [bir ders projesi / kullandığın program / yaptığın iş]',
     "üzerinde çalıştım. CV'mi ekte gönderiyorum.",
@@ -66,7 +71,7 @@ function sablonKur(ogrenci: StudentProfile | null, aramaTerimi?: string): string
   ].join('\n');
 }
 
-export const BasvuruSablonu: React.FC<BasvuruSablonuProps> = ({ acik, onKapat, ogrenci, aramaTerimi }) => {
+export const BasvuruSablonu: React.FC<BasvuruSablonuProps> = ({ acik, onKapat, ogrenci }) => {
   const [metin, setMetin] = React.useState('');
   const [kopyalandi, setKopyalandi] = React.useState(false);
 
@@ -74,10 +79,10 @@ export const BasvuruSablonu: React.FC<BasvuruSablonuProps> = ({ acik, onKapat, o
 
   React.useEffect(() => {
     if (acik) {
-      setMetin(sablonKur(ogrenci, aramaTerimi));
+      setMetin(sablonKur(ogrenci));
       setKopyalandi(false);
     }
-  }, [acik, ogrenci, aramaTerimi]);
+  }, [acik, ogrenci]);
 
   if (!acik) return null;
 
