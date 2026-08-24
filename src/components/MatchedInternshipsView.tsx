@@ -266,6 +266,12 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   */
   const allListingCategories = [
     { id: 'all', label: 'Tüm İlanlar' },
+    /*
+      Kaydettiklerim yalnızca giriş yapılmışsa görünüyor: kaydetme sunucuda
+      tutuluyor ve giriş yapılmadan zaten kaydedilemiyor. Boş bir sekme
+      göstermek, çalışmayan bir özellik göstermek olurdu.
+    */
+    ...(student?.id ? [{ id: 'kaydettiklerim', label: 'Kaydettiklerim' }] : []),
     { id: 'high_match', label: 'Sana En Uygun (%80+)' },
     { id: 'public_sector', label: 'Kamu Stajları' },
     { id: 'global', label: 'Yurtdışı / Global' },
@@ -282,6 +288,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     categoryId?: string
   ): boolean {
     switch (categoryId) {
+      case 'kaydettiklerim':
+        return kayitliIlanlar.has(listing.id);
       case 'high_match':
         return match.overallScore >= 80;
       case 'public_sector':
@@ -368,7 +376,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                 .length,
       }))
       .filter((cat) => cat.id === 'all' || cat.count > 0 || cat.id === subTab);
-  }, [matchedData, subTab]);
+  }, [matchedData, subTab, kayitliIlanlar]);
 
   // Filter & sort
   const filteredListings = useMemo(() => {
@@ -502,6 +510,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     onlyPaid,
     minMatchScore,
     sortBy,
+    /* Kaydettiklerim sekmesi kayıt kümesine bakıyor; değişince liste yenilensin. */
+    kayitliIlanlar,
   ]);
 
   const topMatch = matchedData.sort((a, b) => b.match.overallScore - a.match.overallScore)[0];
@@ -611,7 +621,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       if (tur) sayim[tur] = (sayim[tur] ?? 0) + 1;
     }
     return sayim;
-  }, [matchedData, subTab]);
+  }, [matchedData, subTab, kayitliIlanlar]);
 
   const companyOptions = useMemo(() => {
     const sayim = new Map<string, number>();
@@ -623,7 +633,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     return [...sayim.entries()]
       .map(([ad, adet]) => ({ ad, adet }))
       .sort((a, b) => b.adet - a.adet || a.ad.localeCompare(b.ad, 'tr'));
-  }, [matchedData, subTab]);
+  }, [matchedData, subTab, kayitliIlanlar]);
 
   /*
     ŞERİT VERİSİ
@@ -656,7 +666,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       .map(([ad, v]) => ({ ad, logo: v.logo, adet: v.adet, yeni: v.yeni }))
       /* Yeni ilanı olanlar başta: şeridin başı en çok bakılan yer. */
       .sort((a, b) => Number(b.yeni) - Number(a.yeni) || b.adet - a.adet || a.ad.localeCompare(b.ad, 'tr'));
-  }, [matchedData, subTab]);
+  }, [matchedData, subTab, kayitliIlanlar]);
 
   /** Arama kutusuyla suzulmus sirket listesi. */
   const gorunenSirketler = useMemo(() => {
@@ -711,7 +721,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       liste.push({ id: 'diger', etiket: 'Diğer / belirtilmemiş', adet: bilinmeyen });
     }
     return liste;
-  }, [matchedData, subTab]);
+  }, [matchedData, subTab, kayitliIlanlar]);
 
   return (
     <div className="w-full pb-12">
