@@ -991,8 +991,16 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               onClick={onGoToProfile}
               className="w-full flex items-center gap-3 p-3 rounded-2xl border border-blue-100 bg-blue-50/70 text-left cursor-pointer hover:bg-blue-100/70 transition-colors"
             >
+              {/*
+                Yüzde tek başına ne yapılacağını söylemiyor. Kalan adım
+                sayısı eyleme dönük: "iki alan doldur" ile "%70" aynı bilgi
+                değil.
+              */}
               <span className="shrink-0 text-xs font-bold text-blue-700 tabular-nums">
                 %{profileCompletion}
+              </span>
+              <span className="shrink-0 text-[11px] font-semibold text-blue-700/80">
+                {profileChecks.filter((tamam) => !tamam).length} adım kaldı
               </span>
               <span className="flex-1 h-1.5 rounded-full bg-blue-200/70 overflow-hidden">
                 <span

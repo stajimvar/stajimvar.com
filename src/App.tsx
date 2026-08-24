@@ -1151,7 +1151,13 @@ export default function App() {
 
             {safeTab === 'internships' && listingsStatus === 'ready' && (
               <>
-              <OpportunitiesHomeSection onNavigate={navigate} searchQuery={aramaTerimi} />
+              {/*
+                FIRSAT ŞERİDİ İLANLARIN ALTINDA
+
+                Bölüm tepedeydi ve ekranın çoğunu kaplıyordu: "İlanlar"
+                sekmesindeyken staj ilanları ilk ekranın altında kalıyordu.
+                Sekmenin adı neyse ekranın çoğu o olmalı.
+              */}
               <MatchedInternshipsView
                 student={isLoggedIn ? activeStudent : null}
                 allListings={allListings}
@@ -1166,6 +1172,11 @@ export default function App() {
                 searchQuery={aramaTerimi}
                 onSearchChange={setAramaTerimi}
                 onNavigate={navigate}
+              />
+              <OpportunitiesHomeSection
+                onNavigate={navigate}
+                searchQuery={aramaTerimi}
+                ogrenci={isLoggedIn ? activeStudent : null}
               />
               </>
             )}
