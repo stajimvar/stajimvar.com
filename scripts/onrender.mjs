@@ -914,13 +914,28 @@ async function main() {
     ['/iletisim', 'İletişim'],
   ];
 
+  /*
+    Şehir adı arayüzde konumEtiketi ile düzeltiliyor ("Turkey - Istanbul" →
+    "İstanbul", "Zincirlikuyu, Istanbul" → "Zincirlikuyu, İstanbul") ama ön
+    render edilen HTML ham hâlde kalıyordu — yani arama motorunun okuduğu
+    metin yanlış yazımdaydı. Aynı modül burada da derlenip kullanılıyor;
+    ikinci bir şehir sözlüğü tutmak ikisinin ayrışmasına davetiye olurdu.
+  */
+  const { konumEtiketi } = await icerikDerle(path.join(kok, 'src', 'lib', 'sehir.ts'), 'sehir');
+
   const ilanListesi = ilanlar.length
     ? '<h2>Yayındaki staj ilanları</h2><ul>' +
       ilanlar
         .map((i) => {
           const yol = `/ilan/${slugla(i.title)}-${String(i.id).split('-')[0]}`;
           const sirket = (i.companies || {}).name || '';
-          const yer = i.city || '';
+          /*
+            Şehir adı ham geliyor ve kaynaklar "Istanbul" yazıyor. Arayüzde
+            konumEtiketi ile düzeltiliyordu ama ön render edilen HTML —
+            yani arama motorunun okuduğu metin — ham hâlde kalıyordu.
+            Basit düzeltme yeterli: liste yalnızca şehir adı basıyor.
+          */
+          const yer = i.city ? konumEtiketi(i.city) : '';
           return (
             `<li><a href="${yol}">${kacir(i.title)}</a>` +
             (sirket ? ` — ${kacir(sirket)}` : '') +
@@ -939,7 +954,7 @@ async function main() {
       'Her ilanda şirketin kendi başvuru bağlantısı var.',
     govde:
       '<main><h1>Şirketlerin staj ilanları, tek listede</h1>' +
-      '<p>Sekiz ayrı kariyer sayfasını tek tek gezme. İlanları aracı sitelerden değil, ' +
+      '<p>Farklı kariyer sayfalarını tek tek gezme. İlanları aracı sitelerden değil, ' +
       'şirketlerin kendi kariyer sayfalarından derliyoruz; her ilanda şirketin kendi ' +
       'başvuru bağlantısı var.</p>' +
       ilanListesi +
