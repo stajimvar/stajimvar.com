@@ -229,10 +229,12 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 trafik şifrelidir (HTTPS/TLS).
               </p>
               <p>
-                <strong>Dosyalar.</strong> Özgeçmişler için ayrılmış depolama alanı
-                herkese kapalıdır ve yalnızca dosyanın sahibi ile başvurulan şirket
-                erişebilir. Şirket logoları gibi kamuya açık görseller ayrı bir alanda
-                tutulur.
+                <strong>Dosyalar.</strong> Şu anda özgeçmiş dosyası yükleyemiyorsunuz;
+                yani sizden alınmış bir CV dosyası tutmuyoruz. Özellik açıldığında
+                kullanılacak depolama alanı kapalı olarak hazır: yalnızca dosyanın sahibi
+                erişebilecek ve o gün bu metin, hangi şirketin ne zaman erişeceğini
+                söyleyecek biçimde güncellenecek. Şirket logoları gibi kamuya açık
+                görseller ayrı bir alanda tutuluyor.
               </p>
             </Section>
 
@@ -288,11 +290,12 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 göstermiyoruz.
               </p>
               <p>
-                <strong>Reklam:</strong> Sayfalarda Google AdSense doğrulama betiği
-                yükleniyor. Hesabımız henüz onaylanmadığı için şu anda reklam
-                gösterilmiyor; onaylandığında Google'ın reklam ve ölçüm çerezleri devreye
-                girecek ve bu sayfa o gün güncellenecek. Google'ın bu verileri nasıl
-                işlediğini kendi gizlilik politikasında açıklıyor.
+                <strong>Reklam:</strong> Sayfalarda Google AdSense reklam birimleri
+                bulunuyor ve AdSense betiği her sayfada yükleniyor. Google bir reklam
+                gösterdiğinde kendi reklam ve ölçüm çerezlerini kullanabiliyor; bu
+                çerezler bize değil Google'a ait ve verileri nasıl işlediğini kendi
+                gizlilik politikasında açıklıyor. Birimlere her zaman reklam dönmüyor,
+                ama betik yüklendiği için bu bölüm "reklam yok" diye okunmamalı.
               </p>
               <p>
                 Hesabınız varsa oturumunuzu açık tutmak için bir <strong>oturum
@@ -321,9 +324,11 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
 
             <Section title="Reklamlar">
               <p>
-                Şu anda sitede reklam yayınlanmıyor. İleride Google AdSense
-                etkinleştirilirse reklam çerezleri devreye girecek; o aşamada bu sayfa
-                güncellenecek ve gerekli onay mekanizması eklenecektir.
+                Sitede Google AdSense reklam birimleri var ve AdSense betiği her
+                sayfada yükleniyor. Google bir reklam gösterdiğinde kendi reklam ve ölçüm
+                çerezlerini kullanabiliyor. Bu çerezleri biz koymuyoruz ve içeriklerini
+                göremiyoruz; Google'ın reklam ayarları sayfasından kişiselleştirmeyi
+                kapatabilirsiniz.
               </p>
             </Section>
           </>

@@ -150,7 +150,7 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
         <S baslik="Sitenin geliri ve bağımsızlığı">
           <p>
             StajımVar öğrenciye ücretsiz. Giderleri karşılamak için sayfalarda reklam
-            gösteriliyor ve bunu açıkça söylüyoruz. Reklamların içerikle bir ilgisi yok:{' '}
+            alanları var ve bunu açıkça söylüyoruz. Reklamların içerikle bir ilgisi yok:{' '}
             <strong>hiçbir şirket para karşılığı ilan sırası satın alamıyor</strong> ve hiçbir
             reklamveren rehber metinlerine müdahale etmiyor.
           </p>
