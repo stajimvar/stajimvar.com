@@ -52,6 +52,9 @@ export const Avatar: React.FC<AvatarProps> = ({ name, url, className = '' }) => 
     return (
       <img
         src={url}
+        /* Oran için: gerçek ölçüyü className veriyor, boyut yerleşim kaymasını önlüyor. */
+        width={96}
+        height={96}
         alt={`${name} profil fotoğrafı`}
         onError={() => setBasarisiz(true)}
         className={`object-cover bg-gray-100 ${className}`}

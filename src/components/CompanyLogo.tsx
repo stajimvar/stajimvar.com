@@ -48,10 +48,24 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({ name, logoUrl, classNa
 
   if (showImage) {
     return (
+      /*
+        width/height NEDEN VAR
+
+        Ölçüldü: ana sayfadaki görsellerin çoğunda HTML boyutu yoktu.
+        Tarayıcı görselin ne kadar yer kaplayacağını ancak dosya inince
+        öğreniyor; o ana kadar satır sıfır yükseklikte duruyor ve görsel
+        gelince liste zıplıyor.
+
+        Değerler yalnızca ORAN için: gerçek ölçüyü className belirliyor
+        (w-14 h-14 gibi). Logolar kare üretiliyor (kurum-logolari.mjs 128x128
+        yazıyor), bu yüzden 1:1 doğru oran.
+      */
       <img
         src={logoUrl}
         alt={`${name} logosu`}
         loading="lazy"
+        width={128}
+        height={128}
         onError={() => setFailed(true)}
         className={`object-contain bg-white border border-gray-200 ${className}`}
       />
