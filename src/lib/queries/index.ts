@@ -93,12 +93,12 @@ export async function fetchListingByIdPrefix(
 /** Şirket sayfası için: şirket bilgisi ve yayındaki ilanları. */
 export async function fetchCompanyPage(slug: string): Promise<{
   company: { id: string; name: string; slug: string; logoUrl?: string; websiteUrl?: string;
-             industry?: string; location?: string; description?: string; verified: boolean };
+             industry?: string; location?: string; size?: string; description?: string; verified: boolean };
   listings: InternshipListing[];
 } | null> {
   const { data: company, error } = await supabase
     .from('companies')
-    .select('id,name,slug,logo_url,website_url,industry,location,description,verified')
+    .select('id,name,slug,logo_url,website_url,industry,location,size,description,verified')
     .eq('slug', slug)
     .maybeSingle();
 
@@ -122,6 +122,8 @@ export async function fetchCompanyPage(slug: string): Promise<{
       logoUrl: company.logo_url ?? undefined,
       websiteUrl: company.website_url ?? undefined,
       industry: company.industry ?? undefined,
+      /* Künye bloğu için: çalışan sayısı okunuyordu ama taşınmıyordu. */
+      size: company.size ?? undefined,
       location: company.location ?? undefined,
       description: company.description ?? undefined,
       verified: company.verified,

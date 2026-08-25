@@ -5,6 +5,8 @@ import { ArrowLeft, Globe, MapPin, ShieldCheck, BadgeCheck } from 'lucide-react'
 import type { InternshipListing } from '../types';
 import { fetchCompanyPage } from '../lib/queries';
 import { ListingLogo } from './ListingLogo';
+import { BOLUMLER } from '../data/bolumler';
+import { eklenmeMetni, sonKontrolMetni } from '../lib/zaman';
 import { guvenliDisAdres } from '../lib/guvenli-url.mjs';
 import { Logo } from './Logo';
 import { listingSlug } from '../lib/slug';
@@ -70,6 +72,41 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
         (veri.company.description || '').replace(/\s+/g, ' ').trim().slice(0, 155) ||
         `${veri.company.name} şirketinin yayındaki staj ilanları. İlanlar şirketin kendi kariyer sayfasından derleniyor.`,
     });
+  }, [veri]);
+
+  /*
+    İLGİLİ BÖLÜMLER
+
+    Şirket sayfası masaüstünde neredeyse boştu ve hiçbir yere bağlanmıyordu.
+    Buradaki bağlantılar uydurma değil: yayındaki ilanların `department`
+    alanı ve başlıkları, bölüm sayfalarının adıyla eşleştiriliyor. Eşleşme
+    yoksa bölüm listesi hiç çizilmiyor — boş bir başlık, olmayan bir
+    içeriği varmış gibi gösterir.
+  */
+  const ilgiliBolumler = React.useMemo(() => {
+    if (!veri) return [];
+    const metin = veri.listings
+      .map((i: InternshipListing) => `${i.title} ${i.department || ''}`)
+      .join(' ')
+      .toLocaleLowerCase('tr-TR');
+    if (!metin.trim()) return [];
+    return BOLUMLER.filter((b) => metin.includes(b.ad.toLocaleLowerCase('tr-TR'))).slice(0, 6);
+  }, [veri]);
+
+  /*
+    Kariyer sayfası: ilanların geldiği kaynağın kök adresi. Şirketin kendi
+    sitesinden ayrı bir bilgi — ilanlar çoğu zaman bir işe alım
+    sağlayıcısında (Workable, Lever) duruyor ve öğrenci oraya gidiyor.
+  */
+  const kariyerAdresi = React.useMemo(() => {
+    const kaynak = veri?.listings.find((i: InternshipListing) => i.sourceUrl)?.sourceUrl;
+    if (!kaynak) return null;
+    try {
+      const u = new URL(kaynak);
+      return { adres: u.origin + u.pathname.split('/').slice(0, 3).join('/'), konak: u.hostname };
+    } catch {
+      return null;
+    }
   }, [veri]);
 
   return (
@@ -223,10 +260,112 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                         </span>
                       )}
                     </div>
+                    {/*
+                      Tarih satırı: ilanın kaynaktaki gerçek yayın tarihi ve
+                      başvuru adresinin son doğrulandığı gün. Şirket sayfası
+                      bunları göstermiyordu; oysa "bu şirket ne zaman ilan
+                      açıyor" sorusunun cevabı burada.
+                    */}
+                    {(eklenmeMetni(ilan.postedAt, ilan.postedAtDogrulandi) ||
+                      sonKontrolMetni(ilan.lastSeenAt)) && (
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-400">
+                        {eklenmeMetni(ilan.postedAt, ilan.postedAtDogrulandi) && (
+                          <span>{eklenmeMetni(ilan.postedAt, ilan.postedAtDogrulandi)}</span>
+                        )}
+                        {sonKontrolMetni(ilan.lastSeenAt) && (
+                          <span className="text-emerald-700 font-semibold">
+                            {sonKontrolMetni(ilan.lastSeenAt)}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </button>
                 ))
               )}
             </div>
+
+            {/*
+              KÜNYE VE İLGİLİ BÖLÜMLER
+
+              Sayfa masaüstünde neredeyse boştu: logo, bir satır meta ve
+              ilan listesi. Buradaki üç blok da var olan veriden üretiliyor,
+              hiçbiri uydurma değil — bilgi yoksa blok hiç çizilmiyor.
+            */}
+            {(veri.company.industry ||
+              veri.company.location ||
+              veri.company.size ||
+              kariyerAdresi) && (
+              <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-7">
+                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                  Künye
+                </h2>
+                <dl className="mt-3 grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                  {veri.company.industry && (
+                    <div>
+                      <dt className="text-xs text-gray-500">Sektör</dt>
+                      <dd className="font-semibold text-gray-900">{veri.company.industry}</dd>
+                    </div>
+                  )}
+                  {veri.company.location && (
+                    <div>
+                      <dt className="text-xs text-gray-500">Konum</dt>
+                      <dd className="font-semibold text-gray-900">
+                        {konumEtiketi(veri.company.location)}
+                      </dd>
+                    </div>
+                  )}
+                  {veri.company.size && (
+                    <div>
+                      <dt className="text-xs text-gray-500">Çalışan sayısı</dt>
+                      <dd className="font-semibold text-gray-900">{veri.company.size}</dd>
+                    </div>
+                  )}
+                  {kariyerAdresi && (
+                    <div className="min-w-0">
+                      <dt className="text-xs text-gray-500">Kariyer sayfası</dt>
+                      <dd className="font-semibold truncate">
+                        <a
+                          href={kariyerAdresi.adres}
+                          target="_blank"
+                          rel="noopener noreferrer nofollow"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {kariyerAdresi.konak}
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            )}
+
+            {ilgiliBolumler.length > 0 && (
+              <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-7">
+                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                  İlgili bölümler
+                </h2>
+                <p className="mt-1 text-sm text-gray-600">
+                  Bu şirketin ilanları şu bölümlerle örtüşüyor. Bölüm sayfasında o alanda
+                  stajın nerede yapıldığı ve stajyerin ne iş yaptığı anlatılıyor.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {ilgiliBolumler.map((b) => (
+                    <a
+                      key={b.slug}
+                      href={`/bolum/${b.slug}`}
+                      onClick={(e) => {
+                        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                        e.preventDefault();
+                        onNavigate(`/bolum/${b.slug}`);
+                      }}
+                      className="px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-700 bg-white border border-gray-200 hover:border-blue-300"
+                    >
+                      {b.ad}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/*
               Sahiplenme çağrısı sayfanın altında, ilanlardan sonra.
