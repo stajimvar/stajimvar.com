@@ -36,6 +36,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
+import { kartYaz } from './og-kartlari.mjs';
 import { guvenliDisAdres } from '../src/lib/guvenli-url.mjs';
 
 const kok = path.dirname(path.dirname(url.fileURLToPath(import.meta.url)));
@@ -643,6 +644,26 @@ function sayfaYaz(yol, s) {
     `<meta property="og:description" content="${kacir(s.aciklama)}" />`
   );
 
+  /*
+    SAYFAYA ÖZEL PAYLAŞIM GÖRSELİ
+
+    Bütün site tek bir genel kartı paylaşıyordu: bir rehber, bir ilan ya da
+    bir burs paylaşıldığında WhatsApp ve Twitter'da hep aynı görsel
+    çıkıyordu ve paylaşılan şeyin ne olduğu karttan anlaşılmıyordu.
+
+    Görsel yoksa index.html'deki genel kart yerinde kalıyor — yani bu blok
+    yalnızca ekliyor, hiçbir şeyi bozmuyor.
+  */
+  if (s.gorsel) {
+    const tamGorsel = SITE + s.gorsel;
+    html = html
+      .replace(/<meta property="og:image"[^>]*>/, `<meta property="og:image" content="${tamGorsel}" />`)
+      .replace(
+        /<meta property="og:image:alt"[^>]*>/,
+        `<meta property="og:image:alt" content="${kacir(s.baslik)}" />`
+      );
+  }
+
   // canonical + og:url — hiç yoktu
   html = html.replace(
     '</head>',
@@ -794,7 +815,15 @@ async function main() {
       });
     }
 
+    await kartYaz(`rehber-${r.slug}`, {
+      tur: 'rehber',
+      etiket: 'ÖĞRENCİ REHBERİ',
+      baslik: r.baslik,
+      altMetin: r.ozet || '',
+    });
+
     sayfaYaz(`/rehber/${r.slug}`, {
+      gorsel: `/og/rehber-${r.slug}.png`,
       baslik: `${r.baslik} | StajımVar`,
       aciklama: ozetle(r.aciklama || r.ozet),
       /*
@@ -978,7 +1007,15 @@ async function main() {
       ...(i.work_type === 'Remote' ? { jobLocationType: 'TELECOMMUTE' } : {}),
     };
 
+    await kartYaz(`ilan-${onek}`, {
+      tur: 'ilan',
+      etiket: 'STAJ İLANI',
+      baslik: i.title,
+      altMetin: [sirket.name, i.city ? konumEtiketi(i.city) : ''].filter(Boolean).join(' · '),
+    });
+
     sayfaYaz(yol, {
+      gorsel: `/og/ilan-${onek}.png`,
       baslik: `${i.title}${sirket.name ? ' — ' + sirket.name : ''} | StajımVar`,
       aciklama: ozet,
       govde: govde(
@@ -1015,7 +1052,15 @@ async function main() {
 
   for (const f of firsatlar) {
     if (f.application_deadline && new Date(f.application_deadline).getTime() < Date.now()) continue;
+    await kartYaz(`firsat-${f.slug}`, {
+      tur: 'firsat',
+      etiket: 'ÖĞRENCİ FIRSATI',
+      baslik: f.title,
+      altMetin: f.organization_name || '',
+    });
+
     sayfaYaz(`/firsatlar/${f.slug}`, {
+      gorsel: `/og/firsat-${f.slug}.png`,
       baslik: `${f.title} — ${f.organization_name} | StajımVar`,
       aciklama: ozetle(f.short_description || ''),
       govde: govde(f.title, f.short_description || '', [f.organization_name, f.application_deadline && `Son başvuru: ${f.application_deadline.slice(0, 10)}`].filter(Boolean)),
