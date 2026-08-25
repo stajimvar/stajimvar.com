@@ -5,7 +5,6 @@ import {
   Briefcase,
   Building2,
   Calculator,
-  ChevronDown,
   FileText,
   GraduationCap,
   MapPin,
@@ -63,9 +62,6 @@ import type { StudentProfile } from '../types';
  */
 
 type Sekme = 'uygun' | 'tumu' | KonuId;
-
-/** İlk aşamada görünen konular; gerisi "Daha fazla" ile açılıyor. */
-const ONCELIKLI_KONULAR: KonuId[] = ['staj', 'cv', 'burs'];
 
 /* ------------------------------------------------------------ hızlı işlem */
 
@@ -159,7 +155,6 @@ export const RehberMerkezi: React.FC<{
 
   const kisisel = kisisellestirilebilir(ogrenci);
   const [sekme, setSekme] = React.useState<Sekme>(kisisel ? 'uygun' : 'tumu');
-  const [digerleriAcik, setDigerleriAcik] = React.useState(false);
 
   /*
     Profil sonradan gelebiliyor (oturum çözülünce). Sekme o anda "tumu"da
@@ -309,16 +304,48 @@ export const RehberMerkezi: React.FC<{
 
   /* --------------------------------------------------------------- sekmeler */
 
-  const gorunenKonular = digerleriAcik
-    ? doluKonular
-    : doluKonular.filter((k) => ONCELIKLI_KONULAR.includes(k.id));
-  const gizliSayisi = doluKonular.length - gorunenKonular.length;
-
   const sekmeSec = (id: Sekme) => {
     setSekmeyeDokunuldu(true);
     setSekme(id);
     if (arama) onAramaTemizle?.();
   };
+
+  /*
+    Hızlı işlem AÇMA/KAPAMA çalışıyor.
+
+    Konu çipi satırı kaldırıldı: dört hızlı işlem zaten Staj, CV ve Burs'u
+    veriyordu ve hemen altında aynı üçünü çip olarak tekrarlamak fazlalıktı.
+    Ama "Tümü" çipi de onunla gitti — süzgeci kaldırmanın bir yolu kalmalı.
+    Basılı işleme yeniden basınca varsayılan görünüme dönülüyor.
+  */
+  const hizliIslemSec = (konu: KonuId) => sekmeSec(sekme === konu && !terim ? 'tumu' : konu);
+
+  /*
+    KONU SEÇİCİ LİSTENİN BAŞINDA
+
+    Hızlı işlemler yedi konudan dördünü kapsıyor; yurt, üniversite hayatı
+    ve yurtdışı rehberlerine de bir yol gerekiyor. Ekranın üstüne ikinci
+    bir düğme satırı koymak yerine tek bir seçici, tam da kullanıldığı
+    yerde: listenin başlığının yanında. Seçili konuyu da gösteriyor, yani
+    "hangi süzgeç açık" sorusunun cevabı kontrolün kendisinde.
+  */
+  const KonuSecici = (
+    <label className="flex items-center gap-2 text-xs font-semibold text-gray-600">
+      <span className="sr-only">Konuya göre süz</span>
+      <select
+        value={terim ? '' : sekme === 'uygun' ? 'tumu' : sekme}
+        onChange={(e) => sekmeSec((e.target.value || 'tumu') as Sekme)}
+        className="min-h-11 cursor-pointer rounded-xl border border-gray-200 bg-white px-3 text-xs font-bold text-gray-800 outline-none focus:border-blue-600"
+      >
+        <option value="tumu">Tüm konular</option>
+        {doluKonular.map((k) => (
+          <option key={k.id} value={k.id}>
+            {k.etiket}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
 
   const kartOzellikleri = (r: Rehber) => ({
     rehber: r,
@@ -350,7 +377,7 @@ export const RehberMerkezi: React.FC<{
               <button
                 key={h.konu}
                 type="button"
-                onClick={() => sekmeSec(h.konu)}
+                onClick={() => hizliIslemSec(h.konu)}
                 aria-pressed={sekme === h.konu && !terim}
                 className={`flex min-h-11 cursor-pointer flex-col items-start gap-2 rounded-2xl border bg-white p-3 text-left transition-colors sm:flex-row sm:items-center sm:gap-2.5 ${
                   sekme === h.konu && !terim
@@ -369,59 +396,16 @@ export const RehberMerkezi: React.FC<{
           </div>
         </section>
 
-        {/* ==================================================== konular */}
-        <div className="space-y-2">
-          <nav
-            aria-label="Rehber konuları"
-            className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {kisisel && (
-              <SekmeDugmesi aktif={sekme === 'uygun' && !terim} onClick={() => sekmeSec('uygun')}>
-                Sana uygun
-              </SekmeDugmesi>
-            )}
-            <SekmeDugmesi aktif={sekme === 'tumu' && !terim} onClick={() => sekmeSec('tumu')}>
-              Tümü
-            </SekmeDugmesi>
-            {gorunenKonular.map((k) => (
-              <SekmeDugmesi
-                key={k.id}
-                aktif={sekme === k.id && !terim}
-                onClick={() => sekmeSec(k.id)}
-              >
-                {k.etiket}
-              </SekmeDugmesi>
-            ))}
-
-            {gizliSayisi > 0 && (
-              <SekmeDugmesi aktif={false} onClick={() => setDigerleriAcik(true)}>
-                <span className="inline-flex items-center gap-1">
-                  Daha fazla
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </span>
-              </SekmeDugmesi>
-            )}
-            {digerleriAcik && (
-              <SekmeDugmesi aktif={false} onClick={() => setDigerleriAcik(false)}>
-                <span className="inline-flex items-center gap-1">
-                  Daha az
-                  <ChevronDown className="h-3.5 w-3.5 rotate-180" />
-                </span>
-              </SekmeDugmesi>
-            )}
-            {/* Son seçenek kenara yapışmasın: yatay listede sağdaki öğe tam erişilebilir olmalı. */}
-            <span aria-hidden className="w-2 shrink-0" />
-          </nav>
-
-          {/*
-            Açıklama yalnızca gerçekten kişiselleştirme yapılabiliyorsa.
-            Veri yoksa satır hiç çizilmiyor — "senin için seçtik" demek için
-            kişi hakkında bir şey bilmek gerekiyor.
-          */}
-          {sekme === 'uygun' && kisisel && !terim && (
-            <p className="text-xs text-gray-600">Eğitim bilgilerine göre senin için öne çıkardık.</p>
-          )}
-        </div>
+        {/*
+          Açıklama yalnızca gerçekten kişiselleştirme yapılabiliyorsa.
+          Veri yoksa satır hiç çizilmiyor — "senin için seçtik" demek için
+          kişi hakkında bir şey bilmek gerekiyor.
+        */}
+        {kisisel && !suzuluyor && (
+          <p className="-mt-3 text-xs text-gray-600">
+            Eğitim bilgilerine göre senin için öne çıkardık.
+          </p>
+        )}
 
         {veriDurumu === 'hata' && (
           <p className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs text-amber-900">
@@ -460,7 +444,12 @@ export const RehberMerkezi: React.FC<{
         ) : suzuluyor ? (
           <Bolum
             baslik={terim ? 'Arama sonuçları' : konuEtiketi(sekme as KonuId)}
-            sag={<span className="text-sm text-gray-600">{sonuclar.length} yazı</span>}
+            sag={
+              <span className="flex items-center gap-3">
+                <span className="text-sm text-gray-600">{sonuclar.length} yazı</span>
+                {KonuSecici}
+              </span>
+            }
           >
             <RehberIzgarasi>
               {sonuclar.map((r) => (
@@ -526,7 +515,12 @@ export const RehberMerkezi: React.FC<{
 
             <Bolum
               baslik="Tüm rehberler"
-              sag={<span className="text-sm text-gray-600">{sonuclar.length} yazı</span>}
+              sag={
+                <span className="flex items-center gap-3">
+                  <span className="text-sm text-gray-600">{sonuclar.length} yazı</span>
+                  {KonuSecici}
+                </span>
+              }
             >
               <RehberIzgarasi>
                 {sonuclar.map((r) => (
@@ -598,25 +592,5 @@ export const RehberMerkezi: React.FC<{
     </SayfaKabugu>
   );
 };
-
-/* Dokunma alanı 44 piksel: mobilde küçük çipleri ıskalamak en sık şikâyet. */
-const SekmeDugmesi: React.FC<{
-  aktif: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}> = ({ aktif, onClick, children }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    aria-pressed={aktif}
-    className={`min-h-11 shrink-0 cursor-pointer rounded-full px-3.5 text-xs font-bold transition-colors ${
-      aktif
-        ? 'bg-blue-600 text-white'
-        : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-    }`}
-  >
-    {children}
-  </button>
-);
 
 export { RehberKarti } from './RehberKartlari';
