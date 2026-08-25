@@ -134,8 +134,8 @@ export const STAJ_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Sosyal Güvenlik Kurumu', adres: 'https://www.sgk.gov.tr' },
-      { etiket: 'e-Devlet — SGK tescil ve hizmet dökümü', adres: 'https://www.turkiye.gov.tr' },
+      { etiket: 'Sosyal Güvenlik Kurumu', adres: 'https://www.sgk.gov.tr', kurum: 'Sosyal Güvenlik Kurumu', tur: 'kurum', destekledigi: 'Staj sigortasının kapsamı (iş kazası ve meslek hastalığı) ve tescil kayıtları.' },
+      { etiket: 'e-Devlet — SGK tescil ve hizmet dökümü', adres: 'https://www.turkiye.gov.tr', kurum: 'Cumhurbaşkanlığı Dijital Dönüşüm Ofisi', tur: 'kurum', destekledigi: 'Sigorta girişinin yapılıp yapılmadığını hizmet dökümünden görme.' },
     ],
     sonrakiAdim: {
       etiket: 'Açık staj ilanlarına bak',
@@ -258,8 +258,8 @@ export const STAJ_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Millî Eğitim Bakanlığı', adres: 'https://www.meb.gov.tr' },
-      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr' },
+      { etiket: 'Millî Eğitim Bakanlığı', adres: 'https://www.meb.gov.tr', kurum: 'Millî Eğitim Bakanlığı', tur: 'kurum', destekledigi: 'Zorunlu stajda ücret yükümlülüğünün dayanağı ve güncel oranlar.' },
+      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr', kurum: 'Çalışma ve Sosyal Güvenlik Bakanlığı', tur: 'kurum', destekledigi: 'Asgari ücret ve staj ödemesine ilişkin güncel duyurular.' },
     ],
     sonrakiAdim: {
       etiket: 'Staj ücretini hesapla',
@@ -583,7 +583,7 @@ export const STAJ_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr' },
+      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr', kurum: 'Yükseköğretim Kurulu', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Staj gününü hesapla',
@@ -674,7 +674,7 @@ export const STAJ_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr' },
+      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr', kurum: 'Yükseköğretim Kurulu', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Okulun staj birimiyle nasıl çalışılır',
@@ -775,7 +775,7 @@ export const STAJ_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr' },
+      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr', kurum: 'Çalışma ve Sosyal Güvenlik Bakanlığı', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Staj defteri nasıl doldurulur',
@@ -885,7 +885,7 @@ export const STAJ_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr' },
+      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr', kurum: 'Çalışma ve Sosyal Güvenlik Bakanlığı', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Okulun staj birimiyle nasıl çalışılır',

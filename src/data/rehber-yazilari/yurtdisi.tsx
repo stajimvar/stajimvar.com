@@ -104,8 +104,8 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Türkiye Ulusal Ajansı', adres: 'https://www.ua.gov.tr' },
-      { etiket: 'Erasmus+ resmî sayfası', adres: 'https://erasmus-plus.ec.europa.eu' },
+      { etiket: 'Erasmus+ Programı — Ulusal Ajans program sayfası', adres: 'https://www.ua.gov.tr/programlar_/erasmus-programi/', kurum: 'Türkiye Ulusal Ajansı', tur: 'belge', destekledigi: 'Erasmus+ hibe tutarları, ülke grupları ve başvuru koşulları.' },
+      { etiket: 'Erasmus+ resmî sayfası', adres: 'https://erasmus-plus.ec.europa.eu', kurum: 'Avrupa Komisyonu', tur: 'kurum', destekledigi: 'Programın Avrupa Komisyonu tarafından tanımlanan kuralları.' },
     ],
     sonrakiAdim: {
       etiket: 'Yurtdışı fırsatlarını gör',
@@ -369,7 +369,7 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'IAESTE', adres: 'https://iaeste.org' },
+      { etiket: 'IAESTE', adres: 'https://iaeste.org', kurum: 'IAESTE', tur: 'kurum', destekledigi: 'Programın katılımcı ülkeleri ve başvuru işleyişi.' },
     ],
     sonrakiAdim: {
       etiket: 'Yurt dışında staj: Erasmus+ ve IAESTE',
@@ -464,7 +464,7 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Dışişleri Bakanlığı', adres: 'https://www.mfa.gov.tr' },
+      { etiket: 'Dışişleri Bakanlığı', adres: 'https://www.mfa.gov.tr', kurum: 'Dışişleri Bakanlığı', tur: 'kurum', destekledigi: 'Ülkelere göre vize rejimi ve konsolosluk bilgileri.' },
     ],
     sonrakiAdim: {
       etiket: 'Yurtdışı fırsatlarını gör',
@@ -540,7 +540,15 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
           'Avrupa\'da yaygın olarak tanınıyor ama zorunlu değil. İlan neyi istiyorsa onu göndermek en doğrusu.',
       },
     ],
-    kaynaklar: [{ etiket: 'Europass resmî sayfası', adres: 'https://europa.eu/europass' }],
+    kaynaklar: [
+      {
+        etiket: 'Europass özgeçmişinizi oluşturun',
+        adres: 'https://europa.eu/europass/tr/create-europass-cv',
+        kurum: 'Avrupa Komisyonu — Europass',
+        tur: 'belge',
+        destekledigi: 'Europass özgeçmişinin ücretsiz oluşturulduğu resmî araç.',
+      },
+    ],
     sonrakiAdim: {
       etiket: 'İngilizce başvuru e-postası nasıl yazılır',
       yol: '/rehber/ingilizce-basvuru-epostasi',
@@ -708,8 +716,8 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Millî Eğitim Bakanlığı', adres: 'https://www.meb.gov.tr' },
-      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr' },
+      { etiket: 'Millî Eğitim Bakanlığı', adres: 'https://www.meb.gov.tr', kurum: 'Millî Eğitim Bakanlığı', tur: 'kurum' },
+      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr', kurum: 'Yükseköğretim Kurulu', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Yurtdışı fırsatlarını gör',
@@ -794,7 +802,7 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Sosyal Güvenlik Kurumu', adres: 'https://www.sgk.gov.tr' },
+      { etiket: 'Sosyal Güvenlik Kurumu', adres: 'https://www.sgk.gov.tr', kurum: 'Sosyal Güvenlik Kurumu', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Yurt dışı staj vizesi nasıl alınır',
@@ -881,7 +889,7 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Türkiye Ulusal Ajansı', adres: 'https://www.ua.gov.tr' },
+      { etiket: 'Erasmus+ Programı — Ulusal Ajans program sayfası', adres: 'https://www.ua.gov.tr/programlar_/erasmus-programi/', kurum: 'Türkiye Ulusal Ajansı', tur: 'belge' },
     ],
     sonrakiAdim: {
       etiket: 'Yurtdışı fırsatlarını gör',

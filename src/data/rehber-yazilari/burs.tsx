@@ -85,8 +85,8 @@ export const BURS_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
-      { etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr' },
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr', kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü', tur: 'kurum' },
+      { etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr', kurum: 'Cumhurbaşkanlığı Dijital Dönüşüm Ofisi', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Fırsat takvimini aç',
@@ -163,7 +163,7 @@ export const BURS_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr', kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Açık bursları gör',
@@ -344,7 +344,7 @@ export const BURS_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr', kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Açık bursları gör',
@@ -427,7 +427,7 @@ export const BURS_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr', kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'KYK burs ve öğrenim kredisi',
@@ -516,8 +516,8 @@ export const BURS_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
-      { etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr' },
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr', kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü', tur: 'kurum', destekledigi: 'Geri ödemenin başlama zamanı, taksit sayısı ve uygulanan artış.' },
+      { etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr', kurum: 'Cumhurbaşkanlığı Dijital Dönüşüm Ofisi', tur: 'kurum', destekledigi: 'Güncel borç ve taksit planının sorgulanması.' },
     ],
     sonrakiAdim: {
       etiket: 'Açık bursları gör',
@@ -602,7 +602,7 @@ export const BURS_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr', kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Açık bursları gör',
@@ -686,8 +686,8 @@ export const BURS_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'USOM — Ulusal Siber Olaylara Müdahale Merkezi', adres: 'https://www.usom.gov.tr' },
-      { etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr' },
+      { etiket: 'USOM ihbar ve bildirim sayfası', adres: 'https://www.usom.gov.tr/bildir', kurum: 'USOM — Ulusal Siber Olaylara Müdahale Merkezi', tur: 'belge', destekledigi: 'Şüpheli site ve dolandırıcılık girişiminin bildirileceği resmî kanal.' },
+      { etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr', kurum: 'Cumhurbaşkanlığı Dijital Dönüşüm Ofisi', tur: 'kurum', destekledigi: 'e-Devlet şifresinin hiçbir başvuruda istenmediği; şifre işlemleri.' },
     ],
     sonrakiAdim: {
       etiket: 'Doğrulanmış bursları gör',

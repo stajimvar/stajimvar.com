@@ -132,7 +132,8 @@ export interface RehberTaslagi {
   hizliCevap: string;
   bloklar: Blok[];
   sss: SoruCevap[];
-  kaynaklar?: { etiket: string; adres: string }[];
+  /* Tip Rehber kaydıyla aynı: kurum, tür ve neyi doğruladığı da taşınıyor. */
+  kaynaklar?: Rehber['kaynaklar'];
   sonrakiAdim?: { etiket: string; yol: string; aciklama?: string };
   etiketler?: string[];
   oneCikan?: boolean;

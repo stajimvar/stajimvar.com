@@ -506,18 +506,56 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
             <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400">
               Resmî kaynaklar
             </h2>
+            {/*
+              KAYNAK NE İŞE YARADIĞINI SÖYLÜYOR
+
+              Önce yalnızca kurum adı ve bağlantı vardı: "SGK" yazıp ana
+              sayfaya göndermek okuyucuya aradığını bulma işini bırakıyordu.
+              Artık her kaynak hangi cümleyi desteklediğini söylüyor,
+              kurumu yazıyor ve ana sayfa mı belge mi olduğu belli.
+
+              Erişim tarihi yazının son gözden geçirme tarihi: kaynağı o gün
+              kontrol ettik. Ayrı bir tarih tutmak, iki tarihin birbirinden
+              ayrılmasına ve hangisinin doğru olduğunun belirsizleşmesine
+              yol açardı.
+            */}
             <ul className="rounded-2xl border border-gray-200 bg-white divide-y divide-gray-100">
               {rehber.kaynaklar.map((k) => (
-                <li key={k.adres}>
+                <li key={k.adres} className="px-4 py-3">
                   <a
                     href={k.adres}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-50/60"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:underline"
                   >
                     {k.etiket}
                     <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                   </a>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-gray-500">
+                    {k.kurum && <span>{k.kurum}</span>}
+                    <span className="text-gray-300">·</span>
+                    <span>
+                      {k.tur === 'belge' ? 'Doğrudan sayfa' : 'Kurumun ana sayfası'}
+                    </span>
+                    {rehber.guncelleme && (
+                      <>
+                        <span className="text-gray-300">·</span>
+                        <span>
+                          Erişim:{' '}
+                          {new Date(rehber.guncelleme).toLocaleDateString('tr-TR', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  {k.destekledigi && (
+                    <p className="mt-1 text-xs text-gray-600 leading-relaxed">
+                      Neyi doğruluyor: {k.destekledigi}
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>

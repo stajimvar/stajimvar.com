@@ -174,7 +174,7 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr' },
+      { etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr', kurum: 'Cumhurbaşkanlığı Dijital Dönüşüm Ofisi', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Okulun staj birimiyle nasıl çalışılır',
@@ -254,7 +254,7 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr' },
+      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr', kurum: 'Yükseköğretim Kurulu', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Staj gününü hesapla',
@@ -429,7 +429,7 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr' },
+      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr', kurum: 'Yükseköğretim Kurulu', tur: 'kurum', destekledigi: 'Çift anadal ve yan dal programlarının çerçevesini belirleyen mevzuat.' },
     ],
     sonrakiAdim: {
       etiket: 'Bölümüne göre staj sayfasını aç',
@@ -599,8 +599,8 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Sosyal Güvenlik Kurumu', adres: 'https://www.sgk.gov.tr' },
-      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr' },
+      { etiket: 'Sosyal Güvenlik Kurumu', adres: 'https://www.sgk.gov.tr', kurum: 'Sosyal Güvenlik Kurumu', tur: 'kurum' },
+      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr', kurum: 'Çalışma ve Sosyal Güvenlik Bakanlığı', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Profilini tamamla ve CV\'ni indir',
@@ -699,7 +699,7 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr' },
+      { etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr', kurum: 'Cumhurbaşkanlığı Dijital Dönüşüm Ofisi', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Yeni mezun CV\'si nasıl yazılır',

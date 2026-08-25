@@ -95,8 +95,34 @@ export interface Rehber {
    * Ayrıntı aşağıda duruyor; kısası yukarıda.
    */
   hizliCevap?: string;
-  /** Resmî kaynaklar: rakam ve mevzuat burada doğrulanıyor. */
-  kaynaklar?: { etiket: string; adres: string }[];
+  /**
+   * Resmî kaynaklar.
+   *
+   * NEDEN SADECE ADRES YETMİYOR
+   * ---------------------------
+   * Önce yalnızca `etiket` ve `adres` vardı ve adreslerin çoğu kurumun ANA
+   * SAYFASIYDI: "SGK" yazıp sgk.gov.tr'ye göndermek, okuyucuya aradığını
+   * bulma işini bırakıyor ve "resmî kaynaklı" iddiasını zayıflatıyor.
+   *
+   * `destekledigi` alanı en önemlisi: kaynağın hangi cümleyi doğruladığını
+   * söylüyor. Bunu yazamadığımız bir kaynak, muhtemelen oraya süs olarak
+   * konmuştur.
+   */
+  kaynaklar?: {
+    /** Kaynağın adı — mümkünse belgenin kendi başlığı. */
+    etiket: string;
+    adres: string;
+    /** Belgeyi yayımlayan kurum. */
+    kurum?: string;
+    /**
+     * 'belge': doğrudan sayfaya/duyuruya gidiyor.
+     * 'kurum': kurumun ana sayfası — güncel bilgiyi orada aramak gerekiyor.
+     * Ayrım okuyucuya ne bekleyeceğini söylüyor.
+     */
+    tur?: 'belge' | 'kurum';
+    /** Bu kaynağın yazıdaki hangi iddiayı desteklediği. */
+    destekledigi?: string;
+  }[];
   /**
    * Okunduktan sonra yapılabilecek GERÇEK bir şey.
    *
@@ -246,8 +272,8 @@ export const REHBERLER: Rehber[] = [
     hizliCevap:
       'Zorunlu stajda sırayla üç şey yapılır: okulun staj birimine gidip yönergeyi ve zorunlu staj formunu almak, formu kabul eden bir işyerine imzalatmak, imzalı formu okula teslim edip sigorta girişini başlatmak. Sigortayı çoğu üniversitede okul yapar; kesin cevabı kendi okulunun yönergesindedir.',
     kaynaklar: [
-      { etiket: 'Sosyal Güvenlik Kurumu', adres: 'https://www.sgk.gov.tr' },
-      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr' },
+      { etiket: 'Sosyal Güvenlik Kurumu', adres: 'https://www.sgk.gov.tr', kurum: 'Sosyal Güvenlik Kurumu', tur: 'kurum' },
+      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr', kurum: 'Yükseköğretim Kurulu', tur: 'kurum' },
     ],
     sonrakiAdim: { etiket: 'Staj gününü hesapla', yol: '/araclar/staj-gunu-hesaplama', aciklama: 'Kaç iş günü kaldığını tarih vererek gör.' },
     baslik: 'Zorunlu staj rehberi',
@@ -1108,8 +1134,8 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
     hizliCevap:
       'KYK bursu geri ödenmiyor, KYK öğrenim kredisi mezuniyetten sonra geri ödeniyor; başvuru ikisi için de aynı formdan yapılıyor. Tutarlar ve başvuru takvimi her yıl değiştiği için güncel rakamı resmî kaynaktan kontrol et.',
     kaynaklar: [
-      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
-      { etiket: 'e-Devlet', adres: 'https://www.turkiye.gov.tr' },
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr', kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü', tur: 'kurum', destekledigi: 'Burs ve kredi tutarları, başvuru takvimi ve kesilme koşulları.' },
+      { etiket: 'e-Devlet', adres: 'https://www.turkiye.gov.tr', kurum: 'Cumhurbaşkanlığı Dijital Dönüşüm Ofisi', tur: 'kurum', destekledigi: 'Başvurunun yapıldığı yer ve borç sorgulama.' },
     ],
     sonrakiAdim: { etiket: 'Açık bursları gör', yol: '/firsatlar', aciklama: 'Resmî kaynağıyla doğrulanmış burs ve kredi ilanları.' },
     baslik: 'KYK burs ve öğrenim kredisi',
@@ -1233,7 +1259,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
     hizliCevap:
       'Staj beş kanaldan bulunuyor: ilan siteleri, şirketlerin kendi kariyer sayfaları, okulun staj birimi, tanıdık ağı ve ilan açmayan şirkete doğrudan yazmak. Sonuncusu en az denenen ama rekabetin en düşük olduğu yol.',
     kaynaklar: [
-      { etiket: 'Türkiye İş Kurumu (İŞKUR)', adres: 'https://www.iskur.gov.tr' },
+      { etiket: 'Türkiye İş Kurumu (İŞKUR)', adres: 'https://www.iskur.gov.tr', kurum: 'Türkiye İş Kurumu', tur: 'kurum' },
     ],
     sonrakiAdim: { etiket: 'Açık staj ilanlarına bak', yol: '/', aciklama: 'Tek listede toplanmış güncel ilanlar.' },
     baslik: 'Staj nasıl bulunur',
@@ -1452,7 +1478,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
     hizliCevap:
       'Gönüllü staj okul zorunluluğu olmadan yapılan stajdır; zorunlu stajdan asıl farkı sigorta ve belge tarafında ortaya çıkıyor. Okulun formu vermediği durumda sigorta yükümlülüğü işyerine geçebiliyor, o yüzden başlamadan önce bunu yazılı netleştir.',
     kaynaklar: [
-      { etiket: 'Sosyal Güvenlik Kurumu', adres: 'https://www.sgk.gov.tr' },
+      { etiket: 'Sosyal Güvenlik Kurumu', adres: 'https://www.sgk.gov.tr', kurum: 'Sosyal Güvenlik Kurumu', tur: 'kurum' },
     ],
     sonrakiAdim: { etiket: 'Açık staj ilanlarına bak', yol: '/', aciklama: 'Gönüllü staja da açık ilanlar burada.' },
     baslik: 'Gönüllü staj: zorunlu stajdan farkı ne?',
@@ -1573,7 +1599,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
     hizliCevap:
       'Staj biriminden üç şey alınıyor: staj yönergesi, zorunlu staj formu ve sigorta girişi için gereken onay. Süreç okuldan okula değiştiği için ilk adım her zaman kendi bölümünün yönergesini okumak.',
     kaynaklar: [
-      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr' },
+      { etiket: 'Yükseköğretim Kurulu (YÖK)', adres: 'https://www.yok.gov.tr', kurum: 'Yükseköğretim Kurulu', tur: 'kurum' },
     ],
     sonrakiAdim: { etiket: 'Bölümüne göre staj sayfasını aç', yol: '/bolumler', aciklama: 'Kendi bölümünde staj nerede yapılır, stajyer ne iş yapar.' },
     baslik: 'Okulun staj birimiyle nasıl çalışılır',
@@ -1820,7 +1846,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
     hizliCevap:
       'Yurt dışında staj çoğunlukla tek başına ilana başvurarak değil, okulun kanalıyla yürüyor: Erasmus+ staj hareketliliği ve IAESTE başvuruları üniversitenin uluslararası ofisinden yapılıyor. Takvim okulun ilanına bağlı, o yüzden ofisi erken takip etmek gerekiyor.',
     kaynaklar: [
-      { etiket: 'Türkiye Ulusal Ajansı', adres: 'https://www.ua.gov.tr' },
+      { etiket: 'Erasmus+ Programı — Ulusal Ajans program sayfası', adres: 'https://www.ua.gov.tr/programlar_/erasmus-programi/', kurum: 'Türkiye Ulusal Ajansı', tur: 'belge' },
     ],
     sonrakiAdim: { etiket: 'Yurtdışı fırsatlarını gör', yol: '/yurtdisi-firsatlari', aciklama: 'Erasmus ve yurt dışı programları tek listede.' },
     baslik: 'Yurt dışında staj: Erasmus+ ve IAESTE',

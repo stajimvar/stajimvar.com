@@ -851,11 +851,18 @@ async function main() {
               .join('')}</section>`
           : '') +
         /* Resmî kaynaklar dış bağlantı: nofollow değil, gerçekten kaynak. */
+        /*
+          Kaynak satırı artık kurumu ve hangi cümleyi desteklediğini de
+          taşıyor: statik HTML ile ekranda görünen metin aynı olmalı.
+        */
         (Array.isArray(r.kaynaklar) && r.kaynaklar.length
           ? `<section><h2>Resmî kaynaklar</h2><ul>${r.kaynaklar
               .map(
                 (k) =>
-                  `<li><a href="${kacir(k.adres)}" target="_blank" rel="noopener noreferrer">${kacir(k.etiket)}</a></li>`
+                  `<li><a href="${kacir(k.adres)}" target="_blank" rel="noopener noreferrer">${kacir(k.etiket)}</a>` +
+                  (k.kurum ? ` — ${kacir(k.kurum)}` : '') +
+                  (k.destekledigi ? `<br/>Neyi doğruluyor: ${kacir(k.destekledigi)}` : '') +
+                  '</li>'
               )
               .join('')}</ul></section>`
           : '') +

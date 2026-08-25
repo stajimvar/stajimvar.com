@@ -392,7 +392,7 @@ export const KARIYER_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr' },
+      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr', kurum: 'Çalışma ve Sosyal Güvenlik Bakanlığı', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'İş teklifini değerlendirirken',
@@ -572,7 +572,7 @@ export const KARIYER_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr' },
+      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr', kurum: 'Çalışma ve Sosyal Güvenlik Bakanlığı', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Maaş beklentisi nasıl söylenir',
@@ -659,7 +659,7 @@ export const KARIYER_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Türkiye İş Kurumu (İŞKUR)', adres: 'https://www.iskur.gov.tr' },
+      { etiket: 'Türkiye İş Kurumu (İŞKUR)', adres: 'https://www.iskur.gov.tr', kurum: 'Türkiye İş Kurumu', tur: 'kurum', destekledigi: 'Yeni mezun programları ve iş arama kayıt işlemleri.' },
     ],
     sonrakiAdim: {
       etiket: 'Büyük işverenlerin staj programlarını gör',

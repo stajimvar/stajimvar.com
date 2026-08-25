@@ -91,8 +91,8 @@ export const YURT_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
-      { etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr' },
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr', kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü', tur: 'kurum', destekledigi: 'Yurt başvuru dönemi, yerleştirme ölçütleri ve kayıt süresi.' },
+      { etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr', kurum: 'Cumhurbaşkanlığı Dijital Dönüşüm Ofisi', tur: 'kurum', destekledigi: 'Başvurunun yapıldığı ve sonucun görüldüğü yer.' },
     ],
     sonrakiAdim: {
       etiket: 'Fırsat takvimini aç',
@@ -398,7 +398,7 @@ export const YURT_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr', kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Yurttan kayıt silme',
@@ -479,7 +479,7 @@ export const YURT_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr', kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Öğrenci evi kiralarken dikkat edilecekler',
@@ -574,7 +574,7 @@ export const YURT_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Millî Eğitim Bakanlığı', adres: 'https://www.meb.gov.tr' },
+      { etiket: 'Millî Eğitim Bakanlığı', adres: 'https://www.meb.gov.tr', kurum: 'Millî Eğitim Bakanlığı', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Depozito ve kira sözleşmesi',
@@ -665,7 +665,7 @@ export const YURT_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Ticaret Bakanlığı — Tüketici bilgi sistemi', adres: 'https://www.ticaret.gov.tr' },
+      { etiket: 'Tüketicinin Korunması Genel Müdürlüğü', adres: 'https://tuketici.ticaret.gov.tr', kurum: 'Ticaret Bakanlığı — Tüketicinin Korunması ve Piyasa Gözetimi Genel Müdürlüğü', tur: 'belge', destekledigi: 'Kiracı olarak tüketici haklarının başvuru kanalı.' },
     ],
     sonrakiAdim: {
       etiket: 'Depozito ve kira sözleşmesi',
@@ -763,7 +763,7 @@ export const YURT_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Ticaret Bakanlığı — Tüketici bilgi sistemi', adres: 'https://www.ticaret.gov.tr' },
+      { etiket: 'Tüketicinin Korunması Genel Müdürlüğü', adres: 'https://tuketici.ticaret.gov.tr', kurum: 'Ticaret Bakanlığı — Tüketicinin Korunması ve Piyasa Gözetimi Genel Müdürlüğü', tur: 'belge', destekledigi: 'Sözleşme ve depozito anlaşmazlığında başvurulacak resmî kanal.' },
     ],
     sonrakiAdim: {
       etiket: 'Öğrenci evi kiralarken dikkat edilecekler',
@@ -862,7 +862,7 @@ export const YURT_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' },
+      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr', kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü', tur: 'kurum' },
     ],
     sonrakiAdim: {
       etiket: 'Staj gününü hesapla',
