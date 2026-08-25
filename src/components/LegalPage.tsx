@@ -156,10 +156,18 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 <strong>Hesap verisi:</strong> Kayıt olursanız ad, e-posta ve şifrenizin
                 şifrelenmiş özeti. Şifrenin kendisi hiçbir yerde açık tutulmaz.
               </p>
+              {/*
+                JSX BOŞLUK YUTMASI — İKİ YERDE
+
+                Metnin ortasına konan bir JSX yorumu ve bir öğeden sonraki
+                satır sonu siliniyor. Burada iki kez oldu: "yetenekler," ile
+                "projeler" arasında yorum vardı ve "yetenekler,projeler"
+                basılıyordu; ayrıca em öğesinden sonra "girdiğinizalanlar"
+                çıkıyordu. Yorum metnin dışına alındı, boşluklar açıkça
+                yazıldı.
+              */}
               <p>
-                <strong>Profil verisi:</strong> Üniversite, bölüm, sınıf, yetenekler,
-                {/* Sondaki {' '}: JSX öğeden sonraki satır sonunu siliyor ve
-                    "girdiğinizalanlar" olarak basılıyordu. */}
+                <strong>Profil verisi:</strong> Üniversite, bölüm, sınıf, yetenekler,{' '}
                 projeler ve çalışma tercihleri gibi profilinize <em>sizin girdiğiniz</em>{' '}
                 alanlar. Hepsi isteğe bağlıdır.
               </p>
@@ -298,6 +306,16 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 çerezler bize değil Google'a ait ve verileri nasıl işlediğini kendi
                 gizlilik politikasında açıklıyor. Birimlere her zaman reklam dönmüyor,
                 ama betik yüklendiği için bu bölüm "reklam yok" diye okunmamalı.
+                Kişiselleştirilmiş reklamı{' '}
+                <a
+                  href="https://myadcenter.google.com"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="font-semibold text-blue-600 hover:underline"
+                >
+                  Google reklam ayarları
+                </a>{' '}
+                sayfasından kapatabilirsiniz.
               </p>
               <p>
                 Hesabınız varsa oturumunuzu açık tutmak için bir <strong>oturum
@@ -305,11 +323,17 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 yeniden giriş yapmanız gerekirdi. Çıkışta silinir.
               </p>
               <p>
+                {/*
+                  JSX'te bir öğeden sonra gelen satır sonu YUTULUYOR: burada
+                  "için" ile <code> ve </code> ile "adlı" birbirine
+                  yapışıyordu ("içinstajimvar_themeadlı"). Boşluklar açıkça
+                  yazılıyor.
+                */}
                 Bunun dışında yerel depoda hiçbir tercih saklamıyoruz. Daha önce
-                tema tercihiniz için
-                <code className="mx-1 px-1.5 py-0.5 rounded bg-gray-100 text-xs">
+                tema tercihiniz için{' '}
+                <code className="px-1.5 py-0.5 rounded bg-gray-100 text-xs">
                   stajimvar_theme
-                </code>
+                </code>{' '}
                 adlı bir kayıt tutuluyordu; karanlık tema kaldırıldığı için bu
                 kayıt artık oluşturulmuyor ve siteyi bir sonraki açışınızda
                 tarayıcınızdan otomatik olarak siliniyor.
@@ -324,15 +348,13 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
               </p>
             </Section>
 
-            <Section title="Reklamlar">
-              <p>
-                Sitede Google AdSense reklam birimleri var ve AdSense betiği her
-                sayfada yükleniyor. Google bir reklam gösterdiğinde kendi reklam ve ölçüm
-                çerezlerini kullanabiliyor. Bu çerezleri biz koymuyoruz ve içeriklerini
-                göremiyoruz; Google'ın reklam ayarları sayfasından kişiselleştirmeyi
-                kapatabilirsiniz.
-              </p>
-            </Section>
+            {/*
+              "Reklamlar" başlıklı ayrı bir bölüm daha vardı ve yukarıdaki
+              "Reklam" maddesiyle neredeyse aynı cümleleri tekrar ediyordu.
+              Aynı şeyi iki kez söyleyen bir politika metni, okuyanı hangisinin
+              geçerli olduğunu aramaya itiyor. Tek maddede birleşti; oradaki
+              tek yeni bilgi (Google reklam ayarları) yukarı taşındı.
+            */}
           </>
         )}
 
