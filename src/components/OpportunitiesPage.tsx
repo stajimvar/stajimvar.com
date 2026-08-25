@@ -418,9 +418,23 @@ export const OpportunitiesPage: React.FC<{
         </div>
       )}
 
-      {/* -------- hızlı çipler -------- */}
+      {/* -------- hızlı çipler: yalnızca mobil -------- */}
+      {/*
+        MASAÜSTÜNDE GÖSTERİLMİYOR
+
+        Geniş ekranda bu satır aynı süzgeçleri ÜÇÜNCÜ kez veriyordu: solda
+        "Tüm türler", "Tüm eğitim seviyeleri" ve "Yalnızca açık olanlar",
+        sağda "Kategoriler" paneli, ortada bu çipler. Üstelik ikisi farklı
+        çalışıyor — çip `type` süzgecini değiştiriyor, kategori düğmesi
+        başka bir adrese gidiyor — yani aynı görünen iki düğme aynı sonucu
+        vermiyordu.
+
+        Mobilde kalıyorlar ve orada gerekliler: sol ve sağ sütunlar dar
+        ekranda gizli, geri kalan her süzgeç "Filtreler" panelinin arkasında.
+        Tek dokunuşla süzmenin başka yolu yok.
+      */}
       {sekme !== 'takvim' && !savedOnly && (
-        <div className="mb-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="lg:hidden mb-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Cip aktif={durumSuzgeci === 'acik'} onClick={() => durumSec(durumSuzgeci === 'acik' ? '' : 'acik')}>
             Açık
           </Cip>
