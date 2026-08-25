@@ -25,16 +25,45 @@ test('writes GitHub job outputs when called with a relative script path', () => 
     encoding: 'utf8',
     env: { ...process.env, GITHUB_EVENT_BEFORE: before, GITHUB_SHA: head },
   });
-  assert.match(output, /supabase_changed=true/);
+  /*
+    DEĞERE DEĞİL BİÇİME BAKIYORUZ
+
+    Burada `supabase_changed=true` aranıyordu. Bu, testi SON COMMIT'İN
+    içeriğine bağlıyor: Supabase dosyalarına dokunmayan sıradan bir commit
+    atıldığında betik doğru çalıştığı hâlde test kırmızı oluyordu — ve
+    kırmızı kaldığı sürece gerçek bir kırılma görünmez hâle geliyor.
+
+    Testin adı zaten "çıktı yazıyor mu" diyor: iki anahtarın da geçerli bir
+    değerle yazıldığını doğrulamak yeterli.
+  */
+  assert.match(output, /supabase_changed=(true|false)/);
+  assert.match(output, /app_changed=(true|false)/);
 });
 
-test('keeps Cloudflare fail-closed while permitting a skipped Supabase job for UI-only changes', () => {
+/*
+  SİTE DAĞITIMI ARTIK SUPABASE İŞİNE BAĞLI DEĞİL
+
+  Bu test eskiden `migrate_and_functions.result == 'success'` koşulunu
+  arıyordu. O koşul 23 Ağustos'ta BİLEREK kaldırıldı: üretim veritabanı bu
+  depodakinden başka bir migration soyuyla kurulduğu için migration işi
+  kalıcı olarak kırmızıydı ve şema değişikliği gerektirmeyen sıradan arayüz
+  değişikliklerinin bile yayına çıkmasını engelliyordu. Kalıcı kırmızı bir
+  kapı, olmayan kapıdan kötü.
+
+  Test o değişiklikten sonra güncellenmedi ve o günden beri kırmızı
+  duruyordu — yani `node --test tests/` çalıştıran herkes başarısız bir
+  paketle karşılaşıyor, bu da gerçek bir kırılmayı görünmez yapıyor.
+  Test artık YÜRÜRLÜKTEKİ kuralı doğruluyor: dağıtım yalnızca uygulama
+  doğrulamasına bağlı, Supabase işi sinyal olarak duruyor.
+*/
+test('Cloudflare dağıtımı uygulama doğrulamasına bağlı, Supabase işine değil', () => {
   const workflow = fs.readFileSync('.github/workflows/supabase-production.yml', 'utf8');
   assert.match(workflow, /changes:\s/);
   assert.match(workflow, /supabase_changed/);
   assert.match(workflow, /app_changed/);
   assert.match(workflow, /needs\.changes\.outputs\.supabase_changed == 'true'/);
   assert.match(workflow, /needs\.validate_app\.result == 'success'/);
-  assert.match(workflow, /needs\.migrate_and_functions\.result == 'success'/);
   assert.match(workflow, /always\(\)/);
+  /* Supabase işi hâlâ çalışıyor ve raporluyor — yalnızca engel değil. */
+  assert.match(workflow, /migrate_and_functions:/);
 });

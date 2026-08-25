@@ -26,6 +26,7 @@ import { ApplyDialog } from './components/ApplyDialog';
 import { ListingPage } from './components/ListingPage';
 import { GuideHub, GuidePage } from './components/GuidePages';
 import { BasvuruSablonu } from './components/BasvuruSablonu';
+import { SifreYenile } from './components/SifreYenile';
 import { BolumHub, BolumPage } from './components/BolumPages';
 import { StajProgramlariSayfasi } from './components/StajProgramlari';
 import { IsverenGirisi } from './components/IsverenGirisi';
@@ -887,6 +888,15 @@ export default function App() {
     Rehberdeki "Sıradaki adım" buraya bağlanıyor ve adres paylaşılabilir
     oluyor. Kapatınca rehbere dönüyor: kullanıcı buraya oradan geldi.
   */
+  /*
+    Şifre yenileme sayfası. E-postadaki kurtarma bağlantısı buraya düşüyor;
+    bu adres tanımlı olmadığı sürece "şifremi unuttum" akışı e-postada
+    bitiyordu.
+  */
+  if (temizYol === '/sifre-yenile') {
+    return icerikSayfasi(<SifreYenile onNavigate={navigate} />);
+  }
+
   if (temizYol === '/basvuru-sablonu') {
     return icerikSayfasi(
       <BasvuruSablonu

@@ -35,6 +35,8 @@ import {
 import {
   ACILIYET_SINIFLARI,
   closingSoon,
+  closingSoonLabel,
+  deadlineLabel,
   deadlineTone,
   groupOpportunities,
   opportunityAmount,
@@ -82,15 +84,11 @@ const safeDate = (value?: string) =>
 const kisaTarih = (value?: string) =>
   value ? new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short' }).format(new Date(value)) : null;
 
-/** Kalan süre insanın okuduğu gibi. Tarih bir sayı, aciliyet bir cümle. */
-function kalanSureMetni(item: Opportunity): string | null {
-  const gun = opportunityDaysLeft(item);
-  if (gun == null) return null;
-  if (gun === 0) return 'Bugün son gün';
-  if (gun === 1) return '1 gün kaldı';
-  if (gun <= 30) return `${gun} gün kaldı`;
-  return null;
-}
+/*
+  Kalan süre metni ortak yardımcıdan geliyor (deadlineLabel). Burada ayrı
+  bir kopyası duruyordu ve aynı fırsat kartta "Bugün son gün", üst uyarıda
+  "Yarına kadar açık", ana sayfada "Yarın sona eriyor" diyordu.
+*/
 
 type Sekme = 'uygun' | 'tumu' | 'takvim';
 
@@ -344,8 +342,8 @@ export const OpportunitiesPage: React.FC<{
             <p className="mt-3 flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-100 px-3 py-2 text-xs font-bold text-rose-800">
               <AlarmClock className="w-4 h-4 shrink-0" />
               {yarinKapananlar.length === 1
-                ? `Yarına kadar açık 1 fırsat var: ${yarinKapananlar[0].title}`
-                : `Yarına kadar açık ${yarinKapananlar.length} fırsat var.`}
+                ? `${closingSoonLabel(1)} ${yarinKapananlar[0].title}`
+                : closingSoonLabel(yarinKapananlar.length)}
             </p>
           )}
         </div>
@@ -764,7 +762,7 @@ const Card: React.FC<{
   const cta = opportunityCta(item);
   const durum = opportunityStatus(item);
   const tutar = opportunityAmount(item);
-  const kalan = kalanSureMetni(item);
+  const kalan = deadlineLabel(item);
   const ton = (ACILIYET_SINIFLARI as any)[deadlineTone(item)] ?? ACILIYET_SINIFLARI.notr;
   const yer = [...item.cities, ...item.countries];
   const seviye = item.educationLevels.length ? item.educationLevels.join(', ') : null;

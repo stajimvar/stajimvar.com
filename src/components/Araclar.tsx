@@ -8,6 +8,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { SayfaKabugu } from './SayfaKabugu';
+import { bugununTarihi, stajBitisi } from '../lib/staj-gunu.mjs';
 import {
   SINAV_DAGILIMI,
   YERLESTIRME_DAGILIMI,
@@ -715,18 +716,20 @@ export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate })
  * için buraya yazılmıyor; kullanıcı "ek tatil günü" alanından ekliyor.
  * Sabit yazsaydık bir sonraki yıl yanlış hesap üretirdi.
  */
-const SABIT_TATILLER = [
-  [1, 1],
-  [4, 23],
-  [5, 1],
-  [5, 19],
-  [7, 15],
-  [8, 30],
-  [10, 29],
-];
+/* Sabit tatiller ve hesap src/lib/staj-gunu.mjs içinde: orada test edilebiliyor. */
 
 export const StajGunuHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) => {
-  const [baslangic, setBaslangic] = useState('');
+  /*
+    Başlangıç tarihi BUGÜNLE doluyor.
+
+    Alan boşken sonuç kutusunda "—" duruyordu ve neden boş olduğunu hiçbir
+    şey söylemiyordu. Denetimde "tarih girdim ama sonuç çıkmadı" bildirimi
+    geldi: masaüstünde tarih alanına elle yazarken değer, tarih tamamlanana
+    kadar boş kalıyor — kullanıcı yazdığını görüyor ama araç görmüyor.
+    Bugünle başlamak aracın ilk saniyeden itibaren çalışır olmasını
+    sağlıyor; tarih değişince sonuç anında güncelleniyor.
+  */
+  const [baslangic, setBaslangic] = useState(() => bugununTarihi());
   const [gunSayisi, setGunSayisi] = useState('20');
   const [cumartesi, setCumartesi] = useState(false);
   const [ekTatil, setEkTatil] = useState('0');
@@ -735,49 +738,10 @@ export const StajGunuHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) =
     document.title = 'Staj günü hesaplama | StajımVar';
   }, []);
 
-  const sonuc = useMemo(() => {
-    if (!baslangic) return null;
-    const hedef = Number(gunSayisi) || 0;
-    if (hedef < 1 || hedef > 400) return null;
-
-    const ek = Math.max(0, Number(ekTatil) || 0);
-    const gun = new Date(`${baslangic}T00:00:00`);
-    if (Number.isNaN(gun.getTime())) return null;
-
-    let sayilan = 0;
-    let atlanan = 0;
-    let ekKalan = ek;
-    let guvenlik = 0;
-    let sonGun = new Date(gun);
-
-    while (sayilan < hedef && guvenlik < 2000) {
-      guvenlik += 1;
-      const haftaninGunu = gun.getDay(); // 0 pazar, 6 cumartesi
-      const tatilMi =
-        haftaninGunu === 0 ||
-        (haftaninGunu === 6 && !cumartesi) ||
-        SABIT_TATILLER.some(([ay, g]) => gun.getMonth() + 1 === ay && gun.getDate() === g);
-
-      if (tatilMi) {
-        atlanan += 1;
-      } else if (ekKalan > 0) {
-        // Kullanıcının bildirdiği ek tatiller ilk uygun iş günlerine düşürülüyor.
-        ekKalan -= 1;
-        atlanan += 1;
-      } else {
-        sayilan += 1;
-        sonGun = new Date(gun);
-      }
-      if (sayilan < hedef) gun.setDate(gun.getDate() + 1);
-    }
-
-    if (sayilan < hedef) return null;
-
-    const toplamTakvim =
-      Math.round((sonGun.getTime() - new Date(`${baslangic}T00:00:00`).getTime()) / 86400000) + 1;
-
-    return { bitis: sonGun, atlanan, toplamTakvim };
-  }, [baslangic, gunSayisi, cumartesi, ekTatil]);
+  const sonuc = useMemo(
+    () => stajBitisi({ baslangic, gunSayisi, cumartesi, ekTatil }),
+    [baslangic, gunSayisi, cumartesi, ekTatil]
+  );
 
   const tarihYaz = (d: Date) =>
     d.toLocaleDateString('tr-TR', {
@@ -855,8 +819,21 @@ export const StajGunuHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) =
         <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 space-y-1">
           <p className="text-sm font-semibold text-blue-900/80">Stajın biteceği tarih</p>
           <p className="text-xl sm:text-2xl font-extrabold text-blue-900">
-            {sonuc ? tarihYaz(sonuc.bitis) : '—'}
+            {sonuc ? tarihYaz(sonuc.bitis) : 'Hesaplanamadı'}
           </p>
+          {/*
+            "—" neden boş olduğunu söylemiyordu. Eksik olan alan neyse onu
+            yazıyoruz ki kullanıcı düzeltebilsin.
+          */}
+          {!sonuc && (
+            <p className="text-sm text-blue-900/80">
+              {!baslangic
+                ? 'Başlangıç tarihini seç.'
+                : !(Number(gunSayisi) >= 1 && Number(gunSayisi) <= 400)
+                  ? 'Kaç iş günü staj yapacağını yaz (1–400).'
+                  : 'Girdiğin değerlerle hesap yapılamadı.'}
+            </p>
+          )}
           {sonuc && (
             <p className="text-sm text-blue-900/80">
               Toplam {sonuc.toplamTakvim} takvim günü · {sonuc.atlanan} gün çalışılmıyor

@@ -194,6 +194,37 @@ export function opportunityDaysLeft(item, now = new Date()) {
   return daysUntilDeadline(item.applicationDeadline, now);
 }
 
+/*
+  SON BAŞVURU ETİKETİ — TEK KAYNAK
+
+  Aynı fırsat aynı gün üç ayrı yerde üç farklı şey diyordu: kartta "Bugün
+  son gün", üst uyarıda "Yarına kadar açık", ana sayfa aramasında "Yarın
+  sona eriyor". Üçü de ayrı ayrı yazılmış üç fonksiyondan geliyordu.
+
+  Kullanıcı için bunlar farklı üç bilgi gibi okunuyor ve hangisinin doğru
+  olduğu belirsizleşiyor. Bir tarih tek bir cümleyle anlatılmalı; o cümle
+  burada.
+
+  Gün hesabı Türkiye saat dilimine göre GÜN BAŞINA normalize ediliyor
+  (calendarDay): saat farkı yüzünden aynı tarihin bir yerde "bugün", başka
+  yerde "yarın" görünmesi böyle önleniyor.
+*/
+export function deadlineLabel(item, now = new Date()) {
+  const gun = opportunityDaysLeft(item, now);
+  if (gun == null) return null;
+  if (gun === 0) return 'Bugün son gün';
+  if (gun === 1) return 'Son gün yarın';
+  if (gun <= 30) return `${gun} gün kaldı`;
+  return null;
+}
+
+/** Uyarı satırı için: "Bugün ve yarın kapanan N fırsat var." */
+export function closingSoonLabel(sayi, gun = 1) {
+  if (!sayi) return null;
+  const zaman = gun <= 1 ? 'Bugün ve yarın' : `Önümüzdeki ${gun} gün içinde`;
+  return `${zaman} kapanan ${sayi} fırsat var.`;
+}
+
 /** N gün içinde kapanan AÇIK fırsatlar. Uyarı satırı bunu sayıyor. */
 export function closingSoon(items, gun = 1, now = new Date()) {
   return (items || []).filter((item) => {

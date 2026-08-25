@@ -77,6 +77,8 @@ export const LISTING_COLUMNS = [
   'applicants_count',
   'posted_at',
   'last_seen_at',
+  'source_verified_at',
+  'source_status',
   'created_at',
   'updated_at',
   'origin',
@@ -142,14 +144,37 @@ export function toInternshipListing(row: ListingRowWithCompany): InternshipListi
     responsibilities: row.responsibilities,
     perks: row.perks,
     applicantsCount: row.applicants_count,
-    // posted_at yalnızca yayına alındığında dolar; taslakta created_at'e düş.
-    postedAt: row.posted_at ?? row.created_at,
     /*
-      Kaynağın en son ne zaman kontrol edildiği. Tarama saatte bir çalışıp
-      ilanı kaynağında yeniden gördüğünde bu alan tazeleniyor; ilan
-      kaynaktan kalkarsa tazelenmiyor ve kart eskimeye başlıyor.
+      YAYIN TARİHİ İŞVERENİN TARİHİ
+
+      Önce `posted_at ?? created_at` yazıyordu; posted_at boş olduğu için
+      pratikte SİTEYE EKLENME tarihi kullanılıyordu ve JobPosting verisine
+      de o giriyordu. Ölçüldü: Alumil ilanının kaynaktaki gerçek tarihi
+      2025-10-10, Çiçeksepeti'ninki 2022-01-25 — bizim yazdığımız tarih
+      2026-08'di. Eski bir ilanı yeni göstermek hem kullanıcıyı hem arama
+      motorunu yanıltıyor.
+
+      posted_at artık kaynağın kendi JSON-LD'sinden geliyor
+      (scripts/ilan-baglanti-kontrol.mjs). Boşsa created_at'e düşülüyor
+      ama o durumda arayüz "yayın tarihi" demiyor, "eklenme" diyor.
     */
-    lastSeenAt: row.last_seen_at ?? undefined,
+    postedAt: row.posted_at ?? row.created_at,
+    /* Kaynaktan doğrulanmış yayın tarihi var mı — arayüz buna göre konuşuyor. */
+    postedAtDogrulandi: Boolean(row.posted_at),
+    /*
+      İKİ FARKLI "SON KONTROL" VAR
+
+      `last_seen_at` toplama hattının HAM KAYDI yeniden gördüğü an;
+      `source_verified_at` ise BAŞVURU SAYFASININ çağrılıp çalıştığının
+      doğrulandığı an. Ölçüldü: kapanmış üç ilanın last_seen_at'i bugündü
+      ve kartta "Son kontrol: bugün" yazıyordu — kullanıcıya verilen söz
+      ikincisiydi, gösterilen ise birincisi.
+
+      Arayüz artık doğrulanmış olanı gösteriyor; yoksa hiç göstermiyor.
+    */
+    lastSeenAt: row.source_verified_at ?? undefined,
+    /* 'acik' | 'kapali' | 'erisilemedi' — kaynak sağlığı. */
+    sourceStatus: row.source_status ?? undefined,
     featured: row.featured,
     category: row.category,
     origin: row.origin,

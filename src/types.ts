@@ -136,7 +136,15 @@ export interface InternshipListing {
   applicantsCount: number;
   postedAt: string;
   /** Kaynağın en son doğrulandığı an; tarama ilanı yeniden gördükçe tazeleniyor. */
+  /**
+   * Başvuru sayfasının son BAŞARILI kontrolü (source_verified_at).
+   * Ham kaydın yeniden görülmesi değil — kullanıcıya verilen söz bu.
+   */
   lastSeenAt?: string;
+  /** 'acik' | 'kapali' | 'erisilemedi'. Kapanan ilan listede görünmüyor. */
+  sourceStatus?: string;
+  /** Yayın tarihi kaynağın kendi beyanından mı geliyor. */
+  postedAtDogrulandi?: boolean;
   featured?: boolean;
   category?: 'general' | 'public_sector' | 'global';
 

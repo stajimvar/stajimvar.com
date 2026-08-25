@@ -1,4 +1,4 @@
-import { signIn, signUpStudent, signUpCompany } from '../lib/auth';
+import { sendPasswordReset, sifreSorunu, signIn, signUpStudent, signUpCompany } from '../lib/auth';
 import React, { useState } from 'react';
 import {
   X,
@@ -16,6 +16,8 @@ import {
   Users,
   ShieldCheck,
   ChevronRight,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { useModalErisim } from '../lib/modal-erisim';
@@ -45,7 +47,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onCreateCompany,
   onSuccess,
 }) => {
-  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
+  /*
+    Üçüncü kip: şifre sıfırlama. Giriş ekranında "Şifremi unuttum" yoktu ve
+    sendPasswordReset kodda dururken hiçbir yerden çağrılmıyordu — yani
+    şifresini unutan kullanıcının hesabına dönme yolu yoktu.
+  */
+  const [mode, setMode] = useState<'login' | 'register' | 'sifirla'>(initialMode);
+  /* Şifre alanları görünür/gizli. Yazarken hatayı görmek yazım hatasını önlüyor. */
+  const [sifreGoster, setSifreGoster] = useState(false);
 
   /*
     Modal kapanınca bileşen ağaçta kalıyor; `useState(initialMode)` yalnızca
@@ -97,6 +106,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setSubmitting(true);
 
     try {
+      if (mode === 'sifirla') {
+        await sendPasswordReset(email);
+        /*
+          E-postanın kayıtlı olup olmadığını SÖYLEMİYORUZ: "bu e-posta
+          kayıtlı değil" cevabı, hangi adreslerin sistemde olduğunu
+          dışarıdan sorgulanabilir hâle getiriyor.
+        */
+        setInfoMessage(
+          'Bu adres kayıtlıysa şifre yenileme bağlantısını gönderdik. Gelen kutunu ve spam klasörünü kontrol et.'
+        );
+        return;
+      }
+
+      if (mode === 'register') {
+        const sorun = sifreSorunu(password);
+        if (sorun) {
+          setAuthError(sorun);
+          return;
+        }
+      }
+
       if (mode === 'login') {
         const result = await signIn(email, password);
         onSuccess(result.role, result.displayName);
@@ -286,7 +316,33 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
         )}
 
-        {/* Mode Switcher Tabs */}
+        {/*
+          ŞİFRE SIFIRLAMA KİPİ
+
+          Ayrı bir sekme değil: kullanıcı buraya "Şifremi unuttum"a basarak
+          geliyor ve tek yapacağı şey e-postasını yazmak. Sekme yapmak,
+          hiç kullanılmayacak üçüncü bir sekmeyi kalıcı olarak göstermek
+          olurdu.
+        */}
+        {mode === 'sifirla' ? (
+          <div className="mb-5 rounded-xl bg-blue-50 border border-blue-100 p-3">
+            <p className="text-sm font-bold text-blue-900">Şifreni mi unuttun?</p>
+            <p className="mt-0.5 text-xs text-blue-800 leading-relaxed">
+              E-posta adresini yaz; yenileme bağlantısını gönderelim.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setMode('login');
+                setAuthError(null);
+                setInfoMessage(null);
+              }}
+              className="mt-2 text-xs font-semibold text-blue-700 hover:underline cursor-pointer"
+            >
+              &larr; Girişe dön
+            </button>
+          </div>
+        ) : (
         <div className="flex border-b border-gray-200 mb-5">
           <button
             type="button"
@@ -313,6 +369,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <span>{role === 'company' ? 'Yeni Şirket Kaydı' : 'Kayıt Ol'}</span>
           </button>
         </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
@@ -375,7 +432,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     id="auth-email-sirket-giris"
+                    name="email"
                     type="email"
+                    autoComplete="email"
                     required
                     value={email || (allCompanies.find((c) => c.id === selectedCompId)?.recruiterEmail ?? '')}
                     onChange={(e) => setEmail(e.target.value)}
@@ -392,8 +451,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <div className="relative">
                   <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
-                    type="password"
-                    defaultValue="demo1234"
+                    /*
+                      Buraya "demo1234" gömülüydü: form her açıldığında dolu
+                      geliyordu ve kullanıcı kendi şifresini yazdığını
+                      sanabiliyordu. Gerçek bir alan artık.
+                    */
+                    name="password"
+                    type={sifreGoster ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
                     placeholder="••••••••"
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
@@ -548,7 +615,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           )}
 
           {/* Student Form (Login / Register) */}
-          {role === 'student' && (
+          {mode === 'sifirla' && (
+            <div>
+              <label htmlFor="auth-email-sifirla" className="block font-bold text-gray-700 mb-1">
+                E-posta adresin
+              </label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  id="auth-email-sifirla"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="ogulcan@itu.edu.tr"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
+                />
+              </div>
+            </div>
+          )}
+
+          {role === 'student' && mode !== 'sifirla' && (
             <div className="space-y-3">
               {mode === 'register' && (
                 <div>
@@ -559,6 +648,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <User className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       id="auth-fullName"
+                    name="name"
+                    autoComplete="name"
                       type="text"
                       required
                       value={fullName}
@@ -578,7 +669,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     id="auth-email-ogrenci"
+                    name="email"
                     type="email"
+                    autoComplete="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -596,14 +689,48 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     id="auth-password-ogrenci"
-                    type="password"
+                    name="password"
+                    type={sifreGoster ? 'text' : 'password'}
+                    /*
+                      Girişte current-password, kayıtta new-password: parola
+                      yöneticisi ikisini ayırt edebilsin. Alanlar name ve
+                      autocomplete taşımadığı sürece tarayıcı ne dolduruyor
+                      ne de kaydediyordu.
+                    */
+                    autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
+                    className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setSifreGoster((g) => !g)}
+                    aria-label={sifreGoster ? 'Şifreyi gizle' : 'Şifreyi göster'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 cursor-pointer"
+                  >
+                    {sifreGoster ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
+                {mode === 'register' && (
+                  <p className="mt-1 text-[11px] text-gray-500">
+                    En az 8 karakter, bir harf ve bir rakam.
+                  </p>
+                )}
+                {mode === 'login' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('sifirla');
+                      setAuthError(null);
+                      setInfoMessage(null);
+                    }}
+                    className="mt-1.5 text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
+                  >
+                    Şifremi unuttum
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -629,7 +756,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   aydınlatma metninde
                 </a>
                 . Bilgilerin, sen başvuru sırasında ayrıca izin vermeden hiçbir
-                şirketle paylaşılmaz.
+                şirketle paylaşılmaz. Hesap açarak{' '}
+                <a
+                  href="/kullanim-kosullari"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-semibold text-blue-600 hover:underline"
+                >
+                  kullanım koşullarını
+                </a>{' '}
+                kabul etmiş olursun.
               </p>
 
               <label className="flex items-start gap-2.5 p-3 rounded-xl bg-gray-50 border border-gray-200 cursor-pointer">
@@ -675,6 +811,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             )}
             {submitting ? (
               <span>Lütfen bekle...</span>
+            ) : mode === 'sifirla' ? (
+              <>
+                <Mail className="w-4 h-4" />
+                <span>Yenileme bağlantısı gönder</span>
+              </>
             ) : mode === 'login' ? (
               <>
                 <LogIn className="w-4 h-4" />

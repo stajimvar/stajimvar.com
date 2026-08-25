@@ -298,3 +298,31 @@ export async function sendPasswordReset(email: string): Promise<void> {
   });
   if (error) fail(error.message);
 }
+
+/**
+ * Kurtarma bağlantısıyla gelen kullanıcının şifresini değiştirir.
+ *
+ * NEDEN AYRI FONKSİYON
+ * --------------------
+ * `sendPasswordReset` e-postayı gönderiyordu ama karşılığında bir sayfa
+ * yoktu: bağlantı /sifre-yenile adresine düşüyor, o adres de uygulamada
+ * tanımlı değildi. Yani şifresini unutan kullanıcı için hesap yaşam
+ * döngüsü yarım kalıyordu.
+ *
+ * Supabase kurtarma bağlantısını açan tarayıcıya geçici bir oturum
+ * veriyor; bu fonksiyon o oturumla şifreyi güncelliyor.
+ */
+export async function updatePassword(password: string): Promise<void> {
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) fail(error.message);
+}
+
+/** Şifre kuralı tek yerde: kayıt, sıfırlama ve yenileme aynı şeyi istesin. */
+export const SIFRE_EN_AZ = 8;
+
+export function sifreSorunu(sifre: string): string | null {
+  if (sifre.length < SIFRE_EN_AZ) return `Şifre en az ${SIFRE_EN_AZ} karakter olmalı.`;
+  if (!/[a-zA-ZçğıöşüÇĞİÖŞÜ]/.test(sifre)) return 'Şifre en az bir harf içermeli.';
+  if (!/[0-9]/.test(sifre)) return 'Şifre en az bir rakam içermeli.';
+  return null;
+}

@@ -269,9 +269,9 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               var; kartta karşılığı görünmezse kullanıcı sıralamanın işleyip
               işlemediğini anlayamaz.
             */}
-            {eklenmeMetni(listing.postedAt) && (
+            {eklenmeMetni(listing.postedAt, listing.postedAtDogrulandi) && (
               <span className="text-[11px] text-gray-400">
-                {eklenmeMetni(listing.postedAt)}
+                {eklenmeMetni(listing.postedAt, listing.postedAtDogrulandi)}
               </span>
             )}
 

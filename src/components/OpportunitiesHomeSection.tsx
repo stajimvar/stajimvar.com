@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { fetchOpportunities, type Opportunity } from '../lib/opportunities';
 import { ListingLogo } from './ListingLogo';
 import { isExpiredOpportunity, opportunityTypeLabel } from '../lib/opportunity-domain.mjs';
+import { deadlineLabel } from '../lib/firsat-degerlendirme.mjs';
 import type { StudentProfile } from '../types';
 
 /**
@@ -55,24 +56,20 @@ function seviyeUymuyor(firsat: Opportunity, ogrenci: StudentProfile): boolean {
   return false;
 }
 
-/** Son başvuruya kalan süre; yakınsa metin aciliyeti söylüyor. */
-function sonBasvuru(tarih?: string | null): { aciliyet: string | null; kesin: string } | null {
+/*
+  Aciliyet metni ortak yardımcıdan (deadlineLabel) geliyor. Burada ayrı bir
+  kopyası vardı ve aynı fırsat için fırsatlar sayfasından farklı cümle
+  kuruyordu: biri "Bugün son gün", öteki "Yarın sona eriyor".
+*/
+function sonBasvuru(firsat: Opportunity): { aciliyet: string | null; kesin: string } | null {
+  const tarih = firsat.applicationDeadline;
   if (!tarih) return null;
   const zaman = new Date(tarih).getTime();
   if (Number.isNaN(zaman)) return null;
-
-  const kesin = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short' }).format(new Date(tarih));
-  const gun = Math.ceil((zaman - Date.now()) / 86400000);
-
-  /*
-    "Son: 25 Ağu" bir tarihtir, aciliyet değil. Yaklaşan tarihte insanın
-    okuduğu şey "kaç günüm kaldı" — kesin tarih yine altında duruyor.
-  */
-  if (gun < 0) return null;
-  if (gun === 0) return { aciliyet: 'Bugün son gün', kesin };
-  if (gun === 1) return { aciliyet: 'Yarın sona eriyor', kesin };
-  if (gun <= 7) return { aciliyet: `${gun} gün kaldı`, kesin };
-  return { aciliyet: null, kesin };
+  const kesin = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short' }).format(
+    new Date(tarih)
+  );
+  return { aciliyet: deadlineLabel(firsat), kesin };
 }
 
 export const OpportunitiesHomeSection: React.FC<{
@@ -147,7 +144,7 @@ export const OpportunitiesHomeSection: React.FC<{
       */}
       <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {items.map((item) => {
-          const tarih = sonBasvuru(item.applicationDeadline);
+          const tarih = sonBasvuru(item);
           return (
             <button
               key={item.id}

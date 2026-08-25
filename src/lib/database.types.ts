@@ -341,6 +341,9 @@ export type Database = {
           raw_listing_id: string | null;
           insurance_note: string | null;
           last_seen_at: string | null;
+          source_verified_at: string | null;
+          source_checked_at: string | null;
+          source_status: string | null;
           origin: Database['public']['Enums']['listing_origin'];
           raw: Json | null;
           source_id: string | null;
@@ -382,6 +385,9 @@ export type Database = {
           raw_listing_id?: string | null;
           insurance_note?: string | null;
           last_seen_at?: string | null;
+          source_verified_at?: string | null;
+          source_checked_at?: string | null;
+          source_status?: string | null;
           origin?: Database['public']['Enums']['listing_origin'];
           raw?: Json | null;
           source_id?: string | null;
@@ -427,6 +433,9 @@ export type Database = {
           raw_listing_id?: string | null;
           insurance_note?: string | null;
           last_seen_at?: string | null;
+          source_verified_at?: string | null;
+          source_checked_at?: string | null;
+          source_status?: string | null;
           origin?: Database['public']['Enums']['listing_origin'];
           raw?: Json | null;
           source_id?: string | null;

@@ -14,7 +14,7 @@ import {
   opportunityTypeLabel,
   OPPORTUNITY_STATUS_LABELS,
 } from '../lib/opportunity-domain.mjs';
-import { opportunityAmount, opportunityDaysLeft } from '../lib/firsat-degerlendirme.mjs';
+import { deadlineLabel, opportunityAmount, opportunityDaysLeft } from '../lib/firsat-degerlendirme.mjs';
 import { ListingLogo } from './ListingLogo';
 
 /**
@@ -247,7 +247,7 @@ export const OpportunityDetailPage: React.FC<{
             <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Başvuru</p>
             {durum === 'acik' && (
               <p className="mt-0.5 text-lg font-extrabold text-rose-700 leading-tight">
-                {kalan === 0 ? 'Bugün son gün' : kalan === 1 ? 'Yarın sona eriyor' : `${uzunTarih(item.applicationDeadline)}`}
+                {kalan != null && kalan <= 1 ? deadlineLabel(item) : uzunTarih(item.applicationDeadline)}
               </p>
             )}
             {durum === 'yakinda' && (

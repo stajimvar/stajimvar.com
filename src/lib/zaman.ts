@@ -10,8 +10,20 @@
 
 const GUN_MS = 24 * 60 * 60 * 1000;
 
-export function eklenmeMetni(deger: string | null | undefined): string | null {
+export function eklenmeMetni(
+  deger: string | null | undefined,
+  /*
+    Tarih kaynağın kendi beyanından geliyorsa "yayınlandı" demek doğru;
+    gelmiyorsa "eklendi" demek zorundayız. Ölçüldü: kaynaktan alınan gerçek
+    tarihlerle siteye eklenme tarihi arasında yıllar olabiliyor (bir ilanın
+    gerçek yayın tarihi 2022, siteye eklenmesi 2026). İkisine aynı cümleyi
+    kurmak, ilanı olduğundan taze göstermek olurdu.
+  */
+  kaynaktanMi = false
+): string | null {
   if (!deger) return null;
+
+  const fiil = kaynaktanMi ? 'yayınlandı' : 'eklendi';
 
   const ms = new Date(deger).getTime();
   if (Number.isNaN(ms)) return null;
@@ -19,19 +31,19 @@ export function eklenmeMetni(deger: string | null | undefined): string | null {
   const fark = Date.now() - ms;
 
   /* Saat farkı veya küçük sapmalar yüzünden gelecek görünen tarihler. */
-  if (fark < 0) return 'bugün eklendi';
+  if (fark < 0) return `bugün ${fiil}`;
 
   const gun = Math.floor(fark / GUN_MS);
-  if (gun === 0) return 'bugün eklendi';
-  if (gun === 1) return 'dün eklendi';
-  if (gun < 7) return `${gun} gün önce eklendi`;
+  if (gun === 0) return `bugün ${fiil}`;
+  if (gun === 1) return `dün ${fiil}`;
+  if (gun < 7) return `${gun} gün önce ${fiil}`;
   if (gun < 30) {
     const hafta = Math.floor(gun / 7);
-    return `${hafta} hafta önce eklendi`;
+    return `${hafta} hafta önce ${fiil}`;
   }
   if (gun < 365) {
     const ay = Math.floor(gun / 30);
-    return `${ay} ay önce eklendi`;
+    return `${ay} ay önce ${fiil}`;
   }
   return new Date(ms).toLocaleDateString('tr-TR', {
     day: 'numeric',
@@ -48,10 +60,12 @@ export function eklenmeMetni(deger: string | null | undefined): string | null {
   eklendi" ilanın hâlâ açık olduğunu söylemiyor, "bugün kontrol edildi"
   söylüyor.
 
-  Tarama saatte bir çalışıyor ve ilanı kaynağında yeniden gördüğünde
-  listings.last_seen_at tazeleniyor. Kaynaktan kalkan ilanda tazelenme
-  durur; o zaman bu metin de eskir ve bu DOĞRUDUR — kullanıcı ilanın ne
-  kadar süredir doğrulanmadığını görmeli.
+  DİKKAT: bu tarih `source_verified_at`, `last_seen_at` DEĞİL. İkincisi
+  toplama hattının ham kaydı yeniden gördüğü an; başvuru sayfasının hâlâ
+  çalıştığını söylemiyor. Ölçüldü: kapanmış üç ilanın last_seen_at'i o gün
+  tazelenmişti ve kartta "Son kontrol: bugün" yazıyordu.
+  scripts/ilan-baglanti-kontrol.mjs başvuru adresini gerçekten çağırıyor ve
+  yalnızca çalıştığında bu alanı tazeliyor.
 
   Üç günden eskiyse gün sayısı yazılıyor: "bugün" demek kolay ama yanlışsa
   güveni bitiren şey tam olarak o oluyor.
