@@ -913,10 +913,27 @@ async function main() {
   */
   const { konumEtiketi } = await icerikDerle(path.join(kok, 'src', 'lib', 'sehir.ts'), 'sehir');
 
+  /*
+    ESKİ ADRESLER İÇİN KALICI YÖNLENDİRME
+
+    İlan adresleri bir zamanlar ham kimlikti (/ilan/<uuid>) ve o adresler
+    hâlâ arama sonuçlarında duruyor. SPA yedeği yüzünden 200 dönüyorlardı:
+    ziyaretçi doğru ilanı görmüyordu ve arama motoru aynı içeriği iki
+    adreste indeksliyordu.
+
+    Yönlendirme haritası burada üretiliyor çünkü doğru hedefi ancak burada
+    biliyoruz: ilanın kimliği ile başlığından türeyen slug. Elle yazılan bir
+    liste, başlık değiştiğinde sessizce yanlış hedefe giderdi.
+  */
+  const eskiAdresler = [];
+
   for (const i of ilanlar) {
     const sirket = i.companies || {};
     const onek = String(i.id).split('-')[0];
     const yol = `/ilan/${slugla(i.title)}-${onek}`;
+    /* Tam kimlik ve yalnızca önek: ikisi de kanonik adrese gidiyor. */
+    eskiAdresler.push(`/ilan/${i.id}   ${yol}   301`);
+    eskiAdresler.push(`/ilan/${onek}   ${yol}   301`);
     const ozet = ozetle(i.description, 155);
 
     /*
@@ -976,6 +993,24 @@ async function main() {
       jsonLd,
     });
     sayac++;
+  }
+
+  /*
+    Yönlendirmeler `_redirects` dosyasının BAŞINA yazılıyor: dosyadaki
+    son kural `/* -> /index.html 200` her şeyi yakalıyor ve Cloudflare
+    Pages ilk eşleşen kuralı uyguluyor. Sonda kalan bir kural hiç
+    çalışmazdı.
+  */
+  if (eskiAdresler.length) {
+    const dosya = path.join(dist, '_redirects');
+    const mevcut = fs.existsSync(dosya) ? fs.readFileSync(dosya, 'utf8') : '';
+    const baslik = [
+      '# ESKİ İLAN ADRESLERİ — ön render tarafından üretiliyor',
+      '# scripts/onrender.mjs; elle düzenlenmez',
+    ].join('\n');
+    const govdeMetni = eskiAdresler.join('\n');
+    fs.writeFileSync(dosya, baslik + '\n' + govdeMetni + '\n\n' + mevcut, 'utf8');
+    console.log(`  ${eskiAdresler.length} eski ilan adresi 301'e bağlandı`);
   }
 
   for (const f of firsatlar) {
