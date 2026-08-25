@@ -793,11 +793,46 @@ function govde(baslik, ozet, satirlar = []) {
 
 /* --------------------------------------------------------------------- akış */
 
+/*
+  ÜRETİLEN PAKETİ SINA
+
+  vite.config.ts derleme başlarken anahtarların varlığını kontrol ediyor.
+  Bu ikinci kontrol çıktının KENDİSİNE bakıyor: paketin içinde Supabase
+  adresi gerçekten var mı?
+
+  İki kontrol farklı şeyleri yakalıyor. Birincisi "derlerken anahtar var
+  mıydı", ikincisi "pakete gerçekten girdi mi". Ölçülen olay ikinci
+  soruydu: paket üretildi, dağıtıldı ve uygulama açılışta çöktü — sunucu
+  200 döndüğü için hiçbir şey uyarmadı.
+*/
+function paketiDogrula() {
+  const varliklar = path.join(dist, 'assets');
+  if (!fs.existsSync(varliklar)) return;
+
+  const dosyalar = fs.readdirSync(varliklar).filter((d) => d.endsWith('.js'));
+  const bulundu = dosyalar.some((d) =>
+    /https:\/\/[a-z0-9]+\.supabase\.co/.test(fs.readFileSync(path.join(varliklar, d), 'utf8'))
+  );
+  if (bulundu) return;
+
+  console.error(
+    [
+      'ön render DURDU: derlenen pakette Supabase adresi yok.',
+      'Bu paket dağıtılırsa uygulama açılışta çöker ve site açılmaz.',
+      'VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY olmadan derlenmiş olabilir;',
+      'bir git worktree içindeysen .env orada yoktur.',
+    ].join('\n')
+  );
+  process.exit(1);
+}
+
 async function main() {
   if (!fs.existsSync(path.join(dist, 'index.html'))) {
     console.error('dist/index.html yok — önce `vite build` çalışmalı');
     process.exit(1);
   }
+
+  paketiDogrula();
 
   let sayac = 0;
 
