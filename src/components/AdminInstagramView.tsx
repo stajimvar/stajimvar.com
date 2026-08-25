@@ -6,6 +6,7 @@ import {
   etiketleriBul,
   paylasimSorunlari,
 } from '../lib/instagram-paylasim.mjs';
+import { GORUNURLUK_SAATI, paneldeGosterilecekler } from '../lib/instagram-yayin.mjs';
 
 /**
  * Yönetim → Instagram bağlantısı.
@@ -61,12 +62,28 @@ type PaylasimSeti = {
   kartlar: string[];
 };
 
+/*
+  YAYIN KAYDI
+
+  Bir setin yayınlandığı bilgisi hiçbir yerde tutulmuyordu; liste yalnızca
+  büyüyordu. Kayıt küçük tutuluyor: başlık, gönderi kimliği, tarih.
+  Kartların kendisi burada değil, depoda; onları temizlik betiği siliyor.
+*/
+type YayinKaydi = {
+  set_kodu: string;
+  baslik: string;
+  gonderi_kimligi: string;
+  yayin_zamani: string;
+  temizlendi_mi?: boolean;
+};
+
 const tarih = (deger?: string | null) =>
   deger ? new Intl.DateTimeFormat('tr-TR', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(deger)) : '—';
 
 export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate }) => {
   const [durum, setDurum] = React.useState<Durum | null>(null);
   const [setler, setSetler] = React.useState<PaylasimSeti[]>([]);
+  const [yayinlar, setYayinlar] = React.useState<YayinKaydi[]>([]);
   const [secilenKod, setSecilenKod] = React.useState('');
   const [metin, setMetin] = React.useState('');
   const [yayin, setYayin] = React.useState<{
@@ -100,33 +117,56 @@ export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }
     void sorgula();
   }, [sorgula]);
 
+  const setleriYukle = React.useCallback(async () => {
+    try {
+      const cevap = await fetch('/paylasim/setler.json', { cache: 'no-store' });
+      if (!cevap.ok) return;
+
+      /*
+        YAYINLANMIŞ VE SÜRESİ DOLMUŞ SETLER LİSTEDEN DÜŞÜYOR
+
+        Yayınlanan bir set panelde 24 saat daha duruyor — yayını kontrol
+        etmek için. Sonra listeden çıkıyor. Kural src/lib/instagram-yayin.mjs
+        içinde; temizlik betiği de aynı eşiği kullanıyor.
+
+        Kayıt okunamazsa (tablo yoksa, yetki yoksa) süzme yapılmıyor:
+        listeyi eksik göstermektense fazla göstermek daha az zararlı, çünkü
+        eksik liste yayınlanacak gönderiyi kaybettirir.
+      */
+      const { data: kayitlar } = await supabase
+        .from('instagram_yayinlari')
+        .select('set_kodu, baslik, gonderi_kimligi, yayin_zamani, temizlendi_mi')
+        .order('yayin_zamani', { ascending: false });
+      const gecmis = (kayitlar ?? []) as YayinKaydi[];
+      setYayinlar(gecmis);
+
+      /*
+        En son üretilen set başta: panel açıldığında hazırlanan gönderi
+        seçili gelsin, listede aranmasın.
+      */
+      const hepsi = ((await cevap.json()) as PaylasimSeti[])
+        .slice()
+        .sort((a, b) => String(b.guncellendi ?? '').localeCompare(String(a.guncellendi ?? '')));
+      const gelen = paneldeGosterilecekler(hepsi, gecmis) as PaylasimSeti[];
+
+      setSetler(gelen);
+      if (gelen.length > 0) {
+        setSecilenKod((onceki) => (onceki && gelen.some((s) => s.kod === onceki) ? onceki : gelen[0].kod));
+        setMetin((onceki) => onceki || aciklamaKur(gelen[0].metin, gelen[0].etiketler?.length ? gelen[0].etiketler : undefined));
+      }
+    } catch {
+      /* set listesi okunamazsa ekranın geri kalanı çalışmaya devam etsin */
+    }
+  }, []);
+
   /*
     Setler her açılışta yeniden okunuyor ve önbelleğe alınmıyor: kart
     üretilip dağıtıldıktan hemen sonra eski listeyi görmek, yanlış gönderi
     yayınlamaya yol açardı.
   */
   React.useEffect(() => {
-    void (async () => {
-      try {
-        const cevap = await fetch('/paylasim/setler.json', { cache: 'no-store' });
-        if (!cevap.ok) return;
-        /*
-          En son üretilen set başta: panel açıldığında hazırlanan gönderi
-          seçili gelsin, listede aranmasın.
-        */
-        const gelen = ((await cevap.json()) as PaylasimSeti[])
-          .slice()
-          .sort((a, b) => String(b.guncellendi ?? '').localeCompare(String(a.guncellendi ?? '')));
-        setSetler(gelen);
-        if (gelen.length > 0) {
-          setSecilenKod((onceki) => onceki || gelen[0].kod);
-          setMetin((onceki) => onceki || aciklamaKur(gelen[0].metin, gelen[0].etiketler?.length ? gelen[0].etiketler : undefined));
-        }
-      } catch {
-        /* set listesi okunamazsa ekranın geri kalanı çalışmaya devam etsin */
-      }
-    })();
-  }, []);
+    void setleriYukle();
+  }, [setleriYukle]);
 
   const secilenSet = setler.find((s) => s.kod === secilenKod) ?? null;
   const KARTLAR = secilenSet?.kartlar ?? [];
@@ -232,7 +272,38 @@ export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }
         );
       }
 
-      setYayin({ asama: 'tamam', mesaj: `Yayınlandı. Gönderi kimliği: ${sonuc.gonderiKimligi}` });
+      /*
+        YAYIN KAYDI
+
+        Yayın başarılı olduktan SONRA yazılıyor. Sırası önemli: kayıt önce
+        yazılsaydı, yayın adımı hata verdiğinde yayınlanmamış bir set
+        yayınlanmış görünür ve 24 saat sonra kartları silinirdi.
+
+        Kayıt yazılamazsa yayın yine de başarılı — Instagram'da gönderi
+        var. Bu durumda kullanıcıya söyleniyor, çünkü set listeden
+        düşmeyecek ve yeniden yayınlanabilir görünecek.
+      */
+      let kayitUyarisi = '';
+      const { error: kayitHatasi } = await supabase.from('instagram_yayinlari').insert({
+        set_kodu: secilenKod,
+        baslik: secilenSet?.ad ?? secilenKod,
+        gonderi_kimligi: String(sonuc.gonderiKimligi ?? ''),
+        yayin_zamani: String(sonuc.yayinZamani ?? new Date().toISOString()),
+      });
+      if (kayitHatasi) {
+        kayitUyarisi =
+          ' (Yayın kaydı yazılamadı; set listeden düşmeyecek. Aynı seti tekrar yayınlamayın.)';
+      } else {
+        await setleriYukle();
+      }
+
+      setYayin({
+        asama: 'tamam',
+        mesaj:
+          `Yayınlandı. Gönderi kimliği: ${sonuc.gonderiKimligi}. ` +
+          `Bu set panelde ${GORUNURLUK_SAATI} saat daha görünecek, sonra listeden ve kart ` +
+          `dosyalarından temizlenecek. Instagram'daki gönderiye dokunulmuyor.${kayitUyarisi}`,
+      });
     } catch (e) {
       setYayin({ asama: 'hata', mesaj: e instanceof Error ? e.message : 'Bilinmeyen hata' });
     }
@@ -392,6 +463,38 @@ export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }
               ))}
             </select>
           </label>
+        )}
+
+        {/*
+          YAYIN GEÇMİŞİ
+
+          Listeden düşen setin nereye gittiği görünür olmalı; yoksa panel
+          "gönderim kayboldu" gibi okunuyor. Burada yalnızca kayıt var:
+          başlık, gönderi kimliği, tarih. Kartlar 24 saat sonra depodan
+          siliniyor, Instagram'daki gönderiye dokunulmuyor.
+        */}
+        {yayinlar.length > 0 && (
+          <details className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+            <summary className="cursor-pointer text-sm font-bold text-gray-800">
+              Yayımlananlar ({yayinlar.length})
+            </summary>
+            <ul className="mt-2 space-y-1.5">
+              {yayinlar.map((y) => (
+                <li key={y.set_kodu} className="text-xs text-gray-600">
+                  <span className="font-semibold text-gray-800">{y.baslik}</span>
+                  {' · '}
+                  {tarih(y.yayin_zamani)}
+                  {' · '}
+                  <code>{y.gonderi_kimligi}</code>
+                  {y.temizlendi_mi ? ' · kartları temizlendi' : ''}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-gray-600">
+              Yayımlanan set panelde {GORUNURLUK_SAATI} saat görünür, sonra listeden ve kart
+              dosyalarından temizlenir. Instagram&apos;daki gönderi silinmez.
+            </p>
+          </details>
         )}
 
         <div className="grid grid-cols-4 gap-3">

@@ -910,6 +910,33 @@ export type Database = {
           },
         ];
       };
+      instagram_yayinlari: {
+        Row: {
+          baslik: string;
+          created_at: string;
+          gonderi_kimligi: string;
+          set_kodu: string;
+          temizlendi_mi: boolean;
+          yayin_zamani: string;
+        };
+        Insert: {
+          baslik: string;
+          created_at?: string;
+          gonderi_kimligi: string;
+          set_kodu: string;
+          temizlendi_mi?: boolean;
+          yayin_zamani?: string;
+        };
+        Update: {
+          baslik?: string;
+          created_at?: string;
+          gonderi_kimligi?: string;
+          set_kodu?: string;
+          temizlendi_mi?: boolean;
+          yayin_zamani?: string;
+        };
+        Relationships: [];
+      };
       import_runs: {
         Row: {
           created_count: number;
