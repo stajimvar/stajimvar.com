@@ -18,6 +18,7 @@
     "paylasim-one-cikanlar": "node scripts/paylasim-one-cikanlar.mjs",
     "paylasim-sss": "node scripts/paylasim-sss.mjs",
     "paylasim-kyk": "node scripts/paylasim-kyk.mjs",
+    "paylasim-staj-sigortasi": "node scripts/paylasim-staj-sigortasi.mjs",
     "paylasim-basvuru-epostasi": "node scripts/paylasim-basvuru-epostasi.mjs",
     "paylasim-cv": "node scripts/paylasim-cv.mjs"
   },

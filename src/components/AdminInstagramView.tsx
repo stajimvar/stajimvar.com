@@ -57,6 +57,7 @@ type PaylasimSeti = {
   surum: string;
   guncellendi?: string;
   metin: string;
+  etiketler?: string[];
   kartlar: string[];
 };
 
@@ -119,7 +120,7 @@ export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }
         setSetler(gelen);
         if (gelen.length > 0) {
           setSecilenKod((onceki) => onceki || gelen[0].kod);
-          setMetin((onceki) => onceki || aciklamaKur(gelen[0].metin));
+          setMetin((onceki) => onceki || aciklamaKur(gelen[0].metin, gelen[0].etiketler?.length ? gelen[0].etiketler : undefined));
         }
       } catch {
         /* set listesi okunamazsa ekranın geri kalanı çalışmaya devam etsin */
@@ -133,7 +134,7 @@ export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }
   const setiSec = (kod: string) => {
     const yeni = setler.find((s) => s.kod === kod);
     setSecilenKod(kod);
-    if (yeni) setMetin(aciklamaKur(yeni.metin));
+    if (yeni) setMetin(aciklamaKur(yeni.metin, yeni.etiketler?.length ? yeni.etiketler : undefined));
     setYayin({ asama: 'bos' });
   };
 

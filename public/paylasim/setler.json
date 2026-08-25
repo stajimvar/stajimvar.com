@@ -116,5 +116,34 @@
       "/paylasim/hikaye/staj-cv/04.jpg",
       "/paylasim/hikaye/staj-cv/05.jpg"
     ]
+  },
+  {
+    "kod": "staj-sigortasi",
+    "ad": "Staj sigortasını kim yapar?",
+    "surum": "v1",
+    "guncellendi": "2026-08-25",
+    "metin": "Staj sigortasında tek bir cevap yok: zorunlu ve gönüllü stajda süreç farklı işliyor.\n\n• Zorunlu stajda sigorta girişini genellikle okul yapar; kesin cevap okulunun staj yönergesindedir.\n• Gönüllü stajda okulun sigortası otomatik devreye girmez. Okuluna ve işyerine yazılı sor.\n• Formu ve tarihleri zamanında teslim et; sigorta girişi yapılmadan staja başlama.\n\nRehberin tamamı: stajimvar.com/rehber/staj-sigortasi-kim-yapar",
+    "etiketler": [
+      "#stajsigortasi",
+      "#zorunlustaj",
+      "#gonullustaj",
+      "#stajbasvurusu",
+      "#stajrehberi",
+      "#universiteogrencisi",
+      "#sgk",
+      "#stajyer"
+    ],
+    "kartlar": [
+      "/paylasim/staj-sigortasi/01-v1.jpg",
+      "/paylasim/staj-sigortasi/02-v1.jpg",
+      "/paylasim/staj-sigortasi/03-v1.jpg",
+      "/paylasim/staj-sigortasi/04-v1.jpg"
+    ],
+    "hikayeler": [
+      "/paylasim/hikaye/staj-sigortasi/01.jpg",
+      "/paylasim/hikaye/staj-sigortasi/02.jpg",
+      "/paylasim/hikaye/staj-sigortasi/03.jpg",
+      "/paylasim/hikaye/staj-sigortasi/04.jpg"
+    ]
   }
 ]

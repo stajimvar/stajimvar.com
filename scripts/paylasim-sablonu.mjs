@@ -280,7 +280,7 @@ async function hikayeleriYaz(kod, kartVerileri) {
  * tasarımı almıyor, gönderide eski kart çıkıyor. Sürüm artınca adres de
  * değişiyor.
  */
-export async function setiYaz({ kod, ad, surum, metin, kartlar, hikayeEk = [] }) {
+export async function setiYaz({ kod, ad, surum, metin, kartlar, hikayeEk = [], etiketler = [] }) {
   const klasor = path.join(PAYLASIM, kod);
   fs.mkdirSync(klasor, { recursive: true });
 
@@ -335,6 +335,7 @@ export async function setiYaz({ kod, ad, surum, metin, kartlar, hikayeEk = [] })
     surum,
     guncellendi: new Date().toISOString().slice(0, 10),
     metin,
+    etiketler,
     kartlar: adlar.map((a) => `/paylasim/${kod}/${a}`),
     hikayeler,
   };
