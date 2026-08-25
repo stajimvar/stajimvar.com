@@ -55,6 +55,8 @@ interface HeaderProps {
   onOpenOpportunities?: () => void;
   /** İşveren kapısı: şirket sayfasını sahiplenme akışı. */
   onOpenEmployer?: () => void;
+  /** İşveren metinleriyle açılan giriş penceresi. */
+  onOpenEmployerLogin?: (kip: 'login' | 'register') => void;
   /**
    * Bulunulan adres.
    *
@@ -130,6 +132,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenGuides,
   onOpenOpportunities,
   onOpenEmployer,
+  onOpenEmployerLogin,
   bulunulanYol = '/',
   searchQuery,
   onSearchChange,
@@ -315,7 +318,11 @@ export const Header: React.FC<HeaderProps> = ({
   );
 
   /* İşveren tarafı: rehber ve sahiplenme sayfaları. */
-  const isverendeMi = /^\/isveren(\/|$)/.test(bulunulanYol);
+  /*
+    İşveren tarafı: /isveren, /isveren/ilan-ver, /stajyer-nasil-alinir
+    ve şirket sayfaları. Üst çubuktaki düğmeler bu bayrağa bakıyor.
+  */
+  const isverendeMi = /^\/(isveren|stajyer-nasil-alinir|sirket)(\/|$)/.test(bulunulanYol);
 
   /*
     Yalnızca rehber merkezi ve rehber yazıları. `rehberdeMi` bölüm, araç ve
@@ -376,9 +383,6 @@ export const Header: React.FC<HeaderProps> = ({
                   />
                   <span className="hidden xl:inline">İş & Staj İlanları</span>
                   <span className="inline xl:hidden">İlanlar</span>
-                  {ilanlardaMi && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>
-                  )}
                 </a>
 
                 {/*
@@ -431,7 +435,6 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <Sparkles className={`w-3.5 h-3.5 shrink-0 ${firsatlardaMi ? 'text-blue-600' : 'text-gray-400'}`} />
                   <span>Fırsatlar</span>
-                  {firsatlardaMi && <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>}
                 </a>
 
                 {/*
@@ -457,13 +460,13 @@ export const Header: React.FC<HeaderProps> = ({
                   />
                   <span>Rehber</span>
                   {/*
-                    İşveren sayfası alt menüde "Rehber" altında toplansa da orada
-                    seçili görünmemeli: kullanıcı rehber okumuyor, şirket tarafında.
-                    Zemin rengi düzeltilmişti, simge ve nokta geride kalmıştı.
+                    SEKMELERDEKİ MAVİ NOKTA KALDIRILDI
+
+                    Seçili sekmeyi zaten dolu hap (beyaz zemin + mavi yazı)
+                    gösteriyordu; yanındaki nokta ikinci bir işaretti ve
+                    bildirim rozeti gibi okunuyordu — "Rehber'de okunmamış
+                    bir şey var" sanılıyordu.
                   */}
-                  {rehberdeMi && !isverendeMi && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />
-                  )}
                 </a>
 
                 {/*
@@ -521,9 +524,6 @@ export const Header: React.FC<HeaderProps> = ({
                   />
                   <span className="hidden xl:inline">İlana Başvuranlar</span>
                   <span className="inline xl:hidden">Başvuranlar</span>
-                  {activeSubTab === 'applicants' && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>
-                  )}
                 </button>
 
                 {/* 2. Eşleşen Aday Havuzu */}
@@ -548,9 +548,6 @@ export const Header: React.FC<HeaderProps> = ({
                   />
                   <span className="hidden xl:inline">Eşleşen Aday Havuzu</span>
                   <span className="inline xl:hidden">Aday Havuzu</span>
-                  {(activeSubTab === 'all_candidates' || activeSubTab === 'all') && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>
-                  )}
                 </button>
 
                 {/* 3. Kanban Panosu */}
@@ -575,9 +572,6 @@ export const Header: React.FC<HeaderProps> = ({
                   />
                   <span className="hidden xl:inline">Kanban Süreç Panosu</span>
                   <span className="inline xl:hidden">Kanban Panosu</span>
-                  {activeSubTab === 'kanban' && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-600 shrink-0"/>
-                  )}
                 </button>
 
                 {/* 4. Yeni İlan Yayınla */}
@@ -602,9 +596,6 @@ export const Header: React.FC<HeaderProps> = ({
                   />
                   <span className="hidden xl:inline">+ Yeni İlan Yayınla</span>
                   <span className="inline xl:hidden">+ Yeni İlan</span>
-                  {activeSubTab === 'post_new' && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>
-                  )}
                 </button>
               </nav>
             )}
@@ -672,27 +663,65 @@ export const Header: React.FC<HeaderProps> = ({
                   görünmüyordu. Burada duruyor ve gerçek akışın adıyla:
                   sayfa şirket sayfasını sahiplenmeyi anlatıyor.
                 */}
-                <button
-                  id="header-employer-btn"
-                  onClick={() => onOpenEmployer?.()}
-                  className="hidden sm:inline-flex px-2.5 py-1.5 rounded-full text-xs font-bold text-gray-600 hover:text-blue-700 hover:bg-gray-100 transition-all cursor-pointer whitespace-nowrap"
-                >
-                  İşveren misiniz?
-                </button>
-                <button
-                  id="header-login-btn"
-                  onClick={onOpenLogin}
-                  className="px-2.5 sm:px-4 py-1.5 rounded-full text-xs font-bold text-gray-700 hover:text-blue-600 hover:bg-gray-100 transition-all cursor-pointer whitespace-nowrap"
-                >
-                  Giriş Yap
-                </button>
-                <button
-                  id="header-register-btn"
-                  onClick={onOpenRegister}
-                  className="px-3 sm:px-4.5 py-1.5 rounded-full text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-xs cursor-pointer whitespace-nowrap shrink-0"
-                >
-                  Kayıt Ol
-                </button>
+                {/*
+                  İŞVEREN SAYFASINDA İŞVEREN DÜĞMELERİ
+
+                  Her sayfada aynı üçlü duruyordu: soluk bir "İşveren
+                  misiniz?" ve yanında öğrenci akışına ait güçlü "Giriş
+                  Yap"/"Kayıt Ol". İşveren tarafındaki bir sayfada en
+                  belirgin düğme öğrenci kaydıysa, işveren o düğmeye basıp
+                  "Öğrenci Hesabı Oluşturun" penceresiyle karşılaşıyor.
+
+                  İşveren sayfalarında ikili değişiyor: "İşveren Girişi" ve
+                  ana düğme olarak "Ücretsiz İlan Ver". Öğrenci kaydı
+                  oradan kalkıyor — kaldırılan bir kapı değil, yanlış
+                  kapıya konmuş bir tabela.
+
+                  Belirsiz "İşveren misiniz?" ifadesi de gitti: öğrenci
+                  tarafında düğme artık ne yapacağını söylüyor.
+                */}
+                {isverendeMi ? (
+                  <>
+                    <button
+                      id="header-employer-login-btn"
+                      onClick={() => onOpenEmployerLogin?.('login')}
+                      className="px-2.5 sm:px-4 py-1.5 rounded-full text-xs font-bold text-gray-700 hover:text-blue-600 hover:bg-gray-100 transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      İşveren Girişi
+                    </button>
+                    <button
+                      id="header-employer-post-btn"
+                      onClick={() => onOpenEmployer?.()}
+                      className="px-3 sm:px-4.5 py-1.5 rounded-full text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-xs cursor-pointer whitespace-nowrap shrink-0"
+                    >
+                      Ücretsiz İlan Ver
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      id="header-employer-btn"
+                      onClick={() => onOpenEmployer?.()}
+                      className="hidden sm:inline-flex px-2.5 py-1.5 rounded-full text-xs font-bold text-gray-600 hover:text-blue-700 hover:bg-gray-100 transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      İlan ver
+                    </button>
+                    <button
+                      id="header-login-btn"
+                      onClick={onOpenLogin}
+                      className="px-2.5 sm:px-4 py-1.5 rounded-full text-xs font-bold text-gray-700 hover:text-blue-600 hover:bg-gray-100 transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      Giriş Yap
+                    </button>
+                    <button
+                      id="header-register-btn"
+                      onClick={onOpenRegister}
+                      className="px-3 sm:px-4.5 py-1.5 rounded-full text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-xs cursor-pointer whitespace-nowrap shrink-0"
+                    >
+                      Kayıt Ol
+                    </button>
+                  </>
+                )}
               </div>
               ) : null
             ) : (

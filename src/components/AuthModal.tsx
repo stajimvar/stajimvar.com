@@ -34,11 +34,22 @@ interface AuthModalProps {
   onSuccess: (role: 'student' | 'company' | 'admin', name: string) => void;
   /** Şirket kaydı akışı hazır olana kadar kapalı. */
   allowCompanySignUp?: boolean;
+  /**
+   * Pencerenin KİME göründüğü.
+   *
+   * Arkadaki hesap ikisinde de aynı — tek kullanıcı sistemi. Değişen tek
+   * şey metin. Ölçüldü: şirket sayfasındaki "Giriş yap" düğmesi "Öğrenci
+   * Hesabınıza Giriş Yapın" başlıklı bir pencere açıyordu ve kayıt
+   * tarafında "Öğrenci Hesabı Oluştur" yazıyordu. İşveren için bu, akışın
+   * yanlış yerde olduğunu söyleyen bir işaret; güveni orada kaybediyor.
+   */
+  baglam?: 'ogrenci' | 'isveren';
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   allowCompanySignUp = false,
+  baglam = 'ogrenci',
   onClose,
   initialMode = 'login',
   allCompanies,
@@ -65,6 +76,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     if (isOpen) setMode(initialMode);
   }, [isOpen, initialMode]);
   const [role, setRole] = useState<'student' | 'company'>('student');
+
+  /*
+    İşveren bağlamı yalnızca METNİ değiştiriyor; hesap ikisinde de aynı.
+    `role === 'company'` ise ayrı bir şey: o, henüz açılmamış olan gerçek
+    şirket hesabı akışı.
+  */
+  const isverenBaglami = baglam === 'isveren' && role !== 'company';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -249,6 +267,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               ? mode === 'login'
                 ? 'Şirket Hesabınıza Giriş Yapın'
                 : 'Kurumsal Şirket Hesabı Oluşturun'
+              : isverenBaglami
+              ? mode === 'login'
+                ? 'İşveren girişi'
+                : 'İşveren hesabınızı oluşturun'
               : mode === 'login'
               ? 'Öğrenci Hesabınıza Giriş Yapın'
               : 'Öğrenci Hesabı Oluşturun'}
@@ -256,6 +278,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <p className="text-xs text-gray-500 mt-1">
             {role === 'company'
               ? 'Her şirketin kendine ait bağımsız yetenek havuzu, ilan yönetimi ve İK paneli bulunur.'
+              : isverenBaglami
+              ? 'Şirketinizi doğrulayın, ücretsiz ilan yayınlayın ve başvuruları tek panelden yönetin.'
               : /*
                   VAAT, GERÇEKLE AYNI OLMALI
 
@@ -369,6 +393,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <span>{role === 'company' ? 'Yeni Şirket Kaydı' : 'Kayıt Ol'}</span>
           </button>
         </div>
+        )}
+
+        {/*
+          İŞVERENE NE OLDUĞUNU SÖYLE
+
+          Hesap kişisel kimlikle açılıyor ve şirket yetkisi ancak
+          doğrulamadan sonra geliyor. Bunu söylemezsek işveren "ben şirket
+          hesabı açtım" sanıp panelde aday göremeyince akışın bozuk
+          olduğunu düşünüyor. Güvenlik modeli aynı kalıyor, değişen tek şey
+          kullanıcının ne beklediği.
+        */}
+        {isverenBaglami && mode === 'register' && (
+          <p className="mb-4 rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs leading-relaxed text-blue-900">
+            Hesabınız kişisel kimliğinizle oluşturulur. Aday erişimi, şirket doğrulamasından sonra
+            etkinleşir.
+          </p>
         )}
 
         {/* Form */}
@@ -663,7 +703,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
               <div>
                 <label htmlFor="auth-email-ogrenci" className="block font-bold text-gray-700 mb-1">
-                  Öğrenci / Kişisel E-Posta
+                  {isverenBaglami ? 'Kurumsal e-posta' : 'Öğrenci / Kişisel E-Posta'}
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -828,7 +868,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             ) : (
               <>
                 <Sparkles className="w-4 h-4" />
-                <span>{role === 'company' ? 'Şirket Hesabını Başlat' : 'Öğrenci Hesabı Oluştur'}</span>
+                <span>
+                  {role === 'company'
+                    ? 'Şirket Hesabını Başlat'
+                    : isverenBaglami
+                    ? 'Devam Et — Şirketini Bul'
+                    : 'Öğrenci Hesabı Oluştur'}
+                </span>
               </>
             )}
           </button>

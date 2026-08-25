@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Search, ShieldCheck, ExternalLink } from 'lucide-react';
 import { SayfaKabugu } from './SayfaKabugu';
+import { SirketEklemeFormu } from './SirketEklemeFormu';
 import { CompanyLogo } from './CompanyLogo';
 import { searchCompanies } from '../lib/queries';
 import { IsverenGirisiIcerik } from './IsverenGirisiIcerik';
@@ -42,7 +43,11 @@ type Sonuc = { id: string; name: string; slug: string; logoUrl?: string; verifie
 export const IsverenGirisi: React.FC<{
   onBack: () => void;
   onNavigate: (p: string) => void;
-}> = ({ onBack, onNavigate }) => {
+  /** Talebe kimlik eklemek için; ziyaretçide null. */
+  userId?: string | null;
+  /** İşveren metinleriyle açılan giriş/kayıt penceresi. */
+  onIsverenGirisi?: (kip: 'login' | 'register') => void;
+}> = ({ onBack, onNavigate, userId = null, onIsverenGirisi }) => {
   const [terim, setTerim] = useState('');
   const [sonuclar, setSonuclar] = useState<Sonuc[]>([]);
   const [araniyor, setAraniyor] = useState(false);
@@ -156,13 +161,53 @@ export const IsverenGirisi: React.FC<{
             Sonuç yoksa sessiz kalmıyoruz. Boş liste, işverenin "site bozuk"
             diye çıkıp gitmesinin en kolay yolu; ne yapacağı burada yazıyor.
           */}
+          {/*
+            ÇIKMAZ SOKAK YOK
+
+            Burada "aşağıda ne yapacağınız yazıyor" yazıyordu; aşağısı
+            iletişim bölümüne, orası da yalnızca bir e-posta adresine
+            çıkıyordu. Huninin en kritik noktasında işveren e-posta yazmak
+            zorunda kalıyordu. Form artık burada, aramanın hemen altında.
+          */}
           {arandiMi && !araniyor && sonuclar.length === 0 && !hata && (
-            <p className="text-sm text-gray-600 leading-relaxed">
-              Bu adla bir şirket bulunamadı. Şirketinizin henüz sayfası yok demektir —
-              aşağıda ne yapacağınız yazıyor.
-            </p>
+            <SirketEklemeFormu onAd={terim.trim()} userId={userId} />
           )}
         </section>
+
+        {/*
+          İŞVEREN KAPILARI
+
+          Sayfa "normal bir hesap açın" diyordu ama hesap açtıran bir düğme
+          sunmuyordu. İki düğme de işveren metinleriyle açılan pencereyi
+          çağırıyor: arkadaki hesap aynı, kullanıcıya öğrenci hesabı
+          açtırdığımızı söylemiyoruz.
+        */}
+        {onIsverenGirisi && (
+          <section className="flex flex-col gap-2.5 rounded-2xl border border-gray-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-bold text-gray-900">Hesabınızla devam edin</p>
+              <p className="text-sm text-gray-600">
+                Sahiplenme talebi göndermek için bir hesap gerekiyor; açmak bir dakika sürüyor.
+              </p>
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <button
+                type="button"
+                onClick={() => onIsverenGirisi('login')}
+                className="min-h-11 cursor-pointer rounded-xl border border-gray-200 px-4 text-sm font-bold text-gray-800 hover:bg-gray-50"
+              >
+                İşveren Girişi
+              </button>
+              <button
+                type="button"
+                onClick={() => onIsverenGirisi('register')}
+                className="min-h-11 cursor-pointer rounded-xl bg-blue-600 px-4 text-sm font-bold text-white hover:bg-blue-700"
+              >
+                Ücretsiz İlan Ver
+              </button>
+            </div>
+          </section>
+        )}
 
         <IsverenGirisiIcerik />
       </div>

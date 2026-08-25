@@ -6,6 +6,14 @@
 /ilanlar   /   301
 /ilanlar/*   /   301
 
+# ESKİ ADRES: /sirketler
+#
+# Paylaşılmış ve arama motoruna düşmüş bir adres; sitede hiç olmadı ve
+# gerçek 404 dönmeye başladıktan sonra ziyaretçi boş ekranla karşılaşıyor.
+# Aradığı şey işveren tarafı: /isveren orada.
+/sirketler   /isveren   301
+/sirketler/*   /isveren   301
+
 # SPA YEDEĞİ ARTIK BURADA DEĞİL
 #
 # Eskiden burada `/*  /index.html  200` vardı ve sitedeki her hatalı adres

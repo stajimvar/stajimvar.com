@@ -432,13 +432,47 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
+  /*
+    KAYIT BAĞLAMI
+
+    İki şey taşınıyor:
+
+      baglam  → pencerede hangi metinlerin görüneceği. Arkadaki hesap
+                aynı; ölçüldü, şirket sayfasındaki "Giriş yap" düğmesi
+                "Öğrenci Hesabınıza Giriş Yapın" başlığını açıyordu ve
+                işveren orada akışın yanlış yerde olduğunu düşünüyordu.
+
+      donusYolu → girişten sonra nereye dönüleceği. Insider One sayfasından
+                gelen kişi giriş yapınca ana sayfaya atılıyordu ve
+                sahiplenme talebini bir daha bulamıyordu.
+  */
+  const [authBaglam, setAuthBaglam] = useState<'ogrenci' | 'isveren'>('ogrenci');
+  const [authDonusYolu, setAuthDonusYolu] = useState<string | null>(null);
+
   const handleOpenLogin = () => {
+    setAuthBaglam('ogrenci');
+    setAuthDonusYolu(null);
     setAuthModalMode('login');
     setIsAuthModalOpen(true);
   };
 
   const handleOpenRegister = () => {
+    setAuthBaglam('ogrenci');
+    setAuthDonusYolu(null);
     setAuthModalMode('register');
+    setIsAuthModalOpen(true);
+  };
+
+  /**
+   * İşveren tarafından açılan giriş/kayıt.
+   *
+   * @param kip      'login' ya da 'register'
+   * @param donusYolu giriş bitince dönülecek adres; verilmezse bulunulan sayfa
+   */
+  const isverenGirisiAc = (kip: 'login' | 'register' = 'login', donusYolu?: string) => {
+    setAuthBaglam('isveren');
+    setAuthDonusYolu(donusYolu ?? window.location.pathname);
+    setAuthModalMode(kip);
     setIsAuthModalOpen(true);
   };
 
@@ -460,6 +494,22 @@ export default function App() {
     // arayüzü kullanıcının rolüne göre konumlandırıyoruz.
     // Yönetici de öğrenci görünümünü kullanıyor.
     setUserRole(role === 'company' ? 'company' : 'student');
+
+    /*
+      GELDİĞİ YERE GERİ DÖN
+
+      Sahiplenme akışı buna bağlı: "Insider One'ı sahiplen" → giriş →
+      formun başına dön. Dönüş yolu yoksa eski davranış sürüyor.
+    */
+    if (authDonusYolu) {
+      const hedef = authDonusYolu;
+      setAuthDonusYolu(null);
+      setAuthBaglam('ogrenci');
+      if (hedef !== window.location.pathname) navigate(hedef);
+      showToast(`Hoş geldiniz, ${name}!`);
+      return;
+    }
+
     if (role !== 'company') {
       setActiveTab('internships');
       showToast(`Hoş geldiniz, ${name}!`);
@@ -771,7 +821,17 @@ export default function App() {
       applicationsCount={applications.length}
       onOpenGuides={() => navigate('/rehber')}
       onOpenOpportunities={() => navigate('/firsatlar')}
-      onOpenEmployer={() => navigate('/isveren/ilan-ver')}
+      /*
+        "Ücretsiz İlan Ver" ilan verme sayfasına götürüyor. Zaten oradaysa
+        götürecek yer yok: kayıt penceresini açıyor, yoksa düğme hiçbir şey
+        yapmıyormuş gibi görünüyordu.
+      */
+      onOpenEmployer={() =>
+        temizYol === '/isveren/ilan-ver'
+          ? isverenGirisiAc('register', '/isveren/ilan-ver')
+          : navigate('/isveren/ilan-ver')
+      }
+      onOpenEmployerLogin={AUTH_ENABLED ? (kip) => isverenGirisiAc(kip) : undefined}
       bulunulanYol={temizYol}
       searchQuery={aramaTerimi}
       onSearchChange={(q) => {
@@ -815,6 +875,7 @@ export default function App() {
       onSelectCompany={handleSelectCompany}
       onCreateCompany={handleCreateCompany}
       onSuccess={handleAuthSuccess}
+      baglam={authBaglam}
     />
   );
 
@@ -1014,7 +1075,16 @@ export default function App() {
     /isveren/ilan-ver bilinmeyen adrese dusup 404 uretirdi.
   */
   if (temizYol === '/isveren/ilan-ver') {
-    return icerikSayfasi(<IsverenGirisi onBack={goHome} onNavigate={navigate} />);
+    return icerikSayfasi(
+      <IsverenGirisi
+        onBack={goHome}
+        onNavigate={navigate}
+        userId={session?.userId ?? null}
+        onIsverenGirisi={
+          AUTH_ENABLED ? (kip) => isverenGirisiAc(kip, '/isveren/ilan-ver') : undefined
+        }
+      />
+    );
   }
   if (temizYol === '/isveren' || temizYol === '/stajyer-nasil-alinir') {
     return icerikSayfasi(<EmployerGuide onBack={goHome} onNavigate={navigate} />);
@@ -1074,7 +1144,13 @@ export default function App() {
             onNavigate={navigate}
             userId={session?.userId ?? null}
             userEmail={student?.email}
-            onRequireLogin={handleOpenLogin}
+            /*
+              Şirket sayfasından açılan giriş İŞVEREN metinleriyle geliyor
+              ve girişten sonra bu sayfaya dönüyor. Önce öğrenci penceresi
+              açılıyordu ve giriş bitince kullanıcı ana sayfaya düşüyordu;
+              sahiplenme talebini bir daha bulamıyordu.
+            */
+            onRequireLogin={() => isverenGirisiAc('login', `/sirket/${sirketSlug}`)}
           />
           {girisModali}
         </>
