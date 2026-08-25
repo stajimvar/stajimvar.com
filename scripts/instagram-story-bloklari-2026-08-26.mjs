@@ -20,6 +20,7 @@ const SOURCES_DIR = path.join(PACKAGE, 'sources');
 const WIDTH = 1080;
 const HEIGHT = 1920;
 const FONT = 'Segoe UI, Arial, Helvetica, sans-serif';
+const LOGO_PATH = path.join(ROOT, 'assets', 'logo-kaynak.png');
 const COLORS = {
   white: '#FFFFFF',
   ink: '#111827',
@@ -31,6 +32,8 @@ const COLORS = {
   violet: '#6D5DFB',
   violetPale: '#EEEAFE',
 };
+if (!fs.existsSync(LOGO_PATH)) throw new Error('StajımVar logo kaynağı bulunamadı: assets/logo-kaynak.png');
+const logo64 = fs.readFileSync(LOGO_PATH).toString('base64');
 
 const ensure = (dir) => fs.mkdirSync(dir, { recursive: true });
 const esc = (value) => String(value ?? '')
@@ -99,11 +102,12 @@ function storySvg(block, frame) {
        ${textLines(540, 1252, stickerName, { size: 25, fill: p.background, weight: 900, anchor: 'middle', max: 36 })}`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
+    <defs><clipPath id="story-logo-clip"><circle cx="91" cy="91" r="27"/></clipPath></defs>
     <rect width="${WIDTH}" height="${HEIGHT}" fill="${p.background}"/>
     <circle cx="960" cy="250" r="340" fill="${p.accent}" opacity="0.18"/>
     <circle cx="96" cy="1660" r="280" fill="${p.accent}" opacity="0.14"/>
     ${dots(COLORS.white, '0.055')}
-    ${rect(64, 64, 54, 54, COLORS.blue, 16)}
+    <image href="data:image/png;base64,${logo64}" x="64" y="64" width="54" height="54" preserveAspectRatio="xMidYMid slice" clip-path="url(#story-logo-clip)"/>
     ${textLines(134, 101, 'StajımVar', { size: 29, fill: COLORS.white, weight: 900, max: 25 })}
     ${textLines(134, 134, block.series, { size: 20, fill: p.accent, weight: 800, max: 31 })}
     ${rect(874, 62, 142, 54, 'rgba(255,255,255,0.16)', 27)}
