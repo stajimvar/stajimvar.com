@@ -43,6 +43,18 @@ export interface StajProgrami {
   ozet: string;
   /** İlgili bölüm sayfalarının slug'ları — iç bağlantı için. */
   bolumler: string[];
+  /**
+   * Adresin en son ne zaman çağrılıp çalıştığının doğrulandığı gün.
+   *
+   * scripts/isveren-baglanti-kontrol.mjs yazıyor ve YALNIZCA çalışan
+   * adreslere yazıyor: ölü bir adrese "bugün kontrol edildi" damgası
+   * vurmak, tam da güveni bitiren şey olurdu.
+   *
+   * DİKKAT: bu alan "başvurular açık" demek DEĞİL. Kariyer sayfasının
+   * ayakta olması başvuru alındığı anlamına gelmiyor; doğrulayamadığımız
+   * için hiçbir kartta "Başvurular açık" yazmıyor.
+   */
+  sonKontrol?: string;
 }
 
 export const STAJ_PROGRAMLARI: StajProgrami[] = [
@@ -54,6 +66,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Savunma elektroniği üreticisi; radar, haberleşme ve elektro-optik sistemler geliştiriyor. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['elektrik-elektronik-muhendisligi', 'bilgisayar-muhendisligi', 'makine-muhendisligi', 'mekatronik'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'tusas',
@@ -63,6 +76,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Uçak, helikopter ve insansız hava aracı üretimi yapıyor. Başvurular kendi insan kaynakları sayfasından alınıyor.',
     bolumler: ['makine-muhendisligi', 'elektrik-elektronik-muhendisligi', 'metalurji-ve-malzeme-muhendisligi', 'bilgisayar-muhendisligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'roketsan',
@@ -72,6 +86,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Roket ve füze sistemleri üreticisi. Başvurular kendi insan kaynakları sayfasından alınıyor.',
     bolumler: ['makine-muhendisligi', 'kimya-muhendisligi', 'elektrik-elektronik-muhendisligi', 'metalurji-ve-malzeme-muhendisligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'tav-havalimanlari',
@@ -81,6 +96,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Havalimanı işletmeciliği yapıyor; terminal, yer hizmetleri ve teknik operasyon alanları var. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['isletme', 'turizm-ve-otel-yoneticiligi', 'lojistik', 'endustri-muhendisligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'pegasus',
@@ -90,6 +106,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Havayolu şirketi; uçuş operasyonu, teknik bakım ve merkez ofis birimleri bulunuyor. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['isletme', 'lojistik', 'makine-muhendisligi', 'turizm-ve-otel-yoneticiligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'arcelik',
@@ -99,6 +116,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Beyaz eşya ve ev teknolojileri üreticisi; Türkiye\'de birden fazla üretim tesisi işletiyor. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['makine-muhendisligi', 'elektrik-elektronik-muhendisligi', 'endustri-muhendisligi', 'mekatronik'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'tofas',
@@ -108,6 +126,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Bursa\'daki fabrikasında binek ve hafif ticari araç üretiyor. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['makine-muhendisligi', 'endustri-muhendisligi', 'mekatronik', 'metalurji-ve-malzeme-muhendisligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'bsh-turkiye',
@@ -117,6 +136,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Ev aletleri üreticisi; Türkiye\'de üretim ve Ar-Ge faaliyeti yürütüyor. Başvurular grubun kariyer sayfasından alınıyor.',
     bolumler: ['makine-muhendisligi', 'elektrik-elektronik-muhendisligi', 'endustri-muhendisligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'bosch-turkiye',
@@ -126,6 +146,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Otomotiv yan sanayi, elektrikli el aletleri ve endüstriyel teknoloji alanlarında üretim yapıyor. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['makine-muhendisligi', 'mekatronik', 'elektrik-elektronik-muhendisligi', 'endustri-muhendisligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'tupras',
@@ -135,6 +156,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Rafineri işletmecisi; ham petrolü işleyip akaryakıt ve petrokimya ürünlerine çeviriyor. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['kimya-muhendisligi', 'makine-muhendisligi', 'cevre-muhendisligi', 'is-sagligi-ve-guvenligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'petkim',
@@ -144,6 +166,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Petrokimya üreticisi; plastik ve kimyasal hammadde üretiyor. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['kimya-muhendisligi', 'makine-muhendisligi', 'cevre-muhendisligi', 'is-sagligi-ve-guvenligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'opet',
@@ -162,6 +185,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'LPG dağıtımı yapıyor; dolum tesisleri ve dağıtım ağı işletiyor. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['kimya-muhendisligi', 'makine-muhendisligi', 'lojistik', 'is-sagligi-ve-guvenligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'sasa',
@@ -171,6 +195,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Polyester elyaf ve iplik üreticisi. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['kimya-muhendisligi', 'makine-muhendisligi', 'metalurji-ve-malzeme-muhendisligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'kordsa',
@@ -189,6 +214,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Yassı çelik üreticisi; entegre demir-çelik tesisi işletiyor. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['metalurji-ve-malzeme-muhendisligi', 'makine-muhendisligi', 'elektrik-elektronik-muhendisligi', 'is-sagligi-ve-guvenligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'kardemir',
@@ -198,6 +224,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Uzun ürün çelik üreticisi; ray ve profil üretimi yapıyor. Başvurular kendi insan kaynakları sayfasından alınıyor.',
     bolumler: ['metalurji-ve-malzeme-muhendisligi', 'makine-muhendisligi', 'endustri-muhendisligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'tosyali-holding',
@@ -207,6 +234,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Demir-çelik üretimi ve boru sanayii alanında faaliyet gösteriyor. Başvurular kendi insan kaynakları sayfasından alınıyor.',
     bolumler: ['metalurji-ve-malzeme-muhendisligi', 'makine-muhendisligi', 'endustri-muhendisligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'cimsa',
@@ -216,6 +244,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Çimento ve yapı malzemeleri üreticisi. Başvurular kendi insan kaynakları sayfasından alınıyor.',
     bolumler: ['insaat-muhendisligi', 'kimya-muhendisligi', 'makine-muhendisligi', 'cevre-muhendisligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'akcansa',
@@ -225,6 +254,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Çimento, hazır beton ve agrega üretiyor. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['insaat-muhendisligi', 'kimya-muhendisligi', 'makine-muhendisligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'borusan',
@@ -243,6 +273,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Uluslararası taahhüt ve inşaat şirketi; enerji santrali ve altyapı projeleri yürütüyor. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['insaat-muhendisligi', 'makine-muhendisligi', 'elektrik-elektronik-muhendisligi', 'mimarlik'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'limak',
@@ -252,6 +283,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'İnşaat, enerji, çimento ve turizm alanlarında faaliyet gösteren grup. Başvurular grubun kariyer sayfasından alınıyor.',
     bolumler: ['insaat-muhendisligi', 'mimarlik', 'harita-ve-geomatik-muhendisligi', 'turizm-ve-otel-yoneticiligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'nurol',
@@ -261,6 +293,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'İnşaat taahhüdü, savunma sanayii ve finans alanlarında şirketleri bulunan grup. Başvurular grubun kariyer sayfasından alınıyor.',
     bolumler: ['insaat-muhendisligi', 'makine-muhendisligi', 'mimarlik'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'garanti-bbva',
@@ -270,6 +303,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Özel sermayeli mevduat bankası; şube ağı ve genel müdürlük birimleri var. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['isletme', 'iktisat', 'bilgisayar-muhendisligi', 'muhasebe-ve-vergi-uygulamalari'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'is-bankasi',
@@ -279,6 +313,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Mevduat bankası; bankacılık ve teknoloji birimleri bulunuyor. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['isletme', 'iktisat', 'bilgisayar-muhendisligi', 'hukuk'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'qnb-finansbank',
@@ -297,6 +332,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Sabit hat, internet ve mobil hizmet sağlayıcısı. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['elektrik-elektronik-muhendisligi', 'bilgisayar-muhendisligi', 'endustri-muhendisligi', 'isletme'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'turkcell',
@@ -306,6 +342,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Mobil operatör; şebeke, dijital servisler ve veri merkezi alanlarında çalışıyor. Başvurular kendi insan kaynakları sayfasından alınıyor.',
     bolumler: ['bilgisayar-muhendisligi', 'elektrik-elektronik-muhendisligi', 'endustri-muhendisligi', 'halkla-iliskiler-ve-pazarlama'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'vodafone-turkiye',
@@ -315,6 +352,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Mobil operatör; şebeke işletimi ve dijital hizmetler yürütüyor. Başvurular kendi insan kaynakları sayfasından alınıyor.',
     bolumler: ['bilgisayar-muhendisligi', 'elektrik-elektronik-muhendisligi', 'isletme', 'halkla-iliskiler-ve-pazarlama'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'coca-cola-icecek',
@@ -324,6 +362,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Meşrubat üretimi ve dağıtımı yapıyor; birden fazla ülkede fabrikası var. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['gida-muhendisligi', 'endustri-muhendisligi', 'lojistik', 'makine-muhendisligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'eti',
@@ -333,6 +372,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Bisküvi, çikolata ve kek üreticisi. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['gida-muhendisligi', 'endustri-muhendisligi', 'makine-muhendisligi', 'halkla-iliskiler-ve-pazarlama'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'yildiz-holding',
@@ -342,6 +382,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Gıda ve perakende alanında çok sayıda markayı bünyesinde toplayan grup. Başvurular grubun insan kaynakları sayfasından alınıyor.',
     bolumler: ['gida-muhendisligi', 'isletme', 'endustri-muhendisligi', 'lojistik'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'migros',
@@ -351,6 +392,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Market zinciri; mağaza operasyonu, depo ve online teslimat birimleri var. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['isletme', 'lojistik', 'gida-muhendisligi', 'muhasebe-ve-vergi-uygulamalari'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'boyner',
@@ -360,6 +402,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Hazır giyim perakendesi; mağazacılık ve e-ticaret operasyonu yürütüyor. Başvurular grubun kariyer sayfasından alınıyor.',
     bolumler: ['isletme', 'moda-tasarimi', 'halkla-iliskiler-ve-pazarlama', 'giyim-uretim-teknolojisi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'abdi-ibrahim',
@@ -369,6 +412,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'İlaç üreticisi; üretim tesisi ve Ar-Ge merkezi bulunuyor. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['kimya-muhendisligi', 'tibbi-laboratuvar-teknikleri', 'endustri-muhendisligi', 'is-sagligi-ve-guvenligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'bilim-ilac',
@@ -378,6 +422,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'İlaç üreticisi; kendi üretim tesisini işletiyor. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['kimya-muhendisligi', 'tibbi-laboratuvar-teknikleri', 'endustri-muhendisligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'acibadem-saglik',
@@ -396,6 +441,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Özel hastane grubu; birden fazla ilde hastanesi bulunuyor. Başvurular grubun kariyer sayfasından alınıyor.',
     bolumler: ['hemsirelik', 'fizyoterapi-ve-rehabilitasyon', 'tibbi-laboratuvar-teknikleri'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'sabanci-holding',
@@ -405,6 +451,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Enerji, çimento, finans ve sanayi alanlarında şirketleri olan holding. Başvurular holdingin kariyer sayfasından alınıyor.',
     bolumler: ['isletme', 'endustri-muhendisligi', 'iktisat', 'elektrik-elektronik-muhendisligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'zorlu-holding',
@@ -414,6 +461,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Enerji, dayanıklı tüketim ve tekstil alanlarında şirketleri olan holding. Başvurular holdingin kariyer sayfasından alınıyor.',
     bolumler: ['elektrik-elektronik-muhendisligi', 'endustri-muhendisligi', 'isletme', 'giyim-uretim-teknolojisi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'oyak',
@@ -423,6 +471,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Çimento, demir-çelik, otomotiv ve finans alanlarında şirketleri olan grup. Başvurular grubun kariyer sayfasından alınıyor.',
     bolumler: ['metalurji-ve-malzeme-muhendisligi', 'insaat-muhendisligi', 'isletme', 'endustri-muhendisligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'schneider-electric-turkiye',
@@ -432,6 +481,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Enerji yönetimi ve endüstriyel otomasyon ürünleri sağlıyor. Başvurular kurumsal kariyer sayfasından alınıyor.',
     bolumler: ['elektrik-elektronik-muhendisligi', 'mekatronik', 'endustri-muhendisligi'],
+    sonKontrol: '2026-08-25',
   },
   {
     slug: 'henkel-turkiye',
@@ -441,6 +491,7 @@ export const STAJ_PROGRAMLARI: StajProgrami[] = [
     ozet:
       'Yapıştırıcı, temizlik ve kişisel bakım ürünleri üreticisi. Başvurular kendi kariyer sayfasından alınıyor.',
     bolumler: ['kimya-muhendisligi', 'endustri-muhendisligi', 'halkla-iliskiler-ve-pazarlama'],
+    sonKontrol: '2026-08-25',
   },
 ];
 

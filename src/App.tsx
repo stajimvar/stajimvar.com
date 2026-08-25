@@ -1033,10 +1033,17 @@ export default function App() {
   */
   /* Universite kariyer merkezleri — dogrulanmis dis baglanti dizini. */
   if (temizYol === '/universite-kariyer-merkezleri') {
-    return icerikSayfasi(<KariyerMerkezleriSayfasi onBack={goHome} />);
+    return icerikSayfasi(<KariyerMerkezleriSayfasi onBack={goHome} ogrenci={isLoggedIn ? activeStudent : null} />);
   }
   if (temizYol === '/staj-programlari') {
-    return icerikSayfasi(<StajProgramlariSayfasi onBack={goHome} onNavigate={navigate} />);
+    return icerikSayfasi(
+      <StajProgramlariSayfasi
+        onBack={goHome}
+        onNavigate={navigate}
+        ogrenci={isLoggedIn ? activeStudent : null}
+        onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+      />
+    );
   }
   if (temizYol.startsWith('/bolum/')) {
     return icerikSayfasi(

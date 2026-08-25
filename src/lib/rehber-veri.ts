@@ -107,3 +107,35 @@ export async function rehberOkunduBildir(slug: string): Promise<void> {
     /* sayaç kritik değil */
   }
 }
+
+/* ------------------------------------------------------------- işverenler */
+
+/**
+ * Kullanıcının kaydettiği işverenlerin slug listesi.
+ *
+ * Rehber kaydetmeyle aynı kalıp, ayrı tablo: "bu yazıyı sonra okurum" ile
+ * "bu şirkete başvuracağım" farklı niyetler ve aynı listede durmaları
+ * ikisini de kullanışsız yapardı.
+ */
+export async function kaydedilenIsverenler(userId: string): Promise<string[]> {
+  const db = await istemci();
+  const { data, error } = await db.from('saved_employers').select('employer_slug').eq('user_id', userId);
+  if (error) throw new Error(`Kaydedilen işverenler yüklenemedi: ${error.message}`);
+  return (data ?? []).map((satir) => String(satir.employer_slug));
+}
+
+/** @param kayitliydi çağrı anındaki durum; true ise kayıt SİLİNİYOR. */
+export async function isverenKaydiDegistir(
+  userId: string,
+  slug: string,
+  kayitliydi: boolean
+): Promise<void> {
+  const db = await istemci();
+  const tablo = db.from('saved_employers');
+  const { error } = kayitliydi
+    ? await tablo.delete().eq('user_id', userId).eq('employer_slug', slug)
+    : await tablo.insert({ user_id: userId, employer_slug: slug });
+  if (error && error.code !== '23505') {
+    throw new Error(`İşveren kaydı güncellenemedi: ${error.message}`);
+  }
+}
