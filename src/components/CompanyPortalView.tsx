@@ -526,7 +526,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
               <p className="text-xs text-gray-500 mt-0.5">
                 {activeCompany.industry} • {activeCompany.location} • {activeCompany.size}
               </p>
-              <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-1.5">
+              <p className="text-[11px] text-gray-600 mt-1 flex items-center gap-1.5">
                 <Mail className="w-3 h-3 text-gray-400" />
                 <span>
                   Yetkili İK: <strong className="text-gray-700">{activeCompany.recruiterName}</strong> ({activeCompany.recruiterRole})
@@ -760,7 +760,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                   <button
                     type="button"
                     onClick={() => setCandidateSearchQuery('')}
-                    className="text-gray-400 hover:text-gray-600 text-xs font-bold ml-1 cursor-pointer"
+                    className="text-gray-600 hover:text-gray-600 text-xs font-bold ml-1 cursor-pointer"
                   >
                     ✕
                   </button>
@@ -786,7 +786,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
             {/* Sub-Filter Pills for 'applicants' Tab */}
             {activePortalTab === 'applicants' && (
               <div className="pt-2 border-t border-gray-100 flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-                <span className="text-[11px] font-bold text-gray-400 mr-1 shrink-0">
+                <span className="text-[11px] font-bold text-gray-600 mr-1 shrink-0">
                   Durum Filtresi:
                 </span>
                 {[
@@ -896,7 +896,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                             <p className="text-xs text-gray-500 mt-0.5">
                               {student.university} • {student.department} ({student.gradeLevel}) • GPA: <strong>{student.gpa.toFixed(2)}</strong>
                             </p>
-                            <p className="text-[11px] text-gray-400 mt-0.5">
+                            <p className="text-[11px] text-gray-600 mt-0.5">
                               Başvuru Tarihi: {app.appliedAt}
                             </p>
                           </div>
@@ -912,7 +912,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
 
                           {/* Match Score */}
                           <div className="text-right pl-2 border-l border-gray-200">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-600 block">
                               Uyum Skoru
                             </span>
                             <span
@@ -1020,7 +1020,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                       <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 pt-3 border-t border-gray-100">
                         {/* Quick Stage Progression Buttons */}
                         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 xl:pb-0">
-                          <span className="text-[11px] font-bold text-gray-400 mr-1 shrink-0">
+                          <span className="text-[11px] font-bold text-gray-600 mr-1 shrink-0">
                             Aşama Değiştir:
                           </span>
                           {(
@@ -1170,7 +1170,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                         {/* Overall Match Score Badge */}
                         <div className="flex items-center gap-3 self-end sm:self-center">
                           <div className="text-right">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-600 block">
                               Uyum Skoru
                             </span>
                             <span
@@ -1233,7 +1233,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-gray-100">
                         {/* Pipeline Stage Quick Pills */}
                         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-                          <span className="text-[11px] font-bold text-gray-400 mr-1 shrink-0">
+                          <span className="text-[11px] font-bold text-gray-600 mr-1 shrink-0">
                             Aşama:
                           </span>
                           {(
@@ -1346,7 +1346,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
 
                     <div className="space-y-2.5">
                       {colApplicants.length === 0 ? (
-                        <p className="text-[11px] text-gray-400 text-center py-8">
+                        <p className="text-[11px] text-gray-600 text-center py-8">
                           Bu aşamada aday yok
                         </p>
                       ) : (
@@ -1460,7 +1460,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                   <p className="text-xs text-gray-500 mt-0.5">
                     {viewingStudent.university} • {viewingStudent.department}
                   </p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">
+                  <p className="text-[11px] text-gray-600 mt-0.5">
                     {viewingStudent.gradeLevel} • Mezuniyet: {viewingStudent.graduationYear} • GPA: <strong>{viewingStudent.gpa.toFixed(2)} / 4.00</strong>
                   </p>
                 </div>
@@ -1468,7 +1468,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
               <button
                 type="button"
                 onClick={() => setViewingStudent(null)}
-                className="text-xs font-bold text-gray-400 hover:text-gray-700 cursor-pointer p-1 rounded-lg"
+                className="text-xs font-bold text-gray-600 hover:text-gray-700 cursor-pointer p-1 rounded-lg"
               >
                 ✕ Kapat
               </button>
@@ -1497,7 +1497,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
                     className="px-2.5 py-1 rounded-xl text-xs font-bold bg-gray-100 text-gray-800 border border-gray-200 flex items-center gap-1"
                   >
                     <span>{sk.name}</span>
-                    <span className="text-[10px] text-gray-400 font-normal">({sk.level})</span>
+                    <span className="text-[10px] text-gray-600 font-normal">({sk.level})</span>
                     {sk.verified && (
                       <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
                     )}
@@ -1628,7 +1628,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
               </div>
               <button
                 onClick={() => setInterviewModalData(null)}
-                className="text-xs font-bold text-gray-400 hover:text-gray-700 cursor-pointer"
+                className="text-xs font-bold text-gray-600 hover:text-gray-700 cursor-pointer"
               >
                 Kapat
               </button>
@@ -1748,7 +1748,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
               </div>
               <button
                 onClick={() => setFeedbackModalData(null)}
-                className="text-xs font-bold text-gray-400 hover:text-gray-700 cursor-pointer"
+                className="text-xs font-bold text-gray-600 hover:text-gray-700 cursor-pointer"
               >
                 Kapat
               </button>
@@ -1805,7 +1805,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
               </div>
               <button
                 onClick={() => setShowEditProfileModal(false)}
-                className="text-xs font-bold text-gray-400 hover:text-gray-700 cursor-pointer"
+                className="text-xs font-bold text-gray-600 hover:text-gray-700 cursor-pointer"
               >
                 Kapat
               </button>
@@ -1949,7 +1949,7 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
               </div>
               <button
                 onClick={() => setShowPostModal(false)}
-                className="text-xs font-bold text-gray-400 hover:text-gray-700 cursor-pointer"
+                className="text-xs font-bold text-gray-600 hover:text-gray-700 cursor-pointer"
               >
                 Kapat
               </button>

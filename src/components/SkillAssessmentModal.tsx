@@ -133,7 +133,7 @@ export const SkillAssessmentModal: React.FC<SkillAssessmentModalProps> = ({
                 ))}
               </div>
 
-              <p className="text-[11px] text-gray-400">
+              <p className="text-[11px] text-gray-600">
                 Sonuç tüm sorular cevaplandıktan sonra hesaplanır.
               </p>
 

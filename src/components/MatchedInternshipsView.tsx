@@ -59,7 +59,7 @@ const FiltreBlogu: React.FC<{ baslik: string; children: React.ReactNode }> = ({
   children,
 }) => (
   <div className="px-4 py-3.5 space-y-2">
-    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">{baslik}</h3>
+    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-600">{baslik}</h3>
     {children}
   </div>
 );
@@ -96,7 +96,7 @@ const SecenekSatiri: React.FC<{
       {etiket}
     </span>
     {adet !== undefined && (
-      <span className="text-xs text-gray-400 tabular-nums shrink-0">{adet}</span>
+      <span className="text-xs text-gray-600 tabular-nums shrink-0">{adet}</span>
     )}
   </label>
 );
@@ -1211,7 +1211,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             )}
             <div className="space-y-0.5 max-h-56 overflow-y-auto -mr-1 pr-1">
               {gorunenSirketler.length === 0 ? (
-                <p className="text-xs text-gray-400 py-1">Eşleşen şirket yok.</p>
+                <p className="text-xs text-gray-600 py-1">Eşleşen şirket yok.</p>
               ) : (
                 gorunenSirketler.map((s) => (
                   <SecenekSatiri
@@ -1262,7 +1262,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               Profili olmayan ziyaretçiye "sana uygun" ve "eşleşme puanına göre
               sıralı" demek yanlış: ortada kişiselleştirme yok.
             */}
-            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+            <h2 className="text-xs font-bold text-gray-600 uppercase tracking-widest">
               {student ? 'Sana Uygun Staj İlanları' : 'Açık Staj İlanları'} (
               {filteredListings.length})
             </h2>

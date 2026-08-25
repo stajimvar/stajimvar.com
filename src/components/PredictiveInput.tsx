@@ -264,7 +264,7 @@ export const PredictiveInput: React.FC<PredictiveInputProps> = ({
               <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               <span className="font-semibold text-gray-700">Akıllı Tahminler</span>
             </div>
-            <span className="text-[10px] text-gray-400">
+            <span className="text-[10px] text-gray-600">
               Seçmek için tıklayın veya yön tuşlarını kullanın
             </span>
           </div>
@@ -301,7 +301,7 @@ export const PredictiveInput: React.FC<PredictiveInputProps> = ({
                         En İyi Eşleşme
                       </span>
                     )}
-                    <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
+                    <span className="text-[10px] text-gray-600 flex items-center gap-0.5">
                       <CornerDownLeft className="w-2.5 h-2.5" />
                       <span>Ekle</span>
                     </span>
@@ -312,7 +312,7 @@ export const PredictiveInput: React.FC<PredictiveInputProps> = ({
           </div>
 
           {helperHint && (
-            <div className="px-3 py-1.5 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex items-center justify-between">
+            <div className="px-3 py-1.5 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-600 flex items-center justify-between">
               <span>{helperHint}</span>
               <span>💡 'Tab' tuşu ile hızlı tamamlayabilirsiniz</span>
             </div>

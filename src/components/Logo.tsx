@@ -5,6 +5,8 @@ interface LogoProps {
   showTagline?: boolean;
   className?: string;
   onClick?: () => void;
+  /** Tıklanabilirken gerçek adres — varsayılan ana sayfa. */
+  href?: string;
 }
 
 export const Logo: React.FC<LogoProps> = ({
@@ -12,6 +14,7 @@ export const Logo: React.FC<LogoProps> = ({
   showTagline = false,
   className = '',
   onClick,
+  href = '/',
 }) => {
   // Dimensions (with responsive classes)
   const circleSize = size === 'sm' ? 26 : size === 'lg' ? 44 : 34;
@@ -23,18 +26,25 @@ export const Logo: React.FC<LogoProps> = ({
       ? 'text-2xl sm:text-3xl tracking-[-0.035em]'
       : 'text-xl sm:text-2xl tracking-[-0.03em]';
 
-  return (
-    <div
-      /*
-        Buradaki sabit id kaldırıldı: logo başlıkta ve alt bilgide iki kez
-        çiziliyor, aynı id iki öğede birden bulunuyordu. HTML'de id benzersiz
-        olmak zorunda ve kimse bu id'yi kullanmıyordu.
-      */
-      onClick={onClick}
-      className={`inline-flex items-center gap-2 group select-none ${
-        onClick ? 'cursor-pointer' : ''
-      } ${className}`}
-    >
+  /*
+    TIKLANABİLİR LOGO GERÇEK BİR BAĞLANTI
+
+    Önce tıklanabilir bir <div>'di. Ekran okuyucu onu bağlantı olarak
+    duyurmuyordu, klavyeyle odaklanılamıyordu ve "yeni sekmede aç" ya da
+    orta tuşla açma çalışmıyordu — oysa bir sitede logonun ana sayfaya
+    götürmesi öğrenilmiş bir davranış.
+
+    Şimdi <a href="/">: tarayıcı adresi durum çubuğunda gösteriyor, ctrl
+    ve orta tuş kendi işini yapıyor, arama motoru da ana sayfaya giden bir
+    iç bağlantı görüyor. Sıradan tıklamada varsayılan engelleniyor ve
+    uygulama içi geçiş çalışıyor, yani sayfa baştan kurulmuyor.
+  */
+  const ortakSinif = `inline-flex items-center gap-2 group select-none ${
+    onClick ? 'cursor-pointer' : ''
+  } ${className}`;
+
+  const icerik = (
+    <>
       {/*
         Amblem: markanın kendi çizimi, `assets/logo-kaynak.png`.
 
@@ -68,11 +78,28 @@ export const Logo: React.FC<LogoProps> = ({
         <span className="w-1.5 h-1.5 rounded-full bg-blue-600 ml-1 mb-0.5 inline-block group-hover:scale-125 transition-transform"/>
 
         {showTagline && (
-          <span className="hidden lg:inline-block ml-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider pl-2 border-l border-gray-200">
+          <span className="hidden lg:inline-block ml-2 text-[10px] font-bold text-gray-600 uppercase tracking-wider pl-2 border-l border-gray-200">
             Kariyer & Yetenek
           </span>
         )}
       </div>
-    </div>
+    </>
+  );
+
+  if (!onClick) return <span className={ortakSinif}>{icerik}</span>;
+
+  return (
+    <a
+      href={href}
+      onClick={(e) => {
+        /* Ctrl/Cmd/Shift ve orta tuş tarayıcıya bırakılıyor. */
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+        e.preventDefault();
+        onClick();
+      }}
+      className={ortakSinif}
+    >
+      {icerik}
+    </a>
   );
 };

@@ -194,7 +194,7 @@ export const SkillQuizzesView: React.FC<SkillQuizzesViewProps> = ({
             {acik && (
               <div className="border-t border-gray-100">
                 {testler.length === 0 ? (
-                  <p className="px-4 py-5 text-xs text-gray-400">
+                  <p className="px-4 py-5 text-xs text-gray-600">
                     Bu grupta gösterilecek test yok.
                   </p>
                 ) : (
@@ -250,7 +250,7 @@ export const SkillQuizzesView: React.FC<SkillQuizzesViewProps> = ({
       })}
 
       {arama.trim() && KATEGORILER.every((k) => kategoriTestleri(k.id).length === 0) && (
-        <p className="text-center text-xs text-gray-400 py-6">
+        <p className="text-center text-xs text-gray-600 py-6">
           "{arama}" için test bulunamadı.
         </p>
       )}

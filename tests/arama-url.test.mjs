@@ -35,11 +35,17 @@ test('/ilanlar sunucuda kalıcı olarak ana sayfaya yönleniyor', () => {
     .filter((satir) => satir && !satir.startsWith('#'));
 
   const ilanlar = satirlar.findIndex((satir) => /^\/ilanlar\s+\/\s+30[18]$/.test(satir));
-  const yedek = satirlar.findIndex((satir) => satir.startsWith('/*'));
-
   assert.ok(ilanlar >= 0, '/ilanlar için kalıcı yönlendirme kuralı yok');
-  assert.ok(yedek >= 0, 'SPA yedeği kuralı yok');
-  assert.ok(ilanlar < yedek, 'yönlendirme kuralı SPA yedeğinden sonra kalırsa hiç çalışmaz');
+
+  /*
+    Eskiden burada kuralın SPA yedeğinden (`/*`) önce geldiği de
+    sınanıyordu. O yedek kaldırıldı: her şeyi yakaladığı için sitedeki
+    bütün hatalı adresler 200 ile ana sayfayı döndürüyordu. Kararı artık
+    functions/_middleware.ts veriyor ve _redirects'te yakalayıcı kural
+    kalmadığı tests/adres-kapsami.test.mjs içinde sınanıyor.
+  */
+  const yakalayan = satirlar.filter((satir) => /^\/\*\s/.test(satir));
+  assert.deepEqual(yakalayan, [], 'her şeyi yakalayan SPA kuralı geri gelmiş');
 });
 
 test('sitemap eski /ilanlar adresini üretmiyor', () => {

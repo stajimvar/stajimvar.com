@@ -226,7 +226,7 @@ export const CompanyClaimForm: React.FC<CompanyClaimFormProps> = ({
           placeholder={`ad.soyad@${companyName.toLocaleLowerCase('tr').replace(/[^a-z0-9]/g, '')}.com`}
           className={alanClass}
         />
-        <p className="text-[11px] text-gray-400 mt-1">
+        <p className="text-[11px] text-gray-600 mt-1">
           Şirketin kendi alan adındaki adres olmalı; talebi bununla doğruluyoruz.
         </p>
       </div>
@@ -263,7 +263,7 @@ export const CompanyClaimForm: React.FC<CompanyClaimFormProps> = ({
         >
           {gonderiliyor ? 'Gönderiliyor…' : 'Talebi gönder'}
         </button>
-        <span className="text-[11px] text-gray-400 flex items-center gap-1">
+        <span className="text-[11px] text-gray-600 flex items-center gap-1">
           <Check className="w-3.5 h-3.5" /> Bilgileriniz yalnızca doğrulama için kullanılır
         </span>
       </div>

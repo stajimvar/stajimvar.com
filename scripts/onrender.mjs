@@ -674,6 +674,18 @@ function sayfaYaz(yol, s) {
   let html = kabuk;
   const tamAdres = SITE + yol;
 
+  /*
+    Dizine girmemesi gereken sayfalar (404 gibi) için robots etiketi.
+    Sunucu doğru kodu döndürse bile bir tarayıcı sayfayı içeriğiyle
+    değerlendirebiliyor; ikisi birden söylenince tereddüt kalmıyor.
+  */
+  if (s.dizinDisi) {
+    html = html.replace(
+      '</head>',
+      '  <meta name="robots" content="noindex, follow" />\n  </head>'
+    );
+  }
+
   // <title>
   html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${kacir(s.baslik)}</title>`);
 
@@ -759,7 +771,9 @@ function sayfaYaz(yol, s) {
     Uzantılı dosya yazılınca Pages "/bolum/mimarlik" isteğine doğrudan 200
     dönüyor, yönlendirme olmuyor. Kök sayfa istisna: o index.html kalmalı.
   */
-  if (yol === '/') {
+  if (s.dosya) {
+    fs.writeFileSync(path.join(dist, s.dosya), html, 'utf8');
+  } else if (yol === '/') {
     fs.writeFileSync(path.join(dist, 'index.html'), html, 'utf8');
   } else {
     const hedef = path.join(dist, yol.replace(/^\//, '') + '.html');
@@ -1289,8 +1303,43 @@ async function main() {
   sayac++;
 
 
+  /*
+    GERÇEK 404
+
+    Bilinmeyen adresler HTTP 200 ile ana sayfayı döndürüyordu — Google'ın
+    "yumuşak 404" dediği durum. Hatalı bağlantılar dizine giriyor, aynı
+    içerik onlarca adreste görünüyor ve ziyaretçi de nereye düştüğünü
+    anlamıyor.
+
+    Cloudflare Pages, eşleşmeyen adreslerde çıktının kökündeki 404.html'i
+    GERÇEK 404 koduyla sunuyor. Bunun çalışması için _redirects'teki
+    her şeyi yakalayan `/*` kuralının kalkması gerekiyordu; yerine ön
+    render EDİLMEYEN uygulama adresleri tek tek yazıldı. Ön render edilen
+    215 sayfa zaten gerçek dosya, onlara kural gerekmiyor.
+
+    Sayfanın kendisi uygulama kabuğu: React açılınca bulunamadı ekranını
+    çiziyor, JS kapalıyken de aşağıdaki metin görünüyor.
+  */
+  sayfaYaz('/404', {
+    dosya: '404.html',
+    dizinDisi: true,
+    baslik: 'Sayfa bulunamadı | StajımVar',
+    aciklama:
+      'Aradığın sayfa taşınmış ya da hiç var olmamış olabilir. Staj ilanlarına, '
+      + 'öğrenci fırsatlarına ve rehbere ana sayfadan ulaşabilirsin.',
+    govde:
+      '<main><h1>Sayfa bulunamadı</h1>'
+      + '<p>Aradığın adres taşınmış ya da hiç var olmamış olabilir.</p>'
+      + '<ul>'
+      + `<li><a href="${SITE}/">Staj ilanları</a></li>`
+      + `<li><a href="${SITE}/firsatlar">Öğrenci fırsatları</a></li>`
+      + `<li><a href="${SITE}/rehber">Öğrenci rehberi</a></li>`
+      + `<li><a href="${SITE}/bolumler">Bölümler</a></li>`
+      + '</ul></main>',
+  });
+
   console.log(
-    `ön render: ${sayac} sayfa yazıldı ` +
+    `ön render: ${sayac} sayfa yazıldı (+404) ` +
       `(${bolumler.length} bölüm, ${rehberler.length} rehber, ${ilanlar.length} ilan)`
   );
 }

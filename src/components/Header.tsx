@@ -1017,7 +1017,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Dynamic Contextual Sub-Menu Bar (for Student views) */}
         {subMenuItems.length > 0 && (
           <div className="relative border-t border-gray-100 flex items-center py-2 group/subnav">
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mr-2 hidden sm:inline">
+            <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider shrink-0 mr-2 hidden sm:inline">
               {/* Şu an hiçbir sekme alt menü üretmiyor; şerit de çizilmiyor. */}
             </span>
 
@@ -1121,9 +1121,19 @@ export const Header: React.FC<HeaderProps> = ({
         className={altMenuClass}
         style={altMenuStil}
       >
+        {/*
+          ERİŞİLEBİLİR AD HER ZAMAN VAR
+
+          Alt bardaki yazı yalnızca seçili öğede görünüyor; yerden kazanmak
+          için böyle. Ama ekran okuyucu ve sesle kontrol için ad yazının
+          görünürlüğüne bağlı olamaz — etiketsiz bir ikon "düğme" diye
+          okunuyor ve nereye gittiği bilinmiyor. `aria-label` görünürden
+          bağımsız olarak adı taşıyor.
+        */}
         {/* 1. İlanlar */}
         <a
           href="/"
+          aria-label="Staj ilanları"
           aria-current={ilanlardaMi ? 'page' : undefined}
           onClick={baglantiTiklamasi(() => {
             setActiveTab('internships');
@@ -1156,6 +1166,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* 2. Fırsatlar — masaüstündeki sekmenin karşılığı */}
         <a
           href="/firsatlar"
+          aria-label="Öğrenci fırsatları"
           aria-current={firsatlardaMi ? 'page' : undefined}
           onClick={baglantiTiklamasi(() => onOpenOpportunities?.())}
           className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
@@ -1180,6 +1191,7 @@ export const Header: React.FC<HeaderProps> = ({
         */}
         <a
           href="/rehber"
+          aria-label="Öğrenci rehberi"
           aria-current={rehberdeMi && !isverendeMi ? 'page' : undefined}
           onClick={baglantiTiklamasi(() => onOpenGuides?.())}
           className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
@@ -1206,6 +1218,7 @@ export const Header: React.FC<HeaderProps> = ({
         {!isLoggedIn && (
           <button
             id="mobil-isveren-btn"
+            aria-label="İşveren tarafı"
             onClick={() => onOpenEmployer?.()}
             className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
               isverendeMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
@@ -1225,6 +1238,9 @@ export const Header: React.FC<HeaderProps> = ({
           <>
         {/* 4. Profil — başvuru sayacı burada */}
         <button
+          aria-label={
+            applicationsCount > 0 ? `Profilim, ${applicationsCount} başvuru` : 'Profilim'
+          }
           onClick={() => {
             setActiveTab('profile');
             setActiveSubTab('all');

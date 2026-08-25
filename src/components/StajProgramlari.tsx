@@ -36,7 +36,7 @@ const Kart: React.FC<{ program: StajProgrami; onNavigate?: (p: string) => void }
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0">
         <p className="font-bold text-gray-900 leading-snug">{program.isveren}</p>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-0.5">
+        <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mt-0.5">
           {program.sektor}
         </p>
       </div>
@@ -101,7 +101,7 @@ export const ProgramListesi: React.FC<{ onNavigate?: (p: string) => void }> = ({
           <section key={sektor} className="space-y-4">
             <div className="flex items-baseline gap-3">
               <h2 className="text-xl font-bold text-gray-900">{sektor}</h2>
-              <span className="text-sm text-gray-400">{liste.length} işveren</span>
+              <span className="text-sm text-gray-600">{liste.length} işveren</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {liste.map((p) => (

@@ -1393,7 +1393,7 @@ export default function App() {
               kaldırıldı: anasayfanın tepesinden aynı gerekçeyle çıkardığımız
               cümlenin ikizi.
             */}
-            <span className="text-[11px] text-gray-400">
+            <span className="text-[11px] text-gray-600">
               &copy; 2026 StajımVar
             </span>
           </div>

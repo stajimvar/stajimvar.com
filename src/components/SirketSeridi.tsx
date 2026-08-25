@@ -87,7 +87,7 @@ const Daire: React.FC<{
       >
         {etiket}
       </span>
-      <span className="block text-[10px] text-gray-400 truncate">{altEtiket}</span>
+      <span className="block text-[10px] text-gray-600 truncate">{altEtiket}</span>
     </span>
   </button>
 );

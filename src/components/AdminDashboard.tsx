@@ -94,7 +94,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
       </div>
 
       <section className="space-y-2">
-        <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Öğrenciler</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-gray-600">Öğrenciler</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           <Kutu deger={ozet.ogrenci} etiket="kayıtlı öğrenci" />
           <Kutu deger={ozet.profilDolu} etiket="okulunu girmiş" />
@@ -104,7 +104,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
       </section>
 
       <section className="space-y-2">
-        <p className="text-xs font-bold uppercase tracking-wider text-gray-400">İlanlar ve başvurular</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-gray-600">İlanlar ve başvurular</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           <Kutu deger={ozet.ilan} etiket="yayındaki ilan" />
           <Kutu
@@ -118,7 +118,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
       </section>
 
       <section className="space-y-2">
-        <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Şirket tarafı</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-gray-600">Şirket tarafı</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           <Kutu deger={ozet.sahiplenmis} etiket="sahiplenilmiş şirket" />
           <Kutu
@@ -141,7 +141,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
 
       {ozet.sonKayitlar.length > 0 && (
         <section className="space-y-2">
-          <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
+          <p className="text-xs font-bold uppercase tracking-wider text-gray-600">
             Son 7 günün kayıtları
           </p>
           <div className="bg-white rounded-2xl border border-gray-200 p-4 flex items-end gap-2 h-28">
@@ -154,7 +154,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                     className="w-full bg-blue-600 rounded-t"
                     style={{ height: `${Math.max(4, (g.sayi / enBuyuk) * 60)}px` }}
                   />
-                  <span className="text-[9px] text-gray-400 truncate w-full text-center">
+                  <span className="text-[9px] text-gray-600 truncate w-full text-center">
                     {g.tarih.slice(5)}
                   </span>
                 </div>

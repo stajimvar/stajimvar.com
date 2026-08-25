@@ -146,7 +146,7 @@ export const AiGapAnalysisModal: React.FC<AiGapAnalysisModalProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-blue-400" />
-                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-300">
                       Staj Hazırlık & Uyum Skoru
                     </span>
                   </div>

@@ -163,7 +163,7 @@ const Bolumler: React.FC<{ ogeler: OneCikan[]; secili?: string }> = ({ ogeler, s
               {o.etiket}
             </span>
             {o.alt && (
-              <span className="block text-[10px] leading-tight text-gray-400">{o.alt}</span>
+              <span className="block text-[10px] leading-tight text-gray-600">{o.alt}</span>
             )}
           </span>
         </button>
@@ -323,7 +323,7 @@ export const ProfilBasligi: React.FC<Props> = ({
           satırının yerini tutan bir DURUM cümlesi. Tıklanabilirliği
           duruyor ama eksik listesiyle yarışmıyor.
         */
-        <span className="block text-sm text-gray-400 group-hover:text-blue-700 transition-colors">
+        <span className="block text-sm text-gray-600 group-hover:text-blue-700 transition-colors">
           Henüz staj tercihlerini belirtmedin.
         </span>
       )}

@@ -76,7 +76,7 @@ const Alan: React.FC<{
   <label className="block space-y-1">
     <span className="block text-sm font-semibold text-gray-700">{etiket}</span>
     {children}
-    {ipucu && <span className="block text-xs text-gray-400">{ipucu}</span>}
+    {ipucu && <span className="block text-xs text-gray-600">{ipucu}</span>}
   </label>
 );
 
@@ -293,7 +293,7 @@ export const NetHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) => {
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-          <div className="grid grid-cols-[1fr_5rem_5rem_4.5rem] gap-2 px-4 py-2.5 bg-gray-50 border-b border-gray-200 text-xs font-bold uppercase tracking-wider text-gray-400">
+          <div className="grid grid-cols-[1fr_5rem_5rem_4.5rem] gap-2 px-4 py-2.5 bg-gray-50 border-b border-gray-200 text-xs font-bold uppercase tracking-wider text-gray-600">
             <span>Ders</span>
             <span className="text-center">Doğru</span>
             <span className="text-center">Yanlış</span>
@@ -310,7 +310,7 @@ export const NetHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) => {
                   <span className="block text-sm font-semibold text-gray-900 truncate">
                     {ders.ad}
                   </span>
-                  <span className="block text-xs text-gray-400">{ders.soru} soru</span>
+                  <span className="block text-xs text-gray-600">{ders.soru} soru</span>
                 </span>
                 <input
                   inputMode="numeric"
@@ -347,7 +347,7 @@ export const NetHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) => {
           */}
           {ortalamaKarsilastirmasi.length > 0 && (
             <div className="px-4 py-3 border-t border-gray-100 space-y-1.5">
-              <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
+              <p className="text-xs font-bold uppercase tracking-wider text-gray-600">
                 {YKS_KAYNAK.yil} ülke ortalamasıyla
               </p>
               {ortalamaKarsilastirmasi.map((k) => (
@@ -491,7 +491,7 @@ export const SiralamaTahmini: React.FC<AracProps> = ({ onBack, onNavigate }) => 
                 Sınav puanı
               </button>
             </div>
-            <span className="block text-xs text-gray-400">
+            <span className="block text-xs text-gray-600">
               Yerleştirme puanı okul başarı puanın (OBP) eklenmiş hâli — tercihte kullanılan
               puan budur.
             </span>
@@ -531,7 +531,7 @@ export const SiralamaTahmini: React.FC<AracProps> = ({ onBack, onNavigate }) => 
           puanlık basamaklarla yayınlandığı için ara değerler hesaplanarak bulunuyor.
         </Uyari>
 
-        <p className="text-xs text-gray-400 leading-relaxed">
+        <p className="text-xs text-gray-600 leading-relaxed">
           Kaynak:{' '}
           <a
             href={YKS_KAYNAK.url}
@@ -655,7 +655,7 @@ export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate })
               />
             </Alan>
           </div>
-          <p className="text-xs text-gray-400 leading-relaxed">
+          <p className="text-xs text-gray-600 leading-relaxed">
             Oranlar mevzuatla belirleniyor ve değişebiliyor. Değiştiyse buradan güncelleyip
             hesaplayabilirsin.
           </p>

@@ -1,34 +1,22 @@
-# Tek sayfa uygulaması: /gizlilik gibi yollar doğrudan açıldığında da
-# index.html sunulsun, Cloudflare Pages 404 vermesin.
-# Durum kodu 200 — yönlendirme değil, yeniden yazma.
-#
-# BURAYA "/assets/* -> 404" KURALI EKLEMEYİ DENEME
-# ------------------------------------------------
-# Denendi ve iki kez ters tepti:
-#
-# 1) Hedef `404.html` olunca Cloudflare Pages o dosyayı BÜTÜN bulunamayan
-#    yollar için kullanmaya başlıyor ve aşağıdaki SPA yedeğini eziyor.
-#    Ölçüldü: /cv ve /sirket/deneme 404 döndü, uygulama kabuğu hiç gelmedi —
-#    yani ön render edilmeyen uygulama adresleri açılmaz oldu.
-#
-# 2) Hedef `.txt` olunca Pages kuralı sessizce yok sayıyor; eksik varlık
-#    yine 200 + text/html dönüyor.
-#
-# GEREK DE YOK: tarayıcı, stil dosyası isteyip HTML alınca (nosniff) `error`
-# olayını tetikliyor. Ölçüldü — canlı sitede silinmiş bir css adresi için
-# link öğesinde error olayı geldi. index.html'deki kurtarma betiği o olayı
-# yakalayıp sayfayı bir kez yeniliyor.
 # ESKİ ADRES: /ilanlar
 #
 # İlan listesi ana sayfada duruyor; /ilanlar diye ayrı bir sayfa hiç
-# olmadı. Adres paylaşılmış ve arama motoruna düşmüş durumda, SPA yedeği
-# yüzünden 200 dönüyordu: ziyaretçi ana sayfayı görüyor ama adres çubuğunda
-# var olmayan bir yol kalıyor, arama motoru da aynı içeriği iki adreste
-# indeksliyordu. Kalıcı yönlendirme ikisini de düzeltiyor.
-#
-# Sıra önemli: SPA yedeği (/*) her şeyi yakaladığı için bu kural ondan
-# ÖNCE gelmeli.
+# olmadı. Adres paylaşılmış ve arama motoruna düşmüş durumda. Kalıcı
+# yönlendirme hem ziyaretçiyi hem de arama motorunu doğru yere alıyor.
 /ilanlar   /   301
 /ilanlar/*   /   301
 
-/*    /index.html   200
+# SPA YEDEĞİ ARTIK BURADA DEĞİL
+#
+# Eskiden burada `/*  /index.html  200` vardı ve sitedeki her hatalı adres
+# 200 ile ana sayfayı döndürüyordu (yumuşak 404). Yerine önek başına kural
+# yazmak da denendi ve ters tepti: `/ilan/*  /  200` kuralı ÖN RENDER
+# EDİLMİŞ sayfaları da eziyor (ölçüldü — /bolum/mimarlik ana sayfa
+# başlığıyla dönüyordu).
+#
+# Karar functions/_middleware.ts'e taşındı: orada önce dosya aranıyor,
+# bulunamazsa adresin uygulamaya ait olup olmadığına bakılıyor. Böylece
+# ön render sayfaları kazanıyor ve gerçekten var olmayan adres 404 alıyor.
+#
+# Eşleşmeyen adresler için Cloudflare Pages, çıktının kökündeki 404.html'i
+# gerçek 404 koduyla sunuyor; onu scripts/onrender.mjs üretiyor.

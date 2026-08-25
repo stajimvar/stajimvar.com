@@ -337,7 +337,7 @@ export const RehberMerkezi: React.FC<{
                   <h2 className="text-lg font-bold text-gray-900">
                     {arama ? 'Arama sonuçları' : oneCikanlar.length ? 'Diğer rehberler' : 'Rehberler'}
                   </h2>
-                  <span className="text-sm text-gray-400">{kalanlar.length} yazı</span>
+                  <span className="text-sm text-gray-600">{kalanlar.length} yazı</span>
                 </div>
                 <div className="grid grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-4">
                   {kalanlar.map((r, i) => (

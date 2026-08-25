@@ -297,7 +297,7 @@ export const InternshipDetailModal: React.FC<InternshipDetailModalProps> = ({
                   </label>
                   <button
                     onClick={() => setShowCoverLetterInput(false)}
-                    className="text-xs font-semibold text-gray-400 hover:text-gray-600"
+                    className="text-xs font-semibold text-gray-600 hover:text-gray-600"
                   >
                     Kaldır
                   </button>

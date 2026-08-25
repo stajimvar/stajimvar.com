@@ -262,7 +262,7 @@ export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
       */}
       {digerleri.length > 0 && (
         <section className="pt-2 space-y-2">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-600">
             Aynı gruptaki diğer bölümler
           </h2>
           <ul className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
@@ -305,7 +305,7 @@ export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
       </section>
 
       {bolum.guncelleme && (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-600">
           Son gözden geçirme:{' '}
           {new Date(bolum.guncelleme).toLocaleDateString('tr-TR', {
             day: 'numeric',

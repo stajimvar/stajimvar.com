@@ -32,7 +32,7 @@ export const MerkezListesi: React.FC = () => {
           <section key={sehir} className="space-y-3">
             <div className="flex items-baseline gap-3">
               <h2 className="text-lg font-bold text-gray-900">{sehir}</h2>
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-gray-600">
                 {liste.length} üniversite
               </span>
             </div>
@@ -90,7 +90,7 @@ export const KariyerMerkezleriIcerik: React.FC = () => (
         </a>{' '}
         kontrol edip ekleriz.
       </p>
-      <p className="text-xs text-gray-400 leading-relaxed">
+      <p className="text-xs text-gray-600 leading-relaxed">
         Bağlantılar üniversitelerin kendi sayfalarına gidiyor. İçerikleri onlara ait;
         başvuru koşulları ve takvim için o sayfalara bakın.
       </p>

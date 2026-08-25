@@ -157,7 +157,7 @@ export const RehberListesi: React.FC<{ onNavigate?: (p: string) => void }> = ({
       <section className="space-y-4">
         <div className="flex items-baseline gap-3">
           <h2 className="text-xl font-bold text-gray-900">Tüm rehberler</h2>
-          <span className="text-sm text-gray-400">{ogrenci.length} yazı</span>
+          <span className="text-sm text-gray-600">{ogrenci.length} yazı</span>
         </div>
         {/*
           Mobilde İKİ sütun, geniş ekranda üç.
@@ -265,7 +265,7 @@ export const RehberBaglantilari: React.FC<{
     <>
       {digerleri.length > 0 && (
         <section className="mt-10 space-y-2">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-600">
             Bunlar da işine yarar
           </h2>
           <ul className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
@@ -284,7 +284,7 @@ export const RehberBaglantilari: React.FC<{
       )}
 
       <section className="mt-8 space-y-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-600">
           Bölümüne göre staj
         </h2>
         <div className="flex flex-wrap gap-2">
@@ -344,6 +344,19 @@ const Icindekiler: React.FC<{ kap: React.RefObject<HTMLDivElement | null>; anaht
 
   if (!basliklar.length) return null;
 
+  /*
+    KENDİ NUMARAMIZI HER ZAMAN EKLEMİYORUZ
+
+    Elle yazılan rehberlerde başlıkların bir kısmı zaten numaralı
+    ("1. Okulunun staj birimiyle başla"). Listeye bir de biz numara
+    koyunca "1. 1. Okulunun…" çıkıyordu.
+
+    Numarayı başlıktan silmek yerine listeninkini kaldırıyoruz: oradaki
+    sayı yazarın adım sırası, metnin içinde de öyle görünüyor. Kendi
+    saydığımız sıra ona uymayabilir.
+  */
+  const kendiNumarasiVar = basliklar.some((b) => /^\d+[.)]\s/.test(b.metin.trim()));
+
   return (
     <nav aria-label="İçindekiler" className="rounded-2xl border border-gray-200 bg-white p-4">
       <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-500">
@@ -361,7 +374,7 @@ const Icindekiler: React.FC<{ kap: React.RefObject<HTMLDivElement | null>; anaht
               }}
               className="text-sm text-blue-700 hover:underline"
             >
-              {i + 1}. {b.metin}
+              {kendiNumarasiVar ? b.metin : `${i + 1}. ${b.metin}`}
             </a>
           </li>
         ))}
@@ -413,7 +426,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
           {rehber.baslik}
         </h1>
 
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-600">
           {konuEtiketi(rehber.konu)} · {rehberOkumaDakika(rehber)} dk okuma
         </p>
 
@@ -503,7 +516,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
         */}
         {rehber.kaynaklar && rehber.kaynaklar.length > 0 && (
           <section className="mt-8 space-y-2">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-600">
               Resmî kaynaklar
             </h2>
             {/*
@@ -590,7 +603,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
         )}
 
         {rehber.guncelleme && (
-          <p className="mt-6 text-xs text-gray-400">
+          <p className="mt-6 text-xs text-gray-600">
             Son gözden geçirme:{' '}
             {new Date(rehber.guncelleme).toLocaleDateString('tr-TR', {
               day: 'numeric',

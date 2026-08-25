@@ -194,7 +194,7 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack }) => {
           </Bolum>
         )}
 
-        <p className="text-[10px] text-gray-400 pt-2">
+        <p className="text-[10px] text-gray-600 pt-2">
           Bu CV stajimvar.com profilinden oluşturuldu.
         </p>
       </main>

@@ -15,7 +15,7 @@ import {
 import { InternshipListing, MatchBreakdown } from '../types';
 import { ListingLogo } from './ListingLogo';
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
-import { eklenmeMetni, sonKontrolMetni } from '../lib/zaman';
+import { eklenmeMetni, sonKontrolMetni, uzunSuredirAcik } from '../lib/zaman';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 
 interface InternshipCardProps {
@@ -219,7 +219,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                 bir şey değil. İkon + kısa etiket aynı şeyi söylüyor.
               */
               <span
-                className="inline-flex items-center gap-1 text-[11px] text-gray-400 font-medium"
+                className="inline-flex items-center gap-1 text-[11px] text-gray-600 font-medium"
                 title="Bu ilan şirketin kendi kariyer sayfasından alındı"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
@@ -243,7 +243,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               {listing.title}
             </h4>
             {listing.department && (
-              <p className="text-xs sm:text-sm text-gray-400 font-normal mt-0.5">
+              <p className="text-xs sm:text-sm text-gray-600 font-normal mt-0.5">
                 ({listing.department})
               </p>
             )}
@@ -305,11 +305,25 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               Ne zaman eklendiği. Sıralamada "Önce Yeni Eklenenler" seçeneği
               var; kartta karşılığı görünmezse kullanıcı sıralamanın işleyip
               işlemediğini anlayamaz.
+
+              Yayın tarihi çok eski ama başvuru adresi yakın zamanda
+              doğrulanmışsa tarih yerine ne anlama geldiği yazılıyor:
+              "10 ay önce yayınlandı" listenin bakımsız olduğunu düşündürüyor,
+              oysa ilan gerçekten açık. Ayrıntısı src/lib/zaman.ts içinde.
             */}
-            {eklenmeMetni(listing.postedAt, listing.postedAtDogrulandi) && (
-              <span className="text-[11px] text-gray-400">
-                {eklenmeMetni(listing.postedAt, listing.postedAtDogrulandi)}
+            {uzunSuredirAcik(listing.postedAt, listing.postedAtDogrulandi, listing.lastSeenAt) ? (
+              <span
+                className="text-[11px] text-gray-600"
+                title={`İlk yayın: ${eklenmeMetni(listing.postedAt, listing.postedAtDogrulandi)}`}
+              >
+                Uzun süredir açık
               </span>
+            ) : (
+              eklenmeMetni(listing.postedAt, listing.postedAtDogrulandi) && (
+                <span className="text-[11px] text-gray-600">
+                  {eklenmeMetni(listing.postedAt, listing.postedAtDogrulandi)}
+                </span>
+              )
             )}
 
             {/*
@@ -332,15 +346,29 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             {/*
               Eksik beceri, sahip olunan becerilerle aynı biçimde çizilince
               ikisi ayırt edilemiyordu. Başına "Eksik:" geldi.
+
+              GİRİŞ YAPMAMIŞ ZİYARETÇİYE "EKSİK" DENMEZ
+
+              Karşılaştırılacak bir profil yokken ilanın istediği her beceri
+              "eksik" sayılıyordu: hesabı olmayan ziyaretçi ilk kartta
+              "Eksik: React" görüyor ve kendisi hakkında bir yargı sanıyordu.
+              Oysa site onun hakkında hiçbir şey bilmiyor.
+
+              Aynı beceri artık ne olduğu olarak yazılıyor: ilanın istediği
+              bir beceri. Karşılaştırma ancak profil varken anlamlı.
             */}
             {match.missingRequiredSkills.slice(0, 1).map((skill) => (
               <span
                 key={skill}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-gray-50 text-gray-500 border border-gray-200"
-                title="İlanın istediği ama profilinde olmayan beceri"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-gray-50 text-gray-600 border border-gray-200"
+                title={
+                  girisGerekli
+                    ? 'İlanın istediği becerilerden biri. Giriş yaparsan profilinle karşılaştırılıyor.'
+                    : 'İlanın istediği ama profilinde olmayan beceri'
+                }
               >
-                <AlertCircle className="w-3 h-3 text-gray-400 shrink-0" />
-                <span>Eksik: {skill}</span>
+                <AlertCircle className="w-3 h-3 text-gray-500 shrink-0" />
+                <span>{girisGerekli ? `İlanda geçen: ${skill}` : `Eksik: ${skill}`}</span>
               </span>
             ))}
           </div>
@@ -364,7 +392,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             gereksiz uzatıyordu.
           */}
           {listing.applicationDeadline && (
-            <span className="text-[11px] text-gray-400">
+            <span className="text-[11px] text-gray-600">
               Son:{' '}
               <strong className="text-gray-700">
                 {listing.applicationDeadline}

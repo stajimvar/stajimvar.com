@@ -892,7 +892,7 @@ const Card: React.FC<{
       )}
 
       {item.lastCheckedAt && (
-        <p className="text-[11px] text-gray-400">
+        <p className="text-[11px] text-gray-600">
           Son kontrol: {safeDate(item.lastCheckedAt)} · Bilgiler kurum tarafından değiştirilebilir.
         </p>
       )}

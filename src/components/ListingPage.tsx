@@ -34,7 +34,7 @@ const Bilgi: React.FC<{ ikon: React.ReactNode; etiket: string; deger: string }> 
   <div className="flex items-start gap-2.5">
     <div className="text-gray-400 mt-0.5 shrink-0">{ikon}</div>
     <div className="min-w-0">
-      <p className="text-[11px] uppercase tracking-wider text-gray-400 font-bold">
+      <p className="text-[11px] uppercase tracking-wider text-gray-600 font-bold">
         {etiket}
       </p>
       <p className="text-sm font-semibold text-gray-900 break-words">{deger}</p>
@@ -280,7 +280,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                     </span>
                   ))}
                 </div>
-                <p className="text-[11px] text-gray-400">
+                <p className="text-[11px] text-gray-600">
                   Beceriler ilan metninden otomatik çıkarıldı; eksik olabilir.
                 </p>
               </div>
@@ -348,7 +348,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                 </button>
               )}
               {listing.sourceUrl && (
-                <p className="text-[11px] text-gray-400 pt-2 border-t border-gray-100">
+                <p className="text-[11px] text-gray-600 pt-2 border-t border-gray-100">
                   Kaynak: {new URL(listing.sourceUrl).hostname}
                 </p>
               )}

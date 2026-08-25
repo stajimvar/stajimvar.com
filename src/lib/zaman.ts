@@ -82,3 +82,42 @@ export function sonKontrolMetni(deger: string | null | undefined): string | null
   if (gun < 30) return `Son kontrol: ${gun} gün önce`;
   return null;
 }
+
+/*
+  UZUN SÜREDİR AÇIK İLANLAR
+
+  Toplanan ilanların bir kısmının gerçek yayın tarihi çok eski: bir tanesi
+  2022, bir başkası on aylık. Kartta "10 ay önce yayınlandı" yazınca
+  ziyaretçi haklı olarak "bu liste güncellenmiyor mu?" diye düşünüyor —
+  oysa o ilanların başvuru adresi çağrılıp çalıştığı doğrulanmış durumda.
+
+  İki bilgi burada birleşiyor: yayın tarihi eski AMA başvuru adresi yakın
+  zamanda doğrulanmış. Bu, ilanın unutulmuş bir kalıntı değil, uzun
+  süredir açık kalan bir program olduğunu gösteriyor — büyük şirketlerin
+  sürekli açık staj havuzlarında olağan.
+
+  Tarihi gizlemiyoruz, yorumluyoruz: eski tarih yerine "uzun süredir açık"
+  demek hem doğru hem de ziyaretçiyi yanıltmayan bilgi. Doğrulama yoksa
+  ya da bayatsa yorum yapılmıyor, tarih olduğu gibi kalıyor.
+*/
+const UZUN_SURE_GUN = 180;
+const DOGRULAMA_TAZELIK_GUN = 14;
+
+export function uzunSuredirAcik(
+  yayinTarihi: string | null | undefined,
+  kaynaktanMi: boolean | undefined,
+  sonDogrulama: string | null | undefined
+): boolean {
+  /* Tarih bizim ekleme tarihimizse ilanın gerçek yaşı hakkında bir şey söylemiyor. */
+  if (!kaynaktanMi || !yayinTarihi || !sonDogrulama) return false;
+
+  const yayin = new Date(yayinTarihi).getTime();
+  const dogrulama = new Date(sonDogrulama).getTime();
+  if (Number.isNaN(yayin) || Number.isNaN(dogrulama)) return false;
+
+  const simdi = Date.now();
+  const yas = (simdi - yayin) / GUN_MS;
+  const dogrulamaYasi = (simdi - dogrulama) / GUN_MS;
+
+  return yas >= UZUN_SURE_GUN && dogrulamaYasi >= 0 && dogrulamaYasi <= DOGRULAMA_TAZELIK_GUN;
+}

@@ -247,7 +247,7 @@ const Bolum: React.FC<BolumProps> = ({
 
 /* Boş bölümlerde tek satırlık yönlendirme. */
 const BosDurum: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <p className="text-xs text-gray-400 py-1">{children}</p>
+  <p className="text-xs text-gray-600 py-1">{children}</p>
 );
 
 const alanClass =
@@ -1021,7 +1021,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               placeholder="05XX XXX XX XX"
               className={alanClass}
             />
-            <p className="text-[11px] text-gray-400 mt-1">
+            <p className="text-[11px] text-gray-600 mt-1">
               Telefonun yalnızca başvurduğun ilanın şirketiyle paylaşılır.
             </p>
           </div>
@@ -1139,7 +1139,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           buttonText="Ekle"
           accentColor="blue"
         />
-        <p className="text-[11px] text-gray-400">
+        <p className="text-[11px] text-gray-600">
           Seviyeyi değiştirmek için rozetin üstündeki yazıya dokun.
         </p>
       </Bolum>
@@ -1561,7 +1561,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
-          <p className="text-[11px] text-gray-400 mt-1">
+          <p className="text-[11px] text-gray-600 mt-1">
             Hiç seçmezsen tüm şehirlerdeki ilanlar eşit değerlendirilir.
           </p>
         </div>

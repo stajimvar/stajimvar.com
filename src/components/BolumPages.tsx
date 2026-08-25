@@ -113,7 +113,7 @@ export const BolumListesi: React.FC<{ onNavigate?: (p: string) => void }> = ({
         <section key={grup} className="space-y-4">
           <div className="flex items-baseline gap-3">
             <h2 className="text-xl font-bold text-gray-900">{BOLUM_GRUPLARI[grup]}</h2>
-            <span className="text-sm text-gray-400">{liste.length} bölüm</span>
+            <span className="text-sm text-gray-600">{liste.length} bölüm</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {liste.map((b) => (

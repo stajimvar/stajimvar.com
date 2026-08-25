@@ -227,7 +227,7 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
             </div>
 
             <div className="space-y-3">
-              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
+              <h2 className="text-xs font-bold text-gray-600 uppercase tracking-widest px-1">
                 Açık ilanlar ({veri.listings.length})
               </h2>
 
@@ -268,7 +268,7 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                     */}
                     {(eklenmeMetni(ilan.postedAt, ilan.postedAtDogrulandi) ||
                       sonKontrolMetni(ilan.lastSeenAt)) && (
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-400">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-600">
                         {eklenmeMetni(ilan.postedAt, ilan.postedAtDogrulandi) && (
                           <span>{eklenmeMetni(ilan.postedAt, ilan.postedAtDogrulandi)}</span>
                         )}
@@ -296,7 +296,7 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
               veri.company.size ||
               kariyerAdresi) && (
               <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-7">
-                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                <h2 className="text-xs font-bold text-gray-600 uppercase tracking-widest">
                   Künye
                 </h2>
                 <dl className="mt-3 grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
@@ -341,7 +341,7 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
 
             {ilgiliBolumler.length > 0 && (
               <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-7">
-                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                <h2 className="text-xs font-bold text-gray-600 uppercase tracking-widest">
                   İlgili bölümler
                 </h2>
                 <p className="mt-1 text-sm text-gray-600">
