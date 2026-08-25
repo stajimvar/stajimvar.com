@@ -288,22 +288,49 @@ export const ListingPage: React.FC<ListingPageProps> = ({
 
             <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-3">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="text-sm font-bold">İlanın kaynak metni</h2>
+                <h2 className="text-sm font-bold">İlan metni</h2>
                 <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">
-                  Şirketin kendi metni
+                  Otomatik çeviri
                 </span>
               </div>
               {/*
-                METİN NEDEN DÜZENLENMİYOR
+                "ŞİRKETİN KENDİ METNİ" DEĞİL, ÇEVİRİSİ
 
-                Buradaki metin şirketin kendi ilanından geldiği gibi duruyor:
-                özetlemek ya da yeniden yazmak, şirketin söylemediği bir şeyi
-                söyletme riski taşıyor. Yapılabilecek olan onu ağır
-                göstermemek — uzun metin katlanıyor, isteyen açıyor.
+                Etiket "Şirketin kendi metni" diyordu ama gösterilen metin
+                kaynak ilanın otomatik Türkçe çevirisi: açtığımız resmî
+                ilanların çoğu İngilizce. Çeviriyi şirketin kendi cümlesi
+                gibi sunmak hem yanlış hem de çeviri hatasından doğan
+                sorumluluğu üstlenmek demek.
+
+                Metin ÇEVİRİ dışında düzenlenmiyor: özetlemek ya da yeniden
+                yazmak, şirketin söylemediği bir şeyi söyletme riski taşıyor.
+                Uzun metin katlanıyor, isteyen açıyor.
 
                 HTML olarak basmıyoruz: dışarıdan gelen içeriği işaretleme
                 olarak yorumlamak XSS kapısıdır.
+
+                Orijinal metin sistemde saklanmıyor; "orijinali göster"
+                yerine resmî ilana giden bağlantı veriliyor — tek doğru
+                kaynak zaten orası.
               */}
+              <p className="text-[11px] text-gray-500 leading-relaxed">
+                Bu metin kaynak ilanın otomatik Türkçe çevirisi. Anlam
+                uyuşmazlığında şirketin resmî ilanı esas alınır.
+                {listing.sourceUrl && (
+                  <>
+                    {' '}
+                    <a
+                      href={listing.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      className="font-semibold text-blue-700 hover:underline"
+                    >
+                      Orijinal ilanı aç
+                    </a>
+                    .
+                  </>
+                )}
+              </p>
               <p
                 className={`text-sm text-gray-600 leading-relaxed whitespace-pre-line ${
                   metinAcik ? '' : 'line-clamp-[12]'

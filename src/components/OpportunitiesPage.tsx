@@ -103,8 +103,7 @@ export const OpportunitiesPage: React.FC<{
   const [saved, setSaved] = React.useState<string[]>([]);
   const [state, setState] = React.useState<'loading' | 'ready' | 'error'>('loading');
   const [panelAcik, setPanelAcik] = React.useState(false);
-  /* Süresi dolanlar varsayılanda gizli; isteyen açıyor. */
-  const [arsivGoster, setArsivGoster] = React.useState(false);
+  /* Süresi dolanlar varsayılanda gizli; isteyen açıyor. Durum adreste. */
   /*
     TAKVİMİ AÇIKLANMAYANLAR DA VARSAYILANDA GİZLİ
 
@@ -116,11 +115,23 @@ export const OpportunitiesPage: React.FC<{
     açıklanmayanlar silinmiyor: tek satırlık bir bağlantıyla açılıyorlar,
     çünkü "bu kurum burs veriyor mu" sorusunun cevabı onlarda.
   */
-  const [takvimsizGoster, setTakvimsizGoster] = React.useState(false);
   const [filters, setFilters] = React.useState(() => ({
     ...readOpportunityFilters(window.location.search),
     type: categoryPath[path] || readOpportunityFilters(window.location.search).type,
   }));
+
+  /*
+    GÖRÜNÜM DURUMLARI DA ADRESTE
+
+    Arşiv ve "takvimi açıklanmayanlar" sayfa içi durumdu: sayfa yenilendiğinde
+    kayboluyor ve o görünüm paylaşılamıyordu. Süzgeçlerle aynı yere taşındı.
+  */
+  const arsivGoster = filters.arsiv;
+  const takvimsizGoster = filters.takvimsiz;
+  const setArsivGoster = (f: (a: boolean) => boolean) =>
+    set({ arsiv: f(filters.arsiv), takvimsiz: false });
+  const setTakvimsizGoster = (f: (a: boolean) => boolean) =>
+    set({ takvimsiz: f(filters.takvimsiz) });
 
   const savedOnly = path === '/kaydedilen-firsatlar';
   const sekme: Sekme = path === '/bana-uygun' ? 'uygun' : path === '/firsat-takvimi' ? 'takvim' : 'tumu';
@@ -154,8 +165,13 @@ export const OpportunitiesPage: React.FC<{
   }, [userId]);
 
   React.useEffect(() => {
+    /*
+      Adres yalnızca /firsatlar için yazılıyordu: kategori sayfalarında ve
+      takvimde arama adrese hiç düşmüyor, sayfa yenilenince kayboluyordu.
+      Artık bütün fırsat görünümlerinde yazılıyor.
+    */
     const query = serializeOpportunityFilters(filters);
-    if (path === '/firsatlar' && window.location.search !== query) {
+    if (window.location.search !== query) {
       window.history.replaceState({}, '', `${path}${query}`);
     }
   }, [filters, path]);
@@ -170,17 +186,20 @@ export const OpportunitiesPage: React.FC<{
     bağlantılarla uyumlu kalsın diye); "yakında" seçimi sayfa içi bir
     durum, çünkü kimse "yakında açılacaklar" listesini paylaşmıyor.
   */
-  const [durumSuzgeci, setDurumSuzgeci] = React.useState<'' | 'acik' | 'yakinda'>(
-    filters.openOnly ? 'acik' : ''
-  );
-  const durumSec = (yeni: '' | 'acik' | 'yakinda') => {
-    setDurumSuzgeci(yeni);
-    set({ openOnly: yeni === 'acik' });
-  };
-  const temizle = () => {
-    setDurumSuzgeci('');
-    set({ query: '', type: categoryPath[path] || '', level: '', place: '', openOnly: false });
-  };
+  const durumSuzgeci = (filters.durum || '') as '' | 'acik' | 'yakinda';
+  const durumSec = (yeni: '' | 'acik' | 'yakinda') =>
+    set({ durum: yeni, openOnly: yeni === 'acik' });
+  const temizle = () =>
+    set({
+      query: '',
+      type: categoryPath[path] || '',
+      level: '',
+      place: '',
+      openOnly: false,
+      durum: '',
+      takvimsiz: false,
+      arsiv: false,
+    });
 
   /* Aktif filtre sayısı düğmenin üzerinde: panel kapalıyken de görünsün. */
   const aktifSuzgecSayisi =
@@ -361,7 +380,8 @@ export const OpportunitiesPage: React.FC<{
           ).map(([yol, etiket, id]) => (
             <button
               key={yol}
-              onClick={() => onNavigate(yol)}
+              /* Sekme değişince arama ve süzgeçler adresle birlikte taşınıyor. */
+              onClick={() => onNavigate(`${yol}${serializeOpportunityFilters(filters)}`)}
               className={`flex-1 rounded-full px-3 py-2 transition-colors cursor-pointer ${
                 sekme === id ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
               }`}

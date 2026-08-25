@@ -565,6 +565,63 @@ if (!/<div id="root">\s*<\/div>/.test(kabuk)) {
  * @param {string} yol       "/bolum/mimarlik" gibi
  * @param {object} s         { baslik, aciklama, govde, jsonLd }
  */
+/*
+  KIRINTI YOLU (BreadcrumbList)
+
+  Adresten üretiliyor: /rehber/kyk-burs-ve-kredi -> Ana sayfa > Öğrenci
+  rehberi > sayfanın başlığı. Google arama sonucunda çıplak adres yerine bu
+  yolu gösteriyor ve sayfanın sitedeki yeri makineye anlaşılır oluyor.
+
+  Elle yazılmıyor: 215 sayfa var ve elle yazılan bir kırıntı, adres
+  değiştiğinde sessizce yanlış kalır.
+*/
+const KIRINTI_ADLARI = {
+  rehber: 'Öğrenci rehberi',
+  bolum: 'Bölümler',
+  bolumler: 'Bölümler',
+  ilan: 'Staj ilanları',
+  firsatlar: 'Öğrenci fırsatları',
+  sirket: 'Şirketler',
+  araclar: 'Hesaplama araçları',
+  isveren: 'İşverenler',
+};
+
+function kirintiYolu(yol, baslik) {
+  const parcalar = yol.split('/').filter(Boolean);
+  if (!parcalar.length) return null;
+
+  const ogeler = [{ '@type': 'ListItem', position: 1, name: 'Ana sayfa', item: SITE }];
+  let birikim = '';
+  parcalar.forEach((parca, i) => {
+    birikim += '/' + parca;
+    const sonuncu = i === parcalar.length - 1;
+    ogeler.push({
+      '@type': 'ListItem',
+      position: i + 2,
+      /* Son öğe sayfanın kendi başlığı; aradakiler bölüm adı. */
+      name: sonuncu ? baslik.split('|')[0].trim() : KIRINTI_ADLARI[parca] || parca,
+      item: SITE + birikim,
+    });
+  });
+  return { '@type': 'BreadcrumbList', itemListElement: ogeler };
+}
+
+/*
+  Var olan @graph'a kırıntı ekleniyor. Ayrı bir script bloğu açmak yerine
+  tek grafikte durması, Google'ın ikisini aynı sayfanın verisi olarak
+  okumasını kolaylaştırıyor.
+*/
+function yapisalVeri(yol, s) {
+  const kirinti = kirintiYolu(yol, s.baslik);
+  if (!kirinti) return s.jsonLd || null;
+  const mevcut = s.jsonLd;
+  if (mevcut && Array.isArray(mevcut['@graph'])) {
+    return { ...mevcut, '@graph': [...mevcut['@graph'], kirinti] };
+  }
+  if (mevcut) return { '@context': 'https://schema.org', '@graph': [mevcut, kirinti] };
+  return { '@context': 'https://schema.org', '@graph': [kirinti] };
+}
+
 function sayfaYaz(yol, s) {
   let html = kabuk;
   const tamAdres = SITE + yol;
@@ -591,9 +648,12 @@ function sayfaYaz(yol, s) {
     '</head>',
     `  <link rel="canonical" href="${tamAdres}" />\n` +
       `    <meta property="og:url" content="${tamAdres}" />\n` +
-      (s.jsonLd
-        ? `    <script type="application/ld+json">${JSON.stringify(s.jsonLd)}</script>\n`
-        : '') +
+      (() => {
+        const veri = yapisalVeri(yol, s);
+        return veri
+          ? `    <script type="application/ld+json">${JSON.stringify(veri)}</script>\n`
+          : '';
+      })() +
       '  </head>'
   );
 

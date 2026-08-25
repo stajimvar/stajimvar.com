@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, Copy, X } from 'lucide-react';
 import { useModalErisim } from '../lib/modal-erisim';
+import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 import type { StudentProfile } from '../types';
 
 /**
@@ -84,6 +85,23 @@ export const BasvuruSablonu: React.FC<BasvuruSablonuProps> = ({ acik, onKapat, o
     }
   }, [acik, ogrenci]);
 
+  /*
+    Sayfa olarak açıldığında (/basvuru-sablonu) kendi başlığı ve canonical'ı
+    olmalı; modal olarak açıldığında adres değişmediği için meta da
+    değişmemeli.
+  */
+  const sayfaOlarak = typeof window !== 'undefined' && window.location.pathname === '/basvuru-sablonu';
+  React.useEffect(() => {
+    if (!acik || !sayfaOlarak) return;
+    return sayfaMetaAyarla({
+      baslik: 'Staj başvuru e-postası şablonu | StajımVar',
+      aciklama:
+        'Konu satırı, metin ve sigorta cümlesiyle hazır staj başvuru e-postası. ' +
+        'Profilindeki bilgilerle doldurulur, kopyalanır.',
+      yol: '/basvuru-sablonu',
+    });
+  }, [acik, sayfaOlarak]);
+
   if (!acik) return null;
 
   const konu = `Staj Başvurusu — ${ogrenci?.department || '[Bölüm]'} — [Tarih aralığı]`;
@@ -102,7 +120,13 @@ export const BasvuruSablonu: React.FC<BasvuruSablonuProps> = ({ acik, onKapat, o
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
       <div className="bg-white w-full sm:max-w-2xl sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-5 py-4 flex items-center justify-between">
-          <h2 className="text-base font-extrabold text-gray-900">Başvuru e-postası şablonu</h2>
+          {/*
+            Kendi adresi olan bir sayfa oldu (/basvuru-sablonu) ama başlığı
+            hâlâ h2'ydi ve sayfanın kendi meta bilgisi yoktu: tarayıcı
+            başlığı, açıklaması ve paylaşım kartı ana sayfadan kalıyordu.
+            Modal olarak açıldığında da h1 doğru: bu pencerenin konusu bu.
+          */}
+          <h1 className="text-base font-extrabold text-gray-900">Başvuru e-postası şablonu</h1>
           <button
             type="button"
             onClick={onKapat}

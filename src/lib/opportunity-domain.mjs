@@ -155,14 +155,36 @@ export function daysUntilDeadline(value, now) {
   return deadlineDay == null || currentDay == null ? null : Math.max(0, Math.round((deadlineDay - currentDay) / 86400000));
 }
 
+/*
+  SÜZGEÇLERİN TEK GERÇEK KAYNAĞI ADRES
+
+  Arama ve süzgeçler bellekte tutuluyordu: takvim sekmesine geçince arama
+  duruyordu ama adrese yazılmadığı için sayfa yenilendiğinde kayboluyordu.
+  Aynı sebeple süzülmüş bir listeyi paylaşmak da mümkün değildi.
+
+  `durum` alanı da eklendi: "yakında açılacak" süzgeci yalnızca sayfa içi
+  bir durumdu, adrese hiç yazılmıyordu.
+*/
+const DURUMLAR = ['acik', 'yakinda'];
+
 export function readOpportunityFilters(search) {
   const params = new URLSearchParams(search);
+  const durum = DURUMLAR.includes(params.get('durum')) ? params.get('durum') : '';
   return {
     query: params.get('q') || '',
     type: OPPORTUNITY_TYPES.includes(params.get('type')) ? params.get('type') : '',
     level: params.get('level') || '',
     place: params.get('place') || '',
-    openOnly: params.get('open') === '1',
+    /*
+      Eski bağlantılarla uyum: `open=1` bir süre "yalnızca açık" anlamına
+      geliyordu. Paylaşılmış bağlantılar çalışmaya devam etsin diye
+      okunuyor ama artık `durum=acik` olarak yazılıyor.
+    */
+    openOnly: params.get('open') === '1' || durum === 'acik',
+    durum: durum || (params.get('open') === '1' ? 'acik' : ''),
+    /* Takvimi açıklanmayanlar ve süresi dolanlar da paylaşılabilir olmalı. */
+    takvimsiz: params.get('takvimsiz') === '1',
+    arsiv: params.get('arsiv') === '1',
   };
 }
 
@@ -172,7 +194,10 @@ export function serializeOpportunityFilters(filters) {
   if (filters.type) params.set('type', filters.type);
   if (filters.level) params.set('level', filters.level);
   if (filters.place) params.set('place', filters.place);
-  if (filters.openOnly) params.set('open', '1');
+  if (filters.durum) params.set('durum', filters.durum);
+  else if (filters.openOnly) params.set('durum', 'acik');
+  if (filters.takvimsiz) params.set('takvimsiz', '1');
+  if (filters.arsiv) params.set('arsiv', '1');
   const query = params.toString();
   return query ? `?${query}` : '';
 }

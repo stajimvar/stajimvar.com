@@ -34,10 +34,15 @@ import type { StudentProfile } from '../types';
  * Ortak kabuk kullaniliyor: baslik cubugu ana sayfayla ayni genislikte,
  * logo hep sol ust kosede. Ayrintisi SayfaKabugu.tsx icinde.
  */
-const Kabuk: React.FC<{ onBack: () => void; children: React.ReactNode }> = ({
-  onBack,
-  children,
-}) => <SayfaKabugu onBack={onBack}>{children}</SayfaKabugu>;
+/*
+  REHBER DETAYINDA TEK GERİ YOLU
+
+  Kabuğun genel "Geri" düğmesi ile gövdedeki "← Tüm rehberler" aynı işi
+  yapıyordu. Nereye gittiğini söyleyen kaldı.
+*/
+const Kabuk: React.FC<{ onBack?: () => void; children: React.ReactNode }> = ({ children }) => (
+  <SayfaKabugu>{children}</SayfaKabugu>
+);
 
 /* ------------------------------------------------------------------ merkez */
 
@@ -223,7 +228,25 @@ export const RehberBaglantilari: React.FC<{
   kategori: Rehber['kategori'];
   onNavigate?: (p: string) => void;
 }> = ({ slug, kategori, onNavigate }) => {
-  const digerleri = REHBERLER.filter((r) => r.slug !== slug && r.kategori === kategori);
+  /*
+    İLGİLİ REHBERLER: ÜÇ TANE, AYNI KONUDAN
+
+    Burada `kategori`ye göre süzülüyordu — yani öğrenci rehberlerinin
+    TAMAMI. On bir yazıyken sorun değildi; yetmiş yazıda her rehber
+    sayfasının altına 69 bağlantı düşüyor. Ölçüldü: öğrenci evi rehberi
+    7.747 piksele ve 74 rehber bağlantısına çıkıyordu.
+
+    Bu hem okuyucu için işe yaramaz (69 seçenek seçenek değildir) hem de
+    bağlantı ağırlığını dağıtıp hiçbir sayfaya sinyal taşımıyor.
+
+    Artık AYNI KONUDAN üç yazı geliyor; konu tek başına yetmezse aynı
+    kategoriden tamamlanıyor ve altta "Tüm rehberler" bağlantısı duruyor.
+  */
+  const bu = REHBERLER.find((r) => r.slug === slug);
+  const havuz = REHBERLER.filter((r) => r.slug !== slug && r.kategori === kategori);
+  const ayniKonu = bu ? havuz.filter((r) => r.konu === bu.konu) : [];
+  const digerleri = [...ayniKonu, ...havuz.filter((r) => !ayniKonu.includes(r))].slice(0, 3);
+
   // Bölüm sayfalarının tamamı değil: en çok aranan birkaçı, sonra tam liste.
   const bolumler = BOLUMLER.slice(0, 6);
 
@@ -250,6 +273,13 @@ export const RehberBaglantilari: React.FC<{
               <Satir key={r.slug} rehber={r} onNavigate={onNavigate} />
             ))}
           </ul>
+          <a
+            href="/rehber"
+            onClick={(e) => yakala(e, '/rehber')}
+            className="inline-block text-sm font-semibold text-blue-700 hover:underline"
+          >
+            Tüm rehberleri gör
+          </a>
         </section>
       )}
 

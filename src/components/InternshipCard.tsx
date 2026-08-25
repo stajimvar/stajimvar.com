@@ -37,6 +37,12 @@ interface InternshipCardProps {
   */
   kayitli?: boolean;
   onToggleKayit?: () => void;
+  /*
+    Misafir kullanıcıda da yer imi GÖRÜNÜYOR ama işaretlenmiş olmuyor:
+    düğme gizlendiğinde giriş yapmamış ziyaretçi bu özelliğin varlığından
+    haberdar olmuyordu. Tıklayınca giriş penceresi açılıyor.
+  */
+  girisGerekli?: boolean;
 }
 
 export const InternshipCard: React.FC<InternshipCardProps> = ({
@@ -47,6 +53,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
   onQuickApply,
   kayitli = false,
   onToggleKayit,
+  girisGerekli = false,
 }) => {
   /*
     UYUM PUANI LOGONUN ETRAFINDA HALKA OLARAK
@@ -163,8 +170,21 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                   e.stopPropagation();
                   onToggleKayit();
                 }}
-                aria-pressed={kayitli}
-                title={kayitli ? 'Kayıtlardan çıkar' : 'Daha sonra bakmak için kaydet'}
+                aria-pressed={girisGerekli ? undefined : kayitli}
+                aria-label={
+                  girisGerekli
+                    ? 'Kaydetmek için giriş yap'
+                    : kayitli
+                      ? 'Kayıtlardan çıkar'
+                      : 'Daha sonra bakmak için kaydet'
+                }
+                title={
+                  girisGerekli
+                    ? 'Kaydetmek için giriş yap'
+                    : kayitli
+                      ? 'Kayıtlardan çıkar'
+                      : 'Daha sonra bakmak için kaydet'
+                }
                 className={`ml-auto shrink-0 p-1.5 rounded-lg transition-colors cursor-pointer ${
                   kayitli ? 'text-blue-600 bg-blue-50' : 'text-gray-300 hover:text-blue-600 hover:bg-blue-50'
                 }`}

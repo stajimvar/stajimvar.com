@@ -51,9 +51,50 @@ test('summarizes only real open opportunities without inventing a deadline', () 
 });
 
 test('round-trips public opportunity filters through URL query state', () => {
-  const filters = readOpportunityFilters('?q=erasmus&type=international&level=Y%C3%BCksek+Lisans&place=Ankara&open=1');
-  assert.deepEqual(filters, { query: 'erasmus', type: 'international', level: 'Yüksek Lisans', place: 'Ankara', openOnly: true });
-  assert.equal(serializeOpportunityFilters(filters), '?q=erasmus&type=international&level=Y%C3%BCksek+Lisans&place=Ankara&open=1');
+  const filters = readOpportunityFilters(
+    '?q=erasmus&type=international&level=Y%C3%BCksek+Lisans&place=Ankara&durum=acik'
+  );
+  assert.deepEqual(filters, {
+    query: 'erasmus',
+    type: 'international',
+    level: 'Yüksek Lisans',
+    place: 'Ankara',
+    openOnly: true,
+    durum: 'acik',
+    takvimsiz: false,
+    arsiv: false,
+  });
+  assert.equal(
+    serializeOpportunityFilters(filters),
+    '?q=erasmus&type=international&level=Y%C3%BCksek+Lisans&place=Ankara&durum=acik'
+  );
+});
+
+/*
+  ESKİ BAĞLANTILAR ÇALIŞMAYA DEVAM ETMELİ
+
+  Süzgeç adı `open=1`'den `durum=acik`'e geçti. Paylaşılmış eski bağlantılar
+  hâlâ dolaşımda; okunurken kabul ediliyor, yazılırken yeni ad kullanılıyor.
+*/
+test('eski open=1 bağlantısı durum=acik olarak okunuyor', () => {
+  const filters = readOpportunityFilters('?open=1');
+  assert.equal(filters.openOnly, true);
+  assert.equal(filters.durum, 'acik');
+  assert.equal(serializeOpportunityFilters(filters), '?durum=acik');
+});
+
+test('takvimsiz ve arşiv görünümleri adrese yazılıyor', () => {
+  const filters = readOpportunityFilters('?takvimsiz=1&arsiv=1');
+  assert.equal(filters.takvimsiz, true);
+  assert.equal(filters.arsiv, true);
+  assert.equal(serializeOpportunityFilters(filters), '?takvimsiz=1&arsiv=1');
+});
+
+test('yakında süzgeci adrese yazılıyor', () => {
+  const filters = readOpportunityFilters('?durum=yakinda');
+  assert.equal(filters.durum, 'yakinda');
+  assert.equal(filters.openOnly, false);
+  assert.equal(serializeOpportunityFilters(filters), '?durum=yakinda');
 });
 
 test('does not score an opportunity when a required profile fact is missing', () => {

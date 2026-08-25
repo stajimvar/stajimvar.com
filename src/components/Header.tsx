@@ -381,11 +381,12 @@ export const Header: React.FC<HeaderProps> = ({
                   başvurusu takvime bağlı, kaçırılınca bir yıl bekleniyor.
                   Rehber ise her zaman orada duruyor.
 
-                  Sekmenin adı "Fırsatlar"dan "Burs İlanları"na çevrildi;
-                  "fırsat" ne olduğunu söylemeyen bir kelimeydi. Listede
-                  yarışma ve yurt dışı programı da var, yani ad tam kapsamıyor
-                  — ama on bir kaydın dokuzu burs ve kredi, ve öğrenci
-                  aradığında "burs" yazıyor.
+                  Ad bir süre "Burs İlanları"ydı: o sırada on bir kaydın
+                  dokuzu burs ve krediydi, ad kapsamı doğru anlatıyordu.
+                  Şimdi listede 68 kayıt var ve içinde KYK, yarışma, eğitim
+                  programı, yurt dışı hareketliliği ve öğrenci desteği de
+                  bulunuyor — "burs" artık sayfanın yaptığı işi küçültüyor.
+                  Ad "Fırsatlar"a döndü; sayfanın başlığı da öyle.
                 */}
                 <button
                   id="nav-tab-opportunities"
@@ -395,7 +396,7 @@ export const Header: React.FC<HeaderProps> = ({
                   }`}
                 >
                   <Sparkles className={`w-3.5 h-3.5 shrink-0 ${firsatlardaMi ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <span>Burs İlanları</span>
+                  <span>Fırsatlar</span>
                   {firsatlardaMi && <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>}
                 </button>
 
@@ -1121,7 +1122,7 @@ export const Header: React.FC<HeaderProps> = ({
           Artık ikisi de aynı: İlanlar · Burs · Rehber · (Profil / İşveren).
         */}
 
-        {/* 2. Burs — masaüstündeki "Burs İlanları" sekmesinin karşılığı */}
+        {/* 2. Fırsatlar — masaüstündeki sekmenin karşılığı */}
         <button
           onClick={() => onOpenOpportunities?.()}
           className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
@@ -1134,7 +1135,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600" />
             )}
           </div>
-          {firsatlardaMi && <span className="text-[11px] font-bold truncate">Burs</span>}
+          {firsatlardaMi && <span className="text-[11px] font-bold truncate">Fırsat</span>}
         </button>
 
         {/*

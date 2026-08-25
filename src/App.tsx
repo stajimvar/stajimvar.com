@@ -1201,6 +1201,7 @@ export default function App() {
                 searchQuery={aramaTerimi}
                 onSearchChange={setAramaTerimi}
                 onNavigate={navigate}
+                onRequireLogin={handleOpenLogin}
               />
               <OpportunitiesHomeSection
                 onNavigate={navigate}

@@ -16,6 +16,7 @@ import {
 } from '../lib/opportunity-domain.mjs';
 import { deadlineLabel, opportunityAmount, opportunityDaysLeft } from '../lib/firsat-degerlendirme.mjs';
 import { ListingLogo } from './ListingLogo';
+import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 
 /**
  * Fırsat detay sayfası.
@@ -106,14 +107,25 @@ export const OpportunityDetailPage: React.FC<{
     };
   }, [userId, item]);
 
+  /*
+    BAŞLIK DEĞİŞİYORDU AMA PAYLAŞIM ETİKETLERİ DEĞİŞMİYORDU
+
+    Burada yalnızca document.title ve description yazılıyordu; canonical ve
+    og:title ana sayfadan kalıyordu. Denetimde ölçüldü: tarayıcı sekmesi
+    fırsatın adını gösterirken Open Graph başlığı hâlâ "Öğrenci Fırsatları |
+    StajımVar" idi — yani sayfayı paylaşan kişi liste sayfasının kartını
+    gönderiyordu.
+
+    sayfaMetaAyarla hepsini birden yazıyor ve sayfadan çıkılınca eskisini
+    geri yüklüyor.
+  */
   React.useEffect(() => {
     if (!item) return;
-    document.title = `${item.title} | StajımVar`;
-    const d =
-      document.querySelector('meta[name="description"]') ||
-      Object.assign(document.createElement('meta'), { name: 'description' });
-    d.setAttribute('content', item.shortDescription);
-    document.head.appendChild(d);
+    return sayfaMetaAyarla({
+      baslik: `${item.title} | StajımVar`,
+      aciklama: item.shortDescription,
+      yol: `/firsatlar/${item.slug}`,
+    });
   }, [item]);
 
   if (state === 'loading') {

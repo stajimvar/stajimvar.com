@@ -112,6 +112,8 @@ interface MatchedInternshipsViewProps {
   onQuickApply: (listing: InternshipListing, match: MatchBreakdown) => void;
   /** Profil sekmesine geçiş. Verilmezse profil çubuğu bir şey yapmaz. */
   onGoToProfile?: () => void;
+  /** Giriş penceresini açar; misafirin kaydet düğmesi buraya bağlanıyor. */
+  onRequireLogin?: () => void;
   /**
    * Disaridan gelen arama terimi.
    *
@@ -134,6 +136,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   onViewDetails,
   onQuickApply,
   onGoToProfile,
+  onRequireLogin,
   searchQuery,
   onSearchChange,
   onNavigate,
@@ -1334,7 +1337,10 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                     onViewDetails={() => onViewDetails(listing, match)}
                     onQuickApply={() => onQuickApply(listing, match)}
                     kayitli={kayitliIlanlar.has(listing.id)}
-                    onToggleKayit={student?.id ? () => kaydiDegistir(listing.id) : undefined}
+                    onToggleKayit={
+                      student?.id ? () => kaydiDegistir(listing.id) : onRequireLogin
+                    }
+                    girisGerekli={!student?.id}
                   />
 
                   {/*

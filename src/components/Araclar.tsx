@@ -48,10 +48,19 @@ import {
  * Ortak kabuk kullaniliyor: baslik cubugu ana sayfayla ayni genislikte,
  * logo hep sol ust kosede. Ayrintisi SayfaKabugu.tsx icinde.
  */
-const Kabuk: React.FC<{ onBack: () => void; children: React.ReactNode }> = ({
-  onBack,
-  children,
-}) => <SayfaKabugu onBack={onBack}>{children}</SayfaKabugu>;
+/*
+  ARAÇ DETAYINDA TEK GERİ YOLU
+
+  Sayfada iki tane vardı: kabuğun genel "Geri" düğmesi ve gövdedeki
+  "← Tüm araçlar". İkisi aynı işi yapıyordu ama biri nereye gittiğini
+  söylüyordu, öteki söylemiyordu. Nereye gittiğini söyleyen kaldı.
+
+  `onBack` prop'u imzada duruyor: araç bileşenleri onu alıyor ve
+  kullanmıyor olsalar bile App tarafındaki çağrılar değişmesin.
+*/
+const Kabuk: React.FC<{ onBack?: () => void; children: React.ReactNode }> = ({ children }) => (
+  <SayfaKabugu>{children}</SayfaKabugu>
+);
 
 const Uyari: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-relaxed">
