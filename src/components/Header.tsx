@@ -88,6 +88,29 @@ interface HeaderProps {
   onOpenAdmin?: () => void;
 }
 
+/*
+  SEKMELER GERÇEK BAĞLANTI
+
+  Üst gezinme <button> öğelerinden oluşuyordu. Görsel olarak çalışıyordu ama
+  tarayıcı bir düğmeyi bağlantı saymıyor: orta tuşla yeni sekmede açma,
+  "bağlantı adresini kopyala" ve ekran okuyucunun "bağlantı" demesi
+  çalışmıyordu. Arama motoru da bu geçişleri görmüyordu.
+
+  Şimdi gerçek <a href>. Tıklama yakalanıp uygulama içi geçişe çevriliyor,
+  yani kullanıcı için hiçbir şey değişmiyor: tam sayfa yenilenmesi yok.
+  Değiştirici tuşlar ve orta tuş dokunulmadan geçiyor.
+
+  Aktif sekmede aria-current="page": ekran okuyucu hangi sayfada
+  olunduğunu söylüyor; renk tek başına bunu anlatmıyor.
+*/
+function baglantiTiklamasi(calistir: () => void) {
+  return (e: React.MouseEvent) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    calistir();
+  };
+}
+
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
   setActiveTab,
@@ -325,12 +348,14 @@ export const Header: React.FC<HeaderProps> = ({
                   hâlâ "İş & Staj İlanları" yanıyordu. Artık bulunulan yol da
                   hesaba katılıyor (ilanlardaMi).
                 */}
-                <button
+                <a
                   id="nav-tab-internships"
-                  onClick={() => {
+                  href="/"
+                  aria-current={ilanlardaMi ? 'page' : undefined}
+                  onClick={baglantiTiklamasi(() => {
                     setActiveTab('internships');
                     setActiveSubTab('all');
-                  }}
+                  })}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
                     ilanlardaMi
                       ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
@@ -347,7 +372,7 @@ export const Header: React.FC<HeaderProps> = ({
                   {ilanlardaMi && (
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>
                   )}
-                </button>
+                </a>
 
                 {/*
                   BURS VE REHBER SEKMELERİ HERKESE AÇIK
@@ -388,9 +413,11 @@ export const Header: React.FC<HeaderProps> = ({
                   bulunuyor — "burs" artık sayfanın yaptığı işi küçültüyor.
                   Ad "Fırsatlar"a döndü; sayfanın başlığı da öyle.
                 */}
-                <button
+                <a
                   id="nav-tab-opportunities"
-                  onClick={() => onOpenOpportunities?.()}
+                  href="/firsatlar"
+                  aria-current={firsatlardaMi ? 'page' : undefined}
+                  onClick={baglantiTiklamasi(() => onOpenOpportunities?.())}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
                     firsatlardaMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
@@ -398,7 +425,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <Sparkles className={`w-3.5 h-3.5 shrink-0 ${firsatlardaMi ? 'text-blue-600' : 'text-gray-400'}`} />
                   <span>Fırsatlar</span>
                   {firsatlardaMi && <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"/>}
-                </button>
+                </a>
 
                 {/*
                   Rehber sekmesi. Boşalan yere içerik geldi: staj sürecinin
@@ -407,9 +434,11 @@ export const Header: React.FC<HeaderProps> = ({
                   gönderemediğimiz için hem öğrenci hem işveren bize arama
                   motorundan, bu sayfalar üzerinden geliyor.
                 */}
-                <button
+                <a
                   id="nav-tab-guides"
-                  onClick={() => onOpenGuides?.()}
+                  href="/rehber"
+                  aria-current={rehberdeMi && !isverendeMi ? 'page' : undefined}
+                  onClick={baglantiTiklamasi(() => onOpenGuides?.())}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
                     rehberdeMi && !isverendeMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
@@ -428,7 +457,7 @@ export const Header: React.FC<HeaderProps> = ({
                   {rehberdeMi && !isverendeMi && (
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />
                   )}
-                </button>
+                </a>
 
                 {/*
                   "Başvurularım" sekmesi kaldırıldı.
@@ -1093,11 +1122,13 @@ export const Header: React.FC<HeaderProps> = ({
         style={altMenuStil}
       >
         {/* 1. İlanlar */}
-        <button
-          onClick={() => {
+        <a
+          href="/"
+          aria-current={ilanlardaMi ? 'page' : undefined}
+          onClick={baglantiTiklamasi(() => {
             setActiveTab('internships');
             setActiveSubTab('all');
-          }}
+          })}
           className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
             ilanlardaMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
           }`}
@@ -1109,7 +1140,7 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
           {ilanlardaMi && <span className="text-[11px] font-bold truncate">İlanlar</span>}
-        </button>
+        </a>
 
         {/*
           MOBİL ALT BAR = MASAÜSTÜ SEKMELERİ
@@ -1123,8 +1154,10 @@ export const Header: React.FC<HeaderProps> = ({
         */}
 
         {/* 2. Fırsatlar — masaüstündeki sekmenin karşılığı */}
-        <button
-          onClick={() => onOpenOpportunities?.()}
+        <a
+          href="/firsatlar"
+          aria-current={firsatlardaMi ? 'page' : undefined}
+          onClick={baglantiTiklamasi(() => onOpenOpportunities?.())}
           className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
             firsatlardaMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
           }`}
@@ -1136,7 +1169,7 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
           {firsatlardaMi && <span className="text-[11px] font-bold truncate">Fırsat</span>}
-        </button>
+        </a>
 
         {/*
           3. Rehber — giriş şartı yok, herkese açık.
@@ -1145,8 +1178,10 @@ export const Header: React.FC<HeaderProps> = ({
           altında sayılıyor, ama alt barda İşveren'in kendi öğesi var. İkisi
           birden yanarsa hangisinde olunduğu belirsiz kalıyor.
         */}
-        <button
-          onClick={() => onOpenGuides?.()}
+        <a
+          href="/rehber"
+          aria-current={rehberdeMi && !isverendeMi ? 'page' : undefined}
+          onClick={baglantiTiklamasi(() => onOpenGuides?.())}
           className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
             rehberdeMi && !isverendeMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
           }`}
@@ -1158,7 +1193,7 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
           {rehberdeMi && !isverendeMi && <span className="text-[11px] font-bold truncate">Rehber</span>}
-        </button>
+        </a>
 
         {/*
           İŞVEREN KAPISI (yalnızca giriş yapılmamışken)

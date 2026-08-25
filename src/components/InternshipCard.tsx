@@ -79,7 +79,18 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
   return (
     <div
       id={`internship-card-${listing.id}`}
-      className="bg-white rounded-2xl border border-gray-200 hover:border-blue-500 hover:shadow-xs transition-all duration-150 p-3.5 sm:p-4.5 group flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3.5 sm:gap-4"
+      /*
+        MASAÜSTÜNDE DE TEK SÜTUN
+
+        Kart `lg:flex-row` idi: geniş ekranda sol yarı bilgiye, sağ yarı
+        düğmelere gidiyordu. Ölçüldü: 622 piksellik kartta başlığa kalan yer
+        144 piksel — uzun bir ilan başlığı beş altı satıra sarıyor, kartın
+        boyu 300 pikseli buluyordu.
+
+        Başlık artık tam genişlikte ve en fazla iki satır; düğmeler alta,
+        sağa yaslı tek satıra indi. Aynı bilgi, yarı yükseklik.
+      */
+      className="bg-white rounded-2xl border border-gray-200 hover:border-blue-500 hover:shadow-xs transition-all duration-150 p-3.5 sm:p-4.5 group flex flex-col gap-3 sm:gap-3.5"
     >
       {/* Left & Middle Info Area */}
       <div className="flex items-start gap-3 sm:gap-3.5 flex-1 min-w-0 w-full">
@@ -219,9 +230,15 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
 
           {/* Row 2: Job Title (Bold & Clear) */}
           <div>
+            {/*
+              İki satır sınırı: başlık artık tam genişlikte olduğu için iki
+              satır neredeyse her ilanı alıyor. Sınır olmadan tek bir uzun
+              başlık ızgaradaki bütün kartların boyunu belirliyordu.
+            */}
             <h4
-              className="text-base sm:text-lg font-bold text-gray-900 leading-snug cursor-pointer hover:text-blue-600 transition-colors"
+              className="text-base sm:text-lg font-bold text-gray-900 leading-snug cursor-pointer hover:text-blue-600 transition-colors line-clamp-2"
               onClick={onViewDetails}
+              title={listing.title}
             >
               {listing.title}
             </h4>
@@ -332,11 +349,14 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
 
       {/* Right Actions & Match Score Area */}
       {/*
-        Mobilde bu alan tek satıra sığmıyordu: iki buton eklendikten sonra
-        "StajımVar ile Başvur" kartın 109px dışına taşıyordu. Artık satır
-        sarabiliyor ve shrink-0 kaldırıldı (o, daralmayı engelliyordu).
+        EYLEMLER ALTTA, SAĞA YASLI
+
+        Bu alan geniş ekranda kartın SAĞ SÜTUNUYDU ve başlığın yerini
+        yiyordu. Artık her ekranda kartın alt satırı: solda son başvuru
+        bilgisi, sağda düğmeler. Satır sarabiliyor — dar ekranda üç düğme
+        yan yana sığmadığında kartın kenarından taşıyorlardı.
       */}
-      <div className="flex flex-wrap lg:flex-col items-center lg:items-end justify-between w-full lg:w-auto gap-2.5 pt-2.5 lg:pt-0 border-t lg:border-t-0 border-gray-100 min-w-0">
+      <div className="flex flex-wrap items-center justify-between w-full gap-2.5 pt-2.5 border-t border-gray-100 min-w-0">
         <div className="flex items-center gap-2 flex-wrap min-w-0">
           {/*
             Uyum rozeti buradan kaldırıldı: artık logonun etrafındaki halka
@@ -344,7 +364,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             gereksiz uzatıyordu.
           */}
           {listing.applicationDeadline && (
-            <span className="text-[11px] text-gray-400 hidden sm:inline">
+            <span className="text-[11px] text-gray-400">
               Son:{' '}
               <strong className="text-gray-700">
                 {listing.applicationDeadline}
@@ -358,7 +378,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           Dar ekranda satır sarabiliyor: üç düğme yan yana sığmadığında
           `nowrap` ile kartın kenarından taşıyorlardı (375 pikselde ölçüldü).
         */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2 ml-auto">
           {/*
             Üç çerçeveli düğme yan yana durunca kartın alt yarısı düğme
             tarlasına dönüyordu. Detaylar çerçevesiz metin bağlantısı oldu:
