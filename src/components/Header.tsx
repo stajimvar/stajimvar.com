@@ -316,6 +316,13 @@ export const Header: React.FC<HeaderProps> = ({
 
   /* İşveren tarafı: rehber ve sahiplenme sayfaları. */
   const isverendeMi = /^\/isveren(\/|$)/.test(bulunulanYol);
+
+  /*
+    Yalnızca rehber merkezi ve rehber yazıları. `rehberdeMi` bölüm, araç ve
+    işveren sayfalarını da kapsıyor; oralarda arama hâlâ ilan listesine
+    götürüyor, çünkü o sayfaların arayacak kendi içeriği yok.
+  */
+  const rehberSayfasindaMi = /^\/rehber(\/|$)/.test(bulunulanYol);
   const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kurumsalSayfada && activeTab === 'internships';
   const profildeMi = !rehberdeMi && !kurumsalSayfada && activeTab === 'profile';
 
@@ -615,16 +622,32 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="hidden lg:block flex-1 min-w-0 max-w-xl mx-4">
               <div className="relative">
                 <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                {/*
+                  ARAMA BULUNULAN SAYFAYA GÖRE DAVRANIYOR
+
+                  Kutu her sayfada ilan listesine götürüyordu: Rehber
+                  sayfasında bir şey aramak, kullanıcıyı rehberden atıp ilan
+                  listesine düşürüyordu. Rehberin kendi arama kutusu vardı ve
+                  aynı ekranda iki arama kutusu "hangisi neyi arıyor"
+                  sorusunu doğuruyordu — o kutu kaldırıldı, işi bu üstlendi.
+
+                  Rehberdeyken sekme değiştirilmiyor ve metin de öyle diyor:
+                  yazılan şeyin nerede aranacağı yazının kendisinden belli
+                  olmalı.
+                */}
                 <input
                   type="search"
                   value={searchQuery ?? ''}
                   onChange={(e) => onSearchChange(e.target.value)}
                   onFocus={() => {
+                    if (rehberSayfasindaMi) return;
                     // Arama yapan kişi ilan listesini görmek istiyor.
                     if (activeTab !== 'internships') setActiveTab('internships');
                   }}
-                  placeholder="Pozisyon, şirket veya burs ara"
-                  aria-label="İlan veya burs ara"
+                  placeholder={
+                    rehberSayfasindaMi ? 'Rehberlerde ara' : 'Pozisyon, şirket veya burs ara'
+                  }
+                  aria-label={rehberSayfasindaMi ? 'Rehberlerde ara' : 'İlan veya burs ara'}
                   className="w-full pl-10 pr-3 py-2.5 rounded-2xl border border-gray-200 bg-gray-50/80 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-600 focus:bg-white transition-colors"
                 />
               </div>

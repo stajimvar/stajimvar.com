@@ -776,6 +776,13 @@ export default function App() {
       searchQuery={aramaTerimi}
       onSearchChange={(q) => {
         setAramaTerimi(q);
+        /*
+          Rehber sayfası aramayı KENDİ yapıyor: terim oraya iniyor ve
+          rehberleri süzüyor. Buradan ilan listesine götürmek, rehberde bir
+          şey arayan kişiyi rehberden atmak olurdu — sayfanın kendi arama
+          kutusunu kaldırdığımız için tek arama yolu bu.
+        */
+        if (/^\/rehber(\/|$)/.test(temizYol)) return;
         // Arama ilan listesinde işliyor; başka sayfadayken oraya götürüyor.
         if (q && temizYol !== '/') navigate('/');
       }}
@@ -932,7 +939,16 @@ export default function App() {
 
   /* Rehber merkezi ve tek rehber sayfaları. */
   if (temizYol === '/rehber') {
-    return icerikSayfasi(<GuideHub onBack={goHome} onNavigate={navigate} ogrenci={isLoggedIn ? activeStudent : null} />);
+    return icerikSayfasi(
+      <GuideHub
+        onBack={goHome}
+        onNavigate={navigate}
+        ogrenci={isLoggedIn ? activeStudent : null}
+        arama={aramaTerimi}
+        onAramaTemizle={() => setAramaTerimi('')}
+        onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+      />
+    );
   }
   if (temizYol.startsWith('/rehber/')) {
     return icerikSayfasi(

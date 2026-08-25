@@ -15,7 +15,10 @@ import { REHBERLER, konuEtiketi, rehberBul, rehberOkumaDakika, type Rehber } fro
 import { BOLUMLER } from '../data/bolumler';
 import { ARACLAR } from './AraclarListesi';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
-import { RehberKarti, RehberMerkezi as RehberMerkeziBilesen } from './RehberMerkezi';
+import { RehberMerkezi as RehberMerkeziBilesen } from './RehberMerkezi';
+import { RehberIzgarasi, RehberKarti } from './RehberKartlari';
+import { gecmiseYaz } from '../lib/rehber-gecmis.mjs';
+import { rehberOkunduBildir } from '../lib/rehber-veri';
 import type { StudentProfile } from '../types';
 
 /**
@@ -160,29 +163,27 @@ export const RehberListesi: React.FC<{ onNavigate?: (p: string) => void }> = ({
           <span className="text-sm text-gray-600">{ogrenci.length} yazı</span>
         </div>
         {/*
-          Mobilde İKİ sütun, geniş ekranda üç.
+          Mobilde tek, tablette iki, masaüstünde üç sütun.
 
-          Instagram keşfette üç sütun kullanıyor ama oradaki karolar
-          fotoğraf; okunacak metin yok. Bizim karolarda başlık var ve 375
-          pikselde üç sütun karo başına ~110 piksel bırakıyor — "Staj defteri
-          nasıl doldurulur" oraya sığmıyor. İki sütunda ızgara hissi duruyor,
-          başlık okunuyor.
+          Kart artık kare bir fotoğraf değil: kapak alçaldı, altına başlık,
+          özet, okuma süresi ve tarih geldi. Mobilde iki sütuna sıkıştırınca
+          özet okunmuyordu — 375 pikselde sütun başına ~170 piksel kalıyor.
         */}
-        <div className="grid grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-4">
-          {ogrenci.map((r, i) => (
-            <RehberKarti key={r.slug} rehber={r} sira={i} onNavigate={onNavigate} />
+        <RehberIzgarasi>
+          {ogrenci.map((r) => (
+            <RehberKarti key={r.slug} rehber={r} onNavigate={onNavigate} />
           ))}
-        </div>
+        </RehberIzgarasi>
       </section>
 
       {isveren.length > 0 && (
         <section className="space-y-4">
           <h2 className="text-xl font-bold text-gray-900">İşverenler için</h2>
-          <div className="grid grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-4">
-            {isveren.map((r, i) => (
-              <RehberKarti key={r.slug} rehber={r} sira={i} onNavigate={onNavigate} />
+          <RehberIzgarasi>
+            {isveren.map((r) => (
+              <RehberKarti key={r.slug} rehber={r} onNavigate={onNavigate} />
             ))}
-          </div>
+          </RehberIzgarasi>
         </section>
       )}
     </>
@@ -199,10 +200,22 @@ export const RehberListesi: React.FC<{ onNavigate?: (p: string) => void }> = ({
 */
 export { RehberMerkezi } from './RehberMerkezi';
 
-export const GuideHub: React.FC<GuideHubProps & { ogrenci?: StudentProfile | null }> = ({
-  onNavigate,
-  ogrenci = null,
-}) => <RehberMerkeziBilesen onNavigate={onNavigate} ogrenci={ogrenci} />;
+export const GuideHub: React.FC<
+  GuideHubProps & {
+    ogrenci?: StudentProfile | null;
+    arama?: string;
+    onAramaTemizle?: () => void;
+    onGirisGerekli?: () => void;
+  }
+> = ({ onNavigate, ogrenci = null, arama, onAramaTemizle, onGirisGerekli }) => (
+  <RehberMerkeziBilesen
+    onNavigate={onNavigate}
+    ogrenci={ogrenci}
+    arama={arama}
+    onAramaTemizle={onAramaTemizle}
+    onGirisGerekli={onGirisGerekli}
+  />
+);
 
 /* ------------------------------------------------------------- tek rehber */
 
@@ -393,6 +406,25 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
       const etiket = document.querySelector('meta[name="description"]');
       if (etiket) etiket.setAttribute('content', rehber.aciklama);
     }
+  }, [rehber]);
+
+  /*
+    OKUMA KAYDI
+
+    İki ayrı yere yazılıyor, ikisi de farklı soruya cevap veriyor:
+
+      - Tarayıcı geçmişi → "Kaldığın yerden devam et". Cihazda kalıyor,
+        hiçbir yere gönderilmiyor, giriş yapmamış okuyucuda da çalışıyor.
+      - Sunucudaki sayaç → "En çok okunanlar". Uydurma bir popülerlik
+        sıralaması göstermemek için gerçek sayım tutuluyor.
+
+    Bir kez, yazı gerçekten açıldığında. İkisi de sessiz: yazılamazsa
+    okuyucunun bilmesi gereken bir şey yok ve konsola hata düşmüyor.
+  */
+  useEffect(() => {
+    if (!rehber) return;
+    gecmiseYaz(rehber.slug);
+    void rehberOkunduBildir(rehber.slug);
   }, [rehber]);
 
   if (!rehber) {
