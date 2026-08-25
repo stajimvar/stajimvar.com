@@ -1,0 +1,181 @@
+{
+  "schema": "stajimvar-instagram-draft-package/v1",
+  "generatedAt": "2026-08-25",
+  "panelCapabilities": {
+    "supports": [
+      "public JPEG carousel preview",
+      "caption editing",
+      "manual Instagram publish confirmation"
+    ],
+    "doesNotSupport": [
+      "private draft persistence",
+      "schedule/status metadata",
+      "Reel MP4 publishing",
+      "Story publishing",
+      "alt text persistence",
+      "source/UTM metadata display"
+    ]
+  },
+  "drafts": [
+    {
+      "contentId": "ig-2026w35-firsat-alarmi",
+      "panelDraftCode": "ig-2026w35-firsat-alarmi",
+      "status": "draft",
+      "format": "carousel",
+      "title": "31 Ağustos-10 Eylül: 5 resmî fırsat",
+      "scheduledDate": "2026-08-26",
+      "suggestedTime": "12:30 TRT",
+      "series": "Fırsat Alarmı",
+      "objective": "Güncel ve doğrulanabilir fırsatları kaydedilebilir bir özetle sunmak; öğrenciyi ilgili fırsat listesine taşımak.",
+      "targetAudience": "Burs, yurt dışı hareketliliği ve üniversite başvurularını takip eden öğrenciler; her fırsatın uygunluk şartı ayrı olan dar gruplar.",
+      "caption": "Yaklaşan her başvuru herkese uygun değil.\n\n• YTB, DEÜ, DAÜ, Faydasıçok Vakfı ve MÜKAD için resmî son tarihleri 25 Ağustos'ta yeniden kontrol ettik.\n• Uygunluk koşulu ve destek biçimi birbirinden farklı.\n• Başvurmadan önce kurumun kendi sayfasındaki son durumu tekrar aç.\n\nKaydet; ihtiyacı olan arkadaşına gönder.",
+      "cta": "Kaydet; başvurmadan önce resmî koşulu kontrol et.",
+      "hashtags": [
+        "#bursbasvurusu",
+        "#ogrencifirsatlari",
+        "#erasmus",
+        "#stajimvar"
+      ],
+      "targetUrl": "https://stajimvar.com/firsatlar",
+      "utmUrl": "https://stajimvar.com/firsatlar?utm_source=instagram&utm_medium=organic_social&utm_campaign=ig_2026w35&utm_content=ig-2026w35-firsat-alarmi",
+      "officialSources": [
+        {
+          "name": "YTB Yurt Dışındaki Vatandaşların Eğitim Yolculuğunu Burs Programlarıyla Destekliyor",
+          "official": true,
+          "url": "https://ytb.gov.tr/haberler/ytb-yurt-disindaki-vatandaslarin-egitim-yolculugunu-burs-programlariyla-destekliyor",
+          "verifiedFacts": "Yurt dışında yaşayan Türk vatandaşları ve Mavi Kart sahiplerine yönelik programlar; son başvuru 31 Ağustos 2026."
+        },
+        {
+          "name": "DEÜ hibesiz Erasmus öğrenim hareketliliği duyurusu",
+          "official": true,
+          "url": "https://international.deu.edu.tr/news/2026-2027-akademik-yili-erasmus-ogrenim-hareketliliginden-hibesiz-olarak-yararlanmak-isteyen-yedek-aday-ogrenciler-icin-duyuru/",
+          "verifiedFacts": "5-31 Ağustos 2026; yalnız 17 Nisan sonuçlarında yedek statüsündeki DEÜ öğrencileri için; hibe ve seyahat desteği yok."
+        },
+        {
+          "name": "DAÜ Giriş ve Burs Sınavı Başvuru Sistemi",
+          "official": true,
+          "url": "https://osyb.emu.edu.tr/",
+          "verifiedFacts": "Son başvuru 1 Eylül 2026, 23:59; sınav 3 Eylül 2026, 10:00-12:30; 2026-27'de DAÜ'de öğrenim hakkı kazanacak adaylara yönelik."
+        },
+        {
+          "name": "Hasan Faydasıçok Eğitim Vakfı burs başvuruları",
+          "official": true,
+          "url": "https://faydasicokvakfi.org/burslar/burs-basvurulari/",
+          "verifiedFacts": "Başvuru dönemi 3 Ağustos-3 Eylül 2026; sayısal burs tutarı resmî sayfada açıklanmadı."
+        },
+        {
+          "name": "MÜKAD burs başvuru sistemi",
+          "official": true,
+          "url": "https://burs.mukad.org.tr/",
+          "verifiedFacts": "15 Ağustos-10 Eylül 2026; belirli koşullardaki kız devlet üniversitesi mühendislik/mimarlık lisans öğrencileri için; 2026-27 döneminde aylık 6.000 TL."
+        }
+      ],
+      "checkedAt": "2026-08-25",
+      "cards": [
+        "/paylasim/ig-2026w35-firsat-alarmi/01-w35-v1.jpg",
+        "/paylasim/ig-2026w35-firsat-alarmi/02-w35-v1.jpg",
+        "/paylasim/ig-2026w35-firsat-alarmi/03-w35-v1.jpg",
+        "/paylasim/ig-2026w35-firsat-alarmi/04-w35-v1.jpg",
+        "/paylasim/ig-2026w35-firsat-alarmi/05-w35-v1.jpg",
+        "/paylasim/ig-2026w35-firsat-alarmi/06-w35-v1.jpg",
+        "/paylasim/ig-2026w35-firsat-alarmi/07-w35-v1.jpg"
+      ],
+      "localFolder": "02-carousels/2026-08-26-carousel-resmi-firsatlar",
+      "altTexts": [
+        "StajımVar Fırsat Alarmı kapağı. 31 Ağustos ile 10 Eylül arasında kapanan beş resmî fırsatı duyuruyor.",
+        "YTB yurt dışı vatandaş bursları kartı. Son başvuru 31 Ağustos 2026; yurt dışında yaşayan Türk vatandaşları ve Mavi Kart sahiplerine yönelik olduğunu söylüyor.",
+        "DEÜ hibesiz Erasmus kartı. Son başvuru 31 Ağustos 2026; yalnız yedek statüsündeki DEÜ öğrencileri için ve hibe ile seyahat desteği olmadığını belirtiyor.",
+        "DAÜ giriş ve burs sınavı kartı. Son başvuru 1 Eylül 2026 saat 23:59; sınavın 3 Eylül'de olduğunu belirtiyor.",
+        "Hasan Faydasıçok Eğitim Vakfı bursu kartı. Son başvurunun 3 Eylül 2026 olduğunu ve tutarın resmî kaynakta açıklanmadığını belirtiyor.",
+        "MÜKAD bursu kartı. Son başvurunun 10 Eylül 2026 olduğunu, dar uygunluk koşullarını ve uygun öğrenciler için aylık 6.000 TL bilgisini veriyor.",
+        "Son kontrol çağrısı. Başvurmadan önce resmî koşul, belge ve tarihi tekrar kontrol etmeyi öneriyor."
+      ],
+      "manualSteps": [
+        "Yayın anında her beş resmî kaynağı yeniden aç; başvuru durumunu ve tarihi tekrar doğrula.",
+        "Deadline geçmiş veya başvuru kapalıysa ilgili kartı çıkart; tarih geçmiş içeriği yayınlama.",
+        "Caption içindeki tek CTA'yı koru; uzun resmî URL'leri caption'a ekleme."
+      ]
+    },
+    {
+      "contentId": "ig-2026w35-cv-deneyim-yok",
+      "panelDraftCode": "ig-2026w35-cv-deneyim-yok",
+      "status": "draft",
+      "format": "carousel",
+      "title": "Deneyim yoksa CV'yi boş bırakma",
+      "scheduledDate": "2026-08-28",
+      "suggestedTime": "19:30 TRT",
+      "series": "CV Notu",
+      "objective": "Öğrencinin CV'sinde somut deneyim alanlarını fark etmesini ve rehberi kaydetmesini sağlamak.",
+      "targetAudience": "İlk stajına veya ilk işine başvuran, iş deneyimi olmayan üniversite öğrencileri.",
+      "caption": "CV'de iş deneyimi yok diye boş alan bırakmak zorunda değilsin.\n\n• Ders projesi, kulüp görevi, gönüllülük ve part-time çalışma doğru anlatıldığında somut deneyimdir.\n• Cümleyi görev + araç + çıktı düzeninde kur.\n• Yalnız yapmadığın işi yazma; kanıtlayabileceğin detayları seç.\n\nBu akşam bir CV satırını güncelle.",
+      "cta": "Bu akşam CV'ndeki bir satırı görev + araç + çıktı biçiminde güncelle.",
+      "hashtags": [
+        "#stajcv",
+        "#ilkstaj",
+        "#cvhazirlama",
+        "#universiteogrencisi"
+      ],
+      "targetUrl": "https://stajimvar.com/rehber/staj-cv-nasil-yazilir",
+      "utmUrl": "https://stajimvar.com/rehber/staj-cv-nasil-yazilir?utm_source=instagram&utm_medium=organic_social&utm_campaign=ig_2026w35&utm_content=ig-2026w35-cv-deneyim-yok",
+      "officialSources": [
+        {
+          "name": "StajımVar - Staj CV'si nasıl yazılır?",
+          "official": false,
+          "url": "https://stajimvar.com/rehber/staj-cv-nasil-yazilir",
+          "verifiedFacts": "İş deneyimi olmayan öğrenciler için ders projeleri, kulüp, gönüllülük, yetkinlik ve somut görev anlatımı rehberde ele alınıyor."
+        }
+      ],
+      "checkedAt": "2026-08-25",
+      "cards": [
+        "/paylasim/ig-2026w35-cv-deneyim-yok/01-w35-v1.jpg",
+        "/paylasim/ig-2026w35-cv-deneyim-yok/02-w35-v1.jpg",
+        "/paylasim/ig-2026w35-cv-deneyim-yok/03-w35-v1.jpg",
+        "/paylasim/ig-2026w35-cv-deneyim-yok/04-w35-v1.jpg",
+        "/paylasim/ig-2026w35-cv-deneyim-yok/05-w35-v1.jpg",
+        "/paylasim/ig-2026w35-cv-deneyim-yok/06-w35-v1.jpg",
+        "/paylasim/ig-2026w35-cv-deneyim-yok/07-w35-v1.jpg"
+      ],
+      "localFolder": "02-carousels/2026-08-28-carousel-cv-deneyim-yok",
+      "altTexts": [
+        "StajımVar CV Notu kapağı. Deneyim yoksa CV'ye ne yazılır sorusunu soruyor.",
+        "Ders projesinin deneyim olarak yazılabileceğini ve görevin somutlaştırılması gerektiğini anlatan kart.",
+        "Öğrenci kulübündeki etkinlik, bütçe, iletişim veya koordinasyon sorumluluklarının CV'de anlatılabileceğini belirten kart.",
+        "Gönüllülük ve part-time işlerin beceri ve sorumluluk üzerinden yazılabileceğini belirten kart.",
+        "Kurs adından çok proje, portföy, sunum veya uygulama çıktısının gösterilmesini öneren kart.",
+        "CV cümlesi için görev, araç ve çıktı formülünü örnekleyen kart.",
+        "Bugün bir CV satırını somutlaştırmaya çağıran kapanış kartı."
+      ],
+      "manualSteps": [
+        "Yayın öncesi kapaktaki Türkçe karakterleri ve her slaytın 4:5 güvenli alanını kontrol et.",
+        "Yorumlarda kişisel CV veya iletişim bilgisi paylaşılmasını isteme; öğrenciyi proje ve görev örneği yazmaya çağır.",
+        "Rehber URL'sini caption'a uzun biçimde koyma; profil bağlantısı yönlendirmesini kullan."
+      ]
+    }
+  ],
+  "nonPanelAssets": [
+    {
+      "contentId": "ig-2026w35-reel-cv-bos-birakma",
+      "status": "draft",
+      "format": "reel",
+      "videoPath": "03-reels/2026-08-30-reel-cv-deneyim-yok.mp4",
+      "srtPath": "03-reels/2026-08-30-reel-cv-deneyim-yok.srt",
+      "coverPath": "03-reels/2026-08-30-reel-cv-deneyim-yok-cover.jpg",
+      "note": "Mevcut panel Reel kaydedemez veya yayınlayamaz; dosyayı CapCut veya Meta Business Suite akışına manuel aktar."
+    },
+    {
+      "contentId": "ig-2026w35-reel-firsat-takibi",
+      "status": "draft",
+      "format": "reel",
+      "videoPath": "03-reels/2026-09-01-reel-firsat-takibi.mp4",
+      "srtPath": "03-reels/2026-09-01-reel-firsat-takibi.srt",
+      "coverPath": "03-reels/2026-09-01-reel-firsat-takibi-cover.jpg",
+      "note": "Mevcut panel Reel kaydedemez veya yayınlayamaz; dosyayı CapCut veya Meta Business Suite akışına manuel aktar."
+    }
+  ],
+  "storyPackage": {
+    "status": "draft",
+    "folder": "04-stories",
+    "frameCount": 28,
+    "note": "Mevcut panel Story taslağı tutmaz; uygulamada etiketler manuel eklenir."
+  }
+}

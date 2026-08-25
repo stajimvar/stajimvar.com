@@ -1,0 +1,19 @@
+1
+00:00:00,000 --> 00:00:03,000
+Bir fırsatı gördün. Peki son tarih gelmeden ne yapacaksın?
+
+2
+00:00:03,000 --> 00:00:07,000
+Önce kurumun kendi duyurusunu aç ve son tarihi kontrol et.
+
+3
+00:00:07,000 --> 00:00:11,000
+Sonra ilgilendiğin fırsatı takip listene ekle.
+
+4
+00:00:11,000 --> 00:00:15,000
+Başvuru zamanı geldiğinde kurumun kendi bağlantısına git.
+
+5
+00:00:15,000 --> 00:00:20,000
+Profildeki bağlantıdan açık fırsatlara bak.

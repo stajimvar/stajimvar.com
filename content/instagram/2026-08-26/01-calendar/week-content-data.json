@@ -1,0 +1,801 @@
+{
+  "schemaVersion": 1,
+  "weekCode": "ig_2026w35",
+  "createdAt": "2026-08-25",
+  "timezone": "Europe/Istanbul",
+  "weekStart": "2026-08-26",
+  "weekEnd": "2026-09-01",
+  "status": "draft-package",
+  "brand": {
+    "name": "StajımVar",
+    "promise": "Staj, burs, KYK, yurt dışı ve öğrenci fırsatlarını resmî kaynağıyla sade biçimde buluşturur.",
+    "visualSystem": "Mavi ve beyaz ana kimlik; resmî kaynak için yeşil, yalnız gerçek son tarih uyarıları için kırmızı."
+  },
+  "researchSnapshot": {
+    "checkedAt": "2026-08-25",
+    "instagramPublicProfile": {
+      "followers": 19572,
+      "following": 58,
+      "visibleGridItems": 7,
+      "visibleFormats": "Görünen yedi grid öğesi carousel; girişsiz görünümde Reel kartı veya sekmesi görülmedi.",
+      "highlights": ["Nasıl çalışır", "Burslar", "Staj", "SSS"],
+      "note": "Kaydetme, paylaşma, erişim, görüntülenme ve takipçi dönüşümü herkese açık değildir; tahmin edilmedi."
+    },
+    "siteCapabilities": [
+      "Yayındaki staj ilanlarını kurumların kendi başvuru kaynaklarına yönlendirir.",
+      "Fırsatlar alanında resmî kaynak doğrulaması, tarih ve takip etme akışı bulunur.",
+      "Staj CV rehberi, başvuru e-postası, KYK rehberi, bölüme göre staj ve hesaplama araçları mevcuttur.",
+      "Giriş yapan öğrenciler ilan ve fırsatları takip listesine kaydedebilir."
+    ],
+    "dataDiscrepancies": [
+      {
+        "item": "DEÜ hibesiz Erasmus",
+        "siteObservation": "Tutar açıklanmadı ifadesiyle listelenmiş.",
+        "officialFinding": "Resmî duyuru hibe ve seyahat desteği olmadığını, masrafların öğrenciye ait olduğunu açıkça belirtiyor.",
+        "action": "Sosyal içerikte resmî metindeki hibesiz uyarı kullanıldı; site kaydı için ayrı doğrulama düzeltmesi önerildi."
+      },
+      {
+        "item": "MÜKAD Bursu",
+        "siteObservation": "Kurum adı ve tutar alanı eksik/uyuşmaz görünüyor.",
+        "officialFinding": "Resmî adı Mühendis Mimar Kadınlar Derneği; 2026-27 için uygun öğrencilerde aylık 6.000 TL bilgisi yayımlı.",
+        "action": "Sosyal içerikte resmî adı, dar uygunluk notu ve dönem bilgisi kullanıldı; site kaydı için ayrı doğrulama düzeltmesi önerildi."
+      },
+      {
+        "item": "YÜNDER",
+        "siteObservation": "StajımVar kaydındaki kurum adı ile resmî YÜNDER adı uyuşmuyor.",
+        "officialFinding": "İsim uyuşmazlığı çözülmeden kaynak güvenli değil.",
+        "action": "Bu haftanın sosyal fırsat içeriğine alınmadı."
+      }
+    ]
+  },
+  "timeTests": {
+    "windowA": "12:30-13:30 TRT",
+    "windowB": "19:00-20:00 TRT",
+    "note": "Insights takipçi etkinliği erişilebilir olmadığı için bunlar kesin en iyi saat değil, karşılaştırmalı test saatleridir."
+  },
+  "feed": [
+    {
+      "contentId": "ig-2026w35-firsat-alarmi",
+      "date": "2026-08-26",
+      "suggestedTime": "12:30 TRT",
+      "timeTest": "windowA",
+      "format": "carousel",
+      "status": "draft",
+      "series": "Fırsat Alarmı",
+      "title": "31 Ağustos-10 Eylül: 5 resmî fırsat",
+      "coverTitle": "5 resmî fırsat\n12 gün içinde kapanıyor.",
+      "coverSubtitle": "Koşulu sana uyuyorsa resmî kaynaktan başvur.",
+      "objective": "Güncel ve doğrulanabilir fırsatları kaydedilebilir bir özetle sunmak; öğrenciyi ilgili fırsat listesine taşımak.",
+      "targetAudience": "Burs, yurt dışı hareketliliği ve üniversite başvurularını takip eden öğrenciler; her fırsatın uygunluk şartı ayrı olan dar gruplar.",
+      "cta": "Kaydet; başvurmadan önce resmî koşulu kontrol et.",
+      "targetUrl": "https://stajimvar.com/firsatlar",
+      "utmUrl": "https://stajimvar.com/firsatlar?utm_source=instagram&utm_medium=organic_social&utm_campaign=ig_2026w35&utm_content=ig-2026w35-firsat-alarmi",
+      "hashtags": ["#bursbasvurusu", "#ogrencifirsatlari", "#erasmus", "#stajimvar"],
+      "checkedAt": "2026-08-25",
+      "manualSteps": [
+        "Yayın anında her beş resmî kaynağı yeniden aç; başvuru durumunu ve tarihi tekrar doğrula.",
+        "Deadline geçmiş veya başvuru kapalıysa ilgili kartı çıkart; tarih geçmiş içeriği yayınlama.",
+        "Caption içindeki tek CTA'yı koru; uzun resmî URL'leri caption'a ekleme."
+      ],
+      "sources": [
+        {
+          "name": "YTB Yurt Dışındaki Vatandaşların Eğitim Yolculuğunu Burs Programlarıyla Destekliyor",
+          "official": true,
+          "url": "https://ytb.gov.tr/haberler/ytb-yurt-disindaki-vatandaslarin-egitim-yolculugunu-burs-programlariyla-destekliyor",
+          "verifiedFacts": "Yurt dışında yaşayan Türk vatandaşları ve Mavi Kart sahiplerine yönelik programlar; son başvuru 31 Ağustos 2026."
+        },
+        {
+          "name": "DEÜ hibesiz Erasmus öğrenim hareketliliği duyurusu",
+          "official": true,
+          "url": "https://international.deu.edu.tr/news/2026-2027-akademik-yili-erasmus-ogrenim-hareketliliginden-hibesiz-olarak-yararlanmak-isteyen-yedek-aday-ogrenciler-icin-duyuru/",
+          "verifiedFacts": "5-31 Ağustos 2026; yalnız 17 Nisan sonuçlarında yedek statüsündeki DEÜ öğrencileri için; hibe ve seyahat desteği yok."
+        },
+        {
+          "name": "DAÜ Giriş ve Burs Sınavı Başvuru Sistemi",
+          "official": true,
+          "url": "https://osyb.emu.edu.tr/",
+          "verifiedFacts": "Son başvuru 1 Eylül 2026, 23:59; sınav 3 Eylül 2026, 10:00-12:30; 2026-27'de DAÜ'de öğrenim hakkı kazanacak adaylara yönelik."
+        },
+        {
+          "name": "Hasan Faydasıçok Eğitim Vakfı burs başvuruları",
+          "official": true,
+          "url": "https://faydasicokvakfi.org/burslar/burs-basvurulari/",
+          "verifiedFacts": "Başvuru dönemi 3 Ağustos-3 Eylül 2026; sayısal burs tutarı resmî sayfada açıklanmadı."
+        },
+        {
+          "name": "MÜKAD burs başvuru sistemi",
+          "official": true,
+          "url": "https://burs.mukad.org.tr/",
+          "verifiedFacts": "15 Ağustos-10 Eylül 2026; belirli koşullardaki kız devlet üniversitesi mühendislik/mimarlık lisans öğrencileri için; 2026-27 döneminde aylık 6.000 TL."
+        }
+      ],
+      "slides": [
+        {
+          "number": 1,
+          "kind": "cover",
+          "headline": "5 resmî fırsat\n12 gün içinde kapanıyor.",
+          "body": "31 Ağustos-10 Eylül aralığı.\nHer biri farklı öğrenci grubu için.",
+          "badge": "FIRSAT ALARMI"
+        },
+        {
+          "number": 2,
+          "kind": "opportunity",
+          "headline": "YTB yurt dışı\nvatandaş bursları",
+          "body": "Son başvuru: 31 Ağustos 2026.\nYurt dışında yaşayan Türk vatandaşları ve Mavi Kart sahipleri için.",
+          "badge": "31 AĞUSTOS",
+          "note": "Herkese açık genel burs değildir."
+        },
+        {
+          "number": 3,
+          "kind": "opportunity",
+          "headline": "DEÜ hibesiz\nErasmus",
+          "body": "Son başvuru: 31 Ağustos 2026.\nYalnız 17 Nisan sonuçlarında yedek olan DEÜ öğrencileri için.",
+          "badge": "31 AĞUSTOS",
+          "note": "Hibe ve seyahat desteği yok; masraflar öğrenciye ait."
+        },
+        {
+          "number": 4,
+          "kind": "opportunity",
+          "headline": "DAÜ giriş ve\nburs sınavı",
+          "body": "Son başvuru: 1 Eylül, 23:59.\n2026-27'de DAÜ'de öğrenim hakkı kazanacak adaylar için.",
+          "badge": "1 EYLÜL",
+          "note": "Sınav: 3 Eylül, 10:00-12:30."
+        },
+        {
+          "number": 5,
+          "kind": "opportunity",
+          "headline": "Faydasıçok\nVakfı bursu",
+          "body": "Son başvuru: 3 Eylül 2026.\nKoşullar program bazında değişiyor.",
+          "badge": "3 EYLÜL",
+          "note": "Tutar resmî kaynakta açıklanmadı."
+        },
+        {
+          "number": 6,
+          "kind": "opportunity",
+          "headline": "MÜKAD\nbursu",
+          "body": "Son başvuru: 10 Eylül 2026.\nKoşullar: kız, devlet üniversitesi, mühendislik/mimarlık lisans ve diğer şartlar.",
+          "badge": "10 EYLÜL",
+          "note": "2026-27 için uygun öğrencilerde aylık 6.000 TL."
+        },
+        {
+          "number": 7,
+          "kind": "cta",
+          "headline": "İsmi değil,\nkoşulu kontrol et.",
+          "body": "Uygunluk, belge ve tarih kurumdan kuruma değişir.",
+          "badge": "SON KONTROL",
+          "ctaText": "Profildeki bağlantı → Fırsatlar"
+        }
+      ],
+      "caption": "Yaklaşan her başvuru herkese uygun değil.\n\n• YTB, DEÜ, DAÜ, Faydasıçok Vakfı ve MÜKAD için resmî son tarihleri 25 Ağustos'ta yeniden kontrol ettik.\n• Uygunluk koşulu ve destek biçimi birbirinden farklı.\n• Başvurmadan önce kurumun kendi sayfasındaki son durumu tekrar aç.\n\nKaydet; ihtiyacı olan arkadaşına gönder.",
+      "altTexts": [
+        "StajımVar Fırsat Alarmı kapağı. 31 Ağustos ile 10 Eylül arasında kapanan beş resmî fırsatı duyuruyor.",
+        "YTB yurt dışı vatandaş bursları kartı. Son başvuru 31 Ağustos 2026; yurt dışında yaşayan Türk vatandaşları ve Mavi Kart sahiplerine yönelik olduğunu söylüyor.",
+        "DEÜ hibesiz Erasmus kartı. Son başvuru 31 Ağustos 2026; yalnız yedek statüsündeki DEÜ öğrencileri için ve hibe ile seyahat desteği olmadığını belirtiyor.",
+        "DAÜ giriş ve burs sınavı kartı. Son başvuru 1 Eylül 2026 saat 23:59; sınavın 3 Eylül'de olduğunu belirtiyor.",
+        "Hasan Faydasıçok Eğitim Vakfı bursu kartı. Son başvurunun 3 Eylül 2026 olduğunu ve tutarın resmî kaynakta açıklanmadığını belirtiyor.",
+        "MÜKAD bursu kartı. Son başvurunun 10 Eylül 2026 olduğunu, dar uygunluk koşullarını ve uygun öğrenciler için aylık 6.000 TL bilgisini veriyor.",
+        "Son kontrol çağrısı. Başvurmadan önce resmî koşul, belge ve tarihi tekrar kontrol etmeyi öneriyor."
+      ],
+      "assetFolder": "02-carousels/2026-08-26-carousel-resmi-firsatlar",
+      "panelDraftCode": "ig-2026w35-firsat-alarmi"
+    },
+    {
+      "contentId": "ig-2026w35-cv-deneyim-yok",
+      "date": "2026-08-28",
+      "suggestedTime": "19:30 TRT",
+      "timeTest": "windowB",
+      "format": "carousel",
+      "status": "draft",
+      "series": "CV Notu",
+      "title": "Deneyim yoksa CV'yi boş bırakma",
+      "coverTitle": "Deneyim yoksa\nCV'ye ne yazılır?",
+      "coverSubtitle": "İş deneyimi yoksa yaptığın işi doğru adlandır.",
+      "objective": "Öğrencinin CV'sinde somut deneyim alanlarını fark etmesini ve rehberi kaydetmesini sağlamak.",
+      "targetAudience": "İlk stajına veya ilk işine başvuran, iş deneyimi olmayan üniversite öğrencileri.",
+      "cta": "Bu akşam CV'ndeki bir satırı görev + araç + çıktı biçiminde güncelle.",
+      "targetUrl": "https://stajimvar.com/rehber/staj-cv-nasil-yazilir",
+      "utmUrl": "https://stajimvar.com/rehber/staj-cv-nasil-yazilir?utm_source=instagram&utm_medium=organic_social&utm_campaign=ig_2026w35&utm_content=ig-2026w35-cv-deneyim-yok",
+      "hashtags": ["#stajcv", "#ilkstaj", "#cvhazirlama", "#universiteogrencisi"],
+      "checkedAt": "2026-08-25",
+      "manualSteps": [
+        "Yayın öncesi kapaktaki Türkçe karakterleri ve her slaytın 4:5 güvenli alanını kontrol et.",
+        "Yorumlarda kişisel CV veya iletişim bilgisi paylaşılmasını isteme; öğrenciyi proje ve görev örneği yazmaya çağır.",
+        "Rehber URL'sini caption'a uzun biçimde koyma; profil bağlantısı yönlendirmesini kullan."
+      ],
+      "sources": [
+        {
+          "name": "StajımVar - Staj CV'si nasıl yazılır?",
+          "official": false,
+          "url": "https://stajimvar.com/rehber/staj-cv-nasil-yazilir",
+          "verifiedFacts": "İş deneyimi olmayan öğrenciler için ders projeleri, kulüp, gönüllülük, yetkinlik ve somut görev anlatımı rehberde ele alınıyor."
+        }
+      ],
+      "slides": [
+        {
+          "number": 1,
+          "kind": "cover",
+          "headline": "Deneyim yoksa\nCV'ye ne yazılır?",
+          "body": "Boşluk değil; yaptığın işin kanıtı.",
+          "badge": "CV NOTU"
+        },
+        {
+          "number": 2,
+          "kind": "guide",
+          "headline": "Ders projesi\nbir deneyimdir.",
+          "body": "Konuyu değil, yaptığın görevi yaz:\n\"Veriyi temizledim\", \"prototip geliştirdim\" gibi.",
+          "badge": "1 / 5"
+        },
+        {
+          "number": 3,
+          "kind": "guide",
+          "headline": "Kulüpteki görevin\ndeğerlidir.",
+          "body": "Etkinlik, bütçe, iletişim veya ekip koordinasyonu yaptıysan sorumluluğunu açıkça anlat.",
+          "badge": "2 / 5"
+        },
+        {
+          "number": 4,
+          "kind": "guide",
+          "headline": "Gönüllülük ve\npart-time iş de yazılır.",
+          "body": "İş unvanından çok, kullandığın beceri ve aldığın sorumluluk önemlidir.",
+          "badge": "3 / 5"
+        },
+        {
+          "number": 5,
+          "kind": "guide",
+          "headline": "Kursu değil,\nürettiğini göster.",
+          "body": "Bir eğitim aldıysan proje, portföy, sunum veya uygulama çıktısını ekle.",
+          "badge": "4 / 5"
+        },
+        {
+          "number": 6,
+          "kind": "formula",
+          "headline": "Cümle formülü:",
+          "body": "Görev + araç + çıktı\n\nÖrnek: \"Excel ile kayıtları düzenledim ve ekip sunumu için özet tablo hazırladım.\"",
+          "badge": "5 / 5"
+        },
+        {
+          "number": 7,
+          "kind": "cta",
+          "headline": "Bir satır seç.\nSomutlaştır.",
+          "body": "Başlamak için mükemmel deneyim bekleme.",
+          "badge": "BUGÜN",
+          "ctaText": "Profildeki bağlantı → CV rehberi"
+        }
+      ],
+      "caption": "CV'de iş deneyimi yok diye boş alan bırakmak zorunda değilsin.\n\n• Ders projesi, kulüp görevi, gönüllülük ve part-time çalışma doğru anlatıldığında somut deneyimdir.\n• Cümleyi görev + araç + çıktı düzeninde kur.\n• Yalnız yapmadığın işi yazma; kanıtlayabileceğin detayları seç.\n\nBu akşam bir CV satırını güncelle.",
+      "altTexts": [
+        "StajımVar CV Notu kapağı. Deneyim yoksa CV'ye ne yazılır sorusunu soruyor.",
+        "Ders projesinin deneyim olarak yazılabileceğini ve görevin somutlaştırılması gerektiğini anlatan kart.",
+        "Öğrenci kulübündeki etkinlik, bütçe, iletişim veya koordinasyon sorumluluklarının CV'de anlatılabileceğini belirten kart.",
+        "Gönüllülük ve part-time işlerin beceri ve sorumluluk üzerinden yazılabileceğini belirten kart.",
+        "Kurs adından çok proje, portföy, sunum veya uygulama çıktısının gösterilmesini öneren kart.",
+        "CV cümlesi için görev, araç ve çıktı formülünü örnekleyen kart.",
+        "Bugün bir CV satırını somutlaştırmaya çağıran kapanış kartı."
+      ],
+      "assetFolder": "02-carousels/2026-08-28-carousel-cv-deneyim-yok",
+      "panelDraftCode": "ig-2026w35-cv-deneyim-yok"
+    },
+    {
+      "contentId": "ig-2026w35-reel-cv-bos-birakma",
+      "date": "2026-08-30",
+      "suggestedTime": "13:00 TRT",
+      "timeTest": "windowA",
+      "format": "reel",
+      "status": "draft",
+      "series": "CV Notu Reel",
+      "title": "CV'de deneyim yoksa ilk satırı buraya yaz",
+      "objective": "İlk iki saniyede CV kaygısını yakalayıp öğrenciye uygulanabilir tek bir cümle formülü vermek.",
+      "targetAudience": "CV'sinde deneyim alanını boş bırakan veya ilk stajına başvuran öğrenciler.",
+      "hook": "CV'de deneyim yok diye o bölümü boş mu bırakıyorsun?",
+      "durationSeconds": 18,
+      "targetUrl": "https://stajimvar.com/rehber/staj-cv-nasil-yazilir",
+      "utmUrl": "https://stajimvar.com/rehber/staj-cv-nasil-yazilir?utm_source=instagram&utm_medium=organic_social&utm_campaign=ig_2026w35&utm_content=ig-2026w35-reel-cv-bos-birakma",
+      "cta": "Kaydet; sonra CV'ndeki bir satırı bu formülle yenile.",
+      "hashtags": ["#stajcv", "#cvipuclari", "#ilkis", "#stajbasvurusu"],
+      "musicDirection": "Sözsüz, hafif tempolu lo-fi/indie elektronik; 90-105 BPM. Müzik lisansını Meta'nın uygulama içi kütüphanesinden seç.",
+      "accessibility": "Mavi, beyaz ve açık mor grafikler üzerinde CV cümlesinin görev, araç ve çıktı formülüyle yeniden yazılmasını gösteren 18 saniyelik sessiz kinetik tipografi Reeli.",
+      "voiceover": "CV'de deneyim yok diye o bölümü boş bırakma. Ders projesi, kulüp görevi veya gönüllülükte yaptığın işi yaz. Cümleyi üç parçaya böl: görev, kullandığın araç ve ortaya çıkan çıktı. Yalnız kanıtlayabileceğin şeyi ekle. Devamı profil bağlantısındaki CV rehberinde.",
+      "caption": "CV'nin \"deneyim\" alanı yalnızca tam zamanlı işlerden oluşmaz.\n\nDers projesi, kulüp sorumluluğu veya gönüllülükte yaptığın işi; görev + araç + çıktı şeklinde somutlaştır.\n\nKaydet; sonra CV'ndeki bir satırı yenile.",
+      "storyboard": [
+        {"start": "00:00", "end": "00:02", "visual": "Kinetik tipografi: CV'de deneyim yok mu?", "screenText": "CV'DE DENEYİM YOK MU?"},
+        {"start": "00:02", "end": "00:05", "visual": "Boş CV alanı ikonlaşır ve üç kaynak kartına ayrılır.", "screenText": "Ders projesi / Kulüp görevi / Gönüllülük"},
+        {"start": "00:05", "end": "00:08", "visual": "Kırık cümle üstü çizilir.", "screenText": "“Projede yer aldım.”"},
+        {"start": "00:08", "end": "00:13", "visual": "Üç parçalı formül sırayla açılır.", "screenText": "GÖREV + ARAÇ + ÇIKTI"},
+        {"start": "00:13", "end": "00:16", "visual": "Örnek cümle ekranda okunur.", "screenText": "Excel ile kayıtları düzenledim ve sunum için özet tablo hazırladım."},
+        {"start": "00:16", "end": "00:18", "visual": "Mavi CTA ekranı.", "screenText": "KAYDET → CV REHBERİ"}
+      ],
+      "videoPath": "03-reels/2026-08-30-reel-cv-deneyim-yok.mp4",
+      "srtPath": "03-reels/2026-08-30-reel-cv-deneyim-yok.srt",
+      "coverPath": "03-reels/2026-08-30-reel-cv-deneyim-yok-cover.jpg",
+      "frameFolder": "03-reels/2026-08-30-reel-cv-deneyim-yok-frames",
+      "sources": [
+        {
+          "name": "StajımVar - Staj CV'si nasıl yazılır?",
+          "official": false,
+          "url": "https://stajimvar.com/rehber/staj-cv-nasil-yazilir",
+          "verifiedFacts": "Ders projesi, kulüp ve somut görev anlatımı rehberde yer alır."
+        }
+      ],
+      "manualSteps": [
+        "MP4 sessiz görsel parça olarak üretildi; Meta'nın lisanslı müziğini eklemeden önce ses düzeyini seslendirmeyi bastırmayacak seviyede tut.",
+        "SRT dosyasını CapCut/Meta altyazı akışına aktar veya metni uygulamada yeniden gir.",
+        "Kapakta ana başlığın profil ızgarası merkezi dışında kalmadığını kontrol et."
+      ]
+    },
+    {
+      "contentId": "ig-2026w35-reel-firsat-takibi",
+      "date": "2026-09-01",
+      "suggestedTime": "19:30 TRT",
+      "timeTest": "windowB",
+      "format": "reel",
+      "status": "draft",
+      "series": "StajımVar Nasıl Çalışır",
+      "title": "Fırsat buldun, sonra ne yapacaksın?",
+      "objective": "StajımVar'ın resmî kaynak, takip etme ve başvuru akışını göstererek marka güvenini ve site ziyaretini artırmak.",
+      "targetAudience": "Fırsatları kaybeden, başvuru kaynağını ayırt etmek isteyen veya StajımVar'ı ilk kez gören öğrenciler.",
+      "hook": "Bir fırsatı gördün. Peki son tarih gelmeden ne yapacaksın?",
+      "durationSeconds": 20,
+      "targetUrl": "https://stajimvar.com/firsatlar",
+      "utmUrl": "https://stajimvar.com/firsatlar?utm_source=instagram&utm_medium=organic_social&utm_campaign=ig_2026w35&utm_content=ig-2026w35-reel-firsat-takibi",
+      "cta": "Profildeki bağlantı → Fırsatlar; ilgilendiğini takip listene ekle.",
+      "hashtags": ["#ogrencifirsatlari", "#stajbasvurusu", "#bursbasvurusu", "#stajimvar"],
+      "musicDirection": "Odaklı, güven veren, sözsüz minimal elektronik; 95-110 BPM. Meta'nın uygulama içi lisanslı kütüphanesinden seç.",
+      "accessibility": "StajımVar'ın resmî kaynak rozeti, fırsat kartı, takip et düğmesi ve başvuru akışını temsil eden mavi-beyaz kinetik tipografi Reeli.",
+      "voiceover": "Bir fırsatı gördün. Önce kurumun kendi duyurusunu aç ve son tarihi kontrol et. Sonra ilgilendiğin fırsatı takip listene ekle. Başvuru zamanı geldiğinde kurumun kendi bağlantısına git. StajımVar, fırsatı aracı sayfada tutmak yerine resmî kaynağa yönlendirir. Profildeki bağlantıdan açık fırsatlara bak.",
+      "caption": "Fırsat görüp sonra tarihini kaybetmemek için üç kısa adım:\n\n1. Resmî kaynağı aç.\n2. Tarih ve koşulu kontrol et.\n3. İlgilendiğini takip listene ekle.\n\nProfildeki bağlantı → Fırsatlar.",
+      "storyboard": [
+        {"start": "00:00", "end": "00:02", "visual": "Kinetik tipografi: fırsatı gördün, şimdi ne olacak?", "screenText": "FIRSATI GÖRDÜN. SONRA?"},
+        {"start": "00:02", "end": "00:06", "visual": "Resmî kaynak rozeti belirir.", "screenText": "1. KURUMUN KENDİ KAYNAĞINI AÇ"},
+        {"start": "00:06", "end": "00:10", "visual": "Takvim ve kontrol listesi grafiği.", "screenText": "2. TARİH + KOŞULU KONTROL ET"},
+        {"start": "00:10", "end": "00:14", "visual": "Takip et butonu ve yer imi grafiği.", "screenText": "3. İLGİLENDİĞİNİ TAKİBE AL"},
+        {"start": "00:14", "end": "00:17", "visual": "Dış bağlantı oku ve kurum sayfası simgesi.", "screenText": "BAŞVURU: KURUMUN KENDİ BAĞLANTISI"},
+        {"start": "00:17", "end": "00:20", "visual": "StajımVar CTA ekranı.", "screenText": "PROFİLDEKİ BAĞLANTI → FIRSATLAR"}
+      ],
+      "videoPath": "03-reels/2026-09-01-reel-firsat-takibi.mp4",
+      "srtPath": "03-reels/2026-09-01-reel-firsat-takibi.srt",
+      "coverPath": "03-reels/2026-09-01-reel-firsat-takibi-cover.jpg",
+      "frameFolder": "03-reels/2026-09-01-reel-firsat-takibi-frames",
+      "sources": [
+        {
+          "name": "StajımVar fırsatlar sayfası",
+          "official": false,
+          "url": "https://stajimvar.com/firsatlar",
+          "verifiedFacts": "Fırsat kartlarında resmî kaynak rozetinin, son tarih bilgisinin ve takip etme akışının bulunduğu canlı ürün akışı."
+        }
+      ],
+      "manualSteps": [
+        "MP4 sessiz görsel parça olarak üretildi; yayın öncesi Meta uygulamasında önerilen lisanslı müzik ekle.",
+        "SRT altyazısını ekle ve otomatik altyazının Türkçe karakterlerini kontrol et.",
+        "Bu Reel için gerçek ekran kaydı eklenmek istenirse, girişsiz Fırsatlar ekranındaki yalnız kamuya açık kartlar kullanılmalı; kullanıcı verisi görünmemeli."
+      ]
+    }
+  ],
+  "days": [
+    {
+      "date": "2026-08-26",
+      "weekday": "Çarşamba",
+      "feedContentId": "ig-2026w35-firsat-alarmi",
+      "stories": [
+        {
+          "contentId": "story-2026-08-26-01",
+          "format": "new-opportunity",
+          "headline": "Bu hafta kapanan\n5 resmî fırsat",
+          "body": "Her biri farklı koşulla açık.\nÖnce sana uyup uymadığına bak.",
+          "sticker": {"type": "none"},
+          "cta": "Sonraki karede en yakın tarih.",
+          "assetPath": "04-stories/2026-08-26-story-firsat-01.jpg",
+          "accessibility": "Bu hafta kapanan beş resmî fırsat duyurusu."
+        },
+        {
+          "contentId": "story-2026-08-26-02",
+          "format": "countdown",
+          "headline": "DAÜ giriş ve\nburs sınavı",
+          "body": "Son başvuru:\n1 Eylül, 23:59",
+          "sticker": {"type": "countdown", "label": "DAÜ son başvuru", "endsAt": "2026-09-01T23:59:00+03:00"},
+          "cta": "Geri sayımı kur; uygunsan resmî koşulu aç.",
+          "assetPath": "04-stories/2026-08-26-story-firsat-02.jpg",
+          "accessibility": "DAÜ giriş ve burs sınavı için 1 Eylül saat 23:59 geri sayımı."
+        },
+        {
+          "contentId": "story-2026-08-26-03",
+          "format": "poll",
+          "headline": "Şu an en çok\nneyi takip ediyorsun?",
+          "body": "Bu haftaki içerikleri ona göre sıralayalım.",
+          "sticker": {"type": "poll", "question": "En çok hangisi?", "options": ["Burs", "Staj"]},
+          "cta": "Oy ver.",
+          "assetPath": "04-stories/2026-08-26-story-firsat-03.jpg",
+          "accessibility": "Burs veya staj seçenekli öğrenci fırsatları anketi."
+        },
+        {
+          "contentId": "story-2026-08-26-04",
+          "format": "link",
+          "headline": "İsmi değil,\nkoşulu kontrol et.",
+          "body": "Açık fırsatları tek listede gör.",
+          "sticker": {
+            "type": "link",
+            "label": "Açık fırsatlar",
+            "url": "https://stajimvar.com/firsatlar?utm_source=instagram&utm_medium=organic_social&utm_campaign=ig_2026w35&utm_content=story-2026-08-26-firsatlar"
+          },
+          "cta": "Bağlantıya git.",
+          "assetPath": "04-stories/2026-08-26-story-firsat-04.jpg",
+          "accessibility": "Açık fırsatlar sayfasına yönlendiren bağlantı hikâyesi."
+        }
+      ]
+    },
+    {
+      "date": "2026-08-27",
+      "weekday": "Perşembe",
+      "stories": [
+        {
+          "contentId": "story-2026-08-27-01",
+          "format": "community",
+          "headline": "Bölümün ne?\nSıradaki rehberi seçelim.",
+          "body": "Tek kelime yazman yeter.",
+          "sticker": {"type": "question", "label": "Bölümünü yaz"},
+          "cta": "Cevap kutusuna yaz.",
+          "assetPath": "04-stories/2026-08-27-story-topluluk-01.jpg",
+          "accessibility": "Öğrenciden bölümünü yazmasını isteyen soru kutulu hikâye."
+        },
+        {
+          "contentId": "story-2026-08-27-02",
+          "format": "guide",
+          "headline": "Bölümüne göre staj\ntek bir yer demek değil.",
+          "body": "Görevler ve sektörler\nbirbirinden farklı olabilir.",
+          "sticker": {"type": "none"},
+          "cta": "Sonraki karede bölümler sayfası.",
+          "assetPath": "04-stories/2026-08-27-story-topluluk-02.jpg",
+          "accessibility": "Bölüme göre staj seçeneklerinin çeşitli olduğunu anlatan hikâye."
+        },
+        {
+          "contentId": "story-2026-08-27-03",
+          "format": "quiz",
+          "headline": "Mini test",
+          "body": "Bir staj yeri seçerken\nönce neye bakarsın?",
+          "sticker": {"type": "quiz", "question": "Önce ne?", "options": ["Görev tanımı", "Logo", "Renk"], "correctOption": "Görev tanımı"},
+          "cta": "Cevabını seç.",
+          "assetPath": "04-stories/2026-08-27-story-topluluk-03.jpg",
+          "accessibility": "Görev tanımı, logo veya renk seçenekli staj yeri seçme testi."
+        },
+        {
+          "contentId": "story-2026-08-27-04",
+          "format": "link",
+          "headline": "Bölümüne göre\nstaj alanlarını keşfet.",
+          "body": "Kendi bölümünden başla.",
+          "sticker": {
+            "type": "link",
+            "label": "Bölümler",
+            "url": "https://stajimvar.com/bolumler?utm_source=instagram&utm_medium=organic_social&utm_campaign=ig_2026w35&utm_content=story-2026-08-27-bolumler"
+          },
+          "cta": "Bağlantıya git.",
+          "assetPath": "04-stories/2026-08-27-story-topluluk-04.jpg",
+          "accessibility": "StajımVar bölümler sayfasına yönlendiren bağlantı hikâyesi."
+        }
+      ]
+    },
+    {
+      "date": "2026-08-28",
+      "weekday": "Cuma",
+      "feedContentId": "ig-2026w35-cv-deneyim-yok",
+      "stories": [
+        {
+          "contentId": "story-2026-08-28-01",
+          "format": "feed-teaser",
+          "headline": "CV'de deneyim yoksa\nboş bırakma.",
+          "body": "Yeni carousel yayında.",
+          "sticker": {"type": "none"},
+          "cta": "Gönderiyi kaydır.",
+          "assetPath": "04-stories/2026-08-28-story-cv-01.jpg",
+          "accessibility": "CV deneyimi olmayan öğrenciler için yeni carousel duyurusu."
+        },
+        {
+          "contentId": "story-2026-08-28-02",
+          "format": "quiz",
+          "headline": "Doğru mu,\nyanlış mı?",
+          "body": "Ders projesi CV'de\ndeneyim olarak yazılabilir.",
+          "sticker": {"type": "quiz", "question": "Ders projesi yazılır mı?", "options": ["Doğru", "Yanlış"], "correctOption": "Doğru"},
+          "cta": "Cevabını seç.",
+          "assetPath": "04-stories/2026-08-28-story-cv-02.jpg",
+          "accessibility": "Ders projesinin CV'de yazılıp yazılamayacağını soran doğru yanlış testi."
+        },
+        {
+          "contentId": "story-2026-08-28-03",
+          "format": "guide",
+          "headline": "Cümle formülü",
+          "body": "Görev + araç + çıktı",
+          "sticker": {"type": "none"},
+          "cta": "Bunu ekran görüntüsü al.",
+          "assetPath": "04-stories/2026-08-28-story-cv-03.jpg",
+          "accessibility": "CV cümlesi için görev, araç ve çıktı formülünü gösteren hikâye."
+        },
+        {
+          "contentId": "story-2026-08-28-04",
+          "format": "link",
+          "headline": "CV rehberini\naç ve bir satırı yenile.",
+          "body": "Mükemmel deneyim bekleme.",
+          "sticker": {
+            "type": "link",
+            "label": "CV rehberi",
+            "url": "https://stajimvar.com/rehber/staj-cv-nasil-yazilir?utm_source=instagram&utm_medium=organic_social&utm_campaign=ig_2026w35&utm_content=story-2026-08-28-cv-rehberi"
+          },
+          "cta": "Bağlantıya git.",
+          "assetPath": "04-stories/2026-08-28-story-cv-04.jpg",
+          "accessibility": "Staj CV rehberine yönlendiren bağlantı hikâyesi."
+        }
+      ]
+    },
+    {
+      "date": "2026-08-29",
+      "weekday": "Cumartesi",
+      "stories": [
+        {
+          "contentId": "story-2026-08-29-01",
+          "format": "question-box",
+          "headline": "CV'de en çok\nhangi satır zor geliyor?",
+          "body": "Deneyim, beceri veya özet?\nBirini yaz.",
+          "sticker": {"type": "question", "label": "CV sorunu"},
+          "cta": "Soru kutusuna yaz.",
+          "assetPath": "04-stories/2026-08-29-story-cv-01.jpg",
+          "accessibility": "Öğrencinin CV'de zorlandığı bölümü sormak için soru kutulu hikâye."
+        },
+        {
+          "contentId": "story-2026-08-29-02",
+          "format": "guide",
+          "headline": "Yapmadığın şeyi\nyazma.",
+          "body": "Ama yaptığın işi de\nküçümseme.",
+          "sticker": {"type": "none"},
+          "cta": "CV'nin kanıtlanabilir olsun.",
+          "assetPath": "04-stories/2026-08-29-story-cv-02.jpg",
+          "accessibility": "CV'de sadece kanıtlanabilir işlerin yazılması gerektiğini anlatan hikâye."
+        },
+        {
+          "contentId": "story-2026-08-29-03",
+          "format": "poll",
+          "headline": "CV'ni en son\nne zaman güncelledin?",
+          "body": "Kısa bir kontrol bile fark yaratır.",
+          "sticker": {"type": "poll", "question": "CV güncel mi?", "options": ["Bu hafta", "Uzun zaman oldu"]},
+          "cta": "Oy ver.",
+          "assetPath": "04-stories/2026-08-29-story-cv-03.jpg",
+          "accessibility": "CV'nin güncel olup olmadığını soran anket hikâyesi."
+        },
+        {
+          "contentId": "story-2026-08-29-04",
+          "format": "cta",
+          "headline": "Yarın: 18 saniyede\nCV formülü",
+          "body": "Kaydetmeyi unutma.",
+          "sticker": {"type": "none"},
+          "cta": "Yarın tekrar gel.",
+          "assetPath": "04-stories/2026-08-29-story-cv-04.jpg",
+          "accessibility": "Ertesi gün yayınlanacak CV Reeli için teaser hikâyesi."
+        }
+      ]
+    },
+    {
+      "date": "2026-08-30",
+      "weekday": "Pazar",
+      "feedContentId": "ig-2026w35-reel-cv-bos-birakma",
+      "stories": [
+        {
+          "contentId": "story-2026-08-30-01",
+          "format": "reel-teaser",
+          "headline": "CV'de deneyim yok mu?",
+          "body": "Yeni Reel: 18 saniye.",
+          "sticker": {"type": "none"},
+          "cta": "Reeli izle.",
+          "assetPath": "04-stories/2026-08-30-story-cv-reel-01.jpg",
+          "accessibility": "Yeni CV Reeli duyurusu."
+        },
+        {
+          "contentId": "story-2026-08-30-02",
+          "format": "guide",
+          "headline": "Örnek cümle",
+          "body": "Görev + araç + çıktı\nile başla.",
+          "sticker": {"type": "none"},
+          "cta": "Reeldeki örneği kaydet.",
+          "assetPath": "04-stories/2026-08-30-story-cv-reel-02.jpg",
+          "accessibility": "CV cümlesi formülünü hatırlatan hikâye."
+        },
+        {
+          "contentId": "story-2026-08-30-03",
+          "format": "poll",
+          "headline": "Bir sonraki Reel\nhangisi olsun?",
+          "body": "Soruyu sen seç.",
+          "sticker": {"type": "poll", "question": "Sonraki konu?", "options": ["E-posta", "Mülakat"]},
+          "cta": "Oy ver.",
+          "assetPath": "04-stories/2026-08-30-story-cv-reel-03.jpg",
+          "accessibility": "Başvuru e-postası veya mülakat seçenekli konu anketi."
+        },
+        {
+          "contentId": "story-2026-08-30-04",
+          "format": "link",
+          "headline": "CV rehberinde\ndevamı var.",
+          "body": "Yalnızca iş deneyimiyle sınırlı değil.",
+          "sticker": {
+            "type": "link",
+            "label": "CV rehberi",
+            "url": "https://stajimvar.com/rehber/staj-cv-nasil-yazilir?utm_source=instagram&utm_medium=organic_social&utm_campaign=ig_2026w35&utm_content=story-2026-08-30-cv-reel"
+          },
+          "cta": "Bağlantıya git.",
+          "assetPath": "04-stories/2026-08-30-story-cv-reel-04.jpg",
+          "accessibility": "CV rehberine yönlendiren bağlantı hikâyesi."
+        }
+      ]
+    },
+    {
+      "date": "2026-08-31",
+      "weekday": "Pazartesi",
+      "stories": [
+        {
+          "contentId": "story-2026-08-31-01",
+          "format": "kyk-guide",
+          "headline": "KYK bursu ile\nöğrenim kredisi aynı değil.",
+          "body": "Tutar konuşmadan önce\nfarkı bil.",
+          "sticker": {"type": "none"},
+          "cta": "Sonraki karede mini test.",
+          "assetPath": "04-stories/2026-08-31-story-kyk-01.jpg",
+          "accessibility": "KYK bursu ile öğrenim kredisi arasındaki farkı anlatan hikâye."
+        },
+        {
+          "contentId": "story-2026-08-31-02",
+          "format": "quiz",
+          "headline": "Doğru mu,\nyanlış mı?",
+          "body": "Öğrenim kredisi\ngeri ödemelidir.",
+          "sticker": {"type": "quiz", "question": "Kredi geri ödenir mi?", "options": ["Doğru", "Yanlış"], "correctOption": "Doğru"},
+          "cta": "Cevabını seç.",
+          "assetPath": "04-stories/2026-08-31-story-kyk-02.jpg",
+          "accessibility": "Öğrenim kredisinin geri ödemeli olup olmadığını soran doğru yanlış testi."
+        },
+        {
+          "contentId": "story-2026-08-31-03",
+          "format": "guide",
+          "headline": "Takvim ve tutar\nyıla göre değişir.",
+          "body": "Güncel rakamı yalnız\nresmî duyurudan kontrol et.",
+          "sticker": {"type": "none"},
+          "cta": "Eski ekran görüntüsüne güvenme.",
+          "assetPath": "04-stories/2026-08-31-story-kyk-03.jpg",
+          "accessibility": "KYK takvimi ve tutarının her yıl değişebileceğini belirten hikâye."
+        },
+        {
+          "contentId": "story-2026-08-31-04",
+          "format": "link",
+          "headline": "KYK rehberini\nkaydet.",
+          "body": "Başvuru dönemi açıldığında\ngeri dönersin.",
+          "sticker": {
+            "type": "link",
+            "label": "KYK rehberi",
+            "url": "https://stajimvar.com/rehber/kyk-burs-ve-kredi?utm_source=instagram&utm_medium=organic_social&utm_campaign=ig_2026w35&utm_content=story-2026-08-31-kyk"
+          },
+          "cta": "Bağlantıya git.",
+          "assetPath": "04-stories/2026-08-31-story-kyk-04.jpg",
+          "accessibility": "KYK burs ve kredi rehberine yönlendiren bağlantı hikâyesi."
+        }
+      ]
+    },
+    {
+      "date": "2026-09-01",
+      "weekday": "Salı",
+      "feedContentId": "ig-2026w35-reel-firsat-takibi",
+      "stories": [
+        {
+          "contentId": "story-2026-09-01-01",
+          "format": "brand-trust",
+          "headline": "StajımVar burada\nne sunuyor?",
+          "body": "Staj, burs, KYK ve yurt dışı\nfırsatlarını tek listede toplar.",
+          "sticker": {"type": "none"},
+          "cta": "Sonraki karede yöntem.",
+          "assetPath": "04-stories/2026-09-01-story-urun-01.jpg",
+          "accessibility": "StajımVar'ın sunduğu fırsat alanlarını anlatan marka hikâyesi."
+        },
+        {
+          "contentId": "story-2026-09-01-02",
+          "format": "brand-trust",
+          "headline": "Aracı başvuru sayfası\ndeğil.",
+          "body": "Mümkün olduğunda kurumun\nkendi kaynağına yönlendirir.",
+          "sticker": {"type": "none"},
+          "cta": "Resmî kaynağı aç.",
+          "assetPath": "04-stories/2026-09-01-story-urun-02.jpg",
+          "accessibility": "StajımVar'ın kurumun kendi başvuru kaynağına yönlendirme yaklaşımını anlatan hikâye."
+        },
+        {
+          "contentId": "story-2026-09-01-03",
+          "format": "product-feature",
+          "headline": "İlgilendiğin fırsatı\ntakibe al.",
+          "body": "Sonra tekrar bulmak için\nhafızana güvenme.",
+          "sticker": {"type": "none"},
+          "cta": "Fırsatlar sayfasını aç.",
+          "assetPath": "04-stories/2026-09-01-story-urun-03.jpg",
+          "accessibility": "Fırsatların takip listesine kaydedilebileceğini anlatan ürün hikâyesi."
+        },
+        {
+          "contentId": "story-2026-09-01-04",
+          "format": "link",
+          "headline": "Haftanın fırsat\nözetini gör.",
+          "body": "Bölümünü de yaz; sıradaki içerik senin alanın olsun.",
+          "sticker": {
+            "type": "link",
+            "label": "Fırsatlar",
+            "url": "https://stajimvar.com/firsatlar?utm_source=instagram&utm_medium=organic_social&utm_campaign=ig_2026w35&utm_content=story-2026-09-01-hafta-ozeti"
+          },
+          "cta": "Bağlantıya git; sonra bölümü yorumlara yaz.",
+          "assetPath": "04-stories/2026-09-01-story-urun-04.jpg",
+          "accessibility": "Açık fırsatlar sayfasına yönlendiren ve bölümünü yazmaya çağıran hikâye."
+        }
+      ]
+    }
+  ],
+  "emergencyTemplate": {
+    "contentId": "ig-emergency-last-48-hours",
+    "status": "template",
+    "title": "Son 48 saat: [KURUM / PROGRAM]",
+    "format": "carousel-or-single-feed",
+    "requiredFields": ["[KURUM]", "[PROGRAM]", "[SON_BASVURU_TARIH_SAAT]", "[KIMLER_ICIN]", "[RESMI_KAYNAK_URL]", "[SON_KONTROL_TARIHI]"],
+    "feedCopy": "Son 48 saat: [KURUM / PROGRAM] başvurusu [SON_BASVURU_TARIH_SAAT] tarihinde kapanıyor.\n\n• Kimler için: [KIMLER_ICIN]\n• Tutar/destek: [RESMI_KAYNAKTA_ACIKLANAN_BILGI_VEYA_TUTAR_ACIKLANMADI]\n• Son kontrol: [SON_KONTROL_TARIHI]\n\nBaşvurmadan önce kurumun kendi sayfasındaki koşulları tekrar kontrol et.",
+    "storyTemplate": {
+      "headline": "SON 48 SAAT",
+      "body": "[KURUM / PROGRAM]\nSon başvuru: [SON_BASVURU_TARIH_SAAT]",
+      "sticker": {"type": "countdown", "label": "[KISA_ETIKET]", "endsAt": "[ISO_8601_TARIH_SAAT]"},
+      "linkLabel": "Resmî başvuru",
+      "linkUrl": "[RESMI_KAYNAK_URL_UTM_YOK]"
+    },
+    "manualSteps": [
+      "Sadece resmî kaynak açıkça doğrulanmışsa alanları doldur.",
+      "Tarih veya saat belirsizse geri sayım etiketi kullanma.",
+      "Kapandıysa yayınlama; şablonu silme yerine arşiv klasöründe bırak."
+    ]
+  },
+  "metricsTemplate": {
+    "fields": ["content_id", "publish_datetime_tr", "reach", "non_follower_reach", "plays", "average_watch_time", "three_second_hold", "likes", "comments", "saves", "shares", "profile_visits", "link_clicks", "new_follows", "site_sessions", "started_signup_or_application", "notes"],
+    "evaluationRule": "Formatları yalnız beğeniye göre sıralama. Aynı hedefteki içerikleri kaydetme + paylaşma + bağlantı tıklaması + takipçi olmayan erişimi birlikte karşılaştır. Reel için ilk üç saniye tutma ve ortalama izlenme süresini ayrıca incele."
+  },
+  "collaborationIdeas": [
+    {
+      "idea": "Üniversite kariyer merkezi ile ortak 'resmî kaynak kontrolü' carousel'i",
+      "publicAccountSearch": "@anadolu_kariyer (Anadolu Üniversitesi Kariyer Merkezi / ANAKARİYER)",
+      "deliverable": "Kariyer merkezinin o haftaki ilanını ve StajımVar'ın kaynak kontrolü adımını birlikte anlatan ortak gönderi.",
+      "outreachStatus": "Mesaj gönderilmedi."
+    },
+    {
+      "idea": "Öğrenci kulübü ile bölümüne göre staj canlı soru-cevap Reeli",
+      "publicAccountSearch": "@hacettepekariyer (Hacettepe Üniversitesi KARMER; öğrenci sorularını kariyer merkezi ortaklığıyla toplamak için)",
+      "deliverable": "Kulübün topladığı üç gerçek soruya 30 saniyelik kısa cevaplar.",
+      "outreachStatus": "Mesaj gönderilmedi."
+    },
+    {
+      "idea": "Uluslararası ofis ile 'hibesiz Erasmus ne demek?' bilgi gönderisi",
+      "publicAccountSearch": "@gedikunvkariyer (İstanbul Gedik Üniversitesi Kariyer Merkezi; fırsat ve başvuru takip odağı için)",
+      "deliverable": "Hibe, seyahat desteği, masraf ve yedek liste kavramlarını okul duyurusu üzerinden ayıran ortak carousel.",
+      "outreachStatus": "Mesaj gönderilmedi."
+    }
+  ],
+  "publicCollaborationAccounts": [
+    {
+      "instagramHandle": "@anadolu_kariyer",
+      "name": "Anadolu Üniversitesi Kariyer Merkezi (ANAKARİYER)",
+      "officialVerificationUrl": "https://www.anadolu.edu.tr/arastirma/birimler/kariyer-merkezi-mudurlugu",
+      "verifiedOn": "2026-08-25",
+      "suitableFor": "Resmî kaynak kontrolü, CV ve öğrenci kariyer içerikleri",
+      "outreachStatus": "Mesaj gönderilmedi."
+    },
+    {
+      "instagramHandle": "@hacettepekariyer",
+      "name": "Hacettepe Üniversitesi Kariyer Merkezi (KARMER)",
+      "officialVerificationUrl": "https://karmer.hacettepe.edu.tr/ss/",
+      "verifiedOn": "2026-08-25",
+      "suitableFor": "CV, mülakat, staj ve iş fırsatlarına yönelik öğrenci soru-cevapları",
+      "outreachStatus": "Mesaj gönderilmedi."
+    },
+    {
+      "instagramHandle": "@gedikunvkariyer",
+      "name": "İstanbul Gedik Üniversitesi Kariyer Merkezi",
+      "officialVerificationUrl": "https://kariyer.gedik.edu.tr/iletisim",
+      "verifiedOn": "2026-08-25",
+      "suitableFor": "Staj fırsatları ve başvuru takip akışı",
+      "outreachStatus": "Mesaj gönderilmedi."
+    }
+  ],
+  "broadcastChannelSuggestion": {
+    "channelName": "Son Başvurular",
+    "createStatus": "not-created",
+    "use": "Yalnız resmî kaynakta tarihi doğrulanmış 48 saat ve 7 gün uyarıları; her paylaşımda kurum, tarih, kaynak türü ve içerik bağlantısı.",
+    "cadence": "Haftada en fazla 3 kısa uyarı; aynı fırsatı tekrar tekrar göndermeme."
+  }
+}

@@ -1,0 +1,19 @@
+1
+00:00:00,000 --> 00:00:03,000
+CV’de deneyim yok diye o bölümü boş bırakma.
+
+2
+00:00:03,000 --> 00:00:06,000
+Ders projesi, kulüp görevi veya gönüllülükte yaptığın işi yaz.
+
+3
+00:00:06,000 --> 00:00:10,000
+Cümleyi üç parçaya böl: görev, kullandığın araç ve ortaya çıkan çıktı.
+
+4
+00:00:10,000 --> 00:00:14,000
+Yalnız kanıtlayabileceğin şeyi ekle.
+
+5
+00:00:14,000 --> 00:00:18,000
+Devamı profil bağlantısındaki CV rehberinde.

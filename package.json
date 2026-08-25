@@ -21,6 +21,7 @@
     "paylasim-staj-sigortasi": "node scripts/paylasim-staj-sigortasi.mjs",
     "paylasim-basvuru-epostasi": "node scripts/paylasim-basvuru-epostasi.mjs",
     "paylasim-cv": "node scripts/paylasim-cv.mjs",
+    "instagram-hafta-2026-08-26": "node scripts/instagram-icerik-haftasi-2026-08-26.mjs",
     "ilan-kontrol": "node scripts/ilan-baglanti-kontrol.mjs",
     "rehber-kapaklari": "node scripts/rehber-kapaklari.mjs"
   },

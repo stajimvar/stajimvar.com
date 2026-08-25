@@ -145,5 +145,49 @@
       "/paylasim/hikaye/staj-sigortasi/03.jpg",
       "/paylasim/hikaye/staj-sigortasi/04.jpg"
     ]
+  },
+  {
+    "kod": "ig-2026w35-firsat-alarmi",
+    "ad": "31 Ağustos-10 Eylül: 5 resmî fırsat — taslak",
+    "surum": "w35-v1",
+    "guncellendi": "2026-08-25",
+    "metin": "Yaklaşan her başvuru herkese uygun değil.\n\n• YTB, DEÜ, DAÜ, Faydasıçok Vakfı ve MÜKAD için resmî son tarihleri 25 Ağustos'ta yeniden kontrol ettik.\n• Uygunluk koşulu ve destek biçimi birbirinden farklı.\n• Başvurmadan önce kurumun kendi sayfasındaki son durumu tekrar aç.\n\nKaydet; ihtiyacı olan arkadaşına gönder.",
+    "etiketler": [
+      "#bursbasvurusu",
+      "#ogrencifirsatlari",
+      "#erasmus",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/ig-2026w35-firsat-alarmi/01-w35-v1.jpg",
+      "/paylasim/ig-2026w35-firsat-alarmi/02-w35-v1.jpg",
+      "/paylasim/ig-2026w35-firsat-alarmi/03-w35-v1.jpg",
+      "/paylasim/ig-2026w35-firsat-alarmi/04-w35-v1.jpg",
+      "/paylasim/ig-2026w35-firsat-alarmi/05-w35-v1.jpg",
+      "/paylasim/ig-2026w35-firsat-alarmi/06-w35-v1.jpg",
+      "/paylasim/ig-2026w35-firsat-alarmi/07-w35-v1.jpg"
+    ]
+  },
+  {
+    "kod": "ig-2026w35-cv-deneyim-yok",
+    "ad": "Deneyim yoksa CV'yi boş bırakma — taslak",
+    "surum": "w35-v1",
+    "guncellendi": "2026-08-25",
+    "metin": "CV'de iş deneyimi yok diye boş alan bırakmak zorunda değilsin.\n\n• Ders projesi, kulüp görevi, gönüllülük ve part-time çalışma doğru anlatıldığında somut deneyimdir.\n• Cümleyi görev + araç + çıktı düzeninde kur.\n• Yalnız yapmadığın işi yazma; kanıtlayabileceğin detayları seç.\n\nBu akşam bir CV satırını güncelle.",
+    "etiketler": [
+      "#stajcv",
+      "#ilkstaj",
+      "#cvhazirlama",
+      "#universiteogrencisi"
+    ],
+    "kartlar": [
+      "/paylasim/ig-2026w35-cv-deneyim-yok/01-w35-v1.jpg",
+      "/paylasim/ig-2026w35-cv-deneyim-yok/02-w35-v1.jpg",
+      "/paylasim/ig-2026w35-cv-deneyim-yok/03-w35-v1.jpg",
+      "/paylasim/ig-2026w35-cv-deneyim-yok/04-w35-v1.jpg",
+      "/paylasim/ig-2026w35-cv-deneyim-yok/05-w35-v1.jpg",
+      "/paylasim/ig-2026w35-cv-deneyim-yok/06-w35-v1.jpg",
+      "/paylasim/ig-2026w35-cv-deneyim-yok/07-w35-v1.jpg"
+    ]
   }
 ]
