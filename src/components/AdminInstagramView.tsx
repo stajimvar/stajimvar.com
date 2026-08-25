@@ -6,6 +6,7 @@ import {
   etiketleriBul,
   paylasimSorunlari,
 } from '../lib/instagram-paylasim.mjs';
+import { AdminInstagramStorySchedule } from './AdminInstagramStorySchedule';
 
 /**
  * Yönetim → Instagram bağlantısı.
@@ -452,6 +453,8 @@ export const AdminInstagramView: React.FC<{ onNavigate: (path: string) => void }
           <p className="text-xs text-gray-500">Yayın düğmesi, bağlantı doğrulanana kadar kapalı.</p>
         )}
       </div>
+
+      <AdminInstagramStorySchedule />
     </main>
   );
 };
