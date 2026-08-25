@@ -63,6 +63,110 @@
     <meta property="og:image:alt" content="StajımVar — Şirketlerin staj ilanları, tek listede" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://stajimvar.com/og-gorsel.png" />
+    <!--
+      AÇILIŞ STİLİ — HER ŞEYDEN ÖNCE
+
+      SORUN
+      Soğuk yenilemede sıra şuydu: çıplak ilan metni görünüyor, kısa bir
+      beyaz ekran oluyor, gri iskelet geliyor, sonra site açılıyor.
+
+      Sebebi güvenlik değil, FOUC: #root boş değil, içinde arama motoru için
+      hazırlanan ön render metni duruyor ve tarayıcı onu HEMEN çiziyor. Dış
+      CSS ise modül betiğinden SONRA geliyor (Vite böyle basıyor), yani
+      biçimlenmemiş metin bir an ekranda kalıyor.
+
+      ÇÖZÜM
+      Bu blok satır içi ve <head> içindeki İLK stil: tarayıcı gövdeyi
+      çizmeden önce okuyor.
+        - Ön render metni JS açıkken gizleniyor (aşağıdaki noscript onu
+          JS kapalıyken geri açıyor; arama motoru için içerik yerinde).
+        - Yerine gerçek arayüzü taklit eden statik bir iskelet çiziliyor,
+          böylece beyaz ekran da olmuyor.
+      React ilk çizimini yaptığında #root'un içindekilerin ikisini de
+      değiştiriyor.
+    -->
+    <style>
+      html,
+      body,
+      #root {
+        min-height: 100%;
+        margin: 0;
+        background: #f9fafb;
+      }
+      body {
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+      /* Ön render metni: arama motorunun okuduğu içerik, insanın görmediği. */
+      [data-seo-prerender] {
+        display: none;
+      }
+      /*
+        AÇILIŞ İSKELETİ
+
+        Gerçek düzeni taklit ediyor: üstte başlık çubuğu, altta üç sütun
+        (geniş ekranda süzgeç / liste / kenar çubuğu). Ölçüler uygulamanın
+        kendi iskeletiyle aynı olsun diye seçildi; React devreye girdiğinde
+        sıçrama olmuyor.
+      */
+      #acilis-iskeleti {
+        padding: 0 0 96px;
+      }
+      #acilis-iskeleti .sv-cubuk {
+        height: 64px;
+        background: #ffffff;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      #acilis-iskeleti .sv-govde {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 20px 16px;
+        display: grid;
+        gap: 16px;
+        grid-template-columns: 1fr;
+      }
+      #acilis-iskeleti .sv-kutu {
+        background: #eef0f3;
+        border-radius: 16px;
+      }
+      #acilis-iskeleti .sv-liste .sv-kutu {
+        height: 188px;
+        margin-bottom: 16px;
+      }
+      #acilis-iskeleti .sv-yan {
+        display: none;
+      }
+      @media (min-width: 1024px) {
+        #acilis-iskeleti .sv-govde {
+          grid-template-columns: 3fr 6fr 3fr;
+          padding: 20px 32px;
+        }
+        #acilis-iskeleti .sv-yan {
+          display: block;
+          height: 320px;
+        }
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        #acilis-iskeleti .sv-kutu {
+          animation: sv-nabiz 1.4s ease-in-out infinite;
+        }
+        @keyframes sv-nabiz {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.55; }
+        }
+      }
+    </style>
+    <noscript>
+      <style>
+        /* JS kapalıysa gösterilecek tek şey ön render içeriği. */
+        [data-seo-prerender] {
+          display: block;
+        }
+        #acilis-iskeleti {
+          display: none;
+        }
+      </style>
+    </noscript>
+
     <script>
       /*
         BAYAT HTML KURTARMASI
@@ -123,7 +227,26 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!--
+      İskelet #root'un İÇİNDE: React ilk çizimini yaptığında container'ın
+      mevcut çocuklarını değiştiriyor, yani iskelet kendiliğinden kalkıyor.
+      Dışarıda olsaydı onu ayrıca silen bir kod yazmak gerekirdi ve o kod
+      React'ten önce ya da sonra çalışma yarışına girerdi.
+    -->
+    <div id="root">
+      <div id="acilis-iskeleti" aria-hidden="true">
+        <div class="sv-cubuk"></div>
+        <div class="sv-govde">
+          <div class="sv-kutu sv-yan"></div>
+          <div class="sv-liste">
+            <div class="sv-kutu"></div>
+            <div class="sv-kutu"></div>
+            <div class="sv-kutu"></div>
+          </div>
+          <div class="sv-kutu sv-yan"></div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

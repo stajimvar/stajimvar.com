@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/ads-txt.mjs && vite build && node scripts/onrender.mjs",
-    "preview": "wrangler pages dev dist",
+    "preview": "wrangler pages dev dist --compatibility-date=2026-08-18",
     "deploy": "wrangler pages deploy dist",
     "lint": "tsc --noEmit",
     "ads-txt": "node scripts/ads-txt.mjs",

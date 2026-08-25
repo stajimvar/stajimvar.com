@@ -1,0 +1,21 @@
+# Cloudflare Pages başlık kuralları.
+#
+# /assets/* içindeki dosya adlarında derleme özeti var
+# (index-C48VgoS1.js gibi). İçerik değişince ad da değişiyor, yani aynı
+# adres hiçbir zaman farklı bir içeriğe işaret etmiyor. Bu yüzden bir yıl
+# önbelleğe almak güvenli ve tekrar ziyarette JS/CSS hiç indirilmiyor —
+# açılışta stil beklenmediği için çıplak metin de görünmüyor.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Görsellerin adında özet yok; içerikleri değişebilir. Bir gün önbellek,
+# arada bir güncellemeyi kaçırmadan tekrar ziyareti hızlandırıyor.
+/rehber-gorselleri/*
+  Cache-Control: public, max-age=86400
+
+/kurum-logolari/*
+  Cache-Control: public, max-age=86400
+
+# HTML her istekte tazeleniyor: ilan ve rehber içeriği değişiyor.
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate

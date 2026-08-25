@@ -550,11 +550,58 @@ async function firsatlariGetir() {
   Çözüm: kabuğu okur okumaz kökü boşalt. Böylece betik kaç kez çalışırsa
   çalışsın aynı çıktıyı üretiyor.
 */
-const kabuk = fs
-  .readFileSync(path.join(dist, 'index.html'), 'utf8')
-  .replace(/<div id="root">[\s\S]*?<\/div>(?=\s*<\/body>)/, '<div id="root"></div>');
+const hamKabuk = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
 
-// Boşaltma tutmadıysa devam etmek, yanlış gövdeli 66 sayfa yazmak demek.
+/*
+  AÇILIŞ İSKELETİNİ SAKLA
+
+  #root boşaltılırken index.html'deki açılış iskeleti de siliniyordu ve ön
+  render edilen sayfalar iskeletsiz kalıyordu — yani FOUC düzeltmesi
+  yalnızca ön render EDİLMEYEN adreslerde çalışıyordu, ki asıl sorun tam da
+  ön render edilenlerdeydi.
+
+  İskelet burada bir kez yakalanıp her sayfaya geri konuyor. Kaynağı hâlâ
+  index.html: iki yerde ayrı ayrı yazılsaydı biri değiştiğinde öteki
+  sessizce eskiyecekti.
+*/
+const iskeletEsles = hamKabuk.match(
+  /<div id="acilis-iskeleti"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/
+);
+const ACILIS_ISKELETI = iskeletEsles ? iskeletEsles[0] : '';
+if (!ACILIS_ISKELETI) {
+  console.error('ön render DURDU: index.html içinde açılış iskeleti bulunamadı.');
+  process.exit(1);
+}
+
+/*
+  STİL ETİKETİNİ SCRIPT'İN ÖNÜNE AL
+
+  Vite `<script type="module">` etiketini `<link rel="stylesheet">`
+  etiketinden ÖNCE yazıyor. Tarayıcı etiketleri sırayla görüyor; script
+  önce geldiğinde stil dosyasının indirilmesi de o kadar geç başlıyor.
+  Aradaki boşlukta HTML çıplak çiziliyor — açılışta görülen yazı bundandı.
+
+  Etiketleri yer değiştirmek davranışı değiştirmiyor, yalnızca stil
+  isteğini öne alıyor. Vite'ın çıktısına elle dokunmak yerine burada
+  yapılıyor: derleyicinin sırası sürüm sürüm değişebilir, bu düzeltme
+  değişse de çalışır.
+*/
+function stiliOneAl(html) {
+  const stiller = html.match(/[ \t]*<link rel="stylesheet"[^>]*>\n?/g);
+  if (!stiller) return html;
+  let sonuc = html;
+  for (const stil of stiller) sonuc = sonuc.replace(stil, '');
+  return sonuc.replace(
+    /([ \t]*)<script type="module"/,
+    (_, girinti) => stiller.map((s) => s.trimStart()).map((s) => girinti + s).join('') + girinti + '<script type="module"'
+  );
+}
+
+const kabuk = stiliOneAl(
+  hamKabuk.replace(/<div id="root">[\s\S]*?<\/div>(?=\s*<\/body>)/, '<div id="root"></div>')
+);
+
+// Boşaltma tutmadıysa devam etmek, yanlış gövdeli 200'den fazla sayfa yazmak demek.
 if (!/<div id="root">\s*<\/div>/.test(kabuk)) {
   console.error('ön render DURDU: dist/index.html içindeki #root boşaltılamadı.');
   process.exit(1);
@@ -678,10 +725,26 @@ function sayfaYaz(yol, s) {
       '  </head>'
   );
 
-  // #root içine görünür metin
+  /*
+    #root İÇİNE: AÇILIŞ İSKELETİ + ÖN RENDER METNİ
+
+    Sıra önemli. İskelet ÖNCE geliyor ve görünür olan o: tarayıcı CSS
+    beklemeden onu çiziyor, beyaz ekran oluşmuyor.
+
+    Ön render metni SONRA ve `data-seo-prerender` ile işaretli;
+    index.html'deki satır içi stil onu JS açıkken gizliyor. Sebebi FOUC:
+    tarayıcı bu metni dış CSS gelmeden çiziyordu ve soğuk yenilemede çıplak
+    yazı bir an ekranda kalıyordu.
+
+    Arama motoru için hiçbir şey değişmiyor: metin HTML'de duruyor,
+    `display:none` içeriği kaldırmıyor ve JS kapalıyken noscript onu geri
+    açıyor.
+
+    İkisi de #root'un içinde; React ilk çizimde ikisini birden değiştiriyor.
+  */
   html = html.replace(
-    /<div id="root">\s*<\/div>/,
-    `<div id="root">${s.govde}</div>`
+    '<div id="root"></div>',
+    `<div id="root">${ACILIS_ISKELETI}<div data-seo-prerender>${s.govde}</div></div>`
   );
 
   /*
