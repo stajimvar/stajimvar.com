@@ -1,20 +1,13 @@
 import React from 'react';
-import {
-  ArrowRight,
-  Award,
-  Briefcase,
-  Building2,
-  Calculator,
-  FileText,
-  GraduationCap,
-  MapPin,
-  TrendingUp,
-} from 'lucide-react';
+import { ArrowRight, Award, Briefcase, FileText, TrendingUp } from 'lucide-react';
 import { SayfaKabugu } from './SayfaKabugu';
 import { RehberIzgarasi, RehberKarti, RehberKartiIskeleti } from './RehberKartlari';
+import { YolHaritasi } from './YolHaritasi';
+import { RehberSonuclari } from './RehberSonuclari';
 import { REHBERLER, KONULAR, konuEtiketi, type KonuId, type Rehber } from '../data/rehberler';
 import { BOLUMLER } from '../data/bolumler';
-import { ARACLAR } from './AraclarListesi';
+import { STAJ_PROGRAMLARI } from '../data/stajProgramlari';
+import { KARIYER_MERKEZLERI } from '../data/kariyerMerkezleri';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import {
   enCokOkunanlar,
@@ -25,6 +18,7 @@ import {
   yeniEklenenler,
 } from '../lib/rehber-siralama.mjs';
 import { gecmisiOku } from '../lib/rehber-gecmis.mjs';
+import { birlesikArama } from '../lib/rehber-arama.mjs';
 import { kaydedilenRehberler, okunmaSayilari, rehberKaydiDegistir } from '../lib/rehber-veri';
 import type { StudentProfile } from '../types';
 
@@ -100,26 +94,6 @@ const HIZLI_ISLEMLER: { konu: KonuId; etiket: string; ikon: React.ReactNode; ren
     renk: 'bg-amber-50 text-amber-700',
   },
 ];
-
-const KesfetKarti: React.FC<{
-  ikon: React.ReactNode;
-  renk: string;
-  baslik: string;
-  sayi: string;
-  onClick: () => void;
-}> = ({ ikon, renk, baslik, sayi, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="flex w-40 shrink-0 snap-start cursor-pointer flex-col gap-2 rounded-2xl border border-gray-200 bg-white p-3.5 text-left transition-colors hover:border-blue-300"
-  >
-    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${renk}`}>
-      {ikon}
-    </span>
-    <span className="block text-sm font-bold leading-snug text-gray-900">{baslik}</span>
-    <span className="block text-[11px] font-semibold text-blue-700">{sayi}</span>
-  </button>
-);
 
 const Bolum: React.FC<{
   baslik: string;
@@ -249,26 +223,42 @@ export const RehberMerkezi: React.FC<{
 
   const terim = sadelestir(arama.trim());
 
+  /*
+    BİRLEŞİK ARAMA
+
+    Arama yalnızca yazıların içinde geziyordu; "Aselsan" yazan kişi hiçbir
+    sonuç alamıyor, "Marmara" yazan kendi okulunun kariyer merkezini
+    bulamıyordu. Artık dört kaynakta birden arıyor: rehber yazıları, bölüm
+    rehberleri, doğrulanmış işverenler ve kariyer merkezleri.
+
+    Kural src/lib/rehber-arama.mjs içinde ve sınanıyor.
+  */
+  const aramaSonuclari = React.useMemo(
+    () =>
+      birlesikArama(arama, {
+        rehberler: ogrenciRehberleri.map((r) => ({ ...r, konuAdi: konuEtiketi(r.konu) })),
+        bolumler: BOLUMLER,
+        isverenler: STAJ_PROGRAMLARI,
+        merkezler: KARIYER_MERKEZLERI,
+      }) as {
+        aktif: boolean;
+        toplam: number;
+        rehberler: Rehber[];
+        bolumler: { slug: string; ad: string; ozet?: string }[];
+        isverenler: { slug: string; isveren: string; sektor?: string }[];
+        merkezler: { universite: string; sehir?: string; url: string }[];
+      },
+    [arama, ogrenciRehberleri]
+  );
+
   const sonuclar = React.useMemo(() => {
-    let liste = ogrenciRehberleri;
+    if (terim) return aramaSonuclari.rehberler;
 
-    if (terim) {
-      /*
-        Arama başlıkla sınırlı değil: özet, açıklama, konu adı ve etiketler
-        de taranıyor. "sigorta" yazan kişi başlığında sigorta geçmeyen
-        zorunlu staj rehberini bulabilmeli.
-      */
-      return liste.filter((r) =>
-        sadelestir(
-          [r.baslik, r.ozet, r.aciklama, konuEtiketi(r.konu), ...(r.etiketler ?? [])].join(' ')
-        ).includes(terim)
-      );
-    }
-
+    const liste = ogrenciRehberleri;
     if (sekme === 'uygun' && kisisel) return kisiyeGoreSirala(liste, ogrenci) as Rehber[];
-    if (sekme !== 'tumu' && sekme !== 'uygun') liste = liste.filter((r) => r.konu === sekme);
+    if (sekme !== 'tumu' && sekme !== 'uygun') return liste.filter((r) => r.konu === sekme);
     return liste;
-  }, [terim, sekme, kisisel, ogrenci, ogrenciRehberleri]);
+  }, [terim, aramaSonuclari, sekme, kisisel, ogrenci, ogrenciRehberleri]);
 
   /* Bölümlü görünüm yalnızca varsayılan ekranda; süzgeç varken tek liste. */
   const suzuluyor = Boolean(terim) || (sekme !== 'tumu' && sekme !== 'uygun');
@@ -397,6 +387,17 @@ export const RehberMerkezi: React.FC<{
         </section>
 
         {/*
+          YOL HARİTASI HEMEN BURADA
+
+          Bu bölüm sayfanın sonundaki "Keşfet" şeridiydi ve dört eşit
+          kutudan ibaretti; arkasındaki 34 bölüm rehberi, 44 doğrulanmış
+          işveren ve 22 kariyer merkezi hissedilmiyordu. Rehberin ana
+          özelliği o kutular, yazılar değil — bu yüzden yazıların önüne
+          geçti.
+        */}
+        <YolHaritasi onNavigate={onNavigate} ogrenci={ogrenci} />
+
+        {/*
           Açıklama yalnızca gerçekten kişiselleştirme yapılabiliyorsa.
           Veri yoksa satır hiç çizilmiyor — "senin için seçtik" demek için
           kişi hakkında bir şey bilmek gerekiyor.
@@ -421,13 +422,22 @@ export const RehberMerkezi: React.FC<{
         )}
 
         {/* ================================================== içerikler */}
-        {sonuclar.length === 0 ? (
+        {terim && aramaSonuclari.toplam > 0 ? (
+          <RehberSonuclari
+            sonuclar={aramaSonuclari}
+            onNavigate={onNavigate}
+            kartOzellikleri={kartOzellikleri}
+          />
+        ) : sonuclar.length === 0 ? (
           <section className="space-y-3 rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center">
             <p className="font-bold text-gray-900">
-              {terim ? `“${arama.trim()}” için rehber bulunamadı` : 'Bu konuda henüz rehber yok'}
+              {terim
+                ? `“${arama.trim()}” için sonuç bulunamadı`
+                : 'Bu konuda henüz rehber yok'}
             </p>
             <p className="text-sm text-gray-600">
-              Aradığın konuyu henüz yazmamış olabiliriz. Süzgeçleri kaldırıp tüm rehberlere göz at.
+              Rehberlerde, bölümlerde, işverenlerde ve kariyer merkezlerinde arandı. Süzgeçleri
+              kaldırıp tüm rehberlere göz atabilirsin.
             </p>
             <button
               type="button"
@@ -530,42 +540,6 @@ export const RehberMerkezi: React.FC<{
             </Bolum>
           </>
         )}
-
-        {/* ==================================================== keşfet */}
-        <section className="space-y-3">
-          <h2 className="text-lg font-bold text-gray-900">Keşfet</h2>
-          <div className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <KesfetKarti
-              ikon={<GraduationCap className="h-4.5 w-4.5" />}
-              renk="bg-violet-50 text-violet-700"
-              baslik="Bölüme göre staj"
-              sayi={`${BOLUMLER.length} bölüm`}
-              onClick={() => onNavigate('/bolumler')}
-            />
-            <KesfetKarti
-              ikon={<Calculator className="h-4.5 w-4.5" />}
-              renk="bg-emerald-50 text-emerald-700"
-              baslik="Hesaplama araçları"
-              sayi={`${ARACLAR.length} araç`}
-              onClick={() => onNavigate('/araclar')}
-            />
-            <KesfetKarti
-              ikon={<Building2 className="h-4.5 w-4.5" />}
-              renk="bg-blue-50 text-blue-700"
-              baslik="Büyük işverenler"
-              sayi="Staj programları"
-              onClick={() => onNavigate('/staj-programlari')}
-            />
-            <KesfetKarti
-              ikon={<MapPin className="h-4.5 w-4.5" />}
-              renk="bg-amber-50 text-amber-700"
-              baslik="Kariyer merkezleri"
-              sayi="Üniversiteler"
-              onClick={() => onNavigate('/universite-kariyer-merkezleri')}
-            />
-            <span aria-hidden className="w-2 shrink-0" />
-          </div>
-        </section>
 
         <a
           href="/isveren"
