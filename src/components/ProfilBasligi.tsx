@@ -2,6 +2,7 @@ import React from 'react';
 import { Camera, Check, ChevronRight, Loader2, Plus } from 'lucide-react';
 import { adYazimi } from '../lib/ad';
 import { Avatar } from './Avatar';
+import { Button, Card, ProfileSectionCard, StatItem } from '../ui';
 
 /**
  * Profil başlığı — öğrencinin kişisel kontrol paneli.
@@ -49,31 +50,6 @@ const Halka: React.FC<{ oran: number; children: React.ReactNode }> = ({ oran, ch
   );
 };
 
-const Sayi: React.FC<{ deger: number | string; etiket: string; onClick?: () => void }> = ({
-  deger,
-  etiket,
-  onClick,
-}) => {
-  const icerik = (
-    <>
-      <span className="block text-lg sm:text-xl font-extrabold text-gray-900 tabular-nums leading-tight">
-        {deger}
-      </span>
-      <span className="block text-xs text-gray-500 leading-tight">{etiket}</span>
-    </>
-  );
-  if (!onClick) return <div className="text-center">{icerik}</div>;
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="text-center cursor-pointer rounded-lg px-2 py-1 -mx-2 hover:bg-gray-50 transition-colors"
-    >
-      {icerik}
-    </button>
-  );
-};
-
 export interface OneCikan {
   id: string;
   etiket: string;
@@ -104,71 +80,38 @@ export interface EksikAdim {
 }
 
 /**
- * Bölüm ızgarası.
+ * Bölüm listesi — iki sütunlu yatay kartlar.
  *
- * NEDEN YATAY KAYDIRMA DEĞİL
- * --------------------------
- * Şerit yatay kayıyordu ve sağ kenarda hep yarım bir daire kalıyordu;
- * altındaki açıklamalar da tek satıra sığmayıp kesiliyordu ("Giyim
- * Üretim…"). Yarım ikon kaydırılabilirliği anlatıyor ama burada sekiz
- * bölümün hepsi ekrana zaten sığıyor: dört sütunlu ızgarada iki satır
- * ediyor, hiçbir şey kesilmiyor ve kaydırma gerekmiyor.
+ * NEDEN DÖRT KÜÇÜK DAİRE DEĞİL
+ * ----------------------------
+ * Sekiz bölüm, dört sütunlu bir daire ızgarasındaydı. Mobilde sütun
+ * başına ~80 piksel kalıyordu: "Programlar", "Beceriler" gibi başlıklar
+ * nefes alamıyor, altlarındaki sayılar sıkışıyordu. Daireler ayrıca
+ * avatarla aynı biçimi paylaşıyordu — biri kişi, öteki bölüm olduğu hâlde.
  *
- * SAYI NEDEN ROZET DEĞİL
- * ----------------------
- * Sayılar bir ara dairenin köşesinde mavi rozet olarak duruyordu.
- * Rozet arayüzde belirli bir şey söyler: "burada senin görmediğin yeni
- * bir şey var". Oysa bu sayılar öğrencinin kendi girdiği ve zaten bildiği
- * şeyler — okunmamış bildirim gibi görünüp boşuna dikkat çekiyorlardı.
- * Mavi rozet gerçekten yeni bir duruma saklanıyor.
+ * Yatay kart aynı bilgiyi rahat veriyor ve TAMAMI tıklanabilir: küçük bir
+ * daireyi hedeflemek gerekmiyor. İkon kutusu 40×40 yuvarlatılmış kare;
+ * sitedeki bütün ikon kutularıyla aynı (src/ui/tokens.ts).
  *
- * Sayı artık etiketin altında sade gri bir satır: "8 beceri". Kesilme
- * riski yok çünkü metinler kısa; uzun olan tek şey bölüm adıydı, o da
- * artık sayı içermiyor.
+ * KESİK ÇİZGİ KALKTI
+ * ------------------
+ * Boş bölümler kesik çizgili daireyle çiziliyordu ve "tamamlanmamış ya da
+ * devre dışı" görünüyorlardı. Oysa hepsi çalışan bağlantılar. Kesik çizgi
+ * artık yalnızca boş durum kutularında (src/ui/EmptyState.tsx).
  */
 const Bolumler: React.FC<{ ogeler: OneCikan[]; secili?: string }> = ({ ogeler, secili }) => (
-  <div className="grid grid-cols-4 gap-x-1 gap-y-2.5">
-    {ogeler.map((o) => {
-      const acik = o.id === secili;
-      return (
-        <button
-          key={o.id}
-          type="button"
-          onClick={o.onClick}
-          className="flex flex-col items-center gap-1 cursor-pointer group min-w-0"
-          title={o.alt || `${o.etiket} ekle`}
-        >
-          {/*
-            Seçili olan MARKA MAVİSİ. Önce siyahtı: sitenin geri kalanında
-            seçili olan her şey mavi, yalnızca burada siyahtı ve ayrı bir
-            anlamı varmış gibi duruyordu.
-          */}
-          <span
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-              acik
-                ? 'bg-blue-600 border-2 border-blue-600 text-white'
-                : o.dolu
-                  ? 'bg-gray-50 border border-gray-200 text-gray-700 group-hover:border-blue-400'
-                  : 'bg-white border border-dashed border-gray-300 text-gray-400 group-hover:border-blue-400 group-hover:text-blue-500'
-            }`}
-          >
-            {o.dolu ? o.ikon : o.bosIkon || <Plus className="w-5 h-5" />}
-          </span>
-          <span className="w-full text-center px-0.5">
-            <span
-              className={`block text-[10px] leading-tight ${
-                acik ? 'font-bold text-blue-700' : 'font-semibold text-gray-700'
-              }`}
-            >
-              {o.etiket}
-            </span>
-            {o.alt && (
-              <span className="block text-[10px] leading-tight text-gray-600">{o.alt}</span>
-            )}
-          </span>
-        </button>
-      );
-    })}
+  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+    {ogeler.map((o) => (
+      <ProfileSectionCard
+        key={o.id}
+        ikon={o.dolu ? o.ikon : o.bosIkon || o.ikon}
+        baslik={o.etiket}
+        bilgi={o.alt}
+        tamam={o.dolu}
+        secili={o.id === secili}
+        onClick={o.onClick}
+      />
+    ))}
   </div>
 );
 
@@ -232,7 +175,15 @@ export const ProfilBasligi: React.FC<Props> = ({
     var; her boşluktan kazanılan 4 piksel, altındaki başvuru bölümünü 24
     piksel yukarı çekiyor. Geniş ekranda yer sorunu yok, orada 16 kalıyor.
   */
-  <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 space-y-3 sm:space-y-4">
+  /*
+    KART YALNIZCA KİMLİK VE ANA İŞLEMLER
+
+    İçine kimlik, istatistik, iki düğme ve sekiz menü öğesi doldurulmuştu.
+    Bölüm listesi karttan çıktı; kart artık avatar, bilgiler, tamamlanma
+    durumu ve ana işlemlerden ibaret.
+  */
+  <div className="space-y-3 sm:space-y-4">
+    <Card className="space-y-3 p-4 sm:space-y-4 sm:p-6">
     <div className="flex items-center gap-4 sm:gap-8">
       <button
         type="button"
@@ -267,9 +218,9 @@ export const ProfilBasligi: React.FC<Props> = ({
         Üçü de aynı hikâyenin adımları: baktım → başvurdum → çağrıldım.
       */}
       <div className="flex-1 flex items-center justify-around sm:justify-start sm:gap-8">
-        <Sayi deger={kaydedilenSayisi} etiket="kaydedilen" onClick={onKaydedilenlere} />
-        <Sayi deger={basvuruSayisi} etiket="başvuru" onClick={onBasvurulara} />
-        <Sayi deger={mulakatSayisi} etiket="mülakat" onClick={onMulakatlara} />
+        <StatItem deger={kaydedilenSayisi} etiket="kaydedilen" onClick={onKaydedilenlere} />
+        <StatItem deger={basvuruSayisi} etiket="başvuru" onClick={onBasvurulara} />
+        <StatItem deger={mulakatSayisi} etiket="mülakat" onClick={onMulakatlara} />
       </div>
     </div>
 
@@ -372,38 +323,28 @@ export const ProfilBasligi: React.FC<Props> = ({
     )}
 
     {/*
-      ANA DÜĞME EKSİK VARSA "TAMAMLA"
+      CV ANA DÜĞME, DÜZENLE İKİNCİL
 
-      İki düğme de gri ve eşit ağırlıktaydı; eksik profilden indirilen CV
-      de eksik çıkıyordu. Profil doluyken ana eylem düzenlemek değil, o
-      yüzden %100'de mavi düğme CV'ye geçiyor.
+      İki düğme de gri ve eşit ağırlıktaydı; "Profili düzenle" düz gri
+      olduğu için tıklanabilir bile görünmüyordu — arayüzde gri dolgu
+      genelde DEVRE DIŞI demek. İkincil düğme artık beyaz ve kenarlıklı
+      (src/ui/Button.tsx).
+
+      İndirme yerine görüntüleme: CV ekranında zaten indirme ve paylaşma
+      var, buradan doğrudan indirmek eksik profille eksik bir dosya
+      üretebiliyordu.
     */}
     <div className="flex gap-2">
-      <button
-        type="button"
-        onClick={onDuzenle}
-        className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer ${
-          eksikler.length > 0
-            ? 'bg-blue-600 text-white hover:bg-blue-700'
-            : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-        }`}
-      >
-        {eksikler.length > 0 ? 'Profilini tamamla' : 'Profili düzenle'}
-      </button>
       {onCv && (
-        <button
-          type="button"
-          onClick={onCv}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer ${
-            eksikler.length > 0
-              ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
-          }`}
-        >
-          CV'ni indir
-        </button>
+        <Button onClick={onCv} tamGenislik>
+          CV'ni görüntüle
+        </Button>
       )}
+      <Button tur="secondary" onClick={onDuzenle} tamGenislik>
+        {eksikler.length > 0 ? 'Profilini tamamla' : 'Profili düzenle'}
+      </Button>
     </div>
+    </Card>
 
     <Bolumler ogeler={oneCikanlar} secili={secili} />
   </div>

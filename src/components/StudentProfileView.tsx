@@ -34,6 +34,7 @@ import { fetchSavedListingIds } from '../lib/opportunities';
 import { adYazimi } from '../lib/ad';
 import { useModalErisim } from '../lib/modal-erisim';
 import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
+import { Button, Card, IKON_KUTUSU } from '../ui';
 import { ProfilBasligi, type EksikAdim, type OneCikan } from './ProfilBasligi';
 import { AutocompleteField } from './AutocompleteField';
 import { PredictiveInput } from './PredictiveInput';
@@ -173,7 +174,6 @@ interface BolumProps {
   id: BolumId;
   ikon: React.ReactNode;
   /** Tailwind zemin sınıfı; her bölümün kendi rengi var. */
-  renk: string;
   baslik: string;
   ozet: string;
   tamam: boolean;
@@ -188,7 +188,7 @@ interface BolumProps {
   kurar ve yazarken imleç kaybolurdu.
 */
 const Bolum: React.FC<BolumProps> = ({
-  id, ikon, renk, baslik, ozet, tamam, acik, onToggle, children, gorunur = true,
+  id, ikon, baslik, ozet, tamam, acik, onToggle, children, gorunur = true,
 }) => (
   !gorunur ? null : (
   <section
@@ -206,16 +206,25 @@ const Bolum: React.FC<BolumProps> = ({
       {/*
         EMOJİ YERİNE RENKLİ İKON
 
-        Sekiz bölümün sekizi de gri kutuda emoji taşıyordu. Emoji her
-        işletim sisteminde farklı çiziliyor (Windows'ta başka, iPhone'da
-        başka) ve gri kutular sayfayı tek düze bir liste hâline getiriyordu.
+        Sekiz bölümün sekizi de gri kutuda emoji taşıyordu; emoji her
+        işletim sisteminde farklı çiziliyor. Emojiler çizgi ikona döndü.
 
-        Her bölümün artık kendi rengi ve çizgi ikonu var: göz bölümü
-        okumadan ayırt ediyor, renk sayfaya canlılık veriyor.
+        SONRA SEKİZ AYRI DEGRADE OLDU, O DA GERİ ALINDI
+        -----------------------------------------------
+        Her bölüme kendi degrade rengi verilmişti: pembe, mor, mavi, cam
+        göbeği, turkuaz, amber, turuncu, yeşil. Renk sayfaya canlılık
+        veriyordu ama anlamı bozuyordu — "Başvurularım" pembe-kırmızı bir
+        daireydi ve tam üstündeki kısayolda MAVİ bir daireyle duruyordu:
+        aynı kavram, iki ayrı kimlik. Kırmızı bu üründe yalnızca hata ve
+        reddedilme demek; dekoratif kullanılınca gerçek uyarı fark
+        edilmiyor.
+
+        Artık tek biçim: 40×40 yuvarlatılmış kare, açık bölüm marka
+        mavisi, kapalılar nötr. Ölçü ve köşe src/ui/tokens.ts'ten.
       */}
       <span
         aria-hidden
-        className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-white shadow-sm ${renk}`}
+        className={`${IKON_KUTUSU} ${acik ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
       >
         {ikon}
       </span>
@@ -438,29 +447,18 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
 
     Her öğe ilgili bölümü açıyor: ayrı bir sayfa yok, kaydırma yok.
   */
+  /*
+    BAŞVURULAR KISAYOLLARDAN ÇIKTI
+
+    Aynı kavram ekranda üç ayrı kimlikle duruyordu: üstteki istatistikte
+    bir sayı, kısayol ızgarasında MAVİ bir daire, hemen altında da
+    PEMBE-KIRMIZI simgeli kendi bölümü. Aynı şeyin üç görüntüsü, üçünün de
+    ayrı bir anlamı varmış izlenimi veriyordu.
+
+    Kısayol kalktı: başvuru bölümü zaten bu kartın hemen altında ve
+    sayısı üstteki istatistikte duruyor.
+  */
   const oneCikanlar: OneCikan[] = [
-    /*
-      Başvurular en başta.
-
-      Öğrencinin profile girme sebebi çoğunlukla "başvurum ne oldu"
-      sorusu; profil doldurmak ikinci sırada geliyor. En çok bakılan şeyi
-      şeridin sonuna koymak, her seferinde kaydırmak demekti.
-
-      SAYISI YAZMIYOR: aynı sayı hemen üstteki istatistikte duruyor.
-      Aynı ekranda üç kez tekrarlanıyordu (istatistik, ızgara, bölüm
-      başlığı); ilki en görünür olanı, o kaldı.
-    */
-    ...(basvuruListesi
-      ? [
-          {
-            id: 'basvuru',
-            etiket: 'Başvurular',
-            dolu: basvuruSayisi > 0,
-            ikon: <Send className="w-5 h-5" />,
-            onClick: () => bolumeGit('basvuru'),
-          } as OneCikan,
-        ]
-      : []),
     {
       id: 'kisisel',
       /* "Okulun" bölümün adıyla ("Okul ve iletişim") uyuşmuyordu. */
@@ -509,22 +507,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       dolu: hedefler.length > 0,
       ikon: <Target className="w-5 h-5" />,
       onClick: () => bolumeGit('tercih'),
-    },
-    {
-      id: 'rozet',
-      etiket: 'Testler',
-      dolu: (student.earnedBadges ?? []).length > 0,
-      /*
-        Boşken "+" çiziliyordu ve kullanıcıya test OLUŞTURACAKMIŞ gibi
-        görünüyordu. Burada eklenecek bir şey yok: hazır testler var ve
-        çözülüyor. İkon da yazı da bunu söylüyor.
-      */
-      bosIkon: <Award className="w-5 h-5" />,
-      alt: (student.earnedBadges ?? []).length
-        ? `${(student.earnedBadges ?? []).length} rozet`
-        : 'teste başla',
-      ikon: <Award className="w-5 h-5" />,
-      onClick: () => bolumeGit('rozet'),
     },
   ];
 
@@ -802,6 +784,33 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             secili={acikBolum}
           />
 
+          {/*
+            TESTLER SIRADAN BİR PROFİL ALANI DEĞİL
+
+            Izgarada kesik çizgili bir daireydi ve "tamamlanmamış ya da
+            devre dışı" görünüyordu. Oysa burada doldurulacak bir alan yok:
+            hazır testler var ve çözülüyor — bu bir EYLEM, bir form değil.
+
+            Ayrı ve geniş bir kart olarak duruyor; ne olduğunu ve neden
+            yapılacağını söylüyor.
+          */}
+          <Card vurgulu className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
+              <Award className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-gray-900">Yetkinlik testleri</p>
+              <p className="text-sm leading-relaxed text-gray-600">
+                Güçlü yönlerini keşfet, profilini öne çıkar.
+              </p>
+            </div>
+            <Button onClick={() => bolumeGit('rozet')} className="shrink-0">
+              {(student.earnedBadges ?? []).length > 0
+                ? `${(student.earnedBadges ?? []).length} rozet · Devam et`
+                : 'Teste başla'}
+            </Button>
+          </Card>
+
           <input
             type="file"
             ref={dosyaRef}
@@ -884,7 +893,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           id="basvuru"
           gorunur={acikBolum === 'basvuru'}
           ikon={<Send className="w-5 h-5" />}
-          renk="bg-gradient-to-br from-rose-500 to-rose-600"
           baslik="Başvurularım"
           /*
             Özet "2 başvuru" yazıyordu; hemen üstteki ızgarada zaten
@@ -914,7 +922,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         id="kisisel"
         gorunur={acikBolum === 'kisisel'}
         ikon={<GraduationCap className="w-5 h-5" />}
-        renk="bg-gradient-to-br from-violet-500 to-violet-600"
         baslik="Okul ve iletişim"
         ozet={
           student.university && student.department
@@ -1059,7 +1066,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         id="teknik"
         gorunur={acikBolum === 'teknik'}
         ikon={<Wrench className="w-5 h-5" />}
-        renk="bg-gradient-to-br from-blue-500 to-blue-600"
         baslik="Kullandığın programlar"
         ozet={listeOzeti(yetenekler.map((s) => s.name), 'Excel, AutoCAD, Python… hangilerini biliyorsun?')}
         tamam={yetenekler.length > 0}
@@ -1149,7 +1155,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         id="sosyal"
         gorunur={acikBolum === 'sosyal'}
         ikon={<MessageSquare className="w-5 h-5" />}
-        renk="bg-gradient-to-br from-cyan-500 to-cyan-600"
         baslik="Sosyal becerilerin"
         ozet={listeOzeti(sosyal, 'Ekip çalışması, iletişim, problem çözme…')}
         tamam={sosyal.length > 0}
@@ -1209,7 +1214,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         id="dil"
         gorunur={acikBolum === 'dil'}
         ikon={<Languages className="w-5 h-5" />}
-        renk="bg-gradient-to-br from-teal-500 to-teal-600"
         baslik="Yabancı diller"
         ozet={listeOzeti(diller.map((l) => `${l.language} (${l.level})`), 'Bildiğin dil varsa ekle')}
         tamam={diller.length > 0}
@@ -1342,7 +1346,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         id="proje"
         gorunur={acikBolum === 'proje'}
         ikon={<FolderOpen className="w-5 h-5" />}
-        renk="bg-gradient-to-br from-amber-500 to-amber-600"
         baslik="Projeler ve çalışmalar"
         ozet={listeOzeti(projeler.map((p) => p.title), 'Okul projesi, ödev, kişisel çalışma — hepsi sayılır')}
         tamam={projeler.length > 0}
@@ -1467,7 +1470,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         id="tercih"
         gorunur={acikBolum === 'tercih'}
         ikon={<Target className="w-5 h-5" />}
-        renk="bg-gradient-to-br from-orange-500 to-orange-600"
         baslik="Ne arıyorsun?"
         ozet={
           hedefler.length > 0 || sehirler.length > 0
@@ -1621,7 +1623,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         id="rozet"
         gorunur={acikBolum === 'rozet'}
         ikon={<Award className="w-5 h-5" />}
-        renk="bg-gradient-to-br from-emerald-500 to-emerald-600"
         baslik="Testler ve rozetler"
         ozet={
           rozetler.length > 0

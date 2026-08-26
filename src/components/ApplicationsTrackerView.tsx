@@ -1,3 +1,4 @@
+import { Tabs } from '../ui';
 import React, { useState } from 'react';
 import {
   FileText,
@@ -115,52 +116,25 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
         ekliyordu — aynı şeyin üçüncü kez söylenmesi. Bölüm başlığı zaten
         adı ve özeti veriyor; burası doğrudan süzgeçlerle başlıyor.
       */}
-      <div className="flex items-center justify-start">
-        <div className="w-full lg:w-auto overflow-x-auto no-scrollbar py-0.5">
-          <div className="inline-flex items-center gap-1 bg-gray-100 p-1 rounded-xl sm:rounded-full border border-gray-200 text-xs font-semibold shrink-0">
-            <button
-              onClick={() => onSubTabChange && onSubTabChange('all')}
-              className={`px-3 py-1.5 rounded-lg sm:rounded-full transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                effectiveFilter === 'all'
-                  ? 'bg-blue-600 text-white shadow-xs font-bold'
-                  :'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Tümü ({applications.length})
-            </button>
-            <button
-              onClick={() => onSubTabChange && onSubTabChange('under_review')}
-              className={`px-3 py-1.5 rounded-lg sm:rounded-full transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                effectiveFilter === 'under_review'
-                  ? 'bg-blue-600 text-white shadow-xs font-bold'
-                  :'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              İncelenenler
-            </button>
-            <button
-              onClick={() => onSubTabChange && onSubTabChange('interviews')}
-              className={`px-3 py-1.5 rounded-lg sm:rounded-full transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                effectiveFilter === 'interviews'
-                  ? 'bg-blue-600 text-white shadow-xs font-bold'
-                  :'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Mülakatlar ({interviewCount})
-            </button>
-            <button
-              onClick={() => onSubTabChange && onSubTabChange('offers')}
-              className={`px-3 py-1.5 rounded-lg sm:rounded-full transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                effectiveFilter === 'offers'
-                  ? 'bg-blue-600 text-white shadow-xs font-bold'
-                  :'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Teklifler ({offerCount})
-            </button>
-          </div>
-        </div>
-      </div>
+      {/*
+        SEKMELER ARTIK SİTENİN TEK SEKME BİLEŞENİ
+
+        Burada mavi dolgu haplar, Fırsatlar sekmesinde beyaz hap, Rehber'de
+        yuvarlak çipler vardı. Üçü de "şu an buradasın" diyordu ama üçü de
+        farklı görünüyordu; kullanıcı her ekranda aynı kontrolü yeniden
+        öğreniyordu. Tek biçim: src/ui/Tabs.tsx.
+      */}
+      <Tabs
+        etiket="Başvuru süzgeci"
+        secili={effectiveFilter}
+        onSec={(id) => onSubTabChange && onSubTabChange(id as typeof effectiveFilter)}
+        ogeler={[
+          { id: 'all', etiket: 'Tümü', sayi: applications.length },
+          { id: 'under_review', etiket: 'İncelenenler' },
+          { id: 'interviews', etiket: 'Mülakatlar', sayi: interviewCount },
+          { id: 'offers', etiket: 'Teklifler', sayi: offerCount },
+        ]}
+      />
 
       {/* Applications List */}
       {filteredApps.length > 0 ? (
