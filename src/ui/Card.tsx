@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
-import { GECIS, IKON_KUTUSU, KOSE } from './tokens';
+import { GECIS, IKON_KUTUSU, IKON_TONU, KOSE } from './tokens';
 
 /**
  * Kart — 20 piksel köşe, ince sınır, gölge yok.
@@ -9,6 +9,13 @@ import { GECIS, IKON_KUTUSU, KOSE } from './tokens';
  * arada olunca biçim sayısı artıyor ve hiçbiri diğerinden ayrılmıyor.
  * Yükseklik hissi gerektiğinde `yukseltilmis` ile veriliyor, varsayılan
  * değil.
+ *
+ * SINIR AÇILDI
+ * ------------
+ * Kenarlık gray-200'dü ve yan yana duran kartlarda ızgara çizgisi gibi
+ * görünüyordu; vurgu kenarlıktan geliyordu. Asıl vurgu yazı hiyerarşisi
+ * ve boşluk düzeninden gelmeli — kenarlık yalnızca kartın nerede
+ * bittiğini söylemeli.
  */
 export const Card: React.FC<{
   children: React.ReactNode;
@@ -18,7 +25,7 @@ export const Card: React.FC<{
 }> = ({ children, className = '', yukseltilmis = false, vurgulu = false }) => (
   <div
     className={`${KOSE.kart} border bg-white ${
-      vurgulu ? 'border-blue-200' : 'border-gray-200'
+      vurgulu ? 'border-blue-200' : 'border-gray-100'
     } ${yukseltilmis ? 'shadow-sm' : ''} ${className}`}
   >
     {children}
@@ -26,54 +33,69 @@ export const Card: React.FC<{
 );
 
 /**
- * Profil bölümü kartı — yatay satır.
+ * Profil bölümü satırı.
  *
- * NEDEN DÖRT KÜÇÜK DAİRE DEĞİL
+ * NEDEN AYRI KART DEĞİL, SATIR
  * ----------------------------
- * Okul, program, beceri, dil ve proje dört sütunlu bir daire ızgarasında
- * duruyordu. Mobilde sütun başına ~80 piksel kalıyor ve "Programlar",
- * "Beceriler" gibi başlıklar nefes alamıyordu; daire içindeki ikonun
- * yanında sayı da sıkışıyordu.
+ * Beş bölüm beş ayrı karttı ve her biri ~105 piksel yer kaplıyordu;
+ * ekran gereğinden fazla uzuyordu. Beş ayrı kutu ayrıca beş ayrı şeymiş
+ * izlenimi veriyordu — oysa hepsi tek bir şeyin parçaları: profil
+ * bilgileri.
  *
- * Yatay kart aynı bilgiyi rahat veriyor: solda 40×40 yuvarlatılmış kare
- * ikon, ortada başlık ve bilgi, sağda ok ya da tamamlandı işareti. Kartın
- * TAMAMI tıklanabilir — küçük bir daireyi hedeflemek gerekmiyor.
+ * Artık tek grup kartının içinde, aralarında 1 piksel ayraç olan
+ * satırlar. Satır yüksekliği 80 piksel: dokunma alanının iki katından
+ * fazla, ama beş satır artık bir ekrana sığıyor.
+ *
+ * Bütün satırlar AYNI yapıda: ikon, başlık, ikincil bilgi, chevron.
+ * Satırdan satıra değişen tek şey içerik.
  */
-export const ProfileSectionCard: React.FC<{
+export const ProfileSectionRow: React.FC<{
   ikon: React.ReactNode;
   baslik: string;
-  /** Tek satırlık bilgi: "8 beceri", "2 dil". Yoksa çağrı metni yazılıyor. */
+  /** İkincil satır: "8 beceri", "MSGSÜ · Giyim Üretim Teknolojisi". */
   bilgi?: string;
-  /** Doldurulmuş mu — sağda ok yerine tamamlandı işareti çıkıyor. */
-  tamam?: boolean;
   secili?: boolean;
   onClick: () => void;
-}> = ({ ikon, baslik, bilgi, tamam = false, secili = false, onClick }) => (
+}> = ({ ikon, baslik, bilgi, secili = false, onClick }) => (
   <button
     type="button"
     onClick={onClick}
     aria-current={secili ? 'true' : undefined}
-    className={`flex min-h-[60px] w-full items-center gap-3 ${KOSE.kontrol} border p-3 text-left ${GECIS} cursor-pointer ${
-      secili
-        ? 'border-blue-600 bg-blue-50/60'
-        : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-gray-50'
+    className={`flex min-h-[80px] w-full items-center gap-3 px-4 py-3 text-left ${GECIS} cursor-pointer ${
+      secili ? 'bg-blue-50/60' : 'bg-white hover:bg-gray-50'
     }`}
   >
-    <span
-      className={`${IKON_KUTUSU} ${
-        secili ? 'bg-blue-600 text-white' : tamam ? 'bg-gray-100 text-gray-700' : 'bg-blue-50 text-blue-700'
-      }`}
-    >
-      {ikon}
-    </span>
+    <span className={`${IKON_KUTUSU} ${secili ? 'bg-blue-600 text-white' : IKON_TONU}`}>{ikon}</span>
 
     <span className="min-w-0 flex-1">
       <span className={`block truncate text-sm font-bold ${secili ? 'text-blue-800' : 'text-gray-900'}`}>
         {baslik}
       </span>
-      {bilgi && <span className="block truncate text-xs text-gray-600">{bilgi}</span>}
+      {bilgi && <span className="mt-0.5 block truncate text-xs text-gray-600">{bilgi}</span>}
     </span>
 
     <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" />
   </button>
+);
+
+/**
+ * Satırları saran grup kartı.
+ *
+ * Başlık ve sağdaki sayaç kartın İÇİNDE: "Profil bilgileri · 5/5
+ * tamamlandı" satırların ne olduğunu ve nerede durulduğunu tek bakışta
+ * söylüyor. Ayraçlar 1 piksel ve gray-100 — satırları ayırıyor ama
+ * ızgara çizmiyor.
+ */
+export const ProfileSectionGroup: React.FC<{
+  baslik: string;
+  sagBilgi?: string;
+  children: React.ReactNode;
+}> = ({ baslik, sagBilgi, children }) => (
+  <Card className="overflow-hidden">
+    <div className="flex items-baseline justify-between gap-3 px-4 pb-2 pt-4">
+      <h2 className="text-sm font-bold text-gray-900">{baslik}</h2>
+      {sagBilgi && <span className="shrink-0 text-xs text-gray-600">{sagBilgi}</span>}
+    </div>
+    <div className="divide-y divide-gray-100 border-t border-gray-100">{children}</div>
+  </Card>
 );

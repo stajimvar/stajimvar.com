@@ -296,7 +296,7 @@ export const OpportunitiesPage: React.FC<{
 
   return (
     <main
-      className={`w-full ${SAYFA_GENISLIGI} mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-[calc(110px+env(safe-area-inset-bottom))] lg:pb-10`}
+      className={`w-full ${SAYFA_GENISLIGI} mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-10`}
     >
       <section className="mb-3 overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
         <div aria-hidden="true" className="h-1 bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500" />

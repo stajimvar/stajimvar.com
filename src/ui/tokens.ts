@@ -71,6 +71,15 @@ export const IKON = {
 export const IKON_KUTUSU = 'w-10 h-10 rounded-xl flex items-center justify-center shrink-0';
 
 /**
+ * İkon kutusunun varsayılan tonu: çok hafif marka mavisi.
+ *
+ * Nötr gri kutular sayfayı "ayarlar sayfası" gibi gösteriyordu. Hafif bir
+ * marka tonu, renk gürültüsü eklemeden ekranı StajımVar'a ait kılıyor —
+ * yeşil ve kırmızı hâlâ yalnızca kendi anlamlarında kullanılıyor.
+ */
+export const IKON_TONU = 'bg-blue-50/70 text-blue-700';
+
+/**
  * Anlam renkleri.
  *
  * Yeşil YALNIZCA başarı ve doğrulama, kırmızı YALNIZCA hata, tehlike ve

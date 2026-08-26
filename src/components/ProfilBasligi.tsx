@@ -2,7 +2,7 @@ import React from 'react';
 import { Camera, Check, ChevronRight, Loader2, Plus } from 'lucide-react';
 import { adYazimi } from '../lib/ad';
 import { Avatar } from './Avatar';
-import { Button, Card, ProfileSectionCard, StatItem } from '../ui';
+import { Button, Card, ProfileSectionGroup, ProfileSectionRow, StatItem } from '../ui';
 
 /**
  * Profil başlığı — öğrencinin kişisel kontrol paneli.
@@ -80,40 +80,66 @@ export interface EksikAdim {
 }
 
 /**
- * Bölüm listesi — iki sütunlu yatay kartlar.
+ * Profil bilgileri — tek grup kartı, satırlar arasında ince ayraç.
  *
- * NEDEN DÖRT KÜÇÜK DAİRE DEĞİL
- * ----------------------------
- * Sekiz bölüm, dört sütunlu bir daire ızgarasındaydı. Mobilde sütun
- * başına ~80 piksel kalıyordu: "Programlar", "Beceriler" gibi başlıklar
- * nefes alamıyor, altlarındaki sayılar sıkışıyordu. Daireler ayrıca
- * avatarla aynı biçimi paylaşıyordu — biri kişi, öteki bölüm olduğu hâlde.
+ * NEDEN AYRI KARTLAR DEĞİL
+ * ------------------------
+ * Beş bölüm beş ayrı karttı ve her biri ~105 piksel yer kaplıyordu;
+ * ekran gereğinden fazla uzuyordu. Beş ayrı kutu ayrıca beş ayrı şeymiş
+ * izlenimi veriyordu — oysa hepsi tek bir şeyin parçaları.
  *
- * Yatay kart aynı bilgiyi rahat veriyor ve TAMAMI tıklanabilir: küçük bir
- * daireyi hedeflemek gerekmiyor. İkon kutusu 40×40 yuvarlatılmış kare;
- * sitedeki bütün ikon kutularıyla aynı (src/ui/tokens.ts).
- *
- * KESİK ÇİZGİ KALKTI
- * ------------------
- * Boş bölümler kesik çizgili daireyle çiziliyordu ve "tamamlanmamış ya da
- * devre dışı" görünüyorlardı. Oysa hepsi çalışan bağlantılar. Kesik çizgi
- * artık yalnızca boş durum kutularında (src/ui/EmptyState.tsx).
+ * Şimdi tek kart, 80 piksellik satırlar ve 1 piksel ayraçlar. Kart
+ * başlığı nerede durulduğunu da söylüyor: "3/5 tamamlandı".
  */
-const Bolumler: React.FC<{ ogeler: OneCikan[]; secili?: string }> = ({ ogeler, secili }) => (
-  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-    {ogeler.map((o) => (
-      <ProfileSectionCard
-        key={o.id}
-        ikon={o.dolu ? o.ikon : o.bosIkon || o.ikon}
-        baslik={o.etiket}
-        bilgi={o.alt}
-        tamam={o.dolu}
-        secili={o.id === secili}
-        onClick={o.onClick}
-      />
-    ))}
-  </div>
-);
+const Bolumler: React.FC<{ ogeler: OneCikan[]; secili?: string }> = ({ ogeler, secili }) => {
+  const dolu = ogeler.filter((o) => o.dolu).length;
+  return (
+    <ProfileSectionGroup
+      baslik="Profil bilgileri"
+      sagBilgi={`${dolu}/${ogeler.length} tamamlandı`}
+    >
+      {ogeler.map((o) => (
+        <ProfileSectionRow
+          key={o.id}
+          ikon={o.dolu ? o.ikon : o.bosIkon || o.ikon}
+          baslik={o.etiket}
+          bilgi={o.alt}
+          secili={o.id === secili}
+          onClick={o.onClick}
+        />
+      ))}
+    </ProfileSectionGroup>
+  );
+};
+
+export interface OneCikan {
+  id: string;
+  etiket: string;
+  /** Bölümde içerik var mı. Yoksa kesik çizgili çember ve "+" çiziliyor. */
+  dolu: boolean;
+  /**
+   * Etiketin altındaki kısa satır: dolu bölümde sayı ("8 beceri"), boş
+   * bölümde ne olacağı ("teste başla"). Başka bir yerde zaten yazan
+   * sayılar için boş bırakılıyor.
+   */
+  alt?: string;
+  ikon: React.ReactNode;
+  /**
+   * Boşken çizilecek ikon. Verilmezse "+" çiziliyor.
+   *
+   * "+" bir şey EKLEYECEĞİNİ söyler. Testler bölümünde ekleyecek bir şey
+   * yok — orada çözülecek hazır testler var; "+" kullanıcıya test
+   * oluşturacakmış gibi görünüyordu.
+   */
+  bosIkon?: React.ReactNode;
+  onClick: () => void;
+}
+
+/** Eksik bir adım: adı ve gittiği yer. */
+export interface EksikAdim {
+  etiket: string;
+  onClick: () => void;
+}
 
 interface Props {
   ad: string;

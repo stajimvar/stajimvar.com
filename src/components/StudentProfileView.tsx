@@ -9,14 +9,14 @@ import {
   FolderOpen,
   GraduationCap,
   Languages,
+  LayoutGrid,
   Loader2,
-  MessageSquare,
   Plus,
   Send,
   ShieldCheck,
+  Sparkles,
   Target,
   Trash2,
-  Wrench,
   X,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -31,10 +31,10 @@ import {
 } from '../types';
 import { uploadAvatar } from '../lib/queries';
 import { fetchSavedListingIds } from '../lib/opportunities';
-import { adYazimi } from '../lib/ad';
+import { adYazimi , okulKisaltmasi} from '../lib/ad';
 import { useModalErisim } from '../lib/modal-erisim';
 import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
-import { Button, Card, IKON_KUTUSU } from '../ui';
+import { Button, Card, IKON_KUTUSU, IKON_TONU } from '../ui';
 import { ProfilBasligi, type EksikAdim, type OneCikan } from './ProfilBasligi';
 import { AutocompleteField } from './AutocompleteField';
 import { PredictiveInput } from './PredictiveInput';
@@ -464,6 +464,16 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       /* "Okulun" bölümün adıyla ("Okul ve iletişim") uyuşmuyordu. */
       etiket: 'Okul & Bölüm',
       dolu: Boolean(student.university),
+      /*
+        Satırın ikincil bilgisi boştu; ötekilerin hepsinde ("3 program",
+        "2 dil") bilgi varken burada yoktu ve satır eksik görünüyordu.
+        Uzun üniversite adı bölümle birlikte tek satıra sığmıyor, o yüzden
+        kısaltılıyor (src/lib/ad.ts) — kural dar: yalnızca üç kelimeden
+        uzun adlarda.
+      */
+      alt: [okulKisaltmasi(student.university), student.department]
+        .filter(Boolean)
+        .join(' · ') || undefined,
       ikon: <GraduationCap className="w-5 h-5" />,
       onClick: () => kisiselAc(),
     },
@@ -472,7 +482,11 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       etiket: 'Programlar',
       dolu: yetenekler.length > 0,
       alt: yetenekler.length ? `${yetenekler.length} program` : undefined,
-      ikon: <Wrench className="w-5 h-5" />,
+      /*
+        İngiliz anahtarı "tamir/ayar" demek; burada kastedilen kullanılan
+        uygulamalar. Uygulama ızgarası doğru karşılığı.
+      */
+      ikon: <LayoutGrid className="w-5 h-5" />,
       onClick: () => bolumeGit('teknik'),
     },
     {
@@ -480,7 +494,11 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       etiket: 'Beceriler',
       dolu: sosyal.length > 0,
       alt: sosyal.length ? `${sosyal.length} beceri` : undefined,
-      ikon: <MessageSquare className="w-5 h-5" />,
+      /*
+        Konuşma balonu "mesaj" demek. Beceri bir yetkinlik; rozet/parıltı
+        anlamı taşıyor.
+      */
+      ikon: <Sparkles className="w-5 h-5" />,
       onClick: () => bolumeGit('sosyal'),
     },
     {
@@ -500,13 +518,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       alt: projeler.length ? `${projeler.length} proje` : undefined,
       ikon: <FolderOpen className="w-5 h-5" />,
       onClick: () => bolumeGit('proje'),
-    },
-    {
-      id: 'tercih',
-      etiket: 'Hedefin',
-      dolu: hedefler.length > 0,
-      ikon: <Target className="w-5 h-5" />,
-      onClick: () => bolumeGit('tercih'),
     },
   ];
 
@@ -785,6 +796,31 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           />
 
           {/*
+            KARİYER HEDEFİ AYRI KART
+
+            "Hedefin" profil bilgileri listesindeydi ama ötekilerle aynı
+            cinsten değil: okul, program, beceri, dil ve proje GEÇMİŞİ
+            anlatıyor; hedef GELECEĞİ. Aynı listede durunca doldurulacak
+            bir alan gibi görünüyordu.
+          */}
+          <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
+            <span className={`${IKON_KUTUSU} ${IKON_TONU}`}>
+              <Target className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-gray-900">Kariyer hedefin</p>
+              <p className="truncate text-sm text-gray-600">
+                {hedefler.length > 0
+                  ? hedefler.join(' · ')
+                  : 'Hangi alanda ilerlemek istediğini yaz; ilanlar ona göre sıralanıyor.'}
+              </p>
+            </div>
+            <Button tur="secondary" onClick={() => bolumeGit('tercih')} className="shrink-0">
+              {hedefler.length > 0 ? 'Düzenle' : 'Hedefini seç'}
+            </Button>
+          </Card>
+
+          {/*
             TESTLER SIRADAN BİR PROFİL ALANI DEĞİL
 
             Izgarada kesik çizgili bir daireydi ve "tamamlanmamış ya da
@@ -801,7 +837,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             <div className="min-w-0 flex-1">
               <p className="font-bold text-gray-900">Yetkinlik testleri</p>
               <p className="text-sm leading-relaxed text-gray-600">
-                Güçlü yönlerini keşfet, profilini öne çıkar.
+                Profilini güçlendir; güçlü yönlerini işverene göster.
               </p>
             </div>
             <Button onClick={() => bolumeGit('rozet')} className="shrink-0">
@@ -1065,7 +1101,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       <Bolum
         id="teknik"
         gorunur={acikBolum === 'teknik'}
-        ikon={<Wrench className="w-5 h-5" />}
+        ikon={<LayoutGrid className="w-5 h-5" />}
         baslik="Kullandığın programlar"
         ozet={listeOzeti(yetenekler.map((s) => s.name), 'Excel, AutoCAD, Python… hangilerini biliyorsun?')}
         tamam={yetenekler.length > 0}
@@ -1154,7 +1190,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       <Bolum
         id="sosyal"
         gorunur={acikBolum === 'sosyal'}
-        ikon={<MessageSquare className="w-5 h-5" />}
+        ikon={<Sparkles className="w-5 h-5" />}
         baslik="Sosyal becerilerin"
         ozet={listeOzeti(sosyal, 'Ekip çalışması, iletişim, problem çözme…')}
         tamam={sosyal.length > 0}

@@ -177,7 +177,7 @@ export const OpportunityDetailPage: React.FC<{
   const yer = [...item.cities, ...item.countries];
 
   return (
-    <main className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-7 pb-[calc(110px+env(safe-area-inset-bottom))] space-y-5">
+    <main className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-7 pb-[calc(120px+env(safe-area-inset-bottom))] space-y-5">
       <button
         onClick={onBack}
         className="inline-flex gap-1 items-center text-sm font-bold text-gray-600 hover:text-gray-950 cursor-pointer"
