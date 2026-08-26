@@ -1052,6 +1052,8 @@ export default function App() {
         onBack={() => navigate('/bolumler')}
         onNavigate={navigate}
         onSearch={bolumdenAra}
+        ogrenci={isLoggedIn ? activeStudent : null}
+        onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
       />
     );
   }

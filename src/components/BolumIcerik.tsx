@@ -234,13 +234,32 @@ export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
               </a>
               .
             </p>
+            {/*
+              Logo ve doğrudan bağlantı. Önce adlar düz metindi ve hepsi
+              dizinin BAŞINA gidiyordu; kişi 44 kartın içinde aradığı
+              şirketi yeniden aramak zorunda kalıyordu. Şimdi bağlantı o
+              işverenin kartına iniyor.
+            */}
             <div className="flex flex-wrap gap-2">
               {isverenler.map((i) => (
                 <a
                   key={i.slug}
-                  href="/staj-programlari"
-                  className="px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-200 hover:border-blue-300 hover:text-blue-700"
+                  href={`/staj-programlari#${i.slug}`}
+                  className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 hover:border-blue-300 hover:text-blue-700"
                 >
+                  <img
+                    src={`/isveren-logolari/${i.slug}.png`}
+                    alt=""
+                    aria-hidden="true"
+                    width={20}
+                    height={20}
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                    className="h-5 w-5 object-contain"
+                  />
                   {i.isveren}
                 </a>
               ))}

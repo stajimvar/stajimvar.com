@@ -139,3 +139,32 @@ export async function isverenKaydiDegistir(
     throw new Error(`İşveren kaydı güncellenemedi: ${error.message}`);
   }
 }
+
+/* ---------------------------------------------------------------- bölümler */
+
+/** Kullanıcının takip ettiği bölümlerin slug listesi. */
+export async function takipEdilenBolumler(userId: string): Promise<string[]> {
+  const db = await istemci();
+  const { data, error } = await db
+    .from('saved_departments')
+    .select('department_slug')
+    .eq('user_id', userId);
+  if (error) throw new Error(`Takip edilen bölümler yüklenemedi: ${error.message}`);
+  return (data ?? []).map((satir) => String(satir.department_slug));
+}
+
+/** @param takiptenMiydi çağrı anındaki durum; true ise takip BIRAKILIYOR. */
+export async function bolumTakibiDegistir(
+  userId: string,
+  slug: string,
+  takiptenMiydi: boolean
+): Promise<void> {
+  const db = await istemci();
+  const tablo = db.from('saved_departments');
+  const { error } = takiptenMiydi
+    ? await tablo.delete().eq('user_id', userId).eq('department_slug', slug)
+    : await tablo.insert({ user_id: userId, department_slug: slug });
+  if (error && error.code !== '23505') {
+    throw new Error(`Bölüm takibi güncellenemedi: ${error.message}`);
+  }
+}

@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { SayfaKabugu } from './SayfaKabugu';
 import { BolumIcerik } from './BolumIcerik';
+import { BolumEylemleri } from './BolumEylemleri';
+import type { StudentProfile } from '../types';
 import { BolumRozeti } from './BolumGorseli';
 import {
   BOLUMLER,
@@ -173,7 +175,9 @@ interface SayfaProps {
   onSearch?: (terim: string) => void;
 }
 
-export const BolumPage: React.FC<SayfaProps> = ({ slug, onBack, onNavigate, onSearch }) => {
+export const BolumPage: React.FC<
+  SayfaProps & { ogrenci?: StudentProfile | null; onGirisGerekli?: () => void }
+> = ({ slug, onBack, onNavigate, onSearch, ogrenci = null, onGirisGerekli }) => {
   const bolum = bolumBul(slug);
 
   useEffect(() => {
@@ -242,6 +246,22 @@ export const BolumPage: React.FC<SayfaProps> = ({ slug, onBack, onNavigate, onSe
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">
           {bolum.ad} stajı
         </h1>
+
+        {/*
+          EYLEM PANELİ YALNIZCA TARAYICIDA
+
+          Kişiye göre değişiyor (kendi kariyer merkezi, takip durumu); ön
+          render bir kez üretilip herkese aynı HTML olarak sunulduğu için
+          buraya giremez. Gövdenin ÜSTÜNDE: sayfayı okumadan da ne
+          yapılacağı görünsün.
+        */}
+        <BolumEylemleri
+          bolumSlug={bolum.slug}
+          bolumAdi={bolum.ad}
+          onNavigate={onNavigate}
+          ogrenci={ogrenci}
+          onGirisGerekli={onGirisGerekli}
+        />
 
         {/* İçerik ön render ile ortak; ayrıntısı BolumIcerik.tsx içinde. */}
         <div onClick={baglantiyiYakala}>
