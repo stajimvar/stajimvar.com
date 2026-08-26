@@ -159,7 +159,7 @@ test('masaüstü 320px profil popoverı korunur ve mobil sheet oluşturmaz', asy
   await expect(popover).toBeVisible();
   const box = await popover.boundingBox();
   expect(box).not.toBeNull();
-  expect(box!.width).toBeCloseTo(256, 2);
+  expect(box!.width).toBeCloseTo(320, 2);
   await expect(page.getByTestId('account-sheet-panel')).toHaveCount(0);
   await popover.getByTestId('desktop-profile-menu-profile').click();
   await expect(page.getByTestId('fixture-active-tab')).toHaveText('profile');
