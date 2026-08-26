@@ -15,6 +15,8 @@
 export { Button, IconButton } from './Button';
 export type { ButtonProps, IconButtonProps } from './Button';
 export { Card, ProfileSectionGroup, ProfileSectionRow } from './Card';
+export { AccountPanel } from './AccountPanel';
+export { MenuItem } from './MenuItem';
 export { LogoFrame } from './LogoFrame';
 export { StatusBadge } from './StatusBadge';
 export { StatItem } from './StatItem';

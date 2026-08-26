@@ -40,6 +40,14 @@ export const BOSLUK = {
 export const KOSE = {
   kart: 'rounded-[20px]',
   kontrol: 'rounded-xl', // 12
+  /**
+   * Alttan açılan panel: 24 piksel, yalnızca üst köşeler.
+   *
+   * Karttan bir kademe büyük olması bilinçli — panel ekranın kenarına
+   * yaslanıyor ve daha büyük bir yüzey; kart yarıçapıyla aynı olursa
+   * ekranın alt kenarına yapışmış bir kart gibi görünüyor.
+   */
+  panel: 'rounded-t-3xl',
   tam: 'rounded-full',
 } as const;
 

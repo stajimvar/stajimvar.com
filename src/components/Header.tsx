@@ -28,6 +28,8 @@ import {
 import { StudentProfile, CompanyAccount } from '../types';
 import { Avatar } from './Avatar';
 import { Logo } from './Logo';
+import { adYazimi } from '../lib/ad';
+import { AccountPanel, MenuItem, StatusBadge } from '../ui';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 
 interface HeaderProps {
@@ -765,159 +767,152 @@ export const Header: React.FC<HeaderProps> = ({
                   </button>
                 )}
 
-                {/* User Profile Navigation & Account Menu (Student) */}
+                {/* Hesap menüsü - mobilde alttan panel, masaüstünde popover. */}
                 {userRole === 'student' && activeStudent && (
                   <div className="relative shrink-0">
                     <button
                       id="user-profile-menu-btn"
                       onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                      className="flex items-center gap-2 sm:gap-2.5 py-1.5 px-2 sm:px-3 rounded-2xl text-gray-800 hover:bg-gray-50 border border-gray-200 transition-all text-left cursor-pointer select-none shadow-2xs"
-                      title="Hesap Menüsü"
+                      aria-expanded={profileDropdownOpen}
+                      aria-haspopup="dialog"
+                      className={`flex cursor-pointer select-none items-center gap-2 rounded-2xl border px-2 py-1.5 text-left text-gray-800 transition-all duration-200 sm:gap-2.5 sm:px-3 ${
+                        profileDropdownOpen
+                          ? 'border-blue-200 bg-blue-50'
+                          : 'border-gray-200 hover:bg-gray-50'
+                      }`}
+                      title="Hesap menüsü"
                     >
                       {/*
-                        Başvuru sayacı buraya taşındı. Eskiden "Özgeçmiş &
-                        Profil" sekmesinin üstündeydi; o sekme kaldırılınca
-                        masaüstünde sayaç görünecek hiçbir yer kalmıyordu.
-                        Mobil alt menüde zaten avatarın üstünde duruyor.
+                        AVATARDAKİ YEŞİL SAYI KALDIRILDI
+
+                        Orada basvuru sayisi duruyordu ve bildirim rozeti gibi
+                        goruunuyordu. Arayuzde avatarin kosesindeki sayi belirli
+                        bir sey soyler: "senin gormedigin yeni bir sey var".
+                        Başvuru sayısı ogrencinin kendi bildigi, okunacak bir
+                        sey olmayan bir sayiydi; her acilista bosuna dikkat
+                        cekiyordu.
+
+                        Sayi kaybolmadi: hesap menusunde "Başvurularım"in
+                        yaninda ve profil ekraninin ust istatistiginde duruyor.
                       */}
-                      <span className="relative shrink-0">
-                        <Avatar
-                          name={activeStudent.fullName}
-                          url={activeStudent.avatarUrl || undefined}
-                          className="w-8 h-8 sm:w-9 sm:h-9 rounded-full ring-1 ring-gray-200 text-xs"
-                        />
-                        {applicationsCount > 0 && (
-                          <span className="absolute -top-1 -right-1 bg-teal-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none shadow-2xs">
-                            {applicationsCount}
-                          </span>
-                        )}
-                      </span>
-                      {/*
-                        İki satır: ad ve altında okul. Düğmeye hacim vermek için
-                        boşluk büyütmek yerine bilgi eklendi — kullanıcı hangi
-                        hesapla girdiğini tek bakışta görüyor. Dar ekranda
-                        yalnızca avatar kalıyor.
-                      */}
-                      <span className="hidden md:flex flex-col min-w-0 max-w-[11rem] leading-tight">
-                        <span className="text-sm font-bold text-gray-900 truncate">
-                          {activeStudent.fullName}
+                      <Avatar
+                        name={activeStudent.fullName}
+                        url={activeStudent.avatarUrl || undefined}
+                        className="h-8 w-8 shrink-0 rounded-full text-xs ring-1 ring-gray-200 sm:h-9 sm:w-9"
+                      />
+                      <span className="hidden min-w-0 max-w-[11rem] flex-col leading-tight md:flex">
+                        <span className="truncate text-sm font-bold text-gray-900">
+                          {adYazimi(activeStudent.fullName)}
                         </span>
-                        <span className="text-[11px] text-gray-500 truncate">
-                          {activeStudent.university || 'Öğrenci'}
-                        </span>
+                        <span className="truncate text-[11px] text-gray-600">Öğrenci hesabı</span>
                       </span>
                       <ChevronDown
-                        className={`w-3.5 sm:w-4 h-3.5 sm:h-4 text-gray-600 transition-transform duration-150 shrink-0 ${
+                        className={`h-3.5 w-3.5 shrink-0 text-gray-600 transition-transform duration-200 sm:h-4 sm:w-4 ${
                           profileDropdownOpen ? 'rotate-180' : ''
                         }`}
                       />
                     </button>
 
-                    {profileDropdownOpen && (
-                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-200/90 py-3 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                        {/* Top Profile Header */}
-                        <div className="px-4 pb-3 flex items-center gap-3">
-                          <Avatar
-                            name={activeStudent.fullName}
-                            url={activeStudent.avatarUrl || undefined}
-                            className="w-11 h-11 rounded-full shrink-0 ring-1 ring-blue-500/30 text-sm"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-extrabold text-gray-900 truncate leading-tight">
-                              {activeStudent.fullName}
-                            </p>
-                            <p className="text-[11px] text-gray-500 truncate">
-                              {activeStudent.university}
-                            </p>
-                            <span className="inline-block text-[10px] font-bold text-blue-600 mt-0.5">
-                              {activeStudent.department}
-                            </span>
-                          </div>
-                        </div>
+                    <AccountPanel
+                      acik={profileDropdownOpen}
+                      onKapat={() => setProfileDropdownOpen(false)}
+                      etiket="Hesap menüsü"
+                    >
+                      {/*
+                        ÜST KISIM: YALNIZCA KİMLİK
 
-                        {/* Divider */}
-                        <div className="border-t border-gray-100 my-1"/>
+                        Burada universite ve bolum de yaziyordu; ikisi de profil
+                        sayfasinda zaten var ve menuyu bir profil OZETI haline
+                        getiriyordu. Menu bir ozet degil, hizli hesap gezinmesi.
 
-                        {/* Menu Options */}
-                        <div className="py-1 text-xs text-gray-800 font-medium">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveTab('profile');
-                              setActiveSubTab('all');
-                              setProfileDropdownOpen(false);
-                            }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
-                          >
-                            <User className="w-3.5 h-3.5 text-gray-400" />
-                            <span>Öğrenci Profilim & CV</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveTab('applications');
-                              setActiveSubTab('all');
-                              setProfileDropdownOpen(false);
-                            }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
-                          >
-                            <Send className="w-3.5 h-3.5 text-gray-400" />
-                            <span>Başvurularım ({applicationsCount})</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveTab('badges');
-                              setActiveSubTab('all');
-                              setProfileDropdownOpen(false);
-                            }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
-                          >
-                            <Award className="w-3.5 h-3.5 text-gray-400" />
-                            <span>Rozetlerim & Testler</span>
-                          </button>
-                        </div>
-
-                        {isAdmin && onOpenAdmin && (
-                          <>
-                            <div className="border-t border-gray-100 my-1"/>
-                            <div className="px-2">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  onOpenAdmin();
-                                  setProfileDropdownOpen(false);
-                                }}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-50 rounded-xl transition-colors cursor-pointer"
-                              >
-                                <Settings className="w-3.5 h-3.5" />
-                                <span>Yönetim paneli</span>
-                              </button>
-                            </div>
-                          </>
-                        )}
-
-                        {/* Divider */}
-                        <div className="border-t border-gray-100 my-1"/>
-
-                        {/* Logout Option */}
-                        <div className="px-2 pt-1">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onLogout?.();
-                              setProfileDropdownOpen(false);
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
-                          >
-                            <LogOut className="w-3.5 h-3.5" />
-                            <span>Çıkış Yap</span>
-                          </button>
-                        </div>
+                        Ad `adYazimi` ile yaziliyor: veride "mustafa ogulcan
+                        dogan" gibi kayitli olabiliyor ve ekranda oyle
+                        goruunuyordu.
+                      */}
+                      <div className="flex items-center gap-3 px-4 pb-3 pt-2">
+                        <Avatar
+                          name={activeStudent.fullName}
+                          url={activeStudent.avatarUrl || undefined}
+                          className="h-12 w-12 shrink-0 rounded-full text-sm ring-1 ring-gray-200"
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-extrabold leading-tight text-gray-900">
+                            {adYazimi(activeStudent.fullName)}
+                          </span>
+                          <span className="block truncate text-xs text-gray-600">Öğrenci hesabı</span>
+                        </span>
                       </div>
-                    )}
+
+                      <div className="border-t border-gray-100 px-2 pt-1.5">
+                        {/* "&" yerine "ve": Turkce arayuzde & bir kisaltma degil, yabanci bir isaret. */}
+                        <MenuItem
+                          ikon={<User className="h-5 w-5" />}
+                          onClick={() => {
+                            setActiveTab('profile');
+                            setActiveSubTab('all');
+                            setProfileDropdownOpen(false);
+                          }}
+                        >
+                          Profilim ve CV
+                        </MenuItem>
+
+                        <MenuItem
+                          ikon={<Send className="h-5 w-5" />}
+                          rozet={
+                            applicationsCount > 0 ? (
+                              <StatusBadge ton="marka">{applicationsCount}</StatusBadge>
+                            ) : undefined
+                          }
+                          onClick={() => {
+                            setActiveTab('applications');
+                            setActiveSubTab('all');
+                            setProfileDropdownOpen(false);
+                          }}
+                        >
+                          Başvurularım
+                        </MenuItem>
+
+                        <MenuItem
+                          ikon={<Award className="h-5 w-5" />}
+                          onClick={() => {
+                            setActiveTab('badges');
+                            setActiveSubTab('all');
+                            setProfileDropdownOpen(false);
+                          }}
+                        >
+                          Rozetler ve testler
+                        </MenuItem>
+                      </div>
+
+                      {/* Yonetim yalnizca yoneticide; rozet neden gorundugunu soyluyor. */}
+                      {isAdmin && onOpenAdmin && (
+                        <div className="mt-1.5 border-t border-gray-100 px-2 pt-1.5">
+                          <MenuItem
+                            ikon={<Settings className="h-5 w-5" />}
+                            rozet={<StatusBadge ton="marka">Yönetici</StatusBadge>}
+                            onClick={() => {
+                              onOpenAdmin();
+                              setProfileDropdownOpen(false);
+                            }}
+                          >
+                            Yönetim paneli
+                          </MenuItem>
+                        </div>
+                      )}
+
+                      <div className="mt-1.5 border-t border-gray-100 px-2 pt-1.5">
+                        <MenuItem
+                          yikici
+                          ikon={<LogOut className="h-5 w-5" />}
+                          onClick={() => {
+                            onLogout?.();
+                            setProfileDropdownOpen(false);
+                          }}
+                        >
+                          Çıkış yap
+                        </MenuItem>
+                      </div>
+                    </AccountPanel>
                   </div>
                 )}
 
@@ -1303,18 +1298,18 @@ export const Header: React.FC<HeaderProps> = ({
               :'text-gray-500 hover:text-gray-900'
           }`}
         >
-          <div className="relative">
-            <UserCheck className="w-5 h-5" />
-            {applicationsCount > 0 ? (
-              <span className="absolute -top-1.5 -right-2 bg-teal-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full leading-none shadow-xs">
-                {applicationsCount}
-              </span>
-            ) : (
-              profildeMi && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-teal-500" />
-              )
-            )}
-          </div>
+          {/*
+            YEŞİL SAYI BURADAN DA KALKTI
+
+            Üst çubuktaki avatarın köşesindeki sayıyla aynı sayıydı ve aynı
+            şeyi yanlış söylüyordu: rozet "senin görmediğin yeni bir şey
+            var" demek, oysa bu öğrencinin kendi bildiği başvuru sayısı.
+            İkisinden birini bırakmak, aynı yanlışı yarım düzeltmek olurdu.
+
+            Sayı kaybolmadı: hesap menüsünde "Başvurularım"ın yanında ve
+            profil ekranının üst istatistiğinde.
+          */}
+          <UserCheck className="w-5 h-5" />
           {profildeMi && <span className="text-[11px] font-bold truncate">Profil</span>}
         </button>
           </>
