@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
   Sparkles,
   User,
@@ -27,10 +27,25 @@ import {
 } from 'lucide-react';
 import { StudentProfile, CompanyAccount } from '../types';
 import { Avatar } from './Avatar';
+import { AccountSheet, type AccountSheetCloseReason } from './AccountSheet';
 import { Logo } from './Logo';
 import { adYazimi } from '../lib/ad';
-import { AccountPanel, MenuItem, StatusBadge } from '../ui';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
+
+const ACCOUNT_SHEET_HISTORY_KEY = '__stajimvarAccountSheet';
+
+type AccountSheetPhase = 'closed' | 'open' | 'closing';
+type AccountSheetCloseSource = AccountSheetCloseReason | 'action' | 'back';
+
+const isHistoryRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const uniqueAccountSheetId = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `account-sheet-${crypto.randomUUID()}`;
+  }
+  return `account-sheet-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
 
 interface HeaderProps {
   activeTab: 'internships' | 'badges' | 'applications' | 'profile' | 'company-portal';
@@ -202,12 +217,106 @@ export const Header: React.FC<HeaderProps> = ({
 
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [companyDropdownOpen, setCompanyDropdownOpen] = useState(false);
+  const [mobileAccountSheetOpen, setMobileAccountSheetOpen] = useState(false);
+  const accountSheetTriggerRef = useRef<HTMLButtonElement>(null);
+  const accountSheetOwnerIdRef = useRef(uniqueAccountSheetId());
+  const accountSheetPhaseRef = useRef<AccountSheetPhase>('closed');
+  const accountSheetCloseSourceRef = useRef<AccountSheetCloseSource | null>(null);
+  const accountSheetAfterCloseRef = useRef<(() => void) | null>(null);
   const subMenuScrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeftPos, setScrollLeftPos] = useState(0);
+
+  const isOwnAccountSheetHistoryState = useCallback((state: unknown) => {
+    return isHistoryRecord(state) && state[ACCOUNT_SHEET_HISTORY_KEY] === accountSheetOwnerIdRef.current;
+  }, []);
+
+  const finishMobileAccountSheetClose = useCallback(() => {
+    const afterClose = accountSheetAfterCloseRef.current;
+    accountSheetAfterCloseRef.current = null;
+    accountSheetCloseSourceRef.current = null;
+    accountSheetPhaseRef.current = 'closed';
+    setMobileAccountSheetOpen(false);
+    afterClose?.();
+  }, []);
+
+  /*
+    Popstate tek otoritedir: geri ile kapandıktan sonra burada yeniden
+    history.back() çağrılmaz. Böylece kendi kapatma işlemimizin popstate'i
+    yeni bir geri çağrısını veya eski bir bayrağı tetikleyemez.
+  */
+  useEffect(() => {
+    const onPopState = (event: PopStateEvent) => {
+      if (isOwnAccountSheetHistoryState(event.state)) {
+        accountSheetPhaseRef.current = 'open';
+        setMobileAccountSheetOpen(true);
+        return;
+      }
+
+      if (accountSheetPhaseRef.current !== 'closed') {
+        finishMobileAccountSheetClose();
+      }
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [finishMobileAccountSheetClose, isOwnAccountSheetHistoryState]);
+
+  const openMobileAccountSheet = useCallback(() => {
+    if (accountSheetPhaseRef.current !== 'closed') return;
+
+    if (!isOwnAccountSheetHistoryState(window.history.state)) {
+      const mevcutDurum = isHistoryRecord(window.history.state) ? window.history.state : {};
+      window.history.pushState(
+        { ...mevcutDurum, [ACCOUNT_SHEET_HISTORY_KEY]: accountSheetOwnerIdRef.current },
+        '',
+        window.location.href
+      );
+    }
+
+    accountSheetPhaseRef.current = 'open';
+    setMobileAccountSheetOpen(true);
+  }, [isOwnAccountSheetHistoryState]);
+
+  const requestMobileAccountSheetClose = useCallback(
+    (source: AccountSheetCloseSource, afterClose?: () => void) => {
+      if (accountSheetPhaseRef.current === 'closed') {
+        afterClose?.();
+        return;
+      }
+      if (accountSheetPhaseRef.current === 'closing') return;
+
+      accountSheetCloseSourceRef.current = source;
+      accountSheetAfterCloseRef.current = afterClose ?? null;
+
+      if (isOwnAccountSheetHistoryState(window.history.state)) {
+        accountSheetPhaseRef.current = 'closing';
+        window.history.back();
+        return;
+      }
+
+      /* Başka bir history geçişi işaretçiyi çoktan kaldırdıysa geri çağrısı yapma. */
+      finishMobileAccountSheetClose();
+    },
+    [finishMobileAccountSheetClose, isOwnAccountSheetHistoryState]
+  );
+
+  const closeMobileAccountSheetThen = useCallback(
+    (action: () => void) => requestMobileAccountSheetClose('action', action),
+    [requestMobileAccountSheetClose]
+  );
+
+  const handleProfileTrigger = () => {
+    if (window.matchMedia('(min-width: 1024px)').matches) {
+      setProfileDropdownOpen((open) => !open);
+      return;
+    }
+    setProfileDropdownOpen(false);
+    openMobileAccountSheet();
+  };
 
   // Check scroll position to show/hide left-right helper buttons
   const checkScrollState = () => {
@@ -772,8 +881,10 @@ export const Header: React.FC<HeaderProps> = ({
                   <div className="relative shrink-0">
                     <button
                       id="user-profile-menu-btn"
-                      onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                      aria-expanded={profileDropdownOpen}
+                      ref={accountSheetTriggerRef}
+                      onClick={handleProfileTrigger}
+                      aria-expanded={profileDropdownOpen || mobileAccountSheetOpen}
+                      aria-controls={mobileAccountSheetOpen ? 'mobile-account-sheet' : undefined}
                       aria-haspopup="dialog"
                       className={`flex cursor-pointer select-none items-center gap-2 rounded-2xl border px-2 py-1.5 text-left text-gray-800 transition-all duration-200 sm:gap-2.5 sm:px-3 ${
                         profileDropdownOpen
@@ -813,22 +924,11 @@ export const Header: React.FC<HeaderProps> = ({
                       />
                     </button>
 
-                    <AccountPanel
-                      acik={profileDropdownOpen}
-                      onKapat={() => setProfileDropdownOpen(false)}
-                      etiket="Hesap menüsü"
-                    >
-                      {/*
-                        ÜST KISIM: YALNIZCA KİMLİK
-
-                        Burada universite ve bolum de yaziyordu; ikisi de profil
-                        sayfasinda zaten var ve menuyu bir profil OZETI haline
-                        getiriyordu. Menu bir ozet degil, hizli hesap gezinmesi.
-
-                        Ad `adYazimi` ile yaziliyor: veride "mustafa ogulcan
-                        dogan" gibi kayitli olabiliyor ve ekranda oyle
-                        goruunuyordu.
-                      */}
+                    {profileDropdownOpen && (
+                      <div
+                        data-testid="desktop-profile-menu"
+                        className="hidden lg:block absolute right-0 top-full z-50 mt-2.5 w-[320px] max-w-[320px] rounded-2xl border border-gray-100 bg-white py-2 shadow-lg animate-in fade-in slide-in-from-top-1 duration-200"
+                      >
                       <div className="flex items-center gap-3 px-4 pb-3 pt-2">
                         <Avatar
                           name={activeStudent.fullName}
@@ -842,77 +942,87 @@ export const Header: React.FC<HeaderProps> = ({
                           <span className="block truncate text-xs text-gray-600">Öğrenci hesabı</span>
                         </span>
                       </div>
-
-                      <div className="border-t border-gray-100 px-2 pt-1.5">
-                        {/* "&" yerine "ve": Turkce arayuzde & bir kisaltma degil, yabanci bir isaret. */}
-                        <MenuItem
-                          ikon={<User className="h-5 w-5" />}
-                          onClick={() => {
-                            setActiveTab('profile');
-                            setActiveSubTab('all');
-                            setProfileDropdownOpen(false);
-                          }}
-                        >
-                          Profilim ve CV
-                        </MenuItem>
-
-                        <MenuItem
-                          ikon={<Send className="h-5 w-5" />}
-                          rozet={
-                            applicationsCount > 0 ? (
-                              <StatusBadge ton="marka">{applicationsCount}</StatusBadge>
-                            ) : undefined
-                          }
-                          onClick={() => {
-                            setActiveTab('applications');
-                            setActiveSubTab('all');
-                            setProfileDropdownOpen(false);
-                          }}
-                        >
-                          Başvurularım
-                        </MenuItem>
-
-                        <MenuItem
-                          ikon={<Award className="h-5 w-5" />}
-                          onClick={() => {
-                            setActiveTab('badges');
-                            setActiveSubTab('all');
-                            setProfileDropdownOpen(false);
-                          }}
-                        >
-                          Rozetler ve testler
-                        </MenuItem>
-                      </div>
-
-                      {/* Yonetim yalnizca yoneticide; rozet neden gorundugunu soyluyor. */}
-                      {isAdmin && onOpenAdmin && (
-                        <div className="mt-1.5 border-t border-gray-100 px-2 pt-1.5">
-                          <MenuItem
-                            ikon={<Settings className="h-5 w-5" />}
-                            rozet={<StatusBadge ton="marka">Yönetici</StatusBadge>}
+                        {/* Menu Options */}
+                        <div className="py-1 text-xs text-gray-800 font-medium">
+                          <button
+                            type="button"
+                            data-testid="desktop-profile-menu-profile"
                             onClick={() => {
-                              onOpenAdmin();
+                              setActiveTab('profile');
+                              setActiveSubTab('all');
                               setProfileDropdownOpen(false);
                             }}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
                           >
-                            Yönetim paneli
-                          </MenuItem>
-                        </div>
-                      )}
+                            <User className="w-3.5 h-3.5 text-gray-400" />
+                            <span>Öğrenci Profilim & CV</span>
+                          </button>
 
-                      <div className="mt-1.5 border-t border-gray-100 px-2 pt-1.5">
-                        <MenuItem
-                          yikici
-                          ikon={<LogOut className="h-5 w-5" />}
-                          onClick={() => {
-                            onLogout?.();
-                            setProfileDropdownOpen(false);
-                          }}
-                        >
-                          Çıkış yap
-                        </MenuItem>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveTab('applications');
+                              setActiveSubTab('all');
+                              setProfileDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
+                          >
+                            <Send className="w-3.5 h-3.5 text-gray-400" />
+                            <span>Başvurularım ({applicationsCount})</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveTab('badges');
+                              setActiveSubTab('all');
+                              setProfileDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
+                          >
+                            <Award className="w-3.5 h-3.5 text-gray-400" />
+                            <span>Rozetlerim & Testler</span>
+                          </button>
+                        </div>
+
+                        {isAdmin && onOpenAdmin && (
+                          <>
+                            <div className="border-t border-gray-100 my-1"/>
+                            <div className="px-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onOpenAdmin();
+                                  setProfileDropdownOpen(false);
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-50 rounded-xl transition-colors cursor-pointer"
+                              >
+                                <Settings className="w-3.5 h-3.5" />
+                                <span>Yönetim paneli</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
+
+                        {/* Divider */}
+                        <div className="border-t border-gray-100 my-1"/>
+
+                        {/* Logout Option */}
+                        <div className="px-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onLogout?.();
+                              setProfileDropdownOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                          >
+                            <LogOut className="w-3.5 h-3.5" />
+                            <span>Çıkış Yap</span>
+                          </button>
+                        </div>
                       </div>
-                    </AccountPanel>
+
                   </div>
                 )}
 
@@ -1283,14 +1393,11 @@ export const Header: React.FC<HeaderProps> = ({
 
         {isLoggedIn && (
           <>
-        {/* 4. Profil — başvuru sayacı burada */}
+        {/* Profil — hesap menüsü sağ üst avatar düğmesinden açılır. */}
         <button
-          aria-label={
-            applicationsCount > 0 ? `Profilim, ${applicationsCount} başvuru` : 'Profilim'
-          }
+          aria-label="Profilim"
           onClick={() => {
-            setActiveTab('profile');
-            setActiveSubTab('all');
+            openMobileAccountSheet();
           }}
           className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
             profildeMi
@@ -1379,6 +1486,47 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="text-[11px] font-bold truncate">İlan Ekle</span>
         </button>
       </nav>
+    )}
+
+    {userRole === 'student' && activeStudent && (
+      <AccountSheet
+        open={mobileAccountSheetOpen}
+        student={activeStudent}
+        applicationsCount={applicationsCount}
+        isAdmin={isAdmin}
+        triggerRef={accountSheetTriggerRef}
+        onRequestClose={(reason) => requestMobileAccountSheetClose(reason)}
+        onOpenProfile={() =>
+          closeMobileAccountSheetThen(() => {
+            setActiveTab('profile');
+            setActiveSubTab('all');
+          })
+        }
+        onOpenApplications={() =>
+          closeMobileAccountSheetThen(() => {
+            setActiveTab('applications');
+            setActiveSubTab('all');
+          })
+        }
+        onOpenBadges={() =>
+          closeMobileAccountSheetThen(() => {
+            setActiveTab('badges');
+            setActiveSubTab('all');
+          })
+        }
+        onOpenAdmin={
+          isAdmin && onOpenAdmin
+            ? () => closeMobileAccountSheetThen(onOpenAdmin)
+            : undefined
+        }
+        onLogout={
+          onLogout
+            ? () => closeMobileAccountSheetThen(() => {
+                void onLogout();
+              })
+            : undefined
+        }
+      />
     )}
   </>
   );

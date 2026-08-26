@@ -9,6 +9,8 @@
     "preview": "wrangler pages dev dist --compatibility-date=2026-08-18",
     "paylasim-temizle": "node scripts/paylasim-temizle.mjs",
     "deploy": "wrangler pages deploy dist",
+    "test": "node --test tests/*.test.mjs",
+    "test:e2e": "playwright test",
     "lint": "tsc --noEmit",
     "ads-txt": "node scripts/ads-txt.mjs",
     "onrender": "node scripts/onrender.mjs",
@@ -37,6 +39,7 @@
     "react-dom": "^19.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.14.0",
     "@types/react": "^19.0.0",

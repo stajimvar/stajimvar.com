@@ -21,6 +21,10 @@ test('requires Supabase deployment for migrations and Edge Functions', () => {
 test('writes GitHub job outputs when called with a relative script path', () => {
   const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
   const before = execFileSync('git', ['rev-parse', 'HEAD^'], { encoding: 'utf8' }).trim();
+  const changedPaths = execFileSync('git', ['diff', '--name-only', before, head], { encoding: 'utf8' })
+    .split(/\r?\n/)
+    .filter(Boolean);
+  const expected = classifyChangedPaths(changedPaths);
   const output = execFileSync(process.execPath, ['scripts/detect-deploy-changes.mjs'], {
     encoding: 'utf8',
     env: { ...process.env, GITHUB_EVENT_BEFORE: before, GITHUB_SHA: head },
