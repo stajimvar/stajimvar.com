@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { bugununTarihi, stajBitisi } from '../src/lib/staj-gunu.mjs';
+import { bugununTarihi, stajBitisi , stajTakvimi} from '../src/lib/staj-gunu.mjs';
 
 /**
  * Staj günü hesabının gerilemesini yakalayan testler.
@@ -74,4 +74,53 @@ test('bugünün tarihi tarih alanının kabul ettiği biçimde', () => {
   const deger = bugununTarihi(new Date('2026-03-07T22:30:00'));
   assert.equal(deger, '2026-03-07');
   assert.match(bugununTarihi(), /^\d{4}-\d{2}-\d{2}$/);
+});
+
+/* ---------------------------------------------------------------- takvim */
+
+/*
+  `stajBitisi` ve `stajTakvimi` aynı kuralı iki ayrı döngüde uyguluyor.
+  Bu test ikisinin ayrışmasını yakalıyor: takvimdeki son gün ile hesaplanan
+  bitiş tarihi aynı olmalı, yoksa kullanıcı bir sonuç görüp takvimde başka
+  bir gün görüyor.
+*/
+test('takvim ve bitiş tarihi aynı günü gösteriyor', () => {
+  const girdiler = [
+    { baslangic: '2026-09-01', gunSayisi: 20, cumartesi: false, ekTatil: 0 },
+    { baslangic: '2026-06-15', gunSayisi: 30, cumartesi: true, ekTatil: 3 },
+    { baslangic: '2026-10-26', gunSayisi: 10, cumartesi: false, ekTatil: 0 },
+  ];
+  for (const g of girdiler) {
+    const takvim = stajTakvimi(g);
+    const bitis = stajBitisi(g);
+    assert.ok(takvim.length > 0, `takvim boş: ${JSON.stringify(g)}`);
+    assert.equal(
+      takvim[takvim.length - 1].tarih.toDateString(),
+      bitis.bitis.toDateString(),
+      `ayrışma: ${JSON.stringify(g)}`
+    );
+  }
+});
+
+test('takvimdeki çalışma günü sayısı hedefe eşit', () => {
+  const takvim = stajTakvimi({ baslangic: '2026-09-01', gunSayisi: 20, cumartesi: false, ekTatil: 0 });
+  assert.equal(takvim.filter((g) => g.durum === 'calisma').length, 20);
+});
+
+test('resmî tatil takvimde işaretleniyor', () => {
+  /* 29 Ekim 2026 perşembe — çalışma günü olmamalı. */
+  const takvim = stajTakvimi({ baslangic: '2026-10-26', gunSayisi: 10, cumartesi: false, ekTatil: 0 });
+  const yirmiDokuz = takvim.find((g) => g.tarih.getMonth() === 9 && g.tarih.getDate() === 29);
+  assert.equal(yirmiDokuz.durum, 'resmi');
+});
+
+test('bildirilen bayram günleri takvimde ayrı görünüyor', () => {
+  const takvim = stajTakvimi({ baslangic: '2026-09-01', gunSayisi: 10, cumartesi: false, ekTatil: 2 });
+  assert.equal(takvim.filter((g) => g.durum === 'bildirilen').length, 2);
+});
+
+test('geçersiz girdide takvim boş', () => {
+  assert.deepEqual(stajTakvimi({ baslangic: '', gunSayisi: 20 }), []);
+  assert.deepEqual(stajTakvimi({ baslangic: '2026-09-01', gunSayisi: 0 }), []);
+  assert.deepEqual(stajTakvimi({ baslangic: 'bozuk', gunSayisi: 20 }), []);
 });

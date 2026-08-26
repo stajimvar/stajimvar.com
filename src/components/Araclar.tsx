@@ -8,7 +8,17 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { SayfaKabugu } from './SayfaKabugu';
-import { bugununTarihi, stajBitisi } from '../lib/staj-gunu.mjs';
+import { bugununTarihi, stajBitisi, stajTakvimi } from '../lib/staj-gunu.mjs';
+import { StajTakvimi } from './StajTakvimi';
+
+/*
+  Resmî tatil listesinin en son ne zaman gözden geçirildiği.
+
+  Hesaplayıcı bir mevzuata dayanıyor ve mevzuat değişebiliyor; kullanıcıya
+  "bu bilgi ne kadar taze" sorusunun cevabını vermeden hesap göstermek,
+  doğruluğu kanıtlanamayan bir sayı göstermek olur.
+*/
+const MEVZUAT_TARIHI = '25 Ağustos 2026';
 import {
   SINAV_DAGILIMI,
   YERLESTIRME_DAGILIMI,
@@ -560,9 +570,16 @@ export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate })
     document.title = 'Staj ücreti hesaplama | StajımVar';
   }, []);
 
+  const [kopyalandi, setKopyalandi] = useState(false);
+
   const asgariSayi = Number(asgari.replace(/[^\d]/g, '')) || 0;
   const oran = Number(buyuk ? oranBuyuk : oranKucuk) || 0;
   const sonuc = (asgariSayi * oran) / 100;
+
+  /* Girdi değişince "Kopyalandı" yazısı eski sonuca ait kalmasın. */
+  useEffect(() => {
+    setKopyalandi(false);
+  }, [asgari, buyuk, oranKucuk, oranBuyuk]);
 
   const bicim = (n: number) =>
     n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -661,17 +678,82 @@ export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate })
           </p>
         </div>
 
-        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 space-y-1">
-          <p className="text-sm font-semibold text-blue-900/80">
-            Aylık en az ödenmesi gereken
+        {/*
+          SONUÇ KARTI
+
+          Boş girdide "—" duruyordu ve neden boş olduğunu söylemiyordu.
+          Artık eksik olan alan yazılıyor; kopyalama da var, çünkü öğrenci
+          bu tutarı işverene yazdığı e-postaya aktarıyor.
+        */}
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 space-y-2">
+          <p className="text-sm font-semibold text-blue-900/80">Aylık en az ödenmesi gereken</p>
+          <p className="text-3xl font-extrabold tabular-nums text-blue-900">
+            {asgariSayi > 0 ? `${bicim(sonuc)} TL` : 'Hesaplanamadı'}
           </p>
-          <p className="text-3xl font-extrabold text-blue-900 tabular-nums">
-            {asgariSayi > 0 ? `${bicim(sonuc)} TL` : '—'}
-          </p>
-          <p className="text-sm text-blue-900/80">
-            Net asgari ücretin %{oran || 0}'i
-          </p>
+          {asgariSayi > 0 ? (
+            <>
+              <p className="text-sm text-blue-900/80">Net asgari ücretin %{oran || 0}'i</p>
+              <button
+                type="button"
+                onClick={() => {
+                  const metin = `Staj ücreti alt sınırı: ${bicim(sonuc)} TL (net asgari ücretin %${oran}'i, ${bicim(asgariSayi)} TL üzerinden).`;
+                  navigator.clipboard
+                    ?.writeText(metin)
+                    .then(() => setKopyalandi(true))
+                    .catch(() => setKopyalandi(false));
+                }}
+                className="min-h-11 cursor-pointer rounded-xl border border-blue-300 bg-white px-4 text-sm font-bold text-blue-800"
+              >
+                {kopyalandi ? 'Kopyalandı' : 'Sonucu kopyala'}
+              </button>
+            </>
+          ) : (
+            <p className="text-sm text-blue-900/80">
+              Güncel net asgari ücreti yaz; oranı bu tutar üzerinden hesaplıyoruz.
+            </p>
+          )}
         </div>
+
+        {/*
+          NASIL HESAPLANDI
+
+          Oran mevzuattan geliyor ve yıldan yıla değişiyor. Hangi kanuna
+          dayandığını ve ne zaman gözden geçirildiğini söylemeden bir sayı
+          göstermek, doğruluğu kanıtlanamayan bir sayı göstermek olur.
+        */}
+        <details className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
+          <summary className="cursor-pointer font-bold text-gray-900">Nasıl hesaplandı?</summary>
+          <p className="mt-3 text-sm leading-relaxed text-gray-600 sm:text-base">
+            {asgariSayi > 0
+              ? `${bicim(asgariSayi)} TL × %${oran} = ${bicim(sonuc)} TL.`
+              : 'Girdiğin net asgari ücret, seçtiğin oranla çarpılıyor.'}{' '}
+            Oran işletmenin personel sayısına göre değişiyor; yukarıdaki kutu 20 ve üzeri
+            personel için farklı oranı uyguluyor. Oranları elle değiştirebilirsin, çünkü her
+            yıl güncelleniyorlar.
+          </p>
+          <p className="mt-3 text-xs leading-relaxed text-gray-600">
+            Dayanak: 3308 sayılı Mesleki Eğitim Kanunu.{' '}
+            <a
+              href="https://www.mevzuat.gov.tr/mevzuatmetin/1.5.3308.pdf"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="font-semibold text-blue-700 hover:underline"
+            >
+              Kanun metni
+            </a>
+            {' · '}Bu araçtaki varsayılan oranlar {MEVZUAT_TARIHI} tarihinde gözden geçirildi.
+            Güncel asgari ücret için{' '}
+            <a
+              href="https://www.csgb.gov.tr"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="font-semibold text-blue-700 hover:underline"
+            >
+              Çalışma ve Sosyal Güvenlik Bakanlığı
+            </a>
+            .
+          </p>
+        </details>
 
         <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 space-y-2">
           <h2 className="font-bold text-gray-900">Bilmen gereken üç şey</h2>
@@ -747,10 +829,22 @@ export const StajGunuHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) =
     document.title = 'Staj günü hesaplama | StajımVar';
   }, []);
 
+  const [kopyalandi, setKopyalandi] = useState(false);
+
   const sonuc = useMemo(
     () => stajBitisi({ baslangic, gunSayisi, cumartesi, ekTatil }),
     [baslangic, gunSayisi, cumartesi, ekTatil]
   );
+
+  const takvim = useMemo(
+    () => stajTakvimi({ baslangic, gunSayisi, cumartesi, ekTatil }),
+    [baslangic, gunSayisi, cumartesi, ekTatil]
+  );
+
+  /* Girdi değişince "Kopyalandı" yazısı eski sonuca ait kalmasın. */
+  useEffect(() => {
+    setKopyalandi(false);
+  }, [baslangic, gunSayisi, cumartesi, ekTatil]);
 
   const tarihYaz = (d: Date) =>
     d.toLocaleDateString('tr-TR', {
@@ -825,9 +919,16 @@ export const StajGunuHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) =
           </Alan>
         </div>
 
-        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 space-y-1">
+        {/*
+          SONUÇ KARTI
+
+          Sayfanın asıl çıktısı bu ve boyutu bunu söylemeli. Kopyalama
+          düğmesi var: öğrenci bu tarihi staj formuna yazacak ve elle
+          aktarırken hata yapıyor.
+        */}
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 space-y-2">
           <p className="text-sm font-semibold text-blue-900/80">Stajın biteceği tarih</p>
-          <p className="text-xl sm:text-2xl font-extrabold text-blue-900">
+          <p className="text-2xl sm:text-3xl font-extrabold text-blue-900 leading-tight">
             {sonuc ? tarihYaz(sonuc.bitis) : 'Hesaplanamadı'}
           </p>
           {/*
@@ -844,24 +945,76 @@ export const StajGunuHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) =
             </p>
           )}
           {sonuc && (
-            <p className="text-sm text-blue-900/80">
-              Toplam {sonuc.toplamTakvim} takvim günü · {sonuc.atlanan} gün çalışılmıyor
-            </p>
+            <>
+              <p className="text-sm text-blue-900/80">
+                Toplam {sonuc.toplamTakvim} takvim günü · {sonuc.atlanan} gün çalışılmıyor
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  const metin = `${gunSayisi} iş günü staj: ${tarihYaz(sonuc.bitis)} tarihinde biter (başlangıç ${tarihYaz(new Date(`${baslangic}T00:00:00`))}).`;
+                  navigator.clipboard
+                    ?.writeText(metin)
+                    .then(() => setKopyalandi(true))
+                    .catch(() => setKopyalandi(false));
+                }}
+                className="min-h-11 cursor-pointer rounded-xl border border-blue-300 bg-white px-4 text-sm font-bold text-blue-800"
+              >
+                {kopyalandi ? 'Kopyalandı' : 'Sonucu kopyala'}
+              </button>
+            </>
           )}
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 space-y-2">
-          <h2 className="font-bold text-gray-900">Hesaba dahil olanlar</h2>
-          <ul className="list-disc pl-5 space-y-1.5 text-sm sm:text-base text-gray-600 leading-relaxed">
+        {/* TAKVİM: hangi günlerin neden sayılmadığı bir sayıda değil, günlerde. */}
+        {takvim.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="font-bold text-gray-900">Gün gün takvim</h2>
+            <StajTakvimi gunler={takvim} />
+          </section>
+        )}
+
+        {/*
+          NASIL HESAPLANDI
+
+          Açılır kutu: kuralı merak eden açıyor, sonucu isteyen kutunun
+          altına inmeden görüyor. Önce her zaman açık bir listeydi ve
+          sonucu aşağı itiyordu.
+        */}
+        <details className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
+          <summary className="cursor-pointer font-bold text-gray-900">Nasıl hesaplandı?</summary>
+          <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-gray-600 sm:text-base">
             <li>Pazar günleri her zaman hariç.</li>
             <li>Cumartesi, yukarıdaki kutuyu işaretlemediysen hariç.</li>
             <li>
-              Sabit tarihli resmî tatiller hariç: 1 Ocak, 23 Nisan, 1 Mayıs, 19 Mayıs,
-              15 Temmuz, 30 Ağustos, 29 Ekim.
+              Sabit tarihli resmî tatiller hariç: 1 Ocak, 23 Nisan, 1 Mayıs, 19 Mayıs, 15 Temmuz,
+              30 Ağustos, 29 Ekim.
             </li>
-            <li>Dinî bayramlar her yıl kaydığı için senin girdiğin sayı kadar düşülüyor.</li>
+            <li>
+              Dinî bayramlar her yıl kaydığı için listeye gömülmüyor — gömülen bir tarih ertesi yıl
+              sessizce yanlış olur. Senin girdiğin gün sayısı kadar düşülüyor.
+            </li>
+            {sonuc && (
+              <li>
+                Bu hesapta {sonuc.toplamTakvim} takvim gününün {sonuc.atlanan} tanesi sayılmadı,
+                geriye {gunSayisi} iş günü kaldı.
+              </li>
+            )}
           </ul>
-        </div>
+          <p className="mt-3 text-xs leading-relaxed text-gray-600">
+            Resmî tatil listesi 2429 sayılı Ulusal Bayram ve Genel Tatiller Hakkında Kanun'a
+            dayanıyor.{' '}
+            <a
+              href="https://www.mevzuat.gov.tr/mevzuatmetin/1.5.2429.pdf"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="font-semibold text-blue-700 hover:underline"
+            >
+              Kanun metni
+            </a>
+            {' · '}Bu araçtaki liste {MEVZUAT_TARIHI} tarihinde gözden geçirildi.
+          </p>
+        </details>
 
         <Uyari>
           Okullar arasında fark var: bazıları yarım günü tam gün sayıyor, bazıları

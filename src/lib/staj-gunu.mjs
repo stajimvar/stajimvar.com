@@ -93,3 +93,64 @@ export function bugununTarihi(now = new Date()) {
   const gun = String(now.getDate()).padStart(2, '0');
   return `${yil}-${ay}-${gun}`;
 }
+
+/**
+ * Gün gün döküm — takvim görünümü için.
+ *
+ * NEDEN AYRI FONKSİYON
+ * --------------------
+ * `stajBitisi` yalnızca sonucu döndürüyor: bitiş tarihi ve kaç gün
+ * atlandığı. Kullanıcının asıl sorusu bundan biraz daha büyük — "hangi
+ * günler sayılmadı?". Sayı olarak "12 gün çalışılmıyor" demek, o günleri
+ * takvimde görmekle aynı şey değil; özellikle bayram günlerini kendisi
+ * girdiği için nereye düştüklerini görmek istiyor.
+ *
+ * İki fonksiyon aynı döngüyü paylaşmıyor ama aynı kuralı uyguluyor;
+ * tests/staj-gunu.test.mjs ikisinin aynı bitiş tarihini verdiğini
+ * sınıyor, yoksa zamanla ayrışırlar.
+ *
+ * @param {object} girdi  stajBitisi ile aynı
+ * @returns {{ tarih: Date, durum: 'calisma'|'pazar'|'cumartesi'|'resmi'|'bildirilen', sira: number|null }[]}
+ */
+export function stajTakvimi({ baslangic, gunSayisi, cumartesi = false, ekTatil = 0 }) {
+  if (!baslangic) return [];
+
+  const hedef = Number(gunSayisi) || 0;
+  if (hedef < 1 || hedef > 400) return [];
+
+  const ilkGun = new Date(`${baslangic}T00:00:00`);
+  if (Number.isNaN(ilkGun.getTime())) return [];
+
+  const gun = new Date(ilkGun);
+  const gunler = [];
+  let sayilan = 0;
+  let ekKalan = Math.max(0, Number(ekTatil) || 0);
+  let guvenlik = 0;
+
+  while (sayilan < hedef && guvenlik < 2000) {
+    guvenlik += 1;
+    const haftaninGunu = gun.getDay();
+    const resmiMi = SABIT_TATILLER.some(
+      ([ay, g]) => gun.getMonth() + 1 === ay && gun.getDate() === g
+    );
+
+    let durum;
+    let sira = null;
+    if (haftaninGunu === 0) durum = 'pazar';
+    else if (haftaninGunu === 6 && !cumartesi) durum = 'cumartesi';
+    else if (resmiMi) durum = 'resmi';
+    else if (ekKalan > 0) {
+      ekKalan -= 1;
+      durum = 'bildirilen';
+    } else {
+      sayilan += 1;
+      sira = sayilan;
+      durum = 'calisma';
+    }
+
+    gunler.push({ tarih: new Date(gun), durum, sira });
+    if (sayilan < hedef) gun.setDate(gun.getDate() + 1);
+  }
+
+  return sayilan < hedef ? [] : gunler;
+}
