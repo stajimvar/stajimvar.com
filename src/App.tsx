@@ -8,7 +8,7 @@ import {
   fetchIsAdmin,
   fetchQuizzes,
 } from './lib/queries';
-import { getCurrentUser, onAuthChange, signOut, KVKK_VERSION, type AuthResult } from './lib/auth';
+import { adrestekiOAuthHatasi, getCurrentUser, oauthProfiliTamamla, onAuthChange, signOut, KVKK_VERSION, type AuthResult } from './lib/auth';
 import {
   StudentProfile,
   InternshipListing,
@@ -27,6 +27,7 @@ import { ListingPage } from './components/ListingPage';
 import { GuideHub, GuidePage } from './components/GuidePages';
 import { BasvuruSablonu } from './components/BasvuruSablonu';
 import { SifreYenile } from './components/SifreYenile';
+import { ProfilTamamla } from './components/ProfilTamamla';
 import { BolumHub, BolumPage } from './components/BolumPages';
 import { StajProgramlariSayfasi } from './components/StajProgramlari';
 import { IsverenGirisi } from './components/IsverenGirisi';
@@ -447,6 +448,19 @@ export default function App() {
                 sahiplenme talebini bir daha bulamıyordu.
   */
   const [authBaglam, setAuthBaglam] = useState<'ogrenci' | 'isveren'>('ogrenci');
+  /* OAuth dönüşünde ad gelmediyse bir kez soruluyor; "Sonra" diyene tekrar sorulmuyor. */
+  const [adSoruluyor, setAdSoruluyor] = useState(false);
+
+  /*
+    OAuth sağlayıcıdan hatayla dönüldüyse (iptal, izin reddi) adres
+    çubuğunda geliyor. Okunmazsa kullanıcı hiçbir şey olmamış gibi giriş
+    ekranına bakıyor ve neden giremediğini anlamıyor.
+  */
+  React.useEffect(() => {
+    const hata = adrestekiOAuthHatasi();
+    if (hata) showToast(hata);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [authDonusYolu, setAuthDonusYolu] = useState<string | null>(null);
 
   const handleOpenLogin = () => {
@@ -563,6 +577,27 @@ export default function App() {
     const unsubscribe = onAuthChange((user) => {
       setSession(user);
       setSessionReady(true);
+
+      /*
+        OAUTH DÖNÜŞÜ
+
+        Google/Microsoft ile gelen kullanıcının adı sağlayıcıdan geliyorsa
+        profile yazılıyor; gelmiyorsa bir kez soruluyor. Bazı kurumsal
+        kiracılar profil alanlarını paylaşıma kapatıyor ve o durumda kişi
+        sitede kendi adı yerine boşluk görüyordu.
+
+        Ad üretmiyoruz (e-postanın baş kısmı gibi): kişi profilinde kendi
+        adını görmez ve düzeltebileceğini de bilmez.
+      */
+      if (user) {
+        void oauthProfiliTamamla()
+          .then(({ eksikAd }) => {
+            if (eksikAd) setAdSoruluyor(true);
+          })
+          .catch(() => {
+            /* tamamlama başarısızsa site çalışmaya devam etsin */
+          });
+      }
     });
     return () => {
       cancelled = true;
@@ -876,14 +911,29 @@ export default function App() {
       onCreateCompany={handleCreateCompany}
       onSuccess={handleAuthSuccess}
       baglam={authBaglam}
+      oauthDonusYolu={authDonusYolu ?? undefined}
     />
   );
+
+  /* Eksik ad penceresi: oturum açık her sayfada çizilebilmeli. */
+  const adPenceresi = adSoruluyor ? (
+    <ProfilTamamla
+      isveren={authBaglam === 'isveren'}
+      onKapat={() => setAdSoruluyor(false)}
+      onKaydedildi={(ad) => {
+        setAdSoruluyor(false);
+        setSession((o) => (o ? { ...o, displayName: ad } : o));
+        showToast(`Hoş geldin, ${ad}!`);
+      }}
+    />
+  ) : null;
 
   const icerikSayfasi = (icerik: React.ReactNode) => (
     <div className="min-h-screen flex flex-col bg-[#F9FAFB]">
       {ustCubuk}
       {icerik}
       {girisModali}
+      {adPenceresi}
     </div>
   );
 
@@ -939,6 +989,7 @@ export default function App() {
             onApply={(ilan) => handleApplyToJob(ilan, 0)}
           />
           {girisModali}
+          {adPenceresi}
         </>
       );
     }
@@ -1162,6 +1213,7 @@ export default function App() {
             onRequireLogin={() => isverenGirisiAc('login', `/sirket/${sirketSlug}`)}
           />
           {girisModali}
+          {adPenceresi}
         </>
       );
     }
@@ -1412,6 +1464,7 @@ export default function App() {
 
       {/* Authentication Modal (Giriş Yap / Kayıt Ol) */}
       {girisModali}
+      {adPenceresi}
 
       {/*
         Alt bilgi.

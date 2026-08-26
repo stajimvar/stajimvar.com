@@ -1,4 +1,5 @@
 import { sendPasswordReset, sifreSorunu, signIn, signUpStudent, signUpCompany } from '../lib/auth';
+import { OAuthDugmeleri } from './OAuthDugmeleri';
 import React, { useState } from 'react';
 import {
   X,
@@ -44,12 +45,15 @@ interface AuthModalProps {
    * yanlış yerde olduğunu söyleyen bir işaret; güveni orada kaybediyor.
    */
   baglam?: 'ogrenci' | 'isveren';
+  /** OAuth dönüşünde gidilecek site içi adres. */
+  oauthDonusYolu?: string;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   allowCompanySignUp = false,
   baglam = 'ogrenci',
+  oauthDonusYolu,
   onClose,
   initialMode = 'login',
   allCompanies,
@@ -292,6 +296,31 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 'İlanları kaydet, başvurularını işaretleyip takip et, yeni fırsatlardan haberdar ol.'}
           </p>
         </div>
+
+        {/*
+          OAUTH SEKMELERİN ÜSTÜNDE
+
+          İşveren yetkilisi kurumsal e-postasını zaten Google Workspace ya
+          da Microsoft 365 üzerinden kullanıyor; yeni bir şifre uydurtmak
+          huninin en kırılgan noktasına bir engel daha koymak demek.
+
+          Şifre sıfırlama kipinde çizilmiyor: orada yapılacak tek iş
+          e-posta yazmak ve sağlayıcı düğmesi kafa karıştırır.
+
+          DİKKAT: bu düğmeler ŞİRKET DOĞRULAMASI DEĞİL. Kişinin o e-posta
+          adresine sahip olduğunu kanıtlıyorlar, şirketi temsil ettiğini
+          değil. İlan yayınlama ve aday erişimi sahiplenme onayına bağlı
+          kalmaya devam ediyor.
+        */}
+        {mode !== 'sifirla' && (
+          <div className="mb-4">
+            <OAuthDugmeleri
+              donusYolu={oauthDonusYolu}
+              onHata={(mesaj) => setAuthError(mesaj || null)}
+              ayiriciMetni={isverenBaglami ? 'veya kurumsal e-posta ile' : 'veya e-posta ile'}
+            />
+          </div>
+        )}
 
         {/*
           ROL SEÇİCİ — ŞİRKET SEKMESİ KAPALI.
@@ -597,7 +626,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     required
                     value={recruiterName}
                     onChange={(e) => setRecruiterName(e.target.value)}
-                    placeholder="Örn: Zeynep Kaya"
+                    placeholder="Adınız Soyadınız"
                     className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
@@ -670,7 +699,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ogulcan@itu.edu.tr"
+                  placeholder={isverenBaglami ? 'ad.soyad@sirket.com' : 'ad.soyad@ornek.com'}
                   className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                 />
               </div>
@@ -682,7 +711,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               {mode === 'register' && (
                 <div>
                   <label htmlFor="auth-fullName" className="block font-bold text-gray-700 mb-1">
-                    Ad Soyad *
+                    {isverenBaglami ? 'Yetkili adı soyadı *' : 'Ad Soyad *'}
                   </label>
                   <div className="relative">
                     <User className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -694,7 +723,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       required
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Örn: Mustafa Oğulcan Doğan"
+                      placeholder="Adınız Soyadınız"
                       className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                     />
                   </div>
@@ -715,7 +744,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="ogulcan@itu.edu.tr"
+                    placeholder={isverenBaglami ? 'ad.soyad@sirket.com' : 'ad.soyad@ornek.com'}
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
@@ -785,8 +814,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {mode === 'register' && (
             <div className="space-y-2.5">
               <p className="text-[11px] leading-relaxed text-gray-500">
-                Hesap oluşturduğunda kişisel verilerin, staj ilanlarını
-                eşleştirebilmek için işlenir. Ayrıntısı{' '}
+                {isverenBaglami ? (
+                  <>
+                    {/*
+                      İŞVEREN TEMSİLCİSİNE UYGUN METİN
+
+                      Buradaki cümle öğrenciye yazılmıştı: "verilerin staj
+                      ilanlarını eşleştirebilmek için işlenir". İşveren
+                      yetkilisi ilan eşleştirilmek için kayıt olmuyor;
+                      şirketini sahiplenmek için oluyor. Yanlış hedefe
+                      yazılmış bir aydınlatma metni, aydınlatmıyor.
+                    */}
+                    Hesap yetkili kişi adına açılıyor; ad, soyad ve kurumsal e-posta bilgin
+                    şirket doğrulaması ve seninle iletişim için işleniyor. Ayrıntısı{' '}
+                  </>
+                ) : (
+                  <>
+                    Hesap oluşturduğunda kişisel verilerin, staj ilanlarını eşleştirebilmek
+                    için işlenir. Ayrıntısı{' '}
+                  </>
+                )}
                 <a
                   href="/kvkk-aydinlatma-metni"
                   target="_blank"
@@ -795,8 +842,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 >
                   aydınlatma metninde
                 </a>
-                . Bilgilerin, sen başvuru sırasında ayrıca izin vermeden hiçbir
-                şirketle paylaşılmaz. Hesap açarak{' '}
+                .{' '}
+                {isverenBaglami
+                  ? 'Aday bilgilerine erişim, şirket doğrulaması tamamlanmadan açılmıyor.'
+                  : 'Bilgilerin, sen başvuru sırasında ayrıca izin vermeden hiçbir şirketle paylaşılmaz.'}{' '}
+                Hesap açarak{' '}
                 <a
                   href="/kullanim-kosullari"
                   target="_blank"
@@ -808,18 +858,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 kabul etmiş olursun.
               </p>
 
-              <label className="flex items-start gap-2.5 p-3 rounded-xl bg-gray-50 border border-gray-200 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={bildirimIzni}
-                  onChange={(e) => setBildirimIzni(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded accent-blue-600 shrink-0 cursor-pointer"
-                />
-                <span className="text-[11px] leading-relaxed text-gray-600">
-                  Yeni staj ilanı ve burs duyurularını e-posta ile almak
-                  istiyorum. <span className="text-gray-400">(isteğe bağlı)</span>
-                </span>
-              </label>
+              {/*
+                Bülten kutusu YALNIZCA öğrencide.
+
+                İşveren yetkilisine "yeni staj ilanı ve burs duyurularını
+                almak istiyorum" diye sormak, onu aday sanmak demek. Kutu
+                işverende hiç çizilmiyor ve izin de sorulmuyor.
+              */}
+              {!isverenBaglami && (
+                <label className="flex items-start gap-2.5 p-3 rounded-xl bg-gray-50 border border-gray-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={bildirimIzni}
+                    onChange={(e) => setBildirimIzni(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded accent-blue-600 shrink-0 cursor-pointer"
+                  />
+                  <span className="text-[11px] leading-relaxed text-gray-600">
+                    Yeni staj ilanı ve burs duyurularını e-posta ile almak
+                    istiyorum. <span className="text-gray-400">(isteğe bağlı)</span>
+                  </span>
+                </label>
+              )}
             </div>
           )}
 
