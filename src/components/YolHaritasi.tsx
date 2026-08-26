@@ -126,10 +126,17 @@ export const YolHaritasi: React.FC<{
 
   return (
     <section className="space-y-4">
+      {/*
+        SAYFANIN H1'İ
+
+        Üstündeki karşılama bloğu kaldırıldı ve o bloğun h1'i onunla gitti.
+        Sayfanın başlıksız kalması hem arama motoru hem ekran okuyucu için
+        kayıp; bu bölüm artık ilk başlık, dolayısıyla h1.
+      */}
       <div className="space-y-1">
-        <h2 className="text-xl font-extrabold tracking-tight text-gray-900">
+        <h1 className="text-xl font-extrabold tracking-tight text-gray-900 sm:text-2xl">
           Staj yol haritan burada
-        </h2>
+        </h1>
         <p className="text-sm leading-relaxed text-gray-600">
           Bölümünü ve okulunu seç; sana uygun ilanları, işverenleri, belgeleri ve araçları tek
           yerde gör.

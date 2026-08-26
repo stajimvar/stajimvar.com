@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Award, Briefcase, FileText, TrendingUp } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { SayfaKabugu } from './SayfaKabugu';
 import { RehberIzgarasi, RehberKarti, RehberKartiIskeleti } from './RehberKartlari';
 import { YolHaritasi } from './YolHaritasi';
@@ -56,44 +56,6 @@ import type { StudentProfile } from '../types';
  */
 
 type Sekme = 'uygun' | 'tumu' | KonuId;
-
-/* ------------------------------------------------------------ hızlı işlem */
-
-/*
-  DÖRT HIZLI İŞLEM
-
-  Kullanıcının cümlesiyle yazılmış: "Staj bulmak istiyorum". Konu adı
-  ("Staj") bir raf etiketi; niyet cümlesi ise ekrandaki soruya cevap.
-
-  Basınca ARA EKRAN YOK: aynı sayfada konu süzgeci uygulanıyor ve liste
-  yerinde değişiyor.
-*/
-const HIZLI_ISLEMLER: { konu: KonuId; etiket: string; ikon: React.ReactNode; renk: string }[] = [
-  {
-    konu: 'staj',
-    etiket: 'Staj bulmak istiyorum',
-    ikon: <Briefcase className="h-4 w-4" />,
-    renk: 'bg-blue-50 text-blue-700',
-  },
-  {
-    konu: 'cv',
-    etiket: "CV'mi geliştirmek istiyorum",
-    ikon: <FileText className="h-4 w-4" />,
-    renk: 'bg-violet-50 text-violet-700',
-  },
-  {
-    konu: 'burs',
-    etiket: 'Burs arıyorum',
-    ikon: <Award className="h-4 w-4" />,
-    renk: 'bg-emerald-50 text-emerald-700',
-  },
-  {
-    konu: 'kariyer',
-    etiket: 'Kariyerimi planlamak istiyorum',
-    ikon: <TrendingUp className="h-4 w-4" />,
-    renk: 'bg-amber-50 text-amber-700',
-  },
-];
 
 const Bolum: React.FC<{
   baslik: string;
@@ -301,16 +263,6 @@ export const RehberMerkezi: React.FC<{
   };
 
   /*
-    Hızlı işlem AÇMA/KAPAMA çalışıyor.
-
-    Konu çipi satırı kaldırıldı: dört hızlı işlem zaten Staj, CV ve Burs'u
-    veriyordu ve hemen altında aynı üçünü çip olarak tekrarlamak fazlalıktı.
-    Ama "Tümü" çipi de onunla gitti — süzgeci kaldırmanın bir yolu kalmalı.
-    Basılı işleme yeniden basınca varsayılan görünüme dönülüyor.
-  */
-  const hizliIslemSec = (konu: KonuId) => sekmeSec(sekme === konu && !terim ? 'tumu' : konu);
-
-  /*
     KONU SEÇİCİ LİSTENİN BAŞINDA
 
     Hızlı işlemler yedi konudan dördünü kapsıyor; yurt, üniversite hayatı
@@ -348,52 +300,20 @@ export const RehberMerkezi: React.FC<{
   return (
     <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI}>
       <div className="space-y-6">
-        {/* ================================================== karşılama */}
         {/*
-          Tanıtım bloğu yerine tek satırlık bir soru ve dört işlem. Zemin
-          beyaz, kenarlık ince: sayfanın geri kalanıyla aynı dil, ilk ekranı
-          kaplamayan bir yükseklik.
-        */}
-        <section className="space-y-3.5">
-          <div className="space-y-1">
-            <h1 className="text-xl font-extrabold tracking-tight text-gray-900 sm:text-2xl">
-              Kariyer yolculuğunda sıradaki adım ne?
-            </h1>
-            <p className="text-sm text-gray-600">İhtiyacını seç, sana uygun rehberlere hemen ulaş.</p>
-          </div>
+          SAYFANIN İLK BÖLÜMÜ
 
-          <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-            {HIZLI_ISLEMLER.map((h) => (
-              <button
-                key={h.konu}
-                type="button"
-                onClick={() => hizliIslemSec(h.konu)}
-                aria-pressed={sekme === h.konu && !terim}
-                className={`flex min-h-11 cursor-pointer flex-col items-start gap-2 rounded-2xl border bg-white p-3 text-left transition-colors sm:flex-row sm:items-center sm:gap-2.5 ${
-                  sekme === h.konu && !terim
-                    ? 'border-blue-600 ring-1 ring-blue-600'
-                    : 'border-gray-200 hover:border-blue-300'
-                }`}
-              >
-                <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${h.renk}`}
-                >
-                  {h.ikon}
-                </span>
-                <span className="text-[13px] font-bold leading-snug text-gray-900">{h.etiket}</span>
-              </button>
-            ))}
-          </div>
-        </section>
+          Burada önce "Kariyer yolculuğunda sıradaki adım ne?" başlığı ve
+          dört seçenek kartı vardı. İkisi de aynı işi yapıyordu: kullanıcıyı
+          bir konuya götürmek. Üst üste iki "ne yapmak istiyorsun?" bloğu
+          ilk ekranı doldurup asıl içeriği aşağı itiyordu; kişiselleştirilmiş
+          bölüm kartı ekranın dışında kalıyordu.
 
-        {/*
-          YOL HARİTASI HEMEN BURADA
+          Konu süzme yolu kaybolmadı: liste başlığının yanındaki konu
+          seçici yedi konunun hepsini veriyor.
 
-          Bu bölüm sayfanın sonundaki "Keşfet" şeridiydi ve dört eşit
-          kutudan ibaretti; arkasındaki 34 bölüm rehberi, 44 doğrulanmış
-          işveren ve 22 kariyer merkezi hissedilmiyordu. Rehberin ana
-          özelliği o kutular, yazılar değil — bu yüzden yazıların önüne
-          geçti.
+          Üst boşluk SayfaKabugu'ndan geliyor (py-6 sm:py-8) — mobilde 24,
+          masaüstünde 32 piksel.
         */}
         <YolHaritasi onNavigate={onNavigate} ogrenci={ogrenci} />
 
