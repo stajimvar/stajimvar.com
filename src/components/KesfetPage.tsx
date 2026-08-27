@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, MapPin, ShieldCheck, Sparkles } from "lucide-react";
+import { EventCover } from "./EventCover";
 import {
   DISCOVER_CATEGORIES,
   fetchDiscoverEvents,
@@ -43,19 +44,12 @@ const EventCard: React.FC<{
   <article
     className={`overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm ${compact ? "min-w-[270px] w-[270px]" : ""}`}
   >
-    {e.imageUrl ? (
-      <img
-        src={e.imageUrl}
-        alt=""
-        className={`w-full object-cover ${compact ? "h-32" : "h-44"}`}
-      />
-    ) : (
-      <div
-        className={`bg-gradient-to-br from-blue-50 to-indigo-100 grid place-items-center ${compact ? "h-32" : "h-44"}`}
-      >
-        <Sparkles className="w-10 h-10 text-blue-500" />
-      </div>
-    )}
+    <EventCover
+      src={e.cardImageUrl || e.imageUrl}
+      category={e.category}
+      title={e.title}
+      coverKind={e.coverKind}
+    />
     <div className="p-4 space-y-2">
       <div className="flex flex-wrap gap-1">
         <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-full">
@@ -138,7 +132,10 @@ export const KesfetPage: React.FC<{ onNavigate: (p: string) => void }> = ({
       ),
     [rows, city, category, free, discount, period],
   );
-  const collections = useMemo(() => buildDiscoverCollections(rows), [rows]);
+  const collections = useMemo(
+    () => buildDiscoverCollections(shown, { city }),
+    [shown, city],
+  );
   return (
     <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
       <header>
@@ -270,11 +267,9 @@ export const KesfetPage: React.FC<{ onNavigate: (p: string) => void }> = ({
           </p>
         </div>
       )}
-      {state === "ready" && shown.length > 0 && (
+      {state === "ready" && shown.length > 0 && collections.length === 0 && (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {shown.map((e) => (
-            <EventCard key={e.id} event={e} onNavigate={onNavigate} />
-          ))}
+          {shown.map((e) => <EventCard key={e.id} event={e} onNavigate={onNavigate} />)}
         </div>
       )}
     </main>

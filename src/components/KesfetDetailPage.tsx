@@ -5,6 +5,7 @@ import {
   fetchDiscoverEventBySlug,
   type DiscoverEvent,
 } from "../lib/kesfet";
+import { EventCover } from "./EventCover";
 const dateText = (v: string) =>
   new Intl.DateTimeFormat("tr-TR", {
     dateStyle: "long",
@@ -36,7 +37,7 @@ export const KesfetDetailPage: React.FC<{
         </button>
       </main>
     );
-  const ended = new Date(e.endsAt) < new Date();
+  const ended = Boolean(e.endsAt && new Date(e.endsAt) < new Date());
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
       <button
@@ -47,13 +48,12 @@ export const KesfetDetailPage: React.FC<{
         Keşfet'e dön
       </button>
       <article className="mt-5 overflow-hidden bg-white border border-gray-200 rounded-3xl">
-        {e.imageUrl && (
-          <img
-            src={e.imageUrl}
-            alt=""
-            className="w-full max-h-96 object-cover"
-          />
-        )}
+        <EventCover
+          src={e.detailImageUrl || e.imageUrl}
+          category={e.category}
+          title={e.title}
+          coverKind={e.coverKind}
+        />
         <div className="p-6 sm:p-8 space-y-5">
           {ended && (
             <p className="rounded-xl bg-amber-50 text-amber-800 font-bold p-3">
@@ -77,7 +77,8 @@ export const KesfetDetailPage: React.FC<{
           <div className="grid sm:grid-cols-2 gap-3 text-sm">
             <p className="flex gap-2">
               <CalendarDays className="w-5 h-5 text-blue-600" />
-              {dateText(e.startsAt)} – {dateText(e.endsAt)}
+              {dateText(e.startsAt)}
+              {e.endsAt ? ` – ${dateText(e.endsAt)}` : " · Bitiş saati bilinmiyor"}
             </p>
             <p className="flex gap-2">
               <MapPin className="w-5 h-5 text-blue-600" />
@@ -97,6 +98,10 @@ export const KesfetDetailPage: React.FC<{
                   ? "Ücretsiz"
                   : `Normal: ${e.regularPrice ?? "—"} TL · Öğrenci: ${e.studentPrice ?? "—"} TL`}
               </dd>
+            </div>
+            <div>
+              <dt className="font-bold">Katılım</dt>
+              <dd>{e.eventMode === "online" ? "Çevrimiçi" : e.eventMode === "hybrid" ? "Hibrit" : "Fiziksel"}</dd>
             </div>
             <div>
               <dt className="font-bold">Organizatör</dt>

@@ -92,6 +92,14 @@ export const AdminDiscoverView: React.FC<{
                       ? "Doğrulandı"
                       : "İncelenecek"}
                   </span>
+                  {e.reviewRequired && (
+                    <span className="mt-1 block text-xs font-bold text-amber-700">
+                      İnceleme: {e.reviewReason || "Temel bilgi eksik"}
+                    </span>
+                  )}
+                  <span className="block text-xs text-gray-500">
+                    Kapak: {e.coverKind === "official" ? "Resmî" : e.coverKind === "manual" ? "Yönetici" : "Genel kategori"}
+                  </span>
                 </td>
                 <td className="p-3">
                   <div className="flex flex-wrap gap-2">

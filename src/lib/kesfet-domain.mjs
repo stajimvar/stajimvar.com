@@ -146,81 +146,46 @@ export function calculateStudentFitScore(event = {}, context = {}) {
   return { total, components };
 }
 
-export function buildDiscoverCollections(events = [], now = new Date()) {
-  const sorted = (predicate) =>
-    events
-      .filter(predicate)
-      .sort((a, b) => (b.studentFitScore || 0) - (a.studentFitScore || 0))
-      .slice(0, 10);
-  const today = trDay(now);
-  const day = Number(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: "Europe/Istanbul",
-      weekday: "short",
-    }).format(now) === "Sun"
-      ? 0
-      : new Date(`${today}T12:00:00Z`).getUTCDay(),
-  );
-  const untilWeekend = day === 0 ? 0 : day === 6 ? 0 : 6 - day;
-  const weekendStart = new Date(now.getTime() + untilWeekend * 86400000);
-  const weekendEnd = new Date(
-    weekendStart.getTime() + (day === 6 ? 2 : 1) * 86400000,
-  );
+export function buildDiscoverCollections(events = [], context = {}) {
+  const now = context instanceof Date ? context : context.now || new Date();
+  const city = context instanceof Date ? "" : context.city || "";
+  const weekEnd = new Date(now.getTime() + 7 * 86400000);
+  const careerTags = ["career", "technology", "networking", "entrepreneurship"];
+  const cultureCategories = [
+    "exhibition",
+    "museum",
+    "festival",
+    "theatre",
+    "concert",
+    "workshop",
+  ];
   const definitions = [
-    [
-      "tonight",
-      "Bu akşam ne yapsam?",
-      (e) =>
-        trDay(e.startsAt) === today && new Date(e.startsAt).getHours() >= 17,
-    ],
-    [
-      "free-weekend",
-      "Hafta sonu 0 TL planları",
-      (e) =>
-        e.isFree &&
-        new Date(e.startsAt) >= weekendStart &&
-        new Date(e.startsAt) <= weekendEnd,
-    ],
-    ["student-discount", "Öğrenci indirimli", (e) => e.hasStudentDiscount],
-    [
-      "under-100",
-      "100 TL'nin altında",
-      (e) =>
-        e.isFree || (e.studentPrice != null && Number(e.studentPrice) <= 100),
-    ],
-    [
-      "closing",
-      "Kayıtları kapanıyor",
-      (e) =>
-        e.applicationDeadline &&
-        new Date(e.applicationDeadline) >= now &&
-        new Date(e.applicationDeadline) <=
-          new Date(now.getTime() + 7 * 86400000),
-    ],
+    ["this-week", "Bu Hafta", (e) => new Date(e.startsAt) >= now && new Date(e.startsAt) <= weekEnd],
+    ["nearby", "Şehrindekiler", (e) => city && e.city === city],
+    ["free", "Ücretsiz", (e) => e.isFree],
     [
       "career",
-      "Kariyerine katkı sağlayacaklar",
+      "Kariyer",
       (e) =>
-        (e.interestTags || []).some((x) =>
-          ["career", "technology", "networking", "entrepreneurship"].includes(
-            x,
-          ),
-        ),
+        e.category === "fair" ||
+        e.category === "university" ||
+        (e.interestTags || []).some((tag) => careerTags.includes(tag)),
     ],
-    [
-      "try-new",
-      "Yeni bir şey dene",
-      (e) => Number(e.diversityScore || 0) >= 70,
-    ],
-    [
-      "editors-picks",
-      "StajımVar'ın seçtikleri",
-      (e) =>
-        Number(e.studentFitScore || 0) >= 80 &&
-        e.verificationStatus === "verified",
-    ],
+    ["culture-art", "Kültür-Sanat", (e) => cultureCategories.includes(e.category)],
   ];
+  const used = new Set();
   return definitions
-    .map(([id, title, predicate]) => ({ id, title, events: sorted(predicate) }))
-    .filter((x) => x.events.length > 0);
+    .map(([id, title, predicate]) => {
+      const selected = events
+        .filter((event) => !used.has(event.id) && predicate(event))
+        .sort(
+          (a, b) =>
+            (b.studentFitScore || 0) - (a.studentFitScore || 0) ||
+            new Date(a.startsAt) - new Date(b.startsAt),
+        )
+        .slice(0, 10);
+      selected.forEach((event) => used.add(event.id));
+      return { id, title, events: selected };
+    })
+    .filter((collection) => collection.events.length > 0);
 }

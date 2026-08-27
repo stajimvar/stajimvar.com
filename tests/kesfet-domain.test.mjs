@@ -96,7 +96,7 @@ test("eksik puan sinyalleri mevcut ağırlıkları kendi içinde normalize eder"
   assert.deepEqual(Object.keys(score.components), ["price"]);
 });
 
-test("yalnızca dolu koleksiyonlar üretilir ve seçkiler puana göre sıralanır", () => {
+test("koleksiyonlar ürün sırasındadır ve bir etkinlik yalnızca bir kez görünür", () => {
   assert.equal(typeof domain.buildDiscoverCollections, "function");
   const now = new Date("2026-08-27T12:00:00+03:00");
   const events = [
@@ -105,22 +105,37 @@ test("yalnızca dolu koleksiyonlar üretilir ve seçkiler puana göre sıralanı
       startsAt: "2026-08-27T19:00:00+03:00",
       endsAt: "2026-08-27T22:00:00+03:00",
       isFree: true,
+      category: "fair",
+      city: "İstanbul",
+      interestTags: ["career"],
       studentFitScore: 92,
       verificationStatus: "verified",
     },
     {
       id: "b",
-      startsAt: "2026-08-27T20:00:00+03:00",
-      endsAt: "2026-08-27T22:00:00+03:00",
+      startsAt: "2026-09-10T20:00:00+03:00",
+      endsAt: "2026-09-10T22:00:00+03:00",
       studentPrice: 80,
+      category: "exhibition",
+      city: "Ankara",
       studentFitScore: 70,
     },
   ];
-  const collections = domain.buildDiscoverCollections(events, now);
+  const collections = domain.buildDiscoverCollections(events, {
+    now,
+    city: "İstanbul",
+  });
   assert.ok(collections.length > 0);
   assert.equal(
     collections.some((x) => x.events.length === 0),
     false,
   );
-  assert.equal(collections.find((x) => x.id === "tonight").events[0].id, "a");
+  assert.deepEqual(
+    collections.map((x) => x.id),
+    ["this-week", "culture-art"],
+  );
+  assert.equal(
+    collections.flatMap((x) => x.events).filter((x) => x.id === "a").length,
+    1,
+  );
 });
