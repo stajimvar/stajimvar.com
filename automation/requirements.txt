@@ -3,4 +3,5 @@ deep-translator>=1.11,<2
 python-dotenv>=1.0,<2
 requests>=2.32,<3
 beautifulsoup4>=4.13,<5
+pillow>=11.0,<12
 supabase>=2.0,<3
