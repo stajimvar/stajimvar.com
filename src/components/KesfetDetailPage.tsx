@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, CalendarDays, MapPin } from "lucide-react";
+import { ArrowLeft, CalendarDays, MapPin, ShieldCheck } from "lucide-react";
 import {
   DISCOVER_CATEGORIES,
   fetchDiscoverEventBySlug,
@@ -65,6 +65,14 @@ export const KesfetDetailPage: React.FC<{
           </span>
           <h1 className="text-3xl font-black text-gray-900">{e.title}</h1>
           <p className="text-lg text-gray-600">{e.shortDescription}</p>
+          {(e.verificationStatus === "verified" || e.lastVerifiedAt) && (
+            <p className="flex items-center gap-2 rounded-xl bg-emerald-50 text-emerald-800 font-semibold p-3">
+              <ShieldCheck className="w-5 h-5" />
+              {e.verificationStatus === "verified" && e.sourceKind === "official"
+                ? "Resmî kaynaktan doğrulandı"
+                : `Son kontrol: ${new Date(e.lastVerifiedAt!).toLocaleDateString("tr-TR")}`}
+            </p>
+          )}
           <div className="grid sm:grid-cols-2 gap-3 text-sm">
             <p className="flex gap-2">
               <CalendarDays className="w-5 h-5 text-blue-600" />
@@ -93,6 +101,10 @@ export const KesfetDetailPage: React.FC<{
               <dt className="font-bold">Organizatör</dt>
               <dd>{e.organizer}</dd>
             </div>
+            {e.discountTerms && <div><dt className="font-bold">İndirim koşulu</dt><dd>{e.discountTerms}</dd></div>}
+            {e.ageLimit && <div><dt className="font-bold">Yaş sınırı</dt><dd>{e.ageLimit}</dd></div>}
+            <div><dt className="font-bold">Kayıt</dt><dd>{e.registrationRequired ? "Kayıt gerekiyor" : "Kayıt bilgisi belirtilmedi"}</dd></div>
+            {e.applicationDeadline && <div><dt className="font-bold">Son kayıt</dt><dd>{dateText(e.applicationDeadline)}</dd></div>}
           </dl>
           <div className="flex flex-wrap gap-2">
             <a

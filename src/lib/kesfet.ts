@@ -14,6 +14,7 @@ export const DISCOVER_CATEGORIES = {
 } as const;
 export type DiscoverCategory = keyof typeof DISCOVER_CATEGORIES;
 export type DiscoverStatus = "draft" | "published";
+export type DiscoverVerificationStatus = "unverified" | "pending_review" | "verified" | "needs_review";
 export interface DiscoverEvent {
   id: string;
   slug: string;
@@ -38,9 +39,25 @@ export interface DiscoverEvent {
   directionsUrl?: string;
   status: DiscoverStatus;
   updatedAt?: string;
+  applicationDeadline?: string;
+  discountTerms?: string;
+  ageLimit?: string;
+  registrationRequired: boolean;
+  targetAudiences: string[];
+  interestTags: string[];
+  sourceKind: "official" | "institution" | "ticketing" | "unknown";
+  sourceTrustScore?: number;
+  lastVerifiedAt?: string;
+  verificationStatus: DiscoverVerificationStatus;
+  latitude?: number;
+  longitude?: number;
+  proximityScore?: number;
+  popularityScore?: number;
+  diversityScore?: number;
+  studentFitScore: number;
 }
 const COLUMNS =
-  "id,slug,title,short_description,description,category,image_url,city,district,venue_name,address,starts_at,ends_at,regular_price,student_price,is_free,has_student_discount,organizer,source_url,ticket_url,directions_url,status,updated_at";
+  "id,slug,title,short_description,description,category,image_url,city,district,venue_name,address,starts_at,ends_at,regular_price,student_price,is_free,has_student_discount,organizer,source_url,ticket_url,directions_url,status,updated_at,application_deadline,discount_terms,age_limit,registration_required,target_audiences,interest_tags,source_kind,source_trust_score,last_verified_at,verification_status,latitude,longitude,proximity_score,popularity_score,diversity_score,student_fit_score";
 export const mapDiscoverEvent = (r: any): DiscoverEvent => ({
   id: r.id,
   slug: r.slug,
@@ -65,10 +82,27 @@ export const mapDiscoverEvent = (r: any): DiscoverEvent => ({
   directionsUrl: r.directions_url || undefined,
   status: r.status,
   updatedAt: r.updated_at,
+  applicationDeadline: r.application_deadline || undefined,
+  discountTerms: r.discount_terms || undefined,
+  ageLimit: r.age_limit || undefined,
+  registrationRequired: Boolean(r.registration_required),
+  targetAudiences: r.target_audiences || [],
+  interestTags: r.interest_tags || [],
+  sourceKind: r.source_kind || "official",
+  sourceTrustScore: r.source_trust_score == null ? undefined : Number(r.source_trust_score),
+  lastVerifiedAt: r.last_verified_at || undefined,
+  verificationStatus: r.verification_status || "unverified",
+  latitude: r.latitude == null ? undefined : Number(r.latitude),
+  longitude: r.longitude == null ? undefined : Number(r.longitude),
+  proximityScore: r.proximity_score == null ? undefined : Number(r.proximity_score),
+  popularityScore: r.popularity_score == null ? undefined : Number(r.popularity_score),
+  diversityScore: r.diversity_score == null ? undefined : Number(r.diversity_score),
+  studentFitScore: Number(r.student_fit_score || 0),
 });
 export async function fetchDiscoverEvents() {
   const { data, error } = await (supabase.from("discover_events" as any) as any)
     .select(COLUMNS)
+    .order("student_fit_score", { ascending: false })
     .order("starts_at");
   if (error) throw new Error(error.message);
   return (data || []).map(mapDiscoverEvent);
@@ -107,12 +141,18 @@ export async function adminUpdateDiscoverEvent(
   stamp: string,
   p: Record<string, unknown>,
 ) {
-  const { error } = await (supabase.rpc as any)("admin_update_discover_event", {
+  const { data, error } = await (supabase.rpc as any)("admin_update_discover_event", {
     p_id: id,
     p_expected_updated_at: stamp,
     p,
   });
   if (error) throw new Error(error.message);
+  return data as string;
+}
+export async function adminSetDiscoverEventCuration(id: string, stamp: string, p: Record<string, unknown>) {
+  const { data, error } = await (supabase.rpc as any)("admin_set_discover_event_curation", { p_id: id, p_expected_updated_at: stamp, p });
+  if (error) throw new Error(error.message);
+  return data as string;
 }
 export async function adminSetDiscoverEventStatus(
   id: string,
