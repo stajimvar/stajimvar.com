@@ -5,7 +5,10 @@ import {
   fetchDiscoverEvents,
   type DiscoverEvent,
 } from "../lib/kesfet";
-import { buildDiscoverCollections, matchesDiscoverDateFilter } from "../lib/kesfet-domain.mjs";
+import {
+  buildDiscoverCollections,
+  matchesDiscoverDateFilter,
+} from "../lib/kesfet-domain.mjs";
 
 const dateText = (v: string) =>
   new Intl.DateTimeFormat("tr-TR", {
@@ -15,23 +18,86 @@ const dateText = (v: string) =>
   }).format(new Date(v));
 
 const verificationText = (event: DiscoverEvent) => {
-  if (event.verificationStatus === "verified" && event.sourceKind === "official") return "Resmî kaynaktan doğrulandı";
+  if (
+    event.verificationStatus === "verified" &&
+    event.sourceKind === "official"
+  )
+    return "Resmî kaynaktan doğrulandı";
   if (!event.lastVerifiedAt) return null;
-  const hours = Math.max(1, Math.round((Date.now() - new Date(event.lastVerifiedAt).getTime()) / 3600000));
-  return hours < 24 ? `${hours} saat önce kontrol edildi` : `${Math.round(hours / 24)} gün önce kontrol edildi`;
+  const hours = Math.max(
+    1,
+    Math.round(
+      (Date.now() - new Date(event.lastVerifiedAt).getTime()) / 3600000,
+    ),
+  );
+  return hours < 24
+    ? `${hours} saat önce kontrol edildi`
+    : `${Math.round(hours / 24)} gün önce kontrol edildi`;
 };
 
-const EventCard: React.FC<{ event: DiscoverEvent; onNavigate: (path: string) => void; compact?: boolean }> = ({ event: e, onNavigate, compact }) => (
-  <article className={`overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm ${compact ? "min-w-[270px] w-[270px]" : ""}`}>
-    {e.imageUrl ? <img src={e.imageUrl} alt="" className={`w-full object-cover ${compact ? "h-32" : "h-44"}`} /> : <div className={`bg-gradient-to-br from-blue-50 to-indigo-100 grid place-items-center ${compact ? "h-32" : "h-44"}`}><Sparkles className="w-10 h-10 text-blue-500" /></div>}
+const EventCard: React.FC<{
+  event: DiscoverEvent;
+  onNavigate: (path: string) => void;
+  compact?: boolean;
+}> = ({ event: e, onNavigate, compact }) => (
+  <article
+    className={`overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm ${compact ? "min-w-[270px] w-[270px]" : ""}`}
+  >
+    {e.imageUrl ? (
+      <img
+        src={e.imageUrl}
+        alt=""
+        className={`w-full object-cover ${compact ? "h-32" : "h-44"}`}
+      />
+    ) : (
+      <div
+        className={`bg-gradient-to-br from-blue-50 to-indigo-100 grid place-items-center ${compact ? "h-32" : "h-44"}`}
+      >
+        <Sparkles className="w-10 h-10 text-blue-500" />
+      </div>
+    )}
     <div className="p-4 space-y-2">
-      <div className="flex flex-wrap gap-1"><span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-full">{DISCOVER_CATEGORIES[e.category]}</span>{e.isFree && <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">Ücretsiz</span>}{e.hasStudentDiscount && <span className="text-xs font-bold text-violet-700 bg-violet-50 px-2 py-1 rounded-full">Öğrenci indirimli</span>}</div>
+      <div className="flex flex-wrap gap-1">
+        <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-full">
+          {DISCOVER_CATEGORIES[e.category]}
+        </span>
+        {e.isFree && (
+          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">
+            Ücretsiz
+          </span>
+        )}
+        {e.hasStudentDiscount && (
+          <span className="text-xs font-bold text-violet-700 bg-violet-50 px-2 py-1 rounded-full">
+            Öğrenci indirimli
+          </span>
+        )}
+      </div>
       <h3 className="text-lg font-black text-gray-900">{e.title}</h3>
-      <p className="flex gap-2 text-sm text-gray-600"><CalendarDays className="w-4 h-4 shrink-0" />{dateText(e.startsAt)}</p>
-      <p className="flex gap-2 text-sm text-gray-600"><MapPin className="w-4 h-4 shrink-0" />{e.city}, {e.district} · {e.venueName}</p>
-      {e.studentPrice != null && <p className="font-bold text-gray-900">Öğrenci: {e.studentPrice.toLocaleString("tr-TR")} TL</p>}
-      {verificationText(e) && <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700"><ShieldCheck className="w-3.5 h-3.5" />{verificationText(e)}</p>}
-      <button onClick={() => onNavigate(`/kesfet/${e.slug}`)} className="text-sm font-bold text-blue-700">Detayları gör →</button>
+      <p className="flex gap-2 text-sm text-gray-600">
+        <CalendarDays className="w-4 h-4 shrink-0" />
+        {dateText(e.startsAt)}
+      </p>
+      <p className="flex gap-2 text-sm text-gray-600">
+        <MapPin className="w-4 h-4 shrink-0" />
+        {e.city}, {e.district} · {e.venueName}
+      </p>
+      {e.studentPrice != null && (
+        <p className="font-bold text-gray-900">
+          Öğrenci: {e.studentPrice.toLocaleString("tr-TR")} TL
+        </p>
+      )}
+      {verificationText(e) && (
+        <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          {verificationText(e)}
+        </p>
+      )}
+      <button
+        onClick={() => onNavigate(`/kesfet/${e.slug}`)}
+        className="text-sm font-bold text-blue-700"
+      >
+        Detayları gör →
+      </button>
     </div>
   </article>
 );
@@ -165,12 +231,34 @@ export const KesfetPage: React.FC<{ onNavigate: (p: string) => void }> = ({
           </button>
         </div>
       )}
-      {state === "ready" && collections.map((collection: { id: string; title: string; events: DiscoverEvent[] }) => (
-        <section key={collection.id} aria-labelledby={`collection-${collection.id}`} className="space-y-3">
-          <h2 id={`collection-${collection.id}`} className="text-xl font-black text-gray-900">{collection.title}</h2>
-          <div className="flex gap-4 overflow-x-auto pb-2 snap-x">{collection.events.map((event) => <div key={event.id} className="snap-start"><EventCard event={event} onNavigate={onNavigate} compact /></div>)}</div>
-        </section>
-      ))}
+      {state === "ready" &&
+        collections.map(
+          (collection: {
+            id: string;
+            title: string;
+            events: DiscoverEvent[];
+          }) => (
+            <section
+              key={collection.id}
+              aria-labelledby={`collection-${collection.id}`}
+              className="space-y-3"
+            >
+              <h2
+                id={`collection-${collection.id}`}
+                className="text-xl font-black text-gray-900"
+              >
+                {collection.title}
+              </h2>
+              <div className="flex gap-4 overflow-x-auto pb-2 snap-x">
+                {collection.events.map((event) => (
+                  <div key={event.id} className="snap-start">
+                    <EventCard event={event} onNavigate={onNavigate} compact />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ),
+        )}
       {state === "ready" && shown.length === 0 && (
         <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
           <Sparkles className="mx-auto w-8 h-8 text-blue-500" />
@@ -184,7 +272,9 @@ export const KesfetPage: React.FC<{ onNavigate: (p: string) => void }> = ({
       )}
       {state === "ready" && shown.length > 0 && (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {shown.map((e) => <EventCard key={e.id} event={e} onNavigate={onNavigate} />)}
+          {shown.map((e) => (
+            <EventCard key={e.id} event={e} onNavigate={onNavigate} />
+          ))}
         </div>
       )}
     </main>

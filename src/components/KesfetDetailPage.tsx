@@ -68,7 +68,8 @@ export const KesfetDetailPage: React.FC<{
           {(e.verificationStatus === "verified" || e.lastVerifiedAt) && (
             <p className="flex items-center gap-2 rounded-xl bg-emerald-50 text-emerald-800 font-semibold p-3">
               <ShieldCheck className="w-5 h-5" />
-              {e.verificationStatus === "verified" && e.sourceKind === "official"
+              {e.verificationStatus === "verified" &&
+              e.sourceKind === "official"
                 ? "Resmî kaynaktan doğrulandı"
                 : `Son kontrol: ${new Date(e.lastVerifiedAt!).toLocaleDateString("tr-TR")}`}
             </p>
@@ -101,10 +102,32 @@ export const KesfetDetailPage: React.FC<{
               <dt className="font-bold">Organizatör</dt>
               <dd>{e.organizer}</dd>
             </div>
-            {e.discountTerms && <div><dt className="font-bold">İndirim koşulu</dt><dd>{e.discountTerms}</dd></div>}
-            {e.ageLimit && <div><dt className="font-bold">Yaş sınırı</dt><dd>{e.ageLimit}</dd></div>}
-            <div><dt className="font-bold">Kayıt</dt><dd>{e.registrationRequired ? "Kayıt gerekiyor" : "Kayıt bilgisi belirtilmedi"}</dd></div>
-            {e.applicationDeadline && <div><dt className="font-bold">Son kayıt</dt><dd>{dateText(e.applicationDeadline)}</dd></div>}
+            {e.discountTerms && (
+              <div>
+                <dt className="font-bold">İndirim koşulu</dt>
+                <dd>{e.discountTerms}</dd>
+              </div>
+            )}
+            {e.ageLimit && (
+              <div>
+                <dt className="font-bold">Yaş sınırı</dt>
+                <dd>{e.ageLimit}</dd>
+              </div>
+            )}
+            <div>
+              <dt className="font-bold">Kayıt</dt>
+              <dd>
+                {e.registrationRequired
+                  ? "Kayıt gerekiyor"
+                  : "Kayıt bilgisi belirtilmedi"}
+              </dd>
+            </div>
+            {e.applicationDeadline && (
+              <div>
+                <dt className="font-bold">Son kayıt</dt>
+                <dd>{dateText(e.applicationDeadline)}</dd>
+              </div>
+            )}
           </dl>
           <div className="flex flex-wrap gap-2">
             <a

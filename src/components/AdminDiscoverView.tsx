@@ -3,6 +3,7 @@ import {
   adminCreateDiscoverEvent,
   adminDeleteDiscoverEvent,
   adminSetDiscoverEventStatus,
+  adminSetDiscoverEventCuration,
   adminUpdateDiscoverEvent,
   DISCOVER_CATEGORIES,
   fetchAdminDiscoverEvent,
@@ -84,6 +85,13 @@ export const AdminDiscoverView: React.FC<{
                 </td>
                 <td className="p-3">
                   {e.status === "published" ? "Yayında" : "Taslak"}
+                  <br />
+                  <span className="text-xs text-gray-500">
+                    Puan: {e.studentFitScore} ·{" "}
+                    {e.verificationStatus === "verified"
+                      ? "Doğrulandı"
+                      : "İncelenecek"}
+                  </span>
                 </td>
                 <td className="p-3">
                   <div className="flex flex-wrap gap-2">
@@ -152,6 +160,22 @@ const empty = {
   ticket_url: "",
   directions_url: "",
   status: "draft",
+  application_deadline: "",
+  discount_terms: "",
+  age_limit: "",
+  registration_required: false,
+  target_audiences: "student",
+  interest_tags: "",
+  source_kind: "official",
+  source_trust_score: "90",
+  last_verified_at: "",
+  verification_status: "unverified",
+  latitude: "",
+  longitude: "",
+  proximity_score: "",
+  popularity_score: "",
+  diversity_score: "",
+  review_reason: "",
 };
 export const AdminDiscoverForm: React.FC<{
   onDone: (p: string) => void;
@@ -189,6 +213,22 @@ export const AdminDiscoverForm: React.FC<{
           ticket_url: e.ticketUrl || "",
           directions_url: e.directionsUrl || "",
           status: e.status,
+          application_deadline: e.applicationDeadline?.slice(0, 16) || "",
+          discount_terms: e.discountTerms || "",
+          age_limit: e.ageLimit || "",
+          registration_required: e.registrationRequired,
+          target_audiences: e.targetAudiences.join(", "),
+          interest_tags: e.interestTags.join(", "),
+          source_kind: e.sourceKind,
+          source_trust_score: e.sourceTrustScore ?? "",
+          last_verified_at: e.lastVerifiedAt?.slice(0, 16) || "",
+          verification_status: e.verificationStatus,
+          latitude: e.latitude ?? "",
+          longitude: e.longitude ?? "",
+          proximity_score: e.proximityScore ?? "",
+          popularity_score: e.popularityScore ?? "",
+          diversity_score: e.diversityScore ?? "",
+          review_reason: "",
         });
       })
       .catch((e) => setError(e.message));
@@ -207,10 +247,45 @@ export const AdminDiscoverForm: React.FC<{
       starts_at: new Date(form.starts_at).toISOString(),
       ends_at: new Date(form.ends_at).toISOString(),
     };
+    const curation = {
+      application_deadline: form.application_deadline
+        ? new Date(form.application_deadline).toISOString()
+        : "",
+      discount_terms: form.discount_terms,
+      age_limit: form.age_limit,
+      registration_required: form.registration_required,
+      target_audiences: form.target_audiences
+        .split(",")
+        .map((x: string) => x.trim())
+        .filter(Boolean),
+      interest_tags: form.interest_tags
+        .split(",")
+        .map((x: string) => x.trim())
+        .filter(Boolean),
+      source_kind: form.source_kind,
+      source_trust_score: form.source_trust_score,
+      last_verified_at: form.last_verified_at
+        ? new Date(form.last_verified_at).toISOString()
+        : "",
+      verification_status: form.verification_status,
+      latitude: form.latitude,
+      longitude: form.longitude,
+      proximity_score: form.proximity_score,
+      popularity_score: form.popularity_score,
+      diversity_score: form.diversity_score,
+      review_reason: form.review_reason,
+    };
     try {
-      editId
-        ? await adminUpdateDiscoverEvent(editId, stamp, p)
-        : await adminCreateDiscoverEvent(p);
+      if (editId) {
+        const nextStamp = await adminUpdateDiscoverEvent(editId, stamp, p);
+        await adminSetDiscoverEventCuration(editId, nextStamp, curation);
+      } else {
+        const id = await adminCreateDiscoverEvent(p);
+        const created = await fetchAdminDiscoverEvent(id);
+        if (!created?.updatedAt)
+          throw new Error("Yeni etkinlik doğrulama alanları kaydedilemedi.");
+        await adminSetDiscoverEventCuration(id, created.updatedAt, curation);
+      }
       onDone("/yonetim/kesfet");
     } catch (e: any) {
       setError(e.message);
@@ -307,6 +382,66 @@ export const AdminDiscoverForm: React.FC<{
         {field("Resmî kaynak URL", "source_url", "url")}
         {field("Bilet / başvuru URL", "ticket_url", "url", false)}
         {field("Yol tarifi URL", "directions_url", "url", false)}
+        <h2 className="sm:col-span-2 pt-3 border-t text-lg font-black">
+          Öğrenci uygunluğu ve doğrulama
+        </h2>
+        {field(
+          "Son başvuru / kayıt",
+          "application_deadline",
+          "datetime-local",
+          false,
+        )}
+        {field("İndirim koşulu", "discount_terms", "text", false)}
+        {field("Yaş sınırı", "age_limit", "text", false)}
+        <label className="flex items-center gap-2 text-sm font-bold">
+          <input
+            type="checkbox"
+            checked={form.registration_required}
+            onChange={(e) => set("registration_required", e.target.checked)}
+          />{" "}
+          Kayıt gerekiyor
+        </label>
+        {field("Hedef kitle (virgülle)", "target_audiences", "text", false)}
+        {field("İlgi etiketleri (virgülle)", "interest_tags", "text", false)}
+        <label className="space-y-1 text-sm font-bold">
+          Kaynak türü
+          <select
+            value={form.source_kind}
+            onChange={(e) => set("source_kind", e.target.value)}
+            className="w-full rounded-xl border px-3 py-2 font-normal"
+          >
+            <option value="official">Resmî</option>
+            <option value="institution">Kültür kurumu</option>
+            <option value="ticketing">Bilet platformu</option>
+            <option value="unknown">Bilinmeyen</option>
+          </select>
+        </label>
+        {field(
+          "Kaynak güven puanı (0-100)",
+          "source_trust_score",
+          "number",
+          false,
+        )}
+        {field("Son kontrol", "last_verified_at", "datetime-local", false)}
+        <label className="space-y-1 text-sm font-bold">
+          Doğrulama
+          <select
+            value={form.verification_status}
+            onChange={(e) => set("verification_status", e.target.value)}
+            className="w-full rounded-xl border px-3 py-2 font-normal"
+          >
+            <option value="unverified">Doğrulanmadı</option>
+            <option value="pending_review">İnceleme bekliyor</option>
+            <option value="verified">Doğrulandı</option>
+            <option value="needs_review">Yeniden incelenecek</option>
+          </select>
+        </label>
+        {field("Enlem", "latitude", "number", false)}
+        {field("Boylam", "longitude", "number", false)}
+        {field("Yakınlık puanı", "proximity_score", "number", false)}
+        {field("Popülerlik puanı", "popularity_score", "number", false)}
+        {field("Çeşitlilik puanı", "diversity_score", "number", false)}
+        {field("İnceleme notu", "review_reason", "text", false)}
         <label className="space-y-1 text-sm font-bold">
           Yayın durumu
           <select

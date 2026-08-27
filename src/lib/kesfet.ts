@@ -14,7 +14,8 @@ export const DISCOVER_CATEGORIES = {
 } as const;
 export type DiscoverCategory = keyof typeof DISCOVER_CATEGORIES;
 export type DiscoverStatus = "draft" | "published";
-export type DiscoverVerificationStatus = "unverified" | "pending_review" | "verified" | "needs_review";
+export type DiscoverVerificationStatus =
+  "unverified" | "pending_review" | "verified" | "needs_review";
 export interface DiscoverEvent {
   id: string;
   slug: string;
@@ -89,14 +90,18 @@ export const mapDiscoverEvent = (r: any): DiscoverEvent => ({
   targetAudiences: r.target_audiences || [],
   interestTags: r.interest_tags || [],
   sourceKind: r.source_kind || "official",
-  sourceTrustScore: r.source_trust_score == null ? undefined : Number(r.source_trust_score),
+  sourceTrustScore:
+    r.source_trust_score == null ? undefined : Number(r.source_trust_score),
   lastVerifiedAt: r.last_verified_at || undefined,
   verificationStatus: r.verification_status || "unverified",
   latitude: r.latitude == null ? undefined : Number(r.latitude),
   longitude: r.longitude == null ? undefined : Number(r.longitude),
-  proximityScore: r.proximity_score == null ? undefined : Number(r.proximity_score),
-  popularityScore: r.popularity_score == null ? undefined : Number(r.popularity_score),
-  diversityScore: r.diversity_score == null ? undefined : Number(r.diversity_score),
+  proximityScore:
+    r.proximity_score == null ? undefined : Number(r.proximity_score),
+  popularityScore:
+    r.popularity_score == null ? undefined : Number(r.popularity_score),
+  diversityScore:
+    r.diversity_score == null ? undefined : Number(r.diversity_score),
   studentFitScore: Number(r.student_fit_score || 0),
 });
 export async function fetchDiscoverEvents() {
@@ -108,7 +113,10 @@ export async function fetchDiscoverEvents() {
   return (data || []).map(mapDiscoverEvent);
 }
 export async function fetchDiscoverEventBySlug(slug: string) {
-  const { data, error } = await (supabase.rpc as any)("get_discover_event_by_slug", { p_slug: slug });
+  const { data, error } = await (supabase.rpc as any)(
+    "get_discover_event_by_slug",
+    { p_slug: slug },
+  );
   if (error) throw new Error(error.message);
   const row = Array.isArray(data) ? data[0] : data;
   return row ? mapDiscoverEvent(row) : null;
@@ -141,16 +149,26 @@ export async function adminUpdateDiscoverEvent(
   stamp: string,
   p: Record<string, unknown>,
 ) {
-  const { data, error } = await (supabase.rpc as any)("admin_update_discover_event", {
-    p_id: id,
-    p_expected_updated_at: stamp,
-    p,
-  });
+  const { data, error } = await (supabase.rpc as any)(
+    "admin_update_discover_event",
+    {
+      p_id: id,
+      p_expected_updated_at: stamp,
+      p,
+    },
+  );
   if (error) throw new Error(error.message);
   return data as string;
 }
-export async function adminSetDiscoverEventCuration(id: string, stamp: string, p: Record<string, unknown>) {
-  const { data, error } = await (supabase.rpc as any)("admin_set_discover_event_curation", { p_id: id, p_expected_updated_at: stamp, p });
+export async function adminSetDiscoverEventCuration(
+  id: string,
+  stamp: string,
+  p: Record<string, unknown>,
+) {
+  const { data, error } = await (supabase.rpc as any)(
+    "admin_set_discover_event_curation",
+    { p_id: id, p_expected_updated_at: stamp, p },
+  );
   if (error) throw new Error(error.message);
   return data as string;
 }
