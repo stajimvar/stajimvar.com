@@ -4,6 +4,9 @@ alter table public.discover_events
   drop constraint if exists discover_events_status_check;
 
 alter table public.discover_events
+  alter column ends_at drop not null;
+
+alter table public.discover_events
   add constraint discover_events_status_check
   check (status in ('draft','published','cancelled','postponed','archived'));
 
@@ -106,7 +109,7 @@ drop policy if exists "yayindaki aktif kesfet etkinlikleri herkese acik"
 on public.discover_events;
 create policy "yayindaki aktif kesfet etkinlikleri herkese acik"
 on public.discover_events for select
-using (status = 'published' and ends_at >= now());
+using (status = 'published' and ends_at is not null and ends_at >= now());
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('event-covers', 'event-covers', true, 5242880, array['image/webp','image/avif'])

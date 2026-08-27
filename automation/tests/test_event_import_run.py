@@ -1,0 +1,87 @@
+from dataclasses import asdict
+from datetime import datetime
+import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
+
+from event_import.domain import EventCandidate, EventSource
+from event_import.run import run_source
+
+
+NOW = datetime.fromisoformat("2026-08-27T12:00:00+03:00")
+
+
+class MemoryRepository:
+    def __init__(self):
+        self.events = {}
+        self.runs = []
+
+    def start_run(self, source):
+        self.runs.append({"source": source.id})
+        return str(len(self.runs))
+
+    def find(self, event, fingerprint):
+        return self.events.get(event.canonical_source_url) or self.events.get(fingerprint)
+
+    def upsert(self, event, fingerprint, cover=None):
+        existing = self.find(event, fingerprint)
+        payload = asdict(event)
+        payload["fingerprint"] = fingerprint
+        payload["cover"] = cover
+        self.events[event.canonical_source_url] = payload
+        return "unchanged" if existing == payload else "updated" if existing else "inserted"
+
+    def finish_run(self, run_id, metrics, error=None):
+        self.runs[-1].update(asdict(metrics))
+        self.runs[-1]["error"] = error
+
+    def archive_expired(self, source, now):
+        return 0
+
+
+class FakeAdapter:
+    def fetch(self, source):
+        return [
+            EventCandidate(
+                source_event_id="42",
+                source_url="https://official.example/events/42",
+                title="Kariyer Fuarı",
+                description="Öğrenci kariyer buluşması.",
+                category="fair",
+                starts_at="2026-09-05T10:00:00+03:00",
+                ends_at="2026-09-05T18:00:00+03:00",
+                city="İstanbul",
+                district="Şişli",
+                venue_name="Kongre Merkezi",
+                image_url="https://official.example/cover.jpg",
+            )
+        ]
+
+
+def official_source():
+    return EventSource(
+        id="official",
+        name="Official",
+        base_url="https://official.example/",
+        official_domains=("official.example",),
+        trust_score=95,
+    )
+
+
+def test_second_run_updates_without_duplicate():
+    repository = MemoryRepository()
+    first = run_source(official_source(), FakeAdapter(), repository, NOW)
+    second = run_source(official_source(), FakeAdapter(), repository, NOW)
+    assert first.inserted == 1
+    assert second.inserted == 0
+    assert second.unchanged == 1
+    assert len(repository.events) == 1
+
+
+def test_dry_run_performs_zero_writes():
+    repository = MemoryRepository()
+    metrics = run_source(official_source(), FakeAdapter(), repository, NOW, dry_run=True)
+    assert metrics.found == 1
+    assert repository.events == {}
+    assert repository.runs == []

@@ -117,7 +117,11 @@ def parse_wp_event_manager(html: str, page_url: str) -> EventCandidate:
     if not title or not body or not sidebar:
         raise ValueError("WP Event Manager etkinlik alanları bulunamadı")
     date_box = sidebar.select_one(".wpem-event-date-time")
-    dates = [x.get_text(" ", strip=True) for x in date_box.find_all("span")] if date_box else []
+    dates = (
+        [value for x in date_box.find_all("span") if (value := x.get_text(" ", strip=True))]
+        if date_box
+        else []
+    )
     if not dates:
         raise ValueError("etkinlik başlangıç tarihi bulunamadı")
     types = [x.get_text(" ", strip=True) for x in sidebar.select(".wpem-event-type-text")]

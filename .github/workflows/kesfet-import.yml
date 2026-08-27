@@ -1,0 +1,47 @@
+name: Keşfet etkinliklerini içe aktar
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Veritabanına yazmadan doğrula
+        type: boolean
+        default: false
+      source:
+        description: İsteğe bağlı kaynak kimliği
+        type: string
+        required: false
+  schedule:
+    - cron: "23 4 * * *"
+
+concurrency:
+  group: kesfet-event-import
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r automation/requirements.txt
+      - name: Testler
+        run: python -m pytest automation/tests/test_event_import_domain.py automation/tests/test_event_source_adapters.py automation/tests/test_event_images.py automation/tests/test_event_import_run.py -q
+      - name: Etkinlikleri içe aktar
+        shell: bash
+        run: |
+          args=()
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then args+=(--dry-run); fi
+          if [[ -n "${{ inputs.source }}" ]]; then args+=(--source "${{ inputs.source }}"); fi
+          python -m event_import.run "${args[@]}"
+        working-directory: automation

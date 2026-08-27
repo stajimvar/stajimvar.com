@@ -51,7 +51,7 @@ def test_wp_event_manager_extracts_dates_location_free_and_twitter_cover():
       <div class="wpem-single-event-body-content"><p>Resmî sergi açıklaması.</p></div>
       <div class="wpem-single-event-sidebar-info">
         <h3>Tarih ve Zaman</h3><div class="wpem-event-date-time">
-          <span>16-06-2026</span><span>30-08-2026</span>
+          <span>16-06-2026</span><span>30-08-2026</span><span> </span>
         </div>
         <h3>Etkinlik Türü</h3><div class="wpem-event-type">
           <span class="wpem-event-type-text">Sergi</span>
