@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 
 let domain = {};
 try {
@@ -30,4 +31,13 @@ test('yönetim formu zorunlu alanları ve güvenli HTTPS adreslerini doğrular',
   assert.ok(errors.title);
   assert.ok(errors.slug);
   assert.ok(errors.sourceUrl);
+});
+
+test('Keşfet liste ve detay adresleri production yönlendirmesine kayıtlıdır', async () => {
+  const [onrender, middleware] = await Promise.all([
+    readFile(new URL('../scripts/onrender.mjs', import.meta.url), 'utf8'),
+    readFile(new URL('../functions/_middleware.ts', import.meta.url), 'utf8'),
+  ]);
+  assert.match(onrender, /\['\/kesfet',\s*'Öğrenci Rotası/);
+  assert.match(middleware, /['"]\/kesfet\/['"]/);
 });

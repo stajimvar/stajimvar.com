@@ -44,7 +44,7 @@
   YENİ ROTA EKLERKEN: App.tsx'e ön render edilmeyen bir adres eklediysen
   buraya da ekle. Eklemezsen adres 404 döner.
 */
-const VERI_ONEKLERI = ['/ilan/', '/sirket/', '/firsatlar/', '/bolum/'];
+const VERI_ONEKLERI = ['/ilan/', '/sirket/', '/firsatlar/', '/kesfet/', '/bolum/'];
 
 const UYGULAMA_ADRESLERI = new Set([
   '/cv',
