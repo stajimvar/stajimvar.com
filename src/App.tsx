@@ -39,6 +39,9 @@ import { basvuruSonucMesaji } from './lib/basvuru-yolu.mjs';
 import { aramaTeriminiOku, aramaAdresi } from './lib/arama-url.mjs';
 import { AdminOpportunitiesView, AdminOpportunityCreate } from './components/AdminOpportunitiesView';
 import { AdminInstagramView } from './components/AdminInstagramView';
+import { KesfetPage } from './components/KesfetPage';
+import { KesfetDetailPage } from './components/KesfetDetailPage';
+import { AdminDiscoverForm, AdminDiscoverView } from './components/AdminDiscoverView';
 /*
   Bu ikisi bilerek gecikmeli DEĞİL: /araclar, /araclar/* ve /isveren
   ön render edilen adresler. React kabı temizlediği için gecikmeli
@@ -856,6 +859,7 @@ export default function App() {
       applicationsCount={applications.length}
       onOpenGuides={() => navigate('/rehber')}
       onOpenOpportunities={() => navigate('/firsatlar')}
+      onOpenDiscover={() => navigate('/kesfet')}
       /*
         "Ücretsiz İlan Ver" ilan verme sayfasına götürüyor. Zaten oradaysa
         götürecek yer yok: kayıt penceresini açıyor, yoksa düğme hiçbir şey
@@ -962,6 +966,12 @@ export default function App() {
     if (slug) return icerikSayfasi(<OpportunityDetailPage slug={slug} userId={session?.userId ?? null} onBack={() => navigate('/firsatlar')} onRequireLogin={handleOpenLogin} />);
   }
 
+  if (temizYol === '/kesfet') return icerikSayfasi(<KesfetPage onNavigate={navigate} />);
+  if (temizYol.startsWith('/kesfet/')) {
+    const slug = temizYol.slice('/kesfet/'.length);
+    if (slug) return icerikSayfasi(<KesfetDetailPage slug={slug} onBack={() => navigate('/kesfet')} />);
+  }
+
   /* Yönetim → Instagram bağlantı durumu. Uç yönetici jetonu istiyor. */
   if (temizYol === '/yonetim/instagram') {
     return <AdminRouteGate authenticated={Boolean(session)} isAdmin={isAdmin} onLogin={handleOpenLogin}>
@@ -973,6 +983,13 @@ export default function App() {
     const editId = /^\/yonetim\/firsatlar\/([^/]+)\/duzenle$/.exec(temizYol)?.[1];
     return <AdminRouteGate authenticated={Boolean(session)} isAdmin={isAdmin} onLogin={handleOpenLogin}>
       {temizYol.endsWith('/yeni') || editId ? <AdminOpportunityCreate onDone={navigate} editId={editId} /> : <AdminOpportunitiesView onNavigate={navigate} />}
+    </AdminRouteGate>;
+  }
+
+  if (temizYol === '/yonetim/kesfet' || temizYol === '/yonetim/kesfet/yeni' || /^\/yonetim\/kesfet\/[^/]+\/duzenle$/.test(temizYol)) {
+    const editId = /^\/yonetim\/kesfet\/([^/]+)\/duzenle$/.exec(temizYol)?.[1];
+    return <AdminRouteGate authenticated={Boolean(session)} isAdmin={isAdmin} onLogin={handleOpenLogin}>
+      {temizYol.endsWith('/yeni') || editId ? <AdminDiscoverForm onDone={navigate} editId={editId} /> : <AdminDiscoverView onNavigate={navigate} />}
     </AdminRouteGate>;
   }
 

@@ -70,6 +70,8 @@ interface HeaderProps {
   onOpenGuides?: () => void;
   /** Öğrenci fırsatları merkezi. */
   onOpenOpportunities?: () => void;
+  /** Öğrenci etkinlikleri. */
+  onOpenDiscover?: () => void;
   /** İşveren kapısı: şirket sayfasını sahiplenme akışı. */
   onOpenEmployer?: () => void;
   /** İşveren metinleriyle açılan giriş penceresi. */
@@ -148,6 +150,7 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   onOpenGuides,
   onOpenOpportunities,
+  onOpenDiscover,
   onOpenEmployer,
   onOpenEmployerLogin,
   bulunulanYol = '/',
@@ -417,6 +420,7 @@ export const Header: React.FC<HeaderProps> = ({
   */
   const rehberdeMi = /^\/(rehber|bolum|bolumler|araclar|isveren)(\/|$)/.test(bulunulanYol);
   const firsatlardaMi = /^\/(firsatlar|burslar|kyk|yurtdisi-firsatlari|yarismalar|firsat-takvimi|bana-uygun|kaydedilen-firsatlar)(\/|$)/.test(bulunulanYol);
+  const kesfetteMi = /^\/kesfet(\/|$)/.test(bulunulanYol);
 
   /*
     Kurumsal ve yasal sayfalar üçünden hiçbiri değil.
@@ -546,6 +550,16 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <Sparkles className={`w-3.5 h-3.5 shrink-0 ${firsatlardaMi ? 'text-blue-600' : 'text-gray-400'}`} />
                   <span>Fırsatlar</span>
+                </a>
+
+                <a
+                  href="/kesfet"
+                  aria-current={kesfetteMi ? 'page' : undefined}
+                  onClick={baglantiTiklamasi(() => onOpenDiscover?.())}
+                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${kesfetteMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'}`}
+                >
+                  <Compass className={`w-3.5 h-3.5 ${kesfetteMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span>Keşfet</span>
                 </a>
 
                 {/*
@@ -1337,6 +1351,11 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
           {firsatlardaMi && <span className="text-[11px] font-bold truncate">Fırsat</span>}
+        </a>
+
+        <a href="/kesfet" aria-label="Öğrenci etkinlikleri" aria-current={kesfetteMi ? 'page' : undefined} onClick={baglantiTiklamasi(() => onOpenDiscover?.())} className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all ${kesfetteMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'}`}>
+          <Compass className="w-5 h-5" />
+          {kesfetteMi && <span className="text-[11px] font-bold truncate">Keşfet</span>}
         </a>
 
         {/*
