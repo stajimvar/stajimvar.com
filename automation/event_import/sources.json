@@ -1,0 +1,68 @@
+[
+  {
+    "id": "kultur-istanbul",
+    "name": "KÜLTÜR.İSTANBUL",
+    "base_url": "https://kultur.istanbul/",
+    "listing_url": "https://kultur.istanbul/etkinlikler/",
+    "api_url": "https://kultur.istanbul/wp-json/wp/v2/event_listing?per_page=20&_embed=1",
+    "adapter": "wp_event_manager",
+    "detail_link_pattern": "kultur.istanbul/etkinlik/",
+    "default_category": "exhibition",
+    "cities": ["İstanbul"],
+    "official_domains": ["kultur.istanbul"],
+    "trust_score": 95,
+    "enabled": true
+  },
+  {
+    "id": "bursa-buyuksehir-etkinlik",
+    "name": "Bursa Büyükşehir Belediyesi Etkinlikleri",
+    "base_url": "https://www.bursa.bel.tr/",
+    "listing_url": "https://www.bursa.bel.tr/etkinlik/",
+    "adapter": "json_ld_listing",
+    "detail_link_pattern": "bursa.bel.tr/etkinlik/",
+    "default_category": "festival",
+    "cities": ["Bursa"],
+    "official_domains": ["www.bursa.bel.tr", "bursa.bel.tr"],
+    "trust_score": 95,
+    "enabled": true
+  },
+  {
+    "id": "izmir-buyuksehir-haber",
+    "name": "İzmir Büyükşehir Belediyesi",
+    "base_url": "https://www.izmir.bel.tr/",
+    "listing_url": "https://www.izmir.bel.tr/tr/Haberler/156",
+    "adapter": "json_ld_listing",
+    "detail_link_pattern": "izmir.bel.tr/tr/Haberler/",
+    "default_category": "festival",
+    "cities": ["İzmir"],
+    "official_domains": ["www.izmir.bel.tr", "izmir.bel.tr"],
+    "trust_score": 95,
+    "enabled": false
+  },
+  {
+    "id": "ankara-buyuksehir-haber",
+    "name": "Ankara Büyükşehir Belediyesi",
+    "base_url": "https://www.ankara.bel.tr/",
+    "listing_url": "https://www.ankara.bel.tr/haberler",
+    "adapter": "json_ld_listing",
+    "detail_link_pattern": "ankara.bel.tr/haberler/",
+    "default_category": "festival",
+    "cities": ["Ankara"],
+    "official_domains": ["www.ankara.bel.tr", "ankara.bel.tr", "direct.ankara.bel.tr"],
+    "trust_score": 95,
+    "enabled": false
+  },
+  {
+    "id": "eskisehir-buyuksehir",
+    "name": "Eskişehir Büyükşehir Belediyesi",
+    "base_url": "https://www.eskisehir.bel.tr/",
+    "listing_url": "https://www.eskisehir.bel.tr/etkinlikler.php",
+    "adapter": "json_ld_listing",
+    "detail_link_pattern": "eskisehir.bel.tr/icerik-detay.php",
+    "default_category": "festival",
+    "cities": ["Eskişehir"],
+    "official_domains": ["www.eskisehir.bel.tr", "eskisehir.bel.tr"],
+    "trust_score": 95,
+    "enabled": false
+  }
+]
