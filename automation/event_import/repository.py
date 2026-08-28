@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from datetime import datetime
+from datetime import datetime, timezone
 import re
 import unicodedata
 from typing import Any
@@ -9,6 +9,20 @@ from typing import Any
 from supabase import Client
 
 from .domain import EventSource, NormalizedEvent, merge_event
+
+
+_DATETIME_FIELDS = {"starts_at", "ends_at", "application_deadline"}
+
+
+def _values_equal(incoming: Any, stored: Any, field: str) -> bool:
+    if field not in _DATETIME_FIELDS or not incoming or not stored:
+        return incoming == stored
+    try:
+        left = datetime.fromisoformat(str(incoming).replace("Z", "+00:00")).astimezone(timezone.utc)
+        right = datetime.fromisoformat(str(stored).replace("Z", "+00:00")).astimezone(timezone.utc)
+        return left == right
+    except ValueError:
+        return incoming == stored
 
 
 def slugify(value: str) -> str:
@@ -83,7 +97,7 @@ class SupabaseEventRepository:
         if existing:
             merged = merge_event(existing, event)
             comparable = {k: payload.get(k) for k in payload if k not in {"last_verified_at", "last_seen_at", "imported_at"}}
-            unchanged = all(existing.get(k) == value for k, value in comparable.items())
+            unchanged = all(_values_equal(value, existing.get(k), k) for k, value in comparable.items())
             merged.update(payload)
             self.db.table("discover_events").update(merged).eq("id", existing["id"]).execute()
             return "unchanged" if unchanged else "updated"

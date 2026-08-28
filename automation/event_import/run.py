@@ -6,6 +6,7 @@ from datetime import datetime
 import json
 import os
 from pathlib import Path
+import sys
 from typing import Any
 
 from dotenv import load_dotenv
@@ -77,8 +78,14 @@ def run_source(source, adapter, repository, now: datetime, *, dry_run=False, cov
                 result = repository.upsert(event, fingerprint, cover)
                 setattr(metrics, result, getattr(metrics, result) + 1)
                 metrics.review += int(event.review_required)
-            except Exception:
+            except Exception as exc:
                 metrics.errors += 1
+                print(json.dumps({
+                    "source": source.id,
+                    "event_url": getattr(candidate, "source_url", None),
+                    "error_type": type(exc).__name__,
+                    "error": str(exc)[:300],
+                }, ensure_ascii=False), file=sys.stderr)
         metrics.archived = repository.archive_expired(source, now)
         repository.finish_run(run_id, metrics)
     except Exception as exc:

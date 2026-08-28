@@ -6,6 +6,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
 
 from event_import.domain import EventCandidate, EventSource
+from event_import.repository import _values_equal
 from event_import.run import run_source
 
 
@@ -85,3 +86,8 @@ def test_dry_run_performs_zero_writes():
     assert metrics.found == 1
     assert repository.events == {}
     assert repository.runs == []
+
+
+def test_repository_treats_equivalent_timezone_values_as_unchanged():
+    assert _values_equal("2026-08-28T12:00:00+03:00", "2026-08-28T09:00:00+00:00", "starts_at")
+    assert not _values_equal("2026-08-28T12:00:00+03:00", "2026-08-28T10:00:00+00:00", "starts_at")
