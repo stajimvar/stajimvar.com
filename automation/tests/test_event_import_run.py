@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
 
 from event_import.domain import EventCandidate, EventSource
-from event_import.repository import _values_equal
+from event_import.repository import _identity_text, _values_equal
 from event_import.run import reusable_cover, run_source
 
 
@@ -104,3 +104,7 @@ def test_reuses_existing_processed_cover():
     cover = reusable_cover(existing, event)
     assert cover.card_url.endswith("card.webp")
     assert cover.detail_url.endswith("detail.webp")
+
+
+def test_identity_text_normalizes_venue_spacing_and_case():
+    assert _identity_text(" Müze   Gazhane ") == _identity_text("müze gazhane")

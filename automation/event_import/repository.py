@@ -15,6 +15,10 @@ from .domain import EventSource, NormalizedEvent, merge_event
 _DATETIME_FIELDS = {"starts_at", "ends_at", "application_deadline"}
 
 
+def _identity_text(value: Any) -> str:
+    return " ".join(str(value or "").split()).casefold()
+
+
 def _values_equal(incoming: Any, stored: Any, field: str) -> bool:
     if field not in _DATETIME_FIELDS or not incoming or not stored:
         return incoming == stored
@@ -75,10 +79,9 @@ class SupabaseEventRepository:
         )
         if rows:
             return rows[0]
-        query = self.db.table("discover_events").select("*").eq("title", event.title).eq("starts_at", event.starts_at)
-        query = query.eq("venue_name", event.venue_name) if event.venue_name else query.is_("venue_name", "null")
-        rows = query.limit(1).execute().data or []
-        return rows[0] if rows else None
+        rows = self.db.table("discover_events").select("*").eq("title", event.title).eq("starts_at", event.starts_at).execute().data or []
+        wanted_venue = _identity_text(event.venue_name)
+        return next((row for row in rows if _identity_text(row.get("venue_name")) == wanted_venue), None)
 
     def unique_slug(self, event: NormalizedEvent, fingerprint: str) -> str:
         base = slugify(f"{event.title}-{event.starts_at[:10]}")

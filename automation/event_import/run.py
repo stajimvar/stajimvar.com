@@ -58,7 +58,7 @@ class StorageCoverService:
 
 
 def reusable_cover(existing, event):
-    if not existing or existing.get("original_image_url") != event.original_image_url:
+    if not existing or existing.get("cover_kind") != "official":
         return None
     if not existing.get("card_image_url") or not existing.get("detail_image_url"):
         return None
