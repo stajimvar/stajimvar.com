@@ -9,3 +9,7 @@
 # 20260822160000: fırsat kısıtı onarımı + ilk 11 fırsat. Dağıtım kapısı o
 # gün kilitlendiği için SQL Editor'den elle çalıştırıldı.
 20260822160000
+
+# 20260828020000: Keşfet occurrence modeli. Üretim migration geçmişi eski
+# soyla ayrıştığı için doğrulanan idempotent SQL, SQL Editor'den uygulandı.
+20260828020000
