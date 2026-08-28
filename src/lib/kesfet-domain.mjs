@@ -6,6 +6,22 @@ const trDay = (value) =>
     day: "2-digit",
   }).format(new Date(value));
 
+const istanbulMidnight = (day) => new Date(`${day}T00:00:00+03:00`);
+
+const addCalendarDays = (day, amount) => {
+  const [year, month, date] = day.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, date + amount))
+    .toISOString()
+    .slice(0, 10);
+};
+
+const monthBoundary = (day, offset) => {
+  const [year, month] = day.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1 + offset, 1))
+    .toISOString()
+    .slice(0, 10);
+};
+
 export function isDiscoverEventVisible(event, now = new Date()) {
   return (
     event?.status === "published" &&
@@ -19,15 +35,23 @@ export function matchesDiscoverDateFilter(event, filter, now = new Date()) {
   const start = new Date(event.startsAt);
   if (Number.isNaN(start.getTime())) return false;
   const today = trDay(now);
-  const target = trDay(start);
-  if (filter === "today") return target === today;
-  const diff = Math.floor(
-    (new Date(`${target}T00:00:00Z`) - new Date(`${today}T00:00:00Z`)) /
-      86400000,
-  );
-  if (filter === "week") return diff >= 0 && diff <= 7;
-  if (filter === "month") return target.slice(0, 7) === today.slice(0, 7);
-  return true;
+  const end = event.endsAt ? new Date(event.endsAt) : start;
+  if (Number.isNaN(end.getTime())) return false;
+  let rangeStart;
+  let rangeEnd;
+  if (filter === "today") {
+    rangeStart = istanbulMidnight(today);
+    rangeEnd = istanbulMidnight(addCalendarDays(today, 1));
+  } else if (filter === "week") {
+    rangeStart = istanbulMidnight(today);
+    rangeEnd = istanbulMidnight(addCalendarDays(today, 8));
+  } else if (filter === "month") {
+    rangeStart = istanbulMidnight(monthBoundary(today, 0));
+    rangeEnd = istanbulMidnight(monthBoundary(today, 1));
+  } else {
+    return true;
+  }
+  return start < rangeEnd && end >= rangeStart;
 }
 
 export function slugifyDiscoverEvent(value = "") {
@@ -149,7 +173,6 @@ export function calculateStudentFitScore(event = {}, context = {}) {
 export function buildDiscoverCollections(events = [], context = {}) {
   const now = context instanceof Date ? context : context.now || new Date();
   const city = context instanceof Date ? "" : context.city || "";
-  const weekEnd = new Date(now.getTime() + 7 * 86400000);
   const careerTags = ["career", "technology", "networking", "entrepreneurship"];
   const cultureCategories = [
     "exhibition",
@@ -160,7 +183,7 @@ export function buildDiscoverCollections(events = [], context = {}) {
     "workshop",
   ];
   const definitions = [
-    ["this-week", "Bu Hafta", (e) => new Date(e.startsAt) >= now && new Date(e.startsAt) <= weekEnd],
+    ["this-week", "Bu Hafta", (e) => matchesDiscoverDateFilter(e, "week", now)],
     ["nearby", "Şehrindekiler", (e) => city && e.city === city],
     ["free", "Ücretsiz", (e) => e.isFree],
     [

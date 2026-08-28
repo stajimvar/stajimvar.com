@@ -43,6 +43,31 @@ test("bugün, hafta ve ay filtreleri Türkiye takvimine göre çalışır", () =
   assert.equal(domain.matchesDiscoverDateFilter(nextWeek, "month", now), false);
 });
 
+test("tarih filtreleri başlangıç yerine etkinlik aralığının kesişimini kullanır", () => {
+  const now = new Date("2026-08-27T09:00:00+03:00");
+  const ongoingToday = {
+    startsAt: "2026-08-20T10:00:00+03:00",
+    endsAt: "2026-08-27T18:00:00+03:00",
+  };
+  const ongoingIntoWeek = {
+    startsAt: "2026-08-01T10:00:00+03:00",
+    endsAt: "2026-08-30T18:00:00+03:00",
+  };
+  const ongoingIntoMonth = {
+    startsAt: "2026-07-01T10:00:00+03:00",
+    endsAt: "2026-08-02T18:00:00+03:00",
+  };
+  const finishedYesterday = {
+    startsAt: "2026-08-20T10:00:00+03:00",
+    endsAt: "2026-08-26T23:59:00+03:00",
+  };
+
+  assert.equal(domain.matchesDiscoverDateFilter(ongoingToday, "today", now), true);
+  assert.equal(domain.matchesDiscoverDateFilter(ongoingIntoWeek, "week", now), true);
+  assert.equal(domain.matchesDiscoverDateFilter(ongoingIntoMonth, "month", now), true);
+  assert.equal(domain.matchesDiscoverDateFilter(finishedYesterday, "today", now), false);
+});
+
 test("yönetim formu zorunlu alanları ve güvenli HTTPS adreslerini doğrular", () => {
   assert.equal(typeof domain.validateDiscoverDraft, "function");
   const errors = domain.validateDiscoverDraft({
