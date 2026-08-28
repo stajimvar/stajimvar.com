@@ -16,7 +16,7 @@ from supabase import create_client
 from .adapters import fetch_source
 from .domain import EventSource, event_fingerprint, normalize_event
 from .http import OfficialHttpClient
-from .images import render_variants, upload_variants, validate_image
+from .images import CoverResult, render_variants, upload_variants, validate_image
 from .repository import SupabaseEventRepository
 
 
@@ -57,6 +57,14 @@ class StorageCoverService:
         return upload_variants(self.storage, fingerprint, render_variants(response.content))
 
 
+def reusable_cover(existing, event):
+    if not existing or existing.get("original_image_url") != event.original_image_url:
+        return None
+    if not existing.get("card_image_url") or not existing.get("detail_image_url"):
+        return None
+    return CoverResult(existing["card_image_url"], existing["detail_image_url"], existing.get("cover_kind") or "official")
+
+
 def run_source(source, adapter, repository, now: datetime, *, dry_run=False, cover_service=None) -> RunMetrics:
     metrics = RunMetrics()
     candidates = adapter.fetch(source)
@@ -72,7 +80,10 @@ def run_source(source, adapter, repository, now: datetime, *, dry_run=False, cov
             try:
                 event = normalize_event(candidate, source, now)
                 fingerprint = event_fingerprint(event)
-                cover = cover_service.process(event, fingerprint) if cover_service else None
+                existing = repository.find(event, fingerprint)
+                cover = reusable_cover(existing, event)
+                if cover is None and cover_service:
+                    cover = cover_service.process(event, fingerprint)
                 metrics.images += int(cover is not None)
                 metrics.category_covers += int(cover is None)
                 result = repository.upsert(event, fingerprint, cover)

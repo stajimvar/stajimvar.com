@@ -7,7 +7,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
 
 from event_import.domain import EventCandidate, EventSource
 from event_import.repository import _values_equal
-from event_import.run import run_source
+from event_import.run import reusable_cover, run_source
 
 
 NOW = datetime.fromisoformat("2026-08-27T12:00:00+03:00")
@@ -91,3 +91,16 @@ def test_dry_run_performs_zero_writes():
 def test_repository_treats_equivalent_timezone_values_as_unchanged():
     assert _values_equal("2026-08-28T12:00:00+03:00", "2026-08-28T09:00:00+00:00", "starts_at")
     assert not _values_equal("2026-08-28T12:00:00+03:00", "2026-08-28T10:00:00+00:00", "starts_at")
+
+
+def test_reuses_existing_processed_cover():
+    event = type("Event", (), {"original_image_url": "https://official.example/cover.jpg"})()
+    existing = {
+        "original_image_url": event.original_image_url,
+        "card_image_url": "https://cdn.example/card.webp",
+        "detail_image_url": "https://cdn.example/detail.webp",
+        "cover_kind": "official",
+    }
+    cover = reusable_cover(existing, event)
+    assert cover.card_url.endswith("card.webp")
+    assert cover.detail_url.endswith("detail.webp")

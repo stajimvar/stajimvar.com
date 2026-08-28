@@ -64,9 +64,6 @@ class SupabaseEventRepository:
         return self.db.table("discover_event_import_runs").insert({"source_id": source_id}).execute().data[0]["id"]
 
     def find(self, event: NormalizedEvent, fingerprint: str):
-        rows = self.db.table("discover_events").select("*").eq("source_fingerprint", fingerprint).limit(1).execute().data or []
-        if rows:
-            return rows[0]
         rows = (
             self.db.table("discover_events")
             .select("*")
@@ -78,6 +75,9 @@ class SupabaseEventRepository:
         )
         if rows:
             return rows[0]
+        query = self.db.table("discover_events").select("*").eq("title", event.title).eq("starts_at", event.starts_at)
+        query = query.eq("venue_name", event.venue_name) if event.venue_name else query.is_("venue_name", "null")
+        rows = query.limit(1).execute().data or []
         return rows[0] if rows else None
 
     def unique_slug(self, event: NormalizedEvent, fingerprint: str) -> str:
@@ -93,7 +93,6 @@ class SupabaseEventRepository:
             {
                 "slug": existing.get("slug") if existing else self.unique_slug(event, fingerprint),
                 "import_source_id": source_id,
-                "source_fingerprint": fingerprint,
                 "imported_at": datetime.now().astimezone().isoformat(),
                 "image_url": cover.card_url if cover else None,
                 "card_image_url": cover.card_url if cover else None,
