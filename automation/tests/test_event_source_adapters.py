@@ -4,7 +4,12 @@ import pytest
 
 sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
 
-from event_import.adapters import fetch_source, parse_json_ld, parse_wp_event_manager
+from event_import.adapters import (
+    fetch_source,
+    parse_izmir_sessions,
+    parse_json_ld,
+    parse_wp_event_manager,
+)
 
 
 FIXTURES = pathlib.Path(__file__).parent / "fixtures" / "events"
@@ -121,3 +126,43 @@ def test_source_scan_fails_closed_when_a_discovered_detail_cannot_be_parsed():
             },
             FakeClient(),
         )
+
+
+def test_izmir_official_api_groups_sessions_without_inventing_fields():
+    payload = {
+        "data": [
+            {
+                "entityStatus": 0,
+                "eventDate": "2026-09-04T21:00:00",
+                "eventEndDate": "2026-09-04T22:30:00",
+                "eventImageUrl": "https://kultursanatapi.izmir.bel.tr/uploads/event/concert.jpg",
+                "shortDescription": "Öğrencilere açık konser.",
+                "event": {"id": "event-1", "name": "Zeytin Altında Konserleri"},
+                "venue": {"name": "AASSM Dış Mekan"},
+                "company": {"name": "AASSM Şube Müdürlüğü"},
+                "categories": [{"name": "Konser"}],
+                "id": "session-1",
+            },
+            {
+                "entityStatus": 0,
+                "eventDate": "2026-09-05T21:00:00",
+                "eventEndDate": "2026-09-05T22:30:00",
+                "eventImageUrl": "https://kultursanatapi.izmir.bel.tr/uploads/event/concert.jpg",
+                "event": {"id": "event-1", "name": "Zeytin Altında Konserleri"},
+                "venue": {"name": "AASSM Dış Mekan"},
+                "company": {"name": "AASSM Şube Müdürlüğü"},
+                "categories": [{"name": "Konser"}],
+                "id": "session-2",
+            },
+        ]
+    }
+    [event] = parse_izmir_sessions(payload)
+    assert event.source_event_id == "event-1"
+    assert event.source_url == "https://kultursanat.izmir.bel.tr/event/etkinlik/event-1"
+    assert event.category == "concert"
+    assert event.city == "İzmir"
+    assert event.venue_name == "AASSM Dış Mekan"
+    assert event.image_url.endswith("concert.jpg")
+    assert event.is_free is False
+    assert len(event.occurrences) == 2
+    assert event.occurrences[0].starts_at.endswith("+03:00")

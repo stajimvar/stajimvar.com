@@ -29,6 +29,20 @@
     "enabled": true
   },
   {
+    "id": "izmir-kultursanat-api",
+    "name": "İzmir Büyükşehir Belediyesi Kültür Sanat",
+    "base_url": "https://kultursanat.izmir.bel.tr/",
+    "listing_url": "https://kultursanat.izmir.bel.tr/",
+    "api_url": "https://kultursanatapi.izmir.bel.tr/api/session/list",
+    "adapter": "izmir_session_api",
+    "default_category": "festival",
+    "cities": ["İzmir"],
+    "official_domains": ["kultursanat.izmir.bel.tr", "kultursanatapi.izmir.bel.tr"],
+    "trust_score": 98,
+    "complete_scan": true,
+    "enabled": true
+  },
+  {
     "id": "izmir-buyuksehir-haber",
     "name": "İzmir Büyükşehir Belediyesi",
     "base_url": "https://www.izmir.bel.tr/",

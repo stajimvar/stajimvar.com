@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import replace
 from datetime import datetime
 from typing import Any
@@ -8,7 +9,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from .domain import EventCandidate
+from .domain import EventCandidate, EventOccurrence
 
 
 WP_CATEGORY_MAP = {
@@ -20,6 +21,80 @@ WP_CATEGORY_MAP = {
     "konser": "concert",
     "atölye": "workshop",
 }
+
+
+def _local_iso(value: str | None) -> str | None:
+    if not value:
+        return None
+    text = str(value).strip()
+    if text.endswith("Z") or re.search(r"[+-]\d{2}:\d{2}$", text):
+        return text
+    return f"{text}+03:00"
+
+
+def _plain_html(value: str | None) -> str:
+    if not value:
+        return ""
+    return BeautifulSoup(value, "html.parser").get_text(" ", strip=True)
+
+
+def parse_izmir_sessions(payload: dict[str, Any]) -> list[EventCandidate]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for row in payload.get("data") or []:
+        event = row.get("event") if isinstance(row, dict) else None
+        event_id = event.get("id") if isinstance(event, dict) else None
+        if row.get("entityStatus") != 0 or not event_id:
+            continue
+        if not _local_iso(row.get("eventDate")):
+            continue
+        grouped.setdefault(str(event_id), []).append(row)
+
+    results: list[EventCandidate] = []
+    for event_id, rows in grouped.items():
+        rows.sort(key=lambda row: str(row.get("eventDate") or ""))
+        first = rows[0]
+        event = first.get("event") or {}
+        venue = first.get("venue") or {}
+        company = first.get("company") or {}
+        categories = first.get("categories") or []
+        category_label = str(categories[0].get("name") if categories else "").casefold()
+        category = next(
+            (mapped for label, mapped in WP_CATEGORY_MAP.items() if label in category_label),
+            "festival",
+        )
+        descriptions = [
+            _plain_html(row.get("longDescription")) or _plain_html(row.get("shortDescription"))
+            for row in rows
+        ]
+        description = next((value for value in descriptions if value), "")
+        image = next((row.get("eventImageUrl") for row in rows if row.get("eventImageUrl")), None)
+        occurrences = tuple(
+            EventOccurrence(
+                source_occurrence_id=str(row.get("id")) if row.get("id") else None,
+                starts_at=_local_iso(row.get("eventDate")) or "",
+                ends_at=_local_iso(row.get("eventEndDate")),
+            )
+            for row in rows
+        )
+        results.append(
+            EventCandidate(
+                source_event_id=event_id,
+                source_url=f"https://kultursanat.izmir.bel.tr/event/etkinlik/{event_id}",
+                title=str(event.get("name") or "").strip(),
+                short_description=description[:240] or None,
+                description=description,
+                category=category,
+                image_url=str(image) if image else None,
+                starts_at=occurrences[0].starts_at,
+                ends_at=max((item.ends_at or item.starts_at for item in occurrences), default=None),
+                city="İzmir",
+                district=None,
+                venue_name=str(venue.get("name") or "").strip(),
+                organizer=str(company.get("name") or "").strip() or None,
+                occurrences=occurrences,
+            )
+        )
+    return results
 
 
 def _items(value: Any):
@@ -169,6 +244,8 @@ def discover_detail_urls(html: str, listing_url: str, link_pattern: str, limit: 
 
 
 def fetch_source(config: dict[str, Any], client) -> list[EventCandidate]:
+    if config.get("adapter") == "izmir_session_api":
+        return parse_izmir_sessions(client.get_json(config["api_url"]))
     listing_url = config["listing_url"]
     html = client.get_text(listing_url)
     urls = list(config.get("event_urls") or [])
