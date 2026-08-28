@@ -162,6 +162,48 @@ def parse_eskisehir_news(html: str, page_url: str) -> EventCandidate:
     )
 
 
+def parse_bursa_event(html: str, page_url: str) -> EventCandidate:
+    soup = BeautifulSoup(html, "html.parser")
+    legend = soup.select_one(".list-legend")
+    card = legend.find_parent(class_="card") if legend else None
+    title = card.find("h3") if card else None
+    body = card.select_one(".icerik") if card else None
+    items = [item.get_text(" ", strip=True) for item in legend.find_all("li")] if legend else []
+    if not title or not body or len(items) < 3:
+        raise ValueError("Bursa etkinlik alanları bulunamadı")
+    timed = re.fullmatch(r"\s*(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2})\s*", items[1])
+    date_range = re.fullmatch(r"\s*(\d{2})\.(\d{2})\.(\d{4})\s*[-–]\s*(\d{2})\.(\d{2})\.(\d{4})\s*", items[1])
+    if not timed and not date_range:
+        raise ValueError("Bursa etkinlik tarihi bulunamadı")
+    if timed:
+        day, month, year, hour, minute = (int(value) for value in timed.groups())
+        end_day, end_month, end_year = day, month, year
+    else:
+        day, month, year, end_day, end_month, end_year = (int(value) for value in date_range.groups())
+        hour, minute = 0, 0
+    image = next((item.get("src") for item in card.find_all("img", src=True) if "/dosyalar/resimler/etkinlik/" in item.get("src", "")), None)
+    if not image:
+        raise ValueError("Bursa etkinlik görseli bulunamadı")
+    category = next((mapped for key, mapped in WP_CATEGORY_MAP.items() if key in items[0].casefold()), "festival")
+    source_id_match = re.search(r"-(\d+)(?:/)?$", urlsplit(page_url).path)
+    description = body.get_text(" ", strip=True)
+    return EventCandidate(
+        source_event_id=source_id_match.group(1) if source_id_match else None,
+        source_url=page_url,
+        title=title.get_text(" ", strip=True),
+        short_description=description[:240],
+        description=description,
+        category=category,
+        image_url=urljoin(page_url, image),
+        starts_at=f"{year:04d}-{month:02d}-{day:02d}T{hour:02d}:{minute:02d}:00+03:00",
+        ends_at=f"{end_year:04d}-{end_month:02d}-{end_day:02d}T23:59:59+03:00",
+        city="Bursa",
+        district=None,
+        venue_name=items[2],
+        organizer="Bursa Büyükşehir Belediyesi",
+    )
+
+
 def _items(value: Any):
     if isinstance(value, list):
         for item in value:
@@ -337,6 +379,11 @@ def fetch_source(config: dict[str, Any], client) -> list[EventCandidate]:
         if config.get("adapter") == "eskisehir_official_news":
             try:
                 parsed = [parse_eskisehir_news(detail, url)]
+            except ValueError:
+                parsed = []
+        if config.get("adapter") == "bursa_official_event":
+            try:
+                parsed = [parse_bursa_event(detail, url)]
             except ValueError:
                 parsed = []
         if not parsed:

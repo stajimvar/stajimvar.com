@@ -6,6 +6,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
 
 from event_import.adapters import (
     fetch_source,
+    parse_bursa_event,
     parse_eskisehir_news,
     parse_izmir_sessions,
     parse_json_ld,
@@ -196,3 +197,35 @@ def test_eskisehir_official_news_extracts_verified_festival_range_and_cover():
     assert event.venue_name == "Porsuk Bulvarı Adalar mevki, Kentpark, Sümerpark ve İskele26"
     assert event.organizer == "Eskişehir Büyükşehir Belediyesi"
     assert event.image_url == "https://www.eskisehir.bel.tr/img_icerik/2026/small-13165-cover.jpeg"
+
+
+def test_bursa_official_event_extracts_single_day_schedule_and_cover():
+    html = """
+      <div class="container card"><div class="row"><div class="col-md-6">
+        <h3>30 Ağustos Zafer Bayramı - Yürüyüş & Konser</h3>
+        <ul class="list list-legend"><li>Konser</li><li>30.08.2026 19:30</li>
+        <li>Bursa Millet Bahçesi</li></ul>
+        <div class="icerik"><p>Resmî etkinlik açıklaması.</p></div></div>
+        <div class="col-md-6"><img src="/dosyalar/resimler/etkinlik/cover.jpg"></div>
+      </div></div>
+    """
+    event = parse_bursa_event(html, "https://www.bursa.bel.tr/etkinlik/zafer-bayrami-1542")
+    assert event.source_event_id == "1542"
+    assert event.category == "concert"
+    assert event.starts_at == "2026-08-30T19:30:00+03:00"
+    assert event.ends_at == "2026-08-30T23:59:59+03:00"
+    assert event.city == "Bursa"
+    assert event.venue_name == "Bursa Millet Bahçesi"
+    assert event.image_url == "https://www.bursa.bel.tr/dosyalar/resimler/etkinlik/cover.jpg"
+
+
+def test_bursa_official_event_extracts_date_range_without_inventing_time():
+    html = """
+      <div class="card"><h3>30 Ağustos Zafer Haftası</h3>
+      <ul class="list-legend"><li>Etkinlik</li><li>25.08.2026 - 30.08.2026</li><li>Bursa</li></ul>
+      <div class="icerik">Resmî program.</div>
+      <img src="/dosyalar/resimler/etkinlik/week.jpg"></div>
+    """
+    event = parse_bursa_event(html, "https://www.bursa.bel.tr/etkinlik/zafer-haftasi-1540")
+    assert event.starts_at == "2026-08-25T00:00:00+03:00"
+    assert event.ends_at == "2026-08-30T23:59:59+03:00"

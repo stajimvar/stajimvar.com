@@ -19,7 +19,7 @@
     "name": "Bursa Büyükşehir Belediyesi Etkinlikleri",
     "base_url": "https://www.bursa.bel.tr/",
     "listing_url": "https://www.bursa.bel.tr/etkinlik/",
-    "adapter": "json_ld_listing",
+    "adapter": "bursa_official_event",
     "detail_link_pattern": "bursa.bel.tr/etkinlik/",
     "default_category": "festival",
     "cities": ["Bursa"],
