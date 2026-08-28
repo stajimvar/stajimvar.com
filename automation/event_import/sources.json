@@ -83,5 +83,19 @@
     "trust_score": 95,
     "complete_scan": false,
     "enabled": true
+  },
+  {
+    "id": "konya-kultur-sanat",
+    "name": "Konya Büyükşehir Belediyesi Kültür Sanat",
+    "base_url": "https://www.konya.bel.tr/",
+    "listing_url": "https://www.konya.bel.tr/etkinlik",
+    "adapter": "konya_next_event",
+    "detail_link_pattern": "kultursanatkonya.com/etkinlikler/",
+    "default_category": "festival",
+    "cities": ["Konya"],
+    "official_domains": ["kultursanatkonya.com", "www.kultursanatkonya.com"],
+    "trust_score": 97,
+    "complete_scan": false,
+    "enabled": true
   }
 ]

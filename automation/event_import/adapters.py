@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from dataclasses import replace
 from datetime import datetime
 from typing import Any
@@ -204,6 +205,71 @@ def parse_bursa_event(html: str, page_url: str) -> EventCandidate:
     )
 
 
+def parse_konya_next_event(html: str, page_url: str) -> EventCandidate:
+    soup = BeautifulSoup(html, "html.parser")
+    script = soup.find("script", id="__NEXT_DATA__")
+    if not script:
+        raise ValueError("Konya yapılandırılmış etkinlik verisi bulunamadı")
+    payload = json.loads(script.string or script.get_text())
+    page = payload.get("props", {}).get("pageProps", {})
+    event = page.get("event") or {}
+    sessions = page.get("sessions") or []
+    if not event.get("id") or not event.get("name", {}).get("tr"):
+        raise ValueError("Konya etkinlik verisi eksik")
+    if not sessions and event.get("startedAt"):
+        sessions = [{
+            "id": None,
+            "startedAt": event["startedAt"],
+            "endedAt": event.get("endedAt"),
+        }]
+
+    def session_iso(value: str) -> str:
+        return datetime.strptime(value, "%Y-%m-%d %H:%M").isoformat() + "+03:00"
+
+    occurrences = tuple(
+        EventOccurrence(
+            source_occurrence_id=str(item.get("id")) if item.get("id") else None,
+            starts_at=session_iso(item["startedAt"]),
+            ends_at=session_iso(item["endedAt"]) if item.get("endedAt") else None,
+        )
+        for item in sessions
+        if item.get("startedAt")
+    )
+    if not occurrences:
+        raise ValueError("Konya geçerli etkinlik seansı bulunamadı")
+    price_text = _plain_html((event.get("price") or {}).get("tr"))
+    regular_match = re.search(r"Yetişkin\s*:\s*(\d+(?:[.,]\d+)?)", price_text, re.IGNORECASE)
+    student_match = re.search(r"Öğrenci\s*:\s*(\d+(?:[.,]\d+)?)", price_text, re.IGNORECASE)
+    regular_price = float(regular_match.group(1).replace(",", ".")) if regular_match else None
+    student_price = float(student_match.group(1).replace(",", ".")) if student_match else None
+    category_label = "".join(
+        char
+        for char in unicodedata.normalize("NFKD", str((event.get("categoryName") or {}).get("tr") or "").casefold())
+        if not unicodedata.combining(char)
+    )
+    category = next((mapped for key, mapped in WP_CATEGORY_MAP.items() if key in category_label), "festival")
+    description = _plain_html((event.get("longDesc") or {}).get("tr"))
+    return EventCandidate(
+        source_event_id=str(event["id"]),
+        source_url=page_url,
+        title=str(event["name"]["tr"]).strip(),
+        short_description=description[:240] or None,
+        description=description,
+        category=category,
+        image_url=event.get("posterUrl"),
+        starts_at=occurrences[0].starts_at,
+        ends_at=max((item.ends_at or item.starts_at for item in occurrences)),
+        city="Konya",
+        district=None,
+        venue_name=str(event.get("venueName") or "").strip(),
+        regular_price=regular_price,
+        student_price=student_price,
+        has_student_discount=student_price is not None,
+        is_free=regular_price == 0 if regular_price is not None else False,
+        occurrences=occurrences,
+    )
+
+
 def _items(value: Any):
     if isinstance(value, list):
         for item in value:
@@ -385,6 +451,11 @@ def fetch_source(config: dict[str, Any], client) -> list[EventCandidate]:
             try:
                 parsed = [parse_bursa_event(detail, url)]
             except ValueError:
+                parsed = []
+        if config.get("adapter") == "konya_next_event":
+            try:
+                parsed = [parse_konya_next_event(detail, url)]
+            except (ValueError, json.JSONDecodeError):
                 parsed = []
         if not parsed:
             parsed = parse_json_ld(detail, url, config["default_category"])

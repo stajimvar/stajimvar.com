@@ -10,6 +10,7 @@ from event_import.adapters import (
     parse_eskisehir_news,
     parse_izmir_sessions,
     parse_json_ld,
+    parse_konya_next_event,
     parse_wp_event_manager,
 )
 
@@ -229,3 +230,38 @@ def test_bursa_official_event_extracts_date_range_without_inventing_time():
     event = parse_bursa_event(html, "https://www.bursa.bel.tr/etkinlik/zafer-haftasi-1540")
     assert event.starts_at == "2026-08-25T00:00:00+03:00"
     assert event.ends_at == "2026-08-30T23:59:59+03:00"
+
+
+def test_konya_next_event_uses_real_sessions_and_student_price():
+    html = '''<script id="__NEXT_DATA__" type="application/json">{
+      "props":{"pageProps":{"event":{"id":502,"name":{"tr":"YOLDAN CIKAN OYUN"},
+      "longDesc":{"tr":"<p>Resmi oyun aciklamasi.</p>"},
+      "price":{"tr":"<p>Yeti\u015fkin: 100 tl</p><p>\u00d6\u011frenci: 60 tl</p>"},
+      "venueName":"Selcuklu Kongre Merkezi","posterUrl":"https://sepet.konya.bel.tr/poster.jpeg",
+      "categoryName":{"tr":"T\u0130YATRO"},"status":1},"sessions":[
+      {"id":2036,"startedAt":"2026-09-10 19:00","endedAt":"2026-09-10 21:00"},
+      {"id":2037,"startedAt":"2026-09-11 19:00","endedAt":"2026-09-11 21:00"}]}}
+    }</script>'''
+    event = parse_konya_next_event(html, "https://kultursanatkonya.com/etkinlikler/yoldan-cikan-oyun/502")
+    assert event.source_event_id == "502"
+    assert event.category == "theatre"
+    assert event.starts_at == "2026-09-10T19:00:00+03:00"
+    assert event.ends_at == "2026-09-11T21:00:00+03:00"
+    assert event.student_price == 60
+    assert event.has_student_discount is True
+    assert len(event.occurrences) == 2
+
+
+def test_konya_next_event_uses_verified_event_range_when_sessions_are_absent():
+    html = '''<script id="__NEXT_DATA__" type="application/json">{
+      "props":{"pageProps":{"event":{"id":1253,"name":{"tr":"UC HAREM"},
+      "longDesc":{"tr":"<p>Fotograf Sergisi</p>"},"price":{"tr":"<p>Ucretsiz</p>"},
+      "venueName":"Tantavi Kultur ve Sanat Merkezi","posterUrl":"https://sepet.konya.bel.tr/exhibit.jpeg",
+      "categoryName":{"tr":"SERG\u0130"},"startedAt":"2026-08-17 10:00",
+      "endedAt":"2026-09-15 17:00","status":1},"sessions":null}}
+    }</script>'''
+    event = parse_konya_next_event(html, "https://kultursanatkonya.com/etkinlikler/uc-harem/1253")
+    assert event.starts_at == "2026-08-17T10:00:00+03:00"
+    assert event.ends_at == "2026-09-15T17:00:00+03:00"
+    assert event.category == "exhibition"
+    assert len(event.occurrences) == 1
