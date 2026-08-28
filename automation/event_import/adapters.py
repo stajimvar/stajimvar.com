@@ -5,7 +5,7 @@ import re
 from dataclasses import replace
 from datetime import datetime
 from typing import Any
-from urllib.parse import urljoin
+from urllib.parse import parse_qs, urljoin, urlsplit
 
 from bs4 import BeautifulSoup
 
@@ -20,6 +20,21 @@ WP_CATEGORY_MAP = {
     "tiyatro": "theatre",
     "konser": "concert",
     "atölye": "workshop",
+}
+
+TR_MONTHS = {
+    "ocak": 1,
+    "şubat": 2,
+    "mart": 3,
+    "nisan": 4,
+    "mayıs": 5,
+    "haziran": 6,
+    "temmuz": 7,
+    "ağustos": 8,
+    "eylül": 9,
+    "ekim": 10,
+    "kasım": 11,
+    "aralık": 12,
 }
 
 
@@ -95,6 +110,56 @@ def parse_izmir_sessions(payload: dict[str, Any]) -> list[EventCandidate]:
             )
         )
     return results
+
+
+def parse_eskisehir_news(html: str, page_url: str) -> EventCandidate:
+    soup = BeautifulSoup(html, "html.parser")
+    article = soup.select_one(".post-item-description")
+    if not article:
+        raise ValueError("Eskişehir haber içeriği bulunamadı")
+    text = article.get_text(" ", strip=True)
+    publication = article.select_one(".post-meta-date")
+    publication_match = re.search(r"\b\d{1,2}\.\d{1,2}\.(\d{4})\b", publication.get_text(" ", strip=True) if publication else "")
+    date_match = re.search(
+        r"\b(\d{1,2})\s*[-–]\s*(\d{1,2})\s+(" + "|".join(TR_MONTHS) + r")\s+tarihleri\s+arasında\b",
+        text.casefold(),
+    )
+    title_match = re.search(r"Uluslararası\s+Eskişehir\s+Porsuk\s+Festivali", text, re.IGNORECASE)
+    if not publication_match or not date_match or not title_match:
+        raise ValueError("Eskişehir etkinlik adı veya tarih aralığı bulunamadı")
+    year = int(publication_match.group(1))
+    start_day, end_day = int(date_match.group(1)), int(date_match.group(2))
+    month = TR_MONTHS[date_match.group(3)]
+    venue_match = re.search(
+        r"Festival kapsamında\s+(.+?)(?:;|\s+çeşitli\s+programlara)",
+        text,
+        re.IGNORECASE,
+    )
+    if not venue_match:
+        raise ValueError("Eskişehir etkinlik mekânları bulunamadı")
+    image = next(
+        (item.get("src") for item in soup.find_all("img", src=True) if "/img_icerik/" in item.get("src", "")),
+        None,
+    )
+    if not image:
+        raise ValueError("Eskişehir etkinlik görseli bulunamadı")
+    image_url = urljoin(page_url, image).replace("http://www.eskisehir.bel.tr/", "https://www.eskisehir.bel.tr/")
+    source_id = (parse_qs(urlsplit(page_url).query).get("icerik_id") or [None])[0]
+    return EventCandidate(
+        source_event_id=source_id,
+        source_url=page_url,
+        title=title_match.group(0),
+        short_description=text[:240],
+        description=text,
+        category="festival",
+        image_url=image_url,
+        starts_at=f"{year:04d}-{month:02d}-{start_day:02d}T00:00:00+03:00",
+        ends_at=f"{year:04d}-{month:02d}-{end_day:02d}T23:59:59+03:00",
+        city="Eskişehir",
+        district=None,
+        venue_name=venue_match.group(1).strip(),
+        organizer="Eskişehir Büyükşehir Belediyesi",
+    )
 
 
 def _items(value: Any):
@@ -267,6 +332,11 @@ def fetch_source(config: dict[str, Any], client) -> list[EventCandidate]:
         if config.get("adapter") == "wp_event_manager":
             try:
                 parsed = [parse_wp_event_manager(detail, url)]
+            except ValueError:
+                parsed = []
+        if config.get("adapter") == "eskisehir_official_news":
+            try:
+                parsed = [parse_eskisehir_news(detail, url)]
             except ValueError:
                 parsed = []
         if not parsed:

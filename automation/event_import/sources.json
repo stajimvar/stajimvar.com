@@ -72,13 +72,16 @@
     "id": "eskisehir-buyuksehir",
     "name": "Eskişehir Büyükşehir Belediyesi",
     "base_url": "https://www.eskisehir.bel.tr/",
-    "listing_url": "https://www.eskisehir.bel.tr/etkinlikler.php",
-    "adapter": "json_ld_listing",
-    "detail_link_pattern": "eskisehir.bel.tr/icerik-detay.php",
+    "listing_url": "https://www.eskisehir.bel.tr/2026/etkinlikler.html",
+    "event_urls": [
+      "https://www.eskisehir.bel.tr/icerik-detay.php?cat_icerik=1&icerik_id=13165&menu_id=24"
+    ],
+    "adapter": "eskisehir_official_news",
     "default_category": "festival",
     "cities": ["Eskişehir"],
     "official_domains": ["www.eskisehir.bel.tr", "eskisehir.bel.tr"],
     "trust_score": 95,
-    "enabled": false
+    "complete_scan": false,
+    "enabled": true
   }
 ]

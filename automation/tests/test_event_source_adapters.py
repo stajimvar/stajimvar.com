@@ -6,6 +6,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
 
 from event_import.adapters import (
     fetch_source,
+    parse_eskisehir_news,
     parse_izmir_sessions,
     parse_json_ld,
     parse_wp_event_manager,
@@ -166,3 +167,32 @@ def test_izmir_official_api_groups_sessions_without_inventing_fields():
     assert event.is_free is False
     assert len(event.occurrences) == 2
     assert event.occurrences[0].starts_at.endswith("+03:00")
+
+
+def test_eskisehir_official_news_extracts_verified_festival_range_and_cover():
+    html = """
+      <div class="post-item-description">
+        <span class="post-meta-date">18.08.2026</span>
+        <h1>ESKİŞEHİR'İN BİRLEŞTİRİCİ GÜCÜ PORSUK NEHRİ</h1>
+        <p><strong>Eskişehir Büyükşehir Belediyesi tarafından 2026 Eskişehir Yılı kapsamında
+        Uluslararası Eskişehir Porsuk Festivali düzenlenecek.</strong></p>
+        <p>Festival, 2-6 Eylül tarihleri arasında kentin farklı noktalarında buluşacak.
+        Festival kapsamında Porsuk Bulvarı Adalar mevki, Kentpark, Sümerpark ve İskele26
+        çeşitli programlara ev sahipliği yapacak.</p>
+      </div>
+      <div class="portfolio-item"><img src="/img_icerik/2026/small-13165-cover.jpeg"></div>
+    """
+
+    event = parse_eskisehir_news(
+        html,
+        "https://www.eskisehir.bel.tr/icerik-detay.php?icerik_id=13165",
+    )
+
+    assert event.source_event_id == "13165"
+    assert event.title == "Uluslararası Eskişehir Porsuk Festivali"
+    assert event.starts_at == "2026-09-02T00:00:00+03:00"
+    assert event.ends_at == "2026-09-06T23:59:59+03:00"
+    assert event.city == "Eskişehir"
+    assert event.venue_name == "Porsuk Bulvarı Adalar mevki, Kentpark, Sümerpark ve İskele26"
+    assert event.organizer == "Eskişehir Büyükşehir Belediyesi"
+    assert event.image_url == "https://www.eskisehir.bel.tr/img_icerik/2026/small-13165-cover.jpeg"
