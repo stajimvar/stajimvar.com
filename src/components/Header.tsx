@@ -445,7 +445,7 @@ export const Header: React.FC<HeaderProps> = ({
     götürüyor, çünkü o sayfaların arayacak kendi içeriği yok.
   */
   const rehberSayfasindaMi = /^\/rehber(\/|$)/.test(bulunulanYol);
-  const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kurumsalSayfada && activeTab === 'internships';
+  const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kesfetteMi && !kurumsalSayfada && activeTab === 'internships';
   const profildeMi = !rehberdeMi && !kurumsalSayfada && activeTab === 'profile';
 
   return (
