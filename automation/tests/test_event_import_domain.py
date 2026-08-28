@@ -97,3 +97,11 @@ def test_midnight_occurrence_is_date_only_and_multiple_sessions_are_preserved():
     assert len(normalized.occurrences) == 2
     assert normalized.occurrences[0].time_precision == "date_only"
     assert normalized.occurrences[1].source_occurrence_id == "session-2"
+
+
+def test_occurrence_fingerprint_normalizes_timezone_and_includes_precision():
+    utc = EventOccurrence(None, "2026-09-01T15:00:00Z", "2026-09-01T17:00:00Z", "exact")
+    turkey = EventOccurrence(None, "2026-09-01T18:00:00+03:00", "2026-09-01T20:00:00+03:00", "exact")
+    date_only = EventOccurrence(None, turkey.starts_at, turkey.ends_at, "date_only")
+    assert occurrence_fingerprint(utc) == occurrence_fingerprint(turkey)
+    assert occurrence_fingerprint(turkey) != occurrence_fingerprint(date_only)

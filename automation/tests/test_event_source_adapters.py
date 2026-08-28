@@ -1,5 +1,6 @@
 import pathlib
 import sys
+import pytest
 
 sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
 
@@ -99,3 +100,24 @@ def test_wp_event_manager_source_uses_rest_api_detail_links():
     )
     assert len(events) == 1
     assert events[0].city == "Bursa"
+
+
+def test_source_scan_fails_closed_when_a_discovered_detail_cannot_be_parsed():
+    class FakeClient:
+        def get_text(self, url):
+            return "<html><body>şema değişti</body></html>"
+
+        def get_json(self, url):
+            return [{"link": "https://official.example/etkinlik/bozuk/"}]
+
+    with pytest.raises(ValueError, match="ayrıştırılamadı"):
+        fetch_source(
+            {
+                "listing_url": "https://official.example/etkinlikler/",
+                "api_url": "https://official.example/wp-json/wp/v2/event_listing",
+                "adapter": "wp_event_manager",
+                "default_category": "festival",
+                "cities": ["Bursa"],
+            },
+            FakeClient(),
+        )

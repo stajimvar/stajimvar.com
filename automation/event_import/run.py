@@ -77,7 +77,7 @@ def run_source(source, adapter, repository, now: datetime, *, dry_run=False, cov
             metrics.review += int(normalized.review_required)
         return metrics
     run_id = repository.start_run(source)
-    seen_occurrence_ids: set[str] = set()
+    seen_occurrence_ids: set[tuple[str, str]] = set()
     try:
         for candidate in candidates:
             try:
@@ -93,7 +93,7 @@ def run_source(source, adapter, repository, now: datetime, *, dry_run=False, cov
                 setattr(metrics, result, getattr(metrics, result) + 1)
                 for occurrence in event.occurrences:
                     repository.upsert_occurrence(event_id, occurrence, now)
-                    seen_occurrence_ids.add(occurrence.source_occurrence_id)
+                    seen_occurrence_ids.add((event_id, occurrence.source_occurrence_id))
                 metrics.review += int(event.review_required)
             except Exception as exc:
                 metrics.errors += 1
@@ -107,7 +107,7 @@ def run_source(source, adapter, repository, now: datetime, *, dry_run=False, cov
         reconciliation = repository.reconcile_missing_occurrences(
             source,
             seen_occurrence_ids,
-            run_complete=metrics.errors == 0,
+            run_complete=metrics.errors == 0 and metrics.found > 0,
         )
         metrics.missing_occurrences = reconciliation["missing"]
         metrics.archived_occurrences = reconciliation["archived"]

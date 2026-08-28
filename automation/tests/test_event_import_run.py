@@ -52,7 +52,7 @@ class MemoryRepository:
             return {"missing": 0, "archived": 0}
         missing = archived = 0
         for value in self.occurrences.values():
-            if value["source_occurrence_id"] in seen_ids:
+            if (value["event_id"], value["source_occurrence_id"]) in seen_ids:
                 continue
             missing += 1
             value["consecutive_missing_runs"] += 1
@@ -164,18 +164,26 @@ def test_missing_occurrence_archives_only_after_three_complete_runs():
     repository = MemoryRepository()
     run_source(official_source(), FakeAdapter(), repository, NOW)
 
-    class EmptyAdapter:
+    class ReplacementAdapter:
         def fetch(self, source):
-            return []
+            base = FakeAdapter().fetch(source)[0]
+            return [EventCandidate(**{
+                **asdict(base),
+                "source_event_id": "84",
+                "source_url": "https://official.example/events/84",
+                "title": "Başka Etkinlik",
+                "starts_at": "2026-09-06T10:00:00+03:00",
+                "ends_at": "2026-09-06T18:00:00+03:00",
+            })]
 
     for expected in (1, 2):
-        metrics = run_source(official_source(), EmptyAdapter(), repository, NOW)
-        occurrence = next(iter(repository.occurrences.values()))
+        metrics = run_source(official_source(), ReplacementAdapter(), repository, NOW)
+        occurrence = next(value for value in repository.occurrences.values() if value["event_id"].endswith("/42"))
         assert occurrence["consecutive_missing_runs"] == expected
         assert occurrence["status"] == "scheduled"
         assert metrics.missing_occurrences == 1
-    metrics = run_source(official_source(), EmptyAdapter(), repository, NOW)
-    occurrence = next(iter(repository.occurrences.values()))
+    metrics = run_source(official_source(), ReplacementAdapter(), repository, NOW)
+    occurrence = next(value for value in repository.occurrences.values() if value["event_id"].endswith("/42"))
     assert occurrence["status"] == "archived"
     assert metrics.archived_occurrences == 1
 
@@ -193,6 +201,19 @@ def test_partial_run_does_not_increment_missing_occurrences():
     assert occurrence["consecutive_missing_runs"] == 0
 
 
+def test_empty_scan_is_not_treated_as_complete_for_reconciliation():
+    repository = MemoryRepository()
+    run_source(official_source(), FakeAdapter(), repository, NOW)
+
+    class EmptyAdapter:
+        def fetch(self, source):
+            return []
+
+    run_source(official_source(), EmptyAdapter(), repository, NOW)
+    occurrence = next(iter(repository.occurrences.values()))
+    assert occurrence["consecutive_missing_runs"] == 0
+
+
 def test_explicit_cancellation_is_immediate():
     repository = MemoryRepository()
 
@@ -204,3 +225,14 @@ def test_explicit_cancellation_is_immediate():
     run_source(official_source(), CancelledAdapter(), repository, NOW)
     occurrence = next(iter(repository.occurrences.values()))
     assert occurrence["status"] == "cancelled"
+
+
+def test_seen_occurrence_identity_is_scoped_to_its_event():
+    repository = MemoryRepository()
+    repository.occurrences = {
+        ("event-a", "morning"): {"event_id": "event-a", "source_occurrence_id": "morning", "status": "scheduled", "consecutive_missing_runs": 0},
+        ("event-b", "morning"): {"event_id": "event-b", "source_occurrence_id": "morning", "status": "scheduled", "consecutive_missing_runs": 0},
+    }
+    repository.reconcile_missing_occurrences(official_source(), {("event-a", "morning")}, True)
+    assert repository.occurrences[("event-a", "morning")]["consecutive_missing_runs"] == 0
+    assert repository.occurrences[("event-b", "morning")]["consecutive_missing_runs"] == 1

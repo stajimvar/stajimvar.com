@@ -38,7 +38,15 @@ export const KesfetDetailPage: React.FC<{
         </button>
       </main>
     );
-  const ended = Boolean(e.endsAt && new Date(e.endsAt) < new Date());
+  const now = new Date();
+  const occurrences = e.occurrences || [];
+  const ended = occurrences.length
+    ? !occurrences.some(
+        (occurrence) =>
+          occurrence.status === "scheduled" &&
+          new Date(occurrence.endsAt || occurrence.startsAt) >= now,
+      )
+    : Boolean(e.endsAt && new Date(e.endsAt) < now);
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
       <button
@@ -92,6 +100,27 @@ export const KesfetDetailPage: React.FC<{
               {e.address}
             </p>
           </div>
+          {occurrences.length > 1 && (
+            <div className="rounded-2xl border border-gray-200 p-4">
+              <h2 className="font-black text-gray-900">Etkinlik tarihleri</h2>
+              <ul className="mt-2 space-y-2 text-sm text-gray-700">
+                {occurrences.map((occurrence) => (
+                  <li key={occurrence.id} className="flex items-center justify-between gap-3">
+                    <span>{formatDiscoverDate(occurrence)}</span>
+                    {occurrence.status !== "scheduled" && (
+                      <span className="text-xs font-bold text-amber-700">
+                        {occurrence.status === "cancelled"
+                          ? "İptal edildi"
+                          : occurrence.status === "postponed"
+                            ? "Ertelendi"
+                            : "Arşivlendi"}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="prose max-w-none whitespace-pre-wrap">
             {e.description}
           </div>

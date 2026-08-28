@@ -166,12 +166,16 @@ class SupabaseEventRepository:
             self.db.table("discover_event_occurrences").update(payload).eq("id", existing["id"]).execute()
             return "unchanged" if unchanged else "updated"
         self.db.table("discover_event_occurrences").insert(payload).execute()
+        if not str(occurrence.source_occurrence_id).startswith(("legacy:", "admin:")):
+            self.db.table("discover_event_occurrences").update(
+                {"status": "archived", "archived_at": checked_at.isoformat()}
+            ).eq("event_id", event_id).like("source_occurrence_id", "legacy:%").execute()
         return "inserted"
 
     def reconcile_missing_occurrences(
         self,
         source: EventSource,
-        seen_ids: set[str],
+        seen_ids: set[tuple[str, str]],
         run_complete: bool,
     ) -> dict[str, int]:
         if not run_complete:
@@ -190,7 +194,7 @@ class SupabaseEventRepository:
             return {"missing": 0, "archived": 0}
         rows = (
             self.db.table("discover_event_occurrences")
-            .select("id,source_occurrence_id,status,consecutive_missing_runs")
+            .select("id,event_id,source_occurrence_id,status,consecutive_missing_runs")
             .in_("event_id", event_ids)
             .execute()
             .data
@@ -198,7 +202,8 @@ class SupabaseEventRepository:
         )
         missing = archived = 0
         for row in rows:
-            if row["source_occurrence_id"] in seen_ids or row["status"] != "scheduled":
+            identity = (row["event_id"], row["source_occurrence_id"])
+            if identity in seen_ids or row["status"] != "scheduled":
                 continue
             missing += 1
             count = int(row.get("consecutive_missing_runs") or 0) + 1

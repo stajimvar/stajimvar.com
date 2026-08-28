@@ -30,6 +30,14 @@ export type DiscoverOccurrenceStatus =
   | "cancelled"
   | "postponed"
   | "archived";
+export interface DiscoverOccurrence {
+  id: string;
+  sourceOccurrenceId?: string;
+  startsAt: string;
+  endsAt?: string;
+  timePrecision: DiscoverTimePrecision;
+  status: DiscoverOccurrenceStatus;
+}
 export type DiscoverVerificationStatus =
   "unverified" | "pending_review" | "verified" | "needs_review";
 export interface DiscoverEvent {
@@ -50,6 +58,7 @@ export interface DiscoverEvent {
   endsAt?: string;
   timePrecision: DiscoverTimePrecision;
   occurrenceStatus?: DiscoverOccurrenceStatus;
+  occurrences?: DiscoverOccurrence[];
   regularPrice?: number;
   studentPrice?: number;
   isFree: boolean;
@@ -160,8 +169,20 @@ export async function fetchDiscoverEventBySlug(slug: string) {
     { p_slug: slug },
   );
   if (error) throw new Error(error.message);
-  const row = Array.isArray(data) ? data[0] : data;
-  return row ? mapDiscoverEvent(row) : null;
+  const rows = Array.isArray(data) ? data : data ? [data] : [];
+  if (!rows.length) return null;
+  const mapped = rows.map(mapDiscoverEvent);
+  return {
+    ...mapped[0],
+    occurrences: mapped.map((event) => ({
+      id: event.occurrenceId || event.sourceOccurrenceId || event.startsAt,
+      sourceOccurrenceId: event.sourceOccurrenceId,
+      startsAt: event.startsAt,
+      endsAt: event.endsAt,
+      timePrecision: event.timePrecision,
+      status: event.occurrenceStatus || "scheduled",
+    })),
+  };
 }
 export async function fetchAdminDiscoverEvents() {
   const { data, error } = await (supabase.from("discover_events" as any) as any)

@@ -194,6 +194,8 @@ def fetch_source(config: dict[str, Any], client) -> list[EventCandidate]:
                 parsed = []
         if not parsed:
             parsed = parse_json_ld(detail, url, config["default_category"])
+        if not parsed and url != listing_url:
+            raise ValueError(f"etkinlik detay sayfası ayrıştırılamadı: {url}")
         default_city = (config.get("cities") or [""])[0]
         results.extend(replace(event, city=event.city or default_city) for event in parsed)
     return results

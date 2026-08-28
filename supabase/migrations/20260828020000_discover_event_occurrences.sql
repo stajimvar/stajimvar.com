@@ -1,6 +1,6 @@
 -- Keşfet etkinlik içeriğini tarih/seans yaşam döngüsünden ayırır.
 
-create table public.discover_event_occurrences (
+create table if not exists public.discover_event_occurrences (
   id uuid primary key default gen_random_uuid(),
   event_id uuid not null references public.discover_events(id) on delete cascade,
   source_occurrence_id text not null,
@@ -30,11 +30,12 @@ alter table public.discover_event_import_runs
   add column if not exists archived_occurrence_count integer not null default 0
     check (archived_occurrence_count >= 0);
 
-create index discover_event_occurrences_active_idx
+create index if not exists discover_event_occurrences_active_idx
   on public.discover_event_occurrences(status, ends_at, starts_at);
-create index discover_event_occurrences_event_idx
+create index if not exists discover_event_occurrences_event_idx
   on public.discover_event_occurrences(event_id, starts_at);
 
+drop trigger if exists t_discover_event_occurrences_touch on public.discover_event_occurrences;
 create trigger t_discover_event_occurrences_touch
 before update on public.discover_event_occurrences
 for each row execute function public.touch_updated_at();
@@ -76,15 +77,22 @@ on conflict (event_id, source_occurrence_id) do nothing;
 
 alter table public.discover_event_occurrences enable row level security;
 
+drop policy if exists "yayindaki kesfet seanslari herkese acik"
+on public.discover_event_occurrences;
 create policy "yayindaki kesfet seanslari herkese acik"
 on public.discover_event_occurrences for select
 using (
+  status = 'scheduled'
+  and coalesce(ends_at, starts_at) >= now()
+  and
   exists (
     select 1 from public.discover_events e
     where e.id = event_id and e.status = 'published'
   )
 );
 
+drop policy if exists "yonetici tum kesfet seanslarini gorur"
+on public.discover_event_occurrences;
 create policy "yonetici tum kesfet seanslarini gorur"
 on public.discover_event_occurrences for select to authenticated
 using (public.is_admin());
@@ -93,11 +101,13 @@ revoke insert, update, delete on public.discover_event_occurrences from anon, au
 
 drop policy if exists "yayindaki aktif kesfet etkinlikleri herkese acik"
 on public.discover_events;
+drop policy if exists "yayindaki kesfet etkinlikleri herkese acik"
+on public.discover_events;
 create policy "yayindaki kesfet etkinlikleri herkese acik"
 on public.discover_events for select
 using (status = 'published');
 
-create view public.discover_event_occurrence_rows
+create or replace view public.discover_event_occurrence_rows
 with (security_invoker = true) as
 select
   e.*,
@@ -114,6 +124,69 @@ join public.discover_event_occurrences o on o.event_id = e.id;
 
 revoke all on public.discover_event_occurrence_rows from public;
 grant select on public.discover_event_occurrence_rows to anon, authenticated;
+
+create or replace function public.sync_admin_discover_event_occurrence()
+returns trigger language plpgsql set search_path = public as $$
+declare
+  affected integer := 0;
+  occurrence_status text;
+  precision text;
+begin
+  if new.import_source_id is not null then
+    return new;
+  end if;
+  occurrence_status := case new.status
+    when 'cancelled' then 'cancelled'
+    when 'postponed' then 'postponed'
+    when 'archived' then 'archived'
+    else 'scheduled'
+  end;
+  precision := case
+    when new.starts_at = date_trunc('day', new.starts_at at time zone 'Europe/Istanbul') at time zone 'Europe/Istanbul'
+      then 'date_only'
+    else 'exact'
+  end;
+  update public.discover_event_occurrences set
+    starts_at = new.starts_at,
+    ends_at = new.ends_at,
+    time_precision = precision,
+    status = occurrence_status,
+    last_seen_at = now(),
+    consecutive_missing_runs = 0,
+    cancelled_at = case when occurrence_status = 'cancelled' then now() end,
+    postponed_at = case when occurrence_status = 'postponed' then now() end,
+    archived_at = case when occurrence_status = 'archived' then now() end
+  where event_id = new.id
+    and source_occurrence_id in ('legacy:' || new.id::text, 'admin:' || new.id::text);
+  get diagnostics affected = row_count;
+  if affected = 0 then
+    insert into public.discover_event_occurrences (
+      event_id, source_occurrence_id, starts_at, ends_at, time_precision,
+      status, last_seen_at, cancelled_at, postponed_at, archived_at
+    ) values (
+      new.id, 'admin:' || new.id::text, new.starts_at, new.ends_at, precision,
+      occurrence_status, now(),
+      case when occurrence_status = 'cancelled' then now() end,
+      case when occurrence_status = 'postponed' then now() end,
+      case when occurrence_status = 'archived' then now() end
+    ) on conflict (event_id, source_occurrence_id) do update set
+      starts_at = excluded.starts_at,
+      ends_at = excluded.ends_at,
+      time_precision = excluded.time_precision,
+      status = excluded.status,
+      last_seen_at = excluded.last_seen_at,
+      consecutive_missing_runs = 0;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists t_sync_admin_discover_event_occurrence on public.discover_events;
+create trigger t_sync_admin_discover_event_occurrence
+after insert or update of starts_at, ends_at, status on public.discover_events
+for each row
+when (new.import_source_id is null)
+execute function public.sync_admin_discover_event_occurrence();
 
 create or replace function public.list_active_discover_events(
   p_start timestamptz default null,
@@ -164,8 +237,7 @@ language sql stable security definer set search_path = public as $$
       else 2
     end,
     case when r.occurrence_starts_at >= now() then r.occurrence_starts_at end,
-    case when r.occurrence_starts_at < now() then r.occurrence_starts_at end desc
-  limit 1;
+    case when r.occurrence_starts_at < now() then r.occurrence_starts_at end desc;
 $$;
 
 revoke all on function public.list_active_discover_events(timestamptz,timestamptz) from public;

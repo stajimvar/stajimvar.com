@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 let sql = "";
+let occurrenceSql = "";
 try {
-  sql = (
-    await Promise.all([
+  const files = await Promise.all([
       readFile(
         new URL(
           "../supabase/migrations/20260827010000_kesfet_events.sql",
@@ -27,8 +27,9 @@ try {
         ),
         "utf8",
       ),
-    ])
-  ).join("\n");
+    ]);
+  sql = files.join("\n");
+  occurrenceSql = files[2];
 } catch {}
 
 test("Keşfet migration public okumayı yayındaki aktif etkinliklerle sınırlar", () => {
@@ -74,13 +75,21 @@ test("Keşfet yazma ve silme işlemleri admin RPC sınırındadır", () => {
 });
 
 test("occurrence migration seans kimliği, kesinlik ve yaşam döngüsünü tanımlar", () => {
-  assert.match(sql, /create table public\.discover_event_occurrences/i);
+  assert.match(sql, /create table if not exists public\.discover_event_occurrences/i);
   assert.match(sql, /time_precision[^;]+date_only[^;]+recurring[^;]+ongoing/is);
   assert.match(sql, /status[^;]+scheduled[^;]+cancelled[^;]+postponed[^;]+archived/is);
   assert.match(sql, /consecutive_missing_runs integer not null default 0/i);
   assert.match(sql, /unique[^;]+event_id[^;]+source_occurrence_id/is);
   assert.match(sql, /enable row level security/i);
   assert.match(sql, /revoke insert, update, delete on public\.discover_event_occurrences from anon, authenticated/i);
+});
+
+test("admin etkinlikleri occurrence ile eşzamanlanır ve migration tekrar çalışabilir", () => {
+  assert.match(sql, /sync_admin_discover_event_occurrence/i);
+  assert.match(sql, /new\.import_source_id is null/i);
+  assert.match(sql, /create (?:unique )?index if not exists/i);
+  assert.match(sql, /drop policy if exists "yayindaki kesfet seanslari herkese acik"/i);
+  assert.match(sql, /create or replace view public\.discover_event_occurrence_rows/i);
 });
 
 test("public occurrence sorgusu aralık kesişimiyle etkinlik başına tek aktif seans seçer", () => {
@@ -90,6 +99,7 @@ test("public occurrence sorgusu aralık kesişimiyle etkinlik başına tek aktif
   assert.match(sql, /row_number\(\) over\s*\(\s*partition by o\.event_id/is);
   assert.match(sql, /o\.status = 'scheduled'/i);
   assert.match(sql, /e\.status = 'published'/i);
+  assert.match(sql, /using \([^)]*status = 'scheduled'[^)]*coalesce\([^)]*ends_at/is);
 });
 
 test("detay RPC geçmiş etkinliği occurrence alanlarıyla erişilebilir tutar", () => {
@@ -97,4 +107,5 @@ test("detay RPC geçmiş etkinliği occurrence alanlarıyla erişilebilir tutar"
   assert.match(sql, /occurrence_id/i);
   assert.match(sql, /time_precision/i);
   assert.match(sql, /occurrence_status/i);
+  assert.doesNotMatch(occurrenceSql, /get_discover_event_by_slug[\s\S]+?limit 1;[\s\S]+?\$\$;/i);
 });

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 import hashlib
 import re
 import unicodedata
@@ -113,7 +113,18 @@ def canonical_url(value: str) -> str:
 
 
 def occurrence_fingerprint(occurrence: EventOccurrence) -> str:
-    raw = "|".join((occurrence.starts_at, occurrence.ends_at or ""))
+    def normalized(value: str | None) -> str:
+        if not value:
+            return ""
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc).isoformat()
+
+    raw = "|".join(
+        (
+            normalized(occurrence.starts_at),
+            normalized(occurrence.ends_at),
+            occurrence.time_precision or "exact",
+        )
+    )
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
@@ -129,7 +140,7 @@ def _normalize_occurrence(occurrence: EventOccurrence, fallback_status: str | No
         raise ValueError("geçersiz seans durumu")
     identity = _space(occurrence.source_occurrence_id)
     if not identity:
-        identity = f"schedule:{occurrence_fingerprint(occurrence)}"
+        identity = f"schedule:{occurrence_fingerprint(EventOccurrence(None, occurrence.starts_at, occurrence.ends_at, precision))}"
     return EventOccurrence(identity, occurrence.starts_at, occurrence.ends_at, precision, status or "scheduled")
 
 
