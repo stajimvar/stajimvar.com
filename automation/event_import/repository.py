@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from datetime import datetime, timezone
+import json
 import re
 import unicodedata
 from typing import Any
@@ -63,6 +64,9 @@ class SupabaseEventRepository:
         return self.db.table("discover_event_import_runs").insert({"source_id": source_id}).execute().data[0]["id"]
 
     def find(self, event: NormalizedEvent, fingerprint: str):
+        rows = self.db.table("discover_events").select("*").eq("source_fingerprint", fingerprint).limit(1).execute().data or []
+        if rows:
+            return rows[0]
         rows = (
             self.db.table("discover_events")
             .select("*")
@@ -74,8 +78,12 @@ class SupabaseEventRepository:
         )
         if rows:
             return rows[0]
-        rows = self.db.table("discover_events").select("*").eq("source_fingerprint", fingerprint).limit(1).execute().data or []
         return rows[0] if rows else None
+
+    def unique_slug(self, event: NormalizedEvent, fingerprint: str) -> str:
+        base = slugify(f"{event.title}-{event.starts_at[:10]}")
+        rows = self.db.table("discover_events").select("id").eq("slug", base).limit(1).execute().data or []
+        return f"{base}-{fingerprint[:8]}" if rows else base
 
     def upsert(self, event: NormalizedEvent, fingerprint: str, cover=None) -> str:
         existing = self.find(event, fingerprint)
@@ -83,7 +91,7 @@ class SupabaseEventRepository:
         payload = asdict(event)
         payload.update(
             {
-                "slug": slugify(f"{event.title}-{event.starts_at[:10]}"),
+                "slug": existing.get("slug") if existing else self.unique_slug(event, fingerprint),
                 "import_source_id": source_id,
                 "source_fingerprint": fingerprint,
                 "imported_at": datetime.now().astimezone().isoformat(),
@@ -97,7 +105,10 @@ class SupabaseEventRepository:
         if existing:
             merged = merge_event(existing, event)
             comparable = {k: payload.get(k) for k in payload if k not in {"last_verified_at", "last_seen_at", "imported_at"}}
-            unchanged = all(_values_equal(value, existing.get(k), k) for k, value in comparable.items())
+            changed_fields = [k for k, value in comparable.items() if not _values_equal(value, existing.get(k), k)]
+            unchanged = not changed_fields
+            if changed_fields:
+                print(json.dumps({"event_url": event.canonical_source_url, "changed_fields": changed_fields}, ensure_ascii=False))
             merged.update(payload)
             self.db.table("discover_events").update(merged).eq("id", existing["id"]).execute()
             return "unchanged" if unchanged else "updated"
