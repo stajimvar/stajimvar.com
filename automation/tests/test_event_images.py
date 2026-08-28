@@ -25,6 +25,12 @@ def test_rejects_corrupt_or_non_image_payload():
     assert validate_image(image_bytes(), "text/html").accepted is False
 
 
+def test_accepts_decodable_image_served_as_generic_binary():
+    info = validate_image(image_bytes(), "application/octet-stream")
+    assert info.accepted is True
+    assert (info.width, info.height) == (1200, 675)
+
+
 def test_prefers_event_image_over_site_logo():
     selected = choose_candidate(
         [

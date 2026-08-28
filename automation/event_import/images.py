@@ -25,7 +25,8 @@ class CoverResult:
 
 
 def validate_image(payload: bytes, content_type: str) -> ImageInfo:
-    if not content_type.lower().startswith("image/"):
+    normalized_type = content_type.lower().split(";", 1)[0].strip()
+    if not normalized_type.startswith("image/") and normalized_type != "application/octet-stream":
         return ImageInfo(False, reason="MIME türü görsel değil")
     try:
         with Image.open(BytesIO(payload)) as image:
