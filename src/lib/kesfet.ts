@@ -20,10 +20,22 @@ export type DiscoverStatus =
   | "postponed"
   | "archived";
 export type DiscoverCoverKind = "official" | "category" | "manual";
+export type DiscoverTimePrecision =
+  | "exact"
+  | "date_only"
+  | "recurring"
+  | "ongoing";
+export type DiscoverOccurrenceStatus =
+  | "scheduled"
+  | "cancelled"
+  | "postponed"
+  | "archived";
 export type DiscoverVerificationStatus =
   "unverified" | "pending_review" | "verified" | "needs_review";
 export interface DiscoverEvent {
   id: string;
+  occurrenceId?: string;
+  sourceOccurrenceId?: string;
   slug: string;
   title: string;
   shortDescription: string;
@@ -36,6 +48,8 @@ export interface DiscoverEvent {
   address: string;
   startsAt: string;
   endsAt?: string;
+  timePrecision: DiscoverTimePrecision;
+  occurrenceStatus?: DiscoverOccurrenceStatus;
   regularPrice?: number;
   studentPrice?: number;
   isFree: boolean;
@@ -76,6 +90,8 @@ const COLUMNS =
   "id,slug,title,short_description,description,category,image_url,city,district,venue_name,address,starts_at,ends_at,regular_price,student_price,is_free,has_student_discount,organizer,source_url,ticket_url,directions_url,status,updated_at,application_deadline,discount_terms,age_limit,registration_required,target_audiences,interest_tags,source_kind,source_trust_score,last_verified_at,verification_status,latitude,longitude,proximity_score,popularity_score,diversity_score,student_fit_score,original_image_url,card_image_url,detail_image_url,cover_kind,event_mode,online_url,canonical_source_url,review_required,review_reason";
 export const mapDiscoverEvent = (r: any): DiscoverEvent => ({
   id: r.id,
+  occurrenceId: r.occurrence_id || undefined,
+  sourceOccurrenceId: r.source_occurrence_id || undefined,
   slug: r.slug,
   title: r.title,
   shortDescription: r.short_description || "",
@@ -86,8 +102,10 @@ export const mapDiscoverEvent = (r: any): DiscoverEvent => ({
   district: r.district,
   venueName: r.venue_name,
   address: r.address,
-  startsAt: r.starts_at,
-  endsAt: r.ends_at || undefined,
+  startsAt: r.occurrence_starts_at || r.starts_at,
+  endsAt: r.occurrence_ends_at || r.ends_at || undefined,
+  timePrecision: r.time_precision || "exact",
+  occurrenceStatus: r.occurrence_status || undefined,
   regularPrice: r.regular_price == null ? undefined : Number(r.regular_price),
   studentPrice: r.student_price == null ? undefined : Number(r.student_price),
   isFree: Boolean(r.is_free),
@@ -129,10 +147,10 @@ export const mapDiscoverEvent = (r: any): DiscoverEvent => ({
   reviewReason: r.review_reason || undefined,
 });
 export async function fetchDiscoverEvents() {
-  const { data, error } = await (supabase.from("discover_events" as any) as any)
-    .select(COLUMNS)
-    .order("student_fit_score", { ascending: false })
-    .order("starts_at");
+  const { data, error } = await (supabase.rpc as any)(
+    "list_active_discover_events",
+    { p_start: null, p_end: null },
+  );
   if (error) throw new Error(error.message);
   return (data || []).map(mapDiscoverEvent);
 }

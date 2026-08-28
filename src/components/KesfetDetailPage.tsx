@@ -6,6 +6,7 @@ import {
   type DiscoverEvent,
 } from "../lib/kesfet";
 import { EventCover } from "./EventCover";
+import { formatDiscoverDate } from "../lib/kesfet-domain.mjs";
 const dateText = (v: string) =>
   new Intl.DateTimeFormat("tr-TR", {
     dateStyle: "long",
@@ -77,8 +78,12 @@ export const KesfetDetailPage: React.FC<{
           <div className="grid sm:grid-cols-2 gap-3 text-sm">
             <p className="flex gap-2">
               <CalendarDays className="w-5 h-5 text-blue-600" />
-              {dateText(e.startsAt)}
-              {e.endsAt ? ` – ${dateText(e.endsAt)}` : " · Bitiş saati bilinmiyor"}
+              {formatDiscoverDate(e)}
+              {e.endsAt && e.timePrecision === "exact"
+                ? ` – ${dateText(e.endsAt)}`
+                : !e.endsAt && e.timePrecision === "exact"
+                  ? " · Bitiş saati bilinmiyor"
+                  : ""}
             </p>
             <p className="flex gap-2">
               <MapPin className="w-5 h-5 text-blue-600" />

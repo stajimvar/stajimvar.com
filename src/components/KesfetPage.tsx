@@ -15,15 +15,9 @@ import {
 } from "../lib/kesfet";
 import {
   buildDiscoverCollections,
+  formatDiscoverDate,
   matchesDiscoverDateFilter,
 } from "../lib/kesfet-domain.mjs";
-
-const dateText = (v: string) =>
-  new Intl.DateTimeFormat("tr-TR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Europe/Istanbul",
-  }).format(new Date(v));
 
 const verificationText = (event: DiscoverEvent) => {
   if (
@@ -76,7 +70,7 @@ const EventCard: React.FC<{
       <h3 className="text-lg font-black text-gray-900">{e.title}</h3>
       <p className="flex gap-2 text-sm text-gray-600">
         <CalendarDays className="w-4 h-4 shrink-0" />
-        {dateText(e.startsAt)}
+        {formatDiscoverDate(e)}
       </p>
       <p className="flex gap-2 text-sm text-gray-600">
         <MapPin className="w-4 h-4 shrink-0" />
