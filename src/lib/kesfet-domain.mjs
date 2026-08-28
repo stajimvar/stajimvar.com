@@ -54,16 +54,30 @@ export function matchesDiscoverDateFilter(event, filter, now = new Date()) {
   return start < rangeEnd && end >= rangeStart;
 }
 
-export function formatDiscoverDate(event) {
+export function formatDiscoverDate(event, now = new Date()) {
   const precision = event?.timePrecision || "exact";
   const startsAt = new Date(event?.startsAt);
   if (Number.isNaN(startsAt.getTime())) return "Tarih bilinmiyor";
   const includeTime = precision === "exact";
-  const text = new Intl.DateTimeFormat("tr-TR", {
+  const formatter = new Intl.DateTimeFormat("tr-TR", {
     dateStyle: "medium",
     ...(includeTime ? { timeStyle: "short" } : {}),
     timeZone: "Europe/Istanbul",
-  }).format(startsAt);
+  });
+  const text = formatter.format(startsAt);
+  const endsAt = event?.endsAt ? new Date(event.endsAt) : null;
+  if (
+    precision === "date_only" &&
+    endsAt &&
+    !Number.isNaN(endsAt.getTime()) &&
+    trDay(startsAt) !== trDay(endsAt)
+  ) {
+    const endText = formatter.format(endsAt);
+    if (startsAt <= now && endsAt >= now) {
+      return `Devam ediyor · ${endText} tarihinde bitiyor`;
+    }
+    return `${text} – ${endText}`;
+  }
   if (precision === "ongoing") return `${text} · Devam ediyor`;
   if (precision === "recurring") return `${text} · Tekrarlanan etkinlik`;
   return text;
