@@ -31,6 +31,8 @@ class RunMetrics:
     images: int = 0
     category_covers: int = 0
     errors: int = 0
+    missing_occurrences: int = 0
+    archived_occurrences: int = 0
 
 
 class ConfigAdapter:
@@ -75,6 +77,7 @@ def run_source(source, adapter, repository, now: datetime, *, dry_run=False, cov
             metrics.review += int(normalized.review_required)
         return metrics
     run_id = repository.start_run(source)
+    seen_occurrence_ids: set[str] = set()
     try:
         for candidate in candidates:
             try:
@@ -86,8 +89,11 @@ def run_source(source, adapter, repository, now: datetime, *, dry_run=False, cov
                     cover = cover_service.process(event, fingerprint)
                 metrics.images += int(cover is not None)
                 metrics.category_covers += int(cover is None)
-                result = repository.upsert(event, fingerprint, cover)
+                result, event_id = repository.upsert(event, fingerprint, cover)
                 setattr(metrics, result, getattr(metrics, result) + 1)
+                for occurrence in event.occurrences:
+                    repository.upsert_occurrence(event_id, occurrence, now)
+                    seen_occurrence_ids.add(occurrence.source_occurrence_id)
                 metrics.review += int(event.review_required)
             except Exception as exc:
                 metrics.errors += 1
@@ -98,6 +104,13 @@ def run_source(source, adapter, repository, now: datetime, *, dry_run=False, cov
                     "error": str(exc)[:300],
                 }, ensure_ascii=False), file=sys.stderr)
         metrics.archived = repository.archive_expired(source, now)
+        reconciliation = repository.reconcile_missing_occurrences(
+            source,
+            seen_occurrence_ids,
+            run_complete=metrics.errors == 0,
+        )
+        metrics.missing_occurrences = reconciliation["missing"]
+        metrics.archived_occurrences = reconciliation["archived"]
         repository.finish_run(run_id, metrics)
     except Exception as exc:
         repository.finish_run(run_id, metrics, str(exc)[:500])

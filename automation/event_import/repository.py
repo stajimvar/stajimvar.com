@@ -9,7 +9,7 @@ from typing import Any
 
 from supabase import Client
 
-from .domain import EventSource, NormalizedEvent, merge_event
+from .domain import EventOccurrence, EventSource, NormalizedEvent, merge_event
 
 
 _DATETIME_FIELDS = {"starts_at", "ends_at", "application_deadline"}
@@ -42,6 +42,7 @@ class SupabaseEventRepository:
     def __init__(self, client: Client):
         self.db = client
         self.source_ids: dict[str, str] = {}
+        self.active_source_id: str | None = None
 
     def ensure_source(self, source: EventSource, config: dict[str, Any]) -> str:
         payload = {
@@ -65,6 +66,7 @@ class SupabaseEventRepository:
 
     def start_run(self, source: EventSource) -> str:
         source_id = self.source_ids[source.id]
+        self.active_source_id = source_id
         return self.db.table("discover_event_import_runs").insert({"source_id": source_id}).execute().data[0]["id"]
 
     def find(self, event: NormalizedEvent, fingerprint: str):
@@ -88,10 +90,13 @@ class SupabaseEventRepository:
         rows = self.db.table("discover_events").select("id").eq("slug", base).limit(1).execute().data or []
         return f"{base}-{fingerprint[:8]}" if rows else base
 
-    def upsert(self, event: NormalizedEvent, fingerprint: str, cover=None) -> str:
+    def upsert(self, event: NormalizedEvent, fingerprint: str, cover=None) -> tuple[str, str]:
         existing = self.find(event, fingerprint)
-        source_id = next(iter(self.source_ids.values()))
+        if not self.active_source_id:
+            raise RuntimeError("etkin import kaynağı başlatılmadı")
+        source_id = self.active_source_id
         payload = asdict(event)
+        payload.pop("occurrences", None)
         payload.update(
             {
                 "slug": existing.get("slug") if existing else self.unique_slug(event, fingerprint),
@@ -113,9 +118,96 @@ class SupabaseEventRepository:
                 print(json.dumps({"event_url": event.canonical_source_url, "changed_fields": changed_fields}, ensure_ascii=False))
             merged.update(payload)
             self.db.table("discover_events").update(merged).eq("id", existing["id"]).execute()
+            return ("unchanged" if unchanged else "updated", existing["id"])
+        inserted = self.db.table("discover_events").insert(payload).execute().data[0]
+        return "inserted", inserted["id"]
+
+    def upsert_occurrence(
+        self,
+        event_id: str,
+        occurrence: EventOccurrence,
+        checked_at: datetime,
+    ) -> str:
+        rows = (
+            self.db.table("discover_event_occurrences")
+            .select("*")
+            .eq("event_id", event_id)
+            .eq("source_occurrence_id", occurrence.source_occurrence_id)
+            .limit(1)
+            .execute()
+            .data
+            or []
+        )
+        existing = rows[0] if rows else None
+        status = occurrence.explicit_status or "scheduled"
+        payload = {
+            "event_id": event_id,
+            "source_occurrence_id": occurrence.source_occurrence_id,
+            "starts_at": occurrence.starts_at,
+            "ends_at": occurrence.ends_at,
+            "time_precision": occurrence.time_precision,
+            "status": status,
+            "last_seen_at": checked_at.isoformat(),
+            "consecutive_missing_runs": 0,
+            "cancelled_at": checked_at.isoformat() if status == "cancelled" else None,
+            "postponed_at": checked_at.isoformat() if status == "postponed" else None,
+            "archived_at": checked_at.isoformat() if status == "archived" else None,
+        }
+        comparable = {
+            key: value
+            for key, value in payload.items()
+            if key not in {"last_seen_at", "consecutive_missing_runs"}
+        }
+        unchanged = bool(existing) and all(
+            _values_equal(value, existing.get(key), key)
+            for key, value in comparable.items()
+        ) and int(existing.get("consecutive_missing_runs") or 0) == 0
+        if existing:
+            self.db.table("discover_event_occurrences").update(payload).eq("id", existing["id"]).execute()
             return "unchanged" if unchanged else "updated"
-        self.db.table("discover_events").insert(payload).execute()
+        self.db.table("discover_event_occurrences").insert(payload).execute()
         return "inserted"
+
+    def reconcile_missing_occurrences(
+        self,
+        source: EventSource,
+        seen_ids: set[str],
+        run_complete: bool,
+    ) -> dict[str, int]:
+        if not run_complete:
+            return {"missing": 0, "archived": 0}
+        source_id = self.source_ids[source.id]
+        events = (
+            self.db.table("discover_events")
+            .select("id")
+            .eq("import_source_id", source_id)
+            .execute()
+            .data
+            or []
+        )
+        event_ids = [row["id"] for row in events]
+        if not event_ids:
+            return {"missing": 0, "archived": 0}
+        rows = (
+            self.db.table("discover_event_occurrences")
+            .select("id,source_occurrence_id,status,consecutive_missing_runs")
+            .in_("event_id", event_ids)
+            .execute()
+            .data
+            or []
+        )
+        missing = archived = 0
+        for row in rows:
+            if row["source_occurrence_id"] in seen_ids or row["status"] != "scheduled":
+                continue
+            missing += 1
+            count = int(row.get("consecutive_missing_runs") or 0) + 1
+            payload: dict[str, Any] = {"consecutive_missing_runs": count}
+            if count >= 3:
+                payload.update({"status": "archived", "archived_at": datetime.now().astimezone().isoformat()})
+                archived += 1
+            self.db.table("discover_event_occurrences").update(payload).eq("id", row["id"]).execute()
+        return {"missing": missing, "archived": archived}
 
     def finish_run(self, run_id: str, metrics, error: str | None = None) -> None:
         payload = {
@@ -130,22 +222,39 @@ class SupabaseEventRepository:
             "image_count": metrics.images,
             "category_cover_count": metrics.category_covers,
             "error_count": metrics.errors,
+            "missing_occurrence_count": metrics.missing_occurrences,
+            "archived_occurrence_count": metrics.archived_occurrences,
             "error_summary": error,
         }
+        if not error and metrics.errors:
+            payload["status"] = "partial"
         self.db.table("discover_event_import_runs").update(payload).eq("id", run_id).execute()
 
     def archive_expired(self, source: EventSource, now: datetime) -> int:
         source_id = self.source_ids[source.id]
-        rows = (
+        event_rows = (
             self.db.table("discover_events")
             .select("id")
             .eq("import_source_id", source_id)
+            .execute()
+            .data
+            or []
+        )
+        event_ids = [row["id"] for row in event_rows]
+        if not event_ids:
+            return 0
+        rows = (
+            self.db.table("discover_event_occurrences")
+            .select("id")
+            .in_("event_id", event_ids)
             .lt("ends_at", now.isoformat())
-            .neq("status", "archived")
+            .eq("status", "scheduled")
             .execute()
             .data
             or []
         )
         for row in rows:
-            self.db.table("discover_events").update({"status": "archived"}).eq("id", row["id"]).execute()
+            self.db.table("discover_event_occurrences").update(
+                {"status": "archived", "archived_at": now.isoformat()}
+            ).eq("id", row["id"]).execute()
         return len(rows)

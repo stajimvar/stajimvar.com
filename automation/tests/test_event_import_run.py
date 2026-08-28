@@ -5,7 +5,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
 
-from event_import.domain import EventCandidate, EventSource
+from event_import.domain import EventCandidate, EventOccurrence, EventSource
 from event_import.repository import _identity_text, _values_equal
 from event_import.run import reusable_cover, run_source
 
@@ -17,6 +17,7 @@ class MemoryRepository:
     def __init__(self):
         self.events = {}
         self.runs = []
+        self.occurrences = {}
 
     def start_run(self, source):
         self.runs.append({"source": source.id})
@@ -31,7 +32,34 @@ class MemoryRepository:
         payload["fingerprint"] = fingerprint
         payload["cover"] = cover
         self.events[event.canonical_source_url] = payload
-        return "unchanged" if existing == payload else "updated" if existing else "inserted"
+        status = "unchanged" if existing == payload else "updated" if existing else "inserted"
+        return status, event.canonical_source_url
+
+    def upsert_occurrence(self, event_id, occurrence, checked_at):
+        key = (event_id, occurrence.source_occurrence_id)
+        existing = self.occurrences.get(key)
+        self.occurrences[key] = {
+            **asdict(occurrence),
+            "event_id": event_id,
+            "status": occurrence.explicit_status or "scheduled",
+            "last_seen_at": checked_at.isoformat(),
+            "consecutive_missing_runs": 0,
+        }
+        return "unchanged" if existing == self.occurrences[key] else "updated" if existing else "inserted"
+
+    def reconcile_missing_occurrences(self, source, seen_ids, run_complete):
+        if not run_complete:
+            return {"missing": 0, "archived": 0}
+        missing = archived = 0
+        for value in self.occurrences.values():
+            if value["source_occurrence_id"] in seen_ids:
+                continue
+            missing += 1
+            value["consecutive_missing_runs"] += 1
+            if value["consecutive_missing_runs"] >= 3:
+                value["status"] = "archived"
+                archived += 1
+        return {"missing": missing, "archived": archived}
 
     def finish_run(self, run_id, metrics, error=None):
         self.runs[-1].update(asdict(metrics))
@@ -78,6 +106,7 @@ def test_second_run_updates_without_duplicate():
     assert second.inserted == 0
     assert second.unchanged == 1
     assert len(repository.events) == 1
+    assert len(repository.occurrences) == 1
 
 
 def test_dry_run_performs_zero_writes():
@@ -108,3 +137,70 @@ def test_reuses_existing_processed_cover():
 
 def test_identity_text_normalizes_venue_spacing_and_case():
     assert _identity_text(" Müze   Gazhane ") == _identity_text("müze gazhane")
+
+
+def test_one_event_can_import_multiple_sessions_without_second_run_duplicates():
+    class MultiSessionAdapter:
+        def fetch(self, source):
+            base = FakeAdapter().fetch(source)[0]
+            return [EventCandidate(**{
+                **asdict(base),
+                "occurrences": (
+                    EventOccurrence("morning", base.starts_at, base.ends_at),
+                    EventOccurrence("evening", "2026-09-05T19:00:00+03:00", "2026-09-05T21:00:00+03:00"),
+                ),
+            })]
+
+    repository = MemoryRepository()
+    first = run_source(official_source(), MultiSessionAdapter(), repository, NOW)
+    second = run_source(official_source(), MultiSessionAdapter(), repository, NOW)
+    assert first.inserted == 1
+    assert second.unchanged == 1
+    assert len(repository.events) == 1
+    assert len(repository.occurrences) == 2
+
+
+def test_missing_occurrence_archives_only_after_three_complete_runs():
+    repository = MemoryRepository()
+    run_source(official_source(), FakeAdapter(), repository, NOW)
+
+    class EmptyAdapter:
+        def fetch(self, source):
+            return []
+
+    for expected in (1, 2):
+        metrics = run_source(official_source(), EmptyAdapter(), repository, NOW)
+        occurrence = next(iter(repository.occurrences.values()))
+        assert occurrence["consecutive_missing_runs"] == expected
+        assert occurrence["status"] == "scheduled"
+        assert metrics.missing_occurrences == 1
+    metrics = run_source(official_source(), EmptyAdapter(), repository, NOW)
+    occurrence = next(iter(repository.occurrences.values()))
+    assert occurrence["status"] == "archived"
+    assert metrics.archived_occurrences == 1
+
+
+def test_partial_run_does_not_increment_missing_occurrences():
+    repository = MemoryRepository()
+    run_source(official_source(), FakeAdapter(), repository, NOW)
+
+    class BrokenAdapter:
+        def fetch(self, source):
+            return [EventCandidate(**{**asdict(FakeAdapter().fetch(source)[0]), "source_url": "http://invalid.example/event"})]
+
+    run_source(official_source(), BrokenAdapter(), repository, NOW)
+    occurrence = next(iter(repository.occurrences.values()))
+    assert occurrence["consecutive_missing_runs"] == 0
+
+
+def test_explicit_cancellation_is_immediate():
+    repository = MemoryRepository()
+
+    class CancelledAdapter:
+        def fetch(self, source):
+            base = FakeAdapter().fetch(source)[0]
+            return [EventCandidate(**{**asdict(base), "explicit_status": "cancelled"})]
+
+    run_source(official_source(), CancelledAdapter(), repository, NOW)
+    occurrence = next(iter(repository.occurrences.values()))
+    assert occurrence["status"] == "cancelled"

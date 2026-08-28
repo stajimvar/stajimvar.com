@@ -24,6 +24,12 @@ create table public.discover_event_occurrences (
     unique (event_id, source_occurrence_id)
 );
 
+alter table public.discover_event_import_runs
+  add column if not exists missing_occurrence_count integer not null default 0
+    check (missing_occurrence_count >= 0),
+  add column if not exists archived_occurrence_count integer not null default 0
+    check (archived_occurrence_count >= 0);
+
 create index discover_event_occurrences_active_idx
   on public.discover_event_occurrences(status, ends_at, starts_at);
 create index discover_event_occurrences_event_idx

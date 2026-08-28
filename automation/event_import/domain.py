@@ -19,6 +19,15 @@ class EventSource:
 
 
 @dataclass(frozen=True)
+class EventOccurrence:
+    source_occurrence_id: str | None
+    starts_at: str
+    ends_at: str | None
+    time_precision: str | None = None
+    explicit_status: str | None = None
+
+
+@dataclass(frozen=True)
 class EventCandidate:
     source_event_id: str | None
     source_url: str
@@ -43,6 +52,7 @@ class EventCandidate:
     event_mode: str = "physical"
     online_url: str | None = None
     explicit_status: str | None = None
+    occurrences: tuple[EventOccurrence, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -78,6 +88,7 @@ class NormalizedEvent:
     verification_status: str
     review_required: bool
     review_reason: str | None
+    occurrences: tuple[EventOccurrence, ...]
 
 
 def _space(value: str | None) -> str:
@@ -101,6 +112,27 @@ def canonical_url(value: str) -> str:
     return urlunsplit(("https", parts.netloc.lower(), path.rstrip("/") or "/", "", ""))
 
 
+def occurrence_fingerprint(occurrence: EventOccurrence) -> str:
+    raw = "|".join((occurrence.starts_at, occurrence.ends_at or ""))
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def _normalize_occurrence(occurrence: EventOccurrence, fallback_status: str | None) -> EventOccurrence:
+    starts_at = datetime.fromisoformat(occurrence.starts_at.replace("Z", "+00:00"))
+    precision = occurrence.time_precision
+    if precision is None:
+        precision = "date_only" if starts_at.hour == starts_at.minute == starts_at.second == 0 else "exact"
+    if precision not in {"exact", "date_only", "recurring", "ongoing"}:
+        raise ValueError("geçersiz tarih kesinliği")
+    status = occurrence.explicit_status or fallback_status
+    if status not in {None, "scheduled", "cancelled", "postponed", "archived"}:
+        raise ValueError("geçersiz seans durumu")
+    identity = _space(occurrence.source_occurrence_id)
+    if not identity:
+        identity = f"schedule:{occurrence_fingerprint(occurrence)}"
+    return EventOccurrence(identity, occurrence.starts_at, occurrence.ends_at, precision, status or "scheduled")
+
+
 def normalize_event(candidate: EventCandidate, source: EventSource, checked_at: datetime) -> NormalizedEvent:
     source_url = canonical_url(candidate.source_url)
     host = urlsplit(source_url).hostname or ""
@@ -116,6 +148,13 @@ def normalize_event(candidate: EventCandidate, source: EventSource, checked_at: 
     if reasons or status in {"cancelled", "postponed"}:
         status = status if status in {"cancelled", "postponed"} else "draft"
     stamp = checked_at.isoformat()
+    raw_occurrences = candidate.occurrences or (
+        EventOccurrence(None, candidate.starts_at, candidate.ends_at, None, candidate.explicit_status),
+    )
+    occurrences = tuple(
+        _normalize_occurrence(occurrence, candidate.explicit_status)
+        for occurrence in raw_occurrences
+    )
     return NormalizedEvent(
         source_event_id=_space(candidate.source_event_id) or None,
         source_url=source_url,
@@ -148,6 +187,7 @@ def normalize_event(candidate: EventCandidate, source: EventSource, checked_at: 
         verification_status="pending_review" if reasons else "verified",
         review_required=bool(reasons),
         review_reason="; ".join(reasons) or None,
+        occurrences=occurrences,
     )
 
 
@@ -169,6 +209,8 @@ def lifecycle_for(event: NormalizedEvent, now: datetime) -> str:
 def merge_event(existing: dict[str, Any], incoming: NormalizedEvent) -> dict[str, Any]:
     merged = dict(existing)
     for key, value in asdict(incoming).items():
+        if key == "occurrences":
+            continue
         if value is not None:
             merged[key] = value
     return merged
