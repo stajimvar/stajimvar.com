@@ -1,5 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarDays, MapPin, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronDown,
+  MapPin,
+  ShieldCheck,
+  SlidersHorizontal,
+  Sparkles,
+} from "lucide-react";
 import { EventCover } from "./EventCover";
 import {
   DISCOVER_CATEGORIES,
@@ -105,6 +112,7 @@ export const KesfetPage: React.FC<{ onNavigate: (p: string) => void }> = ({
     [category, setCategory] = useState(""),
     [free, setFree] = useState(false),
     [discount, setDiscount] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   useEffect(() => {
     fetchDiscoverEvents()
       .then((x) => {
@@ -136,8 +144,15 @@ export const KesfetPage: React.FC<{ onNavigate: (p: string) => void }> = ({
     () => buildDiscoverCollections(shown, { city }),
     [shown, city],
   );
+  const activeFilters = [
+    city,
+    period !== "all" ? { today: "Bugün", week: "Bu hafta", month: "Bu ay" }[period] : "",
+    category ? DISCOVER_CATEGORIES[category] : "",
+    free ? "Ücretsiz" : "",
+    discount ? "Öğrenci indirimli" : "",
+  ].filter(Boolean) as string[];
   return (
-    <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+    <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-8 space-y-4 sm:space-y-6">
       <header>
         <p className="text-sm font-bold text-blue-600">Keşfet</p>
         <h1 className="text-3xl sm:text-4xl font-black text-gray-900">
@@ -148,9 +163,39 @@ export const KesfetPage: React.FC<{ onNavigate: (p: string) => void }> = ({
           festivalleri, fuarları, müzeleri ve etkinlikleri keşfet.
         </p>
       </header>
+      <button
+        type="button"
+        aria-expanded={filtersOpen}
+        aria-controls="kesfet-filters"
+        onClick={() => setFiltersOpen((open) => !open)}
+        className="sm:hidden w-full flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-900 shadow-sm"
+      >
+        <span className="flex items-center gap-2">
+          <SlidersHorizontal className="h-4 w-4 text-blue-600" />
+          Filtrele
+          {activeFilters.length > 0 && (
+            <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">
+              {activeFilters.length}
+            </span>
+          )}
+        </span>
+        <ChevronDown
+          className={`h-4 w-4 transition-transform ${filtersOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+      {!filtersOpen && activeFilters.length > 0 && (
+        <div className="sm:hidden -mt-2 flex gap-2 overflow-x-auto pb-1" aria-label="Seçili filtreler">
+          {activeFilters.map((filter) => (
+            <span key={filter} className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
+              {filter}
+            </span>
+          ))}
+        </div>
+      )}
       <section
+        id="kesfet-filters"
         aria-label="Etkinlik filtreleri"
-        className="bg-white border border-gray-200 rounded-2xl p-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-3"
+        className={`${filtersOpen ? "grid" : "hidden"} sm:grid bg-white border border-gray-200 rounded-2xl p-3 sm:p-4 sm:grid-cols-2 lg:grid-cols-3 gap-3`}
       >
         <select
           aria-label="Şehir"
