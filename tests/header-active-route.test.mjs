@@ -11,3 +11,12 @@ test("Keşfet rotasında İlanlar sekmesi aktif kalmaz", () => {
   );
 });
 
+test("Keşfet rotasında üst arama etkinlik içeriğini arar", () => {
+  assert.match(source, /kesfetteMi[\s\S]{0,80}\? 'Etkinlik, şehir veya mekân ara'/);
+  assert.match(source, /if \(rehberSayfasindaMi \|\| kesfetteMi\) return/);
+});
+
+test("Keşfet koleksiyonları masaüstünde dört sütun kullanır", () => {
+  const page = readFileSync("src/components/KesfetPage.tsx", "utf8");
+  assert.match(page, /lg:grid-cols-4/);
+});

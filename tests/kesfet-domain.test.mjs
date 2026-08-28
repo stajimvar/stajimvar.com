@@ -68,6 +68,32 @@ test("tarih filtreleri başlangıç yerine etkinlik aralığının kesişimini k
   assert.equal(domain.matchesDiscoverDateFilter(finishedYesterday, "today", now), false);
 });
 
+test("etkinlik konumu yalnız dolu parçaları doğru ayraçla birleştirir", () => {
+  assert.equal(
+    domain.formatDiscoverLocation({ city: "İstanbul", district: "", venueName: "Elgiz Müzesi" }),
+    "İstanbul · Elgiz Müzesi",
+  );
+  assert.equal(
+    domain.formatDiscoverLocation({ city: "İstanbul", district: "Şişli", venueName: "" }),
+    "İstanbul, Şişli",
+  );
+});
+
+test("Keşfet araması başlık şehir mekân organizatör ve kategoride çalışır", () => {
+  const event = {
+    title: "Girişimcilik Atölyesi",
+    city: "Eskişehir",
+    district: "Odunpazarı",
+    venueName: "Gençlik Merkezi",
+    organizer: "Anadolu Üniversitesi",
+    category: "workshop",
+  };
+  assert.equal(domain.matchesDiscoverSearch(event, "girişimcilik"), true);
+  assert.equal(domain.matchesDiscoverSearch(event, "eskisehir"), true);
+  assert.equal(domain.matchesDiscoverSearch(event, "anadolu"), true);
+  assert.equal(domain.matchesDiscoverSearch(event, "konser"), false);
+});
+
 test("yönetim formu zorunlu alanları ve güvenli HTTPS adreslerini doğrular", () => {
   assert.equal(typeof domain.validateDiscoverDraft, "function");
   const errors = domain.validateDiscoverDraft({

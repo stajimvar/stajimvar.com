@@ -54,6 +54,49 @@ export function matchesDiscoverDateFilter(event, filter, now = new Date()) {
   return start < rangeEnd && end >= rangeStart;
 }
 
+const discoverCategoryLabels = {
+  exhibition: "Sergi",
+  museum: "Müze",
+  festival: "Festival",
+  fair: "Fuar",
+  theatre: "Tiyatro",
+  concert: "Konser",
+  workshop: "Atölye",
+  university: "Üniversite etkinliği",
+  city_route: "Şehir rotası",
+  day_trip: "Günübirlik gezi",
+};
+
+const normalizeDiscoverText = (value = "") =>
+  String(value)
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replaceAll("ı", "i")
+    .trim();
+
+export function matchesDiscoverSearch(event, query) {
+  const needle = normalizeDiscoverText(query);
+  if (!needle) return true;
+  return [
+    event?.title,
+    event?.city,
+    event?.district,
+    event?.venueName,
+    event?.organizer,
+    discoverCategoryLabels[event?.category] || event?.category,
+  ].some((value) => normalizeDiscoverText(value).includes(needle));
+}
+
+export function formatDiscoverLocation(event) {
+  const area = [event?.city, event?.district]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean)
+    .join(", ");
+  const venue = String(event?.venueName || "").trim();
+  return [area, venue].filter(Boolean).join(" · ");
+}
+
 export function formatDiscoverDate(event, now = new Date()) {
   const precision = event?.timePrecision || "exact";
   const startsAt = new Date(event?.startsAt);

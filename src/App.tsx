@@ -881,7 +881,7 @@ export default function App() {
           şey arayan kişiyi rehberden atmak olurdu — sayfanın kendi arama
           kutusunu kaldırdığımız için tek arama yolu bu.
         */
-        if (/^\/rehber(\/|$)/.test(temizYol)) return;
+        if (/^\/(rehber|kesfet)(\/|$)/.test(temizYol)) return;
         // Arama ilan listesinde işliyor; başka sayfadayken oraya götürüyor.
         if (q && temizYol !== '/') navigate('/');
       }}
@@ -966,7 +966,15 @@ export default function App() {
     if (slug) return icerikSayfasi(<OpportunityDetailPage slug={slug} userId={session?.userId ?? null} onBack={() => navigate('/firsatlar')} onRequireLogin={handleOpenLogin} />);
   }
 
-  if (temizYol === '/kesfet') return icerikSayfasi(<KesfetPage onNavigate={navigate} />);
+  if (temizYol === '/kesfet') {
+    return icerikSayfasi(
+      <KesfetPage
+        onNavigate={navigate}
+        searchQuery={aramaTerimi}
+        onSearchChange={setAramaTerimi}
+      />
+    );
+  }
   if (temizYol.startsWith('/kesfet/')) {
     const slug = temizYol.slice('/kesfet/'.length);
     if (slug) return icerikSayfasi(<KesfetDetailPage slug={slug} onBack={() => navigate('/kesfet')} />);

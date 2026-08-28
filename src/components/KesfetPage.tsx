@@ -3,6 +3,7 @@ import {
   CalendarDays,
   ChevronDown,
   MapPin,
+  Search,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
@@ -16,7 +17,9 @@ import {
 import {
   buildDiscoverCollections,
   formatDiscoverDate,
+  formatDiscoverLocation,
   matchesDiscoverDateFilter,
+  matchesDiscoverSearch,
 } from "../lib/kesfet-domain.mjs";
 
 const verificationText = (event: DiscoverEvent) => {
@@ -43,7 +46,7 @@ const EventCard: React.FC<{
   compact?: boolean;
 }> = ({ event: e, onNavigate, compact }) => (
   <article
-    className={`overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm ${compact ? "min-w-[270px] w-[270px]" : ""}`}
+    className={`h-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm ${compact ? "min-w-[270px] w-[78vw] max-w-[320px] sm:min-w-0 sm:w-auto sm:max-w-none" : ""}`}
   >
     <EventCover
       src={e.cardImageUrl || e.imageUrl}
@@ -74,7 +77,7 @@ const EventCard: React.FC<{
       </p>
       <p className="flex gap-2 text-sm text-gray-600">
         <MapPin className="w-4 h-4 shrink-0" />
-        {e.city}, {e.district} · {e.venueName}
+        {formatDiscoverLocation(e)}
       </p>
       {e.studentPrice != null && (
         <p className="font-bold text-gray-900">
@@ -96,9 +99,11 @@ const EventCard: React.FC<{
     </div>
   </article>
 );
-export const KesfetPage: React.FC<{ onNavigate: (p: string) => void }> = ({
-  onNavigate,
-}) => {
+export const KesfetPage: React.FC<{
+  onNavigate: (p: string) => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+}> = ({ onNavigate, searchQuery = "", onSearchChange }) => {
   const [rows, setRows] = useState<DiscoverEvent[]>([]),
     [state, setState] = useState<"loading" | "ready" | "error">("loading");
   const [city, setCity] = useState(""),
@@ -130,9 +135,10 @@ export const KesfetPage: React.FC<{ onNavigate: (p: string) => void }> = ({
           (!category || x.category === category) &&
           (!free || x.isFree) &&
           (!discount || x.hasStudentDiscount) &&
+          matchesDiscoverSearch(x, searchQuery) &&
           (period === "all" || matchesDiscoverDateFilter(x, period)),
       ),
-    [rows, city, category, free, discount, period],
+    [rows, city, category, free, discount, period, searchQuery],
   );
   const collections = useMemo(
     () => buildDiscoverCollections(shown, { city }),
@@ -157,6 +163,19 @@ export const KesfetPage: React.FC<{ onNavigate: (p: string) => void }> = ({
           festivalleri, fuarları, müzeleri ve etkinlikleri keşfet.
         </p>
       </header>
+      {onSearchChange && (
+        <label className="relative block lg:hidden">
+          <span className="sr-only">Etkinlik ara</span>
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder="Etkinlik, şehir veya mekân ara"
+            className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm font-medium text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-600 focus:outline-none"
+          />
+        </label>
+      )}
       <button
         type="button"
         aria-expanded={filtersOpen}
@@ -285,7 +304,7 @@ export const KesfetPage: React.FC<{ onNavigate: (p: string) => void }> = ({
               >
                 {collection.title}
               </h2>
-              <div className="flex gap-4 overflow-x-auto pb-2 snap-x">
+              <div className="flex gap-4 overflow-x-auto pb-2 snap-x sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4">
                 {collection.events.map((event) => (
                   <div key={event.id} className="snap-start">
                     <EventCard event={event} onNavigate={onNavigate} compact />
