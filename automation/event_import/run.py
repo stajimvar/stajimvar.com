@@ -33,15 +33,19 @@ class RunMetrics:
     errors: int = 0
     missing_occurrences: int = 0
     archived_occurrences: int = 0
+    scan_complete: bool = False
 
 
 class ConfigAdapter:
     def __init__(self, config: dict[str, Any], client: OfficialHttpClient):
         self.config = config
         self.client = client
+        self.scan_complete = False
 
     def fetch(self, source: EventSource):
-        return fetch_source(self.config, self.client)
+        events = fetch_source(self.config, self.client)
+        self.scan_complete = bool(self.config.get("complete_scan", False)) and bool(events)
+        return events
 
 
 class StorageCoverService:
@@ -71,6 +75,7 @@ def run_source(source, adapter, repository, now: datetime, *, dry_run=False, cov
     metrics = RunMetrics()
     candidates = adapter.fetch(source)
     metrics.found = len(candidates)
+    metrics.scan_complete = bool(getattr(adapter, "scan_complete", False)) and metrics.found > 0
     if dry_run:
         for candidate in candidates:
             normalized = normalize_event(candidate, source, now)
@@ -107,7 +112,7 @@ def run_source(source, adapter, repository, now: datetime, *, dry_run=False, cov
         reconciliation = repository.reconcile_missing_occurrences(
             source,
             seen_occurrence_ids,
-            run_complete=metrics.errors == 0 and metrics.found > 0,
+            run_complete=metrics.errors == 0 and metrics.scan_complete,
         )
         metrics.missing_occurrences = reconciliation["missing"]
         metrics.archived_occurrences = reconciliation["archived"]

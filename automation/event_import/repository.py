@@ -231,7 +231,7 @@ class SupabaseEventRepository:
             "archived_occurrence_count": metrics.archived_occurrences,
             "error_summary": error,
         }
-        if not error and metrics.errors:
+        if not error and (metrics.errors or not metrics.scan_complete):
             payload["status"] = "partial"
         self.db.table("discover_event_import_runs").update(payload).eq("id", run_id).execute()
 

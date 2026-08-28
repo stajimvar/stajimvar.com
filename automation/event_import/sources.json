@@ -11,6 +11,7 @@
     "cities": ["İstanbul"],
     "official_domains": ["kultur.istanbul"],
     "trust_score": 95,
+    "complete_scan": false,
     "enabled": true
   },
   {
@@ -24,6 +25,7 @@
     "cities": ["Bursa"],
     "official_domains": ["www.bursa.bel.tr", "bursa.bel.tr"],
     "trust_score": 95,
+    "complete_scan": false,
     "enabled": true
   },
   {

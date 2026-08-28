@@ -40,6 +40,9 @@ export const KesfetDetailPage: React.FC<{
     );
   const now = new Date();
   const occurrences = e.occurrences || [];
+  const lifecycleStatus = occurrences.find(
+    (occurrence) => occurrence.status !== "scheduled",
+  )?.status;
   const ended = occurrences.length
     ? !occurrences.some(
         (occurrence) =>
@@ -64,9 +67,13 @@ export const KesfetDetailPage: React.FC<{
           coverKind={e.coverKind}
         />
         <div className="p-6 sm:p-8 space-y-5">
-          {ended && (
+          {(ended || lifecycleStatus) && (
             <p className="rounded-xl bg-amber-50 text-amber-800 font-bold p-3">
-              Etkinlik sona erdi
+              {lifecycleStatus === "cancelled"
+                ? "Etkinlik iptal edildi"
+                : lifecycleStatus === "postponed"
+                  ? "Etkinlik ertelendi"
+                  : "Etkinlik sona erdi"}
             </p>
           )}
           <span className="text-sm font-bold text-blue-700">

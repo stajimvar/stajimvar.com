@@ -70,6 +70,8 @@ class MemoryRepository:
 
 
 class FakeAdapter:
+    scan_complete = True
+
     def fetch(self, source):
         return [
             EventCandidate(
@@ -165,6 +167,8 @@ def test_missing_occurrence_archives_only_after_three_complete_runs():
     run_source(official_source(), FakeAdapter(), repository, NOW)
 
     class ReplacementAdapter:
+        scan_complete = True
+
         def fetch(self, source):
             base = FakeAdapter().fetch(source)[0]
             return [EventCandidate(**{
@@ -212,6 +216,27 @@ def test_empty_scan_is_not_treated_as_complete_for_reconciliation():
     run_source(official_source(), EmptyAdapter(), repository, NOW)
     occurrence = next(iter(repository.occurrences.values()))
     assert occurrence["consecutive_missing_runs"] == 0
+
+
+def test_nonempty_scan_without_positive_completeness_does_not_reconcile():
+    repository = MemoryRepository()
+    run_source(official_source(), FakeAdapter(), repository, NOW)
+
+    class TruncatedAdapter:
+        scan_complete = False
+
+        def fetch(self, source):
+            base = FakeAdapter().fetch(source)[0]
+            return [EventCandidate(**{
+                **asdict(base),
+                "source_url": "https://official.example/events/84",
+                "title": "Eksik taramadaki başka etkinlik",
+            })]
+
+    metrics = run_source(official_source(), TruncatedAdapter(), repository, NOW)
+    original = next(value for value in repository.occurrences.values() if value["event_id"].endswith("/42"))
+    assert original["consecutive_missing_runs"] == 0
+    assert metrics.scan_complete is False
 
 
 def test_explicit_cancellation_is_immediate():

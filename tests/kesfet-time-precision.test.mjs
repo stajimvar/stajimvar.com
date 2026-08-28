@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 
 const domain = await import("../src/lib/kesfet-domain.mjs");
 
@@ -28,4 +29,13 @@ test("ongoing etkinlik açıkça devam ediyor olarak etiketlenir", () => {
   });
   assert.match(text, /Devam ediyor/);
   assert.doesNotMatch(text, /00:00/);
+});
+
+test("tek seanslı iptal ve erteleme detayda doğru yaşam döngüsü mesajını gösterir", async () => {
+  const source = await readFile(
+    new URL("../src/components/KesfetDetailPage.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /lifecycleStatus === "cancelled"[\s\S]+Etkinlik iptal edildi/);
+  assert.match(source, /lifecycleStatus === "postponed"[\s\S]+Etkinlik ertelendi/);
 });
