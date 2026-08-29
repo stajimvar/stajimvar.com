@@ -44,6 +44,7 @@ import { OpportunitiesPage } from './components/OpportunitiesPage';
 import { OpportunityDetailPage } from './components/OpportunityDetailPage';
 import { OpportunitiesHomeSection } from './components/OpportunitiesHomeSection';
 import { basvuruSonucMesaji } from './lib/basvuru-yolu.mjs';
+import { basvuruKopyasi } from './lib/basvuru-kopyasi.mjs';
 import { aramaTeriminiOku, aramaAdresi } from './lib/arama-url.mjs';
 import { AdminOpportunitiesView, AdminOpportunityCreate } from './components/AdminOpportunitiesView';
 import { AdminInstagramView } from './components/AdminInstagramView';
@@ -755,6 +756,12 @@ export default function App() {
       applicationChannelId: applyTarget.listing.applicationChannelId,
       contactShareConsent: consent,
       consentVersion: KVKK_VERSION,
+      /*
+        Şirket öğrencinin `profiles` satırını okuyamıyor; başvuran
+        kartındaki ad, okul ve bölüm yalnızca bu kopyadan geliyor. Kopya
+        rıza verilmediyse queries katmanında yazılmıyor.
+      */
+      profileSnapshot: basvuruKopyasi(activeStudent),
     });
 
     setApplications((prev) => [created, ...prev]);
@@ -1263,7 +1270,18 @@ export default function App() {
     /isveren/ilan-ver'e gidiyor. Panelin bos halini gostermek, olmayan bir
     yetkiyi varmis gibi gostermek olurdu.
   */
-  if (SIRKET_PANEL_YOLLARI.some((p) => temizYol === p || temizYol.startsWith(`${p}/`))) {
+  /*
+    Ciplak /sirket bir sayfa degil: ne panel ne de bir sirketin sayfasi.
+    Panelin ilk ekranina cevriliyor. Giris yoksa asagidaki Kapi 1 yine
+    isveren kapisini gosteriyor -- yonlendirme yetkiyi atlamiyor.
+  */
+  const sirketPanelYolu = temizYol === '/sirket' ? '/sirket/ilanlar' : temizYol;
+
+  if (
+    SIRKET_PANEL_YOLLARI.some(
+      (p) => sirketPanelYolu === p || sirketPanelYolu.startsWith(`${p}/`)
+    )
+  ) {
     if (!isLoggedIn) {
       return icerikSayfasi(
         <IsverenGirisi
@@ -1279,7 +1297,7 @@ export default function App() {
     return (
       <>
         <SirketPaneli
-          yol={temizYol}
+          yol={sirketPanelYolu}
           userId={session?.userId ?? null}
           yoneticiMi={isAdmin}
           onNavigate={navigate}

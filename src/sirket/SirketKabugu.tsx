@@ -1,36 +1,35 @@
 import React from 'react';
-import { Briefcase, Building2, LogOut, Users } from 'lucide-react';
+import { Briefcase, Building2, GraduationCap, Users } from 'lucide-react';
+import {
+  SIRKET_KENAR,
+  SIRKET_METIN,
+  SIRKET_METIN_IKINCIL,
+  SIRKET_ROZET,
+  SIRKET_VURGU,
+  SIRKET_VURGU_KOYU,
+  SIRKET_YUZEY,
+  SIRKET_ZEMIN,
+} from './renk';
 
 /**
  * Şirket dünyasının kabuğu.
  *
  * NEDEN AYRI KABUK
  * ----------------
- * Öğrenci arayüzü açık, kâğıt gibi, listeler hâlinde (#F9FAFB). İK'nın
- * işi başka: gün içinde birkaç kez girip ilan açmak ve başvuranları
- * taramak. Aynı temayı iki işe birden giydirmek, ikisini de yarım
- * bırakıyor.
+ * Öğrenci arayüzü mavi-beyaz ve listeler hâlinde. İK'nın işi başka: gün
+ * içinde birkaç kez girip ilan açmak ve başvuranları taramak. Ayrım
+ * temanın karanlığında değil, RENGİNDE: burası turuncu-beyaz.
  *
- * Öğrenci teması buraya SIZMIYOR: bu ağaçta öğrenci navigasyonu,
- * öğrenci zemini ve öğrenci sekmeleri hiç çizilmiyor.
+ * Öğrenci teması buraya SIZMIYOR: bu ağaçta öğrenci navigasyonu, öğrenci
+ * zemini (#F9FAFB) ve öğrenci mavisi hiç çizilmiyor.
  *
  * DÖRT İŞ, FAZLASI DEĞİL
  * ----------------------
- * İlanlar, Başvuranlar, Şirket, Çıkış. Panelde beşinci bir şey olsaydı
- * gün içinde birkaç dakika ayıran İK onu hiç açmazdı; olmayan bir şey,
- * açılmayan bir şeyden iyidir.
- *
- * TEK VURGU RENGİ
- * ---------------
- * Zemin #0E1116, vurgu amber. İki vurgu rengi olsaydı hangisinin ne
- * demek olduğu belirsizleşirdi — yeşil ve kırmızı burada da yalnızca
- * kendi anlamlarında (doğrulandı / hata).
+ * İlanlar, Başvuranlar, Şirket, Öğrenci. Dördüncüsü bir sekme değil
+ * KAPI: kullanıcıyı kendi öğrenci tarafına geri götürüyor. Eskiden
+ * "Çıkış" yazıyordu ve oturumu kapattığı sanılıyordu; oturumu kapatmak
+ * hesap menüsünün işi.
  */
-
-export const SIRKET_ZEMIN = '#0E1116';
-export const SIRKET_YUZEY = '#161B22';
-export const SIRKET_KENAR = '#232A34';
-export const SIRKET_VURGU = '#F5A524';
 
 export type SirketSekmesi = 'ilanlar' | 'basvuranlar' | 'sirket';
 
@@ -43,31 +42,33 @@ const SEKMELER: { id: SirketSekmesi; etiket: string; ikon: React.ReactNode; yol:
 export const SirketKabugu: React.FC<{
   secili: SirketSekmesi;
   onNavigate: (yol: string) => void;
-  onCikis: () => void;
-  /** Sağ üstte görünen kısa durum: "Kademe 1" ya da doğrulanmış rozeti. */
+  /** Öğrenci dünyasına dönüş. Oturum kapatma DEĞİL. */
+  onOgrenciyeDon: () => void;
+  /** Sağ üstte görünen kısa durum. Kademe numarası yazmıyor. */
   durumRozeti?: React.ReactNode;
   children: React.ReactNode;
-}> = ({ secili, onNavigate, onCikis, durumRozeti, children }) => (
-  <div className="min-h-screen text-gray-100" style={{ background: SIRKET_ZEMIN }}>
+}> = ({ secili, onNavigate, onOgrenciyeDon, durumRozeti, children }) => (
+  <div className="min-h-screen" style={{ background: SIRKET_ZEMIN, color: SIRKET_METIN }}>
     <header
       className="sticky top-0 z-30 border-b"
-      style={{ background: SIRKET_ZEMIN, borderColor: SIRKET_KENAR }}
+      style={{ background: SIRKET_YUZEY, borderColor: SIRKET_KENAR }}
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
         <button
           type="button"
           onClick={() => onNavigate('/sirket/ilanlar')}
           className="flex cursor-pointer items-center gap-2 font-black tracking-tight"
         >
-          <span className="text-lg text-white">StajımVar</span>
+          <span className="text-lg" style={{ color: SIRKET_METIN }}>
+            StajımVar
+          </span>
           {/*
             Monospace YALNIZCA etiketlerde (VKN, ilan no). Gövde metninde
-            kullanmak paneli terminal taklidine çeviriyor; burada amaç
-            hız hissi, kostüm değil.
+            kullanmak paneli terminal taklidine çeviriyor.
           */}
           <span
             className="rounded px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest"
-            style={{ background: SIRKET_YUZEY, color: SIRKET_VURGU }}
+            style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
           >
             İşveren
           </span>
@@ -83,25 +84,27 @@ export const SirketKabugu: React.FC<{
               className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl px-3 text-sm font-bold transition-colors"
               style={
                 secili === s.id
-                  ? { background: SIRKET_YUZEY, color: SIRKET_VURGU }
-                  : { color: '#9AA4B2' }
+                  ? { background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }
+                  : { color: SIRKET_METIN_IKINCIL }
               }
             >
               {s.ikon}
               {s.etiket}
             </button>
           ))}
+          <span className="mx-1 h-6 w-px" style={{ background: SIRKET_KENAR }} />
           <button
             type="button"
-            onClick={onCikis}
-            className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl px-3 text-sm font-bold text-gray-400 transition-colors hover:text-white"
+            onClick={onOgrenciyeDon}
+            className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl px-3 text-sm font-bold transition-colors"
+            style={{ color: SIRKET_METIN_IKINCIL }}
           >
-            <LogOut className="h-5 w-5" />
-            Çıkış
+            <GraduationCap className="h-5 w-5" />
+            Öğrenci
           </button>
         </nav>
 
-        {durumRozeti && <span className="ml-auto sm:ml-0">{durumRozeti}</span>}
+        {durumRozeti && <span className="ml-auto sm:ml-2">{durumRozeti}</span>}
       </div>
     </header>
 
@@ -114,7 +117,7 @@ export const SirketKabugu: React.FC<{
       aria-label="Şirket menüsü"
       className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around border-t px-2 py-2 sm:hidden"
       style={{
-        background: SIRKET_ZEMIN,
+        background: SIRKET_YUZEY,
         borderColor: SIRKET_KENAR,
         paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
       }}
@@ -127,7 +130,7 @@ export const SirketKabugu: React.FC<{
           aria-label={s.etiket}
           aria-current={secili === s.id ? 'page' : undefined}
           className="flex h-11 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-bold"
-          style={secili === s.id ? { color: SIRKET_VURGU } : { color: '#9AA4B2' }}
+          style={secili === s.id ? { color: SIRKET_VURGU_KOYU } : { color: SIRKET_METIN_IKINCIL }}
         >
           {s.ikon}
           {s.etiket}
@@ -135,13 +138,20 @@ export const SirketKabugu: React.FC<{
       ))}
       <button
         type="button"
-        onClick={onCikis}
-        aria-label="Çıkış"
-        className="flex h-11 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-bold text-gray-400"
+        onClick={onOgrenciyeDon}
+        aria-label="Öğrenci tarafına dön"
+        className="flex h-11 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-bold"
+        style={{ color: SIRKET_METIN_IKINCIL }}
       >
-        <LogOut className="h-5 w-5" />
-        Çıkış
+        <GraduationCap className="h-5 w-5" />
+        Öğrenci
       </button>
     </nav>
   </div>
 );
+
+/*
+  Eski koyu tema belirteçleri buradan kaldırıldı; renkler artık ./renk
+  dosyasında. Panelde doğrudan renk yazılmıyor.
+*/
+export { SIRKET_KENAR, SIRKET_VURGU, SIRKET_YUZEY, SIRKET_ZEMIN };

@@ -7,12 +7,29 @@ import {
   SABLONLAR,
   STAJ_TURLERI,
   UCRET_SECENEKLERI,
+  BASVURU_TIPLERI,
   ilanGecerli,
   ilanSatiri,
   ilanSorunlari,
+  platformBasvurusuSecilebilir,
 } from '../lib/ilan-formu.mjs';
 import { ilanBaslangicDurumu, ilanBayraklari } from '../lib/sirket-kademe.mjs';
-import { SIRKET_KENAR, SIRKET_VURGU, SIRKET_YUZEY } from './SirketKabugu';
+import {
+  ALAN,
+  BIRINCIL_DUGME,
+  IKINCIL_DUGME,
+  KUTU,
+  SIRKET_KENAR,
+  SIRKET_METIN,
+  SIRKET_METIN_IKINCIL,
+  SIRKET_ROZET,
+  SIRKET_VURGU_KOYU,
+  SIRKET_YUZEY,
+  alanStil,
+  birincilStil,
+  ikincilStil,
+  kutuStil,
+} from './renk';
 
 /**
  * İlan formu — tek ekran, sihirbaz yok.
@@ -30,13 +47,14 @@ import { SIRKET_KENAR, SIRKET_VURGU, SIRKET_YUZEY } from './SirketKabugu';
  * bastıktan sonra "neden yayında değil" sorusu doğmasın.
  */
 
-const alanSinifi =
-  'w-full min-h-11 rounded-xl border bg-transparent px-3 text-sm text-gray-100 outline-none placeholder:text-gray-500 focus:border-amber-400';
+const alanSinifi = ALAN;
 
 const Etiket: React.FC<{ children: React.ReactNode; sorun?: string }> = ({ children, sorun }) => (
   <span className="mb-1 flex items-baseline justify-between gap-2">
-    <span className="text-xs font-bold text-gray-300">{children}</span>
-    {sorun && <span className="text-[11px] font-semibold text-rose-400">{sorun}</span>}
+    <span className="text-xs font-bold" style={{ color: SIRKET_METIN }}>
+      {children}
+    </span>
+    {sorun && <span className="text-[11px] font-semibold text-rose-700">{sorun}</span>}
   </span>
 );
 
@@ -55,8 +73,8 @@ const SecimSeridi: React.FC<{
         className="min-h-11 cursor-pointer rounded-xl border px-3 text-sm font-bold transition-colors"
         style={
           deger === s.id
-            ? { borderColor: SIRKET_VURGU, color: SIRKET_VURGU, background: SIRKET_YUZEY }
-            : { borderColor: SIRKET_KENAR, color: '#9AA4B2' }
+            ? { borderColor: SIRKET_VURGU_KOYU, color: SIRKET_VURGU_KOYU, background: SIRKET_ROZET }
+            : { borderColor: SIRKET_KENAR, color: SIRKET_METIN_IKINCIL, background: SIRKET_YUZEY }
         }
       >
         {s.etiket}
@@ -76,6 +94,7 @@ export interface IlanFormDegeri {
   basvuruUrl: string;
   aciklama: string;
   sonBasvuru: string;
+  basvuruTipi: string;
 }
 
 const BOS: IlanFormDegeri = {
@@ -89,6 +108,8 @@ const BOS: IlanFormDegeri = {
   basvuruUrl: '',
   aciklama: '',
   sonBasvuru: '',
+  /* Varsayılan HER ZAMAN şirketin kendi adresi. */
+  basvuruTipi: 'kendi',
 };
 
 export const IlanFormu: React.FC<{
@@ -112,6 +133,8 @@ export const IlanFormu: React.FC<{
   const sorunlar = ilanSorunlari(deger);
   const goster = (alan: keyof IlanFormDegeri) => (gonderildi ? sorunlar[alan] : undefined);
 
+  const platformSecilebilir = platformBasvurusuSecilebilir(kademe);
+  const platformdan = platformSecilebilir && deger.basvuruTipi === 'platform';
   const baslangicDurumu = ilanBaslangicDurumu({ kademe, siteUrl, eposta });
   const yayindaBaslar = baslangicDurumu === 'published';
   const bayraklar = ilanBayraklari(deger.aciklama);
@@ -137,15 +160,12 @@ export const IlanFormu: React.FC<{
   if (durum === 'bitti' && sonuc) {
     const adres = `${window.location.origin}/ilan/${sonuc.id}`;
     return (
-      <div
-        className="space-y-4 rounded-2xl border p-6"
-        style={{ background: SIRKET_YUZEY, borderColor: SIRKET_KENAR }}
-      >
-        <p className="flex items-center gap-2 text-lg font-extrabold text-white">
-          <Check className="h-5 w-5" style={{ color: SIRKET_VURGU }} />
+      <div className={`space-y-4 ${KUTU}`} style={kutuStil}>
+        <p className="flex items-center gap-2 text-lg font-extrabold" style={{ color: SIRKET_METIN }}>
+          <Check className="h-5 w-5" style={{ color: SIRKET_VURGU_KOYU }} />
           {sonuc.yayinda ? 'İlan canlı' : 'İlan taslak olarak kaydedildi'}
         </p>
-        <p className="text-sm leading-relaxed text-gray-300">
+        <p className="text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
           {sonuc.yayinda
             ? 'İlan öğrenci listesinde görünüyor. Bağlantıyı paylaşabilirsin.'
             : 'Kurumsal e-posta alan adın site adresinle eşleşmediği için ilan önce bizde inceleniyor. Genellikle bir iş günü içinde yayına alıyoruz; sonucu e-postayla yazacağız.'}
@@ -154,8 +174,8 @@ export const IlanFormu: React.FC<{
         {sonuc.yayinda && (
           <div className="flex flex-wrap items-center gap-2">
             <code
-              className="min-w-0 flex-1 truncate rounded-xl px-3 py-2.5 font-mono text-xs text-gray-300"
-              style={{ background: SIRKET_ZEMIN_KOYU, border: `1px solid ${SIRKET_KENAR}` }}
+              className="min-w-0 flex-1 truncate rounded-xl px-3 py-2.5 font-mono text-xs"
+              style={{ background: SIRKET_ROZET, border: `1px solid ${SIRKET_KENAR}`, color: SIRKET_METIN }}
             >
               {adres}
             </code>
@@ -167,8 +187,8 @@ export const IlanFormu: React.FC<{
                   .then(() => setKopyalandi(true))
                   .catch(() => setKopyalandi(false));
               }}
-              className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl px-4 text-sm font-bold text-gray-900"
-              style={{ background: SIRKET_VURGU }}
+              className={BIRINCIL_DUGME}
+              style={birincilStil}
             >
               <Copy className="h-4 w-4" />
               {kopyalandi ? 'Kopyalandı' : 'Bağlantıyı kopyala'}
@@ -179,8 +199,8 @@ export const IlanFormu: React.FC<{
         <button
           type="button"
           onClick={onIptal}
-          className="min-h-11 cursor-pointer rounded-xl border px-4 text-sm font-bold text-gray-200"
-          style={{ borderColor: SIRKET_KENAR }}
+          className={IKINCIL_DUGME}
+          style={ikincilStil}
         >
           İlanlara dön
         </button>
@@ -191,16 +211,15 @@ export const IlanFormu: React.FC<{
   return (
     <div className="space-y-5">
       <div className="space-y-1">
-        <h1 className="text-2xl font-extrabold tracking-tight text-white">Yeni ilan</h1>
-        <p className="text-sm text-gray-400">
+        <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
+          Yeni ilan
+        </h1>
+        <p className="text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
           {sirketAdi} · {yayindaBaslar ? 'Yayınla dediğinde canlıya çıkar' : 'Yayınla dediğinde incelemeye gider'}
         </p>
       </div>
 
-      <div
-        className="space-y-5 rounded-2xl border p-4 sm:p-6"
-        style={{ background: SIRKET_YUZEY, borderColor: SIRKET_KENAR }}
-      >
+      <div className="space-y-5 rounded-2xl border p-4 sm:p-6" style={kutuStil}>
         <label className="block">
           <Etiket sorun={goster('unvan')}>Pozisyon *</Etiket>
           <input
@@ -208,7 +227,7 @@ export const IlanFormu: React.FC<{
             onChange={(e) => yaz('unvan')(e.target.value)}
             placeholder="Yazılım Stajyeri"
             className={alanSinifi}
-            style={{ borderColor: SIRKET_KENAR }}
+            style={alanStil}
           />
         </label>
 
@@ -220,7 +239,7 @@ export const IlanFormu: React.FC<{
               onChange={(e) => yaz('sehir')(e.target.value)}
               placeholder="İstanbul"
               className={alanSinifi}
-              style={{ borderColor: SIRKET_KENAR }}
+              style={alanStil}
             />
           </label>
           <div>
@@ -246,7 +265,7 @@ export const IlanFormu: React.FC<{
               onChange={(e) => yaz('sure')(e.target.value)}
               placeholder="20 iş günü"
               className={alanSinifi}
-              style={{ borderColor: SIRKET_KENAR }}
+              style={alanStil}
             />
           </label>
           <label className="block">
@@ -256,7 +275,7 @@ export const IlanFormu: React.FC<{
               value={deger.sonBasvuru}
               onChange={(e) => yaz('sonBasvuru')(e.target.value)}
               className={alanSinifi}
-              style={{ borderColor: SIRKET_KENAR }}
+              style={alanStil}
             />
           </label>
         </div>
@@ -270,30 +289,59 @@ export const IlanFormu: React.FC<{
               onChange={(e) => yaz('ucretTutari')(e.target.value)}
               placeholder="17.000 TL / ay"
               className={`mt-2 ${alanSinifi}`}
-              style={{ borderColor: SIRKET_KENAR }}
+              style={alanStil}
             />
           )}
         </div>
 
-        <label className="block">
-          <Etiket sorun={goster('basvuruUrl')}>Başvuru adresi *</Etiket>
-          <input
-            type="url"
-            inputMode="url"
-            value={deger.basvuruUrl}
-            onChange={(e) => yaz('basvuruUrl')(e.target.value)}
-            placeholder="https://sirketiniz.com/kariyer/staj"
-            className={alanSinifi}
-            style={{ borderColor: SIRKET_KENAR }}
-          />
-          {/*
-            Varsayılan başvuru şirketin KENDİ adresi. Platformdan başvuru
-            yalnızca doğrulanmış şirkette açılıyor.
-          */}
-          <span className="mt-1 block text-[11px] text-gray-500">
-            Öğrenci doğrudan bu adrese gidiyor.
-          </span>
-        </label>
+        {/*
+          BAŞVURU NEREYE DÜŞÜYOR
+
+          Varsayılan her zaman şirketin kendi adresi. "StajımVar ile
+          başvur" yalnızca doğrulanmış şirkette çizilir — Kademe 1'de
+          seçenek hiç görünmüyor ve adres zorunlu kalıyor. Bu düğmeyi
+          "seçilemez" hâlde göstermek bile o kapının var olduğunu ima
+          ederdi.
+        */}
+        {platformSecilebilir && (
+          <div>
+            <Etiket>Başvurular nereye gelsin? *</Etiket>
+            <SecimSeridi
+              secenekler={BASVURU_TIPLERI}
+              deger={deger.basvuruTipi}
+              onSec={yaz('basvuruTipi')}
+            />
+            {platformdan && (
+              <p
+                className="mt-2 rounded-xl border px-3 py-2.5 text-[11px] leading-relaxed"
+                style={{ borderColor: SIRKET_KENAR, background: SIRKET_ROZET, color: SIRKET_METIN }}
+              >
+                Öğrenci StajımVar'da başvuruyor ve kartı "Başvuranlar" sekmesine düşüyor.
+                Adı, okulu ve projeleri ancak öğrenci "profilim bu şirketle paylaşılsın"
+                dediğinde aktarılıyor.
+              </p>
+            )}
+          </div>
+        )}
+
+        {!platformdan && (
+          <label className="block">
+            <Etiket sorun={goster('basvuruUrl')}>Başvuru adresi *</Etiket>
+            <input
+              type="url"
+              inputMode="url"
+              value={deger.basvuruUrl}
+              onChange={(e) => yaz('basvuruUrl')(e.target.value)}
+              placeholder="https://sirketiniz.com/kariyer/staj"
+              className={alanSinifi}
+              style={alanStil}
+            />
+            <span className="mt-1 block text-[11px]" style={{ color: SIRKET_METIN_IKINCIL }}>
+              Öğrenci doğrudan bu adrese gidiyor; StajımVar'da hiçbir kişisel bilgi
+              paylaşılmıyor.
+            </span>
+          </label>
+        )}
 
         <div>
           <Etiket sorun={goster('aciklama')}>İş tanımı *</Etiket>
@@ -303,8 +351,8 @@ export const IlanFormu: React.FC<{
                 key={s.id}
                 type="button"
                 onClick={() => yaz('aciklama')(s.metin)}
-                className="min-h-11 cursor-pointer rounded-xl border px-3 text-xs font-bold text-gray-300"
-                style={{ borderColor: SIRKET_KENAR }}
+                className="min-h-11 cursor-pointer rounded-xl border px-3 text-xs font-bold"
+                style={ikincilStil}
               >
                 {s.etiket} şablonu
               </button>
@@ -315,10 +363,13 @@ export const IlanFormu: React.FC<{
             onChange={(e) => yaz('aciklama')(e.target.value)}
             rows={9}
             placeholder="Stajyerin ne yapacağını, kimden destek alacağını ve neler beklediğinizi yazın."
-            className="w-full rounded-xl border bg-transparent p-3 text-sm leading-relaxed text-gray-100 outline-none placeholder:text-gray-500 focus:border-amber-400"
-            style={{ borderColor: SIRKET_KENAR }}
+            className="w-full rounded-xl border p-3 text-sm leading-relaxed outline-none placeholder:text-[#A08C7D]"
+            style={alanStil}
           />
-          <span className="mt-1 block text-right font-mono text-[11px] text-gray-500">
+          <span
+            className="mt-1 block text-right font-mono text-[11px]"
+            style={{ color: SIRKET_METIN_IKINCIL }}
+          >
             {deger.aciklama.trim().length} / {ACIKLAMA_EN_AZ}–{ACIKLAMA_EN_FAZLA}
           </span>
 
@@ -330,7 +381,7 @@ export const IlanFormu: React.FC<{
           {bayraklar.length > 0 && (
             <div
               className="mt-2 rounded-xl border px-3 py-2.5 text-[11px] leading-relaxed"
-              style={{ borderColor: '#7c4a03', background: '#2a1a04', color: '#f5c26b' }}
+              style={{ borderColor: SIRKET_VURGU_KOYU, background: SIRKET_ROZET, color: SIRKET_METIN }}
             >
               İlan metninde dikkat çeken ifadeler var: {bayraklar.join(', ')}. Staj ilanında
               adaydan para, teminat ya da WhatsApp üzerinden başvuru istenmesi kabul edilmiyor.
@@ -339,15 +390,15 @@ export const IlanFormu: React.FC<{
         </div>
       </div>
 
-      {durum === 'hata' && <p className="text-sm font-semibold text-rose-400">{hata}</p>}
+      {durum === 'hata' && <p className="text-sm font-semibold text-rose-700">{hata}</p>}
 
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={() => void gonder()}
           disabled={durum === 'kaydediliyor'}
-          className="inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-xl px-5 text-sm font-black text-gray-900 disabled:opacity-60"
-          style={{ background: SIRKET_VURGU }}
+          className={BIRINCIL_DUGME}
+          style={birincilStil}
         >
           {durum === 'kaydediliyor'
             ? 'Kaydediliyor…'
@@ -358,8 +409,8 @@ export const IlanFormu: React.FC<{
         <button
           type="button"
           onClick={onIptal}
-          className="min-h-12 cursor-pointer rounded-xl border px-4 text-sm font-bold text-gray-300"
-          style={{ borderColor: SIRKET_KENAR }}
+          className={IKINCIL_DUGME}
+          style={ikincilStil}
         >
           Vazgeç
         </button>
@@ -369,7 +420,8 @@ export const IlanFormu: React.FC<{
             href={deger.basvuruUrl}
             target="_blank"
             rel="noreferrer noopener"
-            className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-white"
+            className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold"
+            style={{ color: SIRKET_VURGU_KOYU }}
           >
             Başvuru adresini aç
             <ExternalLink className="h-3.5 w-3.5" />
@@ -379,6 +431,3 @@ export const IlanFormu: React.FC<{
     </div>
   );
 };
-
-/* Sonuç kutusundaki kod bloğunun zemini; kabuk zeminiyle aynı. */
-const SIRKET_ZEMIN_KOYU = '#0E1116';

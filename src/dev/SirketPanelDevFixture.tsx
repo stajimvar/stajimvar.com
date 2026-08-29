@@ -1,7 +1,10 @@
 import React from 'react';
 import { SirketKabugu } from '../sirket/SirketKabugu';
 import { IlanFormu } from '../sirket/IlanFormu';
+import { AdayIzgarasi } from '../sirket/AdayIzgarasi';
+import { SIRKET_KENAR, SIRKET_METIN, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
 import { KADEME } from '../lib/sirket-kademe.mjs';
+import { kartVerisi } from '../lib/aday-kart.mjs';
 
 /**
  * Şirket panelinin görsel testi.
@@ -13,21 +16,88 @@ import { KADEME } from '../lib/sirket-kademe.mjs';
  * yerleşimi bozuk bir şey canlıya çıktı; tip denetimi bir yerleşim
  * hatasını yakalamıyor.
  *
- * Burada kabuk ve ilan formu gerçek verilerle değil ama gerçek
- * bileşenlerle çiziliyor: ölçüler, tema sızıntısı ve form davranışı
- * ölçülebiliyor.
+ * Burada kabuk, ilan formu ve aday ızgarası gerçek verilerle değil ama
+ * GERÇEK bileşenlerle çiziliyor: ölçüler, tema sızıntısı, klavye
+ * gezinmesi ve form davranışı ölçülebiliyor.
+ *
+ * Buradaki adaylar bilerek "Aday A/B/C": gerçek bir kişiye benzeyen
+ * uydurma isim, ekran görüntüsüne düştüğünde gerçek sanılır.
  *
  * Yalnızca development sunucusunda servis ediliyor; üretim paketine
  * girmiyor.
  */
+
+const ORNEK_BASVURULAR = [
+  {
+    id: 'test-1',
+    status: 'submitted',
+    applied_at: '2026-08-20T09:00:00Z',
+    match_score: 88,
+    listing_id: 'ilan-1',
+    ilanBasligi: 'Yazılım Stajyeri',
+    application_method: 'internal',
+    contact_share_consent_at: '2026-08-20T09:00:00Z',
+    cover_letter: 'Bu bir test ön yazısıdır.',
+    profile_snapshot: {
+      ad: 'Aday A',
+      universite: 'Örnek Üniversitesi',
+      bolum: 'Bilgisayar Mühendisliği',
+      sinif: '3. Sınıf',
+      sehir: 'İstanbul',
+      github: 'ornek',
+      yetenekler: ['React', 'TypeScript', 'PostgreSQL'],
+      diller: ['İngilizce (B2)'],
+      rozetler: ['Test rozeti'],
+      projeler: [{ baslik: 'Örnek proje', aciklama: 'Test açıklaması', adres: null }],
+    },
+  },
+  {
+    id: 'test-2',
+    status: 'under_review',
+    applied_at: '2026-08-18T09:00:00Z',
+    match_score: 61,
+    listing_id: 'ilan-1',
+    ilanBasligi: 'Yazılım Stajyeri',
+    application_method: 'internal',
+    contact_share_consent_at: '2026-08-18T09:00:00Z',
+    profile_snapshot: {
+      ad: 'Aday B',
+      universite: 'Örnek Teknik Üniversitesi',
+      bolum: 'Endüstri Mühendisliği',
+      sinif: '2. Sınıf',
+      sehir: 'Ankara',
+      yetenekler: ['Excel', 'Python'],
+      rozetler: [],
+      projeler: [],
+    },
+  },
+  {
+    /* Rıza yok: şirketin kendi sitesinden gelen başvuru. Ad görünmemeli. */
+    id: 'test-3',
+    status: 'submitted',
+    applied_at: '2026-08-15T09:00:00Z',
+    match_score: 34,
+    listing_id: 'ilan-1',
+    ilanBasligi: 'Yazılım Stajyeri',
+    application_method: 'external',
+    contact_share_consent_at: null,
+    profile_snapshot: null,
+  },
+];
+
 export const SirketPanelDevFixture: React.FC = () => {
   const [kademe, setKademe] = React.useState<number>(KADEME.ILAN_VEREN);
-  const [ekran, setEkran] = React.useState<'ilanlar' | 'form'>('form');
+  const [ekran, setEkran] = React.useState<'form' | 'adaylar'>('form');
+
+  const kartlar = React.useMemo(
+    () => ORNEK_BASVURULAR.map((s) => kartVerisi(s, { yetenekler: [] })),
+    []
+  );
 
   return (
     <>
       {/* Test kolları — gerçek panelde yok. */}
-      <div className="fixed left-2 top-2 z-[300] flex gap-2 rounded-xl bg-white p-2 text-xs shadow">
+      <div className="fixed left-2 top-20 z-[300] flex gap-2 rounded-xl bg-white p-2 text-xs shadow-lg">
         <button
           type="button"
           id="dev-kademe-1"
@@ -47,7 +117,7 @@ export const SirketPanelDevFixture: React.FC = () => {
         <button
           type="button"
           id="dev-ekran"
-          onClick={() => setEkran((e) => (e === 'form' ? 'ilanlar' : 'form'))}
+          onClick={() => setEkran((e) => (e === 'form' ? 'adaylar' : 'form'))}
           className="rounded-lg border px-2 py-1 font-bold"
         >
           Ekran
@@ -55,12 +125,19 @@ export const SirketPanelDevFixture: React.FC = () => {
       </div>
 
       <SirketKabugu
-        secili={ekran === 'form' ? 'ilanlar' : 'ilanlar'}
+        secili={ekran === 'adaylar' ? 'basvuranlar' : 'ilanlar'}
         onNavigate={() => undefined}
-        onCikis={() => undefined}
+        onOgrenciyeDon={() => undefined}
         durumRozeti={
-          <span className="rounded-lg px-2 py-1 font-mono text-[11px] font-bold" style={{ background: '#161B22', color: '#F5A524' }}>
-            {kademe === KADEME.DOGRULANMIS ? 'DOĞRULANMIŞ' : 'KADEME 1'}
+          <span
+            className="rounded-lg border px-2 py-1 text-[11px] font-bold"
+            style={{
+              borderColor: kademe === KADEME.DOGRULANMIS ? SIRKET_VURGU_KOYU : SIRKET_KENAR,
+              background: SIRKET_ROZET,
+              color: SIRKET_VURGU_KOYU,
+            }}
+          >
+            {kademe === KADEME.DOGRULANMIS ? 'Doğrulanmış kurum' : 'İlan açık · kartlar kapalı'}
           </span>
         }
       >
@@ -71,10 +148,21 @@ export const SirketPanelDevFixture: React.FC = () => {
             siteUrl="https://ornek.com"
             eposta={kademe === KADEME.DOGRULANMIS ? 'ik@gmail.com' : 'ik@ornek.com'}
             onKaydet={async () => ({ id: '00000000-0000-0000-0000-000000000000' })}
-            onIptal={() => setEkran('ilanlar')}
+            onIptal={() => setEkran('adaylar')}
           />
         ) : (
-          <p className="text-gray-300">İlan listesi ekranı</p>
+          <div className="space-y-4">
+            <h1 className="text-2xl font-extrabold" style={{ color: SIRKET_METIN }}>
+              Başvuranlar
+            </h1>
+            <AdayIzgarasi
+              kartlar={kartlar}
+              ilanAdresi="https://stajimvar.com/ilan/test"
+              onNavigate={() => undefined}
+              onDurum={async () => undefined}
+              onNot={async () => undefined}
+            />
+          </div>
         )}
       </SirketKabugu>
     </>

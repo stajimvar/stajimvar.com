@@ -8,6 +8,7 @@ import {
   ilanGecerli,
   ilanSatiri,
   ilanSorunlari,
+  platformBasvurusuSecilebilir,
 } from '../src/lib/ilan-formu.mjs';
 
 /*
@@ -110,4 +111,38 @@ test('belirtilmeyecek ücret is_paid false', () => {
   const satir = ilanSatiri({ ...GECERLI, ucret: 'belirtilmeyecek' }, { companyId: 'a', durum: 'draft' });
   assert.equal(satir.is_paid, false);
   assert.equal(satir.stipend_text, null);
+});
+
+/* ------------------------------------------- E: başvuru tipi (platform) */
+
+test('platform başvurusu yalnızca Kademe 2 ve üstünde seçilebiliyor', () => {
+  assert.equal(platformBasvurusuSecilebilir(0), false);
+  assert.equal(platformBasvurusuSecilebilir(1), false);
+  assert.equal(platformBasvurusuSecilebilir(2), true);
+  assert.equal(platformBasvurusuSecilebilir(3), true);
+});
+
+test('kendi sitesinden alınan ilanda adres hâlâ zorunlu', () => {
+  const sorunlar = ilanSorunlari({ ...GECERLI, basvuruTipi: 'kendi', basvuruUrl: '' });
+  assert.ok(sorunlar.basvuruUrl);
+});
+
+test('platform başvurusunda adres istenmiyor', () => {
+  const sorunlar = ilanSorunlari({ ...GECERLI, basvuruTipi: 'platform', basvuruUrl: '' });
+  assert.equal(sorunlar.basvuruUrl, undefined);
+});
+
+test('platform başvurusu satırı internal yazıyor ve adresi boşaltıyor', () => {
+  const satir = ilanSatiri(
+    { ...GECERLI, basvuruTipi: 'platform', basvuruUrl: 'https://x.com/basvur' },
+    { companyId: 'c1', durum: 'published' }
+  );
+  assert.equal(satir.application_method, 'internal');
+  assert.equal(satir.apply_url, null);
+});
+
+test('varsayılan satır hâlâ şirketin kendi adresine gidiyor', () => {
+  const satir = ilanSatiri(GECERLI, { companyId: 'c1', durum: 'published' });
+  assert.equal(satir.application_method, 'external');
+  assert.equal(satir.apply_url, GECERLI.basvuruUrl);
 });

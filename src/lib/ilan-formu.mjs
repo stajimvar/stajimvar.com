@@ -25,6 +25,17 @@ export const ZORUNLU_ALANLAR = [
   'aciklama',
 ];
 
+/**
+ * "StajımVar ile başvur" bu kademede seçilebilir mi?
+ *
+ * Kademe 1'de HAYIR: seçenek hiç çizilmiyor ve adres zorunlu kalıyor.
+ * Doğrulanmamış bir şirkete öğrenci verisi akıtacak bir düğmeyi
+ * "seçilemez" diye göstermek bile, o kapının var olduğunu ima ederdi.
+ */
+export function platformBasvurusuSecilebilir(kademe) {
+  return Number(kademe) >= 2;
+}
+
 export const ACIKLAMA_EN_AZ = 200;
 export const ACIKLAMA_EN_FAZLA = 2000;
 
@@ -91,11 +102,23 @@ export const SABLONLAR = [
 ];
 
 /**
+ * Başvuru nereden alınacak?
+ *
+ * VARSAYILAN HER ZAMAN ŞİRKETİN KENDİ ADRESİ. "StajımVar ile başvur"
+ * yalnızca doğrulanmış şirkette seçilebiliyor: başvuru bu yolla
+ * geldiğinde öğrencinin adı, okulu ve projeleri şirkete AKTARILIYOR ve
+ * o aktarımın karşılığı doğrulanmış bir kurum olmak.
+ */
+export const BASVURU_TIPLERI = [
+  { id: 'kendi', etiket: 'Kendi sitemizden' },
+  { id: 'platform', etiket: 'StajımVar ile başvur' },
+];
+
+/**
  * Başvuru adresi kontrolü.
  *
- * VARSAYILAN BAŞVURU ŞİRKETİN KENDİ ADRESİ. Platformdan başvuru yalnızca
- * doğrulanmış şirkette açılıyor; o yüzden burada adres zorunlu ve gerçek
- * bir HTTPS adresi olmak durumunda.
+ * Şirket kendi adresinden alıyorsa adres zorunlu ve gerçek bir HTTPS
+ * adresi olmak durumunda.
  */
 export function basvuruUrlSorunu(url) {
   const temiz = String(url ?? '').trim();
@@ -131,8 +154,14 @@ export function ilanSorunlari(deger) {
   else if (deger.ucret === 'net' && !metin(deger.ucretTutari))
     s.ucret = 'Net tutarı yaz ya da başka bir seçenek seç.';
 
-  const urlSorunu = basvuruUrlSorunu(deger.basvuruUrl);
-  if (urlSorunu) s.basvuruUrl = urlSorunu;
+  /*
+    Adres yalnızca başvuru şirketin kendi sitesinden alınıyorsa zorunlu.
+    Kademe 1'de tip her zaman 'kendi' olduğu için orada adres hep zorunlu.
+  */
+  if (deger.basvuruTipi !== 'platform') {
+    const urlSorunu = basvuruUrlSorunu(deger.basvuruUrl);
+    if (urlSorunu) s.basvuruUrl = urlSorunu;
+  }
 
   const aciklama = metin(deger.aciklama);
   if (aciklama.length < ACIKLAMA_EN_AZ)
@@ -163,6 +192,13 @@ export function ilanSatiri(deger, { companyId, durum }) {
   const metin = (x) => String(x ?? '').trim();
   const tur = deger.tur;
 
+  /*
+    'internal' = başvuru StajımVar'da kalıyor ve şirketin paneline kart
+    olarak düşüyor. 'external' = öğrenci şirketin kendi adresine gidiyor
+    ve bizde hiçbir kişisel veri paylaşılmıyor.
+  */
+  const platformdan = deger.basvuruTipi === 'platform';
+
   return {
     company_id: companyId,
     title: metin(deger.unvan),
@@ -179,8 +215,8 @@ export function ilanSatiri(deger, { companyId, durum }) {
         : deger.ucret === 'net'
           ? metin(deger.ucretTutari)
           : null,
-    apply_url: metin(deger.basvuruUrl),
-    application_method: 'external',
+    apply_url: platformdan ? null : metin(deger.basvuruUrl),
+    application_method: platformdan ? 'internal' : 'external',
     description: metin(deger.aciklama),
     application_deadline: metin(deger.sonBasvuru) || null,
     origin: 'employer_posted',

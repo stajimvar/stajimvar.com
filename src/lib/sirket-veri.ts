@@ -158,21 +158,77 @@ export async function vknKaydet(companyId: string, vkn: string, mersis?: string)
   }
 }
 
-/** Başvuranlar — yalnızca Kademe 2'de veri döner; kapı RLS'te. */
+/**
+ * Başvuranlar — yalnızca Kademe 2'de veri döner; kapı RLS'te.
+ *
+ * `applied_at` ile sıralanıyor: bu tabloda `created_at` YOK. Önceki
+ * hâlinde olmayan bir sütun isteniyordu ve sorgu sessizce hata verip
+ * boş liste dönüyordu — yani doğrulanmış şirket de kart göremiyordu.
+ */
 export async function sirketBasvurulari(companyId: string) {
   const db = await istemci();
   const { data, error } = await db
     .from('applications')
     .select(
-      'id, status, created_at, match_score, listing_id, listings!inner(id, title, company_id), student_profiles(id)'
+      'id, status, applied_at, match_score, listing_id, student_id, cover_letter, cv_path, ' +
+        'cv_snapshot_path, profile_snapshot, contact_share_consent_at, application_method, ' +
+        'listings!inner(id, title, company_id)'
     )
     .eq('listings.company_id', companyId)
-    .order('created_at', { ascending: false });
+    .order('applied_at', { ascending: false });
 
   /*
     Kademe 1'de RLS satır döndürmüyor; bu bir hata değil, kuralın
     kendisi. Boş liste dönüyor ve ekran "doğrulama gerekiyor" diyor.
   */
   if (error) return [];
-  return data ?? [];
+
+  return (data ?? []).map((s: Record<string, unknown>) => ({
+    ...s,
+    ilanBasligi: (s.listings as { title?: string } | null)?.title ?? null,
+  }));
+}
+
+/**
+ * Bir başvuranın canlı yetenek kayıtları.
+ *
+ * Başvuru kopyasında yetenek yoksa (eski başvurular) buradan
+ * tamamlanıyor. Politika bu okumayı yalnızca şirkete BAŞVURMUŞ
+ * öğrenciler için ve yalnızca doğrulanmış şirkete açıyor.
+ */
+export async function adayYetenekleri(studentId: string) {
+  const db = await istemci();
+  const { data, error } = await db
+    .from('student_skills')
+    .select('name, level, category')
+    .eq('student_id', studentId)
+    .order('name');
+  if (error) return [];
+  return (data ?? []) as { name: string; level?: string; category?: string }[];
+}
+
+/** Başvuru durumunu değiştirir. RLS doğrulanmış şirket dışına kapalı. */
+export async function basvuruDurumuDegistir(id: string, durum: string) {
+  const db = await istemci();
+  const { error } = await db.from('applications').update({ status: durum }).eq('id', id);
+  if (error) throw new Error('Başvuru durumu güncellenemedi.');
+}
+
+/**
+ * Adaya not.
+ *
+ * DURUMA DOKUNMUYOR: not yazmak bir karar değil. Önce durumu da
+ * 'under_review' yapıyordu; reddedilmiş bir başvuruya not eklemek onu
+ * sessizce yeniden incelemeye alırdı.
+ *
+ * `company_feedback` ÖĞRENCİYE GÖRÜNÜR — dahili not değil. Arayüzde de
+ * böyle yazıyor.
+ */
+export async function basvuruNotuKaydet(id: string, metin: string) {
+  const db = await istemci();
+  const { error } = await db
+    .from('applications')
+    .update({ company_feedback: metin })
+    .eq('id', id);
+  if (error) throw new Error('Not kaydedilemedi.');
 }

@@ -480,6 +480,13 @@ export async function createApplication(params: {
   consentVersion: string;
   /** Doğrulanmış başvuru kanalı varsa kimliği; teslim kararında kullanılıyor. */
   applicationChannelId?: string;
+  /**
+   * Başvuru anındaki profil kopyası (`basvuruKopyasi`).
+   *
+   * Şirketin gördüğü ad/okul/bölüm YALNIZCA buradan geliyor: `profiles`
+   * tablosunu şirket okuyamıyor. Rıza verilmediyse yazılmıyor.
+   */
+  profileSnapshot?: Record<string, unknown> | null;
 }): Promise<ApplicationRecord> {
   /*
     Açık rıza yalnızca veri gerçekten aktarılıyorsa zorunlu. Dış ilanlarda
@@ -517,6 +524,15 @@ export async function createApplication(params: {
       // Rıza kaydı gerçeği yansıtsın: onay verilmediyse damga da atılmıyor.
       contact_share_consent_at: params.contactShareConsent ? new Date().toISOString() : null,
       contact_share_consent_version: params.contactShareConsent ? params.consentVersion : null,
+      /*
+        Kopya yalnızca veri gerçekten aktarılıyorsa VE rıza varsa
+        yazılıyor. Dış ilanlarda hiçbir şey aktarılmıyor; oraya kopya
+        koymak, verilmemiş bir paylaşımı kaydetmek olurdu.
+      */
+      profile_snapshot:
+        yol.teslimEdiliyor && params.contactShareConsent
+          ? ((params.profileSnapshot ?? null) as never)
+          : null,
       email_delivery_status: deliveryStatus,
       created_via: 'web',
     })
