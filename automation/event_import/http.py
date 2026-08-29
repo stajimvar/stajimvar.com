@@ -17,10 +17,15 @@ class OfficialHttpClient:
 
     def allowed(self, url: str) -> bool:
         parts = urlsplit(url)
-        robots = RobotFileParser(f"{parts.scheme}://{parts.netloc}/robots.txt")
+        robots_url = f"{parts.scheme}://{parts.netloc}/robots.txt"
+        robots = RobotFileParser(robots_url)
         try:
-            robots.read()
-        except Exception:
+            response = self.session.get(robots_url, timeout=self.timeout)
+            if response.status_code in {404, 410}:
+                return True
+            response.raise_for_status()
+            robots.parse(response.text.splitlines())
+        except requests.RequestException:
             return False
         return robots.can_fetch(USER_AGENT, url)
 
