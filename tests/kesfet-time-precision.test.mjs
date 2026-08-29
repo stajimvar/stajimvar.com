@@ -36,6 +36,20 @@ test("exact etkinlik gerçek başlangıç saatini gösterir", () => {
   assert.match(text, /19:30/);
 });
 
+test("exact zamanlı çok günlük etkinlik başladıysa eski başlangıç yerine bitişini gösterir", () => {
+  const text = domain.formatDiscoverDate(
+    {
+      startsAt: "2026-08-17T10:00:00+03:00",
+      endsAt: "2026-09-15T17:00:00+03:00",
+      timePrecision: "exact",
+    },
+    new Date("2026-08-29T08:30:00+03:00"),
+  );
+  assert.match(text, /Devam ediyor/);
+  assert.match(text, /15 Eyl 2026 17:00/);
+  assert.doesNotMatch(text, /^17 Ağu 2026/);
+});
+
 test("ongoing etkinlik açıkça devam ediyor olarak etiketlenir", () => {
   const text = domain.formatDiscoverDate({
     startsAt: "2026-08-01T00:00:00+03:00",

@@ -110,7 +110,7 @@ export function formatDiscoverDate(event, now = new Date()) {
   const text = formatter.format(startsAt);
   const endsAt = event?.endsAt ? new Date(event.endsAt) : null;
   if (
-    precision === "date_only" &&
+    (precision === "date_only" || precision === "exact") &&
     endsAt &&
     !Number.isNaN(endsAt.getTime()) &&
     trDay(startsAt) !== trDay(endsAt)
