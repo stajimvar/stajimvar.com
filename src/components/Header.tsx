@@ -107,6 +107,8 @@ interface HeaderProps {
   */
   isAdmin?: boolean;
   onOpenAdmin?: () => void;
+  /** Şirket dunyasina gecis; yetki yoksa kapiya goturuyor. */
+  onDunyaDegistir?: () => void;
 }
 
 /*
@@ -158,6 +160,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSearchChange,
   isAdmin = false,
   onOpenAdmin,
+  onDunyaDegistir,
 }) => {
   /*
     YÜZEN ÇUBUK AŞAĞI KAYDIRIRKEN ÇEKİLİYOR
@@ -979,7 +982,7 @@ export const Header: React.FC<HeaderProps> = ({
                             className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
                           >
                             <User className="w-3.5 h-3.5 text-gray-400" />
-                            <span>Öğrenci Profilim & CV</span>
+                            <span>Profilim ve CV</span>
                           </button>
 
                           <button
@@ -1005,9 +1008,47 @@ export const Header: React.FC<HeaderProps> = ({
                             className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
                           >
                             <Award className="w-3.5 h-3.5 text-gray-400" />
-                            <span>Rozetlerim & Testler</span>
+                            <span>Rozetler ve testler</span>
                           </button>
                         </div>
+
+                        {/*
+                          DÜNYA SEÇİCİ
+
+                          Aynı kişi hem öğrenci hem İK olabiliyor ve ayrı bir
+                          şirket hesabı YOK: kişisel hesaba şirket yetkisi
+                          takılıyor. Geçişin kalıcı bir yeri olmalı, yoksa
+                          kullanıcı her seferinde adresi elle yazıyor.
+
+                          Şirket yetkisi olmayan kisiye panel degil, kapi
+                          gösteriliyor (/isveren/ilan-ver). Boş bir panel,
+                          olmayan bir yetkiyi varmış gibi gösterirdi.
+                        */}
+                        {onDunyaDegistir && (
+                          <>
+                            <div className="border-t border-gray-100 my-1" />
+                            <div className="px-4 py-2">
+                              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                                Dünya
+                              </p>
+                              <div className="flex gap-1 rounded-xl bg-gray-100 p-1">
+                                <span className="flex-1 rounded-lg bg-white px-2 py-1.5 text-center text-xs font-bold text-blue-700 shadow-sm">
+                                  Öğrenci
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onDunyaDegistir();
+                                    setProfileDropdownOpen(false);
+                                  }}
+                                  className="flex-1 cursor-pointer rounded-lg px-2 py-1.5 text-center text-xs font-bold text-gray-600 transition-colors hover:text-gray-900"
+                                >
+                                  Şirket
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        )}
 
                         {isAdmin && onOpenAdmin && (
                           <>

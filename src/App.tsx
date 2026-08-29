@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   fetchPublishedListings,
   fetchStudentProfile,
@@ -31,6 +31,14 @@ import { ProfilTamamla } from './components/ProfilTamamla';
 import { BolumHub, BolumPage } from './components/BolumPages';
 import { StajProgramlariSayfasi } from './components/StajProgramlari';
 import { IsverenGirisi } from './components/IsverenGirisi';
+import { SirketPaneli } from './sirket/SirketPaneli';
+import { DunyaGecisi } from './sirket/DunyaGecisi';
+
+/*
+  Panel yollari. Herkese acik sirket sayfasi (/sirket/<slug>) ile
+  karismamalari icin acikca sayiliyorlar.
+*/
+const SIRKET_PANEL_YOLLARI = ['/sirket/ilanlar', '/sirket/basvuranlar', '/sirket/profil', '/sirket/ilan'];
 import { KariyerMerkezleriSayfasi } from './components/KariyerMerkezleri';
 import { OpportunitiesPage } from './components/OpportunitiesPage';
 import { OpportunityDetailPage } from './components/OpportunityDetailPage';
@@ -455,6 +463,25 @@ export default function App() {
   const [adSoruluyor, setAdSoruluyor] = useState(false);
 
   /*
+    DUNYA GECISI
+
+    Iki dunya tek hesapta yasiyor ve temalari taban tabana zit. Gecis
+    aninda hicbir sey olmazsa kullanici bir an "yanlis siteye mi dustum"
+    diye duraksiyor. Esik oturumda BIR KEZ calisiyor: her sayfa
+    yenilemesinde tekrar eden bir animasyon ucuncu seferde engel olur.
+  */
+  const [dunyaGecisi, setDunyaGecisi] = useState<'sirkete' | 'ogrenciye' | null>(null);
+  const dunyaEsigiGosterildi = useRef(false);
+
+  const sirketDunyasinaGec = () => {
+    if (!dunyaEsigiGosterildi.current) {
+      dunyaEsigiGosterildi.current = true;
+      setDunyaGecisi('sirkete');
+    }
+    navigate('/sirket/ilanlar');
+  };
+
+  /*
     OAuth sağlayıcıdan hatayla dönüldüyse (iptal, izin reddi) adres
     çubuğunda geliyor. Okunmazsa kullanıcı hiçbir şey olmamış gibi giriş
     ekranına bakıyor ve neden giremediğini anlamıyor.
@@ -871,6 +898,13 @@ export default function App() {
           : navigate('/isveren/ilan-ver')
       }
       onOpenEmployerLogin={AUTH_ENABLED ? (kip) => isverenGirisiAc(kip) : undefined}
+      /*
+        Şirket yetkisi olmayan kişiye panel değil KAPI gösteriliyor.
+        Yetkiyi burada değil veritabanı biliyor; panel açılırken bağlam
+        okunuyor ve üyelik yoksa kullanıcı zaten ilan verme sayfasına
+        düşüyor. Buradaki yönlendirme yalnızca yolu kısaltıyor.
+      */
+      onDunyaDegistir={sirketDunyasinaGec}
       bulunulanYol={temizYol}
       searchQuery={aramaTerimi}
       onSearchChange={(q) => {
@@ -1218,6 +1252,49 @@ export default function App() {
   }
 
   /* /sirket/vertigo-games */
+  /*
+    SIRKET PANELI
+
+    /sirket/... koku ikiye bolunuyor: asagidaki dort yol PANEL, geri kalani
+    herkese acik sirket sayfasi. Panel yollari once bakiliyor cunku bir
+    sirketin slug'i "ilanlar" olsaydi panel erisilemez hale gelirdi.
+
+    KAPI 1: sirket yetkisi olmayan kullanici panele girmiyor,
+    /isveren/ilan-ver'e gidiyor. Panelin bos halini gostermek, olmayan bir
+    yetkiyi varmis gibi gostermek olurdu.
+  */
+  if (SIRKET_PANEL_YOLLARI.some((p) => temizYol === p || temizYol.startsWith(`${p}/`))) {
+    if (!isLoggedIn) {
+      return icerikSayfasi(
+        <IsverenGirisi
+          onBack={goHome}
+          onNavigate={navigate}
+          userId={null}
+          onIsverenGirisi={
+            AUTH_ENABLED ? (kip) => isverenGirisiAc(kip, temizYol) : undefined
+          }
+        />
+      );
+    }
+    return (
+      <>
+        <SirketPaneli
+          yol={temizYol}
+          userId={session?.userId ?? null}
+          yoneticiMi={isAdmin}
+          onNavigate={navigate}
+          onOgrenciyeDon={() => {
+            setDunyaGecisi('ogrenciye');
+            navigate('/');
+          }}
+        />
+        {dunyaGecisi && (
+          <DunyaGecisi yon={dunyaGecisi} onBitti={() => setDunyaGecisi(null)} />
+        )}
+      </>
+    );
+  }
+
   if (temizYol.startsWith('/sirket/')) {
     const sirketSlug = temizYol.slice('/sirket/'.length);
     if (sirketSlug) {
