@@ -311,16 +311,25 @@ export const IlanFormu: React.FC<{
               deger={deger.basvuruTipi}
               onSec={yaz('basvuruTipi')}
             />
-            {platformdan && (
-              <p
-                className="mt-2 rounded-xl border px-3 py-2.5 text-[11px] leading-relaxed"
-                style={{ borderColor: SIRKET_KENAR, background: SIRKET_ROZET, color: SIRKET_METIN }}
-              >
-                Öğrenci StajımVar'da başvuruyor ve kartı "Başvuranlar" sekmesine düşüyor.
-                Adı, okulu ve projeleri ancak öğrenci "profilim bu şirketle paylaşılsın"
-                dediğinde aktarılıyor.
-              </p>
-            )}
+            {/*
+              İki seçeneğin farkı SABİT duruyor, seçime göre değişmiyor.
+              Yalnızca seçileni açıklamak, İK'ya öbür seçeneğin ne
+              yaptığını hiç göstermezdi — karar tam da o karşılaştırmada
+              veriliyor.
+            */}
+            <dl
+              className="mt-2 space-y-1 rounded-xl border px-3 py-2.5 text-[11px] leading-relaxed"
+              style={{ borderColor: SIRKET_KENAR, background: SIRKET_ROZET, color: SIRKET_METIN }}
+            >
+              <div>
+                <dt className="inline font-bold">Kendi siten:</dt>{' '}
+                <dd className="inline">öğrenci sende kalır, burada ad görünmez.</dd>
+              </div>
+              <div>
+                <dt className="inline font-bold">StajımVar ile başvur:</dt>{' '}
+                <dd className="inline">rıza ile kart + CV panele düşer.</dd>
+              </div>
+            </dl>
           </div>
         )}
 

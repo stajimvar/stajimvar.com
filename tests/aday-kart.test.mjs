@@ -181,3 +181,41 @@ test('başvuru kopyası hassas alanları taşımıyor', () => {
 test('profil yoksa kopya da yok', () => {
   assert.equal(basvuruKopyasi(null), null);
 });
+
+test('boş profilden kopya üretilmiyor (boş nesne kaydedilmez)', () => {
+  /* Profilini hiç doldurmamış öğrenci: alan null kalmalı, {} değil. */
+  assert.equal(basvuruKopyasi({ preferences: {}, skills: [], projects: [] }), null);
+  assert.equal(basvuruKopyasi({}), null);
+});
+
+test('tek bir gerçek alan varsa kopya üretiliyor', () => {
+  const sadeceAd = basvuruKopyasi({ fullName: 'Aday A' });
+  assert.ok(sadeceAd);
+  assert.equal(sadeceAd.ad, 'Aday A');
+
+  const sadeceYetenek = basvuruKopyasi({ skills: [{ name: 'React' }] });
+  assert.ok(sadeceYetenek);
+  assert.deepEqual(sadeceYetenek.yetenekler, ['React']);
+});
+
+test('kopya rıza anında istenen sekiz alanı taşıyor', () => {
+  const k = basvuruKopyasi({
+    fullName: 'Aday A',
+    avatarUrl: 'https://x/foto.png',
+    university: 'Örnek Üni',
+    department: 'Bilgisayar',
+    gradeLevel: '3. Sınıf',
+    preferences: { cities: ['İzmir'] },
+    skills: [{ name: 'React' }],
+    projects: [{ title: 'P', description: 'D', liveUrl: 'https://p' }],
+  });
+
+  assert.equal(k.ad, 'Aday A');
+  assert.equal(k.fotoUrl, 'https://x/foto.png');
+  assert.equal(k.universite, 'Örnek Üni');
+  assert.equal(k.bolum, 'Bilgisayar');
+  assert.equal(k.sinif, '3. Sınıf');
+  assert.equal(k.sehir, 'İzmir');
+  assert.deepEqual(k.yetenekler, ['React']);
+  assert.equal(k.projeler.length, 1);
+});

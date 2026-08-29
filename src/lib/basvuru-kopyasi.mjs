@@ -30,7 +30,7 @@ const metin = (x) => {
 export function basvuruKopyasi(ogrenci) {
   if (!ogrenci) return null;
 
-  return {
+  const kopya = {
     surum: 1,
     ad: metin(ogrenci.fullName),
     eposta: metin(ogrenci.email),
@@ -67,4 +67,26 @@ export function basvuruKopyasi(ogrenci) {
       }))
       .filter((p) => p.baslik),
   };
+
+  /*
+    BOŞ NESNE YAZILMIYOR
+
+    Profili hiç doldurmamış bir öğrenci başvurduğunda kopya baştan sona
+    null olurdu ve `profile_snapshot` alanına içi boş bir nesne düşerdi.
+    İki sakıncası var: şirket panelinde "rıza verilmiş ama hiçbir şey
+    yok" gibi görünen bir kart çıkardı, ve kayıt "bu kişinin bilgileri
+    paylaşıldı" diyorken aslında paylaşılan bir şey olmazdı.
+
+    Ad ya da okul yoksa kart zaten çizilemiyor; o durumda alan null
+    kalıyor ve kart "şirketin kendi sitesinden başvuruldu" koluna
+    düşüyor — gerçekte olan da bu.
+  */
+  const doluMu =
+    Boolean(kopya.ad) ||
+    Boolean(kopya.universite) ||
+    Boolean(kopya.bolum) ||
+    kopya.yetenekler.length > 0 ||
+    kopya.projeler.length > 0;
+
+  return doluMu ? kopya : null;
 }

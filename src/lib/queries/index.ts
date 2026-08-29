@@ -468,6 +468,22 @@ export async function fetchCompanyApplications(companyId: string): Promise<Appli
   return (data ?? []).map(toApplicationRecord);
 }
 
+/**
+ * Profil kopyası kaydedilecek mi?
+ *
+ * Üç şart da gerekiyor: veri gerçekten aktarılıyor, öğrenci rıza verdi
+ * ve kopyanın içinde bir şey var. Boş nesne, verilmemiş bir paylaşımı
+ * kaydetmek olur.
+ */
+function kopyaYazilacakMi(
+  teslimEdiliyor: boolean,
+  params: { contactShareConsent: boolean; profileSnapshot?: Record<string, unknown> | null }
+): boolean {
+  if (!teslimEdiliyor || !params.contactShareConsent) return false;
+  const kopya = params.profileSnapshot;
+  return Boolean(kopya) && Object.keys(kopya as Record<string, unknown>).length > 0;
+}
+
 export async function createApplication(params: {
   listingId: string;
   studentId: string;
@@ -528,11 +544,13 @@ export async function createApplication(params: {
         Kopya yalnızca veri gerçekten aktarılıyorsa VE rıza varsa
         yazılıyor. Dış ilanlarda hiçbir şey aktarılmıyor; oraya kopya
         koymak, verilmemiş bir paylaşımı kaydetmek olurdu.
+
+        Boş nesne de yazılmıyor: içi boş bir kopya, şirkete "paylaşıldı
+        ama hiçbir şey yok" diyen bir kart üretirdi.
       */
-      profile_snapshot:
-        yol.teslimEdiliyor && params.contactShareConsent
-          ? ((params.profileSnapshot ?? null) as never)
-          : null,
+      profile_snapshot: (kopyaYazilacakMi(yol.teslimEdiliyor, params)
+        ? params.profileSnapshot
+        : null) as never,
       email_delivery_status: deliveryStatus,
       created_via: 'web',
     })
