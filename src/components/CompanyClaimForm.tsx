@@ -87,16 +87,27 @@ export const CompanyClaimForm: React.FC<CompanyClaimFormProps> = ({
         phone: telefon,
         note: not,
       });
-      setMevcut({
-        id: 'yeni',
-        companyId,
-        companyName,
-        companySlug: '',
-        contactName: ad,
-        workEmail: eposta,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-      });
+      /*
+        DURUM SUNUCUDAN OKUNUYOR, TAHMIN EDILMIYOR
+
+        Once burada iyimser olarak status:'pending' yaziliyordu. Artik
+        kurumsal alan adi sirketin sitesiyle eslesen talepler sunucuda
+        ANINDA onaylaniyor; tahmin eden ekran, zaten onaylanmis
+        kullaniciya "talebiniz inceleniyor" derdi.
+      */
+      const guncel = await fetchMyClaim(companyId, userId);
+      setMevcut(
+        guncel ?? {
+          id: 'yeni',
+          companyId,
+          companyName,
+          companySlug: '',
+          contactName: ad,
+          workEmail: eposta,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        }
+      );
       setAcik(false);
     } catch (error) {
       setHata(error instanceof Error ? error.message : 'Talep gönderilemedi.');
@@ -113,7 +124,7 @@ export const CompanyClaimForm: React.FC<CompanyClaimFormProps> = ({
       <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 flex items-start gap-3">
         <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <p className="font-bold text-sm text-amber-900">Talebiniz inceleniyor</p>
+          <p className="font-bold text-sm text-amber-900">Bilgilerinizi kontrol ediyoruz</p>
           <p className="text-xs text-amber-800">
             {companyName} için sahiplenme talebiniz alındı. Onaylandığında şirket
             profilini düzenleyebilir ve ilan girebilirsiniz.
@@ -123,13 +134,23 @@ export const CompanyClaimForm: React.FC<CompanyClaimFormProps> = ({
     );
   }
 
+  /*
+    Otomatik onayda kullanici hicbir bekleme yasamiyor; mesaj bunu
+    soylemeli. Sure garantisi verilmiyor ("24 saat icinde" gibi bir soz
+    tutulamaz).
+  */
   if (mevcut && mevcut.status === 'approved') {
     return (
       <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 flex items-start gap-3">
         <BadgeCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-        <p className="text-sm font-semibold text-emerald-900">
-          Bu şirketin yetkilisisiniz. Şirket portalından ilan girebilirsiniz.
-        </p>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-emerald-900">
+            Şirket hesabınız doğrulandı.
+          </p>
+          <p className="text-xs text-emerald-800">
+            Şirket panelinden ilan girebilir ve profilinizi düzenleyebilirsiniz.
+          </p>
+        </div>
       </div>
     );
   }

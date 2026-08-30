@@ -141,6 +141,13 @@ export function turkiyeGeneliMi(item) {
 
 export const TURKIYE_GENELI = '__turkiye__';
 
+/** Kısıt listesi boşsa kısıt yoktur ve her seçim uyar. */
+export function kisitaUyar(liste, secim) {
+  const kisit = Array.isArray(liste) ? liste.filter(Boolean) : [];
+  if (kisit.length === 0) return true;
+  return kisit.includes(secim);
+}
+
 export function bursSuzgectenGecer(item, suzgec, now = new Date()) {
   const s = { ...BOS_SUZGEC, ...(suzgec || {}) };
 
@@ -150,16 +157,34 @@ export function bursSuzgectenGecer(item, suzgec, now = new Date()) {
     );
     if (!metin.includes(kucult(s.q))) return false;
   }
-  if (s.seviye && !(item.educationLevels ?? []).includes(s.seviye)) return false;
-  if (s.bolum && !(item.eligibleDepartments ?? []).includes(s.bolum)) return false;
+  /*
+    BOŞ LİSTE = KISIT YOK, "BİLİNMİYOR" DEĞİL
+
+    Şema kısıtı dizi olarak tutuyor. "Tüm lisans öğrencileri" diyen bir
+    bursta `eligible_departments` BOŞ oluyor — bu kısıt olmadığı anlamına
+    geliyor, o bursun hiçbir bölüme uymadığı anlamına değil.
+
+    Önceki hâl boş listeyi "eşleşmiyor" sayıyordu: bölüm süzgeci seçen
+    öğrenci, kendisine AÇIK olan bursların neredeyse tamamını eliyordu.
+    Kısıtsız burs her bölüm süzgecinden geçiyor; süzgeç yalnızca gerçekten
+    başka bir bölüme kısıtlanmış bursları eliyor.
+  */
+  if (s.seviye && !kisitaUyar(item.educationLevels, s.seviye)) return false;
+  if (s.bolum && !kisitaUyar(item.eligibleDepartments, s.bolum)) return false;
   if (s.tur && item.opportunityType !== s.tur) return false;
   if (s.durum && opportunityStatus(item, now) !== s.durum) return false;
 
   if (s.yer === TURKIYE_GENELI) {
+    /* Burada boş liste ARANAN şeyin kendisi: şehir şartı olmayan burslar. */
     if (!turkiyeGeneliMi(item)) return false;
   } else if (s.yer) {
+    /*
+      Belirli bir şehir seçildiğinde, şehir şartı OLMAYAN burslar da
+      listede kalıyor: Türkiye geneli bir burs o şehirdeki öğrenciye de
+      açık.
+    */
     const yerler = [...(item.cities ?? []), ...(item.countries ?? [])];
-    if (!yerler.includes(s.yer)) return false;
+    if (!kisitaUyar(yerler, s.yer)) return false;
   }
 
   return true;

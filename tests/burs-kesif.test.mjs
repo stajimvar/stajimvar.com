@@ -13,6 +13,7 @@ import {
   bursTarihDurumu,
   bursTarihMetni,
   bursTutariVar,
+  kisitaUyar,
   profilYeterliMi,
   suzgecAktifMi,
   turkiyeGeneliMi,
@@ -250,4 +251,44 @@ test('sonuç ızgarasında süresi dolanlar yok, sıralama tarihe göre', () => 
   ];
   const sonuc = bursSonuclari(veri, { q: 'örnek' }, SIMDI).map((i) => i.id);
   assert.deepEqual(sonuc, ['yakin', 'uzak', 'tarihsiz']);
+});
+
+/* -------------------------------- kısıt semantiği (boş liste = kısıt yok) */
+
+test('boş kısıt listesi "kısıt yok" demek, "eşleşmiyor" değil', () => {
+  assert.equal(kisitaUyar([], 'Makine Mühendisliği'), true);
+  assert.equal(kisitaUyar(null, 'Makine Mühendisliği'), true);
+  assert.equal(kisitaUyar(undefined, 'X'), true);
+  assert.equal(kisitaUyar(['Makine Mühendisliği'], 'Makine Mühendisliği'), true);
+  assert.equal(kisitaUyar(['Tıp'], 'Makine Mühendisliği'), false);
+});
+
+test('bölüm kısıtı olmayan burs, bölüm süzgecinden geçiyor', () => {
+  /*
+    "Tüm lisans öğrencileri" diyen bursta eligible_departments boş. Önce
+    bu burs bölüm süzgecinde eleniyordu — yani öğrenci kendisine AÇIK olan
+    bursları kendi eliyle gizliyordu.
+  */
+  const kisitsiz = burs({ id: 'kisitsiz', eligibleDepartments: [] });
+  const kisitli = burs({ id: 'kisitli', eligibleDepartments: ['Tıp'] });
+  assert.equal(bursSuzgectenGecer(kisitsiz, { bolum: 'Bilgisayar Mühendisliği' }, SIMDI), true);
+  assert.equal(bursSuzgectenGecer(kisitli, { bolum: 'Bilgisayar Mühendisliği' }, SIMDI), false);
+  assert.equal(bursSuzgectenGecer(kisitli, { bolum: 'Tıp' }, SIMDI), true);
+});
+
+test('eğitim seviyesi kısıtı yoksa seviye süzgeci elemiyor', () => {
+  assert.equal(bursSuzgectenGecer(burs({ educationLevels: [] }), { seviye: 'Lisans' }, SIMDI), true);
+  assert.equal(
+    bursSuzgectenGecer(burs({ educationLevels: ['Doktora'] }), { seviye: 'Lisans' }, SIMDI),
+    false
+  );
+});
+
+test('şehir şartı olmayan burs, şehir süzgecinde de kalıyor', () => {
+  /* Türkiye geneli bir burs, İzmir'deki öğrenciye de açık. */
+  assert.equal(bursSuzgectenGecer(burs({ cities: [] }), { yer: 'İzmir' }, SIMDI), true);
+  assert.equal(bursSuzgectenGecer(burs({ cities: ['Ankara'] }), { yer: 'İzmir' }, SIMDI), false);
+  /* "Türkiye geneli" seçimi ise tam tersini arıyor: şartı OLMAYANLARI. */
+  assert.equal(bursSuzgectenGecer(burs({ cities: [] }), { yer: TURKIYE_GENELI }, SIMDI), true);
+  assert.equal(bursSuzgectenGecer(burs({ cities: ['Ankara'] }), { yer: TURKIYE_GENELI }, SIMDI), false);
 });
