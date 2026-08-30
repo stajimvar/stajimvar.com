@@ -136,9 +136,18 @@ jobs:
           fi
           echo "Sırlar tanımlı."
 
+      # Testler DEPO KÖKÜNDEN çalışıyor.
+      #
+      # Önce `working-directory: automation` ile çalışıyordu ve iki test
+      # modülü `from automation.scholarship_audit import ...` yazdığı için
+      # toplama aşamasında ModuleNotFoundError veriyordu: iş akışı 20
+      # saniyede düşüyor, TARAMA HİÇ ÇALIŞMIYORDU. Saatlik tarama 30
+      # Ağustos 09:18'den beri bu yüzden kapalıydı.
+      #
+      # Diğer iki iş akışı (supabase-production, kesfet-import) zaten
+      # kökten çağırıyor; üçü artık aynı biçimde.
       - name: Testler
-        run: python -m pytest tests/ -q
-        working-directory: automation
+        run: python -m pytest automation/tests -q
       - name: Kaynakları tara
         run: python discover.py ${{ inputs.dry_run && '--dry-run' || '' }}
         working-directory: automation
