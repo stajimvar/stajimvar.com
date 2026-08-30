@@ -14,13 +14,8 @@ import {
   birincilStil,
   ikincilStil,
 } from './renk';
-import {
-  BIRINCI_SIRA,
-  DURUM_ETIKETI,
-  IKINCI_SIRA,
-  kimlikSatiri,
-  monogram,
-} from '../lib/aday-kart.mjs';
+import { BIRINCI_SIRA, IKINCI_SIRA, kimlikSatiri, monogram } from '../lib/aday-kart.mjs';
+import { durumAdi } from './basvuru-durumu';
 
 /**
  * Aday çekmecesi — sağdan açılan panel.
@@ -138,7 +133,7 @@ export const AdayCekmecesi: React.FC<{
               </p>
             )}
             <p className="mt-1 text-[11px] font-bold" style={{ color: SIRKET_VURGU_KOYU }}>
-              {DURUM_ETIKETI[kart.durum as keyof typeof DURUM_ETIKETI] ?? kart.durum}
+              {durumAdi(kart.durum)}
               {kart.ilanBasligi ? ` · ${kart.ilanBasligi}` : ''}
             </p>
           </div>

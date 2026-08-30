@@ -149,12 +149,11 @@ export const IKINCI_SIRA = [
   { id: 'offer_extended', etiket: 'Teklif' },
 ];
 
-export const DURUM_ETIKETI = {
-  submitted: 'Yeni',
-  under_review: 'İncelemede',
-  technical_assessment: 'Case',
-  interview_scheduled: 'Mülakat',
-  offer_extended: 'Teklif',
-  rejected: 'Reddedildi',
-  withdrawn: 'Geri çekildi',
-};
+/*
+  DURUM SÖZLÜĞÜ BURADAN KALDIRILDI
+
+  Burada ikinci bir sözlük duruyordu ve panelde gerçekten farklı adlar
+  çiziliyordu: kart "İnceleniyor / Değerlendirme / Olumsuz" derken
+  çekmece aynı başvuru için "İncelemede / Case / Reddedildi" diyordu.
+  Tek sözlük artık ../sirket/basvuru-durumu içinde.
+*/

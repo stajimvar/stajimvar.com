@@ -16,28 +16,7 @@ import {
   kutuStil,
 } from './renk';
 import { onyargisizla } from '../lib/aday-kart.mjs';
-
-/* Süzgeçteki durum adları — veritabanındaki `application_status`
-   enum'unun aynısı; uydurma aşama yok. */
-const DURUM_SIRASI = [
-  'submitted',
-  'under_review',
-  'technical_assessment',
-  'interview_scheduled',
-  'offer_extended',
-  'rejected',
-  'withdrawn',
-];
-
-const DURUM_ADI: Record<string, string> = {
-  submitted: 'Yeni',
-  under_review: 'İnceleniyor',
-  technical_assessment: 'Değerlendirme',
-  interview_scheduled: 'Mülakat',
-  offer_extended: 'Teklif',
-  rejected: 'Olumsuz',
-  withdrawn: 'Geri çekildi',
-};
+import { DURUM_SIRASI, durumAdi } from './basvuru-durumu';
 
 /**
  * Başvuran ızgarası.
@@ -260,7 +239,7 @@ export const AdayIzgarasi: React.FC<{
           <option value="">Tüm durumlar</option>
           {DURUM_SIRASI.map((d) => (
             <option key={d} value={d}>
-              {DURUM_ADI[d]}
+              {durumAdi(d)}
             </option>
           ))}
         </select>

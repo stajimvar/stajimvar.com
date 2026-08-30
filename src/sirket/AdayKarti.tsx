@@ -10,6 +10,7 @@ import {
   SIRKET_YUZEY,
 } from './renk';
 import { UYUM_ETIKETI, kimlikSatiri, monogram } from '../lib/aday-kart.mjs';
+import { durumRozeti } from './basvuru-durumu';
 
 /**
  * Başvuran kartı.
@@ -26,28 +27,6 @@ import { UYUM_ETIKETI, kimlikSatiri, monogram } from '../lib/aday-kart.mjs';
  * doldurulmamış kutu" gibi duruyordu.
  */
 
-
-/*
-  Başvuru durumu — GERÇEK enum değerleri.
-
-  `application_status`: submitted, under_review, technical_assessment,
-  interview_scheduled, offer_extended, rejected, withdrawn. Uydurma bir
-  aşama eklenmiyor; olmayan bir durumu göstermek şirkete var olmayan bir
-  akış vaat etmek olurdu.
-
-  Renk semantik: reddedilen kırmızı, teklif verilen yeşil, geri çekilen
-  nötr. Marka yeşili "birincil ve seçili" demek, "başarılı" demek değil —
-  bu yüzden aşama renkleri ayrı.
-*/
-const DURUM_ETIKETI: Record<string, { etiket: string; stil: React.CSSProperties }> = {
-  submitted: { etiket: 'Yeni', stil: { background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU } },
-  under_review: { etiket: 'İnceleniyor', stil: { background: '#FEF3C7', color: '#92400E' } },
-  technical_assessment: { etiket: 'Değerlendirme', stil: { background: '#FEF3C7', color: '#92400E' } },
-  interview_scheduled: { etiket: 'Mülakat', stil: { background: '#DBEAFE', color: '#1E40AF' } },
-  offer_extended: { etiket: 'Teklif', stil: { background: '#DCFCE7', color: '#166534' } },
-  rejected: { etiket: 'Olumsuz', stil: { background: '#FEE2E2', color: '#991B1B' } },
-  withdrawn: { etiket: 'Geri çekildi', stil: { background: '#F3F4F6', color: '#4B5563' } },
-};
 
 const tarihYaz = (t: string | null) => {
   if (!t) return '';
@@ -86,7 +65,7 @@ export const AdayKarti: React.FC<{
   onAc: () => void;
 }> = ({ kart, odakli, onAc }) => {
   const kimlik = kimlikSatiri(kart);
-  const durum = DURUM_ETIKETI[kart.durum] ?? null;
+  const durum = durumRozeti(kart.durum);
   /* Dörtten fazlası kartı boğuyor; kalanı sayıyla anlatılıyor. */
   const gorunenYetenek = kart.yetenekler.slice(0, 4);
   const kalanYetenek = kart.yetenekler.length - gorunenYetenek.length;
@@ -148,14 +127,13 @@ export const AdayKarti: React.FC<{
             )}
           </span>
 
-          {durum && (
-            <span
-              className="shrink-0 rounded-lg px-1.5 py-0.5 text-[10px] font-bold"
-              style={durum.stil}
-            >
-              {durum.etiket}
-            </span>
-          )}
+          {/* Rozet her zaman var: tanınmayan durumda ham enum değil, nötr bir metin. */}
+          <span
+            className="shrink-0 rounded-lg px-1.5 py-0.5 text-[10px] font-bold"
+            style={durum.stil}
+          >
+            {durum.etiket}
+          </span>
         </span>
 
         {kart.sehir && (
