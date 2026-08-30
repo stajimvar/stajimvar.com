@@ -1,7 +1,6 @@
 import React from 'react';
-import { ExternalLink, FileText, ShieldOff } from 'lucide-react';
+import { ChevronRight, ExternalLink, FileText, ShieldOff } from 'lucide-react';
 import {
-  SIRKET_ACCENT,
   SIRKET_KENAR,
   SIRKET_METIN,
   SIRKET_METIN_IKINCIL,
@@ -27,14 +26,6 @@ import { UYUM_ETIKETI, kimlikSatiri, monogram } from '../lib/aday-kart.mjs';
  * doldurulmamış kutu" gibi duruyordu.
  */
 
-const SERIT: Record<string, { renk: string; oran: string }> = {
-  /* Dolgu ailenin imza renginde; bandın adı kartta yazılı olduğu için
-     anlam yalnızca renkle taşınmıyor. */
-  yuksek: { renk: SIRKET_ACCENT, oran: '100%' },
-  orta: { renk: SIRKET_ACCENT, oran: '60%' },
-  dusuk: { renk: SIRKET_KENAR, oran: '30%' },
-  bilinmiyor: { renk: SIRKET_KENAR, oran: '0%' },
-};
 
 /*
   Başvuru durumu — GERÇEK enum değerleri.
@@ -94,7 +85,6 @@ export const AdayKarti: React.FC<{
   odakli: boolean;
   onAc: () => void;
 }> = ({ kart, odakli, onAc }) => {
-  const serit = SERIT[kart.band] ?? SERIT.bilinmiyor;
   const kimlik = kimlikSatiri(kart);
   const durum = DURUM_ETIKETI[kart.durum] ?? null;
   /* Dörtten fazlası kartı boğuyor; kalanı sayıyla anlatılıyor. */
@@ -125,11 +115,6 @@ export const AdayKarti: React.FC<{
           : '0 1px 2px rgba(22, 33, 28, 0.04)',
       }}
     >
-      {/* Uyum şeridi — bandı gösteriyor, sayıyı aşağıda yazıyor. */}
-      <span className="block h-1.5 w-full shrink-0" style={{ background: SIRKET_KENAR }}>
-        <span className="block h-full" style={{ width: serit.oran, background: serit.renk }} />
-      </span>
-
       <span className="flex min-h-0 flex-1 flex-col gap-2.5 p-3">
         {/* ------------------------------------------------- üst satır */}
         <span className="flex items-start gap-2">
@@ -150,17 +135,17 @@ export const AdayKarti: React.FC<{
               {kart.gizli ? 'Aday' : (kart.ad ?? 'Ad paylaşılmadı')}
             </span>
             {/*
-              UYUM: SAYI DEĞİL BAND
-
-              Ölçüldü: üretimdeki puanların tamamı 0–38 arasında ve 0,
-              eşleştirme motorunun "hesaplanamadı" çıktısıyla (unscorable)
-              aynı değeri taşıyor. "%0 uyum" yazmak, hesaplanamamış bir
-              başvuruyu sıfır uyumlu göstermek olurdu. Band adı ne bilindiğini
-              olduğu gibi söylüyor.
+              Okul ve bölüm adın hemen altında: karar için ilk bakılan
+              bilgi bu, uyum değil.
             */}
-            <span className="block text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
-              {UYUM_ETIKETI[kart.band as keyof typeof UYUM_ETIKETI]}
-            </span>
+            {kimlik && (
+              <span
+                className="line-clamp-2 block text-[11px] font-semibold leading-snug"
+                style={{ color: SIRKET_METIN_IKINCIL }}
+              >
+                {kimlik}
+              </span>
+            )}
           </span>
 
           {durum && (
@@ -173,22 +158,9 @@ export const AdayKarti: React.FC<{
           )}
         </span>
 
-        {/* --------------------------------------------- kimlik özeti */}
-        {(kimlik || kart.sehir) && (
-          <span className="block space-y-0.5">
-            {kimlik && (
-              <span
-                className="line-clamp-2 block text-[11px] font-semibold leading-snug"
-                style={{ color: SIRKET_METIN_IKINCIL }}
-              >
-                {kimlik}
-              </span>
-            )}
-            {kart.sehir && (
-              <span className="block text-[11px]" style={{ color: SIRKET_METIN_IKINCIL }}>
-                {kart.sehir}
-              </span>
-            )}
+        {kart.sehir && (
+          <span className="block text-[11px]" style={{ color: SIRKET_METIN_IKINCIL }}>
+            {kart.sehir}
           </span>
         )}
 
@@ -230,19 +202,37 @@ export const AdayKarti: React.FC<{
         )}
 
         {/* ------------------------------------------- alt meta satırı */}
+        {/*
+          ALT SATIR: TARİH + NET AKSİYON
+
+          Uyum bilgisi buraya, küçük yardımcı metne indi. Adın altında
+          duran bir "band" etiketi, algoritmanın aday hakkında verdiği
+          karar gibi okunuyordu; oysa üretimdeki puanların tamamı 0–38
+          arasında ve 0, eşleştirme motorunun "hesaplanamadı" çıktısıyla
+          aynı değeri taşıyor.
+
+          Kartın tamamı tıklanabilir; sağdaki "İncele" bunu görünür
+          kılıyor. İç içe düğme yok — kart zaten bir düğme.
+        */}
         <span
-          className="mt-auto flex items-center justify-between gap-2 border-t pt-2 text-[10px] font-semibold"
+          className="mt-auto flex items-center justify-between gap-2 border-t pt-2.5 text-[11px] font-semibold"
           style={{ borderColor: SIRKET_KENAR, color: SIRKET_METIN_IKINCIL }}
         >
-          <span className="truncate">{tarihYaz(kart.tarih)}</span>
-          <span className="flex shrink-0 items-center gap-2">
-            {kart.cvYolu && (
-              <span className="flex items-center gap-0.5">
-                <FileText className="h-3 w-3" />
-                CV
+          <span className="flex min-w-0 flex-col">
+            <span className="truncate">{tarihYaz(kart.tarih)}</span>
+            {kart.band !== 'bilinmiyor' && (
+              <span className="truncate text-[10px] font-normal">
+                {UYUM_ETIKETI[kart.band as keyof typeof UYUM_ETIKETI]}
               </span>
             )}
-            {kart.rozetler.length > 0 && <span>{kart.rozetler.length} rozet</span>}
+          </span>
+          <span
+            className="flex shrink-0 items-center gap-1 font-bold"
+            style={{ color: SIRKET_VURGU_KOYU }}
+          >
+            {kart.cvYolu && <FileText className="h-3.5 w-3.5" />}
+            İncele
+            <ChevronRight className="h-3.5 w-3.5" />
           </span>
         </span>
       </span>

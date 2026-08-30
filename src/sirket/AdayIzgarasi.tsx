@@ -1,8 +1,9 @@
 import React from 'react';
-import { Check, Copy, Eye, EyeOff, Users, X } from 'lucide-react';
+import { Check, Copy, Eye, EyeOff, Search, Users } from 'lucide-react';
 import { AdayKarti } from './AdayKarti';
 import { AdayCekmecesi } from './AdayCekmecesi';
 import {
+  ALAN,
   IKINCIL_DUGME,
   KUTU,
   SIRKET_KENAR,
@@ -10,23 +11,47 @@ import {
   SIRKET_METIN_IKINCIL,
   SIRKET_ROZET,
   SIRKET_VURGU_KOYU,
-  SIRKET_YUZEY,
+  alanStil,
   ikincilStil,
   kutuStil,
 } from './renk';
 import { onyargisizla } from '../lib/aday-kart.mjs';
 
+/* Süzgeçteki durum adları — veritabanındaki `application_status`
+   enum'unun aynısı; uydurma aşama yok. */
+const DURUM_SIRASI = [
+  'submitted',
+  'under_review',
+  'technical_assessment',
+  'interview_scheduled',
+  'offer_extended',
+  'rejected',
+  'withdrawn',
+];
+
+const DURUM_ADI: Record<string, string> = {
+  submitted: 'Yeni',
+  under_review: 'İnceleniyor',
+  technical_assessment: 'Değerlendirme',
+  interview_scheduled: 'Mülakat',
+  offer_extended: 'Teklif',
+  rejected: 'Olumsuz',
+  withdrawn: 'Geri çekildi',
+};
+
 /**
  * Başvuran ızgarası.
  *
- * KLAVYE
- * ------
- * J/K sonraki-önceki, F detay, A kısa liste (incelemeye al), X red.
- * Yirmi kartı fareyle tek tek açıp kapatmak İK'nın en çok vakit
- * kaybettiği yer; klavyede tarama tek elle yapılıyor.
+ * KLAVYE — GİZLİ, ÖĞRETİLMİYOR
+ * ----------------------------
+ * J/K sonraki-önceki, F detay, A incelemeye al, X red. Kısayollar
+ * ÇALIŞIYOR ama arayüzde HİÇ YAZMIYOR: paneli ilk açan bir İK
+ * çalışanına klavye dizilimi öğretmek, ekranı terminal gibi
+ * gösteriyordu. Her işin görünür bir düğmesi var; kısayol yalnızca çok
+ * kullananın kendiliğinden keşfedeceği bir hızlandırıcı.
  *
- * Kısayollar yalnızca ızgara odaktayken çalışıyor ve bir metin alanına
- * yazarken devre dışı — yoksa not yazarken "x" tuşu adayı reddederdi.
+ * Bir metin alanına yazarken devre dışı — yoksa not yazarken "x" tuşu
+ * adayı reddederdi.
  *
  * ÖNYARGISIZ İNCELEME
  * -------------------
@@ -53,44 +78,44 @@ export const AdayIzgarasi: React.FC<{
   onDurum: (id: string, durum: string) => Promise<void>;
   onNot: (id: string, metin: string) => Promise<void>;
 }> = ({ kartlar, ilanAdresi, onNavigate, onDurum, onNot }) => {
-  /*
-    ÇEKMECE PORTAL'A ÇİZİLİYOR
-
-    `createPortal` içeriği document.body'ye taşıyor; sarmalayıcıya
-    yazılan `lg:hidden` ona işlemiyor. Ölçüldü: geniş ekranda hem yan
-    panel hem çekmece birden açılıyordu. Bu yüzden hangisinin çizileceği
-    CSS'le değil, ölçülen genişlikle seçiliyor.
-  */
-  const [genisEkran, setGenisEkran] = React.useState(false);
-  React.useEffect(() => {
-    if (typeof window === 'undefined') return;
-    /*
-      Hem `matchMedia` değişimi hem `resize` dinleniyor. Yalnızca
-      medya sorgusuna güvenmek yetmedi: ölçüldü, bazı ortamlarda
-      genişlik değişince `change` olayı gelmiyor ve durum bayat kalıyor —
-      o zaman dar ekranda ne yan panel ne çekmece açılıyordu, yani aday
-      ayrıntısına HİÇ ulaşılamıyordu.
-    */
-    const uygula = () => setGenisEkran(window.innerWidth >= 1024);
-    uygula();
-    const sorgu = window.matchMedia?.('(min-width: 1024px)');
-    sorgu?.addEventListener('change', uygula);
-    window.addEventListener('resize', uygula);
-    return () => {
-      sorgu?.removeEventListener('change', uygula);
-      window.removeEventListener('resize', uygula);
-    };
-  }, []);
-
   const [onyargisiz, setOnyargisiz] = React.useState(false);
+  const [ilanSuzgeci, setIlanSuzgeci] = React.useState('');
+  const [durumSuzgeci, setDurumSuzgeci] = React.useState('');
+  const [arama, setArama] = React.useState('');
   const [odak, setOdak] = React.useState(0);
   const [acikId, setAcikId] = React.useState<string | null>(null);
   const [kaydediliyor, setKaydediliyor] = React.useState(false);
   const [kopyalandi, setKopyalandi] = React.useState(false);
 
+  /* İlan süzgecinin seçenekleri gelen başvurulardan türüyor; boş bir
+     ilan listesi göstermenin anlamı yok. */
+  const ilanSecenekleri = React.useMemo(() => {
+    const harita = new Map<string, string>();
+    for (const k of kartlar) {
+      if (k.ilanId) harita.set(String(k.ilanId), String(k.ilanBasligi ?? 'İlan'));
+    }
+    return [...harita].map(([id, baslik]) => ({ id, baslik }));
+  }, [kartlar]);
+
+  const suzulmus = React.useMemo(() => {
+    const terim = arama.trim().toLocaleLowerCase('tr-TR');
+    return kartlar.filter((k) => {
+      if (ilanSuzgeci && String(k.ilanId ?? '') !== ilanSuzgeci) return false;
+      if (durumSuzgeci && String(k.durum ?? '') !== durumSuzgeci) return false;
+      if (!terim) return true;
+      /* Ad, okul, bölüm ve yetenekler aranıyor — İK'nın aklında kalan
+         şeyler bunlar. */
+      const havuz = [k.ad, k.universite, k.bolum, k.sehir, ...(k.yetenekler ?? [])]
+        .filter(Boolean)
+        .join(' ')
+        .toLocaleLowerCase('tr-TR');
+      return havuz.includes(terim);
+    });
+  }, [kartlar, ilanSuzgeci, durumSuzgeci, arama]);
+
   const gosterilen = React.useMemo(
-    () => (onyargisiz ? kartlar.map((k) => onyargisizla(k)) : kartlar),
-    [kartlar, onyargisiz]
+    () => (onyargisiz ? suzulmus.map((k) => onyargisizla(k)) : suzulmus),
+    [suzulmus, onyargisiz]
   );
 
   const acik = acikId ? (gosterilen.find((k) => k.id === acikId) ?? null) : null;
@@ -185,10 +210,76 @@ export const AdayIzgarasi: React.FC<{
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <p className="text-sm font-bold" style={{ color: SIRKET_METIN }}>
-          {kartlar.length} başvuru
+      {/* --------------------------------------------------- başlık */}
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h1 className="text-xl font-black" style={{ color: SIRKET_METIN }}>
+          Başvuranlar
+        </h1>
+        <p className="text-sm font-semibold" style={{ color: SIRKET_METIN_IKINCIL }}>
+          {suzulmus.length === kartlar.length
+            ? `${kartlar.length} aday`
+            : `${suzulmus.length} / ${kartlar.length} aday`}
         </p>
+      </div>
+
+      {/*
+        SÜZGEÇLER — TANIDIK ÜÇLÜ
+
+        İlan, durum ve arama. Hepsi görünür kontrol; öğrenmesi gereken bir
+        şey yok. Kısayol ipucu kaldırıldı: panelin ilk defa açan bir İK
+        çalışanına klavye dizilimi öğretmesi gerekmiyor.
+      */}
+      <div className="flex flex-wrap items-center gap-2">
+        {ilanSecenekleri.length > 1 && (
+          <select
+            value={ilanSuzgeci}
+            onChange={(e) => setIlanSuzgeci(e.target.value)}
+            aria-label="İlana göre süz"
+            className={ALAN}
+            /* ALAN `w-full` taşıyor; süzgeç satırında genişlik satır içi
+               veriliyor, yoksa seçici tüm satırı kaplayıp aramayı alt
+               satıra itiyor. */
+            style={{ ...alanStil, width: 'auto', minWidth: 160, maxWidth: '100%' }}
+          >
+            <option value="">Tüm ilanlar</option>
+            {ilanSecenekleri.map((i) => (
+              <option key={i.id} value={i.id}>
+                {i.baslik}
+              </option>
+            ))}
+          </select>
+        )}
+
+        <select
+          value={durumSuzgeci}
+          onChange={(e) => setDurumSuzgeci(e.target.value)}
+          aria-label="Duruma göre süz"
+          className={ALAN}
+          style={{ ...alanStil, width: 'auto', minWidth: 150 }}
+        >
+          <option value="">Tüm durumlar</option>
+          {DURUM_SIRASI.map((d) => (
+            <option key={d} value={d}>
+              {DURUM_ADI[d]}
+            </option>
+          ))}
+        </select>
+
+        <label className="relative min-w-48 flex-1">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+            style={{ color: SIRKET_METIN_IKINCIL }}
+            aria-hidden
+          />
+          <input
+            value={arama}
+            onChange={(e) => setArama(e.target.value)}
+            placeholder="Aday ara"
+            aria-label="Aday ara"
+            className={`${ALAN} pl-9`}
+            style={alanStil}
+          />
+        </label>
 
         <button
           type="button"
@@ -204,40 +295,11 @@ export const AdayIzgarasi: React.FC<{
           {onyargisiz ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           Önyargısız incele
         </button>
-
-        {/*
-          Kısayollar GERÇEKTEN çalışıyor (aşağıdaki klavye dinleyicisi).
-          Yazmak gerekiyor: keşfedilmeyen bir kısayol yok sayılır. Ama
-          serbest metin gibi havada durmasın diye tuşlar <kbd> ile
-          çiziliyor ve satırın sonunda, listeyle aynı hizada duruyor.
-          Dar ekranda gizli — orada klavye yok.
-        */}
-        <p
-          className="ml-auto hidden items-center gap-1.5 text-[11px] sm:flex"
-          style={{ color: SIRKET_METIN_IKINCIL }}
-        >
-          {[
-            ['J / K', 'gez'],
-            ['F', 'aç'],
-            ['A', 'incelemeye'],
-            ['X', 'reddet'],
-          ].map(([tus, ne]) => (
-            <span key={tus} className="inline-flex items-center gap-1">
-              <kbd
-                className="rounded border px-1 font-mono text-[10px] font-bold"
-                style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY, color: SIRKET_METIN }}
-              >
-                {tus}
-              </kbd>
-              {ne}
-            </span>
-          ))}
-        </p>
       </div>
 
       {onyargisiz && (
         <p
-          className="rounded-xl border px-3 py-2 text-[11px] leading-relaxed"
+          className="rounded-xl border px-3 py-2.5 text-xs leading-relaxed"
           style={{ borderColor: SIRKET_KENAR, background: SIRKET_ROZET, color: SIRKET_METIN }}
         >
           Ad ve fotoğraf gizli. Okul, bölüm, yetenekler ve ön yazı görünmeye devam ediyor.
@@ -245,19 +307,36 @@ export const AdayIzgarasi: React.FC<{
       )}
 
       {/*
-        GENİŞ EKRANDA LİSTE + AYRINTI
+        LİSTE EKRANI DOLDURUYOR
 
-        Kartlar dört sütuna yayılınca sağ taraf boş kalıyor ve aday
-        ayrıntısı ancak üstü kapatan bir çekmeceyle görülebiliyordu:
-        şirket bir adayı okurken listeyi kaybediyordu. Artık solda tarama,
-        sağda inceleme — aynı anda ikisi de görünüyor.
-
-        Dar ekranda düzen aynı kalıyor: liste tam genişlik, ayrıntı
-        çekmeceden geliyor. Masaüstü düzenini telefona sıkıştırmak iki
-        sütunu da okunmaz yapardı.
+        Önce solda kartlar, sağda kalıcı bir "Bir aday seçin" paneli
+        vardı: kimse bir adaya tıklamadan ekranın yarısı boş duruyordu.
+        Artık kartlar tüm alanı kullanıyor ve ayrıntı yalnızca bir karta
+        tıklanınca açılıyor — listeye dönünce liste yine ekranı dolduruyor.
       */}
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-4">
-        <ul className="grid grid-cols-2 items-stretch gap-3 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+      {suzulmus.length === 0 ? (
+        <div className={`${KUTU} text-center`} style={kutuStil}>
+          <p className="font-bold" style={{ color: SIRKET_METIN }}>
+            Bu süzgeçle eşleşen aday yok
+          </p>
+          <p className="mt-1 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
+            Süzgeçleri temizleyip tüm başvuruları görebilirsiniz.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setIlanSuzgeci('');
+              setDurumSuzgeci('');
+              setArama('');
+            }}
+            className={`mx-auto mt-4 ${IKINCIL_DUGME}`}
+            style={ikincilStil}
+          >
+            Süzgeçleri temizle
+          </button>
+        </div>
+      ) : (
+        <ul className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {gosterilen.map((k, i) => (
             <li key={k.id} className="flex">
               <AdayKarti
@@ -271,63 +350,25 @@ export const AdayIzgarasi: React.FC<{
             </li>
           ))}
         </ul>
+      )}
 
-        {/* Yan panel yalnızca geniş ekranda ve bir aday seçiliyken. */}
-        <aside className="mt-4 hidden lg:sticky lg:top-20 lg:mt-0 lg:block">
-          {genisEkran && acik ? (
-            <AdayCekmecesi
-              gomulu
-              kart={acik}
-              kaydediliyor={kaydediliyor}
-              onKapat={() => setAcikId(null)}
-              onDurum={(d) => {
-                if (!acik) return;
-                void durumUygula(acik.id, d);
-              }}
-              onNot={(metin) => {
-                if (!acik) return;
-                setKaydediliyor(true);
-                void onNot(acik.id, metin).finally(() => setKaydediliyor(false));
-              }}
-            />
-          ) : (
-            <div
-              className={`${KUTU} text-center`}
-              style={{ ...kutuStil, borderStyle: 'dashed' }}
-            >
-              <p className="text-sm font-bold" style={{ color: SIRKET_METIN }}>
-                Bir aday seçin
-              </p>
-              <p className="mt-1 text-xs leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
-                Karta tıklayın ya da <b>J</b>/<b>K</b> ile gezip <b>F</b> ile açın; ayrıntı
-                burada görünür.
-              </p>
-            </div>
-          )}
-        </aside>
-      </div>
+      {/* Ayrıntı: dar ekranda tam ekran, geniş ekranda sağdan çekmece. */}
+      <AdayCekmecesi
+        kart={acik}
+        kaydediliyor={kaydediliyor}
+        onKapat={() => setAcikId(null)}
+        onDurum={(d) => {
+          if (!acik) return;
+          void durumUygula(acik.id, d).then(() => setAcikId(null));
+        }}
+        onNot={(metin) => {
+          if (!acik) return;
+          setKaydediliyor(true);
+          void onNot(acik.id, metin).finally(() => setKaydediliyor(false));
+        }}
+      />
 
-      {/* Dar ekranda ayrıntı çekmeceden geliyor. */}
-      <div>
-        <AdayCekmecesi
-          kart={genisEkran ? null : acik}
-          kaydediliyor={kaydediliyor}
-          onKapat={() => setAcikId(null)}
-          onDurum={(d) => {
-            if (!acik) return;
-            void durumUygula(acik.id, d).then(() => setAcikId(null));
-          }}
-          onNot={(metin) => {
-            if (!acik) return;
-            setKaydediliyor(true);
-            void onNot(acik.id, metin).finally(() => setKaydediliyor(false));
-          }}
-        />
-      </div>
-
-      {/* Reddedilenler ızgarada kalıyor ama durumu kartın altında yazıyor. */}
-      <p className="flex items-center gap-1.5 text-[11px]" style={{ color: SIRKET_METIN_IKINCIL }}>
-        <X className="h-3 w-3" />
+      <p className="text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
         Reddedilen başvurular listeden silinmiyor; kararın kaydı adayın başvuru sayfasında da
         görünüyor.
       </p>

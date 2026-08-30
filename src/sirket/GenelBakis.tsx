@@ -35,54 +35,6 @@ import type { SirketBaglami } from '../lib/sirket-veri';
  * götürüyor. Bir gösterge tahtası sayı gösterir; bir panel iş çıkartır.
  */
 
-const Sayi: React.FC<{
-  etiket: string;
-  deger: React.ReactNode;
-  alt?: string;
-  kilitli?: boolean;
-  onClick?: () => void;
-}> = ({ etiket, deger, alt, kilitli, onClick }) => {
-  const icerik = (
-    <>
-      <p
-        className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide"
-        style={{ color: SIRKET_METIN_IKINCIL }}
-      >
-        {kilitli && <Lock className="h-3 w-3" />}
-        {etiket}
-      </p>
-      <p
-        className="mt-0.5 text-2xl font-black"
-        style={{ color: kilitli ? SIRKET_METIN_IKINCIL : SIRKET_METIN }}
-      >
-        {deger}
-      </p>
-      {alt && (
-        <p className="text-[11px]" style={{ color: SIRKET_METIN_IKINCIL }}>
-          {alt}
-        </p>
-      )}
-    </>
-  );
-
-  if (!onClick) {
-    return (
-      <div className="rounded-2xl border p-4" style={kutuStil}>
-        {icerik}
-      </div>
-    );
-  }
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="cursor-pointer rounded-2xl border p-4 text-left transition-shadow hover:shadow-sm"
-      style={kutuStil}
-    >
-      {icerik}
-    </button>
-  );
-};
 
 export const GenelBakis: React.FC<{
   baglam: SirketBaglami;
@@ -177,58 +129,71 @@ export const GenelBakis: React.FC<{
         </button>
       </div>
 
-      {/* ------------------------------------------------------- sayılar */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-        <Sayi
-          etiket="Yayındaki ilan"
-          deger={acik.length}
-          onClick={() => onNavigate('/sirket/ilanlar')}
-        />
-        <Sayi
-          etiket="Taslak"
-          deger={taslak.length}
-          alt={taslak.length > 0 ? 'Öğrenciye görünmüyor' : undefined}
-          onClick={() => onNavigate('/sirket/ilanlar')}
-        />
-        <Sayi
-          etiket="Başvuru"
-          deger={kartAcik ? basvurular.length : '—'}
-          alt={kartAcik && yeni.length > 0 ? `${yeni.length} yeni` : undefined}
-          kilitli={!kartAcik}
-          onClick={() => onNavigate('/sirket/basvuranlar')}
-        />
-        <Sayi
-          etiket="Doğrulama"
-          deger={<span className="text-base">{baglam.dogrulandi ? 'Tamam' : 'Bekliyor'}</span>}
-          onClick={() => onNavigate('/sirket/profil')}
-        />
-      </div>
+      {/*
+        AKTİF İLANLAR — DÖRT KARO YERİNE TEK LİSTE
 
-      {/* -------------------------------------------- yaklaşan kapanışlar */}
-      {yaklasan.length > 0 && (
+        Önce dört sayı karosu vardı (yayındaki ilan, taslak, başvuru,
+        doğrulama). Sayılar doğruydu ama ekran "gösterge paneli" gibi
+        duruyor ve hiçbiri tıklandığında nereye gidileceğini
+        söylemiyordu. İK'nın burada aradığı tek şey belli: hangi ilanım
+        açık ve kaç başvuru gelmiş.
+
+        Kapanış tarihi ayrı bir bölümdü; aynı ilanı iki kez listeliyordu.
+        Artık satırın kendi içinde.
+      */}
+      {ilanlar.length > 0 && (
         <section className={KUTU} style={kutuStil}>
-          <h2 className="flex items-center gap-2 font-bold" style={{ color: SIRKET_METIN }}>
-            <AlertCircle className="h-4 w-4" style={{ color: SIRKET_VURGU_KOYU }} />
-            Yaklaşan ilan kapanışları
-          </h2>
-          <ul className="mt-3 space-y-2">
-            {yaklasan.slice(0, 5).map(({ ilan, kalan }) => (
-              <li
-                key={String(ilan.id)}
-                className="flex items-center gap-3 border-t pt-2 first:border-t-0 first:pt-0"
-                style={{ borderColor: SIRKET_KENAR }}
-              >
-                <span
-                  className="shrink-0 rounded-lg px-2 py-1 text-[11px] font-bold"
-                  style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
-                >
-                  {kalan === 0 ? 'Bugün' : `${kalan} gün`}
-                </span>
-                <span className="min-w-0 flex-1 truncate text-sm" style={{ color: SIRKET_METIN }}>
-                  {String(ilan.title ?? '')}
-                </span>
-              </li>
-            ))}
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="font-bold" style={{ color: SIRKET_METIN }}>
+              İlanlarınız
+            </h2>
+            <button
+              type="button"
+              onClick={() => onNavigate('/sirket/ilanlar')}
+              className="text-xs font-bold"
+              style={{ color: SIRKET_VURGU_KOYU }}
+            >
+              Tümünü aç
+            </button>
+          </div>
+
+          <ul className="mt-3 space-y-1">
+            {ilanlar.slice(0, 5).map((ilan) => {
+              const id = String(ilan.id);
+              const yayinda = ilan.status === 'published';
+              const kalan = yaklasan.find((y) => String(y.ilan.id) === id)?.kalan;
+              return (
+                <li key={id}>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('/sirket/ilanlar')}
+                    className="flex min-h-11 w-full items-center gap-3 rounded-xl px-2 text-left"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className="block truncate text-sm font-bold"
+                        style={{ color: SIRKET_METIN }}
+                      >
+                        {String(ilan.title ?? '')}
+                      </span>
+                      <span className="block text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+                        {yayinda ? 'Yayında' : ilan.status === 'draft' ? 'Taslak' : 'Kapalı'}
+                        {/* Başvuru sayısı yalnızca doğrulanmış şirkette:
+                            göremeyeceği bir sayıyı göstermek doğrulamayı
+                            satmak olurdu. */}
+                        {kartAcik && ` · ${Number(ilan.applicants_count ?? 0)} başvuru`}
+                        {kalan !== undefined &&
+                          ` · ${kalan === 0 ? 'bugün kapanıyor' : `${kalan} gün kaldı`}`}
+                      </span>
+                    </span>
+                    <ArrowRight
+                      className="h-4 w-4 shrink-0"
+                      style={{ color: SIRKET_METIN_IKINCIL }}
+                    />
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}

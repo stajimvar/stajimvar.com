@@ -1,5 +1,15 @@
 import React from 'react';
-import { Archive, BadgeCheck, Lock, Pencil, Plus, Send, ShieldCheck, Trash2 } from 'lucide-react';
+import {
+  Archive,
+  BadgeCheck,
+  Lock,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Send,
+  ShieldCheck,
+  Trash2,
+} from 'lucide-react';
 import { SirketKabugu, type SirketSekmesi } from './SirketKabugu';
 import {
   ALAN,
@@ -333,6 +343,7 @@ const Ilanlar: React.FC<{
     arsivlenecek: boolean;
   } | null>(null);
   const [kaldiriliyor, setKaldiriliyor] = React.useState(false);
+  const [acikMenu, setAcikMenu] = React.useState<string | null>(null);
   const [kaldirmaHatasi, setKaldirmaHatasi] = React.useState('');
   const acik = ilanlar.filter((i) => i.status === 'published').length;
   const taslak = ilanlar.filter((i) => i.status === 'draft').length;
@@ -483,28 +494,63 @@ const Ilanlar: React.FC<{
                     {eylem.durumEtiketi}
                   </button>
 
+                  {/*
+                    ÜÇÜNCÜ EYLEM MENÜDE
+
+                    Satırda üç düğme yan yana durunca hangisinin asıl iş
+                    olduğu kayboluyordu. Düzenle ve Yayınla/Kapat görünür
+                    kalıyor; seyrek ve geri alınamaz olan kaldırma menüye
+                    giriyor.
+                  */}
                   {eylem.kaldirilabilir && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setKaldirilacak({
-                          id,
-                          baslik: String(i.title ?? ''),
-                          basvuruSayisi,
-                          arsivlenecek: eylem.arsivlenecek,
-                        })
-                      }
-                      className={IKINCIL_DUGME}
-                      style={ikincilStil}
-                      title={eylem.arsivlenecek ? 'Listeden kaldır (arşivle)' : 'İlanı sil'}
-                    >
-                      {eylem.arsivlenecek ? (
-                        <Archive className="h-3.5 w-3.5" />
-                      ) : (
-                        <Trash2 className="h-3.5 w-3.5" />
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setAcikMenu((m) => (m === id ? null : id))}
+                        aria-label="Diğer işlemler"
+                        aria-expanded={acikMenu === id}
+                        className={IKINCIL_DUGME}
+                        style={{ ...ikincilStil, paddingInline: 10 }}
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+
+                      {acikMenu === id && (
+                        <>
+                          <span
+                            className="fixed inset-0 z-10"
+                            onClick={() => setAcikMenu(null)}
+                            aria-hidden
+                          />
+                          <div
+                            className="absolute right-0 top-full z-20 mt-1 w-44 overflow-hidden rounded-xl border shadow-lg"
+                            style={kutuStil}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAcikMenu(null);
+                                setKaldirilacak({
+                                  id,
+                                  baslik: String(i.title ?? ''),
+                                  basvuruSayisi,
+                                  arsivlenecek: eylem.arsivlenecek,
+                                });
+                              }}
+                              className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm font-bold"
+                              style={{ color: SIRKET_METIN }}
+                            >
+                              {eylem.arsivlenecek ? (
+                                <Archive className="h-4 w-4" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                              {eylem.arsivlenecek ? 'Arşivle' : 'Sil'}
+                            </button>
+                          </div>
+                        </>
                       )}
-                      {eylem.arsivlenecek ? 'Arşivle' : 'Sil'}
-                    </button>
+                    </div>
                   )}
                 </div>
               </li>
