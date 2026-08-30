@@ -1,7 +1,9 @@
 import React from 'react';
 import { Briefcase, Building2, GraduationCap, LayoutGrid, Plus, Users } from 'lucide-react';
+import { BottomNavigation, BottomNavigationItem } from '../ui/BottomNavigation';
 import {
   birincilStil,
+  SIRKET_ALT_MENU,
   SIRKET_KENAR,
   SIRKET_METIN,
   SIRKET_METIN_IKINCIL,
@@ -140,41 +142,46 @@ export const SirketKabugu: React.FC<{
       {children}
     </main>
 
-    {/* Dar ekranda aynı dört iş altta. */}
-    <nav
-      aria-label="Şirket menüsü"
-      className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around border-t px-2 py-2 sm:hidden"
-      style={{
-        background: SIRKET_YUZEY,
-        borderColor: SIRKET_KENAR,
-        paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
-      }}
-    >
+    {/*
+      DAR EKRANDA AYNI DÖRT İŞ ALTTA — ÖĞRENCİ TARAFIYLA AYNI ÇUBUK
+
+      Önce ekranın dibine yapışık, tam genişlikte, düz bir şerit vardı ve
+      beş öğenin hepsinde yazı duruyordu: 375 pikselde etiketler sıkışıyor,
+      çubuk da öğrenci tarafındaki yüzen haptan bambaşka bir üründen çıkmış
+      gibi duruyordu. Artık ikisi tek bileşen: aynı yüzen hap, aynı köşe,
+      aynı yükseklik. Seçili olan dolgulu rozetin içinde yazısıyla, diğerleri
+      yalnız ikon — hangi sayfada olduğun seçili olanda yazılı.
+
+      Ayrılan tek şey renk, o da ./renk dosyasından geliyor.
+    */}
+    <BottomNavigation gorunur etiket="Şirket menüsü" esik="sm" tema={SIRKET_ALT_MENU}>
       {SEKMELER.map((s) => (
-        <button
+        <BottomNavigationItem
           key={s.id}
-          type="button"
+          ikon={s.ikon}
+          etiket={s.etiket}
+          ad={s.etiket}
+          aktif={secili === s.id}
           onClick={() => onNavigate(s.yol)}
-          aria-label={s.etiket}
-          aria-current={secili === s.id ? 'page' : undefined}
-          className="flex h-11 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-bold"
-          style={secili === s.id ? { color: SIRKET_VURGU_KOYU } : { color: SIRKET_METIN_IKINCIL }}
-        >
-          {s.ikon}
-          {s.etiket}
-        </button>
+          tema={SIRKET_ALT_MENU}
+        />
       ))}
-      <button
-        type="button"
+      {/*
+        "Öğrenci" bir SEKME değil KAPI: hiçbir zaman seçili olmuyor, yani
+        varsayılan kuralla (yazı yalnız seçilide) adsız bir ikona inerdi.
+        Öğrenci tarafına dönüş yolunun adsız kalması, telefonda geri
+        dönemeyen şirket hesabı hatasının aynısı olurdu; etiketi hep açık.
+      */}
+      <BottomNavigationItem
+        ikon={<GraduationCap className="h-5 w-5" />}
+        etiket="Öğrenci"
+        ad="Öğrenci tarafına dön"
+        aktif={false}
+        etiketHepZaman
         onClick={onOgrenciyeDon}
-        aria-label="Öğrenci tarafına dön"
-        className="flex h-11 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-bold"
-        style={{ color: SIRKET_METIN_IKINCIL }}
-      >
-        <GraduationCap className="h-5 w-5" />
-        Öğrenci
-      </button>
-    </nav>
+        tema={SIRKET_ALT_MENU}
+      />
+    </BottomNavigation>
   </div>
 );
 

@@ -577,7 +577,20 @@ export default function App() {
     // Oturumun kendisi onAuthChange üzerinden geliyor; burada yalnızca
     // arayüzü kullanıcının rolüne göre konumlandırıyoruz.
     // Yönetici de öğrenci görünümünü kullanıyor.
-    setUserRole(role === 'company' ? 'company' : 'student');
+    /*
+      `userRole` ARTIK HER ZAMAN 'student'
+
+      Bu alan bir yetki değil, hangi kabuğun çizileceğini seçen bir görünüm
+      anahtarıydı: 'company' olunca eski mavi Şirket Portalı ve ona ait üst
+      çubuk çiziliyordu. İşveren dünyası artık /sirket altında kendi
+      kabuğuyla duruyor ve erişimi company_members belirliyor — yani gerçek
+      sinyal. İki kabuk aynı anda yaşayınca iki farklı sözlük ortaya
+      çıkıyordu ("İncelemede" / "İnceleniyor").
+
+      Oturum, profiles.role ve şirket üyeliği DEĞİŞMİYOR; yalnızca şirket
+      hesabı giriş yapınca öğrenci kabuğu yerine işveren paneline gidiyor.
+    */
+    setUserRole('student');
 
     /*
       GELDİĞİ YERE GERİ DÖN
@@ -594,12 +607,13 @@ export default function App() {
       return;
     }
 
+    setActiveTab('internships');
     if (role !== 'company') {
-      setActiveTab('internships');
       showToast(`Hoş geldiniz, ${name}!`);
     } else {
-      setActiveTab('company-portal');
-      showToast(`Hoş geldiniz, ${name} Şirket Portalı aktif.`);
+      /* Şirket hesabı doğrudan işveren paneline gidiyor; eski portal yok. */
+      navigate('/sirket/ilanlar');
+      showToast(`Hoş geldiniz, ${name}. İşveren paneli açık.`);
     }
   };
 
@@ -866,6 +880,26 @@ export default function App() {
   const safeTab = !isLoggedIn && istenenTab !== 'internships' ? 'internships' : istenenTab;
 
   const temizYol = path.replace(/\/+$/, '') || '/';
+
+  /*
+    ESKİ ŞİRKET PORTALI ARTIK ÇİZİLMİYOR
+
+    İşveren tarafının iki ayrı yüzü vardı: eski mavi "Şirket Portalı"
+    (CompanyPortalView, `company-portal` sekmesi) ve yeni yeşil-beyaz panel
+    (/sirket). İkisi aynı işi farklı sözlükle anlatıyordu — eskisinde
+    "İncelemede" ve "Ön İncele", yenisinde "İnceleniyor". `profiles.role`
+    değeri 'company' olan hesap giriş yapınca eskisine düşüyordu.
+
+    Ölçüldü (üretim, 31 Ağustos 2026): role='company' olan tek bir profil
+    var ve o profilin company_members kaydı da var — yani yeni panele
+    girebiliyor. Bu yüzden eski portala giden yol yeni panele
+    yönlendiriliyor. Bileşen silinmedi; yalnızca kullanıcıya çizilmiyor.
+  */
+  React.useEffect(() => {
+    if (safeTab !== 'company-portal') return;
+    setActiveTab('internships');
+    if (!temizYol.startsWith('/sirket')) navigate('/sirket/ilanlar');
+  }, [safeTab, temizYol]);
 
   /*
     CANONICAL HER YOL DEĞİŞİMİNDE GÜNCELLENİYOR
@@ -1480,31 +1514,31 @@ export default function App() {
         Alt boşluğa dokunulmadı; oradaki pay mobil gezinme çubuğu için.
       */}
       <main className={`flex-1 ${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-8`}>
-        {(userRole === 'company' || safeTab === 'company-portal') && !activeCompany ? (
+        {safeTab === 'company-portal' && !activeCompany ? (
           /*
             Şirket hesabı yokken portalı çizmek, uydurma bir şirketin panelini
             göstermek demekti. Gerçek kayıt akışı kurulana kadar durumu
             olduğu gibi söylüyoruz.
           */
           <div className="max-w-xl mx-auto my-16 bg-white rounded-2xl border border-gray-200 p-8 text-center space-y-3">
-            <h2 className="text-lg font-bold text-gray-900">Şirket hesabı henüz yok</h2>
+            <h2 className="text-lg font-bold text-gray-900">Şirket hesabınız yok</h2>
             <p className="text-sm text-gray-600">
-              Şirket kaydı ve ilan girişi üzerinde çalışıyoruz. Şirketinizin ilanının
-              StajımVar'da olduğunu gördüyseniz ve sahiplenmek istiyorsanız
-              iletişim sayfasından bize yazın.
+              Şirket kaydı ve ilan girişi artık açık. İşveren sayfasından şirketinizi
+              oluşturabilir ya da StajımVar&apos;da zaten görünen şirket sayfanızı
+              sahiplenebilirsiniz.
             </p>
             <button
               type="button"
               onClick={() => {
-                setUserRole('student');
                 setActiveTab('internships');
+                navigate('/isveren');
               }}
               className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
             >
-              İlanlara dön
+              İşveren sayfasına git
             </button>
           </div>
-        ) : userRole === 'company' || safeTab === 'company-portal' ? (
+        ) : safeTab === 'company-portal' ? (
           <CompanyPortalView
             allListings={allListings}
             allStudents={[]}

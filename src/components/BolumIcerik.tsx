@@ -2,6 +2,7 @@ import React from 'react';
 import { BOLUMLER, BOLUM_GRUPLARI, OKUL_YERLESTIRIR, type Bolum } from '../data/bolumler';
 import { BolumKapagi } from './BolumGorseli';
 import { bolumeGoreProgramlar } from '../data/stajProgramlari';
+import { ILAN_KAYNAGI_KISA } from '../lib/urun-metni';
 
 /**
  * Bölüm sayfasının İÇERİĞİ — kabuğu değil.
@@ -191,11 +192,16 @@ export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
       ) : (
         <section className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 space-y-2">
           <h2 className="font-bold text-gray-900">StajımVar'da bu bölüm için ne yapabilirsin</h2>
+          {/*
+            İlk cümle ./lib/urun-metni dosyasından. Burada elle yazılıyken
+            "her ilanda şirketin kendi başvuru bağlantısı var" diyordu ve
+            şirketlerin doğrudan burada açtığı ilanlar için bu artık doğru
+            değil.
+          */}
           <p className="text-sm text-gray-600 leading-relaxed">
-            İlanları aracı sitelerden değil, şirketlerin kendi kariyer sayfalarından
-            derliyoruz; her ilanda şirketin kendi başvuru bağlantısı var. Aşağıdaki bağlantı
-            seni doğrudan bu bölüme uyan ilanlara götürüyor. İlan yoksa da boşuna bekleme:
-            bu bölümde stajın çoğu, ilan açmamış şirkete doğrudan yazarak bulunuyor.
+            {ILAN_KAYNAGI_KISA} Aşağıdaki bağlantı seni doğrudan bu bölüme uyan ilanlara
+            götürüyor. İlan yoksa da boşuna bekleme: bu bölümde stajın çoğu, ilan açmamış
+            şirkete doğrudan yazarak bulunuyor.
           </p>
           <a
             href={aramaYolu}

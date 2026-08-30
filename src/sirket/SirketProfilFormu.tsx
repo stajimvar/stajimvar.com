@@ -303,7 +303,13 @@ export const SirketProfilFormu: React.FC<{
 
       {degisti && (
         <div
-          className="fixed bottom-[calc(64px+env(safe-area-inset-bottom))] left-0 right-0 z-20 border-t px-4 py-3 lg:hidden"
+          /*
+            Alt gezinme artık yapışık değil, yüzen bir hap: üst kenarı
+            ekranın dibinden 68 piksel yukarıda (12px boşluk + 56px yükseklik).
+            Kaydet çubuğu 64'te duruyordu ve hapın altına giriyordu.
+            `sm`'den itibaren hap gizlendiği için çubuk dibe oturuyor.
+          */
+          className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] sm:bottom-0 left-0 right-0 z-20 border-t px-4 py-3 lg:hidden"
           style={{ background: SIRKET_YUZEY, borderColor: SIRKET_KENAR }}
         >
           <KaydetAlani

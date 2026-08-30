@@ -123,3 +123,27 @@ export const alanStil = {
   background: SIRKET_YUZEY,
   color: SIRKET_METIN,
 };
+
+/*
+  ALT GEZİNME TEMASI
+
+  Yüzen alt çubuğun geometrisi öğrenci tarafıyla ortak (src/ui/
+  BottomNavigation). Buradan yalnız RENK geçiyor: seçili sekme açık yeşil
+  rozetin içinde koyu yeşil yazıyla, seçilmeyen ikincil metin renginde.
+
+  Kontrast (ölçüldü): seçili yazı ve nokta #075E54, rozet #E9F8EF
+  üzerinde → 6.99:1; seçilmeyen ikon #55655C beyaz üzerinde → 6.17:1.
+  İkisi de 4.5:1 eşiğinin üstünde.
+
+  Çubuğun kenarı (#BFE8CE) sayfa zemininde (#F5FBF7) yalnız 1.28:1 —
+  ayırma işini gölge yapıyor, kenar süs. Öğrenci tarafında da böyle
+  (gri kenar / gri zemin 1.09:1), yani burada daha görünür.
+*/
+export const SIRKET_ALT_MENU = {
+  zemin: SIRKET_YUZEY,
+  kenar: SIRKET_KENAR,
+  aktifZemin: SIRKET_ROZET,
+  aktifMetin: SIRKET_VURGU_KOYU,
+  pasifMetin: SIRKET_METIN_IKINCIL,
+  nokta: SIRKET_VURGU_KOYU,
+};

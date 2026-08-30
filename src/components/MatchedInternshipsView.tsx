@@ -32,6 +32,7 @@ import { BasvuruSablonu } from './BasvuruSablonu';
 import { ilBul } from '../lib/sehir';
 import { GoogleAdBanner } from './GoogleAdBanner';
 import { SirketSeridi } from './SirketSeridi';
+import { ILAN_KAYNAGI_PARCALI } from '../lib/urun-metni';
 
 /**
  * İlanın listeye eklenme zamanı (ms).
@@ -914,7 +915,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                 <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="Pozisyon, şirket veya burs ara"
+                  placeholder="Pozisyon veya şirket ara"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-11 pr-11 py-3.5 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-600 transition-colors"
@@ -1420,10 +1421,20 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               İlanlar nereden geliyor
             </span>
 
+            {/*
+              Metin ./lib/urun-metni dosyasından geliyor.
+
+              Burada elle yazılıyken "her ilanda şirketin kendi başvuru
+              bağlantısı var" diyordu. Şirketler artık ilanlarını doğrudan
+              burada açıyor ve o ilanlarda başvuru siteden çıkmıyor — yani
+              cümle canlıda yanlış bir iddiaya dönüşmüştü. Aynı cümlenin
+              bölüm sayfalarında da bir kopyası vardı; ikisi tek kaynağa
+              bağlandı.
+            */}
             <p className="text-sm text-gray-600 leading-relaxed">
-              Farklı kariyer sayfalarını tek tek gezme. İlanları aracı sitelerden değil,{' '}
-              <strong className="text-gray-900">şirketlerin kendi kariyer sayfalarından</strong>{' '}
-              derliyoruz; her ilanda şirketin kendi başvuru bağlantısı var.
+              {ILAN_KAYNAGI_PARCALI.once}
+              <strong className="text-gray-900">{ILAN_KAYNAGI_PARCALI.vurgu}</strong>
+              {ILAN_KAYNAGI_PARCALI.sonra}
             </p>
 
             {/*

@@ -61,9 +61,11 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
             sayfaları dağınık: aynı öğrenci onlarca siteyi tek tek gezmek zorunda kalıyor.
           </p>
           <p>
-            StajımVar bu iki sorunu çözmek için var. İlanları{' '}
-            <strong>şirketlerin kendi işe alım sistemlerinden</strong> alıyoruz ve başvuru
-            bağlantısı her zaman ilanın kendi sayfasını gösteriyor. Araya girmiyoruz.
+            StajımVar bu iki sorunu çözmek için var. İlanların bir kısmını{' '}
+            <strong>şirketlerin kendi işe alım sistemlerinden</strong> alıyoruz; o ilanlarda
+            başvuru bağlantısı şirketin kendi sayfasını gösteriyor, araya girmiyoruz.
+            İlanını doğrudan StajımVar&apos;da açan şirketlerde ise başvuru siteden
+            çıkmadan tamamlanıyor ve şirket başvuruyu kendi panelinden görüyor.
           </p>
         </S>
 
@@ -86,8 +88,10 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
         <S baslik="Neyi yapmıyoruz">
           <ul className="list-disc pl-5 space-y-1.5">
             <li>
-              Başvuruyu kendi üzerimizden geçmeye zorlamıyoruz. Başvuru adresi her zaman
-              şirketin kendi sayfası.
+              Başvuruyu kendi üzerimizden geçmeye zorlamıyoruz. Şirketin kariyer
+              kaynağından derlediğimiz ilanlarda başvuru adresi şirketin kendi sayfası
+              olmaya devam ediyor; StajımVar üzerinden başvuru yalnızca ilanı buraya
+              kendisi açan şirketlerde var, çünkü onu isteyen taraf şirketin kendisi.
             </li>
             <li>
               Öğrenci bilgisi satmıyoruz, üçüncü taraflara pazarlama amacıyla aktarmıyoruz.
@@ -135,16 +139,20 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
           <p>
             <strong>Yapabiliyoruz:</strong> ilan arama ve filtreleme, bölüme göre staj
             rehberleri, hesaplama araçları, öğrenci profili ve profilden yazdırılabilir
-            özgeçmiş üretme.
+            özgeçmiş üretme. Şirketlerin StajımVar&apos;da açtığı ilanlara{' '}
+            <strong>başvuru siteden çıkmadan</strong> tamamlanıyor: başvuru şirketin
+            işveren paneline düşüyor, şirket durumunu oradan güncelliyor ve öğrenci
+            sonucu kendi başvuru sayfasında görüyor.
           </p>
           <p>
-            <strong>Henüz yapamıyoruz:</strong> özgeçmiş dosyası yükleme ve platform
-            üzerinden başvuruyu şirkete iletme. Bunlar üzerinde çalışıyoruz.
+            <strong>Henüz yapamıyoruz:</strong> özgeçmiş dosyası yükleme. Başvuruya
+            profilinizden üretilen özgeçmiş bilgisi gidiyor, yüklediğiniz bir PDF değil.
           </p>
           <p>
-            Şirketler artık kendi ilanlarını girebiliyor: önce şirket sayfasını
-            sahipleniyor, ardından girdiği ilan yönetici onayından geçince yayına
-            çıkıyor. Onaydan geçmeyen ilan listede görünmüyor.
+            Şirketler kendi ilanlarını giriyor: önce şirket sayfasını sahipleniyor.
+            Kurumsal e-posta alan adı şirketin site adresiyle eşleşiyorsa ilan doğrudan
+            yayına çıkıyor; eşleşmiyorsa önce bizde inceleniyor ve o sırada listede
+            görünmüyor.
           </p>
         </S>
 

@@ -19,6 +19,7 @@ import { SIRKET_KENAR_GUCLU, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/r
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import { eklenmeMetni, sonKontrolMetni, uzunSuredirAcik } from '../lib/zaman';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
+import { ILAN_KAYNAGI } from '../lib/urun-metni';
 
 interface InternshipCardProps {
   listing: InternshipListing;
@@ -89,6 +90,13 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
 
   /* Başvurunun gerçekte nasıl işlediği — düğmelerin yazısı buradan geliyor. */
   const yol = basvuruYolu(listing);
+  /*
+    Şirketin StajımVar'da kendi açtığı ilan. `origin` alanının üretilmiş
+    tipinde 'employer_posted' henüz yok (tipler yeniden üretilmedi), o
+    yüzden karşılaştırma dizeyle yapılıyor.
+  */
+  const sirketinKendiIlani =
+    String(listing.origin) === 'employer_posted' || String(listing.origin) === 'internal';
 
   return (
     <div
@@ -226,20 +234,33 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                 </div>
               </>
             )}
-            {listing.origin === 'scraped' && (
-              /*
-                Güven sinyali kalıyor ama ağırlığı düştü: her kartta tekrar
-                eden koyu yeşil bir cümle, on bir ilanda on bir kez okunacak
-                bir şey değil. İkon + kısa etiket aynı şeyi söylüyor.
-              */
+            {/*
+              KAYNAK ETİKETİ — İKİ TÜR, İKİ CÜMLE
+
+              Önce yalnızca derlenen ilanda "Kariyer sayfasından" yazıyordu;
+              şirketin buraya kendi açtığı ilanda hiçbir şey yazmıyordu. İki
+              tür kart yan yana duruyor ve ikisinin başvuru yolu farklı —
+              öğrenci düğmeye basmadan hangisinde olduğunu bilmiyordu.
+
+              Tek etiket, iki değer. Kalabalık artmıyor.
+            */}
+            {listing.origin === 'scraped' ? (
               <span
                 className="inline-flex items-center gap-1 text-[11px] text-gray-600 font-medium"
                 title="Bu ilan şirketin kendi kariyer sayfasından alındı"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                Kariyer sayfasından
+                {ILAN_KAYNAGI.dis.etiket}
               </span>
-            )}
+            ) : sirketinKendiIlani ? (
+              <span
+                className="inline-flex items-center gap-1 text-[11px] text-gray-600 font-medium"
+                title="Bu ilanı şirket doğrudan StajımVar'da yayımladı; başvuru burada tamamlanıyor"
+              >
+                <Building2 className="w-3.5 h-3.5 text-emerald-600" />
+                {ILAN_KAYNAGI.ic.etiket}
+              </span>
+            ) : null}
           </div>
 
           {/* Row 2: Job Title (Bold & Clear) */}
@@ -443,11 +464,12 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             düğme ortaya kaymıştı; sıra eski hâline döndü, yalnızca hangi
             eylemin mavi olduğu değişti.
 
-            Mavi olan hep ANA eylem: resmî başvuru adresi varsa o adres,
-            yoksa StajımVar üzerinden başvuru. Yayındaki ilanların tamamı
-            şirketin kendi sayfasından başvuru alıyor ve başvuru oraya
-            İLETİLMİYOR; bu yüzden StajımVar kaydı ikincil ve adı ne
-            yaptığını söylüyor. Karar tek yerde: lib/basvuru-yolu.mjs.
+            Mavi olan hep ANA eylem. Derlenen ilanda o adres şirketin kendi
+            sayfası ve başvuru oraya İLETİLMİYOR; orada StajımVar kaydı
+            ikincil ve adı ne yaptığını söylüyor. Şirketin buraya kendi
+            açtığı ilanda ise başvuru siteden çıkmıyor ve ana eylem
+            "StajımVar ile Başvur" oluyor. Karar tek yerde:
+            lib/basvuru-yolu.mjs.
           */}
           {(() => {
             const cerceveli =
