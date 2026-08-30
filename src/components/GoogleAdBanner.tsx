@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import reklamAyari from '../../reklam.json';
 
 /**
@@ -111,8 +111,33 @@ export const GoogleAdBanner: React.FC<GoogleAdBannerProps> = ({
 }) => {
   const spec = FORMATS[format];
   const pushed = useRef(false);
+  const insRef = useRef<HTMLModElement | null>(null);
   const slot = adSlotId ?? SLOT_ENV[format];
   const configured = Boolean(ADSENSE_CLIENT && slot);
+
+  /*
+    DOLMAYAN REKLAM YER KAPLAMASIN
+
+    AdSense birim için reklam bulamazsa <ins> öğesine
+    data-ad-status="unfilled" yazıyor ama minHeight duruyordu: kartlar
+    arasında 140 pikselik boş bir delik kalıyor, üstünde de "Reklam"
+    etiketi asılı duruyordu. Boş bir yuva, reklamın kendisinden daha çok
+    rahatsız ediyor.
+
+    Durum özniteliği betik tarafından SONRADAN yazılıyor; o yüzden
+    izleniyor.
+  */
+  const [dolmadi, setDolmadi] = useState(false);
+
+  useEffect(() => {
+    const ins = insRef.current;
+    if (!configured || !ins) return;
+    const oku = () => setDolmadi(ins.getAttribute('data-ad-status') === 'unfilled');
+    oku();
+    const gozlemci = new MutationObserver(oku);
+    gozlemci.observe(ins, { attributes: true, attributeFilter: ['data-ad-status'] });
+    return () => gozlemci.disconnect();
+  }, [configured]);
 
   useEffect(() => {
     if (!configured || pushed.current) return;
@@ -150,14 +175,15 @@ export const GoogleAdBanner: React.FC<GoogleAdBannerProps> = ({
   }
 
   return (
-    <div className={className}>
+    <div className={className} style={dolmadi ? { height: 0, overflow: 'hidden' } : undefined}>
       {/* Reklam olduğu görsel olarak da belli olmalı; Google'ın politikası da bunu ister. */}
-      <div className="text-[10px] uppercase tracking-wider text-gray-400 mb-1">
-        Reklam
-      </div>
+      {!dolmadi && (
+        <div className="text-[10px] uppercase tracking-wider text-gray-400 mb-1">Reklam</div>
+      )}
       <ins
+        ref={insRef}
         className="adsbygoogle block"
-        style={{ display: 'block', minHeight: spec.minHeight }}
+        style={{ display: 'block', minHeight: dolmadi ? 0 : spec.minHeight }}
         data-ad-client={ADSENSE_CLIENT}
         data-ad-slot={slot}
         data-ad-format={spec.adFormat}

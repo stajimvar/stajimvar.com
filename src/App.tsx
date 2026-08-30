@@ -41,6 +41,7 @@ import { DunyaGecisi } from './sirket/DunyaGecisi';
 const SIRKET_PANEL_YOLLARI = ['/sirket/ilanlar', '/sirket/basvuranlar', '/sirket/profil', '/sirket/ilan'];
 import { KariyerMerkezleriSayfasi } from './components/KariyerMerkezleri';
 import { OpportunitiesPage } from './components/OpportunitiesPage';
+import { BurslarKesfetPage } from './components/BurslarKesfetPage';
 import { OpportunityDetailPage } from './components/OpportunityDetailPage';
 import { OpportunitiesHomeSection } from './components/OpportunitiesHomeSection';
 import { basvuruSonucMesaji } from './lib/basvuru-yolu.mjs';
@@ -987,7 +988,26 @@ export default function App() {
     return icerikSayfasi(<LegalPage slug={legalSlug} onBack={goHome} />);
   }
 
-  const firsatSayfalari = new Set(['/firsatlar', '/burslar', '/kyk', '/yurtdisi-firsatlari', '/yarismalar', '/firsat-takvimi', '/bana-uygun', '/kaydedilen-firsatlar']);
+  /*
+    BURSLAR AYRI BİR SAYFA
+
+    /burslar artık üç sütunlu fırsat listesi değil, Keşfet ile aynı
+    tasarım ailesinde bir vitrin. Diğer fırsat adresleri (KYK, yurt dışı,
+    yarışmalar, takvim, takip listesi) mevcut sayfada kalıyor: onların
+    akışı ve SEO yapısı değişmedi.
+  */
+  if (temizYol === '/burslar') {
+    return icerikSayfasi(
+      <BurslarKesfetPage
+        userId={session?.userId ?? null}
+        student={student}
+        onNavigate={navigate}
+        onRequireLogin={handleOpenLogin}
+      />
+    );
+  }
+
+  const firsatSayfalari = new Set(['/firsatlar', '/kyk', '/yurtdisi-firsatlari', '/yarismalar', '/firsat-takvimi', '/bana-uygun', '/kaydedilen-firsatlar']);
   if (firsatSayfalari.has(temizYol)) {
     return icerikSayfasi(
       <OpportunitiesPage

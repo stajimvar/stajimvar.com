@@ -5,6 +5,8 @@ export type OpportunityStatus = 'draft' | 'published' | 'expired' | 'archived';
 
 export interface Opportunity {
   id: string; slug: string; title: string; organizationName: string; organizationLogoUrl?: string;
+  /* Kurumun kendi sayfasından doğrulanmış kapak görseli. Yoksa logo/baş harf kapağı üretiliyor. */
+  coverImageUrl?: string;
   opportunityType: OpportunityType; shortDescription: string; description: string; eligibility: string;
   educationLevels: string[]; eligibleDepartments: string[]; eligibleClassYears: string[]; cities: string[]; countries: string[];
   minimumGpa?: number; languageRequirements: string[]; amountText?: string; supportType?: string;
@@ -21,9 +23,9 @@ export interface Opportunity {
   requiredDocuments: string[]; status: OpportunityStatus; verifiedAt?: string; lastCheckedAt?: string; publishedAt?: string; updatedAt?: string;
 }
 
-const COLUMNS = 'id,slug,title,organization_name,organization_logo_url,opportunity_type,short_description,description,eligibility,education_levels,eligible_departments,eligible_class_years,cities,countries,minimum_gpa,language_requirements,amount_text,support_type,amount_min,amount_max,currency,payment_period,amount_period_label,amount_note,repayable,amount_verified_at,application_start_at,application_deadline,application_url,source_url,required_documents,status,verified_at,last_checked_at,published_at';
+const COLUMNS = 'id,slug,title,organization_name,organization_logo_url,cover_image_url,opportunity_type,short_description,description,eligibility,education_levels,eligible_departments,eligible_class_years,cities,countries,minimum_gpa,language_requirements,amount_text,support_type,amount_min,amount_max,currency,payment_period,amount_period_label,amount_note,repayable,amount_verified_at,application_start_at,application_deadline,application_url,source_url,required_documents,status,verified_at,last_checked_at,published_at';
 const map = (row: any): Opportunity => ({
-  id: row.id, slug: row.slug, title: row.title, organizationName: row.organization_name, organizationLogoUrl: row.organization_logo_url ?? undefined,
+  id: row.id, slug: row.slug, title: row.title, organizationName: row.organization_name, organizationLogoUrl: row.organization_logo_url ?? undefined, coverImageUrl: row.cover_image_url ?? undefined,
   opportunityType: row.opportunity_type, shortDescription: row.short_description ?? '', description: row.description ?? '', eligibility: row.eligibility ?? '',
   educationLevels: row.education_levels ?? [], eligibleDepartments: row.eligible_departments ?? [], eligibleClassYears: row.eligible_class_years ?? [], cities: row.cities ?? [], countries: row.countries ?? [],
   minimumGpa: row.minimum_gpa == null ? undefined : Number(row.minimum_gpa), languageRequirements: row.language_requirements ?? [], amountText: row.amount_text ?? undefined, supportType: row.support_type ?? undefined,

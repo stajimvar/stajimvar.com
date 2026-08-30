@@ -14,8 +14,9 @@ import {
   opportunityTypeLabel,
   OPPORTUNITY_STATUS_LABELS,
 } from '../lib/opportunity-domain.mjs';
-import { deadlineLabel, opportunityAmount, opportunityDaysLeft } from '../lib/firsat-degerlendirme.mjs';
-import { ListingLogo } from './ListingLogo';
+import { opportunityAmount } from '../lib/firsat-degerlendirme.mjs';
+import { bursTarihDurumu, bursTarihMetni } from '../lib/burs-kesif.mjs';
+import { ScholarshipCover } from './ScholarshipCover';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 
 /**
@@ -173,163 +174,188 @@ export const OpportunityDetailPage: React.FC<{
   const cta = opportunityCta(item);
   const durum = opportunityStatus(item);
   const tutar = opportunityAmount(item);
-  const kalan = opportunityDaysLeft(item);
+  const tarihDurumu = bursTarihDurumu(item);
   const yer = [...item.cities, ...item.countries];
+  const seviyeVeBolum = [...item.educationLevels, ...item.eligibleDepartments];
+
+  /*
+    ANA EYLEM: RESMÎ BAŞVURUYA GİT
+
+    Başvuru kurumun kendi sayfasında yapılıyor. Sayfanın en görünür
+    düğmesi bu olmalı ve nereye gittiğini söylemeli — "Başvur" yazan bir
+    düğme, başvurunun burada alındığını ima ederdi.
+  */
+  const anaEylem = cta && (
+    <a
+      href={cta.adres}
+      target="_blank"
+      rel="noopener noreferrer nofollow"
+      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-700 sm:w-auto"
+    >
+      {cta.etiket === 'Başvur' ? 'Resmî Başvuruya Git' : cta.etiket}
+      <ExternalLink className="h-4 w-4" />
+    </a>
+  );
 
   return (
-    <main className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-7 pb-[calc(120px+env(safe-area-inset-bottom))] space-y-5">
+    <main className="mx-auto w-full max-w-4xl space-y-5 px-4 pb-[calc(150px+env(safe-area-inset-bottom))] pt-5 sm:px-6 sm:pb-12 sm:pt-7">
       <button
         onClick={onBack}
-        className="inline-flex gap-1 items-center text-sm font-bold text-gray-600 hover:text-gray-950 cursor-pointer"
+        className="inline-flex cursor-pointer items-center gap-1 text-sm font-bold text-gray-600 hover:text-gray-950"
       >
-        <ArrowLeft className="w-4 h-4" />
-        Fırsatlara dön
+        <ArrowLeft className="h-4 w-4" />
+        Burslara dön
       </button>
 
-      <article className="rounded-3xl border border-gray-200 bg-white p-5 sm:p-8 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:justify-between gap-5">
-          <div className="flex items-start gap-4 min-w-0">
-            <ListingLogo name={item.organizationName} logoUrl={item.organizationLogoUrl} />
-            <div className="min-w-0">
-              <span className="inline-flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-bold text-blue-700 uppercase">
-                  {opportunityTypeLabel(item.opportunityType)}
-                </span>
-                <span
-                  className={`text-[11px] font-bold rounded-full px-2 py-0.5 ${
-                    durum === 'acik'
-                      ? 'bg-emerald-50 text-emerald-700'
-                      : durum === 'kapali'
-                        ? 'bg-gray-100 text-gray-600'
-                        : durum === 'yakinda'
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'bg-amber-50 text-amber-800'
-                  }`}
-                >
-                  {OPPORTUNITY_STATUS_LABELS[durum]}
-                </span>
-                {item.verifiedAt && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700">
-                    <CheckCircle2 className="w-3 h-3" />
-                    Resmî kaynak
-                  </span>
-                )}
-              </span>
-              <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold text-gray-950 leading-tight">{item.title}</h1>
-              <p className="mt-2 text-gray-600 font-semibold">{item.organizationName}</p>
-            </div>
-          </div>
+      {/* ------------------------------------------------------------ üst */}
+      <article className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
+        <div className="relative">
+          <ScholarshipCover
+            coverImageUrl={item.coverImageUrl}
+            logoUrl={item.organizationLogoUrl}
+            organizationName={item.organizationName}
+            title={item.title}
+          />
           <button
             aria-label={saved ? 'Takibi bırak' : 'Takip et'}
+            aria-pressed={saved}
             onClick={toggle}
-            className={`self-start rounded-xl px-3 py-2 text-sm font-bold inline-flex gap-2 cursor-pointer ${
-              saved ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-700'
+            className={`absolute right-3 top-3 grid h-10 w-10 cursor-pointer place-items-center rounded-full backdrop-blur transition-colors ${
+              saved ? 'bg-blue-600 text-white' : 'bg-white/90 text-gray-700 hover:bg-white'
             }`}
           >
-            <Bookmark className="w-4 h-4" fill={saved ? 'currentColor' : 'none'} />
-            {saved ? 'Takipte' : 'Takip et'}
+            <Bookmark className="h-4 w-4" fill={saved ? 'currentColor' : 'none'} />
           </button>
         </div>
 
-        {/* TUTAR VE TARİH: kararı belirleyen iki bilgi en üstte. */}
-        <div className="mt-6 grid sm:grid-cols-2 gap-3">
-          <div className="rounded-xl bg-gray-50 px-4 py-3">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Destek tutarı</p>
-            {tutar.bilinmiyor ? (
-              <p className="mt-0.5 text-sm text-gray-600">
-                Resmî kaynakta açıklanmadı
-                {tutar.geriOdeme && <span className="font-semibold text-gray-800"> · {tutar.geriOdeme}</span>}
-              </p>
-            ) : (
-              <>
-                <p className="mt-0.5 text-lg font-extrabold text-gray-900 leading-tight">
-                  {tutar.metin}
-                  {tutar.geriOdeme && <span className="text-sm font-semibold text-gray-600"> · {tutar.geriOdeme}</span>}
-                </p>
-                {tutar.donem && <p className="text-[11px] text-gray-500">{tutar.donem}</p>}
-              </>
-            )}
-          </div>
-
-          <div
-            className={`rounded-xl px-4 py-3 ${
-              durum === 'acik' ? 'bg-rose-50' : durum === 'yakinda' ? 'bg-blue-50' : durum === 'kapali' ? 'bg-gray-50' : 'bg-amber-50'
-            }`}
-          >
-            <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Başvuru</p>
-            {durum === 'acik' && (
-              <p className="mt-0.5 text-lg font-extrabold text-rose-700 leading-tight">
-                {kalan != null && kalan <= 1 ? deadlineLabel(item) : uzunTarih(item.applicationDeadline)}
-              </p>
-            )}
-            {durum === 'yakinda' && (
-              <p className="mt-0.5 text-sm font-extrabold text-blue-800 leading-snug">
-                {uzunTarih(item.applicationStartAt)} tarihinde açılıyor
-              </p>
-            )}
-            {durum === 'kapali' && <p className="mt-0.5 text-sm font-bold text-gray-500">Süresi doldu</p>}
-            {durum === 'takvim_bekleniyor' && (
-              <p className="mt-0.5 text-sm font-semibold text-amber-800 leading-snug">
-                Kurum bu dönemin takvimini açıklamadı.
-              </p>
-            )}
-            {durum === 'acik' && kalan != null && kalan > 1 && (
-              <p className="text-[11px] text-gray-600">{kalan} gün kaldı</p>
-            )}
-          </div>
-        </div>
-
-        <p className="mt-6 text-gray-700 leading-relaxed whitespace-pre-line">
-          {item.description || item.shortDescription}
-        </p>
-
-        <div className="mt-7 grid sm:grid-cols-2 gap-3 text-sm">
-          <Bilgi baslik="Kimler başvurabilir?">
-            {item.eligibility || item.educationLevels.join(', ') || 'Resmî kaynakta belirtilir.'}
-          </Bilgi>
-          <Bilgi baslik="Şehir / ülke">{yer.join(', ') || 'Belirtilmemiş'}</Bilgi>
-          <Bilgi baslik="Başvuru tarihleri">
-            {`${uzunTarih(item.applicationStartAt) || 'Başlangıç belirtilmemiş'} — ${
-              uzunTarih(item.applicationDeadline) || 'Son tarih belirtilmemiş'
-            }`}
-          </Bilgi>
-          <Bilgi baslik="Gerekli belgeler">
-            {item.requiredDocuments.join(', ') || 'Resmî kaynakta belirtilir.'}
-          </Bilgi>
-        </div>
-
-        <div className="mt-7 flex flex-wrap gap-3">
-          {cta && (
-            <a
-              href={cta.adres}
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold ${
-                cta.birincil ? 'bg-blue-600 text-white' : 'border border-gray-300 text-gray-800'
+        <div className="p-5 sm:p-8">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">
+              {opportunityTypeLabel(item.opportunityType)}
+            </span>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ${
+                tarihDurumu === 'son-gunler'
+                  ? 'bg-rose-50 text-rose-700 ring-rose-100'
+                  : tarihDurumu === 'yakin'
+                    ? 'bg-amber-50 text-amber-800 ring-amber-100'
+                    : durum === 'acik'
+                      ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+                      : durum === 'yakinda'
+                        ? 'bg-blue-50 text-blue-700 ring-blue-100'
+                        : 'bg-gray-100 text-gray-600 ring-gray-200'
               }`}
             >
-              {cta.birincil ? null : <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-              {cta.etiket} <ExternalLink className="w-4 h-4" />
-            </a>
+              {OPPORTUNITY_STATUS_LABELS[durum]}
+            </span>
+            {item.verifiedAt && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Resmî kaynaktan doğrulandı
+              </span>
+            )}
+          </div>
+
+          <h1 className="mt-2.5 text-2xl font-extrabold leading-tight text-gray-950 sm:text-3xl">
+            {item.title}
+          </h1>
+          <p className="mt-1.5 font-semibold text-gray-600">{item.organizationName}</p>
+
+          <p
+            className={`mt-3 text-sm font-bold ${
+              tarihDurumu === 'son-gunler'
+                ? 'text-rose-700'
+                : tarihDurumu === 'yakin'
+                  ? 'text-amber-800'
+                  : tarihDurumu === 'yakinda'
+                    ? 'text-blue-700'
+                    : 'text-gray-700'
+            }`}
+          >
+            {bursTarihMetni(item)}
+          </p>
+
+          {/* Masaüstünde burada; mobilde altta yapışkan olarak da duruyor. */}
+          <div className="mt-5 hidden sm:block">{anaEylem}</div>
+          <p className="mt-2 hidden text-xs text-gray-500 sm:block">
+            Başvuru kurumun kendi sayfasında yapılıyor. StajımVar üzerinden başvuru alınmıyor.
+          </p>
+
+          {(item.description || item.shortDescription) && (
+            <p className="mt-6 whitespace-pre-line leading-relaxed text-gray-700">
+              {item.description || item.shortDescription}
+            </p>
           )}
         </div>
+      </article>
 
-        {/*
-          GÜNCELLİK NOTU
+      {/* --------------------------------------------------- bilgi bölümleri */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Bilgi baslik="Kimler başvurabilir?">
+          {item.eligibility || 'Koşullar resmî kaynakta belirtiliyor.'}
+        </Bilgi>
+        <Bilgi baslik="Eğitim seviyesi ve bölümler">
+          {seviyeVeBolum.length ? seviyeVeBolum.join(', ') : 'Resmî kaynakta belirtiliyor.'}
+        </Bilgi>
+        <Bilgi baslik="Şehir şartı">
+          {yer.length ? yer.join(', ') : 'Şehir şartı belirtilmemiş; Türkiye geneli.'}
+        </Bilgi>
+        <Bilgi baslik="Burs miktarı ve ödeme süresi">
+          {/*
+            Tutar YALNIZCA resmî kaynaktan doğrulanmışsa yazılıyor.
+            Bilinmiyorsa burada sade biçimde söyleniyor — kartlarda bu
+            satır hiç çizilmiyor, çünkü her kartta tekrar eden ve hiçbir
+            şey söylemeyen bir alandı.
+          */}
+          {tutar.bilinmiyor ? (
+            <>
+              Resmî kaynakta açıklanmadı
+              {tutar.geriOdeme && <span className="font-semibold"> · {tutar.geriOdeme}</span>}
+            </>
+          ) : (
+            <>
+              <span className="font-bold">{tutar.metin}</span>
+              {tutar.geriOdeme && <span> · {tutar.geriOdeme}</span>}
+              {tutar.donem && <span className="block text-xs text-gray-500">{tutar.donem}</span>}
+            </>
+          )}
+        </Bilgi>
+        <Bilgi baslik="Gerekli belgeler">
+          {item.requiredDocuments.length
+            ? item.requiredDocuments.join(', ')
+            : 'Resmî kaynakta belirtiliyor.'}
+        </Bilgi>
+        <Bilgi baslik="Önemli tarihler">
+          {`${uzunTarih(item.applicationStartAt) || 'Açılış belirtilmemiş'} — ${
+            uzunTarih(item.applicationDeadline) || 'Son tarih belirtilmemiş'
+          }`}
+        </Bilgi>
+      </div>
 
-          Sayfanın söylediği şey "böyledir" değil, "en son şu tarihte
-          şuradan doğruladık". Burs koşulları ve tutarları yıldan yıla
-          değişiyor; kaynağı ve tarihi göstermeden yazılan her rakam bir
-          süre sonra sessizce yanlış oluyor.
-        */}
-        <p className="mt-6 border-t border-gray-100 pt-4 text-xs text-gray-500 leading-relaxed">
+      {/* ------------------------------------------- kaynak ve doğrulama */}
+      <section className="rounded-2xl border border-gray-200 bg-white p-5">
+        <h2 className="text-base font-extrabold text-gray-900">Resmî kaynak</h2>
+        {cta ? (
+          <a
+            href={cta.adres}
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className="mt-1.5 inline-flex items-center gap-1.5 break-all text-sm font-bold text-blue-700 hover:underline"
+          >
+            {cta.adres}
+            <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+          </a>
+        ) : (
+          <p className="mt-1.5 text-sm text-gray-600">Kaynak bağlantısı kayıtta yok.</p>
+        )}
+        <p className="mt-3 border-t border-gray-100 pt-3 text-xs leading-relaxed text-gray-500">
           {item.lastCheckedAt
             ? `Bu kaydı en son ${uzunTarih(item.lastCheckedAt)} tarihinde resmî kaynağından kontrol ettik.`
             : 'Bu kaydın kaynağı doğrulandı.'}
-          {tutar.donem ? ` Tutar ${tutar.donem} için geçerli.` : ''} Koşullar ve tarihler kurum tarafından
-          değiştirilebilir; başvurmadan önce resmî kaynağı kontrol et.
+          {tutar.donem ? ` Tutar ${tutar.donem} için geçerli.` : ''} Koşullar ve tarihler kurum
+          tarafından değiştirilebilir; başvurmadan önce resmî kaynağı kontrol et.
         </p>
-      </article>
+      </section>
 
       {/* ---------------------------- kontrol listesi ---------------------- */}
       <section className="rounded-3xl border border-gray-200 bg-white p-5 sm:p-8">
@@ -385,6 +411,29 @@ export const OpportunityDetailPage: React.FC<{
           </>
         )}
       </section>
+
+      {/*
+        MOBİLDE YAPIŞKAN BAŞVURU
+
+        Detay sayfası telefonda uzun: kapak, açıklama, altı bilgi kutusu
+        ve kontrol listesi. Ana eylem yalnızca en üstte kalınca öğrenci
+        sayfayı okuyup başvurmak için başa dönmek zorunda kalıyordu.
+
+        Alt gezinme çubuğunun üstünde duruyor ve güvenli alan payı
+        ekliyor; sabit bir değer verilseydi çentikli telefonlarda düğmenin
+        bir kısmı ekranın dışında kalırdı.
+      */}
+      {anaEylem && (
+        <div
+          className="fixed inset-x-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur sm:hidden"
+          style={{ bottom: 'calc(68px + env(safe-area-inset-bottom))' }}
+        >
+          {anaEylem}
+          <p className="mt-1.5 text-center text-[11px] text-gray-500">
+            Başvuru kurumun kendi sayfasında yapılıyor.
+          </p>
+        </div>
+      )}
     </main>
   );
 };
