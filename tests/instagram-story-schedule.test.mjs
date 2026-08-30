@@ -51,10 +51,29 @@ test('26 August Story package has four chronological, manual-only blocks and twe
   assert.ok(schedule.blocks.every((block) => block.manualOnly === true));
   assert.ok(schedule.blocks.every((block) => block.frames.length >= 2 && block.frames.length <= 3));
 
+  /*
+    SAAT İSTANBUL'A GÖRE OKUNUYOR
+
+    `start.getHours()` ÇALIŞTIRAN MAKİNENİN saat dilimini kullanıyordu.
+    Takvim Europe/Istanbul (`schedule.timezone` bunu söylüyor): geliştirici
+    makinesinde 09:45 → 9 çıkıp geçiyor, UTC koşan CI'da 6 çıkıp
+    düşüyordu. Test ortama göre farklı sonuç veriyordu; kural değil ortam
+    sınanıyordu.
+  */
+  const istanbulSaati = (tarih) =>
+    Number(
+      new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/Istanbul',
+        hour: '2-digit',
+        hour12: false,
+      }).format(tarih)
+    );
+
   for (const [index, block] of schedule.blocks.entries()) {
     const start = new Date(block.startsAt);
     const end = new Date(block.endsAt);
-    assert.ok(start.getHours() >= 9 && start.getHours() <= 21, `${block.id} is outside the permitted start window`);
+    const saat = istanbulSaati(start);
+    assert.ok(saat >= 9 && saat <= 21, `${block.id} is outside the permitted start window`);
     assert.ok(end <= new Date('2026-08-26T21:30:00+03:00'), `${block.id} ends too late`);
     if (index > 0) {
       const previous = new Date(schedule.blocks[index - 1].startsAt);

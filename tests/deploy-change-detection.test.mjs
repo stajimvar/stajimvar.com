@@ -19,6 +19,13 @@ test('requires Supabase deployment for migrations and Edge Functions', () => {
 });
 
 test('writes GitHub job outputs when called with a relative script path', () => {
+  /*
+    TAM GEÇMİŞ GEREKİYOR
+
+    `HEAD^` okunuyor. GitHub Actions'ın varsayılan sığ klonunda (fetch-depth
+    1) ata commit yok ve test ÜRÜN DEĞİL ORTAM yüzünden düşüyordu. İş akışı
+    bu yüzden `fetch-depth: 0` ile klonluyor.
+  */
   const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
   const before = execFileSync('git', ['rev-parse', 'HEAD^'], { encoding: 'utf8' }).trim();
   const changedPaths = execFileSync('git', ['diff', '--name-only', before, head], { encoding: 'utf8' })

@@ -46,6 +46,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # tests/deploy-change-detection.test.mjs `HEAD^` okuyor; varsayilan
+          # sig klonda ata commit yok ve test ortam yuzunden dusuyordu.
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
