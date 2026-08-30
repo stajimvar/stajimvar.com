@@ -299,10 +299,13 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
       <>
         <S baslik="İlanlar nereden geliyor">
           <p>
-            İlanların çoğu şirketlerin kendi resmî işe alım sistemlerinden otomatik
-            olarak alınır. Şirketler ayrıca kendi ilanlarını girebilir: önce şirket
-            sayfasını sahiplenir, girdikleri ilan yönetici onayından geçince yayına
-            çıkar. Aşağıdaki kurallar her iki yol için de geçerlidir.
+            İlanların bir kısmı şirketlerin kendi resmî işe alım sistemlerinden
+            otomatik olarak alınır; orada başvuru şirketin kendi sayfasında
+            tamamlanır. Şirketler ayrıca kendi ilanlarını girebilir: önce şirket
+            sayfasını sahiplenir, sonra ilanı girer. Kurumsal e-posta alan adı
+            şirketin site adresiyle eşleşiyorsa ilan doğrudan yayına çıkar,
+            eşleşmiyorsa önce incelenir. O ilanlarda başvuru StajımVar üzerinde
+            tamamlanır. Aşağıdaki kurallar her iki yol için de geçerlidir.
           </p>
         </S>
 

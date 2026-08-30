@@ -112,6 +112,24 @@ export const KesfetPage: React.FC<{
     [free, setFree] = useState(false),
     [discount, setDiscount] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  /*
+    SAYFA BAŞLIĞI VE CANONICAL
+
+    Keşfet uygulama içinde gezilirken belge değişmiyor ve başlık ana
+    sayfanınki olarak kalıyordu: sekmede "StajımVar - Staj Bulmanın En
+    Akıllı Yolu" yazıyor, paylaşılan bağlantı da öyle görünüyordu.
+    Fırsatlar sayfası bunu zaten yapıyor; iki sayfa aynı davranıyor.
+  */
+  useEffect(() => {
+    document.title = 'Öğrenci etkinlikleri ve fırsatları | StajımVar';
+    const canonical =
+      document.querySelector('link[rel="canonical"]') ||
+      Object.assign(document.createElement('link'), { rel: 'canonical' });
+    canonical.setAttribute('href', `${window.location.origin}/kesfet`);
+    document.head.appendChild(canonical);
+  }, []);
+
   useEffect(() => {
     fetchDiscoverEvents()
       .then((x) => {

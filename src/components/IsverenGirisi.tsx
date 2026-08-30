@@ -106,9 +106,21 @@ export const IsverenGirisi: React.FC<{
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900">
             Stajyer ilanı ver
           </h1>
+          {/*
+            ONAY HER İLANDA YOK
+
+            Burada "onaya gönderin — onaylandığında yayına çıkar" yazıyordu
+            ama kural bu değil: kurumsal e-posta alan adı şirketin site
+            adresiyle eşleşiyorsa ilan doğrudan yayına çıkıyor
+            (lib/sirket-kademe.mjs · ilanBaslangicDurumu). Onay yalnızca
+            eşleşmeyen durumda devreye giriyor. Cümle, ilk kez gelen
+            işverene gerçekte olacak şeyi söylüyor.
+          */}
           <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
             Staj ilanı yayınlamak ücretsiz. Akış şöyle: şirketinizin sayfasını
-            sahiplenin, ilanı girin, onaya gönderin — onaylandığında yayına çıkar.
+            sahiplenin ve ilanı girin. Kurumsal e-posta adresiniz şirketinizin site
+            adresiyle aynıysa ilan doğrudan yayına çıkıyor; değilse önce biz
+            bakıyoruz ve genellikle bir iş günü içinde yayına alıyoruz.
           </p>
         </div>
 
