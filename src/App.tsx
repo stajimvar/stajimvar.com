@@ -485,17 +485,25 @@ export default function App() {
     DEGIL -- asil kapi RLS'te; burasi yalnizca dogru dugmeyi cizmek icin.
   */
   const [sirketUyesi, setSirketUyesi] = useState(false);
+  /*
+    Hangi şirketin üyesi olduğu da gerekiyor: öğrenci görünümünde kendi
+    şirketinin ilanına "Başvur" düğmesi çizilmemeli.
+  */
+  const [kendiSirketId, setKendiSirketId] = useState<string | null>(null);
   React.useEffect(() => {
     const kullanici = session?.userId;
     if (!kullanici) {
       setSirketUyesi(false);
+      setKendiSirketId(null);
       return;
     }
     let iptal = false;
     import('./lib/sirket-veri')
       .then((m) => m.sirketBaglami(kullanici, false))
       .then((b) => {
-        if (!iptal) setSirketUyesi(Boolean(b.companyId));
+        if (iptal) return;
+        setSirketUyesi(Boolean(b.companyId));
+        setKendiSirketId(b.companyId);
       })
       .catch(() => {
         /* Okunamazsa uye degil sayiliyor; kapi zaten arkada. */
@@ -951,6 +959,7 @@ export default function App() {
         düşüyor. Buradaki yönlendirme yalnızca yolu kısaltıyor.
       */
       onDunyaDegistir={sirketDunyasinaGec}
+      sirketUyesiMi={sirketUyesi}
       bulunulanYol={temizYol}
       searchQuery={aramaTerimi}
       onSearchChange={(q) => {
@@ -1558,6 +1567,7 @@ export default function App() {
                 subTab={activeSubTab}
                 onSubTabChange={setActiveSubTab}
                 onViewDetails={(listing) => navigate(`/ilan/${listingSlug(listing)}`)}
+                kendiSirketId={kendiSirketId}
                 onQuickApply={(listing, match) =>
                   handleApplyToJob(listing, match.overallScore)
                 }

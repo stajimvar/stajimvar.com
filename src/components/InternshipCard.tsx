@@ -7,6 +7,7 @@ import {
   AlertCircle,
   ArrowRight,
   Bookmark,
+  Building2,
   Check,
   ExternalLink,
   ShieldCheck,
@@ -43,6 +44,17 @@ interface InternshipCardProps {
     haberdar olmuyordu. Tıklayınca giriş penceresi açılıyor.
   */
   girisGerekli?: boolean;
+  /*
+    KENDİ ŞİRKETİNİN İLANI
+
+    Şirket üyesi öğrenci görünümüne geçip kendi ilanını kontrol
+    edebiliyor; oradan yanlışlıkla başvurabilmesi ise kendi paneline
+    sahte bir aday düşürüyor ve başvuru sayacını şişiriyordu.
+
+    Bu bir GÖRÜNÜM kuralı: veritabanı hâlâ izin veriyor, çünkü kuralı
+    RLS'e taşımak ürün kararı ve ayrı ele alınıyor.
+  */
+  kendiIlanim?: boolean;
 }
 
 export const InternshipCard: React.FC<InternshipCardProps> = ({
@@ -54,6 +66,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
   kayitli = false,
   onToggleKayit,
   girisGerekli = false,
+  kendiIlanim = false,
 }) => {
   /*
     UYUM PUANI LOGONUN ETRAFINDA HALKA OLARAK
@@ -441,6 +454,24 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             const mavi = 'text-white bg-blue-600 hover:bg-blue-700 shadow-xs';
             const ortak =
               'flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer';
+
+            /*
+              Kendi ilanında başvuru değil, nötr bir durum: suçlayıcı ya da
+              hata gibi değil, yalnızca bilgi. Detay ve kaydet yerinde
+              kalıyor — şirket kendi ilanını öğrenci gözüyle görebilmeli.
+            */
+            if (kendiIlanim) {
+              return (
+                <span
+                  key="kendi"
+                  className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border px-3 py-1.5 text-xs font-bold"
+                  style={{ borderColor: '#7E9A8C', background: '#E6F0EA', color: '#2B7357' }}
+                >
+                  <Building2 className="h-3.5 w-3.5" />
+                  Bu ilanı şirket hesabınız yönetiyor
+                </span>
+              );
+            }
 
             const resmiSiteBirincil = yol.anaEylem === 'resmi-site';
 

@@ -102,7 +102,13 @@ export const SirketKabugu: React.FC<{
             style={{ color: SIRKET_METIN_IKINCIL }}
           >
             <GraduationCap className="h-5 w-5" />
-            Öğrenci
+            {/*
+              "Öğrenci" tek başına hesap türü değiştiriyormuş gibi
+              okunuyordu. Değişen yalnızca GÖRÜNÜM: oturum, rol ve şirket
+              üyeliği aynı kalıyor. Dar ekranda kısa etiket kalıyor.
+            */}
+            <span className="hidden lg:inline">Öğrenci görünümü</span>
+            <span className="lg:hidden">Öğrenci</span>
           </button>
         </nav>
 

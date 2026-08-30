@@ -109,6 +109,18 @@ interface HeaderProps {
   onOpenAdmin?: () => void;
   /** Şirket dunyasina gecis; yetki yoksa kapiya goturuyor. */
   onDunyaDegistir?: () => void;
+  /*
+    ŞİRKET ÜYELİĞİ — GERÇEK SİNYAL
+
+    `profiles.role` değil: bir kişi hem öğrenci hem şirket üyesi olabiliyor
+    ve öğrenci görünümüne geçmek üyeliği düşürmüyor. Bu bayrak
+    `company_members` kaydından geliyor (App.tsx → sirketBaglami).
+
+    Yetki kapısı DEĞİL — asıl kapı RLS'te; burası yalnızca doğru bağlantıyı
+    çizmek için. Üyelik çözülene kadar false, yani normal öğrenciye bir an
+    bile görünmüyor.
+  */
+  sirketUyesiMi?: boolean;
 }
 
 /*
@@ -161,6 +173,7 @@ export const Header: React.FC<HeaderProps> = ({
   isAdmin = false,
   onOpenAdmin,
   onDunyaDegistir,
+  sirketUyesiMi,
 }) => {
   /*
     YÜZEN ÇUBUK AŞAĞI KAYDIRIRKEN ÇEKİLİYOR
@@ -877,6 +890,32 @@ export const Header: React.FC<HeaderProps> = ({
               ) : null
             ) : (
               <div className="flex items-center gap-1 sm:gap-2">
+                {/*
+                  İŞVEREN PANELİNE DÖNÜŞ
+
+                  Şirket üyesi öğrenci görünümüne geçtiğinde geri dönecek
+                  görünür bir yol yoktu: geçiş yalnızca profil menüsünün
+                  içindeydi ve kullanıcı çıkış yapmak ya da tarayıcı geri
+                  tuşuna basmak zorunda kalıyordu.
+
+                  İkincil eylem: mavi öğrenci CTA'sıyla yarışmıyor, yeşilden
+                  yalnızca metin ve kenar rengi kadar ipucu alıyor. Dar
+                  ekranda hiç çizilmiyor — orada hesap menüsündeki satır var.
+                */}
+                {sirketUyesiMi && onDunyaDegistir && (
+                  <button
+                    type="button"
+                    onClick={onDunyaDegistir}
+                    data-testid="header-isveren-paneli"
+                    title="İşveren paneline dön"
+                    className="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer hover:bg-[#E6F0EA]"
+                    style={{ borderColor: '#7E9A8C', color: '#2B7357' }}
+                  >
+                    <Building2 className="w-3.5 h-3.5" />
+                    İşveren paneli
+                  </button>
+                )}
+
                 {/* Messages / Notifications Envelope Icon */}
                 <button
                   id="header-messages-btn"
@@ -1037,7 +1076,7 @@ export const Header: React.FC<HeaderProps> = ({
                           gösteriliyor (/isveren/ilan-ver). Boş bir panel,
                           olmayan bir yetkiyi varmış gibi gösterirdi.
                         */}
-                        {onDunyaDegistir && (
+                        {sirketUyesiMi && onDunyaDegistir && (
                           <>
                             <div className="border-t border-gray-100 my-1" />
                             <div className="px-4 py-2">
@@ -1600,6 +1639,12 @@ export const Header: React.FC<HeaderProps> = ({
         onOpenAdmin={
           isAdmin && onOpenAdmin
             ? () => closeMobileAccountSheetThen(onOpenAdmin)
+            : undefined
+        }
+        sirketUyesiMi={sirketUyesiMi}
+        onIsverenPaneli={
+          sirketUyesiMi && onDunyaDegistir
+            ? () => closeMobileAccountSheetThen(onDunyaDegistir)
             : undefined
         }
         onLogout={

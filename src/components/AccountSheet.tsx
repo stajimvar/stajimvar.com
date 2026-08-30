@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Award, LogOut, Send, Settings, User } from 'lucide-react';
+import { Award, Building2, LogOut, Send, Settings, User } from 'lucide-react';
 import type { StudentProfile } from '../types';
 import { Avatar } from './Avatar';
 
@@ -17,6 +17,16 @@ interface AccountSheetProps {
   onOpenApplications: () => void;
   onOpenBadges: () => void;
   onOpenAdmin?: () => void;
+  /*
+    ŞİRKET PANELİNE DÖNÜŞ
+
+    Şirket üyesi öğrenci görünümüne geçtiğinde geri dönecek görünür bir
+    yol kalmıyordu; kullanıcı çıkış yapmak ya da tarayıcı geri tuşuna
+    basmak zorundaydı. Satır YALNIZCA üyelik varsa çiziliyor — normal
+    öğrenciye işveren bağlantısı gösterilmiyor.
+  */
+  sirketUyesiMi?: boolean;
+  onIsverenPaneli?: () => void;
   onLogout?: () => void;
 }
 
@@ -41,6 +51,8 @@ export const AccountSheet: React.FC<AccountSheetProps> = ({
   onOpenApplications,
   onOpenBadges,
   onOpenAdmin,
+  sirketUyesiMi,
+  onIsverenPaneli,
   onLogout,
 }) => {
   const [mounted, setMounted] = React.useState(false);
@@ -230,6 +242,20 @@ export const AccountSheet: React.FC<AccountSheetProps> = ({
             <Award className="h-5 w-5 shrink-0 text-gray-400" />
             <span>Rozetler ve testler</span>
           </button>
+
+          {sirketUyesiMi && onIsverenPaneli && (
+            <button
+              type="button"
+              data-testid="account-sheet-isveren"
+              onClick={onIsverenPaneli}
+              /* min-h-11 = 44px dokunma hedefi. */
+              className="flex min-h-11 w-full items-center gap-3 rounded-2xl px-3 py-3 text-left font-bold transition-colors hover:bg-[#E6F0EA] focus-visible:outline-2 focus-visible:outline-offset-2"
+              style={{ color: '#2B7357' }}
+            >
+              <Building2 className="h-5 w-5 shrink-0" />
+              <span>İşveren paneline geç</span>
+            </button>
+          )}
 
           {isAdmin && onOpenAdmin && (
             <button

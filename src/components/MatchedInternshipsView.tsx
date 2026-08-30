@@ -110,6 +110,8 @@ interface MatchedInternshipsViewProps {
   onSubTabChange?: (subTab: string) => void;
   onViewDetails: (listing: InternshipListing, match: MatchBreakdown) => void;
   onQuickApply: (listing: InternshipListing, match: MatchBreakdown) => void;
+  /* Görüntüleyenin üyesi olduğu şirket; kendi ilanında başvuru çizilmiyor. */
+  kendiSirketId?: string | null;
   /** Profil sekmesine geçiş. Verilmezse profil çubuğu bir şey yapmaz. */
   onGoToProfile?: () => void;
   /** Giriş penceresini açar; misafirin kaydet düğmesi buraya bağlanıyor. */
@@ -135,6 +137,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   onSubTabChange,
   onViewDetails,
   onQuickApply,
+  kendiSirketId,
   onGoToProfile,
   onRequireLogin,
   searchQuery,
@@ -1341,6 +1344,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                       student?.id ? () => kaydiDegistir(listing.id) : onRequireLogin
                     }
                     girisGerekli={!student?.id}
+                    kendiIlanim={Boolean(kendiSirketId && listing.companyId === kendiSirketId)}
                   />
 
                   {/*

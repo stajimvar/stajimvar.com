@@ -37,6 +37,12 @@ export const AccountSheetDevFixture: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = React.useState('all');
   const [backgroundClicks, setBackgroundClicks] = React.useState(0);
   const [lastAction, setLastAction] = React.useState('hazır');
+  /*
+    Şirket üyeliği anahtarı: "İşveren paneli" bağlantısı yalnızca üyede
+    çizilmeli. İki durumu da elle görebilmek için fixture'da açılıp
+    kapanıyor; gerçek uygulamada bayrak company_members'tan geliyor.
+  */
+  const [sirketUyesi, setSirketUyesi] = React.useState(false);
 
   return (
     <div className="min-h-[2800px] bg-[#F9FAFB]">
@@ -55,8 +61,21 @@ export const AccountSheetDevFixture: React.FC = () => {
         onOpenGuides={() => setLastAction('guides')}
         onOpenOpportunities={() => setLastAction('opportunities')}
         onLogout={() => setLastAction('logout')}
+        sirketUyesiMi={sirketUyesi}
+        onDunyaDegistir={() => setLastAction('isveren-paneli')}
         bulunulanYol="/"
       />
+
+      <div className="fixed left-2 top-20 z-[300] rounded-xl bg-white p-2 shadow-lg">
+        <button
+          type="button"
+          data-testid="fixture-sirket-uyeligi"
+          onClick={() => setSirketUyesi((v) => !v)}
+          className="rounded-lg border px-2 py-1 text-xs font-bold"
+        >
+          Şirket üyeliği: {sirketUyesi ? 'VAR' : 'YOK'}
+        </button>
+      </div>
 
       <main className="mx-auto max-w-3xl space-y-8 px-5 py-12 pb-28">
         <section className="rounded-3xl border border-blue-200 bg-blue-50 p-6">
