@@ -906,6 +906,26 @@ export interface TalentPoolStat {
  * öğrenci bu sayıya girmiyor.
  */
 export async function fetchTalentPoolStats(): Promise<TalentPoolStat> {
+  /*
+    TOPLU SAYI ARTIK SATIR OKUMUYOR
+
+    Önce `student_profiles` satırları çekilip burada sayılıyordu. O erişim
+    kapatıldı: doğrulanmış bir şirket, kendisine hiç başvurmamış
+    öğrencilerin profilini okuyabiliyordu. Toplu sayı kimseyi
+    tanımlanabilir kılmadığı için ayrı bir fonksiyona alındı.
+  */
+  const { data: ozet, error: ozetHatasi } = await (supabase as any).rpc(
+    'staj_arayan_ogrenci_ozeti'
+  );
+  if (!ozetHatasi && Array.isArray(ozet) && ozet.length > 0) {
+    const satir = ozet[0] as { toplam: number; en_cok_bolum: string | null; en_cok_sehir: string | null };
+    return {
+      toplam: Number(satir.toplam ?? 0),
+      enCokBolum: satir.en_cok_bolum ? [{ ad: satir.en_cok_bolum, sayi: 0 }] : [],
+      enCokSehir: satir.en_cok_sehir ? [{ ad: satir.en_cok_sehir, sayi: 0 }] : [],
+    };
+  }
+
   const { data, error } = await supabase
     .from('student_profiles')
     .select('department, pref_cities')

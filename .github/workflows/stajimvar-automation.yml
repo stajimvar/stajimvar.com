@@ -67,6 +67,24 @@ jobs:
       # "ilan kapandi" demek mi, yoksa kaynagin kendisi mi dalgalaniyor?
       # Bos donen tur orani bunun en dogrudan gostergesi.
       #
+      # workable-tr-arama SONRADAN ACILDI. Once "cok sorgulu arama, yumusak
+      # bos yanit gercek kuculmeden ayirt edilemiyor" diye kapaliydi. Uc
+      # olcum bu itirazi kaldirdi:
+      #
+      #   1. Hiz siniri SESSIZ DEGIL: 189 turun birinde HTTP 429 alindi ve
+      #      raise_for_status() turu FAILED yapti. Yumusak bos yanit
+      #      gozlenmedi.
+      #   2. Ilan basina dalgalanma YOK: izlenen 13 kaydin kacirma sayaci
+      #      ya 0 ya 63+. Arada hicbir deger yok, yani "bir tur kaybolup
+      #      geri gelme" davranisi hic yasanmamis.
+      #   3. Golge calistirma (automation/shadow_deactivation.py): kapatma
+      #      acik olsaydi 2 ilan kapanacakti ve IKISI DE zaten kapali —
+      #      basvuru baglantilari HTTP 410 dondugu icin. Yanlis pozitif 0.
+      #
+      # Ayrica adaptore arama birimi kapsamasi eklendi: beklenmedik govde
+      # donen tek bir alt istek bile turu DEGRADED yapiyor ve DEGRADED tur
+      # hicbir ilani kapatmiyor.
+      #
       # ACIK (bos tur orani <= %2, tek sirketli pano, sabit kimlik):
       #   vertigogames-workable   189 tur, %98.9 saglikli,   2 bos (%1)
       #   newmindai-workable      153 tur, %100  saglikli,   0 bos
@@ -76,12 +94,6 @@ jobs:
       #   insiderone-lever        190 tur, %100  saglikli,   3 bos (%1.6)
       #
       # KAPALI ve neden:
-      #   workable-tr-arama  — cok sirketli ARAMA kaynagi. 14 sorgu x 20
-      #     sehir x 8 sayfa doneniyor ve adaptor bos sayfada `break`
-      #     yapiyor. Bir alt kumeye gelen yumusak bos yanit (HTTP 200 +
-      #     bos liste, ornegin hiz siniri) gercek bir kuculmeden AYIRT
-      #     EDILEMIYOR. Yayindaki 12 ilanin 9'u burada; yanlis kapatmanin
-      #     bedeli en yuksek burada.
       #   ciceksepeti-lever  — 189 turun 39'u bos (%21). 1 ile 0 arasinda
       #     gidip geliyor; "listede yok" burada kapanma sinyali degil.
       #   astrazeneca-workday — 188 turun 125'i bos (%66). Workday
@@ -89,7 +101,7 @@ jobs:
       #   lalamove-lever     — 187 turun 13'u bos (%7). Sinirda; once
       #     digerleri izlenecek.
       #   Ilani hic olmayan kaynaklar — kapatilacak bir sey yok.
-      DEACTIVATION_ENABLED_SOURCES: "vertigogames-workable,newmindai-workable,rapsodo-workable,sanction-scanner-workable,alumil-workable,insiderone-lever"
+      DEACTIVATION_ENABLED_SOURCES: "workable-tr-arama,vertigogames-workable,newmindai-workable,rapsodo-workable,sanction-scanner-workable,alumil-workable,insiderone-lever"
       # Dağıtım sırları. `if` koşulunda secrets.* doğrudan okunamıyor,
       # env.* okunabiliyor — bu yüzden buraya taşınıyorlar. Tanımlı
       # değillerse boş dize oluyor ve dağıtım adımları atlanıyor.

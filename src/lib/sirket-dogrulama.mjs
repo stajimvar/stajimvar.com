@@ -110,10 +110,18 @@ export const TEK_KULLANIMLIK = new Set([
  * Türkiye'de ve dünyada yaygın olan çok parçalı son ekler listeleniyor;
  * listede olmayan her şey tek parçalı son ek sayılıyor (".com", ".io").
  *
- * Listenin eksik olması GÜVENLİĞİ ZAYIFLATMIYOR: bilinmeyen çok parçalı
- * bir son ekte kayıtlı alan adı olduğundan bir etiket kısa hesaplanır ve
- * eşleşme BULUNAMAZ — yani hata otomatik onay değil, elle inceleme
- * yönünde. Yanlış yön güvenli yön.
+ * LİSTE TEK BAŞINA YETMİYOR
+ *
+ * Ölçüldü: listede OLMAYAN bir çok parçalı son ekte (örneğin `com.ng`)
+ * `acme.com.ng` ile `baska.com.ng` aynı kayıtlı alan adına (`com.ng`)
+ * düşüyor ve BİRBİRİNİ ONAYLIYORDU. Yani eksik liste otomatik onay
+ * yönünde hata veriyordu — tam istemediğimiz yön.
+ *
+ * Bu yüzden listenin yanında bir KURAL var: son etiket iki harfli bir
+ * ülke kodu VE ondan önceki etiket genel bir ikinci düzey ad ise
+ * (com, net, org, co, ac…), o son ek çok parçalı sayılıyor. Kural
+ * listede olmayan ülkeleri de kapsıyor ve yanılırsa kayıtlı alan adını
+ * UZUN hesaplıyor — yani daha katı eşleşme, elle inceleme yönünde.
  */
 const COK_PARCALI_SON_EKLER = new Set([
   'com.tr', 'org.tr', 'net.tr', 'gov.tr', 'edu.tr', 'k12.tr', 'bel.tr',
@@ -131,6 +139,24 @@ const COK_PARCALI_SON_EKLER = new Set([
   'co.za', 'com.ua', 'com.pl', 'com.gr', 'com.cy',
   'co.il', 'com.sa', 'com.eg', 'com.qa', 'com.kw',
 ]);
+
+/**
+ * Genel ikinci düzey adlar.
+ *
+ * `<bunlardan biri>.<iki harfli ülke kodu>` biçimi, listede olmasa bile
+ * çok parçalı son ek sayılıyor.
+ */
+const GENEL_IKINCI_DUZEY = new Set([
+  'com', 'net', 'org', 'edu', 'gov', 'mil', 'co', 'ac', 'ne', 'or', 'go',
+  'biz', 'info', 'name', 'web', 'gen', 'k12', 'bel', 'pol', 'tv', 'sch',
+  'nom', 'ind', 'firm', 'gob', 'gouv', 'jus', 'int',
+]);
+
+function cokParcaliSonEkMi(sonIki) {
+  if (COK_PARCALI_SON_EKLER.has(sonIki)) return true;
+  const [ikinci, ulke] = sonIki.split('.');
+  return /^[a-z]{2}$/.test(ulke ?? '') && GENEL_IKINCI_DUZEY.has(ikinci ?? '');
+}
 
 /** Otomatik onaya asla girmeyen alan adları. */
 const YEREL_VE_TEST = new Set([
@@ -213,7 +239,7 @@ export function kayitliAlanAdi(alan) {
   const parcalar = temiz.split('.');
   const sonIki = parcalar.slice(-2).join('.');
 
-  if (COK_PARCALI_SON_EKLER.has(sonIki)) {
+  if (cokParcaliSonEkMi(sonIki)) {
     /* "com.tr" tek başına kayıtlı alan adı değil; en az üç etiket gerekiyor. */
     return parcalar.length >= 3 ? parcalar.slice(-3).join('.') : null;
   }

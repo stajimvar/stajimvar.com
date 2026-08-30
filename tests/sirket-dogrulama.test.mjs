@@ -191,3 +191,63 @@ test('kullanıcı mesajı süre garantisi vermiyor', () => {
     assert.ok(!/saat|gün|24|48/i.test(dogrulamaMesaji(k)), 'mesaj süre vaat ediyor');
   }
 });
+
+/* ------------------------------------------------- genişletilmiş vakalar */
+
+test('çok seviyeli alt alan adı aynı kuruma çözülüyor', () => {
+  assert.equal(onay('jobs.eu.acme.com.tr', 'ik@acme.com.tr'), KARAR.OTOMATIK_ONAY);
+  assert.equal(onay('acme.com.tr', 'ik@jobs.eu.acme.com.tr'), KARAR.OTOMATIK_ONAY);
+  assert.equal(kayitliAlanAdi('jobs.eu.acme.com.tr'), 'acme.com.tr');
+});
+
+test('LİSTEDE OLMAYAN ülke son eki de çok parçalı sayılıyor', () => {
+  /*
+    Ölçüldü: liste tek başına yetmiyordu. `com.ng` listede yok ve
+    `acme.com.ng` ile `baska.com.ng` birbirini ONAYLIYORDU. Kural
+    (genel ikinci düzey + iki harfli ülke kodu) bunu kapatıyor.
+  */
+  for (const sonEk of ['com.ng', 'com.pk', 'co.id', 'com.my', 'com.ph', 'co.th', 'com.vn']) {
+    assert.equal(onay(`acme.${sonEk}`, `ik@baska.${sonEk}`), KARAR.ELLE_INCELE, sonEk);
+    assert.equal(onay(`acme.${sonEk}`, `ik@acme.${sonEk}`), KARAR.OTOMATIK_ONAY, sonEk);
+    assert.equal(kayitliAlanAdi(`kariyer.acme.${sonEk}`), `acme.${sonEk}`);
+  }
+  /* Ülke kodu olmayan uydurma son ekte kural devreye girmiyor. */
+  assert.equal(kayitliAlanAdi('acme.com.xyzsuffix'), 'com.xyzsuffix');
+});
+
+test('IDN / punycode alan adları otomatik onay almıyor', () => {
+  /* Ham unicode alan adı doğrulamadan geçmiyor; punycode ise eşleşmeli. */
+  assert.equal(onay('şirket.com.tr', 'ik@şirket.com.tr'), KARAR.ELLE_INCELE);
+  assert.equal(onay('xn--irket-hva.com.tr', 'ik@xn--irket-hva.com.tr'), KARAR.OTOMATIK_ONAY);
+  /* Punycode ile ham hâli AYNI SAYILMIYOR: karıştırma riski var. */
+  assert.equal(onay('xn--irket-hva.com.tr', 'ik@şirket.com.tr'), KARAR.ELLE_INCELE);
+});
+
+test('unicode benzeri karakterlerle taklit onay almıyor', () => {
+  /* Kiril "а" ile latin "a" farklı alan adlarıdır. */
+  assert.equal(onay('acme.com', 'ik@аcme.com'), KARAR.ELLE_INCELE);
+});
+
+test('kimlik bilgisi içeren adres doğru makineyi çözüyor', () => {
+  /* https://acme.com@evil.com → makine evil.com, acme.com DEĞİL. */
+  assert.equal(siteAlanAdi('https://acme.com@evil.com'), 'evil.com');
+  assert.equal(onay('https://acme.com@evil.com', 'ik@acme.com'), KARAR.ELLE_INCELE);
+  assert.equal(onay('https://acme.com@evil.com', 'ik@evil.com'), KARAR.OTOMATIK_ONAY);
+});
+
+test('port, sondaki nokta ve boşluk normalleştiriliyor', () => {
+  assert.equal(onay('  https://acme.com:8443/kariyer/  ', ' ik@acme.com '), KARAR.OTOMATIK_ONAY);
+  assert.equal(onay('https://acme.com.', 'ik@acme.com.'), KARAR.OTOMATIK_ONAY);
+});
+
+test('geçersiz adres biçimleri otomatik onay almıyor', () => {
+  for (const bozuk of ['http://', 'https://.', 'https://-acme.com', 'https://acme..com', '://acme.com']) {
+    assert.equal(onay(bozuk, 'ik@acme.com'), KARAR.ELLE_INCELE, bozuk);
+  }
+});
+
+test('site ile e-posta farklı üst düzey alan adındaysa onay yok', () => {
+  /* Şirketin .com.tr sitesi, .de e-postası: aynı kurum olabilir ama KANIT yok. */
+  assert.equal(onay('acme.com.tr', 'ik@acme.de'), KARAR.ELLE_INCELE);
+  assert.equal(onay('acme.co.uk', 'ik@acme.com'), KARAR.ELLE_INCELE);
+});

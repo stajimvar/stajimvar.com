@@ -231,8 +231,32 @@ def workable_search(config: dict[str, Any]) -> Iterable[Job]:
     max_pages = int(config.get("max_pages", 5))
     gorulen: set[str] = set()
 
+    # ARAMA BİRİMİ KAPSAMASI
+    #
+    # Bu kaynak tek bir istek değil, şehir × sorgu kadar ALT İSTEK yapıyor
+    # (20 × 14 = 280). Toplam ilan sayısı bu alt isteklerin kaçının
+    # gerçekten çalıştığını söylemiyor: yarısı sessizce boş dönse sonuç
+    # yine "sağlıklı ama daha az ilan" gibi görünürdü ve o ilanlar
+    # kapanmış sayılırdı.
+    #
+    # Sayaç çağıranın sözlüğüne yazılıyor; discover.py bunu okuyup turun
+    # sağlığına karar veriyor.
+    kapsama = {
+        "beklenen_birim": len(locations) * len(queries),
+        "denenen_birim": 0,
+        "basarili_birim": 0,
+        "bos_birim": 0,
+        "bozuk_birim": 0,
+        "sayfalama_tamamlanmadi": 0,
+    }
+    config["_kapsama"] = kapsama
+
     for location in locations:
       for query in queries:
+        kapsama["denenen_birim"] += 1
+        birim_sonucu = 0
+        birim_bozuk = False
+        sayfa_bitti = False
         for page in range(1, max_pages + 1):
             url = (
                 "https://jobs.workable.com/api/v1/jobs"
@@ -243,10 +267,31 @@ def workable_search(config: dict[str, Any]) -> Iterable[Job]:
                 url, timeout=25,
                 headers={"User-Agent": "StajimVarJobs/1.0", "Accept": "application/json"},
             )
+            # 4xx/5xx (429 dahil) yükseltiliyor: tur FAILED olur ve hiçbir
+            # ilan kapanmaz. Ölçüldü: hız sınırı gerçekten 429 dönüyor,
+            # sessiz boş yanıt değil.
             response.raise_for_status()
-            data = response.json()
+
+            # YUMUŞAK HATA BURADA YAKALANIYOR
+            #
+            # `data.get("jobs") or []` bir zamanlar beklenmedik gövdeyi de
+            # "boş sonuç" sayıyordu: HTTP 200 + {"error": ...} gerçek bir
+            # sıfır sonuçtan ayırt edilemiyordu. Artık `jobs` anahtarı
+            # YOKSA bu birim BOZUK sayılıyor ve tur DEGRADED oluyor.
+            try:
+                data = response.json()
+            except ValueError:
+                birim_bozuk = True
+                break
+            if not isinstance(data, dict) or "jobs" not in data:
+                birim_bozuk = True
+                break
+
             jobs = data.get("jobs") or []
             if not jobs:
+                # Boş sayfa gerçek sayfalama sonu: 1. sayfada sıfır sonuç
+                # bu şehir+sorgu için geçerli bir cevap.
+                sayfa_bitti = True
                 break
 
             for item in jobs:
@@ -268,6 +313,7 @@ def workable_search(config: dict[str, Any]) -> Iterable[Job]:
                 if not is_early_career(title, description):
                     continue
 
+                birim_sonucu += 1
                 company = item.get("company") or {}
                 yield Job(
                     config["name"],
@@ -284,8 +330,19 @@ def workable_search(config: dict[str, Any]) -> Iterable[Job]:
 
             # Bu sorgunun son sayfasına gelindiyse dur.
             if len(jobs) < 20:
+                sayfa_bitti = True
                 break
 
+        # --- birim sonucu ---
+        if birim_bozuk:
+            kapsama["bozuk_birim"] += 1
+        else:
+            kapsama["basarili_birim"] += 1
+            if birim_sonucu == 0:
+                kapsama["bos_birim"] += 1
+            if not sayfa_bitti:
+                # max_pages'e dayandık: bu birimde daha fazla ilan olabilir.
+                kapsama["sayfalama_tamamlanmadi"] += 1
 
 
 def personio(config: dict[str, Any]) -> Iterable[Job]:

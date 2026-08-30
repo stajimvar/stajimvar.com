@@ -229,6 +229,7 @@ def test_acik_kaynaklar_listede():
     kaynağın sessizce açılmasını engelliyor.
     """
     acik = {
+        "workable-tr-arama",
         "vertigogames-workable",
         "newmindai-workable",
         "rapsodo-workable",
@@ -239,7 +240,7 @@ def test_acik_kaynaklar_listede():
     for slug in acik:
         assert source_deactivation_allowed(slug, True, acik) is True
     # Dalgalanan kaynaklar bilerek dışarıda.
-    for slug in ("workable-tr-arama", "ciceksepeti-lever", "astrazeneca-workday", "lalamove-lever"):
+    for slug in ("ciceksepeti-lever", "astrazeneca-workday", "lalamove-lever"):
         assert source_deactivation_allowed(slug, True, acik) is False
 
 
@@ -273,3 +274,116 @@ def test_izin_kapaliyken_karar_uretilir_ama_yazilmaz():
     yuk = reconciliation_payload(karar, seen=False, now=SIMDI, allow_deactivation=False)
     assert "is_active" not in yuk
     assert yuk["stale_eligible_at"] is not None
+
+
+# ------------------------------------------------- arama birimi kapsaması
+
+
+def test_kapsama_olculmeyen_kaynakta_kural_devrede_degil():
+    """Tek istekli adaptörlerde alanlar 0; davranış değişmiyor."""
+    from automation.stale_safety import unit_coverage
+
+    assert unit_coverage(tur()) is None
+    assert health(tur())[0] is Health.HEALTHY
+
+
+def test_tam_kapsama_HEALTHY():
+    t = tur(expected_units=280, successful_units=280, broken_units=0)
+    assert health(t)[0] is Health.HEALTHY
+
+
+def test_TEK_BOZUK_ALT_ISTEK_DEGRADED():
+    """
+    HTTP 200 + beklenmedik gövde, gerçek sıfır sonuçtan ayırt edilemiyordu:
+    `data.get("jobs") or []` ikisini de boş sayıyordu. Artık bir alt istek
+    bile bozuk gövde dönerse tur DEGRADED ve hiçbir ilan kapanmıyor.
+    """
+    t = tur(expected_units=280, successful_units=279, broken_units=1)
+    saglik, gerekce = health(t)
+    assert saglik is Health.DEGRADED
+    assert "UNIT_PAYLOAD_BROKEN" in gerekce
+
+
+def test_eksik_kapsama_DEGRADED():
+    t = tur(expected_units=280, successful_units=250, broken_units=0)
+    saglik, gerekce = health(t)
+    assert saglik is Health.DEGRADED
+    assert "UNIT_COVERAGE" in gerekce
+
+
+def test_DEGRADED_KAPSAMA_ILAN_KAPATMIYOR():
+    """Kapsama düşükken üç turdur kayıp bir ilan bile kapanmıyor."""
+    t = tur(expected_units=280, successful_units=200, broken_units=0)
+    karar = reconcile(
+        t, kayit(consecutive_missing_runs=MISS_THRESHOLD + 2), False, SIMDI, True
+    )
+    assert karar.would_deactivate is False
+    assert karar.consecutive_missing_runs == MISS_THRESHOLD + 2
+
+
+def test_kapsama_dusukken_last_seen_bozulmuyor():
+    t = tur(broken_units=1, expected_units=10, successful_units=9)
+    yuk = reconciliation_payload(
+        reconcile(t, kayit(), False, SIMDI, True), seen=False, now=SIMDI, allow_deactivation=True
+    )
+    assert "last_seen_at" not in yuk
+    assert "is_active" not in yuk
+
+
+# ------------------------------------------ production vaka senaryoları
+
+
+def test_ardisik_kacirma_senaryosu_bastan_sona():
+    """1 tur → 2 tur → 3 tur ama 48 saat dolmamış → 3 tur + 48 saat."""
+    t = tur()
+    # 1. tur
+    k1 = reconcile(t, kayit(consecutive_missing_runs=0), False, SIMDI, True)
+    assert (k1.consecutive_missing_runs, k1.would_deactivate) == (1, False)
+    # 2. tur
+    k2 = reconcile(t, kayit(consecutive_missing_runs=1), False, SIMDI, True)
+    assert (k2.consecutive_missing_runs, k2.would_deactivate) == (2, False)
+    # 3. tur ama ilan 2 saat önce görülmüş
+    taze = kayit(consecutive_missing_runs=2, last_seen_at=SIMDI - timedelta(hours=2))
+    k3 = reconcile(t, taze, False, SIMDI, True)
+    assert (k3.consecutive_missing_runs, k3.would_deactivate) == (3, False)
+    # 3. tur ve 48 saat dolmuş
+    eski = kayit(consecutive_missing_runs=2, last_seen_at=SIMDI - timedelta(days=3))
+    k4 = reconcile(t, eski, False, SIMDI, True)
+    assert (k4.consecutive_missing_runs, k4.would_deactivate) == (3, True)
+
+
+def test_araya_giren_degraded_tur_sayaci_dondurur():
+    aday = kayit(consecutive_missing_runs=2, last_seen_at=SIMDI - timedelta(days=3))
+    karar = reconcile(tur(pagination_complete=False), aday, False, SIMDI, True)
+    assert karar.consecutive_missing_runs == 2  # ilerlemedi
+    assert karar.would_deactivate is False
+
+
+def test_araya_giren_failed_tur_sayaci_dondurur():
+    aday = kayit(consecutive_missing_runs=2, last_seen_at=SIMDI - timedelta(days=3))
+    karar = reconcile(tur(http_status=500), aday, False, SIMDI, True)
+    assert karar.consecutive_missing_runs == 2
+    assert karar.would_deactivate is False
+
+
+def test_geri_gelen_ilan_sayaci_sifirliyor_ve_geri_aciliyor():
+    kapali = kayit(consecutive_missing_runs=5, deactivation_reason="stale")
+    karar = reconcile(tur(), kapali, True, SIMDI, True)
+    assert karar.consecutive_missing_runs == 0
+    assert karar.would_reactivate is True
+
+
+def test_yuzde_80_dusus_ANOMALI_ve_kapatmiyor():
+    t = tur(previous_job_count=50, current_job_count=5)  # %10 kaldı
+    assert health(t)[0] is Health.ANOMALY
+    aday = kayit(consecutive_missing_runs=9, last_seen_at=SIMDI - timedelta(days=9))
+    assert reconcile(t, aday, False, SIMDI, True).would_deactivate is False
+
+
+def test_bozuk_govde_HTTP_200_ile_geliyor_ve_yakaLaniyor():
+    """
+    En sinsi vaka: HTTP 200 ama gövde beklenen şekilde değil. HTTP durumu
+    sağlıklı göründüğü için eski model bunu fark etmiyordu.
+    """
+    t = tur(http_status=200, expected_units=5, successful_units=4, broken_units=1)
+    assert health(t)[0] is Health.DEGRADED

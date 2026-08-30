@@ -54,6 +54,19 @@ class SourceRun:
     retry_count: int = 0
     error: str | None = None
 
+    # ARAMA BİRİMİ KAPSAMASI
+    #
+    # Çok parçalı kaynaklarda (şehir × sorgu) toplam ilan sayısı taramanın
+    # gerçekten çalışıp çalışmadığını SÖYLEMİYOR: alt isteklerin yarısı
+    # sessizce boş dönse sonuç "sağlıklı ama daha az ilan" görünür ve o
+    # ilanlar kapanmış sayılırdı.
+    #
+    # Tek istekli kaynaklarda bu alanlar 0 kalıyor ve kural devreye
+    # girmiyor — mevcut kaynakların davranışı değişmiyor.
+    expected_units: int = 0
+    successful_units: int = 0
+    broken_units: int = 0
+
     @property
     def duration_ms(self) -> int:
         return max(0, int((self.finished_at - self.started_at).total_seconds() * 1000))
@@ -80,11 +93,33 @@ class ReconciliationDecision:
     would_reactivate: bool
 
 
+def unit_coverage(run: SourceRun) -> float | None:
+    """Tamamlanan arama birimi oranı. Ölçülmeyen kaynakta None."""
+    if run.expected_units <= 0:
+        return None
+    return run.successful_units / run.expected_units
+
+
 def health(run: SourceRun) -> tuple[Health, str | None]:
     if not run.fetch_success or not run.parser_success:
         return Health.FAILED, run.error or "FETCH_OR_PARSE_FAILURE"
     if run.http_status is not None and (run.http_status in {401, 403, 408, 429} or run.http_status >= 500):
         return Health.FAILED, f"HTTP_{run.http_status}"
+
+    # Bozuk gövde dönen TEK bir alt istek bile turu şüpheli yapıyor.
+    #
+    # Eşik neden 1: bugün her alt istek ya 200 + beklenen gövde dönüyor ya
+    # da yükseliyor (ölçüldü: 189 turda tek hata HTTP 429 ve o tur zaten
+    # FAILED). Yani "bozuk gövde" normal davranış DEĞİL; ilk görüldüğünde
+    # bir şeyin değiştiği anlamına geliyor. Yanılma yönü de güvenli:
+    # DEGRADED tur hiçbir ilanı kapatmıyor, yalnızca kapatmayı erteliyor.
+    if run.broken_units > 0:
+        return Health.DEGRADED, f"UNIT_PAYLOAD_BROKEN_{run.broken_units}"
+
+    kapsama = unit_coverage(run)
+    if kapsama is not None and kapsama < 1.0:
+        return Health.DEGRADED, f"UNIT_COVERAGE_{round(kapsama * 100)}"
+
     if not run.pagination_complete:
         return Health.DEGRADED, "PAGINATION_INCOMPLETE"
     if run.previous_job_count > 0 and run.current_job_count == 0:

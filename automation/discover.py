@@ -67,7 +67,8 @@ def process_source(db, config: dict, source_id: str, *, write: bool, allow_deact
     slug = str(config.get("id") or config["name"])
     started = datetime.now(UTC)
     run_id = repository.start_run(db, source_id) if write else None
-    stats = {"fetched": 0, "created": 0, "updated": 0, "skipped": 0, "deactivated": 0}
+    stats = {"fetched": 0, "created": 0, "updated": 0, "skipped": 0, "deactivated": 0,
+             "stale_aday": 0, "devre_kesici": False}
 
     adapter = scraper.ADAPTERS.get(config["type"])
     if adapter is None:
@@ -79,9 +80,18 @@ def process_source(db, config: dict, source_id: str, *, write: bool, allow_deact
 
     try:
         jobs = [scraper.translate_job(job, config) for job in adapter(config)]
+        # Adaptör çok parçalıysa (şehir × sorgu) kapsama sayaçlarını
+        # config'e yazıyor. Tek istekli adaptörlerde sözlük hiç oluşmuyor
+        # ve alanlar 0 kalıyor — o kaynakların davranışı değişmiyor.
+        kapsama = config.get("_kapsama") or {}
         run = SourceRun(
-            slug, started, datetime.now(UTC), 200, True, True, True,
+            slug, started, datetime.now(UTC), 200, True, True,
+            # Sayfalama bütünlüğü artık birim başına ölçülüyor.
+            kapsama.get("sayfalama_tamamlanmadi", 0) == 0,
             previous_count(db, source_id), len(jobs), accepted_count=len(jobs),
+            expected_units=int(kapsama.get("beklenen_birim", 0)),
+            successful_units=int(kapsama.get("basarili_birim", 0)),
+            broken_units=int(kapsama.get("bozuk_birim", 0)),
         )
     except Exception as error:  # noqa: BLE001 — kaynak hatası tüm taramayı düşürmemeli
         message = f"{type(error).__name__}: {error}"
@@ -144,8 +154,10 @@ def process_source(db, config: dict, source_id: str, *, write: bool, allow_deact
         )
         # Devre kesici: bir taramada aktif kayıtların dörtte birinden fazlası
         # kaybolduysa bu bir kaynak arızasıdır, toplu kapatma yapılmaz.
+        stats["stale_aday"] = len(missing)
         if mass_deactivation_blocked(len(missing), len(known)):
             deactivation_allowed = False
+            stats["devre_kesici"] = True
             repository.log_event(
                 db, run_id=run_id, source_id=source_id, event_type="error",
                 message=f"toplu pasifleştirme devre kesicisi: {len(missing)}/{len(known)}",
@@ -192,6 +204,32 @@ def process_source(db, config: dict, source_id: str, *, write: bool, allow_deact
             updated_count=stats["updated"], skipped_count=stats["skipped"],
             deactivated_count=stats["deactivated"],
             error_text=health_reason,
+        )
+
+        # TUR ÖZETİ — TEK YAPILANDIRILMIŞ KAYIT
+        #
+        # "Neden sağlıksız?" sorusunun cevabı log satırlarına dağılmıştı.
+        # `import_events.payload` (jsonb) zaten vardı; kimse bağlamamış.
+        # Yeni bir izleme ürünü kurulmuyor: her tur için tek bir olay.
+        repository.log_event(
+            db, run_id=run_id, source_id=source_id, event_type="run_summary",
+            message=f"{run_health}" + (f" · {health_reason}" if health_reason else ""),
+            payload={
+                "saglik": str(run_health),
+                "gerekce": health_reason,
+                "sonuc_sayisi": stats["fetched"],
+                "onceki_sonuc_sayisi": run.previous_job_count,
+                "benzersiz_sonuc": len(seen_ids),
+                "beklenen_birim": run.expected_units,
+                "basarili_birim": run.successful_units,
+                "bozuk_birim": run.broken_units,
+                "bos_birim": int((config.get("_kapsama") or {}).get("bos_birim", 0)),
+                "sayfalama_tamam": run.pagination_complete,
+                "kapatma_adayi": stats.get("stale_aday", 0),
+                "kapatilan": stats["deactivated"],
+                "devre_kesici": stats.get("devre_kesici", False),
+                "kapatma_izni": allow_deactivation,
+            },
         )
         db.table("sources").update(
             {"last_run_at": now, **({"last_success_at": now} if run_health is Health.HEALTHY else {})}
