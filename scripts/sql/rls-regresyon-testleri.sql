@@ -226,6 +226,147 @@ select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
       where id='33333333-aaaa-4000-8000-000000000001'$q$),
   'A, kendi basvurusunun durumunu degistirebilir');
 
+-- ---------------------------- İLAN KOLONLARI: İÇERİK EVET, SİNYAL HAYIR
+--
+-- RLS bir şirketi kendi SATIRLARIYLA sınırlıyor ama satır güvenliği kolon
+-- güvenliği değil. Tablo düzeyinde UPDATE yetkisi varken şirket, kendi
+-- ilanının kaynak sağlığı ve doğrulama alanlarını da yazabiliyordu:
+-- `source_status='acik'`, `source_verified_at=now()` diyerek ilanı
+-- platform tarafından az önce doğrulanmış gibi gösterebilirdi. O alanlar
+-- öğrenciye tazelik sinyali olarak gösteriliyor.
+--
+-- Aşağıdaki testler sınırın iki yanını da tutuyor: içerik alanları
+-- yazılabilmeli, sistem alanları yazılamamalı. Yalnızca "engellendi"
+-- testi yazmak, her şeyi kapatan bir düzeltmeyi yeşil gösterirdi.
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.listings
+       set title='Guncellenmis ilan basligi', description='yeni aciklama',
+           city='Izmir', application_deadline='2026-12-31'
+     where id='22222222-aaaa-4000-8000-000000000001'$q$),
+  'A, kendi ilaninin ICERIK alanlarini duzenleyebilir');
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.listings set status='closed'
+     where id='22222222-aaaa-4000-8000-000000000001'$q$),
+  'A, kendi ilanini kapatabilir');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.listings set source_status='acik'
+     where id='22222222-aaaa-4000-8000-000000000001'$q$),
+  'A, kendi ilaninin source_status alanini YAZAMAZ');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.listings set source_verified_at=now()
+     where id='22222222-aaaa-4000-8000-000000000001'$q$),
+  'A, kendi ilaninin source_verified_at alanini YAZAMAZ');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.listings set source_checked_at=now(), last_seen_at=now()
+     where id='22222222-aaaa-4000-8000-000000000001'$q$),
+  'A, tarama zaman damgalarini YAZAMAZ');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.listings set source_url='https://sahte.test', content_hash='x',
+                                 deactivation_reason='yok'
+     where id='22222222-aaaa-4000-8000-000000000001'$q$),
+  'A, kaynak ve provenance alanlarini YAZAMAZ');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.listings set applicants_count=999
+     where id='22222222-aaaa-4000-8000-000000000001'$q$),
+  'A, basvuru sayacini YAZAMAZ');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.listings set featured=true
+     where id='22222222-aaaa-4000-8000-000000000001'$q$),
+  'A, kendi ilanini one cikan yapamaz');
+
+-- İlan bir kez açıldıktan sonra kime ait olduğu ve nereden geldiği
+-- değişmemeli: ikisi de yalnızca INSERT'te veriliyor.
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.listings set company_id='11111111-bbbb-4000-8000-000000000002'
+     where id='22222222-aaaa-4000-8000-000000000001'$q$),
+  'A, ilani baska sirkete tasiyamaz');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.listings set origin='scraped'
+     where id='22222222-aaaa-4000-8000-000000000001'$q$),
+  'A, ilanin kaynagini (origin) sonradan degistiremez');
+
+-- ------------------------------------------- YENİ İLAN AÇARKEN
+--
+-- Şirket ilan açabilmeli; ama istek gövdesine ayrıcalıklı bir kolon
+-- eklerse istek DÜŞMELİ, alan sessizce yok sayılmamalı.
+
+-- `id` BİLEREK VERİLMİYOR
+--
+-- Kolon yetkisi, ifadede ADI GEÇEN her kolon için aranıyor. `id`
+-- uygulamanın hiç göndermediği bir alan ve yetki listesinde yok; testte
+-- yazılsaydı istek `id` yüzünden düşer ve ayrıcalıklı alan testleri
+-- YANLIŞ NEDENLE yeşil görünürdü. Ölçüldü: ilk denemede tam bu oldu.
+-- Aşağıdaki yük, panelin gerçekten gönderdiği alan kümesi.
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$insert into public.listings (company_id, title, city, work_type,
+        mandatory_staj_accepted, voluntary_staj_accepted, term, duration,
+        is_paid, stipend_text, apply_url, application_method, description,
+        application_deadline, origin, status, posted_at)
+     values ('11111111-aaaa-4000-8000-000000000001', 'Yeni Stajyer', 'Izmir',
+             'On-site', true, false, 'All Year', '3 ay', true,
+             'Asgari staj ucreti', 'https://test-a.com/basvur', 'external',
+             'aciklama', '2026-12-31', 'employer_posted', 'draft', now())$q$),
+  'A, panelin gonderdigi yukle yeni ilan acabilir');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$insert into public.listings (company_id, title, status, origin,
+                                  application_method, apply_url, source_status)
+     values ('11111111-aaaa-4000-8000-000000000001', 'Sahte Taze Ilan', 'draft',
+             'employer_posted', 'external', 'https://test-a.com/basvur', 'acik')$q$),
+  'A, ilan acarken source_status GONDEREMEZ');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$insert into public.listings (company_id, title, status, origin,
+                                  application_method, apply_url,
+                                  source_verified_at, last_seen_at)
+     values ('11111111-aaaa-4000-8000-000000000001', 'Sahte Dogrulanmis', 'draft',
+             'employer_posted', 'external', 'https://test-a.com/basvur',
+             now(), now())$q$),
+  'A, ilan acarken dogrulama damgalarini GONDEREMEZ');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$insert into public.listings (company_id, title, status, origin,
+                                  application_method, apply_url,
+                                  featured, applicants_count)
+     values ('11111111-aaaa-4000-8000-000000000001', 'Sahte One Cikan', 'draft',
+             'employer_posted', 'external', 'https://test-a.com/basvur',
+             true, 500)$q$),
+  'A, ilan acarken featured ve basvuru sayacini GONDEREMEZ');
+
+-- Az önce açılan ilan sistem alanlarında GÜVENLİ VARSAYILANLARDAN
+-- başlamalı: hiç bakılmamış, hiç doğrulanmamış, öne çıkarılmamış.
+select pg_temp.bekle(
+  (select source_status is null and source_verified_at is null
+      and source_checked_at is null and last_seen_at is null
+      and featured = false and applicants_count = 0
+     from public.listings where title = 'Yeni Stajyer'),
+  'Yeni ilan sistem alanlarinda guvenli varsayilanlarla basliyor');
+
+-- ------------------------------ TARAMA OTOMASYONU KISITLANMADI
+--
+-- Kolon yetkisi daraltılırken asıl işini yapan rol kırılmamalı: kaynak
+-- sağlığı alanlarını yazan tarama otomasyonu ve Edge Function
+-- service_role ile bağlanıyor ve tablo düzeyinde tam yetkili kalıyor.
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.listings
+       set source_status='acik', source_verified_at=now(),
+           source_checked_at=now(), last_seen_at=now()
+     where id='22222222-aaaa-4000-8000-000000000001'$q$),
+  'service_role, kaynak sagligi alanlarini yazabilir');
+
 -- ------------------------------------ DOĞRULANMAMIŞ ŞİRKET SINIRI
 --
 -- "İlan verebilmek" ile "öğrenci kişisel verisine erişebilmek" ayrı iki

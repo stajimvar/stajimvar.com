@@ -212,7 +212,16 @@ export function toListingInsert(
     responsibilities: listing.responsibilities,
     perks: listing.perks,
     category: listing.category ?? 'general',
-    featured: listing.featured ?? false,
+    /*
+      `featured` BİLEREK GÖNDERİLMİYOR.
+
+      Öne çıkarma platformun yerleştirme kararı, ilan sahibinin değil;
+      20260906010000_ilan_kolon_yetkileri ile `authenticated` rolünün
+      yazma yetkisi dışında bırakıldı. Burada gönderilseydi istek
+      "permission denied for column" ile düşerdi — hem de gönderilen değer
+      zaten kolonun varsayılanı olan false olduğu için hiçbir şey
+      kazandırmadan. Kolon varsayılanından başlıyor.
+    */
     status,
     // Şirket portalından girilen ilan tanımı gereği platform içi başvuru alır.
     origin: 'internal' as const,
