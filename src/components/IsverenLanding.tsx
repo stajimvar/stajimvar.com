@@ -12,6 +12,7 @@ import {
 import {
   birincilStil,
   SIRKET_KENAR,
+  SIRKET_METIN,
   SIRKET_ROZET,
   SIRKET_VURGU,
   SIRKET_VURGU_HOVER,
@@ -142,7 +143,7 @@ export const IsverenLanding: React.FC<{
           <button
             type="button"
             onClick={anaEylem}
-            className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold text-white transition-colors"
+            className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold transition-colors"
             style={birincilStil}
             onMouseEnter={(e) => (e.currentTarget.style.background = SIRKET_VURGU_HOVER)}
             onMouseLeave={(e) => (e.currentTarget.style.background = SIRKET_VURGU)}
@@ -207,8 +208,10 @@ export const IsverenLanding: React.FC<{
           ].map(([baslik, govde], i) => (
             <li key={baslik} className="rounded-2xl border border-gray-200 bg-white p-5">
               <span
-                className="grid h-8 w-8 place-items-center rounded-lg text-sm font-black text-white"
-                style={{ background: SIRKET_VURGU }}
+                /* Parlak yeşil zeminde beyaz rakam okunmuyor (1.98:1);
+                   koyu nötr ile 8.35:1. */
+                className="grid h-8 w-8 place-items-center rounded-lg text-sm font-black"
+                style={{ background: SIRKET_VURGU, color: SIRKET_METIN }}
               >
                 {i + 1}
               </span>
@@ -302,7 +305,7 @@ export const IsverenLanding: React.FC<{
         <button
           type="button"
           onClick={anaEylem}
-          className="mt-5 inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold text-white"
+          className="mt-5 inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold"
           style={birincilStil}
           onMouseEnter={(e) => (e.currentTarget.style.background = SIRKET_VURGU_HOVER)}
           onMouseLeave={(e) => (e.currentTarget.style.background = SIRKET_VURGU)}
