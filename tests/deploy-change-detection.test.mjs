@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { classifyChangedPaths } from '../scripts/detect-deploy-changes.mjs';
 
 test('classifies an Opportunities UI-only change without requiring Supabase deployment', () => {
@@ -32,10 +34,32 @@ test('writes GitHub job outputs when called with a relative script path', () => 
     .split(/\r?\n/)
     .filter(Boolean);
   const expected = classifyChangedPaths(changedPaths);
-  const output = execFileSync(process.execPath, ['scripts/detect-deploy-changes.mjs'], {
+
+  /*
+    ÇIKTI DOSYASI TESTİN KONTROLÜNDE
+
+    Betik `GITHUB_OUTPUT` tanımlıysa oraya YAZIYOR, tanımlı değilse
+    stdout'a. Test yalnızca stdout'u okuyordu: geliştirici makinesinde
+    değişken boş olduğu için geçiyor, GitHub Actions içinde değişken
+    dolu olduğu için çıktı dosyaya gidiyor ve test boş metin görüp
+    düşüyordu.
+
+    Artık dosya testin verdiği geçici bir yol: CI'da gerçekten
+    kullanılan kod yolu sınanıyor ve sonuç ortama göre değişmiyor.
+  */
+  const ciktiDosyasi = path.join(os.tmpdir(), `deploy-cikti-${process.pid}.txt`);
+  fs.writeFileSync(ciktiDosyasi, '');
+  execFileSync(process.execPath, ['scripts/detect-deploy-changes.mjs'], {
     encoding: 'utf8',
-    env: { ...process.env, GITHUB_EVENT_BEFORE: before, GITHUB_SHA: head },
+    env: {
+      ...process.env,
+      GITHUB_EVENT_BEFORE: before,
+      GITHUB_SHA: head,
+      GITHUB_OUTPUT: ciktiDosyasi,
+    },
   });
+  const output = fs.readFileSync(ciktiDosyasi, 'utf8');
+  fs.rmSync(ciktiDosyasi, { force: true });
   /*
     DEĞERE DEĞİL BİÇİME BAKIYORUZ
 
