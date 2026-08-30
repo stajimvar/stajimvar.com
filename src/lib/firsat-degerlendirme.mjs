@@ -76,11 +76,20 @@ export function opportunityAmount(item) {
   const alt = paraBicimi(item.amountMin, item.currency);
   const ust = paraBicimi(item.amountMax, item.currency);
 
-  let metin = null;
-  if (alt && ust && String(item.amountMin) !== String(item.amountMax)) metin = `${alt}–${ust}`;
-  else if (alt) metin = alt;
+  /*
+    SIKLIĞI OLMAYAN SAYI GÖSTERİLMİYOR
 
-  if (metin && sikliK) metin = `${sikliK} ${metin}`;
+    "2.250 ₺" tek başına aylık mı tek seferlik mi belli değil ve ikisi
+    arasında on iki katlık fark var. Sıklık yoksa sayı atlanıyor;
+    varsa açıklama alanındaki kaynak ifadesi gösteriliyor. Veri girişi
+    de sıklığı zorunlu tutuyor, bu yalnızca eski kayıtlar için ağ.
+  */
+  let metin = null;
+  if (sikliK) {
+    if (alt && ust && String(item.amountMin) !== String(item.amountMax)) metin = `${alt}–${ust}`;
+    else if (alt) metin = alt;
+    if (metin) metin = `${sikliK} ${metin}`;
+  }
 
   /* Sayıya sığmayan durumlar: "Eğitim ücretinin %50'si", "Hibe yok". */
   if (!metin && item.amountNote) metin = item.amountNote;

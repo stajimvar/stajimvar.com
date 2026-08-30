@@ -37,3 +37,32 @@ export async function adminSetOpportunityAmount(
      korumasını kaybetmesin, kullanıcı sayfayı yenilemek zorunda kalmasın. */
   return data as string;
 }
+
+/**
+ * Tek bir uygunluk boyutunun doğrulama kararını kaydeder.
+ *
+ * ASIL KAPI SUNUCUDA
+ * ------------------
+ * `admin_set_opportunity_eligibility` security definer ve ilk satırında
+ * `is_admin()` soruyor. Arayüzde düğmeyi gizlemek güvenlik değil;
+ * yönetici olmayan biri bu çağrıyı yapsa da yetkisiz hatası alır.
+ *
+ * ALAN BAZLI: bir boyutu doğrulamak diğerlerini doğrulamıyor.
+ */
+export async function adminSetOpportunityEligibility(
+  id: string,
+  expectedUpdatedAt: string,
+  boyut: 'departments' | 'education_levels' | 'cities',
+  karar: 'unverified' | 'unrestricted' | 'restricted',
+  degerler: string[] = []
+): Promise<string> {
+  const { data, error } = await (supabase.rpc as any)('admin_set_opportunity_eligibility', {
+    p_id: id,
+    p_expected_updated_at: expectedUpdatedAt,
+    p_boyut: boyut,
+    p_karar: karar,
+    p_degerler: degerler,
+  });
+  if (error) throw new Error(error.message);
+  return data as string;
+}

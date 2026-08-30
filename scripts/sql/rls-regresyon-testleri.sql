@@ -121,6 +121,13 @@ select '33333333-aaaa-4000-8000-000000000001'::uuid, '22222222-aaaa-4000-8000-00
        80, 'internal', 'not_required', 'web', now(), '{"ad":"Aday C"}'::jsonb
 from k;
 
+-- Uygunluk doğrulaması testleri için bir burs kaydı. Kayıt olmadan
+-- "yazamadı" kontrolü boş tabloda kendiliğinden geçerdi.
+insert into public.opportunities (id, slug, title, organization_name, opportunity_type,
+                                  source_url, status)
+values ('44444444-aaaa-4000-8000-000000000001'::uuid, 'test-burs', 'Test Bursu',
+        'Test Vakfi', 'scholarship', 'https://test-vakfi.test/burs', 'published');
+
 -- ------------------------------------------------- KULLANICI B SALDIRIYOR
 
 select set_config('request.jwt.claims',
@@ -242,6 +249,35 @@ select pg_temp.bekle(
 select pg_temp.bekle(
   (select count(*) = 0 from public.student_profiles where id = (select c from k)),
   'DOGRULANMAMIS sirket basvuranin profilini goremez');
+
+-- ------------------------------- BURS UYGUNLUK DOĞRULAMASI (yönetici işi)
+--
+-- `admin_set_opportunity_eligibility` bir bursun kısıtlarını "doğrulandı"
+-- işaretliyor ve o damga kişiselleştirmeye giriyor. Normal bir kullanıcı
+-- erişebilseydi, kısıtları hiç okunmamış bir bursu herkese açıkmış gibi
+-- gösterebilirdi.
+--
+-- Damga sütunları `authenticated` rolünden REVOKE edilmiş durumda; ikinci
+-- kontrol o iznin geri gelmediğini doğruluyor.
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$select public.admin_set_opportunity_eligibility(
+       '44444444-aaaa-4000-8000-000000000001'::uuid,
+       now(), 'departments', 'unrestricted')$q$),
+  'B, burs uygunlugunu dogrulanmis isaretleyemez');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.opportunities set departments_verified_at = now()
+     where id = '44444444-aaaa-4000-8000-000000000001'$q$),
+  'B, uygunluk dogrulama damgasini dogrudan yazamaz');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.opportunities set education_levels_verified_at = now()$q$),
+  'B, seviye dogrulama damgasini dogrudan yazamaz');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.opportunities set cities_verified_at = now()$q$),
+  'B, sehir dogrulama damgasini dogrudan yazamaz');
 
 reset role;
 rollback;

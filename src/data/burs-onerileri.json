@@ -1,0 +1,417 @@
+{
+  "olusturuldu": "2026-08-30T12:19:36.433518+00:00",
+  "kayitlar": {
+    "7009ad2f-2542-4130-8bd7-1792b7bf60c5": {
+      "sinif": "A",
+      "http": 200,
+      "notlar": [
+        "açık bölüm kısıtı bulunamadı (kısıt yok olabilir)"
+      ],
+      "oneriler": [
+        {
+          "alan": "education_levels",
+          "mevcut": [],
+          "onerilen": [
+            "Doktora",
+            "Lisans",
+            "Yüksek Lisans",
+            "Ön Lisans"
+          ],
+          "kanit": "…rme sistemindeki en üst derece diliminde (excellent, distinction, A) olanlarda ekonomik ve başarı durum değerlendirmesi yapılarak burs başvuru koşullarını taşıması aranır. Lisansüstü (tezli yüksek lisans/doktora) progra",
+          "gerekce": "kaynakta geçen eğitim seviyesi ifadeleri",
+          "kaynak": "https://akpakimya.com/akpa-burslari"
+        }
+      ]
+    },
+    "0ce93fb7-f9ec-44be-ae64-75ae4eeb6c48": {
+      "sinif": "C",
+      "http": 404,
+      "notlar": [
+        "kaynak kapanmış (HTTP 404)"
+      ],
+      "oneriler": []
+    },
+    "59fba91c-b74e-4ddf-9eeb-d3c0093a2fde": {
+      "sinif": "F",
+      "http": null,
+      "notlar": [
+        "erişilemedi: SSLError"
+      ],
+      "oneriler": []
+    },
+    "d3d306b8-6da5-4a4e-848c-7a45a3ea8b7c": {
+      "sinif": "A",
+      "http": 200,
+      "notlar": [
+        "açık bölüm kısıtı bulunamadı (kısıt yok olabilir)"
+      ],
+      "oneriler": [
+        {
+          "alan": "education_levels",
+          "mevcut": [],
+          "onerilen": [
+            "Lisans"
+          ],
+          "kanit": "…AYINIZ 2026-2027 Eğitim ve Öğretim dönemi Yükseköğretim Burs başvuruları 10 Ağustos 2026 - 15 Eylül 2026 tarihleri arasında alınacaktır. 1. Burstan Yararlanacak Öğrencilerde Aranacak Asgari Nitelikler: Burs verilecek Öğ",
+          "gerekce": "kaynakta geçen eğitim seviyesi ifadeleri",
+          "kaynak": "https://www.btso.org.tr/guncel/haberler-ve-duyurular/haber-duyuru-detay/60771"
+        }
+      ]
+    },
+    "f2014b8c-d814-40d3-a0f7-16900b943f65": {
+      "sinif": "F",
+      "http": null,
+      "notlar": [
+        "erişilemedi: ReadTimeout"
+      ],
+      "oneriler": []
+    },
+    "e9f1e2b7-a98b-4bdd-ad91-1ed1ca90a8fb": {
+      "sinif": "A",
+      "http": 200,
+      "notlar": [
+        "açık bölüm kısıtı bulunamadı (kısıt yok olabilir)"
+      ],
+      "oneriler": [
+        {
+          "alan": "education_levels",
+          "mevcut": [],
+          "onerilen": [
+            "Lisans"
+          ],
+          "kanit": "…letişim Search for: Burs Başvuru Formu – 2026-2027 wpadmin 2026-08-17T12:23:01+03:00 Burs Başvuru Formu – 2026-2027 AÇIKLAMA A- Kimler Burs Alabilir: Vakıf tüzüğü gereği, devlet üniversitelerinde Tıp, Sağlık Bilimleri(L",
+          "gerekce": "kaynakta geçen eğitim seviyesi ifadeleri",
+          "kaynak": "https://erciyesorgannaklivakfi.org/burs-basvuru-formu-2026-2027/"
+        }
+      ]
+    },
+    "549110b1-7cda-494c-83bc-29fd166bd814": {
+      "sinif": "A",
+      "http": 200,
+      "notlar": [
+        "açık bölüm kısıtı bulunamadı (kısıt yok olabilir)"
+      ],
+      "oneriler": [
+        {
+          "alan": "education_levels",
+          "mevcut": [],
+          "onerilen": [
+            "Lisans"
+          ],
+          "kanit": "…/ 4,00 veya 70 / 100 Tüm koşulları incele ↓ Program · 02 Kız & erkek öğrencilere özel İz Bırakanlar Gelişim Programı Belirlenen bölümlerde öğrenim gören üniversite öğrencilerini eğitim, kariyer ve topluluk deneyimiyle g",
+          "gerekce": "kaynakta geçen eğitim seviyesi ifadeleri",
+          "kaynak": "https://faydasicokvakfi.org/burslar/burs-basvurulari/"
+        }
+      ]
+    },
+    "a7b5db06-c43c-4509-92db-2d913983318e": {
+      "sinif": "A",
+      "http": 200,
+      "notlar": [
+        "açık bölüm kısıtı bulunamadı (kısıt yok olabilir)"
+      ],
+      "oneriler": [
+        {
+          "alan": "amount_min",
+          "mevcut": null,
+          "onerilen": 2250,
+          "kanit": "…mi için toplam 22.500 TL’dir . Bursiyerlerimiz koşulları sağlamaya devam ettiği sürece, 10 ay boyunca aylık 2.250 TL burs alacaktır. Burslar her ayın ikinci haftasından sonra öğren…",
+          "gerekce": "kaynakta AYLIK olduğu açıkça yazan tek tutar",
+          "kaynak": "https://guneyegitimvakfi.org.tr/basvuru-rehberi/"
+        },
+        {
+          "alan": "payment_period",
+          "mevcut": null,
+          "onerilen": "monthly",
+          "kanit": "…mi için toplam 22.500 TL’dir . Bursiyerlerimiz koşulları sağlamaya devam ettiği sürece, 10 ay boyunca aylık 2.250 TL burs alacaktır. Burslar her ayın ikinci haftasından sonra öğren…",
+          "gerekce": "tutarın yanında 'aylık' ifadesi geçiyor",
+          "kaynak": "https://guneyegitimvakfi.org.tr/basvuru-rehberi/"
+        },
+        {
+          "alan": "education_levels",
+          "mevcut": [],
+          "onerilen": [
+            "Lisans"
+          ],
+          "kanit": "…ir. Burs başvurularının değerlendirilmesinde; %60’ı ailenin sosyal ve ekonomik durumu, %40’ ı sınav başarı durumu göz önüne alınarak sıralama yapılır. BAŞVURU KOŞULLARI GENEL ŞARTLAR Burslar, başarılı maddi desteğe iht",
+          "gerekce": "kaynakta geçen eğitim seviyesi ifadeleri",
+          "kaynak": "https://guneyegitimvakfi.org.tr/basvuru-rehberi/"
+        }
+      ]
+    },
+    "865e0d8e-e80f-4c1f-a5b7-c69e1248489b": {
+      "sinif": "A",
+      "http": 200,
+      "notlar": [
+        "açık bölüm kısıtı bulunamadı (kısıt yok olabilir)"
+      ],
+      "oneriler": [
+        {
+          "alan": "education_levels",
+          "mevcut": [],
+          "onerilen": [
+            "Lisans"
+          ],
+          "kanit": "…TİM SOSYAL VE KÜLTÜREL SAĞLIK YARDIMLAŞMA KALICI ESERLER BURS BURS KOŞULLARI VE FORMU HABERLER BAĞIŞ İLETİŞİM KVKK MİA Vakfı 2026-2027 BURS BAŞVURU ŞARTLARI Her yıl olduğu gibi MİA VAKFI başarılı ve maddi desteğe ihtiya",
+          "gerekce": "kaynakta geçen eğitim seviyesi ifadeleri",
+          "kaynak": "https://ihsanarslanvakfi.org/burs-kosullari-ve-formu/"
+        }
+      ]
+    },
+    "7bbdb0ba-3094-4958-bca8-31fd99e412f8": {
+      "sinif": "A",
+      "http": 200,
+      "notlar": [
+        "açık bölüm kısıtı bulunamadı (kısıt yok olabilir)"
+      ],
+      "oneriler": [
+        {
+          "alan": "education_levels",
+          "mevcut": [],
+          "onerilen": [
+            "Lisans"
+          ],
+          "kanit": "…23.55’te sona erecektir. Burs başvuruları, İstanbul Üniversitesi-Cerrahpaşa’nın tüm sınıf düzeylerindeki lisans programlarında öğrenim gören ve başvuru koşullarını sağlayan öğrenciler tarafından yapılabilecektir. Başvur",
+          "gerekce": "kaynakta geçen eğitim seviyesi ifadeleri",
+          "kaynak": "https://iucerrahpasavakfi.org.tr/?p=4006"
+        }
+      ]
+    },
+    "24567954-21f2-40b8-a186-eb07353c2b94": {
+      "sinif": "A",
+      "http": 200,
+      "notlar": [
+        "açık bölüm kısıtı bulunamadı (kısıt yok olabilir)"
+      ],
+      "oneriler": [
+        {
+          "alan": "education_levels",
+          "mevcut": [],
+          "onerilen": [
+            "Lisans"
+          ],
+          "kanit": "…gretim Yılı Burs Duyurusu 17-08-2026 --> Meliha Ercan Vakfı tarafından 2026-2027 eğitim-öğretim yılında Üniversitemiz lisans programlarında öğrenim gören kız öğrencilerimiz için sunulan söz konusu burs programına www.me",
+          "gerekce": "kaynakta geçen eğitim seviyesi ifadeleri",
+          "kaynak": "https://turizm.deu.edu.tr/duyurular/meliha-ercan-vakfi-2026-2027-egitim-ogretim-yili-burs-duyurusu/"
+        }
+      ]
+    },
+    "565827cf-e3e9-4d80-a139-666a88e8ea28": {
+      "sinif": "A",
+      "http": 200,
+      "notlar": [
+        "açık bölüm kısıtı bulunamadı (kısıt yok olabilir)"
+      ],
+      "oneriler": [
+        {
+          "alan": "amount_min",
+          "mevcut": null,
+          "onerilen": 6000,
+          "kanit": "…erlendirmeye alınmayacaktır. Burs miktarı: 2026–2027 öğretim yılında yüksek öğrenim bursu aylık 6.000 TL’dir. Burs kazanan öğrencilere Ekim ayından itibaren geçerli olacak şekilde…",
+          "gerekce": "kaynakta AYLIK olduğu açıkça yazan tek tutar",
+          "kaynak": "https://burs.mukad.org.tr/"
+        },
+        {
+          "alan": "payment_period",
+          "mevcut": null,
+          "onerilen": "monthly",
+          "kanit": "…erlendirmeye alınmayacaktır. Burs miktarı: 2026–2027 öğretim yılında yüksek öğrenim bursu aylık 6.000 TL’dir. Burs kazanan öğrencilere Ekim ayından itibaren geçerli olacak şekilde…",
+          "gerekce": "tutarın yanında 'aylık' ifadesi geçiyor",
+          "kaynak": "https://burs.mukad.org.tr/"
+        },
+        {
+          "alan": "education_levels",
+          "mevcut": [],
+          "onerilen": [
+            "Lisans"
+          ],
+          "kanit": "…aşvurular MÜKAD Burs Komisyonu tarafından değerlendirilir. BURS ALMAK İSTEYEN ÖĞRENCİLER İÇİN BAŞVURU KRİTERLERİMİZ TC vatandaşı olmak. Kız öğrenci olmak. Üniversite kaydı: Türkiye’de devlete ait bir yüksek öğrenim kuru",
+          "gerekce": "kaynakta geçen eğitim seviyesi ifadeleri",
+          "kaynak": "https://burs.mukad.org.tr/"
+        }
+      ]
+    },
+    "3c6b119e-e72c-4808-966d-25a7d5a74664": {
+      "sinif": "A",
+      "http": 200,
+      "notlar": [
+        "açık bölüm kısıtı bulunamadı (kısıt yok olabilir)"
+      ],
+      "oneriler": [
+        {
+          "alan": "education_levels",
+          "mevcut": [],
+          "onerilen": [
+            "Lisans"
+          ],
+          "kanit": "…irme sonucuna göre ön elemeyi geçen öğrenciler mülakata alınır. Lisans programlarının 2, 3, 4 ve 5. sınıflarında burs verilecektir. Üniversiteye yeni kayıt yaptırmış 1. sınıf öğrencileri burs imkânından yararlanamayacak",
+          "gerekce": "kaynakta geçen eğitim seviyesi ifadeleri",
+          "kaynak": "https://www.mustafaoncelvakfi.org/faaliyetlerimiz/ogrenci-destek-bursu/basvuru"
+        }
+      ]
+    },
+    "e4e83e70-4d62-45e2-b4fa-5d0045caf6b1": {
+      "sinif": "A",
+      "http": 200,
+      "notlar": [
+        "açık bölüm kısıtı bulunamadı (kısıt yok olabilir)"
+      ],
+      "oneriler": [
+        {
+          "alan": "amount_min",
+          "mevcut": null,
+          "onerilen": 3000,
+          "kanit": "…eleri 2026-2027 öğretim yılında, Ekim-Mayıs ayları arasında 8 ay boyunca ve ayın 25’ inde aylık 3.000 TL. olarak yapılacaktır. BAŞVURU Başvurular, Ogem-Vak internet sitesinde “BAŞV…",
+          "gerekce": "kaynakta AYLIK olduğu açıkça yazan tek tutar",
+          "kaynak": "https://ogemvak.org.tr/burs/"
+        },
+        {
+          "alan": "payment_period",
+          "mevcut": null,
+          "onerilen": "monthly",
+          "kanit": "…eleri 2026-2027 öğretim yılında, Ekim-Mayıs ayları arasında 8 ay boyunca ve ayın 25’ inde aylık 3.000 TL. olarak yapılacaktır. BAŞVURU Başvurular, Ogem-Vak internet sitesinde “BAŞV…",
+          "gerekce": "tutarın yanında 'aylık' ifadesi geçiyor",
+          "kaynak": "https://ogemvak.org.tr/burs/"
+        },
+        {
+          "alan": "education_levels",
+          "mevcut": [],
+          "onerilen": [
+            "Lisans",
+            "Ön Lisans"
+          ],
+          "kanit": "…I GENEL KURAL VE ESASLARI Başvuru Girişi GENEL KURALLAR Sosyal Dayanışma Fonu Yükseköğrenim Bursu sadece örgün öğretimde (lisans/ön lisans) okuyan öğrencilere verilmektedir. Ogem-Vak Sosyal Dayanışma Fonundan 2026-2027 ",
+          "gerekce": "kaynakta geçen eğitim seviyesi ifadeleri",
+          "kaynak": "https://ogemvak.org.tr/burs/"
+        }
+      ]
+    },
+    "3f65526a-593f-4c2e-8ffd-dabe585426a8": {
+      "sinif": "A",
+      "http": 200,
+      "notlar": [
+        "açık bölüm kısıtı bulunamadı (kısıt yok olabilir)"
+      ],
+      "oneriler": [
+        {
+          "alan": "education_levels",
+          "mevcut": [],
+          "onerilen": [
+            "Lisans"
+          ],
+          "kanit": "…k defa başvuracak olan Tıp, Eczacılık, Hemşirelik, Diş Hekimliği ve Sağlık Bilimleri Fakültelerinin Lisans Bölümlerinde 2. Sınıf ve üstünde okuyan öğrenciler burs başvurularını, 01 Eylül-15 Eylül 2026 tarihleri arasında",
+          "gerekce": "kaynakta geçen eğitim seviyesi ifadeleri",
+          "kaynak": "https://ssyv.org.tr/2026/06/16/karsiliksiz-burs-basvurulari-01-eylul-15-eylul-2026-tarileri-arasinda-kabul-edilecek/"
+        }
+      ]
+    },
+    "970cb285-e6e3-4e26-a1f2-11dfca00a701": {
+      "sinif": "F",
+      "http": 403,
+      "notlar": [
+        "HTTP 403"
+      ],
+      "oneriler": []
+    },
+    "298cb9db-057f-4a45-a279-3700a1aa8f15": {
+      "sinif": "A",
+      "http": 200,
+      "notlar": [
+        "açık bölüm kısıtı bulunamadı (kısıt yok olabilir)"
+      ],
+      "oneriler": [
+        {
+          "alan": "education_levels",
+          "mevcut": [],
+          "onerilen": [
+            "Lisans",
+            "Yüksek Lisans",
+            "Ön Lisans"
+          ],
+          "kanit": "…utarına öğrenci özelinde karar verilecektir. Ayrıca öksüz, yetim, engelli, Şehit yakını ve Gazi çocuklarına özel bir kontenjan ayrılmıştır. Başvuru Koşulları: 1. Türkiye Cumhuriyeti vatandaşı olmak ve Türkiye'de yaşamak",
+          "gerekce": "kaynakta geçen eğitim seviyesi ifadeleri",
+          "kaynak": "https://www.tekinder.org.tr/duyuru/2026-2027-donemi-burs-basvurulari-basladi%2C27.html"
+        }
+      ]
+    },
+    "74bda680-4e8b-417a-9503-265d53476a5d": {
+      "sinif": "F",
+      "http": null,
+      "notlar": [
+        "erişilemedi: SSLError"
+      ],
+      "oneriler": []
+    },
+    "8f07de91-1e9a-426b-b5b9-3e163aeab3b4": {
+      "sinif": "A",
+      "http": 200,
+      "notlar": [
+        "açık bölüm kısıtı bulunamadı (kısıt yok olabilir)"
+      ],
+      "oneriler": [
+        {
+          "alan": "education_levels",
+          "mevcut": [
+            "Ön lisans",
+            "Lisans",
+            "Yüksek Lisans"
+          ],
+          "onerilen": [
+            "Doktora",
+            "Yüksek Lisans"
+          ],
+          "kanit": "…tim Bursu Üniversite (Eğitim) Bursu Yüksek Lisans & Doktora Başarı Bursu Üstün Başarı Bursu Üstün Başarı Sanat Bursu Kız Öğrenci Yurt Bursu Kimler Başvurabilir? Başvuru Süreci & Adımlar Ödeme Süreci, Devam Koşulları ve ",
+          "gerekce": "kaynakta geçen eğitim seviyesi ifadeleri",
+          "kaynak": "https://www.tev.org.tr/anasayfa/tr"
+        }
+      ]
+    },
+    "f7bb81f6-f96e-45a3-a033-6cc4b601a290": {
+      "sinif": "A",
+      "http": 200,
+      "notlar": [
+        "açık bölüm kısıtı bulunamadı (kısıt yok olabilir)"
+      ],
+      "oneriler": [
+        {
+          "alan": "education_levels",
+          "mevcut": [],
+          "onerilen": [
+            "Doktora",
+            "Lisans"
+          ],
+          "kanit": "…İTİM BİZE ULAŞIN ENGLISH Bursumuza gösterdiğiniz ilgiye teşekkür ederiz. Bu bursumuza başvuru şu anda açık değildir. Bu sayfalarda yer alan başvuru koşulları sadece bilgilendirme amaçlı paylaşılmaktadır. Güncel burs duy",
+          "gerekce": "kaynakta geçen eğitim seviyesi ifadeleri",
+          "kaynak": "https://fulbright.org.tr/burs/7/Doktora-Tezi-Ara%C5%9Ft%C4%B1rma-Bursu"
+        }
+      ]
+    },
+    "cca1b84b-9000-463e-b0ee-76e71c87e713": {
+      "sinif": "A",
+      "http": 200,
+      "notlar": [
+        "açık bölüm kısıtı bulunamadı (kısıt yok olabilir)"
+      ],
+      "oneriler": [
+        {
+          "alan": "education_levels",
+          "mevcut": [],
+          "onerilen": [
+            "Lisans"
+          ],
+          "kanit": "…bu bölümlerde halen öğrenci olup en geç 2027 Haziran ayı sonunda lisans derecesiyle mezun olacak kişiler de programa başvurabilir. Ancak bu kişilerin Pedagojik Formasyon Sertifikaları sunmaları gereklidir. Son başvuru t",
+          "gerekce": "kaynakta geçen eğitim seviyesi ifadeleri",
+          "kaynak": "https://fulbright.org.tr/burs/9/Yabanc%C4%B1-Dil-%C3%96%C4%9Fretim-Asistanl%C4%B1%C4%9F%C4%B1-Bursu"
+        }
+      ]
+    },
+    "2c3aeeb5-326d-4fe1-93b5-32ef048e780e": {
+      "sinif": "F",
+      "http": 403,
+      "notlar": [
+        "HTTP 403"
+      ],
+      "oneriler": []
+    }
+  }
+}

@@ -28,6 +28,7 @@ KULLANIM
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import re
 import sys
@@ -108,10 +109,18 @@ def _govde(html: str) -> str:
 
 
 def _baglam(metin: str, indis: int, yaricap: int = 90) -> str:
-    """Kanıt için KISA bağlam. Telif nedeniyle uzun kopya taşınmıyor."""
+    """Kanıt için KISA bağlam. Telif nedeniyle uzun kopya taşınmıyor.
+
+    HTML varlıkları çözülüyor: kanıtı okuyan kişi kaynaktaki cümleyi
+    görmeli, "Lisans&uuml;st&uuml;" gibi kaçış dizisi değil. Bu metin
+    yönetici ekranında karar dayanağı olarak gösteriliyor; okunamayan
+    kanıt karar verdirmez.
+    """
     bas = max(0, indis - yaricap)
     son = min(len(metin), indis + yaricap)
-    return ("…" if bas > 0 else "") + metin[bas:son].strip() + ("…" if son < len(metin) else "")
+    kesit = html.unescape(metin[bas:son]).strip()
+    kesit = re.sub(r"\s+", " ", kesit)
+    return ("…" if bas > 0 else "") + kesit + ("…" if son < len(metin) else "")
 
 
 # ------------------------------------------------------------- son tarih
@@ -410,6 +419,41 @@ def kaydi_denetle(kayit: dict, bolumler: list[str], sehirler: set[str], bugun: d
     return rapor
 
 
+def oneri_verisi(raporlar: list[KayitRaporu]) -> dict:
+    """Yonetici ekraninin okudugu kompakt bicim.
+
+    NEDEN AYRI DOSYA
+    ----------------
+    Yirmi iki oneri icin kalici bir aday tablosu acmak, cozdugunden fazla
+    bakim yuku getirirdi (senkron tutma, RLS, temizlik). Oneriler statik
+    bir veri dosyasi olarak geliyor: yonetim ekrani ONERIYI gosteriyor,
+    KARARI veritabanina security definer RPC yaziyor.
+
+    Dosya kaynak sayfalardan yalnizca KISA kanit alintisi tasiyor.
+    """
+    kayitlar = {}
+    for r in raporlar:
+        if not r.oneriler and r.sinif in ("A", "B"):
+            continue
+        kayitlar[r.opportunity_id] = {
+            "sinif": r.sinif,
+            "http": r.http_durumu,
+            "notlar": r.notlar,
+            "oneriler": [
+                {
+                    "alan": o.alan,
+                    "mevcut": o.mevcut_deger,
+                    "onerilen": o.onerilen_deger,
+                    "kanit": o.kanit_metni[:220],
+                    "gerekce": o.gerekce,
+                    "kaynak": o.kanit_url,
+                }
+                for o in r.oneriler
+            ],
+        }
+    return {"olusturuldu": datetime.now(UTC).isoformat(), "kayitlar": kayitlar}
+
+
 # ------------------------------------------------------------- inceleme
 
 YONETIM_ADRESI = "https://stajimvar.com/yonetim/firsatlar/{id}/duzenle"
@@ -499,6 +543,10 @@ def main() -> None:
     ayrist.add_argument("--out", default="", help="JSON raporun yazılacağı dosya")
     ayrist.add_argument("--kok", default=".", help="depo kökü (bolumler.ts için)")
     ayrist.add_argument(
+        "--oneri-veri", default="",
+        help="yonetici ekraninin okudugu kompakt oneri dosyasi (src/data/burs-onerileri.json)",
+    )
+    ayrist.add_argument(
         "--inceleme", default="",
         help="insan için okunabilir inceleme sayfası (markdown) yazılacak dosya",
     )
@@ -547,6 +595,10 @@ def main() -> None:
         "toplam_oneri": sum(alan_sayimi.values()),
         "kayitlar": [asdict(r) for r in raporlar],
     }
+
+    if secim.oneri_veri:
+        with open(secim.oneri_veri, "w", encoding="utf-8") as dosya:
+            json.dump(oneri_verisi(raporlar), dosya, ensure_ascii=False, indent=2)
 
     if secim.inceleme:
         with open(secim.inceleme, "w", encoding="utf-8") as dosya:

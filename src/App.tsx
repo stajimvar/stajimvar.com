@@ -49,6 +49,7 @@ import { basvuruSonucMesaji } from './lib/basvuru-yolu.mjs';
 import { basvuruKopyasi } from './lib/basvuru-kopyasi.mjs';
 import { aramaTeriminiOku, aramaAdresi } from './lib/arama-url.mjs';
 import { AdminOpportunitiesView, AdminOpportunityCreate } from './components/AdminOpportunitiesView';
+import { BursDogrulamaMasasi } from './components/BursDogrulamaMasasi';
 import { AdminInstagramView } from './components/AdminInstagramView';
 import { KesfetPage } from './components/KesfetPage';
 import { KesfetDetailPage } from './components/KesfetDetailPage';
@@ -1083,6 +1084,21 @@ export default function App() {
     return <AdminRouteGate authenticated={Boolean(session)} isAdmin={isAdmin} onLogin={handleOpenLogin}>
       <AdminInstagramView onNavigate={navigate} />
     </AdminRouteGate>;
+  }
+
+  /*
+    Burs dogrulama masasi: 68 kaydin uygunluk kisitlarini kaynak okuyarak
+    isaretlemek icin tek ekran. Yetki kapisi sunucuda -- bu ekrani gormek
+    yetki vermiyor, karari security definer RPC yaziyor.
+  */
+  if (temizYol === '/yonetim/firsatlar/dogrulama') {
+    return (
+      <AdminRouteGate authenticated={isLoggedIn} isAdmin={isAdmin} onLogin={handleOpenLogin}>
+        <div className="min-h-screen bg-[#F9FAFB]">
+          <BursDogrulamaMasasi onNavigate={navigate} />
+        </div>
+      </AdminRouteGate>
+    );
   }
 
   if (temizYol === '/yonetim/firsatlar' || temizYol === '/yonetim/firsatlar/yeni' || /^\/yonetim\/firsatlar\/[^/]+\/duzenle$/.test(temizYol)) {

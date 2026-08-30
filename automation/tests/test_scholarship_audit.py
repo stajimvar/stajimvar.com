@@ -13,6 +13,7 @@ from datetime import date
 import pytest
 
 from automation.scholarship_audit import (
+    _baglam,
     _govde,
     _sadelestir,
     aylik_tutar_adaylari,
@@ -330,3 +331,23 @@ def test_uzaktaki_seviye_kelimesi_alinmiyor():
     seviyeler, _ = seviye_adaylari(duz, ham)
     assert "Doktora" not in seviyeler
     assert "Lisans" in seviyeler
+
+
+def test_kanit_html_varliklarini_cozuyor():
+    """Kanıt yönetici ekranında karar dayanağı; okunabilir olmalı.
+
+    Kaynak sayfalar Türkçe karakterleri sık sık `&uuml;` gibi HTML
+    varlıklarıyla veriyor. Ham hâliyle taşınan kanıt ekranda
+    "Lisans&uuml;st&uuml;" görünüyordu ve kimse ona bakıp karar veremez.
+    """
+    ham = "Burs " + "x" * 100 + " Lisans&uuml;st&uuml;   (tezli)\n\nprogram"
+    kanit = _baglam(ham, ham.index("Lisans&"))
+    assert "&uuml;" not in kanit
+    assert "Lisansüstü" in kanit
+    assert "  " not in kanit
+    assert "\n" not in kanit
+
+
+def test_kanit_kisa_kaliyor():
+    """Telif: kanıt sayfa kopyası değil, kısa bir bağlam."""
+    assert len(_baglam("a" * 1000, 500)) <= 220

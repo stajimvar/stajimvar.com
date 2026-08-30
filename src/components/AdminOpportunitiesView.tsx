@@ -41,10 +41,12 @@ const ListeAlani: React.FC<{
 const types = [['scholarship','Burs'],['kyk','KYK'],['international','Yurt dışı'],['competition','Yarışma'],['education','Eğitim'],['student_support','Öğrenci desteği'],['youth_program','Gençlik programı']];
 const asPayload=(f:any)=>({ ...f, slug:slugifyOpportunity(f.title), organization_name:f.organizationName, opportunity_type:f.opportunityType, source_url:f.sourceUrl, application_url:f.applicationUrl||null, short_description:f.shortDescription||null, application_start_at:f.applicationStartAt||null, application_deadline:f.applicationDeadline||null, minimum_gpa:f.minimumGpa||null, education_levels:normalizeStringList(f.educationLevels), eligible_departments:normalizeStringList(f.eligibleDepartments), eligible_class_years:normalizeStringList(f.eligibleClassYears), cities:normalizeStringList(f.cities), countries:normalizeStringList(f.countries), language_requirements:normalizeStringList(f.languageRequirements), required_documents:normalizeStringList(f.requiredDocuments) });
 
+/* Doğrulama masası ayrı bir ekran: 68 kaydı düzenleme formunda tek tek
+   gezmek yerine tek listede kaynak + öneri + üç seçenekli karar. */
 export const AdminOpportunitiesView:React.FC<{onNavigate:(path:string)=>void}> = ({onNavigate}) => {
  const [rows,setRows]=React.useState<any[]>([]); const [query,setQuery]=React.useState(''); const [state,setState]=React.useState<'loading'|'ready'|'error'>('loading'); const [message,setMessage]=React.useState(''); const load=React.useCallback(async()=>{setState('loading');try{const r=await fetchAdminOpportunities(0,query);setRows(r.rows);setState('ready')}catch(e:any){setMessage(e.message);setState('error')}},[query]); React.useEffect(()=>{void load()},[load]);
  const change=async(row:any,status:any)=>{try{await adminSetOpportunityStatus(row.id,row.updatedAt,status);setMessage('Durum güncellendi.');void load()}catch(e:any){setMessage(e.message)}};
- return <main className="max-w-6xl mx-auto p-4 sm:p-8 space-y-5"><div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between"><div><h1 className="text-2xl font-extrabold">Fırsat yönetimi</h1><p className="text-sm text-gray-600">Yalnızca yetkili yöneticiler kayıt oluşturabilir veya durum değiştirebilir.</p></div><button onClick={()=>onNavigate('/yonetim/firsatlar/yeni')} className="rounded-xl bg-blue-600 text-white font-bold px-4 py-2.5">Yeni fırsat</button></div><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Başlık veya kurum ara" className="w-full max-w-md rounded-xl border p-3" />{message&&<p role="status" className="text-sm text-red-700">{message}</p>}{state==='loading'?<p>Yükleniyor…</p>:state==='error'?<button onClick={load}>Tekrar dene</button>:<div className="overflow-x-auto rounded-2xl border bg-white"><table className="w-full min-w-[720px] text-sm"><thead><tr className="text-left bg-gray-50"><th className="p-3">Fırsat</th><th>Tür</th><th>Durum</th><th>Son tarih</th><th className="p-3">İşlem</th></tr></thead><tbody>{rows.map(row=><tr key={row.id} className="border-t"><td className="p-3"><b>{row.title}</b><br/><span className="text-gray-500">{row.organizationName}</span></td><td>{row.opportunityType}</td><td>{row.status}</td><td>{row.applicationDeadline?new Date(row.applicationDeadline).toLocaleDateString('tr-TR'):'—'}</td><td className="p-3 flex gap-2"><a href={`/firsatlar/${row.slug}`} target="_blank" rel="noreferrer">Önizle</a>{row.status!=='published'&&<button onClick={()=>change(row,'published')}>Yayınla</button>}{row.status==='published'&&<button onClick={()=>change(row,'draft')}>Taslağa al</button>}<button onClick={()=>change(row,'archived')}>Arşivle</button></td></tr>)}</tbody></table>{rows.length===0&&<p className="p-8 text-center text-gray-600">Henüz fırsat yok.</p>}</div>}</main>;
+ return <main className="max-w-6xl mx-auto p-4 sm:p-8 space-y-5"><div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between"><div><h1 className="text-2xl font-extrabold">Fırsat yönetimi</h1><p className="text-sm text-gray-600">Yalnızca yetkili yöneticiler kayıt oluşturabilir veya durum değiştirebilir.</p></div><div className="flex gap-2"><button onClick={()=>onNavigate('/yonetim/firsatlar/dogrulama')} className="rounded-xl border-2 border-blue-600 text-blue-700 font-bold px-4 py-2.5">Uygunluk masası</button><button onClick={()=>onNavigate('/yonetim/firsatlar/yeni')} className="rounded-xl bg-blue-600 text-white font-bold px-4 py-2.5">Yeni fırsat</button></div></div><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Başlık veya kurum ara" className="w-full max-w-md rounded-xl border p-3" />{message&&<p role="status" className="text-sm text-red-700">{message}</p>}{state==='loading'?<p>Yükleniyor…</p>:state==='error'?<button onClick={load}>Tekrar dene</button>:<div className="overflow-x-auto rounded-2xl border bg-white"><table className="w-full min-w-[720px] text-sm"><thead><tr className="text-left bg-gray-50"><th className="p-3">Fırsat</th><th>Tür</th><th>Durum</th><th>Son tarih</th><th className="p-3">İşlem</th></tr></thead><tbody>{rows.map(row=><tr key={row.id} className="border-t"><td className="p-3"><b>{row.title}</b><br/><span className="text-gray-500">{row.organizationName}</span></td><td>{row.opportunityType}</td><td>{row.status}</td><td>{row.applicationDeadline?new Date(row.applicationDeadline).toLocaleDateString('tr-TR'):'—'}</td><td className="p-3 flex gap-2"><a href={`/firsatlar/${row.slug}`} target="_blank" rel="noreferrer">Önizle</a>{row.status!=='published'&&<button onClick={()=>change(row,'published')}>Yayınla</button>}{row.status==='published'&&<button onClick={()=>change(row,'draft')}>Taslağa al</button>}<button onClick={()=>change(row,'archived')}>Arşivle</button></td></tr>)}</tbody></table>{rows.length===0&&<p className="p-8 text-center text-gray-600">Henüz fırsat yok.</p>}</div>}</main>;
 };
 
 /**
@@ -73,7 +75,15 @@ const TutarFormu:React.FC<{id:string; kayit:any; expected:string; onKaydedildi:(
   const [saving,setSaving]=React.useState(false);
   const set=(k:string,v:any)=>setF((x:any)=>({...x,[k]:v}));
 
+  /*
+    Sayı girildiyse sıklık şart: "2.250 ₺" tek başına aylık mı tek
+    seferlik mi söylemiyor. Kaynak sıklığı yazmıyorsa ifade olduğu gibi
+    açıklama alanına gider. Sunucu da aynı kuralı uyguluyor.
+  */
+  const sikliksizSayi = Boolean(String(f.amount_min).trim()) && !f.payment_period;
+
   const kaydet=async()=>{
+    if (sikliksizSayi) { setDurum('Sayısal tutar için ödeme sıklığı seç. Kaynak sıklığı söylemiyorsa sayı alanını boş bırakıp ifadeyi açıklama alanına yaz.'); return; }
     setSaving(true); setDurum(null);
     try {
       const yeni = await adminSetOpportunityAmount(id, expected, f);
@@ -114,7 +124,7 @@ const TutarFormu:React.FC<{id:string; kayit:any; expected:string; onKaydedildi:(
         </label>
         <label className="block text-sm font-semibold">Ödeme sıklığı
           <select value={f.payment_period} onChange={e=>set('payment_period',e.target.value)} className="mt-1 w-full rounded-xl border p-3">
-            <option value="">Belirtilmemiş</option>
+            <option value="">Seçilmedi</option>
             <option value="monthly">Aylık</option>
             <option value="once">Tek seferlik</option>
             <option value="yearly">Yıllık</option>
@@ -122,6 +132,8 @@ const TutarFormu:React.FC<{id:string; kayit:any; expected:string; onKaydedildi:(
           </select>
         </label>
       </div>
+
+      {sikliksizSayi&&<p className="text-xs font-semibold text-red-700">Sayısal tutar için ödeme sıklığı zorunlu. Kaynak sıklığı söylemiyorsa sayı alanını boş bırak, ifadeyi aşağıdaki açıklama alanına yaz.</p>}
 
       {alan('amount_period_label','Dönem etiketi (örn. 2026-2027 dönemi)')}
       {alan('amount_note','Sayıya sığmayan durum (örn. Eğitim ücretinin %50si)')}
