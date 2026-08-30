@@ -1,5 +1,5 @@
 import React from 'react';
-import { BadgeCheck, Lock, Plus, Send, ShieldCheck } from 'lucide-react';
+import { Archive, BadgeCheck, Lock, Pencil, Plus, Send, ShieldCheck, Trash2 } from 'lucide-react';
 import { SirketKabugu, type SirketSekmesi } from './SirketKabugu';
 import {
   ALAN,
@@ -21,6 +21,7 @@ import { IlanFormu } from './IlanFormu';
 import { AdayIzgarasi } from './AdayIzgarasi';
 import { SirketProfilFormu } from './SirketProfilFormu';
 import { GenelBakis } from './GenelBakis';
+import { ilanEylemleri } from '../lib/ilan-formu.mjs';
 import { KADEME, adayGorebilir, vknGecerli } from '../lib/sirket-kademe.mjs';
 import { kartVerisi } from '../lib/aday-kart.mjs';
 import {
@@ -28,6 +29,9 @@ import {
   basvuruDurumuDegistir,
   basvuruNotuKaydet,
   ilanDurumuDegistir,
+  ilanGuncelle,
+  ilanOku,
+  ilanSil,
   ilanKaydet,
   sirketBaglami,
   sirketBasvurulari,
@@ -196,6 +200,14 @@ export const SirketPaneli: React.FC<{
   }
 
   const yeniIlanEkrani = yol === '/sirket/ilan/yeni';
+  /*
+    DÜZENLEME AYNI FORMU KULLANIYOR
+
+    İlan formunu ikinci kez yazmak iki kopya demek: doğrulama kuralı ya da
+    yeni bir alan birinde değişip diğerinde unutulur. Aynı bileşen, dolu
+    başlangıç değerleriyle açılıyor; kaydetme yolu değişiyor.
+  */
+  const duzenlenenId = yol.match(/^\/sirket\/ilan\/([0-9a-f-]{36})\/duzenle$/)?.[1] ?? null;
 
   return (
     <SirketKabugu
@@ -204,13 +216,19 @@ export const SirketPaneli: React.FC<{
       onOgrenciyeDon={onOgrenciyeDon}
       durumRozeti={<DurumRozeti baglam={baglam} />}
     >
-      {yeniIlanEkrani ? (
+      {yeniIlanEkrani || duzenlenenId ? (
         <IlanFormu
           kademe={baglam.kademe}
           sirketAdi={baglam.ad}
           siteUrl={baglam.siteUrl}
           eposta={baglam.hrEmail}
+          duzenlenenId={duzenlenenId}
           onKaydet={async (satir) => {
+            if (duzenlenenId) {
+              await ilanGuncelle(duzenlenenId, satir);
+              await yukle();
+              return { id: duzenlenenId };
+            }
             const kayit = await ilanKaydet(satir, baglam.companyId!);
             await yukle();
             return kayit;
@@ -232,6 +250,17 @@ export const SirketPaneli: React.FC<{
           onNavigate={onNavigate}
           onDurum={async (id, d) => {
             await ilanDurumuDegistir(id, d);
+            await yukle();
+          }}
+          /*
+            İki ayrı sonuç, tek eylem: başvurusu olan ilan arşivleniyor
+            (veri duruyor), olmayan ilan siliniyor. Karar burada değil
+            veritabanında da korunuyor — listings_guard_delete başvurulu
+            bir ilanın silinmesini reddediyor.
+          */
+          onKaldir={async (id, arsivle) => {
+            if (arsivle) await ilanDurumuDegistir(id, 'archived');
+            else await ilanSil(id);
             await yukle();
           }}
         />
@@ -294,7 +323,17 @@ const Ilanlar: React.FC<{
   basvuruSayisi: number;
   onNavigate: (y: string) => void;
   onDurum: (id: string, d: 'published' | 'closed') => Promise<void>;
-}> = ({ baglam, ilanlar, basvuruSayisi, onNavigate, onDurum }) => {
+  onKaldir: (id: string, arsivle: boolean) => Promise<void>;
+}> = ({ baglam, ilanlar, basvuruSayisi, onNavigate, onDurum, onKaldir }) => {
+  /* Yanlışlıkla basmaya açık olmasın: kaldırma iki adımda. */
+  const [kaldirilacak, setKaldirilacak] = React.useState<{
+    id: string;
+    baslik: string;
+    basvuruSayisi: number;
+    arsivlenecek: boolean;
+  } | null>(null);
+  const [kaldiriliyor, setKaldiriliyor] = React.useState(false);
+  const [kaldirmaHatasi, setKaldirmaHatasi] = React.useState('');
   const acik = ilanlar.filter((i) => i.status === 'published').length;
   const taslak = ilanlar.filter((i) => i.status === 'draft').length;
   const kartAcik = adayGorebilir(baglam.kademe);
@@ -372,21 +411,26 @@ const Ilanlar: React.FC<{
           {ilanlar.map((i) => {
             const id = String(i.id);
             const yayinda = i.status === 'published';
+            const taslak = i.status === 'draft';
             const platformdan = i.application_method === 'internal';
+            const basvuruSayisi = Number(i.applicants_count ?? 0);
+            /* Kural tek yerde ve test altında: lib/ilan-formu.mjs. */
+            const eylem = ilanEylemleri(i);
+
             return (
               <li
                 key={id}
-                className="flex flex-wrap items-center gap-3 rounded-2xl border p-4"
+                className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border p-4"
                 style={kutuStil}
               >
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 basis-full sm:basis-auto">
                   <p className="truncate font-bold" style={{ color: SIRKET_METIN }}>
                     {String(i.title ?? '')}
                   </p>
                   <p className="truncate text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
                     {String(i.city ?? '')} ·{' '}
                     <span className="font-mono">
-                      {yayinda ? 'YAYINDA' : i.status === 'draft' ? 'TASLAK' : 'KAPALI'}
+                      {yayinda ? 'YAYINDA' : taslak ? 'TASLAK' : 'KAPALI'}
                     </span>
                     {' · '}
                     <span className="font-mono">#{id.slice(0, 8)}</span>
@@ -413,22 +457,142 @@ const Ilanlar: React.FC<{
                     className="shrink-0 font-mono text-xs"
                     style={{ color: SIRKET_METIN_IKINCIL }}
                   >
-                    {Number(i.applicants_count ?? 0)} başvuru
+                    {basvuruSayisi} başvuru
                   </span>
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => void onDurum(id, yayinda ? 'closed' : 'published')}
-                  className={`shrink-0 ${IKINCIL_DUGME}`}
-                  style={ikincilStil}
-                >
-                  {yayinda ? 'Kapat' : 'Yayınla'}
-                </button>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  {eylem.duzenlenebilir && (
+                    <button
+                      type="button"
+                      onClick={() => onNavigate(`/sirket/ilan/${id}/duzenle`)}
+                      className={IKINCIL_DUGME}
+                      style={ikincilStil}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Düzenle
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => void onDurum(id, yayinda ? 'closed' : 'published')}
+                    className={IKINCIL_DUGME}
+                    style={ikincilStil}
+                  >
+                    {eylem.durumEtiketi}
+                  </button>
+
+                  {eylem.kaldirilabilir && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setKaldirilacak({
+                          id,
+                          baslik: String(i.title ?? ''),
+                          basvuruSayisi,
+                          arsivlenecek: eylem.arsivlenecek,
+                        })
+                      }
+                      className={IKINCIL_DUGME}
+                      style={ikincilStil}
+                      title={eylem.arsivlenecek ? 'Listeden kaldır (arşivle)' : 'İlanı sil'}
+                    >
+                      {eylem.arsivlenecek ? (
+                        <Archive className="h-3.5 w-3.5" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      )}
+                      {eylem.arsivlenecek ? 'Arşivle' : 'Sil'}
+                    </button>
+                  )}
+                </div>
               </li>
             );
           })}
         </ul>
+      )}
+
+      {/*
+        ONAY — GERÇEK DAVRANIŞI SÖYLÜYOR
+
+        İki ayrı sonuç var ve metin hangisi olduğunu yazıyor: başvurusu
+        olan ilan arşivleniyor (veri duruyor), olmayan ilan gerçekten
+        siliniyor (geri alınamıyor). "Emin misiniz?" deyip ne olacağını
+        söylememek, kullanıcıyı kendi verisi hakkında karanlıkta bırakır.
+      */}
+      {kaldirilacak && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ilan-kaldir-baslik"
+          onClick={() => !kaldiriliyor && setKaldirilacak(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl border p-5"
+            style={kutuStil}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="ilan-kaldir-baslik" className="font-black" style={{ color: SIRKET_METIN }}>
+              {kaldirilacak.arsivlenecek ? 'İlanı arşivle' : 'İlanı sil'}
+            </h3>
+            <p className="mt-1 text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+              <b style={{ color: SIRKET_METIN }}>{kaldirilacak.baslik}</b>{' '}
+              {kaldirilacak.arsivlenecek ? (
+                <>
+                  ilanına {kaldirilacak.basvuruSayisi} başvuru gelmiş. İlan listenizden
+                  kalkacak ama <b style={{ color: SIRKET_METIN }}>başvurular korunacak</b> —
+                  adayların kendi başvuru geçmişi de olduğu gibi kalıyor.
+                </>
+              ) : (
+                <>
+                  ilanı kalıcı olarak silinecek. Bu ilana hiç başvuru gelmemiş, bu yüzden
+                  kaybolacak başka bir kayıt yok. <b style={{ color: SIRKET_METIN }}>Bu işlem
+                  geri alınamaz.</b>
+                </>
+              )}
+            </p>
+
+            {kaldirmaHatasi && (
+              <p className="mt-3 text-sm font-semibold text-rose-700">{kaldirmaHatasi}</p>
+            )}
+
+            <div className="mt-4 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setKaldirilacak(null)}
+                disabled={kaldiriliyor}
+                className={IKINCIL_DUGME}
+                style={ikincilStil}
+              >
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setKaldiriliyor(true);
+                  setKaldirmaHatasi('');
+                  void onKaldir(kaldirilacak.id, kaldirilacak.arsivlenecek)
+                    .then(() => setKaldirilacak(null))
+                    .catch((e: unknown) =>
+                      setKaldirmaHatasi(e instanceof Error ? e.message : 'İşlem tamamlanamadı.')
+                    )
+                    .finally(() => setKaldiriliyor(false));
+                }}
+                disabled={kaldiriliyor}
+                className={BIRINCIL_DUGME}
+                style={birincilStil}
+              >
+                {kaldiriliyor
+                  ? 'Uygulanıyor…'
+                  : kaldirilacak.arsivlenecek
+                    ? 'Arşivle'
+                    : 'Kalıcı olarak sil'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

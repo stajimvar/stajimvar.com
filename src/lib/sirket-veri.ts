@@ -114,6 +114,9 @@ export async function sirketIlanlari(companyId: string) {
         'posted_at, created_at, apply_url, application_deadline'
     )
     .eq('company_id', companyId)
+    /* Arşivlenen ilan listeden kalkıyor ama veri duruyor: başvurular ve
+       öğrencinin geçmişi olduğu gibi kalsın diye silinmiyor. */
+    .neq('status', 'archived')
     .order('created_at', { ascending: false });
   if (error) throw new Error('İlanlar yüklenemedi.');
   return data ?? [];
@@ -137,13 +140,82 @@ export async function ilanKaydet(satir: Record<string, unknown>, companyId: stri
   return data as { id: string };
 }
 
-export async function ilanDurumuDegistir(id: string, durum: 'published' | 'closed' | 'draft') {
+export async function ilanDurumuDegistir(
+  id: string,
+  durum: 'published' | 'closed' | 'draft' | 'archived'
+) {
   const db = await istemci();
   const { error } = await db
     .from('listings')
     .update({ status: durum, ...(durum === 'published' ? { posted_at: new Date().toISOString() } : {}) })
     .eq('id', id);
   if (error) throw new Error('İlan güncellenemedi.');
+}
+
+/** Düzenleme için tek ilanı okur. RLS zaten yalnızca kendi ilanını veriyor. */
+export async function ilanOku(id: string) {
+  const db = await istemci();
+  const { data, error } = await db
+    .from('listings')
+    .select(
+      'id, company_id, title, city, work_type, term, duration, is_paid, stipend_text, ' +
+        'description, application_deadline, status, origin, ' +
+        'mandatory_staj_accepted, voluntary_staj_accepted'
+    )
+    .eq('id', id)
+    .maybeSingle();
+  if (error || !data) throw new Error('İlan okunamadı.');
+  return data as Record<string, unknown>;
+}
+
+/**
+ * İlanı günceller.
+ *
+ * Gövde `ilanSatiri()` üretiyor; yani düzenleme ile oluşturma AYNI alan
+ * kümesini yazıyor. `company_id`, `origin` ve `status` burada
+ * gönderilmiyor: ilkinin ikisi zaten yalnızca INSERT'te yazılabiliyor,
+ * durum ise ayrı bir eylem (yayınla/kapat) ve düzenleme sırasında sessizce
+ * değişmemeli.
+ */
+export async function ilanGuncelle(id: string, satir: Record<string, unknown>) {
+  const db = await istemci();
+  const { company_id: _c, origin: _o, status: _s, posted_at: _p, ...alanlar } = satir;
+  const { error } = await db.from('listings').update(alanlar).eq('id', id);
+  if (error) {
+    const mesaj = (error as { message?: string }).message ?? '';
+    throw new Error(
+      /row-level security|permission denied/i.test(mesaj)
+        ? 'Bu ilanı düzenleme yetkin görünmüyor.'
+        : 'İlan güncellenemedi.'
+    );
+  }
+}
+
+/**
+ * İlanı KALICI siler.
+ *
+ * ÖLÇÜLDÜ: `applications_listing_id_fkey` ON DELETE CASCADE. Yani ilanı
+ * silmek, o ilana yapılmış HER BAŞVURUYU da siliyor — şirketin kaydını
+ * da, öğrencinin kendi başvuru geçmişini de. Bu yüzden bu fonksiyon
+ * yalnızca başvurusu OLMAYAN ilan için çağrılıyor; başvurusu olanda
+ * arşivleme kullanılıyor.
+ *
+ * Sayım burada da yapılıyor: çağıran tarafın kontrolüne güvenmek, araya
+ * giren bir başvuruyu kaçırmak demek.
+ */
+export async function ilanSil(id: string) {
+  const db = await istemci();
+  const { count, error: sayimHatasi } = await db
+    .from('applications')
+    .select('id', { count: 'exact', head: true })
+    .eq('listing_id', id);
+  if (sayimHatasi) throw new Error('Başvurular okunamadı; ilan silinmedi.');
+  if ((count ?? 0) > 0) {
+    throw new Error('Bu ilana başvuru gelmiş; silmek yerine arşivleyin.');
+  }
+
+  const { error } = await db.from('listings').delete().eq('id', id);
+  if (error) throw new Error('İlan silinemedi.');
 }
 
 /**

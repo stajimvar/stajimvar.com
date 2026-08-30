@@ -374,6 +374,64 @@ select pg_temp.bekle(
      from public.listings where title = 'Yeni Stajyer'),
   'Yeni ilan sistem alanlarinda guvenli varsayilanlarla basliyor');
 
+-- ------------------------- BAŞVURULU İLAN SİLİNEMEZ, ARŞİVLENİR
+--
+-- `applications_listing_id_fkey` ON DELETE CASCADE: ilanı silmek o ilana
+-- yapılmış her başvuruyu da siler — şirketin kaydını da, ÖĞRENCİNİN kendi
+-- başvuru geçmişini de. Öğrenci bir satırın neden kaybolduğunu hiçbir
+-- yerde göremezdi.
+--
+-- Kontrol arayüzde tutulamaz: doğrulanmamış şirket `applications`
+-- tablosunu okuyamıyor, orada sayım sıfır döner ve başvurulu ilan
+-- silinebilirdi.
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$delete from public.listings where id='22222222-aaaa-4000-8000-000000000001'$q$),
+  'A, basvuru almis kendi ilanini SILEMEZ');
+
+select pg_temp.bekle(
+  (select count(*) = 1 from public.applications
+    where id = '33333333-aaaa-4000-8000-000000000001'),
+  'Silme denemesinden sonra basvuru kaydi duruyor');
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.listings set status='archived'
+     where id='22222222-aaaa-4000-8000-000000000001'$q$),
+  'A, basvurulu ilani ARSIVLEYEBILIR');
+
+select pg_temp.bekle(
+  (select count(*) = 1 from public.applications
+    where id = '33333333-aaaa-4000-8000-000000000001'),
+  'Arsivlemeden sonra da basvuru kaydi duruyor');
+
+-- Başvurusu olmayan ilan gerçekten silinebiliyor: kilidi her şeye
+-- kapatan bir düzeltme de yanlış olurdu.
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$delete from public.listings where title = 'Yeni Stajyer'$q$),
+  'A, basvurusu olmayan ilani silebilir');
+
+-- ---------------------- ŞİRKET ÜYESİ KENDİ İLANINA BAŞVURAMAZ
+--
+-- Şirket üyesi öğrenci görünümüne geçip kendi ilanını görebiliyor; oradan
+-- başvurabilmesi kendi paneline sahte bir aday düşürüyordu.
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+update public.listings set status = 'published'
+ where id = '22222222-aaaa-4000-8000-000000000001';
+
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$insert into public.applications (listing_id, student_id, application_method,
+                                      email_delivery_status, created_via)
+     values ('22222222-aaaa-4000-8000-000000000001',
+             '00000000-0000-4000-8000-00000000000a',
+             'internal', 'not_required', 'web')$q$),
+  'A, KENDI sirketinin ilanina basvuramaz');
+
 -- ------------------------------ TARAMA OTOMASYONU KISITLANMADI
 --
 -- Kolon yetkisi daraltılırken asıl işini yapan rol kırılmamalı: kaynak

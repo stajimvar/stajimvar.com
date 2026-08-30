@@ -189,3 +189,88 @@ export function ilanSatiri(deger, { companyId, durum }) {
     posted_at: durum === 'published' ? new Date().toISOString() : null,
   };
 }
+
+/**
+ * `ilanSatiri`'nin TERSİ: veritabanı satırından form değeri.
+ *
+ * NEDEN GEREKİYOR
+ * ---------------
+ * Panelde ilan düzenleme yoktu; şirket bir yazım hatasını bile
+ * düzeltemiyordu. Düzenleme için formu ikinci kez yazmak yerine aynı
+ * form yeniden kullanılıyor — o zaman da kayıtlı satırı forma geri
+ * çevirecek bir yol gerekiyor.
+ *
+ * TÜRETİLEN ALANLAR
+ * -----------------
+ * Form birkaç alanı sıkıştırıyor: staj türü üç sütuna (mandatory,
+ * voluntary, term), ücret ikiye (is_paid, stipend_text). Geri çevirirken
+ * aynı kuralın tersi uygulanıyor; uydurma yok, okunamayan bir değer
+ * varsayılana düşüyor.
+ */
+export function ilanFormDegeri(satir) {
+  const metin = (x) => String(x ?? '').trim();
+  const donem = metin(satir?.term);
+
+  const tur = donem.startsWith('Summer')
+    ? 'yaz'
+    : donem.startsWith('Long-term')
+      ? 'uzun'
+      : satir?.mandatory_staj_accepted
+        ? 'zorunlu'
+        : 'gonullu';
+
+  const odeme = metin(satir?.stipend_text);
+  const ucret = !satir?.is_paid ? 'belirtilmeyecek' : odeme === 'Asgari staj ucreti' || odeme === 'Asgari staj ücreti' ? 'asgari' : 'net';
+
+  return {
+    unvan: metin(satir?.title),
+    sehir: metin(satir?.city),
+    calismaSekli: CALISMA_SEKILLERI.some((c) => c.id === satir?.work_type)
+      ? satir.work_type
+      : 'On-site',
+    tur,
+    sure: metin(satir?.duration),
+    ucret,
+    ucretTutari: ucret === 'net' ? odeme : '',
+    aciklama: metin(satir?.description),
+    /* `date` sütunu; form `yyyy-aa-gg` bekliyor. */
+    sonBasvuru: metin(satir?.application_deadline).slice(0, 10),
+  };
+}
+
+/**
+ * Bir ilanda hangi eylemler açık?
+ *
+ * Kural JSX içinde dağınık durursa test edilemez ve zamanla kayar; bu
+ * yüzden tek yerde ve saf.
+ *
+ * DÜZENLEME yalnızca şirketin KENDİ açtığı ilanda. Toplama hattından
+ * gelen ilan (origin = 'scraped') kaynağın kendi metnini taşıyor ve
+ * tarama onu her turda yeniden görüyor; elle düzeltme bir sonraki turda
+ * geri alınır ve şirket değişikliğinin neden kaybolduğunu anlamaz.
+ *
+ * KALDIRMA yalnızca yayında OLMAYAN ilanda. Yayındaki ilan önce
+ * kapatılıyor: liste bir anda boşalmasın ve öğrenci açık bir ilana
+ * tıklayıp boş sayfa görmesin.
+ *
+ * BAŞVURUSU OLAN İLAN SİLİNMİYOR, arşivleniyor. Ölçüldü:
+ * `applications_listing_id_fkey` ON DELETE CASCADE — silmek öğrencinin
+ * kendi başvuru geçmişini de siler. Kural veritabanında da duruyor
+ * (`listings_guard_delete`), yani arayüzü atlayan bir istek de düşüyor.
+ */
+export function ilanEylemleri(ilan) {
+  const durum = String(ilan?.status ?? '');
+  const kaynak = String(ilan?.origin ?? '');
+  const basvuru = Number(ilan?.applicants_count ?? 0);
+
+  const yayinda = durum === 'published';
+  const kendiIlani = kaynak === 'employer_posted' || kaynak === 'internal';
+
+  return {
+    duzenlenebilir: kendiIlani,
+    /* Yayındaki ilan için "Kapat", diğerlerinde "Yayınla". */
+    durumEtiketi: yayinda ? 'Kapat' : 'Yayınla',
+    kaldirilabilir: !yayinda,
+    arsivlenecek: basvuru > 0,
+  };
+}

@@ -60,7 +60,18 @@ export const AdayCekmecesi: React.FC<{
   onKapat: () => void;
   onDurum: (durum: string) => void;
   onNot: (metin: string) => void;
-}> = ({ kart, kaydediliyor, onKapat, onDurum, onNot }) => {
+  /*
+    GÖMÜLÜ KİP — MASAÜSTÜNDE YAN PANEL
+
+    Aynı içerik iki yerde: dar ekranda üstten gelen çekmece, geniş
+    ekranda ızgaranın yanında duran panel. İki ayrı bileşen yazmak,
+    aday ayrıntısının iki farklı hâlini ayrı ayrı eskitirdi.
+
+    Gömülüyken portal, arka plan karartması ve `fixed` konumlama yok:
+    panel akışın içinde duruyor.
+  */
+  gomulu?: boolean;
+}> = ({ kart, kaydediliyor, onKapat, onDurum, onNot, gomulu }) => {
   const [ikinciAcik, setIkinciAcik] = React.useState(false);
   const [not, setNot] = React.useState('');
   const govde = React.useRef<HTMLDivElement | null>(null);
@@ -88,23 +99,20 @@ export const AdayCekmecesi: React.FC<{
 
   const kimlik = kimlikSatiri(kart);
 
-  return createPortal(
-    <div className="fixed inset-0 z-[120]">
-      <div
-        className="absolute inset-0"
-        style={{ background: 'rgba(28,20,16,.35)' }}
-        onClick={onKapat}
-        aria-hidden
-      />
-      <div
-        ref={govde}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Aday ayrıntısı"
-        tabIndex={-1}
-        className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col outline-none"
-        style={{ background: SIRKET_ZEMIN }}
-      >
+  const panel = (
+    <div
+      ref={govde}
+      role={gomulu ? 'region' : 'dialog'}
+      aria-modal={gomulu ? undefined : true}
+      aria-label="Aday ayrıntısı"
+      tabIndex={-1}
+      className={
+        gomulu
+          ? 'flex max-h-[calc(100vh-7rem)] flex-col overflow-hidden rounded-2xl border outline-none'
+          : 'absolute inset-y-0 right-0 flex w-full max-w-md flex-col outline-none'
+      }
+      style={{ background: SIRKET_ZEMIN, borderColor: gomulu ? SIRKET_KENAR : undefined }}
+    >
         <div
           className="flex items-start gap-3 border-b p-4"
           style={{ background: SIRKET_YUZEY, borderColor: SIRKET_KENAR }}
@@ -350,7 +358,20 @@ export const AdayCekmecesi: React.FC<{
             </div>
           )}
         </div>
-      </div>
+    </div>
+  );
+
+  if (gomulu) return panel;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[120]">
+      <div
+        className="absolute inset-0"
+        style={{ background: 'rgba(28,20,16,.35)' }}
+        onClick={onKapat}
+        aria-hidden
+      />
+      {panel}
     </div>,
     document.body
   );

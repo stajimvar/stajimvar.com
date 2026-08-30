@@ -7,11 +7,13 @@ import {
   SABLONLAR,
   STAJ_TURLERI,
   UCRET_SECENEKLERI,
+  ilanFormDegeri,
   ilanGecerli,
   ilanSatiri,
   ilanSorunlari,
 } from '../lib/ilan-formu.mjs';
 import { ilanBaslangicDurumu, ilanBayraklari } from '../lib/sirket-kademe.mjs';
+import { ilanOku } from '../lib/sirket-veri';
 import {
   ALAN,
   BIRINCIL_DUGME,
@@ -112,13 +114,44 @@ export const IlanFormu: React.FC<{
   eposta?: string | null;
   onKaydet: (satir: Record<string, unknown>) => Promise<{ id: string } | null>;
   onIptal: () => void;
-}> = ({ kademe, sirketAdi, siteUrl, eposta, onKaydet, onIptal }) => {
+  /*
+    Doluysa DÜZENLEME kipi: form aynı, kaydetme yolu farklı. Ayrı bir
+    düzenleme bileşeni yazmak iki kopya demek olurdu — doğrulama kuralı
+    ya da yeni bir alan birinde değişip diğerinde unutulurdu.
+  */
+  duzenlenenId?: string | null;
+}> = ({ kademe, sirketAdi, siteUrl, eposta, onKaydet, onIptal, duzenlenenId }) => {
   const [deger, setDeger] = React.useState<IlanFormDegeri>(BOS);
+  const [yukleniyor, setYukleniyor] = React.useState(Boolean(duzenlenenId));
   const [gonderildi, setGonderildi] = React.useState(false);
   const [durum, setDurum] = React.useState<'form' | 'kaydediliyor' | 'bitti' | 'hata'>('form');
   const [hata, setHata] = React.useState('');
   const [sonuc, setSonuc] = React.useState<{ id: string; yayinda: boolean } | null>(null);
   const [kopyalandi, setKopyalandi] = React.useState(false);
+
+  /* Düzenlemede kayıtlı satır forma çevriliyor (ilanFormDegeri,
+     ilanSatiri'nin tersi). Okunamazsa form boş açılmıyor: hata yazıyor,
+     yoksa kullanıcı var olan ilanı boş sanıp üzerine yazardı. */
+  React.useEffect(() => {
+    if (!duzenlenenId) return;
+    let iptal = false;
+    setYukleniyor(true);
+    void ilanOku(duzenlenenId)
+      .then((satir) => {
+        if (iptal) return;
+        setDeger(ilanFormDegeri(satir));
+        setYukleniyor(false);
+      })
+      .catch((e: unknown) => {
+        if (iptal) return;
+        setHata(e instanceof Error ? e.message : 'İlan okunamadı.');
+        setDurum('hata');
+        setYukleniyor(false);
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [duzenlenenId]);
 
   const yaz = (alan: keyof IlanFormDegeri) => (v: string) =>
     setDeger((o) => ({ ...o, [alan]: v }));
@@ -140,6 +173,9 @@ export const IlanFormu: React.FC<{
     setDurum('kaydediliyor');
     setHata('');
     try {
+      /* Düzenlemede durum DEĞİŞMİYOR: yayınla/kapat ayrı bir eylem ve
+         bir yazım hatasını düzeltmek ilanı sessizce yayına almamalı.
+         `ilanGuncelle` zaten status ve posted_at alanlarını düşürüyor. */
       const satir = ilanSatiri(deger, { companyId: '', durum: baslangicDurumu });
       const kayit = await onKaydet(satir);
       if (!kayit) throw new Error('İlan kaydedilemedi.');
@@ -202,14 +238,39 @@ export const IlanFormu: React.FC<{
     );
   }
 
+  /* Düzenlemede kayıtlı değerler gelene kadar boş form çizilmiyor:
+     kullanıcı bir an boş alanlar görüp "ilan silinmiş" sanmasın. */
+  if (yukleniyor) {
+    return (
+      <div className="space-y-5">
+        <span className="block h-8 w-48 animate-pulse rounded" style={{ background: SIRKET_ROZET }} />
+        <div className="space-y-3 rounded-2xl border p-4 sm:p-6" style={kutuStil}>
+          {[0, 1, 2, 3].map((i) => (
+            <span
+              key={i}
+              className="block h-11 w-full animate-pulse rounded-xl"
+              style={{ background: SIRKET_ROZET }}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       <div className="space-y-1">
         <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
-          Yeni ilan
+          {duzenlenenId ? 'İlanı düzenle' : 'Yeni ilan'}
         </h1>
         <p className="text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-          {sirketAdi} · {yayindaBaslar ? 'Yayınla dediğinde canlıya çıkar' : 'Yayınla dediğinde incelemeye gider'}
+          {sirketAdi} ·{' '}
+          {duzenlenenId
+            ? /* Düzenleme durumu değiştirmiyor; yayınla/kapat ayrı eylem. */
+              'Değişiklikler kaydedilir; ilanın yayın durumu aynı kalır'
+            : yayindaBaslar
+              ? 'Yayınla dediğinde canlıya çıkar'
+              : 'Yayınla dediğinde incelemeye gider'}
         </p>
       </div>
 
@@ -377,9 +438,11 @@ export const IlanFormu: React.FC<{
         >
           {durum === 'kaydediliyor'
             ? 'Kaydediliyor…'
-            : yayindaBaslar
-              ? 'Yayınla'
-              : 'İncelemeye gönder'}
+            : duzenlenenId
+              ? 'Değişiklikleri kaydet'
+              : yayindaBaslar
+                ? 'Yayınla'
+                : 'İncelemeye gönder'}
         </button>
         <button
           type="button"
