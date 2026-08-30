@@ -21,6 +21,16 @@ async function istemci() {
   return supabase as unknown as {
     from: (t: string) => any;
     rpc: (ad: string, arg?: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
+    storage: {
+      from: (kova: string) => {
+        upload: (
+          yol: string,
+          dosya: File,
+          secenek?: { upsert?: boolean; contentType?: string }
+        ) => Promise<{ error: { message: string } | null }>;
+        getPublicUrl: (yol: string) => { data: { publicUrl: string } };
+      };
+    };
   };
 }
 
@@ -292,6 +302,52 @@ export async function sirketProfiliOku(companyId: string): Promise<SirketProfilD
     description: data?.description ?? '',
     hrEmail: data?.hr_email ?? '',
   };
+}
+
+/**
+ * Şirket logosunu yükler ve herkese açık adresini döndürür.
+ *
+ * GERÇEK ALTYAPI, YENİ ALTYAPI DEĞİL
+ * ----------------------------------
+ * `logos` kovası ve yükleme politikası zaten var; öğrenci avatarı da
+ * aynı yoldan yükleniyor. Burada yeni bir sistem kurulmuyor, var olanı
+ * şirket tarafına bağlıyoruz.
+ *
+ * KLASÖR ADI KULLANICI KİMLİĞİ OLMAK ZORUNDA
+ * ------------------------------------------
+ * Depolama politikası `(storage.foldername(name))[1] = auth.uid()` şartı
+ * koyuyor. Dosya adına şirket kimliği yazılıyor ki aynı kişi birden çok
+ * şirkete üyeyse logolar birbirini ezmesin.
+ *
+ * Sınırlar kovanın kendi sınırları: 2 MB ve PNG/JPEG/WEBP. Burada da
+ * kontrol ediliyor çünkü kovadan dönen hata kullanıcıya bir şey
+ * anlatmıyor.
+ */
+export async function sirketLogosuYukle(
+  companyId: string,
+  userId: string,
+  file: File
+): Promise<string> {
+  const izinli = ['image/png', 'image/jpeg', 'image/webp'];
+  if (!izinli.includes(file.type)) {
+    throw new Error('Yalnızca PNG, JPEG veya WEBP yükleyebilirsiniz.');
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    throw new Error('Logo en fazla 2 MB olabilir.');
+  }
+
+  const db = await istemci();
+  const uzanti = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+  const yol = `${userId}/${companyId}.${uzanti}`;
+
+  const { error } = await db.storage
+    .from('logos')
+    .upload(yol, file, { upsert: true, contentType: file.type });
+  if (error) throw new Error(`Logo yüklenemedi: ${error.message}`);
+
+  const { data } = db.storage.from('logos').getPublicUrl(yol);
+  /* Tarayıcı eski logoyu önbellekten göstermesin. */
+  return `${data.publicUrl}?v=${Date.now()}`;
 }
 
 export async function sirketProfiliKaydet(companyId: string, deger: SirketProfilDegeri) {

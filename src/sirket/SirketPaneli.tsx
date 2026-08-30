@@ -255,7 +255,7 @@ export const SirketPaneli: React.FC<{
           <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
             {baglam.ad || 'Şirket'}
           </h1>
-          <SirketProfilFormu baglam={baglam} onKaydedildi={yukle} />
+          <SirketProfilFormu baglam={baglam} userId={userId} onKaydedildi={yukle} />
         </div>
       )}
     </SirketKabugu>

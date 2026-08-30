@@ -3,6 +3,7 @@ import { SirketKabugu } from '../sirket/SirketKabugu';
 import { IlanFormu } from '../sirket/IlanFormu';
 import { AdayIzgarasi } from '../sirket/AdayIzgarasi';
 import { GenelBakis } from '../sirket/GenelBakis';
+import { SirketProfilFormu } from '../sirket/SirketProfilFormu';
 import { SIRKET_KENAR, SIRKET_METIN, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
 import { KADEME } from '../lib/sirket-kademe.mjs';
 import { kartVerisi } from '../lib/aday-kart.mjs';
@@ -88,7 +89,7 @@ const ORNEK_BASVURULAR = [
 
 export const SirketPanelDevFixture: React.FC = () => {
   const [kademe, setKademe] = React.useState<number>(KADEME.ILAN_VEREN);
-  const [ekran, setEkran] = React.useState<'genel' | 'form' | 'adaylar'>('genel');
+  const [ekran, setEkran] = React.useState<'genel' | 'form' | 'adaylar' | 'profil'>('genel');
 
   const kartlar = React.useMemo(
     () => ORNEK_BASVURULAR.map((s) => kartVerisi(s, { yetenekler: [] })),
@@ -119,7 +120,9 @@ export const SirketPanelDevFixture: React.FC = () => {
           type="button"
           id="dev-ekran"
           onClick={() =>
-            setEkran((e) => (e === 'genel' ? 'form' : e === 'form' ? 'adaylar' : 'genel'))
+            setEkran((e) =>
+              e === 'genel' ? 'form' : e === 'form' ? 'adaylar' : e === 'adaylar' ? 'profil' : 'genel'
+            )
           }
           className="rounded-lg border px-2 py-1 font-bold"
         >
@@ -128,7 +131,15 @@ export const SirketPanelDevFixture: React.FC = () => {
       </div>
 
       <SirketKabugu
-        secili={ekran === 'adaylar' ? 'basvuranlar' : ekran === 'genel' ? 'genel' : 'ilanlar'}
+        secili={
+          ekran === 'adaylar'
+            ? 'basvuranlar'
+            : ekran === 'genel'
+              ? 'genel'
+              : ekran === 'profil'
+                ? 'sirket'
+                : 'ilanlar'
+        }
         onNavigate={() => undefined}
         onOgrenciyeDon={() => undefined}
         durumRozeti={
@@ -162,6 +173,26 @@ export const SirketPanelDevFixture: React.FC = () => {
             ]}
             basvurular={kartlar}
             onNavigate={() => undefined}
+          />
+        ) : ekran === 'profil' ? (
+          /*
+            Şirket profili: veri okuması Supabase'e gidiyor ve fixture'da
+            oturum yok, o yüzden ekran boş değerlerle çiziliyor. Amaç
+            yerleşim, hiyerarşi ve tema sızıntısını görmek.
+          */
+          <SirketProfilFormu
+            baglam={{
+              companyId: 'test',
+              ad: 'Örnek Teknoloji A.Ş.',
+              slug: 'ornek',
+              siteUrl: 'https://ornek.com',
+              hrEmail: 'ik@ornek.com',
+              vkn: null,
+              dogrulandi: kademe === KADEME.DOGRULANMIS,
+              kademe,
+            }}
+            userId="00000000-0000-4000-8000-000000000001"
+            onKaydedildi={() => undefined}
           />
         ) : ekran === 'form' ? (
           <IlanFormu
