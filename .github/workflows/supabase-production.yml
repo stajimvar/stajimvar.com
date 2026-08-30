@@ -198,7 +198,6 @@ jobs:
           if [ "$hata" -gt 0 ]; then
             echo "::warning::$hata onarım çağrısı başarısız oldu; kapı raporuna bak."
           fi
-          fi
 
       - name: Remote/local migration geçmişini doğrula
         run: |
