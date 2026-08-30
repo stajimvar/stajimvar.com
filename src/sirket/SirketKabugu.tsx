@@ -1,5 +1,5 @@
 import React from 'react';
-import { Briefcase, Building2, GraduationCap, Users } from 'lucide-react';
+import { Briefcase, Building2, GraduationCap, LayoutGrid, Plus, Users } from 'lucide-react';
 import {
   SIRKET_KENAR,
   SIRKET_METIN,
@@ -31,9 +31,10 @@ import {
  * hesap menüsünün işi.
  */
 
-export type SirketSekmesi = 'ilanlar' | 'basvuranlar' | 'sirket';
+export type SirketSekmesi = 'genel' | 'ilanlar' | 'basvuranlar' | 'sirket';
 
 const SEKMELER: { id: SirketSekmesi; etiket: string; ikon: React.ReactNode; yol: string }[] = [
+  { id: 'genel', etiket: 'Genel', ikon: <LayoutGrid className="h-5 w-5" />, yol: '/sirket' },
   { id: 'ilanlar', etiket: 'İlanlar', ikon: <Briefcase className="h-5 w-5" />, yol: '/sirket/ilanlar' },
   { id: 'basvuranlar', etiket: 'Başvuranlar', ikon: <Users className="h-5 w-5" />, yol: '/sirket/basvuranlar' },
   { id: 'sirket', etiket: 'Şirket', ikon: <Building2 className="h-5 w-5" />, yol: '/sirket/profil' },
@@ -104,7 +105,27 @@ export const SirketKabugu: React.FC<{
           </button>
         </nav>
 
-        {durumRozeti && <span className="ml-auto sm:ml-2">{durumRozeti}</span>}
+        {durumRozeti && <span className="ml-auto hidden sm:inline-flex sm:ml-2">{durumRozeti}</span>}
+
+        {/*
+          ANA EYLEM HER EKRANDA
+
+          "+ Yeni ilan" yalnizca Ilanlar sekmesindeydi; Basvuranlar veya
+          Sirket sekmesindeyken ilan acmak icin once sekme degistirmek
+          gerekiyordu. Panelin tek asil isi bu, her zaman elin altinda
+          olmali.
+        */}
+        <button
+          type="button"
+          onClick={() => onNavigate('/sirket/ilan/yeni')}
+          aria-label="Yeni ilan oluştur"
+          className="ml-auto inline-flex h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-black transition-colors sm:ml-2"
+          style={{ background: SIRKET_VURGU, color: SIRKET_METIN }}
+        >
+          <Plus className="h-4 w-4" />
+          {/* Dar ekranda yalnızca ikon; dokunma hedefi yine 44px. */}
+          <span className="hidden sm:inline">Yeni ilan</span>
+        </button>
       </div>
     </header>
 

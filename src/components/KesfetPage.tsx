@@ -92,7 +92,7 @@ const EventCard: React.FC<{
       )}
       <button
         onClick={() => onNavigate(`/kesfet/${e.slug}`)}
-        className="text-sm font-bold text-blue-700"
+        className="inline-flex min-h-11 items-center text-sm font-bold text-blue-700"
       >
         Detayları gör →
       </button>

@@ -424,6 +424,19 @@ export const Header: React.FC<HeaderProps> = ({
   const rehberdeMi = /^\/(rehber|bolum|bolumler|araclar|isveren)(\/|$)/.test(bulunulanYol);
   const firsatlardaMi = /^\/(firsatlar|burslar|kyk|yurtdisi-firsatlari|yarismalar|firsat-takvimi|bana-uygun|kaydedilen-firsatlar)(\/|$)/.test(bulunulanYol);
   const kesfetteMi = /^\/kesfet(\/|$)/.test(bulunulanYol);
+  /*
+    ARAMA BAĞLAMI
+
+    Üstteki kutu yalnızca STAJ İLANLARINDA arıyor: odaklanınca sekmeyi
+    "internships"e çeviriyor. Yer tutucusu "Pozisyon, şirket veya burs
+    ara" diyordu — burs yazan biri ilan listesine düşüyor ve hiçbir şey
+    bulamıyordu.
+
+    Burslar sayfasının kendi araması var ve o gerçekten bursları arıyor;
+    orada üstteki kutu hiç çizilmiyor, yoksa aynı ekranda iki arama
+    kutusu farklı şeyleri arardı.
+  */
+  const burslardaMi = /^\/burslar(\/|$)/.test(bulunulanYol);
 
   /*
     Kurumsal ve yasal sayfalar üçünden hiçbiri değil.
@@ -737,7 +750,7 @@ export const Header: React.FC<HeaderProps> = ({
             Yalnızca lg ve üstü: mobilde burada yer yok, orada kutu ilan
             listesinin başında duruyor.
           */}
-          {onSearchChange && userRole === 'student' && activeTab !== 'company-portal' && (
+          {onSearchChange && !burslardaMi && userRole === 'student' && activeTab !== 'company-portal' && (
             <div className="hidden lg:block flex-1 min-w-0 max-w-xl mx-4">
               <div className="relative">
                 <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -768,14 +781,14 @@ export const Header: React.FC<HeaderProps> = ({
                       ? 'Rehberlerde ara'
                       : kesfetteMi
                         ? 'Etkinlik, şehir veya mekân ara'
-                        : 'Pozisyon, şirket veya burs ara'
+                        : 'Pozisyon veya şirket ara'
                   }
                   aria-label={
                     rehberSayfasindaMi
                       ? 'Rehberlerde ara'
                       : kesfetteMi
                         ? 'Etkinlik ara'
-                        : 'İlan veya burs ara'
+                        : 'Staj ilanlarında ara'
                   }
                   className="w-full pl-10 pr-3 py-2.5 rounded-2xl border border-gray-200 bg-gray-50/80 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-600 focus:bg-white transition-colors"
                 />
@@ -832,7 +845,7 @@ export const Header: React.FC<HeaderProps> = ({
                       onClick={() => onOpenEmployer?.()}
                       className="px-3 sm:px-4.5 py-1.5 rounded-full text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-xs cursor-pointer whitespace-nowrap shrink-0"
                     >
-                      Ücretsiz İlan Ver
+                      Ücretsiz ilan ver
                     </button>
                   </>
                 ) : (
@@ -842,7 +855,7 @@ export const Header: React.FC<HeaderProps> = ({
                       onClick={() => onOpenEmployer?.()}
                       className="hidden sm:inline-flex px-2.5 py-1.5 rounded-full text-xs font-bold text-gray-600 hover:text-blue-700 hover:bg-gray-100 transition-all cursor-pointer whitespace-nowrap"
                     >
-                      İlan ver
+                      İşverenler için
                     </button>
                     <button
                       id="header-login-btn"

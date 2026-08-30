@@ -2,6 +2,7 @@ import React from 'react';
 import { SirketKabugu } from '../sirket/SirketKabugu';
 import { IlanFormu } from '../sirket/IlanFormu';
 import { AdayIzgarasi } from '../sirket/AdayIzgarasi';
+import { GenelBakis } from '../sirket/GenelBakis';
 import { SIRKET_KENAR, SIRKET_METIN, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
 import { KADEME } from '../lib/sirket-kademe.mjs';
 import { kartVerisi } from '../lib/aday-kart.mjs';
@@ -87,7 +88,7 @@ const ORNEK_BASVURULAR = [
 
 export const SirketPanelDevFixture: React.FC = () => {
   const [kademe, setKademe] = React.useState<number>(KADEME.ILAN_VEREN);
-  const [ekran, setEkran] = React.useState<'form' | 'adaylar'>('form');
+  const [ekran, setEkran] = React.useState<'genel' | 'form' | 'adaylar'>('genel');
 
   const kartlar = React.useMemo(
     () => ORNEK_BASVURULAR.map((s) => kartVerisi(s, { yetenekler: [] })),
@@ -117,7 +118,9 @@ export const SirketPanelDevFixture: React.FC = () => {
         <button
           type="button"
           id="dev-ekran"
-          onClick={() => setEkran((e) => (e === 'form' ? 'adaylar' : 'form'))}
+          onClick={() =>
+            setEkran((e) => (e === 'genel' ? 'form' : e === 'form' ? 'adaylar' : 'genel'))
+          }
           className="rounded-lg border px-2 py-1 font-bold"
         >
           Ekran
@@ -125,7 +128,7 @@ export const SirketPanelDevFixture: React.FC = () => {
       </div>
 
       <SirketKabugu
-        secili={ekran === 'adaylar' ? 'basvuranlar' : 'ilanlar'}
+        secili={ekran === 'adaylar' ? 'basvuranlar' : ekran === 'genel' ? 'genel' : 'ilanlar'}
         onNavigate={() => undefined}
         onOgrenciyeDon={() => undefined}
         durumRozeti={
@@ -141,7 +144,26 @@ export const SirketPanelDevFixture: React.FC = () => {
           </span>
         }
       >
-        {ekran === 'form' ? (
+        {ekran === 'genel' ? (
+          <GenelBakis
+            baglam={{
+              companyId: 'test',
+              ad: 'Örnek Teknoloji A.Ş.',
+              slug: 'ornek',
+              siteUrl: 'https://ornek.com',
+              hrEmail: 'ik@ornek.com',
+              vkn: null,
+              dogrulandi: kademe === KADEME.DOGRULANMIS,
+              kademe,
+            }}
+            ilanlar={[
+              { id: '1', title: 'Yazılım Stajyeri', status: 'published', application_deadline: '2026-09-05' },
+              { id: '2', title: 'Pazarlama Stajyeri', status: 'draft' },
+            ]}
+            basvurular={kartlar}
+            onNavigate={() => undefined}
+          />
+        ) : ekran === 'form' ? (
           <IlanFormu
             kademe={kademe}
             sirketAdi="Örnek Teknoloji A.Ş."

@@ -1015,7 +1015,9 @@ async function main() {
     ['/araclar/siralama-tahmini', 'YKS sıralama tahmini | StajımVar', 'Puanın 2025 ÖSYM verilerine göre kaçıncı sıraya denk geliyor?', 'Sıralama tahmini'],
     ['/araclar/staj-ucreti-hesaplama', 'Staj ücreti hesaplama | StajımVar', '3308 sayılı kanuna göre stajyere en az ne kadar ödenmesi gerektiğini hesapla.', 'Staj ücreti hesaplama'],
     ['/araclar/staj-gunu-hesaplama', 'Staj günü hesaplama | StajımVar', '20 veya 30 iş günü staj hangi tarihte biter? Resmî tatiller düşülerek.', 'Staj günü hesaplama'],
-    ['/isveren', 'Stajyer nasıl alınır? İşveren rehberi | StajımVar', 'Sigorta kimde, ücret zorunlu mu, okulla hangi evrak imzalanır — sırayla.', 'Stajyer almak sandığınızdan kolay.'],
+    ['/isveren', 'İşverenler için | StajımVar', 'Staj ilanınızı oluşturun, şirket profilinizi güçlendirin ve doğru öğrencilere ulaşın. İlan vermek ücretsiz.', 'Doğru stajyeri daha kolay bulun.'],
+    /* Rehber kendi adresine taşındı; /isveren artık ürünün kapısı. */
+    ['/stajyer-nasil-alinir', 'Stajyer nasıl alınır? İşveren rehberi | StajımVar', 'Sigorta kimde, ücret zorunlu mu, okulla hangi evrak imzalanır — sırayla.', 'Stajyer almak sandığınızdan kolay.'],
     ['/staj-programlari', 'Büyük işverenlerde staj başvurusu | StajımVar', 'Aselsan, TUSAŞ, Turkcell, Tüpraş ve diğerleri stajı kendi kariyer sayfasından alıyor. Doğrulanmış başvuru adresleri.', 'Büyük işverenlerde staj'],
     ['/isveren/ilan-ver', 'Stajyer ilanı ver | StajımVar', 'Staj ilanı yayınlamak ücretsiz. Şirket sayfanızı sahiplenin, ilanlarınızı kendiniz girin.', 'Stajyer ilanı ver'],
     ['/universite-kariyer-merkezleri', 'Üniversite kariyer merkezleri | StajımVar', 'Staj formu, sigorta yazısı ve onay imzası kendi okulundan çıkıyor. Kariyer merkezlerinin doğrulanmış adresleri.', 'Üniversite kariyer merkezleri'],
@@ -1274,7 +1276,8 @@ async function main() {
     ['/araclar', 'Hesaplama araçları'],
     ['/firsatlar', 'Öğrenci fırsatları'],
     ['/kesfet', 'Öğrenci etkinlikleri'],
-    ['/isveren', 'İşveren rehberi'],
+    ['/isveren', 'İşverenler için'],
+    ['/stajyer-nasil-alinir', 'İşveren rehberi'],
     ['/hakkimizda', 'Hakkımızda'],
     ['/iletisim', 'İletişim'],
   ];

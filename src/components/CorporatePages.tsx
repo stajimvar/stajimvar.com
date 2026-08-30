@@ -75,10 +75,11 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
             inceleniyor ve <strong>robots kuralları kontrol ediliyor</strong>.
           </p>
           <p>
-            Kaynaklar saatte bir kontrol ediliyor. Yeni ilan çıktığında listeye giriyor;
-            kapanan ilanları şu anda elle kaldırıyoruz, otomatik düşürme henüz açık değil.
-            Bunu <strong>İlan kuralları</strong> sayfasında açıkça yazıyoruz çünkü bu, sitenin
-            bugünkü en zayıf noktası ve saklamanın anlamı yok.
+            Kaynaklar saatte bir kontrol ediliyor. Yeni ilan çıktığında listeye giriyor.
+            Kapanan ilanların otomatik düşürülmesi şu anda <strong>tek bir kaynakta</strong>
+            açık; kalan kaynaklarda kapanan ilanları elle kaldırıyoruz. Kapsamı adım adım
+            genişletiyoruz. Bunu <strong>İlan kuralları</strong> sayfasında da açıkça
+            yazıyoruz çünkü bu, sitenin bugünkü en zayıf noktası ve saklamanın anlamı yok.
           </p>
         </S>
 

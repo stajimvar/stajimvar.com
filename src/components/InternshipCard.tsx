@@ -415,7 +415,8 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           <button
             id={`view-details-btn-${listing.id}`}
             onClick={onViewDetails}
-            className="px-2 py-1.5 text-xs font-semibold text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
+            /* min-h-11: telefonda dokunma hedefi 44px altına düşmesin. */
+            className="inline-flex min-h-11 items-center px-2 text-xs font-semibold text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
           >
             Detaylar
           </button>

@@ -356,7 +356,7 @@ export const BurslarKesfetPage: React.FC<{
                     <button
                       type="button"
                       onClick={() => bolumuAc(bolum.id, set)}
-                      className="cursor-pointer text-sm font-bold text-blue-700 hover:underline"
+                      className="inline-flex min-h-11 cursor-pointer items-center px-1 text-sm font-bold text-blue-700 hover:underline"
                     >
                       Tümünü gör →
                     </button>

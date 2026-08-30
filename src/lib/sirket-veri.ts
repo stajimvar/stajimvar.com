@@ -99,7 +99,10 @@ export async function sirketIlanlari(companyId: string) {
   const db = await istemci();
   const { data, error } = await db
     .from('listings')
-    .select('id, title, city, status, origin, applicants_count, posted_at, created_at, apply_url')
+    .select(
+      'id, title, city, status, origin, application_method, applicants_count, ' +
+        'posted_at, created_at, apply_url, application_deadline'
+    )
     .eq('company_id', companyId)
     .order('created_at', { ascending: false });
   if (error) throw new Error('İlanlar yüklenemedi.');
@@ -231,4 +234,80 @@ export async function basvuruNotuKaydet(id: string, metin: string) {
     .update({ company_feedback: metin })
     .eq('id', id);
   if (error) throw new Error('Not kaydedilemedi.');
+}
+
+/* ------------------------------------------------------- şirket profili */
+
+/**
+ * Şirket profilinde düzenlenebilir alanlar.
+ *
+ * YALNIZCA VAR OLAN SÜTUNLAR
+ * --------------------------
+ * "Çalışma kültürü", "yan haklar", "departmanlar", "sosyal medya" gibi
+ * alanlar `companies` tablosunda YOK. Onları eklemek bir göç ve bir
+ * yönetim ekranı demek; buradaki form yalnızca bugün gerçekten
+ * kaydedilebilen yedi alanı soruyor. Boş bir alanı formda göstermek,
+ * doldurulunca kaybolan bir alan üretirdi.
+ */
+export interface SirketProfilDegeri {
+  logoUrl: string;
+  industry: string;
+  size: string;
+  location: string;
+  websiteUrl: string;
+  description: string;
+  hrEmail: string;
+}
+
+export const PROFIL_ALANLARI: (keyof SirketProfilDegeri)[] = [
+  'logoUrl',
+  'industry',
+  'size',
+  'location',
+  'websiteUrl',
+  'description',
+  'hrEmail',
+];
+
+/** Doldurulmuş alan oranı. Uydurma değil: yedi gerçek sütunu sayıyor. */
+export function profilTamamlanmaOrani(deger: Partial<SirketProfilDegeri>): number {
+  const dolu = PROFIL_ALANLARI.filter((alan) => String(deger[alan] ?? '').trim() !== '').length;
+  return Math.round((dolu / PROFIL_ALANLARI.length) * 100);
+}
+
+export async function sirketProfiliOku(companyId: string): Promise<SirketProfilDegeri> {
+  const db = await istemci();
+  const { data } = await db
+    .from('companies')
+    .select('logo_url, industry, size, location, website_url, description, hr_email')
+    .eq('id', companyId)
+    .maybeSingle();
+
+  return {
+    logoUrl: data?.logo_url ?? '',
+    industry: data?.industry ?? '',
+    size: data?.size ?? '',
+    location: data?.location ?? '',
+    websiteUrl: data?.website_url ?? '',
+    description: data?.description ?? '',
+    hrEmail: data?.hr_email ?? '',
+  };
+}
+
+export async function sirketProfiliKaydet(companyId: string, deger: SirketProfilDegeri) {
+  const db = await istemci();
+  const temiz = (x: string) => x.trim() || null;
+  const { error } = await db
+    .from('companies')
+    .update({
+      logo_url: temiz(deger.logoUrl),
+      industry: temiz(deger.industry),
+      size: temiz(deger.size),
+      location: temiz(deger.location),
+      website_url: temiz(deger.websiteUrl),
+      description: temiz(deger.description),
+      hr_email: temiz(deger.hrEmail),
+    })
+    .eq('id', companyId);
+  if (error) throw new Error('Şirket profili kaydedilemedi.');
 }

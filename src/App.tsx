@@ -42,6 +42,7 @@ const SIRKET_PANEL_YOLLARI = ['/sirket/ilanlar', '/sirket/basvuranlar', '/sirket
 import { KariyerMerkezleriSayfasi } from './components/KariyerMerkezleri';
 import { OpportunitiesPage } from './components/OpportunitiesPage';
 import { BurslarKesfetPage } from './components/BurslarKesfetPage';
+import { IsverenLanding } from './components/IsverenLanding';
 import { OpportunityDetailPage } from './components/OpportunityDetailPage';
 import { OpportunitiesHomeSection } from './components/OpportunitiesHomeSection';
 import { basvuruSonucMesaji } from './lib/basvuru-yolu.mjs';
@@ -475,6 +476,34 @@ export default function App() {
   const [dunyaGecisi, setDunyaGecisi] = useState<'sirkete' | 'ogrenciye' | null>(null);
   const dunyaEsigiGosterildi = useRef(false);
 
+  /*
+    SIRKET UYELIGI
+
+    Isveren sayfasindaki ana dugmenin ne diyecegini bu belirliyor: uye
+    olmayana "sirket hesabi olustur", uyeye "panele git". Yetki kapisi
+    DEGIL -- asil kapi RLS'te; burasi yalnizca dogru dugmeyi cizmek icin.
+  */
+  const [sirketUyesi, setSirketUyesi] = useState(false);
+  React.useEffect(() => {
+    const kullanici = session?.userId;
+    if (!kullanici) {
+      setSirketUyesi(false);
+      return;
+    }
+    let iptal = false;
+    import('./lib/sirket-veri')
+      .then((m) => m.sirketBaglami(kullanici, false))
+      .then((b) => {
+        if (!iptal) setSirketUyesi(Boolean(b.companyId));
+      })
+      .catch(() => {
+        /* Okunamazsa uye degil sayiliyor; kapi zaten arkada. */
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [session?.userId]);
+
   const sirketDunyasinaGec = () => {
     if (!dunyaEsigiGosterildi.current) {
       dunyaEsigiGosterildi.current = true;
@@ -900,10 +929,18 @@ export default function App() {
         götürecek yer yok: kayıt penceresini açıyor, yoksa düğme hiçbir şey
         yapmıyormuş gibi görünüyordu.
       */
+      /*
+        ISVEREN KAPISI TEK YERE BAKIYOR
+
+        Once dogrudan /isveren/ilan-ver'e (sahiplenme formuna) gidiyordu:
+        sirketi henuz tanimayan bir IK calisani, ne oldugunu anlamadan bir
+        arama kutusuyla karsilasiyordu. Artik once /isveren landing'i
+        aciliyor; sahiplenme oradan bir adim sonra.
+      */
       onOpenEmployer={() =>
         temizYol === '/isveren/ilan-ver'
           ? isverenGirisiAc('register', '/isveren/ilan-ver')
-          : navigate('/isveren/ilan-ver')
+          : navigate('/isveren')
       }
       onOpenEmployerLogin={AUTH_ENABLED ? (kip) => isverenGirisiAc(kip) : undefined}
       /*
@@ -1232,7 +1269,25 @@ export default function App() {
       />
     );
   }
-  if (temizYol === '/isveren' || temizYol === '/stajyer-nasil-alinir') {
+  /*
+    /isveren ARTIK ÜRÜNÜN KAPISI
+
+    Önce burada "stajyer nasıl alınır" rehberi vardı: içerik iyi ve arama
+    motoru için değerli, ama İK çalışanı "ne yapabiliyorum" sorusunun
+    cevabını üç ekran aşağıda buluyordu. Rehber /stajyer-nasil-alinir
+    adresinde duruyor (adres değişmedi, SEO korundu) ve landing'den
+    bağlantılı.
+  */
+  if (temizYol === '/isveren') {
+    return icerikSayfasi(
+      <IsverenLanding
+        onNavigate={navigate}
+        onIsverenGirisi={AUTH_ENABLED ? (kip) => isverenGirisiAc(kip, '/sirket/ilanlar') : undefined}
+        sirketUyesiMi={sirketUyesi}
+      />
+    );
+  }
+  if (temizYol === '/stajyer-nasil-alinir') {
     return icerikSayfasi(<EmployerGuide onBack={goHome} onNavigate={navigate} />);
   }
 
@@ -1291,13 +1346,13 @@ export default function App() {
     yetkiyi varmis gibi gostermek olurdu.
   */
   /*
-    Ciplak /sirket bir sayfa degil: ne panel ne de bir sirketin sayfasi.
-    Panelin ilk ekranina cevriliyor. Giris yoksa asagidaki Kapi 1 yine
-    isveren kapisini gosteriyor -- yonlendirme yetkiyi atlamiyor.
+    Ciplak /sirket panelin GENEL BAKIS ekrani. Giris yoksa asagidaki
+    Kapi 1 yine isveren kapisini gosteriyor -- yol yetkiyi atlamiyor.
   */
-  const sirketPanelYolu = temizYol === '/sirket' ? '/sirket/ilanlar' : temizYol;
+  const sirketPanelYolu = temizYol;
 
   if (
+    temizYol === '/sirket' ||
     SIRKET_PANEL_YOLLARI.some(
       (p) => sirketPanelYolu === p || sirketPanelYolu.startsWith(`${p}/`)
     )

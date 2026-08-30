@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, BadgeCheck, FileText, Lock, Plus, Send, ShieldCheck } from 'lucide-react';
+import { BadgeCheck, Lock, Plus, Send, ShieldCheck } from 'lucide-react';
 import { SirketKabugu, type SirketSekmesi } from './SirketKabugu';
 import {
   ALAN,
@@ -19,6 +19,8 @@ import {
 } from './renk';
 import { IlanFormu } from './IlanFormu';
 import { AdayIzgarasi } from './AdayIzgarasi';
+import { SirketProfilFormu } from './SirketProfilFormu';
+import { GenelBakis } from './GenelBakis';
 import { KADEME, adayGorebilir, vknGecerli } from '../lib/sirket-kademe.mjs';
 import { kartVerisi } from '../lib/aday-kart.mjs';
 import {
@@ -149,7 +151,9 @@ export const SirketPaneli: React.FC<{
     ? 'basvuranlar'
     : yol.startsWith('/sirket/profil')
       ? 'sirket'
-      : 'ilanlar';
+      : yol.startsWith('/sirket/ilan')
+        ? 'ilanlar'
+        : 'genel';
 
   if (durum === 'yukleniyor' || !baglam) {
     return (
@@ -213,6 +217,13 @@ export const SirketPaneli: React.FC<{
           }}
           onIptal={() => onNavigate('/sirket/ilanlar')}
         />
+      ) : sekme === 'genel' ? (
+        <GenelBakis
+          baglam={baglam}
+          ilanlar={ilanlar}
+          basvurular={basvurular}
+          onNavigate={onNavigate}
+        />
       ) : sekme === 'ilanlar' ? (
         <Ilanlar
           baglam={baglam}
@@ -240,7 +251,12 @@ export const SirketPaneli: React.FC<{
           }}
         />
       ) : (
-        <SirketProfili baglam={baglam} onKaydedildi={yukle} />
+        <div className="space-y-5">
+          <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
+            {baglam.ad || 'Şirket'}
+          </h1>
+          <SirketProfilFormu baglam={baglam} onKaydedildi={yukle} />
+        </div>
       )}
     </SirketKabugu>
   );
@@ -474,138 +490,6 @@ const Basvuranlar: React.FC<{
         onDurum={onDurum}
         onNot={onNot}
       />
-    </div>
-  );
-};
-
-/* -------------------------------------------------------- şirket profili */
-
-const SirketProfili: React.FC<{ baglam: SirketBaglami; onKaydedildi: () => void }> = ({
-  baglam,
-  onKaydedildi,
-}) => {
-  const [vkn, setVkn] = React.useState(baglam.vkn ?? '');
-  const [mersis, setMersis] = React.useState('');
-  const [durum, setDurum] = React.useState<'bos' | 'kaydediliyor' | 'tamam' | 'hata'>('bos');
-  const [hata, setHata] = React.useState('');
-
-  const bicimTamam = vknGecerli(vkn);
-
-  const gonder = async () => {
-    if (!bicimTamam || !baglam.companyId) return;
-    setDurum('kaydediliyor');
-    setHata('');
-    try {
-      await vknKaydet(baglam.companyId, vkn, mersis);
-      setDurum('tamam');
-      onKaydedildi();
-    } catch (e) {
-      setHata(e instanceof Error ? e.message : 'Kaydedilemedi.');
-      setDurum('hata');
-    }
-  };
-
-  return (
-    <div className="space-y-5">
-      <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
-        {baglam.ad || 'Şirket'}
-      </h1>
-
-      {baglam.dogrulandi ? (
-        <div className={KUTU} style={kutuStil}>
-          <p className="flex items-center gap-2 font-bold" style={{ color: SIRKET_VURGU_KOYU }}>
-            <BadgeCheck className="h-5 w-5" />
-            Doğrulanmış kurum
-          </p>
-          <p className="mt-1 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-            Başvuran kartları ve "StajımVar ile başvur" seçeneği açık.
-          </p>
-        </div>
-      ) : (
-        <div className={KUTU} style={kutuStil}>
-          <p className="font-bold" style={{ color: SIRKET_METIN }}>
-            Şirket doğrulama
-          </p>
-          <p className="mt-1 max-w-xl text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
-            Doğrulama başvuran kartlarını açıyor. Ticari unvan ve VKN'yi alıp bir insan kontrol
-            ediyor; genellikle bir iş günü sürüyor ve sonucu e-postayla yazıyoruz.
-          </p>
-
-          {/*
-            ŞAHIS ŞİRKETİNDEN TCKN İSTENMİYOR
-
-            Kimlik numarası staj ilanı açmak için gereken bir veri değil ve
-            toplandığı anda korunması gereken bir yük oluyor. VKN yeterli.
-          */}
-          <label className="mt-4 block max-w-xs">
-            <span
-              className="mb-1 block font-mono text-[11px] font-bold uppercase tracking-widest"
-              style={{ color: SIRKET_METIN_IKINCIL }}
-            >
-              VKN
-            </span>
-            <input
-              inputMode="numeric"
-              maxLength={10}
-              value={vkn}
-              onChange={(e) => setVkn(e.target.value.replace(/\D/g, ''))}
-              placeholder="10 haneli"
-              className={`${ALAN} font-mono`}
-              style={alanStil}
-            />
-            {vkn.length === 10 && !bicimTamam && (
-              <span className="mt-1 block text-[11px] font-semibold text-rose-700">
-                Bu numara doğrulamayı geçmiyor; bir hane hatalı olabilir.
-              </span>
-            )}
-          </label>
-
-          <label className="mt-3 block max-w-xs">
-            <span
-              className="mb-1 block font-mono text-[11px] font-bold uppercase tracking-widest"
-              style={{ color: SIRKET_METIN_IKINCIL }}
-            >
-              MERSİS (isteğe bağlı)
-            </span>
-            <input
-              value={mersis}
-              onChange={(e) => setMersis(e.target.value)}
-              className={`${ALAN} font-mono`}
-              style={alanStil}
-            />
-          </label>
-
-          <p
-            className="mt-3 flex max-w-xl items-start gap-2 text-[11px] leading-relaxed"
-            style={{ color: SIRKET_METIN_IKINCIL }}
-          >
-            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            VKN herkese açık bir bilgidir ve tek başına yetkili olduğunu kanıtlamaz; bu yüzden
-            kaydetmek doğrulama demek değil. VKN öğrenciye hiçbir yerde gösterilmiyor.
-          </p>
-
-          {durum === 'hata' && <p className="mt-2 text-sm font-semibold text-rose-700">{hata}</p>}
-          {durum === 'tamam' && (
-            <p
-              className="mt-2 flex items-center gap-1.5 text-sm font-semibold"
-              style={{ color: SIRKET_VURGU_KOYU }}
-            >
-              <FileText className="h-4 w-4" />
-              Kaydedildi. İnceleme kuyruğuna alındı.
-            </p>
-          )}
-
-          <button
-            type="button"
-            onClick={() => void gonder()}
-            disabled={!bicimTamam || durum === 'kaydediliyor'}
-            className={`mt-4 ${BIRINCIL_DUGME}`}
-            style={birincilStil}
-          >
-            {durum === 'kaydediliyor' ? 'Kaydediliyor…' : 'Doğrulamaya gönder'}
-          </button>
-        </div>
-      )}
     </div>
   );
 };
