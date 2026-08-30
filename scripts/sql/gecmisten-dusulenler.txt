@@ -69,3 +69,19 @@
 20260830120823
 20260830150855
 20260830151803
+
+# 30 Ağustos, ikinci ekleme: 20260830162634 ilan_kolon_yetkileri
+#
+# Bu satır eski soydan değil. Aynı göç hem üretime doğrudan uygulandı
+# (defterde uygulama anının damgasıyla göründü) hem de depoya
+# 20260906010000 sürümüyle yazıldı. İki kayıt aynı SQL'i anlatıyor ama
+# farklı sürüm taşıyor; kapı bunu "uzakta var, yerelde yok" görüp db
+# push'u durdurdu.
+#
+# DERS: bir göçü üretime doğrudan uygulamak, depo dosyasıyla eşleşmeyen
+# bir defter satırı üretiyor. Boru hattı artık çalıştığı için doğru yol
+# göçü yalnızca depoya yazıp `db push`'un uygulamasını beklemek.
+#
+# Depo dosyası idempotent (revoke + grant), yani db push tarafından
+# yeniden uygulanması üretimde hiçbir şeyi değiştirmiyor.
+20260830162634
