@@ -8,8 +8,33 @@ function cleanIdentifier(value) {
   return value.replaceAll('"', '').replace(/\s+/g, '');
 }
 
+/*
+  Karşılaştırma metni: YORUMSUZ ve boşluğu sadeleştirilmiş.
+
+  Postgres bir fonksiyonun gövdesini yazıldığı gibi saklıyor, yorumlar
+  dahil. Depo dosyalarında yorum bol; aynı SQL Supabase panelinden ya da
+  başka bir yoldan uygulandığında yorum çoğu kez kırpılmış oluyor. Ham
+  metni karşılaştırmak bu farkı "şema değişmiş" diye raporluyordu.
+
+  Yorum şemanın davranışı değil. Denetim aracının sahte fark üretmesi,
+  üzerine dağıtım kapısı kurulacaksa en kötü özellik: kapı gürültüye
+  bağlanır ve gerçek bir fark geldiğinde de es geçilir.
+
+  Yorumlar boşluk sadeleştirmesinden ÖNCE atılıyor: sonra atmak, satır
+  sonları kaybolduğu için `--`'den itibaren ifadenin kalanını da siler.
+*/
+function comparableStatement(statement) {
+  return statement
+    .split('\n')
+    .map((line) => line.replace(/--.*$/, ''))
+    .join('\n')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function add(map, category, name, statement) {
-  if (name) map[category].set(cleanIdentifier(name), statement.replace(/\s+/g, ' ').trim());
+  if (name) map[category].set(cleanIdentifier(name), comparableStatement(statement));
 }
 
 function publicObjectName(match, firstIndex) {
@@ -25,7 +50,21 @@ export function extractSchemaObjects(sql) {
 
   objectMatches(new RegExp(`^CREATE TABLE(?: IF NOT EXISTS)?\\s+${object}[\\s\\S]*?\\);`, 'gmi'), (match) => add(map, 'tables', publicObjectName(match, 1), match[0]));
   objectMatches(new RegExp(`^CREATE TYPE\\s+${object}\\s+AS ENUM[\\s\\S]*?\\);`, 'gmi'), (match) => add(map, 'types', publicObjectName(match, 1), match[0]));
-  objectMatches(new RegExp(`^CREATE(?: OR REPLACE)? FUNCTION\\s+${object}\\s*\\([\\s\\S]*?\\$\\$;`, 'gmi'), (match) => add(map, 'functions', publicObjectName(match, 1), match[0]));
+  /*
+    Gövde, AÇILDIĞI dolar etiketiyle bitmeli.
+
+    Önceki desen gövdenin `$$;` ile bittiğini varsayıyordu. `$_$` ile
+    yazılmış fonksiyonlar — gövdesinde regex geçenlerde yaygın, çünkü
+    `$$` çakışır — orada bitmiyor: eşleşme bir sonraki `$$;`'e kadar
+    uzayıp aradaki CREATE TABLE'ları da yutuyordu. Sonuç, o fonksiyonun
+    ve yuttuğu her nesnenin "değişmiş" görünmesiydi. Denetim aracının
+    sahte fark üretmesi, üzerine dağıtım kapısı kurulacaksa en kötü
+    özellik: kapıyı gürültüye bağlar.
+
+    Geri referans (\3) etiketi eşleştiriyor — `object` iki gruba
+    sahip olduğu için dolar etiketi üçüncü grup.
+  */
+  objectMatches(new RegExp(`^CREATE(?: OR REPLACE)? FUNCTION\\s+${object}\\s*\\([\\s\\S]*?AS (\\$[A-Za-z_0-9]*\\$)[\\s\\S]*?\\3;`, 'gmi'), (match) => add(map, 'functions', publicObjectName(match, 1), match[0]));
   objectMatches(new RegExp(`^ALTER TABLE(?: ONLY)?\\s+${object}[\\s\\S]*?ADD CONSTRAINT\\s+"?([^"\\s]+)"?[\\s\\S]*?;\\s*$`, 'gmi'), (match) => add(map, 'constraints', `${publicObjectName(match, 1)}.${match[3]}`, match[0]));
   objectMatches(new RegExp(`^CREATE(?: UNIQUE)? INDEX\\s+"?([^"\\s]+)"?[\\s\\S]*?;\\s*$`, 'gmi'), (match) => add(map, 'indexes', match[1], match[0]));
   objectMatches(new RegExp(`^CREATE POLICY\\s+"?([^"\\s]+)"?\\s+ON\\s+${object}[\\s\\S]*?;\\s*$`, 'gmi'), (match) => add(map, 'policies', `${publicObjectName(match, 2)}.${match[1]}`, match[0]));
