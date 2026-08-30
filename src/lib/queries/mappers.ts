@@ -223,9 +223,16 @@ export function toListingInsert(
       kazandırmadan. Kolon varsayılanından başlıyor.
     */
     status,
-    // Şirket portalından girilen ilan tanımı gereği platform içi başvuru alır.
     origin: 'internal' as const,
-    application_method: 'internal' as const,
+    /*
+      `application_method` BİLEREK GÖNDERİLMİYOR.
+
+      Şirketin açtığı ilanda başvuru yolu artık seçim değil: kolon
+      varsayılanı 'internal' ve `authenticated` rolünün o kolona yazma
+      yetkisi yok (20260906020000_ilan_basvuru_yolu_sabit). Gönderilseydi
+      istek "permission denied for column" ile düşerdi — hem de değeri
+      varsayılanla aynı olduğu için hiçbir şey kazandırmadan.
+    */
   };
 }
 

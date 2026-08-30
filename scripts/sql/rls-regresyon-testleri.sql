@@ -342,6 +342,33 @@ select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
              true, 500)$q$),
   'A, ilan acarken featured ve basvuru sayacini GONDEREMEZ');
 
+-- ------------------------- BAŞVURU YOLU ŞİRKETİN SEÇİMİ DEĞİL
+--
+-- "Kendi sitemizden" seçeneği kaldırıldı: şirketin açtığı ilan her zaman
+-- StajımVar üzerinden başvuru alıyor. Formdan seçeneği kaldırmak
+-- istemciyi değiştirir, kuralı değiştirmez — istek gövdesine
+-- `application_method: 'external'` yazan biri eski davranışı
+-- sürdürebilirdi. Kural burada duruyor.
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$insert into public.listings (company_id, title, status, origin,
+                                  application_method, apply_url)
+     values ('11111111-aaaa-4000-8000-000000000001', 'Disari Yonlendiren', 'draft',
+             'employer_posted', 'external', 'https://test-a.com/kariyer')$q$),
+  'A, ilani disari yonlendiren yontemle acamaz');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.listings set application_method='external',
+                                 apply_url='https://test-a.com/kariyer'
+     where id='22222222-aaaa-4000-8000-000000000001'$q$),
+  'A, acilmis ilani sonradan disari yonlendiremez');
+
+-- Sistem sabitlemesi: yöntem kolon varsayılanından geliyor.
+select pg_temp.bekle(
+  (select application_method = 'internal' and apply_url is null
+     from public.listings where title = 'Yeni Stajyer'),
+  'Sirketin actigi ilan internal basliyor ve adres tasimiyor');
+
 -- Az önce açılan ilan sistem alanlarında GÜVENLİ VARSAYILANLARDAN
 -- başlamalı: hiç bakılmamış, hiç doğrulanmamış, öne çıkarılmamış.
 select pg_temp.bekle(

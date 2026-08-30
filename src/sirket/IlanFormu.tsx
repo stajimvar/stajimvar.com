@@ -7,11 +7,9 @@ import {
   SABLONLAR,
   STAJ_TURLERI,
   UCRET_SECENEKLERI,
-  BASVURU_TIPLERI,
   ilanGecerli,
   ilanSatiri,
   ilanSorunlari,
-  platformBasvurusuSecilebilir,
 } from '../lib/ilan-formu.mjs';
 import { ilanBaslangicDurumu, ilanBayraklari } from '../lib/sirket-kademe.mjs';
 import {
@@ -91,10 +89,8 @@ export interface IlanFormDegeri {
   sure: string;
   ucret: string;
   ucretTutari: string;
-  basvuruUrl: string;
   aciklama: string;
   sonBasvuru: string;
-  basvuruTipi: string;
 }
 
 const BOS: IlanFormDegeri = {
@@ -105,11 +101,8 @@ const BOS: IlanFormDegeri = {
   sure: '20 iş günü',
   ucret: 'asgari',
   ucretTutari: '',
-  basvuruUrl: '',
   aciklama: '',
   sonBasvuru: '',
-  /* Varsayılan HER ZAMAN şirketin kendi adresi. */
-  basvuruTipi: 'kendi',
 };
 
 export const IlanFormu: React.FC<{
@@ -133,8 +126,9 @@ export const IlanFormu: React.FC<{
   const sorunlar = ilanSorunlari(deger);
   const goster = (alan: keyof IlanFormDegeri) => (gonderildi ? sorunlar[alan] : undefined);
 
-  const platformSecilebilir = platformBasvurusuSecilebilir(kademe);
-  const platformdan = platformSecilebilir && deger.basvuruTipi === 'platform';
+  /* Aday kartlarının açılması doğrulanmış şirkete bağlı; başvurunun
+     nereye geldiğine değil. Form bunu ilan verilirken söylüyor. */
+  const adayKimligiAcik = Number(kademe) >= 2;
   const baslangicDurumu = ilanBaslangicDurumu({ kademe, siteUrl, eposta });
   const yayindaBaslar = baslangicDurumu === 'published';
   const bayraklar = ilanBayraklari(deger.aciklama);
@@ -295,62 +289,34 @@ export const IlanFormu: React.FC<{
         </div>
 
         {/*
-          BAŞVURU NEREYE DÜŞÜYOR
+          BAŞVURU HER ZAMAN STAJIMVAR ÜZERİNDEN
 
-          Varsayılan her zaman şirketin kendi adresi. "StajımVar ile
-          başvur" yalnızca doğrulanmış şirkette çizilir — Kademe 1'de
-          seçenek hiç görünmüyor ve adres zorunlu kalıyor. Bu düğmeyi
-          "seçilemez" hâlde göstermek bile o kapının var olduğunu ima
-          ederdi.
+          "Kendi sitemizden" seçeneği ve başvuru adresi alanı kaldırıldı;
+          `application_method` sistem tarafından 'internal' sabitleniyor
+          ve şirketin o kolona yazma yetkisi yok. Yani burada seçim
+          sunulmuyor, bilgi veriliyor.
+
+          Aday kimliğinin doğrulamaya bağlı olduğu AÇIKÇA yazılıyor:
+          Kademe 1 şirket başvuru sayısını görüyor, adayın kim olduğunu
+          görmüyor. Bunu ilan verirken söylemek, başvurular geldikten
+          sonra söylemekten iyi.
         */}
-        {platformSecilebilir && (
-          <div>
-            <Etiket>Başvurular nereye gelsin? *</Etiket>
-            <SecimSeridi
-              secenekler={BASVURU_TIPLERI}
-              deger={deger.basvuruTipi}
-              onSec={yaz('basvuruTipi')}
-            />
-            {/*
-              İki seçeneğin farkı SABİT duruyor, seçime göre değişmiyor.
-              Yalnızca seçileni açıklamak, İK'ya öbür seçeneğin ne
-              yaptığını hiç göstermezdi — karar tam da o karşılaştırmada
-              veriliyor.
-            */}
-            <dl
-              className="mt-2 space-y-1 rounded-xl border px-3 py-2.5 text-[11px] leading-relaxed"
-              style={{ borderColor: SIRKET_KENAR, background: SIRKET_ROZET, color: SIRKET_METIN }}
-            >
-              <div>
-                <dt className="inline font-bold">Kendi siten:</dt>{' '}
-                <dd className="inline">öğrenci sende kalır, burada ad görünmez.</dd>
-              </div>
-              <div>
-                <dt className="inline font-bold">StajımVar ile başvur:</dt>{' '}
-                <dd className="inline">rıza ile kart + CV panele düşer.</dd>
-              </div>
-            </dl>
-          </div>
-        )}
-
-        {!platformdan && (
-          <label className="block">
-            <Etiket sorun={goster('basvuruUrl')}>Başvuru adresi *</Etiket>
-            <input
-              type="url"
-              inputMode="url"
-              value={deger.basvuruUrl}
-              onChange={(e) => yaz('basvuruUrl')(e.target.value)}
-              placeholder="https://sirketiniz.com/kariyer/staj"
-              className={alanSinifi}
-              style={alanStil}
-            />
-            <span className="mt-1 block text-[11px]" style={{ color: SIRKET_METIN_IKINCIL }}>
-              Öğrenci doğrudan bu adrese gidiyor; StajımVar'da hiçbir kişisel bilgi
-              paylaşılmıyor.
-            </span>
-          </label>
-        )}
+        <div
+          className="rounded-xl border px-3 py-2.5 text-[11px] leading-relaxed"
+          style={{ borderColor: SIRKET_KENAR, background: SIRKET_ROZET, color: SIRKET_METIN }}
+        >
+          <p className="font-bold">Başvurular StajımVar üzerinden gelir.</p>
+          <p className="mt-1">
+            Öğrenci ilanı burada görüp buradan başvuruyor; rıza verdiğinde kartı ve
+            CV'si panelinize düşer.
+          </p>
+          {!adayKimligiAcik && (
+            <p className="mt-1">
+              Şu an başvuru <b>sayısını</b> görüyorsunuz; adayların kim olduğunu
+              görebilmek için şirket doğrulaması gerekiyor.
+            </p>
+          )}
+        </div>
 
         <div>
           <Etiket sorun={goster('aciklama')}>İş tanımı *</Etiket>
@@ -424,18 +390,6 @@ export const IlanFormu: React.FC<{
           Vazgeç
         </button>
 
-        {deger.basvuruUrl && (
-          <a
-            href={deger.basvuruUrl}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold"
-            style={{ color: SIRKET_VURGU_KOYU }}
-          >
-            Başvuru adresini aç
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
-        )}
       </div>
     </div>
   );

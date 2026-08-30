@@ -4,11 +4,9 @@ import {
   ACIKLAMA_EN_AZ,
   SABLONLAR,
   ZORUNLU_ALANLAR,
-  basvuruUrlSorunu,
   ilanGecerli,
   ilanSatiri,
   ilanSorunlari,
-  platformBasvurusuSecilebilir,
 } from '../src/lib/ilan-formu.mjs';
 
 /*
@@ -25,7 +23,6 @@ const GECERLI = {
   tur: 'yaz',
   sure: '20 iş günü',
   ucret: 'asgari',
-  basvuruUrl: 'https://sirket.com/kariyer/staj',
   aciklama: 'a'.repeat(ACIKLAMA_EN_AZ),
 };
 
@@ -42,16 +39,9 @@ test('geçerli form sorunsuz', () => {
 test('eksik alanlar tek tek bildiriliyor', () => {
   const s = ilanSorunlari({});
   /* Tek bir "form geçersiz" yerine alan başına sorun. */
-  for (const alan of ['unvan', 'sehir', 'calismaSekli', 'tur', 'sure', 'ucret', 'basvuruUrl', 'aciklama']) {
+  for (const alan of ['unvan', 'sehir', 'calismaSekli', 'tur', 'sure', 'ucret', 'aciklama']) {
     assert.ok(s[alan], `${alan} için sorun bildirilmeliydi`);
   }
-});
-
-test('başvuru adresi https zorunlu', () => {
-  assert.equal(basvuruUrlSorunu('https://x.com/a'), null);
-  assert.match(basvuruUrlSorunu('http://x.com'), /https/);
-  assert.match(basvuruUrlSorunu('sirket.com'), /adres/i);
-  assert.match(basvuruUrlSorunu(''), /gerekiyor/);
 });
 
 test('iş tanımı alt sınırı', () => {
@@ -88,8 +78,6 @@ test('satır isveren ilani olarak isaretleniyor', () => {
   /* Toplama hattından gelen ilanlarla karışmasın. */
   assert.equal(satir.origin, 'employer_posted');
   assert.equal(satir.status, 'published');
-  assert.equal(satir.application_method, 'external');
-  assert.equal(satir.apply_url, GECERLI.basvuruUrl);
   assert.ok(satir.posted_at);
 });
 
@@ -113,36 +101,30 @@ test('belirtilmeyecek ücret is_paid false', () => {
   assert.equal(satir.stipend_text, null);
 });
 
-/* ------------------------------------------- E: başvuru tipi (platform) */
+/* ------------------------------------ Başvuru yolu artık seçim değil */
 
-test('platform başvurusu yalnızca Kademe 2 ve üstünde seçilebiliyor', () => {
-  assert.equal(platformBasvurusuSecilebilir(0), false);
-  assert.equal(platformBasvurusuSecilebilir(1), false);
-  assert.equal(platformBasvurusuSecilebilir(2), true);
-  assert.equal(platformBasvurusuSecilebilir(3), true);
-});
-
-test('kendi sitesinden alınan ilanda adres hâlâ zorunlu', () => {
-  const sorunlar = ilanSorunlari({ ...GECERLI, basvuruTipi: 'kendi', basvuruUrl: '' });
-  assert.ok(sorunlar.basvuruUrl);
-});
-
-test('platform başvurusunda adres istenmiyor', () => {
-  const sorunlar = ilanSorunlari({ ...GECERLI, basvuruTipi: 'platform', basvuruUrl: '' });
-  assert.equal(sorunlar.basvuruUrl, undefined);
-});
-
-test('platform başvurusu satırı internal yazıyor ve adresi boşaltıyor', () => {
-  const satir = ilanSatiri(
-    { ...GECERLI, basvuruTipi: 'platform', basvuruUrl: 'https://x.com/basvur' },
-    { companyId: 'c1', durum: 'published' }
-  );
-  assert.equal(satir.application_method, 'internal');
-  assert.equal(satir.apply_url, null);
-});
-
-test('varsayılan satır hâlâ şirketin kendi adresine gidiyor', () => {
+test('BAŞVURU YOLU SATIRA HİÇ YAZILMIYOR', () => {
+  /*
+    "Kendi sitemizden" seçeneği kaldırıldı; başvuru her zaman StajımVar
+    üzerinden geliyor. Yol istemcinin göndereceği bir alan değil:
+    `application_method` kolon varsayılanından ('internal') geliyor ve
+    şirketin o kolona yazma yetkisi yok. Satıra yazılsaydı istek
+    "permission denied for column" ile düşerdi.
+  */
   const satir = ilanSatiri(GECERLI, { companyId: 'c1', durum: 'published' });
-  assert.equal(satir.application_method, 'external');
-  assert.equal(satir.apply_url, GECERLI.basvuruUrl);
+  assert.ok(!('application_method' in satir), 'application_method gönderilmemeli');
+  assert.ok(!('apply_url' in satir), 'apply_url gönderilmemeli');
+});
+
+test('eski basvuruTipi alani gonderilse bile satiri degistirmiyor', () => {
+  /* Eski form durumu taşıyan bir istemci yeni davranışı bozmamalı. */
+  const a = ilanSatiri({ ...GECERLI, basvuruTipi: 'kendi', basvuruUrl: 'https://x.com/b' },
+    { companyId: 'c1', durum: 'draft' });
+  const b = ilanSatiri(GECERLI, { companyId: 'c1', durum: 'draft' });
+  assert.deepEqual(a, b);
+});
+
+test('basvuru adresi artik zorunlu alan degil', () => {
+  assert.ok(!ZORUNLU_ALANLAR.includes('basvuruUrl'));
+  assert.equal(ilanSorunlari(GECERLI).basvuruUrl, undefined);
 });

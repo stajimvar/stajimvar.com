@@ -15,29 +15,48 @@ import { ilanSatiri } from '../src/lib/ilan-formu.mjs';
   okunuyor — kaynak orası.
 */
 
-const MIGRATION = readFileSync(
+/*
+  Yetki tek bir dosyada durmuyor: bir göç veriyor, sonraki daraltıyor.
+  Tek dosyayı okumak, sonradan geri alınmış bir yetkiyi hâlâ açık
+  sanmak demek — o yüzden dosyalar SIRAYLA işlenip etkin küme
+  hesaplanıyor. Veritabanının ulaştığı durum da bu.
+*/
+const YETKI_GOCLERI = [
   'supabase/migrations/20260906010000_ilan_kolon_yetkileri.sql',
-  'utf8'
-);
+  'supabase/migrations/20260906020000_ilan_basvuru_yolu_sabit.sql',
+];
 
-/** `grant <ayrıcalık> ( ... ) on public.listings to authenticated` listesini okur. */
-function yetkiliKolonlar(ayricalik) {
-  const desen = new RegExp(
-    String.raw`grant\s+${ayricalik}\s*\(([^)]*)\)\s*on public\.listings`,
-    'i'
-  );
-  const eslesme = MIGRATION.match(desen);
-  assert.ok(eslesme, `${ayricalik} grant bloğu bulunamadı`);
-  return new Set(
-    eslesme[1]
-      .split(',')
-      .map((s) => s.replace(/--[^\n]*/g, '').trim())
-      .filter(Boolean)
-  );
+const MIGRATION = YETKI_GOCLERI.map((yol) => readFileSync(yol, 'utf8')).join('\n');
+
+/** `<grant|revoke> <ayrıcalık> ( ... ) on public.listings` bloklarındaki kolonlar. */
+function kolonlar(eslesme) {
+  return eslesme[1]
+    .split(',')
+    .map((s) => s.replace(/--[^\n]*/g, '').trim())
+    .filter(Boolean);
 }
 
-const INSERT_YETKISI = yetkiliKolonlar('insert');
-const UPDATE_YETKISI = yetkiliKolonlar('update');
+function etkinYetki(ayricalik) {
+  const kume = new Set();
+  let bulundu = false;
+  /* `insert, update` gibi çoklu ayrıcalık listelerini de yakalıyor. */
+  const desen = new RegExp(
+    String.raw`(grant|revoke)\s+([a-z,\s]*\b${ayricalik}\b[a-z,\s]*?)\s*\(([^)]*)\)\s*on public\.listings`,
+    'gi'
+  );
+  for (const m of MIGRATION.matchAll(desen)) {
+    bulundu = true;
+    for (const kolon of kolonlar([m[0], m[3]])) {
+      if (m[1].toLowerCase() === 'grant') kume.add(kolon);
+      else kume.delete(kolon);
+    }
+  }
+  assert.ok(bulundu, `${ayricalik} için grant/revoke bloğu bulunamadı`);
+  return kume;
+}
+
+const INSERT_YETKISI = etkinYetki('insert');
+const UPDATE_YETKISI = etkinYetki('update');
 
 /* Öğrenciye tazelik ve güven sinyali olarak gösterilen, ilan sahibinin
    yazmaması gereken alanlar. */
@@ -47,6 +66,9 @@ const SISTEM_ALANLARI = [
   'content_hash', 'first_seen_at', 'imported_at', 'deactivated_at',
   'deactivation_reason', 'raw', 'raw_listing_id', 'application_channel_id',
   'applicants_count', 'featured', 'id', 'created_at', 'updated_at',
+  /* Başvuru yolu şirketin seçimi değil: ilan her zaman StajımVar
+     üzerinden başvuru alıyor. */
+  'application_method', 'apply_url',
 ];
 
 test('PANELİN GÖNDERDİĞİ HER ALAN INSERT YETKİSİNDE', () => {

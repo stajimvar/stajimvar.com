@@ -21,20 +21,8 @@ export const ZORUNLU_ALANLAR = [
   'tur',
   'sure',
   'ucret',
-  'basvuruUrl',
   'aciklama',
 ];
-
-/**
- * "StajımVar ile başvur" bu kademede seçilebilir mi?
- *
- * Kademe 1'de HAYIR: seçenek hiç çizilmiyor ve adres zorunlu kalıyor.
- * Doğrulanmamış bir şirkete öğrenci verisi akıtacak bir düğmeyi
- * "seçilemez" diye göstermek bile, o kapının var olduğunu ima ederdi.
- */
-export function platformBasvurusuSecilebilir(kademe) {
-  return Number(kademe) >= 2;
-}
 
 export const ACIKLAMA_EN_AZ = 200;
 export const ACIKLAMA_EN_FAZLA = 2000;
@@ -101,37 +89,24 @@ export const SABLONLAR = [
   },
 ];
 
-/**
- * Başvuru nereden alınacak?
- *
- * VARSAYILAN HER ZAMAN ŞİRKETİN KENDİ ADRESİ. "StajımVar ile başvur"
- * yalnızca doğrulanmış şirkette seçilebiliyor: başvuru bu yolla
- * geldiğinde öğrencinin adı, okulu ve projeleri şirkete AKTARILIYOR ve
- * o aktarımın karşılığı doğrulanmış bir kurum olmak.
- */
-export const BASVURU_TIPLERI = [
-  { id: 'kendi', etiket: 'Kendi sitemizden' },
-  { id: 'platform', etiket: 'StajımVar ile başvur' },
-];
+/*
+  BAŞVURU ARTIK HER ZAMAN STAJIMVAR ÜZERİNDEN
+  ------------------------------------------
+  Şirketin açtığı ilanda "Kendi sitemizden" seçeneği ve başvuru adresi
+  alanı kaldırıldı; `application_method` sistem tarafından 'internal'
+  sabitlendi (kolon yetkisi: 20260906020000_ilan_basvuru_yolu_sabit).
 
-/**
- * Başvuru adresi kontrolü.
- *
- * Şirket kendi adresinden alıyorsa adres zorunlu ve gerçek bir HTTPS
- * adresi olmak durumunda.
- */
-export function basvuruUrlSorunu(url) {
-  const temiz = String(url ?? '').trim();
-  if (!temiz) return 'Başvuru adresi gerekiyor.';
-  let cozulen;
-  try {
-    cozulen = new URL(temiz);
-  } catch {
-    return 'Geçerli bir adres yaz (https://... ile başlamalı).';
-  }
-  if (cozulen.protocol !== 'https:') return 'Adres https:// ile başlamalı.';
-  return null;
-}
+  Dışarı yönlendirme geçici bir çözümdü: öğrenci siteden çıkıyor, ne
+  başvurduğu ne de ne olduğu bilinebiliyordu. Başvuru burada kalınca
+  öğrenci tek yerden takip edebiliyor, şirket de ilan başına gelen
+  başvuru sayısını görüyor.
+
+  DİKKAT — ADAY KİMLİĞİ HÂLÂ DOĞRULAMAYA BAĞLI: `applications` satırlarını
+  yalnızca `sirket_dogrulandi()` şirket okuyabiliyor. Kademe 1 şirket
+  başvuru SAYISINI görüyor, adayın kim olduğunu görmüyor. Bu bilinçli;
+  öğrencinin adı, okulu ve projeleri doğrulanmamış bir kuruma
+  aktarılmıyor.
+*/
 
 /**
  * Formu doğrular ve alan alan sorunları döndürür.
@@ -153,15 +128,6 @@ export function ilanSorunlari(deger) {
   if (!UCRET_SECENEKLERI.some((u) => u.id === deger.ucret)) s.ucret = 'Ücret seçeneğini seç.';
   else if (deger.ucret === 'net' && !metin(deger.ucretTutari))
     s.ucret = 'Net tutarı yaz ya da başka bir seçenek seç.';
-
-  /*
-    Adres yalnızca başvuru şirketin kendi sitesinden alınıyorsa zorunlu.
-    Kademe 1'de tip her zaman 'kendi' olduğu için orada adres hep zorunlu.
-  */
-  if (deger.basvuruTipi !== 'platform') {
-    const urlSorunu = basvuruUrlSorunu(deger.basvuruUrl);
-    if (urlSorunu) s.basvuruUrl = urlSorunu;
-  }
 
   const aciklama = metin(deger.aciklama);
   if (aciklama.length < ACIKLAMA_EN_AZ)
@@ -192,13 +158,6 @@ export function ilanSatiri(deger, { companyId, durum }) {
   const metin = (x) => String(x ?? '').trim();
   const tur = deger.tur;
 
-  /*
-    'internal' = başvuru StajımVar'da kalıyor ve şirketin paneline kart
-    olarak düşüyor. 'external' = öğrenci şirketin kendi adresine gidiyor
-    ve bizde hiçbir kişisel veri paylaşılmıyor.
-  */
-  const platformdan = deger.basvuruTipi === 'platform';
-
   return {
     company_id: companyId,
     title: metin(deger.unvan),
@@ -215,8 +174,14 @@ export function ilanSatiri(deger, { companyId, durum }) {
         : deger.ucret === 'net'
           ? metin(deger.ucretTutari)
           : null,
-    apply_url: platformdan ? null : metin(deger.basvuruUrl),
-    application_method: platformdan ? 'internal' : 'external',
+    /*
+      `apply_url` ve `application_method` BİLEREK GÖNDERİLMİYOR.
+
+      İkisi de şirketin yazma yetkisi dışında; başvuru yolu istemcinin
+      seçtiği bir şey değil. `application_method` kolon varsayılanından
+      ('internal') geliyor, `apply_url` boş kalıyor. Buradan
+      gönderilseydi istek "permission denied for column" ile düşerdi.
+    */
     description: metin(deger.aciklama),
     application_deadline: metin(deger.sonBasvuru) || null,
     origin: 'employer_posted',
