@@ -28,6 +28,24 @@ MASS_DEACTIVATION_RATIO = 0.25
 # geçmişini biriktirerek olur.
 MIN_SOURCE_SIZE_FOR_RATIO = 8
 
+# YOKLUK TEK BAŞINA KAPATMA SEBEBİ SAYILMIYOR
+#
+# Ölçüldü (14 gün, 10 kaynak): kapatma açık olan altı kaynağın DÖRDÜNDE
+# tam olarak BİR aktif ilan var, ikisinde iki. Yani "tur başına en fazla
+# bir ilan" kuralı bu kaynaklarda hiçbir şey korumuyordu: tek ilanlı bir
+# kaynakta bir ilan = kaynağın tamamı.
+#
+# Tek ilanlı kaynağın nasıl yanlış kapattığı da ölçüldü. astrazeneca-workday
+# turları 1 → 0 → 1 → 0 gidiyor. İlk 1→0 geçişi ANOMALY_ZERO_RESULT olarak
+# yakalanıyor ve sayaç donuyor; ama sonraki 0→0 turlarında previous_job_count
+# de 0 olduğu için anomali kuralı SUSUYOR, tur HEALTHY görünüyor ve sayaç
+# ilerliyor. Sayaç böyle 122'ye çıkmış — ilan hâlâ açıkken.
+#
+# Eşik 4: bugün kapatması açık kaynaklardan yalnızca workable-tr-arama
+# (13 ilan) bunun üstünde. Yani yoklukla kapatma tek şirketli panolarda
+# hiç çalışmıyor; oralarda GÜÇLÜ SİNYAL gerekiyor.
+MIN_SOURCE_SIZE_FOR_ABSENCE = 4
+
 
 class Health(StrEnum):
     HEALTHY = "HEALTHY"
@@ -70,6 +88,25 @@ class SourceRun:
     @property
     def duration_ms(self) -> int:
         return max(0, int((self.finished_at - self.started_at).total_seconds() * 1000))
+
+
+@dataclass(frozen=True)
+class CloseEvidence:
+    """İlanın kapandığına dair KAYNAKTAN gelen bağımsız kanıt.
+
+    "N turdur listede yok" bir kanıt değil, bir gözlem. Küçük kaynakta
+    kapatmak için bunlardan biri gerekiyor.
+    """
+
+    http_status: int | None = None
+    explicit_closed: bool = False
+
+
+def strong_close_signal(evidence: CloseEvidence | None) -> bool:
+    """404/410 ya da sağlayıcının kendi kapalı bayrağı."""
+    if evidence is None:
+        return False
+    return evidence.explicit_closed or evidence.http_status in {404, 410}
 
 
 @dataclass(frozen=True)
@@ -146,9 +183,22 @@ def next_missing_runs(run: SourceRun, state: ListingState, seen: bool) -> int:
     return 0 if seen else state.consecutive_missing_runs + 1
 
 
-def eligible_for_deactivation(run: SourceRun, state: ListingState, seen: bool, now: datetime) -> bool:
+def eligible_for_deactivation(
+    run: SourceRun,
+    state: ListingState,
+    seen: bool,
+    now: datetime,
+    *,
+    source_active_count: int = 0,
+    evidence: CloseEvidence | None = None,
+) -> bool:
+    """Kapatma adayı mı?
+
+    `source_active_count` VERİLMEZSE 0 sayılıyor ve kaynak küçük kabul
+    ediliyor: çağıran unutursa sonuç "kapatma yok" oluyor. Fail-closed.
+    """
     misses = next_missing_runs(run, state, seen)
-    return (
+    temel = (
         not seen
         and not protected(state)
         and health(run)[0] is Health.HEALTHY
@@ -156,6 +206,13 @@ def eligible_for_deactivation(run: SourceRun, state: ListingState, seen: bool, n
         and state.last_seen_at is not None
         and now - state.last_seen_at >= MIN_STALE_AGE
     )
+    if not temel:
+        return False
+
+    # Küçük kaynakta yokluk yetmiyor; bağımsız bir kapanma kanıtı gerekiyor.
+    if source_active_count < MIN_SOURCE_SIZE_FOR_ABSENCE:
+        return strong_close_signal(evidence)
+    return True
 
 
 def mass_deactivation_blocked(candidate_count: int, managed_active_count: int) -> bool:
@@ -179,7 +236,16 @@ def may_reactivate(state: ListingState, seen: bool) -> bool:
     return seen and not protected(state) and state.deactivation_reason in {"stale", "explicit_closed"}
 
 
-def reconcile(run: SourceRun, state: ListingState, seen: bool, now: datetime, allow_deactivation: bool) -> ReconciliationDecision:
+def reconcile(
+    run: SourceRun,
+    state: ListingState,
+    seen: bool,
+    now: datetime,
+    allow_deactivation: bool,
+    *,
+    source_active_count: int = 0,
+    evidence: CloseEvidence | None = None,
+) -> ReconciliationDecision:
     """Compute the controlled lifecycle without touching a database.
 
     Unhealthy runs and protected records are strict no-ops.  A seen record clears
@@ -190,7 +256,9 @@ def reconcile(run: SourceRun, state: ListingState, seen: bool, now: datetime, al
     if seen:
         return ReconciliationDecision(0, False, False, may_reactivate(state, True))
     missing_runs = next_missing_runs(run, state, False)
-    stale = eligible_for_deactivation(run, state, False, now)
+    stale = eligible_for_deactivation(
+        run, state, False, now, source_active_count=source_active_count, evidence=evidence
+    )
     return ReconciliationDecision(missing_runs, stale, stale, False)
 
 

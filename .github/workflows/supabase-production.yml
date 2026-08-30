@@ -53,8 +53,57 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      - run: node --test tests/opportunity-domain.test.mjs
+      # TEK DOSYA DEGIL, TUM PAKET
+      #
+      # Burada yalnizca tests/opportunity-domain.test.mjs kosuyordu; geri
+      # kalan yuzlerce test yalnizca gelistirici bilgisayarinda calisiyor
+      # ve dagitimi HIC engellemiyordu. Kritik olanlar (sirket dogrulama,
+      # burs kisit semantigi, aday karti rizasi) bu paketin icinde.
+      - name: JS testleri
+        run: npm test
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Python testleri (crawler guvenligi)
+        run: |
+          pip install -r automation/requirements-dev.txt
+          python -m pytest automation/tests -q
       - run: npm run build
+
+  # GUVENLIK REGRESYONU DAGITIMI DURDURUYOR
+  #
+  # supabase/tests altindaki SQL elle calistiriliyordu; yani bir RLS
+  # politikasi yanlislikla gevsetilse CI bunu FARK ETMIYORDU. Is tek
+  # kullanimlik yerel bir veritabaninda calisiyor: uretim verisine
+  # dokunmuyor, kendi kullanicilarini yaratiyor ve `db reset` ile
+  # migration'lari sifirdan uyguladigi icin ayni zamanda temiz kurulum
+  # duman testi.
+  security_regression:
+    needs: changes
+    if: github.repository == 'stajimvar/stajimvar.com' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase start
+      - name: Migrationlari sifirdan uygula (temiz kurulum duman testi)
+        run: supabase db reset --local --no-seed
+      - name: RLS guvenlik regresyonu
+        run: |
+          local_db_url="$(supabase status -o env | node scripts/assert-disposable-db-url.mjs)"
+          psql -v ON_ERROR_STOP=1 -f scripts/sql/disposable-security-tests.sql "$local_db_url"
+          psql -v ON_ERROR_STOP=1 -f scripts/sql/rls-regresyon-testleri.sql "$local_db_url"
+      - name: Tek kullanimlik kaplari temizle
+        if: always()
+        run: supabase stop --no-backup
 
   migrate_and_functions:
     needs: changes
@@ -151,13 +200,14 @@ jobs:
   # ayrı ve insan kararı gerektiren bir iş; şu an şema değişiklikleri
   # Supabase panelinden elle uygulanıyor.
   cloudflare_production:
-    needs: [changes, validate_app, migrate_and_functions]
+    needs: [changes, validate_app, security_regression, migrate_and_functions]
     if: >-
       ${{
         always() &&
         github.repository == 'stajimvar/stajimvar.com' &&
         (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
-        needs.validate_app.result == 'success'
+        needs.validate_app.result == 'success' &&
+        needs.security_regression.result == 'success'
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 20

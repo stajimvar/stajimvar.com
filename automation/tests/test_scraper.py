@@ -142,7 +142,9 @@ class ScraperFixtureTests(unittest.TestCase):
         self.assertEqual(stale_safety.next_missing_runs(run, self.state(), False), 1)
         self.assertFalse(stale_safety.eligible_for_deactivation(run, self.state(consecutive_missing_runs=1), False, datetime.now(UTC)))
         self.assertFalse(stale_safety.eligible_for_deactivation(run, self.state(consecutive_missing_runs=2, last_seen_at=datetime.now(UTC) - timedelta(hours=1)), False, datetime.now(UTC)))
-        self.assertTrue(stale_safety.eligible_for_deactivation(run, self.state(consecutive_missing_runs=2), False, datetime.now(UTC)))
+        # source_active_count veriliyor: kucuk kaynakta yokluk artik tek
+        # basina yetmiyor (bkz. MIN_SOURCE_SIZE_FOR_ABSENCE).
+        self.assertTrue(stale_safety.eligible_for_deactivation(run, self.state(consecutive_missing_runs=2), False, datetime.now(UTC), source_active_count=20))
         self.assertEqual(stale_safety.next_missing_runs(run, self.state(consecutive_missing_runs=2), True), 0)
 
     def test_protected_listings_never_change_stale_state(self):
@@ -199,7 +201,9 @@ class ScraperFixtureTests(unittest.TestCase):
         self.assertFalse(seen.would_deactivate)
         miss1 = stale_safety.reconcile(run, state, False, now, False)
         miss2 = stale_safety.reconcile(run, self.state(consecutive_missing_runs=1, last_seen_at=now - timedelta(hours=49)), False, now, False)
-        miss3 = stale_safety.reconcile(run, self.state(consecutive_missing_runs=2, last_seen_at=now - timedelta(hours=49)), False, now, False)
+        # source_active_count=20: bu test yasam dongusunu sinamak icin
+        # kaynagi buyuk kabul ediyor. Kucuk kaynak kurali ayri dosyada.
+        miss3 = stale_safety.reconcile(run, self.state(consecutive_missing_runs=2, last_seen_at=now - timedelta(hours=49)), False, now, False, source_active_count=20)
         self.assertEqual((miss1.consecutive_missing_runs, miss2.consecutive_missing_runs, miss3.consecutive_missing_runs), (1, 2, 3))
         self.assertTrue(miss3.stale_eligible)
         self.assertTrue(miss3.would_deactivate)

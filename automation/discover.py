@@ -22,11 +22,14 @@ import argparse
 import os
 from datetime import UTC, datetime
 
+import requests
 from dotenv import load_dotenv
 
 import repository
 import scraper
 from stale_safety import (
+    MIN_SOURCE_SIZE_FOR_ABSENCE,
+    CloseEvidence,
     Health,
     ListingState,
     SourceRun,
@@ -34,6 +37,7 @@ from stale_safety import (
     mass_deactivation_blocked,
     reconcile,
     source_deactivation_allowed,
+    strong_close_signal,
 )
 
 
@@ -60,6 +64,25 @@ def previous_count(db, source_id: str) -> int:
         .data
     )
     return int(rows[0]["fetched_count"]) if rows else 0
+
+
+def ilan_adresini_dogrula(url: str) -> CloseEvidence | None:
+    """Ilanin kendi adresine bakarak bagimsiz kapanma kaniti toplar.
+
+    None doner: istek yapilamadi ya da cevap belirsiz. Belirsizlik
+    kapatmaya IZIN VERMIYOR -- strong_close_signal(None) False.
+
+    5xx/403/429 bilerek kanit sayilmiyor: onlar ilanin degil KAYNAGIN
+    arizasi ve ayni ariza listeyi de dusurmus olabilir.
+    """
+    try:
+        cevap = requests.get(
+            url, timeout=15, allow_redirects=True,
+            headers={"User-Agent": "StajimVarJobs/1.0"},
+        )
+    except Exception:  # noqa: BLE001 - baglanti hatasi kanit degil
+        return None
+    return CloseEvidence(http_status=cevap.status_code)
 
 
 def process_source(db, config: dict, source_id: str, *, write: bool, allow_deactivation: bool) -> dict:
@@ -155,6 +178,7 @@ def process_source(db, config: dict, source_id: str, *, write: bool, allow_deact
         # Devre kesici: bir taramada aktif kayıtların dörtte birinden fazlası
         # kaybolduysa bu bir kaynak arızasıdır, toplu kapatma yapılmaz.
         stats["stale_aday"] = len(missing)
+        stats["izlenen_kayit"] = len(known)
         if mass_deactivation_blocked(len(missing), len(known)):
             deactivation_allowed = False
             stats["devre_kesici"] = True
@@ -163,6 +187,18 @@ def process_source(db, config: dict, source_id: str, *, write: bool, allow_deact
                 message=f"toplu pasifleştirme devre kesicisi: {len(missing)}/{len(known)}",
             )
 
+        # KUCUK KAYNAKTA BAGIMSIZ KANIT
+        #
+        # Tek ilanli bir kaynakta "listede yok" kapanma sinyali degil:
+        # olculdu, astrazeneca-workday'in tek ilani 122 turdur listede
+        # gorunmuyordu ve ilan hala aciktir. Bu yuzden kaynak kucukse
+        # ilanin KENDI adresine bakiliyor; 404/410 gormeden kapatilmiyor.
+        #
+        # Istek sayisi sinirli: kural yalnizca 4'ten az aktif kaydi olan
+        # kaynaklarda ve yalnizca zaten esigi doldurmus adaylar icin
+        # calisiyor.
+        kucuk_kaynak = len(known) < MIN_SOURCE_SIZE_FOR_ABSENCE
+
         for row in missing:
             state = ListingState(
                 type="external", importer_managed=True, company_id=None, author_id=None,
@@ -170,7 +206,21 @@ def process_source(db, config: dict, source_id: str, *, write: bool, allow_deact
                 consecutive_missing_runs=int(row.get("consecutive_missing_runs") or 0),
                 last_seen_at=as_datetime(row.get("last_seen_at")),
             )
-            decision = reconcile(run, state, False, datetime.now(UTC), deactivation_allowed)
+            kanit = None
+            if kucuk_kaynak and deactivation_allowed and row.get("url"):
+                kanit = ilan_adresini_dogrula(str(row["url"]))
+                if kanit is not None and write:
+                    repository.log_event(
+                        db, run_id=run_id, source_id=source_id, raw_listing_id=row["id"],
+                        event_type="close_evidence",
+                        message=f"HTTP {kanit.http_status}",
+                        payload={"http_status": kanit.http_status,
+                                 "guclu": strong_close_signal(kanit)},
+                    )
+            decision = reconcile(
+                run, state, False, datetime.now(UTC), deactivation_allowed,
+                source_active_count=len(known), evidence=kanit,
+            )
             update: dict = {
                 "consecutive_missing_runs": decision.consecutive_missing_runs,
                 "source_last_checked_at": now,
@@ -211,6 +261,22 @@ def process_source(db, config: dict, source_id: str, *, write: bool, allow_deact
         # "Neden sağlıksız?" sorusunun cevabı log satırlarına dağılmıştı.
         # `import_events.payload` (jsonb) zaten vardı; kimse bağlamamış.
         # Yeni bir izleme ürünü kurulmuyor: her tur için tek bir olay.
+        # OPERASYONEL UYARI — LOGDAN SANİYELER İÇİNDE ANLAŞILSIN
+        #
+        # Kapatması AÇIK bir kaynakta sağlık bozulduysa ya da kapsama
+        # eksikse bu bir rollout sinyali: o tur zaten hiçbir şey
+        # kapatmıyor ama sürekli tekrar ediyorsa kaynak izin listesinden
+        # çıkarılmalı. GitHub Actions kaydında ::warning:: olarak görünüyor.
+        if deactivation_allowed and (run_health is not Health.HEALTHY or run.broken_units):
+            print(
+                f"::warning::SOURCE DEACTIVATION SAFETY WARNING "
+                f"source={slug} health={run_health} reason={health_reason or '-'} "
+                f"broken_units={run.broken_units} "
+                f"coverage={run.successful_units}/{run.expected_units} "
+                f"results={stats['fetched']} prev={run.previous_job_count}",
+                flush=True,
+            )
+
         repository.log_event(
             db, run_id=run_id, source_id=source_id, event_type="run_summary",
             message=f"{run_health}" + (f" · {health_reason}" if health_reason else ""),
@@ -229,6 +295,7 @@ def process_source(db, config: dict, source_id: str, *, write: bool, allow_deact
                 "kapatilan": stats["deactivated"],
                 "devre_kesici": stats.get("devre_kesici", False),
                 "kapatma_izni": allow_deactivation,
+                "kaynak_aktif_kayit": stats.get("izlenen_kayit", 0),
             },
         )
         db.table("sources").update(

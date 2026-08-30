@@ -2,7 +2,7 @@ name: Supabase disposable security tests
 on:
   push:
     branches: [main]
-    paths: ['supabase/migrations/**','scripts/sql/disposable-security-tests.sql','.github/workflows/supabase-disposable-security-tests.yml']
+    paths: ['supabase/migrations/**','scripts/sql/**','.github/workflows/supabase-disposable-security-tests.yml']
   workflow_dispatch:
 permissions: { contents: read }
 jobs:
@@ -15,10 +15,13 @@ jobs:
         with: { version: latest }
       - run: supabase start
       - run: supabase db reset --local --no-seed
+      # `supabase db reset --local --no-seed` migration'lari SIFIRDAN
+      # uyguluyor: bu adim ayni zamanda temiz kurulum duman testi.
       - name: Run disposable SQL with local psql only
         run: |
           local_db_url="$(supabase status -o env | node scripts/assert-disposable-db-url.mjs)"
           psql -v ON_ERROR_STOP=1 -f scripts/sql/disposable-security-tests.sql "$local_db_url"
+          psql -v ON_ERROR_STOP=1 -f scripts/sql/rls-regresyon-testleri.sql "$local_db_url"
       - name: Clean disposable containers and volumes
         if: always()
         run: supabase stop --no-backup

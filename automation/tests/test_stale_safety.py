@@ -11,7 +11,9 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from automation.stale_safety import (
+    MIN_SOURCE_SIZE_FOR_ABSENCE,
     MISS_THRESHOLD,
+    CloseEvidence,
     Health,
     ListingState,
     SourceRun,
@@ -23,6 +25,7 @@ from automation.stale_safety import (
     reconcile,
     reconciliation_payload,
     source_deactivation_allowed,
+    strong_close_signal,
 )
 
 SIMDI = datetime(2026, 9, 1, 12, 0, tzinfo=UTC)
@@ -151,9 +154,13 @@ def test_tek_turda_kaybolan_ilan_kapanmaz():
     assert not eligible_for_deactivation(tur(), kayit(consecutive_missing_runs=1), False, SIMDI)
 
 
+BUYUK = 20  # yoklukla kapatmanin serbest oldugu kaynak boyutu
+
+
 def test_esik_dolunca_kapanmaya_aday():
     assert eligible_for_deactivation(
-        tur(), kayit(consecutive_missing_runs=MISS_THRESHOLD - 1), False, SIMDI
+        tur(), kayit(consecutive_missing_runs=MISS_THRESHOLD - 1), False, SIMDI,
+        source_active_count=BUYUK,
     )
 
 
@@ -269,7 +276,7 @@ def test_izin_kapaliyken_karar_uretilir_ama_yazilmaz():
     ama ilan pasifleştirilmiyor.
     """
     aday = kayit(consecutive_missing_runs=MISS_THRESHOLD - 1)
-    karar = reconcile(tur(), aday, False, SIMDI, allow_deactivation=False)
+    karar = reconcile(tur(), aday, False, SIMDI, allow_deactivation=False, source_active_count=BUYUK)
     assert karar.stale_eligible is True
     yuk = reconciliation_payload(karar, seen=False, now=SIMDI, allow_deactivation=False)
     assert "is_active" not in yuk
@@ -337,18 +344,18 @@ def test_ardisik_kacirma_senaryosu_bastan_sona():
     """1 tur → 2 tur → 3 tur ama 48 saat dolmamış → 3 tur + 48 saat."""
     t = tur()
     # 1. tur
-    k1 = reconcile(t, kayit(consecutive_missing_runs=0), False, SIMDI, True)
+    k1 = reconcile(t, kayit(consecutive_missing_runs=0), False, SIMDI, True, source_active_count=BUYUK)
     assert (k1.consecutive_missing_runs, k1.would_deactivate) == (1, False)
     # 2. tur
-    k2 = reconcile(t, kayit(consecutive_missing_runs=1), False, SIMDI, True)
+    k2 = reconcile(t, kayit(consecutive_missing_runs=1), False, SIMDI, True, source_active_count=BUYUK)
     assert (k2.consecutive_missing_runs, k2.would_deactivate) == (2, False)
     # 3. tur ama ilan 2 saat önce görülmüş
     taze = kayit(consecutive_missing_runs=2, last_seen_at=SIMDI - timedelta(hours=2))
-    k3 = reconcile(t, taze, False, SIMDI, True)
+    k3 = reconcile(t, taze, False, SIMDI, True, source_active_count=BUYUK)
     assert (k3.consecutive_missing_runs, k3.would_deactivate) == (3, False)
     # 3. tur ve 48 saat dolmuş
     eski = kayit(consecutive_missing_runs=2, last_seen_at=SIMDI - timedelta(days=3))
-    k4 = reconcile(t, eski, False, SIMDI, True)
+    k4 = reconcile(t, eski, False, SIMDI, True, source_active_count=BUYUK)
     assert (k4.consecutive_missing_runs, k4.would_deactivate) == (3, True)
 
 
@@ -387,3 +394,129 @@ def test_bozuk_govde_HTTP_200_ile_geliyor_ve_yakaLaniyor():
     """
     t = tur(http_status=200, expected_units=5, successful_units=4, broken_units=1)
     assert health(t)[0] is Health.DEGRADED
+
+
+# ------------------------------------------------- kucuk kaynak korumasi
+
+
+def bayat(**kwargs):
+    """Esigi ve 48 saati DOLDURMUS bir kayit: tek engel kaynak boyutu."""
+    return kayit(
+        consecutive_missing_runs=MISS_THRESHOLD + 5,
+        last_seen_at=SIMDI - timedelta(days=9),
+        **kwargs,
+    )
+
+
+def test_TEK_ILANLI_KAYNAKTA_YOKLUK_KAPATMIYOR():
+    """
+    Olculdu: astrazeneca-workday'in tek ilani 122 turdur gorunmuyordu ve
+    ilan hala aciktir. Turlar 1->0->1->0 gidiyor; ilk sifir ANOMALY
+    sayiliyor ama sonraki 0->0 turlarinda previous_job_count de 0 oldugu
+    icin anomali kurali susuyor, tur HEALTHY gorunuyor ve sayac ilerliyor.
+    """
+    t = tur(previous_job_count=0, current_job_count=0)
+    assert health(t)[0] is Health.HEALTHY  # anomali kurali burada susuyor
+    assert not eligible_for_deactivation(t, bayat(), False, SIMDI, source_active_count=1)
+    assert reconcile(t, bayat(), False, SIMDI, True, source_active_count=1).would_deactivate is False
+
+
+@pytest.mark.parametrize("adet", [0, 1, 2, 3])
+def test_kucuk_kaynakta_yokluk_yetmiyor(adet):
+    assert not eligible_for_deactivation(tur(), bayat(), False, SIMDI, source_active_count=adet)
+
+
+def test_esikten_itibaren_yokluk_yeterli():
+    assert eligible_for_deactivation(
+        tur(), bayat(), False, SIMDI, source_active_count=MIN_SOURCE_SIZE_FOR_ABSENCE
+    )
+
+
+@pytest.mark.parametrize("kanit", [
+    CloseEvidence(http_status=404),
+    CloseEvidence(http_status=410),
+    CloseEvidence(explicit_closed=True),
+])
+def test_TEK_ILANLI_KAYNAKTA_GUCLU_SINYAL_KAPATIYOR(kanit):
+    """404, 410 ya da saglayicinin kendi kapali bayragi bagimsiz kanittir."""
+    assert strong_close_signal(kanit)
+    assert eligible_for_deactivation(
+        tur(), bayat(), False, SIMDI, source_active_count=1, evidence=kanit
+    )
+
+
+@pytest.mark.parametrize("kanit", [
+    None,
+    CloseEvidence(),
+    CloseEvidence(http_status=200),
+    CloseEvidence(http_status=500),
+    CloseEvidence(http_status=403),
+    CloseEvidence(http_status=429),
+])
+def test_zayif_sinyal_kucuk_kaynakta_kapatmiyor(kanit):
+    """200 acik demek; 5xx/403/429 ise KAYNAK arizasi. Hicbiri kapanma degil."""
+    assert not strong_close_signal(kanit)
+    assert not eligible_for_deactivation(
+        tur(), bayat(), False, SIMDI, source_active_count=1, evidence=kanit
+    )
+
+
+def test_guclu_sinyal_sagliksiz_turu_asmiyor():
+    """
+    Kaynak cokmusken gelen 404 guvenilir degil: ayni ariza hem listeyi hem
+    ilan sayfasini dusurmus olabilir.
+    """
+    assert not eligible_for_deactivation(
+        tur(fetch_success=False), bayat(), False, SIMDI,
+        source_active_count=1, evidence=CloseEvidence(http_status=404),
+    )
+    assert not eligible_for_deactivation(
+        tur(broken_units=1, expected_units=10, successful_units=9), bayat(), False, SIMDI,
+        source_active_count=1, evidence=CloseEvidence(http_status=404),
+    )
+
+
+def test_guclu_sinyal_48_saat_ve_esigi_asmiyor():
+    """Kanit diger korumalarin yerine gecmiyor, ustune ekleniyor."""
+    taze = kayit(consecutive_missing_runs=MISS_THRESHOLD + 5,
+                 last_seen_at=SIMDI - timedelta(hours=2))
+    assert not eligible_for_deactivation(
+        tur(), taze, False, SIMDI, source_active_count=1, evidence=CloseEvidence(http_status=404)
+    )
+    az = kayit(consecutive_missing_runs=1, last_seen_at=SIMDI - timedelta(days=9))
+    assert not eligible_for_deactivation(
+        tur(), az, False, SIMDI, source_active_count=1, evidence=CloseEvidence(http_status=404)
+    )
+
+
+def test_isverenin_ilani_guclu_sinyalle_de_kapanmiyor():
+    korumali = bayat(company_id="11111111-1111-1111-1111-111111111111")
+    assert not eligible_for_deactivation(
+        tur(), korumali, False, SIMDI, source_active_count=99,
+        evidence=CloseEvidence(http_status=410),
+    )
+
+
+def test_iki_ilanli_kaynak_senaryosu():
+    """2 aktif ilan, biri kayip: yokluk yetmiyor, kanit gerekiyor."""
+    assert not eligible_for_deactivation(tur(), bayat(), False, SIMDI, source_active_count=2)
+    assert eligible_for_deactivation(
+        tur(), bayat(), False, SIMDI, source_active_count=2,
+        evidence=CloseEvidence(http_status=404),
+    )
+
+
+def test_uc_ilanli_kaynak_sifir_donerse_anomali():
+    """3 aktif ilan, tur 0 dondu -> ANOMALY, guclu kanitla bile kapanmiyor."""
+    t = tur(previous_job_count=3, current_job_count=0)
+    assert health(t)[0] is Health.ANOMALY
+    assert not eligible_for_deactivation(
+        t, bayat(), False, SIMDI, source_active_count=3,
+        evidence=CloseEvidence(http_status=404),
+    )
+
+
+def test_varsayilan_fail_closed():
+    """source_active_count verilmezse kaynak kucuk sayiliyor."""
+    assert not eligible_for_deactivation(tur(), bayat(), False, SIMDI)
+    assert reconcile(tur(), bayat(), False, SIMDI, True).would_deactivate is False
