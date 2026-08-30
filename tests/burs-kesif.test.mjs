@@ -292,3 +292,72 @@ test('şehir şartı olmayan burs, şehir süzgecinde de kalıyor', () => {
   assert.equal(bursSuzgectenGecer(burs({ cities: [] }), { yer: TURKIYE_GENELI }, SIMDI), true);
   assert.equal(bursSuzgectenGecer(burs({ cities: ['Ankara'] }), { yer: TURKIYE_GENELI }, SIMDI), false);
 });
+
+/* --------------------------------- kişiselleştirme semantiği (uçtan uca) */
+
+/*
+  Bu blok "sana uygun" hesabının veri semantiğini bağlıyor. Yanlış bir
+  "sana uygun" etiketi, hiç göstermemekten kötü: öğrenci başvuramayacağı
+  bir bursa emek harcıyor.
+*/
+
+const ogrenci = { bolum: 'Bilgisayar Mühendisliği', seviye: 'Lisans', sehir: 'İzmir' };
+
+const uygunMu = (b) =>
+  kisitaUyar(b.eligibleDepartments, ogrenci.bolum) &&
+  kisitaUyar(b.educationLevels, ogrenci.seviye) &&
+  kisitaUyar([...(b.cities ?? []), ...(b.countries ?? [])], ogrenci.sehir);
+
+test('bölüm kısıtı yoksa öğrenciye uygun', () => {
+  assert.equal(uygunMu(burs({ eligibleDepartments: [] })), true);
+});
+
+test('bölüm kısıtı öğrencinin bölümünü içeriyorsa uygun', () => {
+  assert.equal(uygunMu(burs({ eligibleDepartments: ['Bilgisayar Mühendisliği'] })), true);
+});
+
+test('bölüm kısıtı başka bölümse UYGUN DEĞİL', () => {
+  assert.equal(uygunMu(burs({ eligibleDepartments: ['Hukuk'] })), false);
+});
+
+test('eğitim seviyesi semantiği aynı kuralı izliyor', () => {
+  assert.equal(uygunMu(burs({ educationLevels: [] })), true);
+  assert.equal(uygunMu(burs({ educationLevels: ['Lisans'] })), true);
+  assert.equal(uygunMu(burs({ educationLevels: ['Doktora'] })), false);
+  /* "Lisansüstü" lisansı KAPSAMIYOR. */
+  assert.equal(uygunMu(burs({ educationLevels: ['Yüksek Lisans', 'Doktora'] })), false);
+});
+
+test('şehir semantiği aynı kuralı izliyor', () => {
+  assert.equal(uygunMu(burs({ cities: [] })), true);
+  assert.equal(uygunMu(burs({ cities: ['İzmir'] })), true);
+  assert.equal(uygunMu(burs({ cities: ['Ankara'] })), false);
+});
+
+test('üç kısıt birlikte değerlendiriliyor', () => {
+  const hepsiUyan = burs({
+    eligibleDepartments: ['Bilgisayar Mühendisliği'],
+    educationLevels: ['Lisans'],
+    cities: ['İzmir'],
+  });
+  assert.equal(uygunMu(hepsiUyan), true);
+
+  const biriUymayan = burs({
+    eligibleDepartments: ['Bilgisayar Mühendisliği'],
+    educationLevels: ['Lisans'],
+    cities: ['Ankara'],
+  });
+  assert.equal(uygunMu(biriUymayan), false);
+});
+
+test('tutar doğrulanmadan karta yazılmıyor', () => {
+  /*
+    Çıkarıcının bulduğu tutar bir ÖNERİ. amount_min dolu ama
+    amount_verified_at boşsa kart tutarı GÖSTERMİYOR.
+  */
+  assert.equal(bursTutariVar(burs({ amountMin: 3000, paymentPeriod: 'monthly' })), false);
+  assert.equal(
+    bursTutariVar(burs({ amountMin: 3000, amountVerifiedAt: '2026-08-30T00:00:00Z' })),
+    true
+  );
+});

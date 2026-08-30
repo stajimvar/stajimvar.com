@@ -21,3 +21,7 @@ _eski-wrangler/
 
 # Claude Code kisisel ayarlari
 .claude/settings.local.json
+
+# Burs denetim çıktısı: her koşuda değişiyor ve kaynak sayfalardan kısa
+# alıntı taşıyor. Araç depoda, çıktısı değil.
+raporlar/
