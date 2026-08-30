@@ -60,7 +60,15 @@ export const IsverenGirisi: React.FC<{
       doğrudan ilan yayınlama vaadi veriyordu; oysa akış şirket sayfasını
       sahiplenmek ve onaydan sonra ilan girmek üzerine kurulu.
     */
+    /*
+      Başlık sayfadan çıkılınca geri yükleniyor: SPA içinde ana sayfaya
+      dönüldüğünde sekmede hâlâ bu sayfanın adı yazıyordu.
+    */
+    const eskiBaslik = document.title;
     document.title = 'Şirketini sahiplen, ilan gir | StajımVar';
+    return () => {
+      document.title = eskiBaslik;
+    };
   }, []);
 
   /*

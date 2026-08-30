@@ -88,6 +88,7 @@ export const EmployerGuide: React.FC<EmployerGuideProps> = ({ onBack, onNavigate
   const [havuz, setHavuz] = useState<TalentPoolStat | null>(null);
 
   useEffect(() => {
+    const eskiBaslik = document.title;
     document.title = 'Stajyer nasıl alınır? İşveren rehberi | StajımVar';
     let iptal = false;
     fetchTalentPoolStats()
@@ -99,6 +100,8 @@ export const EmployerGuide: React.FC<EmployerGuideProps> = ({ onBack, onNavigate
       });
     return () => {
       iptal = true;
+      /* Başlık geri yükleniyor: SPA'da sonraki sayfa bu adı taşımasın. */
+      document.title = eskiBaslik;
     };
   }, []);
 
