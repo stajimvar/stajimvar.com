@@ -900,8 +900,20 @@ export const Header: React.FC<HeaderProps> = ({
                   tuşuna basmak zorunda kalıyordu.
 
                   İkincil eylem: mavi öğrenci CTA'sıyla yarışmıyor, yeşilden
-                  yalnızca metin ve kenar rengi kadar ipucu alıyor. Dar
-                  ekranda hiç çizilmiyor — orada hesap menüsündeki satır var.
+                  yalnızca metin ve kenar rengi kadar ipucu alıyor.
+
+                  DAR EKRANDA DA ÇİZİLİYOR
+
+                  Önce `hidden sm:inline-flex` idi ve mobildeki karşılığı
+                  hesap menüsündeki "İşveren paneline geç" satırıydı. Ama o
+                  menü yalnızca ÖĞRENCİ PROFİLİ OLAN kullanıcıda çiziliyor
+                  (`activeStudent`); şirket hesabının çoğunda öğrenci
+                  profili yok ve orada header yalnızca çıkış düğmesini
+                  gösteriyor. Sonuç: telefonda şirket paneline dönmenin
+                  hiçbir yolu kalmıyordu — bildirilen hata tam olarak buydu.
+
+                  Artık her genişlikte var; dar ekranda yalnızca ikon,
+                  dokunma hedefi 44px.
                 */}
                 {sirketUyesiMi && onDunyaDegistir && (
                   <button
@@ -909,13 +921,14 @@ export const Header: React.FC<HeaderProps> = ({
                     onClick={onDunyaDegistir}
                     data-testid="header-isveren-paneli"
                     title="İşveren paneline dön"
-                    className="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer"
+                    aria-label="İşveren paneline dön"
+                    className="inline-flex h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border px-2.5 sm:px-3 text-xs font-bold transition-colors cursor-pointer"
                     style={{ borderColor: SIRKET_KENAR_GUCLU, color: SIRKET_VURGU_KOYU }}
                     onMouseEnter={(e) => (e.currentTarget.style.background = SIRKET_ROZET)}
                     onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                   >
-                    <Building2 className="w-3.5 h-3.5" />
-                    İşveren paneli
+                    <Building2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                    <span className="hidden sm:inline">İşveren paneli</span>
                   </button>
                 )}
 

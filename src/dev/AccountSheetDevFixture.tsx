@@ -43,6 +43,12 @@ export const AccountSheetDevFixture: React.FC = () => {
     kapanıyor; gerçek uygulamada bayrak company_members'tan geliyor.
   */
   const [sirketUyesi, setSirketUyesi] = React.useState(false);
+  /*
+    Şirket hesabının çoğunda ÖĞRENCİ PROFİLİ YOK; header o durumda hesap
+    menüsünü hiç çizmiyor. Geri dönüş yolunun o duruma bağlı kalmadığını
+    görebilmek için profil de açılıp kapanabiliyor.
+  */
+  const [ogrenciProfiliVar, setOgrenciProfiliVar] = React.useState(true);
 
   return (
     <div className="min-h-[2800px] bg-[#F9FAFB]">
@@ -53,7 +59,7 @@ export const AccountSheetDevFixture: React.FC = () => {
         setActiveSubTab={setActiveSubTab}
         userRole="student"
         setUserRole={() => undefined}
-        activeStudent={testStudent}
+        activeStudent={ogrenciProfiliVar ? testStudent : undefined}
         applicationsCount={3}
         isLoggedIn
         isAdmin
@@ -74,6 +80,14 @@ export const AccountSheetDevFixture: React.FC = () => {
           className="rounded-lg border px-2 py-1 text-xs font-bold"
         >
           Şirket üyeliği: {sirketUyesi ? 'VAR' : 'YOK'}
+        </button>
+        <button
+          type="button"
+          data-testid="fixture-ogrenci-profili"
+          onClick={() => setOgrenciProfiliVar((v) => !v)}
+          className="ml-2 rounded-lg border px-2 py-1 text-xs font-bold"
+        >
+          Öğrenci profili: {ogrenciProfiliVar ? 'VAR' : 'YOK'}
         </button>
       </div>
 

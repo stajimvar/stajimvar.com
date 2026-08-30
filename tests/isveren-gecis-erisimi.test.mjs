@@ -91,11 +91,36 @@ test('mobil: hesap panelinde satır var ve üyeliğe bağlı', () => {
   assert.match(SHEET, /account-sheet-isveren"[\s\S]{0,400}min-h-11/);
 });
 
-test('masaüstü düğmesi dar ekranda çizilmiyor', () => {
-  /* Mobilde yeri hesap paneli; header'a uzun düğme sıkıştırılmıyor. */
-  assert.match(
+test('DÜĞME DAR EKRANDA DA ÇİZİLİYOR', () => {
+  /*
+    Önce `hidden sm:inline-flex` idi ve mobildeki karşılığı hesap
+    menüsündeki satırdı. Ama o menü yalnızca ÖĞRENCİ PROFİLİ OLAN
+    kullanıcıda çiziliyor; şirket hesabının çoğunda öğrenci profili yok
+    ve orada telefonda panele dönmenin hiçbir yolu kalmıyordu.
+  */
+  assert.doesNotMatch(
     HEADER,
-    /data-testid="header-isveren-paneli"[\s\S]{0,400}hidden sm:inline-flex/
+    /data-testid="header-isveren-paneli"[\s\S]{0,300}hidden sm:inline-flex/,
+    'düğme dar ekranda gizlenmiş'
+  );
+  /* Etiket dar ekranda gizli, ikon kalıyor; dokunma hedefi 44px. */
+  assert.match(HEADER, /data-testid="header-isveren-paneli"[\s\S]{0,400}h-11 min-w-11/);
+});
+
+test('MOBİL ERİŞİM HESAP MENÜSÜNE BAĞLI OLMAMALI', () => {
+  /*
+    Hesap menüsü `userRole === 'student' && activeStudent` ile çiziliyor.
+    Şirket hesabında `activeStudent` boş olabiliyor; geri dönüş yolunun
+    o koşulun içine hapsedilmemesi gerekiyor.
+  */
+  const dugme = HEADER.slice(
+    HEADER.indexOf('data-testid="header-isveren-paneli"') - 900,
+    HEADER.indexOf('data-testid="header-isveren-paneli"')
+  );
+  assert.doesNotMatch(
+    dugme,
+    /activeStudent &&/,
+    'işveren düğmesi öğrenci profili koşulunun içine girmiş'
   );
 });
 
