@@ -90,8 +90,15 @@ jobs:
         id: storage_policies
         continue-on-error: true
         run: |
-          supabase db query --linked --agent yes --output-format json             -f scripts/sql/storage-politikalari.sql > .schema-audit/storage-production.json
-          supabase db query --local --agent yes --output-format json             -f scripts/sql/storage-politikalari.sql > .schema-audit/storage-local.json
+          # `--agent yes` çıktısı her yanıta rastgele bir "boundary" alanı
+          # koyuyor. Ham yanıtları karşılaştırmak o rastgele değeri fark
+          # sanıyor ve kapı her turda kırmızı yanıyordu. Yalnızca veri
+          # karşılaştırılıyor; jq -S anahtarları sıralayarak biçim
+          # farklarını da eliyor.
+          supabase db query --linked --agent yes --output-format json -f scripts/sql/storage-politikalari.sql \
+            | jq -S '.rows' > .schema-audit/storage-production.json
+          supabase db query --local --agent yes --output-format json -f scripts/sql/storage-politikalari.sql \
+            | jq -S '.rows' > .schema-audit/storage-local.json
           if diff -u .schema-audit/storage-production.json .schema-audit/storage-local.json; then
             echo "storage politikaları aynı"
           else

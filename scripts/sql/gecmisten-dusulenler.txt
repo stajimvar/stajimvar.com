@@ -13,6 +13,19 @@
 #   scripts/sql/uzak-gecmis-anlik-goruntu-20260830.txt
 #
 # Geri almak gerekirse aynı sürümler "applied" işaretlenebilir.
+#
+# BURADA OLMAYANLAR
+# Eski soyun beş sürümü bilerek dışarıda bırakıldı: aynı sürüm numarasını
+# taşıyan bir depo dosyası var, yani o kayıt zaten izlenen kümenin
+# parçası. Düşülselerdi elle-uygulananlar.txt'nin az önce eklediği satır
+# hemen silinir ve kapı "eksik migration" diye durdururdu.
+#
+#   20260822160000
+#   20260824175332
+#   20260824175356
+#   20260824180222
+#   20260828020000
+#
 20260815205310
 20260815205333
 20260815205506
@@ -32,10 +45,6 @@
 20260817002400
 20260817002459
 20260818111225
-20260822160000
-20260824175332
-20260824175356
-20260824180222
 20260825001218
 20260825212715
 20260825225250
@@ -43,7 +52,6 @@
 20260825235337
 20260825235940
 20260826054420
-20260828020000
 20260829204618
 20260829204647
 20260829204721
