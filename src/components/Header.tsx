@@ -207,6 +207,17 @@ export const Header: React.FC<HeaderProps> = ({
     return () => window.removeEventListener('scroll', kaydir);
   }, []);
 
+  /*
+    SEÇİLİ ÖĞE KENDİ GENİŞLİĞİNİ ALIYOR
+
+    Beş öğenin hepsi `flex-1` iken 390 piksellik ekranda seçili öğenin
+    yazısı kırpılıyordu: "İlanlar" yerine "İla...", "Fırsatlar" yerine
+    "Fır...". Yazıyı yalnız seçilide göstermenin tek amacı hangi sayfada
+    olunduğunu söylemek; kırpılınca o amaç boşa gidiyor.
+
+    Seçili öğe artık `shrink-0`, kalanlar boşluğu paylaşıyor. Aynı kural
+    işveren panelinde de var (src/ui/BottomNavigation).
+  */
   const altMenuClass =
     'lg:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 z-50 rounded-full bg-white border border-gray-200 shadow-[0_10px_30px_rgba(15,23,42,0.18)] px-1.5 py-1.5 flex items-center justify-around gap-0.5 transition-transform duration-200';
 
@@ -1429,7 +1440,7 @@ export const Header: React.FC<HeaderProps> = ({
             setActiveTab('internships');
             setActiveSubTab('all');
           })}
-          className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
+          className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${ilanlardaMi ? 'shrink-0' : 'flex-1'} transition-all cursor-pointer relative ${
             ilanlardaMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
           }`}
         >
@@ -1459,7 +1470,7 @@ export const Header: React.FC<HeaderProps> = ({
           aria-label="Öğrenci fırsatları"
           aria-current={firsatlardaMi ? 'page' : undefined}
           onClick={baglantiTiklamasi(() => onOpenOpportunities?.())}
-          className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
+          className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${firsatlardaMi ? 'shrink-0' : 'flex-1'} transition-all cursor-pointer relative ${
             firsatlardaMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
           }`}
         >
@@ -1472,7 +1483,7 @@ export const Header: React.FC<HeaderProps> = ({
           {firsatlardaMi && <span className="text-[11px] font-bold truncate">Fırsat</span>}
         </a>
 
-        <a href="/kesfet" aria-label="Öğrenci etkinlikleri" aria-current={kesfetteMi ? 'page' : undefined} onClick={baglantiTiklamasi(() => onOpenDiscover?.())} className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all ${kesfetteMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'}`}>
+        <a href="/kesfet" aria-label="Öğrenci etkinlikleri" aria-current={kesfetteMi ? 'page' : undefined} onClick={baglantiTiklamasi(() => onOpenDiscover?.())} className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${kesfetteMi ? 'shrink-0' : 'flex-1'} transition-all ${kesfetteMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'}`}>
           <Compass className="w-5 h-5" />
           {kesfetteMi && <span className="text-[11px] font-bold truncate">Keşfet</span>}
         </a>
@@ -1489,7 +1500,7 @@ export const Header: React.FC<HeaderProps> = ({
           aria-label="Öğrenci rehberi"
           aria-current={rehberdeMi && !isverendeMi ? 'page' : undefined}
           onClick={baglantiTiklamasi(() => onOpenGuides?.())}
-          className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
+          className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${rehberdeMi && !isverendeMi ? 'shrink-0' : 'flex-1'} transition-all cursor-pointer relative ${
             rehberdeMi && !isverendeMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
           }`}
         >
@@ -1515,7 +1526,7 @@ export const Header: React.FC<HeaderProps> = ({
             id="mobil-isveren-btn"
             aria-label="İşveren tarafı"
             onClick={() => onOpenEmployer?.()}
-            className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
+            className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${isverendeMi ? 'shrink-0' : 'flex-1'} transition-all cursor-pointer relative ${
               isverendeMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
             }`}
           >
@@ -1537,7 +1548,7 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={() => {
             openMobileAccountSheet();
           }}
-          className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
+          className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${profildeMi ? 'shrink-0' : 'flex-1'} transition-all cursor-pointer relative ${
             profildeMi
               ? 'bg-blue-50 text-blue-700 font-bold'
               :'text-gray-500 hover:text-gray-900'

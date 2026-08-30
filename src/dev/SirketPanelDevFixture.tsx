@@ -1,5 +1,6 @@
 import React from 'react';
 import { SirketKabugu } from '../sirket/SirketKabugu';
+import { Ilanlar } from '../sirket/SirketPaneli';
 import { IlanFormu } from '../sirket/IlanFormu';
 import { AdayIzgarasi } from '../sirket/AdayIzgarasi';
 import { GenelBakis } from '../sirket/GenelBakis';
@@ -87,9 +88,23 @@ const ORNEK_BASVURULAR = [
   },
 ];
 
+/** Fikstür boyunca aynı şirket bağlamı — üç ekranda tekrar yazılmasın. */
+const TEST_BAGLAMI = (kademe: number) => ({
+  companyId: 'test',
+  ad: 'Örnek Teknoloji A.Ş.',
+  slug: 'ornek',
+  siteUrl: 'https://ornek.com',
+  hrEmail: 'ik@ornek.com',
+  vkn: null,
+  dogrulandi: kademe === KADEME.DOGRULANMIS,
+  kademe,
+});
+
 export const SirketPanelDevFixture: React.FC = () => {
   const [kademe, setKademe] = React.useState<number>(KADEME.ILAN_VEREN);
-  const [ekran, setEkran] = React.useState<'genel' | 'form' | 'adaylar' | 'profil'>('genel');
+  const [ekran, setEkran] = React.useState<'genel' | 'ilanlar' | 'form' | 'adaylar' | 'profil'>(
+    'genel',
+  );
 
   const kartlar = React.useMemo(
     () => ORNEK_BASVURULAR.map((s) => kartVerisi(s, { yetenekler: [] })),
@@ -121,7 +136,15 @@ export const SirketPanelDevFixture: React.FC = () => {
           id="dev-ekran"
           onClick={() =>
             setEkran((e) =>
-              e === 'genel' ? 'form' : e === 'form' ? 'adaylar' : e === 'adaylar' ? 'profil' : 'genel'
+              e === 'genel'
+                ? 'ilanlar'
+                : e === 'ilanlar'
+                  ? 'form'
+                  : e === 'form'
+                    ? 'adaylar'
+                    : e === 'adaylar'
+                      ? 'profil'
+                      : 'genel',
             )
           }
           className="rounded-lg border px-2 py-1 font-bold"
@@ -173,6 +196,61 @@ export const SirketPanelDevFixture: React.FC = () => {
             ]}
             basvurular={kartlar}
             onNavigate={() => undefined}
+          />
+        ) : ekran === 'ilanlar' ? (
+          /*
+            İLANLAR EKRANI FİKSTÜRDE
+
+            Bu ekran giriş arkasında olduğu için tarayıcıda hiç
+            görülmeden değişiyordu. Üç durum birden çiziliyor: yayında
+            (düzenle + kapat), taslak (düzenle + yayınla + sil), başvurusu
+            olan kapalı ilan (sil değil arşivle) ve toplama hattından
+            gelen ilan (düzenlenemez).
+          */
+          <Ilanlar
+            baglam={TEST_BAGLAMI(kademe)}
+            ilanlar={[
+              {
+                id: '2d7aa946-0000-4000-8000-000000000001',
+                title: 'Yazılım Stajyeri',
+                city: 'İstanbul',
+                status: 'published',
+                origin: 'employer_posted',
+                application_method: 'internal',
+                applicants_count: 4,
+              },
+              {
+                id: '2d7aa946-0000-4000-8000-000000000002',
+                title: 'Pazarlama Stajyeri',
+                city: 'Ankara',
+                status: 'draft',
+                origin: 'employer_posted',
+                application_method: 'internal',
+                applicants_count: 0,
+              },
+              {
+                id: '2d7aa946-0000-4000-8000-000000000003',
+                title: 'Veri Analisti Stajyeri',
+                city: 'İzmir',
+                status: 'closed',
+                origin: 'employer_posted',
+                application_method: 'internal',
+                applicants_count: 7,
+              },
+              {
+                id: '2d7aa946-0000-4000-8000-000000000004',
+                title: 'İnsan Kaynakları Stajyeri (kaynaktan)',
+                city: 'İstanbul',
+                status: 'published',
+                origin: 'scraped',
+                application_method: 'external',
+                applicants_count: 0,
+              },
+            ]}
+            basvuruSayisi={11}
+            onNavigate={() => undefined}
+            onDurum={async () => undefined}
+            onKaldir={async () => undefined}
           />
         ) : ekran === 'profil' ? (
           /*

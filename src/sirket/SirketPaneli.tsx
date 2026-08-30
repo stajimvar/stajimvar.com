@@ -301,33 +301,18 @@ export const SirketPaneli: React.FC<{
   );
 };
 
-/* ------------------------------------------------------------- sayılar */
-
-const Sayi: React.FC<{ etiket: string; deger: React.ReactNode; kilitli?: boolean }> = ({
-  etiket,
-  deger,
-  kilitli,
-}) => (
-  <div className="rounded-2xl border p-3" style={kutuStil}>
-    <p
-      className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide"
-      style={{ color: SIRKET_METIN_IKINCIL }}
-    >
-      {kilitli && <Lock className="h-3 w-3" />}
-      {etiket}
-    </p>
-    <p
-      className="mt-0.5 text-xl font-black"
-      style={{ color: kilitli ? SIRKET_METIN_IKINCIL : SIRKET_METIN }}
-    >
-      {deger}
-    </p>
-  </div>
-);
-
 /* ------------------------------------------------------------- ilanlar */
 
-const Ilanlar: React.FC<{
+/**
+ * İlan listesi ekranı.
+ *
+ * `export` YALNIZCA GELİŞTİRME FİKSTÜRÜ İÇİN: bu ekran giriş arkasında
+ * duruyor ve tarayıcıda hiç görülmeden değişiyordu — taşma menüsü,
+ * kaldırma onayı ve düzenle/yayınla düğmeleri dahil. Fikstür (src/dev/
+ * SirketPanelDevFixture) artık bu ekranı da çiziyor. Üretim yolunda
+ * yalnızca aşağıdaki SirketPaneli tarafından kullanılıyor.
+ */
+export const Ilanlar: React.FC<{
   baglam: SirketBaglami;
   ilanlar: Record<string, unknown>[];
   basvuruSayisi: number;
@@ -364,30 +349,34 @@ const Ilanlar: React.FC<{
           >
             {baglam.ad || 'İlanlar'}
           </h1>
+          {/*
+            DÖRT SAYI KAROSU KALDIRILDI
+
+            Aynı bilgi ekranda üç kez yazıyordu: bu satırda, altındaki dört
+            karoda ve doğrulama için üstteki rozette. Telefonda karolar
+            ilanın kendisini ekranın altına itiyordu — İK'nın buraya
+            geldiğinde aradığı şey ilan listesi, sayaç değil.
+
+            Kaybolan bilgi yok: başvuru sayısı bu satıra katıldı,
+            doğrulama zaten üst çubuktaki rozette duruyor. Genel bakış
+            ekranı da aynı sebeple karolarını bırakmıştı; iki ekran artık
+            aynı dili konuşuyor.
+          */}
           <p className="text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
             {acik} açık ilan{taslak > 0 ? ` · ${taslak} taslak` : ''}
+            {kartAcik && basvuruSayisi > 0 ? ` · ${basvuruSayisi} başvuru` : ''}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => onNavigate('/sirket/ilan/yeni')}
-          className={`ml-auto ${BIRINCIL_DUGME}`}
-          style={birincilStil}
-        >
-          <Plus className="h-5 w-5" />
-          Yeni ilan
-        </button>
-      </div>
+        {/*
+          İKİNCİ "YENİ İLAN" DÜĞMESİ KALDIRILDI
 
-      {/* Dört sayı: ne yayında, ne bekliyor, kaç başvuru, kapı açık mı. */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-        <Sayi etiket="Açık ilan" deger={acik} />
-        <Sayi etiket="Taslak" deger={taslak} />
-        <Sayi etiket="Başvuru" deger={kartAcik ? basvuruSayisi : '—'} kilitli={!kartAcik} />
-        <Sayi
-          etiket="Doğrulama"
-          deger={<span className="text-sm">{baglam.dogrulandi ? 'Tamam' : 'Bekliyor'}</span>}
-        />
+          Aynı yeşil düğme üst çubukta zaten duruyor ve her ekranda
+          görünüyor; burada ikincisi tam onun altına, aynı hizaya
+          düşüyordu. İki birincil düğme yan yana durunca hangisinin ana
+          eylem olduğu belirsizleşiyor. Boş ekrandaki çağrı ise kartın
+          içinde kalıyor — orada kullanıcı zaten "peki nasıl" diye
+          soruyor.
+        */}
       </div>
 
       {ilanlar.length === 0 ? (
@@ -438,37 +427,43 @@ const Ilanlar: React.FC<{
                   <p className="truncate font-bold" style={{ color: SIRKET_METIN }}>
                     {String(i.title ?? '')}
                   </p>
+                  {/*
+                    ALT SATIR SADELEŞTİ
+
+                    Önce "İstanbul · YAYINDA · #2d7aa946" yazıyordu: durum
+                    monospace ve BÜYÜK HARF, yanında da UUID'nin ilk sekiz
+                    karakteri. İkisi de panele terminal görüntüsü veriyordu
+                    ve sekiz karakterlik kimlikle şirketin yapabileceği bir
+                    şey yok. Durum artık paneldeki diğer ekranlarla aynı
+                    yazımda ("Yayında"), kimlik satırdan çıktı.
+
+                    Başvuru sayısı yalnızca doğrulanmış şirkette VE sıfırdan
+                    büyükse: "0 başvuru" bir bilgi değil, gürültü.
+                  */}
                   <p className="truncate text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
-                    {String(i.city ?? '')} ·{' '}
-                    <span className="font-mono">
-                      {yayinda ? 'YAYINDA' : taslak ? 'TASLAK' : 'KAPALI'}
-                    </span>
-                    {' · '}
-                    <span className="font-mono">#{id.slice(0, 8)}</span>
+                    {String(i.city ?? '')} · {yayinda ? 'Yayında' : taslak ? 'Taslak' : 'Kapalı'}
+                    {kartAcik && basvuruSayisi > 0 ? ` · ${basvuruSayisi} başvuru` : ''}
                   </p>
                 </div>
 
-                {platformdan && (
+                {/*
+                  BAŞVURU YOLU ETİKETİ YALNIZCA FARKLIYSA
+
+                  Şirketin buradan açtığı her ilan StajımVar üzerinden
+                  başvuru alıyor — yol artık sistem tarafından sabit. Her
+                  satıra "StajımVar ile başvuru" yazmak, hepsinde aynı olan
+                  bir şeyi tekrar etmek ve satırı şişirmekti. Etiket artık
+                  yalnızca AYKIRI durumda çıkıyor: toplama hattından gelen
+                  ilanda başvuru şirketin kendi sayfasında tamamlanıyor ve
+                  o ilanı buradan düzenlemek de mümkün değil.
+                */}
+                {!platformdan && (
                   <span
                     className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold"
                     style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
                   >
                     <Send className="h-3 w-3" />
-                    StajımVar ile başvuru
-                  </span>
-                )}
-
-                {/*
-                  Başvuru sayısı YALNIZCA doğrulanmış şirkette. Kademe 1'e
-                  "3 başvuru var" demek, göremeyeceği bir şeyi göstermek ve
-                  doğrulamayı satmak olurdu.
-                */}
-                {kartAcik && (
-                  <span
-                    className="shrink-0 font-mono text-xs"
-                    style={{ color: SIRKET_METIN_IKINCIL }}
-                  >
-                    {basvuruSayisi} başvuru
+                    Kariyer sayfasından
                   </span>
                 )}
 
@@ -509,7 +504,9 @@ const Ilanlar: React.FC<{
                         onClick={() => setAcikMenu((m) => (m === id ? null : id))}
                         aria-label="Diğer işlemler"
                         aria-expanded={acikMenu === id}
-                        className={IKINCIL_DUGME}
+                        className={`${IKINCIL_DUGME} min-w-11`}
+                        /* Ölçüldü: yalnız `paddingInline: 10` ile genişlik 38 px'e
+                           düşüyordu; dokunma hedefi 44×44 olmalı. */
                         style={{ ...ikincilStil, paddingInline: 10 }}
                       >
                         <MoreHorizontal className="h-4 w-4" />
