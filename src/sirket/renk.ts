@@ -13,30 +13,43 @@
  *
  * YEŞİL VURGU, ZEMİN DEĞİL
  * ------------------------
- * Zemin #F6F9F7 — beyaza çok yakın, yeşile yalnızca fısıldıyor
+ * Zemin #F5FBF7 — beyaza çok yakın, yeşile yalnızca fısıldıyor
  * (beyazla arasındaki oran 1.06). Kartlar beyaz kalıyor. Yeşil
  * düğmede, aktif sekmede, seçili durumda ve rozette görünüyor; yüzey
  * boyamak "her yeri pastel yeşil" görünümü üretirdi.
  *
- * Parlak yeşil bilerek yok: #1F5A45 doygunluğu düşük, koyu ve doğal.
- * Emerald-500 tonu, gradyan ve neon kullanılmıyor.
+ * Yüzey boyanmıyor: imza rengi dolguda ve vurguda görünüyor, arka
+ * planda değil. Gradyan yok.
+ *
+ * WHATSAPP YEŞİLİ AİLESİ
+ * -----------------------
+ * Palet WhatsApp yeşiline yaklaştırıldı: daha canlı ve tanıdık, ama
+ * yüzeyler beyaz kaldığı için panel hâlâ sakin duruyor.
+ *
+ * #25D366 AİLENİN İMZASI AMA METİN TAŞIYAMIYOR
+ * --------------------------------------------
+ * Ölçüldü: beyaz üzerinde 1.98:1, yumuşak yüzeyde 1.81:1. Ne metin
+ * (4.5 gerekir) ne de ince kenar/durum göstergesi (3 gerekir) olabiliyor.
+ * Bu yüzden DOLGU olarak kullanılıyor — ilerleme çubuğu ve uyum şeridi
+ * gibi, yanında sayı ya da etiket duran yerlerde. Metin ve kenarlar
+ * ailenin koyu uçlarını kullanıyor.
+ *
+ * BİRİNCİL DÜĞME #128C7E DEĞİL
+ * ----------------------------
+ * İstenen #128C7E beyaz yazıyla 4.14:1 veriyor; düğme yazısı 14px kalın,
+ * yani "büyük metin" sayılmıyor ve 4.5 eşiğinin altında kalıyor. Aynı
+ * tonun bir tık koyusu (#108074) 4.81:1 ile geçiyor ve gözle ayırt
+ * edilmiyor. Hover ve vurgu metni istenen #075E54.
  *
  * KONTRAST (ölçüldü)
  * ------------------
- * Birincil düğme: #FFFFFF yazı / #1F5A45 zemin = 8.06:1
- * Hover:          #FFFFFF yazı / #174536 zemin = 10.82:1
- * Vurgu metni:    #1F5A45 / beyaz = 8.06:1, / rozet #E6F0EA = 6.91:1
- * Ana metin:      #16211C / zemin = 15.62:1
- * İkincil metin:  #55655C / zemin = 5.82:1
- * Vurgu (ikincil): #2B7357 / beyaz = 5.69:1, / rozet = 4.88:1
- *
- * İKİ KENAR RENGİ VAR
- * -------------------
- * #D9E5DE kart ve ayıraç için — dekoratif, beyazla oranı 1.30 ve o
- * yeterli. Ama form alanının ve çerçeveli düğmenin kenarı KONTROLÜN
- * KENDİSİNİ tanımlıyor; WCAG orada 3:1 istiyor. Eski turuncu temada
- * ikisi de aynı yumuşak renkti (#F3D5B8, 1.3:1) ve girdi kutuları
- * sınırdaydı. #7E9A8C = 3.05:1 ile o eşiği geçiyor.
+ * Birincil düğme: #FFFFFF yazı / #108074 zemin = 4.81:1
+ * Hover:          #FFFFFF yazı / #075E54 zemin = 7.67:1
+ * Vurgu metni:    #075E54 / beyaz = 7.67:1, / rozet #E9F8EF = 6.99:1
+ * Ana metin:      #16211C / zemin #F5FBF7 = 15.79:1
+ * İkincil metin:  #55655C / zemin = 5.89:1
+ * Kontrol kenarı: #3E9569 / beyaz = 3.68:1
+ * Dolgu üstü yazı: #16211C / #25D366 = 8.35:1
  *
  * SEMANTİK RENKLER AYRI
  * ---------------------
@@ -45,17 +58,27 @@
  * öyle. Tema yeşil diye her rozet yeşile boyanmıyor.
  */
 
-export const SIRKET_ZEMIN = '#F6F9F7';
+export const SIRKET_ZEMIN = '#F5FBF7';
 export const SIRKET_YUZEY = '#FFFFFF';
-export const SIRKET_KENAR = '#D9E5DE';
+export const SIRKET_KENAR = '#BFE8CE';
 export const SIRKET_METIN = '#16211C';
 export const SIRKET_METIN_IKINCIL = '#55655C';
-export const SIRKET_VURGU = '#1F5A45';
-export const SIRKET_VURGU_KOYU = '#2B7357';
-export const SIRKET_ROZET = '#E6F0EA';
+export const SIRKET_VURGU = '#108074';
+export const SIRKET_VURGU_KOYU = '#075E54';
+export const SIRKET_ROZET = '#E9F8EF';
 
-/** Birincil düğmenin hover zemini. Beyaz yazıyla 10.82:1. */
-export const SIRKET_VURGU_HOVER = '#174536';
+/**
+ * Ailenin imza rengi — YALNIZCA DOLGU.
+ *
+ * Metin ya da ince kenar olarak kullanılamıyor (beyazda 1.98:1). Geniş
+ * dolgu alanlarında, yanında sayı ya da etiket duran yerlerde çiziliyor:
+ * profil ilerleme çubuğu, aday uyum şeridi. Üstüne yazı gerekirse koyu
+ * nötr (#16211C) ile 8.35:1 veriyor.
+ */
+export const SIRKET_ACCENT = '#25D366';
+
+/** Birincil düğmenin hover zemini. Beyaz yazıyla 7.67:1. */
+export const SIRKET_VURGU_HOVER = '#075E54';
 
 /**
  * Kontrol kenarı — form alanı ve çerçeveli düğme.
@@ -64,7 +87,7 @@ export const SIRKET_VURGU_HOVER = '#174536';
  * başladığını o çizgi söylüyor ve WCAG orada 3:1 istiyor. Beyaz
  * üzerinde 3.05:1.
  */
-export const SIRKET_KENAR_GUCLU = '#7E9A8C';
+export const SIRKET_KENAR_GUCLU = '#3E9569';
 
 /**
  * Birincil düğme.

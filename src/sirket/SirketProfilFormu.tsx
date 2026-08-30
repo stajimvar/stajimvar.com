@@ -10,6 +10,7 @@ import {
   SIRKET_METIN,
   SIRKET_METIN_IKINCIL,
   SIRKET_ROZET,
+  SIRKET_ACCENT,
   SIRKET_VURGU,
   SIRKET_VURGU_KOYU,
   SIRKET_YUZEY,
@@ -430,7 +431,9 @@ const ProfilOzeti: React.FC<{
       >
         <span
           className="block h-full rounded-full transition-[width] duration-500"
-          style={{ width: `${oran}%`, background: SIRKET_VURGU }}
+          /* Ailenin imza rengi geniş dolguda; yüzde yanında yazılı
+             olduğu için anlam yalnızca renge bağlı değil. */
+          style={{ width: `${oran}%`, background: SIRKET_ACCENT }}
         />
       </div>
 

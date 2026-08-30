@@ -28,6 +28,7 @@ import {
 import { StudentProfile, CompanyAccount } from '../types';
 import { Avatar } from './Avatar';
 import { AccountSheet, type AccountSheetCloseReason } from './AccountSheet';
+import { SIRKET_KENAR_GUCLU, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
 import { Logo } from './Logo';
 import { adYazimi } from '../lib/ad';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
@@ -908,8 +909,10 @@ export const Header: React.FC<HeaderProps> = ({
                     onClick={onDunyaDegistir}
                     data-testid="header-isveren-paneli"
                     title="İşveren paneline dön"
-                    className="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer hover:bg-[#E6F0EA]"
-                    style={{ borderColor: '#7E9A8C', color: '#2B7357' }}
+                    className="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer"
+                    style={{ borderColor: SIRKET_KENAR_GUCLU, color: SIRKET_VURGU_KOYU }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = SIRKET_ROZET)}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                   >
                     <Building2 className="w-3.5 h-3.5" />
                     İşveren paneli

@@ -1,6 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Award, Building2, LogOut, Send, Settings, User } from 'lucide-react';
+import { SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
 import type { StudentProfile } from '../types';
 import { Avatar } from './Avatar';
 
@@ -249,8 +250,10 @@ export const AccountSheet: React.FC<AccountSheetProps> = ({
               data-testid="account-sheet-isveren"
               onClick={onIsverenPaneli}
               /* min-h-11 = 44px dokunma hedefi. */
-              className="flex min-h-11 w-full items-center gap-3 rounded-2xl px-3 py-3 text-left font-bold transition-colors hover:bg-[#E6F0EA] focus-visible:outline-2 focus-visible:outline-offset-2"
-              style={{ color: '#2B7357' }}
+              className="flex min-h-11 w-full items-center gap-3 rounded-2xl px-3 py-3 text-left font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+              style={{ color: SIRKET_VURGU_KOYU }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = SIRKET_ROZET)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = '')}
             >
               <Building2 className="h-5 w-5 shrink-0" />
               <span>İşveren paneline geç</span>

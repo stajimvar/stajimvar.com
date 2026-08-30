@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { InternshipListing, MatchBreakdown } from '../types';
 import { ListingLogo } from './ListingLogo';
+import { SIRKET_KENAR_GUCLU, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import { eklenmeMetni, sonKontrolMetni, uzunSuredirAcik } from '../lib/zaman';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
@@ -465,7 +466,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                 <span
                   key="kendi"
                   className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border px-3 py-1.5 text-xs font-bold"
-                  style={{ borderColor: '#7E9A8C', background: '#E6F0EA', color: '#2B7357' }}
+                  style={{ borderColor: SIRKET_KENAR_GUCLU, background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
                 >
                   <Building2 className="h-3.5 w-3.5" />
                   Bu ilanı şirket hesabınız yönetiyor

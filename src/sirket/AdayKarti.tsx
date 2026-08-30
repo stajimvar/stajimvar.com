@@ -1,6 +1,7 @@
 import React from 'react';
 import { ExternalLink, FileText, ShieldOff } from 'lucide-react';
 import {
+  SIRKET_ACCENT,
   SIRKET_KENAR,
   SIRKET_METIN,
   SIRKET_METIN_IKINCIL,
@@ -27,8 +28,10 @@ import { UYUM_ETIKETI, kimlikSatiri, monogram } from '../lib/aday-kart.mjs';
  */
 
 const SERIT: Record<string, { renk: string; oran: string }> = {
-  yuksek: { renk: SIRKET_VURGU, oran: '100%' },
-  orta: { renk: SIRKET_VURGU, oran: '60%' },
+  /* Dolgu ailenin imza renginde; bandın adı kartta yazılı olduğu için
+     anlam yalnızca renkle taşınmıyor. */
+  yuksek: { renk: SIRKET_ACCENT, oran: '100%' },
+  orta: { renk: SIRKET_ACCENT, oran: '60%' },
   dusuk: { renk: SIRKET_KENAR, oran: '30%' },
   bilinmiyor: { renk: SIRKET_KENAR, oran: '0%' },
 };
