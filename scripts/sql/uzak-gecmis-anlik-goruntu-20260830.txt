@@ -1,0 +1,72 @@
+# ÜRETİM MIGRATION DEFTERİNİN UZLAŞTIRMA ÖNCESİ HÂLİ — 30 Ağustos 2026
+#
+# Bu dosya bir KAYIT. Aşağıdaki 48 sürüm, üretim veritabanının
+# supabase_migrations.schema_migrations tablosunda duruyordu ve
+# uzlaştırma sırasında "reverted" işaretlenerek defterden düşüldü.
+#
+# NEDEN DÜŞÜLDÜ
+# Depo geçmişi bir noktada numaralandırılmış bir tabana (0001..0022)
+# sıkıştırılmış, üretim ise özgün damgalı soyu taşımaya devam etmişti.
+# İki soy aynı şemayı üretiyor ama tek bir sürüm numarası bile
+# örtüşmüyordu; `supabase migration list` her ikisini de "karşı tarafta
+# yok" diye raporluyor ve `db push` kalıcı olarak kilitleniyordu.
+#
+# NEYE DAYANARAK
+# Düşme kararı isim benzerliğine DEĞİL, ölçüme dayanıyor: şema temel
+# denetimi (supabase-schema-baseline-audit) üretim dökümü ile depodaki
+# göçlerden sıfırdan kurulan şemayı karşılaştırdı ve fark bulunmadı.
+# Yani depodaki göç kümesi bu soyun ürettiği şemanın aynısını üretiyor.
+#
+# Şema DEĞİŞTİRİLMEDİ. Yalnızca hangi göç kümesinin izlendiği kaydı
+# düzeltildi. Geri almak gerekirse bu liste yeniden "applied"
+# işaretlenebilir.
+#
+# sürüm            ad
+20260815205310  initial_schema_tables
+20260815205333  rls_policies
+20260815205506  storage_buckets
+20260815205730  harden_function_permissions
+20260815205813  fix_anon_execute_permissions
+20260815212705  ingestion_and_application_channels
+20260815215300  discovery_pipeline
+20260815215345  fix_channel_guard_for_service_role
+20260815224314  raw_listing_lifecycle
+20260816015823  logo_bucket_mime_types
+20260816023526  signup_completes_student_profile
+20260816030741  avatar_replace_policies
+20260816214241  company_claims
+20260816214450  revoke_excess_api_grants
+20260816232042  application_notes_split
+20260817001728  signup_role_and_profile_visibility
+20260817002400  server_side_quiz_scoring
+20260817002459  quiz_questions_column_grants
+20260818111225  raw_listing_identity_is_url
+20260822160000  fix_opportunity_url_constraint_and_seed
+20260824175332  opportunity_amount_fields
+20260824175356  opportunity_application_progress
+20260824180222  admin_set_opportunity_amount
+20260825001218  listing_source_health
+20260825212715  instagram_yayin_kaydi
+20260825225250  rehber_kaydet_ve_okunma
+20260825233213  sirket_ekleme_talepleri
+20260825235337  kaydedilen_isverenler
+20260825235940  takip_edilen_bolumler
+20260826054420  oauth_ad_alanini_genislet
+20260828020000  discover_event_occurrences
+20260829204618  sirket_kademeleri_ve_vkn
+20260829204647  ilan_kaynagi_employer_posted
+20260829204721  isveren_ilani_ve_claim_birlestirme
+20260829210114  sirket_dogrulama_tek_tik
+20260829210720  isveren_ilani_yayin_korumasi
+20260829214247  aday_becerileri_dogrulama_ister
+20260829225133  firsat_kapak_gorseli
+20260830080835  sirket_otomatik_dogrulama
+20260830080936  sirket_otomatik_dogrulama_tetikleyici
+20260830081153  sirket_yetki_yukselmesini_kapat
+20260830081253  sirket_uyelik_politikasi_daralt
+20260830084431  ogrenci_profili_basvuru_sarti
+20260830085043  cok_parcali_son_ek_kurali
+20260830115208  burs_uygunluk_dogrulama_durumu
+20260830120823  tutar_odeme_sikligi_zorunlu
+20260830150855  uretim_depo_uzlastirma
+20260830151803  guard_listing_publish_yetkisini_daralt

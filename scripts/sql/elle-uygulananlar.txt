@@ -1,15 +1,73 @@
-# Supabase panelinden ELLE çalıştırılmış migration sürümleri.
+# ÜRETİM DEFTERİNE "UYGULANDI" DİYE İŞLENECEK SÜRÜMLER
 #
-# Buraya yazılan sürüm, uzak geçmişte yoksa CI tarafından "uygulandı" diye
-# işaretlenir (supabase migration repair). Şema değiştirilmez — yalnızca
-# defter gerçeğe uydurulur.
+# Buradaki her sürüm için CI `supabase migration repair --status applied`
+# çalıştırıyor. Şema DEĞİŞMİYOR — yalnızca defter gerçeğe uyduruluyor.
+#
+# NEDEN BU KADAR UZUN
+# 30 Ağustos'a kadar depo ile üretim iki ayrı migration soyu taşıyordu:
+# depo bir noktada 0001..0022 tabanına sıkıştırılmış, üretim özgün damgalı
+# soyu sürdürmüştü. Tek bir sürüm numarası bile örtüşmüyordu, bu yüzden
+# `supabase migration list` hepsini "yerelde var, uzakta yok" görüyor ve
+# `db push` kalıcı olarak kilitleniyordu. Aşağıdaki liste o kilidi
+# açıyor.
+#
+# NEYE DAYANARAK
+# İsim benzerliğine değil ÖLÇÜME: şema temel denetimi üretim dökümü ile
+# depodaki göçlerden sıfırdan kurulan şemayı karşılaştırdı ve fark
+# bulunmadı. Yani bu dosyaların etkisi üretimde ZATEN var; "uygulandı"
+# demek bir tahmin değil, ölçülmüş bir gerçeğin kaydı.
+#
+# Düşülen eski soy: scripts/sql/uzak-gecmis-anlik-goruntu-20260830.txt
 #
 # Bir satır = bir sürüm. Boş satır ve # ile başlayan satır atlanır.
-#
-# 20260822160000: fırsat kısıtı onarımı + ilk 11 fırsat. Dağıtım kapısı o
-# gün kilitlendiği için SQL Editor'den elle çalıştırıldı.
+# YENİ göçleri buraya EKLEME: onları `db push` uygular.
+0001
+0002
+0003
+0004
+0005
+0006
+0007
+0008
+0009
+0010
+0011
+0012
+0013
+0014
+0015
+0016
+0017
+0018
+0019
+0020
+0021
+0022
+20260821213000
 20260822160000
-
-# 20260828020000: Keşfet occurrence modeli. Üretim migration geçmişi eski
-# soyla ayrıştığı için doğrulanan idempotent SQL, SQL Editor'den uygulandı.
+20260824175332
+20260824175356
+20260824180222
+20260825220000
+20260826010000
+20260826020000
+20260826030000
+20260826040000
+20260826050000
+20260827010000
+20260827020000
+20260827030000
 20260828020000
+20260830010000
+20260830020000
+20260830030000
+20260830040000
+20260830050000
+20260831010000
+20260901010000
+20260902010000
+20260902020000
+20260903010000
+20260903020000
+20260904010000
+20260904020000

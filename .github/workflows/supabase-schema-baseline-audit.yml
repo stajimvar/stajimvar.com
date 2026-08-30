@@ -74,6 +74,31 @@ jobs:
           supabase db dump --local --schema public,extensions --file .schema-audit/local.sql
           node scripts/normalize-schema-dump.mjs .schema-audit/local.sql .schema-audit/local.normalized.sql | tee .schema-audit/local-fingerprint.json
           grep -E '^(GRANT|REVOKE) ' .schema-audit/local.sql > .schema-audit/local-grants.sql || true
+      # DEPOLAMA POLİTİKALARI — DENETİMİN ESKİ KÖR NOKTASI
+      #
+      # Yukarıdaki döküm yalnızca public ve extensions şemalarını
+      # kapsıyor. CV erişimi, avatar ve logo görünürlüğü ise
+      # storage.objects politikalarında tanımlı ve o alan hiç
+      # karşılaştırılmıyordu. 30 Ağustos'ta bedeli ölçüldü: üretimde olan
+      # bir okuma politikası depoda yoktu, depodan kurulan her ortamda
+      # profil fotoğrafları kırık görünürdü ve hiçbir test görmüyordu.
+      #
+      # Bütün storage şeması yerine yalnızca kendi politikalarımız
+      # karşılaştırılıyor; Supabase'in yönettiği tablolar sürümden sürüme
+      # değişiyor ve karşılaştırmaya girseler kapı gürültüye boğulurdu.
+      - name: Compare storage.objects policies
+        id: storage_policies
+        continue-on-error: true
+        run: |
+          supabase db query --linked --agent yes --output-format json             -f scripts/sql/storage-politikalari.sql > .schema-audit/storage-production.json
+          supabase db query --local --agent yes --output-format json             -f scripts/sql/storage-politikalari.sql > .schema-audit/storage-local.json
+          if diff -u .schema-audit/storage-production.json .schema-audit/storage-local.json; then
+            echo "storage politikaları aynı"
+          else
+            echo "::error::storage.objects politikaları üretim ile depo arasında ayrışıyor."
+            exit 1
+          fi
+
       - name: Build semantic schema comparison
         id: semantic_diff
         continue-on-error: true
@@ -97,11 +122,12 @@ jobs:
             echo '- Local rebuild: ${{ steps.local_snapshot.outcome }}'
             echo '- Rolled-back 0022 verification: ${{ steps.verify_0022.outcome }}'
             echo '- Semantic diff: ${{ steps.semantic_diff.outcome }}'
+            echo '- storage.objects policies: ${{ steps.storage_policies.outcome }}'
             echo '- Data dump: not requested; schema dump defaults to schema-only.'
             echo '- Migration repair: not run.'
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Fail closed on schema or 0022 differences
-        if: steps.semantic_diff.outcome != 'success' || steps.verify_0022.outcome != 'success'
+        if: steps.semantic_diff.outcome != 'success' || steps.verify_0022.outcome != 'success' || steps.storage_policies.outcome != 'success'
         run: |
           echo '::error::Production schema baseline is not verified. Baseline, repair, migration push, Edge Function, and Cloudflare deployment are blocked.'
           exit 1

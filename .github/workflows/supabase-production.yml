@@ -162,6 +162,28 @@ jobs:
             supabase migration repair --status applied "$surum" --project-ref "$SUPABASE_PROJECT_REF" || true
           done < "$liste"
 
+          # ESKİ SOYU DEFTERDEN DÜŞ
+          #
+          # Üretim, deponun 0001..0022 tabanına sıkıştırılmasından önceki
+          # damgalı migration soyunu taşımaya devam ediyordu. İki soy aynı
+          # şemayı üretiyor — şema temel denetimi farkı SIFIR ölçtü — ama
+          # tek bir sürüm numarası bile örtüşmüyor. Defterde ikisi birden
+          # durduğu sürece kapı her iki yönde de "karşı tarafta yok" diyor
+          # ve db push hiç açılmıyor.
+          #
+          # İzlenen küme depodaki göçler; bu liste eski soyu düşürüyor.
+          # Şemaya DOKUNULMUYOR, yalnızca hangi kümenin izlendiği kaydı
+          # düzeliyor. Düşülenlerin adı ve gerekçesi:
+          # scripts/sql/uzak-gecmis-anlik-goruntu-20260830.txt
+          dusulenler=scripts/sql/gecmisten-dusulenler.txt
+          if [ -f "$dusulenler" ]; then
+            while read -r surum; do
+              case "$surum" in ''|\#*) continue ;; esac
+              echo "-> $surum defterden düşülüyor"
+              supabase migration repair --status reverted "$surum" --project-ref "$SUPABASE_PROJECT_REF" || true
+            done < "$dusulenler"
+          fi
+
       - name: Remote/local migration geçmişini doğrula
         run: |
           if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
@@ -177,31 +199,31 @@ jobs:
       - name: Edge Functionları JWT doğrulamayla dağıt
         run: supabase functions deploy opportunity-source-check --project-ref "$SUPABASE_PROJECT_REF"
 
-  # SİTE DAĞITIMI ARTIK SUPABASE İŞİNE BAĞLI DEĞİL
+  # SİTE DAĞITIMI ŞEMA İŞİNE YENİDEN BAĞLI
   #
-  # Önceki koşul şuydu: supabase/ altında bir şey değiştiyse, migration işi
-  # başarılı olmadan site dağıtılmıyor. Niyet doğruydu — şema değişikliği
-  # gerektiren kodu şema inmeden yayınlamamak.
+  # 22 Ağustos'ta bu bağ koparılmıştı ve gerekçesi doğruydu: migration işi
+  # o tarihte HİÇ geçemiyordu. Üretim, deponun 0001..0022 tabanına
+  # sıkıştırılmasından önceki damgalı soyu taşıyordu; tek bir sürüm bile
+  # örtüşmediği için kapı her iki yönde de "karşı tarafta yok" diyordu.
+  # Kalıcı kırmızı bir kapı, olmayan kapıdan kötüdür — sahibi onu elle
+  # atlamayı öğrenir ve gerçek uyarı geldiğinde de atlar.
   #
-  # Ama 22 Ağustos'ta ölçüldü ki o migration işi ARTIK HİÇ GEÇEMİYOR.
-  # Kapının raporu:
-  #   remoteOnly: 19 damgalı sürüm (20260815205310 ... 20260818111225)
-  #   localOnly : 0001 ... 0022'nin tamamı
-  # Yani üretim veritabanı bu depodakinden BAŞKA bir migration soyuyla
-  # kurulmuş. İki ayrı hat var ve db push bunu uzlaştıramıyor.
+  # 30 Ağustos'ta tıkanıklığın kendisi çözüldü:
+  #   - Eksik SUPABASE_DB_PASSWORD eklendi; şema temel denetimi 26 koşundan
+  #     sonra ilk kez gerçekten çalıştı ve üretim ile depodan sıfırdan
+  #     kurulan şema arasında FARK OLMADIĞINI ölçtü.
+  #   - Defter o ölçüme dayanarak uzlaştırıldı (elle-uygulananlar.txt +
+  #     gecmisten-dusulenler.txt).
+  #   - Kapı, bekleyen göçü ayrışmadan ayırt eder hâle geldi; önceden yeni
+  #     yazılmış her göç "ayrışma" sayılıyordu, yani db push'a hiç sıra
+  #     gelmiyordu.
   #
-  # Sonuç: kapı, şema değişikliği gerektirmeyen sıradan arayüz
-  # değişikliklerinin bile yayına çıkmasını engelliyordu. Kalıcı kırmızı bir
-  # kapı, olmayan kapıdan kötü: sahibi onu elle atlamayı öğreniyor ve
-  # gerçek bir uyarı geldiğinde de atlıyor. 22 Ağustos'ta tam bu oldu,
-  # "Yayına al" elle çalıştırıldı.
+  # Artık şema inmeden onu bekleyen kod yayına çıkmıyor.
   #
-  # Şimdi site yalnızca validate_app'e bağlı. Supabase işi çalışmaya ve
-  # sonucunu göstermeye devam ediyor — sinyal duruyor, engel kalkıyor.
-  #
-  # BU BİR ÇÖZÜM DEĞİL, TIKANIKLIĞI AÇMA. Migration soyunun uzlaştırılması
-  # ayrı ve insan kararı gerektiren bir iş; şu an şema değişiklikleri
-  # Supabase panelinden elle uygulanıyor.
+  # ATLANMIŞ İŞ ENGEL DEĞİL
+  # supabase/ altında değişiklik yoksa migrate_and_functions hiç çalışmıyor
+  # ve sonucu 'skipped' oluyor. Sıradan bir arayüz değişikliğinin dağıtımını
+  # bu yüzden durdurmak, kapıyı yeniden kalıcı kırmızıya çevirirdi.
   cloudflare_production:
     needs: [changes, validate_app, security_regression, migrate_and_functions]
     if: >-
@@ -210,7 +232,9 @@ jobs:
         github.repository == 'stajimvar/stajimvar.com' &&
         (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
         needs.validate_app.result == 'success' &&
-        needs.security_regression.result == 'success'
+        needs.security_regression.result == 'success' &&
+        (needs.migrate_and_functions.result == 'success' ||
+         needs.migrate_and_functions.result == 'skipped')
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 20

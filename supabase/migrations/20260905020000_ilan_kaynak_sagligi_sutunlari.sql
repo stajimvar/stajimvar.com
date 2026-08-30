@@ -35,12 +35,14 @@ alter table public.listings drop constraint if exists listings_source_status_che
 alter table public.listings add constraint listings_source_status_check
   check (source_status is null or source_status in ('acik', 'kapali', 'erisilemedi'));
 
--- Sütun listesi HER ayrıcalığa ayrı bağlanıyor. `grant select, insert,
--- update (sutunlar)` yazmak SELECT ve INSERT'i TÜM TABLOYA verirdi —
--- sütun kısıtı yalnızca son ayrıcalığa yapışır.
+-- YALNIZCA SELECT.
+--
+-- Bu alanları tarama otomasyonu yazıyor; o service_role ile bağlanıyor ve
+-- tablo düzeyinde zaten tam yetkisi var. authenticated'a sütun düzeyinde
+-- INSERT/UPDATE eklemek üretimdeki durumu da aşardı: orada bu sütunlarda
+-- authenticated için yalnızca SELECT tanımlı.
+--
+-- Not: sütun listesi HER ayrıcalığa ayrı bağlanır; `grant select, insert
+-- (sutunlar)` yazmak SELECT'i TÜM TABLOYA verirdi.
 grant select (source_verified_at, source_checked_at, source_status)
-  on public.listings to anon;
-grant select (source_verified_at, source_checked_at, source_status),
-      insert (source_verified_at, source_checked_at, source_status),
-      update (source_verified_at, source_checked_at, source_status)
-  on public.listings to authenticated;
+  on public.listings to anon, authenticated;
