@@ -245,7 +245,7 @@ export const SirketProfilFormu: React.FC<{
             onChange={(e) => yaz('description')(e.target.value)}
             rows={5}
             placeholder="Şirketinizin ne yaptığını ve stajyerin nasıl bir ekibe katılacağını birkaç cümleyle anlatın."
-            className="w-full rounded-xl border p-3 text-sm leading-relaxed outline-none placeholder:text-[#A08C7D]"
+            className="w-full rounded-xl border p-3 text-sm leading-relaxed outline-none placeholder:text-[#69796F]"
             style={alanStil}
           />
         </label>

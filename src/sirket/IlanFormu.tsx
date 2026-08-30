@@ -338,7 +338,7 @@ export const IlanFormu: React.FC<{
             onChange={(e) => yaz('aciklama')(e.target.value)}
             rows={9}
             placeholder="Stajyerin ne yapacağını, kimden destek alacağını ve neler beklediğinizi yazın."
-            className="w-full rounded-xl border p-3 text-sm leading-relaxed outline-none placeholder:text-[#A08C7D]"
+            className="w-full rounded-xl border p-3 text-sm leading-relaxed outline-none placeholder:text-[#69796F]"
             style={alanStil}
           />
           <span

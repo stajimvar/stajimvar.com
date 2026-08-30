@@ -118,3 +118,30 @@ test('tablo düzeyindeki geniş yazma yetkisi kaldırılmış', () => {
      o geri alınmazsa kolon listesi hiçbir şey ifade etmez. */
   assert.match(MIGRATION, /revoke\s+insert,\s*update\s+on public\.listings\s+from authenticated/i);
 });
+
+/* ------------------------------------------------ regresyon paketi bağı */
+
+test('BAŞARIYLA GEÇMESİ BEKLENEN listing yazımları yalnız yetkili kolon adıyor', () => {
+  /*
+    Kolon yetkisi, ifadede ADI GEÇEN her kolon için aranıyor. Regresyon
+    paketindeki "geçmeli" bir yazma, yetkisiz tek bir kolon adarsa o
+    yüzden düşüyor — ve testin kendisi kırmızıya dönüyor. Tersi daha
+    sinsi: "engellenmeli" testleri yanlış nedenle yeşil kalıyor.
+
+    İki kez yaşandı: önce `id`, sonra `apply_url` ve `application_method`
+    yetkiden çıkınca. Bu test o iki listeyi birbirine bağlıyor.
+  */
+  const sql = readFileSync('scripts/sql/rls-regresyon-testleri.sql', 'utf8');
+
+  /* Yalnızca `not pg_temp.yazma_engellendi_mi(...)` ile sarılı — yani
+     geçmesi beklenen — listing INSERT'leri. */
+  const desen = /not pg_temp\.yazma_engellendi_mi\(\s*\$q\$insert into public\.listings\s*\(([^)]*)\)/gi;
+  let sayac = 0;
+  for (const m of sql.matchAll(desen)) {
+    sayac++;
+    const adlar = m[1].split(',').map((s) => s.trim()).filter(Boolean);
+    const yetkisiz = adlar.filter((k) => !INSERT_YETKISI.has(k));
+    assert.deepEqual(yetkisiz, [], `regresyon paketindeki INSERT yetkisiz kolon adıyor: ${yetkisiz}`);
+  }
+  assert.ok(sayac > 0, 'geçmesi beklenen listing INSERT bulunamadı');
+});

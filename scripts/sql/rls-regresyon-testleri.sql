@@ -156,8 +156,8 @@ select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
   'B, A ilanini silemez');
 
 select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
-  $q$insert into public.listings (company_id,title,status,origin,application_method,apply_url)
-     values ('11111111-aaaa-4000-8000-000000000001','IDOR','draft','employer_posted','external','https://x.com')$q$),
+  $q$insert into public.listings (company_id,title,status,origin)
+     values ('11111111-aaaa-4000-8000-000000000001','IDOR','draft','employer_posted')$q$),
   'B, A adina ilan acamaz');
 
 select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
@@ -299,47 +299,43 @@ select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
 -- Şirket ilan açabilmeli; ama istek gövdesine ayrıcalıklı bir kolon
 -- eklerse istek DÜŞMELİ, alan sessizce yok sayılmamalı.
 
--- `id` BİLEREK VERİLMİYOR
+-- YÜK, PANELİN GERÇEKTEN GÖNDERDİĞİ ALAN KÜMESİ
 --
--- Kolon yetkisi, ifadede ADI GEÇEN her kolon için aranıyor. `id`
--- uygulamanın hiç göndermediği bir alan ve yetki listesinde yok; testte
--- yazılsaydı istek `id` yüzünden düşer ve ayrıcalıklı alan testleri
--- YANLIŞ NEDENLE yeşil görünürdü. Ölçüldü: ilk denemede tam bu oldu.
--- Aşağıdaki yük, panelin gerçekten gönderdiği alan kümesi.
+-- Kolon yetkisi, ifadede ADI GEÇEN her kolon için aranıyor. Bu yüzden
+-- teste fazladan bir alan yazmak testi bozuyor: istek o alan yüzünden
+-- düşüyor ve asıl sınanan ayrıcalıklı alan YANLIŞ NEDENLE engellenmiş
+-- görünüyor. İki kez yaşandı — önce `id` ile, sonra `apply_url` ve
+-- `application_method` yetkiden çıkınca. Listeyi form modülüyle
+-- hizalı tut: tests/ilan-kolon-yetkileri.test.mjs bunu bağlıyor.
 select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
   $q$insert into public.listings (company_id, title, city, work_type,
         mandatory_staj_accepted, voluntary_staj_accepted, term, duration,
-        is_paid, stipend_text, apply_url, application_method, description,
+        is_paid, stipend_text, description,
         application_deadline, origin, status, posted_at)
      values ('11111111-aaaa-4000-8000-000000000001', 'Yeni Stajyer', 'Izmir',
              'On-site', true, false, 'All Year', '3 ay', true,
-             'Asgari staj ucreti', 'https://test-a.com/basvur', 'external',
+             'Asgari staj ucreti',
              'aciklama', '2026-12-31', 'employer_posted', 'draft', now())$q$),
   'A, panelin gonderdigi yukle yeni ilan acabilir');
 
 select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
-  $q$insert into public.listings (company_id, title, status, origin,
-                                  application_method, apply_url, source_status)
+  $q$insert into public.listings (company_id, title, status, origin, source_status)
      values ('11111111-aaaa-4000-8000-000000000001', 'Sahte Taze Ilan', 'draft',
-             'employer_posted', 'external', 'https://test-a.com/basvur', 'acik')$q$),
+             'employer_posted', 'acik')$q$),
   'A, ilan acarken source_status GONDEREMEZ');
 
 select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
   $q$insert into public.listings (company_id, title, status, origin,
-                                  application_method, apply_url,
                                   source_verified_at, last_seen_at)
      values ('11111111-aaaa-4000-8000-000000000001', 'Sahte Dogrulanmis', 'draft',
-             'employer_posted', 'external', 'https://test-a.com/basvur',
-             now(), now())$q$),
+             'employer_posted', now(), now())$q$),
   'A, ilan acarken dogrulama damgalarini GONDEREMEZ');
 
 select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
   $q$insert into public.listings (company_id, title, status, origin,
-                                  application_method, apply_url,
                                   featured, applicants_count)
      values ('11111111-aaaa-4000-8000-000000000001', 'Sahte One Cikan', 'draft',
-             'employer_posted', 'external', 'https://test-a.com/basvur',
-             true, 500)$q$),
+             'employer_posted', true, 500)$q$),
   'A, ilan acarken featured ve basvuru sayacini GONDEREMEZ');
 
 -- ------------------------- BAŞVURU YOLU ŞİRKETİN SEÇİMİ DEĞİL
