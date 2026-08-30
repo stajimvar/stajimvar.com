@@ -6,6 +6,7 @@ import {
   OPPORTUNITY_TYPE_LABELS,
 } from './opportunity-domain.mjs';
 import { opportunityFit } from './firsat-degerlendirme.mjs';
+import { DURUM, kisitDurumu } from './burs-uygunluk.mjs';
 
 /**
  * Bursları Keşfet — bölümleme, süzme ve tarih sınıflandırması.
@@ -134,9 +135,22 @@ export function suzgecAktifMi(suzgec) {
 
 const kucult = (metin) => String(metin ?? '').toLocaleLowerCase('tr-TR');
 
-/** "Türkiye geneli" = şehir ya da ülke şartı yok. */
+/**
+ * "Türkiye geneli" = şehir şartı OLMADIĞI DOĞRULANMIŞ.
+ *
+ * Boş şehir listesi tek başına yetmiyor. Boş liste iki şey olabilir:
+ * kaynak okundu ve şehir şartı yok, ya da kaynak hiç okunmadı. İkincisine
+ * "Türkiye geneli" demek, bilmediğimiz bir şeyi öğrenciye olgu diye
+ * sunmak olurdu — Ankara'da oturma şartı olan bir bursu İzmir'deki
+ * öğrenciye "sana da açık" diye göstermek gibi.
+ *
+ * Bu yüzden şehir boyutunun doğrulama damgası aranıyor. Damga yoksa burs
+ * "Türkiye geneli" bölümüne girmiyor; kaybolmuyor, yalnızca hakkında
+ * bilmediğimiz bir iddia taşımıyor.
+ */
 export function turkiyeGeneliMi(item) {
-  return (item?.cities?.length ?? 0) === 0 && (item?.countries?.length ?? 0) === 0;
+  if (kisitDurumu(item ?? {}, 'sehir') !== DURUM.KISIT_YOK) return false;
+  return (item?.countries?.length ?? 0) === 0;
 }
 
 export const TURKIYE_GENELI = '__turkiye__';
@@ -175,7 +189,10 @@ export function bursSuzgectenGecer(item, suzgec, now = new Date()) {
   if (s.durum && opportunityStatus(item, now) !== s.durum) return false;
 
   if (s.yer === TURKIYE_GENELI) {
-    /* Burada boş liste ARANAN şeyin kendisi: şehir şartı olmayan burslar. */
+    /*
+      Kullanıcı "şehir şartı olmayanları göster" diyor; bu bir iddia
+      talebi. Doğrulanmamış kayıt bu cevabın içine giremez.
+    */
     if (!turkiyeGeneliMi(item)) return false;
   } else if (s.yer) {
     /*

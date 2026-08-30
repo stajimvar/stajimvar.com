@@ -118,10 +118,25 @@ test('boş süzgeç arama modunu açmıyor', () => {
   assert.equal(suzgecAktifMi({ ...BOS_SUZGEC, durum: 'acik' }), true);
 });
 
-test('Türkiye geneli = şehir ve ülke şartı yok', () => {
-  assert.equal(turkiyeGeneliMi(burs({})), true);
-  assert.equal(turkiyeGeneliMi(burs({ cities: ['İzmir'] })), false);
-  assert.equal(turkiyeGeneliMi(burs({ countries: ['Almanya'] })), false);
+const SEHIR_DAMGASI = '2026-08-30T00:00:00Z';
+
+test('Türkiye geneli = şehir şartı OLMADIĞI DOĞRULANMIŞ', () => {
+  /*
+    Boş şehir listesi tek başına yetmiyor. Boş liste iki zıt şey olabilir:
+    kaynak okundu ve şart yok, ya da kaynak hiç okunmadı. İkincisine
+    "Türkiye geneli" demek, Ankara'da oturma şartı olabilecek bir bursu
+    İzmir'deki öğrenciye olgu diye sunmak olurdu.
+  */
+  assert.equal(turkiyeGeneliMi(burs({})), false, 'damgasız boş liste iddia taşımamalı');
+  assert.equal(turkiyeGeneliMi(burs({ citiesVerifiedAt: SEHIR_DAMGASI })), true);
+  assert.equal(
+    turkiyeGeneliMi(burs({ citiesVerifiedAt: SEHIR_DAMGASI, cities: ['İzmir'] })),
+    false
+  );
+  assert.equal(
+    turkiyeGeneliMi(burs({ citiesVerifiedAt: SEHIR_DAMGASI, countries: ['Almanya'] })),
+    false
+  );
 });
 
 test('süzgeçler beklendiği gibi eliyor', () => {
@@ -141,8 +156,15 @@ test('seçeneği olmayan süzgeç boş liste döndürüyor (kutu çizilmesin)', 
   /* Hiçbir kayıtta bölüm yok: liste boş, ekranda kutu çizilmiyor. */
   assert.deepEqual(secenekler.bolumler, []);
   assert.deepEqual(secenekler.seviyeler, []);
-  /* Hepsi şehirsiz: yalnızca "Türkiye geneli" seçeneği çıkıyor. */
-  assert.deepEqual(secenekler.yerler, [[TURKIYE_GENELI, 'Türkiye geneli']]);
+  /*
+    Hepsi şehirsiz AMA hiçbiri doğrulanmamış: "Türkiye geneli" seçeneği
+    sunulmuyor. Sunulsaydı seçen kişiye doğrulanmamış kayıtları olgu
+    diye verirdik.
+  */
+  assert.deepEqual(secenekler.yerler, []);
+
+  const damgali = bursSuzgecSecenekleri([burs({ citiesVerifiedAt: SEHIR_DAMGASI })]);
+  assert.deepEqual(damgali.yerler, [[TURKIYE_GENELI, 'Türkiye geneli']]);
 });
 
 test('süzgeç seçenekleri gerçek veriden türetiliyor', () => {
@@ -284,13 +306,29 @@ test('eğitim seviyesi kısıtı yoksa seviye süzgeci elemiyor', () => {
   );
 });
 
-test('şehir şartı olmayan burs, şehir süzgecinde de kalıyor', () => {
-  /* Türkiye geneli bir burs, İzmir'deki öğrenciye de açık. */
+test('şehir süzgeci gizlemiyor, "Türkiye geneli" ise iddia istiyor', () => {
+  /*
+    İki farklı iş, iki farklı kural:
+
+    Bir ŞEHİR seçmek eleme işi. Şehir şartı bilinmeyen bursu elemek, var
+    olabilecek bir fırsatı öğrenciden gizlemek olur — kart zaten kısıtı
+    kendi anlatıyor, karar öğrencinin. Bu yüzden burada boş liste geçiyor.
+
+    "Türkiye geneli" seçmek ise İDDİA işi: "şehir şartı yok olanları
+    göster". Doğrulanmamış kayıt bu cevabın içine giremez.
+  */
   assert.equal(bursSuzgectenGecer(burs({ cities: [] }), { yer: 'İzmir' }, SIMDI), true);
   assert.equal(bursSuzgectenGecer(burs({ cities: ['Ankara'] }), { yer: 'İzmir' }, SIMDI), false);
-  /* "Türkiye geneli" seçimi ise tam tersini arıyor: şartı OLMAYANLARI. */
-  assert.equal(bursSuzgectenGecer(burs({ cities: [] }), { yer: TURKIYE_GENELI }, SIMDI), true);
-  assert.equal(bursSuzgectenGecer(burs({ cities: ['Ankara'] }), { yer: TURKIYE_GENELI }, SIMDI), false);
+
+  assert.equal(bursSuzgectenGecer(burs({ cities: [] }), { yer: TURKIYE_GENELI }, SIMDI), false);
+  assert.equal(
+    bursSuzgectenGecer(burs({ cities: [], citiesVerifiedAt: SEHIR_DAMGASI }), { yer: TURKIYE_GENELI }, SIMDI),
+    true
+  );
+  assert.equal(
+    bursSuzgectenGecer(burs({ cities: ['Ankara'], citiesVerifiedAt: SEHIR_DAMGASI }), { yer: TURKIYE_GENELI }, SIMDI),
+    false
+  );
 });
 
 /* --------------------------------- kişiselleştirme semantiği (uçtan uca) */

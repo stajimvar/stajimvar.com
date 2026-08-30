@@ -15,7 +15,7 @@ import {
   OPPORTUNITY_STATUS_LABELS,
 } from '../lib/opportunity-domain.mjs';
 import { opportunityAmount } from '../lib/firsat-degerlendirme.mjs';
-import { bursTarihDurumu, bursTarihMetni } from '../lib/burs-kesif.mjs';
+import { bursTarihDurumu, bursTarihMetni, turkiyeGeneliMi } from '../lib/burs-kesif.mjs';
 import { ScholarshipCover } from './ScholarshipCover';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 
@@ -298,7 +298,20 @@ export const OpportunityDetailPage: React.FC<{
           {seviyeVeBolum.length ? seviyeVeBolum.join(', ') : 'Resmî kaynakta belirtiliyor.'}
         </Bilgi>
         <Bilgi baslik="Şehir şartı">
-          {yer.length ? yer.join(', ') : 'Şehir şartı belirtilmemiş; Türkiye geneli.'}
+          {/*
+            "Türkiye geneli" ancak DOĞRULANMIŞSA söyleniyor.
+
+            Boş şehir listesi iki zıt şey demek olabiliyordu: kaynak
+            okundu ve şart yok, ya da kaynak hiç okunmadı. İkincisine
+            "Türkiye geneli" demek, Ankara'da oturma şartı olabilecek bir
+            bursu İzmir'deki öğrenciye olgu diye sunmaktı. Doğrulanmamışsa
+            bunu açıkça söyleyip kaynağa yönlendiriyoruz.
+          */}
+          {yer.length
+            ? yer.join(', ')
+            : turkiyeGeneliMi(item)
+              ? 'Şehir şartı yok; Türkiye geneli.'
+              : 'Şehir şartını resmî kaynaktan kontrol edin.'}
         </Bilgi>
         <Bilgi baslik="Burs miktarı ve ödeme süresi">
           {/*
