@@ -36,17 +36,21 @@ jobs:
           version: latest
       - name: Require protected production credentials
         run: |
-          for name in SUPABASE_ACCESS_TOKEN; do
+          # Yalnızca DOLU OLUP OLMADIĞINA bakılıyor; hiçbir değer yazdırılmıyor.
+          #
+          # SUPABASE_DB_PASSWORD daha önce zorunlu değildi ve boş kaldığında
+          # iş akışı sessizce `supabase link`'in parolasız dalına düşüp
+          # pg_dump aşamasında "password authentication failed" ile
+          # ölüyordu. 26 koşunun 25'i bu yüzden kırmızıydı ve kimse
+          # nedenini görmüyordu. Eksik secret artık İLK adımda ve kendi
+          # adıyla düşüyor.
+          for name in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD; do
             [ -n "${!name}" ] || { echo "::error::$name GitHub Actions secret'i eksik."; exit 1; }
+            echo "$name: mevcut"
           done
           [ "$SUPABASE_PROJECT_ID" = "gdumgdgwlfnohkaucfow" ] || { echo "::error::Unexpected Supabase production project id."; exit 1; }
       - name: Link production for schema-only inspection
-        run: |
-          if [ -n "$SUPABASE_DB_PASSWORD" ]; then
-            supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
-          else
-            supabase link --project-ref "$SUPABASE_PROJECT_ID"
-          fi
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
       - name: Dump production public schema and extensions without data
         run: |
           mkdir -p .schema-audit
