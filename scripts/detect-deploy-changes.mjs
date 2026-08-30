@@ -2,7 +2,26 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const SUPABASE_PATHS = ['supabase/migrations/', 'supabase/functions/', 'supabase/config.toml', '.github/workflows/supabase-production.yml'];
+/*
+  Şema işini tetikleyen yollar.
+
+  Yalnızca `supabase/` altı yetmiyor: migration DEFTERİNİ değiştiren
+  dosyalar da buraya ait. Onarım listeleri ve kapı betikleri depoda başka
+  yerde duruyor ve onlara dokunan bir commit şema işini çalıştırmazsa,
+  düzeltme yazılır ama hiç uygulanmaz — 30 Ağustos'ta listedeki bir hata
+  düzeltildi ve düzeltmeyi taşıyan commit `supabase/` altına dokunmadığı
+  için iş atlandı, defter bozuk kaldı.
+*/
+const SUPABASE_PATHS = [
+  'supabase/migrations/',
+  'supabase/functions/',
+  'supabase/config.toml',
+  '.github/workflows/supabase-production.yml',
+  'scripts/sql/elle-uygulananlar.txt',
+  'scripts/sql/gecmisten-dusulenler.txt',
+  'scripts/supabase-history-gate.mjs',
+  'scripts/supabase-onarim-plani.mjs',
+];
 
 export function classifyChangedPaths(paths) {
   const changedPaths = Array.isArray(paths) ? paths.filter((path) => typeof path === 'string') : [];

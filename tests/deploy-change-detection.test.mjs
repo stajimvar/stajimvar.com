@@ -102,3 +102,27 @@ test('Cloudflare dağıtımı uygulama doğrulamasına bağlı, Supabase işine 
   /* Supabase işi hâlâ çalışıyor ve raporluyor — yalnızca engel değil. */
   assert.match(workflow, /migrate_and_functions:/);
 });
+
+test('MIGRATION DEFTERİNİ DEĞİŞTİREN DOSYALAR DA ŞEMA İŞİNİ TETİKLER', () => {
+  /*
+    Onarım listeleri ve kapı betikleri `supabase/` altında değil. Onlara
+    dokunan bir commit şema işini çalıştırmazsa düzeltme yazılır ama hiç
+    uygulanmaz: 30 Ağustos'ta listedeki bir hata düzeltildi, düzeltmeyi
+    taşıyan commit `supabase/` altına dokunmadığı için iş atlandı ve
+    defter bozuk kaldı.
+  */
+  for (const yol of [
+    'scripts/sql/elle-uygulananlar.txt',
+    'scripts/sql/gecmisten-dusulenler.txt',
+    'scripts/supabase-history-gate.mjs',
+    'scripts/supabase-onarim-plani.mjs',
+  ]) {
+    assert.equal(classifyChangedPaths([yol]).supabaseChanged, true, yol);
+  }
+});
+
+test('şema işini tetikleyen dosya aynı zamanda uygulama işini de tetikler', () => {
+  /* `supabase/` dışında oldukları için uygulama derlemesi de çalışmalı;
+     ikisini birbirinin alternatifi yapmak testleri atlatırdı. */
+  assert.equal(classifyChangedPaths(['scripts/sql/elle-uygulananlar.txt']).appChanged, true);
+});

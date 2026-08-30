@@ -147,41 +147,57 @@ jobs:
       - name: Elle uygulanmış migrationları geçmişe işle
         run: |
           liste=scripts/sql/elle-uygulananlar.txt
-          if [ ! -f "$liste" ]; then
-            echo "liste yok, atlanıyor"
+          dusulenler=scripts/sql/gecmisten-dusulenler.txt
+          if [ ! -f "$liste" ] && [ ! -f "$dusulenler" ]; then
+            echo "onarım listesi yok, atlanıyor"
             exit 0
           fi
-          # Koşulsuz repair: sürüm zaten geçmişteyse komut hiçbir şey
-          # değiştirmiyor. Önce "uzakta var mı" diye bakan bir grep vardı;
-          # migration list çıktısı ters tırnaklı bir tablo olduğu için o
-          # desen kırılgandı ve yanlış eşleşirse onarım sessizce atlanırdı.
-          # Sessizce atlamak, gereksiz bir repair çağrısından kötü.
-          while read -r surum; do
-            case "$surum" in ''|\#*) continue ;; esac
-            echo "-> $surum uygulandı olarak işaretleniyor"
-            supabase migration repair --status applied "$surum" --project-ref "$SUPABASE_PROJECT_REF" || true
-          done < "$liste"
 
-          # ESKİ SOYU DEFTERDEN DÜŞ
+          # YALNIZCA GEREKEN ÇAĞRILAR
           #
+          # Önceden iki liste baştan sona geziliyor ve her sürüm için bir
+          # repair çağrılıyordu: doksan üç ağ çağrısı, yaklaşık on beş
+          # dakika, şema değiştiren HER commit'te. Uzlaştırma bir kez
+          # yapıldıktan sonra bu çağrıların neredeyse tamamı hiçbir şeyi
+          # değiştirmiyor — ve doksan üç çağrının biri geçici bir ağ
+          # hatasıyla düşerse tur çöpe gidiyor.
+          #
+          # Plan, migration list çıktısını KAPININ KULLANDIĞI ayrıştırıcıyla
+          # okuyor. Daha önce burada bir grep deseni vardı; çıktı ters
+          # tırnaklı bir tablo olduğu için kırılgandı ve yanlış eşleşirse
+          # onarım sessizce atlanıyordu.
+          #
+          # ESKİ SOY NEDEN DÜŞÜLÜYOR
           # Üretim, deponun 0001..0022 tabanına sıkıştırılmasından önceki
-          # damgalı migration soyunu taşımaya devam ediyordu. İki soy aynı
-          # şemayı üretiyor — şema temel denetimi farkı SIFIR ölçtü — ama
-          # tek bir sürüm numarası bile örtüşmüyor. Defterde ikisi birden
-          # durduğu sürece kapı her iki yönde de "karşı tarafta yok" diyor
-          # ve db push hiç açılmıyor.
-          #
-          # İzlenen küme depodaki göçler; bu liste eski soyu düşürüyor.
-          # Şemaya DOKUNULMUYOR, yalnızca hangi kümenin izlendiği kaydı
-          # düzeliyor. Düşülenlerin adı ve gerekçesi:
+          # damgalı soyu taşıyordu. İki soy aynı şemayı üretiyor — şema
+          # temel denetimi farkı SIFIR ölçtü — ama tek bir sürüm numarası
+          # bile örtüşmüyor. Şemaya DOKUNULMUYOR; yalnızca hangi kümenin
+          # izlendiği kaydı düzeliyor. Düşülenlerin adı ve gerekçesi:
           # scripts/sql/uzak-gecmis-anlik-goruntu-20260830.txt
-          dusulenler=scripts/sql/gecmisten-dusulenler.txt
-          if [ -f "$dusulenler" ]; then
-            while read -r surum; do
-              case "$surum" in ''|\#*) continue ;; esac
-              echo "-> $surum defterden düşülüyor"
-              supabase migration repair --status reverted "$surum" --project-ref "$SUPABASE_PROJECT_REF" || true
-            done < "$dusulenler"
+          supabase migration list --project-ref "$SUPABASE_PROJECT_REF" > /tmp/onarim-oncesi.txt
+          node scripts/supabase-onarim-plani.mjs /tmp/onarim-oncesi.txt "$liste" "$dusulenler" > /tmp/onarim-plani.txt
+
+          if [ ! -s /tmp/onarim-plani.txt ]; then
+            echo "defter zaten uzlaşmış; onarılacak sürüm yok"
+          fi
+
+          hata=0
+          while read -r durum surum; do
+            [ -n "$surum" ] || continue
+            echo "-> $surum : $durum"
+            if ! supabase migration repair --status "$durum" "$surum" --project-ref "$SUPABASE_PROJECT_REF"; then
+              echo "::warning::$surum için repair başarısız ($durum)"
+              hata=$((hata + 1))
+            fi
+          done < /tmp/onarim-plani.txt
+
+          # Başarısızlıklar adımı düşürmüyor — kapı zaten defteri yeniden
+          # okuyup karar verecek. Ama SESSİZ kalmıyor: eskiden her çağrı
+          # `|| true` ile yutuluyordu ve kapı kırmızı yandığında nedeni
+          # görünmüyordu.
+          if [ "$hata" -gt 0 ]; then
+            echo "::warning::$hata onarım çağrısı başarısız oldu; kapı raporuna bak."
+          fi
           fi
 
       - name: Remote/local migration geçmişini doğrula
