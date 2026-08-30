@@ -28,7 +28,7 @@
  * Vurgu metni:    #1F5A45 / beyaz = 8.06:1, / rozet #E6F0EA = 6.91:1
  * Ana metin:      #16211C / zemin = 15.62:1
  * İkincil metin:  #55655C / zemin = 5.82:1
- * Odak halkası:   #2E7A5E / beyaz = 5.17:1
+ * Vurgu (ikincil): #2B7357 / beyaz = 5.69:1, / rozet = 4.88:1
  *
  * İKİ KENAR RENGİ VAR
  * -------------------
@@ -51,7 +51,7 @@ export const SIRKET_KENAR = '#D9E5DE';
 export const SIRKET_METIN = '#16211C';
 export const SIRKET_METIN_IKINCIL = '#55655C';
 export const SIRKET_VURGU = '#1F5A45';
-export const SIRKET_VURGU_KOYU = '#2E7A5E';
+export const SIRKET_VURGU_KOYU = '#2B7357';
 export const SIRKET_ROZET = '#E6F0EA';
 
 /** Birincil düğmenin hover zemini. Beyaz yazıyla 10.82:1. */

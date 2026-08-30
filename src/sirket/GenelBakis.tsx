@@ -119,8 +119,14 @@ export const GenelBakis: React.FC<{
       };
     if (!baglam.dogrulandi)
       return {
+        /*
+          Başvuru yolu artık seçenek değil — her ilan StajımVar üzerinden
+          başvuru alıyor. Doğrulamanın açtığı tek şey ADAY KİMLİĞİ:
+          doğrulanana kadar şirket başvuru sayısını görüyor, kimin
+          başvurduğunu görmüyor.
+        */
         metin:
-          'Şirketiniz henüz doğrulanmadı. Doğrulama başvuran kartlarını ve "StajımVar ile başvur" seçeneğini açıyor.',
+          'Şirketiniz henüz doğrulanmadı. Başvurular geliyor ama adayların kim olduğunu doğrulamadan sonra görebilirsiniz.',
         etiket: 'Doğrulamaya gönder',
         yol: '/sirket/profil',
         birincil: true,
@@ -237,8 +243,8 @@ export const GenelBakis: React.FC<{
           <ul className="mt-2 space-y-1.5 text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
             <li>✓ İlan açabilir, düzenleyebilir ve kapatabilirsiniz.</li>
             <li>✓ Şirket profilinizi doldurabilirsiniz.</li>
-            <li>✕ Başvuran kartları doğrulama sonrası açılıyor.</li>
-            <li>✕ "StajımVar ile başvur" seçeneği doğrulama sonrası açılıyor.</li>
+            <li>✓ Başvurular StajımVar üzerinden gelir; sayısını görürsünüz.</li>
+            <li>✕ Adayların kim olduğu doğrulama sonrası açılıyor.</li>
           </ul>
         </section>
       )}

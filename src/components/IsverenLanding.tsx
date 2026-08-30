@@ -9,6 +9,14 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react';
+import {
+  birincilStil,
+  SIRKET_KENAR,
+  SIRKET_ROZET,
+  SIRKET_VURGU,
+  SIRKET_VURGU_HOVER,
+  SIRKET_VURGU_KOYU,
+} from '../sirket/renk';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 import { fetchTalentPoolStats, type TalentPoolStat } from '../lib/queries';
@@ -57,7 +65,10 @@ const Kart: React.FC<{
   children: React.ReactNode;
 }> = ({ ikon, baslik, children }) => (
   <div className="rounded-2xl border border-gray-200 bg-white p-5">
-    <span className="mb-3 grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-blue-600">
+    <span
+      className="mb-3 grid h-10 w-10 place-items-center rounded-xl"
+      style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
+    >
       {ikon}
     </span>
     <h3 className="font-extrabold text-gray-900">{baslik}</h3>
@@ -111,7 +122,10 @@ export const IsverenLanding: React.FC<{
     >
       {/* ------------------------------------------------------------ hero */}
       <header className="space-y-5">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-700">
+        <span
+          className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wider"
+          style={{ borderColor: SIRKET_KENAR, background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
+        >
           <Building2 className="h-3.5 w-3.5" />
           İşverenler için
         </span>
@@ -128,7 +142,10 @@ export const IsverenLanding: React.FC<{
           <button
             type="button"
             onClick={anaEylem}
-            className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-sm font-bold text-white transition-colors hover:bg-blue-700"
+            className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold text-white transition-colors"
+            style={birincilStil}
+            onMouseEnter={(e) => (e.currentTarget.style.background = SIRKET_VURGU_HOVER)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = SIRKET_VURGU)}
           >
             {sirketUyesiMi ? 'Şirket paneline git' : 'Ücretsiz şirket hesabı oluştur'}
             <ArrowRight className="h-4 w-4" />
@@ -189,7 +206,10 @@ export const IsverenLanding: React.FC<{
             ],
           ].map(([baslik, govde], i) => (
             <li key={baslik} className="rounded-2xl border border-gray-200 bg-white p-5">
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-blue-600 text-sm font-black text-white">
+              <span
+                className="grid h-8 w-8 place-items-center rounded-lg text-sm font-black text-white"
+                style={{ background: SIRKET_VURGU }}
+              >
                 {i + 1}
               </span>
               <h3 className="mt-3 font-extrabold text-gray-900">{baslik}</h3>
@@ -269,7 +289,10 @@ export const IsverenLanding: React.FC<{
       </section>
 
       {/* --------------------------------------------------- kapanış CTA */}
-      <section className="rounded-2xl border border-blue-200 bg-blue-50 p-6 text-center sm:p-9">
+      <section
+        className="rounded-2xl border p-6 text-center sm:p-9"
+        style={{ borderColor: SIRKET_KENAR, background: SIRKET_ROZET }}
+      >
         <h2 className="text-xl font-black tracking-tight text-gray-950 sm:text-2xl">
           İlanınızı bugün yayınlayın
         </h2>
@@ -279,7 +302,10 @@ export const IsverenLanding: React.FC<{
         <button
           type="button"
           onClick={anaEylem}
-          className="mt-5 inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-sm font-bold text-white hover:bg-blue-700"
+          className="mt-5 inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold text-white"
+          style={birincilStil}
+          onMouseEnter={(e) => (e.currentTarget.style.background = SIRKET_VURGU_HOVER)}
+          onMouseLeave={(e) => (e.currentTarget.style.background = SIRKET_VURGU)}
         >
           {sirketUyesiMi ? 'Şirket paneline git' : 'Ücretsiz şirket hesabı oluştur'}
           <ArrowRight className="h-4 w-4" />

@@ -308,7 +308,7 @@ const Dogrulama: React.FC<{ baglam: SirketBaglami; onKaydedildi: () => void }> =
           Doğrulanmış kurum
         </p>
         <p className="mt-1 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-          Başvuran kartları ve "StajımVar ile başvur" seçeneği açık.
+          Başvuran kartları açık: adayların adı, okulu ve CV'si panele düşüyor.
         </p>
       </div>
     );

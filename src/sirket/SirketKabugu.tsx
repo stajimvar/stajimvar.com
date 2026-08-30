@@ -1,6 +1,7 @@
 import React from 'react';
 import { Briefcase, Building2, GraduationCap, LayoutGrid, Plus, Users } from 'lucide-react';
 import {
+  birincilStil,
   SIRKET_KENAR,
   SIRKET_METIN,
   SIRKET_METIN_IKINCIL,
@@ -120,7 +121,7 @@ export const SirketKabugu: React.FC<{
           onClick={() => onNavigate('/sirket/ilan/yeni')}
           aria-label="Yeni ilan oluştur"
           className="ml-auto inline-flex h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-black transition-colors sm:ml-2"
-          style={{ background: SIRKET_VURGU, color: SIRKET_METIN }}
+          style={birincilStil}
         >
           <Plus className="h-4 w-4" />
           {/* Dar ekranda yalnızca ikon; dokunma hedefi yine 44px. */}
