@@ -1,0 +1,23 @@
+-- TARAMA TUR ÖZETİ İÇİN ENUM DEĞERİ
+--
+-- automation/discover.py her kaynağı işledikten sonra bir tur özeti
+-- yazıyor: sağlık, gerekçe, sonuç sayısı, beklenen/başarılı/bozuk birim,
+-- sayfalama tamam mı, kaç ilan kapatma adayıydı, kaç tanesi kapatıldı.
+-- Kapatma kararlarının neden alındığını sonradan görebilmenin tek kaydı bu.
+--
+-- Ama `import_event_type` enum'unda 'run_summary' HİÇ YOKTU:
+--   discovered, updated, rejected, promoted, deactivated, error
+--
+-- Sonuç, üretimde ölçüldü (30 Ağustos 2026, koşu 33338946418):
+--   postgrest.exceptions.APIError:
+--     invalid input value for enum import_event_type: "run_summary"
+--
+-- Yazma hata verince process_source çağrısı istisnayla düşüyor ve
+-- discover.py bütün turu bırakıyor — yani ilk kaynaktan sonraki
+-- kaynaklar hiç taranmıyor. Bir günlük satırının eksikliği bütün
+-- toplama hattını durduruyordu.
+--
+-- Enum değeri ekleniyor; kod değişmiyor çünkü yazmak istediği şey
+-- doğru ve payload'ı zaten kullanılıyor.
+
+alter type public.import_event_type add value if not exists 'run_summary';
