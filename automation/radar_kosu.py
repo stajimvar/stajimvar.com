@@ -21,7 +21,12 @@ import requests
 
 from automation.radar import coz, rapor
 from automation.radar_cozucu import ats_tani, toplayici_mi
-from automation.radar_sirket import AramaYok, bilgi_tabani_kur
+from automation.radar_brave import saglayici_kur
+from automation.radar_sirket import (
+    alan_adini_normalize_et,
+    bilgi_tabani_kur,
+    sirket_alani_olamaz,
+)
 from automation.radar_kaynaklar import (
     KULLANICI_AJANI,
     KaynakKapali,
@@ -153,14 +158,44 @@ def mevcut_ilanlari_yukle() -> dict[str, str]:
 def main(argv: list[str] | None = None) -> int:
     ayrıştırıcı = argparse.ArgumentParser(description="Keşif radarı gölge koşusu")
     ayrıştırıcı.add_argument("--sayfa", type=int, default=2)
+    ayrıştırıcı.add_argument(
+        "--test-sorgusu",
+        help="Toplu koşu yerine TEK kontrollü arama yapar ve çıkar. "
+             "Anahtarın çalıştığını doğrulamak için; anahtar YAZILMIYOR.",
+    )
     args = ayrıştırıcı.parse_args(argv)
 
     oturum = _oturum()
+
+    # TEK KONTROLLÜ TEST
+    #
+    # 53 şirketi birden sorgulamadan önce anahtarın gerçekten çalıştığı
+    # doğrulanıyor. Ne anahtar ne de ham sonuç gövdesi yazılıyor —
+    # yalnız sayılar ve alan adları.
+    if args.test_sorgusu:
+        s = saglayici_kur(oturum)
+        if not getattr(s, "kullanilabilir", False):
+            print("arama katmanı: yapılandırılmamış (anahtar yok)", file=sys.stderr)
+            return 1
+        sonuclar = s.ara(args.test_sorgusu)
+        alanlar = []
+        for x in sonuclar[:5]:
+            a = alan_adini_normalize_et(x.get("url"))
+            if a:
+                alanlar.append(a + ("" if not sirket_alani_olamaz(a) else " (engelli)"))
+        print(json.dumps({
+            "saglayici": s.ad,
+            "sonuc_sayisi": len(sonuclar),
+            "aday_alanlar": alanlar,
+            "olcum": s.olcum.ozet(),
+        }, ensure_ascii=False, indent=2))
+        return 0 if sonuclar else 2
+
     getir = getir_fabrikasi(oturum, {})
     resmi_getir = resmi_ilanlari_getir_fabrikasi(getir)
     mevcut = mevcut_ilanlari_yukle()
     bilgi = bilgi_tabanini_yukle()
-    saglayici = AramaYok()
+    saglayici = saglayici_kur(oturum)
     sirket_onbellegi: dict = {}
     print(f"bilgi tabanı: {len(bilgi)} şirket | arama katmanı: {saglayici.ad}", file=sys.stderr)
 
@@ -190,9 +225,12 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  çözülen: {i}/{len(sinyaller)}", file=sys.stderr)
 
     r = rapor(sonuclar, kapali)
-    r["arama_katmani"] = {"saglayici": saglayici.ad,
-                          "kullanilabilir": getattr(saglayici, "kullanilabilir", False),
-                          "sorgu": 0}
+    r["arama_katmani"] = {
+        "saglayici": saglayici.ad,
+        "kullanilabilir": getattr(saglayici, "kullanilabilir", False),
+        **(saglayici.olcum.ozet() if hasattr(saglayici, "olcum") else {"sorgu": 0}),
+        "aranan_sirket": len(getattr(saglayici, "_onbellek", {})),
+    }
     r["bilgi_tabani_sirket"] = len(bilgi)
     # Alan adının KENDİ güveni sayılıyor; zincirin sonundaki güven değil.
     r["domain_guven"] = {

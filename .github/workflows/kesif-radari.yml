@@ -18,6 +18,10 @@ on:
         description: "Kaynak başına taranacak liste sayfası"
         required: false
         default: "2"
+      test_sorgusu:
+        description: "Doldurulursa TEK arama yapıp çıkar (anahtar denemesi)"
+        required: false
+        default: ""
   schedule:
     # Günde bir. Keşif kaynakları saatlik değişmiyor; saatlik çekmek
     # kaynağa gereksiz yük bindirmek olurdu.
@@ -39,6 +43,11 @@ jobs:
       RADAR_AUTO_PUBLISH: "false"
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      # Şirket alan adı KEŞFİ için. Değeri hiçbir adımda yazdırılmıyor;
+      # yokluğunda radar düşmüyor, arama katmanı kapalı raporlanıyor.
+      BRAVE_SEARCH_API_KEY: ${{ secrets.BRAVE_SEARCH_API_KEY }}
+      # Kaçak döngüye karşı sert tavan.
+      MAX_SEARCH_QUERIES_PER_RUN: "100"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -54,7 +63,25 @@ jobs:
       - name: Radar testleri
         run: python -m pytest automation/tests/test_radar.py automation/tests/test_staj_kalitesi.py -q
 
+      # ANAHTARIN VARLIĞI — DEĞERİ DEĞİL
+      #
+      # Yalnızca "geldi mi" bilgisi yazılıyor. Değer hiçbir koşulda
+      # ekrana çıkmıyor; fork/PR bağlamında secret gelmiyor ve koşu
+      # buna göre kapalı katmanla devam ediyor.
+      - name: Arama anahtarı geldi mi
+        run: |
+          if [ -n "$BRAVE_SEARCH_API_KEY" ]; then
+            echo "arama katmanı: anahtar mevcut (${#BRAVE_SEARCH_API_KEY} karakter)"
+          else
+            echo "::warning::arama katmanı: anahtar yok — katman kapalı çalışacak"
+          fi
+
+      - name: Tek kontrollü arama denemesi
+        if: ${{ inputs.test_sorgusu != '' }}
+        run: python -m automation.radar_kosu --test-sorgusu "${{ inputs.test_sorgusu }}"
+
       - name: Gölge koşusu
+        if: ${{ inputs.test_sorgusu == '' }}
         run: python -m automation.radar_kosu --sayfa "${{ inputs.sayfa_sayisi || '2' }}"
 
       - name: Raporu sakla
