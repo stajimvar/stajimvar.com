@@ -71,6 +71,7 @@ def _ic_kiraci_haritasi(kaynaklar: list[dict]) -> dict[str, tuple[str, str]]:
 def kesfet(saglayici, butce: Butce, sorgu_siniri: int, olcum: dict) -> dict:
     """LinkedIn sinyallerini toplar. Ham isabet ve tekil sinyal AYRI sayılır."""
     sinyaller = []
+    okunamayan: list[str] = []
     aile_verimi: Counter = Counter()
     aile_sinyal: Counter = Counter()
     ham = 0
@@ -93,6 +94,11 @@ def kesfet(saglayici, butce: Butce, sorgu_siniri: int, olcum: dict) -> dict:
                 continue
             sinyaller.append(s)
             aile_sinyal[aile] += 1
+            if not s.sirket and len(okunamayan) < 25:
+                # Şirketi okunamayan sonucun HAM BAŞLIĞI — ayrıştırıcıyı
+                # tahminle değil gerçek biçimle düzeltmek için. Yalnız
+                # kamuya açık ilan meta verisi; kişi bilgisi değil.
+                okunamayan.append((sonuc.get("title") or "")[:160])
 
     tekil = sinyalleri_birlestir(sinyaller)
     olcum.update({
@@ -105,6 +111,7 @@ def kesfet(saglayici, butce: Butce, sorgu_siniri: int, olcum: dict) -> dict:
         "sirketi_okunan": sum(1 for s in tekil.values() if s.sirket),
         "aile_ham_isabet": dict(aile_verimi.most_common()),
         "aile_sinyal": dict(aile_sinyal.most_common()),
+        "sirketi_okunamayan_ornek_basliklar": okunamayan,
     })
     return tekil
 
@@ -140,6 +147,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="LinkedIn keşif radarı gölge koşusu")
     ap.add_argument("--kesif-siniri", type=int, default=220)
     ap.add_argument("--toplam-tavan", type=int, default=430)
+    ap.add_argument("--sadece-kesif", action="store_true",
+                    help="Yalnız keşif: çözüm bütçesi harcanmaz (teşhis koşusu)")
     args = ap.parse_args(argv)
 
     butce = Butce(toplam=args.toplam_tavan, kesif_tavani=args.kesif_siniri,
@@ -155,6 +164,14 @@ def main(argv: list[str] | None = None) -> int:
     olcum: dict = {}
     tekil = kesfet(saglayici, butce, args.kesif_siniri, olcum)
     print(f"keşif: {butce.kesif} sorgu → {len(tekil)} tekil sinyal", file=sys.stderr)
+
+    if args.sadece_kesif:
+        with open(RAPOR_DOSYASI, "w", encoding="utf-8") as f:
+            json.dump({"kesif": olcum, "butce": butce.ozet(),
+                       "arama": {"saglayici": saglayici.ad, **saglayici.olcum.ozet()}},
+                      f, ensure_ascii=False, indent=2)
+        print(json.dumps(olcum, ensure_ascii=False, indent=2))
+        return 0
 
     kaynaklar = _kaynaklari_oku()
     ic_harita = _ic_kiraci_haritasi(kaynaklar)

@@ -27,7 +27,7 @@ on:
         required: false
         default: "resmi"
         type: choice
-        options: ["resmi", "linkedin", "kesif"]
+        options: ["resmi", "linkedin", "linkedin-teshis", "kesif"]
   schedule:
     # Günde bir. Keşif kaynakları saatlik değişmiyor; saatlik çekmek
     # kaynağa gereksiz yük bindirmek olurdu.
@@ -110,6 +110,14 @@ jobs:
         env:
           MAX_SEARCH_QUERIES_PER_RUN: "430"
         run: python -m automation.radar_linkedin_kosu --kesif-siniri 220 --toplam-tavan 430
+
+      # TEŞHİS: yalnız keşif, çözüm bütçesi harcanmadan. Ayrıştırıcıyı
+      # gerçek sonuç biçimiyle düzeltmek için ucuz koşu.
+      - name: LinkedIn keşif teşhisi
+        if: ${{ inputs.test_sorgusu == '' && inputs.mod == 'linkedin-teshis' }}
+        env:
+          MAX_SEARCH_QUERIES_PER_RUN: "430"
+        run: python -m automation.radar_linkedin_kosu --sadece-kesif --kesif-siniri 6
 
       # KEŞİF RADARI — Kariyer.net. Artık canonical ilan kaynağı değil;
       # "bu şirket stajyer arıyor" sinyali olarak duruyor.

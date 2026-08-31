@@ -1,0 +1,77 @@
+{
+  "kesif": {
+    "sorgu": 112,
+    "ham_isabet": 964,
+    "ilan_sinyali": 964,
+    "ilan_disi_sonuc": 0,
+    "unique_sinyal": 359,
+    "turkiye_sinyali": 15,
+    "sirketi_okunan": 44,
+    "aile_ham_isabet": {
+      "intern": 140,
+      "internship": 140,
+      "stajyer": 140,
+      "summer intern": 140,
+      "staj programı": 127,
+      "working student": 122,
+      "long term intern": 114,
+      "uzun dönem stajyer": 41
+    },
+    "aile_sinyal": {
+      "intern": 140,
+      "internship": 140,
+      "stajyer": 140,
+      "summer intern": 140,
+      "staj programı": 127,
+      "working student": 122,
+      "long term intern": 114,
+      "uzun dönem stajyer": 41
+    }
+  },
+  "butce": {
+    "toplam_tavan": 430,
+    "harcanan": 185,
+    "kesif": 112,
+    "cozum": 73,
+    "yedek": 0,
+    "kullanilmayan": 245,
+    "erken_kesildi": null
+  },
+  "arama": {
+    "saglayici": "brave",
+    "sorgu": 185,
+    "basarili": 164,
+    "sonucsuz": 21,
+    "hata": {},
+    "tavana_takildi": 0
+  },
+  "cozum": {
+    "sirket_okunamadi": 315,
+    "adaptorsuz:sirket_sitesi": 179,
+    "kiraci_bulunamadi": 34,
+    "adaptorsuz:teamtailor": 9,
+    "adaptorsuz:workday": 7,
+    "kiracida_ilan_yok": 5,
+    "aramadan_cozuldu": 4
+  },
+  "huni": {
+    "sinyal": 359,
+    "sirketi_var": 44,
+    "kiraci_cozuldu": 5
+  },
+  "adaptor_sonuclari": {
+    "smartrecruiters:ok": 2,
+    "smartrecruiters:bos": 2,
+    "workable:ok": 2,
+    "workable:bos": 2
+  },
+  "yeni_kiraci": [
+    "smartrecruiters:metromakro",
+    "smartrecruiters:visa",
+    "workable:antal-2",
+    "workable:busara"
+  ],
+  "would_publish_ornekleri": [],
+  "red_nedenleri": {},
+  "auto_publish": "false"
+}
