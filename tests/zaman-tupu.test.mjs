@@ -10,6 +10,7 @@ import {
   tupErisilebilirAd,
   tupMetni,
 } from '../src/lib/zaman-tupu.mjs';
+import { calendarDay } from '../src/lib/opportunity-domain.mjs';
 
 /*
   ZAMAN TÜPÜ
@@ -24,8 +25,22 @@ import {
     3. Bilgi renkten bağımsız olarak metinde de var.
 */
 
-/* Üretimdeki biçim: tarih-yalnız (YYYY-MM-DD). Saat dilimi kaymasın. */
-const gun = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+/*
+  Üretimdeki biçim: tarih-yalnız (YYYY-MM-DD).
+
+  GÜN, UTC'DE DEĞİL, KÜTÜPHANENİN GÜNÜNDE HESAPLANIYOR
+  ----------------------------------------------------
+  Burada `Date.now()` doğrudan UTC'ye çevriliyordu; oysa `tupDurumu`
+  bugünü Europe/Istanbul'a göre buluyor. İkisi Türkiye saatiyle
+  21:00–24:00 arasında bir gün ayrışıyor ve `gun(0)` dünü üretiyordu:
+  "bugün son gün" beklenen kayıt "kapalı" görünüyordu. Test her akşam
+  aynı saatlerde kırılıyordu.
+
+  Takvim günü artık kütüphanenin kendi `calendarDay`'inden geliyor, ki
+  iki taraf aynı günü konuşsun.
+*/
+const gun = (n) =>
+  new Date(calendarDay(new Date()) + n * 86400000).toISOString().slice(0, 10);
 const firsat = (n) => ({ applicationDeadline: gun(n) });
 
 /* ------------------------------------------------------------ durumlar */
