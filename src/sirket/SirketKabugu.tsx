@@ -106,7 +106,6 @@ export const SirketKabugu: React.FC<{
               okunmamis={okunmamisBildirim ?? null}
               renk={SIRKET_VURGU_KOYU}
               onAc={onBildirimAc}
-              className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl transition-colors"
               style={{ color: SIRKET_METIN_IKINCIL }}
             />
           </div>

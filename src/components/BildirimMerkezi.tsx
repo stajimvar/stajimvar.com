@@ -37,7 +37,13 @@ export const BildirimRozeti: React.FC<{ sayi: number | null; renk: string }> = (
   return (
     <span
       aria-hidden="true"
-      className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none text-white"
+      /*
+        `pointer-events-none`: rozet düğmenin kenarından taşıyor. Tıklama
+        yine de düğmeye ulaşıyordu (rozet düğmenin çocuğu, olay
+        kabarcıklanıyor) ama taşan kısım artık hiçbir olayı yakalamıyor —
+        rozetin tıklamayı yutabileceği bir hal kalmıyor.
+      */
+      className="pointer-events-none absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none text-white"
       style={{ background: renk }}
     >
       {sayi > 9 ? '9+' : sayi}
@@ -182,10 +188,18 @@ export const BildirimDugmesi: React.FC<{
     aria-label={
       okunmamis && okunmamis > 0 ? `Bildirimler, ${okunmamis} okunmamış` : 'Bildirimler'
     }
-    className={
-      className ??
-      'relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-700 transition-colors hover:bg-gray-100'
-    }
+    /*
+      `relative` VE DOKUNMA HEDEFİ HER ZAMAN BURADAN
+
+      Çağıran yalnızca renk/kenar gibi şeyleri değiştirebiliyor. Konum
+      bağlamı (`relative`) ve 44×44 hedef dışarıdan gelen sınıfla
+      düşürülemiyor: `relative` olmayan bir düğmede rozet en yakın
+      konumlandırılmış ataya kaçar, küçük hedefte de zil telefonda
+      ıskalanır.
+    */
+    className={`relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl transition-colors ${
+      className ?? 'text-gray-700 hover:bg-gray-100'
+    }`}
     style={style}
   >
     <Bell className="h-5 w-5" />

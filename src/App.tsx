@@ -980,6 +980,34 @@ export default function App() {
   }, [safeTab, temizYol]);
 
   /*
+    BİLDİRİM PANELİ ÜST ÇUBUĞUN YANINDA
+
+    P0: zile basılıyor, durum `acik` oluyor, ama PANEL HİÇBİR YERDE
+    ÇİZİLMİYORDU. Merkez yalnızca işveren panelinin döndüğü dalda
+    bağlanmıştı; öğrenci tarafındaki bütün dallar zili gösteriyor ama
+    paneli mount etmiyordu. Yani tetikleyici sağlamdı — ölçüldü: gerçek
+    `<button type="button">`, 44×44, `pointer-events: auto`, merkez
+    koordinatındaki elementFromPoint düğmenin içinde ve tıklama
+    durumu değiştiriyor — kaybolan şey render'dı.
+
+    Panel `ustCubuk` ile aynı ifadeye bağlanıyor: zili çizen her dal
+    paneli de çiziyor, ikisi ayrı düşemiyor. Merkez zaten `createPortal`
+    ile `document.body` altına gidiyor, dolayısıyla başlık ağacının
+    içinde durması yerleşimi etkilemiyor.
+  */
+  const ogrenciBildirimleri = bildirim.acik ? (
+    <BildirimMerkezi
+      bildirimler={bildirim.bildirimler}
+      okunmamis={bildirim.okunmamis}
+      yukleniyor={bildirim.yukleniyor}
+      renk="#2563EB"
+      onKapat={bildirim.kapat}
+      onAc={bildirimAc}
+      onTumunuOkundu={() => void bildirim.tumunuOkunduYap()}
+    />
+  ) : null;
+
+  /*
     CANONICAL HER YOL DEĞİŞİMİNDE GÜNCELLENİYOR
 
     Sayfalar sunucuda ön render ediliyor ve doğrudan açıldıklarında doğru
@@ -1026,6 +1054,7 @@ export default function App() {
    * o bileşen kendi başlığını artık çizmiyor — iki başlık üst üste binmesin.
    */
   const ustCubuk = (
+    <>
     <Header
       activeTab={safeTab}
       setActiveTab={(sekme) => {
@@ -1095,6 +1124,8 @@ export default function App() {
       onOpenRegister={AUTH_ENABLED ? handleOpenRegister : undefined}
       onLogout={handleLogout}
     />
+    {ogrenciBildirimleri}
+    </>
   );
 
   /** İçerik sayfalarını üst çubukla birlikte çizer. */

@@ -259,7 +259,77 @@ test('yeni cron kurulmadı', () => {
   assert.ok(!/cron/i.test(goc), 'bildirim için zamanlanmış iş kurulmuş');
 });
 
-/* -------------------------------------------- 8. RLS regresyon kapsamı */
+/* ------------------------------------- 8. ZİL: TETİKLEYİCİ VE PANEL */
+
+/*
+  P0 REGRESYONU
+
+  Zil görünüyordu, rozet doğru sayıyordu, tıklama durumu değiştiriyordu
+  ama PANEL AÇILMIYORDU. Ölçüldü: tetikleyici sağlam — gerçek
+  `<button type="button">`, 44×44, `pointer-events: auto`, merkez
+  koordinatındaki elementFromPoint düğmenin içinde ve tıklama paneli
+  fikstürde açıyor.
+
+  Eksik olan RENDER'dı: merkez yalnızca işveren panelinin döndüğü dalda
+  bağlanmıştı, öğrenci tarafındaki hiçbir dalda mount edilmiyordu.
+*/
+
+test('zili gösteren her dünyada panel de mount ediliyor', () => {
+  const app = oku('src/App.tsx');
+  /*
+    Öğrenci tarafı: panel üst çubukla AYNI ifadeye bağlı. Zili çizen her
+    dal paneli de çiziyor; ikisi ayrı düşemiyor.
+  */
+  assert.match(app, /\{ogrenciBildirimleri\}/, 'öğrenci tarafında panel mount edilmiyor');
+  assert.match(app, /const ogrenciBildirimleri = bildirim\.acik \?/);
+  /* İşveren tarafı kendi dalında. */
+  assert.match(app, /\{bildirim\.acik && \(\s*<BildirimMerkezi/);
+});
+
+test('iki dünyada da zil aynı bileşenden geliyor', () => {
+  assert.match(header, /<BildirimDugmesi/);
+  assert.match(oku('src/sirket/SirketKabugu.tsx'), /<BildirimDugmesi/);
+});
+
+test('zil gerçek button ve hedefi 44px', () => {
+  assert.match(merkez, /type="button"/);
+  /* Dışarıdan gelen sınıf geometriyi düşüremiyor: şablon dizede sabit. */
+  assert.match(merkez, /`relative flex h-11 w-11 shrink-0 cursor-pointer/);
+});
+
+test('rozet tıklamayı yutmuyor', () => {
+  assert.match(merkez, /pointer-events-none absolute -right-0\.5/);
+});
+
+test('dış tıklama kapatıyor ama açan tıklamayı yakalamıyor', () => {
+  /*
+    Klasik hata: düğme tıklaması paneli açıyor, aynı tıklama belgeye
+    bağlı dış-tıklama dinleyicisine ulaşıp paneli anında kapatıyor.
+    Burada belge dinleyicisi YOK — kapatan şey panelle birlikte çizilen
+    bir örtü, yani açan tıklamadan sonra var oluyor. setTimeout gibi bir
+    gecikme oyunu da yok.
+  */
+  assert.match(merkez, /className="fixed inset-0 z-\[190\]/);
+  assert.match(merkez, /onClick=\{onKapat\}/);
+  assert.ok(
+    !/addEventListener\('(click|mousedown|pointerdown)'/.test(merkez),
+    'belgeye bağlı dış-tıklama dinleyicisi açan tıklamayı yakalayabilir',
+  );
+  assert.ok(!/setTimeout/.test(merkez), 'zamanlayıcı ile sıra oyunu yapılmış');
+});
+
+test('panel örtünün üstünde', () => {
+  /* Örtü z-190, panel z-200: panel örtünün altında kalıp tıklanamaz olmuyor. */
+  assert.match(merkez, /z-\[200\]/);
+});
+
+test('Escape kapatıyor, klavye ile açılıyor', () => {
+  assert.match(merkez, /e\.key === 'Escape'/);
+  /* Enter/Space yerli `button` davranışı: elle tuş yakalama yok. */
+  assert.ok(!/onKeyDown/.test(merkez), 'yerli düğme davranışı elle taklit ediliyor');
+});
+
+/* -------------------------------------------- 9. RLS regresyon kapsamı */
 
 test('regresyon bildirim sınırlarını ölçüyor', () => {
   const beklenen = [
