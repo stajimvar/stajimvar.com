@@ -1,0 +1,66 @@
+name: Keşif radarı (gölge)
+
+# RADAR CANONICAL TOPLAMADAN İZOLE
+#
+# Bu iş akışı saatlik tarayıcıya (stajimvar-automation.yml) ve üretim
+# dağıtımına DOKUNMUYOR. Radar patlarsa canonical ilan toplama
+# etkilenmiyor; bu yüzden ayrı workflow, ayrı zamanlama, ayrı hata
+# yüzeyi.
+#
+# GÖLGE MODU: radar public akışa hiçbir şey yazmıyor. `RADAR_AUTO_PUBLISH`
+# varsayılan olarak kapalı ve bu akışta hiç açılmıyor — sayıları
+# görmeden otomatik yayın yok.
+
+on:
+  workflow_dispatch:
+    inputs:
+      sayfa_sayisi:
+        description: "Kaynak başına taranacak liste sayfası"
+        required: false
+        default: "2"
+  schedule:
+    # Günde bir. Keşif kaynakları saatlik değişmiyor; saatlik çekmek
+    # kaynağa gereksiz yük bindirmek olurdu.
+    - cron: "35 5 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stajimvar-kesif-radari
+  cancel-in-progress: false
+
+jobs:
+  golge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Bu akışta ASLA açılmıyor.
+      RADAR_AUTO_PUBLISH: "false"
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bağımlılıklar
+        run: pip install -r automation/requirements-scraper.txt
+
+      - name: Radar testleri
+        run: python -m pytest automation/tests/test_radar.py automation/tests/test_staj_kalitesi.py -q
+
+      - name: Gölge koşusu
+        run: python -m automation.radar_kosu --sayfa "${{ inputs.sayfa_sayisi || '2' }}"
+
+      - name: Raporu sakla
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: radar-golge-raporu
+          path: radar-rapor.json
+          if-no-files-found: warn
