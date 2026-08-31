@@ -58,8 +58,15 @@ const DURUM_ROZETI: Record<string, { etiket: string; sinif: string }> = {
 
 export const ScholarshipDiscoveryCard: React.FC<{
   item: Opportunity;
-  saved: boolean;
-  onSave: () => void;
+  saved?: boolean;
+  /**
+   * Verilmezse yer imi düğmesi HİÇ çizilmiyor.
+   *
+   * Öne çıkanlar şeridinde takip düğmesi istenmiyor ve boş bir işleve
+   * bağlı ölü bir düğme koymak, basınca hiçbir şey olmayan bir kontrol
+   * göstermek olurdu.
+   */
+  onSave?: () => void;
   onNavigate: (path: string) => void;
   /** Yatay kaydırmalı şeritte sabit genişlik alır. */
   serit?: boolean;
@@ -87,6 +94,7 @@ export const ScholarshipDiscoveryCard: React.FC<{
         bağlantı z-10'da duruyor, aksi hâlde kaydete basmak detaya
         götürürdü.
       */}
+      {onSave && (
       <button
         type="button"
         onClick={onSave}
@@ -98,15 +106,26 @@ export const ScholarshipDiscoveryCard: React.FC<{
       >
         <Bookmark className="h-4 w-4" fill={saved ? 'currentColor' : 'none'} />
       </button>
+      )}
 
       <div className="flex min-h-0 flex-1 flex-col gap-2 p-4">
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">
             {opportunityTypeLabel(item.opportunityType)}
           </span>
-          <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ${rozet.sinif}`}>
-            {rozet.etiket}
-          </span>
+          {/*
+            ŞERİTTE DURUM ROZETİ YOK
+
+            Vitrin kartında zaman sinyali zaten tüpün üstünde yazıyor
+            ("Yarın sona eriyor"). Rozet aynı şeyi ikinci kez söyleyip bir
+            satır daha yer kaplıyordu. Izgarada kalıyor: orada kartlar yan
+            yana ve rozet göz taraması için işe yarıyor.
+          */}
+          {!serit && (
+            <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ${rozet.sinif}`}>
+              {rozet.etiket}
+            </span>
+          )}
         </div>
 
         {/*
@@ -129,7 +148,15 @@ export const ScholarshipDiscoveryCard: React.FC<{
 
         <p className="truncate text-sm text-gray-600">{item.organizationName}</p>
 
-        {etiketler.length > 0 && (
+        {/*
+          UYGUNLUK ETİKETLERİ ŞERİTTE ÇİZİLMİYOR
+
+          Şerit bir vitrin: işi kullanıcıyı detaya çekmek, şartları
+          anlatmak değil. Seviye/bölüm/şehir etiketleri dar kartta iki
+          satır yer kaplıyor ve kararı orada verdirmeye çalışıyordu.
+          Izgarada duruyorlar; orada kartlar yan yana karşılaştırılıyor.
+        */}
+        {!serit && etiketler.length > 0 && (
           <ul className="flex flex-wrap gap-1">
             {etiketler.map((etiket: string) => (
               <li

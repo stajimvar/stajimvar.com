@@ -68,10 +68,18 @@ export const ZamanTupu: React.FC<{
         Vurgu yoksa (bir haftadan uzun süre) tarih SOLA geçiyor — sağda
         tek başına duran bir tarih, solu boş bir satır bırakıyordu.
       */}
-      <div className={`flex items-baseline gap-2 ${vurgu ? 'justify-between' : ''}`}>
-        {vurgu && (
-          <p className="text-[13px] font-extrabold leading-tight" style={{ color: renk.yazi }}>
-            {vurgu}
+      <div className={`flex items-baseline gap-2 ${vurgu && !sikisik ? 'justify-between' : ''}`}>
+        {/*
+          SIKIŞIK KİPTE TEK SATIR
+
+          Öne çıkanlar şeridinde kart dar ve tek güçlü zaman sinyali
+          isteniyor. Vurgu varsa o yazıyor ("Son 3 gün"); yoksa yerine
+          tarih geçiyor — ikisi de yoksa satır hiç çizilmiyordu ve
+          altında sebepsiz bir çubuk kalıyordu.
+        */}
+        {(vurgu || sikisik) && (
+          <p className="truncate text-[13px] font-extrabold leading-tight" style={{ color: renk.yazi }}>
+            {vurgu ?? tarih}
           </p>
         )}
         {tarih && !sikisik && (

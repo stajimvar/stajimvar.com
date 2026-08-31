@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card } from '../components/OpportunitiesPage';
+import { OneCikanBurslar } from '../components/OneCikanBurslar';
 import type { Opportunity } from '../lib/opportunities';
 
 /**
@@ -76,9 +77,49 @@ const ORNEKLER: { ad: string; item: Opportunity }[] = [
   },
 ];
 
+/*
+  ŞERİT SENARYOLARI
+
+  Öne çıkanlar en az üç uygun kayıt ister; ikisiyle hiç çizilmemeli.
+  Görseli olmayan, adı çok uzun ve tarihi olmayan kayıtlar da şeritte
+  nasıl davrandığı görülsün diye burada.
+*/
+const SERIT_DOLU: Opportunity[] = [
+  { ...temel, id: 's1', applicationDeadline: gun(1), coverImageUrl: undefined } as Opportunity,
+  {
+    ...temel,
+    id: 's2',
+    title: 'Türkiye Bilimsel ve Teknolojik Araştırma Kurumu 2247-C Stajyer Araştırmacı Burs Programı',
+    organizationName: 'Türkiye Bilimsel ve Teknolojik Araştırma Kurumu',
+    applicationDeadline: gun(3),
+    organizationLogoUrl: undefined,
+  } as Opportunity,
+  { ...temel, id: 's3', applicationDeadline: gun(9), sourceUrl: '', verifiedAt: undefined } as Opportunity,
+  { ...temel, id: 's4', applicationDeadline: undefined } as Opportunity,
+  { ...temel, id: 's5', applicationDeadline: gun(-5) } as Opportunity,
+];
+
+const SERIT_AZ: Opportunity[] = [
+  { ...temel, id: 'a1', applicationDeadline: gun(2) } as Opportunity,
+  { ...temel, id: 'a2', applicationDeadline: gun(4) } as Opportunity,
+];
+
 export const FirsatKartiDevFixture: React.FC = () => (
   <div className="min-h-screen bg-gray-50 p-4">
     <div className="mx-auto max-w-6xl">
+      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-400">
+        Şerit — üç ve üzeri uygun kayıt (tarihsiz ve süresi dolan girmiyor)
+      </p>
+      <OneCikanBurslar items={SERIT_DOLU} onNavigate={() => undefined} />
+
+      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-400">
+        Şerit — yalnızca iki uygun kayıt (hiç çizilmemeli)
+      </p>
+      <div className="mb-6 rounded-xl border border-dashed border-gray-300 p-3 text-xs text-gray-500">
+        <OneCikanBurslar items={SERIT_AZ} onNavigate={() => undefined} />
+        Bu kutunun içi boş kalmalı.
+      </div>
+
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {ORNEKLER.map((o) => (
           <div key={o.ad}>

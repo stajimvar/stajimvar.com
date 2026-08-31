@@ -14,6 +14,7 @@ import type { StudentProfile } from '../types';
 import { GoogleAdBanner } from './GoogleAdBanner';
 import { ListingLogo } from './ListingLogo';
 import { ZamanTupu } from './ZamanTupu';
+import { OneCikanBurslar } from './OneCikanBurslar';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import {
   fetchOpportunities,
@@ -314,86 +315,101 @@ export const OpportunitiesPage: React.FC<{
     <main
       className={`w-full ${SAYFA_GENISLIGI} mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-10`}
     >
-      <section className="mb-3 overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
-        <div aria-hidden="true" className="h-1 bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500" />
+      {/*
+        ÜST ALAN — KUTUDAN ÇIKTI
 
-        <div className="p-3 sm:p-4">
-          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 sm:gap-y-3">
-            <div className="flex min-w-0 flex-1 items-start gap-3">
-              <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
-                <Sparkles className="h-5 w-5" />
-              </span>
-              <div className="min-w-0 space-y-1">
-                <h1 className="text-base sm:text-lg font-extrabold tracking-tight leading-tight text-gray-950">{heading}</h1>
-                {/*
-                  Açıklama telefonda gizli. Ölçüldü: başlık kartı mobilde
-                  351 piksel tutuyordu ve ilk fırsat 646. pikselde
-                  başlıyordu — yani ekranın dışında. Açıklama başlığın
-                  söylemediği bir şey söylemiyor; asıl bilgi sayaçlarda ve
-                  kapanış uyarısında.
-                */}
-                <p className="hidden sm:block text-xs sm:text-sm text-gray-600 leading-relaxed max-w-2xl">
-                  {savedOnly
-                    ? 'Sonradan incelemek için takibe aldığın fırsatlar.'
-                    : sekme === 'takvim'
-                      ? 'Başvuruların açıldığı ve kapandığı günler, ay ay.'
-                      : sekme === 'uygun'
-                        ? 'Profilindeki bilgilere göre elenmeyen fırsatlar. Koşulları resmî kaynaktan doğrula.'
-                        : 'Burs, kredi, eğitim, yurtdışı ve yarışma — hepsi resmî kaynağıyla doğrulanmış.'}
-                </p>
-              </div>
-            </div>
+        Burada gradyan çizgili, çerçeveli, gölgeli bir kart vardı; içinde
+        başlık, açıklama, üç sayaç rozeti ve bir uyarı kutusu. Hemen
+        altında sekme hapı, altında arama kutusu, altında çip satırı,
+        altında sonuç sayısı ve bir anahtar geliyordu. Yedi ayrı kontrol
+        bloğu üst üste — liste başlamadan önce ekran bir kontrol paneline
+        dönüyordu.
 
-            {/*
-              SAYAÇLAR EYLEME DÖNÜK
+        Kart kalktı: başlık artık sayfanın kendi zemininde duruyor.
+        Sayaçlar ve kapanış uyarısı tek bir META SATIRINA indi. Sayaçlar
+        işlevlerini koruyor (ikisi de süzgeç) ama artık büyük rozet değil,
+        satır içi düğme.
+      */}
+      <header className="mb-3">
+        <h1 className="text-xl font-black tracking-tight text-gray-950 sm:text-2xl">{heading}</h1>
 
-              Önce "Başvurusu devam eden / Burs ve kredi / Takip ettiğimiz
-              fırsat" yazıyordu. İkincisi ve üçüncüsü öğrencinin
-              yapabileceği bir şey söylemiyordu — kaç burs olduğunu bilmek
-              bir karar değiştirmiyor. Üçü de artık bir sonraki hareketi
-              gösteriyor ve üçü de tıklanabilir.
-            */}
-            {state === 'ready' && !savedOnly && (
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 sm:shrink-0">
-                <Sayac
-                  deger={gruplar.acik.length}
-                  etiket="açık"
-                  aktif={durumSuzgeci === 'acik'}
-                  onClick={() => durumSec(durumSuzgeci === 'acik' ? '' : 'acik')}
-                />
-                <Sayac
-                  deger={gruplar.yakinda.length}
-                  etiket="yakında"
-                  aktif={durumSuzgeci === 'yakinda'}
-                  onClick={() => durumSec(durumSuzgeci === 'yakinda' ? '' : 'yakinda')}
-                />
-                <Sayac deger={saved.length} etiket="takipte" onClick={() => onNavigate('/kaydedilen-firsatlar')} />
-              </div>
-            )}
-          </div>
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-gray-600">
+          {state === 'ready' && !savedOnly ? (
+            <>
+              <SayacSatiri
+                deger={gruplar.acik.length}
+                etiket="açık"
+                aktif={durumSuzgeci === 'acik'}
+                onClick={() => durumSec(durumSuzgeci === 'acik' ? '' : 'acik')}
+              />
+              <span aria-hidden className="text-gray-300">·</span>
+              <SayacSatiri
+                deger={gruplar.yakinda.length}
+                etiket="yakında"
+                aktif={durumSuzgeci === 'yakinda'}
+                onClick={() => durumSec(durumSuzgeci === 'yakinda' ? '' : 'yakinda')}
+              />
+              {/*
+                "0 takipte" hiçbir şey söylemiyordu ve üçüncü bir rozet
+                olarak yer kaplıyordu. Yalnızca gerçekten takip edilen
+                kayıt varsa çiziliyor.
+              */}
+              {saved.length > 0 && (
+                <>
+                  <span aria-hidden className="text-gray-300">·</span>
+                  <SayacSatiri
+                    deger={saved.length}
+                    etiket="takipte"
+                    onClick={() => onNavigate('/kaydedilen-firsatlar')}
+                  />
+                </>
+              )}
+            </>
+          ) : (
+            <span>
+              {savedOnly
+                ? 'Sonradan incelemek için takibe aldığın fırsatlar.'
+                : 'Burslar, programlar ve öğrenci fırsatları.'}
+            </span>
+          )}
 
           {/*
-            En yakın kapanış ayrı bir satır: tarih listede kaybolmasın.
+            KAPANIŞ UYARISI ARTIK KUTU DEĞİL SATIR
 
-            Gül kırmızısıydı ve sayfanın en üstündeki tek renkli şey oydu;
-            kartlardaki kırmızı kalkınca tek başına bir hata bandı gibi
-            kaldı. Kartlarla aynı sıcak amber ailesine alındı — söylenen
-            şey kötü haber değil, "bunlar yakında kapanıyor".
+            Tam genişlikte amber bir kutuydu ve başlıktan daha çok yer
+            kaplıyordu. Aynı cümle aynı renkte ama satır içinde: bilgi
+            duruyor, ağırlığı gidiyor.
           */}
-          {state === 'ready' && yarinKapananlar.length > 0 && (
-            <p className="mt-3 flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-xs font-bold text-amber-900">
-              <AlarmClock className="w-4 h-4 shrink-0" />
-              {yarinKapananlar.length === 1
-                ? `${closingSoonLabel(1)} ${yarinKapananlar[0].title}`
-                : closingSoonLabel(yarinKapananlar.length)}
-            </p>
-          )}
         </div>
-      </section>
+
+        {/*
+          KAPANIŞ UYARISI ARTIK KUTU DEĞİL SATIR
+
+          Tam genişlikte amber bir kutuydu ve başlıktan daha çok yer
+          kaplıyordu. Aynı cümle aynı renkte ama tek satırda.
+
+          KENDİ SATIRINDA: önce sayaçlarla aynı sarmalın içindeydi ve
+          telefonda alta kayınca üst satırın sonunda sahipsiz bir "·"
+          kalıyordu.
+        */}
+        {state === 'ready' && yarinKapananlar.length > 0 && (
+          <p className="mt-1 flex items-center gap-1.5 text-[13px] font-bold text-amber-900">
+            <AlarmClock className="h-3.5 w-3.5 shrink-0" />
+            {yarinKapananlar.length === 1
+              ? `${closingSoonLabel(1)} ${yarinKapananlar[0].title}`
+              : closingSoonLabel(yarinKapananlar.length)}
+          </p>
+        )}
+      </header>
 
       {/* -------- sekmeler: sana uygun / tümü / takvim -------- */}
       {!savedOnly && (
-        <nav aria-label="Fırsat görünümü" className="mb-3 flex items-center gap-1 rounded-full bg-gray-100 p-1 text-xs font-bold">
+        /* Sekmeler tam genişlikteydi ve üç büyük düğme gibi duruyordu.
+           İçeriği kadar yer alıyor: görünüm seçmek sayfanın ana işi değil. */
+        <nav
+          aria-label="Fırsat görünümü"
+          className="mb-3 inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full bg-gray-100 p-0.5 text-xs font-bold [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
           {(
             [
               /* Hazır kayıt yoksa sekme hiç çizilmiyor — bkz. hazirSayisi. */
@@ -408,7 +424,9 @@ export const OpportunitiesPage: React.FC<{
               key={yol}
               /* Sekme değişince arama ve süzgeçler adresle birlikte taşınıyor. */
               onClick={() => onNavigate(`${yol}${serializeOpportunityFilters(filters)}`)}
-              className={`flex-1 rounded-full px-3 py-2 transition-colors cursor-pointer ${
+              /* Dokunma hedefi 40 px: 44 sekme çubuğunu üst alanda yeniden
+                 şişiriyordu; 40 hem rahat hem kompakt. */
+              className={`flex h-10 shrink-0 items-center whitespace-nowrap rounded-full px-3.5 transition-colors cursor-pointer ${
                 sekme === id ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -416,6 +434,25 @@ export const OpportunitiesPage: React.FC<{
             </button>
           ))}
         </nav>
+      )}
+
+      {/*
+        ÖNE ÇIKAN BURSLAR — ÜSTTE KEŞİF, ALTTA KARŞILAŞTIRMA
+
+        Liste sayfası hızlı karşılaştırma için iyi ama insanı içeri davet
+        etmiyordu: ilk ekranda yalnızca kontroller ve gri satırlar
+        görünüyordu. Şerit o daveti veriyor.
+
+        Yalnızca "Tüm fırsatlar" sekmesinde ve süzgeç/arama yokken:
+        kullanıcı bir seçim yaptıysa ona uymayan kartları "öne çıkan" diye
+        göstermek, az önce verdiği kararı yok saymak olurdu.
+      */}
+      {sekme === 'tumu' && !savedOnly && (
+        <OneCikanBurslar
+          items={items}
+          onNavigate={onNavigate}
+          gizle={Boolean(filters.query.trim()) || aktifSuzgecSayisi > 0 || arsivGoster}
+        />
       )}
 
       {/* -------- mobil arama satırı -------- */}
@@ -539,52 +576,44 @@ export const OpportunitiesPage: React.FC<{
             <Takvim items={items.filter(metneUyar)} onNavigate={onNavigate} />
           ) : filtered.length ? (
             <>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p aria-live="polite" className="text-sm text-gray-600">
-                  <b>{filtered.length}</b> fırsat gösteriliyor
+              {/*
+                LİSTE ÖNÜ SATIRI — İKİ BLOK DEĞİL BİR SATIR
+
+                "35 fırsat gösteriliyor" tam genişlikte bir satırdı; altına
+                da anahtarlı, çerçeveli, 42 piksellik bir düğme geliyordu.
+                İkisi birlikte liste başlamadan önce üçüncü bir kontrol
+                bloğu kuruyordu.
+
+                Artık tek satır: solda sayı (küçük meta), sağda kontroller
+                (küçük metin düğmeleri). Anahtarın görsel yalancı-switch'i
+                kalktı — `aria-pressed` durumu zaten taşıyor ve seçiliyken
+                düğme koyulaşıyor, yani durum renk+kalınlıkla görünüyor.
+              */}
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 text-xs">
+                <p aria-live="polite" className="text-gray-500">
+                  <b className="font-bold text-gray-700 tabular-nums">{filtered.length}</b> fırsat
                   {arsivGoster && ' (süresi dolanlar)'}
                 </p>
-                <span className="flex flex-wrap gap-x-3 gap-y-1">
-                  {/*
-                    Bu bir anahtar, bir bağlantı değil. Düz metin olarak
-                    duruyordu ve tıklanabilir olduğu anlaşılmıyordu;
-                    listenin neyi gösterdiğini belirleyen bir kontrolün
-                    kendini kontrol gibi göstermesi gerekiyor.
-                  */}
+                <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   {gruplar.takvim_bekleniyor.length > 0 && !savedOnly && !arsivGoster && (
                     <button
-                      role="switch"
-                      aria-checked={takvimsizGoster}
+                      aria-pressed={takvimsizGoster}
                       onClick={() => setTakvimsizGoster((a) => !a)}
-                      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
+                      className={`-my-1.5 rounded-md px-1.5 py-1.5 font-bold transition-colors cursor-pointer ${
                         takvimsizGoster
-                          ? 'border-blue-200 bg-blue-50 text-blue-800'
-                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                          ? 'text-blue-800 underline decoration-blue-300 underline-offset-4'
+                          : 'text-gray-500 hover:text-gray-900'
                       }`}
                     >
-                      <span
-                        aria-hidden
-                        className={`w-8 h-4 rounded-full relative transition-colors ${
-                          takvimsizGoster ? 'bg-blue-600' : 'bg-gray-300'
-                        }`}
-                      >
-                        <span
-                          className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${
-                            takvimsizGoster ? 'left-[18px]' : 'left-0.5'
-                          }`}
-                        />
-                      </span>
-                      Takvimi belli olmayanları da göster ({gruplar.takvim_bekleniyor.length})
+                      Takvimsizler ({gruplar.takvim_bekleniyor.length})
                     </button>
                   )}
                   {gruplar.kapali.length > 0 && !savedOnly && (
                     <button
                       onClick={() => setArsivGoster((a) => !a)}
-                      className="text-xs font-bold text-gray-500 hover:text-gray-900 hover:underline cursor-pointer"
+                      className="-my-1.5 rounded-md px-1.5 py-1.5 font-bold text-gray-500 transition-colors hover:text-gray-900 cursor-pointer"
                     >
-                      {arsivGoster
-                        ? 'Açık fırsatlara dön'
-                        : `Süresi dolan ${gruplar.kapali.length} fırsatı göster`}
+                      {arsivGoster ? 'Açık fırsatlara dön' : `Süresi dolanlar (${gruplar.kapali.length})`}
                     </button>
                   )}
                 </span>
@@ -707,37 +736,48 @@ export const OpportunitiesPage: React.FC<{
 /* ------------------------------------------------------------------ */
 
 /*
-  Sayaç iki satırdı: üstte rakam, altında açıklama. "21 açık" tek satırda
-  da anlaşılıyor ve mobilde üçü yan yana sığıyor. Üçü de bir SÜZGEÇ:
-  rakamın gösterdiği kümeyi listede açıyor, dolayısıyla seçili olduğunda
-  bunu göstermesi gerekiyor.
+  SAYAÇ ROZETTEN SATIRA İNDİ
+
+  Üç dolgulu mavi rozetti ve başlık kartının içinde ikinci bir görsel
+  ağırlık kuruyordu. Rakam ve etiket aynı bilgiyi taşıyor; kutu taşımıyor.
+  Artık satır içi bir düğme: seçiliyken altı çiziliyor ve rengi koyuluyor,
+  seçili değilken sıradan metin gibi duruyor.
+
+  İŞLEVİ AYNI: ikisi de bir SÜZGEÇ — rakamın gösterdiği kümeyi listede
+  açıyor. Rozetin gitmesi süzgeci götürmedi.
 */
-const Sayac: React.FC<{ deger: number; etiket: string; aktif?: boolean; onClick?: () => void }> = ({
-  deger,
-  etiket,
-  aktif = false,
-  onClick,
-}) => {
+const SayacSatiri: React.FC<{
+  deger: number;
+  etiket: string;
+  aktif?: boolean;
+  onClick?: () => void;
+}> = ({ deger, etiket, aktif = false, onClick }) => {
   const icerik = (
     <>
       <b className="font-extrabold tabular-nums">{deger}</b> {etiket}
     </>
   );
-  const sinif = `rounded-full border px-3 py-1.5 text-xs leading-tight whitespace-nowrap ${
-    aktif ? 'bg-blue-600 border-blue-600 text-white' : 'bg-blue-50/70 border-blue-100 text-blue-900'
-  }`;
-  if (!onClick) return <div className={sinif}>{icerik}</div>;
+  if (!onClick) return <span>{icerik}</span>;
   return (
-    <button onClick={onClick} className={`${sinif} hover:bg-blue-100 hover:text-blue-900 transition-colors cursor-pointer`}>
+    <button
+      onClick={onClick}
+      aria-pressed={aktif}
+      /* Dokunma hedefi: satır içi ama dikey boşlukla 32 px'e çıkıyor. */
+      className={`-my-1 rounded-md px-1 py-1 transition-colors cursor-pointer ${
+        aktif ? 'font-bold text-blue-800 underline decoration-blue-300 underline-offset-4' : 'hover:text-gray-900'
+      }`}
+    >
       {icerik}
     </button>
   );
 };
 
+/* Çip yüksekliği 40 px. 30'du ve dokunması zordu; 44 ise çip satırını üst
+   alanda yeniden ağırlaştırıyordu. */
 const Cip: React.FC<{ aktif: boolean; onClick: () => void; children: React.ReactNode }> = ({ aktif, onClick, children }) => (
   <button
     onClick={onClick}
-    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
+    className={`flex h-10 shrink-0 items-center rounded-full px-3.5 text-xs font-bold transition-colors cursor-pointer ${
       aktif ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
     }`}
   >
