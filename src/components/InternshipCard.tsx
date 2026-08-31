@@ -443,36 +443,21 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
       */}
       <div className="w-full min-w-0 border-t border-gray-100 pt-2.5">
         {/*
-          ÜST SATIR: DURUM VE TARİH — AKSİYON DEĞİL
+          ÜST SATIR: YALNIZCA SON BAŞVURU TARİHİ
 
-          Son başvuru tarihi ve "işaretledin" bilgisi düğmelerle AYNI
-          satırdaydı; düğme sayısı değişince satır sağa sola kayıyor,
-          kartlar arasında hiçbir şey hizalanmıyordu. İkisi ayrıldı:
-          burada durum, altında sabit geometride iki düğme.
+          Burada bir de "✓ İşaretledin" durumu vardı. Kaldırıldı: dış
+          ilanda "başvurduğumu işaretle" kartta bir eylem olarak
+          sunulmuyor ve olmayan bir özelliğin durumunu göstermek
+          kullanıcıya yapmadığı bir şeyi hatırlatıyordu. Kartın işi ilanı
+          göstermek; kişisel işaretleme kaydı "Başvurularım" tarafının işi.
+
+          Tarih düğmelerle aynı satırdaydı; düğme sayısı değişince satır
+          sağa sola kayıyordu. Ayrı satırda duruyor.
         */}
-        {(listing.applicationDeadline || (hasApplied && !yol.teslimEdiliyor)) && (
-          <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-            {listing.applicationDeadline && (
-              <span className="text-[11px] text-gray-600">
-                Son: <strong className="text-gray-700">{listing.applicationDeadline}</strong>
-              </span>
-            )}
-            {/*
-              DIŞ İLANDA "İŞARETLEDİN" BİR DURUM, BİR DÜĞME DEĞİL
-
-              Kartta "Başvurdum" düğmesi vardı ve üçüncü aksiyon olarak
-              alt alanı dağıtıyordu; kalktı. Ama işaretlemiş bir öğrenci
-              bunu görmeye devam etmeli, yoksa aynı ilanı tekrar tekrar
-              açar. İşaretlemenin KENDİSİ hâlâ mümkün: "Detaylar"ın
-              açtığı ekranda duruyor.
-            */}
-            {hasApplied && !yol.teslimEdiliyor && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                İşaretledin
-              </span>
-            )}
-          </div>
+        {listing.applicationDeadline && (
+          <p className="mb-2 text-[11px] text-gray-600">
+            Son: <strong className="text-gray-700">{listing.applicationDeadline}</strong>
+          </p>
         )}
 
         {/*
