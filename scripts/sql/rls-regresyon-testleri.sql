@@ -1263,9 +1263,12 @@ select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
 -- ŞİRKET KOPYADA E-POSTA GÖREMEZ
 --
 -- Kopya başvuru anında yazılıyor ve şirket paneli onu olduğu gibi
--- çekiyor. Arayüz adresi çizmiyordu ama veri tarayıcıya gidiyordu:
--- kural arayüzde değil veride tutulmalı. Göç geçmiş kopyalardan bu
--- anahtarı düşürdü; kurulumdaki satır da onunla temizlendi.
+-- çekiyor. Arayüz adresi çizmiyordu ama veri tarayıcıya gidiyordu.
+--
+-- Kural artık YAZIM ANINDA uygulanıyor: bu bloğun kurulumu kopyayı
+-- KASTEN e-postalı yazıyor ("eposta":"c@ogrenci.test") ve tetikleyici
+-- onu düşürüyor. Yani ölçülen şey istemcinin nazik davranması değil,
+-- veritabanının kabul etmemesi.
 select pg_temp.bekle(
   (select count(*) = 0 from public.applications
     where listing_id in (select id from public.listings

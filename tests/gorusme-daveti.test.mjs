@@ -156,6 +156,20 @@ test('görüşme kabulü iletişimi AÇMIYOR', () => {
 
 /* -------------------------------- 5. başvuru kopyasında e-posta yok */
 
+test('kopyaya iletişim yazılması veritabanında engelleniyor', () => {
+  /*
+    İstemcinin yazmaması bir SINIR değil: kopya, istemcinin gönderdiği
+    bir JSON ve kendi isteğini kuran bir istemci e-postayı yeniden
+    koyabilirdi. Anahtarlar yazım anında düşüyor.
+  */
+  const gocTetik = koddan(
+    oku('supabase/migrations/20260912030000_kopyada_iletisim_yazilamaz.sql'),
+  );
+  assert.match(gocTetik, /new\.profile_snapshot - 'eposta' - 'telefon'/);
+  assert.match(gocTetik, /create trigger applications_guard_snapshot_contact/);
+  assert.match(gocTetik, /before insert or update on public\.applications/);
+});
+
 test('kopya üretimi artık e-posta yazmıyor', () => {
   /*
     Kopyada `eposta` vardı ve şirket paneli kopyayı olduğu gibi
