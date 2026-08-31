@@ -91,17 +91,60 @@ def test_b_bos_ve_bozuk_adres_cokmuyor():
 
 
 # ----------------------------------------------- C: başlık ayrıştırma
+#
+# ÖRNEKLER GERÇEK KOŞUDAN — hepsi Brave'in döndürdüğü ham başlıklar.
+# İlk sürüm yalnız iki İngilizce biçim biliyordu ve 359 sinyalin
+# 315'inde şirket adı okunamadı.
 
-def test_c_iki_baslik_bicimi_de_okunuyor():
-    s, b, k = basliktan_ayikla("Getir hiring Data Science Intern in Istanbul | LinkedIn")
-    assert (s, b, k) == ("Getir", "Data Science Intern", "Istanbul")
+GERCEK_BASLIKLAR = [
+    ("Getir şirketi İstanbul, Türkiye konumunda GetirRise Internship Program "
+     "işe alımı yapıyor | LinkedIn", "Getir", "GetirRise Internship Program"),
+    ("Culturelligence şirketi Türkiye konumunda Human Resources Intern işe alacak",
+     "Culturelligence", "Human Resources Intern"),
+    ("Toyota Otomotiv Sanayi Türkiye A.Ş. (TMMT) şirketi Sakarya, Türkiye konumunda "
+     "Summer Intern işe alacak", "Toyota Otomotiv Sanayi Türkiye A.Ş. (TMMT)",
+     "Summer Intern"),
+    ("Rollic şirketi İstanbul, Türkiye konumunda Growth Intern işe ...",
+     "Rollic", "Growth Intern"),
+    ("Getir hiring Data Science Intern in Istanbul | LinkedIn", "Getir",
+     "Data Science Intern"),
+    ("Fit4rail Summer Internship 2026 @Siemens Mobility Turkey",
+     "Siemens Mobility Turkey", "Fit4rail Summer Internship 2026"),
+    ("Business Development Intern (Turkish market) - Qeepl", "Qeepl",
+     "Business Development Intern (Turkish market)"),
+    ("Yazılım Stajyeri - Trendyol | LinkedIn", "Trendyol", "Yazılım Stajyeri"),
+]
 
-    s, b, k = basliktan_ayikla("Yazılım Stajyeri - Trendyol | LinkedIn")
-    assert s == "Trendyol" and b == "Yazılım Stajyeri"
+
+@pytest.mark.parametrize("ham,sirket,baslik", GERCEK_BASLIKLAR)
+def test_c_gercek_baslik_bicimleri_okunuyor(ham, sirket, baslik):
+    s, b, _ = basliktan_ayikla(ham)
+    assert s == sirket
+    assert b == baslik, "fiil çekimi başlığa karışmamalı"
+
+
+def test_c_turkce_bicimde_konum_da_okunuyor():
+    _, _, k = basliktan_ayikla(
+        "Rollic şirketi İstanbul, Türkiye konumunda Growth Intern işe ...")
+    assert k == "İstanbul, Türkiye"
+
+
+LISTE_BASLIKLARI = [
+    "1,000+ International Intern jobs in United States (98 new)",
+    "Türkiye konumunda 83 Stajyer iş ilanı",
+    "Türkiye konumunda 39 User Experience Design Specialist iş ilanları (2 yeni)",
+    "LinkedIn İş Arama: Türkiye İşlerini, Stajyerlikleri, ...",
+]
+
+
+@pytest.mark.parametrize("ham", LISTE_BASLIKLARI)
+def test_c_ilan_listesi_basligindan_sirket_uydurulmuyor(ham):
+    """Tek ilan değil, liste sayfası başlığı — şirket adı çıkarılmıyor."""
+    assert basliktan_ayikla(ham) == (None, None, None)
 
 
 def test_c_taninmayan_baslik_uydurulmuyor():
-    assert basliktan_ayikla("rastgele metin") == (None, None, None)
+    assert basliktan_ayikla("Intern at International marketplace (Turkish, ...") == (None, None, None)
     assert basliktan_ayikla(None) == (None, None, None)
     assert basliktan_ayikla("") == (None, None, None)
 

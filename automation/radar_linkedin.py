@@ -166,11 +166,46 @@ def job_id_cikar(url: str | None) -> str | None:
     return m.group(1) if m else None
 
 
-#: Brave sonuç başlığı iki biçimde geliyor:
-#:   "Şirket hiring Başlık in Konum | LinkedIn"
-#:   "Başlık - Şirket | LinkedIn"
-_HIRING = re.compile(r"^(?P<sirket>.+?)\s+hiring\s+(?P<baslik>.+?)(?:\s+in\s+(?P<konum>.+?))?\s*[|\-–]\s*LinkedIn", re.I)
-_TIRE = re.compile(r"^(?P<baslik>.+?)\s+[-–]\s+(?P<sirket>.+?)\s*[|]\s*LinkedIn", re.I)
+# BAŞLIK BİÇİMLERİ ÖLÇÜLDÜ, TAHMİN EDİLMEDİ
+#
+# İlk sürüm yalnız iki İngilizce biçim biliyordu ve 359 sinyalin
+# 315'inde şirket adı okunamadı. Teşhis koşusu ham başlıkları getirdi:
+# Brave, Türkiye sorgularında LinkedIn'in TÜRKÇE YERELLEŞTİRİLMİŞ
+# başlığını döndürüyor —
+#
+#   "Getir şirketi İstanbul, Türkiye konumunda GetirRise Internship
+#    Program işe alım yapıyor | LinkedIn"
+#
+# Fiil çekimi değişiyor ("işe alım yapıyor", "işe alacak") ve başlık
+# sık sık kırpılıyor ("... işe ..."), bu yüzden pozisyon adı
+# "konumunda" ile "işe" arasında kalan parça olarak okunuyor.
+
+#: Türkçe biçim — en sık görülen. `İ`/`ı` büyük-küçük eşlemesi
+#: güvenilir olmadığı için harfler açıkça yazılıyor, `re.I`'ye
+#: bırakılmıyor.
+_TR = re.compile(
+    r"^(?P<sirket>.+?)\s+[şŞ]irketi\s+(?P<konum>.+?)\s+konumunda\s+"
+    r"(?P<baslik>.+?)(?:\s+[iİ]şe\b.*)?$"
+)
+
+#: "Şirket hiring Başlık in Konum | LinkedIn"
+_HIRING = re.compile(
+    r"^(?P<sirket>.+?)\s+hiring\s+(?P<baslik>.+?)"
+    r"(?:\s+in\s+(?P<konum>.+?))?$", re.I)
+
+#: "Fit4rail Summer Internship 2026 @Siemens Mobility Turkey"
+_AT = re.compile(r"^(?P<baslik>.+?)\s*@\s*(?P<sirket>[^@]+)$")
+
+#: "Business Development Intern (Turkish market) - Qeepl"
+_TIRE = re.compile(r"^(?P<baslik>.+?)\s+[-–]\s+(?P<sirket>[^-–]+)$")
+
+#: Tek ilan değil, ilan LİSTESİ başlığı: "Türkiye konumunda 83 Stajyer
+#: iş ilanı", "1,000+ International Intern jobs in United States".
+#: Buradan şirket adı çıkarılmıyor — çıkarılsa uydurma olurdu.
+_LISTE = re.compile(
+    r"(\d[\d.,]*\+?\s*(iş ilan|jobs? in|ilanlar)|^LinkedIn\s+[İI]ş\s+Arama)", re.I)
+
+_SON_EK = re.compile(r"\s*[|]\s*LinkedIn\s*$", re.I)
 
 
 def basliktan_ayikla(sonuc_basligi: str | None) -> tuple[str | None, str | None, str | None]:
@@ -182,16 +217,19 @@ def basliktan_ayikla(sonuc_basligi: str | None) -> tuple[str | None, str | None,
     """
     if not sonuc_basligi:
         return None, None, None
-    metin = sonuc_basligi.strip()
-    for kalip in (_HIRING, _TIRE):
+    metin = _SON_EK.sub("", sonuc_basligi.strip()).strip()
+    if not metin or _LISTE.search(metin):
+        return None, None, None
+    for kalip in (_TR, _HIRING, _AT, _TIRE):
         m = kalip.match(metin)
-        if m:
-            g = m.groupdict()
-            return (
-                (g.get("sirket") or "").strip() or None,
-                (g.get("baslik") or "").strip() or None,
-                (g.get("konum") or "").strip() or None,
-            )
+        if not m:
+            continue
+        g = m.groupdict()
+        sirket = (g.get("sirket") or "").strip(" .,…") or None
+        baslik = (g.get("baslik") or "").strip(" .,…") or None
+        konum = (g.get("konum") or "").strip(" .,…") or None
+        if sirket:
+            return sirket, baslik, konum
     return None, None, None
 
 

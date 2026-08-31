@@ -19,7 +19,13 @@ import sys
 from collections import Counter
 
 from automation.radar_brave import saglayici_kur
-from automation.radar_cozucu import baslik_benzerligi, sadelestir
+from automation.radar_cozucu import (
+    baslik_benzerligi,
+    benzerlik,
+    kariyer_kaynagi_bul,
+    sadelestir,
+    sirket_adini_normalize_et,
+)
 from automation.radar_linkedin import (
     Butce,
     ButceBitti,
@@ -39,6 +45,8 @@ from automation.radar_resmi import (
     sonucu_sinifla,
     turkiye_mi,
 )
+from automation.radar_kosu import _oturum, getir_fabrikasi
+from automation.radar_sirket import alan_adini_normalize_et, sirket_alani_olamaz
 from automation.radar_resmi_kosu import _kaynaklari_oku, _mevcut_ilanlar, kiracidan_ilanlar
 from automation.staj_kalitesi import VALID_INTERNSHIP, sinifla
 
@@ -49,6 +57,20 @@ SIRKET_BASINA_SORGU = 2
 
 #: Aynı pozisyonu resmî kaynakta tanımak için gereken başlık örtüşmesi.
 BASLIK_ESIGI = 0.5
+
+#: Bir alan adının şirkete ait sayılması için gereken ad benzerliği.
+#: YANLIŞ ALAN ADI, ÇÖZÜLEMEMİŞTEN KÖTÜDÜR — eşik düşük tutulmuyor.
+ALAN_ESIGI = 0.6
+
+
+def _alan_sirkete_ait_mi(sirket: str, alan: str) -> bool:
+    """Alan adı gerçekten bu şirketin mi?
+
+    Brave sonucu "buraya bak" der, "bu kesin onların sitesi" demez.
+    Alan adının gövdesi şirket adına benzemiyorsa kabul edilmiyor.
+    """
+    govde = alan.split(".")[0]
+    return benzerlik(sirket_adini_normalize_et(sirket), sadelestir(govde)) >= ALAN_ESIGI
 
 
 def _ic_kiraci_haritasi(kaynaklar: list[dict]) -> dict[str, tuple[str, str]]:
@@ -117,28 +139,53 @@ def kesfet(saglayici, butce: Butce, sorgu_siniri: int, olcum: dict) -> dict:
 
 
 def kiraci_ara(sirket: str, baslik: str | None, saglayici, butce: Butce,
-               sayac: Counter) -> tuple[str, str] | None:
-    """KATMAN 3 — şirketin resmî ATS kiracısını aramada bulur.
+               getir, sayac: Counter) -> tuple[str, str] | None:
+    """Şirketin resmî ATS kiracısını bulur. En çok `SIRKET_BASINA_SORGU` Brave sorgusu.
 
-    En çok `SIRKET_BASINA_SORGU` sorgu. Brave "buraya bak" der; kiracı
-    ancak adaptör gerçek ilanı döndürürse kanıta dönüşür.
+    İKİ AŞAMA — İKİNCİSİ BRAVE HARCAMIYOR
+    -------------------------------------
+    İlk koşuda 179 sinyalde Brave şirketin KENDİ SİTESİNİ döndürdü,
+    ATS'i değil, ve zincir orada koptu. Oysa bir şirketin kariyer
+    sayfası çoğu zaman ATS'ine bağ veriyor. Bu yüzden Brave sonucu
+    doğrudan ATS değilse, adres şirketin alan adı olarak alınıp mevcut
+    `kariyer_kaynagi_bul` zinciri çalıştırılıyor — bu aşama HTTP, arama
+    bütçesinden harcamıyor.
     """
     sorgular = [f'"{sirket}" careers jobs apply']
     if baslik:
         sorgular.append(f'"{sirket}" "{baslik}"')
+
+    alanlar: list[str] = []
     for sorgu in sorgular[:SIRKET_BASINA_SORGU]:
         try:
             butce.cozum_harca()
         except ButceBitti:
             sayac["butce_bitti"] += 1
-            return None
+            break
         for sonuc in saglayici.ara(sorgu):
-            b = sonucu_sinifla(sonuc.get("url"))
+            adres = sonuc.get("url")
+            b = sonucu_sinifla(adres)
             if b.destekli and b.kiraci:
                 sayac["aramadan_cozuldu"] += 1
                 return (b.platform, b.kiraci.lower())
             if b.platform and not b.destekli:
                 sayac[f"adaptorsuz:{b.platform}"] += 1
+            alan = alan_adini_normalize_et(adres)
+            if (alan and not sirket_alani_olamaz(alan) and alan not in alanlar
+                    and _alan_sirkete_ait_mi(sirket, alan)):
+                alanlar.append(alan)
+
+    # AŞAMA 2 — şirketin kendi kariyer sayfasından ATS'e.
+    for alan in alanlar[:2]:
+        kanit = kariyer_kaynagi_bul(alan, getir)
+        if not kanit.url:
+            continue
+        b = sonucu_sinifla(kanit.url)
+        if b.destekli and b.kiraci:
+            sayac["kariyer_sayfasindan_cozuldu"] += 1
+            return (b.platform, b.kiraci.lower())
+        sayac["kariyer_sayfasi_ats_vermedi"] += 1
+
     sayac["kiraci_bulunamadi"] += 1
     return None
 
@@ -177,6 +224,7 @@ def main(argv: list[str] | None = None) -> int:
     ic_harita = _ic_kiraci_haritasi(kaynaklar)
     kayitli = kayitli_kiracilar(kaynaklar)
     adresler, kimlikler = _mevcut_ilanlar()
+    getir = getir_fabrikasi(_oturum(), {})
     bilinen_sirketler = set(ic_harita)
 
     kuyruk = sorted(tekil.values(),
@@ -210,7 +258,7 @@ def main(argv: list[str] | None = None) -> int:
                 cozum_sayac["ic_kanittan_cozuldu"] += 1
             else:
                 kiraci_onbellek[ad] = kiraci_ara(
-                    sinyal.sirket, sinyal.baslik, saglayici, butce, cozum_sayac)
+                    sinyal.sirket, sinyal.baslik, saglayici, butce, getir, cozum_sayac)
         kiraci = kiraci_onbellek[ad]
         if kiraci is None:
             continue
