@@ -174,7 +174,24 @@ def main(argv: list[str] | None = None) -> int:
 
         for ilan in kiracidan_ilanlar(platform, kiraci, adaptor_sayac):
             platform_huni[platform]["ilan"] += 1
-            if not turkiye_mi(ilan["location"], ilan["description"]):
+
+            # TÜRKİYE SÜZGECİ ADAPTÖRDE, BURADA DEĞİL
+            #
+            # Beş adaptörün beşi de kaynağında `is_turkey_location`
+            # uyguluyor (scraper.py), SmartRecruiters ise API'ye
+            # `country=TR` gönderiyor. Buraya gelen ilan zaten Türkiye
+            # ilanı.
+            #
+            # İkinci bir süzgeç ölçüldü ve ZARAR VERDİ: adaptörlerin bir
+            # kısmı `location` alanını boş bırakıyor, benim kontrolüm de
+            # boş konumu "Türkiye değil" sayıp ilanı eliyordu. İlk
+            # koşuda getirilen 6 ilanın 6'sı burada düştü.
+            #
+            # Kontrol yalnız ÇELİŞKİ için duruyor: konum dolu ve açıkça
+            # başka bir ülkeyi gösteriyorsa ilan atlanıyor.
+            konum = ilan["location"]
+            if konum and not turkiye_mi(konum, ilan["description"]):
+                platform_huni[platform]["turkiye_disi"] += 1
                 continue
             platform_huni[platform]["turkiye"] += 1
 
