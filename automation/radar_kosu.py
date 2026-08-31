@@ -21,6 +21,7 @@ import requests
 
 from automation.radar import coz, rapor
 from automation.radar_cozucu import ats_tani, toplayici_mi
+from automation.radar_sirket import AramaYok, bilgi_tabani_kur
 from automation.radar_kaynaklar import (
     KULLANICI_AJANI,
     KaynakKapali,
@@ -96,6 +97,31 @@ def resmi_ilanlari_getir_fabrikasi(getir):
     return resmi_ilanlari_getir
 
 
+def _rest(yol: str, parametreler: dict) -> list[dict]:
+    """Servis anahtarıyla okuma. Anahtar yoksa boş liste."""
+    url = os.getenv("SUPABASE_URL")
+    anahtar = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    if not url or not anahtar:
+        return []
+    try:
+        y = requests.get(
+            f"{url}/rest/v1/{yol}", params=parametreler,
+            headers={"apikey": anahtar, "Authorization": f"Bearer {anahtar}"},
+            timeout=ZAMAN_ASIMI,
+        )
+        y.raise_for_status()
+        return y.json()
+    except requests.RequestException:
+        return []
+
+
+def bilgi_tabanini_yukle() -> dict[str, str]:
+    """KATMAN 1 verisi: kendi şirket ve ilan kayıtlarımız."""
+    sirketler = _rest("companies", {"select": "name,website_url"})
+    ilanlar = _rest("listings", {"select": "canonical_url,apply_url,source_url,companies(name)"})
+    return bilgi_tabani_kur(sirketler, ilanlar)
+
+
 def mevcut_ilanlari_yukle() -> dict[str, str]:
     """Canonical listede zaten olan resmî adresler → listing id.
 
@@ -133,6 +159,10 @@ def main(argv: list[str] | None = None) -> int:
     getir = getir_fabrikasi(oturum, {})
     resmi_getir = resmi_ilanlari_getir_fabrikasi(getir)
     mevcut = mevcut_ilanlari_yukle()
+    bilgi = bilgi_tabanini_yukle()
+    saglayici = AramaYok()
+    sirket_onbellegi: dict = {}
+    print(f"bilgi tabanı: {len(bilgi)} şirket | arama katmanı: {saglayici.ad}", file=sys.stderr)
 
     sinyaller = []
     kapali: dict[str, str] = {}
@@ -155,11 +185,20 @@ def main(argv: list[str] | None = None) -> int:
 
     sonuclar = []
     for i, s in enumerate(sinyaller, 1):
-        sonuclar.append(coz(s, getir, resmi_getir, mevcut))
+        sonuclar.append(coz(s, getir, resmi_getir, mevcut, bilgi, saglayici, sirket_onbellegi))
         if i % 10 == 0:
             print(f"  çözülen: {i}/{len(sinyaller)}", file=sys.stderr)
 
     r = rapor(sonuclar, kapali)
+    r["arama_katmani"] = {"saglayici": saglayici.ad,
+                          "kullanilabilir": getattr(saglayici, "kullanilabilir", False),
+                          "sorgu": 0}
+    r["bilgi_tabani_sirket"] = len(bilgi)
+    r["domain_guven"] = {
+        "HIGH": sum(1 for s in sonuclar if s.resolved_company_domain and s.resolution_confidence == "HIGH"),
+        "MEDIUM": sum(1 for s in sonuclar if s.resolved_company_domain and s.resolution_confidence == "MEDIUM"),
+        "yok": sum(1 for s in sonuclar if not s.resolved_company_domain),
+    }
     r["unresolved_ornekleri"] = [
         {
             "company": s.company_name_raw[:60],

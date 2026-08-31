@@ -34,6 +34,7 @@ from automation.radar_cozucu import (
     toplayici_mi,
 )
 from automation.radar_kaynaklar import KaynakKapali, Sinyal
+from automation.radar_sirket import AramaYok, sirketi_coz
 from automation.staj_kalitesi import VALID_INTERNSHIP, sinifla
 
 #: Otomatik yayın bayrağı. Bu sprintte KAPALI.
@@ -94,6 +95,9 @@ def coz(
     getir,
     resmi_ilanlari_getir,
     mevcut_ilanlar: dict[str, str] | None = None,
+    bilgi_tabani: dict[str, str] | None = None,
+    saglayici=None,
+    sirket_onbellegi: dict | None = None,
 ) -> SinyalSonucu:
     """Tek bir sinyali zincirin sonuna kadar çözmeye çalışır.
 
@@ -113,12 +117,22 @@ def coz(
         return _bitir(s, "unresolved", "company_unresolved: ad normalleştirilemedi", "LOW")
 
     # ------------------------------------------------ 1. resmî alan adı
-    alan: Kanit = dogrula_alan_adi(sinyal.company_name_raw, getir)
-    s.kanitlar.append(f"alan_adi: {alan.neden}")
-    if not alan.var or alan.guven == "LOW":
-        return _bitir(s, "unresolved", "company_unresolved: resmî alan adı doğrulanamadı", "LOW")
-    s.resolved_company_domain = alan.deger
-    s.resolution_confidence = alan.guven
+    #
+    # V2: üç katmanlı çözücü. Önce kendi verimiz, sonra arama, en sonda
+    # tahmin — ve her aday kimlik doğrulamasından geçiyor.
+    cozum, _sorgu = sirketi_coz(
+        sinyal.company_name_raw, getir,
+        bilgi_tabani or {}, saglayici or AramaYok(), sirket_onbellegi,
+    )
+    s.kanitlar.append(f"alan_adi[{cozum.katman}/{cozum.guven}]: " + "; ".join(cozum.kanitlar)[:160])
+    if not cozum.otomatik_kullanilabilir:
+        neden = ("company_unresolved: aday MEDIUM, insan bakışı bekliyor"
+                 if cozum.var else "company_unresolved: resmî alan adı doğrulanamadı")
+        s.resolved_company_domain = cozum.alan_adi
+        return _bitir(s, "unresolved", neden, cozum.guven)
+    alan = Kanit(cozum.alan_adi, cozum.guven, cozum.katman)
+    s.resolved_company_domain = cozum.alan_adi
+    s.resolution_confidence = cozum.guven
     _bitir(s, "company_resolved", "resmî alan adı doğrulandı")
 
     # -------------------------------------------- 2. kariyer kaynağı
