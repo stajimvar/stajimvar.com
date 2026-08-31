@@ -491,10 +491,8 @@ export const SirketPanelDevFixture: React.FC = () => {
             onIptal={() => setEkran('adaylar')}
           />
         ) : (
-          <div className="space-y-4">
-            <h1 className="text-2xl font-extrabold" style={{ color: SIRKET_METIN }}>
-              Başvuranlar
-            </h1>
+          /* Başlık ızgaranın kendisinde; fikstür de üretimi taklit ediyor. */
+          <div>
             <AdayIzgarasi
               kartlar={kartlar}
               ilanAdresi="https://stajimvar.com/ilan/test"
@@ -538,9 +536,10 @@ export const SirketPanelDevFixture: React.FC = () => {
                     coz(
                       satir && satir.status === 'offer_accepted'
                         ? {
-                            ad: 'Aday B',
-                            eposta: 'aday.b@ornek.edu.tr',
-                            telefon: null,
+                            ad: 'Mustafa Oğulcan Doğan',
+                            eposta: 'mustafa.ogulcan@ornek.edu.tr',
+                            /* Ham biçim: ekranda okunur yazılıyor, kayıt değişmiyor. */
+                            telefon: '+905323311338',
                             unvan: 'Aday',
                           }
                         : null,

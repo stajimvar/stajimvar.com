@@ -1,6 +1,18 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ExternalLink, FileText, Github, Loader2, ShieldOff, X } from 'lucide-react';
+import {
+  CheckCircle2,
+  ChevronDown,
+  CircleSlash,
+  ExternalLink,
+  FileText,
+  Github,
+  Loader2,
+  Mail,
+  Phone,
+  ShieldOff,
+  X,
+} from 'lucide-react';
 import {
   ALAN,
   BIRINCIL_DUGME,
@@ -17,12 +29,15 @@ import {
   ikincilStil,
 } from './renk';
 import { kimlikSatiri, monogram } from '../lib/aday-kart.mjs';
+import { telefonBaglantisi, telefonYaz } from '../lib/telefon.mjs';
 import {
   SIRKET_DURUMLARI,
   durumAdi,
   iletisimAcik,
   sirketDurumCumlesi,
+  ogrencininKarari,
   sonrakiDurum,
+  surecKapandi,
   teklifBekliyor,
 } from './basvuru-durumu';
 import {
@@ -282,6 +297,47 @@ export const AdayCekmecesi: React.FC<{
   const davetOnaylandi = gorusmeOnaylandi(kart.durum, kart.gorusmeYaniti);
   const davetReddedildi = gorusmeReddedildi(kart.durum, kart.gorusmeYaniti);
   const gorusmeAsamasi = kart.durum === 'interview_scheduled';
+
+  /*
+    SÜREÇ BİTTİ: aday hakkında verilecek bir karar kalmadı.
+    `kararKilitli` bundan dar — yalnız ÖĞRENCİNİN verdiği kararlar.
+    Şirketin kendi olumsuz kararı (`rejected`) geri alınabiliyor:
+    yanlışlıkla kapatılan bir adayı yeniden açmak meşru.
+  */
+  const terminal = surecKapandi(kart.durum);
+  const kararKilitli = ogrencininKarari(kart.durum);
+
+  /*
+    BAŞLIK VE AÇIKLAMA AYNI CÜMLE OLMASIN
+
+    Bant önce başlıkta "Teklif kabul edildi", hemen altında yine "Teklif
+    kabul edildi" yazıyordu. Başlık DURUMU söylüyor; alttaki satır ne
+    olduğunu ve şirketin bundan sonra ne yapacağını söylüyor.
+  */
+  const adSoylemi = kart.gizli ? 'Aday' : (kart.ad ?? 'Aday');
+  const finalAciklama =
+    kart.durum === 'offer_accepted'
+      ? `${adSoylemi} teklifi kabul etti. İletişim bilgileri artık açık.`
+      : kart.durum === 'offer_declined'
+        ? `${adSoylemi} gönderdiğiniz teklifi reddetti.`
+        : kart.durum === 'withdrawn'
+          ? `${adSoylemi} başvurusunu geri çekti.`
+          : 'Bu başvuruyu olumsuz olarak kapattınız.';
+
+  /*
+    TEKLİF ÖZETİ — ÜÇ KAYNAK, TEK LİSTE
+
+    Ücret teklifte yazılıysa o geçerli, yoksa ilandaki bilgi. Çalışma
+    biçimi ve süre yalnız ilandan geliyor; şirket teklif gönderirken
+    onları tekrar yazmıyor. Değeri olmayan satır listeye HİÇ
+    girmiyor.
+  */
+  const teklifOzeti = [
+    { etiket: 'Başlangıç', deger: kart.teklifBaslangici ? tarihMetni(kart.teklifBaslangici) : '' },
+    { etiket: 'Ücret', deger: kart.teklifUcreti || kart.ilanUcreti || '' },
+    { etiket: 'Çalışma biçimi', deger: kart.ilanCalismaBicimi || '' },
+    { etiket: 'Süre', deger: kart.ilanSuresi || '' },
+  ].filter((satir) => satir.deger);
   /* Öğrenci teklife yanıt verdiyse karar onun; şirket geri alamıyor. */
   const kararVerildi = kart.durum === 'offer_accepted' || kart.durum === 'offer_declined';
 
@@ -372,6 +428,188 @@ export const AdayCekmecesi: React.FC<{
         </div>
 
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
+          {/*
+            SÜREÇ BİTTİĞİNDE EKRAN SIRASI DEĞİŞİYOR
+
+            Teklif kabul edildikten sonra şirketin ilk sorusu "bu adayı
+            değerlendireyim mi" değil, "bu kişiye nasıl ulaşacağım".
+            Yetenekler ve projeler hâlâ değerli ama artık ekranın en
+            kritik parçası değiller — bu yüzden final durum, iletişim ve
+            kabul edilen teklif profil ayrıntılarının ÜSTÜNE alınıyor.
+
+            Telefonda özellikle: kullanıcı iletişim kartına ulaşmak için
+            uzun uzun kaydırmıyor.
+          */}
+          {terminal && (
+            <section className="space-y-3">
+              <div
+                className="flex items-start gap-2.5 rounded-2xl border p-3.5"
+                style={
+                  kart.durum === 'offer_accepted'
+                    ? { borderColor: '#86EFAC', background: '#F0FDF4' }
+                    : { borderColor: SIRKET_KENAR, background: SIRKET_YUZEY }
+                }
+              >
+                {/*
+                  Final durum yalnızca RENKLE anlatılmıyor: ikon ve metin
+                  birlikte. Renk ayrımı güçlüğü olan kullanıcı da aynı
+                  şeyi okuyor.
+                */}
+                {kart.durum === 'offer_accepted' ? (
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" style={{ color: '#166534' }} />
+                ) : (
+                  <CircleSlash className="mt-0.5 h-5 w-5 shrink-0" style={{ color: SIRKET_METIN_IKINCIL }} />
+                )}
+                <div className="min-w-0">
+                  <p
+                    className="text-sm font-extrabold"
+                    style={{ color: kart.durum === 'offer_accepted' ? '#166534' : SIRKET_METIN }}
+                  >
+                    {durumAdi(kart.durum)}
+                  </p>
+                  <p
+                    className="mt-0.5 text-xs leading-relaxed"
+                    style={{ color: kart.durum === 'offer_accepted' ? '#166534' : SIRKET_METIN_IKINCIL }}
+                  >
+                    {finalAciklama}
+                  </p>
+                </div>
+              </div>
+
+              {/*
+                İLETİŞİM — YALNIZCA KABULDEN SONRA
+
+                Kapı veritabanında: `basvuru_iletisimi` teklif kabul
+                edilmediyse satır döndürmüyor. Buradaki koşul yalnızca
+                gösterim; kuralın kendisi değil.
+
+                Sohbet yok: e-posta ve varsa telefon, ikisi de doğrudan
+                aksiyon.
+              */}
+              {iletisimAcik(kart.durum) && (
+                <div
+                  className="rounded-2xl border p-3.5"
+                  style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY }}
+                >
+                  <p className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: SIRKET_METIN_IKINCIL }}>
+                    İletişim
+                  </p>
+                  {iletisimHatasi ? (
+                    <p role="alert" className="mt-1.5 text-xs font-semibold" style={{ color: '#991B1B' }}>
+                      İletişim bilgileri şu anda yüklenemedi.
+                    </p>
+                  ) : iletisim ? (
+                    <>
+                      <p className="mt-1.5 text-base font-extrabold" style={{ color: SIRKET_METIN }}>
+                        {iletisim.ad ?? 'Aday'}
+                      </p>
+                      {iletisim.eposta && (
+                        <p className="mt-0.5 break-all text-xs" style={{ color: SIRKET_METIN }}>
+                          {iletisim.eposta}
+                        </p>
+                      )}
+                      {/*
+                        Numara okunur biçimde ama VERİTABANINDAKİ değer
+                        değişmiyor; `tel:` bağlantısı ham rakamları
+                        kullanıyor.
+                      */}
+                      {iletisim.telefon && (
+                        <p className="text-xs" style={{ color: SIRKET_METIN }}>
+                          {telefonYaz(iletisim.telefon)}
+                        </p>
+                      )}
+                      <div className="mt-2.5 flex flex-wrap gap-2">
+                        {iletisim.eposta && (
+                          <a
+                            href={`mailto:${iletisim.eposta}`}
+                            aria-label={`${iletisim.ad ?? 'Adaya'} e-posta gönder`}
+                            className={BIRINCIL_DUGME}
+                            style={birincilStil}
+                          >
+                            <Mail className="h-4 w-4" />
+                            E-posta gönder
+                          </a>
+                        )}
+                        {/* Telefon yoksa düğme HİÇ çıkmıyor. */}
+                        {telefonBaglantisi(iletisim.telefon) && (
+                          <a
+                            href={`tel:${telefonBaglantisi(iletisim.telefon)}`}
+                            aria-label={`${iletisim.ad ?? 'Adayı'} ara — ${telefonYaz(iletisim.telefon)}`}
+                            className={IKINCIL_DUGME}
+                            style={ikincilStil}
+                          >
+                            <Phone className="h-4 w-4" />
+                            Ara
+                          </a>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <p className="mt-1.5 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+                      İletişim bilgileri yükleniyor…
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/*
+                KABUL EDİLEN TEKLİF
+
+                Ücret ve çalışma biçimi iki kaynaktan geliyor: teklifte
+                yazan varsa O geçerli, yoksa ilandaki bilgi. Eksik alan
+                GİZLENİYOR: boş bir satırı yer tutucu metinle doldurmak, olmayan
+                bir bilgiyi varmış gibi göstermek olurdu.
+              */}
+              {/*
+                Not TEK BAŞINA da yeterli: özet satırlarının hiçbiri
+                dolu olmayabilir (eski teklif, ilanda ücret/süre yok) ama
+                şirketin yazdığı metin duruyorsa okunabilir kalmalı.
+                Reddedilen teklifte de aynısı geçerli.
+              */}
+              {(teklifOzeti.length > 0 || kart.teklifNotu) && (
+                <div
+                  className="rounded-2xl border p-3.5"
+                  style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY }}
+                >
+                  <p className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: SIRKET_METIN_IKINCIL }}>
+                    {kart.durum === 'offer_accepted' ? 'Kabul edilen teklif' : 'Gönderilen teklif'}
+                  </p>
+                  <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">
+                    {teklifOzeti.map((s: { etiket: string; deger: string }) => (
+                      <div key={s.etiket}>
+                        <dt className="text-[10px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                          {s.etiket}
+                        </dt>
+                        <dd className="text-xs font-semibold" style={{ color: SIRKET_METIN }}>
+                          {s.deger}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                  {/*
+                    Teklif notu ayrı bir satır: bir şart değil, şirketin
+                    yazdığı serbest metin. Görüşme notu buraya
+                    karışmıyor — o `interview_note` alanında ve görüşme
+                    özetinde duruyor.
+                  */}
+                  {kart.teklifNotu && (
+                    <div className="mt-2.5 border-t pt-2.5" style={{ borderColor: SIRKET_KENAR }}>
+                      <p className="text-[10px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                        Teklif notu
+                      </p>
+                      <p
+                        className="mt-0.5 whitespace-pre-line text-xs leading-relaxed"
+                        style={{ color: SIRKET_METIN }}
+                      >
+                        {kart.teklifNotu}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
+
           {!kart.paylasildi && (
             <div
               className="rounded-2xl border p-3 text-xs leading-relaxed"
@@ -552,7 +790,11 @@ export const AdayCekmecesi: React.FC<{
             şirkete göre kuruluyor — öğrenci aynı durumu "Teklif aldın"
             diye görüyor.
           */}
-          {(gorusmeAsamasi || teklifBekliyor(kart.durum) || kararVerildi) && (
+          {/*
+            Final durumda bu cümle YUKARIDA duruyor; burada ikinci kez
+            yazmak aynı şeyi ekranda üç yere dağıtmak olurdu.
+          */}
+          {!terminal && (gorusmeAsamasi || teklifBekliyor(kart.durum)) && (
             <p
               className="mb-3 rounded-xl px-3 py-2 text-xs font-bold"
               style={
@@ -617,7 +859,9 @@ export const AdayCekmecesi: React.FC<{
             teklif içeriği bu turda eklendi. Boşsa bölüm hiç çizilmiyor;
             "belirtilmedi" yazmak da bir bilgi uydurmak olurdu.
           */}
-          {(teklifBekliyor(kart.durum) || kararVerildi) &&
+          {/* Final durumda teklif özeti yukarıda; burada yalnız bekleyen teklif. */}
+          {!terminal &&
+            teklifBekliyor(kart.durum) &&
             (kart.teklifNotu || kart.teklifBaslangici || kart.teklifUcreti) &&
             !teklifFormu && (
               <div
@@ -646,72 +890,48 @@ export const AdayCekmecesi: React.FC<{
             )}
 
           {/*
-            İLETİŞİM — YALNIZCA KABULDEN SONRA
+            İLETİŞİM ARTIK YUKARIDA
 
-            Kapı veritabanında: `basvuru_iletisimi` teklif kabul
-            edilmediyse satır döndürmüyor. Buradaki koşul yalnızca
-            gösterim; kuralın kendisi değil.
-
-            Sohbet yok: e-posta ve varsa telefon. İki taraf da birbirine
-            kendi araçlarıyla ulaşıyor.
+            Kabul sonrası ilk ihtiyaç iletişim; ekranın en altında
+            durması onu yetenek ve proje listelerinin arkasına
+            itiyordu. Blok gövdenin başına taşındı — burada ikinci bir
+            kopyası yok.
           */}
-          {iletisimAcik(kart.durum) && (
-            <div
-              className="mb-3 rounded-xl border p-3"
-              style={{ borderColor: SIRKET_KENAR, background: SIRKET_ZEMIN }}
-            >
-              <p className="text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
-                İLETİŞİM
-              </p>
-              {iletisimHatasi ? (
-                <p role="alert" className="mt-1 text-xs font-semibold" style={{ color: '#991B1B' }}>
-                  İletişim bilgileri şu anda yüklenemedi.
-                </p>
-              ) : iletisim ? (
-                <>
-                  <p className="mt-1 text-sm font-extrabold" style={{ color: SIRKET_METIN }}>
-                    {iletisim.ad ?? 'Aday'}
-                  </p>
-                  {iletisim.eposta && (
-                    <p className="text-xs" style={{ color: SIRKET_METIN }}>
-                      {iletisim.eposta}
-                    </p>
-                  )}
-                  {iletisim.telefon && (
-                    <p className="text-xs" style={{ color: SIRKET_METIN }}>
-                      {iletisim.telefon}
-                    </p>
-                  )}
-                  {iletisim.eposta && (
-                    <a
-                      href={`mailto:${iletisim.eposta}`}
-                      className={`mt-2 inline-flex ${IKINCIL_DUGME}`}
-                      style={ikincilStil}
-                    >
-                      E-posta gönder
-                    </a>
-                  )}
-                </>
-              ) : (
-                <p className="mt-1 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
-                  İletişim bilgileri yükleniyor…
-                </p>
-              )}
-            </div>
-          )}
 
+          {/*
+            KARAR VERİLDİYSE SEÇİCİ YOK
+
+            Teklif kabul edilmiş adayda hâlâ aktif bir açılır liste
+            duruyordu ve gerçekten çalışıyordu: şirket adayı `rejected`
+            ya da `under_review` yapabiliyordu. Yanlış bir imkân
+            gösteriyordu — üstelik öğrencinin verdiği kararı bozan bir
+            imkân.
+
+            Artık sakin, okunur bir satır. Aynı kural veritabanında da
+            duruyor (applications_guard_ogrenci_karari): arayüzde kapatıp
+            veritabanında açık bırakmak kuralı hiç koymamaktır.
+
+            `rejected` BİLEREK DIŞARIDA: o şirketin kendi kararı ve
+            yanlışlıkla kapatılan bir adayı yeniden açmak meşru.
+          */}
+          {kararKilitli ? (
+            <div>
+              <p className="mb-1 text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                Durum
+              </p>
+              <p className="flex items-center gap-1.5 text-sm font-extrabold" style={{ color: SIRKET_METIN }}>
+                <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: SIRKET_VURGU_KOYU }} />
+                {durumAdi(kart.durum)}
+              </p>
+            </div>
+          ) : (
           <label className="block">
             <span className="mb-1 block text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
               Durum
             </span>
             <select
               value={kart.durum}
-              /*
-                Öğrenci karar verdiyse seçici kapalı: teklifi kabul ya da
-                reddetmek adayın kararı ve şirket onu geri alamıyor. Aynı
-                kural veritabanında da duruyor.
-              */
-              disabled={kaydediliyor || kararVerildi}
+              disabled={kaydediliyor}
               onChange={(e) => durumDegistir(e.target.value)}
               className={ALAN}
               style={alanStil}
@@ -722,10 +942,9 @@ export const AdayCekmecesi: React.FC<{
                 </option>
               ))}
               {/*
-                Adayın verdiği kararlar (geri çekme, teklifi kabul/ret)
-                seçenekler arasında yok. Ama mevcut durum onlardan biriyse
-                listede GÖRÜNMELİ: yoksa `select` ilk seçeneği gösterip
-                yanlış bilgi verirdi. Seçilemiyor.
+                Adayın verdiği kararlar seçenekler arasında yok. Mevcut
+                durum onlardan biriyse zaten yukarıdaki okunur satır
+                çiziliyor, bu dala hiç girilmiyor.
               */}
               {!SIRKET_DURUMLARI.includes(kart.durum) && (
                 <option value={kart.durum} disabled>
@@ -734,6 +953,7 @@ export const AdayCekmecesi: React.FC<{
               )}
             </select>
           </label>
+          )}
 
           {/*
             MÜLAKAT TARİHİ ALANI KALDIRILDI
@@ -969,7 +1189,8 @@ export const AdayCekmecesi: React.FC<{
                 gönder" GÖSTERİLMİYOR: görüşme yapılmadan gönderilen bir
                 teklif, bu turda düzeltilen tam olarak o yanlış.
               */}
-              {sonraki === 'interview_scheduled' ? (
+              {/* Süreç bittiyse ilerletilecek bir adım yok. */}
+              {terminal ? null : sonraki === 'interview_scheduled' ? (
                 <button
                   type="button"
                   disabled={kaydediliyor}
@@ -1079,7 +1300,7 @@ export const AdayCekmecesi: React.FC<{
 
                 Öğrenci karar verdikten sonra hiç gösterilmiyor.
               */}
-              {!kararVerildi && kart.durum !== 'rejected' && (
+              {!terminal && (
                 olumsuzSoruldu ? (
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="text-xs font-bold" style={{ color: SIRKET_METIN }}>
@@ -1132,7 +1353,7 @@ export const AdayCekmecesi: React.FC<{
             className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-between rounded-xl text-xs font-bold"
             style={{ color: SIRKET_METIN_IKINCIL }}
           >
-            Adaya not
+            Öğrenciye not
             <ChevronDown
               className="h-4 w-4 transition-transform"
               style={{ transform: ikinciAcik ? 'rotate(180deg)' : 'none' }}
@@ -1148,14 +1369,19 @@ export const AdayCekmecesi: React.FC<{
                 geçerli olduğunu belirsizleştiriyordu.
               */}
               {/*
-                Not ÖĞRENCİYE GÖRÜNÜR: `company_feedback` adayın kendi
-                başvuru sayfasında okunuyor. Bunu yazmadan not alanı
-                koymak, dahili sanılan bir metnin adaya gitmesine yol
-                açardı.
+                NOT ÖĞRENCİYE GÖRÜNÜR
+
+                `company_feedback` adayın kendi başvuru sayfasında
+                okunuyor (ApplicationsTrackerView · "Şirketin notu").
+                Bu yüzden başlık "Adaya not" değil "ÖĞRENCİYE not":
+                şirket içi bir not diye yazılıp adaya gitmesin.
+
+                Şirket içine özel bir not alanı ÜRÜNDE YOK; olmayan bir
+                şeyi varmış gibi adlandırmıyoruz.
               */}
               <label className="block">
                 <span className="mb-1 block text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
-                  Adaya not — başvuru sayfasında görüyor
+                  Öğrenciye not — başvuru sayfasında görüyor
                 </span>
                 <textarea
                   value={not}

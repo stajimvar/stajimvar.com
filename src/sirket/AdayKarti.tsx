@@ -10,7 +10,7 @@ import {
   SIRKET_YUZEY,
 } from './renk';
 import { UYUM_ETIKETI, kimlikSatiri, monogram } from '../lib/aday-kart.mjs';
-import { durumRozeti } from './basvuru-durumu';
+import { durumAdi, durumRozeti, surecKapandi } from './basvuru-durumu';
 
 /**
  * Başvuran kartı.
@@ -67,6 +67,19 @@ export const AdayKarti: React.FC<{
   const kimlik = kimlikSatiri(kart);
   const durum = durumRozeti(kart.durum);
   /* Dörtten fazlası kartı boğuyor; kalanı sayıyla anlatılıyor. */
+  /*
+    UYUM SKORU FİNAL DURUMLARDA GİZLİ
+
+    Teklif kabul edilmiş bir adayın yanında "Düşük uyum" yazıyordu.
+    Şirket adayı zaten seçmiş, aday da teklifi kabul etmiş: o sayı
+    artık bir karara yardım etmiyor, yalnızca kararı sorgulatıyor.
+    Aynısı olumsuz kapanmış, reddedilmiş ve geri çekilmiş
+    başvurular için de geçerli.
+
+    Yalnız GÖSTERİM: puan veritabanında duruyor.
+  */
+  const uyumGoster = !surecKapandi(kart.durum) && kart.band !== 'bilinmiyor';
+
   const gorunenYetenek = kart.yetenekler.slice(0, 4);
   const kalanYetenek = kart.yetenekler.length - gorunenYetenek.length;
 
@@ -75,7 +88,9 @@ export const AdayKarti: React.FC<{
       type="button"
       onClick={onAc}
       data-aday-karti={kart.id}
-      aria-label={`${kart.ad ?? 'Aday'} — ${UYUM_ETIKETI[kart.band as keyof typeof UYUM_ETIKETI]}`}
+      aria-label={`${kart.ad ?? 'Aday'} — ${
+        uyumGoster ? UYUM_ETIKETI[kart.band as keyof typeof UYUM_ETIKETI] : durumAdi(kart.durum)
+      }`}
       /*
         SABİT ORAN KALDIRILDI
 
@@ -198,7 +213,7 @@ export const AdayKarti: React.FC<{
         >
           <span className="flex min-w-0 flex-col">
             <span className="truncate">{tarihYaz(kart.tarih)}</span>
-            {kart.band !== 'bilinmiyor' && (
+            {uyumGoster && (
               <span className="truncate text-[10px] font-normal">
                 {UYUM_ETIKETI[kart.band as keyof typeof UYUM_ETIKETI]}
               </span>

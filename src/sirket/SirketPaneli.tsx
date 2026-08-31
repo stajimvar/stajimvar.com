@@ -757,10 +757,15 @@ const Basvuranlar: React.FC<{
       : null;
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
-        Başvuranlar
-      </h1>
+    /*
+      BAŞLIK BİR KEZ
+
+      Burada bir sayfa başlığı vardı ve AdayIzgarasi kendi başlığını da
+      çiziyordu: masaüstünde başlık iki kez görünüyordu. Kalan başlık
+      ızgaranınki — aday sayısını da taşıyor ve süzgeçler doğrudan onun
+      altında.
+    */
+    <div>
       <AdayIzgarasi
         kartlar={kartlar}
         ilanAdresi={ilanAdresi}

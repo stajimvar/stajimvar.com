@@ -145,8 +145,14 @@ test('teklif beklerken şirkete sonraki adım düğmesi yok', () => {
   assert.match(cekmece, /teklifBekliyor\(kart\.durum\)/);
 });
 
-test('öğrenci karar verdikten sonra şirket seçicisi kapalı', () => {
-  assert.match(cekmece, /disabled=\{kaydediliyor \|\| kararVerildi\}/);
+test('öğrenci karar verdikten sonra şirket seçicisi HİÇ ÇİZİLMİYOR', () => {
+  /*
+    Önce seçici çiziliyor ama `disabled` oluyordu. Kapalı bir açılır
+    liste hâlâ "buradan başka bir duruma çekebilirim" diyor. Artık
+    yerinde okunur bir satır var; seçici o dalda hiç yok.
+  */
+  assert.match(cekmece, /kararKilitli \? \(/, 'karar verilmiş durumda okunur satır yok');
+  assert.match(cekmece, /const kararKilitli = ogrencininKarari\(kart\.durum\)/);
 });
 
 test('öğrenci kabul etmeden önce rıza cümlesini görüyor', () => {

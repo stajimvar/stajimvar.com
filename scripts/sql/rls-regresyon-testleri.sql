@@ -1622,5 +1622,84 @@ select pg_temp.bekle(
     where recipient_id = (select c from k) and read_at is null),
   'Tumu okundu yalniz cagiranin kayitlarini etkiledi');
 
+
+-- =====================================================================
+-- ÖĞRENCİNİN KARARI NİHAİ
+-- =====================================================================
+--
+-- İşveren politikasının WITH CHECK ifadesi şirketin bu üç değere
+-- GEÇMESİNİ engelliyordu ama yalnız YENİ satırı görüyordu: başvuru
+-- `offer_accepted` iken şirket onu `rejected` yapabiliyordu, çünkü yeni
+-- değer yasak listede değil. Yani öğrencinin kararı geri alınabiliyordu.
+--
+-- `rejected` bilerek dışarıda: o şirketin KENDİ kararı ve yanlışlıkla
+-- kapatılan bir adayı yeniden açmak meşru.
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+
+insert into public.listings (id, company_id, title, status, origin, application_method)
+values ('22222222-aaaa-4000-8000-000000000009'::uuid, '11111111-aaaa-4000-8000-000000000001'::uuid,
+        'A Final Stajyeri', 'published', 'employer_posted', 'internal');
+
+insert into public.applications (id, listing_id, student_id, match_score, application_method,
+                                 email_delivery_status, created_via, contact_share_consent_at, status)
+select '33333333-9991-4000-8000-000000000001'::uuid, '22222222-aaaa-4000-8000-000000000009'::uuid, c,
+       60, 'internal', 'not_required', 'web', now(), 'offer_accepted' from k
+union all
+select '33333333-9992-4000-8000-000000000002'::uuid, '22222222-aaaa-4000-8000-000000000009'::uuid, e,
+       60, 'internal', 'not_required', 'web', now(), 'offer_declined' from k;
+
+insert into public.applications (id, listing_id, student_id, match_score, application_method,
+                                 email_delivery_status, created_via, contact_share_consent_at, status)
+values ('33333333-9993-4000-8000-000000000003'::uuid, '22222222-aaaa-4000-8000-000000000009'::uuid,
+        '00000000-0000-4000-8000-00000000000d'::uuid,
+        60, 'internal', 'not_required', 'web', now(), 'withdrawn'),
+       ('33333333-9994-4000-8000-000000000004'::uuid, '22222222-aaaa-4000-8000-000000000009'::uuid,
+        '00000000-0000-4000-8000-00000000000a'::uuid,
+        60, 'internal', 'not_required', 'web', now(), 'rejected');
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='rejected'
+      where id='33333333-9991-4000-8000-000000000001'$q$),
+  'A, kabul edilmis teklifi bozamaz');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='under_review'
+      where id='33333333-9992-4000-8000-000000000002'$q$),
+  'A, reddedilmis teklifi bozamaz');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='under_review'
+      where id='33333333-9993-4000-8000-000000000003'$q$),
+  'A, geri cekilmis basvuruyu yeniden acamaz');
+
+-- Kararlar yerinde duruyor.
+select pg_temp.bekle(
+  (select status::text = 'offer_accepted'
+     from public.applications where id='33333333-9991-4000-8000-000000000001'::uuid),
+  'Kabul kaydi degismedi');
+
+-- ŞİRKETİN KENDİ KARARI GERİ ALINABİLİR
+--
+-- Akış tek yönlü değil: yanlışlıkla olumsuz kapatılan bir aday yeniden
+-- değerlendirmeye alınabilmeli.
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='under_review'
+      where id='33333333-9994-4000-8000-000000000004'$q$),
+  'A, kendi olumsuz kararini geri alabilir');
+
+-- Nihai kayitlarda not/CV gibi alanlar hala yazilabiliyor: kilitlenen
+-- sey DURUM, satirin tamami degil.
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set company_feedback='Gorusuruz.'
+      where id='33333333-9991-4000-8000-000000000001'$q$),
+  'A, kabul edilmis basvuruya not yazabilir');
+
 reset role;
 rollback;

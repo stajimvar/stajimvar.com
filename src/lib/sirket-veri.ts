@@ -260,7 +260,11 @@ export async function sirketBasvurulari(companyId: string) {
         'interview_date, interview_time, interview_type, interview_location, ' +
         'interview_note, interview_response, interview_responded_at, ' +
         'status_changed_at, offer_note, offer_start_date, offer_compensation, ' +
-        'listings!inner(id, title, company_id)'
+        /*
+          Teklif özeti çalışma biçimini, süreyi ve ücreti İLANDAN
+          okuyor: şirket teklif gönderirken bunları tekrar yazmıyor.
+        */
+        'listings!inner(id, title, company_id, work_type, duration, stipend_text)'
     )
     .eq('listings.company_id', companyId)
     .order('applied_at', { ascending: false });
@@ -274,6 +278,9 @@ export async function sirketBasvurulari(companyId: string) {
   return (data ?? []).map((s: Record<string, unknown>) => ({
     ...s,
     ilanBasligi: (s.listings as { title?: string } | null)?.title ?? null,
+    ilanCalismaBicimi: (s.listings as { work_type?: string } | null)?.work_type ?? null,
+    ilanSuresi: (s.listings as { duration?: string } | null)?.duration ?? null,
+    ilanUcreti: (s.listings as { stipend_text?: string } | null)?.stipend_text ?? null,
   }));
 }
 

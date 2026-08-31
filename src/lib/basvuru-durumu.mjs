@@ -240,6 +240,34 @@ export function iletisimAcik(durum) {
   return durum === 'offer_accepted';
 }
 
+/**
+ * ÖĞRENCİNİN VERDİĞİ KARAR — ŞİRKET İÇİN NİHAİ
+ *
+ * Üçü de adayın kararı: teklifi kabul etti, teklifi reddetti, başvurudan
+ * vazgeçti. Şirket bu değerleri yazamıyordu; artık bozamıyor da
+ * (20260914010000_ogrencinin_karari_nihai).
+ *
+ * `rejected` bilerek dışarıda: o şirketin KENDİ kararı ve yanlışlıkla
+ * verilmiş bir kararı düzeltebilmek meşru.
+ */
+export function ogrencininKarari(durum) {
+  return durum === 'offer_accepted' || durum === 'offer_declined' || durum === 'withdrawn';
+}
+
+/**
+ * SÜREÇ BİTTİ — EKRAN ARTIK "DEĞERLENDİR" EKRANI DEĞİL
+ *
+ * Bu dört durumda aday hakkında verilecek bir karar kalmıyor. Uyum
+ * skoru da burada anlamını yitiriyor: şirket adayı zaten seçmiş ya da
+ * süreç kapanmış. Kabul edilmiş bir adayın yanında "Düşük uyum" yazmak,
+ * artık işe yaramayan bir sayıyı karar gibi göstermek olurdu.
+ *
+ * Yalnız GÖSTERİM kuralı: puan veritabanında duruyor.
+ */
+export function surecKapandi(durum) {
+  return ogrencininKarari(durum) || durum === 'rejected';
+}
+
 /** Süreç kapandı mı? Kapalıysa "bir sonraki adım" gösterilmiyor. */
 /**
  * Süreç bitti mi?

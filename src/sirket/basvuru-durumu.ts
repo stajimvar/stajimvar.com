@@ -56,6 +56,8 @@ export {
   durumKapandi,
   teklifBekliyor,
   iletisimAcik,
+  ogrencininKarari,
+  surecKapandi,
 } from '../lib/basvuru-durumu.mjs';
 
 type Rozet = { etiket: string; stil: React.CSSProperties };

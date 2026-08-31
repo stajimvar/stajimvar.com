@@ -116,6 +116,10 @@ export function kartVerisi(satir, ek = {}) {
     id: String(satir?.id ?? ''),
     ilanId: satir?.listing_id ? String(satir.listing_id) : null,
     ilanBasligi: satir?.ilanBasligi ?? null,
+    /* Teklif özetinde kullanılıyor; ilanda yoksa o satır hiç çizilmiyor. */
+    ilanCalismaBicimi: satir?.ilanCalismaBicimi ? String(satir.ilanCalismaBicimi) : '',
+    ilanSuresi: satir?.ilanSuresi ? String(satir.ilanSuresi) : '',
+    ilanUcreti: satir?.ilanUcreti ? String(satir.ilanUcreti) : '',
     durum: satir?.status ?? 'submitted',
     tarih: satir?.applied_at ?? null,
     puan: Number.isFinite(Number(satir?.match_score)) ? Number(satir.match_score) : null,
