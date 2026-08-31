@@ -1,0 +1,77 @@
+name: İlan bağlantı kontrolü
+
+# GÜNDE BİR KEZ, SAATTE DEĞİL
+#
+# Bu iş yayındaki her ilanın BAŞVURU ADRESİNİ üçüncü taraf kariyer
+# sitelerinde gerçekten çağırıyor. Saatlik tarama (stajimvar-automation)
+# kaynağın kendi listesini okuyor; burası ilanın kendi sayfasına gidiyor.
+# İkisi farklı iddia: biri "kayıt hâlâ listede", diğeri "başvuru sayfası
+# hâlâ çalışıyor". Kullanıcıya "Son kontrol" olarak gösterdiğimiz şey
+# ikincisi.
+#
+# NEDEN ELLE ÇALIŞIYORDU
+# ----------------------
+# Betik yalnızca bir npm betiğiydi ve hiçbir iş akışından çağrılmıyordu.
+# Ölçüldü (31 Ağustos 2026): last_seen_at bugündü ama source_verified_at
+# 25 Ağustos'ta kalmıştı — yani kartta yazan "Son kontrol: 5 gün önce"
+# doğruydu, ama beş gündür kimse kontrol etmiyordu.
+#
+# NEDEN SAATLİK DEĞİL
+# -------------------
+# Her koşu, başkasının sunucusuna ilan sayısı kadar istek demek. Günde
+# bir kez, "Son kontrol" damgasını anlamlı tutmaya yetiyor ve üçüncü
+# taraf sitelere gereksiz yük bindirmiyor.
+
+on:
+  workflow_dispatch:
+    inputs:
+      kuru:
+        description: "Hiçbir şey yazma, sadece raporla"
+        type: boolean
+        default: false
+  schedule:
+    # Her gün 04:40 UTC (Türkiye 07:40). Saatlik taramanın 17. dakikasına
+    # denk gelmiyor: iki iş aynı anda aynı satırları güncellemesin.
+    - cron: "40 4 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ilan-baglanti-kontrolu
+  cancel-in-progress: false
+
+jobs:
+  baglanti:
+    runs-on: ubuntu-latest
+    # Sıralı istek + 20 sn zaman aşımı: bugünkü envanterde dakikalar
+    # sürüyor. Sınır, asılı kalan bir koşuyu kesmek için.
+    timeout-minutes: 30
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      # Saatlik iş akışıyla aynı sır düzeni: önce yeni ad, sonra eskisi.
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+
+      - name: Sırları doğrula
+        run: |
+          eksik=""
+          [ -z "$SUPABASE_URL" ] && eksik="$eksik SUPABASE_URL"
+          [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] && eksik="$eksik SUPABASE_SERVICE_ROLE_KEY"
+          if [ -n "$eksik" ]; then
+            echo "::error::Depo sırları eksik:$eksik"
+            exit 1
+          fi
+          echo "Sırlar tanımlı."
+
+      # Betik kendi çıkış kodunu veriyor: üçüncü taraf hatası (403/429/5xx/
+      # zaman aşımı) işi kırmıyor, veritabanına yazamamak kırıyor. Kabuk
+      # `set -e` altında çalıştığı için sessiz yeşil mümkün değil.
+      - name: Başvuru adreslerini kontrol et
+        run: node scripts/ilan-baglanti-kontrol.mjs ${{ inputs.kuru && '--kuru' || '' }}

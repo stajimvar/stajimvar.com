@@ -21,9 +21,24 @@ export interface Opportunity {
   amountPeriodLabel?: string; amountNote?: string; repayable?: boolean; amountVerifiedAt?: string;
   applicationStartAt?: string; applicationDeadline?: string; applicationUrl?: string; sourceUrl: string;
   requiredDocuments: string[]; status: OpportunityStatus; verifiedAt?: string; lastCheckedAt?: string; publishedAt?: string; updatedAt?: string;
+  /*
+    KISIT DOĞRULAMA DAMGALARI
+
+    Kişiselleştirmenin girdisi. Damga yoksa o boyut DOĞRULANMADI demek —
+    dizinin dolu olması tek başına doğrulanmış uygunluk anlamına gelmiyor
+    (bkz. lib/burs-uygunluk.mjs).
+
+    Bu üç alan öğrenciye giden sorguda SEÇİLMİYORDU. Sonuç: istemcide her
+    fırsat "doğrulanmamış" görünüyordu ama `opportunityFit` damgalara
+    hiç bakmadığı için dolu diziyi kesin bilgi sayıyordu — yani sistem
+    bir yandan kapalı, bir yandan açık davranıyordu.
+  */
+  departmentsVerifiedAt?: string;
+  educationLevelsVerifiedAt?: string;
+  citiesVerifiedAt?: string;
 }
 
-const COLUMNS = 'id,slug,title,organization_name,organization_logo_url,cover_image_url,opportunity_type,short_description,description,eligibility,education_levels,eligible_departments,eligible_class_years,cities,countries,minimum_gpa,language_requirements,amount_text,support_type,amount_min,amount_max,currency,payment_period,amount_period_label,amount_note,repayable,amount_verified_at,application_start_at,application_deadline,application_url,source_url,required_documents,status,verified_at,last_checked_at,published_at';
+const COLUMNS = 'id,slug,title,organization_name,organization_logo_url,cover_image_url,opportunity_type,short_description,description,eligibility,education_levels,eligible_departments,eligible_class_years,cities,countries,minimum_gpa,language_requirements,amount_text,support_type,amount_min,amount_max,currency,payment_period,amount_period_label,amount_note,repayable,amount_verified_at,application_start_at,application_deadline,application_url,source_url,required_documents,status,verified_at,last_checked_at,published_at,departments_verified_at,education_levels_verified_at,cities_verified_at';
 const map = (row: any): Opportunity => ({
   id: row.id, slug: row.slug, title: row.title, organizationName: row.organization_name, organizationLogoUrl: row.organization_logo_url ?? undefined, coverImageUrl: row.cover_image_url ?? undefined,
   opportunityType: row.opportunity_type, shortDescription: row.short_description ?? '', description: row.description ?? '', eligibility: row.eligibility ?? '',
@@ -37,6 +52,9 @@ const map = (row: any): Opportunity => ({
   amountVerifiedAt: row.amount_verified_at ?? undefined,
   applicationStartAt: row.application_start_at ?? undefined, applicationDeadline: row.application_deadline ?? undefined, applicationUrl: row.application_url ?? undefined, sourceUrl: row.source_url,
   requiredDocuments: row.required_documents ?? [], status: row.status, verifiedAt: row.verified_at ?? undefined, lastCheckedAt: row.last_checked_at ?? undefined, publishedAt: row.published_at ?? undefined,
+  departmentsVerifiedAt: row.departments_verified_at ?? undefined,
+  educationLevelsVerifiedAt: row.education_levels_verified_at ?? undefined,
+  citiesVerifiedAt: row.cities_verified_at ?? undefined,
 });
 
 export async function fetchOpportunities(): Promise<Opportunity[]> {

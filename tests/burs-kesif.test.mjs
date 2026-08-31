@@ -228,19 +228,54 @@ test('profil yetersizse "Bu Dönem Öne Çıkanlar" gösteriliyor', () => {
   assert.ok(!bolumler.some((b) => b.id === 'sana-uygun'));
 });
 
-test('profil yeterli ve kesin eşleşme varsa "Sana Uygun Burslar" açılıyor', () => {
-  const veri = [burs({ id: '1', educationLevels: ['Lisans'], applicationDeadline: gun(20) })];
-  const bolumler = bursBolumleri(veri, { now: SIMDI, student: { gradeLevel: '2. Sınıf' } });
+/*
+  ÜÇ BOYUTU DA DOĞRULANMIŞ BURS.
+
+  Damgalar olmadan bu bölüm açılmamalı; bu testler tam olarak o sınırı
+  çiziyor. Önce `educationLevels: ['Lisans']` yazmak yetiyordu ve
+  bölüm açılıyordu — yani dolu dizi doğrulanmış sayılıyordu.
+*/
+const DAMGALI = {
+  departmentsVerifiedAt: '2026-08-01T00:00:00Z',
+  educationLevelsVerifiedAt: '2026-08-01T00:00:00Z',
+  citiesVerifiedAt: '2026-08-01T00:00:00Z',
+};
+
+const OGRENCI = { gradeLevel: 'Lisans', department: 'Hukuk', city: 'Ankara' };
+
+test('üç boyut da doğrulanmış ve eşleşiyorsa "Sana Uygun Burslar" açılıyor', () => {
+  const veri = [
+    burs({ id: '1', ...DAMGALI, educationLevels: ['Lisans'], applicationDeadline: gun(20) }),
+  ];
+  const bolumler = bursBolumleri(veri, { now: SIMDI, student: OGRENCI });
   const kisisel = bolumler.find((b) => b.id === 'sana-uygun');
   assert.ok(kisisel, '"sana uygun" bölümü açılmadı');
   assert.equal(kisisel.baslik, 'Sana Uygun Burslar');
   assert.equal(kisisel.kisisel, true);
 });
 
-test('kesin eşleşme yoksa profil dolu olsa bile "sana uygun" açılmıyor', () => {
-  /* educationLevels boş: eşleşme yalnızca TAHMİN olurdu. */
+test('DOLU DİZİ AMA DAMGA YOK: "sana uygun" açılmıyor', () => {
+  /*
+    Üretimde ölçülen durum bu: education_levels dolu 11 kaydın on
+    birinde de education_levels_verified_at NULL. Dolu dizi doğrulanmış
+    uygunluk DEĞİL.
+  */
+  const veri = [burs({ id: '1', educationLevels: ['Lisans'], applicationDeadline: gun(20) })];
+  const bolumler = bursBolumleri(veri, { now: SIMDI, student: OGRENCI });
+  assert.ok(!bolumler.some((b) => b.id === 'sana-uygun'));
+});
+
+test('boyutlardan biri doğrulanmamışsa "sana uygun" açılmıyor', () => {
+  const eksik = { ...DAMGALI };
+  delete eksik.citiesVerifiedAt;
+  const veri = [burs({ id: '1', ...eksik, educationLevels: ['Lisans'], applicationDeadline: gun(20) })];
+  const bolumler = bursBolumleri(veri, { now: SIMDI, student: OGRENCI });
+  assert.ok(!bolumler.some((b) => b.id === 'sana-uygun'));
+});
+
+test('hiçbir kısıt doğrulanmamışsa profil dolu olsa bile "sana uygun" açılmıyor', () => {
   const veri = [burs({ id: '1', applicationDeadline: gun(20) })];
-  const bolumler = bursBolumleri(veri, { now: SIMDI, student: { gradeLevel: '2. Sınıf' } });
+  const bolumler = bursBolumleri(veri, { now: SIMDI, student: OGRENCI });
   assert.ok(!bolumler.some((b) => b.id === 'sana-uygun'));
 });
 

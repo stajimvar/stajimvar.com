@@ -43,6 +43,7 @@ import {
   opportunityCalendar,
   opportunityDaysLeft,
   opportunityFit,
+  personalizationReadyCount,
 } from '../lib/firsat-degerlendirme.mjs';
 
 /**
@@ -132,6 +133,16 @@ export const OpportunitiesPage: React.FC<{
     set({ arsiv: f(filters.arsiv), takvimsiz: false });
   const setTakvimsizGoster = (f: (a: boolean) => boolean) =>
     set({ takvimsiz: f(filters.takvimsiz) });
+
+  /*
+    KİŞİSELLEŞTİRMEYE HAZIR KAYIT SAYISI
+
+    "Sana uygun" ancak doğrulanmış kısıtla anlamlı. Sayı sıfırsa ortada
+    kişiselleştirme yok; sekmeyi aktif bir süzgeç gibi göstermek olmayan
+    bir yetenek sunmak olurdu. Sayı veriye bağlı: doğrulama masasından
+    ilk kayıt damgalandığı anda sekme kendiliğinden geri geliyor.
+  */
+  const hazirSayisi = React.useMemo(() => personalizationReadyCount(items), [items]);
 
   const savedOnly = path === '/kaydedilen-firsatlar';
   const sekme: Sekme = path === '/bana-uygun' ? 'uygun' : path === '/firsat-takvimi' ? 'takvim' : 'tumu';
@@ -253,13 +264,21 @@ export const OpportunitiesPage: React.FC<{
     }
 
     if (sekme === 'uygun' && student) {
-      liste = liste.filter((item) => opportunityFit(item, student).durum !== 'sart_uymuyor');
-      /* Kesin bilgiyle uygun olanlar önce; tahminle elenmeyenler sonra. */
-      liste = [...liste].sort((a, b) => {
-        const fa = opportunityFit(a, student);
-        const fb = opportunityFit(b, student);
-        const puan = (f: typeof fa) => (f.durum === 'uygun_olabilir' && f.kesin ? 0 : 1);
-        return puan(fa) - puan(fb);
+      /*
+        İZİN LİSTESİ, ELEME LİSTESİ DEĞİL
+
+        Önce "şartı uymayanları çıkar" deniyordu. Bu, kısıtları HİÇ
+        doğrulanmamış bir fırsatı da sessizce "sana uygun" sayıyordu —
+        68 kaydın tamamı böyleydi, yani sekme aslında bütün listeyi
+        gösterip adına kişiselleştirme diyordu.
+
+        Artık yalnızca üç boyutu da doğrulanmış VE öğrenciyle eşleşen
+        kayıtlar giriyor. Bilinmeyen bir kayıt burada hiç görünmüyor;
+        "Tüm fırsatlar" sekmesinde duruyor.
+      */
+      liste = liste.filter((item) => {
+        const fit = opportunityFit(item, student);
+        return fit.durum === 'uygun_olabilir' && fit.kesin;
       });
     }
 
@@ -373,7 +392,10 @@ export const OpportunitiesPage: React.FC<{
         <nav aria-label="Fırsat görünümü" className="mb-3 flex items-center gap-1 rounded-full bg-gray-100 p-1 text-xs font-bold">
           {(
             [
-              ['/bana-uygun', 'Sana uygun', 'uygun'],
+              /* Hazır kayıt yoksa sekme hiç çizilmiyor — bkz. hazirSayisi. */
+              ...((hazirSayisi > 0
+                ? [['/bana-uygun', 'Sana uygun', 'uygun']]
+                : []) as [string, string, Sekme][]),
               ['/firsatlar', 'Tüm fırsatlar', 'tumu'],
               ['/firsat-takvimi', 'Takvim', 'takvim'],
             ] as [string, string, Sekme][]
@@ -484,6 +506,22 @@ export const OpportunitiesPage: React.FC<{
               body="Eleme yalnızca kendi profilindeki bilgilerle yapılıyor. Giriş yapmadan bütün fırsatları “Tüm fırsatlar” sekmesinden görebilirsin."
               action="Giriş yap"
               onClick={onRequireLogin}
+            />
+          ) : sekme === 'uygun' && state === 'ready' && hazirSayisi === 0 ? (
+            /*
+              SEKME GİZLİ AMA ADRES AÇIK KALABİLİR
+
+              Kayıtlı bağlantı ya da eski sekme /bana-uygun'a düşürebilir.
+              Burada boş liste göstermek "sana uygun hiçbir şey yok" gibi
+              okunurdu; oysa doğru cümle "henüz eşleştirebileceğimiz
+              kayıt yok". Fırsatların kendisi kaybolmuyor.
+            */
+            <Empty
+              icon={<Sparkles />}
+              title="Eşleştirme için yeterli doğrulanmış bilgi yok"
+              body="Bir fırsatı sana uygun sayabilmemiz için bölüm, eğitim seviyesi ve şehir şartlarının kurumun kendi sayfasından doğrulanmış olması gerekiyor. Şu an bu üç bilgisi de doğrulanmış kayıt yok, o yüzden uydurma bir eşleştirme göstermiyoruz. Bütün fırsatlar “Tüm fırsatlar” sekmesinde duruyor."
+              action="Tüm fırsatlara git"
+              onClick={() => onNavigate('/firsatlar')}
             />
           ) : state === 'loading' ? (
             <div role="status" className="space-y-4">

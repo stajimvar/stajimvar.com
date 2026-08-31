@@ -1,4 +1,5 @@
 import { calendarDay, daysUntilDeadline, opportunityStatus } from './opportunity-domain.mjs';
+import { boyutEslesmesi, kisisellestirmeyeHazir } from './burs-uygunluk.mjs';
 
 /**
  * Fırsat değerlendirme: tutar, profile uygunluk, gruplama.
@@ -104,24 +105,40 @@ export function opportunityAmount(item) {
 /* ------------------------------------------------------------------ */
 
 /*
-  NEDEN "SANA UYGUN" DEMİYORUZ
+  UYGUNLUK YALNIZCA DOĞRULANMIŞ KISITLA
 
-  İkinci sınıf lisans öğrencisine ilk sırada "TÜBİTAK 2250 Lisansüstü
-  Bursu" gösteriliyordu. Sebebi ölçüldü: 68 fırsatın 57'sinde
-  education_levels alanı BOŞ (2250 dahil), eligible_class_years alanı ise
-  68 kaydın HİÇBİRİNDE dolu değil. Yapısal alana bakan bir eşleştirme
-  neredeyse hiçbir şeyi süzmez.
+  ESKİ HÂLİ VE HATASI
+  -------------------
+  Buradaki eşleştirme iki kaynağa bakıyordu:
+    1. `educationLevels` dizisi doluysa "KESİN bilgi" sayılıyordu.
+    2. Dizi boşsa başlıktaki sözcükler okunuyordu ("lisansüstü", "lise").
 
-  İki kaynak birlikte kullanılıyor:
-    1. Alan doluysa doğrudan ona bakılıyor — KESİN bilgi.
-    2. Alan boşsa başlıktaki açık sinyal okunuyor ("lisansüstü", "yüksek
-       lisans", "doktora", "lise"). Bu bir TAHMİN, o yüzden yalnızca
-       ELEME yönünde kullanılıyor; hiçbir kaydı öne çıkarmıyor.
+  Birincisi yanlıştı: dolu bir dizi, o kısıtın KAYNAKTAN DOĞRULANDIĞINI
+  söylemiyor. Ölçüldü (üretim, 31 Ağustos 2026): education_levels dizisi
+  dolu 11 kayıt var ve ON BİRİNİN DE education_levels_verified_at damgası
+  NULL. Yani "kesin" diye işaretlenen her kayıt aslında doğrulanmamıştı
+  ve bu bilgiyle öğrenci listeden ELENEBİLİYORDU.
 
-  Hiçbir durumda "bu bursu alabilirsin" denmiyor. En fazla "profil
-  bilgilerine göre uygun olabilir" deniyor; şart varsa şartın kendisi
-  yazılıyor. Koşulları resmî kaynaktan doğrulamak her hâlükârda
-  öğrencinin işi ve bu kartta da yazıyor.
+  İkincisi de eleme yapıyordu: başlığında "lisansüstü" geçen bir fırsat
+  listeden çıkarılıyordu. Başlık bir tahmindir; tahminle eleme, öğrenciye
+  başvurabileceği bir bursu hiç göstermemek demek.
+
+  YENİ HÂLİ
+  ---------
+  Tek doğruluk kaynağı ./burs-uygunluk.mjs — üç boyutun (bölüm, seviye,
+  şehir) doğrulama damgası:
+
+    damga yok                → DOGRULANMADI  → 'bilinmiyor'
+    damga var + dizi boş     → KISIT_YOK     → o boyut uyuyor
+    damga var + dizi dolu    → KISITLI       → listede varsa uyuyor
+
+  Üç boyut da doğrulanmadan hiçbir fırsat "uygun" ya da "uygun değil"
+  diye işaretlenmiyor. Başlık sinyali kaldı ama artık YALNIZCA bir
+  uyarı metni: `durum` üretmiyor, süzmeye ve sıralamaya girmiyor.
+
+  Çağıran taraf da izin listesiyle çalışmalı ("uygun_olabilir && kesin"),
+  eleme listesiyle değil: eleme listesinde DOĞRULANMAMIŞ her kayıt
+  sessizce "sana uygun" sayılıyordu.
 */
 const LISANSUSTU_IZLERI = ['lisansüstü', 'yüksek lisans', 'doktora'];
 const LISE_IZLERI = ['lise', 'ortaöğretim'];
@@ -129,57 +146,86 @@ const LISE_IZLERI = ['lise', 'ortaöğretim'];
 const kucult = (metin) => String(metin || '').toLocaleLowerCase('tr-TR');
 
 /**
+ * Başlıktan okunan YUMUŞAK uyarı. Karar vermiyor, yalnızca kartta bir
+ * cümle olarak görünüyor. Doğrulanmış kısıt varsa hiç çağrılmıyor.
+ */
+function baslikUyarisi(item, mezunSayilir) {
+  const yazi = kucult(`${item.title} ${item.shortDescription || ''}`);
+  if (!mezunSayilir && LISANSUSTU_IZLERI.some((iz) => yazi.includes(iz)))
+    return 'Başlığı lisansüstü öğrencilerine işaret ediyor. Koşulları resmî kaynaktan kontrol et.';
+  if (LISE_IZLERI.some((iz) => yazi.includes(iz)) && !yazi.includes('lisans'))
+    return 'Başlığı lise öğrencilerine işaret ediyor. Koşulları resmî kaynaktan kontrol et.';
+  return null;
+}
+
+/** Öğrenci profilinden üç boyutun değerleri. */
+function ogrenciBoyutlari(ogrenci) {
+  return {
+    bolum: ogrenci?.department || ogrenci?.bolum || null,
+    seviye: ogrenci?.gradeLevel || ogrenci?.seviye || null,
+    sehir: ogrenci?.city || ogrenci?.sehir || null,
+  };
+}
+
+/**
  * @returns {{ durum: 'sart_uymuyor'|'uygun_olabilir'|'bilinmiyor', not: string|null, kesin: boolean }}
+ *
+ * `kesin` YALNIZCA üç boyutun da doğrulanmış olduğu durumda true. Çağıran
+ * taraf "sana uygun" listesini bu bayrakla kuruyor.
  */
 export function opportunityFit(item, ogrenci) {
   if (!item || !ogrenci) return { durum: 'bilinmiyor', not: null, kesin: false };
 
-  const mezunSayilir = ogrenci.gradeLevel === 'Yüksek Lisans / Mezun';
-  const seviyeler = (item.educationLevels || []).map(kucult);
-
-  /* 1. KESİN: alan dolu. */
-  if (seviyeler.length > 0) {
-    const lisansVar = seviyeler.some((s) => s.includes('lisans') && !s.includes('lisansüstü'));
-    const ustVar = seviyeler.some((s) => s.includes('lisansüstü') || s.includes('doktora'));
-    const uygun = mezunSayilir ? ustVar || lisansVar : lisansVar;
-    if (!uygun) {
-      return {
-        durum: 'sart_uymuyor',
-        not: `${item.educationLevels.join(', ')} öğrencisi olma şartı bulunuyor.`,
-        kesin: true,
-      };
-    }
-    return { durum: 'uygun_olabilir', not: 'Profil bilgilerine göre uygun olabilir.', kesin: true };
-  }
+  const mezunSayilir = (ogrenci.gradeLevel || ogrenci.seviye) === 'Yüksek Lisans / Mezun';
 
   /*
-    2. TAHMİN: başlıktaki açık sinyal. Yalnızca eleme yönünde.
-
-    METİN NASIL ÇIKTIĞINI ANLATMIYOR
-
-    Önce "Başlığına göre lisansüstü öğrencisi olma şartı içeriyor
-    (başlıktan çıkarıldı, resmî kaynaktan doğrula)" yazıyordu. Bu bir
-    sistem günlüğü cümlesi: okuyan öğrenciye bilginin nereden geldiğini
-    değil, ne yapması gerektiğini söylemeliyiz. Belirsizlik artık
-    cümlenin kipinde ("olabilir") ve açık bir yönlendirmede.
+    Bir boyut bile doğrulanmadıysa hiçbir iddia yok. Kartta yalnızca
+    başlıktan okunan yumuşak uyarı görünebiliyor; o da süzmüyor.
   */
-  const yazi = kucult(`${item.title} ${item.shortDescription || ''}`);
-  if (!mezunSayilir && LISANSUSTU_IZLERI.some((iz) => yazi.includes(iz))) {
-    return {
-      durum: 'sart_uymuyor',
-      not: 'Lisansüstü öğrencilerine yönelik olabilir. Kesin koşulları resmî kaynaktan kontrol et.',
-      kesin: false,
-    };
+  if (!kisisellestirmeyeHazir(item)) {
+    return { durum: 'bilinmiyor', not: baslikUyarisi(item, mezunSayilir), kesin: false };
   }
-  if (LISE_IZLERI.some((iz) => yazi.includes(iz)) && !yazi.includes('lisans')) {
+
+  const ogr = ogrenciBoyutlari(ogrenci);
+  const eslesmeler = {
+    bolum: boyutEslesmesi(item, 'bolum', ogr.bolum),
+    seviye: boyutEslesmesi(item, 'seviye', ogr.seviye),
+    sehir: boyutEslesmesi(item, 'sehir', ogr.sehir),
+  };
+
+  const UYMAYAN_NOT = {
+    bolum: () => `${(item.eligibleDepartments || []).join(', ')} bölümü şartı bulunuyor.`,
+    seviye: () => `${(item.educationLevels || []).join(', ')} öğrencisi olma şartı bulunuyor.`,
+    sehir: () => `${(item.cities || []).join(', ')} şartı bulunuyor.`,
+  };
+
+  const uymayan = Object.keys(eslesmeler).find((b) => eslesmeler[b] === 'UYMUYOR');
+  if (uymayan) return { durum: 'sart_uymuyor', not: UYMAYAN_NOT[uymayan](), kesin: true };
+
+  /*
+    Öğrencinin kendi bilgisi eksikse boyut BILINMIYOR dönüyor. Bu bir
+    şart ihlali değil ama "uygun" demeye de yetmiyor.
+  */
+  if (Object.values(eslesmeler).some((e) => e === 'BILINMIYOR')) {
     return {
-      durum: 'sart_uymuyor',
-      not: 'Lise öğrencilerine yönelik olabilir. Kesin koşulları resmî kaynaktan kontrol et.',
+      durum: 'bilinmiyor',
+      not: 'Profilinde bölüm, sınıf ve şehir dolu olursa bu fırsatı eşleştirebiliriz.',
       kesin: false,
     };
   }
 
-  return { durum: 'bilinmiyor', not: null, kesin: false };
+  return { durum: 'uygun_olabilir', not: 'Profil bilgilerine göre uygun olabilir.', kesin: true };
+}
+
+/**
+ * Listede kişiselleştirmeye HAZIR kaç kayıt var?
+ *
+ * Arayüz "Sana uygun" sekmesini bu sayıya göre çiziyor: sıfırsa ortada
+ * kişiselleştirme yok ve sekmeyi aktif bir süzgeç gibi göstermek sahte
+ * bir yetenek sunmak olur.
+ */
+export function personalizationReadyCount(items = []) {
+  return items.filter((item) => kisisellestirmeyeHazir(item || {})).length;
 }
 
 /* ------------------------------------------------------------------ */

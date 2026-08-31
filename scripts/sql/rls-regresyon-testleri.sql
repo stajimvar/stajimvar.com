@@ -58,7 +58,8 @@ create temp table k on commit drop as
 select
   '00000000-0000-4000-8000-00000000000a'::uuid as a,
   '00000000-0000-4000-8000-00000000000b'::uuid as b,
-  '00000000-0000-4000-8000-00000000000c'::uuid as c;
+  '00000000-0000-4000-8000-00000000000c'::uuid as c,
+  '00000000-0000-4000-8000-00000000000d'::uuid as d;
 
 -- `authenticated` rolüne geçildikten sonra da okunabilmeli.
 grant select on k to authenticated;
@@ -69,7 +70,8 @@ select x.id, '00000000-0000-0000-0000-000000000000'::uuid, 'authenticated', 'aut
        x.eposta, '', now(), now(), now()
 from (select a as id, 'a@test-a.com' as eposta from k
       union all select b, 'b@test-b.com' from k
-      union all select c, 'c@ogrenci.test' from k) x
+      union all select c, 'c@ogrenci.test' from k
+      union all select d, 'd@test-d.com' from k) x
 on conflict (id) do nothing;
 
 -- Kurulum service_role kimliğiyle: guard_listing_publish yayına çıkmayı
@@ -86,6 +88,7 @@ insert into public.profiles (id, email, role)
 select a, 'a@test-a.com', 'company'::user_role from k
 union all select b, 'b@test-b.com', 'company'::user_role from k
 union all select c, 'c@ogrenci.test', 'student'::user_role from k
+union all select d, 'd@test-d.com', 'company'::user_role from k
 on conflict (id) do update set role = excluded.role;
 
 insert into public.student_profiles (id, university, department, is_open_to_offers)
@@ -120,6 +123,42 @@ insert into public.applications (id, listing_id, student_id, match_score, applic
 select '33333333-aaaa-4000-8000-000000000001'::uuid, '22222222-aaaa-4000-8000-000000000001'::uuid, c,
        80, 'internal', 'not_required', 'web', now(), '{"ad":"Aday C"}'::jsonb
 from k;
+
+-- A'nın ikinci ilanı: TASLAK.
+--
+-- "Taslağı yayınla" adımı gerçek panel akışının ortasında duruyor
+-- (yeni ilan → düzenle → yayınla) ama regresyonda karşılığı yoktu:
+-- yalnızca yayındaki ilanı KAPATMA test ediliyordu. guard_listing_publish
+-- yayına çıkmayı kısıtlıyor ve bu yol hiç ölçülmemişti.
+insert into public.listings (id, company_id, title, status, origin, application_method)
+values ('22222222-aaaa-4000-8000-000000000002'::uuid, '11111111-aaaa-4000-8000-000000000001'::uuid,
+        'A Taslak Stajyeri', 'draft', 'employer_posted', 'internal');
+
+-- DOĞRULANMAMIŞ ŞİRKET D
+--
+-- CV testleri için gerekiyor: doğrulanmış şirket kendi başvuranının
+-- CV'sini okuyabilmeli, DOĞRULANMAMIŞ şirket okuyamamalı. Ürün kuralı
+-- da bu (lib/sirket-kademe.mjs · adayGorebilir): doğrulama gelene kadar
+-- şirket başvuru SAYISINI görüyor, adayın kim olduğunu görmüyor.
+insert into public.companies (id, name, slug, verified, origin, website_url) values
+ ('11111111-dddd-4000-8000-000000000004'::uuid, 'Sirket D', 'test-sirket-d', false, 'manual', 'https://test-d.com');
+
+insert into public.company_members (company_id, user_id, recruiter_role, is_owner)
+select '11111111-dddd-4000-8000-000000000004'::uuid, d, 'Owner', true from k;
+
+insert into public.listings (id, company_id, title, status, origin, application_method, apply_url)
+values ('22222222-dddd-4000-8000-000000000004'::uuid, '11111111-dddd-4000-8000-000000000004'::uuid,
+        'D Stajyeri', 'published', 'employer_posted', 'external', 'https://test-d.com/basvur');
+
+insert into public.applications (id, listing_id, student_id, match_score, application_method,
+                                 email_delivery_status, created_via)
+select '33333333-dddd-4000-8000-000000000004'::uuid, '22222222-dddd-4000-8000-000000000004'::uuid, c,
+       70, 'internal', 'not_required', 'web'
+from k;
+
+-- Öğrenci C'nin CV dosyası. Yol şeması: cvs/{user_id}/dosya.pdf
+insert into storage.objects (bucket_id, name, owner, owner_id, metadata)
+select 'cvs', c::text || '/cv.pdf', c, c::text, '{"mimetype":"application/pdf"}'::jsonb from k;
 
 -- Uygunluk doğrulaması testleri için bir burs kaydı. Kayıt olmadan
 -- "yazamadı" kontrolü boş tabloda kendiliğinden geçerdi.
@@ -500,6 +539,131 @@ select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
 select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
   $q$update public.opportunities set cities_verified_at = now()$q$),
   'B, sehir dogrulama damgasini dogrudan yazamaz');
+
+-- --------------------------------- PANEL AKIŞI: TASLAĞI YAYINLA, BAŞVUR
+--
+-- Gerçek şirket hesabıyla yapılacak duman testinin adımları:
+--   şirket: yeni ilan → düzenle → yayınla
+--   öğrenci: başvur
+--   şirket: başvuranlar → durum değiştir → kapat → arşivle
+--
+-- Kapatma, düzenleme, durum değiştirme, arşivleme ve silme yukarıda
+-- ölçülüyordu; YAYINLAMA ve ÖĞRENCİ BAŞVURUSU ölçülmüyordu. İkisi de
+-- akışın ortasında ve ikisi de tetikleyici/politika arkasında.
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.listings set status='published'
+      where id='22222222-aaaa-4000-8000-000000000002'$q$),
+  'A, kendi taslagini yayina alabilir');
+
+select pg_temp.bekle(
+  (select status::text = 'published' from public.listings
+    where id = '22222222-aaaa-4000-8000-000000000002'::uuid),
+  'Yayina alinan taslak gercekten published oldu');
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', c::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$insert into public.applications
+       (listing_id, student_id, match_score, cover_letter, application_method,
+        contact_share_consent_at, email_delivery_status, created_via)
+     values ('22222222-aaaa-4000-8000-000000000002',
+             '00000000-0000-4000-8000-00000000000c',
+             60, 'On yazi', 'internal', now(), 'not_required', 'web')$q$),
+  'C, yayina alinan ilana basvurabilir');
+
+select pg_temp.bekle(
+  (select count(*) = 1 from public.applications
+    where listing_id = '22222222-aaaa-4000-8000-000000000002'::uuid
+      and student_id = (select c from k)),
+  'Basvuru kaydi gercekten olustu');
+
+-- ------------------------------------------------------ CV DOSYA ERİŞİMİ
+--
+-- CV'ler özel `cvs` kovasında (public=false, yalnızca application/pdf,
+-- 5 MB). Erişimi storage.objects üzerindeki politikalar belirliyor ve
+-- hedef model şu:
+--
+--   öğrenci        → yalnız kendi klasörü (oku/yaz/sil)
+--   başka öğrenci  → hiçbir şey
+--   şirket         → yalnız KENDİ ilanına başvurmuş öğrencinin CV'si,
+--                    VE yalnız şirket doğrulanmışsa
+--   service_role   → bakım için erişebilir
+--
+-- Son şart tek başına politika metninde yazmıyor: "sirket basvuran cv
+-- okur" politikası yalnızca is_company_member arıyor. Doğrulama şartı
+-- `applications` tablosunun kendi politikasından geliyor
+-- ("dogrulanmis sirket basvurulari gorur"). İki tablonun politikası
+-- birlikte çalışıyor; aşağıdaki test bu birleşimin GERÇEKTEN kapalı
+-- olduğunu ölçüyor. Ölçmeden "güvenli" demek, iki politikanın
+-- birbirini tuttuğunu varsaymak olurdu.
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', c::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(
+  (select count(*) = 1 from storage.objects
+    where bucket_id = 'cvs' and name = (select c::text from k) || '/cv.pdf'),
+  'C, kendi CV dosyasini gorebilir');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$insert into storage.objects (bucket_id, name)
+     values ('cvs', '00000000-0000-4000-8000-00000000000a/sahte.pdf')$q$),
+  'C, baskasinin klasorune CV yukleyemez');
+
+-- Doğrulanmış şirket A: C onun ilanına başvurmuş.
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(
+  (select count(*) = 1 from storage.objects
+    where bucket_id = 'cvs' and name = (select c::text from k) || '/cv.pdf'),
+  'A (dogrulanmis, basvuru sahibi), basvuranin CV dosyasini gorebilir');
+
+-- Doğrulanmış şirket B: C ona hiç başvurmadı.
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', b::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(
+  (select count(*) = 0 from storage.objects
+    where bucket_id = 'cvs' and name = (select c::text from k) || '/cv.pdf'),
+  'B, kendisine BASVURMAYAN ogrencinin CV dosyasini goremez');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$delete from storage.objects
+     where bucket_id = 'cvs'
+       and name = '00000000-0000-4000-8000-00000000000c/cv.pdf'$q$),
+  'B, baskasinin CV dosyasini silemez');
+
+-- Doğrulanmamış şirket D: C ONUN ilanına başvurdu ama şirket doğrulanmadı.
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', d::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(
+  (select count(*) = 0 from public.applications
+    where listing_id = '22222222-dddd-4000-8000-000000000004'::uuid),
+  'D (dogrulanmamis), kendi ilanina gelen basvuru satirini goremez');
+
+select pg_temp.bekle(
+  (select count(*) = 0 from storage.objects
+    where bucket_id = 'cvs' and name = (select c::text from k) || '/cv.pdf'),
+  'D (dogrulanmamis), kendi basvuraninin CV dosyasini goremez');
 
 reset role;
 rollback;

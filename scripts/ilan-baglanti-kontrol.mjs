@@ -129,10 +129,36 @@ let acik = 0;
 let kapali = 0;
 let erisilemedi = 0;
 let tarihYazildi = 0;
+/*
+  AYRINTILI SAYAÇLAR
+
+  Önce yalnızca üç sayı yazılıyordu: açık, kapalı, erişilemedi. Günlük
+  zamanlı çalışmaya bağlanınca bu yetmiyor — "erişilemedi 9" satırı,
+  dokuz sitenin bizi engellediğini mi yoksa dokuz kez zaman aşımı mı
+  olduğunu söylemiyor. Birincisi User-Agent/oran sorunu, ikincisi ağ.
+*/
+const sayac = { adresYok: 0, kapanma404: 0, kapanma410: 0, kapanmaMetin: 0, engel403: 0, oran429: 0, sunucu5xx: 0, digerHTTP: 0, zamanAsimi: 0, agHatasi: 0 };
+/*
+  Yazma hatası sayılıyor: tek bir üçüncü taraf hatası işi kırmamalı ama
+  veritabanına hiç yazamıyorsak bu gerçek bir betik/yetki hatasıdır ve
+  iş yeşil görünmemeli.
+*/
+let yazmaHatasiSayisi = 0;
+
+/*
+  ZAMAN AŞIMI
+
+  `fetch` süresiz bekleyebiliyor. Elle çalıştırıldığında insan fark
+  edip iptal ediyordu; zamanlanmış işte bu, iş kotasını tüketene kadar
+  asılı kalan bir koşu demek. Zaman aşımı `catch` bloğuna düşüyor, yani
+  "erişilemedi" sayılıyor — KAPANDI SAYILMIYOR.
+*/
+const ZAMAN_ASIMI_MS = 20_000;
 
 for (const ilan of ilanlar) {
   const adres = ilan.apply_url || ilan.source_url;
   if (!adres) {
+    sayac.adresYok++;
     console.log(`${ilan.title.slice(0, 42).padEnd(44)} ADRES YOK`);
     continue;
   }
@@ -141,12 +167,19 @@ for (const ilan of ilanlar) {
   let etiket = '';
 
   try {
-    const yanit = await fetch(adres, { headers: BASLIK, redirect: 'follow' });
+    const yanit = await fetch(adres, {
+      headers: BASLIK,
+      redirect: 'follow',
+      signal: AbortSignal.timeout(ZAMAN_ASIMI_MS),
+    });
     const govde = await yanit.text();
     const sebep = kapanmaSebebi(yanit, govde);
 
     if (sebep) {
       kapali++;
+      if (yanit.status === 404) sayac.kapanma404++;
+      else if (yanit.status === 410) sayac.kapanma410++;
+      else sayac.kapanmaMetin++;
       etiket = `KAPALI  ${sebep}`;
       guncelleme = {
         ...guncelleme,
@@ -177,11 +210,22 @@ for (const ilan of ilanlar) {
         kapatmak, çalışan ilanı listeden düşürmek olurdu.
       */
       erisilemedi++;
+      if (yanit.status === 403) sayac.engel403++;
+      else if (yanit.status === 429) sayac.oran429++;
+      else if (yanit.status >= 500) sayac.sunucu5xx++;
+      else sayac.digerHTTP++;
       etiket = `ERİŞİLEMEDİ  HTTP ${yanit.status}`;
       guncelleme = { ...guncelleme, source_status: 'erisilemedi' };
     }
   } catch (hata) {
     erisilemedi++;
+    /*
+      Zaman aşımı, DNS ve TLS hataları burada birleşiyor. Hiçbiri
+      "ilan kapandı" demek değil; hepsi source_status='erisilemedi'.
+    */
+    const ad = String(hata?.name || '');
+    if (ad === 'TimeoutError' || ad === 'AbortError') sayac.zamanAsimi++;
+    else sayac.agHatasi++;
     etiket = `ERİŞİLEMEDİ  ${String(hata.message).slice(0, 40)}`;
     guncelleme = { ...guncelleme, source_status: 'erisilemedi' };
   }
@@ -190,7 +234,10 @@ for (const ilan of ilanlar) {
 
   if (!kuru) {
     const { error: yazmaHatasi } = await db.from('listings').update(guncelleme).eq('id', ilan.id);
-    if (yazmaHatasi) console.log(`   YAZILAMADI: ${yazmaHatasi.message}`);
+    if (yazmaHatasi) {
+      yazmaHatasiSayisi++;
+      console.log(`   YAZILAMADI: ${yazmaHatasi.message}`);
+    }
   }
 }
 
@@ -199,3 +246,33 @@ console.log(
     (tarihYazildi ? `, ${tarihYazildi} ilanda gerçek yayın tarihi güncellendi` : '') +
     (kuru ? '  (kuru çalıştırma: yazılmadı)' : '')
 );
+
+/*
+  KIRILIM — İŞ KAYDINDA OKUNABİLİR TEK SATIR
+
+  Adres yazılmıyor: bazı başvuru adresleri sorgu dizesinde oturum ya da
+  takip belirteci taşıyor ve iş kaydı herkese açık. Sayılar sorunun
+  türünü anlatmaya yetiyor.
+*/
+console.log(
+  `kirilim: kontrol=${ilanlar.length} acik=${acik} 404=${sayac.kapanma404} 410=${sayac.kapanma410} ` +
+    `metinle_kapali=${sayac.kapanmaMetin} 403=${sayac.engel403} 429=${sayac.oran429} ` +
+    `5xx=${sayac.sunucu5xx} diger_http=${sayac.digerHTTP} zaman_asimi=${sayac.zamanAsimi} ` +
+    `ag_hatasi=${sayac.agHatasi} adres_yok=${sayac.adresYok} yazma_hatasi=${yazmaHatasiSayisi}`
+);
+
+/*
+  İŞ NE ZAMAN KIRMIZI OLMALI
+
+  Üçüncü taraf hatası NORMAL: 403, 429, 5xx ve zaman aşımı olağan ve
+  zaten "erişilemedi" olarak kaydediliyor; bunlar için işi kırmak, her
+  gün kırmızı olan ve bu yüzden kimsenin bakmadığı bir iş üretirdi.
+
+  Veritabanına yazamamak ise gerçek bir hata: betiğin tek işi bu. Sessiz
+  yeşil görünmemesi için çıkış kodu 1.
+*/
+if (yazmaHatasiSayisi > 0) {
+  console.error(`::error::${yazmaHatasiSayisi} ilan güncellenemedi — kaynak sağlığı yazılamadı.`);
+  process.exit(1);
+}
+
