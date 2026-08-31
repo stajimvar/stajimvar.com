@@ -849,16 +849,32 @@ select set_config('request.jwt.claims',
   (select json_build_object('sub', b::text, 'role', 'authenticated')::text from k), true);
 set local role authenticated;
 
+-- B'nin ilanına da başvuruldu: simetrik durum. B YALNIZCA kendi
+-- başvurusunun kopyasını görmeli — A'ya giden kopyayı ve öğrencinin
+-- profil belgesini değil.
+select pg_temp.bekle(
+  (select count(*) = 1 from storage.objects
+    where bucket_id = 'cvs'
+      and name = '00000000-0000-4000-8000-00000000000c/basvurular/snap-b.pdf'),
+  'B, kendi basvurusunun CV kopyasini gorebilir');
+
 select pg_temp.bekle(
   (select count(*) = 0 from storage.objects
-    where bucket_id = 'cvs' and name like (select c::text from k) || '/%'),
-  'B, kendisine BASVURMAYAN ogrencinin hicbir CV dosyasini goremez');
+    where bucket_id = 'cvs'
+      and name = '00000000-0000-4000-8000-00000000000c/basvurular/snap-a.pdf'),
+  'B, ayni ogrencinin A sirketine yaptigi basvurunun kopyasini goremez');
+
+select pg_temp.bekle(
+  (select count(*) = 0 from storage.objects
+    where bucket_id = 'cvs'
+      and name like '00000000-0000-4000-8000-00000000000c/profil/%'),
+  'B, ogrencinin profil klasorundeki hicbir CV sini goremez');
 
 select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
   $q$delete from storage.objects
      where bucket_id = 'cvs'
        and name = '00000000-0000-4000-8000-00000000000c/basvurular/snap-a.pdf'$q$),
-  'B, baskasinin CV dosyasini silemez');
+  'B, baska sirkete giden CV kopyasini silemez');
 
 -- Doğrulanmamış şirket D: C ONUN ilanına başvurdu ama şirket doğrulanmadı.
 reset role;
