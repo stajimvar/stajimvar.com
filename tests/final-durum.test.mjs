@@ -44,7 +44,7 @@ const cekmeceKod = koddan(cekmeceHam);
 const kart = oku('src/sirket/AdayKarti.tsx');
 const panel = koddan(oku('src/sirket/SirketPaneli.tsx'));
 const izgara = koddan(oku('src/sirket/AdayIzgarasi.tsx'));
-const goc = koddan(oku('supabase/migrations/20260914010000_ogrencinin_karari_nihai.sql'));
+const goc = koddan(oku('supabase/migrations/20260914020000_durum_gecisi_tek_yerde.sql'));
 const sql = oku('scripts/sql/rls-regresyon-testleri.sql');
 
 /* ------------------------------------------------- 1. tek başlık */
@@ -110,7 +110,7 @@ test('öğrencinin kararı veritabanında da nihai', () => {
     görmek için tetikleyici gerekiyor.
   */
   assert.match(goc, /create trigger applications_guard_ogrenci_karari/);
-  assert.match(goc, /old\.status not in \('offer_accepted', 'offer_declined', 'withdrawn'\)/);
+  assert.match(goc, /old\.status = any \(v_ogrencinin_karari\)/);
   assert.match(goc, /Öğrencinin verdiği karar değiştirilemez/);
 });
 
@@ -118,7 +118,7 @@ test('rejected bilerek geri alınabilir kalıyor', async () => {
   /* Şirketin KENDİ kararı; yanlışlıkla kapatılan adayı yeniden açmak meşru. */
   const m = await import('../src/lib/basvuru-durumu.mjs');
   assert.equal(m.ogrencininKarari('rejected'), false);
-  assert.ok(!/'rejected'/.test(goc.split('old.status not in')[1]?.split(';')[0] ?? ''));
+  assert.ok(!/rejected/.test(goc.split('v_ogrencinin_karari constant')[1]?.split(';')[0] ?? ''));
 });
 
 test('terminal durumda ilerletme ve olumsuz düğmeleri yok', () => {
@@ -230,6 +230,7 @@ test('not öğrenciye görünür olarak adlandırılıyor', () => {
 
 test('regresyon nihai kararı sınıyor', () => {
   for (const ad of [
+    'A, kabul edilmis basvuruya not yazabilir',
     'A, kabul edilmis teklifi bozamaz',
     'A, reddedilmis teklifi bozamaz',
     'A, geri cekilmis basvuruyu yeniden acamaz',

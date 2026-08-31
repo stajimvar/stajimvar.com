@@ -71,12 +71,25 @@ test('enum değerleri kullanıldıkları göçten AYRI dosyada ekleniyor', () =>
 
 /* ----------------------------------------- 2. kararı öğrenci veriyor */
 
-test('şirket politikası öğrencinin kararlarını reddediyor', () => {
-  assert.match(
-    gocKural,
-    /status not in \('withdrawn', 'offer_accepted', 'offer_declined'\)/,
-    'şirket öğrenci adına teklif kabul/ret yazabiliyor',
+test('şirket öğrencinin kararlarını yazamıyor', () => {
+  /*
+    KURAL POLİTİKADAN TETİKLEYİCİYE TAŞINDI
+
+    WITH CHECK yalnız YENİ satırı ve satırın TAMAMINI görüyordu: kabul
+    edilmiş bir başvuruya not yazmak da engelleniyordu, çünkü yeni
+    satırın durumu hâlâ `offer_accepted` idi. Regresyon bunu yakaladı.
+
+    Geçiş kuralı eski ve yeni değeri birlikte görmek zorunda; artık
+    tamamı tek yerde (20260914020000_durum_gecisi_tek_yerde).
+  */
+  const gecis = koddan(
+    oku('supabase/migrations/20260914020000_durum_gecisi_tek_yerde.sql'),
   );
+  assert.match(gecis, /Bu kararı yalnızca aday verebilir/);
+  assert.match(gecis, /Öğrencinin verdiği karar değiştirilemez/);
+  assert.match(gecis, /array\['offer_accepted', 'offer_declined', 'withdrawn'\]/);
+  /* Durum dışındaki alanlar serbest. */
+  assert.match(gecis, /new\.status is not distinct from old\.status/);
 });
 
 test('kabul/ret tek kapıdan geçiyor', () => {
