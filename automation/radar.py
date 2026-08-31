@@ -57,6 +57,10 @@ class SinyalSonucu:
     resolution_confidence: str | None = None
 
     resolved_company_domain: str | None = None
+    #: Alan adının KENDİ güveni. `resolution_confidence` zincirin sonunda
+    #: değişiyor (kariyer ya da ilan bulunamazsa LOW'a düşüyor); alan
+    #: adının ne kadar sağlam bulunduğunu ondan okumak yanlış sayı verir.
+    domain_confidence: str | None = None
     resolved_career_url: str | None = None
     resolved_ats: str | None = None
     resolved_official_job_url: str | None = None
@@ -129,9 +133,11 @@ def coz(
         neden = ("company_unresolved: aday MEDIUM, insan bakışı bekliyor"
                  if cozum.var else "company_unresolved: resmî alan adı doğrulanamadı")
         s.resolved_company_domain = cozum.alan_adi
+        s.domain_confidence = cozum.guven
         return _bitir(s, "unresolved", neden, cozum.guven)
     alan = Kanit(cozum.alan_adi, cozum.guven, cozum.katman)
     s.resolved_company_domain = cozum.alan_adi
+    s.domain_confidence = cozum.guven
     s.resolution_confidence = cozum.guven
     _bitir(s, "company_resolved", "resmî alan adı doğrulandı")
 

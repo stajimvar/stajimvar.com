@@ -194,9 +194,10 @@ def main(argv: list[str] | None = None) -> int:
                           "kullanilabilir": getattr(saglayici, "kullanilabilir", False),
                           "sorgu": 0}
     r["bilgi_tabani_sirket"] = len(bilgi)
+    # Alan adının KENDİ güveni sayılıyor; zincirin sonundaki güven değil.
     r["domain_guven"] = {
-        "HIGH": sum(1 for s in sonuclar if s.resolved_company_domain and s.resolution_confidence == "HIGH"),
-        "MEDIUM": sum(1 for s in sonuclar if s.resolved_company_domain and s.resolution_confidence == "MEDIUM"),
+        "HIGH": sum(1 for s in sonuclar if s.domain_confidence == "HIGH"),
+        "MEDIUM": sum(1 for s in sonuclar if s.domain_confidence == "MEDIUM"),
         "yok": sum(1 for s in sonuclar if not s.resolved_company_domain),
     }
     r["unresolved_ornekleri"] = [
