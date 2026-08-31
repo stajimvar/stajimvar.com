@@ -89,6 +89,17 @@ const kisaTarih = (value?: string) =>
 
 type Sekme = 'uygun' | 'tumu' | 'takvim';
 
+/*
+  AYIRICI NOKTA
+
+  Düz `·` karakteri gray-300'de sönük, gray-400'de metinle yarışıyordu ve
+  satır yüksekliğine göre optik olarak yukarıda duruyordu. Küçük yuvarlak
+  bir işaret hem sabit hizada hem daha sakin.
+*/
+const Nokta: React.FC = () => (
+  <span aria-hidden className="h-1 w-1 shrink-0 rounded-full bg-gray-300" />
+);
+
 export const OpportunitiesPage: React.FC<{
   path: string;
   userId: string | null;
@@ -316,24 +327,43 @@ export const OpportunitiesPage: React.FC<{
       className={`w-full ${SAYFA_GENISLIGI} mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-10`}
     >
       {/*
-        ÜST ALAN — KUTUDAN ÇIKTI
+        ÜST ALAN — TEK BLOK
 
-        Burada gradyan çizgili, çerçeveli, gölgeli bir kart vardı; içinde
-        başlık, açıklama, üç sayaç rozeti ve bir uyarı kutusu. Hemen
-        altında sekme hapı, altında arama kutusu, altında çip satırı,
-        altında sonuç sayısı ve bir anahtar geliyordu. Yedi ayrı kontrol
-        bloğu üst üste — liste başlamadan önce ekran bir kontrol paneline
-        dönüyordu.
+        Önce gradyan çizgili, çerçeveli, gölgeli bir başlık kartı vardı;
+        kart kalktı ama yerine dört ayrı parça geldi: başlık, sayaç
+        satırı, uyarı satırı ve sekme kapsülü. Dördü de kendi başına
+        duruyordu ve aralarındaki boşluklar bloğu "yan yana konmuş
+        parçalar" gibi gösteriyordu.
 
-        Kart kalktı: başlık artık sayfanın kendi zemininde duruyor.
-        Sayaçlar ve kapanış uyarısı tek bir META SATIRINA indi. Sayaçlar
-        işlevlerini koruyor (ikisi de süzgeç) ama artık büyük rozet değil,
-        satır içi düğme.
+        Ölçüldü (390 px): h1 28 px, boşluk 4, meta 20, boşluk 4, uyarı 20,
+        boşluk 12, sekme kapsülü 44 → toplam 131 px. Sorun tek tek
+        boşluklar değil, PARÇA SAYISI ve en alttaki kapsülün ağırlığıydı.
+
+        Şimdi üç katman var:
+          1. başlık
+          2. tek meta satırı — sayaçlar VE kapanış uyarısı aynı satırda
+          3. sekmeler
+
+        Uyarı kendi satırından çıkıp meta zincirine katıldı: aynı türden
+        bilgi (hepsi sayı) ve ayrı satırda durunca üçüncü bir parça
+        oluyordu. Zincire "·" ile değil KENDİ İKONUYLA bağlanıyor — nokta
+        ile bağlansaydı satır kaydığında üst satırın sonunda sahipsiz bir
+        nokta kalırdı (bir kez oldu).
       */}
       <header className="mb-3">
-        <h1 className="text-xl font-black tracking-tight text-gray-950 sm:text-2xl">{heading}</h1>
+        {/*
+          BAŞLIK: DAHA BÜYÜK, DAHA AZ KALIN
 
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-gray-600">
+          20 px / 900'dü. Küçük ama aşırı kalın bir başlık kaba görünüyor;
+          ağırlık boyuttan gelmeli. 22'ye (masaüstünde 28) çıktı, kalınlık
+          800'e indi ve satır yüksekliği 1.15'e sıkıldı — iki satıra düşen
+          uzun başlıklarda aradaki boşluk da kapanıyor.
+        */}
+        <h1 className="text-[22px] font-extrabold leading-[1.15] tracking-tight text-gray-950 sm:text-[28px]">
+          {heading}
+        </h1>
+
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] leading-5 text-gray-500">
           {state === 'ready' && !savedOnly ? (
             <>
               <SayacSatiri
@@ -342,7 +372,7 @@ export const OpportunitiesPage: React.FC<{
                 aktif={durumSuzgeci === 'acik'}
                 onClick={() => durumSec(durumSuzgeci === 'acik' ? '' : 'acik')}
               />
-              <span aria-hidden className="text-gray-300">·</span>
+              <Nokta />
               <SayacSatiri
                 deger={gruplar.yakinda.length}
                 etiket="yakında"
@@ -350,13 +380,13 @@ export const OpportunitiesPage: React.FC<{
                 onClick={() => durumSec(durumSuzgeci === 'yakinda' ? '' : 'yakinda')}
               />
               {/*
-                "0 takipte" hiçbir şey söylemiyordu ve üçüncü bir rozet
+                "0 takipte" hiçbir şey söylemiyordu ve üçüncü bir sayaç
                 olarak yer kaplıyordu. Yalnızca gerçekten takip edilen
                 kayıt varsa çiziliyor.
               */}
               {saved.length > 0 && (
                 <>
-                  <span aria-hidden className="text-gray-300">·</span>
+                  <Nokta />
                   <SayacSatiri
                     deger={saved.length}
                     etiket="takipte"
@@ -374,41 +404,41 @@ export const OpportunitiesPage: React.FC<{
           )}
 
           {/*
-            KAPANIŞ UYARISI ARTIK KUTU DEĞİL SATIR
+            KAPANIŞ UYARISI: BANNER DEĞİL, META SATIRININ BİR PARÇASI
 
-            Tam genişlikte amber bir kutuydu ve başlıktan daha çok yer
-            kaplıyordu. Aynı cümle aynı renkte ama satır içinde: bilgi
-            duruyor, ağırlığı gidiyor.
+            Tam genişlikte amber bir kutuydu, sonra kendi satırına indi,
+            şimdi meta zincirinin son öğesi. Renk aynı sıcak amber ailede
+            ama ağırlığı yok: küçük ikon + tek satır metin.
           */}
+          {state === 'ready' && yarinKapananlar.length > 0 && (
+            <span className="inline-flex items-center gap-1 font-semibold text-amber-800">
+              <AlarmClock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              {yarinKapananlar.length === 1
+                ? `${closingSoonLabel(1)} ${yarinKapananlar[0].title}`
+                : closingSoonLabel(yarinKapananlar.length)}
+            </span>
+          )}
         </div>
-
-        {/*
-          KAPANIŞ UYARISI ARTIK KUTU DEĞİL SATIR
-
-          Tam genişlikte amber bir kutuydu ve başlıktan daha çok yer
-          kaplıyordu. Aynı cümle aynı renkte ama tek satırda.
-
-          KENDİ SATIRINDA: önce sayaçlarla aynı sarmalın içindeydi ve
-          telefonda alta kayınca üst satırın sonunda sahipsiz bir "·"
-          kalıyordu.
-        */}
-        {state === 'ready' && yarinKapananlar.length > 0 && (
-          <p className="mt-1 flex items-center gap-1.5 text-[13px] font-bold text-amber-900">
-            <AlarmClock className="h-3.5 w-3.5 shrink-0" />
-            {yarinKapananlar.length === 1
-              ? `${closingSoonLabel(1)} ${yarinKapananlar[0].title}`
-              : closingSoonLabel(yarinKapananlar.length)}
-          </p>
-        )}
       </header>
 
       {/* -------- sekmeler: sana uygun / tümü / takvim -------- */}
       {!savedOnly && (
         /* Sekmeler tam genişlikteydi ve üç büyük düğme gibi duruyordu.
            İçeriği kadar yer alıyor: görünüm seçmek sayfanın ana işi değil. */
+        /*
+          SEKME KAPSÜLÜ İNCELDİ
+
+          44 pikseldi ve üstündeki 20 piksellik metin satırlarının yanında
+          şişkin duruyordu; seçili öğedeki gölge de plastik bir hap hissi
+          veriyordu. Kapsül 40'a indi (düğme 36), gölge yerine çok hafif
+          bir çerçeve var ve zemin gray-100'den gray-100/70'e yumuşadı.
+
+          Başlıkla arası da 12'den 10 piksele indi: sekmeler başlık
+          bloğunun devamı gibi dursun, ayrı bir kontrol gibi değil.
+        */
         <nav
           aria-label="Fırsat görünümü"
-          className="mb-3 inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full bg-gray-100 p-0.5 text-xs font-bold [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="mb-3 -mt-0.5 inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full bg-gray-100/70 p-0.5 text-xs font-bold ring-1 ring-gray-200/70 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {(
             [
@@ -424,10 +454,12 @@ export const OpportunitiesPage: React.FC<{
               key={yol}
               /* Sekme değişince arama ve süzgeçler adresle birlikte taşınıyor. */
               onClick={() => onNavigate(`${yol}${serializeOpportunityFilters(filters)}`)}
-              /* Dokunma hedefi 40 px: 44 sekme çubuğunu üst alanda yeniden
-                 şişiriyordu; 40 hem rahat hem kompakt. */
-              className={`flex h-10 shrink-0 items-center whitespace-nowrap rounded-full px-3.5 transition-colors cursor-pointer ${
-                sekme === id ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              /* Düğme 36, kapsülle birlikte 40 px. Seçilideki gölge kalktı;
+                 beyaz zemin + ince çerçeve zaten yeterince ayırıyor. */
+              className={`flex h-9 shrink-0 items-center whitespace-nowrap rounded-full px-3.5 transition-colors cursor-pointer ${
+                sekme === id
+                  ? 'bg-white text-blue-700 ring-1 ring-gray-200'
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               {etiket}
