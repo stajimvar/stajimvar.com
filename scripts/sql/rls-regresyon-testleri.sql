@@ -551,10 +551,31 @@ select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
 -- ölçülüyordu; YAYINLAMA ve ÖĞRENCİ BAŞVURUSU ölçülmüyordu. İkisi de
 -- akışın ortasında ve ikisi de tetikleyici/politika arkasında.
 
+-- ÖNCE A'NIN DOĞRULAMASI GERİ AÇILIYOR
+--
+-- Bir üstteki blok ("DOGRULANMAMIS sirket ...") A'yı verified=false
+-- yapıyor ve geri almıyordu. Bu ilk yazıldığında dosyanın son testiydi,
+-- dolayısıyla zararsızdı; sonradan eklenen her test sessizce
+-- DOĞRULANMAMIŞ bir şirketle çalışıyor.
+--
+-- Ölçüldü: bu yüzden "A, kendi taslagini yayina alabilir" kontrolü
+-- kırmızı geldi — guard_listing_publish doğrulanmamış şirkette kurumsal
+-- e-posta alan adı eşleşmesi arıyor ve A'nın hr_email'i boş. Yani hata
+-- üründe değil, testlerin sırasındaydı. Aynı sebeple aşağıdaki CV
+-- kontrolü de yanlış şirketle çalışacaktı.
 reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+update public.companies set verified = true
+ where id = '11111111-aaaa-4000-8000-000000000001'::uuid;
+
 select set_config('request.jwt.claims',
   (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
 set local role authenticated;
+
+select pg_temp.bekle(
+  (select verified from public.companies
+    where id = '11111111-aaaa-4000-8000-000000000001'::uuid),
+  'Kurulum: A yeniden dogrulanmis durumda');
 
 select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
   $q$update public.listings set status='published'
