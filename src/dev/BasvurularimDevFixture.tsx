@@ -62,7 +62,7 @@ const BASVURULAR: ApplicationRecord[] = [
     status: 'technical_assessment',
     statusChangedAt: '2026-08-26T12:00:00Z',
   },
-  /* Mülakat, tarih GİRİLMİŞ. */
+  /* GÖRÜŞME DAVETİ: tam dolu, henüz yanıtlanmamış. */
   {
     ...temel,
     id: 'b4',
@@ -70,6 +70,37 @@ const BASVURULAR: ApplicationRecord[] = [
     status: 'interview_scheduled',
     statusChangedAt: '2026-08-27T12:00:00Z',
     interviewDate: '2026-09-15',
+    interviewTime: '14:00',
+    interviewType: 'in_person',
+    interviewLocation: 'Örnek Plaza, Kat 4, Maslak / İstanbul',
+    interviewNote: 'Pozisyonu ve çalışma koşullarını görüşmek üzere sizi davet ediyoruz.',
+  },
+  /* GÖRÜŞME ONAYLANDI. */
+  {
+    ...temel,
+    id: 'b12',
+    listingId: 'ilan-1',
+    status: 'interview_scheduled',
+    statusChangedAt: '2026-08-27T13:00:00Z',
+    interviewDate: '2026-09-12',
+    interviewTime: '11:30',
+    interviewType: 'online',
+    interviewLocation: 'https://ornek.test/gorusme/abc',
+    interviewResponse: 'accepted',
+    interviewRespondedAt: '2026-08-28T08:00:00Z',
+  },
+  /* ÖĞRENCİ KATILAMIYOR: şirketin olumsuz kararıyla karışmamalı. */
+  {
+    ...temel,
+    id: 'b13',
+    listingId: 'ilan-2',
+    status: 'interview_scheduled',
+    statusChangedAt: '2026-08-27T14:00:00Z',
+    interviewDate: '2026-09-13',
+    interviewTime: '09:00',
+    interviewType: 'phone',
+    interviewResponse: 'declined',
+    interviewRespondedAt: '2026-08-28T09:00:00Z',
   },
   /* Teklif BEKLİYOR: içerik dolu. */
   {
@@ -80,6 +111,8 @@ const BASVURULAR: ApplicationRecord[] = [
     statusChangedAt: '2026-08-29T09:00:00Z',
     offerNote: 'Ekibe eylül başında katılmanı öneriyoruz. Haftada üç gün ofis, iki gün uzaktan.',
     offerStartDate: '2026-10-01',
+    /* Görüşmede netleşen ücret ilandakini eziyor. */
+    offerCompensation: '18.000 TL / ay',
   },
   /* ESKİ TEKLİF: içerik alanları bu turda eklendi, geçmişte yok. */
   {
@@ -89,7 +122,7 @@ const BASVURULAR: ApplicationRecord[] = [
     status: 'offer_extended',
     statusChangedAt: '2026-08-29T10:00:00Z',
   },
-  /* Mülakat, tarih HENÜZ YOK: uydurma tarih yazılmamalı. */
+  /* ESKİ GÖRÜŞME KAYDI: davet alanları bu turda eklendi, hiçbiri yok. */
   {
     ...temel,
     id: 'b5',
@@ -186,6 +219,31 @@ export const BasvurularimDevFixture: React.FC = () => {
                       }
                     : null,
                 );
+              }, 250);
+            })
+          }
+          /*
+            Gerçek kapı sunucuda (public.gorusmeye_yanit_ver): yalnızca
+            görüşme aşamasından yanıt veriliyor ve ikinci yanıt kararı
+            değiştirmiyor. Fikstür aynı davranışı taklit ediyor.
+          */
+          onRespondToInterview={(id, katilacak) =>
+            new Promise((coz, red) => {
+              window.setTimeout(() => {
+                if (id === 'b5') {
+                  red(new Error('Fikstür: görüşme yanıtı hatası taklit ediliyor.'));
+                  return;
+                }
+                const mevcut = kayitlar.find((x) => x.id === id)?.interviewResponse;
+                const yanit = mevcut ?? (katilacak ? 'accepted' : 'declined');
+                setKayitlar((o) =>
+                  o.map((a) =>
+                    a.id === id
+                      ? { ...a, interviewResponse: yanit, interviewRespondedAt: new Date().toISOString() }
+                      : a,
+                  ),
+                );
+                coz(yanit);
               }, 250);
             })
           }

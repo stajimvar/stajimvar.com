@@ -171,6 +171,57 @@ const ORNEK_BASVURULAR = [
     panelden ilerleyerek bu ekranlara ulaşmak mümkün değil. Fikstür
     ikisini de başlangıç durumu olarak taşıyor.
   */
+  /* GÖRÜŞME ONAYLANDI: şirketin sıradaki adımı teklif. */
+  {
+    id: 'test-8',
+    status: 'interview_scheduled',
+    interview_date: '2026-09-12',
+    interview_time: '11:30',
+    interview_type: 'online',
+    interview_location: 'https://ornek.test/gorusme/abc',
+    interview_response: 'accepted',
+    applied_at: '2026-08-25T08:00:00Z',
+    match_score: 84,
+    listing_id: 'ilan-1',
+    ilanBasligi: 'Yazılım Stajyeri',
+    application_method: 'internal',
+    contact_share_consent_at: '2026-08-25T08:00:00Z',
+    cv_path: null,
+    cv_snapshot_path: null,
+    profile_snapshot: {
+      ad: 'Aday H',
+      universite: 'Örnek Üniversitesi',
+      bolum: 'Bilgisayar Mühendisliği',
+      sinif: '3. Sınıf',
+      sehir: 'İstanbul',
+      yetenekler: ['React'],
+    },
+  },
+  /* ÖĞRENCİ KATILAMIYOR: şirket yeni davet gönderebilmeli. */
+  {
+    id: 'test-9',
+    status: 'interview_scheduled',
+    interview_date: '2026-09-13',
+    interview_time: '09:00',
+    interview_type: 'phone',
+    interview_response: 'declined',
+    applied_at: '2026-08-26T08:00:00Z',
+    match_score: 66,
+    listing_id: 'ilan-1',
+    ilanBasligi: 'Yazılım Stajyeri',
+    application_method: 'internal',
+    contact_share_consent_at: '2026-08-26T08:00:00Z',
+    cv_path: null,
+    cv_snapshot_path: null,
+    profile_snapshot: {
+      ad: 'Aday I',
+      universite: 'Örnek Teknik Üniversitesi',
+      bolum: 'Makine Mühendisliği',
+      sinif: '2. Sınıf',
+      sehir: 'Bursa',
+      yetenekler: ['SolidWorks'],
+    },
+  },
   {
     id: 'test-6',
     status: 'offer_accepted',
@@ -184,6 +235,7 @@ const ORNEK_BASVURULAR = [
     cv_snapshot_path: null,
     offer_note: 'Ekibe eylül başında bekliyoruz.',
     offer_start_date: '2026-10-01',
+    offer_compensation: '18.000 TL / ay',
     profile_snapshot: {
       ad: 'Aday F',
       universite: 'Örnek Üniversitesi',
@@ -454,6 +506,19 @@ export const SirketPanelDevFixture: React.FC = () => {
                   status: 'offer_extended',
                   offer_note: teklif.not.trim() || null,
                   offer_start_date: teklif.baslangic || null,
+                  offer_compensation: teklif.ucret.trim() || null,
+                })
+              }
+              onDavet={(id, davet) =>
+                satirYaz(id, {
+                  status: 'interview_scheduled',
+                  interview_date: davet.tarih || null,
+                  interview_time: davet.saat || null,
+                  interview_type: davet.tur || null,
+                  interview_location: davet.yer.trim() || null,
+                  interview_note: davet.not.trim() || null,
+                  /* Yeni davet eski yanıtı geçersiz kılıyor. */
+                  interview_response: null,
                 })
               }
               /*

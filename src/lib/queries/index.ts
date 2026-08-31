@@ -599,6 +599,28 @@ export async function withdrawApplication(applicationId: string): Promise<void> 
 }
 
 /**
+ * GÖRÜŞME DAVETİNE YANIT
+ *
+ * Teklif yanıtıyla aynı biçim ve aynı gerekçe: karar yalnızca davetin
+ * açık olduğu andan verilebilmeli ve iki paralel istek tutarsız sonuç
+ * üretmemeli. `gorusmeye_yanit_ver` satırı kilitleyip o anki yanıtı
+ * okuyor; zaten yanıtlanmışsa hata değil, mevcut yanıt dönüyor.
+ *
+ * Dönen değer sunucunun gördüğü nihai yanıt.
+ */
+export async function respondToInterview(
+  applicationId: string,
+  katilacak: boolean
+): Promise<string> {
+  const { data, error } = await supabase.rpc('gorusmeye_yanit_ver', {
+    p_basvuru: applicationId,
+    p_katilacak: katilacak,
+  });
+  if (error) fail('Görüşme yanıtın kaydedilemedi', error);
+  return data as string;
+}
+
+/**
  * TEKLİFE YANIT — KABUL YA DA RET
  *
  * Doğrudan UPDATE ile yapılamıyor ve yapılmamalı: öğrencinin güncelleme

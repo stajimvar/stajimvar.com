@@ -162,8 +162,20 @@ test('akış sırası: her adımın bir sonrakisi doğru', async () => {
   assert.equal(m.sonrakiDurum('submitted'), 'under_review');
   assert.equal(m.sonrakiDurum('under_review'), 'technical_assessment');
   assert.equal(m.sonrakiDurum('technical_assessment'), 'interview_scheduled');
-  assert.equal(m.sonrakiDurum('interview_scheduled'), 'offer_extended');
-  /* Kapanmış durumlarda bir sonraki adım yok. */
+
+  /*
+    GÖRÜŞMEDEN TEKLİFE GEÇİŞ YANITA BAĞLI
+
+    Teklif ancak görüşme gerçekleşebilecekse anlamlı: öğrenci daveti
+    yanıtlamadıysa ya da katılamayacağını söylediyse şirkete "Teklif
+    gönder" gösterilmiyor. Görüşme yapılmadan gönderilen teklif, bu
+    turda düzeltilen yanlışın kendisi.
+  */
+  assert.equal(m.sonrakiDurum('interview_scheduled'), null);
+  assert.equal(m.sonrakiDurum('interview_scheduled', 'declined'), null);
+  assert.equal(m.sonrakiDurum('interview_scheduled', 'accepted'), 'offer_extended');
+
+  /* Teklif verildikten sonra sıradaki hamle şirketin değil. */
   assert.equal(m.sonrakiDurum('offer_extended'), null);
   assert.equal(m.sonrakiDurum('rejected'), null);
   assert.equal(m.sonrakiDurum('withdrawn'), null);

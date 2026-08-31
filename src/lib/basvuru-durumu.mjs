@@ -47,7 +47,7 @@ export const DURUM_ADI = {
   submitted: 'Yeni',
   under_review: 'İnceleniyor',
   technical_assessment: 'Değerlendirme',
-  interview_scheduled: 'Mülakat',
+  interview_scheduled: 'Görüşme',
   offer_extended: 'Teklif',
   offer_accepted: 'Teklif kabul edildi',
   offer_declined: 'Teklif reddedildi',
@@ -66,7 +66,7 @@ export const OGRENCI_CUMLESI = {
   submitted: 'Başvurun alındı',
   under_review: 'Başvurun inceleniyor',
   technical_assessment: 'Değerlendirme aşamasında',
-  interview_scheduled: 'Mülakat aşamasında',
+  interview_scheduled: 'Görüşme daveti aldın',
   offer_extended: 'Teklif aldın',
   offer_accepted: 'Teklifi kabul ettin',
   offer_declined: 'Teklifi reddettin',
@@ -87,7 +87,7 @@ export const SIRKET_CUMLESI = {
   submitted: 'Yeni başvuru',
   under_review: 'İnceleniyor',
   technical_assessment: 'Değerlendirme aşamasında',
-  interview_scheduled: 'Mülakat aşamasında',
+  interview_scheduled: 'Görüşme daveti gönderildi · yanıt bekleniyor',
   offer_extended: 'Teklif gönderildi · yanıt bekleniyor',
   offer_accepted: 'Teklif kabul edildi',
   offer_declined: 'Öğrenci teklifi reddetti',
@@ -115,14 +115,97 @@ export const SIRKET_DURUMLARI = DURUM_SIRASI.filter((d) => !OGRENCI_KARARLARI.in
  * yapacağını düşünmeden yapabilsin. Kapanmış durumlarda (teklif,
  * olumsuz, geri çekildi) bir sonraki adım yok.
  */
-export function sonrakiDurum(durum) {
+export function sonrakiDurum(durum, gorusmeYaniti) {
+  /*
+    GÖRÜŞMEDEN TEKLİFE GEÇİŞ YANITA BAĞLI
+
+    Teklif ancak görüşme gerçekleşebilecekse anlamlı. Öğrenci daveti
+    henüz yanıtlamadıysa ya da katılamayacağını söylediyse şirkete
+    "Teklif gönder" birincil düğmesi GÖSTERİLMİYOR — sıradaki hamle
+    şirketin değil ya da önce yeni bir davet gerekiyor.
+  */
+  if (durum === 'interview_scheduled') {
+    return gorusmeYaniti === 'accepted' ? 'offer_extended' : null;
+  }
+
   const akis = {
     submitted: 'under_review',
     under_review: 'technical_assessment',
     technical_assessment: 'interview_scheduled',
-    interview_scheduled: 'offer_extended',
   };
   return akis[durum] ?? null;
+}
+
+/**
+ * GÖRÜŞME DAVETİ — DURUMUN İÇİNDEKİ ÜÇ HAL
+ *
+ * `interview_scheduled` görüşme aşamasının canonical durumu. Öğrencinin
+ * davete verdiği yanıt AYRI bir alanda duruyor (`interview_response`):
+ * durumun kendisi değil, durumun içindeki bir olgu. Üç yeni durum değeri
+ * açmak (davet gönderildi / kabul edildi / reddedildi) durum makinesini
+ * şişirir ve her süzgeç, politika ve rozet haritasının üçünü birden
+ * bilmesini gerektirirdi.
+ *
+ * Üç hal:
+ *   yanıt yok       → davet gönderildi, öğrencinin yanıtı bekleniyor
+ *   'accepted'      → öğrenci görüşmeye katılacağını bildirdi
+ *   'declined'      → öğrenci katılamayacağını bildirdi
+ */
+export const GORUSME_TURLERI = [
+  { id: 'in_person', ad: 'Yüz yüze' },
+  { id: 'online', ad: 'Çevrimiçi' },
+  { id: 'phone', ad: 'Telefon' },
+];
+
+/** Görüşme biçiminin görünen adı. Tanınmayan/boş değerde boş dize. */
+export function gorusmeTuruAdi(tur) {
+  return GORUSME_TURLERI.find((t) => t.id === tur)?.ad ?? '';
+}
+
+/**
+ * "Nereye geleceğim" satırının başlığı.
+ *
+ * Adres ve bağlantı TEK alanda duruyor (`interview_location`); ikisi
+ * aynı sorunun cevabı. Başlık biçime göre değişiyor.
+ */
+export function gorusmeYeriEtiketi(tur) {
+  if (tur === 'online') return 'Toplantı bağlantısı';
+  if (tur === 'phone') return 'Arama bilgisi';
+  return 'Konum';
+}
+
+/** Davet gönderildi, öğrenci henüz yanıtlamadı. */
+export function gorusmeBekliyor(durum, yanit) {
+  return durum === 'interview_scheduled' && !yanit;
+}
+
+/** Öğrenci görüşmeye katılacağını bildirdi. */
+export function gorusmeOnaylandi(durum, yanit) {
+  return durum === 'interview_scheduled' && yanit === 'accepted';
+}
+
+/** Öğrenci katılamayacağını bildirdi. Şirketin "Olumsuz" kararı DEĞİL. */
+export function gorusmeReddedildi(durum, yanit) {
+  return durum === 'interview_scheduled' && yanit === 'declined';
+}
+
+/**
+ * Görüşme aşamasının şirkete gösterilen cümlesi.
+ *
+ * `SIRKET_CUMLESI` yalnız durumu biliyor; görüşme aşamasında söylenecek
+ * şey yanıta göre değişiyor.
+ */
+export function gorusmeSirketCumlesi(yanit) {
+  if (yanit === 'accepted') return 'Aday görüşmeye katılacağını onayladı';
+  if (yanit === 'declined') return 'Öğrenci görüşmeye katılamayacak';
+  return 'Görüşme daveti gönderildi · yanıt bekleniyor';
+}
+
+/** Aynı olgunun öğrenciye dönük cümlesi. Terim aynı, özne farklı. */
+export function gorusmeOgrenciCumlesi(yanit) {
+  if (yanit === 'accepted') return 'Görüşmeye katılacağını bildirdin';
+  if (yanit === 'declined') return 'Görüşmeye katılamayacağını bildirdin';
+  return 'Görüşme daveti aldın';
 }
 
 /**

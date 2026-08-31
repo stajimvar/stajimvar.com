@@ -57,7 +57,8 @@ export const AdayIzgarasi: React.FC<{
   onNavigate: (y: string) => void;
   onDurum: (id: string, durum: string) => Promise<void>;
   onMulakatTarihi: (id: string, tarih: string) => Promise<void>;
-  onTeklif: (id: string, teklif: { not: string; baslangic: string }) => Promise<void>;
+  onTeklif: (id: string, teklif: { not: string; baslangic: string; ucret: string }) => Promise<void>;
+  onDavet: (id: string, davet: { tarih: string; saat: string; tur: string; yer: string; not: string }) => Promise<void>;
   onIletisim: (id: string) => Promise<Iletisim | null>;
   onNot: (id: string, metin: string) => Promise<void>;
 }> = ({
@@ -67,6 +68,7 @@ export const AdayIzgarasi: React.FC<{
   onDurum,
   onMulakatTarihi,
   onTeklif,
+  onDavet,
   onIletisim,
   onNot,
 }) => {
@@ -390,6 +392,12 @@ export const AdayIzgarasi: React.FC<{
             if (!acik) return Promise.resolve();
             setKaydediliyor(true);
             return onTeklif(acik.id, teklif).finally(() => setKaydediliyor(false));
+          }}
+          /* Davet de aynı yükleniyor durumunu paylaşıyor. */
+          onDavet={(davet) => {
+            if (!acik) return Promise.resolve();
+            setKaydediliyor(true);
+            return onDavet(acik.id, davet).finally(() => setKaydediliyor(false));
           }}
           onIletisim={onIletisim}
           onNot={(metin) => {

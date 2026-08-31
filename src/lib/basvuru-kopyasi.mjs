@@ -16,9 +16,19 @@
  *
  * NE GİRMİYOR
  * -----------
- * TCKN, adres, doğum tarihi, yaş, GPA ve TELEFON. Telefon yalnızca
- * öğrenci ayrıca paylaşmayı seçtiyse — staj başvurusunun ilk adımında
- * numaranın şirkete gitmesi için bir sebep yok, e-posta yeterli.
+ * TCKN, adres, doğum tarihi, yaş, GPA, TELEFON ve E-POSTA.
+ *
+ * E-POSTA NEDEN ÇIKARILDI
+ * -----------------------
+ * Kopyada `eposta` alanı vardı ve şirket paneli kopyayı olduğu gibi
+ * çekiyordu. Arayüz adresi hiçbir yerde çizmiyordu ama veri tarayıcıya
+ * gidiyordu: ağ isteğine bakan bir şirket, teklif kabul edilmeden önce
+ * her başvuranın e-postasını okuyabiliyordu. Ürünün kuralı ise açık —
+ * iletişim TEKLİF KABUL EDİLDİĞİNDE açılır.
+ *
+ * Kural arayüzde değil veride tutulmalı. Şirket, teklif kabul edildikten
+ * sonra e-postayı `public.basvuru_iletisimi` üzerinden ve GÜNCEL hâliyle
+ * alıyor; kopyadaki adres zaten eskimiş olabilirdi.
  */
 
 const dizi = (x) => (Array.isArray(x) ? x : []);
@@ -33,7 +43,6 @@ export function basvuruKopyasi(ogrenci) {
   const kopya = {
     surum: 1,
     ad: metin(ogrenci.fullName),
-    eposta: metin(ogrenci.email),
     fotoUrl: metin(ogrenci.avatarUrl),
     universite: metin(ogrenci.university),
     bolum: metin(ogrenci.department),

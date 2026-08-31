@@ -257,7 +257,9 @@ export async function sirketBasvurulari(companyId: string) {
     .select(
       'id, status, applied_at, match_score, listing_id, student_id, cover_letter, cv_path, ' +
         'cv_snapshot_path, profile_snapshot, contact_share_consent_at, application_method, ' +
-        'interview_date, status_changed_at, offer_note, offer_start_date, ' +
+        'interview_date, interview_time, interview_type, interview_location, ' +
+        'interview_note, interview_response, interview_responded_at, ' +
+        'status_changed_at, offer_note, offer_start_date, offer_compensation, ' +
         'listings!inner(id, title, company_id)'
     )
     .eq('listings.company_id', companyId)
@@ -301,18 +303,57 @@ export async function basvuruDurumuDegistir(id: string, durum: string) {
 }
 
 /**
+ * GÖRÜŞMEYE DAVET ET
+ *
+ * Durum ve davetin içeriği TEK yazımda gidiyor: önce durumu değiştirip
+ * sonra tarihi yazmak, arada kalan anda öğrenciye içi boş bir "Görüşme
+ * daveti aldın" göstermek olurdu.
+ *
+ * `interview_response` boşaltılıyor: yeni davet, eski yanıtı geçersiz
+ * kılıyor. Şirketin yazabildiği tek yanıt değeri budur — öğrencinin
+ * yerine "katılacak" diyemiyor (applications_guard_interview_response).
+ *
+ * Ücret, sözleşme ve nihai şartlar burada SORULMUYOR: onlar görüşmede
+ * netleşiyor ve tekliften önce sorulursa görüşmenin anlamı kalmaz.
+ */
+export async function gorusmeyeDavetEt(
+  id: string,
+  davet: { tarih: string; saat: string; tur: string; yer: string; not: string },
+) {
+  const db = await istemci();
+  const { error } = await db
+    .from('applications')
+    .update({
+      status: 'interview_scheduled',
+      interview_date: davet.tarih ? davet.tarih : null,
+      interview_time: davet.saat ? davet.saat : null,
+      interview_type: davet.tur ? davet.tur : null,
+      interview_location: davet.yer.trim() ? davet.yer.trim() : null,
+      interview_note: davet.not.trim() ? davet.not.trim() : null,
+      interview_response: null,
+      interview_responded_at: null,
+    })
+    .eq('id', id);
+  if (error) throw new Error('Görüşme daveti gönderilemedi.');
+}
+
+/**
  * TEKLİF GÖNDER
  *
  * Durum ve teklifin içeriği TEK yazımda gidiyor: önce durumu değiştirip
  * sonra notu yazmak, arada kalan anda öğrenciye içi boş bir "Teklif
  * aldın" göstermek olurdu.
  *
- * Ücret, çalışma biçimi ve süre burada SORULMUYOR: üçü de ilanda duruyor
- * ve öğrenci teklif ekranında ilandan okuyor.
+ * ÜCRET ARTIK SORULUYOR: gerçek teklif görüşmeden sonra geliyor ve
+ * ücret çoğu zaman orada netleşiyor. Boş bırakılırsa ilandaki ücret
+ * bilgisi geçerli kalıyor — aynı şey iki kez yazılmıyor.
+ *
+ * Çalışma biçimi ve süre burada SORULMUYOR: ikisi de ilanda duruyor ve
+ * öğrenci teklif ekranında ilandan okuyor.
  */
 export async function teklifGonder(
   id: string,
-  teklif: { not: string; baslangic: string },
+  teklif: { not: string; baslangic: string; ucret: string },
 ) {
   const db = await istemci();
   const { error } = await db
@@ -321,6 +362,7 @@ export async function teklifGonder(
       status: 'offer_extended',
       offer_note: teklif.not.trim() ? teklif.not.trim() : null,
       offer_start_date: teklif.baslangic ? teklif.baslangic : null,
+      offer_compensation: teklif.ucret.trim() ? teklif.ucret.trim() : null,
     })
     .eq('id', id);
   if (error) throw new Error('Teklif gönderilemedi.');

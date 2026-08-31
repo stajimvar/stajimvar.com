@@ -40,6 +40,7 @@ import {
   basvuruDurumuDegistir,
   mulakatTarihiYaz,
   teklifGonder,
+  gorusmeyeDavetEt,
   basvuruIletisimi,
   basvuruNotuKaydet,
   ilanDurumuDegistir,
@@ -298,6 +299,14 @@ export const SirketPaneli: React.FC<{
           */
           onTeklif={async (id, teklif) => {
             await teklifGonder(id, teklif);
+            await yukle();
+          }}
+          /*
+            Davet durumla BİRLİKTE yazılıyor: iki ayrı yazımda arada
+            kalan an, öğrenciye içi boş bir davet gösterirdi.
+          */
+          onDavet={async (id, davet) => {
+            await gorusmeyeDavetEt(id, davet);
             await yukle();
           }}
           onIletisim={(id) => basvuruIletisimi(id)}
@@ -667,7 +676,8 @@ const Basvuranlar: React.FC<{
   onNavigate: (y: string) => void;
   onDurum: (id: string, d: string) => Promise<void>;
   onMulakatTarihi: (id: string, tarih: string) => Promise<void>;
-  onTeklif: (id: string, teklif: { not: string; baslangic: string }) => Promise<void>;
+  onTeklif: (id: string, teklif: { not: string; baslangic: string; ucret: string }) => Promise<void>;
+  onDavet: (id: string, davet: { tarih: string; saat: string; tur: string; yer: string; not: string }) => Promise<void>;
   onIletisim: (id: string) => Promise<Iletisim | null>;
   onNot: (id: string, metin: string) => Promise<void>;
 }> = ({
@@ -678,6 +688,7 @@ const Basvuranlar: React.FC<{
   onDurum,
   onMulakatTarihi,
   onTeklif,
+  onDavet,
   onIletisim,
   onNot,
 }) => {
@@ -727,6 +738,7 @@ const Basvuranlar: React.FC<{
         onDurum={onDurum}
         onMulakatTarihi={onMulakatTarihi}
         onTeklif={onTeklif}
+        onDavet={onDavet}
         onIletisim={onIletisim}
         onNot={onNot}
       />

@@ -70,8 +70,15 @@ export type Database = {
           email_provider_message_id: string | null;
           id: string;
           interview_date: string | null;
+          interview_time: string | null;
+          interview_type: string | null;
+          interview_location: string | null;
+          interview_note: string | null;
+          interview_response: string | null;
+          interview_responded_at: string | null;
           listing_id: string;
           match_score: number | null;
+          offer_compensation: string | null;
           offer_note: string | null;
           offer_start_date: string | null;
           profile_snapshot: Json | null;
@@ -100,8 +107,15 @@ export type Database = {
           submitted_at?: string | null;
           id?: string;
           interview_date?: string | null;
+          interview_time?: string | null;
+          interview_type?: string | null;
+          interview_location?: string | null;
+          interview_note?: string | null;
+          interview_response?: string | null;
+          interview_responded_at?: string | null;
           listing_id: string;
           match_score?: number | null;
+          offer_compensation?: string | null;
           offer_note?: string | null;
           offer_start_date?: string | null;
           status?: Database['public']['Enums']['application_status'];
@@ -127,8 +141,15 @@ export type Database = {
           submitted_at?: string | null;
           id?: string;
           interview_date?: string | null;
+          interview_time?: string | null;
+          interview_type?: string | null;
+          interview_location?: string | null;
+          interview_note?: string | null;
+          interview_response?: string | null;
+          interview_responded_at?: string | null;
           listing_id?: string;
           match_score?: number | null;
+          offer_compensation?: string | null;
           offer_note?: string | null;
           offer_start_date?: string | null;
           status?: Database['public']['Enums']['application_status'];
@@ -1250,6 +1271,11 @@ export type Database = {
       teklife_yanit_ver: {
         Args: { p_basvuru: string; p_kabul: boolean };
         Returns: Database['public']['Enums']['application_status'];
+      };
+      /* Görüşme davetine yanıt — kabul/ret yalnızca bu kapıdan geçiyor. */
+      gorusmeye_yanit_ver: {
+        Args: { p_basvuru: string; p_katilacak: boolean };
+        Returns: string;
       };
       /* Kabul edilmiş teklifte karşı tarafın iletişim satırı. */
       basvuru_iletisimi: {

@@ -1,6 +1,12 @@
 import { Tabs } from '../ui';
 import React, { useState } from 'react';
-import { ogrenciDurumCumlesi, ogrenciGeriCekebilir } from '../lib/basvuru-durumu.mjs';
+import {
+  gorusmeOgrenciCumlesi,
+  gorusmeTuruAdi,
+  gorusmeYeriEtiketi,
+  ogrenciDurumCumlesi,
+  ogrenciGeriCekebilir,
+} from '../lib/basvuru-durumu.mjs';
 import {
   FileText,
   Building2,
@@ -39,6 +45,11 @@ interface ApplicationsTrackerViewProps {
     nihai durum; ekran onu yazıyor, kendi tahminini değil.
   */
   onRespondToOffer?: (applicationId: string, kabul: boolean) => Promise<string>;
+  /*
+    GÖRÜŞME DAVETİNE YANIT. Teklif yanıtından ayrı: biri görüşmeye
+    katılıp katılamayacağı, diğeri işi kabul edip etmediği.
+  */
+  onRespondToInterview?: (applicationId: string, katilacak: boolean) => Promise<string>;
   /* Kabul edilmiş teklifte şirket yetkilisinin iletişim satırı. */
   onFetchContact?: (applicationId: string) => Promise<Iletisim | null>;
 }
@@ -72,6 +83,7 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
   onExploreInternships,
   onWithdraw,
   onRespondToOffer,
+  onRespondToInterview,
   onFetchContact,
 }) => {
   /* Geri çekme onayı: yanlışlıkla tek tıkla süreç kapanmasın. */
@@ -83,6 +95,11 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
   const [teklifAcik, setTeklifAcik] = useState<string | null>(null);
   const [karar, setKarar] = useState<{ id: string; kabul: boolean } | null>(null);
   const [teklifHatasi, setTeklifHatasi] = useState<string | null>(null);
+
+  /* Açık görüşme daveti, katılım kararı ve yanıt hatası. */
+  const [davetAcik, setDavetAcik] = useState<string | null>(null);
+  const [davetKarari, setDavetKarari] = useState<{ id: string; katilacak: boolean } | null>(null);
+  const [davetHatasi, setDavetHatasi] = useState<string | null>(null);
   /* Başvuru kimliği → iletişim satırı. 'yok' okundu ama kapı kapalı demek. */
   const [iletisimler, setIletisimler] = useState<Record<string, Iletisim | 'yok' | 'hata'>>({});
 
@@ -148,8 +165,19 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
     withdrawn: 'bg-gray-100 text-gray-600 border-gray-200',
   };
 
-  const getStatusBadge = (status: ApplicationRecord['status']) => ({
-    label: ogrenciDurumCumlesi(status),
+  const getStatusBadge = (
+    status: ApplicationRecord['status'],
+    /*
+      Görüşme aşamasında rozet YANITA göre değişiyor: davet mi geldi,
+      katılacağını mı bildirdi, katılamayacağını mı. Durum aynı kalıyor;
+      değişen, durumun içindeki olgu.
+    */
+    gorusmeYaniti?: string,
+  ) => ({
+    label:
+      status === 'interview_scheduled'
+        ? gorusmeOgrenciCumlesi(gorusmeYaniti)
+        : ogrenciDurumCumlesi(status),
     color: DURUM_RENGI[status] ?? 'bg-gray-100 text-gray-700 border-gray-200',
   });
 
@@ -213,7 +241,7 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
         <div className="space-y-4">
           {filteredApps.map((app) => {
             const listing = allListings.find((l) => l.id === app.listingId);
-            const badge = getStatusBadge(app.status);
+            const badge = getStatusBadge(app.status, app.interviewResponse);
 
             return (
               <div
@@ -321,35 +349,141 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                 </div>
 
                 {/*
-                  SÜREÇ KUTUSU — YALNIZCA GERÇEK VERİ
+                  GÖRÜŞME DAVETİ — TEKLİF DEĞİL
 
-                  Burada sabit metin duruyordu: bir mülakat daveti, bir
-                  saat, bir video toplantı bağlantısının e-postayla
-                  gönderildiği vaadi. Hiçbiri veriden gelmiyordu; mülakat
-                  aşamasındaki HER başvuruda aynı tarih ve aynı vaat
-                  görünüyordu. Ürün mesajlaşma, takvim ya da video
-                  bağlantısı TAŞIMIYOR.
+                  Burada önce "Mülakat aşamasındasın" yazan bir kutu, sonra
+                  da doğrudan teklif kabul/ret düğmeleri vardı. Gerçek işe
+                  alımda ücret ve şartlar GÖRÜŞMEDE netleşiyor; görüşme
+                  yapılmadan "Teklif aldın" demek yanlıştı.
 
-                  Yerine yalnızca gerçekten kayıtlı olan iki alan:
-                  şirketin girdiği mülakat tarihi ve öğrenciye görünür
-                  geri bildirim.
+                  Bu aşamada teklif kabul/ret KESİNLİKLE görünmüyor.
                 */}
                 {app.status === 'interview_scheduled' && (
-                  <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-4">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
-                      <Video className="w-4 h-4 text-blue-600"/>
-                      <span>
-                        {app.interviewDate
-                          ? `Mülakat tarihi: ${tarihMetni(app.interviewDate)}`
-                          : 'Mülakat aşamasındasın'}
-                      </span>
+                  davetAcik === app.id ? (
+                    <div className="space-y-3 rounded-xl border border-blue-200 bg-blue-50/70 p-4">
+                      <div>
+                        <p className="text-sm font-extrabold text-blue-900">
+                          {listing?.companyName ?? 'Şirket'} · {listing?.title ?? 'Staj'}
+                        </p>
+                        <p className="text-xs font-bold text-blue-800">Görüşme daveti</p>
+                      </div>
+
+                      {/*
+                        Eski `interview_scheduled` kayıtlarında bu alanların
+                        hiçbiri olmayabilir: davet içeriği bu turda eklendi.
+                        Her satır kendi değeri varsa çiziliyor.
+                      */}
+                      <dl className="grid grid-cols-2 gap-2 text-xs">
+                        {app.interviewDate && (
+                          <div>
+                            <dt className="font-bold text-blue-900">Tarih</dt>
+                            <dd className="text-blue-800">{tarihMetni(app.interviewDate)}</dd>
+                          </div>
+                        )}
+                        {app.interviewTime && (
+                          <div>
+                            <dt className="font-bold text-blue-900">Saat</dt>
+                            <dd className="text-blue-800">{app.interviewTime.slice(0, 5)}</dd>
+                          </div>
+                        )}
+                        {app.interviewType && (
+                          <div>
+                            <dt className="font-bold text-blue-900">Görüşme türü</dt>
+                            <dd className="text-blue-800">{gorusmeTuruAdi(app.interviewType)}</dd>
+                          </div>
+                        )}
+                        {app.interviewLocation && (
+                          <div className="col-span-2">
+                            <dt className="font-bold text-blue-900">
+                              {gorusmeYeriEtiketi(app.interviewType)}
+                            </dt>
+                            <dd className="break-words text-blue-800">{app.interviewLocation}</dd>
+                          </div>
+                        )}
+                      </dl>
+
+                      {app.interviewNote && (
+                        <p className="whitespace-pre-line text-xs leading-relaxed text-blue-900">
+                          {app.interviewNote}
+                        </p>
+                      )}
+
+                      {!app.interviewDate && !app.interviewTime && !app.interviewLocation && !app.interviewNote && (
+                        <p className="text-xs text-blue-800">
+                          Şirket seni görüşme aşamasına aldı. Görüşmenin tarihi ve biçimi henüz
+                          belirtilmedi.
+                        </p>
+                      )}
+
+                      {/* Yanıt verilmişse eylem yok: karar bir kez veriliyor. */}
+                      {app.interviewResponse ? (
+                        <p className="text-xs font-bold text-blue-900">
+                          {gorusmeOgrenciCumlesi(app.interviewResponse)}
+                        </p>
+                      ) : davetKarari?.id === app.id ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-xs font-bold text-blue-900">
+                            {davetKarari.katilacak
+                              ? 'Görüşmeye katılacağını bildirelim mi?'
+                              : 'Katılamayacağını bildirelim mi?'}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={islemdeki === app.id}
+                            onClick={() => {
+                              setIslemdeki(app.id);
+                              setDavetHatasi(null);
+                              void onRespondToInterview?.(app.id, davetKarari.katilacak)
+                                .then(() => setDavetKarari(null))
+                                .catch(() => setDavetHatasi(app.id))
+                                .finally(() => setIslemdeki(null));
+                            }}
+                            className="min-h-11 rounded-full bg-blue-700 px-4 text-xs font-bold text-white disabled:opacity-60"
+                          >
+                            {islemdeki === app.id ? 'Kaydediliyor…' : 'Evet'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDavetKarari(null)}
+                            className="min-h-11 rounded-full px-3 text-xs font-bold text-blue-800"
+                          >
+                            Vazgeç
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setDavetKarari({ id: app.id, katilacak: true })}
+                            className="min-h-11 rounded-full bg-blue-700 px-3 text-xs font-bold text-white"
+                          >
+                            Görüşmeye katılacağım
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDavetKarari({ id: app.id, katilacak: false })}
+                            className="min-h-11 rounded-full border border-blue-300 px-3 text-xs font-bold text-blue-900"
+                          >
+                            Katılamayacağım
+                          </button>
+                        </div>
+                      )}
+
+                      {davetHatasi === app.id && (
+                        <p role="alert" className="text-xs font-semibold text-red-700">
+                          Yanıtın kaydedilemedi. Bağlantını kontrol edip tekrar dene.
+                        </p>
+                      )}
                     </div>
-                    <p className="mt-1 text-xs text-blue-800/80">
-                      {app.interviewDate
-                        ? 'Görüşmenin saati ve biçimi için şirketin sana ulaşmasını bekle.'
-                        : 'Şirket seni mülakat aşamasına aldı. Tarih henüz belirlenmedi.'}
-                    </p>
-                  </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setDavetAcik(app.id)}
+                      className="min-h-11 self-start rounded-full bg-blue-700 px-4 text-xs font-bold text-white"
+                    >
+                      Daveti görüntüle
+                    </button>
+                  )
                 )}
 
                 {/*
@@ -392,10 +526,17 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                             <dd className="text-emerald-800">{listing.duration}</dd>
                           </div>
                         )}
-                        {listing?.stipend?.amountText && (
+                        {/*
+                          ÜCRET: teklifte yazan varsa O geçerli, yoksa
+                          ilandaki bilgi. Aynı şey iki kez yazılmıyor ve
+                          görüşmede netleşen ücret ilandakini eziyor.
+                        */}
+                        {(app.offerCompensation || listing?.stipend?.amountText) && (
                           <div>
                             <dt className="font-bold text-emerald-900">Ücret</dt>
-                            <dd className="text-emerald-800">{listing.stipend.amountText}</dd>
+                            <dd className="text-emerald-800">
+                              {app.offerCompensation || listing?.stipend?.amountText}
+                            </dd>
                           </div>
                         )}
                       </dl>

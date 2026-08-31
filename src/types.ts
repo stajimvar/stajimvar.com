@@ -239,6 +239,23 @@ export interface ApplicationRecord {
   offerNote?: string;
   /* Teklif edilen başlangıç tarihi. Opsiyonel. */
   offerStartDate?: string;
+  /*
+    Gerçek teklifteki ücret metni. Serbest metin, çünkü ilandaki
+    karşılığı da serbest metin. Boşsa ilandaki ücret geçerli.
+  */
+  offerCompensation?: string;
+  /* GÖRÜŞME DAVETİ. Eski kayıtlarda hepsi boş olabilir. */
+  interviewTime?: string;
+  interviewType?: string;
+  interviewLocation?: string;
+  interviewNote?: string;
+  /*
+    Öğrencinin davete yanıtı: 'accepted' | 'declined' | tanımsız.
+    Durumun kendisi değil, `interview_scheduled` durumunun içindeki
+    olgu. Şirket bu alanı yazamıyor.
+  */
+  interviewResponse?: string;
+  interviewRespondedAt?: string;
   coverLetter?: string;
   interviewDate?: string;
   /*

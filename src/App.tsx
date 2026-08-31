@@ -6,6 +6,7 @@ import {
   createApplication,
   withdrawApplication,
   respondToOffer,
+  respondToInterview,
   fetchApplicationContact,
   saveStudentProfile,
   fetchIsAdmin,
@@ -1720,6 +1721,26 @@ export default function App() {
                           : 'Teklifi reddettin.',
                       );
                       return durum;
+                    }}
+                    /*
+                      Görüşme yanıtı da sunucudan dönüyor. İkinci yanıt
+                      hata değil: işlev mevcut yanıtı döndürüyor.
+                    */
+                    onRespondToInterview={async (id, katilacak) => {
+                      const yanit = await respondToInterview(id, katilacak);
+                      setApplications((prev) =>
+                        prev.map((a) =>
+                          a.id === id
+                            ? { ...a, interviewResponse: yanit, interviewRespondedAt: new Date().toISOString() }
+                            : a,
+                        ),
+                      );
+                      showToast(
+                        yanit === 'accepted'
+                          ? 'Görüşmeye katılacağını bildirdin.'
+                          : 'Görüşmeye katılamayacağını bildirdin.',
+                      );
+                      return yanit;
                     }}
                     onFetchContact={(id) => fetchApplicationContact(id)}
                   />

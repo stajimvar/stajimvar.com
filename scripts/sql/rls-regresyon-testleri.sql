@@ -1189,5 +1189,207 @@ select pg_temp.bekle(
   (select count(*) = 0 from public.basvuru_iletisimi('33333333-dddd-4000-8000-000000000004')),
   'Dogrulanmamis sirket kabul edilmis teklifte bile iletisimi goremez');
 
+
+-- =====================================================================
+-- GÖRÜŞME DAVETİ ≠ TEKLİF
+-- =====================================================================
+--
+-- Daveti şirket gönderir, yanıtı öğrenci verir. Görüşme kabulü iletişimi
+-- AÇMAZ — o kural teklif kabulünde.
+--
+-- Bu blok kendi başvurusunu açıyor: yukarıdaki başvurular teklif
+-- testlerinde kullanıldı ve durumları oradan geliyor. Ayrı satır,
+-- sıra artığı riskini de ortadan kaldırıyor.
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+
+insert into public.listings (id, company_id, title, status, origin, application_method)
+values ('22222222-aaaa-4000-8000-000000000006'::uuid, '11111111-aaaa-4000-8000-000000000001'::uuid,
+        'A Gorusme Stajyeri', 'published', 'employer_posted', 'internal');
+
+insert into public.applications (id, listing_id, student_id, match_score, application_method,
+                                 email_delivery_status, created_via, contact_share_consent_at,
+                                 status, profile_snapshot)
+select '33333333-6666-4000-8000-000000000006'::uuid, '22222222-aaaa-4000-8000-000000000006'::uuid, c,
+       75, 'internal', 'not_required', 'web', now(), 'technical_assessment',
+       '{"ad":"Aday C","eposta":"c@ogrenci.test"}'::jsonb
+from k;
+
+-- --------------------------------------------------- DAVETİ ŞİRKET GÖNDERİR
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', b::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.applications
+        set status='interview_scheduled', interview_date='2026-09-10'
+      where id='33333333-6666-4000-8000-000000000006'$q$),
+  'B, A adayini gorusmeye davet edemez');
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.applications
+        set status='interview_scheduled',
+            interview_date='2026-09-10', interview_time='14:00',
+            interview_type='in_person', interview_location='Ornek Plaza, Kat 4',
+            interview_note='Pozisyonu ve calisma kosullarini gorusmek uzere davet ediyoruz.',
+            interview_response=null
+      where id='33333333-6666-4000-8000-000000000006'$q$),
+  'A, kendi adayini gorusmeye davet edebilir');
+
+-- Şirket öğrencinin YANITINI yazamaz: tetikleyici reddediyor.
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set interview_response='accepted'
+      where id='33333333-6666-4000-8000-000000000006'$q$),
+  'A, ogrenci adina davete yanit veremez');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$select public.gorusmeye_yanit_ver('33333333-6666-4000-8000-000000000006', true)$q$),
+  'A, gorusme yanit islevini ogrenci adina cagiramaz');
+
+-- Uydurma görüşme biçimi kısıtla reddediliyor.
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set interview_type='teleport'
+      where id='33333333-6666-4000-8000-000000000006'$q$),
+  'Uydurma gorusme bicimi yazilamaz');
+
+-- ŞİRKET KOPYADA E-POSTA GÖREMEZ
+--
+-- Kopya başvuru anında yazılıyor ve şirket paneli onu olduğu gibi
+-- çekiyor. Arayüz adresi çizmiyordu ama veri tarayıcıya gidiyordu:
+-- kural arayüzde değil veride tutulmalı. Göç geçmiş kopyalardan bu
+-- anahtarı düşürdü; kurulumdaki satır da onunla temizlendi.
+select pg_temp.bekle(
+  (select count(*) = 0 from public.applications
+    where listing_id in (select id from public.listings
+                          where company_id = '11111111-aaaa-4000-8000-000000000001'::uuid)
+      and profile_snapshot ? 'eposta'),
+  'Sirket kopyada e-posta goremez');
+
+-- ------------------------------------------------- YANITI ÖĞRENCİ VERİR
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', e::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$select public.gorusmeye_yanit_ver('33333333-6666-4000-8000-000000000006', true)$q$),
+  'D, C nin davetini yanitlayamaz');
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', c::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+-- Öğrenci kendine davet OLUŞTURAMAZ: politikası sonucun `withdrawn`
+-- olmasını şart koşuyor.
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='interview_scheduled'
+      where id='33333333-aaaa-4000-8000-000000000001'$q$),
+  'C, kendine gorusme daveti olusturamaz');
+
+select pg_temp.bekle(
+  (select public.gorusmeye_yanit_ver('33333333-6666-4000-8000-000000000006', true) = 'accepted'),
+  'C, kendi davetini kabul edebilir');
+
+-- ÇİFT TIKLAMA: ikinci yanıt kararı değiştirmiyor.
+select pg_temp.bekle(
+  (select public.gorusmeye_yanit_ver('33333333-6666-4000-8000-000000000006', false) = 'accepted'),
+  'Ikinci gorusme yaniti karari degistirmiyor');
+
+select pg_temp.bekle(
+  (select interview_responded_at is not null
+     from public.applications where id='33333333-6666-4000-8000-000000000006'::uuid),
+  'Gorusme yaniti damgalandi');
+
+-- GÖRÜŞME KABULÜ İLETİŞİMİ AÇMIYOR
+--
+-- Görüşmeye katılmak için gereken şey iletişim bilgisi değil, görüşmenin
+-- kendisi: tarih, saat, biçim ve yer. Bunları şirket zaten davetin
+-- içinde veriyor. Kapı teklif kabulünde açılıyor, burada değil.
+select pg_temp.bekle(
+  (select count(*) = 0 from public.basvuru_iletisimi('33333333-6666-4000-8000-000000000006')),
+  'Gorusme kabulu iletisimi ACMIYOR');
+
+-- Kapanmış başvurularda yanıtlanacak davet yok.
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$select public.gorusmeye_yanit_ver(
+       (select id from public.applications
+         where listing_id = '22222222-bbbb-4000-8000-000000000003'::uuid
+           and student_id = '00000000-0000-4000-8000-00000000000c'::uuid), true)$q$),
+  'Geri cekilmis basvuruda gorusme yanitlanamaz');
+
+/*
+  Olumsuz kapanmış başvuru için AYRI satır: yukarıdakilerin durumları
+  teklif testlerinden geliyor ve "olumsuz" olanı yok. Var olan bir satırı
+  kullanmak, testin gerçekte neyi ölçtüğünü belirsizleştirirdi.
+*/
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+
+insert into public.applications (id, listing_id, student_id, match_score, application_method,
+                                 email_delivery_status, created_via, contact_share_consent_at,
+                                 status, interview_date)
+select '33333333-7777-4000-8000-000000000007'::uuid, '22222222-aaaa-4000-8000-000000000006'::uuid, e,
+       50, 'internal', 'not_required', 'web', now(), 'rejected', '2026-09-10'
+from k;
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', e::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$select public.gorusmeye_yanit_ver('33333333-7777-4000-8000-000000000007', true)$q$),
+  'Olumsuz kapanmis basvuruda gorusme yanitlanamaz');
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', c::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+-- ------------------------------------- KATILAMIYORUM VE YENİ DAVET
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+
+update public.applications
+   set interview_response = null, interview_responded_at = null
+ where id = '33333333-6666-4000-8000-000000000006'::uuid;
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', c::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(
+  (select public.gorusmeye_yanit_ver('33333333-6666-4000-8000-000000000006', false) = 'declined'),
+  'C, katilamayacagini bildirebilir');
+
+-- Şirket YENİ DAVET gönderebiliyor: yanıtı yalnızca BOŞALTABİLİYOR.
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.applications
+        set interview_date='2026-09-17', interview_time='11:00', interview_response=null
+      where id='33333333-6666-4000-8000-000000000006'$q$),
+  'A, yeni davet gonderip yaniti sifirlayabilir');
+
+select pg_temp.bekle(
+  (select interview_response is null
+     from public.applications where id='33333333-6666-4000-8000-000000000006'::uuid),
+  'Yeni davet sonrasi yanit bos');
+
 reset role;
 rollback;

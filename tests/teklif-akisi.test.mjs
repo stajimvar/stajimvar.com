@@ -133,7 +133,7 @@ test('istemci iletişim isteğini kabul edilmemiş başvuruda göndermiyor', () 
 
 test('şirket teklif gönderirken içerik topluyor', () => {
   assert.match(cekmece, /Teklif notu — öğrenci görecek/);
-  assert.match(cekmece, /onTeklif\?\.\(\{ not: teklifNotu, baslangic: teklifBaslangici \}\)/);
+  assert.match(cekmece, /not: teklifNotu,\s+baslangic: teklifBaslangici,\s+ucret: teklifUcreti,/);
 });
 
 test('teklif ve durum tek yazımda gidiyor', () => {
@@ -180,7 +180,7 @@ test('sohbet/takvim/SMS kurulmadı', () => {
 
 test('eski tekliflerde içerik yoksa ekran uydurmuyor', () => {
   /* Teklif içeriği bu turda eklendi; geçmiş kayıtlarda iki alan da boş. */
-  assert.match(cekmece, /\(kart\.teklifNotu \|\| kart\.teklifBaslangici\)/);
+  assert.match(cekmece, /\(kart\.teklifNotu \|\| kart\.teklifBaslangici \|\| kart\.teklifUcreti\)/);
   assert.match(ogrenci, /\{app\.offerNote && \(/);
 });
 

@@ -169,9 +169,24 @@ export function kartVerisi(satir, ek = {}) {
       değerlendirdiği belgenin yerine sonradan yüklenmiş başka bir
       belgeyi görürdü.
     */
-    /* Teklifin içeriği. Eski tekliflerde ikisi de boş olabilir. */
+    /* Teklifin içeriği. Eski tekliflerde hepsi boş olabilir. */
     teklifNotu: satir?.offer_note ? String(satir.offer_note) : '',
     teklifBaslangici: satir?.offer_start_date ? String(satir.offer_start_date).slice(0, 10) : '',
+    teklifUcreti: satir?.offer_compensation ? String(satir.offer_compensation) : '',
+
+    /*
+      GÖRÜŞME DAVETİ
+
+      Eski `interview_scheduled` kayıtlarında tarih de biçim de yer de
+      olmayabilir: bu alanlar bu turda eklendi. Hepsi boş dizeye
+      düşüyor, ekran boş alanı hiç çizmiyor — "undefined" ya da
+      "belirtilmedi" yazmak bir bilgi uydurmak olurdu.
+    */
+    gorusmeSaati: satir?.interview_time ? String(satir.interview_time).slice(0, 5) : '',
+    gorusmeTuru: satir?.interview_type ? String(satir.interview_type) : '',
+    gorusmeYeri: satir?.interview_location ? String(satir.interview_location) : '',
+    gorusmeNotu: satir?.interview_note ? String(satir.interview_note) : '',
+    gorusmeYaniti: satir?.interview_response ? String(satir.interview_response) : '',
 
     /* Mülakat tarihi opsiyonel; yoksa alan boş açılıyor. */
     mulakatTarihi: satir?.interview_date ? String(satir.interview_date).slice(0, 10) : '',

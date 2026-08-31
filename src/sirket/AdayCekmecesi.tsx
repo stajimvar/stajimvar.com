@@ -25,6 +25,15 @@ import {
   sonrakiDurum,
   teklifBekliyor,
 } from './basvuru-durumu';
+import {
+  GORUSME_TURLERI,
+  gorusmeBekliyor,
+  gorusmeOnaylandi,
+  gorusmeReddedildi,
+  gorusmeSirketCumlesi,
+  gorusmeTuruAdi,
+  gorusmeYeriEtiketi,
+} from '../lib/basvuru-durumu.mjs';
 
 /**
  * Aday çekmecesi — sağdan açılan panel.
@@ -90,7 +99,19 @@ export const AdayCekmecesi: React.FC<{
   */
   onMulakatTarihi?: (tarih: string) => void | Promise<void>;
   /* Teklifi durumla BİRLİKTE yazıyor: arada içi boş bir teklif oluşmasın. */
-  onTeklif?: (teklif: { not: string; baslangic: string }) => void | Promise<void>;
+  onTeklif?: (teklif: {
+    not: string;
+    baslangic: string;
+    ucret: string;
+  }) => void | Promise<void>;
+  /* Görüşme daveti de durumla BİRLİKTE yazılıyor. */
+  onDavet?: (davet: {
+    tarih: string;
+    saat: string;
+    tur: string;
+    yer: string;
+    not: string;
+  }) => void | Promise<void>;
   /* Kabul edilmiş teklifte karşı tarafın iletişim satırı; kapalıysa null. */
   onIletisim?: (id: string) => Promise<Iletisim | null>;
   /*
@@ -112,6 +133,7 @@ export const AdayCekmecesi: React.FC<{
   onNot,
   onMulakatTarihi,
   onTeklif,
+  onDavet,
   onIletisim,
   gomulu,
 }) => {
@@ -150,6 +172,15 @@ export const AdayCekmecesi: React.FC<{
   const [teklifFormu, setTeklifFormu] = React.useState(false);
   const [teklifNotu, setTeklifNotu] = React.useState('');
   const [teklifBaslangici, setTeklifBaslangici] = React.useState('');
+  const [teklifUcreti, setTeklifUcreti] = React.useState('');
+
+  /* Görüşme daveti formu ve içeriği. */
+  const [davetFormu, setDavetFormu] = React.useState(false);
+  const [davetTarihi, setDavetTarihi] = React.useState('');
+  const [davetSaati, setDavetSaati] = React.useState('');
+  const [davetTuru, setDavetTuru] = React.useState('online');
+  const [davetYeri, setDavetYeri] = React.useState('');
+  const [davetNotu, setDavetNotu] = React.useState('');
 
   /*
     Karşı tarafın iletişim satırı. YALNIZCA teklif kabul edildiğinde
@@ -176,6 +207,13 @@ export const AdayCekmecesi: React.FC<{
     setTeklifFormu(false);
     setTeklifNotu(kart?.teklifNotu ?? '');
     setTeklifBaslangici(kart?.teklifBaslangici ?? '');
+    setTeklifUcreti(kart?.teklifUcreti ?? '');
+    setDavetFormu(false);
+    setDavetTarihi(kart?.mulakatTarihi ?? '');
+    setDavetSaati(kart?.gorusmeSaati ?? '');
+    setDavetTuru(kart?.gorusmeTuru || 'online');
+    setDavetYeri(kart?.gorusmeYeri ?? '');
+    setDavetNotu(kart?.gorusmeNotu ?? '');
   }, [kart?.id, kart?.mulakatTarihi, kart?.teklifNotu, kart?.teklifBaslangici]);
 
   /*
@@ -235,7 +273,15 @@ export const AdayCekmecesi: React.FC<{
 
   const kimlik = kimlikSatiri(kart);
   /* Akıştaki bir sonraki adım; kapanmış durumlarda yok. */
-  const sonraki = sonrakiDurum(kart.durum);
+  /*
+    Sonraki adım GÖRÜŞME YANITINA da bağlı: teklif ancak öğrenci
+    görüşmeye katılacağını bildirdiyse anlamlı.
+  */
+  const sonraki = sonrakiDurum(kart.durum, kart.gorusmeYaniti);
+  const davetBekliyor = gorusmeBekliyor(kart.durum, kart.gorusmeYaniti);
+  const davetOnaylandi = gorusmeOnaylandi(kart.durum, kart.gorusmeYaniti);
+  const davetReddedildi = gorusmeReddedildi(kart.durum, kart.gorusmeYaniti);
+  const gorusmeAsamasi = kart.durum === 'interview_scheduled';
   /* Öğrenci teklife yanıt verdiyse karar onun; şirket geri alamıyor. */
   const kararVerildi = kart.durum === 'offer_accepted' || kart.durum === 'offer_declined';
 
@@ -506,19 +552,63 @@ export const AdayCekmecesi: React.FC<{
             şirkete göre kuruluyor — öğrenci aynı durumu "Teklif aldın"
             diye görüyor.
           */}
-          {(teklifBekliyor(kart.durum) || kararVerildi) && (
+          {(gorusmeAsamasi || teklifBekliyor(kart.durum) || kararVerildi) && (
             <p
               className="mb-3 rounded-xl px-3 py-2 text-xs font-bold"
               style={
-                kart.durum === 'offer_accepted'
+                kart.durum === 'offer_accepted' || davetOnaylandi
                   ? { background: '#DCFCE7', color: '#166534' }
                   : { background: SIRKET_ROZET, color: SIRKET_METIN }
               }
             >
-              {kart.durum === 'offer_accepted' ? '🎉 ' : ''}
-              {sirketDurumCumlesi(kart.durum)}
+              {kart.durum === 'offer_accepted' ? '🎉 ' : davetOnaylandi ? '✓ ' : ''}
+              {/*
+                Görüşme aşamasında söylenecek şey DURUMA değil YANITA
+                bağlı: davet gönderildi mi, kabul mü edildi, reddedildi mi.
+              */}
+              {gorusmeAsamasi ? gorusmeSirketCumlesi(kart.gorusmeYaniti) : sirketDurumCumlesi(kart.durum)}
             </p>
           )}
+
+          {/*
+            GÖNDERİLEN DAVET
+
+            Eski `interview_scheduled` kayıtlarında bu alanların hiçbiri
+            olmayabilir — davet içeriği bu turda eklendi. Her satır kendi
+            değeri varsa çiziliyor; boş alan hiç görünmüyor.
+          */}
+          {gorusmeAsamasi &&
+            !davetFormu &&
+            (kart.mulakatTarihi || kart.gorusmeSaati || kart.gorusmeTuru || kart.gorusmeYeri || kart.gorusmeNotu) && (
+              <div
+                className="mb-3 rounded-xl border p-3"
+                style={{ borderColor: SIRKET_KENAR, background: SIRKET_ZEMIN }}
+              >
+                <p className="text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                  Gönderilen davet
+                </p>
+                {(kart.mulakatTarihi || kart.gorusmeSaati) && (
+                  <p className="mt-1 text-xs font-bold" style={{ color: SIRKET_METIN }}>
+                    {[tarihMetni(kart.mulakatTarihi), kart.gorusmeSaati].filter(Boolean).join(' · ')}
+                  </p>
+                )}
+                {kart.gorusmeTuru && (
+                  <p className="text-xs" style={{ color: SIRKET_METIN }}>
+                    {gorusmeTuruAdi(kart.gorusmeTuru)}
+                  </p>
+                )}
+                {kart.gorusmeYeri && (
+                  <p className="text-xs" style={{ color: SIRKET_METIN }}>
+                    {gorusmeYeriEtiketi(kart.gorusmeTuru)}: {kart.gorusmeYeri}
+                  </p>
+                )}
+                {kart.gorusmeNotu && (
+                  <p className="mt-1 whitespace-pre-line text-xs leading-relaxed" style={{ color: SIRKET_METIN }}>
+                    {kart.gorusmeNotu}
+                  </p>
+                )}
+              </div>
+            )}
 
           {/*
             GÖNDERİLEN TEKLİF
@@ -528,7 +618,7 @@ export const AdayCekmecesi: React.FC<{
             "belirtilmedi" yazmak da bir bilgi uydurmak olurdu.
           */}
           {(teklifBekliyor(kart.durum) || kararVerildi) &&
-            (kart.teklifNotu || kart.teklifBaslangici) &&
+            (kart.teklifNotu || kart.teklifBaslangici || kart.teklifUcreti) &&
             !teklifFormu && (
               <div
                 className="mb-3 rounded-xl border p-3"
@@ -537,9 +627,14 @@ export const AdayCekmecesi: React.FC<{
                 <p className="text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
                   Gönderilen teklif
                 </p>
-                {kart.teklifBaslangici && (
+                {(kart.teklifUcreti || kart.teklifBaslangici) && (
                   <p className="mt-1 text-xs font-bold" style={{ color: SIRKET_METIN }}>
-                    Başlangıç: {tarihMetni(kart.teklifBaslangici)}
+                    {[
+                      kart.teklifUcreti,
+                      kart.teklifBaslangici ? `Başlangıç: ${tarihMetni(kart.teklifBaslangici)}` : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </p>
                 )}
                 {kart.teklifNotu && (
@@ -641,33 +736,13 @@ export const AdayCekmecesi: React.FC<{
           </label>
 
           {/*
-            MÜLAKAT TARİHİ OPSİYONEL
+            MÜLAKAT TARİHİ ALANI KALDIRILDI
 
-            Tarih girmek durumu değiştirmenin şartı değil: şirket adayı
-            mülakata alıp tarihi sonra netleştirebilmeli. Alan yalnızca
-            mülakat aşamasında görünüyor.
+            Tek başına bir tarih kutusu duruyordu ve öğrenci tarafında
+            yalnız "Mülakat tarihi: 15 Eylül" satırı çıkıyordu: saat yok,
+            biçim yok, yer yok. Görüşmenin bilgisi artık davetin içinde
+            toplanıyor (aşağıdaki "Görüşmeye davet et" formu).
           */}
-          {kart.durum === 'interview_scheduled' && (
-            <label className="mt-2 block">
-              <span className="mb-1 block text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
-                Mülakat tarihi <span className="font-normal">(isteğe bağlı)</span>
-              </span>
-              <input
-                type="date"
-                value={mulakatTarihi}
-                disabled={kaydediliyor}
-                onChange={(e) => {
-                  setMulakatTarihi(e.target.value);
-                  setDurumHatasi(null);
-                  Promise.resolve(onMulakatTarihi?.(e.target.value)).catch(() => {
-                    setDurumHatasi('Mülakat tarihi kaydedilemedi.');
-                  });
-                }}
-                className={ALAN}
-                style={alanStil}
-              />
-            </label>
-          )}
 
           {durumHatasi && (
             <p role="alert" className="mt-2 text-xs font-semibold" style={{ color: '#991B1B' }}>
@@ -676,27 +751,155 @@ export const AdayCekmecesi: React.FC<{
           )}
 
           {/*
-            TEKLİF AŞAMASI DİĞERLERİNDEN FARKLI
+            GÖRÜŞME DAVETİ FORMU
 
-            Diğer aşamalarda değişen tek şey durum. Teklifte ise
-            öğrencinin karar vereceği bir içerik var — bu yüzden düğme
-            doğrudan durumu değiştirmiyor, kısa bir form açıyor. Ücret,
-            çalışma biçimi ve süre SORULMUYOR: üçü de ilanda duruyor ve
-            öğrenci teklif ekranında ilandan okuyor.
+            Değerlendirme aşamasındaki adayın ana aksiyonu "Görüşmeye
+            davet et". Ücret, sözleşme ve nihai şartlar burada
+            SORULMUYOR: onlar görüşmede netleşiyor. Bu formda yalnızca
+            görüşmeyi yapabilmek için gerekenler var.
           */}
-          {teklifFormu ? (
+          {davetFormu ? (
             <div className="mt-3 space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <label className="block">
+                  <span className="mb-1 block text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                    Tarih
+                  </span>
+                  <input
+                    type="date"
+                    value={davetTarihi}
+                    onChange={(e) => setDavetTarihi(e.target.value)}
+                    className={ALAN}
+                    style={alanStil}
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                    Saat
+                  </span>
+                  <input
+                    type="time"
+                    value={davetSaati}
+                    onChange={(e) => setDavetSaati(e.target.value)}
+                    className={ALAN}
+                    style={alanStil}
+                  />
+                </label>
+              </div>
+
               <label className="block">
                 <span className="mb-1 block text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
-                  Teklif notu — öğrenci görecek
+                  Görüşme türü
+                </span>
+                <select
+                  value={davetTuru}
+                  onChange={(e) => setDavetTuru(e.target.value)}
+                  className={ALAN}
+                  style={alanStil}
+                >
+                  {GORUSME_TURLERI.map((t: { id: string; ad: string }) => (
+                    <option key={t.id} value={t.id}>
+                      {t.ad}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {/*
+                TEK ALAN: adres de bağlantı da buraya yazılıyor. İkisi aynı
+                sorunun cevabı ("nereye geleceğim") ve iki ayrı kutu,
+                birinin boş kalmasıyla belirsizlik üretirdi. Başlık
+                seçilen biçime göre değişiyor.
+              */}
+              <label className="block">
+                <span className="mb-1 block text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                  {gorusmeYeriEtiketi(davetTuru)} <span className="font-normal">(isteğe bağlı)</span>
+                </span>
+                <input
+                  type="text"
+                  value={davetYeri}
+                  onChange={(e) => setDavetYeri(e.target.value)}
+                  placeholder={
+                    davetTuru === 'online'
+                      ? 'Toplantı bağlantısı'
+                      : davetTuru === 'phone'
+                        ? 'Hangi numaradan arayacağınız'
+                        : 'Ofis adresi'
+                  }
+                  className={ALAN}
+                  style={alanStil}
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-1 block text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                  Not — öğrenci görecek
                 </span>
                 <textarea
-                  value={teklifNotu}
-                  onChange={(e) => setTeklifNotu(e.target.value)}
-                  rows={3}
-                  placeholder="Başlangıç, ekip, çalışma düzeni gibi öğrencinin karar verirken bilmesi gerekenler."
+                  value={davetNotu}
+                  onChange={(e) => setDavetNotu(e.target.value)}
+                  rows={2}
+                  placeholder="Pozisyonu ve çalışma koşullarını görüşmek üzere sizi davet ediyoruz."
                   className="w-full rounded-xl border p-2.5 text-sm outline-none"
                   style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY, color: SIRKET_METIN }}
+                />
+              </label>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={kaydediliyor}
+                  onClick={() => {
+                    setDurumHatasi(null);
+                    Promise.resolve(
+                      onDavet?.({
+                        tarih: davetTarihi,
+                        saat: davetSaati,
+                        tur: davetTuru,
+                        yer: davetYeri,
+                        not: davetNotu,
+                      }),
+                    )
+                      .then(() => setDavetFormu(false))
+                      .catch(() => setDurumHatasi('Görüşme daveti gönderilemedi. Tekrar dene.'));
+                  }}
+                  className={BIRINCIL_DUGME}
+                  style={birincilStil}
+                >
+                  {kaydediliyor ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Daveti gönder
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDavetFormu(false)}
+                  className={IKINCIL_DUGME}
+                  style={ikincilStil}
+                >
+                  Vazgeç
+                </button>
+              </div>
+            </div>
+          ) : teklifFormu ? (
+            <div className="mt-3 space-y-2">
+              {/*
+                GERÇEK TEKLİF
+
+                Artık görüşmeden SONRA geliyor, bu yüzden ücret de burada
+                soruluyor: şartlar görüşmede netleşiyor. Boş bırakılırsa
+                ilandaki ücret bilgisi geçerli kalıyor — aynı şey iki kez
+                yazılmıyor.
+              */}
+              <label className="block">
+                <span className="mb-1 block text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                  Ücret <span className="font-normal">(boş bırakılırsa ilandaki bilgi geçerli)</span>
+                </span>
+                <input
+                  type="text"
+                  value={teklifUcreti}
+                  onChange={(e) => setTeklifUcreti(e.target.value)}
+                  placeholder="Örn. 18.000 TL / ay"
+                  className={ALAN}
+                  style={alanStil}
                 />
               </label>
               <label className="block">
@@ -711,13 +914,32 @@ export const AdayCekmecesi: React.FC<{
                   style={alanStil}
                 />
               </label>
+              <label className="block">
+                <span className="mb-1 block text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                  Teklif notu — öğrenci görecek
+                </span>
+                <textarea
+                  value={teklifNotu}
+                  onChange={(e) => setTeklifNotu(e.target.value)}
+                  rows={3}
+                  placeholder="Görüşmede konuştuğunuz çalışma düzeni ve ekip gibi, öğrencinin karar verirken bilmesi gerekenler."
+                  className="w-full rounded-xl border p-2.5 text-sm outline-none"
+                  style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY, color: SIRKET_METIN }}
+                />
+              </label>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   disabled={kaydediliyor}
                   onClick={() => {
                     setDurumHatasi(null);
-                    Promise.resolve(onTeklif?.({ not: teklifNotu, baslangic: teklifBaslangici }))
+                    Promise.resolve(
+                      onTeklif?.({
+                        not: teklifNotu,
+                        baslangic: teklifBaslangici,
+                        ucret: teklifUcreti,
+                      }),
+                    )
                       .then(() => setTeklifFormu(false))
                       .catch(() => setDurumHatasi('Teklif gönderilemedi. Tekrar dene.'));
                   }}
@@ -739,7 +961,25 @@ export const AdayCekmecesi: React.FC<{
             </div>
           ) : (
             <div className="mt-3 flex flex-wrap gap-2">
-              {sonraki === 'offer_extended' ? (
+              {/*
+                SIRADAKİ ADIM TEK DÜĞME
+
+                Değerlendirmeden sonra görüşme daveti, görüşme
+                onaylandıktan sonra teklif. Davet yanıtlanmadan "Teklif
+                gönder" GÖSTERİLMİYOR: görüşme yapılmadan gönderilen bir
+                teklif, bu turda düzeltilen tam olarak o yanlış.
+              */}
+              {sonraki === 'interview_scheduled' ? (
+                <button
+                  type="button"
+                  disabled={kaydediliyor}
+                  onClick={() => setDavetFormu(true)}
+                  className={BIRINCIL_DUGME}
+                  style={birincilStil}
+                >
+                  Görüşmeye davet et
+                </button>
+              ) : sonraki === 'offer_extended' ? (
                 <button
                   type="button"
                   disabled={kaydediliyor}
@@ -761,6 +1001,52 @@ export const AdayCekmecesi: React.FC<{
                   {durumAdi(sonraki)} aşamasına al
                 </button>
               ) : null}
+
+              {/*
+                DAVET BEKLERKEN: sıra şirkette değil. Yalnız daveti
+                düzeltebiliyor.
+              */}
+              {davetBekliyor && (
+                <button
+                  type="button"
+                  disabled={kaydediliyor}
+                  onClick={() => setDavetFormu(true)}
+                  className={IKINCIL_DUGME}
+                  style={ikincilStil}
+                >
+                  Daveti düzenle
+                </button>
+              )}
+
+              {/*
+                ÖĞRENCİ KATILAMIYORSA: yeni bir tarih önerilebilir. Ayrı
+                bir durum değeri açılmadı — aynı davet alanları yeniden
+                yazılıyor ve yanıt boşalıyor.
+              */}
+              {davetReddedildi && (
+                <button
+                  type="button"
+                  disabled={kaydediliyor}
+                  onClick={() => setDavetFormu(true)}
+                  className={BIRINCIL_DUGME}
+                  style={birincilStil}
+                >
+                  Yeni davet gönder
+                </button>
+              )}
+
+              {/* Görüşme onaylandıysa davet hâlâ düzeltilebiliyor. */}
+              {davetOnaylandi && (
+                <button
+                  type="button"
+                  disabled={kaydediliyor}
+                  onClick={() => setDavetFormu(true)}
+                  className={IKINCIL_DUGME}
+                  style={ikincilStil}
+                >
+                  Daveti düzenle
+                </button>
+              )}
 
               {/*
                 TEKLİF VERİLDİ: SIRA ŞİRKETTE DEĞİL
@@ -799,7 +1085,9 @@ export const AdayCekmecesi: React.FC<{
                     <span className="text-xs font-bold" style={{ color: SIRKET_METIN }}>
                       {teklifBekliyor(kart.durum)
                         ? 'Teklif geri çekilip aday olumsuz olarak kapatılsın mı?'
-                        : 'Olumsuz olarak işaretlensin mi?'}
+                        : davetBekliyor || davetOnaylandi
+                          ? 'Görüşme iptal edilip aday olumsuz olarak kapatılsın mı?'
+                          : 'Olumsuz olarak işaretlensin mi?'}
                     </span>
                     <button
                       type="button"

@@ -43,7 +43,11 @@ test('her durum için ayrı düğme dizisi kalmadı', () => {
 });
 
 test('sonraki adım sözlükten geliyor, çekmecede yeniden yazılmıyor', () => {
-  assert.match(cekmece, /sonrakiDurum\(kart\.durum\)/, 'sonraki adım hesaplanmıyor');
+  assert.match(
+    cekmece,
+    /sonrakiDurum\(kart\.durum, kart\.gorusmeYaniti\)/,
+    'sonraki adım hesaplanmıyor ya da görüşme yanıtını yok sayıyor',
+  );
   /* Akış sırası ikinci bir yerde tanımlanmamalı. */
   assert.ok(!/const\s+akis\s*=/.test(cekmece), 'çekmece kendi akış haritasını kuruyor');
 });
