@@ -29,13 +29,27 @@ export function opportunityCta(item, now = new Date()) {
   const kaynak = isSafeHttpsUrl(item?.sourceUrl || '') ? item.sourceUrl : null;
 
   if (basvuru && opportunityStatus(item, now) === 'acik') {
-    return { adres: basvuru, etiket: 'Başvur', birincil: true };
+    return { adres: basvuru, etiket: 'Başvur', kisaEtiket: 'Başvur', birincil: true };
   }
   if (basvuru) {
-    return { adres: basvuru, etiket: 'Resmî başvuru sayfası', birincil: false };
+    /*
+      KISA ETİKET KARTLAR İÇİN
+
+      Kartta iki düğme yan yana duruyor ve 390 pikselde her birine ~175
+      piksel düşüyor. "Resmî başvuru sayfası" oraya sığmıyor, düğmeyi iki
+      satıra bölüyordu. Kısa hâli "başvuru" sözcüğünü koruyor: kaynağa mı
+      yoksa başvuru sayfasına mı gidildiği kartta da anlaşılıyor.
+      Uzun hâli detay sayfasında olduğu gibi duruyor.
+    */
+    return {
+      adres: basvuru,
+      etiket: 'Resmî başvuru sayfası',
+      kisaEtiket: 'Resmî başvuru',
+      birincil: false,
+    };
   }
   if (kaynak) {
-    return { adres: kaynak, etiket: 'Resmî kaynak', birincil: false };
+    return { adres: kaynak, etiket: 'Resmî kaynak', kisaEtiket: 'Resmî kaynak', birincil: false };
   }
   return null;
 }

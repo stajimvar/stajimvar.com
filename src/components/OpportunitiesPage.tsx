@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   AlarmClock,
-  Bookmark,
   CalendarDays,
   CheckCircle2,
   ChevronRight,
@@ -19,7 +18,6 @@ import { SAYFA_GENISLIGI } from '../lib/duzen';
 import {
   fetchOpportunities,
   fetchSavedOpportunityIds,
-  toggleSavedOpportunity,
   type Opportunity,
   type OpportunityType,
 } from '../lib/opportunities';
@@ -282,12 +280,14 @@ export const OpportunitiesPage: React.FC<{
     return [...liste].sort((a, b) => (a.applicationDeadline || '9999').localeCompare(b.applicationDeadline || '9999'));
   }, [items, metneUyar, arsivGoster, takvimsizGoster, savedOnly, sekme, student]);
 
-  const save = async (item: Opportunity) => {
-    if (!userId) return onRequireLogin();
-    const isSaved = saved.includes(item.id);
-    await toggleSavedOpportunity(userId, item.id, isSaved);
-    setSaved((rows) => (isSaved ? rows.filter((id) => id !== item.id) : [...rows, item.id]));
-  };
+  /*
+    TAKİP ETME İŞLEVİ BURADAN KALKTI
+
+    Kartta takip düğmesi kalmadığı için bu sayfada takibi değiştiren bir
+    yol da yok. `saved` listesi duruyor: üstteki "takipte" sayacı ve
+    /kaydedilen-firsatlar süzgeci onu okuyor. Takibi açıp kapatmak detay
+    sayfasının işi (OpportunityDetailPage · kapaktaki yer imi düğmesi).
+  */
 
   const heading = savedOnly
     ? 'Takip ettiğin fırsatlar'
@@ -594,8 +594,6 @@ export const OpportunitiesPage: React.FC<{
                   <React.Fragment key={item.id}>
                     <Card
                       item={item}
-                      saved={saved.includes(item.id)}
-                      onSave={() => save(item)}
                       onNavigate={onNavigate}
                       fit={student ? opportunityFit(item, student) : null}
                     />
@@ -828,13 +826,26 @@ const Suzgecler: React.FC<{
   Başlık iki satıra kadar açılıyor: "TÜBİTAK 2250 Lisansüstü Bursları"
   tek satırda kesilince hangi program olduğu okunmuyordu.
 */
-const Card: React.FC<{
+/**
+ * Fırsat listesi kartı.
+ *
+ * `export` YALNIZCA geliştirme fikstürü için: kart uzun başlık, uzun
+ * resmî kaynak etiketi, tarihsiz kayıt gibi durumlarda tarayıcıda hiç
+ * görülmeden değişiyordu ve üretimde bu varyasyonların hepsi aynı anda
+ * bulunmuyor. Üretim yolunda yalnızca bu dosya kullanıyor.
+ */
+export const Card: React.FC<{
   item: Opportunity;
-  saved: boolean;
-  onSave: () => void;
   onNavigate: (p: string) => void;
   fit: { durum: string; not: string | null; kesin: boolean } | null;
-}> = ({ item, saved, onSave, onNavigate, fit }) => {
+  /*
+    `saved` / `onSave` KALDIRILDI
+
+    Takip düğmesi karttan çıkınca bu iki özellik de gereksiz kaldı.
+    Kullanılmayan bir özelliği bırakmak, sonradan okuyanı "kart takibi
+    biliyor ama göstermiyor" diye yanıltır. Takip detay sayfasında.
+  */
+}> = ({ item, onNavigate, fit }) => {
   const cta = opportunityCta(item);
   const durum = opportunityStatus(item);
   const tutar = opportunityAmount(item);
@@ -844,8 +855,15 @@ const Card: React.FC<{
   const yer = [...item.cities, ...item.countries];
   const seviye = item.educationLevels.length ? item.educationLevels.join(', ') : null;
 
+  /*
+    BOŞLUK BİR KADEME DARALDI
+
+    Öğeler arası 12 px'ti ve kart yedi ayrı bloktan oluşuyor; her
+    aralıkta bir kademe fazlalık toplanınca kart gereksiz uzuyordu.
+    10 px hâlâ nefes alıyor ama blokları birbirine yaklaştırıyor.
+  */
   return (
-    <article className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm flex flex-col gap-3">
+    <article className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm flex flex-col gap-2.5">
       <div className="flex gap-3">
         <ListingLogo name={item.organizationName} logoUrl={item.organizationLogoUrl} />
         <div className="min-w-0 flex-1">
@@ -955,33 +973,47 @@ const Card: React.FC<{
         kartında da yapılmıştı; iki kart artık aynı dili konuşuyor.
       */}
 
-      <div className="mt-auto flex flex-wrap items-center gap-2">
-        <button
-          onClick={() => onNavigate(`/firsatlar/${item.slug}`)}
-          className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1 rounded-xl bg-blue-600 px-3 py-2.5 text-sm font-bold text-white hover:bg-blue-700 transition-colors cursor-pointer"
-        >
-          Detayı gör <ChevronRight className="w-4 h-4" />
-        </button>
-        <button
-          onClick={onSave}
-          aria-label={saved ? 'Takibi bırak' : 'Takip et'}
-          className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-bold border cursor-pointer ${
-            saved ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-700 hover:bg-gray-50'
-          }`}
-        >
-          <Bookmark className="w-4 h-4" fill={saved ? 'currentColor' : 'none'} />
-          {saved ? 'Takipte' : 'Takip et'}
-        </button>
-        {cta && (
-          <a
-            href={cta.adres}
-            target="_blank"
-            rel="noopener noreferrer nofollow"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50"
+      {/*
+        İKİ AKSİYON, ÜÇ DEĞİL
+
+        Alt satırda "Detayı gör", "Takip et" ve "Resmî kaynak" birlikte
+        duruyordu; üçü 390 pikselde satıra sığmayıp alt alta düşüyor ve
+        kartı uzatıyordu. Daha kötüsü karar dağılıyordu: kullanıcı hangi
+        düğmenin ana yol olduğunu seçmek zorunda kalıyordu.
+
+        "Takip et" karttan kalktı — SİLİNMEDİ: detay sayfasında kapak
+        görselinin üstündeki yer imi düğmesi olarak duruyor ve
+        /kaydedilen-firsatlar sayfası aynen çalışıyor. Kartın işi karar
+        vermek değil, içeri davet etmek.
+
+        AYIRICI ÇİZGİ
+        Zaman tüpü de yatay bir çubuk; hemen altına düğmeler gelince iki
+        yatay öğe birbirine karışıyordu. Çok açık gri tek piksellik bir
+        çizgi ikisini ayırıyor — tablo çizgisi gibi değil, yalnızca
+        boşluğu düzenleyen bir eşik.
+      */}
+      <div className="mt-auto border-t border-gray-100 pt-3">
+        <div className={`grid gap-2 ${cta ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          <button
+            onClick={() => onNavigate(`/firsatlar/${item.slug}`)}
+            className="inline-flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-xl bg-blue-600 px-3 text-sm font-bold text-white transition-colors hover:bg-blue-700 cursor-pointer"
           >
-            {cta.etiket} <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-        )}
+            <span className="truncate">Detayı gör</span>
+            <ChevronRight className="w-4 h-4 shrink-0" />
+          </button>
+          {cta && (
+            <a
+              href={cta.adres}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-gray-200 px-3 text-sm font-bold text-gray-700 hover:bg-gray-50"
+            >
+              {/* Kartta kısa etiket: uzun hâli düğmeyi iki satıra bölüyordu. */}
+              <span className="truncate">{cta.kisaEtiket ?? cta.etiket}</span>
+              <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+            </a>
+          )}
+        </div>
       </div>
     </article>
   );
