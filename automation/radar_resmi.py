@@ -155,6 +155,50 @@ def sonucu_sinifla(url: str) -> Bulgu:
     return Bulgu(url=url, platform="sirket_sitesi", red_nedeni="desteklenen ATS değil")
 
 
+#: ATS ilan kimliği çıkarma kalıpları: (platform, kiracı, ilan kimliği).
+#:
+#: Aynı ilan farklı adres biçimlerinde görünebiliyor —
+#: `jobs.workable.com/view/<id>/...` ile adaptörün döndürdüğü adres
+#: farklı. Adres dizesiyle karşılaştırmak bu yüzden yetmiyor: geçen
+#: koşuda iki Vertigo Games ilanı "yeni aday" sayıldı, oysa ikisi de
+#: kayıtlıydı (biri yayında, biri kapalı).
+ILAN_KIMLIGI = (
+    ("lever", re.compile(r"jobs\.lever\.co/([^/?#]+)/([0-9a-f-]{8,})", re.I)),
+    ("greenhouse", re.compile(r"greenhouse\.io/([^/?#]+)/jobs/(\d+)", re.I)),
+    ("ashby", re.compile(r"jobs\.ashbyhq\.com/([^/?#]+)/([0-9a-f-]{8,})", re.I)),
+    ("workable", re.compile(r"(?:jobs|apply)\.workable\.com/(?:view/([A-Za-z0-9]{8,})|([^/?#]+)/j/([A-Za-z0-9]+))", re.I)),
+    ("smartrecruiters", re.compile(r"smartrecruiters\.com/([^/?#]+)/(\d+)", re.I)),
+)
+
+
+def ilan_kimligi(url: str | None) -> tuple[str, str, str] | None:
+    """Adresten (platform, kiracı, ilan kimliği) çıkarır.
+
+    DUPLICATE KARARININ TEMELİ BU — adres dizesi değil. Aynı ilan
+    farklı adres biçimlerinde göründüğünde ikisi de aynı kimliğe
+    iniyor.
+
+    Workable'ın iki adres biçimi var: `view/<id>` kiracı taşımıyor,
+    `<kiraci>/j/<id>` taşıyor. İkisi de aynı kimlik alanına düşüyor —
+    eşleştirme ilan kimliğinden yapılıyor.
+    """
+    if not url:
+        return None
+    for platform, kalip in ILAN_KIMLIGI:
+        m = kalip.search(url)
+        if not m:
+            continue
+        gruplar = [g for g in m.groups() if g]
+        if platform == "workable":
+            # view/<id> → kiracı yok; <kiraci>/j/<id> → kiracı + kimlik
+            if len(gruplar) == 1:
+                return (platform, "", gruplar[0].lower())
+            return (platform, gruplar[0].lower(), gruplar[-1].lower())
+        if len(gruplar) >= 2:
+            return (platform, gruplar[0].lower(), gruplar[1].lower())
+    return None
+
+
 def kiracilari_topla(sonuc_urlleri: list[str]) -> tuple[dict[tuple[str, str], list[str]], list[Bulgu]]:
     """Arama sonuçlarını (platform, kiracı) demetlerine indirger.
 

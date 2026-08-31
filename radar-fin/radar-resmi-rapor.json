@@ -1,0 +1,170 @@
+{
+  "arama": {
+    "saglayici": "brave",
+    "sorgu": 100,
+    "basarili": 100,
+    "sonucsuz": 0,
+    "hata": {},
+    "tavana_takildi": 0,
+    "ham_isabet": 1000
+  },
+  "sonuc_siniflari": {
+    "lever": 200,
+    "ashby": 200,
+    "workable": 200,
+    "smartrecruiters": 196,
+    "greenhouse": 151,
+    "desteklenen ATS değil": 53
+  },
+  "platform_huni": {
+    "ashby": {
+      "kiraci": 72,
+      "yeni_kiraci": 71
+    },
+    "greenhouse": {
+      "kiraci": 78,
+      "yeni_kiraci": 74
+    },
+    "lever": {
+      "kiraci": 46,
+      "ilan": 2,
+      "turkiye": 2,
+      "yeni_kiraci": 39,
+      "valid": 1,
+      "duplicate": 1
+    },
+    "smartrecruiters": {
+      "kiraci": 59,
+      "yeni_kiraci": 58
+    },
+    "workable": {
+      "kiraci": 108,
+      "yeni_kiraci": 106,
+      "ilan": 4,
+      "turkiye": 3,
+      "valid": 2,
+      "would_publish": 2,
+      "turkiye_disi": 1
+    }
+  },
+  "toplam": {
+    "unique_kiraci": 363,
+    "yeni_kiraci": 348,
+    "valid_internship": 3,
+    "duplicate": 1,
+    "would_publish": 2
+  },
+  "adaptor_sonuclari": {
+    "workable:ok": 107,
+    "workable:bos": 105,
+    "greenhouse:ok": 77,
+    "greenhouse:bos": 77,
+    "ashby:ok": 69,
+    "ashby:bos": 69,
+    "smartrecruiters:ok": 59,
+    "smartrecruiters:bos": 59,
+    "lever:ok": 42,
+    "lever:bos": 40,
+    "lever:HTTPError:404": 4,
+    "ashby:HTTPError:404": 3,
+    "greenhouse:HTTPError:404": 1,
+    "workable:HTTPError:404": 1
+  },
+  "ornek_kiracilar": {
+    "ashby": [
+      "everai",
+      "cluely",
+      "ellipsislabs",
+      "inertia",
+      "fizz",
+      "ltv",
+      "netic",
+      "laminar-jobs"
+    ],
+    "greenhouse": [
+      "drweng",
+      "enterpret",
+      "optiverprivate",
+      "internshiplist2000",
+      "sezzle",
+      "tripadvisor",
+      "instawork",
+      "liscinternships"
+    ],
+    "lever": [
+      "insiderone",
+      "commencis",
+      "weloglobal",
+      "welocalize",
+      "Yassir",
+      "extremenetworks",
+      "trendyol",
+      "jobgether"
+    ],
+    "smartrecruiters": [
+      "AbbVie",
+      "Lesaffre",
+      "Visa",
+      "TecTammina",
+      "AccorHotel",
+      "NielsenIQ",
+      "TheNielsenCompany",
+      "BoschGroup"
+    ],
+    "workable": [
+      "endace",
+      "capula-investment-management-ltd",
+      "internavenue",
+      "tamatem",
+      "rentokil-initial",
+      "ite-mgmt",
+      "intellecthq",
+      "vertigogames"
+    ]
+  },
+  "adaptor_boslugu": {},
+  "verimli_sorgular": {
+    "site:jobs.lever.co intern Turkey": 10,
+    "site:jobs.lever.co intern Türkiye": 10,
+    "site:jobs.lever.co intern Istanbul": 10,
+    "site:jobs.lever.co intern Ankara": 10,
+    "site:jobs.lever.co intern Izmir": 10,
+    "site:jobs.lever.co internship Turkey": 10,
+    "site:jobs.lever.co internship Türkiye": 10,
+    "site:jobs.lever.co internship Istanbul": 10,
+    "site:jobs.lever.co internship Ankara": 10,
+    "site:jobs.lever.co internship Izmir": 10,
+    "site:jobs.lever.co stajyer Turkey": 10,
+    "site:jobs.lever.co stajyer Türkiye": 10,
+    "site:jobs.lever.co stajyer Istanbul": 10,
+    "site:jobs.lever.co stajyer Ankara": 10,
+    "site:jobs.lever.co stajyer Izmir": 10
+  },
+  "would_publish_ornekleri": [
+    {
+      "company": null,
+      "title": "Game Developer - Intern",
+      "location": "Istanbul",
+      "platform": "workable",
+      "tenant": "vertigogames",
+      "url": "https://apply.workable.com/j/7F708BF16C",
+      "quality": "VALID_INTERNSHIP",
+      "evidence": [
+        "açıklamada staj kanıtı: intern, internship"
+      ]
+    },
+    {
+      "company": null,
+      "title": "Product Intern",
+      "location": "Istanbul",
+      "platform": "workable",
+      "tenant": "vertigogames",
+      "url": "https://apply.workable.com/j/77A44EED91",
+      "quality": "VALID_INTERNSHIP",
+      "evidence": [
+        "açıklamada staj kanıtı: intern, internship"
+      ]
+    }
+  ],
+  "auto_publish": "false"
+}

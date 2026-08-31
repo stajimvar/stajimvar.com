@@ -21,6 +21,7 @@ from automation.radar_brave import saglayici_kur
 from automation.radar_resmi import (
     DESTEKLENEN,
     ResmiAday,
+    ilan_kimligi,
     kayitli_kiracilar,
     kiracilari_topla,
     sorgu_matrisi,
@@ -45,28 +46,49 @@ def _kaynaklari_oku() -> list[dict]:
     return ham if isinstance(ham, list) else ham.get("sources", [])
 
 
-def _mevcut_ilan_adresleri() -> dict[str, str]:
-    """Canonical listede zaten olan resmî adresler → listing id."""
+def _mevcut_ilanlar() -> tuple[dict[str, str], dict[tuple[str, str], str]]:
+    """Canonical listedeki ilanlar: adres haritası + KİMLİK haritası.
+
+    İKİ ÖLÇÜLMÜŞ HATA BURADA KAPANIYOR
+    ----------------------------------
+    1. Yalnız `status=published` okunuyordu. Kapalı bir ilan bu yüzden
+       "yeni aday" sayılıyordu — oysa sprint kuralı açık: aynı ATS ilanı
+       kapalıysa yeniden public yapılmıyor. Artık DURUM SÜZGECİ YOK.
+
+    2. Eşleştirme adres dizesiyle yapılıyordu. Aynı Workable ilanı
+       `jobs.workable.com/view/<id>/...` ve `apply.workable.com/<kiraci>/j/<id>`
+       biçimlerinde göründüğü için iki Vertigo Games ilanı yeni sanıldı.
+       Artık asıl anahtar (platform, ilan kimliği).
+    """
     url = os.getenv("SUPABASE_URL")
     anahtar = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
     if not url or not anahtar:
-        return {}
+        return {}, {}
     try:
         y = requests.get(
             f"{url}/rest/v1/listings",
-            params={"select": "id,canonical_url,apply_url,source_url", "status": "eq.published"},
+            params={"select": "id,status,canonical_url,apply_url,source_url"},
             headers={"apikey": anahtar, "Authorization": f"Bearer {anahtar}"},
             timeout=ZAMAN_ASIMI,
         )
         y.raise_for_status()
     except requests.RequestException:
-        return {}
-    harita: dict[str, str] = {}
+        return {}, {}
+    adresler: dict[str, str] = {}
+    kimlikler: dict[tuple[str, str], str] = {}
     for satir in y.json():
+        etiket = f"{satir['id']}:{satir.get('status') or '?'}"
         for alan in ("canonical_url", "apply_url", "source_url"):
-            if satir.get(alan):
-                harita[satir[alan]] = satir["id"]
-    return harita
+            adres = satir.get(alan)
+            if not adres:
+                continue
+            adresler[adres] = etiket
+            kimlik = ilan_kimligi(adres)
+            if kimlik:
+                # Kiracı adres biçimine göre değişebiliyor; anahtar
+                # platform + ilan kimliği.
+                kimlikler[(kimlik[0], kimlik[2])] = etiket
+    return adresler, kimlikler
 
 
 def _scraper():
@@ -171,7 +193,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"ham isabet: {ham_isabet} | destekli kiracı: {len(kiracilar)}", file=sys.stderr)
 
     kayitli = kayitli_kiracilar(_kaynaklari_oku())
-    mevcut = _mevcut_ilan_adresleri()
+    adresler, kimlikler = _mevcut_ilanlar()
+    kosuda_gorulen: set[tuple[str, str]] = set()
 
     adaylar: list[ResmiAday] = []
     adaptor_sayac: Counter = Counter()
@@ -218,13 +241,30 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             platform_huni[platform]["valid"] += 1
 
-            if ilan["url"] in mevcut:
+            # DUPLICATE: ÖNCE KİMLİK, SONRA ADRES
+            #
+            # Birincil anahtar (platform, ATS ilan kimliği). Adres
+            # karşılaştırması yalnız kimlik çıkarılamayan adresler için
+            # yedek olarak duruyor.
+            kimlik = ilan_kimligi(ilan["url"])
+            eslesme = kimlikler.get((kimlik[0], kimlik[2])) if kimlik else None
+            eslesme = eslesme or adresler.get(ilan["url"])
+            if eslesme:
                 aday.durum = "duplicate"
-                aday.neden = "canonical listede zaten var"
-                aday.mevcut_listing_id = mevcut[ilan["url"]]
+                aday.neden = "canonical listede zaten var (kimlik)" if kimlik else "canonical listede zaten var (adres)"
+                aday.mevcut_listing_id = eslesme
                 platform_huni[platform]["duplicate"] += 1
                 adaylar.append(aday)
                 continue
+
+            # Aynı koşu içinde iki kez görülen ilan bir kez sayılıyor.
+            if kimlik and (kimlik[0], kimlik[2]) in kosuda_gorulen:
+                aday.durum, aday.neden = "duplicate", "aynı koşuda tekrar"
+                platform_huni[platform]["duplicate"] += 1
+                adaylar.append(aday)
+                continue
+            if kimlik:
+                kosuda_gorulen.add((kimlik[0], kimlik[2]))
 
             aday.durum, aday.neden = "would_publish", "resmî kaynak + kalite + tekil"
             platform_huni[platform]["would_publish"] += 1

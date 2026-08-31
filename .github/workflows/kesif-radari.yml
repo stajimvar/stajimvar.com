@@ -23,11 +23,11 @@ on:
         required: false
         default: ""
       mod:
-        description: "resmi = Brave→ATS resmî ilan radarı · kesif = Kariyer.net radarı"
+        description: "resmi = Brave→ATS · linkedin = LinkedIn sinyal radarı · kesif = Kariyer.net"
         required: false
         default: "resmi"
         type: choice
-        options: ["resmi", "kesif"]
+        options: ["resmi", "linkedin", "kesif"]
   schedule:
     # Günde bir. Keşif kaynakları saatlik değişmiyor; saatlik çekmek
     # kaynağa gereksiz yük bindirmek olurdu.
@@ -99,6 +99,18 @@ jobs:
         if: ${{ inputs.test_sorgusu == '' && (inputs.mod || 'resmi') == 'resmi' }}
         run: python -m automation.radar_resmi_kosu --sorgu-siniri 120
 
+      # LINKEDIN RADARI — LinkedIn'e İSTEK GİTMİYOR
+      #
+      # Sinyal Brave'in kamuya açık dizininden okunuyor; yayın kararını
+      # şirketin resmî ATS ilanı veriyor. Bütçe iki katmanda korunuyor:
+      # `Butce` sınıfı (430 sert tavan, 220 keşif / 180 çözüm / 30 yedek)
+      # ve arama sağlayıcısının kendi tavanı.
+      - name: LinkedIn radarı gölge koşusu
+        if: ${{ inputs.test_sorgusu == '' && inputs.mod == 'linkedin' }}
+        env:
+          MAX_SEARCH_QUERIES_PER_RUN: "430"
+        run: python -m automation.radar_linkedin_kosu --kesif-siniri 220 --toplam-tavan 430
+
       # KEŞİF RADARI — Kariyer.net. Artık canonical ilan kaynağı değil;
       # "bu şirket stajyer arıyor" sinyali olarak duruyor.
       - name: Keşif radarı gölge koşusu
@@ -115,4 +127,5 @@ jobs:
           path: |
             radar-rapor.json
             radar-resmi-rapor.json
+            radar-linkedin-rapor.json
           if-no-files-found: warn

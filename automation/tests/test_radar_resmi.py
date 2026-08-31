@@ -215,3 +215,30 @@ def test_i_gercek_kaynak_dosyasindan_kiracilar_okunuyor():
 def test_l_bos_adres_cokmeye_yol_acmiyor():
     assert sonucu_sinifla("").red_nedeni == "adres yok"
     assert sonucu_sinifla(None).red_nedeni == "adres yok"
+
+
+# ------------------------------- M: duplicate kimlikle, durumdan bağımsız
+
+
+def test_m_kapali_ilan_da_duplicate_sayiliyor():
+    """`status=published` süzgeci KALKTI.
+
+    Kapalı bir ATS ilanı 'yeni aday' sayılırsa radar aynı ilanı ikinci
+    kez yayına sokmayı önerir. Geçen koşuda iki Vertigo Games ilanından
+    biri tam bu yüzden kaçtı.
+    """
+    import pathlib
+
+    govde = (pathlib.Path(__file__).resolve().parents[1] / "radar_resmi_kosu.py"
+             ).read_text(encoding="utf-8")
+    kod = "\n".join(s for s in govde.splitlines() if not s.lstrip().startswith("#"))
+    assert "eq.published" not in kod
+    assert "ilan_kimligi(adres)" in kod
+
+
+def test_m_duplicate_karari_adres_dizesine_dayanmiyor():
+    import pathlib
+
+    govde = (pathlib.Path(__file__).resolve().parents[1] / "radar_resmi_kosu.py"
+             ).read_text(encoding="utf-8")
+    assert "kimlikler.get(" in govde, "duplicate anahtarı kimlik olmalı"
