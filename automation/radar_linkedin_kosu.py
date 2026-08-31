@@ -177,10 +177,12 @@ def kiraci_ara(sirket: str, baslik: str | None, saglayici, butce: Butce,
 
     # AŞAMA 2 — şirketin kendi kariyer sayfasından ATS'e.
     for alan in alanlar[:2]:
+        # ALAN ADI `Kanit` VERİ SINIFINDAN, TAHMİNLE DEĞİL: değer
+        # `deger` alanında tutuluyor, `url` diye bir alan yok.
         kanit = kariyer_kaynagi_bul(alan, getir)
-        if not kanit.url:
+        if not kanit.var:
             continue
-        b = sonucu_sinifla(kanit.url)
+        b = sonucu_sinifla(kanit.deger)
         if b.destekli and b.kiraci:
             sayac["kariyer_sayfasindan_cozuldu"] += 1
             return (b.platform, b.kiraci.lower())

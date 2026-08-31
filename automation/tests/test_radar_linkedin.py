@@ -336,3 +336,22 @@ def test_l_kosu_modulu_canonical_tabloya_yazmiyor():
              ).read_text(encoding="utf-8")
     for yasak in ("rest/v1/listings\", json=", ".post(", ".patch(", ".delete("):
         assert yasak not in govde, yasak
+
+
+# ----------------------------- M: veri sınıfı sözleşmesi tahmin edilmiyor
+
+def test_m_kariyer_kaniti_deger_alanindan_okunuyor():
+    """`Kanit.url` diye bir alan YOK — koşu tam bu tahminle patlamıştı."""
+    import dataclasses
+
+    from automation.radar_cozucu import Kanit
+
+    alanlar = {f.name for f in dataclasses.fields(Kanit)}
+    assert "deger" in alanlar and "url" not in alanlar
+
+    import pathlib
+
+    govde = (pathlib.Path(__file__).resolve().parents[1] / "radar_linkedin_kosu.py"
+             ).read_text(encoding="utf-8")
+    assert "kanit.url" not in govde
+    assert "kanit.deger" in govde
