@@ -401,6 +401,14 @@ def sirketi_coz(
         if not sirket_alani_olamaz(t):
             aday_listesi.append((t, "tahmin"))
 
+    # İLK MEDIUM'DA DURMUYORUZ
+    #
+    # Önceki sürüm ilk MEDIUM adayda dönüyordu ve kalan adaylara hiç
+    # bakmıyordu. Üretimde ölçüldü: Brave 69 sorgu attı, 40'ı sonuç
+    # verdi, ama HIGH sayısı 18'de kaldı — çünkü zayıf bir aday güçlü
+    # olanın önünü kesiyordu. MEDIUM saklanıyor, tarama HIGH için
+    # sürüyor; HIGH bulunmazsa en iyi MEDIUM dönüyor.
+    en_iyi_orta: SirketCozumu | None = None
     for alan, katman in aday_listesi:
         guven, kanitlar = kimligi_dogrula(sirket, alan, getir)
         if guven == "HIGH":
@@ -408,13 +416,13 @@ def sirketi_coz(
             if onbellek is not None:
                 onbellek[kok] = sonuc
             return sonuc, sorgu
-        if guven == "MEDIUM":
-            # Kaydediliyor ama devam ediliyor: daha güçlü aday çıkabilir.
-            aday_listesi and None
-            orta = SirketCozumu(alan, "MEDIUM", katman, kanitlar)
-            if onbellek is not None:
-                onbellek[kok] = orta
-            return orta, sorgu
+        if guven == "MEDIUM" and en_iyi_orta is None:
+            en_iyi_orta = SirketCozumu(alan, "MEDIUM", katman, kanitlar)
+
+    if en_iyi_orta is not None:
+        if onbellek is not None:
+            onbellek[kok] = en_iyi_orta
+        return en_iyi_orta, sorgu
 
     sonuc = SirketCozumu(None, "LOW", "yok", ["hiçbir aday kimlik doğrulayamadı"])
     if onbellek is not None:

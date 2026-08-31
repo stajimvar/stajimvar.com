@@ -1,0 +1,264 @@
+{
+  "kaynaklar": {
+    "kariyer.net": {
+      "kapali": null,
+      "raw_signals": 53,
+      "unique_signals": 53,
+      "unique_companies": 47,
+      "domain_resolved": 45,
+      "career_found": 11,
+      "ats_detected": 0,
+      "official_job_match": 0,
+      "valid_internship": 0,
+      "duplicate": 0,
+      "would_publish": 0,
+      "unresolved": 53
+    },
+    "linkedin": {
+      "kapali": "linkedin.com/robots.txt tüm yolları otomasyona kapatıyor (User-agent: * / Disallow: /). Beyaz liste başvurusu olmadan sürdürülebilir bir kamuya açık keşif yüzeyi yok.",
+      "raw_signals": 0,
+      "unique_signals": 0,
+      "unique_companies": 0,
+      "domain_resolved": 0,
+      "career_found": 0,
+      "ats_detected": 0,
+      "official_job_match": 0,
+      "valid_internship": 0,
+      "duplicate": 0,
+      "would_publish": 0,
+      "unresolved": 0
+    }
+  },
+  "capraz": {
+    "toplam_raw": 53,
+    "unique_opportunity": 0,
+    "official_resolved": 0,
+    "would_publish": 0
+  },
+  "unresolved_nedenleri": {
+    "company_unresolved": 35,
+    "official_job_not_found": 11,
+    "official_source_not_found": 7
+  },
+  "ats_bosluk": {},
+  "auto_publish": false,
+  "arama_katmani": {
+    "saglayici": "brave",
+    "kullanilabilir": true,
+    "sorgu": 69,
+    "basarili": 40,
+    "sonucsuz": 29,
+    "hata": {},
+    "tavana_takildi": 0,
+    "aranan_sirket": 69
+  },
+  "bilgi_tabani_sirket": 31,
+  "domain_guven": {
+    "HIGH": 18,
+    "MEDIUM": 27,
+    "yok": 8
+  },
+  "unresolved_ornekleri": [
+    {
+      "company": "SCO GRUP DANIŞMANLIK İNŞAAT SANAYİ TİCARET LİMİTED ŞİRKETİ",
+      "title": "Eğitim ve Gelişim Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: aday MEDIUM, insan bakışı bekliyor",
+      "ats": null
+    },
+    {
+      "company": "Gram Equipment Makina San. Tic. Ltd. Şti",
+      "title": "Üretim Asistanı",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: aday MEDIUM, insan bakışı bekliyor",
+      "ats": null
+    },
+    {
+      "company": "DABHANDS TEKNOLOJİ",
+      "title": "Muhasebe ve Finans Elemanı",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: aday MEDIUM, insan bakışı bekliyor",
+      "ats": null
+    },
+    {
+      "company": "STRATEJİK İLETİŞİM OFİSİ",
+      "title": "Eğitim ve Gelişim Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: aday MEDIUM, insan bakışı bekliyor",
+      "ats": null
+    },
+    {
+      "company": "AHLATCI HOLDİNG",
+      "title": "Dijital Pazarlama ve Sosyal Medya Uzmanı",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "official_job_not_found: aynı ilan bulunamadı",
+      "ats": null
+    },
+    {
+      "company": "COLIN'S",
+      "title": "Endüstri Mühendisi",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "official_job_not_found: aynı ilan bulunamadı",
+      "ats": null
+    },
+    {
+      "company": "L'Oréal Türkiye",
+      "title": "Uzun Dönem Stajyer",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: aday MEDIUM, insan bakışı bekliyor",
+      "ats": null
+    },
+    {
+      "company": "Konyalı Saat",
+      "title": "Grafik Tasarım Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "official_job_not_found: aynı ilan bulunamadı",
+      "ats": null
+    },
+    {
+      "company": "BigChefs",
+      "title": "Grafik Tasarım Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "official_job_not_found: aynı ilan bulunamadı",
+      "ats": null
+    },
+    {
+      "company": "Pronet Güvenlik Hizmetleri",
+      "title": "İnsan Kaynakları Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "official_job_not_found: aynı ilan bulunamadı",
+      "ats": null
+    },
+    {
+      "company": "Koton",
+      "title": "İnsan Kaynakları Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "official_job_not_found: aynı ilan bulunamadı",
+      "ats": null
+    },
+    {
+      "company": "L'Oréal Türkiye",
+      "title": "Uzun Dönem Stajyer",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: aday MEDIUM, insan bakışı bekliyor",
+      "ats": null
+    },
+    {
+      "company": "Elvan Gıda San ve Tic.A.Ş",
+      "title": "İnsan Kaynakları Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "official_job_not_found: aynı ilan bulunamadı",
+      "ats": null
+    },
+    {
+      "company": "KVK TEKNİK SERVİS HİZMETLERİ VE TİC.A.Ş.",
+      "title": "Çırak",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: aday MEDIUM, insan bakışı bekliyor",
+      "ats": null
+    },
+    {
+      "company": "MCAN Sağlık Turizm Asistans ve Danışmanlık AŞ",
+      "title": "Satış Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: resmî alan adı doğrulanamadı",
+      "ats": null
+    },
+    {
+      "company": "G Teknoloji Bilişim San. ve Tic. A.Ş.",
+      "title": "İnsan Kaynakları Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: resmî alan adı doğrulanamadı",
+      "ats": null
+    },
+    {
+      "company": "Kazancı Holding",
+      "title": "İnsan Kaynakları Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "official_job_not_found: aynı ilan bulunamadı",
+      "ats": null
+    },
+    {
+      "company": "Ali Raif İlaç Sanayi A.Ş.",
+      "title": "İnsan Kaynakları Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: aday MEDIUM, insan bakışı bekliyor",
+      "ats": null
+    },
+    {
+      "company": "A1 CAPİTAL YATIRIM MENKUL DEĞERLER AŞ",
+      "title": "Stajyer",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: aday MEDIUM, insan bakışı bekliyor",
+      "ats": null
+    },
+    {
+      "company": "BASF Türk Kimya San. ve Tic. Ltd. Şti.-1",
+      "title": "Stajyer",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: aday MEDIUM, insan bakışı bekliyor",
+      "ats": null
+    },
+    {
+      "company": "Türkiye Finans Katılım Bankası",
+      "title": "Operasyon Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: aday MEDIUM, insan bakışı bekliyor",
+      "ats": null
+    },
+    {
+      "company": "İpekyol Giyim San. ve Tic. A.Ş.",
+      "title": "Stajyer",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: aday MEDIUM, insan bakışı bekliyor",
+      "ats": null
+    },
+    {
+      "company": "Gizli Firma",
+      "title": "İnsan Kaynakları Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: aday MEDIUM, insan bakışı bekliyor",
+      "ats": null
+    },
+    {
+      "company": "Gizli Firma",
+      "title": "İnsan Kaynakları Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: aday MEDIUM, insan bakışı bekliyor",
+      "ats": null
+    },
+    {
+      "company": "LC Waikiki",
+      "title": "İnsan Kaynakları Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "company_unresolved: resmî alan adı doğrulanamadı",
+      "ats": null
+    }
+  ],
+  "would_publish_ornekleri": []
+}
