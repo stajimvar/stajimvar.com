@@ -43,6 +43,7 @@ from automation.radar_resmi import (
     ilan_kimligi,
     kayitli_kiracilar,
     sonucu_sinifla,
+    yeni_kiraci_mi,
     turkiye_mi,
 )
 from automation.radar_kosu import _oturum, getir_fabrikasi
@@ -301,6 +302,23 @@ def main(argv: list[str] | None = None) -> int:
                 adaylar.append(aday)
                 continue
             huni["valid_internship"] += 1
+
+            # KAYITLI KİRACI KEŞİF DEĞİL
+            #
+            # Adres kimliği her zaman yetmiyor: Workable'ın iki ayrı
+            # kimlik uzayı var — hesap API'si `apply.workable.com/j/<shortcode>`,
+            # arama uç noktası `jobs.workable.com/view/<başka kimlik>` veriyor
+            # ve aynı ilan iki farklı kimlikle görünüyor. Rapsodo ilanı
+            # tam bu yüzden "yeni" sanıldı, oysa zaten yayındaydı.
+            #
+            # Kimlikten bağımsız sağlam kural: kiracı zaten kayıtlı bir
+            # kaynaksa saatlik tarayıcı onu okuyor, radar keşif üretmiyor.
+            if not yeni_kiraci_mi(kiraci[0], kiraci[1], kayitli):
+                aday.durum = "duplicate"
+                aday.neden = "kiracı zaten kayıtlı kaynak"
+                huni["kayitli_kiraci"] += 1
+                adaylar.append(aday)
+                continue
 
             # DUPLICATE: platform + ATS ilan kimliği
             kimlik = ilan_kimligi(ilan["url"])

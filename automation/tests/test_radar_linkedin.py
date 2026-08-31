@@ -355,3 +355,43 @@ def test_m_kariyer_kaniti_deger_alanindan_okunuyor():
              ).read_text(encoding="utf-8")
     assert "kanit.url" not in govde
     assert "kanit.deger" in govde
+
+
+# --------------------- N: Workable'ın üçüncü adres biçimi ve kayıtlı kiracı
+
+def test_n_workable_ucuncu_adres_bicimi_de_kimlik_veriyor():
+    """`apply.workable.com/j/<shortcode>` — kiracı taşımayan biçim.
+
+    İlk sürümde hiç eşleşmiyordu; aynı Rapsodo ilanı bu yüzden tek
+    koşuda iki kez 'yeni aday' sayıldı.
+    """
+    k = ilan_kimligi("https://apply.workable.com/j/A33ECE24C2")
+    assert k is not None
+    assert (k[0], k[2]) == ("workable", "a33ece24c2")
+    # Kiracılı biçimle aynı kimliğe iniyor.
+    k2 = ilan_kimligi("https://apply.workable.com/rapsodo/j/A33ECE24C2/")
+    assert (k[0], k[2]) == (k2[0], k2[2])
+
+
+def test_n_kayitli_kiraci_kesif_sayilmiyor():
+    """Saatlik tarayıcının zaten okuduğu kiracı yeni aday üretmez.
+
+    Adres kimliği tek başına yetmiyor: Workable'ın hesap API'si ile
+    arama uç noktası aynı ilana FARKLI kimlik veriyor. Kiracı kuralı
+    kimlikten bağımsız çalıştığı için bu boşluğu kapatıyor.
+    """
+    from automation.radar_resmi import kayitli_kiracilar, yeni_kiraci_mi
+
+    kayitli = kayitli_kiracilar([
+        {"type": "workable", "account": "rapsodo", "name": "Rapsodo"},
+    ])
+    assert not yeni_kiraci_mi("workable", "rapsodo", kayitli)
+    assert yeni_kiraci_mi("workable", "bilinmeyen", kayitli)
+
+
+def test_n_kosu_kayitli_kiraciyi_duplicate_isaretliyor():
+    import pathlib
+
+    for ad in ("radar_linkedin_kosu.py", "radar_resmi_kosu.py"):
+        govde = (pathlib.Path(__file__).resolve().parents[1] / ad).read_text(encoding="utf-8")
+        assert "kiracı zaten kayıtlı kaynak" in govde, ad

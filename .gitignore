@@ -30,3 +30,7 @@ raporlar/
 radar-art*/
 radar-rapor*.json
 radar-*.log
+
+# İndirilen radar rapor artefaktları — depoya girmiyor.
+radar-*/
+radar-*.json

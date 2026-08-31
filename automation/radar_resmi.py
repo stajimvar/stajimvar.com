@@ -166,7 +166,13 @@ ILAN_KIMLIGI = (
     ("lever", re.compile(r"jobs\.lever\.co/([^/?#]+)/([0-9a-f-]{8,})", re.I)),
     ("greenhouse", re.compile(r"greenhouse\.io/([^/?#]+)/jobs/(\d+)", re.I)),
     ("ashby", re.compile(r"jobs\.ashbyhq\.com/([^/?#]+)/([0-9a-f-]{8,})", re.I)),
-    ("workable", re.compile(r"(?:jobs|apply)\.workable\.com/(?:view/([A-Za-z0-9]{8,})|([^/?#]+)/j/([A-Za-z0-9]+))", re.I)),
+    # Workable'ın ÜÇ adres biçimi ölçüldü; üçüncüsü kiracı taşımıyor ve
+    # ilk sürümde hiç eşleşmiyordu — aynı Rapsodo ilanı bu yüzden tek
+    # koşuda iki kez "yeni aday" sayıldı.
+    ("workable", re.compile(
+        r"(?:jobs|apply)\.workable\.com/(?:view/([A-Za-z0-9]{8,})"
+        r"|j/([A-Za-z0-9]{6,})"
+        r"|([^/?#]+)/j/([A-Za-z0-9]+))", re.I)),
     ("smartrecruiters", re.compile(r"smartrecruiters\.com/([^/?#]+)/(\d+)", re.I)),
 )
 

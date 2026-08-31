@@ -241,6 +241,13 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             platform_huni[platform]["valid"] += 1
 
+            # Kayıtlı kiracıyı saatlik tarayıcı zaten okuyor — keşif değil.
+            if not yeni_kiraci_mi(platform, kiraci, kayitli):
+                aday.durum, aday.neden = "duplicate", "kiracı zaten kayıtlı kaynak"
+                platform_huni[platform]["kayitli_kiraci"] += 1
+                adaylar.append(aday)
+                continue
+
             # DUPLICATE: ÖNCE KİMLİK, SONRA ADRES
             #
             # Birincil anahtar (platform, ATS ilan kimliği). Adres
