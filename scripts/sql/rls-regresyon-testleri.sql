@@ -137,6 +137,15 @@ insert into public.listings (id, company_id, title, status, origin, application_
 values ('22222222-aaaa-4000-8000-000000000002'::uuid, '11111111-aaaa-4000-8000-000000000001'::uuid,
         'A Taslak Stajyeri', 'draft', 'employer_posted', 'internal');
 
+-- B ŞİRKETİNİN İLANI
+--
+-- CV kopyalarının şirketler arasında sızmadığını ölçmek için gerekiyor:
+-- aynı öğrenci hem A'ya hem B'ye başvuruyor ve her başvurunun kendi
+-- kopyası var. A, B'ye giden kopyayı görememeli.
+insert into public.listings (id, company_id, title, status, origin, application_method)
+values ('22222222-bbbb-4000-8000-000000000003'::uuid, '11111111-bbbb-4000-8000-000000000002'::uuid,
+        'B Stajyeri', 'published', 'employer_posted', 'internal');
+
 -- DOĞRULANMAMIŞ ŞİRKET D
 --
 -- CV testleri için gerekiyor: doğrulanmış şirket kendi başvuranının
@@ -741,28 +750,48 @@ select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
      values ('cvs', '00000000-0000-4000-8000-00000000000c/basvurular/snap-b.pdf')$q$),
   'C, ikinci basvuru icin yeni kopya cikarabilir');
 
-select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
-  $q$update public.applications
-        set cv_snapshot_path = '00000000-0000-4000-8000-00000000000c/basvurular/snap-b.pdf'
-      where id = '33333333-dddd-4000-8000-000000000004'$q$),
-  'C, kendi ikinci basvurusuna yeni kopyayi baglayabilir');
-
 -- ---------------------------------------------- YOL ENJEKSİYONU KAPALI
 --
 -- Şirketin okuma yetkisi başvuru satırındaki yoldan türüyor. Yol serbest
 -- olsaydı öğrenci, BAŞKA bir öğrencinin dosyasını kendi başvurusuna
 -- yazıp şirkete okutabilirdi. applications_guard_cv_path bunu kapatıyor.
+--
+-- DENEME, MEŞRU EKLEMENİN HEMEN ÖNÜNDE: aynı (ilan, öğrenci) çiftiyle
+-- hemen ardından geçerli bir yolla ekleme YAPILABİLİYOR. Böylece
+-- engellemenin tekillik kısıtından değil, tetikleyiciden geldiği
+-- görülüyor — yoksa test yanlış sebeple yeşil olurdu.
 
 select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
-  $q$update public.applications
-        set cv_snapshot_path = '00000000-0000-4000-8000-00000000000e/profil/baskasi.pdf'
-      where id = '33333333-aaaa-4000-8000-000000000001'$q$),
+  $q$insert into public.applications
+       (listing_id, student_id, match_score, application_method,
+        email_delivery_status, created_via, contact_share_consent_at, cv_snapshot_path)
+     values ('22222222-bbbb-4000-8000-000000000003',
+             '00000000-0000-4000-8000-00000000000c',
+             55, 'internal', 'not_required', 'web', now(),
+             '00000000-0000-4000-8000-00000000000e/profil/baskasi.pdf')$q$),
   'C, baskasinin dosya yolunu kendi basvurusuna yazamaz');
 
 select pg_temp.bekle(
   (select cv_snapshot_path = '00000000-0000-4000-8000-00000000000c/basvurular/snap-a.pdf'
      from public.applications where id = '33333333-aaaa-4000-8000-000000000001'::uuid),
-  'Enjeksiyon denemesinden sonra kopya yolu degismedi');
+  'Enjeksiyon denemesinden sonra ilk kopyanin yolu degismedi');
+
+-- GERÇEK AKIŞ: KOPYA BAŞVURUYLA BİRLİKTE YAZILIYOR
+--
+-- Uygulama var olan bir başvuruyu güncellemiyor; kopyayı çıkarıp yolu
+-- INSERT ile yazıyor (lib/queries · createApplication). Test önce UPDATE
+-- deniyordu ve düştü: şemada öğrencinin kendi başvurusunda
+-- değiştirebildiği tek şey `withdrawn`. Yani kısıt doğru, test yanlış
+-- katmandaydı.
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$insert into public.applications
+       (listing_id, student_id, match_score, application_method,
+        email_delivery_status, created_via, contact_share_consent_at, cv_snapshot_path)
+     values ('22222222-bbbb-4000-8000-000000000003',
+             '00000000-0000-4000-8000-00000000000c',
+             55, 'internal', 'not_required', 'web', now(),
+             '00000000-0000-4000-8000-00000000000c/basvurular/snap-b.pdf')$q$),
+  'C, ikinci sirkete yaptigi basvuruya yeni kopyayi baglayabilir');
 
 -- PROFİL CV SİLİNSE BİLE KOPYALAR DURUYOR
 select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
