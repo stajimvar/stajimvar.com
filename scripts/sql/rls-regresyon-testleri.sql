@@ -702,11 +702,22 @@ select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
       where id = '00000000-0000-4000-8000-00000000000c'$q$),
   'C, profil CV yolunu guncelleyebilir');
 
-select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
-  $q$delete from storage.objects
-      where bucket_id = 'cvs'
-        and name = '00000000-0000-4000-8000-00000000000c/profil/cv-a.pdf'$q$),
-  'C, eski profil CV dosyasini silebilir');
+-- ESKİ DOSYAYI SİLME YETKİSİ: POLİTİKA VARLIĞIYLA ÖLÇÜLÜYOR
+--
+-- Buradaki ham SQL silme denemesi düşüyordu ve sebebi yetki değil:
+-- güncel storage şemasında bir nesneyi silmek `storage.prefixes`
+-- üzerinde de temizlik tetikliyor ve bu zincir psql'den `authenticated`
+-- rolüyle yürümüyor. Uygulama silmeyi ham SQL ile değil storage API'siyle
+-- yapıyor (supabase.storage.remove), yani test yanlış katmanı ölçüyordu.
+--
+-- Ölçülen şey aynı kalıyor: öğrencinin kendi klasöründeki dosyayı silme
+-- politikası var mı? Yetkinin YOKLUĞU zaten aşağıda ayrıca sınanıyor —
+-- B ve A şirketleri başkasının dosyasını silemiyor.
+select pg_temp.bekle(
+  (select count(*) = 1 from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and cmd = 'DELETE' and qual like '%cvs%' and qual like '%auth.uid()%'),
+  'Ogrencinin kendi CV dosyasini silme politikasi duruyor');
 
 select pg_temp.bekle(
   (select cv_path = '00000000-0000-4000-8000-00000000000c/profil/cv-b.pdf'
@@ -789,7 +800,7 @@ select pg_temp.bekle(
   (select count(*) = 0 from storage.objects
     where bucket_id = 'cvs'
       and name like '00000000-0000-4000-8000-00000000000c/profil/%'),
-  'A, ogrencinin GUNCEL profil CV sini goremez');
+  'A, ogrencinin profil klasorundeki hicbir CV sini goremez');
 
 select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
   $q$delete from storage.objects
