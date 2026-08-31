@@ -76,13 +76,23 @@ jobs:
             echo "::warning::arama katmanı: anahtar yok — katman kapalı çalışacak"
           fi
 
+      # GİRDİ KABUK SATIRINA GÖMÜLMÜYOR
+      #
+      # `${{ inputs... }}` doğrudan `run:` içine yazılırsa girdideki
+      # tırnak komutu bölüyor (ilk denemede tam bu oldu) ve daha
+      # kötüsü kabuk enjeksiyonuna açık kalıyor. Değer ortam
+      # değişkeninden geçiyor.
       - name: Tek kontrollü arama denemesi
         if: ${{ inputs.test_sorgusu != '' }}
-        run: python -m automation.radar_kosu --test-sorgusu "${{ inputs.test_sorgusu }}"
+        env:
+          TEST_SORGUSU: ${{ inputs.test_sorgusu }}
+        run: python -m automation.radar_kosu --test-sorgusu "$TEST_SORGUSU"
 
       - name: Gölge koşusu
         if: ${{ inputs.test_sorgusu == '' }}
-        run: python -m automation.radar_kosu --sayfa "${{ inputs.sayfa_sayisi || '2' }}"
+        env:
+          SAYFA: ${{ inputs.sayfa_sayisi || '2' }}
+        run: python -m automation.radar_kosu --sayfa "$SAYFA"
 
       - name: Raporu sakla
         if: always()
