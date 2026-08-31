@@ -52,8 +52,28 @@ export function basvuruKopyasi(ogrenci) {
       .filter(Boolean)
       .slice(0, 5),
 
+    /*
+      DİL ADI ALANI `language`, `name` DEĞİL
+
+      Üretimde ölçüldü (31 Ağustos 2026): iki başvurunun kopyasında
+      diller alanı ["undefined (B1)", "undefined (A2)"] yazıyordu.
+      Sebep basit — `StudentLanguage` tipinde alanın adı `language`,
+      burada `d.name` okunuyordu ve `undefined` şablonun içinde metne
+      dönüşüyordu. `.filter(Boolean)` bunu yakalayamıyor çünkü
+      "undefined (B1)" boş olmayan geçerli bir dize.
+
+      Ad yoksa kayıt ATLANIYOR: seviyesi bilinen ama hangi dil olduğu
+      bilinmeyen bir satır şirkete hiçbir şey söylemiyor. Kullanıcıya
+      dönük hiçbir dizede "undefined", "null" ya da "[object Object]"
+      üretilmiyor — bunu tests/basvuru-kopyasi.test.mjs bağlıyor.
+    */
     diller: dizi(ogrenci.languages)
-      .map((d) => (d?.level ? `${d.name} (${d.level})` : metin(d?.name)))
+      .map((d) => {
+        const ad = metin(d?.language) ?? metin(d?.name);
+        if (!ad) return null;
+        const seviye = metin(d?.level);
+        return seviye ? `${ad} (${seviye})` : ad;
+      })
       .filter(Boolean),
 
     rozetler: dizi(ogrenci.earnedBadges).filter(Boolean),

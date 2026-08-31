@@ -67,33 +67,6 @@ export const AdayCekmecesi: React.FC<{
   */
   gomulu?: boolean;
 }> = ({ kart, kaydediliyor, onKapat, onDurum, onNot, gomulu }) => {
-  const [ikinciAcik, setIkinciAcik] = React.useState(false);
-  const [not, setNot] = React.useState('');
-  const govde = React.useRef<HTMLDivElement | null>(null);
-
-  /* Çekmece değiştiğinde ikinci sıra ve not sıfırlanıyor. */
-  React.useEffect(() => {
-    setIkinciAcik(false);
-    setNot('');
-  }, [kart?.id]);
-
-  React.useEffect(() => {
-    if (!kart) return undefined;
-    const tus = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        onKapat();
-      }
-    };
-    document.addEventListener('keydown', tus);
-    govde.current?.focus();
-    return () => document.removeEventListener('keydown', tus);
-  }, [kart, onKapat]);
-
-  if (!kart) return null;
-
-  const kimlik = kimlikSatiri(kart);
-
   /*
     İmzalı adres tıklama anında üretiliyor, kart çizilirken değil: adresin
     ömrü on dakika ve önceden üretilseydi açılmadan ölürdü. Ayrıca
@@ -115,6 +88,72 @@ export const AdayCekmecesi: React.FC<{
       setCvAciliyor(false);
     }
   };
+
+  const [ikinciAcik, setIkinciAcik] = React.useState(false);
+  const [not, setNot] = React.useState('');
+  const govde = React.useRef<HTMLDivElement | null>(null);
+
+  /* Çekmece değiştiğinde ikinci sıra, not ve CV hatası sıfırlanıyor. */
+  React.useEffect(() => {
+    setIkinciAcik(false);
+    setNot('');
+    /* İkinci adaya geçince önceki adayın CV hatası ekranda kalmasın. */
+    setCvHatasi(null);
+    setCvAciliyor(false);
+  }, [kart?.id]);
+
+  React.useEffect(() => {
+    if (!kart) return undefined;
+    const tus = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onKapat();
+      }
+    };
+    document.addEventListener('keydown', tus);
+    govde.current?.focus();
+    return () => document.removeEventListener('keydown', tus);
+  }, [kart, onKapat]);
+
+  /*
+    ERKEN ÇIKIŞ — BÜTÜN HOOK'LARDAN SONRA
+
+    P0: Bu satırın ALTINDA iki `useState` duruyordu (CV düğmesinin
+    açılıyor/hata durumu). Çekmece kapalıyken bileşen 5 hook ile,
+    "İncele"ye basılınca 7 hook ile render oluyordu. React bunu
+    "Rendered more hooks than during the previous render." diye
+    yükseltiyor ve hata render sırasında atıldığı için TÜM AĞAÇ
+    sökülüyordu — işveren paneli komple beyaz ekrana düşüyordu.
+
+    Liste ekranı çalışmaya devam ettiği için hata yalnızca aday
+    ayrıntısını açarken görünüyordu.
+
+    Kural: bu satırdan sonra hiçbir hook çağrılamaz.
+  */
+  if (!kart) return null;
+
+  const kimlik = kimlikSatiri(kart);
+
+  /*
+    LİSTELER DİZE OLMAYAN ÖĞEYE DAYANIKLI
+
+    `profile_snapshot` istemcide üretilip veritabanına yazılıyor; şeması
+    zorlanmıyor. Bir gün diller ya da yetenekler nesne dizisi olarak
+    gelirse `join(', ')` ekrana "[object Object]" yazardı ve `.map`
+    içindeki bir alan erişimi ayrıntıyı komple düşürebilirdi.
+
+    Dize olmayan ve boş öğeler atılıyor. Liste tamamen boşalırsa o bölüm
+    hiç çizilmiyor — eksik bir alan yüzünden ayrıntı açılmamazlık
+    etmiyor.
+  */
+  const dizeListesi = (deger: unknown): string[] =>
+    Array.isArray(deger)
+      ? deger.filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
+      : [];
+
+  const yetenekler = dizeListesi(kart.yetenekler);
+  const diller = dizeListesi(kart.diller);
+  const projeler = Array.isArray(kart.projeler) ? kart.projeler : [];
 
   const panel = (
     <div
@@ -194,11 +233,11 @@ export const AdayCekmecesi: React.FC<{
             </section>
           )}
 
-          {kart.yetenekler?.length > 0 && (
+          {yetenekler.length > 0 && (
             <section>
               <Baslik>Yetenekler</Baslik>
               <div className="flex flex-wrap gap-1.5">
-                {kart.yetenekler.map((y: string) => (
+                {yetenekler.map((y: string) => (
                   <span
                     key={y}
                     className="rounded-lg px-2 py-1 text-[11px] font-bold"
@@ -211,20 +250,20 @@ export const AdayCekmecesi: React.FC<{
             </section>
           )}
 
-          {kart.diller?.length > 0 && (
+          {diller.length > 0 && (
             <section>
               <Baslik>Diller</Baslik>
               <p className="text-sm" style={{ color: SIRKET_METIN }}>
-                {kart.diller.join(', ')}
+                {diller.join(', ')}
               </p>
             </section>
           )}
 
-          {kart.projeler?.length > 0 && (
+          {projeler.length > 0 && (
             <section>
               <Baslik>Projeler</Baslik>
               <ul className="space-y-2">
-                {kart.projeler.map((p: any, i: number) => (
+                {projeler.map((p: any, i: number) => (
                   <li
                     key={p?.baslik ?? i}
                     className="rounded-2xl border p-3"

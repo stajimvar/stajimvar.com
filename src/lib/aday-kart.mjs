@@ -74,6 +74,31 @@ export function kimlikSatiri(kart) {
  * @param {object} satir applications satırı (+ listings başlığı)
  * @param {{yetenekler?: {name:string, level?:string}[]}} ek canlı tablolardan gelenler
  */
+/**
+ * Bir diziden YALNIZCA dolu dizeleri alır.
+ *
+ * `profile_snapshot` istemcide üretilip veritabanına yazılıyor ve şeması
+ * zorlanmıyor; içindeki dizilerin dize taşıdığı garanti değil. Ölçüldü:
+ * dizi içinde bir nesne olduğunda React "Objects are not valid as a
+ * React child" atıyor ve aday KARTI çizilirken — daha tıklamadan —
+ * bütün ağaç sökülüyordu.
+ *
+ * Temizlik burada, tek yerde: kart, çekmece ve sonradan eklenecek her
+ * tüketici aynı güvenli listeyi alıyor.
+ */
+/*
+  Adı okunamamış dil satırı: "undefined (B1)", "null (A2)". Desen burada
+  tanımlı çünkü satır içinde yazıldığında bir kez kaçış hatasıyla
+  backspace karakterine dönüştü ve sessizce hiçbir şeyi elemedi.
+*/
+const BOZUK_DIL = /^\s*(undefined|null)\s*(\(|$)/i;
+
+function dizeListesi(deger) {
+  return Array.isArray(deger)
+    ? deger.filter((x) => typeof x === 'string' && x.trim().length > 0)
+    : [];
+}
+
 export function kartVerisi(satir, ek = {}) {
   const anlik = satir?.profile_snapshot ?? null;
   const paylasildi = Boolean(satir?.contact_share_consent_at) && anlik !== null;
@@ -83,9 +108,9 @@ export function kartVerisi(satir, ek = {}) {
     Kopya varsa o kazanıyor: şirketin gördüğü şey, başvurunun yapıldığı
     andaki hâli olmalı.
   */
-  const anlikYetenek = Array.isArray(anlik?.yetenekler) ? anlik.yetenekler : null;
-  const canliYetenek = (ek.yetenekler ?? []).map((y) => y?.name).filter(Boolean);
-  const yetenekler = (anlikYetenek ?? canliYetenek).filter(Boolean).slice(0, 5);
+  const anlikYetenek = Array.isArray(anlik?.yetenekler) ? dizeListesi(anlik.yetenekler) : null;
+  const canliYetenek = dizeListesi((ek.yetenekler ?? []).map((y) => y?.name));
+  const yetenekler = (anlikYetenek ?? canliYetenek).slice(0, 5);
 
   return {
     id: String(satir?.id ?? ''),
@@ -106,9 +131,30 @@ export function kartVerisi(satir, ek = {}) {
     sehir: paylasildi ? (anlik.sehir ?? null) : null,
     github: paylasildi ? (anlik.github ?? null) : null,
     portfolyo: paylasildi ? (anlik.portfolyo ?? null) : null,
-    diller: paylasildi && Array.isArray(anlik.diller) ? anlik.diller : [],
-    rozetler: paylasildi && Array.isArray(anlik.rozetler) ? anlik.rozetler : [],
-    projeler: paylasildi && Array.isArray(anlik.projeler) ? anlik.projeler : [],
+    /*
+      ESKİ KOPYALARDAKİ "undefined (B1)" GÖSTERİLMİYOR
+
+      Kopya üreticisi dil adını yanlış alandan okuyordu (`name`, oysa
+      doğrusu `language`) ve şablon `undefined` değerini metne
+      çeviriyordu. Hata kaynağında düzeltildi ama ÜRETİMDE o hatayla
+      yazılmış başvurular duruyor ve onları toplu olarak yeniden yazmak
+      doğru değil — kopya, başvuru anının kaydı.
+
+      Okuma tarafında bu tek bilinen bozuk biçim eleniyor: adı
+      bilinmeyen bir dil satırı şirkete hiçbir şey söylemiyor, "undefined
+      (B1)" ise yanlış bir şey söylüyor. Liste tamamen boşalırsa Diller
+      bölümü hiç çizilmiyor.
+    */
+    diller: paylasildi
+      ? dizeListesi(anlik.diller).filter((d) => !BOZUK_DIL.test(d))
+      : [],
+    rozetler: paylasildi ? dizeListesi(anlik.rozetler) : [],
+    /* Yalnızca nesne olan ve başlığı bulunan projeler: başlıksız kart boş kutu olurdu. */
+    projeler: paylasildi && Array.isArray(anlik.projeler)
+      ? anlik.projeler.filter(
+          (p) => p && typeof p === 'object' && typeof p.baslik === 'string' && p.baslik.trim(),
+        )
+      : [],
     yetenekler,
 
     onYazi: satir?.cover_letter ?? null,

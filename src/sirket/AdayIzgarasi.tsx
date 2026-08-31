@@ -17,6 +17,7 @@ import {
 } from './renk';
 import { onyargisizla } from '../lib/aday-kart.mjs';
 import { DURUM_SIRASI, durumAdi } from './basvuru-durumu';
+import { AdayHataSiniri } from './HataSiniri';
 
 /**
  * Başvuran ızgarası.
@@ -331,21 +332,30 @@ export const AdayIzgarasi: React.FC<{
         </ul>
       )}
 
-      {/* Ayrıntı: dar ekranda tam ekran, geniş ekranda sağdan çekmece. */}
-      <AdayCekmecesi
-        kart={acik}
-        kaydediliyor={kaydediliyor}
-        onKapat={() => setAcikId(null)}
-        onDurum={(d) => {
-          if (!acik) return;
-          void durumUygula(acik.id, d).then(() => setAcikId(null));
-        }}
-        onNot={(metin) => {
-          if (!acik) return;
-          setKaydediliyor(true);
-          void onNot(acik.id, metin).finally(() => setKaydediliyor(false));
-        }}
-      />
+      {/*
+        Ayrıntı: dar ekranda tam ekran, geniş ekranda sağdan çekmece.
+
+        Hata sınırıyla sarılı: bir adayın beklenmedik bir alanı ayrıntıyı
+        çizerken hata verirse kaybedilecek şey o kart olsun, panelin
+        tamamı değil. Sınır kök nedeni gizlemek için değil — asıl hata
+        (erken çıkıştan sonra çağrılan hook) düzeltildi.
+      */}
+      <AdayHataSiniri onKapat={() => setAcikId(null)}>
+        <AdayCekmecesi
+          kart={acik}
+          kaydediliyor={kaydediliyor}
+          onKapat={() => setAcikId(null)}
+          onDurum={(d) => {
+            if (!acik) return;
+            void durumUygula(acik.id, d).then(() => setAcikId(null));
+          }}
+          onNot={(metin) => {
+            if (!acik) return;
+            setKaydediliyor(true);
+            void onNot(acik.id, metin).finally(() => setKaydediliyor(false));
+          }}
+        />
+      </AdayHataSiniri>
 
       <p className="text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
         Reddedilen başvurular listeden silinmiyor; kararın kaydı adayın başvuru sayfasında da

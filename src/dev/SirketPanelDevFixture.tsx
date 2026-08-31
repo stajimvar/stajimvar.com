@@ -86,6 +86,84 @@ const ORNEK_BASVURULAR = [
     contact_share_consent_at: null,
     profile_snapshot: null,
   },
+  {
+    /*
+      ÜRETİMDEKİ GERÇEK BİÇİM (anonimleştirildi)
+
+      Fikstürde yalnız "ideal aday" vardı ve aday ayrıntısını beyaz
+      ekrana düşüren hata bu yüzden burada hiç görünmedi. Bu kayıt
+      üretimdeki yeni başvurunun biçimini taşıyor:
+
+        cv_snapshot_path DOLU, cv_path NULL
+        match_score 0
+        github / linkedin / portfolyo null
+        rozetler []
+        projeler[0].adres dolu
+        diller BOZUK — "undefined (B1)" (kopya hatası düzeltilmeden
+        önce yazılmış kayıtlar üretimde duruyor ve ayrıntı yine de
+        açılabilmeli)
+    */
+    id: 'test-4',
+    status: 'submitted',
+    applied_at: '2026-08-31T08:00:00Z',
+    match_score: 0,
+    listing_id: 'ilan-2',
+    ilanBasligi: 'IT Stajyeri',
+    application_method: 'internal',
+    contact_share_consent_at: '2026-08-31T08:00:00Z',
+    cv_path: null,
+    cv_snapshot_path: '00000000-0000-4000-8000-00000000000c/basvurular/ornek.pdf',
+    profile_snapshot: {
+      ad: 'Aday D',
+      eposta: 'aday-d@ornek.test',
+      universite: 'Örnek Güzel Sanatlar Üniversitesi',
+      bolum: 'Giyim Üretim Teknolojisi',
+      sinif: '2. Sınıf',
+      sehir: 'İstanbul',
+      github: null,
+      linkedin: null,
+      portfolyo: null,
+      fotoUrl: null,
+      yetenekler: ['Canva', 'HTML / CSS', 'JavaScript'],
+      diller: ['undefined (B1)', 'undefined (A2)'],
+      rozetler: [],
+      projeler: [
+        {
+          baslik: 'Örnek proje',
+          aciklama: 'Kısa açıklama.',
+          adres: 'https://ornek.test/',
+        },
+      ],
+    },
+  },
+  {
+    /*
+      DAHA DA BOZUK: dizi beklenen alanlar nesne/sayı taşıyor, proje
+      adresi null, ad yok. Ayrıntı yine AÇILABİLMELİ — ikincil alanlar
+      düşse de ana bilgiler görünmeli.
+    */
+    id: 'test-5',
+    status: 'interview_scheduled',
+    applied_at: '2026-08-29T08:00:00Z',
+    match_score: null,
+    listing_id: 'ilan-2',
+    ilanBasligi: 'IT Stajyeri',
+    application_method: 'internal',
+    contact_share_consent_at: '2026-08-29T08:00:00Z',
+    cv_path: null,
+    cv_snapshot_path: null,
+    profile_snapshot: {
+      ad: 'Aday E',
+      universite: 'Örnek Üniversitesi',
+      bolum: null,
+      sinif: null,
+      sehir: null,
+      yetenekler: [{ ad: 'nesne' }, 42, null, 'Figma'],
+      diller: [{ dil: 'İngilizce' }, null],
+      rozetler: null,
+      projeler: [{ baslik: null, aciklama: null, adres: null }],
+    },
+  },
 ];
 
 /** Fikstür boyunca aynı şirket bağlamı — üç ekranda tekrar yazılmasın. */
