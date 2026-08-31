@@ -29,6 +29,7 @@ import {
 } from './renk';
 import { IlanFormu } from './IlanFormu';
 import { AdayIzgarasi } from './AdayIzgarasi';
+import type { Iletisim } from './AdayCekmecesi';
 import { SirketProfilFormu } from './SirketProfilFormu';
 import { GenelBakis } from './GenelBakis';
 import { ilanEylemleri } from '../lib/ilan-formu.mjs';
@@ -38,6 +39,8 @@ import {
   adayYetenekleri,
   basvuruDurumuDegistir,
   mulakatTarihiYaz,
+  teklifGonder,
+  basvuruIletisimi,
   basvuruNotuKaydet,
   ilanDurumuDegistir,
   ilanGuncelle,
@@ -289,6 +292,15 @@ export const SirketPaneli: React.FC<{
             await mulakatTarihiYaz(id, tarih);
             await yukle();
           }}
+          /*
+            Teklif durumla BİRLİKTE yazılıyor: iki ayrı yazımda arada
+            kalan an, öğrenciye içi boş bir "Teklif aldın" gösterirdi.
+          */
+          onTeklif={async (id, teklif) => {
+            await teklifGonder(id, teklif);
+            await yukle();
+          }}
+          onIletisim={(id) => basvuruIletisimi(id)}
           onNot={async (id, metin) => {
             await basvuruNotuKaydet(id, metin);
             await yukle();
@@ -655,8 +667,20 @@ const Basvuranlar: React.FC<{
   onNavigate: (y: string) => void;
   onDurum: (id: string, d: string) => Promise<void>;
   onMulakatTarihi: (id: string, tarih: string) => Promise<void>;
+  onTeklif: (id: string, teklif: { not: string; baslangic: string }) => Promise<void>;
+  onIletisim: (id: string) => Promise<Iletisim | null>;
   onNot: (id: string, metin: string) => Promise<void>;
-}> = ({ baglam, kartlar, ilanlar, onNavigate, onDurum, onMulakatTarihi, onNot }) => {
+}> = ({
+  baglam,
+  kartlar,
+  ilanlar,
+  onNavigate,
+  onDurum,
+  onMulakatTarihi,
+  onTeklif,
+  onIletisim,
+  onNot,
+}) => {
   if (!adayGorebilir(baglam.kademe)) {
     return (
       <div className={KUTU} style={kutuStil}>
@@ -702,6 +726,8 @@ const Basvuranlar: React.FC<{
         onNavigate={onNavigate}
         onDurum={onDurum}
         onMulakatTarihi={onMulakatTarihi}
+        onTeklif={onTeklif}
+        onIletisim={onIletisim}
         onNot={onNot}
       />
     </div>

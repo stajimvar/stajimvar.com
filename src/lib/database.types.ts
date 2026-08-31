@@ -72,6 +72,8 @@ export type Database = {
           interview_date: string | null;
           listing_id: string;
           match_score: number | null;
+          offer_note: string | null;
+          offer_start_date: string | null;
           profile_snapshot: Json | null;
           status: Database['public']['Enums']['application_status'];
           status_changed_at: string | null;
@@ -100,6 +102,8 @@ export type Database = {
           interview_date?: string | null;
           listing_id: string;
           match_score?: number | null;
+          offer_note?: string | null;
+          offer_start_date?: string | null;
           status?: Database['public']['Enums']['application_status'];
           student_id: string;
           updated_at?: string;
@@ -125,6 +129,8 @@ export type Database = {
           interview_date?: string | null;
           listing_id?: string;
           match_score?: number | null;
+          offer_note?: string | null;
+          offer_start_date?: string | null;
           status?: Database['public']['Enums']['application_status'];
           student_id?: string;
           updated_at?: string;
@@ -1240,6 +1246,22 @@ export type Database = {
       };
       approve_company_claim: { Args: { claim_id: string }; Returns: undefined };
       reject_company_claim: { Args: { claim_id: string; reason: string }; Returns: undefined };
+      /* Teklife yanıt — kabul/ret yalnızca bu kapıdan geçiyor. */
+      teklife_yanit_ver: {
+        Args: { p_basvuru: string; p_kabul: boolean };
+        Returns: Database['public']['Enums']['application_status'];
+      };
+      /* Kabul edilmiş teklifte karşı tarafın iletişim satırı. */
+      basvuru_iletisimi: {
+        Args: { p_basvuru: string };
+        Returns: {
+          taraf: string;
+          ad: string | null;
+          eposta: string | null;
+          telefon: string | null;
+          unvan: string | null;
+        }[];
+      };
     };
     Enums: {
       application_method: 'email_application' | 'external' | 'internal';
@@ -1283,6 +1305,8 @@ export type Database = {
         | 'technical_assessment'
         | 'interview_scheduled'
         | 'offer_extended'
+        | 'offer_accepted'
+        | 'offer_declined'
         | 'rejected'
         | 'withdrawn';
       company_plan: 'Free' | 'Startup' | 'Corporate' | 'Enterprise';

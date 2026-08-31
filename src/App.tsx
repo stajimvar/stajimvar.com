@@ -5,6 +5,8 @@ import {
   fetchStudentApplications,
   createApplication,
   withdrawApplication,
+  respondToOffer,
+  fetchApplicationContact,
   saveStudentProfile,
   fetchIsAdmin,
   fetchQuizzes,
@@ -1698,6 +1700,28 @@ export default function App() {
                       );
                       showToast('Başvurun geri çekildi.');
                     }}
+                    /*
+                      Kararı SUNUCU veriyor: dönen durum yazılıyor, ekranın
+                      tahmini değil. Aynı teklife iki kez yanıt verilirse
+                      işlev mevcut sonucu döndürüyor, hata değil.
+                    */
+                    onRespondToOffer={async (id, kabul) => {
+                      const durum = await respondToOffer(id, kabul);
+                      setApplications((prev) =>
+                        prev.map((a) =>
+                          a.id === id
+                            ? { ...a, status: durum, statusChangedAt: new Date().toISOString() }
+                            : a,
+                        ),
+                      );
+                      showToast(
+                        durum === 'offer_accepted'
+                          ? 'Teklifi kabul ettin. İletişim bilgileri açıldı.'
+                          : 'Teklifi reddettin.',
+                      );
+                      return durum;
+                    }}
+                    onFetchContact={(id) => fetchApplicationContact(id)}
                   />
                 }
                 quizzes={quizzes}

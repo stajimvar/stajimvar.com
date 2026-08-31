@@ -425,6 +425,8 @@ export function toApplicationRecord(row: Tables<'applications'>): ApplicationRec
     matchScore: row.match_score ?? 0,
     coverLetter: row.cover_letter ?? undefined,
     interviewDate: row.interview_date ?? undefined,
+    offerNote: row.offer_note ?? undefined,
+    offerStartDate: row.offer_start_date ?? undefined,
     companyFeedback: row.company_feedback ?? undefined,
   };
 }

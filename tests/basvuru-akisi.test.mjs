@@ -108,24 +108,40 @@ test('mapper status_changed_at taşıyor', () => {
 /* -------------------------------------------------- 4. geri çekme kuralı */
 
 test('öğrenci geri çekmeyi yalnızca açık başvuruda görüyor', () => {
-  assert.match(ogrenci, /durumKapandi\(app\.status\)/, 'kapanmış başvuruda da geri çekme görünüyor');
+  /*
+    Teklif beklerken de gösterilmiyor: o aşamada karar "kabul et" ya da
+    "reddet". Aynı kararı iki ayrı kelimeyle sormak, öğrencinin verdiği
+    yanıtı belirsizleştirirdi.
+  */
+  assert.match(
+    ogrenci,
+    /ogrenciGeriCekebilir\(app\.status\)/,
+    'kapanmış ya da teklif bekleyen başvuruda da geri çekme görünüyor',
+  );
 });
 
 test('geri çekme onay istiyor', () => {
   assert.match(ogrenci, /geriCekilen/, 'tek tıkla geri çekiliyor');
 });
 
-test('şirket tarafında geri çekme EYLEMİ yok', () => {
+test('şirket ADAYIN kararlarını yazamıyor', () => {
   /*
-    Değer ekranda görünebiliyor: aday kendi geri çektiyse seçicide
-    o durum yazmalı, yoksa `select` ilk seçeneği gösterip yanlış bilgi
-    verirdi. Yasak olan onu YAZMAK.
+    Değerler ekranda görünebiliyor: aday geri çektiyse ya da teklife
+    yanıt verdiyse seçicide o durum yazmalı, yoksa `select` ilk seçeneği
+    gösterip yanlış bilgi verirdi. Yasak olan onları YAZMAK.
   */
-  assert.ok(
-    !/(durumDegistir|onDurum)\(\s*'withdrawn'/.test(cekmece),
-    'şirket aday adına geri çekebiliyor',
+  for (const d of ['withdrawn', 'offer_accepted', 'offer_declined']) {
+    assert.ok(
+      !new RegExp(`(durumDegistir|onDurum)\\(\\s*'${d}'`).test(cekmece),
+      `şirket aday adına ${d} yazabiliyor`,
+    );
+  }
+  /* Kilitli seçenek genel: şirketin listesinde olmayan her durum. */
+  assert.match(
+    cekmece,
+    /!SIRKET_DURUMLARI\.includes\(kart\.durum\)/,
+    'adayın kararı seçicide görünmüyor ya da seçilebilir kalmış',
   );
-  assert.match(cekmece, /value="withdrawn" disabled/, 'geri çekilmiş durum seçilebilir kalmış');
 });
 
 /* --------------------------------------- 5. veritabanı kuralı korunuyor */

@@ -1,6 +1,6 @@
 import { Tabs } from '../ui';
 import React, { useState } from 'react';
-import { durumKapandi, ogrenciDurumCumlesi } from '../lib/basvuru-durumu.mjs';
+import { ogrenciDurumCumlesi, ogrenciGeriCekebilir } from '../lib/basvuru-durumu.mjs';
 import {
   FileText,
   Building2,
@@ -34,7 +34,22 @@ interface ApplicationsTrackerViewProps {
     görünmüyor. Söz döndürüyor, hata satır içinde gösteriliyor.
   */
   onWithdraw?: (applicationId: string) => Promise<void> | void;
+  /*
+    TEKLİFE YANIT — kabul ya da ret. Dönen değer SUNUCUNUN gördüğü
+    nihai durum; ekran onu yazıyor, kendi tahminini değil.
+  */
+  onRespondToOffer?: (applicationId: string, kabul: boolean) => Promise<string>;
+  /* Kabul edilmiş teklifte şirket yetkilisinin iletişim satırı. */
+  onFetchContact?: (applicationId: string) => Promise<Iletisim | null>;
 }
+
+/** Karşı tarafın iletişim satırı — sunucunun döndürdüğü biçim. */
+export type Iletisim = {
+  ad: string | null;
+  eposta: string | null;
+  telefon: string | null;
+  unvan: string | null;
+};
 
 /**
  * Tarihi okunur hale getirir.
@@ -56,11 +71,45 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
   onSubTabChange,
   onExploreInternships,
   onWithdraw,
+  onRespondToOffer,
+  onFetchContact,
 }) => {
   /* Geri çekme onayı: yanlışlıkla tek tıkla süreç kapanmasın. */
   const [geriCekilen, setGeriCekilen] = useState<string | null>(null);
   const [islemdeki, setIslemdeki] = useState<string | null>(null);
   const [hata, setHata] = useState<string | null>(null);
+
+  /* Açık teklif ayrıntısı, kabul/ret onayı ve yanıt hatası. */
+  const [teklifAcik, setTeklifAcik] = useState<string | null>(null);
+  const [karar, setKarar] = useState<{ id: string; kabul: boolean } | null>(null);
+  const [teklifHatasi, setTeklifHatasi] = useState<string | null>(null);
+  /* Başvuru kimliği → iletişim satırı. 'yok' okundu ama kapı kapalı demek. */
+  const [iletisimler, setIletisimler] = useState<Record<string, Iletisim | 'yok' | 'hata'>>({});
+
+  /*
+    İLETİŞİM YALNIZCA KABUL EDİLMİŞ TEKLİFTE İSTENİYOR
+
+    Kapı veritabanında (public.basvuru_iletisimi): kabul edilmemiş bir
+    başvuruda satır zaten dönmüyor. Buradaki koşul isteği hiç
+    göndermemek için.
+  */
+  React.useEffect(() => {
+    if (!onFetchContact) return;
+    let iptal = false;
+    for (const app of applications) {
+      if (app.status !== 'offer_accepted' || iletisimler[app.id] !== undefined) continue;
+      void onFetchContact(app.id)
+        .then((satir) => {
+          if (!iptal) setIletisimler((o) => ({ ...o, [app.id]: satir ?? 'yok' }));
+        })
+        .catch(() => {
+          if (!iptal) setIletisimler((o) => ({ ...o, [app.id]: 'hata' }));
+        });
+    }
+    return () => {
+      iptal = true;
+    };
+  }, [applications, onFetchContact, iletisimler]);
 
   const effectiveFilter = subTab || 'all';
 
@@ -88,6 +137,13 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
     technical_assessment: 'bg-amber-50 text-amber-900 border-amber-200',
     interview_scheduled: 'bg-blue-50 text-blue-800 border-blue-200',
     offer_extended: 'bg-emerald-50 text-emerald-800 border-emerald-200 font-bold',
+    /* Sürecin tek gerçek başarısı: dolu yeşil yalnızca kabul edilmiş teklifte. */
+    offer_accepted: 'bg-emerald-600 text-white border-emerald-600 font-bold',
+    /*
+      Öğrencinin kendi reddi nötr: şirketin olumsuz kararıyla (rejected)
+      aynı görünmesi, kararı kimin verdiğini belirsizleştirirdi.
+    */
+    offer_declined: 'bg-gray-100 text-gray-600 border-gray-200',
     rejected: 'bg-gray-100 text-gray-600 border-gray-200',
     withdrawn: 'bg-gray-100 text-gray-600 border-gray-200',
   };
@@ -101,13 +157,24 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
     if (effectiveFilter === 'all') return true;
     if (effectiveFilter === 'under_review') return app.status === 'under_review' || app.status === 'submitted';
     if (effectiveFilter === 'interviews') return app.status === 'interview_scheduled' || app.status === 'technical_assessment';
-    if (effectiveFilter === 'offers') return app.status === 'offer_extended';
+    /*
+      Teklif süzgeci yanıtlanmış teklifleri de kapsıyor: öğrenci kabul
+      ettiği teklifi bu sekmede arıyor. Yalnız bekleyenleri göstermek,
+      kabul edilen teklifi ve iletişim bilgilerini gizlerdi.
+    */
+    if (effectiveFilter === 'offers')
+      return (
+        app.status === 'offer_extended' ||
+        app.status === 'offer_accepted' ||
+        app.status === 'offer_declined'
+      );
     return true;
   });
 
   const interviewCount = applications.filter(
     (a) => a.status === 'interview_scheduled' || a.status === 'technical_assessment'
   ).length;
+  /* Sayaç YANIT BEKLEYEN teklifleri sayıyor: rozetteki sayı bir işi işaret ediyor. */
   const offerCount = applications.filter((a) => a.status === 'offer_extended').length;
 
   return (
@@ -285,6 +352,196 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                   </div>
                 )}
 
+                {/*
+                  TEKLİF — ÖĞRENCİNİN KARAR VERECEĞİ EKRAN
+
+                  Rozet tek başına yetmiyordu: "Teklif aldın" yazıyor ama
+                  öğrenci neyi kabul edeceğini görmüyordu. Ayrıntı kartın
+                  içinde açılıyor; ayrı bir modal, telefonda karar anını
+                  gereksiz yere ağırlaştırırdı.
+
+                  Ücret, çalışma biçimi ve süre İLANDAN okunuyor — şirket
+                  teklif gönderirken bunları tekrar yazmıyor.
+                */}
+                {app.status === 'offer_extended' && (
+                  teklifAcik === app.id ? (
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-3">
+                      <div>
+                        <p className="text-sm font-extrabold text-emerald-900">
+                          {listing?.companyName ?? 'Şirket'} · {listing?.title ?? 'Staj'}
+                        </p>
+                        <p className="text-xs font-bold text-emerald-800">Teklif aldın</p>
+                      </div>
+
+                      <dl className="grid grid-cols-2 gap-2 text-xs">
+                        {app.offerStartDate && (
+                          <div>
+                            <dt className="font-bold text-emerald-900">Başlangıç</dt>
+                            <dd className="text-emerald-800">{tarihMetni(app.offerStartDate)}</dd>
+                          </div>
+                        )}
+                        {listing?.workType && (
+                          <div>
+                            <dt className="font-bold text-emerald-900">Çalışma biçimi</dt>
+                            <dd className="text-emerald-800">{listing.workType}</dd>
+                          </div>
+                        )}
+                        {listing?.duration && (
+                          <div>
+                            <dt className="font-bold text-emerald-900">Süre</dt>
+                            <dd className="text-emerald-800">{listing.duration}</dd>
+                          </div>
+                        )}
+                        {listing?.stipend?.amountText && (
+                          <div>
+                            <dt className="font-bold text-emerald-900">Ücret</dt>
+                            <dd className="text-emerald-800">{listing.stipend.amountText}</dd>
+                          </div>
+                        )}
+                      </dl>
+
+                      {/* Eski tekliflerde not olmayabilir; boşsa bölüm yok. */}
+                      {app.offerNote && (
+                        <p className="whitespace-pre-line text-xs leading-relaxed text-emerald-900">
+                          {app.offerNote}
+                        </p>
+                      )}
+
+                      {/*
+                        RIZA CÜMLESİ KARARIN YANINDA
+
+                        Kabul, iletişim bilgilerinin paylaşılması demek.
+                        Bunu küçük bir dipnot değil, düğmenin hemen
+                        üstünde açık bir cümle söylüyor.
+                      */}
+                      <p className="text-[11px] leading-relaxed text-emerald-800">
+                        Teklifi kabul ettiğinde iletişim bilgilerin bu şirketle paylaşılır.
+                      </p>
+
+                      {karar?.id === app.id ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-xs font-bold text-emerald-900">
+                            {karar.kabul
+                              ? 'Bu teklifi kabul etmek istiyor musun?'
+                              : 'Bu teklifi reddetmek istiyor musun?'}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={islemdeki === app.id}
+                            onClick={() => {
+                              setIslemdeki(app.id);
+                              setTeklifHatasi(null);
+                              void onRespondToOffer?.(app.id, karar.kabul)
+                                .then(() => {
+                                  setKarar(null);
+                                  setTeklifAcik(null);
+                                })
+                                .catch(() => setTeklifHatasi(app.id))
+                                .finally(() => setIslemdeki(null));
+                            }}
+                            className="min-h-11 rounded-full bg-emerald-600 px-4 text-xs font-bold text-white disabled:opacity-60"
+                          >
+                            {islemdeki === app.id ? 'Kaydediliyor…' : karar.kabul ? 'Evet, kabul et' : 'Evet, reddet'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setKarar(null)}
+                            className="min-h-11 rounded-full px-3 text-xs font-bold text-emerald-800"
+                          >
+                            Vazgeç
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setKarar({ id: app.id, kabul: true })}
+                            className="min-h-11 rounded-full bg-emerald-600 px-4 text-xs font-bold text-white"
+                          >
+                            Teklifi kabul et
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setKarar({ id: app.id, kabul: false })}
+                            className="min-h-11 rounded-full border border-emerald-300 px-4 text-xs font-bold text-emerald-900"
+                          >
+                            Reddet
+                          </button>
+                        </div>
+                      )}
+
+                      {teklifHatasi === app.id && (
+                        <p role="alert" className="text-xs font-semibold text-red-700">
+                          Yanıtın kaydedilemedi. Bağlantını kontrol edip tekrar dene.
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setTeklifAcik(app.id)}
+                      className="min-h-11 self-start rounded-full bg-emerald-600 px-4 text-xs font-bold text-white"
+                    >
+                      Teklifi görüntüle
+                    </button>
+                  )
+                )}
+
+                {/*
+                  KABUL SONRASI İLETİŞİM
+
+                  Sohbet yok: şirket yetkilisinin adı, kurumsal e-postası
+                  ve varsa telefonu. Bilgi sunucudan geliyor; `profiles`
+                  tablosunun okuma kuralı genişletilmedi.
+                */}
+                {app.status === 'offer_accepted' && (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+                    <p className="text-xs font-extrabold text-emerald-900">🎉 Teklifi kabul ettin</p>
+                    <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-emerald-800">
+                      İletişim
+                    </p>
+                    {iletisimler[app.id] === 'hata' ? (
+                      <p role="alert" className="mt-1 text-xs font-semibold text-red-700">
+                        İletişim bilgileri şu anda yüklenemedi.
+                      </p>
+                    ) : iletisimler[app.id] === 'yok' ? (
+                      <p className="mt-1 text-xs text-emerald-800">
+                        Şirket yetkilisinin bilgileri henüz görünmüyor.
+                      </p>
+                    ) : iletisimler[app.id] ? (
+                      <>
+                        <p className="mt-1 text-sm font-extrabold text-emerald-900">
+                          {(iletisimler[app.id] as Iletisim).ad ?? listing?.companyName ?? 'Şirket'}
+                        </p>
+                        <p className="text-xs text-emerald-800">
+                          {(iletisimler[app.id] as Iletisim).unvan ?? 'Yetkili'}
+                          {listing?.companyName ? ` · ${listing.companyName}` : ''}
+                        </p>
+                        {(iletisimler[app.id] as Iletisim).eposta && (
+                          <p className="text-xs text-emerald-800">
+                            {(iletisimler[app.id] as Iletisim).eposta}
+                          </p>
+                        )}
+                        {(iletisimler[app.id] as Iletisim).telefon && (
+                          <p className="text-xs text-emerald-800">
+                            {(iletisimler[app.id] as Iletisim).telefon}
+                          </p>
+                        )}
+                        {(iletisimler[app.id] as Iletisim).eposta && (
+                          <a
+                            href={`mailto:${(iletisimler[app.id] as Iletisim).eposta}`}
+                            className="mt-2 inline-flex min-h-11 items-center rounded-full border border-emerald-300 px-4 text-xs font-bold text-emerald-900"
+                          >
+                            E-posta gönder
+                          </a>
+                        )}
+                      </>
+                    ) : (
+                      <p className="mt-1 text-xs text-emerald-800">İletişim bilgileri yükleniyor…</p>
+                    )}
+                  </div>
+                )}
+
                 {app.companyFeedback && (
                   <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                     <p className="text-xs font-bold text-gray-700">Şirketin notu</p>
@@ -300,7 +557,7 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                   Buton gizlemek güvenlik değil: veritabanı politikası da
                   öğrenciye YALNIZCA `withdrawn` değerini veriyor.
                 */}
-                {onWithdraw && !durumKapandi(app.status) && (
+                {onWithdraw && ogrenciGeriCekebilir(app.status) && (
                   geriCekilen === app.id ? (
                     <div className="flex flex-wrap items-center gap-2 pt-1">
                       <span className="text-xs font-bold text-gray-700">

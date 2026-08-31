@@ -164,6 +164,56 @@ const ORNEK_BASVURULAR = [
       projeler: [{ baslik: null, aciklama: null, adres: null }],
     },
   },
+  /*
+    ÖĞRENCİNİN KARAR VERDİĞİ İKİ DURUM
+
+    Şirket bu iki değeri yazamıyor (politika reddediyor), dolayısıyla
+    panelden ilerleyerek bu ekranlara ulaşmak mümkün değil. Fikstür
+    ikisini de başlangıç durumu olarak taşıyor.
+  */
+  {
+    id: 'test-6',
+    status: 'offer_accepted',
+    applied_at: '2026-08-24T08:00:00Z',
+    match_score: 91,
+    listing_id: 'ilan-1',
+    ilanBasligi: 'Yazılım Stajyeri',
+    application_method: 'internal',
+    contact_share_consent_at: '2026-08-24T08:00:00Z',
+    cv_path: null,
+    cv_snapshot_path: null,
+    offer_note: 'Ekibe eylül başında bekliyoruz.',
+    offer_start_date: '2026-10-01',
+    profile_snapshot: {
+      ad: 'Aday F',
+      universite: 'Örnek Üniversitesi',
+      bolum: 'Yazılım Mühendisliği',
+      sinif: '4. Sınıf',
+      sehir: 'İstanbul',
+      yetenekler: ['Go', 'Kubernetes'],
+    },
+  },
+  {
+    id: 'test-7',
+    status: 'offer_declined',
+    applied_at: '2026-08-23T08:00:00Z',
+    match_score: 74,
+    listing_id: 'ilan-1',
+    ilanBasligi: 'Yazılım Stajyeri',
+    application_method: 'internal',
+    contact_share_consent_at: '2026-08-23T08:00:00Z',
+    cv_path: null,
+    cv_snapshot_path: null,
+    offer_note: 'Uzaktan çalışmaya açığız.',
+    profile_snapshot: {
+      ad: 'Aday G',
+      universite: 'Örnek Teknik Üniversitesi',
+      bolum: 'Elektrik-Elektronik',
+      sinif: '3. Sınıf',
+      sehir: 'İzmir',
+      yetenekler: ['C'],
+    },
+  },
 ];
 
 /** Fikstür boyunca aynı şirket bağlamı — üç ekranda tekrar yazılmasın. */
@@ -199,7 +249,12 @@ export const SirketPanelDevFixture: React.FC = () => {
   );
 
   /* Son aday her zaman hata veriyor: satır içi hata mesajı görülebilsin. */
-  const hataliId = ORNEK_BASVURULAR[ORNEK_BASVURULAR.length - 1]?.id;
+  /*
+    Kasten hata veren aday: yazma hatasının satır içinde göründüğü
+    doğrulanabilsin. Sondaki kayıt değil sabit bir kimlik — listeye yeni
+    aday eklendikçe hangi adayın bozuk olduğu kaymasın.
+  */
+  const hataliId = 'test-5';
 
   const satirYaz = (id: string, alanlar: Record<string, unknown>) =>
     new Promise<void>((coz, red) => {
@@ -394,6 +449,40 @@ export const SirketPanelDevFixture: React.FC = () => {
               onNavigate={() => undefined}
               onDurum={(id, d) => satirYaz(id, { status: d })}
               onMulakatTarihi={(id, tarih) => satirYaz(id, { interview_date: tarih || null })}
+              onTeklif={(id, teklif) =>
+                satirYaz(id, {
+                  status: 'offer_extended',
+                  offer_note: teklif.not.trim() || null,
+                  offer_start_date: teklif.baslangic || null,
+                })
+              }
+              /*
+                Gerçek kapı veritabanında; fikstür yalnızca kabul edilmiş
+                başvuruda satır döndürerek aynı davranışı taklit ediyor.
+                Bir adayda kasten hata veriyor: "yüklenemedi" hali de
+                tarayıcıda görülebilsin.
+              */
+              onIletisim={(id) =>
+                new Promise((coz, red) => {
+                  window.setTimeout(() => {
+                    const satir = satirlar.find((x) => x.id === id);
+                    if (id === hataliId) {
+                      red(new Error('Fikstür: iletişim okuma hatası.'));
+                      return;
+                    }
+                    coz(
+                      satir && satir.status === 'offer_accepted'
+                        ? {
+                            ad: 'Aday B',
+                            eposta: 'aday.b@ornek.edu.tr',
+                            telefon: null,
+                            unvan: 'Aday',
+                          }
+                        : null,
+                    );
+                  }, 250);
+                })
+              }
               onNot={async () => undefined}
             />
           </div>

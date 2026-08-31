@@ -67,6 +67,13 @@ test('öğrenci cümlesi enum üyelerinin tamamını kapsıyor', () => {
   }
 });
 
+test('şirket cümlesi enum üyelerinin tamamını kapsıyor', () => {
+  const g = govde(sozluk, 'SIRKET_CUMLESI');
+  for (const uye of enumUyeleri()) {
+    assert.ok(g.includes(`${uye}:`), `${uye} için şirket cümlesi yok`);
+  }
+});
+
 test('renk haritası enum üyelerinin tamamını kapsıyor', () => {
   const g = govde(renkler, 'DURUM_ROZETI');
   for (const uye of enumUyeleri()) {
@@ -135,16 +142,19 @@ test('eski ve yeni adlar aynı anda yaşamıyor', () => {
 
 /* ------------------------------------------------- geçiş kuralları */
 
-test('şirket seçenekleri arasında withdrawn YOK', async () => {
+test('şirket seçenekleri ADAYIN kararlarını içermiyor', async () => {
   /*
-    Geri çekmek adayın kararı; şirket onun adına veremez. Aynı kural
-    veritabanında da duruyor (işveren güncelleme politikasının WITH
-    CHECK ifadesi) — buradaki liste yalnızca arayüzün doğru seçenekleri
-    göstermesi için.
+    Üç değer adayın kararı: başvurusunu geri çekmesi, teklifi kabul
+    etmesi, teklifi reddetmesi. Şirket üçünü de onun adına veremez.
+    Aynı kural veritabanında da duruyor (işveren güncelleme
+    politikasının WITH CHECK ifadesi) — buradaki liste yalnızca arayüzün
+    doğru seçenekleri göstermesi için.
   */
   const m = await import('../src/lib/basvuru-durumu.mjs');
-  assert.ok(!m.SIRKET_DURUMLARI.includes('withdrawn'));
-  assert.equal(m.SIRKET_DURUMLARI.length, enumUyeleri().length - 1);
+  for (const d of ['withdrawn', 'offer_accepted', 'offer_declined']) {
+    assert.ok(!m.SIRKET_DURUMLARI.includes(d), `${d} şirket seçeneklerinde`);
+  }
+  assert.equal(m.SIRKET_DURUMLARI.length, enumUyeleri().length - 3);
 });
 
 test('akış sırası: her adımın bir sonrakisi doğru', async () => {
@@ -160,10 +170,54 @@ test('akış sırası: her adımın bir sonrakisi doğru', async () => {
 });
 
 test('kapanmış durumlar doğru işaretleniyor', async () => {
+  /*
+    `offer_extended` ARTIK KAPALI DEĞİL: teklif verildiğinde süreç
+    bitmiyor, öğrencinin kararı bekleniyor. Kapanış öğrencinin yanıtıyla
+    ya da şirketin olumsuz kararıyla geliyor.
+  */
   const m = await import('../src/lib/basvuru-durumu.mjs');
-  for (const d of ['rejected', 'withdrawn', 'offer_extended']) assert.equal(m.durumKapandi(d), true);
-  for (const d of ['submitted', 'under_review', 'technical_assessment', 'interview_scheduled'])
-    assert.equal(m.durumKapandi(d), false);
+  for (const d of ['rejected', 'withdrawn', 'offer_accepted', 'offer_declined'])
+    assert.equal(m.durumKapandi(d), true, `${d} kapalı sayılmalı`);
+  for (const d of [
+    'submitted',
+    'under_review',
+    'technical_assessment',
+    'interview_scheduled',
+    'offer_extended',
+  ])
+    assert.equal(m.durumKapandi(d), false, `${d} kapalı sayılmamalı`);
+});
+
+test('teklif beklerken sıradaki hamle şirkette değil', async () => {
+  const m = await import('../src/lib/basvuru-durumu.mjs');
+  assert.equal(m.teklifBekliyor('offer_extended'), true);
+  assert.equal(m.sonrakiDurum('offer_extended'), null, 'şirkete sonraki adım gösteriliyor');
+  /* Öğrenci de bu aşamada geri çekmiyor: kabul ya da ret. */
+  assert.equal(m.ogrenciGeriCekebilir('offer_extended'), false);
+  assert.equal(m.ogrenciGeriCekebilir('under_review'), true);
+  assert.equal(m.ogrenciGeriCekebilir('offer_accepted'), false);
+});
+
+test('iletişim yalnızca kabul edilmiş teklifte açık', async () => {
+  const m = await import('../src/lib/basvuru-durumu.mjs');
+  assert.equal(m.iletisimAcik('offer_accepted'), true);
+  for (const d of ['offer_extended', 'offer_declined', 'rejected', 'withdrawn', 'interview_scheduled'])
+    assert.equal(m.iletisimAcik(d), false, `${d} için iletişim açık görünüyor`);
+});
+
+test('şirket ve öğrenci cümleleri aynı terimden ayrılıyor ama karışmıyor', async () => {
+  const m = await import('../src/lib/basvuru-durumu.mjs');
+  /*
+    Öğrencinin teklifi reddetmesi ile ŞİRKETİN olumsuz kararı aynı
+    kelimeye düşmemeli: biri adayın, diğeri şirketin kararı.
+  */
+  assert.notEqual(m.SIRKET_CUMLESI.offer_declined, m.SIRKET_CUMLESI.rejected);
+  assert.notEqual(m.OGRENCI_CUMLESI.offer_declined, m.OGRENCI_CUMLESI.rejected);
+  assert.match(m.SIRKET_CUMLESI.offer_declined, /Öğrenci/);
+  assert.match(m.OGRENCI_CUMLESI.offer_declined, /reddettin/);
+  for (const d of enumUyeleri()) {
+    assert.notEqual(m.sirketDurumCumlesi(d), 'Durum bilinmiyor', `${d} için şirket cümlesi yok`);
+  }
 });
 
 test('iki taraf da aynı terimi veriyor', async () => {

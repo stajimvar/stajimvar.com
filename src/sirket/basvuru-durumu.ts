@@ -34,6 +34,8 @@ export type BasvuruDurumu =
   | 'technical_assessment'
   | 'interview_scheduled'
   | 'offer_extended'
+  | 'offer_accepted'
+  | 'offer_declined'
   | 'rejected'
   | 'withdrawn';
 
@@ -45,7 +47,16 @@ export type BasvuruDurumu =
   kelimeyle görünüyordu. Terimler ../lib/basvuru-durumu.mjs içine
   taşındı; burada YALNIZCA işveren temasına bağlı renkler kaldı.
 */
-export { DURUM_SIRASI, SIRKET_DURUMLARI, durumAdi, sonrakiDurum, durumKapandi } from '../lib/basvuru-durumu.mjs';
+export {
+  DURUM_SIRASI,
+  SIRKET_DURUMLARI,
+  durumAdi,
+  sirketDurumCumlesi,
+  sonrakiDurum,
+  durumKapandi,
+  teklifBekliyor,
+  iletisimAcik,
+} from '../lib/basvuru-durumu.mjs';
 
 type Rozet = { etiket: string; stil: React.CSSProperties };
 
@@ -60,7 +71,24 @@ export const DURUM_ROZETI: Record<BasvuruDurumu, Rozet> = {
     etiket: DURUM_ADI.interview_scheduled,
     stil: { background: '#DBEAFE', color: '#1E40AF' },
   },
-  offer_extended: { etiket: DURUM_ADI.offer_extended, stil: { background: '#DCFCE7', color: '#166534' } },
+  /* Teklif verildi ama HENÜZ KABUL EDİLMEDİ: dolu yeşil değil, çerçeveli. */
+  offer_extended: {
+    etiket: DURUM_ADI.offer_extended,
+    stil: { background: '#F0FDF4', color: '#166534', boxShadow: 'inset 0 0 0 1px #86EFAC' },
+  },
+  /* Sürecin tek gerçek başarısı: dolu yeşil yalnızca burada. */
+  offer_accepted: {
+    etiket: DURUM_ADI.offer_accepted,
+    stil: { background: '#DCFCE7', color: '#166534' },
+  },
+  /*
+    Öğrencinin reddi ŞİRKETİN olumsuz kararıyla aynı renkte değil: biri
+    adayın kararı, diğeri şirketin. Aynı kırmızı ikisini karıştırırdı.
+  */
+  offer_declined: {
+    etiket: DURUM_ADI.offer_declined,
+    stil: { background: '#F3F4F6', color: '#4B5563' },
+  },
   rejected: { etiket: DURUM_ADI.rejected, stil: { background: '#FEE2E2', color: '#991B1B' } },
   withdrawn: { etiket: DURUM_ADI.withdrawn, stil: { background: '#F3F4F6', color: '#4B5563' } },
 };

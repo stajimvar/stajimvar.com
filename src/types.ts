@@ -227,9 +227,18 @@ export interface ApplicationRecord {
     | 'technical_assessment'
     | 'interview_scheduled'
     | 'offer_extended'
+    /* Öğrencinin kararı. Şirket bu iki değeri YAZAMIYOR — kapı
+       public.teklife_yanit_ver işlevi. */
+    | 'offer_accepted'
+    | 'offer_declined'
     | 'rejected'
     | 'withdrawn';
   matchScore: number;
+  /* Şirketin teklif metni. Genel nottan (companyFeedback) ayrı: teklifin
+     şartları, öğrenci karar verirken üzerine yazılmamalı. */
+  offerNote?: string;
+  /* Teklif edilen başlangıç tarihi. Opsiyonel. */
+  offerStartDate?: string;
   coverLetter?: string;
   interviewDate?: string;
   /*

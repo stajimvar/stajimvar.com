@@ -598,6 +598,58 @@ export async function withdrawApplication(applicationId: string): Promise<void> 
   if (error) fail('Başvuru geri çekilemedi', error);
 }
 
+/**
+ * TEKLİFE YANIT — KABUL YA DA RET
+ *
+ * Doğrudan UPDATE ile yapılamıyor ve yapılmamalı: öğrencinin güncelleme
+ * politikası sonucun `withdrawn` olmasını şart koşuyor. Kabul/ret tek
+ * kapıdan geçiyor — `teklife_yanit_ver`. O işlev satırı kilitleyip O ANKİ
+ * durumu okuyor, yani:
+ *
+ *   * yalnızca `offer_extended` durumundan karar verilebiliyor,
+ *   * aynı anda gelen iki istek tutarsız bir sonuç üretmiyor,
+ *   * zaten yanıtlanmış bir teklif ikinci kez yanıtlandığında HATA
+ *     DEĞİL, mevcut sonuç dönüyor.
+ *
+ * Dönen değer sunucunun gördüğü nihai durum; ekran onu yazıyor, kendi
+ * tahminini değil.
+ */
+export async function respondToOffer(
+  applicationId: string,
+  kabul: boolean
+): Promise<ApplicationRecord['status']> {
+  const { data, error } = await supabase.rpc('teklife_yanit_ver', {
+    p_basvuru: applicationId,
+    p_kabul: kabul,
+  });
+  if (error) fail(kabul ? 'Teklif kabul edilemedi' : 'Teklif reddedilemedi', error);
+  return data as ApplicationRecord['status'];
+}
+
+/**
+ * KABUL EDİLMİŞ TEKLİFTE ŞİRKET YETKİLİSİNİN İLETİŞİMİ
+ *
+ * `profiles` tablosunun okuma kuralı yalnızca kişinin kendisine açık ve
+ * öyle kalıyor: öğrenci şirket yetkilisinin satırını okuyamıyor. Bu
+ * işlev, teklif kabul edildiyse yalnızca o başvurunun karşı tarafını
+ * döndüren tek kapı.
+ *
+ * Kapı kapalıysa satır yok — `null` dönüyor, hata değil.
+ */
+export async function fetchApplicationContact(applicationId: string): Promise<{
+  ad: string | null;
+  eposta: string | null;
+  telefon: string | null;
+  unvan: string | null;
+} | null> {
+  const { data, error } = await supabase.rpc('basvuru_iletisimi', { p_basvuru: applicationId });
+  if (error) fail('İletişim bilgileri şu anda yüklenemedi', error);
+  const satir = (data ?? [])[0];
+  return satir
+    ? { ad: satir.ad, eposta: satir.eposta, telefon: satir.telefon, unvan: satir.unvan }
+    : null;
+}
+
 /** Şirket tarafı durum güncellemesi. */
 export async function updateApplicationStatus(
   applicationId: string,

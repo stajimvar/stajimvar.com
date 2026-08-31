@@ -257,7 +257,7 @@ export async function sirketBasvurulari(companyId: string) {
     .select(
       'id, status, applied_at, match_score, listing_id, student_id, cover_letter, cv_path, ' +
         'cv_snapshot_path, profile_snapshot, contact_share_consent_at, application_method, ' +
-        'interview_date, status_changed_at, ' +
+        'interview_date, status_changed_at, offer_note, offer_start_date, ' +
         'listings!inner(id, title, company_id)'
     )
     .eq('listings.company_id', companyId)
@@ -298,6 +298,50 @@ export async function basvuruDurumuDegistir(id: string, durum: string) {
   const db = await istemci();
   const { error } = await db.from('applications').update({ status: durum }).eq('id', id);
   if (error) throw new Error('Başvuru durumu güncellenemedi.');
+}
+
+/**
+ * TEKLİF GÖNDER
+ *
+ * Durum ve teklifin içeriği TEK yazımda gidiyor: önce durumu değiştirip
+ * sonra notu yazmak, arada kalan anda öğrenciye içi boş bir "Teklif
+ * aldın" göstermek olurdu.
+ *
+ * Ücret, çalışma biçimi ve süre burada SORULMUYOR: üçü de ilanda duruyor
+ * ve öğrenci teklif ekranında ilandan okuyor.
+ */
+export async function teklifGonder(
+  id: string,
+  teklif: { not: string; baslangic: string },
+) {
+  const db = await istemci();
+  const { error } = await db
+    .from('applications')
+    .update({
+      status: 'offer_extended',
+      offer_note: teklif.not.trim() ? teklif.not.trim() : null,
+      offer_start_date: teklif.baslangic ? teklif.baslangic : null,
+    })
+    .eq('id', id);
+  if (error) throw new Error('Teklif gönderilemedi.');
+}
+
+/**
+ * KABUL EDİLMİŞ TEKLİFTE KARŞI TARAFIN İLETİŞİMİ
+ *
+ * Kapı veritabanında: `basvuru_iletisimi` yalnızca teklif kabul
+ * edilmişse ve çağıran taraf o başvurunun öğrencisi ya da ilanın
+ * DOĞRULANMIŞ şirketinin üyesiyse satır döndürüyor. Burada ek bir
+ * kontrol yok; olsaydı asıl kuralın nerede olduğu belirsizleşirdi.
+ *
+ * Satır yoksa `null`: bu bir hata değil, kapının kapalı olması.
+ */
+export async function basvuruIletisimi(id: string) {
+  const db = await istemci();
+  const { data, error } = await db.rpc('basvuru_iletisimi', { p_basvuru: id });
+  if (error) throw new Error('İletişim bilgileri şu anda yüklenemedi.');
+  const satir = (data ?? [])[0];
+  return satir ? { ad: satir.ad, eposta: satir.eposta, telefon: satir.telefon, unvan: satir.unvan } : null;
 }
 
 /**

@@ -24,6 +24,10 @@ const ILANLAR: InternshipListing[] = [
     companyName: 'Örnek Teknoloji',
     department: 'Mühendislik',
     city: 'İstanbul',
+    /* Teklif ekranı bu üçünü İLANDAN okuyor; şirket tekrar yazmıyor. */
+    workType: 'Hibrit',
+    duration: '20 iş günü',
+    stipend: { isPaid: true, amountText: 'Asgari staj ücreti' },
   },
   {
     id: 'ilan-2',
@@ -67,6 +71,24 @@ const BASVURULAR: ApplicationRecord[] = [
     statusChangedAt: '2026-08-27T12:00:00Z',
     interviewDate: '2026-09-15',
   },
+  /* Teklif BEKLİYOR: içerik dolu. */
+  {
+    ...temel,
+    id: 'b9',
+    listingId: 'ilan-1',
+    status: 'offer_extended',
+    statusChangedAt: '2026-08-29T09:00:00Z',
+    offerNote: 'Ekibe eylül başında katılmanı öneriyoruz. Haftada üç gün ofis, iki gün uzaktan.',
+    offerStartDate: '2026-10-01',
+  },
+  /* ESKİ TEKLİF: içerik alanları bu turda eklendi, geçmişte yok. */
+  {
+    ...temel,
+    id: 'b10',
+    listingId: 'ilan-2',
+    status: 'offer_extended',
+    statusChangedAt: '2026-08-29T10:00:00Z',
+  },
   /* Mülakat, tarih HENÜZ YOK: uydurma tarih yazılmamalı. */
   {
     ...temel,
@@ -75,13 +97,22 @@ const BASVURULAR: ApplicationRecord[] = [
     status: 'interview_scheduled',
     statusChangedAt: '2026-08-28T12:00:00Z',
   },
+  /* KABUL EDİLMİŞ: iletişim açık. */
   {
     ...temel,
     id: 'b6',
     listingId: 'ilan-2',
-    status: 'offer_extended',
+    status: 'offer_accepted',
     statusChangedAt: '2026-08-29T12:00:00Z',
-    companyFeedback: 'Ekip görüşmesi olumlu geçti, teklif e-postası gönderildi.',
+    offerNote: 'Başlangıç tarihini birlikte netleştiririz.',
+  },
+  /* ÖĞRENCİ REDDETTİ: şirketin olumsuz kararıyla karışmamalı. */
+  {
+    ...temel,
+    id: 'b11',
+    listingId: 'ilan-1',
+    status: 'offer_declined',
+    statusChangedAt: '2026-08-29T15:00:00Z',
   },
   {
     ...temel,
@@ -113,6 +144,51 @@ export const BasvurularimDevFixture: React.FC = () => {
           onSubTabChange={setAltSekme}
           onExploreInternships={() => undefined}
           /* Son kayıt her zaman hata veriyor: satır içi hata görülebilsin. */
+          /*
+            Gerçek kapı sunucuda (public.teklife_yanit_ver): yalnızca
+            `offer_extended` durumundan karar verilebiliyor ve ikinci
+            yanıt hata değil. Fikstür aynı davranışı taklit ediyor.
+          */
+          onRespondToOffer={(id, kabul) =>
+            new Promise((coz, red) => {
+              window.setTimeout(() => {
+                if (id === 'b10') {
+                  red(new Error('Fikstür: yanıt kaydı hatası taklit ediliyor.'));
+                  return;
+                }
+                const durum = kabul ? 'offer_accepted' : 'offer_declined';
+                setKayitlar((o) =>
+                  o.map((a) =>
+                    a.id === id
+                      ? { ...a, status: durum as ApplicationRecord['status'], statusChangedAt: new Date().toISOString() }
+                      : a,
+                  ),
+                );
+                coz(durum);
+              }, 250);
+            })
+          }
+          onFetchContact={(id) =>
+            new Promise((coz, red) => {
+              window.setTimeout(() => {
+                if (id === 'b11') {
+                  red(new Error('Fikstür: iletişim okuma hatası.'));
+                  return;
+                }
+                const a = kayitlar.find((x) => x.id === id);
+                coz(
+                  a && a.status === 'offer_accepted'
+                    ? {
+                        ad: 'Elif Yılmaz',
+                        eposta: 'ik@ornekveri.com',
+                        telefon: null,
+                        unvan: 'İK Uzmanı',
+                      }
+                    : null,
+                );
+              }, 250);
+            })
+          }
           onWithdraw={(id) =>
             new Promise<void>((coz, red) => {
               window.setTimeout(() => {

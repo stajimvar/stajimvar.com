@@ -983,5 +983,211 @@ select pg_temp.bekle(
     where bucket_id = 'cvs' and name like (select c::text from k) || '/%'),
   'D (dogrulanmamis), kendi basvuraninin CV kopyasini goremez');
 
+
+-- =====================================================================
+-- TEKLİF → ÖĞRENCİNİN KARARI → İLETİŞİM
+-- =====================================================================
+--
+-- Ürünün ana kuralı: TEKLİFİ ŞİRKET VERİR, KARARI ÖĞRENCİ VERİR,
+-- İLETİŞİM KABULDEN SONRA AÇILIR. Üçü de arayüzde görünüyor ama düğme
+-- gizlemek güvenlik değil; sınırların gerçekten burada olduğu ölçülüyor.
+
+-- ------------------------------------------------- A TEKLİF GÖNDERİYOR
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.applications
+        set status='offer_extended', offer_note='Ekibe bekliyoruz.',
+            offer_start_date='2026-10-01'
+      where id='33333333-aaaa-4000-8000-000000000001'$q$),
+  'A, adaya teklif gonderebilir');
+
+-- Şirket öğrencinin KARARINI veremez: iki değer de politikada reddediliyor.
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='offer_accepted'
+      where id='33333333-aaaa-4000-8000-000000000001'$q$),
+  'A, ogrenci adina teklifi kabul edemez');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='offer_declined'
+      where id='33333333-aaaa-4000-8000-000000000001'$q$),
+  'A, ogrenci adina teklifi reddedemez');
+
+-- İşlev de aynı şeyi söylüyor: kapı yalnızca başvuran öğrenciye açık.
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$select public.teklife_yanit_ver('33333333-aaaa-4000-8000-000000000001', true)$q$),
+  'A, teklif yanit islevini ogrenci adina cagiramaz');
+
+-- KABUL ÖNCESİ İLETİŞİM KAPALI: teklif verildi ama yanıt yok.
+select pg_temp.bekle(
+  (select count(*) = 0 from public.basvuru_iletisimi('33333333-aaaa-4000-8000-000000000001')),
+  'Kabul oncesi iletisim KAPALI (sirket tarafi)');
+
+-- ------------------------------------------------ B BAŞKASININ ADAYINA
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', b::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='offer_extended', offer_note='sizma'
+      where id='33333333-aaaa-4000-8000-000000000001'$q$),
+  'B, A adayina teklif gonderemez');
+
+select pg_temp.bekle(
+  (select count(*) = 0 from public.basvuru_iletisimi('33333333-aaaa-4000-8000-000000000001')),
+  'Ilgisiz sirket iletisimi goremez');
+
+-- ------------------------------------------------- BAŞKA ÖĞRENCİ (E)
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', e::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$select public.teklife_yanit_ver('33333333-aaaa-4000-8000-000000000001', true)$q$),
+  'D, C nin teklifini yanitlayamaz');
+
+select pg_temp.bekle(
+  (select count(*) = 0 from public.basvuru_iletisimi('33333333-aaaa-4000-8000-000000000001')),
+  'Baska ogrenci iletisimi goremez');
+
+-- ------------------------------------------------------ ÖĞRENCİ C KARAR
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', c::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+-- Öğrenci ŞİRKETİN kararını veremiyor: politika sonucu `withdrawn`
+-- olmaya zorluyor, yani kendine teklif oluşturamıyor.
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='offer_extended'
+      where id='33333333-aaaa-4000-8000-000000000001'$q$),
+  'C, kendi basvurusuna teklif olusturamaz');
+
+-- Kabul öncesi öğrenci de şirket yetkilisini göremiyor.
+select pg_temp.bekle(
+  (select count(*) = 0 from public.basvuru_iletisimi('33333333-aaaa-4000-8000-000000000001')),
+  'Kabul oncesi iletisim KAPALI (ogrenci tarafi)');
+
+select pg_temp.bekle(
+  (select public.teklife_yanit_ver('33333333-aaaa-4000-8000-000000000001', true)::text
+     = 'offer_accepted'),
+  'C, kendi teklifini kabul edebilir');
+
+-- ÇİFT TIKLAMA / PARALEL İSTEK: ikinci yanıt hata değil, mevcut sonuç.
+-- Ret göndersek bile kabul edilmiş karar DEĞİŞMİYOR.
+select pg_temp.bekle(
+  (select public.teklife_yanit_ver('33333333-aaaa-4000-8000-000000000001', false)::text
+     = 'offer_accepted'),
+  'Ikinci yanit hata vermiyor ve karari degistirmiyor');
+
+-- Damga tetikleyiciden: yanıtın zamanı için ayrı kolon açılmadı.
+select pg_temp.bekle(
+  (select status_changed_at is not null
+     from public.applications where id='33333333-aaaa-4000-8000-000000000001'::uuid),
+  'Teklif yaniti status_changed_at ile damgalandi');
+
+-- KABUL SONRASI: öğrenci şirket yetkilisini görüyor.
+select pg_temp.bekle(
+  (select count(*) = 1 from public.basvuru_iletisimi('33333333-aaaa-4000-8000-000000000001')
+    where taraf = 'sirket' and eposta = 'a@test-a.com'),
+  'Kabul sonrasi ogrenci sirket yetkilisini gorur');
+
+-- Ama yalnızca o satırı: `profiles` tablosu hâlâ kapalı.
+select pg_temp.bekle(
+  (select count(*) = 0 from public.profiles where id = (select a from k)),
+  'Kabul sonrasi bile profiles tablosu kapali kaliyor');
+
+-- Geri çekilmiş başvuruda yanıtlanacak teklif yok.
+--
+-- Önce satırın GERÇEKTEN geri çekilmiş olduğu doğrulanıyor: satır
+-- bulunamazsa işlev yine hata verirdi ve test boşuna geçerdi.
+select pg_temp.bekle(
+  (select count(*) = 1 from public.applications
+    where listing_id = '22222222-bbbb-4000-8000-000000000003'::uuid
+      and student_id = '00000000-0000-4000-8000-00000000000c'::uuid
+      and status = 'withdrawn'),
+  'Geri cekilmis basvuru testi dogru satirda calisiyor');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$select public.teklife_yanit_ver(
+       (select id from public.applications
+         where listing_id = '22222222-bbbb-4000-8000-000000000003'::uuid
+           and student_id = '00000000-0000-4000-8000-00000000000c'::uuid), true)$q$),
+  'Geri cekilmis basvuruda teklif yanitlanamaz');
+
+-- ------------------------------------------------ KABUL SONRASI ŞİRKET
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(
+  (select count(*) = 1 from public.basvuru_iletisimi('33333333-aaaa-4000-8000-000000000001')
+    where taraf = 'ogrenci' and eposta = 'c@ogrenci.test'),
+  'Kabul sonrasi sirket adayin iletisimini gorur');
+
+select pg_temp.bekle(
+  (select count(*) = 0 from public.profiles where id = (select c from k)),
+  'Sirket adayin profiles satirini yine de okuyamiyor');
+
+-- ------------------------------- REDDEDİLEN TEKLİF İLETİŞİMİ AÇMIYOR
+--
+-- Ayrı bir başvuru: öğrenci E, A'nın taslak olmayan ikinci ilanına
+-- başvurmuş sayılıyor. Kurulum service_role ile yapılıyor; ölçülen şey
+-- reddin SONUCU.
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+
+insert into public.listings (id, company_id, title, status, origin, application_method)
+values ('22222222-aaaa-4000-8000-000000000005'::uuid, '11111111-aaaa-4000-8000-000000000001'::uuid,
+        'A Ikinci Stajyeri', 'published', 'employer_posted', 'internal');
+
+insert into public.applications (id, listing_id, student_id, match_score, application_method,
+                                 email_delivery_status, created_via, contact_share_consent_at,
+                                 status, offer_note)
+select '33333333-eeee-4000-8000-000000000005'::uuid, '22222222-aaaa-4000-8000-000000000005'::uuid, e,
+       60, 'internal', 'not_required', 'web', now(), 'offer_extended', 'Teklif metni'
+from k;
+
+-- Doğrulanmamış şirket D'nin başvurusu KABUL EDİLMİŞ sayılıyor: ölçülen
+-- şey doğrulama kapısı, kabul kapısı değil.
+update public.applications
+   set status = 'offer_accepted', contact_share_consent_at = now()
+ where id = '33333333-dddd-4000-8000-000000000004'::uuid;
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', e::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(
+  (select public.teklife_yanit_ver('33333333-eeee-4000-8000-000000000005', false)::text
+     = 'offer_declined'),
+  'E, teklifi reddedebilir');
+
+select pg_temp.bekle(
+  (select count(*) = 0 from public.basvuru_iletisimi('33333333-eeee-4000-8000-000000000005')),
+  'Reddedilen teklif iletisimi acmiyor');
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', d::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(
+  (select count(*) = 0 from public.basvuru_iletisimi('33333333-dddd-4000-8000-000000000004')),
+  'Dogrulanmamis sirket kabul edilmis teklifte bile iletisimi goremez');
+
 reset role;
 rollback;

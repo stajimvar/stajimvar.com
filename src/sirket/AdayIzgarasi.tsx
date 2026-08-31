@@ -1,7 +1,7 @@
 import React from 'react';
 import { Check, Copy, Eye, EyeOff, Search, Users } from 'lucide-react';
 import { AdayKarti } from './AdayKarti';
-import { AdayCekmecesi } from './AdayCekmecesi';
+import { AdayCekmecesi, type Iletisim } from './AdayCekmecesi';
 import {
   ALAN,
   IKINCIL_DUGME,
@@ -57,8 +57,19 @@ export const AdayIzgarasi: React.FC<{
   onNavigate: (y: string) => void;
   onDurum: (id: string, durum: string) => Promise<void>;
   onMulakatTarihi: (id: string, tarih: string) => Promise<void>;
+  onTeklif: (id: string, teklif: { not: string; baslangic: string }) => Promise<void>;
+  onIletisim: (id: string) => Promise<Iletisim | null>;
   onNot: (id: string, metin: string) => Promise<void>;
-}> = ({ kartlar, ilanAdresi, onNavigate, onDurum, onMulakatTarihi, onNot }) => {
+}> = ({
+  kartlar,
+  ilanAdresi,
+  onNavigate,
+  onDurum,
+  onMulakatTarihi,
+  onTeklif,
+  onIletisim,
+  onNot,
+}) => {
   const [onyargisiz, setOnyargisiz] = React.useState(false);
   const [ilanSuzgeci, setIlanSuzgeci] = React.useState('');
   const [durumSuzgeci, setDurumSuzgeci] = React.useState('');
@@ -374,6 +385,13 @@ export const AdayIzgarasi: React.FC<{
             if (!acik) return Promise.resolve();
             return onMulakatTarihi(acik.id, tarih);
           }}
+          /* Teklif de aynı yükleniyor durumunu paylaşıyor. */
+          onTeklif={(teklif) => {
+            if (!acik) return Promise.resolve();
+            setKaydediliyor(true);
+            return onTeklif(acik.id, teklif).finally(() => setKaydediliyor(false));
+          }}
+          onIletisim={onIletisim}
           onNot={(metin) => {
             if (!acik) return;
             setKaydediliyor(true);

@@ -169,6 +169,10 @@ export function kartVerisi(satir, ek = {}) {
       değerlendirdiği belgenin yerine sonradan yüklenmiş başka bir
       belgeyi görürdü.
     */
+    /* Teklifin içeriği. Eski tekliflerde ikisi de boş olabilir. */
+    teklifNotu: satir?.offer_note ? String(satir.offer_note) : '',
+    teklifBaslangici: satir?.offer_start_date ? String(satir.offer_start_date).slice(0, 10) : '',
+
     /* Mülakat tarihi opsiyonel; yoksa alan boş açılıyor. */
     mulakatTarihi: satir?.interview_date ? String(satir.interview_date).slice(0, 10) : '',
     cvYolu: satir?.cv_snapshot_path ?? satir?.cv_path ?? null,

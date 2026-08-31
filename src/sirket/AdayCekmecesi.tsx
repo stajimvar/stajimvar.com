@@ -17,7 +17,14 @@ import {
   ikincilStil,
 } from './renk';
 import { kimlikSatiri, monogram } from '../lib/aday-kart.mjs';
-import { SIRKET_DURUMLARI, durumAdi, sonrakiDurum } from './basvuru-durumu';
+import {
+  SIRKET_DURUMLARI,
+  durumAdi,
+  iletisimAcik,
+  sirketDurumCumlesi,
+  sonrakiDurum,
+  teklifBekliyor,
+} from './basvuru-durumu';
 
 /**
  * Aday çekmecesi — sağdan açılan panel.
@@ -41,6 +48,21 @@ import { SIRKET_DURUMLARI, durumAdi, sonrakiDurum } from './basvuru-durumu';
  * karar bu. İkinci sıra (case, teklif, görüşme bağlantısı) katlı duruyor;
  * kartın üstüne konsaydı asıl kararı gölgelerdi.
  */
+
+/** Karşı tarafın iletişim satırı — sunucunun döndürdüğü biçim. */
+/** Tarihi okunur yazar; bozuk/boş değerde bir şey yazmaz. */
+function tarihMetni(deger: string): string {
+  const t = new Date(String(deger));
+  if (Number.isNaN(t.getTime())) return '';
+  return t.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+export type Iletisim = {
+  ad: string | null;
+  eposta: string | null;
+  telefon: string | null;
+  unvan: string | null;
+};
 
 const Baslik: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <h3
@@ -67,6 +89,10 @@ export const AdayCekmecesi: React.FC<{
     girmek adayı mülakata almanın şartı değil.
   */
   onMulakatTarihi?: (tarih: string) => void | Promise<void>;
+  /* Teklifi durumla BİRLİKTE yazıyor: arada içi boş bir teklif oluşmasın. */
+  onTeklif?: (teklif: { not: string; baslangic: string }) => void | Promise<void>;
+  /* Kabul edilmiş teklifte karşı tarafın iletişim satırı; kapalıysa null. */
+  onIletisim?: (id: string) => Promise<Iletisim | null>;
   /*
     GÖMÜLÜ KİP — MASAÜSTÜNDE YAN PANEL
 
@@ -78,7 +104,17 @@ export const AdayCekmecesi: React.FC<{
     panel akışın içinde duruyor.
   */
   gomulu?: boolean;
-}> = ({ kart, kaydediliyor, onKapat, onDurum, onNot, onMulakatTarihi, gomulu }) => {
+}> = ({
+  kart,
+  kaydediliyor,
+  onKapat,
+  onDurum,
+  onNot,
+  onMulakatTarihi,
+  onTeklif,
+  onIletisim,
+  gomulu,
+}) => {
   /*
     İmzalı adres tıklama anında üretiliyor, kart çizilirken değil: adresin
     ömrü on dakika ve önceden üretilseydi açılmadan ölürdü. Ayrıca
@@ -110,6 +146,19 @@ export const AdayCekmecesi: React.FC<{
   const [durumHatasi, setDurumHatasi] = React.useState<string | null>(null);
   const [mulakatTarihi, setMulakatTarihi] = React.useState('');
 
+  /* Teklif formu ve içeriği. */
+  const [teklifFormu, setTeklifFormu] = React.useState(false);
+  const [teklifNotu, setTeklifNotu] = React.useState('');
+  const [teklifBaslangici, setTeklifBaslangici] = React.useState('');
+
+  /*
+    Karşı tarafın iletişim satırı. YALNIZCA teklif kabul edildiğinde
+    isteniyor ve gelen şey sunucunun verdiği satır — burada bir kural
+    yeniden yazılmıyor.
+  */
+  const [iletisim, setIletisim] = React.useState<Iletisim | null>(null);
+  const [iletisimHatasi, setIletisimHatasi] = React.useState(false);
+
   const [ikinciAcik, setIkinciAcik] = React.useState(false);
   const [not, setNot] = React.useState('');
   const govde = React.useRef<HTMLDivElement | null>(null);
@@ -124,7 +173,35 @@ export const AdayCekmecesi: React.FC<{
     setOlumsuzSoruldu(false);
     setDurumHatasi(null);
     setMulakatTarihi(kart?.mulakatTarihi ?? '');
-  }, [kart?.id, kart?.mulakatTarihi]);
+    setTeklifFormu(false);
+    setTeklifNotu(kart?.teklifNotu ?? '');
+    setTeklifBaslangici(kart?.teklifBaslangici ?? '');
+  }, [kart?.id, kart?.mulakatTarihi, kart?.teklifNotu, kart?.teklifBaslangici]);
+
+  /*
+    İLETİŞİM YALNIZCA KABULDEN SONRA İSTENİYOR
+
+    Kabul edilmemiş bir başvuruda istek hiç gönderilmiyor. Gönderilseydi
+    sunucu zaten boş dönerdi (kapı orada) ama ekranın niyeti de açık
+    olmalı. Aday değişince önceki adayın satırı hemen düşüyor.
+  */
+  React.useEffect(() => {
+    setIletisim(null);
+    setIletisimHatasi(false);
+    if (!kart?.id || !iletisimAcik(kart.durum) || !onIletisim) return;
+
+    let iptal = false;
+    Promise.resolve(onIletisim(kart.id))
+      .then((satir) => {
+        if (!iptal) setIletisim(satir ?? null);
+      })
+      .catch(() => {
+        if (!iptal) setIletisimHatasi(true);
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [kart?.id, kart?.durum, onIletisim]);
 
   React.useEffect(() => {
     if (!kart) return undefined;
@@ -159,6 +236,8 @@ export const AdayCekmecesi: React.FC<{
   const kimlik = kimlikSatiri(kart);
   /* Akıştaki bir sonraki adım; kapanmış durumlarda yok. */
   const sonraki = sonrakiDurum(kart.durum);
+  /* Öğrenci teklife yanıt verdiyse karar onun; şirket geri alamıyor. */
+  const kararVerildi = kart.durum === 'offer_accepted' || kart.durum === 'offer_declined';
 
   /*
     Durum değişiminin hatası çekmeceyi KAPATMIYOR: alanın altında
@@ -419,13 +498,125 @@ export const AdayCekmecesi: React.FC<{
           Aynı kural veritabanında da duruyor.
         */}
         <div className="border-t p-4" style={{ background: SIRKET_YUZEY, borderColor: SIRKET_KENAR }}>
+          {/*
+            SÜRECİN NEREDE OLDUĞU CÜMLEYLE
+
+            Rozet tek kelime söylüyor ("Teklif"); şirketin bilmesi gereken
+            ise sıradaki hamlenin kimde olduğu. Terim aynı kalıyor, cümle
+            şirkete göre kuruluyor — öğrenci aynı durumu "Teklif aldın"
+            diye görüyor.
+          */}
+          {(teklifBekliyor(kart.durum) || kararVerildi) && (
+            <p
+              className="mb-3 rounded-xl px-3 py-2 text-xs font-bold"
+              style={
+                kart.durum === 'offer_accepted'
+                  ? { background: '#DCFCE7', color: '#166534' }
+                  : { background: SIRKET_ROZET, color: SIRKET_METIN }
+              }
+            >
+              {kart.durum === 'offer_accepted' ? '🎉 ' : ''}
+              {sirketDurumCumlesi(kart.durum)}
+            </p>
+          )}
+
+          {/*
+            GÖNDERİLEN TEKLİF
+
+            Eski teklif kayıtlarında bu alanların ikisi de boş olabilir —
+            teklif içeriği bu turda eklendi. Boşsa bölüm hiç çizilmiyor;
+            "belirtilmedi" yazmak da bir bilgi uydurmak olurdu.
+          */}
+          {(teklifBekliyor(kart.durum) || kararVerildi) &&
+            (kart.teklifNotu || kart.teklifBaslangici) &&
+            !teklifFormu && (
+              <div
+                className="mb-3 rounded-xl border p-3"
+                style={{ borderColor: SIRKET_KENAR, background: SIRKET_ZEMIN }}
+              >
+                <p className="text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                  Gönderilen teklif
+                </p>
+                {kart.teklifBaslangici && (
+                  <p className="mt-1 text-xs font-bold" style={{ color: SIRKET_METIN }}>
+                    Başlangıç: {tarihMetni(kart.teklifBaslangici)}
+                  </p>
+                )}
+                {kart.teklifNotu && (
+                  <p className="mt-1 whitespace-pre-line text-xs leading-relaxed" style={{ color: SIRKET_METIN }}>
+                    {kart.teklifNotu}
+                  </p>
+                )}
+              </div>
+            )}
+
+          {/*
+            İLETİŞİM — YALNIZCA KABULDEN SONRA
+
+            Kapı veritabanında: `basvuru_iletisimi` teklif kabul
+            edilmediyse satır döndürmüyor. Buradaki koşul yalnızca
+            gösterim; kuralın kendisi değil.
+
+            Sohbet yok: e-posta ve varsa telefon. İki taraf da birbirine
+            kendi araçlarıyla ulaşıyor.
+          */}
+          {iletisimAcik(kart.durum) && (
+            <div
+              className="mb-3 rounded-xl border p-3"
+              style={{ borderColor: SIRKET_KENAR, background: SIRKET_ZEMIN }}
+            >
+              <p className="text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                İLETİŞİM
+              </p>
+              {iletisimHatasi ? (
+                <p role="alert" className="mt-1 text-xs font-semibold" style={{ color: '#991B1B' }}>
+                  İletişim bilgileri şu anda yüklenemedi.
+                </p>
+              ) : iletisim ? (
+                <>
+                  <p className="mt-1 text-sm font-extrabold" style={{ color: SIRKET_METIN }}>
+                    {iletisim.ad ?? 'Aday'}
+                  </p>
+                  {iletisim.eposta && (
+                    <p className="text-xs" style={{ color: SIRKET_METIN }}>
+                      {iletisim.eposta}
+                    </p>
+                  )}
+                  {iletisim.telefon && (
+                    <p className="text-xs" style={{ color: SIRKET_METIN }}>
+                      {iletisim.telefon}
+                    </p>
+                  )}
+                  {iletisim.eposta && (
+                    <a
+                      href={`mailto:${iletisim.eposta}`}
+                      className={`mt-2 inline-flex ${IKINCIL_DUGME}`}
+                      style={ikincilStil}
+                    >
+                      E-posta gönder
+                    </a>
+                  )}
+                </>
+              ) : (
+                <p className="mt-1 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+                  İletişim bilgileri yükleniyor…
+                </p>
+              )}
+            </div>
+          )}
+
           <label className="block">
             <span className="mb-1 block text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
               Durum
             </span>
             <select
               value={kart.durum}
-              disabled={kaydediliyor}
+              /*
+                Öğrenci karar verdiyse seçici kapalı: teklifi kabul ya da
+                reddetmek adayın kararı ve şirket onu geri alamıyor. Aynı
+                kural veritabanında da duruyor.
+              */
+              disabled={kaydediliyor || kararVerildi}
               onChange={(e) => durumDegistir(e.target.value)}
               className={ALAN}
               style={alanStil}
@@ -436,13 +627,14 @@ export const AdayCekmecesi: React.FC<{
                 </option>
               ))}
               {/*
-                Aday geri çektiyse mevcut durum listede olmalı, yoksa
-                `select` ilk seçeneği gösterip yanlış bilgi verirdi.
-                Seçilemiyor: şirket bu değere geçemez.
+                Adayın verdiği kararlar (geri çekme, teklifi kabul/ret)
+                seçenekler arasında yok. Ama mevcut durum onlardan biriyse
+                listede GÖRÜNMELİ: yoksa `select` ilk seçeneği gösterip
+                yanlış bilgi verirdi. Seçilemiyor.
               */}
-              {kart.durum === 'withdrawn' && (
-                <option value="withdrawn" disabled>
-                  {durumAdi('withdrawn')}
+              {!SIRKET_DURUMLARI.includes(kart.durum) && (
+                <option value={kart.durum} disabled>
+                  {durumAdi(kart.durum)}
                 </option>
               )}
             </select>
@@ -483,66 +675,167 @@ export const AdayCekmecesi: React.FC<{
             </p>
           )}
 
-          <div className="mt-3 flex flex-wrap gap-2">
-            {sonraki && (
-              <button
-                type="button"
-                disabled={kaydediliyor}
-                onClick={() => durumDegistir(sonraki)}
-                className={BIRINCIL_DUGME}
-                style={birincilStil}
-              >
-                {kaydediliyor ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                {durumAdi(sonraki)} aşamasına al
-              </button>
-            )}
+          {/*
+            TEKLİF AŞAMASI DİĞERLERİNDEN FARKLI
 
-            {/*
-              OLUMSUZ İKİ ADIMDA
-
-              Yanlışlıkla basılan tek düğme adayın sürecini kapatıyordu.
-              Ağır bir modal yerine düğmenin kendisi soruya dönüşüyor.
-            */}
-            {kart.durum !== 'rejected' && kart.durum !== 'withdrawn' && (
-              olumsuzSoruldu ? (
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-bold" style={{ color: SIRKET_METIN }}>
-                    Olumsuz olarak işaretlensin mi?
-                  </span>
-                  <button
-                    type="button"
-                    disabled={kaydediliyor}
-                    onClick={() => {
-                      setOlumsuzSoruldu(false);
-                      durumDegistir('rejected');
-                    }}
-                    className={IKINCIL_DUGME}
-                    style={{ ...ikincilStil, borderColor: '#FCA5A5', color: '#991B1B' }}
-                  >
-                    Evet, olumsuz
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setOlumsuzSoruldu(false)}
-                    className={IKINCIL_DUGME}
-                    style={ikincilStil}
-                  >
-                    Vazgeç
-                  </button>
+            Diğer aşamalarda değişen tek şey durum. Teklifte ise
+            öğrencinin karar vereceği bir içerik var — bu yüzden düğme
+            doğrudan durumu değiştirmiyor, kısa bir form açıyor. Ücret,
+            çalışma biçimi ve süre SORULMUYOR: üçü de ilanda duruyor ve
+            öğrenci teklif ekranında ilandan okuyor.
+          */}
+          {teklifFormu ? (
+            <div className="mt-3 space-y-2">
+              <label className="block">
+                <span className="mb-1 block text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                  Teklif notu — öğrenci görecek
                 </span>
-              ) : (
+                <textarea
+                  value={teklifNotu}
+                  onChange={(e) => setTeklifNotu(e.target.value)}
+                  rows={3}
+                  placeholder="Başlangıç, ekip, çalışma düzeni gibi öğrencinin karar verirken bilmesi gerekenler."
+                  className="w-full rounded-xl border p-2.5 text-sm outline-none"
+                  style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY, color: SIRKET_METIN }}
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                  Başlangıç tarihi <span className="font-normal">(isteğe bağlı)</span>
+                </span>
+                <input
+                  type="date"
+                  value={teklifBaslangici}
+                  onChange={(e) => setTeklifBaslangici(e.target.value)}
+                  className={ALAN}
+                  style={alanStil}
+                />
+              </label>
+              <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   disabled={kaydediliyor}
-                  onClick={() => setOlumsuzSoruldu(true)}
+                  onClick={() => {
+                    setDurumHatasi(null);
+                    Promise.resolve(onTeklif?.({ not: teklifNotu, baslangic: teklifBaslangici }))
+                      .then(() => setTeklifFormu(false))
+                      .catch(() => setDurumHatasi('Teklif gönderilemedi. Tekrar dene.'));
+                  }}
+                  className={BIRINCIL_DUGME}
+                  style={birincilStil}
+                >
+                  {kaydediliyor ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {teklifBekliyor(kart.durum) ? 'Teklifi güncelle' : 'Teklifi gönder'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTeklifFormu(false)}
                   className={IKINCIL_DUGME}
                   style={ikincilStil}
                 >
-                  Olumsuz
+                  Vazgeç
                 </button>
-              )
-            )}
-          </div>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {sonraki === 'offer_extended' ? (
+                <button
+                  type="button"
+                  disabled={kaydediliyor}
+                  onClick={() => setTeklifFormu(true)}
+                  className={BIRINCIL_DUGME}
+                  style={birincilStil}
+                >
+                  Teklif gönder
+                </button>
+              ) : sonraki ? (
+                <button
+                  type="button"
+                  disabled={kaydediliyor}
+                  onClick={() => durumDegistir(sonraki)}
+                  className={BIRINCIL_DUGME}
+                  style={birincilStil}
+                >
+                  {kaydediliyor ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {durumAdi(sonraki)} aşamasına al
+                </button>
+              ) : null}
+
+              {/*
+                TEKLİF VERİLDİ: SIRA ŞİRKETTE DEĞİL
+
+                Bu aşamada birincil düğme yok — sıradaki hamle öğrencinin.
+                Şirket yalnızca gönderdiği teklifi düzeltebiliyor.
+              */}
+              {teklifBekliyor(kart.durum) && (
+                <button
+                  type="button"
+                  disabled={kaydediliyor}
+                  onClick={() => setTeklifFormu(true)}
+                  className={IKINCIL_DUGME}
+                  style={ikincilStil}
+                >
+                  Teklifi düzenle
+                </button>
+              )}
+
+              {/*
+                OLUMSUZ İKİ ADIMDA
+
+                Yanlışlıkla basılan tek düğme adayın sürecini kapatıyordu.
+                Ağır bir modal yerine düğmenin kendisi soruya dönüşüyor.
+
+                Teklif beklerken de duruyor ve soru başkalaşıyor: ayrı bir
+                "teklifi geri çek" durumu YOK, çünkü sonuç aynı — aday
+                olumsuz kapanıyor. Yeni bir durum uydurmak yerine olanın
+                ne anlama geldiği yazılıyor.
+
+                Öğrenci karar verdikten sonra hiç gösterilmiyor.
+              */}
+              {!kararVerildi && kart.durum !== 'rejected' && (
+                olumsuzSoruldu ? (
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold" style={{ color: SIRKET_METIN }}>
+                      {teklifBekliyor(kart.durum)
+                        ? 'Teklif geri çekilip aday olumsuz olarak kapatılsın mı?'
+                        : 'Olumsuz olarak işaretlensin mi?'}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={kaydediliyor}
+                      onClick={() => {
+                        setOlumsuzSoruldu(false);
+                        durumDegistir('rejected');
+                      }}
+                      className={IKINCIL_DUGME}
+                      style={{ ...ikincilStil, borderColor: '#FCA5A5', color: '#991B1B' }}
+                    >
+                      Evet, olumsuz
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOlumsuzSoruldu(false)}
+                      className={IKINCIL_DUGME}
+                      style={ikincilStil}
+                    >
+                      Vazgeç
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={kaydediliyor}
+                    onClick={() => setOlumsuzSoruldu(true)}
+                    className={IKINCIL_DUGME}
+                    style={ikincilStil}
+                  >
+                    Olumsuz
+                  </button>
+                )
+              )}
+            </div>
+          )}
 
           <button
             type="button"
