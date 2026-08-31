@@ -247,3 +247,31 @@ def test_anahtar_istemci_paketine_girmiyor():
     kok = Path(__file__).resolve().parents[2]
     for yol in (kok / "src").rglob("*.ts*"):
         assert "BRAVE_SEARCH_API_KEY" not in yol.read_text(encoding="utf-8"), yol
+
+
+# ------------------------------------------------- kota bitince dur
+
+def test_402_gorunce_katman_kapaniyor():
+    """Ölçüldü: bir koşuda 292 isteğin 144'ü HTTP 402 döndü.
+
+    Kota ortada bitmişti ve kalan istekler ölü bir uç noktaya gitti.
+    İlk 402'den sonra istek atılmıyor.
+    """
+    oturum = SahteOturum([SahteYanit(402), SahteYanit(402)])
+    b = BraveArama(anahtar=ANAHTAR, oturum=oturum)
+
+    assert b.ara("birinci") == []
+    assert b.olcum.kota_bitti is True
+
+    assert b.ara("ikinci") == []
+    assert oturum.cagri == 1, "kota bittikten sonra istek atılmamalı"
+    assert b.olcum.hata.get("http_402") == 1
+
+
+def test_kota_bitmeden_normal_calisiyor():
+    oturum = SahteOturum([SahteYanit(200, {"web": {"results": [
+        {"url": "https://jobs.lever.co/acme/1", "title": "X"}]}})])
+    b = BraveArama(anahtar=ANAHTAR, oturum=oturum)
+    assert len(b.ara("q")) == 1
+    assert b.olcum.kota_bitti is False
+    assert b.olcum.ozet()["kota_bitti"] is False

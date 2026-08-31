@@ -43,6 +43,7 @@ class BraveOlcum:
     sonucsuz: int = 0
     hata: dict[str, int] = field(default_factory=dict)
     tavana_takildi: int = 0
+    kota_bitti: bool = False
 
     def hata_yaz(self, tur: str) -> None:
         self.hata[tur] = self.hata.get(tur, 0) + 1
@@ -54,6 +55,7 @@ class BraveOlcum:
             "sonucsuz": self.sonucsuz,
             "hata": dict(self.hata),
             "tavana_takildi": self.tavana_takildi,
+            "kota_bitti": self.kota_bitti,
         }
 
 
@@ -83,6 +85,14 @@ class BraveArama:
         devam ediyor ve neden sayaçta görünüyor.
         """
         if not self.kullanilabilir:
+            return []
+        # KOTA BİTTİYSE İSTEK ATMA
+        #
+        # Ölçüldü: bir koşuda 292 isteğin 144'ü HTTP 402 döndü — kota
+        # ortada bitti ve kalan istekler ölü bir uç noktaya gitti. Bir
+        # kez 402 gördükten sonra katman kapanıyor; çözüm aşaması bunu
+        # `kota_bitti` üzerinden görüp koşuyu erken bitirebiliyor.
+        if self.olcum.kota_bitti:
             return []
         if sorgu in self._onbellek:
             return self._onbellek[sorgu]
@@ -117,6 +127,11 @@ class BraveArama:
             return []
         if durum >= 500:
             self.olcum.hata_yaz("5xx")
+            return []
+        if durum == 402:
+            # Ödeme/kota sınırı. Bu koşuda bir daha denenmiyor.
+            self.olcum.hata_yaz("http_402")
+            self.olcum.kota_bitti = True
             return []
         if durum != 200:
             self.olcum.hata_yaz(f"http_{durum}")

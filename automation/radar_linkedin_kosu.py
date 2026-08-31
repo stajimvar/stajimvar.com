@@ -107,6 +107,9 @@ def kesfet(saglayici, butce: Butce, sorgu_siniri: int, olcum: dict) -> dict:
             olcum["kesif_kesildi"] = "bütçe"
             break
         sonuclar = saglayici.ara(sorgu)
+        if saglayici.olcum.kota_bitti:
+            olcum["kesif_kesildi"] = "arama kotası bitti"
+            break
         ham += len(sonuclar)
         aile = sorgu_ailesi(sorgu)
         aile_verimi[aile] += len(sonuclar)
@@ -245,6 +248,9 @@ def main(argv: list[str] | None = None) -> int:
 
     for sinyal in kuyruk:
         huni["sinyal"] += 1
+        if saglayici.olcum.kota_bitti and not kiraci_onbellek.get(sadelestir(sinyal.sirket)):
+            erken_kesildi = "arama kotası bitti — kalan sinyaller çözülemedi"
+            break
         if erken_durdur(butce.harcanan, resmi_eslesme):
             erken_kesildi = (f"ilk {butce.harcanan} istekte resmî eşleşme yok — "
                              "kalan bütçe yakılmadı")
