@@ -22,6 +22,12 @@ on:
         description: "Doldurulursa TEK arama yapıp çıkar (anahtar denemesi)"
         required: false
         default: ""
+      mod:
+        description: "resmi = Brave→ATS resmî ilan radarı · kesif = Kariyer.net radarı"
+        required: false
+        default: "resmi"
+        type: choice
+        options: ["resmi", "kesif"]
   schedule:
     # Günde bir. Keşif kaynakları saatlik değişmiyor; saatlik çekmek
     # kaynağa gereksiz yük bindirmek olurdu.
@@ -61,7 +67,7 @@ jobs:
         run: pip install -r automation/requirements-scraper.txt
 
       - name: Radar testleri
-        run: python -m pytest automation/tests/test_radar.py automation/tests/test_staj_kalitesi.py -q
+        run: python -m pytest automation/tests -q
 
       # ANAHTARIN VARLIĞI — DEĞERİ DEĞİL
       #
@@ -88,8 +94,15 @@ jobs:
           TEST_SORGUSU: ${{ inputs.test_sorgusu }}
         run: python -m automation.radar_kosu --test-sorgusu "$TEST_SORGUSU"
 
-      - name: Gölge koşusu
-        if: ${{ inputs.test_sorgusu == '' }}
+      # RESMÎ WEB RADARI — Brave doğrudan resmî ATS ilanı arıyor.
+      - name: Resmî radar gölge koşusu
+        if: ${{ inputs.test_sorgusu == '' && (inputs.mod || 'resmi') == 'resmi' }}
+        run: python -m automation.radar_resmi_kosu --sorgu-siniri 120
+
+      # KEŞİF RADARI — Kariyer.net. Artık canonical ilan kaynağı değil;
+      # "bu şirket stajyer arıyor" sinyali olarak duruyor.
+      - name: Keşif radarı gölge koşusu
+        if: ${{ inputs.test_sorgusu == '' && inputs.mod == 'kesif' }}
         env:
           SAYFA: ${{ inputs.sayfa_sayisi || '2' }}
         run: python -m automation.radar_kosu --sayfa "$SAYFA"
@@ -99,5 +112,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: radar-golge-raporu
-          path: radar-rapor.json
+          path: |
+            radar-rapor.json
+            radar-resmi-rapor.json
           if-no-files-found: warn
