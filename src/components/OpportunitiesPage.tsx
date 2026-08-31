@@ -14,6 +14,7 @@ import {
 import type { StudentProfile } from '../types';
 import { GoogleAdBanner } from './GoogleAdBanner';
 import { ListingLogo } from './ListingLogo';
+import { ZamanTupu } from './ZamanTupu';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import {
   fetchOpportunities,
@@ -36,7 +37,6 @@ import {
   ACILIYET_SINIFLARI,
   closingSoon,
   closingSoonLabel,
-  deadlineLabel,
   deadlineTone,
   groupOpportunities,
   opportunityAmount,
@@ -78,9 +78,6 @@ const categoryPath: Record<string, OpportunityType | ''> = {
   '/yurtdisi-firsatlari': 'international',
   '/yarismalar': 'competition',
 };
-
-const safeDate = (value?: string) =>
-  value ? new Intl.DateTimeFormat('tr-TR', { dateStyle: 'long' }).format(new Date(value)) : 'Tarih belirtilmemiş';
 
 const kisaTarih = (value?: string) =>
   value ? new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short' }).format(new Date(value)) : null;
@@ -375,9 +372,16 @@ export const OpportunitiesPage: React.FC<{
             )}
           </div>
 
-          {/* En yakın kapanış ayrı bir uyarı: tarih listede kaybolmasın. */}
+          {/*
+            En yakın kapanış ayrı bir satır: tarih listede kaybolmasın.
+
+            Gül kırmızısıydı ve sayfanın en üstündeki tek renkli şey oydu;
+            kartlardaki kırmızı kalkınca tek başına bir hata bandı gibi
+            kaldı. Kartlarla aynı sıcak amber ailesine alındı — söylenen
+            şey kötü haber değil, "bunlar yakında kapanıyor".
+          */}
           {state === 'ready' && yarinKapananlar.length > 0 && (
-            <p className="mt-3 flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-100 px-3 py-2 text-xs font-bold text-rose-800">
+            <p className="mt-3 flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-xs font-bold text-amber-900">
               <AlarmClock className="w-4 h-4 shrink-0" />
               {yarinKapananlar.length === 1
                 ? `${closingSoonLabel(1)} ${yarinKapananlar[0].title}`
@@ -834,7 +838,8 @@ const Card: React.FC<{
   const cta = opportunityCta(item);
   const durum = opportunityStatus(item);
   const tutar = opportunityAmount(item);
-  const kalan = deadlineLabel(item);
+  /* `ton` artık YALNIZCA takvimi açıklanmamış kutuda kullanılıyor; kalan
+     durumların rengini zaman tüpü kendi taşıyor. */
   const ton = (ACILIYET_SINIFLARI as any)[deadlineTone(item)] ?? ACILIYET_SINIFLARI.notr;
   const yer = [...item.cities, ...item.countries];
   const seviye = item.educationLevels.length ? item.educationLevels.join(', ') : null;
@@ -898,33 +903,26 @@ const Card: React.FC<{
         </div>
       )}
 
-      {/* NE ZAMAN: aciliyet önde, kesin tarih arkada. */}
       {/*
-        RENK ACİLİYETİ ANLATIYOR
+        NE ZAMAN — ZAMAN TÜPÜ
 
-        Son başvuruya 17 gün kalan burs da kırmızı görünüyordu. Kırmızı bir
-        uyarı rengi — her şey kırmızı olunca hiçbir şey söylemiyor. Eşikler
-        kalan güne göre (0-3 kırmızı, 4-7 turuncu, 8+ nötr) ve yakında
-        açılacaklar yeşil: orada kaçırılacak bir şey yok, aksine iyi haber.
+        Burada renkli bir kutu vardı ve son üç güne giren burs KIRMIZI
+        oluyordu. Kırmızı bu üründe hata rengi: açık, başvurulabilir bir
+        burs "iptal oldu" gibi okunuyordu. Aynı bilgi artık zaman tüpüyle
+        veriliyor — süre azaldıkça dolan bir kapsül ve pozitif renk dili.
+
+        Takvimi açıklanmamış kayıtta tüp çizilmiyor; oradaki cümle ne
+        yapılacağını söylediği için olduğu gibi kalıyor.
       */}
-      <div className={`rounded-xl px-3 py-2 ${ton.kutu}`}>
-        {durum === 'acik' && (
-          <p className={`text-sm font-extrabold leading-snug ${ton.yazi}`}>
-            {kalan ? `${kalan} · ` : ''}Son başvuru: {safeDate(item.applicationDeadline)}
-          </p>
-        )}
-        {durum === 'kapali' && <p className={`text-sm font-bold ${ton.yazi}`}>Süresi doldu</p>}
-        {durum === 'yakinda' && (
-          <p className={`text-sm font-extrabold leading-snug ${ton.yazi}`}>
-            Başvurular {safeDate(item.applicationStartAt)} tarihinde açılıyor
-          </p>
-        )}
-        {durum === 'takvim_bekleniyor' && (
+      {durum === 'takvim_bekleniyor' ? (
+        <div className={`rounded-xl px-3 py-2 ${ton.kutu}`}>
           <p className={`text-[13px] font-semibold leading-snug ${ton.yazi}`}>
             Kurum bu dönemin takvimini açıklamadı; resmî kaynaktan takip et.
           </p>
-        )}
-      </div>
+        </div>
+      ) : (
+        <ZamanTupu item={item} />
+      )}
 
       {/*
         UYGUNLUK — İDDİA DEĞİL, GEREKÇE
@@ -943,11 +941,19 @@ const Card: React.FC<{
         </p>
       )}
 
-      {item.lastCheckedAt && (
-        <p className="text-[11px] text-gray-600">
-          Son kontrol: {safeDate(item.lastCheckedAt)} · Bilgiler kurum tarafından değiştirilebilir.
-        </p>
-      )}
+      {/*
+        "SON KONTROL … DEĞİŞTİRİLEBİLİR" SATIRI KARTTAN ÇIKTI
+
+        İki satır yer kaplayan bir GÜVEN notuydu, bir karar bilgisi değil:
+        kullanıcı bu cümleye bakıp başvurup başvurmayacağına karar
+        vermiyor. Üstelik kartın tepesinde zaten "Resmî kaynak" rozeti
+        duruyor ve hemen altında zaman tüpü var — üç ayrı güven/tarih
+        sinyali arka arkaya geliyordu.
+
+        Cümlenin tamamı detay sayfasında duruyor: "Bu kaydı en son …
+        tarihinde resmî kaynağından kontrol ettik." Aynı seçim keşif
+        kartında da yapılmıştı; iki kart artık aynı dili konuşuyor.
+      */}
 
       <div className="mt-auto flex flex-wrap items-center gap-2">
         <button
@@ -1023,7 +1029,8 @@ const Takvim: React.FC<{ items: Opportunity[]; onNavigate: (p: string) => void }
                 <span className="min-w-0 flex-1">
                   <span
                     className={`inline-block text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 ${
-                      olay.tur === 'acilis' ? 'bg-blue-50 text-blue-700' : 'bg-rose-50 text-rose-700'
+                      /* Takvimdeki "Son başvuru" işareti de kartlarla aynı amber ailede. */
+                      olay.tur === 'acilis' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-900'
                     }`}
                   >
                     {olay.tur === 'acilis' ? 'Başvuru açılıyor' : 'Son başvuru'}

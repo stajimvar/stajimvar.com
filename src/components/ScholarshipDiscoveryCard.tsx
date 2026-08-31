@@ -4,7 +4,8 @@ import { ScholarshipCover } from './ScholarshipCover';
 import type { Opportunity } from '../lib/opportunities';
 import { opportunityTypeLabel } from '../lib/opportunity-domain.mjs';
 import { opportunityAmount } from '../lib/firsat-degerlendirme.mjs';
-import { bursEtiketleri, bursTarihDurumu, bursTarihMetni, bursTutariVar } from '../lib/burs-kesif.mjs';
+import { bursEtiketleri, bursTarihDurumu, bursTutariVar } from '../lib/burs-kesif.mjs';
+import { ZamanTupu } from './ZamanTupu';
 
 /**
  * Burs keşif kartı.
@@ -38,22 +39,21 @@ import { bursEtiketleri, bursTarihDurumu, bursTarihMetni, bursTutariVar } from '
  *   güven notu, bir karar bilgisi değil. Detay sayfasında kalıyor.
  */
 
+/*
+  ROZETTE DE KIRMIZI YOK
+
+  "Son günler" rozeti gül kırmızısıydı. Kartta hem kırmızı rozet hem
+  kırmızı tarih satırı olunca açık bir burs, iptal edilmiş gibi
+  görünüyordu. Rozet artık zaman tüpüyle aynı ailede: son günlerde sıcak
+  amber, öncesinde yeşil. Kırmızı hiçbir açık durumda yok.
+*/
 const DURUM_ROZETI: Record<string, { etiket: string; sinif: string }> = {
-  'son-gunler': { etiket: 'Son günler', sinif: 'bg-rose-50 text-rose-700 ring-rose-100' },
-  yakin: { etiket: 'Son hafta', sinif: 'bg-amber-50 text-amber-800 ring-amber-100' },
+  'son-gunler': { etiket: 'Son günler', sinif: 'bg-amber-50 text-amber-900 ring-amber-200' },
+  yakin: { etiket: 'Son hafta', sinif: 'bg-green-50 text-green-800 ring-green-200' },
   normal: { etiket: 'Başvuru açık', sinif: 'bg-emerald-50 text-emerald-700 ring-emerald-100' },
   yakinda: { etiket: 'Yakında', sinif: 'bg-blue-50 text-blue-700 ring-blue-100' },
   tarihsiz: { etiket: 'Takvim bekleniyor', sinif: 'bg-gray-100 text-gray-600 ring-gray-200' },
   kapali: { etiket: 'Kapandı', sinif: 'bg-gray-100 text-gray-500 ring-gray-200' },
-};
-
-const TARIH_SINIFI: Record<string, string> = {
-  'son-gunler': 'text-rose-700',
-  yakin: 'text-amber-800',
-  normal: 'text-gray-700',
-  yakinda: 'text-blue-700',
-  tarihsiz: 'text-gray-500',
-  kapali: 'text-gray-500',
 };
 
 export const ScholarshipDiscoveryCard: React.FC<{
@@ -147,9 +147,11 @@ export const ScholarshipDiscoveryCard: React.FC<{
           <p className="text-sm font-extrabold text-emerald-800">{tutar.metin}</p>
         )}
 
-        <p className={`mt-auto pt-1 text-[13px] font-bold ${TARIH_SINIFI[tarihDurumu]}`}>
-          {bursTarihMetni(item)}
-        </p>
+        {/*
+          Tek satırlık kırmızı tarih yazısı yerine zaman tüpü: aynı bilgi,
+          pozitif renk dili ve süre yaklaştıkça dolan bir gösterge.
+        */}
+        <ZamanTupu item={item} className="mt-auto pt-1" sikisik={serit} />
 
         <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-2">
           {item.verifiedAt ? (

@@ -15,7 +15,8 @@ import {
   OPPORTUNITY_STATUS_LABELS,
 } from '../lib/opportunity-domain.mjs';
 import { opportunityAmount } from '../lib/firsat-degerlendirme.mjs';
-import { bursTarihDurumu, bursTarihMetni, turkiyeGeneliMi } from '../lib/burs-kesif.mjs';
+import { bursTarihDurumu, turkiyeGeneliMi } from '../lib/burs-kesif.mjs';
+import { ZamanTupu } from './ZamanTupu';
 import { ScholarshipCover } from './ScholarshipCover';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 
@@ -233,12 +234,13 @@ export const OpportunityDetailPage: React.FC<{
             <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">
               {opportunityTypeLabel(item.opportunityType)}
             </span>
+            {/* Kırmızı kalktı: açık bir burs hata gibi görünmemeli. */}
             <span
               className={`rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ${
                 tarihDurumu === 'son-gunler'
-                  ? 'bg-rose-50 text-rose-700 ring-rose-100'
+                  ? 'bg-amber-50 text-amber-900 ring-amber-200'
                   : tarihDurumu === 'yakin'
-                    ? 'bg-amber-50 text-amber-800 ring-amber-100'
+                    ? 'bg-green-50 text-green-800 ring-green-200'
                     : durum === 'acik'
                       ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
                       : durum === 'yakinda'
@@ -261,19 +263,12 @@ export const OpportunityDetailPage: React.FC<{
           </h1>
           <p className="mt-1.5 font-semibold text-gray-600">{item.organizationName}</p>
 
-          <p
-            className={`mt-3 text-sm font-bold ${
-              tarihDurumu === 'son-gunler'
-                ? 'text-rose-700'
-                : tarihDurumu === 'yakin'
-                  ? 'text-amber-800'
-                  : tarihDurumu === 'yakinda'
-                    ? 'text-blue-700'
-                    : 'text-gray-700'
-            }`}
-          >
-            {bursTarihMetni(item)}
-          </p>
+          {/*
+            Detayda da aynı gösterge: kart ile detay arasında iki farklı
+            tarih dili olmasın. Genişliği sınırlı, çünkü burada tüp bir
+            yardımcı sinyal — asıl odak başlık ve başvuru düğmesi.
+          */}
+          <ZamanTupu item={item} className="mt-3 max-w-xs" />
 
           {/* Masaüstünde burada; mobilde altta yapışkan olarak da duruyor. */}
           <div className="mt-5 hidden sm:block">{anaEylem}</div>
