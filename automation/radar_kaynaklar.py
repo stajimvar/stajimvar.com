@@ -66,10 +66,21 @@ def _metni_ayikla(ham: str) -> str:
 
 
 def kariyer_net(getir, sayfa_sayisi: int = 3) -> list[Sinyal]:
-    """Kariyer.net staj ilanı listelerinden metadata toplar.
+    """Kariyer.net staj listelerinden metadata toplar.
 
-    Yalnızca `/is-ilanlari/...` liste sayfaları ve oradaki `/is-ilani/`
-    bağlantıları. `/filtre` yolları robots.txt'te yasak — kullanılmıyor.
+    KART BAŞINA AYRIŞTIRMA
+    ----------------------
+    İlk sürüm bağlantı metnini olduğu gibi şirket adı sanıyordu ve
+    gölge koşusunda ölçüldü: 61 sinyalin 61'i `company_unresolved`
+    döndü, çünkü "şirket adı" gerçekte `Sponsorlu İlan Stajyer
+    STRATEJİK İLETİŞİM OFİSİ...` gibi kart metninin tamamıydı.
+
+    Sayfa kartları başlığı ve şehri YAPISAL alanlarda taşıyor
+    (`positionName`, `cityName`); şirket adı kart metninde, başlıkla
+    şehrin arasında. Artık ikisi kaynağından okunuyor, şirket de
+    gürültü ayıklanarak bulunuyor.
+
+    `/filtre` yolları robots.txt'te yasak — kullanılmıyor.
     """
     sinyaller: list[Sinyal] = []
     gorulen: set[str] = set()
@@ -84,38 +95,95 @@ def kariyer_net(getir, sayfa_sayisi: int = 3) -> list[Sinyal]:
         if _duvar_mi(govde):
             raise KaynakKapali("kariyer.net bot duvarı döndürdü")
 
-        # Liste kartları: ilan bağı + yanındaki şirket/konum metni.
-        for m in re.finditer(
-            r'<a[^>]+href="(/is-ilani/[^"]+)"[^>]*>(.*?)</a>', govde, re.I | re.S
-        ):
-            yol, ic = m.group(1), _metni_ayikla(m.group(2))
-            if not ic or yol in gorulen:
+        for kart in _kariyer_kartlari(govde):
+            yol = kart.get("yol")
+            if not yol or yol in gorulen:
                 continue
-            gorulen.add(yol)
-            # Kart metni "Başlık Şirket Konum" biçiminde geliyor; slug
-            # şirketi de taşıyor. Başlık kart metninin ilk parçası.
-            baslik = ic[:120]
-            sirket = _kariyer_sirket(yol, ic)
+            sirket = kart.get("sirket")
+            baslik = kart.get("baslik")
             if not sirket or not baslik:
                 continue
+            gorulen.add(yol)
             sinyaller.append(
-                Sinyal("kariyer.net", "https://www.kariyer.net" + yol, sirket, baslik, None)
+                Sinyal("kariyer.net", "https://www.kariyer.net" + yol,
+                       sirket, baslik, kart.get("sehir"))
             )
         time.sleep(ISTEK_ARASI_SANIYE)
 
     return sinyaller
 
 
-def _kariyer_sirket(yol: str, kart_metni: str) -> str | None:
-    """Şirket adını kart metninden ya da slug'dan çıkarır.
+#: Kart metninde şirket adı OLMAYAN parçalar.
+KARIYER_GURULTU = re.compile(
+    r"^(sponsorlu ilan|is yerinde|uzaktan|hibrit|yeni|guncellendi|bugun|dun)$",
+    re.I,
+)
 
-    Slug `sirket-adi-pozisyon-1234567` biçiminde; sondaki sayı ilan
-    kimliği. Kart metni varsa o tercih ediliyor — slug kısaltılmış
-    olabiliyor.
+
+def _oznitelik(blok: str, ad: str) -> str | None:
+    m = re.search(ad + r'="([^"]*)"', blok)
+    if not m:
+        return None
+    d = _metni_ayikla(m.group(1))
+    return d or None
+
+
+def _kariyer_kartlari(govde: str) -> list[dict]:
+    """Liste sayfasındaki her ilan kartını alanlarına ayırır.
+
+    KART `positionName` ÜZERİNDEN ÇAPALANIYOR
+    -----------------------------------------
+    İlk deneme `class="job-list-card-item"` üzerinden bölüyordu ve
+    ölçümde görüldü: başlık ve şehir öznitelikleri o niteliğin ÖNÜNDE
+    duruyor, dolayısıyla bölme onları bir önceki parçada bırakıyordu —
+    `baslik` ve `sehir` boş, şirket alanına da başlık düşüyordu.
+
+    Her kartta `positionName` bir kez geçiyor; doğru çapa o.
     """
-    m = re.search(r"/is-ilani/(.+?)-(\d+)$", yol)
-    slug = m.group(1).replace("-", " ") if m else ""
-    return (kart_metni.split("  ")[0][:80] or slug[:80]) or None
+    kartlar: list[dict] = []
+    caplar = [m.start() for m in re.finditer(r'positionName="', govde)]
+    for i, bas in enumerate(caplar):
+        son = caplar[i + 1] if i + 1 < len(caplar) else min(len(govde), bas + 3000)
+        pencere = govde[bas:son]
+
+        m = re.search(r'href="(/is-ilani/[^"]+)"', pencere)
+        if not m:
+            continue
+
+        baslik = _oznitelik(pencere, "positionName")
+        sehir = _oznitelik(pencere, "cityName")
+        if not baslik:
+            continue
+
+        # Metin parçaları yalnız ilk `>` işaretinden SONRA başlıyor:
+        # öncesi hâlâ açılış etiketinin öznitelikleri.
+        # ŞİRKET, ŞEHRİN BİR ÖNCESİ
+        #
+        # Kart metni sabit sırada geliyor:
+        #     [Sponsorlu İlan] · görünür başlık · ŞİRKET · şehir · çalışma
+        # Görünür başlık `positionName` özniteliğiyle birebir aynı
+        # olmayabiliyor (kısaltılmış ya da farklı yazım), bu yüzden
+        # "başlığa eşit olanı atla" kuralı yetmiyordu ve şirket yuvasına
+        # başlık düşüyordu. Şehir yapısal olarak BİLİNİYOR — sağlam çapa
+        # o: şirket, şehirden hemen önceki parça.
+        govde_ici = pencere[pencere.find(">") + 1:] if ">" in pencere else pencere
+        parcalar = [
+            p for p in (_metni_ayikla(x) for x in re.split(r"<[^>]+>", govde_ici))
+            if p and 2 <= len(p) <= 80 and not KARIYER_GURULTU.match(p)
+        ]
+        sirket = None
+        if sehir:
+            sehir_kok = sehir.split("(")[0].strip().lower()
+            for i, p in enumerate(parcalar):
+                if p.lower().startswith(sehir_kok) and i > 0:
+                    sirket = parcalar[i - 1]
+                    break
+        if not sirket:
+            # Şehir bulunamadıysa başlık olmayan ilk parçaya düşülüyor.
+            sirket = next((p for p in parcalar if p.lower() != baslik.lower()), None)
+
+        kartlar.append({"yol": m.group(1), "baslik": baslik, "sirket": sirket, "sehir": sehir})
+    return kartlar
 
 
 def youthall(getir, sayfa_sayisi: int = 2) -> list[Sinyal]:
