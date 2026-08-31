@@ -1,0 +1,20 @@
+-- GEÇERSİZ KILINDI — İÇERİĞİ BİLEREK BOŞ
+--
+-- Bu sürüm numarası üretim defterinde duruyor çünkü göç gerçekten
+-- uygulandı. İçeriği şuydu: `listings` üzerinde, öğrencinin başvurduğu
+-- ilanı açan bir okuma politikası — ama koşulu DOĞRUDAN `applications`
+-- tablosuna bakıyordu.
+--
+-- Sonuç üretimde ölçüldü: ÖZYİNELEME (42P17). `listings` politikası
+-- `applications`'a bakıyor, `applications`'ın şirket okuma politikası
+-- da `listings`'e bakıyor. Hiçbir ilan okunamıyordu — ana sayfa dahil.
+-- Politika saniyeler içinde düşürüldü ve public okuma onarıldı.
+--
+-- Düzeltilmiş hâli bir sonraki göçte (20260831172729): döngüyü kıran
+-- `security definer` yardımcı, projenin kendi kalıbıyla.
+--
+-- Dosya SİLİNMİYOR: defterdeki sürümün yerel karşılığı olmazsa
+-- geçmiş doğrulama kapısı sapma bildiriyor. Sıfırdan kurulumda bu
+-- dosyanın hiçbir şey yapmaması doğru — bozuk politikayı yeniden
+-- kurmanın anlamı yok.
+select 1;
