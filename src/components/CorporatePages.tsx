@@ -77,7 +77,8 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
             inceleniyor ve <strong>robots kuralları kontrol ediliyor</strong>.
           </p>
           <p>
-            Kaynaklar saatte bir kontrol ediliyor. Yeni ilan çıktığında listeye giriyor.
+            Kaynaklar saatte bir taranıyor; yayındaki ilanların adresleri ayrıca her
+            gün yeniden kontrol ediliyor.
             Kapanan ilanların otomatik düşürülmesi şu anda <strong>tek bir kaynakta</strong>
             açık; kalan kaynaklarda kapanan ilanları elle kaldırıyoruz. Kapsamı adım adım
             genişletiyoruz. Bunu <strong>İlan kuralları</strong> sayfasında da açıkça
@@ -142,11 +143,29 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
             özgeçmiş üretme. Şirketlerin StajımVar&apos;da açtığı ilanlara{' '}
             <strong>başvuru siteden çıkmadan</strong> tamamlanıyor: başvuru şirketin
             işveren paneline düşüyor, şirket durumunu oradan güncelliyor ve öğrenci
-            sonucu kendi başvuru sayfasında görüyor.
+            sonucu kendi başvuru sayfasında görüyor. Şirket görüşmeye davet
+            edebiliyor, öğrenci daveti yanıtlıyor, şirket teklif gönderiyor ve
+            öğrenci teklifi kabul ya da reddediyor. Teklif kabul edildiğinde iki
+            tarafın iletişim bilgileri karşılıklı açılıyor — o ana kadar açılmıyor.
           </p>
           <p>
-            <strong>Henüz yapamıyoruz:</strong> özgeçmiş dosyası yükleme. Başvuruya
-            profilinizden üretilen özgeçmiş bilgisi gidiyor, yüklediğiniz bir PDF değil.
+            <strong>İki ilan modelimiz var ve ikisi farklı işliyor.</strong>{' '}
+            Şirketin kendi kariyer sayfasında ya da başvuru sisteminde bulduğumuz
+            ilanlarda başvuruyu biz almıyoruz: sizi ilanın resmî kaynağına
+            gönderiyoruz ve süreç orada yürüyor. Şirketin doğrudan StajımVar&apos;da
+            açtığı ilanlarda ise başvuru ve sonrasındaki aday süreci burada
+            yürüyor.
+          </p>
+          <p>
+            <strong>Bildirimler uygulama içinde.</strong> Başvurunuzda bir şey
+            değiştiğinde site içindeki bildirim merkezinde görüyorsunuz.{' '}
+            E-posta, SMS ya da telefon bildirimi göndermiyoruz.
+          </p>
+          <p>
+            <strong>Özgeçmiş dosyası:</strong> profilinize PDF yükleyebiliyorsunuz.
+            StajımVar üzerinden bir başvuru gönderdiğinizde o anki dosyanın bir
+            kopyası başvuruya bağlanıyor — sonradan profilinizdeki dosyayı
+            değiştirseniz bile şirketin gördüğü belge değişmiyor.
           </p>
           <p>
             Şirketler kendi ilanlarını giriyor: önce şirket sayfasını sahipleniyor.
@@ -338,12 +357,18 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
             için de aynı adrese yazabilirsiniz.
           </p>
           <p>
-            Kaynağında kapanan ilanlar için kurduğumuz kural şu: bir ilan üç ardışık
-            kontrolde görülmezse ve en az 48 saat geçmişse otomatik olarak listeden
-            düşürülür. <strong>Bu otomatik düşürme şu an devre dışı</strong> — sağlıklı
-            tarama geçmişi birikmeden açılırsa sistem ilk çalıştırmada her ilanı
-            kaybolmuş sayar. O zamana kadar kapanmış bir ilan görürseniz bize bildirin,
-            elle kaldırıyoruz.
+            Yayındaki ilanların kaynak adresleri <strong>her gün</strong> yeniden
+            kontrol ediliyor. Bir ilan yalnızca kaynağının kapandığını{' '}
+            <strong>doğrulayabildiğimizde</strong> listeden düşüyor: adres kalıcı
+            olarak kaldırılmışsa ya da sayfanın kendisi ilanın kapandığını
+            yazıyorsa.
+          </p>
+          <p>
+            Geçici erişim hataları tek başına ilanı kapalı saymak için{' '}
+            <strong>kullanılmıyor</strong>. Zaman aşımı, erişim engeli, istek sınırı,
+            sunucu hatası ve ad çözümleme hatalarında ilan yerinde kalıyor; yalnızca
+            &quot;bugün doğrulanamadı&quot; olarak işaretleniyor. Yanlışlıkla kapatılan
+            bir ilan, açık kalan bir ilandan daha kötü.
           </p>
         </S>
       </>
