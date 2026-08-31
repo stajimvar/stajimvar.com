@@ -1644,11 +1644,15 @@ values ('22222222-aaaa-4000-8000-000000000009'::uuid, '11111111-aaaa-4000-8000-0
 
 insert into public.applications (id, listing_id, student_id, match_score, application_method,
                                  email_delivery_status, created_via, contact_share_consent_at, status)
+-- UNION ALL dallarını birlikte çözerken de dize sabitleri `text` olarak
+-- sabitleniyor: tipler açıkça yazılıyor.
 select '33333333-9991-4000-8000-000000000001'::uuid, '22222222-aaaa-4000-8000-000000000009'::uuid, c,
-       60, 'internal', 'not_required', 'web', now(), 'offer_accepted' from k
+       60, 'internal'::application_method, 'not_required'::email_delivery_status, 'web', now(),
+       'offer_accepted'::application_status from k
 union all
 select '33333333-9992-4000-8000-000000000002'::uuid, '22222222-aaaa-4000-8000-000000000009'::uuid, e,
-       60, 'internal', 'not_required', 'web', now(), 'offer_declined' from k;
+       60, 'internal'::application_method, 'not_required'::email_delivery_status, 'web', now(),
+       'offer_declined'::application_status from k;
 
 insert into public.applications (id, listing_id, student_id, match_score, application_method,
                                  email_delivery_status, created_via, contact_share_consent_at, status)
