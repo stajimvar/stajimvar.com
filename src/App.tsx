@@ -36,7 +36,10 @@ import { BolumHub, BolumPage } from './components/BolumPages';
 import { StajProgramlariSayfasi } from './components/StajProgramlari';
 import { IsverenGirisi } from './components/IsverenGirisi';
 import { SirketPaneli } from './sirket/SirketPaneli';
+import { BildirimMerkezi } from './components/BildirimMerkezi';
+import { useBildirimler } from './lib/useBildirimler';
 import { DunyaGecisi } from './sirket/DunyaGecisi';
+import { SIRKET_VURGU_KOYU } from './sirket/renk';
 
 /*
   Panel yollari. Herkese acik sirket sayfasi (/sirket/<slug>) ile
@@ -325,6 +328,49 @@ export default function App() {
     };
   }, []);
   const [applications, setApplications] = useState<ApplicationRecord[]>([]);
+
+  /*
+    BİLDİRİMDEN GELEN BAŞVURU
+
+    Bildirime tıklayan kullanıcıyı genel bir sayfaya atıp aratmıyoruz:
+    ilgili başvurunun kimliği ekrana geçiyor ve o kartın paneli
+    kendiliğinden açılıyor. Adres satırındaki sorgu parametresine
+    güvenilmiyor — `/profil` yolu ana sayfaya çevriliyor ve sorgu
+    orada kayboluyordu.
+  */
+  const [acilacakBasvuru, setAcilacakBasvuru] = useState<string | null>(null);
+  const [acilacakAday, setAcilacakAday] = useState<string | null>(null);
+
+  /*
+    Bildirim durumu TEK yerde: aynı kullanıcı işveren paneline geçince
+    aynı kayıtları görüyor, çünkü bildirim kullanıcıya ait, dünyaya
+    değil. İki kabuk da bu durumu okuyor.
+  */
+  const bildirim = useBildirimler(session?.userId ?? null);
+
+  /*
+    BİLDİRİME TIKLAMA
+
+    Hedef adres hangi DÜNYAYA gideceğini söylüyor; hangi kaydın
+    açılacağını ise bildirimin taşıdığı başvuru kimliği. Kimliği
+    adresten ayrıştırmak yerine kolondan okumak, adres biçimi
+    değiştiğinde bağlantıyı kırmıyor.
+  */
+  const bildirimAc = React.useCallback(
+    (b: { hedef: string | null; basvuruId: string | null; id: string; okunduMu: boolean }) => {
+      void bildirim.okunduYap(b as never);
+      bildirim.kapat();
+      if (b.hedef?.startsWith('/sirket')) {
+        setAcilacakAday(b.basvuruId);
+        navigate('/sirket/basvuranlar');
+      } else {
+        setAcilacakBasvuru(b.basvuruId);
+        setActiveTab('profile');
+        navigate('/');
+      }
+    },
+    [bildirim, navigate],
+  );
   /*
     Testler veritabanindan geliyor. Eskiden uygulamayla birlikte gonderilen
     duragan bir dosyadan okunuyordu ve o dosyada DOGRU CEVAPLAR vardi --
@@ -1025,6 +1071,8 @@ export default function App() {
         düşüyor. Buradaki yönlendirme yalnızca yolu kısaltıyor.
       */
       onDunyaDegistir={sirketDunyasinaGec}
+      okunmamisBildirim={bildirim.okunmamis}
+      onBildirimAc={() => void bildirim.ac()}
       sirketUyesiMi={sirketUyesi}
       bulunulanYol={temizYol}
       searchQuery={aramaTerimi}
@@ -1471,7 +1519,22 @@ export default function App() {
             setDunyaGecisi('ogrenciye');
             navigate('/');
           }}
+          okunmamisBildirim={bildirim.okunmamis}
+          onBildirimAc={() => void bildirim.ac()}
+          acilacakAday={acilacakAday}
+          onAdayAcildi={() => setAcilacakAday(null)}
         />
+        {bildirim.acik && (
+          <BildirimMerkezi
+            bildirimler={bildirim.bildirimler}
+            okunmamis={bildirim.okunmamis}
+            yukleniyor={bildirim.yukleniyor}
+            renk={SIRKET_VURGU_KOYU}
+            onKapat={bildirim.kapat}
+            onAc={bildirimAc}
+            onTumunuOkundu={() => void bildirim.tumunuOkunduYap()}
+          />
+        )}
         {dunyaGecisi && (
           <DunyaGecisi yon={dunyaGecisi} onBitti={() => setDunyaGecisi(null)} />
         )}
@@ -1743,6 +1806,13 @@ export default function App() {
                       return yanit;
                     }}
                     onFetchContact={(id) => fetchApplicationContact(id)}
+                    /*
+                      Bildirimden gelindiyse ilgili başvurunun paneli
+                      kendiliğinden açılıyor: kullanıcı listeyi tekrar
+                      taramak zorunda kalmıyor.
+                    */
+                    acilacakBasvuru={acilacakBasvuru}
+                    onBasvuruAcildi={() => setAcilacakBasvuru(null)}
                   />
                 }
                 quizzes={quizzes}

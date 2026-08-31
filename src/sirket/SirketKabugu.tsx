@@ -1,6 +1,7 @@
 import React from 'react';
 import { Briefcase, Building2, GraduationCap, LayoutGrid, Plus, Users } from 'lucide-react';
 import { BottomNavigation, BottomNavigationItem } from '../ui/BottomNavigation';
+import { BildirimDugmesi } from '../components/BildirimMerkezi';
 import {
   birincilStil,
   SIRKET_ALT_MENU,
@@ -50,8 +51,19 @@ export const SirketKabugu: React.FC<{
   onOgrenciyeDon: () => void;
   /** Sağ üstte görünen kısa durum. Kademe numarası yazmıyor. */
   durumRozeti?: React.ReactNode;
+  /* Bildirim durumu App'te; kabuk yalnızca düğmeyi çiziyor. */
+  okunmamisBildirim?: number | null;
+  onBildirimAc?: () => void;
   children: React.ReactNode;
-}> = ({ secili, onNavigate, onOgrenciyeDon, durumRozeti, children }) => (
+}> = ({
+  secili,
+  onNavigate,
+  onOgrenciyeDon,
+  durumRozeti,
+  okunmamisBildirim,
+  onBildirimAc,
+  children,
+}) => (
   <div className="min-h-screen" style={{ background: SIRKET_ZEMIN, color: SIRKET_METIN }}>
     <header
       className="sticky top-0 z-30 border-b"
@@ -78,7 +90,29 @@ export const SirketKabugu: React.FC<{
           </span>
         </button>
 
-        <nav aria-label="Şirket menüsü" className="ml-auto hidden items-center gap-1 sm:flex">
+        {/*
+          BİLDİRİM ZİLİ İKİ DÜNYADA DA AYNI SİSTEM
+
+          Bildirim kullanıcıya ait, şirkete değil: aynı kişi öğrenci
+          tarafına geçtiğinde aynı kayıtları görüyor. Değişen tek şey
+          rengi — burası yeşil-beyaz.
+
+          Menüden ÖNCE ve `ml-auto` ile sağa itiliyor ki dar ekranda da
+          (menü gizliyken) görünsün.
+        */}
+        {onBildirimAc && (
+          <div className="ml-auto sm:ml-auto">
+            <BildirimDugmesi
+              okunmamis={okunmamisBildirim ?? null}
+              renk={SIRKET_VURGU_KOYU}
+              onAc={onBildirimAc}
+              className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl transition-colors"
+              style={{ color: SIRKET_METIN_IKINCIL }}
+            />
+          </div>
+        )}
+
+        <nav aria-label="Şirket menüsü" className="hidden items-center gap-1 sm:flex">
           {SEKMELER.map((s) => (
             <button
               key={s.id}

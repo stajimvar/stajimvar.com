@@ -18,7 +18,6 @@ import {
   LogOut,
   ArrowRight,
   ShieldCheck,
-  Mail,
   Users,
   Columns,
   Plus,
@@ -47,6 +46,8 @@ const uniqueAccountSheetId = () => {
   }
   return `account-sheet-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 };
+
+import { BildirimDugmesi } from './BildirimMerkezi';
 
 interface HeaderProps {
   activeTab: 'internships' | 'badges' | 'applications' | 'profile' | 'company-portal';
@@ -111,6 +112,15 @@ interface HeaderProps {
   /** Şirket dunyasina gecis; yetki yoksa kapiya goturuyor. */
   onDunyaDegistir?: () => void;
   /*
+    BİLDİRİM — kabuk yalnızca düğmeyi çiziyor.
+
+    Liste, okunmamış sayısı ve okundu damgası App'te tek yerde duruyor:
+    aynı kullanıcı işveren paneline geçtiğinde de aynı kayıtları görüyor,
+    çünkü bildirim kullanıcıya ait, dünyaya değil.
+  */
+  okunmamisBildirim?: number | null;
+  onBildirimAc?: () => void;
+  /*
     ŞİRKET ÜYELİĞİ — GERÇEK SİNYAL
 
     `profiles.role` değil: bir kişi hem öğrenci hem şirket üyesi olabiliyor
@@ -174,6 +184,8 @@ export const Header: React.FC<HeaderProps> = ({
   isAdmin = false,
   onOpenAdmin,
   onDunyaDegistir,
+  okunmamisBildirim,
+  onBildirimAc,
   sirketUyesiMi,
 }) => {
   /*
@@ -943,24 +955,27 @@ export const Header: React.FC<HeaderProps> = ({
                   </button>
                 )}
 
-                {/* Messages / Notifications Envelope Icon */}
-                <button
-                  id="header-messages-btn"
-                  type="button"
-                  onClick={() => {
-                    if (userRole === 'student') {
-                      setActiveTab('applications');
-                      setActiveSubTab('all');
-                    } else {
-                      setActiveTab('company-portal');
-                      setActiveSubTab('all_candidates');
-                    }
-                  }}
-                  title="Mesajlar ve Bildirimler"
-                  className="p-1.5 text-gray-700 hover:text-gray-900 transition-colors cursor-pointer rounded-lg hover:bg-gray-100"
-                >
-                  <Mail className="w-4.5 sm:w-5 h-4.5 sm:h-5" />
-                </button>
+                {/*
+                  ZARF GİTTİ, ZİL GELDİ
+
+                  Buradaki ikon bir zarftı ve başlığı "Mesajlar ve
+                  Bildirimler" diyordu. Ölçüldü: mesajlaşma diye bir şey
+                  YOK ve düğmenin yaptığı tek şey sekme değiştirmekti —
+                  öğrenciyi Başvurularım'a, şirketi aday havuzuna
+                  götürüyordu. Yani ikon var olmayan bir kutuyu vaat
+                  ediyordu.
+
+                  Zil, gerçekten var olan şeyi anlatıyor: okunmamış
+                  bildirimler. Rozet yalnız sayı SUNUCUDAN geldiğinde
+                  çiziliyor.
+                */}
+                {onBildirimAc && (
+                  <BildirimDugmesi
+                    okunmamis={okunmamisBildirim ?? null}
+                    renk="#2563EB"
+                    onAc={onBildirimAc}
+                  />
+                )}
 
                 {/*
                   GÜVENLİK AĞI: profil herhangi bir sebeple yüklenemezse

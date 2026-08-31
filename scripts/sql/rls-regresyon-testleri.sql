@@ -1394,5 +1394,233 @@ select pg_temp.bekle(
      from public.applications where id='33333333-6666-4000-8000-000000000006'::uuid),
   'Yeni davet sonrasi yanit bos');
 
+
+-- =====================================================================
+-- BİLDİRİMLER
+-- =====================================================================
+--
+-- Bildirim KULLANICIYA ait, şirkete değil. Kimse başkasının bildirimini
+-- okuyamıyor, okundu yapamıyor, kendine bildirim uyduramıyor.
+--
+-- Bildirimler `applications` üzerindeki tetikleyiciden doğuyor; bu blok
+-- kendi başvurusunu açıp akışı baştan yürütüyor.
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+
+insert into public.listings (id, company_id, title, status, origin, application_method)
+values ('22222222-aaaa-4000-8000-000000000008'::uuid, '11111111-aaaa-4000-8000-000000000001'::uuid,
+        'A Bildirim Stajyeri', 'published', 'employer_posted', 'internal');
+
+-- Önceki blokların ürettiği bildirimler sayımları bulandırmasın.
+delete from public.notifications;
+
+-- ------------------------------------------------------ YENİ BAŞVURU
+--
+-- Öğrenci C kendi başvurusunu gönderiyor: bildirim ŞİRKET ÜYESİNE
+-- gitmeli, öğrencinin kendisine DEĞİL (kendi işini zaten biliyor).
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', c::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$insert into public.applications
+       (id, listing_id, student_id, match_score, application_method,
+        email_delivery_status, created_via, contact_share_consent_at, profile_snapshot)
+     values ('33333333-8888-4000-8000-000000000008',
+             '22222222-aaaa-4000-8000-000000000008',
+             '00000000-0000-4000-8000-00000000000c',
+             70, 'internal', 'not_required', 'web', now(), '{"ad":"Aday C"}')$q$),
+  'C, bildirim testi icin basvuru gonderebilir');
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+
+select pg_temp.bekle(
+  (select count(*) = 1 from public.notifications
+    where recipient_id = (select a from k)
+      and type = 'yeni_basvuru'
+      and application_id = '33333333-8888-4000-8000-000000000008'::uuid),
+  'Yeni basvuru sirket uyesine bildirim uretti');
+
+select pg_temp.bekle(
+  (select count(*) = 0 from public.notifications
+    where recipient_id = (select c from k)),
+  'Ogrenci kendi basvurusu icin bildirim almadi');
+
+-- Hedef adres doğrudan ilgili kaydı açıyor.
+select pg_temp.bekle(
+  (select target_url = '/sirket/basvuranlar?aday=33333333-8888-4000-8000-000000000008'
+     from public.notifications
+    where recipient_id = (select a from k) and type = 'yeni_basvuru'),
+  'Bildirim dogrudan ilgili kaydi aciyor');
+
+-- --------------------------------------------- GÖRÜŞME DAVETİ VE YANITI
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.applications
+        set status='interview_scheduled', interview_date='2026-09-20',
+            interview_time='10:00', interview_type='online'
+      where id='33333333-8888-4000-8000-000000000008'$q$),
+  'A, bildirim testinde gorusmeye davet edebilir');
+
+-- AYNI DURUM TEKRAR YAZILIYOR: ikinci bildirim doğmamalı.
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='interview_scheduled'
+      where id='33333333-8888-4000-8000-000000000008'$q$),
+  'A, ayni durumu tekrar yazabilir');
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+
+select pg_temp.bekle(
+  (select count(*) = 1 from public.notifications
+    where recipient_id = (select c from k) and type = 'gorusme_daveti'),
+  'Gorusme daveti ogrenciye bildirim uretti');
+
+select pg_temp.bekle(
+  (select count(*) = 1 from public.notifications
+    where recipient_id = (select c from k) and type = 'gorusme_daveti'),
+  'Ayni durum tekrar yazilinca ikinci bildirim yok');
+
+select pg_temp.bekle(
+  (select count(*) = 0 from public.notifications
+    where recipient_id = (select a from k) and type = 'gorusme_daveti'),
+  'Kendi aksiyonu icin bildirim uretilmedi');
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', c::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(
+  (select public.gorusmeye_yanit_ver('33333333-8888-4000-8000-000000000008', true) = 'accepted'),
+  'C, bildirim testinde daveti kabul edebilir');
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+
+select pg_temp.bekle(
+  (select count(*) = 1 from public.notifications
+    where recipient_id = (select a from k) and type = 'gorusme_kabul'),
+  'Gorusme yaniti sirkete bildirim uretti');
+
+-- --------------------------------------------------- TEKLİF VE YANITI
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.applications
+        set status='offer_extended', offer_note='Bekliyoruz.', offer_compensation='18.000 TL / ay'
+      where id='33333333-8888-4000-8000-000000000008'$q$),
+  'A, bildirim testinde teklif gonderebilir');
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+
+select pg_temp.bekle(
+  (select count(*) = 1 from public.notifications
+    where recipient_id = (select c from k) and type = 'teklif'),
+  'Teklif ogrenciye bildirim uretti');
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', c::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(
+  (select public.teklife_yanit_ver('33333333-8888-4000-8000-000000000008', true)::text
+     = 'offer_accepted'),
+  'C, bildirim testinde teklifi kabul edebilir');
+
+-- İKİNCİ YANIT: işlev erken dönüyor, satır güncellenmiyor, bildirim yok.
+select pg_temp.bekle(
+  (select public.teklife_yanit_ver('33333333-8888-4000-8000-000000000008', true)::text
+     = 'offer_accepted'),
+  'C, ikinci kez yanit verebilir (fail-soft)');
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+
+select pg_temp.bekle(
+  (select count(*) = 1 from public.notifications
+    where recipient_id = (select a from k) and type = 'teklif_kabul'),
+  'Teklif yaniti sirkete bildirim uretti');
+
+-- ------------------------------------------------------ ERİŞİM SINIRI
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', b::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(
+  (select count(*) = 0 from public.notifications),
+  'B, A bildirimlerini goremez');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.notifications set read_at = now()
+      where recipient_id = '00000000-0000-4000-8000-00000000000a'$q$),
+  'B, A bildirimini okundu yapamaz');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$insert into public.notifications (recipient_id, type, title)
+     values ('00000000-0000-4000-8000-00000000000b', 'sahte', 'Sahte bildirim')$q$),
+  'Kullanici kendine bildirim uyduramaz');
+
+-- Başlık ya da hedef adres yazılabilseydi kullanıcı kendi ekranında
+-- sahte bir bildirim üretebilirdi: kolon yetkisi yalnız `read_at`.
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.notifications set title = 'Degistirildi'
+      where recipient_id = '00000000-0000-4000-8000-00000000000a'$q$),
+  'Kullanici bildirim basligini degistiremez');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.notifications
+        set target_url = '/sirket/basvuranlar?aday=33333333-aaaa-4000-8000-000000000001'
+      where recipient_id = '00000000-0000-4000-8000-00000000000a'$q$),
+  'Kullanici bildirim hedefini degistiremez');
+
+-- Okunmamış sayısı: A yalnız kendi kayıtlarını sayıyor.
+select pg_temp.bekle(
+  (select count(*) = (select count(*) from public.notifications
+                       where recipient_id = '00000000-0000-4000-8000-00000000000a'::uuid
+                         and read_at is null)
+     from public.notifications where read_at is null),
+  'Okunmamis sayisi yalniz kendi kayitlarini sayiyor');
+
+-- Kendi bildirimini okundu YAPABİLİYOR.
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$select public.bildirimleri_okundu_isaretle()$q$),
+  'A, kendi bildirimlerini okundu yapabilir');
+
+select pg_temp.bekle(
+  (select count(*) = 0 from public.notifications where read_at is null),
+  'Tumu okundu isaretlendi');
+
+-- B'nin bildirimleri etkilenmedi: işlev yalnız çağıranın satırlarına dokunuyor.
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+
+select pg_temp.bekle(
+  (select count(*) > 0 from public.notifications
+    where recipient_id = (select c from k) and read_at is null),
+  'Tumu okundu yalniz cagiranin kayitlarini etkiledi');
+
 reset role;
 rollback;

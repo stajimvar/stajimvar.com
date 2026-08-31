@@ -53,6 +53,35 @@ export type Database = {
           },
         ];
       };
+      notifications: {
+        Row: {
+          id: string;
+          recipient_id: string;
+          type: string;
+          title: string;
+          body: string | null;
+          target_url: string | null;
+          application_id: string | null;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          recipient_id: string;
+          type: string;
+          title: string;
+          body?: string | null;
+          target_url?: string | null;
+          application_id?: string | null;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          /* Kullanıcının yazabildiği TEK kolon: kolon yetkisi öyle. */
+          read_at?: string | null;
+        };
+        Relationships: [];
+      };
       applications: {
         Row: {
           application_method: Database['public']['Enums']['application_method'];
@@ -1272,6 +1301,8 @@ export type Database = {
         Args: { p_basvuru: string; p_kabul: boolean };
         Returns: Database['public']['Enums']['application_status'];
       };
+      /* Bütün okunmamış bildirimleri okundu yapar; sayıyı döndürür. */
+      bildirimleri_okundu_isaretle: { Args: Record<string, never>; Returns: number };
       /* Görüşme davetine yanıt — kabul/ret yalnızca bu kapıdan geçiyor. */
       gorusmeye_yanit_ver: {
         Args: { p_basvuru: string; p_katilacak: boolean };

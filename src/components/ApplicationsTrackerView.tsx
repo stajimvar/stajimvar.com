@@ -52,6 +52,14 @@ interface ApplicationsTrackerViewProps {
   onRespondToInterview?: (applicationId: string, katilacak: boolean) => Promise<string>;
   /* Kabul edilmiş teklifte şirket yetkilisinin iletişim satırı. */
   onFetchContact?: (applicationId: string) => Promise<Iletisim | null>;
+  /*
+    BİLDİRİMDEN GELEN BAŞVURU
+
+    Kullanıcıyı listeye atıp aratmıyoruz: ilgili başvurunun davet ya da
+    teklif paneli kendiliğinden açılıyor ve kart görünüre kaydırılıyor.
+  */
+  acilacakBasvuru?: string | null;
+  onBasvuruAcildi?: () => void;
 }
 
 /** Karşı tarafın iletişim satırı — sunucunun döndürdüğü biçim. */
@@ -85,6 +93,8 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
   onRespondToOffer,
   onRespondToInterview,
   onFetchContact,
+  acilacakBasvuru,
+  onBasvuruAcildi,
 }) => {
   /* Geri çekme onayı: yanlışlıkla tek tıkla süreç kapanmasın. */
   const [geriCekilen, setGeriCekilen] = useState<string | null>(null);
@@ -100,6 +110,25 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
   const [davetAcik, setDavetAcik] = useState<string | null>(null);
   const [davetKarari, setDavetKarari] = useState<{ id: string; katilacak: boolean } | null>(null);
   const [davetHatasi, setDavetHatasi] = useState<string | null>(null);
+
+  /*
+    Hangi panelin açılacağı BAŞVURUNUN DURUMUNDAN çıkıyor: görüşme
+    aşamasındaysa davet, teklif aşamasındaysa teklif. Bildirim türünü
+    burada ikinci kez yorumlamak, iki yerde ayrı kural demekti.
+  */
+  React.useEffect(() => {
+    if (!acilacakBasvuru) return;
+    const kayit = applications.find((a) => a.id === acilacakBasvuru);
+    if (!kayit) return;
+    if (kayit.status === 'interview_scheduled') setDavetAcik(kayit.id);
+    if (kayit.status === 'offer_extended') setTeklifAcik(kayit.id);
+    /* Süzgeç kaydı gizliyorsa "Tümü"ne dönülüyor; yoksa açılan panel görünmezdi. */
+    onSubTabChange?.('all');
+    document
+      .querySelector(`[data-basvuru-karti="${kayit.id}"]`)
+      ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    onBasvuruAcildi?.();
+  }, [acilacakBasvuru, applications, onSubTabChange, onBasvuruAcildi]);
   /* Başvuru kimliği → iletişim satırı. 'yok' okundu ama kapı kapalı demek. */
   const [iletisimler, setIletisimler] = useState<Record<string, Iletisim | 'yok' | 'hata'>>({});
 
@@ -246,6 +275,8 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
             return (
               <div
                 key={app.id}
+                /* Bildirimden gelindiğinde kart görünüre kaydırılıyor. */
+                data-basvuru-karti={app.id}
                 className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-xs hover:border-blue-300 transition-all space-y-3.5 sm:space-y-4 overflow-hidden"
               >
                 {/* Top Line */}

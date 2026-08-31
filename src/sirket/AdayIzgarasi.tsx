@@ -60,6 +60,15 @@ export const AdayIzgarasi: React.FC<{
   onTeklif: (id: string, teklif: { not: string; baslangic: string; ucret: string }) => Promise<void>;
   onDavet: (id: string, davet: { tarih: string; saat: string; tur: string; yer: string; not: string }) => Promise<void>;
   onIletisim: (id: string) => Promise<Iletisim | null>;
+  /*
+    BİLDİRİMDEN GELEN ADAY
+
+    Şirketi listeye atıp aratmıyoruz: bildirimdeki başvurunun çekmecesi
+    kendiliğinden açılıyor. Süzgeç o adayı gizliyor olabilir ama çekmece
+    ham listeden çözülüyor, dolayısıyla yine açılıyor.
+  */
+  acilacakAday?: string | null;
+  onAdayAcildi?: () => void;
   onNot: (id: string, metin: string) => Promise<void>;
 }> = ({
   kartlar,
@@ -70,6 +79,8 @@ export const AdayIzgarasi: React.FC<{
   onTeklif,
   onDavet,
   onIletisim,
+  acilacakAday,
+  onAdayAcildi,
   onNot,
 }) => {
   const [onyargisiz, setOnyargisiz] = React.useState(false);
@@ -125,6 +136,14 @@ export const AdayIzgarasi: React.FC<{
   */
   const acikHam = acikId ? (kartlar.find((k) => k.id === acikId) ?? null) : null;
   const acik = acikHam && onyargisiz ? onyargisizla(acikHam) : acikHam;
+
+  /* Bildirimden gelindiyse ilgili aday açılıyor. */
+  React.useEffect(() => {
+    if (!acilacakAday) return;
+    if (!kartlar.some((k) => k.id === acilacakAday)) return;
+    setAcikId(acilacakAday);
+    onAdayAcildi?.();
+  }, [acilacakAday, kartlar, onAdayAcildi]);
 
   const durumUygula = React.useCallback(
     async (id: string, durum: string) => {

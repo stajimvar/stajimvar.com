@@ -120,7 +120,23 @@ export const SirketPaneli: React.FC<{
   yoneticiMi: boolean;
   onNavigate: (yol: string) => void;
   onOgrenciyeDon: () => void;
-}> = ({ yol, userId, yoneticiMi, onNavigate, onOgrenciyeDon }) => {
+  /* Bildirim durumu App'te; panel yalnızca kabuğa geçiriyor. */
+  okunmamisBildirim?: number | null;
+  onBildirimAc?: () => void;
+  /* Bildirimden gelindiyse açılacak aday. */
+  acilacakAday?: string | null;
+  onAdayAcildi?: () => void;
+}> = ({
+  yol,
+  userId,
+  yoneticiMi,
+  onNavigate,
+  onOgrenciyeDon,
+  okunmamisBildirim,
+  onBildirimAc,
+  acilacakAday,
+  onAdayAcildi,
+}) => {
   useNoindex();
 
   const [baglam, setBaglam] = React.useState<SirketBaglami | null>(null);
@@ -176,7 +192,10 @@ export const SirketPaneli: React.FC<{
 
   if (durum === 'yukleniyor' || !baglam) {
     return (
-      <SirketKabugu secili={sekme} onNavigate={onNavigate} onOgrenciyeDon={onOgrenciyeDon}>
+      <SirketKabugu secili={sekme} onNavigate={onNavigate} onOgrenciyeDon={onOgrenciyeDon}
+        okunmamisBildirim={okunmamisBildirim}
+        onBildirimAc={onBildirimAc}
+      >
         <div className="space-y-3" aria-busy="true">
           <span
             className="block h-8 w-48 animate-pulse rounded-lg"
@@ -193,7 +212,10 @@ export const SirketPaneli: React.FC<{
 
   if (durum === 'hata') {
     return (
-      <SirketKabugu secili={sekme} onNavigate={onNavigate} onOgrenciyeDon={onOgrenciyeDon}>
+      <SirketKabugu secili={sekme} onNavigate={onNavigate} onOgrenciyeDon={onOgrenciyeDon}
+        okunmamisBildirim={okunmamisBildirim}
+        onBildirimAc={onBildirimAc}
+      >
         <div className={KUTU} style={kutuStil}>
           <p className="font-bold" style={{ color: SIRKET_METIN }}>
             Panel yüklenemedi
@@ -229,6 +251,8 @@ export const SirketPaneli: React.FC<{
       secili={sekme}
       onNavigate={onNavigate}
       onOgrenciyeDon={onOgrenciyeDon}
+      okunmamisBildirim={okunmamisBildirim}
+      onBildirimAc={onBildirimAc}
       durumRozeti={<DurumRozeti baglam={baglam} />}
     >
       {yeniIlanEkrani || duzenlenenId ? (
@@ -314,6 +338,8 @@ export const SirketPaneli: React.FC<{
             await basvuruNotuKaydet(id, metin);
             await yukle();
           }}
+          acilacakAday={acilacakAday}
+          onAdayAcildi={onAdayAcildi}
         />
       ) : (
         <div className="space-y-5">
@@ -679,6 +705,8 @@ const Basvuranlar: React.FC<{
   onTeklif: (id: string, teklif: { not: string; baslangic: string; ucret: string }) => Promise<void>;
   onDavet: (id: string, davet: { tarih: string; saat: string; tur: string; yer: string; not: string }) => Promise<void>;
   onIletisim: (id: string) => Promise<Iletisim | null>;
+  acilacakAday?: string | null;
+  onAdayAcildi?: () => void;
   onNot: (id: string, metin: string) => Promise<void>;
 }> = ({
   baglam,
@@ -690,6 +718,8 @@ const Basvuranlar: React.FC<{
   onTeklif,
   onDavet,
   onIletisim,
+  acilacakAday,
+  onAdayAcildi,
   onNot,
 }) => {
   if (!adayGorebilir(baglam.kademe)) {
@@ -740,6 +770,8 @@ const Basvuranlar: React.FC<{
         onTeklif={onTeklif}
         onDavet={onDavet}
         onIletisim={onIletisim}
+        acilacakAday={acilacakAday}
+        onAdayAcildi={onAdayAcildi}
         onNot={onNot}
       />
     </div>
