@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ExternalLink, FileText, Github, ShieldOff, X } from 'lucide-react';
+import { ChevronDown, ExternalLink, FileText, Github, Loader2, ShieldOff, X } from 'lucide-react';
 import {
   BIRINCIL_DUGME,
   IKINCIL_DUGME,
@@ -93,6 +93,28 @@ export const AdayCekmecesi: React.FC<{
   if (!kart) return null;
 
   const kimlik = kimlikSatiri(kart);
+
+  /*
+    İmzalı adres tıklama anında üretiliyor, kart çizilirken değil: adresin
+    ömrü on dakika ve önceden üretilseydi açılmadan ölürdü. Ayrıca
+    görülmeyen her aday için gereksiz bir istek olurdu.
+  */
+  const [cvAciliyor, setCvAciliyor] = React.useState(false);
+  const [cvHatasi, setCvHatasi] = React.useState<string | null>(null);
+  const cvAc = async () => {
+    if (!kart?.cvYolu) return;
+    setCvHatasi(null);
+    setCvAciliyor(true);
+    try {
+      const { cvGoruntulemeAdresi } = await import('../lib/cv');
+      const adres = await cvGoruntulemeAdresi(kart.cvYolu);
+      window.open(adres, '_blank', 'noopener,noreferrer');
+    } catch {
+      setCvHatasi('CV açılamadı. Şirket doğrulaması tamamlanmamış olabilir.');
+    } finally {
+      setCvAciliyor(false);
+    }
+  };
 
   const panel = (
     <div
@@ -262,16 +284,42 @@ export const AdayCekmecesi: React.FC<{
                     Portfolyo
                   </a>
                 )}
+                {/*
+                  CV ARTIK AÇILABİLİYOR
+
+                  Burada yalnızca "CV başvuruya ekli" yazan ölü bir etiket
+                  vardı; dosyayı açmanın hiçbir yolu yoktu. Kova gizli
+                  olduğu için public adres üretilmiyor — her tıklamada kısa
+                  ömürlü imzalı adres alınıyor ve adresi üretebilmek
+                  dosyayı OKUYABİLMEYİ gerektiriyor. Yani kapı burada
+                  değil, depolama politikasında: yalnızca doğrulanmış
+                  şirket, yalnızca kendi ilanına gelen başvurunun belgesi.
+
+                  Gösterilen dosya başvuru anının kopyası; öğrenci bugün
+                  CV'sini değiştirmiş olsa bile burada değişmiyor.
+                */}
                 {kart.cvYolu && (
-                  <span
+                  <button
+                    type="button"
+                    onClick={() => void cvAc()}
+                    disabled={cvAciliyor}
                     className={IKINCIL_DUGME}
-                    style={{ ...ikincilStil, color: SIRKET_METIN_IKINCIL }}
+                    style={ikincilStil}
                   >
-                    <FileText className="h-4 w-4" />
-                    CV başvuruya ekli
-                  </span>
+                    {cvAciliyor ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileText className="h-4 w-4" />
+                    )}
+                    CV'yi görüntüle
+                  </button>
                 )}
               </div>
+              {cvHatasi && (
+                <p role="alert" className="mt-2 text-xs font-semibold" style={{ color: '#991B1B' }}>
+                  {cvHatasi}
+                </p>
+              )}
             </section>
           )}
         </div>

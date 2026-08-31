@@ -801,7 +801,31 @@ export default function App() {
   const submitApplication = async (consent: boolean) => {
     if (!applyTarget || !activeStudent) return;
 
+    /*
+      CV KOPYASI BAŞVURUDAN ÖNCE ÇIKARILIYOR
+
+      Profildeki dosyanın yolunu kopyalamak yetmez: öğrenci CV'sini
+      değiştirdiğinde şirketin gördüğü belge de sessizce değişirdi.
+      Burada dosyanın AYRI bir kopyası çıkarılıyor ve başvuru o kopyaya
+      bağlanıyor (lib/cv.ts).
+
+      Kopya çıkarılamazsa başvuru YİNE DE gönderiliyor: CV zorunlu değil
+      ve öğrenciyi bir dosya hatası yüzünden ilandan mahrum bırakmak
+      orantısız olurdu. Ama sessizce yutulmuyor — sonda bilgi veriliyor.
+    */
+    let cvSnapshotPath: string | null = null;
+    let cvEklenemedi = false;
+    if (activeStudent.cvPath) {
+      try {
+        const { cvBasvuruKopyasiCikar } = await import('./lib/cv');
+        cvSnapshotPath = await cvBasvuruKopyasiCikar(activeStudent.id, activeStudent.cvPath);
+      } catch {
+        cvEklenemedi = true;
+      }
+    }
+
     const created = await createApplication({
+      cvSnapshotPath,
       listingId: applyTarget.listing.id,
       studentId: activeStudent.id,
       matchScore: applyTarget.matchScore,
@@ -828,7 +852,11 @@ export default function App() {
       böyle çalışan bir süreç yok. Kaydın şirkete gitmediğini söylemek,
       öğrencinin resmî sayfadan başvurmasını sağlayan tek şey.
     */
-    showToast(basvuruSonucMesaji(applyTarget.listing, applyTarget.listing.companyName));
+    showToast(
+      cvEklenemedi
+        ? 'Başvurun kaydedildi ama CV eklenemedi. Profilinden CV dosyanı kontrol edip tekrar deneyebilirsin.'
+        : basvuruSonucMesaji(applyTarget.listing, applyTarget.listing.companyName)
+    );
   };
 
   // Handler: Add New Listing (Company portal)

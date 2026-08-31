@@ -503,6 +503,19 @@ export async function createApplication(params: {
    * tablosunu şirket okuyamıyor. Rıza verilmediyse yazılmıyor.
    */
   profileSnapshot?: Record<string, unknown> | null;
+  /**
+   * Başvuru anındaki CV KOPYASININ depolama yolu.
+   *
+   * Profildeki `cv_path` DEĞİL: burada duran şey, başvuru anında
+   * çıkarılmış ayrı bir dosya (lib/cv.ts · cvBasvuruKopyasiCikar).
+   * Profilin yolunu kopyalasaydık öğrenci CV'sini değiştirdiğinde şirket
+   * ekranındaki belge de sessizce değişirdi.
+   *
+   * Yol, veritabanındaki tetikleyiciyle öğrencinin kendi klasörüne
+   * sınırlı (applications_guard_cv_path): başkasının dosyasını kendi
+   * başvurusuna bağlayıp şirkete okutmak mümkün değil.
+   */
+  cvSnapshotPath?: string | null;
 }): Promise<ApplicationRecord> {
   /*
     Açık rıza yalnızca veri gerçekten aktarılıyorsa zorunlu. Dış ilanlarda
@@ -551,6 +564,15 @@ export async function createApplication(params: {
       profile_snapshot: (kopyaYazilacakMi(yol.teslimEdiliyor, params)
         ? params.profileSnapshot
         : null) as never,
+      /*
+        CV kopyası YALNIZCA teslim edilen başvuruda yazılıyor. Dış ilanda
+        şirkete hiçbir şey gitmiyor; oraya bir belge bağlamak, yapılmamış
+        bir paylaşımı kaydetmek olurdu.
+
+        `cv_path` (eski alan) yeni kod tarafından HİÇ yazılmıyor; okuma
+        tarafında yalnızca geriye uyumluluk için sonda duruyor.
+      */
+      cv_snapshot_path: yol.teslimEdiliyor ? (params.cvSnapshotPath ?? null) : null,
       email_delivery_status: deliveryStatus,
       created_via: 'web',
     })

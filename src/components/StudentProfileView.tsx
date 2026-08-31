@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ExternalLink,
+  FileText,
   FolderOpen,
   GraduationCap,
   Languages,
@@ -30,6 +31,7 @@ import {
   ApplicationRecord,
 } from '../types';
 import { uploadAvatar } from '../lib/queries';
+import { CvAlani } from './CvAlani';
 import { fetchSavedListingIds } from '../lib/opportunities';
 import { adYazimi , okulKisaltmasi} from '../lib/ad';
 import { useModalErisim } from '../lib/modal-erisim';
@@ -94,6 +96,7 @@ interface StudentProfileViewProps {
 type BolumId =
   | 'basvuru'
   | 'kisisel'
+  | 'cv'
   | 'teknik'
   | 'sosyal'
   | 'dil'
@@ -330,6 +333,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     { tamam: Boolean(student.bio), etiket: 'kendini tanıt', bolum: 'kisisel' },
     { tamam: Boolean(student.avatarUrl), etiket: 'fotoğraf ekle', bolum: 'kisisel' },
     { tamam: Boolean(student.phone), etiket: 'telefonunu gir', bolum: 'kisisel' },
+    /* CV artık gerçek bir belge: yüklenmişse adım tamam sayılıyor. */
+    { tamam: Boolean(student.cvPath), etiket: 'CV yükle', bolum: 'cv' },
     { tamam: yetenekler.length > 0, etiket: 'program ekle', bolum: 'teknik' },
     { tamam: sosyal.length > 0, etiket: 'beceri ekle', bolum: 'sosyal' },
     { tamam: diller.length > 0, etiket: 'dil ekle', bolum: 'dil' },
@@ -476,6 +481,18 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         .join(' · ') || undefined,
       ikon: <GraduationCap className="w-5 h-5" />,
       onClick: () => kisiselAc(),
+    },
+    {
+      /*
+        CV şeride ikinci sırada: profil dolduran öğrencinin okuldan sonra
+        yaptığı iş bu ve başvuruya giden tek belge.
+      */
+      id: 'cv',
+      etiket: 'CV',
+      dolu: Boolean(student.cvPath),
+      alt: student.cvPath ? 'PDF yüklendi' : undefined,
+      ikon: <FileText className="w-5 h-5" />,
+      onClick: () => bolumeGit('cv'),
     },
     {
       id: 'teknik',
@@ -952,6 +969,28 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           {basvuruListesi}
         </Bolum>
       )}
+
+      {/* ---------------- CV ---------------- */}
+      <Bolum
+        id="cv"
+        gorunur={acikBolum === 'cv'}
+        ikon={<FileText className="w-5 h-5" />}
+        baslik="CV"
+        ozet={
+          student.cvPath
+            ? 'Başvurularına bu belge ekleniyor'
+            : 'PDF yükle, başvurularına eklensin'
+        }
+        tamam={Boolean(student.cvPath)}
+        acik={acikBolum === 'cv'}
+        onToggle={() => bolumeGit('cv')}
+      >
+        <CvAlani
+          userId={student.id}
+          cvPath={student.cvPath}
+          onDegisti={(yeniYol) => onUpdateProfile({ cvPath: yeniYol ?? '' })}
+        />
+      </Bolum>
 
       {/* ---------------- 1. Kişisel bilgiler ---------------- */}
       <Bolum

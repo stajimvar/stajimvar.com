@@ -264,6 +264,7 @@ export function toStudentProfile(row: StudentRowBundle): StudentProfile {
     githubUsername: row.github_username ?? undefined,
     linkedinUrl: row.linkedin_url ?? undefined,
     portfolioUrl: row.portfolio_url ?? undefined,
+    cvPath: row.cv_path ?? undefined,
     skills: (row.student_skills ?? []).map(toStudentSkill),
     softSkills: row.soft_skills,
     languages: (row.student_languages ?? []).map(toStudentLanguage),
@@ -338,6 +339,8 @@ export function splitStudentUpdate(patch: Partial<StudentProfile>) {
     studentPatch.github_username = patch.githubUsername || null;
   if (patch.linkedinUrl !== undefined) studentPatch.linkedin_url = patch.linkedinUrl || null;
   if (patch.portfolioUrl !== undefined) studentPatch.portfolio_url = patch.portfolioUrl || null;
+  /* CV: boş dize DEĞİL null yazılıyor — "CV yok" tek bir değerle anlatılmalı. */
+  if (patch.cvPath !== undefined) studentPatch.cv_path = patch.cvPath || null;
   if (patch.targetRoles !== undefined) studentPatch.target_roles = patch.targetRoles;
   if (patch.softSkills !== undefined) studentPatch.soft_skills = patch.softSkills;
 

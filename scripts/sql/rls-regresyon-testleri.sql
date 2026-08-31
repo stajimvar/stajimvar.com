@@ -59,7 +59,8 @@ select
   '00000000-0000-4000-8000-00000000000a'::uuid as a,
   '00000000-0000-4000-8000-00000000000b'::uuid as b,
   '00000000-0000-4000-8000-00000000000c'::uuid as c,
-  '00000000-0000-4000-8000-00000000000d'::uuid as d;
+  '00000000-0000-4000-8000-00000000000d'::uuid as d,
+  '00000000-0000-4000-8000-00000000000e'::uuid as e;
 
 -- `authenticated` rolüne geçildikten sonra da okunabilmeli.
 grant select on k to authenticated;
@@ -71,7 +72,8 @@ select x.id, '00000000-0000-0000-0000-000000000000'::uuid, 'authenticated', 'aut
 from (select a as id, 'a@test-a.com' as eposta from k
       union all select b, 'b@test-b.com' from k
       union all select c, 'c@ogrenci.test' from k
-      union all select d, 'd@test-d.com' from k) x
+      union all select d, 'd@test-d.com' from k
+      union all select e, 'e@ogrenci.test' from k) x
 on conflict (id) do nothing;
 
 -- Kurulum service_role kimliğiyle: guard_listing_publish yayına çıkmayı
@@ -89,6 +91,7 @@ select a, 'a@test-a.com', 'company'::user_role from k
 union all select b, 'b@test-b.com', 'company'::user_role from k
 union all select c, 'c@ogrenci.test', 'student'::user_role from k
 union all select d, 'd@test-d.com', 'company'::user_role from k
+union all select e, 'e@ogrenci.test', 'student'::user_role from k
 on conflict (id) do update set role = excluded.role;
 
 insert into public.student_profiles (id, university, department, is_open_to_offers)
@@ -156,9 +159,25 @@ select '33333333-dddd-4000-8000-000000000004'::uuid, '22222222-dddd-4000-8000-00
        70, 'internal', 'not_required', 'web'
 from k;
 
--- Öğrenci C'nin CV dosyası. Yol şeması: cvs/{user_id}/dosya.pdf
+-- ÖĞRENCİ C'NİN CV DOSYALARI
+--
+--   {c}/profil/cv-a.pdf        → profildeki GÜNCEL belge (CV-A)
+--   {c}/basvurular/snap-a.pdf  → A ilanına başvuru anındaki KOPYA
+--
+-- İkisi ayrı dosya; profil belgesi değişince kopya değişmiyor. Test
+-- tam olarak bunu ölçüyor.
 insert into storage.objects (bucket_id, name, owner, owner_id, metadata)
-select 'cvs', c::text || '/cv.pdf', c, c::text, '{"mimetype":"application/pdf"}'::jsonb from k;
+select 'cvs', c::text || '/profil/cv-a.pdf', c, c::text, '{"mimetype":"application/pdf"}'::jsonb from k
+union all
+select 'cvs', c::text || '/basvurular/snap-a.pdf', c, c::text, '{"mimetype":"application/pdf"}'::jsonb from k;
+
+update public.student_profiles
+   set cv_path = (select c::text from k) || '/profil/cv-a.pdf'
+ where id = (select c from k);
+
+update public.applications
+   set cv_snapshot_path = (select c::text from k) || '/basvurular/snap-a.pdf'
+ where id = '33333333-aaaa-4000-8000-000000000001'::uuid;
 
 -- Uygunluk doğrulaması testleri için bir burs kaydı. Kayıt olmadan
 -- "yazamadı" kontrolü boş tabloda kendiliğinden geçerdi.
@@ -609,23 +628,26 @@ select pg_temp.bekle(
 
 -- ------------------------------------------------------ CV DOSYA ERİŞİMİ
 --
--- CV'ler özel `cvs` kovasında (public=false, yalnızca application/pdf,
--- 5 MB). Erişimi storage.objects üzerindeki politikalar belirliyor ve
--- hedef model şu:
+-- MODEL
+--   student_profiles.cv_path       → öğrencinin GÜNCEL belgesi
+--   applications.cv_snapshot_path  → o başvuru anındaki KOPYA
 --
+-- ANA KURAL: profildeki CV güncel belgedir, başvurudaki CV o anın
+-- belgesidir. Öğrenci CV'sini sonradan değiştirirse ŞİRKETİN GÖRDÜĞÜ
+-- BELGE DEĞİŞMEMELİ — yoksa şirket, değerlendirdiğinden başka bir
+-- belgeye bakar.
+--
+-- ERİŞİM HEDEFİ
 --   öğrenci        → yalnız kendi klasörü (oku/yaz/sil)
 --   başka öğrenci  → hiçbir şey
---   şirket         → yalnız KENDİ ilanına başvurmuş öğrencinin CV'si,
+--   şirket         → yalnız kendi ilanına gelen başvurunun BELGESİ,
 --                    VE yalnız şirket doğrulanmışsa
 --   service_role   → bakım için erişebilir
 --
--- Son şart tek başına politika metninde yazmıyor: "sirket basvuran cv
--- okur" politikası yalnızca is_company_member arıyor. Doğrulama şartı
--- `applications` tablosunun kendi politikasından geliyor
--- ("dogrulanmis sirket basvurulari gorur"). İki tablonun politikası
--- birlikte çalışıyor; aşağıdaki test bu birleşimin GERÇEKTEN kapalı
--- olduğunu ölçüyor. Ölçmeden "güvenli" demek, iki politikanın
--- birbirini tuttuğunu varsaymak olurdu.
+-- Şirketin okuduğu dosya artık KLASÖRDEN değil SATIRDAN türüyor
+-- (20260909010000_cv_anlik_kopya_erisimi). Klasör tabanlı eski politika,
+-- başvuru başına kopya çıkmaya başlayınca A şirketine, aynı öğrencinin
+-- B şirketine yaptığı başvurunun kopyasını da okuturdu.
 
 reset role;
 select set_config('request.jwt.claims',
@@ -634,15 +656,118 @@ set local role authenticated;
 
 select pg_temp.bekle(
   (select count(*) = 1 from storage.objects
-    where bucket_id = 'cvs' and name = (select c::text from k) || '/cv.pdf'),
-  'C, kendi CV dosyasini gorebilir');
+    where bucket_id = 'cvs' and name = (select c::text from k) || '/profil/cv-a.pdf'),
+  'C, kendi profil CV dosyasini gorebilir');
 
 select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
   $q$insert into storage.objects (bucket_id, name)
-     values ('cvs', '00000000-0000-4000-8000-00000000000a/sahte.pdf')$q$),
+     values ('cvs', '00000000-0000-4000-8000-00000000000a/profil/sahte.pdf')$q$),
   'C, baskasinin klasorune CV yukleyemez');
 
--- Doğrulanmış şirket A: C onun ilanına başvurmuş.
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$insert into storage.objects (bucket_id, name)
+     values ('cvs', '../00000000-0000-4000-8000-00000000000a/profil/sahte.pdf')$q$),
+  'C, yol gecisiyle baska klasore yazamaz');
+
+-- BAŞKA ÖĞRENCİNİN BELGESİ KAPALI
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', e::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(
+  (select count(*) = 0 from storage.objects
+    where bucket_id = 'cvs' and name like (select c::text from k) || '/%'),
+  'Ogrenci E, C nin hicbir CV dosyasini goremez');
+
+-- ---------------------------------------------- SNAPSHOT DEĞİŞMEZLİĞİ
+--
+-- C profildeki CV'sini CV-B ile değiştiriyor: yeni dosya yükleniyor,
+-- cv_path güncelleniyor, eski dosya siliniyor. Uygulamadaki sıranın
+-- aynısı (src/components/CvAlani.tsx).
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', c::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$insert into storage.objects (bucket_id, name)
+     values ('cvs', '00000000-0000-4000-8000-00000000000c/profil/cv-b.pdf')$q$),
+  'C, yeni profil CV dosyasini yukleyebilir');
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.student_profiles
+        set cv_path = '00000000-0000-4000-8000-00000000000c/profil/cv-b.pdf'
+      where id = '00000000-0000-4000-8000-00000000000c'$q$),
+  'C, profil CV yolunu guncelleyebilir');
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$delete from storage.objects
+      where bucket_id = 'cvs'
+        and name = '00000000-0000-4000-8000-00000000000c/profil/cv-a.pdf'$q$),
+  'C, eski profil CV dosyasini silebilir');
+
+select pg_temp.bekle(
+  (select cv_path = '00000000-0000-4000-8000-00000000000c/profil/cv-b.pdf'
+     from public.student_profiles where id = (select c from k)),
+  'Profil CV artik CV-B');
+
+select pg_temp.bekle(
+  (select cv_snapshot_path = '00000000-0000-4000-8000-00000000000c/basvurular/snap-a.pdf'
+     from public.applications where id = '33333333-aaaa-4000-8000-000000000001'::uuid),
+  'ESKI BASVURUNUN KOPYASI HALA CV-A');
+
+select pg_temp.bekle(
+  (select count(*) = 1 from storage.objects
+    where bucket_id = 'cvs'
+      and name = '00000000-0000-4000-8000-00000000000c/basvurular/snap-a.pdf'),
+  'Profil CV degisince basvuru kopyasi silinmedi');
+
+-- Yeni başvuru YENİ belgeyle: aynı öğrenci, ikinci ilan.
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$insert into storage.objects (bucket_id, name)
+     values ('cvs', '00000000-0000-4000-8000-00000000000c/basvurular/snap-b.pdf')$q$),
+  'C, ikinci basvuru icin yeni kopya cikarabilir');
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.applications
+        set cv_snapshot_path = '00000000-0000-4000-8000-00000000000c/basvurular/snap-b.pdf'
+      where id = '33333333-dddd-4000-8000-000000000004'$q$),
+  'C, kendi ikinci basvurusuna yeni kopyayi baglayabilir');
+
+-- ---------------------------------------------- YOL ENJEKSİYONU KAPALI
+--
+-- Şirketin okuma yetkisi başvuru satırındaki yoldan türüyor. Yol serbest
+-- olsaydı öğrenci, BAŞKA bir öğrencinin dosyasını kendi başvurusuna
+-- yazıp şirkete okutabilirdi. applications_guard_cv_path bunu kapatıyor.
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.applications
+        set cv_snapshot_path = '00000000-0000-4000-8000-00000000000e/profil/baskasi.pdf'
+      where id = '33333333-aaaa-4000-8000-000000000001'$q$),
+  'C, baskasinin dosya yolunu kendi basvurusuna yazamaz');
+
+select pg_temp.bekle(
+  (select cv_snapshot_path = '00000000-0000-4000-8000-00000000000c/basvurular/snap-a.pdf'
+     from public.applications where id = '33333333-aaaa-4000-8000-000000000001'::uuid),
+  'Enjeksiyon denemesinden sonra kopya yolu degismedi');
+
+-- PROFİL CV SİLİNSE BİLE KOPYALAR DURUYOR
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.student_profiles set cv_path = null
+      where id = '00000000-0000-4000-8000-00000000000c'$q$),
+  'C, profil CV kaydini temizleyebilir');
+
+select pg_temp.bekle(
+  (select count(*) = 2 from storage.objects
+    where bucket_id = 'cvs'
+      and name like '00000000-0000-4000-8000-00000000000c/basvurular/%'),
+  'Profil CV silinince basvuru kopyalari duruyor');
+
+-- ------------------------------------------------------ ŞİRKET ERİŞİMİ
+
+-- Doğrulanmış şirket A: C onun ilanına başvurdu.
 reset role;
 select set_config('request.jwt.claims',
   (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
@@ -650,8 +775,33 @@ set local role authenticated;
 
 select pg_temp.bekle(
   (select count(*) = 1 from storage.objects
-    where bucket_id = 'cvs' and name = (select c::text from k) || '/cv.pdf'),
-  'A (dogrulanmis, basvuru sahibi), basvuranin CV dosyasini gorebilir');
+    where bucket_id = 'cvs'
+      and name = '00000000-0000-4000-8000-00000000000c/basvurular/snap-a.pdf'),
+  'A (dogrulanmis), kendi basvurusunun CV kopyasini gorebilir');
+
+select pg_temp.bekle(
+  (select count(*) = 0 from storage.objects
+    where bucket_id = 'cvs'
+      and name = '00000000-0000-4000-8000-00000000000c/basvurular/snap-b.pdf'),
+  'A, ayni ogrencinin BASKA sirkete yaptigi basvurunun kopyasini goremez');
+
+select pg_temp.bekle(
+  (select count(*) = 0 from storage.objects
+    where bucket_id = 'cvs'
+      and name like '00000000-0000-4000-8000-00000000000c/profil/%'),
+  'A, ogrencinin GUNCEL profil CV sini goremez');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$delete from storage.objects
+      where bucket_id = 'cvs'
+        and name = '00000000-0000-4000-8000-00000000000c/basvurular/snap-a.pdf'$q$),
+  'A, basvuru CV kopyasini silemez');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update storage.objects set name = 'cvs-degistirildi'
+      where bucket_id = 'cvs'
+        and name = '00000000-0000-4000-8000-00000000000c/basvurular/snap-a.pdf'$q$),
+  'A, basvuru CV kopyasini degistiremez');
 
 -- Doğrulanmış şirket B: C ona hiç başvurmadı.
 reset role;
@@ -661,13 +811,13 @@ set local role authenticated;
 
 select pg_temp.bekle(
   (select count(*) = 0 from storage.objects
-    where bucket_id = 'cvs' and name = (select c::text from k) || '/cv.pdf'),
-  'B, kendisine BASVURMAYAN ogrencinin CV dosyasini goremez');
+    where bucket_id = 'cvs' and name like (select c::text from k) || '/%'),
+  'B, kendisine BASVURMAYAN ogrencinin hicbir CV dosyasini goremez');
 
 select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
   $q$delete from storage.objects
      where bucket_id = 'cvs'
-       and name = '00000000-0000-4000-8000-00000000000c/cv.pdf'$q$),
+       and name = '00000000-0000-4000-8000-00000000000c/basvurular/snap-a.pdf'$q$),
   'B, baskasinin CV dosyasini silemez');
 
 -- Doğrulanmamış şirket D: C ONUN ilanına başvurdu ama şirket doğrulanmadı.
@@ -683,8 +833,8 @@ select pg_temp.bekle(
 
 select pg_temp.bekle(
   (select count(*) = 0 from storage.objects
-    where bucket_id = 'cvs' and name = (select c::text from k) || '/cv.pdf'),
-  'D (dogrulanmamis), kendi basvuraninin CV dosyasini goremez');
+    where bucket_id = 'cvs' and name like (select c::text from k) || '/%'),
+  'D (dogrulanmamis), kendi basvuraninin CV kopyasini goremez');
 
 reset role;
 rollback;

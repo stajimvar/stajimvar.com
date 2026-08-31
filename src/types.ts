@@ -74,6 +74,14 @@ export interface StudentProfile {
   githubUsername?: string;
   linkedinUrl?: string;
   portfolioUrl?: string;
+  /*
+    CV DOSYASININ DEPOLAMA YOLU — ADRES DEĞİL
+
+    `cvs` kovası gizli; burada tutulan şey `{user_id}/profil/<uuid>.pdf`
+    gibi bir YOL. Görüntülemek için lib/cv.ts kısa ömürlü imzalı adres
+    üretiyor. Buraya public bir URL yazılırsa kova gizli olmaktan çıkar.
+  */
+  cvPath?: string;
   skills: StudentSkill[];
   softSkills?: string[];
   languages?: StudentLanguage[];

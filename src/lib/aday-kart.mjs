@@ -112,6 +112,17 @@ export function kartVerisi(satir, ek = {}) {
     yetenekler,
 
     onYazi: satir?.cover_letter ?? null,
+    /*
+      CV: ÖNCE BAŞVURU ANININ KOPYASI, SONRA ESKİ ALAN
+
+      `cv_snapshot_path` başvuru anında çıkarılmış kopyanın yolu ve yeni
+      kodun yazdığı tek alan. `cv_path` ESKİ alan: hiçbir yerden
+      yazılmıyor, yalnızca geçmiş kayıtlar için burada duruyor.
+
+      Öğrencinin BUGÜNKÜ profil CV'sine düşülmüyor — düşülseydi şirket,
+      değerlendirdiği belgenin yerine sonradan yüklenmiş başka bir
+      belgeyi görürdü.
+    */
     cvYolu: satir?.cv_snapshot_path ?? satir?.cv_path ?? null,
     yontem: satir?.application_method ?? 'external',
   };
