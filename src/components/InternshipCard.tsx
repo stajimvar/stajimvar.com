@@ -8,7 +8,6 @@ import {
   ArrowRight,
   Bookmark,
   Building2,
-  Check,
   ExternalLink,
   ShieldCheck,
   Star,
@@ -20,6 +19,29 @@ import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import { eklenmeMetni, sonKontrolMetni, uzunSuredirAcik } from '../lib/zaman';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { ILAN_KAYNAGI } from '../lib/urun-metni';
+
+/*
+  ALT CTA GEOMETRİSİ — TEK AİLE
+
+  Kartın altındaki iki kutu (ikincil, birincil ve başarı durumu) aynı
+  ölçüleri paylaşıyor: aynı yükseklik, aynı köşe, aynı yazı boyu, aynı
+  iç boşluk. Böylece ilan durumu değişince — dış ilan, StajımVar ilanı,
+  başvurulmuş — alt alan aynı kalıyor ve kartlar arasında zıplama olmuyor.
+
+  `min-h-11`: telefonda dokunma hedefi 44 pikselin altına düşmüyor.
+*/
+const CTA_ORTAK =
+  'flex min-h-11 w-full min-w-0 items-center justify-center gap-1.5 rounded-xl px-2.5 text-xs font-bold transition-colors';
+
+const CTA_IKINCIL = 'cursor-pointer border border-gray-200 bg-white text-gray-800 hover:bg-gray-50';
+const CTA_BIRINCIL = 'cursor-pointer bg-blue-600 text-white hover:bg-blue-700 shadow-xs';
+
+/*
+  Başarı durumu tıklanmıyor: `cursor-pointer` ve `hover` YOK. Ölçüsü
+  düğmeyle aynı ama davranışı düğme gibi değil — basılabilir görünüp
+  hiçbir şey yapmayan bir kutu, kullanıcıyı boşuna deneme yaptırır.
+*/
+const CTA_BASARI = 'border border-emerald-200 bg-emerald-50 text-emerald-800';
 
 interface InternshipCardProps {
   listing: InternshipListing;
@@ -419,133 +441,145 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
         bilgisi, sağda düğmeler. Satır sarabiliyor — dar ekranda üç düğme
         yan yana sığmadığında kartın kenarından taşıyorlardı.
       */}
-      <div className="flex flex-wrap items-center justify-between w-full gap-2.5 pt-2.5 border-t border-gray-100 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap min-w-0">
-          {/*
-            Uyum rozeti buradan kaldırıldı: artık logonun etrafındaki halka
-            gösteriyor. Aynı sayıyı iki yerde göstermek kartın alt yarısını
-            gereksiz uzatıyordu.
-          */}
-          {listing.applicationDeadline && (
-            <span className="text-[11px] text-gray-600">
-              Son:{' '}
-              <strong className="text-gray-700">
-                {listing.applicationDeadline}
-              </strong>
-            </span>
-          )}
-        </div>
-
-        {/* Buttons */}
+      <div className="w-full min-w-0 border-t border-gray-100 pt-2.5">
         {/*
-          Dar ekranda satır sarabiliyor: üç düğme yan yana sığmadığında
-          `nowrap` ile kartın kenarından taşıyorlardı (375 pikselde ölçüldü).
+          ÜST SATIR: DURUM VE TARİH — AKSİYON DEĞİL
+
+          Son başvuru tarihi ve "işaretledin" bilgisi düğmelerle AYNI
+          satırdaydı; düğme sayısı değişince satır sağa sola kayıyor,
+          kartlar arasında hiçbir şey hizalanmıyordu. İkisi ayrıldı:
+          burada durum, altında sabit geometride iki düğme.
         */}
-        <div className="flex flex-wrap items-center justify-end gap-2 ml-auto">
-          {/*
-            Üç çerçeveli düğme yan yana durunca kartın alt yarısı düğme
-            tarlasına dönüyordu. Detaylar çerçevesiz metin bağlantısı oldu:
-            aynı iş, dörtte bir görsel ağırlık. Başlığa dokunmak da açıyor.
-          */}
+        {(listing.applicationDeadline || (hasApplied && !yol.teslimEdiliyor)) && (
+          <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+            {listing.applicationDeadline && (
+              <span className="text-[11px] text-gray-600">
+                Son: <strong className="text-gray-700">{listing.applicationDeadline}</strong>
+              </span>
+            )}
+            {/*
+              DIŞ İLANDA "İŞARETLEDİN" BİR DURUM, BİR DÜĞME DEĞİL
+
+              Kartta "Başvurdum" düğmesi vardı ve üçüncü aksiyon olarak
+              alt alanı dağıtıyordu; kalktı. Ama işaretlemiş bir öğrenci
+              bunu görmeye devam etmeli, yoksa aynı ilanı tekrar tekrar
+              açar. İşaretlemenin KENDİSİ hâlâ mümkün: "Detaylar"ın
+              açtığı ekranda duruyor.
+            */}
+            {hasApplied && !yol.teslimEdiliyor && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                İşaretledin
+              </span>
+            )}
+          </div>
+        )}
+
+        {/*
+          ALT CTA: HER KARTTA AYNI GEOMETRİ
+
+          Önce dış ilanda üç aksiyon vardı — "Detaylar" (çerçevesiz metin),
+          "Başvurdum" ve "Resmî sitede başvur" — ve dar ekranda satır
+          sarıyordu. Üstelik "Detaylar" düz yazıyken diğer ikisi düğmeydi,
+          yani üç farklı görsel ağırlık yan yana duruyordu.
+
+          Artık her durumda İKİ EŞİT KUTU: solda "Detaylar" (ikincil),
+          sağda tek ana eylem. Üçünün de geometrisi aynı yerden geliyor
+          (CTA_ORTAK); değişen yalnızca renk ve etkileşim. Böylece kartlar
+          arasında alt alan zıplamıyor.
+        */}
+        <div className="grid grid-cols-2 gap-2">
           <button
             id={`view-details-btn-${listing.id}`}
             onClick={onViewDetails}
-            /* min-h-11: telefonda dokunma hedefi 44px altına düşmesin. */
-            className="inline-flex min-h-11 items-center px-2 text-xs font-semibold text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
+            className={`${CTA_ORTAK} ${CTA_IKINCIL}`}
           >
             Detaylar
           </button>
 
-          {/*
-            DÜĞME DÜZENİ: önce çerçeveli, en sağda mavi.
-
-            Kartın eski düzeni buydu ("Detaylar · İlana Git · mavi düğme") ve
-            göz en sağdaki mavi düğmeyi arıyor. Doğruluk düzeltmesinde mavi
-            düğme ortaya kaymıştı; sıra eski hâline döndü, yalnızca hangi
-            eylemin mavi olduğu değişti.
-
-            Mavi olan hep ANA eylem. Derlenen ilanda o adres şirketin kendi
-            sayfası ve başvuru oraya İLETİLMİYOR; orada StajımVar kaydı
-            ikincil ve adı ne yaptığını söylüyor. Şirketin buraya kendi
-            açtığı ilanda ise başvuru siteden çıkmıyor ve ana eylem
-            "StajımVar ile Başvur" oluyor. Karar tek yerde:
-            lib/basvuru-yolu.mjs.
-          */}
           {(() => {
-            const cerceveli =
-              'text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 shadow-2xs';
-            const mavi = 'text-white bg-blue-600 hover:bg-blue-700 shadow-xs';
-            const ortak =
-              'flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer';
-
             /*
-              Kendi ilanında başvuru değil, nötr bir durum: suçlayıcı ya da
-              hata gibi değil, yalnızca bilgi. Detay ve kaydet yerinde
-              kalıyor — şirket kendi ilanını öğrenci gözüyle görebilmeli.
+              Kendi ilanında başvuru yok, nötr bir durum: suçlayıcı ya da
+              hata gibi değil, yalnızca bilgi. Şirket kendi ilanını
+              öğrenci gözüyle görebilmeli.
             */
             if (kendiIlanim) {
               return (
                 <span
-                  key="kendi"
-                  className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border px-3 py-1.5 text-xs font-bold"
-                  style={{ borderColor: SIRKET_KENAR_GUCLU, background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
+                  className={`${CTA_ORTAK} border`}
+                  style={{
+                    borderColor: SIRKET_KENAR_GUCLU,
+                    background: SIRKET_ROZET,
+                    color: SIRKET_VURGU_KOYU,
+                  }}
+                  title="Bu ilanı şirket hesabınız yönetiyor"
                 >
-                  <Building2 className="h-3.5 w-3.5" />
-                  Bu ilanı şirket hesabınız yönetiyor
+                  <Building2 className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Şirketinizin ilanı</span>
                 </span>
               );
             }
 
-            const resmiSiteBirincil = yol.anaEylem === 'resmi-site';
+            /*
+              BAŞVURULDU BİR AKSİYON DEĞİL
 
-            const disBaglanti = yol.resmiAdres ? (
-              <a
-                key="dis"
-                id={`external-apply-btn-${listing.id}`}
-                href={yol.resmiAdres}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-                title="İlanın resmî başvuru sayfası"
-                className={`${ortak} ${resmiSiteBirincil ? mavi : cerceveli}`}
-              >
-                <span>{resmiSiteBirincil ? yol.anaEtiket : 'İlana Git'}</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            ) : null;
+              Platform üzerinden başvurulmuş ilanda ikinci kutu bir başarı
+              durumu: `span`, tıklanmıyor, imleç değişmiyor, hover'ı yok.
+              Geometrisi düğmeyle aynı — kart alt alanı durum değişince
+              aynı yüksekliği koruyor.
+            */
+            if (hasApplied && yol.teslimEdiliyor) {
+              return (
+                <span className={`${CTA_ORTAK} ${CTA_BASARI}`}>
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Başvuruldu</span>
+                </span>
+              );
+            }
 
-            const kayit = hasApplied ? (
-              <span
-                key="kayit"
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 whitespace-nowrap"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span>{yol.teslimEdiliyor ? 'Başvuruldu' : 'İşaretlendi'}</span>
-              </span>
-            ) : (
+            /*
+              Ana eylem: derlenen ilanda şirketin kendi sayfası, StajımVar
+              ilanında site içi başvuru. Karar tek yerde:
+              lib/basvuru-yolu.mjs.
+            */
+            if (yol.resmiAdres && yol.anaEylem === 'resmi-site') {
+              return (
+                <a
+                  id={`external-apply-btn-${listing.id}`}
+                  href={yol.resmiAdres}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  title={yol.ozet}
+                  className={`${CTA_ORTAK} ${CTA_BIRINCIL}`}
+                >
+                  <span className="truncate">{yol.anaEtiket}</span>
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                </a>
+              );
+            }
+
+            /*
+              UZUN ETİKET KIRPILMASIN
+
+              Resmî adresi olmayan kayıtta ana eylem "Başvurduğumu
+              işaretle" ve bu etiket 160 piksellik kutuya 12 punto ile
+              sığmıyordu (ölçüldü: 130 px metin, 122 px yer). Etiketi
+              kısaltmak anlamı bozardı — "İşaretle" neyi işaretlediğini
+              söylemiyor. Yazı bir punto küçülüyor; geometri aynı kalıyor.
+            */
+            const uzunEtiket = yol.anaEtiket.length > 18;
+
+            return (
               <button
-                key="kayit"
                 id={`quick-apply-btn-${listing.id}`}
                 onClick={onQuickApply}
                 title={yol.ozet}
-                className={`${ortak} ${resmiSiteBirincil ? cerceveli : mavi}`}
+                className={`${CTA_ORTAK} ${CTA_BIRINCIL} ${uzunEtiket ? 'text-[11px]' : ''}`}
               >
-                {/*
-                  Kartta kısa etiket: "Başvurduğumu işaretle" iki düğmeyle
-                  birlikte metin sütununu daraltıyor, başlık dört satıra
-                  sarıyordu. Anlam aynı, tam cümle title'da ve diyalogda.
-                */}
-                <span>{resmiSiteBirincil ? 'Başvurdum' : yol.anaEtiket}</span>
-                {/*
-                  İşaretleme düğmesinde ok değil onay simgesi: ok "bir yere
-                  gidiyorsun" diyor ve bu düğme hiçbir yere gitmiyor, sadece
-                  kaydı işaretliyor. Yanındaki asıl düğme zaten dışarı çıkan
-                  olan.
-                */}
-                {resmiSiteBirincil ? <Check className="w-3 h-3" /> : <ArrowRight className="w-3 h-3" />}
+                <span className="truncate">{yol.anaEtiket}</span>
+                <ArrowRight className="h-3 w-3 shrink-0" />
               </button>
             );
-
-            return resmiSiteBirincil ? [kayit, disBaglanti] : [disBaglanti, kayit];
           })()}
         </div>
       </div>
