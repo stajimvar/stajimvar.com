@@ -121,13 +121,23 @@ def kiracidan_ilanlar(platform: str, kiraci: str, sayac=None) -> list[dict]:
         sayac[f"{platform}:ok"] += 1
         if not isler:
             sayac[f"{platform}:bos"] += 1
+    # ALANLAR `Job` VERİ SINIFINDAN, TAHMİNLE DEĞİL
+    #
+    # İlk sürüm `i.url`, `i.company`, `i.location` okuyordu; `Job`'da
+    # bu adlar YOK — alanlar `source_url`, `organization_name`, `city`.
+    # `getattr` varsayılanları uyuşmazlığı sessizce yuttuğu için adres
+    # boş kalıyor ve `would_publish` her zaman False dönüyordu:
+    # platform sayacı 4 yayın adayı gösterirken toplam 0 yazıyordu.
+    #
+    # Nitelikler artık doğrudan okunuyor: bir alan yeniden adlandırılırsa
+    # koşu sessizce yanlış sayı üretmek yerine hata veriyor.
     return [
         {
-            "title": getattr(i, "title", "") or "",
-            "url": getattr(i, "url", "") or "",
-            "company": getattr(i, "company", None),
-            "location": getattr(i, "location", None),
-            "description": getattr(i, "description", None),
+            "title": i.title or "",
+            "url": i.source_url or "",
+            "company": i.organization_name,
+            "location": i.city,
+            "description": i.description or None,
         }
         for i in isler
     ]
