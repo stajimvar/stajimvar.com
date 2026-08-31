@@ -2,17 +2,17 @@
   "kaynaklar": {
     "kariyer.net": {
       "kapali": null,
-      "raw_signals": 61,
-      "unique_signals": 61,
-      "unique_companies": 61,
-      "domain_resolved": 0,
-      "career_found": 0,
+      "raw_signals": 53,
+      "unique_signals": 53,
+      "unique_companies": 47,
+      "domain_resolved": 20,
+      "career_found": 8,
       "ats_detected": 0,
       "official_job_match": 0,
       "valid_internship": 0,
       "duplicate": 0,
       "would_publish": 0,
-      "unresolved": 61
+      "unresolved": 53
     },
     "linkedin": {
       "kapali": "linkedin.com/robots.txt tüm yolları otomasyona kapatıyor (User-agent: * / Disallow: /). Beyaz liste başvurusu olmadan sürdürülebilir bir kamuya açık keşif yüzeyi yok.",
@@ -30,215 +30,217 @@
     }
   },
   "capraz": {
-    "toplam_raw": 61,
+    "toplam_raw": 53,
     "unique_opportunity": 0,
     "official_resolved": 0,
     "would_publish": 0
   },
   "unresolved_nedenleri": {
-    "company_unresolved": 61
+    "company_unresolved": 33,
+    "official_source_not_found": 12,
+    "official_job_not_found": 8
   },
   "ats_bosluk": {},
   "auto_publish": false,
   "unresolved_ornekleri": [
     {
-      "company": "Sponsorlu İlan Stajyer STRATEJİK İLETİŞİM OFİSİ Ankara İş Ye",
-      "title": "Sponsorlu İlan Stajyer STRATEJİK İLETİŞİM OFİSİ Ankara İş Ye",
+      "company": "STRATEJİK İLETİŞİM OFİSİ",
+      "title": "Eğitim ve Gelişim Stajyeri",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "Sponsorlu İlan Ahlatcı Portföy / Dijital Pazarlama ve Sosyal",
-      "title": "Sponsorlu İlan Ahlatcı Portföy / Dijital Pazarlama ve Sosyal",
+      "company": "AHLATCI HOLDİNG",
+      "title": "Dijital Pazarlama ve Sosyal Medya Uzmanı",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "Sponsorlu İlan Sosyal Medya Stajyeri SCO GRUP DANIŞMANLIK İN",
-      "title": "Sponsorlu İlan Sosyal Medya Stajyeri SCO GRUP DANIŞMANLIK İN",
+      "company": "Gram Equipment Makina San. Tic. Ltd. Şti",
+      "title": "Üretim Asistanı",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "Stajyer Mühendis COLIN'S İstanbul İş Yerinde Tam zamanlı upd",
-      "title": "Stajyer Mühendis COLIN'S İstanbul İş Yerinde Tam zamanlı upd",
+      "company": "SCO GRUP DANIŞMANLIK İNŞAAT SANAYİ TİCARET LİMİTED ŞİRKETİ",
+      "title": "Eğitim ve Gelişim Stajyeri",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "Production Intern Gram Equipment Makina San. Tic. Ltd. Şti İ",
-      "title": "Production Intern Gram Equipment Makina San. Tic. Ltd. Şti İ",
+      "company": "COLIN'S",
+      "title": "Endüstri Mühendisi",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "official_job_not_found: aynı ilan bulunamadı",
+      "ats": null
+    },
+    {
+      "company": "L'Oréal Türkiye",
+      "title": "Uzun Dönem Stajyer",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "Supply Chain Wıntern L'Oréal Türkiye İstanbul(Asya) İş Yerin",
-      "title": "Supply Chain Wıntern L'Oréal Türkiye İstanbul(Asya) İş Yerin",
+      "company": "Koton",
+      "title": "İnsan Kaynakları Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "official_job_not_found: aynı ilan bulunamadı",
+      "ats": null
+    },
+    {
+      "company": "BigChefs",
+      "title": "Grafik Tasarım Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "official_job_not_found: aynı ilan bulunamadı",
+      "ats": null
+    },
+    {
+      "company": "Konyalı Saat",
+      "title": "Grafik Tasarım Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "official_job_not_found: aynı ilan bulunamadı",
+      "ats": null
+    },
+    {
+      "company": "Pronet Güvenlik Hizmetleri",
+      "title": "İnsan Kaynakları Stajyeri",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "İnsan Kaynakları Stajyeri Koton Kocaeli İş Yerinde Tam zaman",
-      "title": "İnsan Kaynakları Stajyeri Koton Kocaeli İş Yerinde Tam zaman",
+      "company": "BASF Türk Kimya San. ve Tic. Ltd. Şti.-1",
+      "title": "Stajyer",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "Uzun Dönem Zorunlu Grafik Tasarım Stajyeri BigChefs İstanbul",
-      "title": "Uzun Dönem Zorunlu Grafik Tasarım Stajyeri BigChefs İstanbul",
+      "company": "MCAN Sağlık Turizm Asistans ve Danışmanlık AŞ",
+      "title": "Satış Stajyeri",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "Grafik Tasarım Stajyeri Konyalı Saat İstanbul İş Yerinde Tam",
-      "title": "Grafik Tasarım Stajyeri Konyalı Saat İstanbul İş Yerinde Tam",
+      "company": "Elvan Gıda San ve Tic.A.Ş",
+      "title": "İnsan Kaynakları Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "official_job_not_found: aynı ilan bulunamadı",
+      "ats": null
+    },
+    {
+      "company": "İpekyol Giyim San. ve Tic. A.Ş.",
+      "title": "Stajyer",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "Genç Yetenek Programı-Genç Ipekler İpekyol Giyim San. ve Tic",
-      "title": "Genç Yetenek Programı-Genç Ipekler İpekyol Giyim San. ve Tic",
+      "company": "KVK TEKNİK SERVİS HİZMETLERİ VE TİC.A.Ş.",
+      "title": "Çırak",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "İnsan Kaynakları Uzun Dönem Stajyeri Pronet Güvenlik Hizmetl",
-      "title": "İnsan Kaynakları Uzun Dönem Stajyeri Pronet Güvenlik Hizmetl",
+      "company": "G Teknoloji Bilişim San. ve Tic. A.Ş.",
+      "title": "İnsan Kaynakları Stajyeri",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "İnsan Kaynakları Stajyeri Elvan Gıda San ve Tic.A.Ş İstanbul",
-      "title": "İnsan Kaynakları Stajyeri Elvan Gıda San ve Tic.A.Ş İstanbul",
+      "company": "A1 CAPİTAL YATIRIM MENKUL DEĞERLER AŞ",
+      "title": "Stajyer",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "Trainee Case Manager (Paid Internship) MCAN Sağlık Turizm As",
-      "title": "Trainee Case Manager (Paid Internship) MCAN Sağlık Turizm As",
+      "company": "Kazancı Holding",
+      "title": "İnsan Kaynakları Stajyeri",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "official_source_not_found: kariyer kaynağı yok",
+      "ats": null
+    },
+    {
+      "company": "Ali Raif İlaç Sanayi A.Ş.",
+      "title": "İnsan Kaynakları Stajyeri",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "Basf ICT Home Care, Industrial &amp; Institutional Cleaning ",
-      "title": "Basf ICT Home Care, Industrial &amp; Institutional Cleaning ",
+      "company": "Türkiye Finans Katılım Bankası",
+      "title": "Operasyon Stajyeri",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "İnsan Kaynakları Stajyeri Kazancı Holding İstanbul(Asya) İş ",
-      "title": "İnsan Kaynakları Stajyeri Kazancı Holding İstanbul(Asya) İş ",
+      "company": "Gizli Firma",
+      "title": "İnsan Kaynakları Stajyeri",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "Pazarlama Stajyeri A1 CAPİTAL YATIRIM MENKUL DEĞERLER AŞ İst",
-      "title": "Pazarlama Stajyeri A1 CAPİTAL YATIRIM MENKUL DEĞERLER AŞ İst",
+      "company": "RİO KİDS OYUN EVİ",
+      "title": "Yardımcı Öğretmen",
+      "source": "kariyer.net",
+      "stage": "unresolved",
+      "reason": "official_source_not_found: kariyer kaynağı yok",
+      "ats": null
+    },
+    {
+      "company": "Gizli Firma",
+      "title": "İnsan Kaynakları Stajyeri",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "İnsan Kaynakları Stajyeri (Zorunlu Staj) G Teknoloji Bilişim",
-      "title": "İnsan Kaynakları Stajyeri (Zorunlu Staj) G Teknoloji Bilişim",
+      "company": "LC Waikiki",
+      "title": "İnsan Kaynakları Stajyeri",
       "source": "kariyer.net",
       "stage": "unresolved",
       "reason": "company_unresolved: resmî alan adı doğrulanamadı",
       "ats": null
     },
     {
-      "company": "Çırak Öğrenci - Mesem (Ankara) KVK TEKNİK SERVİS HİZMETLERİ ",
-      "title": "Çırak Öğrenci - Mesem (Ankara) KVK TEKNİK SERVİS HİZMETLERİ ",
+      "company": "MARNAK Marmara Nakliyat San.ve Tic.A.Ş.",
+      "title": "Stajyer",
       "source": "kariyer.net",
       "stage": "unresolved",
-      "reason": "company_unresolved: resmî alan adı doğrulanamadı",
-      "ats": null
-    },
-    {
-      "company": "Ankara Arşiv Binası Part Time Stajyeri Türkiye Finans Katılı",
-      "title": "Ankara Arşiv Binası Part Time Stajyeri Türkiye Finans Katılı",
-      "source": "kariyer.net",
-      "stage": "unresolved",
-      "reason": "company_unresolved: resmî alan adı doğrulanamadı",
-      "ats": null
-    },
-    {
-      "company": "Human Resources Intern Gizli Firma İstanbul(Asya) Hibrit Ort",
-      "title": "Human Resources Intern Gizli Firma İstanbul(Asya) Hibrit Ort",
-      "source": "kariyer.net",
-      "stage": "unresolved",
-      "reason": "company_unresolved: resmî alan adı doğrulanamadı",
-      "ats": null
-    },
-    {
-      "company": "İnsan Kaynakları Stajyeri Gizli Firma İstanbul İş Yerinde Ta",
-      "title": "İnsan Kaynakları Stajyeri Gizli Firma İstanbul İş Yerinde Ta",
-      "source": "kariyer.net",
-      "stage": "unresolved",
-      "reason": "company_unresolved: resmî alan adı doğrulanamadı",
-      "ats": null
-    },
-    {
-      "company": "İnsan Kaynakları Stajyeri Ali Raif İlaç Sanayi A.Ş. İstanbul",
-      "title": "İnsan Kaynakları Stajyeri Ali Raif İlaç Sanayi A.Ş. İstanbul",
-      "source": "kariyer.net",
-      "stage": "unresolved",
-      "reason": "company_unresolved: resmî alan adı doğrulanamadı",
-      "ats": null
-    },
-    {
-      "company": "Oyun Ablası RİO KİDS OYUN EVİ İstanbul İş Yerinde Yarı zaman",
-      "title": "Oyun Ablası RİO KİDS OYUN EVİ İstanbul İş Yerinde Yarı zaman",
-      "source": "kariyer.net",
-      "stage": "unresolved",
-      "reason": "company_unresolved: resmî alan adı doğrulanamadı",
-      "ats": null
-    },
-    {
-      "company": "Stajyer MARNAK Marmara Nakliyat San.ve Tic.A.Ş. İstanbul(Asy",
-      "title": "Stajyer MARNAK Marmara Nakliyat San.ve Tic.A.Ş. İstanbul(Asy",
-      "source": "kariyer.net",
-      "stage": "unresolved",
-      "reason": "company_unresolved: resmî alan adı doğrulanamadı",
-      "ats": null
-    },
-    {
-      "company": "İnsan Kaynakları Stajyeri ( Uzun Dönem ) LC Waikiki İstanbul",
-      "title": "İnsan Kaynakları Stajyeri ( Uzun Dönem ) LC Waikiki İstanbul",
-      "source": "kariyer.net",
-      "stage": "unresolved",
-      "reason": "company_unresolved: resmî alan adı doğrulanamadı",
+      "reason": "official_source_not_found: kariyer kaynağı yok",
       "ats": null
     }
   ],
