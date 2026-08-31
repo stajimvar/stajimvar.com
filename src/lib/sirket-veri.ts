@@ -257,6 +257,7 @@ export async function sirketBasvurulari(companyId: string) {
     .select(
       'id, status, applied_at, match_score, listing_id, student_id, cover_letter, cv_path, ' +
         'cv_snapshot_path, profile_snapshot, contact_share_consent_at, application_method, ' +
+        'interview_date, status_changed_at, ' +
         'listings!inner(id, title, company_id)'
     )
     .eq('listings.company_id', companyId)
@@ -297,6 +298,22 @@ export async function basvuruDurumuDegistir(id: string, durum: string) {
   const db = await istemci();
   const { error } = await db.from('applications').update({ status: durum }).eq('id', id);
   if (error) throw new Error('Başvuru durumu güncellenemedi.');
+}
+
+/**
+ * Mülakat tarihi.
+ *
+ * DURUMDAN BAĞIMSIZ: tarih girmek adayı mülakata almanın şartı değil ve
+ * durum değişimini engellemiyor. Boş dize null yazıyor — "tarih
+ * kaldırıldı" ile "boş dize" aynı şey olmalı.
+ */
+export async function mulakatTarihiYaz(id: string, tarih: string) {
+  const db = await istemci();
+  const { error } = await db
+    .from('applications')
+    .update({ interview_date: tarih ? tarih : null })
+    .eq('id', id);
+  if (error) throw new Error('Mülakat tarihi kaydedilemedi.');
 }
 
 /**

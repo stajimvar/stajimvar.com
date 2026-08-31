@@ -420,6 +420,7 @@ export function toApplicationRecord(row: Tables<'applications'>): ApplicationRec
     studentId: row.student_id,
     appliedAt: row.applied_at,
     updatedAt: row.updated_at,
+    statusChangedAt: row.status_changed_at ?? undefined,
     status: row.status,
     matchScore: row.match_score ?? 0,
     coverLetter: row.cover_letter ?? undefined,

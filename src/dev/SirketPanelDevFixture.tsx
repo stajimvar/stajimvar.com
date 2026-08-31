@@ -184,10 +184,34 @@ export const SirketPanelDevFixture: React.FC = () => {
     'genel',
   );
 
+  /*
+    DURUM DEĞİŞİMİ GERÇEKTEN UYGULANIYOR
+
+    Fikstür eskiden `onDurum={async () => undefined}` veriyordu: durum
+    seçicisi tarayıcıda hiçbir şey değiştirmiyordu, dolayısıyla akış
+    hiç görülmüyordu. Artık satırlar yerel durumda tutuluyor ve durum
+    değişimi kartlara işliyor.
+  */
+  const [satirlar, setSatirlar] = React.useState(ORNEK_BASVURULAR);
   const kartlar = React.useMemo(
-    () => ORNEK_BASVURULAR.map((s) => kartVerisi(s, { yetenekler: [] })),
-    []
+    () => satirlar.map((s) => kartVerisi(s, { yetenekler: [] })),
+    [satirlar]
   );
+
+  /* Son aday her zaman hata veriyor: satır içi hata mesajı görülebilsin. */
+  const hataliId = ORNEK_BASVURULAR[ORNEK_BASVURULAR.length - 1]?.id;
+
+  const satirYaz = (id: string, alanlar: Record<string, unknown>) =>
+    new Promise<void>((coz, red) => {
+      window.setTimeout(() => {
+        if (id === hataliId) {
+          red(new Error('Fikstür: bu adayda kayıt hatası taklit ediliyor.'));
+          return;
+        }
+        setSatirlar((o) => o.map((s) => (s.id === id ? { ...s, ...alanlar } : s)));
+        coz();
+      }, 250);
+    });
 
   return (
     <>
@@ -368,7 +392,8 @@ export const SirketPanelDevFixture: React.FC = () => {
               kartlar={kartlar}
               ilanAdresi="https://stajimvar.com/ilan/test"
               onNavigate={() => undefined}
-              onDurum={async () => undefined}
+              onDurum={(id, d) => satirYaz(id, { status: d })}
+              onMulakatTarihi={(id, tarih) => satirYaz(id, { interview_date: tarih || null })}
               onNot={async () => undefined}
             />
           </div>

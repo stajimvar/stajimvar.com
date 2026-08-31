@@ -4,6 +4,7 @@ import {
   fetchStudentProfile,
   fetchStudentApplications,
   createApplication,
+  withdrawApplication,
   saveStudentProfile,
   fetchIsAdmin,
   fetchQuizzes,
@@ -1681,6 +1682,22 @@ export default function App() {
                     subTab={activeSubTab}
                     onSubTabChange={setActiveSubTab}
                     onExploreInternships={() => handleTabChange('internships')}
+                    /*
+                      Geri çekme öğrencinin kendi kararı. Veritabanı
+                      politikası da yalnızca bu değeri veriyor; buton
+                      onun görünür karşılığı, güvenlik sınırı değil.
+                    */
+                    onWithdraw={async (id) => {
+                      await withdrawApplication(id);
+                      setApplications((prev) =>
+                        prev.map((a) =>
+                          a.id === id
+                            ? { ...a, status: 'withdrawn', statusChangedAt: new Date().toISOString() }
+                            : a,
+                        ),
+                      );
+                      showToast('Başvurun geri çekildi.');
+                    }}
                   />
                 }
                 quizzes={quizzes}

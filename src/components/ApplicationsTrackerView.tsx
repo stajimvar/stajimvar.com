@@ -1,5 +1,6 @@
 import { Tabs } from '../ui';
 import React, { useState } from 'react';
+import { durumKapandi, ogrenciDurumCumlesi } from '../lib/basvuru-durumu.mjs';
 import {
   FileText,
   Building2,
@@ -28,6 +29,11 @@ interface ApplicationsTrackerViewProps {
   subTab?: string;
   onSubTabChange?: (subTab: string) => void;
   onExploreInternships: () => void;
+  /*
+    Geri çekme isteğe bağlı: veren ekran vermezse eylem hiç
+    görünmüyor. Söz döndürüyor, hata satır içinde gösteriliyor.
+  */
+  onWithdraw?: (applicationId: string) => Promise<void> | void;
 }
 
 /**
@@ -49,48 +55,47 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
   subTab = 'all',
   onSubTabChange,
   onExploreInternships,
+  onWithdraw,
 }) => {
+  /* Geri çekme onayı: yanlışlıkla tek tıkla süreç kapanmasın. */
+  const [geriCekilen, setGeriCekilen] = useState<string | null>(null);
+  const [islemdeki, setIslemdeki] = useState<string | null>(null);
+  const [hata, setHata] = useState<string | null>(null);
+
   const effectiveFilter = subTab || 'all';
 
-  const getStatusBadge = (status: ApplicationRecord['status']) => {
-    switch (status) {
-      case 'submitted':
-        return {
-          label: 'Başvuru Gönderildi',
-          color:'bg-gray-100 text-gray-700 border-gray-200',
-        };
-      case 'under_review':
-        return {
-          label: 'İK İnceliyor',
-          color:'bg-blue-50 text-blue-800 border-blue-200 font-semibold',
-        };
-      case 'technical_assessment':
-        return {
-          label: 'Teknik Case Aşamasında',
-          color:'bg-blue-50 text-blue-700 border-blue-200 font-semibold',
-        };
-      case 'interview_scheduled':
-        return {
-          label: 'Mülakat Daveti Geldi',
-          color:'bg-blue-100 text-blue-900 border-blue-300 font-bold',
-        };
-      case 'offer_extended':
-        return {
-          label: '🎉 Staj Teklifi Geldi!',
-          color: 'bg-emerald-600 text-white border-emerald-600 font-extrabold shadow-xs',
-        };
-      case 'rejected':
-        return {
-          label: 'Olumsuz Sonuçlandı',
-          color:'bg-gray-100 text-gray-700 border-gray-200',
-        };
-      default:
-        return {
-          label: 'İşlemde',
-          color:'bg-gray-100 text-gray-700 border-gray-200',
-        };
-    }
+  /*
+    DURUM ETİKETİ ORTAK SÖZLÜKTEN
+
+    Burada `switch (status)` ile kendi sözlüğü vardı ve şirket tarafıyla
+    farklı kelimeler kullanıyordu: "İK İnceliyor", "Teknik Case
+    Aşamasında", "🎉 Staj Teklifi Geldi!". Aynı başvuru iki tarafta iki
+    ayrı ürün gibi görünüyordu.
+
+    Daha kötüsü `withdrawn` hiç ele alınmamıştı ve `default` dalına
+    düşüyordu: öğrencinin KENDİ geri çektiği başvuru ona "İşlemde"
+    diyordu — tutarsızlık değil, yanlış bilgi.
+
+    Terim artık ../lib/basvuru-durumu.mjs içinde ve iki taraf da aynı
+    sözlüğü okuyor. Öğrenci tarafında cümleleşiyor ("Başvurun
+    inceleniyor") ama TERİM aynı.
+
+    Renk yalnız yardımcı: metin renksiz de anlaşılıyor.
+  */
+  const DURUM_RENGI: Record<string, string> = {
+    submitted: 'bg-gray-100 text-gray-700 border-gray-200',
+    under_review: 'bg-amber-50 text-amber-900 border-amber-200',
+    technical_assessment: 'bg-amber-50 text-amber-900 border-amber-200',
+    interview_scheduled: 'bg-blue-50 text-blue-800 border-blue-200',
+    offer_extended: 'bg-emerald-50 text-emerald-800 border-emerald-200 font-bold',
+    rejected: 'bg-gray-100 text-gray-600 border-gray-200',
+    withdrawn: 'bg-gray-100 text-gray-600 border-gray-200',
   };
+
+  const getStatusBadge = (status: ApplicationRecord['status']) => ({
+    label: ogrenciDurumCumlesi(status),
+    color: DURUM_RENGI[status] ?? 'bg-gray-100 text-gray-700 border-gray-200',
+  });
 
   const filteredApps = applications.filter((app) => {
     if (effectiveFilter === 'all') return true;
@@ -225,36 +230,122 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                     <Calendar className="w-3.5 h-3.5 text-gray-400"/>
                     <span>Başvuru: {tarihMetni(app.appliedAt)}</span>
                   </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-blue-600"/>
-                    <span>Güncelleme: {tarihMetni(app.updatedAt ?? app.appliedAt)}</span>
-                  </span>
+                  {/*
+                    DURUM DAMGASI GERÇEK OLANI
+
+                    Burada `updated_at` yazıyordu; o kolon başvurudaki
+                    HERHANGİ bir yazımda oynuyor (şirketin geri
+                    bildirimi, mülakat tarihi, e-posta denemesi).
+                    Öğrenciye "süreç ilerledi" demenin ölçüsü
+                    `status_changed_at`: yalnızca durum değişince
+                    damgalanıyor. Hiç değişmediyse satır YOK — başvuru
+                    tarihini "güncelleme" diye göstermek uydurma olurdu.
+                  */}
+                  {app.statusChangedAt && (
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-blue-600"/>
+                      <span>Durum güncellendi: {tarihMetni(app.statusChangedAt)}</span>
+                    </span>
+                  )}
                   {/*
                     "%N Yetenek Uyumu" satırı kaldırıldı: aynı sayı artık
                     logonun etrafındaki halkada ve altındaki rakamda.
                   */}
                 </div>
 
-                {/* Next Step / Action Box */}
-                {app.status === 'interview_scheduled' && listing && (
-                  <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
-                        <Video className="w-4 h-4 text-blue-600"/>
-                        <span>Online Teknik Mülakat Daveti • 18 Haziran 14:00</span>
-                      </div>
-                      <p className="text-xs text-blue-800/80">
-                        Şirket yetkilileri mülakat bağlantısını e-posta adresinize iletmiştir. Görüşme öncesinde portfolyo ve projelerinizi hazır bulundurmanız önerilir.
-                      </p>
-                    </div>
+                {/*
+                  SÜREÇ KUTUSU — YALNIZCA GERÇEK VERİ
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="px-3.5 py-1.5 rounded-full text-xs font-bold text-blue-800 bg-white border border-blue-200">
-                        Google Meet Linki İletildi
+                  Burada sabit metin duruyordu: bir mülakat daveti, bir
+                  saat, bir video toplantı bağlantısının e-postayla
+                  gönderildiği vaadi. Hiçbiri veriden gelmiyordu; mülakat
+                  aşamasındaki HER başvuruda aynı tarih ve aynı vaat
+                  görünüyordu. Ürün mesajlaşma, takvim ya da video
+                  bağlantısı TAŞIMIYOR.
+
+                  Yerine yalnızca gerçekten kayıtlı olan iki alan:
+                  şirketin girdiği mülakat tarihi ve öğrenciye görünür
+                  geri bildirim.
+                */}
+                {app.status === 'interview_scheduled' && (
+                  <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-4">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
+                      <Video className="w-4 h-4 text-blue-600"/>
+                      <span>
+                        {app.interviewDate
+                          ? `Mülakat tarihi: ${tarihMetni(app.interviewDate)}`
+                          : 'Mülakat aşamasındasın'}
                       </span>
                     </div>
+                    <p className="mt-1 text-xs text-blue-800/80">
+                      {app.interviewDate
+                        ? 'Görüşmenin saati ve biçimi için şirketin sana ulaşmasını bekle.'
+                        : 'Şirket seni mülakat aşamasına aldı. Tarih henüz belirlenmedi.'}
+                    </p>
                   </div>
                 )}
+
+                {app.companyFeedback && (
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                    <p className="text-xs font-bold text-gray-700">Şirketin notu</p>
+                    <p className="mt-1 text-xs leading-relaxed text-gray-600">{app.companyFeedback}</p>
+                  </div>
+                )}
+
+                {/*
+                  BAŞVURUYU GERİ ÇEKME
+
+                  Öğrencinin sürecin içindeki tek kararı. Süreç kapandıysa
+                  (teklif, olumsuz, zaten geri çekilmiş) gösterilmiyor.
+                  Buton gizlemek güvenlik değil: veritabanı politikası da
+                  öğrenciye YALNIZCA `withdrawn` değerini veriyor.
+                */}
+                {onWithdraw && !durumKapandi(app.status) && (
+                  geriCekilen === app.id ? (
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <span className="text-xs font-bold text-gray-700">
+                        Başvurunu geri çekmek istiyor musun?
+                      </span>
+                      <button
+                        type="button"
+                        disabled={islemdeki === app.id}
+                        onClick={() => {
+                          setIslemdeki(app.id);
+                          setHata(null);
+                          Promise.resolve(onWithdraw(app.id))
+                            .then(() => setGeriCekilen(null))
+                            .catch(() => setHata(app.id))
+                            .finally(() => setIslemdeki(null));
+                        }}
+                        className="min-h-9 rounded-full border border-gray-300 px-3.5 text-xs font-bold text-gray-800 disabled:opacity-60"
+                      >
+                        Evet, geri çek
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setGeriCekilen(null)}
+                        className="min-h-9 rounded-full px-3 text-xs font-bold text-gray-500"
+                      >
+                        Vazgeç
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setGeriCekilen(app.id)}
+                      className="self-start text-xs font-bold text-gray-500 underline underline-offset-2"
+                    >
+                      Başvuruyu geri çek
+                    </button>
+                  )
+                )}
+
+                {hata === app.id && (
+                  <p role="alert" className="text-xs font-semibold text-red-700">
+                    Başvuru geri çekilemedi. Bağlantını kontrol edip tekrar dene.
+                  </p>
+                )}
+
               </div>
             );
           })}

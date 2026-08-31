@@ -56,8 +56,9 @@ export const AdayIzgarasi: React.FC<{
   ilanAdresi: string | null;
   onNavigate: (y: string) => void;
   onDurum: (id: string, durum: string) => Promise<void>;
+  onMulakatTarihi: (id: string, tarih: string) => Promise<void>;
   onNot: (id: string, metin: string) => Promise<void>;
-}> = ({ kartlar, ilanAdresi, onNavigate, onDurum, onNot }) => {
+}> = ({ kartlar, ilanAdresi, onNavigate, onDurum, onMulakatTarihi, onNot }) => {
   const [onyargisiz, setOnyargisiz] = React.useState(false);
   const [ilanSuzgeci, setIlanSuzgeci] = React.useState('');
   const [durumSuzgeci, setDurumSuzgeci] = React.useState('');
@@ -98,7 +99,19 @@ export const AdayIzgarasi: React.FC<{
     [suzulmus, onyargisiz]
   );
 
-  const acik = acikId ? (gosterilen.find((k) => k.id === acikId) ?? null) : null;
+  /*
+    AÇIK ADAY SÜZGEÇTEN BAĞIMSIZ
+
+    Açık kart `gosterilen` (süzülmüş liste) içinden aranıyordu. "Mülakat"
+    süzgeci açıkken adayı olumsuza almak kartı listeden çıkarıyor, bu da
+    ÇEKMECEYİ ANINDA KAPATIYORDU: şirket kararının sonucunu göremiyordu.
+
+    Kaynak artık ham liste; süzgeç neyin listelendiğini belirliyor, açık
+    olan adayı değil. `onyargisizla` ayrıca uygulanıyor ki önyargısız
+    mod çekmecede de sürsün.
+  */
+  const acikHam = acikId ? (kartlar.find((k) => k.id === acikId) ?? null) : null;
+  const acik = acikHam && onyargisiz ? onyargisizla(acikHam) : acikHam;
 
   const durumUygula = React.useCallback(
     async (id: string, durum: string) => {
@@ -345,9 +358,21 @@ export const AdayIzgarasi: React.FC<{
           kart={acik}
           kaydediliyor={kaydediliyor}
           onKapat={() => setAcikId(null)}
+          /*
+            ÇEKMECE AÇIK KALIYOR
+
+            Eskiden her durum değişimi çekmeceyi kapatıyordu; şirket
+            adayı yeniden açmadan sonucu göremiyordu. Artık durum
+            yerinde güncelleniyor. Hata da söz olarak geri veriliyor:
+            çekmece kendi içinde satır içi gösteriyor.
+          */
           onDurum={(d) => {
-            if (!acik) return;
-            void durumUygula(acik.id, d).then(() => setAcikId(null));
+            if (!acik) return Promise.resolve();
+            return durumUygula(acik.id, d);
+          }}
+          onMulakatTarihi={(tarih) => {
+            if (!acik) return Promise.resolve();
+            return onMulakatTarihi(acik.id, tarih);
           }}
           onNot={(metin) => {
             if (!acik) return;

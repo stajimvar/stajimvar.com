@@ -37,6 +37,7 @@ import { kartVerisi } from '../lib/aday-kart.mjs';
 import {
   adayYetenekleri,
   basvuruDurumuDegistir,
+  mulakatTarihiYaz,
   basvuruNotuKaydet,
   ilanDurumuDegistir,
   ilanGuncelle,
@@ -282,6 +283,10 @@ export const SirketPaneli: React.FC<{
           onNavigate={onNavigate}
           onDurum={async (id, d) => {
             await basvuruDurumuDegistir(id, d);
+            await yukle();
+          }}
+          onMulakatTarihi={async (id, tarih) => {
+            await mulakatTarihiYaz(id, tarih);
             await yukle();
           }}
           onNot={async (id, metin) => {
@@ -649,8 +654,9 @@ const Basvuranlar: React.FC<{
   ilanlar: Record<string, unknown>[];
   onNavigate: (y: string) => void;
   onDurum: (id: string, d: string) => Promise<void>;
+  onMulakatTarihi: (id: string, tarih: string) => Promise<void>;
   onNot: (id: string, metin: string) => Promise<void>;
-}> = ({ baglam, kartlar, ilanlar, onNavigate, onDurum, onNot }) => {
+}> = ({ baglam, kartlar, ilanlar, onNavigate, onDurum, onMulakatTarihi, onNot }) => {
   if (!adayGorebilir(baglam.kademe)) {
     return (
       <div className={KUTU} style={kutuStil}>
@@ -695,6 +701,7 @@ const Basvuranlar: React.FC<{
         ilanAdresi={ilanAdresi}
         onNavigate={onNavigate}
         onDurum={onDurum}
+        onMulakatTarihi={onMulakatTarihi}
         onNot={onNot}
       />
     </div>

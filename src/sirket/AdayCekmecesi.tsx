@@ -2,6 +2,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, ExternalLink, FileText, Github, Loader2, ShieldOff, X } from 'lucide-react';
 import {
+  ALAN,
   BIRINCIL_DUGME,
   IKINCIL_DUGME,
   SIRKET_KENAR,
@@ -11,11 +12,12 @@ import {
   SIRKET_VURGU_KOYU,
   SIRKET_YUZEY,
   SIRKET_ZEMIN,
+  alanStil,
   birincilStil,
   ikincilStil,
 } from './renk';
-import { BIRINCI_SIRA, IKINCI_SIRA, kimlikSatiri, monogram } from '../lib/aday-kart.mjs';
-import { durumAdi } from './basvuru-durumu';
+import { kimlikSatiri, monogram } from '../lib/aday-kart.mjs';
+import { SIRKET_DURUMLARI, durumAdi, sonrakiDurum } from './basvuru-durumu';
 
 /**
  * Aday çekmecesi — sağdan açılan panel.
@@ -53,8 +55,18 @@ export const AdayCekmecesi: React.FC<{
   kart: Record<string, any> | null;
   kaydediliyor: boolean;
   onKapat: () => void;
-  onDurum: (durum: string) => void;
+  /*
+    Söz döndürüyor: durum değişimi başarısız olursa hata ÇEKMECENİN
+    İÇİNDE gösterilecek. Panelin tamamını kapatmak ya da sessizce
+    yutmak yerine.
+  */
+  onDurum: (durum: string) => void | Promise<void>;
   onNot: (metin: string) => void;
+  /*
+    Mülakat tarihi OPSİYONEL ve durumdan bağımsız kaydediliyor: tarih
+    girmek adayı mülakata almanın şartı değil.
+  */
+  onMulakatTarihi?: (tarih: string) => void | Promise<void>;
   /*
     GÖMÜLÜ KİP — MASAÜSTÜNDE YAN PANEL
 
@@ -66,7 +78,7 @@ export const AdayCekmecesi: React.FC<{
     panel akışın içinde duruyor.
   */
   gomulu?: boolean;
-}> = ({ kart, kaydediliyor, onKapat, onDurum, onNot, gomulu }) => {
+}> = ({ kart, kaydediliyor, onKapat, onDurum, onNot, onMulakatTarihi, gomulu }) => {
   /*
     İmzalı adres tıklama anında üretiliyor, kart çizilirken değil: adresin
     ömrü on dakika ve önceden üretilseydi açılmadan ölürdü. Ayrıca
@@ -89,6 +101,15 @@ export const AdayCekmecesi: React.FC<{
     }
   };
 
+  /*
+    Durum kontrolünün yerel durumu. HEPSİ erken çıkışın üstünde:
+    aşağıda tanımlanmış bir hook, panelin tamamını beyaz ekrana
+    düşüren P0 hatasının kaynağıydı.
+  */
+  const [olumsuzSoruldu, setOlumsuzSoruldu] = React.useState(false);
+  const [durumHatasi, setDurumHatasi] = React.useState<string | null>(null);
+  const [mulakatTarihi, setMulakatTarihi] = React.useState('');
+
   const [ikinciAcik, setIkinciAcik] = React.useState(false);
   const [not, setNot] = React.useState('');
   const govde = React.useRef<HTMLDivElement | null>(null);
@@ -100,7 +121,10 @@ export const AdayCekmecesi: React.FC<{
     /* İkinci adaya geçince önceki adayın CV hatası ekranda kalmasın. */
     setCvHatasi(null);
     setCvAciliyor(false);
-  }, [kart?.id]);
+    setOlumsuzSoruldu(false);
+    setDurumHatasi(null);
+    setMulakatTarihi(kart?.mulakatTarihi ?? '');
+  }, [kart?.id, kart?.mulakatTarihi]);
 
   React.useEffect(() => {
     if (!kart) return undefined;
@@ -133,6 +157,19 @@ export const AdayCekmecesi: React.FC<{
   if (!kart) return null;
 
   const kimlik = kimlikSatiri(kart);
+  /* Akıştaki bir sonraki adım; kapanmış durumlarda yok. */
+  const sonraki = sonrakiDurum(kart.durum);
+
+  /*
+    Durum değişiminin hatası çekmeceyi KAPATMIYOR: alanın altında
+    satır içi görünüyor, aday açık kalıyor, şirket tekrar deneyebiliyor.
+  */
+  const durumDegistir = (d: string) => {
+    setDurumHatasi(null);
+    Promise.resolve(onDurum(d)).catch(() => {
+      setDurumHatasi('Durum kaydedilemedi. Bağlantını kontrol edip tekrar dene.');
+    });
+  };
 
   /*
     LİSTELER DİZE OLMAYAN ÖĞEYE DAYANIKLI
@@ -364,20 +401,147 @@ export const AdayCekmecesi: React.FC<{
         </div>
 
         {/* ------------------------------------------------ eylemler */}
+        {/*
+          YEDİ DÜĞME YERİNE: DURUM SEÇİCİ + BİR SONRAKİ ADIM
+
+          Altta üç düğme ("İncelemede", "Mülakat", "Reddet") ve
+          katlanmış bir "Daha fazla" içinde iki düğme daha vardı. Beş
+          eylem yan yana, hangisinin sıradaki adım olduğu belirsiz.
+
+          Şimdi:
+            - üstte MEVCUT DURUM ve tek bir seçici (yerli `select`:
+              telefonda sistemin kendi tekerleği açılıyor, ekran dışına
+              taşmıyor ve klavye erişimi bedava geliyor)
+            - altında akıştaki BİR SONRAKİ ADIM tek birincil düğme
+            - yanında "Olumsuz" — küçük bir onayla
+
+          `withdrawn` seçenekler arasında yok: geri çekmek adayın kararı.
+          Aynı kural veritabanında da duruyor.
+        */}
         <div className="border-t p-4" style={{ background: SIRKET_YUZEY, borderColor: SIRKET_KENAR }}>
-          <div className="flex flex-wrap gap-2">
-            {BIRINCI_SIRA.map((e: { id: string; etiket: string }) => (
+          <label className="block">
+            <span className="mb-1 block text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+              Durum
+            </span>
+            <select
+              value={kart.durum}
+              disabled={kaydediliyor}
+              onChange={(e) => durumDegistir(e.target.value)}
+              className={ALAN}
+              style={alanStil}
+            >
+              {SIRKET_DURUMLARI.map((d: string) => (
+                <option key={d} value={d}>
+                  {durumAdi(d)}
+                </option>
+              ))}
+              {/*
+                Aday geri çektiyse mevcut durum listede olmalı, yoksa
+                `select` ilk seçeneği gösterip yanlış bilgi verirdi.
+                Seçilemiyor: şirket bu değere geçemez.
+              */}
+              {kart.durum === 'withdrawn' && (
+                <option value="withdrawn" disabled>
+                  {durumAdi('withdrawn')}
+                </option>
+              )}
+            </select>
+          </label>
+
+          {/*
+            MÜLAKAT TARİHİ OPSİYONEL
+
+            Tarih girmek durumu değiştirmenin şartı değil: şirket adayı
+            mülakata alıp tarihi sonra netleştirebilmeli. Alan yalnızca
+            mülakat aşamasında görünüyor.
+          */}
+          {kart.durum === 'interview_scheduled' && (
+            <label className="mt-2 block">
+              <span className="mb-1 block text-[11px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                Mülakat tarihi <span className="font-normal">(isteğe bağlı)</span>
+              </span>
+              <input
+                type="date"
+                value={mulakatTarihi}
+                disabled={kaydediliyor}
+                onChange={(e) => {
+                  setMulakatTarihi(e.target.value);
+                  setDurumHatasi(null);
+                  Promise.resolve(onMulakatTarihi?.(e.target.value)).catch(() => {
+                    setDurumHatasi('Mülakat tarihi kaydedilemedi.');
+                  });
+                }}
+                className={ALAN}
+                style={alanStil}
+              />
+            </label>
+          )}
+
+          {durumHatasi && (
+            <p role="alert" className="mt-2 text-xs font-semibold" style={{ color: '#991B1B' }}>
+              {durumHatasi}
+            </p>
+          )}
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            {sonraki && (
               <button
-                key={e.id}
                 type="button"
                 disabled={kaydediliyor}
-                onClick={() => onDurum(e.id)}
-                className={e.id === 'under_review' ? BIRINCIL_DUGME : IKINCIL_DUGME}
-                style={e.id === 'under_review' ? birincilStil : ikincilStil}
+                onClick={() => durumDegistir(sonraki)}
+                className={BIRINCIL_DUGME}
+                style={birincilStil}
               >
-                {e.etiket}
+                {kaydediliyor ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {durumAdi(sonraki)} aşamasına al
               </button>
-            ))}
+            )}
+
+            {/*
+              OLUMSUZ İKİ ADIMDA
+
+              Yanlışlıkla basılan tek düğme adayın sürecini kapatıyordu.
+              Ağır bir modal yerine düğmenin kendisi soruya dönüşüyor.
+            */}
+            {kart.durum !== 'rejected' && kart.durum !== 'withdrawn' && (
+              olumsuzSoruldu ? (
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-bold" style={{ color: SIRKET_METIN }}>
+                    Olumsuz olarak işaretlensin mi?
+                  </span>
+                  <button
+                    type="button"
+                    disabled={kaydediliyor}
+                    onClick={() => {
+                      setOlumsuzSoruldu(false);
+                      durumDegistir('rejected');
+                    }}
+                    className={IKINCIL_DUGME}
+                    style={{ ...ikincilStil, borderColor: '#FCA5A5', color: '#991B1B' }}
+                  >
+                    Evet, olumsuz
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOlumsuzSoruldu(false)}
+                    className={IKINCIL_DUGME}
+                    style={ikincilStil}
+                  >
+                    Vazgeç
+                  </button>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  disabled={kaydediliyor}
+                  onClick={() => setOlumsuzSoruldu(true)}
+                  className={IKINCIL_DUGME}
+                  style={ikincilStil}
+                >
+                  Olumsuz
+                </button>
+              )
+            )}
           </div>
 
           <button
@@ -387,7 +551,7 @@ export const AdayCekmecesi: React.FC<{
             className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-between rounded-xl text-xs font-bold"
             style={{ color: SIRKET_METIN_IKINCIL }}
           >
-            Daha fazla
+            Adaya not
             <ChevronDown
               className="h-4 w-4 transition-transform"
               style={{ transform: ikinciAcik ? 'rotate(180deg)' : 'none' }}
@@ -396,20 +560,12 @@ export const AdayCekmecesi: React.FC<{
 
           {ikinciAcik && (
             <div className="space-y-2">
-              <div className="flex flex-wrap gap-2">
-                {IKINCI_SIRA.map((e: { id: string; etiket: string }) => (
-                  <button
-                    key={e.id}
-                    type="button"
-                    disabled={kaydediliyor}
-                    onClick={() => onDurum(e.id)}
-                    className={IKINCIL_DUGME}
-                    style={ikincilStil}
-                  >
-                    {e.etiket}
-                  </button>
-                ))}
-              </div>
+              {/*
+                Buradaki ikinci düğme sırası ("Değerlendirme", "Teklif")
+                kaldırıldı: durum artık yukarıdaki tek seçiciden
+                değişiyor. Aynı işi yapan iki kontrol, hangisinin
+                geçerli olduğunu belirsizleştiriyordu.
+              */}
               {/*
                 Not ÖĞRENCİYE GÖRÜNÜR: `company_feedback` adayın kendi
                 başvuru sayfasında okunuyor. Bunu yazmadan not alanı

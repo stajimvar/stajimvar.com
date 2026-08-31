@@ -1,4 +1,5 @@
 import { SIRKET_ROZET, SIRKET_VURGU_KOYU } from './renk';
+import { DURUM_ADI } from '../lib/basvuru-durumu.mjs';
 
 /**
  * BAŞVURU DURUMU — TEK SÖZLÜK
@@ -36,42 +37,33 @@ export type BasvuruDurumu =
   | 'rejected'
   | 'withdrawn';
 
-/** Süzgeçte ve listelerde kullanılan sıra: akışın gerçek sırası. */
-export const DURUM_SIRASI: BasvuruDurumu[] = [
-  'submitted',
-  'under_review',
-  'technical_assessment',
-  'interview_scheduled',
-  'offer_extended',
-  'rejected',
-  'withdrawn',
-];
+/*
+  TERİMLER ARTIK ÜRÜNÜN ORTAK SÖZLÜĞÜNDEN
+
+  Sözlük burada duruyordu ve yalnızca işveren paneli okuyordu; öğrenci
+  tarafında ayrı bir sözlük vardı ve aynı başvuru iki tarafta iki farklı
+  kelimeyle görünüyordu. Terimler ../lib/basvuru-durumu.mjs içine
+  taşındı; burada YALNIZCA işveren temasına bağlı renkler kaldı.
+*/
+export { DURUM_SIRASI, SIRKET_DURUMLARI, durumAdi, sonrakiDurum, durumKapandi } from '../lib/basvuru-durumu.mjs';
 
 type Rozet = { etiket: string; stil: React.CSSProperties };
 
 export const DURUM_ROZETI: Record<BasvuruDurumu, Rozet> = {
-  submitted: { etiket: 'Yeni', stil: { background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU } },
-  under_review: { etiket: 'İnceleniyor', stil: { background: '#FEF3C7', color: '#92400E' } },
+  submitted: { etiket: DURUM_ADI.submitted, stil: { background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU } },
+  under_review: { etiket: DURUM_ADI.under_review, stil: { background: '#FEF3C7', color: '#92400E' } },
   technical_assessment: {
-    etiket: 'Değerlendirme',
+    etiket: DURUM_ADI.technical_assessment,
     stil: { background: '#FEF3C7', color: '#92400E' },
   },
-  interview_scheduled: { etiket: 'Mülakat', stil: { background: '#DBEAFE', color: '#1E40AF' } },
-  offer_extended: { etiket: 'Teklif', stil: { background: '#DCFCE7', color: '#166534' } },
-  rejected: { etiket: 'Olumsuz', stil: { background: '#FEE2E2', color: '#991B1B' } },
-  withdrawn: { etiket: 'Geri çekildi', stil: { background: '#F3F4F6', color: '#4B5563' } },
+  interview_scheduled: {
+    etiket: DURUM_ADI.interview_scheduled,
+    stil: { background: '#DBEAFE', color: '#1E40AF' },
+  },
+  offer_extended: { etiket: DURUM_ADI.offer_extended, stil: { background: '#DCFCE7', color: '#166534' } },
+  rejected: { etiket: DURUM_ADI.rejected, stil: { background: '#FEE2E2', color: '#991B1B' } },
+  withdrawn: { etiket: DURUM_ADI.withdrawn, stil: { background: '#F3F4F6', color: '#4B5563' } },
 };
-
-/**
- * Durumun kullanıcıya görünen adı.
- *
- * Tanınmayan bir değer geldiğinde ham enum YAZILMIYOR: çekmece
- * `?? kart.durum` ile geri düşüyordu, yani şemaya yeni bir aşama
- * eklendiği gün panelde "technical_assessment" yazacaktı.
- */
-export function durumAdi(durum: string): string {
-  return DURUM_ROZETI[durum as BasvuruDurumu]?.etiket ?? 'Durum bilinmiyor';
-}
 
 /** Rozet biçemi; tanınmayan değerde nötr. */
 export function durumRozeti(durum: string): Rozet {

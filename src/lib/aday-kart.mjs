@@ -169,6 +169,8 @@ export function kartVerisi(satir, ek = {}) {
       değerlendirdiği belgenin yerine sonradan yüklenmiş başka bir
       belgeyi görürdü.
     */
+    /* Mülakat tarihi opsiyonel; yoksa alan boş açılıyor. */
+    mulakatTarihi: satir?.interview_date ? String(satir.interview_date).slice(0, 10) : '',
     cvYolu: satir?.cv_snapshot_path ?? satir?.cv_path ?? null,
     yontem: satir?.application_method ?? 'external',
   };

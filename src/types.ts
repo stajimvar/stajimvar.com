@@ -214,6 +214,13 @@ export interface ApplicationRecord {
   studentId: string;
   appliedAt: string;
   updatedAt?: string; // applications.updated_at — durum değiştikçe tetikleyici günceller
+  /*
+    applications.status_changed_at — YALNIZCA durum değiştiğinde
+    damgalanıyor (stamp_application_status_change). `updated_at` her
+    yazımda oynadığı için "süreç ilerledi" demenin doğru ölçüsü bu.
+    Hiç durum değişmediyse NULL: uydurulmuyor.
+  */
+  statusChangedAt?: string;
   status:
     | 'submitted'
     | 'under_review'

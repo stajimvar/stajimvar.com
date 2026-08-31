@@ -293,6 +293,65 @@ select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
       where id='33333333-aaaa-4000-8000-000000000001'$q$),
   'A, kendi basvurusunun durumunu degistirebilir');
 
+-- ------------------------ BAŞVURU DURUMU: ŞİRKET ADAY ADINA KARAR VEREMEZ
+--
+-- Ölçüldü: işveren güncelleme politikasının WITH CHECK ifadesi YOKTU.
+-- Doğrulanmış bir şirket başvuruyu `withdrawn` yapabiliyor, yani
+-- öğrencinin kendi başvuru sayfasında "Başvurunu geri çektin" cümlesini
+-- doğurabiliyordu. Geri çekmek adayın kararı; şirket bir adayı
+-- reddedebilir ama onun adına vazgeçemez.
+--
+-- Arayüzde de bu değer şirketin seçeneklerinde yok
+-- (lib/basvuru-durumu.mjs · SIRKET_DURUMLARI) ama düğme gizlemek
+-- güvenlik değildir; kural burada sınanıyor.
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='withdrawn'
+      where id='33333333-aaaa-4000-8000-000000000001'$q$),
+  'A, adayin basvurusunu ADAY ADINA geri cekemez');
+
+select pg_temp.bekle(
+  (select status::text = 'under_review'
+     from public.applications where id='33333333-aaaa-4000-8000-000000000001'::uuid),
+  'Reddedilen geri cekme denemesi durumu degistirmedi');
+
+-- Meşru karar kapanmıyor: reddetmek şirketin hakkı.
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='rejected'
+      where id='33333333-aaaa-4000-8000-000000000001'$q$),
+  'A, adayi reddedebilir');
+
+-- Damga tetikleyiciden geliyor: "ne zaman karar verildi" uydurulmuyor.
+select pg_temp.bekle(
+  (select status_changed_at is not null
+     from public.applications where id='33333333-aaaa-4000-8000-000000000001'::uuid),
+  'Durum degisince status_changed_at damgalaniyor');
+
+-- Mülakat tarihi opsiyonel bir alan; durumdan bagimsiz yazilabiliyor.
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='interview_scheduled',
+        interview_date='2026-09-15'
+      where id='33333333-aaaa-4000-8000-000000000001'$q$),
+  'A, mulakat asamasinda tarih yazabilir');
+
+/*
+  SIRA ARTIĞI BIRAKILMIYOR
+
+  Bu blok başvurunun durumunu değiştiriyor. Daha önce böyle bir blok
+  şirketi `verified=false` bırakmış ve SONRAKİ bütün testler sessizce
+  doğrulanmamış şirketle çalışmıştı. Durum eski değerine geri alınıyor
+  ve geri alındığı DOĞRULANIYOR.
+*/
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='under_review', interview_date=null
+      where id='33333333-aaaa-4000-8000-000000000001'$q$),
+  'A, durumu geri alabilir (akis tek yonlu degil)');
+
+select pg_temp.bekle(
+  (select status::text = 'under_review' and interview_date is null
+     from public.applications where id='33333333-aaaa-4000-8000-000000000001'::uuid),
+  'Durum testleri sonrasi basvuru eski haline dondu');
+
 -- ---------------------------- İLAN KOLONLARI: İÇERİK EVET, SİNYAL HAYIR
 --
 -- RLS bir şirketi kendi SATIRLARIYLA sınırlıyor ama satır güvenliği kolon
@@ -792,6 +851,38 @@ select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
              55, 'internal', 'not_required', 'web', now(),
              '00000000-0000-4000-8000-00000000000c/basvurular/snap-b.pdf')$q$),
   'C, ikinci sirkete yaptigi basvuruya yeni kopyayi baglayabilir');
+
+-- ------------------------- ÖĞRENCİ ŞİRKETİN KARARINI VEREMEZ, GERİ ÇEKEBİLİR
+--
+-- Öğrenci politikasının WITH CHECK ifadesi sonucu `withdrawn` olmaya
+-- zorluyor. Yani öğrenci kendi başvurusunu "Mülakat" ya da "Teklif"
+-- yapamıyor: süreci ilerletmek şirketin kararı, vazgeçmek öğrencinin.
+-- İkinci başvuru üzerinde sınanıyor; ilki şirket testlerinde kullanılıyor.
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='offer_extended'
+      where listing_id='22222222-bbbb-4000-8000-000000000003'
+        and student_id='00000000-0000-4000-8000-00000000000c'$q$),
+  'C, kendine teklif veremez');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='interview_scheduled'
+      where listing_id='22222222-bbbb-4000-8000-000000000003'
+        and student_id='00000000-0000-4000-8000-00000000000c'$q$),
+  'C, kendini mulakata alamaz');
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='withdrawn'
+      where listing_id='22222222-bbbb-4000-8000-000000000003'
+        and student_id='00000000-0000-4000-8000-00000000000c'$q$),
+  'C, kendi basvurusunu geri cekebilir');
+
+select pg_temp.bekle(
+  (select status::text = 'withdrawn' and status_changed_at is not null
+     from public.applications
+    where listing_id='22222222-bbbb-4000-8000-000000000003'::uuid
+      and student_id='00000000-0000-4000-8000-00000000000c'::uuid),
+  'Geri cekme damgalandi');
 
 -- PROFİL CV SİLİNSE BİLE KOPYALAR DURUYOR
 select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
