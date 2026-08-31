@@ -1652,12 +1652,17 @@ select '33333333-9992-4000-8000-000000000002'::uuid, '22222222-aaaa-4000-8000-00
 
 insert into public.applications (id, listing_id, student_id, match_score, application_method,
                                  email_delivery_status, created_via, contact_share_consent_at, status)
+-- Çok satırlı VALUES listesinde tipler AÇIKÇA yazılıyor: PostgreSQL
+-- birden fazla satırı birlikte çözerken dize sabitlerini `text` olarak
+-- sabitliyor ve enum kolonuna atarken düşüyor (ölçüldü).
 values ('33333333-9993-4000-8000-000000000003'::uuid, '22222222-aaaa-4000-8000-000000000009'::uuid,
         '00000000-0000-4000-8000-00000000000d'::uuid,
-        60, 'internal', 'not_required', 'web', now(), 'withdrawn'),
+        60, 'internal'::application_method, 'not_required'::email_delivery_status, 'web', now(),
+        'withdrawn'::application_status),
        ('33333333-9994-4000-8000-000000000004'::uuid, '22222222-aaaa-4000-8000-000000000009'::uuid,
         '00000000-0000-4000-8000-00000000000a'::uuid,
-        60, 'internal', 'not_required', 'web', now(), 'rejected');
+        60, 'internal'::application_method, 'not_required'::email_delivery_status, 'web', now(),
+        'rejected'::application_status);
 
 reset role;
 select set_config('request.jwt.claims',
