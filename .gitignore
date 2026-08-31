@@ -25,3 +25,8 @@ _eski-wrangler/
 # Burs denetim çıktısı: her koşuda değişiyor ve kaynak sayfalardan kısa
 # alıntı taşıyor. Araç depoda, çıktısı değil.
 raporlar/
+
+# Radar gölge raporu artefaktları — depoya girmiyor.
+radar-art*/
+radar-rapor*.json
+radar-*.log
