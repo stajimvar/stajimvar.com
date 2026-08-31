@@ -187,7 +187,24 @@ def _kariyer_kartlari(govde: str) -> list[dict]:
 
 
 def youthall(getir, sayfa_sayisi: int = 2) -> list[Sinyal]:
-    """Youthall staj ilanı listelerinden metadata toplar."""
+    """Youthall staj ilanı listelerinden metadata toplar.
+
+    ÖLÇÜLDÜ: BU KAYNAK HENÜZ SUNUCUDAN İLAN VERMİYOR
+    ------------------------------------------------
+    31 Ağustos 2026 gölge koşusunda 0 sinyal döndü ve nedeni ölçüldü:
+    `/tr/is-ilanlari/` sayfası 200 dönüyor (286 KB) ama sunucudan gelen
+    HTML'de tek bir ilan adresi YOK — yalnız kategori bağları
+    (`/tr/is-ilanlari/stajyer/`, `/part-time/` gibi). `__NEXT_DATA__`
+    ya da gömülü ilan JSON'u da yok; liste istemci tarafında
+    çiziliyor.
+
+    Bu bir ENGEL DEĞİL: robots.txt izin veriyor, bot duvarı yok. Teknik
+    bir boşluk — ilanları görmek için sayfanın JavaScript'ini
+    çalıştırmak gerekiyor ve bu sprintte tarayıcı çalıştırma yok.
+
+    İşlev yerinde bırakılıyor: kaynak sunucu tarafı HTML vermeye
+    başlarsa ya da bir sonraki turda kuyruk eklendiğinde arayüz hazır.
+    """
     sinyaller: list[Sinyal] = []
     gorulen: set[str] = set()
 
