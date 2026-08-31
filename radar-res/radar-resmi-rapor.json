@@ -1,0 +1,70 @@
+{
+  "arama": {
+    "saglayici": "brave",
+    "sorgu": 100,
+    "basarili": 100,
+    "sonucsuz": 0,
+    "hata": {},
+    "tavana_takildi": 0,
+    "ham_isabet": 1000
+  },
+  "sonuc_siniflari": {
+    "lever": 200,
+    "ashby": 200,
+    "workable": 200,
+    "smartrecruiters": 196,
+    "greenhouse": 147,
+    "desteklenen ATS değil": 57
+  },
+  "platform_huni": {
+    "ashby": {
+      "kiraci": 73,
+      "yeni_kiraci": 72
+    },
+    "greenhouse": {
+      "kiraci": 77,
+      "yeni_kiraci": 73
+    },
+    "lever": {
+      "kiraci": 47,
+      "ilan": 2,
+      "yeni_kiraci": 40
+    },
+    "smartrecruiters": {
+      "kiraci": 59,
+      "yeni_kiraci": 58
+    },
+    "workable": {
+      "kiraci": 107,
+      "yeni_kiraci": 105,
+      "ilan": 4
+    }
+  },
+  "toplam": {
+    "unique_kiraci": 363,
+    "yeni_kiraci": 348,
+    "valid_internship": 0,
+    "duplicate": 0,
+    "would_publish": 0
+  },
+  "adaptor_boslugu": {},
+  "verimli_sorgular": {
+    "site:jobs.lever.co intern Turkey": 10,
+    "site:jobs.lever.co intern Türkiye": 10,
+    "site:jobs.lever.co intern Istanbul": 10,
+    "site:jobs.lever.co intern Ankara": 10,
+    "site:jobs.lever.co intern Izmir": 10,
+    "site:jobs.lever.co internship Turkey": 10,
+    "site:jobs.lever.co internship Türkiye": 10,
+    "site:jobs.lever.co internship Istanbul": 10,
+    "site:jobs.lever.co internship Ankara": 10,
+    "site:jobs.lever.co internship Izmir": 10,
+    "site:jobs.lever.co stajyer Turkey": 10,
+    "site:jobs.lever.co stajyer Türkiye": 10,
+    "site:jobs.lever.co stajyer Istanbul": 10,
+    "site:jobs.lever.co stajyer Ankara": 10,
+    "site:jobs.lever.co stajyer Izmir": 10
+  },
+  "would_publish_ornekleri": [],
+  "auto_publish": "false"
+}

@@ -88,22 +88,39 @@ def _scraper():
     return scraper
 
 
-def kiracidan_ilanlar(platform: str, kiraci: str) -> list[dict]:
+def kiracidan_ilanlar(platform: str, kiraci: str, sayac=None) -> list[dict]:
     """MEVCUT adaptörle kiracının resmî ilanlarını okur.
 
     Radar için ikinci bir Lever/Greenhouse ayrıştırıcısı YAZILMIYOR:
     `scraper.py` içindeki resmî API adaptörleri olduğu gibi çağrılıyor.
-    Adaptör hata verirse kiracı atlanıyor, koşu düşmüyor.
+
+    SONUÇ SAYILIYOR, YUTULMUYOR
+    ---------------------------
+    İlk koşuda hatalar sessizce yutuluyordu ve 363 kiracıdan yalnız 6
+    ilan geldiğinde "bu kiracıda Türkiye stajı yok" ile "kiracı adı
+    yanlış, API 404 verdi" ayırt edilemiyordu. Artık her sonuç
+    sayaçta.
     """
     anahtar = DESTEKLENEN[platform]["anahtar"]
     config = {"name": f"radar:{platform}:{kiraci}", anahtar: kiraci}
     adaptor = getattr(_scraper(), platform, None)
     if adaptor is None:
+        if sayac is not None:
+            sayac[f"{platform}:adaptor_yok"] += 1
         return []
     try:
         isler = list(adaptor(config))[:KIRACI_ILAN_TAVANI]
-    except Exception:
+    except Exception as hata:
+        # Hata TÜRÜ ve varsa HTTP durumu; mesaj değil (adres taşıyabilir).
+        durum = getattr(getattr(hata, "response", None), "status_code", None)
+        etiket = f"{platform}:{type(hata).__name__}" + (f":{durum}" if durum else "")
+        if sayac is not None:
+            sayac[etiket] += 1
         return []
+    if sayac is not None:
+        sayac[f"{platform}:ok"] += 1
+        if not isler:
+            sayac[f"{platform}:bos"] += 1
     return [
         {
             "title": getattr(i, "title", "") or "",
@@ -147,6 +164,7 @@ def main(argv: list[str] | None = None) -> int:
     mevcut = _mevcut_ilan_adresleri()
 
     adaylar: list[ResmiAday] = []
+    adaptor_sayac: Counter = Counter()
     platform_huni: dict[str, Counter] = defaultdict(Counter)
 
     for (platform, kiraci), kaynak_urller in kiracilar.items():
@@ -154,7 +172,7 @@ def main(argv: list[str] | None = None) -> int:
         if yeni_kiraci_mi(platform, kiraci, kayitli):
             platform_huni[platform]["yeni_kiraci"] += 1
 
-        for ilan in kiracidan_ilanlar(platform, kiraci):
+        for ilan in kiracidan_ilanlar(platform, kiraci, adaptor_sayac):
             platform_huni[platform]["ilan"] += 1
             if not turkiye_mi(ilan["location"], ilan["description"]):
                 continue
@@ -206,6 +224,11 @@ def main(argv: list[str] | None = None) -> int:
             "would_publish": len(yayin),
         },
         # Adaptörü olmayan resmî platformlar: sonraki adaptör önceliği.
+        "adaptor_sonuclari": dict(adaptor_sayac.most_common()),
+        "ornek_kiracilar": {
+            p: [k for (pp, k) in list(kiracilar)[:400] if pp == p][:8]
+            for p in sorted({pp for pp, _ in kiracilar})
+        },
         "adaptor_boslugu": dict(Counter(
             b.platform for b in bulgular if b.red_nedeni == "adaptör yok"
         ).most_common()),
