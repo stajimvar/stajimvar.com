@@ -273,11 +273,23 @@ export function deadlineLabel(item, now = new Date()) {
   return null;
 }
 
-/** Uyarı satırı için: "Bugün ve yarın kapanan N fırsat var." */
+/**
+ * Başlık altındaki bilgi satırında yazan kapanış uyarısı.
+ *
+ * KISALDI
+ * -------
+ * "Bugün ve yarın kapanan 2 fırsat var." 36 karakterdi ve 390 pikselde
+ * sayaçların yanına sığmayıp kendi satırına düşüyordu — üst blokta
+ * dördüncü bir yatay şerit demekti. "var." zaten hiçbir şey söylemiyor;
+ * cümle bir sayaç, bir haber değil.
+ *
+ * Yeni hâli sayaçlarla aynı satıra sığıyor ve aynı şeyi söylüyor:
+ * "2'si bugün/yarın kapanıyor".
+ */
 export function closingSoonLabel(sayi, gun = 1) {
   if (!sayi) return null;
-  const zaman = gun <= 1 ? 'Bugün ve yarın' : `Önümüzdeki ${gun} gün içinde`;
-  return `${zaman} kapanan ${sayi} fırsat var.`;
+  if (gun <= 1) return `${sayi}'si bugün/yarın kapanıyor`;
+  return `${sayi}'si ${gun} gün içinde kapanıyor`;
 }
 
 /** N gün içinde kapanan AÇIK fırsatlar. Uyarı satırı bunu sayıyor. */

@@ -327,43 +327,88 @@ export const OpportunitiesPage: React.FC<{
       className={`w-full ${SAYFA_GENISLIGI} mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-10`}
     >
       {/*
-        ÜST ALAN — TEK BLOK
+        ÜST ALAN — İKİ SATIR
 
-        Önce gradyan çizgili, çerçeveli, gölgeli bir başlık kartı vardı;
-        kart kalktı ama yerine dört ayrı parça geldi: başlık, sayaç
-        satırı, uyarı satırı ve sekme kapsülü. Dördü de kendi başına
-        duruyordu ve aralarındaki boşluklar bloğu "yan yana konmuş
-        parçalar" gibi gösteriyordu.
+        Dört katman vardı: başlık, sayaç satırı, uyarı satırı ve altında
+        tam bir satır kaplayan sekme kapsülü. Boşluklar küçültülerek
+        toparlanmaya çalışıldı ama sorun boşluk değil DÜZENDİ — dört
+        yatay şerit alt alta durdukça blok ne kadar sıkılırsa sıkılsın
+        "boşluk bırakılmış taslak" gibi okunuyordu.
 
-        Ölçüldü (390 px): h1 28 px, boşluk 4, meta 20, boşluk 4, uyarı 20,
-        boşluk 12, sekme kapsülü 44 → toplam 131 px. Sorun tek tek
-        boşluklar değil, PARÇA SAYISI ve en alttaki kapsülün ağırlığıydı.
+        Düzen değişti. Artık iki satır:
 
-        Şimdi üç katman var:
-          1. başlık
-          2. tek meta satırı — sayaçlar VE kapanış uyarısı aynı satırda
-          3. sekmeler
+          1.  Öğrenci Fırsatları            [Tüm fırsatlar | Takvim]
+          2.  22 açık · 13 yakında · ⏰ 2'si bugün/yarın kapanıyor
 
-        Uyarı kendi satırından çıkıp meta zincirine katıldı: aynı türden
-        bilgi (hepsi sayı) ve ayrı satırda durunca üçüncü bir parça
-        oluyordu. Zincire "·" ile değil KENDİ İKONUYLA bağlanıyor — nokta
-        ile bağlansaydı satır kaydığında üst satırın sonunda sahipsiz bir
-        nokta kalırdı (bir kez oldu).
+        Sekme kapsülü kendi şeridini bıraktı ve başlığın karşısına geçti;
+        modern ürün başlıklarındaki görünüm seçici tam olarak orada
+        duruyor. Uyarı da kendi satırından çıkıp meta zincirinin son
+        halkası oldu.
+
+        Ölçüldü (390 px): eski blok 123 px, yeni blok 54 px.
       */}
-      <header className="mb-3">
+      <header className="mb-3.5">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          {/*
+            Satır yüksekliği 1 (leading-none): başlığın altındaki ve
+            üstündeki tipografik boşluk, meta satırıyla arasında görünmez
+            bir aralık üretiyordu.
+          */}
+          <h1 className="min-w-0 text-[22px] font-extrabold leading-none tracking-tight text-gray-950 sm:text-[26px]">
+            {heading}
+          </h1>
+
+          {/*
+            SEGMENT KONTROLÜ — BAŞLIĞIN KARŞISINDA
+
+            Kendi satırında dururken 40 piksellik bir yastık gibi
+            görünüyordu ve üstündeki metin satırlarıyla ilgisiz duruyordu.
+            Başlıkla aynı hizaya gelince hem o şerit tamamen kalktı hem de
+            "görünüm seçici" olduğu anlaşılıyor.
+
+            Kapsül 36 px (düğme 32) — iOS segment kontrolüyle aynı boy.
+            Seçilideki ağır beyaz hap yerine çok hafif bir gölge var.
+          */}
+          {!savedOnly && (
+            <nav
+              aria-label="Fırsat görünümü"
+              className="flex max-w-full shrink-0 items-center gap-0.5 overflow-x-auto rounded-full bg-gray-100 p-0.5 text-[12px] font-bold [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {(
+                [
+                  /* Hazır kayıt yoksa sekme hiç çizilmiyor — bkz. hazirSayisi. */
+                  ...((hazirSayisi > 0
+                    ? [['/bana-uygun', 'Sana uygun', 'uygun']]
+                    : []) as [string, string, Sekme][]),
+                  ['/firsatlar', 'Tüm fırsatlar', 'tumu'],
+                  ['/firsat-takvimi', 'Takvim', 'takvim'],
+                ] as [string, string, Sekme][]
+              ).map(([yol, etiket, id]) => (
+                <button
+                  key={yol}
+                  /* Sekme değişince arama ve süzgeçler adresle birlikte taşınıyor. */
+                  onClick={() => onNavigate(`${yol}${serializeOpportunityFilters(filters)}`)}
+                  className={`flex h-8 shrink-0 items-center whitespace-nowrap rounded-full px-3 transition-colors cursor-pointer ${
+                    sekme === id
+                      ? 'bg-white text-gray-900 shadow-[0_1px_2px_rgba(16,24,40,0.08)]'
+                      : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  {etiket}
+                </button>
+              ))}
+            </nav>
+          )}
+        </div>
+
         {/*
-          BAŞLIK: DAHA BÜYÜK, DAHA AZ KALIN
+          TEK BİLGİ SATIRI
 
-          20 px / 900'dü. Küçük ama aşırı kalın bir başlık kaba görünüyor;
-          ağırlık boyuttan gelmeli. 22'ye (masaüstünde 28) çıktı, kalınlık
-          800'e indi ve satır yüksekliği 1.15'e sıkıldı — iki satıra düşen
-          uzun başlıklarda aradaki boşluk da kapanıyor.
+          Sayaçlar ve kapanış uyarısı aynı zincirde. Uyarı zincire "·" ile
+          değil KENDİ İKONUYLA bağlanıyor: nokta ile bağlansaydı satır
+          kaydığında üst satırın sonunda sahipsiz bir nokta kalırdı.
         */}
-        <h1 className="text-[22px] font-extrabold leading-[1.15] tracking-tight text-gray-950 sm:text-[28px]">
-          {heading}
-        </h1>
-
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] leading-5 text-gray-500">
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] leading-4 text-gray-500">
           {state === 'ready' && !savedOnly ? (
             <>
               <SayacSatiri
@@ -403,70 +448,14 @@ export const OpportunitiesPage: React.FC<{
             </span>
           )}
 
-          {/*
-            KAPANIŞ UYARISI: BANNER DEĞİL, META SATIRININ BİR PARÇASI
-
-            Tam genişlikte amber bir kutuydu, sonra kendi satırına indi,
-            şimdi meta zincirinin son öğesi. Renk aynı sıcak amber ailede
-            ama ağırlığı yok: küçük ikon + tek satır metin.
-          */}
           {state === 'ready' && yarinKapananlar.length > 0 && (
             <span className="inline-flex items-center gap-1 font-semibold text-amber-800">
               <AlarmClock className="h-3.5 w-3.5 shrink-0" aria-hidden />
-              {yarinKapananlar.length === 1
-                ? `${closingSoonLabel(1)} ${yarinKapananlar[0].title}`
-                : closingSoonLabel(yarinKapananlar.length)}
+              {closingSoonLabel(yarinKapananlar.length)}
             </span>
           )}
         </div>
       </header>
-
-      {/* -------- sekmeler: sana uygun / tümü / takvim -------- */}
-      {!savedOnly && (
-        /* Sekmeler tam genişlikteydi ve üç büyük düğme gibi duruyordu.
-           İçeriği kadar yer alıyor: görünüm seçmek sayfanın ana işi değil. */
-        /*
-          SEKME KAPSÜLÜ İNCELDİ
-
-          44 pikseldi ve üstündeki 20 piksellik metin satırlarının yanında
-          şişkin duruyordu; seçili öğedeki gölge de plastik bir hap hissi
-          veriyordu. Kapsül 40'a indi (düğme 36), gölge yerine çok hafif
-          bir çerçeve var ve zemin gray-100'den gray-100/70'e yumuşadı.
-
-          Başlıkla arası da 12'den 10 piksele indi: sekmeler başlık
-          bloğunun devamı gibi dursun, ayrı bir kontrol gibi değil.
-        */
-        <nav
-          aria-label="Fırsat görünümü"
-          className="mb-3 -mt-0.5 inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full bg-gray-100/70 p-0.5 text-xs font-bold ring-1 ring-gray-200/70 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {(
-            [
-              /* Hazır kayıt yoksa sekme hiç çizilmiyor — bkz. hazirSayisi. */
-              ...((hazirSayisi > 0
-                ? [['/bana-uygun', 'Sana uygun', 'uygun']]
-                : []) as [string, string, Sekme][]),
-              ['/firsatlar', 'Tüm fırsatlar', 'tumu'],
-              ['/firsat-takvimi', 'Takvim', 'takvim'],
-            ] as [string, string, Sekme][]
-          ).map(([yol, etiket, id]) => (
-            <button
-              key={yol}
-              /* Sekme değişince arama ve süzgeçler adresle birlikte taşınıyor. */
-              onClick={() => onNavigate(`${yol}${serializeOpportunityFilters(filters)}`)}
-              /* Düğme 36, kapsülle birlikte 40 px. Seçilideki gölge kalktı;
-                 beyaz zemin + ince çerçeve zaten yeterince ayırıyor. */
-              className={`flex h-9 shrink-0 items-center whitespace-nowrap rounded-full px-3.5 transition-colors cursor-pointer ${
-                sekme === id
-                  ? 'bg-white text-blue-700 ring-1 ring-gray-200'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              {etiket}
-            </button>
-          ))}
-        </nav>
-      )}
 
       {/*
         ÖNE ÇIKAN BURSLAR — ÜSTTE KEŞİF, ALTTA KARŞILAŞTIRMA
