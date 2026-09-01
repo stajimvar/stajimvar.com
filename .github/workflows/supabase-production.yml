@@ -295,13 +295,27 @@ jobs:
       # betik kendisi düşüyor ve continue-on-error dağıtımı sürdürüyor.
       - name: Sitemap üret
         run: |
-          pip install requests
+          pip install -r requirements.txt
           python sitemap.py
         working-directory: automation
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         continue-on-error: true
+
+      # SESSİZ DÜŞMEYİ GÖRÜNÜR YAP
+      #
+      # continue-on-error adımı yeşil gösteriyor. İlk denemede tam bu
+      # oldu: betik eksik bir bağımlılıkla düştü, adım "success" göründü
+      # ve bayat harita yeniden yayına girdi. Harita değişmediyse artık
+      # koşu özetinde uyarı çıkıyor.
+      - name: Site haritası tazelendi mi
+        run: |
+          if git diff --quiet -- public/sitemap.xml; then
+            echo "::warning::public/sitemap.xml değişmedi — harita üretimi düşmüş olabilir"
+          else
+            echo "site haritası tazelendi: $(grep -c '<url>' public/sitemap.xml) adres"
+          fi
 
       - run: npm run build
       - run: npx wrangler pages deploy dist --project-name stajimvar --branch main --commit-dirty=true

@@ -179,6 +179,25 @@ test('H: üretim dağıtımı sitemap üretiyor', () => {
   );
 });
 
+test('H2: sitemap adımı gerçekten kurulabilen bir bağımlılık listesi kullanıyor', () => {
+  /*
+    İlk denemede `pip install requests` yazılmıştı ve betik
+    `ModuleNotFoundError: dotenv` ile düştü. Adım continue-on-error
+    olduğu için koşu yeşil göründü, bayat harita yeniden yayına girdi.
+  */
+  const dagitim = readFileSync(
+    path.join(KOK, '.github/workflows/supabase-production.yml'),
+    'utf8'
+  );
+  const blok = dagitim.slice(dagitim.indexOf('Sitemap üret'), dagitim.indexOf('npm run build', dagitim.indexOf('Sitemap üret')));
+  const m = blok.match(/pip install -r ([\w.-]+)/);
+  assert.ok(m, 'sitemap adımı bir gereksinim dosyası kurmalı');
+  const gereksinim = readFileSync(path.join(KOK, 'automation', m[1]), 'utf8');
+  for (const paket of ['python-dotenv', 'requests']) {
+    assert.match(gereksinim, new RegExp(paket), `${m[1]} içinde ${paket} yok`);
+  }
+});
+
 /* --------------------------------------- I: onay sürümü işlemeyle uyumlu */
 
 test('I: KVKK onay sürümü CV ve başvuru öncesi sürümde kalmadı', () => {
