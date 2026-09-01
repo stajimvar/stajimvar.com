@@ -1,0 +1,15 @@
+-- P0: YENİ KOLON KOLON DÜZEYİ YETKİYİ KAÇIRDI
+--
+-- `listings` tablosunda okuma yetkisi KOLON DÜZEYİNDE veriliyor
+-- (ilan_kolon_yetkileri). Bu yüzden yeni bir kolon eklemek onu otomatik
+-- okunabilir yapmıyor: `source_title` eklendikten sonra tarayıcının
+-- yaptığı select tümüyle düştü ve bütün ilan detay sayfaları
+-- "İlan yüklenemedi" verdi.
+--
+-- Aynı sınıftan bir hata daha önce fonksiyon EXECUTE hakkında yaşanmıştı.
+-- Ortak ders: yetkiyi açıkça listeleyen bir modelde yeni bir nesne
+-- eklemek, yetkiyi de eklemeyi gerektiriyor.
+--
+-- Bu kolon gizli veri taşımıyor: şirketin kendi kariyer sayfasında
+-- herkese açık olan ilan adı.
+grant select (source_title) on public.listings to anon, authenticated;

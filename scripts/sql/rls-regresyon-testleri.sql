@@ -1768,6 +1768,47 @@ begin
 end;
 $$;
 
+-- =============================================================================
+-- FRONTEND'İN OKUDUĞU HER KOLONDA SELECT HAKKI
+--
+-- `listings` okuma yetkisi KOLON DÜZEYİNDE veriliyor. Yeni bir kolon
+-- eklemek onu otomatik okunabilir yapmıyor ve eksik yetki tek bir kolonu
+-- gizlemiyor: PostgREST select'in TAMAMINI reddediyor.
+--
+-- Ölçüldü: `source_title` eklendikten sonra bütün ilan detay sayfaları
+-- "İlan yüklenemedi" verdi. Şema doğruydu, migration temizdi, testler
+-- yeşildi — eksik olan yetkiydi.
+--
+-- Bu kontrol, arayüzün okuduğu kolon listesini kaynaktan alamadığı için
+-- ilanın PUBLIC yüzeyinde gereken kolonları açıkça sayıyor.
+-- =============================================================================
+
+set local role postgres;
+
+do $$
+declare
+  eksik text;
+begin
+  select string_agg(c.kolon || ' -> ' || r.rol, ', ') into eksik
+  from (
+    select unnest(array[
+      'id', 'title', 'source_title', 'city', 'work_type', 'description',
+      'apply_url', 'canonical_url', 'source_url', 'application_method',
+      'status', 'posted_at', 'company_id'
+    ]) as kolon
+  ) c
+  cross join lateral (select unnest(array['anon', 'authenticated']) as rol) r
+  where not has_column_privilege(r.rol, 'public.listings', c.kolon, 'select');
+
+  if eksik is not null then
+    raise exception
+      'GUVENLIK REGRESYONU BASARISIZ: ilan kolonunda SELECT yetkisi yok: %',
+      eksik using errcode = 'check_violation';
+  end if;
+  raise notice 'gecti: public ilan kolonlarinin hepsinde SELECT yetkisi var';
+end;
+$$;
+
 -- DAVRANIŞ KONTROLÜ: yetki tablosu doğru görünse bile anonim ziyaretçi
 -- gerçekten ilan okuyabiliyor mu? Kesinti tam burada yaşandı.
 set local role anon;
