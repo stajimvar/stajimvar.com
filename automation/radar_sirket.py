@@ -337,7 +337,7 @@ def tahmin_adaylari(sirket: str) -> list[str]:
     # "Ahlatcı Holding" gerçekte `ahlatciholding.com.tr`. Bu yüzden
     # adaylar HEM eksiz kökten HEM de yalnız hukuki biçim atılmış
     # hâlden üretiliyor.
-    genis = re.sub(r"(a s|as|ltd sti|ltd|sti|inc|llc|gmbh|sanayi|ticaret|san|tic|ve)", " ",
+    genis = re.sub(r"\b(a s|as|ltd sti|ltd|sti|inc|llc|gmbh|sanayi|ticaret|san|tic|ve)\b", " ",
                    sadelestir(sirket))
     genis = re.sub(r"\s+", " ", genis).strip()
     genis_kelimeler = genis.split()

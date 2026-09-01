@@ -133,6 +133,30 @@ BASLIK_HIGH = 0.5
 BASLIK_MEDIUM = 0.45
 
 
+#: Kıdem işaretleri. Staj sinyali kıdemli bir pozisyonla eşleşemez.
+KIDEM_ISARETI = re.compile(
+    r"\b(senior|sr\.?|lead|principal|head of|director|manager|chief|"
+    r"k[ıi]demli|m[üu]d[üu]r|y[öo]netici|uzman|şef)\b", re.I)
+
+STAJ_ISARETI = re.compile(
+    r"\b(intern|internship|stajyer|staj|working student|co-?op)\b", re.I)
+
+
+def kidem_celiskisi(sinyal_baslik: str | None, resmi_baslik: str) -> bool:
+    """Staj sinyali ile kıdemli pozisyon aynı ilan olamaz.
+
+    ÖLÇÜLDÜ: "Marketing Intern" ile "Senior Marketing Manager" başlık
+    örtüşmesi 0.65 veriyor — ortak "marketing" kelimesi yüzünden eşik
+    yetmiyor. Ayırt edici olan kelime benzerliği değil, pozisyonun
+    kıdemi. Bu kontrol yalnız EŞLEŞTİRME için; kalite kararını hâlâ
+    resmî ilan metni veriyor.
+    """
+    if not sinyal_baslik or not STAJ_ISARETI.search(sinyal_baslik):
+        return False
+    return bool(KIDEM_ISARETI.search(resmi_baslik)
+                and not STAJ_ISARETI.search(resmi_baslik))
+
+
 def eslesme_guveni(sinyal_sirket: str, sinyal_baslik: str | None, sinyal_konum: str | None,
                    resmi_sirket: str | None, resmi_baslik: str,
                    resmi_konum: str | None, ats_kimligi: bool) -> tuple[str, list[str]]:
@@ -141,6 +165,9 @@ def eslesme_guveni(sinyal_sirket: str, sinyal_baslik: str | None, sinyal_konum: 
     Deterministik sinyaller toplanıyor; tek bir ölçüye güvenilmiyor.
     YALNIZ HIGH yayın adayı olabiliyor.
     """
+    if kidem_celiskisi(sinyal_baslik, resmi_baslik):
+        return "LOW", ["kıdem çelişkisi: staj sinyali ↔ kıdemli pozisyon"]
+
     kanitlar: list[str] = []
     puan = 0
 

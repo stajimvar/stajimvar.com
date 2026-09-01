@@ -27,7 +27,7 @@ on:
         required: false
         default: "resmi"
         type: choice
-        options: ["envanter", "cozum", "resmi", "linkedin", "linkedin-kesif-yaz", "linkedin-teshis", "kesif"]
+        options: ["kariyer-html", "kariyer-html-yayinla", "envanter", "cozum", "resmi", "linkedin", "linkedin-kesif-yaz", "linkedin-teshis", "kesif"]
   schedule:
     # Günde bir. Keşif kaynakları saatlik değişmiyor; saatlik çekmek
     # kaynağa gereksiz yük bindirmek olurdu.
@@ -111,6 +111,19 @@ jobs:
           MAX_SEARCH_QUERIES_PER_RUN: "430"
         run: python -m automation.radar_linkedin_kosu --kesif-siniri 220 --toplam-tavan 430
 
+      # GENEL HTML KARİYER SAYFASI → CANONICAL İLAN
+      #
+      # Arama isteği yok. Kapsam kilitli: sayımda ilanlarını kendi
+      # HTML'inde taşıdığı ÖLÇÜLEN şirketler.
+      - name: Kariyer sayfası okuması (gölge)
+        if: ${{ inputs.test_sorgusu == '' && inputs.mod == 'kariyer-html' }}
+        run: python -m automation.kariyer_html_kosu
+
+      # YAYIN: yalnız tüm kapıları geçen adaylar canonical tabloya yazılır.
+      - name: Kariyer sayfası okuması ve YAYIN
+        if: ${{ inputs.test_sorgusu == '' && inputs.mod == 'kariyer-html-yayinla' }}
+        run: python -m automation.kariyer_html_kosu --yayinla
+
       # KAYNAK SAYIMI — SIFIR ARAMA İSTEĞİ
       #
       # Brave hiç kurulmuyor. Şirketlerin kendi siteleri çekilerek
@@ -165,4 +178,5 @@ jobs:
             radar-linkedin-rapor.json
             radar-cozum-rapor.json
             radar-envanter-rapor.json
+            radar-kariyer-html-rapor.json
           if-no-files-found: warn

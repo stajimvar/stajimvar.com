@@ -36,6 +36,10 @@ KIND_BY_ADAPTER = {
     "json": "api",
     "rss": "rss",
     "workable_search": "api",
+    # Şirketin KENDİ kariyer sayfası. `source_kind` enum'unda "html" yok
+    # ve uydurmaya gerek de yok: bu adaptörün birincil kanıtı sayfadaki
+    # JobPosting JSON-LD'si.
+    "generic_career": "jsonld",
 }
 
 # Resmî ATS iş panosu API'leri: sağlayıcıların ilanların dışarıdan okunması
@@ -44,12 +48,23 @@ KIND_BY_ADAPTER = {
 OFFICIAL_ADAPTERS = {
     "lever", "greenhouse", "ashby", "workable", "workday",
     "smartrecruiters", "workable_search",
+    # Şirketin kendi kariyer sayfasından okunan ilan da resmî kaynaktır:
+    # toplayıcı değil, işverenin kendi yayını.
+    "generic_career",
 }
 
 TOS_NOTE = (
     "Resmî ATS iş panosu API'si. Sağlayıcı bu uç noktayı ilanların dışarıdan "
     "okunması için belgeliyor; HTML kazıma veya erişim engeli aşma yok. "
     "Kaynak kaydı eski StajımVar reposundan devralındı."
+)
+
+#: Şirketin kendi kariyer sayfası için ayrı not: yukarıdaki metin ATS
+#: API'lerini anlatıyor ve bu kaynağa uymuyor.
+TOS_NOTE_KARIYER = (
+    "Şirketin kendi kariyer sayfası. İlan verisi sayfanın yayımladığı "
+    "JobPosting yapısal verisinden ya da açık ilan sayfasından okunuyor; "
+    "giriş duvarı, CAPTCHA veya erişim engeli aşma yok."
 )
 
 
@@ -187,7 +202,8 @@ def sync_sources(db: Client, configs: Iterable[dict[str, Any]]) -> dict[str, str
             # yapılmadan bir kaynağın açılmasına izin vermiyor.
             "robots_allowed": official,
             "tos_reviewed_at": now_iso() if official else None,
-            "tos_notes": TOS_NOTE if official else None,
+            "tos_notes": (TOS_NOTE_KARIYER if adapter == "generic_career"
+                          else TOS_NOTE) if official else None,
             "is_enabled": bool(config.get("enabled", True)) and official,
         }
 
