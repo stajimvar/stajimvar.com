@@ -618,3 +618,53 @@ export const CvIskeleti: React.FC<{
     )}
   </figure>
 );
+
+/* ================================================================ figür */
+
+/**
+ * EDİTORYAL GÖRSEL
+ *
+ * Bilgi taşıyan SVG'ler için ortak kap. Süsleme görseli buradan
+ * geçmiyor: her görselin bir alt metni ve bir açıklaması olmak zorunda.
+ *
+ * NEDEN <img> VE DOSYA, INLINE SVG DEĞİL
+ * --------------------------------------
+ * Görsel kendi adresinde erişilebilir olsun istiyoruz: paylaşım kartına
+ * konabilsin, tarayıcı önbelleğe alabilsin, aynı görsel iki rehberde
+ * kullanılırsa ikinci kez indirilmesin. Inline SVG bunların hiçbirini
+ * vermiyor, üstelik her sayfanın HTML'ini şişiriyor.
+ *
+ * `width`/`height` ZORUNLU: oranı baştan bilmeyen tarayıcı görsel
+ * yüklenince sayfayı kaydırıyor (CLS).
+ *
+ * NEDEN ÜST GENİŞLİK SINIRI
+ * -------------------------
+ * Rehber sütunu masaüstünde 688px, telefonda 343px (ölçüldü). Görseller
+ * 400px genişliğinde çizildiği için sınır konmazsa masaüstünde 1.7 kat
+ * büyüyor ve yazılar gövde metninden iri duruyor. 460px sınırı iki
+ * uçtaki ölçeği (0.86 ve 1.15) birbirine yaklaştırıyor.
+ */
+export const RehberFigur: React.FC<{
+  kaynak: string;
+  alt: string;
+  aciklama?: string;
+  genislik: number;
+  yukseklik: number;
+  /** İlk ekranda görünen tek görsel için `false` yapılabilir. */
+  gecikmeli?: boolean;
+}> = ({ kaynak, alt, aciklama, genislik, yukseklik, gecikmeli = true }) => (
+  <figure className="space-y-2">
+    <img
+      src={kaynak}
+      alt={alt}
+      width={genislik}
+      height={yukseklik}
+      loading={gecikmeli ? 'lazy' : 'eager'}
+      decoding="async"
+      className="w-full max-w-[460px] mx-auto h-auto rounded-2xl border border-gray-200 bg-white"
+    />
+    {aciklama && (
+      <figcaption className="text-xs leading-relaxed text-gray-500">{aciklama}</figcaption>
+    )}
+  </figure>
+);

@@ -124,9 +124,59 @@ test('B/29: renk tek bilgi taşıyıcısı değil — ikon ve başlık da var', 
 
 /* ------------------------ stok fotoğraf ve sahte kişi yok */
 
-test('30: stok fotoğraf yok — görseller kodla çizilmiş', () => {
-  assert.doesNotMatch(GORSELLER, /unsplash|pexels|shutterstock|istockphoto/i);
-  assert.doesNotMatch(GORSELLER, /<img\s/, 'rehber görselleri bitmap değil');
+test('30: stok fotoğraf yok — görseller kendi ürettiğimiz varlıklar', () => {
+  for (const dosya of [GORSELLER, KAYNAK]) {
+    assert.doesNotMatch(dosya, /unsplash|pexels|shutterstock|istockphoto|freepik/i);
+  }
+  /*
+    Tek <img> geçidi RehberFigur; başka bileşen doğrudan img basmıyor.
+    Böylece görsel kaynağı, alt metni ve boyut zorunluluğu tek yerde kalıyor.
+  */
+  const imgler = [...GORSELLER.matchAll(/<img\s/g)];
+  assert.equal(imgler.length, 1, 'img yalnız RehberFigur içinde olmalı');
+  const figur = GORSELLER.slice(GORSELLER.indexOf('export const RehberFigur'));
+  assert.match(figur.slice(0, 1200), /<img\s/, 'img RehberFigur içinde değil');
+});
+
+test('30b: rehber görselleri yerel SVG — dış barındırıcı yok', () => {
+  const kaynaklar = [...KAYNAK.matchAll(/kaynak="([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(kaynaklar.length >= 5, `yalnız ${kaynaklar.length} figür var`);
+  for (const yol of kaynaklar) {
+    assert.match(yol, /^\/rehber-gorseller\/[a-z0-9-]+\.svg$/, `${yol}: yerel SVG olmalı`);
+    const tam = path.join(KOK, 'public', yol.replace(/^\//, ''));
+    const svg = readFileSync(tam, 'utf8');
+    assert.match(svg, /<svg\b/, `${yol}: SVG değil`);
+    assert.doesNotMatch(svg, /<image\b|xlink:href|<script/i, `${yol}: gömülü bitmap ya da script`);
+    assert.match(svg, /role="img"/, `${yol}: role="img" yok`);
+    assert.match(svg, /aria-label="/, `${yol}: aria-label yok`);
+  }
+});
+
+test('30c: her figürün alt metni ve boyutu var (CLS)', () => {
+  const figurler = [...KAYNAK.matchAll(/<RehberFigur[\s\S]*?\/>/g)].map((m) => m[0]);
+  assert.ok(figurler.length >= 5, `yalnız ${figurler.length} RehberFigur kullanımı`);
+  for (const f of figurler) {
+    assert.match(f, /alt="[^"]{40,}"/, 'alt metni açıklayıcı olmalı');
+    assert.match(f, /genislik=\{\d+\}/, 'genislik yok — yer ayrılmıyor');
+    assert.match(f, /yukseklik=\{\d+\}/, 'yukseklik yok — yer ayrılmıyor');
+  }
+});
+
+test('30d: zorunlu staj görseli okula göre değişkenliği yazıyor', () => {
+  const svg = readFileSync(
+    path.join(KOK, 'public/rehber-gorseller/zorunlu-staj-sureci.svg'),
+    'utf8'
+  );
+  assert.match(svg, /Üniversitene göre süreç değişebilir\./);
+});
+
+test('30e: kanal görseli sıralama iddiası taşımıyor', () => {
+  const svg = readFileSync(
+    path.join(KOK, 'public/rehber-gorseller/staj-bulma-kanallari.svg'),
+    'utf8'
+  );
+  assert.match(svg, /sıralama değil/i, 'kanalların sıralama olmadığı görselde yazmalı');
+  assert.doesNotMatch(svg, /en iyi|en etkili|en çok işe yarayan/i);
 });
 
 test('N: örneklerde uydurma kişi verisi yok', () => {

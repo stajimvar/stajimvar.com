@@ -13,6 +13,7 @@ import {
   Karsilastirma,
   KarsilastirmaTablosu,
   KontrolListesi,
+  RehberFigur,
   RehberOrnek,
 } from '../components/RehberGorseller';
 
@@ -293,6 +294,15 @@ export const REHBERLER: Rehber[] = [
           konularında farklı kurallara tabi.
         </P>
 
+        <RehberFigur
+          kaynak="/rehber-gorseller/zorunlu-staj-sureci.svg"
+          alt="Zorunlu staj süreci altı adımda: yönergeyi oku, staj yeri bul, komisyona onaylat, sigorta işlemini başlat, staj dönemi, defter ve belgeleri teslim et. Görselde ayrıca üniversiteye göre sürecin değişebileceği uyarısı var."
+          aciklama="Sürecin tamamı tek bakışta. Adımların sırası ve form adları her üniversitede aynı değil; bağlayıcı olan kendi bölümünün staj yönergesi."
+          genislik={400}
+          yukseklik={636}
+          gecikmeli={false}
+        />
+
         <B>Süreç sırası</B>
         <Akis
           adimlar={[
@@ -514,6 +524,14 @@ export const REHBERLER: Rehber[] = [
             },
           ]}
           aciklama="Köşeli parantezli alanlar yer tutucu — gerçek bir kişiye ait örnek kullanılmıyor. Deneyimin yokken sıra böyle: eğitim ve projeler yukarı çıkar."
+        />
+
+        <RehberFigur
+          kaynak="/rehber-gorseller/cv-ogrenci-ornegi.svg"
+          alt="Örnek öğrenci CV sayfası. Numaralı bölümler sırayla iletişim, eğitim, projeler, deneyim ve yetenekleri gösteriyor; alanlar köşeli parantezli yer tutucu."
+          aciklama="Aynı iskelet tek sayfaya yerleştirildiğinde böyle görünüyor. Sayfadaki bilgiler örnektir; gerçek bir kişiye ait değildir."
+          genislik={400}
+          yukseklik={740}
         />
 
         <B>Deneyim yerine ne yazılır</B>
@@ -738,6 +756,15 @@ export const REHBERLER: Rehber[] = [
           açık olup olmadığını, işe devam edip etmeyeceğini ve ekiple çalışabilecek misin onu
           anlamaya çalışıyor.
         </P>
+
+        <RehberFigur
+          kaynak="/rehber-gorseller/staj-mulakati-sureci.svg"
+          alt="Mülakatın üç aşaması: öncesinde şirketi oku ve bağlantıyı dene, sırasında projeni anlat ve tarih sor, sonrasında teşekkür e-postası yaz. Altta proje anlatmanın dört adımı: soru, durum, ne yaptım, sonuç."
+          aciklama="Yukarıdaki üç halka mülakatın aşamaları, alttaki kutular bir projeyi anlatırken izlenecek sıra. Ayrıntılar aşağıda."
+          genislik={400}
+          yukseklik={700}
+          gecikmeli={false}
+        />
 
         <B>Mülakatın üç aşaması</B>
         <Akis
@@ -964,6 +991,15 @@ export const REHBERLER: Rehber[] = [
           Ama çoğu e-posta okunmadan kapanıyor — genelde aynı birkaç sebepten.
         </P>
 
+        <RehberFigur
+          kaynak="/rehber-gorseller/staj-basvuru-epostasi-anatomisi.svg"
+          alt="Staj başvuru e-postasının anatomisi: 1 alıcı, 2 konu satırı, 3 kısa giriş, 4 neden bu şirket, 5 net kapanış, 6 CV eki. Alanlar köşeli parantezli yer tutucu."
+          aciklama="Bir başvuru e-postasının altı parçası. Metnin kopyalanabilir hâli aşağıda; buradaki bilgiler örnektir."
+          genislik={400}
+          yukseklik={700}
+          gecikmeli={false}
+        />
+
         <B>Konu satırı</B>
         <P>
           Konu satırı e-postanın açılıp açılmayacağını belirliyor. Şunu yaz:
@@ -1064,7 +1100,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         <P>
           Küçük firmalarda genel iletişim adresi yeterli. Orta ve büyük şirketlerde insan
           kaynakları adresini ara. Bulamıyorsan LinkedIn üzerinden İK'da çalışan birine kısa
-          bir mesaj atmak çoğu zaman e-postadan hızlı sonuç veriyor.
+          bir mesaj atmak da bir seçenek.
         </P>
 
         <B>Göndermeden önce</B>
@@ -1113,7 +1149,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
       {
         soru: 'Staj e-postasını kime göndermeliyim?',
         cevap:
-          'Küçük firmalarda genel iletişim adresi yeterli. Orta ve büyük şirketlerde insan kaynakları adresini ara. Bulamazsan LinkedIn üzerinden İK\'da çalışan birine kısa bir mesaj çoğu zaman e-postadan hızlı sonuç veriyor.',
+          'Küçük firmalarda genel iletişim adresi yeterli. Orta ve büyük şirketlerde insan kaynakları adresini ara. Bulamazsan LinkedIn üzerinden İK\'da çalışan birine kısa bir mesaj atmak da bir seçenek.',
       },
       {
         soru: 'Staj başvuru e-postası ne kadar uzun olmalı?',
@@ -1457,7 +1493,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
     oneCikan: true,
     etiketler: ['staj bulma', 'ilan', 'başvuru kanalı'],
     hizliCevap:
-      'Staj beş kanaldan bulunuyor: ilan siteleri, şirketlerin kendi kariyer sayfaları, okulun staj birimi, tanıdık ağı ve ilan açmayan şirkete doğrudan yazmak. Sonuncusu en az denenen ama rekabetin en düşük olduğu yol.',
+      'Staj beş kanaldan bulunuyor: ilan siteleri, şirketlerin kendi kariyer sayfaları, okulun staj birimi, tanıdık ağı ve ilan açmayan şirkete doğrudan yazmak. Sonuncusu, ilan açmayan şirketlerde değerlendirebileceğin ek bir kanal.',
     kaynaklar: [
       { etiket: 'Türkiye İş Kurumu (İŞKUR)', adres: 'https://www.iskur.gov.tr', kurum: 'Türkiye İş Kurumu', tur: 'kurum' },
     ],
@@ -1477,13 +1513,22 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
           çoğu zaman en rekabetli olanı.
         </P>
 
+        <RehberFigur
+          kaynak="/rehber-gorseller/staj-bulma-kanallari.svg"
+          alt="Staj bulmanın beş kanalı yan yana: doğrudan başvuru, okulun staj birimi, hocalar ve mezunlar, ilan siteleri ve LinkedIn. Altta dört adımlık sıra: alanını seç, şirket listesi çıkar, CV'ni hazırla, başvur ve takip et."
+          aciklama="Beş kanal eşit büyüklükte çünkü bu bir sıralama değil. Hangisinin sende işe yaradığı bölümüne, şehrine ve okuluna göre değişiyor."
+          genislik={400}
+          yukseklik={636}
+          gecikmeli={false}
+        />
+
         <B>Beş kanal</B>
         <Akis
           adimlar={[
             {
               baslik: 'Doğrudan başvuru',
               aciklama:
-                'İlan açmamış şirketlere yazmak. En az denenen yol — çünkü reddedilme ihtimali kişisel geliyor. Oysa küçük işletmeler stajyer alabilecek durumda ve çoğu ilan açmayı hiç düşünmüyor. Rekabet neredeyse sıfır.',
+                'İlan açmamış şirketlere yazmak. İlan olmadığı için o şirkete yazan aday sayısı da az oluyor; buna karşılık kime yazacağını bulmak sana kalıyor.',
             },
             {
               baslik: 'Okulun staj birimi',

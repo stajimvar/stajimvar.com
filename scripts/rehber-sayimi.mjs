@@ -49,12 +49,12 @@ function metin(jsx) {
     .trim();
 }
 
-function kelimeSay(s) {
+export function kelimeSay(s) {
   return metin(s).split(' ').filter((x) => x.length > 1).length;
 }
 
 /** Bir rehber bloğunun kaynak metnini slug'a göre ayırır. */
-function rehberBloklari(kaynak) {
+export function rehberBloklari(kaynak) {
   const bloklar = [];
   const kalip = /slug:\s*'([^']+)'/g;
   let m;

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 740" width="400" height="740" role="img" aria-label="Örnek öğrenci CV sayfası. Numaralı bölümler sırayla iletişim, eğitim, projeler, deneyim ve yetenekleri gösteriyor; alanlar köşeli parantezli yer tutucu.">
+  <style>
+    .k{fill:#0f172a}.g{fill:#64748b}.mavi{fill:#2563eb}
+    .b{font:700 14px system-ui,sans-serif}
+    .n{font:400 12.5px system-ui,sans-serif}
+    .baslik{font:800 20px system-ui,sans-serif}
+    .rozet{font:800 12px system-ui,sans-serif;fill:#fff}
+    .etiket{font:800 11px system-ui,sans-serif;fill:#2563eb;letter-spacing:.06em}
+  </style>
+
+  <rect width="400" height="740" fill="#f8fafc"/>
+  <rect x="16" y="16" width="368" height="708" rx="16" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+
+  <!-- 1 iletişim -->
+  <circle cx="42" cy="62" r="13" fill="#2563eb"/>
+  <text x="42" y="67" class="rozet" text-anchor="middle">1</text>
+  <text x="66" y="58" class="baslik k">Ad Soyad</text>
+  <text x="66" y="80" class="n g">Bilgisayar Mühendisliği · 3. sınıf</text>
+  <text x="66" y="99" class="n g">[şehir] · [telefon] · [e-posta]</text>
+  <line x1="42" y1="118" x2="366" y2="118" stroke="#e2e8f0" stroke-width="2"/>
+
+  <!-- 2 eğitim -->
+  <circle cx="42" cy="150" r="13" fill="#2563eb"/>
+  <text x="42" y="155" class="rozet" text-anchor="middle">2</text>
+  <text x="66" y="146" class="etiket">EĞİTİM</text>
+  <text x="66" y="170" class="b k">[Üniversite] — Bilgisayar Müh.</text>
+  <text x="66" y="191" class="n g">2023 – beklenen mezuniyet [yıl]</text>
+  <line x1="42" y1="212" x2="366" y2="212" stroke="#e2e8f0" stroke-width="2"/>
+
+  <!-- 3 projeler -->
+  <circle cx="42" cy="244" r="13" fill="#2563eb"/>
+  <text x="42" y="249" class="rozet" text-anchor="middle">3</text>
+  <text x="66" y="240" class="etiket">PROJELER</text>
+  <text x="66" y="265" class="b k">Fiyat takip uygulaması</text>
+  <text x="66" y="286" class="n g">Python ile ürün fiyatlarını günlük kaydeden</text>
+  <text x="66" y="304" class="n g">küçük bir web uygulaması. Veri toplama ve</text>
+  <text x="66" y="322" class="n g">grafik kısmını ben yazdım.</text>
+  <text x="66" y="348" class="b k">Bitirme projesi — [konu]</text>
+  <text x="66" y="369" class="n g">Dört kişilik ekipte [senin payın].</text>
+  <text x="66" y="387" class="n g">Kullanılan: [araç].</text>
+  <line x1="42" y1="408" x2="366" y2="408" stroke="#e2e8f0" stroke-width="2"/>
+
+  <!-- 4 deneyim -->
+  <circle cx="42" cy="440" r="13" fill="#2563eb"/>
+  <text x="42" y="445" class="rozet" text-anchor="middle">4</text>
+  <text x="66" y="436" class="etiket">DENEYİM</text>
+  <text x="66" y="461" class="b k">Öğrenci Kulübü — etkinlik sorumlusu</text>
+  <text x="66" y="482" class="n g">60 kişilik etkinliğin katılımcı yazışmasını</text>
+  <text x="66" y="500" class="n g">yürüttüm.</text>
+  <text x="66" y="524" class="n" fill="#94a3b8">İş deneyimin yoksa bu bölüm hiç açılmaz.</text>
+  <line x1="42" y1="546" x2="366" y2="546" stroke="#e2e8f0" stroke-width="2"/>
+
+  <!-- 5 yetenekler -->
+  <circle cx="42" cy="578" r="13" fill="#2563eb"/>
+  <text x="42" y="583" class="rozet" text-anchor="middle">5</text>
+  <text x="66" y="574" class="etiket">YETENEKLER</text>
+  <rect x="66" y="590" width="118" height="30" rx="8" fill="#eff6ff"/>
+  <text x="125" y="610" class="n mavi" text-anchor="middle">Python (orta)</text>
+  <rect x="192" y="590" width="126" height="30" rx="8" fill="#eff6ff"/>
+  <text x="255" y="610" class="n mavi" text-anchor="middle">SQL (başlangıç)</text>
+  <rect x="66" y="628" width="92" height="30" rx="8" fill="#eff6ff"/>
+  <text x="112" y="648" class="n mavi" text-anchor="middle">Git (orta)</text>
+
+  <rect x="42" y="676" width="324" height="32" rx="10" fill="#f1f5f9"/>
+  <text x="58" y="690" class="n k">Tek sayfa · PDF · “AdSoyad-CV.pdf”</text>
+  <text x="58" y="705" class="n g">Bilgiler örnektir; gerçek bir kişiye ait değildir.</text>
+</svg>

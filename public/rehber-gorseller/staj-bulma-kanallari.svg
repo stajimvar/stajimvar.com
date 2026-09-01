@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 636" width="400" height="636" role="img" aria-label="Staj bulmanın beş kanalı: doğrudan başvuru, okulun staj birimi, hocalar ve mezunlar, ilan siteleri, LinkedIn. Beşi de alternatif kanal; iyiden kötüye bir sıralama değil.">
+  <style>
+    .k{fill:#0f172a}.g{fill:#64748b}
+    .n{font:400 12.5px system-ui,sans-serif}
+    .b{font:700 14.5px system-ui,sans-serif}
+    .merkez{font:800 16px system-ui,sans-serif;fill:#fff}
+    .not{font:400 12px system-ui,sans-serif;fill:#94a3b8}
+  </style>
+
+  <rect width="400" height="636" fill="#f8fafc"/>
+
+  <rect x="88" y="16" width="224" height="46" rx="12" fill="#2563eb"/>
+  <text x="200" y="45" class="merkez" text-anchor="middle">STAJ ARIYORUM</text>
+
+  <!-- kanallara dallanma: tek gövde, beş eşit dal -->
+  <path d="M200 62V76 M32 76H200 M32 76V458 M32 114h12 M32 200h12 M32 286h12 M32 372h12 M32 458h12"
+        stroke="#cbd5e1" stroke-width="2" fill="none"/>
+
+  <g>
+    <rect x="44" y="76" width="340" height="76" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="62" y="102" class="b k">Doğrudan başvuru</text>
+    <text x="62" y="122" class="n g">İlan açmamış şirkete kendin yazarsın.</text>
+    <text x="62" y="141" class="not">Kime yazacağını bulmak sende.</text>
+  </g>
+  <g>
+    <rect x="44" y="162" width="340" height="76" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="62" y="188" class="b k">Okulun staj birimi</text>
+    <text x="62" y="208" class="n g">Geçmiş yıllarda öğrenci alan firmaların listesi.</text>
+    <text x="62" y="227" class="not">Okuluna göre değişiyor.</text>
+  </g>
+  <g>
+    <rect x="44" y="248" width="340" height="76" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="62" y="274" class="b k">Hocalar ve mezunlar</text>
+    <text x="62" y="294" class="n g">Tek bir soru bazen bir isim getiriyor.</text>
+    <text x="62" y="313" class="not">Ağın kadar geniş.</text>
+  </g>
+  <g>
+    <rect x="44" y="334" width="340" height="76" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="62" y="360" class="b k">İlan siteleri</text>
+    <text x="62" y="380" class="n g">Hazır liste, hızlı başvuru.</text>
+    <text x="62" y="399" class="not">Bir ilana yüzlerce başvuru gelebiliyor.</text>
+  </g>
+  <g>
+    <rect x="44" y="420" width="340" height="76" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="62" y="446" class="b k">LinkedIn</text>
+    <text x="62" y="466" class="n g">İlana değil, orada çalışan kişiye yazarsın.</text>
+    <text x="62" y="485" class="not">Kısa ve nazik tut.</text>
+  </g>
+
+  <rect x="16" y="518" width="368" height="56" rx="12" fill="#eff6ff"/>
+  <text x="200" y="542" class="n" fill="#1d4ed8" text-anchor="middle">Beşi de alternatif kanal — iyiden kötüye</text>
+  <text x="200" y="561" class="n" fill="#1d4ed8" text-anchor="middle">bir sıralama değil.</text>
+
+  <text x="200" y="600" class="n g" text-anchor="middle">Hangisinin sende işe yaradığı bölümüne,</text>
+  <text x="200" y="619" class="n g" text-anchor="middle">şehrine ve okuluna göre değişiyor.</text>
+</svg>

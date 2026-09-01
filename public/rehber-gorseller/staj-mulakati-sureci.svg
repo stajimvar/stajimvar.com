@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 700" width="400" height="700" role="img" aria-label="Mülakatın üç aşaması — öncesinde hazırlık, sırasında anlatım, sonrasında teşekkür — ve proje anlatırken izlenecek dört adım: soru, durum, ne yaptım, sonuç.">
+  <style>
+    .k{fill:#0f172a}.g{fill:#64748b}
+    .n{font:400 12.5px system-ui,sans-serif}
+    .b{font:700 14.5px system-ui,sans-serif}
+    .no{font:800 14px system-ui,sans-serif;fill:#fff}
+    .etiket{font:800 11px system-ui,sans-serif;fill:#64748b;letter-spacing:.07em}
+  </style>
+
+  <rect width="400" height="700" fill="#f8fafc"/>
+
+  <path d="M40 52v268" stroke="#cbd5e1" stroke-width="3" fill="none"/>
+
+  <!-- 1 öncesinde -->
+  <circle cx="40" cy="52" r="18" fill="#2563eb"/>
+  <text x="40" y="58" class="no" text-anchor="middle">1</text>
+  <text x="70" y="46" class="b k">Öncesinde</text>
+  <text x="70" y="68" class="n g">Şirketin ne yaptığını iki cümleyle</text>
+  <text x="70" y="86" class="n g">anlatabilecek kadar oku.</text>
+  <text x="70" y="106" class="n g">CV’ndeki her projeyi anlatmaya hazır ol.</text>
+  <text x="70" y="126" class="n g">Bağlantıyı ve saati bir gün önce dene.</text>
+
+  <!-- 2 sırasında -->
+  <circle cx="40" cy="186" r="18" fill="#2563eb"/>
+  <text x="40" y="192" class="no" text-anchor="middle">2</text>
+  <text x="70" y="180" class="b k">Sırasında</text>
+  <text x="70" y="202" class="n g">Bilmediğine “bilmiyorum ama şöyle</text>
+  <text x="70" y="220" class="n g">öğrenirim” de.</text>
+  <text x="70" y="240" class="n g">Projeni ne–hangi araçla–sonuç diye anlat.</text>
+  <text x="70" y="260" class="n g">Tarihi ve zorunlu staj evrağını sen sor.</text>
+
+  <!-- 3 sonrasında -->
+  <circle cx="40" cy="320" r="18" fill="#2563eb"/>
+  <text x="40" y="326" class="no" text-anchor="middle">3</text>
+  <text x="70" y="314" class="b k">Sonrasında</text>
+  <text x="70" y="336" class="n g">Aynı gün kısa bir teşekkür e-postası.</text>
+  <text x="70" y="356" class="n g">Bir hafta cevap gelmezse tek hatırlatma.</text>
+
+  <!-- proje anlatma zinciri -->
+  <rect x="16" y="392" width="368" height="288" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+  <text x="36" y="422" class="etiket">PROJE ANLATIRKEN DÖRT ADIM</text>
+
+  <rect x="36" y="436" width="328" height="52" rx="10" fill="#eff6ff"/>
+  <text x="52" y="458" class="b" fill="#1d4ed8">Soru</text>
+  <text x="52" y="477" class="n g">“Bize bir projenden bahset.”</text>
+
+  <path d="M200 488v10" stroke="#94a3b8" stroke-width="2" marker-end="url(#ok)"/>
+
+  <rect x="36" y="502" width="328" height="52" rx="10" fill="#eff6ff"/>
+  <text x="52" y="524" class="b" fill="#1d4ed8">Durum</text>
+  <text x="52" y="543" class="n g">Ne yapman gerekiyordu, kaç kişiydiniz.</text>
+
+  <path d="M200 554v10" stroke="#94a3b8" stroke-width="2" marker-end="url(#ok)"/>
+
+  <rect x="36" y="568" width="328" height="52" rx="10" fill="#eff6ff"/>
+  <text x="52" y="590" class="b" fill="#1d4ed8">Ne yaptım</text>
+  <text x="52" y="609" class="n g">Senin payın ne oldu, hangi aracı kullandın.</text>
+
+  <path d="M200 620v10" stroke="#94a3b8" stroke-width="2" marker-end="url(#ok)"/>
+
+  <rect x="36" y="634" width="328" height="30" rx="10" fill="#eff6ff"/>
+  <text x="52" y="654" class="b" fill="#1d4ed8">Sonuç <tspan class="n" fill="#64748b">— ne çıktı, ne öğrendin.</tspan></text>
+
+  <defs>
+    <!-- Ok sağa çizilir; orient="auto" onu yol yönüne (aşağı) döndürür. -->
+    <marker id="ok" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0 0l8 4L0 8z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+</svg>

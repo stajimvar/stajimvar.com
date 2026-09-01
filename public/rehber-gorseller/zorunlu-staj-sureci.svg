@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 636" width="400" height="636" role="img" aria-label="Zorunlu staj süreci: yönergeyi oku, staj yeri bul, komisyona onaylat, sigorta işlemini başlat, staj dönemi, defter ve belgeleri teslim et. Üniversitene göre süreç değişebilir.">
+  <style>
+    .k{fill:#0f172a}.g{fill:#64748b}
+    .n{font:400 13px system-ui,sans-serif}
+    .b{font:700 15px system-ui,sans-serif}
+    .no{font:800 15px system-ui,sans-serif;fill:#fff}
+    .uyari{font:700 14px system-ui,sans-serif;fill:#92400e}
+  </style>
+
+  <rect width="400" height="636" fill="#f8fafc"/>
+
+  <path d="M40 44v396" stroke="#cbd5e1" stroke-width="3" fill="none"/>
+
+  <circle cx="40" cy="44" r="19" fill="#2563eb"/>
+  <text x="40" y="50" class="no" text-anchor="middle">1</text>
+  <text x="72" y="38" class="b k">Bölümünün staj yönergesini oku</text>
+  <text x="72" y="60" class="n g">Kaç iş günü, hangi dönem, hangi form —</text>
+  <text x="72" y="78" class="n g">hepsi orada yazıyor.</text>
+
+  <circle cx="40" cy="123" r="19" fill="#2563eb"/>
+  <text x="40" y="129" class="no" text-anchor="middle">2</text>
+  <text x="72" y="117" class="b k">Staj yeri bul</text>
+  <text x="72" y="139" class="n g">İlan, doğrudan başvuru ya da okulun</text>
+  <text x="72" y="157" class="n g">staj birimi.</text>
+
+  <circle cx="40" cy="202" r="19" fill="#2563eb"/>
+  <text x="40" y="208" class="no" text-anchor="middle">3</text>
+  <text x="72" y="196" class="b k">Staj komisyonuna onaylat</text>
+  <text x="72" y="218" class="n g">Şirketin faaliyet alanı bölümüne uygun</text>
+  <text x="72" y="236" class="n g">mu — onay burada veriliyor.</text>
+
+  <circle cx="40" cy="281" r="19" fill="#2563eb"/>
+  <text x="40" y="287" class="no" text-anchor="middle">4</text>
+  <text x="72" y="275" class="b k">Sigorta işlemini başlat</text>
+  <text x="72" y="297" class="n g">Zorunlu stajda primi çoğu üniversitede</text>
+  <text x="72" y="315" class="n g">okul yatırıyor.</text>
+
+  <circle cx="40" cy="360" r="19" fill="#2563eb"/>
+  <text x="40" y="366" class="no" text-anchor="middle">5</text>
+  <text x="72" y="354" class="b k">Staj dönemi</text>
+  <text x="72" y="376" class="n g">Defteri her gün doldur; sonda toplu</text>
+  <text x="72" y="394" class="n g">yazmak en sık yapılan hata.</text>
+
+  <circle cx="40" cy="439" r="19" fill="#2563eb"/>
+  <text x="40" y="445" class="no" text-anchor="middle">6</text>
+  <text x="72" y="433" class="b k">Defter ve belgeleri teslim et</text>
+  <text x="72" y="455" class="n g">Kaşe, imza ve teslim tarihi — eksikse</text>
+  <text x="72" y="473" class="n g">staj sayılmayabiliyor.</text>
+
+  <rect x="16" y="512" width="368" height="100" rx="14" fill="#fef3c7" stroke="#fcd34d" stroke-width="2"/>
+  <circle cx="46" cy="544" r="14" fill="#f59e0b"/>
+  <text x="46" y="550" class="no" text-anchor="middle">!</text>
+  <text x="72" y="542" class="uyari">Üniversitene göre süreç</text>
+  <text x="72" y="562" class="uyari">değişebilir.</text>
+  <text x="72" y="586" class="n" fill="#92400e">Sıra, form adları ve teslim tarihleri</text>
+  <text x="72" y="604" class="n" fill="#92400e">her okulda aynı değil.</text>
+</svg>
