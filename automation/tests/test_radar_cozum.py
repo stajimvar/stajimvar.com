@@ -222,3 +222,34 @@ def test_g_cozum_kosusu_canonical_tabloya_yazmiyor():
              ).read_text(encoding="utf-8")
     for yasak in ("rest/v1/listings\", json=", "/rest/v1/listings\",\n            json"):
         assert yasak not in govde
+
+
+# --------------------- H: şirket sitesi atlanmıyor, alan adı toplanıyor
+
+def test_h_sirket_sitesi_sonucu_atlanmiyor():
+    """Ölçüldü: 104 aday alan adı toplanmadan düştü.
+
+    `sonucu_sinifla` sade bir şirket sitesine de platform veriyor
+    ("sirket_sitesi"). İlk sürüm desteklenmeyen her platformu `continue`
+    ile geçtiği için bedava kariyer sayfası zinciri hiç çalışmadı —
+    sayaçlarda tek bir `kariyer_sayfasi_*` kaydı yoktu. Oysa aranan şey
+    tam da o: şirketin kendi sayfasından ATS'ine inmek.
+    """
+    from automation.radar_resmi import sonucu_sinifla
+
+    b = sonucu_sinifla("https://www.rapsodo.com/kariyer")
+    assert b.platform == "sirket_sitesi" and not b.destekli
+
+    import pathlib
+
+    govde = (pathlib.Path(__file__).resolve().parents[1] / "radar_cozum_kosu.py"
+             ).read_text(encoding="utf-8")
+    assert 'b.platform != "sirket_sitesi"' in govde,         "şirket sitesi adaptörsüz ATS gibi atlanmamalı"
+
+
+def test_h_adaptorsuz_ats_hala_atlaniyor():
+    """Workday/Teamtailor gibi adaptörü olmayan ATS'lerde zincir bitiyor."""
+    from automation.radar_resmi import sonucu_sinifla
+
+    b = sonucu_sinifla("https://acme.wd3.myworkdayjobs.com/careers/job/1")
+    assert b.platform == "workday" and not b.destekli

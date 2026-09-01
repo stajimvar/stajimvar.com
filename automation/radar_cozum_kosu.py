@@ -154,9 +154,23 @@ def kiraci_coz(sinyal, saglayici, butce: Butce, getir, sayac: Counter,
                 aile_sayac[f"{aile}:ats"] += 1
                 onbellek[ad] = (b.platform, b.kiraci.lower())
                 return onbellek[ad], aile, None
-            if b.platform and not b.destekli:
+            # ŞİRKET SİTESİ ATLANMIYOR — TOPLANIYOR
+            #
+            # İlk sürüm desteklenmeyen her sonucu `continue` ile
+            # geçiyordu. Ama `sonucu_sinifla` sade bir şirket sitesine
+            # de platform veriyor ("sirket_sitesi"), dolayısıyla 104
+            # aday alan adı toplanmadan düştü ve bedava kariyer sayfası
+            # zinciri hiç çalışmadı (sayaçlarda tek bir
+            # `kariyer_sayfasi_*` kaydı yok). Oysa aranan şey tam da bu:
+            # şirketin kendi sayfasından ATS'ine inmek.
+            #
+            # Yalnız ADAPTÖRÜ OLMAYAN ATS'ler atlanıyor; onlarda zincir
+            # zaten bitiyor.
+            if b.platform and b.platform != "sirket_sitesi" and not b.destekli:
                 sayac[f"adaptorsuz:{b.platform}"] += 1
                 continue
+            if b.platform == "sirket_sitesi":
+                sayac["sirket_sitesi_adayi"] += 1
             alan = alan_adini_normalize_et(adres)
             if alan and alan not in alanlar and alan_sirkete_ait_mi(sinyal.sirket, alan):
                 alanlar.append(alan)
