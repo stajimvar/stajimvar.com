@@ -257,3 +257,24 @@ test('J3: sigorta şablonu mutlak yükümlülük iddiası taşımıyor', () => {
     'Zorunlu staj sigortası okul ve bölüme göre değişiyor; mutlak dil kullanılamaz'
   );
 });
+
+
+/* ------------- K: AdSense anlatımı gerçek yüzeyle uyumlu */
+
+test('K: "ileride reklam açılırsa" iddiası kalmadı', () => {
+  /*
+    AdSense bugün entegre: betik her sayfada yükleniyor. Gizlilik metni
+    hâlâ "ileride açılırsa" diyordu ve aynı sitenin çerez metniyle
+    çelişiyordu.
+  */
+  hicbirDosyadaGecmiyor(
+    /İleride reklam[^.]{0,40}(açılırsa|devreye girecek)/i,
+    'AdSense entegre; "ileride" demek yanlış'
+  );
+});
+
+test('K2: reklam yüzeyi metinde doğru anlatılıyor', () => {
+  const yasal = readFileSync(path.join(KOK, 'src/components/LegalPage.tsx'), 'utf8');
+  assert.match(yasal, /yalnızca öğrenci rehberlerinin bir bölümünde/);
+  assert.match(yasal, /reklam birimi yok/);
+});

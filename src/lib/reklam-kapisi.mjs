@@ -142,6 +142,18 @@ export function indeksDegeri(alanlar = {}) {
     (sonKontrol ? 1 : 0) +
     (ekBaglam ? 1 : 0);
 
-  if (baglam === 0) return { indeks: false, neden: 'THIN_NO_VALUE' };
+  /*
+    EN AZ İKİ BAĞLAM SİNYALİ
+
+    Tek sinyal fazla gevşekti: yalnız bir tarihi olan, başka hiçbir şey
+    anlatmayan sayfa da geçiyordu. İki sinyal, "ne, nerede, ne zaman"
+    sorusundan en az ikisinin cevaplandığı anlamına geliyor.
+
+    Eşik yine de sertleştirilmedi: açıklaması kısa ama tarihi, yeri ve
+    resmî kaynağı olan bir etkinlik öğrenciye gerçek bilgi veriyor —
+    onu "ince" sayıp Google'dan silmek, kullanıcıya değeri olan bir
+    sayfayı yok etmek olurdu.
+  */
+  if (baglam < 2) return { indeks: false, neden: 'THIN_NO_VALUE' };
   return { indeks: true, neden: 'OK' };
 }

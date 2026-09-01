@@ -1306,7 +1306,12 @@ async function main() {
     aynı şeyi söylemeli.
   */
   const etkinlikler = await etkinlikleriGetir();
+  const { indeksDegeri } = await icerikDerle(
+    path.join(kok, 'src', 'lib', 'reklam-kapisi.mjs'),
+    'reklam-kapisi'
+  );
   const simdi = Date.now();
+  const etkinlikIndeks = { keep: 0, noindex: {} };
   for (const e of etkinlikler) {
     if (!e.slug || !e.title) continue;
     const bitis = e.ends_at || e.starts_at;
@@ -1336,6 +1341,25 @@ async function main() {
         };
 
     const ozetMetni = ozetle(e.short_description || e.description || '', 300);
+
+    /*
+      İNDEKS KARARI ORTAK KAPIDAN
+
+      Reklam kapalı olması indeksten çıkarma sebebi değil; ayrı bir kapı
+      çalışıyor. Doğrulanmış kaynağı ve bir bağlamı olan etkinlik
+      indekste kalıyor. Yalnız gerçekten boş olan sayfa (kaynak var ama
+      anlatacak bir şey yok) `noindex` alıyor — ölçüldü: 46 yayındaki
+      etkinliğin 8'i bu durumdaydı ve site haritasındaydı.
+    */
+    const indeks = indeksDegeri({
+      baslik: e.title,
+      kaynakAdresi: e.source_url || e.canonical_source_url || e.ticket_url,
+      sonKontrol: e.starts_at,
+      aciklama: e.short_description || e.description,
+      ekBaglam: Boolean(e.venue_name || e.city),
+    });
+    if (indeks.indeks) etkinlikIndeks.keep += 1;
+    else etkinlikIndeks.noindex[indeks.neden] = (etkinlikIndeks.noindex[indeks.neden] || 0) + 1;
     const jsonLd = {
       '@context': 'https://schema.org',
       '@type': 'Event',
@@ -1390,9 +1414,14 @@ async function main() {
       aciklama: ozetMetni || `${e.title} etkinliği hakkında bilgi ve bilet bağlantısı.`,
       govde: govde(e.title, ozetMetni, bilgiler),
       jsonLd,
+      dizinDisi: !indeks.indeks,
     });
     sayac++;
   }
+  console.log(
+    `  etkinlik indeksi: ${etkinlikIndeks.keep} keep, ` +
+      `${JSON.stringify(etkinlikIndeks.noindex)}`
+  );
 
   /*
     ---- şirket sayfaları ----

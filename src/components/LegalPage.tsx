@@ -234,9 +234,15 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
             <Section title="Üçüncü taraflar">
               <p>
                 Site, ilan verisini saklamak için Supabase (sunucu bölgesi: Frankfurt,
-                Almanya) ve barındırma için Cloudflare altyapısını kullanır. İleride reklam
-                gösterimi açılırsa Google AdSense devreye girecek ve bu durumda çerez
-                politikamız güncellenecektir.
+                Almanya) ve barındırma için Cloudflare altyapısını kullanır. Reklam
+                tarafında Google AdSense entegre: doğrulama betiği her sayfada
+                yükleniyor, reklam birimi ise yalnızca öğrenci rehberlerinin bir
+                bölümünde çiziliyor. İlan, şirket, burs ve etkinlik sayfalarında reklam
+                birimi yok. Ayrıntısı{' '}
+                <a href="/cerez-politikasi" className="text-blue-600 hover:underline">
+                  Çerez Politikası
+                </a>{' '}
+                sayfasında.
               </p>
             </Section>
 
@@ -327,8 +333,9 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 göstermiyoruz.
               </p>
               <p>
-                <strong>Reklam:</strong> Sayfalarda Google AdSense reklam birimleri
-                bulunuyor ve AdSense betiği her sayfada yükleniyor. Google bir reklam
+                <strong>Reklam:</strong> AdSense betiği her sayfada yükleniyor; reklam
+                birimi ise yalnızca öğrenci rehberlerinin bir bölümünde çiziliyor. İlan,
+                şirket, burs, fırsat ve etkinlik sayfalarında reklam birimi yok. Google bir reklam
                 gösterdiğinde kendi reklam ve ölçüm çerezlerini kullanabiliyor; bu
                 çerezler bize değil Google'a ait ve verileri nasıl işlediğini kendi
                 gizlilik politikasında açıklıyor. Birimlere her zaman reklam dönmüyor,
