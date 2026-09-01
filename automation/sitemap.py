@@ -141,6 +141,18 @@ def main() -> None:
         or []
     )
 
+    # Kesfet etkinlikleri. Ilan ve firsat gibi bunlarin da kendi adresi
+    # ve kendi yapisal verisi var; haritaya girmedikleri surece arama
+    # motoru onlari yalnizca liste sayfasindan bulabiliyordu.
+    etkinlikler = (
+        db.table("discover_events")
+        .select("slug,updated_at,starts_at,ends_at")
+        .eq("status", "published")
+        .execute()
+        .data
+        or []
+    )
+
     bolumler = kayit_sluglari("bolumler.ts")
     rehberler = rehber_sluglari()
     duragan = (
@@ -178,6 +190,27 @@ def main() -> None:
             f"<changefreq>daily</changefreq><priority>0.7</priority></url>"
         )
 
+    # BITMIS ETKINLIK HARITADA DEGIL
+    #
+    # Sayfasi duruyor (paylasilmis olabilir) ve yapisal verisi bitmis
+    # oldugunu soyluyor; ama arama motoruna "bunu tara" demenin anlami
+    # yok. Firsatlarda da ayni kural: son basvurusu gecen kayit girmiyor.
+    simdi = datetime.now(UTC)
+    for etkinlik in etkinlikler:
+        bitis = etkinlik.get("ends_at") or etkinlik.get("starts_at")
+        if bitis:
+            try:
+                if datetime.fromisoformat(bitis.replace("Z", "+00:00")) < simdi:
+                    continue
+            except ValueError:
+                pass
+        tarih = (etkinlik.get("updated_at") or "")[:10]
+        tarih_etiketi = f"<lastmod>{tarih}</lastmod>" if tarih else ""
+        satirlar.append(
+            f"  <url><loc>{SITE}/kesfet/{kacir(etkinlik['slug'])}</loc>{tarih_etiketi}"
+            f"<changefreq>weekly</changefreq><priority>0.6</priority></url>"
+        )
+
     # Sirket sayfalari: sirketin kendi adini arayip bizi bulmasinin yolu.
     for slug in sorted(sirketler):
         satirlar.append(
@@ -197,6 +230,7 @@ def main() -> None:
     print(
         f"sitemap.xml yazildi: {len(duragan)} duragan ({len(bolumler)} bolum) "
         f"+ {len(ilanlar)} ilan + {len(firsatlar)} firsat "
+        f"+ {len(etkinlikler)} etkinlik(yayinda) "
         f"+ {len(sirketler)} sirket = {len(satirlar)} adres "
         f"({datetime.now(UTC).isoformat(timespec='seconds')})"
     )

@@ -28,6 +28,7 @@ import { calculateInternshipMatch } from '../utils/matchingEngine';
 import { InternshipCard } from './InternshipCard';
 import { fetchOpportunities, fetchSavedListingIds, toggleSavedListing } from '../lib/opportunities';
 import { SonucYok, type AktifSuzgec } from './SonucYok';
+import { SonrakiAdim } from './SonrakiAdim';
 import { BasvuruSablonu } from './BasvuruSablonu';
 import { ilBul } from '../lib/sehir';
 import { GoogleAdBanner } from './GoogleAdBanner';
@@ -1369,6 +1370,19 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                   )}
                 </React.Fragment>
               ))}
+
+              {/*
+                LİSTENİN SONU ÇIKMAZ DEĞİL
+
+                Açık ilan sayısı düşük olduğunda liste bitiyor ve sayfa da
+                bitiyordu. Sıfır sonuçta zaten SonucYok devreye giriyor;
+                eksik olan, ilan BULUNAN ama az olan durumdu. Dört yol da
+                gerçek veriden sayısını okuyor.
+              */}
+              <SonrakiAdim
+                onNavigate={(yol) => onNavigate?.(yol)}
+                onSablonAc={() => setSablonAcik(true)}
+              />
             </div>
           )}
         </div>

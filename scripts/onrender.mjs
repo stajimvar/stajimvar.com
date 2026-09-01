@@ -533,6 +533,20 @@ async function firsatlariGetir() {
   return yanit.json();
 }
 
+async function etkinlikleriGetir() {
+  const urlAdres = envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL');
+  const anahtar = envOku('SUPABASE_SERVICE_ROLE_KEY') || envOku('VITE_SUPABASE_ANON_KEY');
+  if (!urlAdres || !anahtar) return [];
+  const secim =
+    'slug,title,short_description,description,category,city,district,venue_name,address,' +
+    'starts_at,ends_at,is_free,student_price,regular_price,organizer,event_mode,online_url,' +
+    'cancelled_at,postponed_at,ticket_url,source_url,canonical_source_url';
+  const istek = `${urlAdres}/rest/v1/discover_events?status=eq.published&select=${encodeURIComponent(secim)}`;
+  const yanit = await fetch(istek, { headers: { apikey: anahtar, Authorization: `Bearer ${anahtar}` } });
+  if (!yanit.ok) { console.log(`  etkinlikler alınamadı: HTTP ${yanit.status}`); return []; }
+  return yanit.json();
+}
+
 /* --------------------------------------------------------------- HTML üretimi */
 
 /*
@@ -723,12 +737,28 @@ function sayfaYaz(yol, s) {
       );
   }
 
-  // canonical + og:url — hiç yoktu
+  /*
+    CANONICAL VARSA DEĞİŞTİRİLİYOR, EKLENMİYOR.
+
+    Bu blok "canonical hiç yoktu" varsayımıyla yazılmıştı ve yalnızca
+    ekliyordu. Kabuğa (index.html) sonradan bir canonical girince her ön
+    render edilmiş sayfada İKİ canonical oluştu: biri kök adresi, biri
+    sayfanın kendisi. Ölçüldü — ilan, burs ve içerik sayfalarının hepsinde
+    ikisi birden vardı. Çelişen iki canonical arama motoruna hangi adresin
+    asıl olduğunu söylemiyor; bu bir SEO kazancı değil, kayıp.
+  */
+  const canonicalEtiketi = `<link rel="canonical" href="${tamAdres}" />`;
+  const ogUrlEtiketi = `<meta property="og:url" content="${tamAdres}" />`;
+  html = /<link[^>]+rel="canonical"[^>]*>/.test(html)
+    ? html.replace(/<link[^>]+rel="canonical"[^>]*>/, canonicalEtiketi)
+    : html.replace('</head>', `  ${canonicalEtiketi}\n  </head>`);
+  html = /<meta[^>]+property="og:url"[^>]*>/.test(html)
+    ? html.replace(/<meta[^>]+property="og:url"[^>]*>/, ogUrlEtiketi)
+    : html.replace('</head>', `  ${ogUrlEtiketi}\n  </head>`);
+
   html = html.replace(
     '</head>',
-    `  <link rel="canonical" href="${tamAdres}" />\n` +
-      `    <meta property="og:url" content="${tamAdres}" />\n` +
-      (() => {
+    (() => {
         const veri = yapisalVeri(yol, s);
         return veri
           ? `    <script type="application/ld+json">${JSON.stringify(veri)}</script>\n`
@@ -1221,6 +1251,112 @@ async function main() {
       baslik: `${f.title} — ${f.organization_name} | StajımVar`,
       aciklama: ozetle(f.short_description || ''),
       govde: govde(f.title, f.short_description || '', [f.organization_name, f.application_deadline && `Son başvuru: ${f.application_deadline.slice(0, 10)}`].filter(Boolean)),
+    });
+    sayac++;
+  }
+
+  /*
+    ---- keşfet etkinlikleri: Event yapısal verisi ----
+
+    NEDEN EKLENDİ
+    -------------
+    `/kesfet/<slug>` uygulamada çalışan bir adres ama ön render
+    edilmiyordu: sunucudan gelen HTML ana sayfanın kabuğuydu, yani 46
+    yayındaki etkinliğin hiçbiri arama motorunda kendi sayfası olarak
+    yoktu. Denetimde EVENT_DETAIL_INDEXABILITY = FAIL olarak ölçülmüştü.
+
+    GEÇMİŞ ETKİNLİK AKTİF GİBİ GÖSTERİLMİYOR
+    ----------------------------------------
+    Bitmiş etkinliğin sayfası siliniyor değil — bağlantısı paylaşılmış
+    olabilir — ama `eventStatus` gerçeği söylüyor ve görünür metinde de
+    "bu etkinlik sona erdi" yazıyor. Yapısal veri sayfadaki metinle
+    aynı şeyi söylemeli.
+  */
+  const etkinlikler = await etkinlikleriGetir();
+  const simdi = Date.now();
+  for (const e of etkinlikler) {
+    if (!e.slug || !e.title) continue;
+    const bitis = e.ends_at || e.starts_at;
+    const gecmis = bitis ? new Date(bitis).getTime() < simdi : false;
+    const iptal = Boolean(e.cancelled_at);
+    const ertelendi = Boolean(e.postponed_at) && !iptal;
+
+    const durum = iptal
+      ? 'https://schema.org/EventCancelled'
+      : ertelendi
+        ? 'https://schema.org/EventPostponed'
+        : 'https://schema.org/EventScheduled';
+
+    const cevrimici = e.event_mode === 'online';
+    const yer = cevrimici
+      ? { '@type': 'VirtualLocation', url: guvenliDisAdres(e.online_url) || SITE + `/kesfet/${e.slug}` }
+      : {
+          '@type': 'Place',
+          name: e.venue_name || e.city || 'Türkiye',
+          address: {
+            '@type': 'PostalAddress',
+            ...(e.address ? { streetAddress: e.address } : {}),
+            ...(e.district ? { addressLocality: e.district } : e.city ? { addressLocality: e.city } : {}),
+            ...(e.city && e.district ? { addressRegion: e.city } : {}),
+            addressCountry: 'TR',
+          },
+        };
+
+    const ozetMetni = ozetle(e.short_description || e.description || '', 300);
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      name: e.title,
+      url: SITE + `/kesfet/${e.slug}`,
+      ...(ozetMetni ? { description: ozetMetni } : {}),
+      eventStatus: durum,
+      eventAttendanceMode: cevrimici
+        ? 'https://schema.org/OnlineEventAttendanceMode'
+        : 'https://schema.org/OfflineEventAttendanceMode',
+      ...(e.starts_at ? { startDate: e.starts_at } : {}),
+      ...(e.ends_at ? { endDate: e.ends_at } : {}),
+      location: yer,
+      ...(e.organizer ? { organizer: { '@type': 'Organization', name: e.organizer } } : {}),
+      /*
+        Fiyat ancak GERÇEKTEN biliniyorsa yazılıyor. Bilinmeyen fiyatı
+        "0" diye yazmak ücretsiz olmayan bir etkinliği ücretsiz
+        göstermek olurdu.
+      */
+      ...(e.is_free === true
+        ? {
+            offers: {
+              '@type': 'Offer',
+              price: 0,
+              priceCurrency: 'TRY',
+              availability: 'https://schema.org/InStock',
+              url: guvenliDisAdres(e.ticket_url) || SITE + `/kesfet/${e.slug}`,
+            },
+          }
+        : e.student_price != null
+          ? {
+              offers: {
+                '@type': 'Offer',
+                price: Number(e.student_price),
+                priceCurrency: 'TRY',
+                url: guvenliDisAdres(e.ticket_url) || SITE + `/kesfet/${e.slug}`,
+              },
+            }
+          : {}),
+    };
+
+    const bilgiler = [
+      e.city && `Şehir: ${konumEtiketi(e.city)}`,
+      e.venue_name && `Mekân: ${e.venue_name}`,
+      e.starts_at && `Tarih: ${String(e.starts_at).slice(0, 10)}`,
+      e.is_free === true ? 'Ücretsiz' : e.student_price != null ? `Öğrenci: ${e.student_price} TL` : '',
+      iptal ? 'Bu etkinlik iptal edildi.' : gecmis ? 'Bu etkinlik sona erdi.' : '',
+    ].filter(Boolean);
+
+    sayfaYaz(`/kesfet/${e.slug}`, {
+      baslik: `${e.title}${e.city ? ' — ' + konumEtiketi(e.city) : ''} | StajımVar`,
+      aciklama: ozetMetni || `${e.title} etkinliği hakkında bilgi ve bilet bağlantısı.`,
+      govde: govde(e.title, ozetMetni, bilgiler),
+      jsonLd,
     });
     sayac++;
   }
