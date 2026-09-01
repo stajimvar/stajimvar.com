@@ -27,7 +27,7 @@ on:
         required: false
         default: "resmi"
         type: choice
-        options: ["resmi", "linkedin", "linkedin-teshis", "kesif"]
+        options: ["cozum", "resmi", "linkedin", "linkedin-kesif-yaz", "linkedin-teshis", "kesif"]
   schedule:
     # Günde bir. Keşif kaynakları saatlik değişmiyor; saatlik çekmek
     # kaynağa gereksiz yük bindirmek olurdu.
@@ -111,6 +111,24 @@ jobs:
           MAX_SEARCH_QUERIES_PER_RUN: "430"
         run: python -m automation.radar_linkedin_kosu --kesif-siniri 220 --toplam-tavan 430
 
+      # SİNYAL → RESMÎ İLAN ÇÖZÜMÜ
+      #
+      # Keşif YAPMIYOR. Depodaki sinyalleri okuyup şirketin resmî
+      # kaynağına bağlıyor; bütçenin tamamı bu köprüye gidiyor.
+      - name: Çözüm koşusu (batch)
+        if: ${{ inputs.test_sorgusu == '' && inputs.mod == 'cozum' }}
+        env:
+          MAX_SEARCH_QUERIES_PER_RUN: "430"
+          BATCH: ${{ inputs.sayfa_sayisi || '50' }}
+        run: python -m automation.radar_cozum_kosu --batch "$BATCH" --toplam-tavan 430
+
+      # KEŞİF + DEPOYA YAZ: sinyaller kalıcı olsun diye bir kez.
+      - name: LinkedIn keşfi ve depoya yazım
+        if: ${{ inputs.test_sorgusu == '' && inputs.mod == 'linkedin-kesif-yaz' }}
+        env:
+          MAX_SEARCH_QUERIES_PER_RUN: "220"
+        run: python -m automation.radar_linkedin_kosu --sadece-kesif --kesif-siniri 220
+
       # TEŞHİS: yalnız keşif, çözüm bütçesi harcanmadan. Ayrıştırıcıyı
       # gerçek sonuç biçimiyle düzeltmek için ucuz koşu.
       - name: LinkedIn keşif teşhisi
@@ -136,4 +154,5 @@ jobs:
             radar-rapor.json
             radar-resmi-rapor.json
             radar-linkedin-rapor.json
+            radar-cozum-rapor.json
           if-no-files-found: warn

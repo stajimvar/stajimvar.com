@@ -47,6 +47,7 @@ from automation.radar_resmi import (
     turkiye_mi,
 )
 from automation.radar_kosu import _oturum, getir_fabrikasi
+from automation.radar_sinyal_deposu import DepoYok, sinyalleri_yaz
 from automation.radar_sirket import alan_adini_normalize_et, sirket_alani_olamaz
 from automation.radar_resmi_kosu import _kaynaklari_oku, _mevcut_ilanlar, kiracidan_ilanlar
 from automation.staj_kalitesi import VALID_INTERNSHIP, sinifla
@@ -217,6 +218,22 @@ def main(argv: list[str] | None = None) -> int:
     olcum: dict = {}
     tekil = kesfet(saglayici, butce, args.kesif_siniri, olcum)
     print(f"keşif: {butce.kesif} sorgu → {len(tekil)} tekil sinyal", file=sys.stderr)
+
+    # SİNYALLER KALICI DEPOYA YAZILIYOR
+    #
+    # İlk koşuda 359 tekil sinyal bulundu ve hiçbiri yazılmadı: koşu
+    # bitince kayboldular ve aynı ilanları yeniden bulmak ikinci kez
+    # arama parası istedi. Keşif ile çözüm ayrı koşulara bölünebilsin
+    # diye sinyal artık `job_discovery_signals` tablosunda duruyor.
+    try:
+        yazim = sinyalleri_yaz(
+            [{"source_url": s.url, "sirket": s.sirket or "", "baslik": s.baslik or "",
+              "sirket_normal": sadelestir(s.sirket), "konum": s.konum}
+             for s in tekil.values() if s.sirket and s.baslik],
+            source="linkedin")
+        olcum["depoya_yazilan"] = yazim["yazilan"]
+    except (DepoYok, Exception) as hata:  # noqa: B014 - depo yoksa koşu düşmüyor
+        olcum["depoya_yazilamadi"] = type(hata).__name__
 
     if args.sadece_kesif:
         with open(RAPOR_DOSYASI, "w", encoding="utf-8") as f:
