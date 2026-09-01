@@ -39,6 +39,9 @@ DURAGAN = [
     ("/firsatlar", "daily", "0.8"),
     ("/burslar", "daily", "0.7"),
     ("/kyk", "daily", "0.7"),
+    # Kesfet liste sayfasi haritada yoktu; detaylari girdi ama
+    # onlari toplayan sayfa disarida kalmisti.
+    ("/kesfet", "daily", "0.7"),
     ("/yurtdisi-firsatlari", "daily", "0.7"),
     ("/yarismalar", "daily", "0.7"),
     ("/firsat-takvimi", "daily", "0.7"),

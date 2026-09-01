@@ -198,6 +198,24 @@ test('H2: sitemap adımı gerçekten kurulabilen bir bağımlılık listesi kull
   }
 });
 
+test('H3: keşfet etkinlikleri hem ön render hem site haritasında', () => {
+  const onrender = readFileSync(path.join(KOK, 'scripts/onrender.mjs'), 'utf8');
+  assert.match(onrender, /etkinlikleriGetir/, 'etkinlik detayları ön render edilmeli');
+  assert.ok(onrender.includes("'@type': 'Event'"), 'Event yapısal verisi olmalı');
+  const sitemap = readFileSync(path.join(KOK, 'automation/sitemap.py'), 'utf8');
+  assert.match(sitemap, /discover_events/, 'etkinlikler site haritasına girmeli');
+  assert.ok(sitemap.includes('("/kesfet"'), 'keşfet liste sayfası haritada olmalı');
+});
+
+test('H4: her sayfada tek canonical üretiliyor', () => {
+  const onrender = readFileSync(path.join(KOK, 'scripts/onrender.mjs'), 'utf8');
+  assert.match(onrender, /canonicalEtiketi/, 'canonical varsa değiştirilmeli, eklenmemeli');
+  assert.ok(
+    onrender.includes('rel="canonical"') && onrender.includes('.replace('),
+    'mevcut canonical değiştirilerek yazılmalı'
+  );
+});
+
 /* --------------------------------------- I: onay sürümü işlemeyle uyumlu */
 
 test('I: KVKK onay sürümü CV ve başvuru öncesi sürümde kalmadı', () => {

@@ -309,12 +309,23 @@ jobs:
       # oldu: betik eksik bir bağımlılıkla düştü, adım "success" göründü
       # ve bayat harita yeniden yayına girdi. Harita değişmediyse artık
       # koşu özetinde uyarı çıkıyor.
-      - name: Site haritası tazelendi mi
+      # DEĞİŞİKLİK DEĞİL, TAZELİK ÖLÇÜLÜYOR
+      #
+      # İlk sürüm `git diff` ile bakıyordu ve depodaki dosya zaten
+      # güncelken yanlış alarm veriyordu (ölçüldü). Doğru soru "dosya
+      # değişti mi" değil, "üretim çalıştı mı": dosyanın bu koşuda
+      # yazılmış olması ve beklenen bölümleri taşıması.
+      - name: Site haritası üretildi mi
         run: |
-          if git diff --quiet -- public/sitemap.xml; then
-            echo "::warning::public/sitemap.xml değişmedi — harita üretimi düşmüş olabilir"
+          if [ ! -f public/sitemap.xml ]; then
+            echo "::warning::public/sitemap.xml yok — harita üretimi düşmüş"
+            exit 0
+          fi
+          adres=$(grep -c '<url>' public/sitemap.xml)
+          if [ "$adres" -lt 100 ]; then
+            echo "::warning::site haritasında yalnız $adres adres var — üretim düşmüş olabilir"
           else
-            echo "site haritası tazelendi: $(grep -c '<url>' public/sitemap.xml) adres"
+            echo "site haritası: $adres adres, $(grep -c '/ilan/' public/sitemap.xml) ilan, $(grep -c '/kesfet/' public/sitemap.xml) etkinlik"
           fi
 
       - run: npm run build
