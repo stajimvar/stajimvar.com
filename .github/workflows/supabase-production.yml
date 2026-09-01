@@ -273,5 +273,35 @@ jobs:
           done
       - run: npm ci
       - run: npm run lint
+
+      # SİTE HARİTASI DAĞITIMDAN ÖNCE ÜRETİLİYOR
+      #
+      # ÖLÇÜLDÜ: canlı sitemap 17 Ağustos'ta donmuştu. Sebep, iki iş
+      # akışının arasındaki boşluktu. Saatlik tarama taze haritayı
+      # üretiyor ama onun dağıtım adımı kapalı; dağıtan tek iş akışı da
+      # burasıydı ve haritayı hiç üretmiyordu. Sonuç: depoda duran bayat
+      # dosya her dağıtımda yeniden yayına giriyordu.
+      #
+      # Bu, kozmetik bir gecikme değil: harita arşivlenmiş ilanları
+      # (kaldırdığımız Insider One MT dahil) Google'a göstermeye devam
+      # ediyor ve o tarihten sonra eklenen hiçbir ilanı tanıtmıyordu.
+      #
+      # continue-on-error: harita üretilemezse dağıtımı durdurmuyoruz —
+      # eksik harita, hiç yayınlanmamış bir siteden iyi.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # `if:` içinde adım seviyesindeki env görünmüyor; anahtar yoksa
+      # betik kendisi düşüyor ve continue-on-error dağıtımı sürdürüyor.
+      - name: Sitemap üret
+        run: |
+          pip install requests
+          python sitemap.py
+        working-directory: automation
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        continue-on-error: true
+
       - run: npm run build
       - run: npx wrangler pages deploy dist --project-name stajimvar --branch main --commit-dirty=true

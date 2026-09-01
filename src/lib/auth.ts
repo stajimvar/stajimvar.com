@@ -10,7 +10,14 @@ import type { CompanyAccount, StudentProfile } from '../types';
 
 /** KVKK aydınlatma metni sürümü. Metin değişince burayı artır —
  *  eski onaylar geçersiz sayılıp kullanıcıdan yeniden onay istenebilir. */
-export const KVKK_VERSION = '2026-08-v1';
+/*
+  ONAY SÜRÜMÜ İŞLEMEYLE BİRLİKTE ARTAR
+
+  v1, özgeçmiş dosyası ve platform içi başvuru yokken alınmış bir onaydı.
+  İkisi de yayına girince aydınlatma metni yeniden yazıldı; sürüm artmazsa
+  kullanıcı, o gün var olmayan bir veri işlemesine onay vermiş sayılırdı.
+*/
+export const KVKK_VERSION = '2026-09-v2';
 
 /*
   'admin' de gerçek bir rol. Yönetici, siteyi kullanan bir kişi olmaktan

@@ -845,7 +845,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 .{' '}
                 {isverenBaglami
                   ? 'Aday bilgilerine erişim, şirket doğrulaması tamamlanmadan açılmıyor.'
-                  : 'Bilgilerin, sen başvuru sırasında ayrıca izin vermeden hiçbir şirketle paylaşılmaz.'}{' '}
+                  : 'Bilgilerin, sen başvuru sırasında ayrıca izin vermeden hiçbir şirketle paylaşılmaz; iletişim bilgilerin ise ancak bir teklifi kabul edersen açılır.'}{' '}
                 Hesap açarak{' '}
                 <a
                   href="/kullanim-kosullari"

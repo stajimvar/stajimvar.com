@@ -1,4 +1,5 @@
 import React from 'react';
+import { ISVEREN_SSS } from '../data/isveren-sss';
 import {
   ArrowRight,
   Building2,
@@ -248,6 +249,11 @@ export const IsverenLanding: React.FC<{
           <Kart ikon={<Sparkles className="h-5 w-5" />} baslik="Ücretsiz">
             İlan paketi, kontenjan ya da abonelik yok. İlan vermek ücretsiz.
           </Kart>
+          <Kart ikon={<Users className="h-5 w-5" />} baslik="Aday süreci panelde">
+            Başvuru panele düşüyor: adayın özgeçmişini görüyor, durumunu
+            güncelliyor, görüşmeye davet ediyor ve teklif gönderiyorsunuz. Öğrenci
+            aynı süreci kendi tarafında adım adım izliyor.
+          </Kart>
         </div>
       </Bolum>
 
@@ -259,7 +265,8 @@ export const IsverenLanding: React.FC<{
         <ul className="space-y-2.5">
           {[
             'İlan asmak ile öğrenci bilgisi görmek ayrı iki yetki. İlan verebilirsiniz; aday kartları doğrulama sonrası açılıyor.',
-            'Öğrencinin adı ve okulu size ancak o öğrenci “profilim bu şirketle paylaşılsın” dediğinde ulaşıyor.',
+            'Öğrencinin profili ve özgeçmişi size yalnızca sizin ilanınıza başvurduğunda ve başvuru sırasında bunu onayladığında ulaşıyor. Başka şirketin ilanına yapılan başvuruyu göremezsiniz.',
+            'Başvuruya bağlanan kopyada e-posta ve telefon yok. İletişim bilgileri yalnızca teklifinizi öğrenci kabul ettiğinde ve karşılıklı açılıyor.',
             'Başvurmamış öğrencilerin listesi diye bir ekran yok.',
             'Şahıs şirketlerinden TC kimlik numarası istenmiyor; doğrulama için VKN yeterli.',
           ].map((satir) => (
@@ -269,6 +276,25 @@ export const IsverenLanding: React.FC<{
             </li>
           ))}
         </ul>
+      </Bolum>
+
+      {/* ---------------------------------------------------------- SSS */}
+      {/*
+        Aynı liste ön render'da FAQPage yapısal verisine çevriliyor. Metin
+        tek yerde duruyor: arama motoruna sayfada olmayan bir cevap
+        göstermek gizleme sayılırdı.
+      */}
+      <Bolum baslik="Sıkça sorulanlar">
+        <div className="divide-y divide-gray-200 overflow-hidden rounded-2xl border border-gray-200 bg-white">
+          {ISVEREN_SSS.map(({ soru, cevap }) => (
+            <details key={soru} className="group p-5">
+              <summary className="cursor-pointer list-none font-extrabold text-gray-900 marker:hidden">
+                {soru}
+              </summary>
+              <p className="mt-2 text-sm leading-relaxed text-gray-600">{cevap}</p>
+            </details>
+          ))}
+        </div>
       </Bolum>
 
       {/* ------------------------------------------------------- rehber */}

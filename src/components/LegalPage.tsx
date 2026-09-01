@@ -12,13 +12,16 @@ import {
  * Yasal metin sayfaları.
  *
  * İçerik sitenin BUGÜN gerçekten yaptığı işe göre yazılır; ne eksik ne fazla.
- * Şu anki durum: öğrenci hesabı açılabiliyor (ad, e-posta, profil alanları),
- * özgeçmiş yükleme ve platform içi başvuru ise kapalı — başvurular hâlâ
- * şirketin kendi sayfasında yapılıyor.
  *
- * ÖNEMLİ: CV yükleme veya platform üzerinden başvuru açıldığında bu metinler
- * yeniden yazılmalı ve `KVKK_VERSION` (src/lib/auth.ts) artırılmalı; sürüm
- * artmazsa eski onayla yeni işleme yapılmış olur.
+ * Bu metinler bir kez ürünün gerisinde kaldı: özgeçmiş yükleme, StajımVar
+ * üzerinden başvuru ve teklif kabulünden sonra iletişim paylaşımı yayına
+ * girdiği hâlde sayfalar hâlâ "CV yükleyemezsiniz", "başvuru şirkete
+ * iletilmez", "hiçbir bilgi paylaşılmaz" diyordu. Bunlar kozmetik değil:
+ * kullanıcı, yapmadığımızı söylediğimiz bir işleme için onay vermiş oluyordu.
+ *
+ * ÖNEMLİ: işlenen veri ya da veriyi paylaştığımız taraf değiştiğinde bu
+ * metinler yeniden yazılmalı VE `KVKK_VERSION` (src/lib/auth.ts) artırılmalı;
+ * sürüm artmazsa eski onayla yeni işleme yapılmış olur.
  */
 
 type YasalSlug = 'gizlilik' | 'cerez-politikasi' | 'kvkk-aydinlatma-metni';
@@ -52,7 +55,10 @@ const GUNCELLEME: Partial<Record<LegalSlug, string>> = {
   // Çerezsiz ziyaret ölçümü eklendi ve AdSense doğrulama betiğinin zaten
   // yüklendiği açıkça yazıldı; ikisi de bu iki metni değiştirdi.
   'cerez-politikasi': '19 Ağustos 2026',
-  gizlilik: '19 Ağustos 2026',
+  // Özgeçmiş yükleme, StajımVar üzerinden başvuru ve teklif sonrası iletişim
+  // paylaşımı bu iki metne işlendi.
+  gizlilik: '1 Eylül 2026',
+  'kvkk-aydinlatma-metni': '1 Eylül 2026',
 };
 
 const guncellemeTarihi = (slug: LegalSlug) => GUNCELLEME[slug] || TEMEL_GUNCELLEME;
@@ -141,13 +147,22 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
 
             <Section title="Kısa özet">
               <p>
-                İlanlara bakmak için hesap açmanız gerekmez. Hesap açarsanız yalnızca
+                İlanlara bakmak için hesap açmanız gerekmez. Hesap açarsanız
                 <strong> adınız, e-posta adresiniz</strong> ve profilinize kendi
-                girdiğiniz bilgiler (üniversite, bölüm, yetenekler, tercihler) saklanır.
-                Başvurular şirketin kendi başvuru sayfasında yapılır. StajımVar'da
-                bir ilanı "başvurdum" diye işaretleyebilirsiniz; bu kayıt yalnızca
-                sizin takibiniz içindir, şirkete gönderilmez. Özgeçmiş dosyası
-                yükleme özelliği yoktur.
+                girdiğiniz bilgiler (üniversite, bölüm, yetenekler, tercihler)
+                saklanır. Profilinize özgeçmiş dosyası da yükleyebilirsiniz.
+              </p>
+              <p>
+                İki tür ilan var ve başvuru ikisinde farklı işliyor. Şirketin kendi
+                kariyer sayfasından derlediğimiz ilanlarda sizi o sayfaya
+                yönlendiririz; başvurunuz bizden geçmez. Şirketin doğrudan
+                StajımVar&apos;da açtığı ilanlarda ise başvurunuzu biz alır ve o
+                şirkete iletiriz — bunu her başvuruda ayrıca onaylarsınız.
+              </p>
+              <p>
+                İletişim bilgileriniz başvuruyla birlikte paylaşılmaz. Şirket size
+                teklif verir ve <strong>siz teklifi kabul ederseniz</strong> iki
+                tarafın iletişim bilgileri karşılıklı açılır.
               </p>
             </Section>
 
@@ -190,15 +205,29 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
 
             <Section title="Başvurular nasıl çalışıyor">
               <p>
-                Şu anda tüm ilanlarda başvuru <strong>şirketin kendi başvuru
-                sayfasında</strong> yapılır. Sizi oraya yönlendiririz; başvuru bilgileriniz
-                StajımVar üzerinden geçmez ve bizde saklanmaz.
+                <strong>Şirketin kendi kaynağından derlenen ilanlar.</strong> Sizi
+                ilanın resmî sayfasına yönlendiririz. Başvurunuz StajımVar
+                üzerinden geçmez ve bizde saklanmaz.
               </p>
               <p>
-                İleride platform üzerinden başvuru açıldığında verileriniz şirkete ancak
-                her başvuru için ayrı vereceğiniz açık rıza ile ve yalnızca doğrulanmış
-                işveren adreslerine iletilecektir. Doğrulanmamış bir adrese hiçbir koşulda
-                veri gönderilmez; bu kural veritabanı kısıtıyla bağlanmıştır.
+                <strong>Şirketin StajımVar&apos;da açtığı ilanlar.</strong> Başvuru
+                siteden çıkmadan tamamlanır ve ilanı açan şirkete iletilir. Her
+                başvuruda bu aktarımı ayrıca onaylarsınız; onay anı kayda geçer.
+                Başvuru yalnızca <strong>doğrulanmış</strong> şirketlere iletilir ve
+                bir şirket yalnızca kendi ilanlarına yapılan başvuruları görebilir.
+              </p>
+              <p>
+                <strong>Şirketin gördüğü bilgi.</strong> Başvuru sırasında profilinizin
+                ve özgeçmiş dosyanızın o anki bir kopyası başvuruya bağlanır; sonradan
+                profilinizi değiştirseniz bile şirketin gördüğü belge değişmez. Bu
+                kopyaya <strong>e-posta ve telefon bilgileriniz alınmaz</strong>.
+              </p>
+              <p>
+                <strong>İletişim bilgileri ne zaman açılır.</strong> Şirket süreci
+                panelinden yürütür: görüşmeye davet eder, teklif gönderir. İletişim
+                bilgileri yalnızca <strong>siz teklifi kabul ettiğinizde</strong> ve
+                karşılıklı olarak açılır. Teklifi reddederseniz ya da başvurunuzu geri
+                çekerseniz açılmaz.
               </p>
             </Section>
 
@@ -239,12 +268,12 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 trafik şifrelidir (HTTPS/TLS).
               </p>
               <p>
-                <strong>Dosyalar.</strong> Şu anda özgeçmiş dosyası yükleyemiyorsunuz;
-                yani sizden alınmış bir CV dosyası tutmuyoruz. Özellik açıldığında
-                kullanılacak depolama alanı kapalı olarak hazır: yalnızca dosyanın sahibi
-                erişebilecek ve o gün bu metin, hangi şirketin ne zaman erişeceğini
-                söyleyecek biçimde güncellenecek. Şirket logoları gibi kamuya açık
-                görseller ayrı bir alanda tutuluyor.
+                <strong>Dosyalar.</strong> Yüklediğiniz özgeçmiş dosyasına yalnızca siz
+                erişebilirsiniz. Bir şirket bu dosyayı ancak o şirketin ilanına
+                başvurduysanız ve yalnızca başvuruya bağlanan kopya üzerinden görebilir.
+                Dosyayı profilinizden değiştirebilir ya da kaldırabilirsiniz; bu, daha
+                önce gönderdiğiniz başvurulardaki kopyayı değiştirmez. Şirket logoları
+                gibi kamuya açık görseller ayrı bir alanda tutuluyor.
               </p>
             </Section>
 
@@ -267,11 +296,9 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
 
             <Section title="Bu metin ne zaman değişecek">
               <p>
-                Kayıt ve giriş özellikleri açıktır; başvurunun şirkete iletilmesi
-                ise henüz yoktur. O gün geldiğinde — yani başvurunuz şirkete
-                gönderilmeye başladığında — bu politika yeniden yazılacak ve aktarım
-                için ayrı bir açık rıza alınacaktır. Değişiklik tarihini bu sayfanın
-                başında görebilirsiniz.
+                İşlediğimiz veri ya da veriyi paylaştığımız taraflar değiştiğinde bu
+                metin yeniden yazılır ve onay sürümü artırılır. Değişiklik tarihini bu
+                sayfanın başında görebilirsiniz.
               </p>
             </Section>
           </>
@@ -377,19 +404,27 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 için; hukuki sebep sözleşmenin kurulması (m.5/2-c).
               </p>
               <p>
-                <strong>Profil bilgileri</strong> — ilanları uygunluğa göre sıralamak
-                için; tamamı isteğe bağlıdır ve yalnızca sizin girdiğiniz kadarıyla
-                işlenir. Bu bilgiler hiçbir şirketle paylaşılmaz: iletişim bilgisinin
-                aktarılması için açık rıza, başvuru sırasında ve yalnızca o ilan için
-                ayrıca istenir.
+                <strong>Profil bilgileri ve özgeçmiş dosyası</strong> — ilanları
+                uygunluğa göre sıralamak ve başvurunuzu oluşturmak için; tamamı
+                isteğe bağlıdır ve yalnızca sizin girdiğiniz kadarıyla işlenir.
+              </p>
+              <p>
+                <strong>Başvuru kaydı</strong> — StajımVar&apos;da açılmış bir ilana
+                başvurduğunuzda; hukuki sebep açık rıza (m.5/1). Rızayı başvuru anında
+                verirsiniz ve bu an kayda geçer.
               </p>
               <p>
                 <strong>Onay kaydı</strong> — bu metni onayladığınız an ve sürümü; hukuki
                 sebep hukuki yükümlülük (m.5/2-ç).
               </p>
               <p>
-                <strong>Aktarım:</strong> Hesap ve profil verileriniz üçüncü taraflara
-                aktarılmaz. Barındırma Supabase (Frankfurt) ve Cloudflare
+                <strong>Aktarım:</strong> Hesap ve profil verileriniz pazarlama amacıyla
+                üçüncü taraflara aktarılmaz ve satılmaz. Tek aktarım şudur:
+                StajımVar&apos;da açılmış bir ilana başvurduğunuzda, başvurunuz ve ona
+                bağlanan profil/özgeçmiş kopyası <strong>o ilanı açan doğrulanmış
+                şirkete</strong> iletilir. Bu kopyaya e-posta ve telefon bilgileriniz
+                alınmaz; iletişim bilgileri yalnızca şirketin teklifini kabul ettiğinizde
+                karşılıklı açılır. Barındırma Supabase (Frankfurt) ve Cloudflare
                 altyapısındadır; bu sağlayıcılar veriyi bizim adımıza saklar. Ziyaret
                 ölçümü Cloudflare Web Analytics ile yapılıyor ve kişisel veri içermiyor;
                 ayrıntısı{' '}
@@ -421,17 +456,17 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
               </p>
             </Section>
 
-            <Section title="Henüz yapılmayanlar">
+            <Section title="Neyi yapmıyoruz">
               <p>
-                {/*
-                  Sondaki {' '}: JSX, bir öğeden sonra gelen satır sonunu tamamen
-                  siliyor ve metin "iletilmesihenüz" olarak basılıyordu.
-                */}
-                Özgeçmiş dosyası yükleme ve <strong>başvurunun şirkete iletilmesi</strong>{' '}
-                henüz yoktur. Bir ilanı "başvurdum" diye işaretlemek yalnızca kendi
-                takip listenizi oluşturur; bu kayıt şirkete gönderilmez, iletişim
-                bilgileriniz hiçbir şirketle paylaşılmaz. Aktarım devreye girdiğinde
-                metin güncellenecek ve her başvuru için ayrı açık rızanız istenecektir.
+                Şirketin kendi kariyer sayfasından derlediğimiz ilanlarda başvuru bizden
+                geçmez: sizi resmî sayfaya yönlendiririz ve o başvuruya ait hiçbir veri
+                bizde oluşmaz. Bir ilanı yalnızca &quot;başvurdum&quot; diye
+                işaretlerseniz bu kayıt sizin takip listenizdir; şirkete gönderilmez.
+              </p>
+              <p>
+                Bildirimleri yalnızca site içinde gösteriyoruz; e-posta, SMS ya da
+                telefon bildirimi göndermiyoruz. Öğrenci verisi satmıyoruz ve pazarlama
+                amacıyla üçüncü taraflara aktarmıyoruz.
               </p>
               <p>
                 KVKK m.11 kapsamındaki taleplerinizi aşağıdaki adrese iletebilirsiniz.

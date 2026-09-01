@@ -77,12 +77,20 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
             inceleniyor ve <strong>robots kuralları kontrol ediliyor</strong>.
           </p>
           <p>
-            Kaynaklar saatte bir taranıyor; yayındaki ilanların adresleri ayrıca her
-            gün yeniden kontrol ediliyor.
-            Kapanan ilanların otomatik düşürülmesi şu anda <strong>tek bir kaynakta</strong>
-            açık; kalan kaynaklarda kapanan ilanları elle kaldırıyoruz. Kapsamı adım adım
-            genişletiyoruz. Bunu <strong>İlan kuralları</strong> sayfasında da açıkça
-            yazıyoruz çünkü bu, sitenin bugünkü en zayıf noktası ve saklamanın anlamı yok.
+            Kaynaklar saatte bir taranıyor; yayındaki ilanların başvuru adresleri
+            ayrıca her gün yeniden kontrol ediliyor. Bir ilan iki yoldan kapanıyor:
+            başvuru adresi artık ilan sunmuyorsa (sayfa kaldırılmış ya da kapandığını
+            kendisi yazıyorsa) ilan yayından düşüyor; ayrıca ilanın <strong>düzenli ve
+            kararlı okunduğu kaynaklarda</strong>, ilan kaynak listesinden kalktığında
+            da düşüyor.
+          </p>
+          <p>
+            <strong>Geçici erişim sorunu kapanma sayılmıyor.</strong> Sunucu hatası,
+            hız sınırı ya da erişim engeli gördüğümüzde ilana dokunmuyoruz — çalışan bir
+            ilanı listeden düşürmek, kapanmış bir ilanı bırakmaktan daha kötü. Aynı
+            sebeple kaynak bazında otomatik düşürmeyi ancak o kaynağın ölçülmüş
+            kararlılığı yeterliyse açıyoruz; kalanlarda kapanan ilanları elle
+            kaldırıyoruz.
           </p>
         </S>
 

@@ -510,7 +510,7 @@ async function ilanlariGetir() {
     return [];
   }
   const secim =
-    'id,title,description,city,work_type,apply_url,posted_at,created_at,application_deadline,is_paid,stipend_text,companies(name,slug,website_url,logo_url,industry,location,description)';
+    'id,title,description,city,work_type,apply_url,application_method,posted_at,created_at,application_deadline,is_paid,stipend_text,companies(name,slug,website_url,logo_url,industry,location,description)';
   const istek = `${urlAdres}/rest/v1/listings?status=eq.published&select=${encodeURIComponent(secim)}`;
   const yanit = await fetch(istek, {
     headers: { apikey: anahtar, Authorization: `Bearer ${anahtar}` },
@@ -1015,7 +1015,7 @@ async function main() {
     ['/araclar/siralama-tahmini', 'YKS sıralama tahmini | StajımVar', 'Puanın 2025 ÖSYM verilerine göre kaçıncı sıraya denk geliyor?', 'Sıralama tahmini'],
     ['/araclar/staj-ucreti-hesaplama', 'Staj ücreti hesaplama | StajımVar', '3308 sayılı kanuna göre stajyere en az ne kadar ödenmesi gerektiğini hesapla.', 'Staj ücreti hesaplama'],
     ['/araclar/staj-gunu-hesaplama', 'Staj günü hesaplama | StajımVar', '20 veya 30 iş günü staj hangi tarihte biter? Resmî tatiller düşülerek.', 'Staj günü hesaplama'],
-    ['/isveren', 'İşverenler için | StajımVar', 'Staj ilanınızı oluşturun, şirket profilinizi güçlendirin ve doğru öğrencilere ulaşın. İlan vermek ücretsiz.', 'Doğru stajyeri daha kolay bulun.'],
+    ['/isveren', 'Stajyer İlanı Ver | Ücretsiz Şirket Hesabı | StajımVar', 'Staj ilanınızı ücretsiz yayınlayın. Başvurular şirket panelinize düşer; adayın özgeçmişini görür, görüşmeye davet eder ve teklif gönderirsiniz.', 'Doğru stajyeri daha kolay bulun.'],
     /* Rehber kendi adresine taşındı; /isveren artık ürünün kapısı. */
     ['/stajyer-nasil-alinir', 'Stajyer nasıl alınır? İşveren rehberi | StajımVar', 'Sigorta kimde, ücret zorunlu mu, okulla hangi evrak imzalanır — sırayla.', 'Stajyer almak sandığınızdan kolay.'],
     ['/staj-programlari', 'Büyük işverenlerde staj başvurusu | StajımVar', 'Aselsan, TUSAŞ, Turkcell, Tüpraş ve diğerleri stajı kendi kariyer sayfasından alıyor. Doğrulanmış başvuru adresleri.', 'Büyük işverenlerde staj'],
@@ -1034,7 +1034,33 @@ async function main() {
     tek tek içerik sayfalarına geçtiği kapı. Listesiz hâlleri yalnızca
     başlık ve tek cümleden ibaretti ve hiçbir bağlantı taşımıyorlardı.
   */
+  /*
+    /isveren'in SSS'i hem GÖRÜNÜR metin hem FAQPage yapısal verisi olarak
+    basılıyor. Kaynak tek: src/data/isveren-sss.ts. İkisini ayrı yazmak,
+    arama motoruna sayfada olmayan bir cevap göstermek olurdu.
+  */
+  const { ISVEREN_SSS } = await icerikDerle(
+    path.join(kok, 'src', 'data', 'isveren-sss.ts'),
+    'isveren-sss'
+  );
+  const isverenSssHtml =
+    '<section><h2>Sıkça sorulanlar</h2>' +
+    ISVEREN_SSS.map(
+      (m) => `<h3>${kacir(m.soru)}</h3><p>${kacir(m.cevap)}</p>`
+    ).join('') +
+    '</section>';
+  const isverenSssJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: ISVEREN_SSS.map((m) => ({
+      '@type': 'Question',
+      name: m.soru,
+      acceptedAnswer: { '@type': 'Answer', text: m.cevap },
+    })),
+  };
+
   const EK_LISTE = {
+    '/isveren': isverenSssHtml,
     '/rehber': merkezListeleri.rehberler,
     '/bolumler': merkezListeleri.bolumler,
     '/staj-programlari': merkezListeleri.programlar,
@@ -1042,12 +1068,15 @@ async function main() {
     '/universite-kariyer-merkezleri': merkezListeleri.kariyerMerkezleri,
   };
 
+  const EK_JSONLD = { '/isveren': isverenSssJsonLd };
+
   for (const [yol, baslik, aciklama, h1] of sabitler) {
     const ek = EK_LISTE[yol] || '';
     sayfaYaz(yol, {
       baslik,
       aciklama,
       govde: `<main><h1>${kacir(h1)}</h1><p>${kacir(aciklama)}</p>${ek}</main>`,
+      ...(EK_JSONLD[yol] ? { jsonLd: EK_JSONLD[yol] } : {}),
     });
     sayac++;
   }
@@ -1094,10 +1123,16 @@ async function main() {
       gerçek bir son başvuru tarihi varsa ekleniyor; Google süresi geçmiş
       veya yanlış tarihli ilanları cezalandırıyor.
 
-      `directApply: false` bilinçli: başvuru şirketin kendi sayfasında
-      tamamlanıyor, bizde değil. Alanı hiç yazmamak "bilmiyoruz" demek;
-      yanlışlıkla true yazmak ise arama sonucundan gelen kişiyi başvuru
-      yapamayacağı bir sayfaya göndermek olurdu.
+      `directApply` İLANA GÖRE DEĞİŞİYOR.
+
+      Sabit `false` yazılıyordu ve bu, ürünün eski hâlinden kalmıştı:
+      o sırada bütün başvurular şirketin kendi sayfasında tamamlanıyordu.
+      Artık iki model var. Şirketin StajımVar'da açtığı ilanda başvuru
+      siteden çıkmadan tamamlanıyor — orada `false` yazmak, arama
+      sonucundan gelen öğrenciye yanlış bilgi vermek olur. Dış kaynaktan
+      derlenen ilanlarda ise `false` doğru: başvuru resmî sayfada.
+
+      Alanı hiç yazmamak "bilmiyoruz" demek; ikisi de yanlış olurdu.
 
       Şirket adresi veritabanına şemasız giriliyor ("alumil.com"); yapısal
       veri mutlak adres istiyor, göreli değer geçersiz sayılıyor.
@@ -1110,7 +1145,7 @@ async function main() {
       datePosted: (i.posted_at || i.created_at || '').slice(0, 10),
       employmentType: 'INTERN',
       url: SITE + yol,
-      directApply: false,
+      directApply: i.application_method !== 'external',
       hiringOrganization: {
         '@type': 'Organization',
         name: sirket.name || 'Bilinmiyor',
