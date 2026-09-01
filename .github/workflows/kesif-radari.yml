@@ -27,7 +27,7 @@ on:
         required: false
         default: "resmi"
         type: choice
-        options: ["cozum", "resmi", "linkedin", "linkedin-kesif-yaz", "linkedin-teshis", "kesif"]
+        options: ["envanter", "cozum", "resmi", "linkedin", "linkedin-kesif-yaz", "linkedin-teshis", "kesif"]
   schedule:
     # Günde bir. Keşif kaynakları saatlik değişmiyor; saatlik çekmek
     # kaynağa gereksiz yük bindirmek olurdu.
@@ -111,6 +111,15 @@ jobs:
           MAX_SEARCH_QUERIES_PER_RUN: "430"
         run: python -m automation.radar_linkedin_kosu --kesif-siniri 220 --toplam-tavan 430
 
+      # KAYNAK SAYIMI — SIFIR ARAMA İSTEĞİ
+      #
+      # Brave hiç kurulmuyor. Şirketlerin kendi siteleri çekilerek
+      # hangi işe alım altyapısını kullandıkları ölçülüyor; bir sonraki
+      # adaptör önceliği bu sayıdan çıkıyor.
+      - name: Kaynak sayımı (arama yok)
+        if: ${{ inputs.test_sorgusu == '' && inputs.mod == 'envanter' }}
+        run: python -m automation.radar_envanter_kosu --is-parcacigi 12
+
       # SİNYAL → RESMÎ İLAN ÇÖZÜMÜ
       #
       # Keşif YAPMIYOR. Depodaki sinyalleri okuyup şirketin resmî
@@ -155,4 +164,5 @@ jobs:
             radar-resmi-rapor.json
             radar-linkedin-rapor.json
             radar-cozum-rapor.json
+            radar-envanter-rapor.json
           if-no-files-found: warn
