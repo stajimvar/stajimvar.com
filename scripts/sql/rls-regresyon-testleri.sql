@@ -1710,5 +1710,72 @@ select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
       where id='33333333-9991-4000-8000-000000000001'$q$),
   'A, kabul edilmis basvuruya not yazabilir');
 
+-- =============================================================================
+-- POLİTİKADAN ÇAĞRILAN FONKSİYONUN EXECUTE HAKKI
+--
+-- ÜRETİMDE İKİ KEZ AYNI ŞEKİLDE DÜŞTÜK
+--   RLS politikaları ÇAĞIRAN ROLÜN yetkisiyle değerlendiriliyor. Bir
+--   politika `security definer` bir yardımcıyı çağırıyorsa ve o role
+--   EXECUTE verilmemişse, politika hata veriyor ve tablodan HİÇBİR
+--   satır okunamıyor.
+--
+--   İlki: `0002` yardımcıların EXECUTE hakkını anon'dan aldı, giriş
+--   yapmamış ziyaretçiler hiçbir ilanı göremedi (`0003` telafi etti).
+--   İkincisi: `ogrenci_basvurdu_mu` yalnız `authenticated` ve
+--   `service_role` ile kuruldu; ana sayfa dahil bütün ilan okumaları
+--   "permission denied for function ogrenci_basvurdu_mu" ile düştü.
+--
+--   İki seferde de migration'lar sorunsuz uygulandı ve testler yeşildi:
+--   eksik olan yetki, şemanın değil ROLÜN tarafındaydı. Bu yüzden
+--   kontrol politikaların İÇİNDEN okunuyor, elle tutulan bir listeden
+--   değil — yeni bir politika yeni bir yardımcı çağırdığında da yakalar.
+-- =============================================================================
+
+set local role postgres;
+
+do $$
+declare
+  eksik text;
+begin
+  select string_agg(format('%s -> %s', k.rol, k.fonksiyon), ', ')
+    into eksik
+  from (
+    select distinct r.rol, p.oid::regprocedure::text as fonksiyon
+    from pg_policy pol
+    join pg_class c on c.oid = pol.polrelid
+    join pg_namespace n on n.oid = c.relnamespace
+    cross join lateral (
+      select unnest(array['anon', 'authenticated']) as rol
+    ) r
+    join pg_proc p on p.pronamespace = 'public'::regnamespace
+    where n.nspname = 'public'
+      -- Politika ifadesinde fonksiyon adı geçiyor mu?
+      and coalesce(pg_get_expr(pol.polqual, pol.polrelid), '') || ' '
+        || coalesce(pg_get_expr(pol.polwithcheck, pol.polrelid), '')
+          ~ ('\m' || p.proname || '\s*\(')
+      -- Politika bu rolü kapsıyor mu? (roller boşsa PUBLIC = hepsi)
+      and (pol.polroles = '{0}'::oid[]
+           or r.rol::regrole::oid = any(pol.polroles))
+      and not has_function_privilege(r.rol, p.oid, 'execute')
+  ) k;
+
+  if eksik is not null then
+    raise exception
+      'GUVENLIK REGRESYONU BASARISIZ: politikadan cagrilan fonksiyonda EXECUTE yok: %',
+      eksik using errcode = 'check_violation';
+  end if;
+  raise notice 'gecti: politikadan cagrilan tum fonksiyonlarda EXECUTE var';
+end;
+$$;
+
+-- DAVRANIŞ KONTROLÜ: yetki tablosu doğru görünse bile anonim ziyaretçi
+-- gerçekten ilan okuyabiliyor mu? Kesinti tam burada yaşandı.
+set local role anon;
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+
+select pg_temp.bekle(
+  (select count(*) from public.listings where status = 'published') > 0,
+  'anonim ziyaretci yayindaki ilanlari okuyabiliyor');
+
 reset role;
 rollback;
