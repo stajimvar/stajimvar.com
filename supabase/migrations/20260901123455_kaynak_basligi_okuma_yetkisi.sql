@@ -12,4 +12,7 @@
 --
 -- Bu kolon gizli veri taşımıyor: şirketin kendi kariyer sayfasında
 -- herkese açık olan ilan adı.
+-- VERSİYON UZAK DEFTERE GÖRE: düzeltme kesinti sırasında doğrudan
+-- uygulandı ve defter kendi versiyonunu yazdı. Yerel dosyaya başka bir
+-- versiyon vermek `remoteOnly` ayrışması üretip db push'u kilitliyor.
 grant select (source_title) on public.listings to anon, authenticated;
