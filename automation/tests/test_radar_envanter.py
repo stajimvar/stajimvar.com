@@ -103,18 +103,40 @@ def test_c_imza_yoksa_sinif_yok():
 
 # ------------------------------- D: kariyer sayfası ilan taşıyor mu
 
-def test_d_ilan_baglantilari_ve_yapi_varsa_evet():
-    govde = ("<h1>Açık Pozisyonlar</h1>"
-             + "".join(f'<a href="/kariyer/ilan-{i}">Poz {i}</a>' for i in range(4)))
-    tasiyor, neden = kariyer_sayfasi_ilan_tasiyor_mu(govde)
-    assert tasiyor, neden
+def test_d_gercek_ilan_yapisal_veriden_taniniyor():
+    import json
+
+    sayfa = ('<script type="application/ld+json">'
+             + json.dumps({"@type": "JobPosting", "title": "Stajyer",
+                           "description": "staj"}) + "</script>")
+    tasiyor, neden = kariyer_sayfasi_ilan_tasiyor_mu(sayfa)
+    assert tasiyor and "JSON-LD" in neden
 
 
-def test_d_bos_ya_da_yapisiz_sayfa_hayir():
+def test_d_mikroveri_de_kanit_sayiliyor():
+    tasiyor, _ = kariyer_sayfasi_ilan_tasiyor_mu(
+        '<div itemtype="https://schema.org/JobPosting">Stajyer</div>')
+    assert tasiyor
+
+
+def test_d_gezinme_baglantilari_ilan_sayilmiyor():
+    """ÖLÇÜLDÜ: bağlantı saymak 14 şirketi yanlış işaretledi.
+
+    Sonraki tur o 14 şirketin kariyer sayfalarını gerçekten okudu ve
+    hiçbirinde tekil ilan bulamadı: sayılan bağlar gezinme bağlarıydı
+    ("How We Hire", "Careers in R&D", dil değiştirme). Yanlış pozitif
+    bir sonraki sprintin adaptör önceliğini belirlediği için ucuz değil.
+    """
+    gezinme = ("<h1>Açık Pozisyonlar</h1>"
+               + "".join(f'<a href="/kariyer/sayfa-{i}">Sayfa {i}</a>' for i in range(8)))
+    tasiyor, neden = kariyer_sayfasi_ilan_tasiyor_mu(gezinme)
+    assert not tasiyor
+    assert "yapısal ilan verisi yok" in neden
+
+
+def test_d_bos_sayfa_hayir():
     assert not kariyer_sayfasi_ilan_tasiyor_mu(None)[0]
     assert not kariyer_sayfasi_ilan_tasiyor_mu("<p>Bize yazın</p>")[0]
-    # Tek bir "kariyer" bağlantısı ilan listesi değil.
-    assert not kariyer_sayfasi_ilan_tasiyor_mu('<a href="/kariyer">Kariyer</a>')[0]
 
 
 # -------------------------------------------------- E: uçtan uca sınıf
@@ -139,11 +161,12 @@ def test_e_kariyer_sayfasinda_ats_imzasi_varsa_o_sinif():
 
 
 def test_e_ats_yoksa_ama_kariyer_sayfasi_varsa_custom():
-    ilanlar = "".join(f'<a href="/career/job-{i}">Poz {i}</a>' for i in range(6))
+    ilan = ('<div itemtype="https://schema.org/JobPosting">'
+            "<h2>Yazılım Stajyeri</h2></div>")
     sayfalar = {
         "acme.com.tr/": (200, "<title>Acme Teknoloji</title>"
                               '<a href="/careers">Careers</a>'),
-        "acme.com.tr/careers": (200, "<h1>Open Positions</h1>" + ilanlar),
+        "acme.com.tr/careers": (200, "<h1>Open Positions</h1>" + ilan),
     }
     k = sirketi_olc("Acme", 4, sahte_getir(sayfalar))
     assert k.sinif == CUSTOM

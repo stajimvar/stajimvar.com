@@ -32,6 +32,7 @@ from automation.radar_cozucu import (
     kariyer_kaynagi_bul,
     sadelestir,
 )
+from automation.kariyer_html import jsonld_ilanlari, mikroveri_var_mi
 from automation.radar_resmi import DESTEKLENEN, DESTEKLENMEYEN
 
 # ---------------------------------------------------------- sınıflar
@@ -89,21 +90,30 @@ class SirketKaydi:
 
 
 def kariyer_sayfasi_ilan_tasiyor_mu(govde: str | None) -> tuple[bool, str]:
-    """Kariyer sayfası ilanları doğrudan HTML'de taşıyor mu?
+    """Kariyer sayfası GERÇEK bir ilan taşıyor mu?
 
-    Bir sonraki sprintin sorusu bu: genel bir HTML kariyer adaptörü
-    yazmak kaç şirketi açar? Cevap ancak sayfada gerçekten ilan
-    bağlantısı varsa "evet".
+    BAĞLANTI SAYMAK YETMİYOR — ÖLÇÜLDÜ
+    ----------------------------------
+    İlk sürüm "üç ilan bağlantısı + 'açık pozisyon' ifadesi" görünce
+    evet diyordu ve 14 şirketi böyle işaretledi. Sonraki tur o 14
+    şirketin kariyer sayfalarını gerçekten okudu: hiçbirinde tekil ilan
+    yoktu. Sayılan bağlantılar gezinme bağlarıydı — "How We Hire",
+    "Careers in R&D", "İnomera Akademi", dil değiştirme bağı. Başvurular
+    ya bir forma ya da bir e-posta adresine gidiyordu.
+
+    Yanlış pozitif ucuz değil: bir sonraki sprintin adaptör önceliğini
+    o sayı belirledi. Bu yüzden ölçü artık KANIT: sayfa ya JobPosting
+    yapısal verisi yayımlıyor ya da schema.org mikroverisiyle ilanı
+    işaretliyor. İkisi de yoksa cevap hayır.
     """
     if not govde:
         return False, "sayfa boş"
+    if jsonld_ilanlari(govde, "https://ornek.invalid/"):
+        return True, "JobPosting JSON-LD"
+    if mikroveri_var_mi(govde):
+        return True, "schema.org JobPosting mikroverisi"
     baglantilar = {m.group(1) for m in ILAN_BAGLANTISI.finditer(govde)}
-    yapi = bool(ILAN_YAPISI.search(govde))
-    if len(baglantilar) >= 3 and yapi:
-        return True, f"{len(baglantilar)} ilan bağlantısı + ilan yapısı"
-    if len(baglantilar) >= 5:
-        return True, f"{len(baglantilar)} ilan bağlantısı"
-    return False, f"{len(baglantilar)} bağlantı, yapı={yapi}"
+    return False, f"yapısal ilan verisi yok ({len(baglantilar)} bağlantı)"
 
 
 def platformu_sinifla(imza_kaynaklari: list[str]) -> tuple[str | None, str | None]:
