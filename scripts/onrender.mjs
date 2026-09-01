@@ -209,6 +209,22 @@ function sssOku() {
  * Düzenli ifadeyle metin ayıklamak da denenebilirdi ama o yol bugün iki kez
  * sessiz veri kaybı üretti; asıl bileşenleri çalıştırmak tek doğru kaynak.
  */
+/*
+  REHBER → ÜRÜN EŞLEMESİ TEK KEZ DERLENİYOR
+
+  Rehber sayfaları ve kurum sayfaları aynı eşlemeyi kullanıyor.
+  Uygulamadan farklı bir liste basmak, tarayıcıya sayfada olmayan bir
+  bağlantı göstermek olurdu.
+*/
+let rehberEylemleri = () => [];
+
+async function eslemeyiYukle() {
+  ({ rehberEylemleri } = await icerikDerle(
+    path.join(kok, 'src', 'lib', 'rehber-eylemleri.mjs'),
+    'rehber-eylemleri'
+  ));
+}
+
 async function icerikDerle(girisDosyasi, ad) {
   const gecici = path.join(kok, 'node_modules', '.cache', `onrender-${ad}.mjs`);
   const esbuild = await import('esbuild');
@@ -857,6 +873,7 @@ function paketiDogrula() {
 }
 
 async function main() {
+  await eslemeyiYukle();
   if (!fs.existsSync(path.join(dist, 'index.html'))) {
     console.error('dist/index.html yok — önce `vite build` çalışmalı');
     process.exit(1);
@@ -997,6 +1014,22 @@ async function main() {
           Kaynak satırı artık kurumu ve hangi cümleyi desteklediğini de
           taşıyor: statik HTML ile ekranda görünen metin aynı olmalı.
         */
+        /*
+          BURADAN DEVAM ET — ÖN RENDER'A DA GİRİYOR
+
+          Bu bağlantılar yalnız tarayıcıda çiziliyordu; sunucudan gelen
+          HTML'de yoktular, yani arama motoru rehberden ürüne giden yolu
+          hiç görmüyordu. Kaynak uygulamayla aynı eşleme, dolayısıyla
+          ekrandaki metin ile statik HTML aynı şeyi söylüyor.
+        */
+        ((() => {
+          const eylemler = rehberEylemleri(r.slug);
+          return eylemler.length
+            ? `<section><h2>Buradan devam et</h2><ul>${eylemler
+                .map((e) => `<li><a href="${e.yol}">${kacir(e.baslik)}</a> — ${kacir(e.aciklama)}</li>`)
+                .join('')}</ul></section>`
+            : '';
+        })()) +
         (Array.isArray(r.kaynaklar) && r.kaynaklar.length
           ? `<section><h2>Resmî kaynaklar</h2><ul>${r.kaynaklar
               .map(
@@ -1460,17 +1493,6 @@ async function main() {
   const kimlikModulu = await icerikDerle(
     path.join(kok, 'src', 'lib', 'sirket-kimligi.mjs'),
     'sirket-kimligi'
-  );
-  /*
-    Hazırlık bağlantıları uygulamayla AYNI kaynaktan.
-
-    Burada üç bağlantı elle yazılıydı; uygulama tarafı merkezî eşlemeye
-    geçince ikisi ayrışıyordu. Tarayıcıya bir liste, kullanıcıya başka
-    bir liste göstermek gizleme sayılır.
-  */
-  const { rehberEylemleri } = await icerikDerle(
-    path.join(kok, 'src', 'lib', 'rehber-eylemleri.mjs'),
-    'rehber-eylemleri'
   );
   const hazirlikEylemleri = rehberEylemleri('ilan-acmayan-sirkete-nasil-yazilir');
   const dbSirketListesi = [...sirketler.values()].map((s) => ({
