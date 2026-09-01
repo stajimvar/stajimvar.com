@@ -24,6 +24,13 @@ class Job:
     # Bazı kaynaklar şirket sitesini ve logosunu ilanla birlikte veriyor;
     # bunlar şirket kaydını zenginleştirmek için taşınıyor.
     company_website: str | None = None; company_logo: str | None = None
+    # KAYNAĞIN KENDİ BAŞLIĞI — ÇEVİRİ BUNU DEĞİŞTİRMİYOR
+    #
+    # `translate_job` başlığın üzerine yazıyordu ve orijinal hiçbir yere
+    # ulaşmıyordu: yayındaki 9 ilanın 9'unda da şirketin resmî ilan adı
+    # kayıptı (ölçüldü). Çeviri bir GÖRÜNÜM katmanı; kaynak veriyi
+    # değiştiremez.
+    source_title: str | None = None
 
 def clean(text: str) -> str: return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", unescape(text))).strip()
 def canonical(url: str) -> str:
@@ -89,11 +96,18 @@ def is_early_career(title: str, description: str) -> bool:
     return bool(EARLY_CAREER.search(f"{title} {description}"))
 
 def translate_job(job: Job, config: dict[str, Any]) -> Job:
-    """Yabanci kaynak ilanlarini Supabase'e daima Turkce kaydeder."""
+    """Ilani gorunum icin Turkcelestirir; KAYNAK BASLIGI korunur.
+
+    `source_title` her durumda dolduruluyor — ceviri kapali olsa bile.
+    Boylece "bu baslik kaynagin kendi basligi mi, bizim cevirimiz mi"
+    sorusu her kayitta cevaplanabiliyor.
+    """
+    kaynak_basligi = job.source_title or job.title
     if config.get("translate_to_turkish", True) is False:
-        return job
+        return replace(job, source_title=kaynak_basligi)
     return replace(
         job,
+        source_title=kaynak_basligi,
         title=translate_title(job.title),
         description=translate_text(job.description) if job.description else job.description,
     )

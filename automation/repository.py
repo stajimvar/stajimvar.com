@@ -286,6 +286,9 @@ def raw_listing_payload(job: Any, source_id: str, canonical_url: str, now: str) 
         "content_hash": fingerprint,
         "raw": {
             "title": job.title,
+            # Kaynagin kendi basligi. `title` cevrilmis olabilir; bu alan
+            # sirketin resmi ilan adini tasiyor ve uzerine yazilmiyor.
+            "source_title": getattr(job, "source_title", None) or job.title,
             "organization_name": job.organization_name,
             "city": job.city,
             "work_mode": job.work_mode,

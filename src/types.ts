@@ -172,6 +172,14 @@ export interface InternshipListing {
   /** İlanın kaynaktaki adresi — "kaynağı gör" bağlantısı için. */
   sourceUrl?: string;
   /**
+   * Şirketin resmî kaynağında görünen ilan adı.
+   *
+   * `title` kullanıcıya gösterilen ad ve çevrilmiş olabilir; bu alan
+   * kaynağın kendi başlığı ve çeviri onu değiştirmiyor. Şirketin
+   * StajımVar'da kendi açtığı ilanlarda boş.
+   */
+  sourceTitle?: string;
+  /**
    * Doğrulanmış başvuru kanalının kimliği. Kanalın kendisi (e-posta adresi)
    * istemciye hiç inmiyor — gönderim server-side yapılıyor.
    * Doluysa kanal doğrulanmıştır; veritabanı tetikleyicisi bunu garanti ediyor.

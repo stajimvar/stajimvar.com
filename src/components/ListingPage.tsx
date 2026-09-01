@@ -183,9 +183,32 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                     {listing.companyName}
                   </button>
                   <div className="flex items-start justify-between gap-3">
-                    <h1 className="text-xl sm:text-2xl font-extrabold leading-snug">
-                      {listing.title}
-                    </h1>
+                    <div className="min-w-0">
+                      <h1 className="text-xl sm:text-2xl font-extrabold leading-snug">
+                        {listing.title}
+                      </h1>
+                      {/*
+                        RESMÎ İLAN ADI
+
+                        Gösterdiğimiz başlık şirketin kendi başlığından
+                        farklıysa orijinali de yazıyoruz: öğrenci resmî
+                        sayfaya gittiğinde aynı ilanı bulduğundan emin
+                        olabilsin. İkisi aynıysa satır çizilmiyor —
+                        gereksiz tekrar.
+
+                        Bu değer VERİTABANINDAN geliyor; sayfa açılıp
+                        yeniden ayrıştırılmıyor.
+                      */}
+                      {listing.sourceTitle &&
+                        listing.sourceTitle.trim() !== listing.title.trim() && (
+                          <p className="mt-1 text-xs text-gray-500">
+                            Resmî ilan adı:{' '}
+                            <span className="font-semibold text-gray-700">
+                              {listing.sourceTitle}
+                            </span>
+                          </p>
+                        )}
+                    </div>
                     <button
                       type="button"
                       onClick={() => paylas(listing)}

@@ -796,9 +796,8 @@ export const REHBERLER: Rehber[] = [
     icerik: (
       <>
         <P>
-          İlan açmayan küçük ve orta ölçekli şirketlere doğrudan yazmak, staj ararken
-          işe yarayan yollardan biri: rekabet düşük oluyor. Ama çoğu e-posta okunmadan
-          kapanıyor — genelde aynı birkaç sebepten.
+          İlan açmayan şirketlere doğrudan başvuru, değerlendirebileceğin ek bir kanal.
+          Ama çoğu e-posta okunmadan kapanıyor — genelde aynı birkaç sebepten.
         </P>
 
         <B>Konu satırı</B>
@@ -1399,8 +1398,8 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
 
         <P>
           Kanalları sırayla değil paralel kullan. Ve beklentini baştan ayarla:{' '}
-          <strong>gönderdiğin e-postaların çoğu cevapsız kalacak</strong> — bu normal ve
-          senin hakkında bir şey söylemiyor. Birkaç cevap da sana yeter. Sessizlikleri
+          <strong>yanıt oranı şirkete ve döneme göre değişebilir</strong>; yanıt gelmemesi
+          sık karşılaşılan bir durum ve senin hakkında bir şey söylemiyor. Sessizlikleri
           başarısızlık sayarsan üçüncü günde bırakırsın.
         </P>
 
@@ -1449,7 +1448,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
       {
         soru: 'İlan olmayan şirkete başvurmak mantıklı mı?',
         cevap:
-          'Denemeye değer. Çoğu küçük işletme stajyer alabilecek durumda ama ilan açmayı hiç düşünmüyor; ilan olmadığı için o şirkete yazan aday sayısı da az oluyor.',
+          'Değerlendirebileceğin ek bir kanal. Çoğu küçük işletme stajyer alabilecek durumda ama ilan açmayı hiç düşünmüyor.',
       },
       {
         soru: 'Kaç yere başvurmalıyım?',

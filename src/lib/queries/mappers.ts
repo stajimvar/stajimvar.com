@@ -55,6 +55,11 @@ export const LISTING_COLUMNS = [
   'id',
   'company_id',
   'title',
+  /*
+    Şirketin resmî kaynağındaki ilan adı. `title` çevrilmiş olabilir;
+    detay sayfası ikisi farklıysa orijinali de gösteriyor.
+  */
+  'source_title',
   'department',
   'work_type',
   'city',
@@ -125,6 +130,7 @@ export function toInternshipListing(row: ListingRowWithCompany): InternshipListi
     companyDescription: c?.description ?? '',
     companyRating: num(c?.rating),
     title: row.title,
+    sourceTitle: row.source_title ?? undefined,
     department: row.department ?? '',
     workType: row.work_type,
     city: row.city ?? '',

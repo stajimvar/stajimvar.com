@@ -200,6 +200,9 @@ def promote_one(db, raw: dict, source: dict, *, dry: bool) -> str:
     payload = {
         "company_id": company_id,
         "title": raw["title"],
+        # Şirketin resmî kaynağındaki ad. Çeviri `title`'ı değiştirebilir;
+        # bu alan değişmiyor ve ilan detayında şeffaflık için kullanılıyor.
+        "source_title": (raw.get("raw") or {}).get("source_title"),
         "work_type": WORK_TYPE.get(raw.get("work_type_guess") or "", "On-site"),
         "city": raw.get("city"),
         "mandatory_staj_accepted": mandatory,

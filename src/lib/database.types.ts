@@ -404,6 +404,7 @@ export type Database = {
           raw: Json | null;
           source_id: string | null;
           source_listing_id: string | null;
+          source_title: string | null;
           source_url: string | null;
           department: string | null;
           description: string | null;
