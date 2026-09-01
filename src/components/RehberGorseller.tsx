@@ -643,6 +643,18 @@ export const CvIskeleti: React.FC<{
  * 400px genişliğinde çizildiği için sınır konmazsa masaüstünde 1.7 kat
  * büyüyor ve yazılar gövde metninden iri duruyor. 460px sınırı iki
  * uçtaki ölçeği (0.86 ve 1.15) birbirine yaklaştırıyor.
+ *
+ * NEDEN VARSAYILAN `lazy`
+ * -----------------------
+ * İlk turda dört rehberde `gecikmeli={false}` verilmişti, gerekçe
+ * "editoryal görsel önemli"ydi. Ölçüm bunu çürüttü: telefonda (375×812)
+ * figürlerin üst kenarı 743–1817px'te, masaüstünde (1280×900) 695px'te
+ * başlıyor. Hiçbiri LCP adayı değil; ilk ekranı H1 ve kısa cevap kartı
+ * dolduruyor. Eager verilen görsel React'in ön render çıktısına ayrıca
+ * `<link rel="preload" as="image">` düşürüyor ve gerçek LCP ile bant
+ * genişliği için yarışıyor. Bu yüzden `gecikmeli` yalnız görselin ilk
+ * ekranda GERÇEKTEN göründüğü ölçüldüyse `false` verilir; rehber başına
+ * en fazla bir tane.
  */
 export const RehberFigur: React.FC<{
   kaynak: string;
@@ -650,7 +662,7 @@ export const RehberFigur: React.FC<{
   aciklama?: string;
   genislik: number;
   yukseklik: number;
-  /** İlk ekranda görünen tek görsel için `false` yapılabilir. */
+  /** Yalnız ilk ekranda göründüğü ÖLÇÜLEN görsel için `false`. */
   gecikmeli?: boolean;
 }> = ({ kaynak, alt, aciklama, genislik, yukseklik, gecikmeli = true }) => (
   <figure className="space-y-2">

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 476" width="400" height="476" role="img" aria-label="KYK bursu ile öğrenim kredisi farkı. Başvuru tek form üzerinden yapılıyor. Burs geri ödemesiz, kontenjanı sınırlı; öğrenim kredisi geri ödemeli, mezuniyetten sonra taksitle ödeniyor. Yurt ve barınma başvurusu ayrı süreç. Görselde tutar ve tarih yok.">
+  <style>
+    .k{fill:#0f172a}.g{fill:#64748b}
+    .n{font:400 12.5px system-ui,sans-serif}
+    .b{font:700 15px system-ui,sans-serif}
+    .ust{font:800 14.5px system-ui,sans-serif;fill:#fff}
+    .et{font:800 10.5px system-ui,sans-serif;letter-spacing:.07em}
+  </style>
+
+  <rect width="400" height="476" fill="#f8fafc"/>
+
+  <rect x="76" y="16" width="248" height="46" rx="12" fill="#2563eb"/>
+  <text x="200" y="45" class="ust" text-anchor="middle">TEK BAŞVURU FORMU</text>
+
+  <path d="M200 62v16 M104 78H296 M104 78v22 M296 78v22" stroke="#cbd5e1" stroke-width="2" fill="none"/>
+
+  <!-- burs -->
+  <rect x="16" y="100" width="176" height="180" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+  <text x="36" y="130" class="b k">Burs</text>
+  <text x="36" y="154" class="et" fill="#2563eb">GERİ ÖDEME</text>
+  <text x="36" y="174" class="n g">Yok.</text>
+  <text x="36" y="200" class="et" fill="#2563eb">KONTENJAN</text>
+  <text x="36" y="220" class="n g">Sınırlı; belirli</text>
+  <text x="36" y="237" class="n g">önceliklere göre</text>
+  <text x="36" y="254" class="n g">veriliyor.</text>
+
+  <!-- kredi -->
+  <rect x="208" y="100" width="176" height="180" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+  <text x="228" y="130" class="b k">Öğrenim kredisi</text>
+  <text x="228" y="154" class="et" fill="#2563eb">GERİ ÖDEME</text>
+  <text x="228" y="174" class="n g">Var.</text>
+  <text x="228" y="200" class="et" fill="#2563eb">NE ZAMAN</text>
+  <text x="228" y="220" class="n g">Mezuniyetten</text>
+  <text x="228" y="237" class="n g">sonra, kanundaki</text>
+  <text x="228" y="254" class="n g">süre geçince taksitle.</text>
+
+  <rect x="16" y="296" width="368" height="52" rx="12" fill="#eff6ff"/>
+  <text x="200" y="320" class="n" fill="#1d4ed8" text-anchor="middle">Bursa hak kazanamayan öğrenci</text>
+  <text x="200" y="338" class="n" fill="#1d4ed8" text-anchor="middle">kredi için değerlendirilebiliyor.</text>
+
+  <rect x="16" y="362" width="368" height="44" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+  <text x="200" y="389" class="n k" text-anchor="middle">Yurt ve barınma başvurusu ayrı süreç.</text>
+
+  <text x="200" y="434" class="n g" text-anchor="middle">Tutar ve takvim her yıl değişiyor.</text>
+  <text x="200" y="454" class="n" fill="#94a3b8" text-anchor="middle">Bu görselde bilerek rakam ve tarih yok.</text>
+</svg>

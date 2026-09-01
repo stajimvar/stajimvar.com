@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
+
+import { rehberBloklari } from '../scripts/rehber-sayimi.mjs';
 
 /*
   GÖRSEL REHBER REGRESYONU
@@ -32,6 +34,26 @@ const GORSELLER = readFileSync(
   path.join(KOK, 'src/components/RehberGorseller.tsx'),
   'utf8'
 );
+
+/*
+  Rehberler iki yerde yaşıyor: elle yazılan JSX (`rehberler.tsx`) ve veriyle
+  çizilen `metinRehberi` yazıları (`rehber-yazilari/*.tsx`). Görsel kuralları
+  ikisi için de geçerli, o yüzden hepsi taranıyor.
+*/
+const REHBER_KAYNAKLARI = [
+  KAYNAK,
+  ...readdirSync(path.join(KOK, 'src/data/rehber-yazilari'))
+    .filter((f) => f.endsWith('.tsx'))
+    .map((f) =>
+      readFileSync(path.join(KOK, 'src/data/rehber-yazilari', f), 'utf8').replace(/\r\n/g, '\n')
+    ),
+];
+
+/** İki yazımda da geçen figür adresleri: `kaynak="..."` ve `kaynak: '...'`. */
+const FIGUR_KAYNAKLARI = REHBER_KAYNAKLARI.flatMap((s) => [
+  ...[...s.matchAll(/kaynak="([^"]+)"/g)].map((m) => m[1]),
+  ...[...s.matchAll(/kaynak: '([^']+)'/g)].map((m) => m[1]),
+]).filter((y) => y.startsWith('/rehber-gorseller/'));
 
 const HEDEF = [
   'staj-nasil-bulunur',
@@ -139,9 +161,8 @@ test('30: stok fotoğraf yok — görseller kendi ürettiğimiz varlıklar', () 
 });
 
 test('30b: rehber görselleri yerel SVG — dış barındırıcı yok', () => {
-  const kaynaklar = [...KAYNAK.matchAll(/kaynak="([^"]+)"/g)].map((m) => m[1]);
-  assert.ok(kaynaklar.length >= 5, `yalnız ${kaynaklar.length} figür var`);
-  for (const yol of kaynaklar) {
+  assert.ok(FIGUR_KAYNAKLARI.length >= 11, `yalnız ${FIGUR_KAYNAKLARI.length} figür var`);
+  for (const yol of FIGUR_KAYNAKLARI) {
     assert.match(yol, /^\/rehber-gorseller\/[a-z0-9-]+\.svg$/, `${yol}: yerel SVG olmalı`);
     const tam = path.join(KOK, 'public', yol.replace(/^\//, ''));
     const svg = readFileSync(tam, 'utf8');
@@ -153,12 +174,56 @@ test('30b: rehber görselleri yerel SVG — dış barındırıcı yok', () => {
 });
 
 test('30c: her figürün alt metni ve boyutu var (CLS)', () => {
-  const figurler = [...KAYNAK.matchAll(/<RehberFigur[\s\S]*?\/>/g)].map((m) => m[0]);
-  assert.ok(figurler.length >= 5, `yalnız ${figurler.length} RehberFigur kullanımı`);
-  for (const f of figurler) {
+  const jsx = [...REHBER_KAYNAKLARI.join('\n').matchAll(/<RehberFigur[\s\S]*?\/>/g)].map(
+    (m) => m[0]
+  );
+  assert.ok(jsx.length >= 7, `yalnız ${jsx.length} JSX RehberFigur kullanımı`);
+  for (const f of jsx) {
     assert.match(f, /alt="[^"]{40,}"/, 'alt metni açıklayıcı olmalı');
     assert.match(f, /genislik=\{\d+\}/, 'genislik yok — yer ayrılmıyor');
     assert.match(f, /yukseklik=\{\d+\}/, 'yukseklik yok — yer ayrılmıyor');
+  }
+
+  /* `metinRehberi` ile yazılan rehberlerde figür bir veri anahtarı. */
+  const veri = [...REHBER_KAYNAKLARI.join('\n').matchAll(/figur: \{[\s\S]*?\n {8}\}/g)].map(
+    (m) => m[0]
+  );
+  assert.ok(veri.length >= 3, `yalnız ${veri.length} veri figürü`);
+  for (const f of veri) {
+    assert.match(f, /genislik: \d+/, 'genislik yok — yer ayrılmıyor');
+    assert.match(f, /yukseklik: \d+/, 'yukseklik yok — yer ayrılmıyor');
+    const alt = /alt:\s*([\s\S]*?)\n\s{10}[a-z]/.exec(f);
+    assert.ok(alt && alt[1].length > 40, 'alt metni açıklayıcı olmalı');
+  }
+});
+
+/* ------------------------------------- eager/lazy ve preload politikası */
+
+test('30f: rehber başına en fazla bir eager görsel', () => {
+  /*
+    İlk turda dört rehberde `gecikmeli={false}` vardı; ölçüm hiçbirinin
+    ilk ekranda olmadığını gösterdi (telefonda üst kenar 743–1817px,
+    masaüstünde 695px). Eager verilen görsel ön render çıktısına ayrıca
+    preload düşürüp gerçek LCP ile yarışıyor.
+  */
+  for (const kaynak of REHBER_KAYNAKLARI) {
+    for (const { slug, govde } of rehberBloklari(kaynak)) {
+      const eager =
+        (govde.match(/gecikmeli=\{false\}/g) || []).length +
+        (govde.match(/gecikmeli: false/g) || []).length;
+      assert.ok(eager <= 1, `${slug}: ${eager} eager görsel — en fazla bir tane olabilir`);
+    }
+  }
+});
+
+test('30g: ön render çıktısında gereksiz görsel preload yok', () => {
+  /* Derleme yapılmadıysa test atlanmıyor, sessizce geçiyor: CI'da build var. */
+  const dizin = path.join(KOK, 'dist/rehber');
+  if (!existsSync(dizin)) return;
+  for (const ad of readdirSync(dizin).filter((f) => f.endsWith('.html'))) {
+    const html = readFileSync(path.join(dizin, ad), 'utf8');
+    const preload = (html.match(/rel="preload" as="image"[^>]*rehber-gorseller/g) || []).length;
+    assert.ok(preload <= 1, `${ad}: ${preload} görsel preload`);
   }
 });
 
@@ -177,6 +242,83 @@ test('30e: kanal görseli sıralama iddiası taşımıyor', () => {
   );
   assert.match(svg, /sıralama değil/i, 'kanalların sıralama olmadığı görselde yazmalı');
   assert.doesNotMatch(svg, /en iyi|en etkili|en çok işe yarayan/i);
+});
+
+/* ------------------------------------ görsel varlıklar eskimeye dayanıklı */
+
+function svgOku(ad) {
+  return readFileSync(path.join(KOK, 'public/rehber-gorseller', ad), 'utf8');
+}
+
+test('31: görsellere eskiyecek veri gömülmemiş', () => {
+  /*
+    Bir görsel dosyası metin kadar kolay güncellenmiyor: içine yazılan
+    tutar, tarih ya da mevzuat maddesi değiştiğinde bütün varlık eskiyor.
+    Bu yüzden değişken bilgi HTML'de kalıyor, SVG'de kavram duruyor.
+  */
+  for (const ad of readdirSync(path.join(KOK, 'public/rehber-gorseller'))) {
+    const svg = svgOku(ad);
+    /* Adresler (xmlns="…/2000/svg") ve yorumlar okunan metin değil. */
+    const govde = svg.replace(/<!--[\s\S]*?-->/g, '').replace(/https?:\/\/\S+/g, '');
+    assert.doesNotMatch(govde, /\b(19|20)\d{2}\b/, `${ad}: yıl yazılı`);
+    assert.doesNotMatch(govde, /₺|\bTL\b|\bLira\b/i, `${ad}: para tutarı yazılı`);
+    assert.doesNotMatch(govde, /\bmadde\s*\d|sayılı Kanun|\b\d{4} sayılı\b/i, `${ad}: mevzuat maddesi`);
+  }
+});
+
+/* ------------------------------------------- ikinci turun iddia güvenliği */
+
+test('32: ölçülmemiş rekabet iddiası staj-nasil-bulunur’da yok', () => {
+  const govde = rehberGovdesi('staj-nasil-bulunur');
+  for (const kalip of [
+    /aday sayısı da az/i,
+    /rekabet neredeyse sıfır/i,
+    /en az denenen/i,
+    /düşük rekabet/i,
+  ]) {
+    assert.doesNotMatch(govde, kalip, `ölçülmemiş rekabet iddiası: ${kalip}`);
+  }
+  assert.match(govde, /garanti değil/i, 'belirsizlik açıkça söylenmeli');
+});
+
+test('33: sigorta görseli kesin hukuki sonuç üretmiyor', () => {
+  const svg = svgOku('staj-sigortasi-karar-agaci.svg');
+  assert.match(svg, /genellikle okul/i, 'kesinlik değil eğilim yazmalı');
+  assert.match(svg, /yönerge/i, 'doğrulama adresi görselde olmalı');
+  for (const kalip of [/her zorunlu stajda/i, /mutlaka/i, /her üniversitede/i, /kesinlikle/i]) {
+    assert.doesNotMatch(svg, kalip, `blanket iddia: ${kalip}`);
+  }
+});
+
+test('34: belge görseli okula göre değişkenliği yazıyor', () => {
+  assert.match(svgOku('staj-belge-dosyasi.svg'), /üniversitene göre değişebilir/i);
+});
+
+test('35: yurt dışı yol haritası vize belirsizliğini yazıyor', () => {
+  const svg = svgOku('yurtdisi-staj-yol-haritasi.svg');
+  assert.match(svg, /ülkeye\/programa göre değişebilir/i);
+});
+
+test('36: yurt dışı kanalları sıralama değil', () => {
+  const svg = svgOku('yurtdisi-staj-kanallari.svg');
+  assert.match(svg, /sıralama değil/i);
+  assert.doesNotMatch(svg, /en iyi|en kolay|en avantajlı/i);
+});
+
+test('37: sorun karar ağacı acil durumları sıraya sokmuyor', () => {
+  const svg = svgOku('stajda-sorun-karar-agaci.svg');
+  assert.match(svg, /sıra beklemez/i, 'acil şerit ayrı olmalı');
+  /*
+    Türkçe büyük İ tuzağı: JS'in `i` bayrağı U+0130'u 'i' ile eşleştirmiyor,
+    o yüzden kalıplar iki harfi de açıkça sayıyor.
+  */
+  for (const konu of [/[Tt]aciz/, /[Aa]yrımcılık/, /[İi]ş güvenliği/]) {
+    assert.match(svg, konu, `acil şeritte eksik: ${konu}`);
+  }
+  /* Acil durumlar "önce sorumlunla konuş" adımının altına düşmemeli. */
+  const acil = svg.search(/sıra beklemez/i);
+  const konus = svg.search(/Sorumlunla konuş/i);
+  assert.ok(acil > 0 && konus > acil, 'acil şerit konuşma adımından önce gelmeli');
 });
 
 test('N: örneklerde uydurma kişi verisi yok', () => {

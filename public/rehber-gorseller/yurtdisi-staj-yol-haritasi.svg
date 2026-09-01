@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 636" width="400" height="636" role="img" aria-label="Yurt dışı staj yol haritası yedi adımda: okulun ofisini aç, kanalını seç, staj komisyonundan yazılı ön onay al, staj yerini bul, belgeleri tamamla, vize ve sözleşme, staj. Vize ve belge süreci ülkeye ve programa göre değişebilir.">
+  <style>
+    .k{fill:#0f172a}.g{fill:#64748b}
+    .n{font:400 12.5px system-ui,sans-serif}
+    .b{font:700 14.5px system-ui,sans-serif}
+    .no{font:800 14px system-ui,sans-serif;fill:#fff}
+    .uyari{font:700 13.5px system-ui,sans-serif;fill:#92400e}
+  </style>
+
+  <rect width="400" height="636" fill="#f8fafc"/>
+
+  <path d="M36 42v380" stroke="#cbd5e1" stroke-width="3" fill="none"/>
+
+  <circle cx="36" cy="42" r="17" fill="#2563eb"/>
+  <text x="36" y="47" class="no" text-anchor="middle">1</text>
+  <text x="66" y="36" class="b k">Okulunun ofisini aç</text>
+  <text x="66" y="56" class="n g">Erasmus / Uluslararası İlişkiler:</text>
+  <text x="66" y="74" class="n g">takvim ve istenen belgeler orada.</text>
+
+  <circle cx="36" cy="105" r="17" fill="#2563eb"/>
+  <text x="36" y="110" class="no" text-anchor="middle">2</text>
+  <text x="66" y="99" class="b k">Kanalını seç</text>
+  <text x="66" y="119" class="n g">Erasmus+, IAESTE ya da kendi başına.</text>
+
+  <!-- 3. adım vurgulu: rehberin "en pahalı hata" dediği yer -->
+  <rect x="60" y="146" width="324" height="72" rx="12" fill="#eff6ff"/>
+  <circle cx="36" cy="168" r="17" fill="#1d4ed8"/>
+  <text x="36" y="173" class="no" text-anchor="middle">3</text>
+  <text x="74" y="170" class="b" fill="#1d4ed8">Komisyondan yazılı ön onay</text>
+  <text x="74" y="190" class="n" fill="#1d4ed8">Gitmeden önce. Dönüşte saydırmaya</text>
+  <text x="74" y="207" class="n" fill="#1d4ed8">çalışmak en pahalı hata.</text>
+
+  <circle cx="36" cy="253" r="17" fill="#2563eb"/>
+  <text x="36" y="258" class="no" text-anchor="middle">4</text>
+  <text x="66" y="247" class="b k">Staj yerini bul</text>
+  <text x="66" y="267" class="n g">Kabul mektubunu ofise götüreceksin.</text>
+
+  <circle cx="36" cy="310" r="17" fill="#2563eb"/>
+  <text x="36" y="315" class="no" text-anchor="middle">5</text>
+  <text x="66" y="304" class="b k">Belgeleri tamamla</text>
+  <text x="66" y="324" class="n g">Dil belgesi isteniyorsa erken başlat.</text>
+
+  <circle cx="36" cy="367" r="17" fill="#2563eb"/>
+  <text x="36" y="372" class="no" text-anchor="middle">6</text>
+  <text x="66" y="361" class="b k">Vize ve staj sözleşmesi</text>
+  <text x="66" y="381" class="n g">İşyerinin evraka taraf olması gerekiyor.</text>
+
+  <circle cx="36" cy="422" r="17" fill="#2563eb"/>
+  <text x="36" y="427" class="no" text-anchor="middle">7</text>
+  <text x="66" y="416" class="b k">Staj</text>
+  <text x="66" y="436" class="n g">Defter ve değerlendirme formu nasıl</text>
+  <text x="66" y="454" class="n g">doldurulacak — komisyona sor.</text>
+
+  <rect x="16" y="492" width="368" height="126" rx="14" fill="#fef3c7" stroke="#fcd34d" stroke-width="2"/>
+  <circle cx="46" cy="524" r="14" fill="#f59e0b"/>
+  <text x="46" y="530" class="no" text-anchor="middle">!</text>
+  <text x="72" y="522" class="uyari">Vize ve belge süreci</text>
+  <text x="72" y="542" class="uyari">ülkeye/programa göre değişebilir.</text>
+  <text x="72" y="568" class="n" fill="#92400e">Adım sırası da okulunun duyurusuna</text>
+  <text x="72" y="586" class="n" fill="#92400e">göre kayabiliyor. Bu sayfa yol tarifi;</text>
+  <text x="72" y="604" class="n" fill="#92400e">bağlayıcı olan okulunun yönergesi.</text>
+</svg>

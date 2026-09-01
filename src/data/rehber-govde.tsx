@@ -1,5 +1,10 @@
 import React from 'react';
-import { KontrolListesi, Karsilastirma, KarsilastirmaTablosu } from '../components/RehberGorseller';
+import {
+  KontrolListesi,
+  Karsilastirma,
+  KarsilastirmaTablosu,
+  RehberFigur,
+} from '../components/RehberGorseller';
 import type { KonuId, Rehber, SoruCevap } from './rehberler';
 
 /**
@@ -71,6 +76,19 @@ export interface Blok {
   kontrol?: { baslik?: string; maddeler: string[] };
   karsilastirma?: { kotuBaslik?: string; iyiBaslik?: string; kotu: string[]; iyi: string[] };
   tablo?: { sutunlar: string[]; satirlar: string[][] };
+  /*
+    Editoryal görsel. Yeni bir görsel yolu açmıyor: aynı `RehberFigur`
+    bileşenine bağlanıyor ki alt metni, boyut ve gecikme kuralı tek yerde
+    kalsın. `metinRehberi` ile yazılan rehberlerin JSX'e dönmesi gerekmesin
+    diye burada.
+  */
+  figur?: {
+    kaynak: string;
+    alt: string;
+    aciklama?: string;
+    genislik: number;
+    yukseklik: number;
+  };
 }
 
 const Baslik: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -100,6 +118,15 @@ export const GovdeCizimi: React.FC<{ bloklar: Blok[] }> = ({ bloklar }) => (
               <li key={j}>{metniCiz(m, `${i}-s${j}`)}</li>
             ))}
           </ol>
+        )}
+        {b.figur && (
+          <RehberFigur
+            kaynak={b.figur.kaynak}
+            alt={b.figur.alt}
+            aciklama={b.figur.aciklama}
+            genislik={b.figur.genislik}
+            yukseklik={b.figur.yukseklik}
+          />
         )}
         {b.kontrol && <KontrolListesi baslik={b.kontrol.baslik} maddeler={b.kontrol.maddeler} />}
         {b.karsilastirma && (

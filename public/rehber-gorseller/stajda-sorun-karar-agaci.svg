@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 616" width="400" height="616" role="img" aria-label="Stajda sorun çıktığında ne yapılır. İş güvenliği riski, taciz, ayrımcılık, baskı ya da yasa dışı talep varsa sıra beklenmez: iş durdurulur, okula ve gerekirse yetkililere bildirilir. Diğer sorunlarda önce sorumluyla konuşulur, değişmezse staj birimine yazılı bildirilir, kararı okul verir. Stajı kendi başına bırakmak son seçenektir.">
+  <style>
+    .k{fill:#0f172a}.g{fill:#64748b}
+    .n{font:400 12.5px system-ui,sans-serif}
+    .b{font:700 14.5px system-ui,sans-serif}
+    .ust{font:800 14.5px system-ui,sans-serif;fill:#fff}
+    .et{font:800 10.5px system-ui,sans-serif;letter-spacing:.07em}
+    .ac{font:800 13.5px system-ui,sans-serif;fill:#92400e}
+  </style>
+
+  <rect width="400" height="616" fill="#f8fafc"/>
+
+  <rect x="104" y="16" width="192" height="44" rx="12" fill="#2563eb"/>
+  <text x="200" y="44" class="ust" text-anchor="middle">STAJDA SORUN VAR</text>
+
+  <!-- Tek dikey bağ: iki şerit yan yana seçenek değil, ilk önce kontrol edilen sonra sıraya giren. -->
+  <path d="M200 60v32" stroke="#cbd5e1" stroke-width="2" fill="none"/>
+
+  <!-- ACİL ŞERİT: güvenlik ve suç niteliğindeki durumlar sıraya girmez -->
+  <rect x="16" y="92" width="368" height="164" rx="14" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+  <circle cx="44" cy="120" r="14" fill="#f59e0b"/>
+  <text x="44" y="126" class="ust" text-anchor="middle">!</text>
+  <text x="68" y="126" class="ac">Bunlar sıra beklemez</text>
+  <text x="38" y="154" class="n" fill="#92400e">• İş güvenliği riski</text>
+  <text x="38" y="174" class="n" fill="#92400e">• Taciz, ayrımcılık, baskı</text>
+  <text x="38" y="194" class="n" fill="#92400e">• Yasa dışı bir talep</text>
+  <rect x="38" y="206" width="330" height="38" rx="9" fill="#fff"/>
+  <text x="52" y="223" class="n" fill="#92400e">İşi durdur. Okula ve gerekirse</text>
+  <text x="52" y="239" class="n" fill="#92400e">yetkililere bildir — konuşmayı bekleme.</text>
+
+  <path d="M200 256v20" stroke="#cbd5e1" stroke-width="2" fill="none"/>
+
+  <!-- OLAĞAN ŞERİT -->
+  <rect x="16" y="276" width="368" height="230" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+  <text x="38" y="304" class="et" fill="#94a3b8">DİĞER DURUMLARDA — SIRAYLA</text>
+  <text x="38" y="326" class="n g">İş verilmiyor · iş bölümünle ilgisiz · ücret ödenmiyor</text>
+
+  <path d="M46 348v122" stroke="#cbd5e1" stroke-width="3" fill="none"/>
+
+  <circle cx="46" cy="356" r="14" fill="#2563eb"/>
+  <text x="46" y="361" class="ust" text-anchor="middle">1</text>
+  <text x="72" y="352" class="b k">Sorumlunla konuş</text>
+  <text x="72" y="371" class="n g">Şikâyet olarak değil, somut talep olarak.</text>
+
+  <circle cx="46" cy="414" r="14" fill="#2563eb"/>
+  <text x="46" y="419" class="ust" text-anchor="middle">2</text>
+  <text x="72" y="410" class="b k">Staj birimine yazılı bildir</text>
+  <text x="72" y="429" class="n g">E-posta ile — yazılı iz kalsın.</text>
+
+  <circle cx="46" cy="470" r="14" fill="#2563eb"/>
+  <text x="46" y="475" class="ust" text-anchor="middle">3</text>
+  <text x="72" y="466" class="b k">Kararı okul verir</text>
+  <text x="72" y="485" class="n g">Görüşür, düzeni değiştirir ya da iptal eder.</text>
+
+  <rect x="16" y="524" width="368" height="76" rx="12" fill="#eff6ff"/>
+  <text x="200" y="550" class="n" fill="#1d4ed8" text-anchor="middle">Stajı kendi başına bırakmak son seçenek:</text>
+  <text x="200" y="568" class="n" fill="#1d4ed8" text-anchor="middle">dönem tümüyle geçersiz sayılabiliyor.</text>
+  <text x="200" y="588" class="n" fill="#1d4ed8" text-anchor="middle">Yukarıdaki acil durumlarda bu kural geçerli değil.</text>
+</svg>

@@ -42,6 +42,20 @@ export const STAJ_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        figur: {
+          kaynak: '/rehber-gorseller/staj-sigortasi-karar-agaci.svg',
+          alt:
+            'Staj sigortası karar ağacı. Soru: okulun bu staj için zorunlu staj formu düzenliyor mu? ' +
+            'Evet ise zorunlu staj — sigorta girişini genellikle okul yapıyor; hayır ise gönüllü staj — ' +
+            'yükümlülük işyerine geçebiliyor. İki durumda da kesin cevap okulun staj yönergesinde.',
+          aciklama:
+            'Şema bir karar değil, soru sırası: hangi dalda olduğunu belirledikten sonra bile ' +
+            'bağlayıcı cevap okulunun yönergesinden ve işyeriyle yaptığın yazılı anlaşmadan geliyor.',
+          genislik: 400,
+          yukseklik: 520,
+        },
+      },
+      {
         baslik: 'Zorunlu stajda yükümlülük kimde',
         paragraflar: [
           'Zorunlu staj, müfredatın parçası olan stajdır: okul senden belirli sayıda iş günü staj yapmanı ister ve ' +
@@ -288,6 +302,21 @@ export const STAJ_REHBERLERI: Rehber[] = [
           'Staj sürecinde zaman kaybının çoğu belge sırasının yanlış kurulmasından çıkıyor: önce yer bulunuyor, ' +
             'sonra form isteniyor, form haftalar sürüyor ve işveren beklerken vazgeçiyor. Doğru sıra tersine yakın.',
         ],
+      },
+      {
+        figur: {
+          kaynak: '/rehber-gorseller/staj-belge-dosyasi.svg',
+          alt:
+            'Staj belge dosyası kaynağına göre üçe ayrılmış: senden gelenler (öğrenci belgesi, ' +
+            'transkript, nüfus cüzdanı fotokopisi, CV) anında hazır; okuldan gelen zorunlu staj formu ' +
+            've sigorta teyidi günler ya da haftalar sürüyor; işyerinden unvan, adres, vergi ve SGK ' +
+            'bilgileri isteniyor.',
+          aciklama:
+            'Belgeleri kaynağına ve süresine göre ayırmak sırayı da veriyor: anında alınanlarla ' +
+            'başvuruyu yap, en uzun süren okul formunu olumlu dönüşten sonra başlat.',
+          genislik: 400,
+          yukseklik: 644,
+        },
       },
       {
         baslik: 'Temel belgeler',
@@ -804,6 +833,21 @@ export const STAJ_REHBERLERI: Rehber[] = [
           'Her staj iyi geçmiyor. Bazı işyerleri stajyer alacak hazırlığı yapmadan alıyor, bazılarında stajyere ' +
             'ayrılacak vakit gerçekten olmuyor. Sorunun ne olduğunu ayırmak, ne yapılacağını belirliyor.',
         ],
+      },
+      {
+        figur: {
+          kaynak: '/rehber-gorseller/stajda-sorun-karar-agaci.svg',
+          alt:
+            'Stajda sorun çıktığında ne yapılır. İş güvenliği riski, taciz, ayrımcılık, baskı ya da ' +
+            'yasa dışı bir talep varsa sıra beklenmez: iş durdurulur, okula ve gerekirse yetkililere ' +
+            'bildirilir. Diğer durumlarda sırayla sorumluyla konuşulur, değişmezse staj birimine yazılı ' +
+            'bildirilir ve kararı okul verir.',
+          aciklama:
+            'Üstteki şerit aşağıdaki sıraya girmiyor: güvenlik ve suç niteliğindeki durumlar ' +
+            'konuşma adımını beklemez.',
+          genislik: 400,
+          yukseklik: 616,
+        },
       },
       {
         baslik: 'Önce sorunu ayır',

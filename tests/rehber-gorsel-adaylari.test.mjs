@@ -53,6 +53,35 @@ test('sıra ve karşılaştırma sinyali puanı yükseltiyor', () => {
   assert.ok(surecli.puan > yalin.puan, 'süreç sinyali puanı artırmalı');
 });
 
+test('veriyle yazılmış görsel de sayılıyor — yalnız JSX değil', () => {
+  /*
+    `metinRehberi` rehberleri görseli bir blok anahtarıyla çiziyor.
+    Yalnız `<RehberFigur` aramak, bu turda görsel eklenen üç rehberi
+    hâlâ "aday" gösteriyordu (ölçüldü).
+  */
+  const { hepsi } = adaylar();
+  for (const slug of [
+    'staj-sigortasi-kim-yapar',
+    'staj-basvurusu-gerekli-belgeler',
+    'kotu-gecen-stajda-ne-yapilir',
+  ]) {
+    const r = hepsi.find((x) => x.slug === slug);
+    assert.ok(r.varlikVar, `${slug}: veri figürü görülmedi`);
+    assert.equal(r.sinif, 'GORSEL_YETERLI');
+  }
+});
+
+test('sınıflar birbirini dışlıyor ve hepsi kaplanıyor', () => {
+  const { hepsi, firsat, ince, metinYeterli, yeterli } = adaylar();
+  assert.equal(firsat.length + ince.length + metinYeterli.length + yeterli.length, hepsi.length);
+});
+
+test('ince içerik "görsel ekle" olarak raporlanmıyor', () => {
+  const { ince, firsat } = adaylar();
+  for (const r of ince) assert.ok(r.kelime < 300, `${r.slug}: ince değil`);
+  for (const r of firsat) assert.ok(r.kelime >= 300, `${r.slug}: fırsat sayılmamalı`);
+});
+
 test('kelime sayımı ikinci kez yazılmamış — sayım betiğinden geliyor', () => {
   const kaynak = readFileSync(path.join(KOK, 'scripts/rehber-gorsel-adaylari.mjs'), 'utf8');
   assert.match(kaynak, /from '\.\/rehber-sayimi\.mjs'/);

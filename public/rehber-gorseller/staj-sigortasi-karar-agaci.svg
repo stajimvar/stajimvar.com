@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520" width="400" height="520" role="img" aria-label="Staj sigortası karar ağacı. Soru: okulun bu staj için zorunlu staj formu düzenliyor mu? Evet ise zorunlu staj, sigorta girişini genellikle okul yapıyor; hayır ise gönüllü staj, yükümlülük işyerine geçebilir. Her iki durumda da kesin cevap okulun staj yönergesinde.">
+  <style>
+    .k{fill:#0f172a}.g{fill:#64748b}
+    .n{font:400 12px system-ui,sans-serif}
+    .b{font:700 14px system-ui,sans-serif}
+    .soru{font:700 14.5px system-ui,sans-serif;fill:#fff}
+    .et{font:800 10.5px system-ui,sans-serif;letter-spacing:.07em}
+  </style>
+
+  <rect width="400" height="520" fill="#f8fafc"/>
+
+  <!-- kök soru -->
+  <rect x="16" y="16" width="368" height="72" rx="14" fill="#2563eb"/>
+  <text x="200" y="46" class="soru" text-anchor="middle">Okulun bu staj için</text>
+  <text x="200" y="68" class="soru" text-anchor="middle">zorunlu staj formu düzenliyor mu?</text>
+
+  <!-- dallanma -->
+  <path d="M200 88v18 M104 106H296 M104 106v20 M296 106v20" stroke="#cbd5e1" stroke-width="2" fill="none"/>
+
+  <!-- evet dalı -->
+  <rect x="16" y="126" width="176" height="196" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+  <text x="36" y="150" class="et" fill="#2563eb">EVET</text>
+  <text x="36" y="172" class="b k">Zorunlu staj</text>
+  <text x="36" y="196" class="n g">Sigorta girişini</text>
+  <text x="36" y="213" class="n g">genellikle okul</text>
+  <text x="36" y="230" class="n g">yapıyor, primi de</text>
+  <text x="36" y="247" class="n g">okul ödüyor.</text>
+  <rect x="36" y="262" width="136" height="44" rx="9" fill="#eff6ff"/>
+  <text x="48" y="280" class="n" fill="#1d4ed8">Yönergeden ve</text>
+  <text x="48" y="297" class="n" fill="#1d4ed8">staj biriminden doğrula.</text>
+
+  <!-- hayır dalı -->
+  <rect x="208" y="126" width="176" height="196" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+  <text x="228" y="150" class="et" fill="#2563eb">HAYIR</text>
+  <text x="228" y="172" class="b k">Gönüllü staj</text>
+  <text x="228" y="196" class="n g">Stajın okulla resmî</text>
+  <text x="228" y="213" class="n g">bağı olmayabiliyor;</text>
+  <text x="228" y="230" class="n g">yükümlülük işyerine</text>
+  <text x="228" y="247" class="n g">geçebiliyor.</text>
+  <rect x="228" y="262" width="136" height="44" rx="9" fill="#eff6ff"/>
+  <text x="240" y="280" class="n" fill="#1d4ed8">Başlamadan önce</text>
+  <text x="240" y="297" class="n" fill="#1d4ed8">yazılı netleştir.</text>
+
+  <!-- ortak sonuç -->
+  <path d="M104 322v16 M296 322v16 M104 338H296 M200 338v18" stroke="#cbd5e1" stroke-width="2" fill="none"/>
+
+  <rect x="16" y="356" width="368" height="76" rx="14" fill="#fef3c7" stroke="#fcd34d" stroke-width="2"/>
+  <text x="200" y="384" class="b" fill="#92400e" text-anchor="middle">Kesin cevap tek yerde:</text>
+  <text x="200" y="406" class="n" fill="#92400e" text-anchor="middle">kendi okulunun staj yönergesi ve</text>
+  <text x="200" y="423" class="n" fill="#92400e" text-anchor="middle">işyeriyle yaptığın yazılı anlaşma.</text>
+
+  <text x="200" y="460" class="n g" text-anchor="middle">Uygulama üniversiteden üniversiteye</text>
+  <text x="200" y="478" class="n g" text-anchor="middle">değişiyor; bu şema karar değil, soru sırası.</text>
+  <text x="200" y="502" class="n" fill="#94a3b8" text-anchor="middle">Sigorta girişi stajın ilk gününden önce yapılmalı.</text>
+</svg>

@@ -33,7 +33,15 @@ import { kelimeSay, rehberBloklari } from './rehber-sayimi.mjs';
 
 const KOK = path.resolve(import.meta.dirname, '..');
 
-/** Görsel anlatım sayılan bileşenler; biri varsa rehber zaten görselleşmiş. */
+/*
+  GÖRSEL ANLATIM İKİ YAZIMDA BİRDEN ARANIYOR
+
+  Elle yazılan rehberler bileşeni JSX olarak çağırıyor (`<Karsilastirma`),
+  `metinRehberi` ile yazılanlar ise aynı bileşeni bir veri anahtarıyla
+  çiziyor (`karsilastirma: {`). Yalnız JSX'e bakmak, veriyle yazılmış
+  görselli rehberleri "görseli yok" göstermeye yol açıyordu (ölçüldü:
+  üç rehbere görsel eklendikten sonra bile aday listesinde kalmışlardı).
+*/
 const GORSEL_BILESENLER = [
   'Akis',
   'Karsilastirma',
@@ -46,6 +54,24 @@ const GORSEL_BILESENLER = [
   'SorumlulukTablosu',
   'KazancKartlari',
 ];
+
+/** `metinRehberi` blok anahtarları → karşılık gelen görsel bileşen. */
+const GORSEL_ANAHTARLAR = {
+  'figur:': 'RehberFigur',
+  'karsilastirma:': 'Karsilastirma',
+  'kontrol:': 'KontrolListesi',
+  'tablo:': 'KarsilastirmaTablosu',
+};
+
+function gorselBilesenleri(govde) {
+  const bulunan = new Set(
+    GORSEL_BILESENLER.filter((b) => new RegExp(`<${b}[\\s/>]`).test(govde))
+  );
+  for (const [anahtar, bilesen] of Object.entries(GORSEL_ANAHTARLAR)) {
+    if (govde.includes(`\n        ${anahtar} {`)) bulunan.add(bilesen);
+  }
+  return [...bulunan];
+}
 
 /** Görselin gerçekten iş göreceği içerik biçimleri. */
 const SINYALLER = {
@@ -67,7 +93,7 @@ function kaynakDosyalari() {
 
 export function puanla({ slug, govde }) {
   const kelime = kelimeSay(govde);
-  const mevcut = GORSEL_BILESENLER.filter((b) => new RegExp(`<${b}[\\s/>]`).test(govde));
+  const mevcut = gorselBilesenleri(govde);
 
   let puan = 0;
   const nedenler = [];
@@ -96,7 +122,37 @@ export function puanla({ slug, govde }) {
     nedenler.push(`${kelime} kelime — görsel dolgu olur`);
   }
 
-  return { slug, kelime, puan, mevcut, nedenler };
+  /*
+    DÖRT AYRI SONUÇ, TEK LİSTE DEĞİL
+
+    "Görseli yok" tek başına bir eylem çağrısı değil. Kısa bir yazıya
+    diyagram eklemek onu derinleştirmiyor, yalnız uzun gösteriyor.
+    Yeterince uzun ama düz anlatan bir yazıda da görsel bir şey
+    öğretmiyor — orada metin zaten yeterli. Sınıflar:
+
+      GORSEL_YETERLI  — hâlihazırda görsel anlatımı var
+      ICERIK_INCE     — önce yazının kendisi derinleşmeli
+      GORSEL_FIRSATI  — içerik olgun ve biçimi görselden kazanır
+      METIN_YETERLI   — olgun ama görselden kazanacak biçimi yok
+  */
+  /*
+    "Görsel anlatım" ile "editoryal varlık" aynı şey değil. Bir
+    karşılaştırma tablosu zaten o karşılaştırmanın görselidir; üstüne
+    SVG koymak aynı şeyi iki kez anlatmak olur. Bu yüzden doyum ölçütü
+    ikili: ya bir `RehberFigur` varlığı var, ya da en az iki görsel blok
+    zaten sayfada duruyor.
+  */
+  const varlikVar = mevcut.includes('RehberFigur');
+  const sinif =
+    varlikVar || mevcut.length >= 2
+      ? 'GORSEL_YETERLI'
+      : kelime < 300
+        ? 'ICERIK_INCE'
+        : puan >= 2
+          ? 'GORSEL_FIRSATI'
+          : 'METIN_YETERLI';
+
+  return { slug, kelime, puan, mevcut, nedenler, sinif, varlikVar };
 }
 
 export function adaylar() {
@@ -104,8 +160,15 @@ export function adaylar() {
   for (const yol of kaynakDosyalari()) {
     for (const blok of rehberBloklari(fs.readFileSync(yol, 'utf8'))) hepsi.push(puanla(blok));
   }
+  const siralaBy = (s) =>
+    hepsi.filter((r) => r.sinif === s).sort((a, b) => b.puan - a.puan || b.kelime - a.kelime);
   return {
     hepsi,
+    firsat: siralaBy('GORSEL_FIRSATI'),
+    ince: siralaBy('ICERIK_INCE'),
+    metinYeterli: siralaBy('METIN_YETERLI'),
+    yeterli: siralaBy('GORSEL_YETERLI'),
+    /* Geriye dönük: yalnız görselsizler, puan sırasıyla. */
     sirali: hepsi
       .filter((r) => r.mevcut.length === 0)
       .sort((a, b) => b.puan - a.puan || b.kelime - a.kelime),
@@ -115,26 +178,34 @@ export function adaylar() {
 function main() {
   const bayrak = process.argv.indexOf('--adet');
   const adet = bayrak > -1 ? Number(process.argv[bayrak + 1]) : 5;
-  const { hepsi, sirali } = adaylar();
-  const gorselli = hepsi.filter((r) => r.mevcut.length > 0);
+  const { hepsi, firsat, ince, metinYeterli, yeterli } = adaylar();
 
   console.log(
-    `${hepsi.length} rehber tarandı · ${gorselli.length} tanesinde görsel anlatım var · ` +
-      `${sirali.length} tanesinde yok`
+    `${hepsi.length} rehber tarandı · görsel fırsatı ${firsat.length} · ` +
+      `içerik ince ${ince.length} · metin yeterli ${metinYeterli.length} · ` +
+      `görsel yeterli ${yeterli.length}`
   );
-  console.log(`\nSIRADAKİ ${adet} ADAY (puan sırasıyla)`);
-  for (const r of sirali.slice(0, adet)) {
+
+  console.log(`\nGÖRSEL FIRSATI — sıradaki ${adet}`);
+  for (const r of firsat.slice(0, adet)) {
     console.log(`  ${r.slug}  puan=${r.puan}  ${r.kelime} kelime`);
     console.log(`     ${r.nedenler.join(' · ') || 'belirgin sinyal yok'}`);
   }
+  if (!firsat.length) console.log('  (yok — görsel eklenecek olgun rehber kalmadı)');
 
-  const zayif = sirali.slice(0, adet).filter((r) => r.puan <= 0);
-  if (zayif.length) {
-    console.log(
-      `\nUYARI: ilk ${adet} adayın ${zayif.length} tanesi sıfır ya da eksi puanlı. ` +
-        'Bunlarda eksik olan görsel değil, içerik derinliği.'
-    );
+  console.log('\nİÇERİK İNCE — burada eksik olan görsel değil, yazının kendisi');
+  for (const r of ince.slice(0, adet)) {
+    console.log(`  ${r.slug}  ${r.kelime} kelime`);
   }
+  if (ince.length > adet) console.log(`  … ve ${ince.length - adet} rehber daha`);
+
+  console.log(`\nMETİN YETERLİ — ${metinYeterli.length} rehber olgun ama görselden kazanmıyor`);
+  for (const r of metinYeterli.slice(0, adet)) {
+    console.log(`  ${r.slug}  ${r.kelime} kelime`);
+  }
+  if (metinYeterli.length > adet) console.log(`  … ve ${metinYeterli.length - adet} rehber daha`);
+
+  console.log(`\nGÖRSEL YETERLİ — ${yeterli.length} rehberde görsel anlatım zaten var`);
 }
 
 /* Windows'ta elle `file://` + yol kurmak yanlış URL üretiyor; pathToFileURL şart. */

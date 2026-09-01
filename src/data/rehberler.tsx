@@ -300,7 +300,6 @@ export const REHBERLER: Rehber[] = [
           aciklama="Sürecin tamamı tek bakışta. Adımların sırası ve form adları her üniversitede aynı değil; bağlayıcı olan kendi bölümünün staj yönergesi."
           genislik={400}
           yukseklik={636}
-          gecikmeli={false}
         />
 
         <B>Süreç sırası</B>
@@ -763,7 +762,6 @@ export const REHBERLER: Rehber[] = [
           aciklama="Yukarıdaki üç halka mülakatın aşamaları, alttaki kutular bir projeyi anlatırken izlenecek sıra. Ayrıntılar aşağıda."
           genislik={400}
           yukseklik={700}
-          gecikmeli={false}
         />
 
         <B>Mülakatın üç aşaması</B>
@@ -997,7 +995,6 @@ export const REHBERLER: Rehber[] = [
           aciklama="Bir başvuru e-postasının altı parçası. Metnin kopyalanabilir hâli aşağıda; buradaki bilgiler örnektir."
           genislik={400}
           yukseklik={700}
-          gecikmeli={false}
         />
 
         <B>Konu satırı</B>
@@ -1390,6 +1387,14 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
           <Kaynak href="https://www.turkiye.gov.tr">e-Devlet</Kaynak> duyurularına bak.
         </Uyari>
 
+        <RehberFigur
+          kaynak="/rehber-gorseller/kyk-burs-kredi-farki.svg"
+          alt="KYK bursu ile öğrenim kredisinin farkı. Başvuru tek form üzerinden yapılıyor; burs geri ödemesiz ve kontenjanı sınırlı, öğrenim kredisi geri ödemeli ve mezuniyetten sonra taksitle ödeniyor. Yurt ve barınma başvurusu ayrı süreç."
+          aciklama="Görselde bilerek tutar, oran ve tarih yok: bunlar her yıl değişiyor, kavramsal fark değişmiyor."
+          genislik={400}
+          yukseklik={476}
+        />
+
         <B>Burs ve kredi aynı şey değil</B>
         <L>
           <li>
@@ -1519,7 +1524,6 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
           aciklama="Beş kanal eşit büyüklükte çünkü bu bir sıralama değil. Hangisinin sende işe yaradığı bölümüne, şehrine ve okuluna göre değişiyor."
           genislik={400}
           yukseklik={636}
-          gecikmeli={false}
         />
 
         <B>Beş kanal</B>
@@ -1528,7 +1532,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
             {
               baslik: 'Doğrudan başvuru',
               aciklama:
-                'İlan açmamış şirketlere yazmak. İlan olmadığı için o şirkete yazan aday sayısı da az oluyor; buna karşılık kime yazacağını bulmak sana kalıyor.',
+                'İlan açmamış şirketlere yazmak. Standart ilan başvurusuna ek bir kanal olabilir; ancak şirketin o dönemde stajyer aradığı garanti değil ve kime yazacağını bulmak sana kalıyor.',
             },
             {
               baslik: 'Okulun staj birimi',
@@ -2123,6 +2127,14 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
           önlüyor.
         </P>
 
+        <RehberFigur
+          kaynak="/rehber-gorseller/yurtdisi-staj-yol-haritasi.svg"
+          alt="Yurt dışı staj yol haritası yedi adımda: okulunun ofisini aç, kanalını seç, staj komisyonundan yazılı ön onay al, staj yerini bul, belgeleri tamamla, vize ve staj sözleşmesi, staj. Görselde vize ve belge sürecinin ülkeye ve programa göre değişebileceği uyarısı var."
+          aciklama="Üçüncü adım bilerek vurgulu: onayı gitmeden önce almak, dönüşte saydırmaya çalışmaktan farklı bir sonuç veriyor."
+          genislik={400}
+          yukseklik={636}
+        />
+
         <B>Tek başına başvuru neden çoğu zaman tıkanıyor</B>
         <P>
           İki duvar var. Birincisi vize: Türk vatandaşı bir öğrencinin çoğu ülkede staj
@@ -2137,6 +2149,14 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
           ilanı ise çok az; şirketin Türkiye'deki birine sözleşme yapıp ödeme yapabilmesi
           gerekiyor ve çoğu bunu kurmamış oluyor.
         </P>
+
+        <RehberFigur
+          kaynak="/rehber-gorseller/yurtdisi-staj-kanallari.svg"
+          alt="Yurt dışı stajın üç kanalı yan yana: Erasmus+, IAESTE ve kendi başına başvuru. Her kanal için kim için uygun olduğu, başvurunun nereden yapıldığı ve neye bağlı olduğu yazıyor."
+          aciklama="Üç kart aynı boyutta: bu bir sıralama değil. Hangisinin sana açık olduğunu okulunun programa dahil olup olmaması belirliyor."
+          genislik={400}
+          yukseklik={512}
+        />
 
         <B>1. Erasmus+ staj hareketliliği</B>
         <P>

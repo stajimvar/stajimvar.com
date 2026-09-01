@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 512" width="400" height="512" role="img" aria-label="Yurt dışı stajın üç kanalı: Erasmus artı, IAESTE ve kendi başına başvuru. Her biri için kim için uygun, başvuru nereden yapılır ve neye bağlı olduğu yazıyor. Üçü alternatif kanal, sıralama değil.">
+  <style>
+    .k{fill:#0f172a}.g{fill:#64748b}
+    .n{font:400 12.5px system-ui,sans-serif}
+    .b{font:700 15px system-ui,sans-serif}
+    .et{font:800 10.5px system-ui,sans-serif;fill:#94a3b8;letter-spacing:.07em}
+  </style>
+
+  <rect width="400" height="512" fill="#f8fafc"/>
+
+  <!-- Kartlar aynı boyutta: sıralama değil, alternatif -->
+  <g>
+    <rect x="16" y="16" width="368" height="136" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="36" y="44" class="b k">Erasmus+</text>
+    <text x="36" y="70" class="et">KİM İÇİN</text>
+    <text x="120" y="70" class="n g">Bölüm ayrımı yok</text>
+    <text x="36" y="96" class="et">BAŞVURU</text>
+    <text x="120" y="96" class="n g">Okulunun Erasmus ofisi</text>
+    <text x="36" y="122" class="et">NEYE BAĞLI</text>
+    <text x="120" y="122" class="n g">Okulun takvimi ve</text>
+    <text x="120" y="139" class="n g">kontenjanı</text>
+  </g>
+
+  <g>
+    <rect x="16" y="164" width="368" height="136" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="36" y="192" class="b k">IAESTE</text>
+    <text x="36" y="218" class="et">KİM İÇİN</text>
+    <text x="120" y="218" class="n g">Ağırlıkla teknik bölümler</text>
+    <text x="36" y="244" class="et">BAŞVURU</text>
+    <text x="120" y="244" class="n g">Okuldaki temsilcilik</text>
+    <text x="36" y="270" class="et">NEYE BAĞLI</text>
+    <text x="120" y="270" class="n g">Okulunun programa</text>
+    <text x="120" y="287" class="n g">dahil olması</text>
+  </g>
+
+  <g>
+    <rect x="16" y="312" width="368" height="136" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="36" y="340" class="b k">Kendi başına</text>
+    <text x="36" y="366" class="et">KİM İÇİN</text>
+    <text x="120" y="366" class="n g">Vize destekleyen büyük</text>
+    <text x="120" y="383" class="n g">staj programları</text>
+    <text x="36" y="405" class="et">BAŞVURU</text>
+    <text x="120" y="405" class="n g">Şirketin kendi sayfası</text>
+    <text x="36" y="431" class="et">NEYE BAĞLI</text>
+    <text x="120" y="431" class="n g">İlanın çalışma izni şartı</text>
+  </g>
+
+  <rect x="16" y="460" width="368" height="40" rx="12" fill="#eff6ff"/>
+  <text x="200" y="485" class="n" fill="#1d4ed8" text-anchor="middle">Üçü alternatif kanal — sıralama değil.</text>
+</svg>

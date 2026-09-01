@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 644" width="400" height="644" role="img" aria-label="Staj belge dosyası üç kaynağa göre: senden gelenler anında hazır, okuldan gelen zorunlu staj formu günler haftalar sürüyor, işyerinden alacağın bilgiler forma yazılıyor. Belge adları ve gereklilikler üniversitene göre değişebilir.">
+  <style>
+    .k{fill:#0f172a}.g{fill:#64748b}
+    .n{font:400 12.5px system-ui,sans-serif}
+    .b{font:700 14.5px system-ui,sans-serif}
+    .et{font:800 10.5px system-ui,sans-serif;letter-spacing:.07em}
+    .uyari{font:700 13.5px system-ui,sans-serif;fill:#92400e}
+  </style>
+
+  <rect width="400" height="644" fill="#f8fafc"/>
+
+  <!-- SENDEN -->
+  <rect x="16" y="16" width="368" height="150" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+  <rect x="16" y="16" width="6" height="150" rx="3" fill="#2563eb"/>
+  <text x="38" y="44" class="b k">Senden</text>
+  <text x="38" y="64" class="et" fill="#94a3b8">ANINDA HAZIR</text>
+  <text x="38" y="90" class="n g">• Öğrenci belgesi (e-Devlet)</text>
+  <text x="38" y="110" class="n g">• Transkript</text>
+  <text x="38" y="130" class="n g">• Nüfus cüzdanı fotokopisi</text>
+  <text x="38" y="150" class="n g">• CV — PDF, “AdSoyad-CV.pdf”</text>
+
+  <!-- OKULDAN -->
+  <rect x="16" y="182" width="368" height="122" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+  <rect x="16" y="182" width="6" height="122" rx="3" fill="#2563eb"/>
+  <text x="38" y="210" class="b k">Okuldan</text>
+  <text x="38" y="230" class="et" fill="#94a3b8">GÜNLER – HAFTALAR</text>
+  <text x="38" y="256" class="n g">• Zorunlu staj formu</text>
+  <text x="38" y="276" class="n g">• Sigorta girişinin yazılı teyidi</text>
+  <text x="38" y="296" class="n" fill="#94a3b8">Süreci uzatan tek adım bu.</text>
+
+  <!-- İŞYERİNDEN -->
+  <rect x="16" y="320" width="368" height="170" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+  <rect x="16" y="320" width="6" height="170" rx="3" fill="#2563eb"/>
+  <text x="38" y="348" class="b k">İşyerinden</text>
+  <text x="38" y="368" class="et" fill="#94a3b8">FORMA YAZILACAK — TEK E-POSTADA SOR</text>
+  <text x="38" y="394" class="n g">• Tam yasal unvan</text>
+  <text x="38" y="414" class="n g">• Adres ve faaliyet alanı</text>
+  <text x="38" y="434" class="n g">• Vergi dairesi ve vergi numarası</text>
+  <text x="38" y="454" class="n g">• SGK işyeri sicil numarası</text>
+  <text x="38" y="474" class="n g">• Yetkilinin adı, unvanı ve staj tarihleri</text>
+
+  <rect x="16" y="506" width="368" height="52" rx="12" fill="#eff6ff"/>
+  <text x="200" y="530" class="n" fill="#1d4ed8" text-anchor="middle">Sıra tersine yakın: önce anında alınanlar</text>
+  <text x="200" y="548" class="n" fill="#1d4ed8" text-anchor="middle">ve başvuru; form en sonda başlıyor.</text>
+
+  <rect x="16" y="574" width="368" height="54" rx="12" fill="#fef3c7" stroke="#fcd34d" stroke-width="2"/>
+  <circle cx="44" cy="601" r="13" fill="#f59e0b"/>
+  <text x="44" y="606" class="b" fill="#fff" text-anchor="middle">!</text>
+  <text x="68" y="596" class="uyari">Belge adları ve gereklilikler</text>
+  <text x="68" y="614" class="uyari">üniversitene göre değişebilir.</text>
+</svg>

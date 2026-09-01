@@ -24,7 +24,7 @@
   <text x="42" y="155" class="rozet" text-anchor="middle">2</text>
   <text x="66" y="146" class="etiket">EĞİTİM</text>
   <text x="66" y="170" class="b k">[Üniversite] — Bilgisayar Müh.</text>
-  <text x="66" y="191" class="n g">2023 – beklenen mezuniyet [yıl]</text>
+  <text x="66" y="191" class="n g">[başlangıç yılı] – beklenen mezuniyet [yıl]</text>
   <line x1="42" y1="212" x2="366" y2="212" stroke="#e2e8f0" stroke-width="2"/>
 
   <!-- 3 projeler -->
