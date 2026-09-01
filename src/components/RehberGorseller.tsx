@@ -3,6 +3,7 @@ import {
   Check,
   X,
   ArrowRight,
+  Paperclip,
   School,
   Building2,
   FileText,
@@ -465,4 +466,155 @@ export const RenkliKart: React.FC<{
       <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
     </span>
   </button>
+);
+
+/* ============================================================ örnek metin */
+
+/**
+ * KOPYALANABİLİR ÖRNEK
+ *
+ * Öğrencinin gerçekten kullanacağı metin (e-posta gövdesi, CV satırı)
+ * görsele gömülmüyor: HTML içinde duruyor. Böylece seçilebiliyor,
+ * kopyalanabiliyor ve ekran okuyucu okuyabiliyor. Bir örneği ekran
+ * görüntüsü olarak koymak, onu kullanılamaz hâle getirmek olurdu.
+ *
+ * Kopyalama düğmesi bir kolaylık; metin düğme olmadan da seçilebilir.
+ */
+export const RehberOrnek: React.FC<{
+  baslik?: string;
+  aciklama?: string;
+  metin: string;
+}> = ({ baslik, aciklama, metin }) => {
+  const [kopyalandi, setKopyalandi] = React.useState(false);
+
+  const kopyala = async () => {
+    try {
+      await navigator.clipboard.writeText(metin);
+      setKopyalandi(true);
+      window.setTimeout(() => setKopyalandi(false), 2000);
+    } catch {
+      /* Pano kapalıysa metin zaten seçilebilir; sessizce geçiliyor. */
+    }
+  };
+
+  return (
+    <figure className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+        <span className="text-xs font-bold uppercase tracking-wider text-gray-600">
+          {baslik ?? 'Örnek'}
+        </span>
+        <button
+          type="button"
+          onClick={kopyala}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-100"
+        >
+          {kopyalandi ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : null}
+          {kopyalandi ? 'Kopyalandı' : 'Kopyala'}
+        </button>
+      </div>
+      <pre className="overflow-x-auto whitespace-pre-wrap break-words px-4 py-3.5 font-mono text-[13px] leading-relaxed text-gray-800">
+        {metin}
+      </pre>
+      {aciklama && (
+        <figcaption className="border-t border-gray-100 px-4 py-2.5 text-xs leading-relaxed text-gray-500">
+          {aciklama}
+        </figcaption>
+      )}
+    </figure>
+  );
+};
+
+/* ========================================================== e-posta maketi */
+
+/**
+ * E-POSTA MAKETİ — MARKASIZ VE SEMANTİK
+ *
+ * Gerçek bir posta istemcisinin ekran görüntüsü değil: alanlar HTML
+ * içinde duruyor, metin kopyalanabiliyor ve ekran okuyucu "Kime",
+ * "Konu" etiketlerini okuyabiliyor. Bir marka arayüzünü taklit etmek
+ * hem gereksiz hem yanıltıcı olurdu.
+ */
+export const EpostaOrnegi: React.FC<{
+  kime: string;
+  konu: string;
+  govde: string;
+  ek?: string;
+  aciklama?: string;
+}> = ({ kime, konu, govde, ek, aciklama }) => (
+  <figure className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+    <dl className="divide-y divide-gray-100 text-sm">
+      {[
+        ['Kime', kime],
+        ['Konu', konu],
+      ].map(([etiket, deger]) => (
+        <div key={etiket} className="flex gap-3 px-4 py-2.5">
+          <dt className="w-14 shrink-0 text-xs font-bold uppercase tracking-wider text-gray-500 pt-0.5">
+            {etiket}
+          </dt>
+          <dd className="min-w-0 break-words font-semibold text-gray-900">{deger}</dd>
+        </div>
+      ))}
+    </dl>
+    <div className="border-t border-gray-100 px-4 py-3.5">
+      <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-gray-800">
+        {govde}
+      </pre>
+    </div>
+    {ek && (
+      <p className="flex items-center gap-2 border-t border-gray-100 bg-gray-50 px-4 py-2.5 text-xs font-semibold text-gray-600">
+        <Paperclip className="h-3.5 w-3.5" aria-hidden="true" />
+        Ek: {ek}
+      </p>
+    )}
+    {aciklama && (
+      <figcaption className="border-t border-gray-100 px-4 py-2.5 text-xs leading-relaxed text-gray-500">
+        {aciklama}
+      </figcaption>
+    )}
+  </figure>
+);
+
+/* ======================================================= açıklamalı CV iskeleti */
+
+/**
+ * AÇIKLAMALI CV İSKELETİ
+ *
+ * CV'nin hangi bölümünün ne işe yaradığını gösteriyor. Raster görsel
+ * değil: bölüm adları ve açıklamalar metin olarak duruyor, arama motoru
+ * ve ekran okuyucu ikisini de görüyor.
+ *
+ * İçindeki örnek satırlar UYDURMA BİR KİŞİYE ait değil — alan adları
+ * köşeli parantezle yer tutucu olarak yazılıyor ki kimse gerçek bir
+ * kişinin verisi sanmasın.
+ */
+export const CvIskeleti: React.FC<{
+  bolumler: { ad: string; ne: string; ornek?: string }[];
+  aciklama?: string;
+}> = ({ bolumler, aciklama }) => (
+  <figure className="space-y-3">
+    <ol className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+      {bolumler.map((b, i) => (
+        <li
+          key={b.ad}
+          className="flex gap-3 border-b border-gray-100 px-4 py-3.5 last:border-b-0 sm:gap-4"
+        >
+          <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-blue-50 text-xs font-black text-blue-700">
+            {i + 1}
+          </span>
+          <div className="min-w-0">
+            <p className="font-bold text-gray-900">{b.ad}</p>
+            <p className="mt-0.5 text-sm leading-relaxed text-gray-600">{b.ne}</p>
+            {b.ornek && (
+              <p className="mt-1.5 rounded-lg bg-gray-50 px-3 py-2 font-mono text-[12.5px] leading-relaxed text-gray-700">
+                {b.ornek}
+              </p>
+            )}
+          </div>
+        </li>
+      ))}
+    </ol>
+    {aciklama && (
+      <figcaption className="text-xs leading-relaxed text-gray-500">{aciklama}</figcaption>
+    )}
+  </figure>
 );

@@ -17,14 +17,11 @@
     "yayinciKimligi bos birakilirsa reklam betigi hic yuklenmiyor ve",
     "ads.txt uretilmiyor - gelistirme icin guvenli varsayilan."
   ],
-
   "yayinciKimligi": "ca-pub-2635670487159819",
-
   "yuvalar": {
     "sidebar-rectangle": "2940163101",
     "in-feed": "4372664276"
   },
-
   "_yuvaNotu": [
     "AdSense panelindeki adlar ve buradaki karsiliklari:",
     "  stajimvar-content-top      -> sidebar-rectangle  (sag sutun, 300x250)",
@@ -34,5 +31,21 @@
     "kullaniliyor. AdSense tarafindaki ad yalnizca senin raporlarinda",
     "gorunuyor, yerlesimi belirlemiyor - istersen panelden yeniden",
     "adlandirabilirsin, kod etkilenmez."
+  ],
+  "_autoAdsNotu": [
+    "AUTO ADS: KAPALI (owner tarafindan AdSense panelinden kapatildi).",
+    "",
+    "Auto Ads bir HESAP ayari; kodla acilip kapatilamiyor. Acikken Google'in",
+    "betigi her rotaya kendi yerlesim ogesini koyuyordu ve manuel bileseni",
+    "kaldirmak bunu durdurmuyordu (olculdu: adsbygoogle-noablate ogesi",
+    "/, /sirket/*, /rehber/* dahil her sayfada vardi).",
+    "",
+    "Simdi reklam yalnizca elle yerlestirilen yuvalarda cikiyor ve o yuvalar",
+    "da yalnizca editoryal deger kapisini gecen rehberlerde:",
+    "  kapi   -> src/lib/reklam-kapisi.mjs",
+    "  liste  -> src/data/reklam-uygun-rehberler.ts (uretilmis dosya)",
+    "",
+    "Auto Ads yeniden acilirsa bu ayrim ortadan kalkar; panelde kapali",
+    "kalmasi gerekiyor."
   ]
 }

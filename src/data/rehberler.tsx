@@ -8,9 +8,12 @@ import { YURTDISI_REHBERLERI } from './rehber-yazilari/yurtdisi';
 import { KARIYER_REHBERLERI } from './rehber-yazilari/kariyer';
 import {
   Akis,
+  CvIskeleti,
+  EpostaOrnegi,
   Karsilastirma,
   KarsilastirmaTablosu,
   KontrolListesi,
+  RehberOrnek,
 } from '../components/RehberGorseller';
 
 /**
@@ -290,6 +293,74 @@ export const REHBERLER: Rehber[] = [
           konularında farklı kurallara tabi.
         </P>
 
+        <B>Süreç sırası</B>
+        <Akis
+          adimlar={[
+            {
+              baslik: 'Okulun kurallarını öğren',
+              aciklama:
+                'Staj birimine git; yönergeyi, kaç iş günü gerektiğini, hangi dönemde yapılabildiğini ve kabul edilen iş yeri türünü öğren.',
+            },
+            {
+              baslik: 'Şirket bul',
+              aciklama:
+                'İlanlardan, kariyer sayfalarından ya da doğrudan başvuruyla. Okulun kabul ettiği iş yeri türüne uyduğundan emin ol.',
+            },
+            {
+              baslik: 'Zorunlu staj formunu al',
+              aciklama:
+                'Okulun hazırladığı form, stajın müfredat kapsamında olduğunu gösteriyor. Şirket bu belgeyi görmeden seni başlatmamalı.',
+            },
+            {
+              baslik: 'Şirkete imzalat',
+              aciklama:
+                'Form şirket tarafından doldurulup kaşelenir. Tarihlerin okulun kabul ettiği aralıkta olduğunu kontrol et.',
+            },
+            {
+              baslik: 'Formu okula teslim et',
+              aciklama:
+                'Sigorta girişi bu teslimle başlıyor. Girişin yapıldığını teyit etmeden staja başlama.',
+            },
+            {
+              baslik: 'Stajı yap',
+              aciklama:
+                'Devamsızlık kuralları okuldan okula değişiyor; kaç gün mazeret hakkın olduğunu baştan öğren.',
+            },
+            {
+              baslik: 'Defteri/raporu doldur',
+              aciklama:
+                'Her gün iki satır yazmak, sonunda otuz günü hatırlamaya çalışmaktan kolay.',
+            },
+            {
+              baslik: 'Teslim et',
+              aciklama:
+                'Teslim tarihini ve istenen imza/kaşeleri staj bitmeden önce öğren.',
+            },
+          ]}
+        />
+        <P>
+          <strong className="text-gray-900">Bu sıra her üniversitede aynı değil.</strong>{' '}
+          Bazı okullarda form önce şirkete, bazılarında önce birime gidiyor; istenen belgeler
+          ve teslim biçimi de değişiyor. Buradaki akış genel bir çerçeve — bağlayıcı olan
+          kendi bölümünün staj yönergesi.
+        </P>
+
+        <B>Belge kontrol listesi</B>
+        <KontrolListesi
+          baslik="Stajdan önce elinde olması gerekenler"
+          maddeler={[
+            'Bölümünün staj yönergesi (kaç iş günü, hangi dönem, hangi iş yeri türü).',
+            'Okulun zorunlu staj formu.',
+            'Formun şirket tarafından doldurulmuş ve kaşelenmiş hâli.',
+            'Sigorta girişinin yapıldığına dair teyit.',
+            'Staj defteri ya da rapor şablonu.',
+          ]}
+        />
+        <P>
+          Listedeki adlar okuldan okula değişebiliyor; bazı bölümler ek olarak nüfus
+          belgesi ya da banka bilgisi isteyebiliyor. Kendi yönergende yazan liste esastır.
+        </P>
+
         <B>1. Okulunun staj birimiyle başla, şirketle değil</B>
         <P>
           En sık yapılan hata, önce şirket bulup sonra okula gitmek. Oysa okul her yıl staj
@@ -414,6 +485,37 @@ export const REHBERLER: Rehber[] = [
           yerine ne koyacağını bilmek</strong>.
         </P>
 
+        <B>Staj CV'sinde ne nerede durur</B>
+        <CvIskeleti
+          bolumler={[
+            {
+              ad: 'İletişim',
+              ne: 'Ad, telefon, e-posta, şehir. Fotoğraf zorunlu değil; adres ve TC kimlik yazma.',
+              ornek: '[Ad Soyad] · [şehir] · [telefon] · [e-posta]',
+            },
+            {
+              ad: 'Eğitim',
+              ne: 'Üniversite, bölüm, sınıf ve beklenen mezuniyet. Deneyimin yokken en üstte durur.',
+              ornek: '[Üniversite] — [Bölüm], 3. sınıf · beklenen mezuniyet [yıl]',
+            },
+            {
+              ad: 'Projeler',
+              ne: 'Staj CV’sinin asıl gövdesi. Her proje için ne yaptın, hangi araçla, sonuç ne oldu.',
+              ornek: '[Proje adı] — [ne yaptın], [araç/dil], [sonuç]',
+            },
+            {
+              ad: 'Deneyim',
+              ne: 'Varsa yarı zamanlı iş, gönüllü çalışma, kulüp görevi. Yoksa bu başlık hiç açılmaz.',
+            },
+            {
+              ad: 'Yetenekler',
+              ne: 'Araç ve dil adları, seviyesiyle birlikte. Uzun bir kelime listesi değil.',
+              ornek: '[Program] (orta) · [Dil] (başlangıç) · [Araç] (ileri)',
+            },
+          ]}
+          aciklama="Köşeli parantezli alanlar yer tutucu — gerçek bir kişiye ait örnek kullanılmıyor. Deneyimin yokken sıra böyle: eğitim ve projeler yukarı çıkar."
+        />
+
         <B>Deneyim yerine ne yazılır</B>
         <L>
           <li>
@@ -536,6 +638,37 @@ export const REHBERLER: Rehber[] = [
           kötü.
         </P>
 
+        <B>Aynı beceri, iki farklı yazım</B>
+        <Karsilastirma
+          kotuBaslik="Bilgi taşımıyor"
+          iyiBaslik="Ne yaptığın belli"
+          kotu={[
+            'Python biliyorum.',
+            'Takım çalışmasına yatkınım.',
+            'Excel: iyi.',
+            'İletişim becerim güçlü.',
+          ]}
+          iyi={[
+            'Python ile ürün fiyatlarını takip eden küçük bir web uygulaması geliştirdim.',
+            'Dört kişilik bitirme projesinde veri toplama kısmını üstlendim.',
+            'Excel’de pivot tablo ve düşeyara ile 500 satırlık ders verisini raporladım.',
+            'Kulüp etkinliğinde 60 kişilik katılımcı yazışmasını yürüttüm.',
+          ]}
+        />
+
+        <B>Göndermeden önce</B>
+        <KontrolListesi
+          baslik="CV kontrol listesi"
+          maddeler={[
+            'Dosya PDF ve adı "AdSoyad-CV.pdf".',
+            'Tek sayfa.',
+            'En az bir projede ne yaptığın, hangi araçla ve sonucu yazıyor.',
+            'Beceriler seviyesiyle yazılmış; boş kelime listesi yok.',
+            'Yazım hatası için bir kez daha okundu.',
+            'İletişim bilgileri güncel ve e-posta adresi ciddi.',
+          ]}
+        />
+
         <B>Bir sayfa yeter</B>
         <P>
           Staj başvurusunda iki sayfalık CV, doldurmak için uzatıldığı izlenimi veriyor.
@@ -605,6 +738,37 @@ export const REHBERLER: Rehber[] = [
           açık olup olmadığını, işe devam edip etmeyeceğini ve ekiple çalışabilecek misin onu
           anlamaya çalışıyor.
         </P>
+
+        <B>Mülakatın üç aşaması</B>
+        <Akis
+          adimlar={[
+            {
+              baslik: 'Öncesinde',
+              aciklama:
+                'Şirketin ne yaptığını iki cümleyle anlatabilecek kadar oku. CV’nde yazan her projeyi anlatmaya hazır ol. Sana sorulacak "bizde ne yapmak istersin" sorusuna tek cümlelik cevabını hazırla. Bağlantıyı ve saati bir gün önce doğrula.',
+            },
+            {
+              baslik: 'Sırasında',
+              aciklama:
+                'Bilmediğin şeye "bilmiyorum ama şöyle öğrenirim" de. Proje anlatırken ne yaptığını, hangi araçla ve sonucu söyle. Süre, başlangıç tarihi ve zorunlu staj evrağını sen sor — bunlar mülakatın normal parçası.',
+            },
+            {
+              baslik: 'Sonrasında',
+              aciklama:
+                'Aynı gün kısa bir teşekkür e-postası yaz. Konuşulan bir belge varsa onu ekle. Bir hafta cevap gelmezse tek bir hatırlatma yeterli.',
+            },
+          ]}
+        />
+
+        <B>Proje anlatırken dört adım</B>
+        <Akis
+          adimlar={[
+            { baslik: 'Soru', aciklama: 'Karşındaki genelde "bize bir projenden bahset" diyor.' },
+            { baslik: 'Durum', aciklama: 'Ne yapman gerekiyordu, hangi derste ya da hangi işte, kaç kişiydiniz.' },
+            { baslik: 'Ne yaptım', aciklama: 'Senin payın ne oldu. "Biz" değil "ben" de; hangi aracı kullandın.' },
+            { baslik: 'Sonuç', aciklama: 'Ne çıktı ortaya, ne öğrendin. Sayı verebiliyorsan ver; veremiyorsan uydurma.' },
+          ]}
+        />
 
         <B>Neredeyse her mülakatta çıkanlar</B>
         <L>
@@ -814,29 +978,52 @@ export const REHBERLER: Rehber[] = [
           "Merhaba", "Staj" ya da boş konu satırı; üçü de doğrudan çöpe gidiyor.
         </P>
 
-        <B>Şablon</B>
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 leading-relaxed whitespace-pre-line font-mono">
-{`Merhaba,
+        <B>Zayıf e-posta ile daha iyisi</B>
+        <Karsilastirma
+          kotuBaslik="Zayıf"
+          iyiBaslik="Daha iyi"
+          kotu={[
+            'Konu: "Merhaba" — açılmadan siliniyor.',
+            'Hangi şirkete yazdığın belli değil; aynı metin herkese gitmiş gibi duruyor.',
+            'Hangi pozisyon, hangi tarih, ne kadar süre — hiçbiri yok.',
+            'CV ekte yazıyor ama ek yok ya da dosya adı "cv.pdf".',
+          ]}
+          iyi={[
+            'Konu satırında başvuru türü, bölüm ve tarih aralığı var.',
+            'Şirkete özel tek cümle: neden orası.',
+            'Süre ve tarih net; işveren planlama yapabiliyor.',
+            'Ek gerçekten iliştirilmiş ve dosya adı "AdSoyad-CV.pdf".',
+          ]}
+        />
 
-[Üniversite] [Bölüm] 3. sınıf öğrencisiyim. Okulumun zorunlu
-stajı kapsamında [tarih] – [tarih] arasında 20 iş günü staj
-yapmam gerekiyor.
+        <B>Örnek e-posta</B>
+        <EpostaOrnegi
+          kime="ik@ornek-sirket.com"
+          konu="Staj Başvurusu — Makine Mühendisliği — Temmuz/Ağustos"
+          govde={`Merhaba,
 
-[Şirket adı]'nın [somut bir konu: ürün, proje, alan] tarafıyla
-ilgileniyorum çünkü [tek cümle sebep].
+[Üniversite] [Bölüm] 3. sınıf öğrencisiyim. Okulumun zorunlu stajı kapsamında [tarih] – [tarih] arasında 20 iş günü staj yapmam gerekiyor.
 
-Şu ana kadar [bir ders projesi / kullandığın program / yaptığın
-iş] üzerinde çalıştım. CV'mi ekte gönderiyorum.
+[Şirket adı]'nın [somut bir konu: ürün, proje, alan] tarafıyla ilgileniyorum çünkü [tek cümle sebep].
 
-Zorunlu staj sigortam okulum tarafından karşılanıyor; gerekli
-belgeyi paylaşabilirim.
+Şu ana kadar [bir ders projesi / kullandığın program / yaptığın iş] üzerinde çalıştım. CV'mi ekte gönderiyorum.
+
+Zorunlu staj sigortam okulum tarafından karşılanıyor; gerekli belgeyi paylaşabilirim.
 
 Uygun olursanız kısa bir görüşme yapabilir miyiz?
 
 İyi çalışmalar,
 [Ad Soyad]
 [Telefon]`}
-        </div>
+          ek="AdSoyad-CV.pdf"
+          aciklama="Köşeli parantezli yerleri kendi bilgilerinle değiştir. Şirkete özel olan tek cümle, e-postanın tamamından daha çok fark yaratıyor."
+        />
+
+        <RehberOrnek
+          baslik="Kopyalanabilir konu satırı"
+          metin="Staj Başvurusu — [Bölümün] — [Ay/Ay]"
+          aciklama="Konu satırı e-postanın açılıp açılmayacağını belirliyor; en somut hâlini yaz."
+        />
 
         <B>Sigorta cümlesini neden yazıyorsun</B>
         <P>
@@ -879,6 +1066,19 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
           kaynakları adresini ara. Bulamıyorsan LinkedIn üzerinden İK'da çalışan birine kısa
           bir mesaj atmak çoğu zaman e-postadan hızlı sonuç veriyor.
         </P>
+
+        <B>Göndermeden önce</B>
+        <KontrolListesi
+          baslik="Son kontrol"
+          maddeler={[
+            'Konu satırında bölüm ve tarih aralığı var.',
+            'Şirket adı doğru yazılmış; önceki başvurudan kalan ad yok.',
+            'Metinde o şirkete özel en az bir cümle var.',
+            'CV PDF ve dosya adı "AdSoyad-CV.pdf".',
+            'Ek gerçekten iliştirilmiş.',
+            'Tek alıcı: "Kime" satırında başka kimse yok.',
+          ]}
+        />
 
         <B>Cevap gelmezse</B>
         <P>
@@ -1283,7 +1483,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
             {
               baslik: 'Doğrudan başvuru',
               aciklama:
-                'İlan açmamış şirketlere yazmak. En çok işe yarayan ama en az denenen yol — çünkü reddedilme ihtimali kişisel geliyor. Oysa küçük işletmeler stajyer alabilecek durumda ve çoğu ilan açmayı hiç düşünmüyor. Rekabet neredeyse sıfır.',
+                'İlan açmamış şirketlere yazmak. En az denenen yol — çünkü reddedilme ihtimali kişisel geliyor. Oysa küçük işletmeler stajyer alabilecek durumda ve çoğu ilan açmayı hiç düşünmüyor. Rekabet neredeyse sıfır.',
             },
             {
               baslik: 'Okulun staj birimi',
@@ -1402,6 +1602,19 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
           sık karşılaşılan bir durum ve senin hakkında bir şey söylemiyor. Sessizlikleri
           başarısızlık sayarsan üçüncü günde bırakırsın.
         </P>
+
+        <B>Bugün yapabileceğin altı şey</B>
+        <KontrolListesi
+          baslik="Bir saatte bitiyor"
+          maddeler={[
+            'Bölümüne uyan üç arama kelimesi belirle ve ilan listesinde dene.',
+            'Şehrinde staj alan beş şirketin adını bir listeye yaz.',
+            'O beş şirketin kariyer sayfasını aç, başvuru adresini not et.',
+            'CV’ni PDF olarak hazırla; dosya adını "AdSoyad-CV.pdf" yap.',
+            'Bir tanesine başvuru e-postasını yaz ve gönder.',
+            'Kime, ne zaman yazdığını aynı listeye işle.',
+          ]}
+        />
 
         <B>Sık yapılan hata</B>
         <Karsilastirma
