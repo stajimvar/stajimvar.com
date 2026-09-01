@@ -11,7 +11,6 @@ import {
   X,
 } from 'lucide-react';
 import type { StudentProfile } from '../types';
-import { GoogleAdBanner } from './GoogleAdBanner';
 import { ListingLogo } from './ListingLogo';
 import { ZamanTupu } from './ZamanTupu';
 import { OneCikanBurslar } from './OneCikanBurslar';
@@ -651,7 +650,6 @@ export const OpportunitiesPage: React.FC<{
                       Akış arası reklam, üçüncü karttan sonra. Yayıncı kimliği
                       tanımlı değilse GoogleAdBanner hiçbir şey çizmiyor.
                     */}
-                    {sira === 2 && <GoogleAdBanner format="in-feed" />}
                   </React.Fragment>
                 ))}
               </div>
@@ -716,7 +714,6 @@ export const OpportunitiesPage: React.FC<{
             </p>
           </aside>
 
-          <GoogleAdBanner format="sidebar-rectangle" />
         </div>
       </div>
 

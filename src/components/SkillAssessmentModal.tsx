@@ -3,7 +3,6 @@ import { X, CheckCircle2, Trophy, ArrowRight, Sparkles, Loader2 } from 'lucide-r
 import confetti from 'canvas-confetti';
 import { SkillQuiz, StudentProfile } from '../types';
 import { submitQuizAttempt, type QuizResult } from '../lib/queries';
-import { GoogleAdBanner } from './GoogleAdBanner';
 
 /**
  * Yetenek doğrulama testi.
@@ -179,7 +178,6 @@ export const SkillAssessmentModal: React.FC<SkillAssessmentModalProps> = ({
               )}
 
               <div className="pt-2">
-                <GoogleAdBanner format="modal-footer" />
               </div>
             </div>
           )}

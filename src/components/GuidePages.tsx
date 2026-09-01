@@ -1,4 +1,6 @@
 import React, { useEffect } from 'react';
+import { GoogleAdBanner } from './GoogleAdBanner';
+import { REKLAM_UYGUN_REHBERLER } from '../data/reklam-uygun-rehberler';
 import { rehberEylemleri } from '../lib/rehber-eylemleri.mjs';
 import {
   ArrowLeft,
@@ -400,6 +402,19 @@ const Icindekiler: React.FC<{ kap: React.RefObject<HTMLDivElement | null>; anaht
 export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }) => {
   /* Rehbere karşılık gelen ürün yüzeyleri; eşlemesi yoksa boş dizi. */
   const eylemler = React.useMemo(() => rehberEylemleri(slug), [slug]);
+
+  /*
+    REKLAM YALNIZ EDİTORYAL DEĞER KAPISINI GEÇEN REHBERDE
+
+    Liste üretilmiş bir dosyadan geliyor (scripts/rehber-sayimi.mjs) ve
+    kapı `src/lib/reklam-kapisi.mjs` içinde. Kelime sayısı tek başına
+    ölçüt değil: sık sorulanlar, resmî kaynak, karşılaştırma bloğu,
+    kontrol listesi ve gözden geçirme tarihi de sayılıyor.
+
+    Sitenin geri kalanında reklam yok — ilanlar, şirketler, fırsatlar ve
+    etkinliklerde ana içerik bizim yazdığımız metin değil.
+  */
+  const reklamUygun = REKLAM_UYGUN_REHBERLER.includes(slug);
   const rehber = rehberBul(slug);
   const icerikRef = React.useRef<HTMLDivElement>(null);
 
@@ -673,6 +688,8 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
             </ul>
           </section>
         )}
+
+        {reklamUygun && <GoogleAdBanner format="in-feed" className="mt-8" />}
 
         {rehber.guncelleme && (
           <p className="mt-6 text-xs text-gray-600">

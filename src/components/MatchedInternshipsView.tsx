@@ -31,7 +31,6 @@ import { SonucYok, type AktifSuzgec } from './SonucYok';
 import { SonrakiAdim } from './SonrakiAdim';
 import { BasvuruSablonu } from './BasvuruSablonu';
 import { ilBul } from '../lib/sehir';
-import { GoogleAdBanner } from './GoogleAdBanner';
 import { SirketSeridi } from './SirketSeridi';
 import { ILAN_KAYNAGI_PARCALI } from '../lib/urun-metni';
 
@@ -558,21 +557,6 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   const profileCompletion = profileChecks.length
     ? Math.round((profileChecks.filter(Boolean).length / profileChecks.length) * 100)
     : 0;
-
-  /**
-   * Akış içi reklamların hangi ilandan SONRA çıkacağı.
-   *
-   * İlk reklam 4. ilandan (index 3) sonra, sonrakiler altı ilanda bir,
-   * sayfa başına en fazla iki tane. Liste kısaldığında reklam sayısı da
-   * kendiliğinden azalıyor: 4 ilanlık bir listede hiç reklam çıkmıyor.
-   */
-  const reklamYerleri = useMemo(() => {
-    const yerler: number[] = [];
-    for (let i = 3; i < filteredListings.length - 1 && yerler.length < 2; i += 6) {
-      yerler.push(i);
-    }
-    return yerler;
-  }, [filteredListings.length]);
 
   /** İlan veren farklı şirket sayısı. Profil yokken uyum yerine bu gösteriliyor. */
   const companyCount = new Set(filteredListings.map((item) => item.listing.companyName)).size;
@@ -1350,24 +1334,15 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                   />
 
                   {/*
-                    AKIŞ İÇİ REKLAM KURALI
+                    AKIŞ İÇİ REKLAM KALDIRILDI
 
-                    Üç kısıt birden geçerli, üçü de kullanıcıyı boğmamak için:
-
-                    1. İlk reklam 4. ilandan önce çıkmıyor. Ziyaretçi önce
-                       gerçek içerik görmeli; ilk ekranda reklamla karşılaşan
-                       kullanıcı siteyi bırakıyor.
-                    2. Sonrakiler 6 ilanda bir. Kariyer.net'te aralık daha
-                       sık ama onların yüzlerce ilanı var; 11 ilanda aynı
-                       sıklık listeyi reklam listesine çevirirdi.
-                    3. Sayfa başına en fazla 2 tane.
-
-                    Anahtar tanımlı değilken bu yuvalar hiçbir şey çizmiyor,
-                    yani boşluk da bırakmıyorlar.
+                    Ana sayfanın içeriği şirketlerin ilanları; bizim
+                    yazdığımız metin değil. Başkasının içeriğinin arasına
+                    reklam koymak, düşük değerli yüzeyden gelir üretmeye
+                    en yakın duran şey. Reklam artık yalnız editoryal
+                    değer kapısını geçen rehberlerde
+                    (src/lib/reklam-kapisi.mjs).
                   */}
-                  {reklamYerleri.includes(index) && (
-                    <GoogleAdBanner format="in-feed" />
-                  )}
                 </React.Fragment>
               ))}
 
@@ -1475,7 +1450,6 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           </aside>
 
           {/* Altı reklam için ayrıldı; anahtar tanımlı değilken boş kalıyor. */}
-          <GoogleAdBanner format="sidebar-rectangle" />
         </div>
       </div>
 

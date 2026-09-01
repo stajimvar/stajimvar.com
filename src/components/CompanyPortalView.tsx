@@ -42,7 +42,6 @@ import {
 } from 'lucide-react';
 import { InternshipListing, StudentProfile, CompanyAccount, ApplicationRecord } from '../types';
 import { calculateInternshipMatch } from '../utils/matchingEngine';
-import { GoogleAdBanner } from './GoogleAdBanner';
 
 /**
  * Başvuru kaydı var ama öğrenci profili yüklenememişse gösterilecek yedek.
@@ -658,7 +657,6 @@ export const CompanyPortalView: React.FC<CompanyPortalViewProps> = ({
 
           {/* Corporate B2B HR Tools Sponsored Ad */}
           <div className="pt-2">
-            <GoogleAdBanner format="sidebar-rectangle" />
           </div>
         </div>
 

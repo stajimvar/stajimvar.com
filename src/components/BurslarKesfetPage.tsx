@@ -1,7 +1,6 @@
 import React from 'react';
 import { ChevronDown, Search, ShieldCheck, SlidersHorizontal, Sparkles, X } from 'lucide-react';
 import type { StudentProfile } from '../types';
-import { GoogleAdBanner } from './GoogleAdBanner';
 import { ScholarshipDiscoveryCard } from './ScholarshipDiscoveryCard';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import {
@@ -397,7 +396,6 @@ export const BurslarKesfetPage: React.FC<{
                 */}
                 {sira === 1 && (
                   <div className="empty:hidden">
-                    <GoogleAdBanner format="in-feed" />
                   </div>
                 )}
               </React.Fragment>
