@@ -1431,6 +1431,119 @@ async function main() {
   }
 
   /*
+    ---- büyük işveren sayfaları (dizin kaynaklı) ----
+
+    NEDEN AYRI BİR KAYNAK
+    ---------------------
+    `/staj-programlari` dizinindeki 44 kurum ile `companies` tablosundaki
+    şirketler AYRIK iki küme: kariyer adresinin alan adı ile şirket
+    kaydının site adresi karşılaştırıldı ve 44'ün HİÇBİRİ mevcut bir
+    kayıtla eşleşmedi (0/44). Slug ve ad çakışması da yok. Yani bu
+    sayfalar var olanları ezmiyor, yanlarına ekleniyor.
+
+    Ad benzerliğiyle birleştirme YAPILMIYOR: "Turkcell" ile "Turkcell
+    İletişim Hizmetleri A.Ş." aynı şirket olabilir ama bunu addan çıkarmak
+    iki farklı şirketi birleştirme riskini de getiriyor.
+
+    KALİTE KAPISI
+    -------------
+    Dizinde olmak sayfa açmaya yetmiyor. Ad, doğrulanmış resmî adres,
+    gerçek bir açıklama ve en az bir yararlı içerik bloğu (ilgili bölümler
+    ya da kariyer yolu) gerekiyor. Kapıdan geçmeyen kayıt için sayfa
+    üretilmiyor — 44 sayfa üretmek için eşik düşürmek, ince içerik üretmek
+    demek.
+  */
+  const { STAJ_PROGRAMLARI } = await icerikDerle(
+    path.join(kok, 'src', 'data', 'stajProgramlari.ts'),
+    'staj-programlari'
+  );
+  const kimlikModulu = await icerikDerle(
+    path.join(kok, 'src', 'lib', 'sirket-kimligi.mjs'),
+    'sirket-kimligi'
+  );
+  const dbSirketListesi = [...sirketler.values()].map((s) => ({
+    id: s.id || s.slug,
+    name: s.name,
+    slug: s.slug,
+    website_url: s.website_url,
+  }));
+  /* Bölüm slug'ı → görünen ad: bağlantı metni uydurulmasın. */
+  const { BOLUMLER: BOLUM_LISTESI } = await icerikDerle(
+    path.join(kok, 'src', 'data', 'bolumler.ts'),
+    'bolumler-isveren'
+  );
+  const bolumAdlari = new Map(BOLUM_LISTESI.map((b) => [b.slug, b.ad]));
+
+  const kimlikler = kimlikModulu.kanonikSirketler(STAJ_PROGRAMLARI, dbSirketListesi);
+  const kimlikSayimi = {};
+  for (const k of kimlikler) kimlikSayimi[k.sinif] = (kimlikSayimi[k.sinif] || 0) + 1;
+
+  const isverenSayfalari = [];
+  for (const k of kimlikler) {
+    if (k.sinif !== 'PROGRAM_ONLY_VERIFIED' && k.sinif !== 'MATCHED_EXISTING_COMPANY') continue;
+    /* Aynı slug iki kez yazılmasın: tabloda karşılığı varsa o sayfa kazanır. */
+    if (sirketler.has(k.slug)) continue;
+
+    const bolumBaglari = k.departments
+      .map((b) => {
+        const bilgi = bolumAdlari.get(b);
+        return bilgi ? `<li><a href="/bolum/${b}">${kacir(bilgi)}</a></li>` : '';
+      })
+      .filter(Boolean)
+      .join('');
+
+    const aciklama = ozetle(k.summary || '', 155);
+    const govdeParcalari = [
+      `<main><h1>${kacir(k.displayName)} staj ve kariyer</h1>`,
+      `<p>${kacir(k.summary || '')}</p>`,
+      /*
+        DİZİNDE OLMAK "DOĞRULANMIŞ İŞVEREN HESABI" DEMEK DEĞİL.
+        Rozet dili burada bilerek kullanılmıyor; söylenen şey yalnızca
+        kariyer kaynağının bizim tarafımızdan takip edildiği.
+      */
+      "<p>Bu kurumun StajımVar'da bir işveren hesabı yok; staj başvurularını kendi " +
+        "kariyer sayfasından alıyor. Kaynağı biz takip ediyoruz.</p>",
+      '<h2>Açık staj ilanları</h2>',
+      "<p>Şu anda StajımVar'da doğruladığımız açık staj ilanı bulunmuyor. " +
+        "Resmî kariyer sayfasını kontrol edebilirsin.</p>",
+      k.careerUrl ? `<p><a href="${kacir(k.careerUrl)}" rel="nofollow noopener">Resmî kariyer sayfası</a></p>` : '',
+      k.lastChecked ? `<p>Kaynak son kontrol: ${kacir(k.lastChecked)}</p>` : '',
+      bolumBaglari ? `<h2>İlgili bölümler</h2><ul>${bolumBaglari}</ul>` : '',
+      '<h2>Başvuruya hazırlan</h2><ul>' +
+        '<li><a href="/rehber/staj-basvuru-epostasi">Staj başvuru e-postası nasıl yazılır</a></li>' +
+        '<li><a href="/rehber/staj-nasil-bulunur">Staj nasıl bulunur</a></li>' +
+        '<li><a href="/cv">Özgeçmiş oluştur</a></li></ul>',
+      '<p><a href="/staj-programlari">Büyük işverenlerde staj</a></p></main>',
+    ];
+
+    sayfaYaz(`/sirket/${k.slug}`, {
+      baslik: `${k.displayName} Staj ve Kariyer | StajımVar`,
+      aciklama,
+      govde: govdeParcalari.filter(Boolean).join(''),
+      /*
+        İŞ İLANI ŞEMASI YOK: bu kurumların StajımVar'da açık ilanı yok.
+        Açık ilanı olmayan bir sayfada iş ilanı yapısal verisi üretmek,
+        arama motoruna var olmayan bir ilanı bildirmek olurdu.
+
+        Organization yalnız ELİMİZDE OLAN alanlarla: ad ve resmî adres.
+        Hukuki unvan, adres, çalışan sayısı, puan uydurulmuyor.
+      */
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: k.displayName,
+        ...(k.officialDomain ? { url: `https://${k.officialDomain}` } : {}),
+        ...(k.sector ? { industry: k.sector } : {}),
+      },
+    });
+    isverenSayfalari.push(k.slug);
+    sayac++;
+  }
+  console.log(
+    `  büyük işveren kimliği: ${JSON.stringify(kimlikSayimi)} → ${isverenSayfalari.length} sayfa`
+  );
+
+  /*
     ---- ana sayfa ----
 
     En sona bırakıldı: gövdesine gerçek ilan listesi giriyor ve ilanlar

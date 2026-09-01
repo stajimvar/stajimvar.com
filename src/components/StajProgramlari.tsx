@@ -156,15 +156,39 @@ export const Kart: React.FC<{
         </p>
       )}
 
-      <a
-        href={program.kariyerUrl}
-        target="_blank"
-        rel="noopener"
-        className="mt-auto inline-flex items-center gap-1.5 pt-3 text-xs font-bold text-blue-700 hover:underline"
-      >
-        Resmî başvuru sayfasına git
-        <ExternalLink className="h-3.5 w-3.5" />
-      </a>
+      {/*
+        İKİ EYLEM, İKİ FARKLI İŞ
+
+        Birincil: kurumun StajımVar sayfası — ilgili bölümler, kaynak son
+        kontrol ve başvuru hazırlığı orada. İkincil: resmî kariyer
+        sayfası, doğrudan dışarı.
+
+        Resmî bağlantı KALDIRILMADI: kullanıcıyı bir tıklama daha
+        yürütmeye zorlamak, gitmek istediği yeri gizlemek olurdu.
+      */}
+      <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-3">
+        <a
+          href={`/sirket/${program.slug}`}
+          onClick={(e) => {
+            if (onNavigate) {
+              e.preventDefault();
+              onNavigate(`/sirket/${program.slug}`);
+            }
+          }}
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 hover:underline"
+        >
+          Şirketi incele
+        </a>
+        <a
+          href={program.kariyerUrl}
+          target="_blank"
+          rel="noopener"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-800 hover:underline"
+        >
+          Resmî başvuru sayfası
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
+      </div>
     </div>
   );
 };

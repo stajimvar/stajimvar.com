@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Globe, MapPin, ShieldCheck, BadgeCheck } from 'lucide-react';
 import type { InternshipListing } from '../types';
 import { fetchCompanyPage } from '../lib/queries';
+import { STAJ_PROGRAMLARI } from '../data/stajProgramlari';
+import { IsverenKimlikSayfasi } from './IsverenKimlikSayfasi';
 import { ListingLogo } from './ListingLogo';
 import { BOLUMLER } from '../data/bolumler';
 import { eklenmeMetni, sonKontrolMetni } from '../lib/zaman';
@@ -45,6 +47,11 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
   onRequireLogin,
 }) => {
   const [veri, setVeri] = useState<Veri>(null);
+  /* Slug tabloda yoksa büyük işverenler dizininde karşılığı olabilir. */
+  const dizinKaydi = React.useMemo(
+    () => STAJ_PROGRAMLARI.find((p) => p.slug === slug) ?? null,
+    [slug]
+  );
   const [durum, setDurum] = useState<Durum>('yukleniyor');
 
   useEffect(() => {
@@ -132,7 +139,24 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
           <div className="h-40 rounded-3xl bg-gray-100 animate-pulse"/>
         )}
 
-        {durum === 'yok' && (
+        {durum === 'yok' && dizinKaydi && (
+          /*
+            DİZİN KAYNAKLI KİMLİK
+
+            `companies` tablosunda karşılığı olmayan slug doğrudan
+            "bulunamadı" oluyordu. Oysa büyük işverenler dizinindeki 44
+            kurumun hiçbirinin tabloda kaydı yok (ölçüldü: 0/44 alan adı
+            eşleşmesi) — yani dizinden gelen her tıklama çıkmaza
+            düşüyordu.
+          */
+          <IsverenKimlikSayfasi
+            program={dizinKaydi}
+            onBack={() => onNavigate('/staj-programlari')}
+            onNavigate={onNavigate}
+          />
+        )}
+
+        {durum === 'yok' && !dizinKaydi && (
           <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center space-y-3">
             <p className="font-bold">Bu şirket bulunamadı</p>
             <button

@@ -98,7 +98,7 @@ export const RehberSonuclari: React.FC<{
               ikon={<Building2 className="h-4 w-4" />}
               baslik={i.isveren}
               altMetin={i.sektor}
-              onClick={() => onNavigate(`/staj-programlari#${i.slug}`)}
+              onClick={() => onNavigate(`/sirket/${i.slug}`)}
             />
           ))}
         </div>

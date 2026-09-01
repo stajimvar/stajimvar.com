@@ -250,7 +250,7 @@ export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
               {isverenler.map((i) => (
                 <a
                   key={i.slug}
-                  href={`/staj-programlari#${i.slug}`}
+                  href={`/sirket/${i.slug}`}
                   className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 hover:border-blue-300 hover:text-blue-700"
                 >
                   <img

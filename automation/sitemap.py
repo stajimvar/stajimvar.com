@@ -62,6 +62,17 @@ DURAGAN = [
 ]
 
 
+def program_sluglari() -> list[str]:
+    """Buyuk isveren dizinindeki kurumlarin sluglari.
+
+    Kalite kapisi ON RENDER tarafinda uygulaniyor (src/lib/sirket-kimligi.mjs);
+    burada ayni kurallari ikinci kez yazmak iki uygulamanin ayrisma riskini
+    dogururdu. Dizin kaydinin kendisi zaten kariyer adresi, ozet ve bolum
+    iliskisi tasiyor.
+    """
+    return kayit_sluglari("stajProgramlari.ts")
+
+
 def kayit_sluglari(dosya: str) -> list[str]:
     """src/data altindaki bir kayittan slug'lari okur.
 
@@ -211,6 +222,14 @@ def main() -> None:
         tarih_etiketi = f"<lastmod>{tarih}</lastmod>" if tarih else ""
         satirlar.append(
             f"  <url><loc>{SITE}/kesfet/{kacir(etkinlik['slug'])}</loc>{tarih_etiketi}"
+            f"<changefreq>weekly</changefreq><priority>0.6</priority></url>"
+        )
+
+    # Buyuk isveren sayfalari: dizindeki kurumlarin kendi adresleri.
+    # Tabloda karsiligi olan slug iki kez yazilmasin diye set birlestiriliyor.
+    for slug in sorted(set(program_sluglari()) - sirketler):
+        satirlar.append(
+            f"  <url><loc>{SITE}/sirket/{kacir(slug)}</loc>"
             f"<changefreq>weekly</changefreq><priority>0.6</priority></url>"
         )
 
