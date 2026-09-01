@@ -11,4 +11,11 @@
 -- zaman false dönüyor. Yani anon yalnız politikanın çalışmasını
 -- sağlıyor, hiçbir başvuru bilgisi görmüyor.
 
+-- VERSİYON UZAK DEFTERE GÖRE SEÇİLDİ
+--
+-- Bu düzeltme kesinti sırasında önce doğrudan uygulandı ve uzak defter
+-- `20260901031143` satırını kendisi yazdı. Yerel dosyaya başka bir
+-- versiyon vermek `remoteOnly` ayrışması üretiyor ve `db push`
+-- kilitleniyor; dosya bu yüzden defterdeki versiyonu taşıyor.
+
 grant execute on function public.ogrenci_basvurdu_mu(uuid) to anon;
