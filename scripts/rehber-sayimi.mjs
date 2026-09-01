@@ -20,31 +20,31 @@ import { editoryalDeger } from '../src/lib/reklam-kapisi.mjs';
 const KOK = path.dirname(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')));
 
 /*
-  KELİME SAYIMI ÖN RENDER ÇIKTISINDAN
+  JSX GÖVDESİNDEN OKUNABİLİR METİN
 
-  İlk sürüm JSX kaynağını sayıyordu ve `{...}` ifadelerini attığı için
-  ortalamayı 151 kelime gösteriyordu — gerçek değer 384. Kullanıcının
-  gördüğü metin ön render edilmiş HTML'de duruyor; ölçüm oradan.
+  İlk sürüm `{...}` bloklarını komple atıyordu; oysa rehber metninin
+  büyük kısmı o blokların İÇİNDEKİ dize sabitlerinde duruyor. Sonuç
+  ortalamayı 151 kelime gösteriyordu — ön render çıktısından ölçülen
+  gerçek değer 469'du.
+
+  İkinci sürüm bu yüzden `dist/` okuyordu, ama o da temiz bir
+  checkout'ta çalışmıyordu: derleme yapılmadan sayım başka sonuç
+  veriyor ve üretilen liste testte tutmuyordu (CI'da ölçüldü).
+
+  Artık ifade blokları atılmadan önce içlerindeki tırnaklı metinler
+  çıkarılıyor: sayım kaynaktan üretiliyor (ortalama 437) ve derlemeye
+  muhtaç değil.
 */
-function onRenderKelime(slug) {
-  const dosya = path.join(KOK, 'dist', 'rehber', `${slug}.html`);
-  if (!fs.existsSync(dosya)) return null;
-  const html = fs.readFileSync(dosya, 'utf8');
-  const m = /data-seo-prerender>([\s\S]*)/.exec(html);
-  if (!m) return null;
-  return m[1]
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .split(' ')
-    .filter((x) => x.length > 1).length;
-}
-
-/** JSX gövdesinden okunabilir metin. */
 function metin(jsx) {
-  return jsx
+  const dizeler = [];
+  const govde = jsx.replace(/\{([\s\S]*?)\}/g, (_tam, ic) => {
+    for (const m of ic.matchAll(/'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"/g)) {
+      dizeler.push(m[1] ?? m[2] ?? '');
+    }
+    return ' ';
+  });
+  return (govde + ' ' + dizeler.join(' '))
     .replace(/<[^>]+>/g, ' ')
-    .replace(/\{[^{}]*\}/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -79,7 +79,7 @@ export function rehberleriOlc() {
   for (const dosya of dosyalar) {
     const kaynak = fs.readFileSync(dosya, 'utf8');
     for (const { slug, govde } of rehberBloklari(kaynak)) {
-      const kelime = onRenderKelime(slug) ?? kelimeSay(govde);
+      const kelime = kelimeSay(govde);
       const sinyal = {
         slug,
         dosya: path.basename(dosya),
@@ -125,7 +125,7 @@ function listeyiYaz(hepsi) {
     ' * Kapı `src/lib/reklam-kapisi.mjs` içindeki editoryalDeger(); burada',
     ' * yalnız o kapıdan geçen sluglar duruyor.',
     ' *',
-    ' * Kelime sayısı tek başına ölçüt değil: 70 rehberin medyanı 396',
+    ' * Kelime sayısı tek başına ölçüt değil: 70 rehberin ortalaması 437',
     ' * kelime ve en uzunu 894. İnternette dolaşan "1000 kelime" eşiği bu',
     ' * sitede her şeyi elerdi ve hiçbir şey anlatmazdı.',
     ' */',
