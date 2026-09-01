@@ -208,3 +208,26 @@ def test_h_kayit_veri_sinifi_beklenen_alanlari_tasiyor():
     alanlar = set(SirketKaydi("X", 1).__dict__)
     assert {"sirket", "sinyal_sayisi", "sinif", "alan_adi", "kariyer_url",
             "ats", "ilan_html_icinde", "kanitlar"} <= alanlar
+
+
+# ---------------------- I: depo sözleşmesi tahmin edilmiyor
+
+def test_i_sinyal_veri_sinifi_cozum_alanlarini_tasiyor():
+    """`Sinyal` alanları koşuculardan okunuyor; varsayılmıyor.
+
+    `resolved_career_url` veri sınıfında yoktu ve kariyer sayfası koşusu
+    tam bu tahminle patladı. Aynı hata `Job` ve `Kanit` alanlarında da
+    olmuştu; sözleşme artık teste bağlı.
+    """
+    import dataclasses
+
+    from automation.radar_sinyal_deposu import Sinyal, sinyalleri_oku
+    import inspect
+
+    alanlar = {f.name for f in dataclasses.fields(Sinyal)}
+    assert {"resolved_ats", "resolved_company_domain", "resolved_career_url"} <= alanlar
+
+    # Okunan kolonlar veri sınıfındaki alanlarla aynı olmalı.
+    kaynak = inspect.getsource(sinyalleri_oku)
+    for kolon in ("resolved_ats", "resolved_company_domain", "resolved_career_url"):
+        assert kolon in kaynak, kolon

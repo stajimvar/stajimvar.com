@@ -47,6 +47,7 @@ class Sinyal:
     durum: str
     resolved_ats: str | None = None
     resolved_company_domain: str | None = None
+    resolved_career_url: str | None = None
 
 
 def _baglanti() -> tuple[str, dict]:
@@ -103,7 +104,7 @@ def sinyalleri_oku(source: str = "linkedin", durumlar: tuple[str, ...] = COZULME
         params={
             "select": ("id,source,source_url,company_name_raw,company_name_normalized,"
                        "title_raw,location_raw,resolution_status,resolved_ats,"
-                       "resolved_company_domain"),
+                       "resolved_company_domain,resolved_career_url"),
             "source": f"eq.{source}",
             "resolution_status": f"in.({','.join(durumlar)})",
             "limit": str(sinir),
@@ -119,6 +120,7 @@ def sinyalleri_oku(source: str = "linkedin", durumlar: tuple[str, ...] = COZULME
             baslik=s["title_raw"], konum=s.get("location_raw"),
             durum=s["resolution_status"], resolved_ats=s.get("resolved_ats"),
             resolved_company_domain=s.get("resolved_company_domain"),
+            resolved_career_url=s.get("resolved_career_url"),
         )
         for s in yanit.json()
     ]
