@@ -228,3 +228,32 @@ test('I: KVKK onay sürümü CV ve başvuru öncesi sürümde kalmadı', () => {
     'Özgeçmiş yükleme ve platform içi başvuru yayına girince sürüm artmalıydı'
   );
 });
+
+
+/* --------------- J: rehber iddiaları fazla kesin olmasın */
+
+test('J: kaynaksız sayısal başarı oranı yok', () => {
+  /*
+    Ölçüldü: "yirmi başvurudan iki cevap gelirse iyi bir orandır" —
+    kaynaksız bir oran, üstelik iki ayrı yerde tekrarlanıyordu. Öğrenci
+    bunu bir ölçüt sanıp kendini kıyaslıyor.
+  */
+  hicbirDosyadaGecmiyor(
+    /(yirmi|[0-9]+) başvurudan (iki|[0-9]+) cevap/i,
+    'Kaynaksız başvuru/cevap oranı yazılmamalı'
+  );
+});
+
+test('J2: ölçülmemiş üstünlük iddiası yok', () => {
+  hicbirDosyadaGecmiyor(
+    /staj bulmanın en çok işe yarayan yolu/i,
+    'Yöntemler arasında ölçülmemiş üstünlük iddiası'
+  );
+});
+
+test('J3: sigorta şablonu mutlak yükümlülük iddiası taşımıyor', () => {
+  hicbirDosyadaGecmiyor(
+    /sizden ek (bir )?yükümlülük gerekmiyor/i,
+    'Zorunlu staj sigortası okul ve bölüme göre değişiyor; mutlak dil kullanılamaz'
+  );
+});

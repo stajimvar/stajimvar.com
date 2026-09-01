@@ -796,8 +796,9 @@ export const REHBERLER: Rehber[] = [
     icerik: (
       <>
         <P>
-          İlan olmayan şirketlere doğrudan yazmak, staj bulmanın en çok işe yarayan yolu.
-          Ama çoğu e-posta okunmadan kapanıyor — genelde aynı birkaç sebepten.
+          İlan açmayan küçük ve orta ölçekli şirketlere doğrudan yazmak, staj ararken
+          işe yarayan yollardan biri: rekabet düşük oluyor. Ama çoğu e-posta okunmadan
+          kapanıyor — genelde aynı birkaç sebepten.
         </P>
 
         <B>Konu satırı</B>
@@ -828,8 +829,8 @@ ilgileniyorum çünkü [tek cümle sebep].
 Şu ana kadar [bir ders projesi / kullandığın program / yaptığın
 iş] üzerinde çalıştım. CV'mi ekte gönderiyorum.
 
-Sigortam okulum tarafından yapılacak; sizden ek bir yükümlülük
-gerekmiyor.
+Zorunlu staj sigortam okulum tarafından karşılanıyor; gerekli
+belgeyi paylaşabilirim.
 
 Uygun olursanız kısa bir görüşme yapabilir miyiz?
 
@@ -1398,8 +1399,9 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
 
         <P>
           Kanalları sırayla değil paralel kullan. Ve beklentini baştan ayarla:{' '}
-          <strong>yirmi başvurudan iki cevap gelirse iyi bir orandır</strong> — iki cevap
-          da sana yeter. Onsekiz sessizliği başarısızlık sayarsan üçüncü günde bırakırsın.
+          <strong>gönderdiğin e-postaların çoğu cevapsız kalacak</strong> — bu normal ve
+          senin hakkında bir şey söylemiyor. Birkaç cevap da sana yeter. Sessizlikleri
+          başarısızlık sayarsan üçüncü günde bırakırsın.
         </P>
 
         <B>Sık yapılan hata</B>
@@ -1447,12 +1449,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
       {
         soru: 'İlan olmayan şirkete başvurmak mantıklı mı?',
         cevap:
-          'En çok işe yarayan yol bu. Çoğu küçük işletme stajyer alabilecek durumda ama ilan açmayı hiç düşünmüyor. İlan olmadığı için rekabet de neredeyse sıfır oluyor.',
+          'Denemeye değer. Çoğu küçük işletme stajyer alabilecek durumda ama ilan açmayı hiç düşünmüyor; ilan olmadığı için o şirkete yazan aday sayısı da az oluyor.',
       },
       {
         soru: 'Kaç yere başvurmalıyım?',
         cevap:
-          'İlk hafta yirmi şirket hedefle. Yirmi başvurudan iki cevap gelmesi iyi bir oran ve iki cevap yeterli. Kime yazdığını bir listede tut; aynı yere ikinci kez yazmak kötü görünüyor.',
+          'Tek bir yere yazıp beklemek yerine ilk hafta bir liste çıkar ve paralel ilerle. Cevapsız kalan e-postalar olacak; birkaç cevap yeterli. Kime yazdığını bir listede tut, aynı yere ikinci kez yazmak kötü görünüyor.',
       },
       {
         soru: 'Tecrübem yokken staj bulabilir miyim?',

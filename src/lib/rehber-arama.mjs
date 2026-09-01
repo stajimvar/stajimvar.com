@@ -124,14 +124,50 @@ export function profilBolumu(bolumAdi, bolumler) {
  * @param {string|null|undefined} universite
  * @param {{universite: string}[]} merkezler
  */
+/*
+  ÜNİVERSİTE TAKMA ADLARI — ELLE, TAHMİNSİZ
+
+  Öğrenci profilinde üniversite serbest metin. Kısaltma ve eksik yazım
+  yaygın olduğu için küçük bir eşleme tutuluyor; ama her giriş burada
+  AÇIKÇA yazılı, kelime benzerliğiyle üretilmiyor.
+*/
+const UNIVERSITE_TAKMA_ADLARI = {
+  bogazici: 'bogazici universitesi',
+  odtu: 'orta dogu teknik universitesi',
+  itu: 'istanbul teknik universitesi',
+  ytu: 'yildiz teknik universitesi',
+  ktu: 'karadeniz teknik universitesi',
+  iyte: 'izmir yuksek teknoloji enstitusu',
+  omu: 'ondokuz mayis universitesi',
+  sdu: 'suleyman demirel universitesi',
+  tobb: 'tobb ekonomi ve teknoloji universitesi',
+  ege: 'ege universitesi',
+  marmara: 'marmara universitesi',
+  hacettepe: 'hacettepe universitesi',
+  sabanci: 'sabanci universitesi',
+};
+
+/**
+ * Öğrencinin üniversitesine karşılık gelen kariyer merkezi.
+ *
+ * TAM EŞLEŞME — ALT DİZE DEĞİL
+ * ----------------------------
+ * İlk sürüm iki yönlü `includes` kullanıyordu ve ölçüldüğünde yanlış
+ * üniversiteyi gösteriyordu: "İstanbul Üniversitesi" yazan öğrenciye
+ * "İstanbul Üniversitesi-Cerrahpaşa" merkezini açıyordu — bunlar farklı
+ * iki üniversite. Yalnız "İstanbul" yazmak bile eşleşiyordu.
+ *
+ * Yanlış kişiselleştirme, kişiselleştirmemekten kötü: öğrenci kendi
+ * okulunun sayfası sandığı yerden yanlış belge indirir. Artık yalnız
+ * normalize edilmiş TAM eşitlik ya da elle yazılmış bir takma ad
+ * kabul ediliyor.
+ */
 export function profilMerkezi(universite, merkezler) {
   const ad = sadelestir(universite);
   if (!ad || ad.length < 4) return null;
+  const hedef = UNIVERSITE_TAKMA_ADLARI[ad] ?? ad;
 
   return (
-    (merkezler ?? []).find((m) => {
-      const mAd = sadelestir(m.universite);
-      return mAd === ad || mAd.includes(ad) || ad.includes(mAd);
-    }) ?? null
+    (merkezler ?? []).find((m) => sadelestir(m.universite) === hedef) ?? null
   );
 }

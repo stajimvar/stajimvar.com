@@ -113,7 +113,7 @@ export const CV_REHBERLERI: Rehber[] = [
       {
         soru: 'Aynı CV\'yi her ilana gönderebilir miyim?',
         cevap:
-          'Gönderebilirsin ama başlıktaki hedef ve beceri sırasını ilana göre değiştirmek dönüş oranını belirgin şekilde artırıyor.',
+          'Gönderebilirsin ama başlıktaki hedef ve beceri sırasını ilana göre düzenlemek ilanı okuyan kişinin aradığını daha hızlı bulmasını sağlıyor.',
       },
     ],
     sonrakiAdim: {

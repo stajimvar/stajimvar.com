@@ -95,7 +95,7 @@ export const STAJ_REHBERLERI: Rehber[] = [
             'Sigorta sorununu hallederim.',
           ],
           iyi: [
-            'Zorunlu stajım kapsamında sigortam okulum tarafından yapılacak; sizden ek bir yükümlülük gerekmiyor.',
+            'Zorunlu staj sigortam okulum tarafından karşılanıyor; gerekli belgeyi paylaşabilirim.',
             'Okulumun zorunlu staj formunu ekte gönderiyorum; sizden yalnızca imza ve tarih onayı gerekiyor.',
             'Staj bitiminde değerlendirme formunu doldurmanız yeterli.',
           ],

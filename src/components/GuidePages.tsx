@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { rehberEylemleri } from '../lib/rehber-eylemleri.mjs';
 import {
   ArrowLeft,
   ChevronRight,
@@ -397,6 +398,8 @@ const Icindekiler: React.FC<{ kap: React.RefObject<HTMLDivElement | null>; anaht
 };
 
 export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }) => {
+  /* Rehbere karşılık gelen ürün yüzeyleri; eşlemesi yoksa boş dizi. */
+  const eylemler = React.useMemo(() => rehberEylemleri(slug), [slug]);
   const rehber = rehberBul(slug);
   const icerikRef = React.useRef<HTMLDivElement>(null);
 
@@ -632,6 +635,43 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
             </span>
             <ChevronRight className="w-5 h-5 shrink-0" />
           </button>
+        )}
+
+        {/*
+          BURADAN DEVAM ET — ÜRÜN YÜZEYİNE
+
+          `sonrakiAdim` tek ve editoryal bir adım; bu blok ise rehberin
+          konusuna karşılık gelen ÜRÜN yüzeylerini veriyor. Eşleme elle
+          kurulu (src/lib/rehber-eylemleri.mjs): slug ya da başlıktaki
+          kelimeye bakıp otomatik bağlantı üretmek, "burs" geçen her
+          rehberi burs sayfasına bağlamak olurdu.
+
+          Bağlantılar gerçek <a href>: tarayıcı bunları izleyebilsin.
+          Eşlemesi olmayan rehberde blok hiç çizilmiyor.
+        */}
+        {eylemler.length > 0 && (
+          <section className="mt-8 rounded-2xl border border-gray-200 bg-gray-50/70 p-4 sm:p-5">
+            <h2 className="text-sm font-extrabold text-gray-900">Buradan devam et</h2>
+            <ul className="mt-3 space-y-2">
+              {eylemler.map((e) => (
+                <li key={e.yol}>
+                  <a
+                    href={e.yol}
+                    onClick={(ev) => {
+                      ev.preventDefault();
+                      onNavigate(e.yol);
+                    }}
+                    className="block rounded-xl border border-gray-200 bg-white p-3.5 transition-colors hover:border-blue-300 hover:bg-blue-50/40"
+                  >
+                    <span className="block text-sm font-bold text-gray-900">{e.baslik}</span>
+                    <span className="block text-xs leading-relaxed text-gray-500">
+                      {e.aciklama}
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         {rehber.guncelleme && (

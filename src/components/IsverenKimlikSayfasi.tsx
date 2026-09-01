@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowLeft, Building2, ExternalLink, GraduationCap, ShieldCheck } from 'lucide-react';
 import { BOLUMLER } from '../data/bolumler';
 import type { StajProgrami } from '../data/stajProgramlari';
+import { rehberEylemleri } from '../lib/rehber-eylemleri.mjs';
 
 /**
  * DİZİN KAYNAKLI İŞVEREN SAYFASI
@@ -39,6 +40,10 @@ const Bolum: React.FC<{ baslik: string; children: React.ReactNode }> = ({ baslik
 );
 
 export const IsverenKimlikSayfasi: React.FC<Props> = ({ program, onBack, onNavigate }) => {
+  const hazirlik = React.useMemo(
+    () => rehberEylemleri('ilan-acmayan-sirkete-nasil-yazilir'),
+    []
+  );
   const bolumler = React.useMemo(
     () =>
       (program.bolumler ?? [])
@@ -118,27 +123,24 @@ export const IsverenKimlikSayfasi: React.FC<Props> = ({ program, onBack, onNavig
       )}
 
       {/*
-        Üç evergreen rehber. Şirkete özel rehber ilişkisi YOK; olmayan bir
-        ilişkiyi varmış gibi göstermek yerine her kurumda işe yarayan
-        üç bağlantı veriliyor.
+        Şirkete ÖZEL rehber ilişkisi yok; olmayan bir ilişkiyi varmış gibi
+        göstermek yerine "ilan açmayan şirkete yazma" rehberinin merkezî
+        eylemleri kullanılıyor. Her bileşen kendi rehber listesini
+        yazsaydı ikisi zamanla ayrışırdı.
       */}
       <Bolum baslik="Başvuruya hazırlan">
         <ul className="space-y-1.5 text-sm">
-          {[
-            ['/rehber/staj-basvuru-epostasi', 'Staj başvuru e-postası nasıl yazılır'],
-            ['/rehber/staj-nasil-bulunur', 'Staj nasıl bulunur'],
-            ['/cv', 'Özgeçmişini oluştur'],
-          ].map(([yol, ad]) => (
-            <li key={yol}>
+          {hazirlik.map((e) => (
+            <li key={e.yol}>
               <a
-                href={yol}
-                onClick={(e) => {
-                  e.preventDefault();
-                  onNavigate(yol);
+                href={e.yol}
+                onClick={(ev) => {
+                  ev.preventDefault();
+                  onNavigate(e.yol);
                 }}
                 className="font-semibold text-blue-600 hover:underline"
               >
-                {ad}
+                {e.baslik}
               </a>
             </li>
           ))}

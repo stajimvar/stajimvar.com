@@ -1461,6 +1461,18 @@ async function main() {
     path.join(kok, 'src', 'lib', 'sirket-kimligi.mjs'),
     'sirket-kimligi'
   );
+  /*
+    Hazırlık bağlantıları uygulamayla AYNI kaynaktan.
+
+    Burada üç bağlantı elle yazılıydı; uygulama tarafı merkezî eşlemeye
+    geçince ikisi ayrışıyordu. Tarayıcıya bir liste, kullanıcıya başka
+    bir liste göstermek gizleme sayılır.
+  */
+  const { rehberEylemleri } = await icerikDerle(
+    path.join(kok, 'src', 'lib', 'rehber-eylemleri.mjs'),
+    'rehber-eylemleri'
+  );
+  const hazirlikEylemleri = rehberEylemleri('ilan-acmayan-sirkete-nasil-yazilir');
   const dbSirketListesi = [...sirketler.values()].map((s) => ({
     id: s.id || s.slug,
     name: s.name,
@@ -1510,9 +1522,10 @@ async function main() {
       k.lastChecked ? `<p>Kaynak son kontrol: ${kacir(k.lastChecked)}</p>` : '',
       bolumBaglari ? `<h2>İlgili bölümler</h2><ul>${bolumBaglari}</ul>` : '',
       '<h2>Başvuruya hazırlan</h2><ul>' +
-        '<li><a href="/rehber/staj-basvuru-epostasi">Staj başvuru e-postası nasıl yazılır</a></li>' +
-        '<li><a href="/rehber/staj-nasil-bulunur">Staj nasıl bulunur</a></li>' +
-        '<li><a href="/cv">Özgeçmiş oluştur</a></li></ul>',
+        hazirlikEylemleri
+          .map((e) => `<li><a href="${e.yol}">${kacir(e.baslik)}</a></li>`)
+          .join('') +
+        '</ul>',
       '<p><a href="/staj-programlari">Büyük işverenlerde staj</a></p></main>',
     ];
 

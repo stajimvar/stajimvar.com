@@ -1,4 +1,5 @@
 import React from 'react';
+import { firsatEylemleri } from '../lib/rehber-eylemleri.mjs';
 import { ArrowLeft, Bookmark, Check, CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
 import {
   fetchOpportunityBySlug,
@@ -77,6 +78,11 @@ export const OpportunityDetailPage: React.FC<{
   const [adimlar, setAdimlar] = React.useState<string[]>([]);
   const [kaydediliyor, setKaydediliyor] = React.useState(false);
   const [listeHatasi, setListeHatasi] = React.useState<string | null>(null);
+  /* Fırsat türüne karşılık gelen devam yolları; tür tanınmıyorsa boş. */
+  const devamEylemleri = React.useMemo(
+    () => firsatEylemleri(item?.opportunityType),
+    [item?.opportunityType]
+  );
 
   React.useEffect(() => {
     let off = false;
@@ -441,6 +447,34 @@ export const OpportunityDetailPage: React.FC<{
             Başvuru kurumun kendi sayfasında yapılıyor.
           </p>
         </div>
+      )}
+
+      {/*
+        BAĞLAMA GÖRE DEVAM
+
+        Fırsatın KENDİ türüne bakıyor (`opportunity_type`), rastgele üç
+        kart değil. Tanımadığı tür için hiçbir şey çizmiyor: alakasız
+        bağlantı, hiç bağlantı olmamasından kötü.
+
+        Gerçek <a href>: tarayıcı bu bağlantıları izleyebilsin.
+      */}
+      {devamEylemleri.length > 0 && (
+        <section className="mt-6 rounded-2xl border border-gray-200 bg-gray-50/70 p-4">
+          <h2 className="text-sm font-extrabold text-gray-900">Buradan devam et</h2>
+          <ul className="mt-2.5 space-y-2">
+            {devamEylemleri.map((e) => (
+              <li key={e.yol}>
+                <a
+                  href={e.yol}
+                  className="block rounded-xl border border-gray-200 bg-white p-3 transition-colors hover:border-blue-300 hover:bg-blue-50/40"
+                >
+                  <span className="block text-sm font-bold text-gray-900">{e.baslik}</span>
+                  <span className="block text-xs leading-relaxed text-gray-500">{e.aciklama}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </main>
   );
