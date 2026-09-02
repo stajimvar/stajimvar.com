@@ -998,8 +998,22 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
 
                 {/* Hesap menüsü - mobilde alttan panel, masaüstünde popover. */}
+                {/*
+                  AVATAR MENÜSÜ YALNIZCA MASAÜSTÜNDE
+
+                  Mobilde bu düğme alttan hesap menüsünü açıyordu ve alt
+                  gezinme çubuğundaki "Profil" de aynı menüyü açıyordu —
+                  ekranın iki ayrı köşesinde aynı işi yapan iki düğme.
+                  Mobilde artık yalnızca alt menü var ve doğrudan profile
+                  gidiyor.
+
+                  MASAÜSTÜNDE KALDIRILAMAZ: alt gezinme çubuğu `lg:hidden`,
+                  yani geniş ekranda hiç çizilmiyor. Bu düğme oradaki tek
+                  profil ve çıkış kapısı; kaldırılsa masaüstünde hesaba
+                  ulaşmanın hiçbir yolu kalmazdı.
+                */}
                 {userRole === 'student' && activeStudent && (
-                  <div className="relative shrink-0">
+                  <div className="relative hidden shrink-0 lg:block">
                     <button
                       id="user-profile-menu-btn"
                       ref={accountSheetTriggerRef}
@@ -1557,11 +1571,24 @@ export const Header: React.FC<HeaderProps> = ({
 
         {isLoggedIn && (
           <>
-        {/* Profil — hesap menüsü sağ üst avatar düğmesinden açılır. */}
+        {/*
+          PROFİL DOĞRUDAN AÇILIYOR
+
+          Bu düğme `openMobileAccountSheet()` çağırıyordu, yani sağ üstteki
+          avatarla BİREBİR aynı şeyi yapıyordu: alttan bir menü açılıyor,
+          menüdeki "Profilim ve CV" ise zaten bu sayfaya götürüyordu. İki
+          ayrı düğme, aynı hedefe, arada gereksiz bir durak.
+
+          Menüdeki diğer satırlar da profilin kendi bölümleriydi
+          ("Başvurularım", "Rozetler ve testler" sayfanın içinde duruyor).
+          Geriye yalnızca çıkış ve yönetim paneli kalıyordu; ikisi de
+          profil sayfasının en altına indi.
+        */}
         <button
           aria-label="Profilim"
           onClick={() => {
-            openMobileAccountSheet();
+            setActiveTab('profile');
+            setActiveSubTab('all');
           }}
           className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${profildeMi ? 'shrink-0' : 'flex-1'} transition-all cursor-pointer relative ${
             profildeMi

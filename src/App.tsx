@@ -1760,6 +1760,15 @@ export default function App() {
                 student={activeStudent}
                 subTab={activeSubTab}
                 onSubTabChange={setActiveSubTab}
+                /*
+                  Çıkış ve yönetim paneli üst çubuktaki avatar menüsünden
+                  buraya taşındı: o menü mobilde kaldırıldı ve alt gezinme
+                  çubuğu artık doğrudan bu sayfaya geliyor. Masaüstündeki
+                  avatar menüsü duruyor, yani iki yerden de erişiliyor.
+                */
+                onLogout={handleLogout}
+                isAdmin={isAdmin}
+                onOpenAdmin={() => navigate('/admin')}
                 onUpdateProfile={handleUpdateProfile}
                 onOpenCv={() => navigate('/cv')}
                 basvurular={applications}
