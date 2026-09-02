@@ -1070,8 +1070,25 @@ async function main() {
   }
 
   /* ---- sabit sayfalar ---- */
+  /*
+    DÖRDÜNCÜ ALAN: ÖN RENDER KABUĞUNUN <h1>'İ
+
+    Bu, tarayıcının ve ilk boyamanın gördüğü başlık; React yüklenince
+    uygulamanın kendi h1'i onun yerine geçiyor. İkisi farklı şey
+    söylediğinde aynı sayfanın iki başlığı oluyor ve indekslenen, kullanıcının
+    gördüğü değil.
+
+    Dört ana sekme aynı cümleyi kuruyor ("<ne var>, tek listede."); burada da
+    birebir aynısı yazılı. Ana sayfada zaten öyleydi, diğer üçü ayrı
+    düşmüştü: "Öğrenci Fırsatları", "Öğrenci Rotası", "Öğrencilik, işini
+    bilene kolay."
+
+    <title> alanları KASITLI olarak farklı: onlar arama sonucunda görünüyor
+    ve anahtar kelimeyle başlıyor. Başlık cümlesi sayfanın kendini tanıtma
+    biçimi, title ise arama sonucundaki adı — ikisinin aynı olması gerekmiyor.
+  */
   const sabitler = [
-    ['/rehber', 'Öğrenci rehberi | StajımVar', "Stajdan bursa, KYK'dan yurda; öğrencilikte ihtiyaç duyacağın bilgiler resmî kaynağıyla, adım adım.", 'Öğrencilik, işini bilene kolay.'],
+    ['/rehber', 'Öğrenci rehberi | StajımVar', "Stajdan bursa, KYK'dan yurda; öğrencilikte ihtiyaç duyacağın bilgiler resmî kaynağıyla, adım adım.", 'Öğrencilikte bilmen gerekenler, tek listede.'],
     ['/bolumler', 'Bölüme göre staj rehberi | StajımVar', `${bolumler.length} bölüm için: staj nerede yapılır, stajyer ne iş yapar, ne öğrenmeli.`, 'Bölüme göre staj'],
     ['/araclar', 'Hesaplama araçları | StajımVar', 'Net hesaplama, YKS sıralama tahmini, staj ücreti ve staj günü hesaplama.', 'Hesaplama araçları'],
     ['/araclar/net-hesaplama', 'Net hesaplama (TYT, AYT, KPSS) | StajımVar', 'Doğru ve yanlış sayını gir, netini gör. TYT, AYT ve KPSS için.', 'Net hesaplama'],
@@ -1084,8 +1101,8 @@ async function main() {
     ['/staj-programlari', 'Büyük işverenlerde staj başvurusu | StajımVar', 'Aselsan, TUSAŞ, Turkcell, Tüpraş ve diğerleri stajı kendi kariyer sayfasından alıyor. Doğrulanmış başvuru adresleri.', 'Büyük işverenlerde staj'],
     ['/isveren/ilan-ver', 'Stajyer ilanı ver | StajımVar', 'Staj ilanı yayınlamak ücretsiz. Şirket sayfanızı sahiplenin, ilanlarınızı kendiniz girin.', 'Stajyer ilanı ver'],
     ['/universite-kariyer-merkezleri', 'Üniversite kariyer merkezleri | StajımVar', 'Staj formu, sigorta yazısı ve onay imzası kendi okulundan çıkıyor. Kariyer merkezlerinin doğrulanmış adresleri.', 'Üniversite kariyer merkezleri'],
-    ['/firsatlar', 'Öğrenci Fırsatları | StajımVar', 'Burs, eğitim, yurtdışı ve yarışma fırsatlarını tek yerden takip et.', 'Öğrenci Fırsatları'],
-    ['/kesfet', 'Öğrenci Rotası | StajımVar', 'Şehrindeki ücretsiz veya öğrenci bütçesine uygun sergileri, festivalleri, fuarları, müzeleri ve etkinlikleri keşfet.', 'Öğrenci Rotası'],
+    ['/firsatlar', 'Öğrenci Fırsatları | StajımVar', 'Burs, eğitim, yurtdışı ve yarışma fırsatlarını tek yerden takip et.', 'Burslar ve öğrenci fırsatları, tek listede.'],
+    ['/kesfet', 'Öğrenci Rotası | StajımVar', 'Şehrindeki ücretsiz veya öğrenci bütçesine uygun sergileri, festivalleri, fuarları, müzeleri ve etkinlikleri keşfet.', 'Şehrindeki etkinlikler, tek listede.'],
     ['/burslar', 'Burs Fırsatları | StajımVar', 'Resmî kaynağı doğrulanmış burs fırsatlarını takip et.', 'Burs Fırsatları'],
     ['/kyk', 'KYK Duyuruları | StajımVar', 'KYK burs, kredi ve resmî duyurularını takip et.', 'KYK Duyuruları'],
     ['/yurtdisi-firsatlari', 'Yurtdışı Fırsatları | StajımVar', 'Yurtdışı eğitim, değişim ve hareketlilik fırsatlarını takip et.', 'Yurtdışı Fırsatları'],

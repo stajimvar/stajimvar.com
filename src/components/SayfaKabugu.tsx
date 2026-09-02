@@ -35,6 +35,19 @@ interface SayfaKabuguProps {
   sag?: React.ReactNode;
   /** İçerik genişliği; varsayılan okuma genişliği. */
   icerikGenisligi?: string;
+  /**
+   * Üst boşluk.
+   *
+   * Varsayılan `pt-6 sm:pt-8` alt sayfalar için: oralarda içerikten önce
+   * geri düğmesi ve uzun metin var, nefes payı gerekiyor.
+   *
+   * Alt menüdeki ANA sekmeler bunu istemiyor. İlanlar, Fırsatlar ve Keşfet
+   * kendi `main`'lerini yazıyor ve `pt-2 sm:pt-3` kullanıyor; Rehber ise bu
+   * kabuğun içinde olduğu için başlığı 16 piksel aşağıda başlıyordu —
+   * sekmeler arasında geçerken üst yazı yer değiştiriyordu (ölçüldü: 85'e
+   * karşı 69).
+   */
+  ustBosluk?: string;
 }
 
 export const SayfaKabugu: React.FC<SayfaKabuguProps> = ({
@@ -42,6 +55,7 @@ export const SayfaKabugu: React.FC<SayfaKabuguProps> = ({
   children,
   sag,
   icerikGenisligi = 'max-w-3xl',
+  ustBosluk = 'pt-6 sm:pt-8',
 }) => (
   /*
     ARTIK KENDİ BAŞLIĞINI ÇİZMİYOR
@@ -73,7 +87,7 @@ export const SayfaKabugu: React.FC<SayfaKabuguProps> = ({
     px-4'tü: geniş ekranda alt sayfaların içeriği, ana sayfanınkinden farklı
     bir hizada başlıyordu.
   */
-  <main className={`${icerikGenisligi} mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-10`}>
+  <main className={`${icerikGenisligi} mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 ${ustBosluk} pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-10`}>
     {(onBack || sag) && (
       <div className="flex items-center justify-between gap-3 mb-4">
         <button

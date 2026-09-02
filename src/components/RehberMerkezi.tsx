@@ -298,7 +298,7 @@ export const RehberMerkezi: React.FC<{
   });
 
   return (
-    <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI}>
+    <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI} ustBosluk="pt-2 sm:pt-3">
       <div className="space-y-6">
         {/*
           SAYFANIN İLK BÖLÜMÜ

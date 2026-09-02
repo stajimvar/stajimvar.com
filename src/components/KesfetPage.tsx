@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
-  ChevronDown,
   MapPin,
   Search,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
 } from "lucide-react";
+import { FiltreBlogu, SecenekSatiri, Serit } from "../ui";
+import { SAYFA_GENISLIGI } from "../lib/duzen";
 import { EventCover } from "./EventCover";
 import {
   DISCOVER_CATEGORIES,
@@ -40,65 +41,276 @@ const verificationText = (event: DiscoverEvent) => {
     : `${Math.round(hours / 24)} gün önce kontrol edildi`;
 };
 
+/**
+ * Şeritteki kart genişliği; kapak `sizes` değeri bununla aynı kalmalı.
+ *
+ * Kap 1440'a, şerit de sağdaki 9 sütuna oturunca dörtlü düzende kart
+ * ~250 piksele geliyor; `sizes` bunu yansıtmazsa tarayıcı gereğinden
+ * küçük varyantı seçip kapağı yumuşatır.
+ */
+const KART_SIZES =
+  "(min-width: 1024px) 250px, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 78vw";
+
+/*
+  KART TÜMÜYLE BİR BAĞLANTI
+
+  Eskiden kartın tek tıklanabilir yeri altındaki "Detayları gör →" yazısıydı.
+  Şeritte kart büyüdükçe bu daha da tuhaflaşıyordu: 340×400 piksellik bir
+  görselin yalnızca alt köşesindeki yazı iş görüyordu, afişin kendisine
+  basmak hiçbir şey yapmıyordu.
+
+  Çözüm ScholarshipDiscoveryCard'daki desenin aynısı: başlıktaki gerçek
+  <a>, `after:absolute after:inset-0` ile kartın tamamına yayılıyor. Tek
+  bağlantı, tek erişilebilir ad — kartı bir <a> ile sarmak başlık, tarih ve
+  konumu tek bir devasa bağlantı adına çevirirdi.
+
+  Gerçek href: orta tuşla yeni sekmede açma ve "bağlantıyı kopyala"
+  çalışıyor, arama motoru da geçişi görüyor.
+*/
 const EventCard: React.FC<{
   event: DiscoverEvent;
   onNavigate: (path: string) => void;
-  compact?: boolean;
-}> = ({ event: e, onNavigate, compact }) => (
-  <article
-    className={`h-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm ${compact ? "min-w-[270px] w-[78vw] max-w-[320px] sm:min-w-0 sm:w-auto sm:max-w-none" : ""}`}
-  >
-    <EventCover
-      src={e.cardImageUrl || e.imageUrl}
-      category={e.category}
-      title={e.title}
-      coverKind={e.coverKind}
-    />
-    <div className="p-4 space-y-2">
-      <div className="flex flex-wrap gap-1">
-        <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-full">
-          {DISCOVER_CATEGORIES[e.category]}
+}> = ({ event: e, onNavigate }) => {
+  const yol = `/kesfet/${e.slug}`;
+  return (
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white transition-colors duration-200 hover:border-blue-400 focus-within:border-blue-600">
+      <EventCover
+        src={e.cardImageUrl || e.imageUrl}
+        srcDetail={e.detailImageUrl}
+        sizes={KART_SIZES}
+        category={e.category}
+        title={e.title}
+        coverKind={e.coverKind}
+      />
+      {/*
+        ÜCRETSİZ / İNDİRİMLİ KAPAĞIN ÜSTÜNDE
+
+        Öğrencinin şeritte göz gezdirirken aradığı tek sinyal bu. Gövdede,
+        diğer üç etiketin arasında dururken kayboluyordu; kapağın köşesinde
+        kart açılmadan okunuyor. Kategori aşağıda kalıyor — o bir tarama
+        sinyali değil, bir sınıflandırma.
+      */}
+      {(e.isFree || e.hasStudentDiscount) && (
+        <span
+          className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-sm ${
+            e.isFree ? "bg-emerald-600 text-white" : "bg-white text-violet-700"
+          }`}
+        >
+          {e.isFree ? "Ücretsiz" : "Öğrenci indirimli"}
         </span>
-        {e.isFree && (
-          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">
-            Ücretsiz
+      )}
+
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        {/*
+          Başlık kartın en üstünde ve en güçlü öğesi. Kategori etiketi
+          başlığın ÜSTÜNDEYDİ; orada bir üst-başlık gibi okunuyor ve asıl
+          başlığın önüne geçiyordu. Aşağıda, ait olduğu yerde: künye.
+        */}
+        <h3 className="text-lg font-black leading-snug text-gray-900">
+          <a
+            href={yol}
+            onClick={(ev) => {
+              if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || ev.button !== 0) return;
+              ev.preventDefault();
+              onNavigate(yol);
+            }}
+            className="line-clamp-2 rounded-sm after:absolute after:inset-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 group-hover:text-blue-700"
+          >
+            {e.title}
+          </a>
+        </h3>
+
+        <p className="flex items-start gap-2 text-sm text-gray-600">
+          <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+          <span>{formatDiscoverDate(e)}</span>
+        </p>
+        <p className="flex items-start gap-2 text-sm text-gray-600">
+          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+          <span className="line-clamp-2">{formatDiscoverLocation(e)}</span>
+        </p>
+
+        {/*
+          `mt-auto`: künye kartın dibine yapışıyor. Şeritte kartlar eşit
+          yükseklikte ve başlıkları bir ya da iki satır olabiliyor; bu
+          olmadan doğrulama satırı her kartta farklı hizada duruyordu.
+        */}
+        <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 pt-2">
+          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">
+            {DISCOVER_CATEGORIES[e.category]}
           </span>
-        )}
-        {e.hasStudentDiscount && (
-          <span className="text-xs font-bold text-violet-700 bg-violet-50 px-2 py-1 rounded-full">
-            Öğrenci indirimli
-          </span>
+          {e.studentPrice != null && (
+            <span className="text-[13px] font-bold text-gray-900 tabular-nums">
+              Öğrenci: {e.studentPrice.toLocaleString("tr-TR")} TL
+            </span>
+          )}
+        </div>
+        {verificationText(e) && (
+          <p className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+            {verificationText(e)}
+          </p>
         )}
       </div>
-      <h3 className="text-lg font-black text-gray-900">{e.title}</h3>
-      <p className="flex gap-2 text-sm text-gray-600">
-        <CalendarDays className="w-4 h-4 shrink-0" />
-        {formatDiscoverDate(e)}
-      </p>
-      <p className="flex gap-2 text-sm text-gray-600">
-        <MapPin className="w-4 h-4 shrink-0" />
-        {formatDiscoverLocation(e)}
-      </p>
-      {e.studentPrice != null && (
-        <p className="font-bold text-gray-900">
-          Öğrenci: {e.studentPrice.toLocaleString("tr-TR")} TL
-        </p>
+    </article>
+  );
+};
+
+/*
+  SÜZGEÇ PANELİ — İLAN VE FIRSAT SAYFALARIYLA AYNI
+
+  Denetimler yatay bir hap şeridiydi ve başlık kartının içinde duruyordu.
+  Şerit seçenekleri ve sayıları gizliyor: "kaç ücretsiz etkinlik var"
+  sorusunun cevabı ancak deneyerek öğreniliyordu.
+
+  Panel artık sol sütunda, kardeş sayfalardaki bölümlü yapıda. Bölüm
+  başlıkları ve satır ölçüleri paylaşılan bileşenlerden (`src/ui/Filtre`),
+  yani üç sayfa tek kaynaktan besleniyor.
+*/
+const Suzgecler: React.FC<{
+  cities: string[];
+  city: string;
+  setCity: (v: string) => void;
+  period: string;
+  setPeriod: (v: string) => void;
+  category: string;
+  setCategory: (v: string) => void;
+  free: boolean;
+  setFree: (v: boolean) => void;
+  discount: boolean;
+  setDiscount: (v: boolean) => void;
+  /*
+    Sayımlar ekranda çizilecek kart sayısı (bkz. `sayimlar` memo'su);
+    sıfır olan seçenek, seçili değilse hiç çizilmiyor.
+  */
+  sayimlar: { kategori: Record<string, number>; ucretsiz: number; indirimli: number };
+  acikSuzgecSayisi: number;
+  temizle: () => void;
+}> = ({
+  cities,
+  city,
+  setCity,
+  period,
+  setPeriod,
+  category,
+  setCategory,
+  free,
+  setFree,
+  discount,
+  setDiscount,
+  sayimlar,
+  acikSuzgecSayisi,
+  temizle,
+}) => (
+  <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+    <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3">
+      <SlidersHorizontal className="h-4 w-4 shrink-0 text-gray-500" />
+      <span className="text-sm font-bold text-gray-900">Filtreler</span>
+      {acikSuzgecSayisi > 0 && (
+        <>
+          <span className="shrink-0 rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-white">
+            {acikSuzgecSayisi}
+          </span>
+          <button
+            type="button"
+            onClick={temizle}
+            className="ml-auto shrink-0 cursor-pointer text-xs font-bold text-blue-600 hover:underline"
+          >
+            Temizle
+          </button>
+        </>
       )}
-      {verificationText(e) && (
-        <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          {verificationText(e)}
-        </p>
-      )}
-      <button
-        onClick={() => onNavigate(`/kesfet/${e.slug}`)}
-        className="inline-flex min-h-11 items-center text-sm font-bold text-blue-700"
-      >
-        Detayları gör →
-      </button>
     </div>
-  </article>
+
+    <div className="divide-y divide-gray-100">
+      <FiltreBlogu baslik="Konum">
+        <div className="relative">
+          <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <select
+            aria-label="Şehir"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className="w-full cursor-pointer appearance-none rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-8 text-sm font-medium text-gray-900 focus:border-blue-600 focus:outline-none"
+          >
+            <option value="">Tüm şehirler</option>
+            {cities.map((x) => (
+              <option key={x}>{x}</option>
+            ))}
+          </select>
+        </div>
+      </FiltreBlogu>
+
+      <FiltreBlogu baslik="Tarih">
+        <div className="space-y-0.5">
+          {[
+            ["all", "Tümü"],
+            ["today", "Bugün"],
+            ["week", "Bu hafta"],
+            ["month", "Bu ay"],
+          ].map(([deger, etiket]) => (
+            <SecenekSatiri
+              key={deger}
+              tip="radio"
+              etiket={etiket}
+              secili={period === deger}
+              onChange={() => setPeriod(deger)}
+            />
+          ))}
+        </div>
+      </FiltreBlogu>
+
+      <FiltreBlogu baslik="Kategori">
+        <div className="space-y-0.5">
+          <SecenekSatiri
+            tip="radio"
+            etiket="Tüm kategoriler"
+            secili={category === ""}
+            onChange={() => setCategory("")}
+          />
+          {Object.entries(DISCOVER_CATEGORIES).map(([deger, etiket]) => {
+            const adet = sayimlar.kategori[deger] ?? 0;
+            if (adet === 0 && category !== deger) return null;
+            return (
+              <SecenekSatiri
+                key={deger}
+                tip="radio"
+                etiket={etiket}
+                adet={adet}
+                secili={category === deger}
+                onChange={() => setCategory(deger)}
+              />
+            );
+          })}
+        </div>
+      </FiltreBlogu>
+
+      {(sayimlar.ucretsiz > 0 || sayimlar.indirimli > 0) && (
+        <FiltreBlogu baslik="Ücret">
+          <div className="space-y-0.5">
+            {sayimlar.ucretsiz > 0 && (
+              <SecenekSatiri
+                tip="checkbox"
+                etiket="Ücretsiz"
+                adet={sayimlar.ucretsiz}
+                secili={free}
+                onChange={() => setFree(!free)}
+              />
+            )}
+            {sayimlar.indirimli > 0 && (
+              <SecenekSatiri
+                tip="checkbox"
+                etiket="Öğrenci indirimli"
+                adet={sayimlar.indirimli}
+                secili={discount}
+                onChange={() => setDiscount(!discount)}
+              />
+            )}
+          </div>
+        </FiltreBlogu>
+      )}
+    </div>
+  </section>
 );
+
 export const KesfetPage: React.FC<{
   onNavigate: (p: string) => void;
   searchQuery?: string;
@@ -111,7 +323,28 @@ export const KesfetPage: React.FC<{
     [category, setCategory] = useState(""),
     [free, setFree] = useState(false),
     [discount, setDiscount] = useState(false);
+
+  /*
+    `filtersOpen`: YALNIZCA DAR EKRAN İÇİN
+
+    Bir ara silinmişti; o sırada denetimler tek satırlık yatay bir hap
+    şeridiydi ve gizlenecek kadar yer kaplamıyordu. Panel artık bölümlü
+    ve uzun: konum, tarih, kategori ve ücret alt alta. Telefonda açık
+    dursa ilk etkinlik kartı ekranın çok altına düşerdi.
+
+    Geniş ekranda bu durum hiç okunmuyor — panel `lg:block` ile her
+    zaman açık; durum yalnızca `lg` altındaki görünürlüğü yönetiyor.
+  */
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  /* Aynı anda hepsini varsayılana döndürüyor; "Filtreleri temizle" buna bağlı. */
+  const filtreleriTemizle = () => {
+    setCity("");
+    setPeriod("all");
+    setCategory("");
+    setFree(false);
+    setDiscount(false);
+  };
 
   /*
     SAYFA BAŞLIĞI VE CANONICAL
@@ -145,6 +378,49 @@ export const KesfetPage: React.FC<{
       ),
     [rows],
   );
+  /*
+    SÜZGEÇ SAYILARI EKRANDAKİ KARTI SAYIYOR
+
+    Ham `rows` üzerinden saymak yanlış sonuç verir: `buildDiscoverCollections`
+    her bölüme en fazla 10 kayıt koyuyor, bölümleri tekilleştiriyor ve beş
+    tanımın hiçbirine girmeyen bir etkinliği hiç çizmiyor. Yani süzgeci geçen
+    kayıt sayısı ekrandaki kart sayısından fazla olabilir — panelde "12" yazıp
+    tıklayınca 9 kart çıkardı.
+
+    Bu yüzden her sayı, o seçenek açıkken listenin izleyeceği yolun aynısından
+    geçiriliyor: aynı süzgeçler, aynı koleksiyon üreticisi. Sayı neyse tıklayınca
+    görülen kart sayısı o.
+  */
+  const sayimlar = useMemo(() => {
+    const gorunenSayi = (secim: {
+      category: string;
+      free: boolean;
+      discount: boolean;
+    }) => {
+      const liste = rows.filter(
+        (x) =>
+          (!city || x.city === city) &&
+          (!secim.category || x.category === secim.category) &&
+          (!secim.free || x.isFree) &&
+          (!secim.discount || x.hasStudentDiscount) &&
+          matchesDiscoverSearch(x, searchQuery) &&
+          (period === "all" || matchesDiscoverDateFilter(x, period)),
+      );
+      return buildDiscoverCollections(liste, { city }).reduce(
+        (toplam: number, k: { events: unknown[] }) => toplam + k.events.length,
+        0,
+      );
+    };
+    const kategori: Record<string, number> = {};
+    for (const anahtar of Object.keys(DISCOVER_CATEGORIES))
+      kategori[anahtar] = gorunenSayi({ category: anahtar, free, discount });
+    return {
+      kategori,
+      ucretsiz: gorunenSayi({ category, free: true, discount }),
+      indirimli: gorunenSayi({ category, free, discount: true }),
+    };
+  }, [rows, city, period, searchQuery, category, free, discount]);
+
   const shown = useMemo(
     () =>
       rows.filter(
@@ -162,6 +438,18 @@ export const KesfetPage: React.FC<{
     () => buildDiscoverCollections(shown, { city }),
     [shown, city],
   );
+  /*
+    SAYFA GENELİ SAYAÇ KALDIRILDI
+
+    Üstte tek bir "20 etkinlik" satırı vardı. Sayı artık her bölümün kendi
+    başlığında ve o bölüme ait: "Bu Hafta · 10 etkinlik". Hem daha çok şey
+    söylüyor hem sayfadan bir satır siliyor.
+
+    Not: sayfa geneli toplam yazılacaksa `shown.length` KULLANILMAMALI —
+    koleksiyon üreticisi her gruba en fazla 10 kayıt koyup grupları
+    tekilleştirdiği için süzgeci geçen kayıt ekrandaki karttan fazla
+    olabiliyor (lib/kesfet-domain.mjs → buildDiscoverCollections).
+  */
   const activeFilters = [
     city,
     period !== "all" ? { today: "Bugün", week: "Bu hafta", month: "Bu ay" }[period] : "",
@@ -170,116 +458,166 @@ export const KesfetPage: React.FC<{
     discount ? "Öğrenci indirimli" : "",
   ].filter(Boolean) as string[];
   return (
-    <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-8 space-y-4 sm:space-y-6">
-      <header>
-        <p className="text-sm font-bold text-blue-600">Keşfet</p>
-        <h1 className="text-3xl sm:text-4xl font-black text-gray-900">
-          Öğrenci Rotası
-        </h1>
-        <p className="mt-2 max-w-3xl text-gray-600">
-          Şehrindeki ücretsiz veya öğrenci bütçesine uygun sergileri,
-          festivalleri, fuarları, müzeleri ve etkinlikleri keşfet.
-        </p>
-      </header>
-      {onSearchChange && (
-        <label className="relative block lg:hidden">
-          <span className="sr-only">Etkinlik ara</span>
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Etkinlik, şehir veya mekân ara"
-            className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm font-medium text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-600 focus:outline-none"
-          />
-        </label>
-      )}
-      <button
-        type="button"
-        aria-expanded={filtersOpen}
-        aria-controls="kesfet-filters"
-        onClick={() => setFiltersOpen((open) => !open)}
-        className="sm:hidden w-full flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-900 shadow-sm"
-      >
-        <span className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-blue-600" />
-          Filtrele
-          {activeFilters.length > 0 && (
-            <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">
-              {activeFilters.length}
-            </span>
+    <main
+      /*
+        KAP ARTIK SİTENİN ORTAK GENİŞLİĞİ
+
+        Burada `max-w-7xl` (1280) ve `px-6` vardı; üst menü ise
+        SAYFA_GENISLIGI (1440) ve `xl:px-10` kullanıyor. Ölçüldü: 1440
+        piksellik ekranda Keşfet içeriği menüden her iki yandan 73 piksel
+        içeride kalıyordu — sayfa menünün altına hizalanmıyor, ortada dar
+        bir sütun gibi duruyordu.
+
+        Ölçü artık tek yerden (lib/duzen.ts) geliyor; o dosyanın kendi
+        açıklaması da neden 1440 olduğunu anlatıyor.
+      */
+      className={`w-full ${SAYFA_GENISLIGI} mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-10`}
+    >
+      {/*
+        SOL SÜTUN: BAŞLIK + SÜZGEÇ PANELİ
+
+        Kardeş sayfaların düzeni. Önce başlık ve filtreler tam genişlikte,
+        mavi gradyanlı bir kartın içindeydi; denetimler yatay bir hap
+        şeridiydi. Şerit seçenekleri ve sayıları gizliyordu.
+
+        Kart kalktı: kardeş sayfalarda başlık sol sütunun içinde, sade
+        duruyor ve içerik sayfanın tepesinden başlıyor. Aynı yapı burada
+        da kuruldu — üç sayfa artık aynı iskelet.
+      */}
+      <div className="grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-12">
+        <div className="space-y-4 lg:col-span-3 lg:sticky lg:top-4">
+          {/*
+            BAŞLIK ÖLÇÜSÜ KARDEŞ SAYFALARDAN
+
+            Sabit `26px / lg:32px` idi. Ölçüldü: 375 pikselde ilan sayfasının
+            başlığı 18,8, fırsatlarınki 20, buradaki 26 pikseldi — üç sekme
+            arasında geçiş yapınca başlık zıplıyordu. Altındaki her şey de
+            onunla birlikte kayıyordu: arama satırı 15 piksel aşağıdaydı,
+            dolayısıyla ayırıcı çizgi de.
+
+            Aynı `clamp` fırsatlar sayfasından alındı; satır yüksekliği ve
+            harf aralığı da oradaki kuralın aynısı (`leading-tight`,
+            `tracking-tight`) — sabit piksel yazmak o kuralı üçüncü kez ve
+            biraz farklı uygulamak olurdu.
+
+            Not: başlık metni farklı sayıda satıra sarıyorsa çizgi de o
+            kadar yukarıda durur. Bu hizasızlık değil, metnin uzunluğu.
+          */}
+          <h1 className="min-w-0 text-center lg:text-left [font-size:clamp(1.25rem,2.4vw,1.75rem)] font-extrabold leading-tight tracking-tight text-gray-950">
+            Şehrindeki etkinlikler,{' '}
+            <span className="text-blue-600">tek listede</span>.
+          </h1>
+
+          {/*
+            Arama ve süzgeç düğmesi yan yana — ilan sayfasındaki satırın
+            aynısı. Düğme yalnızca dar ekranda: geniş ekranda panel zaten
+            altta açık duruyor.
+          */}
+          {onSearchChange && (
+            <div className="flex items-center gap-2 lg:hidden">
+              <div className="relative min-w-0 flex-1">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="search"
+                  aria-label="Etkinlik ara"
+                  value={searchQuery}
+                  onChange={(event) => onSearchChange(event.target.value)}
+                  placeholder="Etkinlik, şehir veya mekân ara"
+                  className="w-full rounded-2xl border border-gray-200 bg-white py-3.5 pl-11 pr-4 text-sm font-medium text-gray-900 placeholder:font-normal placeholder:text-gray-400 transition-colors focus:border-blue-600 focus:outline-none"
+                />
+              </div>
+              {/*
+                PANEL DAR EKRANDA KAPALI BAŞLIYOR
+
+                Bölümlü panel şeritten çok daha uzun: konum, tarih,
+                kategori ve ücret alt alta. Telefonda açık bırakılsa ilk
+                etkinlik ekranın çok altına düşerdi — kardeş sayfalarda da
+                bu yüzden bir düğmenin arkasında.
+              */}
+              <button
+                type="button"
+                onClick={() => setFiltersOpen((o) => !o)}
+                aria-expanded={filtersOpen}
+                aria-controls="kesfet-filters"
+                aria-label={
+                  activeFilters.length > 0
+                    ? `Filtreler (${activeFilters.length} açık)`
+                    : 'Filtreler'
+                }
+                className={`relative flex w-[52px] shrink-0 cursor-pointer items-center justify-center self-stretch rounded-2xl border transition-colors ${
+                  filtersOpen || activeFilters.length > 0
+                    ? 'border-blue-600 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
+                }`}
+              >
+                <SlidersHorizontal className="h-5 w-5" />
+                {activeFilters.length > 0 && (
+                  <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-extrabold text-white">
+                    {activeFilters.length}
+                  </span>
+                )}
+              </button>
+            </div>
           )}
-        </span>
-        <ChevronDown
-          className={`h-4 w-4 transition-transform ${filtersOpen ? "rotate-180" : ""}`}
-        />
-      </button>
-      {!filtersOpen && activeFilters.length > 0 && (
-        <div className="sm:hidden -mt-2 flex gap-2 overflow-x-auto pb-1" aria-label="Seçili filtreler">
-          {activeFilters.map((filter) => (
-            <span key={filter} className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
-              {filter}
-            </span>
-          ))}
+
+          <div id="kesfet-filters" className={`${filtersOpen ? 'block' : 'hidden'} lg:block`}>
+            <Suzgecler
+              cities={cities}
+              city={city}
+              setCity={setCity}
+              period={period}
+              setPeriod={setPeriod}
+              category={category}
+              setCategory={setCategory}
+              free={free}
+              setFree={setFree}
+              discount={discount}
+              setDiscount={setDiscount}
+              sayimlar={sayimlar}
+              acikSuzgecSayisi={activeFilters.length}
+              temizle={filtreleriTemizle}
+            />
+          </div>
+
+          {/*
+            AYIRICI — KARDEŞ SAYFALARDAKİNİN AYNISI
+
+            İlan ve fırsat sayfalarında arama satırının altında yumuşak bir
+            çizgi var; burada yoktu ve başlıkla ilk şerit arası boşlukta
+            asılı kalıyordu. Ölçüsü oralardan alındı: 2 piksel yükseklik,
+            16 piksel yuvarlatma, beyaz zemin, 1 piksel kenarlık ve
+            `shadow-xs`. Yumuşaklığı yuvarlatmadan ve gölgeden geliyor,
+            çizginin kalınlığından değil.
+
+            İlan sayfasında bu şekil kasıtlı çizilmiş bir ayırıcı DEĞİL —
+            kapalı filtre panelinin iki piksele çökmüş kabı. Görüntü
+            beğenildiği için fırsatlar sayfasında da, burada da açıkça bir
+            ayırıcı olarak yazıldı; kaza eseri oluşan bir biçime bel
+            bağlamamak için.
+
+            HİZA
+            Arama kutusunun altıyla arası 16 piksel ve bunu sütunun kendi
+            `space-y-4`ü veriyor — buraya ayrıca `mt` yazmak o sistemi
+            ikinci kez uygulamak olurdu; fırsatlar sayfasında tam olarak bu
+            hata ölçülüp (29 piksel) düzeltilmişti.
+
+            `box-sizing: border-box` sayesinde `h-0.5` kenarlıklarla
+            birlikte tam 2 piksel kalıyor.
+
+            Panel AÇIKKEN çizilmiyor: o durumda ayırdığı iki şey arasında
+            değil, açılan panelin altında kalıyor ve panelin bir parçası
+            gibi okunuyor.
+          */}
+          {!filtersOpen && (
+            <div
+              aria-hidden
+              className="h-0.5 rounded-2xl border border-gray-200 bg-white shadow-xs lg:hidden"
+            />
+          )}
         </div>
-      )}
-      <section
-        id="kesfet-filters"
-        aria-label="Etkinlik filtreleri"
-        className={`${filtersOpen ? "grid" : "hidden"} sm:grid bg-white border border-gray-200 rounded-2xl p-3 sm:p-4 sm:grid-cols-2 lg:grid-cols-3 gap-3`}
-      >
-        <select
-          aria-label="Şehir"
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          className="rounded-xl border border-gray-300 px-3 py-2"
-        >
-          <option value="">Tüm şehirler</option>
-          {cities.map((x) => (
-            <option key={x}>{x}</option>
-          ))}
-        </select>
-        <select
-          aria-label="Tarih"
-          value={period}
-          onChange={(e) => setPeriod(e.target.value)}
-          className="rounded-xl border border-gray-300 px-3 py-2"
-        >
-          <option value="all">Tüm tarihler</option>
-          <option value="today">Bugün</option>
-          <option value="week">Bu hafta</option>
-          <option value="month">Bu ay</option>
-        </select>
-        <select
-          aria-label="Kategori"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="rounded-xl border border-gray-300 px-3 py-2"
-        >
-          <option value="">Tüm kategoriler</option>
-          {Object.entries(DISCOVER_CATEGORIES).map(([k, v]) => (
-            <option value={k} key={k}>
-              {v}
-            </option>
-          ))}
-        </select>
-        <label className="flex items-center gap-2 text-sm font-semibold">
-          <input
-            type="checkbox"
-            checked={free}
-            onChange={(e) => setFree(e.target.checked)}
-          />{" "}
-          Ücretsiz
-        </label>
-        <label className="flex items-center gap-2 text-sm font-semibold">
-          <input
-            type="checkbox"
-            checked={discount}
-            onChange={(e) => setDiscount(e.target.checked)}
-          />{" "}
-          Öğrenci indirimli
-        </label>
-      </section>
+
+        <div className="min-w-0 space-y-4 lg:col-span-9">
+
       {state === "loading" && (
         <div role="status" className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((x) => (
@@ -304,34 +642,49 @@ export const KesfetPage: React.FC<{
           </button>
         </div>
       )}
-      {state === "ready" &&
-        collections.map(
+      {/*
+        KOLEKSİYONLARIN KENDİ RİTMİ
+
+        Bölümler arası mesafe `main`'in `space-y` değerinden geliyordu ve
+        20 pikseldi — ölçüldü. O değer aynı zamanda başlık kabı ile ilk
+        bölüm arasını da belirlediği için tek başına ayarlanamıyordu:
+        bölümleri ayırmak için büyütmek, başlığı da içerikten koparıyordu.
+
+        Koleksiyonlar kendi kabına alındı. Bölüm arası 28 + şeridin alt
+        boşluğu 8 = 36 piksel; başlık kabı ile ilk bölüm arası `main`'in
+        kendi ölçüsünde kalıyor.
+      */}
+      {state === "ready" && collections.length > 0 && (
+        <div className="space-y-7">
+          {collections.map(
           (collection: {
             id: string;
             title: string;
             events: DiscoverEvent[];
           }) => (
-            <section
+            <Serit
               key={collection.id}
-              aria-labelledby={`collection-${collection.id}`}
-              className="space-y-3"
-            >
-              <h2
-                id={`collection-${collection.id}`}
-                className="text-xl font-black text-gray-900"
-              >
-                {collection.title}
-              </h2>
-              <div className="flex gap-4 overflow-x-auto pb-2 snap-x sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4">
-                {collection.events.map((event) => (
-                  <div key={event.id} className="snap-start">
-                    <EventCard event={event} onNavigate={onNavigate} compact />
-                  </div>
-                ))}
-              </div>
-            </section>
+              id={collection.id}
+              baslik={collection.title}
+              ogeler={collection.events}
+              anahtar={(event) => event.id}
+              /*
+                Sayı BU bölüme ait ve gerçek: koleksiyonun kendi kart
+                sayısı. Sayfa geneline ait tek bir toplam yerine her
+                başlığın kendi künyesi — hangi rafta ne kadar var,
+                başlığa bakınca görülüyor.
+              */
+              yanBilgi={
+                <span className="shrink-0 text-[13px] font-medium text-gray-500 tabular-nums">
+                  {collection.events.length} etkinlik
+                </span>
+              }
+              ciz={(event) => <EventCard event={event} onNavigate={onNavigate} />}
+            />
           ),
-        )}
+          )}
+        </div>
+      )}
       {state === "ready" && shown.length === 0 && (
         <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
           <Sparkles className="mx-auto w-8 h-8 text-blue-500" />
@@ -348,6 +701,8 @@ export const KesfetPage: React.FC<{
           {shown.map((e) => <EventCard key={e.id} event={e} onNavigate={onNavigate} />)}
         </div>
       )}
+        </div>
+      </div>
     </main>
   );
 };

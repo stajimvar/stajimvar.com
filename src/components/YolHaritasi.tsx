@@ -1,9 +1,8 @@
 import React from 'react';
-import { ArrowRight, Building2, CalendarDays, Calculator, GraduationCap, MapPin, TrendingUp, Wallet } from 'lucide-react';
-import { BOLUMLER } from '../data/bolumler';
+import { Building2, CalendarDays, Calculator, MapPin, TrendingUp, Wallet } from 'lucide-react';
 import { STAJ_PROGRAMLARI } from '../data/stajProgramlari';
 import { KARIYER_MERKEZLERI } from '../data/kariyerMerkezleri';
-import { profilBolumu, profilMerkezi } from '../lib/rehber-arama.mjs';
+import { profilMerkezi } from '../lib/rehber-arama.mjs';
 import type { StudentProfile } from '../types';
 
 /**
@@ -19,8 +18,12 @@ import type { StudentProfile } from '../types';
  * görünmemesiydi.
  *
  * Şimdi önem sırası var ve her kart içinden ne çıkacağını gösteriyor:
- * bölüm kartı en büyüğü, işveren ve üniversite kartları gerçek logo
- * önizlemesi taşıyor, araçlar küçük satırlara indi.
+ * işveren ve üniversite kartları gerçek logo önizlemesi taşıyor, araçlar
+ * küçük satırlara indi.
+ *
+ * Bir ara en üstte tam genişlikte bir bölüm kartı da vardı; ilk ekranı tek
+ * başına doldurduğu için kaldırıldı. Bölümlere giden yol sayfanın altındaki
+ * "Bölüme göre staj" bölümünde ve altbilgide duruyor.
  *
  * LOGOLAR SÜS DEĞİL, KANIT
  * ------------------------
@@ -106,7 +109,6 @@ export const YolHaritasi: React.FC<{
   onNavigate: (yol: string) => void;
   ogrenci?: StudentProfile | null;
 }> = ({ onNavigate, ogrenci = null }) => {
-  const bolum = profilBolumu(ogrenci?.department, BOLUMLER) as { slug: string; ad: string } | null;
   const merkez = profilMerkezi(ogrenci?.university, KARIYER_MERKEZLERI) as
     | { universite: string; sehir: string; url: string }
     | null;
@@ -132,48 +134,64 @@ export const YolHaritasi: React.FC<{
         Üstündeki karşılama bloğu kaldırıldı ve o bloğun h1'i onunla gitti.
         Sayfanın başlıksız kalması hem arama motoru hem ekran okuyucu için
         kayıp; bu bölüm artık ilk başlık, dolayısıyla h1.
+
+        KALIP DÖRT SEKMEDE ORTAK
+
+        "Staj yol haritan burada" idi. Diğer üç sekme aynı cümleyi kuruyor:
+        "<ne var>, tek listede." — İş & Staj'da staj ilanları, Fırsatlar'da
+        burslar, Keşfet'te etkinlikler. Rehber tek başına başka bir kalıpla
+        konuşuyordu; sekmeler arasında gezerken sayfanın kendini tanıtma
+        biçimi her seferinde değişiyordu.
+
+        Vurgu "tek listede"de ve mavi: cümlenin verdiği söz orada — dağınık
+        kaynakları tek yerde toplamak. Üç sayfada da aynı kelime aynı renkte.
+
+        Ölçü de kardeşlerinkiyle aynı `clamp`; sabit `text-xl sm:text-2xl`
+        375 pikselde 20'ye denk geliyordu ama kırılma noktaları farklıydı,
+        yani aradaki genişliklerde başlık sekmeden sekmeye zıplıyordu.
       */}
       <div className="space-y-1">
-        <h1 className="text-xl font-extrabold tracking-tight text-gray-900 sm:text-2xl">
-          Staj yol haritan burada
+        <h1 className="min-w-0 text-center lg:text-left [font-size:clamp(1.25rem,2.4vw,1.75rem)] font-extrabold leading-tight tracking-tight text-gray-950">
+          Öğrencilikte bilmen gerekenler,{' '}
+          <span className="text-blue-600">tek listede</span>.
         </h1>
-        <p className="text-sm leading-relaxed text-gray-600">
-          Bölümünü ve okulunu seç; sana uygun ilanları, işverenleri, belgeleri ve araçları tek
-          yerde gör.
+        {/*
+          Cümle "Bölümünü ve okulunu seç; sana uygun ilanları, işverenleri,
+          belgeleri ve araçları tek yerde gör." idi. "Bölümünü seç"in
+          karşılığı hemen altındaki bölüm kartıydı; kart kalkınca cümle
+          olmayan bir şeye işaret ediyordu. Şimdi altında gerçekten duran
+          üç şeyi sayıyor.
+        */}
+        <p className="text-center text-sm leading-relaxed text-gray-600 lg:text-left">
+          Doğrulanmış işverenler, üniversitelerin kariyer merkezleri ve hesaplama araçları — hepsi
+          burada.
         </p>
       </div>
 
       {/*
-        BÖLÜM KARTI EN BÜYÜĞÜ
+        BÖLÜM KARTI KALDIRILDI
 
-        Rehberin ana özelliği bu ve boyutu bunu söylemeli. Profilde bölüm
-        varsa kart onun adını taşıyor; yoksa genel listeye götürüyor.
-        Uydurma bir bölüm adı yazılmıyor — eşleşme bulunamazsa kart
-        "Bölümünü seç" diyor.
+        Sayfanın en büyük kartıydı: mavi gradyanlı, tam genişlikte, "34
+        bölüm için ayrı ayrı" diyen bir blok. Rehberin ilk ekranını tek
+        başına yiyordu ve asıl liste — öne çıkan rehberler — onun altına
+        düşüyordu.
+
+        DİKKAT: BU SAYFADAN /bolumler'E ARTIK YOL YOK
+
+        Ölçüldü — kart kalkınca /rehber üzerinde /bolumler ya da /bolum/<slug>
+        adresine giden tek bir bağlantı kalmıyor. "Bölüme göre staj" listesi
+        `RehberBaglantilari` içinde ve o bileşen TEK REHBER sayfasının
+        (/rehber/<slug>) altında çiziliyor, bu merkez sayfasında değil.
+        Altbilgi de bu sayfada render edilmiyor.
+
+        Tarayıcı tarafında bir kayıp yok: kart bir <button> idi, `href`
+        taşımadığı için ön render çıktısına zaten hiç girmiyordu
+        (dist/rehber.html içinde /bolum/ geçmiyor).
+
+        Yani kaybolan şey kullanıcının bu sayfadan bölüm rehberlerine geçme
+        yolu. Kart bilerek kaldırıldı; yolun geri istenmesi hâlinde küçük bir
+        bağlantı yeter, aynı boyda bir kart değil.
       */}
-      <button
-        type="button"
-        onClick={() => onNavigate(bolum ? `/bolum/${bolum.slug}` : '/bolumler')}
-        className="group flex w-full cursor-pointer flex-col gap-3 rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-white p-5 text-left transition-colors hover:border-blue-400 sm:flex-row sm:items-center sm:gap-5"
-      >
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white">
-          <GraduationCap className="h-6 w-6" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-[11px] font-bold uppercase tracking-wide text-blue-700">
-            Bölümüne göre staj yol haritası
-          </span>
-          <span className="mt-0.5 block text-lg font-extrabold leading-snug text-gray-900">
-            {bolum ? `${bolum.ad} yol haritanı aç` : 'Bölümünü seç, yol haritanı aç'}
-          </span>
-          <span className="mt-1 block text-sm leading-relaxed text-gray-600">
-            Nerede staj yapılır, stajyer ne yapar, hangi beceriler gerekir, hangi işverenler bu
-            bölümden öğrenci alır — {BOLUMLER.length} bölüm için ayrı ayrı.
-          </span>
-        </span>
-        <ArrowRight className="h-5 w-5 shrink-0 text-blue-700 transition-transform group-hover:translate-x-0.5" />
-      </button>
-
       <div className="grid gap-3 sm:grid-cols-2">
         {/* İŞVERENLER */}
         <button
