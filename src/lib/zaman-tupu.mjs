@@ -32,9 +32,13 @@ const kalanGun = (item, now) =>
  * RENK POZİTİF KALIYOR
  * --------------------
  * Açık bursta hata kırmızısı yok. Uzun süre varsa yumuşak nane, süre
- * kısaldıkça canlı yeşil, son günlerde sıcak amber. Amber "dikkat" diyor,
- * "hata" demiyor. Kırmızı yalnızca hiçbir yerde: kapanmış kayıt bile gri,
+ * kısaldıkça canlı yeşil, son günlerde marka mavisi. Mavi "buna bak"
+ * diyor, "bir sorun var" demiyor — son günlere giren burs ürünün öne
+ * çıkarmak istediği şey. Kırmızı hiçbir yerde: kapanmış kayıt bile gri,
  * çünkü kapanmış olmak bir hata değil.
+ *
+ * Henüz açılmamış kayıt mor: üç ailenin de (yeşil, mavi, gri) dışında
+ * kaldığı için "bekliyor" durumu tek bakışta ayrılıyor.
  *
  * RENK TEK BAŞINA ANLATMIYOR
  * --------------------------
@@ -160,22 +164,26 @@ export function tupErisilebilirAd(item, now = new Date()) {
  * Metin kendi zemininde (eşik 4.5:1):
  *   rahat       #047857 / #ECFDF5 → 5.21
  *   yaklasiyor  #15803D / #F0FDF4 → 4.79
- *   son-gunler  #92400E / #FFFBEB → 6.84
- *   yakinda     #1D4ED8 / #EFF6FF → 6.16
+ *   son-gunler  #1E40AF / #EFF6FF → 8.01
+ *   yakinda     #6D28D9 / #F5F3FF → 6.48
  *   kapali      #4B5563 / #F3F4F6 → 6.87
  *
  * Dolgu kendi kanalında (grafik öğesi eşiği 3:1):
- *   rahat 3.58 · yaklasiyor 3.15 · son-gunler 3.07 · yakinda 3.38 ·
+ *   rahat 3.58 · yaklasiyor 3.15 · son-gunler 4.75 · yakinda 5.20 ·
  *   kapali 4.39
  *
  * İKİ TUR AYAR
  * ------------
  * İlk tonlar (#34D399, #22C55E, #F59E0B) kendi kanallarında 1.8–2.3
  * kalıyordu: doluluk seviyesi seçilemiyordu, yani tüpün tek işi
- * görünmüyordu. İkinci turda dolgular koyulaştırıldı ama son günlerin
- * ambersi (#B45309) yanık kiremit gibi durdu — istenen sıcak ve davetkâr
- * değil, ağır bir tondu. Çözüm dolguyu değil KANALI açmak oldu:
- * #D97706 açık kanalda hem parlak kalıyor hem eşiği geçiyor.
+ * görünmüyordu. İkinci turda dolgular koyulaştırıldı; kanalları açık
+ * tutmak (dolguyu daha da koyultmak yerine) hem parlaklığı hem eşiği
+ * koruyan çözüm oldu.
+ *
+ * ÜÇÜNCÜ TUR: SON GÜNLER MAVİYE, YAKINDA MORA
+ * Son günler amberdi; marka mavisi aynı vurguyu uyarı tonu olmadan
+ * veriyor. Mavi boşalan "yakında"ya mor geldi. İki yeni çift de eski
+ * değerlerden yüksek kontrast veriyor (8.01 ve 6.48).
  *
  * Hiçbir açık durumda kırmızı yok; kapanmış kayıt bile gri, çünkü
  * kapanmış olmak bir hata değil.
@@ -183,8 +191,34 @@ export function tupErisilebilirAd(item, now = new Date()) {
 export const TUP_RENKLERI = {
   rahat: { dolgu: '#059669', kanal: '#ECFDF5', yazi: '#047857' },
   yaklasiyor: { dolgu: '#16A34A', kanal: '#F0FDF4', yazi: '#15803D' },
-  'son-gunler': { dolgu: '#D97706', kanal: '#FFFBEB', yazi: '#92400E' },
-  yakinda: { dolgu: '#3B82F6', kanal: '#EFF6FF', yazi: '#1D4ED8' },
+  /*
+    SON GÜNLER AMBER DEĞİL MAVİ
+
+    Amberdi ve "dikkat" demek için seçilmişti. Marka mavisi aynı işi
+    uyarı tonu olmadan yapıyor: son günlere giren bir burs bir sorun
+    değil, ürünün öne çıkarmak istediği şey. Ton diğer iki yeşilden
+    belirgin biçimde ayrıldığı için "yaklaşıyor" ile "son günler"
+    karışmıyor.
+
+    Kontrast hesaplandı: yazı 8,01 · dolgu 4,75 (aşağıdaki tabloya
+    bakınız). Renk yine tek başına anlatmıyor; metin de var
+    ("Bugün son gün", "Yarın sona eriyor").
+  */
+  'son-gunler': { dolgu: '#2563EB', kanal: '#EFF6FF', yazi: '#1E40AF' },
+  /*
+    YAKINDA MOR
+
+    Mavi son günlere geçtiği için burası boşaldı. Mor bilinçli: yeşil
+    (açık ve rahat), mavi (açık ama son günler) ve gri (kapalı/tarihsiz)
+    ailelerinin hiçbirine değmiyor, yani "henüz başlamadı" durumu tek
+    bakışta ayrı okunuyor.
+
+    Amber'e dönmedi: amber bu üründe uyarı tonu, oysa başvurusu henüz
+    açılmamış bir burs uyarılacak bir şey değil.
+
+    Kontrast: yazı 6,48 · dolgu 5,20.
+  */
+  yakinda: { dolgu: '#7C3AED', kanal: '#F5F3FF', yazi: '#6D28D9' },
   takvimsiz: { dolgu: '#D1D5DB', kanal: '#F3F4F6', yazi: '#4B5563' },
   kapali: { dolgu: '#6B7280', kanal: '#F3F4F6', yazi: '#4B5563' },
 };
