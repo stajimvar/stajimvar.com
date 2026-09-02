@@ -40,6 +40,7 @@ KIND_BY_ADAPTER = {
     # ve uydurmaya gerek de yok: bu adaptörün birincil kanıtı sayfadaki
     # JobPosting JSON-LD'si.
     "generic_career": "jsonld",
+    "official_jsonld": "jsonld",
 }
 
 # Resmî ATS iş panosu API'leri: sağlayıcıların ilanların dışarıdan okunması
@@ -50,13 +51,13 @@ OFFICIAL_ADAPTERS = {
     "smartrecruiters", "workable_search",
     # Şirketin kendi kariyer sayfasından okunan ilan da resmî kaynaktır:
     # toplayıcı değil, işverenin kendi yayını.
-    "generic_career",
+    "generic_career", "official_jsonld",
 }
 
 TOS_NOTE = (
-    "Resmî ATS iş panosu API'si. Sağlayıcı bu uç noktayı ilanların dışarıdan "
-    "okunması için belgeliyor; HTML kazıma veya erişim engeli aşma yok. "
-    "Kaynak kaydı eski StajımVar reposundan devralındı."
+    "Resmî ve herkese açık kariyer veri kaynağı. İlan içeriği sağlayıcının "
+    "yayımladığı API, akış veya schema.org yapılandırılmış verisinden okunur; "
+    "kimlik doğrulaması, erişim engeli aşma ya da gizli uç nokta kullanımı yok."
 )
 
 #: Şirketin kendi kariyer sayfası için ayrı not: yukarıdaki metin ATS
@@ -202,7 +203,7 @@ def sync_sources(db: Client, configs: Iterable[dict[str, Any]]) -> dict[str, str
             # yapılmadan bir kaynağın açılmasına izin vermiyor.
             "robots_allowed": official,
             "tos_reviewed_at": now_iso() if official else None,
-            "tos_notes": (TOS_NOTE_KARIYER if adapter == "generic_career"
+            "tos_notes": (TOS_NOTE_KARIYER if adapter in {"generic_career", "official_jsonld"}
                           else TOS_NOTE) if official else None,
             "is_enabled": bool(config.get("enabled", True)) and official,
         }

@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib, json, os, re, unicodedata
 from dataclasses import dataclass, replace
 from html import unescape
+from html.parser import HTMLParser
 from typing import Any, Iterable
 from urllib.parse import urlsplit, urlunsplit
 import feedparser, requests
@@ -126,6 +127,98 @@ def json_api(config: dict[str, Any]) -> Iterable[Job]:
         if not item.get("title") or not item.get("url"): continue
         description = clean(item.get("description", ""))
         yield Job(config["name"], item["url"], clean(item["title"]), item.get("company"), item.get("city"), item.get("work_mode") or mode(description), description, item.get("hr_email") or email(description))
+
+
+class _JsonLdScripts(HTMLParser):
+    """Sayfadaki JSON-LD bloklarını HTML'i kazımadan güvenli biçimde toplar."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._inside = False
+        self._parts: list[str] = []
+        self.scripts: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        values = {name.casefold(): value for name, value in attrs}
+        if tag.casefold() == "script" and (values.get("type") or "").casefold() == "application/ld+json":
+            self._inside = True
+            self._parts = []
+
+    def handle_data(self, data: str) -> None:
+        if self._inside:
+            self._parts.append(data)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag.casefold() == "script" and self._inside:
+            self.scripts.append("".join(self._parts))
+            self._inside = False
+            self._parts = []
+
+
+def _jsonld_items(value: Any) -> Iterable[dict[str, Any]]:
+    if isinstance(value, list):
+        for item in value:
+            yield from _jsonld_items(item)
+    elif isinstance(value, dict):
+        graph = value.get("@graph")
+        if graph is not None:
+            yield from _jsonld_items(graph)
+        else:
+            yield value
+
+
+def official_jsonld(config: dict[str, Any]) -> Iterable[Job]:
+    """İzinli resmî kariyer sayfalarındaki schema.org JobPosting verisini okur."""
+    for requested_url in config.get("urls", []):
+        response = requests.get(
+            requested_url, timeout=25, headers={"User-Agent": "StajimVarJobs/1.0"}
+        )
+        response.raise_for_status()
+        parser = _JsonLdScripts()
+        parser.feed(response.text)
+
+        for block in parser.scripts:
+            try:
+                values = list(_jsonld_items(json.loads(block)))
+            except (TypeError, ValueError, json.JSONDecodeError):
+                continue
+
+            for item in values:
+                types = item.get("@type", [])
+                if isinstance(types, str):
+                    types = [types]
+                if "JobPosting" not in types:
+                    continue
+
+                title = clean(str(item.get("title") or ""))
+                description = clean(str(item.get("description") or ""))
+                organization = item.get("hiringOrganization") or {}
+                location = item.get("jobLocation") or {}
+                if isinstance(location, list):
+                    location = location[0] if location else {}
+                address = location.get("address") or {} if isinstance(location, dict) else {}
+                city = address.get("addressLocality") if isinstance(address, dict) else None
+                country = address.get("addressCountry") if isinstance(address, dict) else None
+                location_label = " ".join(str(x) for x in (city, country) if x)
+
+                if not title or not is_turkey_location(location_label):
+                    continue
+                if not is_early_career(title, description):
+                    continue
+
+                source_url = item.get("url") or requested_url
+                yield Job(
+                    config["name"],
+                    source_url,
+                    title,
+                    organization.get("name") or config.get("company_name"),
+                    city,
+                    mode(f"{title} {description} {item.get('jobLocationType', '')}"),
+                    description,
+                    email(description),
+                    company_website=organization.get("sameAs"),
+                    company_logo=organization.get("logo"),
+                )
 
 def greenhouse(config: dict[str, Any]) -> Iterable[Job]:
     """Greenhouse resmî Job Board API: yalnızca yayımlanmış iş panoları."""
@@ -465,4 +558,5 @@ ADAPTERS = {
     "workable_search": workable_search,
     "personio": personio,
     "recruitee": recruitee,
+    "official_jsonld": official_jsonld,
 }

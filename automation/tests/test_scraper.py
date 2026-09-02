@@ -121,6 +121,70 @@ class ScraperFixtureTests(unittest.TestCase):
         self.assertEqual(jobs[0].city, "Istanbul, Turkey")
         self.assertEqual(post.call_count, 1)
 
+    @patch("scraper.requests.get")
+    def test_official_jsonld_extracts_dhl_jobposting(self, get):
+        """JobPosting ayrıştırması kırılırsa resmî DHL ilanı sessizce kaybolmamalı."""
+        response = Mock()
+        response.text = '''
+          <script type="application/ld+json">
+          {
+            "@context": "https://schema.org",
+            "@type": "JobPosting",
+            "identifier": {"@type": "PropertyValue", "value": "AV-373558"},
+            "title": "Uzun Dönem Stajyer",
+            "description": "<p>Haftada minimum 3 gün ofiste çalışabilecek, iyi seviyede İngilizce bilen.</p>",
+            "datePosted": "2026-08-24",
+            "employmentType": "FULL_TIME",
+            "hiringOrganization": {
+              "@type": "Organization",
+              "name": "DHL Global Forwarding Tasimacilik A.S.",
+              "sameAs": "https://careers.dhl.com/global/en"
+            },
+            "jobLocation": {
+              "@type": "Place",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Istanbul",
+                "addressRegion": "Istanbul",
+                "addressCountry": "Turkey"
+              }
+            },
+            "url": "https://careers.dhl.com/global/en/job/DPDHGLOBALAV373558ENGLOBALEXTERNAL/Uzun-D%C3%B6nem-Stajyer"
+          }
+          </script>
+        '''
+        response.raise_for_status.return_value = None
+        get.return_value = response
+
+        jobs = list(scraper.official_jsonld({
+            "name": "DHL Careers",
+            "urls": ["https://careers.dhl.com/global/en/job/DPDHGLOBALAV373558ENGLOBALEXTERNAL/Uzun-D%C3%B6nem-Stajyer"],
+            "company_name": "DHL Global Forwarding",
+        }))
+
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0].title, "Uzun Dönem Stajyer")
+        self.assertEqual(jobs[0].organization_name, "DHL Global Forwarding Tasimacilik A.S.")
+        self.assertEqual(jobs[0].city, "Istanbul")
+        self.assertEqual(jobs[0].work_mode, "onsite")
+        self.assertIn("minimum 3 gün ofiste", jobs[0].description)
+        self.assertEqual(jobs[0].company_website, "https://careers.dhl.com/global/en")
+        self.assertEqual(jobs[0].source_url, "https://careers.dhl.com/global/en/job/DPDHGLOBALAV373558ENGLOBALEXTERNAL/Uzun-D%C3%B6nem-Stajyer")
+
+    @patch("scraper.requests.get")
+    def test_official_jsonld_ignores_non_jobposting_documents(self, get):
+        """Genel WebPage şeması yanlışlıkla ilan olarak yayınlanmamalı."""
+        response = Mock()
+        response.text = '<script type="application/ld+json">{"@type":"WebPage","name":"Careers"}</script>'
+        response.raise_for_status.return_value = None
+        get.return_value = response
+
+        jobs = list(scraper.official_jsonld({
+            "name": "Example Careers", "urls": ["https://example.com/careers"]
+        }))
+
+        self.assertEqual(jobs, [])
+
     def source_run(self, **overrides):
         now = datetime.now(UTC)
         values = dict(source_id="fixture", started_at=now, finished_at=now + timedelta(seconds=1), http_status=200, fetch_success=True, parser_success=True, pagination_complete=True, previous_job_count=10, current_job_count=10)

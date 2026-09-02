@@ -1,6 +1,19 @@
 {
  "sources": [
   {
+   "id": "dhl-official-jsonld",
+   "name": "DHL Careers",
+   "type": "official_jsonld",
+   "enabled": true,
+   "country": "TR",
+   "company_name": "DHL Global Forwarding Taşımacılık A.Ş.",
+   "careers_url": "https://careers.dhl.com/global/en",
+   "website": "https://www.dhl.com/tr-tr/home.html",
+   "urls": [
+    "https://careers.dhl.com/global/en/job/DPDHGLOBALAV373558ENGLOBALEXTERNAL/Uzun-D%C3%B6nem-Stajyer"
+   ]
+  },
+  {
    "id": "workable-tr-arama",
    "name": "Workable Türkiye Araması",
    "type": "workable_search",
