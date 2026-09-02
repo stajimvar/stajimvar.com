@@ -11,10 +11,14 @@ import {
 /**
  * Şirketlerin girdiği ilanların onay kuyruğu.
  *
- * Yalnızca `origin = 'internal'` ilanlar buraya düşüyor. Otomasyonun
- * derledikleri kuyruğa girmiyor: onlar zaten şirketin kendi kariyer
- * sayfasında yayınlanmış, ikinci kez onaylamak hem anlamsız hem de
- * kuyruğu kullanılamaz hale getirirdi.
+ * `internal` (şirketin kendi formundan) ve `manual` (bir ilanı kaynağından
+ * okuyup elle girdiğimiz) ilanlar buraya düşüyor. İkisi de yayına çıkmadan
+ * önce bakılmak istiyor; rozet hangisi olduğunu söylüyor, çünkü elle
+ * girilen kaydın sorumlusu şirket değil biziz.
+ *
+ * Otomasyonun derledikleri (`scraped`) kuyruğa girmiyor: onlar zaten
+ * şirketin kendi kariyer sayfasında yayınlanmış, ikinci kez onaylamak hem
+ * anlamsız hem de kuyruğu kullanılamaz hale getirirdi.
  *
  * Reddedilen ilan silinmiyor, arşivleniyor — şirket ne olduğunu görebilmeli.
  */
@@ -105,7 +109,19 @@ export const AdminListingsQueue: React.FC<AdminListingsQueueProps> = ({ onToast 
         return (
           <div key={ilan.id} className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3">
             <div>
-              <p className="text-xs font-semibold text-blue-600">{ilan.companyName}</p>
+              <p className="flex flex-wrap items-center gap-2 text-xs font-semibold text-blue-600">
+                {ilan.companyName}
+                {/*
+                  Rozet yalnızca elle girilende. Kuyruğun varsayılanı şirket
+                  ilanı; her satıra "şirket girdi" yazmak gürültü olurdu,
+                  istisnayı işaretlemek yeterli.
+                */}
+                {ilan.origin === 'manual' && (
+                  <span className="rounded-md border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-bold text-gray-600">
+                    Elle eklendi
+                  </span>
+                )}
+              </p>
               <h3 className="font-bold text-gray-900">{ilan.title}</h3>
             </div>
 

@@ -872,6 +872,8 @@ export interface PendingListing {
   stipendText?: string;
   applicationDeadline?: string;
   createdAt: string;
+  /** Kuyruğa hangi yoldan geldi: şirketin formu mu, elle mi eklendi. */
+  origin: 'internal' | 'manual';
 }
 
 /**
@@ -887,10 +889,24 @@ export async function fetchPendingListings(): Promise<PendingListing[]> {
     .from('listings')
     .select(
       'id,title,company_id,city,work_type,description,required_skills,is_paid,' +
-        'stipend_text,application_deadline,created_at,companies(name)'
+        'stipend_text,application_deadline,created_at,origin,companies(name)'
     )
     .eq('status', 'draft')
-    .eq('origin', 'internal')
+    /*
+      ELLE EKLENEN İLAN DA KUYRUĞA DÜŞER
+
+      Filtre yalnızca 'internal' idi: şirketin kendi formundan gelen ilan.
+      Bir ilanı kaynağından okuyup elle girdiğimizde origin 'manual' oluyor
+      ve ilan hiçbir yerde görünmüyordu — sitede değil (taslak), kuyrukta da
+      değil (filtre dışı). Kayıt veritabanında duruyor ama onu yayına
+      alabilecek bir ekran yok.
+
+      `scraped` BİLEREK DIŞARIDA: otomasyonun derledikleri zaten şirketin
+      kendi kariyer sayfasında yayınlanmış ve service_role ile doğrudan
+      yayına giriyor. Onları kuyruğa doldurmak kuyruğu kullanılamaz yapardı
+      — bileşenin başındaki not bunu anlatıyor.
+    */
+    .in('origin', ['internal', 'manual'])
     .order('created_at', { ascending: true });
 
   if (error) fail('Bekleyen ilanlar yüklenemedi', error);
@@ -910,6 +926,7 @@ export async function fetchPendingListings(): Promise<PendingListing[]> {
       stipendText: row.stipend_text ?? undefined,
       applicationDeadline: row.application_deadline ?? undefined,
       createdAt: row.created_at,
+      origin: row.origin,
     };
   });
 }

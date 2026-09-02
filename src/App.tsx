@@ -1768,7 +1768,8 @@ export default function App() {
                 */
                 onLogout={handleLogout}
                 isAdmin={isAdmin}
-                onOpenAdmin={() => navigate('/admin')}
+                /* Rota `/yonetim`; `/admin` diye bir adres yok, 404'e düşüyordu. */
+                onOpenAdmin={() => navigate('/yonetim')}
                 onUpdateProfile={handleUpdateProfile}
                 onOpenCv={() => navigate('/cv')}
                 basvurular={applications}
