@@ -92,13 +92,24 @@ export async function fetchListingByIdPrefix(
 
 /** Şirket sayfası için: şirket bilgisi ve yayındaki ilanları. */
 export async function fetchCompanyPage(slug: string): Promise<{
+  /*
+    `sahiplenilmis` ve `verified` AYRI İKİ DURUM
+
+    Profil sayfası ikisini tek alan üzerinden okuyordu: `verified` false
+    olunca "Henüz sahiplenilmemiş" yazıyordu. Oysa bir şirket sahiplenilmiş
+    ama henüz doğrulanmamış olabiliyor — sahiplenme "yetkili olduğunu
+    söyleyen biri var" demek, doğrulama "biz kontrol ettik" demek. İkisini
+    aynı rozete bağlamak, sahiplenmiş ama doğrulanmamış şirkete "kimse
+    sahiplenmemiş" dedirtiyordu.
+  */
   company: { id: string; name: string; slug: string; logoUrl?: string; websiteUrl?: string;
-             industry?: string; location?: string; size?: string; description?: string; verified: boolean };
+             industry?: string; location?: string; size?: string; description?: string;
+             verified: boolean; sahiplenilmis: boolean };
   listings: InternshipListing[];
 } | null> {
   const { data: company, error } = await supabase
     .from('companies')
-    .select('id,name,slug,logo_url,website_url,industry,location,size,description,verified')
+    .select('id,name,slug,logo_url,website_url,industry,location,size,description,verified,claimed_at')
     .eq('slug', slug)
     .maybeSingle();
 
@@ -127,6 +138,7 @@ export async function fetchCompanyPage(slug: string): Promise<{
       location: company.location ?? undefined,
       description: company.description ?? undefined,
       verified: company.verified,
+      sahiplenilmis: company.claimed_at != null,
     },
     listings: (rows as unknown as ListingRowWithCompany[]).map(toInternshipListing),
   };

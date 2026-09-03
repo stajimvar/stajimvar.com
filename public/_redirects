@@ -14,6 +14,19 @@
 /sirketler   /isveren   301
 /sirketler/*   /isveren   301
 
+# ESKİ SLUG: /sirket/stajimvar-deneme
+#
+# StajımVar'ın kendi şirket profili `stajimvar-deneme` slug'ıyla açılmıştı
+# ve açıklamasında "deneme hesabıdır, gerçek bir işveren değildir" yazıyordu.
+# Kayıt silinmedi — silmek ona bağlı iki ilanı, şirket üyeliğini ve sahiplik
+# kaydını da götürürdü. Slug yerinde güncellendi (bütün yabancı anahtarlar
+# company_id üzerinden, slug üzerinden değil), açıklama gerçek metinle
+# değiştirildi.
+#
+# Bu yönlendirme kanonik profil ÇALIŞTIĞI DOĞRULANDIKTAN SONRA eklendi:
+# önce eklenseydi var olmayan bir adrese kalıcı yönlendirme vermiş olurduk.
+/sirket/stajimvar-deneme   /sirket/stajimvar   301
+
 # SPA YEDEĞİ ARTIK BURADA DEĞİL
 #
 # Eskiden burada `/*  /index.html  200` vardı ve sitedeki her hatalı adres

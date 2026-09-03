@@ -181,17 +181,28 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                 <div className="min-w-0 space-y-1.5">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h1 className="text-xl sm:text-2xl font-extrabold">{veri.company.name}</h1>
-                    {veri.company.verified ? (
+                    {/*
+                      İKİ AYRI DURUM, İKİ AYRI ROZET
+
+                      Burada tek bir alan (`verified`) okunuyordu: false ise
+                      "Henüz sahiplenilmemiş" yazıyordu. Oysa bunlar farklı
+                      şeyler — sahiplenme "yetkili olduğunu söyleyen biri
+                      var", doğrulama "biz kontrol ettik". Sahiplenilmiş ama
+                      henüz doğrulanmamış bir şirkete "kimse sahiplenmemiş"
+                      deniyordu.
+                    */}
+                    {veri.company.verified && (
                       <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                         <BadgeCheck className="w-3.5 h-3.5" />
                         Doğrulanmış
                       </span>
-                    ) : (
-                      /*
-                        Doğrulanmamış olmak kötü bir şey değil, sadece henüz
-                        şirketin kendisi sahiplenmemiş demek. Bunu gizlemek
-                        yerine açıkça yazıyoruz.
-                      */
+                    )}
+                    {!veri.company.verified && veri.company.sahiplenilmis && (
+                      <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+                        Sahiplenilmiş
+                      </span>
+                    )}
+                    {!veri.company.verified && !veri.company.sahiplenilmis && (
                       <span className="text-[11px] font-semibold text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full">
                         Henüz sahiplenilmemiş
                       </span>
@@ -234,7 +245,11 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                 </p>
               )}
 
-              {!veri.company.verified && (
+              {/*
+                Bu not "ilanlar derlendi, yetkiliyseniz yazın" diyor.
+                Sahiplenilmiş profilde yersiz: yetkilisi zaten burada.
+              */}
+              {!veri.company.verified && !veri.company.sahiplenilmis && (
                 <div className="pt-3 border-t border-gray-100 text-xs text-gray-500 leading-relaxed">
                   Bu sayfadaki ilanlar {veri.company.name} şirketinin kendi kariyer
                   sisteminden derlendi. Şirket yetkilisiyseniz sayfayı sahiplenmek veya
@@ -397,6 +412,14 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
               yetkilisi zaten kendi şirketini arayarak buraya geliyor
               ve sonuna kadar bakıyor.
             */}
+            {/*
+              SAHİPLENİLMİŞ ŞİRKET TEKRAR SAHİPLENİLEMEZ
+
+              Form koşulsuz çiziliyordu: kendi şirketini açmış bir yetkili
+              kendi sayfasında "Bu şirketin yetkilisi misiniz?" çağrısını
+              görüyordu. Sahiplenilmiş profilde form hiç çizilmiyor.
+            */}
+            {!veri.company.sahiplenilmis && (
             <div className="mt-8">
               <CompanyClaimForm
                 companyId={veri.company.id}
@@ -406,6 +429,7 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                 onRequireLogin={onRequireLogin ?? (() => undefined)}
               />
             </div>
+            )}
           </>
         )}
       </main>
