@@ -28,6 +28,9 @@ import { Logo } from './components/Logo';
 import { LegalPage, LEGAL_ROUTES } from './components/LegalPage';
 import { ApplyDialog } from './components/ApplyDialog';
 import { niyetYaz, niyetOku, niyetSil } from './lib/basvuru-niyeti.mjs';
+import { CerezBandi } from './components/CerezBandi';
+import { adsenseBetiginiBaslat } from './components/GoogleAdBanner';
+import { rizaOku, reklamSerbest } from './lib/cerez-rizasi.mjs';
 import { ListingPage } from './components/ListingPage';
 import { GuideHub, GuidePage } from './components/GuidePages';
 import { BasvuruSablonu } from './components/BasvuruSablonu';
@@ -806,6 +809,21 @@ export default function App() {
     };
   }, [session]);
 
+  /*
+    REKLAM BETİĞİ RIZAYA BAĞLI
+
+    Betik main.tsx'te koşulsuz yükleniyordu: ziyaretçi hiçbir şey seçmeden
+    pagead2.googlesyndication.com isteği başlıyordu. Artık yalnızca kayıtlı
+    rıza "reklam: true" ise yükleniyor. `rizaSayaci` band karar verince
+    artıyor ve etki yeniden çalışıyor.
+  */
+  const [rizaSayaci, setRizaSayaci] = useState(0);
+  const [tercihlerAcik, setTercihlerAcik] = useState(false);
+
+  React.useEffect(() => {
+    if (reklamSerbest(rizaOku(window.localStorage))) adsenseBetiginiBaslat();
+  }, [rizaSayaci]);
+
   const activeStudent = student;
 
   /*
@@ -1246,12 +1264,29 @@ export default function App() {
     />
   ) : null;
 
+  /*
+    ÇEREZ BANDI HER İKİ KABUKTA DA
+
+    Band önce yalnızca ana kabuğun return'ünde duruyordu. İçerik sayfaları
+    (`icerikSayfasi`) oraya HİÇ ULAŞMIYOR — erken dönüyorlar. Ölçüldü:
+    /rehber/... sayfasında band çıkmıyordu, yani reklamın gösterildiği
+    sayfalarda rıza hiç sorulmuyordu.
+  */
+  const cerezBandi = (
+    <CerezBandi
+      acikBasla={tercihlerAcik}
+      onKapat={() => setTercihlerAcik(false)}
+      onKarar={() => setRizaSayaci((n) => n + 1)}
+    />
+  );
+
   const icerikSayfasi = (icerik: React.ReactNode) => (
     <div className="min-h-screen flex flex-col bg-[#F9FAFB]">
       {ustCubuk}
       {icerik}
       {girisModali}
       {adPenceresi}
+      {cerezBandi}
     </div>
   );
 
@@ -1720,6 +1755,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] font-sans text-[#111827] flex flex-col selection:bg-blue-600 selection:text-white transition-colors duration-200">
+      {/*
+        ÇEREZ BANDI
+
+        Reklam betiği bu banda verilen karara bağlı; band çıkmadan hiçbir
+        dış reklam isteği başlamıyor. `tercihlerAcik` altbilgideki
+        "Çerez tercihleri" bağlantısıyla açılıyor — kullanıcı kararını
+        sonradan değiştirebilsin diye.
+      */}
+      {cerezBandi}
+
       {/* Toast Banner */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-gray-800 flex items-center gap-2.5 text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-200">
@@ -2063,6 +2108,18 @@ export default function App() {
                   {bag.etiket}
                 </a>
               ))}
+              {/*
+                Kullanıcı kararını sonradan değiştirebilmeli: band bir kez
+                çıkıp kayboluyor, bu bağlantı onu tercihler açık hâlde geri
+                getiriyor.
+              */}
+              <button
+                type="button"
+                onClick={() => setTercihlerAcik(true)}
+                className="cursor-pointer font-semibold text-gray-600 transition-colors hover:text-blue-600"
+              >
+                Çerez tercihleri
+              </button>
             </div>
 
             <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
