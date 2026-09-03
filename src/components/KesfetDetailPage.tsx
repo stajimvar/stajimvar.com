@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { DisBaglanti } from '../ui';
 import { ArrowLeft, CalendarDays, MapPin, ShieldCheck } from "lucide-react";
 import {
   DISCOVER_CATEGORIES,
@@ -16,7 +17,13 @@ const dateText = (v: string) =>
 export const KesfetDetailPage: React.FC<{
   slug: string;
   onBack: () => void;
-}> = ({ slug, onBack }) => {
+  /*
+    Etkinliğin resmî kaynağı ve bilet bağlantısı misafirde giriş penceresini
+    açıyor; etkinlik metni, tarihi ve mekânı açık kalıyor (ui/DisBaglanti).
+  */
+  girisGerekli?: boolean;
+  onGirisGerekli?: () => void;
+}> = ({ slug, onBack, girisGerekli = false, onGirisGerekli }) => {
   const [e, setE] = useState<DiscoverEvent | null | undefined>();
   useEffect(() => {
     fetchDiscoverEventBySlug(slug)
@@ -176,23 +183,25 @@ export const KesfetDetailPage: React.FC<{
             )}
           </dl>
           <div className="flex flex-wrap gap-2">
-            <a
+            <DisBaglanti
               href={e.sourceUrl}
-              target="_blank"
-              rel="noreferrer"
+              girisGerekli={girisGerekli}
+              onGirisGerekli={onGirisGerekli}
+              kapiEtiketi="Kaynağa gitmek için giriş yap"
               className="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold"
             >
-              Resmî kaynak
-            </a>
+              {girisGerekli && onGirisGerekli ? 'Giriş yap' : 'Resmî kaynak'}
+            </DisBaglanti>
             {e.ticketUrl && (
-              <a
+              <DisBaglanti
                 href={e.ticketUrl}
-                target="_blank"
-                rel="noreferrer"
+                girisGerekli={girisGerekli}
+                onGirisGerekli={onGirisGerekli}
+                kapiEtiketi="Bilet için giriş yap"
                 className="px-4 py-2 rounded-xl border font-bold"
               >
-                Bilet / başvuru
-              </a>
+                {girisGerekli && onGirisGerekli ? 'Giriş yap' : 'Bilet / başvuru'}
+              </DisBaglanti>
             )}
             {e.directionsUrl && (
               <a

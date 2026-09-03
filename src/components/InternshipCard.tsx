@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { InternshipListing, MatchBreakdown } from '../types';
 import { ListingLogo } from './ListingLogo';
+import { DisBaglanti } from '../ui';
 import { SIRKET_KENAR_GUCLU, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import { eklenmeMetni, sonKontrolMetni, uzunSuredirAcik } from '../lib/zaman';
@@ -69,6 +70,11 @@ interface InternshipCardProps {
   */
   girisGerekli?: boolean;
   /*
+    Misafirken dış başvuru bağlantısı giriş penceresini açıyor. İlanın
+    kendisi açık; kapanan yalnızca son adım — bkz. ui/DisBaglanti.
+  */
+  onGirisGerekli?: () => void;
+  /*
     KENDİ ŞİRKETİNİN İLANI
 
     Şirket üyesi öğrenci görünümüne geçip kendi ilanını kontrol
@@ -90,6 +96,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
   kayitli = false,
   onToggleKayit,
   girisGerekli = false,
+  onGirisGerekli,
   kendiIlanim = false,
 }) => {
   /*
@@ -547,17 +554,19 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             */
             if (yol.resmiAdres && yol.anaEylem === 'resmi-site') {
               return (
-                <a
+                <DisBaglanti
                   id={`external-apply-btn-${listing.id}`}
                   href={yol.resmiAdres}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow"
+                  girisGerekli={girisGerekli}
+                  onGirisGerekli={onGirisGerekli}
                   title={yol.ozet}
                   className={`${CTA_ORTAK} ${CTA_BIRINCIL}`}
                 >
-                  <span className="truncate">{yol.anaEtiket}</span>
+                  <span className="truncate">
+                    {girisGerekli && onGirisGerekli ? 'Başvurmak için giriş yap' : yol.anaEtiket}
+                  </span>
                   <ExternalLink className="h-3 w-3 shrink-0" />
-                </a>
+                </DisBaglanti>
               );
             }
 

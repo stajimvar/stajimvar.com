@@ -126,7 +126,15 @@ export const FirsatKartiDevFixture: React.FC = () => (
             <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-400">
               {o.ad}
             </p>
-            <Card item={o.item} onNavigate={() => undefined} fit={null} />
+            {/* Fixture girişli kullanıcıyı taklit ediyor: kapıyı burada denemek
+                istiyorsak `girisGerekli` true yapılır. */}
+            <Card
+              item={o.item}
+              onNavigate={() => undefined}
+              fit={null}
+              girisGerekli={false}
+              onRequireLogin={() => undefined}
+            />
           </div>
         ))}
       </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { DisBaglanti } from '../ui';
 import { firsatEylemleri } from '../lib/rehber-eylemleri.mjs';
 import { ArrowLeft, Bookmark, Check, CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
 import {
@@ -193,15 +194,19 @@ export const OpportunityDetailPage: React.FC<{
     düğme, başvurunun burada alındığını ima ederdi.
   */
   const anaEylem = cta && (
-    <a
+    <DisBaglanti
       href={cta.adres}
-      target="_blank"
-      rel="noopener noreferrer nofollow"
+      girisGerekli={!userId}
+      onGirisGerekli={onRequireLogin}
       className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-700 sm:w-auto"
     >
-      {cta.etiket === 'Başvur' ? 'Resmî Başvuruya Git' : cta.etiket}
+      {!userId
+        ? 'Başvurmak için giriş yap'
+        : cta.etiket === 'Başvur'
+          ? 'Resmî Başvuruya Git'
+          : cta.etiket}
       <ExternalLink className="h-4 w-4" />
-    </a>
+    </DisBaglanti>
   );
 
   return (
@@ -350,15 +355,16 @@ export const OpportunityDetailPage: React.FC<{
       <section className="rounded-2xl border border-gray-200 bg-white p-5">
         <h2 className="text-base font-extrabold text-gray-900">Resmî kaynak</h2>
         {cta ? (
-          <a
+          <DisBaglanti
             href={cta.adres}
-            target="_blank"
-            rel="noopener noreferrer nofollow"
-            className="mt-1.5 inline-flex items-center gap-1.5 break-all text-sm font-bold text-blue-700 hover:underline"
+            girisGerekli={!userId}
+            onGirisGerekli={onRequireLogin}
+            kapiEtiketi="Kaynağa gitmek için giriş yap"
+            className="mt-1.5 inline-flex items-center gap-1.5 break-all text-left text-sm font-bold text-blue-700 hover:underline"
           >
-            {cta.adres}
+            {!userId ? 'Kaynağa gitmek için giriş yap' : cta.adres}
             <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-          </a>
+          </DisBaglanti>
         ) : (
           <p className="mt-1.5 text-sm text-gray-600">Kaynak bağlantısı kayıtta yok.</p>
         )}

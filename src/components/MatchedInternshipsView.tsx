@@ -1330,6 +1330,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                       student?.id ? () => kaydiDegistir(listing.id) : onRequireLogin
                     }
                     girisGerekli={!student?.id}
+                    onGirisGerekli={onRequireLogin}
                     kendiIlanim={Boolean(kendiSirketId && listing.companyId === kendiSirketId)}
                   />
 
