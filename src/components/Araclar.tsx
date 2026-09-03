@@ -20,6 +20,7 @@ import { StajTakvimi } from './StajTakvimi';
 */
 import { paraCoz, yuzdeKurus, kurusBicim } from '../lib/para.mjs';
 import { satirNeti, toplamNet } from '../lib/net-hesap.mjs';
+import { KAYNAK as TATIL_KAYNAK } from '../lib/resmi-tatiller.mjs';
 import {
   YIL as ASGARI_YIL,
   NET_KURUS as ASGARI_NET_KURUS,
@@ -1019,9 +1020,19 @@ export const StajGunuHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) =
             </span>
           </label>
 
+          {/*
+            KUTU ARTIK YALNIZCA KURUMA ÖZEL İZİN
+
+            Etiketi "Dinî bayram ve idari tatil günü sayısı"ydı: öğrencinin
+            Ramazan ve Kurban Bayramı'nın hangi güne düştüğünü bilip elle
+            yazması bekleniyordu. Bilmiyorsa hesap sessizce yanlış çıkıyordu.
+            Resmî tatillerin tamamı (dinî bayramlar dahil) artık otomatik —
+            lib/resmi-tatiller.mjs. Burada yalnızca kurumun kendi verdiği,
+            kimsenin bilemeyeceği izinler kalıyor.
+          */}
           <Alan
-            etiket="Dinî bayram ve idari tatil günü sayısı"
-            ipucu="Ramazan ve Kurban Bayramı her yıl kaydığı için elle giriliyor. Staj sürene denk gelen tatil günü sayısını yaz."
+            etiket="Kuruma özel ek izin (gün)"
+            ipucu="Resmî tatiller otomatik düşülüyor. Buraya yalnızca kurumun kendi verdiği idari izinleri yaz."
           >
             <input
               inputMode="numeric"
@@ -1085,6 +1096,46 @@ export const StajGunuHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) =
             <h2 className="font-bold text-gray-900">Gün gün takvim</h2>
             <StajTakvimi gunler={takvim} />
           </section>
+        )}
+
+        {/*
+          ÇIKARILAN GÜNLER TEK TEK
+
+          Önce yalnızca "12 gün çalışılmıyor" yazıyordu. Hangi günler
+          olduğunu göstermeden verilen bir sayı doğrulanamaz; öğrenci staj
+          formunu doldururken bu listeye bakıyor.
+        */}
+        {sonuc && sonuc.cikarilanlar.length > 0 && (
+          <details className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
+            <summary className="cursor-pointer font-bold text-gray-900">
+              Hesaptan çıkarılan {sonuc.cikarilanlar.length} gün
+            </summary>
+            <ul className="mt-3 space-y-1 text-sm text-gray-700">
+              {sonuc.cikarilanlar.map((c) => (
+                <li key={c.tarih.toISOString()} className="flex flex-wrap gap-x-2">
+                  <span className="font-semibold tabular-nums text-gray-900">
+                    {tarihYaz(c.tarih)}
+                  </span>
+                  <span className="text-gray-600">
+                    {c.ad}
+                    {c.durum === 'yarim' ? ' — yarım gün sayıldı' : ''}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs leading-relaxed text-gray-600">
+              Resmî tatiller {TATIL_KAYNAK.kanun.etiket} ve{' '}
+              <a
+                href={TATIL_KAYNAK.diyanet.adres}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="font-semibold text-blue-700 hover:underline"
+              >
+                Diyanet dinî günler takvimi
+              </a>{' '}
+              esas alınarak otomatik düşülüyor.
+            </p>
+          </details>
         )}
 
         {/*
