@@ -872,9 +872,17 @@ export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate })
         <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 space-y-2">
           <h2 className="font-bold text-gray-900">Bilmen gereken üç şey</h2>
           <ul className="list-disc pl-5 space-y-1.5 text-sm sm:text-base text-gray-600 leading-relaxed">
+            {/*
+              "çoğu zaman ödüyor" KALDIRILDI
+
+              Kaynağı olmayan bir genellemeydi: şirketlerin fiilen ne ödediğine
+              dair elimizde doğrulanmış veri yok. Öğrenciye "nasılsa daha fazla
+              verirler" beklentisi kurmak, pazarlık masasına yanlış bilgiyle
+              oturtuyordu. Kanunun söylediği şey kaldı: bu bir alt sınır.
+            */}
             <li>
-              Bu bir <strong>alt sınır</strong>. İşletme daha fazlasını ödeyebilir ve çoğu
-              zaman ödüyor.
+              Bu bir <strong>alt sınır</strong>. Kanun üst sınır koymuyor; işletme daha
+              fazlasını ödeyebilir. Ne ödendiğini ilandan ve işverene sorarak öğrenirsin.
             </li>
             <li>
               Devletin bu ödemenin bir kısmını karşıladığı bir destek mekanizması var. Yani

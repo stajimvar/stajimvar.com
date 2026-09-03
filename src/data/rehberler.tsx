@@ -80,6 +80,22 @@ export interface Rehber {
    */
   guncelleme?: string;
   /**
+   * Gözden geçiren kişi ya da rol.
+   *
+   * NEDEN ROL DE OLABİLİYOR
+   * -----------------------
+   * Mevzuata değen içerikte "kim baktı" sorusu tarihten sonra gelen ikinci
+   * soru. Ad yazmak her zaman mümkün değil; ekipte bu işi yapan rolü yazmak
+   * ("StajımVar içerik ekibi") hiçbir şey yazmamaktan iyi, ama uydurulmuş bir
+   * unvan yazmaktan da iyi. Alan boş bırakılabilir: doldurulmadığında
+   * ekranda hiç çizilmiyor.
+   *
+   * Burada YAZILANIN DOĞRU OLMASI gerekiyor. Hukukçu incelemesinden geçmemiş
+   * bir metne "hukuk danışmanı onayladı" yazmak, okuyucuya olmayan bir
+   * güvence satmaktır.
+   */
+  inceleyen?: string;
+  /**
    * Konu — Rehber sekmesindeki kategori süzgeci.
    *
    * `kategori` kime hitap ettiğini söylüyor (öğrenci / işveren); `konu` ise

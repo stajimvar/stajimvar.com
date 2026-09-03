@@ -691,14 +691,21 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
 
         {reklamUygun && <GoogleAdBanner format="in-feed" className="mt-8" />}
 
-        {rehber.guncelleme && (
+        {(rehber.guncelleme || rehber.inceleyen) && (
           <p className="mt-6 text-xs text-gray-600">
-            Son gözden geçirme:{' '}
-            {new Date(rehber.guncelleme).toLocaleDateString('tr-TR', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            })}
+            {rehber.guncelleme && (
+              <>
+                Son gözden geçirme:{' '}
+                {new Date(rehber.guncelleme).toLocaleDateString('tr-TR', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </>
+            )}
+            {/* Gözden geçiren yalnızca yazılmışsa çiziliyor; uydurma unvan yok. */}
+            {rehber.guncelleme && rehber.inceleyen && ' · '}
+            {rehber.inceleyen && <>Gözden geçiren: {rehber.inceleyen}</>}
           </p>
         )}
       </article>

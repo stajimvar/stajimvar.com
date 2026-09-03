@@ -30,7 +30,8 @@ export const STAJ_REHBERLERI: Rehber[] = [
       'işveren ne ödüyor, öğrenci neye dikkat etmeli.',
     hizliCevap:
       'Zorunlu stajda sigorta girişini genellikle öğrencinin okulu yapar ve prim okul tarafından ödenir; ' +
-      'işyerine ek bir yükümlülük çıkmaz. Gönüllü (isteğe bağlı) stajda okulun böyle bir zorunluluğu ' +
+      'yani işyerine bu primin MALİYETİ çıkmaz. Ama işverenin iş sağlığı ve güvenliği yükümlülükleri ' +
+      'aynen sürüyor: 6331 sayılı Kanun stajyerleri de kapsıyor. Gönüllü (isteğe bağlı) stajda okulun böyle bir zorunluluğu ' +
       'olmadığı için sigorta yükümlülüğü işyerine geçebilir. Kesin cevap kendi okulunun staj yönergesinde ' +
       've işyeriyle yaptığın yazılı anlaşmadadır.',
     bloklar: [
@@ -62,8 +63,13 @@ export const STAJ_REHBERLERI: Rehber[] = [
             'karşılığında bir "zorunlu staj formu" verir. Bu formun anlamı şudur: öğrenci bizim öğrencimiz, staj ' +
             'bizim programımızın parçası.',
           'Bu durumda iş kazası ve meslek hastalığı sigortası girişi genellikle okul tarafından yapılır ve primi okul öder. ' +
-            'İşyerinin yapması gereken şey formu imzalamak, stajın başlangıç ve bitiş tarihlerini doğrulamak ve staj bitince ' +
-            'değerlendirme bölümünü doldurmaktır.',
+            'İşyerinin evrak tarafında yapması gereken şey formu imzalamak, stajın başlangıç ve bitiş tarihlerini doğrulamak ve ' +
+            'staj bitince değerlendirme bölümünü doldurmaktır.',
+          'Buradaki ayrımı karıştırmamak gerekiyor: primi okulun ödemesi işverenin SORUMLULUĞUNU kaldırmıyor, yalnızca o ' +
+            'primin maliyetini kaldırıyor. 6331 sayılı İş Sağlığı ve Güvenliği Kanunu kapsamını sayarken "çırak ve stajyerler ' +
+            'de dâhil olmak üzere tüm çalışanlar" diyor; yani işverenin risk değerlendirmesi, İSG eğitimi, gözetim ve gerekli ' +
+            'donanımı sağlama yükümlülükleri stajyer için de aynen geçerli. 3308 sayılı Kanun da işyerinin kusuru hâlinde ' +
+            'meydana gelen iş kazası ve meslek hastalığından işvereni sorumlu tutuyor.',
         ],
         uyari:
           'Uygulama üniversiteden üniversiteye değişebiliyor; bazı okullar primi öğrenciden istiyor, bazıları belirli ' +
@@ -129,12 +135,17 @@ export const STAJ_REHBERLERI: Rehber[] = [
       {
         soru: 'Zorunlu stajda sigorta primini kim öder?',
         cevap:
-          'Genellikle öğrencinin okulu öder ve işyerine ek bir maliyet çıkmaz. Bazı üniversiteler farklı uyguluyor; kesin cevap için kendi okulunun staj yönergesine bak.',
+          'Genellikle öğrencinin okulu öder ve işyerine bu primin maliyeti çıkmaz. Bu, işverenin iş sağlığı ve güvenliği yükümlülüklerini kaldırmıyor: 6331 sayılı Kanun stajyerleri de kapsıyor ve 3308 sayılı Kanun işyerinin kusuru hâlindeki iş kazasından işvereni sorumlu tutuyor. Bazı üniversiteler primi farklı uyguluyor; kesin cevap için kendi okulunun staj yönergesine bak.',
       },
       {
         soru: 'Gönüllü stajda sigorta zorunlu mu?',
         cevap:
           'Okul zorunlu staj formu düzenlemiyorsa stajın okulla resmî bağı olmaz ve sigorta yükümlülüğü işyerine geçebilir. Staja başlamadan önce bunu yazılı olarak netleştirmek gerekiyor.',
+      },
+      {
+        soru: 'Primi okul ödüyorsa işverenin hiçbir sorumluluğu kalmıyor mu?',
+        cevap:
+          'Hayır. Primi okulun ödemesi yalnızca o ödemenin maliyetini kaldırır. 6331 sayılı İş Sağlığı ve Güvenliği Kanunu çırak ve stajyerler de dâhil tüm çalışanları kapsıyor; risk değerlendirmesi, İSG eğitimi ve gözetim yükümlülükleri stajyer için de sürüyor. 3308 sayılı Kanun ayrıca işyerinin kusuru hâlinde meydana gelen iş kazası ve meslek hastalığından işvereni sorumlu tutuyor.',
       },
       {
         soru: 'Staj sigortası emekliliğe sayılır mı?',
@@ -148,9 +159,13 @@ export const STAJ_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Sosyal Güvenlik Kurumu', adres: 'https://www.sgk.gov.tr', kurum: 'Sosyal Güvenlik Kurumu', tur: 'kurum', destekledigi: 'Staj sigortasının kapsamı (iş kazası ve meslek hastalığı) ve tescil kayıtları.' },
-      { etiket: 'e-Devlet — SGK tescil ve hizmet dökümü', adres: 'https://www.turkiye.gov.tr', kurum: 'Cumhurbaşkanlığı Dijital Dönüşüm Ofisi', tur: 'kurum', destekledigi: 'Sigorta girişinin yapılıp yapılmadığını hizmet dökümünden görme.' },
+      { etiket: '6331 sayılı İş Sağlığı ve Güvenliği Kanunu, madde 2 (kapsam)', adres: 'https://www.mevzuat.gov.tr/mevzuatmetin/1.5.6331.pdf', kurum: 'Mevzuat Bilgi Sistemi', tur: 'belge', destekledigi: 'Kanunun "çırak ve stajyerler de dâhil olmak üzere tüm çalışanlara" uygulandığı; işverenin İSG yükümlülüklerinin stajyer için de sürdüğü.' },
+      { etiket: '3308 sayılı Mesleki Eğitim Kanunu, madde 25', adres: 'https://www.mevzuat.gov.tr/mevzuatmetin/1.5.3308.pdf', kurum: 'Mevzuat Bilgi Sistemi', tur: 'belge', destekledigi: 'İşyerinin kusuru hâlinde meydana gelen iş kazası ve meslek hastalığından işverenin sorumlu olduğu.' },
+      { etiket: '5510 sayılı Kanun — sigortalılık ve kısa vadeli sigorta kolları', adres: 'https://www.mevzuat.gov.tr/mevzuatmetin/1.5.5510.pdf', kurum: 'Mevzuat Bilgi Sistemi', tur: 'belge', destekledigi: 'Staj sigortasının kapsamının iş kazası ve meslek hastalığı ile sınırlı olduğu.' },
+      { etiket: 'e-Devlet — SGK tescil ve hizmet dökümü', adres: 'https://www.turkiye.gov.tr/sgk-tescil-ve-hizmet-dokumu', kurum: 'Cumhurbaşkanlığı Dijital Dönüşüm Ofisi', tur: 'belge', destekledigi: 'Sigorta girişinin yapılıp yapılmadığını hizmet dökümünden görme.' },
     ],
+    guncelleme: '2026-09-03',
+    inceleyen: 'StajımVar içerik ekibi',
     sonrakiAdim: {
       etiket: 'Açık staj ilanlarına bak',
       yol: '/',
@@ -186,13 +201,16 @@ export const STAJ_REHBERLERI: Rehber[] = [
         paragraflar: [
           'Zorunlu stajda ödenecek asgari tutar iki şeye bağlı: yürürlükteki asgari ücret ve işletmenin büyüklüğü. ' +
             'Belirli bir çalışan sayısının altındaki işletmeler için oran daha düşük, üstündekiler için daha yüksek uygulanıyor.',
-          'İşveren bu asgari tutarın üstünde ödeme yapmakta serbest. Büyük şirketlerin staj programlarında ödenen tutar ' +
-            'çoğu zaman yasal alt sınırın belirgin şekilde üstünde oluyor.',
+          'İşveren bu asgari tutarın üstünde ödeme yapmakta serbest; kanun yalnızca alt sınırı belirliyor, üst sınır koymuyor. ' +
+            'Şirketlerin fiilen ne ödediğine dair elimizde doğrulanmış bir veri yok, o yüzden bir ortalama söylemiyoruz — ' +
+            'ilanda yazan tutara ve işverene sorduğun cevaba bak.',
         ],
         liste: [
-          'Hesabın tabanı: yürürlükteki brüt asgari ücret.',
+          'Hesabın tabanı: yürürlükteki asgari ücretin NET tutarı. 3308 sayılı Kanun m.25 böyle diyor; brüt üzerinden hesaplamak tutarı olduğundan yüksek gösterir.',
           'Çarpan: işletmedeki çalışan sayısına göre değişen oran.',
           'Süre: fiilen staj yapılan gün sayısı. Devamsız geçen gün ödenmiyor.',
+          'Oran: yirmiden az personel çalıştıran işyerinde net asgari ücretin yüzde 15’i, yirmi ve üzerinde yüzde 30’u (3308 m.25).',
+          'Kapsam dışı: staj yapacak işletme bulunamadığı için stajını kendi okulunda ya da üniversitesinde yapan öğrenciler bu alt sınıra dayanamıyor.',
           'Üst sınır yok: işveren daha fazlasını ödeyebilir.',
         ],
       },
@@ -272,9 +290,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Millî Eğitim Bakanlığı', adres: 'https://www.meb.gov.tr', kurum: 'Millî Eğitim Bakanlığı', tur: 'kurum', destekledigi: 'Zorunlu stajda ücret yükümlülüğünün dayanağı ve güncel oranlar.' },
-      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı', adres: 'https://www.csgb.gov.tr', kurum: 'Çalışma ve Sosyal Güvenlik Bakanlığı', tur: 'kurum', destekledigi: 'Asgari ücret ve staj ödemesine ilişkin güncel duyurular.' },
+      { etiket: '3308 sayılı Mesleki Eğitim Kanunu, madde 25', adres: 'https://www.mevzuat.gov.tr/mevzuatmetin/1.5.3308.pdf', kurum: 'Mevzuat Bilgi Sistemi', tur: 'belge', destekledigi: 'Ücretin asgari ücretin NET tutarı üzerinden hesaplandığı; yirmiden az personelde %15, yirmi ve üzerinde %30 alt sınırı; okulda yapılan stajların kapsam dışı olduğu.' },
+      { etiket: 'Asgari Ücret Tespit Komisyonu Kararı (2025/1) — Resmî Gazete, 26/12/2025', adres: 'https://www.resmigazete.gov.tr/eskiler/2025/12/20251226-6.pdf', kurum: 'Resmî Gazete', tur: 'belge', destekledigi: '2026 yılı net asgari ücretin 28.075,50 TL olarak belirlendiği.' },
+      { etiket: 'Çalışma ve Sosyal Güvenlik Bakanlığı — 2026 asgari ücret duyurusu', adres: 'https://www.csgb.gov.tr/cgm/haberler/23122025/', kurum: 'Çalışma ve Sosyal Güvenlik Bakanlığı', tur: 'belge', destekledigi: '2026 net ve brüt asgari ücret tutarlarının resmî duyurusu.' },
     ],
+    guncelleme: '2026-09-03',
+    inceleyen: 'StajımVar içerik ekibi',
     sonrakiAdim: {
       etiket: 'Staj ücretini hesapla',
       yol: '/araclar/staj-ucreti-hesaplama',

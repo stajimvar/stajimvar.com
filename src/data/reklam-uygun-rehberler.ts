@@ -18,6 +18,7 @@ export const REKLAM_UYGUN_REHBERLER: readonly string[] = [
   'staj-mulakati',
   'staj-nasil-bulunur',
   'staj-sigortasi-kim-yapar',
+  'staj-ucreti-nasil-hesaplanir',
   'universite-staj-birimi',
   'yurtdisinda-staj',
   'zorunlu-staj-rehberi',

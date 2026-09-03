@@ -165,6 +165,8 @@ export interface RehberTaslagi {
   etiketler?: string[];
   oneCikan?: boolean;
   guncelleme?: string;
+  /* Gözden geçiren kişi ya da rol; boş bırakılabiliyor (bkz. Rehber tipi). */
+  inceleyen?: string;
 }
 
 /**
@@ -188,6 +190,7 @@ export function metinRehberi(t: RehberTaslagi): Rehber {
     sonrakiAdim: t.sonrakiAdim,
     sss: t.sss,
     guncelleme: t.guncelleme ?? '2026-08-25',
+    inceleyen: t.inceleyen,
     icerik: <GovdeCizimi bloklar={t.bloklar} />,
   };
 }
