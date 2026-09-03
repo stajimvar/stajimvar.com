@@ -119,6 +119,24 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
   */
   const sirketinKendiIlani =
     String(listing.origin) === 'employer_posted' || String(listing.origin) === 'internal';
+  /*
+    "Kariyer sayfasından" ETİKETİ ARTIK ELLE EKLENEN İLANI DA KAPSIYOR
+
+    Koşul yalnızca `origin === 'scraped'` idi. Ama üçüncü bir tür var:
+    otomasyonun derleyemediği bir ilanı kaynağından okuyup elle giriyoruz
+    ve `origin` 'manual' oluyor. O ilan da başvuruyu şirketin kendi
+    sayfasına yolluyor — düğmesinde "Resmî sitede başvur" yazıyor — ama
+    kartında hiçbir kaynak etiketi çıkmıyordu. Yeni eklenen ilanlar
+    listede etiketsiz duruyor, komşusu etiketli: öğrenci ikisinin farklı
+    işlediğini sanıyor.
+
+    Koşul artık başvurunun gerçekte nereye gittiğine bakıyor
+    (`basvuruYolu`), yani düğmenin yazısıyla etiket asla ayrışamıyor.
+    Adresi olmayan elle girilmiş ilan hâlâ etiketsiz: onu kariyer
+    sayfasına yollayamıyoruz, "kariyer sayfasından" demek de yanıltır.
+  */
+  const kariyerSayfasindanIlan =
+    !sirketinKendiIlani && (listing.origin === 'scraped' || yol.anaEylem === 'resmi-site');
 
   return (
     <div
@@ -266,7 +284,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
 
               Tek etiket, iki değer. Kalabalık artmıyor.
             */}
-            {listing.origin === 'scraped' ? (
+            {kariyerSayfasindanIlan ? (
               <span
                 className="inline-flex items-center gap-1 text-[11px] text-gray-600 font-medium"
                 title="Bu ilan şirketin kendi kariyer sayfasından alındı"

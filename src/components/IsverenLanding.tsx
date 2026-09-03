@@ -21,7 +21,6 @@ import {
 } from '../sirket/renk';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
-import { fetchTalentPoolStats, type TalentPoolStat } from '../lib/queries';
 
 /**
  * İşveren giriş sayfası.
@@ -85,8 +84,6 @@ export const IsverenLanding: React.FC<{
   /** Giriş yapmış ve bir şirkete üye olan kullanıcı doğrudan panele gider. */
   sirketUyesiMi: boolean;
 }> = ({ onNavigate, onIsverenGirisi, sirketUyesiMi }) => {
-  const [havuz, setHavuz] = React.useState<TalentPoolStat | null>(null);
-
   React.useEffect(
     () =>
       sayfaMetaAyarla({
@@ -97,20 +94,6 @@ export const IsverenLanding: React.FC<{
       }),
     []
   );
-
-  React.useEffect(() => {
-    let iptal = false;
-    fetchTalentPoolStats()
-      .then((s) => {
-        if (!iptal) setHavuz(s);
-      })
-      .catch(() => {
-        /* Sayı gelmezse satır çizilmiyor; uydurma rakam konmuyor. */
-      });
-    return () => {
-      iptal = true;
-    };
-  }, []);
 
   const anaEylem = () => {
     if (sirketUyesiMi) return onNavigate('/sirket/ilanlar');
@@ -164,30 +147,20 @@ export const IsverenLanding: React.FC<{
         </div>
 
         {/*
-          Sayılar VERİTABANINDAN. Gelmezse satır hiç çizilmiyor — "binlerce
-          öğrenci" gibi doğrulanamayan bir cümle, güven veren değil güven
-          alan bir şey.
+          HAVUZ SAYILARI ŞİMDİLİK GÖSTERİLMİYOR
+
+          Burada "Staj arayan öğrenci / En çok bölüm / En çok şehir"
+          üçlüsü duruyordu ve sayılar gerçekten veritabanından geliyordu.
+          Sorun rakamın doğruluğu değil, bu boydaki rakamın işverene ne
+          anlattığı: havuz daha küçükken "11 öğrenci" ve tek bir bölüm
+          adı, ilan vermeye ikna eden değil caydıran bir kanıt oluyor.
+          Sayı boşken susmak, küçükken bağırmaktan iyi.
+
+          Geri getirmek zor değil: `fetchTalentPoolStats` ve
+          `TalentPoolStat` yerinde duruyor (bkz. src/lib/queries).
+          Havuz anlamlı bir büyüklüğe geldiğinde bu blok, bir alt sınır
+          eşiğiyle birlikte geri konabilir.
         */}
-        {havuz && havuz.toplam > 0 && (
-          <dl className="flex flex-wrap gap-x-6 gap-y-2 pt-1">
-            <div>
-              <dt className="text-xs font-semibold text-gray-500">Staj arayan öğrenci</dt>
-              <dd className="text-lg font-black text-gray-900">{havuz.toplam}</dd>
-            </div>
-            {havuz.enCokBolum.length > 0 && (
-              <div>
-                <dt className="text-xs font-semibold text-gray-500">En çok bölüm</dt>
-                <dd className="text-lg font-black text-gray-900">{havuz.enCokBolum[0].ad}</dd>
-              </div>
-            )}
-            {havuz.enCokSehir.length > 0 && (
-              <div>
-                <dt className="text-xs font-semibold text-gray-500">En çok şehir</dt>
-                <dd className="text-lg font-black text-gray-900">{havuz.enCokSehir[0].ad}</dd>
-              </div>
-            )}
-          </dl>
-        )}
       </header>
 
       {/* ------------------------------------------------- nasıl çalışır */}
