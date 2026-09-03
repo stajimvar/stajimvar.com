@@ -18,6 +18,16 @@ import { StajTakvimi } from './StajTakvimi';
   "bu bilgi ne kadar taze" sorusunun cevabını vermeden hesap göstermek,
   doğruluğu kanıtlanamayan bir sayı göstermek olur.
 */
+import { paraCoz, yuzdeKurus, kurusBicim } from '../lib/para.mjs';
+import {
+  YIL as ASGARI_YIL,
+  NET_KURUS as ASGARI_NET_KURUS,
+  DOGRULANDI as ASGARI_DOGRULANDI,
+  KAYNAK as ASGARI_KAYNAK,
+  ORAN as STAJ_ORAN,
+  KAPSAM_DISI as STAJ_KAPSAM_DISI,
+} from '../lib/asgari-ucret.mjs';
+
 const MEVZUAT_TARIHI = '25 Ağustos 2026';
 import {
   SINAV_DAGILIMI,
@@ -561,10 +571,15 @@ export const SiralamaTahmini: React.FC<AracProps> = ({ onBack, onNavigate }) => 
 /* ================================================= staj ücreti hesaplama */
 
 export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) => {
-  const [asgari, setAsgari] = useState('');
+  /*
+    Tutar merkezî yapılandırmadan geliyor (lib/asgari-ucret.mjs) ve kutuda
+    yazılı başlıyor. Kullanıcı yine değiştirebiliyor: geçmiş bir yılı ya da
+    kendi sözleşmesindeki tutarı hesaplamak isteyebilir.
+  */
+  const [asgari, setAsgari] = useState(kurusBicim(ASGARI_NET_KURUS));
   const [buyuk, setBuyuk] = useState(false); // 20 ve üzeri personel
-  const [oranKucuk, setOranKucuk] = useState('15');
-  const [oranBuyuk, setOranBuyuk] = useState('30');
+  const [oranKucuk, setOranKucuk] = useState(String(STAJ_ORAN.kucukIsyeri));
+  const [oranBuyuk, setOranBuyuk] = useState(String(STAJ_ORAN.buyukIsyeri));
 
   useEffect(() => {
     document.title = 'Staj ücreti hesaplama | StajımVar';
@@ -572,17 +587,35 @@ export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate })
 
   const [kopyalandi, setKopyalandi] = useState(false);
 
-  const asgariSayi = Number(asgari.replace(/[^\d]/g, '')) || 0;
-  const oran = Number(buyuk ? oranBuyuk : oranKucuk) || 0;
-  const sonuc = (asgariSayi * oran) / 100;
+  /*
+    AYRIŞTIRMA ARTIK KURUŞ DUYARLI
+
+    Burada `Number(asgari.replace(/[^\d]/g, ''))` vardı: ondalık ayırıcıyı da
+    siliyordu. "28075,50" önce 2807550 oluyor, yüzde 15'i 421.132,50 TL
+    çıkıyordu — doğrusunun tam yüz katı. Ayrıştırma ve kuruş aritmetiği
+    lib/para.mjs'e taşındı ve testleri var (tests/para.test.mjs).
+  */
+  const cozum = paraCoz(asgari);
+  const oranHam = (buyuk ? oranBuyuk : oranKucuk).trim();
+  const oranGecerli = /^\d{1,3}$/.test(oranHam) && Number(oranHam) > 0 && Number(oranHam) <= 100;
+  const oran = oranGecerli ? Number(oranHam) : 0;
+  const hesaplanabilir = cozum.gecerli && oranGecerli;
+  const sonucKurus = hesaplanabilir ? yuzdeKurus(cozum.kurus, oran) : null;
+  const hataMetni = !asgari.trim()
+    ? null
+    : !cozum.gecerli
+      ? cozum.hata
+      : !oranGecerli
+        ? 'Oran 1 ile 100 arasında olmalı.'
+        : null;
 
   /* Girdi değişince "Kopyalandı" yazısı eski sonuca ait kalmasın. */
   useEffect(() => {
     setKopyalandi(false);
   }, [asgari, buyuk, oranKucuk, oranBuyuk]);
 
-  const bicim = (n: number) =>
-    n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  /* Görüntüleme tek yerden: lib/para.mjs → kurusBicim. */
+  const bicim = kurusBicim;
 
   return (
     <Kabuk onBack={onBack}>
@@ -608,16 +641,28 @@ export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate })
 
         <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 space-y-4">
           <Alan
-            etiket="Net asgari ücret (TL)"
-            ipucu="Güncel tutarı yaz. Her yıl değiştiği için sabit yazmıyoruz."
+            etiket={`Net asgari ücret (TL) — ${ASGARI_YIL}`}
+            ipucu="Kutuda güncel tutar yazılı. Başka bir yıl için değiştirebilirsin."
           >
+            {/*
+              `inputMode="decimal"` ve süzgeçsiz onChange: eskiden her tuşta
+              rakam dışı her şey siliniyordu, yani kullanıcı virgülü YAZAMIYOR,
+              yazsa da kayboluyordu. Doğrulama artık girerken değil
+              hesaplarken yapılıyor (lib/para.mjs).
+            */}
             <input
-              inputMode="numeric"
+              inputMode="decimal"
               value={asgari}
-              onChange={(e) => setAsgari(e.target.value.replace(/[^\d]/g, ''))}
+              onChange={(e) => setAsgari(e.target.value)}
+              aria-invalid={hataMetni ? true : undefined}
+              aria-describedby={hataMetni ? 'ucret-hata' : undefined}
               className={girdiSinifi}
-              placeholder="örn. 22000"
             />
+            {hataMetni && (
+              <p id="ucret-hata" role="alert" className="mt-1.5 text-sm font-semibold text-red-700">
+                {hataMetni}
+              </p>
+            )}
           </Alan>
 
           <div className="space-y-1.5">
@@ -688,15 +733,15 @@ export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate })
         <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 space-y-2">
           <p className="text-sm font-semibold text-blue-900/80">Aylık en az ödenmesi gereken</p>
           <p className="text-3xl font-extrabold tabular-nums text-blue-900">
-            {asgariSayi > 0 ? `${bicim(sonuc)} TL` : 'Hesaplanamadı'}
+            {hesaplanabilir ? `${bicim(sonucKurus)} TL` : 'Hesaplanamadı'}
           </p>
-          {asgariSayi > 0 ? (
+          {hesaplanabilir ? (
             <>
               <p className="text-sm text-blue-900/80">Net asgari ücretin %{oran || 0}'i</p>
               <button
                 type="button"
                 onClick={() => {
-                  const metin = `Staj ücreti alt sınırı: ${bicim(sonuc)} TL (net asgari ücretin %${oran}'i, ${bicim(asgariSayi)} TL üzerinden).`;
+                  const metin = `Staj ücreti alt sınırı: ${bicim(sonucKurus)} TL (${ASGARI_YIL} net asgari ücretinin %${oran}'i, ${bicim(cozum.kurus)} TL üzerinden).`;
                   navigator.clipboard
                     ?.writeText(metin)
                     .then(() => setKopyalandi(true))
@@ -709,7 +754,9 @@ export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate })
             </>
           ) : (
             <p className="text-sm text-blue-900/80">
-              Güncel net asgari ücreti yaz; oranı bu tutar üzerinden hesaplıyoruz.
+              {hataMetni
+                ? 'Geçerli bir tutar girilene kadar sonuç gösterilmiyor.'
+                : 'Net asgari ücreti yaz; oranı bu tutar üzerinden hesaplıyoruz.'}
             </p>
           )}
         </div>
@@ -724,34 +771,66 @@ export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate })
         <details className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
           <summary className="cursor-pointer font-bold text-gray-900">Nasıl hesaplandı?</summary>
           <p className="mt-3 text-sm leading-relaxed text-gray-600 sm:text-base">
-            {asgariSayi > 0
-              ? `${bicim(asgariSayi)} TL × %${oran} = ${bicim(sonuc)} TL.`
+            {hesaplanabilir
+              ? `${bicim(cozum.kurus)} TL × %${oran} = ${bicim(sonucKurus)} TL.`
               : 'Girdiğin net asgari ücret, seçtiğin oranla çarpılıyor.'}{' '}
             Oran işletmenin personel sayısına göre değişiyor; yukarıdaki kutu 20 ve üzeri
             personel için farklı oranı uyguluyor. Oranları elle değiştirebilirsin, çünkü her
             yıl güncelleniyorlar.
           </p>
+          {/*
+            KAYNAK BAKANLIK ANA SAYFASI DEĞİL, KARARIN KENDİSİ
+
+            Burada csgb.gov.tr kökü vardı: kullanıcıyı bir kurumun ana
+            sayfasına atmak, iddiayı doğrulanamaz bırakmak demek. Artık hem
+            oranın dayandığı kanun maddesi hem tutarın çıktığı Resmî Gazete
+            kararı doğrudan bağlı. Adresler lib/asgari-ucret.mjs'te.
+          */}
           <p className="mt-3 text-xs leading-relaxed text-gray-600">
-            Dayanak: 3308 sayılı Mesleki Eğitim Kanunu.{' '}
+            <strong>Oran:</strong> {STAJ_ORAN.kaynak.etiket} — yirmiden az personel
+            çalıştıran işyerinde net asgari ücretin %{STAJ_ORAN.kucukIsyeri}'i, yirmi ve
+            üzerinde %{STAJ_ORAN.buyukIsyeri}'u.{' '}
             <a
-              href="https://www.mevzuat.gov.tr/mevzuatmetin/1.5.3308.pdf"
+              href={STAJ_ORAN.kaynak.adres}
               target="_blank"
               rel="noreferrer noopener"
               className="font-semibold text-blue-700 hover:underline"
             >
               Kanun metni
             </a>
-            {' · '}Bu araçtaki varsayılan oranlar {MEVZUAT_TARIHI} tarihinde gözden geçirildi.
-            Güncel asgari ücret için{' '}
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-gray-600">
+            <strong>Tutar:</strong> {ASGARI_YIL} yılı net asgari ücreti{' '}
+            {bicim(ASGARI_NET_KURUS)} TL.{' '}
             <a
-              href="https://www.csgb.gov.tr"
+              href={ASGARI_KAYNAK.karar.adres}
               target="_blank"
               rel="noreferrer noopener"
               className="font-semibold text-blue-700 hover:underline"
             >
-              Çalışma ve Sosyal Güvenlik Bakanlığı
+              {ASGARI_KAYNAK.karar.etiket}
             </a>
-            .
+            {' · '}
+            <a
+              href={ASGARI_KAYNAK.duyuru.adres}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="font-semibold text-blue-700 hover:underline"
+            >
+              Bakanlık duyurusu
+            </a>
+            {' · '}Son doğrulama: {ASGARI_DOGRULANDI}. Oranlar {MEVZUAT_TARIHI} tarihinde
+            gözden geçirildi.
+          </p>
+          {/*
+            KAPSAM SINIRI
+
+            Kanunun aynı fıkrası stajını okulunda/üniversitesinde yapan
+            öğrenciyi bu alt sınırın dışında bırakıyor. Söylemezsek, hakkı
+            olmayan bir tutarı hakkıymış gibi göstermiş oluruz.
+          */}
+          <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-900">
+            <strong>Kapsam:</strong> {STAJ_KAPSAM_DISI}
           </p>
         </details>
 
