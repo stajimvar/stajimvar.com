@@ -19,6 +19,7 @@ import { StajTakvimi } from './StajTakvimi';
   doğruluğu kanıtlanamayan bir sayı göstermek olur.
 */
 import { paraCoz, yuzdeKurus, kurusBicim } from '../lib/para.mjs';
+import { satirNeti, toplamNet } from '../lib/net-hesap.mjs';
 import {
   YIL as ASGARI_YIL,
   NET_KURUS as ASGARI_NET_KURUS,
@@ -244,27 +245,35 @@ export const NetHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) => {
 
   const secili = SINAVLAR[sinav];
 
-  const netler = useMemo(() => {
-    return secili.dersler.map((ders) => {
-      const v = degerler[`${sinav}-${ders.ad}`] || { d: '', y: '' };
-      const dogru = Math.max(0, Math.min(ders.soru, Number(v.d) || 0));
-      const yanlis = Math.max(0, Math.min(ders.soru, Number(v.y) || 0));
-      // Dört yanlış bir doğruyu götürür — bu kural her iki sınavda da aynı.
-      const net = Math.max(0, dogru - yanlis / 4);
-      const asim = dogru + yanlis > ders.soru;
-      return { ders, dogru, yanlis, net, asim };
-    });
-  }, [degerler, sinav, secili]);
+  /*
+    HESAP KURALI lib/net-hesap.mjs'TE
 
-  const toplam = netler.reduce((t, n) => t + n.net, 0);
-  const hataliVar = netler.some((n) => n.asim);
+    Burada girdiler `Math.min(ders.soru, …)` ile KIRPILIYORDU: 35 doğru + 10
+    yanlış girildiğinde satır "aşım" diye kırmızıya boyanıyor, ama net yine
+    hesaplanıp toplama ekleniyordu. Araç aynı anda hem "bu satır yanlış"
+    diyor hem o satırın netini sonuca katıyordu.
+
+    Artık geçersiz satırın neti YOK (null); toplam da üretilmiyor.
+  */
+  const netler = useMemo(
+    () =>
+      secili.dersler.map((ders) => {
+        const v = degerler[`${sinav}-${ders.ad}`] || { d: '', y: '' };
+        return { ders, ...satirNeti(ders.soru, v.d, v.y) };
+      }),
+    [degerler, sinav, secili],
+  );
+
+  const toplamSonuc = toplamNet(netler);
+  const hataliVar = !toplamSonuc.gecerli;
 
   // KPSS oturumlarının ÖSYM YKS tablosunda karşılığı yok; orada gösterilmiyor.
   const ortalamaKarsilastirmasi = netler
-    .filter((n) => n.net > 0 && TEST_ORTALAMALARI[n.ders.ad])
+    .filter((n) => n.gecerli && (n.net ?? 0) > 0 && TEST_ORTALAMALARI[n.ders.ad])
     .map((n) => {
       const ist = TEST_ORTALAMALARI[n.ders.ad];
-      return { ad: n.ders.ad, net: n.net, ortalama: ist.ortalama, fark: n.net - ist.ortalama };
+      const net = n.net ?? 0;
+      return { ad: n.ders.ad, net, ortalama: ist.ortalama, fark: net - ist.ortalama };
     });
 
   const guncelle = (ders: string, alan: 'd' | 'y', deger: string) => {
@@ -319,7 +328,7 @@ export const NetHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) => {
             <span className="text-center">Yanlış</span>
             <span className="text-right">Net</span>
           </div>
-          {netler.map(({ ders, net, asim }) => {
+          {netler.map(({ ders, net, gecerli, hata }) => {
             const v = degerler[`${sinav}-${ders.ad}`] || { d: '', y: '' };
             return (
               <div
@@ -337,9 +346,10 @@ export const NetHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) => {
                   value={v.d}
                   onChange={(e) => guncelle(ders.ad, 'd', e.target.value)}
                   className={`${girdiSinifi} text-center px-2 py-2 ${
-                    asim ? 'border-red-300 bg-red-50' : ''
+                    gecerli ? '' : 'border-red-300 bg-red-50'
                   }`}
                   placeholder="0"
+                  aria-invalid={gecerli ? undefined : true}
                   aria-label={`${ders.ad} doğru`}
                 />
                 <input
@@ -347,13 +357,22 @@ export const NetHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) => {
                   value={v.y}
                   onChange={(e) => guncelle(ders.ad, 'y', e.target.value)}
                   className={`${girdiSinifi} text-center px-2 py-2 ${
-                    asim ? 'border-red-300 bg-red-50' : ''
+                    gecerli ? '' : 'border-red-300 bg-red-50'
                   }`}
                   placeholder="0"
+                  aria-invalid={gecerli ? undefined : true}
                   aria-label={`${ders.ad} yanlış`}
                 />
-                <span className="text-right font-bold text-gray-900 tabular-nums">
-                  {net.toFixed(2)}
+                {/*
+                  Geçersiz satırda net YAZILMIYOR. Bir sayı yazmak, kırmızı
+                  çerçeveyi görmeyen kullanıcıya o satırın hesaplandığını
+                  söylerdi.
+                */}
+                <span
+                  className="text-right font-bold tabular-nums text-gray-900"
+                  title={hata ?? undefined}
+                >
+                  {gecerli && net !== null ? net.toFixed(2) : '—'}
                 </span>
               </div>
             );
@@ -389,16 +408,31 @@ export const NetHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) => {
           <div className="flex items-center justify-between px-4 py-3 bg-blue-50 border-t border-blue-100">
             <span className="font-bold text-blue-900">Toplam net</span>
             <span className="text-xl font-extrabold text-blue-900 tabular-nums">
-              {toplam.toFixed(2)}
+              {toplamSonuc.gecerli ? toplamSonuc.toplam.toFixed(2) : '—'}
             </span>
           </div>
         </div>
 
+        {/*
+          Uyarı artık tek başına değil: geçersiz satırın neti ve genel toplam
+          da "—" gösteriyor. Metni okumayan kullanıcı da hesabın yapılmadığını
+          görüyor.
+        */}
         {hataliVar && (
-          <p className="text-sm font-semibold text-red-600">
-            Bir derste doğru + yanlış toplamı soru sayısını geçiyor. Kırmızı alanları
-            kontrol et.
-          </p>
+          <div role="alert" className="space-y-1 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm font-bold text-red-800">
+              Toplam net hesaplanmadı: {toplamSonuc.gecersizSayisi} derste sorun var.
+            </p>
+            <ul className="list-disc pl-5 text-sm text-red-700">
+              {netler
+                .filter((n) => !n.gecerli)
+                .map((n) => (
+                  <li key={n.ders.ad}>
+                    <strong>{n.ders.ad}:</strong> {n.hata}
+                  </li>
+                ))}
+            </ul>
+          </div>
         )}
 
         <p className="text-sm text-gray-500">{secili.not}</p>
