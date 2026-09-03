@@ -79,14 +79,87 @@ export const onRequest: PagesFunction<Ortam> = async ({ request, next, env }) =>
   if (cevap.status !== 404) return cevap;
 
   const yol = new URL(request.url).pathname;
+
+  /*
+    VERİYE DAYALI ADRESLER: DOSYA YOKSA GERÇEKTEN YOK
+
+    Burada bütün uygulama adresleri için ana sayfanın gövdesi 200 ile
+    dönüyordu. Sonuç yumuşak 404'tü: /ilan/olmayan-bir-ilan, /sirket/xxx,
+    /kesfet/yyy ve /firsatlar/zzz "200 OK + ana sayfa HTML'i" veriyordu
+    (ölçüldü). Arama motoru bunları geçerli sayfa sanıp indeksliyor, sonra
+    hepsinde aynı içeriği görüyor.
+
+    Bu önekler bir VERİ KAYDINA karşılık geliyor ve yayındaki her kaydın
+    ön render edilmiş dosyası var (scripts/onrender.mjs). Dosya yoksa kayıt
+    da yok demektir: 404.html gerçek 404 koduyla dönüyor. O sayfada
+    "Sayfa bulunamadı" gövdesi ve `noindex` zaten var.
+
+    KABUL EDİLEN ÖDÜNÇ: son dağıtımdan SONRA yayına alınmış bir ilan, bir
+    sonraki dağıtıma kadar doğrudan açıldığında 404 alır. Uygulama içinden
+    tıklayan etkilenmiyor (istemci tarafı gezinme, sunucuya uğramıyor) ve
+    otomasyon saat başı yeniden dağıtıyor. Var olmayan yüzlerce adresi
+    indekslenebilir kılmaktansa bu pencere kabul edildi.
+  */
+  const veriyeDayali = VERI_ONEKLERI.some(
+    (onek) => yol.startsWith(onek) && yol.length > onek.length,
+  );
+
+  /*
+    SAYFASI YAZILMAMIŞ AMA VAR OLAN KAYITLAR
+
+    Şirket sayfaları yalnızca yayında ilanı olanlar için ön render ediliyor
+    (ince içerik üretmemek için). Bu, ilanı olmayan şirketin var olmadığı
+    anlamına gelmiyor: /sirket/stajimvar gerçek, sahiplenilmiş ve kendisine
+    301 verdiğimiz bir profil — "dosya yoksa 404" kuralına geçince kırıldı
+    (canlıda ölçüldü). Build, var olan slug'ları gecerli-adresler.json'a
+    yazıyor; burada ona bakılıyor.
+  */
+  if (veriyeDayali && yol.startsWith('/sirket/')) {
+    const slug = yol.slice('/sirket/'.length).replace(/\/+$/, '');
+    try {
+      const liste = await env.ASSETS.fetch(
+        new Request(new URL('/gecerli-adresler.json', request.url).toString()),
+      );
+      if (liste.ok) {
+        const veri = (await liste.json()) as { sirket?: string[] };
+        if (veri.sirket?.includes(slug)) {
+          const kabuk = await env.ASSETS.fetch(
+            new Request(new URL('/', request.url).toString()),
+          );
+          return new Response(await kabuk.text(), {
+            status: 200,
+            headers: {
+              'content-type': 'text/html; charset=utf-8',
+              'cache-control': 'no-store',
+            },
+          });
+        }
+      }
+    } catch {
+      /* Liste okunamazsa 404'e düşülüyor: var olmayanı 200 vermektense. */
+    }
+  }
+
+  if (veriyeDayali) {
+    const bulunamadi = await env.ASSETS.fetch(
+      new Request(new URL('/404.html', request.url).toString()),
+    );
+    return new Response(await bulunamadi.text(), {
+      status: 404,
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+        'cache-control': 'no-store',
+        'x-robots-tag': 'noindex',
+      },
+    });
+  }
+
   if (!uygulamaninMi(yol)) return cevap;
 
   /*
-    Kabuk ana sayfadan alınıyor. Uygulama açılınca adresi kendisi okuyup
-    doğru ekranı çiziyor; bulamazsa kendi "bulunamadı" ekranını gösteriyor.
-
-    Önbelleğe yazılmıyor: bugün dosyası olmayan bir ilan adresi, yarınki
-    dağıtımda kendi ön render sayfasına kavuşabiliyor.
+    Veriye dayanmayan uygulama adresleri (/cv, /bana-uygun, /sifre-yenile…)
+    kabuğu 200 ile alıyor: bunların arkasında bir kayıt yok, rota var.
+    Uygulama açılınca doğru ekranı kendisi çiziyor.
   */
   const kabuk = await env.ASSETS.fetch(new Request(new URL('/', request.url).toString()));
   const govde = await kabuk.text();

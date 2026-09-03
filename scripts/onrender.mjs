@@ -538,6 +538,36 @@ async function ilanlariGetir() {
   return yanit.json();
 }
 
+/**
+ * Bütün şirket slug'ları.
+ *
+ * NEDEN AYRI SORGU
+ * ----------------
+ * Şirket SAYFALARI yalnızca yayında ilanı olanlar için yazılıyor (ince
+ * içerik üretmemek için) ama bu, ilanı olmayan şirketin VAR OLMADIĞI
+ * anlamına gelmiyor. Ara katman "ön render dosyası yoksa 404" kuralına
+ * geçince /sirket/stajimvar 404 dönmeye başladı — gerçek, sahiplenilmiş ve
+ * kendisine 301 verdiğimiz bir profil (ölçüldü, canlıda kırıldı).
+ *
+ * Bu liste "hangi adres GERÇEKTEN var" sorusunun cevabı; sayfa yazılıp
+ * yazılmadığından bağımsız. Ara katman bunu okuyup karar veriyor.
+ */
+async function sirketSluglariniGetir() {
+  const urlAdres = envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL');
+  const anahtar = envOku('SUPABASE_SERVICE_ROLE_KEY') || envOku('VITE_SUPABASE_ANON_KEY');
+  if (!urlAdres || !anahtar) return [];
+  const istek = `${urlAdres}/rest/v1/companies?select=slug`;
+  const yanit = await fetch(istek, {
+    headers: { apikey: anahtar, Authorization: `Bearer ${anahtar}` },
+  });
+  if (!yanit.ok) {
+    console.log(`  şirket slugları alınamadı: HTTP ${yanit.status}`);
+    return [];
+  }
+  const veri = await yanit.json();
+  return veri.map((x) => x.slug).filter(Boolean);
+}
+
 async function firsatlariGetir() {
   const urlAdres = envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL');
   const anahtar = envOku('SUPABASE_SERVICE_ROLE_KEY') || envOku('VITE_SUPABASE_ANON_KEY');
@@ -1742,6 +1772,18 @@ async function main() {
       + `<li><a href="${SITE}/bolumler">Bölümler</a></li>`
       + '</ul></main>',
   });
+
+  /*
+    GEÇERLİ ADRES LİSTESİ — ARA KATMAN İÇİN
+    Bkz. functions/_middleware.ts. Sayfası yazılmamış ama gerçekten var olan
+    kayıtlar (yayında ilanı olmayan şirket profilleri gibi) burada.
+  */
+  const gecerliSirketler = await sirketSluglariniGetir();
+  fs.writeFileSync(
+    path.join(dist, 'gecerli-adresler.json'),
+    JSON.stringify({ sirket: gecerliSirketler }),
+  );
+  console.log(`  geçerli adres listesi: ${gecerliSirketler.length} şirket`);
 
   console.log(
     `ön render: ${sayac} sayfa yazıldı (+404) ` +

@@ -19,3 +19,47 @@
 # HTML her istekte tazeleniyor: ilan ve rehber içeriği değişiyor.
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
+
+
+# ---------------------------------------------------------------- güvenlik
+#
+# NOT: nosniff, referrer-policy ve report-only CSP'nin bir kısmı Cloudflare
+# panelindeki dönüştürme kurallarından geliyor; o kurallar depoda görünmüyor.
+# Buradakiler depo tarafından kontrol edilenler.
+
+/*
+  # HSTS: apex ve www için HTTPS doğrulandı (ikisi de TLS'te yanıt veriyor,
+  # www apex'e 301 dönüyor). preload İSTENMİYOR — preload listesine girmek
+  # geri alması çok zor bir taahhüt ve alt alan adlarının tamamının HTTPS
+  # olduğunu ayrıca doğrulamak gerekiyor.
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+  # nosniff ve referrer politikası depoda da yazılı olsun: panel kuralı
+  # kaldırılırsa sessizce kaybolmasınlar.
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # Kullanılmayan güçlü tarayıcı yetenekleri kapatılıyor. Site kamera,
+  # mikrofon, konum ya da ödeme kullanmıyor.
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()
+
+  # CSP ÖNCE RAPOR KİPİNDE
+  #
+  # Doğrudan zorlamak riskli: ihlaller görülmeden uygulanırsa reklam,
+  # Supabase ya da bir görsel sessizce engellenir ve bunu ancak kullanıcı
+  # fark eder. Bu satır hiçbir şeyi engellemiyor, yalnızca konsola ihlal
+  # yazıyor. İhlaller temizlendikten sonra Content-Security-Policy adıyla
+  # aynı içerik zorlamaya alınacak.
+  #
+  # Kaynaklar: kendi alan adımız, AdSense (pagead2/googlesyndication,
+  # doubleclick, googletagservices) ve Supabase projesi (REST + Realtime +
+  # depolama). 'unsafe-inline' style için gerekiyor — Tailwind çalışma
+  # anında stil enjekte ediyor.
+  # HTML'de CORS'a gerek yok: sayfalar başka kökenden fetch edilmiyor.
+  # `Access-Control-Allow-Origin: *` Cloudflare panelindeki bir dönüştürme
+  # kuralından geliyor ve depoda görünmüyor; buradaki `!` onu kaldırmayı
+  # deniyor. Panel kuralı öncelikliyse başlık yine görünür — o durumda
+  # panelden kaldırmak gerekiyor.
+  ! Access-Control-Allow-Origin
+
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://partner.googleadservices.com https://tpc.googlesyndication.com https://www.googletagservices.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://gdumgdgwlfnohkaucfow.supabase.co wss://gdumgdgwlfnohkaucfow.supabase.co https://pagead2.googlesyndication.com; frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'
