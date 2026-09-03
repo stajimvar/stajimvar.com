@@ -15,6 +15,7 @@ import {
 import { InternshipListing, MatchBreakdown } from '../types';
 import { ListingLogo } from './ListingLogo';
 import { DisBaglanti } from '../ui';
+import { listingSlug } from '../lib/slug';
 import { SIRKET_KENAR_GUCLU, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import { eklenmeMetni, sonKontrolMetni, uzunSuredirAcik } from '../lib/zaman';
@@ -73,7 +74,13 @@ interface InternshipCardProps {
     Misafirken dış başvuru bağlantısı giriş penceresini açıyor. İlanın
     kendisi açık; kapanan yalnızca son adım — bkz. ui/DisBaglanti.
   */
-  onGirisGerekli?: () => void;
+  onGirisGerekli?: (niyet: {
+    tur: 'dis' | 'ic';
+    ilanId: string;
+    yol: string;
+    disAdres?: string;
+    baslik?: string;
+  }) => void;
   /*
     KENDİ ŞİRKETİNİN İLANI
 
@@ -593,13 +600,29 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               ilanında site içi başvuru. Karar tek yerde:
               lib/basvuru-yolu.mjs.
             */
+            /*
+              Niyet kaydı: hangi ilandan başlandığı ve nereye gidileceği
+              girişten önce yazılıyor. OAuth tam sayfa yönlendirmesi React
+              durumunu siliyor; bu kayıt sekmede kalıyor (lib/basvuru-niyeti).
+            */
             if (yol.resmiAdres && yol.anaEylem === 'resmi-site') {
               return (
                 <DisBaglanti
                   id={`external-apply-btn-${listing.id}`}
                   href={yol.resmiAdres}
                   girisGerekli={girisGerekli}
-                  onGirisGerekli={onGirisGerekli}
+                  onGirisGerekli={
+                    onGirisGerekli
+                      ? () =>
+                          onGirisGerekli({
+                            tur: 'dis',
+                            ilanId: listing.id,
+                            yol: `/ilan/${listingSlug(listing)}`,
+                            disAdres: yol.resmiAdres,
+                            baslik: listing.title,
+                          })
+                      : undefined
+                  }
                   title={yol.ozet}
                   className={`${CTA_ORTAK} ${CTA_BIRINCIL}`}
                 >

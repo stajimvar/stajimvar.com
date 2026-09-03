@@ -116,7 +116,17 @@ interface MatchedInternshipsViewProps {
   /** Profil sekmesine geçiş. Verilmezse profil çubuğu bir şey yapmaz. */
   onGoToProfile?: () => void;
   /** Giriş penceresini açar; misafirin kaydet düğmesi buraya bağlanıyor. */
-  onRequireLogin?: () => void;
+  /*
+    Niyet parametresi isteğe bağlı: kaydet düğmesi niyetsiz çağırıyor,
+    başvuru düğmesi hangi ilandan başlandığını taşıyor (lib/basvuru-niyeti).
+  */
+  onRequireLogin?: (niyet?: {
+    tur: 'dis' | 'ic';
+    ilanId: string;
+    yol: string;
+    disAdres?: string;
+    baslik?: string;
+  }) => void;
   /**
    * Disaridan gelen arama terimi.
    *

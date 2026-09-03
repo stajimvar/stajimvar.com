@@ -27,6 +27,7 @@ import { InternshipDetailModal } from './components/InternshipDetailModal';
 import { Logo } from './components/Logo';
 import { LegalPage, LEGAL_ROUTES } from './components/LegalPage';
 import { ApplyDialog } from './components/ApplyDialog';
+import { niyetYaz, niyetOku, niyetSil } from './lib/basvuru-niyeti.mjs';
 import { ListingPage } from './components/ListingPage';
 import { GuideHub, GuidePage } from './components/GuidePages';
 import { BasvuruSablonu } from './components/BasvuruSablonu';
@@ -583,8 +584,36 @@ export default function App() {
   }, []);
   const [authDonusYolu, setAuthDonusYolu] = useState<string | null>(null);
 
-  const handleOpenLogin = () => {
+  /**
+   * Giriş penceresini açar.
+   *
+   * BAŞVURUDAN GELİYORSA NİYET YAZILIYOR
+   *
+   * `authDonusYolu` React durumu ve e-posta girişinde yetiyor: modal aynı
+   * sayfada açılıp kapanıyor. OAuth'ta yetmiyor — Google'a gidiş tam sayfa
+   * yönlendirmesi, dönüşte uygulama sıfırdan kuruluyor ve durum silinmiş
+   * oluyor. Misafir başvuru düğmesine basıp Google'dan dönünce ana sayfada
+   * buluyordu kendini.
+   *
+   * Niyet sessionStorage'a yazılıyor; dönüşte okunup işlem sürdürülüyor.
+   * `donusYolu` da veriliyor ki OAuth kullanıcıyı doğrudan ilanın sayfasına
+   * getirsin — böylece dönüş anında zaten doğru sayfadayız.
+   */
+  const handleOpenLogin = (niyet?: {
+    tur: 'dis' | 'ic';
+    ilanId: string;
+    yol: string;
+    disAdres?: string;
+    baslik?: string;
+  }) => {
     setAuthBaglam('ogrenci');
+    if (niyet && niyetYaz(window.sessionStorage, niyet)) {
+      setAuthDonusYolu(niyet.yol);
+      /* Kayıt modu: başvurmak isteyen misafirin çoğu henüz üye değil. */
+      setAuthModalMode('register');
+      setIsAuthModalOpen(true);
+      return;
+    }
     setAuthDonusYolu(null);
     setAuthModalMode('login');
     setIsAuthModalOpen(true);
@@ -778,6 +807,57 @@ export default function App() {
   }, [session]);
 
   const activeStudent = student;
+
+  /*
+    NİYETİ SÜRDÜR — GİRİŞTEN SONRA BAŞVURUYA DEVAM
+
+    Kullanıcı başvuru düğmesinden giriş yaptıysa sessionStorage'da bir niyet
+    duruyor. Oturum kurulunca burada okunup işlem tamamlanıyor: kullanıcı
+    ilanı yeniden aramak ya da düğmeye ikinci kez basmak zorunda kalmıyor.
+
+    `sessionReady` bekleniyor: oturum daha okunmadan niyeti çalıştırmak,
+    girişi başarısız olmuş kullanıcıyı da dış siteye gönderirdi.
+
+    Yol kontrolü: niyet yalnızca kendi ilanının sayfasındayken çalışıyor.
+    OAuth `redirectTo` zaten oraya getiriyor; başka bir sayfadaysak kullanıcı
+    arada gezinmiş demektir ve onu habersiz yönlendirmek sürpriz olur.
+  */
+  React.useEffect(() => {
+    if (!sessionReady || !session) return;
+    const niyet = niyetOku(window.sessionStorage);
+    if (!niyet) return;
+    if (niyet.yol !== window.location.pathname) return;
+
+    niyetSil(window.sessionStorage);
+
+    if (niyet.tur === 'dis' && niyet.disAdres) {
+      /*
+        Yeni sekmede açılıyor: kullanıcıyı siteden atmadan başvuruya
+        götürüyor. Açılır pencere engelleyicisi `null` döndürürse zorlamıyoruz
+        — düğme artık girişli kullanıcı için çalışan bir bağlantı, tek
+        dokunuş kaldı. Sessizce hiçbir şey yapmamaktansa bunu söylüyoruz.
+      */
+      const pencere = window.open(niyet.disAdres, '_blank', 'noopener,noreferrer');
+      showToast(
+        pencere
+          ? 'Giriş tamam. Resmî başvuru sayfası yeni sekmede açıldı.'
+          : 'Giriş tamam. Başvuru sayfasını açmak için düğmeye dokun.',
+      );
+      return;
+    }
+
+    /*
+      Platform içi ilan: başvuru formu burada açılıyor, dışarı çıkılmıyor.
+      İlan listede yoksa (henüz yüklenmediyse) sessizce geçiliyor; kullanıcı
+      zaten ilanın sayfasında ve düğme çalışır durumda.
+    */
+    const ilan = allListings.find((l) => l.id === niyet.ilanId);
+    if (ilan) {
+      setApplyTarget({ listing: ilan, matchScore: 0 });
+      showToast('Giriş tamam. Başvurunu tamamlayabilirsin.');
+    }
+  }, [sessionReady, session, allListings]);
+
 
   /**
    * Profil güncelleme. Önce ekranda gösterir, sonra Supabase'e yazar.
