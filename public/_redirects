@@ -27,6 +27,18 @@
 # önce eklenseydi var olmayan bir adrese kalıcı yönlendirme vermiş olurduk.
 /sirket/stajimvar-deneme   /sirket/stajimvar   301
 
+# ÇIPLAK /sirket İŞVEREN SAYFASININ KOPYASIYDI
+#
+# App.tsx'te iki ayrı rota (`/sirket` ve `/isveren/ilan-ver`) BİREBİR aynı
+# `IsverenGirisi` bileşenini çiziyordu: aynı içerik, iki public adres.
+# Kanonik adres `/isveren/ilan-ver`.
+#
+# Kural JOKERSİZ, yani yalnızca çıplak /sirket eşleşiyor. Şirket profilleri
+# (/sirket/<slug>) ve panel yolları (/sirket/ilanlar, /sirket/basvuranlar,
+# /sirket/profil, /sirket/ilan) etkilenmiyor — hepsinin ardında bir yol
+# parçası var.
+/sirket   /isveren/ilan-ver   301
+
 # SPA YEDEĞİ ARTIK BURADA DEĞİL
 #
 # Eskiden burada `/*  /index.html  200` vardı ve sitedeki her hatalı adres

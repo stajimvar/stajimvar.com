@@ -1609,8 +1609,18 @@ export default function App() {
   */
   const sirketPanelYolu = temizYol;
 
+  /*
+    Çıplak /sirket kanonik adrese gidiyor: aynı bileşeni iki adresten
+    çizmek, aynı içeriğe iki public URL vermek demekti. Kenar tarafında
+    301 var (public/_redirects); bu satır uygulama içi gezinmeyi de aynı
+    yere alıyor.
+  */
+  if (temizYol === '/sirket') {
+    navigate('/isveren/ilan-ver');
+    return null;
+  }
+
   if (
-    temizYol === '/sirket' ||
     SIRKET_PANEL_YOLLARI.some(
       (p) => sirketPanelYolu === p || sirketPanelYolu.startsWith(`${p}/`)
     )

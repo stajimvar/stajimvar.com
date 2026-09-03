@@ -48,8 +48,11 @@ const VERI_ONEKLERI = ['/ilan/', '/sirket/', '/firsatlar/', '/kesfet/', '/bolum/
 
 const UYGULAMA_ADRESLERI = new Set([
   '/cv',
-  /* Çıplak /sirket: panelin ilk ekranına çeviriliyor, ön render edilmiyor. */
-  '/sirket',
+  /*
+    Çıplak /sirket BURADAN ÇIKARILDI: artık _redirects ile
+    /isveren/ilan-ver'e 301 veriyor. İkisi aynı bileşeni çiziyordu, yani
+    aynı içeriğin iki public adresi vardı.
+  */
   '/basvuru-sablonu',
   '/sifre-yenile',
   '/stajyer-nasil-alinir',
