@@ -224,8 +224,25 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
 
         {/* Text Details */}
         <div className="space-y-1 sm:space-y-1.5 flex-1 min-w-0">
-          {/* Row 1: Company Name in vibrant blue, Industry & Star Rating */}
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-500">
+          {/*
+            SATIR 1: KAYDET HEP SAĞ ÜST KÖŞEDE
+
+            Şirket adı, sektör, puan, kaydet düğmesi ve kaynak rozeti tek bir
+            `flex-wrap` satırındaydı. Ad kısayken hepsi yan yana sığıyor, ad
+            uzayınca sarma sırası değişiyordu: kaydet düğmesi kimi kartta
+            rozetin soluna düşüyor, kimi kartta rozet alt satıra kayıyordu.
+            Ölçüldü — "TikTok"ta düğme ortada, "The Magnum Ice Cream
+            Company"de rozet ikinci satırda.
+
+            Artık iki parça var: solda sarabilen künye grubu, sağda
+            sarmayan (`shrink-0`) kaydet düğmesi. Düğmenin yeri şirket adının
+            uzunluğundan bağımsız.
+
+            Kaynak rozeti bu satırdan çıkıp aşağıdaki künye şeridine indi;
+            orası zaten konum ve ücret gibi aynı türden bilgilerin yeri.
+          */}
+          <div className="flex items-start gap-2">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-500">
             <h3
               onClick={onViewDetails}
               className="font-bold text-blue-600 text-sm sm:text-base hover:underline cursor-pointer transition-colors"
@@ -243,6 +260,27 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                 <span className="truncate">{listing.companyIndustry}</span>
               </>
             )}
+
+            {listing.companyRating > 0 && (
+              <>
+                <span className="text-gray-300">•</span>
+                <div className="flex items-center text-amber-500 font-bold">
+                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 inline mr-1" />
+                  <span>{listing.companyRating}</span>
+                </div>
+              </>
+            )}
+          </div>
+
+            {/*
+              KAYDET: SARMAYAN İKİNCİ ÇOCUK
+
+              `ml-auto` ile sol taraftan itiliyordu ve sarma satırında bu
+              "son öğenin solu" demek, "kartın sağ üstü" değil. Artık dış
+              flex'in ikinci çocuğu: solundaki grup ne kadar sararsa sarsın
+              düğme aynı yerde kalıyor. `-mr-1` görsel hizayı kartın kenarına
+              çekiyor, dokunma hedefini küçültmeden.
+            */}
             {onToggleKayit && (
               <button
                 type="button"
@@ -265,49 +303,13 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                       ? 'Kayıtlardan çıkar'
                       : 'Daha sonra bakmak için kaydet'
                 }
-                className={`ml-auto shrink-0 p-1.5 rounded-lg transition-colors cursor-pointer ${
+                className={`-mr-1 shrink-0 rounded-lg p-1.5 transition-colors cursor-pointer ${
                   kayitli ? 'text-blue-600 bg-blue-50' : 'text-gray-300 hover:text-blue-600 hover:bg-blue-50'
                 }`}
               >
                 <Bookmark className={`w-4 h-4 ${kayitli ? 'fill-blue-600' : ''}`} />
               </button>
             )}
-            {listing.companyRating > 0 && (
-              <>
-                <span className="text-gray-300">•</span>
-                <div className="flex items-center text-amber-500 font-bold">
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 inline mr-1" />
-                  <span>{listing.companyRating}</span>
-                </div>
-              </>
-            )}
-            {/*
-              KAYNAK ETİKETİ — İKİ TÜR, İKİ CÜMLE
-
-              Önce yalnızca derlenen ilanda "Kariyer sayfasından" yazıyordu;
-              şirketin buraya kendi açtığı ilanda hiçbir şey yazmıyordu. İki
-              tür kart yan yana duruyor ve ikisinin başvuru yolu farklı —
-              öğrenci düğmeye basmadan hangisinde olduğunu bilmiyordu.
-
-              Tek etiket, iki değer. Kalabalık artmıyor.
-            */}
-            {kariyerSayfasindanIlan ? (
-              <span
-                className="inline-flex items-center gap-1 text-[11px] text-gray-600 font-medium"
-                title="Bu ilan şirketin kendi kariyer sayfasından alındı"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                {ILAN_KAYNAGI.dis.etiket}
-              </span>
-            ) : sirketinKendiIlani ? (
-              <span
-                className="inline-flex items-center gap-1 text-[11px] text-gray-600 font-medium"
-                title="Bu ilanı şirket doğrudan StajımVar'da yayımladı; başvuru burada tamamlanıyor"
-              >
-                <Building2 className="w-3.5 h-3.5 text-emerald-600" />
-                {ILAN_KAYNAGI.ic.etiket}
-              </span>
-            ) : null}
           </div>
 
           {/* Row 2: Job Title (Bold & Clear) */}
@@ -382,6 +384,45 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                 <span>{skill}</span>
               </span>
             ))}
+
+            {/*
+              KAYNAK ETİKETİ — İKİ TÜR, İKİ CÜMLE
+
+              Önce yalnızca derlenen ilanda "Kariyer sayfasından" yazıyordu;
+              şirketin buraya kendi açtığı ilanda hiçbir şey yazmıyordu. İki
+              tür kart yan yana duruyor ve ikisinin başvuru yolu farklı —
+              öğrenci düğmeye basmadan hangisinde olduğunu bilmiyordu.
+
+              Şirket adı satırındaydı ve orada kaydet düğmesiyle aynı sarma
+              satırını paylaşıyordu; ad uzayınca ikisinin sırası değişiyordu.
+              Buraya indi.
+
+              Şeridin BAŞINA değil SONUNA kondu: 375 pikselde bu çip tek
+              başına bir satır dolduruyor ve başta durduğunda konumu alt
+              satıra itiyordu (ölçüldü: konum çipi 131 pikselden başlıyordu).
+              Öğrencinin taradığı bilgi konum ve ücret; kaydın nereden
+              geldiği künye, o yüzden artakalan yere düşüyor.
+
+              Çip dili komşularıyla aynı, rengi nötr: bu bir kazanım değil
+              (ücret, zorunlu staj gibi), bir künye.
+            */}
+            {kariyerSayfasindanIlan ? (
+              <span
+                className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 font-medium text-gray-700"
+                title="Bu ilan şirketin kendi kariyer sayfasından alındı"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{ILAN_KAYNAGI.dis.etiket}</span>
+              </span>
+            ) : sirketinKendiIlani ? (
+              <span
+                className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 font-medium text-gray-700"
+                title="Bu ilanı şirket doğrudan StajımVar'da yayımladı; başvuru burada tamamlanıyor"
+              >
+                <Building2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{ILAN_KAYNAGI.ic.etiket}</span>
+              </span>
+            ) : null}
 
             {/*
               Ne zaman eklendiği. Sıralamada "Önce Yeni Eklenenler" seçeneği
