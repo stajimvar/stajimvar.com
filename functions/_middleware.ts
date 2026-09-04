@@ -53,6 +53,13 @@ const UYGULAMA_ADRESLERI = new Set([
     /isveren/ilan-ver'e 301 veriyor. İkisi aynı bileşeni çiziyordu, yani
     aynı içeriğin iki public adresi vardı.
   */
+  /*
+    /profil: uygulama içi bağlantı tıklamayla çalışıyordu (App yolu profil
+    sekmesine çeviriyor) ama DOĞRUDAN açılınca 404 dönüyordu. CV rehberinde
+    "profil sayfandan takip edebilirsin" bağlantısı buraya gidiyor; yeni
+    sekmede açan okuyucu boş ekranla karşılaşıyordu.
+  */
+  '/profil',
   '/basvuru-sablonu',
   '/sifre-yenile',
   '/stajyer-nasil-alinir',

@@ -39,6 +39,27 @@
 # parçası var.
 /sirket   /isveren/ilan-ver   301
 
+# BAŞLIĞI TÜRKÇELEŞTİRİLEN ÜÇ İLAN
+#
+# İlan adresi başlıktan üretiliyor (/ilan/<slug>-<id öneki>). Bu üç ilanın
+# başlığı sonradan Türkçeleştirildi, yani adresleri de değişti. Eski
+# adresler sitemap üzerinden arama motoruna girmişti ve şimdi 404 dönüyor.
+#
+# Kimlik öneki değişmediği için hangi ilan olduğu belli: yeni adrese kalıcı
+# yönlendirme veriliyor. Ana sayfaya atmak yerine ilanın kendisine
+# göndermek, gelen ziyaretçinin aradığı şeyi bulmasını sağlıyor.
+/ilan/it-intern-a0de0769   /ilan/it-stajyeri-a0de0769   301
+/ilan/uzun-vadeli-full-stack-gelistirici-stajyeri-4bead62e   /ilan/uzun-donem-full-stack-gelistirici-stajyeri-4bead62e   301
+/ilan/customer-success-intern-12431c8d   /ilan/customer-success-stajyeri-12431c8d   301
+
+# favicon.ico
+#
+# Tarayıcılar sayfada <link rel="icon"> olsa bile kökten /favicon.ico
+# istiyor. Dosya yoktu, yani her ziyarette bir 404 üretiliyordu. Simge
+# public/favicon.png olarak duruyor; ayrı bir .ico üretip iki dosyayı ayrı
+# ayrı güncel tutmak yerine kalıcı yönlendirme veriliyor.
+/favicon.ico   /favicon.png   301
+
 # SPA YEDEĞİ ARTIK BURADA DEĞİL
 #
 # Eskiden burada `/*  /index.html  200` vardı ve sitedeki her hatalı adres

@@ -1224,7 +1224,24 @@ async function main() {
     /* Tam kimlik ve yalnızca önek: ikisi de kanonik adrese gidiyor. */
     eskiAdresler.push(`/ilan/${i.id}   ${yol}   301`);
     eskiAdresler.push(`/ilan/${onek}   ${yol}   301`);
-    const ozet = ozetle(i.description, 155);
+    /*
+      AYNI PROGRAMIN FARKLI ŞEHİRLERİ AYRIŞSIN
+
+      Alumil'in üç ilanı aynı başlığı ve aynı açıklamayı taşıyordu:
+      "Alumil NextGen Staj Programı…" × Çorlu, İstanbul, İzmir. Arama
+      motoru için üç sayfa da birbirinin kopyasıydı.
+
+      Ayrım BAŞLIK METNİNDE değil META BAŞLIKTA yapılıyor. Veritabanındaki
+      `title` adresin bir parçası (/ilan/<slug>-<önek>); onu değiştirmek
+      üç adresi birden kırardı — bu turda düzelttiğimiz 404'lerin sebebi
+      tam olarak buydu.
+
+      Şehir hem <title>'a hem açıklamanın başına giriyor: ikisi de arama
+      sonucunda görünen alanlar.
+    */
+    const sehirEki = i.city ? konumEtiketi(i.city) : '';
+    const ozetGovde = ozetle(i.description, sehirEki ? 140 : 155);
+    const ozet = sehirEki ? `${sehirEki}. ${ozetGovde}` : ozetGovde;
 
     /*
       JobPosting — Google for Jobs uygunluğu.
@@ -1283,7 +1300,7 @@ async function main() {
 
     sayfaYaz(yol, {
       gorsel: `/og/ilan-${onek}.png`,
-      baslik: `${i.title}${sirket.name ? ' — ' + sirket.name : ''} | StajımVar`,
+      baslik: `${i.title}${sehirEki ? ` (${sehirEki})` : ''}${sirket.name ? ' — ' + sirket.name : ''} | StajımVar`,
       aciklama: ozet,
       govde: govde(
         i.title,
