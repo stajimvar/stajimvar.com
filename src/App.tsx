@@ -1349,7 +1349,10 @@ export default function App() {
       return icerikSayfasi(
         <KesfetDetailPage
           slug={slug}
-          onBack={() => navigate('/kesfet')}
+          onBack={() => {
+            if (window.history.state?.__discoverCatalogReturn) window.history.back();
+            else navigate('/kesfet');
+          }}
           girisGerekli={!session}
           onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
         />,

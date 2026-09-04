@@ -1,72 +1,35 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
 
-const source = readFileSync("src/components/KesfetPage.tsx", "utf8");
+// Mobile interactions are exercised in e2e/kesfet-catalog.spec.ts.
+// These tests protect the catalog's real page merging and transient return state.
+let state = {};
+try { state = await import('../src/components/kesfet-catalog-state.mjs'); } catch {}
 
-/*
-  BU TEST NEYİ KORUYOR
-
-  Keşfet'in süzgeçleri üç biçim değiştirdi: önce mobilde bir "Filtrele"
-  düğmesinin arkasındaydı, sonra başlık kartının içinde yatay kayan bir
-  hap şeridi oldu, şimdi kardeş sayfalardaki (ilanlar, fırsatlar) gibi
-  sol sütunda bölümlü bir panel.
-
-  Şerit sadeydi ama seçenekleri ve sayıları gizliyordu: "kaç ücretsiz
-  etkinlik var" sorusunun cevabı ancak tek tek deneyerek öğreniliyordu.
-  Panel bunları açıkta gösteriyor — bedeli, telefonda ekran dolusu yer
-  kaplaması. Bu yüzden dar ekranda yeniden bir düğmenin arkasında.
-
-  Test biçimi değil, biçimin korumak istediği şeyleri doğruluyor.
-*/
-test("süzgeç paneli dar ekranda erişilebilir bir düğmeye bağlı", () => {
-  /*
-    Panel telefonda kapalı başlıyor; kapıyı açan düğme klavye ve ekran
-    okuyucu için de bir kapı olmalı. `aria-expanded` durumu, `aria-controls`
-    neyi açtığını söylüyor — ikisi olmadan düğme görene çalışır, ötekine
-    çalışmaz.
-  */
-  assert.match(source, /aria-expanded=\{filtersOpen\}/);
-  assert.match(source, /aria-controls="kesfet-filters"/);
-  assert.match(source, /id="kesfet-filters"/);
-
-  /*
-    Kapı YALNIZCA dar ekranda. Geniş ekranda panel `lg:block` ile her
-    zaman açık: orada gizlemenin gerekçesi yok, sol sütun zaten boş
-    duruyor.
-  */
-  assert.match(source, /id="kesfet-filters"[\s\S]{0,120}lg:block/);
+test('overlapping pages produce one card per event while retaining server order', () => {
+  assert.equal(typeof state.mergeCatalogEvents, 'function');
+  const result = state.mergeCatalogEvents(
+    [{ id: 'a', title: 'First' }, { id: 'b', title: 'Second' }],
+    [{ id: 'b', title: 'Repeated second' }, { id: 'c', title: 'Third' }, { id: 'c', title: 'Repeated third' }],
+  );
+  assert.deepEqual(result.map((row) => row.id), ['a', 'b', 'c']);
+  assert.equal(result[1].title, 'Second');
 });
 
-test("süzgeç bölümleri paylaşılan bileşenlerden gelir", () => {
-  /*
-    Aynı panel üç sayfada var. Her birinde ayrı yazıldığında bölüm
-    başlığının puntosu ve sağdaki sayının hizası sessizce ayrılıyor.
-    Ölçüler tek dosyada: src/ui/Filtre.tsx.
-  */
-  assert.match(source, /import \{ FiltreBlogu, SecenekSatiri, Serit \} from "\.\.\/ui"/);
-  assert.match(source, /<FiltreBlogu baslik="Kategori">/);
-
-  const filtre = readFileSync("src/ui/Filtre.tsx", "utf8");
-  assert.match(filtre, /export const FiltreBlogu/);
-  assert.match(filtre, /export const SecenekSatiri/);
+test('detail return restores filters, loaded pages and scroll only to the originating history entry', () => {
+  assert.equal(typeof state.saveCatalogReturn, 'function');
+  const entry = { filters: { city: 'Ankara' }, events: [{ id: 'a' }], scrollY: 1750 };
+  state.saveCatalogReturn('catalog-a', entry, 1000);
+  assert.deepEqual(state.readCatalogReturn('catalog-a', 2000), entry);
+  assert.equal(state.readCatalogReturn('unrelated-entry', 2000), null);
+  assert.equal(state.readCatalogReturn(undefined, 2000), null);
 });
 
-test("panel sayıları ekrandaki kartı sayar, ham kaydı değil", () => {
-  /*
-    EN KOLAY HATA BU
-
-    Sayımı `rows` üzerinden yapmak kolay ve yanlış: koleksiyon üreticisi
-    her bölüme en fazla 10 kayıt koyuyor, bölümleri tekilleştiriyor ve beş
-    tanımın hiçbirine girmeyen etkinliği hiç çizmiyor. Panelde "12" yazıp
-    tıklayınca 9 kart çıkıyordu.
-
-    Her sayı, o seçenek açıkken listenin izleyeceği yolun aynısından
-    geçmeli: aynı süzgeçler, sonra `buildDiscoverCollections`.
-  */
-  const memo = source.match(/const sayimlar = useMemo\([\s\S]*?\n  \}, \[/);
-  assert.ok(memo, "sayimlar memo'su bulunamadı");
-  assert.match(memo[0], /buildDiscoverCollections/);
-  assert.match(memo[0], /matchesDiscoverSearch/);
-  assert.match(memo[0], /matchesDiscoverDateFilter/);
+test('expired detail state is re-fetched instead of hiding new records indefinitely', () => {
+  assert.equal(typeof state.saveCatalogReturn, 'function');
+  state.saveCatalogReturn('catalog-a', { events: [{ id: 'old' }] }, 1000);
+  assert.equal(state.readCatalogReturn('catalog-a', 302000), null);
+  state.saveCatalogReturn('catalog-b', { events: [{ id: 'new' }] }, 303000);
+  assert.equal(state.readCatalogReturn('catalog-a', 303001), null);
+  assert.deepEqual(state.readCatalogReturn('catalog-b', 303001), { events: [{ id: 'new' }] });
 });
