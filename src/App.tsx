@@ -1741,6 +1741,7 @@ export default function App() {
                 countrySelection={globalListings.country}
                 countryFacets={globalListings.page.facets.countries}
                 onCountryChange={globalListings.setCountry}
+                catalogTotal={globalListings.page.total}
                 hasMoreCountriesPage={globalListings.page.hasMore}
                 onLoadMoreCountriesPage={globalListings.loadMore}
               />

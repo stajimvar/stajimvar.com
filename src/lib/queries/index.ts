@@ -63,6 +63,7 @@ export async function fetchPublishedListings(): Promise<InternshipListing[]> {
 export interface PublishedListingsCursor { value: string; id: string }
 export interface PublishedListingsCatalogPage {
   listings: InternshipListing[];
+  total: number;
   facets: { countries: Array<{ code: string; count: number }> };
   hasMore: boolean;
   nextCursor: PublishedListingsCursor | null;

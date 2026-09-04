@@ -15,7 +15,7 @@ async function transport(page:Page){
     if(url.pathname.endsWith('/rpc/get_published_listings_catalog')){
       const args=route.request().postDataJSON();
       const listings=args.p_country==='all'?rows:args.p_country==='remote'?rows.filter(x=>x.work_type==='Remote'):rows.filter(x=>x.country_code===args.p_country);
-      await route.fulfill({json:{listings,facets:{countries:[{code:'FR',count:1},{code:'TR',count:1}]},hasMore:false,nextCursor:null,snapshot:'2026-09-05T12:00:00Z'}});return;
+      await route.fulfill({json:{listings,total:args.p_country==='all'?67:listings.length,facets:{countries:[{code:'FR',count:1},{code:'TR',count:1}]},hasMore:false,nextCursor:null,snapshot:'2026-09-05T12:00:00Z'}});return;
     }
     if(url.pathname.endsWith('/api/visitor-context')){await route.fulfill({json:{countryCode:'FR'}});return;}
     await route.fulfill({json:[]});
@@ -40,6 +40,7 @@ test('remote NULL ulkeyi degil yalniz Remote work_type kaydini getirir',async({p
 
 test('375 pikselde gercek facet secici tasmaz ve secim URLye yazilir',async({page})=>{
   await transport(page);await page.goto('/?country=all');
+  await expect(page.getByText('Toplam 67 açık ilan')).toBeVisible();
   const selector=page.getByRole('combobox',{name:'İlan ülkesi'});
   await expect(selector.locator('option')).toHaveCount(4);
   await selector.selectOption('TR');await expect(page).toHaveURL(/country=TR/);

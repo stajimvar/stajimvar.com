@@ -63,8 +63,11 @@ test('remote yalniz work_type Remote getirir ve NULL ulkeyi remote saymaz', asyn
     (md5('draft')::uuid,'Draft','Paris','Remote','draft','FR')`);
   const remote = await catalog({ country: 'remote' });
   assert.deepEqual(remote.listings.map((row) => row.title), ['Remote']);
+  assert.equal(remote.total, 1);
   assert.deepEqual((await catalog({ country: 'FR' })).listings.map((row) => row.title), ['Paris']);
-  assert.equal((await catalog({ country: 'all' })).listings.length, 3);
+  const all = await catalog({ country: 'all' });
+  assert.equal(all.listings.length, 3);
+  assert.equal(all.total, 3);
   assert.deepEqual(remote.facets.countries, [{ code: 'FR', count: 1 }]);
 });
 

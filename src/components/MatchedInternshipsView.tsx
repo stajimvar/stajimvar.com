@@ -132,6 +132,7 @@ interface MatchedInternshipsViewProps {
   countrySelection?: string;
   countryFacets?: Array<{code:string;count:number}>;
   onCountryChange?: (country:string)=>void;
+  catalogTotal?: number;
   hasMoreCountriesPage?: boolean;
   onLoadMoreCountriesPage?: ()=>void;
 }
@@ -153,6 +154,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   countrySelection='all',
   countryFacets=[],
   onCountryChange,
+  catalogTotal,
   hasMoreCountriesPage=false,
   onLoadMoreCountriesPage,
 }) => {
@@ -860,7 +862,10 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               <span className="text-blue-600">tek listede</span>.
             </span>
           </h1>
-          {onCountryChange && <div className="mt-3"><ListingCountrySelector value={countrySelection} countries={countryFacets} onChange={onCountryChange}/></div>}
+          {onCountryChange && <div className="mt-3 space-y-1.5">
+            <ListingCountrySelector value={countrySelection} countries={countryFacets} onChange={onCountryChange}/>
+            {typeof catalogTotal==='number' && <p className="px-1 text-xs font-semibold text-gray-500 tabular-nums">Toplam {catalogTotal} açık ilan</p>}
+          </div>}
 
           {/*
             Mobildeki "13 açık ilan · 10 şirket · 4 şehir" satırı kaldırıldı.
