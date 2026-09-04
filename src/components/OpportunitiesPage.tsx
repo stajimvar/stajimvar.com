@@ -131,7 +131,21 @@ export const OpportunitiesPage: React.FC<{
     kayboluyor ve o görünüm paylaşılamıyordu. Süzgeçlerle aynı yere taşındı.
   */
   const arsivGoster = filters.arsiv;
-  const takvimsizGoster = filters.takvimsiz;
+  /*
+    KATEGORİ ROTASINDA TAKVİMSİZLER GİZLENMİYOR
+
+    Varsayılan süzgeç, başvuru takvimi açıklanmamış kayıtları listeden
+    çıkarıyor: genel /firsatlar akışında doğru, çünkü tarihi olan fırsat
+    daha eyleme dönük.
+
+    Ama /kyk ve /yarismalar gibi TÜRE ÖZEL rotalarda aynı kural sayfayı
+    tamamen boşaltıyordu. Ölçüldü: veritabanında 2 yayında KYK ve 1 yarışma
+    kaydı var, üçünün de tarihi yok — sayfa "0 sonuç, bu filtrelere uyan
+    fırsat yok" diyordu. Kullanıcı o kategoriye BİLEREK gelmiş; elde ne
+    varsa göstermek, boş ekran göstermekten iyi.
+  */
+  const kategoriRotasi = Boolean(categoryPath[path]);
+  const takvimsizGoster = filters.takvimsiz || kategoriRotasi;
   /*
     `setArsivGoster` kaldırıldı: tek kullanıcısı olan "Süresi dolanlar"
     düğmesi süzgeç paneline taşındı ve panel `set({ arsiv, takvimsiz })`

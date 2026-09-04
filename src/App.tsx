@@ -29,8 +29,6 @@ import { LegalPage, LEGAL_ROUTES } from './components/LegalPage';
 import { ApplyDialog } from './components/ApplyDialog';
 import { niyetYaz, niyetOku, niyetSil } from './lib/basvuru-niyeti.mjs';
 import { CerezBandi } from './components/CerezBandi';
-import { adsenseBetiginiBaslat } from './components/GoogleAdBanner';
-import { rizaOku, reklamSerbest } from './lib/cerez-rizasi.mjs';
 import { ListingPage } from './components/ListingPage';
 import { GuideHub, GuidePage } from './components/GuidePages';
 import { BasvuruSablonu } from './components/BasvuruSablonu';
@@ -810,19 +808,21 @@ export default function App() {
   }, [session]);
 
   /*
-    REKLAM BETİĞİ RIZAYA BAĞLI
+    REKLAM BETİĞİNİ APP YÜKLEMİYOR
 
-    Betik main.tsx'te koşulsuz yükleniyordu: ziyaretçi hiçbir şey seçmeden
-    pagead2.googlesyndication.com isteği başlıyordu. Artık yalnızca kayıtlı
-    rıza "reklam: true" ise yükleniyor. `rizaSayaci` band karar verince
-    artıyor ve etki yeniden çalışıyor.
+    Burada rıza verilince betiği açılışta yükleyen bir etki vardı. Sonuç:
+    izin verildikten sonra betik ANA SAYFADA, ilan listesinde, fırsatlarda,
+    boş süzgeç ekranlarında ve 404'te de yükleniyordu (bildirildi). O
+    sayfalarda görünür reklam yok, yalnızca boş istek çıkıyordu — ama Auto
+    Ads açılırsa Google oralara reklam yerleştirebilir ve boş/hata ekranında
+    reklam göstermek yayıncı politikasına aykırı.
+
+    Yükleme kararı artık yalnızca GoogleAdBanner'da: betik ancak gerçekten
+    bir reklam yuvası çizilirken isteniyor, o da yalnızca editoryal kapıyı
+    geçmiş rehber sayfalarında oluyor (lib/reklam-kapisi.mjs).
   */
   const [rizaSayaci, setRizaSayaci] = useState(0);
   const [tercihlerAcik, setTercihlerAcik] = useState(false);
-
-  React.useEffect(() => {
-    if (reklamSerbest(rizaOku(window.localStorage))) adsenseBetiginiBaslat();
-  }, [rizaSayaci]);
 
   const activeStudent = student;
 
@@ -2081,70 +2081,75 @@ export default function App() {
       */}
       <footer className="border-t border-gray-200 bg-white mt-auto py-8 text-xs text-gray-500 shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
-          <nav className="flex flex-col sm:flex-row sm:justify-center gap-3 sm:gap-8">
-            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
-              {[
-                { yol: '/rehber', etiket: 'Staj rehberi' },
-                { yol: '/bolumler', etiket: 'Bölüme göre staj' },
-                { yol: '/staj-programlari', etiket: 'Büyük işverenlerde staj' },
-                { yol: '/universite-kariyer-merkezleri', etiket: 'Kariyer merkezleri' },
-                { yol: '/araclar', etiket: 'Hesaplama araçları' },
-                { yol: '/isveren', etiket: 'İşveren rehberi' },
-                { yol: '/isveren/ilan-ver', etiket: 'Şirketini sahiplen' },
-                { yol: '/hakkimizda', etiket: 'Hakkımızda' },
-                { yol: '/iletisim', etiket: 'İletişim' },
-                { yol: '/ilan-kurallari', etiket: 'İlan kuralları' },
-                { yol: '/ilan-bildir', etiket: 'İlan bildir' },
-              ].map((bag) => (
-                <a
-                  key={bag.yol}
-                  href={bag.yol}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate(bag.yol);
-                  }}
-                  className="font-semibold text-gray-600 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  {bag.etiket}
-                </a>
-              ))}
-              {/*
-                Kullanıcı kararını sonradan değiştirebilmeli: band bir kez
-                çıkıp kayboluyor, bu bağlantı onu tercihler açık hâlde geri
-                getiriyor.
-              */}
-              <button
-                type="button"
-                onClick={() => setTercihlerAcik(true)}
-                className="cursor-pointer font-semibold text-gray-600 transition-colors hover:text-blue-600"
-              >
-                Çerez tercihleri
-              </button>
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
-              {[
-                { yol: '/kvkk-aydinlatma-metni', etiket: 'KVKK aydınlatma metni' },
-                { yol: '/gizlilik', etiket: 'Gizlilik' },
-                { yol: '/cerez-politikasi', etiket: 'Çerezler' },
-                { yol: '/kullanim-kosullari', etiket: 'Kullanım koşulları' },
-              ].map((bag) => (
-                <a
-                  key={bag.yol}
-                  href={bag.yol}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate(bag.yol);
-                  }}
-                  className="font-semibold text-gray-600 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  {bag.etiket}
-                </a>
-              ))}
-            </div>
+          <nav aria-label="Alt bilgi" className="grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4 lg:gap-x-10">
+            {[
+              {
+                baslik: 'Staj ara',
+                baglantilar: [
+                  { yol: '/rehber', etiket: 'Staj rehberi' },
+                  { yol: '/bolumler', etiket: 'Bölüme göre staj' },
+                  { yol: '/staj-programlari', etiket: 'Büyük işverenlerde staj' },
+                  { yol: '/universite-kariyer-merkezleri', etiket: 'Kariyer merkezleri' },
+                  { yol: '/araclar', etiket: 'Hesaplama araçları' },
+                ],
+              },
+              {
+                baslik: 'İşverenler',
+                baglantilar: [
+                  { yol: '/isveren', etiket: 'İşveren rehberi' },
+                  { yol: '/isveren/ilan-ver', etiket: 'Şirketini sahiplen' },
+                  { yol: '/ilan-kurallari', etiket: 'İlan kuralları' },
+                  { yol: '/ilan-bildir', etiket: 'İlan bildir' },
+                ],
+              },
+              {
+                baslik: 'Kurumsal',
+                baglantilar: [
+                  { yol: '/hakkimizda', etiket: 'Hakkımızda' },
+                  { yol: '/iletisim', etiket: 'İletişim' },
+                ],
+              },
+              {
+                baslik: 'Yasal',
+                baglantilar: [
+                  { yol: '/kvkk-aydinlatma-metni', etiket: 'KVKK aydınlatma metni' },
+                  { yol: '/gizlilik', etiket: 'Gizlilik' },
+                  { yol: '/kullanim-kosullari', etiket: 'Kullanım koşulları' },
+                  { yol: '/cerez-politikasi', etiket: 'Çerezler' },
+                ],
+              },
+            ].map((grup) => (
+              <section key={grup.baslik}>
+                <h2 className="mb-3 text-sm font-extrabold text-gray-900">{grup.baslik}</h2>
+                <div className="flex flex-col items-start gap-2.5">
+                  {grup.baglantilar.map((bag) => (
+                    <a
+                      key={bag.yol}
+                      href={bag.yol}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate(bag.yol);
+                      }}
+                      className="font-semibold leading-relaxed text-gray-600 transition-colors hover:text-blue-600"
+                    >
+                      {bag.etiket}
+                    </a>
+                  ))}
+                  {grup.baslik === 'Yasal' && (
+                    <button
+                      type="button"
+                      onClick={() => setTercihlerAcik(true)}
+                      className="cursor-pointer text-left font-semibold leading-relaxed text-gray-600 transition-colors hover:text-blue-600"
+                    >
+                      Çerez tercihleri
+                    </button>
+                  )}
+                </div>
+              </section>
+            ))}
           </nav>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 pt-4 border-t border-gray-100">
+          <div className="flex flex-col items-center justify-between gap-3 border-t border-gray-100 pt-5 sm:flex-row">
             <Logo
               size="sm"
               showTagline={false}

@@ -36,6 +36,26 @@ export const CerezBandi: React.FC<{
   const [reklam, setReklam] = React.useState(mevcut.reklam);
   const [olcum, setOlcum] = React.useState(mevcut.olcum);
 
+  /*
+    ALTBİLGİDEKİ "ÇEREZ TERCİHLERİ" PANELİ AÇMALI
+
+    `gorunur` yalnızca `useState` başlatıcısıyla kuruluyordu ve başlatıcı bir
+    kez çalışıyor. Karar vermiş kullanıcıda band kapalı; altbilgideki düğme
+    `acikBasla`'yı true yapıyor ama bileşen bunu HİÇ okumuyordu — düğme
+    hiçbir şey yapmıyor gibi görünüyordu (bildirildi ve doğrulandı).
+
+    Bu etki `acikBasla` değişimini izliyor: panel açılıyor, tercihler
+    bölümü açık geliyor ve kutular kayıtlı karara göre doluyor.
+  */
+  React.useEffect(() => {
+    if (!acikBasla) return;
+    const kayitli = rizaOku(window.localStorage);
+    setReklam(kayitli.reklam);
+    setOlcum(kayitli.olcum);
+    setTercihler(true);
+    setGorunur(true);
+  }, [acikBasla]);
+
   if (!gorunur) return null;
 
   const kaydet = (secim: { reklam: boolean; olcum: boolean }) => {

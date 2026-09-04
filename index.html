@@ -36,6 +36,20 @@
     <meta name="google-site-verification" content="23XH0reoo2hmnQqrJArkybqMmFQX7ztZiFYNDb3Qm3w" />
 
     <title>StajımVar - Staj Bulmanın En Akıllı Yolu</title>
+    <!--
+      ADSENSE SİTE DOĞRULAMASI — META ETİKETİ
+
+      Doğrulama için Google'ın iki yolu var: sayfada betiğin yüklü olması ya
+      da bu meta etiketi. Betik yolu, doğrulanmak uğruna betiği her sayfada
+      yüklemeyi gerektiriyordu; artık betik yalnızca reklam yuvası olan
+      rehber sayfalarında ve rızadan sonra yükleniyor. Meta etiketi
+      doğrulamayı o kısıttan bağımsız hâle getiriyor.
+
+      Değer .env'deki VITE_ADSENSE_CLIENT'tan geliyor — ads.txt ile aynı tek
+      kaynak. Kimlik tanımsızsa Vite bu satırı boş içerikle bırakır; yanlış
+      bir kimlik yazmaktansa boş kalması yeğ.
+    -->
+    <meta name="google-adsense-account" content="%VITE_ADSENSE_CLIENT%" />
     <meta name="description" content="Türkiye'deki staj ilanlarını şirketlerin kendi kariyer sayfalarından derliyoruz. Her ilanda şirketin kendi başvuru bağlantısı var." />
     <meta property="og:title" content="StajımVar - Staj Bulmanın En Akıllı Yolu" />
     <meta property="og:description" content="Türkiye'deki staj ilanlarını şirketlerin kendi kariyer sayfalarından derliyoruz. Her ilanda şirketin kendi başvuru bağlantısı var." />
