@@ -1,5 +1,5 @@
 export async function requestPublishedListingsCatalog(client, options = {}) {
-  const { data, error } = await client.rpc('get_published_listings_catalog', {
+  const { data, error } = await client.rpc('get_published_listings_catalog_v2', {
     p_country: options.country ?? 'all',
     p_cursor_posted_at: options.cursor?.value ?? null,
     p_cursor_id: options.cursor?.id ?? null,

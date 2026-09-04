@@ -36,12 +36,13 @@ before(async () => {
     grant select on listings to anon,authenticated;
   `);
   await db.exec(await readFile(new URL('../supabase/migrations/20260919010000_global_listing_preferences.sql', import.meta.url), 'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/20260919020000_global_listing_catalog_total.sql', import.meta.url), 'utf8'));
 });
 after(async () => db?.close());
 
 async function catalog(args = {}) {
   const keys = Object.keys(args);
-  const sql = `select public.get_published_listings_catalog(${keys.map((key, i) => `p_${key}=>$${i + 1}`).join(',')}) result`;
+  const sql = `select public.get_published_listings_catalog_v2(${keys.map((key, i) => `p_${key}=>$${i + 1}`).join(',')}) result`;
   return (await db.query(sql, Object.values(args))).rows[0].result;
 }
 

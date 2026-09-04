@@ -90,7 +90,6 @@ begin
         'size',c.size,'location',c.location,'description',c.description,'rating',c.rating)
       from public.companies c where c.id=p.company_id
     )) order by position) from page p),'[]'::jsonb),
-    'total',(select count(*) from filtered),
     'facets',jsonb_build_object('countries',coalesce((select jsonb_agg(jsonb_build_object('code',country_code,'count',amount) order by country_code) from (select country_code,count(*) amount from active where country_code is not null group by country_code)x),'[]'::jsonb)),
     'hasMore',(select count(*)>24 from candidates),
     'nextCursor',case when (select count(*)>24 from candidates) then (select jsonb_build_object('value',sort_value,'id',id) from page order by position desc limit 1) else null end,

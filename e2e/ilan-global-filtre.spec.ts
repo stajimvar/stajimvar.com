@@ -12,7 +12,7 @@ async function transport(page:Page){
   await page.addLocatorHandler(page.getByRole('button',{name:'Reddet',exact:true}),async b=>b.click());
   await page.route('https://**/*',async route=>{
     const url=new URL(route.request().url());
-    if(url.pathname.endsWith('/rpc/get_published_listings_catalog')){
+    if(url.pathname.endsWith('/rpc/get_published_listings_catalog_v2')){
       const args=route.request().postDataJSON();
       const listings=args.p_country==='all'?rows:args.p_country==='remote'?rows.filter(x=>x.work_type==='Remote'):rows.filter(x=>x.country_code===args.p_country);
       await route.fulfill({json:{listings,total:args.p_country==='all'?67:listings.length,facets:{countries:[{code:'FR',count:1},{code:'TR',count:1}]},hasMore:false,nextCursor:null,snapshot:'2026-09-05T12:00:00Z'}});return;
