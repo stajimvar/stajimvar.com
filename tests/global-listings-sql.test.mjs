@@ -15,7 +15,16 @@ before(async () => {
     create table public.profiles(id uuid primary key references auth.users(id),role text not null default 'student');
     create table public.student_profiles(id uuid primary key references public.profiles(id));
     create table public.companies(id uuid primary key,name text,slug text,logo_url text,industry text,size text,location text,description text,rating numeric);
-    create table public.listings(id uuid primary key,title text not null,company_id uuid references companies(id),city text,work_type work_type not null default 'On-site',status listing_status not null default 'draft',posted_at timestamptz,created_at timestamptz not null default now());
+    create table public.listings(
+      id uuid primary key,title text not null,company_id uuid references companies(id),source_title text,department text,
+      city text,work_type work_type not null default 'On-site',mandatory_staj_accepted boolean,voluntary_staj_accepted boolean,
+      is_paid boolean,stipend_text text,duration text,term text,application_deadline date,min_grade_level text,
+      required_skills text[],preferred_skills text[],description text,responsibilities text[],perks text[],category text,
+      featured boolean,status listing_status not null default 'draft',applicants_count int,posted_at timestamptz,last_seen_at timestamptz,
+      source_verified_at timestamptz,source_status text,created_at timestamptz not null default now(),updated_at timestamptz,
+      origin text,source_id uuid,source_url text,canonical_url text,apply_url text,application_method text,
+      application_channel_id uuid,insurance_note text,raw jsonb
+    );
     alter table profiles enable row level security; alter table student_profiles enable row level security; alter table listings enable row level security;
     create policy read_own_profile on profiles for select to authenticated using(id=auth.uid());
     create policy read_own_student on student_profiles for select to authenticated using(id=auth.uid());
@@ -57,6 +66,14 @@ test('remote yalniz work_type Remote getirir ve NULL ulkeyi remote saymaz', asyn
   assert.deepEqual((await catalog({ country: 'FR' })).listings.map((row) => row.title), ['Paris']);
   assert.equal((await catalog({ country: 'all' })).listings.length, 3);
   assert.deepEqual(remote.facets.countries, [{ code: 'FR', count: 1 }]);
+});
+
+test('public katalog ham kaynak verisini disari sizdirmaz', async () => {
+  await db.exec(`insert into listings(id,title,status,raw) values(md5('private-raw')::uuid,'Güvenli kart','published','{"private":"secret"}')`);
+  const result = await catalog({ country: 'all' });
+  const listing = result.listings.find((row) => row.title === 'Güvenli kart');
+  assert.ok(listing);
+  assert.equal(Object.hasOwn(listing, 'raw'), false);
 });
 
 test('catalog 1237 esit tarihli kaydi tekrarsiz ve sabit ust sinirsiz sayfalar', async () => {

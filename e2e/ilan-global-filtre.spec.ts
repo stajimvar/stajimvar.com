@@ -45,3 +45,12 @@ test('375 pikselde gercek facet secici tasmaz ve secim URLye yazilir',async({pag
   await selector.selectOption('TR');await expect(page).toHaveURL(/country=TR/);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
 });
+
+test('ulke secimi tarayici geri ve ileri gecmisini izler',async({page})=>{
+  await transport(page);await page.goto('/?country=all');
+  const selector=page.getByRole('combobox',{name:'İlan ülkesi'});
+  await selector.selectOption('TR');await expect(selector).toHaveValue('TR');
+  await selector.selectOption('FR');await expect(selector).toHaveValue('FR');
+  await page.goBack();await expect(selector).toHaveValue('TR');
+  await page.goForward();await expect(selector).toHaveValue('FR');
+});

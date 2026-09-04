@@ -64,7 +64,15 @@ begin
     raise exception 'Eksik sayfalama imleci' using errcode='22023';
   end if;
   with active as materialized (
-    select l.*,coalesce(l.posted_at,l.created_at) sort_value from public.listings l
+    select l.id,l.company_id,l.title,l.source_title,l.department,l.work_type,l.city,
+      l.country_code,l.original_language,l.international_applicants,l.visa_sponsorship,
+      l.mandatory_staj_accepted,l.voluntary_staj_accepted,l.is_paid,l.stipend_text,l.duration,l.term,
+      l.application_deadline,l.min_grade_level,l.required_skills,l.preferred_skills,l.description,
+      l.responsibilities,l.perks,l.category,l.featured,l.status,l.applicants_count,l.posted_at,
+      l.last_seen_at,l.source_verified_at,l.source_status,l.created_at,l.updated_at,l.origin,l.source_id,
+      l.source_url,l.canonical_url,l.apply_url,l.application_method,l.application_channel_id,l.insurance_note,
+      coalesce(l.posted_at,l.created_at) sort_value
+    from public.listings l
     where l.status='published' and l.created_at<=watermark
   ), filtered as materialized (
     select * from active where p_country='all'
@@ -77,7 +85,11 @@ begin
     select c.*,row_number() over(order by sort_value desc,id desc) position from candidates c
   ), page as materialized (select * from numbered where position<=24)
   select jsonb_build_object(
-    'listings',coalesce((select jsonb_agg((to_jsonb(p)-'sort_value'-'position') || jsonb_build_object('companies',(select to_jsonb(c) from public.companies c where c.id=p.company_id)) order by position) from page p),'[]'::jsonb),
+    'listings',coalesce((select jsonb_agg((to_jsonb(p)-'sort_value'-'position') || jsonb_build_object('companies',(
+      select jsonb_build_object('name',c.name,'slug',c.slug,'logo_url',c.logo_url,'industry',c.industry,
+        'size',c.size,'location',c.location,'description',c.description,'rating',c.rating)
+      from public.companies c where c.id=p.company_id
+    )) order by position) from page p),'[]'::jsonb),
     'facets',jsonb_build_object('countries',coalesce((select jsonb_agg(jsonb_build_object('code',country_code,'count',amount) order by country_code) from (select country_code,count(*) amount from active where country_code is not null group by country_code)x),'[]'::jsonb)),
     'hasMore',(select count(*)>24 from candidates),
     'nextCursor',case when (select count(*)>24 from candidates) then (select jsonb_build_object('value',sort_value,'id',id) from page order by position desc limit 1) else null end,

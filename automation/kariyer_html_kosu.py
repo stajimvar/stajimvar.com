@@ -27,6 +27,7 @@ from dataclasses import asdict, dataclass, field
 import requests
 
 from automation import repository
+from automation.country_normalization import infer_country_code
 from automation.kariyer_html import HamIlan, kariyer_sayfasini_oku
 from automation.radar_cozucu import sadelestir
 from automation.radar_cozum import eslesme_guveni
@@ -209,7 +210,7 @@ def _yayinla(db, aday: Aday, kaynak_id: str, sayac: Counter) -> Aday:
         "title": aday.baslik,
         "work_type": "On-site",
         "city": aday.konum,
-        "country_code": __import__('country_normalization').infer_country_code(location=aday.konum, title=aday.baslik),
+        "country_code": infer_country_code(location=aday.konum, title=aday.baslik),
         "mandatory_staj_accepted": False,
         "voluntary_staj_accepted": True,
         "is_paid": False,

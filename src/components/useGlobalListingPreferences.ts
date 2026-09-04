@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { fetchPublishedListingsCatalog, type PublishedListingsCatalogPage } from '../lib/queries';
-import { readCountryQuery, resolveListingCountry, writeCountryQuery } from '../lib/global-preferences.mjs';
+import { normalizeCountryCode, readCountryQuery, resolveListingCountry, writeCountryQuery } from '../lib/global-preferences.mjs';
 
 const STORAGE_KEY='stajimvar_listing_country_v1';
 
@@ -16,11 +16,20 @@ export function useGlobalListingPreferences(accountCountries: string[] = []) {
   const [page,setPage]=React.useState<PublishedListingsCatalogPage|null>(null);
   const [phase,setPhase]=React.useState<'loading'|'ready'|'error'>('loading');
   const [error,setError]=React.useState<string|null>(null);
+  const requestVersion=React.useRef(0);
 
   const load=React.useCallback(async(selected:string)=>{
+    const version=++requestVersion.current;
     setPhase('loading'); setError(null);
-    try { setPage(await fetchPublishedListingsCatalog(selected)); setPhase('ready'); }
-    catch(e){ setError(e instanceof Error?e.message:'İlanlar yüklenemedi'); setPhase('error'); }
+    try {
+      const result=await fetchPublishedListingsCatalog(selected);
+      if(version!==requestVersion.current)return;
+      setPage(result); setPhase('ready');
+    }
+    catch(e){
+      if(version!==requestVersion.current)return;
+      setError(e instanceof Error?e.message:'İlanlar yüklenemedi'); setPhase('error');
+    }
   },[]);
 
   React.useEffect(()=>{ void load(country); },[country,load]);
@@ -41,15 +50,20 @@ export function useGlobalListingPreferences(accountCountries: string[] = []) {
   },[accountCountries.join('|')]);
 
   const setCountry=(value:string)=>{
-    window.localStorage.setItem(STORAGE_KEY,value);
-    window.history.pushState({},'',writeCountryQuery(window.location.pathname,window.location.search,value));
-    setCountryState(value);
+    const selected=value==='all'||value==='remote'?value:normalizeCountryCode(value);
+    if(!selected)return;
+    window.localStorage.setItem(STORAGE_KEY,selected);
+    window.history.pushState({},'',writeCountryQuery(window.location.pathname,window.location.search,selected));
+    setCountryState(selected);
   };
   const loadMore=async()=>{
     if(!page?.hasMore||!page.nextCursor)return;
+    const selectedCountry=country;
+    const version=requestVersion.current;
     try{
-      const next=await fetchPublishedListingsCatalog(country,page.nextCursor,page.snapshot);
-      setPage({...next,listings:[...page.listings,...next.listings]});
+      const next=await fetchPublishedListingsCatalog(selectedCountry,page.nextCursor,page.snapshot);
+      if(version!==requestVersion.current||selectedCountry!==country)return;
+      setPage(current=>current?{...next,listings:[...current.listings,...next.listings]}:next);
     }catch(e){setError(e instanceof Error?e.message:'Daha fazla ilan yüklenemedi');}
   };
   return {country,setCountry,phase,error,page,loadMore,retry:()=>load(country)};
