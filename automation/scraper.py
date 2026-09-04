@@ -32,6 +32,8 @@ class Job:
     # kayıptı (ölçüldü). Çeviri bir GÖRÜNÜM katmanı; kaynak veriyi
     # değiştiremez.
     source_title: str | None = None
+    country_code: str | None = None
+    original_language: str | None = None
 
 def clean(text: str) -> str: return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", unescape(text))).strip()
 def canonical(url: str) -> str:

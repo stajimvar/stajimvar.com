@@ -205,6 +205,8 @@ def promote_one(db, raw: dict, source: dict, *, dry: bool) -> str:
         "source_title": (raw.get("raw") or {}).get("source_title"),
         "work_type": WORK_TYPE.get(raw.get("work_type_guess") or "", "On-site"),
         "city": raw.get("city"),
+        "country_code": (raw.get("raw") or {}).get("country_code"),
+        "original_language": (raw.get("raw") or {}).get("original_language"),
         "mandatory_staj_accepted": mandatory,
         "voluntary_staj_accepted": True,
         "is_paid": detect_paid(description),

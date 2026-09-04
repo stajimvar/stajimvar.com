@@ -386,6 +386,10 @@ export type Database = {
           canonical_url: string | null;
           category: Database['public']['Enums']['listing_category'];
           city: string | null;
+          country_code: string | null;
+          original_language: string | null;
+          international_applicants: boolean | null;
+          visa_sponsorship: boolean | null;
           company_id: string;
           content_hash: string | null;
           created_at: string;
@@ -452,6 +456,10 @@ export type Database = {
           source_url?: string | null;
           category?: Database['public']['Enums']['listing_category'];
           city?: string | null;
+          country_code?: string | null;
+          original_language?: string | null;
+          international_applicants?: boolean | null;
+          visa_sponsorship?: boolean | null;
           company_id: string;
           created_at?: string;
           department?: string | null;
@@ -500,6 +508,10 @@ export type Database = {
           source_url?: string | null;
           category?: Database['public']['Enums']['listing_category'];
           city?: string | null;
+          country_code?: string | null;
+          original_language?: string | null;
+          international_applicants?: boolean | null;
+          visa_sponsorship?: boolean | null;
           company_id?: string;
           created_at?: string;
           department?: string | null;
@@ -544,6 +556,9 @@ export type Database = {
           kvkk_consent_version: string | null;
           marketing_consent: boolean;
           phone: string | null;
+          interface_language: string | null;
+          content_language: string | null;
+          home_country: string | null;
           role: Database['public']['Enums']['user_role'];
           updated_at: string;
         };
@@ -557,6 +572,9 @@ export type Database = {
           kvkk_consent_version?: string | null;
           marketing_consent?: boolean;
           phone?: string | null;
+          interface_language?: string | null;
+          content_language?: string | null;
+          home_country?: string | null;
           role?: Database['public']['Enums']['user_role'];
           updated_at?: string;
         };
@@ -570,6 +588,9 @@ export type Database = {
           kvkk_consent_version?: string | null;
           marketing_consent?: boolean;
           phone?: string | null;
+          interface_language?: string | null;
+          content_language?: string | null;
+          home_country?: string | null;
           role?: Database['public']['Enums']['user_role'];
           updated_at?: string;
         };
@@ -1100,6 +1121,7 @@ export type Database = {
           is_open_to_offers: boolean;
           linkedin_url: string | null;
           portfolio_url: string | null;
+          preferred_job_countries: string[];
           pref_cities: string[];
           pref_earliest_start: string | null;
           pref_min_stipend: number | null;
@@ -1126,6 +1148,7 @@ export type Database = {
           is_open_to_offers?: boolean;
           linkedin_url?: string | null;
           portfolio_url?: string | null;
+          preferred_job_countries?: string[];
           pref_cities?: string[];
           pref_earliest_start?: string | null;
           pref_min_stipend?: number | null;
@@ -1152,6 +1175,7 @@ export type Database = {
           is_open_to_offers?: boolean;
           linkedin_url?: string | null;
           portfolio_url?: string | null;
+          preferred_job_countries?: string[];
           pref_cities?: string[];
           pref_earliest_start?: string | null;
           pref_min_stipend?: number | null;

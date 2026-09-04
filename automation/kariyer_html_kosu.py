@@ -209,6 +209,7 @@ def _yayinla(db, aday: Aday, kaynak_id: str, sayac: Counter) -> Aday:
         "title": aday.baslik,
         "work_type": "On-site",
         "city": aday.konum,
+        "country_code": __import__('country_normalization').infer_country_code(location=aday.konum, title=aday.baslik),
         "mandatory_staj_accepted": False,
         "voluntary_staj_accepted": True,
         "is_paid": False,

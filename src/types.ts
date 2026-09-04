@@ -89,6 +89,10 @@ export interface StudentProfile {
   preferences: StudentPreferences;
   projects: StudentProject[];
   earnedBadges: string[];
+  interfaceLanguage?: string;
+  contentLanguage?: string;
+  homeCountry?: string;
+  preferredJobCountries?: string[];
 }
 
 export interface CompanyAccount {
@@ -126,6 +130,10 @@ export interface InternshipListing {
   department: string;
   workType: 'Remote' | 'Hybrid' | 'On-site';
   city: string;
+  countryCode?: string;
+  originalLanguage?: string;
+  internationalApplicants?: boolean;
+  visaSponsorship?: boolean;
   mandatoryStajAccepted: boolean; // Zorunlu staj kabul ediliyor mu
   voluntaryStajAccepted: boolean;
   stipend: {

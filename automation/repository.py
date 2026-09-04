@@ -279,6 +279,16 @@ def raw_listing_payload(job: Any, source_id: str, canonical_url: str, now: str) 
         f"{job.title}|{job.description}|{canonical_url}".encode()
     ).hexdigest()
 
+    try:
+        from .country_normalization import infer_country_code
+    except ImportError:
+        from country_normalization import infer_country_code
+    country_code = infer_country_code(
+        structured_country=getattr(job, "country_code", None),
+        location=job.city,
+        title=job.title,
+    )
+
     return {
         "source_id": source_id,
         "external_id": None,
@@ -293,6 +303,8 @@ def raw_listing_payload(job: Any, source_id: str, canonical_url: str, now: str) 
             "organization_name": job.organization_name,
             "city": job.city,
             "work_mode": job.work_mode,
+            "country_code": country_code,
+            "original_language": getattr(job, "original_language", None),
             "source_name": job.source_name,
             # Bazı kaynaklar şirket sitesini ve logosunu ilanla veriyor;
             # promote adımı yeni şirket açarken bunları kullanıyor.

@@ -31,6 +31,7 @@ import {
   type StudentRowBundle,
 } from './mappers';
 import { basvuruYolu } from '../basvuru-yolu.mjs';
+import { requestPublishedListingsCatalog } from '../global-listings-api.mjs';
 
 /** PostgREST hatalarını tek biçimde yükseltir. */
 function fail(context: string, error: { message: string } | null): never {
@@ -57,6 +58,24 @@ export async function fetchPublishedListings(): Promise<InternshipListing[]> {
 
   if (error) fail('İlanlar yüklenemedi', error);
   return (data as unknown as ListingRowWithCompany[]).map(toInternshipListing);
+}
+
+export interface PublishedListingsCursor { value: string; id: string }
+export interface PublishedListingsCatalogPage {
+  listings: InternshipListing[];
+  facets: { countries: Array<{ code: string; count: number }> };
+  hasMore: boolean;
+  nextCursor: PublishedListingsCursor | null;
+  snapshot: string;
+}
+
+export async function fetchPublishedListingsCatalog(
+  country: string,
+  cursor: PublishedListingsCursor | null = null,
+  snapshot: string | null = null,
+): Promise<PublishedListingsCatalogPage> {
+  const data = await requestPublishedListingsCatalog(supabase, { country, cursor, snapshot });
+  return { ...data, listings: data.listings.map((row: ListingRowWithCompany) => toInternshipListing(row)) };
 }
 
 /**
@@ -210,7 +229,7 @@ export async function deleteListing(listingId: string): Promise<void> {
 
 const STUDENT_SELECT = `
   *,
-  profiles ( full_name, email, phone, avatar_url ),
+  profiles ( full_name, email, phone, avatar_url, interface_language, content_language, home_country ),
   student_skills ( * ),
   student_languages ( * ),
   student_projects ( * )

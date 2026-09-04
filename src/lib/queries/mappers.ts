@@ -19,6 +19,7 @@ import type {
   StudentProject,
   StudentSkill,
 } from '../../types';
+import { normalizeCountryCode, normalizeLanguageCode } from '../global-preferences.mjs';
 
 /**
  * `SkillCategory` arayüz tipi, tasarımdan kalan eski küçük harfli değerleri de taşıyor
@@ -63,6 +64,10 @@ export const LISTING_COLUMNS = [
   'department',
   'work_type',
   'city',
+  'country_code',
+  'original_language',
+  'international_applicants',
+  'visa_sponsorship',
   'mandatory_staj_accepted',
   'voluntary_staj_accepted',
   'is_paid',
@@ -134,6 +139,10 @@ export function toInternshipListing(row: ListingRowWithCompany): InternshipListi
     department: row.department ?? '',
     workType: row.work_type,
     city: row.city ?? '',
+    countryCode: row.country_code ?? undefined,
+    originalLanguage: row.original_language ?? undefined,
+    internationalApplicants: row.international_applicants ?? undefined,
+    visaSponsorship: row.visa_sponsorship ?? undefined,
     mandatoryStajAccepted: row.mandatory_staj_accepted,
     voluntaryStajAccepted: row.voluntary_staj_accepted,
     stipend: {
@@ -245,7 +254,7 @@ export function toListingInsert(
 // ---------------------------------------------------------------- Öğrenci
 
 export type StudentRowBundle = Tables<'student_profiles'> & {
-  profiles: Pick<Tables<'profiles'>, 'full_name' | 'email' | 'phone' | 'avatar_url'> | null;
+  profiles: Pick<Tables<'profiles'>, 'full_name' | 'email' | 'phone' | 'avatar_url' | 'interface_language' | 'content_language' | 'home_country'> | null;
   student_skills: Tables<'student_skills'>[];
   student_languages: Tables<'student_languages'>[];
   student_projects: Tables<'student_projects'>[];
@@ -286,6 +295,10 @@ export function toStudentProfile(row: StudentRowBundle): StudentProfile {
     },
     projects: (row.student_projects ?? []).map(toStudentProject),
     earnedBadges: row.earned_badges,
+    interfaceLanguage: p?.interface_language ?? undefined,
+    contentLanguage: p?.content_language ?? undefined,
+    homeCountry: p?.home_country ?? undefined,
+    preferredJobCountries: row.preferred_job_countries ?? [],
   };
 }
 
@@ -332,6 +345,21 @@ export function splitStudentUpdate(patch: Partial<StudentProfile>) {
   if (patch.fullName !== undefined) profilePatch.full_name = patch.fullName;
   if (patch.phone !== undefined) profilePatch.phone = patch.phone;
   if (patch.avatarUrl !== undefined) profilePatch.avatar_url = patch.avatarUrl;
+  if (patch.interfaceLanguage !== undefined) {
+    const value=patch.interfaceLanguage?normalizeLanguageCode(patch.interfaceLanguage):null;
+    if(patch.interfaceLanguage&&!value)throw new Error('Geçersiz arayüz dili');
+    profilePatch.interface_language=value;
+  }
+  if (patch.contentLanguage !== undefined) {
+    const value=patch.contentLanguage?normalizeLanguageCode(patch.contentLanguage):null;
+    if(patch.contentLanguage&&!value)throw new Error('Geçersiz içerik dili');
+    profilePatch.content_language=value;
+  }
+  if (patch.homeCountry !== undefined) {
+    const value=patch.homeCountry?normalizeCountryCode(patch.homeCountry):null;
+    if(patch.homeCountry&&!value)throw new Error('Geçersiz ülke');
+    profilePatch.home_country=value;
+  }
 
   const studentPatch: Partial<Tables<'student_profiles'>> = {};
   if (patch.university !== undefined) studentPatch.university = patch.university;
@@ -349,6 +377,11 @@ export function splitStudentUpdate(patch: Partial<StudentProfile>) {
   if (patch.cvPath !== undefined) studentPatch.cv_path = patch.cvPath || null;
   if (patch.targetRoles !== undefined) studentPatch.target_roles = patch.targetRoles;
   if (patch.softSkills !== undefined) studentPatch.soft_skills = patch.softSkills;
+  if (patch.preferredJobCountries !== undefined) {
+    const values=patch.preferredJobCountries.map(value=>normalizeCountryCode(value));
+    if(values.some(value=>!value)||new Set(values).size!==values.length)throw new Error('Geçersiz veya tekrarlanan ülke tercihi');
+    studentPatch.preferred_job_countries=values as string[];
+  }
 
   if (patch.preferences) {
     const pref = patch.preferences;
