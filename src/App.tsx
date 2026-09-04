@@ -23,6 +23,7 @@ import {
 } from './types';
 import { Header } from './components/Header';
 import { MatchedInternshipsView } from './components/MatchedInternshipsView';
+import { useGlobalListingPreferences } from './components/useGlobalListingPreferences';
 import { InternshipDetailModal } from './components/InternshipDetailModal';
 import { Logo } from './components/Logo';
 import { LegalPage, LEGAL_ROUTES } from './components/LegalPage';
@@ -304,6 +305,7 @@ export default function App() {
   const [sessionReady, setSessionReady] = useState(false);
   /** Giriş yapmış öğrencinin gerçek profili. */
   const [student, setStudent] = useState<StudentProfile | null>(null);
+  const globalListings = useGlobalListingPreferences(student?.preferredJobCountries ?? []);
   // İlanlar artık Supabase'den geliyor. Boş başlıyor; yükleme durumu aşağıda.
   const [allListings, setAllListings] = useState<InternshipListing[]>([]);
   const [listingsStatus, setListingsStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -1682,7 +1684,7 @@ export default function App() {
           />
         ) : (
           <>
-            {safeTab === 'internships' && listingsStatus === 'loading' && (
+            {safeTab === 'internships' && globalListings.phase === 'loading' && (
               <div className="w-full space-y-4 py-10" role="status" aria-live="polite">
                 <div className="h-40 rounded-3xl bg-gray-100 animate-pulse"/>
                 <div className="h-28 rounded-2xl bg-gray-100 animate-pulse"/>
@@ -1693,17 +1695,17 @@ export default function App() {
               </div>
             )}
 
-            {safeTab === 'internships' && listingsStatus === 'error' && (
+            {safeTab === 'internships' && globalListings.phase === 'error' && (
               <div className="w-full my-10 rounded-2xl border border-red-200 bg-red-50 p-6 text-center space-y-3">
                 <p className="font-bold text-red-800">
                   İlanlar yüklenemedi
                 </p>
                 <p className="text-xs text-red-700 max-w-lg mx-auto">
-                  {listingsError}
+                  {globalListings.error}
                 </p>
                 <button
                   type="button"
-                  onClick={() => window.location.reload()}
+                  onClick={globalListings.retry}
                   className="text-xs font-bold px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors"
                 >
                   Tekrar dene
@@ -1711,7 +1713,7 @@ export default function App() {
               </div>
             )}
 
-            {safeTab === 'internships' && listingsStatus === 'ready' && (
+            {safeTab === 'internships' && globalListings.phase === 'ready' && globalListings.page && (
               <>
               {/*
                 FIRSAT ŞERİDİ İLANLARIN ALTINDA
@@ -1722,7 +1724,7 @@ export default function App() {
               */}
               <MatchedInternshipsView
                 student={isLoggedIn ? activeStudent : null}
-                allListings={allListings}
+                allListings={globalListings.page.listings}
                 applications={applications}
                 subTab={activeSubTab}
                 onSubTabChange={setActiveSubTab}
@@ -1736,6 +1738,11 @@ export default function App() {
                 onSearchChange={setAramaTerimi}
                 onNavigate={navigate}
                 onRequireLogin={handleOpenLogin}
+                countrySelection={globalListings.country}
+                countryFacets={globalListings.page.facets.countries}
+                onCountryChange={globalListings.setCountry}
+                hasMoreCountriesPage={globalListings.page.hasMore}
+                onLoadMoreCountriesPage={globalListings.loadMore}
               />
               <OpportunitiesHomeSection
                 onNavigate={navigate}

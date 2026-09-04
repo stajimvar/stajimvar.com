@@ -48,6 +48,11 @@ import {
   LANGUAGES_DICTIONARY,
 } from '../data/skillsDictionary';
 
+const GLOBAL_COUNTRIES = [
+  ['TR','Türkiye'],['FR','Fransa'],['DE','Almanya'],['US','Amerika Birleşik Devletleri'],
+  ['GB','Birleşik Krallık'],['NL','Hollanda'],['ES','İspanya'],['IT','İtalya'],
+] as const;
+
 /**
  * Öğrenci profili / CV alanı.
  *
@@ -1619,6 +1624,25 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               {tumHedefler ? 'Daha az göster' : 'Tümünü göster'}
             </button>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <span className={etiketClass}>Arayüz dili</span>
+            <select value={student.interfaceLanguage ?? ''} onChange={e=>onUpdateProfile({interfaceLanguage:e.target.value||undefined})} className={alanClass} aria-label="Arayüz dili">
+              <option value="">Tarayıcı dilini kullan</option>
+              <option value="tr">Türkçe</option><option value="en">English</option><option value="fr">Français</option><option value="de">Deutsch</option>
+            </select>
+          </div>
+          <div>
+            <span className={etiketClass}>Staj aradığın ülkeler</span>
+            <select value="" onChange={e=>{const code=e.target.value;const current=student.preferredJobCountries??[];if(code&&!current.includes(code))onUpdateProfile({preferredJobCountries:[...current,code]});}} className={alanClass} aria-label="Staj ülkesi ekle">
+              <option value="">+ Ülke ekle</option>
+              {GLOBAL_COUNTRIES.filter(([code])=>!(student.preferredJobCountries??[]).includes(code)).map(([code,label])=><option key={code} value={code}>{label}</option>)}
+            </select>
+          </div>
+          {(student.preferredJobCountries??[]).length>0&&<div className="sm:col-span-2 flex flex-wrap gap-2">{(student.preferredJobCountries??[]).map((code,index)=><span key={code} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 pl-3 pr-1.5 text-sm font-semibold text-blue-900"><span>{index+1}. {GLOBAL_COUNTRIES.find(x=>x[0]===code)?.[1]??code}</span><button type="button" aria-label={`${code} tercihini kaldır`} onClick={()=>onUpdateProfile({preferredJobCountries:(student.preferredJobCountries??[]).filter(x=>x!==code)})} className="flex h-9 w-9 items-center justify-center rounded-lg text-blue-500 hover:bg-white"><X className="h-4 w-4"/></button></span>)}</div>}
+          <p className="sm:col-span-2 text-[11px] text-gray-600">İlk ülke varsayılan keşif ülken olur. İlan ekranında geçici ülke değiştirmek bu listeyi değiştirmez.</p>
         </div>
 
         <div>

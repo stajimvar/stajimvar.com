@@ -33,6 +33,7 @@ import { BasvuruSablonu } from './BasvuruSablonu';
 import { ilBul } from '../lib/sehir';
 import { SirketSeridi } from './SirketSeridi';
 import { ILAN_KAYNAGI_PARCALI } from '../lib/urun-metni';
+import { ListingCountrySelector } from './ListingCountrySelector';
 
 /**
  * İlanın listeye eklenme zamanı (ms).
@@ -128,6 +129,11 @@ interface MatchedInternshipsViewProps {
   onSearchChange: (q: string) => void;
   /** Sıfır sonuç ekranındaki yönlendirmeler için; verilmezse o düğmeler çizilmiyor. */
   onNavigate?: (yol: string) => void;
+  countrySelection?: string;
+  countryFacets?: Array<{code:string;count:number}>;
+  onCountryChange?: (country:string)=>void;
+  hasMoreCountriesPage?: boolean;
+  onLoadMoreCountriesPage?: ()=>void;
 }
 
 export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
@@ -144,6 +150,11 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   searchQuery,
   onSearchChange,
   onNavigate,
+  countrySelection='all',
+  countryFacets=[],
+  onCountryChange,
+  hasMoreCountriesPage=false,
+  onLoadMoreCountriesPage,
 }) => {
 
   /*
@@ -286,7 +297,6 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     ...(student?.id ? [{ id: 'kaydettiklerim', label: 'Kaydettiklerim' }] : []),
     { id: 'high_match', label: 'Sana En Uygun (%80+)' },
     { id: 'public_sector', label: 'Kamu Stajları' },
-    { id: 'global', label: 'Yurtdışı / Global' },
   ];
 
   /**
@@ -313,16 +323,6 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           listing.title.toLowerCase().includes('ulusal staj') ||
           listing.companyName.toLowerCase().includes('bakanlığı') ||
           listing.companyName.toLowerCase().includes('cumhurbaşkanlığı')
-        );
-      case 'global':
-        return (
-          listing.category === 'global' ||
-          listing.companyIndustry.toLowerCase().includes('erasmus') ||
-          listing.companyIndustry.toLowerCase().includes('global') ||
-          listing.title.toLowerCase().includes('erasmus') ||
-          listing.title.toLowerCase().includes('global') ||
-          listing.city.toLowerCase().includes('almanya') ||
-          listing.city.toLowerCase().includes('berlin')
         );
       default:
         /*
@@ -860,6 +860,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               <span className="text-blue-600">tek listede</span>.
             </span>
           </h1>
+          {onCountryChange && <div className="mt-3"><ListingCountrySelector value={countrySelection} countries={countryFacets} onChange={onCountryChange}/></div>}
 
           {/*
             Mobildeki "13 açık ilan · 10 şirket · 4 şehir" satırı kaldırıldı.
@@ -1345,6 +1346,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                   */}
                 </React.Fragment>
               ))}
+              {hasMoreCountriesPage && <button type="button" onClick={onLoadMoreCountriesPage} className="min-h-11 w-full rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm font-bold text-blue-700">Daha fazla ilan göster</button>}
 
               {/*
                 LİSTENİN SONU ÇIKMAZ DEĞİL
