@@ -85,8 +85,39 @@ const KAPANMA_METINLERI = [
   'başvuru süresi doldu',
 ];
 
+/**
+ * Görünür metni ayıklar: script, style ve noscript blokları atılıyor.
+ *
+ * NEDEN GEREKLİ
+ * -------------
+ * Kapanma işaretleri BÜTÜN HTML içinde aranıyordu, gömülü JavaScript dahil.
+ * Modern iş ilanı siteleri hata metinlerini sayfanın içindeki bir sözlükte
+ * taşıyor; ilan açıkken bile o metinler kaynakta duruyor.
+ *
+ * Ölçüldü — üç canlı ilan bu yüzden kapatıldı:
+ *   hrpanda  "booking.errors.slotUnavailable":"This time is no longer available"
+ *            (randevu slotu hatası; ilanla ilgisi yok)
+ *   Jibe     "NO_JOBS_404":"…this job may be no longer available…"
+ *            (404 sayfasının ŞABLONU, sayfanın kendisi değil)
+ *
+ * Üçünün de adresi 200 dönüyordu. Yanlış kapatma sessiz bir hata: ilan
+ * listeden düşüyor ve kimse fark etmiyor.
+ */
+function gorunurMetin(govde) {
+  return govde
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ');
+}
+
 function kapanmaSebebi(yanit, govde) {
-  const metin = govde.toLowerCase();
+  /*
+    HTTP durumu ve yönlendirme SAYFANIN TAMAMINDAN okunuyor; metin işaretleri
+    ise yalnızca görünür metinden. Durum kodu yanıtın kendi bilgisi, metin
+    ise yorum gerektiriyor.
+  */
+  const metin = gorunurMetin(govde).toLowerCase();
   if (yanit.url.includes('invalid-url')) return 'workday: invalid-url yönlendirmesi';
   if (yanit.status === 404) return 'HTTP 404';
   if (yanit.status === 410) return 'HTTP 410';
