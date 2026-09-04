@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { requestDiscoverCatalog } from './kesfet-catalog.mjs';
 
 export const DISCOVER_CATEGORIES = {
   exhibition: "Sergi",
@@ -69,6 +70,7 @@ export interface DiscoverEvent {
   directionsUrl?: string;
   status: DiscoverStatus;
   updatedAt?: string;
+  createdAt?: string;
   applicationDeadline?: string;
   discountTerms?: string;
   ageLimit?: string;
@@ -125,6 +127,7 @@ export const mapDiscoverEvent = (r: any): DiscoverEvent => ({
   directionsUrl: r.directions_url || undefined,
   status: r.status,
   updatedAt: r.updated_at,
+  createdAt: r.created_at,
   applicationDeadline: r.application_deadline || undefined,
   discountTerms: r.discount_terms || undefined,
   ageLimit: r.age_limit || undefined,
@@ -162,6 +165,31 @@ export async function fetchDiscoverEvents() {
   );
   if (error) throw new Error(error.message);
   return (data || []).map(mapDiscoverEvent);
+}
+export interface DiscoverCatalogCursor { value: string; id: string }
+export interface DiscoverCatalogOptions {
+  city?: string;
+  category?: string;
+  period?: 'all' | 'today' | 'week' | 'month';
+  free?: boolean;
+  discount?: boolean;
+  query?: string;
+  sort?: 'newest' | 'upcoming';
+  cursor?: DiscoverCatalogCursor | null;
+  snapshot?: string | null;
+  signal?: AbortSignal;
+}
+export interface DiscoverCatalogPage {
+  events: DiscoverEvent[];
+  total: number;
+  hasMore: boolean;
+  nextCursor: DiscoverCatalogCursor | null;
+  snapshot: string;
+  facets: { cities: string[]; categories: Record<string, number>; free: number; discount: number };
+}
+export async function fetchDiscoverCatalog(options: DiscoverCatalogOptions = {}): Promise<DiscoverCatalogPage> {
+  const data = await requestDiscoverCatalog(supabase, options);
+  return { ...data, events: data.events.map(mapDiscoverEvent) };
 }
 export async function fetchDiscoverEventBySlug(slug: string) {
   const { data, error } = await (supabase.rpc as any)(

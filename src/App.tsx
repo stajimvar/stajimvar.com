@@ -1232,7 +1232,18 @@ export default function App() {
   }
   if (temizYol.startsWith('/kesfet/')) {
     const slug = temizYol.slice('/kesfet/'.length);
-    if (slug) return icerikSayfasi(<KesfetDetailPage slug={slug} onBack={() => navigate('/kesfet')} />);
+    if (slug)
+      return icerikSayfasi(
+        <KesfetDetailPage
+          slug={slug}
+          onBack={() => {
+            if (window.history.state?.__discoverCatalogReturn) window.history.back();
+            else navigate('/kesfet');
+          }}
+          girisGerekli={!session}
+          onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+        />,
+      );
   }
 
   /* Yönetim → Instagram bağlantı durumu. Uç yönetici jetonu istiyor. */
