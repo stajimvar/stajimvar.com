@@ -53,6 +53,24 @@ export interface Rehber {
   kategori: RehberKategori;
   /** Arama motorunun ve paylaşımın göreceği açıklama. */
   aciklama: string;
+  /**
+   * Yalnızca <title> için başlık — sayfadaki H1 değişmiyor.
+   *
+   * NEDEN İKİ AYRI ALAN
+   * -------------------
+   * H1 ile <title> aynı işi yapmıyor. H1 sayfayı AÇAN kişiye ne okuduğunu
+   * söylüyor; <title> ise arama sonucunda, sayfayı henüz açmamış kişiye
+   * hitap ediyor ve orada aranan kurum adlarının geçmesi işe yarıyor
+   * ("KYK TEV birlikte alınır mı" diye arayan kişi başlıkta o kelimeleri
+   * görmek istiyor).
+   *
+   * H1'i de o kurum listesiyle uzatmak sayfayı çirkinleştirirdi: ekranda
+   * tek ve net bir soru duruyor, arama sonucunda kurum adları da geçiyor.
+   *
+   * Boş bırakılırsa `baslik` kullanılıyor — yani mevcut rehberlerin hiçbiri
+   * etkilenmiyor.
+   */
+  seoBaslik?: string;
   icerik: React.ReactNode;
   /**
    * Sık sorulanlar.

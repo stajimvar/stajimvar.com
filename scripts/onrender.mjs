@@ -490,6 +490,7 @@ async function rehberleriCiz() {
     for (const r of REHBERLER) {
       sonuc[r.slug] = {
         baslik: r.baslik,
+        seoBaslik: r.seoBaslik,
         ozet: r.ozet,
         aciklama: r.aciklama,
         kategori: r.kategori,
@@ -1013,7 +1014,14 @@ async function main() {
 
     sayfaYaz(`/rehber/${r.slug}`, {
       gorsel: `/og/rehber-${r.slug}.png`,
-      baslik: `${r.baslik} | StajımVar`,
+      /*
+        <title> H1'DEN AYRILABİLİYOR
+
+        Arama sonucunda görünen başlıkta kurum adlarının geçmesi işe
+        yarıyor; sayfadaki H1'i aynı listeyle uzatmak ise sayfayı
+        bozuyor. `seoBaslik` yazılmamışsa hiçbir şey değişmiyor.
+      */
+      baslik: `${r.seoBaslik || r.baslik} | StajımVar`,
       aciklama: ozetle(r.aciklama || r.ozet),
       /*
         Gövde = başlık + rehberin ÇİZİLMİŞ tam içeriği + sık sorulanlar.

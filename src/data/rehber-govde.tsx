@@ -89,6 +89,19 @@ export interface Blok {
     genislik: number;
     yukseklik: number;
   };
+  /*
+    ETKİLEŞİMLİ BLOK.
+
+    Rehberlerin neredeyse hepsi düz metin ve öyle kalmalı: her yazıya bir
+    bileşen yazmak, `metinRehberi` fabrikasının varlık sebebini yok eder.
+    Ama bir avuç konu gerçekten hesap ya da seçim istiyor (burs çakışma
+    matrisi gibi) ve o içeriği metne çevirmek okuyucuya yardım etmiyor.
+
+    Kaçış kapısı DAR: bileşen dışarıda yazılıyor, burada yalnızca yerine
+    konuyor. Ön render `renderToStaticMarkup` ile çizdiği için bileşenin
+    ilk hâli statik HTML'e giriyor — tarayıcı boş bir kutu görmüyor.
+  */
+  bilesen?: React.ReactNode;
 }
 
 const Baslik: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -140,6 +153,7 @@ export const GovdeCizimi: React.FC<{ bloklar: Blok[] }> = ({ bloklar }) => (
         {b.tablo && (
           <KarsilastirmaTablosu sutunlar={b.tablo.sutunlar} satirlar={b.tablo.satirlar} />
         )}
+        {b.bilesen}
         {b.uyari && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-relaxed">
             {metniCiz(b.uyari, `${i}-u`)}
@@ -156,6 +170,8 @@ export interface RehberTaslagi {
   ozet: string;
   konu: KonuId;
   aciklama: string;
+  /* Yalnızca <title> için; boşsa `baslik` kullanılıyor (bkz. Rehber tipi). */
+  seoBaslik?: string;
   hizliCevap: string;
   bloklar: Blok[];
   sss: SoruCevap[];
@@ -183,6 +199,7 @@ export function metinRehberi(t: RehberTaslagi): Rehber {
     kategori: 'ogrenci',
     konu: t.konu,
     aciklama: t.aciklama,
+    seoBaslik: t.seoBaslik,
     hizliCevap: t.hizliCevap,
     etiketler: t.etiketler,
     oneCikan: t.oneCikan,

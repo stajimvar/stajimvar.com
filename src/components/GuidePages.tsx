@@ -419,7 +419,16 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
   const icerikRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    document.title = rehber ? `${rehber.baslik} | StajımVar` : 'Rehber bulunamadı | StajımVar';
+    /*
+      ÖN RENDER İLE AYNI BAŞLIK
+
+      Ön render `seoBaslik || baslik` yazıyor. Burada yalnızca `baslik`
+      kullanılsaydı aynı adres, ilk açılışta bir başlık, uygulama içinden
+      gidildiğinde başka bir başlık gösterirdi.
+    */
+    document.title = rehber
+      ? `${rehber.seoBaslik || rehber.baslik} | StajımVar`
+      : 'Rehber bulunamadı | StajımVar';
     if (rehber) {
       const etiket = document.querySelector('meta[name="description"]');
       if (etiket) etiket.setAttribute('content', rehber.aciklama);

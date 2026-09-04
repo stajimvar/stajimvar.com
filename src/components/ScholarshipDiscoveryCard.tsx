@@ -6,6 +6,7 @@ import { opportunityTypeLabel } from '../lib/opportunity-domain.mjs';
 import { opportunityAmount } from '../lib/firsat-degerlendirme.mjs';
 import { bursEtiketleri, bursTarihDurumu, bursTutariVar } from '../lib/burs-kesif.mjs';
 import { ZamanTupu } from './ZamanTupu';
+import { BursUyumRozeti } from './BursCakismaMatrisi';
 
 /**
  * Burs keşif kartı.
@@ -179,6 +180,25 @@ export const ScholarshipDiscoveryCard: React.FC<{
           pozitif renk dili ve süre yaklaştıkça dolan bir gösterge.
         */}
         <ZamanTupu item={item} className="mt-auto pt-1" sikisik={serit} />
+
+        {/*
+          ÇAKIŞMA SATIRI HER İKİ VARYANTTA DA VAR
+
+          Önce `serit` görünümünde gizlenmişti; ama `serit` yalnızca MOBİL
+          şeritte sabit genişlik demek — /burslar sayfasının asıl gruplu
+          görünümü de bu varyantı kullanıyor ve ≥sm'de zaten ızgaraya
+          dönüyor. Gizlemek, satırı tam da gösterilmesi gereken sayfada
+          yok ediyordu.
+
+          Yükseklik kaygısı yersiz: kartta tutar, etiketler ve zaman tüpü
+          de koşullu çiziliyor; kart en baştan değişken yükseklikte.
+          Üstelik satır yalnızca tanınan kurumlarda çıkıyor.
+        */}
+        <BursUyumRozeti
+          tur={item.opportunityType}
+          baslik={item.title}
+          kurumAdi={item.organizationName}
+        />
 
         <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-2">
           {item.verifiedAt ? (

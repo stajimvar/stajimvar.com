@@ -20,6 +20,8 @@ import { opportunityAmount } from '../lib/firsat-degerlendirme.mjs';
 import { bursTarihDurumu, turkiyeGeneliMi } from '../lib/burs-kesif.mjs';
 import { ZamanTupu } from './ZamanTupu';
 import { ScholarshipCover } from './ScholarshipCover';
+import { BursUyumMiniBlok } from './BursCakismaMatrisi';
+import { kurumEslestir } from '../lib/burs-cakisma.mjs';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 
 /**
@@ -83,6 +85,22 @@ export const OpportunityDetailPage: React.FC<{
   const devamEylemleri = React.useMemo(
     () => firsatEylemleri(item?.opportunityType),
     [item?.opportunityType]
+  );
+
+  /*
+    ÇAKIŞMA BLOĞU YALNIZCA BURSLARDA
+
+    Eşleştirme başlık ve kurum adından yapılıyor; bir yarışma ilanı da
+    "belediye" kelimesini taşıyabildiği için önce ilan TÜRÜNE bakılıyor.
+    Tür burs değilse ya da kurum tanınmıyorsa blok hiç çizilmiyor —
+    tanımadığımız bir bursu tanıdık bir satıra oturtmak yanlış bilgi olur.
+  */
+  const uyumKurumu = React.useMemo(
+    () =>
+      item && (item.opportunityType === 'scholarship' || item.opportunityType === 'kyk')
+        ? kurumEslestir(item.title, item.organizationName)
+        : null,
+    [item]
   );
 
   React.useEffect(() => {
@@ -376,6 +394,15 @@ export const OpportunityDetailPage: React.FC<{
           tarafından değiştirilebilir; başvurmadan önce resmî kaynağı kontrol et.
         </p>
       </section>
+
+      {/*
+        BAŞKA BURS ALIYORSAN
+
+        Kaynağı gördükten sonra gelen ikinci soru bu. Metin burada elle
+        yazılmıyor: matris sayfasıyla aynı veri katmanından besleniyor, yoksa
+        biri güncellenip diğeri eskirdi.
+      */}
+      <BursUyumMiniBlok kurumId={uyumKurumu} />
 
       {/* ---------------------------- kontrol listesi ---------------------- */}
       <section className="rounded-3xl border border-gray-200 bg-white p-5 sm:p-8">

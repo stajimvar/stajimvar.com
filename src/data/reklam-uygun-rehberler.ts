@@ -10,6 +10,7 @@
  * sitede her şeyi elerdi ve hiçbir şey anlatmazdı.
  */
 export const REKLAM_UYGUN_REHBERLER: readonly string[] = [
+  'burs-cakisma',
   'gonullu-staj-rehberi',
   'kyk-burs-ve-kredi',
   'staj-basvuru-epostasi',

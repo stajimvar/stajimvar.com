@@ -15,6 +15,7 @@ import {
 import type { StudentProfile } from '../types';
 import { ListingLogo } from './ListingLogo';
 import { ZamanTupu } from './ZamanTupu';
+import { BursUyumRozeti } from './BursCakismaMatrisi';
 import { DisBaglanti, FiltreBlogu, SecenekSatiri } from '../ui';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import {
@@ -1593,6 +1594,23 @@ export const Card: React.FC<{
           <ZamanTupu item={item} />
         </>
       )}
+
+      {/*
+        ÇAKIŞMA BİLGİSİ TAKVİMDEN BAĞIMSIZ
+
+        Bu satır önce zaman tüpünün yanına konmuştu ve farkında olmadan
+        "takvim açıklanmış" koşuluna bağlanmıştı: takvimi belli olmayan
+        kayıtlarda hiç çıkmıyordu. Oysa bir bursun KYK ile birlikte alınıp
+        alınamayacağı, başvurunun ne zaman açıldığıyla ilgili değil.
+
+        Kartta TEK SATIR; ayrıntısı ilan sayfasında ve
+        /rehber/burs-cakisma matrisinde — üçü de aynı veriden besleniyor.
+      */}
+      <BursUyumRozeti
+        tur={item.opportunityType}
+        baslik={item.title}
+        kurumAdi={item.organizationName}
+      />
 
       {/*
         UYGUNLUK — İDDİA DEĞİL, GEREKÇE
