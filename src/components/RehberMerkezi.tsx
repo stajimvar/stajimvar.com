@@ -4,6 +4,7 @@ import { SayfaKabugu } from './SayfaKabugu';
 import { RehberIzgarasi, RehberKarti, RehberKartiIskeleti } from './RehberKartlari';
 import { YolHaritasi } from './YolHaritasi';
 import { RehberSonuclari } from './RehberSonuclari';
+import { StajYollari } from './StajYollari';
 import { REHBERLER, KONULAR, konuEtiketi, type KonuId, type Rehber } from '../data/rehberler';
 import { BOLUMLER } from '../data/bolumler';
 import { STAJ_PROGRAMLARI } from '../data/stajProgramlari';
@@ -315,6 +316,16 @@ export const RehberMerkezi: React.FC<{
           Üst boşluk SayfaKabugu'ndan geliyor (py-6 sm:py-8) — mobilde 24,
           masaüstünde 32 piksel.
         */}
+        {/*
+          ÜÇ YOL EN ÜSTTE
+
+          YolHaritasi bir DİZİN bloğu (bölümler, araçlar, işverenler,
+          kariyer merkezleri) — "nereye göz atayım" sorusuna cevap veriyor.
+          Öğrencinin ilk sorusu ise "ben şu an neredeyim": arıyor mu, evrak
+          mı çıktı, bitiyor mu. Bu yüzden yolculuk bloğu dizinin üstünde.
+        */}
+        <StajYollari onNavigate={onNavigate} />
+
         <YolHaritasi onNavigate={onNavigate} ogrenci={ogrenci} />
 
         {/*
