@@ -1240,8 +1240,6 @@ export default function App() {
             if (window.history.state?.__discoverCatalogReturn) window.history.back();
             else navigate('/kesfet');
           }}
-          girisGerekli={!session}
-          onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
         />,
       );
   }
