@@ -121,6 +121,12 @@ export function useDiscoverCatalog(searchQuery: string, onSearchChange?: (query:
 
   return {
     filters, setFilters, filtersOpen, setFiltersOpen, data, phase: searchPending ? 'loading' as const : phase, loadingMore, moreError,
+    /*
+      Gecikmeli arama terimi dışarı da veriliyor: coğrafi sayım aynı terimi
+      kullanmak zorunda, yoksa haritadaki sayı ile listedeki kart sayısı
+      bir tuş vuruşu boyunca birbirini tutmaz.
+    */
+    query,
     loadMore, refresh: () => setRevision((value) => value + 1), navigateToDetail, clearFilters,
   };
 }

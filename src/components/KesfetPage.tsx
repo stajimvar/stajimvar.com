@@ -6,6 +6,10 @@ import { DISCOVER_CATEGORIES, type DiscoverEvent } from '../lib/kesfet';
 import { formatDiscoverDate, formatDiscoverLocation } from '../lib/kesfet-domain.mjs';
 import { EventCover } from './EventCover';
 import { useDiscoverCatalog } from './useDiscoverCatalog';
+import { useKesfetGeo } from './useKesfetGeo';
+import { KesfetGlobePanel } from './KesfetGlobePanel';
+import { KesfetGeoPanel } from './KesfetGeoPanel';
+import { gorunenKartlar } from './kesfet-geo-state.mjs';
 
 const verificationText = (event: DiscoverEvent) => {
   if (event.verificationStatus === 'verified' && event.sourceKind === 'official') return 'Resmî kaynaktan doğrulandı';
@@ -79,6 +83,30 @@ export const KesfetPage: React.FC<{
   const catalog = useDiscoverCatalog(searchQuery, onSearchChange);
   const { filters, setFilters, filtersOpen, setFiltersOpen, data, phase, loadingMore, moreError } = catalog;
   const setFilter = <K extends keyof typeof filters>(key: K, value: (typeof filters)[K]) => setFilters((current) => ({ ...current, [key]: value }));
+  /*
+    COĞRAFİ KEŞİF FİLTRELERİN YERİNE GEÇMİYOR
+
+    Aynı filtreler ve aynı arama terimi coğrafi sayıma da giriyor; küre,
+    harita ve kart listesi tek kümeyi gösteriyor. Sayım katalog ilk yanıtını
+    verdikten sonra isteniyor: kartlar ekrana ikinci bir isteği beklemeden
+    çıkıyor.
+  */
+  const geo = useKesfetGeo(filters, catalog.query, phase !== 'loading');
+  const geoActive = geo.layout.mapOpen;
+  const geoPhase = geo.phase === 'ready' ? 'ready' : geo.phase === 'error' ? 'error' : 'loading';
+  const listPhase = geoActive ? geoPhase : phase;
+  const listEvents = geoActive ? geo.visibleEvents : data?.events ?? [];
+  const listTotal = geoActive ? geo.events.length : data?.total ?? 0;
+  const listHasMore = geoActive ? geo.hasMore : Boolean(data?.hasMore);
+  /*
+    Harita ilk kart satırının YERİNE geçiyor: seçim varken o satırın üç
+    kartı ızgaradan düşüyor. Kesme yalnızca burada, çizim listesinde;
+    `listEvents` ve `listTotal` tam kümeyi tutmaya devam ettiği için
+    sayfalama ve toplam sayı etkilenmiyor, "Dünya" seçilince de üç kart
+    aynı karede geri geliyor.
+  */
+  const gridEvents = gorunenKartlar(listEvents, geo.layout) as DiscoverEvent[];
+  const selectedCountry = geo.breadcrumb.find((node) => node.level === 'country')?.code ?? null;
   const cities = [...new Set([...(data?.facets.cities ?? []), ...(filters.city ? [filters.city] : [])])];
   const activeFilters = [
     filters.city,
@@ -88,6 +116,7 @@ export const KesfetPage: React.FC<{
     filters.discount ? 'Öğrenci indirimli' : '',
   ].filter(Boolean);
   const hasFilters = activeFilters.length > 0 || Boolean(searchQuery.trim());
+  const hasNarrowing = hasFilters || geoActive;
 
   useEffect(() => {
     document.title = 'Öğrenci etkinlikleri ve fırsatları | StajımVar';
@@ -99,7 +128,12 @@ export const KesfetPage: React.FC<{
   return (
     <main className={`w-full ${SAYFA_GENISLIGI} mx-auto px-4 pb-[calc(120px+env(safe-area-inset-bottom))] pt-2 sm:px-6 sm:pt-3 lg:px-8 lg:pb-10 xl:px-10`}>
       <div className="grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-12">
-        <div className="space-y-4 lg:sticky lg:top-4 lg:col-span-3">
+        {/*
+          Sol sütun küre eklendiği için ekran boyundan uzun olabiliyor.
+          Yapışkan sütun kendi içinde kaydırılabilir: aksi hâlde filtre
+          panelinin alt yarısı geniş ekranda hiç erişilemez hâle gelirdi.
+        */}
+        <div className="space-y-4 lg:sticky lg:top-4 lg:col-span-3 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
           <h1 className="min-w-0 text-center text-[clamp(1.25rem,2.4vw,1.75rem)] font-extrabold leading-tight tracking-tight text-gray-950 lg:text-left">
             Şehrindeki etkinlikler, <span className="text-blue-600">tek listede</span>.
           </h1>
@@ -125,6 +159,15 @@ export const KesfetPage: React.FC<{
               {activeFilters.length > 0 && <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-extrabold text-white">{activeFilters.length}</span>}
             </button>
           </div>
+
+          {/* Küre başlık ile filtre panelinin arasında; panel kaldırılmadı, aşağı indi. */}
+          <KesfetGlobePanel
+            phase={geo.phase}
+            countries={geo.countries}
+            selectedCountry={selectedCountry}
+            onSelect={geo.select}
+            onReload={geo.reload}
+          />
 
           <div id="kesfet-filters" className={`${filtersOpen ? 'block' : 'hidden'} lg:block`}>
             <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
@@ -174,7 +217,13 @@ export const KesfetPage: React.FC<{
             <div>
               <h2 className="text-lg font-extrabold text-gray-900">Tüm etkinlikler</h2>
               <p data-testid="catalog-count" aria-live="polite" aria-atomic="true" className="mt-1 text-xs font-medium text-gray-500 tabular-nums sm:text-sm">
-                {phase === 'ready' && data ? `${data.total} etkinlik · ${data.events.length} gösteriliyor` : phase === 'loading' ? 'Etkinlikler yükleniyor…' : 'Liste yüklenemedi'}
+                {/*
+                  "gösteriliyor" ÇİZİLEN kartı sayıyor: harita ilk satırı
+                  aldığında o üç kart ekranda olmadığı için sayıya da
+                  girmiyor. Toplam ise `listTotal`: coğrafi seçim ve
+                  filtrelerin tam sonucu, kesmeden etkilenmiyor.
+                */}
+                {listPhase === 'ready' ? `${listTotal} etkinlik · ${gridEvents.length} gösteriliyor` : listPhase === 'loading' ? 'Etkinlikler yükleniyor…' : 'Liste yüklenemedi'}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -182,7 +231,7 @@ export const KesfetPage: React.FC<{
                 <option value="newest">En yeni eklenenler</option>
                 <option value="upcoming">Tarihi yaklaşanlar</option>
               </select>
-              <button type="button" aria-label="Listeyi yenile" title="Listeyi yenile" onClick={catalog.refresh} disabled={phase === 'loading'} className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:border-blue-400 disabled:opacity-50">
+              <button type="button" aria-label="Listeyi yenile" title="Listeyi yenile" onClick={() => { catalog.refresh(); geo.reload(); }} disabled={listPhase === 'loading'} className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:border-blue-400 disabled:opacity-50">
                 <RefreshCw className="h-4 w-4" aria-hidden />
               </button>
             </div>
@@ -194,38 +243,70 @@ export const KesfetPage: React.FC<{
               <button type="button" onClick={catalog.clearFilters} className="min-h-9 cursor-pointer font-bold text-blue-700 hover:underline">Filtreleri temizle</button>
             </div>
           )}
-          {phase === 'loading' && (
+          {/*
+            HARİTA, İLK KART SATIRININ YERİNDE
+
+            Sütunun tam genişliği geniş ekranda tam olarak üç kart eder;
+            harita o satırı ALIYOR, ilk satırın kartları ızgaradan geçici
+            olarak düşüyor (bkz. `gridEvents`), altındakiler yerinde kalıyor.
+            Seçim yokken bu blok hiç çizilmiyor ve ilk üç kart geri geliyor.
+          */}
+          {geoActive && (
+            <KesfetGeoPanel
+              breadcrumb={geo.breadcrumb}
+              node={geo.node}
+              regions={geo.regions}
+              pins={geo.pins}
+              unpinnedCount={geo.unpinnedCount}
+              center={geo.center}
+              onSelect={geo.select}
+              onOpenEvent={(slug) => catalog.navigateToDetail(`/kesfet/${slug}`, onNavigate)}
+            />
+          )}
+          {listPhase === 'loading' && (
             <div role="status" aria-label="Etkinlikler yükleniyor" className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
               {[1, 2, 3, 4, 5, 6].map((key) => <div key={key} aria-hidden className="h-44 animate-pulse rounded-2xl bg-gray-100 motion-reduce:animate-none sm:h-72" />)}
             </div>
           )}
-          {phase === 'error' && (
+          {listPhase === 'error' && (
             <div role="alert" className="rounded-2xl border border-rose-200 bg-white p-8 text-center">
               <p className="font-bold text-rose-800">Etkinlikler yüklenemedi.</p>
-              <button type="button" onClick={catalog.refresh} className="mt-3 min-h-11 cursor-pointer font-bold text-blue-700">Tekrar dene</button>
+              <button type="button" onClick={() => { catalog.refresh(); geo.reload(); }} className="mt-3 min-h-11 cursor-pointer font-bold text-blue-700">Tekrar dene</button>
             </div>
           )}
-          {phase === 'ready' && data && <>
-            {data.events.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
-                {data.events.map((event) => <EventCard key={event.id} event={event} onNavigate={(path) => catalog.navigateToDetail(path, onNavigate)} />)}
-              </div>
+          {listPhase === 'ready' && <>
+            {/*
+              "Sonuç yok" kararı KESİLMEMİŞ listeye bakıyor. Seçimde üç ya da
+              daha az etkinlik varsa hepsi haritanın aldığı satırdadır ve
+              ızgara boş kalır; orada "bulunamadı" demek doğru olmazdı.
+            */}
+            {listEvents.length > 0 ? (
+              gridEvents.length > 0 && (
+                <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+                  {gridEvents.map((event) => <EventCard key={event.id} event={event} onNavigate={(path) => catalog.navigateToDetail(path, onNavigate)} />)}
+                </div>
+              )
             ) : (
               <div className="rounded-2xl border border-gray-200 bg-white px-5 py-10 text-center">
                 <Sparkles className="mx-auto h-8 w-8 text-blue-500" aria-hidden />
-                <h2 className="mt-3 font-bold text-gray-900">{hasFilters ? 'Bu filtrelere uygun etkinlik bulunamadı' : 'Henüz yayında etkinlik bulunmuyor'}</h2>
-                <p className="mt-2 text-sm text-gray-600">{hasFilters ? 'Filtreleri değiştirerek yeniden deneyebilirsin.' : 'Yeni etkinlikler eklendiğinde burada görünecek.'}</p>
+                <h2 className="mt-3 font-bold text-gray-900">{hasNarrowing ? 'Bu filtrelere uygun etkinlik bulunamadı' : 'Henüz yayında etkinlik bulunmuyor'}</h2>
+                <p className="mt-2 text-sm text-gray-600">
+                  {geoActive ? 'Haritada üst seviyeye çıkarak ya da filtreleri değiştirerek yeniden deneyebilirsin.'
+                    : hasFilters ? 'Filtreleri değiştirerek yeniden deneyebilirsin.'
+                    : 'Yeni etkinlikler eklendiğinde burada görünecek.'}
+                </p>
+                {geoActive && <button type="button" onClick={geo.reset} className="mt-3 min-h-11 cursor-pointer font-bold text-blue-700 hover:underline">Tüm dünyayı göster</button>}
               </div>
             )}
-            {moreError && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-center text-sm">
+            {!geoActive && moreError && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-center text-sm">
               <p className="text-rose-800">Sonraki etkinlikler yüklenemedi. Açık etkinlikler yerinde duruyor.</p>
               <button type="button" onClick={catalog.loadMore} className="mt-2 min-h-11 cursor-pointer font-bold text-blue-700">Yeniden yükle</button>
             </div>}
-            {data.hasMore && !moreError && <div className="pt-2 text-center">
-              <button type="button" disabled={loadingMore} onClick={catalog.loadMore} className="min-h-12 w-full cursor-pointer rounded-xl border border-blue-200 bg-white px-8 py-3 text-sm font-bold text-blue-700 hover:bg-blue-50 disabled:cursor-wait disabled:opacity-60 sm:w-auto">
-                {loadingMore ? 'Yükleniyor…' : 'Daha fazla göster'}
+            {listHasMore && (geoActive || !moreError) && <div className="pt-2 text-center">
+              <button type="button" disabled={!geoActive && loadingMore} onClick={geoActive ? geo.showMore : catalog.loadMore} className="min-h-12 w-full cursor-pointer rounded-xl border border-blue-200 bg-white px-8 py-3 text-sm font-bold text-blue-700 hover:bg-blue-50 disabled:cursor-wait disabled:opacity-60 sm:w-auto">
+                {!geoActive && loadingMore ? 'Yükleniyor…' : 'Daha fazla göster'}
               </button>
-              {loadingMore && <span role="status" className="sr-only">Sonraki etkinlikler yükleniyor</span>}
+              {!geoActive && loadingMore && <span role="status" className="sr-only">Sonraki etkinlikler yükleniyor</span>}
             </div>}
           </>}
         </section>

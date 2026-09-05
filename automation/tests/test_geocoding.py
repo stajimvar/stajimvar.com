@@ -21,6 +21,7 @@ from event_import.geocoding import (
     NullProvider,
     build_query,
     konum_yeterince_kesin,
+    admin_uyusuyor,
     default_provider,
     geocode_event,
 )
@@ -39,7 +40,7 @@ class SahteSaglayici:
     def enabled(self) -> bool:
         return self.acik
 
-    def forward(self, query: str, *, country: str | None = None):
+    def forward(self, query: str, *, country: str | None = None, **kwargs):
         self.cagrilar.append((query, country))
         return self.koordinat
 
@@ -174,7 +175,7 @@ def test_saglayici_none_donunce_etkinlik_elenmiyor():
     """Geocode başarısızlığı sessiz: çağıran taraf None alıp devam ediyor."""
 
     class Bulamayan(SahteSaglayici):
-        def forward(self, query: str, *, country: str | None = None):
+        def forward(self, query: str, *, country: str | None = None, **kwargs):
             self.cagrilar.append((query, country))
             return None
 
@@ -443,3 +444,116 @@ def test_saklanan_her_koordinat_address_hassasiyetinde():
         country_name="Türkiye",
     )
     assert sonuc is not None and sonuc.precision == "address"
+
+
+# ------------------------------------------------- idari bölge uyuşması
+
+
+def test_baska_sehirdeki_ayni_ad_reddediliyor():
+    """Nokta seviyesinde ama yanlış şehirde: aynı adı taşıyan başka mekân."""
+    assert admin_uyusuyor(
+        sonuc_city="Ankara", sonuc_district=None,
+        beklenen_city="İstanbul", beklenen_district=None,
+    ) is False
+
+
+def test_turkce_buyuk_i_sehir_karsilastirmasini_bozmuyor():
+    assert admin_uyusuyor(
+        sonuc_city="Istanbul", sonuc_district=None,
+        beklenen_city="İstanbul", beklenen_district=None,
+    ) is True
+
+
+def test_bilinen_ilce_uyusmuyorsa_reddediliyor():
+    assert admin_uyusuyor(
+        sonuc_city="İstanbul", sonuc_district="Kadıköy",
+        beklenen_city="İstanbul", beklenen_district="Beyoğlu",
+    ) is False
+
+
+"""
+ÖLÇÜLEN GERÇEK HATA: ZİNCİRİN YANLIŞ ŞUBESİ
+
+"İstanbul Kitapçısı Kadıköy Şubesi" ve "... Karaköy Şubesi" üretimde AYNI
+koordinatı almıştı (40.9932, 29.1241 — Kadıköy). İkisi de POI seviyesinde
+olduğu için result_type filtresinden geçiyorlar.
+
+Bu kayıtların `district` alanı BOŞ ve `city` alanı İstanbul; dönen Kadıköy
+koordinatı da İstanbul'da. Yani bilinen admin karşılaştırması tek başına
+bu hatayı yakalayamıyor — yakalayan şey mekân adının kendisi.
+"""
+
+
+def test_karakoy_subesine_kadikoy_koordinati_reddediliyor():
+    assert admin_uyusuyor(
+        sonuc_city="İstanbul", sonuc_district="Kadıköy",
+        beklenen_city="İstanbul", beklenen_district=None,
+        venue_name="İstanbul Kitapçısı Karaköy Şubesi",
+    ) is False
+
+
+def test_kadikoy_subesine_kadikoy_koordinati_kabul_ediliyor():
+    """Doğru eşleşme elenmemeli; filtre yalnızca çelişkiyi ayıklıyor."""
+    assert admin_uyusuyor(
+        sonuc_city="İstanbul", sonuc_district="Kadıköy",
+        beklenen_city="İstanbul", beklenen_district=None,
+        venue_name="İstanbul Kitapçısı Kadıköy Şubesi",
+    ) is True
+
+
+def test_mekan_adinda_yer_adi_yoksa_engel_cikarilmiyor():
+    """Eksik veri cezalandırılmıyor: karşılaştıracak şey yoksa kabul."""
+    assert admin_uyusuyor(
+        sonuc_city="İstanbul", sonuc_district="Kadıköy",
+        beklenen_city="İstanbul", beklenen_district=None,
+        venue_name="Arter",
+    ) is True
+
+
+def test_hicbir_bilgi_yoksa_kabul():
+    assert admin_uyusuyor(
+        sonuc_city=None, sonuc_district=None,
+        beklenen_city=None, beklenen_district=None,
+    ) is True
+
+
+def _admin_yaniti(city, district):
+    class Oturum:
+        def get(self, url, params=None, timeout=None):
+            class Yanit:
+                def raise_for_status(self):
+                    return None
+
+                def json(self):
+                    return {"features": [{
+                        "geometry": {"coordinates": [29.1241, 40.9932]},
+                        "properties": {
+                            "result_type": "amenity",
+                            "rank": {"confidence": 0.9},
+                            "city": city,
+                            "district": district,
+                        },
+                    }]}
+
+            return Yanit()
+
+    return Oturum()
+
+
+def test_saglayici_yanlis_subeyi_reddedip_ayri_sayiyor():
+    """Uçtan uca: üretimdeki hata artık koordinat üretmiyor."""
+    saglayici = GeoapifyProvider(
+        api_key="k", session=_admin_yaniti("İstanbul", "Kadıköy"), min_interval=0
+    )
+    sonuc = geocode_event(
+        provider=saglayici,
+        address=None,
+        venue_name="İstanbul Kitapçısı Karaköy Şubesi",
+        city="İstanbul",
+        district=None,
+        country_name="Türkiye",
+    )
+    assert sonuc is None
+    assert saglayici.mismatched == 1
+    # Bölge reddinden AYRI sayılıyor: sonuç nokta seviyesindeydi.
+    assert saglayici.rejected == 0

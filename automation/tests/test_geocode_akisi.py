@@ -43,7 +43,7 @@ class SahteSaglayici:
     def enabled(self) -> bool:
         return True
 
-    def forward(self, query: str, *, country: str | None = None):
+    def forward(self, query: str, *, country: str | None = None, **kwargs):
         self.cagrilar.append(query)
         return self.koordinat
 

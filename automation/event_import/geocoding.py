@@ -85,6 +85,86 @@ BOLGE_SONUC_TURLERI = frozenset(
 EN_AZ_GUVEN = 0.5
 
 
+def _sadelestir(metin: str | None) -> str:
+    """Türkçe harfleri katlayıp karşılaştırılabilir hale getirir.
+
+    'İstanbul' ile 'Istanbul' aynı yer; casefold tek başına Türkçe büyük
+    İ'yi düz i'ye çevirmiyor.
+    """
+    if not metin:
+        return ""
+    esle = {"İ": "i", "I": "i", "ı": "i", "Ş": "s", "ş": "s", "Ğ": "g", "ğ": "g",
+            "Ü": "u", "ü": "u", "Ö": "o", "ö": "o", "Ç": "c", "ç": "c"}
+    return "".join(esle.get(h, h) for h in metin).lower().strip()
+
+
+def admin_uyusuyor(
+    *,
+    sonuc_city: str | None,
+    sonuc_district: str | None,
+    beklenen_city: str | None,
+    beklenen_district: str | None,
+    venue_name: str | None = None,
+) -> bool:
+    """Servisin bulduğu yer, etkinliğin bilinen idari bölgesiyle uyuşuyor mu.
+
+    NEDEN GEREKLİ
+    -------------
+    result_type kontrolü sonucun NOKTA olduğunu garanti ediyor ama DOĞRU
+    nokta olduğunu değil. Aynı adı taşıyan başka şehirdeki bir mekân da
+    POI seviyesinde döner ve filtreden geçer.
+
+    İKİNCİ KONTROL: MEKÂN ADINDAKİ YER ADI
+    --------------------------------------
+    Ölçüldü: "İstanbul Kitapçısı Kadıköy Şubesi" ve "... Karaköy Şubesi"
+    aynı koordinatı aldı. İkisinin de kayıtlı `district` alanı BOŞ ve
+    `city` alanı İstanbul; dönen Kadıköy koordinatı da İstanbul'da. Yani
+    bilinen admin karşılaştırması bu hatayı YAKALAYAMIYOR.
+
+    Yakalayan şey mekân adının kendisi: adında "Karaköy" geçen bir mekâna
+    Kadıköy koordinatı dönmüşse eşleşme yanlış. Bu yüzden etkinliğin
+    bilinen ilçesi yoksa mekân adı ilçe adayı olarak kullanılıyor.
+
+    Bilgi yoksa ENGEL ÇIKARILMIYOR: karşılaştıracak bir şey olmadığında
+    True dönüyor. Bu kontrol yanlışı eler, eksik veriyi cezalandırmaz.
+    """
+    sehir_bekleniyor = _sadelestir(beklenen_city)
+    sehir_geldi = _sadelestir(sonuc_city)
+    if sehir_bekleniyor and sehir_geldi and sehir_bekleniyor != sehir_geldi:
+        return False
+
+    ilce_geldi = _sadelestir(sonuc_district)
+    if not ilce_geldi:
+        return True
+
+    ilce_bekleniyor = _sadelestir(beklenen_district)
+    if ilce_bekleniyor:
+        return ilce_bekleniyor == ilce_geldi
+
+    """
+    İlçe bilinmiyor: mekân adı içinde BAŞKA bir ilçe adı geçiyor mu?
+
+    Yalnızca dönen ilçeyle çelişki aranıyor. Mekân adında hiç yer adı
+    yoksa ya da dönen ilçe adı zaten adın içindeyse eşleşme kabul
+    ediliyor — ad, elimizdeki tek ipucu.
+    """
+    ad = _sadelestir(venue_name)
+    if not ad:
+        return True
+    if ilce_geldi in ad:
+        return True
+    return not any(aday in ad for aday in ISTANBUL_ILCE_ADAYLARI if aday != ilce_geldi)
+
+
+#: Mekân adlarında sık geçen ve ilçe belirten adlar. Liste dar tutuldu:
+#: yalnızca "X Şubesi" kalıbında gerçekten karşılaşılanlar. Genişletmek
+#: serbest ama her ad bir yanlış pozitif riski taşıyor.
+ISTANBUL_ILCE_ADAYLARI = (
+    "kadikoy", "karakoy", "besiktas", "beyoglu", "sisli", "uskudar",
+    "fatih", "bakirkoy", "atasehir", "maltepe", "zeytinburnu", "eminonu",
+)
+
+
 def konum_yeterince_kesin(result_type: str | None, confidence: float | None) -> bool:
     """Sonuç bir NOKTA mı, yoksa bölge merkezi mi.
 
@@ -133,7 +213,7 @@ class GeocodeProvider(Protocol):
 
     def enabled(self) -> bool: ...
 
-    def forward(self, query: str, *, country: str | None = None) -> tuple[float, float] | None: ...
+    def forward(self, query: str, **kwargs) -> tuple[float, float] | None: ...
 
 
 class GeoapifyProvider:
@@ -181,6 +261,7 @@ class GeoapifyProvider:
         self._sleep = sleep
         self._used = 0
         self._rejected = 0
+        self._mismatched = 0
         self._last_call: float | None = None
 
     def enabled(self) -> bool:
@@ -201,6 +282,16 @@ class GeoapifyProvider:
         """
         return self._rejected
 
+    @property
+    def mismatched(self) -> int:
+        """Nokta bulundu ama başka bir idari bölgedeydi: kaç kez.
+
+        Reddedilenden ayrı: orada sonuç bölge merkeziydi, burada sonuç
+        gerçek bir nokta ama YANLIŞ nokta (başka şehir ya da zincirin
+        başka şubesi).
+        """
+        return self._mismatched
+
     def _bekle(self) -> None:
         """Saniyelik sınırın altında kalmak için gerekiyorsa uyu."""
         if self._last_call is None or self._min_interval <= 0:
@@ -209,7 +300,15 @@ class GeoapifyProvider:
         if gecen < self._min_interval:
             self._sleep(self._min_interval - gecen)
 
-    def forward(self, query: str, *, country: str | None = None) -> tuple[float, float] | None:
+    def forward(
+        self,
+        query: str,
+        *,
+        country: str | None = None,
+        beklenen_city: str | None = None,
+        beklenen_district: str | None = None,
+        venue_name: str | None = None,
+    ) -> tuple[float, float] | None:
         if not self.enabled():
             return None
         if self._used >= self._quota:
@@ -251,6 +350,17 @@ class GeoapifyProvider:
             self._rejected += 1
             return None
 
+        # Nokta ama DOĞRU nokta mı: aynı adı taşıyan başka yer olabilir.
+        if not admin_uyusuyor(
+            sonuc_city=nitelik.get("city"),
+            sonuc_district=nitelik.get("district") or nitelik.get("suburb"),
+            beklenen_city=beklenen_city,
+            beklenen_district=beklenen_district,
+            venue_name=venue_name,
+        ):
+            self._mismatched += 1
+            return None
+
         coords = ((ozellik.get("geometry") or {}).get("coordinates")) or []
         if len(coords) != 2:
             return None
@@ -274,7 +384,7 @@ class NullProvider:
     def enabled(self) -> bool:
         return False
 
-    def forward(self, query: str, *, country: str | None = None) -> tuple[float, float] | None:
+    def forward(self, query: str, **kwargs) -> tuple[float, float] | None:
         return None
 
 
@@ -378,7 +488,13 @@ def geocode_event(
     if precision != "address":
         return None
 
-    koordinat = provider.forward(query, country=country_code)
+    koordinat = provider.forward(
+        query,
+        country=country_code,
+        beklenen_city=city,
+        beklenen_district=district,
+        venue_name=venue_name,
+    )
     if koordinat is None:
         return None
 

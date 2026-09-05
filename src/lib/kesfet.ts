@@ -41,6 +41,16 @@ export interface DiscoverOccurrence {
 }
 export type DiscoverVerificationStatus =
   "unverified" | "pending_review" | "verified" | "needs_review";
+/**
+ * Koordinatın NEREDEN geldiği.
+ *
+ * 'address' kaydın kendi açık adresinden çözülmüş, bir binayı gösteriyor.
+ * Diğerleri kaynakta yazan bölge adından türetilmiş BÖLGE koordinatı.
+ * Harita yalnızca 'address' olanı nokta pini çiziyor; bölge merkezini
+ * etkinlik adresi gibi göstermek kullanıcıyı yanlış yere yollar.
+ */
+export type DiscoverGeocodePrecision =
+  "address" | "locality" | "admin2" | "admin1";
 export interface DiscoverEvent {
   id: string;
   occurrenceId?: string;
@@ -83,6 +93,18 @@ export interface DiscoverEvent {
   verificationStatus: DiscoverVerificationStatus;
   latitude?: number;
   longitude?: number;
+  /*
+    COĞRAFİ ALANLAR OPSİYONEL OKUNUYOR
+
+    20260918010000_discover_geo.sql kolonları ekledi, yani şema bunları
+    taşıyor. Yine de hepsi opsiyonel: bir kayıt henüz geocode edilmemiş
+    olabilir ve migration uygulanmamış bir ortama karşı da aynı kod
+    çalışıyor. Eksik alan hata değil, "bilinmiyor" demek.
+  */
+  countryCode?: string;
+  geoNodeId?: string;
+  geocodePrecision?: DiscoverGeocodePrecision;
+  geocodedAt?: string;
   proximityScore?: number;
   popularityScore?: number;
   diversityScore?: number;
@@ -141,6 +163,10 @@ export const mapDiscoverEvent = (r: any): DiscoverEvent => ({
   verificationStatus: r.verification_status || "unverified",
   latitude: r.latitude == null ? undefined : Number(r.latitude),
   longitude: r.longitude == null ? undefined : Number(r.longitude),
+  countryCode: r.country_code || undefined,
+  geoNodeId: r.geo_node_id || undefined,
+  geocodePrecision: r.geocode_precision || undefined,
+  geocodedAt: r.geocoded_at || undefined,
   proximityScore:
     r.proximity_score == null ? undefined : Number(r.proximity_score),
   popularityScore:
@@ -166,6 +192,38 @@ export async function fetchDiscoverEvents() {
   if (error) throw new Error(error.message);
   return (data || []).map(mapDiscoverEvent);
 }
+/**
+ * Coğrafi keşif için etkinlik kümesi.
+ *
+ * NEDEN AYRI BİR ÇAĞRI
+ * --------------------
+ * Küre "bu ülkede kaç etkinlik var" diye bir TOPLAM gösteriyor; katalog
+ * RPC'si ise sayfa döndürüyor. Sayfadan toplam çıkarılamaz. Sunucuda
+ * coğrafi toplama yapan bir RPC olmadığı için toplama burada, aynı
+ * kaynaktan okunan kümenin üzerinde yapılıyor.
+ *
+ * Tarih aralığı yine SUNUCUDA süzülüyor: katalog RPC'si de aynı
+ * `list_active_discover_events(p_start, p_end)` çağrısını sarmalıyor, yani
+ * iki taraf birebir aynı satır kümesinden besleniyor. Fonksiyon zaten
+ * "yayında + bitmemiş" garantisini taşıyor.
+ */
+export async function fetchDiscoverGeoEvents(
+  range: { start: Date; end: Date } | null,
+  signal?: AbortSignal,
+): Promise<DiscoverEvent[]> {
+  let request = (supabase.rpc as any)("list_active_discover_events", {
+    p_start: range ? range.start.toISOString() : null,
+    p_end: range ? range.end.toISOString() : null,
+  });
+  if (signal) request = request.abortSignal(signal);
+  const { data, error } = await request;
+  if (error) throw new Error(error.message);
+  if (!Array.isArray(data)) {
+    throw new Error("Coğrafi etkinlik listesi doğrulanamadı. Lütfen yeniden deneyin.");
+  }
+  return data.map(mapDiscoverEvent);
+}
+
 export interface DiscoverCatalogCursor { value: string; id: string }
 export interface DiscoverCatalogOptions {
   city?: string;
