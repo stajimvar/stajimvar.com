@@ -691,7 +691,7 @@ const KIRINTI_ADLARI = {
   ilan: 'Staj ilanları',
   firsatlar: 'Öğrenci fırsatları',
   sirket: 'Şirketler',
-  araclar: 'Hesaplama araçları',
+  araclar: 'Staj hesaplama araçları',
   isveren: 'İşverenler',
 };
 
@@ -1128,7 +1128,14 @@ async function main() {
   const sabitler = [
     ['/rehber', 'Öğrenci rehberi | StajımVar', "Stajdan bursa, KYK'dan yurda; öğrencilikte ihtiyaç duyacağın bilgiler resmî kaynağıyla, adım adım.", 'Öğrencilikte bilmen gerekenler, tek listede.'],
     ['/bolumler', 'Bölüme göre staj rehberi | StajımVar', `${bolumler.length} bölüm için: staj nerede yapılır, stajyer ne iş yapar, ne öğrenmeli.`, 'Bölüme göre staj'],
-    ['/araclar', 'Hesaplama araçları | StajımVar', 'Net hesaplama, YKS sıralama tahmini, staj ücreti ve staj günü hesaplama.', 'Hesaplama araçları'],
+    /*
+      BAŞLIK STAJ ARAÇLARINI ÖNE ALIYOR
+
+      Eski açıklama "Net hesaplama, YKS sıralama tahmini" ile başlıyordu:
+      staj sitesinin araç sayfasını sınav sorgularına eşliyordu. Sıra
+      düzeltildi; sınav araçları hâlâ sayfada ve açıklamada, ama sonda.
+    */
+    ['/araclar', 'Staj hesaplama araçları | StajımVar', 'Staj ücreti ve staj günü hesaplama; ayrıca net hesaplama ve YKS sıralama tahmini.', 'Staj hesaplama araçları'],
     ['/araclar/net-hesaplama', 'Net hesaplama (TYT, AYT, KPSS) | StajımVar', 'Doğru ve yanlış sayını gir, netini gör. TYT, AYT ve KPSS için.', 'Net hesaplama'],
     ['/araclar/siralama-tahmini', 'YKS sıralama tahmini | StajımVar', 'Puanın 2025 ÖSYM verilerine göre kaçıncı sıraya denk geliyor?', 'Sıralama tahmini'],
     ['/araclar/staj-ucreti-hesaplama', 'Staj ücreti hesaplama | StajımVar', '3308 sayılı kanuna göre stajyere en az ne kadar ödenmesi gerektiğini hesapla.', 'Staj ücreti hesaplama'],
@@ -1722,7 +1729,7 @@ async function main() {
   const anaSayfaBaglantilari = [
     ['/rehber', 'Öğrenci rehberi'],
     ['/bolumler', 'Bölüme göre staj'],
-    ['/araclar', 'Hesaplama araçları'],
+    ['/araclar', 'Staj hesaplama araçları'],
     ['/firsatlar', 'Öğrenci fırsatları'],
     ['/kesfet', 'Öğrenci etkinlikleri'],
     ['/isveren', 'İşverenler için'],

@@ -110,6 +110,7 @@ const girdiSinifi =
 
 import { ARACLAR } from './AraclarListesi';
 export { ARACLAR };
+import { STAJ_ARACLARI, SINAV_ARACLARI } from './AraclarListesi';
 
 interface HubProps {
   onBack: () => void;
@@ -118,7 +119,7 @@ interface HubProps {
 
 export const AracHub: React.FC<HubProps> = ({ onBack, onNavigate }) => {
   useEffect(() => {
-    document.title = 'Hesaplama araçları | StajımVar';
+    document.title = 'Staj hesaplama araçları | StajımVar';
   }, []);
 
   return (
@@ -126,7 +127,7 @@ export const AracHub: React.FC<HubProps> = ({ onBack, onNavigate }) => {
       <div className="space-y-6">
         <div className="space-y-2">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">
-            Hesaplama araçları
+            Staj hesaplama araçları
           </h1>
           <p className="text-gray-600 leading-relaxed">
             Kısa hesaplar. Hepsi tarayıcında çalışıyor; girdiğin hiçbir bilgi bize
@@ -134,8 +135,17 @@ export const AracHub: React.FC<HubProps> = ({ onBack, onNavigate }) => {
           </p>
         </div>
 
+        {/*
+          STAJ ARAÇLARI ÖNCE VE ASIL
+
+          Dört araç tek listede eşit ağırlıktaydı ve ilk iki sıra sınav
+          araçlarındaydı: staj sitesinde "Hesaplama araçları" başlığı
+          altında önce TYT neti görmek yanlış vaat. Araçlar silinmedi —
+          çalışıyorlar; yalnızca hangisinin bu sitenin işi olduğu
+          netleştirildi.
+        */}
         <ul className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-          {ARACLAR.map((a) => {
+          {STAJ_ARACLARI.map((a) => {
             const Ikon = a.ikon;
             return (
               <li key={a.slug} className="border-b border-gray-100 last:border-b-0">
@@ -157,6 +167,44 @@ export const AracHub: React.FC<HubProps> = ({ onBack, onNavigate }) => {
             );
           })}
         </ul>
+
+        {/*
+          SINAV ARAÇLARI AYRI BÖLÜMDE
+
+          Bunlar çalışan ve işe yarayan araçlar ama sitenin konusu değil.
+          Ayrı başlık altında ve ne oldukları yazılı duruyorlar; gizlemek
+          yerine doğru yere koymak.
+        */}
+        <div className="space-y-2 pt-2">
+          <h2 className="text-lg font-bold text-gray-900">Sınav araçları</h2>
+          <p className="text-sm leading-relaxed text-gray-600">
+            Bunlar staj değil sınav hesapları. Üniversiteye hazırlanırken ya da KPSS
+            çalışırken işine yarıyor; staj sürecinle ilgisi yok.
+          </p>
+          <ul className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+            {SINAV_ARACLARI.map((a) => {
+              const Ikon = a.ikon;
+              return (
+                <li key={a.slug} className="border-b border-gray-100 last:border-b-0">
+                  <button
+                    type="button"
+                    onClick={() => onNavigate(`/araclar/${a.slug}`)}
+                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-gray-50"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-500">
+                      <Ikon className="h-4.5 w-4.5" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-bold text-gray-900">{a.baslik}</span>
+                      <span className="block text-sm text-gray-500">{a.ozet}</span>
+                    </span>
+                    <ChevronRight className="h-5 w-5 shrink-0 text-gray-300" />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </div>
     </Kabuk>
   );
