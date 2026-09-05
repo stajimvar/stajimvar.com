@@ -28,6 +28,13 @@ jobs:
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      # Geocoding anahtarı. Adı bilerek VITE_ ile BAŞLAMIYOR: Vite yalnızca
+      # VITE_ önekli değişkenleri istemci paketine gömüyor, bu yüzden bu
+      # anahtarın tarayıcıya sızması yapısal olarak imkânsız.
+      #
+      # Secret tanımlı değilse değişken boş gelir; içe aktarma bunu bir hata
+      # saymıyor, yalnızca geocoding adımını atlıyor (bkz. event_import/run.py).
+      GEOAPIFY_API_KEY: ${{ secrets.GEOAPIFY_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -36,7 +43,7 @@ jobs:
           cache: pip
       - run: pip install -r automation/requirements.txt
       - name: Testler
-        run: python -m pytest automation/tests/test_event_import_domain.py automation/tests/test_event_source_adapters.py automation/tests/test_event_images.py automation/tests/test_event_import_run.py -q
+        run: python -m pytest automation/tests/test_event_import_domain.py automation/tests/test_event_source_adapters.py automation/tests/test_event_images.py automation/tests/test_event_import_run.py automation/tests/test_geocoding.py automation/tests/test_geocode_akisi.py -q
       - name: Etkinlikleri içe aktar
         shell: bash
         run: |
