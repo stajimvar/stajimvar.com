@@ -162,3 +162,70 @@ export function alanSayilari(kayitlar, metinAl) {
   }
   return say;
 }
+
+/* ------------------------------------------------------- bölüm → alan */
+
+/**
+ * Üniversite bölümünü ilan alanına bağlar.
+ *
+ * NEDEN AYRI BİR TABLO
+ * --------------------
+ * `alanEslestir` İLAN BAŞLIĞINDAN çıkarım yapıyor; bölüm sayfasında ise
+ * elimizde başlık değil, bilinen bir bölüm var. "Bilgisayar Mühendisliği"
+ * için tahmin yürütmeye gerek yok — hangi alana baktığı belli.
+ *
+ * ELLE YAZILDI, TÜRETİLMEDİ
+ * -------------------------
+ * Bölüm adından alan türetmek yanlış eşleşme üretiyor: "Gıda
+ * Mühendisliği" adında "mühendislik" geçiyor ama o bölümün stajı üretim
+ * ve kalite tarafında. Otuz dört satırı elle yazmak, otuz dört yanlış
+ * eşleşmeyi ayıklamaktan ucuz.
+ *
+ * Haritada olmayan bölüm `null` dönüyor ve o sayfada alan süzgeci
+ * uygulanmıyor — en yeni ilanlar gösteriliyor.
+ */
+export const BOLUM_ALANI = {
+  'bilgisayar-muhendisligi': 'yazilim',
+  'bilgisayar-programciligi': 'yazilim',
+  'makine-muhendisligi': 'muhendislik',
+  'elektrik-elektronik-muhendisligi': 'muhendislik',
+  'mekatronik': 'muhendislik',
+  'insaat-muhendisligi': 'muhendislik',
+  'mimarlik': 'muhendislik',
+  'harita-ve-geomatik-muhendisligi': 'muhendislik',
+  'metalurji-ve-malzeme-muhendisligi': 'uretim-kalite',
+  'kimya-muhendisligi': 'uretim-kalite',
+  'gida-muhendisligi': 'uretim-kalite',
+  'ziraat-muhendisligi': 'uretim-kalite',
+  'cevre-muhendisligi': 'uretim-kalite',
+  'is-sagligi-ve-guvenligi': 'uretim-kalite',
+  'endustri-muhendisligi': 'lojistik',
+  'lojistik': 'lojistik',
+  'uluslararasi-ticaret': 'lojistik',
+  'muhasebe-ve-vergi-uygulamalari': 'finans',
+  'iktisat': 'finans',
+  'isletme': 'finans',
+  'halkla-iliskiler-ve-pazarlama': 'pazarlama',
+  'radyo-televizyon-ve-sinema': 'pazarlama',
+  'grafik-tasarim': 'tasarim',
+  'moda-tasarimi': 'tasarim',
+  'ic-mimarlik': 'tasarim',
+  'giyim-uretim-teknolojisi': 'tasarim',
+  'hukuk': 'hukuk',
+  'psikoloji': 'insan-kaynaklari',
+  'turizm-ve-otel-yoneticiligi': 'satis',
+  'gastronomi-ve-mutfak': 'satis',
+  /*
+    Sağlık bölümleri BİLEREK haritada yok.
+
+    Hemşirelik, fizyoterapi ve tıbbi laboratuvar stajları ilanla değil
+    okul yerleştirmesiyle yürüyor — bu bölümlerin kendi sayfaları da
+    bunu söylüyor. O sayfalara "açık ilanlar" bloğu koymak, olmayan bir
+    yolu varmış gibi göstermek olur.
+  */
+};
+
+/** Bölümün ilan alanı; bilinmiyorsa null. */
+export function bolumunAlani(bolumSlug) {
+  return BOLUM_ALANI[bolumSlug] ?? null;
+}

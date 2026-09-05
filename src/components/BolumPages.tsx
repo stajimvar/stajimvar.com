@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { SayfaKabugu } from './SayfaKabugu';
 import { BolumIcerik } from './BolumIcerik';
+import { RehberdeIlanlar } from './RehberdeIlanlar';
+import { bolumunAlani } from '../lib/bolum-eslestirme.mjs';
 import { BolumEylemleri } from './BolumEylemleri';
 import type { StudentProfile } from '../types';
 import { BolumRozeti } from './BolumGorseli';
@@ -267,6 +269,23 @@ export const BolumPage: React.FC<
         <div onClick={baglantiyiYakala}>
           <BolumIcerik bolum={bolum} />
         </div>
+
+        {/*
+          BÖLÜMÜN AÇIK İLANLARI
+
+          Sayfa bölümü anlatıyordu ama işe götürmüyordu: "İncele" bir bilgi
+          sayfasına çıkıyordu, ilana değil. Oysa bu sayfaya gelen kişi zaten
+          o bölümün öğrencisi — aradığı şey staj.
+
+          Alan haritadan geliyor, tahminden değil (bkz. BOLUM_ALANI).
+          Sağlık bölümleri haritada YOK ve olmaması bilinçli: hemşirelik,
+          fizyoterapi ve tıbbi laboratuvar stajları ilanla değil okul
+          yerleştirmesiyle yürüyor, bu sayfalar da bunu söylüyor. Oralara
+          ilan bloğu koymak olmayan bir yolu varmış gibi göstermek olurdu.
+        */}
+        {bolumunAlani(bolum.slug) && (
+          <RehberdeIlanlar alan={bolumunAlani(bolum.slug)} onNavigate={onNavigate} />
+        )}
       </article>
     </Kabuk>
   );

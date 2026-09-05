@@ -29,11 +29,18 @@ import type { InternshipListing } from '../types';
  * değil. Yükleme sırasında da yer kaplamıyor.
  */
 export const RehberdeIlanlar: React.FC<{
-  /** Yazının konusu; alan eşleşmesi için başlık da veriliyor. */
-  baslik: string;
+  /**
+   * Alan doğrudan biliniyorsa (bölüm sayfası) `alan` veriliyor; rehber
+   * yazısında ise alan bilinmediği için `baslik`'tan çıkarılıyor.
+   * İkisi de yoksa en yeni ilanlar gösteriliyor.
+   */
+  baslik?: string;
+  alan?: string | null;
+  /** Bölüm sayfasında başlık farklı kuruluyor. */
+  basligiGizle?: boolean;
   onNavigate: (yol: string) => void;
   adet?: number;
-}> = ({ baslik, onNavigate, adet = 6 }) => {
+}> = ({ baslik, alan: verilenAlan, basligiGizle = false, onNavigate, adet = 6 }) => {
   const [ilanlar, setIlanlar] = React.useState<InternshipListing[] | null>(null);
 
   React.useEffect(() => {
@@ -57,7 +64,7 @@ export const RehberdeIlanlar: React.FC<{
         const hepsi = await fetchPublishedListings();
         if (iptal) return;
 
-        const alan = alanEslestir(baslik);
+        const alan = verilenAlan ?? (baslik ? alanEslestir(baslik) : null);
         const uyan = alan ? hepsi.filter((i) => alanEslestir(i.title) === alan) : [];
         /*
           Alanına uyanlar önce, sonra kalanlar. Yalnızca uyanları
@@ -73,11 +80,11 @@ export const RehberdeIlanlar: React.FC<{
     return () => {
       iptal = true;
     };
-  }, [baslik, adet]);
+  }, [baslik, verilenAlan, adet]);
 
   if (!ilanlar || ilanlar.length === 0) return null;
 
-  const alan = alanEslestir(baslik);
+  const alan = verilenAlan ?? (baslik ? alanEslestir(baslik) : null);
   const etiket = alan ? alanEtiketi(alan) : null;
 
   return (
