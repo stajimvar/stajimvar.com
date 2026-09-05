@@ -15,6 +15,7 @@ from supabase import create_client
 
 from .adapters import fetch_source
 from .domain import EventSource, event_fingerprint, normalize_event
+from .geocoding import build_query, default_provider, geocode_event
 from .http import OfficialHttpClient
 from .images import CoverResult, render_variants, upload_variants, validate_image
 from .repository import SupabaseEventRepository
@@ -63,6 +64,57 @@ class StorageCoverService:
         return upload_variants(self.storage, fingerprint, render_variants(response.content))
 
 
+class GeocodeService:
+    """Etkinliği koordinata çevirir; aynı sorguyu iki kez sormaz.
+
+    TOKEN YOKSA HİÇ KURULMUYOR
+
+    main() bu servisi yalnızca sağlayıcı etkinse yaratıyor. Yani anahtar
+    yokken ne nesne var ne çağrı; içe aktarma tamamen eskisi gibi akıyor.
+
+    AYNI ADRES TEKRAR SORULMUYOR
+
+    Geocoding ücretli ve kalıcı uç nokta kullanıyoruz. Kayıtta zaten aynı
+    `geocode_query` ile alınmış bir koordinat varsa servise gidilmiyor.
+    Sorgu değiştiyse (mekân adı ya da ilçe güncellendiyse) yeniden
+    soruluyor — çünkü artık başka bir yeri gösteriyor olabilir.
+    """
+
+    def __init__(self, provider, country_names: dict[str, str] | None = None):
+        self.provider = provider
+        self.country_names = country_names or {"TR": "Türkiye"}
+        self.calls = 0
+
+    def process(self, event, existing):
+        country_code = getattr(event, "country_code", None) or "TR"
+        hazir = build_query(
+            address=getattr(event, "address", None),
+            venue_name=getattr(event, "venue_name", None),
+            district=getattr(event, "district", None),
+            city=getattr(event, "city", None),
+            country_name=self.country_names.get(country_code),
+        )
+        if hazir is None:
+            return None
+        query, _ = hazir
+
+        if existing and existing.get("geocode_query") == query and existing.get("latitude") is not None:
+            return None
+
+        sonuc = geocode_event(
+            provider=self.provider,
+            address=getattr(event, "address", None),
+            venue_name=getattr(event, "venue_name", None),
+            district=getattr(event, "district", None),
+            city=getattr(event, "city", None),
+            country_name=self.country_names.get(country_code),
+            country_code=country_code,
+        )
+        if sonuc is not None:
+            self.calls += 1
+        return sonuc
+
+
 def reusable_cover(existing, event):
     if not existing or existing.get("cover_kind") != "official":
         return None
@@ -71,7 +123,7 @@ def reusable_cover(existing, event):
     return CoverResult(existing["card_image_url"], existing["detail_image_url"], existing.get("cover_kind") or "official")
 
 
-def run_source(source, adapter, repository, now: datetime, *, dry_run=False, cover_service=None) -> RunMetrics:
+def run_source(source, adapter, repository, now: datetime, *, dry_run=False, cover_service=None, geocode_service=None) -> RunMetrics:
     metrics = RunMetrics()
     candidates = adapter.fetch(source)
     metrics.found = len(candidates)
@@ -96,6 +148,10 @@ def run_source(source, adapter, repository, now: datetime, *, dry_run=False, cov
                 metrics.category_covers += int(cover is None)
                 result, event_id = repository.upsert(event, fingerprint, cover)
                 setattr(metrics, result, getattr(metrics, result) + 1)
+                # Geocoding upsert'ten SONRA: event_id gerekiyor ve
+                # başarısızlığı kaydın yazılmasını engellememeli.
+                if geocode_service:
+                    repository.save_geocode(event_id, geocode_service.process(event, existing))
                 for occurrence in event.occurrences:
                     repository.upsert_occurrence(event_id, occurrence, now)
                     seen_occurrence_ids.add((event_id, occurrence.source_occurrence_id))
@@ -140,6 +196,7 @@ def main() -> int:
     load_dotenv(Path(__file__).parents[1] / ".env")
     repository = None
     cover_service = None
+    geocode_service = None
     if not args.dry_run:
         url = os.environ.get("SUPABASE_URL")
         key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
@@ -148,6 +205,13 @@ def main() -> int:
         db = create_client(url, key)
         repository = SupabaseEventRepository(db)
         cover_service = StorageCoverService(db.storage)
+        # Sağlayıcı yalnızca anahtar varsa etkin; yoksa servis hiç
+        # kurulmuyor ve tek bir ağ çağrısı bile yapılmıyor.
+        saglayici = default_provider()
+        if saglayici.enabled():
+            geocode_service = GeocodeService(saglayici)
+        else:
+            print(json.dumps({"geocoding": "atlandi", "sebep": "GEOAPIFY_API_KEY yok"}, ensure_ascii=False))
     for config in configs:
         source = EventSource(
             config["id"], config["name"], config["base_url"],
@@ -156,8 +220,29 @@ def main() -> int:
         if repository:
             repository.ensure_source(source, config)
         adapter = ConfigAdapter(config, OfficialHttpClient())
-        metrics = run_source(source, adapter, repository, datetime.now().astimezone(), dry_run=args.dry_run, cover_service=cover_service)
+        metrics = run_source(source, adapter, repository, datetime.now().astimezone(), dry_run=args.dry_run, cover_service=cover_service, geocode_service=geocode_service)
         print(json.dumps({"source": source.id, **metrics.__dict__}, ensure_ascii=False))
+
+    """
+    GEOCODING ÖZETİ
+
+    Üç sayı ayrı ayrı raporlanıyor çünkü üç farklı sorunu anlatıyorlar:
+
+      istek     — servise kaç kez gidildi (kota takibi)
+      reddedilen— servis yanıt verdi ama sonuç bölge merkeziydi; yani
+                  kaynaktaki mekân adı tanınmıyor. Veri kalitesi sorunu.
+      yazilan   — gerçekten nokta koordinatı alınıp saklanan kayıt
+
+    Anahtarın kendisi ASLA basılmıyor; yalnızca etkin olup olmadığı.
+    """
+    if geocode_service is not None:
+        saglayici = geocode_service.provider
+        print(json.dumps({
+            "geocoding": "ozet",
+            "istek": getattr(saglayici, "used", 0),
+            "reddedilen_bolge_sonucu": getattr(saglayici, "rejected", 0),
+            "yazilan_koordinat": geocode_service.calls,
+        }, ensure_ascii=False))
     return 0
 
 

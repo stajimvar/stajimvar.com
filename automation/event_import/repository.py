@@ -122,6 +122,31 @@ class SupabaseEventRepository:
         inserted = self.db.table("discover_events").insert(payload).execute().data[0]
         return "inserted", inserted["id"]
 
+    def save_geocode(self, event_id: str, result) -> None:
+        """Koordinatı ve geocoding izlerini kaydeder.
+
+        AYRI YAZMA, UPSERT'E GÖMÜLMEDİ
+
+        upsert() adaptörden gelen alanları yazıyor; koordinat ise
+        adaptörden değil, dışarıdaki servisten geliyor ve token yoksa hiç
+        gelmiyor. İkisini birleştirmek, geocoding kapalıyken upsert
+        payload'ına None'lar basıp mevcut koordinatı silmek olurdu.
+
+        Burada yalnızca sonuç VARSA yazılıyor; yoksa tabloya dokunulmuyor.
+        """
+        if result is None:
+            return
+        self.db.table("discover_events").update(
+            {
+                "latitude": result.latitude,
+                "longitude": result.longitude,
+                "geocode_precision": result.precision,
+                "geocode_provider": result.provider,
+                "geocode_query": result.query,
+                "geocoded_at": datetime.now().astimezone().isoformat(),
+            }
+        ).eq("id", event_id).execute()
+
     def upsert_occurrence(
         self,
         event_id: str,

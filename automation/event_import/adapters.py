@@ -39,6 +39,31 @@ TR_MONTHS = {
 }
 
 
+def _ilk_metin(kaynak: Any, anahtarlar: tuple[str, ...]) -> str | None:
+    """Sözlükten ilk dolu alanı okur; yoksa None.
+
+    NEDEN SAVUNMACI
+
+    Kaynakların yükünde adres alanı BULUNABİLİR ama garanti değil: İzmir'in
+    venue nesnesi ve Konya'nın event nesnesi sürüm sürüm değişiyor. Alanı
+    zorunlu saymak, bugün çalışan içe aktarmayı yarın kırar; hiç okumamak
+    ise gerçekten var olan adresi çöpe atmak olur.
+
+    Bu yüzden aday anahtarlar sırayla deneniyor ve hiçbiri yoksa None
+    dönüyor. None = "kaynak adres vermedi" demek; uydurma yapılmıyor.
+    """
+    if not isinstance(kaynak, dict):
+        return None
+    for anahtar in anahtarlar:
+        deger = kaynak.get(anahtar)
+        if isinstance(deger, str) and deger.strip():
+            return deger.strip()
+    return None
+
+
+ADRES_ANAHTARLARI = ("address", "adres", "fullAddress", "addressText", "venueAddress", "location")
+
+
 def _local_iso(value: str | None) -> str | None:
     if not value:
         return None
@@ -106,6 +131,8 @@ def parse_izmir_sessions(payload: dict[str, Any]) -> list[EventCandidate]:
                 city="İzmir",
                 district=None,
                 venue_name=str(venue.get("name") or "").strip(),
+                # Adres yalnızca kaynağın venue nesnesinde gerçekten varsa.
+                address=_ilk_metin(venue, ADRES_ANAHTARLARI),
                 organizer=str(company.get("name") or "").strip() or None,
                 occurrences=occurrences,
             )
@@ -262,6 +289,7 @@ def parse_konya_next_event(html: str, page_url: str) -> EventCandidate:
         city="Konya",
         district=None,
         venue_name=str(event.get("venueName") or "").strip(),
+        address=_ilk_metin(event, ADRES_ANAHTARLARI),
         regular_price=regular_price,
         student_price=student_price,
         has_student_discount=student_price is not None,
@@ -383,6 +411,27 @@ def parse_wp_event_manager(html: str, page_url: str) -> EventCandidate:
     )
     location_box = location_heading.find_next_sibling() if location_heading else None
     venue = location_box.get_text(" ", strip=True) if location_box else ""
+    """
+    ADRES YALNIZCA AYRI BİR DÜĞÜMDE VARSA
+
+    WP Event Manager temaları konum kutusunda bazen mekân adının altına
+    ayrı bir adres öğesi basıyor, bazen yalnızca tek satır veriyor. Tek
+    satırı virgülden bölüp "ilki mekân, gerisi adres" varsaymak yapısal
+    bir TAHMİN olurdu ve yanlış adres üretirdi.
+
+    Bu yüzden yalnızca adres için ayrılmış bir düğüm aranıyor. Yoksa
+    address None kalıyor ve mevcut davranış (tüm metin venue_name) aynen
+    sürüyor.
+    """
+    address_box = (
+        location_box.select_one(".wpem-event-location-address, .wpem-event-address, address")
+        if location_box
+        else None
+    )
+    address_text = address_box.get_text(" ", strip=True) if address_box else None
+    if address_text and venue:
+        # Adres ayrı düğümdeyse mekân adı onsuz kalsın; ikisi tekrarlamasın.
+        venue = venue.replace(address_text, "").strip(" ,·|") or venue
     image_meta = soup.find("meta", attrs={"property": "og:image"}) or soup.find(
         "meta", attrs={"name": "twitter:image"}
     )
@@ -400,6 +449,7 @@ def parse_wp_event_manager(html: str, page_url: str) -> EventCandidate:
         city="",
         district=None,
         venue_name=venue,
+        address=address_text,
         is_free=any("ücretsiz" in label.casefold() for label in types),
     )
 
