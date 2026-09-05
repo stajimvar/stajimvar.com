@@ -1,5 +1,4 @@
 import React from 'react';
-import { fetchPublishedListings } from '../lib/queries';
 import { alanEslestir, alanEtiketi } from '../lib/bolum-eslestirme.mjs';
 import { ListingLogo } from './ListingLogo';
 import { konumEtiketi } from '../lib/sehir';
@@ -41,6 +40,20 @@ export const RehberdeIlanlar: React.FC<{
     let iptal = false;
     void (async () => {
       try {
+        /*
+          SUPABASE TEMBEL YÜKLENİYOR
+
+          `queries` modülü en üstte içe aktarılınca Supabase istemcisi de
+          modül yüklenirken kuruluyor ve `import.meta.env` okuyor. Ön
+          render Node'da çalıştığı için orada env yok: ÖLÇÜLDÜ, bu import
+          eklendiği anda ön render "VITE_SUPABASE_URL okunamadı" diyerek
+          DURDU ve dist/rehber tamamen boş kaldı — 71 rehberin ön render
+          edilmiş gövdesi, canonical'ı ve yapısal verisi üretilmedi.
+
+          İçeri alınması gereken şey yalnızca tarayıcıda çalışıyor; bu
+          yüzden import da yalnızca tarayıcıda, efektin içinde yapılıyor.
+        */
+        const { fetchPublishedListings } = await import('../lib/queries');
         const hepsi = await fetchPublishedListings();
         if (iptal) return;
 
