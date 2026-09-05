@@ -174,12 +174,29 @@ def main() -> None:
     # motoru onlari yalnizca liste sayfasindan bulabiliyordu.
     etkinlikler = (
         db.table("discover_events")
-        .select("slug,updated_at,starts_at,ends_at")
+        .select("slug,updated_at,starts_at,ends_at,short_description,description")
         .eq("status", "published")
         .execute()
         .data
         or []
     )
+
+    # Aciklamasi bos etkinlik haritaya girmiyor.
+    #
+    # On render bu sayfalari noindex ile basiyor (bkz. reklam-kapisi.mjs
+    # icindeki NO_TEXT kurali: aciklamasi olmayan sayfada ozgun metin diye
+    # yalnizca baslik kaliyor). Harita onlari yine de bildiriyordu; ayni
+    # adres icin "dizine alma" ve "dizine al" sinyallerini birlikte
+    # gondermek celiskili. Olculdu: 136 etkinligin 22'si bu durumdaydi.
+    #
+    # Kural JS tarafinda tanimli; burada AYNI kosulun kopyasi var, cunku
+    # site haritasi Python ve o modulu calistiramiyor. Kural degisirse iki
+    # yer birlikte guncellenmeli.
+    etkinlikler = [
+        e
+        for e in etkinlikler
+        if (e.get("short_description") or e.get("description") or "").strip()
+    ]
 
     bolumler = kayit_sluglari("bolumler.ts")
     rehberler = rehber_sluglari()

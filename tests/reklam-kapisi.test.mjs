@@ -144,9 +144,40 @@ test('C/E/G(index): kaynağı ya da bağlamı olmayan sayfa indekslenmiyor', () 
     indeksDegeri({ baslik: '', kaynakAdresi: 'https://x' }),
     { indeks: false, neden: 'INCOMPLETE' }
   );
+  /* Açıklaması hiç olmayan sayfada özgün metin diye yalnızca başlık kalıyor. */
   assert.deepEqual(
     indeksDegeri({ baslik: 'X', kaynakAdresi: 'https://x' }),
-    { indeks: false, neden: 'THIN_NO_VALUE' }
+    { indeks: false, neden: 'NO_TEXT' }
+  );
+
+  /*
+    TARİH + ŞEHİR TEK BAŞINA YETMEZ
+
+    Sinyal sayımı metnin uzunluğuna bakmıyordu ve her etkinliğin tarihi ile
+    şehri olduğu için pratikte hiçbir şeyi elemiyordu: ölçüldü, yayındaki
+    136 etkinliğin 136'sı indekse giriyordu ama 22'sinin açıklaması boştu.
+  */
+  assert.deepEqual(
+    indeksDegeri({
+      baslik: 'X',
+      kaynakAdresi: 'https://x',
+      sonKontrol: '2026-09-05',
+      ekBaglam: true,
+      aciklama: '   ',
+    }),
+    { indeks: false, neden: 'NO_TEXT' }
+  );
+
+  /* Kısa ama gerçek bir cümle + tarih + yer: eleme buraya uzanmıyor. */
+  assert.deepEqual(
+    indeksDegeri({
+      baslik: 'X',
+      kaynakAdresi: 'https://x',
+      sonKontrol: '2026-09-05',
+      ekBaglam: true,
+      aciklama: 'Kısa ama gerçek bir açıklama.',
+    }),
+    { indeks: true, neden: 'OK' }
   );
 });
 
