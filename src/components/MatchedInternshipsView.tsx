@@ -31,6 +31,8 @@ import { SonucYok, type AktifSuzgec } from './SonucYok';
 import { SonrakiAdim } from './SonrakiAdim';
 import { BasvuruSablonu } from './BasvuruSablonu';
 import { ilBul } from '../lib/sehir';
+import { BolumCipleri } from './BolumCipleri';
+import { alanaGoreSirala, alanSayilari } from '../lib/bolum-eslestirme.mjs';
 import { SirketSeridi } from './SirketSeridi';
 import { ILAN_KAYNAGI_PARCALI } from '../lib/urun-metni';
 
@@ -461,9 +463,19 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     ],
   );
 
+  /*
+    BÖLÜM TERCİHİ
+
+    Süzgeç DEĞİL, sıralama girdisi: seçim hiçbir ilanı listeden çıkarmıyor
+    (bkz. BolumCipleri). Bu yüzden `gecer` içine değil, sıralamanın en
+    sonuna uygulanıyor — kullanıcının seçtiği sıralama korunuyor, alanına
+    uyanlar o sıra içinde öne alınıyor.
+  */
+  const [bolumAlani, setBolumAlani] = useState<string | null>(null);
+
   // Filter & sort
   const filteredListings = useMemo(() => {
-    return matchedData
+    const sirali = matchedData
       .filter(({ listing, match }) => gecer(listing, match))
       .sort((a, b) => {
         if (sortBy === 'match') {
@@ -506,7 +518,18 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         }
         return 0;
       });
-  }, [matchedData, gecer, sortBy]);
+    /*
+      YALNIZCA BAŞLIK
+
+      Şirket adı da verilince yanlış eşleşme çıktı: "invent.ai" içindeki
+      "ai", "İnsan Kaynakları Stajyeri" ilanını Yazılım alanına sokuyordu
+      (tarayıcıda görüldü). Alanı belirleyen şey pozisyonun adı; şirket
+      adı bu soruda gürültü.
+    */
+    return alanaGoreSirala(sirali, bolumAlani, (x: { listing: InternshipListing }) => [
+      x.listing.title,
+    ]);
+  }, [matchedData, gecer, sortBy, bolumAlani]);
 
   const topMatch = matchedData.sort((a, b) => b.match.overallScore - a.match.overallScore)[0];
 
@@ -569,6 +592,14 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     : 0;
 
   /** İlan veren farklı şirket sayısı. Profil yokken uyum yerine bu gösteriliyor. */
+  /* Çip sayıları TÜM eşleşen ilanlardan; seçim listeyi daraltmadığı için
+     sayı da seçime göre değişmiyor. */
+  const bolumSayilari = useMemo(
+    () =>
+      alanSayilari(matchedData, (x: { listing: InternshipListing }) => [x.listing.title]),
+    [matchedData],
+  );
+
   const companyCount = new Set(filteredListings.map((item) => item.listing.companyName)).size;
 
   /**
@@ -1291,6 +1322,12 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             bir tık uzağa taşıdık. Süzgeç panelindeki şirket listesi de
             çalışmaya devam ediyor, ikisi aynı seçimi paylaşıyor.
           */}
+          <BolumCipleri
+            secili={bolumAlani}
+            onSec={setBolumAlani}
+            sayilar={bolumSayilari as Record<string, number>}
+          />
+
           <SirketSeridi
             sirketler={seritSirketleri}
             secili={selectedCompanies}
