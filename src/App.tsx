@@ -1349,7 +1349,10 @@ export default function App() {
       return icerikSayfasi(
         <KesfetDetailPage
           slug={slug}
-          onBack={() => navigate('/kesfet')}
+          onBack={() => {
+            if (window.history.state?.__discoverCatalogReturn) window.history.back();
+            else navigate('/kesfet');
+          }}
           girisGerekli={!session}
           onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
         />,
@@ -2090,7 +2093,12 @@ export default function App() {
                   { yol: '/bolumler', etiket: 'Bölüme göre staj' },
                   { yol: '/staj-programlari', etiket: 'Büyük işverenlerde staj' },
                   { yol: '/universite-kariyer-merkezleri', etiket: 'Kariyer merkezleri' },
-                  { yol: '/araclar', etiket: 'Hesaplama araçları' },
+                  { yol: '/araclar', etiket: 'Staj hesaplama araçları' },
+                  /*
+                    Keşfet birincil menüden indi (bkz. Header.tsx notu);
+                    bağlantısı burada duruyor ki sayfa öksüz kalmasın.
+                  */
+                  { yol: '/kesfet', etiket: 'Öğrenci etkinlikleri' },
                 ],
               },
               {
