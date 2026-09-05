@@ -112,13 +112,26 @@ export async function fetchListingByIdPrefix(
 
 /** Şirket sayfası için: şirket bilgisi ve yayındaki ilanları. */
 export async function fetchCompanyPage(slug: string): Promise<{
+  /*
+    `sahiplenilmis` ve `verified` AYRI İKİ DURUM
+
+    Profil sayfası ikisini tek alan üzerinden okuyordu: `verified` false
+    olunca "Henüz sahiplenilmemiş" yazıyordu. Oysa bir şirket sahiplenilmiş
+    ama henüz doğrulanmamış olabiliyor — sahiplenme "yetkili olduğunu
+    söyleyen biri var" demek, doğrulama "biz kontrol ettik" demek. İkisini
+    aynı rozete bağlamak, sahiplenmiş ama doğrulanmamış şirkete "kimse
+    sahiplenmemiş" dedirtiyordu.
+  */
   company: { id: string; name: string; slug: string; logoUrl?: string; websiteUrl?: string;
-             industry?: string; location?: string; size?: string; description?: string; verified: boolean };
+             industry?: string; location?: string; size?: string; description?: string;
+             verified: boolean; sahiplenilmis: boolean };
   listings: InternshipListing[];
+  /** Aynı sektör ya da aynı şehirdeki, yayında ilanı olan şirketler. */
+  benzerler: { slug: string; name: string; logoUrl?: string; industry?: string }[];
 } | null> {
   const { data: company, error } = await supabase
     .from('companies')
-    .select('id,name,slug,logo_url,website_url,industry,location,size,description,verified')
+    .select('id,name,slug,logo_url,website_url,industry,location,size,description,verified,claimed_at')
     .eq('slug', slug)
     .maybeSingle();
 
@@ -134,7 +147,69 @@ export async function fetchCompanyPage(slug: string): Promise<{
 
   if (listErr) fail('Şirket ilanları yüklenemedi', listErr);
 
+  /*
+    BENZER ŞİRKETLER
+
+    "Bu şirketin başka açık ilanı yok" tek başına çıkmaz sokaktı: öğrenci
+    sayfaya geliyor, ilan bulamıyor ve geri dönmekten başka yolu olmuyor.
+    Benzer şirket, o noktada gösterilebilecek en yakın gerçek alternatif.
+
+    "Benzer" burada UYDURULMUYOR: yalnızca aynı sektör ya da aynı merkez
+    şehir eşleşiyor. İkisi de boşsa liste boş dönüyor ve bölüm hiç
+    çizilmiyor — rastgele şirket önermek, alakasız bir sayfaya
+    yönlendirmek olurdu.
+
+    Yalnızca YAYINDA İLANI OLAN şirketler öneriliyor; ilanı olmayan bir
+    şirket sayfasına göndermek çıkmaz sokağı bir adım öteye taşımak olur.
+    Tek sorgu ve sınırlı: ilanlardan şirketler türetilip yerelde
+    tekilleştiriliyor.
+  */
+  let benzerler: { slug: string; name: string; logoUrl?: string; industry?: string }[] = [];
+  if (company.industry || company.location) {
+    const { data: digerIlanlar } = await supabase
+      .from('listings')
+      .select('company_id, companies(slug,name,logo_url,industry,location)')
+      .eq('status', 'published')
+      .neq('company_id', company.id)
+      .limit(300);
+
+    /*
+      SEKTÖR ÖNCE, ŞEHİR SONRA
+
+      İlk sürüm sektör ve şehri EŞİT sayıyordu ve tarayıcıda görüldü:
+      Novartis (İlaç) sayfasında "benzer" olarak BESTSELLER (moda),
+      Kepekçi & Sepetçi (hukuk) ve Peak (oyun) çıkıyordu — hepsi yalnızca
+      "İstanbul" eşleşmesiydi. İstanbul'da 41 şirket var, yani şehir tek
+      başına hiçbir şey ayırt etmiyor ve "benzer" kelimesi anlamsızlaşıyor.
+
+      Artık sektör eşleşmeleri önce alınıyor; şehir yalnızca yer kalırsa
+      dolduruyor. Aynı sektörde kimse yoksa liste yine de anlamlı kalıyor
+      ("aynı şehirde staj alan başka şirketler").
+    */
+    const gorulen = new Set<string>();
+    const sektorden: typeof benzerler = [];
+    const sehirden: typeof benzerler = [];
+
+    for (const satir of digerIlanlar ?? []) {
+      const s = (satir as { companies?: Record<string, string | null> }).companies;
+      if (!s?.slug || gorulen.has(s.slug)) continue;
+      const sektorUyar = Boolean(company.industry) && s.industry === company.industry;
+      const sehirUyar = Boolean(company.location) && s.location === company.location;
+      if (!sektorUyar && !sehirUyar) continue;
+      gorulen.add(s.slug);
+      (sektorUyar ? sektorden : sehirden).push({
+        slug: s.slug,
+        name: s.name ?? s.slug,
+        logoUrl: s.logo_url ?? undefined,
+        industry: s.industry ?? undefined,
+      });
+    }
+
+    benzerler = [...sektorden, ...sehirden].slice(0, 6);
+  }
+
   return {
+    benzerler,
     company: {
       id: company.id,
       name: company.name,
@@ -147,6 +222,7 @@ export async function fetchCompanyPage(slug: string): Promise<{
       location: company.location ?? undefined,
       description: company.description ?? undefined,
       verified: company.verified,
+      sahiplenilmis: company.claimed_at != null,
     },
     listings: (rows as unknown as ListingRowWithCompany[]).map(toInternshipListing),
   };

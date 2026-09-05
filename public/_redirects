@@ -14,6 +14,52 @@
 /sirketler   /isveren   301
 /sirketler/*   /isveren   301
 
+# ESKİ SLUG: /sirket/stajimvar-deneme
+#
+# StajımVar'ın kendi şirket profili `stajimvar-deneme` slug'ıyla açılmıştı
+# ve açıklamasında "deneme hesabıdır, gerçek bir işveren değildir" yazıyordu.
+# Kayıt silinmedi — silmek ona bağlı iki ilanı, şirket üyeliğini ve sahiplik
+# kaydını da götürürdü. Slug yerinde güncellendi (bütün yabancı anahtarlar
+# company_id üzerinden, slug üzerinden değil), açıklama gerçek metinle
+# değiştirildi.
+#
+# Bu yönlendirme kanonik profil ÇALIŞTIĞI DOĞRULANDIKTAN SONRA eklendi:
+# önce eklenseydi var olmayan bir adrese kalıcı yönlendirme vermiş olurduk.
+/sirket/stajimvar-deneme   /sirket/stajimvar   301
+
+# ÇIPLAK /sirket İŞVEREN SAYFASININ KOPYASIYDI
+#
+# App.tsx'te iki ayrı rota (`/sirket` ve `/isveren/ilan-ver`) BİREBİR aynı
+# `IsverenGirisi` bileşenini çiziyordu: aynı içerik, iki public adres.
+# Kanonik adres `/isveren/ilan-ver`.
+#
+# Kural JOKERSİZ, yani yalnızca çıplak /sirket eşleşiyor. Şirket profilleri
+# (/sirket/<slug>) ve panel yolları (/sirket/ilanlar, /sirket/basvuranlar,
+# /sirket/profil, /sirket/ilan) etkilenmiyor — hepsinin ardında bir yol
+# parçası var.
+/sirket   /isveren/ilan-ver   301
+
+# BAŞLIĞI TÜRKÇELEŞTİRİLEN ÜÇ İLAN
+#
+# İlan adresi başlıktan üretiliyor (/ilan/<slug>-<id öneki>). Bu üç ilanın
+# başlığı sonradan Türkçeleştirildi, yani adresleri de değişti. Eski
+# adresler sitemap üzerinden arama motoruna girmişti ve şimdi 404 dönüyor.
+#
+# Kimlik öneki değişmediği için hangi ilan olduğu belli: yeni adrese kalıcı
+# yönlendirme veriliyor. Ana sayfaya atmak yerine ilanın kendisine
+# göndermek, gelen ziyaretçinin aradığı şeyi bulmasını sağlıyor.
+/ilan/it-intern-a0de0769   /ilan/it-stajyeri-a0de0769   301
+/ilan/uzun-vadeli-full-stack-gelistirici-stajyeri-4bead62e   /ilan/uzun-donem-full-stack-gelistirici-stajyeri-4bead62e   301
+/ilan/customer-success-intern-12431c8d   /ilan/customer-success-stajyeri-12431c8d   301
+
+# favicon.ico
+#
+# Tarayıcılar sayfada <link rel="icon"> olsa bile kökten /favicon.ico
+# istiyor. Dosya yoktu, yani her ziyarette bir 404 üretiliyordu. Simge
+# public/favicon.png olarak duruyor; ayrı bir .ico üretip iki dosyayı ayrı
+# ayrı güncel tutmak yerine kalıcı yönlendirme veriliyor.
+/favicon.ico   /favicon.png   301
+
 # SPA YEDEĞİ ARTIK BURADA DEĞİL
 #
 # Eskiden burada `/*  /index.html  200` vardı ve sitedeki her hatalı adres

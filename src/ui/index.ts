@@ -27,4 +27,5 @@ export { Skeleton, SkeletonMetin } from './Skeleton';
 export { BottomNavigation, BottomNavigationItem } from './BottomNavigation';
 export { Serit } from './Serit';
 export { FiltreBlogu, SecenekSatiri } from './Filtre';
+export { DisBaglanti } from './DisBaglanti';
 export * from './tokens';

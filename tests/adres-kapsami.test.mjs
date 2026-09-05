@@ -21,6 +21,7 @@ const DIST = path.join(KOK, 'dist');
 
 const app = fs.readFileSync(path.join(KOK, 'src', 'App.tsx'), 'utf8');
 const araKatman = fs.readFileSync(path.join(KOK, 'functions', '_middleware.ts'), 'utf8');
+const yonlendirmeler = fs.readFileSync(path.join(KOK, 'public/_redirects'), 'utf8');
 /* Yasal ve kurumsal adresler ayrı bir tabloda duruyor. */
 const yasal = fs.readFileSync(path.join(KOK, 'src', 'components', 'LegalPage.tsx'), 'utf8');
 
@@ -49,13 +50,36 @@ function onRenderVar(yol) {
   return fs.existsSync(path.join(DIST, yol.replace(/^\//, '') + '.html'));
 }
 
+/*
+  ÜÇÜNCÜ KAPSAM YOLU: KALICI YÖNLENDİRME
+
+  Test önce yalnızca iki yol tanıyordu: ön render edilmiş sayfa ya da ara
+  katmanın uygulama adresi. Üçüncü bir geçerli durum var — adres
+  `_redirects` ile 301 veriyorsa da 404 dönmüyor. Çıplak /sirket bu duruma
+  düştü: işveren sayfasının kopyasıydı, kanonik adrese yönlendirildi.
+
+  Testin koruduğu şey "her rota ön render edilmiş olsun" değil, "hiçbir
+  rota 404 dönmesin". 301 bunu sağlıyor.
+*/
+function yonlendirmeVar(yol) {
+  return yonlendirmeler
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .some((s) => {
+      const p = s.split(/\s+/);
+      return p.length >= 3 && /^30[12]$/.test(p[2]) && (p[0] === yol || p[0] === `${yol}/*`);
+    });
+}
+
 test('App.tsx rotalarının hepsi ya ön render ya ara katman kapsamında', () => {
   if (!fs.existsSync(path.join(DIST, 'index.html'))) {
     console.log('dist yok — adres kapsamı testi atlandı');
     return;
   }
 
-  const acikta = appRotalari().filter((y) => !onRenderVar(y) && !araKatmanKapsami(y));
+  const acikta = appRotalari().filter(
+    (y) => !onRenderVar(y) && !araKatmanKapsami(y) && !yonlendirmeVar(y),
+  );
   assert.deepEqual(
     acikta,
     [],

@@ -1,5 +1,6 @@
 import { metinRehberi } from '../rehber-govde';
 import type { Rehber } from '../rehberler';
+import { BursCakismaMatrisi } from '../../components/BursCakismaMatrisi';
 
 /**
  * Burs ve KYK rehberleri.
@@ -114,6 +115,10 @@ export const BURS_REHBERLERI: Rehber[] = [
         paragraflar: [
           'Öğrencilerin en çok tereddüt ettiği konulardan biri: bir burs alırken ikincisine başvurmak ' +
             'doğru mu, sorun çıkar mı. Sorun çıkaran şey ikinci bursun kendisi değil, beyanın yanlış olması.',
+          'Bu sayfa genel kuralı anlatıyor. Belirli iki kurumu merak ediyorsan — "KYK alıyorum, TEV’e ' +
+            'başvurabilir miyim" gibi — [hangi burslar aynı anda alınır](/rehber/burs-cakisma) ' +
+            'sayfasındaki matriste **çift çift bak**: sekiz kurumun yirmi sekiz çifti, her biri ' +
+            'dayandığı resmî belgeyle birlikte listeli.',
         ],
       },
       {
@@ -164,6 +169,179 @@ export const BURS_REHBERLERI: Rehber[] = [
     ],
     kaynaklar: [
       { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr', kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü', tur: 'kurum' },
+    ],
+    sonrakiAdim: {
+      etiket: 'Açık bursları gör',
+      yol: '/burslar',
+      aciklama: 'Koşulları resmî kaynağıyla birlikte listeledik.',
+    },
+  }),
+
+  metinRehberi({
+    slug: 'burs-cakisma',
+    baslik: 'Hangi burslar aynı anda alınır?',
+    /*
+      <title> H1'DEN UZUN
+
+      Bu soruyu arayan öğrenci kurum adıyla arıyor ("kyk tev birlikte
+      alınır mı"). Arama sonucunda o adların görünmesi işe yarıyor; ama H1'i
+      de kurum listesiyle uzatmak sayfayı bozardı. Ekranda tek ve net bir
+      soru duruyor, arama sonucunda kurumlar da geçiyor.
+
+      Başlığa YIL YAZILMIYOR: "2026" gömülseydi adres her ocak ayında
+      ölür, biriken bağlantılar boşa giderdi. Tarih matrisin hücrelerinde,
+      kaynağın yanında duruyor.
+    */
+    seoBaslik: 'Hangi burslar aynı anda alınır? KYK, TEV, VGM',
+    ozet: 'Sekiz kurum, yirmi sekiz çift, her biri resmî kaynağıyla.',
+    konu: 'burs',
+    etiketler: ['burs çakışma', 'kyk tev', 'vgm burs', 'çifte burs', 'tübitak 2205', 'birlikte burs'],
+    oneCikan: true,
+    guncelleme: '2026-09-04',
+    aciklama:
+      'KYK bursu, KYK öğrenim kredisi, TEV, VGM, MEV, TÜBİTAK 2205, belediye ve üniversite ' +
+      'burslarından hangileri birlikte alınır? Her çift, dayandığı resmî belgeyle birlikte.',
+    hizliCevap:
+      'Tek bir kural yok; cevap hangi iki bursu sorduğuna bağlı. KYK bursu ile KYK öğrenim kredisi ' +
+      'aynı anda alınamıyor, KYK bursu ile VGM bursu da birlikte yürümüyor. TEV ise 1 Eylül 2026 ' +
+      'duyurusuyla başka burs alma koşulunu kaldırdı ve KYK bursunu açıkça izin verilenler arasında ' +
+      'saydı. Belediye ve üniversite burslarında merkezî bir kural yok: koşul her kurumun kendi ilan ' +
+      'metninde yazıyor. Aşağıdaki matriste sekiz kurumun yirmi sekiz çiftini, her birinin dayandığı ' +
+      'resmî belgeyle birlikte listeledik.',
+    bloklar: [
+      {
+        paragraflar: [
+          'Bu sayfa bir kural koymuyor; kurumların kendi yazdıklarını yan yana getiriyor. Her hücrenin ' +
+            'altında o hücreyi doğrulayan belgenin adresi ve belgenin okunduğu tarih duruyor. ' +
+            'Kaynağını gösteremediğimiz hiçbir çifte "olur" yazmadık.',
+          'Kurallar değişiyor. Yıllarca "TEV bursu alan KYK alamaz" diye bilinen koşul, TEV\'in ' +
+            '1 Eylül 2026 tarihli duyurusuyla kalktı. Bu yüzden bir hücreye bakarken tarihine de bak; ' +
+            'başvurmadan önce kurumun kendi sayfasını açmak hâlâ en doğrusu.',
+        ],
+      },
+      {
+        bilesen: <BursCakismaMatrisi />,
+      },
+      {
+        baslik: 'Neye göre karar veriliyor',
+        paragraflar: [
+          'Kamu kurumlarının öğrenciye doğrudan burs ödemesi 5102 sayılı Kanun\'la sınırlanmış; ' +
+            'kanun bu kurumların öğrencilerini Kredi ve Yurtlar Kurumu\'na bildirmesini istiyor. ' +
+            'Bakanlığın Burs Yönetmeliği de bu kapsamdaki bir kamu kurumundan burs almayı tercih eden ' +
+            'öğrencinin KYK bursunun kesileceğini yazıyor. Kısacası iki kamu bursu genellikle üst üste ' +
+            'binmiyor.',
+          'Vakıf bursları bu kapsamın dışında: TEV ve MEV birer vakıf, kamu kurumu değil. Bu yüzden ' +
+            'KYK tarafında onları engelleyen bir hüküm yok; belirleyici olan vakfın kendi koşulları.',
+          'Belediyeler ayrı bir yerde duruyor. Kanundaki "belediyeler hariç" ibaresi Anayasa ' +
+            'Mahkemesi\'nce iptal edilmiş ve belediye yardımları ayrı bir bildirim rejimine bağlanmış. ' +
+            'Ortada tek bir merkezî kural olmadığı için matriste belediye satırları "belirsiz": ' +
+            'kendi belediyenin ilanına bakman gerekiyor.',
+        ],
+      },
+      {
+        baslik: 'Ne yapmalı',
+        sirali: [
+          'Matristen kendi çiftine bak; hücrenin kaynağını açıp kurumun güncel metnini kendin gör.',
+          '"Belirsiz" ya da "koşullu" çıkan çiftte kuruma yaz ve yazılı cevap al. Sözlü cevap bir şey ispatlamıyor.',
+          'Başvuru formundaki "başka burs alıyor musun" sorusuna doğru cevap ver.',
+          'Yeni bir burs almaya başladığında mevcut kurumu bilgilendir; çoğu kurum bunu şart koşuyor.',
+        ],
+        uyari:
+          'Kredi ile burs aynı şey değil ve bazı kurumlar ikisini ayrı değerlendiriyor. Farkı ' +
+          '[KYK burs ve öğrenim kredisi](/rehber/kyk-burs-ve-kredi) ve ' +
+          '[karşılıksız ve geri ödemeli burs farkı](/rehber/karsiliksiz-ve-geri-odemeli-burs-farki) ' +
+          'sayfalarında anlattık.',
+      },
+      {
+        baslik: 'Yanlış beyanın sonucu',
+        paragraflar: [
+          'Kurumlar öğrenci beyanına güveniyor ama denetim de yapıyor. Yanlış beyan tespit edildiğinde ' +
+            'burs kesilebiliyor ve ödenen tutar geri istenebiliyor; MEV gibi kurumlar bunu kendi ' +
+            'sayfalarında burs kesme sebebi olarak açıkça sayıyor. İki bursu birden almak çoğu zaman ' +
+            'sorun değil — sorun, aldığını yazmamak.',
+          'Konunun ayrıntısı [aynı anda birden fazla burs](/rehber/ayni-anda-birden-fazla-burs) ' +
+            'sayfasında. Sana burs vaat edip para ya da bilgi isteyen mesajlar için ' +
+            '[burs dolandırıcılığı](/rehber/burs-dolandiriciligi) sayfasına bak.',
+        ],
+      },
+    ],
+    sss: [
+      {
+        soru: 'KYK bursu ile TEV bursu birlikte alınır mı?',
+        cevap:
+          'TEV, 1 Eylül 2026 tarihli duyurusunda bursunun KYK bursu da dahil olmak üzere diğer kamu veya özel kurum burslarıyla birlikte alınabileceğini yazdı. Duyuru yeni dönemde katılacak bursiyerleri anlatıyor; hâlihazırda TEV bursiyeriysen kendi dönemin için TEV\'e sormak gerekiyor.',
+      },
+      {
+        soru: 'KYK bursu ile KYK öğrenim kredisi aynı anda alınır mı?',
+        cevap:
+          'Alınmıyor. KYK\'nın sıkça sorulan sorular sayfasında burs alan öğrenciye kredi, kredi alan öğrenciye burs ödemesi yapılamayacağı yazıyor. Başvuruda ikisinden biri seçiliyor.',
+      },
+      {
+        soru: 'Öğrenim kredisi burs sayılır mı?',
+        cevap:
+          'Kredi geri ödenen bir destek, burs ise geri ödenmiyor. Birçok kurum ikisini ayrı değerlendiriyor ama hepsi değil. Örneğin VGM kılavuzu yalnızca karşılıksız burs ve yardımları dışlıyor, krediye hiç değinmiyor; bu yüzden o hücreyi belirsiz bıraktık.',
+      },
+      {
+        soru: 'Yemek veya ulaşım desteği burs sayılır mı?',
+        cevap:
+          'Genellikle sayılmıyor, çünkü belirli bir gideri karşılıyor ve tutarı düşük. Yine de başvuru formunda soruluyorsa yazmak gerekiyor; kararı kurum veriyor.',
+      },
+      {
+        soru: 'Aldığım bursu yazmazsam ne olur?',
+        cevap:
+          'Yanlış beyan tespit edildiğinde burs kesilebiliyor ve ödenen tutar geri istenebiliyor. Kurumlar bunu kendi burs kesme koşulları arasında sayıyor. İki bursu birden almak çoğu çiftte sorun değil; sorun, aldığını beyan etmemek.',
+      },
+    ],
+    kaynaklar: [
+      {
+        etiket: 'KYGM — Sıkça Sorulan Sorular (Kredi/Burs)',
+        adres: 'https://kygm.gsb.gov.tr/sayfalar/2446/3200/sikca-sorulan-sorular-kredi-burs.aspx',
+        kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü',
+        tur: 'belge',
+        destekledigi: 'KYK bursu ile öğrenim kredisinin aynı anda alınamadığı.',
+      },
+      {
+        etiket: 'Gençlik ve Spor Bakanlığı Burs Yönetmeliği',
+        adres: 'https://www.resmigazete.gov.tr/eskiler/2023/11/20231103-1.htm',
+        kurum: 'Resmî Gazete',
+        tur: 'belge',
+        destekledigi: 'Kamu kurumundan burs almayı tercih eden öğrencinin KYK bursunun kesildiği (m.16/2).',
+      },
+      {
+        etiket: '5102 sayılı Kanun',
+        adres: 'https://www.mevzuat.gov.tr/mevzuatmetin/1.5.5102.pdf',
+        kurum: 'Mevzuat Bilgi Sistemi',
+        tur: 'belge',
+        destekledigi: 'Kamu kurumlarının öğrenciye doğrudan burs ödeyememesi ve belediyelerin ayrı rejimi (m.2, m.3).',
+      },
+      {
+        etiket: 'TEV — Bursun Diğer Burslarla Birlikte Alınmasına İlişkin Bilgilendirme',
+        adres: 'https://www.tev.org.tr/duyuru/tr/72/TEV-Bursunun-Diger-Burslarla-Birlikte-Alinmasina-Iliskin-Bilgilendirme',
+        kurum: 'Türk Eğitim Vakfı',
+        tur: 'belge',
+        destekledigi: 'TEV bursunun KYK bursu dahil diğer burslarla birlikte alınabildiği.',
+      },
+      {
+        etiket: 'VGM Yükseköğrenim Bursu Başvuru Kılavuzu',
+        adres: 'https://burs.vgm.gov.tr/HHYS_BELGELER/Kilavuz/HHYSDoc842908.pdf',
+        kurum: 'Vakıflar Genel Müdürlüğü',
+        tur: 'belge',
+        destekledigi: 'KYK bursu ve kamu kurumu bursu alanlara VGM bursu verilmediği.',
+      },
+      {
+        etiket: 'MEV — Burslar Hakkında Sıkça Sorulan Sorular',
+        adres: 'https://www.mev.org.tr/sayfa/burslar-hakkinda-sss',
+        kurum: 'Millî Eğitim Vakfı',
+        tur: 'belge',
+        destekledigi: 'MEV başvuru koşulları ve burs kesme sebepleri arasında başka kurum bursunun geçmediği.',
+      },
+      {
+        etiket: 'TÜBİTAK 2205 Lisans Burs Programı Çağrı Duyurusu',
+        adres: 'https://tubitak.gov.tr/sites/default/files/2025-04/2205_Lisans_Burs_Programi_Cagri_Duyurusu_2025_1.pdf',
+        kurum: 'TÜBİTAK BİDEB',
+        tur: 'belge',
+        destekledigi: 'Bursiyerin yalnızca BİDEB\'in başka bir programından burs alamadığı (md. 9.1.8).',
+      },
     ],
     sonrakiAdim: {
       etiket: 'Açık bursları gör',

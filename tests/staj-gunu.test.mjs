@@ -49,9 +49,19 @@ test('cumartesi seçimi sonucu değiştiriyor', () => {
 });
 
 test('sabit resmî tatil düşülüyor', () => {
-  /* 29 Ekim 2026 perşembe: iş günü olacakken tatil olduğu için atlanıyor. */
+  /*
+    26 Ekim 2026 pazartesi başlayan 5 iş günlük staj:
+      26 Pzt tam (1) · 27 Sal tam (2) · 28 Çar YARIM (2,5) ·
+      29 Per Cumhuriyet Bayramı · 30 Cum tam (3,5) · 31-1 hafta sonu ·
+      2 Pzt (4,5) · 3 Sal (5,5) → biter.
+
+    Eskiden 3 Kasım değil 2 Kasım çıkıyordu: 28 Ekim tam iş günü sayılıyordu.
+    2429 sayılı Kanun'a göre 28 Ekim saat 13.00'ten sonra tatil, yani yarım
+    iş günü. Yarım günü tam saymak öğrenciye çalışmadığı yarım günü
+    çalışmış gibi yazıyordu.
+  */
   const tatilli = stajBitisi({ baslangic: '2026-10-26', gunSayisi: 5 });
-  assert.equal(gunAdi(tatilli.bitis), '2026-11-02');
+  assert.equal(gunAdi(tatilli.bitis), '2026-11-03');
   assert.ok(tatilli.atlanan >= 1, '29 Ekim atlanmalı');
 });
 
@@ -123,4 +133,83 @@ test('geçersiz girdide takvim boş', () => {
   assert.deepEqual(stajTakvimi({ baslangic: '', gunSayisi: 20 }), []);
   assert.deepEqual(stajTakvimi({ baslangic: '2026-09-01', gunSayisi: 0 }), []);
   assert.deepEqual(stajTakvimi({ baslangic: 'bozuk', gunSayisi: 20 }), []);
+});
+
+/* ---------------------------------------------- otomatik resmî tatiller */
+
+import { stajPlani } from '../src/lib/staj-gunu.mjs';
+import { yilinTatilleri, yilKapsamda, anahtar } from '../src/lib/resmi-tatiller.mjs';
+
+test('dinî bayramlar otomatik düşülüyor — kullanıcı girmiyor', () => {
+  /*
+    Ramazan Bayramı 2026: 20-22 Mart (Diyanet). 18 Mart çarşamba başlayan
+    staj bu üç günü kendiliğinden atlamalı; eskiden kullanıcının "ek tatil"
+    kutusuna 3 yazması gerekiyordu, yazmazsa hesap sessizce yanlış çıkıyordu.
+  */
+  const plan = stajPlani({ baslangic: '2026-03-18', gunSayisi: 10, ekTatil: 0 });
+  const adlar = plan.cikarilanlar.map((c) => c.ad);
+  assert.ok(
+    adlar.some((a) => a.includes('Ramazan Bayramı 1. gün')),
+    'Ramazan Bayramı otomatik düşmeli',
+  );
+  /*
+    Bayramın 2. ve 3. günü 2026'da cumartesi-pazara denk geliyor. Zaten
+    çalışılmıyor, ama çıkarılma sebebi olarak bayram adı yazılıyor — "neden
+    çıkarıldı" listesinde "Cumartesi" demek doğru ama eksik olurdu.
+  */
+  const bayram = plan.gunler.filter((g) => (g.ad || '').startsWith('Ramazan Bayramı'));
+  assert.equal(bayram.length, 4, 'arife + üç bayram günü adlandırılmalı');
+});
+
+test('kurban bayramı ve arifesi', () => {
+  /* 2026: arife 26 Mayıs (yarım), bayram 27-30 Mayıs (tam). */
+  const plan = stajPlani({ baslangic: '2026-05-25', gunSayisi: 8 });
+  const harita = new Map(plan.gunler.map((g) => [anahtar(g.tarih), g]));
+  assert.equal(harita.get('2026-05-26').durum, 'yarim', 'arife yarım gün');
+  assert.equal(harita.get('2026-05-27').durum, 'resmi', 'bayram 1. gün tam tatil');
+  /* 30 Mayıs 2026 cumartesi: hafta sonu ama adı bayramın 4. günü. */
+  assert.equal(harita.get('2026-05-30').ad, 'Kurban Bayramı 4. gün');
+});
+
+test('yarım gün 0,5 iş günü sayılıyor', () => {
+  const plan = stajPlani({ baslangic: '2026-05-26', gunSayisi: 1 });
+  const ilk = plan.gunler[0];
+  assert.equal(ilk.durum, 'yarim');
+  assert.equal(ilk.sira, 0.5, 'arife yarım gün sayılmalı');
+});
+
+test('çıkarılan günler ad ve tarihle raporlanıyor', () => {
+  const plan = stajPlani({ baslangic: '2026-04-20', gunSayisi: 10 });
+  const nisan23 = plan.cikarilanlar.find((c) => anahtar(c.tarih) === '2026-04-23');
+  assert.ok(nisan23, '23 Nisan çıkarılanlar listesinde olmalı');
+  assert.equal(nisan23.ad, 'Ulusal Egemenlik ve Çocuk Bayramı');
+  assert.equal(nisan23.durum, 'resmi');
+});
+
+test('yıl geçişi: aralıkta başlayan staj sonraki yılın tatillerini biliyor', () => {
+  /* 28 Aralık 2026 başlayan 60 iş günlük staj 2027'ye taşıyor. */
+  const plan = stajPlani({ baslangic: '2026-12-28', gunSayisi: 60 });
+  assert.ok(plan, 'yıl aşan staj hesaplanmalı');
+  assert.ok(plan.bitis.getFullYear() === 2027, 'bitiş 2027 olmalı');
+  const yilbasi = plan.cikarilanlar.find((c) => anahtar(c.tarih) === '2027-01-01');
+  assert.ok(yilbasi, '1 Ocak 2027 düşülmeli');
+  const ramazan = plan.cikarilanlar.find((c) => anahtar(c.tarih) === '2027-03-09');
+  assert.ok(ramazan, '2027 Ramazan Bayramı düşülmeli');
+});
+
+test('kuruma özel izin resmî tatilin üstüne ekleniyor', () => {
+  const izinsiz = stajPlani({ baslangic: '2026-09-01', gunSayisi: 20, ekTatil: 0 });
+  const izinli = stajPlani({ baslangic: '2026-09-01', gunSayisi: 20, ekTatil: 3 });
+  assert.equal(izinli.atlanan, izinsiz.atlanan + 3);
+  assert.ok(izinli.bitis > izinsiz.bitis);
+});
+
+test('tatil listesi yıl bazlı ve kapsam bildiriliyor', () => {
+  assert.equal(yilKapsamda(2026), true);
+  assert.equal(yilKapsamda(2099), false, 'yazılmamış yıl kapsam dışı olmalı');
+  const t2026 = yilinTatilleri(2026);
+  assert.equal(t2026.get('2026-01-01').ad, 'Yılbaşı');
+  assert.equal(t2026.get('2026-10-28').yarim, true, '28 Ekim yarım gün');
+  assert.equal(t2026.get('2026-10-29').yarim, false, '29 Ekim tam gün');
+  assert.equal(t2026.get('2026-03-20').ad, 'Ramazan Bayramı 1. gün');
 });

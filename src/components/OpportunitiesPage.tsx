@@ -15,7 +15,8 @@ import {
 import type { StudentProfile } from '../types';
 import { ListingLogo } from './ListingLogo';
 import { ZamanTupu } from './ZamanTupu';
-import { FiltreBlogu, SecenekSatiri } from '../ui';
+import { BursUyumRozeti } from './BursCakismaMatrisi';
+import { DisBaglanti, FiltreBlogu, SecenekSatiri } from '../ui';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import {
   fetchOpportunities,
@@ -131,7 +132,21 @@ export const OpportunitiesPage: React.FC<{
     kayboluyor ve o görünüm paylaşılamıyordu. Süzgeçlerle aynı yere taşındı.
   */
   const arsivGoster = filters.arsiv;
-  const takvimsizGoster = filters.takvimsiz;
+  /*
+    KATEGORİ ROTASINDA TAKVİMSİZLER GİZLENMİYOR
+
+    Varsayılan süzgeç, başvuru takvimi açıklanmamış kayıtları listeden
+    çıkarıyor: genel /firsatlar akışında doğru, çünkü tarihi olan fırsat
+    daha eyleme dönük.
+
+    Ama /kyk ve /yarismalar gibi TÜRE ÖZEL rotalarda aynı kural sayfayı
+    tamamen boşaltıyordu. Ölçüldü: veritabanında 2 yayında KYK ve 1 yarışma
+    kaydı var, üçünün de tarihi yok — sayfa "0 sonuç, bu filtrelere uyan
+    fırsat yok" diyordu. Kullanıcı o kategoriye BİLEREK gelmiş; elde ne
+    varsa göstermek, boş ekran göstermekten iyi.
+  */
+  const kategoriRotasi = Boolean(categoryPath[path]);
+  const takvimsizGoster = filters.takvimsiz || kategoriRotasi;
   /*
     `setArsivGoster` kaldırıldı: tek kullanıcısı olan "Süresi dolanlar"
     düğmesi süzgeç paneline taşındı ve panel `set({ arsiv, takvimsiz })`
@@ -943,6 +958,8 @@ export const OpportunitiesPage: React.FC<{
               <div className="space-y-3">
                 {filtered.map((item: Opportunity) => (
                   <Card
+                    girisGerekli={!student}
+                    onRequireLogin={onRequireLogin}
                     key={item.id}
                     item={item}
                     onNavigate={onNavigate}
@@ -1414,7 +1431,13 @@ export const Card: React.FC<{
     Kullanılmayan bir özelliği bırakmak, sonradan okuyanı "kart takibi
     biliyor ama göstermiyor" diye yanıltır. Takip detay sayfasında.
   */
-}> = ({ item, onNavigate, fit }) => {
+  /*
+    Dış başvuru bağlantısı misafirde giriş penceresini açıyor; kartın geri
+    kalanı açık kalıyor (bkz. ui/DisBaglanti).
+  */
+  girisGerekli: boolean;
+  onRequireLogin: () => void;
+}> = ({ item, onNavigate, fit, girisGerekli, onRequireLogin }) => {
   const cta = opportunityCta(item);
   const durum = opportunityStatus(item);
   const tutar = opportunityAmount(item);
@@ -1573,6 +1596,23 @@ export const Card: React.FC<{
       )}
 
       {/*
+        ÇAKIŞMA BİLGİSİ TAKVİMDEN BAĞIMSIZ
+
+        Bu satır önce zaman tüpünün yanına konmuştu ve farkında olmadan
+        "takvim açıklanmış" koşuluna bağlanmıştı: takvimi belli olmayan
+        kayıtlarda hiç çıkmıyordu. Oysa bir bursun KYK ile birlikte alınıp
+        alınamayacağı, başvurunun ne zaman açıldığıyla ilgili değil.
+
+        Kartta TEK SATIR; ayrıntısı ilan sayfasında ve
+        /rehber/burs-cakisma matrisinde — üçü de aynı veriden besleniyor.
+      */}
+      <BursUyumRozeti
+        tur={item.opportunityType}
+        baslik={item.title}
+        kurumAdi={item.organizationName}
+      />
+
+      {/*
         UYGUNLUK — İDDİA DEĞİL, GEREKÇE
 
         "%84 uyum" gibi bir puan yazıyordu ve puanın neyden çıktığı
@@ -1632,16 +1672,19 @@ export const Card: React.FC<{
             <ChevronRight className="w-4 h-4 shrink-0" />
           </button>
           {cta && (
-            <a
+            <DisBaglanti
               href={cta.adres}
-              target="_blank"
-              rel="noopener noreferrer nofollow"
+              girisGerekli={girisGerekli}
+              onGirisGerekli={onRequireLogin}
+              kapiEtiketi="Başvurmak için giriş yap"
               className="inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-gray-200 px-3 text-sm font-bold text-gray-700 hover:bg-gray-50"
             >
               {/* Kartta kısa etiket: uzun hâli düğmeyi iki satıra bölüyordu. */}
-              <span className="truncate">{cta.kisaEtiket ?? cta.etiket}</span>
+              <span className="truncate">
+                {girisGerekli ? 'Giriş yap' : (cta.kisaEtiket ?? cta.etiket)}
+              </span>
               <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-            </a>
+            </DisBaglanti>
           )}
         </div>
       </div>

@@ -2901,6 +2901,221 @@ export const BOLUMLER: Bolum[] = [
 
   /* ---------------------------------------------- iktisadi ve idari (devam) */
   {
+    slug: 'yazilim-muhendisligi',
+    ad: 'Yazılım Mühendisliği',
+    grup: 'muhendislik',
+    ozet: 'Bilgisayar mühendisliğinden farkı süreç ve test tarafında yoğunlaşması.',
+    aciklama:
+      'Yazılım mühendisliği öğrencisi staj nerede yapar, bilgisayar mühendisliğinden ' +
+      'farkı nedir ve başvururken hangi proje işe yarar.',
+    nerede: [
+      'Yazılım şirketleri ve ürün ekipleri',
+      'Bankaların ve sigorta şirketlerinin yazılım birimleri',
+      'Teknoparklardaki girişimler',
+      'Kurumsal şirketlerin bilgi teknolojileri bölümleri',
+    ],
+    isler: [
+      'Var olan bir üründe küçük hata kayıtlarını kapatmak',
+      'Birim testi yazmak ve test kapsamını genişletmek',
+      'Kod incelemelerine izleyici olarak katılmak',
+      'Dokümantasyon ve sürüm notlarını güncellemek',
+    ],
+    hazirlik: [
+      'Git — dal açma, birleştirme ve çakışma çözme',
+      'Bir dili gerçekten bilmek; üçünü yüzeysel bilmekten iyi',
+      'Temel veri tabanı ve SQL',
+      'Herkese açık en az bir çalışan proje',
+    ],
+    aranan: [
+      'Okunabilir kod yazma alışkanlığı',
+      'Hatayı adım adım daraltabilmek',
+      'Geri bildirimi savunmaya geçmeden alabilmek',
+    ],
+    ipucu:
+      'Staj başvurusunda "hangi dili biliyorum" listesi değil, "neyi bitirdim" cümlesi işe ' +
+      'yarıyor. Çalışan tek bir proje, on satırlık teknoloji listesinden daha çok şey anlatıyor.',
+    aramaKelimeleri: ['yazılım', 'software', 'developer', 'test', 'qa'],
+    giris:
+      'Yazılım mühendisliği ile bilgisayar mühendisliği staj ilanlarında çoğu zaman aynı ' +
+      'kefeye konuyor ve bu büyük ölçüde doğru: ikisi de aynı ilanlara başvuruyor. Fark ' +
+      'müfredatta: yazılım mühendisliği süreç, test, kalite ve bakım tarafına daha çok yer ' +
+      'ayırıyor. Bu, staj başvurusunda bir dezavantaj değil — tam tersine test ve kalite ' +
+      'ekipleri stajyer alırken bu altyapıyı arıyor. Bu sayfa nerede staj yapabileceğini, ' +
+      'sana gerçekten verilen işleri ve başvurudan önce hazırlaman gerekenleri anlatıyor.',
+    dikkat: [
+      'İlanların çoğu "Bilgisayar Mühendisliği" yazıyor ama yazılım mühendisliğini de kabul ' +
+        'ediyor. Bölüm adı birebir tutmuyor diye başvurmaktan vazgeçme; koşullar bölümünde ' +
+        '"ilgili bölümler" ifadesi varsa kapsam geniştir.',
+      'Staj boyunca sana canlı ürünün ana kodunda büyük değişiklik verilmesi beklenmiyor. ' +
+        'Küçük hata kayıtları ve testler normal başlangıç; bunu "iş vermediler" diye okuma.',
+      'Şirketin kullandığı teknolojiyi önceden öğren. Başvurduğun yer .NET kullanıyorsa ' +
+        'CV\'ndeki Python projeleri tek başına yeterli görünmeyebilir.',
+    ],
+    cvIpucu:
+      'En üste bir cümle: hangi alanda çalışmak istediğin. Altına en fazla üç proje; her ' +
+      'birinde ne yaptığın ve hangi sorunu çözdüğü tek satırla yazılı olsun.',
+  },
+
+  {
+    slug: 'mekatronik-muhendisligi',
+    ad: 'Mekatronik Mühendisliği',
+    grup: 'muhendislik',
+    ozet: 'Makine, elektronik ve yazılımın kesiştiği yer; staj çoğunlukla sahada.',
+    aciklama:
+      'Mekatronik mühendisliği öğrencisi staj nerede yapar, otomasyon ve üretim ' +
+      'hatlarında ne iş yapılır, hangi hazırlık gerekir.',
+    nerede: [
+      'Otomotiv ve yan sanayi üretim tesisleri',
+      'Endüstriyel otomasyon ve robotik firmaları',
+      'Beyaz eşya ve dayanıklı tüketim fabrikaları',
+      'Makine imalatı yapan orta ölçekli şirketler',
+    ],
+    isler: [
+      'Üretim hattındaki duruşları izlemek ve kaydetmek',
+      'PLC ve sensör bağlantılarını takip etmek',
+      'Bakım ekibine arıza tespitinde eşlik etmek',
+      'Teknik çizim ve şema güncellemelerine destek olmak',
+    ],
+    hazirlik: [
+      'Temel PLC mantığı — ladder okuyabilmek',
+      'Bir CAD programında çizim okuyup değiştirebilmek',
+      'Sensör ve aktüatör türlerini tanımak',
+      'İş güvenliği kurallarını ciddiye almak',
+    ],
+    aranan: [
+      'Sahada durabilmek; bu staj masa başı değil',
+      'Gözlemi yazıya dökebilmek',
+      'Ekiple çalışırken soru sorabilmek',
+    ],
+    ipucu:
+      'Mekatronik ilanları çoğu zaman "Makine" ya da "Elektrik-Elektronik" başlığıyla ' +
+      'açılıyor. Yalnızca kendi bölüm adını aratırsan ilanların çoğunu kaçırırsın.',
+    aramaKelimeleri: ['mekatronik', 'otomasyon', 'plc', 'robotik'],
+    giris:
+      'Mekatronik üç alanın kesişiminde: makine, elektronik ve yazılım. Bu, staj ararken ' +
+      'hem avantaj hem kafa karışıklığı sebebi — çünkü ilanlar genellikle bu üç bölümden ' +
+      'birinin adıyla açılıyor, "mekatronik" başlığı nadiren geçiyor. Stajın büyük kısmı ' +
+      'sahada geçiyor: üretim hattı, bakım ekibi, otomasyon panosu. Bu sayfa nerede staj ' +
+      'yapabileceğini, hattın başında sana gerçekten verilen işleri ve gitmeden önce ' +
+      'bilmen gerekenleri anlatıyor.',
+    dikkat: [
+      'İş güvenliği eğitimi almadan sahaya çıkarılmamalısın. Baret, gözlük ve ayakkabı ' +
+        'zorunluysa bunları şirket sağlıyor; sağlamıyorsa sorumluna sor.',
+      'Hattı durduran bir işlem asla tek başına yapılmıyor. Stajyer olarak gözlem ve ' +
+        'kayıt tutuyorsun; müdahale sorumlunun bilgisiyle oluyor.',
+      'Fabrika stajlarında vardiya olabiliyor. Başvurmadan önce çalışma saatlerini ve ' +
+        'servis olup olmadığını öğren — şehir dışı tesislerde bu belirleyici oluyor.',
+    ],
+  },
+
+  {
+    slug: 'uluslararasi-iliskiler',
+    ad: 'Uluslararası İlişkiler',
+    grup: 'sosyal',
+    ozet: 'Staj alanı dar görünüyor ama dış ticaret ve STK tarafı geniş.',
+    aciklama:
+      'Uluslararası ilişkiler öğrencisi staj nerede yapar, hangi sektörler bu bölümü ' +
+      'alır ve dil şartı gerçekten ne kadar önemli.',
+    nerede: [
+      'Dış ticaret yapan şirketlerin ihracat birimleri',
+      'Sivil toplum kuruluşları ve düşünce kuruluşları',
+      'Lojistik ve gümrük müşavirliği firmaları',
+      'Kamu kurumlarının dış ilişkiler birimleri',
+    ],
+    isler: [
+      'Ülke ve pazar araştırması yapmak',
+      'Rapor ve brifing notu hazırlamak',
+      'Yabancı yazışmaları takip etmek',
+      'Etkinlik ve toplantı organizasyonuna destek olmak',
+    ],
+    hazirlik: [
+      'İngilizceyi yazarak kullanabilmek — konuşmak tek başına yetmiyor',
+      'İkinci bir dil, hangisi olursa olsun ayırt edici',
+      'Excel ve sunum hazırlama',
+      'Güncel gündemi kaynağından takip etme alışkanlığı',
+    ],
+    aranan: [
+      'Uzun metni özetleyebilmek',
+      'Kaynak ayırt etme; her haber kaynak değil',
+      'Yazılı anlatımda düzen',
+    ],
+    ipucu:
+      '"Diplomat olacağım" hedefi staj başvurusunda işe yaramıyor; sınav ayrı bir yol. ' +
+      'Stajda ayırt edici olan şey dil ve araştırma becerisi — ikisini de somut gösterebilmelisin.',
+    aramaKelimeleri: ['uluslararası ilişkiler', 'dış ticaret', 'ihracat', 'stk'],
+    giris:
+      'Uluslararası ilişkiler öğrencilerinin en sık duyduğu cümle "bu bölümden staj ' +
+      'bulunmaz". Doğru değil, ama doğru olan bir yanı var: ilanlar bu bölümün adıyla ' +
+      'açılmıyor. Dış ticaret, ihracat, lojistik ve sivil toplum tarafı bu bölümü alıyor ' +
+      've oralarda gerçek iş var — pazar araştırması, yabancı yazışma, rapor. Kilit nokta ' +
+      'nerede arayacağını bilmek. Bu sayfa hangi sektörlerin bu bölümü aldığını, sana ' +
+      'verilen işleri ve başvurudan önce hazırlaman gerekenleri anlatıyor.',
+    dikkat: [
+      'Dil seviyesini CV\'de abartma. Mülakatta İngilizce bir soru gelmesi olağan ve ' +
+        '"ileri seviye" yazıp cevap verememek en kötü ilk izlenim.',
+      'Dış ticaret stajı bol evrak demek: fatura, konşimento, gümrük belgesi. Bunu sıkıcı ' +
+        'bulacaksan bölümün STK ya da araştırma tarafına yönel.',
+      'Kamu kurumlarının staj başvuruları genellikle okul üzerinden ve erken dönemde ' +
+        'yapılıyor; ilan beklersen kaçırırsın.',
+    ],
+  },
+
+  {
+    slug: 'iletisim',
+    ad: 'İletişim',
+    grup: 'sosyal',
+    ozet: 'Ajans, kurumsal iletişim ve içerik tarafı; portfolyo şart.',
+    aciklama:
+      'İletişim fakültesi öğrencisi staj nerede yapar, ajansta ne iş yapılır ve ' +
+      'portfolyo nasıl hazırlanır.',
+    nerede: [
+      'Reklam ve dijital ajanslar',
+      'Şirketlerin kurumsal iletişim birimleri',
+      'Yayın kuruluşları ve prodüksiyon şirketleri',
+      'Sosyal medya ve içerik ajansları',
+    ],
+    isler: [
+      'İçerik takvimi hazırlamak ve takip etmek',
+      'Sosyal medya metni yazmak',
+      'Basın bülteni taslağına destek olmak',
+      'Rakip ve gündem taraması yapmak',
+    ],
+    hazirlik: [
+      'Yazdığın işlerden küçük bir portfolyo',
+      'Temel görsel araçlar — Canva ya da benzeri',
+      'Sosyal medya araçlarını kullanıcı olarak değil üretici olarak tanımak',
+      'Yazım kurallarına hâkim olmak',
+    ],
+    aranan: [
+      'Kısa ve net yazabilmek',
+      'Teslim tarihine uymak',
+      'Geri bildirimle metni yeniden yazabilmek',
+    ],
+    ipucu:
+      'Bu alanda CV\'den önce portfolyo okunuyor. Yayımlanmamış olsa bile kendi yazdığın ' +
+      'üç beş içerik, "iletişim öğrencisiyim" cümlesinden çok daha fazlasını anlatıyor.',
+    aramaKelimeleri: ['iletişim', 'ajans', 'sosyal medya', 'içerik', 'halkla ilişkiler'],
+    giris:
+      'İletişim fakültesi geniş bir çatı: gazetecilik, halkla ilişkiler, reklamcılık, ' +
+      'radyo-televizyon. Staj tarafında bu genişlik hem fırsat hem risk — fırsat, çünkü ' +
+      'ajanstan kurumsal iletişime kadar çok kapı var; risk, çünkü hangi kapıyı ' +
+      'çaldığını bilmezsen başvurun genel kalıyor. Bu alanda ayırt edici olan şey not ' +
+      'ortalaman değil, gösterebildiğin iş. Bu sayfa nerede staj yapabileceğini, sana ' +
+      'verilen gerçek işleri ve portfolyonu nasıl hazırlayacağını anlatıyor.',
+    dikkat: [
+      'Ajans stajları yoğun ve teslim tarihi baskılı geçiyor. Bu tempoyu sevip sevmediğini ' +
+        'anlamak için kısa dönem bir ajans stajı iyi bir sınama.',
+      'Ürettiğin içeriğin hakları şirkete ait olabiliyor. Portfolyona koymadan önce ' +
+        'sorumluna sor; izinsiz paylaşım iş ilişkisini bitirir.',
+      'Ücretsiz staj bu sektörde yaygın ama zorunlu değil. Ücret bilgisini ilan metninde ' +
+        'aramaktan çekinme; yazmıyorsa mülakatta sormak normal.',
+    ],
+    cvIpucu:
+      'Portfolyo bağlantısını CV\'nin en üstüne koy. Üç iyi örnek, on vasat örnekten daha ' +
+      'çok iş getiriyor.',
+  },
+
+  {
     slug: 'hukuk',
     ad: 'Hukuk',
     grup: 'sosyal',
@@ -3230,6 +3445,219 @@ export const BOLUMLER: Bolum[] = [
   },
 
   /* ------------------------------------------------------------- sağlık */
+  {
+    slug: 'sosyoloji',
+    ad: 'Sosyoloji',
+    grup: 'sosyal',
+    ozet: 'Saha ve veri tarafı güçlü; İK ile araştırma şirketleri bu bölümü alıyor.',
+    aciklama:
+      'Sosyoloji öğrencisi staj nerede yapar, araştırma şirketlerinde ve insan ' +
+      'kaynaklarında ne iş yapılır.',
+    nerede: [
+      'Pazar ve sosyal araştırma şirketleri',
+      'Şirketlerin insan kaynakları birimleri',
+      'Sivil toplum kuruluşları ve vakıflar',
+      'Belediyelerin sosyal hizmet birimleri',
+    ],
+    isler: [
+      'Anket ve görüşme verisini derlemek',
+      'Saha notlarını yazıya dökmek',
+      'Literatür ve rapor taraması yapmak',
+      'Sunum ve rapor hazırlığına destek olmak',
+    ],
+    hazirlik: [
+      'Excel — veriyi düzenleyip özetleyebilmek',
+      'Nitel ve nicel yöntem farkını bilmek',
+      'Görüşme notu tutma pratiği',
+      'SPSS ya da benzeri bir araca temel aşinalık',
+    ],
+    aranan: [
+      'Yargılamadan dinleyebilmek',
+      'Veriyi olduğu gibi aktarmak',
+      'Gizlilik — katılımcı bilgisi paylaşılmıyor',
+    ],
+    ipucu:
+      'Sosyoloji ilanı diye aramak sonuç vermiyor; "araştırma stajyeri", "İK stajyeri" ve ' +
+      '"saha stajyeri" başlıkları bu bölümü alıyor. Aramayı işin adıyla yap, bölümün adıyla değil.',
+    aramaKelimeleri: ['sosyoloji', 'araştırma', 'saha', 'anket', 'insan kaynakları'],
+    giris:
+      'Sosyoloji öğrencisinin staj sorunu ilan azlığı değil, ilanların bu bölümün adını ' +
+      'hiç yazmaması. Oysa araştırma şirketleri, insan kaynakları birimleri ve sivil ' +
+      'toplum kuruluşları tam da bu bölümün öğrettiği şeyi arıyor: insanı ve veriyi ' +
+      'birlikte okuyabilmek. Anket tasarımı, saha notu, görüşme çözümlemesi — bunlar ' +
+      'staj sırasında sana gerçekten verilen işler. Bu sayfa hangi başlıklar altında ' +
+      'arama yapman gerektiğini ve gitmeden önce hangi araçları öğrenmenin işe ' +
+      'yaradığını anlatıyor.',
+    dikkat: [
+      'Saha çalışmasında katılımcı bilgisi kişisel veri. İsim, adres ve ses kaydı ekip ' +
+        'dışına çıkmıyor; staj defterine yazarken bile sorumluna sor.',
+      'Araştırma şirketlerinde yoğun dönem anket sahası dönemidir. Staj takvimini buna ' +
+        'göre sorarsan daha çok iş görürsün.',
+      '"Veri girişi yaptırıyorlar" şikâyeti sık duyuluyor. Veri girişi bu işin gerçek bir ' +
+        'parçası; ama bütün staj boyunca yalnızca o yapılıyorsa sorumlunla konuş.',
+    ],
+  },
+
+  {
+    slug: 'siyaset-bilimi',
+    ad: 'Siyaset Bilimi ve Kamu Yönetimi',
+    grup: 'sosyal',
+    ozet: 'Kamu, STK ve düşünce kuruluşları; başvurular erken ve okul üzerinden.',
+    aciklama:
+      'Siyaset bilimi ve kamu yönetimi öğrencisi staj nerede yapar, kamu staj ' +
+      'başvuruları nasıl yapılır.',
+    nerede: [
+      'Kamu kurumları ve belediyeler',
+      'Düşünce kuruluşları ve araştırma merkezleri',
+      'Sivil toplum kuruluşları',
+      'Şirketlerin kurumsal ilişkiler birimleri',
+    ],
+    isler: [
+      'Mevzuat ve politika metni taraması yapmak',
+      'Rapor ve brifing notu hazırlamak',
+      'Toplantı notu tutmak',
+      'Proje ve hibe dosyalarına destek olmak',
+    ],
+    hazirlik: [
+      'Resmî Gazete ve mevzuat kaynaklarını tanımak',
+      'Uzun metni özetleyebilmek',
+      'İngilizce okuma — kaynakların çoğu böyle',
+      'Word ve sunum araçlarında düzenli çıktı üretebilmek',
+    ],
+    aranan: [
+      'Tarafsız özetleme',
+      'Kaynak gösterme alışkanlığı',
+      'Kurum içi nezaket ve gizlilik',
+    ],
+    ipucu:
+      'Kamu kurumlarının staj kontenjanları genellikle dönem başında ve okul üzerinden ' +
+      'dağıtılıyor; ilan beklersen kaçırırsın. Okulun staj birimine erken sor.',
+    aramaKelimeleri: ['siyaset bilimi', 'kamu yönetimi', 'politika', 'stk'],
+    giris:
+      'Siyaset bilimi ve kamu yönetimi öğrencilerinin staj yolu diğer sosyal bölümlerden ' +
+      'bir noktada ayrılıyor: en iyi yerler ilan vermiyor. Kamu kurumlarının kontenjanları ' +
+      'dönem başında okullara dağıtılıyor, düşünce kuruluşları çoğunlukla doğrudan ' +
+      'başvuruyla alıyor. Yani bu bölümde başvuru zamanlaması, başvuru metninden daha ' +
+      'belirleyici. Bu sayfa nerede staj yapabileceğini, sana verilen işleri ve takvimi ' +
+      'kaçırmamak için ne yapman gerektiğini anlatıyor.',
+    dikkat: [
+      'Kamu stajı başvuruları çoğu kurumda okulun staj birimi üzerinden yürüyor. ' +
+        'Doğrudan başvuru kabul edilmeyebiliyor; önce okuluna sor.',
+      'Kurum içinde gördüğün yazışmalar resmî belge. Ekran görüntüsü almak ya da dışarı ' +
+        'aktarmak disiplin konusu olabilir.',
+      'Düşünce kuruluşlarında staj çoğunlukla yazı üretimi demek. Yazmayı sevmiyorsan ' +
+        'bölümün kamu tarafına yönel.',
+    ],
+  },
+
+  {
+    slug: 'eczacilik',
+    ad: 'Eczacılık',
+    grup: 'saglik',
+    ozet: 'Staj müfredatın parçası; eczane ve endüstri dönemleri okul üzerinden.',
+    aciklama:
+      'Eczacılık fakültesi stajı nasıl yapılır, eczane ve endüstri stajının farkı, ' +
+      'başvuru okul üzerinden mi yürür.',
+    nerede: [
+      'Serbest eczaneler',
+      'Hastane eczaneleri',
+      'İlaç üreticilerinin üretim ve kalite birimleri',
+      'İlaç şirketlerinin ruhsatlandırma birimleri',
+    ],
+    isler: [
+      'Reçete karşılama sürecini gözlemlemek',
+      'Stok ve miat takibine destek olmak',
+      'Üretim ve kalite kontrol adımlarını izlemek',
+      'Hasta danışmanlığında eczacıya eşlik etmek',
+    ],
+    hazirlik: [
+      'Farmakoloji ve farmasötik teknoloji derslerini tazelemek',
+      'İlaç isimlerini etken maddesiyle birlikte tanımak',
+      'İyi üretim uygulamaları (GMP) kavramına aşinalık',
+      'Hasta mahremiyeti kurallarını bilmek',
+    ],
+    aranan: [
+      'Dikkat — burada hata tolere edilmiyor',
+      'Hasta bilgisinde gizlilik',
+      'Hijyen ve prosedüre uyum',
+    ],
+    ipucu:
+      'Eczacılıkta staj bir iş ilanı değil, müfredatın parçası. Yerleştirme ve dönem ' +
+      'takvimi fakülten üzerinden yürüyor; endüstri stajı içinse şirketlerin genç yetenek ' +
+      'programlarına ayrıca bakmak gerekiyor.',
+    aramaKelimeleri: ['eczacılık', 'eczane', 'ilaç', 'farmasötik'],
+    giris:
+      'Eczacılık fakültesinde staj, iş ilanına başvurup kazanılan bir şey değil: ' +
+      'müfredatın zorunlu parçası ve dönemleri fakülte tarafından belirleniyor. Serbest ' +
+      'eczane, hastane eczanesi ve endüstri stajı ayrı ayrı tanımlı. Bu yüzden bu sayfada ' +
+      'göreceğin şey "nereye başvurayım" değil, "hangi dönemde ne bekleniyor ve nasıl ' +
+      'hazırlanırım". İlan aramanın işe yaradığı tek yer ilaç şirketlerinin ayrı açtığı ' +
+      'endüstri ve genç yetenek programları.',
+    dikkat: [
+      'Staj yerleştirmesi fakülten üzerinden yapılıyor. İlan aramak yerine önce staj ' +
+        'komisyonunun takvimini öğren; kontenjanlar erken doluyor.',
+      'Hasta bilgisi ve reçete içeriği gizli. Eczanede gördüğün hiçbir kişisel bilgi ' +
+        'dışarı çıkmıyor, staj defterine de isim yazılmıyor.',
+      'Endüstri stajı ayrı bir yol: ilaç şirketleri bunu ilanla ve genellikle yaz dönemi ' +
+        'için açıyor. İki yolu birbirine karıştırma.',
+    ],
+  },
+
+  {
+    slug: 'tip',
+    ad: 'Tıp',
+    grup: 'saglik',
+    ozet: 'İlanla staj yok; eğitim intörnlük ve stajyerlik dönemleriyle yürüyor.',
+    aciklama:
+      'Tıp fakültesi öğrencisi staj yapar mı, intörnlük nedir, yaz döneminde ne ' +
+      'yapılabilir.',
+    nerede: [
+      'Üniversite hastaneleri',
+      'Eğitim ve araştırma hastaneleri',
+      'Araştırma laboratuvarları — gönüllü projeler',
+      'Sağlık alanında çalışan sivil toplum kuruluşları',
+    ],
+    isler: [
+      'Klinik gözlem ve vaka takibi',
+      'Hasta öyküsü almaya eşlik etmek',
+      'Araştırma projelerinde veri toplamak',
+      'Literatür taraması yapmak',
+    ],
+    hazirlik: [
+      'Dönem derslerini takip etmek — burada temel bu',
+      'Literatür okuma ve kaynak tarama',
+      'Etik kurul ve hasta onamı kavramlarını bilmek',
+      'İngilizce tıp literatürünü okuyabilmek',
+    ],
+    aranan: [
+      'Hasta mahremiyetine mutlak saygı',
+      'Sınırını bilmek — yetkin dışında işlem yok',
+      'Ekip içinde iletişim',
+    ],
+    ipucu:
+      'Tıpta "staj" kelimesi müfredatın parçası olan klinik dönemleri anlatıyor; iş ilanı ' +
+      'aranan bir süreç değil. Yaz döneminde deneyim aramak istersen doğru yol, ilgilendiğin ' +
+      'anabilim dalındaki hocaya doğrudan yazıp araştırma projesine gönüllü katılmak.',
+    aramaKelimeleri: ['tıp', 'intörn', 'klinik', 'araştırma'],
+    giris:
+      'Tıp fakültesinde staj, başvurulup kazanılan bir pozisyon değil: eğitimin kendisi ' +
+      'staj dönemleri ve intörnlükle ilerliyor, yerleştirme fakülte tarafından yapılıyor. ' +
+      'Bu yüzden "tıp stajı ilanı" diye arama yapmak sonuç vermiyor ve vermemesi normal. ' +
+      'Ama deneyim biriktirmenin bir yolu var: araştırma projeleri. Anabilim dallarındaki ' +
+      'çalışmalara gönüllü katılmak, hem literatür hem saha tarafını erken öğretiyor. Bu ' +
+      'sayfa o yolu ve dikkat etmen gereken sınırları anlatıyor.',
+    dikkat: [
+      'Klinik dönemler ve intörnlük fakültenin takvimine bağlı. Bu sayfadaki hiçbir şey o ' +
+        'takvimin yerine geçmiyor; kesin bilgi için dekanlığa sor.',
+      'Öğrenci olarak yetkin dışında işlem yapamazsın. Gözlem ve eşlik etmek dışındaki her ' +
+        'şey sorumlu hekimin bilgisi ve gözetimiyle oluyor.',
+      'Hasta bilgisi en katı gizlilik kuralına tabi. Vaka anlatırken bile kimliği ' +
+        'belirleyecek ayrıntı paylaşılmıyor.',
+      'Araştırma projesine katılmak istiyorsan anabilim dalına dönem içinde yaz; yaz ' +
+        'başında yazan çok oluyor ve kontenjan doluyor.',
+    ],
+  },
+
   {
     slug: 'hemsirelik',
     ad: 'Hemşirelik',

@@ -181,21 +181,42 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                 <div className="min-w-0 space-y-1.5">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h1 className="text-xl sm:text-2xl font-extrabold">{veri.company.name}</h1>
-                    {veri.company.verified ? (
+                    {/*
+                      İKİ AYRI DURUM, İKİ AYRI ROZET
+
+                      Burada tek bir alan (`verified`) okunuyordu: false ise
+                      "Henüz sahiplenilmemiş" yazıyordu. Oysa bunlar farklı
+                      şeyler — sahiplenme "yetkili olduğunu söyleyen biri
+                      var", doğrulama "biz kontrol ettik". Sahiplenilmiş ama
+                      henüz doğrulanmamış bir şirkete "kimse sahiplenmemiş"
+                      deniyordu.
+                    */}
+                    {veri.company.verified && (
                       <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                         <BadgeCheck className="w-3.5 h-3.5" />
                         Doğrulanmış
                       </span>
-                    ) : (
-                      /*
-                        Doğrulanmamış olmak kötü bir şey değil, sadece henüz
-                        şirketin kendisi sahiplenmemiş demek. Bunu gizlemek
-                        yerine açıkça yazıyoruz.
-                      */
-                      <span className="text-[11px] font-semibold text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full">
-                        Henüz sahiplenilmemiş
+                    )}
+                    {!veri.company.verified && veri.company.sahiplenilmis && (
+                      <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+                        Sahiplenilmiş
                       </span>
                     )}
+                    {/*
+                      "HENÜZ SAHİPLENİLMEMİŞ" ROZETİ KALDIRILDI
+
+                      Bu rozet şirket adının hemen yanında duruyordu, yani
+                      sayfayı açan ÖĞRENCİNİN gördüğü ilk şeylerden biriydi.
+                      Ama söylediği şey öğrenciyi ilgilendirmiyor:
+                      sahiplenme işveren tarafının bir durumu ve öğrenciye
+                      yalnızca "burası eksik bir sayfa" hissi veriyordu —
+                      oysa ilanlar doğrulanmış kaynaktan derlenmiş, gerçek.
+
+                      "Doğrulanmış" ve "Sahiplenilmiş" rozetleri duruyor:
+                      onlar öğrenci için OLUMLU sinyal. Sahiplenme daveti de
+                      duruyor ama aşağıda, açıklamanın altındaki notta —
+                      yetkiliye hitap ettiği yerde.
+                    */}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
@@ -234,7 +255,11 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                 </p>
               )}
 
-              {!veri.company.verified && (
+              {/*
+                Bu not "ilanlar derlendi, yetkiliyseniz yazın" diyor.
+                Sahiplenilmiş profilde yersiz: yetkilisi zaten burada.
+              */}
+              {!veri.company.verified && !veri.company.sahiplenilmis && (
                 <div className="pt-3 border-t border-gray-100 text-xs text-gray-500 leading-relaxed">
                   Bu sayfadaki ilanlar {veri.company.name} şirketinin kendi kariyer
                   sisteminden derlendi. Şirket yetkilisiyseniz sayfayı sahiplenmek veya
@@ -307,6 +332,54 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                 ))
               )}
             </div>
+
+            {/*
+              BENZER ŞİRKETLER
+
+              "Açık ilanı yok" tek başına çıkmaz sokaktı: öğrenci sayfaya
+              geliyor, ilan bulamıyor, geri dönmekten başka yolu olmuyor.
+              Burada aynı sektör ya da aynı şehirdeki, YAYINDA İLANI OLAN
+              şirketler duruyor.
+
+              Eşleşme uydurulmuyor (bkz. fetchCompanyPage): sektör ve şehir
+              boşsa liste boş dönüyor ve bölüm hiç çizilmiyor. Rastgele
+              şirket önermek, çıkmaz sokağı alakasız bir sayfaya taşımak
+              olurdu.
+            */}
+            {veri.benzerler.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="px-1 text-xs font-bold uppercase tracking-widest text-gray-600">
+                  {veri.listings.length === 0 ? 'Bunun yerine bakabilirsin' : 'Benzer şirketler'}
+                </h2>
+                <ul className="grid gap-2 sm:grid-cols-2">
+                  {veri.benzerler.map((b) => (
+                    <li key={b.slug}>
+                      <a
+                        href={`/sirket/${b.slug}`}
+                        onClick={(e) => {
+                          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                          e.preventDefault();
+                          onNavigate(`/sirket/${b.slug}`);
+                        }}
+                        className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3 transition-colors hover:border-blue-500"
+                      >
+                        <ListingLogo name={b.name} logoUrl={b.logoUrl} />
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-bold text-gray-900">
+                            {b.name}
+                          </span>
+                          {b.industry && (
+                            <span className="block truncate text-xs text-gray-500">
+                              {b.industry}
+                            </span>
+                          )}
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/*
               KÜNYE VE İLGİLİ BÖLÜMLER
@@ -397,6 +470,14 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
               yetkilisi zaten kendi şirketini arayarak buraya geliyor
               ve sonuna kadar bakıyor.
             */}
+            {/*
+              SAHİPLENİLMİŞ ŞİRKET TEKRAR SAHİPLENİLEMEZ
+
+              Form koşulsuz çiziliyordu: kendi şirketini açmış bir yetkili
+              kendi sayfasında "Bu şirketin yetkilisi misiniz?" çağrısını
+              görüyordu. Sahiplenilmiş profilde form hiç çizilmiyor.
+            */}
+            {!veri.company.sahiplenilmis && (
             <div className="mt-8">
               <CompanyClaimForm
                 companyId={veri.company.id}
@@ -406,6 +487,7 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                 onRequireLogin={onRequireLogin ?? (() => undefined)}
               />
             </div>
+            )}
           </>
         )}
       </main>

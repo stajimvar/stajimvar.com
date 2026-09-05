@@ -136,6 +136,26 @@ export function indeksDegeri(alanlar = {}) {
     return { indeks: false, neden: 'MISSING_SOURCE' };
   }
 
+  /*
+    HİÇ METNİ OLMAYAN SAYFA HER HÂLÜKÂRDA DİZİN DIŞI
+
+    Aşağıdaki sinyal sayımı metnin UZUNLUĞUNA hiç bakmıyordu ve pratikte
+    hiçbir şeyi elemiyordu: her etkinliğin bir tarihi ve bir şehri var,
+    bu da iki sinyal ediyor. Ölçüldü: yayındaki 136 etkinliğin 136'sı
+    indekse giriyordu, oysa 22'sinin açıklaması TAMAMEN BOŞTU.
+
+    Açıklaması boş bir sayfada özgün metin diye yalnızca başlık kalıyor.
+    Böyle 22 sayfa, sitenin tamamının "düşük değerli içerik" sayılmasına
+    yetiyor — kazancı olmayan, riski olan sayfalar.
+
+    Kısa açıklamalılar elenmiyor: aşağıdaki notta anlatıldığı gibi tarihi,
+    yeri ve kaynağı olan bir etkinlik öğrenciye gerçek bilgi veriyor.
+    Eleme yalnızca hiç cümlesi olmayanlara uygulanıyor.
+  */
+  if (!aciklama || !String(aciklama).trim()) {
+    return { indeks: false, neden: 'NO_TEXT' };
+  }
+
   /* Doğrulanmış kaynak + en az bir ek bağlam (açıklama, ilişki, tarih). */
   const baglam =
     (aciklama && String(aciklama).trim().length >= 80 ? 1 : 0) +

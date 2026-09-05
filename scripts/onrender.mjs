@@ -490,6 +490,7 @@ async function rehberleriCiz() {
     for (const r of REHBERLER) {
       sonuc[r.slug] = {
         baslik: r.baslik,
+        seoBaslik: r.seoBaslik,
         ozet: r.ozet,
         aciklama: r.aciklama,
         kategori: r.kategori,
@@ -536,6 +537,36 @@ async function ilanlariGetir() {
     return [];
   }
   return yanit.json();
+}
+
+/**
+ * Bütün şirket slug'ları.
+ *
+ * NEDEN AYRI SORGU
+ * ----------------
+ * Şirket SAYFALARI yalnızca yayında ilanı olanlar için yazılıyor (ince
+ * içerik üretmemek için) ama bu, ilanı olmayan şirketin VAR OLMADIĞI
+ * anlamına gelmiyor. Ara katman "ön render dosyası yoksa 404" kuralına
+ * geçince /sirket/stajimvar 404 dönmeye başladı — gerçek, sahiplenilmiş ve
+ * kendisine 301 verdiğimiz bir profil (ölçüldü, canlıda kırıldı).
+ *
+ * Bu liste "hangi adres GERÇEKTEN var" sorusunun cevabı; sayfa yazılıp
+ * yazılmadığından bağımsız. Ara katman bunu okuyup karar veriyor.
+ */
+async function sirketSluglariniGetir() {
+  const urlAdres = envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL');
+  const anahtar = envOku('SUPABASE_SERVICE_ROLE_KEY') || envOku('VITE_SUPABASE_ANON_KEY');
+  if (!urlAdres || !anahtar) return [];
+  const istek = `${urlAdres}/rest/v1/companies?select=slug`;
+  const yanit = await fetch(istek, {
+    headers: { apikey: anahtar, Authorization: `Bearer ${anahtar}` },
+  });
+  if (!yanit.ok) {
+    console.log(`  şirket slugları alınamadı: HTTP ${yanit.status}`);
+    return [];
+  }
+  const veri = await yanit.json();
+  return veri.map((x) => x.slug).filter(Boolean);
 }
 
 async function firsatlariGetir() {
@@ -660,7 +691,7 @@ const KIRINTI_ADLARI = {
   ilan: 'Staj ilanları',
   firsatlar: 'Öğrenci fırsatları',
   sirket: 'Şirketler',
-  araclar: 'Hesaplama araçları',
+  araclar: 'Staj hesaplama araçları',
   isveren: 'İşverenler',
 };
 
@@ -983,7 +1014,14 @@ async function main() {
 
     sayfaYaz(`/rehber/${r.slug}`, {
       gorsel: `/og/rehber-${r.slug}.png`,
-      baslik: `${r.baslik} | StajımVar`,
+      /*
+        <title> H1'DEN AYRILABİLİYOR
+
+        Arama sonucunda görünen başlıkta kurum adlarının geçmesi işe
+        yarıyor; sayfadaki H1'i aynı listeyle uzatmak ise sayfayı
+        bozuyor. `seoBaslik` yazılmamışsa hiçbir şey değişmiyor.
+      */
+      baslik: `${r.seoBaslik || r.baslik} | StajımVar`,
       aciklama: ozetle(r.aciklama || r.ozet),
       /*
         Gövde = başlık + rehberin ÇİZİLMİŞ tam içeriği + sık sorulanlar.
@@ -1090,7 +1128,14 @@ async function main() {
   const sabitler = [
     ['/rehber', 'Öğrenci rehberi | StajımVar', "Stajdan bursa, KYK'dan yurda; öğrencilikte ihtiyaç duyacağın bilgiler resmî kaynağıyla, adım adım.", 'Öğrencilikte bilmen gerekenler, tek listede.'],
     ['/bolumler', 'Bölüme göre staj rehberi | StajımVar', `${bolumler.length} bölüm için: staj nerede yapılır, stajyer ne iş yapar, ne öğrenmeli.`, 'Bölüme göre staj'],
-    ['/araclar', 'Hesaplama araçları | StajımVar', 'Net hesaplama, YKS sıralama tahmini, staj ücreti ve staj günü hesaplama.', 'Hesaplama araçları'],
+    /*
+      BAŞLIK STAJ ARAÇLARINI ÖNE ALIYOR
+
+      Eski açıklama "Net hesaplama, YKS sıralama tahmini" ile başlıyordu:
+      staj sitesinin araç sayfasını sınav sorgularına eşliyordu. Sıra
+      düzeltildi; sınav araçları hâlâ sayfada ve açıklamada, ama sonda.
+    */
+    ['/araclar', 'Staj hesaplama araçları | StajımVar', 'Staj ücreti ve staj günü hesaplama; ayrıca net hesaplama ve YKS sıralama tahmini.', 'Staj hesaplama araçları'],
     ['/araclar/net-hesaplama', 'Net hesaplama (TYT, AYT, KPSS) | StajımVar', 'Doğru ve yanlış sayını gir, netini gör. TYT, AYT ve KPSS için.', 'Net hesaplama'],
     ['/araclar/siralama-tahmini', 'YKS sıralama tahmini | StajımVar', 'Puanın 2025 ÖSYM verilerine göre kaçıncı sıraya denk geliyor?', 'Sıralama tahmini'],
     ['/araclar/staj-ucreti-hesaplama', 'Staj ücreti hesaplama | StajımVar', '3308 sayılı kanuna göre stajyere en az ne kadar ödenmesi gerektiğini hesapla.', 'Staj ücreti hesaplama'],
@@ -1194,7 +1239,24 @@ async function main() {
     /* Tam kimlik ve yalnızca önek: ikisi de kanonik adrese gidiyor. */
     eskiAdresler.push(`/ilan/${i.id}   ${yol}   301`);
     eskiAdresler.push(`/ilan/${onek}   ${yol}   301`);
-    const ozet = ozetle(i.description, 155);
+    /*
+      AYNI PROGRAMIN FARKLI ŞEHİRLERİ AYRIŞSIN
+
+      Alumil'in üç ilanı aynı başlığı ve aynı açıklamayı taşıyordu:
+      "Alumil NextGen Staj Programı…" × Çorlu, İstanbul, İzmir. Arama
+      motoru için üç sayfa da birbirinin kopyasıydı.
+
+      Ayrım BAŞLIK METNİNDE değil META BAŞLIKTA yapılıyor. Veritabanındaki
+      `title` adresin bir parçası (/ilan/<slug>-<önek>); onu değiştirmek
+      üç adresi birden kırardı — bu turda düzelttiğimiz 404'lerin sebebi
+      tam olarak buydu.
+
+      Şehir hem <title>'a hem açıklamanın başına giriyor: ikisi de arama
+      sonucunda görünen alanlar.
+    */
+    const sehirEki = i.city ? konumEtiketi(i.city) : '';
+    const ozetGovde = ozetle(i.description, sehirEki ? 140 : 155);
+    const ozet = sehirEki ? `${sehirEki}. ${ozetGovde}` : ozetGovde;
 
     /*
       JobPosting — Google for Jobs uygunluğu.
@@ -1253,7 +1315,7 @@ async function main() {
 
     sayfaYaz(yol, {
       gorsel: `/og/ilan-${onek}.png`,
-      baslik: `${i.title}${sirket.name ? ' — ' + sirket.name : ''} | StajımVar`,
+      baslik: `${i.title}${sehirEki ? ` (${sehirEki})` : ''}${sirket.name ? ' — ' + sirket.name : ''} | StajımVar`,
       aciklama: ozet,
       govde: govde(
         i.title,
@@ -1476,6 +1538,18 @@ async function main() {
       155,
     );
 
+    /* Boş alan satır üretmiyor: "Sektör: —" yazmak bilgi vermiyor. */
+    const kunye = [
+      s.industry && `Sektör: ${kacir(s.industry)}`,
+      s.location && `Merkez: ${kacir(s.location)}`,
+      sehirler.length && `İlan verilen şehirler: ${kacir(sehirler.join(', '))}`,
+      `Yayındaki staj ilanı: ${adet}`,
+      guvenliDisAdres(s.website_url) &&
+        `Kariyer sayfası: <a href="${guvenliDisAdres(s.website_url)}" rel="nofollow noopener" target="_blank">${kacir(
+          String(s.website_url).replace(/^https?:\/\//i, '')
+        )}</a>`,
+    ].filter(Boolean);
+
     const liste =
       '<ul>' +
       s.ilanlar
@@ -1490,10 +1564,27 @@ async function main() {
     sayfaYaz(`/sirket/${slug}`, {
       baslik,
       aciklama,
+      /*
+        KÜNYE GÖVDEYE DE BASILIYOR
+
+        Sektör, konum ve kariyer sayfası veritabanında VARDI ama yalnızca
+        yapısal veriye giriyordu; sayfanın kendisi isim + ilan listesinden
+        ibaretti. Ölçüldü: 97 şirket sayfasının 97'si 900 karakterin
+        altındaydı, yani tarayıcı için hepsi ince içerikti.
+
+        Bu satırlar uydurulmuyor: hangisi boşsa o satır hiç çizilmiyor.
+        Sonraki adım bağlantıları da burada, çünkü ilanı biten bir şirket
+        sayfası aksi hâlde çıkmaz sokak oluyor.
+      */
       govde:
         `<main><h1>${kacir(s.name)} staj ilanları</h1>` +
         `<p>${kacir(aciklama)}</p>` +
-        `<h2>Yayındaki ilanlar</h2>${liste}` +
+        (kunye.length ? `<ul>${kunye.map((x) => `<li>${x}</li>`).join('')}</ul>` : '') +
+        `<h2>Yayındaki ilanlar (${adet})</h2>${liste}` +
+        '<h2>Bu şirkette açık ilan yoksa</h2>' +
+        '<p>Şirketin kendi kariyer sayfasını takip edebilir ya da doğrudan yazabilirsin. ' +
+        '<a href="/rehber/staj-basvuru-epostasi">Staj başvuru e-postası nasıl yazılır</a> ve ' +
+        '<a href="/rehber/staj-nasil-bulunur">staj nasıl bulunur</a> sayfalarında anlattık.</p>' +
         `<p><a href="/">Tüm staj ilanları</a></p></main>`,
       jsonLd: {
         '@context': 'https://schema.org',
@@ -1638,7 +1729,7 @@ async function main() {
   const anaSayfaBaglantilari = [
     ['/rehber', 'Öğrenci rehberi'],
     ['/bolumler', 'Bölüme göre staj'],
-    ['/araclar', 'Hesaplama araçları'],
+    ['/araclar', 'Staj hesaplama araçları'],
     ['/firsatlar', 'Öğrenci fırsatları'],
     ['/kesfet', 'Öğrenci etkinlikleri'],
     ['/isveren', 'İşverenler için'],
@@ -1742,6 +1833,18 @@ async function main() {
       + `<li><a href="${SITE}/bolumler">Bölümler</a></li>`
       + '</ul></main>',
   });
+
+  /*
+    GEÇERLİ ADRES LİSTESİ — ARA KATMAN İÇİN
+    Bkz. functions/_middleware.ts. Sayfası yazılmamış ama gerçekten var olan
+    kayıtlar (yayında ilanı olmayan şirket profilleri gibi) burada.
+  */
+  const gecerliSirketler = await sirketSluglariniGetir();
+  fs.writeFileSync(
+    path.join(dist, 'gecerli-adresler.json'),
+    JSON.stringify({ sirket: gecerliSirketler }),
+  );
+  console.log(`  geçerli adres listesi: ${gecerliSirketler.length} şirket`);
 
   console.log(
     `ön render: ${sayac} sayfa yazıldı (+404) ` +

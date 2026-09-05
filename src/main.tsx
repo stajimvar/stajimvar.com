@@ -1,7 +1,6 @@
 import {StrictMode, Suspense} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
-import { adsenseBetiginiBaslat } from './components/GoogleAdBanner.tsx';
 import './index.css';
 
 /*
@@ -13,8 +12,21 @@ import './index.css';
 
   Yayıncı kimliği (`VITE_ADSENSE_CLIENT`) tanımlı değilse bu çağrı hiçbir şey
   yapmıyor; boşuna dış istek atılmıyor.
+
+  RIZA KAPISI — ÇAĞRI BURADAN KALKTI
+  ----------------------------------
+  Bu satır koşulsuzdu: ziyaretçi hiçbir şey seçmeden pagead2.googlesyndication.com
+  isteği başlıyordu. Betiği yükleyip görünmez yapmak da yeterli değil; kural
+  isteğin HİÇ BAŞLAMAMASI.
+
+  Karar artık App'te, kayıtlı rızaya bakılarak veriliyor
+  (lib/cerez-rizasi.mjs · reklamSerbest). Reddedildiyse ya da henüz
+  sorulmadıysa çağrı yapılmıyor.
+
+  AdSense site doğrulaması bu yüzden ancak rıza veren ziyaretçide geçebilir;
+  doğrulamayı hızlandırmak için rıza almadan betik yüklemek, hukuki tarafı
+  ürün tarafına feda etmek olurdu.
 */
-adsenseBetiginiBaslat();
 
 /*
   ZIYARET OLCUMU BURADA DEGIL — CLOUDFLARE TARAFINDA.

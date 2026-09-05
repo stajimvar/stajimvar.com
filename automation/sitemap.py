@@ -149,7 +149,21 @@ def main() -> None:
         db.table("opportunities")
         .select("slug,updated_at")
         .eq("status", "published")
-        .gte("application_deadline", datetime.now(UTC).isoformat())
+        # Tarihsiz firsatlar da haritaya girer.
+        #
+        # Filtre yalnizca "son basvuru gecmemis" kayitlari aliyordu; ama
+        # application_deadline NULL olan kayit bu kosulu HIC saglamiyor ve
+        # sessizce dusuyordu. Sitede bu kayitlarin sayfasi uretiliyor ve
+        # /burslar listesinde gorunuyorlar ("Kurum bu donemin takvimini
+        # aciklamadi" notuyla) - yani var olan, calisan sayfalar haritada
+        # yoktu. Olculdu: 83 yayinda firsatin tamami bu durumdaydi.
+        #
+        # Suresi GECMIS olanlar hala disarida: onlar icin deadline dolu ve
+        # gecmis tarihli.
+        .or_(
+            f"application_deadline.is.null,"
+            f"application_deadline.gte.{datetime.now(UTC).isoformat()}"
+        )
         .execute()
         .data
         or []
@@ -160,12 +174,29 @@ def main() -> None:
     # motoru onlari yalnizca liste sayfasindan bulabiliyordu.
     etkinlikler = (
         db.table("discover_events")
-        .select("slug,updated_at,starts_at,ends_at")
+        .select("slug,updated_at,starts_at,ends_at,short_description,description")
         .eq("status", "published")
         .execute()
         .data
         or []
     )
+
+    # Aciklamasi bos etkinlik haritaya girmiyor.
+    #
+    # On render bu sayfalari noindex ile basiyor (bkz. reklam-kapisi.mjs
+    # icindeki NO_TEXT kurali: aciklamasi olmayan sayfada ozgun metin diye
+    # yalnizca baslik kaliyor). Harita onlari yine de bildiriyordu; ayni
+    # adres icin "dizine alma" ve "dizine al" sinyallerini birlikte
+    # gondermek celiskili. Olculdu: 136 etkinligin 22'si bu durumdaydi.
+    #
+    # Kural JS tarafinda tanimli; burada AYNI kosulun kopyasi var, cunku
+    # site haritasi Python ve o modulu calistiramiyor. Kural degisirse iki
+    # yer birlikte guncellenmeli.
+    etkinlikler = [
+        e
+        for e in etkinlikler
+        if (e.get("short_description") or e.get("description") or "").strip()
+    ]
 
     bolumler = kayit_sluglari("bolumler.ts")
     rehberler = rehber_sluglari()

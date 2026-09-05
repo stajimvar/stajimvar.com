@@ -18,6 +18,18 @@ import { StajTakvimi } from './StajTakvimi';
   "bu bilgi ne kadar taze" sorusunun cevabını vermeden hesap göstermek,
   doğruluğu kanıtlanamayan bir sayı göstermek olur.
 */
+import { paraCoz, yuzdeKurus, kurusBicim } from '../lib/para.mjs';
+import { satirNeti, toplamNet } from '../lib/net-hesap.mjs';
+import { KAYNAK as TATIL_KAYNAK } from '../lib/resmi-tatiller.mjs';
+import {
+  YIL as ASGARI_YIL,
+  NET_KURUS as ASGARI_NET_KURUS,
+  DOGRULANDI as ASGARI_DOGRULANDI,
+  KAYNAK as ASGARI_KAYNAK,
+  ORAN as STAJ_ORAN,
+  KAPSAM_DISI as STAJ_KAPSAM_DISI,
+} from '../lib/asgari-ucret.mjs';
+
 const MEVZUAT_TARIHI = '25 Ağustos 2026';
 import {
   SINAV_DAGILIMI,
@@ -98,6 +110,7 @@ const girdiSinifi =
 
 import { ARACLAR } from './AraclarListesi';
 export { ARACLAR };
+import { STAJ_ARACLARI, SINAV_ARACLARI } from './AraclarListesi';
 
 interface HubProps {
   onBack: () => void;
@@ -106,7 +119,7 @@ interface HubProps {
 
 export const AracHub: React.FC<HubProps> = ({ onBack, onNavigate }) => {
   useEffect(() => {
-    document.title = 'Hesaplama araçları | StajımVar';
+    document.title = 'Staj hesaplama araçları | StajımVar';
   }, []);
 
   return (
@@ -114,7 +127,7 @@ export const AracHub: React.FC<HubProps> = ({ onBack, onNavigate }) => {
       <div className="space-y-6">
         <div className="space-y-2">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">
-            Hesaplama araçları
+            Staj hesaplama araçları
           </h1>
           <p className="text-gray-600 leading-relaxed">
             Kısa hesaplar. Hepsi tarayıcında çalışıyor; girdiğin hiçbir bilgi bize
@@ -122,8 +135,17 @@ export const AracHub: React.FC<HubProps> = ({ onBack, onNavigate }) => {
           </p>
         </div>
 
+        {/*
+          STAJ ARAÇLARI ÖNCE VE ASIL
+
+          Dört araç tek listede eşit ağırlıktaydı ve ilk iki sıra sınav
+          araçlarındaydı: staj sitesinde "Hesaplama araçları" başlığı
+          altında önce TYT neti görmek yanlış vaat. Araçlar silinmedi —
+          çalışıyorlar; yalnızca hangisinin bu sitenin işi olduğu
+          netleştirildi.
+        */}
         <ul className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-          {ARACLAR.map((a) => {
+          {STAJ_ARACLARI.map((a) => {
             const Ikon = a.ikon;
             return (
               <li key={a.slug} className="border-b border-gray-100 last:border-b-0">
@@ -145,6 +167,44 @@ export const AracHub: React.FC<HubProps> = ({ onBack, onNavigate }) => {
             );
           })}
         </ul>
+
+        {/*
+          SINAV ARAÇLARI AYRI BÖLÜMDE
+
+          Bunlar çalışan ve işe yarayan araçlar ama sitenin konusu değil.
+          Ayrı başlık altında ve ne oldukları yazılı duruyorlar; gizlemek
+          yerine doğru yere koymak.
+        */}
+        <div className="space-y-2 pt-2">
+          <h2 className="text-lg font-bold text-gray-900">Sınav araçları</h2>
+          <p className="text-sm leading-relaxed text-gray-600">
+            Bunlar staj değil sınav hesapları. Üniversiteye hazırlanırken ya da KPSS
+            çalışırken işine yarıyor; staj sürecinle ilgisi yok.
+          </p>
+          <ul className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+            {SINAV_ARACLARI.map((a) => {
+              const Ikon = a.ikon;
+              return (
+                <li key={a.slug} className="border-b border-gray-100 last:border-b-0">
+                  <button
+                    type="button"
+                    onClick={() => onNavigate(`/araclar/${a.slug}`)}
+                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-gray-50"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-500">
+                      <Ikon className="h-4.5 w-4.5" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-bold text-gray-900">{a.baslik}</span>
+                      <span className="block text-sm text-gray-500">{a.ozet}</span>
+                    </span>
+                    <ChevronRight className="h-5 w-5 shrink-0 text-gray-300" />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </div>
     </Kabuk>
   );
@@ -234,27 +294,35 @@ export const NetHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) => {
 
   const secili = SINAVLAR[sinav];
 
-  const netler = useMemo(() => {
-    return secili.dersler.map((ders) => {
-      const v = degerler[`${sinav}-${ders.ad}`] || { d: '', y: '' };
-      const dogru = Math.max(0, Math.min(ders.soru, Number(v.d) || 0));
-      const yanlis = Math.max(0, Math.min(ders.soru, Number(v.y) || 0));
-      // Dört yanlış bir doğruyu götürür — bu kural her iki sınavda da aynı.
-      const net = Math.max(0, dogru - yanlis / 4);
-      const asim = dogru + yanlis > ders.soru;
-      return { ders, dogru, yanlis, net, asim };
-    });
-  }, [degerler, sinav, secili]);
+  /*
+    HESAP KURALI lib/net-hesap.mjs'TE
 
-  const toplam = netler.reduce((t, n) => t + n.net, 0);
-  const hataliVar = netler.some((n) => n.asim);
+    Burada girdiler `Math.min(ders.soru, …)` ile KIRPILIYORDU: 35 doğru + 10
+    yanlış girildiğinde satır "aşım" diye kırmızıya boyanıyor, ama net yine
+    hesaplanıp toplama ekleniyordu. Araç aynı anda hem "bu satır yanlış"
+    diyor hem o satırın netini sonuca katıyordu.
+
+    Artık geçersiz satırın neti YOK (null); toplam da üretilmiyor.
+  */
+  const netler = useMemo(
+    () =>
+      secili.dersler.map((ders) => {
+        const v = degerler[`${sinav}-${ders.ad}`] || { d: '', y: '' };
+        return { ders, ...satirNeti(ders.soru, v.d, v.y) };
+      }),
+    [degerler, sinav, secili],
+  );
+
+  const toplamSonuc = toplamNet(netler);
+  const hataliVar = !toplamSonuc.gecerli;
 
   // KPSS oturumlarının ÖSYM YKS tablosunda karşılığı yok; orada gösterilmiyor.
   const ortalamaKarsilastirmasi = netler
-    .filter((n) => n.net > 0 && TEST_ORTALAMALARI[n.ders.ad])
+    .filter((n) => n.gecerli && (n.net ?? 0) > 0 && TEST_ORTALAMALARI[n.ders.ad])
     .map((n) => {
       const ist = TEST_ORTALAMALARI[n.ders.ad];
-      return { ad: n.ders.ad, net: n.net, ortalama: ist.ortalama, fark: n.net - ist.ortalama };
+      const net = n.net ?? 0;
+      return { ad: n.ders.ad, net, ortalama: ist.ortalama, fark: net - ist.ortalama };
     });
 
   const guncelle = (ders: string, alan: 'd' | 'y', deger: string) => {
@@ -309,7 +377,7 @@ export const NetHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) => {
             <span className="text-center">Yanlış</span>
             <span className="text-right">Net</span>
           </div>
-          {netler.map(({ ders, net, asim }) => {
+          {netler.map(({ ders, net, gecerli, hata }) => {
             const v = degerler[`${sinav}-${ders.ad}`] || { d: '', y: '' };
             return (
               <div
@@ -327,9 +395,10 @@ export const NetHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) => {
                   value={v.d}
                   onChange={(e) => guncelle(ders.ad, 'd', e.target.value)}
                   className={`${girdiSinifi} text-center px-2 py-2 ${
-                    asim ? 'border-red-300 bg-red-50' : ''
+                    gecerli ? '' : 'border-red-300 bg-red-50'
                   }`}
                   placeholder="0"
+                  aria-invalid={gecerli ? undefined : true}
                   aria-label={`${ders.ad} doğru`}
                 />
                 <input
@@ -337,13 +406,22 @@ export const NetHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) => {
                   value={v.y}
                   onChange={(e) => guncelle(ders.ad, 'y', e.target.value)}
                   className={`${girdiSinifi} text-center px-2 py-2 ${
-                    asim ? 'border-red-300 bg-red-50' : ''
+                    gecerli ? '' : 'border-red-300 bg-red-50'
                   }`}
                   placeholder="0"
+                  aria-invalid={gecerli ? undefined : true}
                   aria-label={`${ders.ad} yanlış`}
                 />
-                <span className="text-right font-bold text-gray-900 tabular-nums">
-                  {net.toFixed(2)}
+                {/*
+                  Geçersiz satırda net YAZILMIYOR. Bir sayı yazmak, kırmızı
+                  çerçeveyi görmeyen kullanıcıya o satırın hesaplandığını
+                  söylerdi.
+                */}
+                <span
+                  className="text-right font-bold tabular-nums text-gray-900"
+                  title={hata ?? undefined}
+                >
+                  {gecerli && net !== null ? net.toFixed(2) : '—'}
                 </span>
               </div>
             );
@@ -379,16 +457,31 @@ export const NetHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) => {
           <div className="flex items-center justify-between px-4 py-3 bg-blue-50 border-t border-blue-100">
             <span className="font-bold text-blue-900">Toplam net</span>
             <span className="text-xl font-extrabold text-blue-900 tabular-nums">
-              {toplam.toFixed(2)}
+              {toplamSonuc.gecerli ? toplamSonuc.toplam.toFixed(2) : '—'}
             </span>
           </div>
         </div>
 
+        {/*
+          Uyarı artık tek başına değil: geçersiz satırın neti ve genel toplam
+          da "—" gösteriyor. Metni okumayan kullanıcı da hesabın yapılmadığını
+          görüyor.
+        */}
         {hataliVar && (
-          <p className="text-sm font-semibold text-red-600">
-            Bir derste doğru + yanlış toplamı soru sayısını geçiyor. Kırmızı alanları
-            kontrol et.
-          </p>
+          <div role="alert" className="space-y-1 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm font-bold text-red-800">
+              Toplam net hesaplanmadı: {toplamSonuc.gecersizSayisi} derste sorun var.
+            </p>
+            <ul className="list-disc pl-5 text-sm text-red-700">
+              {netler
+                .filter((n) => !n.gecerli)
+                .map((n) => (
+                  <li key={n.ders.ad}>
+                    <strong>{n.ders.ad}:</strong> {n.hata}
+                  </li>
+                ))}
+            </ul>
+          </div>
         )}
 
         <p className="text-sm text-gray-500">{secili.not}</p>
@@ -561,10 +654,15 @@ export const SiralamaTahmini: React.FC<AracProps> = ({ onBack, onNavigate }) => 
 /* ================================================= staj ücreti hesaplama */
 
 export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) => {
-  const [asgari, setAsgari] = useState('');
+  /*
+    Tutar merkezî yapılandırmadan geliyor (lib/asgari-ucret.mjs) ve kutuda
+    yazılı başlıyor. Kullanıcı yine değiştirebiliyor: geçmiş bir yılı ya da
+    kendi sözleşmesindeki tutarı hesaplamak isteyebilir.
+  */
+  const [asgari, setAsgari] = useState(kurusBicim(ASGARI_NET_KURUS));
   const [buyuk, setBuyuk] = useState(false); // 20 ve üzeri personel
-  const [oranKucuk, setOranKucuk] = useState('15');
-  const [oranBuyuk, setOranBuyuk] = useState('30');
+  const [oranKucuk, setOranKucuk] = useState(String(STAJ_ORAN.kucukIsyeri));
+  const [oranBuyuk, setOranBuyuk] = useState(String(STAJ_ORAN.buyukIsyeri));
 
   useEffect(() => {
     document.title = 'Staj ücreti hesaplama | StajımVar';
@@ -572,17 +670,35 @@ export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate })
 
   const [kopyalandi, setKopyalandi] = useState(false);
 
-  const asgariSayi = Number(asgari.replace(/[^\d]/g, '')) || 0;
-  const oran = Number(buyuk ? oranBuyuk : oranKucuk) || 0;
-  const sonuc = (asgariSayi * oran) / 100;
+  /*
+    AYRIŞTIRMA ARTIK KURUŞ DUYARLI
+
+    Burada `Number(asgari.replace(/[^\d]/g, ''))` vardı: ondalık ayırıcıyı da
+    siliyordu. "28075,50" önce 2807550 oluyor, yüzde 15'i 421.132,50 TL
+    çıkıyordu — doğrusunun tam yüz katı. Ayrıştırma ve kuruş aritmetiği
+    lib/para.mjs'e taşındı ve testleri var (tests/para.test.mjs).
+  */
+  const cozum = paraCoz(asgari);
+  const oranHam = (buyuk ? oranBuyuk : oranKucuk).trim();
+  const oranGecerli = /^\d{1,3}$/.test(oranHam) && Number(oranHam) > 0 && Number(oranHam) <= 100;
+  const oran = oranGecerli ? Number(oranHam) : 0;
+  const hesaplanabilir = cozum.gecerli && oranGecerli;
+  const sonucKurus = hesaplanabilir ? yuzdeKurus(cozum.kurus, oran) : null;
+  const hataMetni = !asgari.trim()
+    ? null
+    : !cozum.gecerli
+      ? cozum.hata
+      : !oranGecerli
+        ? 'Oran 1 ile 100 arasında olmalı.'
+        : null;
 
   /* Girdi değişince "Kopyalandı" yazısı eski sonuca ait kalmasın. */
   useEffect(() => {
     setKopyalandi(false);
   }, [asgari, buyuk, oranKucuk, oranBuyuk]);
 
-  const bicim = (n: number) =>
-    n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  /* Görüntüleme tek yerden: lib/para.mjs → kurusBicim. */
+  const bicim = kurusBicim;
 
   return (
     <Kabuk onBack={onBack}>
@@ -608,16 +724,28 @@ export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate })
 
         <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 space-y-4">
           <Alan
-            etiket="Net asgari ücret (TL)"
-            ipucu="Güncel tutarı yaz. Her yıl değiştiği için sabit yazmıyoruz."
+            etiket={`Net asgari ücret (TL) — ${ASGARI_YIL}`}
+            ipucu="Kutuda güncel tutar yazılı. Başka bir yıl için değiştirebilirsin."
           >
+            {/*
+              `inputMode="decimal"` ve süzgeçsiz onChange: eskiden her tuşta
+              rakam dışı her şey siliniyordu, yani kullanıcı virgülü YAZAMIYOR,
+              yazsa da kayboluyordu. Doğrulama artık girerken değil
+              hesaplarken yapılıyor (lib/para.mjs).
+            */}
             <input
-              inputMode="numeric"
+              inputMode="decimal"
               value={asgari}
-              onChange={(e) => setAsgari(e.target.value.replace(/[^\d]/g, ''))}
+              onChange={(e) => setAsgari(e.target.value)}
+              aria-invalid={hataMetni ? true : undefined}
+              aria-describedby={hataMetni ? 'ucret-hata' : undefined}
               className={girdiSinifi}
-              placeholder="örn. 22000"
             />
+            {hataMetni && (
+              <p id="ucret-hata" role="alert" className="mt-1.5 text-sm font-semibold text-red-700">
+                {hataMetni}
+              </p>
+            )}
           </Alan>
 
           <div className="space-y-1.5">
@@ -688,15 +816,15 @@ export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate })
         <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 space-y-2">
           <p className="text-sm font-semibold text-blue-900/80">Aylık en az ödenmesi gereken</p>
           <p className="text-3xl font-extrabold tabular-nums text-blue-900">
-            {asgariSayi > 0 ? `${bicim(sonuc)} TL` : 'Hesaplanamadı'}
+            {hesaplanabilir ? `${bicim(sonucKurus)} TL` : 'Hesaplanamadı'}
           </p>
-          {asgariSayi > 0 ? (
+          {hesaplanabilir ? (
             <>
               <p className="text-sm text-blue-900/80">Net asgari ücretin %{oran || 0}'i</p>
               <button
                 type="button"
                 onClick={() => {
-                  const metin = `Staj ücreti alt sınırı: ${bicim(sonuc)} TL (net asgari ücretin %${oran}'i, ${bicim(asgariSayi)} TL üzerinden).`;
+                  const metin = `Staj ücreti alt sınırı: ${bicim(sonucKurus)} TL (${ASGARI_YIL} net asgari ücretinin %${oran}'i, ${bicim(cozum.kurus)} TL üzerinden).`;
                   navigator.clipboard
                     ?.writeText(metin)
                     .then(() => setKopyalandi(true))
@@ -709,7 +837,9 @@ export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate })
             </>
           ) : (
             <p className="text-sm text-blue-900/80">
-              Güncel net asgari ücreti yaz; oranı bu tutar üzerinden hesaplıyoruz.
+              {hataMetni
+                ? 'Geçerli bir tutar girilene kadar sonuç gösterilmiyor.'
+                : 'Net asgari ücreti yaz; oranı bu tutar üzerinden hesaplıyoruz.'}
             </p>
           )}
         </div>
@@ -724,43 +854,83 @@ export const StajUcretiHesaplama: React.FC<AracProps> = ({ onBack, onNavigate })
         <details className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
           <summary className="cursor-pointer font-bold text-gray-900">Nasıl hesaplandı?</summary>
           <p className="mt-3 text-sm leading-relaxed text-gray-600 sm:text-base">
-            {asgariSayi > 0
-              ? `${bicim(asgariSayi)} TL × %${oran} = ${bicim(sonuc)} TL.`
+            {hesaplanabilir
+              ? `${bicim(cozum.kurus)} TL × %${oran} = ${bicim(sonucKurus)} TL.`
               : 'Girdiğin net asgari ücret, seçtiğin oranla çarpılıyor.'}{' '}
             Oran işletmenin personel sayısına göre değişiyor; yukarıdaki kutu 20 ve üzeri
             personel için farklı oranı uyguluyor. Oranları elle değiştirebilirsin, çünkü her
             yıl güncelleniyorlar.
           </p>
+          {/*
+            KAYNAK BAKANLIK ANA SAYFASI DEĞİL, KARARIN KENDİSİ
+
+            Burada csgb.gov.tr kökü vardı: kullanıcıyı bir kurumun ana
+            sayfasına atmak, iddiayı doğrulanamaz bırakmak demek. Artık hem
+            oranın dayandığı kanun maddesi hem tutarın çıktığı Resmî Gazete
+            kararı doğrudan bağlı. Adresler lib/asgari-ucret.mjs'te.
+          */}
           <p className="mt-3 text-xs leading-relaxed text-gray-600">
-            Dayanak: 3308 sayılı Mesleki Eğitim Kanunu.{' '}
+            <strong>Oran:</strong> {STAJ_ORAN.kaynak.etiket} — yirmiden az personel
+            çalıştıran işyerinde net asgari ücretin %{STAJ_ORAN.kucukIsyeri}'i, yirmi ve
+            üzerinde %{STAJ_ORAN.buyukIsyeri}'u.{' '}
             <a
-              href="https://www.mevzuat.gov.tr/mevzuatmetin/1.5.3308.pdf"
+              href={STAJ_ORAN.kaynak.adres}
               target="_blank"
               rel="noreferrer noopener"
               className="font-semibold text-blue-700 hover:underline"
             >
               Kanun metni
             </a>
-            {' · '}Bu araçtaki varsayılan oranlar {MEVZUAT_TARIHI} tarihinde gözden geçirildi.
-            Güncel asgari ücret için{' '}
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-gray-600">
+            <strong>Tutar:</strong> {ASGARI_YIL} yılı net asgari ücreti{' '}
+            {bicim(ASGARI_NET_KURUS)} TL.{' '}
             <a
-              href="https://www.csgb.gov.tr"
+              href={ASGARI_KAYNAK.karar.adres}
               target="_blank"
               rel="noreferrer noopener"
               className="font-semibold text-blue-700 hover:underline"
             >
-              Çalışma ve Sosyal Güvenlik Bakanlığı
+              {ASGARI_KAYNAK.karar.etiket}
             </a>
-            .
+            {' · '}
+            <a
+              href={ASGARI_KAYNAK.duyuru.adres}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="font-semibold text-blue-700 hover:underline"
+            >
+              Bakanlık duyurusu
+            </a>
+            {' · '}Son doğrulama: {ASGARI_DOGRULANDI}. Oranlar {MEVZUAT_TARIHI} tarihinde
+            gözden geçirildi.
+          </p>
+          {/*
+            KAPSAM SINIRI
+
+            Kanunun aynı fıkrası stajını okulunda/üniversitesinde yapan
+            öğrenciyi bu alt sınırın dışında bırakıyor. Söylemezsek, hakkı
+            olmayan bir tutarı hakkıymış gibi göstermiş oluruz.
+          */}
+          <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-900">
+            <strong>Kapsam:</strong> {STAJ_KAPSAM_DISI}
           </p>
         </details>
 
         <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 space-y-2">
           <h2 className="font-bold text-gray-900">Bilmen gereken üç şey</h2>
           <ul className="list-disc pl-5 space-y-1.5 text-sm sm:text-base text-gray-600 leading-relaxed">
+            {/*
+              "çoğu zaman ödüyor" KALDIRILDI
+
+              Kaynağı olmayan bir genellemeydi: şirketlerin fiilen ne ödediğine
+              dair elimizde doğrulanmış veri yok. Öğrenciye "nasılsa daha fazla
+              verirler" beklentisi kurmak, pazarlık masasına yanlış bilgiyle
+              oturtuyordu. Kanunun söylediği şey kaldı: bu bir alt sınır.
+            */}
             <li>
-              Bu bir <strong>alt sınır</strong>. İşletme daha fazlasını ödeyebilir ve çoğu
-              zaman ödüyor.
+              Bu bir <strong>alt sınır</strong>. Kanun üst sınır koymuyor; işletme daha
+              fazlasını ödeyebilir. Ne ödendiğini ilandan ve işverene sorarak öğrenirsin.
             </li>
             <li>
               Devletin bu ödemenin bir kısmını karşıladığı bir destek mekanizması var. Yani
@@ -906,9 +1076,19 @@ export const StajGunuHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) =
             </span>
           </label>
 
+          {/*
+            KUTU ARTIK YALNIZCA KURUMA ÖZEL İZİN
+
+            Etiketi "Dinî bayram ve idari tatil günü sayısı"ydı: öğrencinin
+            Ramazan ve Kurban Bayramı'nın hangi güne düştüğünü bilip elle
+            yazması bekleniyordu. Bilmiyorsa hesap sessizce yanlış çıkıyordu.
+            Resmî tatillerin tamamı (dinî bayramlar dahil) artık otomatik —
+            lib/resmi-tatiller.mjs. Burada yalnızca kurumun kendi verdiği,
+            kimsenin bilemeyeceği izinler kalıyor.
+          */}
           <Alan
-            etiket="Dinî bayram ve idari tatil günü sayısı"
-            ipucu="Ramazan ve Kurban Bayramı her yıl kaydığı için elle giriliyor. Staj sürene denk gelen tatil günü sayısını yaz."
+            etiket="Kuruma özel ek izin (gün)"
+            ipucu="Resmî tatiller otomatik düşülüyor. Buraya yalnızca kurumun kendi verdiği idari izinleri yaz."
           >
             <input
               inputMode="numeric"
@@ -972,6 +1152,46 @@ export const StajGunuHesaplama: React.FC<AracProps> = ({ onBack, onNavigate }) =
             <h2 className="font-bold text-gray-900">Gün gün takvim</h2>
             <StajTakvimi gunler={takvim} />
           </section>
+        )}
+
+        {/*
+          ÇIKARILAN GÜNLER TEK TEK
+
+          Önce yalnızca "12 gün çalışılmıyor" yazıyordu. Hangi günler
+          olduğunu göstermeden verilen bir sayı doğrulanamaz; öğrenci staj
+          formunu doldururken bu listeye bakıyor.
+        */}
+        {sonuc && sonuc.cikarilanlar.length > 0 && (
+          <details className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
+            <summary className="cursor-pointer font-bold text-gray-900">
+              Hesaptan çıkarılan {sonuc.cikarilanlar.length} gün
+            </summary>
+            <ul className="mt-3 space-y-1 text-sm text-gray-700">
+              {sonuc.cikarilanlar.map((c) => (
+                <li key={c.tarih.toISOString()} className="flex flex-wrap gap-x-2">
+                  <span className="font-semibold tabular-nums text-gray-900">
+                    {tarihYaz(c.tarih)}
+                  </span>
+                  <span className="text-gray-600">
+                    {c.ad}
+                    {c.durum === 'yarim' ? ' — yarım gün sayıldı' : ''}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs leading-relaxed text-gray-600">
+              Resmî tatiller {TATIL_KAYNAK.kanun.etiket} ve{' '}
+              <a
+                href={TATIL_KAYNAK.diyanet.adres}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="font-semibold text-blue-700 hover:underline"
+              >
+                Diyanet dinî günler takvimi
+              </a>{' '}
+              esas alınarak otomatik düşülüyor.
+            </p>
+          </details>
         )}
 
         {/*

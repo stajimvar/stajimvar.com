@@ -12,6 +12,7 @@ import {
   ExternalLink,
   List,
 } from 'lucide-react';
+import { RehberdeIlanlar } from './RehberdeIlanlar';
 import { SayfaKabugu } from './SayfaKabugu';
 import { RenkliKart } from './RehberGorseller';
 import { REHBERLER, konuEtiketi, rehberBul, rehberOkumaDakika, type Rehber } from '../data/rehberler';
@@ -419,7 +420,16 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
   const icerikRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    document.title = rehber ? `${rehber.baslik} | StajımVar` : 'Rehber bulunamadı | StajımVar';
+    /*
+      ÖN RENDER İLE AYNI BAŞLIK
+
+      Ön render `seoBaslik || baslik` yazıyor. Burada yalnızca `baslik`
+      kullanılsaydı aynı adres, ilk açılışta bir başlık, uygulama içinden
+      gidildiğinde başka bir başlık gösterirdi.
+    */
+    document.title = rehber
+      ? `${rehber.seoBaslik || rehber.baslik} | StajımVar`
+      : 'Rehber bulunamadı | StajımVar';
     if (rehber) {
       const etiket = document.querySelector('meta[name="description"]');
       if (etiket) etiket.setAttribute('content', rehber.aciklama);
@@ -626,6 +636,22 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
         )}
 
         {/*
+          YAZININ DİBİNDE CANLI İLAN
+
+          Rehber en güçlü yüzey ama çıkmaz sokaktı: öğrenci "staj CV'si
+          nasıl yazılır"ı okuyup çıkıyordu. Yazıyı okuyan kişi başvurmaya
+          en yakın kişi; o anda gerçek ilan göstermemek, hazırladığı CV'yi
+          göndereceği yeri saklamak olur.
+
+          Yalnızca STAJ ve CV konulu yazılarda: burs, yurt ya da üniversite
+          hayatı yazısının altında staj ilanı alakasız durur ve rehberin
+          tonunu bozar.
+        */}
+        {(rehber.konu === 'staj' || rehber.konu === 'cv') && (
+          <RehberdeIlanlar baslik={rehber.baslik} onNavigate={onNavigate} />
+        )}
+
+        {/*
           UYGULANABİLİR SONRAKİ ADIM
 
           Yazının sonunda yalnızca başka yazılar göstermek, okuyanı bir
@@ -691,14 +717,21 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
 
         {reklamUygun && <GoogleAdBanner format="in-feed" className="mt-8" />}
 
-        {rehber.guncelleme && (
+        {(rehber.guncelleme || rehber.inceleyen) && (
           <p className="mt-6 text-xs text-gray-600">
-            Son gözden geçirme:{' '}
-            {new Date(rehber.guncelleme).toLocaleDateString('tr-TR', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            })}
+            {rehber.guncelleme && (
+              <>
+                Son gözden geçirme:{' '}
+                {new Date(rehber.guncelleme).toLocaleDateString('tr-TR', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </>
+            )}
+            {/* Gözden geçiren yalnızca yazılmışsa çiziliyor; uydurma unvan yok. */}
+            {rehber.guncelleme && rehber.inceleyen && ' · '}
+            {rehber.inceleyen && <>Gözden geçiren: {rehber.inceleyen}</>}
           </p>
         )}
       </article>

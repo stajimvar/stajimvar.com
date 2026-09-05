@@ -28,6 +28,8 @@ import { InternshipDetailModal } from './components/InternshipDetailModal';
 import { Logo } from './components/Logo';
 import { LegalPage, LEGAL_ROUTES } from './components/LegalPage';
 import { ApplyDialog } from './components/ApplyDialog';
+import { niyetYaz, niyetOku, niyetSil } from './lib/basvuru-niyeti.mjs';
+import { CerezBandi } from './components/CerezBandi';
 import { ListingPage } from './components/ListingPage';
 import { GuideHub, GuidePage } from './components/GuidePages';
 import { BasvuruSablonu } from './components/BasvuruSablonu';
@@ -585,8 +587,36 @@ export default function App() {
   }, []);
   const [authDonusYolu, setAuthDonusYolu] = useState<string | null>(null);
 
-  const handleOpenLogin = () => {
+  /**
+   * Giriş penceresini açar.
+   *
+   * BAŞVURUDAN GELİYORSA NİYET YAZILIYOR
+   *
+   * `authDonusYolu` React durumu ve e-posta girişinde yetiyor: modal aynı
+   * sayfada açılıp kapanıyor. OAuth'ta yetmiyor — Google'a gidiş tam sayfa
+   * yönlendirmesi, dönüşte uygulama sıfırdan kuruluyor ve durum silinmiş
+   * oluyor. Misafir başvuru düğmesine basıp Google'dan dönünce ana sayfada
+   * buluyordu kendini.
+   *
+   * Niyet sessionStorage'a yazılıyor; dönüşte okunup işlem sürdürülüyor.
+   * `donusYolu` da veriliyor ki OAuth kullanıcıyı doğrudan ilanın sayfasına
+   * getirsin — böylece dönüş anında zaten doğru sayfadayız.
+   */
+  const handleOpenLogin = (niyet?: {
+    tur: 'dis' | 'ic';
+    ilanId: string;
+    yol: string;
+    disAdres?: string;
+    baslik?: string;
+  }) => {
     setAuthBaglam('ogrenci');
+    if (niyet && niyetYaz(window.sessionStorage, niyet)) {
+      setAuthDonusYolu(niyet.yol);
+      /* Kayıt modu: başvurmak isteyen misafirin çoğu henüz üye değil. */
+      setAuthModalMode('register');
+      setIsAuthModalOpen(true);
+      return;
+    }
     setAuthDonusYolu(null);
     setAuthModalMode('login');
     setIsAuthModalOpen(true);
@@ -779,7 +809,75 @@ export default function App() {
     };
   }, [session]);
 
+  /*
+    REKLAM BETİĞİNİ APP YÜKLEMİYOR
+
+    Burada rıza verilince betiği açılışta yükleyen bir etki vardı. Sonuç:
+    izin verildikten sonra betik ANA SAYFADA, ilan listesinde, fırsatlarda,
+    boş süzgeç ekranlarında ve 404'te de yükleniyordu (bildirildi). O
+    sayfalarda görünür reklam yok, yalnızca boş istek çıkıyordu — ama Auto
+    Ads açılırsa Google oralara reklam yerleştirebilir ve boş/hata ekranında
+    reklam göstermek yayıncı politikasına aykırı.
+
+    Yükleme kararı artık yalnızca GoogleAdBanner'da: betik ancak gerçekten
+    bir reklam yuvası çizilirken isteniyor, o da yalnızca editoryal kapıyı
+    geçmiş rehber sayfalarında oluyor (lib/reklam-kapisi.mjs).
+  */
+  const [rizaSayaci, setRizaSayaci] = useState(0);
+  const [tercihlerAcik, setTercihlerAcik] = useState(false);
+
   const activeStudent = student;
+
+  /*
+    NİYETİ SÜRDÜR — GİRİŞTEN SONRA BAŞVURUYA DEVAM
+
+    Kullanıcı başvuru düğmesinden giriş yaptıysa sessionStorage'da bir niyet
+    duruyor. Oturum kurulunca burada okunup işlem tamamlanıyor: kullanıcı
+    ilanı yeniden aramak ya da düğmeye ikinci kez basmak zorunda kalmıyor.
+
+    `sessionReady` bekleniyor: oturum daha okunmadan niyeti çalıştırmak,
+    girişi başarısız olmuş kullanıcıyı da dış siteye gönderirdi.
+
+    Yol kontrolü: niyet yalnızca kendi ilanının sayfasındayken çalışıyor.
+    OAuth `redirectTo` zaten oraya getiriyor; başka bir sayfadaysak kullanıcı
+    arada gezinmiş demektir ve onu habersiz yönlendirmek sürpriz olur.
+  */
+  React.useEffect(() => {
+    if (!sessionReady || !session) return;
+    const niyet = niyetOku(window.sessionStorage);
+    if (!niyet) return;
+    if (niyet.yol !== window.location.pathname) return;
+
+    niyetSil(window.sessionStorage);
+
+    if (niyet.tur === 'dis' && niyet.disAdres) {
+      /*
+        Yeni sekmede açılıyor: kullanıcıyı siteden atmadan başvuruya
+        götürüyor. Açılır pencere engelleyicisi `null` döndürürse zorlamıyoruz
+        — düğme artık girişli kullanıcı için çalışan bir bağlantı, tek
+        dokunuş kaldı. Sessizce hiçbir şey yapmamaktansa bunu söylüyoruz.
+      */
+      const pencere = window.open(niyet.disAdres, '_blank', 'noopener,noreferrer');
+      showToast(
+        pencere
+          ? 'Giriş tamam. Resmî başvuru sayfası yeni sekmede açıldı.'
+          : 'Giriş tamam. Başvuru sayfasını açmak için düğmeye dokun.',
+      );
+      return;
+    }
+
+    /*
+      Platform içi ilan: başvuru formu burada açılıyor, dışarı çıkılmıyor.
+      İlan listede yoksa (henüz yüklenmediyse) sessizce geçiliyor; kullanıcı
+      zaten ilanın sayfasında ve düğme çalışır durumda.
+    */
+    const ilan = allListings.find((l) => l.id === niyet.ilanId);
+    if (ilan) {
+      setApplyTarget({ listing: ilan, matchScore: 0 });
+      showToast('Giriş tamam. Başvurunu tamamlayabilirsin.');
+    }
+  }, [sessionReady, session, allListings]);
+
 
   /**
    * Profil güncelleme. Önce ekranda gösterir, sonra Supabase'e yazar.
@@ -1168,12 +1266,29 @@ export default function App() {
     />
   ) : null;
 
+  /*
+    ÇEREZ BANDI HER İKİ KABUKTA DA
+
+    Band önce yalnızca ana kabuğun return'ünde duruyordu. İçerik sayfaları
+    (`icerikSayfasi`) oraya HİÇ ULAŞMIYOR — erken dönüyorlar. Ölçüldü:
+    /rehber/... sayfasında band çıkmıyordu, yani reklamın gösterildiği
+    sayfalarda rıza hiç sorulmuyordu.
+  */
+  const cerezBandi = (
+    <CerezBandi
+      acikBasla={tercihlerAcik}
+      onKapat={() => setTercihlerAcik(false)}
+      onKarar={() => setRizaSayaci((n) => n + 1)}
+    />
+  );
+
   const icerikSayfasi = (icerik: React.ReactNode) => (
     <div className="min-h-screen flex flex-col bg-[#F9FAFB]">
       {ustCubuk}
       {icerik}
       {girisModali}
       {adPenceresi}
+      {cerezBandi}
     </div>
   );
 
@@ -1240,6 +1355,8 @@ export default function App() {
             if (window.history.state?.__discoverCatalogReturn) window.history.back();
             else navigate('/kesfet');
           }}
+          girisGerekli={!session}
+          onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
         />,
       );
   }
@@ -1532,8 +1649,18 @@ export default function App() {
   */
   const sirketPanelYolu = temizYol;
 
+  /*
+    Çıplak /sirket kanonik adrese gidiyor: aynı bileşeni iki adresten
+    çizmek, aynı içeriğe iki public URL vermek demekti. Kenar tarafında
+    301 var (public/_redirects); bu satır uygulama içi gezinmeyi de aynı
+    yere alıyor.
+  */
+  if (temizYol === '/sirket') {
+    navigate('/isveren/ilan-ver');
+    return null;
+  }
+
   if (
-    temizYol === '/sirket' ||
     SIRKET_PANEL_YOLLARI.some(
       (p) => sirketPanelYolu === p || sirketPanelYolu.startsWith(`${p}/`)
     )
@@ -1633,6 +1760,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] font-sans text-[#111827] flex flex-col selection:bg-blue-600 selection:text-white transition-colors duration-200">
+      {/*
+        ÇEREZ BANDI
+
+        Reklam betiği bu banda verilen karara bağlı; band çıkmadan hiçbir
+        dış reklam isteği başlamıyor. `tercihlerAcik` altbilgideki
+        "Çerez tercihleri" bağlantısıyla açılıyor — kullanıcı kararını
+        sonradan değiştirebilsin diye.
+      */}
+      {cerezBandi}
+
       {/* Toast Banner */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-gray-800 flex items-center gap-2.5 text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-200">
@@ -1955,58 +2092,80 @@ export default function App() {
       */}
       <footer className="border-t border-gray-200 bg-white mt-auto py-8 text-xs text-gray-500 shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
-          <nav className="flex flex-col sm:flex-row sm:justify-center gap-3 sm:gap-8">
-            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
-              {[
-                { yol: '/rehber', etiket: 'Staj rehberi' },
-                { yol: '/bolumler', etiket: 'Bölüme göre staj' },
-                { yol: '/staj-programlari', etiket: 'Büyük işverenlerde staj' },
-                { yol: '/universite-kariyer-merkezleri', etiket: 'Kariyer merkezleri' },
-                { yol: '/araclar', etiket: 'Hesaplama araçları' },
-                { yol: '/isveren', etiket: 'İşveren rehberi' },
-                { yol: '/isveren/ilan-ver', etiket: 'Şirketini sahiplen' },
-                { yol: '/hakkimizda', etiket: 'Hakkımızda' },
-                { yol: '/iletisim', etiket: 'İletişim' },
-                { yol: '/ilan-kurallari', etiket: 'İlan kuralları' },
-                { yol: '/ilan-bildir', etiket: 'İlan bildir' },
-              ].map((bag) => (
-                <a
-                  key={bag.yol}
-                  href={bag.yol}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate(bag.yol);
-                  }}
-                  className="font-semibold text-gray-600 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  {bag.etiket}
-                </a>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
-              {[
-                { yol: '/kvkk-aydinlatma-metni', etiket: 'KVKK aydınlatma metni' },
-                { yol: '/gizlilik', etiket: 'Gizlilik' },
-                { yol: '/cerez-politikasi', etiket: 'Çerezler' },
-                { yol: '/kullanim-kosullari', etiket: 'Kullanım koşulları' },
-              ].map((bag) => (
-                <a
-                  key={bag.yol}
-                  href={bag.yol}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate(bag.yol);
-                  }}
-                  className="font-semibold text-gray-600 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  {bag.etiket}
-                </a>
-              ))}
-            </div>
+          <nav aria-label="Alt bilgi" className="grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4 lg:gap-x-10">
+            {[
+              {
+                baslik: 'Staj ara',
+                baglantilar: [
+                  { yol: '/rehber', etiket: 'Staj rehberi' },
+                  { yol: '/bolumler', etiket: 'Bölüme göre staj' },
+                  { yol: '/staj-programlari', etiket: 'Büyük işverenlerde staj' },
+                  { yol: '/universite-kariyer-merkezleri', etiket: 'Kariyer merkezleri' },
+                  { yol: '/araclar', etiket: 'Staj hesaplama araçları' },
+                  /*
+                    Keşfet birincil menüden indi (bkz. Header.tsx notu);
+                    bağlantısı burada duruyor ki sayfa öksüz kalmasın.
+                  */
+                  { yol: '/kesfet', etiket: 'Öğrenci etkinlikleri' },
+                ],
+              },
+              {
+                baslik: 'İşverenler',
+                baglantilar: [
+                  { yol: '/isveren', etiket: 'İşveren rehberi' },
+                  { yol: '/isveren/ilan-ver', etiket: 'Şirketini sahiplen' },
+                  { yol: '/ilan-kurallari', etiket: 'İlan kuralları' },
+                  { yol: '/ilan-bildir', etiket: 'İlan bildir' },
+                ],
+              },
+              {
+                baslik: 'Kurumsal',
+                baglantilar: [
+                  { yol: '/hakkimizda', etiket: 'Hakkımızda' },
+                  { yol: '/iletisim', etiket: 'İletişim' },
+                ],
+              },
+              {
+                baslik: 'Yasal',
+                baglantilar: [
+                  { yol: '/kvkk-aydinlatma-metni', etiket: 'KVKK aydınlatma metni' },
+                  { yol: '/gizlilik', etiket: 'Gizlilik' },
+                  { yol: '/kullanim-kosullari', etiket: 'Kullanım koşulları' },
+                  { yol: '/cerez-politikasi', etiket: 'Çerezler' },
+                ],
+              },
+            ].map((grup) => (
+              <section key={grup.baslik}>
+                <h2 className="mb-3 text-sm font-extrabold text-gray-900">{grup.baslik}</h2>
+                <div className="flex flex-col items-start gap-2.5">
+                  {grup.baglantilar.map((bag) => (
+                    <a
+                      key={bag.yol}
+                      href={bag.yol}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate(bag.yol);
+                      }}
+                      className="font-semibold leading-relaxed text-gray-600 transition-colors hover:text-blue-600"
+                    >
+                      {bag.etiket}
+                    </a>
+                  ))}
+                  {grup.baslik === 'Yasal' && (
+                    <button
+                      type="button"
+                      onClick={() => setTercihlerAcik(true)}
+                      className="cursor-pointer text-left font-semibold leading-relaxed text-gray-600 transition-colors hover:text-blue-600"
+                    >
+                      Çerez tercihleri
+                    </button>
+                  )}
+                </div>
+              </section>
+            ))}
           </nav>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 pt-4 border-t border-gray-100">
+          <div className="flex flex-col items-center justify-between gap-3 border-t border-gray-100 pt-5 sm:flex-row">
             <Logo
               size="sm"
               showTagline={false}

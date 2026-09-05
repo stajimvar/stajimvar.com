@@ -38,9 +38,31 @@ const BOYUT = 128;
 const EN_AZ_KENAR = 32;
 
 const tur = process.argv[2];
-if (tur !== 'isveren' && tur !== 'universite') {
-  console.error('Kullanım: node scripts/marka-logolari.mjs <isveren|universite>');
+if (tur !== 'isveren' && tur !== 'universite' && tur !== 'liste') {
+  console.error('Kullanım: node scripts/marka-logolari.mjs <isveren|universite|liste <dosya.json>>');
   process.exit(1);
+}
+
+/*
+  ÜÇÜNCÜ MOD: DIŞARIDAN LİSTE
+
+  İlk iki mod kaynak listelerini repodaki TS dosyalarından okuyor; o
+  listeler elle küratörlü ve sabit. Ama veritabanına ilan girildikçe
+  logosu olmayan YENİ şirketler doğuyor ve onlar hiçbir TS dosyasında
+  yazmıyor.
+
+  Bu mod aynı bulma, puanlama ve ölçekleme yolunu o şirketler için de
+  açıyor: dosya [{ kod, ad, sayfa }] taşıyor, gerisi değişmiyor. Ayrı bir
+  betik yazmak, logo kurallarının (en az kenar, yatay kilit cezası, 128
+  piksel) iki yerde ayrışması demek olurdu.
+*/
+function listedenOkur() {
+  const yol = process.argv[3];
+  if (!yol) {
+    console.error('liste modu bir JSON dosyası istiyor: [{ kod, ad, sayfa }]');
+    process.exit(1);
+  }
+  return JSON.parse(fs.readFileSync(path.resolve(yol), 'utf8'));
 }
 
 /* --------------------------------------------------------------- girdiler */
@@ -85,8 +107,10 @@ function universiteler() {
   return bulunan;
 }
 
-const kurumlar = tur === 'isveren' ? isverenler() : universiteler();
-const HEDEF = path.join(KOK, 'public', tur === 'isveren' ? 'isveren-logolari' : 'universite-logolari');
+const kurumlar =
+  tur === 'liste' ? listedenOkur() : tur === 'isveren' ? isverenler() : universiteler();
+/* Liste modu işveren logosu üretiyor; hedef dizin de o yüzden aynı. */
+const HEDEF = path.join(KOK, 'public', tur === 'universite' ? 'universite-logolari' : 'isveren-logolari');
 
 /* ----------------------------------------------------------------- bulma */
 

@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { rizaOku, reklamSerbest } from '../lib/cerez-rizasi.mjs';
+import { reklamGosterilebilir } from '../lib/reklam-kapisi.mjs';
 import reklamAyari from '../../reklam.json';
 
 /**
@@ -70,8 +72,32 @@ const SLOT_ENV: Partial<Record<AdFormat, string | undefined>> =
 /** AdSense betiği sayfa başına bir kez yüklenir. */
 let scriptRequested = false;
 
+/**
+ * Betiği yükler — RIZA YOKSA HİÇ.
+ *
+ * Kapı burada, çağıranlarda değil: iki ayrı çağrı yeri var (açılış ve
+ * reklam yuvası çizimi) ve kapıyı çağıranlara koymak, birini unutunca
+ * sessizce sızdırıyordu. Ölçüldü: açılıştaki çağrı kaldırıldığı hâlde
+ * yuva çizilirken betik yine yükleniyordu.
+ *
+ * Kural isteğin BAŞLAMAMASI; betiği yükleyip görünmez yapmak yetmiyor.
+ */
 function ensureAdsenseScript(client: string): void {
   if (scriptRequested || typeof document === 'undefined') return;
+  if (!reklamSerbest(rizaOku(window.localStorage))) return;
+  /*
+    İKİNCİ KAPI: YOL.
+
+    Rıza tek başına yetmiyor. Betik izinden sonra her sayfada
+    yükleniyordu — ana sayfa, ilanlar, boş süzgeç ekranı, 404. Auto Ads
+    açılırsa Google oralara reklam koyabilir; boş ve hata ekranında reklam
+    göstermek yayıncı politikasına aykırı.
+
+    Bu bileşen zaten yalnızca uygun rehber sayfalarında çiziliyor, ama
+    kapıyı buraya da koymak "bir gün başka bir yerden çağrılırsa" riskini
+    kapatıyor.
+  */
+  if (!reklamGosterilebilir(window.location.pathname, true)) return;
   scriptRequested = true;
 
   const script = document.createElement('script');
