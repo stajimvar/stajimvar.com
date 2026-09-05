@@ -126,12 +126,20 @@ export const RehberdeIlanlar: React.FC<{
         ))}
       </ul>
 
+      {/*
+        İLAN LİSTESİ KÖK ADRESTE
+
+        Burada "/is-ilanlari" yazıyordu ve o rota HİÇ YOK: uygulamada
+        ilan listesi kök adreste duruyor, üst menü de oraya bağlanıyor.
+        Bağlantı sessizce 404 veriyordu — rehber yazısının dibindeki
+        en görünür çıkış yolu çalışmıyordu (canlıda ölçüldü).
+      */}
       <a
-        href="/is-ilanlari"
+        href="/"
         onClick={(e) => {
           if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
           e.preventDefault();
-          onNavigate('/is-ilanlari');
+          onNavigate('/');
         }}
         className="inline-block text-sm font-semibold text-blue-600 hover:underline"
       >
