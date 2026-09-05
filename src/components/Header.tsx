@@ -605,22 +605,15 @@ export const Header: React.FC<HeaderProps> = ({
                   <span>Fırsatlar</span>
                 </a>
 
-                {/*
-                  KEŞFET BİRİNCİL NAV'DAN İNDİ
-
-                  Ölçüldü: yayındaki 136 etkinliğin dağılımı konser 51,
-                  festival 42, sergi 21, tiyatro 18, atölye 3, müze 1 —
-                  kariyerle ilgili tek kayıt TEKNOFEST'ti. Bir staj
-                  sitesinin birincil menüsünde jazz konseri ve kahve
-                  festivali durması "StajımVar = staj" cümlesini
-                  zayıflatıyordu.
-
-                  Bölüm SİLİNMEDİ: /kesfet çalışıyor, altbilgide ve mobil
-                  menüde duruyor, sitemap'te. Yalnızca birincil menüden
-                  indi. Kariyer etkinliği kaynakları eklendiğinde (bkz.
-                  kesfet-kapsam.mjs) geri çıkarılabilir — kapsam katmanı
-                  o gün için hazır bekliyor.
-                */}
+                <a
+                  href="/kesfet"
+                  aria-current={kesfetteMi ? 'page' : undefined}
+                  onClick={baglantiTiklamasi(() => onOpenDiscover?.())}
+                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${kesfetteMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'}`}
+                >
+                  <Compass className={`w-3.5 h-3.5 ${kesfetteMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span>Keşfet</span>
+                </a>
 
                 {/*
                   Rehber sekmesi. Boşalan yere içerik geldi: staj sürecinin
@@ -1519,11 +1512,10 @@ export const Header: React.FC<HeaderProps> = ({
           {firsatlardaMi && <span className="text-[11px] font-bold truncate">Fırsat</span>}
         </a>
 
-        {/*
-          Keşfet mobil alt menüden de indi — masaüstü nav'la aynı gerekçe
-          (bkz. yukarıdaki not). Alt menü üç sekmeye düştü: İlanlar,
-          Fırsatlar, Rehber. Sayfa altbilgiden erişilebilir durumda.
-        */}
+        <a href="/kesfet" aria-label="Öğrenci etkinlikleri" aria-current={kesfetteMi ? 'page' : undefined} onClick={baglantiTiklamasi(() => onOpenDiscover?.())} className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${kesfetteMi ? 'shrink-0' : 'flex-1'} transition-all ${kesfetteMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'}`}>
+          <Compass className="w-5 h-5" />
+          {kesfetteMi && <span className="text-[11px] font-bold truncate">Keşfet</span>}
+        </a>
 
         {/*
           3. Rehber — giriş şartı yok, herkese açık.
