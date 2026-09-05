@@ -27,8 +27,20 @@ import path from 'node:path';
 import url from 'node:url';
 
 const KOK = path.dirname(path.dirname(url.fileURLToPath(import.meta.url)));
-const GIRDI = path.join(KOK, 'scripts', 'data', 'firsat-adaylari.json');
-const CIKTI = path.join(KOK, 'scripts', 'data', 'firsat-dogrulama.json');
+/*
+  GİRDİ/ÇIKTI DIŞARIDAN VERİLEBİLİYOR
+
+  Varsayılan hâli değişmedi: argümansız çağrı yine repodaki aday
+  dosyasını okuyup aynı yere yazıyor. Ama aday listesi artık tek bir
+  dosya olmak zorunda değil — yurt dışı burslarını ayrı bir partide
+  doğrulayıp mevcut listeyi hiç ellememek için yol verilebiliyor.
+*/
+const GIRDI = process.argv[2]
+  ? path.resolve(process.argv[2])
+  : path.join(KOK, 'scripts', 'data', 'firsat-adaylari.json');
+const CIKTI = process.argv[3]
+  ? path.resolve(process.argv[3])
+  : path.join(KOK, 'scripts', 'data', 'firsat-dogrulama.json');
 
 const BASLIK = {
   'User-Agent':

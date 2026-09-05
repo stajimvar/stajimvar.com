@@ -149,7 +149,21 @@ def main() -> None:
         db.table("opportunities")
         .select("slug,updated_at")
         .eq("status", "published")
-        .gte("application_deadline", datetime.now(UTC).isoformat())
+        # Tarihsiz firsatlar da haritaya girer.
+        #
+        # Filtre yalnizca "son basvuru gecmemis" kayitlari aliyordu; ama
+        # application_deadline NULL olan kayit bu kosulu HIC saglamiyor ve
+        # sessizce dusuyordu. Sitede bu kayitlarin sayfasi uretiliyor ve
+        # /burslar listesinde gorunuyorlar ("Kurum bu donemin takvimini
+        # aciklamadi" notuyla) - yani var olan, calisan sayfalar haritada
+        # yoktu. Olculdu: 83 yayinda firsatin tamami bu durumdaydi.
+        #
+        # Suresi GECMIS olanlar hala disarida: onlar icin deadline dolu ve
+        # gecmis tarihli.
+        .or_(
+            f"application_deadline.is.null,"
+            f"application_deadline.gte.{datetime.now(UTC).isoformat()}"
+        )
         .execute()
         .data
         or []
