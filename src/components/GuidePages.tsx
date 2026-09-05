@@ -12,6 +12,7 @@ import {
   ExternalLink,
   List,
 } from 'lucide-react';
+import { RehberdeIlanlar } from './RehberdeIlanlar';
 import { SayfaKabugu } from './SayfaKabugu';
 import { RenkliKart } from './RehberGorseller';
 import { REHBERLER, konuEtiketi, rehberBul, rehberOkumaDakika, type Rehber } from '../data/rehberler';
@@ -632,6 +633,22 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
               ))}
             </ul>
           </section>
+        )}
+
+        {/*
+          YAZININ DİBİNDE CANLI İLAN
+
+          Rehber en güçlü yüzey ama çıkmaz sokaktı: öğrenci "staj CV'si
+          nasıl yazılır"ı okuyup çıkıyordu. Yazıyı okuyan kişi başvurmaya
+          en yakın kişi; o anda gerçek ilan göstermemek, hazırladığı CV'yi
+          göndereceği yeri saklamak olur.
+
+          Yalnızca STAJ ve CV konulu yazılarda: burs, yurt ya da üniversite
+          hayatı yazısının altında staj ilanı alakasız durur ve rehberin
+          tonunu bozar.
+        */}
+        {(rehber.konu === 'staj' || rehber.konu === 'cv') && (
+          <RehberdeIlanlar baslik={rehber.baslik} onNavigate={onNavigate} />
         )}
 
         {/*
