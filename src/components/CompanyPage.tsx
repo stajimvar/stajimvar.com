@@ -202,11 +202,21 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                         Sahiplenilmiş
                       </span>
                     )}
-                    {!veri.company.verified && !veri.company.sahiplenilmis && (
-                      <span className="text-[11px] font-semibold text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full">
-                        Henüz sahiplenilmemiş
-                      </span>
-                    )}
+                    {/*
+                      "HENÜZ SAHİPLENİLMEMİŞ" ROZETİ KALDIRILDI
+
+                      Bu rozet şirket adının hemen yanında duruyordu, yani
+                      sayfayı açan ÖĞRENCİNİN gördüğü ilk şeylerden biriydi.
+                      Ama söylediği şey öğrenciyi ilgilendirmiyor:
+                      sahiplenme işveren tarafının bir durumu ve öğrenciye
+                      yalnızca "burası eksik bir sayfa" hissi veriyordu —
+                      oysa ilanlar doğrulanmış kaynaktan derlenmiş, gerçek.
+
+                      "Doğrulanmış" ve "Sahiplenilmiş" rozetleri duruyor:
+                      onlar öğrenci için OLUMLU sinyal. Sahiplenme daveti de
+                      duruyor ama aşağıda, açıklamanın altındaki notta —
+                      yetkiliye hitap ettiği yerde.
+                    */}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
@@ -322,6 +332,54 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                 ))
               )}
             </div>
+
+            {/*
+              BENZER ŞİRKETLER
+
+              "Açık ilanı yok" tek başına çıkmaz sokaktı: öğrenci sayfaya
+              geliyor, ilan bulamıyor, geri dönmekten başka yolu olmuyor.
+              Burada aynı sektör ya da aynı şehirdeki, YAYINDA İLANI OLAN
+              şirketler duruyor.
+
+              Eşleşme uydurulmuyor (bkz. fetchCompanyPage): sektör ve şehir
+              boşsa liste boş dönüyor ve bölüm hiç çizilmiyor. Rastgele
+              şirket önermek, çıkmaz sokağı alakasız bir sayfaya taşımak
+              olurdu.
+            */}
+            {veri.benzerler.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="px-1 text-xs font-bold uppercase tracking-widest text-gray-600">
+                  {veri.listings.length === 0 ? 'Bunun yerine bakabilirsin' : 'Benzer şirketler'}
+                </h2>
+                <ul className="grid gap-2 sm:grid-cols-2">
+                  {veri.benzerler.map((b) => (
+                    <li key={b.slug}>
+                      <a
+                        href={`/sirket/${b.slug}`}
+                        onClick={(e) => {
+                          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                          e.preventDefault();
+                          onNavigate(`/sirket/${b.slug}`);
+                        }}
+                        className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3 transition-colors hover:border-blue-500"
+                      >
+                        <ListingLogo name={b.name} logoUrl={b.logoUrl} />
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-bold text-gray-900">
+                            {b.name}
+                          </span>
+                          {b.industry && (
+                            <span className="block truncate text-xs text-gray-500">
+                              {b.industry}
+                            </span>
+                          )}
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/*
               KÜNYE VE İLGİLİ BÖLÜMLER
