@@ -1531,6 +1531,18 @@ async function main() {
       155,
     );
 
+    /* Boş alan satır üretmiyor: "Sektör: —" yazmak bilgi vermiyor. */
+    const kunye = [
+      s.industry && `Sektör: ${kacir(s.industry)}`,
+      s.location && `Merkez: ${kacir(s.location)}`,
+      sehirler.length && `İlan verilen şehirler: ${kacir(sehirler.join(', '))}`,
+      `Yayındaki staj ilanı: ${adet}`,
+      guvenliDisAdres(s.website_url) &&
+        `Kariyer sayfası: <a href="${guvenliDisAdres(s.website_url)}" rel="nofollow noopener" target="_blank">${kacir(
+          String(s.website_url).replace(/^https?:\/\//i, '')
+        )}</a>`,
+    ].filter(Boolean);
+
     const liste =
       '<ul>' +
       s.ilanlar
@@ -1545,10 +1557,27 @@ async function main() {
     sayfaYaz(`/sirket/${slug}`, {
       baslik,
       aciklama,
+      /*
+        KÜNYE GÖVDEYE DE BASILIYOR
+
+        Sektör, konum ve kariyer sayfası veritabanında VARDI ama yalnızca
+        yapısal veriye giriyordu; sayfanın kendisi isim + ilan listesinden
+        ibaretti. Ölçüldü: 97 şirket sayfasının 97'si 900 karakterin
+        altındaydı, yani tarayıcı için hepsi ince içerikti.
+
+        Bu satırlar uydurulmuyor: hangisi boşsa o satır hiç çizilmiyor.
+        Sonraki adım bağlantıları da burada, çünkü ilanı biten bir şirket
+        sayfası aksi hâlde çıkmaz sokak oluyor.
+      */
       govde:
         `<main><h1>${kacir(s.name)} staj ilanları</h1>` +
         `<p>${kacir(aciklama)}</p>` +
-        `<h2>Yayındaki ilanlar</h2>${liste}` +
+        (kunye.length ? `<ul>${kunye.map((x) => `<li>${x}</li>`).join('')}</ul>` : '') +
+        `<h2>Yayındaki ilanlar (${adet})</h2>${liste}` +
+        '<h2>Bu şirkette açık ilan yoksa</h2>' +
+        '<p>Şirketin kendi kariyer sayfasını takip edebilir ya da doğrudan yazabilirsin. ' +
+        '<a href="/rehber/staj-basvuru-epostasi">Staj başvuru e-postası nasıl yazılır</a> ve ' +
+        '<a href="/rehber/staj-nasil-bulunur">staj nasıl bulunur</a> sayfalarında anlattık.</p>' +
         `<p><a href="/">Tüm staj ilanları</a></p></main>`,
       jsonLd: {
         '@context': 'https://schema.org',
