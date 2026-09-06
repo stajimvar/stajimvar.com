@@ -368,7 +368,7 @@ export const RehberMerkezi: React.FC<{
         {/* ------------------------------------------------- sol: süzgeçler */}
         <div className="space-y-4 lg:sticky lg:top-4 lg:col-span-3">
           <h1 className="min-w-0 text-center [font-size:clamp(1rem,5vw,1.5rem)] font-extrabold leading-tight tracking-tight text-gray-950 break-words lg:text-left lg:[font-size:clamp(1.125rem,1.82vw,1.85rem)]">
-            Öğrencilikte bilmen gerekenler, <span className="text-blue-600">tek listede</span>.
+            Öğrenci rehberleri, <span className="text-blue-600">tek listede</span>.
           </h1>
 
           {/*

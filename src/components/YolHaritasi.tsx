@@ -151,10 +151,21 @@ export const YolHaritasi: React.FC<{
         yani aradaki genişliklerde başlık sekmeden sekmeye zıplıyordu.
       */}
       <div className="space-y-1">
-        <h1 className="min-w-0 text-center lg:text-left [font-size:clamp(1.25rem,2.4vw,1.75rem)] font-extrabold leading-tight tracking-tight text-gray-950">
-          Öğrencilikte bilmen gerekenler,{' '}
-          <span className="text-blue-600">tek listede</span>.
-        </h1>
+        {/*
+          BURASI ARTIK SAYFA BAŞLIĞI DEĞİL
+
+          Blok rehber listesinin ALTINA indi; sayfanın `<h1>`i sol sütunda
+          duruyor. Burada da `<h1>` kalsaydı aynı sayfada iki birinci
+          seviye başlık — üstelik aynı cümleyle — olurdu: ekran okuyucu
+          "Öğrencilikte bilmen gerekenler" başlığını iki kez duyurur,
+          arama motoru hangisinin sayfa başlığı olduğunu bilemezdi.
+
+          Cümle de değişti: bu blok bir dizin, listenin devamı değil.
+          "Başka nereye bakabilirsin" sorusunu cevaplıyor.
+        */}
+        <h2 className="min-w-0 text-center lg:text-left [font-size:clamp(1.125rem,2vw,1.5rem)] font-extrabold leading-tight tracking-tight text-gray-950">
+          Başka nereye <span className="text-blue-600">bakabilirsin</span>?
+        </h2>
         {/*
           Cümle "Bölümünü ve okulunu seç; sana uygun ilanları, işverenleri,
           belgeleri ve araçları tek yerde gör." idi. "Bölümünü seç"in

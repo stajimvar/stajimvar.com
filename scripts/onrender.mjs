@@ -1126,7 +1126,7 @@ async function main() {
     biçimi, title ise arama sonucundaki adı — ikisinin aynı olması gerekmiyor.
   */
   const sabitler = [
-    ['/rehber', 'Öğrenci rehberi | StajımVar', "Stajdan bursa, KYK'dan yurda; öğrencilikte ihtiyaç duyacağın bilgiler resmî kaynağıyla, adım adım.", 'Öğrencilikte bilmen gerekenler, tek listede.'],
+    ['/rehber', 'Öğrenci rehberi | StajımVar', "Stajdan bursa, KYK'dan yurda; öğrencilikte ihtiyaç duyacağın bilgiler resmî kaynağıyla, adım adım.", 'Öğrenci rehberleri, tek listede.'],
     ['/bolumler', 'Bölüme göre staj rehberi | StajımVar', `${bolumler.length} bölüm için: staj nerede yapılır, stajyer ne iş yapar, ne öğrenmeli.`, 'Bölüme göre staj'],
     /*
       BAŞLIK STAJ ARAÇLARINI ÖNE ALIYOR
