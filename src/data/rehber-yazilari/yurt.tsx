@@ -119,6 +119,18 @@ export const YURT_REHBERLERI: Rehber[] = [
       'en çok bunlar belirliyor.',
     bloklar: [
       {
+        baslik: 'Önce bir uyarı: oda tipi mevzuatta tanımlı değil',
+        paragraflar: [
+          'İnternette "KYK oda tipleri" diye dolaşan listeler kaynak göstermiyor ve birbirini ' +
+            'tutmuyor. Sebebi şu: Gençlik ve Spor Bakanlığı Yurt Hizmetleri Yönetmeliği oda tipi ya ' +
+            'da oda kapasitesi diye bir sınıflandırma YAPMIYOR. Yönetmelik yurtların açılması, ' +
+            'barınma şartları, ücret ve disiplin gibi başlıkları düzenliyor; kaç kişilik oda ' +
+            'olacağını binaya ve Bakanlığın uygulamasına bırakıyor.',
+          'Aşağıdaki tablo bu yüzden bir kural değil, yaygın olarak karşılaşılan düzen. Bağlayıcı ' +
+            'bilgi kendi yerleştiğin yurdun duyurusunda.',
+        ],
+      },
+      {
         baslik: 'Oda tipleri',
         paragraflar: [
           'Yurtlarda oda düzeni binadan binaya değişiyor. Genel eğilim şöyle:',
@@ -213,6 +225,45 @@ export const YURT_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        baslik: 'Sırada kim önde',
+        paragraflar: [
+          'Yedek sırası yalnızca başvuru zamanına göre kurulmuyor. Yurt Hizmetleri Yönetmeliği ' +
+            'başvuruları "öğrenci ve ailesinin sosyal, ekonomik durumu, öğrencinin başarısı ve ' +
+            'benzeri durumlar" üzerinden değerlendiriyor (madde 9/1) ve belgelendirmek koşuluyla ' +
+            'bazı öğrencileri öncelikli barındırıyor (madde 9/2):',
+        ],
+        liste: [
+          'Şehit eşi ve çocukları; şehidin çocuğu yoksa bekâr kardeşleri.',
+          'Gazi ve gazi çocukları.',
+          'Yüzde 40 ve üzerinde engel durumu olanlar.',
+          'Anne ve babası vefat etmiş, yirmi beş yaşını geçmemiş öğrenciler.',
+          'Lise ve dengi öğrenimini Aile ve Sosyal Hizmetler Bakanlığı bünyesinde barınarak tamamlayanlar.',
+          'Devlet koruması altında olanlar.',
+          'Lise ve dengi öğrenimini Darüşşafaka Lisesinde tamamlayanlar.',
+          'Bakanlığın belirlediği kriterleri taşıyan millî sporcu belgesi sahipleri.',
+          'Gönüllü güvenlik korucusu olarak çalışan, çalışırken vefat eden veya emekliye ayrılanların çocukları.',
+          'ÖSYM sınavlarında her puan türünde ham puan bazında ilk yüze girenler.',
+        ],
+        uyari:
+          'Öncelik kendiliğinden işlemiyor. Yönetmelik "kamu kurum ve kuruluşlarından temin edilmiş ' +
+          'olan belgelerle durumunu belgelendiren öğrenci" diyor: belge yüklenmemişse öncelik ' +
+          'uygulanmıyor.',
+      },
+      {
+        baslik: 'Kayıtlar bittikten sonra boş yatak kalırsa',
+        paragraflar: [
+          'Asıl ve yedek listeden hak kazananların kayıtları tamamlandıktan sonra yurtta hâlâ boş ' +
+            'yatak varsa, yönetmelik dört grubun talebinin ayrıca değerlendirileceğini söylüyor ' +
+            '(madde 10/2). Yani sıran gelmese bile bakılacak ikinci bir kapı var:',
+        ],
+        liste: [
+          'Yurt bulunmayan ilçelerde öğrenim görenler.',
+          'Yedek sırası devam eden il veya ilçelerde öğrenim görenler.',
+          'Yeni açılan yükseköğretim kurumlarında öğrenim görenler.',
+          'Öğrenim gördüğü yere ulaşımı zor olan mahalle, belde veya köylerde oturanlar.',
+        ],
+      },
+      {
         baslik: 'Nasıl takip edilir',
         sirali: [
           'e-Devlet üzerinden başvuru durumunu düzenli kontrol et.',
@@ -255,7 +306,25 @@ export const YURT_REHBERLERI: Rehber[] = [
           'Kayıt sırasında istenen ödemeler asıl listeden yerleşenlerle aynı. Ayrıntı kayıt duyurusunda yazıyor.',
       },
     ],
-    kaynaklar: [{ etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr' }],
+    kaynaklar: [
+      {
+        etiket: 'Gençlik ve Spor Bakanlığı Yurt Hizmetleri Yönetmeliği',
+        adres: 'https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=38510&MevzuatTur=7&MevzuatTertip=5',
+        kurum: 'Cumhurbaşkanlığı Mevzuat Bilgi Sistemi',
+        tur: 'belge',
+        destekledigi:
+          'Başvurunun neye göre değerlendirildiği (madde 9), öncelikli barındırma halleri ' +
+          '(madde 9/2), asıl listeden kayıt yaptırmayanın yerine yedek sırasından yerleştirme ' +
+          've boş yatak kalması hâlinde değerlendirilecek gruplar (madde 10).',
+      },
+      {
+        etiket: 'e-Devlet Kapısı',
+        adres: 'https://www.turkiye.gov.tr',
+        kurum: 'Cumhurbaşkanlığı Dijital Dönüşüm Ofisi',
+        tur: 'kurum',
+        destekledigi: 'Başvurunun yapıldığı ve sonucun görüldüğü yer.',
+      },
+    ],
     sonrakiAdim: {
       etiket: 'Öğrenci evi kiralarken dikkat edilecekler',
       yol: '/rehber/ogrenci-evi-kiralarken',
@@ -302,6 +371,41 @@ export const YURT_REHBERLERI: Rehber[] = [
           'Sıralamayı bozmadan ilerlemek önemli.',
       },
       {
+        baslik: 'Okul değişince barınma hakkı ne oluyor',
+        paragraflar: [
+          'Nakil ile barınma HAKKI iki ayrı şey. Yurt Hizmetleri Yönetmeliği barınma sürelerini ' +
+            'ayrıca düzenliyor (madde 17) ve okul değişikliğinde ikisi farklı işliyor:',
+        ],
+        liste: [
+          'AYNI il veya ilçede üniversite ya da bölüm değiştirmek, yatay veya dikey geçiş yapmak: ' +
+            'bir defaya mahsus olmak üzere yeni kurumun normal öğrenim süresi sonuna kadar yurtta ' +
+            'barınmaya devam ediliyor (madde 17/2).',
+          'FARKLI il veya ilçeye geçmek: yurt hakkı taşınmıyor, yeni yerde yurda yerleşmek için ' +
+            'yeniden müracaat ediliyor (madde 17/3). "Nakil" burada bir başvuru anlamına geliyor.',
+          'Çift ana dal ya da yan dal yapan öğrenci, o programın öğrenim süresi kadar daha ' +
+            'barındırılıyor (madde 17/6) — [çift anadal ve yan dal](/rehber/cift-anadal-ve-yan-dal) ' +
+            'düşünüyorsan bu hakkı hesaba kat.',
+          'Değişim programıyla yurt dışında geçen süre normal öğrenim süresinden sayılmıyor ' +
+            '(madde 17/11); dönüşte öncelikli olarak yurda yerleştiriliyorsun (madde 10/3).',
+        ],
+        uyari:
+          'Kayıt hangi tarihte yapılırsa yapılsın, öğretim yılı sonunda bir yıllık barınma hakkı ' +
+          'kullanılmış sayılıyor (madde 17/7). Yani şubatta yerleşmek "yarım yıl" saymıyor.',
+      },
+      {
+        baslik: 'Nakil talebi kaç kez yapılabilir',
+        paragraflar: [
+          'Yönetmelik nakil işlemlerinin ayrıntısını Bakanlığa bırakıyor (madde 41/1); rakam ' +
+            'orada değil, KYGM’nin kendi duyurusunda: bir öğrenci aynı eğitim-öğretim dönemi ' +
+            'içinde en fazla iki defa yurt değişikliği talep edebiliyor ve isteğe bağlı nakil ' +
+            'talepleri GSBBİZ uygulaması ya da biz.gsb.gov.tr üzerinden açılıyor.',
+          'Bir istisna yönetmelikte yazılı: öğrenci değişim programı kapsamında geçici olarak ' +
+            'başka bir şehirde okuyacak yurt öğrencileri, gidecekleri şehirdeki yurtlara ÖNCELİKLİ ' +
+            'olarak naklediliyor; döndüklerinde de esas şehirlerine yine öncelikli dönüyorlar ' +
+            '(madde 41/2).',
+        ],
+      },
+      {
         baslik: 'Staj dönemi',
         paragraflar: [
           'Yaz stajını başka bir şehirde yapacaksan barınma ayrı bir sorun. Bazı dönemlerde yurtlar ' +
@@ -327,7 +431,25 @@ export const YURT_REHBERLERI: Rehber[] = [
           'Uygulama kuruma göre değişiyor; bazı durumlarda aktarılıyor, bazılarında iade edilip yeniden alınıyor. Yurt yönetiminden yazılı bilgi al.',
       },
     ],
-    kaynaklar: [{ etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr' }],
+    kaynaklar: [
+      {
+        etiket: 'Gençlik ve Spor Bakanlığı Yurt Hizmetleri Yönetmeliği',
+        adres: 'https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=38510&MevzuatTur=7&MevzuatTertip=5',
+        kurum: 'Cumhurbaşkanlığı Mevzuat Bilgi Sistemi',
+        tur: 'belge',
+        destekledigi:
+          'Okul/şehir değişikliğinde barınma süresi (madde 17), nakil işlemlerinin Bakanlıkça ' +
+          'belirlendiği ve değişim programı öğrencilerinin öncelikli nakli (madde 41).',
+      },
+      {
+        etiket: 'Gençlik ve Spor Bakanlığı — KYGM yurt sıkça sorulan sorular',
+        adres: 'https://kygm.gsb.gov.tr/Sayfalar/2678/3200/sikca-sorulan-sorular-yurt.aspx',
+        kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü',
+        tur: 'belge',
+        destekledigi:
+          'Nakil talebinin nereden açıldığı ve aynı dönemde en fazla iki defa talep edilebildiği.',
+      },
+    ],
     sonrakiAdim: {
       etiket: 'Başka şehirde staj yaparken barınma',
       yol: '/rehber/baska-sehirde-staj-barinma',
@@ -359,6 +481,39 @@ export const YURT_REHBERLERI: Rehber[] = [
           'Gece dışarıda kalmak için önceden izin alınıyor.',
           'Misafir kabulü ayrı kurallara tabi; çoğu yurtta odaya misafir alınmıyor.',
         ],
+      },
+      {
+        baslik: 'Saatler neden her yerde yazmıyor',
+        paragraflar: [
+          'Giriş-çıkış saatini internette arayınca farklı farklı rakamlar çıkıyor ve hiçbiri ' +
+            'kaynak göstermiyor. Sebebi şu: Yurt Hizmetleri Yönetmeliği bir saat YAZMIYOR. ' +
+            'Madde 18 tek cümle — "Yurtlara giriş çıkış saatleri ve öğrenci izinleri ile ilgili ' +
+            'hususlar Bakanlık tarafından usul ve esaslar ile belirlenir."',
+          'Yani saat, yönetmelikle sabitlenmiş bir kural değil; Bakanlığın belirlediği ve ' +
+            'değişebilen bir uygulama. Bu sayfada da bu yüzden saat yazmıyoruz — bağlayıcı olan ' +
+            'kendi yurdunun kayıt sırasında verdiği yönerge.',
+        ],
+        uyari:
+          'Giriş-çıkış saatlerine uymamak ve izinsiz yurttan ayrılmak, yönetmeliğin disiplin ' +
+          'maddelerinde sayılan davranışlar arasında. "Geceyi izinsiz veya mazeretsiz olarak bir ' +
+          'gün yurdun dışında geçirmek" de ayrıca yazılı. Yani izin almak bir nezaket değil, ' +
+          'kuralın kendisi.',
+      },
+      {
+        baslik: 'Uzun ayrılıkta hakkın ne kadar korunuyor',
+        paragraflar: [
+          'Burada yönetmelik net bir süre veriyor (madde 19). Hastalık ve diğer sebeplerle geçici ' +
+            'olarak ayrılmak isteyen öğrencinin barınma hakkı, ücretini zamanında ödemek ve yurt ' +
+            'idaresine bilgi verip durumunu belgelendirmek koşuluyla saklı tutuluyor:',
+        ],
+        liste: [
+          'Hastalıkta: rapor süresince.',
+          'Diğer sebeplerde: bir ay süreyle.',
+          'Bu sürenin sonunda yurda dönmeyen öğrencinin yurtla ilişiği kesiliyor.',
+        ],
+        uyari:
+          'Üç koşulun üçü birden gerekiyor: ücreti ödemeye devam etmek, idareye bilgi vermek ve ' +
+          'durumu belgelendirmek. Yalnızca haber vermek yetmiyor; belge yoksa hak saklı tutulmuyor.',
       },
       {
         baslik: 'Uzun süreli ayrılık',
@@ -403,7 +558,24 @@ export const YURT_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr', kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü', tur: 'kurum' },
+      {
+        etiket: 'Gençlik ve Spor Bakanlığı Yurt Hizmetleri Yönetmeliği',
+        adres: 'https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=38510&MevzuatTur=7&MevzuatTertip=5',
+        kurum: 'Cumhurbaşkanlığı Mevzuat Bilgi Sistemi',
+        tur: 'belge',
+        destekledigi:
+          'Giriş-çıkış saatleri ve izinlerin yönetmelikle değil Bakanlık usul ve esaslarıyla ' +
+          'belirlendiği (madde 18); geçici ayrılmada barınma hakkının hastalıkta rapor süresince, ' +
+          'diğer sebeplerde bir ay saklı tutulduğu (madde 19); giriş-çıkışa uymamanın disiplin ' +
+          'maddelerinde sayıldığı.',
+      },
+      {
+        etiket: 'Gençlik ve Spor Bakanlığı — KYGM',
+        adres: 'https://kygm.gsb.gov.tr',
+        kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü',
+        tur: 'kurum',
+        destekledigi: 'Yurtların güncel uygulama duyuruları.',
+      },
     ],
     sonrakiAdim: {
       etiket: 'Yurttan kayıt silme',
@@ -439,6 +611,38 @@ export const YURT_REHBERLERI: Rehber[] = [
         uyari:
           'Odayı boşaltmadan ve ilişik kesmeden ayrılmak, ücret tahakkukunun devam etmesine yol açabiliyor. ' +
           'Belgeyi almadan yurttan ayrılma.',
+      },
+      {
+        baslik: 'Ayrılmadan önce: belki silmen gerekmiyor',
+        paragraflar: [
+          'Yurttan bir süreliğine uzak kalacaksan kaydı silmek tek yol değil. Yurt Hizmetleri ' +
+            'Yönetmeliği geçici ayrılmayı ayrı düzenliyor (madde 19): ücretini zamanında ödemek ve ' +
+            'yurt idaresine bilgi verip durumunu belgelendirmek koşuluyla barınma hakkı, hastalık ' +
+            'durumunda rapor süresince, diğer sebeplerde ise bir ay süreyle saklı tutuluyor.',
+          'Bu sürenin sonunda yurda dönmeyen öğrencinin yurtla ilişiği kesiliyor. Yani "bir ay ' +
+            'gitmem gerekiyor" ile "artık kalmayacağım" iki farklı işlem — ilkinde kayıt silmek ' +
+            'hakkı gereksiz yere bitiriyor.',
+        ],
+      },
+      {
+        baslik: 'Güvence bedeli (depozito) mevzuatta ne diyor',
+        paragraflar: [
+          'Yönetmelik depozitoyu "güvence bedeli" diye adlandırıyor ve iki şeyin karşılığı olduğunu ' +
+            'söylüyor: zamanında yatırılmayan yurt ücreti ve yurda verilebilecek zarar (madde 13/1).',
+        ],
+        liste: [
+          'Kayıt silinince ya da yurttan ayrılınca kalan güvence bedeli öğrencinin BANKA HESABINA ' +
+            'iade ediliyor (madde 13/5) — elden ödeme diye bir usul yok, o yüzden IBAN bilgisini doğru vermek gerekiyor.',
+          'Yurt malzemesine zarar verilmişse önce öğrenciye tebliğ ediliyor ve ödemesi için otuz gün ' +
+            'süre veriliyor. Bu sürede ödenmezse tutar güvence bedelinden tahsil ediliyor ve ' +
+            'öğrencinin yurtla ilişiği kesiliyor (madde 13/4).',
+          'Zarar güvence bedelini aşarsa kalan kısım genel hükümlere göre tahsil ediliyor; yani ' +
+            'depozito tavan değil.',
+        ],
+        uyari:
+          'Kayıt silme talebi yurt müdürlüğüne dilekçeyle ya da GSBBİZ uygulaması üzerinden ' +
+          'yapılıyor. Kaydı silinen öğrencilere iade edilecek tutar il müdürlüklerine gönderilip ' +
+          'IBAN numaralı hesaba yatırılıyor — işlem anında değil, takip etmek gerekiyor.',
       },
       {
         baslik: 'Depozito',
@@ -485,7 +689,23 @@ export const YURT_REHBERLERI: Rehber[] = [
       },
     ],
     kaynaklar: [
-      { etiket: 'Gençlik ve Spor Bakanlığı — KYGM', adres: 'https://kygm.gsb.gov.tr', kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü', tur: 'kurum' },
+      {
+        etiket: 'Gençlik ve Spor Bakanlığı Yurt Hizmetleri Yönetmeliği',
+        adres: 'https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=38510&MevzuatTur=7&MevzuatTertip=5',
+        kurum: 'Cumhurbaşkanlığı Mevzuat Bilgi Sistemi',
+        tur: 'belge',
+        destekledigi:
+          'Güvence bedelinin neyin karşılığı olduğu, zarar hâlinde otuz günlük süre ve iade ' +
+          '(madde 13); hastalık ve diğer sebeplerle geçici ayrılmada barınma hakkının saklı ' +
+          'tutulduğu süreler (madde 19).',
+      },
+      {
+        etiket: 'Gençlik ve Spor Bakanlığı — KYGM',
+        adres: 'https://kygm.gsb.gov.tr',
+        kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü',
+        tur: 'kurum',
+        destekledigi: 'Kayıt silme talebinin nasıl açıldığı ve iadenin nasıl yapıldığı.',
+      },
     ],
     sonrakiAdim: {
       etiket: 'Öğrenci evi kiralarken dikkat edilecekler',

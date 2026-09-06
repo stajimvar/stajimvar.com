@@ -20,6 +20,7 @@ export const REKLAM_UYGUN_REHBERLER: readonly string[] = [
   'kotu-gecen-stajda-ne-yapilir',
   'kyk-burs-ve-kredi',
   'kyk-kredisi-geri-odeme',
+  'kyk-yurt-tipleri',
   'maas-beklentisi-nasil-soylenir',
   'staj-basvuru-epostasi',
   'staj-basvurusu-gerekli-belgeler',
@@ -30,8 +31,10 @@ export const REKLAM_UYGUN_REHBERLER: readonly string[] = [
   'staj-sigortasi-kim-yapar',
   'staj-ucreti-nasil-hesaplanir',
   'yeni-mezun-cvsi',
+  'yurt-izin-ve-giris-cikis',
   'yurtdisi-burslari',
   'yurtdisinda-barinma',
   'yurtdisinda-staj',
+  'yurttan-kayit-silme',
   'zorunlu-staj-rehberi',
 ];
