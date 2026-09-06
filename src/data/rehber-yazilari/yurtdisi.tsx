@@ -220,7 +220,7 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
       'Hibesiz Erasmus nedir? Hibeli Erasmus\'tan farkı, kimler için mantıklı ve ' +
       'başvuru süreci.',
     hizliCevap:
-      'Hibesiz Erasmus, programa kabul edilip yurt dışında ders almanı ya da staj yapmanı ' +
+      'Hibesiz Erasmus, programa kabul edilip yurt dışında [ders almanı](/rehber/erasmus-ogrenim-hareketliligi) ya da [staj yapmanı](/rehber/erasmus-staj-hareketliligi) ' +
       'sağlayan ama aylık hibe ödenmeyen katılım biçimidir. Öğrencilik statün, ders denkliğin ve ' +
       'programın bütün resmî hakları aynı kalıyor; değişen tek şey maddi destek. ' +
       'Hibe kontenjanı dolduğunda sıradaki öğrencilere genellikle bu seçenek sunuluyor.',
@@ -396,7 +396,7 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
       'Staj için gereken vize türü ülkeye, stajın süresine ve ücretli olup olmadığına göre ' +
       'değişiyor: kısa süreli stajlarda kısa dönem vizesi, uzun stajlarda oturum izni ' +
       'gerekebiliyor. Tek geçerli kaynak gideceğin ülkenin konsolosluğu ve resmî vize ' +
-      'sayfası. Randevu ve işlem süreleri uzun olabildiği için kabul mektubunu alır almaz başlamak gerekiyor.',
+      'sayfası. Randevu ve işlem süreleri uzun olabildiği için [kabul mektubunu](/rehber/yurtdisinda-staj) alır almaz başlamak gerekiyor.',
     bloklar: [
       {
         paragraflar: [

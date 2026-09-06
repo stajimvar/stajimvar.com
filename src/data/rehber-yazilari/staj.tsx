@@ -184,7 +184,7 @@ export const STAJ_REHBERLERI: Rehber[] = [
       'Staj ücreti nasıl hesaplanır? Zorunlu stajda ücret yükümlülüğü, işletme büyüklüğüne göre ' +
       'değişen oran ve devlet katkısının mekanizması.',
     hizliCevap:
-      'Zorunlu stajda ücret, asgari ücretin belirli bir oranı olarak hesaplanır ve oran işletmedeki ' +
+      '[Zorunlu stajda](/rehber/zorunlu-staj-rehberi) ücret, asgari ücretin belirli bir oranı olarak hesaplanır ve oran işletmedeki ' +
       'çalışan sayısına göre değişir. Bu ödemenin bir kısmı devlet tarafından karşılanabiliyor. ' +
       'Oranlar ve asgari ücret her yıl değiştiği için sitede sabit rakam yazmıyoruz — güncel tutarı ' +
       '[staj ücreti hesaplama aracıyla](/araclar/staj-ucreti-hesaplama) ve resmî kaynaktan kontrol et.',
@@ -441,7 +441,7 @@ export const STAJ_REHBERLERI: Rehber[] = [
     hizliCevap:
       'Stajyer alan şirketlerin çoğu ilan açmıyor; alacaklarını da genellikle kendilerine yazan öğrenciler ' +
       'arasından seçiyorlar. Yapman gereken üç şey var: doğru adresi bulmak, konu satırını "Staj Başvurusu — ' +
-      'Bölüm — Tarih aralığı" biçiminde yazmak ve metinde neden o şirket olduğunu tek cümleyle söylemek. ' +
+      'Bölüm — Tarih aralığı" biçiminde yazmak ve metinde neden o şirket olduğunu tek cümleyle söylemek. Yazının [tam kalıbı ayrı bir rehberde](/rehber/staj-basvuru-epostasi). ' +
       'Cevap gelmezse bir hafta sonra bir kez hatırlatmak normal.',
     bloklar: [
       {

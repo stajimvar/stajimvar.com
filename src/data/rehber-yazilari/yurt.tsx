@@ -794,7 +794,7 @@ export const YURT_REHBERLERI: Rehber[] = [
     hizliCevap:
       'İki ay için ev tutmak çoğu zaman en pahalı seçenek. Sırayla şunlara bak: staj yapılan şehirdeki ' +
       'yurtların yaz dönemi konaklaması, üniversite yurtları, kısa süreli kiralık oda ve tanıdık ağı. ' +
-      'Konaklama maliyetini staj ücretiyle karşılaştırmadan kabul verme — bazı stajlarda ' +
+      'Konaklama maliyetini [staj ücretiyle](/rehber/staj-ucreti-nasil-hesaplanir) karşılaştırmadan kabul verme — bazı stajlarda ' +
       'barınma gideri ücretin tamamını yiyor.',
     bloklar: [
       {

@@ -373,7 +373,7 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
     hizliCevap:
       'Çift anadal (ÇAP) ikinci bir lisans diploması verir ve ders yükü ağırdır; yan dal ' +
       'diploma değil sertifika verir ve daha az ders gerektirir. İkisine de genellikle belirli ' +
-      'bir not ortalaması ve sınıf şartıyla, kontenjan dahilinde başvurulur. Koşullar ve ' +
+      'bir not ortalaması ve sınıf şartıyla, kontenjan dahilinde başvurulur — [yatay geçişte](/rehber/yatay-gecis) de benzer bir eşik var. Koşullar ve ' +
       'kontenjanlar her üniversitenin kendi yönetmeliğinde belirlenir.',
     bloklar: [
       {

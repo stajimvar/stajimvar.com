@@ -23,13 +23,13 @@ export const BURS_REHBERLERI: Rehber[] = [
       'dönemleri ve kaçırmamak için ne yapılmalı.',
     hizliCevap:
       'Burs başvurularının büyük kısmı güz dönemi başında, yani eylül-ekim aylarında açılıyor; ' +
-      'KYK başvuruları da genellikle bu döneme denk geliyor. Vakıf ve dernek bursları ise yıl içine ' +
+      '[KYK başvuruları](/rehber/kyk-burs-ve-kredi) da genellikle bu döneme denk geliyor. Vakıf ve dernek bursları ise yıl içine ' +
       'yayılıyor ve her kurum kendi takvimini açıklıyor. Kesin tarihler her yıl değiştiği için tek ' +
       'güvenilir yol kurumun resmî duyurusunu takip etmek.',
     bloklar: [
       {
         paragraflar: [
-          'Burs kaçırmanın en yaygın sebebi başvuru yapmamak değil, tarihi kaçırmak. Çoğu burs yılda ' +
+          'Burs kaçırmanın en yaygın sebebi başvuru yapmamak değil, [tarihi kaçırmak](/rehber/burs-basvuru-takvimi-takibi). Çoğu burs yılda ' +
             'yalnızca bir kez ve iki-üç haftalık bir pencerede açılıyor; pencere kapandığında ' +
             'bir sonraki yıl bekleniyor.',
         ],
@@ -722,7 +722,7 @@ export const BURS_REHBERLERI: Rehber[] = [
       'karşılığı burslar ve başvurmadan önce sorulacak sorular.',
     hizliCevap:
       'Karşılıksız burs geri ödenmez ve karşılığında bir yükümlülük doğurmaz. Geri ödemeli destek ' +
-      '(öğrenim kredisi gibi) mezuniyetten sonra ödenir. Üçüncü bir tür daha var: zorunlu hizmet ' +
+      '([öğrenim kredisi](/rehber/kyk-kredisi-geri-odeme) gibi) mezuniyetten sonra ödenir. Üçüncü bir tür daha var: zorunlu hizmet ' +
       'karşılığı burslar — para geri ödenmez ama mezuniyetten sonra belirli bir süre o kurumda ' +
       'çalışma yükümlülüğü doğar. Başvurmadan önce hangi türde olduğunu ilan metninden doğrula.',
     bloklar: [
@@ -815,7 +815,7 @@ export const BURS_REHBERLERI: Rehber[] = [
     bloklar: [
       {
         paragraflar: [
-          'Burs başvuru dönemleri, dolandırıcılık girişimlerinin de arttığı dönemler. Hedef genellikle ' +
+          '[Burs başvuru dönemleri](/rehber/burslar-hangi-aylarda-acilir), dolandırıcılık girişimlerinin de arttığı dönemler. Hedef genellikle ' +
             'iki şey: küçük tutarlı ödemeler ve kişisel veriler.',
         ],
       },

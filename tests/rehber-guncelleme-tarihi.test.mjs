@@ -138,3 +138,34 @@ test('dayanak cümlesi kural iddia etmiyor', () => {
     assert.doesNotMatch(cumle, /zorunludur|kesinlikle|her üniversitede/i, `${r.slug}: kural iddiası`);
   }
 });
+
+/* --------------------------------------------- iç bağlantı ağı: çıkmaz sokak yok */
+
+test('her rehberin gövdesinde en az bir rehber bağlantısı var', () => {
+  /*
+    21 rehberin gövdesinde hiç rehber→rehber bağlantısı yoktu; aralarında
+    en çok okunan beşi de vardı. Sayfanın altındaki otomatik "ilgili
+    rehberler" bloğu duruyor ama o her sayfada aynı işi yapıyor —
+    metnin İÇİNDEKİ bağlantı okuyucuyu tam ihtiyaç duyduğu yerde
+    yönlendiriyor ve arama motoruna da daha güçlü sinyal veriyor.
+  */
+  const bagsiz = rehberler()
+    .filter((r) => !/\/rehber\//.test(r.govde))
+    .map((r) => r.slug);
+  assert.deepEqual(bagsiz, [], 'gövdesinde iç bağlantı olmayan rehber');
+});
+
+test('iç bağlantılar var olan rehbere gidiyor, kendine dönmüyor', () => {
+  const hepsi = rehberler();
+  const sluglar = new Set(hepsi.map((r) => r.slug));
+  const kirik = [];
+  const kendine = [];
+  for (const r of hepsi) {
+    for (const m of r.govde.matchAll(/\/rehber\/([a-z0-9-]+)/g)) {
+      if (!sluglar.has(m[1])) kirik.push(`${r.slug} → ${m[1]}`);
+      if (m[1] === r.slug) kendine.push(r.slug);
+    }
+  }
+  assert.deepEqual(kirik, [], 'var olmayan rehbere bağlantı');
+  assert.deepEqual(kendine, [], 'rehber kendine bağlanıyor');
+});

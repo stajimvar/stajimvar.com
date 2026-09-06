@@ -18,7 +18,7 @@ export const CV_REHBERLERI: Rehber[] = [
       'dosya biçimi, başlıklar ve anahtar kelime kullanımı.',
     hizliCevap:
       'Büyük şirketlerin çoğunda CV\'ni önce bir başvuru takip sistemi (ATS) okuyor ve metni ' +
-      'alanlara ayırıyor. Sistemin takılmaması için CV tek sütun, standart başlıklı ' +
+      'alanlara ayırıyor. Sistemin takılmaması için [CV](/rehber/staj-cv-nasil-yazilir) tek sütun, standart başlıklı ' +
       '("Deneyim", "Eğitim", "Beceriler"), düz yazı tipli ve PDF olmalı; tablo, metin kutusu, ' +
       'sütunlu şablon ve görsele gömülü yazı okunmuyor.',
     bloklar: [
@@ -242,13 +242,13 @@ export const CV_REHBERLERI: Rehber[] = [
       'Staj başvurusunda ön yazı nasıl yazılır? Yapısı, uzunluğu ve en sık yapılan hatalar.',
     hizliCevap:
       'Ön yazı üç paragraftan uzun olmamalı: kim olduğun, neden o şirket ve neden sen. ' +
-      'CV\'de yazan şeyleri tekrarlamak değil, CV\'de görünmeyen bağlantıyı kurmak işe yarıyor. ' +
+      '[CV](/rehber/staj-cv-nasil-yazilir)\'de yazan şeyleri tekrarlamak değil, CV\'de görünmeyen bağlantıyı kurmak işe yarıyor. ' +
       'Her başvuruya aynı metni göndermek en sık yapılan hata; değişmesi gereken tek şey ' +
       'ikinci paragraf.',
     bloklar: [
       {
         paragraflar: [
-          'Ön yazı istenmediği sürece uzun bir metin göndermek gerekmiyor; e-postanın gövdesi çoğu zaman ön yazının ' +
+          'Ön yazı istenmediği sürece uzun bir metin göndermek gerekmiyor; [e-postanın gövdesi](/rehber/staj-basvuru-epostasi) çoğu zaman ön yazının ' +
             'kendisi oluyor. Yine de bazı şirketler ayrı bir dosya istiyor ve burs başvurularında da benzer bir metin ' +
             'isteniyor.',
         ],
@@ -426,7 +426,7 @@ export const CV_REHBERLERI: Rehber[] = [
     hizliCevap:
       'Öğrenci profilinde işe yarayan dört alan var: fotoğraf, başlık, hakkında ve projeler. ' +
       'Başlık "Öğrenci" değil, ne aradığını söylemeli — "Makine Mühendisliği 3. sınıf | Yaz stajı arıyorum". ' +
-      'Profil boş kaldığında bağlantı kurmak da işe yaramıyor: önce doldur, sonra bağlan.',
+      'Profil boş kaldığında [bağlantı kurmak](/rehber/ilan-acmayan-sirkete-nasil-yazilir) da işe yaramıyor: önce doldur, sonra bağlan.',
     bloklar: [
       {
         paragraflar: [

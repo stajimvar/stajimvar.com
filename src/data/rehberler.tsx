@@ -339,7 +339,7 @@ export const REHBERLER: Rehber[] = [
       <>
         <P>
           Zorunlu staj, mezun olabilmek için müfredat gereği yapmak zorunda olduğun stajdır.
-          Gönüllü stajdan farkı sadece "mecburi" olması değil: belge akışı, sigorta ve ücret
+          <a href="/rehber/gonullu-staj-rehberi" className="text-blue-600 hover:underline font-semibold">Gönüllü stajdan</a> farkı sadece "mecburi" olması değil: belge akışı, sigorta ve ücret
           konularında farklı kurallara tabi.
         </P>
 
@@ -694,7 +694,14 @@ export const REHBERLER: Rehber[] = [
           </li>
         </L>
         <P>
-          Küçük ve orta ölçekli işletmelerde böyle bir sistem genelde yok; CV'ni doğrudan
+          Küçük ve orta ölçekli işletmelerde{' '}
+          <a
+            href="/rehber/ats-uyumlu-cv"
+            className="text-blue-600 hover:underline font-semibold"
+          >
+            böyle bir sistem
+          </a>{' '}
+          genelde yok; CV'ni doğrudan
           bir insan açıyor. Yani bu kurallar CV'ni çirkinleştirecek kadar abartılmamalı —
           sadeleştirmek zaten ikisine de yarıyor.
         </P>
@@ -970,7 +977,7 @@ export const REHBERLER: Rehber[] = [
 
         <B>Sonrasında</B>
         <P>
-          Kısa bir teşekkür mesajı gönder. Cevap gelmezse bir hafta sonra bir kez daha yaz;
+          Kısa bir <a href="/rehber/staj-basvuru-epostasi" className="text-blue-600 hover:underline font-semibold">teşekkür mesajı</a> gönder. Cevap gelmezse bir hafta sonra bir kez daha yaz;
           ikiden fazla ısrar ters etki yapıyor.
         </P>
 
@@ -1186,7 +1193,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
       {
         soru: 'E-postada sigortadan bahsetmeli miyim?',
         cevap:
-          'Evet, tek cümleyle. Küçük işletmelerin stajyer almama sebebi çoğu zaman maliyet korkusu. Zorunlu stajda sigortayı genellikle okul yapıyor; bunu yazmak tereddüt eden işvereni rahatlatıyor.',
+          'Evet, tek cümleyle. Küçük işletmelerin stajyer almama sebebi çoğu zaman maliyet korkusu. <a href="/rehber/staj-sigortasi-kim-yapar" className="text-blue-600 hover:underline font-semibold">Zorunlu stajda sigortayı</a> genellikle okul yapıyor; bunu yazmak tereddüt eden işvereni rahatlatıyor.',
       },
       {
         soru: 'CV\'yi hangi biçimde eklemeliyim?',
@@ -1228,7 +1235,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
     icerik: (
       <>
         <P>
-          Staj defteri stajın notunu belirleyen belge. İşin kendisini iyi yapıp defteri
+          Staj defteri <a href="/rehber/zorunlu-staj-rehberi" className="text-blue-600 hover:underline font-semibold">stajın notunu belirleyen belge</a>. İşin kendisini iyi yapıp defteri
           eksik teslim eden çok öğrenci var; sonuç çoğu zaman stajın tekrarı oluyor.
         </P>
 
@@ -1475,7 +1482,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         <B>Barınma kredisi ayrı</B>
         <P>
           Yurtta kalmayan öğrenciler için ayrı bir barınma desteği bulunuyor. Yurtta kalan
-          öğrenci bundan yararlanamıyor. Yurt başvurusu ile burs/kredi başvurusu ayrı
+          öğrenci bundan yararlanamıyor. <a href="/rehber/kyk-yurt-basvurusu" className="text-blue-600 hover:underline font-semibold">Yurt başvurusu</a> ile burs/kredi başvurusu ayrı
           süreçler; ikisini de ayrı ayrı yapman gerekiyor.
         </P>
 
@@ -1838,7 +1845,8 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
 
         <B>En kritik nokta: sigorta</B>
         <P>
-          Zorunlu stajda okulun yaptığı iş kazası ve meslek hastalığı sigortası, gönüllü
+          Zorunlu stajda okulun yaptığı{' '}
+          <a href="/rehber/staj-sigortasi-kim-yapar" className="text-blue-600 hover:underline font-semibold">iş kazası ve meslek hastalığı sigortası</a>, gönüllü
           stajda <strong>otomatik olarak devreye girmiyor</strong>. Kimin yapacağı
           duruma göre değişiyor ve bu konuda tahmin yürütmek doğru değil.
         </P>
@@ -1932,7 +1940,8 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
       <>
         <P>
           Staj sürecinde en çok gecikme yaşanan yer okul tarafı. Sebebi genelde bürokrasi
-          değil, öğrencinin süreci geç başlatması: belge birkaç imza gerektiriyor ve o
+          değil, öğrencinin süreci geç başlatması:{' '}
+          <a href="/rehber/staj-basvurusu-gerekli-belgeler" className="text-blue-600 hover:underline font-semibold">belge</a> birkaç imza gerektiriyor ve o
           imzaların sahipleri her gün okulda olmuyor.
         </P>
 
@@ -2108,7 +2117,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         <B>İşe dönüşmezse</B>
         <P>
           Çoğu staj işe dönüşmüyor ve bu bir başarısızlık değil. Elinde kalanlar şunlar:
-          CV'de gerçek bir deneyim satırı, anlatabileceğin bir proje, bir referans ve
+          CV'de gerçek bir deneyim satırı, anlatabileceğin bir proje, <a href="/rehber/referans-nasil-istenir" className="text-blue-600 hover:underline font-semibold">bir referans</a>s ve
           sektörün nasıl işlediğine dair fikir. Bir sonraki başvuruda bunların hepsi
           işine yarıyor.
         </P>
