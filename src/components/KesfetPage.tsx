@@ -134,6 +134,17 @@ export const KesfetPage: React.FC<{
   ].filter(Boolean);
   const hasFilters = activeFilters.length > 0 || Boolean(searchQuery.trim());
   const hasNarrowing = hasFilters || geoActive;
+  /*
+    Filtre düğmesinin iki hâli ayrı dizelerde.
+
+    Önce tek bir şablon dizesinin içinde ternary olarak duruyordu ve
+    "mavi zeminde gri yazı" gibi görünüyordu — oysa gri yazı beyaz
+    zeminli dalın, mavi zemin ise mavi yazılı dalın parçası. Tasarım
+    denetleyicisi de iki dalı tek dize sanıp uyarı veriyordu. Çıktı
+    değişmedi, yalnız hangi rengin hangi hâle ait olduğu okunur oldu.
+  */
+  const filtreDugmesiAcik = 'border-blue-600 bg-blue-50 text-blue-700';
+  const filtreDugmesiKapali = 'border-gray-200 bg-white text-gray-500 hover:border-gray-300';
 
   useEffect(() => {
     document.title = 'Öğrenci etkinlikleri ve fırsatları | StajımVar';
@@ -176,7 +187,7 @@ export const KesfetPage: React.FC<{
               type="button" onClick={() => setFiltersOpen((open) => !open)}
               aria-expanded={filtersOpen} aria-controls="kesfet-filters"
               aria-label={activeFilters.length ? `Filtreler (${activeFilters.length} açık)` : 'Filtreler'}
-              className={`relative flex min-h-12 w-[52px] shrink-0 cursor-pointer items-center justify-center self-stretch rounded-2xl border ${filtersOpen || activeFilters.length ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'}`}
+              className={`relative flex min-h-12 w-[52px] shrink-0 cursor-pointer items-center justify-center self-stretch rounded-2xl border ${filtersOpen || activeFilters.length ? filtreDugmesiAcik : filtreDugmesiKapali}`}
             >
               <SlidersHorizontal className="h-5 w-5" aria-hidden />
               {activeFilters.length > 0 && <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-extrabold text-white">{activeFilters.length}</span>}
