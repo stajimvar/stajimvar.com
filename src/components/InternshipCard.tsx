@@ -18,6 +18,7 @@ import { DisBaglanti } from '../ui';
 import { listingSlug } from '../lib/slug';
 import { SIRKET_KENAR_GUCLU, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
+import { UlkeRozeti } from './UlkeRozeti';
 import { eklenmeMetni, sonKontrolMetni, uzunSuredirAcik } from '../lib/zaman';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { ILAN_KAYNAGI } from '../lib/urun-metni';
@@ -352,6 +353,14 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               */}
               <span>{konumEtiketi(listing.city)} ({calismaEtiketi(listing.workType)})</span>
             </span>
+
+            {/*
+              Ülke yalnız yurt dışı ilanlarda yazılıyor; kararı tek kural
+              dosyası (lib/ulke-rozeti.mjs) veriyor. Konumun hemen yanında,
+              aynı sarmalı şeritte duruyor: "Paris" tek başına yurt içi bir
+              ilan gibi okunuyordu.
+            */}
+            <UlkeRozeti countryCode={listing.countryCode} />
 
             {/* Mandatory SGK Badge */}
             {listing.mandatoryStajAccepted && (

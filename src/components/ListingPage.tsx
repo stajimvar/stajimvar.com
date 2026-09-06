@@ -12,6 +12,7 @@ import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 import { sonKontrolMetni } from '../lib/zaman';
 import { Logo } from './Logo';
 import { slugify } from '../lib/slug';
+import { UlkeRozeti } from './UlkeRozeti';
 
 /**
  * Tek ilan sayfası.
@@ -28,8 +29,18 @@ interface ListingPageProps {
   onApply: (listing: InternshipListing) => void;
 }
 
-const Bilgi: React.FC<{ ikon: React.ReactNode; etiket: string; deger: string }> = ({
-  ikon, etiket, deger,
+const Bilgi: React.FC<{
+  ikon: React.ReactNode;
+  etiket: string;
+  deger: string;
+  /**
+   * Değerin altına giren isteğe bağlı ek işaret (ör. ülke rozeti).
+   * Sarmalayıcı kutu yok: rozet kendi kararını verip null dönebiliyor,
+   * boş bir kutu çizilse yurt içi ilanlarda ölçüsüz bir boşluk kalırdı.
+   */
+  ek?: React.ReactNode;
+}> = ({
+  ikon, etiket, deger, ek,
 }) => (
   <div className="flex items-start gap-2.5">
     <div className="text-gray-400 mt-0.5 shrink-0">{ikon}</div>
@@ -38,6 +49,7 @@ const Bilgi: React.FC<{ ikon: React.ReactNode; etiket: string; deger: string }> 
         {etiket}
       </p>
       <p className="text-sm font-semibold text-gray-900 break-words">{deger}</p>
+      {ek}
     </div>
   </div>
 );
@@ -243,6 +255,12 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                   ikon={<MapPin className="w-4 h-4" />}
                   etiket="Konum"
                   deger={`${konumEtiketi(listing.city)} (${calismaEtiketi(listing.workType)})`}
+                  /*
+                    Kartla aynı rozet, aynı kural: ülke yalnız yurt dışı
+                    ilanlarda çiziliyor (lib/ulke-rozeti.mjs). Şehir adı tek
+                    başına "Paris"in Türkiye dışında olduğunu söylemiyor.
+                  */
+                  ek={<UlkeRozeti countryCode={listing.countryCode} className="mt-1" />}
                 />
                 {listing.department && (
                   <Bilgi ikon={<Building2 className="w-4 h-4" />} etiket="Departman" deger={listing.department} />
