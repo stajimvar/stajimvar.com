@@ -94,7 +94,31 @@ export const SehirSeridi: React.FC<{
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white py-3">
-      <div className="overflow-x-auto px-3">
+      {/*
+        `relative` GÖRÜNÜM İÇİN DEĞİL, YATAY TAŞMAYI DURDURMAK İÇİN
+        ---------------------------------------------------------
+        Her dairenin içinde ekran okuyucu için bir `sr-only` düğümü var ve
+        Tailwind'in `sr-only`si `position: absolute`. Bu sarmalayıcı, iç
+        şerit ve düğmeler konumlandırılmamışken o mutlak kutuların kapsayıcı
+        bloğu ta EN DIŞA — görüntü alanına — düşüyordu. CSS'te bir kaydırma
+        kabı, kapsayıcı bloğu kendi dışında kalan mutlak konumlu kutuyu
+        KIRPAMAZ: `overflow-x-auto` görünen daireleri kırpıyor ama kaçan
+        `sr-only` düğümleri belgenin kaydırma alanını genişletiyordu.
+
+        375 px'lik ekranda ölçülen: documentElement.clientWidth = 375 iken
+        scrollWidth = 684. 684, şeritteki SON `sr-only` düğümünün
+        ("Şanlıurfa, 1 etkinlik") sağ kenarı. Telefonda bunun bedeli ağır:
+        yerleşim görüntü alanı 684'e genişliyor, `position: fixed` olan alt
+        gezinme çubuğu ile çerez şeridi de 684 px'e uzuyor — sayfanın tamamı
+        sağa sola kayıyor.
+
+        `relative` sarmalayıcıyı bu kutuların kapsayıcı bloğu yapıyor;
+        kırpma yeniden işliyor, belge 375'te kalıyor. Sıfır konum kayması,
+        yığın bağlamı da açmıyor (z-index: auto). `overflow-x-auto` tek
+        başına yetmiyordu — ölçüldü: `overflow-x: hidden` bile bu kaçışı
+        durdurmuyor, çünkü sorun kırpma değil kapsayıcı blok seçimi.
+      */}
+      <div className="relative overflow-x-auto px-3">
         <div className="flex min-w-max gap-3">
           {/*
             İlk daire "Tümü": şehir seçiliyken çıkış yolu. Olmasaydı
