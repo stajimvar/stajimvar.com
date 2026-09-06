@@ -216,12 +216,40 @@ export const KesfetPage: React.FC<{
 
           <div id="kesfet-filters" className={`${filtersOpen ? 'block' : 'hidden'} lg:block`}>
             <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-              <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3">
+              <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 px-4 py-3">
                 <SlidersHorizontal className="h-4 w-4 text-gray-500" aria-hidden />
                 <span className="text-sm font-bold text-gray-900">Filtreler</span>
-                {hasFilters && <button type="button" onClick={catalog.clearFilters} className="ml-auto min-h-8 cursor-pointer text-xs font-bold text-blue-600 hover:underline">Temizle</button>}
+                {/*
+                  YENİLEME DÜĞMESİ BURAYA TAŞINDI
+
+                  Katalog başlığı şeridi kaldırıldığı için düğmenin eski yeri
+                  yok. "Temizle" ile aynı sarmalayıcıda ve sağ uçta: ikisi
+                  birden görünürken satır dar ekranda sarıyor, taşmıyor.
+                  Davranış aynı — katalog ve coğrafi sayım birlikte yenileniyor.
+                */}
+                <div className="ml-auto flex items-center gap-2">
+                  {hasFilters && <button type="button" onClick={catalog.clearFilters} className="min-h-8 cursor-pointer text-xs font-bold text-blue-600 hover:underline">Temizle</button>}
+                  <button type="button" aria-label="Listeyi yenile" title="Listeyi yenile" onClick={() => { catalog.refresh(); geo.reload(); }} disabled={listPhase === 'loading'} className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:border-blue-400 disabled:opacity-50">
+                    <RefreshCw className="h-4 w-4" aria-hidden />
+                  </button>
+                </div>
               </div>
               <div className="divide-y divide-gray-100">
+                {/*
+                  SIRALAMA EN ÜSTTE
+
+                  Süzgeç değil: listeden hiçbir şey elemiyor, tamamının
+                  sırasını değiştiriyor. Bu yüzden daraltan blokların önünde
+                  duruyor. Kendi durumu yok, `filters.sort` okunup yazılıyor;
+                  ayrı bir durum tutulsaydı adresten geri dönen seçimle
+                  ayrışırdı.
+                */}
+                <FiltreBlogu baslik="Sıralama">
+                  <div className="space-y-0.5">
+                    <SecenekSatiri tip="radio" etiket="En yeni eklenenler" secili={filters.sort === 'newest'} onChange={() => setFilter('sort', 'newest')} />
+                    <SecenekSatiri tip="radio" etiket="Tarihi yaklaşanlar" secili={filters.sort === 'upcoming'} onChange={() => setFilter('sort', 'upcoming')} />
+                  </div>
+                </FiltreBlogu>
                 <FiltreBlogu baslik="Konum">
                   <select aria-label="Şehir" value={filters.city} onChange={(event) => setFilter('city', event.target.value)} className="w-full cursor-pointer rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-900 focus:border-blue-600 focus:outline-none">
                     <option value="">Tüm şehirler</option>
@@ -258,29 +286,6 @@ export const KesfetPage: React.FC<{
         </div>
 
         <section aria-label="Etkinlik kataloğu" className="min-w-0 space-y-4 lg:col-span-9">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-extrabold text-gray-900">Tüm etkinlikler</h2>
-              <p data-testid="catalog-count" aria-live="polite" aria-atomic="true" className="mt-1 text-xs font-medium text-gray-500 tabular-nums sm:text-sm">
-                {/*
-                  "gösteriliyor" ÇİZİLEN kartı sayıyor: harita ilk satırı
-                  aldığında o üç kart ekranda olmadığı için sayıya da
-                  girmiyor. Toplam ise `listTotal`: coğrafi seçim ve
-                  filtrelerin tam sonucu, kesmeden etkilenmiyor.
-                */}
-                {listPhase === 'ready' ? `${listTotal} etkinlik · ${gridEvents.length} gösteriliyor` : listPhase === 'loading' ? 'Etkinlikler yükleniyor…' : 'Liste yüklenemedi'}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <select aria-label="Sıralama" value={filters.sort} onChange={(event) => setFilter('sort', event.target.value as typeof filters.sort)} className="min-h-11 cursor-pointer rounded-xl border border-gray-200 bg-white px-3 text-xs font-semibold text-gray-700 sm:text-sm">
-                <option value="newest">En yeni eklenenler</option>
-                <option value="upcoming">Tarihi yaklaşanlar</option>
-              </select>
-              <button type="button" aria-label="Listeyi yenile" title="Listeyi yenile" onClick={() => { catalog.refresh(); geo.reload(); }} disabled={listPhase === 'loading'} className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:border-blue-400 disabled:opacity-50">
-                <RefreshCw className="h-4 w-4" aria-hidden />
-              </button>
-            </div>
-          </div>
           {hasFilters && (
             <div className="flex flex-wrap items-center gap-2 text-xs">
               {activeFilters.map((filter) => <span key={filter} className="rounded-full bg-blue-50 px-2.5 py-1 font-semibold text-blue-700">{filter}</span>)}
@@ -356,6 +361,29 @@ export const KesfetPage: React.FC<{
               {!geoActive && loadingMore && <span role="status" className="sr-only">Sonraki etkinlikler yükleniyor</span>}
             </div>}
           </>}
+          {/*
+            SAYAÇ GÖRÜNMÜYOR AMA SUSMUYOR
+
+            Başlık şeridiyle birlikte sayacın GÖRÜNEN hâli kalktı; canlı bölge
+            kalmak zorunda: "yükleniyor / hazır / yüklenemedi" durumunu
+            duyuran tek yer burasıydı, silinseydi ekran okuyucu kullanıcısı
+            liste her değiştiğinde sessizlikle karşılaşırdı. `data-testid`
+            de aynı sebeple duruyor; katalog testleri bu bölgeyi okuyor.
+
+            Bölümün SONUNDA, çünkü `space-y-4` ilk çocuğun ardındaki her
+            kardeşe üst boşluk veriyor: `sr-only` akış dışı olsa da başa
+            konsaydı altındaki içeriği 16 piksel aşağı iterdi. Sonda dururken
+            kimseye boşluk eklemiyor.
+          */}
+          <p data-testid="catalog-count" aria-live="polite" aria-atomic="true" className="sr-only">
+            {/*
+              "gösteriliyor" ÇİZİLEN kartı sayıyor: harita ilk satırı
+              aldığında o üç kart ekranda olmadığı için sayıya da girmiyor.
+              Toplam ise `listTotal`: coğrafi seçim ve filtrelerin tam
+              sonucu, kesmeden etkilenmiyor.
+            */}
+            {listPhase === 'ready' ? `${listTotal} etkinlik · ${gridEvents.length} gösteriliyor` : listPhase === 'loading' ? 'Etkinlikler yükleniyor…' : 'Liste yüklenemedi'}
+          </p>
         </section>
       </div>
     </main>

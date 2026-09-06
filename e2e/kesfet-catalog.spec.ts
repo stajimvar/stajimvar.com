@@ -128,9 +128,10 @@ test('sort, empty state, reset and initial-error retry use current server result
   controls.failFirst = false;
   await page.getByRole('button', { name: 'Tekrar dene', exact: true }).click();
   await expect(cards(page)).toHaveCount(24);
-  await page.getByRole('combobox', { name: 'Sıralama' }).selectOption('upcoming');
-  await expect(cards(page).first()).toContainText('Katalog test etkinliği 137');
+  // Sıralama filtre panelinin içinde: mobilde panel açılmadan erişilemiyor.
   await openFilters(page);
+  await page.getByRole('radio', { name: 'Tarihi yaklaşanlar', exact: true }).check();
+  await expect(cards(page).first()).toContainText('Katalog test etkinliği 137');
   await page.getByRole('radio', { name: 'Bugün', exact: true }).check();
   await expect(count(page)).toHaveText('0 etkinlik · 0 gösteriliyor');
   await expect(page.getByRole('heading', { name: 'Bu filtrelere uygun etkinlik bulunamadı' })).toBeVisible();
@@ -164,6 +165,8 @@ test('browser back restores filters, loaded pages and scroll; refresh sees a new
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeCloseTo(scrollBefore, -1);
   controls.extra = true;
   await page.getByRole('button', { name: 'Filtreleri temizle', exact: true }).click();
+  // Yenileme düğmesi filtre panelinin başlık satırına taşındı.
+  await openFilters(page);
   await page.getByRole('button', { name: 'Listeyi yenile' }).click();
   await expect(count(page)).toHaveText('138 etkinlik · 24 gösteriliyor');
   await expect(cards(page).first()).toContainText('Yeni gelen test etkinliği');
@@ -218,4 +221,34 @@ test('late next-page response cannot append old-city results after changing filt
   await expect(cards(page)).toHaveCount(24);
   await expect(cards(page).filter({ hasText: 'Konya' })).toHaveCount(0);
   await expect(cards(page).first()).toContainText('Katalog test etkinliği 101');
+});
+
+test('katalog başlığı şeridi yok: sayaç yalnız canlı bölge, sıralama filtre panelinde', async ({ page }) => {
+  /*
+    Şerit görsel olarak kaldırıldı. Bu test üç şeyi birlikte tutuyor:
+    görünen başlık gitti, duyuru gitmedi, denetimler paneldeki yerine oturdu.
+  */
+  await catalogTransport(page);
+  await page.goto('/kesfet');
+  await expect(cards(page)).toHaveCount(24);
+
+  // (a) "Tüm etkinlikler" başlığı ve görünen sayaç yok.
+  await expect(page.getByRole('heading', { name: 'Tüm etkinlikler' })).toHaveCount(0);
+  await expect(count(page)).toHaveClass(/sr-only/);
+
+  // (b) Canlı bölge duruyor: liste durumu hâlâ duyuruluyor.
+  await expect(count(page)).toHaveAttribute('aria-live', 'polite');
+  await expect(count(page)).toHaveAttribute('aria-atomic', 'true');
+  await expect(count(page)).toHaveText('137 etkinlik · 24 gösteriliyor');
+
+  // (c) Sıralama panelin içinde ve radyo satırı; eski açılır menü kalmadı.
+  await expect(page.getByRole('combobox', { name: 'Sıralama' })).toHaveCount(0);
+  await openFilters(page);
+  const siralama = page.locator('#kesfet-filters').getByRole('radio', { name: 'Tarihi yaklaşanlar', exact: true });
+  await expect(siralama).toBeVisible();
+  await siralama.check();
+  await expect(cards(page).first()).toContainText('Katalog test etkinliği 137');
+
+  // Yenileme düğmesi de panelde.
+  await expect(page.locator('#kesfet-filters').getByRole('button', { name: 'Listeyi yenile' })).toBeVisible();
 });
