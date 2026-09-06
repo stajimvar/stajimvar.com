@@ -1,19 +1,26 @@
 import React from 'react';
+import { Map as HaritaIkonu } from 'lucide-react';
 import { seritSehirleri, seritToplami } from '../lib/sehir-seridi.mjs';
+import { SehirSimgesi } from './SehirSimgesi';
 
 /**
  * Şehir şeridi — ilanlar sayfasındaki şirket şeridinin (SirketSeridi.tsx)
  * Keşfet karşılığı. Aynı aile: aynı yuvarlak ölçüsü, aynı yatay kaydırma,
  * aynı kart kabı.
  *
- * NEDEN YUVARLAĞIN İÇİNDE SAYI
- * ----------------------------
- * Şirketin logosu var, şehrin yok. Şirket şeridinde yuvarlak "kim" sorusunu
- * cevaplıyor; burada aynı yere baş harf koymak ("İS", "AN") hiçbir şey
- * anlatmayan bir harf dizisi olurdu. Şehrin adı zaten yuvarlağın ALTINDA
- * yazıyor, yani "kim" sorusu orada cevaplanmış durumda. Yuvarlağın içi bu
- * yüzden ikinci soruya ayrıldı: o şehirde kaç etkinlik var. Kullanıcı
- * daireye basmadan önce hangi şehrin dolu olduğunu görüyor.
+ * NEDEN YUVARLAĞIN İÇİNDE SİMGE
+ * -----------------------------
+ * Şirketin logosu var, şehrin yok. Bir ara buraya rakam yazıldı — "kaç
+ * etkinlik" sorusunu cevaplıyordu ama iki şerit yan yana konunca aynı
+ * geometri iki farklı şey anlatıyordu: ilanlarda daire "kim", Keşfet'te
+ * "kaç tane". Baş harf ("İS", "AN") ise hiçbir şey anlatmayan bir harf
+ * dizisi olurdu.
+ *
+ * Şimdi dairede şehrin simgesi duruyor (İstanbul için Kız Kulesi, Ankara
+ * için Anıtkabir…), sayı ise adın altına indi. Düzen ilan şeridiyle
+ * birebir: dairede kimlik, altında ad, onun altında adet.
+ *
+ * Çizimler `SehirSimgesi.tsx` içinde ve fotoğraf DEĞİL; sebepleri orada.
  *
  * SAYI NEREDEN GELİYOR
  * --------------------
@@ -24,16 +31,15 @@ import { seritSehirleri, seritToplami } from '../lib/sehir-seridi.mjs';
  * geçilemezdi. Arama, kategori, ücretsiz ve indirim süzgeçleri uygulanıyor.
  */
 
-/** Dört haneli sayı 56 piksellik dairede taşmasın diye punto küçülüyor. */
-const sayiPuntosu = (adet: number) => (String(adet).length >= 4 ? 'text-base' : 'text-xl');
-
 const Daire: React.FC<{
   etiket: string;
   adet: number;
   okunan: string;
   secili: boolean;
   onClick: () => void;
-}> = ({ etiket, adet, okunan, secili, onClick }) => (
+  /** Dairenin içi: şehir simgesi ya da "Tümü" için harita ikonu. */
+  children: React.ReactNode;
+}> = ({ etiket, adet, okunan, secili, onClick, children }) => (
   <button
     type="button"
     onClick={onClick}
@@ -49,26 +55,38 @@ const Daire: React.FC<{
     >
       <span className="block rounded-full bg-white p-[2px]">
         <span
-          className={`flex h-14 w-14 items-center justify-center overflow-hidden rounded-full px-1 font-extrabold tabular-nums ${sayiPuntosu(adet)} ${
-            secili ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-700'
+          className={`flex h-14 w-14 items-center justify-center overflow-hidden rounded-full ${
+            secili ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-600'
           }`}
         >
-          {adet}
+          {children}
         </span>
       </span>
     </span>
-    <span
-      aria-hidden
-      className={`block w-full truncate text-center text-[11px] ${
-        secili ? 'font-bold text-gray-900' : 'font-semibold text-gray-700'
-      }`}
-    >
-      {etiket}
+    {/*
+      SAYI DAİRENİN İÇİNDEN ADIN ALTINA İNDİ
+
+      Daireye rakam yazmak, ŞİRKET şeridinde logonun durduğu yeri bir
+      sayıyla dolduruyordu; iki şerit yan yana konunca aynı geometri iki
+      farklı şey anlatıyordu. Artık ilan şeridiyle birebir aynı düzen:
+      dairede simge, altında ad, onun altında adet.
+    */}
+    <span aria-hidden className="w-full text-center">
+      <span
+        className={`block truncate text-[11px] ${
+          secili ? 'font-bold text-gray-900' : 'font-semibold text-gray-700'
+        }`}
+      >
+        {etiket}
+      </span>
+      <span className="block truncate text-[10px] tabular-nums text-gray-600">
+        {adet} etkinlik
+      </span>
     </span>
     {/*
-      Yuvarlaktaki çıplak rakam tek başına okununca ("71") hiçbir şey
-      anlatmıyor, altındaki ad ise ayrı bir düğüm. Ekran okuyucu bu yüzden
-      düğmenin tamamını tek cümle olarak duyuyor: "İstanbul, 71 etkinlik".
+      Görünen iki satır `aria-hidden`; ekran okuyucu düğmenin tamamını tek
+      cümle olarak duyuyor: "İstanbul, 71 etkinlik". Aksi hâlde ad ve adet
+      ayrı düğümler olarak, arada duraklamayla okunurdu.
     */}
     <span className="sr-only">{okunan}</span>
   </button>
@@ -132,7 +150,10 @@ export const SehirSeridi: React.FC<{
             okunan={`Tüm şehirler, ${toplam} etkinlik`}
             secili={secili === ''}
             onClick={onTumu}
-          />
+          >
+            {/* Tek bir yer değil, hepsi: harita ikonu. Şirket şeridinde aynı yerde Layers var. */}
+            <HaritaIkonu className="h-6 w-6" aria-hidden />
+          </Daire>
           {sehirler.map((sehir) => (
             <Daire
               key={sehir.ad}
@@ -141,7 +162,9 @@ export const SehirSeridi: React.FC<{
               okunan={`${sehir.ad}, ${sehir.adet} etkinlik`}
               secili={secili === sehir.ad}
               onClick={() => onSec(sehir.ad)}
-            />
+            >
+              <SehirSimgesi sehir={sehir.ad} className="h-7 w-7" />
+            </Daire>
           ))}
         </div>
       </div>
