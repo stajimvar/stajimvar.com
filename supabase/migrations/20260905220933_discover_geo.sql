@@ -21,6 +21,20 @@
 
 /* --------------------------------------------------------- geo_nodes */
 
+-- SÜRÜM NUMARASI NEDEN 20260905220933
+-- ------------------------------------
+-- Dosya 20260918010000 numarasıyla duruyordu ama üretimdeki
+-- `schema_migrations` kaydı 20260905220933: göç MCP `apply_migration`
+-- ile uygulandığı için sürümü sunucu atamıştı. İki numara ayrışınca
+-- `db push` öncesindeki geçmiş doğrulaması "missing: 20260918010000"
+-- diyip durduruyor, arkasından gelen cloudflare_production adımı hiç
+-- çalışmıyordu (ölçüldü: run 34026167243).
+--
+-- Nesnelerin üretimde OLDUĞU doğrulandı (geo_nodes, geo_node_id sütunu
+-- ve discover_event_occurrence_rows görünümü mevcut), yani eksik olan
+-- şema değil yalnızca dosya adıydı. Ad kayda hizalandı; SQL yeniden
+-- uygulanmıyor.
+
 create table if not exists public.geo_nodes (
   id uuid primary key default gen_random_uuid(),
 

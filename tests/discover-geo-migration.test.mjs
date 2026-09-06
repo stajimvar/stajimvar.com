@@ -11,7 +11,7 @@ import { readFile } from 'node:fs/promises';
 */
 
 const sql = await readFile(
-  new URL('../supabase/migrations/20260918010000_discover_geo.sql', import.meta.url),
+  new URL('../supabase/migrations/20260905220933_discover_geo.sql', import.meta.url),
   'utf8',
 );
 

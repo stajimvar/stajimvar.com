@@ -96,7 +96,7 @@ export interface DiscoverEvent {
   /*
     COĞRAFİ ALANLAR OPSİYONEL OKUNUYOR
 
-    20260918010000_discover_geo.sql kolonları ekledi, yani şema bunları
+    20260905220933_discover_geo.sql kolonları ekledi, yani şema bunları
     taşıyor. Yine de hepsi opsiyonel: bir kayıt henüz geocode edilmemiş
     olabilir ve migration uygulanmamış bir ortama karşı da aynı kod
     çalışıyor. Eksik alan hata değil, "bilinmiyor" demek.
