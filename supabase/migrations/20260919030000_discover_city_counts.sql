@@ -1,5 +1,18 @@
 -- Şehir şeridi için etkinlik sayıları.
 --
+-- SÜRÜM NUMARASI NEDEN 20260919030000
+-- -----------------------------------
+-- Dosya önce 20260919010000 numarasındaydı ve global_listing_preferences
+-- ile AYNI numarayı taşıyordu. `schema_migrations` birincil anahtarı
+-- sürüm olduğu için `supabase start` her koşuda
+-- "duplicate key value violates unique constraint schema_migrations_pkey"
+-- ile düşüyordu; CI'da security_regression kırmızı kalıyor, ardından
+-- cloudflare_production adımı hiç çalışmıyordu (ölçüldü: 34024984004).
+--
+-- Numara boş bir sürüme alındı. İçerik tek bir `create or replace
+-- function` olduğu için yeniden uygulanması güvenli: canlıdaki tanımın
+-- aynısı yazılıyor, veri ya da yetki değişmiyor.
+--
 -- NEDEN FONKSİYON YENİDEN TANIMLANIYOR
 -- ------------------------------------
 -- get_discover_catalog tek bir jsonb döndürüyor ve facet'ler o gövdenin
