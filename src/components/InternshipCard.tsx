@@ -22,6 +22,7 @@ import { UlkeRozeti } from './UlkeRozeti';
 import { eklenmeMetni, sonKontrolMetni, uzunSuredirAcik } from '../lib/zaman';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { ILAN_KAYNAGI } from '../lib/urun-metni';
+import { CTA_BASARI, CTA_BIRINCIL, CTA_IKINCIL, CTA_ORTAK } from '../lib/kart-cta';
 
 /*
   ALT CTA GEOMETRİSİ — TEK AİLE
@@ -31,20 +32,10 @@ import { ILAN_KAYNAGI } from '../lib/urun-metni';
   iç boşluk. Böylece ilan durumu değişince — dış ilan, StajımVar ilanı,
   başvurulmuş — alt alan aynı kalıyor ve kartlar arasında zıplama olmuyor.
 
-  `min-h-11`: telefonda dokunma hedefi 44 pikselin altına düşmüyor.
+  Tanımlar `lib/kart-cta` dosyasına taşındı: aynı düğme çifti fırsat
+  kartında da var ve iki dosyada elle yazılınca renkleri ters, puntoları
+  farklı hâle gelmişti.
 */
-const CTA_ORTAK =
-  'flex min-h-11 w-full min-w-0 items-center justify-center gap-1.5 rounded-xl px-2.5 text-xs font-bold transition-colors';
-
-const CTA_IKINCIL = 'cursor-pointer border border-gray-200 bg-white text-gray-800 hover:bg-gray-50';
-const CTA_BIRINCIL = 'cursor-pointer bg-blue-600 text-white hover:bg-blue-700 shadow-xs';
-
-/*
-  Başarı durumu tıklanmıyor: `cursor-pointer` ve `hover` YOK. Ölçüsü
-  düğmeyle aynı ama davranışı düğme gibi değil — basılabilir görünüp
-  hiçbir şey yapmayan bir kutu, kullanıcıyı boşuna deneme yaptırır.
-*/
-const CTA_BASARI = 'border border-emerald-200 bg-emerald-50 text-emerald-800';
 
 interface InternshipCardProps {
   listing: InternshipListing;

@@ -18,6 +18,7 @@ import { ZamanTupu } from './ZamanTupu';
 import { BursUyumRozeti } from './BursCakismaMatrisi';
 import { DisBaglanti, FiltreBlogu, SecenekSatiri } from '../ui';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
+import { CTA_BIRINCIL, CTA_IKINCIL, CTA_ORTAK } from '../lib/kart-cta';
 import {
   fetchOpportunities,
   fetchSavedOpportunityIds,
@@ -1662,14 +1663,30 @@ export const Card: React.FC<{
         çizgi ikisini ayırıyor — tablo çizgisi gibi değil, yalnızca
         boşluğu düzenleyen bir eşik.
       */}
+      {/*
+        DÜĞME AĞIRLIKLARI İLAN KARTIYLA AYNI
+
+        Buradaki çift terstir: "Detayı gör" mavi, "Resmî kaynak" beyazdı;
+        ilan kartında ise "Detaylar" beyaz, "Resmî sitede başvur" maviydi.
+        Punto da ayrışmıştı (text-sm'e karşı text-xs). Yani aynı sitede
+        mavi kutu bir listede siteden çıkaran eylemi, ötekinde site içi
+        sayfayı gösteriyordu.
+
+        Artık ikisi de `lib/kart-cta`dan geliyor: mavi kutu her zaman ana
+        eylem (başvuru/resmî kaynak), detay her zaman ikincil.
+
+        Detay sayfası birincil yuvayı kaybetti ama kaybolmadı: kutu aynı
+        boyutta, aynı yerde, yalnız rengi ikincil. Kartın tamamı zaten
+        detay sayfasına götüren bir bağlantı değil — düğme tek yol.
+      */}
       <div className="mt-auto border-t border-gray-100 pt-3">
         <div className={`grid gap-2 ${cta ? 'grid-cols-2' : 'grid-cols-1'}`}>
           <button
             onClick={() => onNavigate(`/firsatlar/${item.slug}`)}
-            className="inline-flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-xl bg-blue-600 px-3 text-sm font-bold text-white transition-colors hover:bg-blue-700 cursor-pointer"
+            className={`${CTA_ORTAK} ${CTA_IKINCIL}`}
           >
             <span className="truncate">Detayı gör</span>
-            <ChevronRight className="w-4 h-4 shrink-0" />
+            <ChevronRight className="h-3 w-3 shrink-0" />
           </button>
           {cta && (
             <DisBaglanti
@@ -1677,13 +1694,13 @@ export const Card: React.FC<{
               girisGerekli={girisGerekli}
               onGirisGerekli={onRequireLogin}
               kapiEtiketi="Başvurmak için giriş yap"
-              className="inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-gray-200 px-3 text-sm font-bold text-gray-700 hover:bg-gray-50"
+              className={`${CTA_ORTAK} ${CTA_BIRINCIL}`}
             >
               {/* Kartta kısa etiket: uzun hâli düğmeyi iki satıra bölüyordu. */}
               <span className="truncate">
                 {girisGerekli ? 'Giriş yap' : (cta.kisaEtiket ?? cta.etiket)}
               </span>
-              <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+              <ExternalLink className="h-3 w-3 shrink-0" />
             </DisBaglanti>
           )}
         </div>
