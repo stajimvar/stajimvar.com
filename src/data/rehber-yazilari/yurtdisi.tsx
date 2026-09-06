@@ -12,6 +12,7 @@ import type { Rehber } from '../rehberler';
 export const YURTDISI_REHBERLERI: Rehber[] = [
   metinRehberi({
     slug: 'erasmus-ogrenim-hareketliligi',
+    guncelleme: '2026-08-25',
     baslik: 'Erasmus+ öğrenim hareketliliği nasıl işler?',
     ozet: 'Bir ya da iki dönem yurt dışında ders almak.',
     konu: 'yurtdisi',
@@ -116,6 +117,7 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'erasmus-staj-hareketliligi',
+    guncelleme: '2026-08-25',
     baslik: 'Erasmus+ staj hareketliliği',
     ozet: 'Yurt dışında staj; yeri çoğu zaman öğrenci kendisi buluyor.',
     konu: 'yurtdisi',
@@ -209,6 +211,7 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'hibesiz-erasmus',
+    guncelleme: '2026-08-25',
     baslik: 'Hibesiz Erasmus ne demek?',
     ozet: 'Hakkı kazanıyorsun, parasını kendin karşılıyorsun.',
     konu: 'yurtdisi',
@@ -296,6 +299,7 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'iaeste-ile-yurtdisinda-staj',
+    guncelleme: '2026-08-25',
     baslik: 'IAESTE ile yurt dışında staj',
     ozet: 'Teknik bölümler için değişim temelli staj programı.',
     konu: 'yurtdisi',
@@ -380,6 +384,7 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'yurtdisi-staj-vizesi',
+    guncelleme: '2026-08-25',
     baslik: 'Yurt dışı staj vizesi nasıl alınır?',
     ozet: 'Ülkeye göre değişiyor; erken başlamak tek ortak kural.',
     konu: 'yurtdisi',
@@ -475,6 +480,7 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'europass-cv',
+    guncelleme: '2026-08-25',
     baslik: 'Europass CV nedir, ne zaman kullanılır?',
     ozet: 'Avrupa\'da standart biçim; her başvuruda gerekmiyor.',
     konu: 'yurtdisi',
@@ -558,6 +564,7 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'ingilizce-basvuru-epostasi',
+    guncelleme: '2026-08-25',
     baslik: 'İngilizce başvuru e-postası nasıl yazılır?',
     ozet: 'Kısa, doğrudan ve hatasız — üç kural yeterli.',
     konu: 'yurtdisi',
@@ -642,6 +649,7 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'yurtdisi-burslari',
+    guncelleme: '2026-08-25',
     baslik: 'Yurt dışı bursları: nereden başlanır?',
     ozet: 'Devlet, üniversite ve kurum bursları farklı takvimlerde işliyor.',
     konu: 'yurtdisi',
@@ -728,6 +736,7 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'yurtdisinda-staj-sigortasi',
+    guncelleme: '2026-08-25',
     baslik: 'Yurt dışında staj sigortası',
     ozet: 'Türkiye\'deki sigorta orada geçmiyor; ayrı poliçe gerekiyor.',
     konu: 'yurtdisi',
@@ -813,6 +822,7 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'yurtdisinda-barinma',
+    guncelleme: '2026-08-25',
     baslik: 'Yurt dışında barınma seçenekleri',
     ozet: 'Yurt, paylaşımlı ev ve geçici konaklama — üçünü de bil.',
     konu: 'yurtdisi',

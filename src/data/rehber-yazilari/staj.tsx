@@ -305,6 +305,7 @@ export const STAJ_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'staj-basvurusu-gerekli-belgeler',
+    guncelleme: '2026-09-01',
     baslik: 'Staj başvurusunda gerekli belgeler',
     ozet: 'Hangi belge nereden alınır, hangi sırayla toplanır.',
     konu: 'staj',
@@ -426,6 +427,7 @@ export const STAJ_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'ilan-acmayan-sirkete-nasil-yazilir',
+    guncelleme: '2026-08-25',
     baslik: 'İlan açmayan şirkete nasıl yazılır?',
     ozet: 'Rekabetin en düşük olduğu kanal; kimin okuyacağını bilmek yeter.',
     konu: 'staj',
@@ -541,6 +543,7 @@ export const STAJ_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'stajda-izin-ve-devamsizlik',
+    guncelleme: '2026-08-25',
     baslik: 'Stajda izin ve devamsızlık',
     ozet: 'Hangi gün sayılır, hangi gün sayılmaz, rapor ne oluyor.',
     konu: 'staj',
@@ -644,6 +647,7 @@ export const STAJ_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'uzaktan-staj-kabul-edilir-mi',
+    guncelleme: '2026-08-25',
     baslik: 'Uzaktan staj okul tarafından kabul edilir mi?',
     ozet: 'Cevap bölüme göre değişiyor; sormadan başlama.',
     konu: 'staj',
@@ -735,6 +739,7 @@ export const STAJ_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'stajyerin-gorev-ve-sorumluluklari',
+    guncelleme: '2026-08-25',
     baslik: 'Stajyerin görev ve sorumlulukları',
     ozet: 'Ne beklenir, ne beklenmez, sınır nerede.',
     konu: 'staj',
@@ -836,6 +841,7 @@ export const STAJ_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'kotu-gecen-stajda-ne-yapilir',
+    guncelleme: '2026-09-01',
     baslik: 'Kötü geçen stajda ne yapılır?',
     ozet: 'İş verilmiyor, ortam kötü ya da staj amacından uzak — sırayla ne yapmalı.',
     konu: 'staj',

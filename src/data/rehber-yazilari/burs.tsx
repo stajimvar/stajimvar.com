@@ -12,6 +12,7 @@ import { BursCakismaMatrisi } from '../../components/BursCakismaMatrisi';
 export const BURS_REHBERLERI: Rehber[] = [
   metinRehberi({
     slug: 'burslar-hangi-aylarda-acilir',
+    guncelleme: '2026-08-25',
     baslik: 'Burslar hangi aylarda açılır?',
     ozet: 'Takvim yıla göre kayıyor ama dönemler belli.',
     konu: 'burs',
@@ -98,6 +99,7 @@ export const BURS_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'ayni-anda-birden-fazla-burs',
+    guncelleme: '2026-09-04',
     baslik: 'Aynı anda birden fazla burs alınabilir mi?',
     ozet: 'Bazıları birleşiyor, bazıları birbirini kesiyor.',
     konu: 'burs',
@@ -352,6 +354,7 @@ export const BURS_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'burs-basvurusu-gerekli-belgeler',
+    guncelleme: '2026-08-25',
     baslik: 'Burs başvurusunda gerekli belgeler',
     ozet: 'Öğrenci belgesi, gelir belgesi ve ikametgâh — en çok istenen üçlü.',
     konu: 'burs',
@@ -447,6 +450,7 @@ export const BURS_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'burs-mulakati',
+    guncelleme: '2026-08-25',
     baslik: 'Burs mülakatı nasıl olur?',
     ozet: 'Sorular genellikle üç başlıkta toplanıyor.',
     konu: 'burs',
@@ -533,6 +537,7 @@ export const BURS_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'burs-hangi-durumlarda-kesilir',
+    guncelleme: '2026-08-25',
     baslik: 'Burs hangi durumlarda kesilir?',
     ozet: 'Kayıt dondurma, başarısızlık ve bildirim eksikliği en sık sebepler.',
     konu: 'burs',
@@ -616,6 +621,7 @@ export const BURS_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'kyk-kredisi-geri-odeme',
+    guncelleme: '2026-08-25',
     baslik: 'KYK öğrenim kredisi geri ödemesi nasıl işliyor?',
     ozet: 'Ödeme mezuniyetten sonra başlıyor; mekanizmayı bilmek gerekiyor.',
     konu: 'burs',
@@ -706,6 +712,7 @@ export const BURS_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'karsiliksiz-ve-geri-odemeli-burs-farki',
+    guncelleme: '2026-08-25',
     baslik: 'Karşılıksız ve geri ödemeli burs farkı',
     ozet: 'Adı burs olan her destek karşılıksız değil.',
     konu: 'burs',
@@ -791,6 +798,7 @@ export const BURS_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'burs-dolandiriciligi',
+    guncelleme: '2026-08-25',
     baslik: 'Burs dolandırıcılığı nasıl anlaşılır?',
     ozet: 'Para isteyen hiçbir burs gerçek değil.',
     konu: 'burs',
@@ -876,6 +884,7 @@ export const BURS_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'burs-basvuru-takvimi-takibi',
+    guncelleme: '2026-08-25',
     baslik: 'Burs başvuru takvimi nasıl takip edilir?',
     ozet: 'Kaçırmamak bir sistem işi; hafızaya bırakılmıyor.',
     konu: 'burs',

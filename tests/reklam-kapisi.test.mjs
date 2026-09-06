@@ -98,9 +98,28 @@ test('H: zayıf rehberde reklam yok', () => {
 });
 
 test('H2: orta seviye rehber indekslenir ama reklamsız', () => {
-  const k = editoryalDeger({ kelime: 400, sss: 3, guncelleme: true });
+  /*
+    Örnekte önce `guncelleme: true` vardı ve puanın üçte biri oradan
+    geliyordu. Tarih artık puan vermiyor — bütün rehberlerde bulunduğu
+    için hiçbir şeyi ayırt etmiyordu (bkz. reklam-kapisi.mjs). Örnek,
+    hâlâ ayırt eden bir sinyalle kuruldu; testin ölçtüğü şey değişmedi:
+    orta seviye bir yazı indekslenir ama reklam almaz.
+  */
+  const k = editoryalDeger({ kelime: 400, sss: 3, hizliCevap: true });
   assert.equal(k.sinif, 'EDITORIAL_MEDIUM');
   assert.equal(k.reklamUygun, false);
+});
+
+test('H2b: güncelleme tarihi tek başına puan getirmiyor', () => {
+  /*
+    Tarih 71 rehberin 71'inde var; puan verseydi eşiği herkes için aşağı
+    çeker, reklam kapısı içerik değişmeden 13'ten 30 rehbere açılırdı
+    (ölçüldü).
+  */
+  const tarihsiz = editoryalDeger({ kelime: 400, sss: 3 });
+  const tarihli = editoryalDeger({ kelime: 400, sss: 3, guncelleme: true });
+  assert.equal(tarihli.puan, tarihsiz.puan);
+  assert.doesNotMatch(tarihli.nedenler.join(' '), /gözden geçirme tarihi/);
 });
 
 test('H3: kelime sayısı TEK BAŞINA karar değil', () => {

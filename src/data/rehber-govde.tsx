@@ -206,7 +206,29 @@ export function metinRehberi(t: RehberTaslagi): Rehber {
     kaynaklar: t.kaynaklar,
     sonrakiAdim: t.sonrakiAdim,
     sss: t.sss,
-    guncelleme: t.guncelleme ?? '2026-08-25',
+    /*
+      GÜNCELLEME TARİHİ VARSAYILANI KALDIRILDI
+
+      Burada `t.guncelleme ?? '2026-08-25'` yazıyordu: kendi tarihi
+      olmayan her rehbere sabit bir tarih koyuyordu. Tarih üç yerde
+      birden görünüyor — kartta, rehber sayfasında ve JSON-LD'nin
+      `dateModified` alanında — yani sabit, arama motoruna bir GERÇEK
+      gibi bildiriliyordu.
+
+      Ölçüldü: yayındaki 71 sayfanın 15'inde bu sabit git geçmişiyle
+      tutmuyordu (örnek: `staj-basvurusu-gerekli-belgeler` 1 Eylül'de
+      değişmişti, sayfası 25 Ağustos diyordu). Kalan 56'sında doğru
+      çıkması tesadüftü: o yazılar gerçekten 25 Ağustos'ta yazılmış ve
+      o gün son kez değişmişti. Yani sabit bugün "çoğunlukla doğru"
+      olsa da her yeni düzenlemede sessizce yanlışlaşıyordu.
+
+      Artık her rehber kendi tarihini taşıyor; tarihler
+      `scripts/rehber-tarihleri.mjs` ile git geçmişinden türetilip
+      kaynağa yazıldı. Tarihi olmayan bir rehber tarih GÖSTERMİYOR ve
+      `dateModified` alanı hiç yazılmıyor (bkz. onrender.mjs) — bilmediğimiz
+      bir şeyi bildiğimizi söylemektense boş bırakıyoruz.
+    */
+    guncelleme: t.guncelleme,
     inceleyen: t.inceleyen,
     icerik: <GovdeCizimi bloklar={t.bloklar} />,
   };

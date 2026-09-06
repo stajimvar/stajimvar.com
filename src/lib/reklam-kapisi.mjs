@@ -103,7 +103,26 @@ export function editoryalDeger(sinyaller = {}) {
   if (sinyaller.karsilastirma) { puan += 1; nedenler.push('iyi/kötü karşılaştırması'); }
   if ((sinyaller.liste ?? 0) >= 6) { puan += 1; nedenler.push('kontrol listesi'); }
   if (sinyaller.hizliCevap) { puan += 1; nedenler.push('hızlı cevap'); }
-  if (sinyaller.guncelleme) { puan += 1; nedenler.push('gözden geçirme tarihi'); }
+  /*
+    GÜNCELLEME TARİHİ ARTIK PUAN VERMİYOR
+
+    Veriyordu (+1) ve o gün ayırt ediciydi: rehberlerin yalnız 14'ünde
+    tarih vardı, 57'sine `rehber-govde` sabit bir tarih yazıyordu ve
+    sayım bu sabiti göremediği için onları puanlamıyordu. Yani puan
+    aslında "tarihi elle yazılmış mı" sorusunu ölçüyordu.
+
+    Sabit kaldırılıp bütün tarihler git geçmişinden türetilince 71
+    rehberin 71'inde tarih oluştu. Herkeste bulunan bir sinyal hiçbir
+    şeyi ayırt etmiyor: puanı 1 artırmak yalnızca eşiği herkes için
+    aşağı çekerdi ve reklam kapısı 13 rehberden 30'a açılırdı — içerik
+    hiç değişmeden.
+
+    Tarih hâlâ okuyucuya gösteriliyor ve `dateModified` olarak
+    bildiriliyor; yalnızca EDİTORYAL DEĞER ölçüsünden düştü.
+
+    Tazelik ("son 6 ayda güncellenmiş") ölçüye alınmadı: Google'ın
+    yazmadığı bir süre eşiğini politika diye kodlamıyoruz.
+  */
 
   const sinif =
     puan >= 5 ? 'EDITORIAL_STRONG' : puan >= 3 ? 'EDITORIAL_MEDIUM' : 'THIN_OR_INCOMPLETE';

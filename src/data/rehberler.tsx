@@ -471,7 +471,7 @@ export const REHBERLER: Rehber[] = [
         </Uyari>
       </>
     ),
-    guncelleme: '2026-08-17',
+    guncelleme: '2026-09-01',
     sss: [
       {
         soru: 'Zorunlu staj kaç iş günü?',
@@ -739,7 +739,7 @@ export const REHBERLER: Rehber[] = [
         </P>
       </>
     ),
-    guncelleme: '2026-08-17',
+    guncelleme: '2026-09-01',
     sss: [
       {
         soru: 'Hiç iş deneyimim yoksa CV\'de ne yazarım?',
@@ -968,7 +968,7 @@ export const REHBERLER: Rehber[] = [
         />
       </>
     ),
-    guncelleme: '2026-08-17',
+    guncelleme: '2026-09-01',
     sss: [
       {
         soru: 'Staj mülakatında ne sorulur?',
@@ -1155,7 +1155,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </P>
       </>
     ),
-    guncelleme: '2026-08-17',
+    guncelleme: '2026-09-01',
     sss: [
       {
         soru: 'Staj başvuru e-postasının konu satırı ne olmalı?',
@@ -1364,7 +1364,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </L>
       </>
     ),
-    guncelleme: '2026-08-17',
+    guncelleme: '2026-08-25',
     sss: [
       {
         soru: 'Staj defteri her gün mü doldurulur?',
@@ -1487,7 +1487,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </P>
       </>
     ),
-    guncelleme: '2026-08-17',
+    guncelleme: '2026-09-01',
     sss: [
       {
         soru: 'KYK bursu ile öğrenim kredisi arasındaki fark nedir?',
@@ -1734,7 +1734,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </Uyari>
       </>
     ),
-    guncelleme: '2026-08-17',
+    guncelleme: '2026-09-01',
     sss: [
       {
         soru: 'Staj başvurusuna ne zaman başlamalıyım?',
@@ -1855,7 +1855,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         />
       </>
     ),
-    guncelleme: '2026-08-17',
+    guncelleme: '2026-08-25',
     sss: [
       {
         soru: 'Gönüllü staj ne kadar sürer?',
@@ -1983,7 +1983,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </L>
       </>
     ),
-    guncelleme: '2026-08-17',
+    guncelleme: '2026-08-25',
     sss: [
       {
         soru: 'Staj işlemlerine ne zaman başlamalıyım?',
@@ -2101,7 +2101,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         />
       </>
     ),
-    guncelleme: '2026-08-17',
+    guncelleme: '2026-08-25',
     sss: [
       {
         soru: 'Staj işe dönüşür mü?',
@@ -2327,7 +2327,7 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
           'Çoğu ülke için evet ve staj vizesi başvurusunda ev sahibi iş yerinin düzenlediği staj sözleşmesi isteniyor. Yani şirketin evrak sürecine taraf olmayı kabul etmesi gerekiyor. İlanda "çalışma izni gerekli" yazıyorsa o ilan vize desteği vermiyor demektir.',
       },
     ],
-    guncelleme: '2026-08-18',
+    guncelleme: '2026-09-01',
   },
 
   /* Konu konu yazılan yeni rehberler. Sıra: eskiler önce. */

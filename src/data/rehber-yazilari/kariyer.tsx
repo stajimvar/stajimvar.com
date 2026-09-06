@@ -5,6 +5,7 @@ import type { Rehber } from '../rehberler';
 export const KARIYER_REHBERLERI: Rehber[] = [
   metinRehberi({
     slug: 'stajdan-sonra-is-teklifi',
+    guncelleme: '2026-08-25',
     baslik: 'Stajdan sonra iş teklifi almak',
     ozet: 'Teklif son iki haftada değil, ilk haftadan itibaren kazanılıyor.',
     konu: 'kariyer',
@@ -106,6 +107,7 @@ export const KARIYER_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'yeni-mezun-cvsi',
+    guncelleme: '2026-08-25',
     baslik: 'Yeni mezun CV\'si nasıl yazılır?',
     ozet: 'Öğrenci CV\'sinden farkı: eğitim aşağı, deneyim yukarı.',
     konu: 'kariyer',
@@ -203,6 +205,7 @@ export const KARIYER_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'ilk-is-mulakati',
+    guncelleme: '2026-08-25',
     baslik: 'İlk iş mülakatına hazırlık',
     ozet: 'Staj mülakatından farkı: artık sonuç soruluyor.',
     konu: 'kariyer',
@@ -309,6 +312,7 @@ export const KARIYER_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'maas-beklentisi-nasil-soylenir',
+    guncelleme: '2026-08-25',
     baslik: 'Maaş beklentisi nasıl söylenir?',
     ozet: 'Rakam vermemek de bir cevap değil; aralık vermek en iyisi.',
     konu: 'kariyer',
@@ -403,6 +407,7 @@ export const KARIYER_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'referans-nasil-istenir',
+    guncelleme: '2026-08-25',
     baslik: 'Referans nasıl istenir?',
     ozet: 'İzin almadan isim yazmak en sık yapılan hata.',
     konu: 'kariyer',
@@ -495,6 +500,7 @@ export const KARIYER_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'is-teklifini-degerlendirme',
+    guncelleme: '2026-08-25',
     baslik: 'İş teklifini değerlendirirken nelere bakılır?',
     ozet: 'Maaş bir kalem; toplam paket ve büyüme yolu daha belirleyici.',
     konu: 'kariyer',
@@ -583,6 +589,7 @@ export const KARIYER_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'yeni-mezun-programlari',
+    guncelleme: '2026-08-25',
     baslik: 'Yeni mezun programları (MT) nasıl işler?',
     ozet: 'Başvurular mezuniyetten önce açılıyor.',
     konu: 'kariyer',

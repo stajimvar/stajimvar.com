@@ -11,6 +11,7 @@ import type { Rehber } from '../rehberler';
 export const UNIVERSITE_REHBERLERI: Rehber[] = [
   metinRehberi({
     slug: 'universite-kariyer-merkezi',
+    guncelleme: '2026-08-25',
     baslik: 'Üniversite kariyer merkezi ne işe yarar?',
     ozet: 'Çoğu öğrencinin varlığından haberi olmayan en yakın kaynak.',
     konu: 'universite',
@@ -104,6 +105,7 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'ogrenci-isleri-hangi-islemler',
+    guncelleme: '2026-08-25',
     baslik: 'Öğrenci işleri hangi işlemleri yapar?',
     ozet: 'Belge, kayıt, ders ve mezuniyet — hepsinin tek durağı.',
     konu: 'universite',
@@ -185,6 +187,7 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'yaz-okulu-ve-staj',
+    guncelleme: '2026-08-25',
     baslik: 'Yaz okulu ve staj aynı anda yapılabilir mi?',
     ozet: 'Teknik olarak mümkün ama takvim çakışması ciddi risk.',
     konu: 'universite',
@@ -265,6 +268,7 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'ogrenci-kulupleri-cvye-nasil-yazilir',
+    guncelleme: '2026-08-25',
     baslik: 'Öğrenci kulüpleri CV\'ye nasıl yazılır?',
     ozet: 'Kulüp deneyimdir; anlatılırsa iş görür.',
     konu: 'universite',
@@ -354,6 +358,7 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'cift-anadal-ve-yan-dal',
+    guncelleme: '2026-08-25',
     baslik: 'Çift anadal ve yan dal: farkı ne, kime uygun?',
     ozet: 'İkisi de ek yük; hangisinin karşılığı var.',
     konu: 'universite',
@@ -440,6 +445,7 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'yatay-gecis',
+    guncelleme: '2026-08-25',
     baslik: 'Yatay geçiş nasıl yapılır?',
     ozet: 'İki yol var: not ortalamasıyla ve merkezi puanla.',
     konu: 'universite',
@@ -520,6 +526,7 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'ogrenciyken-yari-zamanli-calisma',
+    guncelleme: '2026-08-25',
     baslik: 'Öğrenciyken yarı zamanlı çalışmak',
     ozet: 'Bursu, dersleri ve stajı nasıl etkiliyor.',
     konu: 'universite',
@@ -611,6 +618,7 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'mezun-olmadan-once-yapilacaklar',
+    guncelleme: '2026-08-25',
     baslik: 'Mezun olmadan önce yapılması gerekenler',
     ozet: 'Son dönem: belgeler, bağlantılar ve bir sonraki adım.',
     konu: 'universite',

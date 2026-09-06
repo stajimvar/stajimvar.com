@@ -5,6 +5,7 @@ import type { Rehber } from '../rehberler';
 export const CV_REHBERLERI: Rehber[] = [
   metinRehberi({
     slug: 'ats-uyumlu-cv',
+    guncelleme: '2026-09-01',
     baslik: 'ATS uyumlu CV nasıl hazırlanır?',
     ozet: 'CV\'ni önce bir yazılım okuyor; okunabilir olması gerekiyor.',
     konu: 'cv',
@@ -125,6 +126,7 @@ export const CV_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'cvde-proje-nasil-anlatilir',
+    guncelleme: '2026-08-25',
     baslik: 'CV\'de proje nasıl anlatılır?',
     ozet: 'Ders ödevi de sayılır; anlatma biçimi belirliyor.',
     konu: 'cv',
@@ -225,6 +227,7 @@ export const CV_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'on-yazi-nasil-yazilir',
+    guncelleme: '2026-08-25',
     baslik: 'Ön yazı (cover letter) nasıl yazılır?',
     ozet: 'CV neyi yaptığını, ön yazı neden orada olmak istediğini söylüyor.',
     konu: 'cv',
@@ -310,6 +313,7 @@ export const CV_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'portfolyo-nasil-hazirlanir',
+    guncelleme: '2026-08-25',
     baslik: 'Portfolyo nasıl hazırlanır?',
     ozet: 'Tasarım, yazılım ve mühendislikte CV\'den daha çok konuşan şey.',
     konu: 'cv',
@@ -401,6 +405,7 @@ export const CV_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'linkedin-profili-nasil-duzenlenir',
+    guncelleme: '2026-08-25',
     baslik: 'Öğrenci için LinkedIn profili nasıl düzenlenir?',
     ozet: 'Boş profil, profilin olmamasından kötü.',
     konu: 'cv',
@@ -493,6 +498,7 @@ export const CV_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'online-mulakat',
+    guncelleme: '2026-08-25',
     baslik: 'Online mülakatta dikkat edilecekler',
     ozet: 'Teknik hazırlık, kamera düzeni ve ilk otuz saniye.',
     konu: 'cv',
@@ -590,6 +596,7 @@ export const CV_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'basvuruya-cevap-gelmezse',
+    guncelleme: '2026-08-25',
     baslik: 'Başvuruya cevap gelmezse ne yapılır?',
     ozet: 'Sessizlik çoğu zaman ret değil; ne zaman, nasıl hatırlatılır.',
     konu: 'cv',

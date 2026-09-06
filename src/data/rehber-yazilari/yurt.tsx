@@ -11,6 +11,7 @@ import type { Rehber } from '../rehberler';
 export const YURT_REHBERLERI: Rehber[] = [
   metinRehberi({
     slug: 'kyk-yurt-basvurusu',
+    guncelleme: '2026-08-25',
     baslik: 'KYK yurt başvurusu nasıl yapılır?',
     ozet: 'Başvuru e-Devlet üzerinden; yerleştirme puanla yapılıyor.',
     konu: 'yurt',
@@ -103,6 +104,7 @@ export const YURT_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'kyk-yurt-tipleri',
+    guncelleme: '2026-08-25',
     baslik: 'KYK yurt tipleri ve oda düzeni',
     ozet: 'Oda kişi sayısı ücreti ve günlük düzeni belirliyor.',
     konu: 'yurt',
@@ -181,6 +183,7 @@ export const YURT_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'yurt-yedek-sirasi',
+    guncelleme: '2026-08-25',
     baslik: 'Yurt yedek sırası nasıl ilerler?',
     ozet: 'Sıra boşalan kontenjana göre ilerliyor; beklerken plan B şart.',
     konu: 'yurt',
@@ -262,6 +265,7 @@ export const YURT_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'kyk-yurt-nakli',
+    guncelleme: '2026-08-25',
     baslik: 'KYK yurt nakli nasıl yapılır?',
     ozet: 'Şehir değişince yurt hakkı otomatik taşınmıyor.',
     konu: 'yurt',
@@ -333,6 +337,7 @@ export const YURT_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'yurt-izin-ve-giris-cikis',
+    guncelleme: '2026-08-25',
     baslik: 'Yurtta izin ve giriş-çıkış işlemleri',
     ozet: 'Kurallar yurda göre değişiyor ama mantık aynı.',
     konu: 'yurt',
@@ -409,6 +414,7 @@ export const YURT_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'yurttan-kayit-silme',
+    guncelleme: '2026-08-25',
     baslik: 'Yurttan kayıt silme ve depozito iadesi',
     ozet: 'Sıra önemli: önce dilekçe, sonra teslim, sonra iade.',
     konu: 'yurt',
@@ -490,6 +496,7 @@ export const YURT_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'ozel-yurt-secerken',
+    guncelleme: '2026-08-25',
     baslik: 'Özel yurt seçerken dikkat edilecekler',
     ozet: 'Ruhsat, sözleşme ve toplam maliyet — üçünü de sor.',
     konu: 'yurt',
@@ -585,6 +592,7 @@ export const YURT_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'ogrenci-evi-kiralarken',
+    guncelleme: '2026-08-25',
     baslik: 'Öğrenci evi kiralarken dikkat edilecekler',
     ozet: 'Ev arkadaşı, konum ve sözleşme — sırayla.',
     konu: 'yurt',
@@ -676,6 +684,7 @@ export const YURT_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'depozito-ve-kira-sozlesmesi',
+    guncelleme: '2026-08-25',
     baslik: 'Depozito ve kira sözleşmesinde nelere dikkat edilir?',
     ozet: 'İmzalamadan önce okunacak beş madde.',
     konu: 'yurt',
@@ -774,6 +783,7 @@ export const YURT_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'baska-sehirde-staj-barinma',
+    guncelleme: '2026-08-25',
     baslik: 'Başka şehirde staj yaparken barınma',
     ozet: 'Kısa süreli kalmak, uzun süreli kiralamadan farklı işliyor.',
     konu: 'yurt',
