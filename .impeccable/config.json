@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "src/components/InternshipCard.tsx"
+        ],
+        "createdAt": "2026-09-06T11:14:24.210Z",
+        "reason": "Yanlis pozitif: gri ikon kartin BEYAZ zemininde; mavi zemin yalniz hover ile geliyor ve o anda ikon da maviye donuyor. Tarayicida dogrulandi."
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "src/components/OpportunitiesPage.tsx"
+        ],
+        "createdAt": "2026-09-06T11:14:24.309Z",
+        "reason": "Yanlis pozitif: bg-gray-100 uzerinde text-gray-700 kontrasti 8.9:1; kural doygun renkler icin. Mavi dal beyaz yaziyla, ayri ternary dalinda."
+      }
+    ]
+  }
+}
