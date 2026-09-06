@@ -10,6 +10,7 @@ import { useKesfetGeo } from './useKesfetGeo';
 import { KesfetGlobePanel } from './KesfetGlobePanel';
 import { KesfetGeoPanel } from './KesfetGeoPanel';
 import { gorunenKartlar } from './kesfet-geo-state.mjs';
+import { KESFET_GEO_ACIK } from '../lib/kesfet-geo-ayari.mjs';
 
 const verificationText = (event: DiscoverEvent) => {
   if (event.verificationStatus === 'verified' && event.sourceKind === 'official') return 'Resmî kaynaktan doğrulandı';
@@ -91,8 +92,20 @@ export const KesfetPage: React.FC<{
     verdikten sonra isteniyor: kartlar ekrana ikinci bir isteği beklemeden
     çıkıyor.
   */
-  const geo = useKesfetGeo(filters, catalog.query, phase !== 'loading');
-  const geoActive = geo.layout.mapOpen;
+  /*
+    ASKIDAYKEN VERİ DE ÇEKİLMİYOR: hook'un "etkin mi" argümanı bayrakla
+    birlikte kapanıyor, böylece görünmeyen bir arayüz için sayım isteği
+    atılmıyor. İmza değişmediği için bayrak açıldığında eski davranış
+    olduğu gibi geri geliyor.
+  */
+  const geo = useKesfetGeo(filters, catalog.query, KESFET_GEO_ACIK && phase !== 'loading');
+  /*
+    Bayrak kapalıyken coğrafi seçim ADRESTEN de etkinleşmiyor. Yalnız panel
+    gizlenseydi `?yer=TR` haritayı yine açar, kullanıcı erişemediği bir
+    seçimin içinde kalırdı; ilk satırı harita aldığı için kart sayısı da
+    sessizce 24'ten 21'e düşerdi.
+  */
+  const geoActive = KESFET_GEO_ACIK && geo.layout.mapOpen;
   const geoPhase = geo.phase === 'ready' ? 'ready' : geo.phase === 'error' ? 'error' : 'loading';
   const listPhase = geoActive ? geoPhase : phase;
   const listEvents = geoActive ? geo.visibleEvents : data?.events ?? [];
@@ -103,9 +116,11 @@ export const KesfetPage: React.FC<{
     kartı ızgaradan düşüyor. Kesme yalnızca burada, çizim listesinde;
     `listEvents` ve `listTotal` tam kümeyi tutmaya devam ettiği için
     sayfalama ve toplam sayı etkilenmiyor, "Dünya" seçilince de üç kart
-    aynı karede geri geliyor.
+    aynı karede geri geliyor. Özellik askıdayken (`geoActive` false) düzen
+    hiç okunmuyor: ilk üç kart yerinde kalıyor ve sayaç askıya alınmadan
+    önceki hâlini gösteriyor.
   */
-  const gridEvents = gorunenKartlar(listEvents, geo.layout) as DiscoverEvent[];
+  const gridEvents = gorunenKartlar(listEvents, geoActive ? geo.layout : null) as DiscoverEvent[];
   const selectedCountry = geo.breadcrumb.find((node) => node.level === 'country')?.code ?? null;
   const cities = [...new Set([...(data?.facets.cities ?? []), ...(filters.city ? [filters.city] : [])])];
   const activeFilters = [
@@ -160,14 +175,20 @@ export const KesfetPage: React.FC<{
             </button>
           </div>
 
-          {/* Küre başlık ile filtre panelinin arasında; panel kaldırılmadı, aşağı indi. */}
-          <KesfetGlobePanel
-            phase={geo.phase}
-            countries={geo.countries}
-            selectedCountry={selectedCountry}
-            onSelect={geo.select}
-            onReload={geo.reload}
-          />
+          {/*
+            Küre başlık ile filtre panelinin arasında; panel kaldırılmadı,
+            aşağı indi. Şu an ASKIDA: bayrak kapalıyken hiç çizilmiyor.
+            Çağrı bilerek duruyor, böylece geri açmak tek satırlık değişiklik.
+          */}
+          {KESFET_GEO_ACIK && (
+            <KesfetGlobePanel
+              phase={geo.phase}
+              countries={geo.countries}
+              selectedCountry={selectedCountry}
+              onSelect={geo.select}
+              onReload={geo.reload}
+            />
+          )}
 
           <div id="kesfet-filters" className={`${filtersOpen ? 'block' : 'hidden'} lg:block`}>
             <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
@@ -250,6 +271,8 @@ export const KesfetPage: React.FC<{
             harita o satırı ALIYOR, ilk satırın kartları ızgaradan geçici
             olarak düşüyor (bkz. `gridEvents`), altındakiler yerinde kalıyor.
             Seçim yokken bu blok hiç çizilmiyor ve ilk üç kart geri geliyor.
+            Özellik askıdayken `geoActive` zaten false: harita da küreyle
+            AYNI bayrağa bağlı, ikisi ayrı ayrı açılıp kapanamıyor.
           */}
           {geoActive && (
             <KesfetGeoPanel
