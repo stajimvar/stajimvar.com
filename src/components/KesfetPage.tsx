@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { CalendarDays, MapPin, RefreshCw, Search, ShieldCheck, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { FiltreBlogu, SecenekSatiri } from '../ui';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
+import { ETKINLIK_KAYNAGI_PARCALI } from '../lib/urun-metni';
 import { DISCOVER_CATEGORIES, type DiscoverEvent } from '../lib/kesfet';
 import { formatDiscoverDate, formatDiscoverLocation } from '../lib/kesfet-domain.mjs';
 import { EventCover } from './EventCover';
@@ -145,11 +146,17 @@ export const KesfetPage: React.FC<{
     <main className={`w-full ${SAYFA_GENISLIGI} mx-auto px-4 pb-[calc(120px+env(safe-area-inset-bottom))] pt-2 sm:px-6 sm:pt-3 lg:px-8 lg:pb-10 xl:px-10`}>
       <div className="grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-12">
         {/*
-          Sol sütun küre eklendiği için ekran boyundan uzun olabiliyor.
-          Yapışkan sütun kendi içinde kaydırılabilir: aksi hâlde filtre
-          panelinin alt yarısı geniş ekranda hiç erişilemez hâle gelirdi.
+          SOL SÜTUN — İLANLAR SAYFASININ AYNISI
+
+          Önce `max-h` + `overflow-y-auto` ile kendi içinde kayıyordu:
+          küre paneli sütunu ekrandan uzun yapabildiği için filtrelerin
+          alt yarısı erişilemez kalmasın diye konmuştu. Küre askıya
+          alındığından (KESFET_GEO_ACIK) sütun artık ekrana sığıyor ve o
+          iç kaydırma yalnızca görünür bir ikinci kaydırma çubuğu
+          bırakıyordu — ilanlar sayfasında olmayan bir çubuk. Kaldırıldı;
+          sütun ilanlardaki gibi düz yapışkan.
         */}
-        <div className="space-y-4 lg:sticky lg:top-4 lg:col-span-3 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
+        <div className="space-y-4 lg:sticky lg:top-4 lg:col-span-3">
           <h1 className="min-w-0 text-center text-[clamp(1.25rem,2.4vw,1.75rem)] font-extrabold leading-tight tracking-tight text-gray-950 lg:text-left">
             Şehrindeki etkinlikler, <span className="text-blue-600">tek listede</span>.
           </h1>
@@ -177,27 +184,23 @@ export const KesfetPage: React.FC<{
           </div>
 
           {/*
-            ŞEHİR ŞERİDİ — KÜRENİN DURDUĞU YERDE
+            AYIRICI — ARAMANIN HEMEN ALTINDA
 
-            Arama satırının hemen altında, filtre panelinin üstünde: göz
-            önce "nerede" sorusuna bakıyor, ayrıntılı süzgeçler ondan sonra
-            geliyor. Küre askıya alındığı için burası boştu.
+            İlanlar sayfasındaki ayırıcının aynısı: 2 piksel yüksekliğinde,
+            yuvarlatılmış, beyaz zeminli, `shadow-xs` gölgeli kapsül.
 
-            Şerit bayraktan BAĞIMSIZ: küre gibi bir dünya haritası değil,
-            katalog yanıtındaki sayıları okuyan düz bir düğme dizisi. Bayrak
-            kapalıyken de görünüyor.
+            Orada mobilde aramadan hemen sonra geliyor. Burada sütunun
+            SONUNDAYDI ve şehir şeridinin altına düşüyordu: aramayı listeden
+            ayırmak yerine şeridi listeden ayırıyordu. Şerit ortadaki sütuna
+            taşındı, ayırıcı da aramanın altında kaldı; iki sayfa artık aynı
+            yeri işaretliyor.
 
-            Kendi durumu YOK, `filters.city`'yi okuyup yazıyor. Ayrı bir
-            durum tutulsaydı filtre panelindeki "Şehir" menüsüyle ayrışırdı:
-            menüden İzmir seçildiğinde şeritte hâlâ "Tümü" yanıyor olurdu.
-            İki arayüz tek seçimi paylaşıyor, ikisi de çalışmaya devam ediyor.
+            Filtre paneli açıkken çizilmiyor: panelin kendi üst kenarı zaten
+            aynı ayrımı yapıyor, iki çizgi üst üste biniyordu.
           */}
-          <SehirSeridi
-            sayilar={data?.facets.cityCounts}
-            secili={filters.city}
-            onSec={(city) => setFilter('city', city)}
-            onTumu={() => setFilter('city', '')}
-          />
+          {!filtersOpen && (
+            <div aria-hidden className="h-0.5 rounded-2xl border border-gray-200 bg-white shadow-xs lg:hidden" />
+          )}
 
           {/*
             Küre başlık ile filtre panelinin arasında; panel kaldırılmadı,
@@ -282,10 +285,67 @@ export const KesfetPage: React.FC<{
               </div>
             </section>
           </div>
-          {!filtersOpen && <div aria-hidden className="h-0.5 rounded-2xl border border-gray-200 bg-white shadow-xs lg:hidden" />}
         </div>
 
-        <section aria-label="Etkinlik kataloğu" className="min-w-0 space-y-4 lg:col-span-9">
+        {/*
+          ORTA SÜTUN 9'DAN 6'YA
+
+          İlanlar sayfasında orta sütun 6 birim; sağdaki 3 birim sayaçlara
+          ve "nereden geliyor" kutusuna ayrılmış. Keşfet ortayı 9 birim
+          kullanıyordu ve sağ sütunu hiç yoktu: aynı ürünün iki sayfası
+          farklı iskeletteydi. Sütun 6'ya indi, sağ sütun eklendi.
+
+          Izgara da buna göre daraldı: 6 birimde üç poster kartı 200
+          pikselin altına düşerdi, bu yüzden `xl:grid-cols-3` kalktı.
+          Kartın kendisi değişmedi.
+        */}
+        <section aria-label="Etkinlik kataloğu" className="min-w-0 space-y-4 lg:col-span-6">
+          {/*
+            BAŞLIK SATIRI — İLANLAR SAYFASININ AYNISI
+
+            Aynı tipografi (küçük, seyrek harf aralıklı, büyük harf), aynı
+            hizalama: solda "ne ve kaç tane", sağda listenin nereden
+            geldiğini söyleyen ikincil satır. Sağdaki metin telefonda gizli;
+            orada da aynı sebeple gizliydi — iki metin yan yana sıkışıp
+            dört satıra bölünüyordu.
+
+            Sayı `listTotal`: filtrelerin tam sonucu. Ekrandaki kart sayısı
+            değil; o bilgi sayfanın sonundaki canlı bölgede duruyor.
+          */}
+          <div className="flex items-center justify-between gap-3 px-1">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-gray-600">
+              {hasNarrowing ? 'Filtrelenen etkinlikler' : 'Yayındaki etkinlikler'}
+              {listPhase === 'ready' ? ` (${listTotal})` : ''}
+            </h2>
+            <span className="hidden text-xs font-medium text-gray-500 sm:block">
+              Belediyelerin resmî sayfalarından derlendi
+            </span>
+          </div>
+
+          {/*
+            ŞEHİR ŞERİDİ — İLANLARDAKİ ŞİRKET ŞERİDİYLE AYNI YERDE
+
+            Önce sol sütundaydı, kürenin boşalttığı yerde. İlanlar
+            sayfasında karşılığı (SirketSeridi) listenin hemen üstünde,
+            orta sütunda duruyor: şerit bir süzgeç panelinden çok listenin
+            başlığı gibi çalışıyor — göz listeye inerken üstünden geçiyor.
+            Keşfet'te de aynı yere alındı.
+
+            Şerit bayraktan BAĞIMSIZ: küre gibi bir dünya haritası değil,
+            katalog yanıtındaki sayıları okuyan düz bir düğme dizisi. Bayrak
+            kapalıyken de görünüyor.
+
+            Kendi durumu YOK, `filters.city`'yi okuyup yazıyor. Ayrı bir
+            durum tutulsaydı filtre panelindeki "Şehir" menüsüyle ayrışırdı:
+            menüden İzmir seçildiğinde şeritte hâlâ "Tümü" yanıyor olurdu.
+            İki arayüz tek seçimi paylaşıyor, ikisi de çalışmaya devam ediyor.
+          */}
+          <SehirSeridi
+            sayilar={data?.facets.cityCounts}
+            secili={filters.city}
+            onSec={(city) => setFilter('city', city)}
+            onTumu={() => setFilter('city', '')}
+          />
           {hasFilters && (
             <div className="flex flex-wrap items-center gap-2 text-xs">
               {activeFilters.map((filter) => <span key={filter} className="rounded-full bg-blue-50 px-2.5 py-1 font-semibold text-blue-700">{filter}</span>)}
@@ -316,7 +376,7 @@ export const KesfetPage: React.FC<{
             />
           )}
           {listPhase === 'loading' && (
-            <div role="status" aria-label="Etkinlikler yükleniyor" className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+            <div role="status" aria-label="Etkinlikler yükleniyor" className="grid gap-3 sm:grid-cols-2 sm:gap-4">
               {[1, 2, 3, 4, 5, 6].map((key) => <div key={key} aria-hidden className="h-44 animate-pulse rounded-2xl bg-gray-100 motion-reduce:animate-none sm:h-72" />)}
             </div>
           )}
@@ -334,7 +394,7 @@ export const KesfetPage: React.FC<{
             */}
             {listEvents.length > 0 ? (
               gridEvents.length > 0 && (
-                <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
                   {gridEvents.map((event) => <EventCard key={event.id} event={event} onNavigate={(path) => catalog.navigateToDetail(path, onNavigate)} />)}
                 </div>
               )
@@ -385,6 +445,67 @@ export const KesfetPage: React.FC<{
             {listPhase === 'ready' ? `${listTotal} etkinlik · ${gridEvents.length} gösteriliyor` : listPhase === 'loading' ? 'Etkinlikler yükleniyor…' : 'Liste yüklenemedi'}
           </p>
         </section>
+
+        {/*
+          SAĞ SÜTUN — İLANLAR SAYFASININ KARŞILIĞI
+
+          İlanlarda burada iki kart var: üstte üç sayaç, altında "ilanlar
+          nereden geliyor" kutusu. Keşfet'in böyle bir sütunu hiç yoktu;
+          aynı iskelet buraya da kuruldu.
+
+          `hidden lg:block`: telefonda sayaçlar listenin üstündeki başlıkta
+          zaten var, "nereden geliyor" metni de kartlardaki "Resmî kaynaktan
+          doğrulandı" rozetiyle örtüşüyor. İkisini mobilde ayrıca göstermek
+          listeyi bir ekran aşağı iterdi — ilanlar sayfasında da bu yüzden
+          gizli.
+        */}
+        <div className="hidden space-y-4 lg:sticky lg:top-4 lg:col-span-3 lg:block">
+          {/*
+            SAYAÇLAR
+
+            Üçü de katalog yanıtının kendi alanlarından: `total` filtrelerin
+            tam sonucu, ötekiler faset sayımları. İstemcide sayılmıyorlar —
+            sayfa 24 kayıt getiriyor, katalogda yüzden fazla etkinlik var.
+            Şehir ve kategori sayısı "kaç seçenek var" sorusunu cevaplıyor,
+            "kaç etkinlik var" sorusunu değil.
+          */}
+          <div className="grid grid-cols-3 gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3.5">
+            {[
+              { etiket: 'Etkinlik', deger: listTotal },
+              { etiket: 'Şehir', deger: Object.keys(data?.facets.cityCounts ?? {}).length },
+              {
+                etiket: 'Kategori',
+                deger: Object.values(data?.facets.categories ?? {}).filter((adet) => adet > 0).length,
+              },
+            ].map((kutu) => (
+              <div key={kutu.etiket} className="min-w-0 text-center">
+                <p className="text-2xl font-black leading-none tabular-nums text-gray-900">
+                  {listPhase === 'ready' ? kutu.deger : '—'}
+                </p>
+                <p className="mt-1 truncate text-[11px] font-semibold text-gray-500">{kutu.etiket}</p>
+              </div>
+            ))}
+          </div>
+
+          {/*
+            Metin `lib/urun-metni` dosyasından geliyor, ilan kutusuyla aynı
+            kural: burada elle yazılsaydı kaynak listesi değiştiğinde eskir
+            ve canlıda yanlış bir iddiaya dönüşürdü — ilan tarafında tam
+            olarak bu yaşandı.
+          */}
+          <aside className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5">
+            <span className="inline-block rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-700">
+              Etkinlikler nereden geliyor
+            </span>
+            <p className="text-sm leading-relaxed text-gray-600">
+              {ETKINLIK_KAYNAGI_PARCALI.once}
+              <strong className="text-gray-900">{ETKINLIK_KAYNAGI_PARCALI.vurgu}</strong>
+              {ETKINLIK_KAYNAGI_PARCALI.sonra}
+            </p>
+          </aside>
+
+          {/* Altı reklam için ayrıldı; ilanlar sayfasındaki gibi şimdilik boş. */}
+        </div>
       </div>
     </main>
   );

@@ -55,3 +55,27 @@ export const ILAN_KAYNAGI_PARCALI = {
     ' derliyoruz. StajımVar işverenleri ise ilanını doğrudan burada yayımlıyor; o ilanlarda ' +
     'başvuru siteden çıkmadan tamamlanıyor.',
 } as const;
+
+/**
+ * Keşfet sayfasındaki "etkinlikler nereden geliyor" açıklaması.
+ *
+ * İlan kutusuyla aynı biçimde parçalı: sağ sütundaki kutu ortadaki
+ * cümleyi `<strong>` ile sarıyor.
+ *
+ * DOĞRULUK NOTU
+ * -------------
+ * Cümle `automation/event_import/sources.json` içindeki kaynak listesine
+ * dayanıyor: bugün orada yalnızca belediyelerin ve belediye kültür-sanat
+ * birimlerinin kendi sayfaları var (İstanbul, Ankara, İzmir, Bursa,
+ * Eskişehir, Konya). Bilet satış siteleri ya da etkinlik aracıları
+ * listede YOK — bu yüzden "resmî kaynak" ifadesi bugün için doğru.
+ * Kaynak listesine başka türde bir kaynak eklenirse bu metin de
+ * değişmeli.
+ */
+export const ETKINLIK_KAYNAGI_PARCALI = {
+  once: 'Şehrin etkinlik sayfalarını tek tek gezme. Etkinlikleri bilet sitelerinden değil, ',
+  vurgu: 'belediyelerin kendi resmî sayfalarından',
+  sonra:
+    ' derliyoruz. Her kayıtta kaynağın adresi ve en son ne zaman kontrol edildiği duruyor; ' +
+    'başvuru ya da bilet adımı etkinliğin kendi sayfasında tamamlanıyor.',
+} as const;
