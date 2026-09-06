@@ -11,6 +11,8 @@ import type { Rehber } from '../rehberler';
 export const UNIVERSITE_REHBERLERI: Rehber[] = [
   metinRehberi({
     slug: 'universite-kariyer-merkezi',
+    dayanak:
+      'Bu konuda tek bir resmî kaynak yok: kural üniversiteden üniversiteye değişiyor. Yazı yaygın uygulamayı anlatıyor; seni bağlayan metin kendi bölümünün staj yönergesi.',
     guncelleme: '2026-08-25',
     baslik: 'Üniversite kariyer merkezi ne işe yarar?',
     ozet: 'Çoğu öğrencinin varlığından haberi olmayan en yakın kaynak.',
@@ -268,6 +270,8 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'ogrenci-kulupleri-cvye-nasil-yazilir',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     guncelleme: '2026-08-25',
     baslik: 'Öğrenci kulüpleri CV\'ye nasıl yazılır?',
     ozet: 'Kulüp deneyimdir; anlatılırsa iş görür.',

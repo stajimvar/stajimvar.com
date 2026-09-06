@@ -884,6 +884,28 @@ export const BURS_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'burs-basvuru-takvimi-takibi',
+    /*
+      Bu rehberde `dayanak` DEĞİL gerçek kaynak var: yazı "kurumların
+      resmî duyuru sayfasını takip et" diyor ve okuyucuyu o sayfalara
+      yollaması gerekiyordu. En büyük iki adres yazılıydı ama bağlantı
+      yoktu; bulma işi okuyucuya kalıyordu.
+    */
+    kaynaklar: [
+      {
+        etiket: 'Gençlik ve Spor Bakanlığı — KYGM duyuruları',
+        adres: 'https://kygm.gsb.gov.tr',
+        kurum: 'Gençlik ve Spor Bakanlığı Kredi ve Yurtlar Genel Müdürlüğü',
+        tur: 'kurum',
+        destekledigi: 'KYK burs ve kredi başvuru döneminin ilan edildiği yer.',
+      },
+      {
+        etiket: 'e-Devlet Kapısı',
+        adres: 'https://www.turkiye.gov.tr',
+        kurum: 'Cumhurbaşkanlığı Dijital Dönüşüm Ofisi',
+        tur: 'kurum',
+        destekledigi: 'KYK başvurusunun yapıldığı ve durumunun görüldüğü yer.',
+      },
+    ],
     guncelleme: '2026-08-25',
     baslik: 'Burs başvuru takvimi nasıl takip edilir?',
     ozet: 'Kaçırmamak bir sistem işi; hafızaya bırakılmıyor.',

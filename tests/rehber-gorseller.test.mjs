@@ -63,14 +63,22 @@ const HEDEF = [
   'zorunlu-staj-rehberi',
 ];
 
+/*
+  BLOK AYIRICI ARTIK TEK KAYNAKTAN
+
+  Burada `slug: '...',\n    konu:` kalıbı vardı: `slug` satırının hemen
+  ardından `konu` gelmesini şart koşuyordu. Araya yeni bir alan girince
+  (`dayanak`, `guncelleme`) o rehberler hiç bulunamadı ve testler
+  "görsel bloğu yok" dedi — oysa görseller yerindeydi.
+
+  Ayırma işi `rehber-sayimi.mjs`ye devredildi: sayım da, aday sıralaması
+  da, bu testler de aynı bloklara bakıyor. Alan sırası artık kimseyi
+  ilgilendirmiyor.
+*/
 function rehberGovdesi(slug) {
-  const konum = [...KAYNAK.matchAll(/slug: '([^']+)',\n {4}konu:/g)].map((m) => ({
-    slug: m[1],
-    i: m.index,
-  }));
-  const k = konum.findIndex((x) => x.slug === slug);
-  assert.ok(k >= 0, `${slug} bulunamadı`);
-  return KAYNAK.slice(konum[k].i, k + 1 < konum.length ? konum[k + 1].i : KAYNAK.length);
+  const blok = rehberBloklari(KAYNAK).find((b) => b.slug === slug);
+  assert.ok(blok, `${slug} bulunamadı`);
+  return blok.govde;
 }
 
 function bilesenSayisi(govde, ad) {

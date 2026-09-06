@@ -177,6 +177,8 @@ export interface RehberTaslagi {
   sss: SoruCevap[];
   /* Tip Rehber kaydıyla aynı: kurum, tür ve neyi doğruladığı da taşınıyor. */
   kaynaklar?: Rehber['kaynaklar'];
+  /** Resmî kaynağı olmayan rehberin neye dayandığı — bkz. Rehber tipi. */
+  dayanak?: Rehber['dayanak'];
   sonrakiAdim?: { etiket: string; yol: string; aciklama?: string };
   etiketler?: string[];
   oneCikan?: boolean;
@@ -204,6 +206,7 @@ export function metinRehberi(t: RehberTaslagi): Rehber {
     etiketler: t.etiketler,
     oneCikan: t.oneCikan,
     kaynaklar: t.kaynaklar,
+    dayanak: t.dayanak,
     sonrakiAdim: t.sonrakiAdim,
     sss: t.sss,
     /*

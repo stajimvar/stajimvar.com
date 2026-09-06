@@ -5,6 +5,8 @@ import type { Rehber } from '../rehberler';
 export const CV_REHBERLERI: Rehber[] = [
   metinRehberi({
     slug: 'ats-uyumlu-cv',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     guncelleme: '2026-09-01',
     baslik: 'ATS uyumlu CV nasıl hazırlanır?',
     ozet: 'CV\'ni önce bir yazılım okuyor; okunabilir olması gerekiyor.',
@@ -126,6 +128,8 @@ export const CV_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'cvde-proje-nasil-anlatilir',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     guncelleme: '2026-08-25',
     baslik: 'CV\'de proje nasıl anlatılır?',
     ozet: 'Ders ödevi de sayılır; anlatma biçimi belirliyor.',
@@ -227,6 +231,8 @@ export const CV_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'on-yazi-nasil-yazilir',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     guncelleme: '2026-08-25',
     baslik: 'Ön yazı (cover letter) nasıl yazılır?',
     ozet: 'CV neyi yaptığını, ön yazı neden orada olmak istediğini söylüyor.',
@@ -313,6 +319,8 @@ export const CV_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'portfolyo-nasil-hazirlanir',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     guncelleme: '2026-08-25',
     baslik: 'Portfolyo nasıl hazırlanır?',
     ozet: 'Tasarım, yazılım ve mühendislikte CV\'den daha çok konuşan şey.',
@@ -405,6 +413,8 @@ export const CV_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'linkedin-profili-nasil-duzenlenir',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     guncelleme: '2026-08-25',
     baslik: 'Öğrenci için LinkedIn profili nasıl düzenlenir?',
     ozet: 'Boş profil, profilin olmamasından kötü.',
@@ -498,6 +508,8 @@ export const CV_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'online-mulakat',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     guncelleme: '2026-08-25',
     baslik: 'Online mülakatta dikkat edilecekler',
     ozet: 'Teknik hazırlık, kamera düzeni ve ilk otuz saniye.',
@@ -596,6 +608,8 @@ export const CV_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'basvuruya-cevap-gelmezse',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     guncelleme: '2026-08-25',
     baslik: 'Başvuruya cevap gelmezse ne yapılır?',
     ozet: 'Sessizlik çoğu zaman ret değil; ne zaman, nasıl hatırlatılır.',

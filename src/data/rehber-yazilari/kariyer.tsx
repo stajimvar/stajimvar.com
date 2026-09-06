@@ -5,6 +5,8 @@ import type { Rehber } from '../rehberler';
 export const KARIYER_REHBERLERI: Rehber[] = [
   metinRehberi({
     slug: 'stajdan-sonra-is-teklifi',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     guncelleme: '2026-08-25',
     baslik: 'Stajdan sonra iş teklifi almak',
     ozet: 'Teklif son iki haftada değil, ilk haftadan itibaren kazanılıyor.',
@@ -107,6 +109,8 @@ export const KARIYER_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'yeni-mezun-cvsi',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     guncelleme: '2026-08-25',
     baslik: 'Yeni mezun CV\'si nasıl yazılır?',
     ozet: 'Öğrenci CV\'sinden farkı: eğitim aşağı, deneyim yukarı.',
@@ -205,6 +209,8 @@ export const KARIYER_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'ilk-is-mulakati',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     guncelleme: '2026-08-25',
     baslik: 'İlk iş mülakatına hazırlık',
     ozet: 'Staj mülakatından farkı: artık sonuç soruluyor.',
@@ -407,6 +413,8 @@ export const KARIYER_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'referans-nasil-istenir',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     guncelleme: '2026-08-25',
     baslik: 'Referans nasıl istenir?',
     ozet: 'İzin almadan isim yazmak en sık yapılan hata.',

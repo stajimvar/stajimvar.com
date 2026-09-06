@@ -427,6 +427,8 @@ export const STAJ_REHBERLERI: Rehber[] = [
 
   metinRehberi({
     slug: 'ilan-acmayan-sirkete-nasil-yazilir',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     guncelleme: '2026-08-25',
     baslik: 'İlan açmayan şirkete nasıl yazılır?',
     ozet: 'Rekabetin en düşük olduğu kanal; kimin okuyacağını bilmek yeter.',

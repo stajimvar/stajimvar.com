@@ -106,3 +106,35 @@ test('ön render tarihsiz rehbere dateModified yazmıyor', () => {
   /* Koşullu yayılım: alan yalnızca değer varken ekleniyor. */
   assert.match(onrender, /\.\.\.\(r\.guncelleme \? \{ dateModified: r\.guncelleme \} : \{\}\)/);
 });
+
+/* ------------------------------------------- kaynak ya da dayanak, sessizlik yok */
+
+test('her rehberde ya resmî kaynak ya da dayanak açıklaması var', () => {
+  /*
+    Rehberlerin 20'sinde resmî kaynak yok ve olması da gerekmiyor: "ATS
+    uyumlu CV nasıl hazırlanır" bir mevzuata dayanmıyor. Sorun kaynağın
+    yokluğu değil, SESSİZ olmasıydı — bölüm hiç çizilmediği için okuyucu
+    kaynağın unutulduğunu mu yoksa hiç olmadığını mı bilemiyordu.
+  */
+  const eksik = [];
+  const ikisiBirden = [];
+  for (const r of rehberler()) {
+    const kaynak = /adres: 'https?:/.test(r.govde);
+    const dayanak = /dayanak:/.test(r.govde);
+    if (!kaynak && !dayanak) eksik.push(r.slug);
+    /* Resmî kaynağı olan rehberde "dayanak yok" cümlesi çelişki olurdu. */
+    if (kaynak && dayanak) ikisiBirden.push(r.slug);
+  }
+  assert.deepEqual(eksik, [], 'kaynağı da dayanağı da olmayan rehber');
+  assert.deepEqual(ikisiBirden, [], 'hem kaynak hem dayanak taşıyan rehber');
+});
+
+test('dayanak cümlesi kural iddia etmiyor', () => {
+  for (const r of rehberler()) {
+    const m = /dayanak:\s*\n?\s*'((?:[^'\\]|\\.)*)'/.exec(r.govde);
+    if (!m) continue;
+    const cumle = m[1];
+    assert.match(cumle, /mevzuat|resmî kaynak/i, `${r.slug}: dayanak neyin yokluğunu söylemiyor`);
+    assert.doesNotMatch(cumle, /zorunludur|kesinlikle|her üniversitede/i, `${r.slug}: kural iddiası`);
+  }
+});

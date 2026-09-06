@@ -162,6 +162,21 @@ export interface Rehber {
     destekledigi?: string;
   }[];
   /**
+   * RESMÎ KAYNAĞI OLMAYAN REHBERİN DAYANAĞI
+   *
+   * Rehberlerin 20'sinde `kaynaklar` yok ve olması da gerekmiyor:
+   * "ATS uyumlu CV nasıl hazırlanır" ya da "referans nasıl istenir"
+   * bir mevzuata dayanmıyor, başvuru pratiğini anlatıyor.
+   *
+   * Sorun kaynağın yokluğu değil, SESSİZ olması: "Resmî kaynaklar"
+   * bölümü hiç çizilmiyordu ve okuyucu kaynağın unutulduğunu mu yoksa
+   * hiç olmadığını mı bilemiyordu. Bu alan yokluğu açıkça söylüyor.
+   *
+   * Mevzuata dayanan bir rehberde bu alan KULLANILMAZ — orada gerçek
+   * kaynak yazılır. İkisi bir arada olmuyor.
+   */
+  dayanak?: string;
+  /**
    * Okunduktan sonra yapılabilecek GERÇEK bir şey.
    *
    * Yazının sonunda yalnızca başka yazılar göstermek, okuyanı bir
@@ -508,6 +523,8 @@ export const REHBERLER: Rehber[] = [
 
   {
     slug: 'staj-cv-nasil-yazilir',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     konu: 'cv',
     oneCikan: true,
     etiketler: ['cv', 'özgeçmiş', 'deneyimsiz', 'ats'],
@@ -771,6 +788,8 @@ export const REHBERLER: Rehber[] = [
 
   {
     slug: 'staj-mulakati',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     konu: 'cv',
     etiketler: ['mülakat', 'görüşme', 'sorular'],
     hizliCevap:
@@ -1004,6 +1023,8 @@ export const REHBERLER: Rehber[] = [
   },
   {
     slug: 'staj-basvuru-epostasi',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     konu: 'cv',
     oneCikan: true,
     etiketler: ['e-posta', 'başvuru', 'şablon', 'mail'],
@@ -1191,6 +1212,8 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
   },
   {
     slug: 'staj-defteri-nasil-doldurulur',
+    dayanak:
+      'Bu konuda tek bir resmî kaynak yok: kural üniversiteden üniversiteye değişiyor. Yazı yaygın uygulamayı anlatıyor; seni bağlayan metin kendi bölümünün staj yönergesi.',
     konu: 'staj',
     etiketler: ['staj defteri', 'imza', 'kaşe'],
     hizliCevap:
@@ -2019,6 +2042,8 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
   },
   {
     slug: 'stajdan-ise-gecis',
+    dayanak:
+      'Bu konuda bağlayıcı bir mevzuat yok: yazı kural değil, başvuru pratiği anlatıyor. Buradaki öneriler işverenlerin ilanlarında ve başvuru süreçlerinde istediği şeylere dayanıyor; hiçbiri zorunluluk değil.',
     konu: 'kariyer',
     etiketler: ['işe geçiş', 'teklif', 'referans'],
     hizliCevap:

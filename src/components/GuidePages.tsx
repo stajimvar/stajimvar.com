@@ -576,6 +576,29 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
           söylüyoruz — kaynağı göstermeyen bir bilgi bir süre sonra
           sessizce yanlış oluyor.
         */}
+        {/*
+          KAYNAK YOKSA SESSİZ KALMIYOR
+
+          Rehberlerin 20'sinde resmî kaynak yok ve olması da gerekmiyor:
+          "ATS uyumlu CV nasıl hazırlanır" bir mevzuata dayanmıyor. Ama
+          bölüm hiç çizilmeyince okuyucu kaynağın UNUTULDUĞUNU mu yoksa
+          hiç OLMADIĞINI mı bilemiyordu — kaynaklı ve kaynaksız yazı
+          ekranda aynı görünüyordu.
+
+          `dayanak` yokluğu açıkça söylüyor. İkisi bir arada olmuyor:
+          resmî kaynağı olan rehberde bu alan boş kalıyor.
+        */}
+        {(!rehber.kaynaklar || rehber.kaynaklar.length === 0) && rehber.dayanak && (
+          <section className="mt-8 space-y-2">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-600">
+              Bu rehber neye dayanıyor
+            </h2>
+            <p className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm leading-relaxed text-gray-600">
+              {rehber.dayanak}
+            </p>
+          </section>
+        )}
+
         {rehber.kaynaklar && rehber.kaynaklar.length > 0 && (
           <section className="mt-8 space-y-2">
             <h2 className="text-sm font-bold uppercase tracking-wider text-gray-600">
