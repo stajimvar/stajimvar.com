@@ -36,6 +36,7 @@ import { alanaGoreSirala, alanSayilari } from '../lib/bolum-eslestirme.mjs';
 import { SirketSeridi } from './SirketSeridi';
 import { ILAN_KAYNAGI_PARCALI } from '../lib/urun-metni';
 import { ListingCountrySelector } from './ListingCountrySelector';
+import { gosterilecekIlanSayisi } from '../lib/ilan-sayisi.mjs';
 
 /**
  * İlanın listeye eklenme zamanı (ms).
@@ -698,6 +699,32 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     (minMatchScore > 0 ? 1 : 0);
 
   /*
+    BAŞLIKTAKİ VE ŞERİTTEKİ SAYI
+
+    Liste 24'lük sayfalar hâlinde yükleniyor ("Daha fazla ilan göster" ile
+    devamı geliyor). Başlıkta yüklenmiş kayıt sayısını yazmak kullanıcıya
+    "ilan bitti" dedirtiyordu — ölçülen örnek: katalogda 62 ilan varken
+    başlıkta "(24)" yazıyor, kişi 24 ilan kaldığını sanıyordu.
+
+    Daraltma varken toplamı gösteremeyiz: süzme İSTEMCİDE ve yalnız yüklenmiş
+    kayıtlar üzerinde çalışıyor, sunucunun toplamı o seçime göre süzülmüş
+    değil. O durumda doğru olan yüklenmiş eşleşme sayısı.
+
+    "Daraltma" için yeni bir bayrak yok, ekranda zaten olan üç sinyal
+    toplanıyor: süzgeç rozetindeki `acikSuzgecSayisi` (suzgecleriTemizle'nin
+    sıfırladığı şehir/çalışma tercihi/tarih/şirket/ilan özellikleri/uyum),
+    arama kutusu ve kategori sekmesi. Bölüm çipleri (`bolumAlani`) BİLEREK
+    dışarıda: alanaGoreSirala listeyi sıralıyor, hiçbir ilanı elemiyor.
+  */
+  const daraltmaVar = acikSuzgecSayisi > 0 || searchQuery.trim().length > 0 || subTab !== 'all';
+
+  const gosterilecekToplam = gosterilecekIlanSayisi({
+    catalogTotal,
+    suzulmusAdet: filteredListings.length,
+    daraltmaVar,
+  });
+
+  /*
     SIFIR SONUÇ EKRANININ VERİSİ
 
     Üç şey hesaplanıyor: aynı kelimeyle eşleşen fırsat sayısı, açık
@@ -903,10 +930,18 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               <span className="text-blue-600">tek listede</span>.
             </span>
           </h1>
-          {onCountryChange && <div className="mt-3 space-y-1.5">
-            <ListingCountrySelector value={countrySelection} countries={countryFacets} onChange={onCountryChange}/>
-            {typeof catalogTotal==='number' && <p className="px-1 text-xs font-semibold text-gray-500 tabular-nums">Toplam {catalogTotal} açık ilan</p>}
-          </div>}
+          {/*
+            ÜLKE SEÇİCİ VE "TOPLAM N AÇIK İLAN" BURADAN KALKTI
+
+            Seçici filtre panelinin "Konum" bloğuna taşındı: listeyi daraltan
+            bir kontrolün diğer süzgeçlerden ayrı, başlığın altında tek başına
+            durması için bir sebep yoktu. Ülke şehirden geniş kapsam, o yüzden
+            şehir seçicisinin de üstünde.
+
+            "Toplam N açık ilan" satırı tekrar çizilmiyor: listenin başlığı
+            artık gerçek toplamı gösteriyor ("AÇIK STAJ İLANLARI (62)"), aynı
+            sayıyı sayfada iki yerde söylemek gereksiz.
+          */}
 
           {/*
             Mobildeki "13 açık ilan · 10 şirket · 4 şehir" satırı kaldırıldı.
@@ -1136,6 +1171,21 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
         {/* ---- konum ---- */}
         <FiltreBlogu baslik="Konum">
+          {/*
+            Ülke şehrin ÜSTÜNDE: kapsamı geniş olan önce geliyor. Kişi önce
+            hangi ülkenin ilanlarına baktığını seçiyor, sonra o ülkenin
+            içinden şehir daraltıyor.
+
+            `onCountryChange` verilmemişse seçici hiç çizilmiyor: değiştirmesi
+            bir işe yaramayan bir kutu göstermek yanıltıcı olur.
+          */}
+          {onCountryChange && (
+            <ListingCountrySelector
+              value={countrySelection}
+              countries={countryFacets}
+              onChange={onCountryChange}
+            />
+          )}
           <div className="relative">
             <MapPin className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <select
@@ -1277,7 +1327,14 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             onClick={() => setFiltreAcik(false)}
             className="w-full py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
           >
-            {filteredListings.length} ilanı göster
+            {/*
+              Başlık, şerit "Tümü" ve bu düğme aynı sayıyı söylemek zorunda.
+              Burada yüklenmiş adet yazılınca (24) başlıktaki gerçek toplam
+              (62) yalanlanıyor ve kişi listenin bittiğini sanıyordu — düzeltilen
+              hatanın aynısı, sadece başka bir yerde. Tek kaynak:
+              gosterilecekToplam, ikinci bir hesap yok.
+            */}
+            {gosterilecekToplam} ilanı göster
           </button>
         </div>
         </div>
@@ -1300,7 +1357,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             */}
             <h2 className="text-xs font-bold text-gray-600 uppercase tracking-widest">
               {student ? 'Sana Uygun Staj İlanları' : 'Açık Staj İlanları'} (
-              {filteredListings.length})
+              {gosterilecekToplam})
             </h2>
             {/*
               Açıklama metni mobilde gizli.
@@ -1337,7 +1394,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           <SirketSeridi
             sirketler={seritSirketleri}
             secili={selectedCompanies}
-            toplam={filteredListings.length}
+            toplam={gosterilecekToplam}
             onSec={sirketSec}
             onTumu={() => setSelectedCompanies([])}
           />

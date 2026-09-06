@@ -22,13 +22,35 @@ async function transport(page:Page){
   });
 }
 
+const SECICI='select[aria-label="İlan ülkesi"]';
+
+/**
+ * Ülke seçici artık filtre panelinin "Konum" bloğunda.
+ *
+ * Geniş ekranda panel hep açık (`lg:block`), mobilde kapalı başlıyor: seçiciye
+ * dokunmadan önce "Filtreler" düğmesiyle açılması gerekiyor. Testler hem 375
+ * pikselde hem 1280'de koşuyor, o yüzden karar burada bir kez veriliyor.
+ */
+async function ulkeSecici(page:Page){
+  /*
+    Rol yerine CSS: panel kapalıyken seçici DOM'da duruyor ama display:none
+    olduğu için erişilebilirlik ağacında yok, getByRole onu bulamıyor. Önce
+    varlığını doğrulayıp sonra görünür hâle getiriyoruz.
+  */
+  const secici=page.locator(SECICI);
+  await expect(secici).toHaveCount(1);
+  if(!await secici.isVisible())await page.getByRole('button',{name:'Filtreler'}).first().click();
+  await expect(secici).toBeVisible();
+  return secici;
+}
+
 test('paylasilan FR filtresi yenilemede kalir ve Turkce arayuzden bagimsizdir',async({page})=>{
   await transport(page);await page.goto('/?country=FR');
-  const selector=page.getByRole('combobox',{name:'İlan ülkesi'});
+  const selector=await ulkeSecici(page);
   await expect(selector).toHaveValue('FR');
   await expect(page.getByText('Paris Stajı')).toBeVisible();
   await expect(page.getByText('Türkiye Stajı')).toHaveCount(0);
-  await page.reload();await expect(selector).toHaveValue('FR');
+  await page.reload();await expect(await ulkeSecici(page)).toHaveValue('FR');
   await expect(page.locator('html')).not.toHaveAttribute('lang','fr');
 });
 
@@ -40,8 +62,14 @@ test('remote NULL ulkeyi degil yalniz Remote work_type kaydini getirir',async({p
 
 test('375 pikselde gercek facet secici tasmaz ve secim URLye yazilir',async({page})=>{
   await transport(page);await page.goto('/?country=all');
-  await expect(page.getByText('Toplam 67 açık ilan')).toBeVisible();
-  const selector=page.getByRole('combobox',{name:'İlan ülkesi'});
+  /*
+    Toplam artık ayrı bir "Toplam N açık ilan" satırında değil, listenin
+    başlığında. Sayfa 24'lük sayfalar hâlinde yüklediği için başlıkta yüklenmiş
+    kayıt sayısı değil katalog toplamı yazmalı: burada 4 kayıt çizilirken
+    sunucu 67 diyor, başlık 67 demeli.
+  */
+  await expect(page.getByRole('heading',{name:'Açık Staj İlanları (67)'})).toBeVisible();
+  const selector=await ulkeSecici(page);
   await expect(selector.locator('option')).toHaveCount(4);
   await selector.selectOption('TR');await expect(page).toHaveURL(/country=TR/);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
@@ -49,9 +77,15 @@ test('375 pikselde gercek facet secici tasmaz ve secim URLye yazilir',async({pag
 
 test('ulke secimi tarayici geri ve ileri gecmisini izler',async({page})=>{
   await transport(page);await page.goto('/?country=all');
-  const selector=page.getByRole('combobox',{name:'İlan ülkesi'});
-  await selector.selectOption('TR');await expect(selector).toHaveValue('TR');
-  await selector.selectOption('FR');await expect(selector).toHaveValue('FR');
-  await page.goBack();await expect(selector).toHaveValue('TR');
-  await page.goForward();await expect(selector).toHaveValue('FR');
+  /*
+    Her ülke seçimi listeyi yeniden yüklüyor; yükleme sırasında ilan görünümü
+    sökülüp kuruluyor ve mobilde filtre paneli kapalı hâline dönüyor. Bu yüzden
+    seçiciye her dokunuştan önce yeniden ulaşılıyor. Değer okumak için panelin
+    açık olması gerekmiyor.
+  */
+  const secili=page.locator(SECICI);
+  await (await ulkeSecici(page)).selectOption('TR');await expect(secili).toHaveValue('TR');
+  await (await ulkeSecici(page)).selectOption('FR');await expect(secili).toHaveValue('FR');
+  await page.goBack();await expect(secili).toHaveValue('TR');
+  await page.goForward();await expect(secili).toHaveValue('FR');
 });
