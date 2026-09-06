@@ -5,6 +5,7 @@ import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { DISCOVER_CATEGORIES, type DiscoverEvent } from '../lib/kesfet';
 import { formatDiscoverDate, formatDiscoverLocation } from '../lib/kesfet-domain.mjs';
 import { EventCover } from './EventCover';
+import { SehirSeridi } from './SehirSeridi';
 import { useDiscoverCatalog } from './useDiscoverCatalog';
 import { useKesfetGeo } from './useKesfetGeo';
 import { KesfetGlobePanel } from './KesfetGlobePanel';
@@ -174,6 +175,29 @@ export const KesfetPage: React.FC<{
               {activeFilters.length > 0 && <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-extrabold text-white">{activeFilters.length}</span>}
             </button>
           </div>
+
+          {/*
+            ŞEHİR ŞERİDİ — KÜRENİN DURDUĞU YERDE
+
+            Arama satırının hemen altında, filtre panelinin üstünde: göz
+            önce "nerede" sorusuna bakıyor, ayrıntılı süzgeçler ondan sonra
+            geliyor. Küre askıya alındığı için burası boştu.
+
+            Şerit bayraktan BAĞIMSIZ: küre gibi bir dünya haritası değil,
+            katalog yanıtındaki sayıları okuyan düz bir düğme dizisi. Bayrak
+            kapalıyken de görünüyor.
+
+            Kendi durumu YOK, `filters.city`'yi okuyup yazıyor. Ayrı bir
+            durum tutulsaydı filtre panelindeki "Şehir" menüsüyle ayrışırdı:
+            menüden İzmir seçildiğinde şeritte hâlâ "Tümü" yanıyor olurdu.
+            İki arayüz tek seçimi paylaşıyor, ikisi de çalışmaya devam ediyor.
+          */}
+          <SehirSeridi
+            sayilar={data?.facets.cityCounts}
+            secili={filters.city}
+            onSec={(city) => setFilter('city', city)}
+            onTumu={() => setFilter('city', '')}
+          />
 
           {/*
             Küre başlık ile filtre panelinin arasında; panel kaldırılmadı,

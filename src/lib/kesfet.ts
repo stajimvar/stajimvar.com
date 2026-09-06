@@ -237,17 +237,39 @@ export interface DiscoverCatalogOptions {
   snapshot?: string | null;
   signal?: AbortSignal;
 }
+export interface DiscoverCatalogFacets {
+  cities: string[];
+  /**
+   * Şehir adı → etkinlik sayısı. Şehir şeridi dairenin İÇİNE bu sayıyı
+   * yazıyor. `cities` YERİNE geçmiyor, yanına geliyor: filtre panelindeki
+   * açılır menü adların kendisini okumaya devam ediyor.
+   */
+  cityCounts: Record<string, number>;
+  categories: Record<string, number>;
+  free: number;
+  discount: number;
+}
 export interface DiscoverCatalogPage {
   events: DiscoverEvent[];
   total: number;
   hasMore: boolean;
   nextCursor: DiscoverCatalogCursor | null;
   snapshot: string;
-  facets: { cities: string[]; categories: Record<string, number>; free: number; discount: number };
+  facets: DiscoverCatalogFacets;
 }
 export async function fetchDiscoverCatalog(options: DiscoverCatalogOptions = {}): Promise<DiscoverCatalogPage> {
   const data = await requestDiscoverCatalog(supabase, options);
-  return { ...data, events: data.events.map(mapDiscoverEvent) };
+  return {
+    ...data,
+    events: data.events.map(mapDiscoverEvent),
+    /*
+      `cityCounts` yoksa boş nesne. Alan sunucuda canlı, ama aynı oturumda
+      migration'dan önce alınmış bir dönüş önbelleği ya da eski bir yanıt
+      hâlâ elde olabilir; o durumda şerit sessizce çizilmesin, arayüz
+      çökmesin.
+    */
+    facets: { ...data.facets, cityCounts: data.facets.cityCounts ?? {} },
+  };
 }
 export async function fetchDiscoverEventBySlug(slug: string) {
   const { data, error } = await (supabase.rpc as any)(
