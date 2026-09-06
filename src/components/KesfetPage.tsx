@@ -168,7 +168,16 @@ export const KesfetPage: React.FC<{
           sütun ilanlardaki gibi düz yapışkan.
         */}
         <div className="space-y-4 lg:sticky lg:top-4 lg:col-span-3">
-          <h1 className="min-w-0 text-center text-[clamp(1.25rem,2.4vw,1.75rem)] font-extrabold leading-tight tracking-tight text-gray-950 lg:text-left">
+          {/*
+            BAŞLIK ÖLÇÜSÜ İLANLAR SAYFASININ AYNISI
+
+            Kendi clamp'i vardı: `clamp(1.25rem,2.4vw,1.75rem)`. 375 pikselde
+            2.4vw = 9px olduğu için alt sınıra, 20 piksele oturuyordu; ilanlar
+            sayfasındaki `clamp(1rem,5vw,1.5rem)` ise 18,75 piksel veriyordu.
+            İki piksellik yükseklik farkı altındaki her şeyi kaydırıyordu.
+            Aynı clamp'e alındı, iki sayfanın dikey ritmi eşitlendi.
+          */}
+          <h1 className="min-w-0 text-center [font-size:clamp(1rem,5vw,1.5rem)] font-extrabold leading-tight tracking-tight text-gray-950 break-words lg:text-left lg:[font-size:clamp(1.125rem,1.82vw,1.85rem)]">
             Şehrindeki etkinlikler, <span className="text-blue-600">tek listede</span>.
           </h1>
           <div className="flex items-center gap-2 lg:hidden">
@@ -193,25 +202,6 @@ export const KesfetPage: React.FC<{
               {activeFilters.length > 0 && <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-extrabold text-white">{activeFilters.length}</span>}
             </button>
           </div>
-
-          {/*
-            AYIRICI — ARAMANIN HEMEN ALTINDA
-
-            İlanlar sayfasındaki ayırıcının aynısı: 2 piksel yüksekliğinde,
-            yuvarlatılmış, beyaz zeminli, `shadow-xs` gölgeli kapsül.
-
-            Orada mobilde aramadan hemen sonra geliyor. Burada sütunun
-            SONUNDAYDI ve şehir şeridinin altına düşüyordu: aramayı listeden
-            ayırmak yerine şeridi listeden ayırıyordu. Şerit ortadaki sütuna
-            taşındı, ayırıcı da aramanın altında kaldı; iki sayfa artık aynı
-            yeri işaretliyor.
-
-            Filtre paneli açıkken çizilmiyor: panelin kendi üst kenarı zaten
-            aynı ayrımı yapıyor, iki çizgi üst üste biniyordu.
-          */}
-          {!filtersOpen && (
-            <div aria-hidden className="h-0.5 rounded-2xl border border-gray-200 bg-white shadow-xs lg:hidden" />
-          )}
 
           {/*
             Küre başlık ile filtre panelinin arasında; panel kaldırılmadı,
@@ -296,6 +286,32 @@ export const KesfetPage: React.FC<{
               </div>
             </section>
           </div>
+
+          {/*
+            AYIRICI — SÜTUNUN SON ÇOCUĞU, EKRANDA ARAMANIN ALTINDA
+
+            İlanlar sayfasındaki ayırıcının aynısı: 2 piksel yüksekliğinde,
+            yuvarlatılmış, beyaz zeminli, `shadow-xs` gölgeli kapsül.
+
+            NEDEN EN SONDA YAZILIYOR AMA ARAMANIN ALTINDA GÖRÜNÜYOR
+            -------------------------------------------------------
+            Arada duran filtre kabı telefonda `display:none` — panel kapalıyken
+            hiç çizilmiyor, ayırıcı da aramanın hemen altına oturuyor. İlanlar
+            sayfasındaki dizilim de birebir bu.
+
+            Bir ara ayırıcı gerçekten arama satırının hemen ardına yazılmıştı.
+            Görünen yer aynıydı ama sütunun ALTINA 16 piksel ekliyordu:
+            `space-y-4` son çocuk dışındaki her çocuğa alt boşluk veriyor ve
+            ayırıcı artık son çocuk değildi. Sonuç, ölçülen 18 piksellik kayma
+            oldu — Keşfet'in başlık satırı 213'te, ilanlarınki 195'teydi.
+            Ayırıcı sona alınınca boşluk kalktı.
+
+            Filtre paneli açıkken hiç çizilmiyor: panelin kendi üst kenarı
+            zaten aynı ayrımı yapıyor, iki çizgi üst üste biniyordu.
+          */}
+          {!filtersOpen && (
+            <div aria-hidden className="h-0.5 rounded-2xl border border-gray-200 bg-white shadow-xs lg:hidden" />
+          )}
         </div>
 
         {/*
