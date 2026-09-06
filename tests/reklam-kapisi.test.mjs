@@ -27,7 +27,7 @@ const KOK = path.resolve(import.meta.dirname, '..');
 
 const GUCLU = {
   kelime: 650, sss: 4, kaynak: 2, karsilastirma: true,
-  liste: 10, hizliCevap: true, guncelleme: true,
+  liste: 10, hizliCevap: true, tablo: true,
 };
 
 /* ---------------------------- A–F: reklam kapalı yüzeyler */
@@ -105,9 +105,35 @@ test('H2: orta seviye rehber indekslenir ama reklamsız', () => {
     hâlâ ayırt eden bir sinyalle kuruldu; testin ölçtüğü şey değişmedi:
     orta seviye bir yazı indekslenir ama reklam almaz.
   */
-  const k = editoryalDeger({ kelime: 400, sss: 3, hizliCevap: true });
+  const k = editoryalDeger({
+    /* Ön koşullar: puan getirmiyor ama yoksa güçlü sayılmıyor. */
+    sss: 3,
+    hizliCevap: true,
+    dayanak: true,
+    /* Puan: 400 kelime (+1) ve kontrol listesi (+1) = 2 → ORTA. */
+    kelime: 400,
+    liste: 6,
+  });
+  assert.equal(k.puan, 2);
   assert.equal(k.sinif, 'EDITORIAL_MEDIUM');
   assert.equal(k.reklamUygun, false);
+});
+
+test('H2c: ön koşulu eksik yazı puanı ne olursa olsun güçlü değil', () => {
+  /*
+    Hızlı cevabı, SSS'i ya da neye dayandığı olmayan bir yazı, uzun ve
+    listeli olsa bile güçlü sayılmıyor. Bu üç şey puan getirmiyor —
+    71 rehberin 71'inde var, ayırt etmiyorlar — ama yokluğu eliyor.
+  */
+  const tam = { kelime: 700, kaynak: 2, liste: 10, karsilastirma: true, tablo: true };
+  const gucluOlan = editoryalDeger({ ...tam, sss: 3, hizliCevap: true });
+  assert.equal(gucluOlan.sinif, 'EDITORIAL_STRONG');
+
+  for (const eksik of [{ sss: 0 }, { hizliCevap: false }, { kaynak: 0, dayanak: false }]) {
+    const k = editoryalDeger({ ...tam, sss: 3, hizliCevap: true, ...eksik });
+    assert.equal(k.sinif, 'THIN_OR_INCOMPLETE', JSON.stringify(eksik));
+    assert.ok(k.eksikler.length > 0);
+  }
 });
 
 test('H2b: güncelleme tarihi tek başına puan getirmiyor', () => {
@@ -127,7 +153,7 @@ test('H3: kelime sayısı TEK BAŞINA karar değil', () => {
   assert.notEqual(editoryalDeger({ kelime: 2000 }).sinif, 'EDITORIAL_STRONG');
   /* Kısa ama zengin bir yazı orta seviyeye çıkabiliyor. */
   const kisaZengin = editoryalDeger({
-    kelime: 300, sss: 4, kaynak: 1, karsilastirma: true, guncelleme: true,
+    kelime: 300, sss: 4, kaynak: 1, karsilastirma: true, hizliCevap: true,
   });
   assert.notEqual(kisaZengin.sinif, 'THIN_OR_INCOMPLETE');
 });

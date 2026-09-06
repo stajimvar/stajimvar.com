@@ -75,18 +75,50 @@ export function reklamGosterilebilir(yol, editoryalGecti = false) {
 /**
  * EDİTORYAL DEĞER KAPISI
  *
- * Kelime sayısı tek başına karar değil; sinyallerden biri. Bir rehberin
- * reklam göstermeye uygun sayılması için özgün anlatımın yanında
- * okuyucuya bağımsız değer veren en az iki yapı gerekiyor.
+ * NEDEN İKİ KATMAN: ÖN KOŞUL + PUAN
+ * ---------------------------------
+ * Önce her sinyal puan veriyordu. Ölçüldü: puan veren yedi sinyalin
+ * ikisi 71 rehberin 71'inde vardı (hızlı cevap ve en az üç SSS),
+ * çünkü rehber şablonu ikisini de zorunlu tutuyor. Yani her yazı daha
+ * başlarken +2 alıyordu ve eşiğe yalnız üç puan kalıyordu; uzunluk,
+ * liste ve kaynak üçlüsü onu zaten dolduruyordu. Kapı "editoryal güç"
+ * değil "şablona uygun mu" ölçüyordu — 71 rehberin 51'i geçiyordu.
+ *
+ * Eşiği yükseltmek bunu düzeltmezdi, aynı ayrımsız puanın kestiği yeri
+ * kaydırırdı. Herkeste bulunan sinyal ÖN KOŞULA taşındı: yoksa yazı
+ * güçlü sayılamıyor, varsa puan getirmiyor. Puan yalnızca rehberden
+ * rehbere DEĞİŞEN şeylerden geliyor.
+ *
+ * Aynı hamle daha önce güncelleme tarihinde yapılmıştı; sebebi de aynı.
+ *
+ * ÖLÇÜLEN DAĞILIM (71 rehber, yeni puanla)
+ *   puan 1: 1 · 2: 14 · 3: 32 · 4: 22 · 5: 2
+ *   eşik 3 → 56 rehber (%79)  hâlâ ayırmıyor
+ *   eşik 4 → 24 rehber (%34)  seçilen
+ *   eşik 5 →  2 rehber (%3)   fazla dar
  *
  * @param {{kelime?: number, sss?: number, kaynak?: number,
- *          karsilastirma?: boolean, liste?: number, hizliCevap?: boolean,
- *          guncelleme?: boolean, tamamlanmis?: boolean}} sinyaller
+ *          karsilastirma?: boolean, liste?: number, tablo?: boolean,
+ *          hizliCevap?: boolean, dayanak?: boolean}} sinyaller
  */
 export function editoryalDeger(sinyaller = {}) {
   const nedenler = [];
-  let puan = 0;
+  const eksikler = [];
 
+  /*
+    ÖN KOŞULLAR — puan getirmiyor, yokluğu eliyor.
+
+    Kaynak ya da dayanak: yazının neye dayandığını söylemeyen bir sayfa
+    güçlü sayılamaz. İkisinden biri yeterli, çünkü rehberlerin bir kısmı
+    mevzuata değil başvuru pratiğine dayanıyor ve bunu açıkça yazıyor.
+  */
+  if (!sinyaller.hizliCevap) eksikler.push('hızlı cevap yok');
+  if ((sinyaller.sss ?? 0) < 3) eksikler.push('en az üç SSS yok');
+  if ((sinyaller.kaynak ?? 0) < 1 && !sinyaller.dayanak) {
+    eksikler.push('kaynak ya da dayanak yok');
+  }
+
+  let puan = 0;
   const kelime = sinyaller.kelime ?? 0;
   if (kelime >= 600) {
     puan += 2;
@@ -98,39 +130,29 @@ export function editoryalDeger(sinyaller = {}) {
     nedenler.push(`gövde kısa (${kelime} kelime)`);
   }
 
-  if ((sinyaller.sss ?? 0) >= 3) { puan += 1; nedenler.push('sık sorulanlar'); }
   if ((sinyaller.kaynak ?? 0) >= 1) { puan += 1; nedenler.push('resmî kaynak'); }
-  if (sinyaller.karsilastirma) { puan += 1; nedenler.push('iyi/kötü karşılaştırması'); }
   if ((sinyaller.liste ?? 0) >= 6) { puan += 1; nedenler.push('kontrol listesi'); }
-  if (sinyaller.hizliCevap) { puan += 1; nedenler.push('hızlı cevap'); }
+  if (sinyaller.karsilastirma) { puan += 1; nedenler.push('iyi/kötü karşılaştırması'); }
   /*
-    GÜNCELLEME TARİHİ ARTIK PUAN VERMİYOR
-
-    Veriyordu (+1) ve o gün ayırt ediciydi: rehberlerin yalnız 14'ünde
-    tarih vardı, 57'sine `rehber-govde` sabit bir tarih yazıyordu ve
-    sayım bu sabiti göremediği için onları puanlamıyordu. Yani puan
-    aslında "tarihi elle yazılmış mı" sorusunu ölçüyordu.
-
-    Sabit kaldırılıp bütün tarihler git geçmişinden türetilince 71
-    rehberin 71'inde tarih oluştu. Herkeste bulunan bir sinyal hiçbir
-    şeyi ayırt etmiyor: puanı 1 artırmak yalnızca eşiği herkes için
-    aşağı çekerdi ve reklam kapısı 13 rehberden 30'a açılırdı — içerik
-    hiç değişmeden.
-
-    Tarih hâlâ okuyucuya gösteriliyor ve `dateModified` olarak
-    bildiriliyor; yalnızca EDİTORYAL DEĞER ölçüsünden düştü.
-
-    Tazelik ("son 6 ayda güncellenmiş") ölçüye alınmadı: Google'ın
-    yazmadığı bir süre eşiğini politika diye kodlamıyoruz.
+    Tablo yeni bir sinyal. Puan vermiyordu ama 20 rehberde var ve
+    karşılaştırmayla aynı işi yapıyor: iki şeyi yan yana koymak. Sayım
+    onu zaten ölçüyordu, ölçüp kullanmamak için sebep yoktu.
   */
+  if (sinyaller.tablo) { puan += 1; nedenler.push('tablo'); }
 
-  const sinif =
-    puan >= 5 ? 'EDITORIAL_STRONG' : puan >= 3 ? 'EDITORIAL_MEDIUM' : 'THIN_OR_INCOMPLETE';
+  const sinif = eksikler.length
+    ? 'THIN_OR_INCOMPLETE'
+    : puan >= 4
+      ? 'EDITORIAL_STRONG'
+      : puan >= 2
+        ? 'EDITORIAL_MEDIUM'
+        : 'THIN_OR_INCOMPLETE';
 
   return {
     puan,
     sinif,
-    nedenler,
+    nedenler: [...nedenler, ...eksikler.map((e) => `EKSİK: ${e}`)],
+    eksikler,
     /* Reklam yalnız GÜÇLÜ sayfada. Orta seviye indekslenir ama reklamsız. */
     reklamUygun: sinif === 'EDITORIAL_STRONG',
   };

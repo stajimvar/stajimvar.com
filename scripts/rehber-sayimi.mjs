@@ -143,6 +143,8 @@ export function rehberleriOlc() {
         karsilastirma: /<Karsilastirma|^\s*karsilastirma: \{/m.test(govde),
         liste: listeMaddesi(govde),
         tablo: /<Tablo|<table|^\s*tablo: \{/m.test(govde),
+        /* Kaynağı olmayan rehberin neye dayandığı — ön koşulda kaynağın yerine geçiyor. */
+        dayanak: /^\s*dayanak:/m.test(govde),
         hizliCevap: /hizliCevap:/.test(govde),
         guncelleme: /guncelleme:/.test(govde),
         sonrakiAdim: /sonrakiAdim:/.test(govde),

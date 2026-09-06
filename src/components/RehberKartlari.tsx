@@ -78,7 +78,7 @@ export const RehberKarti: React.FC<KartProps> = ({
         Yan etkisi de iyi: kutu yüksekliği görselden bağımsız olduğu için
         görsel inerken ızgara hiç zıplamıyor.
       */}
-      <div className="relative h-32 w-full shrink-0 overflow-hidden bg-gray-100 sm:h-36">
+      <div className="relative h-24 w-full shrink-0 overflow-hidden bg-gray-100 sm:h-36">
         <picture>
           <source srcSet={`/rehber-gorselleri/${rehber.slug}.avif`} type="image/avif" />
           <img
@@ -95,16 +95,16 @@ export const RehberKarti: React.FC<KartProps> = ({
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </picture>
-        <span className="absolute left-2.5 top-2.5 rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-700 shadow-xs">
+        <span className="absolute left-2 top-2 rounded-full bg-white/95 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gray-700 shadow-xs sm:left-2.5 sm:top-2.5 sm:px-2 sm:text-[10px]">
           {konuEtiketi(rehber.konu)}
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 p-3.5">
-        <h3 className="text-sm font-bold leading-snug text-gray-900 line-clamp-2 sm:text-base">
+      <div className="flex flex-1 flex-col gap-1.5 p-2.5 sm:gap-2 sm:p-3.5">
+        <h3 className="text-[13px] font-bold leading-snug text-gray-900 line-clamp-2 sm:text-base">
           {rehber.baslik}
         </h3>
-        <p className="text-xs leading-relaxed text-gray-600 line-clamp-2">{rehber.ozet}</p>
+        <p className="hidden text-xs leading-relaxed text-gray-600 line-clamp-2 sm:block">{rehber.ozet}</p>
 
         <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 pt-1 text-[11px] text-gray-600">
           <span className="inline-flex items-center gap-1">
@@ -122,7 +122,7 @@ export const RehberKarti: React.FC<KartProps> = ({
         </div>
 
         <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-2.5">
-          <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 group-hover:underline">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 group-hover:underline sm:text-xs">
             Rehberi aç
             <ArrowRight className="h-3.5 w-3.5" />
           </span>
@@ -165,8 +165,8 @@ export const RehberKarti: React.FC<KartProps> = ({
  */
 export const RehberKartiIskeleti: React.FC = () => (
   <div aria-hidden className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white">
-    <div className="h-32 w-full animate-pulse bg-gray-100 sm:h-36" />
-    <div className="flex flex-1 flex-col gap-2 p-3.5">
+    <div className="h-24 w-full animate-pulse bg-gray-100 sm:h-36" />
+    <div className="flex flex-1 flex-col gap-1.5 p-2.5 sm:gap-2 sm:p-3.5">
       <div className="h-4 w-4/5 animate-pulse rounded bg-gray-100" />
       <div className="h-3 w-full animate-pulse rounded bg-gray-100" />
       <div className="h-3 w-3/5 animate-pulse rounded bg-gray-100" />
@@ -175,7 +175,18 @@ export const RehberKartiIskeleti: React.FC = () => (
   </div>
 );
 
-/** Kart ızgarası: masaüstü üç, tablet iki, mobil tek sütun. */
+/**
+ * KART IZGARASI — TELEFONDA DA İKİ SÜTUN
+ *
+ * Tek sütundu: kart 375 pikselde tam genişlik, görselle birlikte ~430
+ * piksel boyunda oluyordu ve ekrana bir buçuk kart sığıyordu. Yetmiş bir
+ * yazılık bir listede bu, listenin gezilemez olması demek — kullanıcı
+ * ikinci başlığı görmek için kaydırmak zorunda.
+ *
+ * İki sütunda kart ~165 piksele iniyor ve ekrana dört kart giriyor.
+ * Karşılığı görselin küçülmesi; başlık ve özet için `line-clamp` zaten
+ * vardı, dar sütunda punto ve boşluk da bir kademe küçülüyor.
+ */
 export const RehberIzgarasi: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">{children}</div>
+  <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">{children}</div>
 );
