@@ -53,6 +53,60 @@ export function kelimeSay(s) {
   return metin(s).split(' ').filter((x) => x.length > 1).length;
 }
 
+/**
+ * LİSTE MADDESİ SAYIMI — İKİ YAZIMDA BİRDEN
+ *
+ * Sayım yalnız JSX'e bakıyordu (`<li>`, `<L>`, `<Adim`). Rehberlerin
+ * altmışı `metinRehberi` ile yazılıyor ve orada liste bir VERİ anahtarı:
+ * `liste: [...]`, `sirali: [...]`, `kontrol: { maddeler: [...] }`.
+ * Sonuç: o altmış rehberin hepsi "liste yok" görünüyordu.
+ *
+ * Aynı kör nokta karşılaştırma ve tabloda da vardı. Ölçüldü: en yüksek
+ * puanlı on altı MEDIUM rehberin HEPSİ `karsilastirma: false, liste: 0`
+ * diyordu — oysa çoğunda ikisi de vardı. Yani "içerik zayıf" görünen
+ * yazıların bir kısmı aslında ölçülemiyordu.
+ *
+ * Madde sayısı dizilerin içindeki dize sabitlerinden geliyor; iç içe
+ * dizi ya da nesne saymıyor.
+ */
+export function listeMaddesi(govde) {
+  const jsx = (govde.match(/<li>|<L>|<Adim/g) || []).length;
+
+  let veri = 0;
+  for (const m of govde.matchAll(/(?:^|\n)\s*(?:liste|sirali|maddeler): \[/g)) {
+    /* Diziyi köşeli parantez dengesiyle kapatıyoruz. */
+    let derinlik = 0;
+    let i = m.index + m[0].length - 1;
+    let son = i;
+    for (; i < govde.length; i += 1) {
+      if (govde[i] === '[') derinlik += 1;
+      else if (govde[i] === ']') {
+        derinlik -= 1;
+        if (derinlik === 0) {
+          son = i;
+          break;
+        }
+      }
+    }
+    const icerik = govde.slice(m.index, son);
+    /*
+      Madde sayısı: virgülle KAPANAN tırnaklar. Bir madde birden çok
+      satıra bölünüp `+` ile birleştirilebildiği için açılış tırnağını
+      saymak yanlış olurdu.
+
+      Satır sonu ve kapanış köşeli parantezi TEK kalıpta: ayrı ayrı
+      arandığında dizinin son maddesi ikisine birden uyup iki kez
+      sayılıyordu (ölçüldü: iki maddelik listeye 3 dedi).
+
+      Depoda prettier kullanıldığı için son maddede de virgül var; bu
+      sayım o düzene dayanıyor.
+    */
+    veri += (icerik.match(/',\s*(?:\n|\])/g) || []).length;
+  }
+
+  return jsx + veri;
+}
+
 /** Bir rehber bloğunun kaynak metnini slug'a göre ayırır. */
 export function rehberBloklari(kaynak) {
   const bloklar = [];
@@ -86,9 +140,9 @@ export function rehberleriOlc() {
         kelime,
         sss: (govde.match(/soru:/g) || []).length,
         kaynak: (govde.match(/adres:\s*'https?:/g) || []).length,
-        karsilastirma: /<Karsilastirma/.test(govde),
-        liste: (govde.match(/<li>|<L>|<Adim/g) || []).length,
-        tablo: /<Tablo|<table/.test(govde),
+        karsilastirma: /<Karsilastirma|^\s*karsilastirma: \{/m.test(govde),
+        liste: listeMaddesi(govde),
+        tablo: /<Tablo|<table|^\s*tablo: \{/m.test(govde),
         hizliCevap: /hizliCevap:/.test(govde),
         guncelleme: /guncelleme:/.test(govde),
         sonrakiAdim: /sonrakiAdim:/.test(govde),

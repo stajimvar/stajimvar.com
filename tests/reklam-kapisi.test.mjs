@@ -234,3 +234,44 @@ test('K: ads.txt tek ve doğru yayıncıyı gösteriyor', () => {
 test('reklam açık yüzey yalnız rehber', () => {
   assert.deepEqual([...REKLAM_ACIK_AILELER], ['/rehber/']);
 });
+
+test('H5: liste ve tablo iki yazımda da sayılıyor', async () => {
+  /*
+    Sayım yalnız JSX'e bakıyordu (`<li>`, `<Karsilastirma`, `<Tablo`).
+    Rehberlerin altmışı `metinRehberi` ile yazılıyor ve orada bunlar
+    birer VERİ anahtarı. Sonuç: en yüksek puanlı on altı MEDIUM rehberin
+    HEPSİ "liste yok, karşılaştırma yok" görünüyordu — oysa çoğunda
+    ikisi de vardı.
+  */
+  const { listeMaddesi } = await import('../scripts/rehber-sayimi.mjs');
+
+  /*
+    JSX tarafı değişmedi. Sarmalayıcı `<L>` de sayılıyor — eski
+    davranış; burada karışmasın diye örnekte yalnız maddeler var.
+  */
+  const jsx = '<li>bir</li><li>iki</li>';
+  assert.equal(listeMaddesi(jsx), 2);
+
+  const veri = [
+    '  liste: [',
+    "    'bir',",
+    "    'iki',",
+    "    'üç',",
+    '  ],',
+  ].join('\n');
+  assert.equal(listeMaddesi(veri), 3);
+
+  const kontrol = [
+    '  kontrol: {',
+    "    baslik: 'Tek e-postada sor',",
+    '    maddeler: [',
+    "      'unvan',",
+    "      'adres',",
+    '    ],',
+    '  },',
+  ].join('\n');
+  assert.equal(listeMaddesi(kontrol), 2);
+
+  /* İkisi bir aradaysa toplanıyor. */
+  assert.equal(listeMaddesi(jsx + '\n' + veri), 5);
+});
