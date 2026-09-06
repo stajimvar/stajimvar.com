@@ -208,14 +208,16 @@ export const GuideHub: React.FC<
   GuideHubProps & {
     ogrenci?: StudentProfile | null;
     arama?: string;
+    onAramaDegis?: (terim: string) => void;
     onAramaTemizle?: () => void;
     onGirisGerekli?: () => void;
   }
-> = ({ onNavigate, ogrenci = null, arama, onAramaTemizle, onGirisGerekli }) => (
+> = ({ onNavigate, ogrenci = null, arama, onAramaDegis, onAramaTemizle, onGirisGerekli }) => (
   <RehberMerkeziBilesen
     onNavigate={onNavigate}
     ogrenci={ogrenci}
     arama={arama}
+    onAramaDegis={onAramaDegis}
     onAramaTemizle={onAramaTemizle}
     onGirisGerekli={onGirisGerekli}
   />

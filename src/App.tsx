@@ -1478,6 +1478,7 @@ export default function App() {
         onNavigate={navigate}
         ogrenci={isLoggedIn ? activeStudent : null}
         arama={aramaTerimi}
+        onAramaDegis={setAramaTerimi}
         onAramaTemizle={() => setAramaTerimi('')}
         onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
       />

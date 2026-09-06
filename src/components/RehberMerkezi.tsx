@@ -1,5 +1,7 @@
 import React from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Search, SlidersHorizontal } from 'lucide-react';
+import { FiltreBlogu, SecenekSatiri } from '../ui';
+import { KonuSeridi } from './KonuSeridi';
 import { SayfaKabugu } from './SayfaKabugu';
 import { RehberIzgarasi, RehberKarti, RehberKartiIskeleti } from './RehberKartlari';
 import { YolHaritasi } from './YolHaritasi';
@@ -26,23 +28,25 @@ import type { StudentProfile } from '../types';
 /**
  * Rehber merkezi.
  *
- * NE DEĞİŞTİ
- * ----------
- * Sayfa bir blog arşivi gibi açılıyordu: tam ekranlık bir tanıtım bloğu,
- * içinde ikinci bir arama kutusu, altında kare fotoğraf karolar. Ölçüldü —
- * masaüstünde kaydırmadan tek bir rehber BAŞLIĞI görünmüyordu; ilk ekranı
- * kaplayan şey siteyi tanıtan bir cümleydi, oysa oraya gelen kişi siteyi
- * zaten bulmuş.
+ * İSKELET DİĞER İKİ LİSTEYLE AYNI
+ * -------------------------------
+ * Sayfa tek sütunlu, üst üste yığılmış bölümlerden oluşuyordu. İlanlar ve
+ * Keşfet ise 3/6/3 ızgara kullanıyor: solda süzgeçler, ortada başlık +
+ * şerit + liste, sağda sayaçlar ve bilgi kutusu. Aynı ürünün üç listesi
+ * artık aynı iskelette; kullanıcı sayfa değiştirince yeniden yön aramıyor.
  *
- * Şimdi ilk ekranda üç şey var: kullanıcının ne yapmak istediğini soran
- * kısa bir satır, dört hızlı işlem ve rehber kartları.
+ * Konu süzgeci ayrıca bir ŞERİDE dönüştü (KonuSeridi.tsx) — Keşfet'teki
+ * şehir şeridinin karşılığı. Açılır menü kapalıyken hangi konuların
+ * olduğunu göstermiyordu; şerit yedi konuyu ve her birindeki yazı
+ * sayısını tek bakışta veriyor. Menü kaldırılmadı, filtre panelinde
+ * duruyor ve aynı durumu paylaşıyor.
  *
- * ARAMA ÜST ÇUBUKTA
- * -----------------
- * Sayfanın kendi arama kutusu kaldırıldı. Üstte zaten bir arama alanı var
- * ve iki arama kutusunun aynı ekranda durması "hangisi neyi arıyor"
- * sorusunu doğuruyordu. Üstteki kutu bu sayfadayken rehberleri arıyor;
- * terim `arama` özelliğiyle buraya iniyor ve adreste `?q=` olarak duruyor.
+ * ARAMA
+ * -----
+ * Masaüstünde üst çubuktaki kutu bu sayfadayken rehberleri arıyor; terim
+ * `arama` özelliğiyle iniyor ve adreste `?q=` olarak duruyor. Telefonda
+ * üst çubukta kutu olmadığı için sol sütun kendi kutusunu çiziyor —
+ * ikisi TEK terimi paylaşıyor, iki ayrı arama durumu yok.
  *
  * KİŞİSELLEŞTİRME İDDİA EDİLMİYOR
  * -------------------------------
@@ -55,6 +59,14 @@ import type { StudentProfile } from '../types';
  * Hiçbir okul, bölüm, sınıf ya da kişi adı koda yazılmıyor: eşleşmeler
  * profil ALANLARI üzerinden çalışıyor.
  */
+
+/*
+  Filtre düğmesinin iki hâli ayrı dizelerde: tek şablonun içindeyken
+  "renkli zeminde gri yazı" gibi okunuyor, oysa gri yazı BEYAZ zeminli
+  dalın parçası. Keşfet sayfasında da aynı sebeple ayrılmıştı.
+*/
+const FILTRE_DUGMESI_ACIK = 'border-blue-600 bg-blue-50 text-blue-700';
+const FILTRE_DUGMESI_KAPALI = 'border-gray-200 bg-white text-gray-500 hover:border-gray-300';
 
 type Sekme = 'uygun' | 'tumu' | KonuId;
 
@@ -81,14 +93,30 @@ export const RehberMerkezi: React.FC<{
   ogrenci?: StudentProfile | null;
   /** Üst çubuktaki arama terimi. */
   arama?: string;
+  /**
+   * Sol sütundaki telefon arama kutusu bunu yazıyor. Keşfet'te de aynı
+   * kalıp: masaüstünde arama üst çubukta, telefonda sayfanın kendi
+   * kutusunda — ikisi TEK terimi paylaşıyor, ayrı bir durum yok.
+   */
+  onAramaDegis?: (terim: string) => void;
   /** Boş sonuç ekranındaki "temizle" bunu çağırıyor. */
   onAramaTemizle?: () => void;
   /** Kaydetme giriş istiyor; ziyaretçide giriş ekranını açıyor. */
   onGirisGerekli?: () => void;
-}> = ({ onNavigate, ogrenci = null, arama = '', onAramaTemizle, onGirisGerekli }) => {
+}> = ({
+  onNavigate,
+  ogrenci = null,
+  arama = '',
+  onAramaDegis,
+  onAramaTemizle,
+  onGirisGerekli,
+}) => {
   React.useEffect(() => {
     document.title = 'Öğrenci rehberi | StajımVar';
   }, []);
+
+  /* Telefonda filtre paneli kapalı başlıyor — Keşfet'teki gibi. */
+  const [filtrelerAcik, setFiltrelerAcik] = React.useState(false);
 
   const kisisel = kisisellestirilebilir(ogrenci);
   const [sekme, setSekme] = React.useState<Sekme>(kisisel ? 'uygun' : 'tumu');
@@ -278,7 +306,7 @@ export const RehberMerkezi: React.FC<{
       <select
         value={terim ? '' : sekme === 'uygun' ? 'tumu' : sekme}
         onChange={(e) => sekmeSec((e.target.value || 'tumu') as Sekme)}
-        className="min-h-11 cursor-pointer rounded-xl border border-gray-200 bg-white px-3 text-xs font-bold text-gray-800 outline-none focus:border-blue-600"
+        className="min-h-11 w-full cursor-pointer rounded-xl border border-gray-200 bg-white px-3 text-sm font-medium text-gray-900 outline-none focus:border-blue-600"
       >
         <option value="tumu">Tüm konular</option>
         {doluKonular.map((k) => (
@@ -290,6 +318,34 @@ export const RehberMerkezi: React.FC<{
     </label>
   );
 
+  /* --------------------------------------------------- konu şeridi verisi */
+
+  /*
+    Şerit her konuda kaç yazı olduğunu gösteriyor. Sayım seçili konuya
+    BAKMIYOR: uygulansaydı bir konu seçilince diğer bütün daireler
+    sıfırlanır ve şeritten başka konuya geçilemezdi. Şehir şeridinde de
+    aynı kural geçerli.
+  */
+  const seritKonulari = React.useMemo(
+    () =>
+      doluKonular
+        .map((k) => ({
+          id: k.id as string,
+          etiket: k.etiket,
+          adet: ogrenciRehberleri.filter((r) => r.konu === k.id).length,
+        }))
+        .sort((a, b) => b.adet - a.adet || a.etiket.localeCompare(b.etiket, 'tr')),
+    [doluKonular, ogrenciRehberleri]
+  );
+
+  /* Şeritte seçili görünen konu: arama varken ya da "uygun"dayken hiçbiri. */
+  const seritSecili = terim || sekme === 'uygun' || sekme === 'tumu' ? '' : (sekme as string);
+
+  const aktifSuzgecler = [
+    terim ? `Arama: ${arama.trim()}` : '',
+    !terim && sekme !== 'tumu' && sekme !== 'uygun' ? konuEtiketi(sekme as KonuId) : '',
+  ].filter(Boolean);
+
   const kartOzellikleri = (r: Rehber) => ({
     rehber: r,
     onNavigate,
@@ -300,35 +356,161 @@ export const RehberMerkezi: React.FC<{
 
   return (
     <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI} ustBosluk="pt-2 sm:pt-3">
-      <div className="space-y-6">
-        {/*
-          SAYFANIN İLK BÖLÜMÜ
+      {/*
+        İSKELET KEŞFET VE İLANLAR SAYFASIYLA AYNI
 
-          Burada önce "Kariyer yolculuğunda sıradaki adım ne?" başlığı ve
-          dört seçenek kartı vardı. İkisi de aynı işi yapıyordu: kullanıcıyı
-          bir konuya götürmek. Üst üste iki "ne yapmak istiyorsun?" bloğu
-          ilk ekranı doldurup asıl içeriği aşağı itiyordu; kişiselleştirilmiş
-          bölüm kartı ekranın dışında kalıyordu.
+        Sayfa tek sütunlu, üst üste yığılmış bölümlerden oluşuyordu; aynı
+        ürünün diğer iki listesi (ilanlar ve Keşfet) ise 3/6/3 ızgara
+        kullanıyor: solda süzgeçler, ortada başlık + şerit + liste, sağda
+        sayaçlar ve bilgi kutusu. Üç liste artık aynı iskelette.
+      */}
+      <div className="grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-12">
+        {/* ------------------------------------------------- sol: süzgeçler */}
+        <div className="space-y-4 lg:sticky lg:top-4 lg:col-span-3">
+          <h1 className="min-w-0 text-center [font-size:clamp(1rem,5vw,1.5rem)] font-extrabold leading-tight tracking-tight text-gray-950 break-words lg:text-left lg:[font-size:clamp(1.125rem,1.82vw,1.85rem)]">
+            Öğrencilikte bilmen gerekenler, <span className="text-blue-600">tek listede</span>.
+          </h1>
 
-          Konu süzme yolu kaybolmadı: liste başlığının yanındaki konu
-          seçici yedi konunun hepsini veriyor.
+          {/*
+            TELEFONDA ARAMA SAYFANIN İÇİNDE
 
-          Üst boşluk SayfaKabugu'ndan geliyor (py-6 sm:py-8) — mobilde 24,
-          masaüstünde 32 piksel.
-        */}
-        {/*
-          ÜÇ YOL EN ÜSTTE
+            Masaüstünde arama üst çubukta duruyor; telefonda üst çubukta
+            kutu yok, o yüzden sayfa kendi kutusunu çiziyor. İkisi TEK
+            terimi paylaşıyor (`arama` / `onAramaDegis`), ayrı bir durum
+            yok — Keşfet'te de aynı kalıp.
+          */}
+          <div className="flex items-center gap-2 lg:hidden">
+            {onAramaDegis && (
+              <div className="relative min-w-0 flex-1">
+                <Search
+                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                  aria-hidden
+                />
+                <input
+                  type="search"
+                  aria-label="Rehberlerde ara"
+                  value={arama}
+                  onChange={(event) => onAramaDegis(event.target.value)}
+                  placeholder="Rehber, bölüm veya şirket ara"
+                  className="w-full rounded-2xl border border-gray-200 bg-white py-3.5 pl-11 pr-4 text-sm font-medium text-gray-900 placeholder:font-normal placeholder:text-gray-400 focus:border-blue-600 focus:outline-none"
+                />
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => setFiltrelerAcik((acik) => !acik)}
+              aria-expanded={filtrelerAcik}
+              aria-controls="rehber-filtreleri"
+              aria-label={
+                aktifSuzgecler.length ? `Filtreler (${aktifSuzgecler.length} açık)` : 'Filtreler'
+              }
+              className={`relative flex min-h-12 w-[52px] shrink-0 cursor-pointer items-center justify-center self-stretch rounded-2xl border ${
+                filtrelerAcik || aktifSuzgecler.length ? FILTRE_DUGMESI_ACIK : FILTRE_DUGMESI_KAPALI
+              }`}
+            >
+              <SlidersHorizontal className="h-5 w-5" aria-hidden />
+              {aktifSuzgecler.length > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-extrabold text-white">
+                  {aktifSuzgecler.length}
+                </span>
+              )}
+            </button>
+          </div>
 
-          YolHaritasi bir DİZİN bloğu (bölümler, araçlar, işverenler,
-          kariyer merkezleri) — "nereye göz atayım" sorusuna cevap veriyor.
-          Öğrencinin ilk sorusu ise "ben şu an neredeyim": arıyor mu, evrak
-          mı çıktı, bitiyor mu. Bu yüzden yolculuk bloğu dizinin üstünde.
-        */}
-        <StajYollari onNavigate={onNavigate} />
+          <div
+            id="rehber-filtreleri"
+            className={`${filtrelerAcik ? 'block' : 'hidden'} lg:block`}
+          >
+            <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+              <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 px-4 py-3">
+                <SlidersHorizontal className="h-4 w-4 text-gray-500" aria-hidden />
+                <span className="text-sm font-bold text-gray-900">Filtreler</span>
+                {aktifSuzgecler.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSekmeyeDokunuldu(true);
+                      setSekme('tumu');
+                      onAramaTemizle?.();
+                    }}
+                    className="ml-auto min-h-8 cursor-pointer text-xs font-bold text-blue-600 hover:underline"
+                  >
+                    Temizle
+                  </button>
+                )}
+              </div>
+              <div className="divide-y divide-gray-100">
+                <FiltreBlogu baslik="Konu">{KonuSecici}</FiltreBlogu>
+                {/*
+                  "Sana uygun" bir süzgeç değil SIRALAMA: listeden hiçbir
+                  şey elemiyor. Yalnızca profilde sıralamaya yetecek veri
+                  varsa çiziliyor — yoksa çalışmayan bir düğme olurdu.
+                */}
+                {kisisel && (
+                  <FiltreBlogu baslik="Sıralama">
+                    <div className="space-y-0.5">
+                      <SecenekSatiri
+                        tip="radio"
+                        etiket="Sana uygun"
+                        secili={!terim && sekme === 'uygun'}
+                        onChange={() => sekmeSec('uygun')}
+                      />
+                      <SecenekSatiri
+                        tip="radio"
+                        etiket="Varsayılan"
+                        secili={!terim && sekme !== 'uygun'}
+                        onChange={() => sekmeSec('tumu')}
+                      />
+                    </div>
+                  </FiltreBlogu>
+                )}
+              </div>
+            </section>
+          </div>
 
-        <YolHaritasi onNavigate={onNavigate} ogrenci={ogrenci} />
+          {/*
+            AYIRICI — SÜTUNUN SON ÇOCUĞU, EKRANDA ARAMANIN ALTINDA
+            Aradaki filtre kabı telefonda `display:none`; dizilim Keşfet
+            ve ilanlar sayfasıyla aynı. Sona yazılıyor çünkü `space-y-4`
+            son çocuk dışındaki her çocuğa alt boşluk veriyor.
+          */}
+          {!filtrelerAcik && (
+            <div
+              aria-hidden
+              className="h-0.5 rounded-2xl border border-gray-200 bg-white shadow-xs lg:hidden"
+            />
+          )}
+        </div>
 
-        {/*
+        {/* --------------------------------------------------- orta: liste */}
+        <section aria-label="Rehberler" className="min-w-0 space-y-4 lg:col-span-6">
+          <div className="flex items-center justify-between gap-3 px-1">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-gray-600">
+              {aktifSuzgecler.length ? 'Filtrelenen rehberler' : 'Tüm rehberler'} ({sonuclar.length}
+              )
+            </h2>
+            <span className="hidden text-xs font-medium text-gray-500 sm:block">
+              Rakam değil, işleyiş anlatılıyor
+            </span>
+          </div>
+
+          {/*
+            KONU ŞERİDİ — KEŞFET'TEKİ ŞEHİR ŞERİDİNİN YERİNDE
+
+            Konu süzgeci yalnızca bir açılır menüydü; kapalıyken hangi
+            konuların olduğunu göstermiyordu. Şerit yedi konuyu ve her
+            birindeki yazı sayısını tek bakışta veriyor. Menü kaldırılmadı,
+            filtre panelinde duruyor ve aynı durumu paylaşıyor.
+          */}
+          <KonuSeridi
+            konular={seritKonulari}
+            secili={seritSecili}
+            toplam={ogrenciRehberleri.length}
+            onSec={(id) => sekmeSec(id as Sekme)}
+            onTumu={() => sekmeSec('tumu')}
+          />
+
+          {/*
           Açıklama yalnızca gerçekten kişiselleştirme yapılabiliyorsa.
           Veri yoksa satır hiç çizilmiyor — "senin için seçtik" demek için
           kişi hakkında bir şey bilmek gerekiyor.
@@ -472,27 +654,78 @@ export const RehberMerkezi: React.FC<{
           </>
         )}
 
-        <a
-          href="/isveren"
-          onClick={(e) => {
-            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-            e.preventDefault();
-            onNavigate('/isveren');
-          }}
-          className="flex items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-sm transition-colors hover:border-blue-300"
-        >
-          <span>
-            <b className="block font-bold text-gray-900">Şirketler için rehber</b>
-            <span className="text-gray-600">Stajyer nasıl alınır: sigorta, ücret, evrak</span>
-          </span>
-          <ArrowRight className="h-4 w-4 shrink-0 text-gray-500" />
-        </a>
+          {/*
+            YOLCULUK VE DİZİN BLOKLARI LİSTENİN ALTINA İNDİ
 
-        <p className="max-w-2xl text-xs leading-relaxed text-gray-600">
-          Rehberlerde yıldan yıla değişen oran ve tutarlar yazılmıyor; mekanizma anlatılıp güncel
-          rakam için resmî kaynağa yönlendiriliyor. Eksik veya hatalı gördüğün bir şey olursa bize
-          yaz.
-        </p>
+            İkisi de sayfanın tepesindeydi ve masaüstünde kaydırmadan tek
+            bir rehber BAŞLIĞI görünmüyordu — bu dosyanın kendi notu da
+            aynı sorunu anlatıyor. Bloklar silinmedi: rehber listesi ilk
+            ekrana çıktıktan sonra, "başka nereye bakayım" sorusunun
+            geldiği yerde duruyorlar.
+          */}
+          <StajYollari onNavigate={onNavigate} />
+
+          <YolHaritasi onNavigate={onNavigate} ogrenci={ogrenci} />
+
+          <a
+            href="/isveren"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              onNavigate('/isveren');
+            }}
+            className="flex items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-sm transition-colors hover:border-blue-300"
+          >
+            <span>
+              <b className="block font-bold text-gray-900">Şirketler için rehber</b>
+              <span className="text-gray-600">Stajyer nasıl alınır: sigorta, ücret, evrak</span>
+            </span>
+            <ArrowRight className="h-4 w-4 shrink-0 text-gray-500" />
+          </a>
+        </section>
+
+        {/* --------------------------------------- sağ: sayaçlar ve bilgi */}
+        {/*
+          `hidden lg:block`: telefonda sayaçlar listenin üstündeki başlıkta
+          ve konu şeridinde zaten var; ikisini ayrıca göstermek listeyi bir
+          ekran aşağı iterdi. Keşfet ve ilanlar sayfasında da aynı sebeple
+          gizli.
+        */}
+        <div className="hidden space-y-4 lg:sticky lg:top-4 lg:col-span-3 lg:block">
+          <div className="grid grid-cols-3 gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3.5">
+            {[
+              { etiket: 'Rehber', deger: ogrenciRehberleri.length },
+              { etiket: 'Konu', deger: doluKonular.length },
+              { etiket: 'Bölüm', deger: BOLUMLER.length },
+            ].map((kutu) => (
+              <div key={kutu.etiket} className="min-w-0 text-center">
+                <p className="text-2xl font-black leading-none tabular-nums text-gray-900">
+                  {kutu.deger}
+                </p>
+                <p className="mt-1 truncate text-[11px] font-semibold text-gray-500">
+                  {kutu.etiket}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/*
+            Sayfanın en altındaki uzun not buraya taşındı. Orada kimse
+            görmüyordu; oysa söylediği şey rehberlerin nasıl yazıldığı —
+            yani okumaya başlamadan önce bilinmesi gereken şey.
+          */}
+          <aside className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5">
+            <span className="inline-block rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-700">
+              Rehberler nasıl yazılıyor
+            </span>
+            <p className="text-sm leading-relaxed text-gray-600">
+              Rehberlerde yıldan yıla değişen oran ve tutarlar{' '}
+              <strong className="text-gray-900">yazılmıyor</strong>; mekanizma anlatılıp güncel
+              rakam için resmî kaynağa yönlendiriliyor. Eksik veya hatalı gördüğün bir şey olursa
+              bize yaz.
+            </p>
+          </aside>
+        </div>
       </div>
     </SayfaKabugu>
   );
