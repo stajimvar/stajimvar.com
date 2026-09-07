@@ -1889,6 +1889,10 @@ export default function App() {
                 countryFacets={globalListings.page.facets.countries}
                 onCountryChange={globalListings.setCountry}
                 catalogTotal={globalListings.page.total}
+                catalogCompanyTotal={globalListings.page.companyTotal}
+                catalogCityTotal={globalListings.page.cityTotal}
+                catalogVerifiedTotal={globalListings.page.verifiedTotal}
+                catalogLastVerifiedAt={globalListings.page.lastVerifiedAt}
                 hasMoreCountriesPage={globalListings.page.hasMore}
                 onLoadMoreCountriesPage={globalListings.loadMore}
               />

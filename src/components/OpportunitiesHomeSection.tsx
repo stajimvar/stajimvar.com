@@ -5,6 +5,7 @@ import { ListingLogo } from './ListingLogo';
 import { isExpiredOpportunity, opportunityTypeLabel } from '../lib/opportunity-domain.mjs';
 import { deadlineLabel } from '../lib/firsat-degerlendirme.mjs';
 import type { StudentProfile } from '../types';
+import { kisaTarihMetni } from '../lib/tarih.mjs';
 
 /**
  * Ana sayfadaki fırsat şeridi.
@@ -64,11 +65,9 @@ function seviyeUymuyor(firsat: Opportunity, ogrenci: StudentProfile): boolean {
 function sonBasvuru(firsat: Opportunity): { aciliyet: string | null; kesin: string } | null {
   const tarih = firsat.applicationDeadline;
   if (!tarih) return null;
-  const zaman = new Date(tarih).getTime();
-  if (Number.isNaN(zaman)) return null;
-  const kesin = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short' }).format(
-    new Date(tarih)
-  );
+  /* Biçim ve saatsiz-tarih koruması `lib/tarih` içinde; null = basılmayacak. */
+  const kesin = kisaTarihMetni(tarih, { yil: false });
+  if (!kesin) return null;
   return { aciliyet: deadlineLabel(firsat), kesin };
 }
 

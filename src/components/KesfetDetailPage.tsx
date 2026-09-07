@@ -8,6 +8,7 @@ import {
 } from "../lib/kesfet";
 import { EventCover } from "./EventCover";
 import { formatDiscoverDate } from "../lib/kesfet-domain.mjs";
+import { tarihMetni } from "../lib/tarih.mjs";
 const dateText = (v: string) =>
   new Intl.DateTimeFormat("tr-TR", {
     dateStyle: "long",
@@ -94,7 +95,7 @@ export const KesfetDetailPage: React.FC<{
               {e.verificationStatus === "verified" &&
               e.sourceKind === "official"
                 ? "Resmî kaynaktan doğrulandı"
-                : `Son kontrol: ${new Date(e.lastVerifiedAt!).toLocaleDateString("tr-TR")}`}
+                : `Son kontrol: ${tarihMetni(e.lastVerifiedAt)}`}
             </p>
           )}
           <div className="grid sm:grid-cols-2 gap-3 text-sm">
@@ -139,14 +140,28 @@ export const KesfetDetailPage: React.FC<{
             {e.description}
           </div>
           <dl className="grid sm:grid-cols-2 gap-3 text-sm">
-            <div>
-              <dt className="font-bold">Fiyat</dt>
-              <dd>
-                {e.isFree
-                  ? "Ücretsiz"
-                  : `Normal: ${e.regularPrice ?? "—"} TL · Öğrenci: ${e.studentPrice ?? "—"} TL`}
-              </dd>
-            </div>
+            {/*
+              FİYAT: BİLİNMİYORSA KUTU YOK
+
+              Ücretsiz değilse ve iki fiyat da boşsa satır
+              "Normal: — TL · Öğrenci: — TL" oluyordu — iki tire, hiçbir
+              bilgi. Bilinen fiyat varsa yalnızca o yazılıyor.
+            */}
+            {(e.isFree || e.regularPrice != null || e.studentPrice != null) && (
+              <div>
+                <dt className="font-bold">Fiyat</dt>
+                <dd>
+                  {e.isFree
+                    ? "Ücretsiz"
+                    : [
+                        e.regularPrice != null ? `Normal: ${e.regularPrice} TL` : null,
+                        e.studentPrice != null ? `Öğrenci: ${e.studentPrice} TL` : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                </dd>
+              </div>
+            )}
             <div>
               <dt className="font-bold">Katılım</dt>
               <dd>{e.eventMode === "online" ? "Çevrimiçi" : e.eventMode === "hybrid" ? "Hibrit" : "Fiziksel"}</dd>

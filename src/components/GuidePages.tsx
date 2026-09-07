@@ -24,6 +24,7 @@ import { RehberIzgarasi, RehberKarti } from './RehberKartlari';
 import { gecmiseYaz } from '../lib/rehber-gecmis.mjs';
 import { rehberOkunduBildir } from '../lib/rehber-veri';
 import type { StudentProfile } from '../types';
+import { tarihMetni } from '../lib/tarih.mjs';
 
 /**
  * Rehber merkezi ve tek rehber sayfası.
@@ -640,11 +641,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
                         <span className="text-gray-300">·</span>
                         <span>
                           Erişim:{' '}
-                          {new Date(rehber.guncelleme).toLocaleDateString('tr-TR', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                          })}
+                          {tarihMetni(rehber.guncelleme)}
                         </span>
                       </>
                     )}
@@ -747,11 +744,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
             {rehber.guncelleme && (
               <>
                 Son gözden geçirme:{' '}
-                {new Date(rehber.guncelleme).toLocaleDateString('tr-TR', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
+                {tarihMetni(rehber.guncelleme)}
               </>
             )}
             {/* Gözden geçiren yalnızca yazılmışsa çiziliyor; uydurma unvan yok. */}

@@ -612,7 +612,24 @@ export const Header: React.FC<HeaderProps> = ({
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${kesfetteMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'}`}
                 >
                   <Compass className={`w-3.5 h-3.5 ${kesfetteMi ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <span>Keşfet</span>
+                  {/*
+                    SEKME ADI "KEŞFET" DEĞİL "ETKİNLİKLER"
+
+                    Ölçüldü (üretim, 7 Eylül 2026): sayfadaki 137 yayındaki
+                    kaydın 137'si etkinlik — konser 51, festival 42, sergi 22,
+                    tiyatro 18, atölye 3, müze 1. Yani içerik "ağırlıklı
+                    olarak" değil, TAMAMEN etkinlik.
+
+                    "Keşfet" bir fiil ve neyin keşfedileceğini söylemiyor;
+                    sayfanın kendi başlığı zaten "Şehrindeki etkinlikler, tek
+                    listede." diyordu — yani sekme ile sayfa aynı şeyi farklı
+                    adlandırıyordu.
+
+                    ADRES DEĞİŞMEDİ: /kesfet olduğu gibi duruyor. Değişen
+                    yalnız etiket; bağlantılar, ön render çıktısı ve
+                    yönlendirmeler etkilenmiyor.
+                  */}
+                  <span>Etkinlikler</span>
                 </a>
 
                 {/*
@@ -1514,7 +1531,8 @@ export const Header: React.FC<HeaderProps> = ({
 
         <a href="/kesfet" aria-label="Öğrenci etkinlikleri" aria-current={kesfetteMi ? 'page' : undefined} onClick={baglantiTiklamasi(() => onOpenDiscover?.())} className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${kesfetteMi ? 'shrink-0' : 'flex-1'} transition-all ${kesfetteMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'}`}>
           <Compass className="w-5 h-5" />
-          {kesfetteMi && <span className="text-[11px] font-bold truncate">Keşfet</span>}
+          {/* Masaüstündeki sekmeyle aynı ad; alt barda yer dar olduğu için tekil. */}
+          {kesfetteMi && <span className="text-[11px] font-bold truncate">Etkinlik</span>}
         </a>
 
         {/*

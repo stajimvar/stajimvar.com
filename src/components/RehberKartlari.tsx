@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight, Bookmark, Clock } from 'lucide-react';
 import { konuEtiketi, rehberOkumaDakika, type Rehber } from '../data/rehberler';
+import { tarihMetni } from '../lib/tarih.mjs';
 
 /**
  * Rehber kartı ve iskeleti.
@@ -28,14 +29,11 @@ import { konuEtiketi, rehberOkumaDakika, type Rehber } from '../data/rehberler';
  * kartlarda en sık yapılan hata bu.
  */
 
-const tarihYaz = (deger?: string) => {
-  if (!deger) return null;
-  const zaman = new Date(deger).getTime();
-  if (Number.isNaN(zaman)) return null;
-  return new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }).format(
-    new Date(zaman)
-  );
-};
+/*
+  Tarih biçimi tek kaynaktan: `lib/tarih`. Buradaki kopya saat dilimi
+  vermiyordu ve `guncelleme` saatsiz bir gün ('2026-09-06'); UTC'nin
+  batısındaki okuyucuda bir gün geri kayıyordu.
+*/
 
 export interface KartProps {
   rehber: Rehber;
@@ -54,7 +52,7 @@ export const RehberKarti: React.FC<KartProps> = ({
   onKaydet,
   kaydetmeEtiketi,
 }) => {
-  const tarih = tarihYaz(rehber.guncelleme);
+  const tarih = tarihMetni(rehber.guncelleme);
 
   return (
     <a

@@ -142,23 +142,29 @@ export const GoogleAdBanner: React.FC<GoogleAdBannerProps> = ({
   const configured = Boolean(ADSENSE_CLIENT && slot);
 
   /*
-    DOLMAYAN REKLAM YER KAPLAMASIN
+    DOLMAYAN REKLAM HİÇ YER KAPLAMASIN
 
-    AdSense birim için reklam bulamazsa <ins> öğesine
-    data-ad-status="unfilled" yazıyor ama minHeight duruyordu: kartlar
-    arasında 140 pikselik boş bir delik kalıyor, üstünde de "Reklam"
-    etiketi asılı duruyordu. Boş bir yuva, reklamın kendisinden daha çok
-    rahatsız ediyor.
+    Önce yuva her zaman çiziliyordu: "Reklam" etiketi ve minHeight kadar
+    boş bir kutu, reklam gelirse dolsun diye. `data-ad-status="unfilled"`
+    yazıldığında kutu kapanıyordu — ama bu öznitelik YALNIZCA betik
+    çalıştığında yazılıyor.
 
-    Durum özniteliği betik tarafından SONRADAN yazılıyor; o yüzden
-    izleniyor.
+    Ölçüldü (canlı, 390px, çerez rızası verilmemiş):
+      data-ad-status = null · <ins> yüksekliği 140px · kap 159px
+    Yani rıza verilmeyen her ziyaretçide sayfada 159 piksellik, üstünde
+    "Reklam" yazan boş bir kutu duruyordu ve hiçbir zaman kapanmıyordu.
+
+    Kural tersine çevrildi: yuva DOLDUĞU KANITLANANA kadar görünmüyor.
+    `<ins>` DOM'da kalmak zorunda — AdSense betiği onu bulup dolduruyor —
+    ama sıfır yükseklikte ve akıştan çıkarılmış hâlde duruyor, yani
+    yerleşimde delik açmıyor. Doldu bilgisi gelince açılıyor.
   */
-  const [dolmadi, setDolmadi] = useState(false);
+  const [doldu, setDoldu] = useState(false);
 
   useEffect(() => {
     const ins = insRef.current;
     if (!configured || !ins) return;
-    const oku = () => setDolmadi(ins.getAttribute('data-ad-status') === 'unfilled');
+    const oku = () => setDoldu(ins.getAttribute('data-ad-status') === 'filled');
     oku();
     const gozlemci = new MutationObserver(oku);
     gozlemci.observe(ins, { attributes: true, attributeFilter: ['data-ad-status'] });
@@ -179,37 +185,36 @@ export const GoogleAdBanner: React.FC<GoogleAdBannerProps> = ({
     }
   }, [configured]);
 
-  if (!configured) {
-    // Üretimde yayıncı kimliği yoksa hiçbir şey basma. Boş bir alan,
-    // sahte bir reklamdan iyidir.
-    if (!import.meta.env.DEV) return null;
+  /*
+    YAPILANDIRILMAMIŞ YUVA HİÇBİR ŞEY ÇİZMEZ — GELİŞTİRMEDE DE
 
-    return (
-      <div
-        className={`rounded-2xl border border-dashed border-gray-300 bg-gray-50/60 flex flex-col items-center justify-center gap-1 text-center px-4 ${className}`}
-        style={{ minHeight: spec.minHeight }}
-        aria-hidden="true"
-      >
-        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-          Reklam yuvası
-        </span>
-        <span className="text-[11px] text-gray-400">
-          {spec.label} · reklam anahtarı tanımlı değil
-        </span>
-      </div>
-    );
-  }
+    Burada geliştirmede kesikli çerçeveli bir yer tutucu çiziliyordu.
+    Faydasından çok zararı vardı: geliştirici üretimde olmayan bir boşluğa
+    göre yerleşim ayarlıyordu. Artık iki ortam da aynı şeyi gösteriyor —
+    hiçbir şey.
+  */
+  if (!configured) return null;
 
   return (
-    <div className={className} style={dolmadi ? { height: 0, overflow: 'hidden' } : undefined}>
+    <div
+      className={doldu ? className : undefined}
+      /*
+        Dolmadan önce: sıfır yükseklik, akış dışı görünüm. `<ins>` DOM'da
+        kalıyor çünkü AdSense betiği onu arıyor; ama hiçbir piksel yer
+        kaplamıyor ve dolduğunda yerleşim kaymasın diye sınıf da o anda
+        uygulanıyor.
+      */
+      style={doldu ? undefined : { height: 0, overflow: 'hidden' }}
+      aria-hidden={doldu ? undefined : true}
+    >
       {/* Reklam olduğu görsel olarak da belli olmalı; Google'ın politikası da bunu ister. */}
-      {!dolmadi && (
+      {doldu && (
         <div className="text-[10px] uppercase tracking-wider text-gray-400 mb-1">Reklam</div>
       )}
       <ins
         ref={insRef}
         className="adsbygoogle block"
-        style={{ display: 'block', minHeight: dolmadi ? 0 : spec.minHeight }}
+        style={{ display: 'block', minHeight: doldu ? spec.minHeight : 0 }}
         data-ad-client={ADSENSE_CLIENT}
         data-ad-slot={slot}
         data-ad-format={spec.adFormat}

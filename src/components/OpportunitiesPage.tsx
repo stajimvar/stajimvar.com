@@ -47,6 +47,7 @@ import {
   opportunityFit,
   personalizationReadyCount,
 } from '../lib/firsat-degerlendirme.mjs';
+import { kisaTarihMetni } from '../lib/tarih.mjs';
 
 /**
  * Öğrenci Fırsatları.
@@ -81,8 +82,13 @@ const categoryPath: Record<string, OpportunityType | ''> = {
   '/yarismalar': 'competition',
 };
 
-const kisaTarih = (value?: string) =>
-  value ? new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short' }).format(new Date(value)) : null;
+/*
+  Tarih biçimi `lib/tarih` üzerinden. Burada elle yazılmış biçimlendirici
+  saat dilimi vermiyordu: `application_deadline` saatsiz bir takvim günü
+  ve `new Date('2026-09-06')` UTC gece yarısı demek — UTC'nin batısındaki
+  okuyucuda 5 Eylül görünüyordu. Son başvuruda bu bir gün kaybettirir.
+*/
+const kisaTarih = (value?: string) => kisaTarihMetni(value, { yil: false });
 
 /*
   Kalan süre metni ortak yardımcıdan geliyor (deadlineLabel). Burada ayrı

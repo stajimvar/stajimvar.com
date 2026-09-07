@@ -20,6 +20,15 @@
         ],
         "createdAt": "2026-09-06T11:14:24.309Z",
         "reason": "Yanlis pozitif: bg-gray-100 uzerinde text-gray-700 kontrasti 8.9:1; kural doygun renkler icin. Mavi dal beyaz yaziyla, ayri ternary dalinda."
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "src/components/RehberKartlari.tsx"
+        ],
+        "createdAt": "2026-09-06T21:46:08.888Z",
+        "reason": "Yanlis pozitif: gri ikon kartin BEYAZ zemininde duruyor (tarayicida olculdu). bg-gray-100 yalnizca hover ile geliyor ve gray-500/gray-100 notr uzerinde notr - kural doygun renkler icin. Ayrica 16px ikon, metin degil (WCAG 1.4.11 esigi 3:1). Mavi dal ayri ternary dalinda."
       }
     ]
   }

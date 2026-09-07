@@ -1,6 +1,18 @@
 import React from 'react';
+import {
+  BellRing,
+  Building2,
+  FileText,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Tag,
+  UserRoundX,
+  XCircle,
+} from 'lucide-react';
 import { BOLUMLER } from '../data/bolumler';
 import { REHBERLER } from '../data/rehberler';
+import { KAYNAK_SISTEMLERI, KAYNAK_TOPLAM } from '../data/kaynak-sistemleri';
 
 /**
  * Kurumsal sayfalar: Hakkımızda, İletişim, Kullanım Koşulları,
@@ -48,6 +60,109 @@ const S: React.FC<{ baslik: string; children: React.ReactNode }> = ({ baslik, ch
   </section>
 );
 
+/**
+ * TARANABİLİR MADDE LİSTESİ
+ *
+ * "Ne yapıyoruz / ne yapmıyoruz" sayfanın en çok okunan ve en çok
+ * atlanan yeriydi: ikisi de düz paragraf ya da sade `<ul>` içindeydi ve
+ * göz bir şeye tutunamıyordu.
+ *
+ * İKON AİLESİ DEĞİŞMİYOR
+ * Sitenin her yerinde lucide kullanılıyor; buraya emoji ya da başka bir
+ * görsel dil girmiyor. İkon tek başına bilgi taşımıyor (yanındaki cümle
+ * taşıyor), bu yüzden ekran okuyucudan gizleniyor.
+ *
+ * MOBİLDE TEK KOLON
+ * `sm:grid-cols-2` yalnızca geniş ekranda: 390 pikselde iki sütun her
+ * maddeyi dört satıra bölerdi ve liste paragraftan uzun olurdu.
+ */
+const MaddeListesi: React.FC<{
+  maddeler: ReadonlyArray<{ ikon: React.ElementType; baslik: string; govde: string }>;
+  ton: 'olumlu' | 'olumsuz';
+}> = ({ maddeler, ton }) => (
+  <ul className="grid gap-2.5 sm:grid-cols-2">
+    {maddeler.map(({ ikon: Ikon, baslik, govde }) => (
+      <li
+        key={baslik}
+        className="flex gap-2.5 rounded-xl border border-gray-200 bg-white p-3"
+      >
+        <Ikon
+          aria-hidden
+          className={`mt-0.5 h-4 w-4 shrink-0 ${
+            ton === 'olumlu' ? 'text-blue-600' : 'text-gray-400'
+          }`}
+        />
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-gray-900">{baslik}</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-gray-600">{govde}</p>
+        </div>
+      </li>
+    ))}
+  </ul>
+);
+
+/*
+  BEŞ MADDE, DAHA FAZLASI DEĞİL
+
+  Liste ancak taranabildiği sürece listeden sayılıyor. Her madde sitenin
+  BUGÜN yaptığı bir şey; "yakında" ya da planlanan hiçbir şey yok.
+*/
+const YAPTIKLARIMIZ = [
+  {
+    ikon: Search,
+    baslik: 'İlanı kaynağından derliyoruz',
+    govde: 'Şirketlerin kendi işe alım sistemlerinden okuyoruz; başvuru adresi şirketin kendi sayfası kalıyor.',
+  },
+  {
+    ikon: ShieldCheck,
+    baslik: 'Başvuru adresini kontrol ediyoruz',
+    govde: 'Yayındaki ilanların başvuru bağlantısı düzenli olarak yeniden çağrılıyor; çalışmayan bağlantı yayında kalmıyor.',
+  },
+  {
+    ikon: Building2,
+    baslik: 'Şirketin kendi ilanını almasını sağlıyoruz',
+    govde: 'İlanını doğrudan burada açan şirkette başvuru siteden çıkmıyor ve şirket başvuruyu kendi panelinden görüyor.',
+  },
+  {
+    ikon: FileText,
+    baslik: 'Süreci anlatan rehberler yazıyoruz',
+    govde: `${REHBERLER.length} rehber ve ${BOLUMLER.length} bölüm sayfası: belge, sigorta, defter, mülakat ve burs süreçleri.`,
+  },
+  {
+    ikon: BellRing,
+    baslik: 'Başvurunun durumunu takip ettiriyoruz',
+    govde: 'Site içi bildirim merkezinde başvurunuzda ne değiştiğini görüyorsunuz.',
+  },
+] as const;
+
+const YAPMADIKLARIMIZ = [
+  {
+    ikon: XCircle,
+    baslik: 'Başvuruyu üzerimizden geçmeye zorlamıyoruz',
+    govde: 'Derlediğimiz ilanlarda başvuru adresi şirketin kendi sayfası; araya girmiyoruz.',
+  },
+  {
+    ikon: UserRoundX,
+    baslik: 'Öğrenci bilgisi satmıyoruz',
+    govde: 'Üçüncü taraflara pazarlama amacıyla veri aktarmıyoruz.',
+  },
+  {
+    ikon: Sparkles,
+    baslik: 'Sahte aciliyet üretmiyoruz',
+    govde: '"Son 2 kişi", "bugün bitiyor" gibi ifadeler kullanmıyoruz. İlanda ne yazıyorsa o.',
+  },
+  {
+    ikon: ShieldCheck,
+    baslik: 'Erişim engeli aşmıyoruz',
+    govde: 'Kullanım şartlarını ihlal eden yöntemlerle veri toplamıyoruz.',
+  },
+  {
+    ikon: Tag,
+    baslik: 'Olmayan özelliği "yakında" diye sunmuyoruz',
+    govde: 'Hazır olmadan "var" demiyoruz; sıra da satılmıyor.',
+  },
+] as const;
+
 export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) => {
   if (slug === 'hakkimizda') {
     return (
@@ -72,9 +187,9 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
         <S baslik="Nasıl çalışıyor">
           <p>
             Kaynaklarımızın tamamı, işe alım sistemlerinin dışarıdan okunmak üzere yayımladığı
-            resmî uç noktalar. Şu anda altı farklı sistemden ilan alıyoruz: Lever, Greenhouse,
-            Ashby, Workable, Workday ve SmartRecruiters. Her kaynak eklenmeden önce elle
-            inceleniyor ve <strong>robots kuralları kontrol ediliyor</strong>.
+            resmî uç noktalar. Her kaynak eklenmeden önce elle inceleniyor ve{' '}
+            <strong>robots kuralları kontrol ediliyor</strong>. Hangi sistemleri
+            okuduğumuz aşağıda tek tek yazıyor.
           </p>
           <p>
             Kaynaklar saatte bir taranıyor; yayındaki ilanların başvuru adresleri
@@ -94,30 +209,60 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
           </p>
         </S>
 
-        <S baslik="Neyi yapmıyoruz">
-          <ul className="list-disc pl-5 space-y-1.5">
-            <li>
-              Başvuruyu kendi üzerimizden geçmeye zorlamıyoruz. Şirketin kariyer
-              kaynağından derlediğimiz ilanlarda başvuru adresi şirketin kendi sayfası
-              olmaya devam ediyor; StajımVar üzerinden başvuru yalnızca ilanı buraya
-              kendisi açan şirketlerde var, çünkü onu isteyen taraf şirketin kendisi.
-            </li>
-            <li>
-              Öğrenci bilgisi satmıyoruz, üçüncü taraflara pazarlama amacıyla aktarmıyoruz.
-            </li>
-            <li>
-              Sahte aciliyet üretmiyoruz: &quot;son 2 kişi&quot;, &quot;bugün bitiyor&quot;
-              gibi ifadeler kullanmıyoruz. İlanda ne yazıyorsa o.
-            </li>
-            <li>
-              Kullanım şartlarını ihlal eden veya erişim engeli aşan yöntemlerle veri
-              toplamıyoruz.
-            </li>
-            <li>
-              Var olmayan bir özelliği &quot;yakında&quot; diye sunmuyoruz. Hazır olmadan
-              &quot;var&quot; demiyoruz.
-            </li>
+        {/*
+          NE YAPIYORUZ / NE YAPMIYORUZ — İKİSİ DE BEŞ MADDE
+
+          "Yapmıyoruz" listesi vardı, karşılığı yoktu: sayfada ürünün ne
+          YAPTIĞI uzun paragraflara dağılmıştı ve okuyucu ancak baştan
+          sona okuyarak çıkarabiliyordu. İki liste yan yana durunca
+          sınır kendiliğinden okunuyor.
+        */}
+        <S baslik="Ne yapıyoruz">
+          <MaddeListesi maddeler={YAPTIKLARIMIZ} ton="olumlu" />
+        </S>
+
+        <S baslik="Ne yapmıyoruz">
+          <MaddeListesi maddeler={YAPMADIKLARIMIZ} ton="olumsuz" />
+        </S>
+
+        {/*
+          TAKİP EDİLEN KAYNAKLAR
+
+          Sayfa "altı farklı sistemden ilan alıyoruz" diyordu ama kaç
+          ŞİRKET kaynağı takip edildiğini hiç yazmıyordu. Sayılar
+          `automation/sources.json` dosyasından üretiliyor
+          (scripts/kaynak-ozeti.mjs), yani elle yazılmış ve eskiyecek bir
+          rakam yok.
+
+          LOGO YOK, AD VAR. Logo kullanmak ortaklık ya da onay izlenimi
+          üretirdi; öyle bir ilişki yok ve bu aşağıda açıkça yazıyor.
+        */}
+        <S baslik="Takip ettiğimiz resmî kaynaklardan bazıları">
+          <p>
+            Şu anda {KAYNAK_TOPLAM} şirket kaynağını takip ediyoruz. Aşağıdaki adlar,
+            şirketlerin ilanlarını yayımladığı işe alım sistemleri; parantez içindeki
+            sayı o sistemden okuduğumuz şirket kaynağı sayısı.
+          </p>
+          <ul className="flex flex-wrap gap-1.5">
+            {KAYNAK_SISTEMLERI.map((sistem) => (
+              <li
+                key={sistem.ad}
+                className="rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-700"
+              >
+                {sistem.ad}
+                <span className="ml-1 font-normal text-gray-500 tabular-nums">
+                  ({sistem.adet})
+                </span>
+              </li>
+            ))}
           </ul>
+          <p>
+            <strong>Bu bir ortaklık değil.</strong> Bu sistemlerle aramızda hiçbir
+            ticari anlaşma, sponsorluk ya da onay ilişkisi yok. İlanları, bu
+            sistemlerin dışarıdan okunmak üzere yayımladığı açık uç noktalardan
+            alıyoruz ve başvuruyu ilanın kendi sayfasına geri gönderiyoruz. Adları
+            burada, hangi kaynağa dayandığımızı gizlememek için yazıyoruz.
+          </p>
         </S>
 
         <S baslik="Rehberleri nasıl yazıyoruz">

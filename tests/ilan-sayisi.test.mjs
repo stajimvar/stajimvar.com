@@ -89,9 +89,26 @@ test('başlık, şirket şeridi ve filtre düğmesi aynı türetilmiş sayıyı 
   assert.match(gorunum, /toplam=\{gosterilecekToplam\}/);
   assert.match(gorunum, /\{gosterilecekToplam\} ilanı göster/);
   assert.match(gorunum, /gosterilecekIlanSayisi\(\{/);
-  // Hesap tek yerde: türetme dışında hiçbir gösterim noktası ham yüklenmiş
-  // adede bağlanmıyor.
-  assert.equal(gorunum.split('gosterilecekIlanSayisi({').length - 1, 1);
+
+  /*
+    ÜÇ SAYAÇ DA AYNI YARDIMCIDAN GEÇİYOR
+
+    Önce burada "yardımcı tam bir kez çağrılıyor" yazıyordu. Kural o
+    değildi; kural şu: gösterilen hiçbir sayı ham yüklenmiş adede
+    bağlanmasın. Sağ sütundaki üç sayaç (ilan / şirket / şehir) tam da
+    o hatayı yapıyordu — ölçüldü (canlı, country=TR): ekranda 24/23/4
+    yazarken gerçek değerler 62/51/6 idi.
+
+    Üçü de artık aynı yardımcıdan geçiyor, yani daraltma kuralı üçünde
+    de aynı; ayrışamıyorlar.
+  */
+  const cagri = gorunum.split('gosterilecekIlanSayisi({').length - 1;
+  assert.equal(cagri, 3, 'ilan, şirket ve şehir sayaçları aynı yardımcıdan geçmeli');
+  for (const ad of ['gosterilecekToplam', 'gosterilecekSirket', 'gosterilecekSehir']) {
+    assert.match(gorunum, new RegExp(`const ${ad} = gosterilecekIlanSayisi\\(`), ad);
+  }
+  /* Sayaç kutuları ham dizi uzunluğuna geri dönmemeli. */
+  assert.doesNotMatch(gorunum, /etiket: 'Açık ilan', deger: String\(filteredListings\.length\)/);
 });
 
 test('mobil filtre düğmesi yüklenmiş adedi yazmıyor', () => {

@@ -155,6 +155,66 @@ export function turkiyeGeneliMi(item) {
 
 export const TURKIYE_GENELI = '__turkiye__';
 
+export const BURS_KESIF_KATEGORILERI = [
+  { id: 'tumu', etiket: 'Tümü' },
+  { id: 'sana-uygun', etiket: 'Sana Uygun' },
+  { id: 'yeni-eklenenler', etiket: 'Yeni Eklenenler' },
+  { id: 'son-gunler', etiket: 'Son Günler' },
+  { id: 'karsiliksiz', etiket: 'Karşılıksız' },
+  { id: 'lisans', etiket: 'Lisans' },
+  { id: 'yuksek-lisans', etiket: 'Yüksek Lisans' },
+  { id: 'yurt-disi', etiket: 'Yurt Dışı' },
+];
+
+const YURTDISI_TURLERI = new Set(['international', 'education', 'student_support', 'youth_program']);
+
+export function yurtdisiBursuMu(item) {
+  return YURTDISI_TURLERI.has(item?.opportunityType) || (item?.countries?.length ?? 0) > 0;
+}
+
+export function bursKesifKategorisineUyar(item, kategori, baglam = {}) {
+  const now = baglam.now || new Date();
+  if (kategori === 'tumu') return true;
+  if (kategori === 'yeni-eklenenler') {
+    const yayin = calendarDay(item?.publishedAt);
+    const bugun = calendarDay(now);
+    if (yayin == null || bugun == null) return false;
+    const fark = Math.round((bugun - yayin) / 86400000);
+    return fark >= 0 && fark < 7;
+  }
+  if (kategori === 'son-gunler') {
+    const kalan = daysUntilDeadline(item?.applicationDeadline, now);
+    return opportunityStatus(item, now) === 'acik' && kalan != null && kalan <= 7;
+  }
+  if (kategori === 'karsiliksiz') return item?.repayable === false;
+  if (kategori === 'lisans') return bursSuzgectenGecer(item, { seviye: 'Lisans' }, now);
+  if (kategori === 'yuksek-lisans')
+    return bursSuzgectenGecer(item, { seviye: 'Yüksek Lisans' }, now);
+  if (kategori === 'yurt-disi') return yurtdisiBursuMu(item);
+  if (kategori === 'sana-uygun') {
+    if (!profilYeterliMi(baglam.student)) return false;
+    const fit = opportunityFit(item, baglam.student);
+    return fit.durum === 'uygun_olabilir' && fit.kesin;
+  }
+  return false;
+}
+
+export function bursKesifSayilari(items = [], baglam = {}) {
+  return Object.fromEntries(
+    BURS_KESIF_KATEGORILERI.map(({ id }) => [
+      id,
+      id === 'tumu'
+        ? items.length
+        : items.filter((item) => bursKesifKategorisineUyar(item, id, baglam)).length,
+    ])
+  );
+}
+
+export function bursKesifSonuclari(items = [], kategori = 'tumu', baglam = {}) {
+  if (kategori === 'tumu') return items;
+  return items.filter((item) => bursKesifKategorisineUyar(item, kategori, baglam));
+}
+
 /** Kısıt listesi boşsa kısıt yoktur ve her seçim uyar. */
 export function kisitaUyar(liste, secim) {
   const kisit = Array.isArray(liste) ? liste.filter(Boolean) : [];
@@ -283,8 +343,6 @@ export const BOLUM_GORUNUMU = [
   'yurtdisi-egitim',
 ];
 
-const YURTDISI_TURLERI = new Set(['international', 'education', 'student_support', 'youth_program']);
-
 /** "Sana Uygun" için profilin yeterli olup olmadığı. */
 export function profilYeterliMi(student) {
   return Boolean(student?.gradeLevel);
@@ -337,9 +395,8 @@ export function bursBolumleri(items = [], baglam = {}) {
     },
     'basvurusu-acik': (item) => opportunityStatus(item, now) === 'acik',
     yakinda: (item) => opportunityStatus(item, now) === 'yakinda',
-    'turkiye-geneli': (item) => turkiyeGeneliMi(item) && !YURTDISI_TURLERI.has(item.opportunityType),
-    'yurtdisi-egitim': (item) =>
-      YURTDISI_TURLERI.has(item.opportunityType) || (item.countries?.length ?? 0) > 0,
+    'turkiye-geneli': (item) => turkiyeGeneliMi(item) && !yurtdisiBursuMu(item),
+    'yurtdisi-egitim': (item) => yurtdisiBursuMu(item),
   };
 
   /*

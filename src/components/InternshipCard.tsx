@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { InternshipListing, MatchBreakdown } from '../types';
 import { ListingLogo } from './ListingLogo';
-import { DisBaglanti } from '../ui';
 import { listingSlug } from '../lib/slug';
 import { SIRKET_KENAR_GUCLU, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
@@ -22,7 +21,8 @@ import { UlkeRozeti } from './UlkeRozeti';
 import { eklenmeMetni, sonKontrolMetni, uzunSuredirAcik } from '../lib/zaman';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { ILAN_KAYNAGI } from '../lib/urun-metni';
-import { CTA_BASARI, CTA_BIRINCIL, CTA_IKINCIL, CTA_ORTAK } from '../lib/kart-cta';
+import { CTA_BASARI, CTA_BIRINCIL, CTA_ORTAK } from '../lib/kart-cta';
+import { tarihMetni } from '../lib/tarih.mjs';
 
 /*
   ALT CTA GEOMETRİSİ — TEK AİLE
@@ -144,6 +144,9 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
   const kariyerSayfasindanIlan =
     !sirketinKendiIlani && (listing.origin === 'scraped' || yol.anaEylem === 'resmi-site');
 
+  /* Ham ISO yerine "6 Eylül 2026"; değer yoksa satır hiç basılmıyor. */
+  const sonBasvuru = tarihMetni(listing.applicationDeadline);
+
   return (
     <div
       id={`internship-card-${listing.id}`}
@@ -158,7 +161,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
         Başlık artık tam genişlikte ve en fazla iki satır; düğmeler alta,
         sağa yaslı tek satıra indi. Aynı bilgi, yarı yükseklik.
       */
-      className="bg-white rounded-2xl border border-gray-200 hover:border-blue-500 hover:shadow-xs transition-all duration-150 p-3.5 sm:p-4.5 group flex flex-col gap-3 sm:gap-3.5"
+      className="relative bg-white rounded-2xl border border-gray-200 hover:border-blue-500 hover:shadow-xs transition-all duration-150 p-3.5 sm:p-4.5 group flex flex-col gap-3 sm:gap-3.5 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2"
     >
       {/* Left & Middle Info Area */}
       <div className="flex items-start gap-3 sm:gap-3.5 flex-1 min-w-0 w-full">
@@ -242,10 +245,12 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           */}
           <div className="flex items-start gap-2">
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-500">
-            <h3
-              onClick={onViewDetails}
-              className="font-bold text-blue-600 text-sm sm:text-base hover:underline cursor-pointer transition-colors"
-            >
+            {/*
+              Şirket adı artık kendi tıklama işleyicisini taşımıyor: kartın
+              tamamı zaten aynı ilana gidiyor (aşağıdaki uzatılmış bağlantı).
+              İki ayrı tıklama hedefi üst üste binince biri ötekini yutuyordu.
+            */}
+            <h3 className="font-bold text-blue-600 text-sm sm:text-base transition-colors">
               {listing.companyName}
             </h3>
             {/*
@@ -302,7 +307,8 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                       ? 'Kayıtlardan çıkar'
                       : 'Daha sonra bakmak için kaydet'
                 }
-                className={`-mr-1 shrink-0 rounded-lg p-1.5 transition-colors cursor-pointer ${
+                /* `relative z-10`: uzatılmış kart bağlantısının örtüsünün üstünde. */
+              className={`relative z-10 -mr-1 shrink-0 rounded-lg p-1.5 transition-colors cursor-pointer ${
                   kayitli ? 'text-blue-600 bg-blue-50' : 'text-gray-300 hover:text-blue-600 hover:bg-blue-50'
                 }`}
               >
@@ -318,12 +324,36 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               satır neredeyse her ilanı alıyor. Sınır olmadan tek bir uzun
               başlık ızgaradaki bütün kartların boyunu belirliyordu.
             */}
-            <h4
-              className="text-base sm:text-lg font-bold text-gray-900 leading-snug cursor-pointer hover:text-blue-600 transition-colors line-clamp-2"
-              onClick={onViewDetails}
-              title={listing.title}
-            >
-              {listing.title}
+            {/*
+              KARTIN TAMAMI TIKLANABİLİR — UZATILMIŞ BAĞLANTI
+
+              Önce ayrı bir "Detaylar" düğmesi vardı ve başlık `onClick`
+              taşıyordu. İkisi de gerçek bir bağlantı değildi: sağ tıkla
+              yeni sekmede açmak, orta tuş, adresi kopyalamak ve bağlantıyı
+              gören arama motoru — hiçbiri çalışmıyordu.
+
+              Şimdi başlık gerçek bir `<a href>` ve `after:absolute
+              after:inset-0` ile kartın tamamına yayılıyor. İç içe `<a>`
+              üretilmiyor: kartta başka bağlantı yok, bağımsız denetimler
+              (kaydet, başvuru) `relative z-10` ile örtünün ÜSTÜNDE duruyor
+              ve kendi işlerini yapmaya devam ediyor.
+
+              Değiştirici tuşlu tıklamalar tarayıcıya bırakılıyor; yalnız
+              düz sol tık SPA gezinmesine çevriliyor.
+            */}
+            <h4 className="text-base sm:text-lg font-bold text-gray-900 leading-snug line-clamp-2">
+              <a
+                href={`/ilan/${listingSlug(listing)}`}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  onViewDetails();
+                }}
+                title={listing.title}
+                className="rounded-sm outline-none transition-colors after:absolute after:inset-0 after:content-[''] group-hover:text-blue-600"
+              >
+                {listing.title}
+              </a>
             </h4>
             {listing.department && (
               <p className="text-xs sm:text-sm text-gray-600 font-normal mt-0.5">
@@ -527,9 +557,14 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           Tarih düğmelerle aynı satırdaydı; düğme sayısı değişince satır
           sağa sola kayıyordu. Ayrı satırda duruyor.
         */}
-        {listing.applicationDeadline && (
+        {/*
+          Tarih ham ISO olarak basılıyordu: "Son: 2026-09-06" (canlıda
+          ölçüldü). Biçimlendirme `lib/tarih` içinde ve saatsiz değerlerde
+          gün kaymasına karşı UTC'de yapılıyor.
+        */}
+        {sonBasvuru && (
           <p className="mb-2 text-[11px] text-gray-600">
-            Son: <strong className="text-gray-700">{listing.applicationDeadline}</strong>
+            Son: <strong className="text-gray-700">{sonBasvuru}</strong>
           </p>
         )}
 
@@ -546,15 +581,14 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           (CTA_ORTAK); değişen yalnızca renk ve etkileşim. Böylece kartlar
           arasında alt alan zıplamıyor.
         */}
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            id={`view-details-btn-${listing.id}`}
-            onClick={onViewDetails}
-            className={`${CTA_ORTAK} ${CTA_IKINCIL}`}
-          >
-            Detaylar
-          </button>
-
+        {/*
+          "Detaylar" düğmesi kalktı: kartın tamamı zaten ilana gidiyor,
+          ikinci bir "aynı yere git" düğmesi yer kaplıyordu. Geriye tek ana
+          eylem kaldı ve tam genişlikte duruyor. `relative z-10`: uzatılmış
+          bağlantının örtüsünün üstünde kalması gerekiyor, yoksa başvuru
+          tıklaması karta gidiyor.
+        */}
+        <div className="relative z-10 grid grid-cols-1 gap-2">
           {(() => {
             /*
               Kendi ilanında başvuru yok, nötr bir durum: suçlayıcı ya da
@@ -605,32 +639,37 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               girişten önce yazılıyor. OAuth tam sayfa yönlendirmesi React
               durumunu siliyor; bu kayıt sekmede kalıyor (lib/basvuru-niyeti).
             */
+            /*
+              DIŞ BAŞVURUDA GİRİŞ KAPISI KALDIRILDI
+
+              Buradaki düğme `DisBaglanti` ile giriş penceresine bağlıydı:
+              misafir "Resmî sitede başvur"a basınca ilana değil kayıt
+              ekranına gidiyordu. Başvuru zaten ŞİRKETİN kendi sayfasında
+              tamamlanıyor; araya kayıt koymak öğrenciyi ilandan uzaklaştıran
+              bir engel oluyordu.
+
+              Kaydetme, "başvurdum" işaretleme ve takip giriş istemeye devam
+              ediyor — onlar gerçekten hesaba yazılan şeyler. Kapı yalnızca
+              dışarı çıkan başvuru bağlantısından kalktı.
+
+              Adres `basvuruYolu` içinde `guvenliDisAdres`ten geçiyor; yoksa
+              bu dal hiç çalışmıyor ve aşağıdaki "işaretle" eylemi çiziliyor,
+              yani bozuk bir CTA basılmıyor.
+            */
             if (yol.resmiAdres && yol.anaEylem === 'resmi-site') {
               return (
-                <DisBaglanti
+                <a
                   id={`external-apply-btn-${listing.id}`}
                   href={yol.resmiAdres}
-                  girisGerekli={girisGerekli}
-                  onGirisGerekli={
-                    onGirisGerekli
-                      ? () =>
-                          onGirisGerekli({
-                            tur: 'dis',
-                            ilanId: listing.id,
-                            yol: `/ilan/${listingSlug(listing)}`,
-                            disAdres: yol.resmiAdres,
-                            baslik: listing.title,
-                          })
-                      : undefined
-                  }
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  onClick={(e) => e.stopPropagation()}
                   title={yol.ozet}
                   className={`${CTA_ORTAK} ${CTA_BIRINCIL}`}
                 >
-                  <span className="truncate">
-                    {girisGerekli && onGirisGerekli ? 'Başvurmak için giriş yap' : yol.anaEtiket}
-                  </span>
+                  <span className="truncate">{yol.anaEtiket}</span>
                   <ExternalLink className="h-3 w-3 shrink-0" />
-                </DisBaglanti>
+                </a>
               );
             }
 

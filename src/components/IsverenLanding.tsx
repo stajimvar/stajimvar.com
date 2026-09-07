@@ -11,14 +11,11 @@ import {
   Users,
 } from 'lucide-react';
 import {
-  birincilStil,
   SIRKET_KENAR,
-  SIRKET_METIN,
   SIRKET_ROZET,
-  SIRKET_VURGU,
-  SIRKET_VURGU_HOVER,
   SIRKET_VURGU_KOYU,
 } from '../sirket/renk';
+import { BIRINCIL_EYLEM, ODAK_HALKASI, RENK_GECISI } from '../lib/renk-token';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 
@@ -124,14 +121,26 @@ export const IsverenLanding: React.FC<{
         </p>
 
         <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-          <button
-            type="button"
-            onClick={anaEylem}
-            className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold transition-colors"
-            style={birincilStil}
-            onMouseEnter={(e) => (e.currentTarget.style.background = SIRKET_VURGU_HOVER)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = SIRKET_VURGU)}
-          >
+          {/*
+            BİRİNCİL EYLEM MARKA MAVİSİ
+
+            Buradaki düğme #25D366 (WhatsApp yeşili) zeminliydi. O renk
+            işveren PANELİNİN alt teması (src/sirket/renk.ts) ve orada
+            yerinde duruyor — panelin kendi kabuğu, kendi başlığı var.
+
+            Bu sayfa ise halka açık ve ÖĞRENCİ başlığını taşıyor.
+            Ölçüldü (canlı, 1440px): mavi logo ve mavi "Kayıt Ol"
+            düğmesiyle aynı ekranda duran yeşil ana eylem, sayfayı başka
+            bir ürünmüş gibi gösteriyordu.
+
+            Kontrast düşmedi: beyaz yazı / #2563EB = 5.12:1, hover
+            #1D4ED8 ile 6.65:1. Önceki düzen 8.35:1'di — ikisi de AA
+            eşiğinin (4.5) üstünde.
+
+            Yumuşak yeşil rozetler kaldı: onlar eylem değil, işveren
+            alanının işareti.
+          */}
+          <button type="button" onClick={anaEylem} className={BIRINCIL_EYLEM}>
             {sirketUyesiMi ? 'Şirket paneline git' : 'Ücretsiz şirket hesabı oluştur'}
             <ArrowRight className="h-4 w-4" />
           </button>
@@ -139,7 +148,7 @@ export const IsverenLanding: React.FC<{
             <button
               type="button"
               onClick={() => (onIsverenGirisi ? onIsverenGirisi('login') : onNavigate('/isveren/ilan-ver'))}
-              className="inline-flex min-h-12 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white px-6 text-sm font-bold text-gray-800 transition-colors hover:bg-gray-50"
+              className={`inline-flex min-h-12 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white px-6 text-sm font-bold text-gray-800 hover:bg-gray-50 ${RENK_GECISI} ${ODAK_HALKASI}`}
             >
               Şirket girişi
             </button>
@@ -181,12 +190,11 @@ export const IsverenLanding: React.FC<{
             ],
           ].map(([baslik, govde], i) => (
             <li key={baslik} className="rounded-2xl border border-gray-200 bg-white p-5">
-              <span
-                /* Parlak yeşil zeminde beyaz rakam okunmuyor (1.98:1);
-                   koyu nötr ile 8.35:1. */
-                className="grid h-8 w-8 place-items-center rounded-lg text-sm font-black"
-                style={{ background: SIRKET_VURGU, color: SIRKET_METIN }}
-              >
+              {/*
+                Adım numarası da birincil vurgu: sayfadaki en dikkat çeken
+                üç yeşil kutu buydu. Beyaz rakam / #2563EB = 5.12:1.
+              */}
+              <span className="grid h-8 w-8 place-items-center rounded-lg bg-blue-600 text-sm font-black text-white">
                 {i + 1}
               </span>
               <h3 className="mt-3 font-extrabold text-gray-900">{baslik}</h3>
@@ -261,7 +269,19 @@ export const IsverenLanding: React.FC<{
         <div className="divide-y divide-gray-200 overflow-hidden rounded-2xl border border-gray-200 bg-white">
           {ISVEREN_SSS.map(({ soru, cevap }) => (
             <details key={soru} className="group p-5">
-              <summary className="cursor-pointer list-none font-extrabold text-gray-900 marker:hidden">
+              {/*
+                SSS BAŞLIKLARI KLAVYEYLE GÖRÜNÜR
+
+                `<summary>` odaklanabilir bir öğe ama burada hiç odak
+                stili yoktu ve tarayıcının varsayılanına düşüyordu.
+                Ölçüldü (canlı, 1440px): 0.8 piksel, #E59700, sayfa
+                zemininde 2.29:1 — WCAG'ın metin dışı öğeler için
+                istediği 3:1'in altında. Klavyeyle gezen kişi sekiz
+                başlık arasında nerede olduğunu göremiyordu.
+              */}
+              <summary
+                className={`cursor-pointer list-none font-extrabold text-gray-900 marker:hidden rounded-md ${ODAK_HALKASI}`}
+              >
                 {soru}
               </summary>
               <p className="mt-2 text-sm leading-relaxed text-gray-600">{cevap}</p>
@@ -283,7 +303,7 @@ export const IsverenLanding: React.FC<{
         <button
           type="button"
           onClick={() => onNavigate('/stajyer-nasil-alinir')}
-          className="mt-4 inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-4 text-sm font-bold text-gray-800 hover:bg-gray-50"
+          className={`mt-4 inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-4 text-sm font-bold text-gray-800 hover:bg-gray-50 ${ODAK_HALKASI}`}
         >
           İşveren rehberini aç
           <ArrowRight className="h-4 w-4" />
@@ -301,14 +321,8 @@ export const IsverenLanding: React.FC<{
         <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-gray-700">
           Hesap açmak bir dakika, ilan girmek iki dakika sürüyor.
         </p>
-        <button
-          type="button"
-          onClick={anaEylem}
-          className="mt-5 inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold"
-          style={birincilStil}
-          onMouseEnter={(e) => (e.currentTarget.style.background = SIRKET_VURGU_HOVER)}
-          onMouseLeave={(e) => (e.currentTarget.style.background = SIRKET_VURGU)}
-        >
+        {/* Sayfanın alt tekrarı; üsttekiyle aynı kalıp, aynı renk. */}
+        <button type="button" onClick={anaEylem} className={`mt-5 ${BIRINCIL_EYLEM}`}>
           {sirketUyesiMi ? 'Şirket paneline git' : 'Ücretsiz şirket hesabı oluştur'}
           <ArrowRight className="h-4 w-4" />
         </button>

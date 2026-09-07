@@ -82,8 +82,17 @@ test('fırsat kartının düğmelerinde elle yazılmış renk ve punto yok', () 
   }
 });
 
-test('ilan kartında da detay ikincil, ana eylem birincil', () => {
-  assert.match(ILAN, /Detaylar[\s\S]{0,80}<\/button>/);
-  assert.match(ILAN, /className=\{`\$\{CTA_ORTAK\} \$\{CTA_IKINCIL\}`\}/);
+test('İLAN KARTINDA TEK EYLEM VAR ve o birincil', () => {
+  /*
+    Kartta "Detaylar" adında ikincil bir düğme vardı. Kartın KENDİSİ zaten
+    detaya gidiyor (bkz. tests/ilan-arayuz-duzeltmeleri.test.mjs): aynı
+    hedefe giden ikinci bir düğme, kalan tek gerçek eylemi — başvuruyu —
+    eşit ağırlıkta bir rakiple paylaştırıyordu.
+
+    Fırsat kartında ikili düzen sürüyor, bu yüzden CTA_IKINCIL kalkmadı;
+    burada yalnızca kullanılmıyor.
+  */
+  assert.doesNotMatch(ILAN, />\s*Detaylar\s*</);
+  assert.doesNotMatch(ILAN, /CTA_IKINCIL/, 'ilan kartında ikincil rol kalmadı');
   assert.match(ILAN, /className=\{`\$\{CTA_ORTAK\} \$\{CTA_BIRINCIL\}`\}/);
 });

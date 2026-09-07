@@ -7,6 +7,7 @@ import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { sadelestir } from '../lib/rehber-arama.mjs';
 import { kaydedilenIsverenler, isverenKaydiDegistir } from '../lib/rehber-veri';
 import type { StudentProfile } from '../types';
+import { tarihMetni } from '../lib/tarih.mjs';
 
 /**
  * /staj-programlari — büyük işverenlerin resmi staj sayfaları dizini.
@@ -36,14 +37,8 @@ import type { StudentProfile } from '../types';
  * ön render onları hiç çizmiyor, listeyi olduğu gibi yazıyor.
  */
 
-const tarihYaz = (deger?: string) => {
-  if (!deger) return null;
-  const zaman = new Date(deger).getTime();
-  if (Number.isNaN(zaman)) return null;
-  return new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }).format(
-    new Date(zaman)
-  );
-};
+/* Tarih biçimi tek kaynaktan; saatsiz değerde gün kayması orada durduruluyor. */
+const tarihYaz = (deger?: string) => tarihMetni(deger);
 
 /**
  * Dış bağlantı kartı.

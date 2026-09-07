@@ -3,6 +3,7 @@ import { BOLUMLER, BOLUM_GRUPLARI, OKUL_YERLESTIRIR, type Bolum } from '../data/
 import { BolumKapagi } from './BolumGorseli';
 import { bolumeGoreProgramlar } from '../data/stajProgramlari';
 import { ILAN_KAYNAGI_KISA } from '../lib/urun-metni';
+import { tarihMetni } from '../lib/tarih.mjs';
 
 /**
  * Bölüm sayfasının İÇERİĞİ — kabuğu değil.
@@ -332,11 +333,7 @@ export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
       {bolum.guncelleme && (
         <p className="text-xs text-gray-600">
           Son gözden geçirme:{' '}
-          {new Date(bolum.guncelleme).toLocaleDateString('tr-TR', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-          })}
+          {tarihMetni(bolum.guncelleme)}
         </p>
       )}
     </div>

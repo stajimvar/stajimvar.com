@@ -1,5 +1,6 @@
 import React from 'react';
 import { Layers } from 'lucide-react';
+import { KesifDairesi, KesifSeridi } from './KesifSeridi';
 
 /**
  * Şirket şeridi — Instagram akışının üstündeki hikâye şeridinin karşılığı.
@@ -49,49 +50,6 @@ function basHarfler(ad: string): string {
   return (k[0][0] + k[1][0]).toLocaleUpperCase('tr-TR');
 }
 
-const Daire: React.FC<{
-  etiket: string;
-  altEtiket: string;
-  secili: boolean;
-  halka: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}> = ({ etiket, altEtiket, secili, halka, onClick, children }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    title={`${etiket} — ${altEtiket}`}
-    className="w-[76px] shrink-0 flex flex-col items-center gap-1.5 cursor-pointer group"
-  >
-    <span
-      className="rounded-full p-[2.5px] transition-colors"
-      style={
-        secili
-          ? { background: '#111827' }
-          : halka
-            ? { background: 'linear-gradient(135deg,#2563eb,#10b981)' }
-            : { background: '#e5e7eb' }
-      }
-    >
-      <span className="block rounded-full bg-white p-[2px]">
-        <span className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center bg-gray-50">
-          {children}
-        </span>
-      </span>
-    </span>
-    <span className="w-full text-center">
-      <span
-        className={`block text-[11px] truncate ${
-          secili ? 'font-bold text-gray-900' : 'font-semibold text-gray-700'
-        }`}
-      >
-        {etiket}
-      </span>
-      <span className="block text-[10px] text-gray-600 truncate">{altEtiket}</span>
-    </span>
-  </button>
-);
-
 export const SirketSeridi: React.FC<{
   sirketler: SeritSirketi[];
   secili: string[];
@@ -102,15 +60,13 @@ export const SirketSeridi: React.FC<{
   if (sirketler.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 py-3">
-      <div className="overflow-x-auto px-3">
-        <div className="flex gap-3 min-w-max">
+    <KesifSeridi>
           {/*
             İlk daire "Tümü" — Instagram'daki "Hikayen" gibi, şeridin
             başındaki sabit öğe. Süzgeç açıkken çıkış yolu bu; olmasaydı
             kullanıcı seçtiği şirketi tek tek geri tıklamak zorunda kalırdı.
           */}
-          <Daire
+          <KesifDairesi
             etiket="Tümü"
             altEtiket={`${toplam} ilan`}
             secili={secili.length === 0}
@@ -118,10 +74,10 @@ export const SirketSeridi: React.FC<{
             onClick={onTumu}
           >
             <Layers className="w-5 h-5 text-gray-500" />
-          </Daire>
+          </KesifDairesi>
 
           {sirketler.map((s) => (
-            <Daire
+            <KesifDairesi
               key={s.ad}
               etiket={s.ad}
               altEtiket={s.yeni ? 'yeni ilan' : `${s.adet} ilan`}
@@ -148,10 +104,8 @@ export const SirketSeridi: React.FC<{
               ) : (
                 <span className="text-sm font-bold text-gray-500">{basHarfler(s.ad)}</span>
               )}
-            </Daire>
+            </KesifDairesi>
           ))}
-        </div>
-      </div>
-    </div>
+    </KesifSeridi>
   );
 };

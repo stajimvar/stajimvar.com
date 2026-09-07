@@ -64,6 +64,21 @@ export interface PublishedListingsCursor { value: string; id: string }
 export interface PublishedListingsCatalogPage {
   listings: InternshipListing[];
   total: number;
+  /*
+    Şirket ve şehir sayısı SUNUCUDAN geliyor, yüklenmiş sayfadan değil.
+
+    İstemci yalnızca ilk 24 kaydı görüyor; "62 ilan kaç şirkete ait"
+    sorusunun cevabı orada yok. Sayaçlar bu yüzden `listings` dizisinden
+    hesaplanınca sayfa boyunu ölçüyordu — ekranda 24/23/4 yazarken gerçek
+    değerler 62/51/6'ydı (ölçüldü, 7 Eylül 2026).
+
+    Üçü de `total` ile aynı sorgudan ve aynı anlık görüntüden çıkıyor.
+  */
+  companyTotal: number;
+  cityTotal: number;
+  /* Güven satırının verisi; bkz. lib/guven-satiri.mjs. */
+  verifiedTotal: number;
+  lastVerifiedAt: string | null;
   facets: { countries: Array<{ code: string; count: number }> };
   hasMore: boolean;
   nextCursor: PublishedListingsCursor | null;

@@ -2,6 +2,7 @@ import React from 'react';
 import { ChevronDown, Search, ShieldCheck, SlidersHorizontal, Sparkles, X } from 'lucide-react';
 import type { StudentProfile } from '../types';
 import { ScholarshipDiscoveryCard } from './ScholarshipDiscoveryCard';
+import { BursKesifSeridi } from './BursKesifSeridi';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import {
   fetchOpportunities,
@@ -13,6 +14,8 @@ import {
   BOS_SUZGEC,
   TURKIYE_GENELI,
   bursBolumleri,
+  bursKesifSayilari,
+  bursKesifSonuclari,
   bursSonuclari,
   bursSuzgecSecenekleri,
   suzgecAktifMi,
@@ -58,6 +61,7 @@ export const BurslarKesfetPage: React.FC<{
   const [saved, setSaved] = React.useState<string[]>([]);
   const [durum, setDurum] = React.useState<'yukleniyor' | 'hazir' | 'hata'>('yukleniyor');
   const [suzgec, setSuzgec] = React.useState<Suzgec>(BOS_SUZGEC);
+  const [kesifKategori, setKesifKategori] = React.useState('tumu');
   const [panelAcik, setPanelAcik] = React.useState(false);
   const [kayitHatasi, setKayitHatasi] = React.useState<string | null>(null);
 
@@ -94,15 +98,21 @@ export const BurslarKesfetPage: React.FC<{
   React.useEffect(() => yukle(), [yukle]);
 
   const secenekler = React.useMemo(() => bursSuzgecSecenekleri(items), [items]);
-  const aramaModu = suzgecAktifMi(suzgec);
+  const aramaModu = suzgecAktifMi(suzgec) || kesifKategori !== 'tumu';
+
+  const suzulmusTaban = React.useMemo(() => bursSonuclari(items, suzgec), [items, suzgec]);
+  const kesifSayilari = React.useMemo(
+    () => bursKesifSayilari(suzulmusTaban, { student }),
+    [suzulmusTaban, student]
+  );
 
   const bolumler = React.useMemo(
     () => (aramaModu ? [] : bursBolumleri(items, { student })),
     [items, student, aramaModu]
   );
   const sonuclar = React.useMemo(
-    () => (aramaModu ? bursSonuclari(items, suzgec) : []),
-    [items, suzgec, aramaModu]
+    () => (aramaModu ? bursKesifSonuclari(suzulmusTaban, kesifKategori, { student }) : []),
+    [suzulmusTaban, kesifKategori, student, aramaModu]
   );
 
   /* Rozetler: sayaç değil, tek satırlık bilgi. */
@@ -130,7 +140,10 @@ export const BurslarKesfetPage: React.FC<{
   };
 
   const set = (yama: Partial<Suzgec>) => setSuzgec((o) => ({ ...o, ...yama }));
-  const temizle = () => setSuzgec(BOS_SUZGEC);
+  const temizle = () => {
+    setSuzgec(BOS_SUZGEC);
+    setKesifKategori('tumu');
+  };
 
   /* Kaldırılabilir çipler: hangi süzgeç neyi kısıtlıyor, tek bakışta. */
   const aktifCipler: [keyof Suzgec, string][] = [];
@@ -273,6 +286,14 @@ export const BurslarKesfetPage: React.FC<{
           </ul>
         )}
       </section>
+
+      {durum === 'hazir' && (
+        <BursKesifSeridi
+          sayilar={kesifSayilari}
+          secili={kesifKategori}
+          onSec={setKesifKategori}
+        />
+      )}
 
       {kayitHatasi && (
         <p role="alert" className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800">

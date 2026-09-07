@@ -8,6 +8,7 @@ import type { InternshipListing } from '../types';
 import { fetchListingByIdPrefix } from '../lib/queries';
 import { ListingLogo } from './ListingLogo';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
+import { tarihMetni } from '../lib/tarih.mjs';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 import { sonKontrolMetni } from '../lib/zaman';
 import { Logo } from './Logo';
@@ -120,6 +121,35 @@ export const ListingPage: React.FC<ListingPageProps> = ({
 
   /* Başvurunun gerçek işleyişi — açıklama ve düğmeler buradan besleniyor. */
   const yol = basvuruYolu(listing ?? {});
+
+  /*
+    GÖSTERİLECEK META DEĞERLERİ — BOŞSA null
+
+    Üçü de yalnızca gerçekten bilgi taşıdığında dolu dönüyor; boş dönen
+    değer için kutu hiç çizilmiyor (aşağıda). Tarih `lib/tarih` üzerinden
+    biçimleniyor, ham ISO basılmıyor.
+  */
+  const sonBasvuru = tarihMetni(listing?.applicationDeadline);
+  const ucretMetni = listing?.stipend?.isPaid
+    ? listing.stipend.amountText?.trim() || 'Ücretli'
+    : null;
+  const zorunluStajMetni = listing?.mandatoryStajAccepted
+    ? 'Kabul ediliyor'
+    : listing?.insuranceNote?.trim() || null;
+  const sureMetni = listing?.duration?.trim() || null;
+
+  /*
+    Not yalnızca ikisi de eksikse tek cümle; biri varsa eksik olanı
+    adıyla söylüyor. Hiçbiri eksik değilse not hiç çıkmıyor.
+  */
+  const eksikBilgiNotu =
+    !sureMetni && !ucretMetni
+      ? 'Süre ve ödeme bilgisi resmî kaynakta açıklanmamış.'
+      : !sureMetni
+        ? 'Süre bilgisi resmî kaynakta açıklanmamış.'
+        : !ucretMetni
+          ? 'Ödeme bilgisi resmî kaynakta açıklanmamış.'
+          : null;
   const [metinAcik, setMetinAcik] = useState(false);
 
   return (
@@ -140,7 +170,14 @@ export const ListingPage: React.FC<ListingPageProps> = ({
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      {/*
+        ALT BOŞLUK: MOBİL SABİT ÇUBUK İÇİN
+
+        Sabit başvuru çubuğu ölçüldü: 12 + 48 + 12 = 72 piksel, artı
+        güvenli alan. Boşluk bırakılmazsa sayfanın son satırı çubuğun
+        altında kalıyor. Masaüstünde çubuk yok, bu yüzden `lg:pb-8`.
+      */}
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-[calc(96px+env(safe-area-inset-bottom))] lg:pb-8 space-y-6">
         {durum === 'yukleniyor' && (
           <div className="space-y-4" role="status" aria-live="polite">
             <div className="h-28 rounded-3xl bg-gray-100 animate-pulse"/>
@@ -265,34 +302,44 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                 {listing.department && (
                   <Bilgi ikon={<Building2 className="w-4 h-4" />} etiket="Departman" deger={listing.department} />
                 )}
-                {listing.duration && (
-                  <Bilgi ikon={<Clock className="w-4 h-4" />} etiket="Süre" deger={listing.duration} />
+                {sureMetni && (
+                  <Bilgi ikon={<Clock className="w-4 h-4" />} etiket="Süre" deger={sureMetni} />
                 )}
-                {listing.applicationDeadline && (
+                {sonBasvuru && (
                   <Bilgi
                     ikon={<Calendar className="w-4 h-4" />}
                     etiket="Son başvuru"
-                    deger={listing.applicationDeadline}
+                    deger={sonBasvuru}
                   />
                 )}
-                <Bilgi
-                  ikon={<DollarSign className="w-4 h-4" />}
-                  etiket="Ücret"
-                  deger={
-                    listing.stipend.isPaid
-                      ? listing.stipend.amountText || 'Ücretli'
-                      : 'Kaynakta belirtilmemiş'
-                  }
-                />
-                <Bilgi
-                  ikon={<ShieldCheck className="w-4 h-4" />}
-                  etiket="Zorunlu staj"
-                  deger={
-                    listing.mandatoryStajAccepted
-                      ? 'Kabul ediliyor'
-                      : listing.insuranceNote || 'Kaynakta belirtilmemiş'
-                  }
-                />
+                {/*
+                  BOŞ KUTU BASILMIYOR
+
+                  Ücret ve zorunlu staj kutuları HER ZAMAN çiziliyordu ve
+                  veri yoksa ikisi de "Kaynakta belirtilmemiş" yazıyordu.
+                  Aynı sayfada aynı cümle iki kutuda birden duruyor,
+                  ızgarada iki delik açıyor ve okuyucuya hiçbir şey
+                  söylemiyordu. Eksik bilgi artık aşağıda TEK bir notta.
+
+                  `isPaid === false` gerçek bir bilgi olsaydı ("ücretsiz")
+                  yazılırdı; ama veri modelinde false hem "ücretsiz" hem
+                  "bilinmiyor" anlamına geliyor ve ikisi ayrılamıyor. Bu
+                  yüzden yalnız POZİTİF bilgi gösteriliyor: uydurmuyoruz.
+                */}
+                {ucretMetni && (
+                  <Bilgi
+                    ikon={<DollarSign className="w-4 h-4" />}
+                    etiket="Ücret"
+                    deger={ucretMetni}
+                  />
+                )}
+                {zorunluStajMetni && (
+                  <Bilgi
+                    ikon={<ShieldCheck className="w-4 h-4" />}
+                    etiket="Zorunlu staj"
+                    deger={zorunluStajMetni}
+                  />
+                )}
                 {/*
                   Kaynağın en son ne zaman doğrulandığı. Kartta da var ama asıl
                   yeri burası: başvurmadan önce insanın sorduğu soru "bu ilan
@@ -306,6 +353,19 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                   />
                 )}
               </div>
+
+              {/*
+                TEK DÜRÜST NOT
+
+                Karar için önemli iki alan (süre ve ödeme) kaynakta yoksa
+                bunu bir kez söylüyoruz. Önce her kutuda ayrı ayrı
+                "Kaynakta belirtilmemiş" yazıyordu; aynı cümlenin üç kez
+                tekrarı bilgi değil gürültü. Tahmin de etmiyoruz: yazmayan
+                yazmıyor.
+              */}
+              {eksikBilgiNotu && (
+                <p className="pt-3 text-[11px] leading-relaxed text-gray-600">{eksikBilgiNotu}</p>
+              )}
             </div>
 
             {listing.requiredSkills.length > 0 && (
@@ -410,7 +470,12 @@ export const ListingPage: React.FC<ListingPageProps> = ({
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-2.5 sticky bottom-4">
+            {/*
+              Bu blok MASAÜSTÜ eylem alanı. Telefonda gizleniyor: aynı
+              eylemler ekranın altındaki sabit çubukta duruyor ve ikisi
+              birden çizilirse aynı düğme sayfada iki kez görünüyor.
+            */}
+            <div className="hidden lg:flex flex-col sm:flex-row gap-2.5 sticky bottom-4">
               {yol.resmiAdres && (
                 <a
                   href={yol.resmiAdres}
@@ -441,6 +506,57 @@ export const ListingPage: React.FC<ListingPageProps> = ({
           </>
         )}
       </main>
+
+      {/*
+        MOBİL SABİT BAŞVURU ÇUBUĞU
+
+        İlan detayı telefonda uzun: başvuru düğmesi sayfanın en altındaydı
+        ve okuyan kişi karar verdiği anda onu görmüyordu. Çubuk kararı
+        verildiği yerde tutuyor.
+
+        YERLEŞİM VE ALT GEZİNME
+        Ölçüldü (390px, canlı sayfa): bu rotada YÜZEN ALT GEZİNME YOK.
+        Gezinme `Header` içinde çiziliyor (`lg:hidden fixed bottom-…
+        z-50`), ilan detayı ise kendi başlığıyla tek başına açılıyor —
+        sayfadaki tek sabit öğe bu çubuk. Bu yüzden çubuk gezinme
+        yüksekliği kadar boşluk AYIRMIYOR; ayırsaydı ekranın altında 84
+        piksellik boş bir şerit kalırdı.
+
+        Yine de `z-40` veriliyor: gezinme z-50, yani ileride sayfa kabuğun
+        içine alınırsa çubuk onun altında kalır, üstünü örtmez.
+
+        DIŞ BAŞVURUDA GİRİŞ YOK
+        Buradaki dış bağlantı da doğrudan resmî adrese gidiyor; kartla ve
+        detay sayfasındaki masaüstü düğmesiyle aynı davranış.
+      */}
+      {listing && (yol.resmiAdres || yol.anaEylem !== 'resmi-site') && (
+        <div
+          className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(15,23,42,0.10)]"
+          role="region"
+          aria-label="Başvuru"
+        >
+          {yol.resmiAdres && yol.anaEylem === 'resmi-site' ? (
+            <a
+              href={yol.resmiAdres}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              title={yol.ozet}
+              className="flex min-h-12 w-full items-center justify-center gap-1.5 rounded-2xl bg-blue-600 px-5 text-sm font-bold text-white shadow-xs transition-colors hover:bg-blue-700"
+            >
+              {yol.anaEtiket}
+              <ExternalLink className="h-4 w-4 shrink-0" />
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onApply(listing)}
+              className="flex min-h-12 w-full items-center justify-center gap-1.5 rounded-2xl bg-blue-600 px-5 text-sm font-bold text-white shadow-xs transition-colors hover:bg-blue-700"
+            >
+              {yol.anaEtiket}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

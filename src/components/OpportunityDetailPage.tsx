@@ -23,6 +23,7 @@ import { ScholarshipCover } from './ScholarshipCover';
 import { BursUyumMiniBlok } from './BursCakismaMatrisi';
 import { kurumEslestir } from '../lib/burs-cakisma.mjs';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
+import { tarihMetni } from '../lib/tarih.mjs';
 
 /**
  * Fırsat detay sayfası.
@@ -43,8 +44,8 @@ import { sayfaMetaAyarla } from '../lib/sayfa-meta';
  * şuradan doğruladık" olmalı, "böyledir" değil.
  */
 
-const uzunTarih = (value?: string) =>
-  value ? new Intl.DateTimeFormat('tr-TR', { dateStyle: 'long' }).format(new Date(value)) : null;
+/* Biçim tek kaynaktan; saatsiz değerde gün kayması `lib/tarih` içinde durduruluyor. */
+const uzunTarih = (value?: string) => tarihMetni(value);
 
 /*
   ADIMLAR SABİT VE KISA
@@ -201,6 +202,21 @@ export const OpportunityDetailPage: React.FC<{
   const durum = opportunityStatus(item);
   const tutar = opportunityAmount(item);
   const tarihDurumu = bursTarihDurumu(item);
+  /*
+    "Önemli tarihler" satırı: bilinen taraflardan kuruluyor, hiçbiri
+    bilinmiyorsa null — kutu o zaman hiç çizilmiyor.
+  */
+  const acilisTarihi = uzunTarih(item.applicationStartAt);
+  const sonTarih = uzunTarih(item.applicationDeadline);
+  const onemliTarihler =
+    acilisTarihi && sonTarih
+      ? `${acilisTarihi} — ${sonTarih}`
+      : sonTarih
+        ? `Son başvuru: ${sonTarih}`
+        : acilisTarihi
+          ? `Başvuru açılışı: ${acilisTarihi}`
+          : null;
+
   const yer = [...item.cities, ...item.countries];
   const seviyeVeBolum = [...item.educationLevels, ...item.eligibleDepartments];
 
@@ -357,16 +373,21 @@ export const OpportunityDetailPage: React.FC<{
             </>
           )}
         </Bilgi>
-        <Bilgi baslik="Gerekli belgeler">
-          {item.requiredDocuments.length
-            ? item.requiredDocuments.join(', ')
-            : 'Resmî kaynakta belirtiliyor.'}
-        </Bilgi>
-        <Bilgi baslik="Önemli tarihler">
-          {`${uzunTarih(item.applicationStartAt) || 'Açılış belirtilmemiş'} — ${
-            uzunTarih(item.applicationDeadline) || 'Son tarih belirtilmemiş'
-          }`}
-        </Bilgi>
+        {/*
+          BOŞ KUTU ÇİZİLMİYOR
+
+          "Gerekli belgeler: Resmî kaynakta belirtiliyor." ve "Açılış
+          belirtilmemiş — Son tarih belirtilmemiş" hiçbir şey söylemeyen
+          iki satırdı; ızgarada yer kaplayıp okuyucuyu bilgi sanıp
+          okumaya çağırıyorlardı. Veri yoksa kutu hiç yok.
+
+          Tarihlerde tek taraf biliniyorsa o taraf yazılıyor: yarısı
+          bilinen bir aralık, hiç bilinmeyenden fazlasını söylüyor.
+        */}
+        {item.requiredDocuments.length > 0 && (
+          <Bilgi baslik="Gerekli belgeler">{item.requiredDocuments.join(', ')}</Bilgi>
+        )}
+        {onemliTarihler && <Bilgi baslik="Önemli tarihler">{onemliTarihler}</Bilgi>}
       </div>
 
       {/* ------------------------------------------- kaynak ve doğrulama */}

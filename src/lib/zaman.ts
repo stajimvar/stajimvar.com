@@ -8,7 +8,10 @@
  * da doğru.
  */
 
+import { tarihMetni } from './tarih.mjs';
+
 const GUN_MS = 24 * 60 * 60 * 1000;
+
 
 export function eklenmeMetni(
   deger: string | null | undefined,
@@ -45,11 +48,8 @@ export function eklenmeMetni(
     const ay = Math.floor(gun / 30);
     return `${ay} ay önce ${fiil}`;
   }
-  return new Date(ms).toLocaleDateString('tr-TR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  /* Bir yıldan eskisinde göreli metin bilgi vermiyor; mutlak tarih tek kaynaktan. */
+  return tarihMetni(new Date(ms));
 }
 
 /*

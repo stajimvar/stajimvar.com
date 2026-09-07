@@ -37,6 +37,7 @@ import { SirketSeridi } from './SirketSeridi';
 import { ILAN_KAYNAGI_PARCALI } from '../lib/urun-metni';
 import { ListingCountrySelector } from './ListingCountrySelector';
 import { gosterilecekIlanSayisi } from '../lib/ilan-sayisi.mjs';
+import { guvenSatiri } from '../lib/guven-satiri.mjs';
 
 /**
  * İlanın listeye eklenme zamanı (ms).
@@ -146,6 +147,14 @@ interface MatchedInternshipsViewProps {
   countryFacets?: Array<{code:string;count:number}>;
   onCountryChange?: (country:string)=>void;
   catalogTotal?: number;
+  /*
+    Sunucudan gelen şirket ve şehir toplamları. İstemci bunları
+    hesaplayamıyor: elinde yalnız yüklenmiş sayfa var (bkz. sağ sütun).
+  */
+  catalogCompanyTotal?: number;
+  catalogCityTotal?: number;
+  catalogVerifiedTotal?: number;
+  catalogLastVerifiedAt?: string | null;
   hasMoreCountriesPage?: boolean;
   onLoadMoreCountriesPage?: ()=>void;
 }
@@ -168,6 +177,10 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   countryFacets=[],
   onCountryChange,
   catalogTotal,
+  catalogCompanyTotal,
+  catalogCityTotal,
+  catalogVerifiedTotal,
+  catalogLastVerifiedAt,
   hasMoreCountriesPage=false,
   onLoadMoreCountriesPage,
 }) => {
@@ -548,8 +561,19 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
    * Yerine gerçekten bildiğimiz bir sayı var: ilan bulunan il sayısı. Yeni
    * şehir seçicisiyle de aynı şeyi ölçüyor.
    */
+  /*
+    ŞEHRİ BİLİNMEYEN İLAN BİR ŞEHİR DEĞİL
+
+    Boş `city` değeri kümede tek bir giriş açıyor ve şehir sayısını bir
+    artırıyordu. Ölçüldü (canlı, country=remote): sunucu 1 şehir sayarken
+    ekranda 2 yazıyordu — fazladan sayılan şey şehirsiz iki ilandı.
+    Sunucu tarafı da (`nullif(btrim(city),'')`) aynı kuralı uyguluyor,
+    yani iki sayım artık aynı şeyi ölçüyor.
+  */
   const cityCount = new Set(
-    filteredListings.map((item) => ilBul(item.listing.city) ?? item.listing.city)
+    filteredListings
+      .map((item) => ilBul(item.listing.city) ?? item.listing.city)
+      .filter((sehir): sehir is string => typeof sehir === 'string' && sehir.trim().length > 0)
   ).size;
 
   /*
@@ -722,6 +746,47 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     catalogTotal,
     suzulmusAdet: filteredListings.length,
     daraltmaVar,
+  });
+
+  /*
+    SAĞ SÜTUN SAYAÇLARI — AYNI KURAL, AYNI KAYNAK
+
+    Üçü de `gosterilecekIlanSayisi` kuralından geçiyor: daraltma yokken
+    sunucudan gelen toplam, daraltma varken ekrandaki süzülmüş sayı.
+    Böylece liste başlığındaki "(62)" ile sağdaki "62" aynı yerden
+    geliyor ve ayrışamıyorlar.
+
+    Önce üçü de `filteredListings` üzerinden hesaplanıyordu ve o dizi
+    yalnız yüklenmiş ilk sayfayı taşıyor. Ölçüldü (canlı, 1440px,
+    country=TR): ekranda 24 / 23 / 4 yazarken gerçek değerler 62 / 51 / 6
+    idi — "24" sayfa boyunun kendisiydi.
+  */
+  const gosterilecekSirket = gosterilecekIlanSayisi({
+    catalogTotal: catalogCompanyTotal,
+    suzulmusAdet: companyCount,
+    daraltmaVar,
+  });
+  const gosterilecekSehir = gosterilecekIlanSayisi({
+    catalogTotal: catalogCityTotal,
+    suzulmusAdet: cityCount,
+    daraltmaVar,
+  });
+
+  /*
+    GÜVEN SATIRI — başlığın hemen altında, tek satır.
+
+    Cümlenin kendisi lib/guven-satiri.mjs içinde kuruluyor ve verisi
+    sayaçlarla AYNI sorgudan geliyor. Doğrulama yoksa o kısım hiç
+    yazılmıyor: ölçüldü, Fransa listesindeki 48 ilanın hiçbirinin
+    kaynağı doğrulanmamış ve sabit bir cümle orada yalan olurdu.
+
+    Daraltma varken doğrulama kısmı gösterilmiyor: sunucudan gelen sayı
+    süzülmüş kümeyi değil, ülkenin tamamını anlatıyor.
+  */
+  const guven = guvenSatiri({
+    toplam: gosterilecekToplam,
+    dogrulanan: daraltmaVar ? 0 : catalogVerifiedTotal,
+    sonDogrulama: catalogLastVerifiedAt ?? null,
   });
 
   /*
@@ -930,6 +995,28 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               <span className="text-blue-600">tek listede</span>.
             </span>
           </h1>
+
+          {/*
+            GÜVEN SATIRI
+
+            Başlık ne yaptığımızı söylüyor, bu satır onu KANITLIYOR: kaç
+            ilan var ve kaynakları en son ne zaman kontrol edildi.
+
+            İkisi de gerçek sorgudan; sabit ya da tahmini sayı yok. Veri
+            yoksa satır hiç çizilmiyor — boş bir güven cümlesi, cümlesizlikten
+            daha kötü.
+          */}
+          {guven && (
+            <p className="text-center lg:text-left text-[11px] sm:text-xs font-semibold text-gray-500 tabular-nums">
+              {guven.ilan}
+              {guven.dogrulama && (
+                <>
+                  <span aria-hidden className="mx-1.5 text-gray-300">·</span>
+                  <span className="font-medium">{guven.dogrulama}</span>
+                </>
+              )}
+            </p>
+          )}
           {/*
             ÜLKE SEÇİCİ VE "TOPLAM N AÇIK İLAN" BURADAN KALKTI
 
@@ -1496,9 +1583,9 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           */}
           <div className="grid grid-cols-3 gap-2 bg-white rounded-2xl border border-gray-200 px-4 py-3.5">
             {[
-              { etiket: 'Açık ilan', deger: String(filteredListings.length) },
-              { etiket: 'Şirket', deger: String(companyCount) },
-              { etiket: 'Şehir', deger: String(cityCount) },
+              { etiket: 'Açık ilan', deger: String(gosterilecekToplam) },
+              { etiket: 'Şirket', deger: String(gosterilecekSirket) },
+              { etiket: 'Şehir', deger: String(gosterilecekSehir) },
             ].map((kutu) => (
               <div key={kutu.etiket} className="min-w-0 text-center">
                 <p className="text-2xl font-black text-gray-900 tabular-nums leading-none">
