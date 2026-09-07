@@ -56,23 +56,33 @@ test('iki kart da paylaşılan tanımları kullanıyor', () => {
   }
 });
 
-/** Fırsat kartının alt düğme ızgarası. */
+/** Fırsat kartının alt eylem alanı. */
 function firsatCtaBlogu() {
-  const bas = FIRSAT.indexOf("onNavigate(`/firsatlar/${item.slug}`)");
-  assert.ok(bas > 0, 'fırsat kartının detay düğmesi bulunamadı');
-  return FIRSAT.slice(bas - 200, bas + 1200);
+  const bas = FIRSAT.indexOf('<DisBaglanti');
+  assert.ok(bas > 0, 'fırsat kartının dış bağlantısı bulunamadı');
+  return FIRSAT.slice(bas - 700, bas + 900);
 }
 
-test('fırsat kartında detay ikincil, dış bağlantı birincil', () => {
+test('FIRSAT KARTINDA TEK EYLEM VAR ve o birincil', () => {
+  /*
+    Kartın altında "Detayı gör" adında ikincil bir düğme vardı. Kartın
+    KENDİSİ artık detaya gidiyor (gerilmiş bağlantı), yani aynı hedefe
+    giden ikinci bir düğme kalan tek gerçek eylemi — resmî kaynağa
+    çıkmayı — eşit ağırlıkta bir rakiple paylaştırıyordu.
+
+    Aynı karar ilan kartında da verilmişti; üç liste artık aynı kalıpta.
+  */
   const blok = firsatCtaBlogu();
-  /* Detay düğmesinin kendi className'i ikincil sınıfı taşıyor. */
-  assert.match(
-    blok,
-    /onNavigate\(`\/firsatlar\/\$\{item\.slug\}`\)\}\s*\n\s*className=\{`\$\{CTA_ORTAK\} \$\{CTA_IKINCIL\}`\}/,
-    'detay düğmesi ikincil değil'
-  );
-  /* Dış bağlantı birincil (mavi) kutu. */
   assert.match(blok, /DisBaglanti[\s\S]*?\$\{CTA_ORTAK\} \$\{CTA_BIRINCIL\}/, 'dış bağlantı birincil değil');
+  assert.doesNotMatch(FIRSAT, />\s*Detayı gör\s*</, 'ayrı "Detayı gör" düğmesi kalmamalı');
+  assert.doesNotMatch(FIRSAT, /CTA_IKINCIL/, 'fırsat kartında ikincil rol kalmadı');
+});
+
+test('kartın tamamı detaya gidiyor, düğme örtünün üstünde', () => {
+  /* Gerilmiş bağlantı kartı kaplıyor; dış bağlantı z-10 ile üstte kalıyor. */
+  assert.match(FIRSAT, /after:absolute after:inset-0/, 'gerilmiş bağlantı yok');
+  assert.match(FIRSAT, /href=\{`\/firsatlar\/\$\{item\.slug\}`\}/, 'gerçek adres olmalı');
+  assert.match(FIRSAT, /relative z-10 mt-auto/, 'eylem alanı örtünün altında kalır');
 });
 
 test('fırsat kartının düğmelerinde elle yazılmış renk ve punto yok', () => {

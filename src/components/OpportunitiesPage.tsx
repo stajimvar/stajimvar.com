@@ -27,7 +27,7 @@ import { BursUyumRozeti } from './BursCakismaMatrisi';
 import { DisBaglanti, FiltreBlogu, SecenekSatiri } from '../ui';
 import { KonuSeridi } from './KonuSeridi';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
-import { CTA_BIRINCIL, CTA_IKINCIL, CTA_ORTAK } from '../lib/kart-cta';
+import { CTA_BIRINCIL, CTA_ORTAK } from '../lib/kart-cta';
 import {
   fetchOpportunities,
   fetchSavedOpportunityIds,
@@ -1037,7 +1037,15 @@ export const OpportunitiesPage: React.FC<{
                 gitti: aynı bilgi her kartın üstünde "Resmî kaynak"
                 rozetiyle ve zaten daha güçlü biçimde söyleniyor.
               */}
-              <div className="space-y-3">
+              {/*
+                IZGARA REHBER VE KEŞFET İLE AYNI
+
+                Kartlar tek sütunda alt alta diziliyordu: 390 pikselde kart
+                358x246 ve ekrana iki kart giriyordu. Aynı ürünün öteki iki
+                listesi (rehber, Keşfet) telefonda iki, geniş ekranda üç
+                sütun kullanıyor.
+              */}
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
                 {filtered.map((item: Opportunity) => (
                   <Card
                     girisGerekli={!student}
@@ -1565,41 +1573,86 @@ export const Card: React.FC<{
       başlık, en altta kurum. İlan kartında gözün ilk gördüğü şey kimin
       ilanı olduğu; burs kartında da öyle olmalı.
     */
-    <article className="group flex min-w-0 flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-3.5 transition-all duration-150 hover:border-blue-500 hover:shadow-xs sm:gap-3.5 sm:p-4.5">
-      <div className="flex w-full min-w-0 flex-1 items-start gap-3 sm:gap-3.5">
+    <article className="group relative flex min-w-0 flex-col gap-1.5 rounded-2xl border border-gray-200 bg-white p-2.5 transition-all duration-150 hover:border-blue-500 hover:shadow-xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 sm:gap-2 sm:p-3.5">
+      <div className="flex w-full min-w-0 items-start gap-2 sm:gap-2.5">
         {/*
           Logo ölçüsü ListingLogo'dan geliyor (56×56, dairesel). İlan
           kartındaki halka burada yok: halka uyum puanını gösteriyor,
           bursta öyle bir puan hesaplanmıyor. Boş bir halka çizmek
           olmayan bir ölçümü varmış gibi gösterirdi.
         */}
+        {/* 56 piksellik logo dar kartta genişliğin üçte birini yiyordu. */}
         <div className="shrink-0">
-          <ListingLogo name={item.organizationName} logoUrl={item.organizationLogoUrl} />
+          <ListingLogo
+            name={item.organizationName}
+            logoUrl={item.organizationLogoUrl}
+            className="!h-9 !w-9 !p-1 !text-[11px] sm:!h-11 sm:!w-11 sm:!text-xs"
+          />
         </div>
-        <div className="min-w-0 flex-1 space-y-1 sm:space-y-1.5">
-          <div className="flex items-start justify-between gap-2">
-            <span className="min-w-0 truncate text-sm font-bold text-blue-600 sm:text-base">
-              {item.organizationName}
-            </span>
-            {item.verifiedAt && (
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
-                <CheckCircle2 className="w-3 h-3" />
-                Resmî kaynak
-              </span>
-            )}
-          </div>
-          <h2 className="line-clamp-2 text-base font-bold leading-snug text-gray-900 sm:text-lg">
-            {item.title}
-          </h2>
-          <span className="inline-flex items-center rounded-lg border border-blue-100 bg-blue-50/80 px-2.5 py-1 text-xs font-medium text-blue-700">
-            {opportunityTypeLabel(item.opportunityType)}
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <span className="block min-w-0 truncate text-[11px] font-bold text-blue-600 sm:text-xs">
+            {item.organizationName}
           </span>
+          {/*
+            KART BAŞLIĞI DETAYA GİDEN BAĞLANTI
+
+            Kartın altında ayrı bir "Detayı gör" düğmesi vardı ve kartın
+            kendisi tıklanmıyordu. İlan kartında bu ayrım kaldırılmıştı:
+            kartın tamamı detaya gidiyor, düğme yalnız DIŞARI çıkan eylem
+            için kalıyor. Üç liste artık aynı davranıyor.
+
+            Gerilmiş bağlantı (`after:inset-0`) kartın tamamını kaplıyor;
+            gerçek bir `href` olduğu için orta tuş ve "yeni sekmede aç"
+            çalışıyor, arama motoru da bağlantıyı görüyor.
+          */}
+          <h2 className="line-clamp-2 text-[13px] font-bold leading-snug text-gray-900 sm:text-base">
+            <a
+              href={`/firsatlar/${item.slug}`}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                onNavigate(`/firsatlar/${item.slug}`);
+              }}
+              title={item.title}
+              className="rounded-sm outline-none transition-colors after:absolute after:inset-0 after:content-[''] group-hover:text-blue-700"
+            >
+              {item.title}
+            </a>
+          </h2>
         </div>
       </div>
 
-      {/* Kime: seviye ve yer. İkisi de yoksa satır hiç çizilmiyor. */}
+      {/*
+        TÜR VE DOĞRULAMA TEK SATIRDA
+
+        Üstte tür etiketi ayrı bir blok, sağ üstte "Resmî kaynak" rozeti
+        ayrı bir bloktu; dar kartta ikisi başlığı aşağı itiyordu. İkisi de
+        aynı türde küçük rozet, aynı satıra alındılar.
+      */}
+      <div className="flex flex-wrap items-center gap-1 text-[9px] font-bold sm:gap-1.5 sm:text-[10px]">
+        <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-blue-700 sm:px-2">
+          {opportunityTypeLabel(item.opportunityType)}
+        </span>
+        {item.verifiedAt && (
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-1.5 py-0.5 text-emerald-700 sm:px-2">
+            <CheckCircle2 className="h-2.5 w-2.5 shrink-0" />
+            Resmî kaynak
+          </span>
+        )}
+      </div>
+
+      {/*
+        Kime: seviye ve yer. İkisi de yoksa satır hiç çizilmiyor.
+
+        Dar karttan (telefonda iki sütun) gizleniyor: 174 piksellik kartta
+        "Lisans · İstanbul, Ankara, İzmir" üç satıra bölünüp kartın en uzun
+        bloğu oluyordu. Bilgi kaybolmuyor — detay sayfasında ve süzgeçte
+        aynen duruyor.
+      */}
       {(seviye || yer.length > 0) && (
-        <p className="text-xs text-gray-500">{[seviye, yer.join(', ')].filter(Boolean).join(' · ')}</p>
+        <p className="hidden text-xs text-gray-500 sm:block">
+          {[seviye, yer.join(', ')].filter(Boolean).join(' · ')}
+        </p>
       )}
 
       {/*
@@ -1619,17 +1672,21 @@ export const Card: React.FC<{
         bilgi orada.
       */}
       {tutar.bilinmiyor ? (
-        <p className="flex items-center gap-1.5 text-xs text-gray-500">
+        <p className="flex items-center gap-1 text-[11px] text-gray-500 sm:gap-1.5 sm:text-xs">
           <span aria-hidden className="font-bold text-gray-400">
             ₺
           </span>
           Tutar açıklanmadı
-          {tutar.geriOdeme && <span className="font-semibold text-gray-600">· {tutar.geriOdeme}</span>}
+          {tutar.geriOdeme && (
+            <span className="hidden font-semibold text-gray-600 sm:inline">· {tutar.geriOdeme}</span>
+          )}
         </p>
       ) : (
-        <div className="rounded-xl bg-emerald-50 px-3 py-2">
-          <p className="text-base font-extrabold text-emerald-900 leading-tight">{tutar.metin}</p>
-          <p className="text-[11px] text-emerald-800">
+        <div className="rounded-lg bg-emerald-50 px-2 py-1.5 sm:px-3 sm:py-2">
+          <p className="text-[13px] font-extrabold leading-tight text-emerald-900 sm:text-base">
+            {tutar.metin}
+          </p>
+          <p className="hidden text-[11px] text-emerald-800 sm:block">
             {[tutar.donem, tutar.geriOdeme].filter(Boolean).join(' · ')}
           </p>
         </div>
@@ -1647,8 +1704,8 @@ export const Card: React.FC<{
         yapılacağını söylediği için olduğu gibi kalıyor.
       */}
       {durum === 'takvim_bekleniyor' ? (
-        <div className={`rounded-xl px-3 py-2 ${ton.kutu}`}>
-          <p className={`text-[13px] font-semibold leading-snug ${ton.yazi}`}>
+        <div className={`rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 ${ton.kutu}`}>
+          <p className={`text-[11px] font-semibold leading-snug sm:text-[13px] ${ton.yazi}`}>
             Kurum bu dönemin takvimini açıklamadı; resmî kaynaktan takip et.
           </p>
         </div>
@@ -1668,11 +1725,15 @@ export const Card: React.FC<{
             söylemiyor, üstelik "açık" kartında kafa karıştırırdı.
           */}
           {acilisTarihi && (
-            <p className="flex items-center gap-1.5 text-[13px] font-semibold text-blue-800">
-              <CalendarDays className="h-3.5 w-3.5 shrink-0" aria-hidden />
-              {acilisTarihi} tarihinde başvuruya açılıyor
+            <p className="flex items-start gap-1 text-[11px] font-semibold leading-snug text-blue-800 sm:gap-1.5 sm:text-[13px]">
+              <CalendarDays className="mt-0.5 h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden />
+              <span>{acilisTarihi} tarihinde başvuruya açılıyor</span>
             </p>
           )}
+          {/*
+            Tüpün üst satırı artık sarıyor (bkz. ZamanTupu): dar kartta
+            tarih alt satıra iniyor, kırpılmıyor.
+          */}
           <ZamanTupu item={item} />
         </>
       )}
@@ -1688,11 +1749,14 @@ export const Card: React.FC<{
         Kartta TEK SATIR; ayrıntısı ilan sayfasında ve
         /rehber/burs-cakisma matrisinde — üçü de aynı veriden besleniyor.
       */}
-      <BursUyumRozeti
-        tur={item.opportunityType}
-        baslik={item.title}
-        kurumAdi={item.organizationName}
-      />
+      {/* Dar kartta gizli; aynı bilgi detay sayfasında ve çakışma matrisinde. */}
+      <div className="hidden sm:block">
+        <BursUyumRozeti
+          tur={item.opportunityType}
+          baslik={item.title}
+          kurumAdi={item.organizationName}
+        />
+      </div>
 
       {/*
         UYGUNLUK — İDDİA DEĞİL, GEREKÇE
@@ -1703,7 +1767,7 @@ export const Card: React.FC<{
       */}
       {fit?.not && (
         <p
-          className={`text-xs leading-relaxed ${
+          className={`hidden text-xs leading-relaxed sm:block ${
             fit.durum === 'sart_uymuyor' ? 'text-amber-800' : 'text-gray-500'
           }`}
         >
@@ -1760,32 +1824,34 @@ export const Card: React.FC<{
         boyutta, aynı yerde, yalnız rengi ikincil. Kartın tamamı zaten
         detay sayfasına götüren bir bağlantı değil — düğme tek yol.
       */}
-      <div className="mt-auto border-t border-gray-100 pt-3">
-        <div className={`grid gap-2 ${cta ? 'grid-cols-2' : 'grid-cols-1'}`}>
-          <button
-            onClick={() => onNavigate(`/firsatlar/${item.slug}`)}
-            className={`${CTA_ORTAK} ${CTA_IKINCIL}`}
+      {/*
+        TEK EYLEM KALDI
+
+        "Detayı gör" düğmesi kalktı: kartın KENDİSİ detaya gidiyor (yukarıda,
+        gerilmiş bağlantı). Aynı hedefe giden ikinci bir düğme, dar kartta
+        kalan tek gerçek eylemi — resmî kaynağa çıkmayı — eşit ağırlıkta bir
+        rakiple paylaştırıyordu. Aynı karar ilan kartında da verilmişti.
+
+        `relative z-10`: düğme gerilmiş bağlantının ÜSTÜNDE kalmalı, yoksa
+        tıklama karta gidip detay sayfasını açardı.
+      */}
+      {cta && (
+        <div className="relative z-10 mt-auto border-t border-gray-100 pt-2 sm:pt-3">
+          <DisBaglanti
+            href={cta.adres}
+            girisGerekli={girisGerekli}
+            onGirisGerekli={onRequireLogin}
+            kapiEtiketi="Başvurmak için giriş yap"
+            className={`${CTA_ORTAK} ${CTA_BIRINCIL} w-full`}
           >
-            <span className="truncate">Detayı gör</span>
-            <ChevronRight className="h-3 w-3 shrink-0" />
-          </button>
-          {cta && (
-            <DisBaglanti
-              href={cta.adres}
-              girisGerekli={girisGerekli}
-              onGirisGerekli={onRequireLogin}
-              kapiEtiketi="Başvurmak için giriş yap"
-              className={`${CTA_ORTAK} ${CTA_BIRINCIL}`}
-            >
-              {/* Kartta kısa etiket: uzun hâli düğmeyi iki satıra bölüyordu. */}
-              <span className="truncate">
-                {girisGerekli ? 'Giriş yap' : (cta.kisaEtiket ?? cta.etiket)}
-              </span>
-              <ExternalLink className="h-3 w-3 shrink-0" />
-            </DisBaglanti>
-          )}
+            {/* Kartta kısa etiket: uzun hâli düğmeyi iki satıra bölüyordu. */}
+            <span className="truncate">
+              {girisGerekli ? 'Giriş yap' : (cta.kisaEtiket ?? cta.etiket)}
+            </span>
+            <ExternalLink className="h-3 w-3 shrink-0" />
+          </DisBaglanti>
         </div>
-      </div>
+      )}
     </article>
   );
 };

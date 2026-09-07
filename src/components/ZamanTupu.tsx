@@ -68,7 +68,22 @@ export const ZamanTupu: React.FC<{
         Vurgu yoksa (bir haftadan uzun süre) tarih SOLA geçiyor — sağda
         tek başına duran bir tarih, solu boş bir satır bırakıyordu.
       */}
-      <div className={`flex items-baseline gap-2 ${vurgu && !sikisik ? 'justify-between' : ''}`}>
+      {/*
+        ÜST SATIR SARABİLİYOR
+
+        Satır tek satıra zorlanıyordu ve vurgu `truncate` ile kırpılıyordu.
+        Fırsat kartı ızgaraya geçip 210 piksele inince ölçüldü: ekranda
+        "Son 3 gün" yerine "Son…", "4 gün kaldı" yerine "4 gü…" yazıyordu —
+        yani kalan süre okunamıyordu.
+
+        `flex-wrap` ile dar kapta tarih alt satıra iniyor, geniş kapta
+        ikisi yan yana kalıyor. Kırpma yerine sarma: bilgi kaybolmuyor.
+      */}
+      <div
+        className={`flex flex-wrap items-baseline gap-x-2 gap-y-0.5 ${
+          vurgu && !sikisik ? 'justify-between' : ''
+        }`}
+      >
         {/*
           SIKIŞIK KİPTE TEK SATIR
 
@@ -78,7 +93,7 @@ export const ZamanTupu: React.FC<{
           altında sebepsiz bir çubuk kalıyordu.
         */}
         {(vurgu || sikisik) && (
-          <p className="truncate text-[13px] font-extrabold leading-tight" style={{ color: renk.yazi }}>
+          <p className="text-[13px] font-extrabold leading-tight" style={{ color: renk.yazi }}>
             {vurgu ?? tarih}
           </p>
         )}

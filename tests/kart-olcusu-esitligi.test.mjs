@@ -92,3 +92,42 @@ test('ÖNBELLEKTEN GELEN KAPAKTA İSKELET KAPANIYOR', () => {
   /* onLoad da yerinde: ikisi birbirinin yedeği. */
   assert.match(kapak, /onLoad=\{\(\) => setLoading\(false\)\}/);
 });
+
+/* ------------------------------------------------- fırsat kartı */
+
+const firsat = oku('src/components/OpportunitiesPage.tsx');
+const tup = oku('src/components/ZamanTupu.tsx');
+
+test('FIRSAT KARTI DA AYNI IZGARADA', () => {
+  /*
+    Kartlar tek sütunda alt alta diziliyordu. Ölçüldü (390px): kart
+    358x246 ve ekrana iki kart giriyordu; rehber ve Keşfet aynı ekranda
+    dört kart gösteriyordu.
+
+    Sonra: 390px'te 2 x 174px (kart 174x233, dört kart görünüyor),
+    1440px'te 3 x 209.5px (kart 210x270, altı kart görünüyor).
+  */
+  assert.match(firsat, /grid grid-cols-2 gap-2\.5 sm:gap-4 lg:grid-cols-3/);
+});
+
+test('FIRSAT KARTI TİPOGRAFİSİ DE AYNI', () => {
+  const kart = firsat.slice(firsat.indexOf('<article className="group relative flex min-w-0 flex-col'));
+  assert.match(kart.slice(0, 400), /gap-1\.5 rounded-2xl[^"]*p-2\.5[^"]*sm:gap-2 sm:p-3\.5/);
+  assert.match(kart, /text-\[13px\] font-bold leading-snug text-gray-900 sm:text-base/);
+});
+
+test('LOGO DAR KARTA GÖRE KÜÇÜLDÜ', () => {
+  /* 56 piksellik logo 174 piksellik kartın üçte birini yiyordu. */
+  assert.match(firsat, /!h-9 !w-9[^"]*sm:!h-11 sm:!w-11/);
+});
+
+test('ZAMAN TÜPÜ KIRPMIYOR, SARIYOR', () => {
+  /*
+    Üst satır tek satıra zorlanıyor ve vurgu `truncate` ile kırpılıyordu.
+    Ölçüldü (210 piksellik kartta): ekranda "Son 3 gün" yerine "Son…",
+    "4 gün kaldı" yerine "4 gü…" yazıyordu — kalan süre okunamıyordu.
+  */
+  assert.match(tup, /flex flex-wrap items-baseline gap-x-2 gap-y-0\.5/);
+  const vurguSatiri = tup.slice(tup.indexOf('{(vurgu || sikisik) && ('), tup.indexOf('{tarih && !sikisik'));
+  assert.doesNotMatch(vurguSatiri, /truncate/, 'vurgu kırpılmamalı');
+});
