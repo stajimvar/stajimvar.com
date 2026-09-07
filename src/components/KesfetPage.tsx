@@ -25,28 +25,52 @@ const EventCard: React.FC<{ event: DiscoverEvent; onNavigate: (path: string) => 
   const path = `/kesfet/${event.slug}`;
   const verified = verificationText(event);
   return (
-    <article className="group relative flex min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white transition-colors hover:border-blue-400 focus-within:border-blue-600 sm:flex-col">
-      <div className="relative w-[104px] shrink-0 sm:aspect-video sm:w-full">
+    /*
+      ÖLÇÜ REHBER KARTIYLA AYNI (bkz. RehberKartlari.tsx)
+
+      Kart poster boyundaydı: ölçüldü (1440px, orta sütun 661px) kapak
+      320x180, kart 322x395 ve ilk ekrana yalnızca 4 kart giriyordu.
+      Rehber sayfası AYNI genişlikteki sütunda üç kart gösteriyor
+      (210x357, kapak 208x144) ve aynı ürünün iki listesi farklı
+      ölçüdeydi.
+
+      Kapak artık SABİT YÜKSEKLİKTE, oranlı değil. Fark burada: oranlı
+      kapak sütun genişledikçe büyüyor ve kartı aşağı itiyordu; sabit
+      yükseklikte kapak her ekranda aynı kalıyor ve okunacak kısım
+      yukarıda duruyor. Izgaranın üç sütuna çıkabilmesinin sebebi de bu
+      — "üç poster 200 pikselin altına düşer" itirazı poster kapak
+      içindi, bu kapak için geçerli değil.
+    */
+    <article className="group relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white transition-colors hover:border-blue-400 focus-within:border-blue-600">
+      <div className="relative h-24 w-full shrink-0 overflow-hidden sm:h-36">
         <EventCover
           src={event.cardImageUrl || event.imageUrl}
           srcDetail={event.detailImageUrl}
-          sizes="(min-width: 1280px) 310px, (min-width: 1024px) 24vw, (min-width: 640px) 46vw, 104px"
+          sizes="(min-width: 1024px) 210px, (min-width: 640px) 46vw, 46vw"
           category={event.category}
           title={event.title}
           coverKind={event.coverKind}
-          className="absolute inset-0 h-full w-full sm:relative sm:h-auto"
+          /*
+            Yalnız h-full/w-full: EventCover kökü `relative aspect-video`
+            taşıyor ve `absolute` göndermek işe yaramıyordu — ikisi de
+            konum yardımcısı, hangisinin kazandığını sınıf sırası değil
+            Tailwind'in üretim sırası belirliyor (ölçüldü: `relative`
+            kazanıyordu). Sabit yükseklikli sarmalayıcının içinde h-full
+            zaten oranı eziyor ve kapak 208x144 çiziliyor.
+          */
+          className="h-full w-full"
         />
       </div>
-      <div className="flex min-w-0 flex-1 flex-col gap-2 p-3 sm:p-4">
-        <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold sm:text-[11px]">
-          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700">{DISCOVER_CATEGORIES[event.category]}</span>
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-2.5 sm:gap-2 sm:p-3.5">
+        <div className="flex flex-wrap items-center gap-1 text-[9px] font-bold sm:gap-1.5 sm:text-[10px]">
+          <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-blue-700 sm:px-2">{DISCOVER_CATEGORIES[event.category]}</span>
           {(event.isFree || event.hasStudentDiscount) && (
-            <span className={`rounded-full px-2 py-0.5 ${event.isFree ? 'bg-emerald-50 text-emerald-800' : 'bg-violet-50 text-violet-800'}`}>
+            <span className={`rounded-full px-1.5 py-0.5 sm:px-2 ${event.isFree ? 'bg-emerald-50 text-emerald-800' : 'bg-violet-50 text-violet-800'}`}>
               {event.isFree ? 'Ücretsiz' : 'Öğrenci indirimli'}
             </span>
           )}
         </div>
-        <h3 className="text-[15px] font-extrabold leading-snug text-gray-900 sm:text-lg">
+        <h3 className="text-[13px] font-bold leading-snug text-gray-900 sm:text-base">
           <a
             href={path}
             onClick={(click) => {
@@ -57,18 +81,27 @@ const EventCard: React.FC<{ event: DiscoverEvent; onNavigate: (path: string) => 
             className="line-clamp-2 rounded-sm after:absolute after:inset-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 group-hover:text-blue-700"
           >{event.title}</a>
         </h3>
-        <p className="flex items-start gap-1.5 text-xs text-gray-600 sm:text-sm">
-          <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
-          <span>{formatDiscoverDate(event)}</span>
+        {/*
+          Tarih ve yer dar sütunda da kalıyor: etkinlikte "ne zaman" ve
+          "nerede" kartın var oluş sebebi, kırpılabilir ama atılamaz.
+        */}
+        <p className="flex items-start gap-1.5 text-[11px] leading-snug text-gray-600 sm:text-xs">
+          <CalendarDays className="mt-0.5 h-3 w-3 shrink-0 text-gray-400 sm:h-3.5 sm:w-3.5" aria-hidden />
+          <span className="line-clamp-2">{formatDiscoverDate(event)}</span>
         </p>
-        <p className="flex items-start gap-1.5 text-xs text-gray-600 sm:text-sm">
-          <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
-          <span className="line-clamp-1 sm:line-clamp-2">{formatDiscoverLocation(event)}</span>
+        <p className="flex items-start gap-1.5 text-[11px] leading-snug text-gray-600 sm:text-xs">
+          <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-gray-400 sm:h-3.5 sm:w-3.5" aria-hidden />
+          <span className="line-clamp-2">{formatDiscoverLocation(event)}</span>
         </p>
-        {event.studentPrice != null && <p className="text-xs font-bold text-gray-900">Öğrenci: {event.studentPrice.toLocaleString('tr-TR')} TL</p>}
+        {/* Öğrenci fiyatı dar kartta yer kaplıyor; rozetler zaten "ücretsiz/indirimli" diyor. */}
+        {event.studentPrice != null && (
+          <p className="hidden text-[11px] font-bold text-gray-900 sm:block">
+            Öğrenci: {event.studentPrice.toLocaleString('tr-TR')} TL
+          </p>
+        )}
         {verified && (
-          <p className="mt-auto flex items-start gap-1 text-[10px] font-semibold leading-snug text-emerald-700 sm:pt-1 sm:text-[11px]">
-            <ShieldCheck className="h-3.5 w-3.5 shrink-0" aria-hidden />{verified}
+          <p className="mt-auto flex items-start gap-1 pt-1 text-[10px] font-semibold leading-snug text-emerald-700 sm:text-[11px]">
+            <ShieldCheck className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden />{verified}
           </p>
         )}
       </div>
@@ -403,8 +436,11 @@ export const KesfetPage: React.FC<{
             />
           )}
           {listPhase === 'loading' && (
-            <div role="status" aria-label="Etkinlikler yükleniyor" className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-              {[1, 2, 3, 4, 5, 6].map((key) => <div key={key} aria-hidden className="h-44 animate-pulse rounded-2xl bg-gray-100 motion-reduce:animate-none sm:h-72" />)}
+            <div role="status" aria-label="Etkinlikler yükleniyor" className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
+              {[1, 2, 3, 4, 5, 6].map((key) => (
+                /* İskelet gerçek kartla aynı boyda: içerik gelince ızgara zıplamıyor. */
+                <div key={key} aria-hidden className="h-64 animate-pulse rounded-2xl bg-gray-100 motion-reduce:animate-none sm:h-80" />
+              ))}
             </div>
           )}
           {listPhase === 'error' && (
@@ -421,7 +457,8 @@ export const KesfetPage: React.FC<{
             */}
             {listEvents.length > 0 ? (
               gridEvents.length > 0 && (
-                <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+                /* Izgara RehberIzgarasi ile birebir aynı: telefonda iki, geniş ekranda üç sütun. */
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
                   {gridEvents.map((event) => <EventCard key={event.id} event={event} onNavigate={(path) => catalog.navigateToDetail(path, onNavigate)} />)}
                 </div>
               )

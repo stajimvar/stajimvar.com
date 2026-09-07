@@ -52,6 +52,26 @@ export const EventCover: React.FC<{
     setCurrent(src || fallback);
     setLoading(true);
   }, [src, fallback]);
+
+  /*
+    ÖNBELLEKTEN GELEN GÖRSELDE `onLoad` HİÇ ÇALIŞMIYOR
+
+    İskelet yalnızca `onLoad` ile kapanıyordu. Tarayıcı görseli React
+    olay dinleyicisini bağlamadan önce bitirirse (önbellek, ya da
+    `sizes` değişince aynı dosyanın yeniden seçilmesi) o olay hiç
+    gelmiyor ve gri iskelet YÜKLENMİŞ bir görselin üstünde kalıyor.
+
+    Ölçüldü (canlı, /kesfet, 1440px): dokuz kapağın dokuzu da
+    `complete` ve `naturalWidth = 210`, buna rağmen altısında iskelet
+    duruyordu — yani kart boş görünüyordu.
+
+    Ref geri çağrısı öğe DOM'a girdiği anda çalışıyor ve `complete`
+    zaten doğruysa iskeleti hemen kapatıyor. `onLoad` da yerinde
+    kalıyor: ikisi birbirinin yedeği.
+  */
+  const imgRef = React.useCallback((node: HTMLImageElement | null) => {
+    if (node?.complete && node.naturalWidth > 0) setLoading(false);
+  }, [current]);
   const general = !src || current === fallback || coverKind === "category";
   /*
     Yedek kapak bir SVG: ölçekten bağımsız, ikinci varyantı yok. srcSet
@@ -65,6 +85,7 @@ export const EventCover: React.FC<{
     <div className={`relative aspect-video overflow-hidden bg-blue-50 ${className}`}>
       {loading && <div className="absolute inset-0 animate-pulse bg-gray-200" aria-hidden="true" />}
       <img
+        ref={imgRef}
         src={current}
         srcSet={cokluCozunurluk}
         sizes={cokluCozunurluk ? sizes : undefined}
