@@ -78,9 +78,12 @@ export const RehberKarti: React.FC<KartProps> = ({
       */}
       <div className="relative h-24 w-full shrink-0 overflow-hidden bg-gray-100 sm:h-36">
         <picture>
-          <source srcSet={`/rehber-gorselleri/${rehber.slug}.avif`} type="image/avif" />
+          <source
+            srcSet={`/rehber-gorselleri/${rehber.slug}.avif?v=rehber-fotograf-20260907`}
+            type="image/avif"
+          />
           <img
-            src={`/rehber-gorselleri/${rehber.slug}.webp`}
+            src={`/rehber-gorselleri/${rehber.slug}.webp?v=rehber-fotograf-20260907`}
             alt=""
             aria-hidden="true"
             loading="lazy"

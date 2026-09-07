@@ -49,3 +49,9 @@ test('ikonlu kapak üreticisi yeniden görsellerin üstüne yazamaz', () => {
   const paket = JSON.parse(readFileSync(path.join(KOK, 'package.json'), 'utf8'));
   assert.equal(paket.scripts['rehber-kapaklari'], undefined);
 });
+
+test('kart kapak URLleri eski CDN önbelleğini kıran fotoğraf sürümünü taşır', () => {
+  const kart = readFileSync(path.join(KOK, 'src/components/RehberKartlari.tsx'), 'utf8');
+  assert.match(kart, /\.avif\?v=rehber-fotograf-20260907/);
+  assert.match(kart, /\.webp\?v=rehber-fotograf-20260907/);
+});
