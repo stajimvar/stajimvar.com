@@ -48,30 +48,41 @@ export const EventCover: React.FC<{
   const fallback = CATEGORY_COVERS[category];
   const [current, setCurrent] = useState(src || fallback);
   const [loading, setLoading] = useState(true);
+  const imgEl = React.useRef<HTMLImageElement | null>(null);
+
   useEffect(() => {
     setCurrent(src || fallback);
-    setLoading(true);
   }, [src, fallback]);
 
   /*
-    ÖNBELLEKTEN GELEN GÖRSELDE `onLoad` HİÇ ÇALIŞMIYOR
+    İSKELET YÜKLENMİŞ GÖRSELİN ÜSTÜNDE KALIYORDU
 
-    İskelet yalnızca `onLoad` ile kapanıyordu. Tarayıcı görseli React
-    olay dinleyicisini bağlamadan önce bitirirse (önbellek, ya da
-    `sizes` değişince aynı dosyanın yeniden seçilmesi) o olay hiç
-    gelmiyor ve gri iskelet YÜKLENMİŞ bir görselin üstünde kalıyor.
+    Önce şöyleydi: aynı effect hem adresi tazeliyor hem `loading`'i
+    koşulsuz `true` yapıyordu. Görsel mount ile effect ARASINDA biterse
+    `onLoad` çoktan çalışmış oluyor, effect iskeleti geri açıyor ve bir
+    daha kapanmıyor.
 
-    Ölçüldü (canlı, /kesfet, 1440px): dokuz kapağın dokuzu da
-    `complete` ve `naturalWidth = 210`, buna rağmen altısında iskelet
-    duruyordu — yani kart boş görünüyordu.
+    Bu yarış hızlı bağlantıda kuraldır, yavaşta istisna: yerelde sorun
+    görünmezken CANLIDA ölçüldü (stajimvar.com/kesfet, 1440px) —
+    24 kapağın 24'ünde `complete: true`, `naturalWidth: 210`, istek 200
+    dönüyor, buna rağmen 24'ünde de gri iskelet duruyordu. Yani kartların
+    tamamı boş görünüyordu.
 
-    Ref geri çağrısı öğe DOM'a girdiği anda çalışıyor ve `complete`
-    zaten doğruysa iskeleti hemen kapatıyor. `onLoad` da yerinde
-    kalıyor: ikisi birbirinin yedeği.
+    Artık `loading` bir VARSAYIM değil, ölçüm: adres her değiştiğinde
+    öğenin `complete` durumu okunuyor. Üç yol da kapatıyor — ref (mount
+    anında hazırsa), bu effect (boyamadan sonra hazırsa), `onLoad`
+    (sonradan bitiyorsa).
   */
-  const imgRef = React.useCallback((node: HTMLImageElement | null) => {
-    if (node?.complete && node.naturalWidth > 0) setLoading(false);
+  useEffect(() => {
+    const node = imgEl.current;
+    setLoading(!(node?.complete && node.naturalWidth > 0));
   }, [current]);
+
+  const imgRef = React.useCallback((node: HTMLImageElement | null) => {
+    imgEl.current = node;
+    if (node?.complete && node.naturalWidth > 0) setLoading(false);
+  }, []);
+
   const general = !src || current === fallback || coverKind === "category";
   /*
     Yedek kapak bir SVG: ölçekten bağımsız, ikinci varyantı yok. srcSet
