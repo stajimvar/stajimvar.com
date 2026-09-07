@@ -131,3 +131,41 @@ test('ZAMAN TÜPÜ KIRPMIYOR, SARIYOR', () => {
   const vurguSatiri = tup.slice(tup.indexOf('{(vurgu || sikisik) && ('), tup.indexOf('{tarih && !sikisik'));
   assert.doesNotMatch(vurguSatiri, /truncate/, 'vurgu kırpılmamalı');
 });
+
+/* --------------------------------------- liste başlığı üç sayfada da */
+
+test('ŞERİDİN ÜSTÜNDE LİSTE BAŞLIĞI VAR', () => {
+  /*
+    Rehberde "TÜM REHBERLER (71)", Keşfet'te "YAYINDAKİ ETKİNLİKLER (102)",
+    ilanlarda "AÇIK STAJ İLANLARI (62)" varken fırsatlarda şerit başlıksız
+    duruyordu: göz doğrudan dairelere düşüyor, neyin listelendiği
+    yazmıyordu.
+
+    Üçü de aynı tipografi: 12px, büyük harf, seyrek harf aralığı; solda
+    "ne ve kaç tane", sağda listenin nereden geldiğini söyleyen ikincil
+    satır (telefonda gizli).
+  */
+  const kesfet = oku('src/components/KesfetPage.tsx');
+  const bicim = /text-xs font-bold uppercase tracking-widest text-gray-600/;
+  assert.match(kesfet, bicim, 'Keşfet başlığı değişmiş');
+  assert.match(firsat, bicim, 'fırsat listesinde başlık yok');
+  assert.match(firsat, /Kurumların resmî sayfalarından derlendi/);
+  assert.match(firsat, /hidden text-xs font-medium text-gray-500 sm:block/);
+});
+
+test('BAŞLIKTAKİ SAYI DARALTMAYA GÖRE DEĞİŞİYOR', () => {
+  /*
+    Ölçüldü (canlı): daraltma yokken "Güncel fırsatlar (32)", tür
+    seçilince "Filtrelenen fırsatlar (27)", Tümü'ye dönünce yine 32.
+  */
+  assert.match(firsat, /listeDaraldi \? 'Filtrelenen fırsatlar' : 'Güncel fırsatlar'/);
+  assert.match(firsat, /listeDaraldi \? filtered\.length : sayimTabani\.length/);
+  assert.match(firsat, /aktifSuzgecSayisi > 0 \|\| filters\.query\.trim\(\)\.length > 0 \|\| savedOnly/);
+});
+
+test('BAŞLIK ŞERİDİN ÜSTÜNDE, LİSTENİN DEĞİL', () => {
+  /* Başlık şeridi tanıtıyor; şeritten sonra gelseydi hangi bloğa ait olduğu belirsiz kalırdı. */
+  const baslikYeri = firsat.indexOf("'Filtrelenen fırsatlar'");
+  const seritYeri = firsat.indexOf('<KonuSeridi');
+  assert.ok(baslikYeri > 0 && seritYeri > baslikYeri, 'başlık şeritten sonra geliyor');
+});

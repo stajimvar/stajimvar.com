@@ -375,6 +375,15 @@ export const OpportunitiesPage: React.FC<{
     Sayılar `sayimlar.tur` üzerinden geliyor, yani şerit ile filtre paneli
     aynı kaynağı okuyor ve ayrışamıyor.
   */
+  /*
+    LİSTE DARALDI MI?
+
+    Başlıktaki sayı buna bakıyor: daraltma varsa ekrandaki kadarını,
+    yoksa tabanın tamamını yazıyor. Aynı kural Keşfet'te de var.
+  */
+  const listeDaraldi =
+    aktifSuzgecSayisi > 0 || filters.query.trim().length > 0 || savedOnly;
+
   const seritTurleri = React.useMemo(
     () =>
       Object.entries(OPPORTUNITY_TYPE_LABELS)
@@ -895,6 +904,37 @@ export const OpportunitiesPage: React.FC<{
                 ))}
               </nav>
           )}
+          {/*
+            LİSTE BAŞLIĞI — ŞERİDİN ÜSTÜNDE, DİĞER İKİ SAYFADAKİ GİBİ
+
+            Şerit başlıksız duruyordu: rehberde "TÜM REHBERLER (71)",
+            Keşfet'te "YAYINDAKİ ETKİNLİKLER (102)", ilanlarda "AÇIK STAJ
+            İLANLARI (62)" varken burada göz doğrudan dairelere düşüyordu
+            ve neyin listelendiği yazmıyordu.
+
+            Bir zamanlar "FIRSATLAR (33)" etiketi vardı ve kaldırılmıştı;
+            gerekçesi şuydu: sayı iki yerde daha duruyor ve etiket kontrol
+            satırıyla birlikte İKİNCİ bir şerit kuruyordu. O gerekçe artık
+            geçerli değil — etiket kendi başına durmuyor, ŞERİDİN başlığı
+            olarak duruyor ve üç sayfa aynı hizaya geliyor.
+
+            Sayı daraltmaya göre değişiyor (Keşfet'teki kural): süzgeç ya
+            da arama varken ekrandaki kadarını, yokken tabanın tamamını
+            söylüyor. Sağdaki not 121 kaydın 121'inde `verified_at` ve
+            `source_url` dolu olduğu için doğru (ölçüldü, üretim).
+          */}
+          {sekme !== 'takvim' && state === 'ready' && (
+            <div className="flex items-center justify-between gap-3 px-1">
+              <h2 className="text-xs font-bold uppercase tracking-widest text-gray-600">
+                {listeDaraldi ? 'Filtrelenen fırsatlar' : 'Güncel fırsatlar'}
+                {` (${listeDaraldi ? filtered.length : sayimTabani.length})`}
+              </h2>
+              <span className="hidden text-xs font-medium text-gray-500 sm:block">
+                Kurumların resmî sayfalarından derlendi
+              </span>
+            </div>
+          )}
+
           {/*
             TÜR ŞERİDİ — REHBER VE KEŞFET İLE AYNI BİLEŞEN
 
