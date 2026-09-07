@@ -6,10 +6,18 @@ import {
   ChevronRight,
   ExternalLink,
   Filter,
+  Globe2,
+  GraduationCap,
+  HandCoins,
+  HeartHandshake,
+  Landmark,
+  Layers,
   MapPin,
   SlidersHorizontal,
   Search,
   Sparkles,
+  Trophy,
+  Users,
   X,
 } from 'lucide-react';
 import type { StudentProfile } from '../types';
@@ -17,6 +25,7 @@ import { ListingLogo } from './ListingLogo';
 import { ZamanTupu } from './ZamanTupu';
 import { BursUyumRozeti } from './BursCakismaMatrisi';
 import { DisBaglanti, FiltreBlogu, SecenekSatiri } from '../ui';
+import { KonuSeridi } from './KonuSeridi';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { CTA_BIRINCIL, CTA_IKINCIL, CTA_ORTAK } from '../lib/kart-cta';
 import {
@@ -95,6 +104,23 @@ const kisaTarih = (value?: string) => kisaTarihMetni(value, { yil: false });
   bir kopyası duruyordu ve aynı fırsat kartta "Bugün son gün", üst uyarıda
   "Yarına kadar açık", ana sayfada "Yarın sona eriyor" diyordu.
 */
+
+/*
+  FIRSAT TÜRÜ → İKON
+
+  Şerit rehber ve Keşfet'tekiyle aynı bileşen (KonuSeridi); değişen tek
+  şey ikon haritası ve sayının yanındaki ad. Anahtarlar
+  `OPPORTUNITY_TYPE_LABELS` içindeki tür kimlikleri.
+*/
+const TUR_IKONLARI: Record<string, React.ComponentType<{ className?: string }>> = {
+  scholarship: HandCoins,
+  international: Globe2,
+  kyk: Landmark,
+  competition: Trophy,
+  education: GraduationCap,
+  student_support: HeartHandshake,
+  youth_program: Users,
+};
 
 type Sekme = 'uygun' | 'tumu' | 'takvim';
 
@@ -338,6 +364,26 @@ export const OpportunitiesPage: React.FC<{
       yakinda: sayimTabani.filter((i) => opportunityStatus(i) === 'yakinda').length,
     };
   }, [sayimTabani]);
+  /*
+    ŞERİT İÇİN TÜR LİSTESİ
+
+    Sıra çoktan aza: en çok kayıt taşıyan tür başta duruyor, tıpkı rehber
+    ve Keşfet şeritlerinde olduğu gibi. Kaydı olmayan tür ÇİZİLMİYOR —
+    tıklayınca boş sonuç veren bir daire, az seçenek görmekten daha çok
+    güven kaybettiriyor (aynı kural filtre panelinde de var).
+
+    Sayılar `sayimlar.tur` üzerinden geliyor, yani şerit ile filtre paneli
+    aynı kaynağı okuyor ve ayrışamıyor.
+  */
+  const seritTurleri = React.useMemo(
+    () =>
+      Object.entries(OPPORTUNITY_TYPE_LABELS)
+        .map(([id, etiket]) => ({ id, etiket: etiket as string, adet: sayimlar.tur[id] ?? 0 }))
+        .filter((tur) => tur.adet > 0)
+        .sort((a, b) => b.adet - a.adet || a.etiket.localeCompare(b.etiket, 'tr')),
+    [sayimlar.tur]
+  );
+
   const yarinKapananlar = React.useMemo(() => closingSoon(items, 1), [items]);
 
   /* Metin ve tür süzgeçleri; durum ve profil ayrı aşamada. */
@@ -849,6 +895,35 @@ export const OpportunitiesPage: React.FC<{
                 ))}
               </nav>
           )}
+          {/*
+            TÜR ŞERİDİ — REHBER VE KEŞFET İLE AYNI BİLEŞEN
+
+            Tür süzgeci yalnızca filtre panelindeydi ve panel kapalıyken
+            hangi türlerin OLDUĞUNU göstermiyordu: kullanıcı paneli
+            açmadan "burada yarışma var mı" sorusunu cevaplayamıyordu.
+            Şerit türlerin hepsini ve her birinde kaç kayıt olduğunu tek
+            bakışta veriyor.
+
+            Panel kaldırılmadı; ikisi AYNI durumu (`filters.type`) ve aynı
+            sayıları paylaşıyor, yani biri değişince öteki de değişiyor.
+
+            Takvim görünümünde çizilmiyor: orada liste değil ay ay bir
+            takvim var ve tür süzgeci o görünümün üstünde durmuyor.
+          */}
+          {sekme !== 'takvim' && state === 'ready' && (
+            <KonuSeridi
+              konular={seritTurleri}
+              secili={filters.type}
+              toplam={sayimTabani.length}
+              onSec={(tur) => set({ type: tur })}
+              onTumu={() => set({ type: '' })}
+              birim="fırsat"
+              ikonlar={TUR_IKONLARI}
+              varsayilanIkon={Layers}
+              tumuEtiketi="Tüm türler"
+            />
+          )}
+
           {sekme === 'uygun' && student && (
             <p className="rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-2.5 text-xs text-blue-900 leading-relaxed">
               Bu liste bir <b>uygunluk garantisi değil</b>. Profiline açıkça uymayan fırsatlar

@@ -44,16 +44,18 @@ const IKONLAR: Record<string, React.ComponentType<{ className?: string }>> = {
 const Daire: React.FC<{
   etiket: string;
   adet: number;
+  /** "rehber", "fırsat" — sayının yanında ve ipucunda geçen ad. */
+  birim: string;
   okunan: string;
   secili: boolean;
   onClick: () => void;
   children: React.ReactNode;
-}> = ({ etiket, adet, okunan, secili, onClick, children }) => (
+}> = ({ etiket, adet, birim, okunan, secili, onClick, children }) => (
   <button
     type="button"
     onClick={onClick}
     aria-pressed={secili}
-    title={`${etiket} — ${adet} rehber`}
+    title={`${etiket} — ${adet} ${birim}`}
     /* min-h-11 = 44px dokunma hedefi. */
     className="group flex min-h-11 w-[76px] shrink-0 cursor-pointer flex-col items-center gap-1.5"
   >
@@ -80,7 +82,7 @@ const Daire: React.FC<{
       >
         {etiket}
       </span>
-      <span className="block truncate text-[10px] tabular-nums text-gray-600">{adet} rehber</span>
+      <span className="block truncate text-[10px] tabular-nums text-gray-600">{adet} {birim}</span>
     </span>
     {/*
       Görünen iki satır `aria-hidden`; ekran okuyucu düğmenin tamamını tek
@@ -90,6 +92,16 @@ const Daire: React.FC<{
   </button>
 );
 
+type SimgeBileseni = React.ComponentType<{ className?: string }>;
+
+/**
+ * ŞERİT REHBERE ÖZEL DEĞİL
+ *
+ * Aynı şerit fırsatlar sayfasında da kullanılıyor (tür süzgeci). Beşinci
+ * bir kopya yazmak yerine değişen üç şey props'a alındı: sayının yanındaki
+ * ad, ikon haritası ve "Tümü" dairesinin ikonu. Varsayılanlar rehberin
+ * bugünkü davranışı — rehber tarafında hiçbir çağrı değişmedi.
+ */
 export const KonuSeridi: React.FC<{
   konular: { id: string; etiket: string; adet: number }[];
   /** Seçili konu; boş dize "tümü" demek. */
@@ -97,7 +109,25 @@ export const KonuSeridi: React.FC<{
   toplam: number;
   onSec: (konu: string) => void;
   onTumu: () => void;
-}> = ({ konular, secili, toplam, onSec, onTumu }) => {
+  /** Sayının yanında geçen ad. Varsayılan: rehber. */
+  birim?: string;
+  /** `id` → ikon. Verilmezse rehber konularının haritası kullanılıyor. */
+  ikonlar?: Record<string, SimgeBileseni>;
+  /** "Tümü" dairesinin ikonu ve eşleşmeyen id'ler için yedek. */
+  varsayilanIkon?: SimgeBileseni;
+  /** "Tümü" dairesinin okunan metni. */
+  tumuEtiketi?: string;
+}> = ({
+  konular,
+  secili,
+  toplam,
+  onSec,
+  onTumu,
+  birim = 'rehber',
+  ikonlar = IKONLAR,
+  varsayilanIkon: VarsayilanIkon = BookOpen,
+  tumuEtiketi = 'Tüm konular',
+}) => {
   /* Konu yoksa şerit çizilmiyor — SehirSeridi ve SirketSeridi kalıbı. */
   if (konular.length === 0) return null;
 
@@ -117,20 +147,22 @@ export const KonuSeridi: React.FC<{
           <Daire
             etiket="Tümü"
             adet={toplam}
-            okunan={`Tüm konular, ${toplam} rehber`}
+            birim={birim}
+            okunan={`${tumuEtiketi}, ${toplam} ${birim}`}
             secili={secili === ''}
             onClick={onTumu}
           >
-            <BookOpen className="h-6 w-6" aria-hidden />
+            <VarsayilanIkon className="h-6 w-6" />
           </Daire>
           {konular.map((konu) => {
-            const Ikon = IKONLAR[konu.id] ?? BookOpen;
+            const Ikon = ikonlar[konu.id] ?? VarsayilanIkon;
             return (
               <Daire
                 key={konu.id}
                 etiket={konu.etiket}
                 adet={konu.adet}
-                okunan={`${konu.etiket}, ${konu.adet} rehber`}
+                birim={birim}
+                okunan={`${konu.etiket}, ${konu.adet} ${birim}`}
                 secili={secili === konu.id}
                 onClick={() => onSec(konu.id)}
               >
