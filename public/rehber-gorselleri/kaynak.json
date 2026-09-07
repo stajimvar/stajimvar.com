@@ -85,9 +85,9 @@
     "tur": "ai-photorealistic"
   },
   "gonullu-staj-rehberi": {
-    "kaynak": "https://www.rawpixel.com/image/9677543/image-plant-person-trees",
-    "lisans": "cc0",
-    "tur": "cc0-photo"
+    "kaynak": "openai-imagegen:exec-32dc88d6-6658-4544-a926-1d095312cd10.png",
+    "lisans": "generated",
+    "tur": "ai-photorealistic"
   },
   "hibesiz-erasmus": {
     "kaynak": "openai-imagegen:exec-ec2b7b4e-f4da-4546-a64f-97552a59d721.png",
@@ -130,9 +130,9 @@
     "tur": "ai-photorealistic"
   },
   "kyk-burs-ve-kredi": {
-    "kaynak": "https://www.rawpixel.com/image/5912198/image-paper-books-public-domain",
-    "lisans": "cc0",
-    "tur": "cc0-photo"
+    "kaynak": "openai-imagegen:exec-812fbeea-82da-4cae-a09b-59face874037.png",
+    "lisans": "generated",
+    "tur": "ai-photorealistic"
   },
   "kyk-kredisi-geri-odeme": {
     "kaynak": "openai-imagegen:exec-95131598-355d-4b49-80c6-140c8a8fafe7.png",
@@ -215,9 +215,9 @@
     "tur": "ai-photorealistic"
   },
   "staj-basvuru-epostasi": {
-    "kaynak": "https://www.rawpixel.com/image/5925994/photo-image-background-public-domain-technology",
-    "lisans": "cc0",
-    "tur": "cc0-photo"
+    "kaynak": "openai-imagegen:exec-e299d25b-62a5-48f4-bb48-488b50c90041.png",
+    "lisans": "generated",
+    "tur": "ai-photorealistic"
   },
   "staj-basvurusu-gerekli-belgeler": {
     "kaynak": "openai-imagegen:exec-66624030-eaeb-4d49-a4d0-580598bd682e.png",
@@ -225,24 +225,24 @@
     "tur": "ai-photorealistic"
   },
   "staj-cv-nasil-yazilir": {
-    "kaynak": "https://www.rawpixel.com/image/5946625/free-public-domain-cc0-photo",
-    "lisans": "cc0",
-    "tur": "cc0-photo"
+    "kaynak": "openai-imagegen:exec-20f6728b-8907-447d-9b66-48e3d31ec0f0.png",
+    "lisans": "generated",
+    "tur": "ai-photorealistic"
   },
   "staj-defteri-nasil-doldurulur": {
-    "kaynak": "https://www.rawpixel.com/image/5924621/photo-image-paper-book-public-domain",
-    "lisans": "cc0",
-    "tur": "cc0-photo"
+    "kaynak": "openai-imagegen:exec-0a43f90b-5606-4668-9948-d0f5ffafcfd4.png",
+    "lisans": "generated",
+    "tur": "ai-photorealistic"
   },
   "staj-mulakati": {
-    "kaynak": "https://www.rawpixel.com/image/5926233/photo-image-background-public-domain-technology",
-    "lisans": "cc0",
-    "tur": "cc0-photo"
+    "kaynak": "openai-imagegen:exec-4c325113-788b-4e1c-a3b8-f0c4792cf64a.png",
+    "lisans": "generated",
+    "tur": "ai-photorealistic"
   },
   "staj-nasil-bulunur": {
-    "kaynak": "https://www.rawpixel.com/image/3373565/free-photo-image-africa-archive-broadcasting",
-    "lisans": "cc0",
-    "tur": "cc0-photo"
+    "kaynak": "openai-imagegen:exec-7a5bb865-dfe4-45f1-88f2-e934c9c4ca2d.png",
+    "lisans": "generated",
+    "tur": "ai-photorealistic"
   },
   "staj-sigortasi-kim-yapar": {
     "kaynak": "openai-imagegen:exec-7c7cd75e-b51d-4edb-96fd-75cb76dd651a.png",
@@ -260,9 +260,9 @@
     "tur": "ai-photorealistic"
   },
   "stajdan-ise-gecis": {
-    "kaynak": "https://www.rawpixel.com/image/8812100/photo-image-laptop-people-business",
-    "lisans": "cc0",
-    "tur": "cc0-photo"
+    "kaynak": "openai-imagegen:exec-39ed5a61-8571-41ba-b8f8-b466aacf69ec.png",
+    "lisans": "generated",
+    "tur": "ai-photorealistic"
   },
   "stajdan-sonra-is-teklifi": {
     "kaynak": "openai-imagegen:exec-1dd49d8e-4d1b-4a64-9dde-15428d61b0c7.png",
@@ -280,9 +280,9 @@
     "tur": "ai-photorealistic"
   },
   "universite-staj-birimi": {
-    "kaynak": "https://www.rawpixel.com/image/4023317/university-otago-clocktower",
-    "lisans": "cc0",
-    "tur": "cc0-photo"
+    "kaynak": "openai-imagegen:exec-2ee74df5-23e8-4d0e-9f95-da250989d748.png",
+    "lisans": "generated",
+    "tur": "ai-photorealistic"
   },
   "uzaktan-staj-kabul-edilir-mi": {
     "kaynak": "openai-imagegen:exec-0140c26c-7d7c-4677-a4a3-7ffc0447eb91.png",
@@ -335,9 +335,9 @@
     "tur": "ai-photorealistic"
   },
   "yurtdisinda-staj": {
-    "kaynak": "https://www.rawpixel.com/image/3338088/free-photo-image-screen-flight-adventure",
-    "lisans": "cc0",
-    "tur": "cc0-photo"
+    "kaynak": "openai-imagegen:exec-ec50b4c4-0026-46dd-8952-27e064ab6c14.png",
+    "lisans": "generated",
+    "tur": "ai-photorealistic"
   },
   "yurtdisinda-staj-sigortasi": {
     "kaynak": "openai-imagegen:exec-47e28701-ba64-47f0-989e-967e21f61d8c.png",
@@ -350,8 +350,8 @@
     "tur": "ai-photorealistic"
   },
   "zorunlu-staj-rehberi": {
-    "kaynak": "https://www.rawpixel.com/image/5927609/photo-image-background-public-domain-hands",
-    "lisans": "cc0",
-    "tur": "cc0-photo"
+    "kaynak": "openai-imagegen:exec-3f123bc8-4d52-4134-bffe-7fc438eef3e0.png",
+    "lisans": "generated",
+    "tur": "ai-photorealistic"
   }
 }

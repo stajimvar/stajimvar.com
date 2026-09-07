@@ -17,7 +17,8 @@ test('her rehber kapağı fotoğraf kaynağıyla kayıtlı', () => {
   assert.equal(sluglar.length, 71, `beklenen 71 kapak, bulunan ${sluglar.length}`);
   assert.deepEqual(Object.keys(kaynaklar).sort(), sluglar);
   for (const slug of sluglar) {
-    assert.match(kaynaklar[slug].tur, /^(cc0-photo|ai-photorealistic)$/i, `${slug}: fotoğraf türü yok`);
+    assert.equal(kaynaklar[slug].tur, 'ai-photorealistic', `${slug}: ortak fotoğraf dili dışında`);
+    assert.equal(kaynaklar[slug].lisans, 'generated', `${slug}: eski stok fotoğraf kaydı kaldı`);
     assert.ok(kaynaklar[slug].kaynak, `${slug}: kaynak yok`);
   }
 });
@@ -50,8 +51,8 @@ test('ikonlu kapak üreticisi yeniden görsellerin üstüne yazamaz', () => {
   assert.equal(paket.scripts['rehber-kapaklari'], undefined);
 });
 
-test('kart kapak URLleri eski CDN önbelleğini kıran fotoğraf sürümünü taşır', () => {
+test('kart kapak URLleri tümü yenilenen fotoğraf sürümünü taşır', () => {
   const kart = readFileSync(path.join(KOK, 'src/components/RehberKartlari.tsx'), 'utf8');
-  assert.match(kart, /\.avif\?v=rehber-fotograf-20260907/);
-  assert.match(kart, /\.webp\?v=rehber-fotograf-20260907/);
+  assert.match(kart, /\.avif\?v=rehber-fotograf-20260907-tam/);
+  assert.match(kart, /\.webp\?v=rehber-fotograf-20260907-tam/);
 });

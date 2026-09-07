@@ -7,6 +7,16 @@ const URETIM = 'C:/Users/ON/.codex/generated_images/01a00d9d-8c05-7861-a906-fc6c
 const HEDEF = path.join(KOK, 'public/rehber-gorselleri');
 
 const yapay = {
+  'gonullu-staj-rehberi': 'exec-32dc88d6-6658-4544-a926-1d095312cd10.png',
+  'kyk-burs-ve-kredi': 'exec-812fbeea-82da-4cae-a09b-59face874037.png',
+  'staj-basvuru-epostasi': 'exec-e299d25b-62a5-48f4-bb48-488b50c90041.png',
+  'staj-cv-nasil-yazilir': 'exec-20f6728b-8907-447d-9b66-48e3d31ec0f0.png',
+  'staj-defteri-nasil-doldurulur': 'exec-0a43f90b-5606-4668-9948-d0f5ffafcfd4.png',
+  'staj-mulakati': 'exec-4c325113-788b-4e1c-a3b8-f0c4792cf64a.png',
+  'stajdan-ise-gecis': 'exec-39ed5a61-8571-41ba-b8f8-b466aacf69ec.png',
+  'universite-staj-birimi': 'exec-2ee74df5-23e8-4d0e-9f95-da250989d748.png',
+  'yurtdisinda-staj': 'exec-ec50b4c4-0026-46dd-8952-27e064ab6c14.png',
+  'zorunlu-staj-rehberi': 'exec-3f123bc8-4d52-4134-bffe-7fc438eef3e0.png',
   'ats-uyumlu-cv': 'exec-20afa7a8-a3d1-4cf0-9826-81a99e29cd3e.png',
   'ayni-anda-birden-fazla-burs': 'exec-46412959-efd9-42e1-84a4-a974fa0c1b60.png',
   'baska-sehirde-staj-barinma': 'exec-7d88d1b0-6470-4053-a8fa-ca4688805cbd.png',
@@ -49,6 +59,7 @@ const yapay = {
   'portfolyo-nasil-hazirlanir': 'exec-a4f685f1-bc57-439d-a5cd-cfa6b0a7f076.png',
   'referans-nasil-istenir': 'exec-a203081a-08d3-495a-bae9-bf38dacebea6.png',
   'staj-basvurusu-gerekli-belgeler': 'exec-66624030-eaeb-4d49-a4d0-580598bd682e.png',
+  'staj-nasil-bulunur': 'exec-7a5bb865-dfe4-45f1-88f2-e934c9c4ca2d.png',
   'staj-sigortasi-kim-yapar': 'exec-7c7cd75e-b51d-4edb-96fd-75cb76dd651a.png',
   'staj-ucreti-nasil-hesaplanir': 'exec-6405dd3c-9949-4575-b361-47ad8a88b8ce.png',
   'stajda-izin-ve-devamsizlik': 'exec-e94c37d0-267f-4d20-9c7d-641591e6e338.png',
