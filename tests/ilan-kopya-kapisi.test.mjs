@@ -27,7 +27,7 @@ import { PGlite } from '@electric-sql/pglite';
 */
 
 const GOC = new URL(
-  '../supabase/migrations/20260920010000_ilan_canonical_url_bosluk.sql',
+  '../supabase/migrations/20260907005851_ilan_canonical_url_bosluk.sql',
   import.meta.url
 );
 

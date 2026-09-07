@@ -42,8 +42,6 @@ declare
   total bigint;
   sirket bigint;
   sehir bigint;
-  dogrulanan bigint;
-  son_dogrulama timestamptz;
   watermark timestamptz;
 begin
   page := public.get_published_listings_catalog(p_country,p_cursor_posted_at,p_cursor_id,p_snapshot);
@@ -55,10 +53,8 @@ begin
   */
   select count(*),
          count(distinct l.company_id),
-         count(distinct nullif(btrim(l.city),'')),
-         count(l.source_verified_at),
-         max(l.source_verified_at)
-    into total, sirket, sehir, dogrulanan, son_dogrulama
+         count(distinct nullif(btrim(l.city),''))
+    into total, sirket, sehir
   from public.listings l
   where l.status='published' and l.created_at<=watermark
     and (p_country='all'
@@ -68,19 +64,7 @@ begin
   return page || jsonb_build_object(
     'total', total,
     'companyTotal', sirket,
-    'cityTotal', sehir,
-    /*
-      GÜVEN SATIRININ VERİSİ — İDDİA DEĞİL, ÖLÇÜM
-
-      Ana sayfada "kaynaklar düzenli kontrol ediliyor" demek ancak bu iki
-      alan doğruysa dürüst. Ölçüldü (7 Eylül 2026):
-        TR : 62 ilanın 62'si doğrulanmış, en son 6 Eylül
-        FR : 48 ilanın 0'ı doğrulanmış — source_verified_at hiç yazılmamış
-      Yani sabit bir cümle yazılsaydı Fransa listesinde YANLIŞ olurdu.
-      Arayüz bu iki sayıya bakıp cümleyi kuruyor ya da hiç kurmuyor.
-    */
-    'verifiedTotal', dogrulanan,
-    'lastVerifiedAt', son_dogrulama
+    'cityTotal', sehir
   );
 end;
 $function$;
