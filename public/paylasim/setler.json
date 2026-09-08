@@ -189,5 +189,51 @@
       "/paylasim/ig-2026w35-cv-deneyim-yok/06-w35-v1.jpg",
       "/paylasim/ig-2026w35-cv-deneyim-yok/07-w35-v1.jpg"
     ]
+  },
+  {
+    "kod": "staj-sigortasi-fotografli",
+    "ad": "Staj sigortasını kim yapar? — fotoğraflı",
+    "surum": "v1",
+    "guncellendi": "2026-09-08",
+    "metin": "Staj sigortasını kim yapar? Cevap stajın türüne göre değişiyor.\n\n• Zorunlu stajda sigorta girişini genellikle okul yapar; kesin yanıt okulunun staj yönergesinde.\n• Gönüllü stajda okul sigortası otomatik devreye girmeyebilir. Okuluna ve işyerine yazılı sor.\n• Staj türünü, girişin kim tarafından ve hangi tarihte yapılacağını başlamadan önce teyit et.\n• Sigorta girişi yapılmadan staja başlama.\n\nKaydet; staj başlangıcından önce kontrol et.\n\nRehberin tamamı: stajimvar.com/rehber/staj-sigortasi-kim-yapar",
+    "etiketler": [
+      "#stajsigortasi",
+      "#zorunlustaj",
+      "#gonullustaj",
+      "#stajbasvurusu",
+      "#stajrehberi",
+      "#universiteogrencisi",
+      "#sgk",
+      "#stajyer"
+    ],
+    "kartlar": [
+      "/paylasim/staj-sigortasi-fotografli/01-v1.jpg",
+      "/paylasim/staj-sigortasi-fotografli/02-v1.jpg",
+      "/paylasim/staj-sigortasi-fotografli/03-v1.jpg",
+      "/paylasim/staj-sigortasi-fotografli/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "basvuruya-cevap-gelmezse-fotografli",
+    "ad": "Başvuruya cevap gelmezse — fotoğraflı",
+    "surum": "v1",
+    "guncellendi": "2026-09-08",
+    "metin": "Staj başvuruna cevap gelmemesi her zaman ret demek değil. E-posta gözden kaçmış veya süreç gecikmiş olabilir.\n\n• Bir hafta bekle; daha erken yazmak sabırsız görünebilir.\n• Yeni e-posta açma, aynı e-posta zincirine kısa bir yanıt yaz.\n• Kibar ve net sor; baskı kuran ifadeler kullanma.\n• İkinci hatırlatmadan sonra üçüncü hatırlatma yok: başvuruyu kapat ve yenilerine geç.\n\nBeklerken başvuru yapmayı bırakma. Kaydet; gerektiğinde takip mesajını kullan.\n\nRehberin tamamı: stajimvar.com/rehber/basvuruya-cevap-gelmezse",
+    "etiketler": [
+      "#stajbasvurusu",
+      "#stajarama",
+      "#takipepostasi",
+      "#kariyer",
+      "#stajrehberi",
+      "#universiteogrencisi",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/basvuruya-cevap-gelmezse-fotografli/01-v1.jpg",
+      "/paylasim/basvuruya-cevap-gelmezse-fotografli/02-v1.jpg",
+      "/paylasim/basvuruya-cevap-gelmezse-fotografli/03-v1.jpg",
+      "/paylasim/basvuruya-cevap-gelmezse-fotografli/04-v1.jpg"
+    ]
   }
 ]
