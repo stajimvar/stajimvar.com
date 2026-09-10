@@ -43,6 +43,9 @@ const kurulum = oku('src/components/sosyal/SosyalProfilKurulum.tsx');
 const gorunum = oku('src/components/sosyal/SosyalProfilGorunumu.tsx');
 const menu = oku('src/components/sosyal/ProfilAyarMenusu.tsx');
 const izgara = oku('src/components/sosyal/PaylasimIzgarasi.tsx');
+const uyariKutusu = oku('src/components/sosyal/TopluluktaDegilUyarisi.tsx');
+const ustSatir = oku('src/components/sosyal/PortfolyoUstSatiri.tsx');
+const ogrenciProfili = oku('src/components/StudentProfileView.tsx');
 const sayfa = oku('src/components/sosyal/SosyalProfilSayfasi.tsx');
 const duzenleme = oku('src/components/sosyal/SosyalProfilDuzenleme.tsx');
 const alanlar = oku('src/components/sosyal/SosyalFormAlanlari.tsx');
@@ -55,6 +58,10 @@ const talepKuyrugu = oku('src/components/yonetim/BolumTalepleri.tsx');
 /* Kuyruğa girişin çizildiği yer: mevcut yönetim paneli. */
 const panel = oku('src/components/AdminDashboard.tsx');
 const app = oku('src/App.tsx');
+/* Alt gezinme çubuğu: birleşik ekranın tek girişi. */
+const ustCubuk = oku('src/components/Header.tsx');
+const orta = oku('functions/_middleware.ts');
+const hesapSayfasi = oku('src/components/AccountSheet.tsx');
 const sema = oku('supabase/migrations/20260921010000_sosyal_katman_semasi.sql');
 const rls = oku('supabase/migrations/20260921020000_sosyal_katman_rls.sql');
 const kurulumRpc = oku('supabase/migrations/20260923030000_sosyal_kurulum_rpc.sql');
@@ -411,8 +418,11 @@ test('menüde yalnız gerçekten çalışan satırlar var', () => {
     yükleme ekranını açıyor, öteki `avatar_path`i null'a çekiyor —
     ikisinin de arka ucu 20260924040000 ile geldi.
 
-    Düzenleme üst bloktaki ana düğmede duruyor; menüdeki ikinci kopyası
-    aynı işi iki yerde gösteriyordu.
+    Düzenleme satırı KOŞULLU ve yalnız birleşik ekranda (`/cv`)
+    veriliyor: orada profil sunumunun üst bloğu hiç çizilmiyor (kimlik
+    alanları sol sütunda), yani ana düğmenin evi kalmıyor. Üst bloğu
+    çizen çağıran eylemi VERMİYOR ve satır orada diziye hiç girmiyor —
+    aynı işin iki girişi hâlâ yok.
 
     BEĞENDİKLERİM / KAYDEDİLENLER / ARŞİV ARTIK GERÇEK: beğen ve kaydet
     düğmeleri paylaşımın ayrıntı katmanında çalışıyor, arşivden geri
@@ -421,16 +431,21 @@ test('menüde yalnız gerçekten çalışan satırlar var', () => {
     KOŞULLU: eylem verilmediğinde diziye hiç girmiyorlar ve eylem yalnız
     sahip dalında veriliyor.
 
-    Sayı YEDİ: iki fotoğraf satırı ve üç liste satırı koşullu; fotoğrafı
-    olmayan bir ziyaretçide bu menü zaten hiç çizilmiyor.
+    Sayı SEKİZ: düzenleme, iki fotoğraf satırı ve üç liste satırı
+    koşullu; fotoğrafı olmayan bir ziyaretçide bu menü zaten hiç
+    çizilmiyor.
   */
   assert.match(menu, /etiket: 'Profil bağlantısını paylaş'/);
   assert.match(menu, /etiket: gorunurlukEtiketi/);
   assert.match(menu, /'Profil fotoğrafını değiştir'/);
   assert.match(menu, /'Profil fotoğrafını kaldır'/);
-  assert.doesNotMatch(menu, /etiket: 'Profili düzenle'/);
+  /* Satır KOŞULLU: eylem verilmediğinde diziye hiç girmiyor. */
+  assert.match(menu, /\.\.\.\(onDuzenle\s*\n?\s*\? \[/);
+  assert.match(menu, /etiket: 'Sosyal profili düzenle'/);
+  /* Üst bloğu çizen sunum eylemi VERMİYOR: aynı işin iki girişi yok. */
+  assert.doesNotMatch(gorunum, /onDuzenle=\{onDuzenle\}/);
   /* `Oge` arayüzündeki `etiket: string;` sayılmıyor: o bir satır değil, bir tür. */
-  assert.equal((menu.match(/\n\s*etiket: (?!string)/g) ?? []).length, 7);
+  assert.equal((menu.match(/\n\s*etiket: (?!string)/g) ?? []).length, 8);
 });
 
 test('görünürlük öğesinin etiketi duruma göre değişiyor', () => {
@@ -568,23 +583,30 @@ test('sahibe özel her şey sahibiMi koşulunun içinde', () => {
 
 test('topluluğa katılmamış kendi profilinde uyarı ve "Topluluğa katıl" var', () => {
   /*
-    Blok `sahibiMi && !profil.yayindaMi` koşulunun İÇİNDE: ziyaretçide ve
-    başkasının profilinde DOM'a hiç girmiyor. Ölçüm koşulun açılışından
-    üst bloğun kapanışına kadarki parçada yapılıyor.
+    KUTU AYRI DOSYADA, YETKİ KOŞULU ÇAĞIRANDA
+
+    Aynı uyarı iki yerde gerekiyor: profil sunumunun üst bloğunda ve
+    birleşik ekranın sağ sütununda. İki kopya olsaydı biri değiştiğinde
+    öteki geride kalır ve aynı durum iki farklı cümleyle anlatılırdı.
+    Metin bu yüzden `TopluluktaDegilUyarisi` içinde; İKİ çağıran da onu
+    kendi sahip dalının İÇİNDE çiziyor, yani ziyaretçide DOM'a hiç
+    girmiyor.
   */
-  const blok = govdeAl(gorunum, '{sahibiMi && !profil.yayindaMi && onYayimla && (', '</header>');
-  assert.ok(blok.length > 0, 'topluluk uyarısı bulunamadı');
-  assert.match(blok, /Alan topluluğuna henüz katılmadın/);
-  assert.match(blok, /Topluluğa katıl/);
-  assert.match(blok, /role="status"/);
-  /* Metin dört durumu da ayırıyor: bekliyor, gönderiliyor, hata. */
-  assert.match(blok, /yayimlamaDurumu === 'gonderiliyor'/);
-  assert.match(blok, /Topluluğa katılıyor…/);
-  assert.match(blok, /yayimlamaDurumu === 'hata'/);
+  assert.match(gorunum, /\{sahibiMi && !profil\.yayindaMi && onYayimla && \(\n\s*<TopluluktaDegilUyarisi/);
+  assert.match(sayfa, /\{!profil!\.yayindaMi && \(\n\s*<TopluluktaDegilUyarisi/);
+
+  assert.match(uyariKutusu, /Alan topluluğuna henüz katılmadın/);
+  assert.match(uyariKutusu, /Topluluğa katıl/);
+  assert.match(uyariKutusu, /role="status"/);
+  /* Metin üç durumu da ayırıyor: bekliyor, gönderiliyor, hata. */
+  assert.match(uyariKutusu, /durum === 'gonderiliyor'/);
+  assert.match(uyariKutusu, /Topluluğa katılıyor…/);
+  assert.match(uyariKutusu, /durum === 'hata'/);
   /* Hata dürüst: başarı gibi gösterilmiyor. */
-  assert.match(blok, /profilinde bir değişiklik olmadı/);
-  /* Eylem etiketi yalnız bu blokta; başka yerde kopyası yok. */
-  assert.equal((gorunum.match(/'Topluluğa katıl'/g) ?? []).length, 1);
+  assert.match(uyariKutusu, /profilinde bir değişiklik olmadı/);
+  /* Eylem etiketi TEK yerde; iki çağıranın hiçbirinde kopyası yok. */
+  assert.equal((gorunum.match(/Topluluğa katıl/g) ?? []).length, 0);
+  assert.equal((sayfa.match(/Topluluğa katıl/g) ?? []).length, 0);
 });
 
 test('kullanıcıya basılan metinde "yayımla" ve "yayından" kalmadı', () => {
@@ -658,9 +680,15 @@ test('görünürlük bildirimleri yalnız başarıdan sonra yazılıyor', () => 
 });
 
 test('bildirim kibar canlı bölgeden okunuyor', () => {
-  /* `role="status"` zaten kibar bir canlı bölge; ikinci bir aria-live yok. */
+  /*
+    `role="status"` zaten kibar bir canlı bölge; ikinci bir aria-live yok.
+    Aynı kalıp gömülü portfolyo dalında da geçerli: orada `SosyalProfilGorunumu`
+    çizilmediği için bildirimi sayfanın kendisi basıyor.
+  */
   assert.match(gorunum, /\{bildirim && \(\n\s*<p role="status"/);
+  assert.match(sayfa, /\{bildirim && \(\n\s*<p role="status"/);
   assert.doesNotMatch(gorunum, /aria-live/);
+  assert.doesNotMatch(sayfa, /aria-live/);
 });
 
 test('topluluktan ayrılma hatası sessiz kalmıyor', () => {
@@ -894,8 +922,21 @@ test('profil yoksa /profil kurulum ekranını açıyor', () => {
   assert.match(sayfa, /<SosyalProfilKurulum/);
 });
 
-test('profil tamsa /profil kalıcı adrese yönlendiriyor', () => {
-  assert.match(sayfa, /onNavigate\(profilYolu\(profil!\.kullaniciAdi as string\), \{ degistir: true \}\)/);
+test('profil tamsa /profil sahibin tek ekranına yönlendiriyor', () => {
+  /*
+    Sahibin kanonik adresi artık `/profil/<ad>` DEĞİL, birleşik ekran:
+    solda profil/CV kartı, sağda sosyal portfolyo. İki ayrı sahip ekranı
+    olsaydı hangisinde ne yapılabileceği adres çubuğundan tahmin edilirdi.
+
+    `/profil/<başkasının adı>` yönlendirilmiyor: koşul `sahibiMi`ye
+    bakıyor, yalnız `profilTamMi`ye değil.
+  */
+  assert.match(sayfa, /const BIRLESIK_EKRAN = '\/cv';/);
+  assert.match(sayfa, /if \(rotaAdi !== null && !sahibiMi\) return;/);
+  assert.match(sayfa, /onNavigate\(BIRLESIK_EKRAN, \{ degistir: true \}\)/);
+  /* Hedef adres gerçekten çiziliyor: `/cv` birleşik ekranı döndürüyor. */
+  assert.match(app, /temizYol === '\/cv' \|\| temizYol === '\/cv\/yazdir'/);
+  assert.match(app, /ogrenciProfilEkrani\(\)/);
 });
 
 test('kanonik yönlendirme geri tuşunu kilitlemiyor', () => {
@@ -908,7 +949,11 @@ test('kanonik yönlendirme geri tuşunu kilitlemiyor', () => {
   */
   assert.match(app, /const navigate = \(to: string, secenek\?: \{ degistir\?: boolean \}\) =>/);
   assert.match(app, /if \(secenek\?\.degistir\) window\.history\.replaceState\(\{\}, '', to\);/);
-  assert.match(sayfa, /onNavigate\(profilYolu\(ad\), \{ degistir: true \}\)/);
+  /* Kurulum sonrası ve kanonik yönlendirme: ikisi de `degistir` ile. */
+  assert.equal(
+    (sayfa.match(/onNavigate\(BIRLESIK_EKRAN, \{ degistir: true \}\)/g) ?? []).length,
+    2,
+  );
 });
 
 test('yükleme, boş, hata ve yetkisiz durumları sayfada ayrı ayrı var', () => {
@@ -1386,4 +1431,156 @@ test('kuyruk girişi yönetici olmayan dalda DOM’a hiç girmiyor', () => {
   );
   /* Rotanın kendisi de sunucu tarafı kapının arkasında. */
   assert.match(app, /temizYol === '\/yonetim\/bolum-talepleri'[\s\S]{0,400}?<AdminRouteGate/);
+});
+
+/* ------------------------------------------------------------------ */
+/*  BİRLEŞİK EKRAN — SOLDA PROFİL/CV, SAĞDA SOSYAL PORTFOLYO           */
+/* ------------------------------------------------------------------ */
+
+test('/cv birleşik ekranı, /cv/yazdir yazdırılabilir CV', () => {
+  /*
+    İki adres AYRILDI çünkü iki farklı iş: biri profili yönetmek, öteki
+    bir belgeyi almak. Tek adreste dursalardı yazdırma görünümü profili
+    düzenleyen kullanıcının altından ekranı çeker, ya da tersine belge
+    adresi paylaşılamazdı. Sunucu tarafı da ikisini de tanıyor; tanımasa
+    doğrudan açılan `/cv/yazdir` 404 dönerdi.
+  */
+  assert.match(app, /if \(temizYol === '\/cv' \|\| temizYol === '\/cv\/yazdir'\) \{/);
+  assert.match(app, /if \(temizYol === '\/cv\/yazdir'\) \{\n\s*return <CvPage student=\{student\} onBack=\{\(\) => navigate\('\/cv'\)\} \/>;/);
+  assert.match(app, /return icerikSayfasi\(<main className=\{anaAlanSinifi\}>\{ogrenciProfilEkrani\(\)\}<\/main>\);/);
+  assert.match(orta, /'\/cv',/);
+  assert.match(orta, /'\/cv\/yazdir',/);
+
+  /* Birleşik ekran: sol sütun profil/CV kartı, sağ sütun portfolyo. */
+  assert.match(ogrenciProfili, /lg:col-span-4/);
+  assert.match(ogrenciProfili, /lg:col-span-8/);
+  assert.match(ogrenciProfili, /\{sosyalPortfolyo\}/);
+  assert.match(app, /sosyalPortfolyo=\{\n\s*<SosyalProfilSayfasi\n\s*gomulu/);
+});
+
+test('CV eylemi yazdırılabilir belgeye gidiyor, birleşik ekrana değil', () => {
+  /*
+    `/cv` artık birleşik ekranın kendisi. "CV'yi görüntüle" oraya
+    götürseydi düğme kullanıcıyı bulunduğu sayfaya geri koyardı — hiçbir
+    şey yapmayan bir eylem.
+  */
+  assert.match(app, /onOpenCv=\{\(\) => navigate\('\/cv\/yazdir'\)\}/);
+  assert.equal((app.match(/navigate\('\/cv'\)/g) ?? []).length, 2);
+});
+
+test('Başvurularım sağ sütundan kalktı ama yolu duruyor', () => {
+  /*
+    Bölüm profilin sağ sütunundan kaldırıldı; yerini sosyal portfolyo
+    aldı. Başvuru takibi SİLİNMEDİ: kendi sekmesine döndü. Bir süre
+    'applications' sekmesi 'profile'a çevriliyordu ve o çeviri kalsaydı
+    hesap menüsündeki satır kullanıcıyı başvuru diye bir şey olmayan bir
+    ekrana düşürürdü.
+  */
+  assert.doesNotMatch(ogrenciProfili, /basvuruListesi/);
+  assert.doesNotMatch(ogrenciProfili, /baslik="Başvurularım"/);
+  assert.doesNotMatch(ogrenciProfili, /id="basvuru"/);
+
+  assert.match(app, /const istenenTab = activeTab;/);
+  assert.match(app, /\{safeTab === 'applications' && basvuruTakibi\}/);
+  assert.match(app, /const basvuruTakibi = activeStudent \? \(/);
+  assert.match(hesapSayfasi, /data-testid="account-sheet-applications"/);
+  assert.match(hesapSayfasi, /onClick=\{onOpenApplications\}/);
+
+  /* Sayaçlar da o ekrana götürüyor: sayının gittiği yerde aynı sayı var. */
+  assert.match(ogrenciProfili, /onBasvurulariAc\?: \(altSekme\?: 'all' \| 'interviews'\) => void;/);
+  assert.match(ogrenciProfili, /onBasvurulara=\{onBasvurulariAc \? \(\) => onBasvurulariAc\('all'\) : undefined\}/);
+  assert.match(app, /setActiveTab\('applications'\);\n\s*setActiveSubTab\(altSekme \?\? 'all'\);/);
+});
+
+test('ziyaretçi dalı portfolyo üst satırını ve CV alanını DOM’a hiç sokmuyor', () => {
+  /*
+    Dişli menüsü, "Paylaş" düğmesi ve sahibin kendi listeleri
+    `PortfolyoUstSatiri` içinde; o bileşen sayfanın SAHİP dalında, yani
+    `if (!sahibiMi) return <GuvenliEkran/>` satırından SONRA çiziliyor.
+    Ziyaretçi dalı çok daha yukarıda dönüyor ve o dala hiç ulaşmıyor —
+    gizlenmiş bir menü klavyeyle bulunur, çizilmeyen menü bulunmaz.
+
+    CV kartı, profil tamamlanma oranı ve düzenleme alanları
+    `StudentProfileView` içinde ve o bileşen sosyal ağaçta hiç geçmiyor:
+    ziyaretçi görünümü `SosyalProfilGorunumu` ile çiziliyor.
+  */
+  const ziyaretciDali = sayfa.indexOf('if (ziyaretciYolu) {');
+  const sahipDali = sayfa.indexOf('if (!sahibiMi) {');
+  const ustSatirCagrisi = sayfa.indexOf('<PortfolyoUstSatiri');
+  assert.ok(ziyaretciDali > 0 && sahipDali > 0 && ustSatirCagrisi > 0);
+  assert.ok(ziyaretciDali < sahipDali, 'ziyaretçi dalı sahip dalından önce dönmeli');
+  assert.ok(sahipDali < ustSatirCagrisi, 'üst satır sahip dalından sonra çiziliyor');
+
+  /* Ziyaretçiye açıkça `sahibiMi={false}` geçiyor; varsayılana bırakılmıyor. */
+  assert.match(sayfa, /<SosyalProfilGorunumu\n\s*profil=\{ziyaretciProfili\}\n\s*sahibiMi=\{false\}/);
+
+  /* Sosyal ağaçta CV/profil düzenleme bileşenlerinin adı bile geçmiyor. */
+  for (const kaynak of [sayfa, gorunum, ustSatir]) {
+    assert.doesNotMatch(kaynak, /StudentProfileView|CvAlani|CvPage|ProfilBasligi/);
+  }
+  /* Üst satır bir `sahibiMi` bayrağı ALMIYOR: sınır çağıranda, burada değil. */
+  assert.doesNotMatch(ustSatir, /sahibiMi\?:/);
+});
+
+test('ziyaretçi görünümü iki sütun, ızgara sahibin ekranıyla aynı ölçüde', () => {
+  /*
+    Ziyaretçi görünümü TEK SÜTUNDU: kimlik kartı tam genişlikte duruyor,
+    ızgara onun altından başlıyordu. Geniş ekranda kartın sağı boş
+    kalıyor, kullanıcı fotoğrafları görmek için önce biyografiyi geçmek
+    zorunda kalıyordu.
+
+    İskelet birleşik ekrandakiyle (`/cv`) BİREBİR aynı olmalı: iki farklı
+    profil yerleşimi olsaydı aynı kişi kendi ekranıyla başkasının ekranı
+    arasında geçerken düzen kayardı. Bu yüzden iddia sınıf dizesini TEK
+    TEK karşılaştırıyor, "iki sütun var mı" diye bakmıyor.
+  */
+  const iskelet = /grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start/;
+  assert.match(gorunum, iskelet);
+  assert.match(ogrenciProfili, iskelet);
+  assert.match(gorunum, /className="lg:col-span-4 lg:sticky lg:top-4"/);
+  assert.match(gorunum, /className="lg:col-span-8 min-w-0"/);
+
+  /*
+    Izgara sabiti DEĞİŞMEDİ ve iki ekran da `gorunum="sade"` istiyor: iki
+    kip olsaydı aynı paylaşım iki adreste iki farklı boyda görünürdü.
+  */
+  assert.ok(
+    izgara.includes(
+      "export const PAYLASIM_IZGARASI = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3';",
+    ),
+    'ızgara sabiti değişmemeli',
+  );
+  assert.match(gorunum, /<PaylasimIzgarasi[\s\S]{0,400}?gorunum="sade"/);
+  assert.match(sayfa, /<PaylasimIzgarasi[\s\S]{0,400}?gorunum="sade"/);
+
+  /* Sol sütun yalnız herkese açık alanlar: sahibin üst satırı burada yok. */
+  assert.doesNotMatch(gorunum, /PortfolyoUstSatiri/);
+});
+
+test('alt çubuktaki Profil birleşik ekranın kendi adresine gidiyor', () => {
+  /*
+    Düğme `setActiveTab('profile')` yapıyordu: aynı birleşik ekran `/`
+    adresinde çiziliyor, yani aynı ekranın iki adresi vardı. Artık hesap
+    menüsüyle AYNI prop'u çağırıyor — ikinci bir yol açılmadı.
+  */
+  const altCubukProfil = ustCubuk.indexOf('aria-label="Profilim"');
+  assert.ok(altCubukProfil > 0, 'alt çubuktaki Profil düğmesi bulunmalı');
+  const dugme = ustCubuk.slice(altCubukProfil, altCubukProfil + 1400);
+  assert.ok(
+    dugme.includes('if (onOpenProfilVeCv) {') && dugme.includes('onOpenProfilVeCv();'),
+    'alt çubuk hesap menüsüyle aynı prop’u çağırmalı',
+  );
+  /* Prop verilmezse eski sekme davranışı yedekte kalıyor. */
+  assert.ok(dugme.includes("setActiveTab('profile');"), 'yedek davranış korunmalı');
+  assert.match(app, /onOpenProfilVeCv=\{\(\) => navigate\('\/cv'\)\}/);
+
+  /*
+    Seçili vurgusu ADRESE de bakıyor: /cv'ye götüren düğme, gittiği yerde
+    sönük kalmamalı.
+  */
+  assert.ok(
+    ustCubuk.includes(String.raw`const cvEkranindaMi = /^\/cv(\/|$)/.test(bulunulanYol);`),
+    'adres /cv iken Profil seçili görünmeli',
+  );
+  assert.ok(ustCubuk.includes('const profildeMi = cvEkranindaMi ||'));
 });

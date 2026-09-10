@@ -237,13 +237,21 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
   return (
     <div className="max-w-5xl mx-auto space-y-4 pb-2">
       {/*
-        BAŞLIK BANDI KALDIRILDI
+        BAŞLIK ÇAĞIRANDA, BURADA DEĞİL
 
-        Bu liste profil sayfasında "Başvurularım" başlıklı bölümün İÇİNDE
-        duruyor. Bandın kendisi bir kez daha "Staj Başvurularım & Süreç
-        Takibi" diyordu ve altına da ne işe yaradığını anlatan bir cümle
-        ekliyordu — aynı şeyin üçüncü kez söylenmesi. Bölüm başlığı zaten
-        adı ve özeti veriyor; burası doğrudan süzgeçlerle başlıyor.
+        Liste artık profil sayfasının içinde bir bölüm değil; kendi
+        ekranında duruyor ve `<h1>Başvurularım</h1>` App.tsx'te, bu
+        bileşenin hemen üstünde çiziliyor.
+
+        Başlığın orada durmasının sebebi sayfa sıradüzeni: bir ekranda
+        tek bir `h1` var ve o ekranın konusunu ROTA belirliyor. Bileşen
+        kendi `h1`ini yazsaydı, gömüldüğü her yerde ikinci bir sayfa
+        başlığı üretirdi — daha önce tam olarak bu oldu, profil
+        sayfasındaki "Başvurularım" bölüm başlığının altında bir kez daha
+        "Staj Başvurularım & Süreç Takibi" yazıyordu.
+
+        Burası bu yüzden doğrudan süzgeçlerle başlıyor. Bileşeni başka
+        bir ekrana taşıyan, başlığı da o ekranın diline göre yazacak.
       */}
       {/*
         SEKMELER ARTIK SİTENİN TEK SEKME BİLEŞENİ

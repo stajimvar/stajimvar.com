@@ -15,7 +15,6 @@ import {
   LogOut,
   Plus,
   Settings,
-  Send,
   ShieldCheck,
   Sparkles,
   Target,
@@ -82,20 +81,46 @@ interface StudentProfileViewProps {
   /** Yazdırılabilir CV sayfasına geçiş. */
   onOpenCv?: () => void;
   /**
-   * Başvuru takibi artık bu sayfanın içinde; ayrı sekme kaldırıldı.
-   * Liste bileşeni App tarafından hazır veriliyor — bu bileşen başvuru
-   * verisini kendisi çekmiyor, sadece yerleştiriyor.
-   */
-  /**
    * Başvuru KAYITLARI — yalnızca sayısı değil.
    *
    * Önce sadece `basvuruSayisi` geliyordu; "kaç mülakat" gibi bir soruyu
    * cevaplayabilmek için sayının yanında ikinci bir sayı daha geçirmek
    * gerekirdi ve iki sayı ayrı hesaplandığında er geç birbirini tutmaz.
    * Liste bir kez geçiyor, bütün sayılar ondan çıkıyor.
+   *
+   * LİSTENİN KENDİSİ ARTIK BURADA DEĞİL
+   * -----------------------------------
+   * "Başvurularım" bölümü bu sayfanın sağ sütunundan KALKTI; yerini
+   * sosyal fotoğraf portfolyosu aldı. Başvuru takibi silinmedi, kendi
+   * ekranına döndü (hesap menüsündeki "Başvurularım" satırı). Sayılar
+   * burada kalmaya devam ediyor: başlıktaki iki sayaç öğrencinin
+   * sürecinin nerede olduğunu söylüyor ve dokununca o ekrana götürüyor.
    */
   basvurular?: ApplicationRecord[];
-  basvuruListesi?: React.ReactNode;
+  /**
+   * Başvuru ekranını aç — isteğe bağlı olarak mülakat süzgeciyle.
+   *
+   * Başlıktaki iki sayaç eskiden aynı sayfadaki `basvuru` bölümünü
+   * açıyordu; o bölüm artık burada olmadığı için sayı hiçbir yere
+   * götürmüyordu. Sayının GİTTİĞİ YERDE aynı sayı durmalı: mülakat
+   * sayacı doğrudan mülakat süzgecini açıyor.
+   *
+   * Verilmezse sayaçlara tıklanamıyor (bkz. `ProfilBasligi`); çalışmayan
+   * bir tıklama hedefi çizmek yerine sayı düz metin kalıyor.
+   */
+  onBasvurulariAc?: (altSekme?: 'all' | 'interviews') => void;
+  /**
+   * SOSYAL FOTOĞRAF PORTFOLYOSU — SAĞ SÜTUNUN BAŞI
+   *
+   * Panel App tarafından hazır veriliyor; bu bileşen sosyal veriyi
+   * kendisi çekmiyor, sadece yerleştiriyor. Kalıp buradan kalkan başvuru
+   * listesiyle aynıydı ve sebebi de aynı: profil ekranı bir yerleşim,
+   * veri katmanına açılan ikinci bir kapı değil.
+   *
+   * Verilmezse sağ sütun doğrudan bölümlerle başlıyor — boş bir kutu ya
+   * da "yakında" satırı çizilmiyor.
+   */
+  sosyalPortfolyo?: React.ReactNode;
   /** İlanlar sekmesindeki "Kaydettiklerim" kategorisine geçiş. */
   onKaydedilenlere?: () => void;
   /*
@@ -115,7 +140,6 @@ interface StudentProfileViewProps {
 }
 
 type BolumId =
-  | 'basvuru'
   | 'kisisel'
   | 'cv'
   | 'teknik'
@@ -300,7 +324,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   quizzes = [],
   onStartQuiz,
   basvurular = [],
-  basvuruListesi,
+  onBasvurulariAc,
+  sosyalPortfolyo,
   onKaydedilenlere,
   onSubTabChange,
   onLogout,
@@ -308,15 +333,15 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   onOpenAdmin,
 }) => {
   /*
-    Açılışta 'basvuru' seçili — şeritteki ilk daire.
+    AÇILIŞTA 'kisisel'
 
-    Öğrenci profile en çok "başvurum ne oldu" diye giriyor. Başvuru listesi
-    hiç yoksa (bileşene geçirilmemişse) 'kisisel'e düşüyor: boş bir bölümle
-    karşılamak, dolu bir bölümle karşılamaktan kötü.
+    Bir süre 'basvuru' seçiliydi çünkü başvuru takibi bu sayfanın içindeydi
+    ve öğrenci profile en çok "başvurum ne oldu" diye giriyordu. O bölüm
+    artık burada değil — kendi ekranında — dolayısıyla şeritteki ilk daire
+    de okul ve iletişim. Koşullu bir başlangıç bırakılmadı: kaldırılan bir
+    bölümün adına bakan koşul, sonradan okuyanı yanıltır.
   */
-  const [acikBolum, setAcikBolum] = useState<BolumId>(
-    basvuruListesi ? 'basvuru' : 'kisisel'
-  );
+  const [acikBolum, setAcikBolum] = useState<BolumId>('kisisel');
   /**
    * Bölüme git. Izgara, sayılar ve eksik adımlar hep buradan geçiyor.
    *
@@ -395,9 +420,12 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   const mulakatSayisi = basvurular.filter(
     (b) => b.status === 'interview_scheduled' || b.status === 'technical_assessment'
   ).length;
-  const degerlendirmede = basvurular.filter(
-    (b) => b.status === 'under_review' || b.status === 'technical_assessment'
-  ).length;
+  /*
+    "Değerlendirmede" sayısı BURADAN KALKTI: tek okuyucusu kaldırılan
+    başvuru bölümünün özet satırıydı. Kullanılmayan bir hesabı bırakmak,
+    sonradan okuyana o sayının bir yerde gösterildiğini düşündürürdü;
+    aynı ayrım başvuru ekranının kendi süzgeçlerinde duruyor.
+  */
 
   /*
     KAYDEDİLEN İLAN SAYISI
@@ -822,15 +850,19 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                 : undefined
             }
             onKaydedilenlere={onKaydedilenlere}
-            onBasvurulara={basvuruListesi ? () => bolumeGit('basvuru') : undefined}
+            /*
+              İKİ SAYAÇ DA AYRI BAŞVURU EKRANINA GİDİYOR
+
+              Eskiden ikisi de bu sayfadaki `basvuru` bölümünü açıyordu; o
+              bölüm sağ sütundan kalktığı için tıklama hiçbir şey yapmayan
+              bir hedefe düşerdi. Eylem verilmediğinde `ProfilBasligi`
+              sayıyı tıklanabilir çizmiyor — çalışmayan bir hedef yerine
+              düz metin.
+            */
+            onBasvurulara={onBasvurulariAc ? () => onBasvurulariAc('all') : undefined}
             onMulakatlara={
-              basvuruListesi
-                ? () => {
-                    bolumeGit('basvuru');
-                    /* Mülakat sayısına basan kişi mülakatları görmek istiyor. */
-                    onSubTabChange?.('interviews');
-                  }
-                : undefined
+              /* Mülakat sayısına basan kişi mülakatları görmek istiyor. */
+              onBasvurulariAc ? () => onBasvurulariAc('interviews') : undefined
             }
             oneCikanlar={oneCikanlar}
             secili={acikBolum}
@@ -964,35 +996,21 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         {/* ---------------- SAĞ: sekmeler ve bölümler ---------------- */}
         <div className="lg:col-span-8 space-y-3 min-w-0">
 
-      {/* ---------------- 0. Başvurularım ---------------- */}
-      {basvuruListesi && (
-        <Bolum
-          id="basvuru"
-          gorunur={acikBolum === 'basvuru'}
-          ikon={<Send className="w-5 h-5" />}
-          baslik="Başvurularım"
-          /*
-            Özet "2 başvuru" yazıyordu; hemen üstteki ızgarada zaten
-            "Başvurular · 2" duruyordu. Aynı sayıyı iki kez söylemek yerine
-            sürecin nerede olduğunu söylüyor.
-          */
-          ozet={
-            basvuruSayisi > 0
-              ? `${basvuruSayisi} başvuru · ${degerlendirmede} değerlendirmede · ${mulakatSayisi} mülakat`
-              : 'Henüz başvuru yok — ilanlara göz at'
-          }
-          /*
-            Yeşil tik "bu bölüm tamamlandı" demek ve başvuru sürecinde
-            böyle bir tamamlanma yok — süreç işverende devam ediyor.
-            Başvuru yapmış olmak bir bitiş değil.
-          */
-          tamam={false}
-          acik={acikBolum === 'basvuru'}
-          onToggle={bolumAc}
-        >
-          {basvuruListesi}
-        </Bolum>
-      )}
+      {/*
+        ---------------- SOSYAL FOTOĞRAF PORTFOLYOSU ----------------
+
+        Buradaki blok "Başvurularım" idi. Başvuru takibi SİLİNMEDİ, kendi
+        ekranına döndü: hesap menüsündeki "Başvurularım" satırı ve
+        başlıktaki iki sayaç oraya götürüyor. Aynı ekranda hem başvuru
+        listesi hem portfolyo olsaydı sağ sütun iki ayrı işin sırasını
+        tartışırdı; portfolyo yukarıda çünkü profil ekranının konusu
+        öğrencinin kendisi, başvuru süreci ayrı bir takip işi.
+
+        Panel App'ten hazır geliyor ve VERİLMEZSE hiçbir şey çizilmiyor:
+        boş bir kutu ya da "yakında" satırı, olmayan bir özelliği varmış
+        gibi göstermek olurdu.
+      */}
+      {sosyalPortfolyo}
 
       {/* ---------------- CV ---------------- */}
       <Bolum

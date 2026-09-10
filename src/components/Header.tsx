@@ -68,6 +68,18 @@ interface HeaderProps {
   onOpenLogin?: () => void;
   onOpenRegister?: () => void;
   onLogout?: () => void;
+  /**
+   * "Profilim ve CV" — birleşik profil ekranı (`/cv`).
+   *
+   * Sekme durumu (`setActiveTab('profile')`) YETMİYOR: kullanıcı bir alt
+   * sayfadayken (rehber, ilan ayrıntısı…) sekmeyi değiştirmek adresi
+   * değiştirmiyor ve ekranda hiçbir şey olmuyordu. Ekranın kendi adresi
+   * olduğu için gezinme App'ten geliyor — üst çubuk rota bilmiyor.
+   *
+   * Verilmezse satır eski davranışına düşüyor (yalnız sekme): tek bir
+   * prop unutulduğunda menü çalışmaz hâle gelmesin.
+   */
+  onOpenProfilVeCv?: () => void;
   /** Rehber merkezine geçiş. */
   onOpenGuides?: () => void;
   /** Öğrenci fırsatları merkezi. */
@@ -173,6 +185,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenLogin,
   onOpenRegister,
   onLogout,
+  onOpenProfilVeCv,
   onOpenGuides,
   onOpenOpportunities,
   onOpenDiscover,
@@ -499,7 +512,15 @@ export const Header: React.FC<HeaderProps> = ({
   */
   const rehberSayfasindaMi = /^\/rehber(\/|$)/.test(bulunulanYol);
   const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kesfetteMi && !kurumsalSayfada && activeTab === 'internships';
-  const profildeMi = !rehberdeMi && !kurumsalSayfada && activeTab === 'profile';
+  /*
+    Birleşik profil ekranının KENDİ ADRESİ var (/cv, /cv/yazdir). Alt
+    menüdeki Profil oraya gidiyor ama seçili vurgusu yalnızca
+    `activeTab === 'profile'`e bakıyordu: kullanıcı Profil'e basıp /cv'ye
+    gidiyor, alt menüde hiçbir şey yanmıyordu — bastığı düğme sönük
+    kalıyordu. Adres de sekme kadar geçerli bir sinyal.
+  */
+  const cvEkranindaMi = /^\/cv(\/|$)/.test(bulunulanYol);
+  const profildeMi = cvEkranindaMi || (!rehberdeMi && !kurumsalSayfada && activeTab === 'profile');
 
   return (
     <>
@@ -1100,9 +1121,13 @@ export const Header: React.FC<HeaderProps> = ({
                             type="button"
                             data-testid="desktop-profile-menu-profile"
                             onClick={() => {
+                              setProfileDropdownOpen(false);
+                              if (onOpenProfilVeCv) {
+                                onOpenProfilVeCv();
+                                return;
+                              }
                               setActiveTab('profile');
                               setActiveSubTab('all');
-                              setProfileDropdownOpen(false);
                             }}
                             className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
                           >
@@ -1605,6 +1630,20 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           aria-label="Profilim"
           onClick={() => {
+            /*
+              Hesap menüsüyle AYNI yolu kullanıyor. Alt menü
+              `setActiveTab('profile')` yaptığında ekran `/` adresinde
+              çiziliyordu; birleşik profil ekranının kendi adresi (/cv)
+              olduğu için aynı ekranın iki adresi vardı. İkinci bir yol
+              açmamak için hesap menüsünün prop'u burada da geçiyor.
+
+              Prop verilmezse eski sekme davranışı yedekte: tek bir prop
+              unutulduğunda alt menüdeki Profil ölmesin.
+            */
+            if (onOpenProfilVeCv) {
+              onOpenProfilVeCv();
+              return;
+            }
             setActiveTab('profile');
             setActiveSubTab('all');
           }}
@@ -1707,6 +1746,10 @@ export const Header: React.FC<HeaderProps> = ({
         onRequestClose={(reason) => requestMobileAccountSheetClose(reason)}
         onOpenProfile={() =>
           closeMobileAccountSheetThen(() => {
+            if (onOpenProfilVeCv) {
+              onOpenProfilVeCv();
+              return;
+            }
             setActiveTab('profile');
             setActiveSubTab('all');
           })

@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Archive, Bookmark, Camera, Eye, EyeOff, Heart, Link2, Settings, Trash2 } from 'lucide-react';
+import { Archive, Bookmark, Camera, Eye, EyeOff, Heart, Link2, Pencil, Settings, Trash2 } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 
 /**
@@ -58,10 +58,16 @@ import { ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
  *                    giriyor; menü de yalnız `sahibiMi` dalında ağaca
  *                    giriyor
  *
+ *   Sosyal profili düzenle  KOŞULLU ve yalnız birleşik ekranda (`/cv`)
+ *                    veriliyor. Bir süre menüde HİÇ yoktu çünkü eylem
+ *                    profil sunumunun üst bloğundaki ana düğmedeydi ve
+ *                    aynı işin iki girişi, hangisinin ne yaptığı
+ *                    sorusunu doğuruyordu. Birleşik ekranda o üst blok
+ *                    çizilmiyor (kimlik alanları sol sütunda) — düğme
+ *                    menüye TAŞINDI, kopyalanmadı: `SosyalProfilGorunumu`
+ *                    eylemi vermiyor, satır orada diziye hiç girmiyor
+ *
  * Çizilmeyenler ve sebepleri:
- *   Profili düzenle  arka ucu ÇALIŞIYOR ama eylem üst bloktaki ana
- *                    düğmede zaten var; aynı işin iki girişi, hangisinin
- *                    ne yaptığı sorusunu doğuruyordu
  *   Öne çıkanlar     `highlights` tablosu YOK (göçte açıkça ertelendi)
  *   Bağlantılar      bağlantı akışı bu aşamada yok
  */
@@ -107,6 +113,18 @@ export interface ProfilAyarMenusuProps {
   onBegendiklerim?: () => void;
   onKaydedilenler?: () => void;
   onArsiv?: () => void;
+  /**
+   * Sosyal profil düzenleme ekranı.
+   *
+   * Bu satır menüde BİLEREK YOKTU: eylem profil sunumunun üst bloğunda
+   * ayrı bir düğmeydi ve aynı işin iki girişi olsaydı biri değiştiğinde
+   * öteki geride kalırdı. Birleşik ekranda (`/cv`) o üst blok hiç
+   * çizilmiyor — kimlik alanları sol sütundaki profil kartında duruyor —
+   * yani düğmenin evi kalmadı. Satır bu yüzden KOŞULLU: eylemi veren
+   * çağıran (birleşik ekran) görüyor, üst bloğu çizen çağıran
+   * (`SosyalProfilGorunumu`) vermiyor ve satır diziye hiç girmiyor.
+   */
+  onDuzenle?: () => void;
 }
 
 interface Oge {
@@ -152,6 +170,7 @@ export const ProfilAyarMenusu: React.FC<ProfilAyarMenusuProps> = ({
   onBegendiklerim,
   onKaydedilenler,
   onArsiv,
+  onDuzenle,
 }) => {
   const [acik, setAcik] = React.useState(false);
   const [monte, setMonte] = React.useState(false);
@@ -195,6 +214,21 @@ export const ProfilAyarMenusu: React.FC<ProfilAyarMenusuProps> = ({
       ikon: <Link2 aria-hidden className="h-5 w-5 shrink-0 text-gray-400" />,
       calistir: onPaylas,
     },
+    /*
+      Düzenleme satırı da koşullu ve fotoğraf satırlarının ÜSTÜNDE:
+      ikisi de profilin kendisini değiştiriyor, aynı işin yakınlığına
+      göre yan yana duruyorlar.
+    */
+    ...(onDuzenle
+      ? [
+          {
+            anahtar: 'duzenle',
+            etiket: 'Sosyal profili düzenle',
+            ikon: <Pencil aria-hidden className="h-5 w-5 shrink-0 text-gray-400" />,
+            calistir: onDuzenle,
+          },
+        ]
+      : []),
     /*
       Fotoğraf satırları koşullu: eylem verilmediğinde ya da fotoğraf
       olmadığında DİZİYE HİÇ GİRMİYORLAR. `disabled` bırakmak, kullanıcıya

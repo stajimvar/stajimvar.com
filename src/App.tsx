@@ -1064,10 +1064,16 @@ export default function App() {
    * gibi görünen örnek verileri görür.
    */
   /*
-    "Başvurularım" sekmesi profile taşındı. Eski bağlantılar ve kayıtlı durum
-    kırılmasın diye 'applications' burada 'profile'a çevriliyor.
+    "BAŞVURULARIM" YİNE KENDİ SEKMESİ
+
+    Bir süre 'applications' burada 'profile'a ÇEVRİLİYORDU: başvuru
+    listesi profil sayfasının içinde bir bölümdü ve sekmenin kendi ekranı
+    yoktu. O bölüm profilin sağ sütunundan kalktı (yerini sosyal
+    portfolyo aldı), yani çeviri artık hesap menüsündeki "Başvurularım"
+    satırını hiçbir yere götürmeyen bir yola sokardı — kullanıcı profil
+    ekranına düşer ve orada başvuru diye bir şey bulamazdı.
   */
-  const istenenTab = activeTab === 'applications' ? 'profile' : activeTab;
+  const istenenTab = activeTab;
   const safeTab = !isLoggedIn && istenenTab !== 'internships' ? 'internships' : istenenTab;
 
   const temizYol = path.replace(/\/+$/, '') || '/';
@@ -1184,6 +1190,13 @@ export default function App() {
       allCompanies={allCompanies}
       onSelectCompany={handleSelectCompany}
       applicationsCount={applications.length}
+      /*
+        "Profilim ve CV" birleşik ekrana gidiyor: sol sütunda profil/CV
+        kartı, sağ sütunda sosyal fotoğraf portfolyosu. Sekme durumunu
+        değiştirmek yetmezdi — alt sayfadayken adres değişmiyor ve menü
+        hiçbir şey yapmamış gibi görünüyordu.
+      */
+      onOpenProfilVeCv={() => navigate('/cv')}
       onOpenGuides={() => navigate('/rehber')}
       onOpenOpportunities={() => navigate('/firsatlar')}
       onOpenDiscover={() => navigate('/kesfet')}
@@ -1304,6 +1317,224 @@ export default function App() {
       {cerezBandi}
     </div>
   );
+
+  /**
+   * ANA ALAN ÖLÇÜSÜ — TEK YERDE
+   *
+   * Ana sayfanın `main`i ile birleşik profil ekranının `main`i aynı
+   * genişlikte ve aynı kenar boşluklarında olmalı: iki farklı dize
+   * olsaydı, aynı ekran iki adreste iki farklı hizada başlardı.
+   */
+  const anaAlanSinifi = `flex-1 ${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-8`;
+
+  /**
+   * BAŞVURU TAKİBİ — KENDİ EKRANI
+   *
+   * Liste bir süre profil sayfasının içinde bir bölümdü; profilin sağ
+   * sütunu sosyal portfolyoya geçince oradan çıktı. Silinmedi: hesap
+   * menüsündeki "Başvurularım" satırı ve profil başlığındaki iki sayaç
+   * buraya götürüyor.
+   */
+  const basvuruTakibi = activeStudent ? (
+    <div className="max-w-5xl mx-auto space-y-3">
+      {/*
+        BAŞLIK BURADA, LİSTENİN İÇİNDE DEĞİL
+
+        Liste kendi başlığını çizmiyor: bir süre profil sayfasında
+        "Başvurularım" başlıklı bir bölümün İÇİNDEYDİ ve orada ikinci bir
+        başlık aynı şeyi iki kez söylerdi. Ekran kendi başına durunca o
+        başlığın sahibi kalmadı — sayfa doğrudan süzgeç haplarıyla
+        başlıyordu ve neyin süzüldüğü hiçbir yerde yazmıyordu.
+
+        Genişlik listenin kendi ölçüsüyle aynı (`max-w-5xl`): başlık
+        kartların hizasında başlasın.
+      */}
+      <h1 className="text-lg font-extrabold tracking-tight text-gray-900 sm:text-xl">
+        Başvurularım
+      </h1>
+              <ApplicationsTrackerView
+                applications={applications}
+                allListings={allListings}
+                subTab={activeSubTab}
+                onSubTabChange={setActiveSubTab}
+                onExploreInternships={() => handleTabChange('internships')}
+                /*
+                  Geri çekme öğrencinin kendi kararı. Veritabanı
+                  politikası da yalnızca bu değeri veriyor; buton
+                  onun görünür karşılığı, güvenlik sınırı değil.
+                */
+                onWithdraw={async (id) => {
+                  await withdrawApplication(id);
+                  setApplications((prev) =>
+                    prev.map((a) =>
+                      a.id === id
+                        ? { ...a, status: 'withdrawn', statusChangedAt: new Date().toISOString() }
+                        : a,
+                    ),
+                  );
+                  showToast('Başvurun geri çekildi.');
+                }}
+                /*
+                  Kararı SUNUCU veriyor: dönen durum yazılıyor, ekranın
+                  tahmini değil. Aynı teklife iki kez yanıt verilirse
+                  işlev mevcut sonucu döndürüyor, hata değil.
+                */
+                onRespondToOffer={async (id, kabul) => {
+                  const durum = await respondToOffer(id, kabul);
+                  setApplications((prev) =>
+                    prev.map((a) =>
+                      a.id === id
+                        ? { ...a, status: durum, statusChangedAt: new Date().toISOString() }
+                        : a,
+                    ),
+                  );
+                  showToast(
+                    durum === 'offer_accepted'
+                      ? 'Teklifi kabul ettin. İletişim bilgileri açıldı.'
+                      : 'Teklifi reddettin.',
+                  );
+                  return durum;
+                }}
+                /*
+                  Görüşme yanıtı da sunucudan dönüyor. İkinci yanıt
+                  hata değil: işlev mevcut yanıtı döndürüyor.
+                */
+                onRespondToInterview={async (id, katilacak) => {
+                  const yanit = await respondToInterview(id, katilacak);
+                  setApplications((prev) =>
+                    prev.map((a) =>
+                      a.id === id
+                        ? { ...a, interviewResponse: yanit, interviewRespondedAt: new Date().toISOString() }
+                        : a,
+                    ),
+                  );
+                  showToast(
+                    yanit === 'accepted'
+                      ? 'Görüşmeye katılacağını bildirdin.'
+                      : 'Görüşmeye katılamayacağını bildirdin.',
+                  );
+                  return yanit;
+                }}
+                onFetchContact={(id) => fetchApplicationContact(id)}
+                /*
+                  Bildirimden gelindiyse ilgili başvurunun paneli
+                  kendiliğinden açılıyor: kullanıcı listeyi tekrar
+                  taramak zorunda kalmıyor.
+                */
+                acilacakBasvuru={acilacakBasvuru}
+                onBasvuruAcildi={() => setAcilacakBasvuru(null)}
+              />
+    </div>
+  ) : null;
+
+  /**
+   * BİRLEŞİK PROFİL EKRANI — İKİ GİRİŞ, TEK TANIM
+   *
+   * Aynı ekran iki yerden açılıyor: `/cv` adresi ve alt gezinme
+   * çubuğundaki `profile` sekmesi. İki ayrı tanım olsaydı biri
+   * değiştiğinde öteki geride kalır ve kullanıcı hangi girişten geldiğine
+   * göre farklı bir profil görürdü.
+   *
+   * Fonksiyon, değişken değil: erken dönen `/cv` rotası bunu çağırdığı
+   * anda çalışsın diye. Değişken olsaydı her rotada — hiç kullanılmayan
+   * sayfalarda da — bütün ağaç kurulurdu.
+   */
+  const ogrenciProfilEkrani = () =>
+    activeStudent ? (
+              <StudentProfileView
+                student={activeStudent}
+                subTab={activeSubTab}
+                onSubTabChange={setActiveSubTab}
+                /*
+                  Çıkış ve yönetim paneli üst çubuktaki avatar menüsünden
+                  buraya taşındı: o menü mobilde kaldırıldı ve alt gezinme
+                  çubuğu artık doğrudan bu sayfaya geliyor. Masaüstündeki
+                  avatar menüsü duruyor, yani iki yerden de erişiliyor.
+                */
+                onLogout={handleLogout}
+                isAdmin={isAdmin}
+                /* Rota `/yonetim`; `/admin` diye bir adres yok, 404'e düşüyordu. */
+                onOpenAdmin={() => navigate('/yonetim')}
+                onUpdateProfile={handleUpdateProfile}
+                /*
+                  YAZDIRILABİLİR CV KENDİ ADRESİNDE
+
+                  `/cv` artık birleşik ekranın kendisi; oraya götürseydi
+                  düğme kullanıcıyı bulunduğu sayfaya geri koyardı.
+                  Yazdırılabilir belge `/cv/yazdir` adresinde ve o adres
+                  sunucu tarafında da tanımlı (functions/_middleware.ts).
+                */
+                onOpenCv={() => navigate('/cv/yazdir')}
+                basvurular={applications}
+                /*
+                  Başlıktaki iki sayaç artık AYRI başvuru ekranına
+                  götürüyor: bu sayfadaki `basvuru` bölümü kalktı ve
+                  sayının gittiği yerde aynı sayı durmalı.
+                */
+                onBasvurulariAc={(altSekme) => {
+                  /*
+                    Birleşik ekran KENDİ ADRESİNDE de açılıyor (`/cv`).
+                    Orada yalnız sekme durumunu değiştirmek hiçbir şey
+                    yapmazdı: rota hâlâ `/cv` olduğu için ekranda aynı
+                    profil kalırdı. Sekmeler ana sayfada yaşıyor, o yüzden
+                    önce oraya dönülüyor.
+                  */
+                  if (temizYol !== '/') navigate('/');
+                  setActiveTab('applications');
+                  setActiveSubTab(altSekme ?? 'all');
+                }}
+                /*
+                  SOSYAL PORTFOLYO PANELİ
+
+                  `SosyalProfilSayfasi` gömülü kipte çiziliyor: veri
+                  yükleme, dört durum, sahiplik kararı ve sahibe özel alt
+                  ekranlar orada zaten kurulu. İkinci bir bileşen
+                  yazılsaydı yetki dalları iki yerde tutulurdu.
+
+                  Ziyaretçi bu panele HİÇ ulaşmıyor: birleşik ekran
+                  oturum sahibinin kendi ekranı, başkasının profili
+                  `/profil/<kullaniciadi>` adresinde ziyaretçi görünümüyle
+                  açılıyor.
+                */
+                sosyalPortfolyo={
+                  <SosyalProfilSayfasi
+                    gomulu
+                    rotaKullaniciAdi={null}
+                    kullaniciId={session?.userId ?? null}
+                    oturumHazir={sessionReady}
+                    onNavigate={navigate}
+                    onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+                  />
+                }
+                onKaydedilenlere={() => {
+                  /*
+                    Kaydedilen sayısı ilan listesindeki "Kaydettiklerim"
+                    kategorisini açıyor: sayının gittiği yerde aynı sayı
+                    duruyor.
+                  */
+                  setActiveTab('internships');
+                  setActiveSubTab('kaydettiklerim');
+                }}
+                quizzes={quizzes}
+                onStartQuiz={(quiz) => setActiveQuiz(quiz)}
+                onOpenQuiz={(skillName) => {
+                  const matchedQ =
+                    quizzes.find(
+                      (q) => q.skillName.toLowerCase() === skillName.toLowerCase()
+                    );
+                  /*
+                    Eskiden eşleşme yoksa quizzes[0]'a düşüyordu: Rusça
+                    doğrulamak isteyen kullanıcıya React sorusu geliyordu.
+                    Olmayan sınavı uydurmak yerine durumu söylüyoruz.
+                  */
+                  if (!matchedQ) {
+                    showToast(`${skillName} için henüz doğrulama sınavı yok.`);
+                    return;
+                  }
+                  setActiveQuiz(matchedQ);
+                }}
+              />
+    ) : null;
 
   const legalSlug = LEGAL_ROUTES[temizYol];
   if (legalSlug) {
@@ -1476,14 +1707,34 @@ export default function App() {
     );
   }
 
-  if (temizYol === '/cv') {
+  /*
+    /cv        BİRLEŞİK EKRAN — solda profil/CV kartı, sağda sosyal
+               fotoğraf portfolyosu. Sahibin tek ekranı burası;
+               `/profil` ve `/profil/<kendi adı>` de buraya yönleniyor.
+    /cv/yazdir YAZDIRILABİLİR CV — profildeki bilgilerden üretilen belge.
+
+    İki adres AYRILDI çünkü iki farklı iş: biri profili yönetmek, öteki
+    bir belgeyi almak. Tek adreste dursalardı yazdırma görünümü profili
+    düzenleyen kullanıcının altından ekranı çeker, ya da tersine belge
+    adresi paylaşılamazdı.
+
+    Oturum kapısı İKİSİ İÇİN DE aynı: sayfa kişinin kendi profilinden
+    üretiliyor, başkasının CV'si buradan görüntülenemiyor.
+  */
+  if (temizYol === '/cv' || temizYol === '/cv/yazdir') {
     if (!student) {
       return (
         <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center p-6">
           <div className="max-w-md bg-white rounded-2xl border border-gray-200 p-8 text-center space-y-3">
-            <p className="font-bold text-gray-900">CV oluşturmak için giriş yapın</p>
+            {/*
+              Cümle İKİ ADRESİ birden karşılıyor: birleşik profil ekranı
+              da yazdırılabilir CV de kişinin kendi hesabından üretiliyor.
+              "CV oluşturmak için" yazsaydı, `/cv` adresine gelen kişiye
+              profilini de göremeyeceğini söylemezdi.
+            */}
+            <p className="font-bold text-gray-900">Profilin için giriş yapın</p>
             <p className="text-sm text-gray-600">
-              CV, profilindeki bilgilerden oluşturuluyor.
+              Profil ve CV, hesabındaki bilgilerden oluşturuluyor.
             </p>
             <button
               type="button"
@@ -1496,7 +1747,16 @@ export default function App() {
         </div>
       );
     }
-    return <CvPage student={student} onBack={() => navigate('/')} />;
+    /*
+      Geri dönüş birleşik ekrana: kullanıcı buraya oradaki "CV'yi
+      görüntüle" eyleminden geldi. Ana sayfaya dönseydi, aradığı ekranı
+      yeniden bulması gerekirdi.
+    */
+    if (temizYol === '/cv/yazdir') {
+      return <CvPage student={student} onBack={() => navigate('/cv')} />;
+    }
+
+    return icerikSayfasi(<main className={anaAlanSinifi}>{ogrenciProfilEkrani()}</main>);
   }
 
   /*
@@ -1881,7 +2141,7 @@ export default function App() {
         duruyordu ve sayfanın ilk ekranında boş bir bant gibi görünüyordu.
         Alt boşluğa dokunulmadı; oradaki pay mobil gezinme çubuğu için.
       */}
-      <main className={`flex-1 ${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-8`}>
+      <main className={anaAlanSinifi}>
         {safeTab === 'company-portal' && !activeCompany ? (
           /*
             Şirket hesabı yokken portalı çizmek, uydurma bir şirketin panelini
@@ -2007,127 +2267,18 @@ export default function App() {
               />
             )}
 
-            {safeTab === 'profile' && activeStudent && (
-              <StudentProfileView
-                student={activeStudent}
-                subTab={activeSubTab}
-                onSubTabChange={setActiveSubTab}
-                /*
-                  Çıkış ve yönetim paneli üst çubuktaki avatar menüsünden
-                  buraya taşındı: o menü mobilde kaldırıldı ve alt gezinme
-                  çubuğu artık doğrudan bu sayfaya geliyor. Masaüstündeki
-                  avatar menüsü duruyor, yani iki yerden de erişiliyor.
-                */
-                onLogout={handleLogout}
-                isAdmin={isAdmin}
-                /* Rota `/yonetim`; `/admin` diye bir adres yok, 404'e düşüyordu. */
-                onOpenAdmin={() => navigate('/yonetim')}
-                onUpdateProfile={handleUpdateProfile}
-                onOpenCv={() => navigate('/cv')}
-                basvurular={applications}
-                onKaydedilenlere={() => {
-                  /*
-                    Kaydedilen sayısı ilan listesindeki "Kaydettiklerim"
-                    kategorisini açıyor: sayının gittiği yerde aynı sayı
-                    duruyor.
-                  */
-                  setActiveTab('internships');
-                  setActiveSubTab('kaydettiklerim');
-                }}
-                basvuruListesi={
-                  <ApplicationsTrackerView
-                    applications={applications}
-                    allListings={allListings}
-                    subTab={activeSubTab}
-                    onSubTabChange={setActiveSubTab}
-                    onExploreInternships={() => handleTabChange('internships')}
-                    /*
-                      Geri çekme öğrencinin kendi kararı. Veritabanı
-                      politikası da yalnızca bu değeri veriyor; buton
-                      onun görünür karşılığı, güvenlik sınırı değil.
-                    */
-                    onWithdraw={async (id) => {
-                      await withdrawApplication(id);
-                      setApplications((prev) =>
-                        prev.map((a) =>
-                          a.id === id
-                            ? { ...a, status: 'withdrawn', statusChangedAt: new Date().toISOString() }
-                            : a,
-                        ),
-                      );
-                      showToast('Başvurun geri çekildi.');
-                    }}
-                    /*
-                      Kararı SUNUCU veriyor: dönen durum yazılıyor, ekranın
-                      tahmini değil. Aynı teklife iki kez yanıt verilirse
-                      işlev mevcut sonucu döndürüyor, hata değil.
-                    */
-                    onRespondToOffer={async (id, kabul) => {
-                      const durum = await respondToOffer(id, kabul);
-                      setApplications((prev) =>
-                        prev.map((a) =>
-                          a.id === id
-                            ? { ...a, status: durum, statusChangedAt: new Date().toISOString() }
-                            : a,
-                        ),
-                      );
-                      showToast(
-                        durum === 'offer_accepted'
-                          ? 'Teklifi kabul ettin. İletişim bilgileri açıldı.'
-                          : 'Teklifi reddettin.',
-                      );
-                      return durum;
-                    }}
-                    /*
-                      Görüşme yanıtı da sunucudan dönüyor. İkinci yanıt
-                      hata değil: işlev mevcut yanıtı döndürüyor.
-                    */
-                    onRespondToInterview={async (id, katilacak) => {
-                      const yanit = await respondToInterview(id, katilacak);
-                      setApplications((prev) =>
-                        prev.map((a) =>
-                          a.id === id
-                            ? { ...a, interviewResponse: yanit, interviewRespondedAt: new Date().toISOString() }
-                            : a,
-                        ),
-                      );
-                      showToast(
-                        yanit === 'accepted'
-                          ? 'Görüşmeye katılacağını bildirdin.'
-                          : 'Görüşmeye katılamayacağını bildirdin.',
-                      );
-                      return yanit;
-                    }}
-                    onFetchContact={(id) => fetchApplicationContact(id)}
-                    /*
-                      Bildirimden gelindiyse ilgili başvurunun paneli
-                      kendiliğinden açılıyor: kullanıcı listeyi tekrar
-                      taramak zorunda kalmıyor.
-                    */
-                    acilacakBasvuru={acilacakBasvuru}
-                    onBasvuruAcildi={() => setAcilacakBasvuru(null)}
-                  />
-                }
-                quizzes={quizzes}
-                onStartQuiz={(quiz) => setActiveQuiz(quiz)}
-                onOpenQuiz={(skillName) => {
-                  const matchedQ =
-                    quizzes.find(
-                      (q) => q.skillName.toLowerCase() === skillName.toLowerCase()
-                    );
-                  /*
-                    Eskiden eşleşme yoksa quizzes[0]'a düşüyordu: Rusça
-                    doğrulamak isteyen kullanıcıya React sorusu geliyordu.
-                    Olmayan sınavı uydurmak yerine durumu söylüyoruz.
-                  */
-                  if (!matchedQ) {
-                    showToast(`${skillName} için henüz doğrulama sınavı yok.`);
-                    return;
-                  }
-                  setActiveQuiz(matchedQ);
-                }}
-              />
-            )}
+            {safeTab === 'profile' && ogrenciProfilEkrani()}
+
+            {/*
+              BAŞVURULARIM ARTIK KENDİ SEKMESİ
+
+              Bir süre bu sekme 'profile'a ÇEVRİLİYORDU (bkz. `istenenTab`)
+              çünkü başvuru listesi profil sayfasının içinde bir bölümdü. O
+              bölüm profilin sağ sütunundan kalktı ve yerini sosyal
+              portfolyo aldı; çeviri bırakılsaydı hesap menüsündeki
+              "Başvurularım" satırı hiçbir yere götürmezdi.
+            */}
+            {safeTab === 'applications' && basvuruTakibi}
           </>
         )}
       </main>

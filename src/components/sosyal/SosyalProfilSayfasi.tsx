@@ -1,5 +1,7 @@
 import React from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { SayfaKabugu } from '../SayfaKabugu';
+import { SAYFA_GENISLIGI } from '../../lib/duzen';
 import { BIRINCIL_EYLEM, ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import {
   kendiSosyalProfiliGetir,
@@ -18,19 +20,28 @@ import { kullaniciAdiNormalize, profilYolu } from '../../lib/sosyal-kullanici-ad
 import { BolumTalebi, type TalepKipi } from './BolumTalebi';
 import { PaylasimIzgarasi } from './PaylasimIzgarasi';
 import { PaylasimOlustur } from './PaylasimOlustur';
+import { PortfolyoUstSatiri } from './PortfolyoUstSatiri';
 import { ProfilFotografiYukleme } from './ProfilFotografiYukleme';
 import { SahipListesi } from './SahipListesi';
 import { SosyalProfilDuzenleme } from './SosyalProfilDuzenleme';
 import { SosyalProfilGorunumu } from './SosyalProfilGorunumu';
 import { SosyalProfilKurulum } from './SosyalProfilKurulum';
+import { TopluluktaDegilUyarisi } from './TopluluktaDegilUyarisi';
 
 /**
  * SOSYAL PROFİL ROTASI — VERİ YÜKLEME VE YETKİ
  *
  * Bu bileşen görünüm çizmiyor, DURUM belirliyor: kim bakıyor, veri geldi
- * mi, sahibi mi. Sunum `SosyalProfilGorunumu` içinde. Sınır bilerek
- * buradan geçiyor; ziyaretçi görünümü eklendiğinde değişecek yer bu
- * dosya, sunum değil.
+ * mi, sahibi mi. Ziyaretçi sunumu `SosyalProfilGorunumu` içinde, sahibin
+ * birleşik ekrandaki portfolyosu ise `PortfolyoUstSatiri` + sade ızgara.
+ * Sınır bilerek buradan geçiyor; yetki dalları tek dosyada.
+ *
+ * İKİ KİP, TEK DOSYA
+ * ------------------
+ * Ayrı adreste (`/profil`, `/profil/<kullaniciadi>`) sayfa; birleşik
+ * ekranın (`/cv`) sağ sütununda panel. Ayrımı `gomulu` prop'u yapıyor ve
+ * gerekçesi orada yazılı: ikinci bir kopya, sahibe özel dalların iki
+ * yerde tutulması demek olurdu.
  *
  * ROTADAKİ KULLANICI ADINA GÜVENİLMİYOR
  * -------------------------------------
@@ -87,13 +98,71 @@ interface SayfaProps {
   /** `degistir` geçmişe kayıt eklemeden adresi değiştiriyor; bkz. App.tsx. */
   onNavigate: (yol: string, secenek?: { degistir?: boolean }) => void;
   onGirisGerekli?: () => void;
+  /**
+   * GÖMÜLÜ KİP — BİRLEŞİK EKRANIN (`/cv`) SAĞ SÜTUNU
+   *
+   * Sahibin sosyal portfolyosu artık kendi adresinde değil, profil/CV
+   * ekranının sağında duruyor. Bu bileşenin İKİNCİ BİR KOPYASI
+   * yazılmadı: veri yükleme, dört durum, sahiplik kararı ve sahibe özel
+   * bütün alt ekranlar (paylaşım oluşturma, fotoğraf, düzenleme,
+   * Beğendiklerim / Kaydedilenler / Arşiv) burada zaten kurulu. İki
+   * kopya olsaydı biri değiştiğinde öteki geride kalır ve sahibe özel
+   * bir ekran yanlış dalda çizilebilirdi — yetki hatası, biçim hatası
+   * değil.
+   *
+   * Gömülü kipte DEĞİŞEN üç şey var:
+   *   1. Sayfa kabuğu yok — çevreleyen ekran kendi `main`ini çiziyor.
+   *   2. Sahip görünümü `SosyalProfilGorunumu` yerine portfolyo üst
+   *      satırı + sade ızgara: kimlik alanları (fotoğraf, ad, alan,
+   *      biyografi) sol sütundaki profil kartında zaten duruyor.
+   *   3. Adreste kullanıcı adı YOK. Sahiplik zaten adresten değil,
+   *      `profile_id = auth.uid()` karşılaştırmasından okunuyordu;
+   *      gömülü kipte adres karşılaştırması tamamen düşüyor.
+   */
+  gomulu?: boolean;
 }
 
+/**
+ * Sahibin tek ekranının adresi.
+ *
+ * Yol dört yerde geçiyor (kısa yol yönlendirmesi, kanonik yönlendirme,
+ * kurulum sonrası ve güvenli ekranın alt bağlantısı) ve tek yerde
+ * yazılıyor: dört kopya olsaydı biri değiştiğinde öteki üçü sessizce
+ * eski adrese giderdi.
+ */
+const BIRLESIK_EKRAN = '/cv';
+
 const KART = 'rounded-2xl border border-gray-200 bg-white p-2.5 sm:p-3.5';
+/**
+ * Gömülü kipteki geri satırı.
+ *
+ * Ölçüsü `SayfaKabugu`nun geri düğmesiyle birebir aynı: aynı üründe iki
+ * farklı "Geri" görünümü olmasın. Kopya olmasının sebebi kabuğun kendisi:
+ * gömülü kipte `SayfaKabugu` hiç çizilmiyor (ikinci bir `main` olurdu),
+ * içindeki satır da onunla birlikte düşüyor.
+ */
+const GERI_SATIRI = `inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 ${ODAK_HALKASI}`;
+
 const IKINCIL = `inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-800 hover:bg-gray-50 ${RENK_GECISI} ${ODAK_HALKASI}`;
 
-/** Üst blok + ızgara ölçüsünde iskelet: içerik gelince sayfa zıplamıyor. */
-const ProfilIskeleti: React.FC = () => (
+/**
+ * Üst blok + ızgara ölçüsünde iskelet: içerik gelince sayfa zıplamıyor.
+ *
+ * `sade` gömülü kip için: orada kimlik alanları (fotoğraf, ad, alan)
+ * SOL sütunda çiziliyor ve sağ sütunda onların iskeletini göstermek,
+ * gelmeyecek bir bloğun yerini ayırmak olurdu — içerik gelince panel
+ * yukarı zıplardı.
+ */
+const ProfilIskeleti: React.FC<{ sade?: boolean }> = ({ sade = false }) =>
+  sade ? (
+    <div aria-busy="true" className="space-y-3">
+      <div className="flex gap-5">
+        <div aria-hidden className="h-5 w-24 animate-pulse rounded bg-gray-100" />
+        <div aria-hidden className="h-5 w-24 animate-pulse rounded bg-gray-100" />
+      </div>
+      <PaylasimIzgarasi paylasimlar={[]} durum="yukleniyor" gorunum="sade" />
+    </div>
+  ) : (
   <div aria-busy="true" className="space-y-4">
     <div className={`${KART} space-y-3`}>
       <div className="flex items-start gap-3">
@@ -111,7 +180,7 @@ const ProfilIskeleti: React.FC = () => (
     </div>
     <PaylasimIzgarasi paylasimlar={[]} durum="yukleniyor" />
   </div>
-);
+  );
 
 export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   rotaKullaniciAdi,
@@ -119,6 +188,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   oturumHazir,
   onNavigate,
   onGirisGerekli,
+  gomulu = false,
 }) => {
   const [profil, setProfil] = React.useState<SosyalProfil | null>(null);
   const [profilDurumu, setProfilDurumu] = React.useState<Durum>('yukleniyor');
@@ -175,13 +245,22 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
 
   /* Kendi profili: oturum kimliği ile satırın sahibi eşleşiyor mu. */
   const profilTamMi = Boolean(profil?.kullaniciAdi && profil?.sektorId);
+  /*
+    Gömülü kipte ADRES KARŞILAŞTIRMASI DÜŞÜYOR
+
+    Adres karşılaştırması bir yetki kanıtı değildi, bir ROTA kanıtıydı:
+    "bu sayfada gösterilmesi gereken profil benimki mi". Yetkiyi zaten
+    `profil.profilId === kullaniciId` veriyor ve o satır her iki kipte de
+    aynı. Gömülü kipte gösterilecek profil rotadan gelmiyor — çevreleyen
+    ekran oturum sahibinin kendi ekranı — bu yüzden karşılaştıracak bir
+    ad da yok.
+  */
   const sahibiMi = Boolean(
     kullaniciId &&
       profil &&
       profil.profilId === kullaniciId &&
       profilTamMi &&
-      rotaAdi !== null &&
-      rotaAdi === profil.kullaniciAdi,
+      (gomulu || (rotaAdi !== null && rotaAdi === profil.kullaniciAdi)),
   );
 
   /*
@@ -193,7 +272,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     çalışan gereksiz bir istek.
   */
   const ziyaretciYolu = Boolean(
-    kullaniciId && rotaAdi !== null && profilDurumu === 'hazir' && !sahibiMi,
+    !gomulu && kullaniciId && rotaAdi !== null && profilDurumu === 'hazir' && !sahibiMi,
   );
 
   /* Görüntülenen profil: sahip dalında kendi satırı, ziyaretçi dalında öteki. */
@@ -229,18 +308,32 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   }, [kullaniciId, profilDeneme]);
 
   /*
-    `/profil` KALICI ADRESE YÖNLENDİRİYOR
+    SAHİBİN KANONİK ADRESİ ARTIK `/cv`
 
-    Profil tamamsa kısa yol kendi `/profil/<kullaniciadi>` adresine
-    gidiyor: paylaşılan bağlantı da tarayıcı geçmişi de kalıcı adresi
-    göstersin. Yönlendirme çizim sırasında değil effect içinde — çizim
-    sırasında gezinmek React'te durum güncellemesini çizime karıştırır.
+    Profili kurulu olan kullanıcı `/profil` ya da `/profil/<kendi adı>`
+    adresine gittiğinde birleşik ekrana yönlendiriliyor. Sebep: sahip için
+    TEK ekran var. İki ayrı sahip ekranı olsaydı — biri CV'li, öteki
+    portfolyolu — kullanıcı hangisinde ne yapabileceğini adres çubuğundan
+    tahmin etmek zorunda kalır, iki ekranın eylemleri de zamanla
+    birbirinden ayrılırdı.
+
+    `/profil/<başkasının adı>` YÖNLENDİRİLMİYOR: orası ziyaretçi görünümü
+    ve kendi kalıcı adresi. Koşul bu yüzden `sahibiMi`ye bakıyor, yalnız
+    `profilTamMi`ye değil.
+
+    `degistir: true` geçmişe kayıt EKLEMİYOR; push edilseydi geri tuşu
+    kullanıcıyı yeniden yönlendirilecek adrese düşürür ve geri tuşu hiç
+    çalışmaz hâle gelirdi.
+
+    Yönlendirme çizim sırasında değil effect içinde — çizim sırasında
+    gezinmek React'te durum güncellemesini çizime karıştırır.
   */
   React.useEffect(() => {
-    if (profilDurumu !== 'hazir' || !profilTamMi || rotaAdi !== null) return;
-    onNavigate(profilYolu(profil!.kullaniciAdi as string), { degistir: true });
+    if (gomulu || profilDurumu !== 'hazir' || !profilTamMi) return;
+    if (rotaAdi !== null && !sahibiMi) return;
+    onNavigate(BIRLESIK_EKRAN, { degistir: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profilDurumu, profilTamMi, rotaAdi]);
+  }, [gomulu, profilDurumu, profilTamMi, rotaAdi, sahibiMi]);
 
   /*
     ZİYARETÇİ PROFİLİ — İKİ ADIM, İKİSİ DE RLS'E TABİ
@@ -431,59 +524,88 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
 
   // ------------------------------------------------------------- Çizim
 
-  if (!oturumHazir) {
-    return (
-      <SayfaKabugu>
-        <ProfilIskeleti />
-      </SayfaKabugu>
+  /*
+    KABUK: SAYFA MI, PANEL Mİ
+
+    Ayrı adreste bu bileşen kendi `main`ini (`SayfaKabugu`) çiziyor.
+    Gömülü kipte çevreleyen ekranın `main`i zaten var; ikinci bir `main`
+    aynı belgede iki ana bölge demek olurdu ve ekran okuyucu hangisinin
+    sayfanın içeriği olduğunu söyleyemezdi.
+
+    Bu bir BİLEŞEN DEĞİL, düz bir fonksiyon: bileşen olsaydı her çizimde
+    yeni bir tip üretilir, React ağacı söker ve alt ekranlardaki form
+    girdileri her tuşta sıfırlanırdı.
+
+    Geri satırı gömülü kipte de var: alt ekranların (paylaşım oluşturma,
+    arşiv, düzenleme) kendi adresi yok, geri dönmenin tek yolu bu satır.
+  */
+  const kabuk = (icerik: React.ReactNode, onBack?: () => void) =>
+    gomulu ? (
+      <div className="min-w-0 space-y-3">
+        {onBack && (
+          <button type="button" onClick={onBack} className={GERI_SATIRI}>
+            <ArrowLeft aria-hidden className="h-4 w-4 shrink-0" />
+            Geri
+          </button>
+        )}
+        {icerik}
+      </div>
+    ) : (
+      <SayfaKabugu onBack={onBack}>{icerik}</SayfaKabugu>
     );
+
+  if (!oturumHazir) {
+    return kabuk(<ProfilIskeleti sade={gomulu} />);
   }
 
   /* YETKİSİZ (1): oturum yok. Sosyal profil giriş yapmış kullanıcıya açık. */
   if (!kullaniciId) {
-    return (
-      <SayfaKabugu>
-        <div className={`${KART} space-y-3 text-center`}>
+    return kabuk(
+      <div className={`${KART} space-y-3 text-center`}>
           <h1 className="text-lg font-extrabold text-gray-900">Sosyal profil için giriş gerekiyor</h1>
           <p className="text-sm leading-relaxed text-gray-600">
             Profiller yalnızca giriş yapmış kullanıcılara açık.
           </p>
-          {onGirisGerekli && (
-            <button type="button" onClick={onGirisGerekli} className={BIRINCIL_EYLEM}>
-              Giriş yap
-            </button>
-          )}
-        </div>
-      </SayfaKabugu>
+        {onGirisGerekli && (
+          <button type="button" onClick={onGirisGerekli} className={BIRINCIL_EYLEM}>
+            Giriş yap
+          </button>
+        )}
+      </div>,
     );
   }
 
   if (profilDurumu === 'yukleniyor') {
-    return (
-      <SayfaKabugu>
-        <ProfilIskeleti />
-      </SayfaKabugu>
-    );
+    return kabuk(<ProfilIskeleti sade={gomulu} />);
   }
 
   /* HATA: boş durumla karıştırılmıyor. */
   if (profilDurumu === 'hata') {
-    return (
-      <SayfaKabugu>
-        <div className={`${KART} space-y-3 text-center`} role="alert">
+    return kabuk(
+      <div className={`${KART} space-y-3 text-center`} role="alert">
+        {/*
+          Gömülü kipte de `h2` değil `h1` değil — başlık düzeyi sayfanın
+          değil bloğun işi. Birleşik ekranda sayfanın `h1`i sol sütundaki
+          ada ait; burada `p` yeterli olurdu ama hata bloğunun kendi adı
+          okunabilsin diye başlık korunuyor ve gömülü kipte `h2`ye
+          iniyor.
+        */}
+        {gomulu ? (
+          <h2 className="text-base font-extrabold text-gray-900">Portfolyon alınamadı</h2>
+        ) : (
           <h1 className="text-lg font-extrabold text-gray-900">Profil bilgileri alınamadı</h1>
-          <p className="text-sm leading-relaxed text-gray-600">
-            Sunucudan cevap alınamadı. Profilinde bir değişiklik olmadı.
-          </p>
-          <button
-            type="button"
-            onClick={() => setProfilDeneme((sayi) => sayi + 1)}
-            className={IKINCIL}
-          >
-            Yeniden dene
-          </button>
-        </div>
-      </SayfaKabugu>
+        )}
+        <p className="text-sm leading-relaxed text-gray-600">
+          Sunucudan cevap alınamadı. Profilinde bir değişiklik olmadı.
+        </p>
+        <button
+          type="button"
+          onClick={() => setProfilDeneme((sayi) => sayi + 1)}
+          className={IKINCIL}
+        >
+          Yeniden dene
+        </button>
+      </div>,
     );
   }
 
@@ -498,8 +620,21 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   */
   if (ziyaretciYolu) {
     if (ziyaretciDurumu === 'yukleniyor') {
+      /*
+        İSKELET DE HAZIR DURUMLA AYNI GENİŞLİKTE
+
+        İskeletin kendi gerekçesi "içerik gelince sayfa zıplamıyor".
+        Aşağıdaki hazır dal `SAYFA_GENISLIGI`ne çıkınca bu iddia genişlik
+        ekseninde yanlış hale geldi: iskelet varsayılan `max-w-3xl`te
+        çiziliyor, profil gelince kap bir anda site genişliğine atlıyordu.
+        İskeletin işi tam olarak gelecek yerleşimin yerini tutmak; değer de
+        bu yüzden aynı yerden, `src/lib/duzen`den geliyor.
+
+        Hata kartı bilerek bunun dışında: orada yerini tutacak bir ızgara
+        yok, ortalanmış tek bir kart geniş kapta gereksiz yayılırdı.
+      */
       return (
-        <SayfaKabugu>
+        <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI}>
           <ProfilIskeleti />
         </SayfaKabugu>
       );
@@ -521,7 +656,19 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     }
     if (ziyaretciDurumu === 'hazir' && ziyaretciProfili) {
       return (
-        <SayfaKabugu>
+        /*
+          ZİYARETÇİ PROFİLİ SİTE GENİŞLİĞİNDE
+
+          `SayfaKabugu`nun varsayılanı `max-w-3xl`: uzun metin okuma
+          genişliği. Bu ekran metin değil, solda kimlik kartı sağda kare
+          ızgara. 3xl'de ölçülen: sol kart ~219 piksel, ızgara hücresi
+          ~143 piksel; ad ve rozet truncate oluyordu.
+
+          Sahibin kendi ekranı App'in ana alanında çiziliyor ve orası zaten
+          `SAYFA_GENISLIGI`. Aynı tasarımın iki yüzü aynı genişlikte durmak
+          zorunda; değer de dosya dosya değil, `src/lib/duzen`de tek yerde.
+        */
+        <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI}>
           <SosyalProfilGorunumu
             profil={ziyaretciProfili}
             sahibiMi={false}
@@ -543,24 +690,66 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
 
   /* KURULMAMIŞ: `/profil` kurulum ekranını ya da talep ekranını açıyor. */
   if (!profilTamMi) {
+    /*
+      GÖMÜLÜ KİPTE KURULUM BURADA DEĞİL, KENDİ ADRESİNDE
+
+      Sağ sütuna çizilen şey gerçek kurulum akışına giden bir GİRİŞ:
+      bağlantı `/profil` adresine gidiyor ve orada `SosyalProfilKurulum`
+      açılıyor. "Yakında" kutusu ya da çalışmayan bir düğme değil.
+
+      Form buraya gömülmedi çünkü kurulum bölüm seçimi, alan uygunluğu ve
+      gerektiğinde bölüm talebi ekranını da içeriyor; hepsini 8 sütunluk
+      bir panele sıkıştırmak, aynı formu iki farklı genişlikte iki kez
+      tasarlamak olurdu.
+
+      Gerçek `<a href>`: orta tuş ve "yeni sekmede aç" çalışıyor.
+    */
+    if (gomulu) {
+      return kabuk(
+        <div className={`${KART} space-y-3`}>
+          <h2 className="text-base font-extrabold text-gray-900">Sosyal profilin yok</h2>
+          <p className="text-sm leading-relaxed text-gray-600">
+            Fotoğraf paylaşmak ve aynı alandaki öğrencilerle bağlantı kurmak için önce kullanıcı
+            adını ve bölümünü seçmen gerekiyor.
+          </p>
+          <a
+            href="/profil"
+            onClick={(olay) => {
+              if (
+                olay.metaKey ||
+                olay.ctrlKey ||
+                olay.shiftKey ||
+                olay.altKey ||
+                olay.button !== 0
+              )
+                return;
+              olay.preventDefault();
+              onNavigate('/profil');
+            }}
+            className={BIRINCIL_EYLEM}
+          >
+            Sosyal profil oluştur
+          </a>
+        </div>,
+      );
+    }
     if (rotaAdi === null) {
       if (talep) {
-        return (
-          <SayfaKabugu onBack={() => setTalep(null)}>
-            <BolumTalebi
-              kip={talep.kip}
-              kullaniciId={kullaniciId}
-              bolum={talep.bolum}
-              onGeri={() => setTalep(null)}
-            />
-          </SayfaKabugu>
+        return kabuk(
+          <BolumTalebi
+            kip={talep.kip}
+            kullaniciId={kullaniciId}
+            bolum={talep.bolum}
+            onGeri={() => setTalep(null)}
+          />,
+          () => setTalep(null),
         );
       }
-      return (
-        <SayfaKabugu>
-          <SosyalProfilKurulum
+      return kabuk(
+        <SosyalProfilKurulum
             onTalepGerekli={(kip, bolum) => setTalep({ kip, bolum })}
-            onTamamlandi={(ad) => {
+            /* Kullanıcı adı ARTIK KULLANILMIYOR: hedef her durumda `/cv`. */
+            onTamamlandi={() => {
               /*
                 Kurulumdan sonra profil YENİDEN OKUNUYOR: ekranda gösterilen
                 değerler formdakiler değil, veritabanının kabul ettikleri
@@ -571,27 +760,44 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
                 Kurulum ekranı geçmişte BIRAKILMIYOR: profil kurulduktan
                 sonra geri tuşuyla ona dönmenin bir karşılığı yok, dönen
                 kullanıcı da anında ileri yönlendirilirdi.
+
+                Hedef `ad` DEĞİL, birleşik ekran: kurulumu bitiren kişi
+                sahibin kendisi ve sahibin tek ekranı orası. Kalıcı
+                `/profil/<ad>` adresine gitseydi o adres de anında `/cv`ye
+                yönlendirir, yani iki kere yönlendirme yapardık.
               */
-              onNavigate(profilYolu(ad), { degistir: true });
+              onNavigate(BIRLESIK_EKRAN, { degistir: true });
             }}
-          />
-        </SayfaKabugu>
+        />,
       );
     }
     /* Profili olmayan kullanıcı başkasının adresine gitmişse: güvenli ekran. */
     return <GuvenliEkran onNavigate={onNavigate} />;
   }
 
-  /* `/profil` yönlendirmesi effect'te; o kare için iskelet çiziliyor. */
-  if (rotaAdi === null) {
-    return (
-      <SayfaKabugu>
-        <ProfilIskeleti />
-      </SayfaKabugu>
-    );
+  /*
+    YÖNLENDİRME UÇUŞTA — O KARE İÇİN İSKELET
+
+    Ayrı adresteki sahip (hem `/profil` hem `/profil/<kendi adı>`)
+    birleşik ekrana gidiyor ve yönlendirme effect içinde. Aradaki tek
+    karede iskelet çiziliyor; profil görünümünü çizip hemen kaldırmak,
+    kullanıcıya bir kare için görünüp kaybolan bir ekran gösterirdi.
+
+    Gömülü kipte yönlendirme YOK: koşul `!gomulu` ile başlıyor.
+  */
+  if (!gomulu) {
+    return kabuk(<ProfilIskeleti />);
   }
 
-  /* YETKİSİZ (2): adresteki ad bu oturuma ait değil. */
+  /*
+    YETKİSİZ (2): adresteki ad bu oturuma ait değil.
+
+    Bu satıra artık yalnız gömülü kip ulaşıyor; ayrı adreste sahip
+    yukarıda yönlendiriliyor, sahip olmayan da ziyaretçi dalında
+    karşılanıyor. Koşul yine de duruyor: `sahibiMi` false iken aşağıdaki
+    sahibe özel ekranların hiçbiri DOM'a girmemeli ve bunu bir yorumla
+    değil, gerçek bir dalla garanti ediyoruz.
+  */
   if (!sahibiMi) {
     return <GuvenliEkran onNavigate={onNavigate} kendiAdi={profil?.kullaniciAdi ?? null} />;
   }
@@ -605,9 +811,8 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     ekran klavyeyle ve adres durumuyla bulunur.
   */
   if (gorunum === 'paylasimOlustur') {
-    return (
-      <SayfaKabugu onBack={() => setGorunum('profil')}>
-        <PaylasimOlustur
+    return kabuk(
+      <PaylasimOlustur
           onVazgec={() => setGorunum('profil')}
           onTamamlandi={() => {
             /*
@@ -627,8 +832,8 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
             setBildirim('Paylaşımın eklendi.');
             window.setTimeout(() => setBildirim(null), 2500);
           }}
-        />
-      </SayfaKabugu>
+      />,
+      () => setGorunum('profil'),
     );
   }
 
@@ -642,9 +847,8 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     tek başına bir güvenlik sınırı olmazdı.
   */
   if (gorunum === 'fotograf') {
-    return (
-      <SayfaKabugu onBack={() => setGorunum('profil')}>
-        <ProfilFotografiYukleme
+    return kabuk(
+      <ProfilFotografiYukleme
           kullaniciId={kullaniciId}
           ad={profil!.gorunenAd ?? `@${profil!.kullaniciAdi}`}
           mevcutYol={profil!.avatarYolu}
@@ -667,8 +871,8 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
             setBildirim('Profil fotoğrafın güncellendi.');
             window.setTimeout(() => setBildirim(null), 2500);
           }}
-        />
-      </SayfaKabugu>
+      />,
+      () => setGorunum('profil'),
     );
   }
 
@@ -686,9 +890,8 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     tuşunu boş bir sayfaya götürürdü.
   */
   if (gorunum === 'begendiklerim' || gorunum === 'kaydedilenler' || gorunum === 'arsiv') {
-    return (
-      <SayfaKabugu onBack={() => setGorunum('profil')}>
-        <SahipListesi
+    return kabuk(
+      <SahipListesi
           kip={
             gorunum === 'begendiklerim' ? 'begeni' : gorunum === 'kaydedilenler' ? 'kayit' : 'arsiv'
           }
@@ -700,15 +903,14 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
             de sunucudan yeniden okunuyor; istemcide artırılmıyor.
           */
           onGeriYuklendi={paylasimlariTazele}
-        />
-      </SayfaKabugu>
+      />,
+      () => setGorunum('profil'),
     );
   }
 
   if (gorunum === 'duzenle') {
-    return (
-      <SayfaKabugu onBack={() => setGorunum('profil')}>
-        <SosyalProfilDuzenleme
+    return kabuk(
+      <SosyalProfilDuzenleme
           kullaniciId={kullaniciId}
           profil={profil as SosyalProfil}
           onVazgec={() => setGorunum('profil')}
@@ -716,38 +918,109 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
             setProfil((onceki) => (onceki ? { ...onceki, ...girdi } : onceki));
             setGorunum('profil');
           }}
-        />
-      </SayfaKabugu>
+      />,
+      () => setGorunum('profil'),
     );
   }
 
-  return (
-    <SayfaKabugu>
-      <SosyalProfilGorunumu
-        profil={profil as SosyalProfil}
-        sahibiMi
-        onNavigate={onNavigate}
+  /*
+    SAHİBİN PORTFOLYOSU — BİRLEŞİK EKRANIN SAĞ SÜTUNU
+
+    `SosyalProfilGorunumu` burada ÇİZİLMİYOR. O bileşen kimlik alanlarını
+    (fotoğraf, ad, kullanıcı adı, alan rozeti, bölüm, biyografi) da
+    çiziyor ve birleşik ekranda o bilgilerin hepsi SOL sütunda, profil
+    kartında duruyor — ikisini birden çizmek aynı kimliği aynı ekranda iki
+    kez göstermek olurdu. Ziyaretçi görünümü (`/profil/<kullaniciadi>`)
+    o bileşeni kullanmaya devam ediyor ve kendi sol sütununu KENDİ
+    içinde kuruyor: orada kimlik kartı herkese açık alanlardan oluşuyor,
+    burada ise sol sütun CV/profil kartı — iki farklı içerik, aynı
+    iskelet.
+
+    SIRA: sayaçlar + eylemler, sonra (gerekiyorsa) topluluk uyarısı, sonra
+    hata cümleleri ve bildirim, en sonda ızgara. Uyarı ızgaranın ÜSTÜNDE
+    çünkü "Paylaş" düğmesinin neden olmadığını o anlatıyor; altta kalsaydı
+    boş ızgaranın arkasına düşerdi.
+
+    Izgara `gorunum="sade"`: hücre çıplak kare fotoğraf. Açıklama ve tarih
+    ayrıntı katmanında (`PaylasimDetayi`) duruyor ve o katman ızgaranın
+    kendi içinden açılıyor — beğeni, kaydetme ve arşivleme orada zaten
+    çalışıyor.
+  */
+  return kabuk(
+    <section aria-labelledby="portfolyo-basligi" className="space-y-3">
+      {/*
+        Bölümün adı ekranda YAZILI DEĞİL: sağ sütunda sayaçların üstünde
+        bir başlık, sol sütundaki kartla aynı hizada durmuyordu ve iki
+        sütunlu düzende ikinci bir "başlık" gibi okunuyordu. Ad ekran
+        okuyucu için duruyor — bölümün nerede başladığı klavye ve okuyucu
+        araçlarında hâlâ belli.
+      */}
+      <h2 id="portfolyo-basligi" className="sr-only">
+        Fotoğraf portfolyon
+      </h2>
+
+      <PortfolyoUstSatiri
         sayaclar={sayaclar}
         sayacDurumu={sayacDurumu}
-        paylasimlar={paylasimlar}
-        paylasimDurumu={paylasimDurumu}
-        onPaylasimlariYenile={() => setPaylasimDeneme((sayi) => sayi + 1)}
-        onDuzenle={() => setGorunum('duzenle')}
-        onPaylas={paylas}
+        yayindaMi={profil!.yayindaMi}
+        avatarVarMi={Boolean(profil!.avatarYolu)}
         onPaylasimOlustur={() => setGorunum('paylasimOlustur')}
+        onProfilBaglantisiPaylas={paylas}
+        onGorunurluk={() => gorunurlukDegistir(!profil!.yayindaMi)}
+        gorunurlukDurumu={gorunurlukDurumu === 'gonderiliyor' ? 'gonderiliyor' : 'bekliyor'}
+        onDuzenle={() => setGorunum('duzenle')}
         onFotografDegistir={() => setGorunum('fotograf')}
         onFotografKaldir={fotografiKaldir}
-        fotografKaldirmaDurumu={fotografKaldirmaDurumu}
-        onPaylasimArsivlendi={paylasimlariTazele}
+        fotografDurumu={fotografKaldirmaDurumu === 'gonderiliyor' ? 'gonderiliyor' : 'bekliyor'}
         onBegendiklerim={() => setGorunum('begendiklerim')}
         onKaydedilenler={() => setGorunum('kaydedilenler')}
         onArsiv={() => setGorunum('arsiv')}
-        onYayimla={() => gorunurlukDegistir(true)}
-        onGorunurluk={() => gorunurlukDegistir(!profil!.yayindaMi)}
-        yayimlamaDurumu={gorunurlukDurumu}
-        bildirim={bildirim}
+        onNavigate={onNavigate}
       />
-    </SayfaKabugu>
+
+      {!profil!.yayindaMi && (
+        <TopluluktaDegilUyarisi
+          onYayimla={() => gorunurlukDegistir(true)}
+          durum={gorunurlukDurumu}
+        />
+      )}
+
+      {/*
+        TOPLULUKTAN AYRILMA HATASI AYRI BİR CÜMLE
+
+        Katılma hatasını yukarıdaki kutu anlatıyor ama o kutu kullanıcı
+        TOPLULUKTAYKEN hiç çizilmiyor. Cümle olmasaydı başarısız bir
+        "Topluluktan ayrıl" hiçbir iz bırakmaz, kullanıcı olmamış bir işi
+        olmuş sanardı — sessiz başarısızlık başarı gibi okunur.
+      */}
+      {profil!.yayindaMi && gorunurlukDurumu === 'hata' && (
+        <p role="alert" className="text-xs font-semibold leading-relaxed text-rose-700">
+          Alan topluluğundan ayrılamadın; hâlâ topluluktasın. Yeniden deneyebilirsin.
+        </p>
+      )}
+
+      {/* Menü tıklandığı anda kapanıyor; kaldırma hatası bu yüzden burada. */}
+      {fotografKaldirmaDurumu === 'hata' && (
+        <p role="alert" className="text-xs font-semibold leading-relaxed text-rose-700">
+          Profil fotoğrafın kaldırılamadı; fotoğrafın duruyor. Yeniden deneyebilirsin.
+        </p>
+      )}
+
+      {bildirim && (
+        <p role="status" className="text-sm font-semibold text-gray-700">
+          {bildirim}
+        </p>
+      )}
+
+      <PaylasimIzgarasi
+        paylasimlar={paylasimlar}
+        durum={paylasimDurumu}
+        onYenidenDene={() => setPaylasimDeneme((sayi) => sayi + 1)}
+        sahibiMi
+        onArsivlendi={paylasimlariTazele}
+        gorunum="sade"
+      />
+    </section>,
   );
 };
 
@@ -767,7 +1040,13 @@ const GuvenliEkran: React.FC<{
   onNavigate: (yol: string, secenek?: { degistir?: boolean }) => void;
   kendiAdi?: string | null;
 }> = ({ onNavigate, kendiAdi }) => {
-  const hedef = kendiAdi ? profilYolu(kendiAdi) : '/profil';
+  /*
+    Kendi profili KURULUYSA hedef birleşik ekran, değilse kurulum kısa
+    yolu. `profilYolu(kendiAdi)` de aynı yere çıkardı ama bir yönlendirme
+    daha üzerinden: sahip için `/profil/<ad>` artık `/cv`ye replace ile
+    gidiyor.
+  */
+  const hedef = kendiAdi ? BIRLESIK_EKRAN : '/profil';
   return (
     <SayfaKabugu>
       <div className={`${KART} space-y-3 text-center`}>

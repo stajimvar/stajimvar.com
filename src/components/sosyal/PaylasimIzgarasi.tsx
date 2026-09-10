@@ -85,6 +85,26 @@ interface IzgaraProps {
   onGeriYukle?: (paylasim: SosyalPaylasim) => void;
   /** Şu anda geri yüklenen kimlik; o kartın düğmesi kilitli. */
   geriYuklenenId?: string | null;
+  /**
+   * Hücrenin ne kadarını çizeceği.
+   *
+   * 'ayrintili' (VARSAYILAN) hücreyi kart kabına koyup açıklamayı ve
+   * tarihi de basıyor. Arşiv ekranı bunu istiyor: orada kart ALTINDA
+   * "Profilde yeniden göster" düğmesi var ve kullanıcı hangi satırı geri
+   * yüklediğini çıplak kapaktan ayırt edemez — aynı fotoğrafın iki ayrı
+   * gün paylaşılmış hâli olabilir.
+   *
+   * 'sade' hücreyi çıplak kare fotoğrafa indiriyor; profil ızgarasının
+   * onaylanan tasarımı bu. Açıklama YOK OLMUYOR, yer değiştiriyor: tam
+   * metin ayrıntı katmanında (`PaylasimDetayi`) duruyor. "Açıklama yok"
+   * satırı da bu yüzden kalktı — boş bir alanın boşluğunu ilan eden bir
+   * satır, ızgaranın asıl sorusunu ("hangi fotoğraf") bulandırıyordu.
+   *
+   * Varsayılan bilerek 'ayrintili': prop'u geçirmeyi unutan çağıran
+   * bugünkü davranışı görüyor. Ters varsayılan, arşivdeki tarihi sessizce
+   * kaldırırdı.
+   */
+  gorunum?: 'sade' | 'ayrintili';
 }
 
 const KART_KABI = 'rounded-2xl border border-gray-200 bg-white p-2.5 sm:p-3.5';
@@ -102,6 +122,7 @@ interface KartProps {
   onAc: (paylasim: SosyalPaylasim, tetikleyici: HTMLElement) => void;
   onGeriYukle?: (paylasim: SosyalPaylasim) => void;
   geriYukleKilidi?: boolean;
+  sade: boolean;
 }
 
 const GERI_YUKLE_DUGMESI = `inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2 text-[13px] font-bold text-gray-800 hover:bg-gray-50 disabled:cursor-default disabled:opacity-40 sm:text-sm ${RENK_GECISI} ${ODAK_HALKASI}`;
@@ -113,8 +134,25 @@ const PaylasimKarti: React.FC<KartProps> = ({
   onAc,
   onGeriYukle,
   geriYukleKilidi = false,
+  sade,
 }) => {
   const tarih = tarihMetni(paylasim.arsivAni ?? paylasim.olusturmaAni);
+
+  /*
+    SADE HÜCRENİN ERİŞİLEBİLİR ADI
+
+    Ayrıntılı hücrede düğmenin adı içeriğinden geliyordu: açıklama metni
+    ve tarih düğmenin İÇİNDE yazılı. Sade hücrede metin kalmadı ve
+    fotoğrafın `alt`ı da boş OLABİLİR (yazar yazmadıysa) — o durumda
+    düğmenin erişilebilir adı tamamen boş kalır, ekran okuyucu "düğme"
+    diye okurdu.
+
+    Ad bu yüzden ELDE VAR OLANDAN kuruluyor: paylaşımın tarihi. İçerik
+    uydurulmuyor — "Tekstil paylaşımı" gibi bir tahmin, olmayan bir
+    başlığı ekran okuyucuya gerçek diye sunardı. Tarih de yoksa ad tek
+    başına eyleme iniyor.
+  */
+  const sadeAd = tarih ? `${tarih} tarihli paylaşımı aç` : 'Paylaşımı aç';
 
   const kart = (
     /*
@@ -139,7 +177,18 @@ const PaylasimKarti: React.FC<KartProps> = ({
       */
       data-paylasim-kimligi={paylasim.id}
       onClick={(olay) => onAc(paylasim, olay.currentTarget)}
-      className={`${KART_KABI} flex h-full min-w-0 flex-col gap-1.5 cursor-pointer text-left hover:border-gray-300 ${RENK_GECISI} ${ODAK_HALKASI}`}
+      /*
+        Sade hücrede kart kabı yok: kenarlık ve dolgu kalkınca aynı sütun
+        genişliğinde fotoğrafın kendisi büyüyor. Odak halkası İKİ dalda da
+        duruyor — çerçevesiz bir hücrede klavye odağının nerede olduğu
+        yalnız o halkadan okunuyor.
+      */
+      aria-label={sade ? sadeAd : undefined}
+      className={
+        sade
+          ? `block h-full w-full min-w-0 cursor-pointer ${RENK_GECISI} ${ODAK_HALKASI}`
+          : `${KART_KABI} flex h-full min-w-0 flex-col gap-1.5 cursor-pointer text-left hover:border-gray-300 ${RENK_GECISI} ${ODAK_HALKASI}`
+      }
     >
       <div className={KAPAK_KABI}>
         {kapakDurumu === 'yukleniyor' && paylasim.kapakYolu && (
@@ -194,16 +243,28 @@ const PaylasimKarti: React.FC<KartProps> = ({
         )}
       </div>
 
-      {paylasim.aciklama ? (
-        <p className="text-[13px] leading-snug text-gray-900 break-words line-clamp-3 sm:text-sm">
-          {paylasim.aciklama}
-        </p>
-      ) : (
-        /* Açıklama boş olabilir; uydurma başlık üretilmiyor. */
-        <p className="text-[13px] italic leading-snug text-gray-500 sm:text-sm">Açıklama yok</p>
-      )}
+      {/*
+        AÇIKLAMA VE TARİH YALNIZ AYRINTILI HÜCREDE
 
-      {tarih && <span className="mt-auto pt-1 text-[11px] text-gray-600">{tarih}</span>}
+        Sade hücrede ikisi de basılmıyor; açıklamanın tam metni ayrıntı
+        katmanında duruyor ve tarih de orada yazıyor. Sade hücrede bu
+        satırların yerine düğmenin `aria-label`ı geçiyor, yani bilgi ekran
+        okuyucudan da kaçmıyor.
+      */}
+      {!sade && (
+        <>
+          {paylasim.aciklama ? (
+            <p className="text-[13px] leading-snug text-gray-900 break-words line-clamp-3 sm:text-sm">
+              {paylasim.aciklama}
+            </p>
+          ) : (
+            /* Açıklama boş olabilir; uydurma başlık üretilmiyor. */
+            <p className="text-[13px] italic leading-snug text-gray-500 sm:text-sm">Açıklama yok</p>
+          )}
+
+          {tarih && <span className="mt-auto pt-1 text-[11px] text-gray-600">{tarih}</span>}
+        </>
+      )}
     </button>
   );
 
@@ -234,14 +295,22 @@ const PaylasimKarti: React.FC<KartProps> = ({
   );
 };
 
-/** İskelet ölçüsü gerçek kartla aynı: içerik gelince ızgara zıplamıyor. */
-const Iskelet: React.FC = () => (
-  <div aria-hidden className={`${KART_KABI} flex h-full flex-col gap-1.5`}>
-    <div className={`${KAPAK_KABI} animate-pulse`} />
-    <div className="h-3.5 w-4/5 animate-pulse rounded bg-gray-100" />
-    <div className="mt-auto h-3 w-20 animate-pulse rounded bg-gray-100" />
-  </div>
-);
+/**
+ * İskelet ölçüsü gerçek kartla aynı: içerik gelince ızgara zıplamıyor.
+ *
+ * Sade dalda metin çizgileri de yok — onları çizmek, gelmeyecek bir
+ * satırın yerini ayırıp içerik gelince ızgarayı kısaltırdı.
+ */
+const Iskelet: React.FC<{ sade: boolean }> = ({ sade }) =>
+  sade ? (
+    <div aria-hidden className={`${KAPAK_KABI} animate-pulse`} />
+  ) : (
+    <div aria-hidden className={`${KART_KABI} flex h-full flex-col gap-1.5`}>
+      <div className={`${KAPAK_KABI} animate-pulse`} />
+      <div className="h-3.5 w-4/5 animate-pulse rounded bg-gray-100" />
+      <div className="mt-auto h-3 w-20 animate-pulse rounded bg-gray-100" />
+    </div>
+  );
 
 export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
   paylasimlar,
@@ -252,7 +321,9 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
   bosMetni,
   onGeriYukle,
   geriYuklenenId = null,
+  gorunum = 'ayrintili',
 }) => {
+  const sade = gorunum === 'sade';
   const [acik, setAcik] = React.useState<SosyalPaylasim | null>(null);
   /* Katmanı açan kart; kapanışta odak buraya dönüyor. */
   const tetikRef = React.useRef<HTMLElement | null>(null);
@@ -282,9 +353,9 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
   if (durum === 'yukleniyor') {
     return (
       <div className={PAYLASIM_IZGARASI} aria-busy="true">
-        <Iskelet />
-        <Iskelet />
-        <Iskelet />
+        <Iskelet sade={sade} />
+        <Iskelet sade={sade} />
+        <Iskelet sade={sade} />
       </div>
     );
   }
@@ -365,6 +436,7 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
             }}
             onGeriYukle={onGeriYukle}
             geriYukleKilidi={geriYuklenenId === paylasim.id}
+            sade={sade}
           />
         ))}
       </div>

@@ -623,3 +623,56 @@ test('yeni ekranlarda da imzalı ya da kalıcı adres üreten çağrı yok', () 
   assert.match(sahipListesi, /<PaylasimIzgarasi/);
   assert.equal((sahipListesi.match(/grid-cols-/g) ?? []).length, 0);
 });
+
+/* ------------------------------------------------------------------ */
+/*  IZGARANIN SADE KİPİ — BİRLEŞİK EKRANIN PORTFOLYOSU                 */
+/* ------------------------------------------------------------------ */
+
+test('sade hücre açıklama basmıyor; metin ayrıntı katmanında duruyor', () => {
+  /*
+    Onaylanan tasarımda profil ızgarasının hücresi çıplak bir kare
+    fotoğraf: kart kabı, açıklama ve tarih yok. Açıklama SİLİNMİYOR, yer
+    değiştiriyor — tam metin `PaylasimDetayi` içinde ve o katman
+    ızgaranın kendi içinden açılıyor.
+
+    "Açıklama yok" satırı da bu yüzden sade kipte çizilmiyor: boş bir
+    alanın boşluğunu ilan eden bir satır, hücrenin asıl sorusunu ("hangi
+    fotoğraf") bulandırıyordu.
+
+    Arşiv ekranı ayrıntılı kipte KALIYOR: orada kart altında "Profilde
+    yeniden göster" var ve kullanıcı hangi satırı geri yüklediğini çıplak
+    kapaktan ayırt edemez.
+  */
+  assert.match(izgara, /gorunum\?: 'sade' \| 'ayrintili';/);
+  assert.match(izgara, /gorunum = 'ayrintili',/);
+  assert.match(izgara, /\{!sade && \(/);
+  /* Açıklama ve tarih AYNI koşulun içinde: ikisi de sade kipte düşüyor. */
+  const govde = izgara.slice(izgara.indexOf('{!sade && ('), izgara.indexOf('</button>'));
+  assert.match(govde, /paylasim\.aciklama/);
+  assert.match(govde, /Açıklama yok/);
+  assert.match(govde, /\{tarih && </);
+  /* Sade hücrede kart kabı yok; odak halkası İKİ dalda da duruyor. */
+  assert.match(izgara, /sade\n\s*\? `block h-full w-full min-w-0 cursor-pointer/);
+  assert.equal((izgara.match(/\$\{ODAK_HALKASI\}`\n\s*: `\$\{KART_KABI\}/g) ?? []).length, 1);
+});
+
+test('sade hücrenin adı boş kalmıyor, içerik de uydurulmuyor', () => {
+  /*
+    Ayrıntılı hücrede düğmenin erişilebilir adı içeriğinden geliyordu.
+    Sade hücrede metin yok ve fotoğrafın `alt`ı da BOŞ OLABİLİR (yazar
+    yazmadıysa); ad elde var olandan kuruluyor: paylaşımın tarihi.
+    "Tekstil paylaşımı" gibi bir tahmin, olmayan bir başlığı ekran
+    okuyucuya gerçek diye sunardı.
+
+    Çoklu fotoğraf rozeti sade kipte de duruyor: `KAPAK_KABI` her iki
+    dalda da çiziliyor ve rozet onun içinde.
+  */
+  assert.match(izgara, /const sadeAd = tarih \? `\$\{tarih\} tarihli paylaşımı aç` : 'Paylaşımı aç';/);
+  assert.match(izgara, /aria-label=\{sade \? sadeAd : undefined\}/);
+  /* İkon tek başına bilgi taşımıyor; yanındaki metin ekran okuyucuya kalıyor. */
+  assert.match(izgara, /paylasim\.gorselSayisi > 1 && \(/);
+  assert.match(izgara, /<Images aria-hidden/);
+  assert.match(izgara, /<span className="sr-only">Birden çok fotoğraf<\/span>/);
+  /* Rozet koşulu `sade` bayrağına HİÇ bakmıyor: iki kipte de aynı. */
+  assert.doesNotMatch(izgara, /sade && paylasim\.gorselSayisi/);
+});

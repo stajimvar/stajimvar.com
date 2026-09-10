@@ -47,7 +47,15 @@
 const VERI_ONEKLERI = ['/ilan/', '/sirket/', '/firsatlar/', '/kesfet/', '/bolum/'];
 
 const UYGULAMA_ADRESLERI = new Set([
+  /*
+    /cv artık YAZDIRILABİLİR CV DEĞİL: profil kartı ile sosyal fotoğraf
+    portfolyosunun birlikte durduğu ekran. Rehber yazılarındaki sekiz
+    bağlantı ("Profilini tamamla ve CV'ni indir") buraya geliyor ve
+    yazdırılabilir CV bir tık uzakta, kartın kendi düğmesinde.
+  */
   '/cv',
+  /* Yazdırılabilir CV kendi adresine taşındı; kabuk 200 ile gelmeli. */
+  '/cv/yazdir',
   /*
     Çıplak /sirket BURADAN ÇIKARILDI: artık _redirects ile
     /isveren/ilan-ver'e 301 veriyor. İkisi aynı bileşeni çiziyordu, yani
@@ -78,6 +86,26 @@ function uygulamaninMi(yol: string): boolean {
   const temiz = yol.replace(/\/+$/, '') || '/';
   if (UYGULAMA_ADRESLERI.has(temiz)) return true;
   if (temiz === '/yonetim' || temiz.startsWith('/yonetim/')) return true;
+  /*
+    /profil/<kullaniciadi> — UYGULAMA ÖNEKİ, VERİ ÖNEKİ DEĞİL
+
+    Profiller ön render EDİLMİYOR ve edilmeyecek: kişiye özel ve kitleye
+    bağlılar, yayında bir dosyaları yok. Bu yüzden `/profil/`
+    VERI_ONEKLERI'ne KONMADI — oraya konsaydı "dosya yoksa 404" kuralına
+    düşer ve gerçek, var olan bir profil de 404 alırdı.
+
+    ÖLÇÜLEN SORUN: bb74d60 yayınında `/profil/<ad>` adreslerinin tamamı
+    HTTP 404 dönüyordu. Sayfa yine de açılıyordu (404.html uygulamayı
+    başlatıyor) ama durum kodu yanlıştı: paylaşılan profil bağlantısı
+    arama motoruna ve bağlantı önizlemesine "böyle bir sayfa yok"
+    diyordu.
+
+    VAR-YOK SIZDIRMIYOR: bütün kullanıcı adları — var olan, olmayan,
+    engellenmiş, farklı alandaki — AYNI 200 kabuğunu alıyor. Ayrım
+    sunucudaki satır politikasında ve istemcideki tek güvenli ekranda
+    kalıyor; durum kodunun kendisi bir varlık kanıtı olmuyor.
+  */
+  if (temiz === '/profil' || temiz.startsWith('/profil/')) return true;
   return VERI_ONEKLERI.some((onek) => yol.startsWith(onek) && yol.length > onek.length);
 }
 
