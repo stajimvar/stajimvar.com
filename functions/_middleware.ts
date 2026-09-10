@@ -60,6 +60,12 @@ const UYGULAMA_ADRESLERI = new Set([
     sekmede açan okuyucu boş ekranla karşılaşıyordu.
   */
   '/profil',
+  /*
+    /baglantilar: /profil ile aynı sebep. Profildeki "Bağlantı" sayısı
+    gerçek bir <a href> ve yeni sekmede açılabiliyor; ön render
+    edilmediği için ara katman olmadan doğrudan açılışta 404 dönerdi.
+  */
+  '/baglantilar',
   '/basvuru-sablonu',
   '/sifre-yenile',
   '/stajyer-nasil-alinir',

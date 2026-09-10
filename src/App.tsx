@@ -35,6 +35,9 @@ import { GuideHub, GuidePage } from './components/GuidePages';
 import { BasvuruSablonu } from './components/BasvuruSablonu';
 import { SifreYenile } from './components/SifreYenile';
 import { ProfilTamamla } from './components/ProfilTamamla';
+import { SosyalProfilSayfasi } from './components/sosyal/SosyalProfilSayfasi';
+import { BaglantilarSayfasi } from './components/sosyal/BaglantilarSayfasi';
+import { BolumTalepleri } from './components/yonetim/BolumTalepleri';
 import { BolumHub, BolumPage } from './components/BolumPages';
 import { StajProgramlariSayfasi } from './components/StajProgramlari';
 import { IsverenGirisi } from './components/IsverenGirisi';
@@ -257,8 +260,18 @@ export default function App() {
     }
   }, [path]);
 
-  const navigate = (to: string) => {
-    window.history.pushState({}, '', to);
+  /*
+    `degistir`: geçmişe YENİ kayıt eklemeden adresi değiştiriyor.
+
+    Kanonik adrese yönlendiren sayfalar için gerekiyor. /profil kendi
+    /profil/<kullaniciadi> adresine gidiyor; bu push edilseydi geri tuşu
+    kullanıcıyı yeniden yönlendirilecek adrese düşürür ve geri tuşu hiç
+    çalışmaz hâle gelirdi. Aynı kalıp /ilanlar düzeltmesinde de var
+    (yukarıda, replaceState ile).
+  */
+  const navigate = (to: string, secenek?: { degistir?: boolean }) => {
+    if (secenek?.degistir) window.history.replaceState({}, '', to);
+    else window.history.pushState({}, '', to);
     /*
       Adres çubuğuna tamamı yazılıyor ama rota durumuna YALNIZCA yol
       konuyor. Sorgu dizesi de duruma girseydi "/firsatlar?q=yazılım"
@@ -1383,6 +1396,22 @@ export default function App() {
     );
   }
 
+  /*
+    Bolum talep kuyrugu: kullanicinin "bolumum listede yok" ya da
+    "bolumumun alani tanimli degil" talepleri. Ekrani gormek yetki
+    vermiyor -- satirlari RLS yalniz yoneticiye veriyor ve karari
+    `bolum_talebini_karara_bagla` security definer RPC'si yaziyor.
+  */
+  if (temizYol === '/yonetim/bolum-talepleri') {
+    return (
+      <AdminRouteGate authenticated={isLoggedIn} isAdmin={isAdmin} onLogin={handleOpenLogin}>
+        <div className="min-h-screen bg-[#F9FAFB] p-4 sm:p-8">
+          <BolumTalepleri onToast={showToast} />
+        </div>
+      </AdminRouteGate>
+    );
+  }
+
   if (temizYol === '/yonetim/firsatlar' || temizYol === '/yonetim/firsatlar/yeni' || /^\/yonetim\/firsatlar\/[^/]+\/duzenle$/.test(temizYol)) {
     const editId = /^\/yonetim\/firsatlar\/([^/]+)\/duzenle$/.exec(temizYol)?.[1];
     return <AdminRouteGate authenticated={Boolean(session)} isAdmin={isAdmin} onLogin={handleOpenLogin}>
@@ -1468,6 +1497,70 @@ export default function App() {
       );
     }
     return <CvPage student={student} onBack={() => navigate('/')} />;
+  }
+
+  /*
+    SOSYAL PROFİL
+
+    İki adres tek bileşene bağlanıyor:
+      /profil                 kısa yol — profil yoksa kurulum, varsa kalıcı
+                              adrese yönlendirme
+      /profil/<kullaniciadi>  kalıcı profil adresi
+
+    Adresteki ad yalnızca bir GİRDİ; sahiplik oturum kimliği ile
+    `social_profiles.profile_id` ilişkisinden doğrulanıyor. Bu yüzden
+    burada ad üzerinden hiçbir yetki kararı verilmiyor, ad olduğu gibi
+    bileşene geçiyor.
+
+    `decodeURIComponent` bir try içinde: bozuk yüzde kodlaması (%zz) bu
+    fonksiyonu fırlatıyor ve tek bir hatalı adres bütün uygulamayı beyaz
+    ekrana düşürürdü. Çözülemeyen adres ham hâliyle geçiyor; bileşen onu
+    zaten geçerli bir kullanıcı adıyla eşleştiremeyip güvenli ekranı
+    çiziyor.
+
+    Öğrenci tarafındaki ÖZEL alan (başvurular, kaydedilen ilanlar, hesap
+    ayarları) buraya taşınmadı: o alan ana sayfadaki `profile` sekmesinde
+    duruyor ve bu rota ona hiç dokunmuyor.
+  */
+  if (temizYol === '/profil' || temizYol.startsWith('/profil/')) {
+    const hamAd = temizYol === '/profil' ? null : temizYol.slice('/profil/'.length);
+    let rotaKullaniciAdi: string | null = hamAd;
+    if (hamAd) {
+      try {
+        rotaKullaniciAdi = decodeURIComponent(hamAd);
+      } catch {
+        rotaKullaniciAdi = hamAd;
+      }
+    }
+    return icerikSayfasi(
+      <SosyalProfilSayfasi
+        rotaKullaniciAdi={rotaKullaniciAdi}
+        kullaniciId={session?.userId ?? null}
+        oturumHazir={sessionReady}
+        onNavigate={navigate}
+        onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+      />
+    );
+  }
+
+  /*
+    /baglantilar
+
+    Tek adres, tek sayfa, üç bölüm (bağlantılar, gelen istekler,
+    gönderilen istekler). Sekme adresi ya da alt rota YOK: üçü de aynı
+    okumadan geliyor ve bir isteği kabul etmek satırı bölümler arasında
+    taşıyor. Yetki kapısı sunucuda: `connections` politikası satırları
+    yalnız tarafına veriyor.
+  */
+  if (temizYol === '/baglantilar') {
+    return icerikSayfasi(
+      <BaglantilarSayfasi
+        kullaniciId={session?.userId ?? null}
+        oturumHazir={sessionReady}
+        onNavigate={navigate}
+        onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+      />
+    );
   }
 
   /* Rehber merkezi ve tek rehber sayfaları. */

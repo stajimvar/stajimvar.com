@@ -90,10 +90,17 @@ export const SayfaKabugu: React.FC<SayfaKabuguProps> = ({
   <main className={`${icerikGenisligi} mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 ${ustBosluk} pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-10`}>
     {(onBack || sag) && (
       <div className="flex items-center justify-between gap-3 mb-4">
+        {/*
+          min-h-11: kutu yalnız metnin satır yüksekliği kadardı ve 390 piksel
+          genişlikte paylaşım oluşturma ekranında 48 × 20 piksel ölçüldü —
+          yükseklik 44 piksellik dokunma hedefinin altında. Aynı ekrandaki
+          öteki düğmeler (Paylaş, Vazgeç, Kaldır…) zaten min-h-11 taşıyor;
+          bu satır o eşiğe hizalanıyor, görünen metin ve hiza değişmiyor.
+        */}
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 cursor-pointer"
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           Geri

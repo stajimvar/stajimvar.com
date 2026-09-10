@@ -177,19 +177,53 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         </p>
       </div>
 
+      {/*
+        DOKUNMA HEDEFİ: `min-h-11` (44 piksel)
+
+        Bu şeritteki düğmelerin yüksekliği yalnız dolgudan geliyordu:
+        `py-2.5` (10+10) + `text-sm`in 20 piksellik satır yüksekliği =
+        40; kenarlıklı olanlarda 42. Depodaki eşik 44 ve yönetim paneli
+        telefondan da açılıyor. Dolgu artırılmadı, taban yükseklik
+        verildi: satır
+        sayısı değişmediği için şeridin görünen ölçüsü aynı kalıyor,
+        yalnız kutu 2-4 piksel büyüyor.
+      */}
       <div className="flex flex-wrap gap-2">
-        <button type="button" onClick={() => onNavigate('/yonetim/kesfet')} className="px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer">
+        <button type="button" onClick={() => onNavigate('/yonetim/kesfet')} className="inline-flex items-center justify-center min-h-11 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer">
           Keşfet etkinlikleri
         </button>
         <button
           type="button"
           onClick={() => onNavigate('/yonetim/talepler')}
-          className="px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
+          className="inline-flex items-center justify-center min-h-11 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
         >
           Onay kuyrukları
           {ozet.bekleyenTalep + ozet.taslakIlan > 0 && (
             <span className="ml-1.5">({ozet.bekleyenTalep + ozet.taslakIlan})</span>
           )}
+        </button>
+        {/*
+          BÖLÜM TALEP KUYRUĞUNA GİDEN DÜĞME
+
+          Kuyruk şimdiye kadar yalnız adresi elle yazarak açılıyordu; talep
+          bir kullanıcının beklediği bir karar, panelden bir tık uzakta
+          olmalı.
+
+          Rozette SAYI YOK: `fetchAdminOzet` bekleyen bölüm talebini
+          saymıyor (`ozet.bekleyenTalep` şirket sahiplenme talebi, başka bir
+          kuyruk). Yanındaki parantezi doldurmak için o sayıyı kullanmak,
+          yöneticiye yanlış kuyruğun boyunu gösterirdi.
+
+          Bu düğme yalnız yönetici dalında çiziliyor: bileşenin kendisi
+          App içinde `isAdmin` koşulunun içinde. Gizleme değil, hiç
+          çizmeme — gizlenmiş bir düğme klavyeyle bulunur.
+        */}
+        <button
+          type="button"
+          onClick={() => onNavigate('/yonetim/bolum-talepleri')}
+          className="inline-flex items-center justify-center min-h-11 px-4 py-2.5 rounded-xl text-sm font-bold text-gray-900 border border-gray-200 hover:bg-gray-50 cursor-pointer"
+        >
+          Bölüm talepleri
         </button>
         {/*
           PAYLAŞIM EKRANINA GİDEN DÜĞME
@@ -201,7 +235,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         <button
           type="button"
           onClick={() => onNavigate('/yonetim/instagram')}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-gray-900 border border-gray-200 hover:bg-gray-50 cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 rounded-xl text-sm font-bold text-gray-900 border border-gray-200 hover:bg-gray-50 cursor-pointer"
         >
           <Instagram className="w-4 h-4" />
           Gönderi paylaş
@@ -209,7 +243,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         <button
           type="button"
           onClick={() => onNavigate('/')}
-          className="px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 border border-gray-200 hover:bg-gray-50 cursor-pointer"
+          className="inline-flex items-center justify-center min-h-11 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 border border-gray-200 hover:bg-gray-50 cursor-pointer"
         >
           Siteye dön
         </button>
