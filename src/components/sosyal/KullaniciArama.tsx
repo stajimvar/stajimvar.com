@@ -40,6 +40,17 @@ import { ProfilFotografi } from './ProfilFotografi';
  * duruncaya kadar bekleniyor; ayrıca her istek kendi `iptal` bayrağını
  * taşıyor, yani geç dönen eski cevap yeni sonucun üstüne yazmıyor.
  *
+ * TEK MANTIK, İKİ YERLEŞİM
+ * ------------------------
+ * Masaüstünde kişi araması üst çubuktaki kutudan yapılıyor: /cv sağ
+ * sütunundaki ikinci kutu, aynı ekranda "hangisi neyi arıyor" sorusunu
+ * doğuruyordu ve kaldırıldı. Üst çubuk mobilde arama kutusu çizmiyor
+ * (`hidden lg:block`); orada kişi aramasının tek yolu bu bileşen, o
+ * yüzden yalnız `lg:hidden` ile mobilde duruyor. Geciktirme, durum
+ * cümleleri ve sonuç satırları `KullaniciAramaSonuclari`nda tek kez
+ * yazılı; iki yerleşim de onu çiziyor. Kopyalansaydı biri değişince
+ * öteki eski cümleyle kalırdı.
+ *
  * ZİYARETÇİ BU BİLEŞENE HİÇ ULAŞMIYOR
  * -----------------------------------
  * Kutu yalnız sahibin kendi ekranında, `if (!sahibiMi) return
@@ -57,13 +68,27 @@ const SATIR = `flex min-h-11 items-center gap-2.5 rounded-xl px-2 py-2 hover:bg-
 
 type Durum = 'kisa' | 'yukleniyor' | 'hazir' | 'hata';
 
-interface Props {
+type Gezinme = (yol: string, secenek?: { degistir?: boolean }) => void;
+
+interface SonucProps {
+  /** Ham sorgu; harfe indirme ve uzunluk ölçümü burada yapılıyor. */
+  sorgu: string;
   /** `degistir` geçmişe kayıt eklemeden adresi değiştiriyor; bkz. App.tsx. */
-  onNavigate: (yol: string, secenek?: { degistir?: boolean }) => void;
+  onNavigate: Gezinme;
+  /**
+   * Uygulama içi geçişle bir sonuca gidildiğinde çağrılıyor. Üst çubuk
+   * bununla kutuyu temizleyip listeyi kapatıyor; orta tuş ve yeni sekme
+   * açılışları tarayıcıya kaldığı için burada çağrılmıyor — kullanıcı
+   * hâlâ aynı sayfada ve aramasını kaybetmemeli.
+   */
+  onSecildi?: () => void;
 }
 
-export const KullaniciArama: React.FC<Props> = ({ onNavigate }) => {
-  const [sorgu, setSorgu] = React.useState('');
+/**
+ * Sorguyu sonuca çeviren ve dört durumu yazan parça. Kutu burada YOK:
+ * kutunun yeri ve biçimi yerleşime göre değişiyor, mantık değişmiyor.
+ */
+export const KullaniciAramaSonuclari: React.FC<SonucProps> = ({ sorgu, onNavigate, onSecildi }) => {
   const [sonuclar, setSonuclar] = React.useState<SosyalAramaSonucu[]>([]);
   const [durum, setDurum] = React.useState<Durum>('kisa');
 
@@ -103,27 +128,7 @@ export const KullaniciArama: React.FC<Props> = ({ onNavigate }) => {
   }, [sorgu, yeterliMi]);
 
   return (
-    <div role="search" className="space-y-2">
-      <div className="relative">
-        <label htmlFor="sosyal-kullanici-arama" className="sr-only">
-          Kullanıcı ara
-        </label>
-        {/* İkon dekoratif: yanındaki etiket ve yer tutucu ne yapıldığını yazıyor. */}
-        <Search
-          aria-hidden
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-        />
-        <input
-          id="sosyal-kullanici-arama"
-          type="search"
-          value={sorgu}
-          onChange={(olay) => setSorgu(olay.target.value)}
-          placeholder="Kullanıcı adıyla ara"
-          autoComplete="off"
-          className={ALAN_KUTUSU}
-        />
-      </div>
-
+    <div className="space-y-2">
       {/*
         DÖRT DURUMUN DÖRDÜ DE YAZILI ve `role="status"` ile okunuyor:
         kısa sorgu, arama sürüyor, eşleşme yok, sunucu vermedi. İlk ikisi
@@ -188,6 +193,7 @@ export const KullaniciArama: React.FC<Props> = ({ onNavigate }) => {
                       return;
                     olay.preventDefault();
                     onNavigate(yol);
+                    onSecildi?.();
                   }}
                   className={SATIR}
                 >
@@ -209,6 +215,42 @@ export const KullaniciArama: React.FC<Props> = ({ onNavigate }) => {
           })}
         </ul>
       )}
+    </div>
+  );
+};
+
+interface Props {
+  /** `degistir` geçmişe kayıt eklemeden adresi değiştiriyor; bkz. App.tsx. */
+  onNavigate: Gezinme;
+}
+
+/** Mobil yerleşim: kutu ve sonuçlar portfolyo alanının içinde, alt alta. */
+export const KullaniciArama: React.FC<Props> = ({ onNavigate }) => {
+  const [sorgu, setSorgu] = React.useState('');
+
+  return (
+    <div role="search" className="space-y-2">
+      <div className="relative">
+        <label htmlFor="sosyal-kullanici-arama" className="sr-only">
+          Kullanıcı ara
+        </label>
+        {/* İkon dekoratif: yanındaki etiket ve yer tutucu ne yapıldığını yazıyor. */}
+        <Search
+          aria-hidden
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+        />
+        <input
+          id="sosyal-kullanici-arama"
+          type="search"
+          value={sorgu}
+          onChange={(olay) => setSorgu(olay.target.value)}
+          placeholder="Kullanıcı adıyla ara"
+          autoComplete="off"
+          className={ALAN_KUTUSU}
+        />
+      </div>
+
+      <KullaniciAramaSonuclari sorgu={sorgu} onNavigate={onNavigate} />
     </div>
   );
 };

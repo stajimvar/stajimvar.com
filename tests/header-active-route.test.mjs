@@ -78,3 +78,44 @@ test("/cv ekranı çıkışı her öğrenciye, yönetim panelini yalnız yöneti
   /* Yönetim paneli yalnız yöneticide DOM'a giriyor. */
   assert.match(profil, /\{isAdmin && onOpenAdmin && \([\s\S]{0,500}Yönetim paneli/);
 });
+
+/*
+  SOSYAL SAYFALARDA ÜST ARAMA KİŞİ ARIYOR
+
+  /cv sağ sütununda "Kullanıcı adıyla ara" kutusu, üst çubukta "Pozisyon
+  veya şirket ara" duruyordu: aynı ekranda iki kutu, ikisi farklı şey
+  arıyor. Burs ve rehberdeki kalıp izlendi — tek kutu, bulunulan sayfaya
+  göre davranıyor. Yazılan metin ilan süzgecine (`onSearchChange`)
+  GİTMİYOR: o çağrı App'te boş olmayan her terimde ana sayfaya götürüyor
+  ve kişi arayan kullanıcıyı /cv'den atardı.
+*/
+test("sosyal sayfada üst arama kişi arıyor ve ilan süzgecine yazmıyor", () => {
+  assert.ok(
+    source.includes("const sosyaldeMi = /^\\/(cv|profil|topluluklar|baglantilar)(\\/|$)/.test(bulunulanYol);"),
+  );
+  assert.match(source, /sosyaldeMi\s*\? 'Kullanıcı adıyla ara'/);
+  assert.match(source, /sosyaldeMi\s*\? 'Kişi ara'/);
+  /* Değer ve değişim yerel duruma bağlı; `onSearchChange` sosyal dalda çağrılmıyor. */
+  assert.ok(source.includes("value={sosyaldeMi ? kisiSorgusu : (searchQuery ?? '')}"));
+  assert.match(
+    source,
+    /if \(sosyaldeMi\) \{\s*setKisiSorgusu\(e\.target\.value\);\s*setKisiListesiAcik\(true\);\s*return;\s*\}\s*onSearchChange\?\.\(e\.target\.value\);/,
+  );
+  /* Odaklanınca ilan sekmesine geçiş sosyal dalda çalışmıyor. */
+  assert.match(
+    source,
+    /onFocus=\{\(\) => \{\s*if \(sosyaldeMi\) \{[\s\S]{0,120}return;\s*\}\s*if \(rehberSayfasindaMi \|\| kesfetteMi\) return;/,
+  );
+  /* Sonuç mantığı kopyalanmadı: ortak parça çiziliyor; oturumsuz ve şirket hesabında kutu yok. */
+  assert.ok(source.includes("import { KullaniciAramaSonuclari } from './sosyal/KullaniciArama';"));
+  assert.ok(
+    source.includes(
+      "sosyaldeMi && isLoggedIn && userRole === 'student' && activeTab !== 'company-portal' && Boolean(onNavigate)",
+    ),
+  );
+  /* Sayfadan çıkınca sorgu sıfırlanıyor. */
+  assert.match(source, /useEffect\(\(\) => \{\s*setKisiSorgusu\(''\);\s*setKisiListesiAcik\(false\);\s*\}, \[bulunulanYol\]\)/);
+  /* App gezinmeyi geçiyor; geçmeseydi kutu hiç çizilmezdi. */
+  const app = readFileSync("src/App.tsx", "utf8");
+  assert.match(app, /<Header[\s\S]{0,6000}onNavigate=\{navigate\}/);
+});

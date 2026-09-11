@@ -29,6 +29,7 @@ import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { ODAK_HALKASI } from '../lib/renk-token';
 
 import { BildirimDugmesi } from './BildirimMerkezi';
+import { KullaniciAramaSonuclari } from './sosyal/KullaniciArama';
 
 interface HeaderProps {
   activeTab: 'internships' | 'badges' | 'applications' | 'profile' | 'company-portal';
@@ -101,6 +102,13 @@ interface HeaderProps {
    */
   searchQuery?: string;
   onSearchChange?: (q: string) => void;
+  /**
+   * Kişi aramasının gezinmesi: sonuç satırı `/profil/<kullaniciadi>`
+   * adresine gidiyor. Verilmezse sosyal sayfalarda üst çubuk arama kutusu
+   * hiç çizmiyor — gidecek yeri olmayan bir liste çizmek, çalışmayan bir
+   * özellik göstermek olurdu.
+   */
+  onNavigate?: (yol: string, secenek?: { degistir?: boolean }) => void;
   /*
     Yönetici menüsü. Bu bayrak yalnızca MENÜYÜ gösteriyor — yetkinin kendisi
     veritabanında. Tarayıcıda değerini değiştiren biri menüyü görebilir ama
@@ -181,6 +189,7 @@ export const Header: React.FC<HeaderProps> = ({
   bulunulanYol = '/',
   searchQuery,
   onSearchChange,
+  onNavigate,
   isAdmin = false,
   onOpenAdmin,
   onDunyaDegistir,
@@ -403,6 +412,54 @@ export const Header: React.FC<HeaderProps> = ({
     götürüyor, çünkü o sayfaların arayacak kendi içeriği yok.
   */
   const rehberSayfasindaMi = /^\/rehber(\/|$)/.test(bulunulanYol);
+  /*
+    SOSYAL SAYFALARDA ÜST ARAMA KİŞİ ARIYOR
+
+    /cv sağ sütununda ayrı bir "Kullanıcı adıyla ara" kutusu vardı ve üst
+    çubukta aynı anda "Pozisyon veya şirket ara" duruyordu: aynı ekranda
+    iki arama kutusu, ikisi farklı şey arıyor. Burslarda ve rehberde aynı
+    sorun aynı yolla çözülmüştü — tek kutu, bulunulan sayfaya göre
+    davranıyor. Sosyal sayfalar (birleşik profil, profil sayfaları,
+    topluluklar, bağlantılar) da o kalıba girdi.
+
+    Yazılan metin `onSearchChange`e GİTMİYOR: o çağrı App'te ilan
+    listesini süzüyor ve boş olmayan her terimde ana sayfaya götürüyor.
+    Kişi araması kendi yerel durumunda; /cv'de yazılan ad ilan süzgecini
+    kirletmiyor ve kullanıcıyı sayfadan atmıyor.
+  */
+  const sosyaldeMi = /^\/(cv|profil|topluluklar|baglantilar)(\/|$)/.test(bulunulanYol);
+  /*
+    Kişi araması yalnız oturumu olan öğrenci hesabına: `sosyal_kullanici_ara`
+    çağıranın görebildiği profilleri tarıyor, oturumsuz çağrı boş döner ve
+    boş liste "kimse yok" gibi okunurdu. Yönetici hesabı arayüzde öğrenci
+    görünümünü kullanıyor (`userRole` 'student', ayrıca `isAdmin`), yani
+    bu koşul onu dışarıda bırakmıyor. Şirket hesabı ve şirket portalı
+    sekmesi, ilan araması gibi burada da dışarıda.
+  */
+  const kisiAramasiCizilsin =
+    sosyaldeMi && isLoggedIn && userRole === 'student' && activeTab !== 'company-portal' && Boolean(onNavigate);
+  const [kisiSorgusu, setKisiSorgusu] = useState('');
+  const [kisiListesiAcik, setKisiListesiAcik] = useState(false);
+  const kisiAramaKabi = useRef<HTMLDivElement>(null);
+  /* Sayfadan çıkınca sorgu sıfırlanıyor: /cv'de yazılan ad /topluluklar'da liste açmasın. */
+  useEffect(() => {
+    setKisiSorgusu('');
+    setKisiListesiAcik(false);
+  }, [bulunulanYol]);
+  /*
+    Dışarı tıklama listeyi kapatıyor; dişli menüsündeki kalıp
+    (`ProfilAyarMenusu`). Kutu ve liste aynı kabın içinde, ikisine
+    basmak kapatmıyor.
+  */
+  useEffect(() => {
+    if (!kisiListesiAcik) return;
+    const disariTikla = (olay: MouseEvent) => {
+      if (kisiAramaKabi.current?.contains(olay.target as Node)) return;
+      setKisiListesiAcik(false);
+    };
+    document.addEventListener('mousedown', disariTikla);
+    return () => document.removeEventListener('mousedown', disariTikla);
+  }, [kisiListesiAcik]);
   const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kesfetteMi && !kurumsalSayfada && activeTab === 'internships';
   /*
     Birleşik profil ekranının KENDİ ADRESİ var (/cv, /cv/yazdir). Alt
@@ -717,9 +774,34 @@ export const Header: React.FC<HeaderProps> = ({
             Yalnızca lg ve üstü: mobilde burada yer yok, orada kutu ilan
             listesinin başında duruyor.
           */}
-          {onSearchChange && !burslardaMi && userRole === 'student' && activeTab !== 'company-portal' && (
+          {!burslardaMi &&
+            userRole === 'student' &&
+            activeTab !== 'company-portal' &&
+            (sosyaldeMi ? kisiAramasiCizilsin : Boolean(onSearchChange)) && (
             <div className="hidden lg:block flex-1 min-w-0 max-w-xl mx-4">
-              <div className="relative">
+              <div
+                ref={kisiAramaKabi}
+                className="relative"
+                /*
+                  Escape listeyi kapatıyor, odak kutuda kalıyor: kullanıcı
+                  yazdığını düzeltip devam edebilsin. Odak Tab ile kabın
+                  dışındaki bir öğeye geçince de kapanıyor; sonuç satırları
+                  kabın içinde olduğundan onlara Tab'lamak kapatmıyor.
+                  `relatedTarget` boşken KAPATILMIYOR: Safari bağlantıya
+                  basınca ona odak vermiyor ve blur boş hedefle geliyor —
+                  burada kapatsaydık satır, tıklama daha işlenmeden
+                  ağaçtan kalkardı. O durumu dışarı tıklama dinleyicisi
+                  (`mousedown`) karşılıyor.
+                */
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape' && kisiListesiAcik) setKisiListesiAcik(false);
+                }}
+                onBlur={(e) => {
+                  const yeniOdak = e.relatedTarget as Node | null;
+                  if (!yeniOdak || kisiAramaKabi.current?.contains(yeniOdak)) return;
+                  setKisiListesiAcik(false);
+                }}
+              >
                 <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 {/*
                   ARAMA BULUNULAN SAYFAYA GÖRE DAVRANIYOR
@@ -732,33 +814,77 @@ export const Header: React.FC<HeaderProps> = ({
 
                   Rehberdeyken sekme değiştirilmiyor ve metin de öyle diyor:
                   yazılan şeyin nerede aranacağı yazının kendisinden belli
-                  olmalı.
+                  olmalı. Sosyal sayfalarda aynı kutu kişi arıyor; bkz.
+                  `sosyaldeMi`.
                 */}
                 <input
                   type="search"
-                  value={searchQuery ?? ''}
-                  onChange={(e) => onSearchChange(e.target.value)}
+                  value={sosyaldeMi ? kisiSorgusu : (searchQuery ?? '')}
+                  onChange={(e) => {
+                    if (sosyaldeMi) {
+                      setKisiSorgusu(e.target.value);
+                      setKisiListesiAcik(true);
+                      return;
+                    }
+                    onSearchChange?.(e.target.value);
+                  }}
                   onFocus={() => {
+                    if (sosyaldeMi) {
+                      if (kisiSorgusu) setKisiListesiAcik(true);
+                      return;
+                    }
                     if (rehberSayfasindaMi || kesfetteMi) return;
                     // Arama yapan kişi ilan listesini görmek istiyor.
                     if (activeTab !== 'internships') setActiveTab('internships');
                   }}
+                  autoComplete={sosyaldeMi ? 'off' : undefined}
+                  aria-controls={sosyaldeMi ? 'ust-kisi-arama-sonuclari' : undefined}
                   placeholder={
-                    rehberSayfasindaMi
-                      ? 'Rehberlerde ara'
-                      : kesfetteMi
-                        ? 'Etkinlik, şehir veya mekân ara'
-                        : 'Pozisyon veya şirket ara'
+                    sosyaldeMi
+                      ? 'Kullanıcı adıyla ara'
+                      : rehberSayfasindaMi
+                        ? 'Rehberlerde ara'
+                        : kesfetteMi
+                          ? 'Etkinlik, şehir veya mekân ara'
+                          : 'Pozisyon veya şirket ara'
                   }
                   aria-label={
-                    rehberSayfasindaMi
-                      ? 'Rehberlerde ara'
-                      : kesfetteMi
-                        ? 'Etkinlik ara'
-                        : 'Staj ilanlarında ara'
+                    sosyaldeMi
+                      ? 'Kişi ara'
+                      : rehberSayfasindaMi
+                        ? 'Rehberlerde ara'
+                        : kesfetteMi
+                          ? 'Etkinlik ara'
+                          : 'Staj ilanlarında ara'
                   }
                   className="w-full pl-10 pr-3 py-2.5 rounded-2xl border border-gray-200 bg-gray-50/80 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-600 focus:bg-white transition-colors"
                 />
+                {/*
+                  Sonuçlar kutunun altında açılır listede. Liste yalnız
+                  bir şey yazılmışken açık: boş kutuya odaklanınca "en az 3
+                  harf yaz" ipucu belirmesin, o ipucu ilk harften sonra
+                  anlamlı. Mantık (geciktirme, dört durum, satırlar)
+                  `KullaniciAramaSonuclari`nda; mobildeki kutu da aynı
+                  parçayı çiziyor. Kutu sonuca gidince temizleniyor:
+                  yeni sayfada eski aramanın listesi asılı kalmasın.
+                */}
+                {sosyaldeMi && onNavigate && kisiListesiAcik && kisiSorgusu !== '' && (
+                  <div
+                    id="ust-kisi-arama-sonuclari"
+                    role="region"
+                    aria-label="Kişi arama sonuçları"
+                    className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-[70vh] overflow-y-auto rounded-2xl border border-gray-200 bg-white p-2 shadow-lg"
+                  >
+                    <KullaniciAramaSonuclari
+                      sorgu={kisiSorgusu}
+                      onNavigate={onNavigate}
+                      onSecildi={() => {
+                        setKisiSorgusu('');
+                        setKisiListesiAcik(false);
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}

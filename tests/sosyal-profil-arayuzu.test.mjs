@@ -1895,6 +1895,24 @@ test('arama en az üç harf istiyor ve profile_id kullanmıyor', () => {
   assert.doesNotMatch(yorumsuz(arama), /sahibiMi/);
 });
 
+test('masaüstünde tek kişi arama kutusu: portfolyodaki mobilde, üst çubuktaki masaüstünde', () => {
+  /*
+    Aynı ekranda iki arama kutusu olmasın: üst çubuk lg ve üstünde kişi
+    arıyor (`hidden lg:block`), portfolyo alanındaki kutu yalnız onun
+    olmadığı genişlikte (`lg:hidden`). Sonuç mantığı tek parçada
+    (`KullaniciAramaSonuclari`); iki yerleşim de onu çiziyor, biri
+    değişince öteki eski cümleyle kalmıyor.
+  */
+  assert.match(sayfa, /<div className="lg:hidden">\s*<KullaniciArama onNavigate=\{onNavigate\} \/>\s*<\/div>/);
+  assert.ok(ustCubuk.includes('<div className="hidden lg:block flex-1 min-w-0 max-w-xl mx-4">'));
+  assert.match(arama, /export const KullaniciAramaSonuclari/);
+  assert.ok(arama.includes('<KullaniciAramaSonuclari sorgu={sorgu} onNavigate={onNavigate} />'));
+  assert.match(ustCubuk, /<KullaniciAramaSonuclari\s*sorgu=\{kisiSorgusu\}/);
+  /* Geciktirme ve `sosyalKullaniciAra` çağrısı tek yerde: Header'da yok. */
+  assert.doesNotMatch(ustCubuk, /sosyalKullaniciAra|GECIKME_MS/);
+  assert.equal((arama.match(/sosyalKullaniciAra\(/g) ?? []).length, 1);
+});
+
 test('üye sayısı NULL iken hiçbir sayı çizilmiyor', () => {
   /*
     `uye_sayisi` yalnız ÜYE OLUNAN toplulukta dolu; ötekilerde `null` ve

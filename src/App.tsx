@@ -1263,6 +1263,14 @@ export default function App() {
         // Arama ilan listesinde işliyor; başka sayfadayken oraya götürüyor.
         if (q && temizYol !== '/') navigate('/');
       }}
+      /*
+        Sosyal sayfalarda (/cv, /profil, /topluluklar, /baglantilar) üst
+        çubuktaki kutu kişi arıyor ve sonuç satırı /profil/<ad>'a gidiyor.
+        Yazılan metin `onSearchChange`e GİRMİYOR — yukarıdaki dal boş
+        olmayan her terimde ana sayfaya götürüyor, kişi arayan kullanıcıyı
+        sayfadan atardı. Gezinme bu yüzden ayrı prop.
+      */
+      onNavigate={navigate}
       isAdmin={isAdmin}
       onOpenAdmin={() => navigate('/yonetim')}
       isLoggedIn={isLoggedIn}

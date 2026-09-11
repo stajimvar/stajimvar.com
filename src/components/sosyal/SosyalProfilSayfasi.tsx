@@ -1466,8 +1466,16 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
         onun DOM'una hiç girmiyor. Yeri ızgaranın ÜSTÜ — aradığı kişiye
         gitmek isteyen kullanıcı kendi kareleri arasında aşağı
         kaydırmak zorunda kalmasın.
+
+        YALNIZ MOBİLDE. Masaüstünde kişi araması üst çubuktaki kutudan
+        yapılıyor (Header, `sosyaldeMi`); burada ikinci bir kutu, aynı
+        ekranda "hangisi neyi arıyor" sorusunu doğuruyordu. Üst çubuk
+        mobilde arama kutusu çizmiyor (`hidden lg:block`), o yüzden
+        burası `lg:hidden`: her genişlikte tek kutu.
       */}
-      <KullaniciArama onNavigate={onNavigate} />
+      <div className="lg:hidden">
+        <KullaniciArama onNavigate={onNavigate} />
+      </div>
 
       <PaylasimIzgarasi
         paylasimlar={paylasimlar}
