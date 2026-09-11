@@ -883,7 +883,11 @@ test('ayrıntılı ızgara depodaki kalıpta, sade ızgara üç sütun 2 px', ()
     arasında yalnız 2 px; hücrede köşe yuvarlaması ve çerçeve yok.
   */
   assert.ok(izgara.includes("export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-0.5';"));
-  assert.match(izgara, /const KAPAK_KABI = 'relative aspect-square w-full overflow-hidden bg-gray-100';/);
+  assert.match(izgara, /const KAPAK_KABI = 'relative aspect-\[3\/4\] w-full overflow-hidden bg-gray-100';/);
+  assert.match(
+    izgara,
+    /const AYRINTILI_KAPAK_KABI = 'relative aspect-square w-full overflow-hidden rounded-xl bg-gray-100';/,
+  );
   assert.match(izgara, /<div className=\{sade \? KAPAK_KABI : AYRINTILI_KAPAK_KABI\}>/);
   assert.match(izgara, /const izgaraSinifi = sade \? PAYLASIM_IZGARASI : AYRINTILI_IZGARA;/);
 });

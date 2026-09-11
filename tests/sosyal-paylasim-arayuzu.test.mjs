@@ -194,6 +194,17 @@ test('katman açılışında odak kapatma düğmesine taşınıyor', () => {
   assert.match(detay, /if \(olay\.key !== 'Tab'\) return;/);
 });
 
+test('ayrıntı katmanı iki panel: 4:5 görsel alanı, dar ekranda üst üste', () => {
+  /*
+    Kap dar ekranda tek sütun (`flex-col`), lg ve üstünde yan yana
+    (`lg:flex-row`); görsel paneli `aspect-[4/5]` ve `object-cover` ile
+    doluyor. Yerleşim sınıfları kaynak metinden ölçülüyor; piksel ölçümü
+    bu testin işi değil.
+  */
+  assert.match(detay, /flex-col[^"]*lg:flex-row/);
+  assert.match(detay, /aspect-\[4\/5\][^"]*lg:w-\[60%\]/);
+});
+
 test('kova adları tek sabitten geliyor, kalıcı public adres üretilmiyor', () => {
   assert.match(sorgular, /SOSYAL_PAYLASIM_KOVASI = 'sosyal-paylasim'/);
   assert.match(sorgular, /SOSYAL_AVATAR_KOVASI = 'sosyal-avatar'/);

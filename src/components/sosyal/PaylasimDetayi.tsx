@@ -74,6 +74,17 @@ const DUGME = `inline-flex min-h-11 min-w-11 cursor-pointer items-center justify
 */
 const ETKILESIM_TABANI = `inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-3 text-sm font-bold disabled:cursor-default disabled:opacity-40 ${RENK_GECISI} ${ODAK_HALKASI}`;
 
+/*
+  SERİ OKLARI GÖRSELİN ÜSTÜNDE
+
+  Koyu zeminde beyaz yuvarlak; 44 px dokunma hedefi (`h-11 w-11`).
+  `absolute` + `top-1/2 -translate-y-1/2` ile dikey ortada, yatay kenar
+  çağıran yerde (`left-2` / `right-2`). Devre dışı uçta düğme
+  SİLİKLEŞİYOR ama kalkmıyor: yerleşim kaymıyor ve klavye kullanıcısı
+  "buradan öteye yok" bilgisini `disabled` durumundan alıyor.
+*/
+const OK_DUGMESI = `absolute top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/90 text-gray-900 shadow-sm hover:bg-white disabled:cursor-default disabled:opacity-40 ${RENK_GECISI} ${ODAK_HALKASI}`;
+
 const etkilesimSinifi = (basili: boolean) =>
   `${ETKILESIM_TABANI} ${
     basili
@@ -386,12 +397,17 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
         className="fixed inset-0 h-full w-full cursor-default touch-none bg-slate-950/60"
       />
       {/*
-        GENİŞLİK EKRANDAN ASLA TAŞMIYOR
+        İKİ PANEL: SOLDA FOTOĞRAF, SAĞDA METİN
 
-        Kap `w-[min(100%,44rem)]`: dar ekranda yüzde, geniş ekranda sabit
-        tavan. Yükseklik `max-h-[92vh]` ve içerik DİKEY kayıyor. Yatay
-        kaydırma hiçbir dalda açılmıyor; uzun açıklama `break-words` ile
-        sarıyor, görsel `max-w-full` ile kabına giriyor.
+        Küçük ekranda tek sütun: 4:5 görsel tam genişlikte, altında metin;
+        kabın kendisi dikey kayıyor. lg ve üstünde yan yana: kap
+        `min(100%, 68.75rem)` genişlik ve `90vh` yükseklik; sol panel
+        kabın %60'ı ve yüksekliğin tamamı, sağ panel kalan %40 ve YALNIZ o
+        panel kayıyor — fotoğraf kaydırmayla birlikte gitmiyor.
+
+        Yatay kaydırma hiçbir dalda açılmıyor: uzun açıklama `break-words`
+        ile sarıyor, görsel kendi panelinin içinde `object-cover` ile
+        kırpılıyor.
       */}
       <div
         ref={panelRef}
@@ -399,94 +415,146 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
         aria-modal="true"
         aria-label="Paylaşım ayrıntısı"
         tabIndex={-1}
-        className="relative flex max-h-[92vh] w-[min(100%,44rem)] flex-col overflow-hidden rounded-t-[2rem] border border-gray-200 bg-white shadow-[0_-20px_50px_rgba(15,23,42,0.24)] sm:rounded-2xl"
+        className="relative flex max-h-[92vh] w-[min(100%,44rem)] flex-col overflow-y-auto rounded-t-[2rem] border border-gray-200 bg-white shadow-[0_-20px_50px_rgba(15,23,42,0.24)] sm:rounded-2xl lg:h-[90vh] lg:max-h-[90vh] lg:w-[min(100%,68.75rem)] lg:flex-row lg:overflow-hidden"
       >
-        <div className="flex items-center justify-between gap-2 border-b border-gray-100 px-3 py-2">
-          <p className="min-w-0 truncate text-sm font-bold text-gray-900">
-            {tarih ?? 'Paylaşım'}
-          </p>
+        {/*
+          KAPAT TEK DÜĞME, İKİ YER
+
+          Dar ekranda kabın en üstünde kendi şeridinde; geniş ekranda kabın
+          sağ üst köşesine bindirilmiş. Aynı düğüm: odak referansı ve
+          açılış odağı tek yere bakıyor, iki ayrı düğme iki ayrı odak
+          hedefi doğururdu.
+        */}
+        <div className="flex shrink-0 items-center justify-end border-b border-gray-100 px-3 py-2 lg:absolute lg:right-2 lg:top-2 lg:z-20 lg:border-0 lg:p-0">
           <button type="button" ref={kapatDugmesiRef} onClick={kapat} className={DUGME}>
             <X aria-hidden className="h-4 w-4" />
             Kapat
           </button>
         </div>
 
-        <div className="min-w-0 flex-1 overflow-y-auto">
-          <div className="bg-gray-50">
-            {gorselDurumu === 'yukleniyor' && (
-              <div aria-busy="true" className="flex h-64 items-center justify-center">
-                <span aria-hidden className="h-24 w-24 animate-pulse rounded-2xl bg-gray-200" />
-              </div>
-            )}
+        {/*
+          SOL PANEL — GÖRSEL
 
-            {/*
-              "Görsel alınamadı" ile "görsel yok" AYRI cümleler: birincisi
-              geçici bir sorun, ikincisi paylaşımın kendisi hakkında bir
-              iddia. İkisini aynı metne indirmek, dosyası duran bir
-              paylaşımı boş göstermek olurdu.
-            */}
-            {gorselDurumu === 'hata' && (
-              <p role="alert" className="px-3 py-10 text-center text-sm text-gray-600">
-                Görseller şu anda alınamadı. Paylaşımda bir değişiklik olmadı.
-              </p>
-            )}
+          Zemin koyu nötr: `object-cover` ile kırpılan fotoğrafın kenarında
+          boşluk kalmıyor ama yükleme ve hata dallarında panel boş; koyu
+          zemin o boşluğu "fotoğraf alanı" olarak okutuyor. Renk depodaki
+          katman perdesiyle aynı aile (`slate-950`), yeni ton yok.
+        */}
+        <div className="relative aspect-[4/5] w-full shrink-0 overflow-hidden bg-slate-950 lg:aspect-auto lg:h-full lg:w-[60%]">
+          {gorselDurumu === 'yukleniyor' && (
+            <div aria-busy="true" className="flex h-full w-full items-center justify-center">
+              <span aria-hidden className="h-24 w-24 animate-pulse rounded-2xl bg-slate-800" />
+            </div>
+          )}
 
-            {gorselDurumu === 'hazir' && gecerliGorsel && gecerliAdres && (
-              <img
-                src={gecerliAdres}
-                /*
-                  `alt` yazarın yazdığı metin. Yazmadıysa BOŞ kalıyor:
-                  "paylaşım görseli" gibi bir doldurma, ekran okuyucuya
-                  içerik hakkında hiçbir şey söylemeden gürültü üretirdi.
-                */
-                alt={gecerliGorsel.alt ?? ''}
-                width={gecerliGorsel.genislik ?? undefined}
-                height={gecerliGorsel.yukseklik ?? undefined}
-                className="mx-auto max-h-[60vh] w-auto max-w-full object-contain"
-              />
-            )}
+          {/*
+            "Görsel alınamadı" ile "görsel yok" AYRI cümleler: birincisi
+            geçici bir sorun, ikincisi paylaşımın kendisi hakkında bir
+            iddia. İkisini aynı metne indirmek, dosyası duran bir
+            paylaşımı boş göstermek olurdu.
+          */}
+          {gorselDurumu === 'hata' && (
+            <p
+              role="alert"
+              className="flex h-full w-full items-center justify-center px-6 text-center text-sm text-slate-200"
+            >
+              Görseller şu anda alınamadı. Paylaşımda bir değişiklik olmadı.
+            </p>
+          )}
 
-            {gorselDurumu === 'hazir' && gecerliGorsel && !gecerliAdres && (
-              <p className="px-3 py-10 text-center text-sm text-gray-600">
-                Bu görsel açılamadı.
-              </p>
-            )}
+          {gorselDurumu === 'hazir' && gecerliGorsel && gecerliAdres && (
+            <img
+              src={gecerliAdres}
+              /*
+                `alt` yazarın yazdığı metin. Yazmadıysa BOŞ kalıyor:
+                "paylaşım görseli" gibi bir doldurma, ekran okuyucuya
+                içerik hakkında hiçbir şey söylemeden gürültü üretirdi.
+              */
+              alt={gecerliGorsel.alt ?? ''}
+              width={gecerliGorsel.genislik ?? undefined}
+              height={gecerliGorsel.yukseklik ?? undefined}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          )}
 
-            {gorselDurumu === 'hazir' && !gecerliGorsel && (
-              <p className="px-3 py-10 text-center text-sm text-gray-600">
-                Bu paylaşımda görsel yok.
-              </p>
-            )}
-          </div>
+          {gorselDurumu === 'hazir' && gecerliGorsel && !gecerliAdres && (
+            <p className="flex h-full w-full items-center justify-center px-6 text-center text-sm text-slate-200">
+              Bu görsel açılamadı.
+            </p>
+          )}
 
-          {/* Gezinme yalnız seride: tek fotoğrafta düğmeler hiç çizilmiyor. */}
+          {gorselDurumu === 'hazir' && !gecerliGorsel && (
+            <p className="flex h-full w-full items-center justify-center px-6 text-center text-sm text-slate-200">
+              Bu paylaşımda görsel yok.
+            </p>
+          )}
+
+          {/*
+            Gezinme yalnız seride: tek fotoğrafta ne ok ne nokta çiziliyor.
+            Oklar görselin ÜSTÜNE bindirilmiş; bağımsız eylem oldukları
+            için `z-10`. İkon tek başına bilgi taşımıyor: metin `sr-only`
+            olarak yanında. Sayı satırı görünür VE `aria-live`: ok tuşuyla
+            geçişte okuyucu aracı da hangi karede olduğunu duyuyor.
+          */}
           {toplam > 1 && (
-            <div className="flex items-center justify-between gap-2 px-3 py-2">
+            <>
               <button
                 type="button"
                 onClick={() => setIndeks((onceki) => Math.max(onceki - 1, 0))}
                 disabled={indeks === 0}
-                className={DUGME}
+                className={`${OK_DUGMESI} left-2`}
               >
-                <ChevronLeft aria-hidden className="h-4 w-4" />
-                Önceki
+                <ChevronLeft aria-hidden className="h-5 w-5" />
+                <span className="sr-only">Önceki</span>
               </button>
-              <p aria-live="polite" className="text-xs font-semibold tabular-nums text-gray-700">
-                {indeks + 1} / {toplam}
-              </p>
               <button
                 type="button"
                 onClick={() => setIndeks((onceki) => Math.min(onceki + 1, toplam - 1))}
                 disabled={indeks >= toplam - 1}
-                className={DUGME}
+                className={`${OK_DUGMESI} right-2`}
               >
-                Sonraki
-                <ChevronRight aria-hidden className="h-4 w-4" />
+                <ChevronRight aria-hidden className="h-5 w-5" />
+                <span className="sr-only">Sonraki</span>
               </button>
-            </div>
+              <p
+                aria-live="polite"
+                className="absolute right-2 top-2 z-10 rounded-full bg-slate-950/60 px-2 py-0.5 text-xs font-semibold tabular-nums text-white"
+              >
+                {indeks + 1} / {toplam}
+              </p>
+              <div
+                aria-hidden
+                className="absolute inset-x-0 bottom-2 z-10 flex justify-center gap-1.5"
+              >
+                {paylasim.gorseller.map((gorsel, sira) => (
+                  <span
+                    key={gorsel.storageYolu}
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      sira === indeks ? 'bg-white' : 'bg-white/40'
+                    }`}
+                  />
+                ))}
+              </div>
+            </>
           )}
+        </div>
 
-          <div className="min-w-0 space-y-2 px-3 pb-3 pt-1">
+        {/*
+          SAĞ PANEL — METİN VE EYLEMLER
+
+          Üstte tarih başlığı, altında açıklama ve bilgi satırı; `flex-1`
+          boşluk etkileşim satırını panelin altına itiyor. Geniş ekranda
+          başlığın sağı kapat düğmesine yer bırakıyor (`lg:pr-28`; düğme
+          `min-w-11` + metin ve `right-2` kenarı).
+        */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:overflow-y-auto">
+          <div className="border-b border-gray-100 px-3 py-2 lg:py-3 lg:pr-28">
+            <p className="min-w-0 truncate text-sm font-bold text-gray-900">
+              {tarih ?? 'Paylaşım'}
+            </p>
+          </div>
+
+          <div className="min-w-0 space-y-2 px-3 pt-3">
             {paylasim.aciklama ? (
               <p className="whitespace-pre-line break-words text-sm leading-relaxed text-gray-800">
                 {paylasim.aciklama}
@@ -511,32 +579,36 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
                 </div>
               )}
             </dl>
+          </div>
 
-            {/*
-              BEĞEN VE KAYDET — DÖRT DURUM
+          <div aria-hidden className="min-h-3 flex-1" />
 
-              Yükleniyorken düğme çizilmiyor: yanlış bir `aria-pressed`
-              değeri, kullanıcıya beğenmediği bir paylaşımı beğenmiş gibi
-              okutur. Hata dalında da çizilmiyor ve cümle sebebini
-              söylüyor; tahmin edilmiş bir durumla düğme sunmak, her
-              basışta sunucunun reddedeceği bir eylem olurdu.
-            */}
+          {/*
+            BEĞEN VE KAYDET — DÖRT DURUM
+
+            Yükleniyorken düğme çizilmiyor: yanlış bir `aria-pressed`
+            değeri, kullanıcıya beğenmediği bir paylaşımı beğenmiş gibi
+            okutur. Hata dalında da çizilmiyor ve cümle sebebini
+            söylüyor; tahmin edilmiş bir durumla düğme sunmak, her
+            basışta sunucunun reddedeceği bir eylem olurdu.
+          */}
+          <div className="min-w-0 border-t border-gray-100 px-3 py-2">
             {etkilesimDurumu === 'yukleniyor' && (
-              <div aria-busy="true" className="flex gap-2 pt-1">
+              <div aria-busy="true" className="flex gap-2">
                 <span aria-hidden className="h-11 w-28 animate-pulse rounded-xl bg-gray-100" />
                 <span aria-hidden className="h-11 w-28 animate-pulse rounded-xl bg-gray-100" />
               </div>
             )}
 
             {etkilesimDurumu === 'hata' && (
-              <p role="alert" className="pt-1 text-xs leading-relaxed text-gray-600">
+              <p role="alert" className="text-xs leading-relaxed text-gray-600">
                 Beğeni ve kayıt durumun şu anda alınamadı. Yanlış bir durum göstermemek için
                 düğmeler çizilmedi.
               </p>
             )}
 
             {etkilesimDurumu === 'hazir' && begeniDurumu && (
-              <div className="space-y-2 pt-1">
+              <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
                   {/*
                     Etiket iki durumda da aynı: durumu `aria-pressed`
@@ -595,64 +667,64 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
               </div>
             )}
           </div>
-        </div>
 
-        {/*
-          ARŞİVLEME SAHİBE ÖZEL VE İKİ ADIMLI
+          {/*
+            ARŞİVLEME SAHİBE ÖZEL VE İKİ ADIMLI
 
-          Tek dokunuşla arşivlemek geri dönüşü olmayan bir kaza olurdu:
-          arşivden çıkarma akışı D'de YOK, yani arşivlenen paylaşım
-          arayüzden geri getirilemiyor. İkinci adım bunu bir karara
-          çeviriyor. Cümle de bunu söylüyor — "sonra geri alırsın" gibi
-          bir vaat verilmiyor.
+            Tek dokunuşla arşivlemek geri dönüşü olmayan bir kaza olurdu:
+            arşivden çıkarma akışı D'de YOK, yani arşivlenen paylaşım
+            arayüzden geri getirilemiyor. İkinci adım bunu bir karara
+            çeviriyor. Cümle de bunu söylüyor — "sonra geri alırsın" gibi
+            bir vaat verilmiyor.
 
-          KALICI SİLME DÜĞMESİ YOK: sunucuda da yalnız taslak silinebiliyor.
-        */}
-        {sahibiMi && (
-          <div className="space-y-2 border-t border-gray-100 px-3 py-2">
-            {arsivAsamasi === 'kapali' ? (
-              <button
-                type="button"
-                onClick={() => setArsivAsamasi('soruluyor')}
-                className={DUGME}
-              >
-                <Archive aria-hidden className="h-4 w-4" />
-                Arşivle
-              </button>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-xs leading-relaxed text-gray-700">
-                  Arşivlenen paylaşım profilinden kalkıyor ve kimseye görünmüyor. Bu ekrandan
-                  geri getirme yolu yok.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={arsivle}
-                    disabled={arsivAsamasi === 'gonderiliyor'}
-                    className={DUGME}
-                  >
-                    <Archive aria-hidden className="h-4 w-4" />
-                    {arsivAsamasi === 'gonderiliyor' ? 'Arşivleniyor…' : 'Evet, arşivle'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setArsivAsamasi('kapali')}
-                    disabled={arsivAsamasi === 'gonderiliyor'}
-                    className={DUGME}
-                  >
-                    Vazgeç
-                  </button>
+            KALICI SİLME DÜĞMESİ YOK: sunucuda da yalnız taslak silinebiliyor.
+          */}
+          {sahibiMi && (
+            <div className="space-y-2 border-t border-gray-100 px-3 py-2">
+              {arsivAsamasi === 'kapali' ? (
+                <button
+                  type="button"
+                  onClick={() => setArsivAsamasi('soruluyor')}
+                  className={DUGME}
+                >
+                  <Archive aria-hidden className="h-4 w-4" />
+                  Arşivle
+                </button>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs leading-relaxed text-gray-700">
+                    Arşivlenen paylaşım profilinden kalkıyor ve kimseye görünmüyor. Bu ekrandan
+                    geri getirme yolu yok.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={arsivle}
+                      disabled={arsivAsamasi === 'gonderiliyor'}
+                      className={DUGME}
+                    >
+                      <Archive aria-hidden className="h-4 w-4" />
+                      {arsivAsamasi === 'gonderiliyor' ? 'Arşivleniyor…' : 'Evet, arşivle'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setArsivAsamasi('kapali')}
+                      disabled={arsivAsamasi === 'gonderiliyor'}
+                      className={DUGME}
+                    >
+                      Vazgeç
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-            {arsivHatasi && (
-              <p role="alert" className="text-xs font-semibold leading-relaxed text-rose-700">
-                {arsivHatasi}
-              </p>
-            )}
-          </div>
-        )}
+              )}
+              {arsivHatasi && (
+                <p role="alert" className="text-xs font-semibold leading-relaxed text-rose-700">
+                  {arsivHatasi}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>,
     document.body,

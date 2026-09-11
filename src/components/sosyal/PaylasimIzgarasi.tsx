@@ -13,7 +13,7 @@ import { useGorselAdresleri } from './useGorselAdresleri';
  * İKİ ÖLÇÜ, İKİ İŞ
  * ----------------
  * Sade ızgara (profil, ziyaretçi görünümü) her genişlikte ÜÇ sütun ve
- * 2 px boşluk: hücre çıplak kare fotoğraf, çerçevesi ve köşesi yok;
+ * 2 px boşluk: hücre çıplak dikey (3:4) fotoğraf, çerçevesi ve köşesi yok;
  * hücreler arasında yalnız o boşluk var. Depodaki kart kalıbı (iki/üç
  * sütun, 10–16 px boşluk, yuvarlak köşe) burada bilerek kullanılmıyor —
  * o kalıp metin taşıyan kartlar için; fotoğraf duvarında boşluk ve
@@ -102,7 +102,7 @@ interface IzgaraProps {
    * yüklediğini çıplak kapaktan ayırt edemez — aynı fotoğrafın iki ayrı
    * gün paylaşılmış hâli olabilir.
    *
-   * 'sade' hücreyi çıplak kare fotoğrafa indiriyor; profil ızgarasının
+   * 'sade' hücreyi çıplak dikey (3:4) fotoğrafa indiriyor; profil ızgarasının
    * onaylanan tasarımı bu. Açıklama YOK OLMUYOR, yer değiştiriyor: tam
    * metin ayrıntı katmanında (`PaylasimDetayi`) duruyor. "Açıklama yok"
    * satırı da bu yüzden kalktı — boş bir alanın boşluğunu ilan eden bir
@@ -127,9 +127,19 @@ export const AYRINTILI_IZGARA = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-
  * Kapak kutusu: içerik gelmeden de aynı yeri kaplıyor, ızgara zıplamıyor.
  * Köşe yuvarlaması yalnız ayrıntılı hücrede — sade ızgarada hücreler
  * 2 px arayla yan yana ve yuvarlak köşe o arada beyaz üçgenler açardı.
+ *
+ * SADE HÜCRE DİKEY 3:4, AYRINTILI HÜCRE KARE
+ * ------------------------------------------
+ * Sade ızgara Instagram'ın bugünkü karosunu izliyor: o karo artık kare
+ * değil dikey 3:4. Kare hücre üç sütunlu masaüstünde her karoyu hem
+ * geniş hem kısa bırakıyordu; dikey oran aynı sütun genişliğinde
+ * fotoğrafa daha çok yükseklik veriyor. Kapak `object-cover` ile
+ * kırpılıyor, deforme olmuyor. Ayrıntılı hücre kare KALIYOR — orada
+ * kapağın altında açıklama ve tarih var, dikey kapak kartı gereksiz
+ * uzatırdı.
  */
-const KAPAK_KABI = 'relative aspect-square w-full overflow-hidden bg-gray-100';
-const AYRINTILI_KAPAK_KABI = `${KAPAK_KABI} rounded-xl`;
+const KAPAK_KABI = 'relative aspect-[3/4] w-full overflow-hidden bg-gray-100';
+const AYRINTILI_KAPAK_KABI = 'relative aspect-square w-full overflow-hidden rounded-xl bg-gray-100';
 
 interface KartProps {
   paylasim: SosyalPaylasim;
