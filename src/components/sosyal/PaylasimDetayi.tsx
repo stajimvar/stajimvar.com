@@ -16,6 +16,7 @@ import {
   type SosyalPaylasim,
 } from '../../lib/queries/sosyal';
 import { begeniyiTersle, etkilesimGecisi } from '../../lib/sosyal-etkilesim.mjs';
+import { gezinmeKarari, parmakKaymasi, yonuBelirle } from '../../lib/kaydirma-gezinme.mjs';
 import { tarihMetni } from '../../lib/tarih.mjs';
 import { useGorselAdresleri } from './useGorselAdresleri';
 
@@ -82,8 +83,22 @@ const ETKILESIM_TABANI = `inline-flex min-h-11 min-w-11 cursor-pointer items-cen
   çağıran yerde (`left-2` / `right-2`). Devre dışı uçta düğme
   SİLİKLEŞİYOR ama kalkmıyor: yerleşim kaymıyor ve klavye kullanıcısı
   "buradan öteye yok" bilgisini `disabled` durumundan alıyor.
+
+  DAR EKRANDA GÖRÜNMÜYOR AMA DOM'DAN ÇIKMIYOR (`max-lg:sr-only`)
+
+  lg altında gezinme parmakla (aşağıdaki işaretçi olayları); oklar
+  fotoğrafın üstünde yer kaplamasın diye görsel olarak gizli. `hidden`
+  DEĞİL, `sr-only`: dokunmatik cihazda ekran okuyucu açıkken (VoiceOver,
+  TalkBack) parmak hareketlerini okuyucu alıyor, kaydırma bileşene hiç
+  ulaşmıyor; oklar ağaçtan çıksaydı o kullanıcının seride gezecek hiçbir
+  yolu kalmazdı. `sr-only` düğme 1 px ve kırpılmış ama odaklanabilir ve
+  etkinleştirilebilir; odak tuzağı `getClientRects` ile ölçtüğü için onu
+  da sayıyor. `lg:not-sr-only` yerine `max-lg:sr-only` seçildi: ikincisi
+  lg ve üstünde HİÇBİR bildirim yazmıyor, `absolute h-11 w-11` ile
+  `not-sr-only`'nin `position/width/height` sıfırlaması arasında sıra
+  kavgası olmuyor.
 */
-const OK_DUGMESI = `absolute top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/90 text-gray-900 shadow-sm hover:bg-white disabled:cursor-default disabled:opacity-40 ${RENK_GECISI} ${ODAK_HALKASI}`;
+const OK_DUGMESI = `absolute top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/90 text-gray-900 shadow-sm hover:bg-white disabled:cursor-default disabled:opacity-40 max-lg:sr-only ${RENK_GECISI} ${ODAK_HALKASI}`;
 
 const etkilesimSinifi = (basili: boolean) =>
   `${ETKILESIM_TABANI} ${
@@ -164,6 +179,108 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
   const toplam = paylasim.gorseller.length;
 
   /*
+    GEZİNME TEK YERDE: klavye oku, ekrandaki ok ve parmak kaydırması
+    aynı iki fonksiyonu çağırıyor. Üç kopya olsaydı uç kuralı üçünde ayrı
+    yazılır ve biri diğerinden sapardı (klavye dalı bir süre
+    `Math.max(toplam - 1, 0)` ile, düğme dalı onsuz yazılmıştı).
+  */
+  const oncekiKare = React.useCallback(() => {
+    setIndeks((onceki) => Math.max(onceki - 1, 0));
+  }, []);
+  const sonrakiKare = React.useCallback(() => {
+    setIndeks((onceki) => Math.min(onceki + 1, Math.max(toplam - 1, 0)));
+  }, [toplam]);
+
+  /*
+    PARMAKLA KAYDIRMA — DURUM VE OLAYLAR
+
+    Başlangıç noktası ve yön kilidi ref'te: her `pointermove`de yeniden
+    çizim istemiyorlar. Görselin parmakla kayması (`kayma`, px) ise
+    durumda, çünkü ekrana yazılıyor. Kararlar `kaydirma-gezinme.mjs`'te;
+    burada yalnız olaydan sayı çıkarılıp o kararlar uygulanıyor.
+
+    YALNIZ DOKUNMA (`pointerType === 'touch'`): fare ile fotoğrafı
+    sürüklemek masaüstünde beklenen bir hareket değil, ok ve klavye
+    orada duruyor; fare dalı açık olsaydı tarayıcının kendi görsel
+    sürüklemesiyle çakışırdı. Dokunma işaretçisi tarayıcı tarafından
+    örtük olarak yakalanıyor, `setPointerCapture` gerekmiyor
+    (KesfetGlobe'daki capture → click çakışması burada da olmasın).
+
+    OKTAN BAŞLAYAN DOKUNMA SAYILMIYOR: lg ve üstünde dokunmatik ekranda
+    ok görünür; oktan başlayıp kayan parmak hem okun `click`ini hem
+    kaydırma kararını üretip iki kare atlardı.
+
+    GEÇİŞ ANİMASYONU YALNIZ YERİNE DÖNÜŞTE (`yumusakDonus`)
+
+    Parmak sürerken görsel gecikmesiz izliyor (geçiş sınıfı yok); eşiğin
+    altında bırakınca 200 ms'de yerine dönüyor. Kare DEĞİŞTİĞİNDE
+    animasyon YOK: kayma -60 px'ten 0'a animasyonla dönseydi YENİ
+    fotoğraf soldan girer gibi görünürdü, oysa sağdan gelmesi gerekir.
+
+    Bu yüzden geçiş sınıfı "kareyi yeni değiştirdim" diye bir etkiyle
+    KAPATILMIYOR, tersine yalnız yerine dönüş anında AÇILIYOR ve bir
+    sonraki dokunuşta kapanıyor. Etkiyle kapatmak güvenilir değildi:
+    React ayrık olaylardan (pointerup) doğan etkileri boyamadan önce
+    eşzamanlı akıtıyor; iki DOM yazımı tek stil hesabına düşünce tarayıcı
+    "geçiş sınıfı var, transform -60'tan 0'a değişti" görüp animasyonu
+    yine başlatırdı. Kare zamanlayıcısı bu dosyada yasak (açılış odağı
+    testi), zorla yeniden akış ise ölçüsüz bir hile olurdu.
+  */
+  const surukleme = React.useRef<{
+    kimlik: number;
+    x: number;
+    y: number;
+    yon: 'belirsiz' | 'yatay' | 'dikey';
+  } | null>(null);
+  const [kayma, setKayma] = React.useState(0);
+  const [yumusakDonus, setYumusakDonus] = React.useState(false);
+
+  const surukleBasla = (olay: React.PointerEvent<HTMLDivElement>) => {
+    if (olay.pointerType !== 'touch' || toplam <= 1) return;
+    if ((olay.target as HTMLElement).closest('button')) return;
+    surukleme.current = { kimlik: olay.pointerId, x: olay.clientX, y: olay.clientY, yon: 'belirsiz' };
+    setYumusakDonus(false);
+  };
+
+  const surukleHareket = (olay: React.PointerEvent<HTMLDivElement>) => {
+    const baslangic = surukleme.current;
+    if (!baslangic || baslangic.kimlik !== olay.pointerId) return;
+    const dx = olay.clientX - baslangic.x;
+    const dy = olay.clientY - baslangic.y;
+    if (baslangic.yon === 'belirsiz') {
+      baslangic.yon = yonuBelirle(dx, dy);
+      if (baslangic.yon === 'dikey') {
+        /* Sayfa kaydırması: tarayıcı `pan-y` ile devralıyor, biz çekiliyoruz. */
+        surukleme.current = null;
+        return;
+      }
+    }
+    if (baslangic.yon !== 'yatay') return;
+    setKayma(parmakKaymasi({ dx, indeks, toplam }));
+  };
+
+  const surukleBitir = (olay: React.PointerEvent<HTMLDivElement>) => {
+    const baslangic = surukleme.current;
+    if (!baslangic || baslangic.kimlik !== olay.pointerId) return;
+    surukleme.current = null;
+    if (baslangic.yon !== 'yatay') return;
+    const karar = gezinmeKarari({ dx: olay.clientX - baslangic.x, indeks, toplam });
+    setKayma(0);
+    if (karar === 'sonraki') sonrakiKare();
+    else if (karar === 'onceki') oncekiKare();
+    else setYumusakDonus(true);
+  };
+
+  /* `pointercancel` (tarayıcı hareketi devraldı): kare değişmiyor, görsel yerine dönüyor. */
+  const surukleIptal = (olay: React.PointerEvent<HTMLDivElement>) => {
+    const baslangic = surukleme.current;
+    if (!baslangic || baslangic.kimlik !== olay.pointerId) return;
+    surukleme.current = null;
+    setKayma(0);
+    setYumusakDonus(true);
+  };
+
+  /*
     KAPANIŞTA ÖNCE ODAK, SONRA KAPATMA
 
     ÖLÇÜLDÜ (1440x900, gerçek oturum): kart odaklanıp tıklandı, katman
@@ -222,11 +339,11 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
         Enter'a basmak zorunda kalmıyor.
       */
       if (olay.key === 'ArrowRight') {
-        setIndeks((onceki) => Math.min(onceki + 1, Math.max(toplam - 1, 0)));
+        sonrakiKare();
         return;
       }
       if (olay.key === 'ArrowLeft') {
-        setIndeks((onceki) => Math.max(onceki - 1, 0));
+        oncekiKare();
         return;
       }
       if (olay.key !== 'Tab') return;
@@ -261,7 +378,7 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
 
     document.addEventListener('keydown', tusaBas);
     return () => document.removeEventListener('keydown', tusaBas);
-  }, [kapat, toplam]);
+  }, [kapat, oncekiKare, sonrakiKare]);
 
   /*
     AÇILIŞTA ODAK KATMANIN İÇİNE ALINIYOR
@@ -440,7 +557,13 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
           zemin o boşluğu "fotoğraf alanı" olarak okutuyor. Renk depodaki
           katman perdesiyle aynı aile (`slate-950`), yeni ton yok.
         */}
-        <div className="relative aspect-[4/5] w-full shrink-0 overflow-hidden bg-slate-950 lg:aspect-auto lg:h-full lg:w-[60%]">
+        <div
+          className="relative aspect-[4/5] w-full shrink-0 touch-pan-y overflow-hidden bg-slate-950 lg:aspect-auto lg:h-full lg:w-[60%]"
+          onPointerDown={surukleBasla}
+          onPointerMove={surukleHareket}
+          onPointerUp={surukleBitir}
+          onPointerCancel={surukleIptal}
+        >
           {gorselDurumu === 'yukleniyor' && (
             <div aria-busy="true" className="flex h-full w-full items-center justify-center">
               <span aria-hidden className="h-24 w-24 animate-pulse rounded-2xl bg-slate-800" />
@@ -473,7 +596,11 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
               alt={gecerliGorsel.alt ?? ''}
               width={gecerliGorsel.genislik ?? undefined}
               height={gecerliGorsel.yukseklik ?? undefined}
-              className="absolute inset-0 h-full w-full object-cover"
+              className={`absolute inset-0 h-full w-full object-cover ${
+                yumusakDonus ? 'transition-transform duration-200 motion-reduce:transition-none' : ''
+              }`}
+              style={{ transform: `translateX(${kayma}px)` }}
+              draggable={false}
             />
           )}
 
@@ -494,13 +621,16 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
             Oklar görselin ÜSTÜNE bindirilmiş; bağımsız eylem oldukları
             için `z-10`. İkon tek başına bilgi taşımıyor: metin `sr-only`
             olarak yanında. Sayı satırı görünür VE `aria-live`: ok tuşuyla
-            geçişte okuyucu aracı da hangi karede olduğunu duyuyor.
+            geçişte okuyucu aracı da hangi karede olduğunu duyuyor. Dar
+            ekranda oklar görünmediği için (`OK_DUGMESI` başlığı) sayı
+            satırı ve noktalar oradaki TEK görünür gezinme ipucu; ikisi de
+            kalıyor.
           */}
           {toplam > 1 && (
             <>
               <button
                 type="button"
-                onClick={() => setIndeks((onceki) => Math.max(onceki - 1, 0))}
+                onClick={oncekiKare}
                 disabled={indeks === 0}
                 className={`${OK_DUGMESI} left-2`}
               >
@@ -509,7 +639,7 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => setIndeks((onceki) => Math.min(onceki + 1, toplam - 1))}
+                onClick={sonrakiKare}
                 disabled={indeks >= toplam - 1}
                 className={`${OK_DUGMESI} right-2`}
               >

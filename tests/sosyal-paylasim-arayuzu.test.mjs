@@ -12,6 +12,12 @@ import {
   etkilesimGecisi,
   geriYuklemeOdagi,
 } from '../src/lib/sosyal-etkilesim.mjs';
+import {
+  KAYDIRMA_ESIGI,
+  gezinmeKarari,
+  parmakKaymasi,
+  yonuBelirle,
+} from '../src/lib/kaydirma-gezinme.mjs';
 
 /*
   SOSYAL PORTFOLYO — D AŞAMASI ARAYÜZÜ (FOTOĞRAF PAYLAŞIMI)
@@ -710,4 +716,52 @@ test('sade hücrenin adı boş kalmıyor, içerik de uydurulmuyor', () => {
   assert.match(izgara, /<span className="sr-only">Birden çok fotoğraf<\/span>/);
   /* Rozet koşulu `sade` bayrağına HİÇ bakmıyor: iki kipte de aynı. */
   assert.doesNotMatch(izgara, /sade && paylasim\.gorselSayisi/);
+});
+
+test('seride parmakla gezinme: oklar dar ekranda görünmez ama ağaçta; kaydırma AYNI iki fonksiyonu çağırıyor', () => {
+  /*
+    Dar ekranda gezinme parmakla; oklar `hidden` DEĞİL `max-lg:sr-only`
+    (dokunmatik cihazda ekran okuyucu kullanıcısı parmak hareketini
+    bileşene ulaştıramıyor; ok ağaçtan çıksaydı seride gezecek yolu
+    kalmazdı). lg ve üstünde sınıf hiçbir bildirim yazmıyor, ok aynen
+    duruyor. Gezinme mantığı ÜÇ yerde (klavye, ok, kaydırma) aynı iki
+    fonksiyon; `setIndeks`i o ikisi dışında kimse çağırmıyor.
+
+    Eşik ve uç kuralı kaynak metinden değil, fonksiyon ÇAĞRILARAK
+    ölçülüyor. Tarayıcı ölçümü bu testin işi değil.
+  */
+  const kaynak = yorumsuz(detay);
+  assert.match(kaynak, /const OK_DUGMESI = `[^`]* max-lg:sr-only [^`]*`/);
+  assert.doesNotMatch(kaynak, /const OK_DUGMESI = `[^`]*(?:\bhidden\b|lg:not-sr-only)[^`]*`/);
+  /* Görsel kabı dikey kaydırmayı tarayıcıya bırakıyor; dört işaretçi olayı da bağlı. */
+  assert.match(kaynak, /touch-pan-y[^"]*"\s*onPointerDown=\{surukleBasla\}\s*onPointerMove=\{surukleHareket\}\s*onPointerUp=\{surukleBitir\}\s*onPointerCancel=\{surukleIptal\}/);
+  /* Tek gezinme kaynağı: setIndeks yalnız iki callback'in içinde. */
+  assert.equal((kaynak.match(/setIndeks\(/g) ?? []).length, 2);
+  assert.match(kaynak, /if \(olay\.key === 'ArrowRight'\) \{\s*sonrakiKare\(\);/);
+  assert.match(kaynak, /if \(olay\.key === 'ArrowLeft'\) \{\s*oncekiKare\(\);/);
+  assert.match(kaynak, /onClick=\{oncekiKare\}/);
+  assert.match(kaynak, /onClick=\{sonrakiKare\}/);
+  assert.match(kaynak, /if \(karar === 'sonraki'\) sonrakiKare\(\);\s*else if \(karar === 'onceki'\) oncekiKare\(\);/);
+  /* Yalnız dokunma; fare dalı yok, oktan başlayan dokunma yok. */
+  assert.match(kaynak, /olay\.pointerType !== 'touch' \|\| toplam <= 1\) return;/);
+  assert.match(kaynak, /\.closest\('button'\)\) return;/);
+  /* Sayaç ve noktalar duruyor: dar ekranda tek görünür ipucu. */
+  assert.match(kaynak, /\{indeks \+ 1\} \/ \{toplam\}/);
+  assert.match(kaynak, /sira === indeks \? 'bg-white' : 'bg-white\/40'/);
+
+  /* Kararlar ÇALIŞTIRILARAK. */
+  assert.equal(KAYDIRMA_ESIGI, 40);
+  assert.equal(yonuBelirle(3, 3), 'belirsiz');
+  assert.equal(yonuBelirle(20, 5), 'yatay');
+  assert.equal(yonuBelirle(5, 20), 'dikey');
+  assert.equal(gezinmeKarari({ dx: -39, indeks: 0, toplam: 3 }), 'yok');
+  assert.equal(gezinmeKarari({ dx: -40, indeks: 0, toplam: 3 }), 'sonraki');
+  assert.equal(gezinmeKarari({ dx: 40, indeks: 1, toplam: 3 }), 'onceki');
+  /* Uçlar: ilk karede sağa, son karede sola çekmek hiçbir şey yapmıyor, görsel de kımıldamıyor. */
+  assert.equal(gezinmeKarari({ dx: 120, indeks: 0, toplam: 3 }), 'yok');
+  assert.equal(gezinmeKarari({ dx: -120, indeks: 2, toplam: 3 }), 'yok');
+  assert.equal(parmakKaymasi({ dx: 30, indeks: 0, toplam: 3 }), 0);
+  assert.equal(parmakKaymasi({ dx: -30, indeks: 2, toplam: 3 }), 0);
+  assert.equal(parmakKaymasi({ dx: -30, indeks: 1, toplam: 3 }), -30);
+  assert.equal(parmakKaymasi({ dx: -30, indeks: 0, toplam: 1 }), 0);
 });
