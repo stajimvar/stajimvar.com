@@ -7,7 +7,6 @@ import { RehberIzgarasi, RehberKarti, RehberKartiIskeleti } from './RehberKartla
 import { YolHaritasi } from './YolHaritasi';
 import { RehberSonuclari } from './RehberSonuclari';
 import { StajYollari } from './StajYollari';
-import { KullaniciAramaSonuclari } from './sosyal/KullaniciArama';
 import { REHBERLER, KONULAR, konuEtiketi, type KonuId, type Rehber } from '../data/rehberler';
 import { BOLUMLER } from '../data/bolumler';
 import { STAJ_PROGRAMLARI } from '../data/stajProgramlari';
@@ -25,6 +24,25 @@ import { gecmisiOku } from '../lib/rehber-gecmis.mjs';
 import { birlesikArama } from '../lib/rehber-arama.mjs';
 import { kaydedilenRehberler, okunmaSayilari, rehberKaydiDegistir } from '../lib/rehber-veri';
 import type { StudentProfile } from '../types';
+
+/*
+  KİŞİ ARAMA TEMBEL YÜKLENİYOR — ÖN RENDER KIRILMASIN DİYE
+
+  Ön render (scripts/onrender.mjs) bu dosyayı Node'da statik derleyip
+  `renderToStaticMarkup` ile çiziyor. `./sosyal/KullaniciArama` →
+  `lib/queries/sosyal` → `lib/supabase` zinciri modül yüklenirken
+  `import.meta.env.VITE_SUPABASE_URL` okuyor; Node'da `import.meta.env`
+  yok ve `npm run build` "ön render DURDU: merkez listeleri çizilemedi"
+  ile düşüyordu (ölçüldü, HEAD 74f5eef). Supabase istemcisi ön render
+  edilen bir dosyanın STATİK içe aktarma grafiğinde olamaz; dinamik
+  `import()` modülü yalnız tarayıcıda, parça ilk çizildiğinde çekiyor.
+  Parça zaten yalnız oturum açık + terim varken çiziliyor, yani Suspense
+  de ancak o anda devreye giriyor; ön render ziyaretçi olarak çizdiği
+  için o dala hiç girmiyor.
+*/
+const KullaniciAramaSonuclari = React.lazy(() =>
+  import('./sosyal/KullaniciArama').then((m) => ({ default: m.KullaniciAramaSonuclari }))
+);
 
 /**
  * Rehber merkezi.
@@ -558,9 +576,16 @@ export const RehberMerkezi: React.FC<{
           aramanın çalışmadığını düşündürürdü. `gomuluBaslik` ile parça
           eşleşme yokken de hiç çizilmiyor: "eşleşen profil yok" satırı
           rehber arayan kullanıcı için gürültü olurdu.
+
+          `fallback={null}`: parça yüklenirken iskelet çizilmiyor çünkü
+          parçanın kendisi de üç harfin altında ya da eşleşme yokken
+          hiçbir şey çizmiyor; yükleme anında boş bir kutu göstermek,
+          sonra kaldırmak sıçrama yaratırdı.
         */}
         {ogrenci && terim ? (
-          <KullaniciAramaSonuclari sorgu={arama} onNavigate={onNavigate} gomuluBaslik="Kişiler" />
+          <React.Suspense fallback={null}>
+            <KullaniciAramaSonuclari sorgu={arama} onNavigate={onNavigate} gomuluBaslik="Kişiler" />
+          </React.Suspense>
         ) : null}
 
         {/* ================================================== içerikler */}

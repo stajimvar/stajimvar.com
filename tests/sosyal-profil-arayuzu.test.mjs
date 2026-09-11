@@ -2099,7 +2099,20 @@ test('kişi arama kutusu: üst çubukta ve rehberde, /cv içinde yok', () => {
   assert.match(ustCubuk, /<KullaniciAramaSonuclari\s*sorgu=\{kisiSorgusu\}/);
   assert.match(
     rehberMerkezi,
-    /\{ogrenci && terim \? \(\s*<KullaniciAramaSonuclari sorgu=\{arama\} onNavigate=\{onNavigate\} gomuluBaslik="Kişiler" \/>/,
+    /\{ogrenci && terim \? \(\s*<React\.Suspense fallback=\{null\}>\s*<KullaniciAramaSonuclari sorgu=\{arama\} onNavigate=\{onNavigate\} gomuluBaslik="Kişiler" \/>\s*<\/React\.Suspense>/,
+  );
+  /*
+    Rehber merkezi ön render ediliyor (scripts/onrender.mjs, Node'da
+    statik derleme). `KullaniciArama` → `queries/sosyal` → `supabase`
+    zinciri modül yüklenirken `import.meta.env` okuyor; statik import
+    edilirse ön render "merkez listeleri çizilemedi" ile düşüyor (74f5eef'te
+    ölçüldü). Parça bu yüzden yalnız `React.lazy` + dinamik `import()` ile
+    geliyor; statik `import { KullaniciAramaSonuclari }` satırı yasak.
+  */
+  assert.doesNotMatch(rehberMerkezi, /^import .*['"]\.\/sosyal\/KullaniciArama['"]/m);
+  assert.match(
+    yorumsuz(rehberMerkezi),
+    /React\.lazy\(\(\) =>\s*import\('\.\/sosyal\/KullaniciArama'\)\.then\(\(m\) => \(\{ default: m\.KullaniciAramaSonuclari \}\)\)/,
   );
   /* Geciktirme ve `sosyalKullaniciAra` çağrısı tek yerde: Header'da ve rehberde yok (rehber yorumu adı anıyor, kodu değil). */
   for (const kaynak of [ustCubuk, yorumsuz(rehberMerkezi)]) {
