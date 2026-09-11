@@ -113,6 +113,15 @@ interface IzgaraProps {
    * kaldırırdı.
    */
   gorunum?: 'sade' | 'ayrintili';
+  /**
+   * Listedeki gönderilerin sahibi — akış başlığında "@ad" olarak yazılıyor.
+   *
+   * Yalnız listenin tamamı tek profile aitken (profil ızgarası) veriliyor.
+   * Beğendiklerim, Kaydedilenler ve Arşiv karışık yazarlı; orada
+   * verilmiyor ve başlık "Gönderi" kalıyor. Gönderi satırı yazar adı
+   * taşımıyor, bu yüzden buradan geçmeyen ad ekranda uydurulmuyor.
+   */
+  kullaniciAdi?: string | null;
 }
 
 const KART_KABI = 'rounded-2xl border border-gray-200 bg-white p-2.5 sm:p-3.5';
@@ -349,10 +358,16 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
   onGeriYukle,
   geriYuklenenId = null,
   gorunum = 'ayrintili',
+  kullaniciAdi = null,
 }) => {
   const sade = gorunum === 'sade';
   const izgaraSinifi = sade ? PAYLASIM_IZGARASI : AYRINTILI_IZGARA;
-  const [acik, setAcik] = React.useState<SosyalPaylasim | null>(null);
+  /*
+    Açık olan gönderinin KİMLİĞİ, nesnesi değil: katman ızgaranın güncel
+    listesini alıyor (dar ekranda o listenin tamamı bir akış olarak
+    çiziliyor) ve tazelenen listede aynı kimliği kendisi buluyor.
+  */
+  const [acikId, setAcikId] = React.useState<string | null>(null);
   /* Katmanı açan kart; kapanışta odak buraya dönüyor. */
   const tetikRef = React.useRef<HTMLElement | null>(null);
 
@@ -378,13 +393,39 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
     kapakYollari,
   );
 
+  /*
+    KATMAN IZGARANIN DURUMUNDAN BAĞIMSIZ
+
+    Arşivleme listeyi sunucudan yeniden çektiriyor ve ızgara o sırada
+    'yukleniyor'a dönüyor. Katman yalnız 'hazir' dalında çizilseydi, dar
+    ekrandaki akış bir gönderi arşivlenir arşivlenmez sökülür, kullanıcı
+    ızgaraya düşer ve odağı kaybederdi. Bu yüzden katman yükleme, hata ve
+    liste dallarının üçüne de ekleniyor (boş dalda açılacak gönderi yok);
+    tazeleme sürerken eski listeyle duruyor — `paylasimlar` yalnız başarılı
+    yanıtta yazılıyor — ve arşivlenen kimliği katman kendisi düşürüyor.
+  */
+  const katman = acikId !== null && paylasimlar.length > 0 && (
+    <PaylasimDetayi
+      liste={paylasimlar}
+      baslangicId={acikId}
+      sahibiMi={sahibiMi}
+      tetikleyici={tetikRef.current}
+      onKapat={() => setAcikId(null)}
+      onArsivlendi={onArsivlendi}
+      kullaniciAdi={kullaniciAdi}
+    />
+  );
+
   if (durum === 'yukleniyor') {
     return (
-      <div className={izgaraSinifi} aria-busy="true">
-        <Iskelet sade={sade} />
-        <Iskelet sade={sade} />
-        <Iskelet sade={sade} />
-      </div>
+      <>
+        <div className={izgaraSinifi} aria-busy="true">
+          <Iskelet sade={sade} />
+          <Iskelet sade={sade} />
+          <Iskelet sade={sade} />
+        </div>
+        {katman}
+      </>
     );
   }
 
@@ -397,21 +438,24 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
   */
   if (durum === 'hata') {
     return (
-      <div className={`${KART_KABI} space-y-2 text-center`}>
-        <p className="text-sm font-bold text-gray-900">Paylaşımlar alınamadı.</p>
-        <p className="text-sm text-gray-600">
-          Bağlantı ya da sunucu kaynaklı olabilir. İçeriğinde bir değişiklik olmadı.
-        </p>
-        {onYenidenDene && (
-          <button
-            type="button"
-            onClick={onYenidenDene}
-            className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-800 transition-[background-color,border-color,color] duration-150 hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-          >
-            Yeniden dene
-          </button>
-        )}
-      </div>
+      <>
+        <div className={`${KART_KABI} space-y-2 text-center`}>
+          <p className="text-sm font-bold text-gray-900">Paylaşımlar alınamadı.</p>
+          <p className="text-sm text-gray-600">
+            Bağlantı ya da sunucu kaynaklı olabilir. İçeriğinde bir değişiklik olmadı.
+          </p>
+          {onYenidenDene && (
+            <button
+              type="button"
+              onClick={onYenidenDene}
+              className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-800 transition-[background-color,border-color,color] duration-150 hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            >
+              Yeniden dene
+            </button>
+          )}
+        </div>
+        {katman}
+      </>
     );
   }
 
@@ -473,7 +517,7 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
             kapakAdresi={paylasim.kapakYolu ? (adresler.get(paylasim.kapakYolu) ?? null) : null}
             onAc={(secilen, tetikleyici) => {
               tetikRef.current = tetikleyici;
-              setAcik(secilen);
+              setAcikId(secilen.id);
             }}
             onGeriYukle={onGeriYukle}
             geriYukleKilidi={geriYuklenenId === paylasim.id}
@@ -482,15 +526,7 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
         ))}
       </div>
 
-      {acik && (
-        <PaylasimDetayi
-          paylasim={acik}
-          sahibiMi={sahibiMi}
-          tetikleyici={tetikRef.current}
-          onKapat={() => setAcik(null)}
-          onArsivlendi={onArsivlendi}
-        />
-      )}
+      {katman}
     </>
   );
 };

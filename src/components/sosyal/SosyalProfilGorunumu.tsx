@@ -531,6 +531,7 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
           sahibiMi={sahibiMi}
           onArsivlendi={sahibiMi ? onPaylasimArsivlendi : undefined}
           gorunum="sade"
+          kullaniciAdi={profil.kullaniciAdi}
         />
       </div>
     </div>

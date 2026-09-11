@@ -1648,6 +1648,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
         sahibiMi
         onArsivlendi={paylasimlariTazele}
         gorunum="sade"
+        kullaniciAdi={profil?.kullaniciAdi ?? null}
       />
     </section>,
   );

@@ -47,6 +47,8 @@ const oku = (p) => readFileSync(path.join(KOK, p), 'utf8');
 const sorgular = oku('src/lib/queries/sosyal.ts');
 const olustur = oku('src/components/sosyal/PaylasimOlustur.tsx');
 const detay = oku('src/components/sosyal/PaylasimDetayi.tsx');
+/* Tek gönderinin şeridi, metni ve eylemleri; katman ve akış ikisi de bunu çiziyor. */
+const govde = oku('src/components/sosyal/PaylasimGovdesi.tsx');
 const izgara = oku('src/components/sosyal/PaylasimIzgarasi.tsx');
 const gorunum = oku('src/components/sosyal/SosyalProfilGorunumu.tsx');
 const sayfa = oku('src/components/sosyal/SosyalProfilSayfasi.tsx');
@@ -86,7 +88,7 @@ function govdeAl(kaynak, baslangicIsareti, bitisIsareti) {
   return son < 0 ? kaynak.slice(bas) : kaynak.slice(bas, son);
 }
 
-const D_BILESENLERI = [olustur, detay, izgara, gorunum, sayfa];
+const D_BILESENLERI = [olustur, detay, govde, izgara, gorunum, sayfa];
 
 /* ------------------------------------------------------------------ */
 
@@ -110,16 +112,18 @@ test('"takip" kavramı hiçbir ekranda geçmiyor', () => {
 
 test('kalıcı silme yok; sahibin tek yolu arşiv ve o da sahibiMi dalının içinde', () => {
   assert.match(sorgular, /paylasimiArsivle[\s\S]{0,600}archived_at/);
-  assert.match(yorumsuz(detay), /Evet, arşivle/);
+  assert.match(yorumsuz(govde), /Evet, arşivle/);
   /* Silme sözcüğü hiçbir düğmede geçmiyor; sunucuda da yalnız taslak siliniyor. */
-  assert.doesNotMatch(yorumsuz(detay) + yorumsuz(izgara), /sil(?:<|\b)/i);
+  assert.doesNotMatch(yorumsuz(detay) + yorumsuz(govde) + yorumsuz(izgara), /sil(?:<|\b)/i);
   assert.match(rpcGocu, /yayimlanmis-paylasim-iptal-edilemez/);
   /*
-    Ayrıntı katmanında sahibe özel İKİ blok var (görünürlük satırı ve
-    arşivleme) ve ikisi de koşulun İÇİNDE: ziyaretçide DOM'a hiç
-    girmiyorlar, CSS ile gizlenmiyorlar.
+    Gövdede sahibe özel İKİ blok var (görünürlük satırı ve arşivleme) ve
+    ikisi de koşulun İÇİNDE: ziyaretçide DOM'a hiç girmiyorlar, CSS ile
+    gizlenmiyorlar. Katman ve akış `sahibiMi`yi gövdeye olduğu gibi
+    geçiriyor; ne başlık ne blok kabı sahibe özel bir şey çiziyor.
   */
-  assert.equal(detay.split('{sahibiMi && (').length - 1, 2);
+  assert.equal(govde.split('{sahibiMi && (').length - 1, 2);
+  assert.doesNotMatch(yorumsuz(detay), /sahibiMi &&|sahibiMi \?/);
 });
 
 test('1-10 ve 2200 sınırları istemcide de var, sunucudaki sayıyla aynı', () => {
@@ -200,15 +204,74 @@ test('katman açılışında odak kapatma düğmesine taşınıyor', () => {
   assert.match(detay, /if \(olay\.key !== 'Tab'\) return;/);
 });
 
-test('ayrıntı katmanı iki panel: 4:5 görsel alanı, dar ekranda üst üste', () => {
+test('tek gövde iki yerleşimde: lg üstü iki panelli diyalog, lg altı dikey akış', () => {
   /*
-    Kap dar ekranda tek sütun (`flex-col`), lg ve üstünde yan yana
-    (`lg:flex-row`); görsel paneli `aspect-[4/5]` ve `object-cover` ile
-    doluyor. Yerleşim sınıfları kaynak metinden ölçülüyor; piksel ölçümü
-    bu testin işi değil.
+    Gövde (`PaylasimGovdesi`) şerit + metin + eylemleri TEK yerde
+    tanımlıyor; diyalog ve akış aynı bileşeni çiziyor, ikisinde de ikinci
+    bir şerit ya da ikinci bir beğen düğmesi yazılmıyor. Yerleşim farkı
+    yalnız sınıf: diyalogda görsel paneli kabın yüksekliğini alıp 4:5'ten
+    genişliyor (`lg:h-full lg:w-auto`), akışta blok sırası `order-*` ile
+    şerit → etkileşim → metin → arşiv. Yerleşim sınıfları kaynak metinden
+    ölçülüyor; piksel ölçümü bu testin işi değil.
+
+    Hangi sunumun çizileceğine `matchMedia` karar veriyor: `lg` altında
+    diyalog, `lg`de akış HİÇ ağaca girmiyor — `hidden lg:flex` ile iki
+    kopya, görselleri iki kez indirmek ve odak tuzağını görünmeyen
+    kopyaya da kurmak olurdu.
   */
-  assert.match(detay, /flex-col[^"]*lg:flex-row/);
-  assert.match(detay, /aspect-\[4\/5\][^"]*lg:aspect-\[4\/5\] lg:h-full lg:w-auto/);
+  assert.equal((detay.match(/<PaylasimGovdesi\b/g) ?? []).length, 2);
+  assert.match(detay, /yerlesim="diyalog"/);
+  assert.match(detay, /yerlesim="akis"/);
+  assert.doesNotMatch(yorumsuz(detay), /aria-pressed|translateX|useGorselAdresleri|begeniDurumuGetir/);
+  assert.match(govde, /const GORSEL_PANELI = 'relative aspect-\[4\/5\] w-full shrink-0 touch-pan-y overflow-hidden bg-slate-950';/);
+  assert.match(govde, /const GORSEL_PANELI_DIYALOG = `\$\{GORSEL_PANELI\} lg:aspect-\[4\/5\] lg:h-full lg:w-auto`;/);
+  assert.match(govde, /diyalog \? GORSEL_PANELI_DIYALOG : GORSEL_PANELI/);
+  assert.match(govde, /diyalog \? '' : 'order-1'/);
+  assert.match(govde, /diyalog \? 'pt-3' : 'order-2 pb-3'/);
+  assert.match(govde, /diyalog \? '' : 'order-3'/);
+  /* Sunum kararı tek kırılımdan; iki dal `genisEkran` ile ayrılıyor. */
+  const genisEkran = oku('src/components/sosyal/useGenisEkran.ts');
+  assert.match(genisEkran, /LG_SORGUSU = '\(min-width: 1024px\)'/);
+  assert.match(detay, /if \(genisEkran\) \{[\s\S]*aria-label="Paylaşım ayrıntısı"[\s\S]*flex-row[\s\S]*\n  \}\n\n  return createPortal\([\s\S]*aria-label="Paylaşım akışı"/);
+  assert.doesNotMatch(yorumsuz(detay), /hidden lg:|lg:hidden|max-lg:hidden/);
+});
+
+test('mobil akış: tam ekran, dokunulan gönderi başta, bloklar görünüme yaklaşınca yükleniyor', () => {
+  /*
+    Akış `fixed inset-0`, `role="dialog"` ve `aria-modal`; başlıkta geri
+    düğmesi (açılış odağı burada, diyalogdaki "Kapat" ile AYNI ref) ve
+    "Gönderi". Açılışta kaydırma senkron ve kare zamanlayıcısız (odak
+    testiyle aynı gerekçe): `scrollTop` doğrudan yazılıyor.
+
+    Her blok kendi `IntersectionObserver`ıyla aktif oluyor; kök kaydırma
+    kabı (pencere olsaydı `rootMargin` kabın kırptığı blokları
+    yakalamazdı). Gövde aktif olana kadar görsel kancasına boş liste
+    gidiyor ve etkileşim sorgusu atılmıyor — tembel yükleme ölçülen yer
+    bu ikisi.
+
+    Arşivlenen blok listeden düşüyor, akış kalıyor; son blok düşünce
+    kapanıyor. Blok kalkmadan ÖNCE odak başlığa alınıyor (kapanıştaki
+    "önce odak, sonra sökme" sırası).
+  */
+  assert.match(detay, /className="fixed inset-0 z-\[100\] flex flex-col bg-white"/);
+  assert.match(detay, /aria-label="Paylaşım akışı"/);
+  assert.equal((detay.match(/aria-modal="true"/g) ?? []).length, 2);
+  assert.equal((detay.match(/ref=\{kapatDugmesiRef\}/g) ?? []).length, 2);
+  assert.match(detay, /<span className="sr-only">Geri<\/span>/);
+  assert.match(detay, /<h2 className="[^"]*">Gönderi<\/h2>/);
+  assert.match(yorumsuz(detay), /React\.useLayoutEffect\(\(\) => \{\s*const kap = akisRef\.current;\s*const blok = baslangicRef\.current;\s*if \(!kap \|\| !blok\) return;\s*kap\.scrollTop = blok\.offsetTop;\s*\}, \[\]\);/);
+  assert.match(detay, /new IntersectionObserver\(/);
+  assert.match(detay, /\{ root: kok\.current, rootMargin: '100% 0px' \}/);
+  assert.match(detay, /gozlemci\.observe\(blok\);\s*return \(\) => gozlemci\.disconnect\(\);/);
+  assert.match(govde, /\(aktif \? paylasim\.gorseller\.map\(\(gorsel\) => gorsel\.storageYolu\) : \[\]\)/);
+  assert.match(govde, /const gorselDurumu = aktif \? kancaDurumu : 'yukleniyor';/);
+  assert.match(yorumsuz(govde), /React\.useEffect\(\(\) => \{\s*if \(!aktif\) return;\s*let iptal = false;/);
+  /* Akışın kendisi her bloğa aynı listeyi, aynı `sahibiMi`yi geçiriyor. */
+  assert.match(detay, /\{gorunenler\.map\(\(paylasim\) => \(\s*<AkisBlogu/);
+  assert.match(detay, /const kalan = gorunenler\.filter\(\(paylasim\) => paylasim\.id !== paylasimId\);\s*if \(kalan\.length === 0\) \{\s*kapat\(\);\s*return;\s*\}\s*kapatDugmesiRef\.current\?\.focus\(\);\s*setGizlenenler/);
+  /* Izgara listeyi ve dokunulan kimliği veriyor; katman yükleme dalında sökülmüyor. */
+  assert.match(izgara, /<PaylasimDetayi\s*liste=\{paylasimlar\}\s*baslangicId=\{acikId\}/);
+  assert.match(izgara, /durum === 'yukleniyor'\) \{\s*return \(\s*<>[\s\S]{0,400}\{katman\}/);
 });
 
 test('kova adları tek sabitten geliyor, kalıcı public adres üretilmiyor', () => {
@@ -216,7 +279,7 @@ test('kova adları tek sabitten geliyor, kalıcı public adres üretilmiyor', ()
   assert.match(sorgular, /SOSYAL_AVATAR_KOVASI = 'sosyal-avatar'/);
   assert.match(depoGocu, /\('sosyal-paylasim', 'sosyal-paylasim', false/);
   /* Bileşenler adı elle yazmıyor: değişirse tek yerde değişiyor. */
-  for (const kaynak of [olustur, detay, izgara]) {
+  for (const kaynak of [olustur, detay, govde, izgara]) {
     assert.doesNotMatch(kaynak, /'sosyal-(paylasim|avatar)'/);
   }
 });
@@ -229,7 +292,7 @@ test('sosyal görsellerde imzalı ya da kalıcı adres üreten hiçbir çağrı 
     tamamen kalktı; dosya her seferinde kullanıcının oturumundan geçerek
     iniyor. `getPublicUrl` de yok: iki kova da `public = false`.
   */
-  for (const kaynak of [sorgular, kanca, fotograf, fotografYukleme, izgara, detay]) {
+  for (const kaynak of [sorgular, kanca, fotograf, fotografYukleme, izgara, detay, govde]) {
     assert.doesNotMatch(yorumsuz(kaynak), /createSignedUrls?\(|getPublicUrl/);
   }
   assert.match(sorgular, /db\.storage\.from\(kova\)\.download\(yol\)/);
@@ -243,7 +306,7 @@ test('bellekteki adresler temizlikte tek tek bırakılıyor', () => {
     yalnız bu kancada, çağıran bileşenlerde değil.
   */
   assert.match(kanca, /return \(\) => \{[\s\S]{0,200}URL\.revokeObjectURL\(adres\)/);
-  for (const kaynak of [izgara, detay, fotograf]) {
+  for (const kaynak of [izgara, detay, govde, fotograf]) {
     assert.doesNotMatch(yorumsuz(kaynak), /createObjectURL|revokeObjectURL/);
   }
   /* Yetkisiz/başarısız dalda adres HİÇ üretilmiyor. */
@@ -503,14 +566,14 @@ test('beğen ve kaydet AYNI düğmede iki yön; durum aria-pressed ile, etiket s
     sürerken kilitli; kapı `kilitRef` üzerinden, çünkü React durumu aynı
     karede güncellenmiyor.
   */
-  assert.match(detay, /aria-pressed=\{begeniDurumu\.begendimMi\}/);
-  assert.match(detay, /aria-pressed=\{kaydettimMi\}/);
-  assert.equal((detay.match(/disabled=\{kilitli\}/g) ?? []).length, 2);
-  assert.match(detay, /\n\s*Beğen\n/);
-  assert.match(detay, /\n\s*Kaydet\n/);
+  assert.match(govde, /aria-pressed=\{begeniDurumu\.begendimMi\}/);
+  assert.match(govde, /aria-pressed=\{kaydettimMi\}/);
+  assert.equal((govde.match(/disabled=\{kilitli\}/g) ?? []).length, 2);
+  assert.match(govde, /\n\s*Beğen\n/);
+  assert.match(govde, /\n\s*Kaydet\n/);
 
-  const begeniGovdesi = govdeAl(detay, 'const begeniyiCevir = () =>', '\n  };');
-  const kayitGovdesi = govdeAl(detay, 'const kaydiCevir = () =>', '\n  };');
+  const begeniGovdesi = govdeAl(govde, 'const begeniyiCevir = () =>', '\n  };');
+  const kayitGovdesi = govdeAl(govde, 'const kaydiCevir = () =>', '\n  };');
   for (const govde of [begeniGovdesi, kayitGovdesi]) {
     assert.match(govde, /etkilesimGecisi\(\{/);
     assert.match(govde, /kilitliMi: kilitRef\.current/);
@@ -521,7 +584,7 @@ test('beğen ve kaydet AYNI düğmede iki yön; durum aria-pressed ile, etiket s
   );
   assert.match(kayitGovdesi, /onceki \? kaydiKaldir\(paylasim\.id\) : kaydet\(paylasim\.id\)/);
   /* Ref ve durum TEK fonksiyondan yazılıyor: biri ötekinden geride kalmasın. */
-  assert.match(detay, /kilitRef\.current = deger;\s*\n\s*setKilitli\(deger\);/);
+  assert.match(govde, /kilitRef\.current = deger;\s*\n\s*setKilitli\(deger\);/);
 });
 
 test('kaydetme sayısı hiçbir yerde yok; "kimler beğendi" listesi de yok', () => {
@@ -534,7 +597,7 @@ test('kaydetme sayısı hiçbir yerde yok; "kimler beğendi" listesi de yok', ()
   assert.match(kayitGovdesi, /Promise<Set<string>>/);
   assert.doesNotMatch(kayitGovdesi, /adet|count/i);
   assert.doesNotMatch(
-    yorumsuz(detay) + yorumsuz(izgara) + yorumsuz(sahipListesi),
+    yorumsuz(detay) + yorumsuz(govde) + yorumsuz(izgara) + yorumsuz(sahipListesi),
     /kaydeden|kayıt sayısı/i,
   );
 
@@ -550,8 +613,8 @@ test('kaydetme sayısı hiçbir yerde yok; "kimler beğendi" listesi de yok', ()
   assert.equal((begeniGovdesi.match(/user_id/g) ?? []).length, 1);
   assert.match(begeniGovdesi, /\.eq\('user_id', kimlik\)/);
   /* Ekrandaki sayı GERÇEK satırlardan; sıfırken hiç yazılmıyor. */
-  assert.match(detay, /begeniDurumu\.adet > 0 && \(/);
-  assert.match(detay, /\{begeniDurumu\.adet\} beğeni/);
+  assert.match(govde, /begeniDurumu\.adet > 0 && \(/);
+  assert.match(govde, /\{begeniDurumu\.adet\} beğeni/);
 });
 
 test('üç liste ekranı yalnız sahip dalında; ziyaretçide DOM’a hiç girmiyor', () => {
@@ -730,15 +793,23 @@ test('seride parmakla gezinme: oklar dar ekranda görünmez ama ağaçta; kaydı
     Eşik ve uç kuralı kaynak metinden değil, fonksiyon ÇAĞRILARAK
     ölçülüyor. Tarayıcı ölçümü bu testin işi değil.
   */
-  const kaynak = yorumsuz(detay);
+  const kaynak = yorumsuz(govde);
   assert.match(kaynak, /const OK_DUGMESI = `[^`]* max-lg:sr-only [^`]*`/);
   assert.doesNotMatch(kaynak, /const OK_DUGMESI = `[^`]*(?:\bhidden\b|lg:not-sr-only)[^`]*`/);
   /* Görsel kabı dikey kaydırmayı tarayıcıya bırakıyor; dört işaretçi olayı da bağlı. */
-  assert.match(kaynak, /touch-pan-y[^"]*"\s*onPointerDown=\{surukleBasla\}\s*onPointerMove=\{surukleHareket\}\s*onPointerUp=\{surukleBitir\}\s*onPointerCancel=\{surukleIptal\}/);
+  assert.match(kaynak, /const GORSEL_PANELI = '[^']*touch-pan-y[^']*';/);
+  assert.match(kaynak, /className=\{diyalog \? GORSEL_PANELI_DIYALOG : GORSEL_PANELI\}\s*onPointerDown=\{surukleBasla\}\s*onPointerMove=\{surukleHareket\}\s*onPointerUp=\{surukleBitir\}\s*onPointerCancel=\{surukleIptal\}/);
   /* Tek gezinme kaynağı: setIndeks yalnız iki callback'in içinde. */
   assert.equal((kaynak.match(/setIndeks\(/g) ?? []).length, 2);
+  /*
+    Ok tuşları yalnız diyalogda: akışta aynı anda birden çok şerit var ve
+    belge düzeyinde bir ok hepsini kaydırırdı. Dinleyici `diyalog`
+    kapısının arkasında, gövdenin kendisinde.
+  */
+  assert.match(kaynak, /if \(!diyalog\) return;\s*const tusaBas/);
   assert.match(kaynak, /if \(olay\.key === 'ArrowRight'\) \{\s*sonrakiKare\(\);/);
   assert.match(kaynak, /if \(olay\.key === 'ArrowLeft'\) \{\s*oncekiKare\(\);/);
+  assert.doesNotMatch(yorumsuz(detay), /ArrowRight|ArrowLeft'/);
   assert.match(kaynak, /onClick=\{oncekiKare\}/);
   assert.match(kaynak, /onClick=\{sonrakiKare\}/);
   assert.match(kaynak, /if \(karar === 'sonraki'\) sonrakiKare\(\);\s*else if \(karar === 'onceki'\) oncekiKare\(\);/);
