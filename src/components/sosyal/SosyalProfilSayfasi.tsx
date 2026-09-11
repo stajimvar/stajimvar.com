@@ -24,7 +24,7 @@ import { BolumTalebi, type TalepKipi } from './BolumTalebi';
 import { KullaniciArama } from './KullaniciArama';
 import { PaylasimIzgarasi } from './PaylasimIzgarasi';
 import { PaylasimOlustur } from './PaylasimOlustur';
-import { PortfolyoUstSatiri } from './PortfolyoUstSatiri';
+import type { ProfilAyarMenusuProps } from './ProfilAyarMenusu';
 import { ProfilFotografi } from './ProfilFotografi';
 import { ProfilFotografiYukleme } from './ProfilFotografiYukleme';
 import { SahipListesi } from './SahipListesi';
@@ -36,7 +36,8 @@ import { SosyalProfilGorunumu } from './SosyalProfilGorunumu';
  *
  * Bu bileşen görünüm çizmiyor, DURUM belirliyor: kim bakıyor, veri geldi
  * mi, sahibi mi. Ziyaretçi sunumu `SosyalProfilGorunumu` içinde, sahibin
- * birleşik ekrandaki portfolyosu ise `PortfolyoUstSatiri` + sade ızgara.
+ * birleşik ekrandaki portfolyosu ise sade ızgara; sayaçları ve eylemleri
+ * `PortfolyoSatiri` nesnesiyle çevreleyen ekranın sol sütununa gidiyor.
  * Sınır bilerek buradan geçiyor; yetki dalları tek dosyada.
  *
  * İKİ KİP, TEK DOSYA
@@ -133,9 +134,11 @@ interface SayfaProps {
    *
    * Gömülü kipte DEĞİŞEN üç şey var:
    *   1. Sayfa kabuğu yok — çevreleyen ekran kendi `main`ini çiziyor.
-   *   2. Sahip görünümü `SosyalProfilGorunumu` yerine portfolyo üst
-   *      satırı + sade ızgara: kimlik alanları (fotoğraf, ad, alan,
-   *      biyografi) sol sütundaki profil kartında zaten duruyor.
+   *   2. Sahip görünümü `SosyalProfilGorunumu` yerine sade ızgara:
+   *      kimlik alanları (fotoğraf, ad, alan, biyografi) sol sütundaki
+   *      profil kartında zaten duruyor; sayaçlar ile "Paylaş" ve dişli
+   *      de o karta gidiyor (`onPortfolyoSatiri`), sağ sütun doğrudan
+   *      ızgarayla başlıyor.
    *   3. Adreste kullanıcı adı YOK. Sahiplik zaten adresten değil,
    *      `profile_id = auth.uid()` karşılaştırmasından okunuyordu;
    *      gömülü kipte adres karşılaştırması tamamen düşüyor.
@@ -183,6 +186,74 @@ interface SayfaProps {
    * Yalnız gömülü kipte veriliyor; ziyaretçi görünümünde çağrılmıyor.
    */
   onAvatarYolu?: (yol: string | null) => void;
+  /**
+   * SAHİBİN PORTFOLYO SATIRINI ÇEVRELEYEN EKRANA VERİYOR
+   *
+   * Sayaçlar, "Paylaş" ve dişli menüsü birleşik ekranda sağ sütunun
+   * üstünde duruyordu; artık sol sütundaki kimlik kartının içinde
+   * çiziliyorlar. Kalıp `onAvatarYolu` ile aynı: veri ve eylemler yine
+   * BURADA doğuyor, ikinci bir sorgu yolu ya da ikinci bir sahiplik dalı
+   * yazılmadı. Kart yalnız verilen nesneyi çiziyor.
+   *
+   * Üç değer, üç anlam:
+   *   `undefined`  satır henüz okunmadı (kart iskelet çiziyor)
+   *   `null`       satır gelmedi ya da sahibi değil — kart ne sayı ne
+   *                eylem çiziyor; sağ sütundaki hata kutusu duruyor
+   *   nesne        sahip, satır hazır
+   *
+   * Yalnız gömülü portfolyo kipinde çağrılıyor; düzenleme kipinde ve
+   * ziyaretçi görünümünde hiç.
+   */
+  onPortfolyoSatiri?: (satir: PortfolyoSatiri | null | undefined) => void;
+}
+
+/**
+ * SAHİBİN PORTFOLYO SATIRI — SOL SÜTUNA GİDEN VERİ + EYLEM
+ *
+ * NEDEN HAZIR BİR DÜĞÜM (ReactNode) DEĞİL
+ * ---------------------------------------
+ * Kimlik kartı beş sayacı tek şeritte, tek tipografiyle çiziyor (üç
+ * öğrenci sayacı + paylaşım + bağlantı). Sosyal sayaçlar buradan hazır
+ * bir düğüm olarak gitseydi kartın içinde ikinci bir sayaç biçimi
+ * yaşar, "Paylaş" ile dişli için de ayrı bir yuva gerekirdi: biçim iki
+ * yere dağılırdı. Veri gidince biçim tek yerde (kartta), yetki tek
+ * yerde (burada, `sahibiMi` kapısının arkasında).
+ *
+ * "PAYLAŞ" EYLEMİ VARSA DÜĞME VAR
+ * -------------------------------
+ * `sosyal_paylasim_baslat` (20260924030000) taslağı ancak `yayinda_mi`
+ * VE `sector_id is not null` iken açıyor. İki koşul da burada ölçülüyor
+ * ve sağlanmıyorsa `onPaylasimOlustur` nesneye HİÇ konmuyor — kart
+ * "çizeyim mi" diye ikinci kez bakmıyor, eylemi olmayan düğmeyi çizmiyor.
+ * Eksikliğin sebebi sağ sütunda yazıyor (`paylasimEngeli`).
+ *
+ * DİŞLİ MENÜSÜNÜN SATIRLARI DEĞİŞMEDİ
+ * -----------------------------------
+ * `menu` doğrudan `ProfilAyarMenusu`nun props'u; `Pick` ile yalnız
+ * portfolyoya ait satırlar geçiyor. Düzenleme ve fotoğraf satırları bu
+ * tipe giremiyor — onlar düzenleme ekranında, ikinci kapı açılmıyor.
+ */
+export interface PortfolyoSatiri {
+  sayaclar: SosyalSayaclar | null;
+  sayacDurumu: 'yukleniyor' | 'hazir' | 'hata';
+  /** Yalnız iki sunucu önkoşulu sağlanınca var; yoksa kart düğme çizmiyor. */
+  onPaylasimOlustur?: () => void;
+  /**
+   * Uygulama içi gezinme — bağlantı sayacının gerçek `<a href>`i için.
+   * Kimliği sabit: çağıranın her çizimde yenilenen fonksiyonunu ref'ten
+   * okuyor (bkz. `sabitEylemler`).
+   */
+  onNavigate: (yol: string) => void;
+  menu: Pick<
+    ProfilAyarMenusuProps,
+    | 'onPaylas'
+    | 'yayindaMi'
+    | 'onGorunurluk'
+    | 'gorunurlukDurumu'
+    | 'onBegendiklerim'
+    | 'onKaydedilenler'
+    | 'onArsiv'
+  >;
 }
 
 /**
@@ -316,9 +387,10 @@ const SosyalProfilHazirDegil: React.FC<{
  * İskelet üç kipte: içerik gelince sayfa zıplamıyor.
  *
  * 'panel' gömülü portfolyo için: orada kimlik alanları (fotoğraf, ad,
- * alan) SOL sütunda çiziliyor ve sağ sütunda onların iskeletini
- * göstermek, gelmeyecek bir bloğun yerini ayırmak olurdu — içerik
- * gelince panel yukarı zıplardı.
+ * alan) ve sayaçlar SOL sütunda çiziliyor; sağ sütunda onların
+ * iskeletini göstermek, gelmeyecek bir bloğun yerini ayırmak olurdu —
+ * içerik gelince panel yukarı zıplardı. Sayaç iskeletini kimlik kartı
+ * kendi şeridinde çiziyor; burada yalnız ızgara.
  *
  * 'form' düzenleme kipi için: orada gelecek şey ızgara değil, üç kart
  * dolusu giriş kutusu. Aynı iskeleti kullansaydık kullanıcı bir kare
@@ -335,11 +407,7 @@ const ProfilIskeleti: React.FC<{ kip?: 'sayfa' | 'panel' | 'form' }> = ({ kip = 
       ))}
     </div>
   ) : kip === 'panel' ? (
-    <div aria-busy="true" className="space-y-3">
-      <div className="flex gap-5">
-        <div aria-hidden className="h-5 w-24 animate-pulse rounded bg-gray-100" />
-        <div aria-hidden className="h-5 w-24 animate-pulse rounded bg-gray-100" />
-      </div>
+    <div aria-busy="true">
       <PaylasimIzgarasi paylasimlar={[]} durum="yukleniyor" gorunum="sade" />
     </div>
   ) : (
@@ -372,6 +440,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   gomuluKip = 'portfolyo',
   ogrenciAvatarAdresi = null,
   onAvatarYolu,
+  onPortfolyoSatiri,
 }) => {
   /*
     Kip yalnız gömülü halde anlamlı: ayrı adreste (`/profil`) düzenleme
@@ -459,6 +528,8 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     reddedilen bir eylem sunmak olurdu.
   */
   const alaniVarMi = Boolean(profil?.sektorId);
+  /* İkinci önkoşul; kimlik kartına giden satır ve dişli menüsü aynı değeri okuyor. */
+  const yayindaMi = Boolean(profil?.yayindaMi);
   /*
     TALEBİN İKİ SEBEBİ, İKİ AYRI KİP
 
@@ -846,11 +917,121 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     }
   };
 
+  /*
+    EYLEMLERİN KİMLİĞİ SABİT, İÇERİĞİ GÜNCEL
+
+    Portfolyo satırı çevreleyen ekranda bir state'e yazılıyor. `paylas`,
+    `gorunurlukDegistir` ve `onNavigate` her çizimde yeniden üretiliyor;
+    aşağıdaki effect'in bağımlılığına girselerdi her çizim yeni bir nesne
+    gönderir, nesne çevreleyen ekranı yeniden çizdirir, o çizim bu
+    bileşeni de çizer ve döngü hiç durmazdı. Bu yüzden son hâlleri bir
+    ref'te tutuluyor (ref her commit'ten sonra tazeleniyor); dışarı giden
+    fonksiyonlar ise BİR KEZ kuruluyor ve çağrıldıkları anda ref'ten
+    okuyor. Tıklama her zaman commit'ten sonra geldiği için ref güncel.
+  */
+  const guncel = React.useRef({ paylas, gorunurlukDegistir, onNavigate, yayindaMi });
+  React.useEffect(() => {
+    guncel.current = { paylas, gorunurlukDegistir, onNavigate, yayindaMi };
+  });
+  const sabitEylemler = React.useMemo(
+    () => ({
+      paylasimOlustur: () => setGorunum('paylasimOlustur'),
+      profilBaglantisiPaylas: () => {
+        void guncel.current.paylas();
+      },
+      gorunurluk: () => {
+        void guncel.current.gorunurlukDegistir(!guncel.current.yayindaMi);
+      },
+      begendiklerim: () => setGorunum('begendiklerim'),
+      kaydedilenler: () => setGorunum('kaydedilenler'),
+      arsiv: () => setGorunum('arsiv'),
+      navigate: (yol: string) => guncel.current.onNavigate(yol),
+    }),
+    [],
+  );
+
+  /*
+    PORTFOLYO SATIRI ÇEVRELEYEN EKRANA — SAHİP KAPISININ ARKASINDAN
+
+    Aşağıdaki çizim dalları `if (!sahibiMi) return <GuvenliEkran/>` ile
+    kesiliyor; effect'ler o satırdan ÖNCE çalışmak zorunda (koşullu hook
+    olmaz). Kapı bu yüzden effect'in içinde ikinci kez, aynı `sahibiMi`
+    değeriyle çekiliyor: sahibi olmayan (ya da satırı gelmeyen) durumda
+    dışarı `null` gidiyor ve kart ne sayı ne eylem çiziyor. Sayı da
+    eylem de bu nesneden başka bir yoldan karta ulaşmıyor.
+
+    Yükleme sırasında `undefined`: yeniden deneme profil sorgusunu
+    'yukleniyor'a çekiyor ve o aralıkta eski sayı kartta kalsaydı,
+    tazelenmekte olan bir değer kesinmiş gibi dururdu.
+
+    "Paylaş" eylemi yalnız iki sunucu önkoşulu sağlanınca nesneye
+    giriyor; kart eylemi olmayan düğmeyi çizmiyor.
+  */
+  React.useEffect(() => {
+    if (!onPortfolyoSatiri || !gomulu || duzenlemeKipi) return;
+    if (profilDurumu === 'yukleniyor') {
+      onPortfolyoSatiri(undefined);
+      return;
+    }
+    if (!sahibiMi) {
+      onPortfolyoSatiri(null);
+      return;
+    }
+    onPortfolyoSatiri({
+      sayaclar,
+      sayacDurumu,
+      onPaylasimOlustur: yayindaMi && alaniVarMi ? sabitEylemler.paylasimOlustur : undefined,
+      onNavigate: sabitEylemler.navigate,
+      menu: {
+        onPaylas: sabitEylemler.profilBaglantisiPaylas,
+        yayindaMi,
+        onGorunurluk: sabitEylemler.gorunurluk,
+        gorunurlukDurumu: gorunurlukDurumu === 'gonderiliyor' ? 'gonderiliyor' : 'bekliyor',
+        onBegendiklerim: sabitEylemler.begendiklerim,
+        onKaydedilenler: sabitEylemler.kaydedilenler,
+        onArsiv: sabitEylemler.arsiv,
+      },
+    });
+  }, [
+    onPortfolyoSatiri,
+    gomulu,
+    duzenlemeKipi,
+    profilDurumu,
+    sahibiMi,
+    sayaclar,
+    sayacDurumu,
+    yayindaMi,
+    alaniVarMi,
+    gorunurlukDurumu,
+    sabitEylemler,
+  ]);
+
+  /*
+    SÖKÜLÜNCE SATIR GERİ ALINIYOR
+
+    `/cv` düzenlemeye geçerken bu paneli söküyor. Çevreleyen ekrandaki
+    state temizlenmeseydi, düzenlemeden dönüşte kurulan yeni panel
+    satırını gönderene kadar kart ESKİ nesneyi çizerdi: eski sayı ve
+    artık var olmayan bir bileşenin `setGorunum`una bağlı, basınca hiçbir
+    şey yapmayan bir "Paylaş". `undefined` gidiyor, `null` değil — sökülen
+    panel bir hata değil, henüz bilinmeyen bir sonraki yükleme.
+  */
+  React.useEffect(() => {
+    if (!onPortfolyoSatiri || !gomulu || duzenlemeKipi) return;
+    return () => onPortfolyoSatiri(undefined);
+    /*
+      Yalnız sökülürken: bağımlılık verilseydi yukarıdaki effect'in her
+      tetiklenişinde önce `undefined` sonra yeni nesne giderdi — aynı
+      sonuç için iki yazma.
+    */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ------------------------------------------------------------- Çizim
 
   /*
     Yükleme iskeleti gelecek içeriğin ölçüsünde: düzenleme kipinde form,
-    gömülü portfolyoda sayaç + ızgara, ayrı adreste tam sayfa.
+    gömülü portfolyoda ızgara, ayrı adreste tam sayfa.
   */
   const iskeletKipi: 'sayfa' | 'panel' | 'form' = duzenlemeKipi
     ? 'form'
@@ -1378,10 +1559,19 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     burada ise sol sütun CV/profil kartı — iki farklı içerik, aynı
     iskelet.
 
-    SIRA: sayaçlar + eylemler, sonra (gerekiyorsa) topluluk uyarısı, sonra
-    hata cümleleri ve bildirim, en sonda ızgara. Uyarı ızgaranın ÜSTÜNDE
-    çünkü "Paylaş" düğmesinin neden olmadığını o anlatıyor; altta kalsaydı
-    boş ızgaranın arkasına düşerdi.
+    SAYAÇLAR VE EYLEMLER BURADA DEĞİL
+
+    Sağ sütunun üstünde "N Paylaşım · N Bağlantı", "Paylaş" ve dişli
+    menüsü duruyordu (`PortfolyoUstSatiri`). Sol sütundaki kimlik kartı
+    zaten üç sayaç ve bir eylem satırı çiziyor; aynı ekranda iki ayrı
+    sayaç şeridi ve iki ayrı eylem bölgesi vardı. İkisi tek şeride ve tek
+    eylem alanına indi — kartın içine. Veri buradan gidiyor
+    (`onPortfolyoSatiri`); sağ sütun doğrudan ızgarayla başlıyor.
+
+    SIRA: (gerekiyorsa) eksik eylemin açıklaması, hata cümleleri ve
+    bildirim, sonra ızgara. Açıklama ızgaranın ÜSTÜNDE çünkü "Paylaş"
+    düğmesinin neden olmadığını o anlatıyor; altta kalsaydı boş ızgaranın
+    arkasına düşerdi.
 
     Izgara `gorunum="sade"`: hücre çıplak kare fotoğraf. Açıklama ve tarih
     ayrıntı katmanında (`PaylasimDetayi`) duruyor ve o katman ızgaranın
@@ -1391,7 +1581,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   return kabuk(
     <section aria-labelledby="portfolyo-basligi" className="space-y-3">
       {/*
-        Bölümün adı ekranda YAZILI DEĞİL: sağ sütunda sayaçların üstünde
+        Bölümün adı ekranda YAZILI DEĞİL: sağ sütunda ızgaranın üstünde
         bir başlık, sol sütundaki kartla aynı hizada durmuyordu ve iki
         sütunlu düzende ikinci bir "başlık" gibi okunuyordu. Ad ekran
         okuyucu için duruyor — bölümün nerede başladığı klavye ve okuyucu
@@ -1400,21 +1590,6 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
       <h2 id="portfolyo-basligi" className="sr-only">
         Fotoğraf portfolyon
       </h2>
-
-      <PortfolyoUstSatiri
-        sayaclar={sayaclar}
-        sayacDurumu={sayacDurumu}
-        yayindaMi={profil!.yayindaMi}
-        alaniVarMi={alaniVarMi}
-        onPaylasimOlustur={() => setGorunum('paylasimOlustur')}
-        onProfilBaglantisiPaylas={paylas}
-        onGorunurluk={() => gorunurlukDegistir(!profil!.yayindaMi)}
-        gorunurlukDurumu={gorunurlukDurumu === 'gonderiliyor' ? 'gonderiliyor' : 'bekliyor'}
-        onBegendiklerim={() => setGorunum('begendiklerim')}
-        onKaydedilenler={() => setGorunum('kaydedilenler')}
-        onArsiv={() => setGorunum('arsiv')}
-        onNavigate={onNavigate}
-      />
 
       {/*
         "TOPLULUĞA KATILMADIN" UYARISI KALDIRILDI

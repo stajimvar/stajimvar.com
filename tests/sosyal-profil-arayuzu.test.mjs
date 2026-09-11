@@ -71,8 +71,14 @@ const arama = oku('src/components/sosyal/KullaniciArama.tsx');
 /* Tek profil fotoğrafı: çizen bileşen ve kaynağı seçen yardımcı. */
 const fotograf = oku('src/components/sosyal/ProfilFotografi.tsx');
 const fotografKaynagi = oku('src/lib/profil-fotografi.ts');
-const ustSatir = oku('src/components/sosyal/PortfolyoUstSatiri.tsx');
+/*
+  `PortfolyoUstSatiri.tsx` BU LİSTEDEN ÇIKTI — dosya duruyor ama hiçbir
+  yerden çizilmiyor. Sayaçlar, "Paylaş" ve dişli sol sütundaki kimlik
+  kartına indi; ölçümleri artık `profilBasligi` ve `sayfa` üstünde.
+*/
 const olustur = oku('src/components/sosyal/PaylasimOlustur.tsx');
+/* Beş sayaçlı şeridi çizen ui parçası: bağlantı sayacı gerçek `<a>`. */
+const sayacOgesi = oku('src/ui/StatItem.tsx');
 const ogrenciProfili = oku('src/components/StudentProfileView.tsx');
 const profilBasligi = oku('src/components/ProfilBasligi.tsx');
 const sayfa = oku('src/components/sosyal/SosyalProfilSayfasi.tsx');
@@ -1675,34 +1681,48 @@ test('Başvurularım sağ sütundan kalktı ama yolu duruyor', () => {
   assert.match(app, /setActiveTab\('applications'\);\n\s*setActiveSubTab\(altSekme \?\? 'all'\);/);
 });
 
-test('ziyaretçi dalı portfolyo üst satırını ve CV alanını DOM’a hiç sokmuyor', () => {
+test('ziyaretçi dalı portfolyo satırını ve CV alanını DOM’a hiç sokmuyor', () => {
   /*
-    Dişli menüsü, "Paylaş" düğmesi ve sahibin kendi listeleri
-    `PortfolyoUstSatiri` içinde; o bileşen sayfanın SAHİP dalında, yani
-    `if (!sahibiMi) return <GuvenliEkran/>` satırından SONRA çiziliyor.
-    Ziyaretçi dalı çok daha yukarıda dönüyor ve o dala hiç ulaşmıyor —
-    gizlenmiş bir menü klavyeyle bulunur, çizilmeyen menü bulunmaz.
+    Dişli menüsü, "Paylaş" düğmesi ve sahibin kendi listeleri artık sağ
+    sütunda değil, sol sütundaki kimlik kartında çiziliyor. Veri ve
+    eylemler yine bu sayfadan çıkıyor: `onPortfolyoSatiri` nesnesi bir
+    effect'te kuruluyor ve o effect `sahibiMi` kapısını kendi içinde
+    çekiyor — sahibi olmayan (ya da satırı gelmeyen) durumda dışarı
+    `null` gidiyor, kart ne sayı ne eylem çiziyor. Gizlenmiş bir menü
+    klavyeyle bulunur, çizilmeyen menü bulunmaz.
+
+    Effect'in kapısı çizim dalındaki `if (!sahibiMi) return
+    <GuvenliEkran/>` satırıyla AYNI değişkeni okuyor; ikinci bir
+    sahiplik hesabı yok. Ziyaretçi dalı çizimde çok daha yukarıda dönüyor.
 
     CV kartı, profil tamamlanma oranı ve düzenleme alanları
     `StudentProfileView` içinde ve o bileşen sosyal ağaçta hiç geçmiyor:
     ziyaretçi görünümü `SosyalProfilGorunumu` ile çiziliyor.
   */
   const ziyaretciDali = sayfa.indexOf('if (ziyaretciYolu) {');
-  const sahipDali = sayfa.indexOf('if (!sahibiMi) {');
-  const ustSatirCagrisi = sayfa.indexOf('<PortfolyoUstSatiri');
-  assert.ok(ziyaretciDali > 0 && sahipDali > 0 && ustSatirCagrisi > 0);
+  const sahipDali = sayfa.indexOf('if (!sahibiMi) {\n    return <GuvenliEkran');
+  assert.ok(ziyaretciDali > 0 && sahipDali > 0);
   assert.ok(ziyaretciDali < sahipDali, 'ziyaretçi dalı sahip dalından önce dönmeli');
-  assert.ok(sahipDali < ustSatirCagrisi, 'üst satır sahip dalından sonra çiziliyor');
+
+  /* Satır nesnesi yalnız sahip kapısının arkasından çıkıyor; kapı dışına `null`. */
+  assert.match(
+    sayfa,
+    /if \(!sahibiMi\) \{\n\s*onPortfolyoSatiri\(null\);\n\s*return;\n\s*\}\n\s*onPortfolyoSatiri\(\{/,
+  );
+  /* Sağ sütunda üst satır artık çizilmiyor. */
+  assert.doesNotMatch(sayfa, /<PortfolyoUstSatiri/);
 
   /* Ziyaretçiye açıkça `sahibiMi={false}` geçiyor; varsayılana bırakılmıyor. */
   assert.match(sayfa, /<SosyalProfilGorunumu\n\s*profil=\{ziyaretciProfili\}\n\s*sahibiMi=\{false\}/);
 
-  /* Sosyal ağaçta CV/profil düzenleme bileşenlerinin adı bile geçmiyor. */
-  for (const kaynak of [sayfa, gorunum, ustSatir]) {
+  /*
+    Sosyal ağaçta CV/profil düzenleme bileşenlerinin adı bile geçmiyor —
+    satır "yukarı" verilirken de: prop ve geri çağrı adlarında kartın adı
+    yok, kart sosyal dosyayı bilir, tersi olmaz.
+  */
+  for (const kaynak of [sayfa, gorunum]) {
     assert.doesNotMatch(kaynak, /StudentProfileView|CvAlani|CvPage|ProfilBasligi/);
   }
-  /* Üst satır bir `sahibiMi` bayrağı ALMIYOR: sınır çağıranda, burada değil. */
-  assert.doesNotMatch(ustSatir, /sahibiMi\?:/);
 });
 
 test('ziyaretçi görünümü iki sütun, ızgara sahibin ekranıyla aynı ölçüde', () => {
@@ -1738,6 +1758,78 @@ test('ziyaretçi görünümü iki sütun, ızgara sahibin ekranıyla aynı ölç
 
   /* Sol sütun yalnız herkese açık alanlar: sahibin üst satırı burada yok. */
   assert.doesNotMatch(gorunum, /PortfolyoUstSatiri/);
+});
+
+test('beş sayaç kimlik kartında tek şeritte; sağ sütun doğrudan ızgarayla başlıyor', () => {
+  /*
+    "N Paylaşım · N Bağlantı", "Paylaş" ve dişli sağ sütunun üstünde
+    AYRI bir satırdı; sol kart zaten üç sayaç ve bir eylem satırı
+    çiziyordu — aynı ekranda iki sayaç şeridi, iki eylem bölgesi. Beşi
+    tek şeride indi ve beşi de aynı öğe (`StatItem`): sağ sütundaki
+    satır içi "sayı etiket" biçimi karta taşınmadı.
+
+    Veri yolu TEK: kart sosyal veri çekmiyor, panel `onPortfolyoSatiri`
+    ile yukarı veriyor (App → profil ekranı → kart). Bağlantı sayacı
+    yine gerçek `<a href="/baglantilar">`.
+  */
+  const serit = govdeAl(profilBasligi, 'className={`grid ${sosyalHucre', '</div>');
+  assert.match(serit, /'grid-cols-3' : 'grid-cols-5'/);
+  for (const etiket of ['kaydedilen', 'başvuru', 'mülakat', 'paylaşım', 'bağlantı']) {
+    assert.match(serit, new RegExp(`<StatItem[^>]*etiket="${etiket}"`), `${etiket} sayacı şeritte`);
+  }
+  assert.ok(
+    serit.indexOf('etiket="mülakat"') < serit.indexOf('etiket="paylaşım"') &&
+      serit.indexOf('etiket="paylaşım"') < serit.indexOf('etiket="bağlantı"'),
+    'sosyal ikili öğrenci üçlüsünden sonra',
+  );
+  assert.match(serit, /href="\/baglantilar"/);
+  assert.match(sayacOgesi, /<a\n\s*href=\{href\}/);
+  /*
+    Sağ sütunda satır yok: ne içe aktarma ne bileşen çağrısı ne panel
+    iskeletinde sayaç çubuğu. (Ad yorumda geçiyor: neyin nereye gittiği
+    orada yazılı.)
+  */
+  assert.doesNotMatch(sayfa, /<PortfolyoUstSatiri|from '\.\/PortfolyoUstSatiri'/);
+  const panelIskeleti = govdeAl(sayfa, "kip === 'panel' ? (", ') : (');
+  assert.doesNotMatch(panelIskeleti, /h-5 w-24/);
+  assert.match(panelIskeleti, /<PaylasimIzgarasi paylasimlar=\{\[\]\} durum="yukleniyor" gorunum="sade" \/>/);
+  /* Tek yol: panel → App state → profil ekranı → kart. */
+  assert.match(app, /onPortfolyoSatiri=\{setSosyalPortfolyoSatiri\}/);
+  assert.match(app, /sosyalPortfolyoSatiri=\{sosyalPortfolyoSatiri\}/);
+  assert.match(
+    ogrenciProfili,
+    /portfolyo=\{sosyalPortfolyo \? \{ satir: sosyalPortfolyoSatiri \} : undefined\}/,
+  );
+  assert.doesNotMatch(profilBasligi, /sosyalSayaclariGetir|kendiSosyalProfiliGetir|supabase/);
+  /* Dişli menüsü karta olduğu gibi geçiyor; satırları burada seçilmiyor. */
+  assert.match(profilBasligi, /<ProfilAyarMenusu \{\.\.\.satir\.menu\} \/>/);
+});
+
+test('sosyal satır yokken kartta Paylaş ve dişli çizilmiyor, sayı uydurulmuyor', () => {
+  /*
+    Üç hâl, üç ayrı çizim: satır henüz okunmadıysa iki hücre iskelet;
+    satır gelmediyse ya da sayaç RPC'si boş/hatalı döndüyse hücrelerde
+    kısa durum cümlesi ve eylem alanında ne "Paylaş" ne dişli; satır
+    varsa sayılar. Hiçbir dalda 0 ya da tire yazılmıyor — "sunucu
+    vermedi" ile "gerçekten sıfır" aynı şey değil.
+
+    "Paylaş" eylemi nesneye yalnız iki sunucu önkoşulu sağlanınca giriyor;
+    kart ikinci bir koşul kurmuyor, eylemi olmayan düğmeyi çizmiyor.
+  */
+  assert.match(profilBasligi, /\{satir && \(\n\s*<div className="flex items-center justify-end gap-2">/);
+  assert.match(profilBasligi, /\{satir\.onPaylasimOlustur && \(/);
+  assert.match(profilBasligi, /sosyalHucre === 'hazir' && satir\?\.sayaclar && \(/);
+  assert.match(profilBasligi, /Paylaşım ve bağlantı sayısı alınamadı/);
+  assert.doesNotMatch(profilBasligi, /deger=\{0\}|etiket="paylaşım" deger=\{0\}|\?\? 0/);
+  assert.match(profilBasligi, /<SayacIskeleti \/>\n\s*<SayacIskeleti \/>/);
+  /* Paneldeki kapı: yüklenirken `undefined`, sahibi değilse `null`, eylem koşullu. */
+  assert.match(sayfa, /if \(profilDurumu === 'yukleniyor'\) \{\n\s*onPortfolyoSatiri\(undefined\);/);
+  assert.match(
+    sayfa,
+    /onPaylasimOlustur: yayindaMi && alaniVarMi \? sabitEylemler\.paylasimOlustur : undefined,/,
+  );
+  /* Satır gelmediğinde sağ sütundaki dürüst hata kutusu duruyor. */
+  assert.match(sayfa, /if \(gomulu\) \{[\s\S]{0,200}?<SosyalProfilHazirDegil/);
 });
 
 test('alt çubuktaki Profil birleşik ekranın kendi adresine gidiyor', () => {
@@ -1845,8 +1937,13 @@ test('tek düzenleme ekranı, iki ayrı bölüm, iki ayrı kayıt', () => {
   /* Hata satırı bölümün kendi formunun içinde; ekran düzeyinde şerit yok. */
   assert.match(duzenleme, /\{kayitHatasi && <KayitHatasi mesaj=\{kayitHatasi\} \/>\}/);
   assert.doesNotMatch(ogrenciProfili, /KayitHatasi|SosyalHata/);
-  /* Dişli artık düzenlemeye ve fotoğrafa götürmüyor. */
-  assert.doesNotMatch(ustSatir, /onDuzenle|onFotograf/);
+  /*
+    Dişli artık düzenlemeye ve fotoğrafa götürmüyor: karta giden satırın
+    `menu` alanı `Pick` ile yalnız portfolyo satırlarını taşıyor.
+  */
+  const menuTipi = govdeAl(sayfa, 'menu: Pick<', '>;');
+  assert.doesNotMatch(menuTipi, /onDuzenle|onFotograf/);
+  assert.match(menuTipi, /'onGorunurluk'/);
   /* Sosyal panelin tek çağrısı App'te ve düzenleme kipinde. */
   assert.match(app, /gomuluKip="duzenleme"/);
 });
@@ -1887,7 +1984,9 @@ test('arama en az üç harf istiyor ve profile_id kullanmıyor', () => {
   assert.doesNotMatch(yorumsuz(arama), /profilId|profile_id/);
   assert.doesNotMatch(yorumsuz(sorgular), /profilId: String\(satir\.profile_id\)/);
   /* Kutu sahibin dalında: ziyaretçi bu koda hiç ulaşmıyor. */
-  assert.ok(sayfa.indexOf('if (!sahibiMi) {') < sayfa.indexOf('<KullaniciArama'));
+  assert.ok(
+    sayfa.indexOf('if (!sahibiMi) {\n    return <GuvenliEkran') < sayfa.indexOf('<KullaniciArama'),
+  );
   /*
     Yorumsuz kaynak: gerekçe yazısı sınırın nerede olduğunu anlatmak için
     `sahibiMi` adını anmak zorunda; bayrak olarak ALINMIYOR.

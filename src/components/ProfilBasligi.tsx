@@ -1,8 +1,10 @@
 import React from 'react';
-import { Check, ChevronRight, Plus } from 'lucide-react';
+import { Check, ChevronRight, ImagePlus, Plus } from 'lucide-react';
 import { adYazimi } from '../lib/ad';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
-import { Button, Card, ProfileSectionGroup, ProfileSectionRow, StatItem } from '../ui';
+import { ProfilAyarMenusu } from './sosyal/ProfilAyarMenusu';
+import type { PortfolyoSatiri } from './sosyal/SosyalProfilSayfasi';
+import { Button, Card, ProfileSectionGroup, ProfileSectionRow, Skeleton, StatItem } from '../ui';
 
 /**
  * Profil başlığı — öğrencinin kişisel kontrol paneli.
@@ -214,7 +216,41 @@ interface Props {
   onKaydedilenlere?: () => void;
   onBasvurulara?: () => void;
   onMulakatlara?: () => void;
+  /**
+   * SOSYAL PORTFOLYO SATIRI — İKİ SAYAÇ, "PAYLAŞ" VE DİŞLİ
+   *
+   * Sayaçlar ("Paylaşım", "Bağlantı"), birincil "Paylaş" ve dişli menüsü
+   * `/cv` ekranının SAĞ sütununun üstünde duruyordu; artık bu kartın
+   * içinde. Veri ve eylemler yine sağ sütundaki portfolyo panelinden
+   * geliyor — kart sosyal veriyi kendisi çekmiyor ve sahiplik kararını
+   * kendisi vermiyor; nesne ancak panelin sahip dalından geçince
+   * doluyor. Kalıp `sosyalAvatarYolu` ile aynı.
+   *
+   * Dış prop VERİLMEZSE (panel yok) sosyal hücreler ve eylemler HİÇ
+   * çizilmiyor: olmayan bir özelliğe boş hücre ayırmak, onu varmış gibi
+   * göstermek olurdu. Verilirse iç değerin üç hâli var:
+   *   `undefined`  satır henüz okunmadı → iki hücre iskelet
+   *   `null`       satır gelmedi → hücrede kısa durum metni; düğme yok
+   *   nesne        sayılar ve eylemler
+   *
+   * Sıfır UYDURULMUYOR: sayaç RPC'si satır döndürmediyse (`sayaclar`
+   * null ya da `sayacDurumu` 'hata') sayı çizilmiyor, yerine durum metni
+   * geçiyor — sağ sütunda dün "Sayaçlar şu anda alınamadı." ne idiyse
+   * burada o.
+   */
+  portfolyo?: { satir: PortfolyoSatiri | null | undefined };
 }
+
+/**
+ * Sosyal hücrenin iskeleti: `StatItem` ölçüsünde (sayı satırı + etiket
+ * satırı) ki satır gelince şerit zıplamasın.
+ */
+const SayacIskeleti: React.FC = () => (
+  <span aria-hidden className="block min-w-0 py-0.5">
+    <Skeleton className="mx-auto h-6 w-8" />
+    <Skeleton className="mx-auto mt-1.5 h-3 w-12" />
+  </span>
+);
 
 export const ProfilBasligi: React.FC<Props> = ({
   ad,
@@ -235,7 +271,27 @@ export const ProfilBasligi: React.FC<Props> = ({
   onKaydedilenlere,
   onBasvurulara,
   onMulakatlara,
-}) => (
+  portfolyo,
+}) => {
+  /*
+    Sosyal hücrelerin dört hâli tek yerde karara bağlanıyor; JSX'te iç
+    içe üçlü koşul yerine tek bir ad okunuyor.
+
+    'yok'        panel verilmemiş — hücre de düğme de yok
+    'yukleniyor' satır ya da sayaç RPC'si henüz dönmedi — iskelet
+    'hazir'      iki sayı
+    'alinamadi'  satır gelmedi ya da RPC boş/hatalı — durum cümlesi
+  */
+  const sosyalHucre: 'yok' | 'yukleniyor' | 'hazir' | 'alinamadi' = !portfolyo
+    ? 'yok'
+    : portfolyo.satir === undefined || portfolyo.satir?.sayacDurumu === 'yukleniyor'
+      ? 'yukleniyor'
+      : portfolyo.satir?.sayacDurumu === 'hazir' && portfolyo.satir.sayaclar
+        ? 'hazir'
+        : 'alinamadi';
+  const satir = portfolyo?.satir ?? null;
+
+  return (
     /*
     Bloklar arası boşluk mobilde 16'dan 12 piksele indi. Kartta yedi blok
     var; her boşluktan kazanılan 4 piksel, altındaki başvuru bölümünü 24
@@ -254,7 +310,22 @@ export const ProfilBasligi: React.FC<Props> = ({
     sütunun kendi `space-y`si veriyor.
   */
   <Card className="space-y-3 p-4 sm:space-y-4 sm:p-6">
-    <div className="flex items-center gap-4 sm:gap-8">
+    {/*
+      FOTOĞRAF VE AD AYNI SATIRDA, SAYAÇLAR ALTTA TAM GENİŞLİKTE
+
+      Sayaç şeridi fotoğrafın SAĞINDA duruyordu ve üç hücreydi. İki
+      sosyal hücre (paylaşım, bağlantı) aynı şeride eklenince beş hücre
+      oldu ve fotoğrafın yanına sığmıyor. Sınıf değerlerinden hesap
+      (tarayıcıda ölçülmedi): geniş ekranda `Halka` 96 + 2×6 = 108
+      piksel, fotoğrafla şerit arası `sm:gap-8` 32 piksel, şeridin
+      İÇİNDEKİ dört `sm:gap-8` aralığı 128 piksel — beş hücre daha
+      çizilmeden 268 piksel gidiyor ve sol sütun sayfanın 12'de 4'ü.
+      Etiketleri kısaltmak ya da kırpmak yerine şerit kendi satırına indi
+      ve kartın tam genişliğini alıyor; ad ile okul satırı fotoğrafın
+      yanındaki boşluğa çıktı. Kart bir satır uzamadı: ad bloğu zaten
+      bir satırdı, yalnız yer değiştirdi.
+    */}
+    <div className="flex items-center gap-4">
       {/*
         KAMERA DÜĞMESİ KALDIRILDI — TEK FOTOĞRAF, TEK YÜKLEME YERİ
 
@@ -285,35 +356,76 @@ export const ProfilBasligi: React.FC<Props> = ({
         />
       </Halka>
 
-      {/*
-        SÜREÇ ÜÇLÜSÜ
-
-        Eskiden "başvuru / beceri / profil" duruyordu. "Beceri" öğrencinin
-        sürecine dair bir şey söylemiyor (kaç beceri girdiğini zaten
-        kendisi biliyor) ve alttaki şeritle çelişiyordu; "profil" yüzdesi
-        de halkanın tekrarıydı.
-
-        Üçü de aynı hikâyenin adımları: baktım → başvurdum → çağrıldım.
-      */}
-      <div className="flex-1 flex items-center justify-around sm:justify-start sm:gap-8">
-        <StatItem deger={kaydedilenSayisi} etiket="kaydedilen" onClick={onKaydedilenlere} />
-        <StatItem deger={basvuruSayisi} etiket="başvuru" onClick={onBasvurulara} />
-        <StatItem deger={mulakatSayisi} etiket="mülakat" onClick={onMulakatlara} />
+      <div className="min-w-0 flex-1 space-y-0.5">
+        <h1 className="text-base font-bold text-gray-900">{adYazimi(ad)}</h1>
+        {/*
+          Sınıf ayrı satırdaydı; okul satırının devamı olduğu için tek
+          satırda birleşti. Kart yüksekliğinden bir satır kazanmak,
+          altındaki başvuru bölümünü o kadar yukarı çekiyor.
+        */}
+        <p className="text-sm text-gray-500">
+          {okul || 'Okulun eksik'}
+          {bolum ? ` · ${bolum}` : ''}
+          {sinif ? ` · ${sinif}` : ''}
+        </p>
       </div>
     </div>
 
-    <div className="space-y-0.5">
-      <h1 className="text-base font-bold text-gray-900">{adYazimi(ad)}</h1>
-      {/*
-        Sınıf ayrı satırdaydı; okul satırının devamı olduğu için tek
-        satırda birleşti. Kart yüksekliğinden bir satır kazanmak,
-        altındaki başvuru bölümünü o kadar yukarı çekiyor.
-      */}
-      <p className="text-sm text-gray-500">
-        {okul || 'Okulun eksik'}
-        {bolum ? ` · ${bolum}` : ''}
-        {sinif ? ` · ${sinif}` : ''}
-      </p>
+    {/*
+      SÜREÇ ÜÇLÜSÜ + SOSYAL İKİLİ, TEK ŞERİT
+
+      Eskiden "başvuru / beceri / profil" duruyordu. "Beceri" öğrencinin
+      sürecine dair bir şey söylemiyor (kaç beceri girdiğini zaten
+      kendisi biliyor) ve alttaki şeritle çelişiyordu; "profil" yüzdesi
+      de halkanın tekrarıydı.
+
+      Üçü aynı hikâyenin adımları: baktım → başvurdum → çağrıldım. Sosyal
+      ikili de aynı şeritte ve aynı tipografide: "Paylaşım" ve "Bağlantı"
+      sağ sütunda AYRI bir ölçüyle (satır içi sayı + etiket) duruyordu;
+      aynı ekranda iki sayaç biçimi vardı. Beşi de `StatItem`.
+
+      Sütun sayısı sabit sınıf: `grid-cols-3` / `grid-cols-5`. Tailwind
+      birleştirilmiş dizeyi görmüyor; ikisi de tam adıyla yazılı.
+
+      "Paylaşım" tıklanabilir değil: gittiği yer bu ekranın kendisi (sağ
+      sütundaki ızgara); "Bağlantı" ise gerçek `<a href="/baglantilar">`
+      — orta tuş ve yeni sekme çalışıyor. Ziyaretçi görünümündeki
+      kural burada söz konusu değil: bu kart yalnız sahibin ekranında.
+    */}
+    <div
+      className={`grid ${sosyalHucre === 'yok' ? 'grid-cols-3' : 'grid-cols-5'} items-start`}
+      aria-busy={sosyalHucre === 'yukleniyor' || undefined}
+    >
+      <StatItem deger={kaydedilenSayisi} etiket="kaydedilen" onClick={onKaydedilenlere} />
+      <StatItem deger={basvuruSayisi} etiket="başvuru" onClick={onBasvurulara} />
+      <StatItem deger={mulakatSayisi} etiket="mülakat" onClick={onMulakatlara} />
+      {sosyalHucre === 'yukleniyor' && (
+        <>
+          <SayacIskeleti />
+          <SayacIskeleti />
+        </>
+      )}
+      {sosyalHucre === 'hazir' && satir?.sayaclar && (
+        <>
+          <StatItem deger={satir.sayaclar.paylasim} etiket="paylaşım" />
+          <StatItem
+            deger={satir.sayaclar.baglanti}
+            etiket="bağlantı"
+            href="/baglantilar"
+            onNavigate={satir.onNavigate}
+          />
+        </>
+      )}
+      {sosyalHucre === 'alinamadi' && (
+        /*
+          Satır gelmedi ya da sayaç RPC'si boş/hatalı döndü: iki hücrenin
+          yerine tek durum cümlesi. Sıfır ya da tire yazmak, "sunucu
+          vermedi"yi "gerçekten sıfır" gibi gösterirdi.
+        */
+        <p className="col-span-2 self-center px-1 text-center text-[11px] leading-tight text-gray-600">
+          Paylaşım ve bağlantı sayısı alınamadı
+        </p>
+      )}
     </div>
 
     {/*
@@ -401,6 +513,42 @@ export const ProfilBasligi: React.FC<Props> = ({
     )}
 
     {/*
+      "PAYLAŞ" VE DİŞLİ — KARTIN EYLEM ALANINDA
+
+      İkisi sağ sütunun üstündeydi; kartın altındaki düğme satırıyla aynı
+      ekranda iki ayrı eylem bölgesi vardı. Aynı yükseklik (`Button` md =
+      `min-h-12`, dişli 44 piksel ve satırda ortalı) ve aynı köşe
+      (`rounded-xl`) — dördü tek ailenin düğmeleri.
+
+      YALNIZ SATIR VARKEN: sosyal satır gelmediyse (`null`) ne "Paylaş" ne
+      dişli çiziliyor; sebep sağ sütundaki hata kutusunda yazıyor. Satır
+      henüz okunmadıysa da çizilmiyor — eylemi olmayan bir düğme, basınca
+      hiçbir şey yapmayan bir düğmedir.
+
+      "PAYLAŞ" YALNIZ EYLEMİ VARKEN: `onPaylasimOlustur` iki sunucu
+      önkoşulu (`yayinda_mi`, `sector_id`) sağlanmadığında nesnede yok ve
+      kart burada ikinci bir koşul kurmuyor. İkon tek başına bilgi
+      taşımıyor; yanında "Paylaş" yazıyor.
+
+      Dişli `ProfilAyarMenusu` — satırları burada seçilmiyor, nesne
+      olduğu gibi geçiyor.
+    */}
+    {satir && (
+      <div className="flex items-center justify-end gap-2">
+        {satir.onPaylasimOlustur && (
+          <Button
+            onClick={satir.onPaylasimOlustur}
+            className="flex-1"
+            ikon={<ImagePlus aria-hidden className="h-4 w-4 shrink-0" />}
+          >
+            Paylaş
+          </Button>
+        )}
+        <ProfilAyarMenusu {...satir.menu} />
+      </div>
+    )}
+
+    {/*
       CV ANA DÜĞME, DÜZENLE İKİNCİL
 
       İki düğme de gri ve eşit ağırlıktaydı; "Profili düzenle" düz gri
@@ -423,4 +571,5 @@ export const ProfilBasligi: React.FC<Props> = ({
       </Button>
     </div>
   </Card>
-);
+  );
+};

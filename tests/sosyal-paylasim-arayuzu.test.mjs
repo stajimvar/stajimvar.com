@@ -258,7 +258,8 @@ test('fotoğraf yükleme ekranı yalnız sahip dalında; ziyaretçide DOM’a hi
     çiziliyor: ziyaretçi o koda hiç ulaşmıyor. Düğme de görünümde
     koşulun İÇİNDE — CSS ile gizlenmiş bir düğme klavyeyle bulunur.
   */
-  const kapi = sayfa.indexOf('if (!sahibiMi) {');
+  /* Çizim dalındaki kapı; paneldeki effect aynı `sahibiMi`yi daha yukarıda okuyor. */
+  const kapi = sayfa.indexOf('if (!sahibiMi) {\n    return <GuvenliEkran');
   const ekran = sayfa.indexOf('<ProfilFotografiYukleme');
   assert.ok(kapi > 0 && ekran > kapi, 'yükleme ekranı sahip kapısından önce çiziliyor');
   /* Menü de sahip dalının içinde; ziyaretçide DOM'a hiç girmiyor. */
@@ -537,7 +538,8 @@ test('kaydetme sayısı hiçbir yerde yok; "kimler beğendi" listesi de yok', ()
 });
 
 test('üç liste ekranı yalnız sahip dalında; ziyaretçide DOM’a hiç girmiyor', () => {
-  const kapi = sayfa.indexOf('if (!sahibiMi) {');
+  /* Çizim dalındaki kapı; paneldeki effect aynı `sahibiMi`yi daha yukarıda okuyor. */
+  const kapi = sayfa.indexOf('if (!sahibiMi) {\n    return <GuvenliEkran');
   const ekran = sayfa.indexOf('<SahipListesi');
   assert.ok(kapi > 0 && ekran > kapi, 'liste ekranı sahip kapısından önce çiziliyor');
 
@@ -551,11 +553,23 @@ test('üç liste ekranı yalnız sahip dalında; ziyaretçide DOM’a hiç girmi
     assert.match(menu, new RegExp(`etiket: '${etiket}'`));
   }
 
-  /* Eylemler yalnız sahip görünümünden geçiyor: sayfada tek bağlama var. */
+  /*
+    Eylemler yalnız sahip görünümünden geçiyor: sayfada tek bağlama var.
+    Gömülü kipte menü artık sağ sütunda değil, sol sütundaki kimlik
+    kartında çiziliyor; eylemler `onPortfolyoSatiri` nesnesinin `menu`
+    alanıyla gidiyor ve o nesne yalnız `sahibiMi` kapısının arkasında
+    kuruluyor. JSX'te ikinci bir `<ProfilAyarMenusu` çağrısı yok.
+  */
   const menuBlogu = govdeAl(gorunum, '<ProfilAyarMenusu', '/>');
   assert.match(menuBlogu, /onBegendiklerim=\{onBegendiklerim\}/);
-  assert.equal((sayfa.match(/onBegendiklerim=/g) ?? []).length, 1);
-  assert.equal((sayfa.match(/onArsiv=/g) ?? []).length, 1);
+  assert.doesNotMatch(sayfa, /<ProfilAyarMenusu/);
+  assert.equal((sayfa.match(/onBegendiklerim: /g) ?? []).length, 1);
+  assert.equal((sayfa.match(/onArsiv: /g) ?? []).length, 1);
+  assert.ok(
+    sayfa.indexOf('if (!sahibiMi) {\n      onPortfolyoSatiri(null);') <
+      sayfa.indexOf('onBegendiklerim: '),
+    'menü eylemleri sahip kapısından sonra bağlanıyor',
+  );
 });
 
 test('listeler OTURUM kimliğiyle; kullanıcı adından kimlik türetilmiyor', () => {

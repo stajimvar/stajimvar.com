@@ -35,7 +35,10 @@ import { GuideHub, GuidePage } from './components/GuidePages';
 import { BasvuruSablonu } from './components/BasvuruSablonu';
 import { SifreYenile } from './components/SifreYenile';
 import { ProfilTamamla } from './components/ProfilTamamla';
-import { SosyalProfilSayfasi } from './components/sosyal/SosyalProfilSayfasi';
+import {
+  SosyalProfilSayfasi,
+  type PortfolyoSatiri,
+} from './components/sosyal/SosyalProfilSayfasi';
 import { BaglantilarSayfasi } from './components/sosyal/BaglantilarSayfasi';
 import { TopluluklarSayfasi } from './components/sosyal/TopluluklarSayfasi';
 import { BolumTalepleri } from './components/yonetim/BolumTalepleri';
@@ -339,6 +342,16 @@ export default function App() {
     bir iş.
   */
   const [sosyalAvatarYolu, setSosyalAvatarYolu] = useState<string | null | undefined>(undefined);
+  /*
+    PORTFOLYO SATIRI DA AYNI YOLDAN: sayaçlar, "Paylaş" ve dişli menüsü
+    sol sütundaki kimlik kartında çiziliyor ama verisi ve eylemleri sağ
+    sütundaki panelden geliyor. `undefined` = henüz okunmadı, `null` =
+    satır gelmedi ya da sahibi değil (kart ne sayı ne eylem çiziyor).
+    Yalnız `/cv`nin portfolyo kipi yazıyor; düzenleme kipi dokunmuyor.
+  */
+  const [sosyalPortfolyoSatiri, setSosyalPortfolyoSatiri] = useState<
+    PortfolyoSatiri | null | undefined
+  >(undefined);
   const globalListings = useGlobalListingPreferences(student?.preferredJobCountries ?? []);
   // İlanlar artık Supabase'den geliyor. Boş başlıyor; yükleme durumu aşağıda.
   const [allListings, setAllListings] = useState<InternshipListing[]>([]);
@@ -1502,6 +1515,7 @@ export default function App() {
                   sayının gittiği yerde aynı sayı durmalı.
                 */
                 sosyalAvatarYolu={sosyalAvatarYolu}
+                sosyalPortfolyoSatiri={sosyalPortfolyoSatiri}
                 onBasvurulariAc={(altSekme) => {
                   /*
                     Birleşik ekran KENDİ ADRESİNDE de açılıyor (`/cv`).
@@ -1541,6 +1555,14 @@ export default function App() {
                       aynı satırı iki kez okurdu.
                     */
                     onAvatarYolu={setSosyalAvatarYolu}
+                    /*
+                      Sayaçlar, "Paylaş" ve dişli de aynı yoldan sol
+                      sütuna: ikinci bir veri yolu ya da ikinci bir
+                      sahiplik dalı yazılmadı, panel sahip dalından geçen
+                      satırı yukarı veriyor. `setState` kimliği sabit;
+                      paneldeki effect bu yüzden döngüye girmiyor.
+                    */
+                    onPortfolyoSatiri={setSosyalPortfolyoSatiri}
                   />
                 }
                 /*

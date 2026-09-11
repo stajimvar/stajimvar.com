@@ -50,6 +50,7 @@ import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
 import { Button, Card, IKON_KUTUSU, IKON_TONU } from '../ui';
 import { ODAK_HALKASI } from '../lib/renk-token';
 import { ProfilBasligi, ProfilBolumListesi, type EksikAdim, type OneCikan } from './ProfilBasligi';
+import type { PortfolyoSatiri } from './sosyal/SosyalProfilSayfasi';
 import { AutocompleteField } from './AutocompleteField';
 import { PredictiveInput } from './PredictiveInput';
 import {
@@ -165,6 +166,19 @@ interface StudentProfileViewProps {
    * `avatarUrl` yedeğine düşüyor; ikisi de yoksa iskelet çiziliyor.
    */
   sosyalAvatarYolu?: string | null;
+  /**
+   * SOSYAL PORTFOLYO SATIRI — KİMLİK KARTINDAKİ SAYAÇLAR VE EYLEMLER
+   *
+   * "N Paylaşım · N Bağlantı", birincil "Paylaş" ve dişli menüsü sağ
+   * sütunun üstünden sol sütundaki kimlik kartına indi. Veri ve eylemler
+   * yine sağdaki portfolyo panelinden geliyor (`sosyalAvatarYolu` ile
+   * aynı kalıp): bu ekran ne sosyal veri çekiyor ne sahiplik kararı
+   * veriyor. `undefined` = henüz okunmadı, `null` = satır gelmedi.
+   *
+   * Yalnız `sosyalPortfolyo` verilmişken karta geçiyor: panel yokken
+   * kart iki boş hücreyi sonsuza kadar iskelet çizerdi.
+   */
+  sosyalPortfolyoSatiri?: PortfolyoSatiri | null;
   /** İlanlar sekmesindeki "Kaydettiklerim" kategorisine geçiş. */
   onKaydedilenlere?: () => void;
   /*
@@ -372,6 +386,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   sosyalPortfolyo,
   sosyalProfilDuzenleme,
   sosyalAvatarYolu,
+  sosyalPortfolyoSatiri,
   onKaydedilenlere,
   onSubTabChange,
   onLogout,
@@ -942,6 +957,13 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               tazelenirdi.
             */
             sosyalAvatarYolu={sosyalAvatarYolu}
+            /*
+              Sayaçlar ve eylemler de aynı panelden. Panel yoksa prop hiç
+              geçmiyor: kart o zaman sosyal hücre ve düğme ÇİZMİYOR —
+              olmayan bir panele iskelet ayırmak, onu varmış gibi
+              göstermek olurdu.
+            */
+            portfolyo={sosyalPortfolyo ? { satir: sosyalPortfolyoSatiri } : undefined}
             okul={student.university}
             bolum={student.department}
             sinif={student.gradeLevel}
