@@ -742,6 +742,17 @@ test('seride parmakla gezinme: oklar dar ekranda görünmez ama ağaçta; kaydı
   assert.match(kaynak, /onClick=\{oncekiKare\}/);
   assert.match(kaynak, /onClick=\{sonrakiKare\}/);
   assert.match(kaynak, /if \(karar === 'sonraki'\) sonrakiKare\(\);\s*else if \(karar === 'onceki'\) oncekiKare\(\);/);
+  /*
+    Çizim TEK şerit: konum `indeks` ile `kayma`nın toplamı, yani klavye,
+    ok ve parmak aynı dönüşümü sürüyor. Şeritte yalnız mevcut ± 1 slayt
+    gerçek görsel taşıyor (tek `<img>` döneminde parmak kayarken yanında
+    boş koyu alan kalıyordu; on görseli birden çözmek de gerekmiyor).
+  */
+  assert.ok(
+    kaynak.includes('translateX(calc(${-indeks * 100}% + ${kayma}px))') &&
+      kaynak.includes('const pencerede = Math.abs(sira - indeks) <= 1;'),
+    'şerit dönüşümü ya da üçlü pencere yok',
+  );
   /* Yalnız dokunma; fare dalı yok, oktan başlayan dokunma yok. */
   assert.match(kaynak, /olay\.pointerType !== 'touch' \|\| toplam <= 1\) return;/);
   assert.match(kaynak, /\.closest\('button'\)\) return;/);

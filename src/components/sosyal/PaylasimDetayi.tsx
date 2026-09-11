@@ -210,21 +210,25 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
     ok görünür; oktan başlayıp kayan parmak hem okun `click`ini hem
     kaydırma kararını üretip iki kare atlardı.
 
-    GEÇİŞ ANİMASYONU YALNIZ YERİNE DÖNÜŞTE (`yumusakDonus`)
+    GEÇİŞ ANİMASYONU PARMAK SÜRERKEN KAPALI, BAŞKA HER ZAMAN AÇIK
+    (`parmakSuruyor`)
 
-    Parmak sürerken görsel gecikmesiz izliyor (geçiş sınıfı yok); eşiğin
-    altında bırakınca 200 ms'de yerine dönüyor. Kare DEĞİŞTİĞİNDE
-    animasyon YOK: kayma -60 px'ten 0'a animasyonla dönseydi YENİ
-    fotoğraf soldan girer gibi görünürdü, oysa sağdan gelmesi gerekir.
+    Parmak sürerken şerit gecikmesiz izliyor (geçiş sınıfı yok);
+    bırakınca sınıf geri geliyor ve şerit 200 ms'de yeni konumuna
+    oturuyor — eşik geçildiyse komşu kareye, geçilmediyse eski yerine.
+    Kare değişiminde animasyon artık İSTENİYOR: tek `<img>` döneminde
+    kayma -60 px'ten 0'a animasyonla dönseydi YENİ fotoğraf soldan girer
+    gibi görünürdü; şeritte böyle bir ters yön yok, çünkü hedef konum
+    (-(i+1)·100%) parmağın zaten gittiği yönde. Klavye ve ok da aynı
+    sınıfla kayıyor: sürükleme yokken sınıf hep var, tek kaynak.
 
-    Bu yüzden geçiş sınıfı "kareyi yeni değiştirdim" diye bir etkiyle
-    KAPATILMIYOR, tersine yalnız yerine dönüş anında AÇILIYOR ve bir
-    sonraki dokunuşta kapanıyor. Etkiyle kapatmak güvenilir değildi:
-    React ayrık olaylardan (pointerup) doğan etkileri boyamadan önce
-    eşzamanlı akıtıyor; iki DOM yazımı tek stil hesabına düşünce tarayıcı
-    "geçiş sınıfı var, transform -60'tan 0'a değişti" görüp animasyonu
-    yine başlatırdı. Kare zamanlayıcısı bu dosyada yasak (açılış odağı
-    testi), zorla yeniden akış ise ölçüsüz bir hile olurdu.
+    Bayrak pointerdown'da kapanıp pointerup/cancel'da açılıyor; etkiyle
+    ya da kare zamanlayıcısıyla değil (açılış odağı testi: bu dosyada
+    kare zamanlayıcısı yasak). pointerup'taki üç yazım (kayma 0, indeks,
+    bayrak) tek karede boyanıyor; tarayıcı "sınıf var, transform değişti"
+    görüp animasyonu başlatıyor — istenen tam bu. Dikeye dönen ya da hiç
+    kımıldamayan dokunuşta da bayrak açılıyor; yoksa bir sonraki ok tuşu
+    animasyonsuz atlardı.
   */
   const surukleme = React.useRef<{
     kimlik: number;
@@ -233,13 +237,13 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
     yon: 'belirsiz' | 'yatay' | 'dikey';
   } | null>(null);
   const [kayma, setKayma] = React.useState(0);
-  const [yumusakDonus, setYumusakDonus] = React.useState(false);
+  const [parmakSuruyor, setParmakSuruyor] = React.useState(false);
 
   const surukleBasla = (olay: React.PointerEvent<HTMLDivElement>) => {
     if (olay.pointerType !== 'touch' || toplam <= 1) return;
     if ((olay.target as HTMLElement).closest('button')) return;
     surukleme.current = { kimlik: olay.pointerId, x: olay.clientX, y: olay.clientY, yon: 'belirsiz' };
-    setYumusakDonus(false);
+    setParmakSuruyor(true);
   };
 
   const surukleHareket = (olay: React.PointerEvent<HTMLDivElement>) => {
@@ -252,6 +256,7 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
       if (baslangic.yon === 'dikey') {
         /* Sayfa kaydırması: tarayıcı `pan-y` ile devralıyor, biz çekiliyoruz. */
         surukleme.current = null;
+        setParmakSuruyor(false);
         return;
       }
     }
@@ -263,21 +268,21 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
     const baslangic = surukleme.current;
     if (!baslangic || baslangic.kimlik !== olay.pointerId) return;
     surukleme.current = null;
+    setParmakSuruyor(false);
     if (baslangic.yon !== 'yatay') return;
     const karar = gezinmeKarari({ dx: olay.clientX - baslangic.x, indeks, toplam });
     setKayma(0);
     if (karar === 'sonraki') sonrakiKare();
     else if (karar === 'onceki') oncekiKare();
-    else setYumusakDonus(true);
   };
 
-  /* `pointercancel` (tarayıcı hareketi devraldı): kare değişmiyor, görsel yerine dönüyor. */
+  /* `pointercancel` (tarayıcı hareketi devraldı): kare değişmiyor, şerit yerine dönüyor. */
   const surukleIptal = (olay: React.PointerEvent<HTMLDivElement>) => {
     const baslangic = surukleme.current;
     if (!baslangic || baslangic.kimlik !== olay.pointerId) return;
     surukleme.current = null;
     setKayma(0);
-    setYumusakDonus(true);
+    setParmakSuruyor(false);
   };
 
   /*
@@ -501,8 +506,6 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
     }
   };
 
-  const gecerliGorsel = paylasim.gorseller[Math.min(indeks, Math.max(toplam - 1, 0))] ?? null;
-  const gecerliAdres = gecerliGorsel ? (adresler.get(gecerliGorsel.storageYolu) ?? null) : null;
   const tarih = tarihMetni(paylasim.olusturmaAni);
 
   return createPortal(
@@ -589,32 +592,72 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
             </p>
           )}
 
-          {gorselDurumu === 'hazir' && gecerliGorsel && gecerliAdres && (
-            <img
-              src={gecerliAdres}
-              /*
-                `alt` yazarın yazdığı metin. Yazmadıysa BOŞ kalıyor:
-                "paylaşım görseli" gibi bir doldurma, ekran okuyucuya
-                içerik hakkında hiçbir şey söylemeden gürültü üretirdi.
-              */
-              alt={gecerliGorsel.alt ?? ''}
-              width={gecerliGorsel.genislik ?? undefined}
-              height={gecerliGorsel.yukseklik ?? undefined}
-              className={`absolute inset-0 h-full w-full object-cover ${
-                yumusakDonus ? 'transition-transform duration-200 motion-reduce:transition-none' : ''
+          {/*
+            FİLM ŞERİDİ — ÜÇLÜ PENCERE
+
+            Önceki sürümde tek `<img>` parmakla kayıyordu ve yanında boş
+            koyu alan kalıyordu; sonraki fotoğraf ancak bırakınca
+            beliriyordu (telefon ekran görüntüsüyle bildirildi). Şeritte
+            her slayt kabın genişliğinde (`w-full shrink-0`) ve şerit
+            `-indeks·100% + kayma` kadar ötelenmiş: komşu slayt parmakla
+            birlikte giriyor. Yüzde şeridin kendi genişliğine göre; şerit
+            `inset-0` ile kabı doldurduğu için bir slayt = kabın genişliği.
+
+            Yalnız mevcut, önceki ve sonraki slayt gerçek `<img>` taşıyor;
+            ötekiler aynı genişlikte boş yer tutucu. On karelik seride on
+            çözümlenmiş görseli aynı anda DOM'da tutmak gerekmiyor;
+            indirme zaten `useGorselAdresleri`de tek yerde ve burada
+            değişmiyor. Mevcut olmayan slaytlar `aria-hidden`: ekran
+            okuyucu eskisi gibi TEK görsel duyuyor.
+
+            Kanca bütün seriyi birlikte indirdiği için `hazir` durumunda
+            haritada olmayan yol "henüz gelmedi" değil "indirilemedi"
+            demek; o slayt mevcut karedeki cümlenin aynısını gösteriyor,
+            iskelet ya da uydurma görsel değil.
+          */}
+          {gorselDurumu === 'hazir' && toplam > 0 && (
+            <div
+              className={`absolute inset-0 flex ${
+                parmakSuruyor ? '' : 'transition-transform duration-200 motion-reduce:transition-none'
               }`}
-              style={{ transform: `translateX(${kayma}px)` }}
-              draggable={false}
-            />
+              style={{ transform: `translateX(calc(${-indeks * 100}% + ${kayma}px))` }}
+            >
+              {paylasim.gorseller.map((gorsel, sira) => {
+                const pencerede = Math.abs(sira - indeks) <= 1;
+                const adres = pencerede ? (adresler.get(gorsel.storageYolu) ?? null) : null;
+                return (
+                  <div
+                    key={gorsel.storageYolu}
+                    aria-hidden={sira !== indeks || undefined}
+                    className="relative h-full w-full shrink-0"
+                  >
+                    {pencerede && adres && (
+                      <img
+                        src={adres}
+                        /*
+                          `alt` yazarın yazdığı metin. Yazmadıysa BOŞ kalıyor:
+                          "paylaşım görseli" gibi bir doldurma, ekran okuyucuya
+                          içerik hakkında hiçbir şey söylemeden gürültü üretirdi.
+                        */
+                        alt={gorsel.alt ?? ''}
+                        width={gorsel.genislik ?? undefined}
+                        height={gorsel.yukseklik ?? undefined}
+                        className="absolute inset-0 h-full w-full object-cover"
+                        draggable={false}
+                      />
+                    )}
+                    {pencerede && !adres && (
+                      <p className="flex h-full w-full items-center justify-center px-6 text-center text-sm text-slate-200">
+                        Bu görsel açılamadı.
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
 
-          {gorselDurumu === 'hazir' && gecerliGorsel && !gecerliAdres && (
-            <p className="flex h-full w-full items-center justify-center px-6 text-center text-sm text-slate-200">
-              Bu görsel açılamadı.
-            </p>
-          )}
-
-          {gorselDurumu === 'hazir' && !gecerliGorsel && (
+          {gorselDurumu === 'hazir' && toplam === 0 && (
             <p className="flex h-full w-full items-center justify-center px-6 text-center text-sm text-slate-200">
               Bu paylaşımda görsel yok.
             </p>
