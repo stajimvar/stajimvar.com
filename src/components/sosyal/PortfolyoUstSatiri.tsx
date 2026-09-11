@@ -15,6 +15,19 @@ import { BaglantiSayaci, Sayac } from './SosyalProfilGorunumu';
 /**
  * PORTFOLYO ÜST SATIRI — BİRLEŞİK EKRANIN SAĞ SÜTUN BAŞLIĞI
  *
+ * DÜZENLEME VE FOTOĞRAF SATIRLARI ARTIK BU MENÜDE DEĞİL
+ * -----------------------------------------------------
+ * Dişli menüsünde üç satır vardı: sosyal alanları ayrı bir ekranda açan
+ * "Sosyal profili düzenle" ile profil fotoğrafını değiştirme/kaldırma.
+ * Üçü de profilin KENDİSİNİ değiştiriyor ve profili değiştirmenin artık
+ * tek bir yeri var: `/cv` düzenleme ekranının sosyal bölümü. Satırlar
+ * orada bırakılsaydı aynı işin iki kapısı olurdu ve kullanıcı bir alanı
+ * hangisinde arayacağını ancak deneyerek bulurdu.
+ *
+ * Menüde kalanlar portfolyonun kendisine ait: bağlantıyı paylaşmak,
+ * görünürlük ve üç liste. `ProfilAyarMenusu` o satırları koşullu
+ * çiziyor; eylem verilmediğinde diziye hiç girmiyorlar.
+ *
  * NEDEN AYRI BİR BAŞLIK
  * ---------------------
  * `SosyalProfilGorunumu` kendi başlığında fotoğrafı, adı, kullanıcı adını,
@@ -49,19 +62,30 @@ import { BaglantiSayaci, Sayac } from './SosyalProfilGorunumu';
 interface UstSatirProps {
   sayaclar: SosyalSayaclar | null;
   sayacDurumu: 'yukleniyor' | 'hazir' | 'hata';
-  /** `yayinda_mi`: "Paylaş" düğmesinin önkoşulu. */
+  /**
+   * `yayinda_mi` — bugünkü anlamıyla PROFİL GÖRÜNÜRLÜĞÜ (20260926040000).
+   *
+   * Dişli menüsündeki görünürlük satırının yönünü belirliyor. "Paylaş"
+   * düğmesinin de önkoşulu ama bu ayrı bir sebeple: sunucudaki
+   * `sosyal_paylasim_baslat` (20260924030000) hâlâ `yayinda_mi` VE
+   * `sector_id is not null` arıyor.
+   */
   yayindaMi: boolean;
-  avatarVarMi: boolean;
-  /** Yeni paylaşım ekranı. Topluluğa katılmamış kullanıcıda çizilmiyor. */
+  /**
+   * `social_profiles.sector_id` dolu mu — "Paylaş"ın ikinci önkoşulu.
+   *
+   * Bölümü katalogla eşleşmeyen kullanıcının alanı NULL kalıyor
+   * (20260926050000). Ona düğme çizmek, her basışta 'toplulukta-degil'
+   * ile reddedilen bir eylem sunmak olurdu. Düğmenin neden olmadığını
+   * çağıran taraf yazıyor: sebep profil verisinde, burada değil.
+   */
+  alaniVarMi: boolean;
+  /** Yeni paylaşım ekranı. Alanı olmayan kullanıcıda çizilmiyor. */
   onPaylasimOlustur: () => void;
   /** Profil BAĞLANTISINI paylaşma — dişli menüsünde. */
   onProfilBaglantisiPaylas: () => void;
   onGorunurluk: () => void;
   gorunurlukDurumu?: 'bekliyor' | 'gonderiliyor';
-  onDuzenle: () => void;
-  onFotografDegistir: () => void;
-  onFotografKaldir: () => void;
-  fotografDurumu?: 'bekliyor' | 'gonderiliyor';
   onBegendiklerim: () => void;
   onKaydedilenler: () => void;
   onArsiv: () => void;
@@ -72,15 +96,11 @@ export const PortfolyoUstSatiri: React.FC<UstSatirProps> = ({
   sayaclar,
   sayacDurumu,
   yayindaMi,
-  avatarVarMi,
+  alaniVarMi,
   onPaylasimOlustur,
   onProfilBaglantisiPaylas,
   onGorunurluk,
   gorunurlukDurumu = 'bekliyor',
-  onDuzenle,
-  onFotografDegistir,
-  onFotografKaldir,
-  fotografDurumu = 'bekliyor',
   onBegendiklerim,
   onKaydedilenler,
   onArsiv,
@@ -111,18 +131,20 @@ export const PortfolyoUstSatiri: React.FC<UstSatirProps> = ({
 
     <div className="flex items-center gap-1.5">
       {/*
-        PAYLAŞ DÜĞMESİ TOPLULUĞA KATILMIŞ KULLANICIDA
+        PAYLAŞ DÜĞMESİNİN İKİ ÖNKOŞULU SUNUCUDAN
 
-        `sosyal_paylasim_baslat` topluluğa katılmamış kullanıcıyı
-        'toplulukta-degil' ile reddediyor; düğmeyi yine de çizip hatayı
-        sonradan göstermek, her basışta başarısız olan bir eylem sunmak
-        olurdu. Katılmamış kullanıcı bunun yerine aşağıdaki uyarı
-        kutusunu görüyor ve oradaki eylem tam olarak bu düğmenin
-        önkoşulu.
+        `sosyal_paylasim_baslat` (20260924030000) taslağı ancak
+        `yayinda_mi` VE `sector_id is not null` iken açıyor; ikisinden
+        biri eksikken 'toplulukta-degil' ile reddediyor. Düğmeyi yine de
+        çizip hatayı sonradan göstermek, her basışta başarısız olan bir
+        eylem sunmak olurdu.
+
+        Eksikliğin SEBEBİ burada yazılmıyor, çağıran tarafta: iki koşulun
+        cümlesi ayrı ve ikisi de profil verisine bakıyor.
 
         İkon tek başına bilgi taşımıyor: yanında "Paylaş" yazıyor.
       */}
-      {yayindaMi && (
+      {yayindaMi && alaniVarMi && (
         <button type="button" onClick={onPaylasimOlustur} className={BIRINCIL_EYLEM}>
           <ImagePlus aria-hidden className="h-4 w-4" />
           Paylaş
@@ -134,20 +156,6 @@ export const PortfolyoUstSatiri: React.FC<UstSatirProps> = ({
         yayindaMi={yayindaMi}
         onGorunurluk={onGorunurluk}
         gorunurlukDurumu={gorunurlukDurumu}
-        /*
-          "Sosyal profili düzenle" birleşik ekranda MENÜYE girdi.
-
-          Eskiden üst blokta ayrı bir düğmeydi ve menüde bilerek yoktu:
-          aynı işin iki girişi olmasın diye. Birleşik ekranda o üst blok
-          hiç çizilmiyor (kimlik alanları sol sütunda), yani düğmenin evi
-          kalmadı. Menüye TAŞINDI, kopyalanmadı — sağ sütunda ikinci bir
-          giriş yok.
-        */
-        onDuzenle={onDuzenle}
-        onFotografDegistir={onFotografDegistir}
-        avatarVarMi={avatarVarMi}
-        onFotografKaldir={onFotografKaldir}
-        fotografDurumu={fotografDurumu}
         onBegendiklerim={onBegendiklerim}
         onKaydedilenler={onKaydedilenler}
         onArsiv={onArsiv}

@@ -31,11 +31,20 @@ import { ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
  *                    "değiştir" diye bir eylem görmüyor
  *   Profil fotoğrafını kaldır  YALNIZ fotoğraf varken; `avatar_path`i
  *                    null'a çeken gerçek bir sorgu
- *   Profili yayımla / Yayından kaldır  tek kolonu (`yayinda_mi`) yazan
+ *   Profili gizle / Profili herkese aç  tek kolonu (`yayinda_mi`) yazan
  *                    gerçek bir sorgu; çift yönlü olduğu için menüde
- *                    duruyor. Profil sayfasındaki uyarı kutusu yalnız
- *                    yayımlama yönünü sunuyor ve profil yayındayken hiç
- *                    çizilmiyor; yayından kaldırmanın başka girişi yok.
+ *                    duruyor ve başka girişi yok.
+ *
+ * GÖRÜNÜRLÜK SATIRI ÜYELİK DEĞİL
+ * ------------------------------
+ * Satırın etiketi "Topluluğa katıl / Topluluktan ayrıl" idi ve o zaman
+ * doğruydu: `yayinda_mi` üyeliği de anlatıyordu. 20260926040000 üç
+ * kavramı ayırdı — kolon artık yalnız "profilim giriş yapmış herkese açık
+ * mı" demek, üyelik ise `community_members` tablosunda ve kendi ekranında
+ * (`/topluluklar`). Eski etiket kalsaydı, profilini gizlemek isteyen
+ * kullanıcı topluluğundan çıktığını sanırdı; oysa üyeliğine bu satır hiç
+ * dokunmuyor. Katıl/ayrıl eylemi de bu yüzden menüden KALKTI, ikinci bir
+ * giriş olarak bırakılmadı.
  *
  * FOTOĞRAF EYLEMLERİ NEDEN BURAYA TAŞINDI
  * ---------------------------------------
@@ -84,7 +93,13 @@ const ODAKLANABILIR =
 
 export interface ProfilAyarMenusuProps {
   onPaylas: () => void;
-  /** Satırın yönünü belirliyor: yayındaysa kaldırma, değilse yayımlama. */
+  /**
+   * `yayinda_mi` — PROFİL GÖRÜNÜRLÜĞÜ, topluluk üyeliği DEĞİL.
+   *
+   * Satırın yönünü belirliyor: profil açıksa gizleme, kapalıysa açma.
+   * Kolonun anlamı 20260926040000 ile daraldı; üyelik `community_members`
+   * tablosunda ve `/topluluklar` ekranında.
+   */
   yayindaMi: boolean;
   onGorunurluk: () => void;
   /** 'gonderiliyor' iken satır kilitli; çift tıklama ikinci istek atmıyor. */
@@ -185,18 +200,26 @@ export const ProfilAyarMenusu: React.FC<ProfilAyarMenusuProps> = ({
   /*
     ETİKET DURUMU OLDUĞU GİBİ SÖYLÜYOR
 
-    Yayındaki profilde "Profili yayımla" yazsaydı satır, olmayan bir durumu
+    Açık profilde "Profili herkese aç" yazsaydı satır, olmayan bir durumu
     anlatırdı. Gönderim sırasındaki metin de ayrı: kilitli bir düğmenin
     neden tıklanmadığını yalnız görsel solukluk anlatamaz.
+
+    ETİKET ÜYELİĞİ DEĞİL GÖRÜNÜRLÜĞÜ SÖYLÜYOR: "Topluluğa katıl /
+    Topluluktan ayrıl" yazıyordu ve o cümle bugün yanlış — satır
+    `yayinda_mi` kolonunu yazıyor, o kolon da 20260926040000'den beri
+    yalnız profilin herkese açık olup olmadığını anlatıyor.
+
+    Gönderim etiketleri KISA: menü kutusu `w-64` sabit genişlikte ve daha
+    uzun bir cümle ikinci satıra düşerdi.
   */
   const gorunurlukGonderiliyor = gorunurlukDurumu === 'gonderiliyor';
   const gorunurlukEtiketi = yayindaMi
     ? gorunurlukGonderiliyor
-      ? 'Topluluktan ayrılıyor…'
-      : 'Topluluktan ayrıl'
+      ? 'Gizleniyor…'
+      : 'Profili gizle'
     : gorunurlukGonderiliyor
-      ? 'Topluluğa katılıyor…'
-      : 'Topluluğa katıl';
+      ? 'Açılıyor…'
+      : 'Profili herkese aç';
 
   /*
     KALDIRMA SATIRI DA DURUMU OLDUĞU GİBİ SÖYLÜYOR

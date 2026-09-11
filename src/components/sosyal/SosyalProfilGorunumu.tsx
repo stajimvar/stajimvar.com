@@ -6,7 +6,6 @@ import { BaglantiDugmesi } from './BaglantiDugmesi';
 import { PaylasimIzgarasi } from './PaylasimIzgarasi';
 import { ProfilFotografi } from './ProfilFotografi';
 import { ProfilAyarMenusu } from './ProfilAyarMenusu';
-import { TopluluktaDegilUyarisi } from './TopluluktaDegilUyarisi';
 
 /**
  * PROFİL SUNUMU — TEK BİLEŞEN, İKİ YETKİ DURUMU
@@ -110,8 +109,6 @@ interface GorunumProps {
   onBegendiklerim?: () => void;
   onKaydedilenler?: () => void;
   onArsiv?: () => void;
-  /** Yayımlanmamış kendi profilindeki uyarı kutusunun eylemi. */
-  onYayimla?: () => void;
   /**
    * Dişli menüsündeki çift yönlü eylem. İki eylem de sayfada AYNI
    * fonksiyondan besleniyor; iki ayrı yol olsaydı biri değiştiğinde öteki
@@ -203,7 +200,6 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
   onBegendiklerim,
   onKaydedilenler,
   onArsiv,
-  onYayimla,
   onGorunurluk,
   yayimlamaDurumu = 'bekliyor',
   bildirim,
@@ -405,54 +401,41 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
           )}
 
           {/*
-            YAYIMLANMAMIŞ PROFİL UYARISI — YALNIZ SAHİBİNE
+            "TOPLULUĞA KATILMADIN" KUTUSU KALDIRILDI
 
-            `yayinda_mi` false iken profil kimseye görünmüyor ve kullanıcı
-            bunu hiçbir yerden anlayamıyordu: ekran, yayındaki profille
-            birebir aynı görünüyordu. Kutu koşulun İÇİNDE; ziyaretçide ve
-            başkasının profilinde DOM'a hiç girmiyor.
+            Kutu `yayinda_mi` false iken çiziliyor ve "Alan topluluğuna
+            henüz katılmadın" diyordu. Cümle artık YANLIŞ: 20260926040000
+            o kolonun anlamını yalnız profil görünürlüğüne indirdi ve
+            üyelik ayrı bir tabloya (`community_members`) taşındı.
+            Katılma eyleminin de kendi ekranı var (`/topluluklar`).
+            Kutuyu "profilin kapalı" diye yeniden yazmak, kullanıcının
+            kendi açtığı bir ayarı her açılışta uyarıya çevirirdi.
 
-            Kutunun kendisi AYRI DOSYADA (`TopluluktaDegilUyarisi`): aynı
-            uyarı birleşik ekranın sağ sütununda da gerekiyor ve iki kopya
-            olsaydı biri değiştiğinde öteki geride kalırdı. Yetki koşulu
-            burada, çağıranda kalıyor.
+            GÖRÜNÜRLÜK HATASI TEK CÜMLEYE İNDİ: iki yön de aynı satırdan
+            bildiriliyor. Blok `sahibiMi` koşulunun içinde; sessiz
+            başarısızlık başarı gibi okunurdu.
           */}
-          {sahibiMi && !profil.yayindaMi && onYayimla && (
-            <TopluluktaDegilUyarisi onYayimla={onYayimla} durum={yayimlamaDurumu} />
-          )}
-
-          {/*
-            YAYINDAN KALDIRMA HATASI AYRI BİR CÜMLE
-
-            Yayımlama hatasını yukarıdaki uyarı kutusu anlatıyor, ama o kutu
-            profil YAYINDAYKEN hiç çizilmiyor. Menüdeki "Yayından kaldır"
-            başarısız olduğunda cümle olmasaydı ekranda hiçbir iz kalmazdı
-            ve kullanıcı olmamış bir işi olmuş sanardı — sessiz başarısızlık
-            başarı gibi okunur. Blok sahibiMi koşulunun içinde.
-          */}
-          {sahibiMi && profil.yayindaMi && yayimlamaDurumu === 'hata' && (
+          {sahibiMi && yayimlamaDurumu === 'hata' && (
             <p role="alert" className="text-xs font-semibold leading-relaxed text-rose-700">
-              Alan topluluğundan ayrılamadın; hâlâ topluluktasın. Yeniden deneyebilirsin.
+              Profilinin görünürlüğü değiştirilemedi; eski ayarın duruyor. Yeniden
+              deneyebilirsin.
             </p>
           )}
 
           {/*
-            PAYLAŞIM DÜĞMESİ TOPLULUĞA KATILMIŞ SAHİBE ÖZEL
+            PAYLAŞIM DÜĞMESİNİN ÖNKOŞULU SUNUCUDAN OKUNUYOR
 
-            Üç koşul da gerekli ve üçü de bu satırda: sahibi olmak,
-            topluluğa katılmış olmak ve eylemin verilmiş olması.
-            `sosyal_paylasim_baslat` topluluğa katılmamış kullanıcıyı
-            'toplulukta-degil' ile reddediyor; düğmeyi yine de çizip hatayı
-            sonradan göstermek, her basışta başarısız olan bir eylem
-            sunmak olurdu. Katılmamış kullanıcı zaten yukarıdaki uyarı
-            kutusunu görüyor ve oradaki eylem tam olarak bu düğmenin
-            önkoşulu.
+            `sosyal_paylasim_baslat` (20260924030000) satırın hem
+            `yayinda_mi` hem `sector_id is not null` olmasını arıyor.
+            İkisi de sağlanmadan düğmeyi çizmek, her basışta reddedilen
+            bir eylem sunmak olurdu. `sector_id` bölümü katalogla
+            eşleşmeyen kullanıcıda NULL kalıyor (20260926050000).
 
             Düzenleme düğmesiyle AYNI kutuya konmadı: o `onDuzenle`
             koşuluna bağlı ve iki eylemin görünürlük koşulu farklı. Ortak
             bir kutu, birinin koşulunu ötekine de dayatırdı.
           */}
-          {sahibiMi && profil.yayindaMi && onPaylasimOlustur && (
+          {sahibiMi && profil.yayindaMi && profil.sektorId && onPaylasimOlustur && (
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={onPaylasimOlustur} className={IKINCIL_EYLEM}>
                 <ImagePlus aria-hidden className="h-4 w-4" />

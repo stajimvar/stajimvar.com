@@ -336,7 +336,17 @@ test('baş harf yedeği yalnız fotoğraf gösterilemediğinde; beklerken yanıp
     alınamadığında baş harfe düşüyor.
   */
   assert.match(fotograf, /durum === 'yukleniyor'[\s\S]{0,200}animate-pulse/);
-  assert.match(fotograf, /if \(adres\) \{[\s\S]{0,160}url=\{adres\}/);
+  /*
+    Dal ARTIK TEK SATIR: `if (adres) return <Avatar ... url={adres} />`.
+    Şekil değişti çünkü bileşen bir kaynak daha tanıyor (eski
+    `student_profiles.avatar_url` yedeği) ve kaynağı `profilFotografi`
+    seçiyor. Ölçülen kural aynı: adres varsa fotoğrafın kendisi çiziliyor.
+  */
+  assert.match(fotograf, /if \(adres\) return <Avatar name=\{ad\} url=\{adres\}/);
+  /*
+    Baş harf dalı HÂLÂ TEK: yol yoksa ve yedek adres de yoksa. Yedek
+    dalının kendi `Avatar`ı var ve o `url` alıyor — baş harfe düşmüyor.
+  */
   assert.equal((fotograf.match(/<Avatar name=\{ad\} className=\{className\} \/>/g) ?? []).length, 1);
 });
 

@@ -1,7 +1,7 @@
 import React from 'react';
-import { Camera, Check, ChevronRight, Loader2, Plus } from 'lucide-react';
+import { Check, ChevronRight, Plus } from 'lucide-react';
 import { adYazimi } from '../lib/ad';
-import { Avatar } from './Avatar';
+import { ProfilFotografi } from './sosyal/ProfilFotografi';
 import { Button, Card, ProfileSectionGroup, ProfileSectionRow, StatItem } from '../ui';
 
 /**
@@ -90,8 +90,20 @@ export interface EksikAdim {
  *
  * Şimdi tek kart, 80 piksellik satırlar ve 1 piksel ayraçlar. Kart
  * başlığı nerede durulduğunu da söylüyor: "3/5 tamamlandı".
+ *
+ * NEDEN DIŞARI AÇILDI
+ * -------------------
+ * Kart `ProfilBasligi`nin içinde çiziliyordu, yani /cv'nin ANA
+ * görünümünde. Ana görünümün konusu artık iki şey: solda kim olduğun,
+ * sağda portfolyon. Doldurulacak alanların listesi düzenleme ekranının
+ * gezinmesi — orada bir işe yarıyor, ana görünümde yalnız yer kaplıyordu.
+ * Kopyalanmadı, TAŞINDI: iki liste olsaydı biri değiştiğinde öteki geride
+ * kalır ve aynı bölüm iki farklı yerde iki farklı sırayla dururdu.
  */
-const Bolumler: React.FC<{ ogeler: OneCikan[]; secili?: string }> = ({ ogeler, secili }) => {
+export const ProfilBolumListesi: React.FC<{ ogeler: OneCikan[]; secili?: string }> = ({
+  ogeler,
+  secili,
+}) => {
   const dolu = ogeler.filter((o) => o.dolu).length;
   return (
     <ProfileSectionGroup
@@ -143,7 +155,25 @@ export interface EksikAdim {
 
 interface Props {
   ad: string;
+  /**
+   * `student_profiles.avatar_url` — ARTIK YALNIZ YEDEK.
+   *
+   * Bu kolona yazan tek yer buradaki kamera düğmesiydi ve o düğme
+   * kalktı: kullanıcının tek fotoğrafı var, kaynağı
+   * `social_profiles.avatar_path` ve tek yükleme yeri düzenleme
+   * ekranının sosyal bloğu. Kolon SİLİNMEDİ, okunmaya devam ediyor —
+   * eskiden buradan fotoğraf yüklemiş kullanıcı fotoğrafsız kalmamalı.
+   */
   avatarUrl?: string;
+  /**
+   * `social_profiles.avatar_path`.
+   *
+   * `undefined` = sosyal satır henüz okunmadı. Değer `/cv` ekranının
+   * sağ sütunundaki portfolyo panelinden geliyor; kart kendi sorgusunu
+   * atsaydı aynı satır aynı ekranda iki kez okunur ve yeni yüklenen
+   * fotoğraf bir sütunda eski kalırdı.
+   */
+  sosyalAvatarYolu?: string | null;
   okul: string;
   bolum?: string;
   sinif: string;
@@ -161,11 +191,24 @@ interface Props {
   kaydedilenSayisi: number;
   basvuruSayisi: number;
   mulakatSayisi: number;
-  oneCikanlar: OneCikan[];
-  /** Aşağıda hangi bölümün açık olduğu; ızgarada işaretleniyor. */
-  secili?: string;
-  avatarYukleniyor: boolean;
-  onFotografSec: () => void;
+  /*
+    `oneCikanlar` ve `secili` BU BİLEŞENDEN KALKTI: bölüm listesi artık
+    `ProfilBolumListesi` olarak dışarıdan çiziliyor ve yalnız düzenleme
+    ekranında duruyor. Props'ta bırakılsalardı, hiçbir şeyi çizmeyen iki
+    değer her çağrıda taşınır ve sonradan okuyan onların bir yerde
+    göründüğünü sanırdı.
+  */
+  /*
+    `avatarYukleniyor` ve `onFotografSec` BU BİLEŞENDEN KALKTI.
+
+    Fotoğraf yükleme iki yerde vardı (buradaki kamera düğmesi ve sosyal
+    profilin düzenleme bloğu) ve ikisi AYRI kolona yazıyordu: aynı
+    kullanıcı iki ekranda iki farklı fotoğrafla görünebiliyordu. Tek
+    kaynak `social_profiles.avatar_path` seçildi, yükleme de tek yerde
+    kaldı. Props'ta bırakılsalardı hiçbir şey yapmayan iki değer her
+    çağrıda taşınır ve sonradan okuyan buradan fotoğraf değiştirilebildiğini
+    sanırdı.
+  */
   onDuzenle: () => void;
   onCv?: () => void;
   onKaydedilenlere?: () => void;
@@ -176,6 +219,7 @@ interface Props {
 export const ProfilBasligi: React.FC<Props> = ({
   ad,
   avatarUrl,
+  sosyalAvatarYolu,
   okul,
   bolum,
   sinif,
@@ -186,10 +230,6 @@ export const ProfilBasligi: React.FC<Props> = ({
   kaydedilenSayisi,
   basvuruSayisi,
   mulakatSayisi,
-  oneCikanlar,
-  secili,
-  avatarYukleniyor,
-  onFotografSec,
   onDuzenle,
   onCv,
   onKaydedilenlere,
@@ -207,31 +247,43 @@ export const ProfilBasligi: React.FC<Props> = ({
     İçine kimlik, istatistik, iki düğme ve sekiz menü öğesi doldurulmuştu.
     Bölüm listesi karttan çıktı; kart artık avatar, bilgiler, tamamlanma
     durumu ve ana işlemlerden ibaret.
+
+    SARMALAYAN DIV DE KALKTI: içinde iki kutu vardı (kart ve bölüm
+    listesi) ve aralarındaki boşluğu o veriyordu. Liste düzenleme
+    ekranına taşınınca tek çocuklu bir kap kaldı; boşluğu artık çağıran
+    sütunun kendi `space-y`si veriyor.
   */
-  <div className="space-y-3 sm:space-y-4">
-    <Card className="space-y-3 p-4 sm:space-y-4 sm:p-6">
+  <Card className="space-y-3 p-4 sm:space-y-4 sm:p-6">
     <div className="flex items-center gap-4 sm:gap-8">
-      <button
-        type="button"
-        onClick={onFotografSec}
-        className="relative cursor-pointer shrink-0"
-        title={`Fotoğrafını değiştir — profilin %${oran} dolu`}
-      >
-        <Halka oran={oran}>
-          <Avatar
-            name={ad}
-            url={avatarUrl || undefined}
-            className="w-20 h-20 sm:w-24 sm:h-24 rounded-full text-2xl sm:text-3xl"
-          />
-        </Halka>
-        <span className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center border-2 border-white">
-          {avatarYukleniyor ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : (
-            <Camera className="w-3.5 h-3.5" />
-          )}
-        </span>
-      </button>
+      {/*
+        KAMERA DÜĞMESİ KALDIRILDI — TEK FOTOĞRAF, TEK YÜKLEME YERİ
+
+        Buradaki düğme `student_profiles.avatar_url`e, düzenleme
+        ekranındaki sosyal blok `social_profiles.avatar_path`e yazıyordu.
+        İki yazma birbirinden habersizdi: aynı kullanıcı profil kartında
+        bir fotoğraf, sosyal profilinde başka bir fotoğraf gösterebiliyordu
+        ve hangisinin asıl olduğu hiçbir yerde yazmıyordu. Yükleme tek
+        yere indi; burası artık yalnız GÖSTERİYOR.
+
+        Halka (doluluk) kaldı ve tıklanabilir değil: yüzdenin kendisi ne
+        yapılacağını söylemiyor, altındaki eksik adım rozetleri söylüyor.
+        Tıklanamayan bir daireye `title` da konmuyor — fare ile beliren bir
+        ipucu, dokunmatikte hiç okunmayan bir bilgi olurdu.
+      */}
+      {/* Sarmalayıcı yok: konumlandırılacak rozet kalmadı, `Halka` zaten `shrink-0`. */}
+      <Halka oran={oran}>
+          {/*
+            Fotoğrafın kaynağını `ProfilFotografi` seçiyor: önce
+            `avatar_path` (private kovadan oturumla iniyor), o yoksa eski
+            `avatar_url`. Karar tek yerde (`src/lib/profil-fotografi.ts`).
+          */}
+        <ProfilFotografi
+          ad={ad}
+          yol={sosyalAvatarYolu}
+          yedekAdres={avatarUrl}
+          className="w-20 h-20 sm:w-24 sm:h-24 rounded-full text-2xl sm:text-3xl"
+        />
+      </Halka>
 
       {/*
         SÜREÇ ÜÇLÜSÜ
@@ -370,8 +422,5 @@ export const ProfilBasligi: React.FC<Props> = ({
         {eksikler.length > 0 ? 'Profilini tamamla' : 'Profili düzenle'}
       </Button>
     </div>
-    </Card>
-
-    <Bolumler ogeler={oneCikanlar} secili={secili} />
-  </div>
+  </Card>
 );

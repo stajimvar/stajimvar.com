@@ -54,9 +54,17 @@ export type TalepKipi = 'bolum-yok' | 'alan-tanimsiz';
 interface TalepProps {
   kip: TalepKipi;
   kullaniciId: string;
-  /** `alan-tanimsiz` kipinde kullanıcının seçtiği katalog bölümü. */
-  bolum: SosyalBolum | null;
-  /** Kurulum ekranına dönüş; talep bir çıkmaz sokak değil. */
+  /**
+   * `alan-tanimsiz` kipinde kullanıcının KAYITLI katalog bölümü.
+   *
+   * Bölüm artık burada seçilmiyor: `student_profiles.department` sunucuda
+   * çözülüyor ve eşleşen katalog satırı profilin kendisinde duruyor. Tam
+   * `SosyalBolum` değil çünkü `slug` ve `grup` bu ekranda hiç
+   * kullanılmıyor; olmayan alanları boş dizeyle doldurmak, verisi
+   * olmayan iki alanı varmış gibi taşımak olurdu.
+   */
+  bolum: Pick<SosyalBolum, 'id' | 'ad'> | null;
+  /** Talebi açan ekrana dönüş; talep bir çıkmaz sokak değil. */
   onGeri: () => void;
 }
 
@@ -76,7 +84,13 @@ const DURUM_CUMLESI: Record<string, string> = {
   bekliyor: 'Talebin sırada. Karara bağlanana kadar bekliyor.',
   incelendi: 'Talebin incelendi. Sonuç henüz bir bölüm ya da eşleme olarak yazılmadı.',
   reddedildi: 'Talebin reddedildi.',
-  eklendi: 'Talebin kabul edildi. Kurulum ekranına dönüp bölümünü seçebilirsin.',
+  /*
+    "Ne yapmalıyım" DENMİYOR: kabul edilen talepten sonra bölümü ve alanı
+    profile bağlayan iş sunucuda (`bolum_girilince_tamamla`,
+    `sosyal_profilimi_tamamla`). Kullanıcıya bir adım yazsaydık,
+    çalıştığını ölçmediğimiz bir yol tarif etmiş olurduk.
+  */
+  eklendi: 'Talebin kabul edildi.',
 };
 
 export const BolumTalebi: React.FC<TalepProps> = ({ kip, kullaniciId, bolum, onGeri }) => {
@@ -164,7 +178,8 @@ export const BolumTalebi: React.FC<TalepProps> = ({ kip, kullaniciId, bolum, onG
 
       {kip === 'alan-tanimsiz' && bolum && (
         <p className={`${KART} text-sm text-gray-700`}>
-          <span className="font-bold text-gray-900">Seçtiğin bölüm:</span>{' '}
+          {/* "Seçtiğin" değil: bölüm öğrenci profilinden çözülüyor, burada seçilmiyor. */}
+          <span className="font-bold text-gray-900">Kayıtlı bölümün:</span>{' '}
           <span className="break-words">{bolum.ad}</span>
         </p>
       )}
@@ -278,8 +293,12 @@ export const BolumTalebi: React.FC<TalepProps> = ({ kip, kullaniciId, bolum, onG
             >
               {durum === 'gonderiliyor' ? 'Gönderiliyor…' : 'Talebi gönder'}
             </button>
+            {/*
+              "Bölüm seçimine dön" DEĞİL: dönülecek yer artık kurulum
+              formu değil, talebin açıldığı düzenleme ekranı.
+            */}
             <button type="button" onClick={onGeri} className={IKINCIL}>
-              Bölüm seçimine dön
+              Düzenlemeye dön
             </button>
           </div>
         </form>
@@ -287,7 +306,7 @@ export const BolumTalebi: React.FC<TalepProps> = ({ kip, kullaniciId, bolum, onG
 
       {durum === 'gonderildi' && (
         <button type="button" onClick={onGeri} className={IKINCIL}>
-          Bölüm seçimine dön
+          Düzenlemeye dön
         </button>
       )}
     </div>

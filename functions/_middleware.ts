@@ -74,6 +74,13 @@ const UYGULAMA_ADRESLERI = new Set([
     edilmediği için ara katman olmadan doğrudan açılışta 404 dönerdi.
   */
   '/baglantilar',
+  /*
+    /topluluklar: alan toplulukları listesi ve tek topluluk sayfası.
+    /profil ile aynı gerekçe — kişiye ve üyeliğe bağlı içerik, ön render
+    edilmiyor. Önek eşleşmesi aşağıda `uygulamaninMi` içinde; buradaki
+    satır çıplak adres için.
+  */
+  '/topluluklar',
   '/basvuru-sablonu',
   '/sifre-yenile',
   '/stajyer-nasil-alinir',
@@ -106,6 +113,14 @@ function uygulamaninMi(yol: string): boolean {
     kalıyor; durum kodunun kendisi bir varlık kanıtı olmuyor.
   */
   if (temiz === '/profil' || temiz.startsWith('/profil/')) return true;
+  /*
+    /topluluklar/<slug> — aynı sebep, aynı çözüm. Topluluk sayfası
+    üyeliğe göre farklı içerik çiziyor ve ön render edilmiyor; VERİ
+    ÖNEKİ değil, uygulama öneki. Var-yok sızdırmıyor: geçerli ya da
+    uydurma her slug aynı 200 kabuğunu alıyor, ayrımı sunucudaki üyelik
+    politikası ve tek güvenli ekran yapıyor.
+  */
+  if (temiz === '/topluluklar' || temiz.startsWith('/topluluklar/')) return true;
   return VERI_ONEKLERI.some((onek) => yol.startsWith(onek) && yol.length > onek.length);
 }
 

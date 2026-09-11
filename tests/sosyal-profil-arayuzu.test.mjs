@@ -39,13 +39,42 @@ const KOK = path.resolve(import.meta.dirname, '..');
 const oku = (p) => readFileSync(path.join(KOK, p), 'utf8');
 
 const sorgular = oku('src/lib/queries/sosyal.ts');
-const kurulum = oku('src/components/sosyal/SosyalProfilKurulum.tsx');
+/*
+  `SosyalProfilKurulum.tsx` BU LİSTEDEN ÇIKTI — dosya silindi.
+
+  Ekran kullanıcıdan ad, bölüm ve görünürlük alıp `sosyal_profil_kur`
+  RPC'sini çağırıyordu. 20260926050000 satırı kayıt anında SUNUCUDA
+  açıyor, 20260926090000 da eksik kalanı tamamlamak için argümansız bir
+  kapı veriyor: kullanıcının gireceği bir bilgi kalmadı, dolayısıyla
+  soracak bir form da. Dosya ağaçta dursaydı hiçbir yerden çizilmeyen
+  bir ekranın iddiaları burada ölçülmeye devam eder ve o iddialar
+  üründe karşılığı olmayan bir akışı canlı gibi gösterirdi.
+
+  Kurulum ekranına bağlı iddialar (kurulum RPC'si, kurulum hata kodları,
+  kurulumdaki bölüm listesi) bu dosyadan kalktı. Kalanlar duruyor.
+*/
 const gorunum = oku('src/components/sosyal/SosyalProfilGorunumu.tsx');
 const menu = oku('src/components/sosyal/ProfilAyarMenusu.tsx');
 const izgara = oku('src/components/sosyal/PaylasimIzgarasi.tsx');
-const uyariKutusu = oku('src/components/sosyal/TopluluktaDegilUyarisi.tsx');
+/*
+  `TopluluktaDegilUyarisi.tsx` BU LİSTEDEN ÇIKTI — dosya silindi.
+
+  Kutu "Alan topluluğuna henüz katılmadın" diyordu ve koşulu
+  `!yayinda_mi` idi. 20260926040000 o kolonun anlamını yalnız profil
+  görünürlüğüne indirdi, üyeliği de `community_members`e taşıdı: cümle
+  artık olmayan bir durumu anlatıyordu. Kutuyu "profilin kapalı" diye
+  yeniden yazmak, kullanıcının kendi açtığı bir ayarı her açılışta
+  uyarıya çevirirdi. Üyeliğin kendi ekranı var (`/topluluklar`).
+*/
+const topluluklar = oku('src/components/sosyal/TopluluklarSayfasi.tsx');
+const arama = oku('src/components/sosyal/KullaniciArama.tsx');
+/* Tek profil fotoğrafı: çizen bileşen ve kaynağı seçen yardımcı. */
+const fotograf = oku('src/components/sosyal/ProfilFotografi.tsx');
+const fotografKaynagi = oku('src/lib/profil-fotografi.ts');
 const ustSatir = oku('src/components/sosyal/PortfolyoUstSatiri.tsx');
+const olustur = oku('src/components/sosyal/PaylasimOlustur.tsx');
 const ogrenciProfili = oku('src/components/StudentProfileView.tsx');
+const profilBasligi = oku('src/components/ProfilBasligi.tsx');
 const sayfa = oku('src/components/sosyal/SosyalProfilSayfasi.tsx');
 const duzenleme = oku('src/components/sosyal/SosyalProfilDuzenleme.tsx');
 const alanlar = oku('src/components/sosyal/SosyalFormAlanlari.tsx');
@@ -64,7 +93,13 @@ const orta = oku('functions/_middleware.ts');
 const hesapSayfasi = oku('src/components/AccountSheet.tsx');
 const sema = oku('supabase/migrations/20260921010000_sosyal_katman_semasi.sql');
 const rls = oku('supabase/migrations/20260921020000_sosyal_katman_rls.sql');
-const kurulumRpc = oku('supabase/migrations/20260923030000_sosyal_kurulum_rpc.sql');
+/*
+  Kurulum RPC'sinin göç dosyası artık BU DOSYADA okunmuyor: imzasını ve
+  hata kodlarını ölçen iki iddia kurulum ekranıyla birlikte kalktı.
+  Göç dosyası duruyor ve veritabanı tarafındaki testleri de duruyor —
+  ölçümü orada yapılıyor.
+*/
+const tamamlamaRpc = oku('supabase/migrations/20260926090000_profilimi_tamamla.sql');
 const durumRpc = oku('supabase/migrations/20260923080000_baglanti_durumu_rpc.sql');
 const kararRpc = oku('supabase/migrations/20260923060000_talep_kuyrugu_karari.sql');
 const kararAciklamasiRpc = oku('supabase/migrations/20260923090000_talep_karar_aciklamasi.sql');
@@ -94,7 +129,6 @@ function govdeAl(kaynak, baslangicIsareti, bitisIsareti) {
 }
 
 const SOSYAL_BILESENLER = [
-  kurulum,
   gorunum,
   menu,
   izgara,
@@ -191,7 +225,7 @@ test('sahiplik kullanıcı adından değil oturum kimliğinden okunuyor', () => 
   const govde = govdeAl(
     yorumsuz(sorgular),
     'export async function kendiSosyalProfiliGetir',
-    'export interface SosyalKurulumGirdisi',
+    'export async function sosyalProfilimiTamamla',
   );
   assert.ok(govde.length > 0, 'kendi profil fonksiyonu bulunamadı');
   assert.match(govde, /\.eq\('profile_id', kullaniciId\)/);
@@ -231,73 +265,18 @@ test('sektör listesi kapalı: aktif olanlar sıraya göre', () => {
   assert.match(sorgular, /\.order\('sira', \{ ascending: true \}\)/);
 });
 
-test('kurulum topluluğa katılmayı açık seçim olarak soruyor, varsayılan kapalı', () => {
-  /*
-    Topluluğa katılmak "aynı alandaki öğrenciler seni görebilir" demek;
-    bu sessizce varsayılan yapılamaz. Kutu KAPALI başlıyor, seçim RPC
-    gövdesine olduğu gibi gidiyor ve girdi tipinde zorunlu — çağıran
-    taraf değeri atlayıp varsayılan uyduramıyor.
+/*
+  KURULUM RPC'SİNİN ÜÇ İDDİASI BURADAN KALKTI
 
-    Kod adı (`yayimla`) ŞEMAYLA aynı kalıyor; değişen yalnız ekran metni.
-  */
-  assert.match(kurulum, /const \[yayimla, setYayimla\] = React\.useState\(false\);/);
-  assert.match(kurulum, /Alan topluluğuna katıl/);
-  assert.match(kurulum, /yayindaMi: yayimla/);
-  assert.match(sorgular, /interface SosyalKurulumGirdisi \{[\s\S]*?\n {2}yayindaMi: boolean;/);
-  assert.match(sorgular, /p_yayimla: girdi\.yayindaMi/);
-});
-
-test('kurulum RPC üzerinden yazıyor; gövdede alan kimliği geçmiyor', () => {
-  /*
-    Alan artık istemciden GELMİYOR: sunucu bölümden türetiyor ve
-    `sector_id` kolonuna istemcinin yazma yetkisi bile yok. Gövdeye
-    koymak, sunucunun yetki katmanında reddedeceği bir istek üretirdi.
-    Parametre adları şemadaki imzayla birebir.
-  */
-  const govde = govdeAl(
-    yorumsuz(sorgular),
-    'export async function sosyalProfilKur',
-    'export async function sosyalProfilGorunurluguAyarla',
-  );
-  assert.ok(govde.length > 0, 'kurulum fonksiyonu bulunamadı');
-  assert.match(govde, /rpc\('sosyal_profil_kur'/);
-  assert.doesNotMatch(govde, /sector_id/);
-  assert.doesNotMatch(govde, /upsert/);
-  for (const parametre of [
-    'p_kullanici_adi',
-    'p_bolum_slug',
-    'p_yayimla',
-    'p_gorunen_ad',
-    'p_biyografi',
-    'p_sinif',
-    'p_sehir',
-  ]) {
-    assert.ok(govde.includes(`${parametre}:`), `${parametre} gövdede yok`);
-    assert.ok(kurulumRpc.includes(parametre), `${parametre} şemadaki imzada yok`);
-  }
-  /* Şemanın imzasında olmayan bir parametre uydurulmuyor. */
-  assert.doesNotMatch(govde, /p_alan|p_sektor|p_bolum_etiketi/);
-});
-
-test('kurulum hataları `details` alanından ayrı cümlelere çevriliyor', () => {
-  /*
-    RPC hata kodunu `detail` ile gönderiyor; `errcode` üçü için de aynı
-    olabiliyor (P0001). Yalnız koda bakan bir eşleme "bölümün listede
-    yok" ile "bölümünün alanı tanımlı değil" ayrımını yapamazdı ve
-    kullanıcıyı yanlış eyleme gönderirdi.
-  */
-  const temiz = yorumsuz(sorgular);
-  assert.match(temiz, /const detay = \(error\?\.details \?\? ''\)\.trim\(\);/);
-  for (const kod of ['bolum-bulunamadi', 'bolum-alani-tanimsiz', 'gecersiz-kullanici-adi']) {
-    assert.ok(temiz.includes(`'${kod}'`), `${kod} eşlemesi yok`);
-    assert.ok(kurulumRpc.includes(`'${kod}'`), `${kod} şemada yok`);
-  }
-  assert.match(temiz, /'Bölümün listede bulunamadı\.'/);
-  assert.match(temiz, /'Bölümün için alan topluluğu henüz tanımlı değil\.'/);
-  /* 23505 ve 42501 eşlemeleri duruyor. */
-  assert.match(temiz, /'Bu kullanıcı adı alınmış\. Başka bir ad dene\.'/);
-  assert.match(temiz, /'Alan seçildikten sonra değiştirilemiyor\.'/);
-});
+  Üçü de `SosyalProfilKurulum` ekranını ve `sosyalProfilKur` sarmalayıcısını
+  ölçüyordu: topluluğa katılma onay kutusunun kapalı başladığını, RPC
+  gövdesinde alan kimliği olmadığını ve kurulum hata kodlarının ayrı
+  cümlelere çevrildiğini. Ekran silindi, sarmalayıcı da silindi (hiçbir
+  yerden çağrılmıyordu). Ölçülecek kod kalmadığı için iddialar da
+  kalktı — duran bir iddia, olmayan bir akışın hâlâ ölçüldüğünü
+  söylerdi. `sosyal_profil_kur` fonksiyonu VERİTABANINDA duruyor ve
+  ölçümü veritabanı testlerinde.
+*/
 
 test('bölüm kataloğu kapalı liste: aktif olanlar sıraya göre', () => {
   const govde = govdeAl(
@@ -450,14 +429,15 @@ test('menüde yalnız gerçekten çalışan satırlar var', () => {
 
 test('görünürlük öğesinin etiketi duruma göre değişiyor', () => {
   /*
-    Topluluktayken "Topluluğa katıl" yazsaydı, düğme kullanıcıya olmayan
-    bir durum anlatırdı. Dört etiketin dördü de kaynakta. Kod adı
-    (`yayindaMi`) şemadaki `yayinda_mi` ile aynı kalıyor.
+    Açık profilde "Profili herkese aç" yazsaydı, satır kullanıcıya
+    olmayan bir durum anlatırdı. Dört etiketin dördü de kaynakta ve
+    dördü de GÖRÜNÜRLÜĞÜ anlatıyor; üyelik başka bir ekranın işi. Kod
+    adı (`yayindaMi`) şemadaki `yayinda_mi` ile aynı kalıyor.
   */
-  assert.match(menu, /'Topluluktan ayrıl'/);
-  assert.match(menu, /'Topluluğa katıl'/);
-  assert.match(menu, /'Topluluktan ayrılıyor…'/);
-  assert.match(menu, /'Topluluğa katılıyor…'/);
+  assert.match(menu, /'Profili gizle'/);
+  assert.match(menu, /'Profili herkese aç'/);
+  assert.match(menu, /'Gizleniyor…'/);
+  assert.match(menu, /'Açılıyor…'/);
   assert.match(menu, /yayindaMi\s*\n?\s*\?/);
 });
 
@@ -576,37 +556,43 @@ test('dokunma hedefi ve odak halkası menüde kalıbı izliyor', () => {
 test('sahibe özel her şey sahibiMi koşulunun içinde', () => {
   assert.match(gorunum, /\{sahibiMi && onPaylas && onGorunurluk && \(/);
   assert.match(gorunum, /\{sahibiMi && onDuzenle && \(/);
-  assert.match(gorunum, /\{sahibiMi && !profil\.yayindaMi && onYayimla && \(/);
+  /*
+    ÜÇÜNCÜ KOŞUL DEĞİŞTİ: "yayında değilse uyarı" yerine "önkoşullar
+    tamsa Paylaş". Sunucudaki `sosyal_paylasim_baslat` taslağı yalnız
+    `yayinda_mi` VE `sector_id is not null` iken açıyor; düğmeyi bundan
+    daha geniş bir koşulla çizmek, her basışta reddedilen bir eylem
+    sunmak olurdu.
+  */
+  assert.match(
+    gorunum,
+    /\{sahibiMi && profil\.yayindaMi && profil\.sektorId && onPaylasimOlustur && \(/,
+  );
   /* CSS ile gizleme yok: gizlenmiş düğme klavyeyle bulunur. */
   assert.doesNotMatch(gorunum, /hidden.*ProfilAyarMenusu/);
 });
 
-test('topluluğa katılmamış kendi profilinde uyarı ve "Topluluğa katıl" var', () => {
+test('dişli menüsünde topluluğa katılma/ayrılma eylemi YOK', () => {
   /*
-    KUTU AYRI DOSYADA, YETKİ KOŞULU ÇAĞIRANDA
+    ÜYELİK DİŞLİDEN ÇIKTI
 
-    Aynı uyarı iki yerde gerekiyor: profil sunumunun üst bloğunda ve
-    birleşik ekranın sağ sütununda. İki kopya olsaydı biri değiştiğinde
-    öteki geride kalır ve aynı durum iki farklı cümleyle anlatılırdı.
-    Metin bu yüzden `TopluluktaDegilUyarisi` içinde; İKİ çağıran da onu
-    kendi sahip dalının İÇİNDE çiziyor, yani ziyaretçide DOM'a hiç
-    girmiyor.
+    Menüdeki tek görünürlük satırı bir zamanlar "Topluluğa katıl /
+    Topluluktan ayrıl" yazıyordu ve `yayinda_mi` kolonunu yazıyordu.
+    20260926030000 üyeliği `community_members`e taşıdı, 20260926040000 da
+    kolonun anlamını yalnız profil görünürlüğüne indirdi. Etiket
+    kalsaydı, profilini gizleyen kullanıcı topluluğundan çıktığını
+    sanırdı — oysa üyeliğine hiç dokunulmuyor.
+
+    Ölçüm YORUMSUZ kaynakta: bu dosyadaki gerekçe yorumları eski etiketi
+    anmak zorunda ve doğru yazılmış bir gerekçe testi düşürmemeli.
   */
-  assert.match(gorunum, /\{sahibiMi && !profil\.yayindaMi && onYayimla && \(\n\s*<TopluluktaDegilUyarisi/);
-  assert.match(sayfa, /\{!profil!\.yayindaMi && \(\n\s*<TopluluktaDegilUyarisi/);
-
-  assert.match(uyariKutusu, /Alan topluluğuna henüz katılmadın/);
-  assert.match(uyariKutusu, /Topluluğa katıl/);
-  assert.match(uyariKutusu, /role="status"/);
-  /* Metin üç durumu da ayırıyor: bekliyor, gönderiliyor, hata. */
-  assert.match(uyariKutusu, /durum === 'gonderiliyor'/);
-  assert.match(uyariKutusu, /Topluluğa katılıyor…/);
-  assert.match(uyariKutusu, /durum === 'hata'/);
-  /* Hata dürüst: başarı gibi gösterilmiyor. */
-  assert.match(uyariKutusu, /profilinde bir değişiklik olmadı/);
-  /* Eylem etiketi TEK yerde; iki çağıranın hiçbirinde kopyası yok. */
-  assert.equal((gorunum.match(/Topluluğa katıl/g) ?? []).length, 0);
-  assert.equal((sayfa.match(/Topluluğa katıl/g) ?? []).length, 0);
+  const menuYorumsuz = yorumsuz(menu);
+  assert.doesNotMatch(menuYorumsuz, /Topluluğa katıl|Topluluktan ayrıl/);
+  /* Üyeliğin tek girişi kendi ekranı; menüde ona giden bir satır da yok. */
+  assert.doesNotMatch(menuYorumsuz, /\/topluluklar/);
+  /* Katıl/ayrıl çağrıları yalnız o ekranda. */
+  assert.doesNotMatch(menu, /sosyalToplulugaKatil|sosyalTopluluktanAyril/);
+  assert.match(topluluklar, /sosyalToplulugaKatil/);
+  assert.match(topluluklar, /sosyalTopluluktanAyril/);
 });
 
 test('kullanıcıya basılan metinde "yayımla" ve "yayından" kalmadı', () => {
@@ -666,17 +652,37 @@ test('görünürlük bildirimleri yalnız başarıdan sonra yazılıyor', () => 
     değil: bağlantı kopyalamanın kullandığı `bildirim` durumu.
   */
   const govde = govdeAl(sayfa, 'const gorunurlukDegistir = async', 'const paylas =');
-  assert.match(
-    govde,
-    /setBildirim\(\s*\n?\s*yeniDeger \? 'Alan topluluğuna katıldın\.' : 'Alan topluluğundan ayrıldın\.'/,
-  );
+  /*
+    CÜMLELER ÜYELİĞİ DEĞİL GÖRÜNÜRLÜĞÜ ANLATIYOR
+
+    "Alan topluluğuna katıldın." yazıyordu ve o cümle bugün yanlış:
+    `yayinda_mi` 20260926040000'den beri yalnız profilin herkese açık
+    olup olmadığını tutuyor, üyelik `community_members` tablosunda.
+    Kullanıcı profilini gizlerken topluluğundan çıktığını sanmamalı.
+  */
+  assert.match(govde, /'Profilin artık giriş yapmış herkese açık\.'/);
+  assert.match(govde, /'Profilin artık yalnızca sana görünüyor\.'/);
   assert.equal((govde.match(/setBildirim\(/g) ?? []).length, 2);
   assert.ok(govde.indexOf('await sosyalProfilGorunurluguAyarla') < govde.indexOf('setBildirim('));
   assert.ok(govde.indexOf('setBildirim(') < govde.indexOf('} catch'));
   /* Kopyalamadaki kalıpla aynı: kısa süre sonra temizleniyor. */
   assert.match(govde, /window\.setTimeout\(\(\) => setBildirim\(null\), 2500\)/);
-  /* İkinci bir bildirim mekanizması kurulmadı. */
-  assert.equal((sayfa.match(/useState<string \| null>\(null\)/g) ?? []).length, 1);
+  /*
+    İkinci bir bildirim mekanizması kurulmadı.
+
+    Ölçüm `useState<string | null>(null)` sayısından BİLDİRİM DURUMUNUN
+    KENDİSİNE daraldı: dosyada artık aynı tipte ikinci bir durum var
+    ("Sosyal profilin hazırlanamadı" kutusunun kendi hata cümlesi) ve o
+    bir bildirim kanalı değil — kutunun içinde, kendi denemesinin
+    sonucunu yazıyor. Tip sayısına bakan eski ölçüm, alakasız bir durumu
+    ikinci bir bildirim sanardı. İddia gevşemedi: bildirim durumu hâlâ
+    tek yerde tanımlı ve `setBildirim` hâlâ tek kanal.
+  */
+  assert.equal(
+    (sayfa.match(/const \[bildirim, setBildirim\] = React\.useState<string \| null>\(null\);/g) ?? [])
+      .length,
+    1,
+  );
 });
 
 test('bildirim kibar canlı bölgeden okunuyor', () => {
@@ -691,14 +697,19 @@ test('bildirim kibar canlı bölgeden okunuyor', () => {
   assert.doesNotMatch(sayfa, /aria-live/);
 });
 
-test('topluluktan ayrılma hatası sessiz kalmıyor', () => {
+test('görünürlük hatası sessiz kalmıyor ve tek cümleye indi', () => {
   /*
-    Katılma hatasını uyarı kutusu anlatıyor ama o kutu kullanıcı
-    TOPLULUKTAYKEN çizilmiyor. Cümle olmasaydı başarısız bir "Topluluktan
-    ayrıl" hiçbir iz bırakmaz, kullanıcı olmamış bir işi olmuş sanırdı.
+    Eskiden iki dal vardı: katılma hatasını uyarı kutusu, ayrılma
+    hatasını bu satır anlatıyordu. Kutu kalkınca (üyelik artık burada
+    değil) iki yön de tek yerden bildiriliyor. Cümle olmasaydı
+    başarısız bir görünürlük değişimi hiçbir iz bırakmaz, kullanıcı
+    olmamış bir işi olmuş sanırdı.
+
+    Metin de dürüst: eski ayarın DURDUĞUNU söylüyor.
   */
-  assert.match(gorunum, /\{sahibiMi && profil\.yayindaMi && yayimlamaDurumu === 'hata' && \(/);
-  assert.match(gorunum, /hâlâ topluluktasın/);
+  assert.match(gorunum, /\{sahibiMi && yayimlamaDurumu === 'hata' && \(/);
+  assert.match(gorunum, /Profilinin görünürlüğü değiştirilemedi; eski ayarın duruyor/);
+  assert.match(sayfa, /Profilinin görünürlüğü değiştirilemedi; eski ayarın duruyor/);
 });
 
 test('iki sayaç var, üçüncüsü yok', () => {
@@ -747,12 +758,12 @@ test('kullanıcıya görünen metinde "Sektör" geçmiyor', () => {
     duruyor; değişen yalnız ekrana basılan sözcük. Ölçüm yorumsuz kaynak
     üzerinde: yorumlar şema kavramının adını anmakta serbest.
   */
-  for (const kaynak of [kurulum, gorunum, sorgular]) {
+  for (const kaynak of [gorunum, sorgular, duzenleme]) {
     assert.doesNotMatch(yorumsuz(kaynak), /Sektör/);
   }
-  assert.match(kurulum, /Bölüm seçilmeden profil kurulamıyor\./);
-  assert.match(sorgular, /Alan seçildikten sonra değiştirilemiyor\./);
   assert.match(sorgular, /Alan listesi alınamadı/);
+  /* Düzenlemedeki kilitli kart da "alan" diyor, "sektör" değil. */
+  assert.match(duzenleme, /Bölüm ve alan değiştirilemiyor/);
   /* Rozet "Tekstil ve Moda alanı" diye okunuyor; boşsa hiç çizilmiyor. */
   assert.match(gorunum, /profil\.sektorAdi && \(/);
   assert.match(gorunum, /\{profil\.sektorAdi\} alanı/);
@@ -917,9 +928,80 @@ test('oturum okunmadan yetkisiz kararı verilmiyor', () => {
   assert.match(sayfa, /Sosyal profil için giriş gerekiyor/);
 });
 
-test('profil yoksa /profil kurulum ekranını açıyor', () => {
+test('sosyal profil satırı yoksa kurulum değil, dürüst hata çiziliyor', () => {
+  /*
+    KURULUM EKRANI ARTIK ÇİZİLMİYOR.
+
+    20260926050000 sosyal profili ve kullanıcı adını kayıt sırasında
+    SUNUCUDA açıyor; kurulum formunun sorduğu sorunun bir karşılığı
+    kalmadı. Satırın gelmemesi bir kullanıcı kararı değil, bir ARIZA —
+    arızaya form göstermek, kullanıcıyı sistemin kendi işini elle
+    yapmaya çağırmak olurdu.
+
+    Dosya da SİLİNDİ: hiçbir yerden çizilmeyen bir ekranı ağaçta
+    bırakmak, olmayan bir akışın hâlâ varmış gibi durması olurdu.
+    Ölçülen şey iki yoldaki KULLANIMI ve kullanımın hiç olmaması.
+  */
   assert.match(sayfa, /if \(!profilTamMi\)/);
-  assert.match(sayfa, /<SosyalProfilKurulum/);
+  assert.doesNotMatch(sayfa, /<SosyalProfilKurulum/);
+  /* Yorumsuz gövde: gerekçe yorumunda adı ANMAK bir çağrı değil. */
+  assert.doesNotMatch(
+    yorumsuz(sayfa),
+    /SosyalProfilKurulum|sosyal_profil_kur|sosyalProfilKur/,
+  );
+  assert.match(sayfa, /Sosyal profilin hazırlanamadı/);
+  assert.match(sayfa, /<SosyalProfilHazirDegil[\s\S]{0,200}?setProfilDeneme/);
+});
+
+test('"Yeniden dene" sunucudan tamamlamayı istiyor, yalnız okumayı tekrarlamıyor', () => {
+  /*
+    DÜĞME BİR ZAMANLAR HİÇBİR ZAMAN ÇALIŞMIYORDU
+
+    `profilDeneme` yalnız `kendiSosyalProfiliGetir`i tekrarlıyordu; satır
+    gerçekten hiç açılmadıysa aynı okumayı yüz kez yapmak da satır
+    üretmiyordu. 20260926090000 argümansız, idempotent ve topluluğa
+    katmayan bir kapı verdi.
+
+    ÖLÇÜLEN ÜÇ ŞEY:
+      1. RPC sarmalayıcısı çağrılıyor ve okuma ONDAN SONRA tazeleniyor.
+      2. Çift tıklama kilitli: gönderim sırasında düğme devre dışı.
+      3. Hata dalında sebep UYDURULMUYOR — cümle `SosyalHata`dan geliyor,
+         ham veritabanı metni ekrana çıkmıyor.
+  */
+  const govde = govdeAl(yorumsuz(sayfa), 'const dene = async', 'return (');
+  assert.ok(govde.length > 0, 'tamamlama gövdesi bulunamadı');
+  assert.match(govde, /await sosyalProfilimiTamamla\(\);/);
+  assert.ok(
+    govde.indexOf('await sosyalProfilimiTamamla()') < govde.indexOf('onTamamlandi()'),
+    'okuma tazelemesi RPC çağrısından önce olmamalı',
+  );
+  /* Tazeleme YALNIZ try içinde: başarısız denemede ekran yeniden okumuyor. */
+  assert.ok(govde.indexOf('onTamamlandi()') < govde.indexOf('} catch'));
+  assert.match(govde, /if \(durum === 'gonderiliyor'\) return;/);
+  assert.match(sayfa, /disabled=\{durum === 'gonderiliyor'\}/);
+  assert.match(govde, /sorun instanceof SosyalHata/);
+
+  /* Sarmalayıcı RPC'nin gerçek adını ve argümansız imzasını kullanıyor. */
+  const sarmalayici = govdeAl(
+    yorumsuz(sorgular),
+    'export async function sosyalProfilimiTamamla',
+    'function tamamlamaHatasi',
+  );
+  assert.match(sarmalayici, /db\.rpc\('sosyal_profilimi_tamamla', \{\}\)/);
+  assert.match(tamamlamaRpc, /create or replace function public\.sosyal_profilimi_tamamla\(\)/);
+  /* Üç `detail` kodunun üçü de şemada var ve üçünün Türkçe karşılığı yazılı. */
+  for (const kod of ['oturum-yok', 'ogrenci-degil', 'profil-hazirlanamadi']) {
+    assert.ok(tamamlamaRpc.includes(`'${kod}'`), `${kod} şemada yok`);
+    assert.ok(yorumsuz(sorgular).includes(`'${kod}'`), `${kod} eşlemesi yok`);
+  }
+  /* Genel dalda ham hata metni taşınmıyor: `error.message` hiç okunmuyor. */
+  const cevirici = govdeAl(
+    yorumsuz(sorgular),
+    'function tamamlamaHatasi',
+    'export async function sosyalProfilGorunurluguAyarla',
+  );
+  assert.ok(cevirici.length > 0, 'çevirici bulunamadı');
+  assert.doesNotMatch(cevirici, /error\?\.message|error\.message/);
 });
 
 test('profil tamsa /profil sahibin tek ekranına yönlendiriyor', () => {
@@ -950,9 +1032,13 @@ test('kanonik yönlendirme geri tuşunu kilitlemiyor', () => {
   assert.match(app, /const navigate = \(to: string, secenek\?: \{ degistir\?: boolean \}\) =>/);
   assert.match(app, /if \(secenek\?\.degistir\) window\.history\.replaceState\(\{\}, '', to\);/);
   /* Kurulum sonrası ve kanonik yönlendirme: ikisi de `degistir` ile. */
+  /*
+    Sayı İKİDEN BİRE indi: ikincisi kurulum ekranının "bitti" dalıydı ve
+    o ekran artık çizilmiyor. Kalan tek çağrı kanonik yönlendirme.
+  */
   assert.equal(
     (sayfa.match(/onNavigate\(BIRLESIK_EKRAN, \{ degistir: true \}\)/g) ?? []).length,
-    2,
+    1,
   );
 });
 
@@ -964,22 +1050,14 @@ test('yükleme, boş, hata ve yetkisiz durumları sayfada ayrı ayrı var', () =
 });
 
 /* ------------------------------------------------------------------ */
-/*  KURULUM EKRANI                                                     */
+/*  BÖLÜM SEÇİMİ VE TALEP                                              */
 /* ------------------------------------------------------------------ */
 
-test('kurulumda ALAN SEÇİCİ YOK; seçilen şey bölüm', () => {
-  /*
-    Alan artık kullanıcının seçimi değil: sunucu bölümden türetiyor.
-    Ekranda bir alan listesi bırakmak, sunucunun yok sayacağı bir seçimi
-    kullanıcıya yaptırmak olurdu. `sektorleriGetir` bu ekranda hiç
-    çağrılmıyor.
-  */
-  assert.doesNotMatch(kurulum, /sektorleriGetir/);
-  assert.doesNotMatch(kurulum, /name="sosyal-sektor"/);
-  assert.match(kurulum, /bolumleriGetir/);
-  /* Seçilen bölümün alanı ÖNİZLENMİYOR: türetmeyi sunucu yapıyor. */
-  assert.doesNotMatch(yorumsuz(kurulum), /sektorAdi|alanAdi|Alanın:/);
-});
+/*
+  "Kurulumda alan seçici yok" İDDİASI KALKTI: ölçtüğü ekran silindi.
+  Alanın kullanıcı tarafından seçilemediğini artık düzenleme ekranının
+  kilitli bölüm/alan kartı gösteriyor ve onun kendi iddiası var.
+*/
 
 test('bölüm seçimi kapalı liste, gruplu ve aranabilir', () => {
   assert.match(bolumSecimi, /type="radio"/);
@@ -1002,34 +1080,111 @@ test('bölüm seçimi dokunma hedefi ve odak halkası kalıbı izliyor', () => {
   assert.match(bolumSecimi, /ODAK_HALKASI/);
 });
 
-test('bölümün geri alınamadığı kaydetmeden önce söyleniyor', () => {
-  assert.match(kurulum, /Bölümünü bir kez seçiyorsun/);
-  assert.match(kurulum, /Kaydettikten sonra değiştirilemiyor/);
-  /* Alanın nereden geldiği tek cümleyle anlatılıyor. */
-  assert.match(kurulum, /Alanını sen seçmiyorsun/);
+test('bölüm/alan talebinin girişi yalnız eksik durumda ve yalnız sahip dalında', () => {
+  /*
+    TALEP GİRİŞİ BİR SÜRE HİÇ YOKTU
+
+    `BolumTalebi` yalnız kurulum formundan açılıyordu; form silinince
+    ekran ulaşılamaz kaldı. Yeni giriş eksikliğin YAZILI OLDUĞU yerde:
+    düzenlemedeki kilitli bölüm/alan kartı.
+
+    ÖLÇÜLEN ÜÇ ŞEY:
+      1. Satır KOŞULLU: `talepKipi` null iken hiçbir şey çizilmiyor,
+         yani bölümü ve alanı bağlanmış kullanıcı bu satırı görmüyor.
+      2. İki durum iki ayrı kip: katalogda bölüm yok / bölüm var ama
+         alan eşlemesi yok. Tek cümle ikisini de yanlış anlatırdı.
+      3. Ekran SAHİP DALININ İÇİNDE: `if (!sahibiMi) return
+         <GuvenliEkran/>` satırından sonra çiziliyor, ziyaretçide DOM'a
+         hiç girmiyor.
+  */
+  assert.match(duzenleme, /talepKipi: TalepKipi \| null;/);
+  assert.match(duzenleme, /\{talepKipi && \(/);
+  assert.match(duzenleme, /talepKipi === 'bolum-yok'/);
+  /* Kip sayfada tek yerde türetiliyor; ikinci bir koşul kopyası yok. */
+  assert.match(sayfa, /const talepKipi: TalepKipi \| null = !profil/);
+  assert.match(sayfa, /\? 'alan-tanimsiz'\n\s*: 'bolum-yok';/);
+  assert.equal((sayfa.match(/<BolumTalebi\b/g) ?? []).length, 1);
+
+  /*
+    SAHİPLİK SIRASI: talep dalı güvenli ekrandan SONRA geliyor.
+    Yorumsuz kaynakta ölçülüyor ki gerekçe yorumları sonucu değiştirmesin.
+  */
+  const temiz = yorumsuz(sayfa);
+  assert.ok(
+    temiz.indexOf('if (!sahibiMi) return') < temiz.indexOf("gorunum === 'talep'"),
+    'talep ekranı sahiplik kontrolünden önce çiziliyor',
+  );
+
+  /* YAKIN BİR BÖLÜM ÖNERİLMİYOR: katalogda olmayan bölüme öneri yok. */
+  assert.doesNotMatch(yorumsuz(duzenleme), /benzer bölüm|en yakın bölüm|şunu mu demek/i);
+  assert.doesNotMatch(yorumsuz(bolumTalebi), /benzer bölüm|en yakın bölüm|şunu mu demek/i);
 });
 
-test('kurulumda liste için yükleme, boş ve hata durumları ayrı', () => {
-  assert.match(kurulum, /listeDurumu === 'yukleniyor'/);
-  assert.match(kurulum, /listeDurumu === 'hata'/);
-  assert.match(kurulum, /bolumler\.length === 0/);
-  assert.match(kurulum, /Bölüm listesi alınamadı/);
-  assert.match(kurulum, /seçilebilecek bir bölüm yok/);
+test('tek profil fotoğrafı: kamera düğmesi ve ikinci yükleme yolu yok', () => {
+  /*
+    İKİ FOTOĞRAF VARDI, BİRİ KALDI
+
+    Sol sütundaki kamera düğmesi `student_profiles.avatar_url`e,
+    düzenlemedeki sosyal blok `social_profiles.avatar_path`e yazıyordu.
+    İkisi birbirinden habersizdi: aynı kullanıcı iki ekranda iki farklı
+    fotoğrafla görünebiliyordu.
+
+    ÖLÇÜLEN DÖRT ŞEY:
+      1. `uploadAvatar` bu ekrandan hiç çağrılmıyor ve dosya seçici yok.
+      2. `ProfilBasligi`de kamera rozeti ve fotoğraf seçme eylemi yok.
+      3. Karar tek yerde: `profilFotografi` yardımcısı.
+      4. VERİ SİLİNMEDİ: eski adres yedek olarak okunmaya devam ediyor.
+  */
+  const temizOgrenci = yorumsuz(ogrenciProfili);
+  assert.doesNotMatch(temizOgrenci, /uploadAvatar/);
+  assert.doesNotMatch(temizOgrenci, /type="file"/);
+
+  const temizBaslik = yorumsuz(profilBasligi);
+  assert.doesNotMatch(temizBaslik, /Camera|onFotografSec|avatarYukleniyor/);
+  /* Fotoğrafı artık tek bileşen çiziyor ve kaynağı tek yardımcı seçiyor. */
+  assert.match(profilBasligi, /<ProfilFotografi/);
+  assert.match(profilBasligi, /yedekAdres=\{avatarUrl\}/);
+  assert.match(fotograf, /from '\.\.\/\.\.\/lib\/profil-fotografi'/);
+  assert.match(fotograf, /profilFotografi\(yol, yedekAdres\)/);
+
+  /*
+    Yedek dalı GERÇEKTEN VAR: `avatar_path`i olmayan eski kullanıcı
+    fotoğrafsız kalmıyor. Yardımcı önce yolu, sonra adresi deniyor.
+  */
+  assert.match(fotografKaynagi, /if \(dolu\(avatarYolu\)\) return \{ tur: 'yol', yol: avatarYolu \};/);
+  assert.match(
+    fotografKaynagi,
+    /if \(dolu\(ogrenciAvatarUrl\)\) return \{ tur: 'adres', adres: ogrenciAvatarUrl \};/,
+  );
+  /* Bilinmeyen ile boş ayrı: yüklenmemiş satır "fotoğraf yok" sayılmıyor. */
+  assert.match(fotografKaynagi, /avatarYolu === undefined \? \{ tur: 'bilinmiyor' \}/);
 });
 
-test('kaydetme başarısızsa profile geçilmiyor', () => {
-  const govde = govdeAl(kurulum, 'const gonder', 'return (\n    <div');
-  assert.match(govde, /await sosyalProfilKur/);
-  assert.match(govde, /setKayitHatasi\(mesaj\)/);
-  /* onTamamlandi yalnız try içinde, catch içinde değil. */
-  assert.equal((govde.match(/onTamamlandi\(/g) ?? []).length, 1);
-  assert.ok(govde.indexOf('onTamamlandi(') < govde.indexOf('} catch'));
-});
+/*
+  ÜÇ İDDİA DAHA KALKTI — HEPSİ KURULUM EKRANINI ÖLÇÜYORDU
 
-test('düzenlemede kullanıcı adı, bölüm ve alan düzenlenebilir kutu değil', () => {
-  assert.match(duzenleme, /Kullanıcı adı, bölüm ve alan değiştirilemiyor/);
-  assert.doesNotMatch(yorumsuz(duzenleme), /kimlik="sosyal-duzenle-kullanici-adi"/);
-  assert.doesNotMatch(duzenleme, /disabled\s*\n?\s*value=\{profil\.kullaniciAdi/);
+  "Bölümün geri alınamadığı kaydetmeden önce söyleniyor", "kurulumda
+  liste için yükleme/boş/hata ayrı" ve "kaydetme başarısızsa profile
+  geçilmiyor". Üçü de `SosyalProfilKurulum` formunun cümlelerini ve
+  gönderim dalını ölçüyordu; form silindi. Gevşetilmediler, konuları
+  kalmadı.
+*/
+
+test('düzenlemede bölüm ve alan düzenlenebilir kutu değil', () => {
+  /*
+    KULLANICI ADI ARTIK BU CÜMLENİN DIŞINDA
+
+    "Kullanıcı adı, bölüm ve alan değiştirilemiyor" yazıyordu. 20260926020000
+    adı değiştirilebilir yaptı (eski ad kalıcı olarak rezerve ediliyor) ve
+    işin kendi bileşeni var. Cümle olduğu gibi kalsaydı, çalışan bir
+    eylemi yokmuş gibi gösterirdi.
+
+    Bölüm ve alan hâlâ kilitli: istemcinin o kolonlarda update yetkisi
+    yok (20260923030000) ve düzeltme yönetim tarafında.
+  */
+  assert.match(duzenleme, /Bölüm ve alan değiştirilemiyor/);
+  assert.match(duzenleme, /<KullaniciAdiDegistirme/);
+  assert.doesNotMatch(duzenleme, /disabled\s*\n?\s*value=\{profil\.bolumAdi/);
 });
 
 /* ------------------------------------------------------------------ */
@@ -1059,7 +1214,6 @@ test('tarih tek kaynaktan biçimleniyor', () => {
 
 test('renk ve odak kalıbı depodaki tek kaynaktan', () => {
   for (const kaynak of [
-    kurulum,
     gorunum,
     menu,
     sayfa,
@@ -1141,8 +1295,16 @@ test('sahibe özel her şey sahibiMi koşulunun içinde, bağlantı düğmesi d�
   */
   assert.match(gorunum, /\{sahibiMi && onPaylas && onGorunurluk && \(/);
   assert.match(gorunum, /\{sahibiMi && onDuzenle && \(/);
-  assert.match(gorunum, /\{sahibiMi && !profil\.yayindaMi && onYayimla && \(/);
-  assert.match(gorunum, /\{sahibiMi && profil\.yayindaMi && yayimlamaDurumu === 'hata' && \(/);
+  /*
+    "Yayında değilse uyarı kutusu" dalı KALKTI (üyelik artık bu kolonda
+    değil); yerinde paylaşımın iki sunucu önkoşulu duruyor. Görünürlük
+    hatası da tek dala indi.
+  */
+  assert.match(
+    gorunum,
+    /\{sahibiMi && profil\.yayindaMi && profil\.sektorId && onPaylasimOlustur && \(/,
+  );
+  assert.match(gorunum, /\{sahibiMi && yayimlamaDurumu === 'hata' && \(/);
   /* Bağlantı düğmesi bunun TERSİ dalda: kendi profilinde çizilmiyor. */
   assert.match(gorunum, /\{!sahibiMi && bakanId && \(/);
 });
@@ -1583,4 +1745,186 @@ test('alt çubuktaki Profil birleşik ekranın kendi adresine gidiyor', () => {
     'adres /cv iken Profil seçili görünmeli',
   );
   assert.ok(ustCubuk.includes('const profildeMi = cvEkranindaMi ||'));
+});
+
+/* ------------------------------------------------------------------ */
+/*  G AŞAMASI — ÜÇ KAVRAM AYRIŞTI                                      */
+/* ------------------------------------------------------------------ */
+
+test('/cv ana görünümünde "Profil bilgileri" listesi ve kurulum girişi yok', () => {
+  /*
+    ANA GÖRÜNÜM SADE: solda kim olduğun, sağda portfolyon.
+
+    Doldurulacak alanların listesi bir GEZİNME aracı ve yeri düzenleme
+    ekranı. Ana görünümde dururken sol sütunun yarısını kaplıyor,
+    kullanıcıya her açılışta "burada eksiklerin var" diyordu — oysa aynı
+    eksikler kimlik kartındaki rozetlerde zaten yazılı.
+
+    "Sosyal profil oluştur" girişi de yok: 20260926050000 profili kayıtla
+    birlikte SUNUCUDA açıyor. Arkasında kullanıcının vereceği bir bilgi
+    olmayan bir karar sormak, olmayan bir adımı varmış gibi göstermek
+    olurdu. Satır gelmediğinde çizilen şey bir kurulum çağrısı değil,
+    dürüst bir hata kutusu.
+  */
+  assert.doesNotMatch(profilBasligi, /<Bolumler /);
+  assert.doesNotMatch(ogrenciProfili, /oneCikanlar=\{oneCikanlar\}\n\s*secili=/);
+  /* Kimlik kartı hâlâ ana görünümde ve tek çağrısı orada. */
+  assert.equal((ogrenciProfili.match(/<ProfilBasligi\b/g) ?? []).length, 1);
+  /* Kurulum ekranının tek çağrısı `/profil` dalında; gömülü kip hata yazıyor. */
+  assert.doesNotMatch(ogrenciProfili, /SosyalProfilKurulum|Sosyal profil oluştur/);
+  assert.match(sayfa, /if \(gomulu\) \{[\s\S]{0,200}?<SosyalProfilHazirDegil/);
+});
+
+test('kaldırılan bölümler silinmedi: düzenleme ekranının içindeler', () => {
+  /*
+    TAŞINDI, KOPYALANMADI. Aynı `Bolum` bileşenleri, aynı veri, aynı
+    `onUpdateProfile` çağrıları — yalnız `duzenleme` dalında çiziliyorlar.
+    İki kopya olsaydı biri değiştiğinde öteki geride kalır ve aynı alan
+    iki ekranda iki farklı değer gösterirdi.
+
+    Liste de aynı diziden besleniyor (`oneCikanlar`): gezinme ile
+    bölümlerin sırası tek yerde.
+  */
+  assert.match(ogrenciProfili, /\{duzenleme && \(\n\s*<>/);
+  assert.match(ogrenciProfili, /<ProfilBolumListesi ogeler=\{oneCikanlar\} secili=\{acikBolum\} \/>/);
+  for (const kimlik of ['"cv"', '"kisisel"', '"teknik"', '"sosyal"', '"dil"', '"proje"']) {
+    assert.equal(
+      (ogrenciProfili.match(new RegExp(`id=${kimlik}\n`, 'g')) ?? []).length,
+      1,
+      `${kimlik} bölümü tam olarak bir kez çizilmeli`,
+    );
+  }
+  /* Portfolyo yalnız ana görünümde: sağ sütun aynı anda görünüm+form olmuyor. */
+  assert.match(ogrenciProfili, /\{!duzenleme && \(\n\s*<>\n\s*\{sosyalPortfolyo\}/);
+  /* Düzenlemeye giden tek kapı `bolumeGit`; her giriş oradan geçiyor. */
+  assert.equal((ogrenciProfili.match(/setDuzenleme\(true\)/g) ?? []).length, 1);
+});
+
+test('tek düzenleme ekranı, iki ayrı bölüm, iki ayrı kayıt', () => {
+  /*
+    Sosyal alanlar dişliden açılan AYRI bir ekrandaydı; öğrenci alanları
+    ise `/cv` düzenleme dalında. Tek bir profili düzenlemek için iki
+    ekran ve iki giriş vardı. Ekran birleşti.
+
+    KAYIT BİRLEŞMEDİ VE BİRLEŞMİŞ GİBİ GÖSTERİLMİYOR: öğrenci alanları
+    `student_profiles`e, sosyal alanlar `social_profiles`a yazıyor.
+    Tek bir "Kaydet" düğmesi tek bir sonuç iddia ederdi ve yarısı
+    başarılı bir gönderimde o iddia yanlış olurdu. Bölümün kendi düğmesi,
+    kendi durumu (bekliyor / gönderiliyor / kaydedildi / hata) ve kendi
+    hata satırı var; ortak tek bir hata şeridi yok.
+
+    Dişli menüsündeki giriş de kalktı: aynı işin iki kapısı olmasın.
+  */
+  assert.match(ogrenciProfili, /\{sosyalProfilDuzenleme && \(/);
+  assert.match(ogrenciProfili, /Öğrenci bilgilerin/);
+  assert.match(duzenleme, /Sosyal profilin/);
+  assert.match(duzenleme, /'bekliyor' \| 'gonderiliyor' \| 'kaydedildi' \| 'hata'/);
+  assert.match(duzenleme, /Sosyal profili kaydet/);
+  /* Hata satırı bölümün kendi formunun içinde; ekran düzeyinde şerit yok. */
+  assert.match(duzenleme, /\{kayitHatasi && <KayitHatasi mesaj=\{kayitHatasi\} \/>\}/);
+  assert.doesNotMatch(ogrenciProfili, /KayitHatasi|SosyalHata/);
+  /* Dişli artık düzenlemeye ve fotoğrafa götürmüyor. */
+  assert.doesNotMatch(ustSatir, /onDuzenle|onFotograf/);
+  /* Sosyal panelin tek çağrısı App'te ve düzenleme kipinde. */
+  assert.match(app, /gomuluKip="duzenleme"/);
+});
+
+test('kariyer hedefi ve yetkinlik testleri ana görünümde duruyor', () => {
+  /*
+    İkisi de doldurulacak bir profil ALANI değil: hedef geleceği
+    anlatıyor, testler ise bir eylem (çözülecek sınav). Düzenleme
+    ekranına taşınsalardı ikisi de "eksik alan" gibi okunurdu.
+
+    Yerleri sol sütunun ana görünüm dalı: `{!duzenleme && (` ile
+    `{duzenleme && (` arasında, `ProfilBasligi`nin hemen altında.
+  */
+  const solSutun = ogrenciProfili.slice(
+    ogrenciProfili.indexOf('<ProfilBasligi'),
+    ogrenciProfili.indexOf('DOSYA SEÇİCİ HER İKİ DALDA DA AĞAÇTA'),
+  );
+  assert.match(solSutun, /Kariyer hedefin/);
+  assert.match(solSutun, /Yetkinlik testleri/);
+  /* Düzenleme dalına kopyalanmadılar: her biri tam olarak bir kez. */
+  assert.equal((ogrenciProfili.match(/Kariyer hedefin/g) ?? []).length, 1);
+  assert.equal((ogrenciProfili.match(/Yetkinlik testleri/g) ?? []).length, 1);
+});
+
+test('arama en az üç harf istiyor ve profile_id kullanmıyor', () => {
+  /*
+    Üç harf altında istek ATILMIYOR: sunucu zaten sıfır satır dönüyor ve
+    o sıfır "sonuç yok" değil "henüz arama yok" demek. Sayı tek yerden
+    (`ARAMA_EN_AZ_HARF`) geliyor; iki yerde yazılsaydı biri değiştiğinde
+    arayüz ya boşuna istek atar ya da sunucunun bulacağı sonucu hiç
+    sormazdı.
+
+    Kimlik hiç taşınmıyor: RPC `profile_id` döndürmüyor ve gezinme
+    kullanıcı adıyla yapılıyor. Kimlik listesi, ileride yazılacak her
+    sorguya hazır bir hedef listesi olurdu.
+  */
+  assert.match(arama, /ARAMA_EN_AZ_HARF/);
+  assert.doesNotMatch(yorumsuz(arama), /profilId|profile_id/);
+  assert.doesNotMatch(yorumsuz(sorgular), /profilId: String\(satir\.profile_id\)/);
+  /* Kutu sahibin dalında: ziyaretçi bu koda hiç ulaşmıyor. */
+  assert.ok(sayfa.indexOf('if (!sahibiMi) {') < sayfa.indexOf('<KullaniciArama'));
+  /*
+    Yorumsuz kaynak: gerekçe yazısı sınırın nerede olduğunu anlatmak için
+    `sahibiMi` adını anmak zorunda; bayrak olarak ALINMIYOR.
+  */
+  assert.doesNotMatch(yorumsuz(arama), /sahibiMi/);
+});
+
+test('üye sayısı NULL iken hiçbir sayı çizilmiyor', () => {
+  /*
+    `uye_sayisi` yalnız ÜYE OLUNAN toplulukta dolu; ötekilerde `null` ve
+    NULL "sıfır" değil "sana verilmiyor" demek. 0 basmak, ölçülmemiş bir
+    sayı uydurmak olurdu. Veri katmanı da `Number(null)`ı sıfıra
+    çevirmiyor.
+  */
+  assert.equal(
+    (topluluklar.match(/topluluk\.uyeMiyim && topluluk\.uyeSayisi !== null &&/g) ?? []).length,
+    2,
+  );
+  assert.match(sorgular, /satir\.uye_sayisi === null \|\| satir\.uye_sayisi === undefined\n?\s*\? null/);
+  /* Üye olmayana boş liste + "içerik yok" DEĞİL, sebep yazılıyor. */
+  assert.match(topluluklar, /Topluluk paylaşımları üye olunca görünür/);
+  assert.doesNotMatch(yorumsuz(topluluklar), /henüz içerik yok/i);
+});
+
+test('"Alan topluluğum" kitlesi yalnız üyede açılıyor', () => {
+  /*
+    Sunucu tarafı da aynı sınırı çiziyor (`paylasim_kitlesi_kilidi`,
+    20260926040000); buradaki kapı ikinci kapı. Seçenek açık kalsaydı
+    kullanıcı fotoğraflarını yükledikten SONRA reddedilirdi.
+
+    Üyelik OKUNAMADIYSA da kapalı ve "üye değilsin" denmiyor: bilinmeyen
+    bir yetkiyi bilinen gibi yazmak, kullanıcıya kendi üyeliği hakkında
+    yanlış bilgi vermek olurdu.
+
+    Varsayılan yine DAR olan: `useState<PaylasimKitlesi>('baglantilarim')`.
+  */
+  assert.match(olustur, /const pasif = kilitli \|\| \(uyelikSarti && !uyeMiyim\);/);
+  assert.match(olustur, /disabled=\{pasif\}/);
+  assert.match(olustur, /uyeMiyim/);
+  assert.match(olustur, /setUyeMiyim\(liste\.some\(\(topluluk\) => topluluk\.uyeMiyim\)\)/);
+  /* Sebep ve açan adres yazılı; bağlantı etiketin DIŞINDA. */
+  assert.match(olustur, /alan topluluğuna katılınca açılıyor/);
+  assert.match(olustur, /href=\{TOPLULUKLAR_YOLU\}/);
+  assert.match(olustur, /aria-describedby=\{uyelikSarti && !uyeMiyim \? 'kitle-uyelik-sebebi' : undefined\}/);
+  assert.match(olustur, /React\.useState<PaylasimKitlesi>\('baglantilarim'\)/);
+  /* Sunucunun tetikleyici hatası yutulmuyor, Türkçe cümleye çevriliyor. */
+  assert.match(sorgular, /'topluluk-uyeligi-yok':/);
+});
+
+test('/topluluklar rotası App içinde tek dala bağlı', () => {
+  /*
+    Liste ve detay AYNI bileşende: ikisi de `sosyal_topluluklar`
+    okumasından besleniyor ve katılma eylemi ikisinde de aynı satırı
+    değiştiriyor. İki bileşen olsaydı aynı üyelik iki yerden yazılırdı.
+  */
+  assert.match(
+    app,
+    /if \(temizYol === '\/topluluklar' \|\| temizYol\.startsWith\('\/topluluklar\/'\)\) \{/,
+  );
+  assert.equal((app.match(/<TopluluklarSayfasi\b/g) ?? []).length, 1);
+  assert.match(app, /slug=\{hamSlug\}/);
 });

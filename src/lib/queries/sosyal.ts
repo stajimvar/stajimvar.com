@@ -26,7 +26,10 @@
  */
 
 import { supabase } from '../supabase';
-import { kullaniciAdiNormalize } from '../sosyal-kullanici-adi.mjs';
+import {
+  kullaniciAdiHarfeIndir,
+  kullaniciAdiNormalize,
+} from '../sosyal-kullanici-adi.mjs';
 
 /* Yalnız burada kullanılan dar erişim; bkz. yukarıdaki gerekçe. */
 interface SosyalIstemci {
@@ -160,10 +163,13 @@ export interface SosyalBolum {
 /**
  * Kontrollü bölüm kataloğu.
  *
- * Kullanıcının seçtiği TEK şey bu: alan bu seçimden SUNUCUDA türetiliyor
- * (`sosyal_profil_kur` → `department_sectors`). Bu yüzden listede "Diğer"
- * ya da serbest metin yok — katalog bir öneri değil, alan topluluğunun
- * kapısı. Katalogda olmayan bölüm için yol talep kuyruğu.
+ * Alan bu listeden SUNUCUDA türetiliyor (`department_sectors`). Bu yüzden
+ * listede "Diğer" ya da serbest metin yok — katalog bir öneri değil, alan
+ * topluluğunun kapısı. Katalogda olmayan bölüm için yol talep kuyruğu.
+ *
+ * LİSTENİN TEK OKUYUCUSU ARTIK YÖNETİM KUYRUĞU (`BolumTalepleri`):
+ * öğrenciye bölüm SEÇTİREN ekran kalktı, bölüm `student_profiles`ten
+ * sunucuda çözülüyor.
  *
  * `aktif` süzgeci ve `sira` sıralaması şemadaki kullanımın aynısı:
  * kapatılan bölüm listede çıkmıyor ama mevcut profilleri bozmuyor.
@@ -200,6 +206,14 @@ export interface SosyalProfil {
    * yazarak sistem bölümünü taklit edebilirdi.
    */
   bolumAdi: string | null;
+  /**
+   * `social_profiles.department_id`.
+   *
+   * Ekranda BASILMIYOR; yalnız eksik eşleme talebinde hangi katalog
+   * satırının kastedildiğini sunucuya söylemek için taşınıyor. Adla
+   * göndermek, yönetim tarafında eşleşme aramak demek olurdu.
+   */
+  bolumId: string | null;
   gorunenAd: string | null;
   biyografi: string | null;
   bolumEtiketi: string | null;
@@ -229,7 +243,7 @@ export interface SosyalProfil {
   okuma da kapalı tutulmuştu.
 */
 const PROFIL_KOLONLARI =
-  'profile_id, username, sector_id, gorunen_ad, biyografi, bolum_etiketi, sinif_etiketi, sehir, yayinda_mi, avatar_path, sectors ( ad ), departments ( ad )';
+  'profile_id, username, sector_id, department_id, gorunen_ad, biyografi, bolum_etiketi, sinif_etiketi, sehir, yayinda_mi, avatar_path, sectors ( ad ), departments ( ad )';
 
 function profileCevir(satir: any): SosyalProfil {
   return {
@@ -238,6 +252,7 @@ function profileCevir(satir: any): SosyalProfil {
     sektorId: satir.sector_id ?? null,
     sektorAdi: satir.sectors?.ad ?? null,
     bolumAdi: satir.departments?.ad ?? null,
+    bolumId: satir.department_id ?? null,
     gorunenAd: satir.gorunen_ad ?? null,
     biyografi: satir.biyografi ?? null,
     bolumEtiketi: satir.bolum_etiketi ?? null,
@@ -313,104 +328,76 @@ export async function kendiSosyalProfiliGetir(kullaniciId: string): Promise<Sosy
   return data ? profileCevir(data) : null;
 }
 
-export interface SosyalKurulumGirdisi {
-  kullaniciAdi: string;
-  /** Katalogdaki bölümün slug'ı. ALAN GİRDİSİ YOK: sunucu türetiyor. */
-  bolumSlug: string;
-  /** Kurulum ekranındaki açık seçim; varsayılanı burada uydurulmuyor. */
-  yayindaMi: boolean;
-  gorunenAd?: string | null;
-  biyografi?: string | null;
-  sinifEtiketi?: string | null;
-  sehir?: string | null;
+/**
+ * Sosyal profil satırının eksiklerini SUNUCUYA tamamlatıyor.
+ *
+ * KURULUM DEĞİL, TAMAMLAMA
+ * ------------------------
+ * Burada bir zamanlar `sosyalProfilKur` vardı: kullanıcıdan ad, bölüm ve
+ * görünürlük alıp `sosyal_profil_kur` RPC'sini çağırıyordu. 20260926050000
+ * satırı kayıt anında sunucuda açıyor, 20260926090000 da eksik kalanı
+ * tamamlamak için bu kapıyı veriyor — kullanıcının gireceği bir bilgi
+ * kalmadı, dolayısıyla soracak bir form da yok.
+ *
+ * ARGÜMAN YOK
+ * -----------
+ * RPC hedefi `auth.uid()` okuyor. Kimlik parametresi alsaydı bir bileşen
+ * prop'undan gelen değerle başkasının satırını açtırma denemesine kapı
+ * kalırdı. Fonksiyon bu yüzden oturum kimliği de ALMIYOR.
+ *
+ * İKİNCİ ÇAĞRI ZARARSIZ: RPC idempotent (satır varsa yeniden açmıyor,
+ * yalnız NULL kalan bölüm/alan alanlarını dolduruyor) ve topluluğa
+ * katmıyor. Yine de düğme tarafında kilit var: iki isteğin sonucu
+ * kullanıcıya iki ayrı cümle olarak dönerdi.
+ *
+ * DÖNEN SATIR KULLANILMIYOR: çağıran taraf okumayı kendi tazeliyor ve
+ * ekrandaki değer her zaman `kendiSosyalProfiliGetir`den geliyor. İki
+ * ayrı kaynak olsaydı RPC'nin döndürdüğü satır ile listelerin okuduğu
+ * satır birbirinden ayrışabilirdi.
+ */
+export async function sosyalProfilimiTamamla(): Promise<void> {
+  const { error } = await db.rpc('sosyal_profilimi_tamamla', {});
+  if (!error) return;
+  throw tamamlamaHatasi(error);
 }
 
 /**
- * Kurulum RPC'sinin hatasını cümleye çeviriyor.
+ * Tamamlama RPC'sinin hatasını cümleye çeviriyor.
  *
- * AYRIM `details` ALANINDAN, KODDAN DEĞİL
- * ---------------------------------------
- * `bolum-bulunamadi` ile `bolum-alani-tanimsiz` aynı `errcode` ile
- * (`P0001`) geliyor; yalnız koda bakan bir eşleme ikisini ayıramaz ve
- * kullanıcıyı yanlış eyleme gönderirdi: birincisinde katalogda bölüm
- * açılması, ikincisinde var olan bölüme alan eşlenmesi gerekiyor. Göç
- * dosyası kodu `using ... detail = '...'` ile gönderiyor; PostgREST bunu
- * `error.details` olarak veriyor.
+ * AYRIM `details` ALANINDAN: göç kodu `using ... detail = '...'` ile
+ * gönderiyor, PostgREST bunu `error.details` olarak veriyor. `errcode`
+ * ayırt etmeye yetmezdi ('42501' iki ayrı durumda da geliyor).
+ *
+ * HAM VERİTABANI METNİ EKRANA ÇIKMIYOR: tanınmayan bir hatada sebep
+ * UYDURULMUYOR, yalnız ne yapılabileceği yazılıyor. Sunucu tarafındaki
+ * gerçek sebep zaten istemciye gönderilmiyor (bkz. 20260926090000).
  *
  * BU EŞLEME GERÇEK BİR VERİTABANINDA ÇALIŞTIRILMADI: arayüz tarafında
- * ölçüm yapılmadı, ölçüm ana oturumda. Bu yüzden tanınmayan bir değer
- * hata dalı değil, genel cümleye düşen normal bir sonuç.
+ * ölçüm yapılmadı. Bu yüzden tanınmayan bir değer hata dalı değil, genel
+ * cümleye düşen normal bir sonuç.
  */
-function kurulumHatasi(error: { code?: string; message?: string; details?: string }): SosyalHata {
+function tamamlamaHatasi(error: { code?: string; message?: string; details?: string }): SosyalHata {
   const detay = (error?.details ?? '').trim();
 
-  if (detay === 'bolum-bulunamadi') {
-    return new SosyalHata('Bölümün listede bulunamadı.', 'bolum-bulunamadi');
-  }
-  if (detay === 'bolum-alani-tanimsiz') {
-    return new SosyalHata(
-      'Bölümün için alan topluluğu henüz tanımlı değil.',
-      'bolum-alani-tanimsiz',
-    );
-  }
-  if (detay === 'gecersiz-kullanici-adi') {
-    return new SosyalHata(
-      'Kullanıcı adı kurala uymuyor: 3-30 karakter, İngilizce küçük harf, rakam, nokta ve alt çizgi.',
-      'gecersiz-kullanici-adi',
-    );
-  }
   if (detay === 'oturum-yok') {
     return new SosyalHata('Oturumun kapanmış görünüyor. Yeniden giriş yap.', 'oturum-yok');
   }
-  /* Tekil indeks: social_profiles_username_key (lower(username)). */
-  if (error.code === '23505') {
-    return new SosyalHata('Bu kullanıcı adı alınmış. Başka bir ad dene.', 'kullanici-adi-alinmis');
+  if (detay === 'ogrenci-degil') {
+    return new SosyalHata(
+      'Sosyal profil yalnız öğrenci hesaplarında açılıyor.',
+      'ogrenci-degil',
+    );
   }
-  /* Kimlik kilidi tetikleyicisi 42501 ile reddediyor. */
-  if (error.code === '42501') {
-    return new SosyalHata('Alan seçildikten sonra değiştirilemiyor.', 'sektor-kilitli');
+  if (detay === 'profil-hazirlanamadi') {
+    return new SosyalHata(
+      'Sunucu sosyal profilini hazırlayamadı. Sebebini buradan göremiyoruz.',
+      'profil-hazirlanamadi',
+    );
   }
   return new SosyalHata(
-    `Sosyal profil kaydedilemedi: ${error?.message ?? 'bilinmeyen hata'}`,
+    'Sosyal profilin tamamlanamadı. Bağlantını kontrol edip yeniden dene.',
     'sunucu',
   );
-}
-
-/**
- * İlk kurulum: kullanıcı adı + BÖLÜM.
- *
- * ARTIK `upsert` DEĞİL, RPC
- * -------------------------
- * İstemcinin `social_profiles` üzerinde INSERT yetkisi YOK ve
- * `sector_id`/`department_id`/`username` kolonlarına UPDATE yetkisi de
- * yok (kolon düzeyi grant). Satırı yalnız `sosyal_profil_kur` açıyor ve
- * alanı `department_sectors` eşlemesinden SUNUCUDA türetiyor. Gövdeye
- * `sector_id` koymak, yetki katmanında duracak bir istek üretmek olurdu;
- * daha kötüsü, alanın kullanıcı tarafından seçilebildiği izlenimi.
- *
- * KİMLİK PARAMETRESİ YOK
- * ----------------------
- * Fonksiyon oturum kimliği ALMIYOR: RPC `auth.uid()` okuyor. Kimliği
- * dışarıdan almak, bir bileşen prop'undan gelen değerle başkasının
- * satırını açma denemesine kapı bırakırdı.
- *
- * `yayinda_mi` KULLANICININ AÇIK SEÇİMİ: kurulum ekranındaki onay kutusu
- * KAPALI başlıyor ve `SosyalKurulumGirdisi` içinde zorunlu alan — çağıran
- * taraf "herhâlde şudur" diye bir varsayılan uyduramıyor.
- */
-export async function sosyalProfilKur(girdi: SosyalKurulumGirdisi): Promise<void> {
-  const { error } = await db.rpc('sosyal_profil_kur', {
-    p_kullanici_adi: girdi.kullaniciAdi,
-    p_bolum_slug: girdi.bolumSlug,
-    p_yayimla: girdi.yayindaMi,
-    p_gorunen_ad: bosNull(girdi.gorunenAd),
-    p_biyografi: bosNull(girdi.biyografi),
-    p_sinif: bosNull(girdi.sinifEtiketi),
-    p_sehir: bosNull(girdi.sehir),
-  });
-
-  if (!error) return;
-  throw kurulumHatasi(error);
 }
 
 /**
@@ -705,8 +692,8 @@ export async function gorselIndir(kova: string, yol: string): Promise<Blob | nul
  *
  * AYRIM `message` ALANINDAN, `details`TEN DEĞİL
  * ---------------------------------------------
- * Kurulum RPC'si kodu `using ... detail = '...'` ile gönderiyordu ve
- * `kurulumHatasi` bu yüzden `details` okuyor. Paylaşım RPC'leri
+ * Tamamlama RPC'si kodu `using ... detail = '...'` ile gönderiyor ve
+ * `tamamlamaHatasi` bu yüzden `details` okuyor. Paylaşım RPC'leri
  * (20260924030000) kodu doğrudan MESAJ olarak atıyor:
  * `raise exception 'toplulukta-degil' using errcode = 'P0001'`. İki alan
  * da taranıyor çünkü hangisinin dolu geldiği bu arayüz tarafında
@@ -714,7 +701,24 @@ export async function gorselIndir(kova: string, yol: string): Promise<Blob | nul
  * normal bir sonuç.
  */
 const PAYLASIM_CUMLELERI: Record<string, string> = {
-  'toplulukta-degil': 'Paylaşım yapabilmek için önce alan topluluğuna katılmalısın.',
+  /*
+    `sosyal_paylasim_baslat` bu kodu `yayinda_mi` VEYA `sector_id`
+    eksikken atıyor; adı eski modelden kalma ve üyeliği anlatmıyor.
+    Cümle bu yüzden iki önkoşulu da anıyor — "topluluğa katıl" deseydi,
+    profili gizli olan kullanıcıyı yapacağı işin olmadığı bir ekrana
+    gönderirdi.
+  */
+  'toplulukta-degil':
+    'Paylaşım açmak için profilinin herkese açık olması ve bölümünün bir alana bağlı olması gerekiyor.',
+  /*
+    Bu KOD AYRI: `paylasim_kitlesi_kilidi` (20260926040000) tetikleyicisi
+    yalnız "Alan topluluğum" kitlesi seçildiğinde ve üyelik yokken
+    çalışıyor. Yukarıdakiyle tek cümlede birleştirilmedi: biri profilin
+    durumunu, öteki seçilen kitleyi anlatıyor ve kullanıcının yapacağı iş
+    farklı.
+  */
+  'topluluk-uyeligi-yok':
+    'Alan topluluğuna katılmadan "Alan topluluğum" kitlesiyle paylaşamazsın.',
   'gecersiz-kitle': 'Paylaşımın kimlere görüneceği seçilmeden gönderilemiyor.',
   'anahtar-kullanilmis': 'Bu paylaşım zaten tamamlanmış. Yeni bir paylaşım başlatman gerekiyor.',
   'istemci-anahtari-gerekli': 'Paylaşım başlatılamadı. Sayfayı yenileyip yeniden dene.',
@@ -1836,4 +1840,248 @@ function kararHatasi(error: { code?: string; message?: string; details?: string 
     `Karar kaydedilemedi: ${error?.message ?? 'bilinmeyen hata'}`,
     'sunucu',
   );
+}
+
+/* ============================================================ G aşaması */
+/*  KULLANICI ADI — DEĞİŞTİRME VE ESKİ ADRESİN ÇÖZÜMÜ                     */
+/* ====================================================================== */
+
+/**
+ * Kullanıcı adı RPC'sinin hatasını cümleye çeviriyor.
+ *
+ * AYRIM YİNE `details` ALANINDAN
+ * ------------------------------
+ * `sosyal_kullanici_adi_degistir` (20260926020000) dört kodu birden
+ * gönderiyor ve ikisi aynı `errcode` ile gelebiliyor: 'profil-yok'
+ * P0001, 'gecersiz-kullanici-adi' 23514, 'kullanici-adi-alinmis' 23505,
+ * 'oturum-yok' 42501. Yalnız koda bakan bir eşleme kullanıcıyı yanlış
+ * eyleme gönderirdi — "alınmış" başka bir ad yazdırır, "kurala uymuyor"
+ * yazımı düzelttirir.
+ *
+ * HAM HATA HİÇ GÖSTERİLMİYOR: tanınmayan bir değer bile veritabanı
+ * metnini değil, kullanıcının yapabileceği bir şeyi söyleyen genel bir
+ * cümleye düşüyor.
+ *
+ * BU EŞLEME GERÇEK BİR VERİTABANINDA ÇALIŞTIRILMADI; ölçüm ana oturumda.
+ */
+function kullaniciAdiRpcHatasi(error: {
+  code?: string;
+  message?: string;
+  details?: string;
+}): SosyalHata {
+  const detay = (error?.details ?? '').trim();
+  const cumleler: Record<string, string> = {
+    'kullanici-adi-alinmis': 'Bu kullanıcı adı alınmış. Başka bir ad dene.',
+    'gecersiz-kullanici-adi':
+      'Kullanıcı adı kurala uymuyor: 3-30 harf, yalnız İngilizce küçük harf.',
+    'profil-yok': 'Sosyal profilin bulunamadı; kullanıcı adı değiştirilemedi.',
+    'oturum-yok': 'Oturumun kapanmış görünüyor. Yeniden giriş yap.',
+  };
+  if (cumleler[detay]) return new SosyalHata(cumleler[detay], detay);
+  return new SosyalHata('Kullanıcı adı değiştirilemedi. Yeniden deneyebilirsin.', 'sunucu');
+}
+
+/**
+ * Kullanıcı adını değiştir.
+ *
+ * KOLON DOĞRUDAN YAZILMIYOR: `username` istemcinin `grant update`
+ * listesinde yok ve `kimlik_kilidi` tetikleyicisi doğrudan UPDATE'i
+ * reddediyor (20260926020000). Tek yol bu RPC.
+ *
+ * DÖNEN DEĞER SUNUCUNUN KABUL ETTİĞİ AD: fonksiyon `social_profiles`
+ * satırını döndürüyor ve buradan yalnız `username` okunuyor. Çağıran
+ * tarafın formdaki metni "kaydedildi" diye göstermesi, sunucunun başka
+ * bir değer yazdığı durumda yalan olurdu.
+ */
+export async function sosyalKullaniciAdiDegistir(yeni: string): Promise<string> {
+  const { data, error } = await db.rpc('sosyal_kullanici_adi_degistir', { p_yeni: yeni });
+  if (error) throw kullaniciAdiRpcHatasi(error);
+
+  const satir = Array.isArray(data) ? data[0] : data;
+  const ad = satir?.username;
+  /*
+    Satır dönmediyse ad UYDURULMUYOR. "Herhâlde yazdığı ad kaydedildi"
+    demek, kaydedilmemiş bir adresi kullanıcıya vermek olurdu.
+  */
+  if (!ad) throw new SosyalHata('Kullanıcı adı değiştirilemedi. Yeniden deneyebilirsin.', 'sunucu');
+  return String(ad);
+}
+
+/**
+ * Eski kullanıcı adını GÜNCEL adına çözer.
+ *
+ * SIFIR SATIR "YOK" DEĞİL, "ÇÖZÜM YOK" DEMEK. Fonksiyon yalnız çağıranın
+ * zaten görebileceği bir profile çözüm veriyor (`sosyal_gorunur`
+ * kapısı); bulamadığında `null` dönüyor ve çağıran taraf MEVCUT güvenli
+ * ekranı çiziyor — "böyle bir ad hiç olmadı" diye ayrı bir cevap
+ * üretilmiyor, yoksa adres çubuğu bir ad sözlüğüne dönerdi.
+ *
+ * Hata YUTULMUYOR: sunucuya ulaşılamaması ile çözüm bulunamaması aynı
+ * şey değil ve ikisi çağıran tarafta ayrı ele alınıyor.
+ */
+export async function sosyalKullaniciAdiCoz(ad: string): Promise<string | null> {
+  const { data, error } = await db.rpc('sosyal_kullanici_adi_coz', { p_ad: ad });
+  if (error) hata('Kullanıcı adı çözülemedi', error);
+
+  const satir = Array.isArray(data) ? data[0] : data;
+  return satir?.guncel_username ? String(satir.guncel_username) : null;
+}
+
+/* ====================================================================== */
+/*  KULLANICI ARAMASI                                                     */
+/* ====================================================================== */
+
+/**
+ * Arama sonucu satırı — RPC'nin döndürdüğü beş alanın aynısı.
+ *
+ * `profilId` YOK ve olmayacak: `sosyal_kullanici_ara` (20260926060000)
+ * `profile_id` döndürmüyor. Gezinme için gereken tek şey kullanıcı adı
+ * (`/profil/<ad>`); kimlik listesi, ileride yazılacak her sorguya hazır
+ * bir hedef listesi olurdu.
+ */
+export interface SosyalAramaSonucu {
+  kullaniciAdi: string;
+  gorunenAd: string | null;
+  avatarYolu: string | null;
+  bolumEtiketi: string | null;
+  sehir: string | null;
+}
+
+/**
+ * Sunucudaki `length(sorgu.ad) >= 3` kuralının istemci tarafı.
+ *
+ * Sayı iki yerde yazılı olsaydı biri değiştiğinde arayüz ya boşuna
+ * istek atar ya da sunucunun bulacağı sonucu hiç sormazdı.
+ */
+export const ARAMA_EN_AZ_HARF = 3;
+
+/**
+ * Kullanıcı adı öneki ile arama.
+ *
+ * ÜÇ HARF ALTINDA İSTEK ATILMIYOR: sunucu zaten sıfır satır dönüyor ve
+ * o sıfır "sonuç yok" DEĞİL, "henüz arama yok" demek. İstek atıp boş
+ * liste almak, arayüzün ikisini karıştırmasına kapı bırakırdı; bu yüzden
+ * ayrım burada, tek yerde.
+ *
+ * UZUNLUK HAM METİNDE DEĞİL, HARFE İNDİRİLMİŞ METİNDE ölçülüyor:
+ * sunucu da `sosyal_gizli.kullanici_adi_normalize`den geçmiş dizenin
+ * uzunluğuna bakıyor. "a b" üç karakter ama sıfır harf; ham uzunluğa
+ * baksaydık sunucunun kesin olarak boş döneceği bir istek atardık.
+ * Gönderilen metin yine HAM: normalleştirme sunucuda tek yerde kalıyor,
+ * yoksa iki tanım ayrışır ve kullanıcı kendi adını arayıp bulamazdı.
+ */
+export async function sosyalKullaniciAra(sorgu: string): Promise<SosyalAramaSonucu[]> {
+  if (kullaniciAdiHarfeIndir(sorgu).length < ARAMA_EN_AZ_HARF) return [];
+
+  const { data, error } = await db.rpc('sosyal_kullanici_ara', { p_sorgu: sorgu });
+  if (error) hata('Arama yapılamadı', error);
+
+  return (data ?? []).map((satir: any) => ({
+    kullaniciAdi: String(satir.username),
+    gorunenAd: satir.gorunen_ad ?? null,
+    avatarYolu: satir.avatar_path ?? null,
+    bolumEtiketi: satir.bolum_etiketi ?? null,
+    sehir: satir.sehir ?? null,
+  }));
+}
+
+/* ====================================================================== */
+/*  ALAN TOPLULUKLARI                                                     */
+/* ====================================================================== */
+
+/**
+ * Bir alan topluluğu ve ÇAĞIRANIN o topluluktaki durumu.
+ *
+ * Liste ile durum tek çağrıda geliyor (`sosyal_topluluklar`,
+ * 20260926030000). İki ayrı çağrı olsaydı arayüz, katılma yetkisi
+ * olmayan bir toplulukta da "Katıl" düğmesi çizebilirdi.
+ */
+export interface AlanToplulugu {
+  sektorId: string;
+  slug: string;
+  ad: string;
+  /** Çağıranın bölümü bu topluluğa eşleniyor mu. */
+  uygunMu: boolean;
+  uyeMiyim: boolean;
+  /**
+   * Üye sayısı — YALNIZ üye olunan toplulukta dolu, ötekilerde `null`.
+   *
+   * `null` "sıfır" DEĞİL, "sana verilmiyor" demek; sunucu üye olmayana
+   * topluluk büyüklüğünü söylemiyor. Arayüz bu yüzden `null` iken sayıyı
+   * hiç çizmiyor — 0 basmak, ölçülmemiş bir sayı uydurmak olurdu.
+   */
+  uyeSayisi: number | null;
+}
+
+/**
+ * Alan toplulukları listesi.
+ *
+ * Boş dizi dönmesi normal bir sonuç: `sectors` boşsa ya da oturum
+ * yoksa fonksiyon sıfır satır veriyor. Hata dalı ayrı ve yutulmuyor —
+ * "topluluk yok" ile "liste alınamadı" kullanıcıya farklı cümle
+ * kurdurur.
+ */
+export async function sosyalTopluluklariGetir(): Promise<AlanToplulugu[]> {
+  const { data, error } = await db.rpc('sosyal_topluluklar', {});
+  if (error) hata('Topluluklar alınamadı', error);
+
+  return (data ?? []).map((satir: any) => ({
+    sektorId: String(satir.sector_id),
+    slug: String(satir.slug),
+    ad: String(satir.ad),
+    uygunMu: Boolean(satir.uygun_mu),
+    uyeMiyim: Boolean(satir.uye_miyim),
+    /*
+      `null` ile `0` burada ayrılıyor: `Number(null)` sıfır üretirdi ve
+      o sıfır ekranda gerçek bir sayı gibi görünürdü.
+    */
+    uyeSayisi:
+      satir.uye_sayisi === null || satir.uye_sayisi === undefined
+        ? null
+        : Number(satir.uye_sayisi),
+  }));
+}
+
+/**
+ * Topluluk katıl/ayrıl hatasını cümleye çeviriyor.
+ *
+ * 'bolum-alani-tanimsiz' ile 'topluluk-uygun-degil' aynı ekranda çok
+ * farklı iki durum: birincisinde kullanıcının bölümü katalogla
+ * eşleşmemiş, ikincisinde başka bir alanın topluluğuna katılmaya
+ * çalışılmış. Tek cümle olsaydı ilk durumdaki kullanıcı sorunun kendinde
+ * olduğunu sanırdı.
+ */
+function toplulukHatasi(error: { code?: string; message?: string; details?: string }): SosyalHata {
+  const detay = (error?.details ?? '').trim();
+  const cumleler: Record<string, string> = {
+    'bolum-alani-tanimsiz': 'Bölümün için topluluk henüz tanımlı değil.',
+    'topluluk-uygun-degil': 'Bu topluluk senin bölümüne açık değil.',
+    'oturum-yok': 'Oturumun kapanmış görünüyor. Yeniden giriş yap.',
+  };
+  if (cumleler[detay]) return new SosyalHata(cumleler[detay], detay);
+  return new SosyalHata('İşlem tamamlanamadı. Yeniden deneyebilirsin.', 'sunucu');
+}
+
+/**
+ * Topluluğa katıl.
+ *
+ * `sektorId` bir İSTEK, yetki değil: sunucu çağıranın bölümünden uygun
+ * alanı kendisi okuyup karşılaştırıyor. Arayüzün "Katıl" düğmesini
+ * yalnız `uygunMu` satırında çizmesi ikinci kapı, tek kapı değil.
+ */
+export async function sosyalToplulugaKatil(sektorId: string): Promise<void> {
+  const { error } = await db.rpc('sosyal_topluluga_katil', { p_sector_id: sektorId });
+  if (error) throw toplulukHatasi(error);
+}
+
+/**
+ * Topluluktan ayrıl.
+ *
+ * PROFİLE DOKUNMUYOR: görünürlük, kullanıcı adı, bağlantılar ve
+ * "Bağlantılarım" kitlesindeki paylaşımlar aynen kalıyor. Tek etki, o
+ * topluluğun içeriğine erişimin kapanması.
+ */
+export async function sosyalTopluluktanAyril(sektorId: string): Promise<void> {
+  const { error } = await db.rpc('sosyal_topluluktan_ayril', { p_sector_id: sektorId });
+  if (error) throw toplulukHatasi(error);
 }

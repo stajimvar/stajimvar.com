@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  ArrowLeft,
   Award,
   Camera,
   Check,
@@ -31,14 +32,24 @@ import {
   SkillQuiz,
   ApplicationRecord,
 } from '../types';
-import { uploadAvatar } from '../lib/queries';
+/*
+  `uploadAvatar` ÇAĞRISI KALDIRILDI
+
+  Kullanıcının tek fotoğrafı var ve kaynağı `social_profiles.avatar_path`;
+  yükleme yalnız düzenleme ekranının sosyal bloğundan yapılıyor. Buradaki
+  çağrı `student_profiles.avatar_url`e yazıyordu ve iki kolon birbirinden
+  habersizdi: aynı kullanıcı profil kartında bir, sosyal profilinde başka
+  bir fotoğrafla görünebiliyordu. Fonksiyon `src/lib/queries`te DURUYOR —
+  kolon da duruyor ve eski fotoğraflar okunmaya devam ediyor.
+*/
 import { CvAlani } from './CvAlani';
 import { fetchSavedListingIds } from '../lib/opportunities';
 import { adYazimi , okulKisaltmasi} from '../lib/ad';
 import { useModalErisim } from '../lib/modal-erisim';
 import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
 import { Button, Card, IKON_KUTUSU, IKON_TONU } from '../ui';
-import { ProfilBasligi, type EksikAdim, type OneCikan } from './ProfilBasligi';
+import { ODAK_HALKASI } from '../lib/renk-token';
+import { ProfilBasligi, ProfilBolumListesi, type EksikAdim, type OneCikan } from './ProfilBasligi';
 import { AutocompleteField } from './AutocompleteField';
 import { PredictiveInput } from './PredictiveInput';
 import {
@@ -121,6 +132,39 @@ interface StudentProfileViewProps {
    * da "yakında" satırı çizilmiyor.
    */
   sosyalPortfolyo?: React.ReactNode;
+  /**
+   * SOSYAL PROFİL ALANLARI — AYNI DÜZENLEME EKRANININ İKİNCİ BÖLÜMÜ
+   *
+   * Görünen ad, kullanıcı adı, biyografi, eğitim notu, sınıf, şehir ve
+   * profil fotoğrafı dişli menüsünden açılan AYRI bir ekrandaydı. Tek bir
+   * profili düzenlemek için iki ayrı ekran ve iki ayrı giriş vardı;
+   * kullanıcı bir alanı hangisinde arayacağını ancak deneyerek buluyordu.
+   *
+   * EKRAN BİRLEŞTİ, KAYIT BİRLEŞMEDİ. Buradaki alanlar `social_profiles`a,
+   * yukarıdaki bölümler `student_profiles`a yazılıyor. Tek bir "Kaydet"
+   * düğmesi tek bir sonuç iddia ederdi ve yarısı başarılı bir gönderimde
+   * o iddia yanlış olurdu — bu yüzden panel KENDİ kaydetme düğmesini,
+   * kendi durumunu ve kendi hata satırını taşıyor. Ortak bir hata şeridi
+   * yok.
+   *
+   * Panel App'ten hazır geliyor; bu bileşen sosyal veriyi kendisi
+   * çekmiyor. Verilmezse hiçbir şey çizilmiyor — boş bir kutu ya da
+   * "yakında" satırı, olmayan bir özelliği varmış gibi göstermek olurdu.
+   */
+  sosyalProfilDuzenleme?: React.ReactNode;
+  /**
+   * SOSYAL SATIRDAKİ PROFİL FOTOĞRAFININ YOLU
+   *
+   * Kullanıcının tek fotoğrafı var ve kaynağı
+   * `social_profiles.avatar_path`. Bu ekran sosyal veriyi kendisi
+   * çekmiyor (portfolyo paneli gibi, değer App'ten hazır geliyor);
+   * ikinci bir sorgu aynı satırı aynı ekranda iki kez okurdu ve yeni
+   * yüklenen fotoğraf bir sütunda eski kalırdı.
+   *
+   * `undefined` = henüz okunmadı. O aralıkta `ProfilBasligi` eski
+   * `avatarUrl` yedeğine düşüyor; ikisi de yoksa iskelet çiziliyor.
+   */
+  sosyalAvatarYolu?: string | null;
   /** İlanlar sekmesindeki "Kaydettiklerim" kategorisine geçiş. */
   onKaydedilenlere?: () => void;
   /*
@@ -326,6 +370,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   basvurular = [],
   onBasvurulariAc,
   sosyalPortfolyo,
+  sosyalProfilDuzenleme,
+  sosyalAvatarYolu,
   onKaydedilenlere,
   onSubTabChange,
   onLogout,
@@ -342,17 +388,44 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     bölümün adına bakan koşul, sonradan okuyanı yanıltır.
   */
   const [acikBolum, setAcikBolum] = useState<BolumId>('kisisel');
+  /*
+    DÜZENLEME AYRI BİR EKRAN
+
+    Doldurulacak bölümler (okul, CV, programlar, beceriler, diller,
+    projeler, tercihler, testler) ana görünümün sağ sütununda,
+    portfolyonun hemen altında duruyordu. İki farklı iş aynı ekrandaydı:
+    biri "profilim nasıl görünüyor", öteki "profilimi dolduruyorum". Sağ
+    sütun bu yüzden hem kare ızgarayı hem de bir formu taşıyordu ve
+    ızgaranın nerede bittiği belli olmuyordu.
+
+    Bölümler SİLİNMEDİ, taşındı: aynı `Bolum` bileşenleri, aynı veri,
+    aynı `onUpdateProfile` çağrıları — yalnız düzenleme dalında
+    çiziliyorlar. Kopya bırakılmadı; bir bölüm iki ekranda birden
+    durmuyor.
+
+    Adres DEĞİŞMİYOR (`/cv`): düzenleme ekranının kendi adresi olsaydı
+    onu da ara katmana yazmak gerekirdi ve geri tuşu bu ekrandan
+    çıkarken kullanıcıyı ana görünüme değil bir önceki sayfaya
+    götürürdü.
+  */
+  const [duzenleme, setDuzenleme] = useState(false);
   /**
-   * Bölüme git. Izgara, sayılar ve eksik adımlar hep buradan geçiyor.
+   * Bölüme git — düzenleme ekranını açıp o bölümü seçiyor.
+   *
+   * Şeritteki satırlar, eksik adım rozetleri ve sol sütundaki kartlar
+   * hep buradan geçiyor: hepsinin işi aynı, doldurulacak bir alana
+   * gitmek. Ayrı ayrı `setDuzenleme` çağırsalardı biri unutulduğunda o
+   * giriş hiçbir şey yapmayan bir tıklama olurdu.
    *
    * MOBİLDE KAYDIRMA DA GEREKİYOR
-   * Telefonda bölümler başlık kartının ALTINDA duruyor. Sayıya basınca
+   * Telefonda bölümler listenin ALTINDA duruyor. Sayıya basınca
    * yalnızca durum değişiyordu; ekranda görünen şey değişmediği için
-   * tıklama hiçbir şey yapmamış gibi oluyordu. Geniş ekranda bölümler
+   * tıklama hiçbir şey yapmamış gibi oluyordu. Geniş ekranda bölüm
    * zaten yan sütunda ve görünüyor, orada kaydırma gereksiz.
    */
   const bolumeGit = (bolum: BolumId) => {
     setAcikBolum(bolum);
+    setDuzenleme(true);
     if (typeof window === 'undefined' || window.innerWidth >= 1024) return;
     /* Bölüm yalnızca seçiliyken çiziliyor; boyama bitmeden hedef yok. */
     requestAnimationFrame(() => {
@@ -380,7 +453,24 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   const adimlar: { tamam: boolean; etiket: string; bolum: BolumId }[] = [
     { tamam: Boolean(student.university && student.department), etiket: 'okulunu gir', bolum: 'kisisel' },
     { tamam: Boolean(student.bio), etiket: 'kendini tanıt', bolum: 'kisisel' },
-    { tamam: Boolean(student.avatarUrl), etiket: 'fotoğraf ekle', bolum: 'kisisel' },
+    /*
+      FOTOĞRAF ADIMI TEK KAYNAĞA BAKIYOR
+
+      Ölçüt artık `avatar_url` değil: yükleme yalnız düzenleme ekranının
+      sosyal bloğundan yapılıyor ve oraya yazılan şey `avatar_path`. Eski
+      kolon yedek olarak duruyor, o yüzden ikisinden biri doluysa adım
+      tamam — eskiden fotoğraf yüklemiş kullanıcıya "fotoğraf ekle"
+      demek, zaten duran bir fotoğrafı yokmuş gibi göstermek olurdu.
+
+      Rozet düzenleme ekranını açıyor ('kisisel'): fotoğraf bloğu o
+      ekranın sosyal bölümünde, yani rozetin gittiği yerde. Kendi
+      `BolumId`si yok çünkü şeritteki bir bölüm değil.
+    */
+    {
+      tamam: Boolean(sosyalAvatarYolu || student.avatarUrl),
+      etiket: 'fotoğraf ekle',
+      bolum: 'kisisel',
+    },
     { tamam: Boolean(student.phone), etiket: 'telefonunu gir', bolum: 'kisisel' },
     /* CV artık gerçek bir belge: yüklenmişse adım tamam sayılıyor. */
     { tamam: Boolean(student.cvPath), etiket: 'CV yükle', bolum: 'cv' },
@@ -608,26 +698,15 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   */
   const bolumAc = (id: BolumId) => setAcikBolum(id);
 
-  /* ---- fotoğraf ---- */
-  const dosyaRef = useRef<HTMLInputElement>(null);
-  const [avatarYukleniyor, setAvatarYukleniyor] = useState(false);
-  const [avatarHatasi, setAvatarHatasi] = useState<string | null>(null);
+  /*
+    ---- fotoğraf ----
 
-  const fotografSec = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setAvatarHatasi(null);
-    setAvatarYukleniyor(true);
-    try {
-      const url = await uploadAvatar(student.id, file);
-      onUpdateProfile({ avatarUrl: url });
-    } catch (error) {
-      setAvatarHatasi(error instanceof Error ? error.message : 'Fotoğraf yüklenemedi.');
-    } finally {
-      setAvatarYukleniyor(false);
-      e.target.value = '';
-    }
-  };
+    Bu ekranda fotoğraf YÜKLENMİYOR: dosya seçici, yükleme durumu ve hata
+    satırı kaldırıldı. Tek yükleme yeri düzenleme ekranının sosyal bloğu
+    ve tek kaynak `social_profiles.avatar_path`. Görünen fotoğrafı
+    `ProfilBasligi` çiziyor; eski `avatar_url` de orada yedek olarak
+    okunuyor, yani kimse fotoğrafsız kalmıyor.
+  */
 
   /* ---- kişisel bilgi taslağı ---- */
   const bosTaslak = () => ({
@@ -811,17 +890,58 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       Aynı sitede iki farklı sayfa genişliği vardı.
 
       Artık anasayfayla aynı: solda kimlik kartı (kaydırınca yapışık kalıyor),
-      sağda doldurulacak bölümler. Mobilde hiçbir şey değişmiyor — sütunlar
+      sağda sosyal portfolyo. Mobilde hiçbir şey değişmiyor — sütunlar
       alt alta diziliyor ve sıra aynı.
+
+      DÜZENLEME AYNI İSKELETİ KULLANIYOR: solda hangi bölümde olduğun,
+      sağda o bölümün formu. İkinci bir yerleşim kurmak, aynı sayfanın
+      iki farklı genişlikte iki hâli demek olurdu; kullanıcı düzenlemeye
+      girip çıkarken sütunlar kayardı.
     */
     <div className="w-full pb-16 animate-in fade-in duration-200">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
 
         {/* ---------------- SOL: profil başlığı ---------------- */}
         <div className="lg:col-span-4 lg:sticky lg:top-4 space-y-3">
+          {/*
+            DÜZENLEMEDE SOL SÜTUN GEZİNME OLUYOR
+
+            Kimlik kartı burada çizilmiyor: düzenleme ekranında kullanıcı
+            kendi adına bakmıyor, hangi alanı doldurduğuna bakıyor. Kart
+            kalsaydı listeyi aşağı iter ve telefonda her bölüm
+            değişiminde onu yeniden geçmek gerekirdi.
+          */}
+          {duzenleme && (
+            <>
+              {/*
+                Geri satırı 44 piksel dokunma hedefinde ve ikon tek başına
+                bilgi taşımıyor: yanında "Profilime dön" yazıyor.
+              */}
+              <button
+                type="button"
+                onClick={() => setDuzenleme(false)}
+                /* Odak halkası tek kaynaktan: `src/lib/renk-token.ts`. */
+                className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 ${ODAK_HALKASI}`}
+              >
+                <ArrowLeft aria-hidden className="h-4 w-4 shrink-0" />
+                Profilime dön
+              </button>
+              <ProfilBolumListesi ogeler={oneCikanlar} secili={acikBolum} />
+            </>
+          )}
+
+          {!duzenleme && (
+          <>
           <ProfilBasligi
             ad={student.fullName}
             avatarUrl={student.avatarUrl}
+            /*
+              Sosyal satırdaki yol sağ sütundaki portfolyo panelinden
+              geliyor: aynı satırı bu bileşen ikinci kez sorgulasaydı
+              yeni yüklenen fotoğraf iki sütunda iki farklı anda
+              tazelenirdi.
+            */
+            sosyalAvatarYolu={sosyalAvatarYolu}
             okul={student.university}
             bolum={student.department}
             sinif={student.gradeLevel}
@@ -832,8 +952,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             kaydedilenSayisi={kaydedilenSayisi}
             basvuruSayisi={basvuruSayisi}
             mulakatSayisi={mulakatSayisi}
-            avatarYukleniyor={avatarYukleniyor}
-            onFotografSec={() => dosyaRef.current?.click()}
+
             onDuzenle={kisiselAc}
             onCv={
               onOpenCv
@@ -864,8 +983,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               /* Mülakat sayısına basan kişi mülakatları görmek istiyor. */
               onBasvurulariAc ? () => onBasvurulariAc('interviews') : undefined
             }
-            oneCikanlar={oneCikanlar}
-            secili={acikBolum}
           />
 
           {/*
@@ -919,15 +1036,9 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                 : 'Teste başla'}
             </Button>
           </Card>
+          </>
+          )}
 
-          <input
-            type="file"
-            ref={dosyaRef}
-            accept="image/*"
-            className="hidden"
-            onChange={fotografSec}
-          />
-          {avatarHatasi && <p className="text-xs text-rose-600 px-1">{avatarHatasi}</p>}
 
           {/*
             CV UYARISI
@@ -993,7 +1104,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           */}
         </div>
 
-        {/* ---------------- SAĞ: sekmeler ve bölümler ---------------- */}
+        {/* ---------------- SAĞ: portfolyo ya da açık bölüm ---------------- */}
         <div className="lg:col-span-8 space-y-3 min-w-0">
 
       {/*
@@ -1009,8 +1120,42 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         Panel App'ten hazır geliyor ve VERİLMEZSE hiçbir şey çizilmiyor:
         boş bir kutu ya da "yakında" satırı, olmayan bir özelliği varmış
         gibi göstermek olurdu.
+
+        DÜZENLEMEDE ÇİZİLMİYOR: portfolyo kendi ızgarasını, sayaçlarını ve
+        dişli menüsünü taşıyor; formun üstünde durunca sağ sütun aynı anda
+        hem bir görünüm hem bir form olurdu.
       */}
-      {sosyalPortfolyo}
+      {!duzenleme && (
+        <>
+          {sosyalPortfolyo}
+        </>
+      )}
+
+      {/*
+        ---------------- DÜZENLEME BÖLÜMLERİ ----------------
+
+        Sekiz bölümün sekizi de bu dalın içinde ve her biri ayrıca
+        `gorunur={acikBolum === ...}` ile süzülüyor: aynı anda tek bölüm
+        çiziliyor, ötekiler DOM'a hiç girmiyor. Kapalı bir bölümü
+        `hidden` ile bırakmak, doldurulmamış form alanlarını klavye
+        sırasında tutmak olurdu.
+
+        EKRAN TEK, KAYNAK İKİ. Aşağıdaki bölümler `student_profiles`a
+        yazıyor; ekranın altındaki sosyal bölüm `social_profiles`a. İki
+        başlık bu ayrımı yazıyor çünkü kaydetme ATOMİK DEĞİL: her bölümün
+        kendi kaydetme eylemi ve kendi durumu var, tek bir "Kaydet"
+        düğmesi yarısı başarılı bir gönderimde yalan söylerdi.
+      */}
+      {duzenleme && (
+      <>
+
+      {/*
+        Başlık düzeyi `h2`: sayfanın `h1`i sol sütunda. Bölümlerin kendi
+        başlıkları `Bolum` içinde ve bunun altında kalıyor.
+      */}
+      <h2 className="px-1 text-base font-extrabold tracking-tight text-gray-900">
+        Öğrenci bilgilerin
+      </h2>
 
       {/* ---------------- CV ---------------- */}
       <Bolum
@@ -1832,6 +1977,28 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       </Bolum>
 
       {/*
+        ---------------- SOSYAL PROFİL BÖLÜMÜ ----------------
+
+        Dişliden açılan ayrı ekran buraya TAŞINDI, kopyalanmadı: aynı
+        bileşen, aynı alanlar, aynı yazma çağrısı — yalnız yeri değişti.
+        Kullanıcı adı da içinde; güncel ad ve profil adresi orada yazılı.
+
+        Ayrı bir kaydetme düğmesi var ve olması gerekiyor: burası
+        `social_profiles`a yazıyor, yukarısı `student_profiles`a. Ortak
+        bir "Kaydet" iki yazmayı tek sonuç gibi gösterirdi.
+
+        Ayırıcı çizgi iki kaynağın sınırını gösteriyor; VERİLMEZSE çizgi
+        de çizilmiyor — boş bir ayırıcı, altında bir şey olduğunu ima
+        ederdi.
+      */}
+      {sosyalProfilDuzenleme && (
+        <div className="mt-6 border-t border-gray-200 pt-5">{sosyalProfilDuzenleme}</div>
+      )}
+
+      </>
+      )}
+
+      {/*
         HESAP EYLEMLERİ — SAYFANIN EN ALTI
 
         Üst çubuktaki avatar menüsü mobilde kaldırıldı; oradaki iki gerçek
@@ -1842,8 +2009,12 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         Çıkış kırmızı ama DOLU DEĞİL: dolu kırmızı bir düğme, sayfadaki en
         güçlü eylemin "hesabımdan çık" olduğunu söylerdi. Kenarlıkla
         veriliyor — bulunur ama çağırmaz.
+
+        DÜZENLEMEDE ÇİZİLMİYOR: form doldururken hemen altında duran bir
+        "Çıkış yap", yanlışlıkla basılacak bir tuzak olurdu. Eylem
+        kaybolmuyor, ana görünümde aynı yerde duruyor.
       */}
-      {(onLogout || (isAdmin && onOpenAdmin)) && (
+      {!duzenleme && (onLogout || (isAdmin && onOpenAdmin)) && (
         <div className="mt-6 flex flex-col gap-2 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end">
           {isAdmin && onOpenAdmin && (
             <button

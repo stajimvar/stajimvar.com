@@ -4,29 +4,32 @@ import { SayfaKabugu } from '../SayfaKabugu';
 import { SAYFA_GENISLIGI } from '../../lib/duzen';
 import { BIRINCIL_EYLEM, ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import {
+  SosyalHata,
   kendiSosyalProfiliGetir,
   paylasimlariGetir,
   profilFotografiKaldir,
+  sosyalKullaniciAdiCoz,
   sosyalProfilGorunurluguAyarla,
   sosyalProfilKimligiGetir,
   sosyalProfiliGetir,
+  sosyalProfilimiTamamla,
   sosyalSayaclariGetir,
-  type SosyalBolum,
   type SosyalPaylasim,
   type SosyalProfil,
   type SosyalSayaclar,
 } from '../../lib/queries/sosyal';
+import { profilFotografi } from '../../lib/profil-fotografi';
 import { kullaniciAdiNormalize, profilYolu } from '../../lib/sosyal-kullanici-adi.mjs';
 import { BolumTalebi, type TalepKipi } from './BolumTalebi';
+import { KullaniciArama } from './KullaniciArama';
 import { PaylasimIzgarasi } from './PaylasimIzgarasi';
 import { PaylasimOlustur } from './PaylasimOlustur';
 import { PortfolyoUstSatiri } from './PortfolyoUstSatiri';
+import { ProfilFotografi } from './ProfilFotografi';
 import { ProfilFotografiYukleme } from './ProfilFotografiYukleme';
 import { SahipListesi } from './SahipListesi';
 import { SosyalProfilDuzenleme } from './SosyalProfilDuzenleme';
 import { SosyalProfilGorunumu } from './SosyalProfilGorunumu';
-import { SosyalProfilKurulum } from './SosyalProfilKurulum';
-import { TopluluktaDegilUyarisi } from './TopluluktaDegilUyarisi';
 
 /**
  * SOSYAL PROFİL ROTASI — VERİ YÜKLEME VE YETKİ
@@ -60,7 +63,7 @@ import { TopluluktaDegilUyarisi } from './TopluluktaDegilUyarisi';
  * DÖRT DURUMUN DÖRDÜ DE ÇİZİLİYOR
  * -------------------------------
  *   yükleniyor   iskelet
- *   boş          kurulum ekranı (profil yok) ya da dürüst boş ızgara
+ *   boş          dürüst boş ızgara; satır hiç yoksa "hazırlanamadı" kutusu
  *   hata         "alınamadı" + yeniden dene; boş listeyle karıştırılmıyor
  *   yetkisiz     oturum yoksa giriş kapısı, başkasının adıysa güvenli ekran
  */
@@ -80,11 +83,29 @@ type Durum = 'yukleniyor' | 'hazir' | 'hata';
   Üçü de `if (!sahibiMi) return <GuvenliEkran/>` satırından SONRA
   çiziliyor; ziyaretçi bu koda hiç ulaşmıyor.
 */
+/*
+  'duzenle' GÖRÜNÜMÜ KALDIRILDI
+
+  Sosyal alanların düzenlenmesi sağ sütunda AYRI bir ekran açıyordu ve
+  dişli menüsünden giriliyordu. Aynı kullanıcının öğrenci alanları
+  (okul, CV, program, beceri, dil, proje) ise `/cv` ekranının kendi
+  düzenleme dalındaydı: tek bir profili düzenlemek için iki ayrı ekran
+  ve iki ayrı giriş vardı. İkisi artık aynı düzenleme ekranında, iki
+  ayrı bölüm olarak duruyor (`gomuluKip="duzenleme"`), dolayısıyla
+  buradaki görünüm durumuna gerek kalmadı. Bırakılsaydı aynı formun
+  ikinci bir çizim yolu olurdu.
+*/
 type Gorunum =
   | 'profil'
-  | 'duzenle'
   | 'paylasimOlustur'
   | 'fotograf'
+  /*
+    Bölüm/alan talebi AYRI bir görünüm, formun içinde bir blok değil:
+    `BolumTalebi` kendi `<form>`unu taşıyor ve düzenleme bölümünün formu
+    da kendi `<form>`u — iç içe form geçersiz HTML olurdu ve tarayıcı
+    içteki gönderimi dıştakine bağlardı.
+  */
+  | 'talep'
   | 'begendiklerim'
   | 'kaydedilenler'
   | 'arsiv';
@@ -120,6 +141,48 @@ interface SayfaProps {
    *      gömülü kipte adres karşılaştırması tamamen düşüyor.
    */
   gomulu?: boolean;
+  /**
+   * GÖMÜLÜ KİPİN İKİ YÜZÜ
+   *
+   * `/cv` ekranının iki hâli var: ana görünüm ve düzenleme. Sağ sütunda
+   * ana görünümde PORTFOLYO duruyor (sayaçlar, dişli, ızgara), düzenleme
+   * dalında ise profilin SOSYAL yarısının formu.
+   *
+   * İkisi aynı bileşenden çiziliyor çünkü ikisi de aynı satırı okuyor
+   * (`kendiSosyalProfiliGetir`) ve aynı sahiplik kararına tabi. Ayrı bir
+   * bileşen yazsaydık yükleme, hata ve "satır gelmedi" dallarının ikinci
+   * bir kopyası olurdu — yetki dalının kopyalanması bir biçim hatası
+   * değil, güvenlik hatası.
+   *
+   * Aynı anda yalnız biri ağaçta: `/cv` düzenlemeye geçerken portfolyoyu
+   * söküyor. Bu yüzden düzenleme kipinde sayaç ve paylaşım sorguları hiç
+   * atılmıyor — çizilmeyecek bir sayı için istek atmak olurdu.
+   */
+  gomuluKip?: 'portfolyo' | 'duzenleme';
+  /**
+   * ÖĞRENCİ KAYDINDAKİ ESKİ FOTOĞRAF — YALNIZ YEDEK
+   *
+   * Kullanıcının tek fotoğrafı var ve kaynağı `social_profiles.avatar_path`.
+   * `student_profiles.avatar_url` ise eskiden sol sütundaki kamera
+   * düğmesinden yazılıyordu; o düğme kalktı ama kolon SİLİNMEDİ. Yolu
+   * olmayan kullanıcı bu adrese düşüyor, yani değişiklikle kimse
+   * fotoğrafsız kalmıyor. Karar `profilFotografi` içinde, tek yerde.
+   *
+   * YALNIZ SAHİBİN KENDİ EKRANINDA DOLU: ziyaretçi dalına geçilmiyor,
+   * çünkü başkasının `student_profiles` satırı bu ekrandan okunmuyor.
+   */
+  ogrenciAvatarAdresi?: string | null;
+  /**
+   * Sosyal satırdaki fotoğraf yolunu ÇEVRELEYEN EKRANA bildiriyor.
+   *
+   * `/cv` ekranının sol sütunundaki kimlik kartı da aynı fotoğrafı
+   * çiziyor ve tek kaynak `avatar_path`. Kart kendi sorgusunu atsaydı
+   * aynı satır aynı ekranda iki kez okunur, ikisi ayrı zamanlarda
+   * tazelenir ve yeni yüklenen fotoğraf bir yerde eski kalırdı.
+   *
+   * Yalnız gömülü kipte veriliyor; ziyaretçi görünümünde çağrılmıyor.
+   */
+  onAvatarYolu?: (yol: string | null) => void;
 }
 
 /**
@@ -146,15 +209,132 @@ const GERI_SATIRI = `inline-flex min-h-11 cursor-pointer items-center gap-1.5 te
 const IKINCIL = `inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-800 hover:bg-gray-50 ${RENK_GECISI} ${ODAK_HALKASI}`;
 
 /**
- * Üst blok + ızgara ölçüsünde iskelet: içerik gelince sayfa zıplamıyor.
+ * SOSYAL PROFİL SATIRI GELMEDİ — KURULUM DEĞİL, ARIZA
  *
- * `sade` gömülü kip için: orada kimlik alanları (fotoğraf, ad, alan)
- * SOL sütunda çiziliyor ve sağ sütunda onların iskeletini göstermek,
- * gelmeyecek bir bloğun yerini ayırmak olurdu — içerik gelince panel
- * yukarı zıplardı.
+ * Burada eskiden `SosyalProfilKurulum` vardı: kullanıcıya kendi sosyal
+ * profilini kurdurup `sosyal_profil_kur` RPC'sini çağırıyordu. O ekranın
+ * sorduğu sorunun artık bir karşılığı yok — 20260926050000 öğrenci kaydı
+ * tamamlandığında sosyal profili ve kullanıcı adını SUNUCUDA açıyor.
+ * Kullanıcının vereceği bir bilgi kalmamıştı: ad kayıttan, bölüm öğrenci
+ * profilinden geliyor.
+ *
+ * Dolayısıyla satırın olmaması normal bir yol değil, bir ARIZA. Arızaya
+ * kurulum formu göstermek, kullanıcıyı sistemin kendi işini elle
+ * yapmaya çağırmak olurdu; ikinci bir satır açma denemesi de sunucunun
+ * zaten yaptığı işi tekrar etmek olurdu.
+ *
+ * SEBEP UYDURULMUYOR. Arayüz satırın neden gelmediğini bilmiyor
+ * (yetki mi, ağ mı, tetikleyici mi) ve bilmediğini yazıyor.
+ *
+ * "YENİDEN DENE" ARTIK SUNUCUYA İŞ VERİYOR
+ * ----------------------------------------
+ * Düğme uzun süre yalnız OKUMAYI tekrarlıyordu ve satır gerçekten hiç
+ * açılmadıysa okumayı yüz kez tekrarlamak da satır üretmiyordu:
+ * kullanıcının elinde hiçbir zaman çalışmayacak bir düğme kalıyordu.
+ * 20260926090000 dar bir kapı açtı — `sosyal_profilimi_tamamla()`
+ * argüman almıyor, hedefi `auth.uid()`, idempotent ve topluluğa
+ * katmıyor. Düğme önce onu çağırıyor, SONRA okumayı tazeliyor.
+ *
+ * BU HÂLÂ BİR KURULUM FORMU DEĞİL: kullanıcı hiçbir bilgi girmiyor, ad
+ * kayıttan, bölüm öğrenci profilinden geliyor. Sorulacak bir soru
+ * olmadığı için form da yok.
+ *
+ * ÇİFT TIKLAMA KİLİTLİ. RPC idempotent olduğu için ikinci çağrı veriyi
+ * bozmazdı ama iki isteğin sonucu kullanıcıya iki ayrı cümle olarak
+ * dönerdi; ikincisi birincinin cevabının üstüne yazardı.
+ *
+ * BAŞARISIZLIKTA SEBEP UYDURULMUYOR: cümle `SosyalHata`dan geliyor ve o
+ * da RPC'nin `detail` kodundan seçilmiş. Kod tanınmıyorsa ham
+ * veritabanı metni EKRANA ÇIKMIYOR, yalnız ne yapılabileceği yazılıyor.
  */
-const ProfilIskeleti: React.FC<{ sade?: boolean }> = ({ sade = false }) =>
-  sade ? (
+const SosyalProfilHazirDegil: React.FC<{
+  /** Birleşik ekranda sayfanın `h1`i sol sütundaki ada ait; burada `h2`. */
+  altBaslik?: boolean;
+  /** YALNIZ tamamlama isteği kabul edildikten sonra çağrılıyor: okumayı tazeliyor. */
+  onTamamlandi: () => void;
+}> = ({ altBaslik = false, onTamamlandi }) => {
+  const Baslik = altBaslik ? 'h2' : 'h1';
+  const [durum, setDurum] = React.useState<'bekliyor' | 'gonderiliyor' | 'hata'>('bekliyor');
+  const [hataMesaji, setHataMesaji] = React.useState<string | null>(null);
+
+  const dene = async () => {
+    if (durum === 'gonderiliyor') return;
+    setDurum('gonderiliyor');
+    setHataMesaji(null);
+    try {
+      await sosyalProfilimiTamamla();
+      /*
+        Okuma ancak sunucu isteği KABUL ettikten sonra tazeleniyor. Hata
+        dalında tazeleme yok: aynı boş sonucu yeniden çizmek, başarısız
+        bir denemeyi "bir şey oldu" gibi gösterirdi.
+      */
+      onTamamlandi();
+      setDurum('bekliyor');
+    } catch (sorun) {
+      setHataMesaji(
+        sorun instanceof SosyalHata
+          ? sorun.message
+          : 'Sosyal profilin tamamlanamadı. Bağlantını kontrol edip yeniden dene.',
+      );
+      setDurum('hata');
+    }
+  };
+
+  return (
+    <div className={`${KART} space-y-3`} role="alert">
+      <Baslik className="text-base font-extrabold text-gray-900">
+        Sosyal profilin hazırlanamadı
+      </Baslik>
+      <p className="text-sm leading-relaxed text-gray-600">
+        Sosyal profil satırın sunucudan gelmedi ve sebebini buradan göremiyoruz.
+        "Yeniden dene" sunucudan profilini tamamlamasını ister; senden bir bilgi
+        istenmiyor, kayıtlı bilgilerinden başkası kullanılmıyor.
+      </p>
+      <button
+        type="button"
+        onClick={dene}
+        disabled={durum === 'gonderiliyor'}
+        className={`${IKINCIL} disabled:opacity-40`}
+      >
+        {durum === 'gonderiliyor' ? 'Deneniyor…' : 'Yeniden dene'}
+      </button>
+      {/*
+        Hata satırı denemenin YANINDA: kutunun kendisi zaten bir hata
+        kutusu ve ikisi farklı şeyler anlatıyor — biri satırın gelmediğini,
+        öteki tamamlama isteğinin de olmadığını.
+      */}
+      {hataMesaji && (
+        <p role="status" className="text-xs font-semibold leading-relaxed text-rose-700">
+          {hataMesaji}
+        </p>
+      )}
+    </div>
+  );
+};
+
+/**
+ * İskelet üç kipte: içerik gelince sayfa zıplamıyor.
+ *
+ * 'panel' gömülü portfolyo için: orada kimlik alanları (fotoğraf, ad,
+ * alan) SOL sütunda çiziliyor ve sağ sütunda onların iskeletini
+ * göstermek, gelmeyecek bir bloğun yerini ayırmak olurdu — içerik
+ * gelince panel yukarı zıplardı.
+ *
+ * 'form' düzenleme kipi için: orada gelecek şey ızgara değil, üç kart
+ * dolusu giriş kutusu. Aynı iskeleti kullansaydık kullanıcı bir kare
+ * boyunca gelmeyecek bir kare ızgara görürdü.
+ */
+const ProfilIskeleti: React.FC<{ kip?: 'sayfa' | 'panel' | 'form' }> = ({ kip = 'sayfa' }) =>
+  kip === 'form' ? (
+    <div aria-busy="true" className="space-y-4">
+      {[0, 1, 2].map((sira) => (
+        <div key={sira} className={`${KART} space-y-2.5`}>
+          <div aria-hidden className="h-4 w-28 animate-pulse rounded bg-gray-100" />
+          <div aria-hidden className="h-10 w-full animate-pulse rounded-xl bg-gray-100" />
+        </div>
+      ))}
+    </div>
+  ) : kip === 'panel' ? (
     <div aria-busy="true" className="space-y-3">
       <div className="flex gap-5">
         <div aria-hidden className="h-5 w-24 animate-pulse rounded bg-gray-100" />
@@ -189,7 +369,18 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   onNavigate,
   onGirisGerekli,
   gomulu = false,
+  gomuluKip = 'portfolyo',
+  ogrenciAvatarAdresi = null,
+  onAvatarYolu,
 }) => {
+  /*
+    Kip yalnız gömülü halde anlamlı: ayrı adreste (`/profil`) düzenleme
+    diye bir ekran yok, sahip zaten `/cv`ye yönlendiriliyor. Koşulu
+    burada bir kez kurup aşağıda tek isimle kullanmak, `gomulu &&
+    gomuluKip === ...` karşılaştırmasının beş ayrı dalda tekrarlanmasını
+    önlüyor — biri unutulsaydı portfolyo ile form aynı anda çizilirdi.
+  */
+  const duzenlemeKipi = gomulu && gomuluKip === 'duzenleme';
   const [profil, setProfil] = React.useState<SosyalProfil | null>(null);
   const [profilDurumu, setProfilDurumu] = React.useState<Durum>('yukleniyor');
   const [profilDeneme, setProfilDeneme] = React.useState(0);
@@ -224,16 +415,19 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   const [bildirim, setBildirim] = React.useState<string | null>(null);
 
   /*
-    TALEP EKRANI KURULUMUN İÇİNDE DEĞİL, ONUN YERİNE ÇİZİLİYOR
+    BÖLÜM TALEBİNİN GİRİŞİ ARTIK DÜZENLEME EKRANINDA
 
-    Kullanıcının "bölümüm listede yok" ya da "bölümümün alanı tanımlı
-    değil" durumunda yapacağı iş formu doldurmak değil, talep açmak.
-    Kurulum formunun altına ikinci bir form koymak, iki farklı gönderimi
-    aynı ekranda yan yana getirirdi.
+    `BolumTalebi` bir süre hiçbir yerden açılamıyordu: tek girişi kurulum
+    formuydu ve o form kalktı. Yeni giriş eksikliğin YAZILI OLDUĞU yerde
+    — düzenlemedeki "Sosyal profilin" bölümünün kilitli bölüm/alan
+    kartında. Başka bir ekrana konsaydı kullanıcı eksikliği bir yerde
+    okuyup çözümü başka yerde arardı.
+
+    Görünüm burada tutuluyor (`gorunum === 'talep'`) çünkü ekran sahibe
+    özel dalın İÇİNDE çiziliyor: `if (!sahibiMi) return <GuvenliEkran/>`
+    satırından sonra. Ziyaretçi bu koda hiç ulaşmıyor, talep ekranı DOM'a
+    hiç girmiyor.
   */
-  const [talep, setTalep] = React.useState<{ kip: TalepKipi; bolum: SosyalBolum | null } | null>(
-    null,
-  );
 
   /* Ziyaretçi yolu: rotadaki ad başkasına aitse bu durumlar kullanılıyor. */
   const [ziyaretciProfili, setZiyaretciProfili] = React.useState<SosyalProfil | null>(null);
@@ -243,8 +437,75 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
 
   const rotaAdi = rotaKullaniciAdi ? kullaniciAdiNormalize(rotaKullaniciAdi) : null;
 
-  /* Kendi profili: oturum kimliği ile satırın sahibi eşleşiyor mu. */
-  const profilTamMi = Boolean(profil?.kullaniciAdi && profil?.sektorId);
+  /*
+    PROFİL "TAM" SAYILMAK İÇİN ARTIK YALNIZ KULLANICI ADI İSTİYOR
+
+    Koşul `kullaniciAdi && sektorId` idi. O ikinci şart eski modelden
+    kalmaydı: alan aynı zamanda topluluk üyeliği demekti ve alansız
+    profil kimseye görünmüyordu. 20260926040000 üçünü ayırdı ve
+    `yayin_icin_kimlik_sart` kısıtı da yalnız `username is not null`
+    istiyor. Bölümü katalogla eşleşmeyen kullanıcının `sector_id`si NULL
+    kalıyor (20260926050000) ama profili AÇILIYOR; eski koşul o kişiyi
+    kendi profilinden çıkarıp kurulum ekranına düşürürdü.
+
+    Eksiklik saklanmıyor: alanı olmayan kullanıcı bunu düzenleme
+    ekranında ve `/topluluklar` sayfasında olduğu gibi görüyor.
+  */
+  const profilTamMi = Boolean(profil?.kullaniciAdi);
+  /*
+    Paylaşım açmanın SUNUCUDAKİ önkoşulu: `sosyal_paylasim_baslat`
+    (20260924030000) `yayinda_mi` VE `sector_id is not null` arıyor.
+    Alanı olmayan kullanıcıya "Paylaş" düğmesi çizmek, her basışta
+    reddedilen bir eylem sunmak olurdu.
+  */
+  const alaniVarMi = Boolean(profil?.sektorId);
+  /*
+    TALEBİN İKİ SEBEBİ, İKİ AYRI KİP
+
+    `null` = yapılacak iş yok: bölüm katalogla eşleşmiş VE alana
+    bağlanmış. O kullanıcıya talep satırı hiç çizilmiyor; çizilseydi
+    olmayan bir eksiklik varmış gibi görünürdü.
+
+    Ayrım `bolumAdi`ndan: `departments` birleşimi doluysa katalog satırı
+    var, yönetimin işi eşleme eklemek. Boşsa bölüm hiç eşleşmemiş
+    (20260926050000 `department_id`yi NULL bırakıyor) ve yönetimin işi
+    kataloğa bölüm eklemek. Tek kipe indirmek, yöneticiye de kullanıcıya
+    da yanlış işi anlattırırdı.
+  */
+  const talepKipi: TalepKipi | null = !profil
+    ? null
+    : profil.sektorId
+      ? null
+      : profil.bolumAdi
+        ? 'alan-tanimsiz'
+        : 'bolum-yok';
+  /*
+    "PAYLAŞ" YOKSA SEBEBİ YAZILIYOR
+
+    Düğme iki önkoşuldan biri eksikken çizilmiyor. Sebep yazılmasaydı
+    kullanıcı, başkasında duran bir düğmenin kendisinde neden olmadığını
+    hiçbir yerden okuyamazdı — sessizce eksilen bir eylem, bozuk bir
+    ekrandan ayırt edilemez.
+
+    ÜÇ CÜMLE, ÜÇ FARKLI DURUM. "Alanın yok" tek cümle olsaydı, bölümü
+    hiç eşleşmemiş kullanıcıyla bölümü eşleşmiş ama alana bağlanmamış
+    kullanıcı aynı şeyi okur ve ikisi de yapabileceği bir şey olduğunu
+    sanırdı. Elinde iş olan yalnız birincisi: `bolum_girilince_tamamla`
+    (20260926050000) öğrenci profilindeki bölüm girildiğinde
+    `department_id` ve `sector_id` alanlarını SUNUCUDA dolduruyor.
+    Kullanıcıya bir bölüm ADI ÖNERİLMİYOR, uydurma bir alan da
+    yazılmıyor; ikincisinde yapılacak bir iş yok ve cümle bunu iddia
+    etmiyor.
+  */
+  const paylasimEngeli: string | null = !profil
+    ? null
+    : !profil.sektorId
+      ? profil.bolumAdi
+        ? `Bölümün (${profil.bolumAdi}) henüz bir alana bağlanmadı; bu yüzden paylaşım açamıyorsun.`
+        : 'Bölümün kataloğumuzla eşleşmediği için alanın belirlenmedi; bu yüzden paylaşım açamıyorsun. Öğrenci profilindeki bölümünü girdiğinde alanın kendiliğinden tamamlanıyor.'
+      : !profil.yayindaMi
+        ? 'Profilin şu anda yalnızca sana görünüyor; paylaşım açmak için dişli menüsünden profilini herkese açman gerekiyor.'
+        : null;
   /*
     Gömülü kipte ADRES KARŞILAŞTIRMASI DÜŞÜYOR
 
@@ -308,6 +569,29 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   }, [kullaniciId, profilDeneme]);
 
   /*
+    FOTOĞRAF YOLU ÇEVRELEYEN EKRANA BİLDİRİLİYOR
+
+    `/cv` sol sütunundaki kimlik kartı da aynı fotoğrafı çiziyor. İkinci
+    bir sorgu atmak yerine burada okunan değer yukarı veriliyor: aynı
+    satırın iki ayrı okuması, yeni yüklenen fotoğrafın bir sütunda eski
+    kalması demek olurdu.
+
+    HATA DALINDA DA BİLDİRİLİYOR — SEBEBİ İSKELET
+
+    "Bilinmiyor" durumu kimlik kartında bir iskelet daire çizdiriyor
+    (fotoğrafı olan kullanıcıda baş harflerin yanıp sönmemesi için).
+    Sorgu hata verdiğinde haber verilmeseydi o daire SONSUZA KADAR
+    atardı: hiç bitmeyen bir yükleme, bitmiş bir hatadan daha kötü bir
+    yalan olurdu. Hata dalında `null` gidiyor ve kart eski `avatar_url`
+    yedeğine, o da yoksa baş harflere düşüyor — `ProfilFotografi`nin
+    "dosya inemedi" dalıyla aynı karar.
+  */
+  React.useEffect(() => {
+    if (!onAvatarYolu || profilDurumu === 'yukleniyor') return;
+    onAvatarYolu(profilDurumu === 'hazir' ? (profil?.avatarYolu ?? null) : null);
+  }, [onAvatarYolu, profilDurumu, profil?.avatarYolu]);
+
+  /*
     SAHİBİN KANONİK ADRESİ ARTIK `/cv`
 
     Profili kurulu olan kullanıcı `/profil` ya da `/profil/<kendi adı>`
@@ -356,6 +640,29 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
         mı" sorusunu cevaplardı.
       */
       if (!kimlik) {
+        /*
+          ESKİ ADRES YENİSİNE ÇÖZÜLÜYOR
+
+          Kullanıcı adı değiştirilebiliyor (20260926020000) ve bırakılan
+          ad kalıcı olarak rezerve ediliyor. Paylaşılmış eski bağlantıya
+          tıklayan kişiyi güvenli ekrana düşürmek, çalışan bir adresi
+          kırık göstermek olurdu.
+
+          `degistir: true` geçmişe kayıt EKLEMİYOR: push edilseydi geri
+          tuşu kullanıcıyı yeniden yönlendirilecek eski adrese düşürür ve
+          geri tuşu hiç çalışmaz hâle gelirdi.
+
+          Çözüm bulunamazsa MEVCUT güvenli ekran aynen kalıyor. Fonksiyon
+          da bir varlık kehaneti değil: yalnız çağıranın zaten
+          görebileceği bir profile çözüm veriyor ve bulamadığında sıfır
+          satır dönüyor.
+        */
+        const guncel = await sosyalKullaniciAdiCoz(rotaAdi);
+        if (iptal) return;
+        if (guncel && guncel !== rotaAdi) {
+          onNavigate(profilYolu(guncel), { degistir: true });
+          return;
+        }
         setZiyaretciDurumu('yok');
         return;
       }
@@ -375,8 +682,13 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     };
   }, [ziyaretciYolu, rotaAdi]);
 
+  /*
+    Düzenleme kipinde sayaç ve ızgara ÇİZİLMİYOR; sorguları da atılmıyor.
+    Bayrağı yalnız çizim tarafına koysaydık kullanıcı her düzenlemeye
+    girişinde sonucu hiçbir yerde görünmeyen iki istek atardı.
+  */
   React.useEffect(() => {
-    if (!gosterilenProfil) return;
+    if (!gosterilenProfil || duzenlemeKipi) return;
     let iptal = false;
     setSayacDurumu('yukleniyor');
     sosyalSayaclariGetir(gosterilenProfil.profilId)
@@ -391,10 +703,10 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     return () => {
       iptal = true;
     };
-  }, [gosterilenProfil, profilDeneme, sayacDeneme]);
+  }, [gosterilenProfil, duzenlemeKipi, profilDeneme, sayacDeneme]);
 
   React.useEffect(() => {
-    if (!gosterilenProfil) return;
+    if (!gosterilenProfil || duzenlemeKipi) return;
     let iptal = false;
     setPaylasimDurumu('yukleniyor');
     paylasimlariGetir(gosterilenProfil.profilId)
@@ -409,7 +721,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     return () => {
       iptal = true;
     };
-  }, [gosterilenProfil, paylasimDeneme]);
+  }, [gosterilenProfil, duzenlemeKipi, paylasimDeneme]);
 
   /**
    * Profil görünürlüğünü değiştir — iki yön, tek fonksiyon.
@@ -438,7 +750,19 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
       setProfil((onceki) => (onceki ? { ...onceki, yayindaMi: yeniDeger } : onceki));
       setGorunurlukDurumu('bekliyor');
       /* Bildirim kanalı yeni değil: bağlantı kopyalamanın kullandığı satır. */
-      setBildirim(yeniDeger ? 'Alan topluluğuna katıldın.' : 'Alan topluluğundan ayrıldın.');
+      /*
+        CÜMLE ARTIK ÜYELİĞİ DEĞİL GÖRÜNÜRLÜĞÜ ANLATIYOR
+
+        `yayinda_mi` bir zamanlar topluluk üyeliği demekti; 20260926040000
+        anlamı daralttı ve üyelik `community_members`e taşındı. Eski cümle
+        kalsaydı kullanıcı profilini gizlerken topluluğundan çıktığını
+        sanırdı — oysa üyeliğine hiç dokunulmuyor.
+      */
+      setBildirim(
+        yeniDeger
+          ? 'Profilin artık giriş yapmış herkese açık.'
+          : 'Profilin artık yalnızca sana görünüyor.',
+      );
       window.setTimeout(() => setBildirim(null), 2500);
     } catch {
       setGorunurlukDurumu('hata');
@@ -525,6 +849,16 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   // ------------------------------------------------------------- Çizim
 
   /*
+    Yükleme iskeleti gelecek içeriğin ölçüsünde: düzenleme kipinde form,
+    gömülü portfolyoda sayaç + ızgara, ayrı adreste tam sayfa.
+  */
+  const iskeletKipi: 'sayfa' | 'panel' | 'form' = duzenlemeKipi
+    ? 'form'
+    : gomulu
+      ? 'panel'
+      : 'sayfa';
+
+  /*
     KABUK: SAYFA MI, PANEL Mİ
 
     Ayrı adreste bu bileşen kendi `main`ini (`SayfaKabugu`) çiziyor.
@@ -537,7 +871,15 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     girdileri her tuşta sıfırlanırdı.
 
     Geri satırı gömülü kipte de var: alt ekranların (paylaşım oluşturma,
-    arşiv, düzenleme) kendi adresi yok, geri dönmenin tek yolu bu satır.
+    fotoğraf yükleme, arşiv) kendi adresi yok, geri dönmenin tek yolu bu
+    satır.
+
+    Düzenleme kipinin FORMU bu satırı almıyor: oraya `/cv` düzenleme
+    dalından giriliyor ve dönüş bağlantısı ("Profilime dön") o ekranın
+    sol sütununda zaten duruyor — ikinci bir geri satırı, aynı ekranda
+    iki farklı "geri" demek olurdu. Fotoğraf yükleme ekranı formun
+    ÜSTÜNE açıldığı için satırı alıyor: oradan dönülecek yer sayfa
+    değil, bir üstteki form.
   */
   const kabuk = (icerik: React.ReactNode, onBack?: () => void) =>
     gomulu ? (
@@ -555,7 +897,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     );
 
   if (!oturumHazir) {
-    return kabuk(<ProfilIskeleti sade={gomulu} />);
+    return kabuk(<ProfilIskeleti kip={iskeletKipi} />);
   }
 
   /* YETKİSİZ (1): oturum yok. Sosyal profil giriş yapmış kullanıcıya açık. */
@@ -576,7 +918,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   }
 
   if (profilDurumu === 'yukleniyor') {
-    return kabuk(<ProfilIskeleti sade={gomulu} />);
+    return kabuk(<ProfilIskeleti kip={iskeletKipi} />);
   }
 
   /* HATA: boş durumla karıştırılmıyor. */
@@ -688,87 +1030,32 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     return <GuvenliEkran onNavigate={onNavigate} kendiAdi={profil?.kullaniciAdi ?? null} />;
   }
 
-  /* KURULMAMIŞ: `/profil` kurulum ekranını ya da talep ekranını açıyor. */
+  /*
+    SATIR YOK: KURULUM DEĞİL, DÜRÜST HATA
+
+    Burada `SosyalProfilKurulum` çiziliyordu ve kullanıcı kendi sosyal
+    profilini elle kuruyordu. O ekranın sorduğu sorunun karşılığı kalmadı:
+    20260926050000 öğrenci kaydı tamamlanınca sosyal profili ve kullanıcı
+    adını SUNUCUDA açıyor — ad kayıtta, bölüm öğrenci profilinde.
+
+    Buraya düşmek artık normal bir yol değil, bir ARIZA. İki kip de AYNI
+    kutuyu çiziyor (`SosyalProfilHazirDegil`) ve kutu tek yerde tanımlı:
+    iki kopya olsaydı biri değiştiğinde aynı arıza iki ekranda iki farklı
+    cümleyle okunurdu. Başlık düzeyi farklı çünkü gömülü kipte sayfanın
+    `h1`i sol sütundaki ada ait.
+  */
   if (!profilTamMi) {
-    /*
-      GÖMÜLÜ KİPTE KURULUM BURADA DEĞİL, KENDİ ADRESİNDE
-
-      Sağ sütuna çizilen şey gerçek kurulum akışına giden bir GİRİŞ:
-      bağlantı `/profil` adresine gidiyor ve orada `SosyalProfilKurulum`
-      açılıyor. "Yakında" kutusu ya da çalışmayan bir düğme değil.
-
-      Form buraya gömülmedi çünkü kurulum bölüm seçimi, alan uygunluğu ve
-      gerektiğinde bölüm talebi ekranını da içeriyor; hepsini 8 sütunluk
-      bir panele sıkıştırmak, aynı formu iki farklı genişlikte iki kez
-      tasarlamak olurdu.
-
-      Gerçek `<a href>`: orta tuş ve "yeni sekmede aç" çalışıyor.
-    */
     if (gomulu) {
       return kabuk(
-        <div className={`${KART} space-y-3`}>
-          <h2 className="text-base font-extrabold text-gray-900">Sosyal profilin yok</h2>
-          <p className="text-sm leading-relaxed text-gray-600">
-            Fotoğraf paylaşmak ve aynı alandaki öğrencilerle bağlantı kurmak için önce kullanıcı
-            adını ve bölümünü seçmen gerekiyor.
-          </p>
-          <a
-            href="/profil"
-            onClick={(olay) => {
-              if (
-                olay.metaKey ||
-                olay.ctrlKey ||
-                olay.shiftKey ||
-                olay.altKey ||
-                olay.button !== 0
-              )
-                return;
-              olay.preventDefault();
-              onNavigate('/profil');
-            }}
-            className={BIRINCIL_EYLEM}
-          >
-            Sosyal profil oluştur
-          </a>
-        </div>,
+        <SosyalProfilHazirDegil
+          altBaslik
+          onTamamlandi={() => setProfilDeneme((sayi) => sayi + 1)}
+        />,
       );
     }
     if (rotaAdi === null) {
-      if (talep) {
-        return kabuk(
-          <BolumTalebi
-            kip={talep.kip}
-            kullaniciId={kullaniciId}
-            bolum={talep.bolum}
-            onGeri={() => setTalep(null)}
-          />,
-          () => setTalep(null),
-        );
-      }
       return kabuk(
-        <SosyalProfilKurulum
-            onTalepGerekli={(kip, bolum) => setTalep({ kip, bolum })}
-            /* Kullanıcı adı ARTIK KULLANILMIYOR: hedef her durumda `/cv`. */
-            onTamamlandi={() => {
-              /*
-                Kurulumdan sonra profil YENİDEN OKUNUYOR: ekranda gösterilen
-                değerler formdakiler değil, veritabanının kabul ettikleri
-                olmalı.
-              */
-              setProfilDeneme((sayi) => sayi + 1);
-              /*
-                Kurulum ekranı geçmişte BIRAKILMIYOR: profil kurulduktan
-                sonra geri tuşuyla ona dönmenin bir karşılığı yok, dönen
-                kullanıcı da anında ileri yönlendirilirdi.
-
-                Hedef `ad` DEĞİL, birleşik ekran: kurulumu bitiren kişi
-                sahibin kendisi ve sahibin tek ekranı orası. Kalıcı
-                `/profil/<ad>` adresine gitseydi o adres de anında `/cv`ye
-                yönlendirir, yani iki kere yönlendirme yapardık.
-              */
-              onNavigate(BIRLESIK_EKRAN, { degistir: true });
-            }}
-        />,
+        <SosyalProfilHazirDegil onTamamlandi={() => setProfilDeneme((sayi) => sayi + 1)} />,
       );
     }
     /* Profili olmayan kullanıcı başkasının adresine gitmişse: güvenli ekran. */
@@ -803,6 +1090,208 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   }
 
   /*
+    DÜZENLEME KİPİ — TEK EKRANIN SOSYAL BÖLÜMÜ
+
+    `/cv` düzenlemeye geçtiğinde sağ sütun bu dalı çiziyor: öğrenci
+    bölümlerinin altında, kendi başlıkları ve kendi kaydetme eylemleriyle.
+
+    KAYIT ATOMİK DEĞİL VE ÖYLE GÖSTERİLMİYOR. Öğrenci alanları
+    `student_profiles`e, buradaki alanlar `social_profiles`a yazılıyor;
+    kullanıcı adı ve fotoğraf ise kendi yazmaları. Tek bir "Kaydet"
+    düğmesi tek bir başarı cümlesi iddia ederdi ve yarısı başarılı bir
+    gönderimde o cümle YALAN olurdu. Bu yüzden her bloğun kendi
+    gönderimi, kendi durumu ve kendi hata satırı var; ortak bir hata
+    şeridi yok.
+
+    FOTOĞRAF DA BURADA. Değiştirme ve kaldırma dişli menüsündeydi; ikisi
+    de profilin kendisini değiştiriyor, yani düzenlemenin işi. Menüde
+    kalsaydı aynı işin iki kapısı olurdu.
+
+    Dal `if (!sahibiMi) return <GuvenliEkran/>` satırından SONRA geliyor:
+    başkasının profilinde bu form DOM'a hiç girmiyor. Sunucu tarafı da
+    aynı sınırı ikinci kez çiziyor (`avatar_yolu_kilidi`, 20260924040000);
+    arayüzde gizlemek tek başına bir güvenlik sınırı olmazdı.
+  */
+  if (duzenlemeKipi) {
+    /*
+      Yükleme ekranı kırpma tuvaliyle birlikte geliyor ve formun yanına
+      sığmıyor; kendi katmanında açılıyor. Geri satırı burada VAR çünkü
+      dönülecek yer sayfanın kendisi değil, bir üstteki form.
+    */
+    if (gorunum === 'fotograf') {
+      return kabuk(
+        <ProfilFotografiYukleme
+          kullaniciId={kullaniciId}
+          ad={profil!.gorunenAd ?? `@${profil!.kullaniciAdi}`}
+          mevcutYol={profil!.avatarYolu}
+          yedekAdres={ogrenciAvatarAdresi}
+          onVazgec={() => setGorunum('profil')}
+          onKaydedildi={(yeniYol) => {
+            /*
+              Yerel durum ancak sunucu `avatar_path`i yazdıktan sonra
+              güncelleniyor. İyimser bir güncelleme, kaydedilmemiş bir
+              fotoğrafı profilde göstermek olurdu.
+            */
+            setProfil((onceki) => (onceki ? { ...onceki, avatarYolu: yeniYol } : onceki));
+            /*
+              Başarısız bir KALDIRMA denemesinin cümlesi burada siliniyor:
+              yeni fotoğraf kaydedildikten sonra "fotoğrafın duruyor"
+              satırı artık başka bir fotoğrafı anlatırdı.
+            */
+            setFotografKaldirmaDurumu('bekliyor');
+            setGorunum('profil');
+            setBildirim('Profil fotoğrafın güncellendi.');
+            window.setTimeout(() => setBildirim(null), 2500);
+          }}
+        />,
+        () => setGorunum('profil'),
+      );
+    }
+
+    /*
+      BÖLÜM / ALAN TALEBİ — FORMUN ÜSTÜNDE, KENDİ KATMANINDA
+
+      Formun içine gömülemezdi: `BolumTalebi` kendi `<form>`unu taşıyor ve
+      iç içe form geçersiz HTML. Geri satırı VAR çünkü dönülecek yer
+      sayfanın kendisi değil, bir üstteki düzenleme formu — fotoğraf
+      yükleme ekranıyla aynı kalıp.
+
+      `talepKipi` null'a düştüyse (bölüm ya da alan sunucuda tamamlandı)
+      ekran açılmıyor: yapılacak işi kalmamış kullanıcıya talep formu
+      göstermek, olmayan bir eksikliği varmış gibi göstermek olurdu.
+    */
+    if (gorunum === 'talep' && talepKipi) {
+      return kabuk(
+        <BolumTalebi
+          kip={talepKipi}
+          kullaniciId={kullaniciId}
+          /*
+            Kimlik yalnız `alan-tanimsiz` kipinde anlamlı: orada katalog
+            satırı VAR ve yönetimin işi ona alan eşlemek. `bolum-yok`
+            kipinde eşleşen satır olmadığı için uydurulmuyor.
+          */
+          bolum={
+            talepKipi === 'alan-tanimsiz' && profil!.bolumId && profil!.bolumAdi
+              ? { id: profil!.bolumId, ad: profil!.bolumAdi }
+              : null
+          }
+          onGeri={() => setGorunum('profil')}
+        />,
+        () => setGorunum('profil'),
+      );
+    }
+
+    return (
+      <div className="min-w-0 space-y-4">
+        <section aria-labelledby="sosyal-fotograf-basligi" className={`${KART} space-y-3`}>
+          {/* Sayfanın `h1`i `/cv` ekranında; bölüm başlıkları `h2`. */}
+          <h2
+            id="sosyal-fotograf-basligi"
+            className="text-base font-extrabold tracking-tight text-gray-900"
+          >
+            Profil fotoğrafın
+          </h2>
+          <div className="flex flex-wrap items-center gap-3">
+            {/*
+              Fotoğrafın kendisi çiziliyor, yer tutucu bir daire değil:
+              `ProfilFotografi` yol yokken baş harfleri gösteriyor ve
+              "fotoğrafın yok" bilgisi de gerçek.
+            */}
+            <ProfilFotografi
+              ad={profil!.gorunenAd ?? `@${profil!.kullaniciAdi}`}
+              yol={profil!.avatarYolu}
+              /*
+                Eski kamera düğmesiyle yüklenmiş fotoğraf yedek: bu blok
+                tek yükleme yeri olduğu için, yolu olmayan kullanıcıya
+                "fotoğrafın yok" demek YANLIŞ olurdu — fotoğrafı var,
+                başka kolonda duruyor.
+              */
+              yedekAdres={ogrenciAvatarAdresi}
+              className="h-16 w-16 shrink-0 rounded-full"
+            />
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => setGorunum('fotograf')} className={IKINCIL}>
+                {/*
+                  Etiket EKRANDA GÖRÜNENE göre: yedek adresten bir fotoğraf
+                  çiziliyorsa yapılacak iş "ekle" değil "değiştir".
+                */}
+                {profilFotografi(profil!.avatarYolu, ogrenciAvatarAdresi).tur === 'yok'
+                  ? 'Fotoğraf ekle'
+                  : 'Fotoğrafı değiştir'}
+              </button>
+              {/*
+                Kaldırma yalnız `avatar_path` VARKEN çiziliyor: olmayan bir
+                dosyayı silen bir düğme, hiçbir zaman çalışmayacak bir
+                eylem sunmak olurdu.
+
+                YEDEK ADRES BU DÜĞMEYİ AÇMIYOR. Kaldırma yalnız
+                `avatar_path`i null'a çekiyor; ekranda görünen fotoğraf
+                `student_profiles.avatar_url`den geliyorsa düğme hiçbir
+                şeyi kaldırmaz ve kullanıcı kaldırılmamış bir fotoğrafı
+                kaldırdığını sanırdı.
+              */}
+              {profil!.avatarYolu && (
+                <button
+                  type="button"
+                  onClick={fotografiKaldir}
+                  disabled={fotografKaldirmaDurumu === 'gonderiliyor'}
+                  className={`${IKINCIL} disabled:opacity-40`}
+                >
+                  {fotografKaldirmaDurumu === 'gonderiliyor' ? 'Kaldırılıyor…' : 'Fotoğrafı kaldır'}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/*
+            Hata ve bildirim bu bloğun İÇİNDE: fotoğraf yazması ayrı bir
+            yazma ve sonucu, aşağıdaki form alanlarının sonucuyla
+            karıştırılmamalı.
+          */}
+          {fotografKaldirmaDurumu === 'hata' && (
+            <p role="alert" className="text-xs font-semibold leading-relaxed text-rose-700">
+              Profil fotoğrafın kaldırılamadı; fotoğrafın duruyor. Yeniden deneyebilirsin.
+            </p>
+          )}
+          {bildirim && (
+            <p role="status" className="text-sm font-semibold text-gray-700">
+              {bildirim}
+            </p>
+          )}
+        </section>
+
+        <SosyalProfilDuzenleme
+          kullaniciId={kullaniciId}
+          profil={profil as SosyalProfil}
+          /*
+            Kaydettikten sonra ekran KAPANMIYOR: kullanıcı aynı düzenleme
+            ekranında, öğrenci bölümlerinin altında duruyor. Yerel satır
+            yalnız sunucu kabul ettikten sonra güncelleniyor.
+          */
+          onKaydedildi={(girdi) =>
+            setProfil((onceki) => (onceki ? { ...onceki, ...girdi } : onceki))
+          }
+          /*
+            Ad ayrı bir geri çağrı çünkü ayrı bir yazma:
+            `sosyalProfilGuncelle` değil kendi RPC'si. İkisini tek geri
+            çağrıda toplamak, hangi yazmanın başarılı olduğunu
+            belirsizleştirirdi.
+          */
+          onKullaniciAdiDegisti={(yeniAd) =>
+            setProfil((onceki) => (onceki ? { ...onceki, kullaniciAdi: yeniAd } : onceki))
+          }
+          /*
+            Talep satırı yalnız eksiklik varken çiziliyor; `null` geçince
+            bölüm/alan kartında hiçbir ek satır DOM'a girmiyor.
+          */
+          talepKipi={talepKipi}
+          onTalepAc={() => setGorunum('talep')}
+        />
+      </div>
+    );
+  }
+
+  /*
     PAYLAŞIM OLUŞTURMA — SAHİP DALININ İÇİNDE
 
     Bu dal, yukarıdaki `if (!sahibiMi) return <GuvenliEkran/>` satırından
@@ -813,6 +1302,13 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   if (gorunum === 'paylasimOlustur') {
     return kabuk(
       <PaylasimOlustur
+          /*
+            Ekran, üyeliği olmayan kullanıcıya "Alan topluluğum" kitlesini
+            açmıyor ve sebebini yazarken `/topluluklar` bağlantısı veriyor.
+            Gezinme burada zaten var; ikinci bir gezinme kanalı açmak
+            yerine aynı fonksiyon geçiyor.
+          */
+          onNavigate={onNavigate}
           onVazgec={() => setGorunum('profil')}
           onTamamlandi={() => {
             /*
@@ -830,45 +1326,6 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
               baştan beri koruyor.
             */
             setBildirim('Paylaşımın eklendi.');
-            window.setTimeout(() => setBildirim(null), 2500);
-          }}
-      />,
-      () => setGorunum('profil'),
-    );
-  }
-
-  /*
-    PROFİL FOTOĞRAFI — AYNI SAHİP DALININ İÇİNDE
-
-    Paylaşım oluşturma gibi, bu dal da `if (!sahibiMi) return
-    <GuvenliEkran/>` satırından SONRA geliyor: başkasının profilinde
-    ekran DOM'a hiç girmiyor. Sunucu tarafı da aynı sınırı ikinci kez
-    çiziyor (`avatar_yolu_kilidi`, 20260924040000); arayüzde gizlemek
-    tek başına bir güvenlik sınırı olmazdı.
-  */
-  if (gorunum === 'fotograf') {
-    return kabuk(
-      <ProfilFotografiYukleme
-          kullaniciId={kullaniciId}
-          ad={profil!.gorunenAd ?? `@${profil!.kullaniciAdi}`}
-          mevcutYol={profil!.avatarYolu}
-          onVazgec={() => setGorunum('profil')}
-          onKaydedildi={(yeniYol) => {
-            /*
-              Yerel durum ancak sunucu `avatar_path`i yazdıktan sonra
-              güncelleniyor; geri çağrı da yalnız o dalda çalışıyor.
-              İyimser bir güncelleme, kaydedilmemiş bir fotoğrafı
-              profilde göstermek olurdu.
-            */
-            setProfil((onceki) => (onceki ? { ...onceki, avatarYolu: yeniYol } : onceki));
-            /*
-              Başarısız bir KALDIRMA denemesinin cümlesi burada
-              siliniyor: yeni fotoğraf kaydedildikten sonra "fotoğrafın
-              duruyor" satırı artık başka bir fotoğrafı anlatırdı.
-            */
-            setFotografKaldirmaDurumu('bekliyor');
-            setGorunum('profil');
-            setBildirim('Profil fotoğrafın güncellendi.');
             window.setTimeout(() => setBildirim(null), 2500);
           }}
       />,
@@ -903,21 +1360,6 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
             de sunucudan yeniden okunuyor; istemcide artırılmıyor.
           */
           onGeriYuklendi={paylasimlariTazele}
-      />,
-      () => setGorunum('profil'),
-    );
-  }
-
-  if (gorunum === 'duzenle') {
-    return kabuk(
-      <SosyalProfilDuzenleme
-          kullaniciId={kullaniciId}
-          profil={profil as SosyalProfil}
-          onVazgec={() => setGorunum('profil')}
-          onKaydedildi={(girdi) => {
-            setProfil((onceki) => (onceki ? { ...onceki, ...girdi } : onceki));
-            setGorunum('profil');
-          }}
       />,
       () => setGorunum('profil'),
     );
@@ -963,46 +1405,50 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
         sayaclar={sayaclar}
         sayacDurumu={sayacDurumu}
         yayindaMi={profil!.yayindaMi}
-        avatarVarMi={Boolean(profil!.avatarYolu)}
+        alaniVarMi={alaniVarMi}
         onPaylasimOlustur={() => setGorunum('paylasimOlustur')}
         onProfilBaglantisiPaylas={paylas}
         onGorunurluk={() => gorunurlukDegistir(!profil!.yayindaMi)}
         gorunurlukDurumu={gorunurlukDurumu === 'gonderiliyor' ? 'gonderiliyor' : 'bekliyor'}
-        onDuzenle={() => setGorunum('duzenle')}
-        onFotografDegistir={() => setGorunum('fotograf')}
-        onFotografKaldir={fotografiKaldir}
-        fotografDurumu={fotografKaldirmaDurumu === 'gonderiliyor' ? 'gonderiliyor' : 'bekliyor'}
         onBegendiklerim={() => setGorunum('begendiklerim')}
         onKaydedilenler={() => setGorunum('kaydedilenler')}
         onArsiv={() => setGorunum('arsiv')}
         onNavigate={onNavigate}
       />
 
-      {!profil!.yayindaMi && (
-        <TopluluktaDegilUyarisi
-          onYayimla={() => gorunurlukDegistir(true)}
-          durum={gorunurlukDurumu}
-        />
-      )}
-
       {/*
-        TOPLULUKTAN AYRILMA HATASI AYRI BİR CÜMLE
+        "TOPLULUĞA KATILMADIN" UYARISI KALDIRILDI
 
-        Katılma hatasını yukarıdaki kutu anlatıyor ama o kutu kullanıcı
-        TOPLULUKTAYKEN hiç çizilmiyor. Cümle olmasaydı başarısız bir
-        "Topluluktan ayrıl" hiçbir iz bırakmaz, kullanıcı olmamış bir işi
-        olmuş sanardı — sessiz başarısızlık başarı gibi okunur.
+        Kutu `yayinda_mi` false iken çiziliyor ve "Alan topluluğuna henüz
+        katılmadın" diyordu. O cümle artık YANLIŞ: aynı kolon bugün yalnız
+        profil görünürlüğünü anlatıyor (20260926040000) ve üyelik ayrı bir
+        tabloda. Katılma eyleminin yeri de değişti — kendi ekranı var
+        (`/topluluklar`). Kutuyu "profilin kapalı" diye yeniden yazmak,
+        kullanıcının kendi açtığı bir ayarı her açılışta uyarıya
+        çevirirdi; durum zaten dişli menüsündeki satırın etiketinde
+        yazıyor.
+
+        GÖRÜNÜRLÜK HATASI TEK CÜMLEYE İNDİ
+
+        Eskiden iki dal vardı: katılma hatasını kutu, ayrılma hatasını
+        aşağıdaki satır anlatıyordu. Kutu kalkınca iki yön de tek yerden
+        bildiriliyor — sessiz başarısızlık başarı gibi okunurdu.
       */}
-      {profil!.yayindaMi && gorunurlukDurumu === 'hata' && (
+      {gorunurlukDurumu === 'hata' && (
         <p role="alert" className="text-xs font-semibold leading-relaxed text-rose-700">
-          Alan topluluğundan ayrılamadın; hâlâ topluluktasın. Yeniden deneyebilirsin.
+          Profilinin görünürlüğü değiştirilemedi; eski ayarın duruyor. Yeniden deneyebilirsin.
         </p>
       )}
 
-      {/* Menü tıklandığı anda kapanıyor; kaldırma hatası bu yüzden burada. */}
-      {fotografKaldirmaDurumu === 'hata' && (
-        <p role="alert" className="text-xs font-semibold leading-relaxed text-rose-700">
-          Profil fotoğrafın kaldırılamadı; fotoğrafın duruyor. Yeniden deneyebilirsin.
+      {/*
+        Cümle bir UYARI değil, eksik bir eylemin açıklaması: `role="alert"`
+        yerine `role="status"` ve nötr ton. Kırmızı bu üründe hata ve
+        reddedilme demek; kendi profilinde eksik bir alanı olan kullanıcı
+        bir şeyi yanlış yapmış değil.
+      */}
+      {paylasimEngeli && (
+        <p role="status" className={`${KART} text-sm leading-relaxed text-gray-600`}>
+          {paylasimEngeli}
         </p>
       )}
 
@@ -1011,6 +1457,17 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
           {bildirim}
         </p>
       )}
+
+      {/*
+        ARAMA SAHİP DALININ İÇİNDE
+
+        Kutu `if (!sahibiMi) return <GuvenliEkran/>` satırından SONRA
+        çiziliyor: ziyaretçi bu koda hiç ulaşmıyor ve arama kutusu
+        onun DOM'una hiç girmiyor. Yeri ızgaranın ÜSTÜ — aradığı kişiye
+        gitmek isteyen kullanıcı kendi kareleri arasında aşağı
+        kaydırmak zorunda kalmasın.
+      */}
+      <KullaniciArama onNavigate={onNavigate} />
 
       <PaylasimIzgarasi
         paylasimlar={paylasimlar}

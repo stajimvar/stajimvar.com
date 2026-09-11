@@ -1,5 +1,6 @@
 import React from 'react';
 import { Avatar } from '../Avatar';
+import { profilFotografi } from '../../lib/profil-fotografi';
 import { SOSYAL_AVATAR_KOVASI } from '../../lib/queries/sosyal';
 import { useGorselAdresleri } from './useGorselAdresleri';
 
@@ -40,13 +41,31 @@ import { useGorselAdresleri } from './useGorselAdresleri';
  * her sayfa açılışında "fotoğrafı yok → var" diye bir yanıp sönme
  * üretirdi ve o ilk kare yanlış bilgi olurdu. Bekleme durumu bu yüzden
  * iskelet kalıbı: `animate-pulse`, sayfa iskeletinin kullandığı gri.
+ *
+ * YEDEK ADRES — TEK FOTOĞRAFIN ÖTEKİ UCU
+ * --------------------------------------
+ * Kullanıcının tek fotoğrafı var ve kaynağı `avatar_path`. Eski kamera
+ * düğmesiyle yüklenmiş `student_profiles.avatar_url` ise SİLİNMEDİ:
+ * yolu olmayan kullanıcı o adrese düşüyor, yani değişiklikle kimse
+ * fotoğrafsız kalmıyor. Hangisinin kullanılacağı burada değil
+ * `profilFotografi` içinde kararlaştırılıyor — karar tek yerde olmasa
+ * her çağrı yerinde ayrı bir `??` olurdu ve biri unutulduğunda aynı
+ * kullanıcı iki ekranda iki farklı fotoğrafla görünürdü.
  */
 
 interface FotografProps {
   /** Baş harf yedeği ve `alt` metni için; başlıkta görünen adın aynısı. */
   ad: string;
-  /** `social_profiles.avatar_path`; fotoğraf yoksa null. */
-  yol: string | null;
+  /**
+   * `social_profiles.avatar_path`.
+   *
+   * `null` = fotoğraf yok, `undefined` = sosyal satır HENÜZ OKUNMADI.
+   * İkisi ayrı: bilinmeyeni "yok" saymak, yüklenmemiş bir satır için
+   * baş harf çizip sonra fotoğrafa atlamak olurdu.
+   */
+  yol: string | null | undefined;
+  /** `student_profiles.avatar_url` yedeği; yalnız sahibin kendi ekranlarında dolu. */
+  yedekAdres?: string | null;
   /** Ölçü ve yuvarlaklık çağırandan geliyor: başlıkta ve formda farklı. */
   className?: string;
 }
@@ -57,16 +76,37 @@ interface FotografProps {
 */
 const YOL_YOK: string[] = [];
 
-export const ProfilFotografi: React.FC<FotografProps> = ({ ad, yol, className = '' }) => {
-  const yollar = React.useMemo(() => (yol ? [yol] : YOL_YOK), [yol]);
+export const ProfilFotografi: React.FC<FotografProps> = ({
+  ad,
+  yol,
+  yedekAdres = null,
+  className = '',
+}) => {
+  const kaynak = profilFotografi(yol, yedekAdres);
+  /*
+    İndirme yalnız 'yol' dalında anlamlı; kanca koşulsuz çağrılıyor çünkü
+    React kancaları dallara giremez. Yol yokken liste boş ve istek atılmıyor.
+  */
+  const depolamaYolu = kaynak.tur === 'yol' ? kaynak.yol : null;
+  const yollar = React.useMemo(
+    () => (depolamaYolu ? [depolamaYolu] : YOL_YOK),
+    [depolamaYolu],
+  );
   const { durum, adresler } = useGorselAdresleri(SOSYAL_AVATAR_KOVASI, yollar);
-  const adres = yol ? (adresler.get(yol) ?? null) : null;
 
-  if (yol && durum === 'yukleniyor') {
+  /* Satır henüz gelmedi ve elde yedek adres de yok: iskelet. */
+  if (kaynak.tur === 'bilinmiyor') {
     return <div aria-hidden className={`animate-pulse bg-gray-100 ${className}`} />;
   }
-  if (adres) {
-    return <Avatar name={ad} url={adres} className={className} />;
+  if (kaynak.tur === 'adres') {
+    return <Avatar name={ad} url={kaynak.adres} className={className} />;
+  }
+  if (depolamaYolu) {
+    if (durum === 'yukleniyor') {
+      return <div aria-hidden className={`animate-pulse bg-gray-100 ${className}`} />;
+    }
+    const adres = adresler.get(depolamaYolu) ?? null;
+    if (adres) return <Avatar name={ad} url={adres} className={className} />;
   }
   /*
     Baş harfler: yol yoksa (fotoğraf yok) ya da dosya inemediyse.

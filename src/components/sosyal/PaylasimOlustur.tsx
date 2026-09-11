@@ -5,6 +5,7 @@ import {
   EN_FAZLA_FOTOGRAF,
   SosyalHata,
   paylasimOlustur,
+  sosyalTopluluklariGetir,
   type PaylasimKitlesi,
 } from '../../lib/queries/sosyal';
 import { AciklamaAlani, KayitHatasi } from './SosyalFormAlanlari';
@@ -22,6 +23,15 @@ import { AciklamaAlani, KayitHatasi } from './SosyalFormAlanlari';
  * (`posts.kitle default 'baglantilarim'`). Geniş olan varsayılan
  * olsaydı, seçeneği hiç fark etmeyen kullanıcı fotoğrafını istemediği
  * kadar geniş bir kitleye açardı — güvenli varsayılan dar olandır.
+ *
+ * "ALAN TOPLULUĞUM" ÜYELİĞE BAĞLI
+ * -------------------------------
+ * Kitle seçeneği yalnız kullanıcı bir alan topluluğunun ÜYESİYKEN
+ * açılıyor; üyelik `sosyal_topluluklar` çıktısındaki `uye_miyim`
+ * alanından okunuyor. Sunucu da aynı sınırı çiziyor
+ * (`paylasim_kitlesi_kilidi`, 20260926040000) — buradaki kapı ikinci
+ * kapı, tek kapı değil. Açık bırakılsaydı kullanıcı fotoğraflarını
+ * yükledikten SONRA reddedilirdi.
  *
  * "TAKİP" DİYE BİR ŞEY YOK
  * ------------------------
@@ -176,12 +186,45 @@ interface OlusturProps {
   onVazgec: () => void;
   /** YALNIZ `tamamla` döndükten sonra çağrılıyor. */
   onTamamlandi: () => void;
+  /**
+   * Üyelik ekranına gezinme.
+   *
+   * Verilmezse "Alan toplulukları" bağlantısı düz bir `<a href>` olarak
+   * kalıyor: adres gerçek, orta tuş ve yeni sekme çalışıyor. Bağlantıyı
+   * hiç çizmemek, kullanıcıya kapalı seçeneğin nasıl açılacağını
+   * söyleyip yolunu göstermemek olurdu.
+   */
+  onNavigate?: (yol: string) => void;
 }
 
-export const PaylasimOlustur: React.FC<OlusturProps> = ({ onVazgec, onTamamlandi }) => {
+/** Üyelik ekranının adresi; iki yerde (metin ve gezinme) tek dizeden. */
+const TOPLULUKLAR_YOLU = '/topluluklar';
+
+export const PaylasimOlustur: React.FC<OlusturProps> = ({
+  onVazgec,
+  onTamamlandi,
+  onNavigate,
+}) => {
   const [secilenler, setSecilenler] = React.useState<HazirGorsel[]>([]);
   const [aciklama, setAciklama] = React.useState('');
   const [kitle, setKitle] = React.useState<PaylasimKitlesi>('baglantilarim');
+  /*
+    ÜYELİK OKUNUYOR — "ALAN TOPLULUĞUM" SEÇENEĞİNİN ÖNKOŞULU
+
+    `paylasim_kitlesi_kilidi` (20260926040000) bu kitleyle açılan satırı
+    üye olmayan kullanıcıda reddediyor. Seçeneği açık bırakıp hatayı
+    gönderimden sonra göstermek, kullanıcının fotoğraflarını yükleyip
+    sonra reddedilmesi demekti.
+
+    ÜÇ DURUM AYRI TUTULUYOR: okunuyor / okundu / okunamadı. Hata dalında
+    seçenek AÇILMIYOR ve "üye değilsin" de DENMİYOR — bilinmeyen bir şeyi
+    bilinen gibi yazmak, kullanıcıya kendi üyeliği hakkında yanlış bilgi
+    vermek olurdu.
+  */
+  const [uyeMiyim, setUyeMiyim] = React.useState(false);
+  const [uyelikDurumu, setUyelikDurumu] = React.useState<'yukleniyor' | 'hazir' | 'hata'>(
+    'yukleniyor',
+  );
   const [hazirlaniyor, setHazirlaniyor] = React.useState(false);
   const [gonderiliyor, setGonderiliyor] = React.useState(false);
   const [ilerleme, setIlerleme] = React.useState<{ yuklenen: number; toplam: number } | null>(null);
@@ -214,6 +257,27 @@ export const PaylasimOlustur: React.FC<OlusturProps> = ({ onVazgec, onTamamlandi
     },
     [],
   );
+
+  /*
+    Üyelik BİR KEZ okunuyor: ekran açıkken kullanıcı topluluğa
+    katılamıyor (katılma ekranı başka bir adreste ve oraya gitmek bu
+    ekranı kapatıyor), yani tazelenecek bir değer yok.
+  */
+  React.useEffect(() => {
+    let iptal = false;
+    sosyalTopluluklariGetir()
+      .then((liste) => {
+        if (iptal) return;
+        setUyeMiyim(liste.some((topluluk) => topluluk.uyeMiyim));
+        setUyelikDurumu('hazir');
+      })
+      .catch(() => {
+        if (!iptal) setUyelikDurumu('hata');
+      });
+    return () => {
+      iptal = true;
+    };
+  }, []);
 
   const kilitli = gonderiliyor || hazirlaniyor;
 
@@ -514,32 +578,88 @@ export const PaylasimOlustur: React.FC<OlusturProps> = ({ onVazgec, onTamamlandi
                 aciklama: 'Aynı alandaki, topluluğa katılmış herkes görür.',
               },
             ] as const
-          ).map((secenek) => (
-            <label
-              key={secenek.deger}
-              className={`flex min-h-11 cursor-pointer items-start gap-2.5 rounded-xl border p-2.5 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-blue-600 ${RENK_GECISI} ${
-                kitle === secenek.deger
-                  ? 'border-blue-200 bg-blue-50'
-                  : 'border-gray-200 bg-white hover:bg-gray-50'
-              }`}
-            >
-              <input
-                type="radio"
-                name="paylasim-kitlesi"
-                value={secenek.deger}
-                checked={kitle === secenek.deger}
-                disabled={kilitli}
-                onChange={() => setKitle(secenek.deger)}
-                className="mt-1 h-4 w-4 shrink-0 accent-blue-600"
-              />
-              <span className="min-w-0">
-                <span className="block text-sm font-bold text-gray-900">{secenek.etiket}</span>
-                <span className="block text-xs leading-relaxed text-gray-600">
-                  {secenek.aciklama}
+          ).map((secenek) => {
+            /*
+              ÜYE OLMAYANDA SEÇENEK KAPALI, GİZLİ DEĞİL
+
+              Kaldırmak da bir yoldu ama o zaman kullanıcı iki kitleden
+              birini hiç görmez ve paylaşımının neden yalnız
+              bağlantılarına gittiğini bilmezdi. Kapalı satır sebebini
+              de yanında yazıyor; sebebin altında da açan adres var.
+
+              Üyelik OKUNAMADIYSA da kapalı: bilinmeyen bir yetkiyi açık
+              varsaymak, sunucunun reddedeceği bir gönderime kapı
+              açardı.
+            */
+            const uyelikSarti = secenek.deger === 'alan-toplulugum';
+            const pasif = kilitli || (uyelikSarti && !uyeMiyim);
+            return (
+              <label
+                key={secenek.deger}
+                className={`flex min-h-11 items-start gap-2.5 rounded-xl border p-2.5 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-blue-600 ${RENK_GECISI} ${
+                  pasif && !kilitli ? 'opacity-60' : 'cursor-pointer'
+                } ${
+                  kitle === secenek.deger
+                    ? 'border-blue-200 bg-blue-50'
+                    : 'border-gray-200 bg-white hover:bg-gray-50'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="paylasim-kitlesi"
+                  value={secenek.deger}
+                  checked={kitle === secenek.deger}
+                  disabled={pasif}
+                  aria-describedby={uyelikSarti && !uyeMiyim ? 'kitle-uyelik-sebebi' : undefined}
+                  onChange={() => setKitle(secenek.deger)}
+                  className="mt-1 h-4 w-4 shrink-0 accent-blue-600"
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-bold text-gray-900">{secenek.etiket}</span>
+                  <span className="block text-xs leading-relaxed text-gray-600">
+                    {secenek.aciklama}
+                  </span>
                 </span>
-              </span>
-            </label>
-          ))}
+              </label>
+            );
+          })}
+
+          {/*
+            SEBEP ETİKETİN DIŞINDA
+
+            Bağlantı `<label>` içinde olsaydı, ona tıklamak radyo
+            düğmesini de tetiklerdi — kullanıcı topluluk ekranına
+            giderken kitlesini de değiştirmiş olurdu. Bu yüzden kardeş
+            paragraf, `aria-describedby` ile radyoya bağlı.
+          */}
+          {!uyeMiyim && (
+            <p id="kitle-uyelik-sebebi" className="text-xs leading-relaxed text-gray-600">
+              {uyelikDurumu === 'yukleniyor'
+                ? 'Topluluk üyeliğin okunuyor; "Alan topluluğum" o zamana kadar kapalı.'
+                : uyelikDurumu === 'hata'
+                  ? 'Topluluk üyeliğin okunamadı; "Alan topluluğum" bu yüzden kapalı. Paylaşımın bağlantılarına açılabilir.'
+                  : '"Alan topluluğum" alan topluluğuna katılınca açılıyor.'}{' '}
+              <a
+                href={TOPLULUKLAR_YOLU}
+                onClick={(olay) => {
+                  if (!onNavigate) return;
+                  if (
+                    olay.metaKey ||
+                    olay.ctrlKey ||
+                    olay.shiftKey ||
+                    olay.altKey ||
+                    olay.button !== 0
+                  )
+                    return;
+                  olay.preventDefault();
+                  onNavigate(TOPLULUKLAR_YOLU);
+                }}
+                className={`font-semibold text-blue-700 underline underline-offset-2 ${ODAK_HALKASI}`}
+              >
+                Alan toplulukları
+              </a>
+            </p>
+          )}
         </fieldset>
 
         {gonderimHatasi && <KayitHatasi mesaj={gonderimHatasi} />}

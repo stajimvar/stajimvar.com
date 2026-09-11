@@ -37,6 +37,7 @@ import { SifreYenile } from './components/SifreYenile';
 import { ProfilTamamla } from './components/ProfilTamamla';
 import { SosyalProfilSayfasi } from './components/sosyal/SosyalProfilSayfasi';
 import { BaglantilarSayfasi } from './components/sosyal/BaglantilarSayfasi';
+import { TopluluklarSayfasi } from './components/sosyal/TopluluklarSayfasi';
 import { BolumTalepleri } from './components/yonetim/BolumTalepleri';
 import { BolumHub, BolumPage } from './components/BolumPages';
 import { StajProgramlariSayfasi } from './components/StajProgramlari';
@@ -320,6 +321,24 @@ export default function App() {
   const [sessionReady, setSessionReady] = useState(false);
   /** Giriş yapmış öğrencinin gerçek profili. */
   const [student, setStudent] = useState<StudentProfile | null>(null);
+  /*
+    PROFİL FOTOĞRAFI TEK KAYNAKTAN — İKİ SÜTUN, TEK OKUMA
+
+    `/cv` ekranı aynı fotoğrafı iki yerde gösteriyor: solda kimlik kartı,
+    sağda sosyal portfolyo paneli. Tek kaynak `social_profiles.avatar_path`
+    ve o satırı zaten sağdaki panel okuyor. Sol sütun kendi sorgusunu
+    atsaydı aynı satır aynı ekranda iki kez okunur, ikisi ayrı zamanlarda
+    tazelenir ve yeni yüklenen fotoğraf solda eski kalırdı.
+
+    `undefined` = HENÜZ OKUNMADI; `null` = fotoğraf yok. İkisi ayrı,
+    çünkü kimlik kartı bilinmeyen durumda eski `avatar_url` yedeğine
+    düşüyor, "yok" durumunda ise baş harfleri çiziyor.
+
+    Değer yalnız `/cv` açıkken doluyor: üst çubuk ve hesap sayfası hâlâ
+    `student.avatarUrl` gösteriyor ve bu ekranların kendi veri yolu ayrı
+    bir iş.
+  */
+  const [sosyalAvatarYolu, setSosyalAvatarYolu] = useState<string | null | undefined>(undefined);
   const globalListings = useGlobalListingPreferences(student?.preferredJobCountries ?? []);
   // İlanlar artık Supabase'den geliyor. Boş başlıyor; yükleme durumu aşağıda.
   const [allListings, setAllListings] = useState<InternshipListing[]>([]);
@@ -1471,6 +1490,7 @@ export default function App() {
                   götürüyor: bu sayfadaki `basvuru` bölümü kalktı ve
                   sayının gittiği yerde aynı sayı durmalı.
                 */
+                sosyalAvatarYolu={sosyalAvatarYolu}
                 onBasvurulariAc={(altSekme) => {
                   /*
                     Birleşik ekran KENDİ ADRESİNDE de açılıyor (`/cv`).
@@ -1504,6 +1524,53 @@ export default function App() {
                     oturumHazir={sessionReady}
                     onNavigate={navigate}
                     onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+                    /*
+                      Fotoğraf yolu sol sütuna buradan geçiyor: satırı bu
+                      panel zaten okuyor, ikinci bir sorgu aynı ekranda
+                      aynı satırı iki kez okurdu.
+                    */
+                    onAvatarYolu={setSosyalAvatarYolu}
+                  />
+                }
+                /*
+                  SOSYAL ALANLAR DÜZENLEME EKRANININ İÇİNDE
+
+                  Aynı bileşen, ikinci bir kip: sosyal profilin alanları
+                  (görünen ad, kullanıcı adı, biyografi, eğitim notu,
+                  sınıf, şehir) artık dişliden açılan ayrı bir ekranda
+                  değil, öğrenci bilgileriyle AYNI düzenleme ekranında.
+
+                  İkisi aynı anda ağaçta DEĞİL: `/cv` düzenlemeye
+                  geçerken portfolyoyu söküp bu paneli kuruyor.
+                  Dolayısıyla iki ayrı sorgu değil, sırayla tek sorgu var
+                  ve ekrandaki değer her girişte sunucudan tazeleniyor.
+
+                  Kaydetme atomik değil ve öyle gösterilmiyor: bu panel
+                  `social_profiles`a, üstündeki bölümler
+                  `student_profiles`a yazıyor; her birinin kendi düğmesi
+                  ve kendi durumu var.
+                */
+                sosyalProfilDuzenleme={
+                  <SosyalProfilSayfasi
+                    gomulu
+                    gomuluKip="duzenleme"
+                    rotaKullaniciAdi={null}
+                    kullaniciId={session?.userId ?? null}
+                    oturumHazir={sessionReady}
+                    onNavigate={navigate}
+                    onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+                    /*
+                      Fotoğraf yükleme ve kaldırma BU panelde: yeni yol
+                      buradan da bildiriliyor, yoksa düzenlemeden çıkan
+                      kullanıcı sol sütunda eski fotoğrafı görürdü.
+                    */
+                    onAvatarYolu={setSosyalAvatarYolu}
+                    /*
+                      Eski kamera düğmesiyle yüklenmiş fotoğraf YEDEK:
+                      `avatar_path`i olmayan kullanıcı sosyal blokta da
+                      fotoğrafsız görünmesin.
+                    */
+                    ogrenciAvatarAdresi={activeStudent.avatarUrl}
                   />
                 }
                 onKaydedilenlere={() => {
@@ -1815,6 +1882,40 @@ export default function App() {
   if (temizYol === '/baglantilar') {
     return icerikSayfasi(
       <BaglantilarSayfasi
+        kullaniciId={session?.userId ?? null}
+        oturumHazir={sessionReady}
+        onNavigate={navigate}
+        onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+      />
+    );
+  }
+
+  /*
+    /topluluklar ve /topluluklar/<slug>
+
+    ÜYELİK ARTIK KENDİ EKRANINDA. Katılma/ayrılma bir zamanlar profil
+    dişlisindeydi ve orada `yayinda_mi` kolonunu yazıyordu; 20260926030000
+    üyeliği `community_members` tablosuna, 20260926040000 da kolonun
+    anlamını yalnız profil görünürlüğüne indirdi. İki kavram aynı menüde
+    dursaydı kullanıcı profilini gizlerken topluluğundan çıktığını sanırdı.
+
+    İKİ ADRES TEK BİLEŞEN: liste ve detay aynı okumadan (`sosyal_topluluklar`)
+    besleniyor ve katılma eylemi ikisinde de aynı satırı değiştiriyor. İki
+    bileşen olsaydı aynı üyelik iki yerden yazılır, biri değiştiğinde öteki
+    geride kalırdı. Detay için ayrı bir sorgu da YOK: sunucu topluluk
+    büyüklüğünü yalnız üyeye veriyor ve o değer zaten listede geliyor.
+
+    Slug adresten OLDUĞU GİBİ geçiyor; bir yetki kararı taşımıyor.
+    Listede bulunmayan slug bileşenin kendi güvenli ekranına düşüyor —
+    "böyle bir topluluk yok" ile "bu topluluk sana kapalı" ayrı cümleler
+    olsaydı adres çubuğu bir topluluk sözlüğüne dönerdi.
+  */
+  if (temizYol === '/topluluklar' || temizYol.startsWith('/topluluklar/')) {
+    const hamSlug =
+      temizYol === '/topluluklar' ? null : temizYol.slice('/topluluklar/'.length) || null;
+    return icerikSayfasi(
+      <TopluluklarSayfasi
+        slug={hamSlug}
         kullaniciId={session?.userId ?? null}
         oturumHazir={sessionReady}
         onNavigate={navigate}

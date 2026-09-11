@@ -2,6 +2,7 @@ import React from 'react';
 import { ImagePlus } from 'lucide-react';
 import { BIRINCIL_EYLEM, ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import { SosyalHata, profilFotografiYukle } from '../../lib/queries/sosyal';
+import { profilFotografi } from '../../lib/profil-fotografi';
 import { KayitHatasi } from './SosyalFormAlanlari';
 import { ProfilFotografi } from './ProfilFotografi';
 
@@ -175,8 +176,17 @@ interface YuklemeProps {
   kullaniciId: string;
   /** Başlıkta görünen ad — baş harf yedeği ve `alt` metni için. */
   ad: string;
-  /** Şu anki `avatar_path`; yoksa null ve baş harfler çiziliyor. */
+  /** Şu anki `avatar_path`; yoksa null ve yedek adrese düşülüyor. */
   mevcutYol: string | null;
+  /**
+   * Eski `student_profiles.avatar_url` — YALNIZ ÖNİZLEME İÇİN.
+   *
+   * Yükleme her zaman `avatar_path`e yazıyor; bu adres yalnız "şu anki
+   * fotoğrafın" karesinde gösteriliyor. Verilmeseydi, kamera düğmesiyle
+   * fotoğraf yüklemiş kullanıcı bu ekranda "Fotoğrafın yok" cümlesini
+   * okurdu — ekranın başka bir yerinde duran bir fotoğraf için.
+   */
+  yedekAdres?: string | null;
   onVazgec: () => void;
   /** YALNIZ `avatar_path` yazıldıktan sonra, yeni yolla çağrılıyor. */
   onKaydedildi: (yeniYol: string) => void;
@@ -200,6 +210,7 @@ export const ProfilFotografiYukleme: React.FC<YuklemeProps> = ({
   kullaniciId,
   ad,
   mevcutYol,
+  yedekAdres = null,
   onVazgec,
   onKaydedildi,
 }) => {
@@ -306,10 +317,18 @@ export const ProfilFotografiYukleme: React.FC<YuklemeProps> = ({
               <ProfilFotografi
                 ad={ad}
                 yol={mevcutYol}
+                yedekAdres={yedekAdres}
                 className="h-28 w-28 shrink-0 rounded-full text-2xl ring-1 ring-blue-500/20"
               />
+              {/*
+                Cümle EKRANDA GÖRÜNENE bakıyor, tek bir kolona değil:
+                yedek adresten bir fotoğraf çiziliyorken "Fotoğrafın yok"
+                demek, kullanıcının gözüyle gördüğü şeyi yok saymak olurdu.
+              */}
               <p className="text-[11px] font-semibold text-gray-600">
-                {mevcutYol ? 'Şu anki fotoğrafın' : 'Fotoğrafın yok'}
+                {profilFotografi(mevcutYol, yedekAdres).tur === 'yok'
+                  ? 'Fotoğrafın yok'
+                  : 'Şu anki fotoğrafın'}
               </p>
             </div>
 
