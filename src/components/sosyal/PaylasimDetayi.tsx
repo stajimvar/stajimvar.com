@@ -517,10 +517,14 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
         İKİ PANEL: SOLDA FOTOĞRAF, SAĞDA METİN
 
         Küçük ekranda tek sütun: 4:5 görsel tam genişlikte, altında metin;
-        kabın kendisi dikey kayıyor. lg ve üstünde yan yana: kap
-        `min(100%, 68.75rem)` genişlik ve `90vh` yükseklik; sol panel
-        kabın %60'ı ve yüksekliğin tamamı, sağ panel kalan %40 ve YALNIZ o
-        panel kayıyor — fotoğraf kaydırmayla birlikte gitmiyor.
+        kabın kendisi dikey kayıyor. lg ve üstünde yan yana: kap `90vh`
+        yükseklikte ve genişliği İÇERİKTEN türüyor (`w-auto`, üst sınır
+        `min(100%, 72rem)`). Sol panel yüksekliğin tamamı ve 4:5 oranında
+        (genişlik = yükseklik × 4/5; 900 px yüksek ekranda ≈ 648×810),
+        sağ panel sabit 26rem ve YALNIZ o panel kayıyor — fotoğraf
+        kaydırmayla birlikte gitmiyor. Sol panel önceden kabın %60'ıydı;
+        oran serbest kalınca masaüstünde kare görünüyordu, Instagram gibi
+        görselin oranı paneli taşımalı.
 
         Yatay kaydırma hiçbir dalda açılmıyor: uzun açıklama `break-words`
         ile sarıyor, görsel kendi panelinin içinde `object-cover` ile
@@ -532,7 +536,7 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
         aria-modal="true"
         aria-label="Paylaşım ayrıntısı"
         tabIndex={-1}
-        className="relative flex max-h-[92vh] w-[min(100%,44rem)] flex-col overflow-y-auto rounded-t-[2rem] border border-gray-200 bg-white shadow-[0_-20px_50px_rgba(15,23,42,0.24)] sm:rounded-2xl lg:h-[90vh] lg:max-h-[90vh] lg:w-[min(100%,68.75rem)] lg:flex-row lg:overflow-hidden"
+        className="relative flex max-h-[92vh] w-[min(100%,44rem)] flex-col overflow-y-auto rounded-t-[2rem] border border-gray-200 bg-white shadow-[0_-20px_50px_rgba(15,23,42,0.24)] sm:rounded-2xl lg:h-[90vh] lg:max-h-[90vh] lg:w-auto lg:max-w-[min(100%,72rem)] lg:flex-row lg:overflow-hidden"
       >
         {/*
           KAPAT TEK DÜĞME, İKİ YER
@@ -558,7 +562,7 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
           katman perdesiyle aynı aile (`slate-950`), yeni ton yok.
         */}
         <div
-          className="relative aspect-[4/5] w-full shrink-0 touch-pan-y overflow-hidden bg-slate-950 lg:aspect-auto lg:h-full lg:w-[60%]"
+          className="relative aspect-[4/5] w-full shrink-0 touch-pan-y overflow-hidden bg-slate-950 lg:aspect-[4/5] lg:h-full lg:w-auto"
           onPointerDown={surukleBasla}
           onPointerMove={surukleHareket}
           onPointerUp={surukleBitir}
@@ -674,10 +678,12 @@ export const PaylasimDetayi: React.FC<DetayProps> = ({
 
           Üstte tarih başlığı, altında açıklama ve bilgi satırı; `flex-1`
           boşluk etkileşim satırını panelin altına itiyor. Geniş ekranda
-          başlığın sağı kapat düğmesine yer bırakıyor (`lg:pr-28`; düğme
-          `min-w-11` + metin ve `right-2` kenarı).
+          panel sabit 26rem (`lg:flex-none lg:w-[26rem]`): kabın genişliği
+          içerikten türediği için esnek kalsaydı sol panelin 4:5 oranını
+          da sürüklerdi. Başlığın sağı kapat düğmesine yer bırakıyor
+          (`lg:pr-28`; düğme `min-w-11` + metin ve `right-2` kenarı).
         */}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:overflow-y-auto">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:w-[26rem] lg:flex-none lg:overflow-y-auto">
           <div className="border-b border-gray-100 px-3 py-2 lg:py-3 lg:pr-28">
             <p className="min-w-0 truncate text-sm font-bold text-gray-900">
               {tarih ?? 'Paylaşım'}

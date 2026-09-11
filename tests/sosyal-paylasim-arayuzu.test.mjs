@@ -208,7 +208,7 @@ test('ayrıntı katmanı iki panel: 4:5 görsel alanı, dar ekranda üst üste',
     bu testin işi değil.
   */
   assert.match(detay, /flex-col[^"]*lg:flex-row/);
-  assert.match(detay, /aspect-\[4\/5\][^"]*lg:w-\[60%\]/);
+  assert.match(detay, /aspect-\[4\/5\][^"]*lg:aspect-\[4\/5\] lg:h-full lg:w-auto/);
 });
 
 test('kova adları tek sabitten geliyor, kalıcı public adres üretilmiyor', () => {
