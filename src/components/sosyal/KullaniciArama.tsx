@@ -1,5 +1,4 @@
 import React from 'react';
-import { Search } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import {
   ARAMA_EN_AZ_HARF,
@@ -40,29 +39,24 @@ import { ProfilFotografi } from './ProfilFotografi';
  * duruncaya kadar bekleniyor; ayrıca her istek kendi `iptal` bayrağını
  * taşıyor, yani geç dönen eski cevap yeni sonucun üstüne yazmıyor.
  *
- * TEK MANTIK, İKİ YERLEŞİM
- * ------------------------
- * Masaüstünde kişi araması üst çubuktaki kutudan yapılıyor: /cv sağ
- * sütunundaki ikinci kutu, aynı ekranda "hangisi neyi arıyor" sorusunu
- * doğuruyordu ve kaldırıldı. Üst çubuk mobilde arama kutusu çizmiyor
- * (`hidden lg:block`); orada kişi aramasının tek yolu bu bileşen, o
- * yüzden yalnız `lg:hidden` ile mobilde duruyor. Geciktirme, durum
- * cümleleri ve sonuç satırları `KullaniciAramaSonuclari`nda tek kez
- * yazılı; iki yerleşim de onu çiziyor. Kopyalansaydı biri değişince
- * öteki eski cümleyle kalırdı.
+ * KUTU BURADA YOK, TEK YERLEŞİM
+ * -----------------------------
+ * Kişi araması yalnız üst çubuktaki kutudan yapılıyor (Header,
+ * `sosyaldeMi`, `hidden lg:block`). /cv içindeki mobil kutu bilinçli
+ * olarak kaldırıldı: mobilde kişi araması yolu YOK. Bu dosya yalnız
+ * sonuç mantığını (geciktirme, dört durum, satırlar) taşıyor; kutuyu
+ * çizen yer Header. Mantık burada tek kez yazılı, kutu geri gelirse
+ * bu parçayı çizer — kopyalanmaz.
  *
- * ZİYARETÇİ BU BİLEŞENE HİÇ ULAŞMIYOR
- * -----------------------------------
- * Kutu yalnız sahibin kendi ekranında, `if (!sahibiMi) return
- * <GuvenliEkran/>` satırından SONRA çiziliyor. Bileşen bu yüzden bir
- * `sahibiMi` bayrağı ALMIYOR: ikinci bir gizleme, sınırın nerede
- * olduğunu bulanıklaştırırdı.
+ * `sahibiMi` BAYRAĞI ALMIYOR
+ * --------------------------
+ * Üst çubuk kutuyu yalnız oturum açmış kullanıcının sosyal sayfalarında
+ * çiziyor; ikinci bir gizleme, sınırın nerede olduğunu
+ * bulanıklaştırırdı.
  */
 
 /** Girdi duruncaya kadar beklenen süre. */
 const GECIKME_MS = 300;
-
-const ALAN_KUTUSU = `w-full min-h-11 rounded-xl border border-gray-200 bg-white pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 ${RENK_GECISI} ${ODAK_HALKASI}`;
 
 const SATIR = `flex min-h-11 items-center gap-2.5 rounded-xl px-2 py-2 hover:bg-gray-50 ${RENK_GECISI} ${ODAK_HALKASI}`;
 
@@ -215,42 +209,6 @@ export const KullaniciAramaSonuclari: React.FC<SonucProps> = ({ sorgu, onNavigat
           })}
         </ul>
       )}
-    </div>
-  );
-};
-
-interface Props {
-  /** `degistir` geçmişe kayıt eklemeden adresi değiştiriyor; bkz. App.tsx. */
-  onNavigate: Gezinme;
-}
-
-/** Mobil yerleşim: kutu ve sonuçlar portfolyo alanının içinde, alt alta. */
-export const KullaniciArama: React.FC<Props> = ({ onNavigate }) => {
-  const [sorgu, setSorgu] = React.useState('');
-
-  return (
-    <div role="search" className="space-y-2">
-      <div className="relative">
-        <label htmlFor="sosyal-kullanici-arama" className="sr-only">
-          Kullanıcı ara
-        </label>
-        {/* İkon dekoratif: yanındaki etiket ve yer tutucu ne yapıldığını yazıyor. */}
-        <Search
-          aria-hidden
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-        />
-        <input
-          id="sosyal-kullanici-arama"
-          type="search"
-          value={sorgu}
-          onChange={(olay) => setSorgu(olay.target.value)}
-          placeholder="Kullanıcı adıyla ara"
-          autoComplete="off"
-          className={ALAN_KUTUSU}
-        />
-      </div>
-
-      <KullaniciAramaSonuclari sorgu={sorgu} onNavigate={onNavigate} />
     </div>
   );
 };

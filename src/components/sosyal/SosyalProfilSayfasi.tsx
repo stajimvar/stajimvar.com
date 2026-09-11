@@ -21,7 +21,6 @@ import {
 import { profilFotografi } from '../../lib/profil-fotografi';
 import { kullaniciAdiNormalize, profilYolu } from '../../lib/sosyal-kullanici-adi.mjs';
 import { BolumTalebi, type TalepKipi } from './BolumTalebi';
-import { KullaniciArama } from './KullaniciArama';
 import { PaylasimIzgarasi } from './PaylasimIzgarasi';
 import { PaylasimOlustur } from './PaylasimOlustur';
 import type { ProfilAyarMenusuProps } from './ProfilAyarMenusu';
@@ -1632,25 +1631,6 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
           {bildirim}
         </p>
       )}
-
-      {/*
-        ARAMA SAHİP DALININ İÇİNDE
-
-        Kutu `if (!sahibiMi) return <GuvenliEkran/>` satırından SONRA
-        çiziliyor: ziyaretçi bu koda hiç ulaşmıyor ve arama kutusu
-        onun DOM'una hiç girmiyor. Yeri ızgaranın ÜSTÜ — aradığı kişiye
-        gitmek isteyen kullanıcı kendi kareleri arasında aşağı
-        kaydırmak zorunda kalmasın.
-
-        YALNIZ MOBİLDE. Masaüstünde kişi araması üst çubuktaki kutudan
-        yapılıyor (Header, `sosyaldeMi`); burada ikinci bir kutu, aynı
-        ekranda "hangisi neyi arıyor" sorusunu doğuruyordu. Üst çubuk
-        mobilde arama kutusu çizmiyor (`hidden lg:block`), o yüzden
-        burası `lg:hidden`: her genişlikte tek kutu.
-      */}
-      <div className="lg:hidden">
-        <KullaniciArama onNavigate={onNavigate} />
-      </div>
 
       <PaylasimIzgarasi
         paylasimlar={paylasimlar}

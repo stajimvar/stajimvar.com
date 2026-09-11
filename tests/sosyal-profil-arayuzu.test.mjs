@@ -2030,10 +2030,6 @@ test('arama en az üç harf istiyor ve profile_id kullanmıyor', () => {
   assert.match(arama, /ARAMA_EN_AZ_HARF/);
   assert.doesNotMatch(yorumsuz(arama), /profilId|profile_id/);
   assert.doesNotMatch(yorumsuz(sorgular), /profilId: String\(satir\.profile_id\)/);
-  /* Kutu sahibin dalında: ziyaretçi bu koda hiç ulaşmıyor. */
-  assert.ok(
-    sayfa.indexOf('if (!sahibiMi) {\n    return <GuvenliEkran') < sayfa.indexOf('<KullaniciArama'),
-  );
   /*
     Yorumsuz kaynak: gerekçe yazısı sınırın nerede olduğunu anlatmak için
     `sahibiMi` adını anmak zorunda; bayrak olarak ALINMIYOR.
@@ -2041,18 +2037,18 @@ test('arama en az üç harf istiyor ve profile_id kullanmıyor', () => {
   assert.doesNotMatch(yorumsuz(arama), /sahibiMi/);
 });
 
-test('masaüstünde tek kişi arama kutusu: portfolyodaki mobilde, üst çubuktaki masaüstünde', () => {
+test('tek kişi arama kutusu: üst çubukta, /cv içinde yok', () => {
   /*
-    Aynı ekranda iki arama kutusu olmasın: üst çubuk lg ve üstünde kişi
-    arıyor (`hidden lg:block`), portfolyo alanındaki kutu yalnız onun
-    olmadığı genişlikte (`lg:hidden`). Sonuç mantığı tek parçada
-    (`KullaniciAramaSonuclari`); iki yerleşim de onu çiziyor, biri
-    değişince öteki eski cümleyle kalmıyor.
+    Kişi araması yalnız üst çubuktan (`hidden lg:block`). /cv içindeki
+    mobil kutu bilinçli olarak kaldırıldı: mobilde kişi araması yolu
+    yok, sayfa `KullaniciArama` diye bir şey çizmiyor ve içe aktarmıyor.
+    Sonuç mantığı tek parçada (`KullaniciAramaSonuclari`), onu çizen
+    tek yer Header.
   */
-  assert.match(sayfa, /<div className="lg:hidden">\s*<KullaniciArama onNavigate=\{onNavigate\} \/>\s*<\/div>/);
+  assert.doesNotMatch(sayfa, /KullaniciArama/);
   assert.ok(ustCubuk.includes('<div className="hidden lg:block flex-1 min-w-0 max-w-xl mx-4">'));
   assert.match(arama, /export const KullaniciAramaSonuclari/);
-  assert.ok(arama.includes('<KullaniciAramaSonuclari sorgu={sorgu} onNavigate={onNavigate} />'));
+  assert.doesNotMatch(arama, /export const KullaniciArama/);
   assert.match(ustCubuk, /<KullaniciAramaSonuclari\s*sorgu=\{kisiSorgusu\}/);
   /* Geciktirme ve `sosyalKullaniciAra` çağrısı tek yerde: Header'da yok. */
   assert.doesNotMatch(ustCubuk, /sosyalKullaniciAra|GECIKME_MS/);
