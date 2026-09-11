@@ -28,10 +28,11 @@ import { useGorselAdresleri } from './useGorselAdresleri';
  *              Görsel paneli kabın yüksekliğini alıyor, metin paneli
  *              sabit 26rem ve yalnız o kayıyor.
  *   'akis'     lg altı; aynı katmanın dikey akışı. Bloklar alt alta,
- *              sıra Instagram'ınki: şerit → beğen/kaydet → açıklama →
- *              arşiv. Sıra `order-*` ile veriliyor, JSX ikinci kez
- *              yazılmıyor — iki kopya olsaydı beğeni kilidi ya da arşiv
- *              cümlesi birinde değişip ötekinde kalırdı.
+ *              sıra Instagram'ınki: şerit → eylem satırı (beğen/kaydet,
+ *              sahipte sağ uçta arşivle) → açıklama. Sıra `order-*` ile
+ *              veriliyor, JSX ikinci kez yazılmıyor — iki kopya olsaydı
+ *              beğeni kilidi ya da arşiv cümlesi birinde değişip ötekinde
+ *              kalırdı.
  *
  * Beğeni/kaydetme durumu, kilit, arşiv adımları ve görsel indirme
  * (`useGorselAdresleri`) hep burada; katman ve akış yalnız kabı ve
@@ -632,8 +633,8 @@ export const PaylasimGovdesi: React.FC<GovdeProps> = ({
         `lg:pr-28`; düğme `min-w-11` + metin ve `right-2` kenarı), altında
         açıklama ve bilgi satırı, `flex-1` boşluk etkileşim satırını
         panelin altına itiyor. Akışta başlık yok — akışın kendi sabit
-        başlığı var — ve sıra `order-*` ile şerit → etkileşim → metin →
-        arşiv; boşluk da yok, blok içeriği kadar.
+        başlığı var — ve sıra `order-*` ile şerit → eylem satırı → metin;
+        boşluk da yok, blok içeriği kadar.
       */}
       <div className={diyalog ? METIN_PANELI_DIYALOG : METIN_PANELI_AKIS}>
         {diyalog && (
@@ -682,24 +683,51 @@ export const PaylasimGovdesi: React.FC<GovdeProps> = ({
           söylüyor; tahmin edilmiş bir durumla düğme sunmak, her
           basışta sunucunun reddedeceği bir eylem olurdu.
         */}
-        <div className={`min-w-0 border-t border-gray-100 px-3 py-2 ${diyalog ? '' : 'order-1'}`}>
-          {etkilesimDurumu === 'yukleniyor' && (
-            <div aria-busy="true" className="flex gap-2">
-              <span aria-hidden className="h-11 w-28 animate-pulse rounded-xl bg-gray-100" />
-              <span aria-hidden className="h-11 w-28 animate-pulse rounded-xl bg-gray-100" />
-            </div>
-          )}
+        <div className={`min-w-0 space-y-2 border-t border-gray-100 px-3 py-2 ${diyalog ? '' : 'order-1'}`}>
+          {/*
+            TEK EYLEM SATIRI: SOLDA BEĞEN/KAYDET, SAĞ UÇTA ARŞİVLE
 
-          {etkilesimDurumu === 'hata' && (
-            <p role="alert" className="text-xs leading-relaxed text-gray-600">
-              Beğeni ve kayıt durumun şu anda alınamadı. Yanlış bir durum göstermemek için
-              düğmeler çizilmedi.
-            </p>
-          )}
+            Arşivle bir süre açıklamanın altında kendi şeridindeydi;
+            telefon ekran görüntüsüyle bildirildi: kullanıcı onu
+            Instagram'daki sağ uç yer imi gibi, beğen/kaydet satırının
+            SAĞINDA bekliyor. Sağa itme `ml-auto` ile; satır `flex-wrap`
+            kalıyor ki dört haneli bir beğeni sayısı gelirse Arşivle
+            kırpılmak yerine alt satıra, yine sağa insin.
 
-          {etkilesimDurumu === 'hazir' && begeniDurumu && (
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
+            SIĞIYOR, KISALTILMADI — sınıf değerlerinden hesap: düğme
+            genişliği = 24 (px-3) + 2 (kenar) + 16 (ikon) + 6 (gap-1.5) +
+            metin; text-sm kalın Inter'de ortalama ~8,4 px/harf ile Beğen
+            ≈ 90, Kaydet ≈ 98, Arşivle ≈ 107 px. İki `gap-2` ile 311 px;
+            "99 beğeni" sayısı ve aralığı eklenince ≈ 380 px. Kap 390 px
+            ekranda 366 px, diyalog panelinde (26rem, px-3) 392 px:
+            sayısız hâlde ikisine de sığıyor, sayı gelince 390 px'te
+            `flex-wrap` devreye giriyor. Bu yüzden `sr-only` kısaltma yok:
+            ikonun tek başına bilgi taşımaması kuralı bozulmuyor.
+
+            Arşivle etkileşim durumundan BAĞIMSIZ: beğeni sorgusu hata
+            verdiğinde ya da yüklenirken de duruyor. Eskiden de öyleydi
+            (ayrı şeritteydi); satıra taşınmak sahibin arşivleme
+            yolunu ağ durumuna bağlamamalı. Skelet ve hata cümlesi
+            satırın sol yarısında, Arşivle sağ uçta; yükseklik üç
+            durumda da 44 px, akış zıplamıyor.
+          */}
+          <div className="flex flex-wrap items-center gap-2">
+            {etkilesimDurumu === 'yukleniyor' && (
+              <div aria-busy="true" className="flex gap-2">
+                <span aria-hidden className="h-11 w-28 animate-pulse rounded-xl bg-gray-100" />
+                <span aria-hidden className="h-11 w-28 animate-pulse rounded-xl bg-gray-100" />
+              </div>
+            )}
+
+            {etkilesimDurumu === 'hata' && (
+              <p role="alert" className="min-w-0 flex-1 text-xs leading-relaxed text-gray-600">
+                Beğeni ve kayıt durumun şu anda alınamadı. Yanlış bir durum göstermemek için
+                düğmeler çizilmedi.
+              </p>
+            )}
+
+            {etkilesimDurumu === 'hazir' && begeniDurumu && (
+              <>
                 {/*
                   Etiket iki durumda da aynı: durumu `aria-pressed`
                   söylüyor. Değişen etiketli bir basılı düğme, okuyucu
@@ -747,73 +775,75 @@ export const PaylasimGovdesi: React.FC<GovdeProps> = ({
                     {begeniDurumu.adet} beğeni
                   </p>
                 )}
-              </div>
+              </>
+            )}
 
-              {etkilesimHatasi && (
-                <p role="alert" className="text-xs font-semibold leading-relaxed text-rose-700">
-                  {etkilesimHatasi}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
+            {/*
+              ARŞİVLEME SAHİBE ÖZEL VE İKİ ADIMLI
 
-        {/*
-          ARŞİVLEME SAHİBE ÖZEL VE İKİ ADIMLI
+              Tek dokunuşla arşivlemek geri dönüşü olmayan bir kaza olurdu:
+              arşivden çıkarma akışı D'de YOK, yani arşivlenen paylaşım
+              arayüzden geri getirilemiyor. İkinci adım bunu bir karara
+              çeviriyor. Cümle de bunu söylüyor — "sonra geri alırsın" gibi
+              bir vaat verilmiyor. Soru açıkken düğme satırdan kalkıyor ve
+              soru aşağıdaki blokta; aynı anda hem "Arşivle" hem "Evet,
+              arşivle" görünseydi ikisi de aynı işi yapan iki düğme olurdu.
 
-          Tek dokunuşla arşivlemek geri dönüşü olmayan bir kaza olurdu:
-          arşivden çıkarma akışı D'de YOK, yani arşivlenen paylaşım
-          arayüzden geri getirilemiyor. İkinci adım bunu bir karara
-          çeviriyor. Cümle de bunu söylüyor — "sonra geri alırsın" gibi
-          bir vaat verilmiyor.
-
-          KALICI SİLME DÜĞMESİ YOK: sunucuda da yalnız taslak silinebiliyor.
-        */}
-        {sahibiMi && (
-          <div className={`space-y-2 border-t border-gray-100 px-3 py-2 ${diyalog ? '' : 'order-3'}`}>
-            {arsivAsamasi === 'kapali' ? (
+              Sahip dalı: ziyaretçide DOM'a hiç girmiyor, CSS ile gizlenmiyor.
+              KALICI SİLME DÜĞMESİ YOK: sunucuda da yalnız taslak silinebiliyor.
+            */}
+            {sahibiMi && arsivAsamasi === 'kapali' && (
               <button
                 type="button"
                 onClick={() => setArsivAsamasi('soruluyor')}
-                className={DUGME}
+                className={`${DUGME} ml-auto`}
               >
                 <Archive aria-hidden className="h-4 w-4" />
                 Arşivle
               </button>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-xs leading-relaxed text-gray-700">
-                  Arşivlenen paylaşım profilinden kalkıyor ve kimseye görünmüyor. Bu ekrandan
-                  geri getirme yolu yok.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={arsivle}
-                    disabled={arsivAsamasi === 'gonderiliyor'}
-                    className={DUGME}
-                  >
-                    <Archive aria-hidden className="h-4 w-4" />
-                    {arsivAsamasi === 'gonderiliyor' ? 'Arşivleniyor…' : 'Evet, arşivle'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setArsivAsamasi('kapali')}
-                    disabled={arsivAsamasi === 'gonderiliyor'}
-                    className={DUGME}
-                  >
-                    Vazgeç
-                  </button>
-                </div>
-              </div>
-            )}
-            {arsivHatasi && (
-              <p role="alert" className="text-xs font-semibold leading-relaxed text-rose-700">
-                {arsivHatasi}
-              </p>
             )}
           </div>
-        )}
+
+          {etkilesimDurumu === 'hazir' && etkilesimHatasi && (
+            <p role="alert" className="text-xs font-semibold leading-relaxed text-rose-700">
+              {etkilesimHatasi}
+            </p>
+          )}
+
+          {sahibiMi && arsivAsamasi !== 'kapali' && (
+            <div className="space-y-2">
+              <p className="text-xs leading-relaxed text-gray-700">
+                Arşivlenen paylaşım profilinden kalkıyor ve kimseye görünmüyor. Bu ekrandan
+                geri getirme yolu yok.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={arsivle}
+                  disabled={arsivAsamasi === 'gonderiliyor'}
+                  className={DUGME}
+                >
+                  <Archive aria-hidden className="h-4 w-4" />
+                  {arsivAsamasi === 'gonderiliyor' ? 'Arşivleniyor…' : 'Evet, arşivle'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setArsivAsamasi('kapali')}
+                  disabled={arsivAsamasi === 'gonderiliyor'}
+                  className={DUGME}
+                >
+                  Vazgeç
+                </button>
+              </div>
+            </div>
+          )}
+
+          {sahibiMi && arsivHatasi && (
+            <p role="alert" className="text-xs font-semibold leading-relaxed text-rose-700">
+              {arsivHatasi}
+            </p>
+          )}
+        </div>
       </div>
     </>
   );

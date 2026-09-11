@@ -117,12 +117,17 @@ test('kalıcı silme yok; sahibin tek yolu arşiv ve o da sahibiMi dalının iç
   assert.doesNotMatch(yorumsuz(detay) + yorumsuz(govde) + yorumsuz(izgara), /sil(?:<|\b)/i);
   assert.match(rpcGocu, /yayimlanmis-paylasim-iptal-edilemez/);
   /*
-    Gövdede sahibe özel İKİ blok var (görünürlük satırı ve arşivleme) ve
-    ikisi de koşulun İÇİNDE: ziyaretçide DOM'a hiç girmiyorlar, CSS ile
-    gizlenmiyorlar. Katman ve akış `sahibiMi`yi gövdeye olduğu gibi
-    geçiriyor; ne başlık ne blok kabı sahibe özel bir şey çiziyor.
+    Gövdede sahibe özel DÖRT parça var (görünürlük satırı, eylem
+    satırının sağ ucundaki Arşivle, arşiv sorusu, arşiv hatası) ve hepsi
+    koşulun İÇİNDE: ziyaretçide DOM'a hiç girmiyorlar, CSS ile
+    gizlenmiyorlar. Arşivle düğmesi `ml-auto` ile beğen/kaydet satırının
+    sağ ucunda, ayrı bir `order-3` şeridi yok. Katman ve akış `sahibiMi`yi
+    gövdeye olduğu gibi geçiriyor; ne başlık ne blok kabı sahibe özel bir
+    şey çiziyor.
   */
-  assert.equal(govde.split('{sahibiMi && (').length - 1, 2);
+  assert.equal(govde.split('{sahibiMi && ').length - 1, 4);
+  assert.match(govde, /\{sahibiMi && arsivAsamasi === 'kapali' && \(\s*<button[\s\S]{0,200}?className=\{`\$\{DUGME\} ml-auto`\}/);
+  assert.doesNotMatch(govde, /order-3/);
   assert.doesNotMatch(yorumsuz(detay), /sahibiMi &&|sahibiMi \?/);
 });
 
@@ -228,7 +233,6 @@ test('tek gövde iki yerleşimde: lg üstü iki panelli diyalog, lg altı dikey 
   assert.match(govde, /diyalog \? GORSEL_PANELI_DIYALOG : GORSEL_PANELI/);
   assert.match(govde, /diyalog \? '' : 'order-1'/);
   assert.match(govde, /diyalog \? 'pt-3' : 'order-2 pb-3'/);
-  assert.match(govde, /diyalog \? '' : 'order-3'/);
   /* Sunum kararı tek kırılımdan; iki dal `genisEkran` ile ayrılıyor. */
   const genisEkran = oku('src/components/sosyal/useGenisEkran.ts');
   assert.match(genisEkran, /LG_SORGUSU = '\(min-width: 1024px\)'/);
