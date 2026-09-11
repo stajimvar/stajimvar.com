@@ -34,10 +34,13 @@ test('A/B) masaüstü bağlantısı ŞİRKET ÜYELİĞİNE bağlı', () => {
   assert.match(HEADER, /data-testid="header-isveren-paneli"/);
 });
 
-test('A/B) profil menüsündeki dünya seçici de üyeliğe bağlı', () => {
+test('A/B) üyelik koşulu olmayan dünya seçici kalmadı', () => {
   /*
-    Eskiden yalnızca `onDunyaDegistir &&` idi: giriş yapan HER öğrenci
-    "Şirket" sekmesi görüyordu. Bu turda kapatıldı.
+    Eskiden profil menüsünde yalnızca `onDunyaDegistir &&` ile çizilen bir
+    "Öğrenci / Şirket" seçici vardı: giriş yapan HER öğrenci "Şirket"
+    sekmesi görüyordu. Önce koşul eklendi; sonra menünün kendisi kalktı
+    (hesap düğmesi doğrudan /cv'ye gidiyor). Bu iddia, koşulsuz bir
+    seçicinin başka bir yerden geri gelmediğini ölçüyor.
   */
   const kalanKosulsuz = HEADER.match(/\{onDunyaDegistir && \(/g) ?? [];
   assert.deepEqual(kalanKosulsuz, [], 'üyelik koşulu olmayan dünya seçici kalmış');
@@ -85,6 +88,11 @@ test('parlama yok: bayrak false başlıyor', () => {
 });
 
 test('mobil: hesap panelinde satır var ve üyeliğe bağlı', () => {
+  /*
+    AccountSheet artık Header'a BAĞLI DEĞİL: tek tetikleyicisi olan hesap
+    düğmesi doğrudan /cv'ye gidiyor. Dosya duruyor (silme kararı ayrı);
+    bu iddia dosyanın kendi içini ölçüyor, çizildiğini değil.
+  */
   assert.match(SHEET, /\{sirketUyesiMi && onIsverenPaneli && \(/);
   assert.match(SHEET, /data-testid="account-sheet-isveren"/);
   /* 44px dokunma hedefi. */

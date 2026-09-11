@@ -1210,10 +1210,11 @@ export default function App() {
       onSelectCompany={handleSelectCompany}
       applicationsCount={applications.length}
       /*
-        "Profilim ve CV" birleşik ekrana gidiyor: sol sütunda profil/CV
-        kartı, sağ sütunda sosyal fotoğraf portfolyosu. Sekme durumunu
-        değiştirmek yetmezdi — alt sayfadayken adres değişmiyor ve menü
-        hiçbir şey yapmamış gibi görünüyordu.
+        Üst çubuktaki hesap bağlantısı ve alt çubuktaki Profil birleşik
+        ekrana gidiyor: sol sütunda profil/CV kartı, sağ sütunda sosyal
+        fotoğraf portfolyosu. Sekme durumunu değiştirmek yetmezdi — alt
+        sayfadayken adres değişmiyor ve düğme hiçbir şey yapmamış gibi
+        görünüyordu.
       */
       onOpenProfilVeCv={() => navigate('/cv')}
       onOpenGuides={() => navigate('/rehber')}
@@ -1466,9 +1467,11 @@ export default function App() {
                 onSubTabChange={setActiveSubTab}
                 /*
                   Çıkış ve yönetim paneli üst çubuktaki avatar menüsünden
-                  buraya taşındı: o menü mobilde kaldırıldı ve alt gezinme
-                  çubuğu artık doğrudan bu sayfaya geliyor. Masaüstündeki
-                  avatar menüsü duruyor, yani iki yerden de erişiliyor.
+                  buraya taşındı ve o menü artık masaüstünde de yok: üst
+                  çubuktaki hesap bağlantısı ile alt çubuktaki Profil
+                  doğrudan bu sayfaya geliyor. Bu iki düğme çıkışın ve
+                  yönetim panelinin TEK yeri — kaldırılırsa hesaptan
+                  çıkmanın yolu kalmaz.
                 */
                 onLogout={handleLogout}
                 isAdmin={isAdmin}

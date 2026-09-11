@@ -1,19 +1,15 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   Sparkles,
-  User,
   Building2,
   CheckCircle2,
   Compass,
   FileText,
-  Award,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   Briefcase,
-  Send,
   UserCheck,
-  Settings,
   BookOpen,
   LogOut,
   ArrowRight,
@@ -26,26 +22,11 @@ import {
 } from 'lucide-react';
 import { StudentProfile, CompanyAccount } from '../types';
 import { Avatar } from './Avatar';
-import { AccountSheet, type AccountSheetCloseReason } from './AccountSheet';
 import { SIRKET_KENAR_GUCLU, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
 import { Logo } from './Logo';
 import { adYazimi } from '../lib/ad';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
-
-const ACCOUNT_SHEET_HISTORY_KEY = '__stajimvarAccountSheet';
-
-type AccountSheetPhase = 'closed' | 'open' | 'closing';
-type AccountSheetCloseSource = AccountSheetCloseReason | 'action' | 'back';
-
-const isHistoryRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
-const uniqueAccountSheetId = () => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return `account-sheet-${crypto.randomUUID()}`;
-  }
-  return `account-sheet-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-};
+import { ODAK_HALKASI } from '../lib/renk-token';
 
 import { BildirimDugmesi } from './BildirimMerkezi';
 
@@ -63,7 +44,14 @@ interface HeaderProps {
   activeCompany?: CompanyAccount;
   allCompanies?: CompanyAccount[];
   onSelectCompany?: (companyId: string) => void;
-  applicationsCount: number;
+  /**
+   * ARTIK OKUNMUYOR. Sayı hesap menüsündeki "Başvurularım (n)" satırında
+   * yazıyordu; menü kalktı, sayı profil ekranının üst istatistiğinde.
+   * Prop yalnızca src/dev/AccountSheetDevFixture.tsx hâlâ geçtiği için
+   * duruyor (o dosya bu turun kapsamı dışında); fixture temizlenince
+   * buradan ve App.tsx'ten silinmeli.
+   */
+  applicationsCount?: number;
   isLoggedIn?: boolean;
   onOpenLogin?: () => void;
   onOpenRegister?: () => void;
@@ -180,7 +168,6 @@ export const Header: React.FC<HeaderProps> = ({
   activeCompany,
   allCompanies = [],
   onSelectCompany,
-  applicationsCount,
   isLoggedIn = true,
   onOpenLogin,
   onOpenRegister,
@@ -271,108 +258,13 @@ export const Header: React.FC<HeaderProps> = ({
     transform: altMenuGorunur ? 'none' : 'translateY(160%)',
   };
 
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [companyDropdownOpen, setCompanyDropdownOpen] = useState(false);
-  const [mobileAccountSheetOpen, setMobileAccountSheetOpen] = useState(false);
-  const accountSheetTriggerRef = useRef<HTMLButtonElement>(null);
-  const accountSheetOwnerIdRef = useRef(uniqueAccountSheetId());
-  const accountSheetPhaseRef = useRef<AccountSheetPhase>('closed');
-  const accountSheetCloseSourceRef = useRef<AccountSheetCloseSource | null>(null);
-  const accountSheetAfterCloseRef = useRef<(() => void) | null>(null);
   const subMenuScrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeftPos, setScrollLeftPos] = useState(0);
-
-  const isOwnAccountSheetHistoryState = useCallback((state: unknown) => {
-    return isHistoryRecord(state) && state[ACCOUNT_SHEET_HISTORY_KEY] === accountSheetOwnerIdRef.current;
-  }, []);
-
-  const finishMobileAccountSheetClose = useCallback(() => {
-    const afterClose = accountSheetAfterCloseRef.current;
-    accountSheetAfterCloseRef.current = null;
-    accountSheetCloseSourceRef.current = null;
-    accountSheetPhaseRef.current = 'closed';
-    setMobileAccountSheetOpen(false);
-    afterClose?.();
-  }, []);
-
-  /*
-    Popstate tek otoritedir: geri ile kapandıktan sonra burada yeniden
-    history.back() çağrılmaz. Böylece kendi kapatma işlemimizin popstate'i
-    yeni bir geri çağrısını veya eski bir bayrağı tetikleyemez.
-  */
-  useEffect(() => {
-    const onPopState = (event: PopStateEvent) => {
-      if (isOwnAccountSheetHistoryState(event.state)) {
-        accountSheetPhaseRef.current = 'open';
-        setMobileAccountSheetOpen(true);
-        return;
-      }
-
-      if (accountSheetPhaseRef.current !== 'closed') {
-        finishMobileAccountSheetClose();
-      }
-    };
-
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, [finishMobileAccountSheetClose, isOwnAccountSheetHistoryState]);
-
-  const openMobileAccountSheet = useCallback(() => {
-    if (accountSheetPhaseRef.current !== 'closed') return;
-
-    if (!isOwnAccountSheetHistoryState(window.history.state)) {
-      const mevcutDurum = isHistoryRecord(window.history.state) ? window.history.state : {};
-      window.history.pushState(
-        { ...mevcutDurum, [ACCOUNT_SHEET_HISTORY_KEY]: accountSheetOwnerIdRef.current },
-        '',
-        window.location.href
-      );
-    }
-
-    accountSheetPhaseRef.current = 'open';
-    setMobileAccountSheetOpen(true);
-  }, [isOwnAccountSheetHistoryState]);
-
-  const requestMobileAccountSheetClose = useCallback(
-    (source: AccountSheetCloseSource, afterClose?: () => void) => {
-      if (accountSheetPhaseRef.current === 'closed') {
-        afterClose?.();
-        return;
-      }
-      if (accountSheetPhaseRef.current === 'closing') return;
-
-      accountSheetCloseSourceRef.current = source;
-      accountSheetAfterCloseRef.current = afterClose ?? null;
-
-      if (isOwnAccountSheetHistoryState(window.history.state)) {
-        accountSheetPhaseRef.current = 'closing';
-        window.history.back();
-        return;
-      }
-
-      /* Başka bir history geçişi işaretçiyi çoktan kaldırdıysa geri çağrısı yapma. */
-      finishMobileAccountSheetClose();
-    },
-    [finishMobileAccountSheetClose, isOwnAccountSheetHistoryState]
-  );
-
-  const closeMobileAccountSheetThen = useCallback(
-    (action: () => void) => requestMobileAccountSheetClose('action', action),
-    [requestMobileAccountSheetClose]
-  );
-
-  const handleProfileTrigger = () => {
-    if (window.matchMedia('(min-width: 1024px)').matches) {
-      setProfileDropdownOpen((open) => !open);
-      return;
-    }
-    setProfileDropdownOpen(false);
-    openMobileAccountSheet();
-  };
 
   // Check scroll position to show/hide left-right helper buttons
   const checkScrollState = () => {
@@ -1035,210 +927,77 @@ export const Header: React.FC<HeaderProps> = ({
                   </button>
                 )}
 
-                {/* Hesap menüsü - mobilde alttan panel, masaüstünde popover. */}
                 {/*
-                  AVATAR MENÜSÜ YALNIZCA MASAÜSTÜNDE
+                  HESAP DÜĞMESİ MENÜ AÇMIYOR, DOĞRUDAN /cv'YE GİDİYOR
 
-                  Mobilde bu düğme alttan hesap menüsünü açıyordu ve alt
-                  gezinme çubuğundaki "Profil" de aynı menüyü açıyordu —
-                  ekranın iki ayrı köşesinde aynı işi yapan iki düğme.
-                  Mobilde artık yalnızca alt menü var ve doğrudan profile
-                  gidiyor.
+                  Burada bir açılır menü vardı: "Profilim ve CV",
+                  "Başvurularım (n)", "Rozetler ve testler", "Yönetim
+                  paneli", "Çıkış Yap". Beş satırın beşinin de karşılığı
+                  zaten birleşik profil ekranında (/cv) duruyor: sayfanın
+                  kendisi, sol karttaki başvuru sayacı, "Yetkinlik
+                  testleri" kartı ve sayfanın altındaki iki düğme
+                  (StudentProfileView, yönetim paneli yalnız yöneticide).
+                  Menü, her satırı için bir sayfa ileride bir kez daha
+                  gösterilen bir ara duraktı.
 
-                  MASAÜSTÜNDE KALDIRILAMAZ: alt gezinme çubuğu `lg:hidden`,
-                  yani geniş ekranda hiç çizilmiyor. Bu düğme oradaki tek
-                  profil ve çıkış kapısı; kaldırılsa masaüstünde hesaba
-                  ulaşmanın hiçbir yolu kalmazdı.
+                  YALNIZCA MASAÜSTÜNDE: alt gezinme çubuğu `lg:hidden`,
+                  yani geniş ekranda hiç çizilmiyor. Bu bağlantı oradaki tek
+                  profil kapısı; çıkış ve yönetim paneli de o sayfada.
+                  Dar ekranda alt çubuktaki "Profil" aynı adrese gidiyor.
+
+                  GERÇEK BAĞLANTI: üst sekmelerle aynı gerekçe — orta tuş,
+                  "yeni sekmede aç" ve ekran okuyucunun "bağlantı" demesi
+                  bir <button> ile çalışmıyor. Ok simgesi de gitti: aşağı
+                  bakan ok "altında bir menü var" der, artık yok.
                 */}
                 {userRole === 'student' && activeStudent && (
-                  <div className="relative hidden shrink-0 lg:block">
-                    <button
-                      id="user-profile-menu-btn"
-                      ref={accountSheetTriggerRef}
-                      onClick={handleProfileTrigger}
-                      aria-expanded={profileDropdownOpen || mobileAccountSheetOpen}
-                      aria-controls={mobileAccountSheetOpen ? 'mobile-account-sheet' : undefined}
-                      aria-haspopup="dialog"
-                      className={`flex cursor-pointer select-none items-center gap-2 rounded-2xl border px-2 py-1.5 text-left text-gray-800 transition-all duration-200 sm:gap-2.5 sm:px-3 ${
-                        profileDropdownOpen
-                          ? 'border-blue-200 bg-blue-50'
-                          : 'border-gray-200 hover:bg-gray-50'
-                      }`}
-                      title="Hesap menüsü"
-                    >
-                      {/*
-                        AVATARDAKİ YEŞİL SAYI KALDIRILDI
+                  <a
+                    href="/cv"
+                    id="user-profile-menu-btn"
+                    data-testid="header-hesap-baglantisi"
+                    aria-label={`Profilim ve CV — ${adYazimi(activeStudent.fullName)}, öğrenci hesabı`}
+                    aria-current={cvEkranindaMi ? 'page' : undefined}
+                    title="Profilim ve CV"
+                    onClick={baglantiTiklamasi(() => {
+                      if (onOpenProfilVeCv) {
+                        onOpenProfilVeCv();
+                        return;
+                      }
+                      /* Prop verilmezse eski sekme davranışı yedekte. */
+                      setActiveTab('profile');
+                      setActiveSubTab('all');
+                    })}
+                    className={`hidden min-h-11 shrink-0 select-none items-center gap-2 rounded-2xl border px-2 py-1.5 text-left text-gray-800 transition-all duration-200 sm:gap-2.5 sm:px-3 lg:flex ${ODAK_HALKASI} ${
+                      cvEkranindaMi
+                        ? 'border-blue-200 bg-blue-50'
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    {/*
+                      AVATARDAKİ YEŞİL SAYI KALDIRILDI
 
-                        Orada basvuru sayisi duruyordu ve bildirim rozeti gibi
-                        goruunuyordu. Arayuzde avatarin kosesindeki sayi belirli
-                        bir sey soyler: "senin gormedigin yeni bir sey var".
-                        Başvuru sayısı ogrencinin kendi bildigi, okunacak bir
-                        sey olmayan bir sayiydi; her acilista bosuna dikkat
-                        cekiyordu.
+                      Orada basvuru sayisi duruyordu ve bildirim rozeti gibi
+                      goruunuyordu. Arayuzde avatarin kosesindeki sayi belirli
+                      bir sey soyler: "senin gormedigin yeni bir sey var".
+                      Başvuru sayısı ogrencinin kendi bildigi, okunacak bir
+                      sey olmayan bir sayiydi; her acilista bosuna dikkat
+                      cekiyordu.
 
-                        Sayi kaybolmadi: hesap menusunde "Başvurularım"in
-                        yaninda ve profil ekraninin ust istatistiginde duruyor.
-                      */}
-                      <Avatar
-                        name={activeStudent.fullName}
-                        url={activeStudent.avatarUrl || undefined}
-                        className="h-8 w-8 shrink-0 rounded-full text-xs ring-1 ring-gray-200 sm:h-9 sm:w-9"
-                      />
-                      <span className="hidden min-w-0 max-w-[11rem] flex-col leading-tight md:flex">
-                        <span className="truncate text-sm font-bold text-gray-900">
-                          {adYazimi(activeStudent.fullName)}
-                        </span>
-                        <span className="truncate text-[11px] text-gray-600">Öğrenci hesabı</span>
+                      Sayi kaybolmadi: profil ekraninin ust istatistiginde
+                      duruyor.
+                    */}
+                    <Avatar
+                      name={activeStudent.fullName}
+                      url={activeStudent.avatarUrl || undefined}
+                      className="h-8 w-8 shrink-0 rounded-full text-xs ring-1 ring-gray-200 sm:h-9 sm:w-9"
+                    />
+                    <span className="hidden min-w-0 max-w-[11rem] flex-col leading-tight md:flex">
+                      <span className="truncate text-sm font-bold text-gray-900">
+                        {adYazimi(activeStudent.fullName)}
                       </span>
-                      <ChevronDown
-                        className={`h-3.5 w-3.5 shrink-0 text-gray-600 transition-transform duration-200 sm:h-4 sm:w-4 ${
-                          profileDropdownOpen ? 'rotate-180' : ''
-                        }`}
-                      />
-                    </button>
-
-                    {profileDropdownOpen && (
-                      <div
-                        data-testid="desktop-profile-menu"
-                        className="hidden lg:block absolute right-0 top-full z-50 mt-2.5 w-[320px] max-w-[320px] rounded-2xl border border-gray-100 bg-white py-2 shadow-lg animate-in fade-in slide-in-from-top-1 duration-200"
-                      >
-                      <div className="flex items-center gap-3 px-4 pb-3 pt-2">
-                        <Avatar
-                          name={activeStudent.fullName}
-                          url={activeStudent.avatarUrl || undefined}
-                          className="h-12 w-12 shrink-0 rounded-full text-sm ring-1 ring-gray-200"
-                        />
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-extrabold leading-tight text-gray-900">
-                            {adYazimi(activeStudent.fullName)}
-                          </span>
-                          <span className="block truncate text-xs text-gray-600">Öğrenci hesabı</span>
-                        </span>
-                      </div>
-                        {/* Menu Options */}
-                        <div className="py-1 text-xs text-gray-800 font-medium">
-                          <button
-                            type="button"
-                            data-testid="desktop-profile-menu-profile"
-                            onClick={() => {
-                              setProfileDropdownOpen(false);
-                              if (onOpenProfilVeCv) {
-                                onOpenProfilVeCv();
-                                return;
-                              }
-                              setActiveTab('profile');
-                              setActiveSubTab('all');
-                            }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
-                          >
-                            <User className="w-3.5 h-3.5 text-gray-400" />
-                            <span>Profilim ve CV</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveTab('applications');
-                              setActiveSubTab('all');
-                              setProfileDropdownOpen(false);
-                            }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
-                          >
-                            <Send className="w-3.5 h-3.5 text-gray-400" />
-                            <span>Başvurularım ({applicationsCount})</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveTab('badges');
-                              setActiveSubTab('all');
-                              setProfileDropdownOpen(false);
-                            }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
-                          >
-                            <Award className="w-3.5 h-3.5 text-gray-400" />
-                            <span>Rozetler ve testler</span>
-                          </button>
-                        </div>
-
-                        {/*
-                          DÜNYA SEÇİCİ
-
-                          Aynı kişi hem öğrenci hem İK olabiliyor ve ayrı bir
-                          şirket hesabı YOK: kişisel hesaba şirket yetkisi
-                          takılıyor. Geçişin kalıcı bir yeri olmalı, yoksa
-                          kullanıcı her seferinde adresi elle yazıyor.
-
-                          Şirket yetkisi olmayan kisiye panel degil, kapi
-                          gösteriliyor (/isveren/ilan-ver). Boş bir panel,
-                          olmayan bir yetkiyi varmış gibi gösterirdi.
-                        */}
-                        {sirketUyesiMi && onDunyaDegistir && (
-                          <>
-                            <div className="border-t border-gray-100 my-1" />
-                            <div className="px-4 py-2">
-                              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-500">
-                                Dünya
-                              </p>
-                              <div className="flex gap-1 rounded-xl bg-gray-100 p-1">
-                                <span className="flex-1 rounded-lg bg-white px-2 py-1.5 text-center text-xs font-bold text-blue-700 shadow-sm">
-                                  Öğrenci
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    onDunyaDegistir();
-                                    setProfileDropdownOpen(false);
-                                  }}
-                                  className="flex-1 cursor-pointer rounded-lg px-2 py-1.5 text-center text-xs font-bold text-gray-600 transition-colors hover:text-gray-900"
-                                >
-                                  Şirket
-                                </button>
-                              </div>
-                            </div>
-                          </>
-                        )}
-
-                        {isAdmin && onOpenAdmin && (
-                          <>
-                            <div className="border-t border-gray-100 my-1"/>
-                            <div className="px-2">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  onOpenAdmin();
-                                  setProfileDropdownOpen(false);
-                                }}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-50 rounded-xl transition-colors cursor-pointer"
-                              >
-                                <Settings className="w-3.5 h-3.5" />
-                                <span>Yönetim paneli</span>
-                              </button>
-                            </div>
-                          </>
-                        )}
-
-                        {/* Divider */}
-                        <div className="border-t border-gray-100 my-1"/>
-
-                        {/* Logout Option */}
-                        <div className="px-2 pt-1">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onLogout?.();
-                              setProfileDropdownOpen(false);
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
-                          >
-                            <LogOut className="w-3.5 h-3.5" />
-                            <span>Çıkış Yap</span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                      <span className="truncate text-[11px] text-gray-600">Öğrenci hesabı</span>
+                    </span>
+                  </a>
                 )}
 
                 {/* Company Account Menu */}
@@ -1631,11 +1390,11 @@ export const Header: React.FC<HeaderProps> = ({
           aria-label="Profilim"
           onClick={() => {
             /*
-              Hesap menüsüyle AYNI yolu kullanıyor. Alt menü
-              `setActiveTab('profile')` yaptığında ekran `/` adresinde
-              çiziliyordu; birleşik profil ekranının kendi adresi (/cv)
-              olduğu için aynı ekranın iki adresi vardı. İkinci bir yol
-              açmamak için hesap menüsünün prop'u burada da geçiyor.
+              Üst çubuktaki hesap bağlantısıyla AYNI yolu kullanıyor. Alt
+              menü `setActiveTab('profile')` yaptığında ekran `/`
+              adresinde çiziliyordu; birleşik profil ekranının kendi adresi
+              (/cv) olduğu için aynı ekranın iki adresi vardı. İkinci bir
+              yol açmamak için aynı prop burada da geçiyor.
 
               Prop verilmezse eski sekme davranışı yedekte: tek bir prop
               unutulduğunda alt menüdeki Profil ölmesin.
@@ -1661,8 +1420,7 @@ export const Header: React.FC<HeaderProps> = ({
             var" demek, oysa bu öğrencinin kendi bildiği başvuru sayısı.
             İkisinden birini bırakmak, aynı yanlışı yarım düzeltmek olurdu.
 
-            Sayı kaybolmadı: hesap menüsünde "Başvurularım"ın yanında ve
-            profil ekranının üst istatistiğinde.
+            Sayı kaybolmadı: profil ekranının üst istatistiğinde duruyor.
           */}
           <UserCheck className="w-5 h-5" />
           {profildeMi && <span className="text-[11px] font-bold truncate">Profil</span>}
@@ -1734,57 +1492,6 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="text-[11px] font-bold truncate">İlan Ekle</span>
         </button>
       </nav>
-    )}
-
-    {userRole === 'student' && activeStudent && (
-      <AccountSheet
-        open={mobileAccountSheetOpen}
-        student={activeStudent}
-        applicationsCount={applicationsCount}
-        isAdmin={isAdmin}
-        triggerRef={accountSheetTriggerRef}
-        onRequestClose={(reason) => requestMobileAccountSheetClose(reason)}
-        onOpenProfile={() =>
-          closeMobileAccountSheetThen(() => {
-            if (onOpenProfilVeCv) {
-              onOpenProfilVeCv();
-              return;
-            }
-            setActiveTab('profile');
-            setActiveSubTab('all');
-          })
-        }
-        onOpenApplications={() =>
-          closeMobileAccountSheetThen(() => {
-            setActiveTab('applications');
-            setActiveSubTab('all');
-          })
-        }
-        onOpenBadges={() =>
-          closeMobileAccountSheetThen(() => {
-            setActiveTab('badges');
-            setActiveSubTab('all');
-          })
-        }
-        onOpenAdmin={
-          isAdmin && onOpenAdmin
-            ? () => closeMobileAccountSheetThen(onOpenAdmin)
-            : undefined
-        }
-        sirketUyesiMi={sirketUyesiMi}
-        onIsverenPaneli={
-          sirketUyesiMi && onDunyaDegistir
-            ? () => closeMobileAccountSheetThen(onDunyaDegistir)
-            : undefined
-        }
-        onLogout={
-          onLogout
-            ? () => closeMobileAccountSheetThen(() => {
-                void onLogout();
-              })
-            : undefined
-        }
-      />
     )}
   </>
   );

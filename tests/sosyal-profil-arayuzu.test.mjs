@@ -1743,15 +1743,16 @@ test('ziyaretçi görünümü iki sütun, ızgara sahibin ekranıyla aynı ölç
 test('alt çubuktaki Profil birleşik ekranın kendi adresine gidiyor', () => {
   /*
     Düğme `setActiveTab('profile')` yapıyordu: aynı birleşik ekran `/`
-    adresinde çiziliyor, yani aynı ekranın iki adresi vardı. Artık hesap
-    menüsüyle AYNI prop'u çağırıyor — ikinci bir yol açılmadı.
+    adresinde çiziliyor, yani aynı ekranın iki adresi vardı. Artık üst
+    çubuktaki hesap bağlantısıyla AYNI prop'u çağırıyor — ikinci bir yol
+    açılmadı.
   */
   const altCubukProfil = ustCubuk.indexOf('aria-label="Profilim"');
   assert.ok(altCubukProfil > 0, 'alt çubuktaki Profil düğmesi bulunmalı');
   const dugme = ustCubuk.slice(altCubukProfil, altCubukProfil + 1400);
   assert.ok(
     dugme.includes('if (onOpenProfilVeCv) {') && dugme.includes('onOpenProfilVeCv();'),
-    'alt çubuk hesap menüsüyle aynı prop’u çağırmalı',
+    'alt çubuk üst çubuktaki hesap bağlantısıyla aynı prop’u çağırmalı',
   );
   /* Prop verilmezse eski sekme davranışı yedekte kalıyor. */
   assert.ok(dugme.includes("setActiveTab('profile');"), 'yedek davranış korunmalı');
