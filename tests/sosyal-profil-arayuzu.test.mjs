@@ -870,11 +870,22 @@ test('kısa ve tek satırlık alanlar hâlâ truncate ile kesiliyor', () => {
 /*  IZGARA                                                             */
 /* ------------------------------------------------------------------ */
 
-test('ızgara ölçüsü depodaki kalıpla aynı', () => {
+test('ayrıntılı ızgara depodaki kalıpta, sade ızgara üç sütun 2 px', () => {
   const rehber = oku('src/components/RehberKartlari.tsx');
   const kalip = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3';
   assert.ok(rehber.includes(kalip), 'kalıp rehber kartlarında değişmiş');
-  assert.ok(izgara.includes(kalip), 'paylaşım ızgarası kalıptan ayrışmış');
+  assert.ok(
+    izgara.includes(`export const AYRINTILI_IZGARA = '${kalip}';`),
+    'ayrıntılı ızgara kalıptan ayrışmış',
+  );
+  /*
+    Sade ızgara fotoğraf duvarı: her genişlikte üç sütun, hücreler
+    arasında yalnız 2 px; hücrede köşe yuvarlaması ve çerçeve yok.
+  */
+  assert.ok(izgara.includes("export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-0.5';"));
+  assert.match(izgara, /const KAPAK_KABI = 'relative aspect-square w-full overflow-hidden bg-gray-100';/);
+  assert.match(izgara, /<div className=\{sade \? KAPAK_KABI : AYRINTILI_KAPAK_KABI\}>/);
+  assert.match(izgara, /const izgaraSinifi = sade \? PAYLASIM_IZGARASI : AYRINTILI_IZGARA;/);
 });
 
 test('kart kabı depodaki ölçüde', () => {
@@ -1676,7 +1687,7 @@ test('mobilde gönderi alanı kimlik kartının altında; masaüstü iskeleti ay
   /* Ortada tek örnek: `space-y-3` mobilde ızgara `gap`iyle çakışmıyor. */
   assert.doesNotMatch(ogrenciProfili, /className="lg:col-span-4 lg:sticky lg:top-4 space-y-3"/);
   assert.ok(
-    izgara.includes("export const PAYLASIM_IZGARASI = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3';"),
+    izgara.includes("export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-0.5';"),
   );
 });
 
@@ -1782,7 +1793,7 @@ test('ziyaretçi görünümü iki sütun, ızgara sahibin ekranıyla aynı ölç
   */
   assert.ok(
     izgara.includes(
-      "export const PAYLASIM_IZGARASI = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3';",
+      "export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-0.5';",
     ),
     'ızgara sabiti değişmemeli',
   );

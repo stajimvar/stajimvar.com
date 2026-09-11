@@ -1587,7 +1587,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     çalışıyor.
   */
   return kabuk(
-    <section aria-labelledby="portfolyo-basligi" className="space-y-3">
+    <section aria-labelledby="portfolyo-basligi" className="min-w-0 space-y-3">
       {/*
         Bölümün adı ekranda YAZILI DEĞİL: sağ sütunda ızgaranın üstünde
         bir başlık, sol sütundaki kartla aynı hizada durmuyordu ve iki

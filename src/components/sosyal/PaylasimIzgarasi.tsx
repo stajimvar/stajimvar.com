@@ -10,10 +10,20 @@ import { useGorselAdresleri } from './useGorselAdresleri';
 /**
  * PAYLAŞIM IZGARASI
  *
- * Ölçü depodaki kalıptan geliyor (RehberKartlari.tsx): telefonda iki,
- * geniş ekranda üç sütun. Yeni bir ızgara ölçüsü tanımlanmadı — aynı
- * üründe ikinci bir ızgara ölçeği, aynı sayfada iki farklı kart boyu
- * demek olurdu.
+ * İKİ ÖLÇÜ, İKİ İŞ
+ * ----------------
+ * Sade ızgara (profil, ziyaretçi görünümü) her genişlikte ÜÇ sütun ve
+ * 2 px boşluk: hücre çıplak kare fotoğraf, çerçevesi ve köşesi yok;
+ * hücreler arasında yalnız o boşluk var. Depodaki kart kalıbı (iki/üç
+ * sütun, 10–16 px boşluk, yuvarlak köşe) burada bilerek kullanılmıyor —
+ * o kalıp metin taşıyan kartlar için; fotoğraf duvarında boşluk ve
+ * köşe, fotoğrafın kendisinden yer çalıyor ve mobilde iki sütun,
+ * masaüstünde üç sütun olunca aynı duvar iki genişlikte farklı
+ * dizilirdi.
+ *
+ * Ayrıntılı ızgara (Arşiv, Beğendiklerim, Kaydedilenler) kart kalıbında
+ * KALIYOR (`AYRINTILI_IZGARA`): orada hücre açıklama, tarih ve kart altı
+ * düğme taşıyor; üç dar sütuna sığmaz.
  *
  * SEKME YOK
  * ---------
@@ -107,10 +117,19 @@ interface IzgaraProps {
 
 const KART_KABI = 'rounded-2xl border border-gray-200 bg-white p-2.5 sm:p-3.5';
 
-export const PAYLASIM_IZGARASI = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3';
+/** Sade ızgara: her genişlikte üç sütun, hücreler arasında yalnız 2 px. */
+export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-0.5';
 
-/** Kapak kutusu: içerik gelmeden de aynı yeri kaplıyor, ızgara zıplamıyor. */
-const KAPAK_KABI = 'relative aspect-square w-full overflow-hidden rounded-xl bg-gray-100';
+/** Ayrıntılı ızgara depodaki kart kalıbında (RehberKartlari.tsx). */
+export const AYRINTILI_IZGARA = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3';
+
+/**
+ * Kapak kutusu: içerik gelmeden de aynı yeri kaplıyor, ızgara zıplamıyor.
+ * Köşe yuvarlaması yalnız ayrıntılı hücrede — sade ızgarada hücreler
+ * 2 px arayla yan yana ve yuvarlak köşe o arada beyaz üçgenler açardı.
+ */
+const KAPAK_KABI = 'relative aspect-square w-full overflow-hidden bg-gray-100';
+const AYRINTILI_KAPAK_KABI = `${KAPAK_KABI} rounded-xl`;
 
 interface KartProps {
   paylasim: SosyalPaylasim;
@@ -188,7 +207,7 @@ const PaylasimKarti: React.FC<KartProps> = ({
           : `${KART_KABI} flex h-full min-w-0 flex-col gap-1.5 cursor-pointer text-left hover:border-gray-300 ${RENK_GECISI} ${ODAK_HALKASI}`
       }
     >
-      <div className={KAPAK_KABI}>
+      <div className={sade ? KAPAK_KABI : AYRINTILI_KAPAK_KABI}>
         {kapakDurumu === 'yukleniyor' && paylasim.kapakYolu && (
           <span aria-hidden className="block h-full w-full animate-pulse bg-gray-100" />
         )}
@@ -304,7 +323,7 @@ const Iskelet: React.FC<{ sade: boolean }> = ({ sade }) =>
     <div aria-hidden className={`${KAPAK_KABI} animate-pulse`} />
   ) : (
     <div aria-hidden className={`${KART_KABI} flex h-full flex-col gap-1.5`}>
-      <div className={`${KAPAK_KABI} animate-pulse`} />
+      <div className={`${AYRINTILI_KAPAK_KABI} animate-pulse`} />
       <div className="h-3.5 w-4/5 animate-pulse rounded bg-gray-100" />
       <div className="mt-auto h-3 w-20 animate-pulse rounded bg-gray-100" />
     </div>
@@ -322,6 +341,7 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
   gorunum = 'ayrintili',
 }) => {
   const sade = gorunum === 'sade';
+  const izgaraSinifi = sade ? PAYLASIM_IZGARASI : AYRINTILI_IZGARA;
   const [acik, setAcik] = React.useState<SosyalPaylasim | null>(null);
   /* Katmanı açan kart; kapanışta odak buraya dönüyor. */
   const tetikRef = React.useRef<HTMLElement | null>(null);
@@ -350,7 +370,7 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
 
   if (durum === 'yukleniyor') {
     return (
-      <div className={PAYLASIM_IZGARASI} aria-busy="true">
+      <div className={izgaraSinifi} aria-busy="true">
         <Iskelet sade={sade} />
         <Iskelet sade={sade} />
         <Iskelet sade={sade} />
@@ -434,7 +454,7 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
 
   return (
     <>
-      <div className={PAYLASIM_IZGARASI}>
+      <div className={izgaraSinifi}>
         {paylasimlar.map((paylasim) => (
           <PaylasimKarti
             key={paylasim.id}
