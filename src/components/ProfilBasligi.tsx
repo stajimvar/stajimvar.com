@@ -4,6 +4,8 @@ import { adYazimi } from '../lib/ad';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
 import { ProfilAyarMenusu } from './sosyal/ProfilAyarMenusu';
 import type { PortfolyoSatiri } from './sosyal/SosyalProfilSayfasi';
+import { profilYolu } from '../lib/sosyal-kullanici-adi.mjs';
+import { ODAK_HALKASI } from '../lib/renk-token';
 import { Button, Card, ProfileSectionGroup, ProfileSectionRow, Skeleton, StatItem } from '../ui';
 
 /**
@@ -358,6 +360,45 @@ export const ProfilBasligi: React.FC<Props> = ({
 
       <div className="min-w-0 flex-1 space-y-0.5">
         <h1 className="text-base font-bold text-gray-900">{adYazimi(ad)}</h1>
+        {/*
+          KULLANICI ADI ADIN HEMEN ALTINDA
+
+          Kartta görünen ad, okul ve sınıf vardı; `@ad` hiçbir yerde
+          yoktu. Kullanıcı herkese açık adresinin neyle başladığını ancak
+          dişli menüsündeki "Paylaş"tan öğreniyordu. Satır Instagram'daki
+          gibi adın altında ve gerçek `<a href="/profil/<ad>">`: orta tuş
+          ve yeni sekme çalışıyor, sol tık uygulama içi gezinmeye
+          dönüyor (`StatItem`deki değiştirici tuş kalıbı).
+
+          Üç hâl, panelin satırıyla aynı kaynaktan:
+            satır `undefined`  → kısa iskelet (ad henüz okunmadı)
+            `kullaniciAdi` null → satır HİÇ yok (adsız profil olabilir)
+            ad var              → `@ad`
+          Panel verilmemişse (`portfolyo` yok) satır da yok.
+
+          `@` işareti seçilemez (`select-none`): adres çubuğuna ya da
+          başka yere kopyalarken yalnız ad gelsin. Ekran okuyucuya yine
+          okunuyor; işaret satırın kullanıcı adı olduğunu söylüyor. Uzun ad 390 pikselde
+          `truncate` ile kırpılıyor; kap zaten `min-w-0`.
+        */}
+        {portfolyo && portfolyo.satir === undefined && (
+          <Skeleton className="h-4 w-28" />
+        )}
+        {satir?.kullaniciAdi && (
+          <a
+            href={profilYolu(satir.kullaniciAdi)}
+            onClick={(olay) => {
+              if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0)
+                return;
+              olay.preventDefault();
+              satir.onNavigate(profilYolu(satir.kullaniciAdi as string));
+            }}
+            className={`block min-w-0 truncate text-sm font-semibold text-gray-700 hover:underline ${ODAK_HALKASI}`}
+          >
+            <span className="select-none">@</span>
+            {satir.kullaniciAdi}
+          </a>
+        )}
         {/*
           Sınıf ayrı satırdaydı; okul satırının devamı olduğu için tek
           satırda birleşti. Kart yüksekliğinden bir satır kazanmak,

@@ -233,6 +233,13 @@ interface SayfaProps {
  * tipe giremiyor — onlar düzenleme ekranında, ikinci kapı açılmıyor.
  */
 export interface PortfolyoSatiri {
+  /**
+   * Kartın ad satırının altına `@ad` olarak iniyor. Sunucudan gelen
+   * satırda ad henüz seçilmemiş olabilir (`null`); o zaman kart satırı
+   * HİÇ çizmiyor — uydurma ya da yer tutucu ad yok. Sayaçlarla aynı
+   * nesnede gidiyor ki kart ikinci bir profil sorgusu açmasın.
+   */
+  kullaniciAdi: string | null;
   sayaclar: SosyalSayaclar | null;
   sayacDurumu: 'yukleniyor' | 'hazir' | 'hata';
   /** Yalnız iki sunucu önkoşulu sağlanınca var; yoksa kart düğme çizmiyor. */
@@ -977,6 +984,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
       return;
     }
     onPortfolyoSatiri({
+      kullaniciAdi: profil?.kullaniciAdi ?? null,
       sayaclar,
       sayacDurumu,
       onPaylasimOlustur: yayindaMi && alaniVarMi ? sabitEylemler.paylasimOlustur : undefined,
@@ -997,6 +1005,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     duzenlemeKipi,
     profilDurumu,
     sahibiMi,
+    profil?.kullaniciAdi,
     sayaclar,
     sayacDurumu,
     yayindaMi,

@@ -1842,6 +1842,19 @@ test('dört sayaç kimlik kartında tek şeritte; sağ sütun doğrudan ızgaray
   assert.doesNotMatch(profilBasligi, /sosyalSayaclariGetir|kendiSosyalProfiliGetir|supabase/);
   /* Dişli menüsü karta olduğu gibi geçiyor; satırları burada seçilmiyor. */
   assert.match(profilBasligi, /<ProfilAyarMenusu \{\.\.\.satir\.menu\} \/>/);
+  /*
+    `@ad` satırı da aynı nesneden: panel `kullaniciAdi`yi satıra koyuyor,
+    kart yalnız değer varsa (`satir?.kullaniciAdi &&`) çiziyor — null'da
+    satır yok, yer tutucu yok; adresi `profilYolu` üretiyor.
+  */
+  assert.ok(
+    /kullaniciAdi: profil\?\.kullaniciAdi \?\? null,/.test(sayfa) &&
+      /\{satir\?\.kullaniciAdi && \(\n\s*<a\n\s*href=\{profilYolu\(satir\.kullaniciAdi\)\}/.test(
+        profilBasligi,
+      ) &&
+      /<span className="select-none">@<\/span>\n\s*\{satir\.kullaniciAdi\}/.test(profilBasligi),
+    'kullanıcı adı tek yoldan (panel satırı) karta iniyor ve null iken çizilmiyor',
+  );
 });
 
 test('sosyal satır yokken kartta Paylaş ve dişli çizilmiyor, sayı uydurulmuyor', () => {
