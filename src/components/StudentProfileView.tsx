@@ -47,7 +47,7 @@ import { fetchSavedListingIds } from '../lib/opportunities';
 import { adYazimi , okulKisaltmasi} from '../lib/ad';
 import { useModalErisim } from '../lib/modal-erisim';
 import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
-import { Button, Card, IKON_KUTUSU, IKON_TONU } from '../ui';
+import { Card, IKON_KUTUSU } from '../ui';
 import { ODAK_HALKASI } from '../lib/renk-token';
 import { ProfilBasligi, ProfilBolumListesi, type EksikAdim, type OneCikan } from './ProfilBasligi';
 import type { PortfolyoSatiri } from './sosyal/SosyalProfilSayfasi';
@@ -912,8 +912,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       Sütunlar alt alta dizilince sıra "kart → kariyer hedefi → testler →
       gönderiler" oluyordu: kullanıcı mobil ekran görüntüsünde
       gönderilere ulaşmak için iki kartı geçmek zorunda kaldığını
-      gösterdi. İstenen sıra: kart → gönderiler → kariyer → testler →
-      hesap eylemleri.
+      gösterdi. O iki kart sonra ana görünümden tamamen kalktı; sıra
+      artık kart → gönderiler → hesap eylemleri.
 
       İki sütun sarmalayıcısı `lg` altında `display: contents`
       (`contents lg:block`): kutuları kayboluyor, içlerindeki kartlar tek
@@ -923,14 +923,11 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       DOM sırası geçerli. Dikey boşluk mobilde ızgara `gap`inden,
       masaüstünde `lg:space-y-3`ten — ikisi birden olsaydı çift boşluk.
 
-      NEDEN DOM MOBİL SIRAYA GÖRE YAZILMADI: masaüstünde kart, kariyer ve
-      testler TEK yapışık (`sticky`) kutuda; DOM'da gönderi alanı bu
-      üçünün arasına girseydi ortak kutu kalmaz, sol sütun iki ızgara
-      hücresine bölünürdü. İki hücrede yapışıklık ya hiç çalışmıyor
-      (birinci satır kartın boyunda, yapışacak yer yok) ya da yalnız alt
-      hücre yapışıp kart kayıp gidiyor. İkisini kopyalamadan tek kutuda
-      tutmanın yolu bu; bedeli mobilde ekran okuyucu sırasının DOM
-      (masaüstü) sırası olması: kart, kariyer, testler, gönderiler.
+      NEDEN `order` HÂLÂ DURUYOR: sol sütunda tek kart kaldı ama hesap
+      eylemleri sağ sütunun sonunda; sarmalayıcılar `contents` olmasa
+      mobilde "kart → hesap eylemleri → gönderiler" olurdu. Aynı
+      `contents` + `order` kalıbı bu yüzden yerinde; masaüstünde
+      `lg:order-none` ile DOM sırası geçerli.
 
       DÜZENLEME AYNI İSKELETİ KULLANIYOR: solda hangi bölümde olduğun,
       sağda o bölümün formu. İkinci bir yerleşim kurmak, aynı sayfanın
@@ -974,8 +971,19 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             </div>
           )}
 
+          {/*
+            KARİYER HEDEFİ VE TESTLER KARTLARI ANA GÖRÜNÜMDEN KALKTI
+
+            İkisi de kimlik kartının altında ayrı birer karttı. Hedef
+            düzenleme ekranındaki "Ne arıyorsun?" bölümünde (id `tercih`,
+            "Aradığın pozisyon") zaten dolduruluyor ve kartın durum
+            satırı `bolumeGit('tercih')` ile oraya gidiyor; ana görünümde
+            ikinci bir kopyası aynı bilgiyi iki kez gösteriyordu. Testler
+            kartı ise testlere giden tek yoldu — o giriş kimlik kartının
+            içine tek satır olarak indi (`rozetSayisi` / `onTestlere`).
+            Sayfa artık profil kartı, gönderi alanı ve hesap eylemleri.
+          */}
           {!duzenleme && (
-          <>
           <ProfilBasligi
             ad={student.fullName}
             avatarUrl={student.avatarUrl}
@@ -1034,63 +1042,18 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               /* Mülakat sayısına basan kişi mülakatları görmek istiyor. */
               onBasvurulariAc ? () => onBasvurulariAc('interviews') : undefined
             }
+            /*
+              TESTLERE GİDEN TEK YOL ARTIK KARTIN İÇİNDE
+
+              "Yetkinlik testleri" kartı ana görünümden kalktı ve hesap
+              menüsü de yok; testler bölümüne (`id="rozet"`, düzenleme
+              dalında) başka bir giriş kalmamıştı. Sayı uydurulmuyor:
+              `earnedBadges` uzunluğu, aynı bölümün özet satırındaki
+              sayının kaynağı.
+            */
+            rozetSayisi={rozetler.length}
+            onTestlere={() => bolumeGit('rozet')}
           />
-
-          {/*
-            KARİYER HEDEFİ AYRI KART
-
-            "Hedefin" profil bilgileri listesindeydi ama ötekilerle aynı
-            cinsten değil: okul, program, beceri, dil ve proje GEÇMİŞİ
-            anlatıyor; hedef GELECEĞİ. Aynı listede durunca doldurulacak
-            bir alan gibi görünüyordu.
-
-            `order-3`: mobilde gönderi alanından (order-2) sonra. Kimlik
-            kartı `order` almıyor, varsayılan 0 ile en başta kalıyor.
-          */}
-          <Card className="order-3 flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5 lg:order-none">
-            <span className={`${IKON_KUTUSU} ${IKON_TONU}`}>
-              <Target className="h-5 w-5" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="font-bold text-gray-900">Kariyer hedefin</p>
-              <p className="truncate text-sm text-gray-600">
-                {hedefler.length > 0
-                  ? hedefler.join(' · ')
-                  : 'Hangi alanda ilerlemek istediğini yaz; ilanlar ona göre sıralanıyor.'}
-              </p>
-            </div>
-            <Button tur="secondary" onClick={() => bolumeGit('tercih')} className="shrink-0">
-              {hedefler.length > 0 ? 'Düzenle' : 'Hedefini seç'}
-            </Button>
-          </Card>
-
-          {/*
-            TESTLER SIRADAN BİR PROFİL ALANI DEĞİL
-
-            Izgarada kesik çizgili bir daireydi ve "tamamlanmamış ya da
-            devre dışı" görünüyordu. Oysa burada doldurulacak bir alan yok:
-            hazır testler var ve çözülüyor — bu bir EYLEM, bir form değil.
-
-            Ayrı ve geniş bir kart olarak duruyor; ne olduğunu ve neden
-            yapılacağını söylüyor.
-          */}
-          <Card vurgulu className="order-4 flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5 lg:order-none">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
-              <Award className="h-5 w-5" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="font-bold text-gray-900">Yetkinlik testleri</p>
-              <p className="text-sm leading-relaxed text-gray-600">
-                Profilini güçlendir; güçlü yönlerini işverene göster.
-              </p>
-            </div>
-            <Button onClick={() => bolumeGit('rozet')} className="shrink-0">
-              {(student.earnedBadges ?? []).length > 0
-                ? `${(student.earnedBadges ?? []).length} rozet · Devam et`
-                : 'Teste başla'}
-            </Button>
-          </Card>
-          </>
           )}
 
 
@@ -1179,12 +1142,12 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         dişli menüsünü taşıyor; formun üstünde durunca sağ sütun aynı anda
         hem bir görünüm hem bir form olurdu.
 
-        Sarmalayıcı `order-2`: mobilde kimlik kartının hemen altı. `min-w-0`
+        Sarmalayıcı `order-1`: mobilde kimlik kartının hemen altı. `min-w-0`
         burada da var çünkü sağ sütun kutusu mobilde `contents` — dış
         `min-w-0` orada geçersiz, ızgara daralınca içerik taşardı.
       */}
       {!duzenleme && sosyalPortfolyo && (
-        <div className="order-2 min-w-0 lg:order-none">
+        <div className="order-1 min-w-0 lg:order-none">
           {sosyalPortfolyo}
         </div>
       )}
@@ -2074,8 +2037,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         kaybolmuyor, ana görünümde aynı yerde duruyor.
       */}
       {!duzenleme && (onLogout || (isAdmin && onOpenAdmin)) && (
-        /* `order-5`: mobilde en son, testlerin altında. */
-        <div className="order-5 mt-6 flex flex-col gap-2 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end lg:order-none">
+        /* `order-2`: mobilde en son, gönderi alanının altında. */
+        <div className="order-2 mt-6 flex flex-col gap-2 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end lg:order-none">
           {isAdmin && onOpenAdmin && (
             <button
               type="button"

@@ -1664,9 +1664,10 @@ test('/cv birleşik ekranı, /cv/yazdir yazdırılabilir CV', () => {
 
 test('mobilde gönderi alanı kimlik kartının altında; masaüstü iskeleti aynı', () => {
   /*
-    Mobil sıra kart → gönderiler → kariyer → testler → hesap eylemleri.
-    Kartlar kopyalanmıyor: iki sütun sarmalayıcısı `lg` altında
-    `contents`, kartlar `order-*` ile diziliyor; masaüstünde
+    Mobil sıra kart → gönderiler → hesap eylemleri. Kariyer hedefi ve
+    testler kartları ana görünümden KALKTI; aradaki iki `order` da
+    onlarla gitti. Kartlar kopyalanmıyor: iki sütun sarmalayıcısı `lg`
+    altında `contents`, kartlar `order-*` ile diziliyor; masaüstünde
     sarmalayıcılar `lg:block` ve `lg:order-none` ile DOM sırası. Sınıf
     dizeleri tek tek: sol yapışık kutu ve sağ `min-w-0` masaüstünde
     değişmedi, gönderi ızgarası sabiti de.
@@ -1674,20 +1675,18 @@ test('mobilde gönderi alanı kimlik kartının altında; masaüstü iskeleti ay
   assert.match(ogrenciProfili, /grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start/);
   assert.match(ogrenciProfili, /className="contents lg:block lg:col-span-4 lg:sticky lg:top-4 lg:space-y-3"/);
   assert.match(ogrenciProfili, /className="contents lg:block lg:col-span-8 min-w-0 lg:space-y-3"/);
-  /* Mobil sıra: kart (order yok = 0) → gönderi 2 → kariyer 3 → testler 4 → hesap 5. */
+  /* Mobil sıra: kart (order yok = 0) → gönderi 1 → hesap 2. */
   const kart = ogrenciProfili.indexOf('<ProfilBasligi');
-  const gonderi = ogrenciProfili.indexOf('<div className="order-2 min-w-0 lg:order-none">');
-  const kariyer = ogrenciProfili.indexOf('className="order-3 flex flex-col gap-3');
-  const testler = ogrenciProfili.indexOf('className="order-4 flex flex-col gap-3');
-  const hesap = ogrenciProfili.indexOf('className="order-5 mt-6 flex flex-col gap-2');
-  for (const [ad, i] of Object.entries({ kart, gonderi, kariyer, testler, hesap })) {
+  const gonderi = ogrenciProfili.indexOf('<div className="order-1 min-w-0 lg:order-none">');
+  const hesap = ogrenciProfili.indexOf('className="order-2 mt-6 flex flex-col gap-2');
+  for (const [ad, i] of Object.entries({ kart, gonderi, hesap })) {
     assert.ok(i > 0, `${ad} bulunamadı`);
   }
-  assert.ok(kart < kariyer && kariyer < testler && testler < gonderi && gonderi < hesap, 'DOM masaüstü sırasında');
-  const kariyerKart = ogrenciProfili.slice(kariyer, ogrenciProfili.indexOf('>', kariyer));
-  const testlerKart = ogrenciProfili.slice(testler, ogrenciProfili.indexOf('>', testler));
-  assert.match(kariyerKart, /lg:order-none/);
-  assert.match(testlerKart, /lg:order-none/);
+  assert.ok(kart < gonderi && gonderi < hesap, 'DOM masaüstü sırasında');
+  const hesapSatiri = ogrenciProfili.slice(hesap, ogrenciProfili.indexOf('>', hesap));
+  assert.match(hesapSatiri, /lg:order-none/);
+  /* Üçüncü ve sonraki `order` yok: kaldırılan kartların sınıfı geri gelmiyor. */
+  assert.doesNotMatch(yorumsuz(ogrenciProfili), /order-[3-9]/);
   /* Ortada tek örnek: `space-y-3` mobilde ızgara `gap`iyle çakışmıyor. */
   assert.doesNotMatch(ogrenciProfili, /className="lg:col-span-4 lg:sticky lg:top-4 space-y-3"/);
   assert.ok(
@@ -1983,7 +1982,7 @@ test('kaldırılan bölümler silinmedi: düzenleme ekranının içindeler', () 
   /* Portfolyo yalnız ana görünümde: sağ sütun aynı anda görünüm+form olmuyor. */
   assert.match(
     ogrenciProfili,
-    /\{!duzenleme && sosyalPortfolyo && \(\n\s*<div className="order-2 min-w-0 lg:order-none">\n\s*\{sosyalPortfolyo\}/,
+    /\{!duzenleme && sosyalPortfolyo && \(\n\s*<div className="order-1 min-w-0 lg:order-none">\n\s*\{sosyalPortfolyo\}/,
   );
   /* Düzenlemeye giden tek kapı `bolumeGit`; her giriş oradan geçiyor. */
   assert.equal((ogrenciProfili.match(/setDuzenleme\(true\)/g) ?? []).length, 1);
@@ -2023,24 +2022,41 @@ test('tek düzenleme ekranı, iki ayrı bölüm, iki ayrı kayıt', () => {
   assert.match(app, /gomuluKip="duzenleme"/);
 });
 
-test('kariyer hedefi ve yetkinlik testleri ana görünümde duruyor', () => {
+test('kariyer hedefi ve yetkinlik testleri kartları ana görünümde YOK; testlere giriş kartın içinde', () => {
   /*
-    İkisi de doldurulacak bir profil ALANI değil: hedef geleceği
-    anlatıyor, testler ise bir eylem (çözülecek sınav). Düzenleme
-    ekranına taşınsalardı ikisi de "eksik alan" gibi okunurdu.
-
-    Yerleri sol sütunun ana görünüm dalı: `{!duzenleme && (` ile
-    `{duzenleme && (` arasında, `ProfilBasligi`nin hemen altında.
+    İki kart kimlik kartının altında duruyordu ve ana görünüm üç kutuya
+    bölünüyordu. Karar: sayfa = profil kartı + ızgara + hesap eylemleri.
+    Hedef düzenleme ekranındaki "Ne arıyorsun?" bölümünde ("Aradığın
+    pozisyon", `targetRoles`) zaten dolduruluyor; kartın durum satırı
+    `bolumeGit('tercih')` ile oraya gidiyor. Testler kartı ise testlere
+    giden TEK yoldu (hesap menüsü yok); kalkınca giriş kimlik kartına
+    tek satır olarak indi ve aynı `bolumeGit('rozet')` eylemine bağlı.
+    Sayı uydurulmuyor: `earnedBadges` uzunluğu.
   */
-  const solSutun = ogrenciProfili.slice(
-    ogrenciProfili.indexOf('<ProfilBasligi'),
-    ogrenciProfili.indexOf('DOSYA SEÇİCİ HER İKİ DALDA DA AĞAÇTA'),
-  );
-  assert.match(solSutun, /Kariyer hedefin/);
-  assert.match(solSutun, /Yetkinlik testleri/);
-  /* Düzenleme dalına kopyalanmadılar: her biri tam olarak bir kez. */
-  assert.equal((ogrenciProfili.match(/Kariyer hedefin/g) ?? []).length, 1);
-  assert.equal((ogrenciProfili.match(/Yetkinlik testleri/g) ?? []).length, 1);
+  const temiz = yorumsuz(ogrenciProfili);
+  assert.doesNotMatch(temiz, /Kariyer hedefin/);
+  assert.doesNotMatch(temiz, /Yetkinlik testleri/);
+  /* Veri ve yol duruyor: hedef alanı `tercih` bölümünde, giriş de oraya. */
+  assert.match(temiz, /const hedefler = student\.targetRoles \?\? \[\];/);
+  assert.match(temiz, /onEtiketDuzenle=\{\(\) => bolumeGit\('tercih'\)\}/);
+  assert.match(temiz, /Aradığın pozisyon/);
+  assert.equal((ogrenciProfili.match(/id="rozet"\n/g) ?? []).length, 1);
+  /* Karta giden iki prop: gerçek sayı ve mevcut eylem. */
+  assert.match(temiz, /rozetSayisi=\{rozetler\.length\}/);
+  assert.match(temiz, /onTestlere=\{\(\) => bolumeGit\('rozet'\)\}/);
+  const kartTemiz = yorumsuz(profilBasligi);
+  assert.match(kartTemiz, /onClick=\{onTestlere\}/);
+  assert.match(kartTemiz, /rozetSayisi > 0 \? `\$\{rozetSayisi\} rozet · Testler` : 'Yetkinlik testleri'/);
+  /* Satır: 44 piksel dokunma hedefi, odak halkası, ikon aria-hidden. */
+  const giris = govdeAl(kartTemiz, 'onClick={onTestlere}', '</button>');
+  assert.match(giris, /min-h-11/);
+  assert.match(giris, /ODAK_HALKASI/);
+  assert.match(giris, /<Award aria-hidden/);
+  /* Giriş "Profilin tamamlandı" satırından sonra, "Paylaş" düğmesinden önce. */
+  const tamamlandi = kartTemiz.indexOf('Profilin tamamlandı');
+  const girisYeri = kartTemiz.indexOf('onClick={onTestlere}');
+  const paylas = kartTemiz.indexOf('{satir && (');
+  assert.ok(tamamlandi > 0 && tamamlandi < girisYeri && girisYeri < paylas, 'giriş yanlış yerde');
 });
 
 test('arama en az üç harf istiyor ve profile_id kullanmıyor', () => {

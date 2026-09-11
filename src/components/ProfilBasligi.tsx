@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, ChevronRight, ImagePlus, Plus } from 'lucide-react';
+import { Award, Check, ChevronRight, ImagePlus, Plus } from 'lucide-react';
 import { adYazimi } from '../lib/ad';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
 import { ProfilAyarMenusu } from './sosyal/ProfilAyarMenusu';
@@ -241,6 +241,19 @@ interface Props {
    * burada o.
    */
   portfolyo?: { satir: PortfolyoSatiri | null | undefined };
+  /**
+   * TESTLERE GİRİŞ — KARTIN İÇİNDE TEK SATIR
+   *
+   * "Yetkinlik testleri" kartı `/cv` ana görünümünden kalktı ve hesap
+   * menüsü de yok; testler bölümüne (`id="rozet"`, düzenleme dalında)
+   * giden başka bir yol kalmamıştı. Giriş bu yüzden kimlik kartında:
+   * `rozetSayisi` kazanılmış rozet sayısı (`earnedBadges.length`, sayı
+   * uydurulmuyor), `onTestlere` çağıranın `bolumeGit('rozet')` eylemi.
+   * İkisi de zorunlu: eylemi olmayan bir satır, basınca hiçbir şey
+   * yapmayan bir satır olurdu.
+   */
+  rozetSayisi: number;
+  onTestlere: () => void;
 }
 
 /**
@@ -274,6 +287,8 @@ export const ProfilBasligi: React.FC<Props> = ({
   onBasvurulara,
   onMulakatlara,
   portfolyo,
+  rozetSayisi,
+  onTestlere,
 }) => {
   /*
     Sosyal hücrelerin dört hâli tek yerde karara bağlanıyor; JSX'te iç
@@ -557,6 +572,31 @@ export const ProfilBasligi: React.FC<Props> = ({
         Profilin tamamlandı
       </p>
     )}
+
+    {/*
+      ROZETLER VE TESTLER — TEK SATIR, KARTIN EYLEMLERİNDEN ÖNCE
+
+      Kartın altındaki ayrı "Yetkinlik testleri" kartı kalktı; bu satır
+      testlere giden tek giriş. Ayrı bir kart ya da üçüncü bir düğme
+      değil: kartta iki ana düğme zaten var ve eşit ağırlıkta üçüncüsü
+      hangisinin asıl iş olduğunu bulanıklaştırırdı. Metin duruma göre:
+      rozet varsa sayı ("3 rozet · Testler"), yoksa yalnız bölümün adı.
+      Sıfır rozeti "0 rozet" diye basmak, henüz hiç test çözmemiş
+      kullanıcıya bir eksiklik sayacı göstermek olurdu.
+
+      Ölçü ve stil `@ad` bağlantısıyla aynı ikincil satır (text-sm,
+      gray-700, hover altı çizgi); dokunma hedefi 44 piksel (`min-h-11`).
+      İkon tek başına bilgi taşımıyor: `aria-hidden`, yanında metin.
+    */}
+    <button
+      type="button"
+      onClick={onTestlere}
+      className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-semibold text-gray-700 hover:underline ${ODAK_HALKASI}`}
+    >
+      <Award aria-hidden className="h-4 w-4 shrink-0" />
+      {rozetSayisi > 0 ? `${rozetSayisi} rozet · Testler` : 'Yetkinlik testleri'}
+      <ChevronRight aria-hidden className="h-4 w-4 shrink-0" />
+    </button>
 
     {/*
       "PAYLAŞ" VE DİŞLİ — KARTIN EYLEM ALANINDA
