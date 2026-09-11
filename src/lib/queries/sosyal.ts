@@ -242,8 +242,19 @@ export interface SosyalProfil {
   baştan beri açıktı; eksik olan tarafta kırık bir <img> çizmemek için
   okuma da kapalı tutulmuştu.
 */
+/*
+  `sectors` GÖMMESİ FK İPUCUSUZ YAZILAMAZ — `!social_profiles_sector_id_fkey`
+  GEREKSİZ DEĞİL
+
+  20260926030000 ile gelen `community_members(profile_id, sector_id)`
+  tablosu PostgREST için social_profiles ↔ sectors arasında İKİNCİ bir yol
+  (çoktan-çoğa) açtı. İpucusuz `sectors ( ad )` canlıda ölçüldü: HTTP 300,
+  PGRST201 "more than one relationship was found"; ipuçlu hâli 200.
+  Sorgu fırlayınca /cv "Portfolyon alınamadı" ekranına düşüyordu.
+  `departments ( ad )` tek yollu, ipucu gerekmiyor (ölçüldü: 200).
+*/
 const PROFIL_KOLONLARI =
-  'profile_id, username, sector_id, department_id, gorunen_ad, biyografi, bolum_etiketi, sinif_etiketi, sehir, yayinda_mi, avatar_path, sectors ( ad ), departments ( ad )';
+  'profile_id, username, sector_id, department_id, gorunen_ad, biyografi, bolum_etiketi, sinif_etiketi, sehir, yayinda_mi, avatar_path, sectors!social_profiles_sector_id_fkey ( ad ), departments ( ad )';
 
 function profileCevir(satir: any): SosyalProfil {
   return {
@@ -1684,7 +1695,9 @@ export async function baglantilarimiGetir(kullaniciId: string): Promise<Baglanti
       .from('social_profiles')
       /* `avatar_path` listede gerçek fotoğrafı çizebilmek için; yol
          gelmezse satır baş harflere düşüyor, sahte görsel üretilmiyor. */
-      .select('profile_id, username, gorunen_ad, avatar_path, sectors ( ad )')
+      /* FK ipucu zorunlu: `community_members` ikinci yolu açtı, ipucusuz
+         PostgREST 300/PGRST201 döndürüyor (gerekçe PROFIL_KOLONLARI'nda). */
+      .select('profile_id, username, gorunen_ad, avatar_path, sectors!social_profiles_sector_id_fkey ( ad )')
       .in('profile_id', kimlikler);
 
     if (profilHatasi) hata('Bağlantı profilleri alınamadı', profilHatasi);

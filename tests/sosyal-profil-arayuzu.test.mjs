@@ -265,6 +265,23 @@ test('sektör listesi kapalı: aktif olanlar sıraya göre', () => {
   assert.match(sorgular, /\.order\('sira', \{ ascending: true \}\)/);
 });
 
+test('social_profiles üzerinden sectors gömmesi FK ipucusuz geçmiyor', () => {
+  /*
+    KÖK NEDEN, canlıda ölçüldü: 20260926030000 ile gelen
+    `community_members(profile_id, sector_id)` PostgREST için
+    social_profiles ↔ sectors arasında ikinci bir yol açtı. İpucusuz
+    `sectors ( ad )` HTTP 300 / PGRST201 döndürdü ve /cv "Portfolyon
+    alınamadı" ekranına düştü; `sectors!social_profiles_sector_id_fkey ( ad )`
+    200. Bu iddia ipucunun "gereksiz" diye silinmesini kaynak düzeyinde
+    yakalıyor. `departments ( ad )` tek yollu (ölçüldü: 200), kapsam dışı.
+  */
+  assert.doesNotMatch(yorumsuz(sorgular), /sectors\s*\(/);
+  assert.ok(
+    (yorumsuz(sorgular).match(/sectors!social_profiles_sector_id_fkey\s*\(\s*ad\s*\)/g) ?? []).length >= 2,
+    'PROFIL_KOLONLARI ve bağlantı listesi: iki gömme de ipuçlu olmalı',
+  );
+});
+
 /*
   KURULUM RPC'SİNİN ÜÇ İDDİASI BURADAN KALKTI
 
@@ -864,33 +881,37 @@ test('ızgarada dört durumun dördü de çiziliyor', () => {
   assert.match(izgara, /paylasimlar\.length === 0/);
   /* Hata ile boş ayrı cümle. */
   assert.match(izgara, /Paylaşımlar alınamadı/);
-  assert.match(izgara, /Henüz paylaşım yok/);
+  assert.match(izgara, /Henüz hiç gönderi yok/);
 });
 
 test('boş ızgarada olmayan bir özelliğin düğmesi yok', () => {
   assert.doesNotMatch(yorumsuz(izgara), /Paylaşım ekle|Fotoğraf yükle|İlk paylaşımını/);
 });
 
-test('boş ızgarada ziyaretçi ile sahip AYRI cümle görüyor', () => {
+test('boş ızgara tek tarafsız cümle; hata dalı ayrı duruyor', () => {
   /*
-    "Henüz paylaşım yok." bir İDDİA: ortada paylaşım olmadığını söylüyor.
-    Ziyaretçiye bunu yazmak, kitlesi dar bir paylaşımın yokluğunu iddia
-    etmek olurdu — oysa ızgarayı RLS dolduruyor ve ziyaretçinin gördüğü
-    boşluk "sana açık bir şey yok" demek. İki durum iki cümle.
+    Eski hâlinde ziyaretçi "Görebileceğin bir paylaşım yok." okuyordu;
+    "görebileceğin" sözcüğü RLS'in kestiği satırların VARLIĞINI ima
+    ediyordu. Görünürlük bir güvenlik sınırı: boş ızgara kitlesi dar bir
+    paylaşım olup olmadığını hiçbir sözcükle haber vermemeli. Sahip ve
+    ziyaretçi aynı cümleyi alıyor; ayrım sahibe özel EYLEMLERDE kalıyor.
   */
-  assert.match(izgara, /Görebileceğin bir paylaşım yok\./);
-  assert.match(izgara, /Henüz paylaşım yok\./);
-  /* Ayrım tek koşulda; iki cümle aynı anda çizilmiyor. */
-  assert.match(
-    izgara,
-    /sahibiMi \? 'Henüz paylaşım yok\.' : 'Görebileceğin bir paylaşım yok\.'/,
-  );
+  const temiz = yorumsuz(izgara);
+  assert.match(temiz, /bosMetni \?\? 'Henüz hiç gönderi yok'/);
+  assert.doesNotMatch(temiz, /Görebileceğin bir paylaşım yok|sahibiMi \? '/);
+  assert.doesNotMatch(temiz, /kapalı olabilir|sana kapalı|gizlenmiş/);
+  /* Simge tek başına bilgi taşımıyor: aria-hidden ve yanında metin. */
+  assert.match(temiz, /<Camera/);
+  assert.match(temiz, /aria-hidden="true"[\s\S]{0,200}<Camera/);
   /*
-    Ziyaretçi cümlesi gizli paylaşım OLUP OLMADIĞINI açıklamıyor: "bazıları
-    sana kapalı olabilir" gibi bir ima, gizli içeriğin varlığını sızdırırdı.
+    `[]` başarı, `throw` hata: boş cümle yalnız length === 0 dalında,
+    hata dalı ("Paylaşımlar alınamadı") ve sayfanın profil hatası
+    ("Portfolyon alınamadı") ayrı ve ham Supabase metni basmıyor.
   */
-  assert.doesNotMatch(yorumsuz(izgara), /kapalı olabilir|sana kapalı|gizlenmiş/);
-  /* Çağıran taraf yetki durumunu gerçekten geçiriyor. */
+  assert.match(temiz, /durum === 'hata'[\s\S]*Paylaşımlar alınamadı[\s\S]*paylasimlar\.length === 0[\s\S]*Henüz hiç gönderi yok/);
+  assert.match(yorumsuz(sayfa), /profilDurumu === 'hata'[\s\S]{0,1500}Portfolyon alınamadı/);
+  assert.doesNotMatch(yorumsuz(sayfa), /error\.message|\.code\}/);
+  /* Çağıran taraf yetki durumunu hâlâ geçiriyor (ayrıntı katmanı için). */
   assert.match(gorunum, /sahibiMi=\{sahibiMi\}/);
 });
 

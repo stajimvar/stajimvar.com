@@ -1,8 +1,9 @@
 import React from 'react';
-import { Images, Undo2 } from 'lucide-react';
+import { Camera, Images, Undo2 } from 'lucide-react';
 import { SOSYAL_PAYLASIM_KOVASI, type SosyalPaylasim } from '../../lib/queries/sosyal';
 import { ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import { tarihMetni } from '../../lib/tarih.mjs';
+import { IKON_TONU } from '../../ui/tokens';
 import { PaylasimDetayi } from './PaylasimDetayi';
 import { useGorselAdresleri } from './useGorselAdresleri';
 
@@ -51,16 +52,13 @@ interface IzgaraProps {
   durum: 'yukleniyor' | 'hazir' | 'hata';
   onYenidenDene?: () => void;
   /**
-   * Boş ızgaranın CÜMLESİNİ belirleyen yetki durumu.
+   * Yetki durumu; varsayılan `false`, yani ziyaretçi.
    *
-   * Varsayılan `false`, yani ziyaretçi. Ters varsayılan daha tehlikeli
-   * olurdu: prop'u geçirmeyi unutan bir çağıran, ziyaretçiye "Henüz
-   * paylaşım yok." yazdırırdı ve o cümle ortada paylaşım olmadığını
-   * İDDİA eder. Ziyaretçi cümlesi ise sahibine yanlış geldiğinde bile
-   * bir şey sızdırmıyor, yalnız garip duruyor.
-   *
-   * Aynı bayrak ayrıntı katmanındaki sahibe özel eylemleri de kesiyor:
-   * arşivleme ziyaretçi dalında DOM'a hiç girmiyor.
+   * Bayrak ayrıntı katmanındaki sahibe özel eylemleri kesiyor: arşivleme
+   * ziyaretçi dalında DOM'a hiç girmiyor. Boş ızgaranın CÜMLESİNİ artık
+   * belirlemiyor — iki cümle vardı ve ziyaretçininki ("Görebileceğin bir
+   * paylaşım yok.") tam da saklanan şeyin varlığını ima ediyordu; boş
+   * durum bu yüzden tek ve tarafsız (aşağıda).
    */
   sahibiMi?: boolean;
   /** Arşivleme başarılı olduğunda listeyi tazeleyen çağrı. */
@@ -68,7 +66,7 @@ interface IzgaraProps {
   /**
    * Boş listenin cümlesi.
    *
-   * Verilmezse profil ızgarasının iki cümlesi geçerli. Beğendiklerim,
+   * Verilmezse profil ızgarasının tek cümlesi geçerli. Beğendiklerim,
    * Kaydedilenler ve Arşiv'in boşluğu farklı şeyler anlatıyor ve aynı
    * cümleyle geçiştirilemez: "henüz paylaşım yok" bir arşiv ekranında
    * yanlış bir iddia olurdu.
@@ -387,6 +385,12 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
     );
   }
 
+  /*
+    BOŞ, HATANIN TERSİ: `[]` başarıdır, `throw` hatadır. Bu dal yalnız
+    sorgu 200 dönüp sıfır satır verdiğinde çiziliyor; sorgu fırlarsa
+    yukarıdaki 'hata' dalı ya da sayfanın "Portfolyon alınamadı" ekranı
+    devrede ve ikisi asla aynı cümleye inmiyor.
+  */
   if (paylasimlar.length === 0) {
     return (
       /*
@@ -395,28 +399,35 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
         Burada ikinci bir giriş, aynı eylemin iki yerde iki farklı
         koşulla durması demek olurdu.
       */
-      <div className={`${KART_KABI} text-center`}>
+      <div className={`${KART_KABI} flex flex-col items-center gap-3 py-8 text-center`}>
         {/*
-          BOŞ IZGARANIN CÜMLESİ YETKİYE GÖRE DEĞİŞİYOR
+          BOŞ IZGARANIN CÜMLESİ YETKİYE GÖRE DEĞİŞMİYOR
 
-          Sahibi kendi ızgarasına baktığında liste GERÇEKTEN boş: kendi
-          satırlarının hepsini görüyor. Ziyaretçinin gördüğü boşluk ise
-          RLS'in verdiği kadarı; "henüz paylaşım yok" demek, kitlesi dar
-          bir paylaşımın yokluğunu ona İDDİA etmek olurdu.
+          Eskiden iki cümle vardı: sahibe "Henüz paylaşım yok.",
+          ziyaretçiye "Görebileceğin bir paylaşım yok.". İkinci cümle
+          RLS'in kestiği satırların VARLIĞINI ima ediyordu — "görebileceğin"
+          sözcüğü, göremediklerin olduğunu söyler. Görünürlük burada bir
+          güvenlik sınırı; boş ızgara kitlesi dar bir paylaşımın var mı yok
+          mu olduğunu hiçbir sözcükle haber vermemeli. Tek tarafsız cümle
+          bu yüzden.
 
-          Ziyaretçi cümlesi gizli paylaşım olup olmadığını da AÇIKLAMIYOR.
-          "Bazıları sana kapalı olabilir" gibi bir ek, tam da saklanan
-          şeyin varlığını haber verirdi; bu yüzden cümle tek ve kısa.
+          Simge dekoratif ve tek başına bilgi taşımıyor: metin yanında,
+          simge `aria-hidden`. Ton depodaki IKON_TONU; IKON_KUTUSU'nun 40px
+          karesi yerine daire, çünkü burası satır başı ikonu değil ızgaranın
+          tamamının yerini tutan tek görsel.
         */}
+        <span
+          aria-hidden="true"
+          className={`flex h-14 w-14 items-center justify-center rounded-full ${IKON_TONU}`}
+        >
+          <Camera className="h-7 w-7" strokeWidth={1.5} />
+        </span>
         {/*
-          Çağıran bir cümle verdiyse o geçerli: Beğendiklerim ve
-          Kaydedilenler'in boşluğu "paylaşım yok" değil, "listende
-          görüntülenebilen bir şey yok" demek ve ikisi aynı cümleye
-          indirilemez.
+          Çağıran bir cümle verdiyse o geçerli: Beğendiklerim, Kaydedilenler
+          ve Arşiv'in boşluğu "gönderi yok" değil, "listende görüntülenebilen
+          bir şey yok" demek ve ikisi aynı cümleye indirilemez.
         */}
-        <p className="text-sm leading-relaxed text-gray-600">
-          {bosMetni ?? (sahibiMi ? 'Henüz paylaşım yok.' : 'Görebileceğin bir paylaşım yok.')}
-        </p>
+        <p className="text-sm font-bold text-gray-900">{bosMetni ?? 'Henüz hiç gönderi yok'}</p>
       </div>
     );
   }
