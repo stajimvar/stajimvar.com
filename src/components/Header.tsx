@@ -460,7 +460,12 @@ export const Header: React.FC<HeaderProps> = ({
     document.addEventListener('mousedown', disariTikla);
     return () => document.removeEventListener('mousedown', disariTikla);
   }, [kisiListesiAcik]);
-  const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kesfetteMi && !kurumsalSayfada && activeTab === 'internships';
+  /*
+    `sosyaldeMi` de dışlanıyor: /cv'de activeTab hâlâ 'internships'
+    kalıyor (sosyal rotalar sekme değil adresle çiziliyor), İlanlar ile
+    Profil aynı anda basılı görünüyordu. Alt çubukta her an tek sekme.
+  */
+  const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kesfetteMi && !kurumsalSayfada && !sosyaldeMi && activeTab === 'internships';
   /*
     Birleşik profil ekranının KENDİ ADRESİ var (/cv, /cv/yazdir). Alt
     menüdeki Profil oraya gidiyor ama seçili vurgusu yalnızca
@@ -1514,6 +1519,7 @@ export const Header: React.FC<HeaderProps> = ({
         */}
         <button
           aria-label="Profilim"
+          aria-current={profildeMi ? 'page' : undefined}
           onClick={() => {
             /*
               Üst çubuktaki hesap bağlantısıyla AYNI yolu kullanıyor. Alt

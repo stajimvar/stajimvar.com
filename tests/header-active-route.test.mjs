@@ -7,8 +7,14 @@ const source = readFileSync("src/components/Header.tsx", "utf8");
 test("Keşfet rotasında İlanlar sekmesi aktif kalmaz", () => {
   assert.match(
     source,
-    /const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kesfetteMi && !kurumsalSayfada/,
+    /const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kesfetteMi && !kurumsalSayfada && !sosyaldeMi && activeTab === 'internships'/,
   );
+});
+
+test("sosyal rotada (/cv) İlanlar sönük, Profil aktif; aria-current görselle aynı", () => {
+  /* /cv'de activeTab 'internships' kalıyor; adres sekmeyi ezmeli, iki sekme birden yanmamalı. */
+  assert.match(source, /const profildeMi = cvEkranindaMi \|\|/);
+  assert.match(source, /aria-label="Profilim"\s*aria-current=\{profildeMi \? 'page' : undefined\}/);
 });
 
 test("Keşfet rotasında üst arama etkinlik içeriğini arar", () => {
