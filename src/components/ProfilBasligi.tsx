@@ -379,12 +379,18 @@ export const ProfilBasligi: React.FC<Props> = ({
       kendisi biliyor) ve alttaki şeritle çelişiyordu; "profil" yüzdesi
       de halkanın tekrarıydı.
 
-      Üçü aynı hikâyenin adımları: baktım → başvurdum → çağrıldım. Sosyal
-      ikili de aynı şeritte ve aynı tipografide: "Paylaşım" ve "Bağlantı"
-      sağ sütunda AYRI bir ölçüyle (satır içi sayı + etiket) duruyordu;
-      aynı ekranda iki sayaç biçimi vardı. Beşi de `StatItem`.
+      İkisi aynı hikâyenin adımları: baktım → başvurdum. Sosyal ikili de
+      aynı şeritte ve aynı tipografide: "Paylaşım" ve "Bağlantı" sağ
+      sütunda AYRI bir ölçüyle (satır içi sayı + etiket) duruyordu; aynı
+      ekranda iki sayaç biçimi vardı. Dördü de `StatItem`.
 
-      Sütun sayısı sabit sınıf: `grid-cols-3` / `grid-cols-5`. Tailwind
+      "MÜLAKAT" ŞERİTTEN KALKTI: kullanıcı mobil ekran görüntüsünde beş
+      hücrenin 390 piksele sığmadığını gösterdi. Sayı VERİ olarak
+      duruyor (`mulakatSayisi`, `onMulakatlara` prop'ları geçmeye devam
+      ediyor); yalnız bu şeritte çizilmiyor. Başvuru sayacı zaten
+      başvuru ekranına götürüyor, mülakatlar orada süzülüyor.
+
+      Sütun sayısı sabit sınıf: `grid-cols-2` / `grid-cols-4`. Tailwind
       birleştirilmiş dizeyi görmüyor; ikisi de tam adıyla yazılı.
 
       "Paylaşım" tıklanabilir değil: gittiği yer bu ekranın kendisi (sağ
@@ -393,12 +399,11 @@ export const ProfilBasligi: React.FC<Props> = ({
       kural burada söz konusu değil: bu kart yalnız sahibin ekranında.
     */}
     <div
-      className={`grid ${sosyalHucre === 'yok' ? 'grid-cols-3' : 'grid-cols-5'} items-start`}
+      className={`grid ${sosyalHucre === 'yok' ? 'grid-cols-2' : 'grid-cols-4'} items-start`}
       aria-busy={sosyalHucre === 'yukleniyor' || undefined}
     >
       <StatItem deger={kaydedilenSayisi} etiket="kaydedilen" onClick={onKaydedilenlere} />
       <StatItem deger={basvuruSayisi} etiket="başvuru" onClick={onBasvurulara} />
-      <StatItem deger={mulakatSayisi} etiket="mülakat" onClick={onMulakatlara} />
       {sosyalHucre === 'yukleniyor' && (
         <>
           <SayacIskeleti />

@@ -1647,6 +1647,39 @@ test('/cv birleşik ekranı, /cv/yazdir yazdırılabilir CV', () => {
   assert.match(app, /sosyalPortfolyo=\{\n\s*<SosyalProfilSayfasi\n\s*gomulu/);
 });
 
+test('mobilde gönderi alanı kimlik kartının altında; masaüstü iskeleti aynı', () => {
+  /*
+    Mobil sıra kart → gönderiler → kariyer → testler → hesap eylemleri.
+    Kartlar kopyalanmıyor: iki sütun sarmalayıcısı `lg` altında
+    `contents`, kartlar `order-*` ile diziliyor; masaüstünde
+    sarmalayıcılar `lg:block` ve `lg:order-none` ile DOM sırası. Sınıf
+    dizeleri tek tek: sol yapışık kutu ve sağ `min-w-0` masaüstünde
+    değişmedi, gönderi ızgarası sabiti de.
+  */
+  assert.match(ogrenciProfili, /grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start/);
+  assert.match(ogrenciProfili, /className="contents lg:block lg:col-span-4 lg:sticky lg:top-4 lg:space-y-3"/);
+  assert.match(ogrenciProfili, /className="contents lg:block lg:col-span-8 min-w-0 lg:space-y-3"/);
+  /* Mobil sıra: kart (order yok = 0) → gönderi 2 → kariyer 3 → testler 4 → hesap 5. */
+  const kart = ogrenciProfili.indexOf('<ProfilBasligi');
+  const gonderi = ogrenciProfili.indexOf('<div className="order-2 min-w-0 lg:order-none">');
+  const kariyer = ogrenciProfili.indexOf('className="order-3 flex flex-col gap-3');
+  const testler = ogrenciProfili.indexOf('className="order-4 flex flex-col gap-3');
+  const hesap = ogrenciProfili.indexOf('className="order-5 mt-6 flex flex-col gap-2');
+  for (const [ad, i] of Object.entries({ kart, gonderi, kariyer, testler, hesap })) {
+    assert.ok(i > 0, `${ad} bulunamadı`);
+  }
+  assert.ok(kart < kariyer && kariyer < testler && testler < gonderi && gonderi < hesap, 'DOM masaüstü sırasında');
+  const kariyerKart = ogrenciProfili.slice(kariyer, ogrenciProfili.indexOf('>', kariyer));
+  const testlerKart = ogrenciProfili.slice(testler, ogrenciProfili.indexOf('>', testler));
+  assert.match(kariyerKart, /lg:order-none/);
+  assert.match(testlerKart, /lg:order-none/);
+  /* Ortada tek örnek: `space-y-3` mobilde ızgara `gap`iyle çakışmıyor. */
+  assert.doesNotMatch(ogrenciProfili, /className="lg:col-span-4 lg:sticky lg:top-4 space-y-3"/);
+  assert.ok(
+    izgara.includes("export const PAYLASIM_IZGARASI = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3';"),
+  );
+});
+
 test('CV eylemi yazdırılabilir belgeye gidiyor, birleşik ekrana değil', () => {
   /*
     `/cv` artık birleşik ekranın kendisi. "CV'yi görüntüle" oraya
@@ -1760,27 +1793,33 @@ test('ziyaretçi görünümü iki sütun, ızgara sahibin ekranıyla aynı ölç
   assert.doesNotMatch(gorunum, /PortfolyoUstSatiri/);
 });
 
-test('beş sayaç kimlik kartında tek şeritte; sağ sütun doğrudan ızgarayla başlıyor', () => {
+test('dört sayaç kimlik kartında tek şeritte; sağ sütun doğrudan ızgarayla başlıyor', () => {
   /*
     "N Paylaşım · N Bağlantı", "Paylaş" ve dişli sağ sütunun üstünde
-    AYRI bir satırdı; sol kart zaten üç sayaç ve bir eylem satırı
-    çiziyordu — aynı ekranda iki sayaç şeridi, iki eylem bölgesi. Beşi
-    tek şeride indi ve beşi de aynı öğe (`StatItem`): sağ sütundaki
+    AYRI bir satırdı; sol kart zaten sayaçları ve bir eylem satırı
+    çiziyordu — aynı ekranda iki sayaç şeridi, iki eylem bölgesi. Hepsi
+    tek şeride indi ve hepsi aynı öğe (`StatItem`): sağ sütundaki
     satır içi "sayı etiket" biçimi karta taşınmadı.
+
+    "MÜLAKAT" ŞERİTTE YOK: beş hücre 390 piksele sığmıyordu (kullanıcı
+    ekran görüntüsü). Sayı veri olarak duruyor — prop'lar silinmedi —
+    yalnız çizilmiyor; sütun sayısı 2/4.
 
     Veri yolu TEK: kart sosyal veri çekmiyor, panel `onPortfolyoSatiri`
     ile yukarı veriyor (App → profil ekranı → kart). Bağlantı sayacı
     yine gerçek `<a href="/baglantilar">`.
   */
   const serit = govdeAl(profilBasligi, 'className={`grid ${sosyalHucre', '</div>');
-  assert.match(serit, /'grid-cols-3' : 'grid-cols-5'/);
-  for (const etiket of ['kaydedilen', 'başvuru', 'mülakat', 'paylaşım', 'bağlantı']) {
+  assert.match(serit, /'grid-cols-2' : 'grid-cols-4'/);
+  for (const etiket of ['kaydedilen', 'başvuru', 'paylaşım', 'bağlantı']) {
     assert.match(serit, new RegExp(`<StatItem[^>]*etiket="${etiket}"`), `${etiket} sayacı şeritte`);
   }
+  assert.doesNotMatch(serit, /mülakat|grid-cols-5/, 'mülakat hücresi şeritten kalktı');
+  assert.match(profilBasligi, /mulakatSayisi: number;/, 'sayı veri olarak duruyor');
   assert.ok(
-    serit.indexOf('etiket="mülakat"') < serit.indexOf('etiket="paylaşım"') &&
+    serit.indexOf('etiket="başvuru"') < serit.indexOf('etiket="paylaşım"') &&
       serit.indexOf('etiket="paylaşım"') < serit.indexOf('etiket="bağlantı"'),
-    'sosyal ikili öğrenci üçlüsünden sonra',
+    'sosyal ikili öğrenci ikilisinden sonra',
   );
   assert.match(serit, /href="\/baglantilar"/);
   assert.match(sayacOgesi, /<a\n\s*href=\{href\}/);
@@ -1899,7 +1938,12 @@ test('kaldırılan bölümler silinmedi: düzenleme ekranının içindeler', () 
     Liste de aynı diziden besleniyor (`oneCikanlar`): gezinme ile
     bölümlerin sırası tek yerde.
   */
-  assert.match(ogrenciProfili, /\{duzenleme && \(\n\s*<>/);
+  /*
+    Dal artık fragment değil kutu: sütun sarmalayıcısı mobilde `contents`
+    olduğundan çıplak çocuklar ızgara öğesi olurdu (bkz. mobil sıra testi).
+  */
+  assert.match(ogrenciProfili, /\{duzenleme && \(\n\s*<div className="space-y-3">/);
+  assert.match(ogrenciProfili, /\{duzenleme && \(\n[^\n]*\n\s*<div className="min-w-0 space-y-3">/);
   assert.match(ogrenciProfili, /<ProfilBolumListesi ogeler=\{oneCikanlar\} secili=\{acikBolum\} \/>/);
   for (const kimlik of ['"cv"', '"kisisel"', '"teknik"', '"sosyal"', '"dil"', '"proje"']) {
     assert.equal(
@@ -1909,7 +1953,10 @@ test('kaldırılan bölümler silinmedi: düzenleme ekranının içindeler', () 
     );
   }
   /* Portfolyo yalnız ana görünümde: sağ sütun aynı anda görünüm+form olmuyor. */
-  assert.match(ogrenciProfili, /\{!duzenleme && \(\n\s*<>\n\s*\{sosyalPortfolyo\}/);
+  assert.match(
+    ogrenciProfili,
+    /\{!duzenleme && sosyalPortfolyo && \(\n\s*<div className="order-2 min-w-0 lg:order-none">\n\s*\{sosyalPortfolyo\}/,
+  );
   /* Düzenlemeye giden tek kapı `bolumeGit`; her giriş oradan geçiyor. */
   assert.equal((ogrenciProfili.match(/setDuzenleme\(true\)/g) ?? []).length, 1);
 });

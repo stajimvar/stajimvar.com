@@ -905,8 +905,32 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       Aynı sitede iki farklı sayfa genişliği vardı.
 
       Artık anasayfayla aynı: solda kimlik kartı (kaydırınca yapışık kalıyor),
-      sağda sosyal portfolyo. Mobilde hiçbir şey değişmiyor — sütunlar
-      alt alta diziliyor ve sıra aynı.
+      sağda sosyal portfolyo.
+
+      MOBİLDE GÖNDERİ ALANI KİMLİK KARTININ HEMEN ALTINDA
+
+      Sütunlar alt alta dizilince sıra "kart → kariyer hedefi → testler →
+      gönderiler" oluyordu: kullanıcı mobil ekran görüntüsünde
+      gönderilere ulaşmak için iki kartı geçmek zorunda kaldığını
+      gösterdi. İstenen sıra: kart → gönderiler → kariyer → testler →
+      hesap eylemleri.
+
+      İki sütun sarmalayıcısı `lg` altında `display: contents`
+      (`contents lg:block`): kutuları kayboluyor, içlerindeki kartlar tek
+      sütunlu ızgaranın doğrudan öğesi oluyor ve `order-*` ile
+      sıralanıyor. Masaüstünde sarmalayıcılar geri geliyor
+      (`lg:block`), sol sütun yine tek yapışık kutu; `lg:order-none` ile
+      DOM sırası geçerli. Dikey boşluk mobilde ızgara `gap`inden,
+      masaüstünde `lg:space-y-3`ten — ikisi birden olsaydı çift boşluk.
+
+      NEDEN DOM MOBİL SIRAYA GÖRE YAZILMADI: masaüstünde kart, kariyer ve
+      testler TEK yapışık (`sticky`) kutuda; DOM'da gönderi alanı bu
+      üçünün arasına girseydi ortak kutu kalmaz, sol sütun iki ızgara
+      hücresine bölünürdü. İki hücrede yapışıklık ya hiç çalışmıyor
+      (birinci satır kartın boyunda, yapışacak yer yok) ya da yalnız alt
+      hücre yapışıp kart kayıp gidiyor. İkisini kopyalamadan tek kutuda
+      tutmanın yolu bu; bedeli mobilde ekran okuyucu sırasının DOM
+      (masaüstü) sırası olması: kart, kariyer, testler, gönderiler.
 
       DÜZENLEME AYNI İSKELETİ KULLANIYOR: solda hangi bölümde olduğun,
       sağda o bölümün formu. İkinci bir yerleşim kurmak, aynı sayfanın
@@ -917,7 +941,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
 
         {/* ---------------- SOL: profil başlığı ---------------- */}
-        <div className="lg:col-span-4 lg:sticky lg:top-4 space-y-3">
+        <div className="contents lg:block lg:col-span-4 lg:sticky lg:top-4 lg:space-y-3">
           {/*
             DÜZENLEMEDE SOL SÜTUN GEZİNME OLUYOR
 
@@ -926,8 +950,13 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             kalsaydı listeyi aşağı iter ve telefonda her bölüm
             değişiminde onu yeniden geçmek gerekirdi.
           */}
+          {/*
+            Geri satırı ve liste tek kutuda: sarmalayıcı mobilde
+            `contents` olduğundan çıplak dursalar ızgara öğesi olur, düğme
+            tam genişliğe yayılırdı.
+          */}
           {duzenleme && (
-            <>
+            <div className="space-y-3">
               {/*
                 Geri satırı 44 piksel dokunma hedefinde ve ikon tek başına
                 bilgi taşımıyor: yanında "Profilime dön" yazıyor.
@@ -942,7 +971,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                 Profilime dön
               </button>
               <ProfilBolumListesi ogeler={oneCikanlar} secili={acikBolum} />
-            </>
+            </div>
           )}
 
           {!duzenleme && (
@@ -1014,8 +1043,11 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             cinsten değil: okul, program, beceri, dil ve proje GEÇMİŞİ
             anlatıyor; hedef GELECEĞİ. Aynı listede durunca doldurulacak
             bir alan gibi görünüyordu.
+
+            `order-3`: mobilde gönderi alanından (order-2) sonra. Kimlik
+            kartı `order` almıyor, varsayılan 0 ile en başta kalıyor.
           */}
-          <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
+          <Card className="order-3 flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5 lg:order-none">
             <span className={`${IKON_KUTUSU} ${IKON_TONU}`}>
               <Target className="h-5 w-5" />
             </span>
@@ -1042,7 +1074,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             Ayrı ve geniş bir kart olarak duruyor; ne olduğunu ve neden
             yapılacağını söylüyor.
           */}
-          <Card vurgulu className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
+          <Card vurgulu className="order-4 flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5 lg:order-none">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
               <Award className="h-5 w-5" />
             </span>
@@ -1127,7 +1159,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         </div>
 
         {/* ---------------- SAĞ: portfolyo ya da açık bölüm ---------------- */}
-        <div className="lg:col-span-8 space-y-3 min-w-0">
+        <div className="contents lg:block lg:col-span-8 min-w-0 lg:space-y-3">
 
       {/*
         ---------------- SOSYAL FOTOĞRAF PORTFOLYOSU ----------------
@@ -1146,11 +1178,15 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         DÜZENLEMEDE ÇİZİLMİYOR: portfolyo kendi ızgarasını, sayaçlarını ve
         dişli menüsünü taşıyor; formun üstünde durunca sağ sütun aynı anda
         hem bir görünüm hem bir form olurdu.
+
+        Sarmalayıcı `order-2`: mobilde kimlik kartının hemen altı. `min-w-0`
+        burada da var çünkü sağ sütun kutusu mobilde `contents` — dış
+        `min-w-0` orada geçersiz, ızgara daralınca içerik taşardı.
       */}
-      {!duzenleme && (
-        <>
+      {!duzenleme && sosyalPortfolyo && (
+        <div className="order-2 min-w-0 lg:order-none">
           {sosyalPortfolyo}
-        </>
+        </div>
       )}
 
       {/*
@@ -1169,7 +1205,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         düğmesi yarısı başarılı bir gönderimde yalan söylerdi.
       */}
       {duzenleme && (
-      <>
+      /* Tek kutu: mobilde `contents` sarmalayıcının içinde `min-w-0` ve boşluk buradan. */
+      <div className="min-w-0 space-y-3">
 
       {/*
         Başlık düzeyi `h2`: sayfanın `h1`i sol sütunda. Bölümlerin kendi
@@ -2017,7 +2054,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         <div className="mt-6 border-t border-gray-200 pt-5">{sosyalProfilDuzenleme}</div>
       )}
 
-      </>
+      </div>
       )}
 
       {/*
@@ -2037,7 +2074,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         kaybolmuyor, ana görünümde aynı yerde duruyor.
       */}
       {!duzenleme && (onLogout || (isAdmin && onOpenAdmin)) && (
-        <div className="mt-6 flex flex-col gap-2 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end">
+        /* `order-5`: mobilde en son, testlerin altında. */
+        <div className="order-5 mt-6 flex flex-col gap-2 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end lg:order-none">
           {isAdmin && onOpenAdmin && (
             <button
               type="button"
