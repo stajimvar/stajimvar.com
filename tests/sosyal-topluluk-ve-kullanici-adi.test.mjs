@@ -50,6 +50,7 @@ const DOSYALAR = [
   '../supabase/migrations/20260926070000_paylasim_topluluktan_bagimsiz.sql',
   '../supabase/migrations/20260926080000_bolum_takma_adlari.sql',
   '../supabase/migrations/20260926090000_profilimi_tamamla.sql',
+  '../supabase/migrations/20260926100000_yonetici_sosyal_profil.sql',
 ].map((yol) => new URL(yol, import.meta.url));
 
 const AYSE = '11111111-1111-4111-8111-111111111111';   // bilgisayar müh.
@@ -371,4 +372,28 @@ test('profilimi tamamla: dar, idempotent, topluluğa katmıyor', async () => {
   const adlar = await yonetici(`select username from social_profiles where username is not null`);
   for (const { username } of adlar) assert.match(username, /^[a-z]{3,30}$/);
   assert.equal(new Set(adlar.map((r) => r.username)).size, adlar.length, 'adlar eşsiz olmalı');
+});
+
+test('yönetici hesabına da sosyal profil açılıyor, şirket hesabına açılmıyor', async () => {
+  /*
+    Canlıda ölçüldü: 14 öğrenci → 14 profil, 1 yönetici → 0. Sitenin
+    sahibi kendi ürününü kendi hesabıyla göremiyordu. Rol kümesi artık
+    tek yardımcıda (öğrenci + yönetici); şirket dışarıda.
+  */
+  const YONETICI = '55555555-5555-4555-8555-555555555555';
+  const SIRKET = '66666666-6666-4666-8666-666666666666';
+  await db.exec(`insert into auth.users values ('${YONETICI}'),('${SIRKET}')`);
+  await db.exec(`insert into public.profiles(id, role, full_name) values
+    ('${YONETICI}','admin','Mustafa Oğulcan Doğan'),
+    ('${SIRKET}','company','Örnek Şirket')`);
+
+  const [y] = await yonetici(`select username from social_profiles where profile_id=$1`, [YONETICI]);
+  assert.ok(y, 'YÖNETİCİYE SOSYAL PROFİL AÇILMALI');
+  assert.equal(y.username, 'mustafaogulcandogan');
+
+  const sirket = await yonetici(`select 1 from social_profiles where profile_id=$1`, [SIRKET]);
+  assert.equal(sirket.length, 0, 'şirket hesabına sosyal profil açılmamalı');
+
+  const red = await hata(SIRKET, `select * from sosyal_profilimi_tamamla()`);
+  assert.match(String(red), /öğrenci ve yönetici/i, 'şirket için RPC dürüstçe reddetmeli');
 });
