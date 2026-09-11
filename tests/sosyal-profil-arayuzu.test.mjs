@@ -2081,21 +2081,30 @@ test('arama en az üç harf istiyor ve profile_id kullanmıyor', () => {
   assert.doesNotMatch(yorumsuz(arama), /sahibiMi/);
 });
 
-test('tek kişi arama kutusu: üst çubukta, /cv içinde yok', () => {
+test('kişi arama kutusu: üst çubukta ve rehberde, /cv içinde yok', () => {
   /*
-    Kişi araması yalnız üst çubuktan (`hidden lg:block`). /cv içindeki
-    mobil kutu bilinçli olarak kaldırıldı: mobilde kişi araması yolu
-    yok, sayfa `KullaniciArama` diye bir şey çizmiyor ve içe aktarmıyor.
-    Sonuç mantığı tek parçada (`KullaniciAramaSonuclari`), onu çizen
-    tek yer Header.
+    Kişi araması üst çubuktan (`hidden lg:block`) ve rehber sayfasının
+    kendi kutusundan. /cv içindeki mobil kutu bilinçli olarak
+    kaldırıldı; telefonda üst çubukta kutu olmadığı için mobil kişi
+    arama yolu rehber kutusu. Sayfa `KullaniciArama` diye bir şey
+    çizmiyor ve içe aktarmıyor. Sonuç mantığı tek parçada
+    (`KullaniciAramaSonuclari`); rehber onu yalnız oturum açıkken ve
+    terim varken, gömülü kipte çiziyor — üç harf sınırı parçanın içinde.
   */
+  const rehberMerkezi = oku('src/components/RehberMerkezi.tsx');
   assert.doesNotMatch(sayfa, /KullaniciArama/);
   assert.ok(ustCubuk.includes('<div className="hidden lg:block flex-1 min-w-0 max-w-xl mx-4">'));
   assert.match(arama, /export const KullaniciAramaSonuclari/);
-  assert.doesNotMatch(arama, /export const KullaniciArama/);
+  assert.doesNotMatch(arama, /export const KullaniciArama\b/);
   assert.match(ustCubuk, /<KullaniciAramaSonuclari\s*sorgu=\{kisiSorgusu\}/);
-  /* Geciktirme ve `sosyalKullaniciAra` çağrısı tek yerde: Header'da yok. */
-  assert.doesNotMatch(ustCubuk, /sosyalKullaniciAra|GECIKME_MS/);
+  assert.match(
+    rehberMerkezi,
+    /\{ogrenci && terim \? \(\s*<KullaniciAramaSonuclari sorgu=\{arama\} onNavigate=\{onNavigate\} gomuluBaslik="Kişiler" \/>/,
+  );
+  /* Geciktirme ve `sosyalKullaniciAra` çağrısı tek yerde: Header'da ve rehberde yok (rehber yorumu adı anıyor, kodu değil). */
+  for (const kaynak of [ustCubuk, yorumsuz(rehberMerkezi)]) {
+    assert.doesNotMatch(kaynak, /sosyalKullaniciAra|GECIKME_MS/);
+  }
   assert.equal((arama.match(/sosyalKullaniciAra\(/g) ?? []).length, 1);
 });
 

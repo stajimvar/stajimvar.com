@@ -39,14 +39,25 @@ import { ProfilFotografi } from './ProfilFotografi';
  * duruncaya kadar bekleniyor; ayrıca her istek kendi `iptal` bayrağını
  * taşıyor, yani geç dönen eski cevap yeni sonucun üstüne yazmıyor.
  *
- * KUTU BURADA YOK, TEK YERLEŞİM
+ * KUTU BURADA YOK, İKİ YERLEŞİM
  * -----------------------------
- * Kişi araması yalnız üst çubuktaki kutudan yapılıyor (Header,
- * `sosyaldeMi`, `hidden lg:block`). /cv içindeki mobil kutu bilinçli
- * olarak kaldırıldı: mobilde kişi araması yolu YOK. Bu dosya yalnız
- * sonuç mantığını (geciktirme, dört durum, satırlar) taşıyor; kutuyu
- * çizen yer Header. Mantık burada tek kez yazılı, kutu geri gelirse
- * bu parçayı çizer — kopyalanmaz.
+ * Kişi araması iki kutudan yapılıyor: üst çubuktaki kutu (Header,
+ * `sosyaldeMi`, `hidden lg:block`) ve rehber sayfasının kendi kutusu
+ * (RehberMerkezi). /cv içindeki mobil kutu bilinçli olarak kaldırıldı;
+ * telefonda üst çubukta kutu olmadığı için mobil kişi arama yolu rehber
+ * kutusu. Bu dosya yalnız sonuç mantığını (geciktirme, dört durum,
+ * satırlar) taşıyor; kutuyu çizen yer çağıran. Mantık burada tek kez
+ * yazılı, `sosyalKullaniciAra` çağrısı depoda yalnız burada.
+ *
+ * GÖMÜLÜ KİP (`gomuluBaslik`)
+ * ---------------------------
+ * Rehber kutusu aynı anda rehber, bölüm ve işveren de arıyor; o sayfada
+ * "en az üç harf yaz", "aranıyor…" ya da "eşleşen profil yok" satırları
+ * rehber sonuçlarının üstünde gürültü olurdu — kullanıcı kişi aramıyor
+ * olabilir. Başlık verildiğinde dört durum metni YAZILMIYOR: eşleşme
+ * yoksa parça hiç çizilmiyor, varsa başlık + satırlar çiziliyor. Üst
+ * çubukta ise dört durum olduğu gibi duruyor: orada kutu yalnız kişi
+ * arıyor ve sessizlik "ne bekliyorum" sorusunu cevapsız bırakırdı.
  *
  * `sahibiMi` BAYRAĞI ALMIYOR
  * --------------------------
@@ -76,13 +87,24 @@ interface SonucProps {
    * hâlâ aynı sayfada ve aramasını kaybetmemeli.
    */
   onSecildi?: () => void;
+  /**
+   * Verildiğinde parça başka bir aramanın içine gömülü: durum metinleri
+   * yok, eşleşme yoksa hiç çizilmiyor, varsa bu başlıkla çiziliyor.
+   * Bkz. dosya başındaki "GÖMÜLÜ KİP".
+   */
+  gomuluBaslik?: string;
 }
 
 /**
  * Sorguyu sonuca çeviren ve dört durumu yazan parça. Kutu burada YOK:
  * kutunun yeri ve biçimi yerleşime göre değişiyor, mantık değişmiyor.
  */
-export const KullaniciAramaSonuclari: React.FC<SonucProps> = ({ sorgu, onNavigate, onSecildi }) => {
+export const KullaniciAramaSonuclari: React.FC<SonucProps> = ({
+  sorgu,
+  onNavigate,
+  onSecildi,
+  gomuluBaslik,
+}) => {
   const [sonuclar, setSonuclar] = React.useState<SosyalAramaSonucu[]>([]);
   const [durum, setDurum] = React.useState<Durum>('kisa');
 
@@ -121,6 +143,77 @@ export const KullaniciAramaSonuclari: React.FC<SonucProps> = ({ sorgu, onNavigat
     };
   }, [sorgu, yeterliMi]);
 
+  const liste =
+    durum === 'hazir' && sonuclar.length > 0 ? (
+      <ul className="space-y-0.5">
+        {sonuclar.map((kisi) => {
+          const yol = profilYolu(kisi.kullaniciAdi);
+          /*
+            İki satırın ikincisi yalnız GERÇEKTEN varsa çiziliyor:
+            bölüm etiketi ve şehir isteğe bağlı kolonlar ve boşken
+            satırı yer tutucu bir metinle doldurmak, girilmemiş bir
+            bilgiyi varmış gibi göstermek olurdu.
+          */
+          const ikinciSatir = [kisi.bolumEtiketi, kisi.sehir].filter(Boolean).join(' · ');
+          /* Görünen ad yoksa uydurulmuyor; kullanıcı adı zaten altında. */
+          const ad = kisi.gorunenAd ?? `@${kisi.kullaniciAdi}`;
+          return (
+            <li key={kisi.kullaniciAdi}>
+              {/*
+                Gerçek `<a href>`: orta tuş ve "yeni sekmede aç"
+                çalışıyor. Değiştirici tuşlarda tarayıcıya
+                dokunulmuyor.
+              */}
+              <a
+                href={yol}
+                onClick={(olay) => {
+                  if (
+                    olay.metaKey ||
+                    olay.ctrlKey ||
+                    olay.shiftKey ||
+                    olay.altKey ||
+                    olay.button !== 0
+                  )
+                    return;
+                  olay.preventDefault();
+                  onNavigate(yol);
+                  onSecildi?.();
+                }}
+                className={SATIR}
+              >
+                <ProfilFotografi
+                  ad={ad}
+                  yol={kisi.avatarYolu}
+                  className="h-10 w-10 shrink-0 rounded-full text-sm"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-bold text-gray-900">{ad}</span>
+                  <span className="block truncate text-xs text-gray-600">
+                    @{kisi.kullaniciAdi}
+                    {ikinciSatir ? ` · ${ikinciSatir}` : ''}
+                  </span>
+                </span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    ) : null;
+
+  if (gomuluBaslik !== undefined) {
+    if (!liste) return null;
+    /* Başlık ve kap, RehberSonuclari'ndaki grup başlığı ve kart kabıyla aynı ölçüde. */
+    return (
+      <section className="space-y-3">
+        <div className="flex items-baseline gap-2.5">
+          <h3 className="text-sm font-bold text-gray-900">{gomuluBaslik}</h3>
+          <span className="text-xs text-gray-600">{sonuclar.length}</span>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-white p-2.5 sm:p-3.5">{liste}</div>
+      </section>
+    );
+  }
+
   return (
     <div className="space-y-2">
       {/*
@@ -154,61 +247,7 @@ export const KullaniciAramaSonuclari: React.FC<SonucProps> = ({ sorgu, onNavigat
         </p>
       )}
 
-      {durum === 'hazir' && sonuclar.length > 0 && (
-        <ul className="space-y-0.5">
-          {sonuclar.map((kisi) => {
-            const yol = profilYolu(kisi.kullaniciAdi);
-            /*
-              İki satırın ikincisi yalnız GERÇEKTEN varsa çiziliyor:
-              bölüm etiketi ve şehir isteğe bağlı kolonlar ve boşken
-              satırı yer tutucu bir metinle doldurmak, girilmemiş bir
-              bilgiyi varmış gibi göstermek olurdu.
-            */
-            const ikinciSatir = [kisi.bolumEtiketi, kisi.sehir].filter(Boolean).join(' · ');
-            /* Görünen ad yoksa uydurulmuyor; kullanıcı adı zaten altında. */
-            const ad = kisi.gorunenAd ?? `@${kisi.kullaniciAdi}`;
-            return (
-              <li key={kisi.kullaniciAdi}>
-                {/*
-                  Gerçek `<a href>`: orta tuş ve "yeni sekmede aç"
-                  çalışıyor. Değiştirici tuşlarda tarayıcıya
-                  dokunulmuyor.
-                */}
-                <a
-                  href={yol}
-                  onClick={(olay) => {
-                    if (
-                      olay.metaKey ||
-                      olay.ctrlKey ||
-                      olay.shiftKey ||
-                      olay.altKey ||
-                      olay.button !== 0
-                    )
-                      return;
-                    olay.preventDefault();
-                    onNavigate(yol);
-                    onSecildi?.();
-                  }}
-                  className={SATIR}
-                >
-                  <ProfilFotografi
-                    ad={ad}
-                    yol={kisi.avatarYolu}
-                    className="h-10 w-10 shrink-0 rounded-full text-sm"
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-bold text-gray-900">{ad}</span>
-                    <span className="block truncate text-xs text-gray-600">
-                      @{kisi.kullaniciAdi}
-                      {ikinciSatir ? ` · ${ikinciSatir}` : ''}
-                    </span>
-                  </span>
-                </a>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      {liste}
     </div>
   );
 };

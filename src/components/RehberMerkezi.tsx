@@ -7,6 +7,7 @@ import { RehberIzgarasi, RehberKarti, RehberKartiIskeleti } from './RehberKartla
 import { YolHaritasi } from './YolHaritasi';
 import { RehberSonuclari } from './RehberSonuclari';
 import { StajYollari } from './StajYollari';
+import { KullaniciAramaSonuclari } from './sosyal/KullaniciArama';
 import { REHBERLER, KONULAR, konuEtiketi, type KonuId, type Rehber } from '../data/rehberler';
 import { BOLUMLER } from '../data/bolumler';
 import { STAJ_PROGRAMLARI } from '../data/stajProgramlari';
@@ -378,6 +379,10 @@ export const RehberMerkezi: React.FC<{
             kutu yok, o yüzden sayfa kendi kutusunu çiziyor. İkisi TEK
             terimi paylaşıyor (`arama` / `onAramaDegis`), ayrı bir durum
             yok — Keşfet'te de aynı kalıp.
+
+            Yer tutucu "kullanıcı" da diyor: telefonda kişi arama yolu
+            yalnız bu kutu (Header'daki kişi kutusu `hidden lg:block`).
+            Kişi sonuçları aşağıda, rehber sonuçlarının üstünde.
           */}
           <div className="flex items-center gap-2 lg:hidden">
             {onAramaDegis && (
@@ -388,11 +393,19 @@ export const RehberMerkezi: React.FC<{
                 />
                 <input
                   type="search"
-                  aria-label="Rehberlerde ara"
+                  aria-label="Rehber, bölüm veya kullanıcı ara"
                   value={arama}
                   onChange={(event) => onAramaDegis(event.target.value)}
-                  placeholder="Rehber, bölüm veya şirket ara"
-                  className="w-full rounded-2xl border border-gray-200 bg-white py-3.5 pl-11 pr-4 text-sm font-medium text-gray-900 placeholder:font-normal placeholder:text-gray-400 focus:border-blue-600 focus:outline-none"
+                  placeholder="Rehber, bölüm veya kullanıcı ara"
+                  /*
+                    Keşfet'teki kutu `pl-11 pr-4`; burada `pl-10 pr-3`.
+                    Ölçüldü (390 px, telefonda alanlar 16 px — index.css
+                    iOS yakınlaştırma kuralı): yer tutucu 225,9 px, eski
+                    iç genişlik 222 px, son harf kırpılıyordu. Simge
+                    32 px'te bitiyor, 40 px'lik sol boşluk 8 px pay
+                    bırakıyor; iç genişlik 230 px'e çıkıyor.
+                  */
+                  className="w-full rounded-2xl border border-gray-200 bg-white py-3.5 pl-10 pr-3 text-sm font-medium text-gray-900 placeholder:font-normal placeholder:text-gray-400 focus:border-blue-600 focus:outline-none"
                 />
               </div>
             )}
@@ -533,6 +546,22 @@ export const RehberMerkezi: React.FC<{
             </button>
           </p>
         )}
+
+        {/*
+          KİŞİLER, REHBER SONUÇLARININ ÜSTÜNDE
+
+          Aynı kutu kişi de arıyor. Mantık kopyalanmadı: geciktirme, üç
+          harf sınırı ve `sosyalKullaniciAra` çağrısı yalnız
+          `KullaniciAramaSonuclari` içinde; burada yalnız iki kapı var.
+          Oturum yoksa parça DOM'a hiç girmiyor — RPC zaten ziyaretçiye
+          satır vermiyor ve boş bir "Kişiler" bölümü, ziyaretçiye
+          aramanın çalışmadığını düşündürürdü. `gomuluBaslik` ile parça
+          eşleşme yokken de hiç çizilmiyor: "eşleşen profil yok" satırı
+          rehber arayan kullanıcı için gürültü olurdu.
+        */}
+        {ogrenci && terim ? (
+          <KullaniciAramaSonuclari sorgu={arama} onNavigate={onNavigate} gomuluBaslik="Kişiler" />
+        ) : null}
 
         {/* ================================================== içerikler */}
         {terim && aramaSonuclari.toplam > 0 ? (
