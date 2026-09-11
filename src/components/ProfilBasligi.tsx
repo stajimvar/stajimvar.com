@@ -221,7 +221,7 @@ interface Props {
   /**
    * SOSYAL PORTFOLYO SATIRI — İKİ SAYAÇ, "PAYLAŞ" VE DİŞLİ
    *
-   * Sayaçlar ("Paylaşım", "Bağlantı"), birincil "Paylaş" ve dişli menüsü
+   * Sayaçlar ("Paylaşım", "Bağlantı"), "Paylaş" (ikincil) ve dişli menüsü
    * `/cv` ekranının SAĞ sütununun üstünde duruyordu; artık bu kartın
    * içinde. Veri ve eylemler yine sağ sütundaki portfolyo panelinden
    * geliyor — kart sosyal veriyi kendisi çekmiyor ve sahiplik kararını
@@ -599,42 +599,6 @@ export const ProfilBasligi: React.FC<Props> = ({
     </button>
 
     {/*
-      "PAYLAŞ" VE DİŞLİ — KARTIN EYLEM ALANINDA
-
-      İkisi sağ sütunun üstündeydi; kartın altındaki düğme satırıyla aynı
-      ekranda iki ayrı eylem bölgesi vardı. Aynı yükseklik (`Button` md =
-      `min-h-12`, dişli 44 piksel ve satırda ortalı) ve aynı köşe
-      (`rounded-xl`) — dördü tek ailenin düğmeleri.
-
-      YALNIZ SATIR VARKEN: sosyal satır gelmediyse (`null`) ne "Paylaş" ne
-      dişli çiziliyor; sebep sağ sütundaki hata kutusunda yazıyor. Satır
-      henüz okunmadıysa da çizilmiyor — eylemi olmayan bir düğme, basınca
-      hiçbir şey yapmayan bir düğmedir.
-
-      "PAYLAŞ" YALNIZ EYLEMİ VARKEN: `onPaylasimOlustur` iki sunucu
-      önkoşulu (`yayinda_mi`, `sector_id`) sağlanmadığında nesnede yok ve
-      kart burada ikinci bir koşul kurmuyor. İkon tek başına bilgi
-      taşımıyor; yanında "Paylaş" yazıyor.
-
-      Dişli `ProfilAyarMenusu` — satırları burada seçilmiyor, nesne
-      olduğu gibi geçiyor.
-    */}
-    {satir && (
-      <div className="flex items-center justify-end gap-2">
-        {satir.onPaylasimOlustur && (
-          <Button
-            onClick={satir.onPaylasimOlustur}
-            className="flex-1"
-            ikon={<ImagePlus aria-hidden className="h-4 w-4 shrink-0" />}
-          >
-            Paylaş
-          </Button>
-        )}
-        <ProfilAyarMenusu {...satir.menu} />
-      </div>
-    )}
-
-    {/*
       CV ANA DÜĞME, DÜZENLE İKİNCİL
 
       İki düğme de gri ve eşit ağırlıktaydı; "Profili düzenle" düz gri
@@ -656,6 +620,53 @@ export const ProfilBasligi: React.FC<Props> = ({
         {eksikler.length > 0 ? 'Profilini tamamla' : 'Profili düzenle'}
       </Button>
     </div>
+
+    {/*
+      "PAYLAŞ" VE DİŞLİ — KARTIN EYLEM ALANINDA, İKİNCİ SATIR
+
+      İkisi sağ sütunun üstündeydi; kartın altındaki düğme satırıyla aynı
+      ekranda iki ayrı eylem bölgesi vardı. Aynı yükseklik (`Button` md =
+      `min-h-12`, dişli 44 piksel ve satırda ortalı) ve aynı köşe
+      (`rounded-xl`) — dördü tek ailenin düğmeleri.
+
+      NEDEN CV/DÜZENLE SATIRININ ALTINDA VE NEDEN İKİNCİL: bu satır
+      üstteyken ekranda iki mavi birincil düğme vardı ("Paylaş" ve "CV'ni
+      görüntüle") ve ikisi de tam genişlikte olduğu için hangisinin asıl
+      iş olduğu okunmuyordu (`Button` sözleşmesi: bir ekranda tek
+      primary). Kartın asıl işi CV/profil; paylaşım onun yanındaki gerçek
+      seçenek. "Paylaş" bu yüzden beyaz-kenarlıklı ikincil ve satır
+      CV/düzenle satırının altına indi. İkon, metin, eylem ve koşullar
+      aynı; yalnız tür ve sıra değişti.
+
+      YALNIZ SATIR VARKEN: sosyal satır gelmediyse (`null`) ne "Paylaş" ne
+      dişli çiziliyor; sebep sağ sütundaki hata kutusunda yazıyor. Satır
+      henüz okunmadıysa da çizilmiyor — eylemi olmayan bir düğme, basınca
+      hiçbir şey yapmayan bir düğmedir.
+
+      "PAYLAŞ" YALNIZ EYLEMİ VARKEN: `onPaylasimOlustur` iki sunucu
+      önkoşulu (`yayinda_mi`, `sector_id`) sağlanmadığında nesnede yok ve
+      kart burada ikinci bir koşul kurmuyor. İkon tek başına bilgi
+      taşımıyor; yanında "Paylaş" yazıyor.
+
+      Dişli `ProfilAyarMenusu` — satırları burada seçilmiyor, nesne
+      olduğu gibi geçiyor.
+    */}
+    {satir && (
+      <div className="flex items-center justify-end gap-2">
+        {satir.onPaylasimOlustur && (
+          <Button
+            tur="secondary"
+            onClick={satir.onPaylasimOlustur}
+            className="flex-1"
+            ikon={<ImagePlus aria-hidden className="h-4 w-4 shrink-0" />}
+          >
+            Paylaş
+          </Button>
+        )}
+        <ProfilAyarMenusu {...satir.menu} />
+      </div>
+    )}
+
   </Card>
   );
 };
