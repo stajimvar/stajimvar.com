@@ -1717,7 +1717,12 @@ test('CV eylemi yazdırılabilir belgeye gidiyor, birleşik ekrana değil', () =
     şey yapmayan bir eylem.
   */
   assert.match(app, /onOpenCv=\{\(\) => navigate\('\/cv\/yazdir'\)\}/);
-  assert.equal((app.match(/navigate\('\/cv'\)/g) ?? []).length, 2);
+  /*
+    Üçüncü çağrı `/agim`den geliyor: akıştaki "paylaşım oluştur" eylemi
+    de birleşik ekrana götürüyor. Oluşturma ekranı orada; akışa ikinci
+    bir kopyasını koymak aynı formu iki yerde tutmak olurdu.
+  */
+  assert.equal((app.match(/navigate\('\/cv'\)/g) ?? []).length, 3);
 });
 
 test('Başvurularım sağ sütundan kalktı ama yolu duruyor', () => {

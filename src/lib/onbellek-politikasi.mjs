@@ -25,6 +25,8 @@ export const UYGULAMA_BOLUMLERI = [
   '/yonetim',
   '/cv',
   '/baglantilar',
+  /* Sosyal akış: içeriği kişinin bağlantılarına göre değişiyor. */
+  '/agim',
   '/bana-uygun',
   '/kaydedilen-firsatlar',
   '/sifre-yenile',

@@ -378,7 +378,17 @@ export const Header: React.FC<HeaderProps> = ({
     sayfa, sekme değil; Profil de değil (o /cv). Orada hiçbir sekme
     yanmıyor, kurumsal sayfalardaki kuralla aynı.
   */
-  const agimdaMi = /^\/baglantilar(\/|$)/.test(bulunulanYol);
+  const agimdaMi = /^\/(agim|baglantilar)(\/|$)/.test(bulunulanYol);
+  /*
+    AKIŞIN KENDİ BAŞLIĞI VAR.
+
+    `/agim` telefonda kompakt bir başlık çiziyor (paylaş · Senin için ·
+    bağlantılar · bildirimler). Sitenin büyük üst çubuğu da çizilseydi
+    ekranın üstünde iki başlık üst üste binerdi ve akışa kalan yer
+    azalırdı. Geniş ekranda üst çubuk DURUYOR: orada akış ortalanmış bir
+    sütun ve sayfanın gezinmesi hâlâ üstten yapılıyor.
+  */
+  const akistaMi = /^\/agim(\/|$)/.test(bulunulanYol);
   /*
     ARAMA BAĞLAMI
 
@@ -487,7 +497,12 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-2xs transition-colors duration-200">
+      <header
+        /* `akistaMi` → telefonda gizli; gerekçesi tanımın yanında. */
+        className={`sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-2xs transition-colors duration-200 ${
+          akistaMi ? 'hidden lg:block' : ''
+        }`}
+      >
         <div className={`${SAYFA_GENISLIGI} mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10`}>
         {/* Main Nav Bar */}
         <div className="flex items-center justify-between h-15 sm:h-18 gap-2 sm:gap-4">
@@ -604,7 +619,7 @@ export const Header: React.FC<HeaderProps> = ({
                   id="nav-tab-network"
                   href="/baglantilar"
                   aria-current={agimdaMi ? 'page' : undefined}
-                  onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/baglantilar')) : undefined}
+                  onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/agim')) : undefined}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
                     agimdaMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
@@ -1451,7 +1466,7 @@ export const Header: React.FC<HeaderProps> = ({
           href="/baglantilar"
           aria-label="Ağım"
           aria-current={agimdaMi ? 'page' : undefined}
-          onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/baglantilar')) : undefined}
+          onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/agim')) : undefined}
           className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${agimdaMi ? 'shrink-0' : 'flex-1'} transition-all cursor-pointer relative ${
             agimdaMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
           }`}
