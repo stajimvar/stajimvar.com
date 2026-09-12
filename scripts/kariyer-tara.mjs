@@ -300,7 +300,7 @@ export function ilanlariCikar(html, temelAdres) {
 */
 
 /** Kayıtlı kökten ATS kimliğini çıkarır. Çıkaramazsa null → HTML'e düşülür. */
-function atsKimligi(kayit) {
+export function atsKimligi(kayit) {
   let u;
   try {
     u = new URL(kayit.kok);
@@ -319,7 +319,15 @@ function atsKimligi(kayit) {
     const tenant = h.split('.')[0];
     /* Yol /<dil>/<site> ya da /<site> olabiliyor; dil kodu iki harfli-tireli. */
     const site = p.find((x) => !/^[a-z]{2}([-_][A-Za-z]{2})?$/.test(x));
-    if (tenant && site) return { tip: 'workday', host: h, tenant, site };
+    /*
+      `kok` DA TAŞINIYOR: CXS'in döndürdüğü `externalPath` "/job/..." ile
+      başlıyor ve SİTE SEGMENTİNİ İÇERMİYOR. Sadece host'a eklemek
+      analogdevices.wd1.myworkdayjobs.com/job/... üretiyordu; gerçek adres
+      .../External/job/... Sonuç iki katlı hataydı: rapordaki bağlantılar
+      404'e gidiyordu ve karşılaştırma anahtarı tutmadığı için ZATEN
+      eklediğimiz ilanlar (Kenvue, MUFG, Medtronic…) "yeni" görünüyordu.
+    */
+    if (tenant && site) return { tip: 'workday', host: h, tenant, site, kok: kayit.kok.replace(/\/+$/, '') };
   }
   return null;
 }
@@ -384,7 +392,8 @@ async function atstenIlanlar(kimlik) {
         const liste = v?.jobPostings || [];
         for (const x of liste) {
           if (!x.externalPath) continue;
-          d.push({ adres: `https://${kimlik.host}${x.externalPath}`, baslik: x.title || '', yer: x.locationsText || '' });
+          /* Site segmenti kökten geliyor; externalPath onu içermiyor. */
+          d.push({ adres: `${kimlik.kok}${x.externalPath}`, baslik: x.title || '', yer: x.locationsText || '' });
         }
         if (liste.length < 20) break;
       }

@@ -22,11 +22,41 @@ export const Card: React.FC<{
   className?: string;
   yukseltilmis?: boolean;
   vurgulu?: boolean;
-}> = ({ children, className = '', yukseltilmis = false, vurgulu = false }) => (
+  /**
+   * Telefonda kart DEĞİL, yüzey.
+   *
+   * Kimlik bloğu gibi ekranın tamamını kaplayan kartlar telefonda gri
+   * zemin üzerinde yüzüyordu: iki yanında gri şeritler, köşelerde
+   * yuvarlatmanın açtığı gri üçgenler kalıyordu. Bu bayrak açıkken
+   * telefonda kabuk (yuvarlatma + dört kenar) yerini tek bir alt
+   * çizgiye bırakıyor; `sm:` ve üstünde kart olduğu gibi geri geliyor.
+   *
+   * Sınıflar EKLENMİYOR, DEĞİŞTİRİLİYOR: `rounded-none` ile
+   * `rounded-[20px]` aynı katmanda ve hangisinin kazanacağı üretilen
+   * CSS'in sırasına kalırdı — iki ayrı dal bunu belirsizlikten
+   * çıkarıyor.
+   */
+  mobilYuzey?: boolean;
+}> = ({
+  children,
+  className = '',
+  yukseltilmis = false,
+  vurgulu = false,
+  mobilYuzey = false,
+}) => (
   <div
-    className={`${KOSE.kart} border bg-white ${
-      vurgulu ? 'border-blue-200' : 'border-gray-100'
-    } ${yukseltilmis ? 'shadow-sm' : ''} ${className}`}
+    className={`${
+      /*
+        Sınıf adı LİTERAL yazılıyor: Tailwind kaynak dosyalarını düz metin
+        olarak tarıyor ve `sm:${KOSE.kart}` gibi çalışma anında kurulan bir
+        dizeyi göremez — `sm:rounded-[20px]` üretilmez, kart geniş ekranda
+        köşesiz kalırdı. `KOSE.kart` ile aynı değer; ikisi ayrışırsa köşe
+        yarıçapı iki yerde farklı olur.
+      */
+      mobilYuzey ? 'border-b sm:rounded-[20px] sm:border' : `${KOSE.kart} border`
+    } bg-white ${vurgulu ? 'border-blue-200' : 'border-gray-100'} ${
+      yukseltilmis ? 'shadow-sm' : ''
+    } ${className}`}
   >
     {children}
   </div>

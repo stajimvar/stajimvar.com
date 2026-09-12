@@ -48,6 +48,15 @@ interface SayfaKabuguProps {
    * karşı 69).
    */
   ustBosluk?: string;
+  /**
+   * Telefonda yan boşlukları kaldırır ve içeriği kenara yaslar.
+   *
+   * Varsayılan `px-4`, metin sayfaları için doğru: uzun yazı ekranın
+   * kenarına yapışmamalı. Ama profil gibi bir sayfada içerik bir
+   * KART değil, bir YÜZEY — Instagram'da olduğu gibi. Orada yan boşluk,
+   * beyaz yüzeyin iki yanında gri şeritler bırakıyor.
+   */
+  mobilKenarsiz?: boolean;
 }
 
 export const SayfaKabugu: React.FC<SayfaKabuguProps> = ({
@@ -56,6 +65,7 @@ export const SayfaKabugu: React.FC<SayfaKabuguProps> = ({
   sag,
   icerikGenisligi = 'max-w-3xl',
   ustBosluk = 'pt-6 sm:pt-8',
+  mobilKenarsiz = false,
 }) => (
   /*
     ARTIK KENDİ BAŞLIĞINI ÇİZMİYOR
@@ -87,7 +97,11 @@ export const SayfaKabugu: React.FC<SayfaKabuguProps> = ({
     px-4'tü: geniş ekranda alt sayfaların içeriği, ana sayfanınkinden farklı
     bir hizada başlıyordu.
   */
-  <main className={`${icerikGenisligi} mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 ${ustBosluk} pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-10`}>
+  <main
+    className={`${icerikGenisligi} mx-auto w-full ${
+      mobilKenarsiz ? 'px-0 sm:px-6' : 'px-4 sm:px-6'
+    } lg:px-8 xl:px-10 ${ustBosluk} pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-10`}
+  >
     {(onBack || sag) && (
       <div className="flex items-center justify-between gap-3 mb-4">
         {/*

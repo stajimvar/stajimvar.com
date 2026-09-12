@@ -1,8 +1,17 @@
 import React from 'react';
 import { Building2, GraduationCap, Landmark, Mail } from 'lucide-react';
-import { BOLUMLER } from '../data/bolumler';
-import { STAJ_PROGRAMLARI } from '../data/stajProgramlari';
-import { KARIYER_MERKEZLERI } from '../data/kariyerMerkezleri';
+/*
+  Buradaki üç kart yalnızca SAYI gösteriyor. Veri dosyalarının kendisini
+  import etmek `bolumler.ts` (205 KB) ve `stajProgramlari.ts` (21 KB)
+  dosyalarını ana pakete taşıyordu; bu bileşen anasayfada çizildiği için
+  bedelini siteye giren herkes ödüyordu. Sayılar ayrı bir dosyada, veriyle
+  eşleştikleri `tests/veri-sayilari.test.mjs` ile güvence altında.
+*/
+import {
+  BOLUM_SAYISI,
+  KARIYER_MERKEZI_SAYISI,
+  STAJ_PROGRAMI_SAYISI,
+} from '../data/veri-sayilari';
 
 /**
  * "Aradığını bulamadın mı?" — listenin altındaki ikinci yol.
@@ -65,19 +74,19 @@ export const SonrakiAdim: React.FC<SonrakiAdimProps> = ({ onNavigate, onSablonAc
       <Yol
         ikon={<Building2 className="h-4 w-4" />}
         baslik="Büyük işverenleri keşfet"
-        aciklama={`${STAJ_PROGRAMLARI.length} kurum stajı kendi kariyer sayfasından alıyor.`}
+        aciklama={`${STAJ_PROGRAMI_SAYISI} kurum stajı kendi kariyer sayfasından alıyor.`}
         onClick={() => onNavigate('/staj-programlari')}
       />
       <Yol
         ikon={<GraduationCap className="h-4 w-4" />}
         baslik="Bölümüne göre staj yolunu gör"
-        aciklama={`${BOLUMLER.length} bölüm için nerede staj yapılır, ne aranır.`}
+        aciklama={`${BOLUM_SAYISI} bölüm için nerede staj yapılır, ne aranır.`}
         onClick={() => onNavigate('/bolumler')}
       />
       <Yol
         ikon={<Landmark className="h-4 w-4" />}
         baslik="Kariyer merkezini bul"
-        aciklama={`${KARIYER_MERKEZLERI.length} üniversitenin doğrulanmış kariyer merkezi adresi.`}
+        aciklama={`${KARIYER_MERKEZI_SAYISI} üniversitenin doğrulanmış kariyer merkezi adresi.`}
         onClick={() => onNavigate('/universite-kariyer-merkezleri')}
       />
       <Yol

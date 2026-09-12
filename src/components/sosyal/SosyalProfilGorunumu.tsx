@@ -231,7 +231,16 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
       Sol sütun `lg:sticky`: sağdaki ızgara uzun, kaydırınca kimin
       profiline baktığın ekrandan çıkmıyor.
     */
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
+    /*
+      TELEFONDA SÜTUNLAR ARASI BOŞLUK YOK.
+
+      `gap-4` telefonda üst blokla ızgara arasında gri bir bant
+      bırakıyordu. Instagram'da profil kesintisiz tek bir beyaz yüzey:
+      kimlik bloğu biter, ızgara hemen başlar. Geniş ekranda boşluk
+      duruyor — orada iki sütun yan yana ve aralarında nefes payı
+      gerekiyor.
+    */
+    <div className="grid grid-cols-1 gap-0 sm:gap-6 lg:grid-cols-12 items-start">
       {/*
         SOL SÜTUN — YALNIZ HERKESE AÇIK ALANLAR
 
@@ -241,7 +250,17 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
         sütuna taşımak o koşulları atlamıyor.
       */}
       <div className="lg:col-span-4 lg:sticky lg:top-4">
-        <header className="space-y-3 rounded-2xl border border-gray-200 bg-white p-2.5 sm:p-3.5">
+        {/*
+          TELEFONDA KART DEĞİL YÜZEY.
+
+          Kimlik bloğu gri zemin üzerinde yüzen yuvarlatılmış bir karttı:
+          iki yanında gri şeritler, köşelerde yuvarlatmanın açtığı gri
+          üçgenler kalıyordu. Telefonda kart kabuğu (kenarlık,
+          yuvarlatma) yerini tek bir alt çizgiye bırakıyor; `sm:`
+          üstünde geri geliyor, çünkü orada iki sütunun nerede bittiğini
+          göstermek gerekiyor.
+        */}
+        <header className="space-y-3 border-b border-gray-200 bg-white p-3 sm:rounded-2xl sm:border sm:border-gray-200 sm:p-3.5">
           <div className="flex items-start gap-3">
             {/*
               Yol boşsa baş harfler çiziliyor; sahte bir fotoğraf ya da

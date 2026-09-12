@@ -9,7 +9,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { kokTuret, STAJ_DESENI } from '../scripts/kariyer-tara.mjs';
+import { atsKimligi, kokTuret, STAJ_DESENI } from '../scripts/kariyer-tara.mjs';
 
 test('ATS adreslerinden ilan listesi kökü doğru kesiliyor', () => {
   const dene = [
@@ -79,4 +79,51 @@ test('gerçek staj başlıkları yakalanıyor', () => {
   ]) {
     assert.equal(STAJ_DESENI.test(dogru), true, dogru);
   }
+});
+
+test('Workday kimliği kökü taşıyor; ilan adresi site segmentini kaybetmiyor', () => {
+  /*
+    ÖLÇÜLEN HATA
+
+    Workday'in CXS uçlarından dönen `externalPath` "/job/..." ile başlıyor
+    ve SİTE SEGMENTİNİ İÇERMİYOR. Adres yalnız host'a eklenerek
+    kuruluyordu:
+
+      https://analogdevices.wd1.myworkdayjobs.com/job/...        (yanlış)
+      https://analogdevices.wd1.myworkdayjobs.com/External/job/... (doğru)
+
+    Bedeli iki katlıydı: rapordaki bağlantılar 404'e gidiyordu VE
+    karşılaştırma anahtarı tutmadığı için zaten eklediğimiz ilanlar
+    (Kenvue, MUFG, Medtronic…) her turda "yeni" görünüyordu.
+  */
+  const kimlik = atsKimligi({
+    adapter: 'workday',
+    kok: 'https://analogdevices.wd1.myworkdayjobs.com/External/',
+  });
+
+  assert.equal(kimlik.tip, 'workday');
+  assert.equal(kimlik.site, 'External');
+  /* Sondaki eğik çizgi kırpılıyor; yoksa adres çift çizgiyle kuruluyordu. */
+  assert.equal(kimlik.kok, 'https://analogdevices.wd1.myworkdayjobs.com/External');
+
+  const adres = `${kimlik.kok}/job/Turkey/Engineering-Intern_R123456`;
+  assert.equal(
+    adres,
+    'https://analogdevices.wd1.myworkdayjobs.com/External/job/Turkey/Engineering-Intern_R123456',
+  );
+  /* Asıl korunan şey: site segmenti adreste KALMALI. */
+  assert.ok(adres.includes('/External/job/'));
+  /* Eski kurulum bu satırı geçemezdi — regresyon geri gelirse burada patlar. */
+  assert.notEqual(adres, `https://${kimlik.host}/job/Turkey/Engineering-Intern_R123456`);
+});
+
+test('dil kodlu Workday kökünde de site segmenti korunuyor', () => {
+  // Canlıda iki kalıp da var: /<site>/ ve /<dil>/<site>/
+  const kimlik = atsKimligi({
+    adapter: 'workday',
+    kok: 'https://gsknch.wd3.myworkdayjobs.com/tr-TR/GSKCareers',
+  });
+  assert.equal(kimlik.site, 'GSKCareers');
+  assert.equal(kimlik.kok, 'https://gsknch.wd3.myworkdayjobs.com/tr-TR/GSKCareers');
+  assert.ok(`${kimlik.kok}/job/Turkey/Intern_1`.includes('/tr-TR/GSKCareers/job/'));
 });

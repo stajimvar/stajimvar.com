@@ -18,7 +18,8 @@ import path from 'node:path';
     1. Satır içi kritik stil, ilk script'ten ve gövdeden ÖNCE geliyor.
     2. O stil ön render metnini gizliyor (yani metin hiç boyanmıyor).
     3. Dış stil dosyası module script'inden önce isteniyor.
-    4. #root içinde önce iskelet, sonra gizli ön render metni var.
+    4. #root'un İLK çocuğu ya görünür ön render gövdesi ya da açılış
+       iskeleti; gizli SEO metni her zaman ondan SONRA geliyor.
     5. JS kapalıyken noscript metni geri açıyor — SEO bozulmuyor.
     6. body'nin açık bir arka planı var: beyazdan griye sıçrama olmuyor.
 */
@@ -79,13 +80,33 @@ test('her sayfada açılış boyama zinciri kurulu', () => {
       assert.ok(css < modul, `${ad}: stil dosyası module script'inden sonra isteniyor`);
     }
 
+    /*
+      İKİ AÇILIŞ BİÇİMİ
+
+      Anasayfa ön render edilmiş GERÇEK içerikle açılıyor
+      (`data-onrender-govde`): ilk ilan kartları JavaScript inmeden
+      ekranda. Orada iskelet YOK ve olmamalı — gerçek içeriğin üstüne
+      nabız atan gri kutu koymak "yükleniyor" deyip aynı yere içeriği
+      basmak olurdu.
+
+      Öteki sayfalarda gösterilecek görünür bir gövde henüz yok; onlar
+      iskeletle açılıyor. İkisinden BİRİ her sayfada bulunmak zorunda,
+      yoksa açılışta boş ekran olur.
+    */
     const iskelet = h.indexOf('id="acilis-iskeleti"');
+    const gorunur = h.indexOf('<div data-onrender-govde>');
     const onRender = h.indexOf('<div data-seo-prerender>');
-    assert.ok(iskelet !== -1, `${ad}: açılış iskeleti yok`);
     const kok = h.indexOf('<div id="root">');
-    assert.ok(kok !== -1 && kok < iskelet, `${ad}: iskelet #root içinde değil`);
+    assert.ok(kok !== -1, `${ad}: #root bulunamadı`);
+
+    const ilk = gorunur !== -1 ? gorunur : iskelet;
+    assert.ok(ilk !== -1, `${ad}: ne görünür ön render gövdesi ne açılış iskeleti var`);
+    assert.ok(kok < ilk, `${ad}: açılış içeriği #root içinde değil`);
+    if (gorunur !== -1) {
+      assert.equal(iskelet, -1, `${ad}: görünür içerik varken iskelet de basılmış`);
+    }
     if (onRender !== -1) {
-      assert.ok(iskelet < onRender, `${ad}: ön render metni iskeletten önce geliyor`);
+      assert.ok(ilk < onRender, `${ad}: gizli SEO metni görünür içerikten önce geliyor`);
     }
 
     assert.match(

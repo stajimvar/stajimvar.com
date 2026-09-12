@@ -62,8 +62,35 @@ export default defineConfig(({ command, mode }) => {
           manualChunks: {
             react: ['react', 'react-dom'],
             supabase: ['@supabase/supabase-js'],
-            ikonlar: ['lucide-react'],
-            konfeti: ['canvas-confetti'],
+            /*
+              İKON PAKETİ DE KALDIRILDI.
+
+              `ikonlar: ['lucide-react']` bütün sayfaların kullandığı
+              ikonları TEK dosyada topluyordu ve o dosya giriş noktasının
+              bağımlılığı olduğu için anasayfada önyükleniyordu: yönetim
+              panelinin, şirket panelinin, keşfet haritasının ikonları
+              dahil, 68 KB (15.9 KB gzip).
+
+              Bölme kaldırılınca Rollup ikonları kullanan parçaya
+              koyuyor. Ölçüldü: anasayfanın ilk yükü 198.2 KB'den
+              189.8 KB'ye indi. Bedeli, ikonların artık uygulama koduyla
+              aynı dosyada olması — yani her yayında yeniden inmesi.
+              Ölçülen 8.4 KB'lik ilk yük kazancı bu bedelden büyük
+              görüldü; ilk açılış hedefi burada öncelikli.
+            */
+            /*
+              KONFETİ BURADAN KALDIRILDI.
+
+              `manualChunks` bir girdi eklemek onu yalnız ayrı dosyaya
+              koymuyor; giriş noktasının bağımlılığı olduğu için
+              `index.html`'e `<link rel="modulepreload">` de yazdırıyordu.
+              Yani siteye ilk giren herkes, başvuru gönderince atılan
+              kutlama efektini de indiriyordu.
+
+              Kod tarafı artık `lib/konfeti.ts` üzerinden dinamik import
+              yapıyor; Rollup parçayı kendiliğinden ayırıyor ve
+              önyüklemiyor.
+            */
           },
         },
       },

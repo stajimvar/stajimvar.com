@@ -92,12 +92,15 @@
       ÇÖZÜM
       Bu blok satır içi ve <head> içindeki İLK stil: tarayıcı gövdeyi
       çizmeden önce okuyor.
-        - Ön render metni JS açıkken gizleniyor (aşağıdaki noscript onu
-          JS kapalıyken geri açıyor; arama motoru için içerik yerinde).
-        - Yerine gerçek arayüzü taklit eden statik bir iskelet çiziliyor,
-          böylece beyaz ekran da olmuyor.
-      React ilk çizimini yaptığında #root'un içindekilerin ikisini de
-      değiştiriyor.
+        - Ön render edilen içeriğin GÖRÜNÜR kısmı (`data-onrender-govde`)
+          gerçek düzeniyle çiziliyor: üst çubuk, ilk ilan kartları,
+          bağlantılar. JavaScript inmeden önce ekranda olan şey bu.
+        - Geri kalan ilanlar `data-seo-prerender` içinde gizli duruyor;
+          aşağıdaki noscript onları JS kapalıyken geri açıyor.
+        - Veri hiç yoksa (ön render edilmemiş adresler) bunun yerine
+          nabız atan iskelet çiziliyor, yani beyaz ekran olmuyor.
+      React ilk çizimini yaptığında #root'un içindekilerin hepsini
+      birden değiştiriyor.
     -->
     <style>
       html,
@@ -110,27 +113,35 @@
       body {
         font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       }
-      /* Ön render metni: arama motorunun okuduğu içerik, insanın görmediği. */
+      /*
+        Ön render metni: arama motorunun okuduğu, insanın görmediği kısım.
+
+        Artık burada ilanların TAMAMI yok — ilk kartlar görünür bloğa
+        (`[data-onrender-govde]`) taşındı. Gizli blokta yalnızca o
+        kartlara girmeyenler duruyor, yani aynı ilan iki kez yazılmıyor.
+      */
       [data-seo-prerender] {
         display: none;
       }
-      /*
-        AÇILIŞ İSKELETİ
 
-        Gerçek düzeni taklit ediyor: üstte başlık çubuğu, altta üç sütun
-        (geniş ekranda süzgeç / liste / kenar çubuğu). Ölçüler uygulamanın
-        kendi iskeletiyle aynı olsun diye seçildi; React devreye girdiğinde
-        sıçrama olmuyor.
+      /*
+        AÇILIŞ DÜZENİ
+
+        Aynı `.sv-` sınıfları iki yerde kullanılıyor: veri yokken açılış
+        iskeletinde (nabız atan gri kutular), veri varken ön render
+        edilmiş gerçek içerikte. Ölçüler ortak — React devreye
+        girdiğinde satırlar yer değiştirmesin diye.
       */
-      #acilis-iskeleti {
+      #acilis-iskeleti,
+      [data-onrender-govde] {
         padding: 0 0 96px;
       }
-      #acilis-iskeleti .sv-cubuk {
+      .sv-cubuk {
         height: 64px;
         background: #ffffff;
         border-bottom: 1px solid #e5e7eb;
       }
-      #acilis-iskeleti .sv-govde {
+      .sv-govde {
         max-width: 1440px;
         margin: 0 auto;
         padding: 20px 16px;
@@ -138,7 +149,7 @@
         gap: 16px;
         grid-template-columns: 1fr;
       }
-      #acilis-iskeleti .sv-kutu {
+      .sv-kutu {
         background: #eef0f3;
         border-radius: 16px;
       }
@@ -146,17 +157,89 @@
         height: 188px;
         margin-bottom: 16px;
       }
-      #acilis-iskeleti .sv-yan {
+      .sv-yan {
         display: none;
       }
+
+      /*
+        GERÇEK KARTLAR
+
+        Yükseklik iskeletteki gri kutuyla aynı (188px): JavaScript inip
+        React kendi kartlarını çizdiğinde satırlar kaymıyor.
+      */
+      [data-onrender-govde] .sv-liste {
+        min-width: 0;
+      }
+      [data-onrender-govde] h1 {
+        margin: 0 0 8px;
+        font-size: 22px;
+        line-height: 1.25;
+        color: #111827;
+      }
+      [data-onrender-govde] .sv-giris {
+        margin: 0 0 16px;
+        font-size: 14px;
+        line-height: 1.55;
+        color: #4b5563;
+      }
+      .sv-kartlar {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .sv-kart {
+        box-sizing: border-box;
+        min-height: 188px;
+        margin-bottom: 16px;
+        padding: 20px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .sv-kart-baslik {
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.35;
+        color: #111827;
+        text-decoration: none;
+      }
+      .sv-kart-alt {
+        font-size: 13px;
+        font-weight: 600;
+        color: #2563eb;
+      }
+      .sv-kart-ozet {
+        font-size: 13px;
+        line-height: 1.55;
+        color: #6b7280;
+      }
+      .sv-nav ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 16px;
+      }
+      .sv-nav a {
+        font-size: 13px;
+        color: #4b5563;
+      }
+
       @media (min-width: 1024px) {
-        #acilis-iskeleti .sv-govde {
+        .sv-govde {
           grid-template-columns: 3fr 6fr 3fr;
           padding: 20px 32px;
         }
-        #acilis-iskeleti .sv-yan {
+        .sv-yan {
           display: block;
           height: 320px;
+        }
+        [data-onrender-govde] h1 {
+          font-size: 26px;
         }
       }
       @media (prefers-reduced-motion: no-preference) {
@@ -171,9 +254,15 @@
     </style>
     <noscript>
       <style>
-        /* JS kapalıysa gösterilecek tek şey ön render içeriği. */
+        /*
+          JS kapalıyken kalan ilanlar da açılıyor. Görünür kartlar zaten
+          ekranda; bu blok onların DEVAMI, kopyası değil.
+        */
         [data-seo-prerender] {
           display: block;
+          max-width: 1440px;
+          margin: 0 auto;
+          padding: 0 16px 96px;
         }
         #acilis-iskeleti {
           display: none;

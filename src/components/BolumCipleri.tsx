@@ -64,18 +64,38 @@ export const BolumCipleri: React.FC<{
   /** Alan başına eşleşen ilan sayısı — sıfır olan çip çizilmiyor. */
   sayilar?: Record<string, number>;
 }> = ({ secili, onSec, sayilar }) => {
-  const [gorunur, setGorunur] = React.useState(false);
+  /*
+    TERCİH İLK ÇİZİMDE OKUNUYOR — ETKİDE DEĞİL.
+
+    Önce `useState(false)` ile başlanıp `useEffect` içinde açılıyordu ve
+    gerekçesi "Başlatıcıda okunsaydı ön render (Node) çökerdi" idi. Bu
+    bileşen Node'da HİÇ çizilmiyor (anasayfanın ön render gövdesi elle
+    yazılan HTML, React değil), ama gerekçenin kendisi hâlâ geçerli:
+    `window` yoksa okumak çökerdi. O yüzden korunuyor, kaldırılmıyor.
+
+    Bedeli ölçüldü: bölüm sorusu 275 piksellik bir blok ve ilk çizimden
+    SONRA açılınca altındaki bütün liste aşağı kayıyordu — sayfanın en
+    büyük düzen sıçraması buydu (CLS 0.212). Başlatıcıda okununca blok
+    ilk çizimde yerinde oluyor ve hiçbir şey kaymıyor.
+
+    `useState` başlatıcısı yalnız ilk çizimde çalışıyor; her çizimde
+    localStorage okunmuyor.
+  */
+  const ilkTercih = React.useState(() =>
+    typeof window === 'undefined'
+      ? { alan: null as string | null, soruldu: false }
+      : tercihOku(window.localStorage),
+  )[0];
+  const [gorunur, setGorunur] = React.useState(
+    () => !ilkTercih.soruldu || Boolean(ilkTercih.alan),
+  );
 
   /*
-    localStorage yalnızca tarayıcıda okunuyor.
-
-    Başlatıcıda okunsaydı ön render (Node) çökerdi; ayrıca sunucuda
-    çizilen HTML ile tarayıcıdaki ilk çizim ayrışırdı.
+    Kayıtlı alan üst bileşene bildiriliyor. Bu bir DIŞARI haber verme, yani
+    çizim sırasında yapılamaz; etkide kalıyor.
   */
   React.useEffect(() => {
-    const { alan, soruldu } = tercihOku(window.localStorage);
-    if (alan) onSec(alan);
-    setGorunur(!soruldu || Boolean(alan));
+    if (ilkTercih.alan) onSec(ilkTercih.alan);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

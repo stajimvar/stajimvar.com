@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, CheckCircle2, Trophy, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
-import confetti from 'canvas-confetti';
+import { konfetiAt } from '../lib/konfeti';
 import { SkillQuiz, StudentProfile } from '../types';
 import { submitQuizAttempt, type QuizResult } from '../lib/queries';
 
@@ -69,7 +69,7 @@ export const SkillAssessmentModal: React.FC<SkillAssessmentModalProps> = ({
       const r = await submitQuizAttempt(quiz.id, yeniCevaplar);
       setSonuc(r);
       if (r.gecti) {
-        confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+        void konfetiAt({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
         onEarnBadge(quiz.id, quiz.skillName);
       }
     } catch (error) {

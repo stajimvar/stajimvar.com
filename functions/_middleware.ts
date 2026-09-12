@@ -1,3 +1,15 @@
+/*
+  Politika `functions/` DIŞINDA duruyor. Cloudflare Pages, `functions/`
+  altındaki her modülü bir rota olarak ele alıyor; paylaşılan bir yardımcı
+  dosyayı oraya koymak `/onbellek-politikasi` diye bir adres açardı.
+*/
+import {
+  kenardaTutulabilirMi,
+  kopyaKarari,
+  onbellekAnahtariAdresi,
+  onbellekBasligi,
+} from '../src/lib/onbellek-politikasi.mjs';
+
 /**
  * Bilinmeyen adreslere gerçek 404, uygulama adreslerine kabuk döndürür.
  *
@@ -132,8 +144,157 @@ interface Ortam {
   ASSETS: { fetch: (istek: Request) => Promise<Response> };
 }
 
-export const onRequest: PagesFunction<Ortam> = async ({ request, next, env }) => {
+/**
+ * Bulunan bir dosyaya önbellek kararını yazar.
+ *
+ * Karar `src/lib/onbellek-politikasi.mjs` içinde; burada yalnızca
+ * uygulanıyor. Cevap gövdesi kopyalanmıyor, yalnız başlıklar
+ * değiştiriliyor.
+ */
+function onbellegiIsaretle(cevap: Response, request: Request): Response {
+  const karar = onbellekBasligi({
+    yol: new URL(request.url).pathname,
+    contentType: cevap.headers.get('content-type'),
+    cerez: request.headers.get('cookie'),
+  });
+  if (!karar) return cevap;
+
+  const yeni = new Response(cevap.body, cevap);
+  yeni.headers.set('cache-control', karar);
+  return yeni;
+}
+
+/**
+ * KENAR ÖNBELLEĞİ — BAŞLIKLA DEĞİL, AÇIKÇA.
+ *
+ * Önce yalnızca `s-maxage` başlığı yazılıyordu. Ölçüldü (canlı,
+ * 12 Eylül 2026): Cloudflare HTML'e `cf-cache-status: DYNAMIC` diyor,
+ * yani başlığa rağmen önbelleğe hiç almıyor — varsayılan davranışta
+ * HTML önbelleklenmiyor. Aynı alan adındaki `/assets/*.js` isteklerinde
+ * ise `MISS` görünüyordu, yani mekanizma çalışıyor, kapsam HTML'i
+ * dışarıda bırakıyor.
+ *
+ * Panelden bir Cache Rule açmak da bir yol ama o ayar depoda durmuyor,
+ * gözden kaçabiliyor ve "her şeyi önbelleğe al" kuralı kolayca oturumlu
+ * cevapları da kapsar. Burada Cache API ile açıkça yapılıyor:
+ * anahtarı, kapsamı ve süresi kodda yazıyor ve testi mümkün.
+ *
+ * `x-onbellek` başlığı ölçüm için: HIT / MISS / ATLANDI. `age` kopyanın
+ * kaç saniyedir durduğunu söylüyor — `cf-cache-status` ve `age` ile aynı
+ * işi görüyor, farkı bizim yazıyor olmamız.
+ */
+/** Kopyanın yazılma anını taşıyan iç defter başlığı; istemciye gitmiyor. */
+const YAZILMA_BASLIGI = 'x-onbellek-yazilma';
+
+/** Bayat bir kopyanın arkada yenilenmesi. Hata olursa eski kopya yerinde kalıyor. */
+async function tazele(
+  anahtar: Request,
+  next: () => Promise<Response>,
+  onbellek: Cache,
+  request: Request,
+): Promise<void> {
+  try {
+    const taze = onbellegiIsaretle(await next(), request);
+    if (taze.status !== 200) return;
+    if (!(taze.headers.get('content-type') || '').includes('text/html')) return;
+    if (taze.headers.has('set-cookie')) return;
+    const saklanacak = new Response(taze.body, taze);
+    saklanacak.headers.set(YAZILMA_BASLIGI, String(Date.now()));
+    saklanacak.headers.delete('x-onbellek');
+    await onbellek.put(anahtar, saklanacak);
+  } catch {
+    /* Tazeleme başarısızsa bayat kopya duruyor; sunulan cevap etkilenmiyor. */
+  }
+}
+
+async function kenardanSun(
+  request: Request,
+  next: () => Promise<Response>,
+  bekle: (is: Promise<unknown>) => void,
+): Promise<Response> {
+  const url = new URL(request.url);
+  const uygun = kenardaTutulabilirMi({
+    yontem: request.method,
+    yol: url.pathname,
+    cerez: request.headers.get('cookie'),
+  });
+
+  if (!uygun) {
+    const cevap = onbellegiIsaretle(await next(), request);
+    const yeni = new Response(cevap.body, cevap);
+    yeni.headers.set('x-onbellek', 'ATLANDI');
+    return yeni;
+  }
+
+  const anahtar = new Request(onbellekAnahtariAdresi(request.url), { method: 'GET' });
+  const onbellek = (caches as unknown as { default: Cache }).default;
+
+  const bulunan = await onbellek.match(anahtar);
+  if (bulunan) {
+    /*
+      Yaş, kopyanın yazıldığı anla şimdiki an arasındaki fark. Cache API
+      kendiliğinden `age` yazmıyor ve — ölçüldü — süreyi de uygulamıyor:
+      `s-maxage=60` yazılı bir kopya 75 saniye sonra hâlâ dönüyordu.
+      Bu yüzden tazelik kararı burada, yazılma damgasından veriliyor.
+    */
+    const yazilma = Number(bulunan.headers.get(YAZILMA_BASLIGI) || 0);
+    const yas = yazilma ? Math.max(0, Math.round((Date.now() - yazilma) / 1000)) : Number.NaN;
+    const karar = kopyaKarari(yas);
+
+    if (karar !== 'yok') {
+      const yeni = new Response(bulunan.body, bulunan);
+      /* Defter başlığı dışarı sızmıyor: yalnız içeride kullandığımız bir alan. */
+      yeni.headers.delete(YAZILMA_BASLIGI);
+      yeni.headers.set('x-onbellek', karar === 'taze' ? 'HIT' : 'HIT-BAYAT');
+      yeni.headers.set('age', String(yas));
+
+      /*
+        Bayat kopya ANINDA veriliyor, tazeleme arkada yapılıyor —
+        `stale-while-revalidate`in söylediği şey tam olarak bu.
+        Ziyaretçi beklemiyor, bir sonraki ziyaretçi taze kopyayı alıyor.
+      */
+      if (karar === 'bayat') bekle(tazele(anahtar, next, onbellek, request));
+      return yeni;
+    }
+    /* Bayatlık penceresi de dolmuş: kopya yok sayılıyor ve yenisi alınıyor. */
+  }
+
   const cevap = await next();
+  const isaretli = onbellegiIsaretle(cevap, request);
+
+  const saklanabilir =
+    isaretli.status === 200 &&
+    (isaretli.headers.get('content-type') || '').includes('text/html') &&
+    !isaretli.headers.has('set-cookie');
+
+  const yeni = new Response(isaretli.body, isaretli);
+  yeni.headers.set('x-onbellek', saklanabilir ? 'MISS' : 'ATLANDI');
+  if (!saklanabilir) return yeni;
+
+  /*
+    Kenarda tutulma süresini `cache.put` cevabın kendi `Cache-Control`
+    başlığından okuyor (`s-maxage=60`). Süreyi ayrıca yazmak ikisinin
+    ayrışmasına davetiye olurdu.
+
+    Saklanan kopyaya yazılma anı ekleniyor; `age` bundan hesaplanıyor ve
+    okurken siliniyor.
+  */
+  const saklanacak = yeni.clone();
+  saklanacak.headers.set(YAZILMA_BASLIGI, String(Date.now()));
+  saklanacak.headers.delete('x-onbellek');
+  bekle(onbellek.put(anahtar, saklanacak));
+  return yeni;
+}
+
+export const onRequest: PagesFunction<Ortam> = async (baglam) => {
+  const { request, next, env } = baglam;
+
+  /*
+    Önbellek kapısı EN ÖNDE: isabet varsa `next()` hiç çağrılmıyor, yani
+    varlık araması da yapılmıyor.
+  */
+  const kenar = await kenardanSun(request, next, (is) => baglam.waitUntil(is));
+  const cevap = kenar;
 
   /* Dosya bulunduysa işimiz yok — ön render sayfaları buradan geçiyor. */
   if (cevap.status !== 404) return cevap;

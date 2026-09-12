@@ -22,7 +22,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
+import { konfetiAt } from '../lib/konfeti';
 import {
   StudentProfile,
   StudentSkill,
@@ -699,7 +699,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   const oncekiOran = useRef(oran);
   useEffect(() => {
     if (oran === 100 && oncekiOran.current < 100) {
-      confetti({ particleCount: 90, spread: 70, origin: { y: 0.3 } });
+      void konfetiAt({ particleCount: 90, spread: 70, origin: { y: 0.3 } });
     }
     oncekiOran.current = oran;
   }, [oran]);
@@ -979,9 +979,21 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       sağda o bölümün formu. İkinci bir yerleşim kurmak, aynı sayfanın
       iki farklı genişlikte iki hâli demek olurdu; kullanıcı düzenlemeye
       girip çıkarken sütunlar kayardı.
+
+      TELEFONDA SÜTUNLAR ARASI BOŞLUK YOK
+
+      `gap-4` telefonda kimlik kartıyla ızgara arasında gri bir bant
+      bırakıyordu. Profil kesintisiz tek bir beyaz yüzey olmalı: kimlik
+      bloğu biter, ızgara hemen başlar. Geniş ekranda boşluk duruyor —
+      orada iki sütun yan yana ve aralarında nefes payı gerekiyor.
+
+      DEĞER İKİ EKRANDA DA AYNI: bu iskelet `SosyalProfilGorunumu` ile
+      BİREBİR aynı olmak zorunda, yoksa kişi kendi ekranıyla başkasının
+      ekranı arasında geçerken düzen kayar. `tests/sosyal-profil-arayuzu`
+      bunu dize dize karşılaştırıyor.
     */
     <div className="w-full pb-16 animate-in fade-in duration-200">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
+      <div className="grid grid-cols-1 gap-0 sm:gap-6 lg:grid-cols-12 items-start">
 
         {/* ---------------- SOL: profil başlığı ---------------- */}
         <div className="contents lg:block lg:col-span-4 lg:sticky lg:top-4 lg:space-y-3">
@@ -1030,7 +1042,15 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             Sayfa artık profil kartı, gönderi alanı ve hesap eylemleri.
           */}
           {!duzenleme && (
+          /*
+            `-mx-4 sm:mx-0`: kimlik bloğu TELEFONDA ekranın iki kenarına
+            yaslanıyor. Kabuğun `px-4`i yerinde bırakıldı — kaldırılsaydı
+            sağ sütundaki hesap eylemleri ve düzenleme formları da kenara
+            yapışırdı; onlar yüzey değil kutu. Bleed yalnız yüzey olması
+            gereken iki öğede.
+          */
           <ProfilBasligi
+            className="-mx-4 sm:mx-0"
             ad={student.fullName}
             avatarUrl={student.avatarUrl}
             /*
@@ -1192,8 +1212,17 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         burada da var çünkü sağ sütun kutusu mobilde `contents` — dış
         `min-w-0` orada geçersiz, ızgara daralınca içerik taşardı.
       */}
+      {/*
+        `-mx-4 sm:mx-0`: fotoğraf ızgarası TELEFONDA kenara yaslı —
+        kareler ekranın iki kenarına kadar gidiyor ve kimlik bloğuyla
+        birlikte tek bir beyaz yüzey oluşturuyor. Ziyaretçi
+        görünümündeki ızgarayla aynı his; orada bleed'i kabuğun kendisi
+        veriyor (`SayfaKabugu mobilKenarsiz`), burada blok kendi veriyor
+        çünkü aynı sütunda kutu olarak kalması gereken başka bloklar da
+        var.
+      */}
       {!duzenleme && sosyalPortfolyo && (
-        <div className="order-1 min-w-0 lg:order-none">
+        <div className="order-1 -mx-4 min-w-0 sm:mx-0 lg:order-none">
           {sosyalPortfolyo}
         </div>
       )}
