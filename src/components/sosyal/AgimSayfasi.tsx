@@ -155,11 +155,17 @@ export const AgimSayfasi: React.FC<Props> = ({
       </button>
 
       {/*
-        Ortadaki başlık şu an TEK akışı adlandırıyor. Yanındaki ok bir
-        seçici değil, o akışın adının parçası: ikinci bir akış yokken
-        açılan bir menü çizmek, olmayan bir seçim sunmak olurdu.
+        Ortada akışın adı değil MARKA duruyor.
+
+        Önce "Senin için" yazıyordu ve yanına bir akış seçici düşünülmüştü.
+        İkinci bir akış yok: tek akışı adlandırmak, olmayan bir seçim
+        varmış gibi durdu. Telefonda sitenin büyük üst çubuğu gizli
+        olduğu için kullanıcının hangi üründe olduğunu söyleyen tek yer
+        de burası.
       */}
-      <h1 className="flex-1 text-center text-base font-extrabold text-gray-900">Senin için</h1>
+      <h1 className="flex-1 text-center text-base font-extrabold tracking-tight text-gray-900">
+        Stajım<span className="text-blue-600">Var</span>
+      </h1>
 
       <button
         type="button"
