@@ -540,6 +540,68 @@ async function ilanlariGetir() {
 }
 
 /**
+ * AÇILIŞ TOHUMU — katalogun ilk sayfası.
+ *
+ * NEDEN AYRI ÇAĞRI
+ * ----------------
+ * `ilanlariGetir` düz bir REST seçimi yapıyor ve arama motoru metni için
+ * yeterli. Ama istemcinin beklediği şey o değil: `useGlobalListingPreferences`
+ * `get_published_listings_catalog_v2` yanıtını bekliyor — sayfalama
+ * imleci, anlık görüntü kimliği ve sayaçlarıyla birlikte. Tohumun
+ * istemcide doğrulamadan geçmesi için AYNI çağrıdan gelmesi gerekiyor.
+ *
+ * NEDEN ANONİM ANAHTAR
+ * --------------------
+ * Bu betiğin elinde `SUPABASE_SERVICE_ROLE_KEY` olabiliyor ve o anahtar
+ * RLS'i atlıyor. Tohum herkese açık HTML'in içine giriyor; servis
+ * anahtarıyla üretilmiş bir yanıt, yayımlanmaması gereken bir satırı
+ * sessizce dışarı taşıyabilirdi. Bu yüzden burada YALNIZCA anonim
+ * anahtar kullanılıyor: gömülen şey, siteye giren herhangi birinin
+ * zaten görebileceği yanıtın aynısı.
+ *
+ * Başarısız olursa tohum yazılmıyor ve istemci eski yolundan — ağdan —
+ * yüklüyor. Ön render durmuyor: tohum bir hızlandırma, bir gereklilik
+ * değil.
+ */
+async function katalogTohumuGetir(ulke) {
+  const urlAdres = envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL');
+  const anahtar = envOku('VITE_SUPABASE_ANON_KEY');
+  if (!urlAdres || !anahtar) {
+    console.log('  açılış tohumu atlandı (anonim anahtar yok)');
+    return null;
+  }
+  try {
+    const yanit = await fetch(`${urlAdres}/rest/v1/rpc/get_published_listings_catalog_v2`, {
+      method: 'POST',
+      headers: {
+        apikey: anahtar,
+        Authorization: `Bearer ${anahtar}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        p_country: ulke,
+        p_cursor_posted_at: null,
+        p_cursor_id: null,
+        p_snapshot: null,
+      }),
+    });
+    if (!yanit.ok) {
+      console.log(`  açılış tohumu alınamadı: HTTP ${yanit.status}`);
+      return null;
+    }
+    const veri = await yanit.json();
+    if (!veri || !Array.isArray(veri.listings) || !veri.listings.length) {
+      console.log('  açılış tohumu boş geldi, yazılmadı');
+      return null;
+    }
+    return veri;
+  } catch (hata) {
+    console.log(`  açılış tohumu alınamadı: ${hata?.message || hata}`);
+    return null;
+  }
+}
+
+/**
  * Bütün şirket slug'ları.
  *
  * NEDEN AYRI SORGU
@@ -717,9 +779,23 @@ function yapisalVeri(yol, s) {
   return { '@context': 'https://schema.org', '@graph': [kirinti] };
 }
 
+/**
+ * YAZILAN HER ADRES — site haritası uzlaştırması için.
+ *
+ * Bu betik hangi sayfaların GERÇEKTEN var olduğunu bilen tek yer; her
+ * dağıtımda çalışıyor. Site haritası ayrı bir saatlik işten (automation/
+ * sitemap.py) üretiliyor ve ölçüldü (12 Eylül 2026): canlı sitemap.xml
+ * 5 Eylül'de donmuştu — 159 ilan sayfası varken haritada 62, 160 şirket
+ * sayfası varken 93 adres yazıyordu.
+ *
+ * Liste aşağıda `siteHaritasiniUzlastir` tarafından kullanılıyor.
+ */
+const YAZILAN_ADRESLER = new Set();
+
 function sayfaYaz(yol, s) {
   let html = kabuk;
   const tamAdres = SITE + yol;
+  if (!s.dizinDisi) YAZILAN_ADRESLER.add(yol);
 
   /*
     Dizine girmemesi gereken sayfalar (404 gibi) için robots etiketi.
@@ -817,10 +893,43 @@ function sayfaYaz(yol, s) {
 
     İkisi de #root'un içinde; React ilk çizimde ikisini birden değiştiriyor.
   */
-  html = html.replace(
-    '<div id="root"></div>',
-    `<div id="root">${ACILIS_ISKELETI}<div data-seo-prerender>${s.govde}</div></div>`
-  );
+  /*
+    İSKELET YALNIZ VERİ YOKKEN.
+
+    `gorunurGovde` verilmişse ekranda gösterilecek gerçek içerik zaten
+    var; üstüne bir de nabız atan gri kutular koymak, kullanıcıya önce
+    "yükleniyor" deyip sonra aynı yere içeriği basmak olurdu.
+  */
+  const gorunur = s.gorunurGovde
+    ? `<div data-onrender-govde>${s.gorunurGovde}</div>`
+    : ACILIS_ISKELETI;
+
+  /*
+    Gizli blok BOŞSA hiç yazılmıyor. Anasayfada artık gizli ilan listesi
+    yok (hepsi görünür kartlarda ve site haritasında); boş bir
+    `display:none` kabı bırakmak, okuyan birine hâlâ saklanan bir şey
+    olduğunu düşündürürdü.
+  */
+  const gizli = s.govde ? `<div data-seo-prerender>${s.govde}</div>` : '';
+
+  html = html.replace('<div id="root"></div>', `<div id="root">${gorunur}${gizli}</div>`);
+
+  /*
+    AÇILIŞ TOHUMU.
+
+    İlk ilan sayfası HTML'in içinde geliyor; istemci aynı veriyi bir
+    daha beklemeden ekrana basıyor (bkz. src/lib/ilk-katalog.ts).
+    `</script>` dizisi kaçırılıyor: veri içinde geçerse etiketi erken
+    kapatıp sayfayı kırardı.
+  */
+  if (s.tohum) {
+    const govde = JSON.stringify(s.tohum).replace(/<\/(script)/gi, '<\\/$1');
+    html = html.replace(
+      '</body>',
+      `  <script type="application/json" id="ilk-katalog">${govde}</script>
+  </body>`
+    );
+  }
 
   /*
     DOSYA ADI: <yol>.html — <yol>/index.html DEĞİL.
@@ -1608,23 +1717,74 @@ async function main() {
     ['/iletisim', 'İletişim'],
   ];
 
-  const ilanListesi = ilanlar.length
-    ? '<h2>Yayındaki staj ilanları</h2><ul>' +
-      ilanlar
+  /*
+    İLK KARTLAR GÖRÜNÜR, GERİSİ ARAMA MOTORU İÇİN.
+
+    Eskiden ilanların TAMAMI `data-seo-prerender` içindeydi ve
+    `display:none` ile gizliydi: arama motoru okuyordu, insan görmüyordu.
+    İnsanın gördüğü tek şey nabız atan gri kutulardı — 436 KB JavaScript
+    inip çalışana, sonra bir de Supabase çağrısı dönene kadar.
+
+    Artık ilk kartlar GÖRÜNÜR bloğa, kalanlar gizli bloğa yazılıyor.
+    Aynı ilan iki yerde birden yok: gizli listede yalnızca görünür
+    kartlara girmeyenler var, yani JavaScript kapalıyken de sayfa
+    kendini tekrar etmiyor ve arama motoru yine hepsini görüyor.
+  */
+  /*
+    TOHUM HANGİ ÜLKE İÇİN
+
+    `resolveListingCountry` (src/lib/global-preferences.mjs) sırayla
+    adresteki ülkeye, kayıtlı tercihe, hesaptaki ülkelere, tarayıcı
+    diline ve Cloudflare ülkesine bakıyor; hiçbiri yoksa 'TR' dönüyor.
+    İlk kez gelen bir tr-TR ziyaretçi de 'TR' oluyor — yani tek bir
+    tohum yazılacaksa en çok isabet eden bu.
+
+    Başka bir ülkeyi seçmiş ziyaretçide tohum KULLANILMIYOR: okuyucu
+    ülke eşleşmesini kontrol ediyor (src/lib/ilk-katalog.ts) ve
+    eşleşmezse eski yoldan, ağdan yükleniyor.
+  */
+  const TOHUM_ULKESI = 'TR';
+  const katalogTohumu = await katalogTohumuGetir(TOHUM_ULKESI);
+  const tohumIlanlari = Array.isArray(katalogTohumu?.listings) ? katalogTohumu.listings : [];
+
+  const GORUNUR_KART = 12;
+  const ilanYolu = (i) => `/ilan/${slugla(i.title)}-${String(i.id).split('-')[0]}`;
+  /*
+    Şehir adı ham geliyor ve kaynaklar "Istanbul" yazıyor. Arayüzde
+    konumEtiketi ile düzeltiliyor; ön render edilen metin de aynı
+    sözlükten geçiyor ki ikisi ayrışmasın.
+  */
+  const ilanYeri = (i) => (i.city ? konumEtiketi(i.city) : '');
+
+  /*
+    GÖRÜNÜR KARTLAR TOHUMDAN GELİYOR — `ilanlar` listesinden değil.
+
+    İkisi aynı veritabanını okuyor ama aynı sorguyu değil: `ilanlar`
+    yayındaki her ilanı ülke ayırmadan getiriyor, tohum ise katalogun
+    ülkeye göre sıralanmış ilk sayfası. İstemci ilk çizimde TOHUMU
+    kullanıyor; kartları başka bir listeden yazsaydık React devreye
+    girdiğinde ekrandaki ilanlar değişirdi — istediğimizin tam tersi,
+    görünür bir içerik sıçraması.
+
+    Tohum alınamadıysa kartlar yine de çiziliyor (boş ekrandan iyi),
+    ama o durumda istemci zaten ağdan yükleyecek.
+  */
+  const gorunurIlanlar = (tohumIlanlari.length ? tohumIlanlari : ilanlar).slice(0, GORUNUR_KART);
+  const gorunurKimlikler = new Set(gorunurIlanlar.map((i) => String(i.id)));
+  const gizliIlanlar = ilanlar.filter((i) => !gorunurKimlikler.has(String(i.id)));
+
+  const ilanKartlari = gorunurIlanlar.length
+    ? '<ul class="sv-kartlar">' +
+      gorunurIlanlar
         .map((i) => {
-          const yol = `/ilan/${slugla(i.title)}-${String(i.id).split('-')[0]}`;
           const sirket = (i.companies || {}).name || '';
-          /*
-            Şehir adı ham geliyor ve kaynaklar "Istanbul" yazıyor. Arayüzde
-            konumEtiketi ile düzeltiliyordu ama ön render edilen HTML —
-            yani arama motorunun okuduğu metin — ham hâlde kalıyordu.
-            Basit düzeltme yeterli: liste yalnızca şehir adı basıyor.
-          */
-          const yer = i.city ? konumEtiketi(i.city) : '';
+          const yer = ilanYeri(i);
+          const alt = [sirket, yer].filter(Boolean).join(' · ');
           return (
-            `<li><a href="${yol}">${kacir(i.title)}</a>` +
-            (sirket ? ` — ${kacir(sirket)}` : '') +
-            (yer ? `, ${kacir(yer)}` : '') +
+            '<li class="sv-kart">' +
+            `<a class="sv-kart-baslik" href="${ilanYolu(i)}">${kacir(i.title)}</a>` +
+            (alt ? `<span class="sv-kart-alt">${kacir(alt)}</span>` : '') +
+            `<span class="sv-kart-ozet">${kacir(ozetle(i.description, 150))}</span>` +
             '</li>'
           );
         })
@@ -1632,22 +1792,69 @@ async function main() {
       '</ul>'
     : '';
 
+  /*
+    GİZLİ İLAN LİSTESİ KALDIRILDI.
+
+    Anasayfa kalan 147 ilanı `display:none` bir blokta taşıyordu:
+    "arama motoru okusun, insan görmesin". Bu sağlam bir yaklaşım değil —
+    gizlenmiş bağlantı, Google'ın ana içerikten saydığı bir sinyal değil
+    ve "kullanıcıya gösterilmeyen içerik" tarafında bir risk taşıyor.
+    Üstelik anasayfanın HTML'ini 22 KB şişiriyordu.
+
+    Doğru kanal site haritası. Ama önce onun gerçekten kapsadığından emin
+    olmak gerekiyordu: ölçüldü, canlı sitemap.xml'de 159 ilanın yalnız
+    62'si vardı ve dosya yedi gündür donmuştu. `siteHaritasiniUzlastir`
+    bu açığı her dağıtımda kapatıyor; bu liste ancak ondan sonra
+    kaldırılabilirdi.
+  */
+
+  const anaSayfaNav =
+    '<nav class="sv-nav"><ul>' +
+    anaSayfaBaglantilari
+      .map(([y, e]) => `<li><a href="${y}">${kacir(e)}</a></li>`)
+      .join('') +
+    '</ul></nav>';
+
   sayfaYaz('/', {
     baslik: 'StajımVar — Şirketlerin staj ilanları, tek listede',
     aciklama:
       "Türkiye'deki staj ilanlarını şirketlerin kendi kariyer sayfalarından derliyoruz. " +
       'Her ilanda şirketin kendi başvuru bağlantısı var.',
-    govde:
-      '<main><h1>Şirketlerin staj ilanları, tek listede</h1>' +
-      '<p>Farklı kariyer sayfalarını tek tek gezme. İlanları aracı sitelerden değil, ' +
-      'şirketlerin kendi kariyer sayfalarından derliyoruz; her ilanda şirketin kendi ' +
-      'başvuru bağlantısı var.</p>' +
-      ilanListesi +
-      '<nav><ul>' +
-      anaSayfaBaglantilari
-        .map(([y, e]) => `<li><a href="${y}">${kacir(e)}</a></li>`)
-        .join('') +
-      '</ul></nav></main>',
+    /*
+      GÖRÜNÜR GÖVDE: JavaScript inmeden ekranda duran içerik.
+
+      Üstteki çubuk gerçek başlığın yerini tutuyor (aynı 64px), altında
+      ilk ilan kartları ve sayfanın ana bağlantıları var. Yan sütunlar
+      hâlâ yer tutucu: süzgeçler ve kenar çubuğu etkileşim gerektiriyor,
+      onları burada çizmek çalışmayan bir arayüz göstermek olurdu.
+    */
+    gorunurGovde:
+      '<div class="sv-cubuk"></div>' +
+      '<div class="sv-govde">' +
+      '<div class="sv-kutu sv-yan"></div>' +
+      '<main class="sv-liste">' +
+      '<h1>Şirketlerin staj ilanları, tek listede</h1>' +
+      '<p class="sv-giris">Farklı kariyer sayfalarını tek tek gezme. İlanları aracı ' +
+      'sitelerden değil, şirketlerin kendi kariyer sayfalarından derliyoruz; her ' +
+      'ilanda şirketin kendi başvuru bağlantısı var.</p>' +
+      ilanKartlari +
+      anaSayfaNav +
+      '</main>' +
+      '<div class="sv-kutu sv-yan"></div>' +
+      '</div>',
+    /*
+      Gizli SEO gövdesi anasayfada artık BOŞ. Görünür kartlar hem
+      kullanıcının hem tarayıcının gördüğü tek içerik; kalan ilanlar
+      site haritasından taranıyor.
+    */
+    govde: '',
+    /*
+      Ülke SARMALIN İÇİNDE yazılıyor. Okuyucu (src/lib/ilk-katalog.ts)
+      tohumu ancak ziyaretçinin ülkesiyle eşleştiğinde kullanıyor;
+      hangi ülkenin kataloğu olduğu yazmasaydı, Almanya'yı seçmiş bir
+      ziyaretçiye Türkiye listesi gösterilirdi.
+    */
+    tohum: katalogTohumu ? { country: TOHUM_ULKESI, page: katalogTohumu } : null,
     jsonLd: {
       '@context': 'https://schema.org',
       '@graph': [
@@ -1716,9 +1923,98 @@ async function main() {
   );
   console.log(`  geçerli adres listesi: ${gecerliSirketler.length} şirket`);
 
+  siteHaritasiniUzlastir();
+
   console.log(
     `ön render: ${sayac} sayfa yazıldı (+404) ` +
       `(${bolumler.length} bölüm, ${rehberler.length} rehber, ${ilanlar.length} ilan)`
+  );
+}
+
+/**
+ * SİTE HARİTASINI GERÇEKLE UZLAŞTIR.
+ *
+ * SORUN
+ * -----
+ * `sitemap.xml` ayrı bir saatlik işten (automation/sitemap.py) üretiliyor
+ * ve depoya `public/sitemap.xml` olarak işleniyor. Ölçüldü
+ * (12 Eylül 2026, canlı):
+ *
+ *   /ilan/    haritada  62   üretilen sayfa 159   → 97 sayfa haritada yok
+ *   /sirket/  haritada  93   üretilen sayfa 160   → 67 sayfa haritada yok
+ *   en yeni lastmod: 5 Eylül 2026 (yani harita yedi gündür donmuş)
+ *
+ * Bu, anasayfadaki gizli bağlantı listesi kaldırılınca gerçek bir kayba
+ * dönüşürdü: o 97 ilan sayfasına giden hiçbir taranabilir yol kalmazdı.
+ *
+ * ÇÖZÜM
+ * -----
+ * Bu betik hangi sayfaların GERÇEKTEN yazıldığını bilen tek yer ve her
+ * dağıtımda çalışıyor. Burada `dist/sitemap.xml` düzeltiliyor: yazılan
+ * ama haritada olmayan adresler ekleniyor, sayfası olmadığı hâlde
+ * haritada duran adresler çıkarılıyor.
+ *
+ * KAPSAM DAR: yalnızca bu betiğin ÜRETTİĞİ adres aileleri. `/firsatlar/`,
+ * `/kesfet/` ve durağan sayfalar sitemap.py'ın bileceği işler; onlara
+ * dokunulmuyor, yoksa iki üretici birbirinin işini silerdi.
+ *
+ * `public/sitemap.xml` DEĞİŞTİRİLMİYOR — o dosya saatlik işin çıktısı.
+ * Düzeltme yalnızca dağıtılan kopyada.
+ */
+function siteHaritasiniUzlastir() {
+  const harita = path.join(dist, 'sitemap.xml');
+  if (!fs.existsSync(harita)) {
+    console.log('  site haritası uzlaştırma atlandı (dist/sitemap.xml yok)');
+    return;
+  }
+
+  /* Yalnız bu betiğin ürettiği aileler. */
+  const AILELER = ['/ilan/', '/sirket/', '/bolum/', '/rehber/'];
+  const aileninMi = (yol) => AILELER.some((a) => yol.startsWith(a));
+
+  const bizim = new Set([...YAZILAN_ADRESLER].filter(aileninMi));
+
+  let xml = fs.readFileSync(harita, 'utf8');
+  const bugun = new Date().toISOString().slice(0, 10);
+
+  /* Haritada duran, bize ait adresler. */
+  const mevcut = new Map();
+  const blokDeseni = /<url>[\s\S]*?<\/url>/g;
+  const bloklar = xml.match(blokDeseni) || [];
+  for (const blok of bloklar) {
+    const loc = (blok.match(/<loc>([^<]*)<\/loc>/) || [])[1];
+    if (!loc || !loc.startsWith(SITE)) continue;
+    const yol = loc.slice(SITE.length);
+    if (aileninMi(yol)) mevcut.set(yol, blok);
+  }
+
+  /*
+    Sayfası olmayan adresler çıkıyor. Ölçüldü: haritada duran ama
+    üretilmeyen adres, ara katmanın "dosya yoksa 404" kuralına takılıyor —
+    yani arama motoruna 404 veren bir adres bildiriyorduk.
+  */
+  const fazla = [...mevcut.keys()].filter((y) => !bizim.has(y));
+  for (const y of fazla) xml = xml.replace(mevcut.get(y), '');
+
+  /* Yazılmış ama haritada olmayan adresler giriyor. */
+  const eksik = [...bizim].filter((y) => !mevcut.has(y));
+  if (eksik.length) {
+    const oncelik = (yol) => (yol.startsWith('/ilan/') ? '0.8' : '0.6');
+    const yeni = eksik
+      .map(
+        (yol) =>
+          `<url><loc>${SITE}${yol}</loc><lastmod>${bugun}</lastmod>` +
+          `<changefreq>weekly</changefreq><priority>${oncelik(yol)}</priority></url>`
+      )
+      .join('');
+    xml = xml.replace('</urlset>', `${yeni}</urlset>`);
+  }
+
+  fs.writeFileSync(harita, xml, 'utf8');
+  const toplam = (xml.match(/<url>/g) || []).length;
+  console.log(
+    `  site haritası uzlaştırıldı: +${eksik.length} eklendi, ` +
+      `-${fazla.length} çıkarıldı, toplam ${toplam} adres`
   );
 }
 
