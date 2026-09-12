@@ -1,5 +1,13 @@
 import {StrictMode, Suspense} from 'react';
 import {createRoot} from 'react-dom/client';
+/*
+  ÖN RENDER YEDEĞİ EN ÖNCE import EDİLİYOR.
+
+  Modül gövdesi `#root` içeriğini kopyalıyor ve bu kopya `createRoot`
+  kabı temizlemeden önce alınmak zorunda. Import sırası bu yüzden
+  anlamlı: en üstte durması gerekiyor.
+*/
+import {OnRenderYedegi} from './lib/onrender-yedek.tsx';
 import App from './App.tsx';
 import './index.css';
 
@@ -49,12 +57,18 @@ createRoot(document.getElementById('root')!).render(
     {/*
       Gecikmeli yüklenen ekranlar için tek bir sınır.
 
-      Yedek içerik bilerek BOŞ: ön render'ın bastığı metin ekranda duruyor ve
-      araya bir yükleniyor göstergesi koymak onu silip yerine dönen bir daire
-      koymak olurdu. Boş bırakınca kullanıcı mevcut içeriği görmeye devam
-      ediyor, parça inince yerini alıyor.
+      Yedek BOŞ DEĞİL, ÖN RENDER EDİLEN SAYFANIN KENDİSİ. Eskiden `null`
+      idi ve gerekçesi "ön render'ın bastığı metin ekranda duruyor" idi —
+      ama durmuyordu: `createRoot` ilk çizimde `#root`'u temizliyor, yani
+      gecikmeli bir rota beklenirken ekran gerçekten boşalıyordu. Bu
+      yüzden rehber, bölüm ve araç sayfaları gecikmeli yapılamıyor ve
+      veri dosyaları (≈515 KB kaynak) ana pakette taşınıyordu.
+
+      Yedek artık React devreye girmeden alınan kopyayı geri çiziyor:
+      parça inene kadar kullanıcı ön render edilen sayfayı görmeye devam
+      ediyor. Bkz. `lib/onrender-yedek.tsx`.
     */}
-    <Suspense fallback={null}>
+    <Suspense fallback={<OnRenderYedegi />}>
       <App />
     </Suspense>
   </StrictMode>,

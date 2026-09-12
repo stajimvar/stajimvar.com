@@ -1,12 +1,22 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Logo } from './Logo';
+import { CorporateContent } from './CorporatePages';
+/*
+  Adres haritası artık metinlerden ayrı bir dosyada; App.tsx onu statik
+  okuyabilsin diye. Bu dosya haritayı yeniden dışa veriyor:
+  `scripts/onrender.mjs` LegalPage.LEGAL_ROUTES üzerinden okumaya devam
+  ediyor.
+*/
 import {
-  CorporateContent,
   CORPORATE_ROUTES,
   CORPORATE_TITLES,
+  LEGAL_ROUTES,
   type CorporateSlug,
-} from './CorporatePages';
+  type LegalSlug,
+} from '../lib/yasal-rotalar';
+
+export { LEGAL_ROUTES, type LegalSlug } from '../lib/yasal-rotalar';
 
 /**
  * Yasal metin sayfaları.
@@ -24,17 +34,6 @@ import {
  * sürüm artmazsa eski onayla yeni işleme yapılmış olur.
  */
 
-type YasalSlug = 'gizlilik' | 'cerez-politikasi' | 'kvkk-aydinlatma-metni';
-
-/** Yasal ve kurumsal sayfalar aynı kabuğu paylaşıyor. */
-export type LegalSlug = YasalSlug | CorporateSlug;
-
-export const LEGAL_ROUTES: Record<string, LegalSlug> = {
-  '/gizlilik': 'gizlilik',
-  '/cerez-politikasi': 'cerez-politikasi',
-  '/kvkk-aydinlatma-metni': 'kvkk-aydinlatma-metni',
-  ...CORPORATE_ROUTES,
-};
 
 /*
   Son güncelleme tarihi SAYFA BAŞINA.

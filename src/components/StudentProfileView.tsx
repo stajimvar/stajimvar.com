@@ -22,7 +22,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
+import { konfetiAt } from '../lib/konfeti';
 import {
   StudentProfile,
   StudentSkill,
@@ -699,7 +699,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   const oncekiOran = useRef(oran);
   useEffect(() => {
     if (oran === 100 && oncekiOran.current < 100) {
-      confetti({ particleCount: 90, spread: 70, origin: { y: 0.3 } });
+      void konfetiAt({ particleCount: 90, spread: 70, origin: { y: 0.3 } });
     }
     oncekiOran.current = oran;
   }, [oran]);
@@ -979,6 +979,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       sağda o bölümün formu. İkinci bir yerleşim kurmak, aynı sayfanın
       iki farklı genişlikte iki hâli demek olurdu; kullanıcı düzenlemeye
       girip çıkarken sütunlar kayardı.
+
     */
     <div className="w-full pb-16 animate-in fade-in duration-200">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">

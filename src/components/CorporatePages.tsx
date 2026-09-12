@@ -26,28 +26,19 @@ import { KAYNAK_SISTEMLERI, KAYNAK_TOPLAM } from '../data/kaynak-sistemleri';
  * yayınlar" demiyoruz, çünkü şirket kaydı henüz kapalı.
  */
 
-export type CorporateSlug =
-  | 'hakkimizda'
-  | 'iletisim'
-  | 'kullanim-kosullari'
-  | 'ilan-kurallari'
-  | 'ilan-bildir';
+/*
+  Adres haritası ve başlıklar `lib/yasal-rotalar.ts`'e taşındı: App.tsx
+  bir adresin kurumsal sayfa olup olmadığına çizimden önce bakmak
+  zorunda ve o bakış bu dosyadaki 24 KB metni ana pakete çekiyordu.
+  Adlar buradan yeniden dışa veriliyor, çağıran hiçbir kod değişmedi.
+*/
+export {
+  CORPORATE_ROUTES,
+  CORPORATE_TITLES,
+  type CorporateSlug,
+} from '../lib/yasal-rotalar';
+import type { CorporateSlug } from '../lib/yasal-rotalar';
 
-export const CORPORATE_ROUTES: Record<string, CorporateSlug> = {
-  '/hakkimizda': 'hakkimizda',
-  '/iletisim': 'iletisim',
-  '/kullanim-kosullari': 'kullanim-kosullari',
-  '/ilan-kurallari': 'ilan-kurallari',
-  '/ilan-bildir': 'ilan-bildir',
-};
-
-export const CORPORATE_TITLES: Record<CorporateSlug, string> = {
-  hakkimizda: 'Hakkımızda',
-  iletisim: 'İletişim',
-  'kullanim-kosullari': 'Kullanım Koşulları',
-  'ilan-kurallari': 'İlan Yayınlama Kuralları',
-  'ilan-bildir': 'İçerik ve İlan Bildirimi',
-};
 
 const ILETISIM = 'iletisim@stajimvar.com';
 

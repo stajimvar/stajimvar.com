@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, Suspense } from 'react';
 import {
   fetchPublishedListings,
   fetchStudentProfile,
@@ -24,31 +24,18 @@ import {
 import { Header } from './components/Header';
 import { MatchedInternshipsView } from './components/MatchedInternshipsView';
 import { useGlobalListingPreferences } from './components/useGlobalListingPreferences';
-import { InternshipDetailModal } from './components/InternshipDetailModal';
 import { Logo } from './components/Logo';
-import { LegalPage, LEGAL_ROUTES } from './components/LegalPage';
-import { ApplyDialog } from './components/ApplyDialog';
+import { LEGAL_ROUTES } from './lib/yasal-rotalar';
 import { niyetYaz, niyetOku, niyetSil } from './lib/basvuru-niyeti.mjs';
 import { CerezBandi } from './components/CerezBandi';
-import { ListingPage } from './components/ListingPage';
-import { GuideHub, GuidePage } from './components/GuidePages';
-import { BasvuruSablonu } from './components/BasvuruSablonu';
-import { SifreYenile } from './components/SifreYenile';
-import { ProfilTamamla } from './components/ProfilTamamla';
-import {
-  SosyalProfilSayfasi,
-  type PortfolyoSatiri,
-} from './components/sosyal/SosyalProfilSayfasi';
-import { BaglantilarSayfasi } from './components/sosyal/BaglantilarSayfasi';
-import { TopluluklarSayfasi } from './components/sosyal/TopluluklarSayfasi';
-import { BolumTalepleri } from './components/yonetim/BolumTalepleri';
-import { BolumHub, BolumPage } from './components/BolumPages';
-import { StajProgramlariSayfasi } from './components/StajProgramlari';
-import { IsverenGirisi } from './components/IsverenGirisi';
-import { SirketPaneli } from './sirket/SirketPaneli';
+/*
+  Yalnız TİP: `import type` derlemede siliniyor, yani bu satır
+  `SosyalProfilSayfasi` parçasını ana pakete çekmiyor. Bileşenin kendisi
+  aşağıda gecikmeli yükleniyor.
+*/
+import type { PortfolyoSatiri } from './components/sosyal/SosyalProfilSayfasi';
 import { BildirimMerkezi } from './components/BildirimMerkezi';
 import { useBildirimler } from './lib/useBildirimler';
-import { DunyaGecisi } from './sirket/DunyaGecisi';
 import { SIRKET_VURGU_KOYU } from './sirket/renk';
 
 /*
@@ -56,34 +43,24 @@ import { SIRKET_VURGU_KOYU } from './sirket/renk';
   karismamalari icin acikca sayiliyorlar.
 */
 const SIRKET_PANEL_YOLLARI = ['/sirket/ilanlar', '/sirket/basvuranlar', '/sirket/profil', '/sirket/ilan'];
-import { KariyerMerkezleriSayfasi } from './components/KariyerMerkezleri';
-import { OpportunitiesPage } from './components/OpportunitiesPage';
-import { IsverenLanding } from './components/IsverenLanding';
-import { OpportunityDetailPage } from './components/OpportunityDetailPage';
 import { OpportunitiesHomeSection } from './components/OpportunitiesHomeSection';
 import { basvuruSonucMesaji } from './lib/basvuru-yolu.mjs';
 import { basvuruKopyasi } from './lib/basvuru-kopyasi.mjs';
 import { aramaTeriminiOku, aramaAdresi } from './lib/arama-url.mjs';
-import { AdminOpportunitiesView, AdminOpportunityCreate } from './components/AdminOpportunitiesView';
-import { BursDogrulamaMasasi } from './components/BursDogrulamaMasasi';
-import { AdminInstagramView } from './components/AdminInstagramView';
-import { AdminDiscoverForm, AdminDiscoverView } from './components/AdminDiscoverView';
 /*
-  Bu ikisi bilerek gecikmeli DEĞİL: /araclar, /araclar/* ve /isveren
-  ön render edilen adresler. React kabı temizlediği için gecikmeli
-  yüklemede parça inene kadar ekran boş kalıyor — yani ön render'ın
-  kazandırdığı şeyi geri vermiş oluyoruz.
+  ARTIK GECİKMELİ — ÖN RENDER YEDEĞİ SAYESİNDE
+
+  Bu ekranlar önce bilerek gecikmesiz tutuluyordu: /araclar, /bolum/*,
+  /rehber/* ön render edilen adresler ve React kabı temizlediği için
+  parça inene kadar ekran boş kalıyordu.
+
+  `lib/onrender-yedek` o engeli kaldırdı: ön render edilen HTML React
+  devreye girmeden kopyalanıyor ve parça beklenirken `Suspense` yedeği
+  olarak geri çiziliyor. Ekran boşalmıyor, ama `bolumler.ts` (205 KB) ve
+  rehber gövdeleri (≈310 KB) ana paketten çıkıyor.
 */
-import { EmployerGuide } from './components/EmployerGuide';
-import {
-  AracHub,
-  NetHesaplama,
-  SiralamaTahmini,
-  StajUcretiHesaplama,
-  StajGunuHesaplama,
-} from './components/Araclar';
 import { listingSlug, idPrefixFromSlug } from './lib/slug';
-import confetti from 'canvas-confetti';
+import { konfetiAt } from './lib/konfeti';
 import { CheckCircle2 } from 'lucide-react';
 import { SAYFA_GENISLIGI } from './lib/duzen';
 
@@ -102,6 +79,125 @@ import { SAYFA_GENISLIGI } from './lib/duzen';
   Ana sayfanın ilan listesi (MatchedInternshipsView), üst çubuk, rehber ve
   bölüm sayfaları bilerek gecikmeli DEĞİL: onlar zaten ilk ekranda.
 */
+/* --- Belge sayfaları: ön render edilmiş, yedeği var, parçaları ayrı --- */
+
+const GuideHub = React.lazy(() =>
+  import('./components/GuidePages').then((m) => ({ default: m.GuideHub }))
+);
+const GuidePage = React.lazy(() =>
+  import('./components/GuidePages').then((m) => ({ default: m.GuidePage }))
+);
+/*
+  Bölüm rehberleri TEK parçada değil: `BolumPage` kendi içinde
+  `src/data/bolumler.ts` kaydını gecikmeli okuyor, böylece /bolum/<slug>
+  yalnız kendi içeriğini indiriyor.
+*/
+const BolumHub = React.lazy(() =>
+  import('./components/BolumPages').then((m) => ({ default: m.BolumHub }))
+);
+const BolumPage = React.lazy(() =>
+  import('./components/BolumPages').then((m) => ({ default: m.BolumPage }))
+);
+const EmployerGuide = React.lazy(() =>
+  import('./components/EmployerGuide').then((m) => ({ default: m.EmployerGuide }))
+);
+const AracHub = React.lazy(() =>
+  import('./components/Araclar').then((m) => ({ default: m.AracHub }))
+);
+const NetHesaplama = React.lazy(() =>
+  import('./components/Araclar').then((m) => ({ default: m.NetHesaplama }))
+);
+const SiralamaTahmini = React.lazy(() =>
+  import('./components/Araclar').then((m) => ({ default: m.SiralamaTahmini }))
+);
+const StajUcretiHesaplama = React.lazy(() =>
+  import('./components/Araclar').then((m) => ({ default: m.StajUcretiHesaplama }))
+);
+const StajGunuHesaplama = React.lazy(() =>
+  import('./components/Araclar').then((m) => ({ default: m.StajGunuHesaplama }))
+);
+
+/* --- Rota ve pencere gövdeleri: yalnız açıldıklarında iniyorlar --- */
+
+const LegalPage = React.lazy(() =>
+  import('./components/LegalPage').then((m) => ({ default: m.LegalPage }))
+);
+const ListingPage = React.lazy(() =>
+  import('./components/ListingPage').then((m) => ({ default: m.ListingPage }))
+);
+const BasvuruSablonu = React.lazy(() =>
+  import('./components/BasvuruSablonu').then((m) => ({ default: m.BasvuruSablonu }))
+);
+const SifreYenile = React.lazy(() =>
+  import('./components/SifreYenile').then((m) => ({ default: m.SifreYenile }))
+);
+const ProfilTamamla = React.lazy(() =>
+  import('./components/ProfilTamamla').then((m) => ({ default: m.ProfilTamamla }))
+);
+const SosyalProfilSayfasi = React.lazy(() =>
+  import('./components/sosyal/SosyalProfilSayfasi').then((m) => ({ default: m.SosyalProfilSayfasi }))
+);
+const TopluluklarSayfasi = React.lazy(() =>
+  import('./components/sosyal/TopluluklarSayfasi').then((m) => ({ default: m.TopluluklarSayfasi }))
+);
+const BaglantilarSayfasi = React.lazy(() =>
+  import('./components/sosyal/BaglantilarSayfasi').then((m) => ({ default: m.BaglantilarSayfasi }))
+);
+const BolumTalepleri = React.lazy(() =>
+  import('./components/yonetim/BolumTalepleri').then((m) => ({ default: m.BolumTalepleri }))
+);
+const StajProgramlariSayfasi = React.lazy(() =>
+  import('./components/StajProgramlari').then((m) => ({ default: m.StajProgramlariSayfasi }))
+);
+const IsverenGirisi = React.lazy(() =>
+  import('./components/IsverenGirisi').then((m) => ({ default: m.IsverenGirisi }))
+);
+const SirketPaneli = React.lazy(() =>
+  import('./sirket/SirketPaneli').then((m) => ({ default: m.SirketPaneli }))
+);
+const DunyaGecisi = React.lazy(() =>
+  import('./sirket/DunyaGecisi').then((m) => ({ default: m.DunyaGecisi }))
+);
+const KariyerMerkezleriSayfasi = React.lazy(() =>
+  import('./components/KariyerMerkezleri').then((m) => ({ default: m.KariyerMerkezleriSayfasi }))
+);
+const OpportunitiesPage = React.lazy(() =>
+  import('./components/OpportunitiesPage').then((m) => ({ default: m.OpportunitiesPage }))
+);
+const BurslarKesfetPage = React.lazy(() =>
+  import('./components/BurslarKesfetPage').then((m) => ({ default: m.BurslarKesfetPage }))
+);
+const IsverenLanding = React.lazy(() =>
+  import('./components/IsverenLanding').then((m) => ({ default: m.IsverenLanding }))
+);
+const OpportunityDetailPage = React.lazy(() =>
+  import('./components/OpportunityDetailPage').then((m) => ({ default: m.OpportunityDetailPage }))
+);
+const AdminOpportunitiesView = React.lazy(() =>
+  import('./components/AdminOpportunitiesView').then((m) => ({ default: m.AdminOpportunitiesView }))
+);
+const AdminOpportunityCreate = React.lazy(() =>
+  import('./components/AdminOpportunitiesView').then((m) => ({ default: m.AdminOpportunityCreate }))
+);
+const BursDogrulamaMasasi = React.lazy(() =>
+  import('./components/BursDogrulamaMasasi').then((m) => ({ default: m.BursDogrulamaMasasi }))
+);
+const AdminInstagramView = React.lazy(() =>
+  import('./components/AdminInstagramView').then((m) => ({ default: m.AdminInstagramView }))
+);
+const AdminDiscoverForm = React.lazy(() =>
+  import('./components/AdminDiscoverView').then((m) => ({ default: m.AdminDiscoverForm }))
+);
+const AdminDiscoverView = React.lazy(() =>
+  import('./components/AdminDiscoverView').then((m) => ({ default: m.AdminDiscoverView }))
+);
+const InternshipDetailModal = React.lazy(() =>
+  import('./components/InternshipDetailModal').then((m) => ({ default: m.InternshipDetailModal }))
+);
+const ApplyDialog = React.lazy(() =>
+  import('./components/ApplyDialog').then((m) => ({ default: m.ApplyDialog }))
+);
+
 const StudentProfileView = React.lazy(() =>
   import('./components/StudentProfileView').then((m) => ({ default: m.StudentProfileView }))
 );
@@ -1051,7 +1147,7 @@ export default function App() {
     setApplications((prev) => [created, ...prev]);
     setApplyTarget(null);
 
-    confetti({ particleCount: 60, spread: 60, origin: { y: 0.7 } });
+    void konfetiAt({ particleCount: 60, spread: 60, origin: { y: 0.7 } });
 
     /*
       Mesaj, gerçekte ne olduğunu söylüyor. Önce dış ilanlarda "şirkete
@@ -1316,7 +1412,22 @@ export default function App() {
     düğmeleri durumu değiştiriyor ama ekranda hiçbir şey açılmıyordu —
     ölçüldü, iki sayfada da tıklama sessizce kayboluyordu.
   */
-  const girisModali = (
+  /*
+    PENCERE KAPALIYKEN AĞACA HİÇ KURULMUYOR.
+
+    `AuthModal` gecikmeli bir parça (42 KB kaynak) ve burada koşulsuz
+    çiziliyordu: `isOpen={false}` ile bile React parçayı indirmek için
+    beklemek zorunda kalıyordu, yani siteye giren herkes giriş
+    penceresinin inmesini bekliyordu. Bileşen kapalıyken zaten `null`
+    dönüyor (`if (!isOpen) return null`) ve kip her açılışta
+    `initialMode`'a çekiliyor — koşullu kurulum davranışı değiştirmiyor.
+
+    Kendi `Suspense` sınırı da şart: sınır olmasaydı bekleme en
+    yukarıdaki sınıra çıkar ve pencere açılırken tüm sayfa yerine ön
+    render kopyası çizilirdi.
+  */
+  const girisModali = !isAuthModalOpen ? null : (
+    <Suspense fallback={null}>
     <AuthModal
       isOpen={isAuthModalOpen}
       onClose={() => setIsAuthModalOpen(false)}
@@ -1329,10 +1440,12 @@ export default function App() {
       baglam={authBaglam}
       oauthDonusYolu={authDonusYolu ?? undefined}
     />
+    </Suspense>
   );
 
   /* Eksik ad penceresi: oturum açık her sayfada çizilebilmeli. */
   const adPenceresi = adSoruluyor ? (
+    <Suspense fallback={null}>
     <ProfilTamamla
       isveren={authBaglam === 'isveren'}
       onKapat={() => setAdSoruluyor(false)}
@@ -1342,6 +1455,7 @@ export default function App() {
         showToast(`Hoş geldin, ${ad}!`);
       }}
     />
+    </Suspense>
   ) : null;
 
   /*
@@ -1378,6 +1492,7 @@ export default function App() {
    * olsaydı, aynı ekran iki adreste iki farklı hizada başlardı.
    */
   const anaAlanSinifi = `flex-1 ${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-8`;
+
 
   /**
    * BAŞVURU TAKİBİ — KENDİ EKRANI
@@ -2403,7 +2518,16 @@ export default function App() {
         )}
       </main>
 
-      {/* Modals */}
+      {/*
+        Pencereler (modal) kendi `Suspense` sınırında.
+
+        Üçü de gecikmeli parça. Sınır olmasaydı bir pencere açılırken
+        bekleme en yukarıdaki sınıra çıkar ve React tüm sayfayı ön render
+        kopyasıyla değiştirirdi — kullanıcı pencereyi açarken sayfanın
+        yok olduğunu görürdü. Burada bekleme sessiz: pencere iner inmez
+        açılıyor, arkadaki sayfa yerinde duruyor.
+      */}
+      <Suspense fallback={null}>
       {selectedListingDetail && (
         <InternshipDetailModal
           listing={selectedListingDetail.listing}
@@ -2440,6 +2564,7 @@ export default function App() {
           onEarnBadge={handleEarnBadge}
         />
       )}
+      </Suspense>
 
       {/* Authentication Modal (Giriş Yap / Kayıt Ol) */}
       {girisModali}
