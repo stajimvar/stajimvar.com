@@ -28,9 +28,24 @@ on:
         default: "resmi"
         type: choice
         options: ["kariyer-html", "kariyer-html-yayinla", "envanter", "cozum", "resmi", "linkedin", "linkedin-kesif-yaz", "linkedin-teshis", "kesif"]
-  # ZAMANLAYICI KAPALI (11 Eylül 2026): Keşfet navigasyondan kaldırıldı,
-  # kayıtlar arşivlendi (20260926120000). Yeni içe aktarım yayımlanmaz;
-  # elle çalıştırma (workflow_dispatch) inceleme için duruyor.
+  schedule:
+    # Günde bir. Keşif kaynakları saatlik değişmiyor; saatlik çekmek
+    # kaynağa gereksiz yük bindirmek olurdu.
+    - cron: "35 5 * * *"
+
+# KEŞİF ≠ KEŞFET — ZAMANLAYICI BİR KEZ YANLIŞLIKLA KAPATILDI
+#
+# 67f56ed'de bu iş akışının zamanlayıcısı "Keşfet navigasyondan
+# kaldırıldı" gerekçesiyle kapatıldı. Gerekçe bu dosya için YANLIŞTI:
+# burası İŞ İLANI keşif radarı (Brave→ATS, LinkedIn sinyali,
+# Kariyer.net) ve kapanan Keşfet bölümüyle — kültür etkinlikleri —
+# hiçbir ilişkisi yok. Yalnız isim benzerliği yüzünden elendi.
+#
+# Kapatılması gereken tek iş akışı `kesfet-import.yml`'di; o
+# `discover_events` tablosunu besliyor ve kapalı kalıyor.
+#
+# Buraya dokunmadan önce: bu dosya `job_discovery_signals`'a yazıyor,
+# Keşfet'e değil.
 
 permissions:
   contents: read
