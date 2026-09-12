@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, ImagePlus, Users } from 'lucide-react';
+import { Bell, ImagePlus, Search, Users, X } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import {
   akisiGetir,
@@ -13,6 +13,7 @@ import {
 } from '../../lib/queries/sosyal';
 import { AkisKarti } from './AkisKarti';
 import { ProfilFotografi } from './ProfilFotografi';
+import { KullaniciAramaSonuclari } from './KullaniciArama';
 
 /**
  * /agim — bağlantılarının ve alanının akışı.
@@ -69,6 +70,18 @@ export const AgimSayfasi: React.FC<Props> = ({
   const [bekleyenIstek, setBekleyenIstek] = React.useState(0);
   const [begeniler, setBegeniler] = React.useState<Map<string, BegeniDurumu>>(new Map());
   const [kayitlilar, setKayitlilar] = React.useState<Set<string>>(new Set());
+  /*
+    ARAMA BAŞLIKTA BİR SİMGE, KUTU DEĞİL.
+
+    Telefonda sitenin büyük üst çubuğu bu sayfada gizli, yani oradaki
+    arama kutusu da yok. Kutuyu doğrudan başlığa koymak markayı ve dört
+    simgeyi sıkıştırırdı; simge açılıp altında tam genişlikte bir alan
+    veriyor. Sonuçları çizen bileşen üst çubuktakiyle AYNI
+    (`KullaniciAramaSonuclari`) — ikinci bir arama arayüzü yazmak, aynı
+    sorgunun iki farklı sonuç listesi demek olurdu.
+  */
+  const [aramaAcik, setAramaAcik] = React.useState(false);
+  const [arama, setArama] = React.useState('');
 
   React.useEffect(() => {
     if (!oturumHazir || !kullaniciId) return;
@@ -154,6 +167,23 @@ export const AgimSayfasi: React.FC<Props> = ({
         <ImagePlus aria-hidden className="h-6 w-6" />
       </button>
 
+      <button
+        type="button"
+        onClick={() => {
+          setAramaAcik((a) => !a);
+          if (aramaAcik) setArama('');
+        }}
+        aria-label={aramaAcik ? 'Aramayı kapat' : 'Kişi ara'}
+        aria-expanded={aramaAcik}
+        className={IKON}
+      >
+        {aramaAcik ? (
+          <X aria-hidden className="h-6 w-6" />
+        ) : (
+          <Search aria-hidden className="h-6 w-6" />
+        )}
+      </button>
+
       {/*
         Ortada akışın adı değil MARKA duruyor.
 
@@ -194,6 +224,44 @@ export const AgimSayfasi: React.FC<Props> = ({
       </button>
     </header>
   );
+
+  /* Arama alanı başlığın ALTINDA, tam genişlikte; başlık sıkışmıyor. */
+  const aramaAlani = aramaAcik ? (
+    <div className="border-b border-gray-200 bg-white px-3 py-2.5 lg:hidden">
+      <label className="relative block">
+        <span className="sr-only">Kişi ara</span>
+        <Search
+          aria-hidden
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+        />
+        <input
+          type="search"
+          value={arama}
+          autoFocus
+          onChange={(o) => setArama(o.target.value)}
+          placeholder="Kullanıcı adı ara"
+          className={`h-11 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-500 ${ODAK_HALKASI}`}
+        />
+      </label>
+
+      {/*
+        Sonuçları çizen bileşen üst çubuktakiyle aynı: sorgu üç harften
+        kısaysa istek atmıyor ve "sonuç yok" ile "henüz arama yok"
+        ayrımını kendisi yapıyor.
+      */}
+      <div className="mt-2">
+        <KullaniciAramaSonuclari
+          sorgu={arama}
+          onNavigate={onNavigate}
+          onSecildi={() => {
+            setArama('');
+            setAramaAcik(false);
+          }}
+          gomuluBaslik="Kişiler"
+        />
+      </div>
+    </div>
+  ) : null;
 
   /* ---------------------------------------------------------------- akış */
 
@@ -299,6 +367,7 @@ export const AgimSayfasi: React.FC<Props> = ({
   return (
     <div className="bg-white lg:bg-transparent">
       {baslik}
+      {aramaAlani}
 
       {/*
         MASAÜSTÜ: ortalanmış akış + sağda kendi kimliğin ve bağlantı
