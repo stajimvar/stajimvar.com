@@ -35,8 +35,12 @@ test("alt çubuk sırası İlanlar · Fırsatlar · Ağım · Rehber · Profil; 
   assert.match(ust, /id="nav-tab-opportunities"[\s\S]+id="nav-tab-network"\s+href="\/baglantilar"/);
 });
 
-test("Ağım yalnız /baglantilar'ta yanıyor; /profil/* ve Profil ayrı, her an tek sekme", () => {
-  assert.match(source, /const agimdaMi = \/\^\\\/baglantilar\(\\\/\|\$\)\/\.test\(bulunulanYol\);/);
+test("Ağım /agim ve /baglantilar'ta yanıyor; /profil/* ve Profil ayrı, her an tek sekme", () => {
+  /*
+    Ağım artık akışa (`/agim`) gidiyor; `/baglantilar` o akışın bağlantı
+    ekranı ve sekme orada da yanmaya devam ediyor — iki adres tek sekme.
+  */
+  assert.match(source, /const agimdaMi = \/\^\\\/\(agim\|baglantilar\)\(\\\/\|\$\)\/\.test\(bulunulanYol\);/);
   /* Ağım'da Profil sönük: sekme durumu 'profile' kalsa bile adres eziyor. */
   assert.match(source, /const profildeMi = cvEkranindaMi \|\| \(!rehberdeMi && !kurumsalSayfada && !agimdaMi && activeTab === 'profile'\)/);
   assert.match(source, /aria-label="Ağım"\s*aria-current=\{agimdaMi \? 'page' : undefined\}/);

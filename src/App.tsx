@@ -140,6 +140,9 @@ const SosyalProfilSayfasi = React.lazy(() =>
 const TopluluklarSayfasi = React.lazy(() =>
   import('./components/sosyal/TopluluklarSayfasi').then((m) => ({ default: m.TopluluklarSayfasi }))
 );
+const AgimSayfasi = React.lazy(() =>
+  import('./components/sosyal/AgimSayfasi').then((m) => ({ default: m.AgimSayfasi }))
+);
 const BaglantilarSayfasi = React.lazy(() =>
   import('./components/sosyal/BaglantilarSayfasi').then((m) => ({ default: m.BaglantilarSayfasi }))
 );
@@ -2052,7 +2055,35 @@ export default function App() {
     taşıyor. Yetki kapısı sunucuda: `connections` politikası satırları
     yalnız tarafına veriyor.
   */
-  if (temizYol === '/baglantilar') {
+  /*
+    /agim — sosyal akış.
+
+    Zemin `/cv` ve profille aynı: telefonda beyaz yüzey, `sm:` üstünde
+    gri. Akış kenardan kenara ve kendi kompakt başlığını çiziyor; bu
+    yüzden sitenin büyük üst çubuğu TELEFONDA gizleniyor (bkz. Header
+    `akistaMi`) — iki başlık üst üste binerdi.
+  */
+  if (temizYol === '/agim') {
+    return icerikSayfasi(
+      <AgimSayfasi
+        kullaniciId={session?.userId ?? null}
+        oturumHazir={sessionReady}
+        onNavigate={navigate}
+        onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+        onPaylasimOlustur={() => navigate('/cv')}
+      />,
+      'bg-white sm:bg-[#F9FAFB]',
+    );
+  }
+
+  /*
+    /agim/baglantilar — üç bölüm (bağlantılar, gelen, gönderilen).
+
+    Aynı bileşen `/baglantilar` adresinde de duruyor: eski adres canlıda
+    paylaşılmış olabilir ve kırmak, çalışan bir bağlantıyı 404'e
+    düşürmek olurdu.
+  */
+  if (temizYol === '/agim/baglantilar' || temizYol === '/baglantilar') {
     return icerikSayfasi(
       <BaglantilarSayfasi
         kullaniciId={session?.userId ?? null}

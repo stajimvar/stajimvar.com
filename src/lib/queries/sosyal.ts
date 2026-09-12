@@ -2098,3 +2098,161 @@ export async function sosyalTopluluktanAyril(sektorId: string): Promise<void> {
   const { error } = await db.rpc('sosyal_topluluktan_ayril', { p_sector_id: sektorId });
   if (error) throw toplulukHatasi(error);
 }
+
+/* ====================================================================== */
+/*  AĞIM AKIŞI                                                            */
+/* ====================================================================== */
+
+/**
+ * Akıştaki tek paylaşım: gövde + YAZARIN profili.
+ *
+ * Profil ayrı taşınıyor çünkü `posts` ile `social_profiles` arasında
+ * doğrudan bir yabancı anahtar yok — ikisi de `profiles`e bakıyor, yani
+ * PostgREST gömmesi kurulamıyor (aynı durum `baglantilarimiGetir` için
+ * de geçerli ve orada da iki sorgu var).
+ *
+ * `yazar` null olabiliyor: satır RLS'ten geçmiş ama profil geçmemişse
+ * (araya engel ya da topluluktan ayrılma girmişse) ad UYDURULMUYOR.
+ * Akış o paylaşımı hiç çizmiyor — kimliği belirsiz bir gönderi
+ * göstermek, kime ait olduğunu bilmediğimiz bir şeyi yayımlamak olurdu.
+ */
+export interface AkisPaylasimi extends SosyalPaylasim {
+  yazarId: string;
+  yazar: {
+    kullaniciAdi: string | null;
+    gorunenAd: string | null;
+    sektorAdi: string | null;
+    bolumAdi: string | null;
+    avatarYolu: string | null;
+  };
+}
+
+/** Akışta bir seferde kaç paylaşım okunuyor. */
+export const AKIS_SAYFA_BOYU = 20;
+
+/**
+ * Ağım akışı — bağlantılarının ve alan topluluğunun paylaşımları.
+ *
+ * SÜZGEÇ SUNUCUDA, BURADA DEĞİL
+ * -----------------------------
+ * Sorgu "bütün paylaşımları" istiyor; hangisinin görüneceğine `posts`
+ * okuma politikası karar veriyor (20260925010000): sahibinin kendi
+ * satırı, ya da arşivlenmemiş olup `paylasim_gorunur(id)` diyen satır.
+ * O işlev de aynı sektörde yayımlanmış olmayı, engelsizliği ve kitleye
+ * göre bağlantı şartını kontrol ediyor.
+ *
+ * Yani burada ikinci bir görünürlük kuralı YAZILMIYOR. Yazılsaydı iki
+ * tanım zamanla ayrışır ve istemci tarafı gevşek kalırsa kullanıcı,
+ * sunucunun ona vermeyi kabul ettiği ama göstermek istemediğimiz bir
+ * satırı görürdü — ya da tersi, sunucunun verdiği satır sessizce
+ * kaybolurdu.
+ *
+ * TASLAK VE ARŞİV DIŞARIDA: `durum = 'hazir'` ve `archived_at is null`
+ * süzgeçleri kendi paylaşımların için gerekiyor — politika onları sana
+ * açıyor ama akış "yayında olan" listesi.
+ */
+export async function akisiGetir(
+  secenek: { limit?: number; oncesi?: string | null } = {},
+): Promise<AkisPaylasimi[]> {
+  const limit = secenek.limit ?? AKIS_SAYFA_BOYU;
+
+  let sorgu = db
+    .from('posts')
+    .select(`author_id, ${PAYLASIM_ALANLARI}`)
+    .eq('durum', 'hazir')
+    .is('archived_at', null)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  /* Sayfalama zaman imleciyle: offset, araya yeni paylaşım girince kayar. */
+  if (secenek.oncesi) sorgu = sorgu.lt('created_at', secenek.oncesi);
+
+  const { data, error } = await sorgu;
+  if (error) hata('Akış alınamadı', error);
+
+  const satirlar = data ?? [];
+  if (!satirlar.length) return [];
+
+  /* Yazar profilleri tek çağrıda; her satır için ayrı istek atmıyoruz. */
+  const yazarIdler = [...new Set(satirlar.map((s: any) => String(s.author_id)))];
+  const { data: profiller, error: profilHatasi } = await db
+    .from('social_profiles')
+    .select(
+      'profile_id, username, gorunen_ad, avatar_path, departments ( ad ), sectors!social_profiles_sector_id_fkey ( ad )',
+    )
+    .in('profile_id', yazarIdler);
+  if (profilHatasi) hata('Akıştaki profiller alınamadı', profilHatasi);
+
+  const profilHaritasi = new Map<string, AkisPaylasimi['yazar']>();
+  for (const p of profiller ?? []) {
+    profilHaritasi.set(String((p as any).profile_id), {
+      kullaniciAdi: (p as any).username ?? null,
+      gorunenAd: (p as any).gorunen_ad ?? null,
+      sektorAdi: (p as any).sectors?.ad ?? null,
+      bolumAdi: (p as any).departments?.ad ?? null,
+      avatarYolu: (p as any).avatar_path ?? null,
+    });
+  }
+
+  return satirlar
+    .map((satir: any) => {
+      const yazar = profilHaritasi.get(String(satir.author_id));
+      if (!yazar) return null;
+      return { ...paylasimSatiriCevir(satir), yazarId: String(satir.author_id), yazar };
+    })
+    .filter((x): x is AkisPaylasimi => x !== null);
+}
+
+/** Önerilen kişi: aynı alandan, henüz bağlantın olmayan yayımlanmış profil. */
+export interface OnerilenKisi {
+  profilId: string;
+  kullaniciAdi: string | null;
+  gorunenAd: string | null;
+  bolumAdi: string | null;
+  avatarYolu: string | null;
+}
+
+/**
+ * Alanındaki, henüz bağlantın olmayan kişiler.
+ *
+ * Görünürlük yine sunucudan: `social_profiles` okuma politikası
+ * ("ayni sektordeki yayimlanmis profil okunur", 20260921020000) zaten
+ * yalnız aynı sektördeki yayımlanmış profilleri veriyor. Burada
+ * yapılan tek şey, ZATEN BAĞLANTIN OLANLARI çıkarmak — onları
+ * "tanıyor olabilirsin" diye önermek yanlış olurdu.
+ *
+ * Kendi satırın da çıkıyor: politika onu her hâlükârda veriyor.
+ */
+export async function onerilenKisileriGetir(
+  kullaniciId: string,
+  limit = 12,
+): Promise<OnerilenKisi[]> {
+  if (!UUID_DESENI.test(kullaniciId)) {
+    throw new SosyalHata('Geçersiz kimlik.', 'gecersiz-kimlik');
+  }
+
+  const { data, error } = await db
+    .from('social_profiles')
+    .select('profile_id, username, gorunen_ad, avatar_path, departments ( ad )')
+    .eq('yayinda_mi', true)
+    .neq('profile_id', kullaniciId)
+    .limit(limit + 24);
+  if (error) hata('Öneriler alınamadı', error);
+
+  /* Bağlantın olan ya da istek bekleyen kişiler öneriden çıkıyor. */
+  const baglantilar = await baglantilarimiGetir(kullaniciId);
+  const disarida = new Set(
+    [...baglantilar.kabul, ...baglantilar.gelen, ...baglantilar.giden].map((b) => b.kisiId),
+  );
+
+  return (data ?? [])
+    .filter((p: any) => !disarida.has(String(p.profile_id)))
+    .slice(0, limit)
+    .map((p: any) => ({
+      profilId: String(p.profile_id),
+      kullaniciAdi: p.username ?? null,
+      gorunenAd: p.gorunen_ad ?? null,
+      bolumAdi: p.departments?.ad ?? null,
+      avatarYolu: p.avatar_path ?? null,
+    }));
+}

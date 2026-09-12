@@ -91,6 +91,14 @@ const UYGULAMA_ADRESLERI = new Set([
   */
   '/baglantilar',
   /*
+    /agim ve /agim/baglantilar: sosyal akış ve bağlantı yönetimi. Ön
+    render edilmiyorlar (içerik kişiye göre değişiyor), bu yüzden
+    doğrudan açıldıklarında kabuğu buradan alıyorlar — liste bu ikisini
+    tanımasaydı adres 404 dönerdi.
+  */
+  '/agim',
+  '/agim/baglantilar',
+  /*
     /topluluklar: alan toplulukları listesi ve tek topluluk sayfası.
     /profil ile aynı gerekçe — kişiye ve üyeliğe bağlı içerik, ön render
     edilmiyor. Önek eşleşmesi aşağıda `uygulamaninMi` içinde; buradaki

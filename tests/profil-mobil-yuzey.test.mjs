@@ -37,10 +37,15 @@ const kabuk = oku('src/components/SayfaKabugu.tsx');
 
 test('iki profil ekranı da aynı zemini kullanıyor: telefonda beyaz, sm üstünde gri', () => {
   const zemin = /'bg-white sm:bg-\[#F9FAFB\]'/g;
+  /*
+    Üç ekran: `/cv`, ziyaretçi profili ve `/agim` akışı. Üçü de aynı
+    yüzey mantığında — telefonda beyaz, geniş ekranda gri — ve aynı
+    dizeyi paylaşıyorlar ki biri değişince öteki ikisi geride kalmasın.
+  */
   assert.equal(
     [...app.matchAll(zemin)].length,
-    2,
-    '/cv ve ziyaretçi profili aynı zemin dizesini paylaşmalı',
+    3,
+    '/cv, ziyaretçi profili ve akış aynı zemin dizesini paylaşmalı',
   );
 });
 
