@@ -202,7 +202,14 @@ export const BildirimDugmesi: React.FC<{
     }`}
     style={style}
   >
-    <Bell className="h-5 w-5" />
+    {/*
+      ZİL 24 PİKSEL — akıştaki (`/agim`) zille aynı.
+
+      Burada 20 pikseldi ve aynı simge sitenin iki yerinde iki farklı
+      ölçüde duruyordu. Dokunma hedefi DEĞİŞMEDİ: düğme 44 piksel
+      kalıyor, büyüyen yalnız görünen simge.
+    */}
+    <Bell className="h-6 w-6" />
     <BildirimRozeti sayi={okunmamis} renk={renk} />
   </button>
 );
