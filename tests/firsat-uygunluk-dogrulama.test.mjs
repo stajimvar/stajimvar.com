@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { opportunityFit, personalizationReadyCount } from '../src/lib/firsat-degerlendirme.mjs';
+import { firsatRozetleri } from '../src/lib/firsat-kategori.mjs';
 
 /*
   UNKNOWN ≠ VERIFIED · DOLU DİZİ ≠ DOĞRULANMIŞ UYGUNLUK
@@ -93,6 +94,55 @@ test('şehir damgası dolu + [Ankara] → yalnız Ankara eşleşir', () => {
   const f = firsat({ ...HEPSI_DOGRULANMIS, cities: ['Ankara'] });
   assert.equal(opportunityFit(f, OGRENCI).durum, 'uygun_olabilir');
   assert.equal(opportunityFit(f, { ...OGRENCI, city: 'İzmir' }).durum, 'sart_uymuyor');
+});
+
+/*
+  ŞEHİR İSTEĞE BAĞLI OLDU — ÜÇ KURAL
+
+  `student_profiles.city` 20260926130000 göçüyle geldi ve İSTEĞE BAĞLI.
+  Önceki hâlde `StudentProfile`ta ikamet ili diye bir alan hiç yoktu:
+  şehir boyutu her gerçek kullanıcıda BILINMIYOR dönüyordu, dolayısıyla
+  "Sana uygun" rozeti ve "Bana uygun" süzgeci hiçbir zaman sonuç
+  vermiyordu. Aşağıdaki üç test o boyutun yeni sözleşmesini bağlıyor.
+*/
+
+test('çevrim içi fırsatta şehir aranmıyor: damgasız da olsa boyut UYGUN', () => {
+  /*
+    `event_mode = 'online'` kayıtta fiziksel bir yer yok; doğrulanacak
+    şehir de yok. Damga şartı burada tutulsaydı çevrim içi etkinlikler
+    yalnızca bu yüzden kişiselleştirmenin dışında kalırdı.
+  */
+  const f = firsat({
+    departmentsVerifiedAt: DAMGA,
+    educationLevelsVerifiedAt: DAMGA,
+    eventMode: 'online',
+  });
+  assert.equal(personalizationReadyCount([f]), 1, 'çevrim içi kayıt hazır sayılmıyor');
+  const sehirsiz = opportunityFit(f, { gradeLevel: 'Lisans', department: 'Hukuk' });
+  assert.equal(sehirsiz.durum, 'uygun_olabilir', 'çevrim içi kayıtta şehir aranıyor');
+  assert.equal(sehirsiz.kesin, true);
+});
+
+test('şehir şartı + profilde şehir yok → belirsiz; rozet yok, kayıt düşmüyor', () => {
+  const f = firsat({ ...HEPSI_DOGRULANMIS, cities: ['Ankara'] });
+  const sonuc = opportunityFit(f, { gradeLevel: 'Lisans', department: 'Hukuk' });
+
+  assert.equal(sonuc.durum, 'bilinmiyor');
+  assert.notEqual(sonuc.durum, 'sart_uymuyor', 'eksik profil şart ihlali sayılıyor');
+  assert.equal(sonuc.kesin, false);
+  assert.deepEqual(firsatRozetleri(f, { fit: sonuc, simdi: new Date(2026, 8, 11) }), []);
+  /* Not hangi alanın eksik olduğunu söylüyor; "bölüm, sınıf ve şehir" demiyor. */
+  assert.match(String(sonuc.not), /şehir/);
+  assert.doesNotMatch(String(sonuc.not), /bölüm|sınıf/);
+});
+
+test('şehir şartı + eşleşmeyen şehir → uygun değil, rozet yok', () => {
+  const f = firsat({ ...HEPSI_DOGRULANMIS, cities: ['Ankara'] });
+  const sonuc = opportunityFit(f, { ...OGRENCI, city: 'Şanlıurfa' });
+
+  assert.equal(sonuc.durum, 'sart_uymuyor');
+  assert.equal(sonuc.kesin, true, 'doğrulanmış şart "kesin" sayılmıyor');
+  assert.deepEqual(firsatRozetleri(f, { fit: sonuc, simdi: new Date(2026, 8, 11) }), []);
 });
 
 /* ------------------------------------------------- boyutların birliği */

@@ -1,5 +1,14 @@
+/*
+  KEŞFET ARŞİVDE — YALNIZ YÖNETİM YÜZEYİ KALDI
+
+  Bölüm 11 Eylül 2026'da navigasyondan kalktı; 163 satır silinmedi,
+  durumu 'archived' oldu (göç 20260926120000). Halka açık okuyucular
+  (katalog, coğrafi küme, slug ile ayrıntı) sayfalarıyla birlikte
+  silindi: sunucu politikası yalnız 'published' veriyor, yani hepsi boş
+  dönerdi. Burada kalan tipler ve çağrılar AdminDiscoverView'ün ihtiyacı:
+  arşivi görmek, düzenlemek, silmek.
+*/
 import { supabase } from "./supabase";
-import { requestDiscoverCatalog } from './kesfet-catalog.mjs';
 
 export const DISCOVER_CATEGORIES = {
   exhibition: "Sergi",
@@ -184,114 +193,6 @@ export const mapDiscoverEvent = (r: any): DiscoverEvent => ({
   reviewRequired: Boolean(r.review_required),
   reviewReason: r.review_reason || undefined,
 });
-export async function fetchDiscoverEvents() {
-  const { data, error } = await (supabase.rpc as any)(
-    "list_active_discover_events",
-    { p_start: null, p_end: null },
-  );
-  if (error) throw new Error(error.message);
-  return (data || []).map(mapDiscoverEvent);
-}
-/**
- * Coğrafi keşif için etkinlik kümesi.
- *
- * NEDEN AYRI BİR ÇAĞRI
- * --------------------
- * Küre "bu ülkede kaç etkinlik var" diye bir TOPLAM gösteriyor; katalog
- * RPC'si ise sayfa döndürüyor. Sayfadan toplam çıkarılamaz. Sunucuda
- * coğrafi toplama yapan bir RPC olmadığı için toplama burada, aynı
- * kaynaktan okunan kümenin üzerinde yapılıyor.
- *
- * Tarih aralığı yine SUNUCUDA süzülüyor: katalog RPC'si de aynı
- * `list_active_discover_events(p_start, p_end)` çağrısını sarmalıyor, yani
- * iki taraf birebir aynı satır kümesinden besleniyor. Fonksiyon zaten
- * "yayında + bitmemiş" garantisini taşıyor.
- */
-export async function fetchDiscoverGeoEvents(
-  range: { start: Date; end: Date } | null,
-  signal?: AbortSignal,
-): Promise<DiscoverEvent[]> {
-  let request = (supabase.rpc as any)("list_active_discover_events", {
-    p_start: range ? range.start.toISOString() : null,
-    p_end: range ? range.end.toISOString() : null,
-  });
-  if (signal) request = request.abortSignal(signal);
-  const { data, error } = await request;
-  if (error) throw new Error(error.message);
-  if (!Array.isArray(data)) {
-    throw new Error("Coğrafi etkinlik listesi doğrulanamadı. Lütfen yeniden deneyin.");
-  }
-  return data.map(mapDiscoverEvent);
-}
-
-export interface DiscoverCatalogCursor { value: string; id: string }
-export interface DiscoverCatalogOptions {
-  city?: string;
-  category?: string;
-  period?: 'all' | 'today' | 'week' | 'month';
-  free?: boolean;
-  discount?: boolean;
-  query?: string;
-  sort?: 'newest' | 'upcoming';
-  cursor?: DiscoverCatalogCursor | null;
-  snapshot?: string | null;
-  signal?: AbortSignal;
-}
-export interface DiscoverCatalogFacets {
-  cities: string[];
-  /**
-   * Şehir adı → etkinlik sayısı. Şehir şeridi dairenin İÇİNE bu sayıyı
-   * yazıyor. `cities` YERİNE geçmiyor, yanına geliyor: filtre panelindeki
-   * açılır menü adların kendisini okumaya devam ediyor.
-   */
-  cityCounts: Record<string, number>;
-  categories: Record<string, number>;
-  free: number;
-  discount: number;
-}
-export interface DiscoverCatalogPage {
-  events: DiscoverEvent[];
-  total: number;
-  hasMore: boolean;
-  nextCursor: DiscoverCatalogCursor | null;
-  snapshot: string;
-  facets: DiscoverCatalogFacets;
-}
-export async function fetchDiscoverCatalog(options: DiscoverCatalogOptions = {}): Promise<DiscoverCatalogPage> {
-  const data = await requestDiscoverCatalog(supabase, options);
-  return {
-    ...data,
-    events: data.events.map(mapDiscoverEvent),
-    /*
-      `cityCounts` yoksa boş nesne. Alan sunucuda canlı, ama aynı oturumda
-      migration'dan önce alınmış bir dönüş önbelleği ya da eski bir yanıt
-      hâlâ elde olabilir; o durumda şerit sessizce çizilmesin, arayüz
-      çökmesin.
-    */
-    facets: { ...data.facets, cityCounts: data.facets.cityCounts ?? {} },
-  };
-}
-export async function fetchDiscoverEventBySlug(slug: string) {
-  const { data, error } = await (supabase.rpc as any)(
-    "get_discover_event_by_slug",
-    { p_slug: slug },
-  );
-  if (error) throw new Error(error.message);
-  const rows = Array.isArray(data) ? data : data ? [data] : [];
-  if (!rows.length) return null;
-  const mapped = rows.map(mapDiscoverEvent);
-  return {
-    ...mapped[0],
-    occurrences: mapped.map((event) => ({
-      id: event.occurrenceId || event.sourceOccurrenceId || event.startsAt,
-      sourceOccurrenceId: event.sourceOccurrenceId,
-      startsAt: event.startsAt,
-      endsAt: event.endsAt,
-      timePrecision: event.timePrecision,
-      status: event.occurrenceStatus || "scheduled",
-    })),
-  };
-}
 export async function fetchAdminDiscoverEvents() {
   const { data, error } = await (supabase.from("discover_events" as any) as any)
     .select(COLUMNS)

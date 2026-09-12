@@ -1,5 +1,5 @@
 import { calendarDay, daysUntilDeadline, opportunityStatus } from './opportunity-domain.mjs';
-import { boyutEslesmesi, kisisellestirmeyeHazir } from './burs-uygunluk.mjs';
+import { DURUM, boyutEslesmesi, kisisellestirmeyeHazir, kisitDurumu } from './burs-uygunluk.mjs';
 
 /**
  * Fırsat değerlendirme: tutar, profile uygunluk, gruplama.
@@ -204,12 +204,28 @@ export function opportunityFit(item, ogrenci) {
 
   /*
     Öğrencinin kendi bilgisi eksikse boyut BILINMIYOR dönüyor. Bu bir
-    şart ihlali değil ama "uygun" demeye de yetmiyor.
+    şart ihlali DEĞİL: kayıt listede kalıyor, yalnızca "Sana uygun"
+    rozetini alamıyor.
+
+    Not artık hangi alanın eksik olduğunu tek tek söylüyor. Eski cümle üç
+    alanı birden sayıyordu ("bölüm, sınıf ve şehir dolu olursa") ve
+    ikisini doldurmuş bir öğrenciye hâlâ üçünü de eksikmiş gibi
+    gösteriyordu — ne yapacağını söylemeyen bir uyarı.
+
+    Buraya gelindiğinde üç boyutun damgası da var (kisisellestirmeyeHazir
+    yukarıda geçildi); dolayısıyla BILINMIYOR'un tek sebebi öğrencinin
+    kendi profilindeki boşluk.
   */
-  if (Object.values(eslesmeler).some((e) => e === 'BILINMIYOR')) {
+  const EKSIK_ALAN_ADI = { bolum: 'bölüm', seviye: 'sınıf', sehir: 'şehir' };
+  const eksikler = Object.keys(eslesmeler)
+    .filter((b) => eslesmeler[b] === 'BILINMIYOR')
+    .map((b) => EKSIK_ALAN_ADI[b]);
+  if (eksikler.length) {
+    const alanlar =
+      eksikler.length === 1 ? eksikler[0] : `${eksikler.slice(0, -1).join(', ')} ve ${eksikler.at(-1)}`;
     return {
       durum: 'bilinmiyor',
-      not: 'Profilinde bölüm, sınıf ve şehir dolu olursa bu fırsatı eşleştirebiliriz.',
+      not: `Bu fırsatın ${alanlar} şartı var; profilinde ${alanlar} yazmıyor.`,
       kesin: false,
     };
   }
@@ -226,6 +242,18 @@ export function opportunityFit(item, ogrenci) {
  */
 export function personalizationReadyCount(items = []) {
   return items.filter((item) => kisisellestirmeyeHazir(item || {})).length;
+}
+
+/**
+ * Listede kaç kaydın DOĞRULANMIŞ ve DOLU bir şehir şartı var?
+ *
+ * Profilinde ikamet ili yazmayan öğrenciye "şehir yaz" demenin ancak bu
+ * sayı sıfırdan büyükken bir karşılığı oluyor. Sıfırken şehir yazmak o
+ * ekranda hiçbir sonucu değiştirmezdi; olmayan bir kazanç vaat etmemek
+ * için çağrı da çizilmiyor. Sayı gerçek listeden sayılıyor.
+ */
+export function sehirSartliSayisi(items = []) {
+  return (items || []).filter((item) => kisitDurumu(item || {}, 'sehir') === DURUM.KISITLI).length;
 }
 
 /* ------------------------------------------------------------------ */
@@ -298,6 +326,99 @@ export function closingSoon(items, gun = 1, now = new Date()) {
     if (opportunityStatus(item, now) !== 'acik') return false;
     const kalan = opportunityDaysLeft(item, now);
     return kalan != null && kalan <= gun;
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/*  SIRALAMA                                                           */
+/* ------------------------------------------------------------------ */
+
+/*
+  VARSAYILAN SIRA: UYGUN → YAKLAŞAN → YENİ → DİĞER
+
+  Liste tek bir alana göre diziliyordu: `application_deadline` artan,
+  tarihi olmayanlar sona. Sonucu şuydu — öğrencinin profiline uyan, üç
+  boyutu da doğrulanmış bir burs, hiç uymayan ama iki gün sonra kapanacak
+  bir çağrının ALTINDA kalıyordu. Tarih bir aciliyet ölçüsü, alaka ölçüsü
+  değil.
+
+  Dört kova var ve kovalar arası sıra kesin:
+
+    0  uygun      opportunityFit → uygun_olabilir VE kesin
+    1  yaklaşan   son başvuru tarihi biliniyor
+    2  yeni       tarihi yok ama yayın tarihi var
+    3  diğer      ikisi de yok
+
+  Kova içinde: 0 ve 1 son tarihe göre artan (yakın olan üstte), 2 yayın
+  tarihine göre azalan (yeni olan üstte), 3 başlığa göre alfabetik —
+  belirsiz bir sıra her yüklemede listeyi karıştırırdı.
+
+  UYDURMA ORAN YOK
+  ----------------
+  Kova 0'a girmek için `kesin` şart: üç kısıt boyutunun da kurumun kendi
+  sayfasından doğrulanmış olması gerekiyor (bkz. burs-uygunluk.mjs).
+  Profili eksik öğrencide ya da doğrulanmamış kayıtta bu kova boş kalıyor
+  ve sıra sessizce "yaklaşan"dan başlıyor; kimseye "%84 uyum" denmiyor.
+*/
+const SIRA_SONU = Number.MAX_SAFE_INTEGER;
+
+/* Boş değer `calendarDay` içinde epoch'a düşüyor; önce ayıklanıyor. */
+const gunDegeri = (deger) => (deger ? calendarDay(deger) : null);
+
+function varsayilanKova(item, ogrenci) {
+  if (ogrenci) {
+    const fit = opportunityFit(item, ogrenci);
+    if (fit.durum === 'uygun_olabilir' && fit.kesin) return 0;
+  }
+  if (gunDegeri(item?.applicationDeadline) != null) return 1;
+  if (gunDegeri(item?.publishedAt) != null) return 2;
+  return 3;
+}
+
+/**
+ * @param {object[]} items
+ * @param {{ogrenci?: object|null, mod?: ''|'son-tarih'|'yeni'}} secenek
+ *   `mod` boşsa yukarıdaki dört kovalı varsayılan sıra. 'son-tarih' ve
+ *   'yeni' kullanıcının AÇIKÇA seçtiği sıralar; uygunluk onları ezmiyor,
+ *   yoksa seçim yaptığı hâlde liste değişmemiş görünürdü.
+ */
+export function firsatSirala(items = [], { ogrenci = null, mod = '' } = {}) {
+  const liste = [...items];
+  const baslik = (item) => String(item?.title ?? '');
+
+  if (mod === 'son-tarih') {
+    return liste.sort((a, b) => {
+      const x = gunDegeri(a.applicationDeadline) ?? SIRA_SONU;
+      const y = gunDegeri(b.applicationDeadline) ?? SIRA_SONU;
+      return x - y || baslik(a).localeCompare(baslik(b), 'tr');
+    });
+  }
+  if (mod === 'yeni') {
+    return liste.sort((a, b) => {
+      const x = gunDegeri(a.publishedAt) ?? -SIRA_SONU;
+      const y = gunDegeri(b.publishedAt) ?? -SIRA_SONU;
+      return y - x || baslik(a).localeCompare(baslik(b), 'tr');
+    });
+  }
+
+  /* Kova bir kez hesaplanıyor: `opportunityFit` her karşılaştırmada
+     yeniden çağrılsaydı n·log(n) yerine n²·log(n) iş çıkardı. */
+  const kovalar = new Map(liste.map((item) => [item, varsayilanKova(item, ogrenci)]));
+  return liste.sort((a, b) => {
+    const fark = kovalar.get(a) - kovalar.get(b);
+    if (fark !== 0) return fark;
+    const kova = kovalar.get(a);
+    if (kova <= 1) {
+      const x = gunDegeri(a.applicationDeadline) ?? SIRA_SONU;
+      const y = gunDegeri(b.applicationDeadline) ?? SIRA_SONU;
+      if (x !== y) return x - y;
+    }
+    if (kova === 2) {
+      const x = gunDegeri(a.publishedAt) ?? -SIRA_SONU;
+      const y = gunDegeri(b.publishedAt) ?? -SIRA_SONU;
+      if (x !== y) return y - x;
+    }
+    return baslik(a).localeCompare(baslik(b), 'tr');
   });
 }
 

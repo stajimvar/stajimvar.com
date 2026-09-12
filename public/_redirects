@@ -1,3 +1,13 @@
+# ESKİ BÖLÜM: /kesfet
+#
+# Keşfet (kültür etkinlikleri) 11 Eylül 2026'da navigasyondan kaldırıldı;
+# 163 kayıt silinmedi, arşivlendi (20260926120000). Paylaşılmış /kesfet
+# bağlantıları boş ekran yerine Fırsatlar'a insin: Keşfet'in yerini alan
+# alan orası. Tek tek etkinlik adresleri de aynı yere — arşivlenmiş bir
+# etkinliğin sayfası yok.
+/kesfet   /firsatlar   301
+/kesfet/*   /firsatlar   301
+
 # ESKİ ADRES: /ilanlar
 #
 # İlan listesi ana sayfada duruyor; /ilanlar diye ayrı bir sayfa hiç

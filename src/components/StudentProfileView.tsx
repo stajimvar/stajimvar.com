@@ -730,11 +730,38 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     department: student.department,
     gradeLevel: student.gradeLevel as string,
     gpa: student.gpa ? String(student.gpa) : '',
+    city: student.city ?? '',
     phone: student.phone ?? '',
     bio: student.bio ?? '',
   });
   const [taslak, setTaslak] = useState(bosTaslak);
   const [kaydedildi, setKaydedildi] = useState(false);
+  /*
+    ŞEHİR KAPALI LİSTE
+
+    Kolonun biçim kısıtı (20260926130000_ogrenci_sehri) "İstanbul"u kabul
+    edip "istanbul", "ANKARA", "İstanbul (Avrupa)" yazımlarını reddediyor;
+    serbest metin gönderilse istek sunucuda düşer ve kullanıcı sebebini
+    göremezdi. Eşleştirme de birebir eşitlikle çalışıyor (fırsatın
+    `cities` listesi de aynı sözlükten) — "Izmir" yazımı hiçbir fırsata
+    uymaz, üstelik sessizce. Onun için kaydetmeden önce değerin TR_CITIES
+    içinde birebir bulunması şart.
+  */
+  const [sehirHatasi, setSehirHatasi] = useState(false);
+
+  /*
+    AD BOŞKEN UYARIYI SAYFA YAZIYOR, TARAYICI DEĞİL
+
+    Ad alanı `required` idi ve kayıt sırasında ad sorulmadığı için hesabın
+    adı boş başlıyor. Tarayıcı doğrulaması bu yüzden formu gönderilmeden
+    durduruyordu: ölçümde "Kaydet"e basınca submit olayı 0 kez tetikleniyor,
+    odak `#ad-soyad`a kaçıyor ve `student_profiles`a tek istek gitmiyordu.
+    Şehir doğrulaması da bu yüzden hiç çalışamıyordu — o kontrol
+    `kisiselKaydet`in İÇİNDE, yani form gönderilmeyince kullanıcı "Listeden
+    bir il seç" uyarısını da göremiyordu. Form artık `noValidate`: doğrulama
+    tek yerde toplandı ve uyarı sayfanın kendi diliyle yazılıyor.
+  */
+  const [adHatasi, setAdHatasi] = useState(false);
 
   /*
     Taslak yalnızca bölüm açılırken tazelenir; açıkken yazdıklarının üzerine
@@ -744,18 +771,37 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     if (acikBolum !== 'kisisel') {
       setTaslak(bosTaslak());
       setKaydedildi(false);
+      setSehirHatasi(false);
+      setAdHatasi(false);
     }
     bolumeGit('kisisel');
   };
 
   const kisiselKaydet = (e: React.FormEvent) => {
     e.preventDefault();
+
+    /* Ad zorunlu: boş kaydedilirse profil ve CV adsız kalır. */
+    if (!taslak.fullName.trim()) {
+      setAdHatasi(true);
+      return;
+    }
+    setAdHatasi(false);
+
+    /* Boş bırakmak serbest; yazıldıysa listedeki ilin kendisi olmalı. */
+    const sehir = taslak.city.trim();
+    if (sehir && !TR_CITIES.includes(sehir)) {
+      setSehirHatasi(true);
+      return;
+    }
+    setSehirHatasi(false);
+
     onUpdateProfile({
       fullName: taslak.fullName.trim() || student.fullName,
       university: taslak.university.trim(),
       department: taslak.department.trim(),
       gradeLevel: taslak.gradeLevel as StudentProfile['gradeLevel'],
       gpa: taslak.gpa ? parseFloat(taslak.gpa) : 0,
+      city: sehir,
       phone: taslak.phone.trim(),
       bio: taslak.bio.trim(),
     });
@@ -1216,17 +1262,31 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         acik={acikBolum === 'kisisel'}
         onToggle={kisiselAc}
       >
-        <form onSubmit={kisiselKaydet} className="space-y-3">
+        {/*
+          `noValidate`: zorunluluk kontrolü `kisiselKaydet`te. Tarayıcıya
+          bırakıldığında gönderim olayı hiç doğmuyor, dolayısıyla şehir
+          uyarısı da çizilemiyordu.
+        */}
+        <form onSubmit={kisiselKaydet} noValidate className="space-y-3">
           <div>
             <label className={etiketClass} htmlFor="ad-soyad">Ad Soyad</label>
             <input
               id="ad-soyad"
               type="text"
               required
+              aria-invalid={adHatasi || undefined}
               value={taslak.fullName}
-              onChange={(e) => setTaslak({ ...taslak, fullName: e.target.value })}
+              onChange={(e) => {
+                setTaslak({ ...taslak, fullName: e.target.value });
+                if (adHatasi) setAdHatasi(false);
+              }}
               className={alanClass}
             />
+            {adHatasi && (
+              <p role="alert" className="mt-1 text-[11px] font-semibold text-rose-700">
+                Ad Soyad boş olamaz: profilinde ve CV'nde bu ad görünüyor.
+              </p>
+            )}
             {taslak.fullName.trim() &&
               adYazimi(taslak.fullName) !== taslak.fullName.trim() && (
                 <button
@@ -1264,6 +1324,33 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
               placeholder="Ön lisans ve lisans programları"
               className={alanClass}
             />
+          </div>
+
+          <div>
+            <label className={etiketClass} htmlFor="sehir">
+              Şehir <span className="font-normal text-gray-400">(isteğe bağlı)</span>
+            </label>
+            <AutocompleteField
+              id="sehir"
+              value={taslak.city}
+              onChange={(v) => {
+                setTaslak({ ...taslak, city: v });
+                if (sehirHatasi) setSehirHatasi(false);
+              }}
+              options={TR_CITIES}
+              placeholder="Yazmaya başla, listeden seç"
+              className={alanClass}
+            />
+            {sehirHatasi ? (
+              <p role="alert" className="mt-1 text-[11px] font-semibold text-rose-700">
+                Listeden bir il seç: yazdığın değer il listesinde yok, bu hâliyle kaydedilemiyor.
+              </p>
+            ) : (
+              <p className="mt-1 text-[11px] text-gray-600">
+                Nerede oturduğunu soruyoruz, nerede çalışmak istediğini değil. Şehir şartı olan
+                burslarda eşleştirme için kullanılıyor.
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

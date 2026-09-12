@@ -1,134 +1,159 @@
 import React from 'react';
 import {
-  AlarmClock,
+  Building2,
   CalendarDays,
   CheckCircle2,
   ChevronRight,
   ExternalLink,
-  Filter,
   Globe2,
   GraduationCap,
   HandCoins,
-  HeartHandshake,
-  Landmark,
   Layers,
   MapPin,
-  SlidersHorizontal,
   Search,
+  SlidersHorizontal,
   Sparkles,
   Trophy,
-  Users,
   X,
 } from 'lucide-react';
 import type { StudentProfile } from '../types';
 import { ListingLogo } from './ListingLogo';
 import { ZamanTupu } from './ZamanTupu';
-import { BursUyumRozeti } from './BursCakismaMatrisi';
 import { DisBaglanti, FiltreBlogu, SecenekSatiri } from '../ui';
 import { KonuSeridi } from './KonuSeridi';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { CTA_BIRINCIL, CTA_ORTAK } from '../lib/kart-cta';
+import { ODAK_HALKASI } from '../lib/renk-token';
+import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 import {
+  fetchExpiredOpportunities,
   fetchOpportunities,
   fetchSavedOpportunityIds,
   type Opportunity,
-  type OpportunityType,
 } from '../lib/opportunities';
 import {
-  isExpiredOpportunity,
+  aktifFirsatSuzgecleri,
   opportunityCta,
-  opportunityStatus,
   opportunityTypeLabel,
   readOpportunityFilters,
   serializeOpportunityFilters,
-  OPPORTUNITY_STATUS_LABELS,
-  OPPORTUNITY_TYPE_LABELS,
+  BOS_FIRSAT_SUZGECI,
 } from '../lib/opportunity-domain.mjs';
 import {
-  ACILIYET_SINIFLARI,
-  closingSoon,
-  closingSoonLabel,
-  deadlineTone,
-  groupOpportunities,
+  firsatKategorisi,
+  firsatRozetleri,
+  FIRSAT_KATEGORILERI,
+  KATEGORI_ETIKETLERI,
+} from '../lib/firsat-kategori.mjs';
+import {
+  firsatSirala,
   opportunityAmount,
   opportunityCalendar,
-  opportunityDaysLeft,
   opportunityFit,
   personalizationReadyCount,
+  sehirSartliSayisi,
 } from '../lib/firsat-degerlendirme.mjs';
 import { kisaTarihMetni } from '../lib/tarih.mjs';
 
 /**
- * Öğrenci Fırsatları.
+ * Fırsatlar — burs, öğrenci programı, yarışma ve kariyer etkinliği.
  *
- * SAYAÇ İLE LİSTE AYNI ŞEYİ SAYIYOR
- * ---------------------------------
- * Üstte "21 başvurusu devam eden" yazarken listede 68 fırsat
- * gösteriliyordu: iki sayı aynı ekranda birbiriyle çelişiyordu. Sebebi
- * sayacın yalnızca "Açık" olanları, listenin ise süresi dolmamış her şeyi
- * göstermesiydi. Artık ikisi de aynı gruplardan geliyor ve sayaçlar
- * kaçının açık, kaçının yakında olduğunu ayrı ayrı söylüyor.
+ * TÜR DEĞİL KATEGORİ
+ * ------------------
+ * Süzgeç tek tek TÜR sunuyordu (`scholarship`, `student_support`,
+ * `youth_program` …). Göç dört tür daha açınca (hackathon, teknofest,
+ * career_day, career_fair) liste on bire çıktı ve hiçbiri öğrencinin
+ * kafasındaki soruya karşılık gelmiyordu: kimse "student_support mu
+ * youth_program mu" diye aramıyor.
  *
- * SÜRESİ DOLANLAR VARSAYILANDA YOK
- * --------------------------------
- * Kapanmış bir başvuru öğrencinin yapabileceği bir şey değil. Listeden
- * çıkarıldı ama silinmedi: altta "süresi dolanları göster" bağlantısı
- * duruyor, çünkü geçen yılın takvimi gelecek yılın tahmini için işe
- * yarıyor.
+ * Şeritte dört kategori var ve haritası TEK YERDE — lib/firsat-kategori
+ * (göçteki `public.firsat_kategori()` ile birebir). KYK beşinci daire
+ * değil: bir kurum, bir kategori değil. Burslar seçiliyken "Kaynak: KYK /
+ * Diğer kurumlar" süzgeci çıkıyor.
  *
- * MOBİLDE FİLTRELER PANELDE
- * -------------------------
- * Filtre kutusu telefonda neredeyse bütün ekranı kaplıyor, ilk fırsatı
- * ekranın dışına itiyordu. Telefonda yalnızca arama satırı ve "Filtreler"
- * düğmesi duruyor; ayrıntılar alttan açılan panelde. Geniş ekranda yer
- * sorunu yok, orada sol sütunda açık duruyor.
+ * ESKİ ADRESLER KOPYA SAYFA DEĞİL
+ * -------------------------------
+ * /burslar, /kyk, /yurtdisi-firsatlari, /yarismalar, /firsat-takvimi,
+ * /bana-uygun ve /kaydedilen-firsatlar hâlâ çalışıyor ve indekslenmiş
+ * durumda. Her biri AYNI bileşeni farklı bir başlangıç durumuyla açıyor
+ * (`ROTA_BASLANGICI`); ayrı bileşen yazmak aynı hatanın yedi kopyasını
+ * üretirdi.
+ *
+ * SÜRESİ DOLANLAR AYRI SORGUDA
+ * ----------------------------
+ * Ana liste sunucudan `status=published` + son tarihi geçmemiş olarak
+ * geliyor (lib/opportunities). Arşiv `status=expired` ile AYRI çağrılıyor
+ * ve yalnızca kullanıcı açtığında; kapanmış bir başvuru, açık listede
+ * öğrencinin yapabileceği bir şey değil.
  */
 
-const categoryPath: Record<string, OpportunityType | ''> = {
-  '/burslar': 'scholarship',
-  '/kyk': 'kyk',
-  '/yurtdisi-firsatlari': 'international',
-  '/yarismalar': 'competition',
+/*
+  ESKİ ADRES → BAŞLANGIÇ DURUMU
+
+  Adres bir görünüm, süzgeç bir durum. Bu tablo ikisini bağlıyor: adrese
+  girildiğinde süzgeçler o hâle kuruluyor. Yedi ayrı bileşen yazmak aynı
+  düzeltmeyi yedi kez yapmayı gerektirirdi.
+*/
+const ROTA_BASLANGICI: Record<string, Partial<typeof BOS_FIRSAT_SUZGECI>> = {
+  '/firsatlar': {},
+  '/burslar': { kategori: 'burslar' },
+  '/kyk': { kategori: 'burslar', kaynak: 'kyk' },
+  '/yurtdisi-firsatlari': { kategori: 'programlar', bolge: 'yurtdisi' },
+  '/yarismalar': { kategori: 'yarismalar' },
+  '/firsat-takvimi': { takvim: true },
+  '/bana-uygun': { banaUygun: true },
+  '/kaydedilen-firsatlar': { kaydedilen: true },
+};
+
+/* Belge başlığı görünüme göre; paylaşılan bağlantı ve sekme adı için. */
+const ROTA_BASLIGI: Record<string, string> = {
+  '/burslar': 'Burslar',
+  '/kyk': 'KYK bursları ve kredileri',
+  '/yurtdisi-firsatlari': 'Yurt dışı öğrenci programları',
+  '/yarismalar': 'Öğrenci yarışmaları',
+  '/firsat-takvimi': 'Fırsat takvimi',
+  '/bana-uygun': 'Sana uygun fırsatlar',
+  '/kaydedilen-firsatlar': 'Kaydettiğin fırsatlar',
 };
 
 /*
-  Tarih biçimi `lib/tarih` üzerinden. Burada elle yazılmış biçimlendirici
-  saat dilimi vermiyordu: `application_deadline` saatsiz bir takvim günü
-  ve `new Date('2026-09-06')` UTC gece yarısı demek — UTC'nin batısındaki
+  KATEGORİ → İKON
+
+  Şerit rehberdekiyle aynı bileşen (KonuSeridi); değişen tek şey ikon
+  haritası ve sayının yanındaki ad. Anahtarlar `FIRSAT_KATEGORILERI`.
+*/
+const KATEGORI_IKONLARI: Record<string, React.ComponentType<{ className?: string }>> = {
+  burslar: HandCoins,
+  programlar: GraduationCap,
+  yarismalar: Trophy,
+  'kariyer-etkinlikleri': Building2,
+};
+
+/*
+  Tarih biçimi `lib/tarih` üzerinden. Elle yazılmış biçimlendirici saat
+  dilimi vermiyordu: `application_deadline` saatsiz bir takvim günü ve
+  `new Date('2026-09-06')` UTC gece yarısı demek — UTC'nin batısındaki
   okuyucuda 5 Eylül görünüyordu. Son başvuruda bu bir gün kaybettirir.
 */
 const kisaTarih = (value?: string) => kisaTarihMetni(value, { yil: false });
 
-/*
-  Kalan süre metni ortak yardımcıdan geliyor (deadlineLabel). Burada ayrı
-  bir kopyası duruyordu ve aynı fırsat kartta "Bugün son gün", üst uyarıda
-  "Yarına kadar açık", ana sayfada "Yarın sona eriyor" diyordu.
-*/
+const kucult = (metin: string) => String(metin ?? '').toLocaleLowerCase('tr-TR');
 
-/*
-  FIRSAT TÜRÜ → İKON
+/**
+ * Kayıt yurt dışına mı işaret ediyor?
+ *
+ * Ölçüt DAR ve açık: ülke alanında Türkiye dışında bir ülke yazıyor mu.
+ * "Ülke alanı boş = Türkiye" bir varsayım olurdu; bu yüzden süzgeç boş
+ * alanlı kayıtlar hakkında bir iddia taşımıyor, onları yalnızca "Yurt
+ * dışı" tarafına KOYMUYOR.
+ */
+const yurtDisiMi = (item: Opportunity) =>
+  (item.countries || []).some((ulke) => {
+    const ad = kucult(ulke);
+    return ad !== '' && ad !== 'türkiye' && ad !== 'turkey' && ad !== 'tr';
+  });
 
-  Şerit rehber ve Keşfet'tekiyle aynı bileşen (KonuSeridi); değişen tek
-  şey ikon haritası ve sayının yanındaki ad. Anahtarlar
-  `OPPORTUNITY_TYPE_LABELS` içindeki tür kimlikleri.
-*/
-const TUR_IKONLARI: Record<string, React.ComponentType<{ className?: string }>> = {
-  scholarship: HandCoins,
-  international: Globe2,
-  kyk: Landmark,
-  competition: Trophy,
-  education: GraduationCap,
-  student_support: HeartHandshake,
-  youth_program: Users,
-};
-
-type Sekme = 'uygun' | 'tumu' | 'takvim';
-
-/*
-  `Nokta` ve `SayacSatiri` silindi: tek kullanıcıları olan ince sayaç
-  satırı sağ sütundaki karta dönüştü. Kullanılmayan bileşen bırakmak,
-  sonradan bakanı "bir yerde çiziliyor" diye aratır.
-*/
+type Suzgec = typeof BOS_FIRSAT_SUZGECI;
 
 export const OpportunitiesPage: React.FC<{
   path: string;
@@ -141,144 +166,34 @@ export const OpportunitiesPage: React.FC<{
   const [saved, setSaved] = React.useState<string[]>([]);
   const [state, setState] = React.useState<'loading' | 'ready' | 'error'>('loading');
   const [panelAcik, setPanelAcik] = React.useState(false);
-  /* Süresi dolanlar varsayılanda gizli; isteyen açıyor. Durum adreste. */
-  /*
-    TAKVİMİ AÇIKLANMAYANLAR DA VARSAYILANDA GİZLİ
+  /* "Yeniden dene" bunu artırıyor; yükleme etkisi buna bağlı. */
+  const [deneme, setDeneme] = React.useState(0);
 
-    Ölçüldü: 68 fırsatın 21'i açık, 17'si yakında, 30'unun takvimi henüz
-    açıklanmamış. Üstteki sayaç "21 açık" derken listenin 68 göstermesi
-    bundandı — iki sayı aynı ekranda çelişiyordu.
+  /* Arşiv AYRI sorgu ve ayrı durum: ana liste onu beklemeden çiziliyor. */
+  const [arsivKayitlari, setArsivKayitlari] = React.useState<Opportunity[]>([]);
+  const [arsivDurumu, setArsivDurumu] = React.useState<'kapali' | 'loading' | 'ready' | 'error'>(
+    'kapali'
+  );
+  /* Arşivin kendi "yeniden dene" sayacı: ana listeyi boşuna çekmiyor. */
+  const [arsivDenemesi, setArsivDenemesi] = React.useState(0);
 
-    Varsayılan liste artık sayaçlarla aynı kümeyi gösteriyor. Takvimi
-    açıklanmayanlar silinmiyor: tek satırlık bir bağlantıyla açılıyorlar,
-    çünkü "bu kurum burs veriyor mu" sorusunun cevabı onlarda.
-  */
-  const [filters, setFilters] = React.useState(() => ({
+  const [filters, setFilters] = React.useState<Suzgec>(() => ({
+    ...BOS_FIRSAT_SUZGECI,
     ...readOpportunityFilters(window.location.search),
-    type: categoryPath[path] || readOpportunityFilters(window.location.search).type,
+    ...(ROTA_BASLANGICI[path] ?? {}),
   }));
 
-  /*
-    GÖRÜNÜM DURUMLARI DA ADRESTE
-
-    Arşiv ve "takvimi açıklanmayanlar" sayfa içi durumdu: sayfa yenilendiğinde
-    kayboluyor ve o görünüm paylaşılamıyordu. Süzgeçlerle aynı yere taşındı.
-  */
-  const arsivGoster = filters.arsiv;
-  /*
-    KATEGORİ ROTASINDA TAKVİMSİZLER GİZLENMİYOR
-
-    Varsayılan süzgeç, başvuru takvimi açıklanmamış kayıtları listeden
-    çıkarıyor: genel /firsatlar akışında doğru, çünkü tarihi olan fırsat
-    daha eyleme dönük.
-
-    Ama /kyk ve /yarismalar gibi TÜRE ÖZEL rotalarda aynı kural sayfayı
-    tamamen boşaltıyordu. Ölçüldü: veritabanında 2 yayında KYK ve 1 yarışma
-    kaydı var, üçünün de tarihi yok — sayfa "0 sonuç, bu filtrelere uyan
-    fırsat yok" diyordu. Kullanıcı o kategoriye BİLEREK gelmiş; elde ne
-    varsa göstermek, boş ekran göstermekten iyi.
-  */
-  const kategoriRotasi = Boolean(categoryPath[path]);
-  const takvimsizGoster = filters.takvimsiz || kategoriRotasi;
-  /*
-    `setArsivGoster` kaldırıldı: tek kullanıcısı olan "Süresi dolanlar"
-    düğmesi süzgeç paneline taşındı ve panel `set({ arsiv, takvimsiz })`
-    ile doğrudan yazıyor. Aynı kural orada da geçerli — arşiv açılınca
-    takvimsiz kapanıyor.
-  */
-  /*
-    `setTakvimsizGoster` kaldırıldı: anahtar süzgeç paneline taşınınca
-    panel `set({ takvimsiz })` ile doğrudan yazıyor. Okunmayan bir
-    yardımcıyı bırakmak, sonradan bakanı "başka bir yerden de
-    değiştiriliyor" diye yanıltır.
-  */
+  const set = (patch: Partial<Suzgec>) => setFilters((mevcut) => ({ ...mevcut, ...patch }));
 
   /*
-    KİŞİSELLEŞTİRMEYE HAZIR KAYIT SAYISI
+    ADRES DEĞİŞİNCE BAŞLANGIÇ DURUMU YENİDEN KURULUYOR
 
-    "Sana uygun" ancak doğrulanmış kısıtla anlamlı. Sayı sıfırsa ortada
-    kişiselleştirme yok; sekmeyi aktif bir süzgeç gibi göstermek olmayan
-    bir yetenek sunmak olurdu. Sayı veriye bağlı: doğrulama masasından
-    ilk kayıt damgalandığı anda sekme kendiliğinden geri geliyor.
-  */
-  const hazirSayisi = React.useMemo(() => personalizationReadyCount(items), [items]);
-
-  const savedOnly = path === '/kaydedilen-firsatlar';
-  const sekme: Sekme = path === '/bana-uygun' ? 'uygun' : path === '/firsat-takvimi' ? 'takvim' : 'tumu';
-
-  /*
-    SEKME VURGUSU ADRESE BAKIYOR, `sekme` DEĞİŞKENİNE DEĞİL
-
-    `sekme` yalnızca üç değer alıyor ve /yurtdisi-firsatlari onun için
-    'tumu' — o yüzden yurtdışı sekmesi kendi sayfasındayken sönük
-    kalırdı. Vurgu artık doğrudan adresi karşılaştırıyor.
-
-    Sekmesi olmayan kategori adresleri (/burslar, /kyk, /yarismalar) için
-    "Tüm fırsatlar" yanıyor: kullanıcı hâlâ o listenin bir alt kümesinde
-    ve hiçbir sekmenin yanmaması "buradan çıktın" hissi verirdi.
-  */
-  const SEKME_YOLLARI = ['/bana-uygun', '/yurtdisi-firsatlari', '/firsat-takvimi'];
-  const sekmeAktif = (yol: string) =>
-    path === yol || (yol === '/firsatlar' && !SEKME_YOLLARI.includes(path));
-
-  React.useEffect(() => {
-    document.title = `${
-      sekme === 'uygun' ? 'Sana uygun fırsatlar' : sekme === 'takvim' ? 'Fırsat takvimi' : 'Öğrenci Fırsatları'
-    } | StajımVar`;
-    const canonical =
-      document.querySelector('link[rel="canonical"]') || Object.assign(document.createElement('link'), { rel: 'canonical' });
-    canonical.setAttribute('href', `${window.location.origin}${path}`);
-    document.head.appendChild(canonical);
-  }, [path, sekme]);
-
-  React.useEffect(() => {
-    let cancelled = false;
-    Promise.all([fetchOpportunities(), userId ? fetchSavedOpportunityIds(userId) : Promise.resolve([])])
-      .then(([rows, ids]) => {
-        if (!cancelled) {
-          setItems(rows);
-          setSaved(ids);
-          setState('ready');
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setState('error');
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
-
-  React.useEffect(() => {
-    /*
-      Adres yalnızca /firsatlar için yazılıyordu: kategori sayfalarında ve
-      takvimde arama adrese hiç düşmüyor, sayfa yenilenince kayboluyordu.
-      Artık bütün fırsat görünümlerinde yazılıyor.
-    */
-    const query = serializeOpportunityFilters(filters);
-    if (window.location.search !== query) {
-      window.history.replaceState({}, '', `${path}${query}`);
-    }
-  }, [filters, path]);
-
-  const set = (patch: Partial<typeof filters>) => setFilters((current) => ({ ...current, ...patch }));
-
-  /*
-    KATEGORİ ADRESİ TÜR SÜZGECİNİ SÜRÜYOR
-
-    `filters.type` yalnızca `useState` başlatıcısında adresten okunuyordu
-    (bkz. categoryPath kullanımı). Başlatıcı bir kez çalışıyor; sayfa içi
-    geçişte adres değişiyor ama süzgeç yerinde kalıyordu.
-
-    Sonuç ölçüldü: /yurtdisi-firsatlari adresine geçince adres ve sekme
-    vurgusu değişiyor, LİSTE DEĞİŞMİYORDU — 33 kayıt olduğu gibi
-    kalıyordu. Aynı kırık davranış sağ sütundaki kategori düğmelerinde de
-    vardı (/burslar, /kyk, /yarismalar), yalnızca kimse fark etmemişti
-    çünkü oraya tam sayfa yenilemeyle de gidilebiliyor.
-
-    İlk render atlanıyor: başlatıcı adres ve arama dizesini zaten doğru
-    okudu; burada tekrar yazmak /firsatlar?type=scholarship gibi
-    paylaşılmış bir bağlantının süzgecini silerdi.
+    `useState` başlatıcısı bir kez çalışıyor. Sayfa içi geçişte (/kyk'ye
+    tıklamak) adres değişiyordu ama süzgeç yerinde kalıyordu: adres ve
+    başlık değişiyor, LİSTE DEĞİŞMİYORDU. İlk render atlanıyor, çünkü
+    başlatıcı adresi ve sorgu dizesini zaten doğru okudu — burada yeniden
+    yazmak paylaşılmış bir /firsatlar?kategori=burslar bağlantısının
+    süzgecini silerdi.
   */
   const ilkRender = React.useRef(true);
   React.useEffect(() => {
@@ -286,218 +201,271 @@ export const OpportunitiesPage: React.FC<{
       ilkRender.current = false;
       return;
     }
-    const kategoriTuru = categoryPath[path] || '';
-    if (filters.type !== kategoriTuru) set({ type: kategoriTuru });
-    /* Yalnızca adres değişiminde: süzgeç değişimi bu etkiyi tetiklememeli. */
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setFilters({ ...BOS_FIRSAT_SUZGECI, ...(ROTA_BASLANGICI[path] ?? {}) });
   }, [path]);
 
-  /*
-    DURUM SÜZGECİ
+  /* Süzgeçlerin tek gerçek kaynağı adres: paylaşılabilir ve yenilemeye dayanıklı. */
+  React.useEffect(() => {
+    const sorgu = serializeOpportunityFilters(filters);
+    if (window.location.search !== sorgu) window.history.replaceState({}, '', `${path}${sorgu}`);
+  }, [filters, path]);
 
-    Sayaçların üçü de birer süzgeç: "17 yakında"ya basan kişi o 17'yi
-    görmek istiyor. URL'de yalnızca `open=1` tutuluyor (paylaşılan
-    bağlantılarla uyumlu kalsın diye); "yakında" seçimi sayfa içi bir
-    durum, çünkü kimse "yakında açılacaklar" listesini paylaşmıyor.
-  */
-  const durumSuzgeci = (filters.durum || '') as '' | 'acik' | 'yakinda';
-  const durumSec = (yeni: '' | 'acik' | 'yakinda') =>
-    set({ durum: yeni, openOnly: yeni === 'acik' });
-  const temizle = () =>
-    set({
-      query: '',
-      type: categoryPath[path] || '',
-      level: '',
-      place: '',
-      openOnly: false,
-      durum: '',
-      takvimsiz: false,
-      arsiv: false,
-    });
-
-  /* Aktif filtre sayısı düğmenin üzerinde: panel kapalıyken de görünsün. */
-  const aktifSuzgecSayisi =
-    (filters.type ? 1 : 0) + (filters.level ? 1 : 0) + (filters.place ? 1 : 0) + (durumSuzgeci ? 1 : 0);
-
-  const gruplar = React.useMemo(() => groupOpportunities(items), [items]);
-
-  /*
-    SEÇENEK SAYIMLARI — LİSTEYLE AYNI TABANDAN
-
-    Panel her seçeneğin yanında kaç kayıt olduğunu yazıyor.
-
-    TABAN `items` DEĞİL. İlk yazımda öyleydi ve ölçüldü: panel "KYK 2"
-    diyordu, tıklayınca liste 0 kart gösteriyordu — çünkü o iki kaydın
-    takvimi açıklanmamış ve varsayılan liste onları gizliyor. Sayının
-    tıklanınca tutmadığı bir süzgeç, kullanıcıya olmayan içerik vaat eder;
-    bu projede aynı hata bir kez de sayaç/liste arasında yaşanmış.
-
-    Taban artık listenin kendi tabanı: süresi dolanlar ve (istenmedikçe)
-    takvimi açıklanmayanlar dışarıda. Görünürlük anahtarları açılırsa
-    sayılar da kendiliğinden büyüyor.
-
-    Sayımlar DİĞER süzgeçlerden bağımsız: "Lisans 11" yazısı, tür süzgeci
-    açıkken de 11 kalıyor. Kesişimli sayım seçenekleri birbirine
-    söndürürdü ve kullanıcı neyi neden kaybettiğini anlayamazdı.
-  */
-  const sayimTabani = React.useMemo(() => {
-    let liste = arsivGoster
-      ? items.filter((item) => isExpiredOpportunity(item))
-      : items.filter((item) => !isExpiredOpportunity(item));
-    if (!arsivGoster && !takvimsizGoster && !savedOnly) {
-      liste = liste.filter((item) => opportunityStatus(item) !== 'takvim_bekleniyor');
-    }
-    return liste;
-  }, [items, arsivGoster, takvimsizGoster, savedOnly]);
-
-  const sayimlar = React.useMemo(() => {
-    const tur: Record<string, number> = {};
-    const seviye: Record<string, number> = {};
-    for (const item of sayimTabani) {
-      if (item.opportunityType) tur[item.opportunityType] = (tur[item.opportunityType] || 0) + 1;
-      for (const s of item.educationLevels || []) seviye[s] = (seviye[s] || 0) + 1;
-    }
-    return {
-      tur,
-      seviye,
-      acik: sayimTabani.filter((i) => opportunityStatus(i) === 'acik').length,
-      yakinda: sayimTabani.filter((i) => opportunityStatus(i) === 'yakinda').length,
-    };
-  }, [sayimTabani]);
-  /*
-    ŞERİT İÇİN TÜR LİSTESİ
-
-    Sıra çoktan aza: en çok kayıt taşıyan tür başta duruyor, tıpkı rehber
-    ve Keşfet şeritlerinde olduğu gibi. Kaydı olmayan tür ÇİZİLMİYOR —
-    tıklayınca boş sonuç veren bir daire, az seçenek görmekten daha çok
-    güven kaybettiriyor (aynı kural filtre panelinde de var).
-
-    Sayılar `sayimlar.tur` üzerinden geliyor, yani şerit ile filtre paneli
-    aynı kaynağı okuyor ve ayrışamıyor.
-  */
-  /*
-    LİSTE DARALDI MI?
-
-    Başlıktaki sayı buna bakıyor: daraltma varsa ekrandaki kadarını,
-    yoksa tabanın tamamını yazıyor. Aynı kural Keşfet'te de var.
-  */
-  const listeDaraldi =
-    aktifSuzgecSayisi > 0 || filters.query.trim().length > 0 || savedOnly;
-
-  const seritTurleri = React.useMemo(
+  React.useEffect(
     () =>
-      Object.entries(OPPORTUNITY_TYPE_LABELS)
-        .map(([id, etiket]) => ({ id, etiket: etiket as string, adet: sayimlar.tur[id] ?? 0 }))
-        .filter((tur) => tur.adet > 0)
-        .sort((a, b) => b.adet - a.adet || a.etiket.localeCompare(b.etiket, 'tr')),
-    [sayimlar.tur]
+      sayfaMetaAyarla({
+        baslik: `${ROTA_BASLIGI[path] ?? 'Fırsatlar'} | StajımVar`,
+        aciklama:
+          'Bursları, öğrenci programlarını, yarışmaları ve kariyer etkinliklerini tek listede topluyoruz; her kaydın kaynağı kurumun kendi sayfası.',
+        yol: path,
+      }),
+    [path]
   );
 
-  const yarinKapananlar = React.useMemo(() => closingSoon(items, 1), [items]);
+  React.useEffect(() => {
+    let iptal = false;
+    setState('loading');
+    Promise.all([
+      fetchOpportunities(),
+      userId ? fetchSavedOpportunityIds(userId) : Promise.resolve([]),
+    ])
+      .then(([kayitlar, kimlikler]) => {
+        if (iptal) return;
+        setItems(kayitlar);
+        setSaved(kimlikler);
+        setState('ready');
+      })
+      .catch(() => {
+        if (!iptal) setState('error');
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [userId, deneme]);
 
-  /* Metin ve tür süzgeçleri; durum ve profil ayrı aşamada. */
-  const metneUyar = React.useCallback(
+  /*
+    ARŞİV YALNIZCA AÇILDIĞINDA ÇEKİLİYOR; kapalıyken ağa hiç çıkılmıyor.
+
+    BAĞIMLILIKTA `arsivDurumu` YOK — ve olmamalı. Etkinin ilk işi durumu
+    'loading' yapmaktı; durum bağımlılıkta olduğu için React etkiyi hemen
+    söküp yeniden kuruyor, sökerken de temizlik `iptal = true` diyordu.
+    İkinci kurulumda `arsivDurumu !== 'kapali'` koşulu erken dönüyor ve
+    yeni istek hiç açılmıyordu. Ölçülen sonuç: istek 200 dönüyor, cevap
+    `iptal` yüzünden atılıyor, ekran sonsuza kadar iskelette kalıyor —
+    "Süresi dolanlar" açıkken kart da boş durum da hiç çizilmiyordu.
+    StrictMode'un çift kurulumu aynı kilidi mount anında da üretiyor.
+  */
+  React.useEffect(() => {
+    if (!filters.arsiv) return;
+    let iptal = false;
+    setArsivDurumu('loading');
+    fetchExpiredOpportunities()
+      .then((kayitlar) => {
+        if (iptal) return;
+        setArsivKayitlari(kayitlar);
+        setArsivDurumu('ready');
+      })
+      .catch(() => {
+        if (!iptal) setArsivDurumu('error');
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [filters.arsiv, arsivDenemesi]);
+
+  /*
+    KİŞİSELLEŞTİRMEYE HAZIR KAYIT SAYISI
+
+    "Bana uygun" ancak doğrulanmış kısıtla anlamlı. Sayı sıfırsa ortada
+    kişiselleştirme yok; süzgeci çizmek olmayan bir yetenek sunmak olur.
+    Sayı veriye bağlı: doğrulama masasından ilk kayıt damgalandığı anda
+    süzgeç kendiliğinden geri geliyor.
+  */
+  const hazirSayisi = React.useMemo(() => personalizationReadyCount(items), [items]);
+
+  /*
+    PROFİL EKSİKSE ORAN UYDURULMUYOR
+
+    Eşleştirme üç boyut okuyor: bölüm, eğitim seviyesi ve şehir. Bölüm ya
+    da sınıf boşsa HİÇBİR kayıt eşleşemiyor (burs-uygunluk.mjs); o durumda
+    ekran sebebini söyleyip /cv'ye yönlendiriyor — "%60 uyumlu" gibi
+    hesaplanmamış bir sayı üretmiyor.
+
+    ŞEHİR BU ŞARTA DAHİL DEĞİL: ikamet ili isteğe bağlı ve şehir şartı
+    OLMAYAN fırsatlar onsuz da eşleşiyor. Şehri buraya koymak, ili
+    yazmamış herkesin listesini tümden boşaltırdı. Şehir yalnızca şehir
+    şartlı kayıtlarda "belirsiz" üretiyor; onun çağrısı aşağıda, liste
+    gerçekten boş kaldığında çiziliyor.
+  */
+  const profilEksik = !student || !student.department || !student.gradeLevel;
+
+  const taban = filters.arsiv ? arsivKayitlari : items;
+
+  /*
+    KATILIM BİÇİMİ SÜZGECİ YALNIZCA VERİ VARKEN
+
+    `event_mode` kariyer etkinliklerinde dolu, burs ve programlarda NULL.
+    Listede tek bir dolu kayıt yokken "Yüz yüze / Çevrim içi" seçeneği
+    sunmak, hiçbir zaman sonuç vermeyecek bir denetim çizmek olurdu.
+  */
+  const modVar = React.useMemo(() => taban.some((item) => Boolean(item.eventMode)), [taban]);
+
+  /* Kategori dışındaki bütün süzgeçler. Şerit sayıları bunun üstünde. */
+  const kategoriDisiSuzgec = React.useCallback(
     (item: Opportunity) => {
-      if (savedOnly && !saved.includes(item.id)) return false;
-      if (filters.type && item.opportunityType !== filters.type) return false;
-      if (durumSuzgeci && opportunityStatus(item) !== durumSuzgeci) return false;
-      if (filters.level && !item.educationLevels.includes(filters.level)) return false;
+      if (filters.kaydedilen && !saved.includes(item.id)) return false;
+      if (filters.sonGun) {
+        const gun = gunKaldi(item);
+        if (gun == null || gun > Number(filters.sonGun)) return false;
+      }
       if (
-        filters.place &&
-        ![...item.cities, ...item.countries].some((place) =>
-          place.toLocaleLowerCase('tr-TR').includes(filters.place.toLocaleLowerCase('tr-TR'))
+        filters.sehir &&
+        ![...item.cities, ...item.countries].some((yer) =>
+          kucult(yer).includes(kucult(filters.sehir))
         )
       )
         return false;
+      if (filters.bolge === 'yurtdisi' && !yurtDisiMi(item)) return false;
+      if (filters.bolge === 'turkiye' && yurtDisiMi(item)) return false;
       if (
-        filters.query &&
-        !`${item.title} ${item.organizationName} ${item.shortDescription}`
-          .toLocaleLowerCase('tr-TR')
-          .includes(filters.query.toLocaleLowerCase('tr-TR'))
+        filters.mod === 'yuz-yuze' &&
+        !(item.eventMode === 'in_person' || item.eventMode === 'hybrid')
       )
         return false;
+      if (
+        filters.mod === 'cevrim-ici' &&
+        !(item.eventMode === 'online' || item.eventMode === 'hybrid')
+      )
+        return false;
+      if (filters.banaUygun) {
+        if (!student) return false;
+        const fit = opportunityFit(item, student);
+        if (!(fit.durum === 'uygun_olabilir' && fit.kesin)) return false;
+      }
+      if (filters.query) {
+        const metin = `${item.title} ${item.organizationName} ${item.shortDescription}`;
+        if (!kucult(metin).includes(kucult(filters.query))) return false;
+      }
       return true;
     },
-    [filters, durumSuzgeci, saved, savedOnly]
+    [filters, saved, student]
   );
 
-  const filtered = React.useMemo(() => {
-    let liste = items.filter(metneUyar);
-
-    /*
-      Süresi dolanlar ayrı. Arşiv açıkken YALNIZCA onlar görünüyor: iki
-      kümeyi karıştırmak, "bu hâlâ açık mı" sorusunu her kartta yeniden
-      sordururdu.
-    */
-    liste = arsivGoster
-      ? liste.filter((item) => isExpiredOpportunity(item))
-      : liste.filter((item) => !isExpiredOpportunity(item));
-
-    /* Takvimi açıklanmayanlar yalnızca istenirse. Arşiv görünümünde bu
-       ayrım anlamsız: orada zaten hepsinin tarihi var ve geçmiş. */
-    if (!arsivGoster && !takvimsizGoster && !savedOnly) {
-      liste = liste.filter((item) => opportunityStatus(item) !== 'takvim_bekleniyor');
-    }
-
-    if (sekme === 'uygun' && student) {
-      /*
-        İZİN LİSTESİ, ELEME LİSTESİ DEĞİL
-
-        Önce "şartı uymayanları çıkar" deniyordu. Bu, kısıtları HİÇ
-        doğrulanmamış bir fırsatı da sessizce "sana uygun" sayıyordu —
-        68 kaydın tamamı böyleydi, yani sekme aslında bütün listeyi
-        gösterip adına kişiselleştirme diyordu.
-
-        Artık yalnızca üç boyutu da doğrulanmış VE öğrenciyle eşleşen
-        kayıtlar giriyor. Bilinmeyen bir kayıt burada hiç görünmüyor;
-        "Tüm fırsatlar" sekmesinde duruyor.
-      */
-      liste = liste.filter((item) => {
-        const fit = opportunityFit(item, student);
-        return fit.durum === 'uygun_olabilir' && fit.kesin;
-      });
-    }
-
-    return [...liste].sort((a, b) => (a.applicationDeadline || '9999').localeCompare(b.applicationDeadline || '9999'));
-  }, [items, metneUyar, arsivGoster, takvimsizGoster, savedOnly, sekme, student]);
+  const sayimTabani = React.useMemo(
+    () => taban.filter(kategoriDisiSuzgec),
+    [taban, kategoriDisiSuzgec]
+  );
 
   /*
-    TAKİP ETME İŞLEVİ BURADAN KALKTI
+    ŞERİT SAYILARI GERÇEK VE LİSTEYLE AYNI TABANDAN
 
-    Kartta takip düğmesi kalmadığı için bu sayfada takibi değiştiren bir
-    yol da yok. `saved` listesi duruyor: üstteki "takipte" sayacı ve
-    /kaydedilen-firsatlar süzgeci onu okuyor. Takibi açıp kapatmak detay
-    sayfasının işi (OpportunityDetailPage · kapaktaki yer imi düğmesi).
+    Sayının tıklanınca tutmadığı bir süzgeç, kullanıcıya olmayan içerik
+    vaat eder; bu projede aynı hata bir kez sayaç/liste arasında
+    yaşanmıştı. Taban listenin kendi tabanı: kategori dışındaki bütün
+    süzgeçler uygulanmış hâli.
+
+    Kaydı olmayan kategori ÇİZİLMİYOR — tıklayınca boş sonuç veren bir
+    daire, az seçenek görmekten daha çok güven kaybettiriyor.
   */
+  const kategoriSayimlari = React.useMemo(() => {
+    const sayim: Record<string, number> = {};
+    for (const item of sayimTabani) {
+      const kategori = firsatKategorisi(item.opportunityType);
+      sayim[kategori] = (sayim[kategori] || 0) + 1;
+    }
+    return sayim;
+  }, [sayimTabani]);
 
-  const heading = savedOnly
-    ? 'Takip ettiğin fırsatlar'
-    : sekme === 'takvim'
-      ? 'Fırsat takvimi'
-      : sekme === 'uygun'
-        ? 'Sana uygun fırsatlar'
-        : 'Öğrenci Fırsatları';
+  const seritKategorileri = React.useMemo(
+    () =>
+      (FIRSAT_KATEGORILERI as string[])
+        .map((id) => ({
+          id,
+          etiket: KATEGORI_ETIKETLERI[id] as string,
+          adet: kategoriSayimlari[id] ?? 0,
+        }))
+        .filter((kategori) => kategori.adet > 0),
+    [kategoriSayimlari]
+  );
 
-  const kategoriler: [string, string][] = [
-    ['/firsatlar', 'Tümü'],
-    ['/burslar', 'Burslar'],
-    ['/kyk', 'KYK'],
-    ['/yurtdisi-firsatlari', 'Yurt dışı'],
-    ['/yarismalar', 'Yarışmalar'],
-    ['/kaydedilen-firsatlar', 'Takip ettiklerim'],
-  ];
+  /* Kaynak süzgecinin sayıları da gerçek: Burslar kategorisinin içinden. */
+  const kaynakSayimlari = React.useMemo(() => {
+    const burslar = sayimTabani.filter(
+      (item) => firsatKategorisi(item.opportunityType) === 'burslar'
+    );
+    return {
+      kyk: burslar.filter((item) => item.opportunityType === 'kyk').length,
+      diger: burslar.filter((item) => item.opportunityType !== 'kyk').length,
+    };
+  }, [sayimTabani]);
+
+  const filtered = React.useMemo(() => {
+    let liste = sayimTabani;
+    if (filters.kategori)
+      liste = liste.filter((item) => firsatKategorisi(item.opportunityType) === filters.kategori);
+    if (filters.kaynak === 'kyk') liste = liste.filter((item) => item.opportunityType === 'kyk');
+    if (filters.kaynak === 'diger') liste = liste.filter((item) => item.opportunityType !== 'kyk');
+    return firsatSirala(liste, {
+      /*
+        Uygunluk yalnız VARSAYILAN sırada belirleyici. "Bana uygun"
+        açıkken zaten hepsi uygun (kova ayrımı anlamsız), kullanıcı bir
+        sıra seçtiyse de onu ezmemesi gerekiyor — yoksa seçim yapıldığı
+        hâlde liste değişmemiş görünürdü.
+      */
+      ogrenci: filters.banaUygun || profilEksik ? null : student,
+      /* `Suzgec` .mjs sabitinden türediği için alan `string`; kabul edilen
+         üç değer adres okunurken zaten doğrulanıyor (secilen()). */
+      mod: filters.siralama as '' | 'son-tarih' | 'yeni',
+    });
+  }, [
+    sayimTabani,
+    filters.kategori,
+    filters.kaynak,
+    filters.siralama,
+    filters.banaUygun,
+    profilEksik,
+    student,
+  ]);
+
+  const aktifSuzgecler = React.useMemo(
+    () => aktifFirsatSuzgecleri(filters) as { id: string; etiket: string }[],
+    [filters]
+  );
+  /* Arşiv bir daraltma değil, başka bir küme: rozet sayacında yer almıyor. */
+  const aktifSuzgecSayisi = aktifSuzgecler.filter((s) => s.id !== 'arsiv').length;
+  const listeDaraldi = aktifSuzgecSayisi > 0;
+
+  const temizle = () => setFilters({ ...BOS_FIRSAT_SUZGECI, arsiv: filters.arsiv });
+
+  /*
+    'kapali' bir EKRAN durumu değil, "daha sorulmadı" demek: süzgeç yeni
+    açıldığı karede istek henüz yola çıkmamış oluyor. Onu 'loading'
+    saymazsak o tek karede "Arşivde kayıt yok" yazardı — elimizde cevap
+    yokken yokluk iddia etmek, bu ekranın kaçındığı şeyin ta kendisi.
+  */
+  const listeDurumu = filters.arsiv ? (arsivDurumu === 'kapali' ? 'loading' : arsivDurumu) : state;
+
+  /*
+    ARŞİVDE TAKVİM YOK
+
+    `opportunityCalendar` yalnızca BUGÜN VE SONRASINDAKİ açılış/kapanış
+    günlerini topluyor; arşiv kümesi ise tanımı gereği süresi dolmuş
+    kayıtlar. İkisinin kesişimi her zaman boş, yani arşivde Takvim
+    sekmesi hiçbir içerik üretemeyecek bir düğme olurdu. Adres
+    `?arsiv=1&takvim=1` ile paylaşılmış olabileceği için süzgeci
+    değiştirmiyor, görünümü türetiyoruz.
+  */
+  const takvimGorunumu = filters.takvim && !filters.arsiv;
 
   const suzgecler = (
     <Suzgecler
       filters={filters}
       set={set}
       temizle={temizle}
-      takvimsizSayisi={gruplar.takvim_bekleniyor.length}
-      kapaliSayisi={gruplar.kapali.length}
-      sayimlar={sayimlar}
-      durumSuzgeci={durumSuzgeci}
-      durumSec={durumSec}
-      acikSuzgecSayisi={aktifSuzgecSayisi}
+      aktifSuzgecSayisi={aktifSuzgecSayisi}
+      kaynakSayimlari={kaynakSayimlari}
+      modVar={modVar}
+      banaUygunVar={hazirSayisi > 0}
+      kaydedilenVar={Boolean(userId)}
     />
   );
 
@@ -505,301 +473,73 @@ export const OpportunitiesPage: React.FC<{
     <main
       className={`w-full ${SAYFA_GENISLIGI} mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-10`}
     >
-      {/*
-        ÜST ALAN — İKİ SATIR
-
-        Dört katman vardı: başlık, sayaç satırı, uyarı satırı ve altında
-        tam bir satır kaplayan sekme kapsülü. Boşluklar küçültülerek
-        toparlanmaya çalışıldı ama sorun boşluk değil DÜZENDİ — dört
-        yatay şerit alt alta durdukça blok ne kadar sıkılırsa sıkılsın
-        "boşluk bırakılmış taslak" gibi okunuyordu.
-
-        Düzen değişti. Artık iki satır:
-
-          1.  Öğrenci Fırsatları            [Tüm fırsatlar | Takvim]
-          2.  22 açık · 13 yakında · ⏰ 2'si bugün/yarın kapanıyor
-
-        Sekme kapsülü kendi şeridini bıraktı ve başlığın karşısına geçti;
-        modern ürün başlıklarındaki görünüm seçici tam olarak orada
-        duruyor. Uyarı da kendi satırından çıkıp meta zincirinin son
-        halkası oldu.
-
-        Ölçüldü (390 px): eski blok 123 px, yeni blok 54 px.
-      */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
-        {/*
-          SOL SÜTUN: BAŞLIK + GÖRÜNÜM + SAYAÇLAR + SÜZGEÇLER
-
-          İş & Staj İlanları sayfasının düzeni. Orada başlık tam genişlik bir
-          bant değil, sol sütunun içinde duruyor ve ilanlar sayfanın en
-          tepesinden başlıyor. Burada başlık, sekme kapsülü ve sayaçlar üstte
-          ayrı bir bant kaplıyor, kartlar o bandın altından başlıyordu.
-
-          Sütun artık dar ekranda da görünüyor ("hidden lg:block" kalktı):
-          başlığı buraya taşıyabilmenin şartı buydu. Mobil arama ve çipler de
-          ızgaranın üstünden buraya indi, böylece dar ekranda sıra bozulmuyor:
-          başlık → arama → çipler → kartlar.
-
-          ÖNE ÇIKAN BURSLAR ŞERİDİ KALDIRILDI
-
-          Vitrin ile alttaki "Başvuru açık" şeridi aynı beş bursu aynı
-          sırayla gösteriyordu — ölçüldü, birebir aynıydı. Şeridin varlık
-          gerekçesi "alttaki liste sıkıcı, davet etmiyor" idi; liste kapak
-          görselli şeritlere dönünce o gerekçe ortadan kalktı ve geriye
-          yalnızca sayfanın kendini tekrar etmesi kaldı.
-
-          Masaüstü süzgeç paneli kendi "hidden lg:block" sarmalayıcısını aldı;
-          sütun görünür olunca panel mobilde de çizilecekti ve oradaki
-          "Filtreler" paneliyle aynı süzgeçleri ikinci kez verecekti.
-        */}
-        {/*
-          Mobilde başlık grubunun altında ince bir ayırıcı — ilan
-          sayfasında da arama satırıyla liste arasında aynı çizgi var ve
-          "kontroller bitti, liste başlıyor" demesini sağlıyor. Geniş
-          ekranda çizgi yok: orada ayrımı sütunlar zaten yapıyor.
-        */}
-        {/*
-          `pb-4` KALDIRILDI — ÇİZGİ HİZASI
-
-          Ölçüldü: ilan sayfasında arama kutusuyla çizgi arası 16 piksel,
-          burada 33'tü. Sebep iki boşluğun üst üste binmesi: Tailwind v4'te
-          `space-y-4` son OLMAYAN çocuğa `margin-bottom` veriyor ve arama
-          satırı son çocuk değil (altında masaüstü süzgeç paneli var), yani
-          zaten 16 alıyordu; `pb-4` bunun üstüne 16 daha ekliyordu.
-
-          Alt boşluğu artık tek kaynak veriyor.
-        */}
+        {/* --------------------------------- sol: başlık, arama, süzgeçler */}
         <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-4">
-          <header>
-            {/*
-          Mobilde başlık ve sekmeler ortalı (ilan sayfasındaki gibi), geniş
-          ekranda başlık solda ve sekmeler karşısında.
-        */}
-        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 lg:justify-between">
-              {/*
-                Satır yüksekliği 1 (leading-none): başlığın altındaki ve
-                üstündeki tipografik boşluk, meta satırıyla arasında görünmez
-                bir aralık üretiyordu.
-              */}
-              {/*
-                BAŞLIK İŞ & STAJ İLANLARI SAYFASININ DİLİNDE
-
-                Orada başlık bir etiket değil bir CÜMLE ve son parçası marka
-                mavisiyle vurgulanıyor ("Şirketlerin staj ilanları, tek
-                listede."). Burada ise yalnızca "Öğrenci Fırsatları" yazan bir
-                etiket vardı; iki kardeş sayfa aynı üründen çıkmış gibi
-                durmuyordu.
-
-                Punto sabit değil, genişlikle ölçekleniyor — kardeş sayfadaki
-                `clamp` yaklaşımının aynısı. Sabit puntoda cümle dar ekranda
-                üç satıra bölünüyor, geniş ekranda ise satırın yarısını boş
-                bırakıyordu.
-
-                Cümle YALNIZCA varsayılan görünümde. "Takvim", "Sana uygun" ve
-                "Takip ettiklerin" görünümlerinde başlık o görünümün adını
-                söylemek zorunda; oraya pazarlama cümlesi koymak kullanıcının
-                nerede olduğunu gizlerdi.
-              */}
-              <h1 className="min-w-0 text-center lg:text-left [font-size:clamp(1.25rem,2.4vw,1.75rem)] font-extrabold leading-tight tracking-tight text-gray-950">
-                {/*
-              BAŞLIK GÖRÜNÜME GÖRE DEĞİŞMİYOR
-
-              Koşul `sekme === 'tumu'` idi: takvime geçince başlık "Fırsat
-              takvimi"ne dönüyor ve sayfa kimliğini değiştiriyordu. Sekme,
-              arama ve sütunlar aynı kalırken başlığın değişmesi "başka bir
-              sayfaya geldim" hissi veren son parçaydı.
-
-              Hangi görünümde olunduğunu aktif sekme zaten söylüyor; başlık
-              sayfanın kendisini söylüyor. Belge başlığı (document.title)
-              görünüme göre değişmeye devam ediyor — paylaşılan bağlantı ve
-              sekme adı için orası doğru yer.
-            */}
-            {!savedOnly ? (
-                  <>
-                    Burslar ve öğrenci fırsatları,{' '}
-                    <span className="text-blue-600">tek listede</span>.
-                  </>
-                ) : (
-                  heading
-                )}
-              </h1>
-
-              {/*
-                SEGMENT KONTROLÜ — BAŞLIĞIN KARŞISINDA
-
-                Kendi satırında dururken 40 piksellik bir yastık gibi
-                görünüyordu ve üstündeki metin satırlarıyla ilgisiz duruyordu.
-                Başlıkla aynı hizaya gelince hem o şerit tamamen kalktı hem de
-                "görünüm seçici" olduğu anlaşılıyor.
-
-                Kapsül 36 px (düğme 32) — iOS segment kontrolüyle aynı boy.
-                Seçilideki ağır beyaz hap yerine çok hafif bir gölge var.
-              */}
-              {/*
-                GÖRÜNÜM SEÇİCİ AŞAĞI TAŞINDI
-
-                Başlığın karşısındaydı ve mobilde başlıkla arama kutusunun
-                arasına giriyordu. Yeri artık listenin hemen üstü —
-                "süresi dolanlar" anahtarıyla aynı satırda, çünkü üçü de
-                aynı işi yapıyor: AŞAĞIDAKİ LİSTENİN ne göstereceğini
-                seçiyorlar. Başlığın yanında dururken bir sayfa başlığı
-                süsü veriyorlardı.
-              */}
-            </div>
-
-            {/*
-              SAYAÇ SATIRI SAĞ SÜTUNA, KART OLARAK TAŞINDI
-
-              Burada ince gri bir sayaç satırı vardı. İlan sayfasında aynı
-              bilgi sağ sütunun tepesinde büyük rakamlı bir kart; iki sayfa
-              aynı şeyi iki ayrı ağırlıkta söylüyordu.
-
-              Sayaçlar TIKLANABİLİR kaldı — onlar aynı zamanda durum
-              süzgeci. İlan sayfasındaki kart yalnızca gösteriyor; burada
-              basınca liste süzülüyor, o yüzden düğme olarak yazıldılar.
-            */}
+          <header className="space-y-1">
+            <h1 className="[font-size:clamp(1.25rem,2.4vw,1.75rem)] font-extrabold leading-tight tracking-tight text-gray-950">
+              Fırsatlar
+            </h1>
+            <p className="text-sm leading-relaxed text-gray-600">
+              Bursları, öğrenci programlarını, yarışmaları ve kariyer etkinliklerini keşfet.
+            </p>
           </header>
-          {/* -------- mobil arama satırı -------- */}
-          {/*
-            TAKVİMDE DE ÇİZİLİYOR
 
-            `sekme !== 'takvim'` koşulu vardı ve takvime geçince arama
-            kutusu kayboluyordu; sekme kapsülü de o sırada liste dalının
-            içinde kaldığı için birlikte yok oluyordu. Sonuç: takvim
-            "aynı sayfanın başka görünümü" değil, BAŞKA BİR SAYFA gibi
-            açılıyordu — geri dönecek sekme bile ekranda değildi.
-
-            Takvim zaten metne göre süzülüyor (`items.filter(metneUyar)`),
-            yani kutunun orada bir işi var. Ayrıntılı süzgeç paneli hâlâ
-            gizli: Takvim yalnızca metin süzgecini okuyor, tür/seviye/şehir
-            seçimlerini yok sayıyor — çalışmayan denetim göstermemek için.
-          */}
-          {!savedOnly && (
-            /*
-              ARAMA SATIRI İLAN SAYFASIYLA AYNI ÖLÇÜDE
-
-              Kutu `py-2.5 rounded-xl` idi, ilan sayfasındaki ise
-              `py-3.5 rounded-2xl` — yan yana konunca buradaki gözle
-              görülür biçimde bastırılmış duruyordu. İkon da 3 piksel
-              içerideydi (`left-3` / `left-4`).
-
-              Düğme yüksekliği SABİT DEĞİL, kutudan geliyor (`self-stretch`).
-              İlan sayfasındaki yorumda gerekçesi yazılı: sabit piksel
-              verilince kutu bir piksel farklı çıkıyor ve yan yana iki
-              çerçevenin alt kenarı kayıyor.
-
-              `mb-3` KALKTI — ÇİZGİ HİZASI İÇİN
-
-              Ölçüldü: ilan sayfasında arama kutusunun altıyla çizgi arası
-              16 piksel, burada 29'du. Fark bu `mb-3`ten (12) geliyordu;
-              sütunun kendi `pb-4`ü (16) zaten alttaki boşluğu veriyor ve
-              ikisi üst üste biniyordu.
-
-              Kardeşler arası boşluğu sütunun `space-y-4`ü veriyor; buraya
-              ayrıca margin yazmak o sistemi ikinci kez uygulamak olur.
-            */
-            <div className="lg:hidden flex items-center gap-2">
-              <div className="relative flex-1 min-w-0">
-                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  aria-label="Fırsat ara"
-                  value={filters.query}
-                  onChange={(e) => set({ query: e.target.value })}
-                  placeholder="Burs veya fırsat ara"
-                  className="w-full rounded-2xl border border-gray-200 bg-white py-3.5 pl-11 pr-11 text-sm font-medium text-gray-900 placeholder:text-gray-400 transition-colors focus:border-blue-600 focus:outline-none"
-                />
-                {filters.query && (
-                  <button
-                    type="button"
-                    onClick={() => set({ query: '' })}
-                    aria-label="Aramayı temizle"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-700 cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-              {/*
-                DÜĞME İKON, YAZI DEĞİL
-
-                "Filtreler" yazısı arama kutusundan yer çalıyordu: ilan
-                sayfasında aynı yerde yalnızca ikon var ve arama kutusu
-                satırın tamamına yakınını alıyor. Erişilebilir ad
-                `aria-label`de duruyor, yani yazının kalkması ekran
-                okuyucuda bir şey kaybettirmiyor.
-
-                Açık süzgeç sayısı rozet olarak köşede kalıyor — düğme
-                ikona dönünce "kaç süzgeç açık" bilgisi kaybolmasın diye.
-              */}
-              <button
-                type="button"
-                onClick={() => setPanelAcik(true)}
-                aria-label={
-                  aktifSuzgecSayisi > 0
-                    ? `Filtreler (${aktifSuzgecSayisi} açık)`
-                    : 'Filtreler'
-                }
-                /*
-                  Yükseklik `self-stretch` ile arama kutusundan geliyor,
-                  sabit piksel DEĞİL — ilan sayfasında bunun gerekçesi
-                  ölçülerek yazılmış: sabit değerde iki çerçevenin alt
-                  kenarı bir piksel kayıyor.
-
-                  İkon huni değil kaydırıcı: ilan sayfasında da öyle ve
-                  huni "sonuçları ele" derken kaydırıcı "ayarları aç"
-                  diyor — buradaki düğme bir panel açıyor.
-                */
-                className={`relative flex w-[52px] shrink-0 cursor-pointer items-center justify-center self-stretch rounded-2xl border transition-colors ${
-                  aktifSuzgecSayisi > 0
-                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
-                }`}
-              >
-                <SlidersHorizontal className="w-5 h-5" />
-                {aktifSuzgecSayisi > 0 && (
-                  <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-extrabold text-white">
-                    {aktifSuzgecSayisi}
-                  </span>
-                )}
-              </button>
+          {/* -------- mobil arama satırı + panel düğmesi -------- */}
+          <div className="lg:hidden flex items-center gap-2">
+            <div className="relative flex-1 min-w-0">
+              <Search
+                aria-hidden
+                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+              />
+              <input
+                type="text"
+                aria-label="Fırsat ara"
+                value={filters.query}
+                onChange={(e) => set({ query: e.target.value })}
+                placeholder="Burs, program veya yarışma ara"
+                className={`w-full rounded-2xl border border-gray-200 bg-white py-3.5 pl-11 pr-11 text-sm font-medium text-gray-900 placeholder:text-gray-400 transition-colors focus:border-blue-600 focus:outline-none ${ODAK_HALKASI}`}
+              />
+              {filters.query && (
+                <button
+                  type="button"
+                  onClick={() => set({ query: '' })}
+                  aria-label="Aramayı temizle"
+                  className={`absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-gray-400 hover:text-gray-700 cursor-pointer ${ODAK_HALKASI}`}
+                >
+                  <X className="w-4 h-4" aria-hidden />
+                </button>
+              )}
             </div>
-          )}
-          {/*
-            HIZLI ÇİP SATIRI KALDIRILDI
-
-            "Burs", "KYK", "Lisans" gitti; "Yurtdışı" ise üstteki sekme
-            grubuna taşındı. Çipler tür/seviye süzgeciydi ve karşılıkları
-            zaten "Filtreler" panelinde duruyor ("Tüm türler", "Tüm eğitim
-            seviyeleri"). Aynı süzgeci hem panelde hem satırda vermek,
-            mobilde başlıkla liste arasına üçüncü bir şerit koyuyordu.
-
-            Yurtdışı ayrı tutuldu çünkü kendi adresi var
-            (/yurtdisi-firsatlari); o bir süzgeç değil, paylaşılabilir bir
-            görünüm — yeri sekme grubu.
-          */}
-
-          <div className="hidden lg:block">
-            {!savedOnly && sekme !== 'takvim' && suzgecler}
+            {/*
+              Yükseklik `self-stretch` ile arama kutusundan geliyor, sabit
+              piksel DEĞİL — ilan sayfasında gerekçesi ölçülerek yazılmış:
+              sabit değerde iki çerçevenin alt kenarı bir piksel kayıyor.
+            */}
+            <button
+              type="button"
+              onClick={() => setPanelAcik(true)}
+              aria-label={
+                aktifSuzgecSayisi > 0 ? `Filtreler (${aktifSuzgecSayisi} açık)` : 'Filtreler'
+              }
+              className={`relative flex w-[52px] shrink-0 cursor-pointer items-center justify-center self-stretch rounded-2xl border transition-colors ${ODAK_HALKASI} ${
+                aktifSuzgecSayisi > 0
+                  ? 'border-blue-600 bg-blue-50 text-blue-700'
+                  : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
+              }`}
+            >
+              <SlidersHorizontal className="w-5 h-5" aria-hidden />
+              {aktifSuzgecSayisi > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-extrabold text-white">
+                  {aktifSuzgecSayisi}
+                </span>
+              )}
+            </button>
           </div>
 
-          {/*
-            AYIRICI — İLAN SAYFASINDAKİNİN AYNISI
+          <div className="hidden lg:block">{suzgecler}</div>
 
-            Önce sütunun `border-b`siydi: düz, 1 piksellik bir hairline.
-            İlan sayfasındaki ise farklı ve daha yumuşak duruyor; ölçüldü:
-            2 piksel yüksekliğinde, 16 piksel yuvarlatılmış, beyaz zeminli,
-            1 piksel kenarlı ve `shadow-xs` gölgeli bir kapsül. Yumuşaklığı
-            yuvarlatmadan ve gölgeden geliyor, çizginin kendisinden değil.
-
-            Orada bu şekil kasıtlı çizilmiş bir ayırıcı DEĞİL — kapalı
-            filtre panelinin iki piksele çökmüş kabı. Görsel sonuç
-            beğenildiği için burada bilerek ve açıkça bir ayırıcı olarak
-            yazıldı; kaza eseri oluşan bir biçime bel bağlamamak için.
-
-            `box-sizing: border-box` sayesinde `h-0.5` kenarlıklarla
-            birlikte tam 2 piksel kalıyor.
-          */}
+          {/* Ayırıcı: "kontroller bitti, liste başlıyor". Geniş ekranda sütunlar yapıyor. */}
           <div
             aria-hidden
             className="h-0.5 rounded-2xl border border-gray-200 bg-white shadow-xs lg:hidden"
@@ -807,126 +547,76 @@ export const OpportunitiesPage: React.FC<{
         </div>
 
         {/* ------------------------------------------- orta: kart akışı --- */}
-        {/*
-          FEED 6 SÜTUNDAN 9'A ÇIKTI
-
-          Liste yatay şeritlere dönünce 6 sütun (660 px) yetmiyordu:
-          340 piksellik karttan yalnızca 1,85 tanesi sığıyor, yani şerit
-          "büyük kartlar" değil "sıkışmış iki kart" gibi duruyordu
-          (ölçüldü). 9 sütunda şerit ~985 piksele çıkıyor ve üç kart
-          rahatça giriyor.
-
-          Sağdaki kategori sütunu kaybolmadı, şeritlerin altına indi —
-          yardımcı içerik, kararın kendisi değil.
-        */}
-        {/*
-          FEED 6 SÜTUN — İŞ & STAJ İLANLARIYLA AYNI
-
-          Şerit düzenindeyken 9 sütuna çıkarılmıştı: 340 piksellik kapak
-          kartından 6 sütuna yalnızca 1,85 tanesi sığıyordu. Liste dikey
-          satır kartlarına dönünce o gerekçe kalktı ve sağdaki kategori
-          sütunu yeniden yanına gelebildi — ilan sayfasındaki üç kolonlu
-          düzenin aynısı.
-        */}
         <div className="lg:col-span-6 space-y-4 min-w-0">
           {/*
-            LİSTE KONTROL SATIRI
+            GÖRÜNÜM SEÇİCİ
 
-            Üç denetim tek yerde: görünüm seçici (Tüm fırsatlar /
-            Takvim / Sana uygun) ve "süresi dolanlar" anahtarı. Üçü de
-            aynı soruyu cevaplıyor — AŞAĞIDA NE LİSTELENSİN. Önce
-            sekmeler sayfa başlığının yanındaydı, "süresi dolanlar" ise
-            ayrı bir satırdaydı; ikisi ilgisiz görünüyordu.
+            Liste ve takvim aynı kaydı iki biçimde gösteriyor: takvimde
+            açılış günleri de var ("4 Eyl · Başvuru açılıyor"). Seçici
+            listenin hemen üstünde, çünkü seçtiği şey AŞAĞIDAKİ liste.
 
-            Sekmeler solda, anahtar sağda: biri asıl görünümü seçiyor,
-            diğeri o görünüme bir ekleme yapıyor. `justify-between`
-            ikisini ayırıyor, `flex-wrap` dar ekranda alt alta indiriyor.
+            Arşivde seçici DOM'A HİÇ GİRMİYOR: takvim yalnız bugünü ve
+            sonrasını topluyor (opportunityCalendar), arşiv ise yalnız
+            geçmişi tutuyor — tıklanınca kesin boş kalacak bir sekme
+            çizmek, olmayan bir görünümü var göstermek olurdu.
           */}
-          {/*
-            Kapsül YALNIZCA seçilecek birden çok görünüm varken çiziliyor.
-            "Yurtdışı" ve "Takvim" çıkınca geriye tek düğme kalabiliyor
-            ("Sana uygun" yalnızca doğrulanmış eşleşme varken ekleniyor);
-            tek seçenekli bir görünüm seçici, seçim varmış izlenimi veren
-            boş bir kontroldür.
-          */}
-          {!savedOnly && hazirSayisi > 0 && (
-              <nav
-                aria-label="Fırsat görünümü"
-                className="flex max-w-full shrink-0 items-center gap-0.5 overflow-x-auto rounded-full bg-gray-100 p-0.5 text-[12px] font-bold [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              >
-                {(
-                  [
-                    /* Hazır kayıt yoksa sekme hiç çizilmiyor — bkz. hazirSayisi. */
-                    ...((hazirSayisi > 0
-                      ? [['/bana-uygun', 'Sana uygun']]
-                      : []) as [string, string][]),
-                    ['/firsatlar', 'Tüm fırsatlar'],
-                    /*
-                      "Yurtdışı" SEKMEDEN KALDIRILDI
-
-                      Süzgeç paneli bölümlere ayrılınca aynı seçim orada
-                      "Tür → Yurtdışı" olarak, üstelik kaç kayıt olduğu
-                      yazılı biçimde belirdi. Sekme onun kopyasıydı.
-
-                      Adres kaybolmadı: /yurtdisi-firsatlari hâlâ
-                      çalışıyor ve sağ sütundaki kategori düğmesi oraya
-                      gidiyor — yalnızca sekme kapsülünden çıktı.
-                    */
-                    /*
-                      "Takvim" SEKMEDEN KALDIRILDI
-
-                      Takvimin listeye göre tek fazlası açılış tarihleriydi
-                      ("4 Eyl · BAŞVURU AÇILIYOR"); o bilgi artık kartın
-                      içinde. Geriye aynı 33 kaydı başka biçimde çizen bir
-                      ikinci görünüm kalıyordu.
-
-                      ROTA SİLİNMEDİ. /firsat-takvimi üç rehber yazısından
-                      bağlantı alıyor ("açılış ve son başvuru günleri ay ay
-                      duruyor") ve onrender.mjs tarafından ön-render edilen,
-                      yani indekslenmiş bir sayfa. Rotayı kaldırmak o
-                      bağlantıları 404 yapardı; sayfa duruyor, yalnızca
-                      sekme kapsülünden çıktı.
-                    */
-                  ] as [string, string][]
-                ).map(([yol, etiket]) => (
-                  <button
-                    key={yol}
-                    /* Sekme değişince arama ve süzgeçler adresle birlikte taşınıyor. */
-                    onClick={() => onNavigate(`${yol}${serializeOpportunityFilters(filters)}`)}
-                    className={`flex h-8 shrink-0 items-center whitespace-nowrap rounded-full px-3 transition-colors cursor-pointer ${
-                      sekmeAktif(yol)
-                        ? 'bg-white text-gray-900 shadow-[0_1px_2px_rgba(16,24,40,0.08)]'
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
-                  >
-                    {etiket}
-                  </button>
-                ))}
-              </nav>
+          {!filters.arsiv && (
+            <nav
+              aria-label="Fırsat görünümü"
+              className="flex max-w-full shrink-0 items-center gap-0.5 rounded-full bg-gray-100 p-0.5 text-[12px] font-bold"
+            >
+              {(
+                [
+                  [false, 'Liste'],
+                  [true, 'Takvim'],
+                ] as [boolean, string][]
+              ).map(([takvim, etiket]) => (
+                <button
+                  key={etiket}
+                  type="button"
+                  aria-pressed={takvimGorunumu === takvim}
+                  onClick={() => set({ takvim })}
+                  className={`flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full px-4 transition-colors cursor-pointer ${ODAK_HALKASI} ${
+                    takvimGorunumu === takvim
+                      ? 'bg-white text-gray-900 shadow-[0_1px_2px_rgba(16,24,40,0.08)]'
+                      : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  {etiket}
+                </button>
+              ))}
+            </nav>
           )}
+
           {/*
-            LİSTE BAŞLIĞI — ŞERİDİN ÜSTÜNDE, DİĞER İKİ SAYFADAKİ GİBİ
+            ARŞİV ŞERİDİ — TARAFSIZ
 
-            Şerit başlıksız duruyordu: rehberde "TÜM REHBERLER (71)",
-            Keşfet'te "YAYINDAKİ ETKİNLİKLER (102)", ilanlarda "AÇIK STAJ
-            İLANLARI (62)" varken burada göz doğrudan dairelere düşüyordu
-            ve neyin listelendiği yazmıyordu.
-
-            Bir zamanlar "FIRSATLAR (33)" etiketi vardı ve kaldırılmıştı;
-            gerekçesi şuydu: sayı iki yerde daha duruyor ve etiket kontrol
-            satırıyla birlikte İKİNCİ bir şerit kuruyordu. O gerekçe artık
-            geçerli değil — etiket kendi başına durmuyor, ŞERİDİN başlığı
-            olarak duruyor ve üç sayfa aynı hizaya geliyor.
-
-            Sayı daraltmaya göre değişiyor (Keşfet'teki kural): süzgeç ya
-            da arama varken ekrandaki kadarını, yokken tabanın tamamını
-            söylüyor. Sağdaki not 121 kaydın 121'inde `verified_at` ve
-            `source_url` dolu olduğu için doğru (ölçüldü, üretim).
+            "Kaçırdın" demiyor: geçen yılın takvimi gelecek yılın tahmini
+            için işe yarıyor. Kartlarda başvuru düğmesi yok.
           */}
-          {sekme !== 'takvim' && state === 'ready' && (
+          {filters.arsiv && (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5">
+              <p className="text-xs font-semibold text-gray-700">
+                Süresi dolan fırsatları görüyorsun. Başvuru dönemleri kapandı.
+              </p>
+              <button
+                type="button"
+                onClick={() => set({ arsiv: false })}
+                className={`shrink-0 cursor-pointer rounded-lg px-2 py-1 text-xs font-bold text-blue-700 hover:underline ${ODAK_HALKASI}`}
+              >
+                Açık fırsatlara dön
+              </button>
+            </div>
+          )}
+
+          {!takvimGorunumu && listeDurumu === 'ready' && (
             <div className="flex items-center justify-between gap-3 px-1">
               <h2 className="text-xs font-bold uppercase tracking-widest text-gray-600">
-                {listeDaraldi ? 'Filtrelenen fırsatlar' : 'Güncel fırsatlar'}
+                {filters.arsiv
+                  ? 'Süresi dolan fırsatlar'
+                  : listeDaraldi
+                    ? 'Filtrelenen fırsatlar'
+                    : 'Güncel fırsatlar'}
                 {` (${listeDaraldi ? filtered.length : sayimTabani.length})`}
               </h2>
               <span className="hidden text-xs font-medium text-gray-500 sm:block">
@@ -935,327 +625,167 @@ export const OpportunitiesPage: React.FC<{
             </div>
           )}
 
-          {/*
-            TÜR ŞERİDİ — REHBER VE KEŞFET İLE AYNI BİLEŞEN
-
-            Tür süzgeci yalnızca filtre panelindeydi ve panel kapalıyken
-            hangi türlerin OLDUĞUNU göstermiyordu: kullanıcı paneli
-            açmadan "burada yarışma var mı" sorusunu cevaplayamıyordu.
-            Şerit türlerin hepsini ve her birinde kaç kayıt olduğunu tek
-            bakışta veriyor.
-
-            Panel kaldırılmadı; ikisi AYNI durumu (`filters.type`) ve aynı
-            sayıları paylaşıyor, yani biri değişince öteki de değişiyor.
-
-            Takvim görünümünde çizilmiyor: orada liste değil ay ay bir
-            takvim var ve tür süzgeci o görünümün üstünde durmuyor.
-          */}
-          {sekme !== 'takvim' && state === 'ready' && (
+          {!takvimGorunumu && listeDurumu === 'ready' && (
             <KonuSeridi
-              konular={seritTurleri}
-              secili={filters.type}
+              konular={seritKategorileri}
+              secili={filters.kategori}
               toplam={sayimTabani.length}
-              onSec={(tur) => set({ type: tur })}
-              onTumu={() => set({ type: '' })}
+              onSec={(kategori) =>
+                set({
+                  kategori,
+                  kaynak: kategori === 'burslar' ? filters.kaynak : '',
+                })
+              }
+              onTumu={() => set({ kategori: '', kaynak: '' })}
               birim="fırsat"
-              ikonlar={TUR_IKONLARI}
+              ikonlar={KATEGORI_IKONLARI}
               varsayilanIkon={Layers}
-              tumuEtiketi="Tüm türler"
+              tumuEtiketi="Tüm kategoriler"
             />
           )}
 
-          {sekme === 'uygun' && student && (
-            <p className="rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-2.5 text-xs text-blue-900 leading-relaxed">
-              Bu liste bir <b>uygunluk garantisi değil</b>. Profiline açıkça uymayan fırsatlar
-              çıkarıldı; kalanların koşullarını resmî kaynağından kontrol et.
-            </p>
-          )}
-
-          {/*
-            Giriş yapılmamışken "Sana uygun" sekmesinde liste ÇİZİLMİYOR.
-            Önce giriş çağrısının altında 38 fırsat sıralanıyordu: sekmenin
-            adı "sana uygun" olduğu için o liste kişiselleştirilmiş
-            görünüyordu, oysa hiçbir eleme yapılmamıştı.
-          */}
-          {sekme === 'uygun' && !student ? (
+          {/* ----------------------------------------------- dört durum --- */}
+          {listeDurumu === 'loading' ? (
+            <ListeIskeleti />
+          ) : listeDurumu === 'error' ? (
             <Empty
               icon={<Sparkles />}
-              title="Sana uygun fırsatları görmek için giriş yap"
-              body="Eleme yalnızca kendi profilindeki bilgilerle yapılıyor. Giriş yapmadan bütün fırsatları “Tüm fırsatlar” sekmesinden görebilirsin."
-              action="Giriş yap"
-              onClick={onRequireLogin}
+              title="Fırsatlar şu anda yüklenemedi"
+              body="Bağlantı kurulamadı. Birkaç saniye sonra yeniden denemek çoğu zaman yetiyor."
+              action="Yeniden dene"
+              onClick={() =>
+                filters.arsiv ? setArsivDenemesi((x) => x + 1) : setDeneme((x) => x + 1)
+              }
             />
-          ) : sekme === 'uygun' && state === 'ready' && hazirSayisi === 0 ? (
+          ) : filters.kaydedilen && !userId ? (
             /*
-              SEKME GİZLİ AMA ADRES AÇIK KALABİLİR
+              YETKİSİZ İLE BOŞ AYNI CÜMLE DEĞİL
 
-              Kayıtlı bağlantı ya da eski sekme /bana-uygun'a düşürebilir.
-              Burada boş liste göstermek "sana uygun hiçbir şey yok" gibi
-              okunurdu; oysa doğru cümle "henüz eşleştirebileceğimiz
-              kayıt yok". Fırsatların kendisi kaybolmuyor.
+              "Kaydettiğin fırsat yok" demek yanlış olurdu: liste sunucuda
+              hesaba bağlı ve misafirken HİÇ sorulmuyor. Söylenen şey
+              "göremiyorsun", "yok" değil.
             */
             <Empty
               icon={<Sparkles />}
-              title="Eşleştirme için yeterli doğrulanmış bilgi yok"
-              body="Bir fırsatı sana uygun sayabilmemiz için bölüm, eğitim seviyesi ve şehir şartlarının kurumun kendi sayfasından doğrulanmış olması gerekiyor. Şu an bu üç bilgisi de doğrulanmış kayıt yok, o yüzden uydurma bir eşleştirme göstermiyoruz. Bütün fırsatlar “Tüm fırsatlar” sekmesinde duruyor."
-              action="Tüm fırsatlara git"
-              onClick={() => onNavigate('/firsatlar')}
+              title="Kaydettiğin fırsatları görmek için giriş yap"
+              body="Kaydetme listesi hesabına bağlı; giriş yapmadan hangi fırsatları kaydettiğini gösteremiyoruz."
+              action="Giriş yap"
+              onClick={onRequireLogin}
             />
-          ) : state === 'loading' ? (
-            <div role="status" className="space-y-4">
-              {[1, 2, 3].map((x) => (
-                <div key={x} className="h-56 rounded-2xl bg-gray-100 animate-pulse" />
-              ))}
-            </div>
-          ) : state === 'error' ? (
-            <Empty icon={<Filter />} title="Fırsatlar şu anda yüklenemedi" body="Bağlantını kontrol edip tekrar dene." />
-          ) : sekme === 'takvim' ? (
-            <Takvim items={items.filter(metneUyar)} onNavigate={onNavigate} />
-          ) : filtered.length ? (
-            <>
-              {/*
-                LİSTE ÖNÜ SATIRI — İKİ BLOK DEĞİL BİR SATIR
-
-                "35 fırsat gösteriliyor" tam genişlikte bir satırdı; altına
-                da anahtarlı, çerçeveli, 42 piksellik bir düğme geliyordu.
-                İkisi birlikte liste başlamadan önce üçüncü bir kontrol
-                bloğu kuruyordu.
-
-                Artık tek satır: solda sayı (küçük meta), sağda kontroller
-                (küçük metin düğmeleri). Anahtarın görsel yalancı-switch'i
-                kalktı — `aria-pressed` durumu zaten taşıyor ve seçiliyken
-                düğme koyulaşıyor, yani durum renk+kalınlıkla görünüyor.
-              */}
-              {/*
-                SAYI BURADAN KALKTI — AŞAĞIDAKİ BÖLÜM ETİKETİNDE ZATEN VAR
-
-                Bu satır "33 fırsat" diyordu, hemen altındaki bölüm etiketi
-                de "FIRSATLAR (33)". Aynı sayı iki satır arayla iki kez
-                yazılıyordu (ekran görüntüsünde yan yana görülüyor).
-                Geriye yalnızca görünüm anahtarları kaldı; onlar sağa değil
-                sola yaslanıyor artık, çünkü solda dengeleyecek bir şey yok.
-              */}
-              {/*
-                "Takvimsizler (30)" buradan kaldırıldı — süzgeç panelindeki
-                "Takvimi açıklanmayanlar" anahtarına taşındı. Bir süzgeci
-                liste başlığının yanına iliştirmek, onu diğer süzgeçlerden
-                ayrı bir şeymiş gibi gösteriyordu.
-
-                Geriye tek anahtar kaldı ve satır ARTIK KOŞULLU: süresi
-                dolan kayıt yokken sarmalayıcı boş çiziliyor ve üstündeki
-                `space-y-4` yüzünden 16 piksel ölü boşluk bırakıyordu
-                (ölçüldü — şu an kapalı kayıt yok ve satır boştu).
-              */}
-              {/*
-                DİKEY LİSTE — İŞ & STAJ İLANLARIYLA AYNI DÜZEN
-
-                Bir ara kapak görselli yatay şeritlere çevrilmişti. Şerit
-                keşif için iyi ama burs KARŞILAŞTIRILAN bir şey: tutar, son
-                başvuru tarihi ve şartlar yan yana okunuyor. Yatay şeritte
-                iki bursu aynı anda görmek mümkün değildi ve 27 kayda
-                ulaşmak on ok tıklaması sürüyordu.
-
-                İlan listesiyle aynı düzen: tek kolon, alt alta satır
-                kartları. Bölüm etiketi de oradaki biçimde — küçük, büyük
-                harfli, sayıyı parantez içinde veriyor.
-
-                DURUM GRUPLAMASI KALKTI
-                Aynı ayrım sol sütundaki sayaçlarda zaten var ve orada
-                TIKLANABİLİR süzgeç: "27 açık" yazısına basınca liste ona
-                düşüyor. Aynı ayrımı ikinci kez başlıklara bölmek, tek
-                listeyi üçe kesip karşılaştırmayı yeniden zorlaştırırdı.
-              */}
-              {/*
-                "FIRSATLAR (33)" ETİKETİ KALDIRILDI
-
-                Sayı zaten iki yerde daha duruyordu: sol sütundaki
-                sayaçlarda ("27 açık · 6 yakında") ve listenin kendisinde.
-                Üstelik hemen üstündeki kontrol satırıyla birlikte iki
-                ayrı şerit oluşturuyor, kartları aşağı itiyordu.
-
-                "Kurumların kendi sayfalarından derlendi" notu da onunla
-                gitti: aynı bilgi her kartın üstünde "Resmî kaynak"
-                rozetiyle ve zaten daha güçlü biçimde söyleniyor.
-              */}
-              {/*
-                IZGARA REHBER VE KEŞFET İLE AYNI
-
-                Kartlar tek sütunda alt alta diziliyordu: 390 pikselde kart
-                358x246 ve ekrana iki kart giriyordu. Aynı ürünün öteki iki
-                listesi (rehber, Keşfet) telefonda iki, geniş ekranda üç
-                sütun kullanıyor.
-              */}
-              <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
-                {filtered.map((item: Opportunity) => (
-                  <Card
-                    girisGerekli={!student}
-                    onRequireLogin={onRequireLogin}
-                    key={item.id}
-                    item={item}
-                    onNavigate={onNavigate}
-                    fit={student ? opportunityFit(item, student) : null}
-                  />
-                ))}
-              </div>
-            </>
-          ) : savedOnly ? (
+          ) : filters.banaUygun && !student ? (
             <Empty
               icon={<Sparkles />}
-              title="Henüz takip ettiğin fırsat yok"
-              body="Fırsat kartlarındaki “Takip et” düğmesine bastıklarında burada birikiyor."
-              action="Fırsatlara göz at"
-              onClick={() => onNavigate('/firsatlar')}
+              title="Eşleştirme için giriş yapman gerekiyor"
+              body="Eleme yalnızca kendi profilindeki bilgilerle yapılıyor. Bütün fırsatları süzgeci kapatarak görebilirsin."
+              action="Giriş yap"
+              onClick={onRequireLogin}
             />
-          ) : items.length ? (
+          ) : filters.banaUygun && profilEksik ? (
             <Empty
-              icon={<Filter />}
-              title="Bu filtrelere uyan fırsat yok"
-              body={
-                gruplar.takvim_bekleniyor.length > 0 && !takvimsizGoster
-                  ? `Sitede ${items.length} fırsat var. ${gruplar.takvim_bekleniyor.length} tanesinin takvimi henüz açıklanmadığı için varsayılan listede yok.`
-                  : `Sitede ${items.length} fırsat var ama seçtiğin filtrelere uymuyor.`
-              }
-              action="Filtreleri temizle"
+              icon={<Sparkles />}
+              title="Eşleştirme için profilinde bölüm ve sınıf bilgisi gerekiyor"
+              body="Bir fırsatın sana uyup uymadığını ancak bu iki bilgiyle söyleyebiliriz. Tahmini bir uyum oranı üretmiyoruz."
+              action="Profilini tamamla"
+              onClick={() => onNavigate('/cv')}
+            />
+          ) : filters.banaUygun && hazirSayisi === 0 ? (
+            <Empty
+              icon={<Sparkles />}
+              title="Eşleştirme için yeterli doğrulanmış bilgi yok"
+              body="Bir fırsatı sana uygun sayabilmemiz için bölüm, eğitim seviyesi ve şehir şartlarının kurumun kendi sayfasından doğrulanmış olması gerekiyor. Şu an bu üç bilgisi de doğrulanmış kayıt yok; uydurma bir eşleştirme göstermiyoruz."
+              action="Bütün fırsatları gör"
               onClick={temizle}
             />
-          ) : (
+          ) : takvimGorunumu ? (
+            <Takvim items={filtered} onNavigate={onNavigate} />
+          ) : filtered.length ? (
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
+              {filtered.map((item: Opportunity) => (
+                <Card
+                  key={item.id}
+                  item={item}
+                  arsivde={filters.arsiv}
+                  girisGerekli={!userId}
+                  onRequireLogin={onRequireLogin}
+                  onNavigate={onNavigate}
+                  fit={student && !profilEksik ? opportunityFit(item, student) : null}
+                />
+              ))}
+            </div>
+          ) : filters.banaUygun && student && !student.city && sehirSartliSayisi(taban) > 0 ? (
+            /*
+              LİSTE BOŞ VE SEBEBİ ŞEHİR
+
+              Şehir şartı doğrulanmış bir kayıtta profilde il yazmıyorsa
+              sonuç "uygun değil" değil BELİRSİZ: kayıt eleniyor değil,
+              rozet alamıyor. Ama "Bana uygun" açıkken belirsizler zaten
+              listeye girmiyor, dolayısıyla ekran boş kalıyor — ve genel
+              "süzgeçler daraltıyor" cümlesi buradaki gerçek sebebi
+              söylemiyordu.
+
+              Sayı gerçek listeden: şehir şartı doğrulanmış ve dolu kayıt
+              yoksa bu cümle hiç çıkmıyor, çünkü il yazmak o ekranda
+              hiçbir şeyi değiştirmezdi.
+            */
             <Empty
               icon={<Sparkles />}
-              title="Şu anda aktif başvuru dönemi olan fırsat bulunmuyor"
-              body="Fırsatları resmî kaynağından doğrulayarak yayımlıyoruz; doğrulayamadığımız hiçbir burs veya yarışmayı listeye almıyoruz."
-              action="Staj ilanlarına bak"
-              onClick={() => onNavigate('/')}
+              title="Şehir şartlı fırsatları eşleştirmek için ilini yazman gerekiyor"
+              body={`Bu listede şehir şartı doğrulanmış ${sehirSartliSayisi(taban)} fırsat var; profilinde oturduğun il yazmadığı için bunların sana uyup uymadığını söyleyemiyoruz. İl isteğe bağlı — yazmazsan da şehir şartı olmayan fırsatlar eşleşmeye devam ediyor.`}
+              action="Profilini tamamla"
+              onClick={() => onNavigate('/cv')}
+            />
+          ) : taban.length > 0 && aktifSuzgecler.length ? (
+            /*
+              BOŞ SONUÇ HANGİ SÜZGECİN DARALTTIĞINI SÖYLÜYOR
+
+              "Bu filtrelere uyan fırsat yok" cümlesi hangi süzgecin
+              daralttığını söylemiyordu; kullanıcı paneli açıp tek tek
+              aramak zorundaydı. Süzgeçler artık adıyla sayılıyor ve her
+              biri tek tek kaldırılabiliyor.
+
+              `taban.length > 0` ŞARTI: taban zaten boşsa daraltan bir
+              süzgeç yok — "1 süzgeç onu boşaltıyor" demek yanlış olurdu.
+              O durumda aşağıdaki "hiç kayıt yok" cümlesi çıkıyor.
+            */
+            <BosSonuc
+              suzgecler={aktifSuzgecler}
+              toplam={taban.length}
+              onKaldir={(id) => set(bosDeger(id))}
+              onTemizle={temizle}
+            />
+          ) : (
+            /*
+              SİSTEMDE HİÇ KAYIT YOK. Uydurma sayı, örnek kart ya da
+              "yakında" kutusu yok: gerçekten boşsa ekran da boş.
+            */
+            <Empty
+              icon={<Sparkles />}
+              title={filters.arsiv ? 'Arşivde kayıt yok' : 'Şu anda yayında olan fırsat bulunmuyor'}
+              body="Fırsatları resmî kaynağından doğrulayarak yayımlıyoruz; doğrulayamadığımız hiçbir burs, program veya yarışma listeye girmiyor."
             />
           )}
         </div>
 
-        {/* ------------------------------------ sağ: kategoriler + reklam --- */}
-        {/*
-          Feed 9 sütuna çıkınca bu blok yan tarafta değil ALTTA duruyor:
-          `col-start-4` ile şeritlerin hizasına oturuyor. `sticky` kalktı —
-          kendi satırında yapışacak bir şey yok.
-        */}
-        {/*
-          Sağ sütun feed'in ALTINDA değil YANINDA. Şerit düzeni 9 sütun
-          isteyince buraya inmişti; liste 6 sütuna dönünce yerine çıktı.
-          İlan sayfasındaki gibi kaydırırken yapışık kalıyor.
-        */}
+        {/* ------------------------------------------ sağ: yardımcı sütun --- */}
         <div className="hidden lg:block lg:col-span-3 space-y-4 lg:sticky lg:top-4">
-          {/*
-            SAYAÇ KARTI — İLAN SAYFASINDAKİYLE AYNI
-
-            Kart biçimi oradan birebir alındı: `grid-cols-3`, aynı kap
-            (`rounded-2xl border border-gray-200 bg-white px-4 py-3.5`),
-            rakam `text-2xl font-black tabular-nums`, etiket `text-[11px]`.
-            Bu bilgi burada ince gri bir metin satırıydı; iki sayfa aynı
-            şeyi iki ayrı ağırlıkta söylüyordu.
-
-            FARK: buradaki kutular DÜĞME. İlan sayfasındakiler yalnızca
-            gösteriyor, buradakiler aynı zamanda durum süzgeci — "27 açık"a
-            basınca liste ona düşüyor. Görünüm aynı, işlev fazladan.
-
-            Üçüncü kutu "Takvimsiz": ilan sayfasındaki üçüncü kutunun
-            (Şehir) buradaki karşılığı yok, ama takvimi açıklanmamış kayıt
-            sayısı gerçek ve varsayılan listede görünmediği için söylenmeye
-            değer. Sıfırsa kutu hiç çizilmiyor.
-          */}
-          {state === 'ready' && !savedOnly && (
-            <div className="space-y-2">
-              <div className="grid grid-cols-3 gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3.5">
-                {[
-                  {
-                    etiket: 'Açık',
-                    deger: gruplar.acik.length,
-                    aktif: durumSuzgeci === 'acik',
-                    onClick: () => durumSec(durumSuzgeci === 'acik' ? '' : 'acik'),
-                  },
-                  {
-                    etiket: 'Yakında',
-                    deger: gruplar.yakinda.length,
-                    aktif: durumSuzgeci === 'yakinda',
-                    onClick: () => durumSec(durumSuzgeci === 'yakinda' ? '' : 'yakinda'),
-                  },
-                  {
-                    etiket: 'Takvimsiz',
-                    deger: gruplar.takvim_bekleniyor.length,
-                    aktif: takvimsizGoster,
-                    onClick: () => set({ takvimsiz: !takvimsizGoster }),
-                  },
-                ]
-                  .filter((kutu) => kutu.deger > 0)
-                  .map((kutu) => (
-                    <button
-                      key={kutu.etiket}
-                      type="button"
-                      onClick={kutu.onClick}
-                      aria-pressed={kutu.aktif}
-                      className="min-w-0 cursor-pointer rounded-lg py-0.5 text-center transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-                    >
-                      <span
-                        className={`block text-2xl font-black leading-none tabular-nums ${
-                          kutu.aktif ? 'text-blue-700' : 'text-gray-900'
-                        }`}
-                      >
-                        {kutu.deger}
-                      </span>
-                      <span
-                        className={`mt-1 block truncate text-[11px] font-semibold ${
-                          kutu.aktif ? 'text-blue-700' : 'text-gray-500'
-                        }`}
-                      >
-                        {kutu.etiket}
-                      </span>
-                    </button>
-                  ))}
-              </div>
-
-              {/*
-                Kapanış uyarısı kartın DIŞINDA: bir sayaç değil, zamana
-                bağlı bir uyarı. Kartın içine üçüncü bir kutu gibi
-                girseydi "kaç tane var" sorusunun cevabı sanılırdı.
-              */}
-              {yarinKapananlar.length > 0 && (
-                <p className="flex items-center gap-1.5 px-1 text-[12px] font-semibold text-amber-800">
-                  <AlarmClock className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                  {closingSoonLabel(yarinKapananlar.length)}
-                </p>
-              )}
-            </div>
-          )}
-
-          <nav aria-label="Fırsat kategorileri" className="rounded-2xl border border-gray-200 bg-white p-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Kategoriler</p>
-            <div className="mt-2.5 flex flex-wrap gap-2">
-              {kategoriler.map(([yol, etiket]) => (
-                <button
-                  key={yol}
-                  onClick={() => onNavigate(yol)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-bold cursor-pointer ${
-                    path === yol ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {etiket}
-                </button>
-              ))}
-            </div>
-          </nav>
-
           <aside className="rounded-2xl border border-gray-200 bg-white p-4 space-y-2">
             <p className="text-sm font-bold text-gray-900">Fırsatları nasıl seçiyoruz</p>
             <p className="text-xs text-gray-600 leading-relaxed">
-              Her kaydın resmî kaynağı doğrulanıyor; kurumun kendi sayfasında görmediğimiz hiçbir burs
-              veya yarışma listeye girmiyor. Tutar ve son başvuru tarihi her yıl değiştiği için
-              uydurmuyoruz — yalnızca resmî kaynakta açıkça yazan tutarı, ait olduğu dönemle birlikte
-              gösteriyoruz.
+              Her kaydın resmî kaynağı doğrulanıyor; kurumun kendi sayfasında görmediğimiz hiçbir
+              burs, program veya yarışma listeye girmiyor. Tutar ve son başvuru tarihi her yıl
+              değiştiği için uydurmuyoruz — yalnızca resmî kaynakta açıkça yazan tutarı, ait olduğu
+              dönemle birlikte gösteriyoruz.
             </p>
           </aside>
-
         </div>
       </div>
 
-      {/* -------- mobil filtre paneli -------- */}
+      {/* -------- mobil filtre paneli (alt levha) -------- */}
       {panelAcik && (
-        <div className="lg:hidden fixed inset-0 z-50 flex items-end bg-black/40" onClick={() => setPanelAcik(false)}>
+        <div
+          className="lg:hidden fixed inset-0 z-50 flex items-end bg-black/40"
+          onClick={() => setPanelAcik(false)}
+        >
           <div
             role="dialog"
             aria-modal="true"
@@ -1266,17 +796,19 @@ export const OpportunitiesPage: React.FC<{
             <div className="flex items-center justify-between">
               <h2 className="text-base font-extrabold text-gray-900">Filtreler</h2>
               <button
+                type="button"
                 onClick={() => setPanelAcik(false)}
                 aria-label="Kapat"
-                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 cursor-pointer"
+                className={`grid h-11 w-11 place-items-center rounded-lg text-gray-400 hover:bg-gray-100 cursor-pointer ${ODAK_HALKASI}`}
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden />
               </button>
             </div>
             {suzgecler}
             <button
+              type="button"
               onClick={() => setPanelAcik(false)}
-              className="w-full rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white cursor-pointer"
+              className={`min-h-11 w-full rounded-xl bg-blue-600 text-sm font-bold text-white cursor-pointer ${ODAK_HALKASI}`}
             >
               {filtered.length} fırsatı göster
             </button>
@@ -1289,85 +821,59 @@ export const OpportunitiesPage: React.FC<{
 
 /* ------------------------------------------------------------------ */
 
-/*
-  SAYAÇ ROZETTEN SATIRA İNDİ
+/** Son başvuruya kalan gün; tarih yoksa null. */
+function gunKaldi(item: Opportunity): number | null {
+  if (!item.applicationDeadline) return null;
+  const son = new Date(item.applicationDeadline);
+  if (!Number.isFinite(son.getTime())) return null;
+  const bugun = new Date();
+  bugun.setHours(0, 0, 0, 0);
+  return Math.round((son.getTime() - bugun.getTime()) / 86400000);
+}
 
-  Üç dolgulu mavi rozetti ve başlık kartının içinde ikinci bir görsel
-  ağırlık kuruyordu. Rakam ve etiket aynı bilgiyi taşıyor; kutu taşımıyor.
-  Artık satır içi bir düğme: seçiliyken altı çiziliyor ve rengi koyuluyor,
-  seçili değilken sıradan metin gibi duruyor.
-
-  İŞLEVİ AYNI: ikisi de bir SÜZGEÇ — rakamın gösterdiği kümeyi listede
-  açıyor. Rozetin gitmesi süzgeci götürmedi.
-*/
-/*
-  `Cip` bileşeni silindi: tek kullanıcısı olan hızlı çip satırı kaldırıldı.
-  Kullanılmayan bir bileşeni bırakmak, sonradan bakanı "bir yerde çiziliyor"
-  diye aratır.
-*/
+/** Bir süzgecin "kapalı" değeri; boş durumdaki tek tek kaldırma için. */
+function bosDeger(id: string): Partial<Suzgec> {
+  if (id === 'banaUygun' || id === 'kaydedilen' || id === 'arsiv')
+    return { [id]: false } as Partial<Suzgec>;
+  /* Kaynak Burslar'ın alt süzgeci: kategori kalkınca o da kalkmalı. */
+  if (id === 'kategori') return { kategori: '', kaynak: '' };
+  return { [id]: '' } as Partial<Suzgec>;
+}
 
 const Suzgecler: React.FC<{
-  filters: {
-    query: string;
-    type: string;
-    level: string;
-    place: string;
-    openOnly: boolean;
-    takvimsiz: boolean;
-    arsiv: boolean;
-  };
-  set: (patch: any) => void;
+  filters: Suzgec;
+  set: (patch: Partial<Suzgec>) => void;
   temizle: () => void;
-  /** Takvimi açıklanmamış kayıt sayısı; sıfırsa o anahtar hiç çizilmiyor. */
-  takvimsizSayisi: number;
-  /** Süresi dolmuş kayıt sayısı; sıfırsa o anahtar hiç çizilmiyor. */
-  kapaliSayisi: number;
-  /*
-    GERÇEK SAYIMLAR
-
-    Her seçeneğin yanındaki sayı `items` üzerinden hesaplanıyor (bkz.
-    parent'taki `sayimlar`). Sıfır olan seçenek — seçili değilse —
-    hiç çizilmiyor: sonucu boş olduğu baştan belli bir süzgeci sunmak,
-    kullanıcıya olmayan bir içerik vaat etmek olur.
-  */
-  sayimlar: {
-    tur: Record<string, number>;
-    seviye: Record<string, number>;
-    acik: number;
-    yakinda: number;
-  };
-  durumSuzgeci: '' | 'acik' | 'yakinda';
-  durumSec: (yeni: '' | 'acik' | 'yakinda') => void;
-  acikSuzgecSayisi: number;
+  aktifSuzgecSayisi: number;
+  kaynakSayimlari: { kyk: number; diger: number };
+  /** Listede `event_mode` dolu kayıt var mı; yoksa katılım süzgeci çizilmiyor. */
+  modVar: boolean;
+  /** Doğrulanmış kısıtı olan kayıt var mı; yoksa "Bana uygun" çizilmiyor. */
+  banaUygunVar: boolean;
+  kaydedilenVar: boolean;
 }> = ({
   filters,
   set,
   temizle,
-  takvimsizSayisi,
-  kapaliSayisi,
-  sayimlar,
-  durumSuzgeci,
-  durumSec,
-  acikSuzgecSayisi,
+  aktifSuzgecSayisi,
+  kaynakSayimlari,
+  modVar,
+  banaUygunVar,
+  kaydedilenVar,
 }) => (
   <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-    {/*
-      Başlık satırı ilan sayfasındaki gibi: ikon + "Filtreler", sağda açık
-      süzgeç sayısı ve temizleme. Panel geniş ekranda hep açık olduğu için
-      burada açma-kapama oku yok.
-    */}
     <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3">
-      <SlidersHorizontal className="h-4 w-4 shrink-0 text-gray-500" />
+      <SlidersHorizontal className="h-4 w-4 shrink-0 text-gray-500" aria-hidden />
       <span className="text-sm font-bold text-gray-900">Filtreler</span>
-      {acikSuzgecSayisi > 0 && (
+      {aktifSuzgecSayisi > 0 && (
         <>
           <span className="shrink-0 rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-white">
-            {acikSuzgecSayisi}
+            {aktifSuzgecSayisi}
           </span>
           <button
             type="button"
             onClick={temizle}
-            className="ml-auto shrink-0 cursor-pointer text-xs font-bold text-blue-600 hover:underline"
+            className={`ml-auto shrink-0 cursor-pointer rounded-lg px-1 text-xs font-bold text-blue-600 hover:underline ${ODAK_HALKASI}`}
           >
             Temizle
           </button>
@@ -1378,155 +884,199 @@ const Suzgecler: React.FC<{
     <div className="divide-y divide-gray-100">
       <FiltreBlogu baslik="Ara">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search
+            aria-hidden
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+          />
           <input
             aria-label="Fırsat ara"
             value={filters.query}
             onChange={(e) => set({ query: e.target.value })}
-            placeholder="Burs veya fırsat ara"
-            className="w-full rounded-xl border border-gray-200 py-2.5 pl-9 pr-3 text-sm font-medium text-gray-900 placeholder:font-normal placeholder:text-gray-400 focus:border-blue-600 focus:outline-none"
+            placeholder="Burs, program veya yarışma ara"
+            className={`w-full rounded-xl border border-gray-200 py-2.5 pl-9 pr-3 text-sm font-medium text-gray-900 placeholder:font-normal placeholder:text-gray-400 focus:border-blue-600 focus:outline-none ${ODAK_HALKASI}`}
           />
         </div>
       </FiltreBlogu>
 
       {/*
-        DURUM
+        KAYNAK YALNIZCA BURSLARDA
 
-        "Yalnızca açık olanlar" tek bir anahtardı ve "yakında açılacaklar"
-        seçilemiyordu — o küme yalnızca sayaçtan süzülebiliyordu. Üçü aynı
-        soruyu cevapladığı için tek bir seçenek grubu oldu.
+        KYK ayrı bir kategori değil, Burslar'ın içindeki bir kurum. Şerit
+        Burslar'da değilken bu blok çizilmiyor: yarışmalar listesinde
+        "KYK / Diğer kurumlar" seçeneği sunmak anlamsız olurdu.
       */}
-      <FiltreBlogu baslik="Durum">
-        <div className="space-y-0.5">
-          <SecenekSatiri
-            tip="radio"
-            etiket="Tümü"
-            secili={durumSuzgeci === ''}
-            onChange={() => durumSec('')}
-          />
-          <SecenekSatiri
-            tip="radio"
-            etiket="Başvuru açık"
-            adet={sayimlar.acik}
-            secili={durumSuzgeci === 'acik'}
-            onChange={() => durumSec('acik')}
-          />
-          <SecenekSatiri
-            tip="radio"
-            etiket="Yakında açılıyor"
-            adet={sayimlar.yakinda}
-            secili={durumSuzgeci === 'yakinda'}
-            onChange={() => durumSec('yakinda')}
-          />
-        </div>
-      </FiltreBlogu>
-
-      <FiltreBlogu baslik="Tür">
-        <div className="space-y-0.5">
-          <SecenekSatiri
-            tip="radio"
-            etiket="Tüm türler"
-            secili={filters.type === ''}
-            onChange={() => set({ type: '' })}
-          />
-          {Object.entries(OPPORTUNITY_TYPE_LABELS).map(([value, label]) => {
-            const adet = sayimlar.tur[value] ?? 0;
-            if (adet === 0 && filters.type !== value) return null;
-            return (
-              <SecenekSatiri
-                key={value}
-                tip="radio"
-                etiket={label as string}
-                adet={adet}
-                secili={filters.type === value}
-                onChange={() => set({ type: value })}
-              />
-            );
-          })}
-        </div>
-      </FiltreBlogu>
-
-      <FiltreBlogu baslik="Eğitim seviyesi">
-        <div className="space-y-0.5">
-          <SecenekSatiri
-            tip="radio"
-            etiket="Tüm seviyeler"
-            secili={filters.level === ''}
-            onChange={() => set({ level: '' })}
-          />
-          {['Lise', 'Ön lisans', 'Lisans', 'Yüksek Lisans', 'Doktora'].map((seviye) => {
-            const adet = sayimlar.seviye[seviye] ?? 0;
-            if (adet === 0 && filters.level !== seviye) return null;
-            return (
-              <SecenekSatiri
-                key={seviye}
-                tip="radio"
-                etiket={seviye}
-                adet={adet}
-                secili={filters.level === seviye}
-                onChange={() => set({ level: seviye })}
-              />
-            );
-          })}
-        </div>
-      </FiltreBlogu>
-
-      <FiltreBlogu baslik="Şehir veya ülke">
-        <div className="relative">
-          <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            aria-label="Şehir veya ülke"
-            value={filters.place}
-            onChange={(e) => set({ place: e.target.value })}
-            placeholder="Şehir veya ülke"
-            className="w-full rounded-xl border border-gray-200 py-2.5 pl-9 pr-3 text-sm font-medium text-gray-900 placeholder:font-normal placeholder:text-gray-400 focus:border-blue-600 focus:outline-none"
-          />
-        </div>
-      </FiltreBlogu>
-
-      {/*
-        TAKVİMİ AÇIKLANMAYANLAR
-
-        Varsayılan liste bu kayıtları gizliyor ve panelde karşılığı yoktu;
-        anahtar liste başlığının yanında ayrı bir satırdaydı. Yeri burası —
-        diğer süzgeçlerin yanı. Sayı sıfırken çizilmiyor.
-      */}
-      {(takvimsizSayisi > 0 || kapaliSayisi > 0) && (
-        <FiltreBlogu baslik="Ayrıca göster">
+      {filters.kategori === 'burslar' && (
+        <FiltreBlogu baslik="Kaynak">
           <div className="space-y-0.5">
-            {takvimsizSayisi > 0 && (
+            <SecenekSatiri
+              tip="radio"
+              etiket="Tümü"
+              secili={filters.kaynak === ''}
+              onChange={() => set({ kaynak: '' })}
+            />
+            {kaynakSayimlari.kyk > 0 && (
               <SecenekSatiri
-                tip="checkbox"
-                etiket="Takvimi açıklanmayanlar"
-                adet={takvimsizSayisi}
-                secili={filters.takvimsiz}
-                onChange={() => set({ takvimsiz: !filters.takvimsiz })}
+                tip="radio"
+                etiket="KYK"
+                adet={kaynakSayimlari.kyk}
+                secili={filters.kaynak === 'kyk'}
+                onChange={() => set({ kaynak: 'kyk' })}
               />
             )}
-            {/*
-              SÜRESİ DOLANLAR — LİSTE ÜSTÜNDEN BURAYA
-
-              Liste başlığının yanında ayrı bir düğmeydi. Süzgeç paneli
-              bölümlere ayrılınca oranın tek kalan sakini oldu; yeri
-              zaten burası, diğer görünürlük anahtarının yanı.
-
-              İki anahtar birbirini dışlıyor: arşiv açılınca takvimsiz
-              kapanıyor (`setArsivGoster`'daki kural). Süresi dolmuş
-              kayıtların hepsinin tarihi zaten var, "takvimi
-              açıklanmayan" ayrımı orada anlamsız.
-            */}
-            {kapaliSayisi > 0 && (
+            {kaynakSayimlari.diger > 0 && (
               <SecenekSatiri
-                tip="checkbox"
-                etiket="Süresi dolanlar"
-                adet={kapaliSayisi}
-                secili={filters.arsiv}
-                onChange={() => set({ arsiv: !filters.arsiv, takvimsiz: false })}
+                tip="radio"
+                etiket="Diğer kurumlar"
+                adet={kaynakSayimlari.diger}
+                secili={filters.kaynak === 'diger'}
+                onChange={() => set({ kaynak: 'diger' })}
               />
             )}
           </div>
         </FiltreBlogu>
       )}
+
+      {(banaUygunVar || kaydedilenVar) && (
+        <FiltreBlogu baslik="Listem">
+          <div className="space-y-0.5">
+            {banaUygunVar && (
+              <SecenekSatiri
+                tip="checkbox"
+                etiket="Bana uygun"
+                secili={filters.banaUygun}
+                onChange={() => set({ banaUygun: !filters.banaUygun })}
+              />
+            )}
+            {kaydedilenVar && (
+              <SecenekSatiri
+                tip="checkbox"
+                etiket="Kaydedilenler"
+                secili={filters.kaydedilen}
+                onChange={() => set({ kaydedilen: !filters.kaydedilen })}
+              />
+            )}
+          </div>
+        </FiltreBlogu>
+      )}
+
+      <FiltreBlogu baslik="Son başvuru tarihi">
+        <div className="space-y-0.5">
+          <SecenekSatiri
+            tip="radio"
+            etiket="Tümü"
+            secili={filters.sonGun === ''}
+            onChange={() => set({ sonGun: '' })}
+          />
+          <SecenekSatiri
+            tip="radio"
+            etiket="7 gün içinde"
+            secili={filters.sonGun === '7'}
+            onChange={() => set({ sonGun: '7' })}
+          />
+          <SecenekSatiri
+            tip="radio"
+            etiket="30 gün içinde"
+            secili={filters.sonGun === '30'}
+            onChange={() => set({ sonGun: '30' })}
+          />
+        </div>
+      </FiltreBlogu>
+
+      <FiltreBlogu baslik="Şehir veya ülke">
+        <div className="relative">
+          <MapPin
+            aria-hidden
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+          />
+          <input
+            aria-label="Şehir veya ülke"
+            value={filters.sehir}
+            onChange={(e) => set({ sehir: e.target.value })}
+            placeholder="Şehir veya ülke"
+            className={`w-full rounded-xl border border-gray-200 py-2.5 pl-9 pr-3 text-sm font-medium text-gray-900 placeholder:font-normal placeholder:text-gray-400 focus:border-blue-600 focus:outline-none ${ODAK_HALKASI}`}
+          />
+        </div>
+      </FiltreBlogu>
+
+      <FiltreBlogu baslik="Nerede">
+        <div className="space-y-0.5">
+          <SecenekSatiri
+            tip="radio"
+            etiket="Tümü"
+            secili={filters.bolge === ''}
+            onChange={() => set({ bolge: '' })}
+          />
+          <SecenekSatiri
+            tip="radio"
+            etiket="Türkiye"
+            secili={filters.bolge === 'turkiye'}
+            onChange={() => set({ bolge: 'turkiye' })}
+          />
+          <SecenekSatiri
+            tip="radio"
+            etiket="Yurt dışı"
+            secili={filters.bolge === 'yurtdisi'}
+            onChange={() => set({ bolge: 'yurtdisi' })}
+          />
+        </div>
+      </FiltreBlogu>
+
+      {modVar && (
+        <FiltreBlogu baslik="Katılım">
+          <div className="space-y-0.5">
+            <SecenekSatiri
+              tip="radio"
+              etiket="Tümü"
+              secili={filters.mod === ''}
+              onChange={() => set({ mod: '' })}
+            />
+            <SecenekSatiri
+              tip="radio"
+              etiket="Yüz yüze"
+              secili={filters.mod === 'yuz-yuze'}
+              onChange={() => set({ mod: 'yuz-yuze' })}
+            />
+            <SecenekSatiri
+              tip="radio"
+              etiket="Çevrim içi"
+              secili={filters.mod === 'cevrim-ici'}
+              onChange={() => set({ mod: 'cevrim-ici' })}
+            />
+          </div>
+        </FiltreBlogu>
+      )}
+
+      <FiltreBlogu baslik="Sıralama">
+        <div className="space-y-0.5">
+          <SecenekSatiri
+            tip="radio"
+            etiket="Varsayılan"
+            secili={filters.siralama === ''}
+            onChange={() => set({ siralama: '' })}
+          />
+          <SecenekSatiri
+            tip="radio"
+            etiket="Son başvuru tarihi"
+            secili={filters.siralama === 'son-tarih'}
+            onChange={() => set({ siralama: 'son-tarih' })}
+          />
+          <SecenekSatiri
+            tip="radio"
+            etiket="Yeni eklenen"
+            secili={filters.siralama === 'yeni'}
+            onChange={() => set({ siralama: 'yeni' })}
+          />
+        </div>
+      </FiltreBlogu>
+
+      <FiltreBlogu baslik="Ayrıca göster">
+        <SecenekSatiri
+          tip="checkbox"
+          etiket="Süresi dolanlar"
+          secili={filters.arsiv}
+          onChange={() => set({ arsiv: !filters.arsiv })}
+        />
+      </FiltreBlogu>
     </div>
   </section>
 );
@@ -1534,53 +1084,45 @@ const Suzgecler: React.FC<{
 /*
   FIRSAT KARTI
 
-  Kartın söylemesi gereken sıra: bu ne, kimden, kime, ne kadar, ne zaman.
-  Önce tarih dev punto ile kartın ortasındaydı ve tutar tek kelimelik gri
-  bir rozetti ("Karşılıksız") — oysa burs seçerken ilk sorulan iki şey
-  "kaç para" ve "geri ödeyecek miyim".
+  Kartın söyleme sırası: kimden, bu ne, kime, nerede, ne kadar, ne zaman.
+  Veri YOKSA satır hiç çizilmiyor — boş bir alan bilgi sanılıp okunuyor ve
+  kartı uzatıyor.
 
-  Başlık iki satıra kadar açılıyor: "TÜBİTAK 2250 Lisansüstü Bursları"
-  tek satırda kesilince hangi program olduğu okunmuyordu.
+  `export` yalnızca geliştirme fikstürü için: kart uzun başlık, tarihsiz
+  kayıt, logosuz kurum gibi durumlarda tarayıcıda hiç görülmeden
+  değişiyordu ve üretimde bu varyasyonların hepsi aynı anda bulunmuyor.
 */
-/**
- * Fırsat listesi kartı.
- *
- * `export` YALNIZCA geliştirme fikstürü için: kart uzun başlık, uzun
- * resmî kaynak etiketi, tarihsiz kayıt gibi durumlarda tarayıcıda hiç
- * görülmeden değişiyordu ve üretimde bu varyasyonların hepsi aynı anda
- * bulunmuyor. Üretim yolunda yalnızca bu dosya kullanıyor.
- */
 export const Card: React.FC<{
   item: Opportunity;
   onNavigate: (p: string) => void;
   fit: { durum: string; not: string | null; kesin: boolean } | null;
-  /*
-    `saved` / `onSave` KALDIRILDI
-
-    Takip düğmesi karttan çıkınca bu iki özellik de gereksiz kaldı.
-    Kullanılmayan bir özelliği bırakmak, sonradan okuyanı "kart takibi
-    biliyor ama göstermiyor" diye yanıltır. Takip detay sayfasında.
-  */
-  /*
-    Dış başvuru bağlantısı misafirde giriş penceresini açıyor; kartın geri
-    kalanı açık kalıyor (bkz. ui/DisBaglanti).
-  */
+  /** Arşiv görünümünde başvuru düğmesi çizilmiyor: dönem kapandı. */
+  arsivde?: boolean;
   girisGerekli: boolean;
   onRequireLogin: () => void;
-}> = ({ item, onNavigate, fit, girisGerekli, onRequireLogin }) => {
-  const cta = opportunityCta(item);
-  const durum = opportunityStatus(item);
+}> = ({ item, onNavigate, fit, arsivde = false, girisGerekli, onRequireLogin }) => {
+  const cta = arsivde ? null : opportunityCta(item);
   const tutar = opportunityAmount(item);
-  /* `ton` artık YALNIZCA takvimi açıklanmamış kutuda kullanılıyor; kalan
-     durumların rengini zaman tüpü kendi taşıyor. */
-  const ton = (ACILIYET_SINIFLARI as any)[deadlineTone(item)] ?? ACILIYET_SINIFLARI.notr;
+  const rozetler = firsatRozetleri(item, { fit }) as {
+    id: string;
+    etiket: string;
+  }[];
   const yer = [...item.cities, ...item.countries];
   const seviye = item.educationLevels.length ? item.educationLevels.join(', ') : null;
+  const bolumVeSinif = [...item.eligibleDepartments, ...item.eligibleClassYears];
+  const katilim =
+    item.eventMode === 'online'
+      ? 'Çevrim içi'
+      : item.eventMode === 'hybrid'
+        ? 'Karma'
+        : item.eventMode === 'in_person'
+          ? 'Yüz yüze'
+          : null;
 
   /*
-    Açılış tarihi yalnızca GELECEKTEYSE gösteriliyor — takvimin kendi
-    kuralı (opportunityCalendar). Gün karşılaştırması yerel saatten
-    etkilenmesin diye tarihler güne yuvarlanıyor.
+    Açılış tarihi yalnızca GELECEKTEYSE gösteriliyor — takvimin kuralının
+    aynısı (opportunityCalendar). Geçmiş bir açılış, öğrencinin
+    yapabileceği bir şey söylemiyor.
   */
   const acilisTarihi = (() => {
     if (!item.applicationStartAt) return null;
@@ -1591,37 +1133,16 @@ export const Card: React.FC<{
     return acilis >= bugun ? kisaTarih(item.applicationStartAt) : null;
   })();
 
-  /*
-    BOŞLUK BİR KADEME DARALDI
-
-    Öğeler arası 12 px'ti ve kart yedi ayrı bloktan oluşuyor; her
-    aralıkta bir kademe fazlalık toplanınca kart gereksiz uzuyordu.
-    10 px hâlâ nefes alıyor ama blokları birbirine yaklaştırıyor.
-  */
   return (
-    /*
-      KART İŞ & STAJ İLAN KARTIYLA AYNI
-
-      Kök sınıflar, iç boşluk, logo ölçüsü ve tipografi InternshipCard'dan
-      birebir alındı: aynı `rounded-2xl`, aynı `p-3.5 sm:p-4.5`, aynı
-      `hover:border-blue-500`, aynı `gap-3 sm:gap-3.5`. İki liste sayfası
-      farklı iç boşluk ve farklı kart gölgesi kullanıyordu; aynı üründe
-      iki ayrı kart dili oluyordu.
-
-      Sıra da oradaki gibi: önce kurum adı (mavi, küçük), sonra asıl
-      başlık (büyük, koyu). Burada tersiydi — üstte tür etiketi, altta
-      başlık, en altta kurum. İlan kartında gözün ilk gördüğü şey kimin
-      ilanı olduğu; burs kartında da öyle olmalı.
-    */
     <article className="group relative flex min-w-0 flex-col gap-1.5 rounded-2xl border border-gray-200 bg-white p-2.5 transition-all duration-150 hover:border-blue-500 hover:shadow-xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 sm:gap-2 sm:p-3.5">
       <div className="flex w-full min-w-0 items-start gap-2 sm:gap-2.5">
         {/*
-          Logo ölçüsü ListingLogo'dan geliyor (56×56, dairesel). İlan
-          kartındaki halka burada yok: halka uyum puanını gösteriyor,
-          bursta öyle bir puan hesaplanmıyor. Boş bir halka çizmek
-          olmayan bir ölçümü varmış gibi gösterirdi.
+          Logo ilan kartıyla AYNI bileşen (ListingLogo): aynı dairesel
+          kutu, aynı iç boşluk ve logosu olmayan kurumda AYNI ÖLÇÜDE baş
+          harf kutusu — iki liste arasında göz hizası kaymıyor. Ölçü dar
+          kart için bir kademe küçültüldü: 56 piksellik logo 174 piksellik
+          kartın üçte birini yiyordu (ölçüldü, 390px).
         */}
-        {/* 56 piksellik logo dar kartta genişliğin üçte birini yiyordu. */}
         <div className="shrink-0">
           <ListingLogo
             name={item.organizationName}
@@ -1634,13 +1155,6 @@ export const Card: React.FC<{
             {item.organizationName}
           </span>
           {/*
-            KART BAŞLIĞI DETAYA GİDEN BAĞLANTI
-
-            Kartın altında ayrı bir "Detayı gör" düğmesi vardı ve kartın
-            kendisi tıklanmıyordu. İlan kartında bu ayrım kaldırılmıştı:
-            kartın tamamı detaya gidiyor, düğme yalnız DIŞARI çıkan eylem
-            için kalıyor. Üç liste artık aynı davranıyor.
-
             Gerilmiş bağlantı (`after:inset-0`) kartın tamamını kaplıyor;
             gerçek bir `href` olduğu için orta tuş ve "yeni sekmede aç"
             çalışıyor, arama motoru da bağlantıyı görüyor.
@@ -1654,7 +1168,7 @@ export const Card: React.FC<{
                 onNavigate(`/firsatlar/${item.slug}`);
               }}
               title={item.title}
-              className="rounded-sm outline-none transition-colors after:absolute after:inset-0 after:content-[''] group-hover:text-blue-700"
+              className={`rounded-sm outline-none transition-colors after:absolute after:inset-0 after:content-[''] group-hover:text-blue-700 ${ODAK_HALKASI}`}
             >
               {item.title}
             </a>
@@ -1663,53 +1177,58 @@ export const Card: React.FC<{
       </div>
 
       {/*
-        TÜR VE DOĞRULAMA TEK SATIRDA
+        TÜR ETİKETİ VE ROZETLER
 
-        Üstte tür etiketi ayrı bir blok, sağ üstte "Resmî kaynak" rozeti
-        ayrı bir bloktu; dar kartta ikisi başlığı aşağı itiyordu. İkisi de
-        aynı türde küçük rozet, aynı satıra alındılar.
+        Rozetlerin üçü de tek bir alandan geliyor: "Yeni" published_at'ten,
+        "Son 3 gün" son başvuru tarihinden, "Sana uygun" doğrulanmış
+        kısıtlardan (lib/firsat-kategori · firsatRozetleri). Hesaplanmamış
+        etiket yok — "Popüler" için bu sitede sayılabilecek bir başvuru
+        yok, başvuruyu kurum alıyor.
       */}
       <div className="flex flex-wrap items-center gap-1 text-[9px] font-bold sm:gap-1.5 sm:text-[10px]">
         <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-blue-700 sm:px-2">
           {opportunityTypeLabel(item.opportunityType)}
         </span>
+        {rozetler.map((rozet) => (
+          <span
+            key={rozet.id}
+            className={`rounded-full px-1.5 py-0.5 sm:px-2 ${
+              rozet.id === 'son_gunler'
+                ? 'bg-amber-50 text-amber-900'
+                : rozet.id === 'uygun'
+                  ? 'bg-emerald-50 text-emerald-800'
+                  : 'bg-gray-100 text-gray-700'
+            }`}
+          >
+            {rozet.etiket}
+          </span>
+        ))}
         {item.verifiedAt && (
           <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-1.5 py-0.5 text-emerald-700 sm:px-2">
-            <CheckCircle2 className="h-2.5 w-2.5 shrink-0" />
+            <CheckCircle2 className="h-2.5 w-2.5 shrink-0" aria-hidden />
             Resmî kaynak
           </span>
         )}
       </div>
 
       {/*
-        Kime: seviye ve yer. İkisi de yoksa satır hiç çizilmiyor.
-
-        Dar karttan (telefonda iki sütun) gizleniyor: 174 piksellik kartta
-        "Lisans · İstanbul, Ankara, İzmir" üç satıra bölünüp kartın en uzun
-        bloğu oluyordu. Bilgi kaybolmuyor — detay sayfasında ve süzgeçte
-        aynen duruyor.
+        Kime ve nerede. Hiçbiri yoksa satır çizilmiyor. Dar kartta gizli:
+        174 pikselde "Lisans · İstanbul, Ankara, İzmir" üç satıra bölünüp
+        kartın en uzun bloğu oluyordu (ölçüldü). Bilgi kaybolmuyor — detay
+        sayfasında ve süzgeçte aynen duruyor.
       */}
-      {(seviye || yer.length > 0) && (
+      {(seviye || bolumVeSinif.length > 0 || yer.length > 0 || katilim) && (
         <p className="hidden text-xs text-gray-500 sm:block">
-          {[seviye, yer.join(', ')].filter(Boolean).join(' · ')}
+          {[seviye, bolumVeSinif.slice(0, 2).join(', '), yer.join(', '), katilim]
+            .filter(Boolean)
+            .join(' · ')}
         </p>
       )}
 
       {/*
-        NE KADAR
-
-        Tutar yalnızca resmî kaynaktan doğrulanmışsa yazıyor. Doğrulanmamışsa
-        susmuyoruz da: "açıklanmadı" demek, boş bırakıp öğrenciyi aramaya
-        göndermekten iyi.
-      */}
-      {/*
-        BİLİNMEYEN TUTAR KUTU DEĞİL, SATIR
-
-        Fırsatların çoğunda tutar henüz doğrulanmadı ve her birine gri bir
-        kutu çizmek kartları boşuna uzatıyordu — hiçbir şey söylemeyen bir
-        alanın en büyük öğelerden biri olması yanlış. Bilinmiyorsa tek
-        satır; biliniyorsa vurgulu kutu, çünkü o zaman kararı belirleyen
-        bilgi orada.
+        Tutar yalnızca resmî kaynaktan doğrulanmışsa yazıyor.
+        Doğrulanmamışsa susmuyoruz da: "açıklanmadı" demek, boş bırakıp
+        öğrenciyi aramaya göndermekten iyi.
       */}
       {tutar.bilinmiyor ? (
         <p className="flex items-center gap-1 text-[11px] text-gray-500 sm:gap-1.5 sm:text-xs">
@@ -1718,7 +1237,9 @@ export const Card: React.FC<{
           </span>
           Tutar açıklanmadı
           {tutar.geriOdeme && (
-            <span className="hidden font-semibold text-gray-600 sm:inline">· {tutar.geriOdeme}</span>
+            <span className="hidden font-semibold text-gray-600 sm:inline">
+              · {tutar.geriOdeme}
+            </span>
           )}
         </p>
       ) : (
@@ -1732,79 +1253,30 @@ export const Card: React.FC<{
         </div>
       )}
 
-      {/*
-        NE ZAMAN — ZAMAN TÜPÜ
-
-        Burada renkli bir kutu vardı ve son üç güne giren burs KIRMIZI
-        oluyordu. Kırmızı bu üründe hata rengi: açık, başvurulabilir bir
-        burs "iptal oldu" gibi okunuyordu. Aynı bilgi artık zaman tüpüyle
-        veriliyor — süre azaldıkça dolan bir kapsül ve pozitif renk dili.
-
-        Takvimi açıklanmamış kayıtta tüp çizilmiyor; oradaki cümle ne
-        yapılacağını söylediği için olduğu gibi kalıyor.
-      */}
-      {durum === 'takvim_bekleniyor' ? (
-        <div className={`rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 ${ton.kutu}`}>
-          <p className={`text-[11px] font-semibold leading-snug sm:text-[13px] ${ton.yazi}`}>
-            Kurum bu dönemin takvimini açıklamadı; resmî kaynaktan takip et.
-          </p>
-        </div>
-      ) : (
-        <>
-          {/*
-            BAŞVURU AÇILIŞ TARİHİ — TAKVİMDEN KARTA
-
-            Bu bilgi yalnızca takvim görünümünde vardı ("4 Eyl · BAŞVURU
-            AÇILIYOR"). Liste yalnızca son başvuruyu gösteriyordu, yani
-            kartına bakan öğrenci "yakında" yazısını görüyor ama NE ZAMAN
-            açılacağını göremiyordu — cevap ayrı bir sayfadaydı.
-
-            Yalnızca GELECEKTEKİ açılışta çiziliyor; takvimdeki kuralın
-            aynısı (lib/firsat-degerlendirme.mjs → opportunityCalendar).
-            Geçmiş bir açılış tarihi öğrencinin yapabileceği bir şey
-            söylemiyor, üstelik "açık" kartında kafa karıştırırdı.
-          */}
-          {acilisTarihi && (
-            <p className="flex items-start gap-1 text-[11px] font-semibold leading-snug text-blue-800 sm:gap-1.5 sm:text-[13px]">
-              <CalendarDays className="mt-0.5 h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden />
-              <span>{acilisTarihi} tarihinde başvuruya açılıyor</span>
-            </p>
-          )}
-          {/*
-            Tüpün üst satırı artık sarıyor (bkz. ZamanTupu): dar kartta
-            tarih alt satıra iniyor, kırpılmıyor.
-          */}
-          <ZamanTupu item={item} />
-        </>
+      {acilisTarihi && !arsivde && (
+        <p className="flex items-start gap-1 text-[11px] font-semibold leading-snug text-blue-800 sm:gap-1.5 sm:text-[13px]">
+          <CalendarDays className="mt-0.5 h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden />
+          <span>{acilisTarihi} tarihinde başvuruya açılıyor</span>
+        </p>
       )}
 
       {/*
-        ÇAKIŞMA BİLGİSİ TAKVİMDEN BAĞIMSIZ
+        ARŞİVDE TÜP YOK
 
-        Bu satır önce zaman tüpünün yanına konmuştu ve farkında olmadan
-        "takvim açıklanmış" koşuluna bağlanmıştı: takvimi belli olmayan
-        kayıtlarda hiç çıkmıyordu. Oysa bir bursun KYK ile birlikte alınıp
-        alınamayacağı, başvurunun ne zaman açıldığıyla ilgili değil.
-
-        Kartta TEK SATIR; ayrıntısı ilan sayfasında ve
-        /rehber/burs-cakisma matrisinde — üçü de aynı veriden besleniyor.
+        Zaman tüpü "ne kadar kaldı" diyor; kapanmış bir dönemde kalan süre
+        yok ve dolu bir tüp çizmek yanlış bilgi olurdu. Yerine tarafsız bir
+        satır: ne zaman kapandığı.
       */}
-      {/* Dar kartta gizli; aynı bilgi detay sayfasında ve çakışma matrisinde. */}
-      <div className="hidden sm:block">
-        <BursUyumRozeti
-          tur={item.opportunityType}
-          baslik={item.title}
-          kurumAdi={item.organizationName}
-        />
-      </div>
+      {arsivde ? (
+        item.applicationDeadline ? (
+          <p className="text-[11px] font-semibold text-gray-500 sm:text-[13px]">
+            {kisaTarih(item.applicationDeadline)} tarihinde kapandı
+          </p>
+        ) : null
+      ) : (
+        <ZamanTupu item={item} />
+      )}
 
-      {/*
-        UYGUNLUK — İDDİA DEĞİL, GEREKÇE
-
-        "%84 uyum" gibi bir puan yazıyordu ve puanın neyden çıktığı
-        görünmüyordu. Şart varsa şartın kendisi yazıyor; yoksa en fazla
-        "uygun olabilir" deniyor.
-      */}
       {fit?.not && (
         <p
           className={`hidden text-xs leading-relaxed sm:block ${
@@ -1816,62 +1288,6 @@ export const Card: React.FC<{
       )}
 
       {/*
-        "SON KONTROL … DEĞİŞTİRİLEBİLİR" SATIRI KARTTAN ÇIKTI
-
-        İki satır yer kaplayan bir GÜVEN notuydu, bir karar bilgisi değil:
-        kullanıcı bu cümleye bakıp başvurup başvurmayacağına karar
-        vermiyor. Üstelik kartın tepesinde zaten "Resmî kaynak" rozeti
-        duruyor ve hemen altında zaman tüpü var — üç ayrı güven/tarih
-        sinyali arka arkaya geliyordu.
-
-        Cümlenin tamamı detay sayfasında duruyor: "Bu kaydı en son …
-        tarihinde resmî kaynağından kontrol ettik." Aynı seçim keşif
-        kartında da yapılmıştı; iki kart artık aynı dili konuşuyor.
-      */}
-
-      {/*
-        İKİ AKSİYON, ÜÇ DEĞİL
-
-        Alt satırda "Detayı gör", "Takip et" ve "Resmî kaynak" birlikte
-        duruyordu; üçü 390 pikselde satıra sığmayıp alt alta düşüyor ve
-        kartı uzatıyordu. Daha kötüsü karar dağılıyordu: kullanıcı hangi
-        düğmenin ana yol olduğunu seçmek zorunda kalıyordu.
-
-        "Takip et" karttan kalktı — SİLİNMEDİ: detay sayfasında kapak
-        görselinin üstündeki yer imi düğmesi olarak duruyor ve
-        /kaydedilen-firsatlar sayfası aynen çalışıyor. Kartın işi karar
-        vermek değil, içeri davet etmek.
-
-        AYIRICI ÇİZGİ
-        Zaman tüpü de yatay bir çubuk; hemen altına düğmeler gelince iki
-        yatay öğe birbirine karışıyordu. Çok açık gri tek piksellik bir
-        çizgi ikisini ayırıyor — tablo çizgisi gibi değil, yalnızca
-        boşluğu düzenleyen bir eşik.
-      */}
-      {/*
-        DÜĞME AĞIRLIKLARI İLAN KARTIYLA AYNI
-
-        Buradaki çift terstir: "Detayı gör" mavi, "Resmî kaynak" beyazdı;
-        ilan kartında ise "Detaylar" beyaz, "Resmî sitede başvur" maviydi.
-        Punto da ayrışmıştı (text-sm'e karşı text-xs). Yani aynı sitede
-        mavi kutu bir listede siteden çıkaran eylemi, ötekinde site içi
-        sayfayı gösteriyordu.
-
-        Artık ikisi de `lib/kart-cta`dan geliyor: mavi kutu her zaman ana
-        eylem (başvuru/resmî kaynak), detay her zaman ikincil.
-
-        Detay sayfası birincil yuvayı kaybetti ama kaybolmadı: kutu aynı
-        boyutta, aynı yerde, yalnız rengi ikincil. Kartın tamamı zaten
-        detay sayfasına götüren bir bağlantı değil — düğme tek yol.
-      */}
-      {/*
-        TEK EYLEM KALDI
-
-        "Detayı gör" düğmesi kalktı: kartın KENDİSİ detaya gidiyor (yukarıda,
-        gerilmiş bağlantı). Aynı hedefe giden ikinci bir düğme, dar kartta
-        kalan tek gerçek eylemi — resmî kaynağa çıkmayı — eşit ağırlıkta bir
-        rakiple paylaştırıyordu. Aynı karar ilan kartında da verilmişti.
-
         `relative z-10`: düğme gerilmiş bağlantının ÜSTÜNDE kalmalı, yoksa
         tıklama karta gidip detay sayfasını açardı.
       */}
@@ -1882,13 +1298,13 @@ export const Card: React.FC<{
             girisGerekli={girisGerekli}
             onGirisGerekli={onRequireLogin}
             kapiEtiketi="Başvurmak için giriş yap"
-            className={`${CTA_ORTAK} ${CTA_BIRINCIL} w-full`}
+            className={`${CTA_ORTAK} ${CTA_BIRINCIL} w-full ${ODAK_HALKASI}`}
           >
             {/* Kartta kısa etiket: uzun hâli düğmeyi iki satıra bölüyordu. */}
             <span className="truncate">
               {girisGerekli ? 'Giriş yap' : (cta.kisaEtiket ?? cta.etiket)}
             </span>
-            <ExternalLink className="h-3 w-3 shrink-0" />
+            <ExternalLink className="h-3 w-3 shrink-0" aria-hidden />
           </DisBaglanti>
         </div>
       )}
@@ -1899,13 +1315,17 @@ export const Card: React.FC<{
 /*
   TAKVİM
 
-  Önce yalnızca son başvuru tarihleri tek uzun liste hâlinde diziliyordu.
-  Takvimin işe yaraması için açılış günü de gerekiyor: "ne zaman
-  başvurabilirim" sorusu en az "ne zaman kapanıyor" kadar sık.
+  Takvimin listeye göre tek fazlası açılış günleri: "ne zaman
+  başvurabilirim" sorusu en az "ne zaman kapanıyor" kadar sık. Aylara
+  bölünüyor çünkü öğrenci "bu ay ne var" diye bakıyor.
 
-  Aylara bölünüyor çünkü öğrenci "bu ay ne var" diye bakıyor.
+  Satır gerçek `<a href>`: orta tuş ve "yeni sekmede aç" çalışsın diye.
+  Önce `<button>` idi ve ikisi de çalışmıyordu.
 */
-const Takvim: React.FC<{ items: Opportunity[]; onNavigate: (p: string) => void }> = ({ items, onNavigate }) => {
+const Takvim: React.FC<{
+  items: Opportunity[];
+  onNavigate: (p: string) => void;
+}> = ({ items, onNavigate }) => {
   const aylar = React.useMemo(() => opportunityCalendar(items), [items]);
 
   if (!aylar.length) {
@@ -1921,34 +1341,49 @@ const Takvim: React.FC<{ items: Opportunity[]; onNavigate: (p: string) => void }
   return (
     <div className="space-y-4">
       {aylar.map((ay: any) => (
-        <section key={ay.anahtar} className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+        <section
+          key={ay.anahtar}
+          className="rounded-2xl border border-gray-200 bg-white overflow-hidden"
+        >
           <h2 className="px-4 py-2.5 text-sm font-extrabold text-gray-900 bg-gray-50 border-b border-gray-100 capitalize">
             {ay.etiket}
           </h2>
           <div className="divide-y divide-gray-100">
             {ay.olaylar.map((olay: any) => (
-              <button
+              <a
                 key={`${olay.item.id}-${olay.tur}`}
-                onClick={() => onNavigate(`/firsatlar/${olay.item.slug}`)}
-                className="w-full text-left p-3 sm:p-4 hover:bg-gray-50 flex items-center gap-3 cursor-pointer"
+                href={`/firsatlar/${olay.item.slug}`}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  onNavigate(`/firsatlar/${olay.item.slug}`);
+                }}
+                className={`flex min-h-11 w-full items-center gap-3 p-3 text-left hover:bg-gray-50 sm:p-4 ${ODAK_HALKASI}`}
               >
                 <time className="w-14 shrink-0 text-sm font-extrabold text-gray-900">
-                  {kisaTarih(olay.tur === 'acilis' ? olay.item.applicationStartAt : olay.item.applicationDeadline)}
+                  {kisaTarih(
+                    olay.tur === 'acilis'
+                      ? olay.item.applicationStartAt
+                      : olay.item.applicationDeadline
+                  )}
                 </time>
                 <span className="min-w-0 flex-1">
                   <span
-                    className={`inline-block text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 ${
-                      /* Takvimdeki "Son başvuru" işareti de kartlarla aynı amber ailede. */
-                      olay.tur === 'acilis' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-900'
+                    className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                      olay.tur === 'acilis'
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'bg-amber-50 text-amber-900'
                     }`}
                   >
                     {olay.tur === 'acilis' ? 'Başvuru açılıyor' : 'Son başvuru'}
                   </span>
-                  <b className="mt-0.5 block text-sm text-gray-900 line-clamp-2 leading-snug">{olay.item.title}</b>
+                  <b className="mt-0.5 block text-sm leading-snug text-gray-900 line-clamp-2">
+                    {olay.item.title}
+                  </b>
                   <span className="text-xs text-gray-500">{olay.item.organizationName}</span>
                 </span>
-                <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
-              </button>
+                <ChevronRight className="w-4 h-4 shrink-0 text-gray-400" aria-hidden />
+              </a>
             ))}
           </div>
         </section>
@@ -1957,19 +1392,89 @@ const Takvim: React.FC<{ items: Opportunity[]; onNavigate: (p: string) => void }
   );
 };
 
-const Empty: React.FC<{ icon: React.ReactNode; title: string; body: string; action?: string; onClick?: () => void }> = ({
-  icon,
-  title,
-  body,
-  action,
-  onClick,
-}) => (
-  <section className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
-    <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-gray-100 text-gray-500">{icon}</div>
+/*
+  İSKELET LİSTEYLE AYNI IZGARADA
+
+  Tek sütunlu üç gri blok çiziliyordu; liste gelince ızgara iki sütuna
+  atlıyor ve sayfa zıplıyordu. İskelet artık kartların oturacağı yere
+  oturuyor.
+*/
+const ListeIskeleti: React.FC = () => (
+  <div
+    role="status"
+    aria-label="Fırsatlar yükleniyor"
+    className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3"
+  >
+    {[1, 2, 3, 4, 5, 6].map((x) => (
+      <div key={x} aria-hidden className="h-56 rounded-2xl bg-gray-100 animate-pulse" />
+    ))}
+  </div>
+);
+
+const BosSonuc: React.FC<{
+  suzgecler: { id: string; etiket: string }[];
+  toplam: number;
+  onKaldir: (id: string) => void;
+  onTemizle: () => void;
+}> = ({ suzgecler, toplam, onKaldir, onTemizle }) => (
+  <section className="rounded-2xl border border-dashed border-gray-300 bg-white p-6 text-center sm:p-10">
+    <div
+      aria-hidden
+      className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-gray-100 text-gray-500"
+    >
+      <Globe2 />
+    </div>
+    <h2 className="font-extrabold text-gray-900">Bu süzgeçlere uyan fırsat yok</h2>
+    <p className="mt-1 text-sm text-gray-600">
+      Listede {toplam} fırsat var; {suzgecler.length} süzgeç onu boşaltıyor. Birini kaldırmayı dene.
+    </p>
+    <ul className="mt-4 flex flex-wrap items-center justify-center gap-2">
+      {suzgecler.map((suzgec) => (
+        <li key={suzgec.id}>
+          <button
+            type="button"
+            onClick={() => onKaldir(suzgec.id)}
+            className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 text-xs font-bold text-gray-800 hover:bg-gray-50 cursor-pointer ${ODAK_HALKASI}`}
+          >
+            {suzgec.etiket}
+            <X className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span className="sr-only">süzgecini kaldır</span>
+          </button>
+        </li>
+      ))}
+    </ul>
+    <button
+      type="button"
+      onClick={onTemizle}
+      className={`mt-4 min-h-11 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white cursor-pointer ${ODAK_HALKASI}`}
+    >
+      Temizle
+    </button>
+  </section>
+);
+
+const Empty: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  body: string;
+  action?: string;
+  onClick?: () => void;
+}> = ({ icon, title, body, action, onClick }) => (
+  <section className="rounded-2xl border border-dashed border-gray-300 bg-white p-6 text-center sm:p-10">
+    <div
+      aria-hidden
+      className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-gray-100 text-gray-500"
+    >
+      {icon}
+    </div>
     <h2 className="font-extrabold text-gray-900">{title}</h2>
     <p className="mt-1 text-sm text-gray-600">{body}</p>
     {action && (
-      <button onClick={onClick} className="mt-4 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white cursor-pointer">
+      <button
+        type="button"
+        onClick={onClick}
+        className={`mt-4 min-h-11 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white cursor-pointer ${ODAK_HALKASI}`}
+      >
         {action}
       </button>
     )}

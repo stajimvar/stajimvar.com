@@ -38,6 +38,26 @@ export const BOYUTLAR = {
 
 const dizi = (deger) => (Array.isArray(deger) ? deger.filter(Boolean) : []);
 
+/*
+  ÇEVRİM İÇİ ETKİNLİKTE ARANACAK ŞEHİR YOK
+
+  `event_mode = 'online'` olan bir kayıtta fiziksel bir yer yok: katılım
+  bağlantı üzerinden. Böyle bir kayıtta "şehir şartı doğrulanmadı" demek
+  doğrulanacak bir şey olmadığını görmezden gelmek olurdu ve kayıt
+  yalnızca bu yüzden kişiselleştirmenin dışında kalıyordu.
+
+  KAPSAM: muafiyet yalnızca AÇIK bir şehir şartı YOKKEN geçerli. Kaynaktan
+  doğrulanmış ve DOLU bir `cities` listesi varsa (ör. çevrim içi ama
+  yalnız İzmirli öğrencilere açık bir program) o şart yine okunuyor;
+  doğrulanmış bir kısıtı "çevrim içi" diye silmek, öğrenciye
+  başvuramayacağı bir kayda "sana uygun" demek olurdu.
+*/
+function cevrimIciMuafiyeti(burs) {
+  if (burs?.eventMode !== 'online') return false;
+  const acikSehirSarti = Boolean(burs?.citiesVerifiedAt) && dizi(burs?.cities).length > 0;
+  return !acikSehirSarti;
+}
+
 /**
  * Bir boyutun doğrulama durumu.
  *
@@ -47,6 +67,8 @@ const dizi = (deger) => (Array.isArray(deger) ? deger.filter(Boolean) : []);
 export function kisitDurumu(burs, boyut) {
   const alan = BOYUTLAR[boyut];
   if (!alan) throw new Error(`bilinmeyen boyut: ${boyut}`);
+
+  if (boyut === 'sehir' && cevrimIciMuafiyeti(burs)) return DURUM.KISIT_YOK;
 
   const damga = burs?.[alan.damga];
   if (!damga) return DURUM.DOGRULANMADI;

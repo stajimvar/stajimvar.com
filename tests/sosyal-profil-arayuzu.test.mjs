@@ -36,7 +36,21 @@ import {
 */
 
 const KOK = path.resolve(import.meta.dirname, '..');
-const oku = (p) => readFileSync(path.join(KOK, p), 'utf8');
+/*
+  SATIR SONU NORMALLEŞTİRİLİYOR — ÖLÇÜLEN ŞEY KAYNAĞIN YAPISI
+
+  Aşağıdaki iddiaların bir kısmı çok satırlı kalıp ölçüyor ve içlerinde
+  düz `\n` geçiyor. Depo LF ile saklanıyor; ama `core.autocrlf=true`
+  olan bir checkout'ta (bu depo Windows'ta öyle çalışıyor) çalışma kopyası
+  CRLF oluyor. Ölçüldü: aynı kaynak, aynı yapı, dört iddia yalnızca araya
+  giren `\r` yüzünden düşüyordu — dördü de `\r?\n` ile birebir eşleşti.
+
+  Satır sonu bir ürün gerçeği değil, checkout ayarı. Kalıpları tek tek
+  gevşetmek yerine metin tek yerde normalleştiriliyor: aksi halde bundan
+  sonra yazılan her çok satırlı iddia aynı tuzağa yeniden düşer. İddianın
+  kendisi bir şey kaybetmiyor — eşleşen metin karakteri karakterine aynı.
+*/
+const oku = (p) => readFileSync(path.join(KOK, p), 'utf8').replace(/\r\n/g, '\n');
 
 const sorgular = oku('src/lib/queries/sosyal.ts');
 /*

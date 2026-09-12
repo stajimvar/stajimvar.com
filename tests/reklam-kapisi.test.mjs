@@ -37,7 +37,6 @@ const KAPALI_YOLLAR = [
   ['/ilan/yazilim-stajyeri-abc123', 'ilan detayı'],
   ['/sirket/aselsan', 'şirket sayfası'],
   ['/firsatlar/bir-burs', 'fırsat detayı'],
-  ['/kesfet/bir-etkinlik', 'etkinlik detayı'],
   ['/burslar', 'burs listesi'],
   ['/gizlilik', 'yasal metin'],
   ['/kvkk-aydinlatma-metni', 'yasal metin'],

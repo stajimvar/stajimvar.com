@@ -58,7 +58,6 @@ import { SIRKET_VURGU_KOYU } from './sirket/renk';
 const SIRKET_PANEL_YOLLARI = ['/sirket/ilanlar', '/sirket/basvuranlar', '/sirket/profil', '/sirket/ilan'];
 import { KariyerMerkezleriSayfasi } from './components/KariyerMerkezleri';
 import { OpportunitiesPage } from './components/OpportunitiesPage';
-import { BurslarKesfetPage } from './components/BurslarKesfetPage';
 import { IsverenLanding } from './components/IsverenLanding';
 import { OpportunityDetailPage } from './components/OpportunityDetailPage';
 import { OpportunitiesHomeSection } from './components/OpportunitiesHomeSection';
@@ -68,8 +67,6 @@ import { aramaTeriminiOku, aramaAdresi } from './lib/arama-url.mjs';
 import { AdminOpportunitiesView, AdminOpportunityCreate } from './components/AdminOpportunitiesView';
 import { BursDogrulamaMasasi } from './components/BursDogrulamaMasasi';
 import { AdminInstagramView } from './components/AdminInstagramView';
-import { KesfetPage } from './components/KesfetPage';
-import { KesfetDetailPage } from './components/KesfetDetailPage';
 import { AdminDiscoverForm, AdminDiscoverView } from './components/AdminDiscoverView';
 /*
   Bu ikisi bilerek gecikmeli DEĞİL: /araclar, /araclar/* ve /isveren
@@ -285,6 +282,21 @@ export default function App() {
     setPath(to.split('?')[0].split('#')[0] || '/');
     window.scrollTo(0, 0);
   };
+
+  /*
+    /kesfet KAPANDI (11 Eylül 2026)
+
+    Bölüm arşive alındı (göç 20260926120000): 163 kaydın hiçbiri kariyer
+    etkinliği değildi, Fırsatlar'a taşınacak satır yoktu. Sunucu tarafı
+    301 public/_redirects'te; burası uygulama İÇİNDEN o adrese düşen
+    durumu karşılıyor — geri tuşu, eski bir bağlantı, /kesfet/<slug>.
+    `degistir`: yönlendirilen adres geçmişe girmesin, geri tuşu döngüye
+    düşmesin (/ilanlar düzeltmesiyle aynı gerekçe).
+  */
+  React.useEffect(() => {
+    if (/^\/kesfet(\/|$)/.test(path)) navigate('/firsatlar', { degistir: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [path]);
 
   /**
    * İlan araması.
@@ -1232,7 +1244,6 @@ export default function App() {
       onOpenProfilVeCv={() => navigate('/cv')}
       onOpenGuides={() => navigate('/rehber')}
       onOpenOpportunities={() => navigate('/firsatlar')}
-      onOpenDiscover={() => navigate('/kesfet')}
       /*
         "Ücretsiz İlan Ver" ilan verme sayfasına götürüyor. Zaten oradaysa
         götürecek yer yok: kayıt penceresini açıyor, yoksa düğme hiçbir şey
@@ -1272,7 +1283,7 @@ export default function App() {
           şey arayan kişiyi rehberden atmak olurdu — sayfanın kendi arama
           kutusunu kaldırdığımız için tek arama yolu bu.
         */
-        if (/^\/(rehber|kesfet)(\/|$)/.test(temizYol)) return;
+        if (/^\/rehber(\/|$)/.test(temizYol)) return;
         // Arama ilan listesinde işliyor; başka sayfadayken oraya götürüyor.
         if (q && temizYol !== '/') navigate('/');
       }}
@@ -1642,25 +1653,25 @@ export default function App() {
   }
 
   /*
-    BURSLAR AYRI BİR SAYFA
+    YEDİ ADRES, TEK BİLEŞEN
 
-    /burslar artık üç sütunlu fırsat listesi değil, Keşfet ile aynı
-    tasarım ailesinde bir vitrin. Diğer fırsat adresleri (KYK, yurt dışı,
-    yarışmalar, takvim, takip listesi) mevcut sayfada kalıyor: onların
-    akışı ve SEO yapısı değişmedi.
+    /burslar bir süre ayrı bir vitrin sayfasıydı (BurslarKesfetPage) ve
+    aynı kayıtları ikinci bir kart diliyle gösteriyordu: iki sayfa
+    ayrı süzgeç, ayrı sıralama ve ayrı boş durum taşıyordu. Hepsi
+    artık OpportunitiesPage; adres yalnızca başlangıç durumunu
+    seçiyor (bkz. ROTA_BASLANGICI). Sekiz adresin hiçbiri silinmedi:
+    hepsi ön-render edilip indekslenmiş durumda.
   */
-  if (temizYol === '/burslar') {
-    return icerikSayfasi(
-      <BurslarKesfetPage
-        userId={session?.userId ?? null}
-        student={student}
-        onNavigate={navigate}
-        onRequireLogin={handleOpenLogin}
-      />
-    );
-  }
-
-  const firsatSayfalari = new Set(['/firsatlar', '/kyk', '/yurtdisi-firsatlari', '/yarismalar', '/firsat-takvimi', '/bana-uygun', '/kaydedilen-firsatlar']);
+  const firsatSayfalari = new Set([
+    '/firsatlar',
+    '/burslar',
+    '/kyk',
+    '/yurtdisi-firsatlari',
+    '/yarismalar',
+    '/firsat-takvimi',
+    '/bana-uygun',
+    '/kaydedilen-firsatlar',
+  ]);
   if (firsatSayfalari.has(temizYol)) {
     return icerikSayfasi(
       <OpportunitiesPage
@@ -1678,31 +1689,6 @@ export default function App() {
   if (temizYol.startsWith('/firsatlar/')) {
     const slug = temizYol.slice('/firsatlar/'.length);
     if (slug) return icerikSayfasi(<OpportunityDetailPage slug={slug} userId={session?.userId ?? null} onBack={() => navigate('/firsatlar')} onRequireLogin={handleOpenLogin} />);
-  }
-
-  if (temizYol === '/kesfet') {
-    return icerikSayfasi(
-      <KesfetPage
-        onNavigate={navigate}
-        searchQuery={aramaTerimi}
-        onSearchChange={setAramaTerimi}
-      />
-    );
-  }
-  if (temizYol.startsWith('/kesfet/')) {
-    const slug = temizYol.slice('/kesfet/'.length);
-    if (slug)
-      return icerikSayfasi(
-        <KesfetDetailPage
-          slug={slug}
-          onBack={() => {
-            if (window.history.state?.__discoverCatalogReturn) window.history.back();
-            else navigate('/kesfet');
-          }}
-          girisGerekli={!session}
-          onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
-        />,
-      );
   }
 
   /* Yönetim → Instagram bağlantı durumu. Uç yönetici jetonu istiyor. */
@@ -2485,11 +2471,6 @@ export default function App() {
                   { yol: '/staj-programlari', etiket: 'Büyük işverenlerde staj' },
                   { yol: '/universite-kariyer-merkezleri', etiket: 'Kariyer merkezleri' },
                   { yol: '/araclar', etiket: 'Staj hesaplama araçları' },
-                  /*
-                    Keşfet birincil menüden indi (bkz. Header.tsx notu);
-                    bağlantısı burada duruyor ki sayfa öksüz kalmasın.
-                  */
-                  { yol: '/kesfet', etiket: 'Öğrenci etkinlikleri' },
                 ],
               },
               {

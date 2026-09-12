@@ -1,7 +1,7 @@
 import React from 'react';
 import { DisBaglanti } from '../ui';
 import { firsatEylemleri } from '../lib/rehber-eylemleri.mjs';
-import { ArrowLeft, Bookmark, Check, CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
+import { ArrowLeft, Bookmark, Check, CheckCircle2, ExternalLink, Loader2, Share2 } from 'lucide-react';
 import {
   fetchOpportunityBySlug,
   fetchOpportunityProgress,
@@ -16,7 +16,8 @@ import {
   opportunityTypeLabel,
   OPPORTUNITY_STATUS_LABELS,
 } from '../lib/opportunity-domain.mjs';
-import { opportunityAmount } from '../lib/firsat-degerlendirme.mjs';
+import { opportunityAmount, ODEME_DONEMI_ETIKETLERI } from '../lib/firsat-degerlendirme.mjs';
+import { firsatDurumu } from '../lib/firsat-kategori.mjs';
 import { bursTarihDurumu, turkiyeGeneliMi } from '../lib/burs-kesif.mjs';
 import { ZamanTupu } from './ZamanTupu';
 import { ScholarshipCover } from './ScholarshipCover';
@@ -82,6 +83,7 @@ export const OpportunityDetailPage: React.FC<{
   const [adimlar, setAdimlar] = React.useState<string[]>([]);
   const [kaydediliyor, setKaydediliyor] = React.useState(false);
   const [listeHatasi, setListeHatasi] = React.useState<string | null>(null);
+  const [paylasimDurumu, setPaylasimDurumu] = React.useState<'hazir' | 'kopyalandi'>('hazir');
   /* Fırsat türüne karşılık gelen devam yolları; tür tanınmıyorsa boş. */
   const devamEylemleri = React.useMemo(
     () => firsatEylemleri(item?.opportunityType),
@@ -174,6 +176,31 @@ export const OpportunityDetailPage: React.FC<{
     );
   }
 
+  /**
+   * Paylaşım. Mobilde işletim sisteminin kendi menüsü açılıyor; masaüstünde
+   * adres panoya kopyalanıyor. İlan sayfasındaki desenin aynısı — iki
+   * sayfada iki farklı paylaşım davranışı olmasın.
+   */
+  const paylas = async () => {
+    const adres = window.location.href;
+    const metin = `${item.title} — ${item.organizationName}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: metin, text: `${metin} fırsatına bak:`, url: adres });
+        return;
+      } catch {
+        /* Kullanıcı vazgeçti; kopyalamaya düşüyoruz. */
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(adres);
+      setPaylasimDurumu('kopyalandi');
+      setTimeout(() => setPaylasimDurumu('hazir'), 2500);
+    } catch {
+      /* Pano izni yoksa yapacak bir şey yok; sessiz kalıyor. */
+    }
+  };
+
   const toggle = async () => {
     if (!userId) return onRequireLogin();
     await toggleSavedOpportunity(userId, item.id, saved);
@@ -201,6 +228,16 @@ export const OpportunityDetailPage: React.FC<{
   const cta = opportunityCta(item);
   const durum = opportunityStatus(item);
   const tutar = opportunityAmount(item);
+  /*
+    SÜRESİ DOLMUŞ KAYITTA BAŞVURU DÜĞMESİ YOK
+
+    Kayıt arşivden ya da paylaşılmış eski bir bağlantıdan açılabiliyor.
+    Kapanmış bir döneme "Resmî sitede başvur" düğmesi koymak, öğrenciyi
+    kapalı bir forma göndermek demek. Durum saklanan sütundan DEĞİL,
+    sütun + son tarihten birlikte hesaplanıyor (firsatDurumu): gece işi
+    koşmadan önce tarihi geçmiş kayıt hâlâ 'published' görünüyor.
+  */
+  const suresiDoldu = firsatDurumu(item.status, item.applicationDeadline) === 'expired';
   const tarihDurumu = bursTarihDurumu(item);
   /*
     "Önemli tarihler" satırı: bilinen taraflardan kuruluyor, hiçbiri
@@ -218,28 +255,63 @@ export const OpportunityDetailPage: React.FC<{
           : null;
 
   const yer = [...item.cities, ...item.countries];
-  const seviyeVeBolum = [...item.educationLevels, ...item.eligibleDepartments];
+  const seviyeVeBolum = [...item.educationLevels, ...item.eligibleDepartments, ...item.eligibleClassYears];
+  const katilimBicimi =
+    item.eventMode === 'online'
+      ? 'Çevrim içi'
+      : item.eventMode === 'hybrid'
+        ? 'Karma (yüz yüze + çevrim içi)'
+        : item.eventMode === 'in_person'
+          ? 'Yüz yüze'
+          : null;
+  /* Tek taraf biliniyorsa o taraf yazılıyor; yarısı bilinen bir aralık hiç bilinmeyenden fazlasını söylüyor. */
+  const yasAraligi =
+    item.ageMin != null && item.ageMax != null
+      ? `${item.ageMin}–${item.ageMax} yaş`
+      : item.ageMin != null
+        ? `En az ${item.ageMin} yaş`
+        : item.ageMax != null
+          ? `En çok ${item.ageMax} yaş`
+          : null;
+  /* İki damgadan YENİ olanı; ikisi de boşsa null. */
+  const sonKontrol = [item.sourceCheckedAt, item.lastCheckedAt]
+    .filter(Boolean)
+    .sort()
+    .pop();
+  const odemeDonemi = item.paymentPeriod
+    ? ((ODEME_DONEMI_ETIKETLERI as Record<string, string>)[item.paymentPeriod] ?? null)
+    : null;
 
   /*
-    ANA EYLEM: RESMÎ BAŞVURUYA GİT
+    ANA EYLEM: NEREYE GİTTİĞİNİ SÖYLÜYOR
 
-    Başvuru kurumun kendi sayfasında yapılıyor. Sayfanın en görünür
-    düğmesi bu olmalı ve nereye gittiğini söylemeli — "Başvur" yazan bir
-    düğme, başvurunun burada alındığını ima ederdi.
+    Başvuru kurumun kendi sayfasında yapılıyor. Düğme "Başvur" deseydi
+    başvurunun burada alındığını ima ederdi; "Resmî sitede başvur" hem
+    eylemi hem de siteden çıkıldığını söylüyor.
+
+    Etiket adrese göre değişiyor: doğrudan başvuru adresi yoksa kullanıcı
+    kurumun kaynak sayfasına gidiyor ve orada bir başvuru formu
+    olmayabilir. Var olmayan bir forma "başvur" demek yerine "Resmî
+    kaynağa git" deniyor (gerekçesi opportunityCta içinde ölçülmüş).
+
+    `DisBaglanti` gerçek bir `<a>` üretiyor: target="_blank" ve
+    rel="noopener noreferrer nofollow". Yeni sekme açan bağlantıda
+    `noopener` olmadan açılan sayfa `window.opener` üzerinden bu sekmeyi
+    yönlendirebiliyor.
   */
-  const anaEylem = cta && (
+  const anaEylem = cta && !suresiDoldu && (
     <DisBaglanti
       href={cta.adres}
       girisGerekli={!userId}
       onGirisGerekli={onRequireLogin}
-      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-700 sm:w-auto"
+      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white transition-colors hover:bg-blue-700 sm:w-auto"
     >
       {!userId
         ? 'Başvurmak için giriş yap'
-        : cta.etiket === 'Başvur'
-          ? 'Resmî Başvuruya Git'
-          : cta.etiket}
-      <ExternalLink className="h-4 w-4" />
+        : item.applicationUrl
+          ? 'Resmî sitede başvur'
+          : 'Resmî kaynağa git'}
+      <ExternalLink className="h-4 w-4" aria-hidden />
     </DisBaglanti>
   );
 
@@ -249,9 +321,20 @@ export const OpportunityDetailPage: React.FC<{
         onClick={onBack}
         className="inline-flex cursor-pointer items-center gap-1 text-sm font-bold text-gray-600 hover:text-gray-950"
       >
-        <ArrowLeft className="h-4 w-4" />
-        Burslara dön
+        <ArrowLeft className="h-4 w-4" aria-hidden />
+        Fırsatlara dön
       </button>
+
+      {/*
+        Şerit sayfanın EN ÜSTÜNDE: aşağıdaki bütün bilgiler geçmiş bir
+        döneme ait ve okuyucu bunu ilk satırda bilmeli.
+      */}
+      {suresiDoldu && (
+        <p className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700">
+          Bu fırsatın süresi doldu. Aşağıdaki bilgiler geçmiş döneme ait; yeni takvim açıklandığında
+          kayıt güncelleniyor.
+        </p>
+      )}
 
       {/* ------------------------------------------------------------ üst */}
       <article className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
@@ -262,16 +345,32 @@ export const OpportunityDetailPage: React.FC<{
             organizationName={item.organizationName}
             title={item.title}
           />
-          <button
-            aria-label={saved ? 'Takibi bırak' : 'Takip et'}
-            aria-pressed={saved}
-            onClick={toggle}
-            className={`absolute right-3 top-3 grid h-10 w-10 cursor-pointer place-items-center rounded-full backdrop-blur transition-colors ${
-              saved ? 'bg-blue-600 text-white' : 'bg-white/90 text-gray-700 hover:bg-white'
-            }`}
-          >
-            <Bookmark className="h-4 w-4" fill={saved ? 'currentColor' : 'none'} />
-          </button>
+          {/* İki eylem de 44 piksel: telefonda dokunma hedefi altına düşmüyor. */}
+          <div className="absolute right-3 top-3 flex items-center gap-2">
+            <button
+              type="button"
+              aria-label={paylasimDurumu === 'kopyalandi' ? 'Bağlantı kopyalandı' : 'Paylaş'}
+              onClick={paylas}
+              className="grid h-11 w-11 cursor-pointer place-items-center rounded-full bg-white/90 text-gray-700 backdrop-blur transition-colors hover:bg-white"
+            >
+              {paylasimDurumu === 'kopyalandi' ? (
+                <Check className="h-4 w-4" aria-hidden />
+              ) : (
+                <Share2 className="h-4 w-4" aria-hidden />
+              )}
+            </button>
+            <button
+              type="button"
+              aria-label={saved ? 'Kaydı kaldır' : 'Kaydet'}
+              aria-pressed={saved}
+              onClick={toggle}
+              className={`grid h-11 w-11 cursor-pointer place-items-center rounded-full backdrop-blur transition-colors ${
+                saved ? 'bg-blue-600 text-white' : 'bg-white/90 text-gray-700 hover:bg-white'
+              }`}
+            >
+              <Bookmark className="h-4 w-4" fill={saved ? 'currentColor' : 'none'} aria-hidden />
+            </button>
+          </div>
         </div>
 
         <div className="p-5 sm:p-8">
@@ -330,13 +429,24 @@ export const OpportunityDetailPage: React.FC<{
       </article>
 
       {/* --------------------------------------------------- bilgi bölümleri */}
+      {/*
+        KUTU ANCAK VERİ VARSA ÇİZİLİYOR
+
+        "Gerekli belgeler: Resmî kaynakta belirtiliyor." gibi satırlar
+        hiçbir şey söylemeyen ama okunmayı bekleyen bloklardı. Alan boşsa
+        kutu yok. İki istisna var ve ikisi de bilinçli: "Kimler
+        başvurabilir" ve "Şehir şartı" — o iki soruda SUSMAK, öğrencinin
+        şartı yok sanmasına yol açıyordu, o yüzden bilmediğimizi açıkça
+        söylüyoruz.
+      */}
       <div className="grid gap-3 sm:grid-cols-2">
         <Bilgi baslik="Kimler başvurabilir?">
           {item.eligibility || 'Koşullar resmî kaynakta belirtiliyor.'}
         </Bilgi>
-        <Bilgi baslik="Eğitim seviyesi ve bölümler">
-          {seviyeVeBolum.length ? seviyeVeBolum.join(', ') : 'Resmî kaynakta belirtiliyor.'}
-        </Bilgi>
+        {seviyeVeBolum.length > 0 && (
+          <Bilgi baslik="Eğitim seviyesi ve bölümler">{seviyeVeBolum.join(', ')}</Bilgi>
+        )}
+        {item.academicYear && <Bilgi baslik="Akademik yıl">{item.academicYear}</Bilgi>}
         <Bilgi baslik="Şehir şartı">
           {/*
             "Türkiye geneli" ancak DOĞRULANMIŞSA söyleniyor.
@@ -344,8 +454,7 @@ export const OpportunityDetailPage: React.FC<{
             Boş şehir listesi iki zıt şey demek olabiliyordu: kaynak
             okundu ve şart yok, ya da kaynak hiç okunmadı. İkincisine
             "Türkiye geneli" demek, Ankara'da oturma şartı olabilecek bir
-            bursu İzmir'deki öğrenciye olgu diye sunmaktı. Doğrulanmamışsa
-            bunu açıkça söyleyip kaynağa yönlendiriyoruz.
+            bursu İzmir'deki öğrenciye olgu diye sunmaktı.
           */}
           {yer.length
             ? yer.join(', ')
@@ -353,12 +462,36 @@ export const OpportunityDetailPage: React.FC<{
               ? 'Şehir şartı yok; Türkiye geneli.'
               : 'Şehir şartını resmî kaynaktan kontrol edin.'}
         </Bilgi>
-        <Bilgi baslik="Burs miktarı ve ödeme süresi">
+        {/*
+          ETKİNLİK BİLGİSİ — KARİYER GÜNÜ VE FUARLARDA
+
+          `event_mode`, `venue_name` ve `starts_at` burs/program
+          kayıtlarında NULL; üçü de boşken kutu hiç çizilmiyor.
+        */}
+        {(katilimBicimi || item.venueName || item.startsAt) && (
+          <Bilgi baslik="Etkinlik">
+            {[
+              katilimBicimi,
+              item.venueName,
+              item.startsAt ? `${uzunTarih(item.startsAt)} tarihinde` : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </Bilgi>
+        )}
+        {item.minimumGpa != null && (
+          <Bilgi baslik="En düşük not ortalaması">{item.minimumGpa}</Bilgi>
+        )}
+        {item.languageRequirements.length > 0 && (
+          <Bilgi baslik="Dil şartı">{item.languageRequirements.join(', ')}</Bilgi>
+        )}
+        {yasAraligi && <Bilgi baslik="Yaş şartı">{yasAraligi}</Bilgi>}
+        {item.incomeRequirement && <Bilgi baslik="Gelir şartı">{item.incomeRequirement}</Bilgi>}
+        <Bilgi baslik="Tutar ve ödeme">
           {/*
-            Tutar YALNIZCA resmî kaynaktan doğrulanmışsa yazılıyor.
-            Bilinmiyorsa burada sade biçimde söyleniyor — kartlarda bu
-            satır hiç çizilmiyor, çünkü her kartta tekrar eden ve hiçbir
-            şey söylemeyen bir alandı.
+            Tutar YALNIZCA resmî kaynaktan doğrulanmışsa yazılıyor. Geçen
+            yılın rakamını bu yılınmış gibi sunmak, hiç göstermemekten
+            kötü.
           */}
           {tutar.bilinmiyor ? (
             <>
@@ -369,21 +502,11 @@ export const OpportunityDetailPage: React.FC<{
             <>
               <span className="font-bold">{tutar.metin}</span>
               {tutar.geriOdeme && <span> · {tutar.geriOdeme}</span>}
+              {odemeDonemi && <span> · {odemeDonemi}</span>}
               {tutar.donem && <span className="block text-xs text-gray-500">{tutar.donem}</span>}
             </>
           )}
         </Bilgi>
-        {/*
-          BOŞ KUTU ÇİZİLMİYOR
-
-          "Gerekli belgeler: Resmî kaynakta belirtiliyor." ve "Açılış
-          belirtilmemiş — Son tarih belirtilmemiş" hiçbir şey söylemeyen
-          iki satırdı; ızgarada yer kaplayıp okuyucuyu bilgi sanıp
-          okumaya çağırıyorlardı. Veri yoksa kutu hiç yok.
-
-          Tarihlerde tek taraf biliniyorsa o taraf yazılıyor: yarısı
-          bilinen bir aralık, hiç bilinmeyenden fazlasını söylüyor.
-        */}
         {item.requiredDocuments.length > 0 && (
           <Bilgi baslik="Gerekli belgeler">{item.requiredDocuments.join(', ')}</Bilgi>
         )}
@@ -408,8 +531,10 @@ export const OpportunityDetailPage: React.FC<{
           <p className="mt-1.5 text-sm text-gray-600">Kaynak bağlantısı kayıtta yok.</p>
         )}
         <p className="mt-3 border-t border-gray-100 pt-3 text-xs leading-relaxed text-gray-500">
-          {item.lastCheckedAt
-            ? `Bu kaydı en son ${uzunTarih(item.lastCheckedAt)} tarihinde resmî kaynağından kontrol ettik.`
+          {/* Otomatik kaynak kontrolü `source_checked_at`e yazıyor; elle doğrulama
+              `last_checked_at`e. Yeni olan hangisiyse o gösteriliyor. */}
+          {sonKontrol
+            ? `Bu kaydı en son ${uzunTarih(sonKontrol)} tarihinde resmî kaynağından kontrol ettik.`
             : 'Bu kaydın kaynağı doğrulandı.'}
           {tutar.donem ? ` Tutar ${tutar.donem} için geçerli.` : ''} Koşullar ve tarihler kurum
           tarafından değiştirilebilir; başvurmadan önce resmî kaynağı kontrol et.

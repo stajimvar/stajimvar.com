@@ -33,7 +33,6 @@ const GECERLI_YOLLAR = new Set([
   '/yurtdisi-firsatlari',
   '/universite-kariyer-merkezleri',
   '/bolumler',
-  '/kesfet',
 ]);
 
 function rehberSluglari() {
@@ -119,7 +118,8 @@ test('J: fırsat türleri gerçek enum değerleriyle eşleşiyor', () => {
     firsatEylemleri('international').map((e) => e.yol),
     ['/yurtdisi-firsatlari', '/burslar']
   );
-  assert.deepEqual(firsatEylemleri('competition').map((e) => e.yol), ['/kesfet']);
+  /* Yarışma /kesfet'e gidiyordu; Keşfet arşive alındı, doğrulanmış hedef yok. */
+  assert.deepEqual(firsatEylemleri('competition'), []);
 });
 
 test('J2: tanınmayan tür için uydurma bağlantı yok', () => {

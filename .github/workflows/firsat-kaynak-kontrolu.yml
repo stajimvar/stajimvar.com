@@ -1,0 +1,66 @@
+name: Fırsat kaynak kontrolü
+
+# ÜÇ GÜNDE BİR
+#
+# Yayındaki her fırsatın RESMÎ KAYNAĞINI gerçekten çağırıyor ve üç vuruş
+# kuralıyla değerlendiriyor (scripts/firsat-kaynak-kontrol.mjs): geçici
+# hata (403/429/5xx/zaman aşımı) kapanma DEĞİL; 404/410/alan adı değişimi
+# art arda üç koşuda görülürse kayıt expired. Aynı koşuda son tarihi
+# geçenler de expired'a çekiliyor (firsat_suresi_dolanlari_kapat).
+#
+# NEDEN GÜNLÜK DEĞİL
+# ------------------
+# Burs ve program sayfaları ilan sayfaları gibi her gün değişmiyor; üç
+# gün, "Son kontrol" damgasını anlamlı tutmaya yetiyor ve kurum sitelerine
+# gereksiz yük bindirmiyor. Üç vuruş × üç gün ≈ dokuz günlük tolerans:
+# bir haftalık bakım geçerli bir bursu düşürmüyor.
+
+on:
+  workflow_dispatch:
+    inputs:
+      kuru:
+        description: "Hiçbir şey yazma, sadece raporla"
+        type: boolean
+        default: false
+  schedule:
+    # Her 3 günde bir 05:10 UTC (Türkiye 08:10). İlan kontrolünün 04:40'ı
+    # ile saatlik taramanın 17. dakikasına denk gelmiyor.
+    - cron: "10 5 */3 * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firsat-kaynak-kontrolu
+  cancel-in-progress: false
+
+jobs:
+  kaynak:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+
+      - name: Sırları doğrula
+        run: |
+          eksik=""
+          [ -z "$SUPABASE_URL" ] && eksik="$eksik SUPABASE_URL"
+          [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] && eksik="$eksik SUPABASE_SERVICE_ROLE_KEY"
+          if [ -n "$eksik" ]; then
+            echo "::error::Depo sırları eksik:$eksik"
+            exit 1
+          fi
+          echo "Sırlar tanımlı."
+
+      # Betik kendi çıkış kodunu veriyor: üçüncü taraf hatası işi
+      # kırmıyor, veritabanına yazamamak kırıyor.
+      - name: Resmî kaynakları kontrol et
+        run: node scripts/firsat-kaynak-kontrol.mjs ${{ inputs.kuru && '--kuru' || '' }}

@@ -11,8 +11,9 @@ on:
         description: İsteğe bağlı kaynak kimliği
         type: string
         required: false
-  schedule:
-    - cron: "23 4 * * *"
+  # ZAMANLAYICI KAPALI (11 Eylül 2026): Keşfet navigasyondan kaldırıldı,
+  # kayıtlar arşivlendi (20260926120000). Yeni içe aktarım yayımlanmaz;
+  # elle çalıştırma (workflow_dispatch) inceleme için duruyor.
 
 concurrency:
   group: kesfet-event-import

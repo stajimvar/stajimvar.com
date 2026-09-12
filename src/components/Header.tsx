@@ -3,7 +3,6 @@ import {
   Sparkles,
   Building2,
   CheckCircle2,
-  Compass,
   FileText,
   ChevronDown,
   ChevronLeft,
@@ -73,8 +72,6 @@ interface HeaderProps {
   onOpenGuides?: () => void;
   /** Öğrenci fırsatları merkezi. */
   onOpenOpportunities?: () => void;
-  /** Öğrenci etkinlikleri. */
-  onOpenDiscover?: () => void;
   /** İşveren kapısı: şirket sayfasını sahiplenme akışı. */
   onOpenEmployer?: () => void;
   /** İşveren metinleriyle açılan giriş penceresi. */
@@ -183,7 +180,6 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenProfilVeCv,
   onOpenGuides,
   onOpenOpportunities,
-  onOpenDiscover,
   onOpenEmployer,
   onOpenEmployerLogin,
   bulunulanYol = '/',
@@ -374,7 +370,15 @@ export const Header: React.FC<HeaderProps> = ({
   */
   const rehberdeMi = /^\/(rehber|bolum|bolumler|araclar|isveren)(\/|$)/.test(bulunulanYol);
   const firsatlardaMi = /^\/(firsatlar|burslar|kyk|yurtdisi-firsatlari|yarismalar|firsat-takvimi|bana-uygun|kaydedilen-firsatlar)(\/|$)/.test(bulunulanYol);
-  const kesfetteMi = /^\/kesfet(\/|$)/.test(bulunulanYol);
+  /*
+    AĞIM = /baglantilar
+
+    Sosyal ağın girişi bugün bağlantılar sayfası (bağlantılar, gelen ve
+    giden istekler). /profil/* BURAYA GİRMİYOR: başkasının profili bir
+    sayfa, sekme değil; Profil de değil (o /cv). Orada hiçbir sekme
+    yanmıyor, kurumsal sayfalardaki kuralla aynı.
+  */
+  const agimdaMi = /^\/baglantilar(\/|$)/.test(bulunulanYol);
   /*
     ARAMA BAĞLAMI
 
@@ -465,7 +469,7 @@ export const Header: React.FC<HeaderProps> = ({
     kalıyor (sosyal rotalar sekme değil adresle çiziliyor), İlanlar ile
     Profil aynı anda basılı görünüyordu. Alt çubukta her an tek sekme.
   */
-  const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kesfetteMi && !kurumsalSayfada && !sosyaldeMi && activeTab === 'internships';
+  const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kurumsalSayfada && !sosyaldeMi && activeTab === 'internships';
   /*
     Birleşik profil ekranının KENDİ ADRESİ var (/cv, /cv/yazdir). Alt
     menüdeki Profil oraya gidiyor ama seçili vurgusu yalnızca
@@ -474,7 +478,12 @@ export const Header: React.FC<HeaderProps> = ({
     kalıyordu. Adres de sekme kadar geçerli bir sinyal.
   */
   const cvEkranindaMi = /^\/cv(\/|$)/.test(bulunulanYol);
-  const profildeMi = cvEkranindaMi || (!rehberdeMi && !kurumsalSayfada && activeTab === 'profile');
+  /*
+    `!agimdaMi`: sekme durumu 'profile' iken /baglantilar'a geçilirse
+    activeTab değişmiyor; adres sekmeyi eziyor ki Profil ile Ağım aynı
+    anda yanmasın. Alt çubukta her an tek sekme.
+  */
+  const profildeMi = cvEkranindaMi || (!rehberdeMi && !kurumsalSayfada && !agimdaMi && activeTab === 'profile');
 
   return (
     <>
@@ -580,31 +589,28 @@ export const Header: React.FC<HeaderProps> = ({
                   <span>Fırsatlar</span>
                 </a>
 
+                {/*
+                  3. Ağım — sosyal ağın girişi.
+
+                  Buradaki "Etkinlikler" (Keşfet, /kesfet) sekmesi 11 Eylül
+                  2026'da kalktı: sayfadaki 163 kaydın hiçbiri kariyer
+                  etkinliği değildi (konser 57, festival 52, sergi 29,
+                  tiyatro 19, atölye 5, müze 1 — göç 20260926120000) ve
+                  bölüm arşive alındı. Boşalan yere sosyal ağ geldi;
+                  adres bugün için bağlantılar sayfası. Akış ayrı bir iş,
+                  gelince aynı sekmenin altına girecek.
+                */}
                 <a
-                  href="/kesfet"
-                  aria-current={kesfetteMi ? 'page' : undefined}
-                  onClick={baglantiTiklamasi(() => onOpenDiscover?.())}
-                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${kesfetteMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'}`}
+                  id="nav-tab-network"
+                  href="/baglantilar"
+                  aria-current={agimdaMi ? 'page' : undefined}
+                  onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/baglantilar')) : undefined}
+                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
+                    agimdaMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                  }`}
                 >
-                  <Compass className={`w-3.5 h-3.5 ${kesfetteMi ? 'text-blue-600' : 'text-gray-400'}`} />
-                  {/*
-                    SEKME ADI "KEŞFET" DEĞİL "ETKİNLİKLER"
-
-                    Ölçüldü (üretim, 7 Eylül 2026): sayfadaki 137 yayındaki
-                    kaydın 137'si etkinlik — konser 51, festival 42, sergi 22,
-                    tiyatro 18, atölye 3, müze 1. Yani içerik "ağırlıklı
-                    olarak" değil, TAMAMEN etkinlik.
-
-                    "Keşfet" bir fiil ve neyin keşfedileceğini söylemiyor;
-                    sayfanın kendi başlığı zaten "Şehrindeki etkinlikler, tek
-                    listede." diyordu — yani sekme ile sayfa aynı şeyi farklı
-                    adlandırıyordu.
-
-                    ADRES DEĞİŞMEDİ: /kesfet olduğu gibi duruyor. Değişen
-                    yalnız etiket; bağlantılar, ön render çıktısı ve
-                    yönlendirmeler etkilenmiyor.
-                  */}
-                  <span>Etkinlikler</span>
+                  <Users className={`w-3.5 h-3.5 shrink-0 ${agimdaMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span>Ağım</span>
                 </a>
 
                 {/*
@@ -838,7 +844,7 @@ export const Header: React.FC<HeaderProps> = ({
                       if (kisiSorgusu) setKisiListesiAcik(true);
                       return;
                     }
-                    if (rehberSayfasindaMi || kesfetteMi) return;
+                    if (rehberSayfasindaMi) return;
                     // Arama yapan kişi ilan listesini görmek istiyor.
                     if (activeTab !== 'internships') setActiveTab('internships');
                   }}
@@ -849,18 +855,14 @@ export const Header: React.FC<HeaderProps> = ({
                       ? 'Kullanıcı adıyla ara'
                       : rehberSayfasindaMi
                         ? 'Rehberlerde ara'
-                        : kesfetteMi
-                          ? 'Etkinlik, şehir veya mekân ara'
-                          : 'Pozisyon veya şirket ara'
+                        : 'Pozisyon veya şirket ara'
                   }
                   aria-label={
                     sosyaldeMi
                       ? 'Kişi ara'
                       : rehberSayfasindaMi
                         ? 'Rehberlerde ara'
-                        : kesfetteMi
-                          ? 'Etkinlik ara'
-                          : 'Staj ilanlarında ara'
+                        : 'Staj ilanlarında ara'
                   }
                   className="w-full pl-10 pr-3 py-2.5 rounded-2xl border border-gray-200 bg-gray-50/80 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-600 focus:bg-white transition-colors"
                 />
@@ -1422,7 +1424,7 @@ export const Header: React.FC<HeaderProps> = ({
           öyle. İki taraf ayrı yapıdaydı; aynı sitede telefonla ve bilgisayarla
           gezen kişi farklı bir uygulama görüyordu.
 
-          Artık ikisi de aynı: İlanlar · Burs · Rehber · (Profil / İşveren).
+          Artık ikisi de aynı: İlanlar · Fırsatlar · Ağım · Rehber · (Profil / İşveren).
         */}
 
         {/* 2. Fırsatlar — masaüstündeki sekmenin karşılığı */}
@@ -1444,14 +1446,27 @@ export const Header: React.FC<HeaderProps> = ({
           {firsatlardaMi && <span className="text-[11px] font-bold truncate">Fırsat</span>}
         </a>
 
-        <a href="/kesfet" aria-label="Öğrenci etkinlikleri" aria-current={kesfetteMi ? 'page' : undefined} onClick={baglantiTiklamasi(() => onOpenDiscover?.())} className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${kesfetteMi ? 'shrink-0' : 'flex-1'} transition-all ${kesfetteMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'}`}>
-          <Compass className="w-5 h-5" />
-          {/* Masaüstündeki sekmeyle aynı ad; alt barda yer dar olduğu için tekil. */}
-          {kesfetteMi && <span className="text-[11px] font-bold truncate">Etkinlik</span>}
+        {/* 3. Ağım — masaüstündeki sekmenin karşılığı; Keşfet'in yerini aldı (bkz. üstteki not). */}
+        <a
+          href="/baglantilar"
+          aria-label="Ağım"
+          aria-current={agimdaMi ? 'page' : undefined}
+          onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/baglantilar')) : undefined}
+          className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${agimdaMi ? 'shrink-0' : 'flex-1'} transition-all cursor-pointer relative ${
+            agimdaMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
+          }`}
+        >
+          <div className="relative">
+            <Users className="w-5 h-5" />
+            {agimdaMi && (
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600" />
+            )}
+          </div>
+          {agimdaMi && <span className="text-[11px] font-bold truncate">Ağım</span>}
         </a>
 
         {/*
-          3. Rehber — giriş şartı yok, herkese açık.
+          4. Rehber — giriş şartı yok, herkese açık.
 
           `!isverendeMi`: işveren rehberi masaüstünde "Rehber" başlığının
           altında sayılıyor, ama alt barda İşveren'in kendi öğesi var. İkisi

@@ -1109,6 +1109,7 @@ export type Database = {
       student_profiles: {
         Row: {
           bio: string | null;
+          city: string | null;
           cv_path: string | null;
           department: string | null;
           earned_badges: string[];
@@ -1136,6 +1137,7 @@ export type Database = {
         };
         Insert: {
           bio?: string | null;
+          city?: string | null;
           cv_path?: string | null;
           department?: string | null;
           earned_badges?: string[];
@@ -1163,6 +1165,7 @@ export type Database = {
         };
         Update: {
           bio?: string | null;
+          city?: string | null;
           cv_path?: string | null;
           department?: string | null;
           earned_badges?: string[];

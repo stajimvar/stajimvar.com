@@ -25,7 +25,6 @@ export const AILELER = /** @type {const} */ ({
   SCHOLARSHIPS: 'scholarships',
   CAREER_CENTERS: 'career_centers',
   DEPARTMENTS: 'departments',
-  EVENTS: 'events',
 });
 
 /**
@@ -82,12 +81,6 @@ const EYLEM = {
     aciklama: 'Hangi pozisyonlar açılıyor, ne aranıyor, nereye başvurulur.',
     yol: '/bolumler',
   },
-  etkinlikler: {
-    aile: AILELER.EVENTS,
-    baslik: 'Öğrenci etkinliklerini keşfet',
-    aciklama: 'Şehrindeki ücretsiz ya da öğrenci bütçesine uygun etkinlikler.',
-    yol: '/kesfet',
-  },
 };
 
 /**
@@ -140,7 +133,7 @@ const ESLEME = {
   'stajdan-sonra-is-teklifi': ['ilanlar', 'cv'],
   'ilk-is-mulakati': ['cv', 'ilanlar'],
   'mezun-olmadan-once-yapilacaklar': ['cv', 'ilanlar', 'kariyerMerkezleri'],
-  'ogrenci-kulupleri-cvye-nasil-yazilir': ['cv', 'etkinlikler'],
+  'ogrenci-kulupleri-cvye-nasil-yazilir': ['cv'],
   'ogrenciyken-yari-zamanli-calisma': ['ilanlar'],
 };
 
@@ -189,7 +182,11 @@ export function firsatEylemleri(tur) {
     international: [EYLEM.yurtdisi, EYLEM.burslar],
     youth_program: [EYLEM.yurtdisi],
     education: [EYLEM.burslar],
-    competition: [EYLEM.etkinlikler],
+    /*
+      competition eşlemesi /kesfet'e gidiyordu; Keşfet 11 Eylül 2026'da
+      arşive alındı (göç 20260926120000). Yarışma için gösterilecek
+      doğrulanmış bir eylem yok — uydurma bağlantı yerine boş liste.
+    */
   };
   /* Tür tanınmıyorsa uydurma bağlantı yok. */
   return ESLEME_TUR[(tur || '').toLowerCase()] ?? [];

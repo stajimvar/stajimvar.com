@@ -50,51 +50,70 @@ test('summarizes only real open opportunities without inventing a deadline', () 
   assert.deepEqual(getOpportunityOverview([], now), { openCount: 0, scholarshipAndCreditCount: 0, nearest: null, daysLeft: null });
 });
 
-test('round-trips public opportunity filters through URL query state', () => {
+test('süzgeç durumu adres üzerinden gidip geliyor', () => {
   const filters = readOpportunityFilters(
-    '?q=erasmus&type=international&level=Y%C3%BCksek+Lisans&place=Ankara&durum=acik'
+    '?q=erasmus&kategori=programlar&sehir=Ankara&bolge=yurtdisi&son=30&sirala=yeni'
   );
   assert.deepEqual(filters, {
     query: 'erasmus',
-    type: 'international',
-    level: 'Yüksek Lisans',
-    place: 'Ankara',
-    openOnly: true,
-    durum: 'acik',
-    takvimsiz: false,
+    kategori: 'programlar',
+    kaynak: '',
+    sehir: 'Ankara',
+    bolge: 'yurtdisi',
+    mod: '',
+    sonGun: '30',
+    banaUygun: false,
+    kaydedilen: false,
     arsiv: false,
+    siralama: 'yeni',
+    takvim: false,
   });
   assert.equal(
     serializeOpportunityFilters(filters),
-    '?q=erasmus&type=international&level=Y%C3%BCksek+Lisans&place=Ankara&durum=acik'
+    '?q=erasmus&kategori=programlar&sehir=Ankara&bolge=yurtdisi&son=30&sirala=yeni'
   );
 });
 
 /*
   ESKİ BAĞLANTILAR ÇALIŞMAYA DEVAM ETMELİ
 
-  Süzgeç adı `open=1`'den `durum=acik`'e geçti. Paylaşılmış eski bağlantılar
-  hâlâ dolaşımda; okunurken kabul ediliyor, yazılırken yeni ad kullanılıyor.
+  Süzgeç modeli TÜR'den KATEGORİ'ye geçti. Paylaşılmış ve indekslenmiş
+  eski bağlantılar hâlâ dolaşımda: okunurken kabul ediliyor, yazılırken
+  yeni ad kullanılıyor.
 */
-test('eski open=1 bağlantısı durum=acik olarak okunuyor', () => {
-  const filters = readOpportunityFilters('?open=1');
-  assert.equal(filters.openOnly, true);
-  assert.equal(filters.durum, 'acik');
-  assert.equal(serializeOpportunityFilters(filters), '?durum=acik');
+test('eski type= bağlantısı kategoriye çevriliyor', () => {
+  assert.equal(readOpportunityFilters('?type=international').kategori, 'programlar');
+  assert.equal(readOpportunityFilters('?type=competition').kategori, 'yarismalar');
+  /* KYK bir kategori değil, Burslar içinde bir kaynak. */
+  const kyk = readOpportunityFilters('?type=kyk');
+  assert.equal(kyk.kategori, 'burslar');
+  assert.equal(kyk.kaynak, 'kyk');
+  assert.equal(serializeOpportunityFilters(kyk), '?kategori=burslar&kaynak=kyk');
 });
 
-test('takvimsiz ve arşiv görünümleri adrese yazılıyor', () => {
-  const filters = readOpportunityFilters('?takvimsiz=1&arsiv=1');
-  assert.equal(filters.takvimsiz, true);
+test('eski place= adı şehir alanına okunuyor', () => {
+  const filters = readOpportunityFilters('?place=Ankara');
+  assert.equal(filters.sehir, 'Ankara');
+  assert.equal(serializeOpportunityFilters(filters), '?sehir=Ankara');
+});
+
+test('görünüm ve liste anahtarları adrese yazılıyor', () => {
+  const filters = readOpportunityFilters('?arsiv=1&uygun=1&kayit=1&gorunum=takvim');
   assert.equal(filters.arsiv, true);
-  assert.equal(serializeOpportunityFilters(filters), '?takvimsiz=1&arsiv=1');
+  assert.equal(filters.banaUygun, true);
+  assert.equal(filters.kaydedilen, true);
+  assert.equal(filters.takvim, true);
+  assert.equal(serializeOpportunityFilters(filters), '?uygun=1&kayit=1&arsiv=1&gorunum=takvim');
 });
 
-test('yakında süzgeci adrese yazılıyor', () => {
-  const filters = readOpportunityFilters('?durum=yakinda');
-  assert.equal(filters.durum, 'yakinda');
-  assert.equal(filters.openOnly, false);
-  assert.equal(serializeOpportunityFilters(filters), '?durum=yakinda');
+test('tanınmayan değer sessizce düşüyor', () => {
+  /* Elle yazılmış ya da bozulmuş adres süzgeci kilitlememeli. */
+  const filters = readOpportunityFilters('?kategori=uydurma&bolge=mars&son=999&sirala=rastgele');
+  assert.equal(filters.kategori, '');
+  assert.equal(filters.bolge, '');
+  assert.equal(filters.sonGun, '');
+  assert.equal(filters.siralama, '');
+  assert.equal(serializeOpportunityFilters(filters), '');
 });
 
 test('does not score an opportunity when a required profile fact is missing', () => {

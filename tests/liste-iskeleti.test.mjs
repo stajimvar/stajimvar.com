@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 /*
-  ÜÇ LİSTE, TEK İSKELET
+  ÜÇ LİSTE, TEK İSKELET (Keşfet 11 Eylül 2026'da kapandı; ikisi kaldı)
 
   İlanlar, Keşfet ve Rehber aynı işi yapıyor: süz, gez, aç. Üçü ayrı ayrı
   yazıldığı için düzenleri ayrışmıştı — biri 3/9, biri 3/6/3, biri tek
@@ -18,12 +18,12 @@ const KOK = path.resolve(import.meta.dirname, '..');
 const oku = (p) => readFileSync(path.join(KOK, p), 'utf8').replace(/\r\n/g, '\n');
 
 const SAYFALAR = [
+  /* Keşfet 11 Eylül 2026'da kapandı; listeden çıktı, iddialar kalan ikiye uygulanıyor. */
   ['ilanlar', oku('src/components/MatchedInternshipsView.tsx')],
-  ['kesfet', oku('src/components/KesfetPage.tsx')],
   ['rehber', oku('src/components/RehberMerkezi.tsx')],
 ];
 
-test('üç liste de 3/6/3 ızgara kullanıyor', () => {
+test('iki liste de 3/6/3 ızgara kullanıyor', () => {
   for (const [ad, kaynak] of SAYFALAR) {
     assert.match(kaynak, /lg:grid-cols-12/, `${ad}: 12 sütunlu ızgara yok`);
     assert.match(kaynak, /lg:col-span-3/, `${ad}: yan sütun yok`);
@@ -31,7 +31,7 @@ test('üç liste de 3/6/3 ızgara kullanıyor', () => {
   }
 });
 
-test('üç listede de sağ sütun gizli ve yapışkan', () => {
+test('iki listede de sağ sütun gizli ve yapışkan', () => {
   for (const [ad, kaynak] of SAYFALAR) {
     assert.match(
       kaynak,
@@ -42,9 +42,9 @@ test('üç listede de sağ sütun gizli ve yapışkan', () => {
   }
 });
 
-test('Keşfet ve Rehber aynı ayırıcıyı aynı yerde kullanıyor', () => {
+test('Rehber ayırıcıyı sol sütunun sonunda kullanıyor', () => {
   const ayirici = /h-0\.5 rounded-2xl border border-gray-200 bg-white shadow-xs lg:hidden/;
-  for (const ad of ['kesfet', 'rehber']) {
+  for (const ad of ['rehber']) {
     const kaynak = SAYFALAR.find(([x]) => x === ad)[1];
     assert.match(kaynak, ayirici, `${ad}: ayırıcı çizgi yok`);
     /*
@@ -58,9 +58,9 @@ test('Keşfet ve Rehber aynı ayırıcıyı aynı yerde kullanıyor', () => {
   }
 });
 
-test('Keşfet ve Rehber başlık satırı aynı tipografide', () => {
+test('Rehber başlık satırı ortak tipografide', () => {
   const baslik = /text-xs font-bold uppercase tracking-widest text-gray-600/;
-  for (const ad of ['kesfet', 'rehber']) {
+  for (const ad of ['rehber']) {
     const kaynak = SAYFALAR.find(([x]) => x === ad)[1];
     assert.match(kaynak, baslik, `${ad}: liste başlığı ortak tipografide değil`);
   }

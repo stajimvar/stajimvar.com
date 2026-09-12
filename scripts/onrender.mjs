@@ -1146,8 +1146,8 @@ async function main() {
     ['/staj-programlari', 'Büyük işverenlerde staj başvurusu | StajımVar', 'Aselsan, TUSAŞ, Turkcell, Tüpraş ve diğerleri stajı kendi kariyer sayfasından alıyor. Doğrulanmış başvuru adresleri.', 'Büyük işverenlerde staj'],
     ['/isveren/ilan-ver', 'Stajyer ilanı ver | StajımVar', 'Staj ilanı yayınlamak ücretsiz. Şirket sayfanızı sahiplenin, ilanlarınızı kendiniz girin.', 'Stajyer ilanı ver'],
     ['/universite-kariyer-merkezleri', 'Üniversite kariyer merkezleri | StajımVar', 'Staj formu, sigorta yazısı ve onay imzası kendi okulundan çıkıyor. Kariyer merkezlerinin doğrulanmış adresleri.', 'Üniversite kariyer merkezleri'],
-    ['/firsatlar', 'Öğrenci Fırsatları | StajımVar', 'Burs, eğitim, yurtdışı ve yarışma fırsatlarını tek yerden takip et.', 'Burslar ve öğrenci fırsatları, tek listede.'],
-    ['/kesfet', 'Öğrenci Rotası | StajımVar', 'Şehrindeki ücretsiz veya öğrenci bütçesine uygun sergileri, festivalleri, fuarları, müzeleri ve etkinlikleri keşfet.', 'Şehrindeki etkinlikler, tek listede.'],
+    ['/firsatlar', 'Fırsatlar | StajımVar', 'Bursları, öğrenci programlarını, yarışmaları ve kariyer etkinliklerini keşfet.', 'Fırsatlar'],
+    /* /kesfet KALDIRILDI (11 Eylül 2026): bölüm kapandı, adres _redirects ile /firsatlar'a 301 alıyor. Statik sayfa yazılsaydı yönlendirmeyi gölgeleyebilirdi. */
     ['/burslar', 'Burs Fırsatları | StajımVar', 'Resmî kaynağı doğrulanmış burs fırsatlarını takip et.', 'Burs Fırsatları'],
     ['/kyk', 'KYK Duyuruları | StajımVar', 'KYK burs, kredi ve resmî duyurularını takip et.', 'KYK Duyuruları'],
     ['/yurtdisi-firsatlari', 'Yurtdışı Fırsatları | StajımVar', 'Yurtdışı eğitim, değişim ve hareketlilik fırsatlarını takip et.', 'Yurtdışı Fırsatları'],
@@ -1731,7 +1731,6 @@ async function main() {
     ['/bolumler', 'Bölüme göre staj'],
     ['/araclar', 'Staj hesaplama araçları'],
     ['/firsatlar', 'Öğrenci fırsatları'],
-    ['/kesfet', 'Öğrenci etkinlikleri'],
     ['/isveren', 'İşverenler için'],
     ['/stajyer-nasil-alinir', 'İşveren rehberi'],
     ['/hakkimizda', 'Hakkımızda'],

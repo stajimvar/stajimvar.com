@@ -46,7 +46,14 @@ export const AdminDiscoverView: React.FC<{
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-bold text-blue-600">Yönetim</p>
-          <h1 className="text-2xl font-black">Keşfet etkinlikleri</h1>
+          {/*
+            ARŞİV — bölüm 11 Eylül 2026'da kapandı (göç 20260926120000).
+            Satırlar silinmedi, durumu 'archived' oldu; halka açık bir
+            /kesfet sayfası artık yok. Bu ekran arşivi görmek, düzeltmek
+            ve silmek için duruyor.
+          */}
+          <h1 className="text-2xl font-black">Keşfet etkinlikleri (arşiv)</h1>
+          <p className="text-sm text-gray-600">Bölüm kapandı; halka açık sayfası yok. Kayıtlar yalnız burada görünüyor.</p>
         </div>
         <button
           onClick={() => onNavigate("/yonetim/kesfet/yeni")}
@@ -84,7 +91,7 @@ export const AdminDiscoverView: React.FC<{
                   {new Date(e.startsAt).toLocaleDateString("tr-TR")}
                 </td>
                 <td className="p-3">
-                  {e.status === "published" ? "Yayında" : "Taslak"}
+                  {e.status === "archived" ? "Arşiv" : e.status === "published" ? "Yayında" : "Taslak"}
                   <br />
                   <span className="text-xs text-gray-500">
                     Puan: {e.studentFitScore} ·{" "}

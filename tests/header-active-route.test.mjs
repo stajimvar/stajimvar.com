@@ -4,11 +4,44 @@ import { readFileSync } from "node:fs";
 
 const source = readFileSync("src/components/Header.tsx", "utf8");
 
-test("Keşfet rotasında İlanlar sekmesi aktif kalmaz", () => {
+test("adres sekmeyi eziyor: rehber, fırsat, kurumsal ve sosyal sayfalarda İlanlar sönük", () => {
   assert.match(
     source,
-    /const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kesfetteMi && !kurumsalSayfada && !sosyaldeMi && activeTab === 'internships'/,
+    /const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kurumsalSayfada && !sosyaldeMi && activeTab === 'internships'/,
   );
+});
+
+/*
+  KEŞFET NAVİGASYONDAN KALKTI (11 Eylül 2026)
+
+  Göç 20260926120000: 163 kaydın hiçbiri kariyer etkinliği değildi
+  (konser 57, festival 52, sergi 29, tiyatro 19, atölye 5, müze 1);
+  bölüm arşive alındı, adres _redirects ile /firsatlar'a gidiyor.
+  Yerine sosyal ağın girişi "Ağım" geldi; bugün /baglantilar.
+*/
+test("alt çubuk sırası İlanlar · Fırsatlar · Ağım · Rehber · Profil; Keşfet yok", () => {
+  const altCubuk = source.slice(source.indexOf('aria-label="Mobil Alt Navigasyon"'), source.indexOf('aria-label="Mobil Alt Şirket Navigasyon"'));
+  const etiketler = [...altCubuk.matchAll(/aria-label="([^"]+)"/g)].map((e) => e[1]).filter((e) => e !== 'Mobil Alt Navigasyon');
+  assert.deepEqual(etiketler, ['Staj ilanları', 'Öğrenci fırsatları', 'Ağım', 'Öğrenci rehberi', 'İşveren tarafı', 'Profilim']);
+  const hrefler = [...altCubuk.matchAll(/href="([^"]+)"/g)].map((e) => e[1]);
+  assert.deepEqual(hrefler, ['/', '/firsatlar', '/baglantilar', '/rehber']);
+  /* Keşfet'in izi yok: adres, bayrak, etiket, ikon. Yorumlar atılıyor: kalkışı ANLATAN not kalabilir, kod kalamaz. */
+  const kod = source.replace(/\/\*[\s\S]*?\*\//g, '');
+  for (const iz of ['/kesfet', 'kesfetteMi', 'onOpenDiscover', 'Etkinlikler', 'Compass']) {
+    assert.ok(!kod.includes(iz), `${iz} hâlâ Header'da`);
+  }
+  /* Masaüstünde de aynı sıra. */
+  const ust = source.slice(source.indexOf('id="nav-tab-internships"'), source.indexOf('id="nav-tab-guides"'));
+  assert.match(ust, /id="nav-tab-opportunities"[\s\S]+id="nav-tab-network"\s+href="\/baglantilar"/);
+});
+
+test("Ağım yalnız /baglantilar'ta yanıyor; /profil/* ve Profil ayrı, her an tek sekme", () => {
+  assert.match(source, /const agimdaMi = \/\^\\\/baglantilar\(\\\/\|\$\)\/\.test\(bulunulanYol\);/);
+  /* Ağım'da Profil sönük: sekme durumu 'profile' kalsa bile adres eziyor. */
+  assert.match(source, /const profildeMi = cvEkranindaMi \|\| \(!rehberdeMi && !kurumsalSayfada && !agimdaMi && activeTab === 'profile'\)/);
+  assert.match(source, /aria-label="Ağım"\s*aria-current=\{agimdaMi \? 'page' : undefined\}/);
+  /* /baglantilar sosyal küme içinde, yani İlanlar da sönük (ilanlardaMi !sosyaldeMi). */
+  assert.match(source, /const sosyaldeMi = \/\^\\\/\(cv\|profil\|topluluklar\|baglantilar\)\(\\\/\|\$\)\/\.test\(bulunulanYol\);/);
 });
 
 test("sosyal rotada (/cv) İlanlar sönük, Profil aktif; aria-current görselle aynı", () => {
@@ -17,13 +50,10 @@ test("sosyal rotada (/cv) İlanlar sönük, Profil aktif; aria-current görselle
   assert.match(source, /aria-label="Profilim"\s*aria-current=\{profildeMi \? 'page' : undefined\}/);
 });
 
-test("Keşfet rotasında üst arama etkinlik içeriğini arar", () => {
-  assert.match(source, /kesfetteMi[\s\S]{0,80}\? 'Etkinlik, şehir veya mekân ara'/);
-  assert.match(source, /if \(rehberSayfasindaMi \|\| kesfetteMi\) return/);
+test("üst arama rehberde rehber arıyor, başka yerde ilan; Keşfet dalı yok", () => {
+  assert.match(source, /rehberSayfasindaMi\s*\? 'Rehberlerde ara'\s*: 'Pozisyon veya şirket ara'/);
+  assert.match(source, /if \(rehberSayfasindaMi\) return;/);
 });
-
-// Keşfet now has a paginated catalog. Reachability, responsive layout and
-// header search are exercised against the real page in kesfet-catalog.spec.ts.
 
 test("şeritte masaüstünde dört kart yan yana durur", () => {
   const serit = readFileSync("src/ui/Serit.tsx", "utf8");
@@ -110,7 +140,7 @@ test("sosyal sayfada üst arama kişi arıyor ve ilan süzgecine yazmıyor", () 
   /* Odaklanınca ilan sekmesine geçiş sosyal dalda çalışmıyor. */
   assert.match(
     source,
-    /onFocus=\{\(\) => \{\s*if \(sosyaldeMi\) \{[\s\S]{0,120}return;\s*\}\s*if \(rehberSayfasindaMi \|\| kesfetteMi\) return;/,
+    /onFocus=\{\(\) => \{\s*if \(sosyaldeMi\) \{[\s\S]{0,120}return;\s*\}\s*if \(rehberSayfasindaMi\) return;/,
   );
   /* Sonuç mantığı kopyalanmadı: ortak parça çiziliyor; oturumsuz ve şirket hesabında kutu yok. */
   assert.ok(source.includes("import { KullaniciAramaSonuclari } from './sosyal/KullaniciArama';"));

@@ -28,10 +28,9 @@ on:
         default: "resmi"
         type: choice
         options: ["kariyer-html", "kariyer-html-yayinla", "envanter", "cozum", "resmi", "linkedin", "linkedin-kesif-yaz", "linkedin-teshis", "kesif"]
-  schedule:
-    # Günde bir. Keşif kaynakları saatlik değişmiyor; saatlik çekmek
-    # kaynağa gereksiz yük bindirmek olurdu.
-    - cron: "35 5 * * *"
+  # ZAMANLAYICI KAPALI (11 Eylül 2026): Keşfet navigasyondan kaldırıldı,
+  # kayıtlar arşivlendi (20260926120000). Yeni içe aktarım yayımlanmaz;
+  # elle çalıştırma (workflow_dispatch) inceleme için duruyor.
 
 permissions:
   contents: read

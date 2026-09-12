@@ -93,6 +93,22 @@ export interface StudentProfile {
   contentLanguage?: string;
   homeCountry?: string;
   preferredJobCountries?: string[];
+  /*
+    İKAMET ŞEHRİ — `preferences.cities` DEĞİL
+
+    `preferences.cities` (pref_cities) "çalışmak istediğim şehirler"
+    demek; burası "oturduğum il". İkisini karıştırmak, "İstanbul'da staj
+    arıyorum" diyen Konyalı öğrenciyi İstanbul şartlı bir bursta uygun
+    göstermek olurdu — o yüzden pref_cities buraya ASLA kopyalanmıyor.
+
+    İSTEĞE BAĞLI: boşken şehir boyutu "belirsiz" sayılıyor, "uygun değil"
+    değil (firsat-degerlendirme.mjs → opportunityFit).
+
+    Değer TR_CITIES sözlüğünden birebir geliyor; karşılaştırma da birebir
+    eşitlik. Serbest metin girilmiyor çünkü Türkçe küçültme tuzağı var:
+    'İstanbul'.toLowerCase() 'i̇stanbul' veriyor.
+  */
+  city?: string;
 }
 
 export interface CompanyAccount {

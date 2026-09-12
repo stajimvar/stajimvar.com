@@ -190,7 +190,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
       */}
       <div className="flex flex-wrap gap-2">
         <button type="button" onClick={() => onNavigate('/yonetim/kesfet')} className="inline-flex items-center justify-center min-h-11 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer">
-          Keşfet etkinlikleri
+          Keşfet arşivi
         </button>
         <button
           type="button"

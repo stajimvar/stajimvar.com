@@ -44,7 +44,11 @@
   YENİ ROTA EKLERKEN: App.tsx'e ön render edilmeyen bir adres eklediysen
   buraya da ekle. Eklemezsen adres 404 döner.
 */
-const VERI_ONEKLERI = ['/ilan/', '/sirket/', '/firsatlar/', '/kesfet/', '/bolum/'];
+/*
+  /kesfet/ bu listeden ÇIKTI: bölüm kapandı, adresler `_redirects` ile
+  /firsatlar'a 301 alıyor ve o dosya bu ara katmandan ÖNCE işleniyor.
+*/
+const VERI_ONEKLERI = ['/ilan/', '/sirket/', '/firsatlar/', '/bolum/'];
 
 const UYGULAMA_ADRESLERI = new Set([
   /*

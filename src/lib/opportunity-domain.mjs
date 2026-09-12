@@ -1,6 +1,25 @@
 import { yerelKonakMi } from './guvenli-url.mjs';
 
-export const OPPORTUNITY_TYPES = ['scholarship', 'kyk', 'international', 'competition', 'education', 'student_support', 'youth_program'];
+/*
+  TÜR LİSTESİ GÖÇLE BİRLİKTE BÜYÜDÜ
+
+  20260926110000 göçü dört tür açtı (hackathon, teknofest, career_day,
+  career_fair). Liste burada eksik kalsaydı yönetim formu ve adres
+  süzgeçleri o türleri geçersiz sayardı.
+*/
+export const OPPORTUNITY_TYPES = [
+  'scholarship',
+  'kyk',
+  'international',
+  'competition',
+  'education',
+  'student_support',
+  'youth_program',
+  'hackathon',
+  'teknofest',
+  'career_day',
+  'career_fair',
+];
 
 export function isSafeHttpsUrl(value) {
   try {
@@ -112,6 +131,10 @@ export const OPPORTUNITY_TYPE_LABELS = {
   education: 'Eğitim',
   student_support: 'Öğrenci desteği',
   youth_program: 'Gençlik programı',
+  hackathon: 'Hackathon',
+  teknofest: 'Teknofest',
+  career_day: 'Kariyer günü',
+  career_fair: 'Kariyer fuarı',
 };
 
 export function opportunityTypeLabel(type) {
@@ -172,48 +195,138 @@ export function daysUntilDeadline(value, now) {
 /*
   SÜZGEÇLERİN TEK GERÇEK KAYNAĞI ADRES
 
-  Arama ve süzgeçler bellekte tutuluyordu: takvim sekmesine geçince arama
-  duruyordu ama adrese yazılmadığı için sayfa yenilendiğinde kayboluyordu.
-  Aynı sebeple süzülmüş bir listeyi paylaşmak da mümkün değildi.
+  Arama ve süzgeçler bir zamanlar bellekte tutuluyordu: sayfa
+  yenilendiğinde kayboluyor, süzülmüş bir liste paylaşılamıyordu. Durumun
+  tamamı adreste.
 
-  `durum` alanı da eklendi: "yakında açılacak" süzgeci yalnızca sayfa içi
-  bir durumdu, adrese hiç yazılmıyordu.
+  MODEL TÜRDEN KATEGORİYE GEÇTİ
+  -----------------------------
+  Eski model tek tek TÜR süzüyordu (`type=scholarship`). Göç dört yeni
+  tür açınca on bir türlük bir radyo listesi çıktı; kimse "student_support
+  mu youth_program mu" diye düşünmüyor. Süzgeç artık dört KATEGORİ
+  (lib/firsat-kategori.mjs) ve Burslar içinde bir KAYNAK ayrımı.
+
+  Eski `type=` bağlantıları okunmaya devam ediyor: değeri kategorisine
+  çevriliyor, `type=kyk` ayrıca kaynak süzgecini açıyor. Eski `place=`
+  de `sehir` olarak okunuyor. Paylaşılmış bağlantılar kırılmıyor.
+
+  `durum`, `takvimsiz` ve `level` kaldırıldı: ana liste artık sunucuda
+  `status=published` + son tarihi geçmemiş olarak süzülüyor, yani
+  "yalnızca açık" bir seçenek değil varsayılan. Yerine "Son başvuru
+  tarihi" (7/30 gün) geldi — öğrencinin sorduğu soru buydu.
 */
-const DURUMLAR = ['acik', 'yakinda'];
+const BOLGELER = ['turkiye', 'yurtdisi'];
+const MODLAR = ['yuz-yuze', 'cevrim-ici'];
+const SIRALAMALAR = ['son-tarih', 'yeni'];
+const SON_GUNLER = ['7', '30'];
+const KATEGORILER = ['burslar', 'programlar', 'yarismalar', 'kariyer-etkinlikleri'];
+const KAYNAKLAR = ['kyk', 'diger'];
+
+/* Eski tür adresleri: değeri kategoriye çeviren tek tablo. */
+const ESKI_TUR_KATEGORISI = {
+  scholarship: 'burslar',
+  kyk: 'burslar',
+  student_support: 'burslar',
+  education: 'programlar',
+  youth_program: 'programlar',
+  international: 'programlar',
+  competition: 'yarismalar',
+  hackathon: 'yarismalar',
+  teknofest: 'yarismalar',
+  career_day: 'kariyer-etkinlikleri',
+  career_fair: 'kariyer-etkinlikleri',
+};
+
+export const BOS_FIRSAT_SUZGECI = {
+  query: '',
+  kategori: '',
+  kaynak: '',
+  sehir: '',
+  bolge: '',
+  mod: '',
+  sonGun: '',
+  banaUygun: false,
+  kaydedilen: false,
+  arsiv: false,
+  siralama: '',
+  takvim: false,
+};
+
+const secilen = (deger, izinli) => (izinli.includes(deger) ? deger : '');
 
 export function readOpportunityFilters(search) {
   const params = new URLSearchParams(search);
-  const durum = DURUMLAR.includes(params.get('durum')) ? params.get('durum') : '';
+  const eskiTur = ESKI_TUR_KATEGORISI[params.get('type')] || '';
   return {
     query: params.get('q') || '',
-    type: OPPORTUNITY_TYPES.includes(params.get('type')) ? params.get('type') : '',
-    level: params.get('level') || '',
-    place: params.get('place') || '',
-    /*
-      Eski bağlantılarla uyum: `open=1` bir süre "yalnızca açık" anlamına
-      geliyordu. Paylaşılmış bağlantılar çalışmaya devam etsin diye
-      okunuyor ama artık `durum=acik` olarak yazılıyor.
-    */
-    openOnly: params.get('open') === '1' || durum === 'acik',
-    durum: durum || (params.get('open') === '1' ? 'acik' : ''),
-    /* Takvimi açıklanmayanlar ve süresi dolanlar da paylaşılabilir olmalı. */
-    takvimsiz: params.get('takvimsiz') === '1',
+    kategori: secilen(params.get('kategori'), KATEGORILER) || eskiTur,
+    kaynak: secilen(params.get('kaynak'), KAYNAKLAR) || (params.get('type') === 'kyk' ? 'kyk' : ''),
+    /* `place` eski addı; iki ad da aynı alana yazıyor. */
+    sehir: params.get('sehir') || params.get('place') || '',
+    bolge: secilen(params.get('bolge'), BOLGELER),
+    mod: secilen(params.get('mod'), MODLAR),
+    sonGun: secilen(params.get('son'), SON_GUNLER),
+    banaUygun: params.get('uygun') === '1',
+    kaydedilen: params.get('kayit') === '1',
     arsiv: params.get('arsiv') === '1',
+    siralama: secilen(params.get('sirala'), SIRALAMALAR),
+    takvim: params.get('gorunum') === 'takvim',
   };
 }
 
-export function serializeOpportunityFilters(filters) {
+export function serializeOpportunityFilters(filters = {}) {
   const params = new URLSearchParams();
   if (filters.query) params.set('q', filters.query);
-  if (filters.type) params.set('type', filters.type);
-  if (filters.level) params.set('level', filters.level);
-  if (filters.place) params.set('place', filters.place);
-  if (filters.durum) params.set('durum', filters.durum);
-  else if (filters.openOnly) params.set('durum', 'acik');
-  if (filters.takvimsiz) params.set('takvimsiz', '1');
+  if (filters.kategori) params.set('kategori', filters.kategori);
+  if (filters.kaynak) params.set('kaynak', filters.kaynak);
+  if (filters.sehir) params.set('sehir', filters.sehir);
+  if (filters.bolge) params.set('bolge', filters.bolge);
+  if (filters.mod) params.set('mod', filters.mod);
+  if (filters.sonGun) params.set('son', filters.sonGun);
+  if (filters.banaUygun) params.set('uygun', '1');
+  if (filters.kaydedilen) params.set('kayit', '1');
   if (filters.arsiv) params.set('arsiv', '1');
+  if (filters.siralama) params.set('sirala', filters.siralama);
+  if (filters.takvim) params.set('gorunum', 'takvim');
   const query = params.toString();
   return query ? `?${query}` : '';
+}
+
+/*
+  BOŞ SONUÇ HANGİ SÜZGECİN DARALTTIĞINI SÖYLÜYOR
+
+  "Bu filtrelere uyan fırsat yok" cümlesi hangi filtrenin daralttığını
+  söylemiyordu; kullanıcı paneli açıp tek tek aramak zorundaydı. Boş
+  durum artık açık süzgeçleri ADIYLA sayıyor ve her biri tek tek
+  kaldırılabiliyor.
+
+  Sıra kullanıcının onları açtığı sırayla değil, panelde gördüğü sırayla:
+  önce arama ve kategori, sonra daraltıcılar.
+*/
+const KATEGORI_ADI = {
+  burslar: 'Burslar',
+  programlar: 'Programlar',
+  yarismalar: 'Yarışmalar',
+  'kariyer-etkinlikleri': 'Kariyer Etkinlikleri',
+};
+
+export function aktifFirsatSuzgecleri(filters = {}) {
+  const liste = [];
+  if (filters.query) liste.push({ id: 'query', etiket: `Arama: “${filters.query}”` });
+  if (filters.kategori)
+    liste.push({ id: 'kategori', etiket: `Kategori: ${KATEGORI_ADI[filters.kategori] ?? filters.kategori}` });
+  if (filters.kaynak)
+    liste.push({ id: 'kaynak', etiket: filters.kaynak === 'kyk' ? 'Kaynak: KYK' : 'Kaynak: Diğer kurumlar' });
+  if (filters.sonGun) liste.push({ id: 'sonGun', etiket: `Son başvuru: ${filters.sonGun} gün içinde` });
+  if (filters.sehir) liste.push({ id: 'sehir', etiket: `Şehir: ${filters.sehir}` });
+  if (filters.bolge)
+    liste.push({ id: 'bolge', etiket: filters.bolge === 'turkiye' ? 'Türkiye' : 'Yurt dışı' });
+  if (filters.mod)
+    liste.push({ id: 'mod', etiket: filters.mod === 'yuz-yuze' ? 'Yüz yüze' : 'Çevrim içi' });
+  if (filters.banaUygun) liste.push({ id: 'banaUygun', etiket: 'Bana uygun' });
+  if (filters.kaydedilen) liste.push({ id: 'kaydedilen', etiket: 'Kaydedilenler' });
+  if (filters.arsiv) liste.push({ id: 'arsiv', etiket: 'Süresi dolanlar' });
+  return liste;
 }
 
 export function matchOpportunity(opportunity, profile) {

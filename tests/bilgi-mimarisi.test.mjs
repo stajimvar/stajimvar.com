@@ -22,36 +22,26 @@ const kurumsal = oku('src/components/CorporatePages.tsx');
 
 test('DÖRT ANA ALAN DURUYOR — hiçbiri diğerinin altına gömülmedi', () => {
   /*
-    Üçe indirme önerisi ölçüldü ve UYGULANMADI: dört alanın dördü de
-    ayrı ve dolu bir kullanıcı görevi (üretim, 7 Eylül 2026):
-      İlanlar    114 ilan
-      Fırsatlar  121 kayıt (67 uluslararası, 47 burs, 2 KYK, yarışma…)
-      Etkinlik   137 etkinlik
-      Rehber      71 rehber + 42 bölüm sayfası
-    Birini ötekinin altına taşımak, o görevi keşfedilemez yapardı.
+    Dört alan: İlanlar, Fırsatlar, Ağım, Rehber. Üçü ayrı ve dolu bir
+    kullanıcı görevi (üretim, 7 Eylül 2026): İlanlar 114 ilan, Fırsatlar
+    121 kayıt, Rehber 71 rehber + 42 bölüm sayfası. Ağım sosyal ağın
+    girişi; bugün bağlantılar sayfası.
+
+    Etkinlik (Keşfet) 11 Eylül 2026'da kalktı: 163 kaydın hiçbiri kariyer
+    etkinliği değildi, bölüm arşive alındı (göç 20260926120000).
   */
   /* İlan listesi ana sayfanın kendisi; diğer üçü kendi adresinde. */
-  for (const yol of ['/', '/firsatlar', '/kesfet', '/rehber']) {
+  for (const yol of ['/', '/firsatlar', '/baglantilar', '/rehber']) {
     assert.ok(header.includes(`href="${yol}"`), `${yol} gezintide yok`);
   }
-  for (const kimlik of ['nav-tab-opportunities', 'nav-tab-guides']) {
+  for (const kimlik of ['nav-tab-opportunities', 'nav-tab-network', 'nav-tab-guides']) {
     assert.ok(header.includes(kimlik), kimlik);
   }
+  assert.ok(!header.includes('href="/kesfet"'), 'Keşfet gezintiden kalktı');
 });
 
-test('KEŞFET SEKMESİ "ETKİNLİKLER" ADIYLA GÖRÜNÜYOR', () => {
-  /*
-    Ölçüldü: sayfadaki 137 yayındaki kaydın 137'si etkinlik. "Keşfet"
-    neyin keşfedileceğini söylemeyen bir fiildi; sayfanın kendi başlığı
-    zaten "Şehrindeki etkinlikler" diyordu.
-  */
-  assert.match(header, /<span>Etkinlikler<\/span>/);
-  assert.doesNotMatch(header, /<span>Keşfet<\/span>/, 'eski ad sekmede kalmamalı');
-});
-
-test('ADRES DEĞİŞMEDİ — yalnız etiket değişti', () => {
-  /* /kesfet bağlantıları, ön render çıktısı ve yönlendirmeler korunuyor. */
-  assert.ok(header.includes('href="/kesfet"'));
+test('AĞIM SEKMESİ: lucide Users, etiket "Ağım"', () => {
+  assert.match(header, /id="nav-tab-network"[\s\S]{0,900}<Users[\s\S]{0,200}<span>Ağım<\/span>/);
 });
 
 test('İŞVEREN BAĞLANTISI ÖĞRENCİ SEKMELERİNDEN AYRI', () => {

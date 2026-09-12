@@ -4,7 +4,11 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 /*
-  ETKİNLİK KARTI REHBER KARTIYLA AYNI ÖLÇÜDE
+  KEŞFET KAPANDI (11 Eylül 2026) — bu dosyadaki etkinlik kartı iddiaları
+  sayfayla birlikte gitti; ölçüm notu tarihçe olarak duruyor. Kalan
+  iddialar rehber ve fırsat kartını sabitliyor.
+
+  ETKİNLİK KARTI REHBER KARTIYLA AYNI ÖLÇÜDE (tarihçe)
 
   Aynı ürünün iki listesi farklı ölçüdeydi. Ölçüldü (1440px, iki sayfada
   da orta sütun 661 piksel):
@@ -25,13 +29,10 @@ const KOK = path.resolve(import.meta.dirname, '..');
 const oku = (p) => readFileSync(path.join(KOK, p), 'utf8');
 
 const rehber = oku('src/components/RehberKartlari.tsx');
-const kesfet = oku('src/components/KesfetPage.tsx');
-const kapak = oku('src/components/EventCover.tsx');
 
-test('IZGARA İKİ SAYFADA DA AYNI', () => {
+test('REHBER IZGARASI ORTAK ÖLÇÜDE', () => {
   const izgara = /grid-cols-2 gap-2\.5 sm:gap-4 lg:grid-cols-3/;
   assert.match(rehber, izgara, 'RehberIzgarasi değişmiş');
-  assert.match(kesfet, izgara, 'Keşfet ızgarası rehberle aynı olmalı');
 });
 
 test('KAPAK SABİT YÜKSEKLİKTE, ORANLI DEĞİL', () => {
@@ -40,57 +41,13 @@ test('KAPAK SABİT YÜKSEKLİKTE, ORANLI DEĞİL', () => {
     sebebi buydu ("üç poster 200 pikselin altına düşer" notu poster kapak
     içindi).
   */
-  for (const [ad, kaynak] of [['rehber', rehber], ['keşfet', kesfet]]) {
-    assert.match(kaynak, /h-24 w-full shrink-0 overflow-hidden/, ad);
-    assert.match(kaynak, /sm:h-36/, ad);
-  }
-  /* Yorumlar atılıyor: eski kapağı ANLATAN yorum, kapağın kendisi değil. */
-  const kart = kesfet
-    .slice(kesfet.indexOf('const EventCard'), kesfet.indexOf('const PERIODS'))
-    .replace(/\/\*[\s\S]*?\*\//g, '');
-  assert.doesNotMatch(kart, /aspect-video/, 'etkinlik kartında oranlı kapak kalmamalı');
-  assert.doesNotMatch(kart, /w-\[104px\]/, 'telefondaki yatay küçük kapak kalmamalı');
+  assert.match(rehber, /h-24 w-full shrink-0 overflow-hidden/);
+  assert.match(rehber, /sm:h-36/);
 });
 
 test('TİPOGRAFİ VE İÇ BOŞLUK AYNI', () => {
-  const kart = kesfet.slice(kesfet.indexOf('const EventCard'), kesfet.indexOf('const PERIODS'));
-  assert.match(kart, /text-\[13px\] font-bold leading-snug text-gray-900 sm:text-base/);
-  assert.match(kart, /gap-1\.5 p-2\.5 sm:gap-2 sm:p-3\.5/);
-  /* Rehber kartı da aynı iki değeri kullanıyor. */
   assert.match(rehber, /text-\[13px\] font-bold leading-snug text-gray-900 line-clamp-2 sm:text-base/);
   assert.match(rehber, /gap-1\.5 p-2\.5 sm:gap-2 sm:p-3\.5/);
-});
-
-test('İSKELET GERÇEK KARTLA AYNI IZGARADA', () => {
-  /* Farklı ızgarada iskelet, içerik gelince sayfayı zıplatırdı. */
-  const iskelet = kesfet.slice(kesfet.indexOf('Etkinlikler yükleniyor'));
-  assert.match(iskelet.slice(0, 300), /grid-cols-2 gap-2\.5 sm:gap-4 lg:grid-cols-3/);
-});
-
-test('TARİH VE YER DAR KARTTA DA KALIYOR', () => {
-  /*
-    Etkinlikte "ne zaman" ve "nerede" kartın var oluş sebebi; kırpılabilir
-    ama gizlenemez. Gizlenen tek şey öğrenci fiyatı — rozet zaten
-    "Ücretsiz / Öğrenci indirimli" diyor.
-  */
-  const kart = kesfet.slice(kesfet.indexOf('const EventCard'), kesfet.indexOf('const PERIODS'));
-  assert.match(kart, /formatDiscoverDate\(event\)/);
-  assert.match(kart, /formatDiscoverLocation\(event\)/);
-  assert.doesNotMatch(kart, /hidden sm:block[^]{0,80}formatDiscoverDate/);
-  assert.match(kart, /hidden text-\[11px\] font-bold text-gray-900 sm:block/);
-});
-
-test('ÖNBELLEKTEN GELEN KAPAKTA İSKELET KAPANIYOR', () => {
-  /*
-    İskelet yalnız `onLoad` ile kapanıyordu; tarayıcı görseli React olay
-    dinleyicisini bağlamadan bitirirse o olay hiç gelmiyor. Ölçüldü
-    (canlı): dokuz kapağın dokuzu `complete` ve naturalWidth 210 iken
-    altısında gri iskelet duruyordu — kart boş görünüyordu.
-  */
-  assert.match(kapak, /node\?\.complete && node\.naturalWidth > 0/);
-  assert.match(kapak, /ref=\{imgRef\}/);
-  /* onLoad da yerinde: ikisi birbirinin yedeği. */
-  assert.match(kapak, /onLoad=\{\(\) => setLoading\(false\)\}/);
 });
 
 /* ------------------------------------------------- fırsat kartı */
@@ -101,8 +58,8 @@ const tup = oku('src/components/ZamanTupu.tsx');
 test('FIRSAT KARTI DA AYNI IZGARADA', () => {
   /*
     Kartlar tek sütunda alt alta diziliyordu. Ölçüldü (390px): kart
-    358x246 ve ekrana iki kart giriyordu; rehber ve Keşfet aynı ekranda
-    dört kart gösteriyordu.
+    358x246 ve ekrana iki kart giriyordu; rehber aynı ekranda dört kart
+    gösteriyordu.
 
     Sonra: 390px'te 2 x 174px (kart 174x233, dört kart görünüyor),
     1440px'te 3 x 209.5px (kart 210x270, altı kart görünüyor).
@@ -136,18 +93,15 @@ test('ZAMAN TÜPÜ KIRPMIYOR, SARIYOR', () => {
 
 test('ŞERİDİN ÜSTÜNDE LİSTE BAŞLIĞI VAR', () => {
   /*
-    Rehberde "TÜM REHBERLER (71)", Keşfet'te "YAYINDAKİ ETKİNLİKLER (102)",
-    ilanlarda "AÇIK STAJ İLANLARI (62)" varken fırsatlarda şerit başlıksız
-    duruyordu: göz doğrudan dairelere düşüyor, neyin listelendiği
-    yazmıyordu.
+    Rehberde "TÜM REHBERLER (71)", ilanlarda "AÇIK STAJ İLANLARI (62)"
+    varken fırsatlarda şerit başlıksız duruyordu: göz doğrudan dairelere
+    düşüyor, neyin listelendiği yazmıyordu.
 
-    Üçü de aynı tipografi: 12px, büyük harf, seyrek harf aralığı; solda
+    Hepsi aynı tipografi: 12px, büyük harf, seyrek harf aralığı; solda
     "ne ve kaç tane", sağda listenin nereden geldiğini söyleyen ikincil
     satır (telefonda gizli).
   */
-  const kesfet = oku('src/components/KesfetPage.tsx');
   const bicim = /text-xs font-bold uppercase tracking-widest text-gray-600/;
-  assert.match(kesfet, bicim, 'Keşfet başlığı değişmiş');
   assert.match(firsat, bicim, 'fırsat listesinde başlık yok');
   assert.match(firsat, /Kurumların resmî sayfalarından derlendi/);
   assert.match(firsat, /hidden text-xs font-medium text-gray-500 sm:block/);
@@ -158,9 +112,15 @@ test('BAŞLIKTAKİ SAYI DARALTMAYA GÖRE DEĞİŞİYOR', () => {
     Ölçüldü (canlı): daraltma yokken "Güncel fırsatlar (32)", tür
     seçilince "Filtrelenen fırsatlar (27)", Tümü'ye dönünce yine 32.
   */
-  assert.match(firsat, /listeDaraldi \? 'Filtrelenen fırsatlar' : 'Güncel fırsatlar'/);
+  /* Arşiv üçüncü bir başlık: "Süresi dolan fırsatlar". Üçü de aynı ifadede. */
+  assert.match(firsat, /'Süresi dolan fırsatlar'/);
+  assert.match(firsat, /'Filtrelenen fırsatlar'\s*:\s*'Güncel fırsatlar'/);
   assert.match(firsat, /listeDaraldi \? filtered\.length : sayimTabani\.length/);
-  assert.match(firsat, /aktifSuzgecSayisi > 0 \|\| filters\.query\.trim\(\)\.length > 0 \|\| savedOnly/);
+  /*
+    Daraltma ölçüsü tek yerde: açık süzgeç listesi (aktifFirsatSuzgecleri).
+    Arama da o listenin bir üyesi, ayrıca sayılmıyor.
+  */
+  assert.match(firsat, /const listeDaraldi = aktifSuzgecSayisi > 0/);
 });
 
 test('BAŞLIK ŞERİDİN ÜSTÜNDE, LİSTENİN DEĞİL', () => {

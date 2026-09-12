@@ -270,6 +270,8 @@ export function toStudentProfile(row: StudentRowBundle): StudentProfile {
     university: row.university ?? '',
     faculty: row.faculty ?? '',
     department: row.department ?? '',
+    /* İkamet ili; NULL kalabilir. pref_cities ile karıştırma — o tercih. */
+    city: row.city ?? '',
     // grade_level nullable; arayüz tipi zorunlu, en yaygın değere düş.
     gradeLevel: row.grade_level ?? '3. Sınıf',
     graduationYear: row.graduation_year ?? new Date().getFullYear() + 1,
@@ -365,6 +367,12 @@ export function splitStudentUpdate(patch: Partial<StudentProfile>) {
   if (patch.university !== undefined) studentPatch.university = patch.university;
   if (patch.faculty !== undefined) studentPatch.faculty = patch.faculty;
   if (patch.department !== undefined) studentPatch.department = patch.department;
+  /*
+    Boş dize NULL'a çevriliyor: kolondaki biçim kısıtı ('' reddediliyor,
+    20260926130000_ogrenci_sehri) boş dizeyi kabul etmiyor ve "şehir yok"
+    tek bir değerle anlatılmalı — cv_path'te olduğu gibi.
+  */
+  if (patch.city !== undefined) studentPatch.city = patch.city || null;
   if (patch.gradeLevel !== undefined) studentPatch.grade_level = patch.gradeLevel;
   if (patch.graduationYear !== undefined) studentPatch.graduation_year = patch.graduationYear;
   if (patch.gpa !== undefined) studentPatch.gpa = patch.gpa;

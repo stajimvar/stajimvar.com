@@ -34,7 +34,6 @@ export const REKLAM_KAPALI_AILELER = [
   '/ilan/',
   '/sirket/',
   '/firsatlar/',
-  '/kesfet/',
   '/burslar',
   '/kyk',
   '/yurtdisi-firsatlari',

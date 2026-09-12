@@ -39,9 +39,8 @@ DURAGAN = [
     ("/firsatlar", "daily", "0.8"),
     ("/burslar", "daily", "0.7"),
     ("/kyk", "daily", "0.7"),
-    # Kesfet liste sayfasi haritada yoktu; detaylari girdi ama
-    # onlari toplayan sayfa disarida kalmisti.
-    ("/kesfet", "daily", "0.7"),
+    # /kesfet KALDIRILDI (11 Eylul 2026): bolum kapandi, adres /firsatlar'a
+    # 301 aliyor. Haritada yonlendirmeye giden adres olmaz.
     ("/yurtdisi-firsatlari", "daily", "0.7"),
     ("/yarismalar", "daily", "0.7"),
     ("/firsat-takvimi", "daily", "0.7"),

@@ -198,13 +198,53 @@ test('H2: sitemap adımı gerçekten kurulabilen bir bağımlılık listesi kull
   }
 });
 
-test('H3: keşfet etkinlikleri hem ön render hem site haritasında', () => {
+test("H3: keşfet kapandı — /kesfet ön renderda ve haritada yok, adresi /firsatlar'a 301", () => {
+  /*
+    ESKİ İDDİA: "keşfet etkinlikleri hem ön render hem site haritasında".
+    Doğruydu — 11 Eylül 2026'ya kadar. O gün Keşfet (kültür etkinlikleri)
+    navigasyondan kaldırıldı: 163 discover_events satırının hiçbiri
+    kariyer etkinliği değildi (konser 57, festival 52, sergi 29, tiyatro
+    19, atölye 5, müze 1), yani Fırsatlar'a taşınacak satır yoktu. Kayıt
+    silinmedi, 20260926120000 ile 'archived' oldu.
+
+    İDDİA TERSİNE ÇEVRİLDİ, GEVŞETİLMEDİ. Kapanan bir bölümün üç kanalı
+    da aynı şeyi söylemeli: ön render statik sayfa yazmamalı, harita
+    adresi bildirmemeli, adres kalıcı olarak yeni yerine gitmeli. Biri
+    ötekinden ayrılırsa arama motoruna "bu sayfayı tara" derken sunucu
+    301 döner — çelişkili sinyal, tam da testin yakalaması gereken şey.
+  */
   const onrender = readFileSync(path.join(KOK, 'scripts/onrender.mjs'), 'utf8');
-  assert.match(onrender, /etkinlikleriGetir/, 'etkinlik detayları ön render edilmeli');
-  assert.ok(onrender.includes("'@type': 'Event'"), 'Event yapısal verisi olmalı');
+  assert.ok(
+    !onrender.includes("['/kesfet',"),
+    'kapanan bölüm için statik sayfa yazılmamalı: yönlendirmeyi gölgeler'
+  );
   const sitemap = readFileSync(path.join(KOK, 'automation/sitemap.py'), 'utf8');
-  assert.match(sitemap, /discover_events/, 'etkinlikler site haritasına girmeli');
-  assert.ok(sitemap.includes('("/kesfet"'), 'keşfet liste sayfası haritada olmalı');
+  assert.ok(
+    !sitemap.includes('("/kesfet"'),
+    'haritada yönlendirmeye giden adres olmaz'
+  );
+
+  const yonlendirme = readFileSync(path.join(KOK, 'public/_redirects'), 'utf8');
+  assert.match(
+    yonlendirme,
+    /^\/kesfet[ \t]+\/firsatlar[ \t]+301/m,
+    'paylaşılmış /kesfet bağlantısı boş ekrana değil Fırsatlar\'a inmeli'
+  );
+  assert.match(
+    yonlendirme,
+    /^\/kesfet\/\*[ \t]+\/firsatlar[ \t]+301/m,
+    'arşivlenen tek tek etkinliklerin sayfası yok; onlar da aynı yere'
+  );
+
+  /*
+    Yönlendirmenin HEDEFİ gerçekten üretiliyor mu: var olmayan bir
+    adrese kalıcı yönlendirme, 404'ü bir adım öteye taşımaktan başka bir
+    şey değil.
+  */
+  assert.ok(
+    onrender.includes("['/firsatlar',") && sitemap.includes('("/firsatlar"'),
+    '301 hedefi /firsatlar hem ön renderda hem haritada olmalı'
+  );
 });
 
 test('H4: her sayfada tek canonical üretiliyor', () => {
