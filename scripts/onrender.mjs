@@ -580,20 +580,6 @@ async function firsatlariGetir() {
   return yanit.json();
 }
 
-async function etkinlikleriGetir() {
-  const urlAdres = envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL');
-  const anahtar = envOku('SUPABASE_SERVICE_ROLE_KEY') || envOku('VITE_SUPABASE_ANON_KEY');
-  if (!urlAdres || !anahtar) return [];
-  const secim =
-    'slug,title,short_description,description,category,city,district,venue_name,address,' +
-    'starts_at,ends_at,is_free,student_price,regular_price,organizer,event_mode,online_url,' +
-    'cancelled_at,postponed_at,ticket_url,source_url,canonical_source_url';
-  const istek = `${urlAdres}/rest/v1/discover_events?status=eq.published&select=${encodeURIComponent(secim)}`;
-  const yanit = await fetch(istek, { headers: { apikey: anahtar, Authorization: `Bearer ${anahtar}` } });
-  if (!yanit.ok) { console.log(`  etkinlikler alınamadı: HTTP ${yanit.status}`); return []; }
-  return yanit.json();
-}
-
 /* --------------------------------------------------------------- HTML üretimi */
 
 /*
@@ -1368,139 +1354,24 @@ async function main() {
   }
 
   /*
-    ---- keşfet etkinlikleri: Event yapısal verisi ----
+    ---- keşfet etkinlikleri: KALDIRILDI ----
 
-    NEDEN EKLENDİ
-    -------------
-    `/kesfet/<slug>` uygulamada çalışan bir adres ama ön render
-    edilmiyordu: sunucudan gelen HTML ana sayfanın kabuğuydu, yani 46
-    yayındaki etkinliğin hiçbiri arama motorunda kendi sayfası olarak
-    yoktu. Denetimde EVENT_DETAIL_INDEXABILITY = FAIL olarak ölçülmüştü.
+    Keşfet bölümü 11 Eylül 2026'da kapandı: 163 kayıt arşivlendi,
+    /kesfet ve /kesfet/* adresleri 301 ile /firsatlar'a iniyor
+    (public/_redirects). Burada üretilen `Event` yapısal verisi ve
+    /kesfet/<slug> sayfaları artık üretilmiyordu — sorgu
+    `status=eq.published` süzdüğü için sıfır satır dönüyordu — ama
+    kod duruyordu.
 
-    GEÇMİŞ ETKİNLİK AKTİF GİBİ GÖSTERİLMİYOR
-    ----------------------------------------
-    Bitmiş etkinliğin sayfası siliniyor değil — bağlantısı paylaşılmış
-    olabilir — ama `eventStatus` gerçeği söylüyor ve görünür metinde de
-    "bu etkinlik sona erdi" yazıyor. Yapısal veri sayfadaki metinle
-    aynı şeyi söylemeli.
+    NEDEN TAMAMEN SİLİNDİ
+    Search Console 12 Eylül 2026'da 7 adet Event yapısal veri
+    uyarısı bildirdi (image/performer/offers/organizer eksik). Uyarılar
+    kapanmadan ÖNCE taranmış sayfalara aitti; canlıda tek Event
+    işaretlemesi kalmamıştı. Ama kod yerinde durdukça tek bir kaydın
+    arşivden çıkması eksik alanlı Event sayfalarını geri getirirdi.
+    Ölü kod her derlemede discover_events'e gereksiz bir istek de
+    atıyordu.
   */
-  const etkinlikler = await etkinlikleriGetir();
-  const { indeksDegeri } = await icerikDerle(
-    path.join(kok, 'src', 'lib', 'reklam-kapisi.mjs'),
-    'reklam-kapisi'
-  );
-  const simdi = Date.now();
-  const etkinlikIndeks = { keep: 0, noindex: {} };
-  for (const e of etkinlikler) {
-    if (!e.slug || !e.title) continue;
-    const bitis = e.ends_at || e.starts_at;
-    const gecmis = bitis ? new Date(bitis).getTime() < simdi : false;
-    const iptal = Boolean(e.cancelled_at);
-    const ertelendi = Boolean(e.postponed_at) && !iptal;
-
-    const durum = iptal
-      ? 'https://schema.org/EventCancelled'
-      : ertelendi
-        ? 'https://schema.org/EventPostponed'
-        : 'https://schema.org/EventScheduled';
-
-    const cevrimici = e.event_mode === 'online';
-    const yer = cevrimici
-      ? { '@type': 'VirtualLocation', url: guvenliDisAdres(e.online_url) || SITE + `/kesfet/${e.slug}` }
-      : {
-          '@type': 'Place',
-          name: e.venue_name || e.city || 'Türkiye',
-          address: {
-            '@type': 'PostalAddress',
-            ...(e.address ? { streetAddress: e.address } : {}),
-            ...(e.district ? { addressLocality: e.district } : e.city ? { addressLocality: e.city } : {}),
-            ...(e.city && e.district ? { addressRegion: e.city } : {}),
-            addressCountry: 'TR',
-          },
-        };
-
-    const ozetMetni = ozetle(e.short_description || e.description || '', 300);
-
-    /*
-      İNDEKS KARARI ORTAK KAPIDAN
-
-      Reklam kapalı olması indeksten çıkarma sebebi değil; ayrı bir kapı
-      çalışıyor. Doğrulanmış kaynağı ve bir bağlamı olan etkinlik
-      indekste kalıyor. Yalnız gerçekten boş olan sayfa (kaynak var ama
-      anlatacak bir şey yok) `noindex` alıyor — ölçüldü: 46 yayındaki
-      etkinliğin 8'i bu durumdaydı ve site haritasındaydı.
-    */
-    const indeks = indeksDegeri({
-      baslik: e.title,
-      kaynakAdresi: e.source_url || e.canonical_source_url || e.ticket_url,
-      sonKontrol: e.starts_at,
-      aciklama: e.short_description || e.description,
-      ekBaglam: Boolean(e.venue_name || e.city),
-    });
-    if (indeks.indeks) etkinlikIndeks.keep += 1;
-    else etkinlikIndeks.noindex[indeks.neden] = (etkinlikIndeks.noindex[indeks.neden] || 0) + 1;
-    const jsonLd = {
-      '@context': 'https://schema.org',
-      '@type': 'Event',
-      name: e.title,
-      url: SITE + `/kesfet/${e.slug}`,
-      ...(ozetMetni ? { description: ozetMetni } : {}),
-      eventStatus: durum,
-      eventAttendanceMode: cevrimici
-        ? 'https://schema.org/OnlineEventAttendanceMode'
-        : 'https://schema.org/OfflineEventAttendanceMode',
-      ...(e.starts_at ? { startDate: e.starts_at } : {}),
-      ...(e.ends_at ? { endDate: e.ends_at } : {}),
-      location: yer,
-      ...(e.organizer ? { organizer: { '@type': 'Organization', name: e.organizer } } : {}),
-      /*
-        Fiyat ancak GERÇEKTEN biliniyorsa yazılıyor. Bilinmeyen fiyatı
-        "0" diye yazmak ücretsiz olmayan bir etkinliği ücretsiz
-        göstermek olurdu.
-      */
-      ...(e.is_free === true
-        ? {
-            offers: {
-              '@type': 'Offer',
-              price: 0,
-              priceCurrency: 'TRY',
-              availability: 'https://schema.org/InStock',
-              url: guvenliDisAdres(e.ticket_url) || SITE + `/kesfet/${e.slug}`,
-            },
-          }
-        : e.student_price != null
-          ? {
-              offers: {
-                '@type': 'Offer',
-                price: Number(e.student_price),
-                priceCurrency: 'TRY',
-                url: guvenliDisAdres(e.ticket_url) || SITE + `/kesfet/${e.slug}`,
-              },
-            }
-          : {}),
-    };
-
-    const bilgiler = [
-      e.city && `Şehir: ${konumEtiketi(e.city)}`,
-      e.venue_name && `Mekân: ${e.venue_name}`,
-      e.starts_at && `Tarih: ${String(e.starts_at).slice(0, 10)}`,
-      e.is_free === true ? 'Ücretsiz' : e.student_price != null ? `Öğrenci: ${e.student_price} TL` : '',
-      iptal ? 'Bu etkinlik iptal edildi.' : gecmis ? 'Bu etkinlik sona erdi.' : '',
-    ].filter(Boolean);
-
-    sayfaYaz(`/kesfet/${e.slug}`, {
-      baslik: `${e.title}${e.city ? ' — ' + konumEtiketi(e.city) : ''} | StajımVar`,
-      aciklama: ozetMetni || `${e.title} etkinliği hakkında bilgi ve bilet bağlantısı.`,
-      govde: govde(e.title, ozetMetni, bilgiler),
-      jsonLd,
-      dizinDisi: !indeks.indeks,
-    });
-    sayac++;
-  }
-  console.log(
-    `  etkinlik indeksi: ${etkinlikIndeks.keep} keep, ` +
-      `${JSON.stringify(etkinlikIndeks.noindex)}`
-  );
 
   /*
     ---- şirket sayfaları ----
