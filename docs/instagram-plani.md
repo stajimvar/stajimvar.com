@@ -14,6 +14,13 @@ düşürdüğü için listede yok.
 
 ## Elimizdeki üretim araçları
 
+### Kalıcı görsel yön
+
+- Yeni Instagram gönderileri varsayılan olarak **aydınlık ve ferah** hazırlanır: beyaz/buz mavisi zemin, koyu lacivert yazı ve görünür fotoğraf.
+- Fotoğrafın tamamını koyu lacivert katmanla kapatan karanlık kartlar, kullanıcı açıkça istemedikçe kullanılmaz.
+- Mavi renk vurgu ve çağrı kutusunda kalır; uzun metinler açık zeminde yüksek kontrastla okunur.
+- Yeni setler görsel kontrolden önce ortalama RGB aydınlığında en az `135/255` eşiğini geçer. Eşik, Instagram içerik testlerinde korunur.
+
 | Komut | Ne üretir | Sıklık |
 | --- | --- | --- |
 | `npm run instagram-kartlari` | "Nasıl çalışır" — hesabın sabit tanıtım seti (4 kart) | Bir kez, değişince |

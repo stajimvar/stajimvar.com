@@ -121,7 +121,7 @@
     "kod": "staj-sigortasi",
     "ad": "Staj sigortasını kim yapar?",
     "surum": "v1",
-    "guncellendi": "2026-09-07",
+    "guncellendi": "2026-09-12",
     "metin": "Staj sigortasında tek bir cevap yok: zorunlu ve gönüllü stajda süreç farklı işliyor.\n\n• Zorunlu stajda sigorta girişini genellikle okul yapar; kesin cevap okulunun staj yönergesindedir.\n• Gönüllü stajda okulun sigortası otomatik devreye girmez. Okuluna ve işyerine yazılı sor.\n• Formu ve tarihleri zamanında teslim et; sigorta girişi yapılmadan staja başlama.\n\nRehberin tamamı: stajimvar.com/rehber/staj-sigortasi-kim-yapar",
     "etiketler": [
       "#stajsigortasi",
@@ -579,6 +579,133 @@
       "/paylasim/stajda-net-eposta/02-v2-acik.jpg",
       "/paylasim/stajda-net-eposta/03-v2-acik.jpg",
       "/paylasim/stajda-net-eposta/04-v2-acik.jpg"
+    ]
+  },
+  {
+    "kod": "ilana-gore-cv",
+    "ad": "CV’ni ilana göre uyarlamanın 3 adımı — fotoğraflı taslak",
+    "surum": "v1",
+    "guncellendi": "2026-09-10",
+    "metin": "Aynı CV’yi her ilana göndermek yerine, deneyimini ilanın diline göre görünür kıl.\n\n• Önce ilanın dilini çöz; görevleri ve tekrar eden anahtar kelimeleri işaretle.\n• Yalnız gerçekten kullandığın becerileri CV’ndeki somut bir kanıtla eşleştir.\n• En ilgili proje ve deneyimi üst sıralara taşı; yapmadığın işi ekleme.\n\nAmaç anahtar kelime doldurmak değil, bu role neden uygun olduğunu hızlıca göstermek.",
+    "etiketler": [
+      "#stajcv",
+      "#stajbaşvurusu",
+      "#cvhazırlama",
+      "#ilkstaj",
+      "#kariyer",
+      "#üniversiteöğrencisi",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/ilana-gore-cv/01-v1.jpg",
+      "/paylasim/ilana-gore-cv/02-v1.jpg",
+      "/paylasim/ilana-gore-cv/03-v1.jpg",
+      "/paylasim/ilana-gore-cv/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "kendinden-bahset-cevabi",
+    "ad": "“Kendinden bahset” sorusuna net cevap — fotoğraflı taslak",
+    "surum": "v1",
+    "guncellendi": "2026-09-10",
+    "metin": "“Kendinden bahset” sorusu bütün hayat hikâyeni anlatman için değil, role uygun yönünü kısa biçimde kurman için sorulur.\n\nCevabını üç parçaya ayır:\n• Şu an: Bölümün, odağın veya üzerinde çalıştığın alan.\n• Geçmiş: Bu alana bağlanan tek somut proje ya da deneyim.\n• Bu rol: Neden bu stajla devam etmek istediğin.\n\nYaklaşık bir dakikalık cevap hazırla; ezberlemek yerine ana fikri sesli prova et.",
+    "etiketler": [
+      "#stajmülakatı",
+      "#mülakattaktikleri",
+      "#ilkstaj",
+      "#kariyer",
+      "#üniversiteöğrencisi",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/kendinden-bahset-cevabi/01-v1.jpg",
+      "/paylasim/kendinden-bahset-cevabi/02-v1.jpg",
+      "/paylasim/kendinden-bahset-cevabi/03-v1.jpg",
+      "/paylasim/kendinden-bahset-cevabi/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "online-mulakat-kontrolu",
+    "ad": "Online mülakat öncesi 10 dakikalık kontrol — fotoğraflı taslak",
+    "surum": "v1",
+    "guncellendi": "2026-09-10",
+    "metin": "Online mülakattan 10 dakika önce küçük bir teknik kontrol, görüşmeye sorun çözerek başlamanı önler.\n\n• Kamera açısını ve ışığı kontrol et.\n• Mikrofonu ve kulaklığı kısa bir kayıtla dene.\n• Görüşme bağlantısını önceden aç; uygulama veya izin gerekiyorsa tamamla.\n• CV’ni, ilanı ve notlarını tek yerde hazır tut.\n• Bağlantı kesilirse kullanacağın telefon veya e-posta bilgisini yanında bulundur.\n\nBildirimleri kapat, cihazını şarja tak ve görüşmeye birkaç dakika erken gir.",
+    "etiketler": [
+      "#onlinemülakat",
+      "#stajmülakatı",
+      "#mülakathazırlığı",
+      "#ilkstaj",
+      "#kariyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/online-mulakat-kontrolu/01-v1.jpg",
+      "/paylasim/online-mulakat-kontrolu/02-v1.jpg",
+      "/paylasim/online-mulakat-kontrolu/03-v1.jpg",
+      "/paylasim/online-mulakat-kontrolu/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "motivasyon-yazisi",
+    "ad": "Motivasyon yazısının 3 güçlü bölümü — fotoğraflı taslak",
+    "surum": "v1",
+    "guncellendi": "2026-09-10",
+    "metin": "Motivasyon yazısında yalnız “çok istiyorum” demek yetmez. Kurumu tanıdığını, hazırlığını ve katkı ihtimalini tek bir akışta göster.\n\n• Neden bu kurum: Seni çeken işi, ürünü veya çalışma alanını somutlaştır.\n• Neden sen: İlgili bir proje ya da deneyimden kısa bir örnek ver.\n• Nasıl katkı: Bu rolde hangi becerinle başlangıç yapabileceğini anlat.\n\nGenel övgüler yerine kurum ve rol için değişen iki üç cümle yaz. Kanıtlayamayacağın iddiaları kullanma.",
+    "etiketler": [
+      "#motivasyonyazısı",
+      "#niyetmektubu",
+      "#stajbaşvurusu",
+      "#kariyer",
+      "#üniversiteöğrencisi",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/motivasyon-yazisi/01-v1.jpg",
+      "/paylasim/motivasyon-yazisi/02-v1.jpg",
+      "/paylasim/motivasyon-yazisi/03-v1.jpg",
+      "/paylasim/motivasyon-yazisi/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "staj-teklifi-degerlendirme",
+    "ad": "Staj teklifini değerlendirirken 5 kontrol — fotoğraflı taslak",
+    "surum": "v1",
+    "guncellendi": "2026-09-10",
+    "metin": "Staj teklifi geldiğinde yalnız kurum adına bakarak karar verme. Günlük deneyimin nasıl olacağını netleştir.\n\n• Görev: Günlük olarak ne yapacaksın?\n• Rehberlik: Sorularında kime ulaşacaksın?\n• Öğrenme: Hangi becerileri uygulama fırsatın olacak?\n• Koşul: Gün, saat, konum, ücret ve yan haklar nasıl?\n• Zaman: Karar vermen için son tarih nedir?\n\nKoşulları mümkünse yazılı gör; ulaşım ve zaman maliyetini de hesaba kat.",
+    "etiketler": [
+      "#stajteklifi",
+      "#staj",
+      "#kariyerkararı",
+      "#ilkstaj",
+      "#üniversiteöğrencisi",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/staj-teklifi-degerlendirme/01-v1.jpg",
+      "/paylasim/staj-teklifi-degerlendirme/02-v1.jpg",
+      "/paylasim/staj-teklifi-degerlendirme/03-v1.jpg",
+      "/paylasim/staj-teklifi-degerlendirme/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "ilk-hafta-ogrenme-hedefi",
+    "ad": "Stajın ilk haftası için öğrenme hedefi — fotoğraflı taslak",
+    "surum": "v1",
+    "guncellendi": "2026-09-10",
+    "metin": "Stajın ilk haftasında her şeyi öğrenmeye çalışma. Gözlem, uygulama ve geri bildirim içeren küçük bir hedef seç.\n\n• Gözlem: Bir işin ekipte nasıl ilerlediğini izle ve adımlarını not et.\n• Uygulama: O sürecin küçük, güvenli bir bölümünü kendi başına tamamla.\n• Geri bildirim: Çıktın için tek ve değiştirilebilir bir noktayı sor.\n\nHafta sonunda ne öğrendiğini, nerede zorlandığını ve gelecek haftanın ilk hedefini üç cümleyle yaz.",
+    "etiketler": [
+      "#stajdailkhafta",
+      "#öğrenmehedefi",
+      "#stajyer",
+      "#ilkstaj",
+      "#kariyergelişimi",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/ilk-hafta-ogrenme-hedefi/01-v1.jpg",
+      "/paylasim/ilk-hafta-ogrenme-hedefi/02-v1.jpg",
+      "/paylasim/ilk-hafta-ogrenme-hedefi/03-v1.jpg",
+      "/paylasim/ilk-hafta-ogrenme-hedefi/04-v1.jpg"
     ]
   }
 ]
