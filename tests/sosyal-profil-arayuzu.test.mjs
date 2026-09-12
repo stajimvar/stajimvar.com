@@ -1665,7 +1665,7 @@ test('/cv birleşik ekranı, /cv/yazdir yazdırılabilir CV', () => {
   */
   assert.match(app, /if \(temizYol === '\/cv' \|\| temizYol === '\/cv\/yazdir'\) \{/);
   assert.match(app, /if \(temizYol === '\/cv\/yazdir'\) \{\n\s*return <CvPage student=\{student\} onBack=\{\(\) => navigate\('\/cv'\)\} \/>;/);
-  assert.match(app, /return icerikSayfasi\(<main className=\{anaAlanSinifi\}>\{ogrenciProfilEkrani\(\)\}<\/main>\);/);
+  assert.match(app, /return icerikSayfasi\([\s\S]{0,400}<main className=\{profilAlanSinifi\}>\{ogrenciProfilEkrani\(\)\}<\/main>,[\s\S]{0,80}'bg-white sm:bg-\[#F9FAFB\]',/);
   assert.match(orta, /'\/cv',/);
   assert.match(orta, /'\/cv\/yazdir',/);
 
@@ -1686,12 +1686,14 @@ test('mobilde gönderi alanı kimlik kartının altında; masaüstü iskeleti ay
     dizeleri tek tek: sol yapışık kutu ve sağ `min-w-0` masaüstünde
     değişmedi, gönderi ızgarası sabiti de.
   */
-  assert.match(ogrenciProfili, /grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start/);
+  /* `gap-0 sm:gap-6`: telefonda kimlik bloğuyla ızgara arasında gri bant kalmıyor. */
+  assert.match(ogrenciProfili, /grid grid-cols-1 gap-0 sm:gap-6 lg:grid-cols-12 items-start/);
   assert.match(ogrenciProfili, /className="contents lg:block lg:col-span-4 lg:sticky lg:top-4 lg:space-y-3"/);
   assert.match(ogrenciProfili, /className="contents lg:block lg:col-span-8 min-w-0 lg:space-y-3"/);
   /* Mobil sıra: kart (order yok = 0) → gönderi 1 → hesap 2. */
   const kart = ogrenciProfili.indexOf('<ProfilBasligi');
-  const gonderi = ogrenciProfili.indexOf('<div className="order-1 min-w-0 lg:order-none">');
+  /* `-mx-4 sm:mx-0`: ızgara telefonda ekranın iki kenarına yaslı. */
+  const gonderi = ogrenciProfili.indexOf('<div className="order-1 -mx-4 min-w-0 sm:mx-0 lg:order-none">');
   const hesap = ogrenciProfili.indexOf('className="order-2 mt-6 flex flex-col gap-2');
   for (const [ad, i] of Object.entries({ kart, gonderi, hesap })) {
     assert.ok(i > 0, `${ad} bulunamadı`);
@@ -1798,7 +1800,15 @@ test('ziyaretçi görünümü iki sütun, ızgara sahibin ekranıyla aynı ölç
     arasında geçerken düzen kayardı. Bu yüzden iddia sınıf dizesini TEK
     TEK karşılaştırıyor, "iki sütun var mı" diye bakmıyor.
   */
-  const iskelet = /grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start/;
+  /*
+    Telefonda sütunlar arası boşluk `gap-4`ten `gap-0`a indi: o boşluk
+    kimlik bloğuyla ızgara arasında gri bir bant bırakıyordu ve profil
+    tek bir beyaz yüzey olmalı. Geniş ekranda `sm:gap-6` duruyor.
+
+    Testin AMACI değişmedi: iki ekranın iskeleti hâlâ dize dize aynı
+    olmak zorunda.
+  */
+  const iskelet = /grid grid-cols-1 gap-0 sm:gap-6 lg:grid-cols-12 items-start/;
   assert.match(gorunum, iskelet);
   assert.match(ogrenciProfili, iskelet);
   assert.match(gorunum, /className="lg:col-span-4 lg:sticky lg:top-4"/);
@@ -1996,7 +2006,7 @@ test('kaldırılan bölümler silinmedi: düzenleme ekranının içindeler', () 
   /* Portfolyo yalnız ana görünümde: sağ sütun aynı anda görünüm+form olmuyor. */
   assert.match(
     ogrenciProfili,
-    /\{!duzenleme && sosyalPortfolyo && \(\n\s*<div className="order-1 min-w-0 lg:order-none">\n\s*\{sosyalPortfolyo\}/,
+    /\{!duzenleme && sosyalPortfolyo && \(\n\s*<div className="order-1 -mx-4 min-w-0 sm:mx-0 lg:order-none">\n\s*\{sosyalPortfolyo\}/,
   );
   /* Düzenlemeye giden tek kapı `bolumeGit`; her giriş oradan geçiyor. */
   assert.equal((ogrenciProfili.match(/setDuzenleme\(true\)/g) ?? []).length, 1);

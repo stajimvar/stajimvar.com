@@ -1474,8 +1474,16 @@ export default function App() {
     />
   );
 
-  const icerikSayfasi = (icerik: React.ReactNode) => (
-    <div className="min-h-screen flex flex-col bg-[#F9FAFB]">
+  /*
+    `zemin` — sayfanın arka planı.
+
+    Varsayılan gri, içeriğin beyaz kartlar hâlinde yüzdüğü sayfalar için
+    doğru. Profil bunun istisnası: orada içerik kart değil YÜZEY, ve gri
+    zemin üstünde beyaz bir kart olarak durunca iki yanında gri şeritler,
+    bloklar arasında gri bantlar kalıyordu.
+  */
+  const icerikSayfasi = (icerik: React.ReactNode, zemin = 'bg-[#F9FAFB]') => (
+    <div className={`min-h-screen flex flex-col ${zemin}`}>
       {ustCubuk}
       {icerik}
       {girisModali}
@@ -1493,6 +1501,22 @@ export default function App() {
    */
   const anaAlanSinifi = `flex-1 ${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-8`;
 
+  /*
+    BİRLEŞİK PROFİL EKRANININ ALANI — YALNIZ TELEFONDA FARKLI.
+
+    Tek fark ÜST BOŞLUK: `/cv` bir metin sayfası değil, profil yüzeyi —
+    kimlik bloğu üst çubuğun hemen altında başlıyor. `pt-2` orada beyaz
+    yüzeyin üstünde ince bir şerit bırakıyordu.
+
+    YAN BOŞLUK BURADAN KALDIRILMADI. Kaldırılsaydı sağ sütundaki hesap
+    eylemleri ve düzenleme formları da ekranın kenarına yapışırdı; onlar
+    yüzey değil kutu. Kenara yaslanması gereken iki öğe (kimlik bloğu ve
+    fotoğraf ızgarası) bunu kendi `-mx-4 sm:mx-0` değeriyle yapıyor.
+
+    `sm:` ve üstünde varsayılanla BİREBİR AYNI (`sm:px-6`, `sm:pt-3`):
+    geniş ekrandaki gri zeminli kartlı düzen olduğu gibi duruyor.
+  */
+  const profilAlanSinifi = `flex-1 ${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-0 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-8`;
 
   /**
    * BAŞVURU TAKİBİ — KENDİ EKRANI
@@ -1957,7 +1981,15 @@ export default function App() {
       return <CvPage student={student} onBack={() => navigate('/cv')} />;
     }
 
-    return icerikSayfasi(<main className={anaAlanSinifi}>{ogrenciProfilEkrani()}</main>);
+    /*
+      Zemin YALNIZ TELEFONDA beyaz. `sm:bg-[#F9FAFB]` geniş ekranda eski
+      gri zemini geri veriyor — orada içerik kartlar hâlinde duruyor ve
+      kartın nerede bittiğini gösteren şey zeminin rengi.
+    */
+    return icerikSayfasi(
+      <main className={profilAlanSinifi}>{ogrenciProfilEkrani()}</main>,
+      'bg-white sm:bg-[#F9FAFB]',
+    );
   }
 
   /*
@@ -2000,7 +2032,14 @@ export default function App() {
         oturumHazir={sessionReady}
         onNavigate={navigate}
         onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
-      />
+      />,
+      /*
+        Zemin `/cv` ile BİREBİR AYNI: telefonda beyaz yüzey, `sm:`
+        üstünde eski gri. İki ekran aynı tasarımın iki yüzü; biri beyaz
+        öteki gri kalsaydı aynı kişi kendi profiliyle başkasınınki
+        arasında geçerken zemin değişirdi.
+      */
+      'bg-white sm:bg-[#F9FAFB]',
     );
   }
 

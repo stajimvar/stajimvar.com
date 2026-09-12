@@ -158,6 +158,14 @@ export interface EksikAdim {
 }
 
 interface Props {
+  /**
+   * Kabın dış boşluğu — çağıran veriyor.
+   *
+   * `/cv` telefonda bu bloğu ekranın iki kenarına yaslıyor
+   * (`-mx-4 sm:mx-0`). Değer bileşenin içine yazılmadı: bleed miktarı
+   * çağıranın kendi yan boşluğuna bağlı ve burada bilinmiyor.
+   */
+  className?: string;
   ad: string;
   /**
    * `student_profiles.avatar_url` — ARTIK YALNIZ YEDEK.
@@ -268,6 +276,7 @@ const SayacIskeleti: React.FC = () => (
 );
 
 export const ProfilBasligi: React.FC<Props> = ({
+  className = '',
   ad,
   avatarUrl,
   sosyalAvatarYolu,
@@ -326,7 +335,19 @@ export const ProfilBasligi: React.FC<Props> = ({
     ekranına taşınınca tek çocuklu bir kap kaldı; boşluğu artık çağıran
     sütunun kendi `space-y`si veriyor.
   */
-  <Card className="space-y-3 p-4 sm:space-y-4 sm:p-6">
+  /*
+    TELEFONDA KART DEĞİL YÜZEY — `mobilYuzey`.
+
+    Kimlik bloğu telefonda ekranın tamamını kaplıyor ve gri zemin
+    üzerinde yüzen bir kart olarak duruyordu: iki yanında gri şeritler,
+    köşelerde yuvarlatmanın açtığı gri üçgenler kalıyordu. Telefonda
+    kabuk yerini tek bir alt çizgiye bırakıyor.
+
+    `sm:` ve üstünde HİÇBİR ŞEY DEĞİŞMEDİ: kart, kenarlık, köşe ve iç
+    boşluk aynı. Geniş ekranda blok sol sütunun bir parçası ve nerede
+    bittiğinin görünmesi gerekiyor.
+  */
+  <Card mobilYuzey className={`space-y-3 p-4 sm:space-y-4 sm:p-6 ${className}`}>
     {/*
       FOTOĞRAF VE AD AYNI SATIRDA, SAYAÇLAR ALTTA TAM GENİŞLİKTE
 

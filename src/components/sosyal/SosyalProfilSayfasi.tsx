@@ -283,6 +283,19 @@ const KART = 'rounded-2xl border border-gray-200 bg-white p-2.5 sm:p-3.5';
  */
 const GERI_SATIRI = `inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 ${ODAK_HALKASI}`;
 
+
+/**
+ * PROFİL GÖRÜNÜMÜNÜN KABUĞU — öteki ekranlardan farklı.
+ *
+ * Profil bir metin sayfası değil, bir YÜZEY: üst blok telefonda ekranın
+ * iki kenarına yaslanıyor ve üst çubuğun hemen altında başlıyor
+ * (Instagram'daki gibi). Varsayılan `px-4` ve `pt-6`, beyaz yüzeyin
+ * çevresinde gri şeritler bırakıyordu.
+ *
+ * Yalnız PROFİL GÖRÜNÜMÜ için: düzenleme, paylaşım oluşturma ve arşiv
+ * ekranları form sayfası ve varsayılan boşlukları koruyor.
+ */
+const PROFIL_KABUGU = { mobilKenarsiz: true, ustBosluk: 'pt-0 sm:pt-8' } as const;
 const IKINCIL = `inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-800 hover:bg-gray-50 ${RENK_GECISI} ${ODAK_HALKASI}`;
 
 /**
@@ -1199,7 +1212,13 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
           `SAYFA_GENISLIGI`. Aynı tasarımın iki yüzü aynı genişlikte durmak
           zorunda; değer de dosya dosya değil, `src/lib/duzen`de tek yerde.
         */
-        <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI}>
+        /*
+          Genişlik main'den, telefondaki kenarsızlık buradan: ikisi
+          birbirinin yerine geçmiyor. `SAYFA_GENISLIGI` geniş ekranda iki
+          sütunun sıkışmasını önlüyor; `PROFIL_KABUGU` telefonda yan
+          boşluğu kaldırıp üst bloğu ekranın kenarına yaslıyor.
+        */
+        <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI} {...PROFIL_KABUGU}>
           <SosyalProfilGorunumu
             profil={ziyaretciProfili}
             sahibiMi={false}
