@@ -34,3 +34,8 @@ radar-*.log
 # İndirilen radar rapor artefaktları — depoya girmiyor.
 radar-*/
 radar-*.json
+
+# Kariyer sayfası yoklamasının ÇIKTISI: her koşuda yeniden üretiliyor ve
+# o günkü ilan listesine bağlı. Defterin KENDİSİ (kariyer-sayfalari.json)
+# depoda duruyor — izlenen sayfalar kalıcı, rapor geçici.
+automation/kariyer-tarama-raporu.json
