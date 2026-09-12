@@ -2071,6 +2071,8 @@ export default function App() {
         onNavigate={navigate}
         onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
         onPaylasimOlustur={() => navigate('/cv')}
+        /* Eski kamera düğmesiyle yüklenmiş fotoğraf: akışta da yedek. */
+        ogrenciAvatarAdresi={activeStudent?.avatarUrl ?? null}
       />,
       'bg-white sm:bg-[#F9FAFB]',
     );
