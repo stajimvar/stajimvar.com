@@ -43,6 +43,12 @@ interface Props {
   onGirisGerekli?: () => void;
   /** Paylaşım oluşturma ekranı profil tarafında; `+` oraya götürüyor. */
   onPaylasimOlustur?: () => void;
+  /**
+   * Oturum sahibinin eski kamera düğmesiyle yüklenmiş fotoğrafı.
+   * `social_profiles.avatar_path` boşsa kendi paylaşımlarında yedek
+   * olarak kullanılıyor; bkz. `AkisKarti.yedekAvatarAdresi`.
+   */
+  ogrenciAvatarAdresi?: string | null;
 }
 
 type Durum = 'yukleniyor' | 'hazir' | 'hata';
@@ -55,6 +61,7 @@ export const AgimSayfasi: React.FC<Props> = ({
   onNavigate,
   onGirisGerekli,
   onPaylasimOlustur,
+  ogrenciAvatarAdresi = null,
 }) => {
   const [durum, setDurum] = React.useState<Durum>('yukleniyor');
   const [akis, setAkis] = React.useState<AkisPaylasimi[]>([]);
@@ -271,6 +278,8 @@ export const AgimSayfasi: React.FC<Props> = ({
             paylasim={p}
             begeni={begeniler.get(p.id)}
             kayitliMi={kayitlilar.has(p.id)}
+            /* Yedek yalnız KENDİ paylaşımında: başkasının eski kolonu okunmuyor. */
+            yedekAvatarAdresi={p.yazarId === kullaniciId ? ogrenciAvatarAdresi : null}
             onProfilAc={profilAc}
             onBegeniDegisti={begeniYaz}
             onKayitDegisti={kayitYaz}
@@ -303,6 +312,7 @@ export const AgimSayfasi: React.FC<Props> = ({
                 <ProfilFotografi
                   ad={benimAd}
                   yol={benim?.avatarYolu ?? null}
+                  yedekAdres={ogrenciAvatarAdresi}
                   className="h-12 w-12 shrink-0 rounded-full"
                 />
                 <div className="min-w-0">

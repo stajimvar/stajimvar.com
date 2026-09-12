@@ -41,6 +41,19 @@ interface Props {
   /** Beğeni durumu akıştan toplu geliyor; her kart kendi isteğini atmıyor. */
   begeni: BegeniDurumu | undefined;
   kayitliMi: boolean;
+  /**
+   * Yazarın eski kamera düğmesiyle yüklenmiş fotoğrafı — YEDEK.
+   *
+   * `social_profiles.avatar_path` boş olan kullanıcı akışta baş harfle
+   * görünüyordu; oysa fotoğrafı var, yalnız eski kolonda
+   * (`student_profiles.avatar_url`). Profil ekranı bu yedeği zaten
+   * kullanıyor (`ogrenciAvatarAdresi`), akış kullanmıyordu.
+   *
+   * Yalnız OTURUM SAHİBİNİN kendi paylaşımında dolu geliyor: başkasının
+   * `student_profiles` satırı akışa açık değil ve olmayan bir adresi
+   * uydurmak yerine baş harf çiziliyor.
+   */
+  yedekAvatarAdresi?: string | null;
   onProfilAc: (kullaniciAdi: string) => void;
   /** Beğeni/kayıt değişince üst bileşen kendi haritasını güncelliyor. */
   onBegeniDegisti: (postId: string, yeni: BegeniDurumu) => void;
@@ -53,6 +66,7 @@ export const AkisKarti: React.FC<Props> = ({
   paylasim,
   begeni,
   kayitliMi,
+  yedekAvatarAdresi = null,
   onProfilAc,
   onBegeniDegisti,
   onKayitDegisti,
@@ -118,7 +132,12 @@ export const AkisKarti: React.FC<Props> = ({
       {/* -------------------------------------------------- yazar satırı */}
       <header className="flex items-center gap-3 px-3 py-2.5 sm:px-4">
         <button type="button" onClick={profilAc} className={`shrink-0 cursor-pointer rounded-full ${ODAK_HALKASI}`}>
-          <ProfilFotografi ad={ad} yol={paylasim.yazar.avatarYolu} className="h-9 w-9 rounded-full text-sm" />
+          <ProfilFotografi
+            ad={ad}
+            yol={paylasim.yazar.avatarYolu}
+            yedekAdres={yedekAvatarAdresi}
+            className="h-9 w-9 rounded-full text-sm"
+          />
         </button>
         <div className="min-w-0 flex-1 leading-tight">
           <button
