@@ -20,6 +20,14 @@ export type Bildirim = {
   hedef: string | null;
   basvuruId: string | null;
   okunduMu: boolean;
+  /*
+    Olayın kimliği (`notifications.dedupe_key`). Sosyal bildirimlerde
+    olayın taraflarını da taşıyor: "baglanti_istegi:<isteyen>:<alıcı>".
+    Zilin altındaki "Kabul et" kimin isteğini yanıtlayacağını buradan
+    okuyor — bildirim satırında ayrıca bir kullanıcı kimliği tutmaya
+    gerek kalmıyor. Eski başvuru bildirimlerinde `null`.
+  */
+  anahtar: string | null;
   tarih: string;
 };
 
@@ -34,6 +42,7 @@ type Satir = {
   target_url: string | null;
   application_id: string | null;
   read_at: string | null;
+  dedupe_key?: string | null;
   created_at: string;
 };
 
@@ -45,6 +54,7 @@ const bildirime = (s: Satir): Bildirim => ({
   hedef: s.target_url,
   basvuruId: s.application_id,
   okunduMu: Boolean(s.read_at),
+  anahtar: s.dedupe_key ?? null,
   tarih: s.created_at,
 });
 
@@ -57,11 +67,17 @@ const bildirime = (s: Satir): Bildirim => ({
 export async function bildirimleriGetir(): Promise<Bildirim[]> {
   const { data, error } = await supabase
     .from('notifications')
-    .select('id, type, title, body, target_url, application_id, read_at, created_at')
+    .select('id, type, title, body, target_url, application_id, read_at, created_at, dedupe_key')
     .order('created_at', { ascending: false })
     .limit(BILDIRIM_LIMITI);
   if (error) return [];
-  return ((data ?? []) as Satir[]).map(bildirime);
+  /*
+    `dedupe_key` göç 20260927130000 ile geldi; üretilmiş tipler henüz
+    yeniden üretilmedi ve sütunu tanımıyor. Dönüşüm `unknown` üzerinden:
+    doğrudan çevirim, derleyicinin haklı olarak "bu iki tip örtüşmüyor"
+    demesine yol açıyor.
+  */
+  return ((data ?? []) as unknown as Satir[]).map(bildirime);
 }
 
 /**
