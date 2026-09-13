@@ -869,7 +869,16 @@ test('seride parmakla gezinme: oklar dar ekranda görünmez ama ağaçta; kaydı
 */
 
 test('fotoğraf simgesi telefonun seçicisini doğrudan açıyor', () => {
-  const agim = oku('src/components/sosyal/AgimSayfasi.tsx');
+  /*
+    GİRİŞ ARTIK ORTAK BİLEŞENDE
+
+    Simge, gizli dosya kutusu ve besteci Ağım'ın içinde yazılmıştı;
+    profil sayfasına da aynı giriş istenince kopyalanmadı, ayrı bir
+    bileşene çıkarıldı. İki kopya olsaydı iki ekran zamanla ayrışırdı:
+    biri seçiciyi dokunmadan açar öteki açmaz, biri ön koşulu sorar
+    öteki sormaz.
+  */
+  const agim = oku('src/components/sosyal/FotografPaylasGirisi.tsx');
 
   /*
     SEÇİCİ DOKUNMANIN İÇİNDEN AÇILIYOR
@@ -883,6 +892,12 @@ test('fotoğraf simgesi telefonun seçicisini doğrudan açıyor', () => {
   assert.match(agim, /dosyaGirdisi\.current\?\.click\(\);/);
   assert.doesNotMatch(agim, /const fotografSec = async/);
   assert.match(agim, /onClick=\{fotografSec\}\s*\n\s*aria-label="Fotoğraf paylaş"/);
+  /* Tek bileşen: iki ekran da onu çiziyor, kendi kopyasını değil. */
+  for (const ekran of ['src/components/sosyal/AgimSayfasi.tsx', 'src/components/Header.tsx']) {
+    const kaynak = oku(ekran);
+    assert.match(kaynak, /<FotografPaylasGirisi/, `${ekran}: ortak giriş çizilmiyor`);
+    assert.doesNotMatch(kaynak, /accept="image\/jpeg,image\/png,image\/webp"/, `${ekran}: kendi seçicisini kurmuş`);
+  }
 
   /* Sunucudaki üç türle aynı liste; GIF, SVG ve video seçilemiyor. */
   assert.match(agim, /accept="image\/jpeg,image\/png,image\/webp"/);
@@ -894,7 +909,7 @@ test('fotoğraf simgesi telefonun seçicisini doğrudan açıyor', () => {
     (besteci üstte çiziliyor), kaydırma konumu yerinde kalıyor.
   */
   assert.match(agim, /if \(liste\.length === 0\) return;/);
-  assert.match(agim, /const besteci = olusturDosyalari && \(/);
+  assert.match(agim, /\{olusturDosyalari && \(/);
   assert.match(agim, /<div className="fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-white">/);
 
   /*
@@ -905,20 +920,31 @@ test('fotoğraf simgesi telefonun seçicisini doğrudan açıyor', () => {
   assert.match(header, /fixed bottom-0 left-0 right-0 z-50/);
 
   /*
+    PROFİLDE DE AYNI GİRİŞ, AMA YALNIZ KENDİ PROFİLİNDE.
+
+    `/cv` oturum sahibinin kendi ekranı; başkasının profili
+    `/profil/<kullaniciadi>` adresinde açılıyor ve orada bu koşul
+    hiçbir zaman doğru olmuyor.
+  */
+  assert.match(header, /const kendiProfilimde = bulunulanYol === '\/cv';/);
+  assert.match(header, /\{kendiProfilimde && \(\s*\n\s*<FotografPaylasGirisi/);
+
+  /*
     ÖN KOŞUL ÖNCE SORULUYOR
 
     Profil yayında değilken ya da alan seçilmemişken sunucu paylaşımı
     zaten reddediyor. Seçiciyi açmak, kullanıcıya fotoğraflarını
     seçtirip sonra hayır demek olurdu.
   */
-  assert.match(agim, /const paylasabilirMi = Boolean\(benim\?\.yayindaMi && benim\?\.sektorId\);/);
   assert.match(agim, /if \(!paylasabilirMi\) \{/);
   /* Koşul okunana kadar simge kapalı: bilinmeyen bir şeye göre karar verilmiyor. */
-  assert.match(agim, /disabled=\{durum === 'yukleniyor'\}/);
+  assert.match(agim, /disabled=\{!hazirMi\}/);
 
+  const akis = oku('src/components/sosyal/AgimSayfasi.tsx');
+  assert.match(akis, /const paylasabilirMi = Boolean\(benim\?\.yayindaMi && benim\?\.sektorId\);/);
   /* Paylaşım bitince akış sunucudan yeniden okunuyor, elle satır eklenmiyor. */
-  assert.match(agim, /setTazeleme\(\(n\) => n \+ 1\);/);
-  assert.match(agim, /\}, \[kullaniciId, oturumHazir, tazeleme\]\);/);
+  assert.match(akis, /onTamamlandi=\{\(\) => setTazeleme\(\(n\) => n \+ 1\)\}/);
+  assert.match(akis, /\}, \[kullaniciId, oturumHazir, tazeleme\]\);/);
 });
 
 test('akıştan gelen seçim besteciyle AYNI borudan geçiyor', () => {
@@ -952,7 +978,7 @@ test('akıştan gelen seçim besteciyle AYNI borudan geçiyor', () => {
 });
 
 test('besteciden çıkış yolu tepede ve yükleme sürerken kilitli', () => {
-  const agim = oku('src/components/sosyal/AgimSayfasi.tsx');
+  const agim = oku('src/components/sosyal/FotografPaylasGirisi.tsx');
   const olustur = oku('src/components/sosyal/PaylasimOlustur.tsx');
 
   /*
@@ -977,4 +1003,37 @@ test('besteciden çıkış yolu tepede ve yükleme sürerken kilitli', () => {
   assert.match(olustur, /onMesgulDegisti\?\.\(kilitli\);/);
   /* Ekran kalkarken kabuk "hâlâ meşgul" diye kilitli kalmamalı. */
   assert.match(olustur, /return \(\) => onMesgulDegisti\?\.\(false\);/);
+});
+
+test('paylaşım girişi TEK bileşen; besteci ana pakete binmiyor', () => {
+  /*
+    Giriş artık site üst çubuğundan da çiziliyor, yani ANA PAKETE
+    giriyor. `PaylasimOlustur` doğrudan içeri alınınca ana paket
+    438 → 453 KB oldu (ölçüldü): küçültme, EXIF düşürme ve form, hiç
+    fotoğraf paylaşmayacak ziyaretçinin de indirdiği 16 KB. Besteci
+    ancak dosya SEÇİLDİKTEN sonra çiziliyor; parça tam o anda iniyor.
+  */
+  const giris = oku('src/components/sosyal/FotografPaylasGirisi.tsx');
+  assert.match(giris, /const PaylasimOlustur = React\.lazy\(/);
+  assert.doesNotMatch(giris, /^import \{ PaylasimOlustur \}/m);
+  assert.match(giris, /<React\.Suspense/);
+
+  /*
+    İKİ EKRAN, TEK GİRİŞ: Ağım ve kendi profilin. Ayrı kopya
+    yazılsaydı biri seçiciyi dokunmadan açar öteki açmaz, biri ön
+    koşulu sorar öteki sormazdı.
+  */
+  for (const ekran of ['src/components/sosyal/AgimSayfasi.tsx', 'src/components/Header.tsx']) {
+    assert.match(oku(ekran), /<FotografPaylasGirisi/, `${ekran}: ortak giriş yok`);
+  }
+
+  /*
+    Boş durumdaki geniş düğme de AYNI seçiciyi açıyor: başka bir düğme
+    ama aynı iş. İkinci bir gizli kutu açmak yerine girişe bir kol
+    veriliyor.
+  */
+  const akis = oku('src/components/sosyal/AgimSayfasi.tsx');
+  assert.match(akis, /const paylasKolu = React\.useRef<FotografPaylasKolu>\(null\);/);
+  assert.match(akis, /onClick=\{\(\) => paylasKolu\.current\?\.sec\(\)\}/);
+  assert.match(giris, /React\.useImperativeHandle\(kol, \(\) => \(\{ sec: fotografSec \}\)\);/);
 });

@@ -472,20 +472,39 @@ export default function App() {
     güncelleniyor — ikinci bir istek gerekmiyor.
   */
   const [sosyalAvatarYolu, setSosyalAvatarYolu] = useState<string | null | undefined>(undefined);
+  /*
+    PAYLAŞIM ÖN KOŞULU AYNI OKUMADAN GELİYOR
+
+    Üst çubuktaki fotoğraf paylaşma düğmesi, sunucudaki ön koşulu
+    (`yayinda_mi` + `sector_id`) seçimden ÖNCE sormak zorunda. Aynı
+    satır zaten avatar için okunuyor; ikinci bir sorgu aynı ekranda
+    aynı satırı iki kez okurdu.
+
+    `undefined` = henüz okunmadı; düğme o sırada kapalı duruyor.
+    Bilinmeyeni "sağlanmıyor" saymak, kullanıcıyı boş yere profil
+    ekranına atmak olurdu.
+  */
+  const [sosyalPaylasabilir, setSosyalPaylasabilir] = useState<boolean | undefined>(undefined);
   React.useEffect(() => {
     const kimlik = session?.userId ?? null;
     if (!kimlik) {
       setSosyalAvatarYolu(undefined);
+      setSosyalPaylasabilir(undefined);
       return;
     }
     let iptal = false;
     void kendiSosyalProfiliGetir(kimlik)
       .then((profil) => {
-        if (!iptal) setSosyalAvatarYolu(profil?.avatarYolu ?? null);
+        if (iptal) return;
+        setSosyalAvatarYolu(profil?.avatarYolu ?? null);
+        setSosyalPaylasabilir(Boolean(profil?.yayindaMi && profil?.sektorId));
       })
       .catch(() => {
         /* Yol alınamadı: baş harfler kalıyor, ekran bozulmuyor. */
-        if (!iptal) setSosyalAvatarYolu(null);
+        if (!iptal) {
+          setSosyalAvatarYolu(null);
+          setSosyalPaylasabilir(false);
+        }
       });
     return () => {
       iptal = true;
@@ -1524,6 +1543,7 @@ export default function App() {
       */
       onOpenProfilVeCv={() => navigate('/cv')}
       sosyalAvatarYolu={sosyalAvatarYolu}
+      sosyalPaylasabilir={sosyalPaylasabilir}
       onOpenGuides={() => navigate('/rehber')}
       onOpenOpportunities={() => navigate('/firsatlar')}
       /*

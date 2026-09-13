@@ -32,6 +32,7 @@ import { ODAK_HALKASI } from '../lib/renk-token';
 import { BildirimDugmesi } from './BildirimMerkezi';
 import { useSayfaAramasi } from '../lib/sayfa-aramasi';
 import { KullaniciAramaSonuclari } from './sosyal/KullaniciArama';
+import { FotografPaylasGirisi } from './sosyal/FotografPaylasGirisi';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
 
 interface HeaderProps {
@@ -87,6 +88,15 @@ interface HeaderProps {
     açardı.
   */
   sosyalAvatarYolu?: string | null;
+  /**
+   * Kendi profil sayfasındaki fotoğraf paylaşma düğmesinin ön koşulu.
+   *
+   * `undefined` = profil henüz okunmadı; düğme o sırada KAPALI. Sunucu
+   * paylaşımı `yayinda_mi` + `sector_id` olmadan zaten reddediyor
+   * (20260924030000), o yüzden koşul seçimden ÖNCE soruluyor —
+   * kullanıcıya fotoğraflarını seçtirip sonra hayır demek olurdu.
+   */
+  sosyalPaylasabilir?: boolean | undefined;
   /** Rehber merkezine geçiş. */
   onOpenGuides?: () => void;
   /** Öğrenci fırsatları merkezi. */
@@ -198,6 +208,7 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   onOpenProfilVeCv,
   sosyalAvatarYolu = null,
+  sosyalPaylasabilir,
   onOpenGuides,
   onOpenOpportunities,
   onOpenEmployer,
@@ -430,6 +441,13 @@ export const Header: React.FC<HeaderProps> = ({
     hesaplama araçları ve işveren rehberi. Hepsi alt menüde "Rehber"
     altında toplanıyor — kullanıcı için hepsi aynı yerin parçası.
   */
+  /*
+    `/cv` = oturum sahibinin kendi profili. Başkasının profili
+    `/profil/<kullaniciadi>` adresinde ziyaretçi görünümüyle açılıyor,
+    yani orada bu koşul hiçbir zaman doğru olmuyor.
+  */
+  const kendiProfilimde = bulunulanYol === '/cv';
+
   const rehberdeMi = /^\/(rehber|bolum|bolumler|araclar|isveren)(\/|$)/.test(bulunulanYol);
   const firsatlardaMi = /^\/(firsatlar|burslar|kyk|yurtdisi-firsatlari|yarismalar|firsat-takvimi|bana-uygun|kaydedilen-firsatlar)(\/|$)/.test(bulunulanYol);
   /*
@@ -622,6 +640,43 @@ export const Header: React.FC<HeaderProps> = ({
             dönüyor ve masaüstü gezinmesi logonun sağında kalıyor.
           */}
           <div className="flex flex-1 items-center gap-2 sm:gap-3 lg:flex-none lg:gap-6 min-w-0">
+            {/*
+              FOTOĞRAF PAYLAŞMA — YALNIZ KENDİ PROFİLİNDE
+
+              Ağım'ın üst çubuğundaki simgenin AYNISI: aynı bileşen,
+              aynı seçici, aynı besteci (`FotografPaylasGirisi`). İkinci
+              bir kopya yazmak, iki ekranın zamanla ayrışması demekti.
+
+              `/cv` oturum sahibinin KENDİ ekranı; başkasının profili
+              `/profil/<kullaniciadi>` adresinde açılıyor ve orada bu
+              düğme hiç çizilmiyor. Koşul adrese değil, adresin
+              anlamına bakıyor: `/cv` = kendi profilim.
+
+              Ağım'da çizilmiyor: orada sayfanın kendi üst çubuğu var ve
+              düğme zaten orada. İkisi birden çizilseydi aynı ekranda iki
+              paylaşım düğmesi olurdu.
+            */}
+            {kendiProfilimde && (
+              <FotografPaylasGirisi
+                hazirMi={sosyalPaylasabilir !== undefined}
+                paylasabilirMi={sosyalPaylasabilir === true}
+                /*
+                  Ön koşul yoksa kullanıcı zaten kendi profilinde:
+                  eksikliği orada, kendi kartında görüyor. Başka bir
+                  yere götürmek onu bulunduğu yerden koparırdı.
+                */
+                onOnKosulEksik={() => {}}
+                onNavigate={onNavigate}
+                /*
+                  Paylaşım bitince akışa gidiliyor: yeni paylaşımın
+                  görüneceği yer orası. Profilde kalmak, kullanıcıyı
+                  paylaştığı şeyi göremediği bir ekranda bırakırdı.
+                */
+                onTamamlandi={() => onNavigate('/agim')}
+                dugmeSinifi="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-700 transition-colors hover:bg-gray-100 lg:hidden"
+              />
+            )}
+
             {/*
               ARAMA VE SÜZGEÇ — YALNIZ TELEFONDA VE YALNIZ KAPSAM VARSA.
 

@@ -670,26 +670,24 @@ export const ProfilBasligi: React.FC<Props> = ({
       henüz okunmadıysa da çizilmiyor — eylemi olmayan bir düğme, basınca
       hiçbir şey yapmayan bir düğmedir.
 
-      "PAYLAŞ" YALNIZ EYLEMİ VARKEN: `onPaylasimOlustur` iki sunucu
-      önkoşulu (`yayinda_mi`, `sector_id`) sağlanmadığında nesnede yok ve
-      kart burada ikinci bir koşul kurmuyor. İkon tek başına bilgi
-      taşımıyor; yanında "Paylaş" yazıyor.
+      GENİŞ "PAYLAŞ" DÜĞMESİ KALKTI
+
+      Paylaşım girişi artık sayfanın sol üstünde, Ağım'daki simgenin
+      AYNISI (`FotografPaylasGirisi`, Header'dan çiziliyor). İki giriş
+      birden bırakmak, aynı işi yapan iki düğme demekti: biri kartın
+      altında geniş ve metinli, öteki tepede simge. Kullanıcı hangisinin
+      ne yaptığını denemeden bilemezdi.
+
+      Satır kaldırılmadı, dişli hâlâ burada: kart ayarlarının yeri
+      burası ve o eylemin paylaşımla ilgisi yok. Düğme kalkınca satır
+      tek öğeyle kaldığı için `justify-end` da yeterli — boşluk
+      bırakmıyor, dişli sağda duruyor.
 
       Dişli `ProfilAyarMenusu` — satırları burada seçilmiyor, nesne
       olduğu gibi geçiyor.
     */}
     {satir && (
       <div className="flex items-center justify-end gap-2">
-        {satir.onPaylasimOlustur && (
-          <Button
-            tur="secondary"
-            onClick={satir.onPaylasimOlustur}
-            className="flex-1"
-            ikon={<ImagePlus aria-hidden className="h-4 w-4 shrink-0" />}
-          >
-            Paylaş
-          </Button>
-        )}
         <ProfilAyarMenusu {...satir.menu} />
       </div>
     )}

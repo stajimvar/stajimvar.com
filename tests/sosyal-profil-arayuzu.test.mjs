@@ -1951,11 +1951,22 @@ test('sosyal satır yokken kartta Paylaş ve dişli çizilmiyor, sayı uydurulmu
     varsa sayılar. Hiçbir dalda 0 ya da tire yazılmıyor — "sunucu
     vermedi" ile "gerçekten sıfır" aynı şey değil.
 
-    "Paylaş" eylemi nesneye yalnız iki sunucu önkoşulu sağlanınca giriyor;
-    kart ikinci bir koşul kurmuyor, eylemi olmayan düğmeyi çizmiyor.
+    GENİŞ "PAYLAŞ" DÜĞMESİ KARTTAN KALKTI
+
+    Paylaşım girişi artık sayfanın sol üstünde, Ağım'daki simgenin
+    aynısı (`FotografPaylasGirisi`, Header'dan çiziliyor). İki giriş
+    birden bırakmak aynı işi yapan iki düğme demekti: biri kartın
+    altında geniş ve metinli, öteki tepede simge — kullanıcı hangisinin
+    ne yaptığını denemeden bilemezdi.
+
+    Dişli yerinde kaldı: kart ayarlarının yeri burası ve o eylemin
+    paylaşımla ilgisi yok. Satır tek öğeyle kaldığı için `justify-end`
+    yeterli; kaldırılan düğmenin yerinde boşluk durmuyor.
   */
   assert.match(profilBasligi, /\{satir && \(\n\s*<div className="flex items-center justify-end gap-2">/);
-  assert.match(profilBasligi, /\{satir\.onPaylasimOlustur && \(/);
+  assert.doesNotMatch(profilBasligi, /\{satir\.onPaylasimOlustur && \(/);
+  assert.doesNotMatch(profilBasligi, />\s*Paylaş\s*</);
+  assert.match(profilBasligi, /<ProfilAyarMenusu \{\.\.\.satir\.menu\} \/>/);
   assert.match(profilBasligi, /sosyalHucre === 'hazir' && satir\?\.sayaclar && \(/);
   assert.match(profilBasligi, /Paylaşım ve bağlantı sayısı alınamadı/);
   assert.doesNotMatch(profilBasligi, /deger=\{0\}|etiket="paylaşım" deger=\{0\}|\?\? 0/);
