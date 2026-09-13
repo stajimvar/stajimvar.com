@@ -353,7 +353,7 @@ test('görsel yolu ÜÇ PARÇALI: {yazar}/{post}/{dosya}', () => {
     İstemcideki üç adımlı akış da aynı öneki kuruyor; tek biçim.
   */
   const betik = oku('scripts/resmi-paylasim-aktar.mjs');
-  assert.match(betik, /const depoYolu = `\$\{resmiKimlik\}\/\$\{post\.id\}\/\$\{crypto\.randomUUID\(\)\}\.\$\{uzanti\}`;/);
+  assert.match(betik, /const depoYolu = `\$\{resmiKimlik\}\/\$\{postId\}\/\$\{crypto\.randomUUID\(\)\}\.\$\{uzanti\}`;/);
 
   const istemci = oku('src/lib/queries/sosyal.ts');
   assert.match(istemci, /const onek = `\$\{satir\.author_id\}\/\$\{postId\}\/`;/);
