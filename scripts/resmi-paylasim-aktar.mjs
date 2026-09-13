@@ -48,6 +48,47 @@ export const EN_FAZLA_FOTOGRAF = 10;
 /* `posts.aciklama` CHECK'iyle aynı sayı. */
 export const ACIKLAMA_SINIRI = 2200;
 
+/**
+ * AKTARIM AD ALANI — `instagram:<kod>:<sürüm>` dizesini UUID'ye çeviren tohum.
+ *
+ * `posts.istemci_anahtari` UUID tipinde (20260924010000) ve üzerinde
+ * `(author_id, istemci_anahtari)` tekil indeksi var. Okunur bir dize
+ * yazılamıyor: ölçüldü, `invalid input syntax for type uuid`.
+ *
+ * Rastgele UUID de olmaz — betik ikinci kez koştuğunda yeni bir anahtar
+ * üretir ve AYNI SET İKİNCİ KEZ paylaşılırdı. Bu yüzden anahtar
+ * TÜRETİLİYOR: aynı kod ve sürüm her zaman aynı UUID'yi veriyor, tekil
+ * indeks de ikinci satırı engelliyor.
+ *
+ * Sürüm dizenin içinde: set v6'dan v7'ye geçerse anahtar da değişiyor
+ * ve düzeltilmiş içerik yeni paylaşım olarak çıkıyor, eskisi yerinde
+ * kalıyor.
+ */
+const AKTARIM_AD_ALANI = '6f1c9d64-2a1f-4d7b-9a83-2a6b0f5c1e47';
+
+/**
+ * RFC 4122 sürüm 5 UUID (SHA-1, ad alanı tabanlı).
+ *
+ * Dışarıdan paket almamak için elle yazıldı: betiğin tek bağımlılığı
+ * `@supabase/supabase-js` ve bir satırlık bir iş için ikinci bir
+ * bağımlılık eklemek, aktarımı bir paketin ömrüne bağlamak olurdu.
+ */
+export function uuid5(ad, adAlani = AKTARIM_AD_ALANI) {
+  const adAlaniBaytlari = Buffer.from(adAlani.replace(/-/g, ''), 'hex');
+  const ozet = crypto
+    .createHash('sha1')
+    .update(Buffer.concat([adAlaniBaytlari, Buffer.from(ad, 'utf8')]))
+    .digest();
+
+  const b = Buffer.from(ozet.subarray(0, 16));
+  /* Sürüm 5 ve RFC 4122 varyantı: tip alanları yerine oturuyor. */
+  b[6] = (b[6] & 0x0f) | 0x50;
+  b[8] = (b[8] & 0x3f) | 0x80;
+
+  const h = b.toString('hex');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
 export function ortamOku() {
   const birlesik = { ...process.env };
   for (const dosya of ['.env', 'automation/.env']) {
@@ -72,9 +113,12 @@ export function ortamOku() {
 export function aktarilacak(set) {
   const metin = String(set?.metin ?? '').trim();
   const kartlar = Array.isArray(set?.kartlar) ? set.kartlar.slice(0, EN_FAZLA_FOTOGRAF) : [];
+  /* Okunur kaynak; anahtarın kendisi bundan TÜRETİLİYOR (bkz. uuid5). */
+  const anahtarKaynagi = `instagram:${set?.kod ?? ''}:${set?.surum ?? 'v0'}`;
   return {
-    /* Sürüm anahtarın içinde: düzeltilen içerik yeni paylaşım oluyor. */
-    istemciAnahtari: `instagram:${set?.kod ?? ''}:${set?.surum ?? 'v0'}`,
+    anahtarKaynagi,
+    /* Sürüm kaynağın içinde: düzeltilen içerik yeni paylaşım oluyor. */
+    istemciAnahtari: uuid5(anahtarKaynagi),
     aciklama: metin.slice(0, ACIKLAMA_SINIRI),
     kartlar,
     /*
@@ -161,6 +205,7 @@ async function main() {
 
   const icerik = aktarilacak(set);
   console.log(`kod          : ${set.kod}`);
+  console.log(`anahtar kayn.: ${icerik.anahtarKaynagi}`);
   console.log(`istemci anah.: ${icerik.istemciAnahtari}`);
   console.log(`kitle        : ${icerik.kitle}`);
   console.log(`fotoğraf     : ${icerik.kartlar.length}`);
@@ -230,7 +275,21 @@ async function main() {
     }
     sira += 1;
     const uzanti = path.extname(dosyaYolu).slice(1).toLowerCase() || 'jpg';
-    const depoYolu = `${resmiKimlik}/${crypto.randomUUID()}.${uzanti}`;
+    /*
+      YOL ÜÇ PARÇALI OLMAK ZORUNDA: {yazar}/{post}/{dosya}
+
+      Depolama okuma politikası `sosyal_gizli.paylasim_dosyasi_gorunur`
+      yolu bölüp ORTADAKİ parçayı paylaşım kimliği sayıyor ve üç
+      parçadan azını doğrudan reddediyor. Betik önce iki parçalı
+      yazıyordu; dosyalar yüklendi, `post_media` satırları açıldı ama
+      paylaşımı gören hiç kimse görselleri AÇAMADI — yalnız hesabın
+      kendisi (klasör adı kendi kimliğine eşit olduğu için). Canlıda
+      ölçüldü: akıştaki kartın şeridinde tek bir `<img>` yoktu.
+
+      İstemcideki üç adımlı akış da aynı öneki kuruyor
+      (`${author_id}/${postId}/`); tek biçim, tek kural.
+    */
+    const depoYolu = `${resmiKimlik}/${post.id}/${crypto.randomUUID()}.${uzanti}`;
     const { error: yuklemeHatasi } = await db.storage
       .from(PAYLASIM_KOVASI)
       .upload(depoYolu, fs.readFileSync(dosyaYolu), {
