@@ -253,3 +253,28 @@ test('keşif yalnız kullanıcı içeriği yokken, deneme kayıtları dışarıd
   assert.match(agim, /<KisiListesi kisiler=\{kesif\} onNavigate=\{onNavigate\} \/>/);
   assert.match(oku('src/components/sosyal/KullaniciArama.tsx'), /export const KisiListesi/);
 });
+
+test('veri okuyan kancalar YETKİ KAPISININ ÜSTÜNDE', () => {
+  /*
+    REACT #310 — CANLIDA ÖLÇÜLDÜ (13 Eylül 2026)
+
+    Keşif etkisi `if (!oturumHazir) return` satırlarının ALTINDAYDI.
+    Kancalar dallara giremez: oturum okunurken çalışan render daha az
+    kanca çağırıyor, React "önceki render'dan fazla kanca" diyor ve
+    AĞIM EKRANI BOMBOŞ açılıyordu.
+
+    Kural: veri okuyan her kanca kapıların üstünde; kapılar yalnız
+    ÇİZİMİ kesiyor.
+  */
+  const agim = oku('src/components/sosyal/AgimSayfasi.tsx');
+  const kapi = agim.indexOf('yetki kapısı');
+  assert.ok(kapi > 0, 'yetki kapısı bulunamadı');
+
+  const altKisim = agim.slice(kapi);
+  assert.doesNotMatch(altKisim, /React\.useEffect\(/, 'kapının altında kanca var');
+  assert.doesNotMatch(altKisim, /React\.useState</, 'kapının altında kanca var');
+  assert.doesNotMatch(altKisim, /React\.useRef</, 'kapının altında kanca var');
+
+  /* Keşif etkisi gerçekten üstte. */
+  assert.ok(agim.indexOf('alanindakiKisiler(kullaniciId, sektor)') < kapi);
+});

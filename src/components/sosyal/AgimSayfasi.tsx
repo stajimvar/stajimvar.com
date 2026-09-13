@@ -198,6 +198,44 @@ export const AgimSayfasi: React.FC<Props> = ({
     };
   }, [kullaniciId, oturumHazir, tazeleme]);
 
+  /*
+    KEŞİF ETKİSİ YETKİ KAPISININ ÜSTÜNDE
+
+    Kancalar dallara giremez. Bu etki aşağıdaki `if (!oturumHazir)
+    return` satırlarının ALTINDAYDI ve oturum okunurken çalışan render
+    daha az kanca çağırıyordu: React #310, ekran bomboş (canlıda
+    ölçüldü, 13 Eylül 2026). Veri okuyan her kanca kapıların üstünde
+    duruyor; kapılar yalnız ÇİZİMİ kesiyor.
+  */
+  /*
+    "KULLANICI İÇERİĞİ" = RESMÎ OLMAYAN PAYLAŞIM
+
+    Sayıya değil TÜRE bakılıyor: akışta yirmi resmî paylaşım olsa da
+    kullanıcı hâlâ kimseyi tanımıyor demektir.
+  */
+  const kullaniciIcerigiVar = akis.some((p) => !p.resmiMi);
+
+  React.useEffect(() => {
+    const sektor = benim?.sektorId ?? null;
+    /* Akış hazır olmadan karar verilmiyor: yüklenirken blok yanıp sönerdi. */
+    if (durum !== 'hazir' || kullaniciIcerigiVar || !kullaniciId || !sektor) {
+      setKesif([]);
+      return;
+    }
+    let iptal = false;
+    void alanindakiKisiler(kullaniciId, sektor)
+      .then((liste) => {
+        if (!iptal) setKesif(liste);
+      })
+      .catch(() => {
+        /* Keşif bir yan bölüm; alınamazsa blok hiç çizilmiyor. */
+        if (!iptal) setKesif([]);
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [durum, kullaniciIcerigiVar, kullaniciId, benim?.sektorId]);
+
   /* --------------------------------------------------------- yetki kapısı */
 
   if (!oturumHazir) {
@@ -425,35 +463,6 @@ export const AgimSayfasi: React.FC<Props> = ({
     });
 
   const profilAc = (kullaniciAdi: string) => onNavigate(`/profil/${kullaniciAdi}`);
-
-  /*
-    "KULLANICI İÇERİĞİ" = RESMÎ OLMAYAN PAYLAŞIM
-
-    Sayıya değil TÜRE bakılıyor: akışta yirmi resmî paylaşım olsa da
-    kullanıcı hâlâ kimseyi tanımıyor demektir.
-  */
-  const kullaniciIcerigiVar = akis.some((p) => !p.resmiMi);
-
-  React.useEffect(() => {
-    const sektor = benim?.sektorId ?? null;
-    /* Akış hazır olmadan karar verilmiyor: yüklenirken blok yanıp sönerdi. */
-    if (durum !== 'hazir' || kullaniciIcerigiVar || !kullaniciId || !sektor) {
-      setKesif([]);
-      return;
-    }
-    let iptal = false;
-    void alanindakiKisiler(kullaniciId, sektor)
-      .then((liste) => {
-        if (!iptal) setKesif(liste);
-      })
-      .catch(() => {
-        /* Keşif bir yan bölüm; alınamazsa blok hiç çizilmiyor. */
-        if (!iptal) setKesif([]);
-      });
-    return () => {
-      iptal = true;
-    };
-  }, [durum, kullaniciIcerigiVar, kullaniciId, benim?.sektorId]);
 
   /*
     SESSİZLİK ANINDA EKRANA YANSIYOR
