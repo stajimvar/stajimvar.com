@@ -100,13 +100,39 @@ test('şeritler aynı ölçüde ve yatay taşmaya karşı korumalı', () => {
     const kaynak = oku(dosya);
     assert.match(kaynak, /w-\[76px\]/, `${dosya}: daire genişliği ortak değil`);
     assert.match(kaynak, /h-14 w-14/, `${dosya}: daire ölçüsü ortak değil`);
-    /*
-      `sr-only` düğümleri `position: absolute`; sarmalayıcı
-      konumlandırılmazsa kapsayıcı blok en dışa düşüyor, `overflow-x-auto`
-      onları kırpamıyor ve belge 375 yerine 684 piksele genişliyor
-      (Keşfet'te ölçüldü).
-    */
-    assert.match(kaynak, /relative overflow-x-auto/, `${dosya}: yatay taşma koruması yok`);
+  }
+
+  /*
+    `sr-only` düğümleri `position: absolute`; sarmalayıcı
+    konumlandırılmazsa kapsayıcı blok en dışa düşüyor, `overflow-x-auto`
+    onları kırpamıyor ve belge 375 yerine 684 piksele genişliyor
+    (Keşfet'te ölçüldü).
+
+    KonuSeridi bu sarmalayıcıyı artık ortak belirteçten alıyor
+    (`SERIT.ic`); şerit kabuğu telefonda kaldırılırken iki şerit tek
+    tanımda toplandı. SehirSeridi kendi kabını yazmaya devam ediyor.
+  */
+  assert.match(oku('src/components/SehirSeridi.tsx'), /relative overflow-x-auto/);
+  assert.match(oku('src/components/KonuSeridi.tsx'), /className=\{SERIT\.ic\}/);
+  assert.match(oku('src/ui/tokens.ts'), /ic: 'relative overflow-x-auto/);
+});
+
+test('iki şerit de telefonda kabuksuz ve ekranın iki kenarına yaslı', () => {
+  /*
+    Şerit yuvarlatılmış, çerçeveli beyaz bir kutunun içindeydi ve o kutu
+    sayfanın 16 pikselik yan boşluğunun da içinde duruyordu: 375
+    piksellik ekranda dairelere 319 piksel kalıyor, beşinci daire hep
+    yarım görünüyordu.
+
+    Kabuk tek yerde tanımlı; iki şerit de oradan okuyor. Halkalar,
+    seçim durumu ve yatay kaydırma değişmedi.
+  */
+  const tokens = oku('src/ui/tokens.ts');
+  assert.match(tokens, /kabuk: `border-b border-gray-200 bg-white py-2 sm:rounded-2xl sm:border sm:py-3 \$\{YUZEY\.kap\}`/);
+  for (const dosya of ['src/components/KesifSeridi.tsx', 'src/components/KonuSeridi.tsx']) {
+    const kaynak = oku(dosya);
+    assert.match(kaynak, /className=\{SERIT\.kabuk\}/, `${dosya}: ortak kabuk kullanılmıyor`);
+    assert.doesNotMatch(kaynak, /rounded-2xl border border-gray-200 bg-white py-3/, `${dosya}: eski kabuk duruyor`);
   }
 });
 

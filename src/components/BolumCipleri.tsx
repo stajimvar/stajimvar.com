@@ -1,4 +1,5 @@
 import React from 'react';
+import { YUZEY } from '../ui/tokens';
 import { ALANLAR } from '../lib/bolum-eslestirme.mjs';
 
 /**
@@ -113,7 +114,14 @@ export const BolumCipleri: React.FC<{
   return (
     <section
       aria-label="Bölüm tercihi"
-      className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4"
+      /*
+        Telefonda kutu değil BANT: şeritle liste arasında, ikisi de
+        ekranın iki kenarına yaslıyken bu blok 16 piksel içeride
+        yuvarlak bir kutu olarak duruyordu ve aradaki tek girintili
+        öğe olduğu için bozuk görünüyordu. `sm:` üstünde kutu aynen
+        geri geliyor.
+      */
+      className={`border-y border-blue-100 bg-blue-50/60 p-4 sm:rounded-2xl sm:border ${YUZEY.kap}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

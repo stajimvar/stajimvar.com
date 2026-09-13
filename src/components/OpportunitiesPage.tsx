@@ -4,8 +4,9 @@ import {
   Building2,
   CalendarDays,
   CheckCircle2,
+  ArrowRight,
+  Bookmark,
   ChevronRight,
-  ExternalLink,
   Globe2,
   GraduationCap,
   HandCoins,
@@ -19,22 +20,22 @@ import {
 } from 'lucide-react';
 import type { StudentProfile } from '../types';
 import { ListingLogo } from './ListingLogo';
-import { ZamanTupu } from './ZamanTupu';
-import { DisBaglanti, FiltreBlogu, SecenekSatiri } from '../ui';
+import { FiltreBlogu, SecenekSatiri } from '../ui';
 import { KonuSeridi } from './KonuSeridi';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
-import { CTA_BIRINCIL, CTA_ORTAK } from '../lib/kart-cta';
+import { YUZEY } from '../ui/tokens';
 import { ODAK_HALKASI } from '../lib/renk-token';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 import {
   fetchExpiredOpportunities,
   fetchOpportunities,
   fetchSavedOpportunityIds,
+  toggleSavedOpportunity,
   type Opportunity,
 } from '../lib/opportunities';
 import {
   aktifFirsatSuzgecleri,
-  opportunityCta,
+  opportunityReviewLabel,
   opportunityTypeLabel,
   readOpportunityFilters,
   serializeOpportunityFilters,
@@ -177,6 +178,29 @@ export const OpportunitiesPage: React.FC<{
   );
   /* Arşivin kendi "yeniden dene" sayacı: ana listeyi boşuna çekmiyor. */
   const [arsivDenemesi, setArsivDenemesi] = React.useState(0);
+
+  /*
+    KAYDET — İYİMSER, HATADA GERİ ALINIYOR
+
+    Kaydedilenler zaten okunuyordu ("Kaydettiklerim" süzgeci onu
+    kullanıyor) ama kartta yazacak bir yer yoktu: öğrenci süzgeci
+    görüyor, listeyi dolduramıyordu. BurslarKesfetPage'deki desenin
+    aynısı — ayrı bir mantık yazılmadı.
+
+    Yazma başarısız olursa durum geri alınıyor: kullanıcı kaydettiğini
+    sanıp kaybetmemeli.
+  */
+  const kaydiDegistir = React.useCallback(
+    (item: Opportunity) => {
+      if (!userId) return onRequireLogin();
+      const kayitliydi = saved.includes(item.id);
+      setSaved((o) => (kayitliydi ? o.filter((id) => id !== item.id) : [...o, item.id]));
+      void toggleSavedOpportunity(userId, item.id, kayitliydi).catch(() => {
+        setSaved((o) => (kayitliydi ? [...o, item.id] : o.filter((id) => id !== item.id)));
+      });
+    },
+    [userId, saved, onRequireLogin],
+  );
 
   const [filters, setFilters] = React.useState<Suzgec>(() => ({
     ...BOS_FIRSAT_SUZGECI,
@@ -490,7 +514,7 @@ export const OpportunitiesPage: React.FC<{
         olarak gösteriyordu. `sm:` üstünde boşluk duruyor — orada iki
         sütun yan yana ve aralarında nefes payı gerekiyor.
       */}
-      <div className="grid grid-cols-1 gap-0 sm:gap-6 lg:grid-cols-12 items-start">
+      <div className={`grid grid-cols-1 items-start gap-0 sm:gap-6 lg:grid-cols-12 ${YUZEY.kolon}`}>
         {/* --------------------------------- sol: başlık, arama, süzgeçler */}
         {/*
           Sol sütun telefonda YER KAPLAMIYOR: başlık `sr-only` olunca
@@ -538,7 +562,7 @@ export const OpportunitiesPage: React.FC<{
         </div>
 
         {/* ------------------------------------------- orta: kart akışı --- */}
-        <div className="lg:col-span-6 space-y-4 min-w-0">
+        <div className="min-w-0 space-y-4 lg:col-span-6">
           {/*
             GÖRÜNÜM SEÇİCİ
 
@@ -690,7 +714,20 @@ export const OpportunitiesPage: React.FC<{
           ) : takvimGorunumu ? (
             <Takvim items={filtered} onNavigate={onNavigate} />
           ) : filtered.length ? (
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
+            /*
+              TELEFONDA TEK SÜTUN, KENARA YASLI
+
+              İki sütundu: 375 piksellik ekranda karta 174 piksel
+              kalıyordu ve kartın yarısı — kime uygun olduğu, tutarın
+              dönemi, şart notu — oraya sığmadığı için `hidden sm:block`
+              ile gizleniyordu. Yani telefon kullanıcısı en az bilgiyi
+              gören kullanıcıydı.
+
+              Tek sütun ve tam genişlik: aynı kart artık bütün alanlarını
+              gösteriyor. `sm:` üstünde iki, `lg:` üstünde üç sütun —
+              masaüstü düzeni değişmedi.
+            */
+            <div className={`grid grid-cols-1 gap-0 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 ${YUZEY.kap} sm:mx-0`}>
               {filtered.map((item: Opportunity) => (
                 <Card
                   key={item.id}
@@ -700,6 +737,8 @@ export const OpportunitiesPage: React.FC<{
                   onRequireLogin={onRequireLogin}
                   onNavigate={onNavigate}
                   fit={student && !profilEksik ? opportunityFit(item, student) : null}
+                  kayitli={saved.includes(item.id)}
+                  onKaydet={filters.arsiv ? undefined : () => kaydiDegistir(item)}
                 />
               ))}
             </div>
@@ -1091,9 +1130,26 @@ export const Card: React.FC<{
   arsivde?: boolean;
   girisGerekli: boolean;
   onRequireLogin: () => void;
-}> = ({ item, onNavigate, fit, arsivde = false, girisGerekli, onRequireLogin }) => {
-  const cta = arsivde ? null : opportunityCta(item);
+  /** Kaydedilmiş mi — `saved_opportunities` tablosundan geliyor. */
+  kayitli?: boolean;
+  /** Verilmezse kaydet düğmesi hiç çizilmiyor (arşiv görünümü). */
+  onKaydet?: () => void;
+}> = ({
+  item,
+  onNavigate,
+  fit,
+  arsivde = false,
+  girisGerekli,
+  onRequireLogin,
+  kayitli = false,
+  onKaydet,
+}) => {
   const tutar = opportunityAmount(item);
+  const kaydetEtiketi = girisGerekli
+    ? 'Kaydetmek için giriş yap'
+    : kayitli
+      ? 'Kayıtlardan çıkar'
+      : 'Daha sonra bakmak için kaydet';
   const rozetler = firsatRozetleri(item, { fit }) as {
     id: string;
     etiket: string;
@@ -1125,47 +1181,77 @@ export const Card: React.FC<{
   })();
 
   return (
-    <article className="group relative flex min-w-0 flex-col gap-1.5 rounded-2xl border border-gray-200 bg-white p-2.5 transition-all duration-150 hover:border-blue-500 hover:shadow-xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 sm:gap-2 sm:p-3.5">
-      <div className="flex w-full min-w-0 items-start gap-2 sm:gap-2.5">
+    <article
+      className={`group relative flex min-w-0 flex-col gap-2 bg-white transition-all duration-150 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 ${YUZEY.kabuk} ${YUZEY.ic} sm:hover:border-blue-500 sm:hover:shadow-xs`}
+    >
+      {/*
+        SATIR 1: KURUM VE KAYDET — BAŞLIK BUNUN ALTINDA
+
+        Logo ve künye sol sütunda, başlık sağ sütundaydı: başlık kartın
+        sol kenarından 44 piksel içeriden başlıyor ve altındaki hiçbir
+        şey o boşluğu doldurmuyordu. Şimdi ilk satır yalnız künye;
+        başlık ve altındaki her şey kartın tam iç genişliğinde.
+      */}
+      <div className="flex w-full min-w-0 items-center gap-2.5">
         {/*
           Logo ilan kartıyla AYNI bileşen (ListingLogo): aynı dairesel
           kutu, aynı iç boşluk ve logosu olmayan kurumda AYNI ÖLÇÜDE baş
-          harf kutusu — iki liste arasında göz hizası kaymıyor. Ölçü dar
-          kart için bir kademe küçültüldü: 56 piksellik logo 174 piksellik
-          kartın üçte birini yiyordu (ölçüldü, 390px).
+          harf kutusu — iki liste arasında göz hizası kaymıyor.
         */}
-        <div className="shrink-0">
-          <ListingLogo
-            name={item.organizationName}
-            logoUrl={item.organizationLogoUrl}
-            className="!h-9 !w-9 !p-1 !text-[11px] sm:!h-11 sm:!w-11 sm:!text-xs"
-          />
-        </div>
-        <div className="min-w-0 flex-1 space-y-0.5">
-          <span className="block min-w-0 truncate text-[11px] font-bold text-blue-600 sm:text-xs">
-            {item.organizationName}
-          </span>
-          {/*
-            Gerilmiş bağlantı (`after:inset-0`) kartın tamamını kaplıyor;
-            gerçek bir `href` olduğu için orta tuş ve "yeni sekmede aç"
-            çalışıyor, arama motoru da bağlantıyı görüyor.
-          */}
-          <h2 className="line-clamp-2 text-[13px] font-bold leading-snug text-gray-900 sm:text-base">
-            <a
-              href={`/firsatlar/${item.slug}`}
-              onClick={(e) => {
-                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-                e.preventDefault();
-                onNavigate(`/firsatlar/${item.slug}`);
-              }}
-              title={item.title}
-              className={`rounded-sm outline-none transition-colors after:absolute after:inset-0 after:content-[''] group-hover:text-blue-700 ${ODAK_HALKASI}`}
-            >
-              {item.title}
-            </a>
-          </h2>
-        </div>
+        <ListingLogo
+          name={item.organizationName}
+          logoUrl={item.organizationLogoUrl}
+          className="!h-9 !w-9 shrink-0 !p-1 !text-[11px] sm:!h-10 sm:!w-10 sm:!text-xs"
+        />
+        <span className="min-w-0 flex-1 truncate text-xs font-bold text-blue-600 sm:text-sm">
+          {item.organizationName}
+        </span>
+        {/*
+          KAYDET AYRI ÇALIŞIYOR
+
+          `relative z-10`: gerilmiş bağlantının örtüsünün üstünde durmalı,
+          yoksa tıklama karta gider ve detay sayfası açılırdı.
+        */}
+        {onKaydet && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onKaydet();
+            }}
+            aria-pressed={girisGerekli ? undefined : kayitli}
+            aria-label={kaydetEtiketi}
+            title={kaydetEtiketi}
+            className={`relative z-10 -mr-1 shrink-0 cursor-pointer rounded-lg p-1.5 transition-colors ${
+              kayitli
+                ? 'bg-blue-50 text-blue-600'
+                : 'text-gray-300 hover:bg-blue-50 hover:text-blue-600'
+            }`}
+          >
+            <Bookmark className={`h-4 w-4 ${kayitli ? 'fill-blue-600' : ''}`} />
+          </button>
+        )}
       </div>
+
+      {/*
+        Gerilmiş bağlantı (`after:inset-0`) kartın tamamını kaplıyor;
+        gerçek bir `href` olduğu için orta tuş ve "yeni sekmede aç"
+        çalışıyor, arama motoru da bağlantıyı görüyor.
+      */}
+      <h2 className="line-clamp-2 min-w-0 text-[15px] font-bold leading-snug text-gray-900 sm:text-base">
+        <a
+          href={`/firsatlar/${item.slug}`}
+          onClick={(e) => {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+            e.preventDefault();
+            onNavigate(`/firsatlar/${item.slug}`);
+          }}
+          title={item.title}
+          className={`rounded-sm outline-none transition-colors after:absolute after:inset-0 after:content-[''] group-hover:text-blue-700 ${ODAK_HALKASI}`}
+        >
+          {item.title}
+        </a>
+      </h2>
 
       {/*
         TÜR ETİKETİ VE ROZETLER
@@ -1176,14 +1262,14 @@ export const Card: React.FC<{
         etiket yok — "Popüler" için bu sitede sayılabilecek bir başvuru
         yok, başvuruyu kurum alıyor.
       */}
-      <div className="flex flex-wrap items-center gap-1 text-[9px] font-bold sm:gap-1.5 sm:text-[10px]">
-        <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-blue-700 sm:px-2">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-[10px] font-bold">
+        <span className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700">
           {opportunityTypeLabel(item.opportunityType)}
         </span>
         {rozetler.map((rozet) => (
           <span
             key={rozet.id}
-            className={`rounded-full px-1.5 py-0.5 sm:px-2 ${
+            className={`rounded-full px-2 py-0.5 ${
               rozet.id === 'son_gunler'
                 ? 'bg-amber-50 text-amber-900'
                 : rozet.id === 'uygun'
@@ -1195,7 +1281,7 @@ export const Card: React.FC<{
           </span>
         ))}
         {item.verifiedAt && (
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-1.5 py-0.5 text-emerald-700 sm:px-2">
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">
             <CheckCircle2 className="h-2.5 w-2.5 shrink-0" aria-hidden />
             Resmî kaynak
           </span>
@@ -1203,74 +1289,84 @@ export const Card: React.FC<{
       </div>
 
       {/*
-        Kime ve nerede. Hiçbiri yoksa satır çizilmiyor. Dar kartta gizli:
-        174 pikselde "Lisans · İstanbul, Ankara, İzmir" üç satıra bölünüp
-        kartın en uzun bloğu oluyordu (ölçüldü). Bilgi kaybolmuyor — detay
-        sayfasında ve süzgeçte aynen duruyor.
+        Kime ve nerede. Hiçbiri yoksa satır çizilmiyor.
+
+        TELEFONDA ARTIK GİZLİ DEĞİL: kart iki sütunluyken 174 piksele
+        sıkışıyor ve "Lisans · İstanbul, Ankara, İzmir" üç satıra
+        bölünüyordu. Tek sütunda bir ya da iki satır alıyor ve öğrencinin
+        ilk sorduğu şeyi ("bana uygun mu") kartın üstünde yanıtlıyor.
       */}
       {(seviye || bolumVeSinif.length > 0 || yer.length > 0 || katilim) && (
-        <p className="hidden text-xs text-gray-500 sm:block">
+        <p className="min-w-0 text-xs leading-relaxed text-gray-500">
           {[seviye, bolumVeSinif.slice(0, 2).join(', '), yer.join(', '), katilim]
             .filter(Boolean)
             .join(' · ')}
         </p>
       )}
 
-      {/*
-        Tutar yalnızca resmî kaynaktan doğrulanmışsa yazıyor.
-        Doğrulanmamışsa susmuyoruz da: "açıklanmadı" demek, boş bırakıp
-        öğrenciyi aramaya göndermekten iyi.
-      */}
-      {tutar.bilinmiyor ? (
-        <p className="flex items-center gap-1 text-[11px] text-gray-500 sm:gap-1.5 sm:text-xs">
-          <span aria-hidden className="font-bold text-gray-400">
-            ₺
-          </span>
-          Tutar açıklanmadı
-          {tutar.geriOdeme && (
-            <span className="hidden font-semibold text-gray-600 sm:inline">
-              · {tutar.geriOdeme}
-            </span>
-          )}
-        </p>
-      ) : (
-        <div className="rounded-lg bg-emerald-50 px-2 py-1.5 sm:px-3 sm:py-2">
-          <p className="text-[13px] font-extrabold leading-tight text-emerald-900 sm:text-base">
-            {tutar.metin}
-          </p>
-          <p className="hidden text-[11px] text-emerald-800 sm:block">
-            {[tutar.donem, tutar.geriOdeme].filter(Boolean).join(' · ')}
-          </p>
-        </div>
-      )}
-
       {acilisTarihi && !arsivde && (
-        <p className="flex items-start gap-1 text-[11px] font-semibold leading-snug text-blue-800 sm:gap-1.5 sm:text-[13px]">
-          <CalendarDays className="mt-0.5 h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden />
+        <p className="flex min-w-0 items-start gap-1.5 text-xs font-semibold leading-snug text-blue-800">
+          <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
           <span>{acilisTarihi} tarihinde başvuruya açılıyor</span>
         </p>
       )}
 
       {/*
-        ARŞİVDE TÜP YOK
+        TUTAR VE SON BAŞVURU — İKİ HİZALI BİLGİ ALANI
 
-        Zaman tüpü "ne kadar kaldı" diyor; kapanmış bir dönemde kalan süre
-        yok ve dolu bir tüp çizmek yanlış bilgi olurdu. Yerine tarafsız bir
-        satır: ne zaman kapandığı.
+        Tutar yeşil bir kutunun içindeydi, son başvuru ise kartın altında
+        dolmakta olan bir ZAMAN TÜPÜYDÜ. İkisi aynı soruyu yanıtlıyor
+        ("değeri ne, ne zamana kadar") ama iki ayrı görsel dilde
+        duruyordu; tüp ayrıca kalan günü çubuğun doluluğuyla anlatıyor,
+        yani okunmak için yorumlanması gerekiyordu.
+
+        Şimdi aynı ölçüde iki alan: üstte sakin etiket, altında değerin
+        kendisi. `items-start` ve `min-w-0`: uzun tutar metni dar ekranda
+        kendi sütununda sarıyor, komşusunu itmiyor.
+
+        İLERLEME ÇUBUĞU KALKTI — kalan gün kaybolmadı: gerçekten yaklaşan
+        tarihte "Son 3 gün" rozeti yukarıda yanıyor ve o rozet doğrudan
+        son başvuru tarihinden hesaplanıyor (firsatRozetleri).
       */}
-      {arsivde ? (
-        item.applicationDeadline ? (
-          <p className="text-[11px] font-semibold text-gray-500 sm:text-[13px]">
-            {kisaTarih(item.applicationDeadline)} tarihinde kapandı
-          </p>
-        ) : null
-      ) : (
-        <ZamanTupu item={item} />
-      )}
+      <dl className="grid grid-cols-2 items-start gap-x-3 gap-y-1 border-t border-gray-100 pt-2">
+        <div className="min-w-0">
+          <dt className="text-[11px] text-gray-500">Tutar</dt>
+          {/*
+            Tutar yalnızca resmî kaynaktan doğrulanmışsa yazıyor.
+            Doğrulanmamışsa susmuyoruz da: "açıklanmadı" demek, boş
+            bırakıp öğrenciyi aramaya göndermekten iyi.
+          */}
+          {tutar.bilinmiyor ? (
+            <dd className="text-sm font-semibold text-gray-500">Tutar açıklanmadı</dd>
+          ) : (
+            <dd className="text-sm font-extrabold leading-tight text-gray-900 sm:text-base">
+              {tutar.metin}
+              {tutar.donem && (
+                <span className="block text-[11px] font-medium text-gray-500">{tutar.donem}</span>
+              )}
+            </dd>
+          )}
+        </div>
+        <div className="min-w-0">
+          <dt className="text-[11px] text-gray-500">{arsivde ? 'Kapanış' : 'Son başvuru'}</dt>
+          {/*
+            Tarih yoksa "—" değil, ne olduğu yazılıyor: takvimini
+            açıklamamış kurum var ve boş bir çizgi bunu "veri eksik" gibi
+            gösteriyordu.
+          */}
+          <dd className="text-sm font-extrabold leading-tight text-gray-900 sm:text-base">
+            {item.applicationDeadline ? (
+              kisaTarih(item.applicationDeadline)
+            ) : (
+              <span className="font-semibold text-gray-500">Takvim açıklanmadı</span>
+            )}
+          </dd>
+        </div>
+      </dl>
 
       {fit?.not && (
         <p
-          className={`hidden text-xs leading-relaxed sm:block ${
+          className={`min-w-0 text-xs leading-relaxed ${
             fit.durum === 'sart_uymuyor' ? 'text-amber-800' : 'text-gray-500'
           }`}
         >
@@ -1279,25 +1375,28 @@ export const Card: React.FC<{
       )}
 
       {/*
-        `relative z-10`: düğme gerilmiş bağlantının ÜSTÜNDE kalmalı, yoksa
-        tıklama karta gidip detay sayfasını açardı.
+        İNCELEME BAĞLANTISI, BAŞVURU DÜĞMESİ DEĞİL
+
+        Kartın altında tam genişlikte bir "Başvur" düğmesi vardı ve
+        doğrudan kurumun sitesine çıkıyordu: öğrenci şartları okumadan
+        dışarı gidiyordu. Başvuru düğmesi kaldırılmadı, YERİ DEĞİŞTİ —
+        detay sayfasında, şartların hemen altında duruyor
+        (OpportunityDetailPage).
+
+        Bu satır GERÇEK BİR BAĞLANTI DEĞİL: kartın tamamını zaten
+        gerilmiş bağlantı kaplıyor ve iç içe iki `<a>` üretilemez. İşi
+        nereye gidileceğini söylemek; tıklamayı üstteki örtü alıyor. Bu
+        yüzden `aria-hidden` — ekran okuyucu aynı hedefi iki kez
+        duymamalı.
       */}
-      {cta && (
-        <div className="relative z-10 mt-auto border-t border-gray-100 pt-2 sm:pt-3">
-          <DisBaglanti
-            href={cta.adres}
-            girisGerekli={girisGerekli}
-            onGirisGerekli={onRequireLogin}
-            kapiEtiketi="Başvurmak için giriş yap"
-            className={`${CTA_ORTAK} ${CTA_BIRINCIL} w-full ${ODAK_HALKASI}`}
-          >
-            {/* Kartta kısa etiket: uzun hâli düğmeyi iki satıra bölüyordu. */}
-            <span className="truncate">
-              {girisGerekli ? 'Giriş yap' : (cta.kisaEtiket ?? cta.etiket)}
-            </span>
-            <ExternalLink className="h-3 w-3 shrink-0" aria-hidden />
-          </DisBaglanti>
-        </div>
+      {!arsivde && (
+        <p
+          aria-hidden
+          className="mt-auto inline-flex items-center gap-1 pt-0.5 text-sm font-bold text-blue-700"
+        >
+          {opportunityReviewLabel(item.opportunityType)}
+          <ArrowRight className="h-3.5 w-3.5 shrink-0" />
+        </p>
       )}
     </article>
   );
@@ -1394,7 +1493,7 @@ const ListeIskeleti: React.FC = () => (
   <div
     role="status"
     aria-label="Fırsatlar yükleniyor"
-    className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3"
+    className="grid grid-cols-1 gap-0 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3"
   >
     {[1, 2, 3, 4, 5, 6].map((x) => (
       <div key={x} aria-hidden className="h-56 rounded-2xl bg-gray-100 animate-pulse" />

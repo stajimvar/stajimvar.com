@@ -23,6 +23,7 @@ import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { ILAN_KAYNAGI } from '../lib/urun-metni';
 import { CTA_BASARI, CTA_BIRINCIL, CTA_ORTAK } from '../lib/kart-cta';
 import { tarihMetni } from '../lib/tarih.mjs';
+import { YUZEY } from '../ui/tokens';
 
 /*
   ALT CTA GEOMETRİSİ — TEK AİLE
@@ -84,6 +85,20 @@ interface InternshipCardProps {
     RLS'e taşımak ürün kararı ve ayrı ele alınıyor.
   */
   kendiIlanim?: boolean;
+  /*
+    TELEFONDA KART DEĞİL, YÜZEY
+
+    Liste ekranında kartlar gri zemin üzerinde yüzen kutulardı: iki
+    yanında 16 pikselik şeritler, köşelerinde yuvarlatma, aralarında
+    12 piksel boşluk. Bu bayrak açıkken telefonda kabuk yerini tek bir
+    alt çizgiye bırakıyor ve kart ekranın iki kenarına yaslanıyor;
+    `sm:` ve üstünde kart olduğu gibi geri geliyor.
+
+    PROP'A BAĞLI, ÇÜNKÜ KART PAYLAŞILIYOR: aynı bileşen dev
+    düzeneğinde ve ileride başka bağlamlarda da çiziliyor. Yüzey
+    davranışı yalnız liste ekranının kararı.
+  */
+  yuzey?: boolean;
 }
 
 export const InternshipCard: React.FC<InternshipCardProps> = ({
@@ -97,6 +112,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
   girisGerekli = false,
   onGirisGerekli,
   kendiIlanim = false,
+  yuzey = false,
 }) => {
   /*
     UYUM PUANI LOGONUN ETRAFINDA HALKA OLARAK
@@ -161,10 +177,28 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
         Başlık artık tam genişlikte ve en fazla iki satır; düğmeler alta,
         sağa yaslı tek satıra indi. Aynı bilgi, yarı yükseklik.
       */
-      className="relative bg-white rounded-2xl border border-gray-200 hover:border-blue-500 hover:shadow-xs transition-all duration-150 p-3.5 sm:p-4.5 group flex flex-col gap-3 sm:gap-3.5 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2"
+      className={`group relative flex min-w-0 flex-col gap-3 bg-white transition-all duration-150 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 sm:gap-3.5 ${
+        yuzey
+          ? `${YUZEY.kabuk} ${YUZEY.ic} sm:hover:border-blue-500 sm:hover:shadow-xs`
+          : 'rounded-2xl border border-gray-200 p-3.5 hover:border-blue-500 hover:shadow-xs sm:p-4.5'
+      }`}
     >
-      {/* Left & Middle Info Area */}
-      <div className="flex items-start gap-3 sm:gap-3.5 flex-1 min-w-0 w-full">
+      {/*
+        KÜNYE IZGARASI — BAŞLIK TELEFONDA TAM GENİŞLİKTE
+
+        Burası `flex` idi: solda logo sütunu, sağda bütün metin. Bu,
+        başlığın 375 piksellik ekranda logo genişliği kadar (48 + 12 =
+        60 piksel) içeriden başlaması demekti — kartın sol kenarıyla
+        başlığın arasında, altındaki hiçbir şeyin doldurmadığı boş bir
+        sütun kalıyordu.
+
+        Izgara ikisini birden verebiliyor: telefonda başlık üç sütunu
+        birden kaplıyor (yani kartın tam iç genişliğini), `sm:` ve
+        üstünde eskisi gibi ikinci sütundan başlıyor. Logo da aynı
+        şekilde telefonda yalnız ilk satırda, geniş ekranda bütün
+        satırlar boyunca duruyor.
+      */}
+      <div className="grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 sm:items-start sm:gap-x-3.5">
         {/*
           Şirket logosu — uyum puanı hesaplanabiliyorsa halkanın içinde.
 
@@ -172,7 +206,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           (öğrenci giriş yapmamış ya da ilanda beceri şartı yok) boş bir
           halka çizmek, olmayan bir ölçümü varmış gibi gösterirdi.
         */}
-        <div className="shrink-0">
+        <div className="col-start-1 row-start-1 shrink-0 sm:row-span-4">
           {/*
             Logo HER ZAMAN yuvarlak, halka yalnızca puan varken.
 
@@ -200,11 +234,20 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             }
           >
             <div className="rounded-full bg-white p-[2px]">
+              {/*
+                TELEFONDA BİR KADEME KÜÇÜK
+
+                46 piksellik logo halkasıyla birlikte 56 piksellik bir
+                hücre yapıyor; yanındaki şirket adı 20 piksel. Kartın
+                ilk satırı, taşıdığı yazının iki buçuk katı yükseklikte
+                kalıyordu. Telefonda 36 piksele iniyor, `sm:` üstünde
+                eski ölçü — orada satırda sektör ve puan da var.
+              */}
               <ListingLogo
                 name={listing.companyName}
                 logoUrl={listing.companyLogo || undefined}
                 halkaIcinde
-                className="group-hover:scale-105 transition-transform"
+                className="!h-9 !w-9 !text-xs sm:!h-[46px] sm:!w-[46px] sm:!text-sm group-hover:scale-105 transition-transform"
               />
             </div>
           </div>
@@ -215,8 +258,15 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             bilgi veriyor ve yine tek bir yerde duruyor.
           */}
           {match.isScorable && (
+            /*
+              Telefonda bu satır GİZLİ: logonun altına inen yüzde, ilk
+              satırın yüksekliğini şirket adının iki katına çıkarıyor ve
+              adın yanında karşılığı olmayan bir boşluk bırakıyordu.
+              Sayı orada kaybolmuyor — şirket adının yanındaki künye
+              şeridine giriyor (aşağıda).
+            */
             <span
-              className="block text-center text-[10px] font-bold mt-1 tabular-nums"
+              className="mt-1 hidden text-center text-[10px] font-bold tabular-nums sm:block"
               style={{ color: halkaRengi }}
             >
               %{match.overallScore}
@@ -224,10 +274,8 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           )}
         </div>
 
-        {/* Text Details */}
-        <div className="space-y-1 sm:space-y-1.5 flex-1 min-w-0">
-          {/*
-            SATIR 1: KAYDET HEP SAĞ ÜST KÖŞEDE
+        {/*
+          SATIR 1: KAYDET HEP SAĞ ÜST KÖŞEDE
 
             Şirket adı, sektör, puan, kaydet düğmesi ve kaynak rozeti tek bir
             `flex-wrap` satırındaydı. Ad kısayken hepsi yan yana sığıyor, ad
@@ -243,8 +291,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             Kaynak rozeti bu satırdan çıkıp aşağıdaki künye şeridine indi;
             orası zaten konum ve ücret gibi aynı türden bilgilerin yeri.
           */}
-          <div className="flex items-start gap-2">
-            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-500">
+          <div className="col-start-2 row-start-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-500">
             {/*
               Şirket adı artık kendi tıklama işleyicisini taşımıyor: kartın
               tamamı zaten aynı ilana gidiyor (aşağıdaki uzatılmış bağlantı).
@@ -277,13 +324,13 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           </div>
 
             {/*
-              KAYDET: SARMAYAN İKİNCİ ÇOCUK
+              KAYDET: KENDİ IZGARA HÜCRESİ
 
               `ml-auto` ile sol taraftan itiliyordu ve sarma satırında bu
-              "son öğenin solu" demek, "kartın sağ üstü" değil. Artık dış
-              flex'in ikinci çocuğu: solundaki grup ne kadar sararsa sarsın
-              düğme aynı yerde kalıyor. `-mr-1` görsel hizayı kartın kenarına
-              çekiyor, dokunma hedefini küçültmeden.
+              "son öğenin solu" demek, "kartın sağ üstü" değil. Şimdi
+              ızgaranın üçüncü sütununda: solundaki künye ne kadar sararsa
+              sarsın düğme aynı yerde kalıyor. `-mr-1` görsel hizayı kartın
+              kenarına çekiyor, dokunma hedefini küçültmeden.
             */}
             {onToggleKayit && (
               <button
@@ -308,17 +355,16 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                       : 'Daha sonra bakmak için kaydet'
                 }
                 /* `relative z-10`: uzatılmış kart bağlantısının örtüsünün üstünde. */
-              className={`relative z-10 -mr-1 shrink-0 rounded-lg p-1.5 transition-colors cursor-pointer ${
+              className={`relative z-10 col-start-3 row-start-1 -mr-1 shrink-0 cursor-pointer rounded-lg p-1.5 transition-colors ${
                   kayitli ? 'text-blue-600 bg-blue-50' : 'text-gray-300 hover:text-blue-600 hover:bg-blue-50'
                 }`}
               >
                 <Bookmark className={`w-4 h-4 ${kayitli ? 'fill-blue-600' : ''}`} />
               </button>
             )}
-          </div>
 
-          {/* Row 2: Job Title (Bold & Clear) */}
-          <div>
+          {/* Satır 2: ilan başlığı — telefonda kartın tam iç genişliği */}
+          <div className="col-span-3 col-start-1 row-start-2 min-w-0 sm:col-span-2 sm:col-start-2">
             {/*
               İki satır sınırı: başlık artık tam genişlikte olduğu için iki
               satır neredeyse her ilanı alıyor. Sınır olmadan tek bir uzun
@@ -362,26 +408,62 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             )}
           </div>
 
-          {/* Row 3: Badges & Tags */}
-          <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
-            {/* Work Type & City */}
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50/80 text-blue-700 font-medium border border-blue-100">
-              <MapPin className="w-3.5 h-3.5 text-blue-600"/>
-              {/*
-                Ham konum metni "Turkey - Istanbul" gibi gelebiliyor.
-                konumEtiketi ülke önekini atıyor ve ilçeyi iliyle birlikte
-                yazıyor: "Şişli, İstanbul".
-              */}
-              <span>{konumEtiketi(listing.city)} ({calismaEtiketi(listing.workType)})</span>
-            </span>
+          {/*
+            SATIR 3: KONUM SADE METİN
 
+            Konum ve çalışma modeli mavi bir çipti ve kartın en dikkat
+            çeken ikinci öğesiydi — oysa "İstanbul · Hibrit" bir kazanım
+            değil, künye. Rozet ücret, sigorta ve zorunlu staj gibi
+            gerçekten ayırt edici özelliklere kaldı; bunlar sade metne
+            indi ve şerit okunur hâle geldi.
+          */}
+          <p className="col-span-3 col-start-1 row-start-3 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-gray-600 sm:col-span-2 sm:col-start-2">
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+            {/*
+              Ham konum metni "Turkey - Istanbul" gibi gelebiliyor.
+              konumEtiketi ülke önekini atıyor ve ilçeyi iliyle birlikte
+              yazıyor: "Şişli, İstanbul".
+            */}
+            <span className="min-w-0">
+              {konumEtiketi(listing.city)} · {calismaEtiketi(listing.workType)}
+            </span>
             {/*
               Ülke yalnız yurt dışı ilanlarda yazılıyor; kararı tek kural
-              dosyası (lib/ulke-rozeti.mjs) veriyor. Konumun hemen yanında,
-              aynı sarmalı şeritte duruyor: "Paris" tek başına yurt içi bir
-              ilan gibi okunuyordu.
+              dosyası (lib/ulke-rozeti.mjs) veriyor. Konumun hemen yanında
+              duruyor: "Paris" tek başına yurt içi bir ilan gibi okunuyordu.
             */}
             <UlkeRozeti countryCode={listing.countryCode} />
+            {/*
+              Süre de künye: takvim ikonlu gri bir çipti, aynı şeridin
+              düz metnine indi.
+            */}
+            {listing.duration?.trim() && (
+              <>
+                <span className="text-gray-300">·</span>
+                <span className="inline-flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+                  {listing.duration}
+                </span>
+              </>
+            )}
+          </p>
+
+          {/* Satır 4: rozetler — yalnız ayırt edici özellikler */}
+          <div className="col-span-3 col-start-1 row-start-4 flex min-w-0 flex-wrap items-center gap-1.5 text-xs sm:col-span-2 sm:col-start-2">
+            {/*
+              Uyum puanı telefonda buraya düşüyor: logonun altındaki
+              yüzde `sm:` altında gizli, çünkü orada ilk satırı iki katına
+              çıkarıyordu. Halka hep duruyor, sayı burada.
+            */}
+            {match.isScorable && (
+              <span
+                className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-bold tabular-nums sm:hidden"
+                style={{ color: halkaRengi, borderColor: halkaRengi }}
+                title={`%${match.overallScore} uyum — ${match.summaryInsight}`}
+              >
+                %{match.overallScore} uyum
+              </span>
+            )}
 
             {/* Mandatory SGK Badge */}
             {listing.mandatoryStajAccepted && (
@@ -396,18 +478,6 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 font-semibold border border-amber-200">
                 <DollarSign className="w-3.5 h-3.5 text-amber-600"/>
                 <span>{listing.stipend.amountText?.split('+')[0] || 'Ücretli'}</span>
-              </span>
-            )}
-
-            {/*
-              Süre bilgisi toplanan ilanların çoğunda yok. Koşulsuz çizilince
-              içi boş, yalnızca takvim ikonu olan bir rozet kalıyordu — kartın
-              bozuk görünmesinin başlıca sebebi buydu.
-            */}
-            {listing.duration?.trim() && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-100 text-gray-600 font-medium">
-                <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                <span>{listing.duration}</span>
               </span>
             )}
 
@@ -532,7 +602,6 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               </span>
             ))}
           </div>
-        </div>
       </div>
 
       {/* Right Actions & Match Score Area */}

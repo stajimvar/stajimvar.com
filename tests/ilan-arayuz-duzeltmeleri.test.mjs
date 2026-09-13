@@ -174,12 +174,24 @@ test('MOBİL SABİT ÇUBUK alt gezinmeyi kapatmıyor', () => {
     sayfa ileride kabuğun içine alınırsa gezinmenin altında durur.
   */
   assert.match(altNav, /z-50/);
-  assert.match(header, /lg:hidden fixed bottom-\[max\(0\.75rem,env\(safe-area-inset-bottom\)\)\][^']*z-50/);
+  /*
+    Çubuk yüzen bir haptı (`bottom-[max(0.75rem,…)] left-3 right-3`);
+    ekranın iki kenarına yaslı tam genişlikte bir bara indi. Sınanan şey
+    aynı kaldı: `lg:hidden` ve z-50 — yani telefonda var, masaüstünde
+    yok ve ilan detayının kendi çubuğunun (z-40) üstünde.
+  */
+  assert.match(header, /lg:hidden fixed bottom-0 left-0 right-0 z-50/);
   assert.match(detay, /lg:hidden fixed[^"]*z-40/, 'çubuk gezinmenin altında bir katmanda');
 });
 
 test('çubuk güvenli alanı hesaba katıyor — çentikli telefonda düğme kesilmiyor', () => {
   assert.match(detay, /pb-\[max\(0\.75rem,env\(safe-area-inset-bottom\)\)\]/);
+  /*
+    Alt gezinme çubuğu da kendi güvenli alanını taşıyor. Yüzerken
+    `bottom` değeri bu işi görüyordu; ekranın dibine yaslanınca son
+    sekmenin yazısı iPhone'un ana ekran çubuğunun altında kalıyor.
+  */
+  assert.match(header, /pb-\[max\(0\.25rem,env\(safe-area-inset-bottom\)\)\]/);
 });
 
 test('sayfa altında çubuk kadar boşluk var — son satır çubuğun altında kalmıyor', () => {

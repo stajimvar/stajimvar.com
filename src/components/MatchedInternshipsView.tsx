@@ -39,6 +39,7 @@ import { ILAN_KAYNAGI_PARCALI } from '../lib/urun-metni';
 import { ListingCountrySelector } from './ListingCountrySelector';
 import { gosterilecekIlanSayisi } from '../lib/ilan-sayisi.mjs';
 import { guvenSatiri } from '../lib/guven-satiri.mjs';
+import { YUZEY } from '../ui/tokens';
 
 /**
  * İlanın listeye eklenme zamanı (ms).
@@ -958,7 +959,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         olarak gösteriyordu. `sm:` üstünde boşluk duruyor — orada iki
         sütun yan yana ve aralarında nefes payı gerekiyor.
       */}
-      <div className="grid grid-cols-1 gap-0 sm:gap-6 lg:grid-cols-12 items-start">
+      <div className={`grid grid-cols-1 items-start gap-0 sm:gap-6 lg:grid-cols-12 ${YUZEY.kolon}`}>
 
         {/*
           SOL SÜTUN TELEFONDA YER KAPLAMIYOR.
@@ -1440,7 +1441,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         */}
         </div>
 
-        <div className="lg:col-span-6 space-y-4 min-w-0">
+        <div className="min-w-0 space-y-4 lg:col-span-6">
           <div className="flex items-center justify-between px-1">
             {/*
               Profili olmayan ziyaretçiye "sana uygun" ve "eşleşme puanına göre
@@ -1516,8 +1517,21 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               onSablonAc={() => setSablonAcik(true)}
             />
           ) : (
-            <div className="flex flex-col gap-3">
-              {filteredListings.map(({ listing, match, hasApplied }, index) => (
+            <div className="flex flex-col gap-4">
+              {/*
+                KARTLAR TELEFONDA EKRANIN İKİ KENARINA YASLI
+
+                Sayfanın `main` alanı `px-4` taşıyor — formlar ve hesap
+                eylemleri ekranın kenarına yapışmamalı. Liste o boşluğu
+                `-mx-4` ile geri alıyor ve kartlar yüzey oluyor; aralarında
+                boşluk değil 1 pikselik çizgi var (kartın kendi alt
+                kenarlığı, bkz. YUZEY.kabuk).
+
+                Aşağıdaki "daha fazla" düğmesi ve yönlendirme bloğu bu
+                kabın DIŞINDA: onlar kutu, kenara yaslanmamalı.
+              */}
+              <div className={`flex flex-col ${YUZEY.kap}`}>
+                {filteredListings.map(({ listing, match, hasApplied }, index) => (
                 <React.Fragment key={listing.id}>
                   {/* Internship Card */}
                   <InternshipCard
@@ -1533,6 +1547,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                     girisGerekli={!student?.id}
                     onGirisGerekli={onRequireLogin}
                     kendiIlanim={Boolean(kendiSirketId && listing.companyId === kendiSirketId)}
+                    yuzey
                   />
 
                   {/*
@@ -1546,7 +1561,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                     (src/lib/reklam-kapisi.mjs).
                   */}
                 </React.Fragment>
-              ))}
+                ))}
+              </div>
               {hasMoreCountriesPage && <button type="button" onClick={onLoadMoreCountriesPage} className="min-h-11 w-full rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm font-bold text-blue-700">Daha fazla ilan göster</button>}
 
               {/*

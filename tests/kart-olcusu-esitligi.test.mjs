@@ -30,19 +30,38 @@ const oku = (p) => readFileSync(path.join(KOK, p), 'utf8');
 
 const rehber = oku('src/components/RehberKartlari.tsx');
 
-test('REHBER IZGARASI ORTAK ÖLÇÜDE', () => {
-  const izgara = /grid-cols-2 gap-2\.5 sm:gap-4 lg:grid-cols-3/;
-  assert.match(rehber, izgara, 'RehberIzgarasi değişmiş');
+test('REHBER IZGARASI: telefonda 1 piksel ayırıcı, sm üstünde eski ölçü', () => {
+  /*
+    Sütun arası 10 piksellik BOŞLUKTU ve ızgara sayfanın 16 piksellik
+    yan boşluğunun içindeydi; 375 piksellik ekranda hücreye 172 piksel
+    kalıyordu. Izgara telefonda ekranın iki kenarına yaslandı ve
+    hücreleri ayıran şey 1 piksele indi.
+
+    O 1 piksel bir kenarlık DEĞİL: ızgaranın zemini gri, araları
+    `gap-px`, hücreler beyaz — çizgi zeminin göründüğü yer. Kenarlıkla
+    yapılsaydı komşu hücrelerin kenarlıkları üst üste binip 2 piksel
+    olur, son sütunun sağında da tek başına bir çizgi kalırdı.
+
+    `sm:` ve üstünde ölçü DEĞİŞMEDİ: 16 piksel boşluk, üç sütun.
+  */
+  assert.match(rehber, /grid-cols-2 gap-px bg-gray-200 sm:gap-4 sm:bg-transparent lg:grid-cols-3/);
+  assert.match(rehber, /\$\{YUZEY\.kap\}/, 'ızgara kenara yaslanmıyor');
 });
 
-test('KAPAK SABİT YÜKSEKLİKTE, ORANLI DEĞİL', () => {
+test('KAPAK TELEFONDA ORANLI, sm ÜSTÜNDE SABİT YÜKSEKLİKTE', () => {
   /*
-    Oranlı kapak sütun genişledikçe büyüyordu; üç sütuna çıkılamamasının
-    sebebi buydu ("üç poster 200 pikselin altına düşer" notu poster kapak
-    içindi).
+    Telefonda 96 piksel sabitti ve hücre 187 piksel genişliğindeydi:
+    kapak 2:1 bir şeride dönüşüyor, fotoğrafın konusu kırpılıp
+    gidiyordu. Oran (4:3) kapağı hücre genişliğine bağlıyor ve kapak
+    hücrenin tam genişliğini kaplıyor.
+
+    `sm:` üstünde SABİT YÜKSEKLİK KALIYOR — oranlı kapak orada sütun
+    genişledikçe büyüyor ve üç sütuna çıkılamamasının sebebi buydu.
   */
-  assert.match(rehber, /h-24 w-full shrink-0 overflow-hidden/);
-  assert.match(rehber, /sm:h-36/);
+  assert.match(rehber, /aspect-\[4\/3\] w-full shrink-0 overflow-hidden/);
+  assert.match(rehber, /sm:aspect-auto sm:h-36/);
+  /* İskelet de aynı ölçüde: içerik gelince ızgara zıplamamalı. */
+  assert.match(rehber, /aspect-\[4\/3\] w-full animate-pulse bg-gray-100 sm:aspect-auto sm:h-36/);
 });
 
 test('TİPOGRAFİ VE İÇ BOŞLUK AYNI', () => {
@@ -50,32 +69,83 @@ test('TİPOGRAFİ VE İÇ BOŞLUK AYNI', () => {
   assert.match(rehber, /gap-1\.5 p-2\.5 sm:gap-2 sm:p-3\.5/);
 });
 
+test('KARTIN ALTINDA İKİNCİ BİR "AYNI YERE GİT" SATIRI YOK', () => {
+  /*
+    Kartın tamamı zaten rehbere giden bir bağlantı; altındaki "Rehberi
+    aç →" ikinci bir aynı-hedef satırıydı ve kendi ayıracıyla birlikte
+    kartın altına 32 piksel ekliyordu. Telefonda iki sütunlu ızgarada bu,
+    ekrana sığan kart sayısını düşüren en büyük tek kalemdi.
+  */
+  assert.doesNotMatch(rehber, />\s*Rehberi aç/, '"Rehberi aç" satırı geri gelmiş');
+  assert.doesNotMatch(rehber, /border-t border-gray-100 pt-2\.5/, 'ayıraç ve alt boşluk geri gelmiş');
+  /* Okuma süresi ve kaydet kaldı: ikisi aynı satırda, karşı karşıya. */
+  assert.match(rehber, /rehberOkumaDakika\(rehber\)\} dk/);
+  assert.match(rehber, /mt-auto flex items-center justify-between gap-2 pt-1/);
+});
+
 /* ------------------------------------------------- fırsat kartı */
 
 const firsat = oku('src/components/OpportunitiesPage.tsx');
 const tup = oku('src/components/ZamanTupu.tsx');
 
-test('FIRSAT KARTI DA AYNI IZGARADA', () => {
+test('FIRSAT IZGARASI: TELEFONDA TEK SÜTUN, sm ÜSTÜNDE REHBERLE AYNI', () => {
   /*
-    Kartlar tek sütunda alt alta diziliyordu. Ölçüldü (390px): kart
-    358x246 ve ekrana iki kart giriyordu; rehber aynı ekranda dört kart
-    gösteriyordu.
+    Telefonda iki sütundu ve 375 piksellik ekranda karta 174 piksel
+    kalıyordu. Kartın yarısı oraya sığmadığı için `hidden sm:block` ile
+    gizleniyordu — kime uygun olduğu, tutarın dönemi, şart notu. Yani
+    telefon kullanıcısı EN AZ bilgiyi gören kullanıcıydı.
 
-    Sonra: 390px'te 2 x 174px (kart 174x233, dört kart görünüyor),
-    1440px'te 3 x 209.5px (kart 210x270, altı kart görünüyor).
+    Tek sütunda aynı kart bütün alanlarını gösteriyor. Rehber iki sütunda
+    kalıyor: orada hücrenin taşıdığı şey bir KAPAK ve iki satır başlık,
+    metin alanı yok — ikisi bilerek ayrıldı.
+
+    `sm:` ve üstünde ikisi yine aynı ızgarada: 16 piksel boşluk, `lg:`
+    üstünde üç sütun.
   */
-  assert.match(firsat, /grid grid-cols-2 gap-2\.5 sm:gap-4 lg:grid-cols-3/);
+  assert.match(firsat, /grid grid-cols-1 gap-0 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3/);
+  assert.match(firsat, /\$\{YUZEY\.kap\} sm:mx-0/, 'liste kenara yaslanmıyor');
+  /* İskelet listenin oturacağı yere oturuyor: gelince sayfa zıplamamalı. */
+  const iskelet = firsat.slice(firsat.indexOf('const ListeIskeleti'));
+  assert.match(iskelet, /grid grid-cols-1 gap-0 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3/);
 });
 
-test('FIRSAT KARTI TİPOGRAFİSİ DE AYNI', () => {
-  const kart = firsat.slice(firsat.indexOf('<article className="group relative flex min-w-0 flex-col'));
-  assert.match(kart.slice(0, 400), /gap-1\.5 rounded-2xl[^"]*p-2\.5[^"]*sm:gap-2 sm:p-3\.5/);
-  assert.match(kart, /text-\[13px\] font-bold leading-snug text-gray-900 sm:text-base/);
+test('FIRSAT KARTI TELEFONDA KABUKSUZ, BAŞLIK TAM GENİŞLİKTE', () => {
+  const kart = firsat.slice(firsat.indexOf('<article'));
+  /* Kabuk ortak belirteçten: liste ekranlarındaki kartlarla aynı. */
+  assert.match(kart.slice(0, 400), /\$\{YUZEY\.kabuk\} \$\{YUZEY\.ic\}/);
+  /*
+    Logo ve künye sol sütunda, başlık sağ sütundaydı: başlık kartın sol
+    kenarından 44 piksel içeriden başlıyor ve altındaki hiçbir şey o
+    boşluğu doldurmuyordu. İlk satır artık yalnız künye.
+  */
+  assert.match(kart, /<h2 className="line-clamp-2 min-w-0 text-\[15px\] font-bold leading-snug text-gray-900 sm:text-base">/);
+  /* Kime ve nerede satırı telefonda da görünüyor. */
+  assert.doesNotMatch(kart, /hidden text-xs text-gray-500 sm:block/);
 });
 
-test('LOGO DAR KARTA GÖRE KÜÇÜLDÜ', () => {
-  /* 56 piksellik logo 174 piksellik kartın üçte birini yiyordu. */
-  assert.match(firsat, /!h-9 !w-9[^"]*sm:!h-11 sm:!w-11/);
+test('TUTAR VE SON BAŞVURU İKİ HİZALI ALANDA, İLERLEME ÇUBUĞU YOK', () => {
+  /*
+    Tutar yeşil bir kutunun içindeydi, son başvuru ise dolmakta olan bir
+    ZAMAN TÜPÜYDÜ: aynı soruyu ("değeri ne, ne zamana kadar") iki ayrı
+    görsel dilde yanıtlıyorlardı ve tüp kalan günü çubuğun doluluğuyla
+    anlatıyordu — okunmak için yorumlanması gerekiyordu.
+
+    İkisi artık aynı ölçüde iki alan. Kalan gün kaybolmadı: gerçekten
+    yaklaşan tarihte "Son 3 gün" rozeti yukarıda yanıyor ve o rozet
+    doğrudan son başvuru tarihinden hesaplanıyor (firsatRozetleri).
+  */
+  assert.doesNotMatch(firsat, /ZamanTupu/, 'ilerleme çubuğu karta geri gelmiş');
+  assert.match(firsat, /<dl className="grid grid-cols-2 items-start gap-x-3 gap-y-1 border-t border-gray-100 pt-2">/);
+  assert.match(firsat, /<dt className="text-\[11px\] text-gray-500">Tutar<\/dt>/);
+  assert.match(firsat, /\{arsivde \? 'Kapanış' : 'Son başvuru'\}/);
+  /* Bilinmeyen değerde boş çizgi değil, ne olduğu yazıyor. */
+  assert.match(firsat, /Tutar açıklanmadı/);
+  assert.match(firsat, /Takvim açıklanmadı/);
+});
+
+test('LOGO İLAN KARTIYLA AYNI AİLEDE', () => {
+  /* 56 piksellik logo dar kartın üçte birini yiyordu; ölçü bir kademe küçük. */
+  assert.match(firsat, /!h-9 !w-9[^"]*sm:!h-10 sm:!w-10/);
 });
 
 test('ZAMAN TÜPÜ KIRPMIYOR, SARIYOR', () => {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { SERIT } from '../ui/tokens';
 import {
   BookOpen,
   Briefcase,
@@ -132,7 +133,7 @@ export const KonuSeridi: React.FC<{
   if (konular.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white py-3">
+    <div className={SERIT.kabuk}>
       {/*
         `relative` GÖRÜNÜM İÇİN DEĞİL, YATAY TAŞMAYI DURDURMAK İÇİN.
         Her dairede `position: absolute` olan bir `sr-only` düğümü var;
@@ -141,7 +142,7 @@ export const KonuSeridi: React.FC<{
         700 pikselin üstüne çıkıyor. Aynı hata Keşfet'te ölçülmüştü;
         SehirSeridi.tsx içindeki uzun not sebebi anlatıyor.
       */}
-      <div className="relative overflow-x-auto px-3">
+      <div className={SERIT.ic}>
         <div className="flex min-w-max gap-3">
           {/* İlk daire "Tümü": konu seçiliyken çıkış yolu. */}
           <Daire
