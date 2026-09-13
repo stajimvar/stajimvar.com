@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bookmark, Heart, Send } from 'lucide-react';
+import { BadgeCheck, Bookmark, Heart, Send } from 'lucide-react';
 import { YUZEY } from '../../ui/tokens';
 import { ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import {
@@ -56,6 +56,14 @@ interface Props {
    */
   yedekAvatarAdresi?: string | null;
   onProfilAc: (kullaniciAdi: string) => void;
+  /**
+   * Resmî içerikleri sessize alma.
+   *
+   * Yalnız resmî kartta anlamlı; verilmezse düğme hiç çizilmiyor.
+   * Kaynağı kaldırmak diye bir şey yok — bu, kullanıcının elindeki tek
+   * düğme ve geri alınabilir olması bilinçli.
+   */
+  onSessizeAl?: () => void | Promise<void>;
   /** Beğeni/kayıt değişince üst bileşen kendi haritasını güncelliyor. */
   onBegeniDegisti: (postId: string, yeni: BegeniDurumu) => void;
   onKayitDegisti: (postId: string, kayitli: boolean) => void;
@@ -69,6 +77,7 @@ export const AkisKarti: React.FC<Props> = ({
   kayitliMi,
   yedekAvatarAdresi = null,
   onProfilAc,
+  onSessizeAl,
   onBegeniDegisti,
   onKayitDegisti,
 }) => {
@@ -154,8 +163,49 @@ export const AkisKarti: React.FC<Props> = ({
           >
             {ad}
           </button>
-          {altSatir && <span className="block truncate text-xs text-gray-600">{altSatir}</span>}
+          {/*
+            RESMÎ İÇERİK ETİKETİ ALT SATIRIN YERİNE GEÇİYOR
+
+            Alt satır normalde "bölüm · alan" yazıyor. Resmî hesapta o
+            iki alan ya boş ya anlamsız (kurumun bölümü yok); etiketi
+            oraya koymak hem yeri boşa harcamıyor hem de kullanıcının
+            adın hemen altında aradığı "bu kim" sorusunu cevaplıyor.
+
+            ETİKET PAYLAŞIMDAN OKUNUYOR, YAZARDAN DEĞİL: "bu paylaşım
+            resmî kitleyle yayımlandı" demek. Yazarın bayrağına
+            bakılsaydı, resmî hesabın ileride sıradan bir paylaşımı da
+            resmî içerik gibi etiketlenirdi.
+          */}
+          {paylasim.resmiMi ? (
+            <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-blue-50 px-1.5 py-0.5 text-[11px] font-bold text-blue-700">
+              <BadgeCheck aria-hidden className="h-3 w-3" />
+              StajımVar'dan · Resmî içerik
+            </span>
+          ) : (
+            altSatir && <span className="block truncate text-xs text-gray-600">{altSatir}</span>
+          )}
         </div>
+
+        {/*
+          SESSİZE ALMA YALNIZ RESMÎ KARTTA
+
+          Kullanıcı bu kaynağı KALDIRAMIYOR (kaldırılacak bir bağlantı
+          yok, bkz. 20260928010000) — elindeki tek düğme bu. Düğmeyi
+          yalnız resmî kartta çizmek, kullanıcı içeriğinde olmayan bir
+          eylemi vaat etmemek demek.
+
+          `onSessizeAl` verilmezse hiç çizilmiyor: eylemi olmayan bir
+          düğme, basınca hiçbir şey yapmayan bir düğmedir.
+        */}
+        {paylasim.resmiMi && onSessizeAl && (
+          <button
+            type="button"
+            onClick={() => void onSessizeAl()}
+            className={`shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-100 cursor-pointer ${ODAK_HALKASI}`}
+          >
+            Sessize al
+          </button>
+        )}
       </header>
 
       {/* ------------------------------------------------------- görseller */}

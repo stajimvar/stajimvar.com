@@ -3,18 +3,22 @@ import { Bell, ImagePlus, Search, Users, X } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import {
   akisiGetir,
+  alanindakiKisiler,
   baglantilarimiGetir,
   begeniDurumuGetir,
   kaydetmeDurumuGetir,
   kendiSosyalProfiliGetir,
+  resmiSessizMi,
+  resmiSessizYaz,
   type AkisPaylasimi,
   type BegeniDurumu,
+  type SosyalAramaSonucu,
   type SosyalProfil,
 } from '../../lib/queries/sosyal';
 import { AkisKarti } from './AkisKarti';
 import { PaylasimOlustur } from './PaylasimOlustur';
 import { ProfilFotografi } from './ProfilFotografi';
-import { KullaniciAramaSonuclari } from './KullaniciArama';
+import { KisiListesi, KullaniciAramaSonuclari } from './KullaniciArama';
 
 /**
  * /agim — bağlantılarının ve alanının akışı.
@@ -130,6 +134,25 @@ export const AgimSayfasi: React.FC<Props> = ({
     geliyor, burada tahmin edilmiyor.
   */
   const [besteciMesgul, setBesteciMesgul] = React.useState(false);
+  /*
+    RESMÎ İÇERİK SESSİZDE Mİ
+
+    Sunucu sessizliği bir YETKİ kuralı saymıyor (bkz.
+    20260928010000): süzgeç akış sorgusunda. Ekranın da bilmesi
+    gerekiyor, çünkü sessize alan kullanıcıya geri dönüş yolunu
+    göstermek zorundayız — susturduğu şeyi nasıl geri açacağını
+    bilmeyen kullanıcı, sessizliği kalıcı bir kayıp sanır.
+  */
+  const [resmiSessiz, setResmiSessiz] = React.useState(false);
+  /*
+    ALANINDAKİ KİŞİLER — YALNIZ KULLANICI İÇERİĞİ YOKKEN
+
+    Akışta yalnız resmî içerik varsa kullanıcı için yapacak bir şey
+    kalmıyor: resmî içerik okunur ama ağ kurulmaz. Keşif tam o boşluğa
+    giriyor. Kullanıcı içeriği geldiği anda blok kayboluyor — dolu bir
+    akışın ortasında öneri listesi, akışın kendisiyle yarışırdı.
+  */
+  const [kesif, setKesif] = React.useState<SosyalAramaSonucu[]>([]);
 
   React.useEffect(() => {
     if (!oturumHazir || !kullaniciId) return;
@@ -139,7 +162,7 @@ export const AgimSayfasi: React.FC<Props> = ({
     (async () => {
       try {
         const [paylasimlar, profil, baglantilar] = await Promise.all([
-          akisiGetir(),
+          akisiGetir({ kullaniciId }),
           kendiSosyalProfiliGetir(kullaniciId),
           baglantilarimiGetir(kullaniciId).catch(() => ({ kabul: [], gelen: [], giden: [] })),
         ]);
@@ -148,6 +171,7 @@ export const AgimSayfasi: React.FC<Props> = ({
         setAkis(paylasimlar);
         setBenim(profil);
         setBekleyenIstek(baglantilar.gelen.length);
+        setResmiSessiz(await resmiSessizMi(kullaniciId).catch(() => false));
 
         /*
           Beğeni ve kayıt durumu TOPLU okunuyor. Her kart kendi isteğini
@@ -402,6 +426,57 @@ export const AgimSayfasi: React.FC<Props> = ({
 
   const profilAc = (kullaniciAdi: string) => onNavigate(`/profil/${kullaniciAdi}`);
 
+  /*
+    "KULLANICI İÇERİĞİ" = RESMÎ OLMAYAN PAYLAŞIM
+
+    Sayıya değil TÜRE bakılıyor: akışta yirmi resmî paylaşım olsa da
+    kullanıcı hâlâ kimseyi tanımıyor demektir.
+  */
+  const kullaniciIcerigiVar = akis.some((p) => !p.resmiMi);
+
+  React.useEffect(() => {
+    const sektor = benim?.sektorId ?? null;
+    /* Akış hazır olmadan karar verilmiyor: yüklenirken blok yanıp sönerdi. */
+    if (durum !== 'hazir' || kullaniciIcerigiVar || !kullaniciId || !sektor) {
+      setKesif([]);
+      return;
+    }
+    let iptal = false;
+    void alanindakiKisiler(kullaniciId, sektor)
+      .then((liste) => {
+        if (!iptal) setKesif(liste);
+      })
+      .catch(() => {
+        /* Keşif bir yan bölüm; alınamazsa blok hiç çizilmiyor. */
+        if (!iptal) setKesif([]);
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [durum, kullaniciIcerigiVar, kullaniciId, benim?.sektorId]);
+
+  /*
+    SESSİZLİK ANINDA EKRANA YANSIYOR
+
+    Sunucu yazması beklenip sonra akış yeniden okunsaydı, kullanıcı
+    "Sessize al"a bastıktan sonra resmî kartlara bakmaya devam ederdi.
+    Yazma başarısız olursa liste ESKİ hâline dönüyor — yalan söylemeden
+    hızlı olmanın yolu bu.
+  */
+  const sessizligiDegistir = async (sessiz: boolean) => {
+    if (!kullaniciId) return;
+    const oncekiAkis = akis;
+    setResmiSessiz(sessiz);
+    if (sessiz) setAkis((o) => o.filter((p) => !p.resmiMi));
+    try {
+      await resmiSessizYaz(kullaniciId, sessiz);
+      if (!sessiz) setAkis(await akisiGetir({ kullaniciId }));
+    } catch {
+      setResmiSessiz(!sessiz);
+      setAkis(oncekiAkis);
+    }
+  };
+
   const bosDurum = (
     /*
       ÜÇ AYRI BOŞ KUTU YOK.
@@ -446,6 +521,49 @@ export const AgimSayfasi: React.FC<Props> = ({
     </div>
   );
 
+  /*
+    SESSİZE ALINAN ŞEY GERİ AÇILABİLİR OLMALI
+
+    Sessizlik ayarlar ekranının dibinde saklansaydı, kullanıcı
+    susturduğu kaynağı bir daha bulamazdı. Satır yalnız sessizken
+    çiziliyor ve akışın en üstünde: kaybolan içeriğin yerinde duruyor.
+  */
+  const sessizlikSatiri = resmiSessiz ? (
+    <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+      <p className="text-xs text-gray-700">StajımVar'ın resmî içerikleri sessizde.</p>
+      <button
+        type="button"
+        onClick={() => void sessizligiDegistir(false)}
+        className={`shrink-0 cursor-pointer rounded-lg px-2 py-1 text-xs font-bold text-blue-700 hover:bg-blue-50 ${RENK_GECISI} ${ODAK_HALKASI}`}
+      >
+        Sesi aç
+      </button>
+    </div>
+  ) : null;
+
+  /*
+    KEŞİF — RESMÎ İÇERİĞİN YANINDA, YERİNE DEĞİL
+
+    Akışta kullanıcı içeriği yokken çiziliyor; resmî paylaşımlar
+    kalkmıyor, blok onların altına giriyor. Kullanıcı içeriği geldiği
+    anda kayboluyor (bkz. `kullaniciIcerigiVar`).
+
+    Kimlerin listeye girdiği sunucuda sınırlı: aynı alan, yayında ve
+    adı doldurulmuş profiller — yarım bırakılmış deneme kayıtları
+    dışarıda (bkz. `alanindakiKisiler`).
+  */
+  const kesifBlogu = kesif.length > 0 ? (
+    <section className="space-y-3 border-t border-gray-200 px-4 py-5">
+      <div className="space-y-1">
+        <h2 className="text-base font-extrabold text-gray-900">Alanındaki kişiler</h2>
+        <p className="text-sm leading-relaxed text-gray-600">
+          Bağlantı kurduğunda paylaşımları akışına düşüyor.
+        </p>
+      </div>
+      <KisiListesi kisiler={kesif} onNavigate={onNavigate} />
+    </section>
+  ) : null;
+
   const akisGovdesi =
     durum === 'yukleniyor' ? (
       <div aria-busy="true" className="space-y-6 py-3">
@@ -467,7 +585,16 @@ export const AgimSayfasi: React.FC<Props> = ({
         </p>
       </div>
     ) : akis.length === 0 ? (
-      bosDurum
+      <>
+        {/*
+          Sessizlik satırı BOŞ AKIŞTA DA çiziliyor: sessize almış
+          kullanıcının akışı bomboş kalabiliyor ve o ekranda "sesi aç"
+          yoksa susturduğu şeyi geri getirmesinin hiçbir yolu olmaz.
+        */}
+        {sessizlikSatiri}
+        {bosDurum}
+        {kesifBlogu}
+      </>
     ) : (
       /*
         AYIRICI ARTIK KARTIN KENDİSİNDE
@@ -478,6 +605,8 @@ export const AgimSayfasi: React.FC<Props> = ({
         başına farklı bir kurala göre çizilmemeli.
       */
       <div className="sm:space-y-4">
+        {/* Sessizlik satırı akışın en üstünde: kaybolan içeriğin yerinde. */}
+        {sessizlikSatiri}
         {akis.map((p) => (
           <AkisKarti
             key={p.id}
@@ -487,10 +616,12 @@ export const AgimSayfasi: React.FC<Props> = ({
             /* Yedek yalnız KENDİ paylaşımında: başkasının eski kolonu okunmuyor. */
             yedekAvatarAdresi={p.yazarId === kullaniciId ? ogrenciAvatarAdresi : null}
             onProfilAc={profilAc}
+            onSessizeAl={p.resmiMi ? () => sessizligiDegistir(true) : undefined}
             onBegeniDegisti={begeniYaz}
             onKayitDegisti={kayitYaz}
           />
         ))}
+        {kesifBlogu}
       </div>
     );
 

@@ -99,54 +99,21 @@ interface SonucProps {
  * Sorguyu sonuca çeviren ve dört durumu yazan parça. Kutu burada YOK:
  * kutunun yeri ve biçimi yerleşime göre değişiyor, mantık değişmiyor.
  */
-export const KullaniciAramaSonuclari: React.FC<SonucProps> = ({
-  sorgu,
-  onNavigate,
-  onSecildi,
-  gomuluBaslik,
-}) => {
-  const [sonuclar, setSonuclar] = React.useState<SosyalAramaSonucu[]>([]);
-  const [durum, setDurum] = React.useState<Durum>('kisa');
-
-  /* Ölçü sunucudakiyle aynı: harfe indirilmiş uzunluk, ham metin değil. */
-  const harfSayisi = kullaniciAdiHarfeIndir(sorgu).length;
-  const yeterliMi = harfSayisi >= ARAMA_EN_AZ_HARF;
-
-  React.useEffect(() => {
-    if (!yeterliMi) {
-      /*
-        Kısa sorguda eski sonuçlar da siliniyor: "mus" yazıp "mu"ya
-        dönen kullanıcı, artık aramadığı bir listeye bakıyor olurdu.
-      */
-      setSonuclar([]);
-      setDurum('kisa');
-      return;
-    }
-
-    let iptal = false;
-    setDurum('yukleniyor');
-    const zaman = window.setTimeout(() => {
-      sosyalKullaniciAra(sorgu)
-        .then((liste) => {
-          if (iptal) return;
-          setSonuclar(liste);
-          setDurum('hazir');
-        })
-        .catch(() => {
-          if (!iptal) setDurum('hata');
-        });
-    }, GECIKME_MS);
-
-    return () => {
-      iptal = true;
-      window.clearTimeout(zaman);
-    };
-  }, [sorgu, yeterliMi]);
-
-  const liste =
-    durum === 'hazir' && sonuclar.length > 0 ? (
-      <ul className="space-y-0.5">
-        {sonuclar.map((kisi) => {
+/**
+ * KİŞİ SATIRLARI — ARAMADAN DA KEŞİFTEN DE AYNI BİLEŞEN
+ *
+ * Ağım'daki keşif bloğu bu listeyi kullanıyor. İkinci bir satır
+ * yazılsaydı aynı kişi iki ekranda iki farklı biçimde görünür, biri
+ * ötekinin kurallarını (ad yoksa `@kullanıcı`, boş alanların hiç
+ * çizilmemesi) zamanla unuturdu.
+ */
+export const KisiListesi: React.FC<{
+  kisiler: SosyalAramaSonucu[];
+  onNavigate: (yol: string) => void;
+  onSecildi?: () => void;
+}> = ({ kisiler, onNavigate, onSecildi }) => (
+  <ul className="space-y-0.5">
+        {kisiler.map((kisi) => {
           const yol = profilYolu(kisi.kullaniciAdi);
           /*
             İki satırın ikincisi yalnız GERÇEKTEN varsa çiziliyor:
@@ -198,6 +165,55 @@ export const KullaniciAramaSonuclari: React.FC<SonucProps> = ({
           );
         })}
       </ul>
+);
+
+export const KullaniciAramaSonuclari: React.FC<SonucProps> = ({
+  sorgu,
+  onNavigate,
+  onSecildi,
+  gomuluBaslik,
+}) => {
+  const [sonuclar, setSonuclar] = React.useState<SosyalAramaSonucu[]>([]);
+  const [durum, setDurum] = React.useState<Durum>('kisa');
+
+  /* Ölçü sunucudakiyle aynı: harfe indirilmiş uzunluk, ham metin değil. */
+  const harfSayisi = kullaniciAdiHarfeIndir(sorgu).length;
+  const yeterliMi = harfSayisi >= ARAMA_EN_AZ_HARF;
+
+  React.useEffect(() => {
+    if (!yeterliMi) {
+      /*
+        Kısa sorguda eski sonuçlar da siliniyor: "mus" yazıp "mu"ya
+        dönen kullanıcı, artık aramadığı bir listeye bakıyor olurdu.
+      */
+      setSonuclar([]);
+      setDurum('kisa');
+      return;
+    }
+
+    let iptal = false;
+    setDurum('yukleniyor');
+    const zaman = window.setTimeout(() => {
+      sosyalKullaniciAra(sorgu)
+        .then((liste) => {
+          if (iptal) return;
+          setSonuclar(liste);
+          setDurum('hazir');
+        })
+        .catch(() => {
+          if (!iptal) setDurum('hata');
+        });
+    }, GECIKME_MS);
+
+    return () => {
+      iptal = true;
+      window.clearTimeout(zaman);
+    };
+  }, [sorgu, yeterliMi]);
+
+  const liste =
+    durum === 'hazir' && sonuclar.length > 0 ? (
+      <KisiListesi kisiler={sonuclar} onNavigate={onNavigate} onSecildi={onSecildi} />
     ) : null;
 
   if (gomuluBaslik !== undefined) {

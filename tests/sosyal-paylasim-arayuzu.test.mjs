@@ -42,7 +42,15 @@ import {
 */
 
 const KOK = path.resolve(import.meta.dirname, '..');
-const oku = (p) => readFileSync(path.join(KOK, p), 'utf8');
+/*
+  SATIR SONU NORMALLEŞTİRİLİYOR
+
+  Bu okuyucu ham okuyordu ve dosyalar Windows'ta CRLF ile duruyor:
+  içinde satır sonu geçen üç kalıp eşleşmiyordu, yani testler yalnız
+  satır sonu yüzünden düşüyordu. Depodaki öteki test dosyaları zaten
+  normalleştiriyor; burada eksikti.
+*/
+const oku = (p) => readFileSync(path.join(KOK, p), 'utf8').replace(/\r\n/g, '\n');
 
 const sorgular = oku('src/lib/queries/sosyal.ts');
 const olustur = oku('src/components/sosyal/PaylasimOlustur.tsx');

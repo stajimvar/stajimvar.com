@@ -154,9 +154,18 @@ const etkilesimSinifi = (basili: boolean) =>
       : 'border-gray-200 bg-white text-gray-800 hover:bg-gray-50'
   }`;
 
+/*
+  Kitle etiketi yalnız SAHİBİNE gösteriliyor: bu, yazarın kendi ayarı.
+
+  `resmi` de burada, çünkü okunan kitle yazılabilen kitleden geniş —
+  resmî hesap kendi paylaşımına baktığında etiketin boş kalmaması
+  gerekiyor. Sıradan kullanıcı bu değeri hiç görmüyor: resmî kitleyle
+  yalnız resmî hesap paylaşabiliyor (`paylasim_kitlesi_kilidi`).
+*/
 const KITLE_METNI: Record<SosyalPaylasim['kitle'], string> = {
   baglantilarim: 'Bağlantılarım',
   'alan-toplulugum': 'Alan topluluğum',
+  resmi: 'Resmî içerik — herkes',
 };
 
 export type GovdeYerlesimi = 'diyalog' | 'akis';
