@@ -278,3 +278,41 @@ test('veri okuyan kancalar YETKİ KAPISININ ÜSTÜNDE', () => {
   /* Keşif etkisi gerçekten üstte. */
   assert.ok(agim.indexOf('alanindakiKisiler(kullaniciId, sektor)') < kapi);
 });
+
+test('resmî işareti YÖNETİCİ RPC ile veriliyor, elle UPDATE ile değil', () => {
+  /*
+    ÖLÇÜLDÜ (üretim, 13 Eylül 2026): bayrağı verecek desteklenen bir yol
+    YOKTU.
+
+      servis anahtarıyla UPDATE   42501 / resmi-bayragi-kilitli
+        (servis anahtarı RLS'i atlıyor ama TETİKLEYİCİYİ atlamıyor)
+      yönetici oturumuyla UPDATE  42501 / permission denied for table
+        (UPDATE izni yalnız `avatar_path` sütununda, 20260924040000)
+
+    Elle SQL de bir yol değil: tekrarlanabilir ve denetlenebilir değil.
+    Çözüm depodaki kalıp — `security definer` + `is_admin()` kapısı.
+  */
+  const rpc = oku('supabase/migrations/20260928020000_resmi_hesap_isaretle.sql');
+  assert.match(rpc, /create or replace function public\.resmi_hesap_isaretle\(/);
+  assert.match(rpc, /language plpgsql\s*\n\s*security definer/);
+  assert.match(rpc, /if not public\.is_admin\(\) then/);
+  assert.match(rpc, /detail = 'yonetici-degil'/);
+
+  /* Süzgeç birincil anahtar: başka satıra dokunması mümkün değil. */
+  assert.match(rpc, /where profile_id = p_profil/);
+
+  /*
+    YORUMLAR ÇIKARILIYOR: gerekçe metni `connections` sözcüğünü
+    geçiriyor (neden dokunulmadığını anlatıyor). Aranan şey KOD.
+  */
+  const kod = rpc.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*--.*$/gm, ' ');
+  assert.doesNotMatch(kod, /connections/i, 'bağlantı tablosuna dokunmamalı');
+  assert.doesNotMatch(kod, /insert into/i);
+  /* Tek UPDATE, tek tablo. */
+  assert.equal((kod.match(/update public\./g) || []).length, 1);
+
+  /* anon çağıramıyor. */
+  assert.match(rpc, /revoke all on function public\.resmi_hesap_isaretle\(uuid, boolean\) from public;/);
+  assert.match(rpc, /grant execute on function public\.resmi_hesap_isaretle\(uuid, boolean\) to authenticated;/);
+  assert.doesNotMatch(rpc, /to anon/);
+});
