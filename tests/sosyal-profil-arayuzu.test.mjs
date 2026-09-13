@@ -1665,7 +1665,7 @@ test('/cv birleşik ekranı, /cv/yazdir yazdırılabilir CV', () => {
   */
   assert.match(app, /if \(temizYol === '\/cv' \|\| temizYol === '\/cv\/yazdir'\) \{/);
   assert.match(app, /if \(temizYol === '\/cv\/yazdir'\) \{\n\s*return <CvPage student=\{student\} onBack=\{\(\) => navigate\('\/cv'\)\} \/>;/);
-  assert.match(app, /return icerikSayfasi\([\s\S]{0,400}<main className=\{profilAlanSinifi\}>\{ogrenciProfilEkrani\(\)\}<\/main>,[\s\S]{0,80}'bg-white sm:bg-\[#F9FAFB\]',/);
+  assert.match(app, /return icerikSayfasi\([\s\S]{0,400}<main className=\{anaAlanSinifi\}>\{ogrenciProfilEkrani\(\)\}<\/main>,[\s\S]{0,80}'bg-white sm:bg-\[#F9FAFB\]',/);
   assert.match(orta, /'\/cv',/);
   assert.match(orta, /'\/cv\/yazdir',/);
 

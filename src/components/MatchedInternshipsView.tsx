@@ -952,7 +952,13 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         yok. Izgaranın dışına, tam genişliğe alındı.
       */}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
+      {/*
+        Telefonda satır boşluğu SIFIR: başlık `sr-only` olunca ızgaranın
+        ilk satırı boş kalıyor ve `gap-4` onu 16 piksellik bir bant
+        olarak gösteriyordu. `sm:` üstünde boşluk duruyor — orada iki
+        sütun yan yana ve aralarında nefes payı gerekiyor.
+      */}
+      <div className="grid grid-cols-1 gap-0 sm:gap-6 lg:grid-cols-12 items-start">
 
         {/*
           SOL SÜTUN TELEFONDA YER KAPLAMIYOR.

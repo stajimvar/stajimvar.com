@@ -484,7 +484,13 @@ export const OpportunitiesPage: React.FC<{
     <main
       className={`w-full ${SAYFA_GENISLIGI} mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-10`}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
+      {/*
+        Telefonda satır boşluğu SIFIR: başlık `sr-only` olunca ızgaranın
+        ilk satırı boş kalıyor ve `gap-4` onu 16 piksellik bir bant
+        olarak gösteriyordu. `sm:` üstünde boşluk duruyor — orada iki
+        sütun yan yana ve aralarında nefes payı gerekiyor.
+      */}
+      <div className="grid grid-cols-1 gap-0 sm:gap-6 lg:grid-cols-12 items-start">
         {/* --------------------------------- sol: başlık, arama, süzgeçler */}
         <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-4">
           {/*
