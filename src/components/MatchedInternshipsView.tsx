@@ -954,7 +954,20 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
 
-        <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-4">
+        {/*
+          SOL SÜTUN TELEFONDA YER KAPLAMIYOR.
+
+          Başlık `sr-only` olunca ve süzgeç paneli kapalıyken bu sütunun
+          içinde çizilecek bir şey kalmıyor; ama sütun yine de 34 piksel
+          yer tutuyor ve panelin kabı 2 piksellik bir çizgi bırakıyordu
+          (ölçüldü: üst çubuk 61'de bitiyor, liste 118'de başlıyordu).
+
+          `contents` kabı düzenden çıkarıyor: çocuklar doğrudan ızgaraya
+          giriyor, `sr-only` başlık yer tutmuyor ve panel açılmadıkça
+          hiçbir kutu çizilmiyor. `lg:block` ile geniş ekranda sütun
+          eskisi gibi geri geliyor.
+        */}
+        <div className="contents lg:block lg:col-span-3 lg:space-y-4 lg:sticky lg:top-4">
           {/*
             BAŞLIK SOL SÜTUNDA
 
@@ -1170,7 +1183,11 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         bir süzgeç değil — hiçbir ilanı elemiyor, sadece diziyor. Süzgeçlerin
         arasında durması ikisini aynı şey sanmaya yol açıyordu.
       */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
+      {/*
+        Kap telefonda yalnız panel AÇIKKEN çiziliyor; kapalıyken kenarlığı
+        ince bir çizgi olarak görünüyordu.
+      */}
+      <div className={`${filtreAcik ? 'block' : 'hidden'} lg:block bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden`}>
 
         {/*
           ---- başlık: yalnızca geniş ekran ----
