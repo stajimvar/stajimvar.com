@@ -1462,20 +1462,51 @@ test('bağlantı eylemleri kilitli ve iyimser güncelleme yok', () => {
 /*  /baglantilar SAYFASI                                               */
 /* ------------------------------------------------------------------ */
 
-test('tek sayfa, üç bölüm', () => {
+test('tek başlık, tek liste: istek bölümleri kalktı', () => {
+  /*
+    Sayfada dört başlık vardı: "Bağlantılar" (h1), altında aynı adlı
+    bölüm başlığı, sonra "Gelen istekler" ve "Gönderilen istekler".
+    İkisi aynı kelimeyle, hepsi aynı ekranda.
+
+    Gelen istek bildirim zilinin altında yanıtlanıyor; gönderilen
+    isteğin durumu kişinin profilinde duruyor (BaglantiDugmesi:
+    "İstek gönderildi" / "İsteği geri çek"). Bu sayfa artık tek bir
+    şeyi gösteriyor: kurulmuş bağlantılar.
+  */
   assert.match(baglantilar, /Bağlantılar\s*<\/h1>/);
-  assert.match(baglantilar, /baslik="Gelen istekler"/);
-  assert.match(baglantilar, /baslik="Gönderilen istekler"/);
+  assert.doesNotMatch(baglantilar, /baslik="Gelen istekler"/);
+  assert.doesNotMatch(baglantilar, /baslik="Gönderilen istekler"/);
+  assert.doesNotMatch(baglantilar, /Bağlantı karşılıklı: iki taraf[\s\S]{0,40}<\/p>\s*<\/header>/);
+  /* Gönderilen isteğin iki eylemi profildeki düğmede duruyor. */
+  const dugme = oku('src/components/sosyal/BaglantiDugmesi.tsx');
+  assert.match(dugme, /İstek gönderildi/);
+  assert.match(dugme, /İsteği geri çek/);
   /* Ayrı rota ya da sekme adresi yok: tek adres. */
   assert.doesNotMatch(yorumsuz(baglantilar), /\/baglantilar\//);
 });
 
-test('her bölümde dört durum ayrı çiziliyor', () => {
+test('kişi araması sayfanın içinde, üst çubuktakiyle aynı bileşen', () => {
+  /*
+    Bağlantılar sayfasının asıl işi "kimi bulayım". Kutu telefonda bir
+    simgenin arkasında değil, açıkta. Sonuç listesi üst çubuktakiyle
+    AYNI bileşen: iki yerde iki farklı arama davranışı olmasın.
+  */
+  assert.match(baglantilar, /<KullaniciAramaSonuclari/);
+  assert.match(baglantilar, /placeholder="Kullanıcı adıyla ara"/);
+});
+
+test('boş durum iki çıkış yolu veriyor, çıkmaz sokak değil', () => {
+  assert.match(baglantilar, /İlk bağlantını kur/);
+  assert.match(baglantilar, /Öğrencileri keşfet/);
+  /* Keşif arama kutusuna odaklanıyor: görünürlük kuralı sunucuda kalıyor. */
+  assert.match(baglantilar, /aramaKutusu\.current\?\.focus\(\)/);
+});
+
+test('dört durum ayrı çiziliyor', () => {
   assert.match(baglantilar, /durum === 'yukleniyor'/);
   assert.match(baglantilar, /durum === 'hata'/);
   assert.match(baglantilar, /satirlar\.length === 0/);
   assert.match(baglantilar, /Bağlantılar alınamadı/);
-  assert.match(baglantilar, /bosMetin/);
 });
 
 test('karşı tarafın profili gelmiyorsa ad uydurulmuyor', () => {
