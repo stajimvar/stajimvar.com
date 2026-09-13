@@ -133,15 +133,35 @@ test('Instagram setinden YALNIZ metin ve kartlar taşınıyor', () => {
   };
   const c = aktarilacak(set);
 
-  assert.deepEqual(Object.keys(c).sort(), ['aciklama', 'istemciAnahtari', 'kartlar', 'kitle']);
+  assert.deepEqual(Object.keys(c).sort(), [
+    'aciklama',
+    'anahtarKaynagi',
+    'istemciAnahtari',
+    'kartlar',
+    'kitle',
+  ]);
   assert.equal(c.aciklama, 'merhaba');
   assert.deepEqual(c.kartlar, ['/paylasim/a/01.jpg', '/paylasim/a/02.jpg']);
   /* Hikâyeler, ad ve tarih sosyal ağa geçmiyor. */
   assert.equal(JSON.stringify(c).includes('hikaye'), false);
   /* Kitle seçilebilir bir alan değil. */
   assert.equal(c.kitle, 'resmi');
-  /* Sürüm anahtarın içinde: düzeltilen içerik yeni paylaşım oluyor. */
-  assert.equal(c.istemciAnahtari, 'instagram:deneme:v3');
+  /*
+    ANAHTAR TÜRETİLMİŞ UUID — RASTGELE DEĞİL
+
+    `posts.istemci_anahtari` UUID tipinde (20260924010000) ve okunur bir
+    dize yazılamıyor: ölçüldü, `invalid input syntax for type uuid`.
+    Rastgele UUID de olmaz — ikinci çalıştırma yeni anahtar üretir ve
+    AYNI SET İKİNCİ KEZ paylaşılırdı.
+
+    Sürüm kaynağın içinde: v6 → v7 anahtarı değiştiriyor, yani
+    düzeltilmiş içerik yeni paylaşım olarak çıkıyor.
+  */
+  assert.equal(c.anahtarKaynagi, 'instagram:deneme:v3');
+  assert.match(c.istemciAnahtari, /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  /* Aynı girdi her zaman aynı anahtar: idempotanlığın temeli. */
+  assert.equal(c.istemciAnahtari, aktarilacak(set).istemciAnahtari);
+  assert.notEqual(c.istemciAnahtari, aktarilacak({ ...set, surum: 'v4' }).istemciAnahtari);
 });
 
 test('etkileşim verisi taşınmıyor; varsa betik DURUYOR', () => {
@@ -316,3 +336,29 @@ test('resmî işareti YÖNETİCİ RPC ile veriliyor, elle UPDATE ile değil', ()
   assert.match(rpc, /grant execute on function public\.resmi_hesap_isaretle\(uuid, boolean\) to authenticated;/);
   assert.doesNotMatch(rpc, /to anon/);
 });
+
+test('görsel yolu ÜÇ PARÇALI: {yazar}/{post}/{dosya}', () => {
+  /*
+    CANLIDA ÖLÇÜLDÜ (13 Eylül 2026) — pilot aktarımda yakalandı.
+
+    Betik dosyaları `{yazar}/{dosya}` diye İKİ parçalı yazıyordu.
+    Yükleme başarılı oldu, `post_media` satırları açıldı, kart akışta
+    göründü — ama şeritte tek bir `<img>` yoktu: depolama okuma
+    politikası `sosyal_gizli.paylasim_dosyasi_gorunur` yolu bölüp
+    ORTADAKİ parçayı paylaşım kimliği sayıyor ve üç parçadan azını
+    doğrudan reddediyor. Yani paylaşımı gören herkes fotoğrafsız bir
+    kart görüyordu; yalnız hesabın kendisi açabiliyordu (klasör adı
+    kendi kimliğine eşit olduğu için).
+
+    İstemcideki üç adımlı akış da aynı öneki kuruyor; tek biçim.
+  */
+  const betik = oku('scripts/resmi-paylasim-aktar.mjs');
+  assert.match(betik, /const depoYolu = `\$\{resmiKimlik\}\/\$\{post\.id\}\/\$\{crypto\.randomUUID\(\)\}\.\$\{uzanti\}`;/);
+
+  const istemci = oku('src/lib/queries/sosyal.ts');
+  assert.match(istemci, /const onek = `\$\{satir\.author_id\}\/\$\{postId\}\/`;/);
+
+  const depolama = oku('supabase/migrations/20260924020000_sosyal_depolama.sql');
+  assert.match(depolama, /if array_length\(parcalar, 1\) is distinct from 3 then/);
+});
+
