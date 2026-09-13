@@ -7,8 +7,18 @@ const source = readFileSync("src/components/Header.tsx", "utf8");
 test("adres sekmeyi eziyor: rehber, fırsat, kurumsal ve sosyal sayfalarda İlanlar sönük", () => {
   assert.match(
     source,
-    /const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kurumsalSayfada && !sosyaldeMi && activeTab === 'internships'/,
+    /\(!rehberdeMi && !firsatlardaMi && !kurumsalSayfada && !sosyaldeMi && activeTab === 'internships'\)/,
   );
+  /*
+    /staj-ilanlari DA "İlanlar" SEKMESİ
+
+    Sekme artık oraya götürüyor (ana sayfa markayı anlatıyor, ilan
+    aramanın kendi sayfası var). Koşul yalnız `activeTab`e bakınca o
+    sayfa açıkken hiçbir sekme yanmıyordu; kullanıcı nerede olduğunu üst
+    çubuktan okuyamıyordu.
+  */
+  assert.match(source, /const stajIlanlarindaMi = bulunulanYol === '\/staj-ilanlari';/);
+  assert.match(source, /const ilanlardaMi =\s+stajIlanlarindaMi \|\|/);
 });
 
 /*

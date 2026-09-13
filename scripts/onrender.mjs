@@ -402,6 +402,15 @@ async function merkezListeleriniCiz() {
       path.join(kok, 'src', 'components', 'KariyerMerkezleri.tsx'),
       'kariyer-merkezleri'
     );
+    /*
+      /staj-ilanlari gövdesi CANLI ROTAYLA AYNI BİLEŞENDEN çiziliyor.
+      İkinci bir işaretleme yazılsaydı arama motorunun gördüğü sayfa ile
+      kullanıcının gördüğü sayfa zamanla ayrışırdı.
+    */
+    const stajIlanlariModul = await icerikDerle(
+      path.join(kok, 'src', 'components', 'StajIlanlariIcerik.tsx'),
+      'staj-ilanlari'
+    );
 
     return {
       bolumler: renderToStaticMarkup(React.createElement(bolumModul.BolumListesi, {})),
@@ -413,6 +422,13 @@ async function merkezListeleriniCiz() {
       kariyerMerkezleri: renderToStaticMarkup(
         React.createElement(merkezModul.KariyerMerkezleriIcerik, {})
       ),
+      /*
+        Veri ÇAĞIRANDAN geliyor: bileşen hiçbir sayı hesaplamıyor.
+        `onNavigate` verilmiyor — statik HTML'de bağlantılar düz
+        `<a href>` kalıyor ve tarayıcı onları izleyebiliyor.
+      */
+      stajIlanlari: (veri) =>
+        renderToStaticMarkup(React.createElement(stajIlanlariModul.StajIlanlariIcerik, veri)),
       rehberBaglantilari,
     };
   } catch (hata) {
@@ -1312,6 +1328,65 @@ async function main() {
     ikinci bir şehir sözlüğü tutmak ikisinin ayrışmasına davetiye olurdu.
   */
   const { konumEtiketi } = await icerikDerle(path.join(kok, 'src', 'lib', 'sehir.ts'), 'sehir');
+
+  /* ---------------------------------------------- /staj-ilanlari ---- */
+  /*
+    "STAJ İLANLARI" ARAMA NİYETİNİN BİRİNCİL SAYFASI
+
+    Ana sayfa markayı ve ürünün tamamını anlatıyor; ölçüldü (Search
+    Console): "staj" içeren sorgularda 137 gösterim, ana sayfadan tek
+    tıklama yok ve tam "staj ilanları" sorgusunda ana sayfa hiç gösterim
+    almıyor. Bu sayfanın tek konusu ilan aramak.
+
+    SABİTLER LİSTESİNDE DEĞİL, BURADA: gövdesi gerçek ilan verisi
+    istiyor ve o veri (`ilanlar`) ancak bu satırdan sonra elde. Sayılar
+    hesaplanmıyor, SAYILIYOR — uydurulan tek bir rakam yok.
+  */
+  const stajIlanlariVerisi = (() => {
+    const sehirSayaci = new Map();
+    const sirketler = new Set();
+    for (const ilan of ilanlar) {
+      const sirket = ilan.companies?.name;
+      if (sirket) sirketler.add(sirket);
+      const ham = (ilan.city || '').trim();
+      if (!ham) continue;
+      const ad = konumEtiketi(ham);
+      sehirSayaci.set(ad, (sehirSayaci.get(ad) || 0) + 1);
+    }
+
+    /* En yeni ilanlar: `posted_at` yoksa `created_at`. İkisi de yoksa sona. */
+    const zaman = (i) => new Date(i.posted_at || i.created_at || 0).getTime() || 0;
+    const enYeniler = ilanlar
+      .slice()
+      .sort((a, b) => zaman(b) - zaman(a))
+      .slice(0, 12)
+      .map((ilan) => ({
+        yol: `/ilan/${slugla(ilan.title)}-${String(ilan.id).replace(/-/g, '').slice(0, 8)}`,
+        baslik: ilan.title,
+        sirket: ilan.companies?.name || '',
+        sehir: ilan.city ? konumEtiketi(ilan.city) : null,
+        calismaSekli: ilan.work_type || null,
+      }));
+
+    return {
+      toplam: ilanlar.length,
+      sirketToplam: sirketler.size,
+      sehirToplam: sehirSayaci.size,
+      ilanlar: enYeniler,
+      sehirler: [...sehirSayaci.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 12)
+        .map(([ad, adet]) => ({ ad, adet })),
+    };
+  })();
+
+  sayfaYaz('/staj-ilanlari', {
+    baslik: 'Güncel Staj İlanları 2026 | StajımVar',
+    aciklama:
+      'Türkiye genelindeki güncel staj ilanlarını şehir, bölüm ve staj türüne göre filtrele. Şirketlerin resmî başvuru sayfalarına doğrudan ulaş.',
+    govde: merkezListeleri.stajIlanlari(stajIlanlariVerisi),
+  });
+  sayac++;
 
   /*
     ESKİ ADRESLER İÇİN KALICI YÖNLENDİRME

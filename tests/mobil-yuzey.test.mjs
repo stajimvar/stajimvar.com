@@ -129,7 +129,13 @@ test('her an tek sekme yanıyor: /agim İlanlar sekmesini de yakmıyor', () => {
   assert.ok(
     header.includes("const sosyaldeMi = /^\\/(agim|cv|profil|topluluklar|baglantilar)(\\/|$)/.test(bulunulanYol);"),
   );
-  assert.match(header, /const ilanlardaMi = [^;]*!sosyaldeMi && activeTab === 'internships'/);
+  /*
+    /staj-ilanlari da "İlanlar" sekmesini yakıyor (sekme artık oraya
+    götürüyor), ama sosyal sayfalar hâlâ SÖNDÜRÜYOR: koşulun ikinci
+    yarısı olduğu gibi duruyor.
+  */
+  assert.match(header, /!sosyaldeMi && activeTab === 'internships'/);
+  assert.match(header, /const ilanlardaMi =\s+stajIlanlarindaMi \|\|/);
 });
 
 test('masaüstü düzeni korunuyor: her yüzey değeri sm ile geri dönüyor', () => {

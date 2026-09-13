@@ -30,6 +30,14 @@ SITE = "https://stajimvar.com"
 # siteye getiren tek kanal oldugu icin anasayfadan sonra geliyor.
 DURAGAN = [
     ("/", "daily", "1.0"),
+    # "STAJ ILANLARI" ARAMA NIYETININ BIRINCIL SAYFASI
+    #
+    # Ana sayfadan hemen sonra: olculdu (Search Console), "staj" iceren
+    # sorgularda ana sayfa 137 gosterim aliyor ama TEK tiklama yok ve tam
+    # "staj ilanlari" sorgusunda hic gosterim almiyor. Ana sayfa markayi
+    # ve urunun tamamini anlatiyor; ilan aramanin kendi sayfasi burasi.
+    # Gunluk: liste her gun degisiyor.
+    ("/staj-ilanlari", "daily", "0.9"),
     ("/isveren", "weekly", "0.9"),
     ("/rehber", "weekly", "0.9"),
     ("/bolumler", "weekly", "0.9"),

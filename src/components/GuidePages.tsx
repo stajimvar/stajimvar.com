@@ -303,6 +303,28 @@ export const RehberBaglantilari: React.FC<{
         </section>
       )}
 
+      {/*
+        REHBERDEN İLAN ARAMAYA ÇIKIŞ
+
+        Rehberler bu sitenin arama motorundan en çok gösterim alan
+        sayfaları (bazıları 7-10. sırada). Okuyan kişi bilgiyi alıyor ve
+        sayfanın sonunda gidecek yer olarak yalnız başka rehberleri ve
+        bölüm sayfalarını buluyordu — okuduğu şeyin karşılığı olan ilan
+        listesine giden hiçbir bağlantı yoktu.
+
+        Tek satır ve metni doğal: bağlantı metni sayfanın gerçekten
+        götürdüğü yeri söylüyor.
+      */}
+      <section className="mt-8">
+        <a
+          href="/staj-ilanlari"
+          onClick={(e) => yakala(e, '/staj-ilanlari')}
+          className="inline-flex min-h-11 items-center rounded-xl bg-blue-600 px-5 text-sm font-bold text-white hover:bg-blue-700"
+        >
+          Güncel staj ilanlarını gör
+        </a>
+      </section>
+
       <section className="mt-8 space-y-2">
         <h2 className="text-sm font-bold uppercase tracking-wider text-gray-600">
           Bölümüne göre staj
