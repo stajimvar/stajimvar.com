@@ -409,9 +409,17 @@ export const RehberMerkezi: React.FC<{
         kullanıyor: solda süzgeçler, ortada başlık + şerit + liste, sağda
         sayaçlar ve bilgi kutusu. Üç liste artık aynı iskelette.
       */}
-      <div className="grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-12">
+      {/* Telefonda satır boşluğu sıfır; gizli başlık bant bırakmasın. */}
+      <div className="grid grid-cols-1 items-start gap-0 sm:gap-6 lg:grid-cols-12">
         {/* ------------------------------------------------- sol: süzgeçler */}
-        <div className="space-y-4 lg:sticky lg:top-4 lg:col-span-3">
+        {/*
+          Sol sütun telefonda YER KAPLAMIYOR: başlık `sr-only` olunca
+          çizecek bir şey kalmıyor ama sütun yine de satır açıyordu.
+          `contents` kabı düzenden çıkarıyor; `lg:block` ile geniş
+          ekranda sütun eskisi gibi geri geliyor. (İlanlar'daki kalıbın
+          aynısı.)
+        */}
+        <div className="contents lg:block lg:space-y-4 lg:sticky lg:top-4 lg:col-span-3">
           {/*
             BAŞLIK TELEFONDA GÖRSELDEN KALKTI, METİNDEN KALKMADI.
 

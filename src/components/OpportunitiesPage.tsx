@@ -492,7 +492,14 @@ export const OpportunitiesPage: React.FC<{
       */}
       <div className="grid grid-cols-1 gap-0 sm:gap-6 lg:grid-cols-12 items-start">
         {/* --------------------------------- sol: başlık, arama, süzgeçler */}
-        <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-4">
+        {/*
+          Sol sütun telefonda YER KAPLAMIYOR: başlık `sr-only` olunca
+          çizecek bir şey kalmıyor ama sütun yine de satır açıyordu.
+          `contents` kabı düzenden çıkarıyor; `lg:block` ile geniş
+          ekranda sütun eskisi gibi geri geliyor. (İlanlar'daki kalıbın
+          aynısı.)
+        */}
+        <div className="contents lg:block lg:col-span-3 lg:space-y-4 lg:sticky lg:top-4">
           {/*
             Başlık ve açıklama telefonda GÖRSELDEN kalktı, metinden
             kalkmadı: `sr-only` öğeyi ekrandan çıkarıyor ama DOM'da ve
