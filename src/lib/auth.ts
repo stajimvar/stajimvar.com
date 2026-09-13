@@ -313,6 +313,37 @@ export async function signOut(): Promise<void> {
  */
 let sonOkunanKimlik: string | null = null;
 
+/**
+ * Profil satırını okur; TAŞIMA HATASINDA bir kez daha dener.
+ *
+ * Bu okuma açılışta SEKİZ kez yapılıyordu (bkz. `onAuthChange`) ve
+ * içlerinden biri tutunca kullanıcı girişli görünüyordu. Tekrarlar
+ * kaldırılınca okuma tek kaldı: o tek istek ağ ya da uç sunucu
+ * kaynaklı olarak düşerse kullanıcı, oturumu geçerliyken bile sayfayı
+ * yenileyene kadar girişsiz görünürdü. Canlıda ölçüldü (13 Eylül
+ * 2026): aynı isteğin bir kez CORS ön kontrolünde düştüğü görüldü.
+ *
+ * İKİ DURUM AYRI: satır YOK ile satır OKUNAMADI aynı şey değil.
+ * `maybeSingle` ilkinde hatasız `null` veriyor — orada denemenin
+ * anlamı yok, gerçekten satır yok. Yeniden deneme yalnız ikincisinde.
+ */
+async function profiliOku(
+  kimlik: string,
+): Promise<{ role: string | null; full_name: string | null } | null> {
+  for (let deneme = 0; deneme < 2; deneme += 1) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role, full_name')
+      .eq('id', kimlik)
+      .maybeSingle();
+
+    if (!error) return data;
+    /* Kısa bekleme: anlık bir kesintinin üzerinden geçmeye yetiyor. */
+    if (deneme === 0) await new Promise((coz) => setTimeout(coz, 400));
+  }
+  return null;
+}
+
 export async function getCurrentUser(): Promise<AuthResult | null> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.user) {
@@ -320,11 +351,7 @@ export async function getCurrentUser(): Promise<AuthResult | null> {
     return null;
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, full_name')
-    .eq('id', session.user.id)
-    .single();
+  const profile = await profiliOku(session.user.id);
 
   /*
     Oturum var ama profil satırı yok: kimlik KAYDEDİLMİYOR ki bir

@@ -129,4 +129,24 @@ test('aynı kullanıcı için oturum olayı tekrar tekrar işlenmiyor', () => {
     yenileyene kadar girişsiz görünürdü.
   */
   assert.match(auth, /if \(!profile\) \{\s*sonOkunanKimlik = null;/);
+
+  /*
+    TEK KALAN OKUMA YEDEKSİZ KALMASIN
+
+    Bu okuma açılışta sekiz kez yapılıyordu ve içinden biri tutunca
+    kullanıcı girişli görünüyordu. Tekrarlar kalkınca okuma tek kaldı:
+    o tek istek ağ ya da uç sunucu kaynaklı düşerse kullanıcı, oturumu
+    geçerliyken bile sayfayı yenileyene kadar girişsiz görünürdü.
+    Canlıda ölçüldü (13 Eylül 2026): aynı isteğin bir kez CORS ön
+    kontrolünde düştüğü görüldü.
+
+    İKİ DURUM AYRI: satır YOK ile satır OKUNAMADI aynı şey değil.
+    `maybeSingle` ilkinde hatasız `null` veriyor; yeniden deneme yalnız
+    ikincisinde.
+  */
+  assert.match(auth, /async function profiliOku\(/);
+  assert.match(auth, /\.maybeSingle\(\);/);
+  assert.match(auth, /if \(!error\) return data;/);
+  assert.match(auth, /if \(deneme === 0\) await new Promise\(\(coz\) => setTimeout\(coz, 400\)\);/);
+  assert.doesNotMatch(auth, /\.eq\('id', session\.user\.id\)\s+\.single\(\);/);
 });
