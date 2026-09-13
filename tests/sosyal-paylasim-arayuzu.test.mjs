@@ -942,3 +942,31 @@ test('akıştan gelen seçim besteciyle AYNI borudan geçiyor', () => {
   assert.match(olustur, /if \(anahtarRef\.current === null\) anahtarRef\.current = crypto\.randomUUID\(\);/);
   assert.match(olustur, /setGonderiliyor\(false\);\s*\n\s*setIlerleme\(null\);/);
 });
+
+test('besteciden çıkış yolu tepede ve yükleme sürerken kilitli', () => {
+  const agim = oku('src/components/sosyal/AgimSayfasi.tsx');
+  const olustur = oku('src/components/sosyal/PaylasimOlustur.tsx');
+
+  /*
+    Ekranın kendi "Vazgeç" düğmesi formun ALTINDA: telefonda fotoğraf,
+    açıklama ve kitle kartlarının arkasında kalıyor ve vazgeçmek için
+    aşağı kaydırmak gerekiyordu (ölçüldü: 375 pikselde görünmüyor).
+  */
+  assert.match(agim, /aria-label="Paylaşımdan vazgeç"/);
+  assert.match(agim, /sticky top-0 z-10 flex h-15 items-center border-b border-gray-200 bg-white px-2\.5/);
+  /* Aynı şeyi iki kez söylememek için üst çubukta başlık yok. */
+  const cubuk = agim.slice(agim.indexOf('sticky top-0 z-10 flex h-15'), agim.indexOf('mx-auto w-full max-w-[600px] px-4 pb-24'));
+  assert.doesNotMatch(cubuk, /Fotoğraf paylaş/);
+
+  /*
+    YÜKLEME SÜRERKEN KAPATMA KİLİTLİ: yarıda kalmış bir yüklemeyi
+    sessizce çöpe atmamak için. Bilgi bestecinin kendisinden geliyor,
+    kabukta tahmin edilmiyor.
+  */
+  assert.match(agim, /disabled=\{besteciMesgul\}/);
+  assert.match(agim, /onMesgulDegisti=\{setBesteciMesgul\}/);
+  assert.match(olustur, /onMesgulDegisti\?: \(mesgul: boolean\) => void;/);
+  assert.match(olustur, /onMesgulDegisti\?\.\(kilitli\);/);
+  /* Ekran kalkarken kabuk "hâlâ meşgul" diye kilitli kalmamalı. */
+  assert.match(olustur, /return \(\) => onMesgulDegisti\?\.\(false\);/);
+});

@@ -208,6 +208,16 @@ interface OlusturProps {
    * küçültme, EXIF düşürme — yani bu yolun ayrı bir kuralı yok.
    */
   baslangicDosyalari?: File[];
+  /**
+   * "Şu anda geri alınamaz bir iş sürüyor mu?"
+   *
+   * Ekranı taşıyan kabuk (akıştaki besteci) kendi kapatma düğmesini
+   * çiziyor ve yükleme sürerken onu kapatmak, yarıda kalmış bir
+   * yüklemeyi sessizce çöpe atmak olurdu. Ekranın kendi "Vazgeç"
+   * düğmesi zaten aynı sebeple kilitleniyor; kabuğun da aynı bilgiye
+   * ihtiyacı var.
+   */
+  onMesgulDegisti?: (mesgul: boolean) => void;
 }
 
 /** Üyelik ekranının adresi; iki yerde (metin ve gezinme) tek dizeden. */
@@ -218,6 +228,7 @@ export const PaylasimOlustur: React.FC<OlusturProps> = ({
   onTamamlandi,
   onNavigate,
   baslangicDosyalari,
+  onMesgulDegisti,
 }) => {
   const [secilenler, setSecilenler] = React.useState<HazirGorsel[]>([]);
   const [aciklama, setAciklama] = React.useState('');
@@ -311,6 +322,15 @@ export const PaylasimOlustur: React.FC<OlusturProps> = ({
   }, []);
 
   const kilitli = gonderiliyor || hazirlaniyor;
+
+  /*
+    Kilit durumu kabuğa bildiriliyor. Temizlikte `false`: ekran
+    kalkarken kabuk "hâlâ meşgul" diye kilitli kalmamalı.
+  */
+  React.useEffect(() => {
+    onMesgulDegisti?.(kilitli);
+    return () => onMesgulDegisti?.(false);
+  }, [kilitli, onMesgulDegisti]);
 
   const dosyaSecildi = async (olay: React.ChangeEvent<HTMLInputElement>) => {
     const liste = Array.from(olay.target.files ?? []);
