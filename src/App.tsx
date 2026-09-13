@@ -1,5 +1,10 @@
 import React, { useState, useRef, Suspense } from 'react';
-import { baglantiDurumu, baglantiYanitla, kendiSosyalProfiliGetir } from './lib/queries/sosyal';
+import {
+  baglantiDurumu,
+  baglantilarimiGetir,
+  baglantiYanitla,
+  kendiSosyalProfiliGetir,
+} from './lib/queries/sosyal';
 import {
   fetchPublishedListings,
   fetchStudentProfile,
@@ -35,7 +40,11 @@ import { CerezBandi } from './components/CerezBandi';
   aşağıda gecikmeli yükleniyor.
 */
 import type { PortfolyoSatiri } from './components/sosyal/SosyalProfilSayfasi';
-import { BildirimMerkezi, type BaglantiYanitSonucu } from './components/BildirimMerkezi';
+import {
+  BildirimMerkezi,
+  type BaglantiYanitSonucu,
+  type IstekDurumu,
+} from './components/BildirimMerkezi';
 import { useBildirimler } from './lib/useBildirimler';
 import { SIRKET_VURGU_KOYU } from './sirket/renk';
 
@@ -1337,6 +1346,51 @@ export default function App() {
     [session?.userId, bildirim],
   );
 
+  /*
+    BEKLEYEN İSTEKLER PANEL AÇILINCA BİR KEZ OKUNUYOR
+
+    İsteğin yanıtlanıp yanıtlanmadığı yalnız bileşenin belleğindeydi:
+    sayfa yenilenince kabul edilmiş bir istek yeniden "Kabul et /
+    Reddet" gösteriyordu. Bellek bir gerçeğin kaynağı olamaz.
+
+    Liste panel her açıldığında bir kez çekiliyor — bildirim başına bir
+    sorgu değil. Gelen istekler "bekliyor", kurulmuş bağlantılar
+    "kabul"; ikisinde de olmayan istek geçmişte kalmış demek (geri
+    çekilmiş ya da reddedilmiş) ve satırda ne düğme ne sonuç yazıyor.
+  */
+  const [baglantiHaritasi, setBaglantiHaritasi] = useState<Record<string, IstekDurumu>>({});
+  React.useEffect(() => {
+    const kimlik = session?.userId ?? null;
+    if (!bildirim.acik || !kimlik) return;
+    let iptal = false;
+    void baglantilarimiGetir(kimlik)
+      .then((liste) => {
+        if (iptal) return;
+        const harita: Record<string, IstekDurumu> = {};
+        for (const k of liste.kabul) harita[k.kisiId] = 'kabul';
+        for (const k of liste.gelen) harita[k.kisiId] = 'bekliyor';
+        setBaglantiHaritasi(harita);
+      })
+      .catch(() => {
+        /* Liste alınamadı: eski davranışa düşülüyor, düğmeler çiziliyor. */
+        if (!iptal) setBaglantiHaritasi({});
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [bildirim.acik, session?.userId]);
+
+  /* Bildirimin işaret ettiği kişi, olayın kimliğinden okunuyor. */
+  const istekDurumu = React.useCallback(
+    (b: { anahtar: string | null }): IstekDurumu => {
+      const parcalar = (b.anahtar ?? '').split(':');
+      const isteyen = parcalar.length === 3 ? parcalar[1] : null;
+      if (!isteyen) return 'bekliyor';
+      return baglantiHaritasi[isteyen] ?? 'yok';
+    },
+    [baglantiHaritasi],
+  );
+
   const ogrenciBildirimleri = bildirim.acik ? (
     <BildirimMerkezi
       bildirimler={bildirim.bildirimler}
@@ -1347,6 +1401,7 @@ export default function App() {
       onAc={bildirimAc}
       onTumunuOkundu={() => void bildirim.tumunuOkunduYap()}
       onBaglantiYanitla={baglantiIsteginiYanitla}
+      istekDurumu={istekDurumu}
     />
   ) : null;
 

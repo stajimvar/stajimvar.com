@@ -101,7 +101,7 @@ test('zilin altındaki kabul/ret gerçek eyleme bağlı', () => {
     yapıyor, o zaman yanıtlamadan düğmeler kaybolurdu.
   */
   assert.match(merkez, /const \[sonuc, setSonuc\] = React\.useState<Record<string, BaglantiYanitSonucu>>\(\{\}\);/);
-  assert.match(merkez, /onBaglantiYanitla && !sonuc\[b\.id\] && \(/);
+  assert.match(merkez, /onBaglantiYanitla && dugmeCizilsin\(b\) && \(/);
 
   /*
     "ZATEN KABUL EDİLMİŞ" BİR HATA DEĞİL
@@ -119,9 +119,27 @@ test('zilin altındaki kabul/ret gerçek eyleme bağlı', () => {
   assert.match(merkez, /kabul: 'Bağlantı kuruldu\. Tebrikler!'/);
   assert.match(merkez, /gecersiz: 'Bu istek artık geçerli değil\.'/);
   /* Başarı yeşil, geçersizlik kehribar: renk sonucu tekrar ediyor. */
-  assert.match(merkez, /sonuc\[b\.id\] === 'kabul'\s*\?\s*'text-emerald-700'/);
+  assert.match(merkez, /gosterilecekSonuc\(b\) === 'kabul'\s*\?\s*'text-emerald-700'/);
+
+  /*
+    SAYFA YENİLENİNCE DURUM KAYBOLMUYOR
+
+    Yanıtın sonucu yalnız bileşenin belleğindeydi: yenileyince kabul
+    edilmiş bir istek yeniden "Kabul et / Reddet" gösteriyordu
+    (bildirildi ve canlıda ölçüldü). Bellek bir gerçeğin kaynağı
+    olamaz; durum panel her açıldığında bağlantı listesinden
+    türetiliyor — bildirim başına bir sorgu değil, panel başına bir.
+  */
+  assert.match(merkez, /export type IstekDurumu = 'bekliyor' \| 'kabul' \| 'yok';/);
+  assert.match(merkez, /const dugmeCizilsin = \(b: Bildirim\) =>\s*!sonuc\[b\.id\] && \(istekDurumu\?\.\(b\) \?\? 'bekliyor'\) === 'bekliyor';/);
+  /* Yerel sonuç yanıtın hemen ardından, sunucu durumu yenilemeden sonra. */
+  assert.match(merkez, /if \(sonuc\[b\.id\]\) return sonuc\[b\.id\];/);
 
   const app2 = oku('src/App.tsx');
+  assert.match(app2, /if \(!bildirim\.acik \|\| !kimlik\) return;/);
+  assert.match(app2, /for \(const k of liste\.kabul\) harita\[k\.kisiId\] = 'kabul';/);
+  assert.match(app2, /for \(const k of liste\.gelen\) harita\[k\.kisiId\] = 'bekliyor';/);
+  assert.match(app2, /return baglantiHaritasi\[isteyen\] \?\? 'yok';/);
   assert.match(app2, /const bilgi = await baglantiDurumu\(isteyen\)\.catch\(\(\) => null\);/);
   assert.match(app2, /sonuc = bilgi\?\.durum === 'kabul' \? 'kabul' : 'gecersiz';/);
   /*

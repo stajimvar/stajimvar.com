@@ -38,6 +38,22 @@ function BildirimIkonu({ tur, renk }: { tur: string; renk: string }) {
  */
 export type BaglantiYanitSonucu = 'kabul' | 'red' | 'gecersiz';
 
+/**
+ * Bir bağlantı isteğinin ŞU ANKİ durumu — sunucudan.
+ *
+ * Yanıtın sonucu önce yalnız bileşenin belleğinde tutuluyordu: sayfa
+ * yenilenince kayboluyor ve kabul edilmiş bir istek yeniden "Kabul et /
+ * Reddet" gösteriyordu (bildirildi ve canlıda ölçüldü). Bellek bir
+ * gerçeğin kaynağı olamaz; durum artık her panel açılışında bağlantı
+ * listesinden türetiliyor.
+ *
+ *   bekliyor  düğmeler çiziliyor
+ *   kabul     "Bağlantı kuruldu. Tebrikler!"
+ *   yok       satır geçmişte kaldı (geri çekilmiş ya da reddedilmiş);
+ *             ne düğme ne sonuç yazılıyor
+ */
+export type IstekDurumu = 'bekliyor' | 'kabul' | 'yok';
+
 export const BildirimRozeti: React.FC<{ sayi: number | null; renk: string }> = ({ sayi, renk }) => {
   /*
     SAYI BİLİNMİYORSA ROZET ÇİZİLMİYOR
@@ -90,6 +106,13 @@ export const BildirimMerkezi: React.FC<{
     tazeliyor; bu bileşen kendi başına veri yazmıyor.
   */
   onBaglantiYanitla?: (bildirimId: string, karar: 'kabul' | 'red') => Promise<BaglantiYanitSonucu>;
+  /*
+    Bildirimin işaret ettiği isteğin şu anki durumu. Çağıran her panel
+    açılışında bağlantı listesinden hesaplıyor; bileşen kendi başına
+    veri okumuyor. Verilmezse bütün istekler "bekliyor" sayılıyor —
+    eski davranış, dev fikstürü için.
+  */
+  istekDurumu?: (b: Bildirim) => IstekDurumu;
 }> = ({
   bildirimler,
   okunmamis,
@@ -99,6 +122,7 @@ export const BildirimMerkezi: React.FC<{
   onAc,
   onTumunuOkundu,
   onBaglantiYanitla,
+  istekDurumu,
 }) => {
   const kapsayici = React.useRef<HTMLDivElement>(null);
   /* Hangi bildirimin düğmeleri işlemde: çift dokunma ikinci istek atmasın. */
@@ -136,6 +160,24 @@ export const BildirimMerkezi: React.FC<{
       setIslemdeki(null);
     }
   };
+
+  /*
+    İKİ KAYNAK, BİRİ ÖNCELİKLİ
+
+    Yerel sonuç yanıtın HEMEN ardından doğru cevabı veriyor (liste
+    tazelenene kadar). Sunucudan gelen durum ise sayfa yenilendikten
+    sonra tek doğru kaynak. Yerel olan önce okunuyor; yoksa sunucunun
+    durumuna düşülüyor.
+  */
+  const gosterilecekSonuc = (b: Bildirim): BaglantiYanitSonucu | null => {
+    if (sonuc[b.id]) return sonuc[b.id];
+    const durum = istekDurumu?.(b) ?? 'bekliyor';
+    return durum === 'kabul' ? 'kabul' : null;
+  };
+
+  /* Düğmeler yalnız gerçekten bekleyen istekte. */
+  const dugmeCizilsin = (b: Bildirim) =>
+    !sonuc[b.id] && (istekDurumu?.(b) ?? 'bekliyor') === 'bekliyor';
 
   const SONUC_METNI: Record<BaglantiYanitSonucu, string> = {
     kabul: 'Bağlantı kuruldu. Tebrikler!',
@@ -239,22 +281,22 @@ export const BildirimMerkezi: React.FC<{
                   olarak duruyorlar; satıra basmak yine bildirimi açıyor,
                   düğmeler kendi işlerini yapıyor.
                 */}
-                {b.tur === 'baglanti_istegi' && onBaglantiYanitla && sonuc[b.id] && (
+                {b.tur === 'baglanti_istegi' && onBaglantiYanitla && gosterilecekSonuc(b) && (
                   <p
                     role="status"
                     className={`border-b border-gray-50 px-4 pb-3 text-[11px] font-semibold ${
-                      sonuc[b.id] === 'gecersiz'
+                      gosterilecekSonuc(b) === 'gecersiz'
                         ? 'text-amber-800'
-                        : sonuc[b.id] === 'kabul'
+                        : gosterilecekSonuc(b) === 'kabul'
                           ? 'text-emerald-700'
                           : 'text-gray-600'
                     }`}
                   >
-                    {SONUC_METNI[sonuc[b.id]]}
+                    {SONUC_METNI[gosterilecekSonuc(b)!]}
                   </p>
                 )}
 
-                {b.tur === 'baglanti_istegi' && onBaglantiYanitla && !sonuc[b.id] && (
+                {b.tur === 'baglanti_istegi' && onBaglantiYanitla && dugmeCizilsin(b) && (
                   <div className="flex gap-2 border-b border-gray-50 px-4 pb-3">
                     <button
                       type="button"
