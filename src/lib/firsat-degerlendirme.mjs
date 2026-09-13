@@ -36,24 +36,44 @@ export const ODEME_DONEMI_ETIKETLERI = {
   term: 'Dönemlik',
 };
 
-function paraBicimi(deger, currency) {
+/*
+  TÜRK LİRASI "7.000 TL", "₺7.000" DEĞİL
+
+  `Intl` TRY için ₺ işaretini SAYIDAN ÖNCE koyuyor: "₺7.000". Türkçede
+  tutar sayıdan sonra ve çoğunlukla "TL" ile yazılıyor; burs ilanlarının
+  kendi sayfalarında da öyle geçiyor ("aylık burs miktarı 7.000 TL").
+  Kaynağıyla aynı yazılmayan bir rakam, öğrenciyi ikisini
+  karşılaştırırken duraklatıyor.
+
+  Yalnızca TRY'ye özel: öteki para birimleri `Intl`in yerel kuralında
+  kalıyor (EUR "3.000 €", USD "60.000 $"), çünkü onların doğru yazımını
+  `Intl` zaten biliyor ve elle kural yazmak her birim için yeni bir
+  hata yüzeyi açardı.
+*/
+export function paraBicimi(deger, currency) {
   const sayi = Number(deger);
   if (deger == null || !Number.isFinite(sayi)) return null;
+
+  const birim = currency || 'TRY';
+  const sayiMetni = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(sayi);
+  if (birim === 'TRY') return `${sayiMetni} TL`;
+
   try {
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
-      currency: currency || 'TRY',
+      currency: birim,
       maximumFractionDigits: 0,
     }).format(sayi);
   } catch {
-    return `${new Intl.NumberFormat('tr-TR').format(sayi)} ${currency || ''}`.trim();
+    /* Tanınmayan birim kodu: sayıyı kaybetmemek için kodu yanına yazıyoruz. */
+    return `${sayiMetni} ${birim}`.trim();
   }
 }
 
 /**
  * Karta yazılacak tutar bilgisi.
  *
- * metin      — "Aylık 12.000 ₺" ya da açıklama; bilinmiyorsa null
+ * metin      — "Aylık 12.000 TL" ya da açıklama; bilinmiyorsa null
  * donem      — "2026-2027 dönemi"; yoksa null
  * geriOdeme  — "Karşılıksız" | "Geri ödemeli"; bilinmiyorsa null
  * bilinmiyor — true ise ekranda "açıklanmadı" cümlesi yazılmalı
@@ -79,7 +99,7 @@ function paraBicimi(deger, currency) {
 
   ALTI DURUM
   ----------
-    kesin          Güncel dönem için kesin rakam → "Aylık 5.000 ₺"
+    kesin          Güncel dönem için kesin rakam → "Aylık 5.000 TL"
     aciklanacak    Kaynak "tutar sonra açıklanacak" diyor
     mali_destek    Destek var, miktar programa/şehre/kişiye göre değişiyor
     belirtilmemis  Güncel sayfa okundu, tutardan hiç söz etmiyor
@@ -155,7 +175,7 @@ export function opportunityAmount(item) {
   /*
     SIKLIĞI OLMAYAN SAYI GÖSTERİLMİYOR
 
-    "2.250 ₺" tek başına aylık mı tek seferlik mi belli değil ve ikisi
+    "2.250 TL" tek başına aylık mı tek seferlik mi belli değil ve ikisi
     arasında on iki katlık fark var. Sıklık yoksa sayı atlanıyor;
     varsa açıklama alanındaki kaynak ifadesi gösteriliyor.
   */

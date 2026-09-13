@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
   opportunityAmount,
+  paraBicimi,
   TUTAR_DURUMU,
   TUTAR_METNI,
 } from '../src/lib/firsat-degerlendirme.mjs';
@@ -99,7 +100,7 @@ test('ESKİ DÖNEM TUTARI KULLANILMIYOR: damgasız sayı rakam sayılmıyor', ()
 });
 
 test('sıklığı olmayan sayı gösterilmiyor', () => {
-  /* "2.250 ₺" tek başına aylık mı tek seferlik mi belli değil. */
+  /* "2.250 TL" tek başına aylık mı tek seferlik mi belli değil. */
   const t = opportunityAmount(
     kayit({ amountStatus: 'kesin', amountVerifiedAt: '2026-09-13', amountMin: 2250, currency: 'TRY' }),
   );
@@ -140,4 +141,53 @@ test('sorgu ve tip yeni alanları taşıyor', () => {
     assert.ok(lib.includes(alan), `${alan} sorguda yok`);
   }
   assert.match(lib, /amountStatus\?: 'kesin' \| 'aciklanacak' \| 'mali_destek' \| 'belirtilmemis' \| 'ucretsiz' \| 'belirsiz'/);
+});
+
+test('TÜRK LİRASI "7.000 TL" yazılıyor, "₺7.000" değil', () => {
+  /*
+    `Intl` TRY için ₺ işaretini SAYIDAN ÖNCE koyuyor. Türkçede tutar
+    sayıdan sonra ve çoğunlukla "TL" ile yazılıyor; burs ilanlarının
+    kendi sayfalarında da öyle geçiyor ("aylık burs miktarı 7.000 TL").
+    Kaynağıyla aynı yazılmayan bir rakam, öğrenciyi ikisini
+    karşılaştırırken duraklatıyor.
+  */
+  assert.equal(paraBicimi(7000, 'TRY'), '7.000 TL');
+  assert.equal(paraBicimi(22500, 'TRY'), '22.500 TL');
+  /* Birim verilmezse varsayılan TRY. */
+  assert.equal(paraBicimi(7000), '7.000 TL');
+
+  const t = opportunityAmount(
+    kayit({
+      amountStatus: 'kesin',
+      amountVerifiedAt: '2026-09-13',
+      amountMin: 7000,
+      amountMax: 7000,
+      currency: 'TRY',
+      paymentPeriod: 'monthly',
+      amountPeriodLabel: '2026–2027',
+    }),
+  );
+  assert.equal(t.satir, 'Aylık 7.000 TL · 2026–2027');
+  assert.doesNotMatch(t.satir, /₺/);
+});
+
+test('öteki para birimlerinin gösterimi değişmedi', () => {
+  /*
+    EUR ve USD `Intl`in yerel kuralında kalıyor: onların doğru yazımını
+    zaten biliyor ve her birim için elle kural yazmak yeni bir hata
+    yüzeyi açardı.
+  */
+  assert.match(paraBicimi(3000, 'EUR'), /3\.000/);
+  assert.match(paraBicimi(3000, 'EUR'), /€/);
+  assert.match(paraBicimi(60000, 'USD'), /60\.000/);
+  assert.match(paraBicimi(60000, 'USD'), /\$/);
+  /*
+    Tanınmayan ama geçerli biçimdeki kodu `Intl` kendisi yazıyor
+    ("XYZ 500"); catch dalı yalnız gerçekten geçersiz kodlar için.
+    Sınanan şey davranışın DEĞİŞMEMESİ: sayı kaybolmuyor.
+  */
+  assert.match(paraBicimi(500, 'XYZ'), /500/);
+  assert.match(paraBicimi(500, 'XYZ'), /XYZ/);
+  assert.equal(paraBicimi(null, 'TRY'), null);
+  assert.equal(paraBicimi('abc', 'TRY'), null);
 });
