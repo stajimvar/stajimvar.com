@@ -30,6 +30,7 @@ import {
   kullaniciAdiHarfeIndir,
   kullaniciAdiNormalize,
 } from '../sosyal-kullanici-adi.mjs';
+import { ucustaPaylas } from '../ucusta-paylas.mjs';
 
 /* Yalnız burada kullanılan dar erişim; bkz. yukarıdaki gerekçe. */
 interface SosyalIstemci {
@@ -328,15 +329,26 @@ export async function sosyalProfiliGetir(profilId: string): Promise<SosyalProfil
  *
  * Satır yoksa `null`: bu bir hata değil, "henüz kurulmamış" demek.
  */
-export async function kendiSosyalProfiliGetir(kullaniciId: string): Promise<SosyalProfil | null> {
-  const { data, error } = await db
-    .from('social_profiles')
-    .select(PROFIL_KOLONLARI)
-    .eq('profile_id', kullaniciId)
-    .maybeSingle();
+/*
+  AYNI ANDA İKİ YERDEN İSTENİYOR
 
-  if (error) hata('Sosyal profil alınamadı', error);
-  return data ? profileCevir(data) : null;
+  Kendi sosyal profilini App (üst çubuktaki fotoğraf için) ve Ağım
+  ekranı (sağ sütun kartı için) aynı açılışta ayrı ayrı okuyordu —
+  ölçüldü (canlı, 13 Eylül 2026): aynı satır, aynı kolonlar, iki
+  sorgu. `ucustaPaylas` sonucu SAKLAMIYOR; yalnız hâlâ uçuşta olan
+  isteği paylaştırıyor, o yüzden tazelik kaybı yok.
+*/
+export async function kendiSosyalProfiliGetir(kullaniciId: string): Promise<SosyalProfil | null> {
+  return ucustaPaylas(`kendiSosyalProfil:${kullaniciId}`, async () => {
+    const { data, error } = await db
+      .from('social_profiles')
+      .select(PROFIL_KOLONLARI)
+      .eq('profile_id', kullaniciId)
+      .maybeSingle();
+
+    if (error) hata('Sosyal profil alınamadı', error);
+    return data ? profileCevir(data) : null;
+  });
 }
 
 /**
@@ -703,10 +715,27 @@ export const SOSYAL_AVATAR_KOVASI = 'sosyal-avatar';
  * açılamadı" yazıyor. Boş bir kutu bırakmak kırık görselden farksız
  * olurdu.
  */
+/*
+  AYNI DOSYA AYNI ANDA BEŞ KEZ İNİYORDU
+
+  Avatarı çizen bileşenler (üst çubuk, sağ sütun kartı, her paylaşım
+  başlığı) aynı commit'te bağlanıyor: beş istek aynı tikte açılıyordu,
+  hepsi AYNI dosya için — ölçüldü (canlı, 13 Eylül 2026, /agim).
+
+  `ucustaPaylas` sonucu saklamıyor, yalnız uçuştaki isteği
+  paylaştırıyor. Yetki her indirmede yeniden sorulmaya devam ediyor
+  (imzalı adres bu yüzden kaldırılmıştı); aynı ANI paylaşmak o kararı
+  dondurmuyor — iki çağıran zaten aynı yetkiyle, aynı saniyede soruyor.
+
+  Dönen Blob paylaşılıyor ama her çağıran KENDİ object URL'ini
+  üretiyor, yani temizlik yine çağıranda ve tek tek.
+*/
 export async function gorselIndir(kova: string, yol: string): Promise<Blob | null> {
-  const { data, error } = await db.storage.from(kova).download(yol);
-  if (error || !data) return null;
-  return data as Blob;
+  return ucustaPaylas(`gorsel:${kova}:${yol}`, async () => {
+    const { data, error } = await db.storage.from(kova).download(yol);
+    if (error || !data) return null;
+    return data as Blob;
+  });
 }
 
 /**
