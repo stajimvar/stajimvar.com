@@ -530,10 +530,84 @@ export const Header: React.FC<HeaderProps> = ({
       >
         <div className={`${SAYFA_GENISLIGI} mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10`}>
         {/* Main Nav Bar */}
-        <div className="flex items-center justify-between h-15 sm:h-18 gap-2 sm:gap-4">
-          {/* Left: Brand Logo & Segmented Navigation */}
-          <div className="flex items-center gap-2 sm:gap-3 lg:gap-6 shrink-0 min-w-0">
-            <div className="shrink-0">
+        <div className="relative flex items-center justify-between h-15 sm:h-18 gap-2 sm:gap-4">
+          {/*
+            TELEFONDA DİZİLİM: SİMGELER · MARKA · SİMGELER
+
+            Marka `/agim` başlığındaki gibi ortada duruyor. Bunun için
+            arama ve süzgeç simgeleri sağ kümeden SOLA alındı ve logo
+            kabı `flex-1 justify-center` ile aradaki boşluğun ortasına
+            oturdu.
+
+            `lg:` üstünde hiçbir şey değişmiyor: simgeler zaten gizli,
+            kap `lg:flex-none lg:justify-start` ile eski hizasına
+            dönüyor ve masaüstü gezinmesi logonun sağında kalıyor.
+          */}
+          <div className="flex flex-1 items-center gap-2 sm:gap-3 lg:flex-none lg:gap-6 min-w-0">
+            {/*
+              ARAMA VE SÜZGEÇ — YALNIZ TELEFONDA VE YALNIZ KAPSAM VARSA.
+
+              `lg:hidden`: geniş ekranda sayfanın kendi arama kutusu
+              ve süzgeç paneli yerinde duruyor, masaüstü düzeni
+              değişmedi. Kapsam yoksa (örneğin hukuki sayfalar) hiç
+              çizilmiyor — çalışmayan bir simge göstermek olmayan
+              bir özelliği vaat etmek olurdu.
+                */}
+            {sayfaAramasi && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAramaAcik((a) => {
+                if (a) {
+                  setAramaMetni('');
+                  sayfaAramasi.onDegisti('');
+                }
+                return !a;
+                  });
+                }}
+                aria-label={aramaAcik ? 'Aramayı kapat' : sayfaAramasi.yerTutucu}
+                aria-expanded={aramaAcik}
+                className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-700 transition-colors hover:bg-gray-100 lg:hidden"
+              >
+                {aramaAcik ? <X className="h-6 w-6" /> : <Search className="h-6 w-6" />}
+              </button>
+                )}
+
+            {sayfaAramasi?.onSuzgec && (
+              <button
+                type="button"
+                onClick={sayfaAramasi.onSuzgec}
+                aria-expanded={sayfaAramasi.suzgecAcik ?? false}
+                aria-label={
+                  sayfaAramasi.acikSuzgec
+                ? `Filtreler (${sayfaAramasi.acikSuzgec} açık)`
+                : 'Filtreler'
+                }
+                className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-700 transition-colors hover:bg-gray-100 lg:hidden"
+              >
+                <SlidersHorizontal className="h-6 w-6" />
+                {/* Rozet GERÇEK sayı; sıfırken hiç çizilmiyor. */}
+                {Boolean(sayfaAramasi.acikSuzgec) && (
+                  <span className="absolute right-1 top-1 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white">
+                {sayfaAramasi.acikSuzgec}
+                  </span>
+                )}
+              </button>
+                )}
+
+            {/*
+              MARKA GERÇEKTEN ORTADA.
+
+              Önce `flex-1 justify-center` ile ortalanıyordu ama o, iki
+              yan kümenin ARASINI ortalıyor: sol küme (iki simge, 98 px)
+              sağdan (69 px) geniş olduğu için marka 14 piksel sağa
+              kayıyordu (ölçüldü). Mutlak konum ekranın kendisini
+              ortalıyor, yan kümelerin genişliğinden bağımsız.
+
+              `lg:` üstünde eski akışına dönüyor: orada logo solda ve
+              gezinme onun sağında.
+            */}
+            <div className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 shrink-0">
               <Logo
                 onClick={() => {
                   setUserRole('student');
@@ -943,57 +1017,6 @@ export const Header: React.FC<HeaderProps> = ({
               onOpenLogin/onOpenRegister verilmediyse kayıt akışı henüz hazır
               değil demektir; çalışmayan düğme göstermek yerine hiç çizmiyoruz.
             */}
-            {/*
-              ARAMA VE SÜZGEÇ — YALNIZ TELEFONDA VE YALNIZ KAPSAM VARSA.
-
-              `lg:hidden`: geniş ekranda sayfanın kendi arama kutusu
-              ve süzgeç paneli yerinde duruyor, masaüstü düzeni
-              değişmedi. Kapsam yoksa (örneğin hukuki sayfalar) hiç
-              çizilmiyor — çalışmayan bir simge göstermek olmayan
-              bir özelliği vaat etmek olurdu.
-                */}
-            {sayfaAramasi && (
-              <button
-                type="button"
-                onClick={() => {
-                  setAramaAcik((a) => {
-                if (a) {
-                  setAramaMetni('');
-                  sayfaAramasi.onDegisti('');
-                }
-                return !a;
-                  });
-                }}
-                aria-label={aramaAcik ? 'Aramayı kapat' : sayfaAramasi.yerTutucu}
-                aria-expanded={aramaAcik}
-                className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-700 transition-colors hover:bg-gray-100 lg:hidden"
-              >
-                {aramaAcik ? <X className="h-6 w-6" /> : <Search className="h-6 w-6" />}
-              </button>
-                )}
-
-            {sayfaAramasi?.onSuzgec && (
-              <button
-                type="button"
-                onClick={sayfaAramasi.onSuzgec}
-                aria-expanded={sayfaAramasi.suzgecAcik ?? false}
-                aria-label={
-                  sayfaAramasi.acikSuzgec
-                ? `Filtreler (${sayfaAramasi.acikSuzgec} açık)`
-                : 'Filtreler'
-                }
-                className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-700 transition-colors hover:bg-gray-100 lg:hidden"
-              >
-                <SlidersHorizontal className="h-6 w-6" />
-                {/* Rozet GERÇEK sayı; sıfırken hiç çizilmiyor. */}
-                {Boolean(sayfaAramasi.acikSuzgec) && (
-                  <span className="absolute right-1 top-1 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white">
-                {sayfaAramasi.acikSuzgec}
-                  </span>
-                )}
-              </button>
-                )}
-
             {!isLoggedIn ? (
               onOpenLogin || onOpenRegister ? (
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
