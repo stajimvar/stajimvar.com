@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search } from 'lucide-react';
+import { YUZEY } from '../../ui/tokens';
 import { SayfaKabugu } from '../SayfaKabugu';
 import { KullaniciAramaSonuclari } from './KullaniciArama';
 import { BIRINCIL_EYLEM, ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
@@ -85,7 +86,16 @@ const BaglantiSatiri: React.FC<{
   const hedef = kisi.profil?.kullaniciAdi ? profilYolu(kisi.profil.kullaniciAdi) : null;
 
   return (
-    <li className={`${KART} flex flex-wrap items-center gap-3`}>
+    /*
+      TELEFONDA KART DEĞİL YÜZEY
+
+      Satırlar gri zemin üzerinde yüzen kutulardı: iki yanında 16
+      pikselik şerit, köşelerde yuvarlatma, aralarında boşluk. Liste
+      ekranlarının tamamı bu düzenden çıktı; bu sayfa geride kalmıştı.
+      Telefonda kabuk yerini tek bir alt çizgiye bırakıyor ve satır
+      ekranın iki kenarına yaslanıyor (ui/tokens · YUZEY).
+    */
+    <li className={`flex flex-wrap items-center gap-3 bg-white px-4 py-3 ${YUZEY.kabuk} sm:px-3.5 sm:py-3.5`}>
       {/*
         GERÇEK FOTOĞRAF, YOKSA BAŞ HARF
 
@@ -150,9 +160,9 @@ const Bolum: React.FC<{
   <section className="space-y-2">
 
     {durum === 'yukleniyor' && (
-      <div aria-busy="true" className="space-y-2">
-        <div aria-hidden className={`${KART} h-16 animate-pulse bg-gray-50`} />
-        <div aria-hidden className={`${KART} h-16 animate-pulse bg-gray-50`} />
+      <div aria-busy="true" className={`flex flex-col ${YUZEY.kap} sm:gap-2`}>
+        <div aria-hidden className={`h-16 animate-pulse bg-gray-50 ${YUZEY.kabuk}`} />
+        <div aria-hidden className={`h-16 animate-pulse bg-gray-50 ${YUZEY.kabuk}`} />
       </div>
     )}
 
@@ -171,7 +181,9 @@ const Bolum: React.FC<{
     {durum === 'hazir' && satirlar.length === 0 && bos}
 
     {durum === 'hazir' && satirlar.length > 0 && (
-      <ul className="space-y-2">{satirlar.map((kisi) => satirCiz(kisi))}</ul>
+      <ul className={`flex flex-col ${YUZEY.kap} sm:gap-2`}>
+        {satirlar.map((kisi) => satirCiz(kisi))}
+      </ul>
     )}
   </section>
 );
