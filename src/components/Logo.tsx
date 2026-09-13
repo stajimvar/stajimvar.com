@@ -60,7 +60,19 @@ export const Logo: React.FC<LogoProps> = ({
         width={circleSize}
         height={circleSize}
         style={{ width: circleSize, height: circleSize }}
-        className="block shrink-0 rounded-full shadow-xs transition-transform duration-200 group-hover:scale-105"
+        /*
+          İKON TELEFONDA GİZLİ.
+
+          Üst çubukta marka artık ortada duruyor ve ortalanan şey BLOK:
+          ikon + yazı + nokta. Blok ortalanınca yazının kendisi göz
+          hizasında sağa kayıyordu. Telefonda yalnız kelime kalıyor,
+          böylece ortalanan şey doğrudan "StajımVar" oluyor — `/agim`
+          başlığındaki marka da zaten düz yazı.
+
+          `lg:` üstünde ikon geri geliyor: orada logo solda, ortalama
+          yok ve marka tam hâliyle duruyor.
+        */
+        className="hidden lg:block shrink-0 rounded-full shadow-xs transition-transform duration-200 group-hover:scale-105"
         title="stajimvar.com"
       />
 
@@ -75,7 +87,8 @@ export const Logo: React.FC<LogoProps> = ({
         >
           Stajım<span className="text-blue-600 font-black">Var</span>
         </span>
-        <span className="w-1.5 h-1.5 rounded-full bg-blue-600 ml-1 mb-0.5 inline-block group-hover:scale-125 transition-transform"/>
+        {/* Nokta da ikonla birlikte: ortalanan şey yalnız kelime olsun. */}
+        <span className="hidden lg:inline-block w-1.5 h-1.5 rounded-full bg-blue-600 ml-1 mb-0.5 group-hover:scale-125 transition-transform"/>
 
         {showTagline && (
           <span className="hidden lg:inline-block ml-2 text-[10px] font-bold text-gray-600 uppercase tracking-wider pl-2 border-l border-gray-200">

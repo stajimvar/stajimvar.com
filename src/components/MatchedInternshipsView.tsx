@@ -1024,8 +1024,16 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             yoksa satır hiç çizilmiyor — boş bir güven cümlesi, cümlesizlikten
             daha kötü.
           */}
+          {/*
+            TELEFONDA GİZLİ: sayı zaten hemen altında, listenin kendi
+            başlığında yazıyor ("SANA UYGUN STAJ İLANLARI (105)"). Aynı
+            rakamı iki satır arayla iki kez yazmak, ilanın başlamasını
+            geciktirmekten başka bir şey yapmıyordu. Geniş ekranda satır
+            duruyor: orada başlık sol sütunda ve liste başlığı sağda,
+            ikisi yan yana okunmuyor.
+          */}
           {guven && (
-            <p className="text-center lg:text-left text-[11px] sm:text-xs font-semibold text-gray-500 tabular-nums">
+            <p className="hidden lg:block text-center lg:text-left text-[11px] sm:text-xs font-semibold text-gray-500 tabular-nums">
               {guven.ilan}
               {guven.dogrulama && (
                 <>
