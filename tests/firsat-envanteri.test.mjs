@@ -178,7 +178,6 @@ test('BOŞ DURUM AKTİF SÜZGEÇLERİ ADIYLA SAYIYOR', () => {
     kaydedilen: false,
     arsiv: false,
     siralama: 'yeni',
-    takvim: false,
   });
   /* Sıralama ve görünüm listeyi DARALTMIYOR: sayılmıyorlar. */
   assert.deepEqual(
@@ -223,10 +222,16 @@ test('ARŞİV AÇIKKEN LİSTE ÇİZİLİYOR: İSTEK KENDİ ETKİSİNCE İPTAL ED
     boş durum da açık listeyle aynı dalda çiziliyor. Tek koşulları
     görünüm ve yükleme durumu; `filters.arsiv` bunlara kapı tutmuyor.
   */
-  assert.match(sayfa, /\{!takvimGorunumu && listeDurumu === 'ready' && \(\s*<KonuSeridi/);
+  assert.match(sayfa, /\{listeDurumu === 'ready' && \(\s*<KonuSeridi/);
   assert.match(sayfa, /arsivde=\{filters\.arsiv\}/);
   /* Cevap gelmeden yokluk iddia edilmiyor: 'kapali' ekranda 'loading'. */
   assert.match(sayfa, /arsivDurumu === 'kapali'\s*\?\s*'loading'/);
-  /* Takvim arşivde HİÇ çizilmiyor: kesişimi boş bir sekme düğme olamaz. */
-  assert.match(sayfa, /const takvimGorunumu = filters\.takvim && !filters\.arsiv;/);
+  /*
+    TAKVİM GÖRÜNÜMÜ TAMAMEN KALKTI
+
+    Liste/Takvim geçişi kaldırıldı; sayfa her zaman liste. "Arşivde
+    takvim çizilmesin" kuralı da onunla gitti — arşivin kendi dalı
+    (`filters.arsiv`) yerinde ve şerit orada da çiziliyor.
+  */
+  assert.doesNotMatch(sayfa, /takvimGorunumu|<Takvim/, 'takvim görünümü geri gelmiş');
 });

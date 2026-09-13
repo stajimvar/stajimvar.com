@@ -171,10 +171,10 @@ test('ŞERİDİN ÜSTÜNDE LİSTE BAŞLIĞI VAR', () => {
     "ne ve kaç tane", sağda listenin nereden geldiğini söyleyen ikincil
     satır (telefonda gizli).
   */
-  const bicim = /text-xs font-bold uppercase tracking-widest text-gray-600/;
-  assert.match(firsat, bicim, 'fırsat listesinde başlık yok');
+  /* Biçim artık ortak belirteçte (ui/tokens · LISTE_BASLIGI_*). */
+  assert.match(firsat, /className=\{LISTE_BASLIGI_YAZISI\}/, 'fırsat listesinde başlık yok');
   assert.match(firsat, /Kurumların resmî sayfalarından derlendi/);
-  assert.match(firsat, /hidden text-xs font-medium text-gray-500 sm:block/);
+  assert.match(firsat, /className=\{LISTE_BASLIGI_NOTU\}/);
 });
 
 test('BAŞLIKTAKİ SAYI DARALTMAYA GÖRE DEĞİŞİYOR', () => {

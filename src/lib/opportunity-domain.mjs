@@ -281,7 +281,6 @@ export const BOS_FIRSAT_SUZGECI = {
   kaydedilen: false,
   arsiv: false,
   siralama: '',
-  takvim: false,
 };
 
 const secilen = (deger, izinli) => (izinli.includes(deger) ? deger : '');
@@ -302,7 +301,6 @@ export function readOpportunityFilters(search) {
     kaydedilen: params.get('kayit') === '1',
     arsiv: params.get('arsiv') === '1',
     siralama: secilen(params.get('sirala'), SIRALAMALAR),
-    takvim: params.get('gorunum') === 'takvim',
   };
 }
 
@@ -319,7 +317,6 @@ export function serializeOpportunityFilters(filters = {}) {
   if (filters.kaydedilen) params.set('kayit', '1');
   if (filters.arsiv) params.set('arsiv', '1');
   if (filters.siralama) params.set('sirala', filters.siralama);
-  if (filters.takvim) params.set('gorunum', 'takvim');
   const query = params.toString();
   return query ? `?${query}` : '';
 }

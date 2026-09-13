@@ -202,3 +202,43 @@ export const SERIT = {
    */
   ic: 'relative overflow-x-auto px-4 no-scrollbar sm:px-3',
 } as const;
+
+/**
+ * LİSTE BAŞLIĞI — ÜÇ SAYFADA AYNI SATIR
+ *
+ * "AÇIK STAJ İLANLARI (105)", "GÜNCEL FIRSATLAR (113)", "TÜM REHBERLER
+ * (71)". Üçü de aynı işi yapıyor: aşağıdaki listenin ne olduğunu ve kaç
+ * tane olduğunu söylemek. Üç dosyada elle yazılmışlardı ve ayrışmıştı —
+ * biri `gap-3` taşıyor, öteki taşımıyordu.
+ *
+ * ÜST BOŞLUK BURADA, ÇÜNKÜ KAYNAĞI BURASI
+ * ---------------------------------------
+ * İlanlar'da üst çubukla başlık arasında 16 piksel vardı ama o boşluk
+ * KAZAYDI: sol sütunda, içi boşalmış bir sarmalayıcının `mt-4` değeri
+ * kalmıştı (arama kutusu ve süzgeç düğmesi üst çubuğa taşınınca içi
+ * boşaldı). Rehber'de öyle bir artık olmadığı için başlık üst çubuğa
+ * yapışıyordu.
+ *
+ * Artık boşluk başlığın kendi `pt-4` değeri: üç sayfada da aynı ve
+ * nereden geldiği belli. `sm:pt-0` çünkü geniş ekranda üst boşluğu
+ * sayfanın `main` alanı (`sm:pt-3`) zaten veriyor.
+ */
+export const LISTE_BASLIGI = 'flex items-center justify-between gap-3 px-1 pt-4 sm:pt-0';
+export const LISTE_BASLIGI_YAZISI = 'text-xs font-bold uppercase tracking-widest text-gray-600';
+/** Sağdaki ikincil satır — telefonda gizli, başlıkla aynı hizada. */
+export const LISTE_BASLIGI_NOTU = 'hidden text-xs font-medium text-gray-500 sm:block';
+
+/**
+ * LİSTE BLOĞU — BAŞLIK RİTMİNDEN ÇIKIYOR
+ *
+ * Kartlar sütunun `space-y-4` ritmindeydi ve ilk karta 16 piksel üst
+ * boşluk düşüyordu. Ölçüldü (375 px): şerit alt çizgisinden ilk kartın
+ * kurum satırına 43 piksel, sonraki kartların ayırıcısından kurum
+ * satırına 27. Aradaki 16 piksel tam olarak o boşluk.
+ *
+ * Kartlar arasında boşluk YOK — ayıran şey 1 pikselik çizgi. İlk kartın
+ * üstünde de şeridin alt çizgisi var, yani aynı ayırıcı. Boşluk
+ * telefonda sıfıra iniyor ve ritim ilk karttan son karta aynı kalıyor.
+ * `sm:pt-4` geniş ekranın ritmini olduğu gibi bırakıyor.
+ */
+export const LISTE_BLOGU = 'pt-0 sm:pt-4';

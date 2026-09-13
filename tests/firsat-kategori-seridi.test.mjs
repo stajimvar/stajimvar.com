@@ -89,14 +89,13 @@ test('KAYDI OLMAYAN KATEGORİ ÇİZİLMİYOR', () => {
   assert.match(hesap, /kategoriSayimlari\[id\]/, 'sayılar listeyle aynı kaynaktan gelmeli');
 });
 
-test('TAKVİM GÖRÜNÜMÜNDE ŞERİT YOK', () => {
+test('TAKVİM GÖRÜNÜMÜ KALKTI: ŞERİDİN TEK KOŞULU YÜKLEME DURUMU', () => {
   /*
-    Takvimde liste değil ay ay bir görünüm var; kategori süzgeci orada
-    durmuyor. Koşul `filters.takvim` değil `takvimGorunumu`: arşivde
-    takvim hiç açılmadığı için görünüm süzgeçten türetiliyor
-    (takvimGorunumu = filters.takvim && !filters.arsiv) ve şerit orada
-    çizilmeye devam ediyor.
+    Liste/Takvim geçişi kaldırıldı; sayfa her zaman liste. Şeridin
+    "takvimde çizilmesin" koşulu da onunla birlikte gitti — geriye tek
+    koşul kaldı: liste okunmuş olsun. Arşivde şerit çizilmeye devam
+    ediyor, çünkü arşiv daraltılmış bir liste değil AYRI BİR KÜME.
   */
-  assert.match(firsatlar, /const takvimGorunumu = filters\.takvim && !filters\.arsiv;/);
-  assert.match(firsatlar, /\{!takvimGorunumu && listeDurumu === 'ready' && \(\s*<KonuSeridi/);
+  assert.doesNotMatch(firsatlar, /takvimGorunumu/, 'takvim görünümü geri gelmiş');
+  assert.match(firsatlar, /\{listeDurumu === 'ready' && \(\s*<KonuSeridi/);
 });

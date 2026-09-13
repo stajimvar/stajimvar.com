@@ -54,7 +54,16 @@ interface Props {
 
 type Durum = 'yukleniyor' | 'hazir' | 'hata';
 
-const IKON = `relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-gray-800 hover:bg-gray-100 ${RENK_GECISI} ${ODAK_HALKASI}`;
+/*
+  İKON DÜĞMESİ ORTAK ÜST ÇUBUKLA AYNI ÖLÇÜDE
+
+  40 pikseldi; paylaşılan üst çubukta (Header.tsx) ikon düğmeleri 44.
+  Çubuğun kendi yüksekliği de o düğmeden türüyordu, yani Ağım'ın üst
+  çubuğu öteki sayfalardan 8 piksel kısa duruyordu (ölçüldü: 53'e karşı
+  61). İkonun kendisi zaten 24 piksel ve öyle kalıyor — değişen yalnız
+  dokunma kutusu.
+*/
+const IKON = `relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-gray-800 hover:bg-gray-100 ${RENK_GECISI} ${ODAK_HALKASI}`;
 
 export const AgimSayfasi: React.FC<Props> = ({
   kullaniciId,
@@ -157,7 +166,19 @@ export const AgimSayfasi: React.FC<Props> = ({
   /* ------------------------------------------------------------- başlık */
 
   const baslik = (
-    <header className="sticky top-0 z-20 flex items-center gap-1 border-b border-gray-200 bg-white px-2.5 py-1.5 lg:hidden">
+    /*
+      ÜST ÇUBUK ÖTEKİ SAYFALARLA AYNI KUTUDA
+
+      Yükseklik `py-1.5` ile düğmeden türüyordu (40 + 12 = 52) ve
+      paylaşılan üst çubuk 60 pikseldi; Ağım'a geçince çubuk gözle
+      görülür şekilde alçalıyordu. Artık yükseklik SABİT (`h-15` = 60) ve
+      Header.tsx'teki satırla birebir aynı: aynı yan boşluk (`px-2.5`),
+      aynı dikey ortalama, aynı 1 piksellik alt çizgi.
+
+      `relative`: marka mutlak konumla ortalanıyor (aşağıda).
+    */
+    <header className="sticky top-0 z-20 border-b border-gray-200 bg-white lg:hidden">
+      <div className="relative flex h-15 items-center gap-1 px-2.5">
       <button
         type="button"
         onClick={() => (onPaylasimOlustur ? onPaylasimOlustur() : onNavigate('/cv'))}
@@ -196,15 +217,21 @@ export const AgimSayfasi: React.FC<Props> = ({
       {/*
         Ölçü SİTE LOGOSUYLA AYNI: `Logo` bileşeni `md` boyutunda
         `text-xl sm:text-2xl tracking-[-0.03em]` kullanıyor ve marka
-        telefonda 20 piksel duruyor. Burada 16 pikseldi — iki yanındaki
-        24 piksellik simgelerin altında kalıyor, sayfanın adı
-        simgelerden küçük görünüyordu.
+        telefonda 20 piksel duruyor. Yazı tipi ağırlığı da logoyla aynı
+        (`font-black`).
 
-        Yazı tipi ağırlığı da logoyla aynı (`font-black`).
+        ORTALAMA MUTLAK, `flex-1` DEĞİL: iki yandaki simge kümeleri bugün
+        eşit (ikişer düğme) ama biri değişince marka sessizce kayardı.
+        Header.tsx'te aynı kayma ölçülmüştü (14 piksel) ve aynı yolla
+        çözülmüştü. `pointer-events-none`: marka bir düğme değil, altındaki
+        simgelerin tıklamasını yutmamalı.
       */}
-      <h1 className="flex-1 text-center text-xl font-black leading-none tracking-[-0.03em] text-gray-900 sm:text-2xl">
+      <h1 className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-xl font-black leading-none tracking-[-0.03em] text-gray-900 sm:text-2xl">
         Stajım<span className="text-blue-600">Var</span>
       </h1>
+
+      {/* Sağdaki küme sola yaslanmasın: marka mutlak olduğu için boşluğu bu alıyor. */}
+      <span aria-hidden className="flex-1" />
 
       <button
         type="button"
@@ -231,6 +258,7 @@ export const AgimSayfasi: React.FC<Props> = ({
       >
         <Bell aria-hidden className="h-6 w-6" />
       </button>
+      </div>
     </header>
   );
 

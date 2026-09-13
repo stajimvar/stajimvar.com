@@ -82,11 +82,57 @@ test('ayırıcı çizgi kalktı: kontroller üst çubuğa taşındı', () => {
   }
 });
 
-test('Rehber başlık satırı ortak tipografide', () => {
-  const baslik = /text-xs font-bold uppercase tracking-widest text-gray-600/;
-  for (const ad of ['rehber']) {
-    const kaynak = SAYFALAR.find(([x]) => x === ad)[1];
-    assert.match(kaynak, baslik, `${ad}: liste başlığı ortak tipografide değil`);
+test('liste başlığı üç sayfada da ortak belirteçten geliyor', () => {
+  /*
+    Tipografi üç dosyada elle yazılmıştı ve ayrışmıştı (biri `gap-3`
+    taşıyor, öteki taşımıyordu). Artık `ui/tokens` içinde tek tanım;
+    üst boşluk da orada, çünkü kaynağı orası: İlanlar'daki 16 piksel
+    sol sütunda içi boşalmış bir sarmalayıcının `mt-4` artığıydı,
+    Rehber'de o artık olmadığı için başlık üst çubuğa yapışıyordu.
+  */
+  const tokens = oku('src/ui/tokens.ts');
+  assert.match(tokens, /LISTE_BASLIGI = 'flex items-center justify-between gap-3 px-1 pt-4 sm:pt-0'/);
+  assert.match(tokens, /LISTE_BASLIGI_YAZISI = 'text-xs font-bold uppercase tracking-widest text-gray-600'/);
+  assert.match(tokens, /LISTE_BASLIGI_NOTU = 'hidden text-xs font-medium text-gray-500 sm:block'/);
+
+  for (const dosya of [
+    'src/components/MatchedInternshipsView.tsx',
+    'src/components/OpportunitiesPage.tsx',
+    'src/components/RehberMerkezi.tsx',
+  ]) {
+    const kaynak = oku(dosya);
+    assert.match(kaynak, /className=\{LISTE_BASLIGI\}/, `${dosya}: başlık satırı ortak değil`);
+    assert.match(kaynak, /className=\{LISTE_BASLIGI_YAZISI\}/, `${dosya}: başlık yazısı ortak değil`);
+    assert.match(kaynak, /className=\{LISTE_BASLIGI_NOTU\}/, `${dosya}: ikincil satır ortak değil`);
+  }
+
+  /* İlanlar'daki artık sarmalayıcı geri gelmesin: boşluk başlığın kendi işi. */
+  assert.doesNotMatch(
+    oku('src/components/MatchedInternshipsView.tsx'),
+    /<div className="mt-4 flex flex-col sm:flex-row lg:flex-col gap-2">/,
+    'içi boşalmış sarmalayıcı geri gelmiş',
+  );
+});
+
+test('liste bloğu sütunun ritminden ayrı: ilk kart da sonrakiler gibi', () => {
+  /*
+    Kartlar sütunun `space-y-4` ritmindeydi ve ilk karta 16 piksel üst
+    boşluk düşüyordu; sonraki kartların arasında ise boşluk değil 1
+    pikselik çizgi var. Ölçüldü (375 px): şerit alt çizgisinden ilk
+    kartın kurum satırına 43 piksel, sonrakilerde 27.
+
+    Boşluk `space-y` ile MARGIN olarak veriliyordu, yani listeye
+    `padding-top: 0` demek onu götürmüyor. Ritim bölündü: başlık ve
+    şeritler kendi kabında, liste onun dışında.
+  */
+  assert.match(oku('src/ui/tokens.ts'), /LISTE_BLOGU = 'pt-0 sm:pt-4'/);
+  for (const dosya of [
+    'src/components/MatchedInternshipsView.tsx',
+    'src/components/OpportunitiesPage.tsx',
+  ]) {
+    const kaynak = oku(dosya);
+    assert.match(kaynak, /<div className="min-w-0 lg:col-span-6">/, `${dosya}: sütun hâlâ space-y taşıyor`);
+    assert.match(kaynak, /<div className=\{LISTE_BLOGU\}>/, `${dosya}: liste bloğu ayrı değil`);
   }
 });
 
