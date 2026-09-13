@@ -195,6 +195,19 @@ interface OlusturProps {
    * söyleyip yolunu göstermemek olurdu.
    */
   onNavigate?: (yol: string) => void;
+  /**
+   * Ekran açılır açılmaz hazırlanacak fotoğraflar.
+   *
+   * Akıştaki fotoğraf simgesi telefonun seçicisini DOĞRUDAN açıyor
+   * (dokunmanın kendisinden; bkz. AgimSayfasi). Seçim yapıldığında bu
+   * ekran zaten seçilmiş dosyalarla açılıyor: kullanıcı fotoğrafını bir
+   * kez seçiyor, ekran açılınca ikinci kez "Fotoğraf seç" demek zorunda
+   * kalmıyor.
+   *
+   * Dosyalar aynı borudan geçiyor — tür denetimi, sayı sınırı,
+   * küçültme, EXIF düşürme — yani bu yolun ayrı bir kuralı yok.
+   */
+  baslangicDosyalari?: File[];
 }
 
 /** Üyelik ekranının adresi; iki yerde (metin ve gezinme) tek dizeden. */
@@ -204,6 +217,7 @@ export const PaylasimOlustur: React.FC<OlusturProps> = ({
   onVazgec,
   onTamamlandi,
   onNavigate,
+  baslangicDosyalari,
 }) => {
   const [secilenler, setSecilenler] = React.useState<HazirGorsel[]>([]);
   const [aciklama, setAciklama] = React.useState('');
@@ -279,12 +293,42 @@ export const PaylasimOlustur: React.FC<OlusturProps> = ({
     };
   }, []);
 
+  /*
+    BAŞLANGIÇ SEÇİMİ BİR KEZ İŞLENİYOR
+
+    `useRef` kapısı olmasaydı React'in çift çağrılan geliştirme
+    etkileri (StrictMode) aynı fotoğrafları iki kez eklerdi. Bağımlılık
+    listesi boş: dosyalar ekran açılırken veriliyor, sonradan
+    değişmiyor.
+  */
+  const baslangicIslendi = React.useRef(false);
+  React.useEffect(() => {
+    if (baslangicIslendi.current) return;
+    if (!baslangicDosyalari || baslangicDosyalari.length === 0) return;
+    baslangicIslendi.current = true;
+    void dosyalariAl(baslangicDosyalari);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const kilitli = gonderiliyor || hazirlaniyor;
 
   const dosyaSecildi = async (olay: React.ChangeEvent<HTMLInputElement>) => {
     const liste = Array.from(olay.target.files ?? []);
     /* Aynı dosya art arda seçilebilsin diye kutu boşaltılıyor. */
     olay.target.value = '';
+    await dosyalariAl(liste);
+  };
+
+  /*
+    SEÇİM NEREDEN GELİRSE GELSİN AYNI BORUDAN GEÇİYOR
+
+    İki giriş var: bu ekrandaki "Fotoğraf seç" kutusu ve akıştaki
+    fotoğraf simgesi (seçiciyi dokunmanın kendisinden açıyor, ekran
+    sonra geliyor). İkisi de buraya düşüyor — tür denetimi, sayı
+    sınırı, küçültme ve uyarı metinleri tek yerde. Ayrı yazılsaydı iki
+    yol zamanla ayrışır, biri ötekinin sınırını unuturdu.
+  */
+  const dosyalariAl = async (liste: File[]) => {
     if (liste.length === 0) return;
 
     setUyari(null);

@@ -12,6 +12,7 @@ import {
   type SosyalProfil,
 } from '../../lib/queries/sosyal';
 import { AkisKarti } from './AkisKarti';
+import { PaylasimOlustur } from './PaylasimOlustur';
 import { ProfilFotografi } from './ProfilFotografi';
 import { KullaniciAramaSonuclari } from './KullaniciArama';
 
@@ -42,7 +43,16 @@ interface Props {
   oturumHazir: boolean;
   onNavigate: (yol: string) => void;
   onGirisGerekli?: () => void;
-  /** Paylaşım oluşturma ekranı profil tarafında; `+` oraya götürüyor. */
+  /**
+   * PAYLAŞIMA HAZIR OLMAYAN KULLANICI İÇİN ÇIKIŞ.
+   *
+   * Fotoğraf simgesi artık telefonun seçicisini doğrudan açıyor ve
+   * paylaşım akıştan tamamlanıyor. Ama paylaşabilmenin ön koşulu var
+   * (profil yayında + alan seçili; bkz. `paylasabilirMi`); koşul
+   * sağlanmıyorsa seçiciyi açmak kullanıcıya fotoğraflarını
+   * seçtirip sonra reddetmek olurdu. O durumda profil tarafına
+   * gidiliyor, eksik orada söyleniyor.
+   */
   onPaylasimOlustur?: () => void;
   /**
    * Oturum sahibinin eski kamera düğmesiyle yüklenmiş fotoğrafı.
@@ -92,6 +102,29 @@ export const AgimSayfasi: React.FC<Props> = ({
   const [aramaAcik, setAramaAcik] = React.useState(false);
   const [arama, setArama] = React.useState('');
 
+  /*
+    FOTOĞRAF SEÇİCİSİ DOKUNMANIN KENDİSİNDEN AÇILIYOR
+
+    Simge önce `/cv` adresine götürüyordu: kullanıcı akıştan çıkıyor,
+    profil ekranı yükleniyor, orada ikinci kez "Fotoğraf seç" diyordu.
+    Artık dokunma DOĞRUDAN gizli dosya kutusunu tıklıyor — tarayıcılar
+    dosya seçiciyi yalnız kullanıcı hareketinin İÇİNDEN açıyor, araya
+    bir gezinme ya da bir `await` girse seçici hiç açılmazdı.
+
+    VAZGEÇME SESSİZ: seçici iptal edilirse tarayıcı `change` olayı
+    yollamıyor, yani burada hiçbir şey olmuyor — akış olduğu yerde,
+    kaydırma konumu yerinde kalıyor.
+  */
+  const dosyaGirdisi = React.useRef<HTMLInputElement>(null);
+  /* `null` = besteci kapalı. Boş dizi diye bir durum yok: seçim olmadan açılmıyor. */
+  const [olusturDosyalari, setOlusturDosyalari] = React.useState<File[] | null>(null);
+  /*
+    Paylaşım tamamlanınca akış yeniden okunuyor. Yeni paylaşımı elle
+    listeye eklemek, sunucunun görünürlük kurallarını istemcide ikinci
+    kez yazmak olurdu.
+  */
+  const [tazeleme, setTazeleme] = React.useState(0);
+
   React.useEffect(() => {
     if (!oturumHazir || !kullaniciId) return;
     let iptal = false;
@@ -133,7 +166,7 @@ export const AgimSayfasi: React.FC<Props> = ({
     return () => {
       iptal = true;
     };
-  }, [kullaniciId, oturumHazir]);
+  }, [kullaniciId, oturumHazir, tazeleme]);
 
   /* --------------------------------------------------------- yetki kapısı */
 
@@ -163,6 +196,44 @@ export const AgimSayfasi: React.FC<Props> = ({
 
   const benimAd = benim?.gorunenAd ?? (benim?.kullaniciAdi ? `@${benim.kullaniciAdi}` : 'Sen');
 
+  /*
+    Sunucunun koyduğu ön koşulun aynısı: profil yayında değilken ya da
+    alan seçilmemişken paylaşım satırı zaten reddediliyor
+    (`paylasim_kitlesi_kilidi` ve profil politikaları). Kapı burada da
+    var ki kullanıcı fotoğraflarını yükledikten SONRA reddedilmesin.
+  */
+  const paylasabilirMi = Boolean(benim?.yayindaMi && benim?.sektorId);
+
+  const fotografSec = () => {
+    if (!paylasabilirMi) {
+      if (onPaylasimOlustur) onPaylasimOlustur();
+      else onNavigate('/cv');
+      return;
+    }
+    dosyaGirdisi.current?.click();
+  };
+
+  /*
+    Gizli dosya kutusu başlığın DIŞINDA, sayfanın kökünde duruyor:
+    besteci açılınca başlık yeniden çizilse de kutu aynı düğüm kalıyor.
+  */
+  const dosyaKutusu = (
+    <input
+      ref={dosyaGirdisi}
+      type="file"
+      accept="image/jpeg,image/png,image/webp"
+      multiple
+      className="sr-only"
+      onChange={(olay) => {
+        const liste = Array.from(olay.target.files ?? []);
+        /* Aynı fotoğraf art arda seçilebilsin diye kutu boşaltılıyor. */
+        olay.target.value = '';
+        if (liste.length === 0) return;
+        setOlusturDosyalari(liste);
+      }}
+    />
+  );
+
   /* ------------------------------------------------------------- başlık */
 
   const baslik = (
@@ -181,9 +252,19 @@ export const AgimSayfasi: React.FC<Props> = ({
       <div className="relative flex h-15 items-center gap-1 px-2.5">
       <button
         type="button"
-        onClick={() => (onPaylasimOlustur ? onPaylasimOlustur() : onNavigate('/cv'))}
-        aria-label="Paylaşım oluştur"
-        className={IKON}
+        onClick={fotografSec}
+        aria-label="Fotoğraf paylaş"
+        /*
+          PROFİL OKUNANA KADAR KAPALI
+
+          Paylaşabilme koşulu profilden okunuyor ve akışla birlikte
+          geliyor. Okunmadan basılsaydı koşul "sağlanmıyor" sayılır ve
+          kullanıcı boş yere profil ekranına atılırdı. Seçiciyi
+          açmak da olmazdı: koşulu sonradan öğrenip fotoğrafları
+          reddetmek, seçimi yaptırdıktan sonra hayır demek olurdu.
+        */
+        disabled={durum === 'yukleniyor'}
+        className={`${IKON} disabled:cursor-default disabled:opacity-40`}
       >
         <ImagePlus aria-hidden className="h-6 w-6" />
       </button>
@@ -350,7 +431,7 @@ export const AgimSayfasi: React.FC<Props> = ({
         </button>
         <button
           type="button"
-          onClick={() => (onPaylasimOlustur ? onPaylasimOlustur() : onNavigate('/cv'))}
+          onClick={fotografSec}
           className={`inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-bold text-white hover:bg-blue-700 ${RENK_GECISI} ${ODAK_HALKASI}`}
         >
           İlk paylaşımını oluştur
@@ -409,8 +490,42 @@ export const AgimSayfasi: React.FC<Props> = ({
 
   /* ------------------------------------------------------------- düzen */
 
+  /*
+    BESTECİ AKIŞIN ÜSTÜNDE, AKIŞIN YERİNE DEĞİL
+
+    Akış DOM'dan kalkmıyor: kullanıcı vazgeçince tam bıraktığı yere
+    dönüyor. Akışı bestecinin yerine çizmek kaydırma konumunu
+    sıfırlardı ve fotoğrafını seçip vazgeçen kullanıcı kendini akışın
+    başında bulurdu.
+
+    `z-40`: alt menü 50'de kalıyor, yani Ağım sekmesi seçili
+    GÖRÜNMEYE devam ediyor — kullanıcı ağdan çıkmış olmuyor.
+  */
+  const besteci = olusturDosyalari && (
+    <div className="fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-white">
+      <div className="mx-auto w-full max-w-[600px] px-4 pb-24 pt-4">
+        <PaylasimOlustur
+          baslangicDosyalari={olusturDosyalari}
+          onNavigate={onNavigate}
+          onVazgec={() => setOlusturDosyalari(null)}
+          onTamamlandi={() => {
+            /*
+              Sıra önemli: önce kapan, sonra tazele. Tersi olsaydı
+              kullanıcı yeni akışı bestecinin arkasında bir an görür,
+              sonra ekran kapanırdı.
+            */
+            setOlusturDosyalari(null);
+            setTazeleme((n) => n + 1);
+          }}
+        />
+      </div>
+    </div>
+  );
+
   return (
     <div className="bg-white lg:bg-transparent">
+      {dosyaKutusu}
+      {besteci}
       {baslik}
       {aramaAlani}
 
