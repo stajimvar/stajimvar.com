@@ -851,3 +851,94 @@ test('seride parmakla gezinme: oklar dar ekranda görünmez ama ağaçta; kaydı
   assert.equal(parmakKaymasi({ dx: -30, indeks: 1, toplam: 3 }), -30);
   assert.equal(parmakKaymasi({ dx: -30, indeks: 0, toplam: 1 }), 0);
 });
+
+/*
+  AKIŞTAN FOTOĞRAF PAYLAŞMA
+
+  Simge `/cv` adresine götürüyordu: kullanıcı akıştan çıkıyor, profil
+  ekranı yükleniyor, orada İKİNCİ kez "Fotoğraf seç" diyordu. Üç
+  dokunuşluk bir iş, üstelik akıştaki yerini kaybederek.
+*/
+
+test('fotoğraf simgesi telefonun seçicisini doğrudan açıyor', () => {
+  const agim = oku('src/components/sosyal/AgimSayfasi.tsx');
+
+  /*
+    SEÇİCİ DOKUNMANIN İÇİNDEN AÇILIYOR
+
+    Tarayıcılar dosya seçiciyi yalnız kullanıcı hareketinin içinden
+    açıyor. Araya bir gezinme ya da bir `await` girseydi seçici hiç
+    açılmazdı — bu yüzden `fotografSec` eşzamanlı ve doğrudan gizli
+    kutuyu tıklıyor.
+  */
+  assert.match(agim, /const dosyaGirdisi = React\.useRef<HTMLInputElement>\(null\);/);
+  assert.match(agim, /dosyaGirdisi\.current\?\.click\(\);/);
+  assert.doesNotMatch(agim, /const fotografSec = async/);
+  assert.match(agim, /onClick=\{fotografSec\}\s*\n\s*aria-label="Fotoğraf paylaş"/);
+
+  /* Sunucudaki üç türle aynı liste; GIF, SVG ve video seçilemiyor. */
+  assert.match(agim, /accept="image\/jpeg,image\/png,image\/webp"/);
+  assert.match(agim, /multiple/);
+
+  /*
+    VAZGEÇME SESSİZ: seçici iptal edilince tarayıcı `change` yollamıyor,
+    yani hiçbir durum değişmiyor. Değişseydi bile akış DOM'dan kalkmıyor
+    (besteci üstte çiziliyor), kaydırma konumu yerinde kalıyor.
+  */
+  assert.match(agim, /if \(liste\.length === 0\) return;/);
+  assert.match(agim, /const besteci = olusturDosyalari && \(/);
+  assert.match(agim, /<div className="fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-white">/);
+
+  /*
+    AĞIM SEÇİLİ KALIYOR: alt menü 50'de, besteci 40'ta. Kullanıcı
+    paylaşırken ağdan çıkmış olmuyor.
+  */
+  const header = oku('src/components/Header.tsx');
+  assert.match(header, /fixed bottom-0 left-0 right-0 z-50/);
+
+  /*
+    ÖN KOŞUL ÖNCE SORULUYOR
+
+    Profil yayında değilken ya da alan seçilmemişken sunucu paylaşımı
+    zaten reddediyor. Seçiciyi açmak, kullanıcıya fotoğraflarını
+    seçtirip sonra hayır demek olurdu.
+  */
+  assert.match(agim, /const paylasabilirMi = Boolean\(benim\?\.yayindaMi && benim\?\.sektorId\);/);
+  assert.match(agim, /if \(!paylasabilirMi\) \{/);
+  /* Koşul okunana kadar simge kapalı: bilinmeyen bir şeye göre karar verilmiyor. */
+  assert.match(agim, /disabled=\{durum === 'yukleniyor'\}/);
+
+  /* Paylaşım bitince akış sunucudan yeniden okunuyor, elle satır eklenmiyor. */
+  assert.match(agim, /setTazeleme\(\(n\) => n \+ 1\);/);
+  assert.match(agim, /\}, \[kullaniciId, oturumHazir, tazeleme\]\);/);
+});
+
+test('akıştan gelen seçim besteciyle AYNI borudan geçiyor', () => {
+  const olustur = oku('src/components/sosyal/PaylasimOlustur.tsx');
+
+  /*
+    İki giriş var (bestecinin kendi kutusu ve akıştaki simge) ama tek
+    boru: tür denetimi, 10 sınırı, küçültme/EXIF düşürme ve uyarı
+    metinleri tek yerde. Ayrı yazılsaydı iki yol zamanla ayrışır, biri
+    ötekinin sınırını unuturdu.
+  */
+  assert.match(olustur, /const dosyalariAl = async \(liste: File\[\]\) => \{/);
+  assert.match(olustur, /await dosyalariAl\(liste\);/);
+  assert.match(olustur, /baslangicDosyalari\?: File\[\];/);
+  assert.match(olustur, /void dosyalariAl\(baslangicDosyalari\);/);
+
+  /*
+    BAŞLANGIÇ SEÇİMİ BİR KEZ: `useRef` kapısı olmasaydı React'in çift
+    çağrılan geliştirme etkileri aynı fotoğrafları iki kez eklerdi.
+  */
+  assert.match(olustur, /const baslangicIslendi = React\.useRef\(false\);/);
+  assert.match(olustur, /if \(baslangicIslendi\.current\) return;/);
+
+  /*
+    ÇİFT DOKUNMA İKİNCİ PAYLAŞIM AÇMIYOR: deneme anahtarı bileşen ömrü
+    boyunca tek ve sunucudaki tekil indeks onu yakalıyor. Hatada seçimler
+    duruyor — besteci DOM'dan kalkmıyor, yalnız hata yazılıyor.
+  */
+  assert.match(olustur, /if \(anahtarRef\.current === null\) anahtarRef\.current = crypto\.randomUUID\(\);/);
+  assert.match(olustur, /setGonderiliyor\(false\);\s*\n\s*setIlerleme\(null\);/);
+});
