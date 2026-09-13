@@ -109,21 +109,61 @@ test('FIRSAT IZGARASI: TELEFONDA TEK SÜTUN, sm ÜSTÜNDE REHBERLE AYNI', () => 
   assert.match(iskelet, /grid grid-cols-1 gap-0 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3/);
 });
 
-test('FIRSAT KARTI TELEFONDA KABUKSUZ, BAŞLIK TAM GENİŞLİKTE', () => {
+test('FIRSAT KARTI TELEFONDA KOMPAKT IZGARA, GENİŞ EKRANDA DİKEY AKIŞ', () => {
   const kart = firsat.slice(firsat.indexOf('<article'));
   /* Kabuk ortak belirteçten: liste ekranlarındaki kartlarla aynı. */
   assert.match(kart.slice(0, 400), /\$\{YUZEY\.kabuk\} \$\{YUZEY\.ic\}/);
+
   /*
-    Logo ve künye sol sütunda, başlık sağ sütundaydı: başlık kartın sol
-    kenarından 44 piksel içeriden başlıyor ve altındaki hiçbir şey o
-    boşluğu doldurmuyordu. İlk satır artık yalnız künye.
+    Telefonda üç sütun: 40 piksellik logo, künye, kaydet. `sm:flex
+    sm:flex-col` ızgara yerleşimini tamamen düşürüyor ve çocuklar kaynak
+    sırasıyla diziliyor — masaüstündeki dar kart olduğu gibi kalıyor.
+    Izgara yerleşim sınıfları esnek kapta hiçbir şey yapmadığı için
+    `sm:` karşılıkları yazılmıyor.
   */
-  assert.match(kart, /<h2 className="line-clamp-2 min-w-0 text-\[15px\] font-bold leading-snug text-gray-900 sm:text-base">/);
-  /* Kime ve nerede satırı telefonda da görünüyor. */
-  assert.doesNotMatch(kart, /hidden text-xs text-gray-500 sm:block/);
+  assert.match(kart, /grid grid-cols-\[40px_minmax\(0,1fr\)_auto\] items-start gap-x-3 gap-y-1 sm:flex sm:flex-col sm:gap-2/);
+  /* Logo/kurum/kaydet satırı telefonda düzenden çıkıyor, sm üstünde geri geliyor. */
+  assert.match(kart, /className="contents sm:flex sm:w-full sm:min-w-0 sm:items-center sm:gap-2\.5"/);
+
+  /* Kurum adı 13 punto orta kalınlıkta mavi; başlık 16/600, satır yüksekliği 21. */
+  assert.match(kart, /text-\[13px\] font-medium text-blue-600/);
+  assert.match(kart, /text-\[16px\] font-semibold leading-\[21px\] text-gray-900/);
+  /*
+    UZUN BAŞLIK TELEFONDA KIRPILMIYOR: `line-clamp` yalnız `sm:`
+    üstünde, çünkü dar masaüstü kartında üç satırlık bir başlık
+    ızgaradaki bütün kartların boyunu belirliyor.
+  */
+  assert.match(kart, /sm:line-clamp-2/);
+  assert.doesNotMatch(kart, /<h2 className="line-clamp-2/, 'telefonda başlık hâlâ kırpılıyor');
+
+  /* Tür ve tutar telefonda tek gri satır; kutu ve renk yok. */
+  assert.match(kart, /\{opportunityTypeLabel\(item\.opportunityType\)\}\s*\{' · '\}/);
+  assert.match(kart, /col-start-2 col-span-2 row-start-3 min-w-0 text-xs text-gray-500 sm:hidden/);
+
+  /* Doğrulama ve kalan süre kutusuz, ikonlu — kaynak aynı rozet listesi. */
+  assert.match(firsat, /const sonGunlerRozeti = rozetler\.find\(\(r\) => r\.id === 'son_gunler'\) \?\? null;/);
+  assert.match(kart, /<Clock className="h-3\.5 w-3\.5 shrink-0" aria-hidden \/>/);
+
+  /* Alt satır: solda son başvuru, sağda küçük mavi "İncele". */
+  assert.match(kart, /flex items-center justify-between gap-3 text-xs text-gray-600 sm:hidden/);
+  assert.match(kart, /\$\{arsivde \? 'Kapandı' : 'Son başvuru'\}: \$\{kisaTarih\(item\.applicationDeadline\)\}/);
 });
 
-test('TUTAR VE SON BAŞVURU İKİ HİZALI ALANDA, İLERLEME ÇUBUĞU YOK', () => {
+test('MASAÜSTÜ BLOKLARI DURUYOR: çipler, uygunluk, iki alanlı künye', () => {
+  /*
+    Telefon düzeni kazanınca masaüstündeki dar kartın anlattıkları
+    kaybolmamalı. Üçü de `hidden sm:*` ile yerinde: renkli çip şeridi,
+    kime/nerede satırı ve iki alanlı tutar/son başvuru künyesi.
+  */
+  const kart = firsat.slice(firsat.indexOf('<article'));
+  assert.match(kart, /hidden min-w-0 flex-wrap items-center gap-1\.5 text-\[10px\] font-bold sm:flex/);
+  assert.match(kart, /hidden min-w-0 text-xs leading-relaxed text-gray-500 sm:block/);
+  assert.match(kart, /<dl className="hidden grid-cols-2 items-start gap-x-3 gap-y-1 border-t border-gray-100 pt-2 sm:grid">/);
+  /* Geniş ekrandaki inceleme satırı da yerinde ve kartın altına yapışıyor. */
+  assert.match(kart, /mt-auto hidden items-center gap-1 pt-0\.5 text-sm font-bold text-blue-700 sm:inline-flex/);
+});
+
+test('İLERLEME ÇUBUĞU YOK; TUTAR VE TARİH GERÇEK KAYITTAN', () => {
   /*
     Tutar yeşil bir kutunun içindeydi, son başvuru ise dolmakta olan bir
     ZAMAN TÜPÜYDÜ: aynı soruyu ("değeri ne, ne zamana kadar") iki ayrı
@@ -135,7 +175,6 @@ test('TUTAR VE SON BAŞVURU İKİ HİZALI ALANDA, İLERLEME ÇUBUĞU YOK', () =>
     doğrudan son başvuru tarihinden hesaplanıyor (firsatRozetleri).
   */
   assert.doesNotMatch(firsat, /ZamanTupu/, 'ilerleme çubuğu karta geri gelmiş');
-  assert.match(firsat, /<dl className="grid grid-cols-2 items-start gap-x-3 gap-y-1 border-t border-gray-100 pt-2">/);
   assert.match(firsat, /<dt className="text-\[11px\] text-gray-500">Tutar<\/dt>/);
   assert.match(firsat, /\{arsivde \? 'Kapanış' : 'Son başvuru'\}/);
   /* Bilinmeyen değerde boş çizgi değil, ne olduğu yazıyor. */
@@ -143,9 +182,18 @@ test('TUTAR VE SON BAŞVURU İKİ HİZALI ALANDA, İLERLEME ÇUBUĞU YOK', () =>
   assert.match(firsat, /Takvim açıklanmadı/);
 });
 
-test('LOGO İLAN KARTIYLA AYNI AİLEDE', () => {
-  /* 56 piksellik logo dar kartın üçte birini yiyordu; ölçü bir kademe küçük. */
-  assert.match(firsat, /!h-9 !w-9[^"]*sm:!h-10 sm:!w-10/);
+test('LOGO 40 PİKSEL VE IZGARANIN İLK SÜTUNU', () => {
+  /*
+    Sütun genişliği ve logonun kendi ölçüsü AYNI değer olmalı (40), yoksa
+    künye sütunu logonun soluna ya da sağına kayar. Logo ilk üç satırı
+    kaplıyor (kurum · başlık · tür-tutar) ve dikeyde ortalanıyor.
+
+    `object-contain` CompanyLogo içinde: kare olmayan kurum logoları
+    kırpılmadan kutuya oturuyor.
+  */
+  assert.match(firsat, /grid-cols-\[40px_minmax\(0,1fr\)_auto\]/);
+  assert.match(firsat, /col-start-1 row-start-3?1? ?row-span-3 !h-10 !w-10/);
+  assert.match(oku('src/components/CompanyLogo.tsx'), /object-contain/);
 });
 
 test('ZAMAN TÜPÜ KIRPMIYOR, SARIYOR', () => {

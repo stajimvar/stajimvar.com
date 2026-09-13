@@ -85,7 +85,7 @@ test('kartın tamamı detaya gidiyor, kaydet örtünün üstünde', () => {
   /* Gerilmiş bağlantı kartı kaplıyor; kaydet düğmesi z-10 ile üstte kalıyor. */
   assert.match(FIRSAT, /after:absolute after:inset-0/, 'gerilmiş bağlantı yok');
   assert.match(FIRSAT, /href=\{`\/firsatlar\/\$\{item\.slug\}`\}/, 'gerçek adres olmalı');
-  assert.match(FIRSAT, /relative z-10 -mr-1 shrink-0 cursor-pointer/, 'kaydet örtünün altında kalır');
+  assert.match(FIRSAT, /relative z-10 col-start-3 row-start-1 -mr-1 -mt-1 shrink-0 cursor-pointer/, 'kaydet örtünün altında kalır');
   assert.match(FIRSAT, /onClick=\{\(e\) => \{\s*e\.stopPropagation\(\);/, 'kaydet tıklaması karta taşıyor');
 });
 
