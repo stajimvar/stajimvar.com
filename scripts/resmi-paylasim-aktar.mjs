@@ -211,7 +211,12 @@ export function setleriOku() {
  * taslak kalıyor (akış `durum='hazir'` istiyor); bir sonraki
  * çalıştırma onu `onar` dalında bulup tamamlıyor.
  */
-export async function setiAktar(db, set, resmiKimlik, { gunluk = () => {} } = {}) {
+export async function setiAktar(
+  db,
+  set,
+  resmiKimlik,
+  { gunluk = () => {}, yayinZamani = null } = {},
+) {
   const icerik = aktarilacak(set);
 
   const { data: mevcut, error: okumaHatasi } = await db
@@ -239,6 +244,19 @@ export async function setiAktar(db, set, resmiKimlik, { gunluk = () => {} } = {}
         kitle: icerik.kitle,
         durum: 'taslak',
         istemci_anahtari: icerik.istemciAnahtari,
+        /*
+          INSTAGRAM YAYIN TARİHİ KORUNUYOR
+
+          Akış `created_at desc` sıralı. Tarih verilmeseydi 09 Eylül'de
+          yayımlanmış bir gönderi ile 13 Eylül'dekiler akışta aynı ana
+          düşer, aralarındaki sıra aktarım hızına kalırdı — içeriğin
+          kendi zaman çizgisi kaybolurdu.
+
+          Tarihi olmayan sette alan hiç yazılmıyor: sütunun kendi
+          varsayılanı (`now()`) devreye giriyor ve setler aktarım
+          SIRASINA göre diziliyor.
+        */
+        ...(yayinZamani ? { created_at: yayinZamani } : {}),
       })
       .select('id')
       .single();
@@ -357,9 +375,27 @@ async function main() {
     return;
   }
 
-  const secilenler = hepsi
-    ? setler
-    : [setler.find((s) => s.kod === kodBayragi.slice('--kod='.length))].filter(Boolean);
+  /*
+    HARİÇ TUTMA — ÜRÜN KARARI, BETİĞİN TAHMİNİ DEĞİL
+
+    Aynı konunun iki çekimi olabiliyor (staj-sigortasi ile
+    staj-sigortasi-fotografli). Hangisinin aktarılacağına betik karar
+    veremez: metinleri farklı, ikisi de geçerli. Karar dışarıdan
+    veriliyor ve komutta GÖRÜNÜYOR — sessizce eleyen bir kural, yarın
+    kimsenin hatırlamayacağı bir davranış olurdu.
+  */
+  const haricBayragi = bayraklar.find((b) => b.startsWith('--haric='));
+  const haric = new Set(
+    haricBayragi ? haricBayragi.slice('--haric='.length).split(',').map((k) => k.trim()).filter(Boolean) : [],
+  );
+
+  const secilenler = (
+    hepsi ? setler : [setler.find((s) => s.kod === kodBayragi.slice('--kod='.length))].filter(Boolean)
+  ).filter((s) => !haric.has(s.kod));
+
+  for (const kod of haric) {
+    if (!setler.some((s) => s.kod === kod)) console.log(`uyarı: --haric içindeki "${kod}" setler.json'da yok`);
+  }
 
   if (secilenler.length === 0) {
     console.error(`Set bulunamadı: ${kodBayragi.slice('--kod='.length)}`);
@@ -388,6 +424,7 @@ async function main() {
 
   if (!yaz) {
     console.log(`${secilenler.length} set seçildi (--yaz verilmedi, hiçbir şey yazılmıyor):\n`);
+    if (haric.size > 0) console.log(`  hariç tutulan: ${[...haric].join(', ')}\n`);
     for (const s of secilenler) {
       const icerik = aktarilacak(s);
       console.log(`  ${s.kod} (${s.surum})  ${icerik.kartlar.length} kart  ${icerik.aciklama.length} karakter`);
@@ -399,14 +436,37 @@ async function main() {
 
   const { db, resmiKimlik } = await istemciKur();
 
+  /*
+    SIRA: Instagram'da yayımlananlar önce, eskiden yeniye.
+
+    Gerekçe: Instagram'da zaten görülmüş içerik akışa önce girsin ki
+    akış tanıdık bir şeyle dolsun. Yayımlanmamışlar sona kalıyor ve
+    aralarındaki sıra alfabetik — rastgele bir sıra, yarın aynı komutu
+    çalıştıranda başka bir sonuç verirdi.
+  */
+  const { data: yayinlar } = await db
+    .from('instagram_yayinlari')
+    .select('set_kodu, yayin_zamani');
+  const yayinTarihi = new Map((yayinlar ?? []).map((y) => [y.set_kodu, y.yayin_zamani]));
+
+  const sirali = [...secilenler].sort((a, b) => {
+    const at = yayinTarihi.get(a.kod) ?? '9999';
+    const bt = yayinTarihi.get(b.kod) ?? '9999';
+    return at.localeCompare(bt) || a.kod.localeCompare(b.kod);
+  });
+
   const sonuclar = [];
   let islenen = 0;
-  for (const s of secilenler) {
+  for (const s of sirali) {
     if (islenen >= sinir) break;
     islenen += 1;
-    process.stdout.write(`${s.kod} (${s.surum}) ... `);
+    const tarih = yayinTarihi.get(s.kod) ?? null;
+    process.stdout.write(`${String(islenen).padStart(2)}. ${s.kod} (${s.surum}) ${tarih ? tarih.slice(0, 10) : 'IG yok'} ... `);
     try {
-      const sonuc = await setiAktar(db, s, resmiKimlik, { gunluk: (m) => console.log(m) });
+      const sonuc = await setiAktar(db, s, resmiKimlik, {
+        gunluk: (m) => console.log(m),
+        yayinZamani: tarih,
+      });
       sonuclar.push(sonuc);
     } catch (sorun) {
       /*
