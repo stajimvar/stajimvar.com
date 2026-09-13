@@ -1230,7 +1230,13 @@ export const Card: React.FC<{
           <ListingLogo
             name={item.organizationName}
             logoUrl={item.organizationLogoUrl}
-            className="col-start-1 row-start-1 row-span-3 !h-10 !w-10 shrink-0 self-center !p-1 !text-[11px] sm:row-auto sm:self-auto sm:!text-xs"
+            /*
+              `row-span-2`: logo yalnız HER ZAMAN VAR OLAN iki satırı
+              kaplıyor (kurum · başlık). Üçüncü satır (tür · destek)
+              gizlenebiliyor; üçe yayılsaydı o satır yokken ızgara
+              boş bir örtük satır açar ve kart uzardı.
+            */
+            className="col-start-1 row-start-1 row-span-2 !h-10 !w-10 shrink-0 self-center !p-1 !text-[11px] sm:row-auto sm:self-auto sm:!text-xs"
           />
           <span className="col-start-2 row-start-1 min-w-0 truncate text-[13px] font-medium text-blue-600 sm:text-sm sm:font-bold">
             {item.organizationName}
@@ -1289,21 +1295,24 @@ export const Card: React.FC<{
         </h2>
 
         {/*
-          TÜR VE TUTAR TEK SATIRDA — TELEFON
+          TÜR VE DESTEK TEK SATIRDA — TELEFON
 
           Geniş ekranda tür bir çip, tutar ise alttaki iki alanlı
           künyenin yarısı. Telefonda ikisi tek gri satıra iniyor:
-          "Burs · Tutar açıklanmadı". Kutu ve renk yok, çünkü ikisi de
-          bir kazanım değil künye.
+          "Burs · Tutar kurumca açıklanacak". Kutu ve renk yok, çünkü
+          ikisi de bir kazanım değil künye.
 
-          Tutar yalnızca resmî kaynaktan doğrulanmışsa yazıyor.
-          Doğrulanmamışsa susmuyoruz da: "açıklanmadı" demek, boş bırakıp
-          öğrenciyi aramaya göndermekten iyi.
+          Destek metnini `opportunityAmount` veriyor ve `satir` null ise
+          yalnız tür yazılıyor — parayla ilgisi olmayan yarışmada
+          tutar hakkında hiçbir şey iddia edilmiyor.
+
+          `line-clamp-2`: en uzun metin ("Tutar kurumca açıklanacak")
+          dar ekranda ikinci satıra sarabiliyor; üçüncü satıra
+          geçemiyor, yani kart uzamıyor.
         */}
-        <p className="col-start-2 col-span-2 row-start-3 min-w-0 text-xs text-gray-500 sm:hidden">
+        <p className="col-start-2 col-span-2 row-start-3 min-w-0 line-clamp-2 text-xs text-gray-500 sm:hidden">
           {opportunityTypeLabel(item.opportunityType)}
-          {' · '}
-          {tutar.bilinmiyor ? 'Tutar açıklanmadı' : tutar.metin}
+          {tutar.satir ? ` · ${tutar.satir}` : ''}
         </p>
 
         {/*
@@ -1397,8 +1406,16 @@ export const Card: React.FC<{
         <dl className="hidden grid-cols-2 items-start gap-x-3 gap-y-1 border-t border-gray-100 pt-2 sm:grid">
           <div className="min-w-0">
             <dt className="text-[11px] text-gray-500">Tutar</dt>
+            {/*
+              Metin telefondakiyle AYNI kaynaktan (`opportunityAmount`);
+              yerleşim değişmedi. Destek bilgisi hiç yoksa alan "—"
+              basmıyor: olmayan bir ölçümü çizgiyle göstermek "veri
+              eksik" gibi okunuyordu.
+            */}
             {tutar.bilinmiyor ? (
-              <dd className="text-sm font-semibold text-gray-500">Tutar açıklanmadı</dd>
+              <dd className="text-sm font-semibold text-gray-500">
+                {tutar.satir ?? 'Belirtilmemiş'}
+              </dd>
             ) : (
               <dd className="text-sm font-extrabold leading-tight text-gray-900 sm:text-base">
                 {tutar.metin}
