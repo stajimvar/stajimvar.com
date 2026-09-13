@@ -124,6 +124,12 @@ export const AgimSayfasi: React.FC<Props> = ({
     kez yazmak olurdu.
   */
   const [tazeleme, setTazeleme] = React.useState(0);
+  /*
+    Yükleme sürerken kapatma düğmesi kilitli: yarıda kalmış bir
+    yüklemeyi sessizce çöpe atmamak için. Bilgi bestecinin kendisinden
+    geliyor, burada tahmin edilmiyor.
+  */
+  const [besteciMesgul, setBesteciMesgul] = React.useState(false);
 
   React.useEffect(() => {
     if (!oturumHazir || !kullaniciId) return;
@@ -503,9 +509,34 @@ export const AgimSayfasi: React.FC<Props> = ({
   */
   const besteci = olusturDosyalari && (
     <div className="fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-white">
+      {/*
+        KAPATMA YOLU TEPEDE
+
+        Ekranın kendi "Vazgeç" düğmesi formun ALTINDA: telefonda
+        fotoğraf, açıklama ve kitle kartlarının arkasında kalıyor ve
+        vazgeçmek için aşağı kaydırmak gerekiyordu. Üst çubuk sayfanın
+        geri kalanıyla aynı ölçüde (`h-15`, `px-2.5`, 44 piksellik ikon
+        düğmesi).
+
+        BAŞLIK YOK: ekran zaten "Fotoğraf paylaş" diye bir `h1`
+        taşıyor. İkincisini yazmak aynı şeyi iki kez söylemek olurdu.
+      */}
+      <div className="sticky top-0 z-10 flex h-15 items-center border-b border-gray-200 bg-white px-2.5">
+        <button
+          type="button"
+          onClick={() => setOlusturDosyalari(null)}
+          disabled={besteciMesgul}
+          aria-label="Paylaşımdan vazgeç"
+          className={`${IKON} disabled:cursor-default disabled:opacity-40`}
+        >
+          <X aria-hidden className="h-6 w-6" />
+        </button>
+      </div>
+
       <div className="mx-auto w-full max-w-[600px] px-4 pb-24 pt-4">
         <PaylasimOlustur
           baslangicDosyalari={olusturDosyalari}
+          onMesgulDegisti={setBesteciMesgul}
           onNavigate={onNavigate}
           onVazgec={() => setOlusturDosyalari(null)}
           onTamamlandi={() => {
