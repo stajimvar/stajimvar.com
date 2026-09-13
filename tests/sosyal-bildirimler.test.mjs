@@ -100,11 +100,30 @@ test('zilin altındaki kabul/ret gerçek eyleme bağlı', () => {
     `okunduMu` bu iş için yetmiyor: satıra dokunmak da bildirimi okundu
     yapıyor, o zaman yanıtlamadan düğmeler kaybolurdu.
   */
-  assert.match(merkez, /const \[sonuc, setSonuc\] = React\.useState<Record<string, 'kabul' \| 'red' \| 'hata'>>\(\{\}\);/);
+  assert.match(merkez, /const \[sonuc, setSonuc\] = React\.useState<Record<string, BaglantiYanitSonucu>>\(\{\}\);/);
   assert.match(merkez, /onBaglantiYanitla && !sonuc\[b\.id\] && \(/);
-  /* Hata yutulmuyor: düğmeler kalkıyor ve sebebi yazılıyor. */
-  assert.match(merkez, /\} catch \{[\s\S]{0,400}setSonuc\(\(o\) => \(\{ \.\.\.o, \[bildirimId\]: 'hata' \}\)\);/);
-  assert.match(merkez, /hata: 'Bu istek artık geçerli değil\.'/);
+
+  /*
+    "ZATEN KABUL EDİLMİŞ" BİR HATA DEĞİL
+
+    `baglantiYanitla` yalnız `durum='bekliyor'` satırı güncelliyor;
+    istek daha önce yanıtlandıysa hiçbir satır dönmüyor ve çağrı hata
+    veriyor — ama BAĞLANTI KURULMUŞ olabilir. Ölçüldü (canlı): kullanıcı
+    kabul etmiş, ekran "Bu istek artık geçerli değil" diyordu.
+
+    Ayrım sunucuya sorularak yapılıyor; sonucu ÇAĞIRAN belirliyor,
+    bileşen yalnız gösteriyor.
+  */
+  assert.match(merkez, /export type BaglantiYanitSonucu = 'kabul' \| 'red' \| 'gecersiz';/);
+  assert.match(merkez, /const cikti = await onBaglantiYanitla\(bildirimId, karar\);/);
+  assert.match(merkez, /kabul: 'Bağlantı kuruldu\. Tebrikler!'/);
+  assert.match(merkez, /gecersiz: 'Bu istek artık geçerli değil\.'/);
+  /* Başarı yeşil, geçersizlik kehribar: renk sonucu tekrar ediyor. */
+  assert.match(merkez, /sonuc\[b\.id\] === 'kabul'\s*\?\s*'text-emerald-700'/);
+
+  const app2 = oku('src/App.tsx');
+  assert.match(app2, /const bilgi = await baglantiDurumu\(isteyen\)\.catch\(\(\) => null\);/);
+  assert.match(app2, /sonuc = bilgi\?\.durum === 'kabul' \? 'kabul' : 'gecersiz';/);
   /*
     Düğmeler satırın `<button>`ının İÇİNDE değil kardeşi: iç içe iki
     düğme geçersiz ve tıklama hedeflerini karıştırırdı.
@@ -117,5 +136,6 @@ test('zilin altındaki kabul/ret gerçek eyleme bağlı', () => {
   /* İsteyen, olayın kimliğinden okunuyor. */
   assert.match(app, /const parcalar = \(satir\?\.anahtar \?\? ''\)\.split\(':'\)/);
   /* Üç iş sırayla: yanıtla, okundu yap, listeyi tazele. */
-  assert.match(app, /await baglantiYanitla\(kimlik, isteyen, karar\);[\s\S]{0,200}await bildirim\.ac\(\);/);
+  assert.match(app, /await baglantiYanitla\(kimlik, isteyen, karar\);/);
+  assert.match(app, /if \(satir\) await bildirim\.okunduYap\(satir\);\s*await bildirim\.ac\(\);/);
 });
