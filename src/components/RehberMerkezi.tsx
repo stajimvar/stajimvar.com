@@ -1,3 +1,4 @@
+import { useSayfaAramasiKaydet } from '../lib/sayfa-aramasi';
 import React from 'react';
 import { ArrowRight, Search, SlidersHorizontal } from 'lucide-react';
 import { FiltreBlogu, SecenekSatiri } from '../ui';
@@ -365,6 +366,31 @@ export const RehberMerkezi: React.FC<{
     !terim && sekme !== 'tumu' && sekme !== 'uygun' ? konuEtiketi(sekme as KonuId) : '',
   ].filter(Boolean);
 
+  /*
+    ARAMA VE SÜZGEÇ TUTAMAĞI ÜST ÇUBUĞA.
+
+    Durum burada kalıyor; üst çubuk yalnız yer tutucuyu ve iki geri
+    çağrıyı alıyor. Geri çağrılar `useCallback` ile KARARLI olmak
+    zorunda — her çizimde yeni nesne kaydedilseydi sağlayıcı döngüye
+    girerdi (bkz. lib/sayfa-aramasi).
+  */
+  const aramaDegisti = React.useCallback(
+    (deger: string) => onAramaDegis?.(deger),
+    [onAramaDegis],
+  );
+  const suzgecAcKapa = React.useCallback(() => setFiltrelerAcik((acik) => !acik), []);
+  useSayfaAramasiKaydet(
+    onAramaDegis
+      ? {
+          yerTutucu: 'Rehber, bölüm veya kullanıcı ara',
+          onDegisti: aramaDegisti,
+          onSuzgec: suzgecAcKapa,
+          acikSuzgec: aktifSuzgecler.length,
+          suzgecAcik: filtrelerAcik,
+        }
+      : null,
+  );
+
   const kartOzellikleri = (r: Rehber) => ({
     rehber: r,
     onNavigate,
@@ -386,68 +412,30 @@ export const RehberMerkezi: React.FC<{
       <div className="grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-12">
         {/* ------------------------------------------------- sol: süzgeçler */}
         <div className="space-y-4 lg:sticky lg:top-4 lg:col-span-3">
-          <h1 className="min-w-0 text-center [font-size:clamp(1rem,5vw,1.5rem)] font-extrabold leading-tight tracking-tight text-gray-950 break-words lg:text-left lg:[font-size:clamp(1.125rem,1.82vw,1.85rem)]">
+          {/*
+            BAŞLIK TELEFONDA GÖRSELDEN KALKTI, METİNDEN KALKMADI.
+
+            `sr-only` öğeyi ekrandan çıkarıyor ama DOM'da ve erişilebilirlik
+            ağacında bırakıyor: ön render edilen `h1` metni yerinde, arama
+            motoru ve ekran okuyucu için hiçbir şey değişmiyor. Geniş
+            ekranda (`lg:not-sr-only`) başlık eskisi gibi görünüyor.
+          */}
+          <h1 className="sr-only lg:not-sr-only min-w-0 text-center [font-size:clamp(1rem,5vw,1.5rem)] font-extrabold leading-tight tracking-tight text-gray-950 break-words lg:text-left lg:[font-size:clamp(1.125rem,1.82vw,1.85rem)]">
             Öğrenci rehberleri, <span className="text-blue-600">tek listede</span>.
           </h1>
 
           {/*
-            TELEFONDA ARAMA SAYFANIN İÇİNDE
+            TELEFONDA ARAMA VE SÜZGEÇ ÜST ÇUBUKTA
 
-            Masaüstünde arama üst çubukta duruyor; telefonda üst çubukta
-            kutu yok, o yüzden sayfa kendi kutusunu çiziyor. İkisi TEK
-            terimi paylaşıyor (`arama` / `onAramaDegis`), ayrı bir durum
-            yok — Keşfet'te de aynı kalıp.
+            Sayfa kendi geniş arama kutusunu ve süzgeç düğmesini
+            çiziyordu; ikisi de üst çubuğa taşındı (`lib/sayfa-aramasi`).
+            Arama DURUMU burada kaldı — üst çubuk yalnız bir tutamak
+            alıyor, terim yine `arama` / `onAramaDegis` üzerinden akıyor,
+            ayrı bir durum yok.
 
-            Yer tutucu "kullanıcı" da diyor: telefonda kişi arama yolu
-            yalnız bu kutu (Header'daki kişi kutusu `hidden lg:block`).
-            Kişi sonuçları aşağıda, rehber sonuçlarının üstünde.
+            Geniş ekranda değişen bir şey yok: orada arama zaten üst
+            çubuktaydı ve süzgeç paneli aşağıda açık duruyor.
           */}
-          <div className="flex items-center gap-2 lg:hidden">
-            {onAramaDegis && (
-              <div className="relative min-w-0 flex-1">
-                <Search
-                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-                  aria-hidden
-                />
-                <input
-                  type="search"
-                  aria-label="Rehber, bölüm veya kullanıcı ara"
-                  value={arama}
-                  onChange={(event) => onAramaDegis(event.target.value)}
-                  placeholder="Rehber, bölüm veya kullanıcı ara"
-                  /*
-                    Keşfet'teki kutu `pl-11 pr-4`; burada `pl-10 pr-3`.
-                    Ölçüldü (390 px, telefonda alanlar 16 px — index.css
-                    iOS yakınlaştırma kuralı): yer tutucu 225,9 px, eski
-                    iç genişlik 222 px, son harf kırpılıyordu. Simge
-                    32 px'te bitiyor, 40 px'lik sol boşluk 8 px pay
-                    bırakıyor; iç genişlik 230 px'e çıkıyor.
-                  */
-                  className="w-full rounded-2xl border border-gray-200 bg-white py-3.5 pl-10 pr-3 text-sm font-medium text-gray-900 placeholder:font-normal placeholder:text-gray-400 focus:border-blue-600 focus:outline-none"
-                />
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => setFiltrelerAcik((acik) => !acik)}
-              aria-expanded={filtrelerAcik}
-              aria-controls="rehber-filtreleri"
-              aria-label={
-                aktifSuzgecler.length ? `Filtreler (${aktifSuzgecler.length} açık)` : 'Filtreler'
-              }
-              className={`relative flex min-h-12 w-[52px] shrink-0 cursor-pointer items-center justify-center self-stretch rounded-2xl border ${
-                filtrelerAcik || aktifSuzgecler.length ? FILTRE_DUGMESI_ACIK : FILTRE_DUGMESI_KAPALI
-              }`}
-            >
-              <SlidersHorizontal className="h-5 w-5" aria-hidden />
-              {aktifSuzgecler.length > 0 && (
-                <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-extrabold text-white">
-                  {aktifSuzgecler.length}
-                </span>
-              )}
-            </button>
-          </div>
-
           <div
             id="rehber-filtreleri"
             className={`${filtrelerAcik ? 'block' : 'hidden'} lg:block`}
