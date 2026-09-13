@@ -18,6 +18,8 @@ import {
   Plus,
   Inbox,
   Search,
+  SlidersHorizontal,
+  X,
 } from 'lucide-react';
 import { StudentProfile, CompanyAccount } from '../types';
 import { Avatar } from './Avatar';
@@ -28,6 +30,7 @@ import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { ODAK_HALKASI } from '../lib/renk-token';
 
 import { BildirimDugmesi } from './BildirimMerkezi';
+import { useSayfaAramasi } from '../lib/sayfa-aramasi';
 import { KullaniciAramaSonuclari } from './sosyal/KullaniciArama';
 
 interface HeaderProps {
@@ -389,6 +392,28 @@ export const Header: React.FC<HeaderProps> = ({
     sütun ve sayfanın gezinmesi hâlâ üstten yapılıyor.
   */
   const akistaMi = /^\/agim(\/|$)/.test(bulunulanYol);
+
+  /*
+    SAYFA ARAMASI ÜST ÇUBUKTA — TELEFONDA.
+
+    İlanlar, Fırsatlar ve Rehber telefonda sayfanın içinde geniş birer
+    arama kutusu çiziyordu; kutular kalktı, yerlerini buradaki iki simge
+    aldı (`/agim` başlığındaki düzenle aynı).
+
+    Metin BURADA, yerel durumda: bağlamda tutulsaydı her tuş vuruşu
+    uygulamanın kökünü yeniden çizerdi. Sayfa kendi durumunu
+    `onDegisti` ile güncellemeye devam ediyor — iki durum değil, tek
+    yönlü akış (bkz. lib/sayfa-aramasi).
+  */
+  const sayfaAramasi = useSayfaAramasi();
+  const [aramaAcik, setAramaAcik] = React.useState(false);
+  const [aramaMetni, setAramaMetni] = React.useState('');
+
+  /* Sayfa değişince kutu kapanıyor: önceki sayfanın terimi burada kalmasın. */
+  React.useEffect(() => {
+    setAramaAcik(false);
+    setAramaMetni('');
+  }, [bulunulanYol]);
   /*
     ARAMA BAĞLAMI
 
@@ -918,6 +943,57 @@ export const Header: React.FC<HeaderProps> = ({
               onOpenLogin/onOpenRegister verilmediyse kayıt akışı henüz hazır
               değil demektir; çalışmayan düğme göstermek yerine hiç çizmiyoruz.
             */}
+            {/*
+              ARAMA VE SÜZGEÇ — YALNIZ TELEFONDA VE YALNIZ KAPSAM VARSA.
+
+              `lg:hidden`: geniş ekranda sayfanın kendi arama kutusu
+              ve süzgeç paneli yerinde duruyor, masaüstü düzeni
+              değişmedi. Kapsam yoksa (örneğin hukuki sayfalar) hiç
+              çizilmiyor — çalışmayan bir simge göstermek olmayan
+              bir özelliği vaat etmek olurdu.
+                */}
+            {sayfaAramasi && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAramaAcik((a) => {
+                if (a) {
+                  setAramaMetni('');
+                  sayfaAramasi.onDegisti('');
+                }
+                return !a;
+                  });
+                }}
+                aria-label={aramaAcik ? 'Aramayı kapat' : sayfaAramasi.yerTutucu}
+                aria-expanded={aramaAcik}
+                className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-700 transition-colors hover:bg-gray-100 lg:hidden"
+              >
+                {aramaAcik ? <X className="h-6 w-6" /> : <Search className="h-6 w-6" />}
+              </button>
+                )}
+
+            {sayfaAramasi?.onSuzgec && (
+              <button
+                type="button"
+                onClick={sayfaAramasi.onSuzgec}
+                aria-expanded={sayfaAramasi.suzgecAcik ?? false}
+                aria-label={
+                  sayfaAramasi.acikSuzgec
+                ? `Filtreler (${sayfaAramasi.acikSuzgec} açık)`
+                : 'Filtreler'
+                }
+                className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-700 transition-colors hover:bg-gray-100 lg:hidden"
+              >
+                <SlidersHorizontal className="h-6 w-6" />
+                {/* Rozet GERÇEK sayı; sıfırken hiç çizilmiyor. */}
+                {Boolean(sayfaAramasi.acikSuzgec) && (
+                  <span className="absolute right-1 top-1 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white">
+                {sayfaAramasi.acikSuzgec}
+                  </span>
+                )}
+              </button>
+                )}
+
             {!isLoggedIn ? (
               onOpenLogin || onOpenRegister ? (
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
@@ -982,7 +1058,16 @@ export const Header: React.FC<HeaderProps> = ({
                     <button
                       id="header-register-btn"
                       onClick={onOpenRegister}
-                      className="px-3 sm:px-4.5 py-1.5 rounded-full text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-xs cursor-pointer whitespace-nowrap shrink-0"
+                      /*
+                        "Kayıt Ol" TELEFONDA GİZLİ.
+
+                        Arama ve süzgeç simgeleri üst çubuğa gelince satır
+                        360 pikselde 42 piksel taşıyordu (ölçüldü).
+                        Kaydolma yolu kapanmıyor: "Giriş Yap"ın açtığı
+                        pencerede "Kayıt Ol" sekmesi zaten var, yani eylem
+                        bir dokunuş uzakta ve aynı pencerede.
+                      */
+                      className="hidden sm:inline-flex px-3 sm:px-4.5 py-1.5 rounded-full text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-xs cursor-pointer whitespace-nowrap shrink-0"
                     >
                       Kayıt Ol
                     </button>
@@ -1293,6 +1378,34 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
+        {/*
+          ARAMA ALANI — simgeye basılınca çubuğun ALTINDA açılıyor.
+
+          Kutuyu doğrudan çubuğa koymak logoyu ve simgeleri sıkıştırırdı;
+          bu satır tam genişlik veriyor ve kapalıyken hiç yer kaplamıyor.
+        */}
+        {aramaAcik && sayfaAramasi && (
+          <div className="py-2 lg:hidden">
+            <label className="relative block">
+              <span className="sr-only">{sayfaAramasi.yerTutucu}</span>
+              <Search
+                aria-hidden
+                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+              />
+              <input
+                type="search"
+                autoFocus
+                value={aramaMetni}
+                onChange={(olay) => {
+                  setAramaMetni(olay.target.value);
+                  sayfaAramasi.onDegisti(olay.target.value);
+                }}
+                placeholder={sayfaAramasi.yerTutucu}
+                className="w-full rounded-2xl border border-gray-200 bg-white py-3 pl-10 pr-3 text-sm font-medium text-gray-900 placeholder:font-normal placeholder:text-gray-400 focus:border-blue-600 focus:outline-none"
+              />
+            </label>
+          </div>
+        )}
         {/* Dynamic Contextual Sub-Menu Bar (for Student views) */}
         {subMenuItems.length > 0 && (
           <div className="relative border-t border-gray-100 flex items-center py-2 group/subnav">

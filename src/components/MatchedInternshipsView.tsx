@@ -1,3 +1,4 @@
+import { useSayfaAramasiKaydet } from '../lib/sayfa-aramasi';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Search,
@@ -877,6 +878,17 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     suzgecKazanci,
   ]);
 
+  /* Arama ve süzgeç tutamağı üst çubuğa; bkz. lib/sayfa-aramasi. */
+  const aramaDegisti = React.useCallback((deger: string) => setSearchQuery(deger), []);
+  const suzgecAcKapa = React.useCallback(() => setFiltreAcik((o) => !o), []);
+  useSayfaAramasiKaydet({
+    yerTutucu: 'Pozisyon veya şirket ara',
+    onDegisti: aramaDegisti,
+    onSuzgec: suzgecAcKapa,
+    acikSuzgec: aktifSuzgecler.length,
+    suzgecAcik: filtreAcik,
+  });
+
   const suzgecleriTemizle = () => {
     setSelectedCity('all');
     setWorkTypes([]);
@@ -989,7 +1001,13 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             yani punto en fazla ~20 olabiliyor. 5vw tam oraya oturuyor ve
             küçük telefonlarda da orantılı küçülüyor.
           */}
-          <h1 className="text-center lg:text-left [font-size:clamp(1rem,5vw,1.5rem)] lg:[font-size:clamp(1.125rem,1.82vw,1.85rem)] font-extrabold leading-tight tracking-tight text-gray-900 break-words">
+          {/*
+            Başlık telefonda GÖRSELDEN kalktı, metinden kalkmadı:
+            `sr-only` öğeyi ekrandan çıkarıyor ama DOM'da ve
+            erişilebilirlik ağacında bırakıyor — ön render edilen `h1`
+            yerinde. Geniş ekranda eskisi gibi görünüyor.
+          */}
+          <h1 className="sr-only lg:not-sr-only text-center lg:text-left [font-size:clamp(1rem,5vw,1.5rem)] lg:[font-size:clamp(1.125rem,1.82vw,1.85rem)] font-extrabold leading-tight tracking-tight text-gray-900 break-words">
             <span className="inline lg:block">Şirketlerin staj ilanları, </span>
             <span className="inline lg:block">
               <span className="text-blue-600">tek listede</span>.
@@ -1064,56 +1082,11 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               çubukta, filtre paneli sol sütunda hep açık.
             */}
             <div className="mt-4 flex flex-col sm:flex-row lg:flex-col gap-2">
-              <div className="flex items-center gap-2 lg:hidden">
-              <div className="relative flex-1 min-w-0">
-                <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  placeholder="Pozisyon veya şirket ara"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-11 pr-11 py-3.5 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-600 transition-colors"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    aria-label="Aramayı temizle"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-700 cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-
               {/*
-                Filtre düğmesi. Arama kutusuyla aynı yükseklikte ve aynı
-                köşe yarıçapında: ikisi tek bir kontrol gibi okunuyor.
+                TELEFONDA ARAMA VE SÜZGEÇ ÜST ÇUBUKTA (lib/sayfa-aramasi).
+                Durum burada kaldı; üst çubuk yalnız bir tutamak alıyor.
+                Geniş ekranda değişen bir şey yok.
               */}
-              <button
-                type="button"
-                onClick={() => setFiltreAcik((o) => !o)}
-                aria-expanded={filtreAcik}
-                aria-label="Filtreler"
-                /*
-                  Yükseklik sabit değil, arama kutusundan geliyor (self-stretch).
-                  Sabit 52 piksel verilince kutu 53 çıkıyordu ve yan yana iki
-                  çerçevenin alt kenarı 1 piksel kayıyordu — ölçüldü.
-                */
-                className={`relative shrink-0 self-stretch w-[52px] rounded-2xl border flex items-center justify-center cursor-pointer transition-colors ${
-                  filtreAcik || acikSuzgecSayisi > 0
-                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
-                }`}
-              >
-                <SlidersHorizontal className="w-5 h-5" />
-                {acikSuzgecSayisi > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-blue-600 text-white text-[10px] font-extrabold flex items-center justify-center">
-                    {acikSuzgecSayisi}
-                  </span>
-                )}
-              </button>
-              </div>
 
               {/*
                 Şehir seçici buradan kaldırıldı.

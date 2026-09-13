@@ -1,3 +1,4 @@
+import { useSayfaAramasiKaydet } from '../lib/sayfa-aramasi';
 import React from 'react';
 import {
   Building2,
@@ -432,6 +433,16 @@ export const OpportunitiesPage: React.FC<{
   );
   /* Arşiv bir daraltma değil, başka bir küme: rozet sayacında yer almıyor. */
   const aktifSuzgecSayisi = aktifSuzgecler.filter((s) => s.id !== 'arsiv').length;
+
+  const aramaDegisti = React.useCallback((deger: string) => set({ query: deger }), [set]);
+  const suzgecAc = React.useCallback(() => setPanelAcik(true), []);
+  useSayfaAramasiKaydet({
+    yerTutucu: 'Burs, program veya yarışma ara',
+    onDegisti: aramaDegisti,
+    onSuzgec: suzgecAc,
+    acikSuzgec: aktifSuzgecSayisi,
+    suzgecAcik: panelAcik,
+  });
   const listeDaraldi = aktifSuzgecSayisi > 0;
 
   const temizle = () => setFilters({ ...BOS_FIRSAT_SUZGECI, arsiv: filters.arsiv });
@@ -476,66 +487,30 @@ export const OpportunitiesPage: React.FC<{
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
         {/* --------------------------------- sol: başlık, arama, süzgeçler */}
         <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-4">
-          <header className="space-y-1">
-            <h1 className="[font-size:clamp(1.25rem,2.4vw,1.75rem)] font-extrabold leading-tight tracking-tight text-gray-950">
+          {/*
+            Başlık ve açıklama telefonda GÖRSELDEN kalktı, metinden
+            kalkmadı: `sr-only` öğeyi ekrandan çıkarıyor ama DOM'da ve
+            erişilebilirlik ağacında bırakıyor. Geniş ekranda eskisi gibi.
+          */}
+          <header className="lg:space-y-1">
+            {/*
+              `sr-only` KAPSAYICIYA DEĞİL ÖĞELERE veriliyor: sınıf
+              öğenin kendisini 1×1 piksele indiriyor, çocuklarını
+              kırpmıyor — kapsayıcıya verilince başlık ekranda kalmıştı
+              (ölçüldü).
+            */}
+            <h1 className="sr-only lg:not-sr-only [font-size:clamp(1.25rem,2.4vw,1.75rem)] font-extrabold leading-tight tracking-tight text-gray-950">
               Fırsatlar
             </h1>
-            <p className="text-sm leading-relaxed text-gray-600">
+            <p className="sr-only lg:not-sr-only text-sm leading-relaxed text-gray-600">
               Bursları, öğrenci programlarını, yarışmaları ve kariyer etkinliklerini keşfet.
             </p>
           </header>
 
-          {/* -------- mobil arama satırı + panel düğmesi -------- */}
-          <div className="lg:hidden flex items-center gap-2">
-            <div className="relative flex-1 min-w-0">
-              <Search
-                aria-hidden
-                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-              />
-              <input
-                type="text"
-                aria-label="Fırsat ara"
-                value={filters.query}
-                onChange={(e) => set({ query: e.target.value })}
-                placeholder="Burs, program veya yarışma ara"
-                className={`w-full rounded-2xl border border-gray-200 bg-white py-3.5 pl-11 pr-11 text-sm font-medium text-gray-900 placeholder:text-gray-400 transition-colors focus:border-blue-600 focus:outline-none ${ODAK_HALKASI}`}
-              />
-              {filters.query && (
-                <button
-                  type="button"
-                  onClick={() => set({ query: '' })}
-                  aria-label="Aramayı temizle"
-                  className={`absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-gray-400 hover:text-gray-700 cursor-pointer ${ODAK_HALKASI}`}
-                >
-                  <X className="w-4 h-4" aria-hidden />
-                </button>
-              )}
-            </div>
-            {/*
-              Yükseklik `self-stretch` ile arama kutusundan geliyor, sabit
-              piksel DEĞİL — ilan sayfasında gerekçesi ölçülerek yazılmış:
-              sabit değerde iki çerçevenin alt kenarı bir piksel kayıyor.
-            */}
-            <button
-              type="button"
-              onClick={() => setPanelAcik(true)}
-              aria-label={
-                aktifSuzgecSayisi > 0 ? `Filtreler (${aktifSuzgecSayisi} açık)` : 'Filtreler'
-              }
-              className={`relative flex w-[52px] shrink-0 cursor-pointer items-center justify-center self-stretch rounded-2xl border transition-colors ${ODAK_HALKASI} ${
-                aktifSuzgecSayisi > 0
-                  ? 'border-blue-600 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
-              }`}
-            >
-              <SlidersHorizontal className="w-5 h-5" aria-hidden />
-              {aktifSuzgecSayisi > 0 && (
-                <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-extrabold text-white">
-                  {aktifSuzgecSayisi}
-                </span>
-              )}
-            </button>
-          </div>
+          {/*
+            TELEFONDA ARAMA VE SÜZGEÇ ÜST ÇUBUKTA (lib/sayfa-aramasi).
+            Durum burada kaldı; üst çubuk yalnız bir tutamak alıyor.
+          */}
 
           <div className="hidden lg:block">{suzgecler}</div>
 

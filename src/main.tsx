@@ -9,6 +9,13 @@ import {createRoot} from 'react-dom/client';
 */
 import {OnRenderYedegi} from './lib/onrender-yedek.tsx';
 import App from './App.tsx';
+/*
+  Sayfa araması sağlayıcısı: üst çubuktaki arama/süzgeç simgeleriyle
+  sayfaların kendi arama durumu arasındaki köprü (bkz. lib/sayfa-aramasi).
+  App'in DIŞINDA duruyor ki App'in kendisi yeniden çizildiğinde kayıt
+  düşmesin.
+*/
+import { SayfaAramaSaglayici } from './lib/sayfa-aramasi.tsx';
 import './index.css';
 
 /*
@@ -69,7 +76,9 @@ createRoot(document.getElementById('root')!).render(
       ediyor. Bkz. `lib/onrender-yedek.tsx`.
     */}
     <Suspense fallback={<OnRenderYedegi />}>
-      <App />
+      <SayfaAramaSaglayici>
+        <App />
+      </SayfaAramaSaglayici>
     </Suspense>
   </StrictMode>,
 );
