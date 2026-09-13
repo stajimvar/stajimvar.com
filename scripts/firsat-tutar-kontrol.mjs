@@ -147,22 +147,47 @@ export function pdfMetni(tampon) {
 /* ------------------------------------------------------------------ */
 
 /**
+ * İÇİNDE BULUNULAN ÖĞRETİM YILI
+ *
+ * Takvim yılı değil: öğretim yılı eylülde başlıyor. 13 Eylül 2026'da
+ * güncel öğretim yılı 2026–2027; 13 Mart 2026'da ise hâlâ 2025–2026.
+ */
+export function ogretimYili(bugun = new Date()) {
+  const yil = bugun.getUTCFullYear();
+  return bugun.getUTCMonth() >= 8 ? yil : yil - 1;
+}
+
+/**
  * Metinde GÜNCEL bir dönem işareti var mı.
  *
- * Güncel sayılan: içinde bulunulan yıl, gelecek yıl ve "2026-2027" gibi
- * öğretim yılı yazımları. Eylül'den önce bir önceki yıl da güncel
- * sayılıyor, çünkü öğretim yılı yazın başlamıyor.
+ * ARALIK YALNIZCA BAŞLANGIÇ YILINDAN KABUL EDİLİYOR
+ * -------------------------------------------------
+ * Önce "2025-2026" aralığı da güncel sayılıyordu, çünkü bitiş yılı
+ * (2026) içinde bulunduğumuz takvim yılıydı. Ölçüldü: Güney Eğitim
+ * Vakfı sayfasındaki "yıllık burs miktarı 2025-2026 dönemi için toplam
+ * 22.500 TL" cümlesi bu yüzden GÜNCEL diye damgalandı — oysa o öğretim
+ * yılı yazın bitti ve bu, tam olarak "eski dönem rakamını güncele
+ * taşımak" demek.
+ *
+ * Aralık artık yalnızca BAŞLANGIÇ yılı güncel öğretim yılıysa kabul
+ * ediliyor: 2026–2027 evet, 2025–2026 hayır. Tek yıl yazımında da
+ * geçmiş yıl kabul edilmiyor.
  */
 export function guncelDonem(metin, bugun = new Date()) {
-  const yil = bugun.getUTCFullYear();
-  const kabul = new Set([String(yil), String(yil + 1)]);
-  if (bugun.getUTCMonth() < 8) kabul.add(String(yil - 1));
+  const bas = ogretimYili(bugun);
+  const t = String(metin ?? '');
 
-  for (const m of String(metin ?? '').matchAll(/(20\d{2})\s*[-–—/]\s*(20\d{2})/g)) {
-    if (kabul.has(m[1]) || kabul.has(m[2])) return m[0];
+  const aralik = /(20\d{2})\s*[-–—/]\s*(20\d{2})/g;
+  for (const m of t.matchAll(aralik)) {
+    if (Number(m[1]) >= bas) return m[0];
   }
-  for (const m of String(metin ?? '').matchAll(/20\d{2}/g)) {
-    if (kabul.has(m[0])) return m[0];
+  /*
+    Aralıklar metinden ÇIKARILIYOR: "2025-2026" reddedildikten sonra tek
+    yıl taraması içindeki "2026"yı yakalayıp aynı eski dönemi güncel
+    ilan ediyordu (ölçüldü: Güney Eğitim Vakfı).
+  */
+  for (const m of t.replace(aralik, ' ').matchAll(/20\d{2}/g)) {
+    if (Number(m[0]) >= bas) return m[0];
   }
   return null;
 }
@@ -173,8 +198,20 @@ export function guncelDonem(metin, bugun = new Date()) {
 
 const UCRETSIZ = /(katılım|kayıt|başvuru)\s+(ücreti|ücretsizdir|bedeli)[^.]{0,40}(yoktur|alınmaz|alınmamaktadır|ücretsiz)|ücretsizdir|tamamen ücretsiz|katılım ücretsiz/i;
 
+/*
+  ÖZNE TUTAR OLMALI
+
+  Kalıp önce "burs" sözcüğünü de özne kabul ediyordu ve şu cümleyi
+  tutar açıklaması sandı: "Bursiyer aday listesi 03 EKİM 2026 tarihinde
+  vakıf web sitesinde açıklanacaktır" (Erciyes Organ Nakli Vakfı).
+  Orada açıklanacak olan aday listesi, tutar değil.
+
+  Özne artık açıkça tutar: "burs tutarı", "burs miktarı", "tutar",
+  "miktar". Aradaki mesafe de 40 karaktere indi — uzun cümlelerde
+  ilgisiz iki öge yan yana gelebiliyordu.
+*/
 const ACIKLANACAK =
-  /(tutar|miktar|burs)[^.]{0,60}(daha sonra|ilerleyen|ayrıca)?\s*(açıklanacak|açıklanacaktır|duyurulacak|duyurulacaktır|ilan edilecek|belirlenecek|belirlenecektir)/i;
+  /(burs\s+)?(tutarı|tutari|tutar|miktarı|miktari|miktar)[^.]{0,40}(açıklanacak|açıklanacaktır|duyurulacak|duyurulacaktır|ilan edilecek|belirlenecek|belirlenecektir)/i;
 
 const DEGISKEN =
   /(değişmektedir|değişiklik göstermektedir|programa göre|şehre göre|eyalete göre|ülkeye göre|kişiye göre|başvuru sahibine göre)/i;
@@ -226,11 +263,18 @@ export function tutarKarari(metin, { bugun = new Date() } = {}) {
   if (tutar) {
     const cevre = t.slice(Math.max(0, tutar.index - 160), tutar.index + 160);
     const siklik = Object.entries(SIKLIK).find(([, kalip]) => kalip.test(cevre))?.[0] ?? null;
-    const donem = guncelDonem(cevre, bugun) ?? guncelDonem(t.slice(0, 4000), bugun);
+    /*
+      DÖNEM RAKAMIN YANINDAN OKUNUYOR, SAYFANIN HERHANGİ BİR YERİNDEN DEĞİL.
+
+      Önce sayfanın ilk 4000 karakterine de bakılıyordu; oradaki bir yıl
+      telif satırından ya da ilgisiz bir duyurudan gelebiliyor ve geçen
+      yılın rakamını "güncel" diye damgalayabiliyordu. Dönem artık
+      yalnızca rakamın ±160 karakterlik çevresinde aranıyor.
+    */
+    const donem = guncelDonem(cevre, bugun);
     /*
       Rakam ancak SIKLIĞI ve GÜNCEL DÖNEMİ ile birlikte kabul ediliyor.
-      "2.250 ₺" tek başına aylık mı tek seferlik mi belli değil; dönemsiz
-      bir rakam da geçen yılın rakamı olabilir.
+      "2.250 ₺" tek başına aylık mı tek seferlik mi belli değil.
     */
     if (siklik && donem) {
       return {
@@ -241,6 +285,15 @@ export function tutarKarari(metin, { bugun = new Date() } = {}) {
         siklik,
         donem,
       };
+    }
+    /*
+      Sıklığı olan ama GÜNCEL DÖNEMİ olmayan rakam: sayfada bir burs
+      tutarı yazıyor ama hangi yıla ait olduğu okunamıyor. Tahmin
+      edilmiyor — kayıt kuyruğa giriyor. "Belirtilmemiş" demek de yanlış
+      olurdu: sayfa bir rakam söylüyor, biz tarihleyemiyoruz.
+    */
+    if (siklik) {
+      return { durum: 'belirsiz', kanit: kanit(t, tutar), sebep: 'dönemsiz rakam' };
     }
   }
 
