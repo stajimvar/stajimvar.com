@@ -136,9 +136,15 @@ test('FIRSAT KARTI TELEFONDA KOMPAKT IZGARA, GENİŞ EKRANDA DİKEY AKIŞ', () =
   assert.match(kart, /sm:line-clamp-2/);
   assert.doesNotMatch(kart, /<h2 className="line-clamp-2/, 'telefonda başlık hâlâ kırpılıyor');
 
-  /* Tür ve tutar telefonda tek gri satır; kutu ve renk yok. */
-  assert.match(kart, /\{opportunityTypeLabel\(item\.opportunityType\)\}\s*\{' · '\}/);
-  assert.match(kart, /col-start-2 col-span-2 row-start-3 min-w-0 text-xs text-gray-500 sm:hidden/);
+  /*
+    Tür ve destek telefonda tek gri satır; kutu ve renk yok. Destek
+    metni `opportunityAmount` belirliyor (bkz.
+    tests/firsat-tutar-durumu) ve `satir` null ise yalnız tür yazılıyor.
+    `line-clamp-2`: metin uzasa da kart uzamıyor.
+  */
+  assert.match(kart, /\{opportunityTypeLabel\(item\.opportunityType\)\}/);
+  assert.match(kart, /\{tutar\.satir \? ` · \$\{tutar\.satir\}` : ''\}/);
+  assert.match(kart, /col-start-2 col-span-2 row-start-3 min-w-0 line-clamp-2 text-xs text-gray-500 sm:hidden/);
 
   /* Doğrulama ve kalan süre kutusuz, ikonlu — kaynak aynı rozet listesi. */
   assert.match(firsat, /const sonGunlerRozeti = rozetler\.find\(\(r\) => r\.id === 'son_gunler'\) \?\? null;/);
@@ -177,8 +183,12 @@ test('İLERLEME ÇUBUĞU YOK; TUTAR VE TARİH GERÇEK KAYITTAN', () => {
   assert.doesNotMatch(firsat, /ZamanTupu/, 'ilerleme çubuğu karta geri gelmiş');
   assert.match(firsat, /<dt className="text-\[11px\] text-gray-500">Tutar<\/dt>/);
   assert.match(firsat, /\{arsivde \? 'Kapanış' : 'Son başvuru'\}/);
-  /* Bilinmeyen değerde boş çizgi değil, ne olduğu yazıyor. */
-  assert.match(firsat, /Tutar açıklanmadı/);
+  /*
+    Bilinmeyen değerde boş çizgi değil, ne olduğu yazıyor — ve metin
+    telefondakiyle AYNI kaynaktan geliyor (`opportunityAmount.satir`),
+    yerleşim değişmeden.
+  */
+  assert.match(firsat, /\{tutar\.satir \?\? 'Belirtilmemiş'\}/);
   assert.match(firsat, /Takvim açıklanmadı/);
 });
 
@@ -192,7 +202,7 @@ test('LOGO 40 PİKSEL VE IZGARANIN İLK SÜTUNU', () => {
     kırpılmadan kutuya oturuyor.
   */
   assert.match(firsat, /grid-cols-\[40px_minmax\(0,1fr\)_auto\]/);
-  assert.match(firsat, /col-start-1 row-start-3?1? ?row-span-3 !h-10 !w-10/);
+  assert.match(firsat, /col-start-1 row-start-1 row-span-2 !h-10 !w-10/);
   assert.match(oku('src/components/CompanyLogo.tsx'), /object-contain/);
 });
 

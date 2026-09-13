@@ -32,10 +32,12 @@ import { BursUyumRozeti } from './BursCakismaMatrisi';
  *
  * KARTTAN ÇIKARILANLAR
  * --------------------
- * - "Tutar açıklanmadı": 68 kaydın hiçbirinde doğrulanmış tutar yok, yani
- *   bu satır her kartta tekrar eden ve hiçbir şey söylemeyen bir alandı.
- *   Tutar biliniyorsa yazıyor, bilinmiyorsa alan hiç çizilmiyor; bilgi
- *   detay sayfasında sade biçimde duruyor.
+ * - Tek cümlelik tutar alanı: doğrulanmış rakamı olmayan kayıtlarda her
+ *   kartta tekrar eden ve hiçbir şey söylemeyen bir satırdı. Rakam
+ *   biliniyorsa yazıyor, bilinmiyorsa alan hiç çizilmiyor; destek türü
+ *   (Fırsatlar kartındaki "Mali destek sağlanıyor" / "Tutar kurumca
+ *   açıklanacak" ayrımı, bkz. lib/firsat-degerlendirme · TUTAR_DURUMU)
+ *   ve ayrıntısı detay sayfasında duruyor.
  * - "Son kontrol: … Bilgiler kurum tarafından değiştirilebilir": bir
  *   güven notu, bir karar bilgisi değil. Detay sayfasında kalıyor.
  */

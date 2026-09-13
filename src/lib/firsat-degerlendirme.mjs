@@ -58,19 +58,144 @@ function paraBicimi(deger, currency) {
  * geriOdeme  — "Karşılıksız" | "Geri ödemeli"; bilinmiyorsa null
  * bilinmiyor — true ise ekranda "açıklanmadı" cümlesi yazılmalı
  */
+/*
+  TUTAR SATIRI — DESTEK TÜRÜNE GÖRE BEŞ DURUM
+
+  Kart "Tutar açıklanmadı" diyordu. Cümle üç ayrı gerçeği tek torbaya
+  atıyordu: kurumun henüz rakam yayımlamadığı burs, tanımı gereği sabit
+  rakamı olmayan kapsamlı program ve parayla hiç ilgisi olmayan yarışma.
+  Üçü de aynı cümleyi görünce cümle hiçbir şey söylemiyor.
+
+  BEŞ DURUM
+  ---------
+    rakam        Doğrulanmış güncel rakam var → "Aylık 5.000 ₺"
+    aciklanacak  Para var, kurum rakamı henüz yayımlamadı
+                 → "Tutar kurumca açıklanacak"
+    mali_destek  Sabit rakamı YOK ama burs/harcırah/yol/konaklama
+                 desteği veriliyor → "Mali destek sağlanıyor"
+    ucretsiz     Katılım ücretsiz → "Ücretsiz"
+    yok          Para ya da ücretsizlik bilgisi yok → satır çizilmiyor
+
+  ESKİ DÖNEM TUTARI KULLANILMIYOR
+  ------------------------------
+  Rakam yalnızca `amount_verified_at` damgası varken çıkıyor; damga
+  kurumun kendi sayfasında o rakamın görüldüğü an. Damgasız bir sayı
+  geçen yılın rakamı olabilir ve burs tutarları her yıl değişiyor —
+  bu yüzden damgasız kayıt `aciklanacak` dalına düşüyor, sayıya değil.
+
+  KURAL VERİDEN OKUYOR, TAHMİN ETMİYOR
+  ------------------------------------
+  "Mali destek sağlanıyor" ve "Ücretsiz" bir İDDİA: kurumun bir şey
+  verdiğini söylüyor. İddia yalnızca kaydın kendi alanlarından
+  (`amount_text`, `support_type`) okunuyor. Alan boşsa iddia edilmiyor;
+  parası tanımı gereği olan türlerde (burs, KYK, öğrenci desteği)
+  "açıklanacak", ötekilerde satır hiç çizilmiyor.
+
+  Yeni eklenen kayıtlara ayrıca bir şey yapmak gerekmiyor: kural
+  kaydın alanlarının bir fonksiyonu, listede de detayda da aynı yerden
+  çağrılıyor.
+*/
+export const TUTAR_DURUMU = {
+  rakam: 'rakam',
+  aciklanacak: 'aciklanacak',
+  maliDestek: 'mali_destek',
+  ucretsiz: 'ucretsiz',
+  yok: 'yok',
+};
+
+export const TUTAR_METNI = {
+  aciklanacak: 'Tutar kurumca açıklanacak',
+  mali_destek: 'Mali destek sağlanıyor',
+  ucretsiz: 'Ücretsiz',
+};
+
+/*
+  PARASI TANIMI GEREĞİ OLAN TÜRLER
+
+  Burs, KYK ve öğrenci desteği zaten para demek. `international` de bu
+  kümede: envanterdeki 66 kaydın hepsi yurt dışı BURS ve DEĞİŞİM
+  programı (Fulbright, Erasmus, Swiss Government Excellence, NAWA,
+  Deutschlandstipendium …) — ortak noktaları bir ödeme taşımaları.
+
+  Yarışma, eğitim ve gençlik programı bu kümede DEĞİL: orada para
+  olabilir de olmayabilir de. Kayıt kendi alanlarında bir şey
+  söylemiyorsa satır hiç çizilmiyor — "açıklanacak" demek olmayan bir
+  ödemeyi varmış gibi göstermek olurdu.
+*/
+const PARALI_TURLER = new Set(['scholarship', 'kyk', 'student_support', 'international']);
+
+const kucuk = (metin) => String(metin ?? '').toLocaleLowerCase('tr-TR');
+
+/*
+  NİTELİK ALANLARINDAN DURUM OKUMA
+
+  `amount_text` bir miktar değil NİTELİK alanı: "Karşılıksız",
+  "Programa göre değişiyor", "Hibe destekli", "Ödüllü". `support_type`
+  de öyle: "Burs", "Kredi", "Yarışma". İkisi de serbest metin, bu yüzden
+  eşleşme kelime kökünden yapılıyor — "Hibe destekli" ile "hibe desteği"
+  aynı şeyi söylüyor.
+*/
+function nitelikDurumu(item) {
+  const metin = `${kucuk(item.amountText)} ${kucuk(item.supportType)}`.trim();
+  if (!metin) return null;
+
+  /* Ücretsizlik en belirgin iddia; önce o aranıyor. */
+  if (/ücretsiz|ucretsiz|katılım ücreti yok|katilim ucreti yok/.test(metin)) {
+    return TUTAR_DURUMU.ucretsiz;
+  }
+
+  /*
+    Sabit rakamı olmayan ama destek veren programlar. "Programa göre
+    değişiyor" tam olarak bunu söylüyor: rakam kişiden kişiye değişiyor,
+    yani yayımlanacak tek bir sayı yok.
+  */
+  if (/programa göre|programa gore|hibe|harcırah|harcirah|konaklama|yol deste|mali deste|masraf/.test(metin)) {
+    return TUTAR_DURUMU.maliDestek;
+  }
+
+  /*
+    Para var ama rakam yok: karşılıksız burs, geri ödemeli kredi, ödüllü
+    yarışma. Üçünde de kurumun açıklayacağı bir rakam var.
+  */
+  if (/karşılıksız|karsiliksiz|geri ödemeli|geri odemeli|ödül|odul|burs|kredi|destek/.test(metin)) {
+    return TUTAR_DURUMU.aciklanacak;
+  }
+
+  return null;
+}
+
 export function opportunityAmount(item) {
-  const bos = { metin: null, donem: null, geriOdeme: null, bilinmiyor: true };
+  const bos = {
+    metin: null,
+    donem: null,
+    geriOdeme: null,
+    bilinmiyor: true,
+    durum: TUTAR_DURUMU.yok,
+    satir: null,
+  };
   if (!item) return bos;
 
   const geriOdeme =
     item.repayable === true ? 'Geri ödemeli' : item.repayable === false ? 'Karşılıksız' : null;
 
   /*
+    Rakamsız dal: durumu nitelik alanlarından, o da yoksa türden
+    türetiyor. `satir` karttaki tek satırlık gösterim; `null` ise satır
+    hiç çizilmiyor.
+  */
+  const rakamsiz = () => {
+    const durum =
+      nitelikDurumu(item) ??
+      (PARALI_TURLER.has(item.opportunityType) ? TUTAR_DURUMU.aciklanacak : TUTAR_DURUMU.yok);
+    return { ...bos, geriOdeme, durum, satir: TUTAR_METNI[durum] ?? null };
+  };
+
+  /*
     Doğrulanmamış tutar gösterilmiyor. amount_text hâlâ duruyor ama o bir
     NİTELİK alanı ("Karşılıksız") — miktar değil; miktarmış gibi
     göstermek okuyanı yanıltırdı.
   */
-  if (!item.amountVerifiedAt) return { ...bos, geriOdeme };
+  if (!item.amountVerifiedAt) return rakamsiz();
 
   const donem = item.amountPeriodLabel || null;
   const sikliK = ODEME_DONEMI_ETIKETLERI[item.paymentPeriod] || null;
@@ -96,8 +221,16 @@ export function opportunityAmount(item) {
   if (!metin && item.amountNote) metin = item.amountNote;
   else if (metin && item.amountNote) metin = `${metin} · ${item.amountNote}`;
 
-  if (!metin) return { ...bos, geriOdeme, donem };
-  return { metin, donem, geriOdeme, bilinmiyor: false };
+  if (!metin) return { ...rakamsiz(), donem };
+  return {
+    metin,
+    donem,
+    geriOdeme,
+    bilinmiyor: false,
+    durum: TUTAR_DURUMU.rakam,
+    /* Kartta tek satır: rakam ve varsa dönemi ("Aylık 5.000 ₺ · 2026–2027"). */
+    satir: donem ? `${metin} · ${donem}` : metin,
+  };
 }
 
 /* ------------------------------------------------------------------ */
