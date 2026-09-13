@@ -5,6 +5,7 @@ import type { SosyalPaylasim, SosyalProfil, SosyalSayaclar } from '../../lib/que
 import { BaglantiDugmesi } from './BaglantiDugmesi';
 import { PaylasimIzgarasi } from './PaylasimIzgarasi';
 import { ProfilFotografi } from './ProfilFotografi';
+import { ResmiTik } from './ResmiTik';
 import { ProfilAyarMenusu } from './ProfilAyarMenusu';
 
 /**
@@ -281,6 +282,15 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
 
               <div className="flex items-center gap-1">
                 <p className="min-w-0 truncate text-sm text-gray-600">@{profil.kullaniciAdi}</p>
+                {/*
+                  TİK KULLANICI ADININ HEMEN YANINDA
+
+                  Satır `min-w-0 truncate`: uzun bir kullanıcı adı dar
+                  ekranda kesiliyor. Tik metnin İÇİNDE olsaydı onunla
+                  birlikte kesilirdi; kardeş düğüm olduğu ve `shrink-0`
+                  taşıdığı için her genişlikte yerinde duruyor.
+                */}
+                <ResmiTik resmiMi={profil.resmiMi} />
                 {/* Dişli sahibe özel: ziyaretçide bu dal hiç çalışmıyor. */}
                 {sahibiMi && onPaylas && onGorunurluk && (
                   <ProfilAyarMenusu
