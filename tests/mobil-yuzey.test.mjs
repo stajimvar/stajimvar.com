@@ -146,3 +146,26 @@ test('masaüstü düzeni korunuyor: her yüzey değeri sm ile geri dönüyor', (
   assert.match(ilan, /col-span-3 col-start-1 row-start-2 min-w-0 sm:col-span-2 sm:col-start-2/);
   assert.match(ilan, /col-start-1 row-start-1 shrink-0 sm:row-span-4/);
 });
+
+test('marka telefonda da 24 piksel: yanındaki simgelerden küçük değil', () => {
+  /*
+    `md` marka telefonda 20, `sm:` üstünde 24 pikseldi. Üst çubuktaki
+    simgeler her boyutta 24 piksel; marka onlardan küçük kalınca
+    sayfanın adı, yanındaki ikinci derece denetimlerden daha sessiz
+    görünüyordu.
+
+    Ölçüldü (360 px): marka 109 piksel genişliğinde, solundaki simge
+    kümesiyle arasında 11,8 piksel, sağındaki "Giriş Yap" ile 39
+    piksel — çakışma yok, çubuk yüksekliği değişmedi (60,8).
+
+    Akışın kendi başlığı AYNI değeri taşımak zorunda: iki çubuk aynı
+    görünsün diye (bkz. alt bar testi).
+  */
+  const logo = oku('src/components/Logo.tsx');
+  assert.match(logo, /'text-2xl tracking-\[-0\.03em\]'/, 'md marka ölçüsü değişmiş');
+  assert.doesNotMatch(logo, /text-xl sm:text-2xl/, 'eski iki kademeli ölçü geri gelmiş');
+
+  const agim = oku('src/components/sosyal/AgimSayfasi.tsx');
+  assert.match(agim, /text-2xl font-black leading-none tracking-\[-0\.03em\]/);
+  assert.doesNotMatch(agim, /text-xl font-black[^"]*sm:text-2xl/, 'akış başlığı markadan ayrışmış');
+});

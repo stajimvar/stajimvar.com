@@ -24,7 +24,18 @@ export const Logo: React.FC<LogoProps> = ({
       ? 'text-base sm:text-lg tracking-[-0.03em]'
       : size === 'lg'
       ? 'text-2xl sm:text-3xl tracking-[-0.035em]'
-      : 'text-xl sm:text-2xl tracking-[-0.03em]';
+      : /*
+          TELEFONDA DA 24 PİKSEL
+
+          `md` marka telefonda 20, `sm:` üstünde 24 pikseldi. Üst çubukta
+          iki yanındaki simgeler her boyutta 24 piksel; marka onlardan
+          küçük kalınca sayfanın adı, yanındaki ikinci derece
+          denetimlerden daha sessiz görünüyordu.
+
+          Tek ölçüye indi: 24 piksel. Geniş ekranda değişen bir şey yok —
+          orada zaten 24'tü.
+        */
+        'text-2xl tracking-[-0.03em]';
 
   /*
     TIKLANABİLİR LOGO GERÇEK BİR BAĞLANTI
