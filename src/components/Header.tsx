@@ -32,6 +32,7 @@ import { ODAK_HALKASI } from '../lib/renk-token';
 import { BildirimDugmesi } from './BildirimMerkezi';
 import { useSayfaAramasi } from '../lib/sayfa-aramasi';
 import { KullaniciAramaSonuclari } from './sosyal/KullaniciArama';
+import { ProfilFotografi } from './sosyal/ProfilFotografi';
 
 interface HeaderProps {
   activeTab: 'internships' | 'badges' | 'applications' | 'profile' | 'company-portal';
@@ -71,6 +72,21 @@ interface HeaderProps {
    * prop unutulduğunda menü çalışmaz hâle gelmesin.
    */
   onOpenProfilVeCv?: () => void;
+  /*
+    ÜST ÇUBUKTAKİ AVATAR DA ORTAK KAYNAKTAN
+
+    Buradaki avatar `activeStudent.avatarUrl` okuyordu — yani ESKİ alan
+    (`profiles.avatar_url`). Fotoğraf ise sosyal profilde
+    (`social_profiles.avatar_path`) duruyor ve tek kaynak o
+    (`lib/profil-fotografi`). Sonuç: aynı kullanıcı solda fotoğrafını,
+    sağ üstte baş harflerini görüyordu (ölçüldü: @stajimvar'da
+    `avatar_url` null, `avatar_path` dolu).
+
+    Yol App'ten geliyor; Header sosyal profili kendisi çekmiyor, çünkü
+    üst çubuk her sayfada çiziliyor ve her açılışta fazladan bir sorgu
+    açardı.
+  */
+  sosyalAvatarYolu?: string | null;
   /** Rehber merkezine geçiş. */
   onOpenGuides?: () => void;
   /** Öğrenci fırsatları merkezi. */
@@ -181,6 +197,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenRegister,
   onLogout,
   onOpenProfilVeCv,
+  sosyalAvatarYolu = null,
   onOpenGuides,
   onOpenOpportunities,
   onOpenEmployer,
@@ -1295,9 +1312,10 @@ export const Header: React.FC<HeaderProps> = ({
                       Sayi kaybolmadi: profil ekraninin ust istatistiginde
                       duruyor.
                     */}
-                    <Avatar
-                      name={activeStudent.fullName}
-                      url={activeStudent.avatarUrl || undefined}
+                    <ProfilFotografi
+                      ad={activeStudent.fullName}
+                      yol={sosyalAvatarYolu}
+                      yedekAdres={activeStudent.avatarUrl || null}
                       className="h-8 w-8 shrink-0 rounded-full text-xs ring-1 ring-gray-200 sm:h-9 sm:w-9"
                     />
                     <span className="hidden min-w-0 max-w-[11rem] flex-col leading-tight md:flex">

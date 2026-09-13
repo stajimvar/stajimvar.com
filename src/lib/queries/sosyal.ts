@@ -513,47 +513,24 @@ export interface SosyalSayaclar {
  */
 export async function sosyalSayaclariGetir(profilId: string): Promise<SosyalSayaclar | null> {
   /*
-    İKİ SAYAÇ, İKİ KAPI — ÖNCE DAR OLANI
+    RPC `sosyal_gorunur` kapısından geçiyor ve göremediğin profil için
+    SIFIR SATIR dönüyor. Sıfır satır "sayı sıfır" DEĞİL, "sana
+    verilmiyor" demek; bu yüzden burada 0 uydurulmuyor, `null` dönüyor
+    ve arayüz sayı basmıyor.
 
-    `sosyal_sayaclar` paylaşımları GÖREBİLDİĞİN KADAR sayıyor
-    (`paylasim_gorunur` süzgeci sayımın içinde) ve oturum yoksa hiç satır
-    dönmüyor. Bağlantısı olan kişi için doğru sayı budur: gördüğü liste
-    ile sayaç birbirini tutuyor.
-
-    Satır gelmediğinde `sosyal_acik_sayaclar` devreye giriyor: yayımlanmış
-    profilin TOPLAM paylaşım sayısını veriyor, içeriği vermiyor. Ürün
-    kararı bu — "bu kişi var ve şu kadar üretmiş" görünüyor, paylaşımlar
-    bağlantı kurulmadan görünmüyor.
-
-    SIRA ÖNEMLİ: dar kapı önce deneniyor. Ters sırada, bağlantısı olan
-    kişi de toplam sayıyı görürdü ve altındaki liste daha az paylaşım
-    gösterirse sayı ile liste çelişirdi.
+    Bir ara buraya ikinci bir dal eklenmişti (`sosyal_acik_sayaclar`):
+    oturumsuz ziyaretçiye toplam sayıyı verecekti. Ürün kararı bunun
+    tersi çıktı — profil giriş yapmamış kullanıcıya hiç açılmıyor — ve
+    dal göçüyle birlikte geri alındı (20260927120000).
   */
   const { data, error } = await db.rpc('sosyal_sayaclar', { hedef: profilId });
   if (error) hata('Sayaçlar alınamadı', error);
 
   const satir = Array.isArray(data) ? data[0] : data;
-  if (satir) {
-    return {
-      paylasim: Number(satir.paylasim ?? 0),
-      baglanti: Number(satir.baglanti ?? 0),
-    };
-  }
-
-  const { data: acik, error: acikHatasi } = await db.rpc('sosyal_acik_sayaclar', {
-    hedef: profilId,
-  });
-  /*
-    Açık sayaç da satır vermezse profil yayımda değil demek. Burada 0
-    uydurulmuyor: "bilmiyorum" ile "sıfır" aynı şey değil ve arayüz
-    `null` gördüğünde sayacı hiç çizmiyor.
-  */
-  if (acikHatasi) hata('Sayaçlar alınamadı', acikHatasi);
-  const acikSatir = Array.isArray(acik) ? acik[0] : acik;
-  if (!acikSatir) return null;
+  if (!satir) return null;
   return {
-    paylasim: Number(acikSatir.paylasim ?? 0),
-    baglanti: Number(acikSatir.baglanti ?? 0),
+    paylasim: Number(satir.paylasim ?? 0),
+    baglanti: Number(satir.baglanti ?? 0),
   };
 }
 

@@ -1,4 +1,5 @@
 import React, { useState, useRef, Suspense } from 'react';
+import { kendiSosyalProfiliGetir } from './lib/queries/sosyal';
 import {
   fetchPublishedListings,
   fetchStudentProfile,
@@ -448,11 +449,39 @@ export default function App() {
     çünkü kimlik kartı bilinmeyen durumda eski `avatar_url` yedeğine
     düşüyor, "yok" durumunda ise baş harfleri çiziyor.
 
-    Değer yalnız `/cv` açıkken doluyor: üst çubuk ve hesap sayfası hâlâ
-    `student.avatarUrl` gösteriyor ve bu ekranların kendi veri yolu ayrı
-    bir iş.
+    ARTIK YALNIZ `/cv` DEĞİL, HER SAYFADA
+
+    Değer önce yalnız `/cv` açıkken doluyordu ve üst çubuk
+    `student.avatarUrl` okuyordu — yani ESKİ alan (`profiles.avatar_url`).
+    Sonuç: fotoğrafını sosyal profilden yüklemiş kullanıcı solda
+    fotoğrafını, sağ üstteki hesap alanında baş harflerini görüyordu
+    (ölçüldü: @stajimvar'da `avatar_url` null, `avatar_path` dolu).
+
+    Yol artık oturum açılır açılmaz bir kez okunuyor ve üst çubuğa prop
+    olarak iniyor. `/cv` açıldığında `onAvatarYolu` aynı durumu
+    tazeliyor, yani fotoğraf değiştirilince üst çubuk da hemen
+    güncelleniyor — ikinci bir istek gerekmiyor.
   */
   const [sosyalAvatarYolu, setSosyalAvatarYolu] = useState<string | null | undefined>(undefined);
+  React.useEffect(() => {
+    const kimlik = session?.userId ?? null;
+    if (!kimlik) {
+      setSosyalAvatarYolu(undefined);
+      return;
+    }
+    let iptal = false;
+    void kendiSosyalProfiliGetir(kimlik)
+      .then((profil) => {
+        if (!iptal) setSosyalAvatarYolu(profil?.avatarYolu ?? null);
+      })
+      .catch(() => {
+        /* Yol alınamadı: baş harfler kalıyor, ekran bozulmuyor. */
+        if (!iptal) setSosyalAvatarYolu(null);
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [session?.userId]);
   /*
     PORTFOLYO SATIRI DA AYNI YOLDAN: sayaçlar, "Paylaş" ve dişli menüsü
     sol sütundaki kimlik kartında çiziliyor ama verisi ve eylemleri sağ
@@ -1341,6 +1370,7 @@ export default function App() {
         görünüyordu.
       */
       onOpenProfilVeCv={() => navigate('/cv')}
+      sosyalAvatarYolu={sosyalAvatarYolu}
       onOpenGuides={() => navigate('/rehber')}
       onOpenOpportunities={() => navigate('/firsatlar')}
       /*
