@@ -93,16 +93,45 @@ export const BildirimMerkezi: React.FC<{
   const kapsayici = React.useRef<HTMLDivElement>(null);
   /* Hangi bildirimin düğmeleri işlemde: çift dokunma ikinci istek atmasın. */
   const [islemdeki, setIslemdeki] = React.useState<string | null>(null);
+  /*
+    YANITLANAN İSTEĞİN DÜĞMELERİ KALMIYOR
+
+    Düğmeler yanıttan sonra da duruyordu. Bildirim okundu işaretleniyor
+    ama satır hâlâ "Kabul et / Reddet" gösteriyordu; ikinci kez basınca
+    sunucu haklı olarak "kayıt değişmedi" diyor ve hata yutulduğu için
+    ekranda hiçbir şey olmuyordu. Kullanıcıya düğme takılmış gibi
+    görünüyordu (bildirildi ve canlıda ölçüldü).
+
+    `okunduMu` bu iş için YETMİYOR: satıra dokunmak da bildirimi okundu
+    yapıyor, o zaman yanıtlamadan düğmeler kaybolurdu. Bu yüzden sonuç
+    ayrı tutuluyor ve bildirim kimliğine bağlı — liste tazelenip aynı
+    satır yeniden çizilse de sonuç yerinde kalıyor.
+  */
+  const [sonuc, setSonuc] = React.useState<Record<string, 'kabul' | 'red' | 'hata'>>({});
 
   const yanitla = async (bildirimId: string, karar: 'kabul' | 'red') => {
-    if (!onBaglantiYanitla || islemdeki) return;
+    if (!onBaglantiYanitla || islemdeki || sonuc[bildirimId]) return;
     setIslemdeki(bildirimId);
     try {
       await onBaglantiYanitla(bildirimId, karar);
+      setSonuc((o) => ({ ...o, [bildirimId]: karar }));
+    } catch {
+      /*
+        En sık sebep: istek başka bir yerden zaten yanıtlanmış ya da geri
+        çekilmiş. Hata YUTULMUYOR — düğmeler kalkıyor ve sebebi yazıyor;
+        aksi hâlde kullanıcı boşuna tekrar basıyor.
+      */
+      setSonuc((o) => ({ ...o, [bildirimId]: 'hata' }));
     } finally {
       setIslemdeki(null);
     }
   };
+
+  const SONUC_METNI = {
+    kabul: 'Bağlantı kuruldu.',
+    red: 'İstek reddedildi.',
+    hata: 'Bu istek artık geçerli değil.',
+  } as const;
 
   /* Escape ile kapanıyor ve açılınca odak panele giriyor. */
   React.useEffect(() => {
@@ -200,7 +229,18 @@ export const BildirimMerkezi: React.FC<{
                   olarak duruyorlar; satıra basmak yine bildirimi açıyor,
                   düğmeler kendi işlerini yapıyor.
                 */}
-                {b.tur === 'baglanti_istegi' && onBaglantiYanitla && (
+                {b.tur === 'baglanti_istegi' && onBaglantiYanitla && sonuc[b.id] && (
+                  <p
+                    role="status"
+                    className={`border-b border-gray-50 px-4 pb-3 text-[11px] font-semibold ${
+                      sonuc[b.id] === 'hata' ? 'text-amber-800' : 'text-gray-600'
+                    }`}
+                  >
+                    {SONUC_METNI[sonuc[b.id]]}
+                  </p>
+                )}
+
+                {b.tur === 'baglanti_istegi' && onBaglantiYanitla && !sonuc[b.id] && (
                   <div className="flex gap-2 border-b border-gray-50 px-4 pb-3">
                     <button
                       type="button"

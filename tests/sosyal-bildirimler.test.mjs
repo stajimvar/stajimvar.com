@@ -87,6 +87,24 @@ test('zilin altındaki kabul/ret gerçek eyleme bağlı', () => {
   assert.match(merkez, /b\.tur === 'baglanti_istegi' && onBaglantiYanitla &&/);
   /* Çift dokunma ikinci istek atmıyor. */
   assert.match(merkez, /disabled=\{islemdeki === b\.id\}/);
+
+  /*
+    YANITLANAN İSTEĞİN DÜĞMELERİ KALMIYOR
+
+    Düğmeler yanıttan sonra da duruyordu; ikinci kez basınca sunucu
+    haklı olarak "kayıt değişmedi" diyor ve hata yutulduğu için ekranda
+    hiçbir şey olmuyordu — kullanıcıya takılmış gibi görünüyordu
+    (bildirildi ve canlıda ölçüldü: istek kabul edilmiş, düğmeler
+    yerinde).
+
+    `okunduMu` bu iş için yetmiyor: satıra dokunmak da bildirimi okundu
+    yapıyor, o zaman yanıtlamadan düğmeler kaybolurdu.
+  */
+  assert.match(merkez, /const \[sonuc, setSonuc\] = React\.useState<Record<string, 'kabul' \| 'red' \| 'hata'>>\(\{\}\);/);
+  assert.match(merkez, /onBaglantiYanitla && !sonuc\[b\.id\] && \(/);
+  /* Hata yutulmuyor: düğmeler kalkıyor ve sebebi yazılıyor. */
+  assert.match(merkez, /\} catch \{[\s\S]{0,400}setSonuc\(\(o\) => \(\{ \.\.\.o, \[bildirimId\]: 'hata' \}\)\);/);
+  assert.match(merkez, /hata: 'Bu istek artık geçerli değil\.'/);
   /*
     Düğmeler satırın `<button>`ının İÇİNDE değil kardeşi: iç içe iki
     düğme geçersiz ve tıklama hedeflerini karıştırırdı.
