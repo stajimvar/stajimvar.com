@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, Briefcase, CalendarClock, CheckCircle2, FileText, X } from 'lucide-react';
+import { Bell, Briefcase, CalendarClock, CheckCircle2, FileText, Heart, UserPlus, X } from 'lucide-react';
 import { gecenSure, type Bildirim } from '../lib/bildirim';
 
 /**
@@ -23,6 +23,8 @@ function BildirimIkonu({ tur, renk }: { tur: string; renk: string }) {
   if (tur === 'gorusme_daveti' || tur === 'gorusme_guncellendi') return <CalendarClock {...ortak} />;
   if (tur === 'teklif' || tur === 'teklif_kabul') return <CheckCircle2 {...ortak} />;
   if (tur === 'yeni_basvuru') return <Briefcase {...ortak} />;
+  if (tur === 'baglanti_istegi' || tur === 'baglanti_kabul') return <UserPlus {...ortak} />;
+  if (tur === 'paylasim_begeni') return <Heart {...ortak} />;
   return <FileText {...ortak} />;
 }
 
@@ -51,6 +53,17 @@ export const BildirimRozeti: React.FC<{ sayi: number | null; renk: string }> = (
   );
 };
 
+/*
+  BAĞLANTI İSTEĞİ AYNI SATIRDAN YANITLANIYOR
+
+  İstek bildirimi kullanıcıyı Bağlantılar sayfasına götürüyordu ve karar
+  orada veriliyordu: zili aç, oku, sayfaya git, tekrar bul, kabul et.
+  Karar tek dokunuşluk bir şey — bildirimin kendisinde duruyor.
+
+  `onBaglantiYanitla` VERİLMEZSE düğmeler hiç çizilmiyor: eylemi olmayan
+  bir düğme, basınca hiçbir şey yapmayan bir düğmedir. Şirket hesabında
+  ve sosyal katmanın kapalı olduğu durumda prop geçilmiyor.
+*/
 export const BildirimMerkezi: React.FC<{
   bildirimler: Bildirim[];
   okunmamis: number | null;
@@ -60,8 +73,36 @@ export const BildirimMerkezi: React.FC<{
   onKapat: () => void;
   onAc: (b: Bildirim) => void;
   onTumunuOkundu: () => void;
-}> = ({ bildirimler, okunmamis, yukleniyor, renk, onKapat, onAc, onTumunuOkundu }) => {
+  /*
+    Bağlantı isteğini satır içinde yanıtlar. Verilmezse düğmeler hiç
+    çizilmiyor — şirket hesabında ve sosyal katman kapalıyken böyle.
+    Çağıran hem isteği yanıtlıyor hem bildirimi okundu yapıp listeyi
+    tazeliyor; bu bileşen kendi başına veri yazmıyor.
+  */
+  onBaglantiYanitla?: (bildirimId: string, karar: 'kabul' | 'red') => Promise<void>;
+}> = ({
+  bildirimler,
+  okunmamis,
+  yukleniyor,
+  renk,
+  onKapat,
+  onAc,
+  onTumunuOkundu,
+  onBaglantiYanitla,
+}) => {
   const kapsayici = React.useRef<HTMLDivElement>(null);
+  /* Hangi bildirimin düğmeleri işlemde: çift dokunma ikinci istek atmasın. */
+  const [islemdeki, setIslemdeki] = React.useState<string | null>(null);
+
+  const yanitla = async (bildirimId: string, karar: 'kabul' | 'red') => {
+    if (!onBaglantiYanitla || islemdeki) return;
+    setIslemdeki(bildirimId);
+    try {
+      await onBaglantiYanitla(bildirimId, karar);
+    } finally {
+      setIslemdeki(null);
+    }
+  };
 
   /* Escape ile kapanıyor ve açılınca odak panele giriyor. */
   React.useEffect(() => {
@@ -150,6 +191,36 @@ export const BildirimMerkezi: React.FC<{
                     )}
                   </span>
                 </button>
+
+                {/*
+                  KARAR SATIRIN İÇİNDE, AMA BAĞLANTININ DIŞINDA
+
+                  Düğmeler yukarıdaki `<button>`ın İÇİNDE olamaz — iç içe
+                  iki düğme geçersiz ve tıklama hedefleri karışır. Kardeş
+                  olarak duruyorlar; satıra basmak yine bildirimi açıyor,
+                  düğmeler kendi işlerini yapıyor.
+                */}
+                {b.tur === 'baglanti_istegi' && onBaglantiYanitla && (
+                  <div className="flex gap-2 border-b border-gray-50 px-4 pb-3">
+                    <button
+                      type="button"
+                      disabled={islemdeki === b.id}
+                      onClick={() => void yanitla(b.id, 'kabul')}
+                      className="min-h-9 flex-1 rounded-lg px-3 text-xs font-bold text-white disabled:opacity-60"
+                      style={{ background: renk }}
+                    >
+                      {islemdeki === b.id ? 'İşleniyor…' : 'Kabul et'}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={islemdeki === b.id}
+                      onClick={() => void yanitla(b.id, 'red')}
+                      className="min-h-9 flex-1 rounded-lg border border-gray-200 px-3 text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                    >
+                      Reddet
+                    </button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

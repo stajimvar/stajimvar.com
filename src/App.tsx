@@ -1,5 +1,5 @@
 import React, { useState, useRef, Suspense } from 'react';
-import { kendiSosyalProfiliGetir } from './lib/queries/sosyal';
+import { baglantiYanitla, kendiSosyalProfiliGetir } from './lib/queries/sosyal';
 import {
   fetchPublishedListings,
   fetchStudentProfile,
@@ -1286,6 +1286,35 @@ export default function App() {
     ile `document.body` altına gidiyor, dolayısıyla başlık ağacının
     içinde durması yerleşimi etkilemiyor.
   */
+  /*
+    BAĞLANTI İSTEĞİ ZİLİN ALTINDAN YANITLANIYOR
+
+    İsteği KİM gönderdi: bildirimin `anahtar` alanından okunuyor
+    ("baglanti_istegi:<isteyen>:<alıcı>"). Bildirim satırında ayrıca bir
+    kullanıcı kimliği tutmak gerekmiyor; olayın kimliği zaten tarafları
+    taşıyor.
+
+    ÜÇ İŞ SIRAYLA: isteği yanıtla, bildirimi okundu yap, listeyi ve
+    sayacı tazele. Üçü de sunucudan yeniden okunuyor — yerelde iyimser
+    bir durum tutmuyoruz, çünkü yanıt başarısız olsa bile ekranda
+    "kabul edildi" kalırdı.
+  */
+  const baglantiIsteginiYanitla = React.useCallback(
+    async (bildirimId: string, karar: 'kabul' | 'red') => {
+      const kimlik = session?.userId;
+      if (!kimlik) return;
+      const satir = bildirim.bildirimler.find((b) => b.id === bildirimId);
+      const parcalar = (satir?.anahtar ?? '').split(':');
+      const isteyen = parcalar.length === 3 ? parcalar[1] : null;
+      if (!isteyen) return;
+
+      await baglantiYanitla(kimlik, isteyen, karar);
+      if (satir) await bildirim.okunduYap(satir);
+      await bildirim.ac();
+    },
+    [session?.userId, bildirim],
+  );
+
   const ogrenciBildirimleri = bildirim.acik ? (
     <BildirimMerkezi
       bildirimler={bildirim.bildirimler}
@@ -1295,6 +1324,7 @@ export default function App() {
       onKapat={bildirim.kapat}
       onAc={bildirimAc}
       onTumunuOkundu={() => void bildirim.tumunuOkunduYap()}
+      onBaglantiYanitla={baglantiIsteginiYanitla}
     />
   ) : null;
 

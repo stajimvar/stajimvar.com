@@ -27,7 +27,8 @@ const OGRENCI: Bildirim[] = [
     govde: 'Örnek Teknoloji seni Yazılım Geliştirme Stajyeri pozisyonu için görüşmeye davet etti.',
     hedef: '/profil?basvuru=b1',
     basvuruId: 'b1',
-    okunduMu: false,
+    anahtar: null,
+  okunduMu: false,
     tarih: dk(2),
   },
   {
@@ -37,7 +38,8 @@ const OGRENCI: Bildirim[] = [
     govde: 'Örnek Veri · Veri Analisti Stajyeri pozisyonu için teklif gönderdi.',
     hedef: '/profil?basvuru=b2',
     basvuruId: 'b2',
-    okunduMu: false,
+    anahtar: null,
+  okunduMu: false,
     tarih: dk(75),
   },
   {
@@ -47,7 +49,8 @@ const OGRENCI: Bildirim[] = [
     govde: 'Örnek Teknoloji · staj görüşme bilgileri değişti.',
     hedef: '/profil?basvuru=b1',
     basvuruId: 'b1',
-    okunduMu: true,
+    anahtar: null,
+  okunduMu: true,
     tarih: dk(60 * 26),
   },
   {
@@ -59,7 +62,8 @@ const OGRENCI: Bildirim[] = [
       'Türkiye Bilimsel ve Teknolojik Araştırma Kurumu · Yapay Zekâ ve Makine Öğrenmesi Araştırma Stajyeri başvurunu incelemeye aldı.',
     hedef: '/profil?basvuru=b3',
     basvuruId: 'b3',
-    okunduMu: true,
+    anahtar: null,
+  okunduMu: true,
     tarih: dk(60 * 24 * 3),
   },
   {
@@ -69,7 +73,8 @@ const OGRENCI: Bildirim[] = [
     govde: 'Örnek Veri · staj başvurun bu süreçte ilerlemedi.',
     hedef: '/profil?basvuru=b4',
     basvuruId: 'b4',
-    okunduMu: true,
+    anahtar: null,
+  okunduMu: true,
     tarih: dk(60 * 24 * 20),
   },
 ];
@@ -82,7 +87,8 @@ const SIRKET: Bildirim[] = [
     govde: 'Mustafa Oğulcan Doğan · IT Stajyeri',
     hedef: '/sirket/basvuranlar?aday=x1',
     basvuruId: 'x1',
-    okunduMu: false,
+    anahtar: null,
+  okunduMu: false,
     tarih: dk(1),
   },
   {
@@ -92,7 +98,8 @@ const SIRKET: Bildirim[] = [
     govde: 'IT Stajyeri',
     hedef: '/sirket/basvuranlar?aday=x1',
     basvuruId: 'x1',
-    okunduMu: false,
+    anahtar: null,
+  okunduMu: false,
     tarih: dk(40),
   },
   {
@@ -102,7 +109,8 @@ const SIRKET: Bildirim[] = [
     govde: 'IT Stajyeri · iletişim bilgileri artık açık.',
     hedef: '/sirket/basvuranlar?aday=x1',
     basvuruId: 'x1',
-    okunduMu: true,
+    anahtar: null,
+  okunduMu: true,
     tarih: dk(60 * 30),
   },
 ];
