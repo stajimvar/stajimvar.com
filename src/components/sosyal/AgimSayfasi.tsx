@@ -193,7 +193,16 @@ export const AgimSayfasi: React.FC<Props> = ({
         olduğu için kullanıcının hangi üründe olduğunu söyleyen tek yer
         de burası.
       */}
-      <h1 className="flex-1 text-center text-base font-extrabold tracking-tight text-gray-900">
+      {/*
+        Ölçü SİTE LOGOSUYLA AYNI: `Logo` bileşeni `md` boyutunda
+        `text-xl sm:text-2xl tracking-[-0.03em]` kullanıyor ve marka
+        telefonda 20 piksel duruyor. Burada 16 pikseldi — iki yanındaki
+        24 piksellik simgelerin altında kalıyor, sayfanın adı
+        simgelerden küçük görünüyordu.
+
+        Yazı tipi ağırlığı da logoyla aynı (`font-black`).
+      */}
+      <h1 className="flex-1 text-center text-xl font-black leading-none tracking-[-0.03em] text-gray-900 sm:text-2xl">
         Stajım<span className="text-blue-600">Var</span>
       </h1>
 
