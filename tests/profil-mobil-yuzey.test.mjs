@@ -56,25 +56,21 @@ test('varsayılan zemin değişmedi: öteki içerik sayfaları hâlâ gri', () =
 
 /* --------------------------------------------------- kabuğun yan boşluğu */
 
-test('/cv kabuğu yan boşluğu KORUYOR, yalnız üst boşluğu sıfırlıyor', () => {
+test('ana alan telefonda üst boşluk bırakmıyor, yan boşluğu koruyor', () => {
   /*
-    Yan boşluk kaldırılsaydı aynı sütundaki hesap eylemleri ve düzenleme
-    formları da ekranın kenarına yapışırdı. Kenara yaslanma, yaslanması
-    gereken iki öğenin kendi işi.
+    Başlıklar telefonda `sr-only` olunca `pt-2` boşa çıktı ve üst çubukla
+    liste arasında bant olarak kaldı. Yan boşluk KALIYOR: kaldırılsaydı
+    hesap eylemleri ve formlar da ekranın kenarına yapışırdı; kenara
+    yaslanması gereken öğeler bunu kendi `-mx-4 sm:mx-0` değeriyle yapıyor.
+
+    `/cv` ile ana alan artık AYNI sınıfı paylaşıyor: ikisi üst boşlukta
+    ayrılıyordu, o fark kalkınca ayrı bir sabit tutmak iki tanımın
+    sessizce ayrışmasına davetiye olurdu.
   */
-  const profil = app.match(/const profilAlanSinifi = `([^`]+)`/)[1];
   const ana = app.match(/const anaAlanSinifi = `([^`]+)`/)[1];
-
-  assert.ok(profil.includes('px-4 sm:px-6'), 'yan boşluk korunmalı');
-  assert.ok(profil.includes('pt-0 sm:pt-3'), 'telefonda üst boşluk sıfır');
-  assert.ok(ana.includes('pt-2 sm:pt-3'), 'ana alanın üst boşluğu değişmedi');
-
-  /* Üst boşluk dışında iki dize birebir aynı olmalı. */
-  assert.equal(
-    profil.replace('pt-0 sm:pt-3', 'PT'),
-    ana.replace('pt-2 sm:pt-3', 'PT'),
-    'profil alanı ana alandan yalnız üst boşlukta ayrılmalı',
-  );
+  assert.ok(ana.includes('px-4 sm:px-6'), 'yan boşluk korunmalı');
+  assert.ok(ana.includes('pt-0 sm:pt-3'), 'telefonda üst boşluk sıfır');
+  assert.ok(!app.includes('profilAlanSinifi'), 'ayrı bir profil alanı sabiti kalmamalı');
 });
 
 test('ziyaretçi kabuğu telefonda kenarsız, sm üstünde varsayılan', () => {

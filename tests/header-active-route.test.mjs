@@ -109,7 +109,7 @@ test("/cv ekranı çıkışı her öğrenciye, yönetim panelini yalnız yöneti
   const app = readFileSync("src/App.tsx", "utf8");
 
   /* App /cv'de aynı ekranı çiziyor ve iki prop'u da geçiyor. */
-  assert.match(app, /return icerikSayfasi\([\s\S]{0,400}<main className=\{profilAlanSinifi\}>\{ogrenciProfilEkrani\(\)\}<\/main>,[\s\S]{0,80}'bg-white sm:bg-\[#F9FAFB\]',/);
+  assert.match(app, /return icerikSayfasi\([\s\S]{0,400}<main className=\{anaAlanSinifi\}>\{ogrenciProfilEkrani\(\)\}<\/main>,[\s\S]{0,80}'bg-white sm:bg-\[#F9FAFB\]',/);
   assert.match(app, /const ogrenciProfilEkrani = \(\) =>[\s\S]{0,1200}onLogout=\{handleLogout\}[\s\S]{0,200}isAdmin=\{isAdmin\}[\s\S]{0,200}onOpenAdmin=\{\(\) => navigate\('\/yonetim'\)\}/);
 
   /* Çıkış yalnız `onLogout` varlığına bağlı — yönetici koşulu yok. */
