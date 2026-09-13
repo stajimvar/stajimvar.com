@@ -96,3 +96,47 @@ test('üst çubuktaki avatar da ortak kaynaktan okuyor', () => {
   /* `/cv` fotoğrafı değiştirince aynı durumu tazeliyor: üst çubuk hemen güncelleniyor. */
   assert.match(app, /onAvatarYolu=\{setSosyalAvatarYolu\}/);
 });
+
+test('bütün kullanıcı yüzeyleri ortak avatar bileşenini kullanıyor', () => {
+  /*
+    Denetlendi (13 Eylül 2026): aşağıdaki yüzeylerin hepsi
+    `ProfilFotografi` çiziyor, yani hepsi `social_profiles.avatar_path`
+    okuyor ve fotoğrafı olmayan hesapta aynı baş harf yedeğine düşüyor.
+
+    `Avatar` bileşenini DOĞRUDAN kullanan tek üretim dosyası kalmadı:
+    `AccountSheet` yalnız dev fikstüründen çiziliyor (Header'dan
+    kaldırılmıştı), `ProfilFotografi` ise zaten `Avatar`ı sarıyor.
+  */
+  for (const dosya of [
+    'src/components/Header.tsx',
+    'src/components/ProfilBasligi.tsx',
+    'src/components/sosyal/AgimSayfasi.tsx',
+    'src/components/sosyal/AkisKarti.tsx',
+    'src/components/sosyal/BaglantilarSayfasi.tsx',
+    'src/components/sosyal/KullaniciArama.tsx',
+    'src/components/sosyal/SosyalProfilGorunumu.tsx',
+    'src/components/sosyal/SosyalProfilSayfasi.tsx',
+  ]) {
+    assert.match(oku(dosya), /<ProfilFotografi/, `${dosya}: ortak avatar bileşeni kullanılmıyor`);
+  }
+});
+
+test('Bağlantılar satırları telefonda yüzey', () => {
+  /*
+    Satırlar gri zemin üzerinde yüzen kutulardı; liste ekranlarının
+    tamamı yüzey düzenine geçmişti, bu sayfa geride kalmıştı.
+  */
+  const sayfa = oku('src/components/sosyal/BaglantilarSayfasi.tsx');
+  assert.match(sayfa, /<li className=\{`flex flex-wrap items-center gap-3 bg-white px-4 py-3 \$\{YUZEY\.kabuk\}/);
+  assert.match(sayfa, /<ul className=\{`flex flex-col \$\{YUZEY\.kap\} sm:gap-2`\}>/);
+
+  /*
+    ÜST ÇUBUK GERİ GELDİ
+
+    `akistaMi` kalıbı `/agim/*` idi ve `/agim/baglantilar` de üst
+    çubuksuz kalıyordu — ama o sayfanın kendi başlığı yok. Telefonda
+    sayfanın tepesinde hiçbir çubuk, hiçbir geri dönüş yolu
+    görünmüyordu.
+  */
+  assert.match(oku('src/components/Header.tsx'), /const akistaMi = bulunulanYol === '\/agim';/);
+});

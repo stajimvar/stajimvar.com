@@ -449,8 +449,16 @@ export const Header: React.FC<HeaderProps> = ({
     ekranın üstünde iki başlık üst üste binerdi ve akışa kalan yer
     azalırdı. Geniş ekranda üst çubuk DURUYOR: orada akış ortalanmış bir
     sütun ve sayfanın gezinmesi hâlâ üstten yapılıyor.
+
+    YALNIZ `/agim`, ALTI DEĞİL
+
+    Kalıp önce `/agim/*` idi ve `/agim/baglantilar` de üst çubuksuz
+    kalıyordu — ama o sayfanın kendi başlığı YOK. Sonuç: telefonda
+    sayfanın tepesinde hiçbir çubuk, hiçbir geri dönüş yolu
+    görünmüyordu (bildirildi, ekran görüntüsüyle). Yalnız akışın kendi
+    başlığı var, o yüzden yalnız akış dışlanıyor.
   */
-  const akistaMi = /^\/agim(\/|$)/.test(bulunulanYol);
+  const akistaMi = bulunulanYol === '/agim';
 
   /*
     SAYFA ARAMASI ÜST ÇUBUKTA — TELEFONDA.
