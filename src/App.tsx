@@ -502,29 +502,46 @@ export default function App() {
     PortfolyoSatiri | null | undefined
   >(undefined);
   const globalListings = useGlobalListingPreferences(student?.preferredJobCountries ?? []);
-  // İlanlar artık Supabase'den geliyor. Boş başlıyor; yükleme durumu aşağıda.
+  /*
+    BÜTÜN İLANLARIN LİSTESİ — YALNIZ OTURUM VARKEN
+
+    Bu liste ekrandaki ilan listesi DEĞİL: onu `globalListings` ülkeye
+    göre getiriyor. Buradaki liste üç yerde kullanılıyor ve üçü de
+    oturum istiyor — "Başvurularım" (başvurunun hangi ilana ait olduğu),
+    şirket paneli ve girişten sonra kaldığı yerden devam eden başvuru
+    niyeti.
+
+    Yine de HER ZİYARETÇİDE, her sayfada çekiliyordu: giriş yapmamış
+    birinin ana sayfası, hiçbir yerde çizilmeyecek yüzlerce ilan satırı
+    indiriyordu. Artık oturum kimliğine bağlı; ziyaretçi bu isteği hiç
+    açmıyor, kullanıcı giriş yapınca açılıyor.
+
+    DURUM VE HATA DURUMU KALDIRILDI: `listingsStatus` ile
+    `listingsError` yazılıyor ama HİÇBİR YERDE OKUNMUYORDU. "Hatayı
+    yutma" diyen yorum da bu yüzden doğru değildi — hata bir değişkene
+    konup orada kalıyordu. Okunmayan bir durumu taşımak, ileride
+    birinin ona güvenmesini kolaylaştırır.
+  */
   const [allListings, setAllListings] = useState<InternshipListing[]>([]);
-  const [listingsStatus, setListingsStatus] = useState<'loading' | 'ready' | 'error'>('loading');
-  const [listingsError, setListingsError] = useState<string | null>(null);
 
   React.useEffect(() => {
+    if (!session?.userId) return;
     let cancelled = false;
     fetchPublishedListings()
       .then((rows) => {
-        if (cancelled) return;
-        setAllListings(rows);
-        setListingsStatus('ready');
+        if (!cancelled) setAllListings(rows);
       })
-      .catch((error: unknown) => {
-        if (cancelled) return;
-        // Hatayı yutma: kullanıcı boş liste ile "ilan yok" sanmasın.
-        setListingsError(error instanceof Error ? error.message : 'Bilinmeyen hata');
-        setListingsStatus('error');
+      .catch(() => {
+        /*
+          Liste alınamazsa `allListings` boş kalıyor: "Başvurularım"
+          başvuruyu ilanla eşleştiremiyor ve kendi boş/eksik durumunu
+          çiziyor. Buradan gösterilecek bir ekran yok.
+        */
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [session?.userId]);
   const [applications, setApplications] = useState<ApplicationRecord[]>([]);
 
   /*
@@ -577,7 +594,17 @@ export default function App() {
   */
   const [quizzes, setQuizzes] = useState<SkillQuiz[]>([]);
 
+  /*
+    OTURUM YOKSA İSTEK DE YOK.
+
+    Testleri çizen iki ekran da (`SkillQuizzesView` ve profildeki
+    yetenek kartı) `activeStudent` istiyor, yani giriş yapmamış
+    kullanıcıda ikisi de DOM'a hiç girmiyor. İstek ise her ziyaretçide,
+    her sayfada atılıyordu: ana sayfayı açan birinin göremeyeceği
+    sorular indiriliyordu.
+  */
   React.useEffect(() => {
+    if (!session?.userId) return;
     let iptal = false;
     fetchQuizzes()
       .then((v) => {
@@ -589,7 +616,7 @@ export default function App() {
     return () => {
       iptal = true;
     };
-  }, []);
+  }, [session?.userId]);
 
   /*
     Şirket hesapları.

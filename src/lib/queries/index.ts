@@ -60,6 +60,53 @@ export async function fetchPublishedListings(): Promise<InternshipListing[]> {
   return (data as unknown as ListingRowWithCompany[]).map(toInternshipListing);
 }
 
+/**
+ * Rehber ve bölüm sayfalarındaki "açık ilanlar" bloğunun satırı.
+ *
+ * NEDEN AYRI BİR ŞEKİL: o blok altı kart çiziyor ve karttaki her şey
+ * burada — başlık, şirket adı, logo, şehir. Blok bugüne kadar
+ * `fetchPublishedListings` çağırıyordu, yani 42 kolon ve şirket
+ * birleştirmesiyle YAYINDAKİ BÜTÜN İLANLARI indirip altı tanesini
+ * kesiyordu (ölçüldü, 13 Eylül 2026: 363 KB). Aynı iş bu beş alanla
+ * 40 KB'ye iniyor.
+ *
+ * Alan eşleştirmesi hâlâ istemcide (`alanEslestir` başlığa bakan bir
+ * eşleyici, SQL'e çevrilebilir bir şey değil) — bu yüzden satır sayısı
+ * değil, satırın GENİŞLİĞİ küçültüldü. Sonuç aynı: eşleşenler önce,
+ * kalanlar arkadan dolduruyor.
+ */
+export interface RehberIlanKarti {
+  id: string;
+  title: string;
+  city: string;
+  companyName: string;
+  companyLogo: string;
+}
+
+export async function fetchRehberIlanKartlari(): Promise<RehberIlanKarti[]> {
+  const { data, error } = await supabase
+    .from('listings')
+    .select('id, title, city, companies ( name, logo_url )')
+    .eq('status', 'published')
+    .order('posted_at', { ascending: false, nullsFirst: false });
+
+  if (error) fail('İlanlar yüklenemedi', error);
+  type Satir = {
+    id: string;
+    title: string;
+    city: string | null;
+    companies: { name: string | null; logo_url: string | null } | null;
+  };
+  return (data as unknown as Satir[]).map((row) => ({
+    id: row.id,
+    title: row.title,
+    city: row.city ?? '',
+    /* Boş dize, `toInternshipListing` ile aynı yedek: kart ikisini de aynı çiziyor. */
+    companyName: row.companies?.name ?? 'Bilinmeyen şirket',
+    companyLogo: row.companies?.logo_url ?? '',
+  }));
+}
+
 export interface PublishedListingsCursor { value: string; id: string }
 export interface PublishedListingsCatalogPage {
   listings: InternshipListing[];

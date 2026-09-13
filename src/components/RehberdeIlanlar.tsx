@@ -3,7 +3,14 @@ import { alanEslestir, alanEtiketi } from '../lib/bolum-eslestirme.mjs';
 import { ListingLogo } from './ListingLogo';
 import { konumEtiketi } from '../lib/sehir';
 import { listingSlug } from '../lib/slug';
-import type { InternshipListing } from '../types';
+/*
+  YALNIZ TİP: `import type` derlemede siliniyor, yani bu satır
+  `lib/queries` modülünü ÇALIŞTIRMIYOR. Fark önemli — modülün gövdesi
+  Supabase istemcisini kuruyor ve `import.meta.env` okuyor; ön render
+  Node'da çalıştığı için gerçek bir import burada rehber sayfalarının
+  tamamını düşürürdü (aşağıdaki tembel import'un gerekçesi de bu).
+*/
+import type { RehberIlanKarti } from '../lib/queries';
 
 /**
  * Rehber yazısının dibinde o anki açık ilanlar.
@@ -41,7 +48,7 @@ export const RehberdeIlanlar: React.FC<{
   onNavigate: (yol: string) => void;
   adet?: number;
 }> = ({ baslik, alan: verilenAlan, basligiGizle = false, onNavigate, adet = 6 }) => {
-  const [ilanlar, setIlanlar] = React.useState<InternshipListing[] | null>(null);
+  const [ilanlar, setIlanlar] = React.useState<RehberIlanKarti[] | null>(null);
 
   React.useEffect(() => {
     let iptal = false;
@@ -60,8 +67,8 @@ export const RehberdeIlanlar: React.FC<{
           İçeri alınması gereken şey yalnızca tarayıcıda çalışıyor; bu
           yüzden import da yalnızca tarayıcıda, efektin içinde yapılıyor.
         */
-        const { fetchPublishedListings } = await import('../lib/queries');
-        const hepsi = await fetchPublishedListings();
+        const { fetchRehberIlanKartlari } = await import('../lib/queries');
+        const hepsi = await fetchRehberIlanKartlari();
         if (iptal) return;
 
         const alan = verilenAlan ?? (baslik ? alanEslestir(baslik) : null);
