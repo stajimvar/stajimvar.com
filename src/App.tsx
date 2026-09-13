@@ -30,6 +30,7 @@ import {
 import { Header } from './components/Header';
 import { MatchedInternshipsView } from './components/MatchedInternshipsView';
 import { useGlobalListingPreferences } from './components/useGlobalListingPreferences';
+
 import { Logo } from './components/Logo';
 import { LEGAL_ROUTES } from './lib/yasal-rotalar';
 import { niyetYaz, niyetOku, niyetSil } from './lib/basvuru-niyeti.mjs';
@@ -144,6 +145,18 @@ const SifreYenile = React.lazy(() =>
 const ProfilTamamla = React.lazy(() =>
   import('./components/ProfilTamamla').then((m) => ({ default: m.ProfilTamamla }))
 );
+/*
+  /staj-ilanlari GECİKMELİ YÜKLENİYOR
+
+  Sayfa bölüm listesini çiziyor ve `src/data/bolumler.ts` 195 KB kaynak.
+  Doğrudan içe aktarılınca ana paket 440 -> 629 KB oldu (ölçüldü): bu
+  sayfayı hiç açmayan ziyaretçinin de indirdiği 190 KB. Bölüm ve rehber
+  sayfaları da aynı sebeple gecikmeli.
+*/
+const StajIlanlariSayfasi = React.lazy(() =>
+  import('./components/StajIlanlariSayfasi').then((m) => ({ default: m.StajIlanlariSayfasi }))
+);
+
 const SosyalProfilSayfasi = React.lazy(() =>
   import('./components/sosyal/SosyalProfilSayfasi').then((m) => ({ default: m.SosyalProfilSayfasi }))
 );
@@ -356,17 +369,19 @@ export default function App() {
   }, []);
 
   /*
-    ESKİ ADRES: /ilanlar
+    ESKİ ADRES: /ilanlar  ->  /staj-ilanlari
 
-    İlan listesi ana sayfada; /ilanlar diye bir sayfa hiç olmadı. Sunucu
-    tarafında kalıcı yönlendirme public/_redirects'te duruyor. Burası
-    uygulama içinden (geri tuşu, eski bağlantı) o yola düşen durumu
-    karşılıyor: 404 yerine ana sayfa, adres de düzeltilmiş oluyor.
+    Önce ana sayfaya gidiyordu: /ilanlar diye bir sayfa yoktu ve liste
+    ana sayfadaydı. Artık ilan aramanın KENDİ sayfası var
+    (`/staj-ilanlari`) ve eski adresin doğru karşılığı orası — ana sayfa
+    değil. Sunucu tarafındaki kalıcı yönlendirme public/_redirects'te;
+    burası uygulama içinden (geri tuşu, eski bağlantı) o yola düşen
+    durumu karşılıyor.
   */
   React.useEffect(() => {
     if (path.replace(/\/+$/, '') === '/ilanlar') {
-      window.history.replaceState({}, '', `/${window.location.search}`);
-      setPath('/');
+      window.history.replaceState({}, '', `/staj-ilanlari${window.location.search}`);
+      setPath('/staj-ilanlari');
     }
   }, [path]);
 
@@ -2344,6 +2359,41 @@ export default function App() {
         slug={temizYol.slice('/rehber/'.length)}
         onBack={() => navigate('/rehber')}
         onNavigate={navigate}
+      />
+    );
+  }
+
+  /*
+    STAJ İLANLARI — "staj ilanları" arama niyetinin birincil sayfası.
+
+    Veri AYRI BİR SORGU AÇMIYOR: katalog zaten `globalListings` içinde
+    yüklü ve ana sayfa da onu kullanıyor. İkinci bir çağrı, aynı ekranda
+    aynı satırları iki kez okumak olurdu.
+
+    Ön render bu sayfanın gövdesini AYNI bileşenle basıyor
+    (scripts/onrender.mjs), yani arama motoru boş bir kabuk değil
+    sayfanın kendisini görüyor.
+  */
+  if (temizYol === '/staj-ilanlari') {
+    const sayfa = globalListings.page;
+    return icerikSayfasi(
+      <StajIlanlariSayfasi
+        onBack={goHome}
+        onNavigate={navigate}
+        veri={{
+          toplam: sayfa?.total,
+          sirketToplam: sayfa?.companyTotal,
+          sehirToplam: sayfa?.cityTotal,
+          dogrulananToplam: sayfa?.verifiedTotal,
+          sonKontrol: sayfa?.lastVerifiedAt ?? null,
+          ilanlar: (sayfa?.listings ?? []).slice(0, 12).map((ilan) => ({
+            yol: `/ilan/${listingSlug(ilan)}`,
+            baslik: ilan.title,
+            sirket: ilan.companyName,
+            sehir: ilan.city || null,
+            calismaSekli: ilan.workType || null,
+          })),
+        }}
       />
     );
   }

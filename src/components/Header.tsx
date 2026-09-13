@@ -600,7 +600,17 @@ export const Header: React.FC<HeaderProps> = ({
     kalıyor (sosyal rotalar sekme değil adresle çiziliyor), İlanlar ile
     Profil aynı anda basılı görünüyordu. Alt çubukta her an tek sekme.
   */
-  const ilanlardaMi = !rehberdeMi && !firsatlardaMi && !kurumsalSayfada && !sosyaldeMi && activeTab === 'internships';
+  /*
+    /staj-ilanlari DA "ilanlar" SEKMESİ
+
+    Sekme artık oraya götürüyor; koşul yalnız `activeTab`e bakınca sayfa
+    açıkken hiçbir sekme yanmıyordu — kullanıcı nerede olduğunu üst
+    çubuktan okuyamıyordu.
+  */
+  const stajIlanlarindaMi = bulunulanYol === '/staj-ilanlari';
+  const ilanlardaMi =
+    stajIlanlarindaMi ||
+    (!rehberdeMi && !firsatlardaMi && !kurumsalSayfada && !sosyaldeMi && activeTab === 'internships');
   /*
     Birleşik profil ekranının KENDİ ADRESİ var (/cv, /cv/yazdir). Alt
     menüdeki Profil oraya gidiyor ama seçili vurgusu yalnızca
@@ -772,9 +782,25 @@ export const Header: React.FC<HeaderProps> = ({
                   hâlâ "İş & Staj İlanları" yanıyordu. Artık bulunulan yol da
                   hesaba katılıyor (ilanlardaMi).
                 */}
+                {/*
+                  SEKME ARTIK /staj-ilanlari'na GİDİYOR
+
+                  Ölçüldü (Search Console): "staj" içeren sorgularda ana
+                  sayfa 137 gösterim alıyor, TEK tıklama yok; tam "staj
+                  ilanları" sorgusunda hiç gösterim almıyor. Ana sayfa
+                  markayı ve ürünün tamamını anlatıyor — arama motoru onu
+                  "StajımVar nedir"e eşliyor.
+
+                  Süzgeçli GERÇEK liste ana sayfada duruyor ve
+                  kaybolmadı: /staj-ilanlari'nın en üstünde "Tüm staj
+                  ilanlarını filtrele" düğmesi oraya götürüyor. Telefonun
+                  alt menüsündeki "İlanlar" sekmesi de ana sayfada kaldı;
+                  o uygulamanın kabuğu, arama motorundan gelen
+                  ziyaretçinin menüsü değil.
+                */}
                 <a
                   id="nav-tab-internships"
-                  href="/"
+                  href="/staj-ilanlari"
                   aria-current={ilanlardaMi ? 'page' : undefined}
                   onClick={baglantiTiklamasi(() => {
                     setActiveTab('internships');
@@ -791,7 +817,7 @@ export const Header: React.FC<HeaderProps> = ({
                       ilanlardaMi ? 'text-blue-600' : 'text-gray-400'
                     }`}
                   />
-                  <span className="hidden xl:inline">İş & Staj İlanları</span>
+                  <span className="hidden xl:inline">Staj İlanları</span>
                   <span className="inline xl:hidden">İlanlar</span>
                 </a>
 

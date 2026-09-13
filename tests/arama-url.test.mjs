@@ -27,14 +27,24 @@ test('diğer parametreler korunuyor', () => {
   assert.equal(aramaAdresi('/', '?utm_source=x&q=staj', ''), '/?utm_source=x');
 });
 
-test('/ilanlar sunucuda kalıcı olarak ana sayfaya yönleniyor', () => {
+test('/ilanlar sunucuda kalıcı olarak /staj-ilanlari adresine yönleniyor', () => {
   const kurallar = fs.readFileSync(path.join(kok, 'public', '_redirects'), 'utf8');
   const satirlar = kurallar
     .split('\n')
     .map((satir) => satir.trim())
     .filter((satir) => satir && !satir.startsWith('#'));
 
-  const ilanlar = satirlar.findIndex((satir) => /^\/ilanlar\s+\/\s+30[18]$/.test(satir));
+  /*
+    HEDEF DEĞİŞTİ: ana sayfa -> /staj-ilanlari
+
+    Önce ana sayfaya gidiyordu, çünkü ilan listesi oradaydı ve /ilanlar
+    diye ayrı bir sayfa yoktu. Artık ilan aramanın kendi sayfası var ve
+    eski adresin doğru karşılığı orası: ana sayfa markayı ve ürünün
+    tamamını anlatıyor, /staj-ilanlari yalnız ilan aramayı.
+  */
+  const ilanlar = satirlar.findIndex((satir) =>
+    /^\/ilanlar\s+\/staj-ilanlari\s+30[18]$/.test(satir),
+  );
   assert.ok(ilanlar >= 0, '/ilanlar için kalıcı yönlendirme kuralı yok');
 
   /*

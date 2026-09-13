@@ -141,12 +141,21 @@ export const RehberdeIlanlar: React.FC<{
         Bağlantı sessizce 404 veriyordu — rehber yazısının dibindeki
         en görünür çıkış yolu çalışmıyordu (canlıda ölçüldü).
       */}
+      {/*
+        HEDEF /staj-ilanlari, ANA SAYFA DEĞİL
+
+        Bu bağlantı bölüm ve rehber sayfalarının sonunda duruyor ve
+        metni "staj ilanları" diyor. Ana sayfaya gidiyordu; ana sayfa
+        markayı ve ürünün tamamını anlatıyor, yani bağlantı metniyle
+        vardığı yer aynı şeyi söylemiyordu. Artık ilan aramanın kendi
+        sayfasına gidiyor.
+      */}
       <a
-        href="/"
+        href="/staj-ilanlari"
         onClick={(e) => {
           if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
           e.preventDefault();
-          onNavigate('/');
+          onNavigate('/staj-ilanlari');
         }}
         className="inline-block text-sm font-semibold text-blue-600 hover:underline"
       >

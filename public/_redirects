@@ -8,13 +8,15 @@
 /kesfet   /firsatlar   301
 /kesfet/*   /firsatlar   301
 
-# ESKİ ADRES: /ilanlar
+# ESKİ ADRES: /ilanlar  ->  /staj-ilanlari
 #
-# İlan listesi ana sayfada duruyor; /ilanlar diye ayrı bir sayfa hiç
-# olmadı. Adres paylaşılmış ve arama motoruna düşmüş durumda. Kalıcı
-# yönlendirme hem ziyaretçiyi hem de arama motorunu doğru yere alıyor.
-/ilanlar   /   301
-/ilanlar/*   /   301
+# Adres paylaşılmış ve arama motoruna düşmüş durumda. Önce ana sayfaya
+# gidiyordu, çünkü ilan listesi oradaydı ve /ilanlar diye ayrı bir sayfa
+# yoktu. Artık ilan aramanın KENDİ sayfası var (/staj-ilanlari) ve eski
+# adresin doğru karşılığı orası: ana sayfa markayı ve ürünün tamamını
+# anlatıyor, /staj-ilanlari yalnız ilan aramayı.
+/ilanlar   /staj-ilanlari   301
+/ilanlar/*   /staj-ilanlari   301
 
 # ESKİ ADRES: /sirketler
 #
