@@ -184,11 +184,13 @@ test('İLERLEME ÇUBUĞU YOK; TUTAR VE TARİH GERÇEK KAYITTAN', () => {
   assert.match(firsat, /<dt className="text-\[11px\] text-gray-500">Tutar<\/dt>/);
   assert.match(firsat, /\{arsivde \? 'Kapanış' : 'Son başvuru'\}/);
   /*
-    Bilinmeyen değerde boş çizgi değil, ne olduğu yazıyor — ve metin
-    telefondakiyle AYNI kaynaktan geliyor (`opportunityAmount.satir`),
-    yerleşim değişmeden.
+    Metin telefondakiyle AYNI kaynaktan geliyor (`opportunityAmount.satir`)
+    ve ızgara iki sütun kalıyor. Kaynak tutar açısından henüz kontrol
+    edilmediyse alan HİÇ çizilmiyor: bakmadığımız bir sayfa hakkında
+    "Belirtilmemiş" demek bir iddia olurdu.
   */
-  assert.match(firsat, /\{tutar\.satir \?\? 'Belirtilmemiş'\}/);
+  assert.match(firsat, /\{tutar\.satir && \(/);
+  assert.match(firsat, /<dd className="text-sm font-semibold text-gray-500">\{tutar\.satir\}<\/dd>/);
   assert.match(firsat, /Takvim açıklanmadı/);
 });
 

@@ -32,6 +32,22 @@ export interface Opportunity {
   */
   amountMin?: number; amountMax?: number; currency?: string; paymentPeriod?: string;
   amountPeriodLabel?: string; amountNote?: string; repayable?: boolean; amountVerifiedAt?: string;
+  /*
+    TUTAR DURUMU VE KANITI (göç 20260927100000)
+
+    `amountStatus` kartın tutar satırını belirliyor ve onu yalnızca
+    `scripts/firsat-tutar-kontrol.mjs` yazıyor — kurumun kendi güncel
+    sayfasını açıp okuduğu cümleye bakarak. NULL = kaynak tutar
+    açısından henüz kontrol edilmedi; arayüz o durumda satırı hiç
+    çizmiyor.
+
+    Kanıt alanları ekranda kullanılmıyor, DENETİM için duruyor: bir
+    insan "bu cümle gerçekten bunu mu söylüyor" diye bakabilsin.
+  */
+  amountStatus?: 'kesin' | 'aciklanacak' | 'mali_destek' | 'belirtilmemis' | 'ucretsiz' | 'belirsiz';
+  amountCheckedAt?: string;
+  amountSourceUrl?: string;
+  amountEvidence?: string;
   applicationStartAt?: string; applicationDeadline?: string; applicationUrl?: string; sourceUrl: string;
   requiredDocuments: string[]; status: OpportunityStatus; verifiedAt?: string; lastCheckedAt?: string; publishedAt?: string; updatedAt?: string;
   /*
@@ -71,7 +87,7 @@ export interface Opportunity {
   sourceFailureCount?: number;
 }
 
-const COLUMNS = 'id,slug,title,organization_name,organization_logo_url,cover_image_url,opportunity_type,short_description,description,eligibility,education_levels,eligible_departments,eligible_class_years,cities,countries,minimum_gpa,language_requirements,amount_text,support_type,amount_min,amount_max,currency,payment_period,amount_period_label,amount_note,repayable,amount_verified_at,application_start_at,application_deadline,application_url,source_url,required_documents,status,verified_at,last_checked_at,published_at,departments_verified_at,education_levels_verified_at,cities_verified_at,event_mode,starts_at,ends_at,venue_name,academic_year,age_min,age_max,income_requirement,source_checked_at,source_status,source_failure_count';
+const COLUMNS = 'id,slug,title,organization_name,organization_logo_url,cover_image_url,opportunity_type,short_description,description,eligibility,education_levels,eligible_departments,eligible_class_years,cities,countries,minimum_gpa,language_requirements,amount_text,support_type,amount_min,amount_max,currency,payment_period,amount_period_label,amount_note,repayable,amount_verified_at,amount_status,amount_checked_at,amount_source_url,amount_evidence,application_start_at,application_deadline,application_url,source_url,required_documents,status,verified_at,last_checked_at,published_at,departments_verified_at,education_levels_verified_at,cities_verified_at,event_mode,starts_at,ends_at,venue_name,academic_year,age_min,age_max,income_requirement,source_checked_at,source_status,source_failure_count';
 const map = (row: any): Opportunity => ({
   id: row.id, slug: row.slug, title: row.title, organizationName: row.organization_name, organizationLogoUrl: row.organization_logo_url ?? undefined, coverImageUrl: row.cover_image_url ?? undefined,
   opportunityType: row.opportunity_type, shortDescription: row.short_description ?? '', description: row.description ?? '', eligibility: row.eligibility ?? '',
@@ -83,6 +99,10 @@ const map = (row: any): Opportunity => ({
   amountPeriodLabel: row.amount_period_label ?? undefined, amountNote: row.amount_note ?? undefined,
   repayable: row.repayable == null ? undefined : Boolean(row.repayable),
   amountVerifiedAt: row.amount_verified_at ?? undefined,
+  amountStatus: row.amount_status ?? undefined,
+  amountCheckedAt: row.amount_checked_at ?? undefined,
+  amountSourceUrl: row.amount_source_url ?? undefined,
+  amountEvidence: row.amount_evidence ?? undefined,
   applicationStartAt: row.application_start_at ?? undefined, applicationDeadline: row.application_deadline ?? undefined, applicationUrl: row.application_url ?? undefined, sourceUrl: row.source_url,
   requiredDocuments: row.required_documents ?? [], status: row.status, verifiedAt: row.verified_at ?? undefined, lastCheckedAt: row.last_checked_at ?? undefined, publishedAt: row.published_at ?? undefined,
   departmentsVerifiedAt: row.departments_verified_at ?? undefined,

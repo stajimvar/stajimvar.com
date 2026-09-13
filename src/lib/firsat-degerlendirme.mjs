@@ -59,110 +59,59 @@ function paraBicimi(deger, currency) {
  * bilinmiyor — true ise ekranda "açıklanmadı" cümlesi yazılmalı
  */
 /*
-  TUTAR SATIRI — DESTEK TÜRÜNE GÖRE BEŞ DURUM
+  TUTAR SATIRI — DURUM VERİDEN GELİYOR, TÜRDEN DEĞİL
 
-  Kart "Tutar açıklanmadı" diyordu. Cümle üç ayrı gerçeği tek torbaya
-  atıyordu: kurumun henüz rakam yayımlamadığı burs, tanımı gereği sabit
-  rakamı olmayan kapsamlı program ve parayla hiç ilgisi olmayan yarışma.
-  Üçü de aynı cümleyi görünce cümle hiçbir şey söylemiyor.
+  ÖNCEKİ HÂLİ VE HATASI
+  ---------------------
+  Durum kaydın TÜRÜNDEN türetiliyordu: "burs ya da yurt dışı ise demek
+  ki bir ödeme var, kurum henüz açıklamamış". 113 kaydın 106'sı
+  "Tutar kurumca açıklanacak" cümlesini kaynağında öyle yazdığı için
+  değil, türü öyle olduğu için gösteriyordu. Yani ekran, hiç bakmadığı
+  bir sayfa hakkında iddiada bulunuyordu.
 
-  BEŞ DURUM
-  ---------
-    rakam        Doğrulanmış güncel rakam var → "Aylık 5.000 ₺"
-    aciklanacak  Para var, kurum rakamı henüz yayımlamadı
-                 → "Tutar kurumca açıklanacak"
-    mali_destek  Sabit rakamı YOK ama burs/harcırah/yol/konaklama
-                 desteği veriliyor → "Mali destek sağlanıyor"
-    ucretsiz     Katılım ücretsiz → "Ücretsiz"
-    yok          Para ya da ücretsizlik bilgisi yok → satır çizilmiyor
+  ŞİMDİ
+  -----
+  Durum `amount_status` sütunundan okunuyor ve o sütunu yalnızca
+  `scripts/firsat-tutar-kontrol.mjs` yazıyor: kurumun kendi güncel
+  sayfasını açıp okuduğu cümleye bakarak. Kanıt da satırda duruyor
+  (`amount_evidence`, `amount_source_url`, `amount_checked_at`), yani
+  her cümlenin arkasında denetlenebilir bir kaynak var.
+
+  ALTI DURUM
+  ----------
+    kesin          Güncel dönem için kesin rakam → "Aylık 5.000 ₺"
+    aciklanacak    Kaynak "tutar sonra açıklanacak" diyor
+    mali_destek    Destek var, miktar programa/şehre/kişiye göre değişiyor
+    belirtilmemis  Güncel sayfa okundu, tutardan hiç söz etmiyor
+    ucretsiz       Katılımın ücretsiz olduğu açıkça yazıyor
+    belirsiz       Açılamadı, çelişkili ya da karar verilemedi
+
+  `belirsiz` ve NULL (hiç bakılmamış) EKRANDA AYNI ŞEY: satır hiç
+  çizilmiyor. Betiğin kararsızlığı bir iddiaya dönüşmüyor.
 
   ESKİ DÖNEM TUTARI KULLANILMIYOR
   ------------------------------
-  Rakam yalnızca `amount_verified_at` damgası varken çıkıyor; damga
-  kurumun kendi sayfasında o rakamın görüldüğü an. Damgasız bir sayı
-  geçen yılın rakamı olabilir ve burs tutarları her yıl değişiyor —
-  bu yüzden damgasız kayıt `aciklanacak` dalına düşüyor, sayıya değil.
-
-  KURAL VERİDEN OKUYOR, TAHMİN ETMİYOR
-  ------------------------------------
-  "Mali destek sağlanıyor" ve "Ücretsiz" bir İDDİA: kurumun bir şey
-  verdiğini söylüyor. İddia yalnızca kaydın kendi alanlarından
-  (`amount_text`, `support_type`) okunuyor. Alan boşsa iddia edilmiyor;
-  parası tanımı gereği olan türlerde (burs, KYK, öğrenci desteği)
-  "açıklanacak", ötekilerde satır hiç çizilmiyor.
-
-  Yeni eklenen kayıtlara ayrıca bir şey yapmak gerekmiyor: kural
-  kaydın alanlarının bir fonksiyonu, listede de detayda da aynı yerden
-  çağrılıyor.
+  Rakam yalnızca `amount_verified_at` damgası varken çıkıyor; damgayı da
+  yalnız `kesin` dalı atıyor. Betik öteki dallarda eski rakamı
+  temizliyor: durumu "belirtilmemiş" olan bir kayıtta geçen yıldan kalma
+  bir sayı durmamalı.
 */
 export const TUTAR_DURUMU = {
-  rakam: 'rakam',
+  kesin: 'kesin',
   aciklanacak: 'aciklanacak',
   maliDestek: 'mali_destek',
+  belirtilmemis: 'belirtilmemis',
   ucretsiz: 'ucretsiz',
-  yok: 'yok',
+  belirsiz: 'belirsiz',
 };
 
+/* Ekranda görünen karşılıklar. Listede olmayan durum satır çizmiyor. */
 export const TUTAR_METNI = {
   aciklanacak: 'Tutar kurumca açıklanacak',
   mali_destek: 'Mali destek sağlanıyor',
+  belirtilmemis: 'Tutar belirtilmemiş',
   ucretsiz: 'Ücretsiz',
 };
-
-/*
-  PARASI TANIMI GEREĞİ OLAN TÜRLER
-
-  Burs, KYK ve öğrenci desteği zaten para demek. `international` de bu
-  kümede: envanterdeki 66 kaydın hepsi yurt dışı BURS ve DEĞİŞİM
-  programı (Fulbright, Erasmus, Swiss Government Excellence, NAWA,
-  Deutschlandstipendium …) — ortak noktaları bir ödeme taşımaları.
-
-  Yarışma, eğitim ve gençlik programı bu kümede DEĞİL: orada para
-  olabilir de olmayabilir de. Kayıt kendi alanlarında bir şey
-  söylemiyorsa satır hiç çizilmiyor — "açıklanacak" demek olmayan bir
-  ödemeyi varmış gibi göstermek olurdu.
-*/
-const PARALI_TURLER = new Set(['scholarship', 'kyk', 'student_support', 'international']);
-
-const kucuk = (metin) => String(metin ?? '').toLocaleLowerCase('tr-TR');
-
-/*
-  NİTELİK ALANLARINDAN DURUM OKUMA
-
-  `amount_text` bir miktar değil NİTELİK alanı: "Karşılıksız",
-  "Programa göre değişiyor", "Hibe destekli", "Ödüllü". `support_type`
-  de öyle: "Burs", "Kredi", "Yarışma". İkisi de serbest metin, bu yüzden
-  eşleşme kelime kökünden yapılıyor — "Hibe destekli" ile "hibe desteği"
-  aynı şeyi söylüyor.
-*/
-function nitelikDurumu(item) {
-  const metin = `${kucuk(item.amountText)} ${kucuk(item.supportType)}`.trim();
-  if (!metin) return null;
-
-  /* Ücretsizlik en belirgin iddia; önce o aranıyor. */
-  if (/ücretsiz|ucretsiz|katılım ücreti yok|katilim ucreti yok/.test(metin)) {
-    return TUTAR_DURUMU.ucretsiz;
-  }
-
-  /*
-    Sabit rakamı olmayan ama destek veren programlar. "Programa göre
-    değişiyor" tam olarak bunu söylüyor: rakam kişiden kişiye değişiyor,
-    yani yayımlanacak tek bir sayı yok.
-  */
-  if (/programa göre|programa gore|hibe|harcırah|harcirah|konaklama|yol deste|mali deste|masraf/.test(metin)) {
-    return TUTAR_DURUMU.maliDestek;
-  }
-
-  /*
-    Para var ama rakam yok: karşılıksız burs, geri ödemeli kredi, ödüllü
-    yarışma. Üçünde de kurumun açıklayacağı bir rakam var.
-  */
-  if (/karşılıksız|karsiliksiz|geri ödemeli|geri odemeli|ödül|odul|burs|kredi|destek/.test(metin)) {
-    return TUTAR_DURUMU.aciklanacak;
-  }
-
-  return null;
-}
 
 export function opportunityAmount(item) {
   const bos = {
@@ -170,7 +119,7 @@ export function opportunityAmount(item) {
     donem: null,
     geriOdeme: null,
     bilinmiyor: true,
-    durum: TUTAR_DURUMU.yok,
+    durum: null,
     satir: null,
   };
   if (!item) return bos;
@@ -179,16 +128,17 @@ export function opportunityAmount(item) {
     item.repayable === true ? 'Geri ödemeli' : item.repayable === false ? 'Karşılıksız' : null;
 
   /*
-    Rakamsız dal: durumu nitelik alanlarından, o da yoksa türden
-    türetiyor. `satir` karttaki tek satırlık gösterim; `null` ise satır
-    hiç çizilmiyor.
+    Durum SATIRDAN geliyor. Tanınmayan bir değer (ileride eklenip
+    arayüze yansımamış bir durum) satır çizdirmiyor: bilmediğimiz bir
+    etiketi kullanıcıya okutmaktansa susmak doğru.
   */
-  const rakamsiz = () => {
-    const durum =
-      nitelikDurumu(item) ??
-      (PARALI_TURLER.has(item.opportunityType) ? TUTAR_DURUMU.aciklanacak : TUTAR_DURUMU.yok);
-    return { ...bos, geriOdeme, durum, satir: TUTAR_METNI[durum] ?? null };
-  };
+  const durum = item.amountStatus ?? null;
+  const rakamsiz = () => ({
+    ...bos,
+    geriOdeme,
+    durum,
+    satir: TUTAR_METNI[durum] ?? null,
+  });
 
   /*
     Doğrulanmamış tutar gösterilmiyor. amount_text hâlâ duruyor ama o bir
@@ -207,8 +157,7 @@ export function opportunityAmount(item) {
 
     "2.250 ₺" tek başına aylık mı tek seferlik mi belli değil ve ikisi
     arasında on iki katlık fark var. Sıklık yoksa sayı atlanıyor;
-    varsa açıklama alanındaki kaynak ifadesi gösteriliyor. Veri girişi
-    de sıklığı zorunlu tutuyor, bu yalnızca eski kayıtlar için ağ.
+    varsa açıklama alanındaki kaynak ifadesi gösteriliyor.
   */
   let metin = null;
   if (sikliK) {
@@ -227,8 +176,8 @@ export function opportunityAmount(item) {
     donem,
     geriOdeme,
     bilinmiyor: false,
-    durum: TUTAR_DURUMU.rakam,
-    /* Kartta tek satır: rakam ve varsa dönemi ("Aylık 5.000 ₺ · 2026–2027"). */
+    durum: TUTAR_DURUMU.kesin,
+    /* Kartta tek satır: rakam ve varsa ödeme dönemi. */
     satir: donem ? `${metin} · ${donem}` : metin,
   };
 }

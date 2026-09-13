@@ -1404,27 +1404,30 @@ export const Card: React.FC<{
           masaüstü kartında alt satır için yer yok.
         */}
         <dl className="hidden grid-cols-2 items-start gap-x-3 gap-y-1 border-t border-gray-100 pt-2 sm:grid">
-          <div className="min-w-0">
-            <dt className="text-[11px] text-gray-500">Tutar</dt>
-            {/*
-              Metin telefondakiyle AYNI kaynaktan (`opportunityAmount`);
-              yerleşim değişmedi. Destek bilgisi hiç yoksa alan "—"
-              basmıyor: olmayan bir ölçümü çizgiyle göstermek "veri
-              eksik" gibi okunuyordu.
-            */}
-            {tutar.bilinmiyor ? (
-              <dd className="text-sm font-semibold text-gray-500">
-                {tutar.satir ?? 'Belirtilmemiş'}
-              </dd>
-            ) : (
-              <dd className="text-sm font-extrabold leading-tight text-gray-900 sm:text-base">
-                {tutar.metin}
-                {tutar.donem && (
-                  <span className="block text-[11px] font-medium text-gray-500">{tutar.donem}</span>
-                )}
-              </dd>
-            )}
-          </div>
+          {/*
+            Metin telefondakiyle AYNI kaynaktan (`opportunityAmount`) ve
+            ızgara iki sütun kalıyor. Kaynak tutar açısından henüz
+            kontrol edilmediyse (`satir` null) alan HİÇ çizilmiyor:
+            "Belirtilmemiş" demek, bakmadığımız bir sayfa hakkında
+            iddiada bulunmak olurdu.
+          */}
+          {tutar.satir && (
+            <div className="min-w-0">
+              <dt className="text-[11px] text-gray-500">Tutar</dt>
+              {tutar.bilinmiyor ? (
+                <dd className="text-sm font-semibold text-gray-500">{tutar.satir}</dd>
+              ) : (
+                <dd className="text-sm font-extrabold leading-tight text-gray-900 sm:text-base">
+                  {tutar.metin}
+                  {tutar.donem && (
+                    <span className="block text-[11px] font-medium text-gray-500">
+                      {tutar.donem}
+                    </span>
+                  )}
+                </dd>
+              )}
+            </div>
+          )}
           <div className="min-w-0">
             <dt className="text-[11px] text-gray-500">{arsivde ? 'Kapanış' : 'Son başvuru'}</dt>
             <dd className="text-sm font-extrabold leading-tight text-gray-900 sm:text-base">

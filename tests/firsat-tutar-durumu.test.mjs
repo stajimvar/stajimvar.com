@@ -26,120 +26,118 @@ const oku = (p) => readFileSync(path.join(KOK, p), 'utf8').replace(/\r\n/g, '\n'
 
 const kayit = (yama = {}) => ({ opportunityType: 'scholarship', ...yama });
 
-test('doğrulanmış rakam varsa tutar ve dönemi yazılıyor', () => {
+test('doğrulanmış rakam varsa tutar ve ödeme dönemi yazılıyor', () => {
   const t = opportunityAmount(
     kayit({
-      amountVerifiedAt: '2026-09-01',
-      amountMin: 5000,
-      amountMax: 5000,
+      amountStatus: 'kesin',
+      amountVerifiedAt: '2026-09-13',
+      amountMin: 7000,
+      amountMax: 7000,
       currency: 'TRY',
       paymentPeriod: 'monthly',
       amountPeriodLabel: '2026–2027',
     }),
   );
-  assert.equal(t.durum, TUTAR_DURUMU.rakam);
+  assert.equal(t.durum, 'kesin');
   assert.equal(t.bilinmiyor, false);
-  assert.match(t.satir, /5\.000/);
+  assert.match(t.satir, /7\.000/);
   assert.match(t.satir, /2026–2027/, 'ödeme dönemi satırda');
+});
+
+test('DURUM VERİDEN GELİYOR, TÜRDEN DEĞİL', () => {
+  /*
+    Durum kaydın türünden türetiliyordu: "burs ya da yurt dışı ise demek
+    ki bir ödeme var, kurum henüz açıklamamış". 113 kaydın 106'sı
+    "Tutar kurumca açıklanacak" cümlesini kaynağında öyle yazdığı için
+    değil, TÜRÜ öyle olduğu için gösteriyordu.
+
+    Tür artık hiçbir şey söylemiyor: `amount_status` yoksa satır yok.
+  */
+  for (const tur of ['scholarship', 'kyk', 'student_support', 'international', 'competition']) {
+    const t = opportunityAmount(kayit({ opportunityType: tur }));
+    assert.equal(t.durum, null, tur);
+    assert.equal(t.satir, null, `${tur}: türden cümle üretilmemeli`);
+  }
+});
+
+test('her durumun ekranda tek bir karşılığı var', () => {
+  const bekleme = {
+    aciklanacak: 'Tutar kurumca açıklanacak',
+    mali_destek: 'Mali destek sağlanıyor',
+    belirtilmemis: 'Tutar belirtilmemiş',
+    ucretsiz: 'Ücretsiz',
+  };
+  for (const [durum, metin] of Object.entries(bekleme)) {
+    const t = opportunityAmount(kayit({ amountStatus: durum }));
+    assert.equal(t.satir, metin, durum);
+  }
+});
+
+test('belirsiz ve kontrol edilmemiş kayıtta satır çizilmiyor', () => {
+  /*
+    Betiğin kararsızlığı ekranda bir iddiaya dönüşmemeli: açılamayan,
+    çelişkili ya da hiç bakılmamış kaynak için hiçbir şey yazılmıyor.
+  */
+  assert.equal(opportunityAmount(kayit({ amountStatus: 'belirsiz' })).satir, null);
+  assert.equal(opportunityAmount(kayit({})).satir, null);
+  /* İleride eklenip arayüze yansımamış bir durum da satır çizdirmiyor. */
+  assert.equal(opportunityAmount(kayit({ amountStatus: 'yeni_bir_durum' })).satir, null);
 });
 
 test('ESKİ DÖNEM TUTARI KULLANILMIYOR: damgasız sayı rakam sayılmıyor', () => {
   /*
-    Burs tutarları her yıl değişiyor. `amount_verified_at` o rakamın
-    kurumun kendi sayfasında GÖRÜLDÜĞÜ an; damga yoksa sayı geçen yılın
-    rakamı olabilir. Damgasız kayıt rakam dalına hiç girmiyor.
+    Rakam yalnızca `amount_verified_at` damgası varken çıkıyor; damgayı
+    da yalnız betiğin `kesin` dalı atıyor. Damgasız bir sayı geçen yılın
+    rakamı olabilir.
   */
   const t = opportunityAmount(
-    kayit({ amountMin: 5000, currency: 'TRY', paymentPeriod: 'monthly' }),
+    kayit({ amountStatus: 'belirtilmemis', amountMin: 22500, currency: 'TRY', paymentPeriod: 'yearly' }),
   );
-  assert.equal(t.durum, TUTAR_DURUMU.aciklanacak);
-  assert.equal(t.satir, 'Tutar kurumca açıklanacak');
-  assert.doesNotMatch(t.satir, /5\.000/);
+  assert.equal(t.durum, 'belirtilmemis');
+  assert.equal(t.satir, 'Tutar belirtilmemiş');
+  assert.doesNotMatch(t.satir, /22\.500/);
 });
 
 test('sıklığı olmayan sayı gösterilmiyor', () => {
   /* "2.250 ₺" tek başına aylık mı tek seferlik mi belli değil. */
-  const t = opportunityAmount(kayit({ amountVerifiedAt: '2026-09-01', amountMin: 2250, currency: 'TRY' }));
-  assert.equal(t.durum, TUTAR_DURUMU.aciklanacak);
-});
-
-test('sabit tutarı olmayan destek programı: "Mali destek sağlanıyor"', () => {
-  /*
-    Fulbright FLTA'nın resmî sayfası (doğrulandı 13 Eylül 2026): "Burs,
-    sağlık sigortası, Fulbright etkinlikleri masrafları, kalacak yer,
-    yaşam giderleri ve gidiş-dönüş ulaşım desteğini kapsamaktadır" ve
-    "aylık burs ödemesi miktarı eyalete göre değişmektedir". Yani destek
-    var, yayımlanacak tek bir sayı yok.
-  */
-  for (const nitelik of ['Programa göre değişiyor', 'Hibe destekli', 'Yol ve konaklama desteği', 'Harcırah ödeniyor']) {
-    const t = opportunityAmount(kayit({ amountText: nitelik }));
-    assert.equal(t.durum, TUTAR_DURUMU.maliDestek, nitelik);
-    assert.equal(t.satir, 'Mali destek sağlanıyor');
-  }
-});
-
-test('katılım ücretsizse: "Ücretsiz"', () => {
-  for (const nitelik of ['Ücretsiz', 'Katılım ücreti yok']) {
-    const t = opportunityAmount(kayit({ opportunityType: 'education', amountText: nitelik }));
-    assert.equal(t.durum, TUTAR_DURUMU.ucretsiz);
-    assert.equal(t.satir, 'Ücretsiz');
-  }
-});
-
-test('para var ama rakam yok: "Tutar kurumca açıklanacak"', () => {
-  for (const nitelik of ['Karşılıksız', 'Geri ödemeli', 'Ödüllü']) {
-    const t = opportunityAmount(kayit({ opportunityType: 'competition', amountText: nitelik }));
-    assert.equal(t.durum, TUTAR_DURUMU.aciklanacak, nitelik);
-  }
-});
-
-test('parayla ilgisi olmayan kayıtta satır hiç çizilmiyor', () => {
-  /*
-    Yarışma, atölye ve gençlik programında para olabilir de olmayabilir
-    de. Kayıt kendi alanlarında bir şey söylemiyorsa iddia edilmiyor:
-    "açıklanacak" demek olmayan bir ödemeyi varmış gibi göstermek olurdu.
-  */
-  for (const tur of ['competition', 'education', 'youth_program', 'career_fair']) {
-    const t = opportunityAmount(kayit({ opportunityType: tur }));
-    assert.equal(t.durum, TUTAR_DURUMU.yok, tur);
-    assert.equal(t.satir, null, `${tur}: satır çizilmemeli`);
-  }
-});
-
-test('parası tanımı gereği olan türlerde rakamsız kayıt "açıklanacak" diyor', () => {
-  /*
-    `international` bu kümede: envanterdeki yurt dışı kayıtlarının hepsi
-    burs ve değişim programı (Fulbright, Erasmus, Swiss Government
-    Excellence, NAWA, Deutschlandstipendium …) ve ortak noktaları bir
-    ödeme taşımaları.
-  */
-  for (const tur of ['scholarship', 'kyk', 'student_support', 'international']) {
-    const t = opportunityAmount(kayit({ opportunityType: tur }));
-    assert.equal(t.durum, TUTAR_DURUMU.aciklanacak, tur);
-  }
-});
-
-test('ücretsizlik önce okunuyor: "Ücretsiz · burs yok" burs sayılmıyor', () => {
-  const t = opportunityAmount(kayit({ opportunityType: 'education', amountText: 'Ücretsiz', supportType: 'Burs' }));
-  assert.equal(t.durum, TUTAR_DURUMU.ucretsiz);
+  const t = opportunityAmount(
+    kayit({ amountStatus: 'kesin', amountVerifiedAt: '2026-09-13', amountMin: 2250, currency: 'TRY' }),
+  );
+  assert.equal(t.bilinmiyor, true);
 });
 
 test('metinler tek yerde tanımlı ve kart oradan okuyor', () => {
   assert.deepEqual(TUTAR_METNI, {
     aciklanacak: 'Tutar kurumca açıklanacak',
     mali_destek: 'Mali destek sağlanıyor',
+    belirtilmemis: 'Tutar belirtilmemiş',
     ucretsiz: 'Ücretsiz',
   });
+  assert.equal(TUTAR_DURUMU.kesin, 'kesin');
+  assert.equal(TUTAR_DURUMU.belirsiz, 'belirsiz');
+
   const sayfa = oku('src/components/OpportunitiesPage.tsx');
-  /* Kart artık kendi cümlesini kurmuyor: `satir` ne diyorsa onu yazıyor. */
+  /* Kart kendi cümlesini kurmuyor: `satir` ne diyorsa onu yazıyor. */
   assert.doesNotMatch(sayfa, /Tutar açıklanmadı/, 'eski tek cümle geri gelmiş');
   assert.match(sayfa, /\{tutar\.satir \? ` · \$\{tutar\.satir\}` : ''\}/);
   /* Telefonda metin uzasa da kart uzamıyor: en fazla iki satır. */
   assert.match(sayfa, /line-clamp-2 text-xs text-gray-500 sm:hidden/);
+  /* Masaüstünde de durum yoksa alan hiç çizilmiyor. */
+  assert.match(sayfa, /\{tutar\.satir && \(/);
+  assert.doesNotMatch(sayfa, /'Belirtilmemiş'/, 'masaüstü hâlâ varsayım basıyor');
   /*
     Logo yalnız HER ZAMAN VAR OLAN iki satırı kaplıyor; tutar satırı
     gizlenebildiği için üçe yayılsaydı ızgara boş bir örtük satır açar
     ve kart uzardı.
   */
   assert.match(sayfa, /col-start-1 row-start-1 row-span-2 !h-10 !w-10/);
+});
+
+test('sorgu ve tip yeni alanları taşıyor', () => {
+  /* Kanıt alanları ekranda kullanılmıyor ama denetim için çekiliyor. */
+  const lib = oku('src/lib/opportunities.ts');
+  for (const alan of ['amount_status', 'amount_checked_at', 'amount_source_url', 'amount_evidence']) {
+    assert.ok(lib.includes(alan), `${alan} sorguda yok`);
+  }
+  assert.match(lib, /amountStatus\?: 'kesin' \| 'aciklanacak' \| 'mali_destek' \| 'belirtilmemis' \| 'ucretsiz' \| 'belirsiz'/);
 });
