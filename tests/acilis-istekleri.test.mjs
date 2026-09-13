@@ -83,3 +83,32 @@ test('rehber/bölüm ilan bloğu altı kart için bütün ilanları indirmiyor',
   assert.match(blok, /import type \{ RehberIlanKarti \} from '\.\.\/lib\/queries';/);
   assert.doesNotMatch(blok, /^import \{[^}]*\} from '\.\.\/lib\/queries';/m);
 });
+
+test('aynı kullanıcı için oturum olayı tekrar tekrar işlenmiyor', () => {
+  const auth = oku('src/lib/auth.ts');
+  const app = oku('src/App.tsx');
+
+  /*
+    ÖLÇÜLDÜ (canlı, 13 Eylül 2026, giriş yapmış kullanıcı, TEK sayfa
+    açılışı): auth/v1/user, rpc/is_admin, student_profiles,
+    applications ve iki profiles sorgusundan oluşan küme ALTI KEZ
+    tekrarlandı — otuz civarı gereksiz istek.
+
+    Sebep: Supabase `SIGNED_IN` olayını yalnız girişte yollamıyor;
+    sekme öne gelince, pencere odaklanınca ve oturum yerelden geri
+    kurulunca da yolluyor. Her seferinde yeni bir `session` NESNESİ
+    yazılıyor, nesneye bağlı etkiler de baştan koşuyordu.
+  */
+  assert.match(auth, /let sonKimlik: string \| null = null;/);
+  assert.match(auth, /if \(kimlik !== null && kimlik === sonKimlik\) return;/);
+  /* Çıkışta hafıza sıfırlanıyor: aynı kişi yeniden girerse haber veriliyor. */
+  assert.match(auth, /sonKimlik = null;\s*\n\s*callback\(null\);/);
+
+  /*
+    İKİNCİ KAPI: dinleyicideki eleme kaçırsa bile aynı kullanıcı için
+    yeni bir nesne yazılmıyor, yani etkiler tetiklenmiyor.
+  */
+  assert.match(app, /const oturumuYaz = React\.useCallback\(/);
+  assert.match(app, /return ayni \? eski : yeni;/);
+  assert.doesNotMatch(app, /\n      setSession\(user\);/);
+});
