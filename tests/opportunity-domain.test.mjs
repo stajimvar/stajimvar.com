@@ -66,7 +66,6 @@ test('süzgeç durumu adres üzerinden gidip geliyor', () => {
     kaydedilen: false,
     arsiv: false,
     siralama: 'yeni',
-    takvim: false,
   });
   assert.equal(
     serializeOpportunityFilters(filters),
@@ -97,13 +96,21 @@ test('eski place= adı şehir alanına okunuyor', () => {
   assert.equal(serializeOpportunityFilters(filters), '?sehir=Ankara');
 });
 
-test('görünüm ve liste anahtarları adrese yazılıyor', () => {
+test('liste anahtarları adrese yazılıyor; eski görünüm anahtarı düşüyor', () => {
+  /*
+    `gorunum=takvim` LİSTE/TAKVİM GEÇİŞİYLE BİRLİKTE KALKTI.
+
+    Parametre paylaşılmış ve indekslenmiş bağlantılarda dolaşımda; bu
+    yüzden okuma tarafı onu bir HATA saymıyor, tanınmayan her değer gibi
+    sessizce düşürüyor ve sayfa listeyle açılıyor. Yazma tarafı da artık
+    üretmiyor: adres tazelenince anahtar kendiliğinden temizleniyor.
+  */
   const filters = readOpportunityFilters('?arsiv=1&uygun=1&kayit=1&gorunum=takvim');
   assert.equal(filters.arsiv, true);
   assert.equal(filters.banaUygun, true);
   assert.equal(filters.kaydedilen, true);
-  assert.equal(filters.takvim, true);
-  assert.equal(serializeOpportunityFilters(filters), '?uygun=1&kayit=1&arsiv=1&gorunum=takvim');
+  assert.ok(!('takvim' in filters), 'takvim anahtarı süzgeç modelinde kalmamalı');
+  assert.equal(serializeOpportunityFilters(filters), '?uygun=1&kayit=1&arsiv=1');
 });
 
 test('tanınmayan değer sessizce düşüyor', () => {

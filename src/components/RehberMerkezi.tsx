@@ -3,7 +3,12 @@ import React from 'react';
 import { ArrowRight, Search, SlidersHorizontal } from 'lucide-react';
 import { FiltreBlogu, SecenekSatiri } from '../ui';
 import { KonuSeridi } from './KonuSeridi';
-import { YUZEY } from '../ui/tokens';
+import {
+  LISTE_BASLIGI,
+  LISTE_BASLIGI_NOTU,
+  LISTE_BASLIGI_YAZISI,
+  YUZEY,
+} from '../ui/tokens';
 import { SayfaKabugu } from './SayfaKabugu';
 import { RehberIzgarasi, RehberKarti, RehberKartiIskeleti } from './RehberKartlari';
 import { YolHaritasi } from './YolHaritasi';
@@ -513,12 +518,12 @@ export const RehberMerkezi: React.FC<{
 
         {/* --------------------------------------------------- orta: liste */}
         <section aria-label="Rehberler" className="min-w-0 space-y-4 lg:col-span-6">
-          <div className="flex items-center justify-between gap-3 px-1">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-gray-600">
+          <div className={LISTE_BASLIGI}>
+            <h2 className={LISTE_BASLIGI_YAZISI}>
               {aktifSuzgecler.length ? 'Filtrelenen rehberler' : 'Tüm rehberler'} ({sonuclar.length}
               )
             </h2>
-            <span className="hidden text-xs font-medium text-gray-500 sm:block">
+            <span className={LISTE_BASLIGI_NOTU}>
               Rakam değil, işleyiş anlatılıyor
             </span>
           </div>
@@ -540,15 +545,18 @@ export const RehberMerkezi: React.FC<{
           />
 
           {/*
-          Açıklama yalnızca gerçekten kişiselleştirme yapılabiliyorsa.
-          Veri yoksa satır hiç çizilmiyor — "senin için seçtik" demek için
-          kişi hakkında bir şey bilmek gerekiyor.
-        */}
-        {kisisel && !suzuluyor && (
-          <p className="-mt-3 text-xs text-gray-600">
-            Eğitim bilgilerine göre senin için öne çıkardık.
-          </p>
-        )}
+            AÇIKLAMA SATIRI KALDIRILDI
+
+            "Eğitim bilgilerine göre senin için öne çıkardık." satırı
+            şeritle "Sana özel seçilenler" başlığı arasında duruyordu ve
+            aynı şeyi iki kez söylüyordu: başlık zaten "sana özel" diyor.
+            Negatif bir üst boşlukla (`-mt-3`) yukarı çekiliyordu, yani
+            sütunun ritmiyle de kavgalıydı.
+
+            KİŞİSELLEŞTİRME KALKMADI: `kisisel` bayrağı duruyor ve başlığı
+            hâlâ o seçiyor ("Sana özel seçilenler" / "Öne çıkan
+            rehberler"); sıralama da değişmedi. Kalkan yalnız cümle.
+          */}
 
         {veriDurumu === 'hata' && (
           <p className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs text-amber-900">

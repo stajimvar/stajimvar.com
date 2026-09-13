@@ -39,7 +39,7 @@ import { ILAN_KAYNAGI_PARCALI } from '../lib/urun-metni';
 import { ListingCountrySelector } from './ListingCountrySelector';
 import { gosterilecekIlanSayisi } from '../lib/ilan-sayisi.mjs';
 import { guvenSatiri } from '../lib/guven-satiri.mjs';
-import { YUZEY } from '../ui/tokens';
+import { LISTE_BASLIGI, LISTE_BASLIGI_NOTU, LISTE_BASLIGI_YAZISI, LISTE_BLOGU, YUZEY } from '../ui/tokens';
 
 /**
  * İlanın listeye eklenme zamanı (ms).
@@ -1088,44 +1088,24 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             ve şeridin göstermediği "şehir" sayısını da veriyor.
           */}
 
-          <div className="space-y-3">
+          {/*
+            İÇİ BOŞALMIŞ SARMALAYICI KALDIRILDI
 
-            {/*
-              "Eşleşmeleri Bul" düğmesi kaldırıldı: onClick'i boştu, hiçbir şey
-              yapmıyordu. Liste zaten yazdıkça anında süzülüyor. Basınca hiçbir
-              şey olmayan büyük mavi bir düğme, siteye olan güveni doğrudan
-              zedeliyor.
-            */}
-            {/*
-              ARAMA VE FİLTRE TEK SATIRDA (mobil)
+            Burada `space-y-3` bir kap ve içinde `mt-4` taşıyan bir satır
+            vardı. Satırın içindeki her şey — arama kutusu, süzgeç düğmesi,
+            şehir seçici — başka yerlere taşındı (arama ve süzgeç üst
+            çubuğa, şehir süzgeç paneline) ve geriye yalnız iki boş kutu
+            kaldı.
 
-              Önce alt alta iki ayrı kart vardı: arama kutusu, altında
-              "Filtreler" başlıklı bir açılır kart. İkisi de aynı işi yapıyor
-              — listeyi daraltmak — ve ikisi birlikte 130 pikselden fazla yer
-              kaplıyordu. Telefonda o yer ilanın hakkı.
+            Boş olmalarına rağmen ÇİZİLİYORLARDI: `mt-4` telefonda
+            ızgaranın ilk satırını 16 piksel yapıyor ve orta sütunu o kadar
+            aşağı itiyordu. Yani üst çubukla liste başlığı arasındaki
+            boşluk bir tasarım kararı değil, bir artıktı — Rehber'de aynı
+            artık olmadığı için orada başlık üst çubuğa yapışıyordu.
 
-              Şimdi arama kutusu ve filtre düğmesi yan yana. Düğme açık
-              süzgeç sayısını rozetle gösteriyor, basınca panel altında
-              açılıyor. Geniş ekranda hiçbir şey değişmedi: orada arama üst
-              çubukta, filtre paneli sol sütunda hep açık.
-            */}
-            <div className="mt-4 flex flex-col sm:flex-row lg:flex-col gap-2">
-              {/*
-                TELEFONDA ARAMA VE SÜZGEÇ ÜST ÇUBUKTA (lib/sayfa-aramasi).
-                Durum burada kaldı; üst çubuk yalnız bir tutamak alıyor.
-                Geniş ekranda değişen bir şey yok.
-              */}
-
-              {/*
-                Şehir seçici buradan kaldırıldı.
-
-                Filtre panelinin "Konum" bloğunda aynısı var ve o her ekran
-                boyutunda görünüyor. İki kutu aynı değeri yazıp okuyordu;
-                kullanıcı birini değiştirince diğeri de değişiyor, hangisinin
-                geçerli olduğu belirsiz kalıyordu.
-              */}
-            </div>
-          </div>
+            Boşluk kaybolmadı, KAYNAĞI DEĞİŞTİ: başlık satırının kendi
+            `pt-4` değeri (ui/tokens · LISTE_BASLIGI) ve üç sayfada da aynı.
+          */}
 
           {/*
             Sayaç şeridi başlığın yanına taşındı; oradaki boşluğu dolduruyor
@@ -1441,13 +1421,30 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         */}
         </div>
 
-        <div className="min-w-0 space-y-4 lg:col-span-6">
-          <div className="flex items-center justify-between px-1">
+        <div className="min-w-0 lg:col-span-6">
+          {/*
+            BAŞLIK VE ŞERİTLER KENDİ RİTMİNDE
+
+            Sütunun tamamı `space-y-4` idi ve liste de o ritmin bir
+            üyesiydi: ilk karta 16 piksel üst boşluk düşüyordu, sonraki
+            kartların arasında ise boşluk değil 1 pikselik çizgi vardı.
+            Ölçüldü (375 px): şerit alt çizgisinden ilk kartın kurum
+            satırına 43 piksel, sonrakilerde 27.
+
+            Boşluk `space-y` ile MARGIN olarak veriliyordu; listeye
+            `padding-top: 0` demek onu götürmüyor. Bu yüzden ritim
+            bölündü: başlık ve şeritler kendi `space-y-4` kabında,
+            liste onun dışında ve kendi üst boşluğunu açıkça veriyor
+            (ui/tokens · LISTE_BLOGU). Negatif kenar boşluğu yok;
+            listeye düşen bir margin de yok.
+          */}
+          <div className="space-y-4">
+          <div className={LISTE_BASLIGI}>
             {/*
               Profili olmayan ziyaretçiye "sana uygun" ve "eşleşme puanına göre
               sıralı" demek yanlış: ortada kişiselleştirme yok.
             */}
-            <h2 className="text-xs font-bold text-gray-600 uppercase tracking-widest">
+            <h2 className={LISTE_BASLIGI_YAZISI}>
               {student ? 'Sana Uygun Staj İlanları' : 'Açık Staj İlanları'} (
               {gosterilecekToplam})
             </h2>
@@ -1462,7 +1459,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               Bilgi olarak da ikincil: sıralamanın neye göre olduğunu bilmek
               hoş ama telefonda yeri ilan göstermek.
             */}
-            <span className="hidden sm:block text-xs text-gray-500 font-medium">
+            <span className={LISTE_BASLIGI_NOTU}>
               {student
                 ? 'Gerçek zamanlı eşleşme puanına göre sıralı'
                 : 'Şirketlerin kendi kariyer sayfalarından derlendi'}
@@ -1491,6 +1488,21 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             onTumu={() => setSelectedCompanies([])}
           />
 
+          </div>
+
+          {/*
+            LİSTE, SÜTUNUN `space-y-4` RİTMİNDEN ÇIKIYOR
+
+            Kartlar o ritmin bir üyesiydi ve ilk karta 16 piksel üst boşluk
+            düşüyordu; sonraki kartların arasında ise boşluk değil 1
+            pikselik çizgi var. Ölçüldü (375 px): şerit alt çizgisinden ilk
+            kartın kurum satırına 43 piksel, sonrakilerde 27.
+
+            Şeridin alt çizgisi zaten ilk kartın ayırıcısı. Blok kendi üst
+            boşluğunu telefonda sıfır, geniş ekranda 16 piksel olarak
+            veriyor (ui/tokens · LISTE_BLOGU).
+          */}
+          <div className={LISTE_BLOGU}>
           {filteredListings.length === 0 ? (
             /*
               Sıfır sonuç bir çıkmaz sokak değil: aynı kelimeyle eşleşen
@@ -1579,6 +1591,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               />
             </div>
           )}
+          </div>
         </div>
 
         {/*

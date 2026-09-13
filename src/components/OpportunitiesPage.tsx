@@ -23,7 +23,13 @@ import { ListingLogo } from './ListingLogo';
 import { FiltreBlogu, SecenekSatiri } from '../ui';
 import { KonuSeridi } from './KonuSeridi';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
-import { YUZEY } from '../ui/tokens';
+import {
+  LISTE_BASLIGI,
+  LISTE_BASLIGI_NOTU,
+  LISTE_BASLIGI_YAZISI,
+  LISTE_BLOGU,
+  YUZEY,
+} from '../ui/tokens';
 import { ODAK_HALKASI } from '../lib/renk-token';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 import {
@@ -50,7 +56,6 @@ import {
 import {
   firsatSirala,
   opportunityAmount,
-  opportunityCalendar,
   opportunityFit,
   personalizationReadyCount,
   sehirSartliSayisi,
@@ -102,7 +107,15 @@ const ROTA_BASLANGICI: Record<string, Partial<typeof BOS_FIRSAT_SUZGECI>> = {
   '/kyk': { kategori: 'burslar', kaynak: 'kyk' },
   '/yurtdisi-firsatlari': { kategori: 'programlar', bolge: 'yurtdisi' },
   '/yarismalar': { kategori: 'yarismalar' },
-  '/firsat-takvimi': { takvim: true },
+  /*
+    `/firsat-takvimi` DURUYOR AMA ARTIK LİSTE AÇIYOR
+
+    Takvim görünümü kalktı; adres indekslenmiş ve paylaşılmış olduğu için
+    kaldırılmadı, yalnızca başlangıç süzgeci boşaldı. Aynı şey
+    `?gorunum=takvim` için de geçerli: parametre okunmuyor, tanınmayan
+    her değer gibi sessizce düşüyor ve sayfa listeyle açılıyor.
+  */
+  '/firsat-takvimi': {},
   '/bana-uygun': { banaUygun: true },
   '/kaydedilen-firsatlar': { kaydedilen: true },
 };
@@ -479,18 +492,6 @@ export const OpportunitiesPage: React.FC<{
   */
   const listeDurumu = filters.arsiv ? (arsivDurumu === 'kapali' ? 'loading' : arsivDurumu) : state;
 
-  /*
-    ARŞİVDE TAKVİM YOK
-
-    `opportunityCalendar` yalnızca BUGÜN VE SONRASINDAKİ açılış/kapanış
-    günlerini topluyor; arşiv kümesi ise tanımı gereği süresi dolmuş
-    kayıtlar. İkisinin kesişimi her zaman boş, yani arşivde Takvim
-    sekmesi hiçbir içerik üretemeyecek bir düğme olurdu. Adres
-    `?arsiv=1&takvim=1` ile paylaşılmış olabileceği için süzgeci
-    değiştirmiyor, görünümü türetiyoruz.
-  */
-  const takvimGorunumu = filters.takvim && !filters.arsiv;
-
   const suzgecler = (
     <Suzgecler
       filters={filters}
@@ -562,46 +563,41 @@ export const OpportunitiesPage: React.FC<{
         </div>
 
         {/* ------------------------------------------- orta: kart akışı --- */}
-        <div className="min-w-0 space-y-4 lg:col-span-6">
+        <div className="min-w-0 lg:col-span-6">
           {/*
-            GÖRÜNÜM SEÇİCİ
+            BAŞLIK VE ŞERİTLER KENDİ RİTMİNDE
 
-            Liste ve takvim aynı kaydı iki biçimde gösteriyor: takvimde
-            açılış günleri de var ("4 Eyl · Başvuru açılıyor"). Seçici
-            listenin hemen üstünde, çünkü seçtiği şey AŞAĞIDAKİ liste.
+            Sütunun tamamı `space-y-4` idi ve liste de o ritmin bir
+            üyesiydi: ilk karta 16 piksel üst boşluk düşüyordu, sonraki
+            kartların arasında ise boşluk değil 1 pikselik çizgi vardı.
+            Ölçüldü (375 px): şerit alt çizgisinden ilk kartın kurum
+            satırına 43 piksel, sonrakilerde 27.
 
-            Arşivde seçici DOM'A HİÇ GİRMİYOR: takvim yalnız bugünü ve
-            sonrasını topluyor (opportunityCalendar), arşiv ise yalnız
-            geçmişi tutuyor — tıklanınca kesin boş kalacak bir sekme
-            çizmek, olmayan bir görünümü var göstermek olurdu.
+            Boşluk `space-y` ile MARGIN olarak veriliyordu; listeye
+            `padding-top: 0` demek onu götürmüyor. Bu yüzden ritim
+            bölündü: başlık ve şeritler kendi `space-y-4` kabında,
+            liste onun dışında ve kendi üst boşluğunu açıkça veriyor
+            (ui/tokens · LISTE_BLOGU). Negatif kenar boşluğu yok;
+            listeye düşen bir margin de yok.
           */}
-          {!filters.arsiv && (
-            <nav
-              aria-label="Fırsat görünümü"
-              className="flex max-w-full shrink-0 items-center gap-0.5 rounded-full bg-gray-100 p-0.5 text-[12px] font-bold"
-            >
-              {(
-                [
-                  [false, 'Liste'],
-                  [true, 'Takvim'],
-                ] as [boolean, string][]
-              ).map(([takvim, etiket]) => (
-                <button
-                  key={etiket}
-                  type="button"
-                  aria-pressed={takvimGorunumu === takvim}
-                  onClick={() => set({ takvim })}
-                  className={`flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full px-4 transition-colors cursor-pointer ${ODAK_HALKASI} ${
-                    takvimGorunumu === takvim
-                      ? 'bg-white text-gray-900 shadow-[0_1px_2px_rgba(16,24,40,0.08)]'
-                      : 'text-gray-500 hover:text-gray-900'
-                  }`}
-                >
-                  {etiket}
-                </button>
-              ))}
-            </nav>
-          )}
+          <div className="space-y-4">
+          {/*
+            LİSTE/TAKVİM GEÇİŞİ KALDIRILDI
+
+            Listenin üstünde iki sekmelik bir hap duruyordu. Takvim aynı
+            kayıtları ay ay diziyordu — ikinci bir görünüm, ikinci bir
+            zihinsel model; üstelik sekme kendi satırını ve altındaki 16
+            pikseli kaplıyor, başlığı ve kartları o kadar aşağı itiyordu.
+
+            Sayfa artık her zaman liste. Eski bağlantılar kırılmıyor:
+            `?gorunum=takvim` ve `/firsat-takvimi` adresleri açılıyor ama
+            görünüm anahtarı olarak değerlendirilmiyor — ikisi de listeyi
+            gösteriyor (alan modelinden `takvim` süzgeci kalktı, tanınmayan
+            parametre sessizce düşüyor).
+
+            Takvimin asıl işini kart zaten yapıyor: "Son başvuru" alanı ve
+            gerçekten yaklaşan tarihte yanan "Son 3 gün" rozeti.
+          */}
 
           {/*
             ARŞİV ŞERİDİ — TARAFSIZ
@@ -624,9 +620,9 @@ export const OpportunitiesPage: React.FC<{
             </div>
           )}
 
-          {!takvimGorunumu && listeDurumu === 'ready' && (
-            <div className="flex items-center justify-between gap-3 px-1">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-gray-600">
+          {listeDurumu === 'ready' && (
+            <div className={LISTE_BASLIGI}>
+              <h2 className={LISTE_BASLIGI_YAZISI}>
                 {filters.arsiv
                   ? 'Süresi dolan fırsatlar'
                   : listeDaraldi
@@ -634,13 +630,13 @@ export const OpportunitiesPage: React.FC<{
                     : 'Güncel fırsatlar'}
                 {` (${listeDaraldi ? filtered.length : sayimTabani.length})`}
               </h2>
-              <span className="hidden text-xs font-medium text-gray-500 sm:block">
+              <span className={LISTE_BASLIGI_NOTU}>
                 Kurumların resmî sayfalarından derlendi
               </span>
             </div>
           )}
 
-          {!takvimGorunumu && listeDurumu === 'ready' && (
+          {listeDurumu === 'ready' && (
             <KonuSeridi
               konular={seritKategorileri}
               secili={filters.kategori}
@@ -659,6 +655,18 @@ export const OpportunitiesPage: React.FC<{
             />
           )}
 
+          </div>
+
+          {/*
+            LİSTE, SÜTUNUN `space-y-4` RİTMİNDEN ÇIKIYOR
+
+            Kartlar o ritmin bir üyesiydi ve ilk karta 16 piksel üst boşluk
+            düşüyordu; sonraki kartların arasında ise boşluk değil 1
+            pikselik çizgi var. Şeridin alt çizgisi zaten ilk kartın
+            ayırıcısı — İlanlar'daki kalıbın aynısı (ui/tokens ·
+            LISTE_BLOGU).
+          */}
+          <div className={LISTE_BLOGU}>
           {/* ----------------------------------------------- dört durum --- */}
           {listeDurumu === 'loading' ? (
             <ListeIskeleti />
@@ -711,8 +719,6 @@ export const OpportunitiesPage: React.FC<{
               action="Bütün fırsatları gör"
               onClick={temizle}
             />
-          ) : takvimGorunumu ? (
-            <Takvim items={filtered} onNavigate={onNavigate} />
           ) : filtered.length ? (
             /*
               TELEFONDA TEK SÜTUN, KENARA YASLI
@@ -794,6 +800,7 @@ export const OpportunitiesPage: React.FC<{
               body="Fırsatları resmî kaynağından doğrulayarak yayımlıyoruz; doğrulayamadığımız hiçbir burs, program veya yarışma listeye girmiyor."
             />
           )}
+          </div>
         </div>
 
         {/* ------------------------------------------ sağ: yardımcı sütun --- */}
@@ -1403,84 +1410,13 @@ export const Card: React.FC<{
 };
 
 /*
-  TAKVİM
+  TAKVİM BİLEŞENİ KALDIRILDI
 
-  Takvimin listeye göre tek fazlası açılış günleri: "ne zaman
-  başvurabilirim" sorusu en az "ne zaman kapanıyor" kadar sık. Aylara
-  bölünüyor çünkü öğrenci "bu ay ne var" diye bakıyor.
-
-  Satır gerçek `<a href>`: orta tuş ve "yeni sekmede aç" çalışsın diye.
-  Önce `<button>` idi ve ikisi de çalışmıyordu.
+  Liste/Takvim geçişi kalkınca bu bileşeni çizecek bir dal kalmadı;
+  ulaşılamayan kod olarak duracaktı. Aylara bölen alan mantığı
+  (`opportunityCalendar`, lib/firsat-degerlendirme) yerinde ve testleri
+  duruyor — geri getirilmek istenirse gövde oradan yeniden kurulabilir.
 */
-const Takvim: React.FC<{
-  items: Opportunity[];
-  onNavigate: (p: string) => void;
-}> = ({ items, onNavigate }) => {
-  const aylar = React.useMemo(() => opportunityCalendar(items), [items]);
-
-  if (!aylar.length) {
-    return (
-      <Empty
-        icon={<CalendarDays />}
-        title="Takvimde yaklaşan tarih yok"
-        body="Kurumlar bu dönemin başvuru takvimini açıkladıkça buraya düşecek."
-      />
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {aylar.map((ay: any) => (
-        <section
-          key={ay.anahtar}
-          className="rounded-2xl border border-gray-200 bg-white overflow-hidden"
-        >
-          <h2 className="px-4 py-2.5 text-sm font-extrabold text-gray-900 bg-gray-50 border-b border-gray-100 capitalize">
-            {ay.etiket}
-          </h2>
-          <div className="divide-y divide-gray-100">
-            {ay.olaylar.map((olay: any) => (
-              <a
-                key={`${olay.item.id}-${olay.tur}`}
-                href={`/firsatlar/${olay.item.slug}`}
-                onClick={(e) => {
-                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-                  e.preventDefault();
-                  onNavigate(`/firsatlar/${olay.item.slug}`);
-                }}
-                className={`flex min-h-11 w-full items-center gap-3 p-3 text-left hover:bg-gray-50 sm:p-4 ${ODAK_HALKASI}`}
-              >
-                <time className="w-14 shrink-0 text-sm font-extrabold text-gray-900">
-                  {kisaTarih(
-                    olay.tur === 'acilis'
-                      ? olay.item.applicationStartAt
-                      : olay.item.applicationDeadline
-                  )}
-                </time>
-                <span className="min-w-0 flex-1">
-                  <span
-                    className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                      olay.tur === 'acilis'
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'bg-amber-50 text-amber-900'
-                    }`}
-                  >
-                    {olay.tur === 'acilis' ? 'Başvuru açılıyor' : 'Son başvuru'}
-                  </span>
-                  <b className="mt-0.5 block text-sm leading-snug text-gray-900 line-clamp-2">
-                    {olay.item.title}
-                  </b>
-                  <span className="text-xs text-gray-500">{olay.item.organizationName}</span>
-                </span>
-                <ChevronRight className="w-4 h-4 shrink-0 text-gray-400" aria-hidden />
-              </a>
-            ))}
-          </div>
-        </section>
-      ))}
-    </div>
-  );
-};
 
 /*
   İSKELET LİSTEYLE AYNI IZGARADA
