@@ -673,7 +673,18 @@ export const Header: React.FC<HeaderProps> = ({
                   paylaştığı şeyi göremediği bir ekranda bırakırdı.
                 */
                 onTamamlandi={() => onNavigate('/agim')}
-                dugmeSinifi="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-700 transition-colors hover:bg-gray-100 lg:hidden"
+                /*
+                  `lg:hidden` YOK — BİLEREK.
+
+                  Yanındaki arama/süzgeç simgeleri telefona özel, çünkü
+                  masaüstünde sayfanın kendi arama kutusu var. Paylaşımın
+                  öyle bir karşılığı YOK: kaldırılan geniş "Paylaş"
+                  düğmesi masaüstünde de görünüyordu ve Ağım'ın kendi üst
+                  çubuğu `lg:hidden`. Bu düğme de gizlenseydi masaüstünde
+                  fotoğraf paylaşmanın hiçbir yolu kalmazdı (ölçüldü:
+                  1280 pikselde düğme DOM'daydı ama görünmüyordu).
+                */
+                dugmeSinifi="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-700 transition-colors hover:bg-gray-100"
               />
             )}
 
