@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Bookmark,
   ChevronRight,
+  Clock,
   Globe2,
   GraduationCap,
   HandCoins,
@@ -1161,6 +1162,12 @@ export const Card: React.FC<{
     id: string;
     etiket: string;
   }[];
+  /*
+    Telefondaki saat ikonlu satırın kaynağı. Yeni bir kural yazılmıyor:
+    aynı rozet listesinden okunuyor, yani "Son 3 gün" orada hangi tarih
+    hesabıyla yanıyorsa burada da onunla yanıyor.
+  */
+  const sonGunlerRozeti = rozetler.find((r) => r.id === 'son_gunler') ?? null;
   const yer = [...item.cities, ...item.countries];
   const seviye = item.educationLevels.length ? item.educationLevels.join(', ') : null;
   const bolumVeSinif = [...item.eligibleDepartments, ...item.eligibleClassYears];
@@ -1192,214 +1199,277 @@ export const Card: React.FC<{
       className={`group relative flex min-w-0 flex-col gap-2 bg-white transition-all duration-150 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 ${YUZEY.kabuk} ${YUZEY.ic} sm:hover:border-blue-500 sm:hover:shadow-xs`}
     >
       {/*
-        SATIR 1: KURUM VE KAYDET — BAŞLIK BUNUN ALTINDA
+        TELEFONDA IZGARA, GENİŞ EKRANDA DİKEY AKIŞ
 
-        Logo ve künye sol sütunda, başlık sağ sütundaydı: başlık kartın
-        sol kenarından 44 piksel içeriden başlıyor ve altındaki hiçbir
-        şey o boşluğu doldurmuyordu. Şimdi ilk satır yalnız künye;
-        başlık ve altındaki her şey kartın tam iç genişliğinde.
+        Telefonda kart üç sütunlu bir ızgara: solda 40 piksellik logo,
+        ortada kurum adı + başlık + künye, sağ üstte kaydet. Logo sütunu
+        ilk üç satırı birden kaplıyor ve dikeyde ortalanıyor.
+
+        `sm:flex sm:flex-col`: geniş ekranda ızgara yerleşimi tamamen
+        düşüyor ve çocuklar kaynak sırasıyla alt alta diziliyor — yani
+        masaüstündeki dar kart olduğu gibi kalıyor. Izgara yerleşim
+        sınıfları (`col-start-*`, `row-start-*`) esnek kapta hiçbir şey
+        yapmıyor, bu yüzden `sm:` karşılıkları yazılmıyor.
+
+        SABİT YÜKSEKLİK YOK: satırlar içeriğe göre büyüyor, uzun başlık
+        kırpılmadan sarıyor.
       */}
-      <div className="flex w-full min-w-0 items-center gap-2.5">
+      <div className="grid grid-cols-[40px_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-1 sm:flex sm:flex-col sm:gap-2">
         {/*
-          Logo ilan kartıyla AYNI bileşen (ListingLogo): aynı dairesel
-          kutu, aynı iç boşluk ve logosu olmayan kurumda AYNI ÖLÇÜDE baş
-          harf kutusu — iki liste arasında göz hizası kaymıyor.
+          `contents`: telefonda bu sarmalayıcı düzenden çıkıyor ve üç
+          çocuk doğrudan ızgaranın hücresi oluyor. `sm:` üstünde eski
+          tek satırına dönüyor — logo, kurum ve kaydet yan yana.
         */}
-        <ListingLogo
-          name={item.organizationName}
-          logoUrl={item.organizationLogoUrl}
-          className="!h-9 !w-9 shrink-0 !p-1 !text-[11px] sm:!h-10 sm:!w-10 sm:!text-xs"
-        />
-        <span className="min-w-0 flex-1 truncate text-xs font-bold text-blue-600 sm:text-sm">
-          {item.organizationName}
-        </span>
-        {/*
-          KAYDET AYRI ÇALIŞIYOR
-
-          `relative z-10`: gerilmiş bağlantının örtüsünün üstünde durmalı,
-          yoksa tıklama karta gider ve detay sayfası açılırdı.
-        */}
-        {onKaydet && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onKaydet();
-            }}
-            aria-pressed={girisGerekli ? undefined : kayitli}
-            aria-label={kaydetEtiketi}
-            title={kaydetEtiketi}
-            className={`relative z-10 -mr-1 shrink-0 cursor-pointer rounded-lg p-1.5 transition-colors ${
-              kayitli
-                ? 'bg-blue-50 text-blue-600'
-                : 'text-gray-300 hover:bg-blue-50 hover:text-blue-600'
-            }`}
-          >
-            <Bookmark className={`h-4 w-4 ${kayitli ? 'fill-blue-600' : ''}`} />
-          </button>
-        )}
-      </div>
-
-      {/*
-        Gerilmiş bağlantı (`after:inset-0`) kartın tamamını kaplıyor;
-        gerçek bir `href` olduğu için orta tuş ve "yeni sekmede aç"
-        çalışıyor, arama motoru da bağlantıyı görüyor.
-      */}
-      <h2 className="line-clamp-2 min-w-0 text-[15px] font-bold leading-snug text-gray-900 sm:text-base">
-        <a
-          href={`/firsatlar/${item.slug}`}
-          onClick={(e) => {
-            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-            e.preventDefault();
-            onNavigate(`/firsatlar/${item.slug}`);
-          }}
-          title={item.title}
-          className={`rounded-sm outline-none transition-colors after:absolute after:inset-0 after:content-[''] group-hover:text-blue-700 ${ODAK_HALKASI}`}
-        >
-          {item.title}
-        </a>
-      </h2>
-
-      {/*
-        TÜR ETİKETİ VE ROZETLER
-
-        Rozetlerin üçü de tek bir alandan geliyor: "Yeni" published_at'ten,
-        "Son 3 gün" son başvuru tarihinden, "Sana uygun" doğrulanmış
-        kısıtlardan (lib/firsat-kategori · firsatRozetleri). Hesaplanmamış
-        etiket yok — "Popüler" için bu sitede sayılabilecek bir başvuru
-        yok, başvuruyu kurum alıyor.
-      */}
-      <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-[10px] font-bold">
-        <span className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700">
-          {opportunityTypeLabel(item.opportunityType)}
-        </span>
-        {rozetler.map((rozet) => (
-          <span
-            key={rozet.id}
-            className={`rounded-full px-2 py-0.5 ${
-              rozet.id === 'son_gunler'
-                ? 'bg-amber-50 text-amber-900'
-                : rozet.id === 'uygun'
-                  ? 'bg-emerald-50 text-emerald-800'
-                  : 'bg-gray-100 text-gray-700'
-            }`}
-          >
-            {rozet.etiket}
-          </span>
-        ))}
-        {item.verifiedAt && (
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">
-            <CheckCircle2 className="h-2.5 w-2.5 shrink-0" aria-hidden />
-            Resmî kaynak
-          </span>
-        )}
-      </div>
-
-      {/*
-        Kime ve nerede. Hiçbiri yoksa satır çizilmiyor.
-
-        TELEFONDA ARTIK GİZLİ DEĞİL: kart iki sütunluyken 174 piksele
-        sıkışıyor ve "Lisans · İstanbul, Ankara, İzmir" üç satıra
-        bölünüyordu. Tek sütunda bir ya da iki satır alıyor ve öğrencinin
-        ilk sorduğu şeyi ("bana uygun mu") kartın üstünde yanıtlıyor.
-      */}
-      {(seviye || bolumVeSinif.length > 0 || yer.length > 0 || katilim) && (
-        <p className="min-w-0 text-xs leading-relaxed text-gray-500">
-          {[seviye, bolumVeSinif.slice(0, 2).join(', '), yer.join(', '), katilim]
-            .filter(Boolean)
-            .join(' · ')}
-        </p>
-      )}
-
-      {acilisTarihi && !arsivde && (
-        <p className="flex min-w-0 items-start gap-1.5 text-xs font-semibold leading-snug text-blue-800">
-          <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-          <span>{acilisTarihi} tarihinde başvuruya açılıyor</span>
-        </p>
-      )}
-
-      {/*
-        TUTAR VE SON BAŞVURU — İKİ HİZALI BİLGİ ALANI
-
-        Tutar yeşil bir kutunun içindeydi, son başvuru ise kartın altında
-        dolmakta olan bir ZAMAN TÜPÜYDÜ. İkisi aynı soruyu yanıtlıyor
-        ("değeri ne, ne zamana kadar") ama iki ayrı görsel dilde
-        duruyordu; tüp ayrıca kalan günü çubuğun doluluğuyla anlatıyor,
-        yani okunmak için yorumlanması gerekiyordu.
-
-        Şimdi aynı ölçüde iki alan: üstte sakin etiket, altında değerin
-        kendisi. `items-start` ve `min-w-0`: uzun tutar metni dar ekranda
-        kendi sütununda sarıyor, komşusunu itmiyor.
-
-        İLERLEME ÇUBUĞU KALKTI — kalan gün kaybolmadı: gerçekten yaklaşan
-        tarihte "Son 3 gün" rozeti yukarıda yanıyor ve o rozet doğrudan
-        son başvuru tarihinden hesaplanıyor (firsatRozetleri).
-      */}
-      <dl className="grid grid-cols-2 items-start gap-x-3 gap-y-1 border-t border-gray-100 pt-2">
-        <div className="min-w-0">
-          <dt className="text-[11px] text-gray-500">Tutar</dt>
+        <div className="contents sm:flex sm:w-full sm:min-w-0 sm:items-center sm:gap-2.5">
           {/*
-            Tutar yalnızca resmî kaynaktan doğrulanmışsa yazıyor.
-            Doğrulanmamışsa susmuyoruz da: "açıklanmadı" demek, boş
-            bırakıp öğrenciyi aramaya göndermekten iyi.
+            Logo ilan kartıyla AYNI bileşen (ListingLogo): aynı dairesel
+            kutu, `object-contain` ve logosu olmayan kurumda aynı ölçüde
+            baş harf kutusu. Telefonda 40 piksel — kurum adı 13, başlık
+            16 punto; 40 piksel ikisinin toplam yüksekliğine oturuyor.
           */}
-          {tutar.bilinmiyor ? (
-            <dd className="text-sm font-semibold text-gray-500">Tutar açıklanmadı</dd>
-          ) : (
-            <dd className="text-sm font-extrabold leading-tight text-gray-900 sm:text-base">
-              {tutar.metin}
-              {tutar.donem && (
-                <span className="block text-[11px] font-medium text-gray-500">{tutar.donem}</span>
-              )}
-            </dd>
+          <ListingLogo
+            name={item.organizationName}
+            logoUrl={item.organizationLogoUrl}
+            className="col-start-1 row-start-1 row-span-3 !h-10 !w-10 shrink-0 self-center !p-1 !text-[11px] sm:row-auto sm:self-auto sm:!text-xs"
+          />
+          <span className="col-start-2 row-start-1 min-w-0 truncate text-[13px] font-medium text-blue-600 sm:text-sm sm:font-bold">
+            {item.organizationName}
+          </span>
+          {/*
+            KAYDET AYRI ÇALIŞIYOR
+
+            `relative z-10`: gerilmiş bağlantının örtüsünün üstünde
+            durmalı, yoksa tıklama karta gider ve detay sayfası açılırdı.
+            `-mt-1`: 44 piksellik dokunma kutusu 20 piksellik kurum
+            satırını aşağı itmesin diye görsel hizası yukarı alınıyor.
+          */}
+          {onKaydet && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onKaydet();
+              }}
+              aria-pressed={girisGerekli ? undefined : kayitli}
+              aria-label={kaydetEtiketi}
+              title={kaydetEtiketi}
+              className={`relative z-10 col-start-3 row-start-1 -mr-1 -mt-1 shrink-0 cursor-pointer rounded-lg p-1.5 transition-colors sm:mt-0 ${
+                kayitli
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'text-gray-400 hover:bg-blue-50 hover:text-blue-600'
+              }`}
+            >
+              <Bookmark className={`h-5 w-5 ${kayitli ? 'fill-blue-600' : ''}`} />
+            </button>
           )}
         </div>
-        <div className="min-w-0">
-          <dt className="text-[11px] text-gray-500">{arsivde ? 'Kapanış' : 'Son başvuru'}</dt>
-          {/*
-            Tarih yoksa "—" değil, ne olduğu yazılıyor: takvimini
-            açıklamamış kurum var ve boş bir çizgi bunu "veri eksik" gibi
-            gösteriyordu.
-          */}
-          <dd className="text-sm font-extrabold leading-tight text-gray-900 sm:text-base">
-            {item.applicationDeadline ? (
-              kisaTarih(item.applicationDeadline)
-            ) : (
-              <span className="font-semibold text-gray-500">Takvim açıklanmadı</span>
-            )}
-          </dd>
-        </div>
-      </dl>
 
-      {fit?.not && (
-        <p
-          className={`min-w-0 text-xs leading-relaxed ${
-            fit.durum === 'sart_uymuyor' ? 'text-amber-800' : 'text-gray-500'
-          }`}
-        >
-          {fit.not}
+        {/*
+          Gerilmiş bağlantı (`after:inset-0`) kartın tamamını kaplıyor;
+          gerçek bir `href` olduğu için orta tuş ve "yeni sekmede aç"
+          çalışıyor, arama motoru da bağlantıyı görüyor.
+
+          `line-clamp` TELEFONDA YOK: uzun başlık kırpılmadan sarıyor.
+          Dar masaüstü kartında iki satır sınırı kalıyor, orada üç
+          satırlık bir başlık ızgaradaki bütün kartların boyunu belirler.
+        */}
+        <h2 className="col-start-2 col-span-2 row-start-2 min-w-0 text-[16px] font-semibold leading-[21px] text-gray-900 sm:line-clamp-2 sm:text-base sm:font-bold sm:leading-snug">
+          <a
+            href={`/firsatlar/${item.slug}`}
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              onNavigate(`/firsatlar/${item.slug}`);
+            }}
+            title={item.title}
+            className={`rounded-sm outline-none transition-colors after:absolute after:inset-0 after:content-[''] group-hover:text-blue-700 ${ODAK_HALKASI}`}
+          >
+            {item.title}
+          </a>
+        </h2>
+
+        {/*
+          TÜR VE TUTAR TEK SATIRDA — TELEFON
+
+          Geniş ekranda tür bir çip, tutar ise alttaki iki alanlı
+          künyenin yarısı. Telefonda ikisi tek gri satıra iniyor:
+          "Burs · Tutar açıklanmadı". Kutu ve renk yok, çünkü ikisi de
+          bir kazanım değil künye.
+
+          Tutar yalnızca resmî kaynaktan doğrulanmışsa yazıyor.
+          Doğrulanmamışsa susmuyoruz da: "açıklanmadı" demek, boş bırakıp
+          öğrenciyi aramaya göndermekten iyi.
+        */}
+        <p className="col-start-2 col-span-2 row-start-3 min-w-0 text-xs text-gray-500 sm:hidden">
+          {opportunityTypeLabel(item.opportunityType)}
+          {' · '}
+          {tutar.bilinmiyor ? 'Tutar açıklanmadı' : tutar.metin}
         </p>
-      )}
+
+        {/*
+          DOĞRULAMA VE KALAN SÜRE — KUTUSUZ, İKONLU
+
+          Geniş ekranda ikisi de renkli çip. Telefonda çip kalkıyor,
+          geriye ikon ve metin kalıyor. İçerik aynı yerden geliyor:
+          "Resmî kaynak" `verifiedAt` alanından, "Son 3 gün"
+          `firsatRozetleri`nin son başvuru tarihinden hesapladığı
+          rozetten — yeni bir kural yazılmadı.
+        */}
+        {(item.verifiedAt || sonGunlerRozeti) && (
+          <div className="col-start-2 col-span-2 row-start-4 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:hidden">
+            {item.verifiedAt && (
+              <span className="inline-flex items-center gap-1 text-emerald-700">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                Resmî kaynak
+              </span>
+            )}
+            {sonGunlerRozeti && (
+              <span className="inline-flex items-center gap-1 text-amber-700">
+                <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                {sonGunlerRozeti.etiket}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/*
+          TÜR ETİKETİ VE ROZETLER — YALNIZ GENİŞ EKRAN
+
+          Rozetlerin üçü de tek bir alandan geliyor: "Yeni" published_at'ten,
+          "Son 3 gün" son başvuru tarihinden, "Sana uygun" doğrulanmış
+          kısıtlardan (lib/firsat-kategori · firsatRozetleri). Hesaplanmamış
+          etiket yok.
+        */}
+        <div className="hidden min-w-0 flex-wrap items-center gap-1.5 text-[10px] font-bold sm:flex">
+          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700">
+            {opportunityTypeLabel(item.opportunityType)}
+          </span>
+          {rozetler.map((rozet) => (
+            <span
+              key={rozet.id}
+              className={`rounded-full px-2 py-0.5 ${
+                rozet.id === 'son_gunler'
+                  ? 'bg-amber-50 text-amber-900'
+                  : rozet.id === 'uygun'
+                    ? 'bg-emerald-50 text-emerald-800'
+                    : 'bg-gray-100 text-gray-700'
+              }`}
+            >
+              {rozet.etiket}
+            </span>
+          ))}
+          {item.verifiedAt && (
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">
+              <CheckCircle2 className="h-2.5 w-2.5 shrink-0" aria-hidden />
+              Resmî kaynak
+            </span>
+          )}
+        </div>
+
+        {/*
+          Kime ve nerede. Hiçbiri yoksa satır çizilmiyor. TELEFONDA
+          GİZLİ: kompakt düzende kartın söylediği şey "kimden, ne, ne
+          kadar, ne zamana kadar"; uygunluk şartları detay sayfasının
+          işi ve süzgeçte zaten duruyor.
+        */}
+        {(seviye || bolumVeSinif.length > 0 || yer.length > 0 || katilim) && (
+          <p className="hidden min-w-0 text-xs leading-relaxed text-gray-500 sm:block">
+            {[seviye, bolumVeSinif.slice(0, 2).join(', '), yer.join(', '), katilim]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+        )}
+
+        {acilisTarihi && !arsivde && (
+          <p className="hidden min-w-0 items-start gap-1.5 text-xs font-semibold leading-snug text-blue-800 sm:flex">
+            <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span>{acilisTarihi} tarihinde başvuruya açılıyor</span>
+          </p>
+        )}
+
+        {/*
+          TUTAR VE SON BAŞVURU — İKİ HİZALI ALAN, YALNIZ GENİŞ EKRAN
+
+          Telefonda tutar yukarıdaki gri satıra, son başvuru da kartın
+          alt satırına taşındı; burada ikisi yan yana duruyor çünkü dar
+          masaüstü kartında alt satır için yer yok.
+        */}
+        <dl className="hidden grid-cols-2 items-start gap-x-3 gap-y-1 border-t border-gray-100 pt-2 sm:grid">
+          <div className="min-w-0">
+            <dt className="text-[11px] text-gray-500">Tutar</dt>
+            {tutar.bilinmiyor ? (
+              <dd className="text-sm font-semibold text-gray-500">Tutar açıklanmadı</dd>
+            ) : (
+              <dd className="text-sm font-extrabold leading-tight text-gray-900 sm:text-base">
+                {tutar.metin}
+                {tutar.donem && (
+                  <span className="block text-[11px] font-medium text-gray-500">{tutar.donem}</span>
+                )}
+              </dd>
+            )}
+          </div>
+          <div className="min-w-0">
+            <dt className="text-[11px] text-gray-500">{arsivde ? 'Kapanış' : 'Son başvuru'}</dt>
+            <dd className="text-sm font-extrabold leading-tight text-gray-900 sm:text-base">
+              {item.applicationDeadline ? (
+                kisaTarih(item.applicationDeadline)
+              ) : (
+                <span className="font-semibold text-gray-500">Takvim açıklanmadı</span>
+              )}
+            </dd>
+          </div>
+        </dl>
+
+        {fit?.not && (
+          <p
+            className={`hidden min-w-0 text-xs leading-relaxed sm:block ${
+              fit.durum === 'sart_uymuyor' ? 'text-amber-800' : 'text-gray-500'
+            }`}
+          >
+            {fit.not}
+          </p>
+        )}
+      </div>
 
       {/*
-        İNCELEME BAĞLANTISI, BAŞVURU DÜĞMESİ DEĞİL
+        ALT SATIR — TELEFON
 
-        Kartın altında tam genişlikte bir "Başvur" düğmesi vardı ve
-        doğrudan kurumun sitesine çıkıyordu: öğrenci şartları okumadan
-        dışarı gidiyordu. Başvuru düğmesi kaldırılmadı, YERİ DEĞİŞTİ —
-        detay sayfasında, şartların hemen altında duruyor
-        (OpportunityDetailPage).
+        Solda son başvuru tarihi, sağda inceleme bağlantısı. İkisi de
+        gerçek kayıttan: tarih `application_deadline`, biçimlendirme
+        `lib/tarih` (saatsiz günlerde gün kayması olmasın diye UTC'de).
 
-        Bu satır GERÇEK BİR BAĞLANTI DEĞİL: kartın tamamını zaten
+        "İncele" GERÇEK BİR BAĞLANTI DEĞİL: kartın tamamını zaten
         gerilmiş bağlantı kaplıyor ve iç içe iki `<a>` üretilemez. İşi
         nereye gidileceğini söylemek; tıklamayı üstteki örtü alıyor. Bu
         yüzden `aria-hidden` — ekran okuyucu aynı hedefi iki kez
         duymamalı.
       */}
+      <div className="flex items-center justify-between gap-3 text-xs text-gray-600 sm:hidden">
+        <span className="min-w-0 truncate">
+          {item.applicationDeadline
+            ? `${arsivde ? 'Kapandı' : 'Son başvuru'}: ${kisaTarih(item.applicationDeadline)}`
+            : 'Takvim açıklanmadı'}
+        </span>
+        {!arsivde && (
+          <span
+            aria-hidden
+            className="inline-flex shrink-0 items-center gap-1 text-[13px] font-semibold text-blue-700"
+          >
+            İncele
+            <ArrowRight className="h-3.5 w-3.5 shrink-0" />
+          </span>
+        )}
+      </div>
+
+      {/*
+        Geniş ekranda inceleme satırı kartın en altına yapışıyor
+        (`mt-auto`): ızgaradaki kartların boyu farklı ve bağlantı hepsinde
+        aynı hizada durmalı.
+      */}
       {!arsivde && (
         <p
           aria-hidden
-          className="mt-auto inline-flex items-center gap-1 pt-0.5 text-sm font-bold text-blue-700"
+          className="mt-auto hidden items-center gap-1 pt-0.5 text-sm font-bold text-blue-700 sm:inline-flex"
         >
           {opportunityReviewLabel(item.opportunityType)}
           <ArrowRight className="h-3.5 w-3.5 shrink-0" />
