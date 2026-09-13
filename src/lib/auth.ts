@@ -318,13 +318,41 @@ export async function getCurrentUser(): Promise<AuthResult | null> {
 }
 
 /** Oturum değişikliklerini dinler (başka sekmede çıkış yapılması gibi). */
+/**
+ * Oturum değişikliklerini dinler.
+ *
+ * AYNI KULLANICI İÇİN TEKRAR HABER VERİLMİYOR
+ * -------------------------------------------
+ * Supabase `SIGNED_IN` olayını yalnız girişte yollamıyor: sekme öne
+ * gelince, pencere odaklanınca ve oturum yerelden geri kurulunca da
+ * yolluyor. Her seferinde `getCurrentUser` çağrılıyor ve çağıran yeni
+ * bir nesne alıyordu; App tarafında `session` nesnesine bağlı etkiler
+ * de baştan koşuyordu.
+ *
+ * ÖLÇÜLDÜ (canlı, 13 Eylül 2026, tek sayfa açılışı): auth/v1/user,
+ * rpc/is_admin, student_profiles, applications ve iki profiles
+ * sorgusundan oluşan küme ALTI KEZ tekrarlandı — otuz civarı gereksiz
+ * istek.
+ *
+ * Kullanıcı kimliği değişmediyse haber verilmiyor. Rol ya da ad
+ * sunucuda değişirse ekran bunu sayfa yenilenene kadar görmüyor; zaten
+ * öyleydi (rol değişimi oturum olayı üretmiyor).
+ */
 export function onAuthChange(callback: (user: AuthResult | null) => void) {
-  const { data } = supabase.auth.onAuthStateChange(async (event) => {
+  let sonKimlik: string | null = null;
+  const { data } = supabase.auth.onAuthStateChange(async (event, oturum) => {
     if (event === 'SIGNED_OUT') {
+      sonKimlik = null;
       callback(null);
-    } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-      callback(await getCurrentUser());
+      return;
     }
+    if (event !== 'SIGNED_IN' && event !== 'TOKEN_REFRESHED') return;
+
+    const kimlik = oturum?.user?.id ?? null;
+    /* Aynı kullanıcı yeniden duyuruldu: okunacak yeni bir şey yok. */
+    if (kimlik !== null && kimlik === sonKimlik) return;
+    sonKimlik = kimlik;
+    callback(await getCurrentUser());
   });
   return () => data.subscription.unsubscribe();
 }

@@ -946,13 +946,32 @@ export default function App() {
    * Sayfa açıldığında mevcut oturumu okur, sonra değişiklikleri dinler.
    * Dinleyici başka sekmede yapılan çıkışı da yakalar.
    */
+  /*
+    OTURUM NESNESİ AYNI KALDIĞINDA KİMLİĞİ DE AYNI KALIYOR
+
+    `session` bir NESNE ve ona bağlı etkiler nesne kimliğine bakıyor.
+    Aynı kullanıcı için yeni bir nesne yazmak, hiçbir şey değişmemişken
+    profil, başvuru ve yönetici sorgularını baştan koşturuyordu. İkinci
+    kapı burada: dinleyicideki eleme kaçırırsa da etkiler tetiklenmiyor.
+  */
+  const oturumuYaz = React.useCallback((yeni: AuthResult | null) => {
+    setSession((eski) => {
+      if (!eski || !yeni) return yeni;
+      const ayni =
+        eski.userId === yeni.userId &&
+        eski.role === yeni.role &&
+        eski.displayName === yeni.displayName;
+      return ayni ? eski : yeni;
+    });
+  }, []);
+
   React.useEffect(() => {
     let cancelled = false;
 
     getCurrentUser()
       .then((user) => {
         if (cancelled) return;
-        setSession(user);
+        oturumuYaz(user);
       })
       .catch(() => {
         if (!cancelled) setSession(null);
@@ -962,7 +981,7 @@ export default function App() {
       });
 
     const unsubscribe = onAuthChange((user) => {
-      setSession(user);
+      oturumuYaz(user);
       setSessionReady(true);
 
       /*
