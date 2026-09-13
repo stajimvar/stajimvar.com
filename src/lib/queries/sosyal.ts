@@ -231,6 +231,14 @@ export interface SosyalProfil {
    * olarak bunu gösterdi (bkz. `gorselIndir`).
    */
   avatarYolu: string | null;
+  /**
+   * `social_profiles.resmi_mi` — doğrulanmış StajımVar resmî hesabı mı.
+   *
+   * Arayüzde kullanıcı adının yanındaki mavi tiki AÇAN tek alan
+   * (`ResmiTik`). Bayrağı yalnız yönetici verebiliyor; normal kullanıcı
+   * kendi satırında değiştiremiyor (20260928010000).
+   */
+  resmiMi: boolean;
 }
 
 /*
@@ -255,7 +263,7 @@ export interface SosyalProfil {
   `departments ( ad )` tek yollu, ipucu gerekmiyor (ölçüldü: 200).
 */
 const PROFIL_KOLONLARI =
-  'profile_id, username, sector_id, department_id, gorunen_ad, biyografi, bolum_etiketi, sinif_etiketi, sehir, yayinda_mi, avatar_path, sectors!social_profiles_sector_id_fkey ( ad ), departments ( ad )';
+  'profile_id, username, sector_id, department_id, gorunen_ad, biyografi, bolum_etiketi, sinif_etiketi, sehir, yayinda_mi, resmi_mi, avatar_path, sectors!social_profiles_sector_id_fkey ( ad ), departments ( ad )';
 
 function profileCevir(satir: any): SosyalProfil {
   return {
@@ -272,6 +280,8 @@ function profileCevir(satir: any): SosyalProfil {
     sehir: satir.sehir ?? null,
     yayindaMi: Boolean(satir.yayinda_mi),
     avatarYolu: satir.avatar_path ?? null,
+    /* Okunamayan satırda `false`: tik, VARLIĞI kanıtlanmadıkça çizilmiyor. */
+    resmiMi: satir.resmi_mi === true,
   };
 }
 
@@ -1696,6 +1706,8 @@ export interface BaglantiKisisi {
     gorunenAd: string | null;
     sektorAdi: string | null;
     avatarYolu: string | null;
+    /* Kullanıcı adının yanındaki mavi tiki açan alan; bkz. `ResmiTik`. */
+    resmiMi: boolean;
   } | null;
 }
 
@@ -1747,6 +1759,7 @@ export async function baglantilarimiGetir(kullaniciId: string): Promise<Baglanti
       gorunenAd: string | null;
       sektorAdi: string | null;
       avatarYolu: string | null;
+      resmiMi: boolean;
     }
   >();
 
@@ -1757,7 +1770,7 @@ export async function baglantilarimiGetir(kullaniciId: string): Promise<Baglanti
          gelmezse satır baş harflere düşüyor, sahte görsel üretilmiyor. */
       /* FK ipucu zorunlu: `community_members` ikinci yolu açtı, ipucusuz
          PostgREST 300/PGRST201 döndürüyor (gerekçe PROFIL_KOLONLARI'nda). */
-      .select('profile_id, username, gorunen_ad, avatar_path, sectors!social_profiles_sector_id_fkey ( ad )')
+      .select('profile_id, username, gorunen_ad, avatar_path, resmi_mi, sectors!social_profiles_sector_id_fkey ( ad )')
       .in('profile_id', kimlikler);
 
     if (profilHatasi) hata('Bağlantı profilleri alınamadı', profilHatasi);
@@ -1767,6 +1780,7 @@ export async function baglantilarimiGetir(kullaniciId: string): Promise<Baglanti
         gorunenAd: satir.gorunen_ad ?? null,
         sektorAdi: satir.sectors?.ad ?? null,
         avatarYolu: satir.avatar_path ?? null,
+        resmiMi: satir.resmi_mi === true,
       });
     }
   }
@@ -2018,6 +2032,8 @@ export interface SosyalAramaSonucu {
   avatarYolu: string | null;
   bolumEtiketi: string | null;
   sehir: string | null;
+  /* Kullanıcı adının yanındaki mavi tiki açan alan; bkz. `ResmiTik`. */
+  resmiMi: boolean;
 }
 
 /**
@@ -2055,6 +2071,7 @@ export async function sosyalKullaniciAra(sorgu: string): Promise<SosyalAramaSonu
     avatarYolu: satir.avatar_path ?? null,
     bolumEtiketi: satir.bolum_etiketi ?? null,
     sehir: satir.sehir ?? null,
+    resmiMi: satir.resmi_mi === true,
   }));
 }
 
@@ -2087,7 +2104,7 @@ export async function alanindakiKisiler(
 ): Promise<SosyalAramaSonucu[]> {
   const { data, error } = await db
     .from('social_profiles')
-    .select('username, gorunen_ad, avatar_path, bolum_etiketi, sehir')
+    .select('username, gorunen_ad, avatar_path, bolum_etiketi, sehir, resmi_mi')
     .eq('sector_id', sektorId)
     .eq('yayinda_mi', true)
     .eq('resmi_mi', false)
@@ -2109,6 +2126,7 @@ export async function alanindakiKisiler(
     avatarYolu: satir.avatar_path ?? null,
     bolumEtiketi: satir.bolum_etiketi ?? null,
     sehir: satir.sehir ?? null,
+    resmiMi: satir.resmi_mi === true,
   }));
 }
 
@@ -2246,6 +2264,8 @@ export interface AkisPaylasimi extends SosyalPaylasim {
     sektorAdi: string | null;
     bolumAdi: string | null;
     avatarYolu: string | null;
+    /* Kullanıcı adının yanındaki mavi tiki açan alan; bkz. `ResmiTik`. */
+    resmiMi: boolean;
   };
 }
 
@@ -2363,7 +2383,7 @@ export async function akisiGetir(
   const { data: profiller, error: profilHatasi } = await db
     .from('social_profiles')
     .select(
-      'profile_id, username, gorunen_ad, avatar_path, departments ( ad ), sectors!social_profiles_sector_id_fkey ( ad )',
+      'profile_id, username, gorunen_ad, avatar_path, resmi_mi, departments ( ad ), sectors!social_profiles_sector_id_fkey ( ad )',
     )
     .in('profile_id', yazarIdler);
   if (profilHatasi) hata('Akıştaki profiller alınamadı', profilHatasi);
@@ -2376,6 +2396,7 @@ export async function akisiGetir(
       sektorAdi: (p as any).sectors?.ad ?? null,
       bolumAdi: (p as any).departments?.ad ?? null,
       avatarYolu: (p as any).avatar_path ?? null,
+      resmiMi: (p as any).resmi_mi === true,
     });
   }
 

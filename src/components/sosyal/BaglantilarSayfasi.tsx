@@ -14,6 +14,7 @@ import {
 } from '../../lib/queries/sosyal';
 import { profilYolu } from '../../lib/sosyal-kullanici-adi.mjs';
 import { ProfilFotografi } from './ProfilFotografi';
+import { ResmiTik } from './ResmiTik';
 
 /**
  * BAĞLANTILAR — TEK ADRES, ÜÇ BÖLÜM
@@ -116,6 +117,14 @@ const BaglantiSatiri: React.FC<{
       />
       <div className="min-w-0 flex-1">
         {hedef && ad ? (
+          /*
+            TİK BAĞLANTININ DIŞINDA, KARDEŞİ
+
+            İç içe tıklama hedefi kurulmuyor: ada basmak profili açıyor,
+            tik yalnız bir gösterge. Ad `truncate` olduğu için tik
+            metnin içinde olsaydı uzun adlarda kesilirdi.
+          */
+          <span className="flex min-w-0 items-center gap-1">
           <a
             href={hedef}
             onClick={(olay) => {
@@ -124,10 +133,12 @@ const BaglantiSatiri: React.FC<{
               olay.preventDefault();
               onNavigate(hedef);
             }}
-            className={`block truncate text-sm font-bold text-gray-900 hover:underline ${ODAK_HALKASI}`}
+            className={`min-w-0 truncate text-sm font-bold text-gray-900 hover:underline ${ODAK_HALKASI}`}
           >
             {ad}
           </a>
+          <ResmiTik resmiMi={kisi.profil?.resmiMi} className="h-3.5 w-3.5" />
+          </span>
         ) : (
           /* Ad uydurulmuyor: profil gelmediyse durum olduğu gibi yazılıyor. */
           <p className="text-sm font-semibold text-gray-600">Bu profil şu anda görüntülenemiyor</p>

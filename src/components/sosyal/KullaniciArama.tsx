@@ -7,6 +7,7 @@ import {
 } from '../../lib/queries/sosyal';
 import { kullaniciAdiHarfeIndir, profilYolu } from '../../lib/sosyal-kullanici-adi.mjs';
 import { ProfilFotografi } from './ProfilFotografi';
+import { ResmiTik } from './ResmiTik';
 
 /**
  * KULLANICI ARAMASI — YALNIZ ARAMA
@@ -154,7 +155,10 @@ export const KisiListesi: React.FC<{
                   className="h-10 w-10 shrink-0 rounded-full text-sm"
                 />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-bold text-gray-900">{ad}</span>
+                  <span className="flex min-w-0 items-center gap-1">
+                    <span className="min-w-0 truncate text-sm font-bold text-gray-900">{ad}</span>
+                    <ResmiTik resmiMi={kisi.resmiMi} className="h-3.5 w-3.5" />
+                  </span>
                   <span className="block truncate text-xs text-gray-600">
                     @{kisi.kullaniciAdi}
                     {ikinciSatir ? ` · ${ikinciSatir}` : ''}

@@ -13,6 +13,7 @@ import {
 } from '../../lib/queries/sosyal';
 import { useGorselAdresleri } from './useGorselAdresleri';
 import { ProfilFotografi } from './ProfilFotografi';
+import { ResmiTik } from './ResmiTik';
 import { gecenSure } from '../../lib/gecen-sure.mjs';
 
 /**
@@ -156,13 +157,27 @@ export const AkisKarti: React.FC<Props> = ({
           />
         </button>
         <div className="min-w-0 flex-1 leading-tight">
-          <button
-            type="button"
-            onClick={profilAc}
-            className={`block max-w-full truncate text-sm font-bold text-gray-900 cursor-pointer ${ODAK_HALKASI}`}
-          >
-            {ad}
-          </button>
+          {/*
+            AD VE TİK TEK SATIRDA, AMA TİK METNİN DIŞINDA
+
+            Ad `truncate`: uzun bir ad dar ekranda kesiliyor. Tik
+            düğmenin metnine katılsaydı onunla birlikte kesilirdi.
+            Sarmalayıcı `flex` ve tik `shrink-0`, yani ad ne kadar
+            kısalırsa kısalsın tik görünür kalıyor.
+
+            TİK DÜĞMENİN DIŞINDA: iç içe tıklama hedefi kurmamak için.
+            Ada basmak profili açıyor, tik ise yalnız bir gösterge.
+          */}
+          <span className="flex min-w-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={profilAc}
+              className={`min-w-0 truncate text-sm font-bold text-gray-900 cursor-pointer ${ODAK_HALKASI}`}
+            >
+              {ad}
+            </button>
+            <ResmiTik resmiMi={paylasim.yazar.resmiMi} className="h-3.5 w-3.5" />
+          </span>
           {/*
             RESMÎ İÇERİK ETİKETİ ALT SATIRIN YERİNE GEÇİYOR
 
