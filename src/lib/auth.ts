@@ -298,9 +298,27 @@ export async function signOut(): Promise<void> {
   if (error) fail(error.message);
 }
 
+/**
+ * EN SON OKUNAN KULLANICI — `getCurrentUser` ile `onAuthChange` ORTAK.
+ *
+ * Açılışta kullanıcı İKİ KEZ okunuyordu: bir kez uygulama kendi
+ * `getCurrentUser` çağrısıyla, bir kez de hemen ardından gelen
+ * `SIGNED_IN` olayı yüzünden. İkisi de aynı `profiles` satırını
+ * getiriyordu (canlıda ölçüldü, 13 Eylül 2026).
+ *
+ * Okuma burada kaydediliyor; dinleyici aynı kimliği görünce ikinci
+ * okumayı yapmıyor. Olay okumadan ÖNCE gelirse eleme tutmuyor ve
+ * eskisi gibi iki okuma oluyor — yanlış sonuç değil, yalnız
+ * kazanılmamış bir tasarruf.
+ */
+let sonOkunanKimlik: string | null = null;
+
 export async function getCurrentUser(): Promise<AuthResult | null> {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return null;
+  if (!session?.user) {
+    sonOkunanKimlik = null;
+    return null;
+  }
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -308,7 +326,18 @@ export async function getCurrentUser(): Promise<AuthResult | null> {
     .eq('id', session.user.id)
     .single();
 
-  if (!profile) return null;
+  /*
+    Oturum var ama profil satırı yok: kimlik KAYDEDİLMİYOR ki bir
+    sonraki oturum olayı yeniden denesin. Kaydedilseydi, satır az sonra
+    oluşsa bile (OAuth dönüşünde profil tamamlanıyor) kullanıcı sayfayı
+    yenileyene kadar girişsiz görünürdü.
+  */
+  if (!profile) {
+    sonOkunanKimlik = null;
+    return null;
+  }
+
+  sonOkunanKimlik = session.user.id;
 
   return {
     userId: session.user.id,
@@ -339,19 +368,21 @@ export async function getCurrentUser(): Promise<AuthResult | null> {
  * öyleydi (rol değişimi oturum olayı üretmiyor).
  */
 export function onAuthChange(callback: (user: AuthResult | null) => void) {
-  let sonKimlik: string | null = null;
   const { data } = supabase.auth.onAuthStateChange(async (event, oturum) => {
     if (event === 'SIGNED_OUT') {
-      sonKimlik = null;
+      sonOkunanKimlik = null;
       callback(null);
       return;
     }
     if (event !== 'SIGNED_IN' && event !== 'TOKEN_REFRESHED') return;
 
     const kimlik = oturum?.user?.id ?? null;
-    /* Aynı kullanıcı yeniden duyuruldu: okunacak yeni bir şey yok. */
-    if (kimlik !== null && kimlik === sonKimlik) return;
-    sonKimlik = kimlik;
+    /*
+      Aynı kullanıcı yeniden duyuruldu: okunacak yeni bir şey yok.
+      Hafıza `getCurrentUser` ile ORTAK, yani açılıştaki okuma da bu
+      elemeyi besliyor — olay ardından gelince ikinci okuma yapılmıyor.
+    */
+    if (kimlik !== null && kimlik === sonOkunanKimlik) return;
     callback(await getCurrentUser());
   });
   return () => data.subscription.unsubscribe();

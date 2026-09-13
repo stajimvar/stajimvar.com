@@ -99,10 +99,10 @@ test('aynı kullanıcı için oturum olayı tekrar tekrar işlenmiyor', () => {
     kurulunca da yolluyor. Her seferinde yeni bir `session` NESNESİ
     yazılıyor, nesneye bağlı etkiler de baştan koşuyordu.
   */
-  assert.match(auth, /let sonKimlik: string \| null = null;/);
-  assert.match(auth, /if \(kimlik !== null && kimlik === sonKimlik\) return;/);
+  assert.match(auth, /let sonOkunanKimlik: string \| null = null;/);
+  assert.match(auth, /if \(kimlik !== null && kimlik === sonOkunanKimlik\) return;/);
   /* Çıkışta hafıza sıfırlanıyor: aynı kişi yeniden girerse haber veriliyor. */
-  assert.match(auth, /sonKimlik = null;\s*\n\s*callback\(null\);/);
+  assert.match(auth, /sonOkunanKimlik = null;\s*\n\s*callback\(null\);/);
 
   /*
     İKİNCİ KAPI: dinleyicideki eleme kaçırsa bile aynı kullanıcı için
@@ -111,4 +111,22 @@ test('aynı kullanıcı için oturum olayı tekrar tekrar işlenmiyor', () => {
   assert.match(app, /const oturumuYaz = React\.useCallback\(/);
   assert.match(app, /return ayni \? eski : yeni;/);
   assert.doesNotMatch(app, /\n      setSession\(user\);/);
+
+  /*
+    AÇILIŞTAKİ ÇİFT OKUMA
+
+    Kullanıcı açılışta İKİ KEZ okunuyordu: bir kez uygulamanın kendi
+    `getCurrentUser` çağrısıyla, bir kez de hemen ardından gelen
+    `SIGNED_IN` olayı yüzünden — ikisi de aynı `profiles` satırını
+    getiriyordu (canlıda ölçüldü, 13 Eylül 2026). Hafıza artık okuyucuyla
+    dinleyici arasında ORTAK, yani açılıştaki okuma elemeyi besliyor.
+  */
+  assert.match(auth, /sonOkunanKimlik = session[.]user[.]id;/);
+  /*
+    Oturum var ama profil satırı yok: kimlik kaydedilmiyor ki bir
+    sonraki oturum olayı yeniden denesin. Kaydedilseydi, satır az sonra
+    oluşsa bile (OAuth dönüşünde profil tamamlanıyor) kullanıcı sayfayı
+    yenileyene kadar girişsiz görünürdü.
+  */
+  assert.match(auth, /if \(!profile\) \{\s*sonOkunanKimlik = null;/);
 });
