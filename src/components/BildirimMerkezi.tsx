@@ -28,6 +28,16 @@ function BildirimIkonu({ tur, renk }: { tur: string; renk: string }) {
   return <FileText {...ortak} />;
 }
 
+/**
+ * Bağlantı isteğine verilen yanıtın SONUCU.
+ *
+ * `kabul` ile `gecersiz` arasındaki fark sunucuya sorularak
+ * belirleniyor: istek daha önce yanıtlanmışsa güncelleme hiçbir satır
+ * döndürmüyor ve çağrı hata veriyor, ama bağlantı KURULMUŞ olabilir.
+ * O durumda kullanıcıya hata değil başarı gösteriliyor.
+ */
+export type BaglantiYanitSonucu = 'kabul' | 'red' | 'gecersiz';
+
 export const BildirimRozeti: React.FC<{ sayi: number | null; renk: string }> = ({ sayi, renk }) => {
   /*
     SAYI BİLİNMİYORSA ROZET ÇİZİLMİYOR
@@ -79,7 +89,7 @@ export const BildirimMerkezi: React.FC<{
     Çağıran hem isteği yanıtlıyor hem bildirimi okundu yapıp listeyi
     tazeliyor; bu bileşen kendi başına veri yazmıyor.
   */
-  onBaglantiYanitla?: (bildirimId: string, karar: 'kabul' | 'red') => Promise<void>;
+  onBaglantiYanitla?: (bildirimId: string, karar: 'kabul' | 'red') => Promise<BaglantiYanitSonucu>;
 }> = ({
   bildirimler,
   okunmamis,
@@ -107,31 +117,31 @@ export const BildirimMerkezi: React.FC<{
     ayrı tutuluyor ve bildirim kimliğine bağlı — liste tazelenip aynı
     satır yeniden çizilse de sonuç yerinde kalıyor.
   */
-  const [sonuc, setSonuc] = React.useState<Record<string, 'kabul' | 'red' | 'hata'>>({});
+  const [sonuc, setSonuc] = React.useState<Record<string, BaglantiYanitSonucu>>({});
 
   const yanitla = async (bildirimId: string, karar: 'kabul' | 'red') => {
     if (!onBaglantiYanitla || islemdeki || sonuc[bildirimId]) return;
     setIslemdeki(bildirimId);
     try {
-      await onBaglantiYanitla(bildirimId, karar);
-      setSonuc((o) => ({ ...o, [bildirimId]: karar }));
-    } catch {
       /*
-        En sık sebep: istek başka bir yerden zaten yanıtlanmış ya da geri
-        çekilmiş. Hata YUTULMUYOR — düğmeler kalkıyor ve sebebi yazıyor;
-        aksi hâlde kullanıcı boşuna tekrar basıyor.
+        Sonucu ÇAĞIRAN belirliyor: "zaten kabul edilmiş" bir hata değil,
+        başarıdır ve bunu ancak sunucuya sorarak ayırt edebiliyoruz
+        (bkz. App · baglantiIsteginiYanitla).
       */
-      setSonuc((o) => ({ ...o, [bildirimId]: 'hata' }));
+      const cikti = await onBaglantiYanitla(bildirimId, karar);
+      setSonuc((o) => ({ ...o, [bildirimId]: cikti }));
+    } catch {
+      setSonuc((o) => ({ ...o, [bildirimId]: 'gecersiz' }));
     } finally {
       setIslemdeki(null);
     }
   };
 
-  const SONUC_METNI = {
-    kabul: 'Bağlantı kuruldu.',
+  const SONUC_METNI: Record<BaglantiYanitSonucu, string> = {
+    kabul: 'Bağlantı kuruldu. Tebrikler!',
     red: 'İstek reddedildi.',
-    hata: 'Bu istek artık geçerli değil.',
-  } as const;
+    gecersiz: 'Bu istek artık geçerli değil.',
+  };
 
   /* Escape ile kapanıyor ve açılınca odak panele giriyor. */
   React.useEffect(() => {
@@ -233,7 +243,11 @@ export const BildirimMerkezi: React.FC<{
                   <p
                     role="status"
                     className={`border-b border-gray-50 px-4 pb-3 text-[11px] font-semibold ${
-                      sonuc[b.id] === 'hata' ? 'text-amber-800' : 'text-gray-600'
+                      sonuc[b.id] === 'gecersiz'
+                        ? 'text-amber-800'
+                        : sonuc[b.id] === 'kabul'
+                          ? 'text-emerald-700'
+                          : 'text-gray-600'
                     }`}
                   >
                     {SONUC_METNI[sonuc[b.id]]}

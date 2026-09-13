@@ -1,5 +1,5 @@
 import React, { useState, useRef, Suspense } from 'react';
-import { baglantiYanitla, kendiSosyalProfiliGetir } from './lib/queries/sosyal';
+import { baglantiDurumu, baglantiYanitla, kendiSosyalProfiliGetir } from './lib/queries/sosyal';
 import {
   fetchPublishedListings,
   fetchStudentProfile,
@@ -35,7 +35,7 @@ import { CerezBandi } from './components/CerezBandi';
   aşağıda gecikmeli yükleniyor.
 */
 import type { PortfolyoSatiri } from './components/sosyal/SosyalProfilSayfasi';
-import { BildirimMerkezi } from './components/BildirimMerkezi';
+import { BildirimMerkezi, type BaglantiYanitSonucu } from './components/BildirimMerkezi';
 import { useBildirimler } from './lib/useBildirimler';
 import { SIRKET_VURGU_KOYU } from './sirket/renk';
 
@@ -1300,17 +1300,39 @@ export default function App() {
     "kabul edildi" kalırdı.
   */
   const baglantiIsteginiYanitla = React.useCallback(
-    async (bildirimId: string, karar: 'kabul' | 'red') => {
+    async (bildirimId: string, karar: 'kabul' | 'red'): Promise<BaglantiYanitSonucu> => {
       const kimlik = session?.userId;
-      if (!kimlik) return;
+      if (!kimlik) return 'gecersiz';
       const satir = bildirim.bildirimler.find((b) => b.id === bildirimId);
       const parcalar = (satir?.anahtar ?? '').split(':');
       const isteyen = parcalar.length === 3 ? parcalar[1] : null;
-      if (!isteyen) return;
+      if (!isteyen) return 'gecersiz';
 
-      await baglantiYanitla(kimlik, isteyen, karar);
+      /*
+        "ZATEN KABUL EDİLMİŞ" BİR HATA DEĞİL
+
+        `baglantiYanitla` yalnız `durum='bekliyor'` satırı güncelliyor;
+        istek başka bir yerden (ya da önceki bir tıklamayla) yanıtlandıysa
+        hiçbir satır dönmüyor ve fonksiyon hata fırlatıyor. Bu hatayı
+        olduğu gibi ekrana yazmak yanlış olurdu: kullanıcı bağlantıyı
+        kurmuş, ekran ona "bu istek artık geçerli değil" diyordu
+        (bildirildi ve canlıda ölçüldü — bağlantı kurulmuştu).
+
+        Hata yakalanınca GERÇEK DURUM sunucuya soruluyor. Kabul edilmişse
+        sonuç başarı; değilse gerçekten geçersiz.
+      */
+      let sonuc: BaglantiYanitSonucu;
+      try {
+        await baglantiYanitla(kimlik, isteyen, karar);
+        sonuc = karar;
+      } catch {
+        const bilgi = await baglantiDurumu(isteyen).catch(() => null);
+        sonuc = bilgi?.durum === 'kabul' ? 'kabul' : 'gecersiz';
+      }
+
       if (satir) await bildirim.okunduYap(satir);
       await bildirim.ac();
+      return sonuc;
     },
     [session?.userId, bildirim],
   );
