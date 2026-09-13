@@ -549,7 +549,18 @@ export async function sosyalSayaclariGetir(profilId: string): Promise<SosyalSaya
 // --------------------------------------------------------------- Paylaşımlar
 
 /** Şemadaki `posts.kitle` CHECK'inin iki değeri; üçüncüsü yok. */
+/**
+ * Kullanıcının SEÇEBİLECEĞİ kitleler.
+ *
+ * `resmi` bilerek burada YOK: onu yalnız resmî hesap kullanıyor ve
+ * seçimi bir ekrandan geçmiyor (aktarım betiğinden geliyor). Bu tipe
+ * eklenseydi besteci onu bir seçenek olarak çizmeye aday olurdu;
+ * sunucu da reddederdi (`paylasim_kitlesi_kilidi`).
+ */
 export type PaylasimKitlesi = 'baglantilarim' | 'alan-toplulugum';
+
+/** Okunan bir satırın kitlesi — `resmi` DAHİL. */
+export type OkunanKitle = PaylasimKitlesi | 'resmi';
 
 export interface PaylasimGorseli {
   /** 1..10; kapak `sira = 1`. Şemadaki PK(post_id, sira) bunu garantiliyor. */
@@ -577,8 +588,13 @@ export interface SosyalPaylasim {
    * Ekranda yalnız SAHİBİNE gösteriliyor: bu, yazarın kendi ayarı.
    * Ziyaretçiye "bu paylaşım yalnız bağlantılarına açık" demek, ona
    * karşı tarafın bağlantı listesi hakkında bir çıkarım yaptırırdı.
+   *
+   * OKUNAN kitle, yazılabilen kitleden geniş: `resmi` de buraya
+   * düşebiliyor (bkz. `OkunanKitle`). Dar tipte kalsaydı çevirici
+   * resmî satırı "bağlantılarım" diye okurdu — kimsenin görmediği ama
+   * yanlış olan bir değer.
    */
-  kitle: PaylasimKitlesi;
+  kitle: OkunanKitle;
   /** Seri paylaşımda kaç görsel olduğu; `post_media` satır sayısı. */
   gorselSayisi: number;
   /** Sırasına göre dizilmiş bütün görseller; ayrıntı görünümü bunu geziyor. */
@@ -656,7 +672,11 @@ function paylasimSatiriCevir(satir: any): SosyalPaylasim {
     olusturmaAni: satir.created_at,
     arsivAni: satir.archived_at ?? null,
     /* Tanınmayan bir değer DAR olana düşüyor; şema varsayılanıyla aynı yön. */
-    kitle: satir.kitle === 'alan-toplulugum' ? 'alan-toplulugum' : 'baglantilarim',
+    /* Üç değer de olduğu gibi okunuyor; bilinmeyen bir değer dar olana düşüyor. */
+    kitle:
+      satir.kitle === 'alan-toplulugum' || satir.kitle === 'resmi'
+        ? satir.kitle
+        : 'baglantilarim',
     gorselSayisi: gorseller.length,
     gorseller,
     kapakYolu: kapak?.storageYolu ?? null,
@@ -2038,6 +2058,60 @@ export async function sosyalKullaniciAra(sorgu: string): Promise<SosyalAramaSonu
   }));
 }
 
+/**
+ * Aynı alandaki, profilini gerçekten doldurmuş kişiler.
+ *
+ * NEDEN GERİ GELDİ
+ * ----------------
+ * "Önerilen kişiler" listesi bir kez kaldırılmıştı ve gerekçesi
+ * yerindeydi: satırlar gerçekten `social_profiles`ten geliyordu ama
+ * arkalarındaki hesapların bir kısmı deneme kaydıydı; onları
+ * "alanındaki kişiler" diye önermek, kullanıcıya gerçek olmayan bir
+ * topluluk göstermek olurdu.
+ *
+ * Şimdi ürün kararı değişti (keşif, akışta kullanıcı içeriği yokken
+ * resmî içeriğin yanında gösteriliyor) ama ESKİ GEREKÇE ÇÖPE
+ * ATILMADI, kurala çevrildi: adı ve kullanıcı adı olmayan satır
+ * listeye girmiyor. Yarım bırakılmış bir kayıt, doldurulmuş bir
+ * profilden bu iki alanla ayrılıyor.
+ *
+ * DIŞARIDA BIRAKILANLAR
+ *   kendisi        kendini keşfetmek diye bir şey yok
+ *   resmî hesap    zaten akışın kendisinde; keşif kişi keşfi
+ *   yayında olmayan profil  (RLS zaten vermiyor; sorgu da istemiyor)
+ */
+export async function alanindakiKisiler(
+  kullaniciId: string,
+  sektorId: string,
+  adet = 6,
+): Promise<SosyalAramaSonucu[]> {
+  const { data, error } = await db
+    .from('social_profiles')
+    .select('username, gorunen_ad, avatar_path, bolum_etiketi, sehir')
+    .eq('sector_id', sektorId)
+    .eq('yayinda_mi', true)
+    .eq('resmi_mi', false)
+    .neq('profile_id', kullaniciId)
+    .not('username', 'is', null)
+    .not('gorunen_ad', 'is', null)
+    .limit(adet);
+
+  /*
+    Keşif bir YAN BÖLÜM: alınamazsa boş liste dönüyor ve ekran o bloğu
+    hiç çizmiyor. Hata yükseltmek, akışın tamamını bir öneri listesi
+    yüzünden düşürmek olurdu.
+  */
+  if (error) return [];
+
+  return (data ?? []).map((satir: any) => ({
+    kullaniciAdi: String(satir.username),
+    gorunenAd: satir.gorunen_ad ?? null,
+    avatarYolu: satir.avatar_path ?? null,
+    bolumEtiketi: satir.bolum_etiketi ?? null,
+    sehir: satir.sehir ?? null,
+  }));
+}
+
 /* ====================================================================== */
 /*  ALAN TOPLULUKLARI                                                     */
 /* ====================================================================== */
@@ -2158,6 +2232,14 @@ export async function sosyalTopluluktanAyril(sektorId: string): Promise<void> {
  */
 export interface AkisPaylasimi extends SosyalPaylasim {
   yazarId: string;
+  /*
+    RESMÎ İÇERİK ETİKETİ YAZARDAN DEĞİL PAYLAŞIMDAN OKUNUYOR
+
+    Etiket "bu paylaşım resmî kitleyle yayımlandı" demek. Yazarın
+    bayrağına bakılsaydı, resmî hesabın ileride sıradan bir paylaşım
+    yapması hâlinde o da resmî içerik gibi etiketlenirdi.
+  */
+  resmiMi: boolean;
   yazar: {
     kullaniciAdi: string | null;
     gorunenAd: string | null;
@@ -2191,10 +2273,69 @@ export const AKIS_SAYFA_BOYU = 20;
  * süzgeçleri kendi paylaşımların için gerekiyor — politika onları sana
  * açıyor ama akış "yayında olan" listesi.
  */
+/* ----------------------------------------------- resmî içerik sessizliği */
+
+/**
+ * Kullanıcı resmî içerikleri sessize aldı mı?
+ *
+ * Satır VARSA sessiz. Kullanıcı kendi satırından başkasını okuyamıyor
+ * (RLS); "sessiz değil" ile "okuyamadım" ayrımı burada anlamsız, ikisi
+ * de akışta resmî içeriğin görünmesi demek — süzgeç bir yetki kapısı
+ * değil, bir tercih.
+ */
+export async function resmiSessizMi(kullaniciId: string | null): Promise<boolean> {
+  const kimlik = kullaniciId;
+  if (!kimlik) return false;
+  return ucustaPaylas(`resmiSessiz:${kimlik}`, async () => {
+    const { data, error } = await db
+      .from('sosyal_resmi_sessiz')
+      .select('profile_id')
+      .eq('profile_id', kimlik)
+      .maybeSingle();
+    if (error) return false;
+    return data !== null;
+  });
+}
+
+/**
+ * Resmî içerikleri sessize al / sesini aç.
+ *
+ * BAĞLANTI KALDIRMA DİYE BİR ŞEY YOK: resmî içerik bir bağlantıdan
+ * gelmiyor (bkz. 20260928010000). Kullanıcının elindeki tek düğme bu ve
+ * geri alınabilir olması bilinçli — kaldırılamayan bir kaynağı susturmak
+ * da kullanıcının hakkı.
+ */
+export async function resmiSessizYaz(kullaniciId: string, sessiz: boolean): Promise<void> {
+  const kimlik = kullaniciId;
+
+  if (sessiz) {
+    const { error } = await db
+      .from('sosyal_resmi_sessiz')
+      .upsert({ profile_id: kimlik }, { onConflict: 'profile_id' });
+    if (error) hata('Sessize alınamadı', error);
+  } else {
+    const { error } = await db.from('sosyal_resmi_sessiz').delete().eq('profile_id', kimlik);
+    if (error) hata('Sesi açılamadı', error);
+  }
+}
+
 export async function akisiGetir(
-  secenek: { limit?: number; oncesi?: string | null } = {},
+  secenek: { limit?: number; oncesi?: string | null; kullaniciId?: string | null } = {},
 ): Promise<AkisPaylasimi[]> {
   const limit = secenek.limit ?? AKIS_SAYFA_BOYU;
+
+  /*
+    SESSİZLİK BURADA SÜZÜLÜYOR, RLS'TE DEĞİL
+
+    `paylasim_gorunur` YETKİYİ söylüyor: sessize alınmış içerik yetkisiz
+    değil, istenmeyen içerik. Kurala RLS'te yer verilseydi, ileride
+    paylaşımın kalıcı adresi açıldığında sessize almış kullanıcı
+    paylaşılan bir bağlantıyı açamazdı — tercihi bir duvara dönüşürdü.
+
+    Okuma tek satır ve gönderiler sorgusuyla PARALEL gidiyor: sıraya
+    dizilseydi akış bir gidiş-dönüş geç açılırdı.
+  */
+  const sessizSoz = resmiSessizMi(secenek.kullaniciId ?? null);
 
   let sorgu = db
     .from('posts')
@@ -2207,10 +2348,14 @@ export async function akisiGetir(
   /* Sayfalama zaman imleciyle: offset, araya yeni paylaşım girince kayar. */
   if (secenek.oncesi) sorgu = sorgu.lt('created_at', secenek.oncesi);
 
-  const { data, error } = await sorgu;
+  const [{ data, error }, sessiz] = await Promise.all([sorgu, sessizSoz]);
   if (error) hata('Akış alınamadı', error);
 
-  const satirlar = data ?? [];
+  const tumSatirlar = data ?? [];
+  /* Sessizdeyse resmî satırlar hiç çizilmiyor; ötekiler olduğu gibi. */
+  const satirlar = sessiz
+    ? tumSatirlar.filter((s: any) => s.kitle !== 'resmi')
+    : tumSatirlar;
   if (!satirlar.length) return [];
 
   /* Yazar profilleri tek çağrıda; her satır için ayrı istek atmıyoruz. */
@@ -2238,7 +2383,12 @@ export async function akisiGetir(
     .map((satir: any) => {
       const yazar = profilHaritasi.get(String(satir.author_id));
       if (!yazar) return null;
-      return { ...paylasimSatiriCevir(satir), yazarId: String(satir.author_id), yazar };
+      return {
+        ...paylasimSatiriCevir(satir),
+        yazarId: String(satir.author_id),
+        resmiMi: satir.kitle === 'resmi',
+        yazar,
+      };
     })
     .filter((x): x is AkisPaylasimi => x !== null);
 }
