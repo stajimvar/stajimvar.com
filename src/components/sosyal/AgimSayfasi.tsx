@@ -226,7 +226,7 @@ export const AgimSayfasi: React.FC<Props> = ({
         çözülmüştü. `pointer-events-none`: marka bir düğme değil, altındaki
         simgelerin tıklamasını yutmamalı.
       */}
-      <h1 className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-2xl font-black leading-none tracking-[-0.03em] text-gray-900">
+      <h1 className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-[23px] font-black leading-none tracking-[-0.03em] text-gray-900 sm:text-2xl">
         Stajım<span className="text-blue-600">Var</span>
       </h1>
 

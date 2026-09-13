@@ -147,25 +147,28 @@ test('masaüstü düzeni korunuyor: her yüzey değeri sm ile geri dönüyor', (
   assert.match(ilan, /col-start-1 row-start-1 shrink-0 sm:row-span-4/);
 });
 
-test('marka telefonda da 24 piksel: yanındaki simgelerden küçük değil', () => {
+test('marka 23 piksel: telefondaki 20 pikselin %15 üstü', () => {
   /*
-    `md` marka telefonda 20, `sm:` üstünde 24 pikseldi. Üst çubuktaki
-    simgeler her boyutta 24 piksel; marka onlardan küçük kalınca
-    sayfanın adı, yanındaki ikinci derece denetimlerden daha sessiz
-    görünüyordu.
+    Telefonda 20, `sm:` üstünde 24 pikseldi. Üst çubuktaki simgeler her
+    boyutta 24 piksel; marka onlardan küçük kalınca sayfanın adı,
+    yanındaki ikinci derece denetimlerden daha sessiz görünüyordu.
 
-    Ölçüldü (360 px): marka 109 piksel genişliğinde, solundaki simge
-    kümesiyle arasında 11,8 piksel, sağındaki "Giriş Yap" ile 39
-    piksel — çakışma yok, çubuk yüksekliği değişmedi (60,8).
+    23 piksel = telefondaki 20'nin %15 üstü. Tailwind'in basamaklarında
+    20 ile 24 arasında bir değer yok; bu yüzden açıkça yazılıyor.
 
-    Akışın kendi başlığı AYNI değeri taşımak zorunda: iki çubuk aynı
-    görünsün diye (bkz. alt bar testi).
+    `sm:` DALI DEĞİŞMEDİ: geniş ekranda marka 24 pikselde kalıyor,
+    istenen büyütme yalnız telefon için.
+
+    Akışın kendi başlığı AYNI değeri taşımak zorunda: iki üst çubuk
+    birbirinden ayrışmasın diye.
   */
   const logo = oku('src/components/Logo.tsx');
-  assert.match(logo, /'text-2xl tracking-\[-0\.03em\]'/, 'md marka ölçüsü değişmiş');
-  assert.doesNotMatch(logo, /text-xl sm:text-2xl/, 'eski iki kademeli ölçü geri gelmiş');
+  assert.match(logo, /'text-\[23px\] sm:text-2xl tracking-\[-0\.03em\]'/, 'md marka ölçüsü değişmiş');
+  assert.doesNotMatch(logo, /text-xl sm:text-2xl/, 'telefondaki eski 20 piksel geri gelmiş');
+  /* Yazı karakteri, ağırlık ve renkler aynı kaldı: değişen yalnız punto. */
+  assert.match(logo, /font-black/);
 
   const agim = oku('src/components/sosyal/AgimSayfasi.tsx');
-  assert.match(agim, /text-2xl font-black leading-none tracking-\[-0\.03em\]/);
+  assert.match(agim, /text-\[23px\] font-black leading-none tracking-\[-0\.03em\][^"]*sm:text-2xl/);
   assert.doesNotMatch(agim, /text-xl font-black[^"]*sm:text-2xl/, 'akış başlığı markadan ayrışmış');
 });

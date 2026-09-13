@@ -25,17 +25,25 @@ export const Logo: React.FC<LogoProps> = ({
       : size === 'lg'
       ? 'text-2xl sm:text-3xl tracking-[-0.035em]'
       : /*
-          TELEFONDA DA 24 PİKSEL
+          MARKA TELEFONDA 23 PİKSEL
 
-          `md` marka telefonda 20, `sm:` üstünde 24 pikseldi. Üst çubukta
-          iki yanındaki simgeler her boyutta 24 piksel; marka onlardan
-          küçük kalınca sayfanın adı, yanındaki ikinci derece
-          denetimlerden daha sessiz görünüyordu.
+          Telefonda 20 pikseldi. Üst çubuktaki simgeler her boyutta 24
+          piksel; marka onlardan küçük kalınca sayfanın adı, yanındaki
+          ikinci derece denetimlerden daha sessiz görünüyordu.
 
-          Tek ölçüye indi: 24 piksel. Geniş ekranda değişen bir şey yok —
-          orada zaten 24'tü.
+          23 = 20'nin %15 üstü. Ölçü Tailwind'in basamaklarından biri
+          değil (20 ile 24 arasında basamak yok), bu yüzden değer açıkça
+          yazılıyor. Yazı karakteri, ağırlık, harf aralığı ve renkler
+          aynı — değişen yalnız punto.
+
+          `sm:text-2xl` OLDUĞU GİBİ: geniş ekran bu işin dışında, orada
+          marka 24 pikselde kalıyor.
+
+          Yükseklik BUNA BAĞLI DEĞİL: `leading-none` satır yüksekliğini
+          puntodan ayırıyor ve çubuğun kendi yüksekliği sabit
+          (`h-15` / `sm:h-18`).
         */
-        'text-2xl tracking-[-0.03em]';
+        'text-[23px] sm:text-2xl tracking-[-0.03em]';
 
   /*
     TIKLANABİLİR LOGO GERÇEK BİR BAĞLANTI
