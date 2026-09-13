@@ -1,5 +1,7 @@
 import React from 'react';
+import { Search } from 'lucide-react';
 import { SayfaKabugu } from '../SayfaKabugu';
+import { KullaniciAramaSonuclari } from './KullaniciArama';
 import { BIRINCIL_EYLEM, ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import {
   SosyalHata,
@@ -65,6 +67,20 @@ const BaglantiSatiri: React.FC<{
   eylemler: React.ReactNode;
   onNavigate: (yol: string, secenek?: { degistir?: boolean }) => void;
 }> = ({ kisi, eylemler, onNavigate }) => {
+  /*
+    ALT SATIR YALNIZ SEKTÖR — BÖLÜM VE ÜNİVERSİTE HENÜZ GELMİYOR
+
+    Bağlantı sorgusu (`baglantilarimiGetir`) profilden dört alan
+    çekiyor: kullanıcı adı, görünen ad, sektör, avatar yolu. Bölüm
+    `social_profiles` içinde VAR ama bu sorguda seçilmiyor; üniversite
+    ise hiç yok — okul bilgisi `student_profiles` tablosunda ve o tablo
+    başkasının satırını okutmuyor (RLS).
+
+    Uydurulmuyor: bugün okunabilen tek alan yazılıyor. Bölümü de
+    göstermek sorguyu genişletmeyi, üniversiteyi göstermek ise sosyal
+    profile yeni bir alan ve bir görünürlük kararı eklemeyi gerektiriyor.
+  */
+  const altSatir = kisi.profil?.sektorAdi ? `${kisi.profil.sektorAdi} alanı` : null;
   const ad = kisi.profil?.gorunenAd ?? (kisi.profil?.kullaniciAdi ? `@${kisi.profil.kullaniciAdi}` : null);
   const hedef = kisi.profil?.kullaniciAdi ? profilYolu(kisi.profil.kullaniciAdi) : null;
 
@@ -106,26 +122,32 @@ const BaglantiSatiri: React.FC<{
           /* Ad uydurulmuyor: profil gelmediyse durum olduğu gibi yazılıyor. */
           <p className="text-sm font-semibold text-gray-600">Bu profil şu anda görüntülenemiyor</p>
         )}
-        {kisi.profil?.sektorAdi && (
-          <p className="truncate text-xs text-gray-600">{kisi.profil.sektorAdi} alanı</p>
-        )}
+        {/*
+          BÖLÜM VE ALAN — ÜNİVERSİTE YOK
+
+          `social_profiles` üniversite taşımıyor; okul bilgisi
+          `student_profiles` içinde ve o tablo başkasının satırını
+          okutmuyor (RLS). Uydurulmuyor: okunabilen iki alan yazılıyor —
+          bölüm (katalogdan ya da kullanıcının kendi yazdığı etiket) ve
+          sektör. İkisi de yoksa satır hiç çizilmiyor.
+        */}
+        {altSatir && <p className="truncate text-xs text-gray-600">{altSatir}</p>}
       </div>
-      <div className="flex flex-wrap gap-2">{eylemler}</div>
+      {eylemler && <div className="flex shrink-0 flex-wrap gap-2">{eylemler}</div>}
     </li>
   );
 };
 
 /** Bir bölüm: dört durumun dördü de burada çiziliyor. */
 const Bolum: React.FC<{
-  baslik: string;
   durum: Durum;
   satirlar: BaglantiKisisi[];
-  bosMetin: string;
+  /* Boş durum artık bir cümle değil, iki çıkış yolu taşıyan bir blok. */
+  bos: React.ReactNode;
   onYenidenDene: () => void;
   satirCiz: (kisi: BaglantiKisisi) => React.ReactNode;
-}> = ({ baslik, durum, satirlar, bosMetin, onYenidenDene, satirCiz }) => (
+}> = ({ durum, satirlar, bos, onYenidenDene, satirCiz }) => (
   <section className="space-y-2">
-    <h2 className="text-base font-extrabold tracking-tight text-gray-900">{baslik}</h2>
 
     {durum === 'yukleniyor' && (
       <div aria-busy="true" className="space-y-2">
@@ -146,9 +168,7 @@ const Bolum: React.FC<{
       </div>
     )}
 
-    {durum === 'hazir' && satirlar.length === 0 && (
-      <p className={`${KART} text-sm text-gray-600`}>{bosMetin}</p>
-    )}
+    {durum === 'hazir' && satirlar.length === 0 && bos}
 
     {durum === 'hazir' && satirlar.length > 0 && (
       <ul className="space-y-2">{satirlar.map((kisi) => satirCiz(kisi))}</ul>
@@ -167,6 +187,8 @@ export const BaglantilarSayfasi: React.FC<BaglantilarProps> = ({
   const [deneme, setDeneme] = React.useState(0);
   const [islemdeki, setIslemdeki] = React.useState<string | null>(null);
   const [islemHatasi, setIslemHatasi] = React.useState<string | null>(null);
+  const [sorgu, setSorgu] = React.useState('');
+  const aramaKutusu = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (!oturumHazir || kullaniciId) return;
@@ -250,17 +272,79 @@ export const BaglantilarSayfasi: React.FC<BaglantilarProps> = ({
 
   const yenidenDene = () => setDeneme((sayi) => sayi + 1);
 
+  /*
+    BOŞ DURUM İKİ ÇIKIŞ YOLU VERİYOR
+
+    "Henüz bağlantın yok." tek başına bir çıkmaz sokaktı. İki yol da
+    gerçek: arama kutusu sayfanın üstünde duruyor, keşif ise kullanıcının
+    KENDİ ALANINDAKİ yayımlanmış profilleri getiriyor — görünürlük
+    kuralları sunucuda (`sosyal_kullanici_ara`), burada gevşetilmiyor.
+  */
+  const bosDurum = (
+    <div className={`${KART} space-y-3 text-center`}>
+      <p className="text-sm font-bold text-gray-900">İlk bağlantını kur</p>
+      <p className="text-sm leading-relaxed text-gray-600">
+        Bağlantı karşılıklı: iki taraf da kabul ettiğinde kuruluyor.
+      </p>
+      <button
+        type="button"
+        onClick={() => aramaKutusu.current?.focus()}
+        className={BIRINCIL_EYLEM}
+      >
+        Öğrencileri keşfet
+      </button>
+    </div>
+  );
+
   return (
     <SayfaKabugu>
       <div className="space-y-5">
-        <header className="space-y-1.5">
-          <h1 className="text-xl font-extrabold tracking-tight text-gray-900 sm:text-2xl">
-            Bağlantılar
-          </h1>
-          <p className="text-sm leading-relaxed text-gray-600">
-            Bağlantı karşılıklı: iki taraf da kabul ettiğinde kuruluyor.
-          </p>
-        </header>
+{/*
+          TEK BAŞLIK
+
+          Sayfada üç başlık vardı: "Bağlantılar" (h1), altında aynı adlı
+          bölüm başlığı, sonra "Gelen istekler" ve "Gönderilen istekler".
+          Dördü de aynı ekranda, ikisi aynı kelimeyle. Altındaki
+          açıklama paragrafı ("Bağlantı karşılıklı…") bir kural
+          anlatıyordu, bir karar değil.
+
+          İSTEK BÖLÜMLERİ DE KALKTI: gelen istekler bildirim zilinin
+          altında yanıtlanıyor, gönderilen isteğin durumu kişinin
+          profilinde duruyor ("İstek gönderildi" / "İsteği geri çek",
+          bkz. BaglantiDugmesi). Bu sayfa artık tek bir şeyi gösteriyor:
+          kurulmuş bağlantılar.
+        */}
+        <h1 className="text-xl font-extrabold tracking-tight text-gray-900 sm:text-2xl">
+          Bağlantılar
+        </h1>
+
+        {/*
+          KİŞİ ARAMASI SAYFANIN KENDİ İÇİNDE
+
+          Üst çubuktaki arama sosyal sayfalarda zaten kişi arıyor ama
+          telefonda bir simgenin arkasında. Bağlantılar sayfasının asıl
+          işi "kimi bulayım" olduğu için kutu burada açıkta duruyor.
+          Sonuç listesi ÜST ÇUBUKTAKİYLE AYNI bileşen: iki yerde iki
+          farklı arama davranışı olmasın.
+        */}
+        <label className="relative block">
+          <span className="sr-only">Kişi ara</span>
+          <Search
+            aria-hidden
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+          />
+          <input
+            ref={aramaKutusu}
+            type="search"
+            value={sorgu}
+            onChange={(e) => setSorgu(e.target.value)}
+            placeholder="Kullanıcı adıyla ara"
+            className={`h-11 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-500 ${ODAK_HALKASI}`}
+          />
+        </label>
+        {sorgu.trim().length > 0 && (
+          <KullaniciAramaSonuclari sorgu={sorgu} onNavigate={onNavigate} onSecildi={() => setSorgu('')} />
+        )}
 
         {islemHatasi && (
           <p role="alert" className="text-sm font-semibold leading-relaxed text-rose-700">
@@ -269,10 +353,9 @@ export const BaglantilarSayfasi: React.FC<BaglantilarProps> = ({
         )}
 
         <Bolum
-          baslik="Bağlantılar"
           durum={durum}
           satirlar={liste.kabul}
-          bosMetin="Henüz bağlantın yok."
+          bos={bosDurum}
           onYenidenDene={yenidenDene}
           satirCiz={(kisi) => (
             <BaglantiSatiri
@@ -295,75 +378,6 @@ export const BaglantilarSayfasi: React.FC<BaglantilarProps> = ({
           )}
         />
 
-        <Bolum
-          baslik="Gelen istekler"
-          durum={durum}
-          satirlar={liste.gelen}
-          bosMetin="Bekleyen bir istek yok."
-          onYenidenDene={yenidenDene}
-          satirCiz={(kisi) => (
-            <BaglantiSatiri
-              key={kisi.kisiId}
-              kisi={kisi}
-              onNavigate={onNavigate}
-              eylemler={
-                <>
-                  <button
-                    type="button"
-                    disabled={islemdeki === kisi.kisiId}
-                    onClick={() =>
-                      eylemiCalistir(kisi.kisiId, () =>
-                        baglantiYanitla(kullaniciId, kisi.kisiId, 'kabul'),
-                      )
-                    }
-                    className={BIRINCIL_EYLEM}
-                  >
-                    Kabul et
-                  </button>
-                  <button
-                    type="button"
-                    disabled={islemdeki === kisi.kisiId}
-                    onClick={() =>
-                      eylemiCalistir(kisi.kisiId, () =>
-                        baglantiYanitla(kullaniciId, kisi.kisiId, 'red'),
-                      )
-                    }
-                    className={IKINCIL}
-                  >
-                    Reddet
-                  </button>
-                </>
-              }
-            />
-          )}
-        />
-
-        <Bolum
-          baslik="Gönderilen istekler"
-          durum={durum}
-          satirlar={liste.giden}
-          bosMetin="Gönderdiğin bekleyen bir istek yok."
-          onYenidenDene={yenidenDene}
-          satirCiz={(kisi) => (
-            <BaglantiSatiri
-              key={kisi.kisiId}
-              kisi={kisi}
-              onNavigate={onNavigate}
-              eylemler={
-                <button
-                  type="button"
-                  disabled={islemdeki === kisi.kisiId}
-                  onClick={() =>
-                    eylemiCalistir(kisi.kisiId, () => baglantiKaldir(kullaniciId, kisi.kisiId))
-                  }
-                  className={IKINCIL}
-                >
-                  İsteği geri çek
-                </button>
-              }
-            />
-          )}
-        />
       </div>
     </SayfaKabugu>
   );
