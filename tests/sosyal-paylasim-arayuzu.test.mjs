@@ -1037,3 +1037,18 @@ test('paylaşım girişi TEK bileşen; besteci ana pakete binmiyor', () => {
   assert.match(akis, /onClick=\{\(\) => paylasKolu\.current\?\.sec\(\)\}/);
   assert.match(giris, /React\.useImperativeHandle\(kol, \(\) => \(\{ sec: fotografSec \}\)\);/);
 });
+
+test('paylaşım düğmesi MASAÜSTÜNDE de görünüyor', () => {
+  /*
+    ÖLÇÜLDÜ (canlı, 1280 px): düğme DOM'daydı ama `lg:hidden` yüzünden
+    görünmüyordu. Yanındaki arama/süzgeç simgeleri telefona özel çünkü
+    masaüstünde sayfanın kendi arama kutusu var; paylaşımın öyle bir
+    karşılığı YOK. Kaldırılan geniş "Paylaş" düğmesi masaüstünde de
+    görünüyordu ve Ağım'ın kendi üst çubuğu `lg:hidden` — bu düğme de
+    gizlenseydi masaüstünde fotoğraf paylaşmanın hiçbir yolu kalmazdı.
+  */
+  const header = oku('src/components/Header.tsx');
+  const blok = header.slice(header.indexOf('<FotografPaylasGirisi'), header.indexOf('ARAMA VE SÜZGEÇ'));
+  assert.match(blok, /dugmeSinifi="[^"]*h-11 w-11[^"]*"/);
+  assert.doesNotMatch(blok.slice(blok.indexOf('dugmeSinifi')), /lg:hidden/);
+});
