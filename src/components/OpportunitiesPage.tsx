@@ -482,7 +482,7 @@ export const OpportunitiesPage: React.FC<{
 
   return (
     <main
-      className={`w-full ${SAYFA_GENISLIGI} mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-10`}
+      className={`w-full ${SAYFA_GENISLIGI} mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-0 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-10`}
     >
       {/*
         Telefonda satır boşluğu SIFIR: başlık `sr-only` olunca ızgaranın
@@ -527,11 +527,14 @@ export const OpportunitiesPage: React.FC<{
 
           <div className="hidden lg:block">{suzgecler}</div>
 
-          {/* Ayırıcı: "kontroller bitti, liste başlıyor". Geniş ekranda sütunlar yapıyor. */}
-          <div
-            aria-hidden
-            className="h-0.5 rounded-2xl border border-gray-200 bg-white shadow-xs lg:hidden"
-          />
+          {/*
+            AYIRICI KALDIRILDI.
+
+            "Kontroller bitti, liste başlıyor" demek için konmuştu. O
+            kontroller — arama kutusu ve süzgeç düğmesi — telefonda üst
+            çubuğa taşındı; ayıracak bir şey kalmadı. Geriye yalnız
+            üst çubuğun altında duran ince bir çizgi kalıyordu.
+          */}
         </div>
 
         {/* ------------------------------------------- orta: kart akışı --- */}

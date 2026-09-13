@@ -400,7 +400,7 @@ export const RehberMerkezi: React.FC<{
   });
 
   return (
-    <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI} ustBosluk="pt-2 sm:pt-3">
+    <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI} ustBosluk="pt-0 sm:pt-3">
       {/*
         İSKELET KEŞFET VE İLANLAR SAYFASIYLA AYNI
 
@@ -501,12 +501,13 @@ export const RehberMerkezi: React.FC<{
             ve ilanlar sayfasıyla aynı. Sona yazılıyor çünkü `space-y-4`
             son çocuk dışındaki her çocuğa alt boşluk veriyor.
           */}
-          {!filtrelerAcik && (
-            <div
-              aria-hidden
-              className="h-0.5 rounded-2xl border border-gray-200 bg-white shadow-xs lg:hidden"
-            />
-          )}
+          {/*
+            AYIRICI KALDIRILDI — Fırsatlar'daki ikizi de kalktı.
+
+            Arama kutusu ve süzgeç düğmesi telefonda üst çubuğa taşındı;
+            "kontroller bitti, liste başlıyor" diyecek bir şey kalmadı.
+            Geriye yalnız üst çubuğun altında ince bir çizgi kalıyordu.
+          */}
         </div>
 
         {/* --------------------------------------------------- orta: liste */}

@@ -42,19 +42,43 @@ test('iki listede de sağ sütun gizli ve yapışkan', () => {
   }
 });
 
-test('Rehber ayırıcıyı sol sütunun sonunda kullanıyor', () => {
+test('üç liste telefonda aynı yükseklikte başlıyor', () => {
+  /*
+    Başlıklar `sr-only` olunca üstteki boşluk boşa çıktı. İlanlar
+    `anaAlanSinifi` ile `pt-0`a inmişti; Rehber ve Fırsatlar `pt-2`de
+    kalmıştı ve listeleri 8 piksel aşağıda başlıyordu (ölçüldü: 68,8'e
+    karşı 60,8). O 8 piksel üst çubukla liste arasında bant olarak
+    okunuyordu.
+
+    Üç sayfa üç ayrı yerde yazıyor — biri App'in sabiti, biri kendi
+    `main`'i, biri kabuğun `ustBosluk` değeri — bu yüzden hizayı ancak
+    ortak bir iddia koruyabiliyor.
+  */
+  const kaynaklar = [
+    ['ilanlar', oku('src/App.tsx').match(/const anaAlanSinifi = `([^`]+)`/)[1]],
+    ['firsatlar', oku('src/components/OpportunitiesPage.tsx').match(/xl:px-10 (pt-\S+ sm:pt-\S+)/)[1]],
+    ['rehber', oku('src/components/RehberMerkezi.tsx').match(/ustBosluk="([^"]+)"/)[1]],
+  ];
+  for (const [ad, sinif] of kaynaklar) {
+    assert.ok(sinif.includes('pt-0'), `${ad}: telefonda üst boşluk sıfır değil (${sinif})`);
+    assert.ok(sinif.includes('sm:pt-3'), `${ad}: geniş ekranda üst boşluk değişmiş (${sinif})`);
+  }
+});
+
+test('ayırıcı çizgi kalktı: kontroller üst çubuğa taşındı', () => {
+  /*
+    `h-0.5` ayırıcı "kontroller bitti, liste başlıyor" demek için
+    konmuştu. O kontroller — arama kutusu ve süzgeç düğmesi — telefonda
+    üst çubuğa taşındı (bkz. lib/sayfa-aramasi); ayıracak bir şey
+    kalmadı ve çizgi, üst çubuğun hemen altında duran ince bir şerit
+    olarak görünüyordu.
+
+    İddia tersine çevrildi: çizginin GERİ GELMEDİĞİNİ sınıyor. Geri
+    gelirse aynı şerit yeniden çıkar.
+  */
   const ayirici = /h-0\.5 rounded-2xl border border-gray-200 bg-white shadow-xs lg:hidden/;
-  for (const ad of ['rehber']) {
-    const kaynak = SAYFALAR.find(([x]) => x === ad)[1];
-    assert.match(kaynak, ayirici, `${ad}: ayırıcı çizgi yok`);
-    /*
-      Ayırıcı sol sütunun SON çocuğu olmalı. Arama satırının hemen ardına
-      yazılınca `space-y-4` sütuna 16 piksel ekliyor ve başlık satırı
-      diğer sayfalardan aşağı kayıyor (ölçüldü: 213'e karşı 195).
-    */
-    const ayiriciYeri = kaynak.search(ayirici);
-    const ortaSutun = kaynak.search(/lg:col-span-6/);
-    assert.ok(ayiriciYeri > 0 && ayiriciYeri < ortaSutun, `${ad}: ayırıcı sol sütunun sonunda değil`);
+  for (const [ad, kaynak] of SAYFALAR) {
+    assert.doesNotMatch(kaynak, ayirici, `${ad}: ayırıcı çizgi geri gelmiş`);
   }
 });
 

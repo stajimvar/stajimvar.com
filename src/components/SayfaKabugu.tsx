@@ -41,11 +41,11 @@ interface SayfaKabuguProps {
    * Varsayılan `pt-6 sm:pt-8` alt sayfalar için: oralarda içerikten önce
    * geri düğmesi ve uzun metin var, nefes payı gerekiyor.
    *
-   * Alt menüdeki ANA sekmeler bunu istemiyor. İlanlar, Fırsatlar ve Keşfet
-   * kendi `main`'lerini yazıyor ve `pt-2 sm:pt-3` kullanıyor; Rehber ise bu
-   * kabuğun içinde olduğu için başlığı 16 piksel aşağıda başlıyordu —
-   * sekmeler arasında geçerken üst yazı yer değiştiriyordu (ölçüldü: 85'e
-   * karşı 69).
+   * Alt menüdeki ANA sekmeler bunu istemiyor: İlanlar, Fırsatlar ve Rehber
+   * telefonda `pt-0 sm:pt-3` kullanıyor. Başlıklar `sr-only` olduktan sonra
+   * üstte boşluk bırakacak bir şey kalmadı; 8 piksel kalınca üst çubukla
+   * liste arasında bant olarak okunuyordu ve Rehber ile Fırsatlar,
+   * İlanlar'dan 8 piksel aşağıda başlıyordu (ölçüldü: 68,8'e karşı 60,8).
    */
   ustBosluk?: string;
   /**
