@@ -157,7 +157,7 @@ export const AgimSayfasi: React.FC<Props> = ({
   /* ------------------------------------------------------------- başlık */
 
   const baslik = (
-    <header className="sticky top-0 z-20 flex items-center gap-1 border-b border-gray-200 bg-white px-1.5 py-1.5 lg:hidden">
+    <header className="sticky top-0 z-20 flex items-center gap-1 border-b border-gray-200 bg-white px-2.5 py-1.5 lg:hidden">
       <button
         type="button"
         onClick={() => (onPaylasimOlustur ? onPaylasimOlustur() : onNavigate('/cv'))}
@@ -236,7 +236,7 @@ export const AgimSayfasi: React.FC<Props> = ({
 
   /* Arama alanı başlığın ALTINDA, tam genişlikte; başlık sıkışmıyor. */
   const aramaAlani = aramaAcik ? (
-    <div className="border-b border-gray-200 bg-white px-3 py-2.5 lg:hidden">
+    <div className="border-b border-gray-200 bg-white px-4 py-2.5 lg:hidden">
       <label className="relative block">
         <span className="sr-only">Kişi ara</span>
         <Search
@@ -336,7 +336,7 @@ export const AgimSayfasi: React.FC<Props> = ({
       <div aria-busy="true" className="space-y-6 py-3">
         {[0, 1].map((i) => (
           <div key={i} className="space-y-2">
-            <div className="flex items-center gap-3 px-3">
+            <div className="flex items-center gap-3 px-4">
               <span className="h-9 w-9 animate-pulse rounded-full bg-gray-100" />
               <span className="h-3.5 w-32 animate-pulse rounded bg-gray-100" />
             </div>
@@ -354,7 +354,15 @@ export const AgimSayfasi: React.FC<Props> = ({
     ) : akis.length === 0 ? (
       bosDurum
     ) : (
-      <div className="divide-y divide-gray-200 sm:space-y-4 sm:divide-y-0">
+      /*
+        AYIRICI ARTIK KARTIN KENDİSİNDE
+
+        Burada `divide-y` vardı; kart da ortak kabuğa (YUZEY.kabuk)
+        geçince aynı yere ikinci bir çizgi daha düşüyordu. Ayırıcının
+        kartta durması doğrusu: liste ekranlarında da öyle ve akış tek
+        başına farklı bir kurala göre çizilmemeli.
+      */
+      <div className="sm:space-y-4">
         {akis.map((p) => (
           <AkisKarti
             key={p.id}

@@ -884,19 +884,31 @@ test('kısa ve tek satırlık alanlar hâlâ truncate ile kesiliyor', () => {
 /*  IZGARA                                                             */
 /* ------------------------------------------------------------------ */
 
-test('ayrıntılı ızgara depodaki kalıpta, sade ızgara üç sütun 2 px', () => {
-  const rehber = oku('src/components/RehberKartlari.tsx');
-  const kalip = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3';
-  assert.ok(rehber.includes(kalip), 'kalıp rehber kartlarında değişmiş');
+test('ayrıntılı ızgara kutulu ekranların ölçüsünde, sade ızgara üç sütun 1 px', () => {
+  /*
+    AYRINTILI_IZGARA rehber ızgarasından KOPTU (bilerek).
+
+    İkisi aynı kalıbı paylaşıyordu. Rehber ızgarası telefonda ekranın
+    iki kenarına yaslandı ve hücre arası 1 piksele indi; ayrıntılı
+    ızgara ise Arşiv, Beğendiklerim ve Kaydedilenler ekranlarında
+    KUTULU kartlar taşıyor — orada hücrenin altında tarih ve
+    "Profilde yeniden göster" gibi eylem satırları var, yani kart
+    gerçekten bir kutu ve boşlukla ayrılması gerekiyor.
+
+    Kalıp burada kendi değeriyle sabitleniyor: iki ızgara artık ayrı
+    ama ikisi de kendi yerinde kilitli.
+  */
   assert.ok(
-    izgara.includes(`export const AYRINTILI_IZGARA = '${kalip}';`),
-    'ayrıntılı ızgara kalıptan ayrışmış',
+    izgara.includes("export const AYRINTILI_IZGARA = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3';"),
+    'ayrıntılı ızgara değişmiş',
   );
   /*
     Sade ızgara fotoğraf duvarı: her genişlikte üç sütun, hücreler
-    arasında yalnız 2 px; hücrede köşe yuvarlaması ve çerçeve yok.
+    arasında yalnız 1 px; hücrede köşe yuvarlaması ve çerçeve yok.
+    2 pikseldi — site genelinde yüzey ayırıcısı 1 piksel ve ızgaranın
+    tek başına farklı kalması aynı ekranda iki kalınlık demekti.
   */
-  assert.ok(izgara.includes("export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-0.5';"));
+  assert.ok(izgara.includes("export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-px';"));
   assert.match(izgara, /const KAPAK_KABI = 'relative aspect-\[3\/4\] w-full overflow-hidden bg-gray-100';/);
   assert.match(
     izgara,
@@ -1706,7 +1718,7 @@ test('mobilde gönderi alanı kimlik kartının altında; masaüstü iskeleti ay
   /* Ortada tek örnek: `space-y-3` mobilde ızgara `gap`iyle çakışmıyor. */
   assert.doesNotMatch(ogrenciProfili, /className="lg:col-span-4 lg:sticky lg:top-4 space-y-3"/);
   assert.ok(
-    izgara.includes("export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-0.5';"),
+    izgara.includes("export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-px';"),
   );
 });
 
@@ -1825,7 +1837,7 @@ test('ziyaretçi görünümü iki sütun, ızgara sahibin ekranıyla aynı ölç
   */
   assert.ok(
     izgara.includes(
-      "export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-0.5';",
+      "export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-px';",
     ),
     'ızgara sabiti değişmemeli',
   );

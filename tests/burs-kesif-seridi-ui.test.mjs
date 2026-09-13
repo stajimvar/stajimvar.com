@@ -8,9 +8,16 @@ test('ortak keşif dairesi şirket ölçüsünü ve yatay kaydırmayı tek yerde
   const ortak = oku('src/components/KesifSeridi.tsx');
   assert.match(ortak, /w-\[76px\]/);
   assert.match(ortak, /h-14 w-14|w-14 h-14/);
-  assert.match(ortak, /overflow-x-auto/);
   assert.match(ortak, /min-w-max/);
   assert.match(ortak, /seciliRenk = '#111827'/);
+  /*
+    Kaydırma kabının sınıfları `SERIT.ic` belirtecine taşındı — şerit
+    kabuğu telefonda kaldırıldığında iki şeridin (şirket ve konu)
+    ölçüleri ayrışmasın diye. İddia yerini değiştirdi, kapsamı değil:
+    yatay kaydırma ve `relative` sarmalayıcı hâlâ zorunlu.
+  */
+  assert.match(ortak, /className=\{SERIT\.ic\}/);
+  assert.match(oku('src/ui/tokens.ts'), /ic: 'relative overflow-x-auto/);
 });
 
 test('şirket şeridi ortak bileşeni varsayılan görünümle kullanıyor', () => {

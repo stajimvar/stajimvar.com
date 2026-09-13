@@ -238,8 +238,27 @@ export const Header: React.FC<HeaderProps> = ({
     Seçili öğe artık `shrink-0`, kalanlar boşluğu paylaşıyor. Aynı kural
     işveren panelinde de var (src/ui/BottomNavigation).
   */
+  /*
+    ALT BAR EKRANIN TAM GENİŞLİĞİNDE
+
+    Kenarlardan 12 piksel boşluklu, tam yuvarlak köşeli, gölgeli YÜZEN
+    bir haptı. Beş sekmeye 375 piksellik ekranda 351 piksel kalıyordu,
+    yani öğe başına 70 piksel; yazı sığmadığı için yalnız seçili öğede
+    yazı vardı ve o öğe genişleyip komşularını itiyordu — sekme
+    değiştirirken çubuğun içi oynuyordu.
+
+    Çubuk artık ekranın iki kenarına yaslı, üstünde 1 piksellik bir
+    çizgi var, gölgesi yok. Beş öğenin beşi de yazısını taşıyor.
+
+    GÜVENLİ ALAN: alt dolgu `env(safe-area-inset-bottom)` kadar
+    büyüyor; iPhone'da ana ekran çubuğu o kadar yer kaplıyor ve hesaba
+    katılmazsa son sekmenin yazısı altında kalıyor. Sayfaların alt
+    boşluğu (`pb-[calc(120px+env(safe-area-inset-bottom))]`) bu
+    çubuktan yüksek: son kartın düğmesi çubuğun üstüne tamamen
+    kaydırılabiliyor.
+  */
   const altMenuClass =
-    'lg:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 z-50 rounded-full bg-white border border-gray-200 shadow-[0_10px_30px_rgba(15,23,42,0.18)] px-1.5 py-1.5 flex items-center justify-around gap-0.5 transition-transform duration-200';
+    'lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white px-1 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] flex items-stretch justify-around gap-0.5 transition-transform duration-200';
 
   /*
     ÇUBUK ARTIK SAYDAM DEĞİL
@@ -265,6 +284,29 @@ export const Header: React.FC<HeaderProps> = ({
   const altMenuStil: React.CSSProperties = {
     transform: altMenuGorunur ? 'none' : 'translateY(160%)',
   };
+
+  /*
+    ALT BAR ÖĞESİ — İKON ÜSTTE, YAZI ALTTA, BEŞİNDE DE
+
+    Yazı yalnız seçili öğedeydi ve o öğe `flex-1` yerine `shrink-0`
+    olup genişliyordu: sekme değiştikçe beş öğenin genişliği yeniden
+    dağılıyordu. Çubuk tam genişliğe inince öğe başına 75 piksel düştü
+    ve 10 puntoluk en uzun etiket ("Fırsatlar") 48 piksel — hepsi
+    sığıyor.
+
+    Seçili öğeyi ayıran şey artık genişlik değil: renk ve ikonun
+    arkasındaki hafif mavi kutu. Öğeler yerinden oynamıyor.
+  */
+  const altMenuOgesi = (secili: boolean) =>
+    `flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 py-1 transition-colors ${
+      secili ? 'text-blue-700' : 'text-gray-500 hover:text-gray-900'
+    }`;
+  const altMenuIkonu = (secili: boolean) =>
+    `flex h-7 w-12 items-center justify-center rounded-xl transition-colors ${
+      secili ? 'bg-blue-50 text-blue-600' : ''
+    }`;
+  const altMenuYazisi = (secili: boolean) =>
+    `w-full truncate text-center text-[10px] leading-none ${secili ? 'font-bold' : 'font-medium'}`;
 
   const [companyDropdownOpen, setCompanyDropdownOpen] = useState(false);
   const subMenuScrollRef = useRef<HTMLDivElement>(null);
@@ -466,7 +508,18 @@ export const Header: React.FC<HeaderProps> = ({
     Kişi araması kendi yerel durumunda; /cv'de yazılan ad ilan süzgecini
     kirletmiyor ve kullanıcıyı sayfadan atmıyor.
   */
-  const sosyaldeMi = /^\/(cv|profil|topluluklar|baglantilar)(\/|$)/.test(bulunulanYol);
+  /*
+    `agim` DE BU KÜMEDE — ALT ÇUBUKTA İKİ SEKME BİRDEN YANIYORDU
+
+    Akışa girildiğinde `activeTab` 'internships' olarak kalıyor ve
+    `ilanlardaMi` yalnız bu kümeyi dışlıyor; küme /agim'i saymadığı için
+    alt çubukta hem Ağım hem İlanlar yanıyordu. Bulunulan adres sekmeyi
+    ezmeli: her an tek sekme.
+
+    Yan etkisi de doğru: üst çubuktaki arama /agim'de de kişi arıyor —
+    akışın kendi arama panelinin aradığı şeyle aynı.
+  */
+  const sosyaldeMi = /^\/(agim|cv|profil|topluluklar|baglantilar)(\/|$)/.test(bulunulanYol);
   /*
     Kişi araması yalnız oturumu olan öğrenci hesabına: `sosyal_kullanici_ara`
     çağıranın görebildiği profilleri tarıyor, oturumsuz çağrı boş döner ve
@@ -1554,17 +1607,12 @@ export const Header: React.FC<HeaderProps> = ({
             setActiveTab('internships');
             setActiveSubTab('all');
           })}
-          className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${ilanlardaMi ? 'shrink-0' : 'flex-1'} transition-all cursor-pointer relative ${
-            ilanlardaMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
-          }`}
+          className={altMenuOgesi(ilanlardaMi)}
         >
-          <div className="relative">
-            <Briefcase className="w-5 h-5" />
-            {ilanlardaMi && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600"/>
-            )}
-          </div>
-          {ilanlardaMi && <span className="text-[11px] font-bold truncate">İlanlar</span>}
+          <span className={altMenuIkonu(ilanlardaMi)}>
+            <Briefcase className="h-5 w-5" />
+          </span>
+          <span className={altMenuYazisi(ilanlardaMi)}>İlanlar</span>
         </a>
 
         {/*
@@ -1584,17 +1632,12 @@ export const Header: React.FC<HeaderProps> = ({
           aria-label="Öğrenci fırsatları"
           aria-current={firsatlardaMi ? 'page' : undefined}
           onClick={baglantiTiklamasi(() => onOpenOpportunities?.())}
-          className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${firsatlardaMi ? 'shrink-0' : 'flex-1'} transition-all cursor-pointer relative ${
-            firsatlardaMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
-          }`}
+          className={altMenuOgesi(firsatlardaMi)}
         >
-          <div className="relative">
-            <Sparkles className="w-5 h-5" />
-            {firsatlardaMi && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600" />
-            )}
-          </div>
-          {firsatlardaMi && <span className="text-[11px] font-bold truncate">Fırsat</span>}
+          <span className={altMenuIkonu(firsatlardaMi)}>
+            <Sparkles className="h-5 w-5" />
+          </span>
+          <span className={altMenuYazisi(firsatlardaMi)}>Fırsatlar</span>
         </a>
 
         {/* 3. Ağım — masaüstündeki sekmenin karşılığı; Keşfet'in yerini aldı (bkz. üstteki not). */}
@@ -1603,17 +1646,12 @@ export const Header: React.FC<HeaderProps> = ({
           aria-label="Ağım"
           aria-current={agimdaMi ? 'page' : undefined}
           onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/agim')) : undefined}
-          className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${agimdaMi ? 'shrink-0' : 'flex-1'} transition-all cursor-pointer relative ${
-            agimdaMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
-          }`}
+          className={altMenuOgesi(agimdaMi)}
         >
-          <div className="relative">
-            <Users className="w-5 h-5" />
-            {agimdaMi && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600" />
-            )}
-          </div>
-          {agimdaMi && <span className="text-[11px] font-bold truncate">Ağım</span>}
+          <span className={altMenuIkonu(agimdaMi)}>
+            <Users className="h-5 w-5" />
+          </span>
+          <span className={altMenuYazisi(agimdaMi)}>Ağım</span>
         </a>
 
         {/*
@@ -1628,17 +1666,12 @@ export const Header: React.FC<HeaderProps> = ({
           aria-label="Öğrenci rehberi"
           aria-current={rehberdeMi && !isverendeMi ? 'page' : undefined}
           onClick={baglantiTiklamasi(() => onOpenGuides?.())}
-          className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${rehberdeMi && !isverendeMi ? 'shrink-0' : 'flex-1'} transition-all cursor-pointer relative ${
-            rehberdeMi && !isverendeMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
-          }`}
+          className={altMenuOgesi(rehberdeMi && !isverendeMi)}
         >
-          <div className="relative">
-            <BookOpen className="w-5 h-5" />
-            {rehberdeMi && !isverendeMi && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600" />
-            )}
-          </div>
-          {rehberdeMi && !isverendeMi && <span className="text-[11px] font-bold truncate">Rehber</span>}
+          <span className={altMenuIkonu(rehberdeMi && !isverendeMi)}>
+            <BookOpen className="h-5 w-5" />
+          </span>
+          <span className={altMenuYazisi(rehberdeMi && !isverendeMi)}>Rehber</span>
         </a>
 
         {/*
@@ -1654,17 +1687,12 @@ export const Header: React.FC<HeaderProps> = ({
             id="mobil-isveren-btn"
             aria-label="İşveren tarafı"
             onClick={() => onOpenEmployer?.()}
-            className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${isverendeMi ? 'shrink-0' : 'flex-1'} transition-all cursor-pointer relative ${
-              isverendeMi ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:text-gray-900'
-            }`}
+            className={altMenuOgesi(isverendeMi)}
           >
-            <div className="relative">
-              <Building2 className="w-5 h-5" />
-              {isverendeMi && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600" />
-              )}
-            </div>
-            {isverendeMi && <span className="text-[11px] font-bold truncate">İşveren</span>}
+            <span className={altMenuIkonu(isverendeMi)}>
+              <Building2 className="h-5 w-5" />
+            </span>
+            <span className={altMenuYazisi(isverendeMi)}>İşveren</span>
           </button>
         )}
 
@@ -1704,11 +1732,7 @@ export const Header: React.FC<HeaderProps> = ({
             setActiveTab('profile');
             setActiveSubTab('all');
           }}
-          className={`flex items-center justify-center gap-1.5 min-w-0 h-11 px-2 rounded-full ${profildeMi ? 'shrink-0' : 'flex-1'} transition-all cursor-pointer relative ${
-            profildeMi
-              ? 'bg-blue-50 text-blue-700 font-bold'
-              :'text-gray-500 hover:text-gray-900'
-          }`}
+          className={altMenuOgesi(profildeMi)}
         >
           {/*
             YEŞİL SAYI BURADAN DA KALKTI
@@ -1720,8 +1744,10 @@ export const Header: React.FC<HeaderProps> = ({
 
             Sayı kaybolmadı: profil ekranının üst istatistiğinde duruyor.
           */}
-          <UserCheck className="w-5 h-5" />
-          {profildeMi && <span className="text-[11px] font-bold truncate">Profil</span>}
+          <span className={altMenuIkonu(profildeMi)}>
+            <UserCheck className="h-5 w-5" />
+          </span>
+          <span className={altMenuYazisi(profildeMi)}>Profil</span>
         </button>
           </>
         )}
@@ -1739,14 +1765,12 @@ export const Header: React.FC<HeaderProps> = ({
             setActiveTab('company-portal');
             setActiveSubTab('all_candidates');
           }}
-          className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
-            activeSubTab === 'all_candidates' || activeSubTab === 'all'
-              ? 'bg-blue-50 text-blue-700 font-bold'
-              :'text-gray-500'
-          }`}
+          className={altMenuOgesi(activeSubTab === 'all_candidates' || activeSubTab === 'all')}
         >
-          <Users className="w-5 h-5" />
-          <span className="text-[11px] font-bold truncate">Adaylar</span>
+          <span className={altMenuIkonu(activeSubTab === 'all_candidates' || activeSubTab === 'all')}>
+            <Users className="h-5 w-5" />
+          </span>
+          <span className={altMenuYazisi(activeSubTab === 'all_candidates' || activeSubTab === 'all')}>Adaylar</span>
         </button>
 
         <button
@@ -1754,14 +1778,24 @@ export const Header: React.FC<HeaderProps> = ({
             setActiveTab('company-portal');
             setActiveSubTab('top_matches');
           }}
-          className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
-            activeSubTab === 'top_matches'
-              ?'text-orange-600 font-bold'
-              :'text-gray-500'
+          className={`flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 py-1 transition-colors ${
+            activeSubTab === 'top_matches' ? 'text-orange-600' : 'text-gray-500'
           }`}
         >
-          <Sparkles className="w-5 h-5" />
-          <span className="text-[11px] font-bold truncate">%80+ Uyum</span>
+          <span
+            className={`flex h-7 w-12 items-center justify-center rounded-xl transition-colors ${
+              activeSubTab === 'top_matches' ? 'bg-orange-50' : ''
+            }`}
+          >
+            <Sparkles className="h-5 w-5" />
+          </span>
+          <span
+            className={`w-full truncate text-center text-[10px] leading-none ${
+              activeSubTab === 'top_matches' ? 'font-bold' : 'font-medium'
+            }`}
+          >
+            %80+ Uyum
+          </span>
         </button>
 
         <button
@@ -1769,14 +1803,22 @@ export const Header: React.FC<HeaderProps> = ({
             setActiveTab('company-portal');
             setActiveSubTab('kanban');
           }}
-          className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full transition-all cursor-pointer relative ${
-            activeSubTab === 'kanban'
-              ?'text-purple-600 font-bold'
-              :'text-gray-500'
+          className={`flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 py-1 transition-colors ${
+            activeSubTab === 'kanban' ? 'text-purple-600' : 'text-gray-500'
           }`}
         >
-          <Columns className="w-5 h-5" />
-          <span className="text-[11px] font-bold truncate">Kanban</span>
+          <span
+            className={`flex h-7 w-12 items-center justify-center rounded-xl transition-colors ${activeSubTab === 'kanban' ? 'bg-purple-50' : ''}`}
+          >
+            <Columns className="h-5 w-5" />
+          </span>
+          <span
+            className={`w-full truncate text-center text-[10px] leading-none ${
+              activeSubTab === 'kanban' ? 'font-bold' : 'font-medium'
+            }`}
+          >
+            Kanban
+          </span>
         </button>
 
         <button
@@ -1784,10 +1826,12 @@ export const Header: React.FC<HeaderProps> = ({
             setActiveTab('company-portal');
             setActiveSubTab('post_new');
           }}
-          className="flex items-center justify-center gap-1.5 flex-1 min-w-0 h-11 px-2 rounded-full bg-blue-50 text-blue-700 font-bold cursor-pointer"
+          className="flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 py-1 transition-colors text-blue-700"
         >
-          <Plus className="w-5 h-5" />
-          <span className="text-[11px] font-bold truncate">İlan Ekle</span>
+          <span className="flex h-7 w-12 items-center justify-center rounded-xl transition-colors bg-blue-50 text-blue-600">
+            <Plus className="h-5 w-5" />
+          </span>
+          <span className="w-full truncate text-center text-[10px] leading-none font-bold">İlan Ekle</span>
         </button>
       </nav>
     )}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { SERIT } from '../ui/tokens';
 
 export const KesifDairesi: React.FC<{
   etiket: string;
@@ -55,9 +56,11 @@ export const KesifSeridi: React.FC<{
   baslik?: string;
   children: React.ReactNode;
 }> = ({ baslik, children }) => (
-  <div className="bg-white rounded-2xl border border-gray-200 py-3">
-    {baslik && <h2 className="px-3 pb-3 text-sm font-extrabold text-gray-900">{baslik}</h2>}
-    <div className="relative overflow-x-auto px-3">
+  <div className={SERIT.kabuk}>
+    {baslik && (
+      <h2 className="px-4 pb-2 text-sm font-extrabold text-gray-900 sm:px-3 sm:pb-3">{baslik}</h2>
+    )}
+    <div className={SERIT.ic}>
       <div className="flex gap-3 min-w-max">{children}</div>
     </div>
   </div>

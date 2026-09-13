@@ -141,6 +141,38 @@ export function opportunityTypeLabel(type) {
   return OPPORTUNITY_TYPE_LABELS[type] ?? 'Fırsat';
 }
 
+/*
+  KART ALTINDAKİ İNCELEME BAĞLANTISININ METNİ
+
+  Kartın altında tam genişlikte bir "Başvur" düğmesi vardı. Başvuru
+  kurumun kendi sayfasında tamamlanıyor ve listede o düğmeye basmak,
+  öğrenciyi neye başvurduğunu okumadan dışarı çıkarıyordu. Yerine
+  detaya götüren sakin bir bağlantı geldi; başvuru düğmesi detay
+  sayfasında, şartların hemen altında duruyor.
+
+  Metin tür tür yazılıyor, kuralla üretilmiyor: Türkçede belirtme hâli
+  ünlü uyumuna ve son harfe bağlı ("Burs" → "Bursu", "Yarışma" →
+  "Yarışmayı"), üstelik kısaltmaların çekimi kesme işareti istiyor
+  ("Teknofest'i"). Tek bir şablon bunların hepsini yanlış yazardı.
+*/
+export const OPPORTUNITY_REVIEW_LABELS = {
+  scholarship: 'Bursu incele',
+  kyk: 'KYK bursunu incele',
+  international: 'Fırsatı incele',
+  competition: 'Yarışmayı incele',
+  education: 'Eğitimi incele',
+  student_support: 'Desteği incele',
+  youth_program: 'Programı incele',
+  hackathon: "Hackathon'u incele",
+  teknofest: "Teknofest'i incele",
+  career_day: 'Kariyer gününü incele',
+  career_fair: 'Kariyer fuarını incele',
+};
+
+export function opportunityReviewLabel(type) {
+  return OPPORTUNITY_REVIEW_LABELS[type] ?? 'Fırsatı incele';
+}
+
 export function getOpportunityOverview(items, now = new Date()) {
   const openItems = Array.isArray(items) ? items.filter((item) => item && !isExpiredOpportunity(item, now)) : [];
   const timedItems = openItems

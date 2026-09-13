@@ -45,7 +45,7 @@ test("Ağım /agim ve /baglantilar'ta yanıyor; /profil/* ve Profil ayrı, her a
   assert.match(source, /const profildeMi = cvEkranindaMi \|\| \(!rehberdeMi && !kurumsalSayfada && !agimdaMi && activeTab === 'profile'\)/);
   assert.match(source, /aria-label="Ağım"\s*aria-current=\{agimdaMi \? 'page' : undefined\}/);
   /* /baglantilar sosyal küme içinde, yani İlanlar da sönük (ilanlardaMi !sosyaldeMi). */
-  assert.match(source, /const sosyaldeMi = \/\^\\\/\(cv\|profil\|topluluklar\|baglantilar\)\(\\\/\|\$\)\/\.test\(bulunulanYol\);/);
+  assert.match(source, /const sosyaldeMi = \/\^\\\/\(agim\|cv\|profil\|topluluklar\|baglantilar\)\(\\\/\|\$\)\/\.test\(bulunulanYol\);/);
 });
 
 test("sosyal rotada (/cv) İlanlar sönük, Profil aktif; aria-current görselle aynı", () => {
@@ -131,7 +131,7 @@ test("/cv ekranı çıkışı her öğrenciye, yönetim panelini yalnız yöneti
 */
 test("sosyal sayfada üst arama kişi arıyor ve ilan süzgecine yazmıyor", () => {
   assert.ok(
-    source.includes("const sosyaldeMi = /^\\/(cv|profil|topluluklar|baglantilar)(\\/|$)/.test(bulunulanYol);"),
+    source.includes("const sosyaldeMi = /^\\/(agim|cv|profil|topluluklar|baglantilar)(\\/|$)/.test(bulunulanYol);"),
   );
   assert.match(source, /sosyaldeMi\s*\? 'Kullanıcı adıyla ara'/);
   assert.match(source, /sosyaldeMi\s*\? 'Kişi ara'/);

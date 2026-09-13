@@ -3,6 +3,7 @@ import React from 'react';
 import { ArrowRight, Search, SlidersHorizontal } from 'lucide-react';
 import { FiltreBlogu, SecenekSatiri } from '../ui';
 import { KonuSeridi } from './KonuSeridi';
+import { YUZEY } from '../ui/tokens';
 import { SayfaKabugu } from './SayfaKabugu';
 import { RehberIzgarasi, RehberKarti, RehberKartiIskeleti } from './RehberKartlari';
 import { YolHaritasi } from './YolHaritasi';
@@ -410,7 +411,7 @@ export const RehberMerkezi: React.FC<{
         sayaçlar ve bilgi kutusu. Üç liste artık aynı iskelette.
       */}
       {/* Telefonda satır boşluğu sıfır; gizli başlık bant bırakmasın. */}
-      <div className="grid grid-cols-1 items-start gap-0 sm:gap-6 lg:grid-cols-12">
+      <div className={`grid grid-cols-1 items-start gap-0 sm:gap-6 lg:grid-cols-12 ${YUZEY.kolon}`}>
         {/* ------------------------------------------------- sol: süzgeçler */}
         {/*
           Sol sütun telefonda YER KAPLAMIYOR: başlık `sr-only` olunca

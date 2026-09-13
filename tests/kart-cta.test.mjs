@@ -47,49 +47,62 @@ test('geometri ve punto tek yerde tanımlı', () => {
   assert.doesNotMatch(ortak, /bg-(blue|white|gray)/);
 });
 
-test('iki kart da paylaşılan tanımları kullanıyor', () => {
-  for (const [ad, kaynak] of [
-    ['InternshipCard', ILAN],
-    ['OpportunitiesPage', FIRSAT],
-  ]) {
-    assert.match(kaynak, /from '\.\.\/lib\/kart-cta'/, `${ad}: paylaşılan tanım alınmamış`);
-  }
+test('ilan kartı paylaşılan tanımları kullanıyor', () => {
+  assert.match(ILAN, /from '\.\.\/lib\/kart-cta'/, 'paylaşılan tanım alınmamış');
 });
 
-/** Fırsat kartının alt eylem alanı. */
-function firsatCtaBlogu() {
-  const bas = FIRSAT.indexOf('<DisBaglanti');
-  assert.ok(bas > 0, 'fırsat kartının dış bağlantısı bulunamadı');
-  return FIRSAT.slice(bas - 700, bas + 900);
-}
+/*
+  FIRSAT KARTINDAN DÜĞME KALKTI
 
-test('FIRSAT KARTINDA TEK EYLEM VAR ve o birincil', () => {
-  /*
-    Kartın altında "Detayı gör" adında ikincil bir düğme vardı. Kartın
-    KENDİSİ artık detaya gidiyor (gerilmiş bağlantı), yani aynı hedefe
-    giden ikinci bir düğme kalan tek gerçek eylemi — resmî kaynağa
-    çıkmayı — eşit ağırlıkta bir rakiple paylaştırıyordu.
+  Kartın altında tam genişlikte bir "Başvur" düğmesi vardı ve doğrudan
+  kurumun sitesine çıkıyordu: öğrenci şartları — kimler başvurabilir,
+  tutar ne, son tarih ne — okumadan dışarı gidiyordu. Düğme kaldırılmadı,
+  YERİ DEĞİŞTİ: detay sayfasında, şartların hemen altında duruyor.
 
-    Aynı karar ilan kartında da verilmişti; üç liste artık aynı kalıpta.
-  */
-  const blok = firsatCtaBlogu();
-  assert.match(blok, /DisBaglanti[\s\S]*?\$\{CTA_ORTAK\} \$\{CTA_BIRINCIL\}/, 'dış bağlantı birincil değil');
+  Kartta yerine detaya götüren sakin bir satır var ("Bursu incele →") ve
+  o satır gerçek bir bağlantı DEĞİL — kartın tamamını zaten gerilmiş
+  bağlantı kaplıyor, iç içe iki `<a>` üretilemez.
+
+  Aşağıdaki testler bu kararın geri dönmesini engelliyor: kart yeniden
+  dışarı çıkan bir düğme taşımaya başlarsa ya da başvuru detaydan
+  kaybolursa yakalanıyor.
+*/
+
+test('FIRSAT KARTINDA DIŞARI ÇIKAN DÜĞME YOK', () => {
+  assert.doesNotMatch(FIRSAT, /DisBaglanti/, 'kartta dış başvuru düğmesi geri gelmiş');
+  assert.doesNotMatch(FIRSAT, /CTA_BIRINCIL|CTA_IKINCIL|CTA_ORTAK/, 'kart düğme geometrisini geri almış');
   assert.doesNotMatch(FIRSAT, />\s*Detayı gör\s*</, 'ayrı "Detayı gör" düğmesi kalmamalı');
-  assert.doesNotMatch(FIRSAT, /CTA_IKINCIL/, 'fırsat kartında ikincil rol kalmadı');
 });
 
-test('kartın tamamı detaya gidiyor, düğme örtünün üstünde', () => {
-  /* Gerilmiş bağlantı kartı kaplıyor; dış bağlantı z-10 ile üstte kalıyor. */
+test('BAŞVURU DETAY SAYFASINDA ERİŞİLEBİLİR', () => {
+  const detay = oku('src/components/OpportunityDetailPage.tsx');
+  assert.match(detay, /<DisBaglanti/, 'detayda başvuru bağlantısı yok');
+  assert.match(detay, /const anaEylem = cta && !suresiDoldu/, 'ana eylem kurulmuyor');
+  assert.match(detay, /Resmî sitede başvur/);
+});
+
+test('kartın tamamı detaya gidiyor, kaydet örtünün üstünde', () => {
+  /* Gerilmiş bağlantı kartı kaplıyor; kaydet düğmesi z-10 ile üstte kalıyor. */
   assert.match(FIRSAT, /after:absolute after:inset-0/, 'gerilmiş bağlantı yok');
   assert.match(FIRSAT, /href=\{`\/firsatlar\/\$\{item\.slug\}`\}/, 'gerçek adres olmalı');
-  assert.match(FIRSAT, /relative z-10 mt-auto/, 'eylem alanı örtünün altında kalır');
+  assert.match(FIRSAT, /relative z-10 -mr-1 shrink-0 cursor-pointer/, 'kaydet örtünün altında kalır');
+  assert.match(FIRSAT, /onClick=\{\(e\) => \{\s*e\.stopPropagation\(\);/, 'kaydet tıklaması karta taşıyor');
 });
 
-test('fırsat kartının düğmelerinde elle yazılmış renk ve punto yok', () => {
-  const blok = firsatCtaBlogu();
-  for (const kalip of [/bg-blue-600/, /text-sm/, /border-gray-200 px-3/]) {
-    assert.doesNotMatch(blok, kalip, `elle yazılmış stil kaldı: ${kalip}`);
-  }
+test('inceleme satırı tür tür yazılıyor, şablonla üretilmiyor', () => {
+  /*
+    "Bursu incele" / "Yarışmayı incele": Türkçede belirtme hâli ünlü
+    uyumuna ve son harfe bağlı, kısaltmalar kesme işareti istiyor
+    ("Teknofest'i"). Tek bir şablon bunların hepsini yanlış yazardı.
+  */
+  const alan = oku('src/lib/opportunity-domain.mjs');
+  assert.match(alan, /OPPORTUNITY_REVIEW_LABELS/);
+  assert.match(alan, /scholarship: 'Bursu incele'/);
+  assert.match(alan, /competition: 'Yarışmayı incele'/);
+  assert.match(alan, /export function opportunityReviewLabel/);
+  assert.match(FIRSAT, /opportunityReviewLabel\(item\.opportunityType\)/);
+  /* Ekran okuyucu aynı hedefi iki kez duymamalı: satır `aria-hidden`. */
+  assert.match(FIRSAT, /\{!arsivde && \(\s*<p\s+aria-hidden/);
 });
 
 test('İLAN KARTINDA TEK EYLEM VAR ve o birincil', () => {

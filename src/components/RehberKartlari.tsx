@@ -1,7 +1,8 @@
 import React from 'react';
-import { ArrowRight, Bookmark, Clock } from 'lucide-react';
+import { Bookmark, Clock } from 'lucide-react';
 import { konuEtiketi, rehberOkumaDakika, type Rehber } from '../data/rehberler';
 import { tarihMetni } from '../lib/tarih.mjs';
+import { YUZEY } from '../ui/tokens';
 
 /**
  * Rehber kartı ve iskeleti.
@@ -63,20 +64,34 @@ export const RehberKarti: React.FC<KartProps> = ({
         e.preventDefault();
         onNavigate(`/rehber/${rehber.slug}`);
       }}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xs transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+      /*
+        TELEFONDA KABUK YOK
+
+        Kart yuvarlatılmış, çerçeveli ve gölgeliydi; iki sütun arasında
+        10 piksel boşluk vardı. Üç ayrı kenar işareti (çerçeve, gölge,
+        boşluk) aynı şeyi söylüyordu: "kart burada bitiyor". Telefonda
+        üçü de kalktı — hücreleri ayıran tek şey ızgaranın 1 pikselik
+        arası (RehberIzgarasi). `sm:` üstünde kart aynen geri geliyor.
+      */
+      className="group flex h-full flex-col overflow-hidden bg-white transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:rounded-2xl sm:border sm:border-gray-200 sm:shadow-xs sm:hover:-translate-y-0.5 sm:hover:border-blue-300 sm:hover:shadow-md"
     >
       {/*
-        KAPAK SABİT YÜKSEKLİKTE
+        KAPAK TELEFONDA ORANLI, GENİŞ EKRANDA SABİT YÜKSEKLİKTE
 
-        Oran yerine sabit yükseklik: `aspect-[16/9]` geniş ekranda sütun
-        genişledikçe kapağı da büyütüyordu ve 1280x720'de kartın tamamı
-        ekrana sığmıyordu (ölçüldü: kart 386 piksel). Sabit yükseklikte
-        kapak her ekranda aynı ve kartın okunacak kısmı yukarıda kalıyor.
+        Telefonda 96 piksel sabitti ve hücre genişliği 187 piksel: kapak
+        neredeyse 2:1 bir şeride dönüşüyor, fotoğrafın konusu kırpılıp
+        gidiyordu. Oran (4:3) hücre ne kadar genişse kapağı o kadar
+        yüksek yapıyor; kapak hücrenin tam genişliğini kaplıyor ve iki
+        yanında boşluk kalmıyor.
 
-        Yan etkisi de iyi: kutu yüksekliği görselden bağımsız olduğu için
-        görsel inerken ızgara hiç zıplamıyor.
+        `sm:` üstünde sabit yükseklik KALIYOR: orada sütun genişledikçe
+        oranlı kapak da büyüyor ve 1280x720'de kartın tamamı ekrana
+        sığmıyordu (ölçülmüştü: kart 386 piksel).
+
+        Her iki durumda da kutu yüksekliği görselden bağımsız, yani
+        görsel inerken ızgara zıplamıyor.
       */}
-      <div className="relative h-24 w-full shrink-0 overflow-hidden bg-gray-100 sm:h-36">
+      <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-gray-100 sm:aspect-auto sm:h-36">
         <picture>
           <source
             srcSet={`/rehber-gorselleri/${rehber.slug}.avif?v=rehber-fotograf-20260907-tam`}
@@ -107,25 +122,34 @@ export const RehberKarti: React.FC<KartProps> = ({
         </h3>
         <p className="hidden text-xs leading-relaxed text-gray-600 line-clamp-2 sm:block">{rehber.ozet}</p>
 
-        <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 pt-1 text-[11px] text-gray-600">
-          <span className="inline-flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            {rehberOkumaDakika(rehber)} dk
-          </span>
-          {tarih && (
-            <>
-              <span aria-hidden className="text-gray-300">
-                ·
-              </span>
-              <span>{tarih}</span>
-            </>
-          )}
-        </div>
+        {/*
+          "REHBERİ AÇ" SATIRI KALKTI
 
-        <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-2.5">
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 group-hover:underline sm:text-xs">
-            Rehberi aç
-            <ArrowRight className="h-3.5 w-3.5" />
+          Kartın tamamı zaten rehbere giden bir bağlantı; altındaki
+          "Rehberi aç →" ikinci bir "aynı yere git" satırıydı ve kendi
+          ayıracıyla birlikte kartın altına 32 piksel ekliyordu. Telefonda
+          iki sütunlu ızgarada bu, ekrana sığan kart sayısını düşüren en
+          büyük tek kalemdi.
+
+          Geriye okuma süresi ve kaydet kaldı; ikisi aynı satırda, karşı
+          karşıya. Tarih yalnızca geniş ekranda: dar hücrede okuma
+          süresiyle aynı satıra sığmıyor ve alta inip bir satır daha
+          açıyordu.
+        */}
+        <div className="mt-auto flex items-center justify-between gap-2 pt-1 text-[11px] text-gray-600">
+          <span className="inline-flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-3 w-3 shrink-0" />
+              {rehberOkumaDakika(rehber)} dk
+            </span>
+            {tarih && (
+              <>
+                <span aria-hidden className="hidden text-gray-300 sm:inline">
+                  ·
+                </span>
+                <span className="hidden sm:inline">{tarih}</span>
+              </>
+            )}
           </span>
 
           {onKaydet && (
@@ -143,8 +167,13 @@ export const RehberKarti: React.FC<KartProps> = ({
                 e.stopPropagation();
                 onKaydet(rehber.slug);
               }}
-              /* Dokunma alanı 44 piksel: mobilde küçük ikon hedefi ıskalanıyor. */
-              className={`-mr-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors cursor-pointer ${
+              /*
+                Dokunma alanı 44 piksel: mobilde küçük ikon hedefi
+                ıskalanıyor. Negatif kenar boşluğu düğmeyi satırın
+                dışına taşırıyor — hedef 44 kalıyor ama kartın altına
+                fazladan yükseklik eklemiyor.
+              */
+              className={`-my-2.5 -mr-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors cursor-pointer ${
                 kayitli ? 'text-blue-700 hover:bg-blue-50' : 'text-gray-500 hover:bg-gray-100'
               }`}
             >
@@ -165,8 +194,8 @@ export const RehberKarti: React.FC<KartProps> = ({
  * anlatıyor.
  */
 export const RehberKartiIskeleti: React.FC = () => (
-  <div aria-hidden className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white">
-    <div className="h-24 w-full animate-pulse bg-gray-100 sm:h-36" />
+  <div aria-hidden className="flex h-full flex-col overflow-hidden bg-white sm:rounded-2xl sm:border sm:border-gray-200">
+    <div className="aspect-[4/3] w-full animate-pulse bg-gray-100 sm:aspect-auto sm:h-36" />
     <div className="flex flex-1 flex-col gap-1.5 p-2.5 sm:gap-2 sm:p-3.5">
       <div className="h-4 w-4/5 animate-pulse rounded bg-gray-100" />
       <div className="h-3 w-full animate-pulse rounded bg-gray-100" />
@@ -187,7 +216,26 @@ export const RehberKartiIskeleti: React.FC = () => (
  * İki sütunda kart ~165 piksele iniyor ve ekrana dört kart giriyor.
  * Karşılığı görselin küçülmesi; başlık ve özet için `line-clamp` zaten
  * vardı, dar sütunda punto ve boşluk da bir kademe küçülüyor.
+ *
+ * AYIRICI: 1 PİKSEL, BOŞLUK DEĞİL
+ * -------------------------------
+ * Sütunlar arası 10 pikselik boşluktu ve ızgara sayfanın 16 pikselik
+ * yan boşluğunun içindeydi; 375 piksellik ekranda hücreye 172 piksel
+ * kalıyordu. Izgara artık ekranın iki kenarına yaslı ve hücreleri
+ * ayıran şey 1 piksel.
+ *
+ * O 1 piksel bir kenarlık DEĞİL: ızgaranın zemini gri, araları
+ * `gap-px`, hücreler beyaz — çizgi zeminin göründüğü yer. Kenarlıkla
+ * yapılsaydı komşu hücrelerin kenarlıkları üst üste binip 2 piksel
+ * olurdu ve son sütunun sağında tek başına bir çizgi kalırdı.
+ *
+ * `sm:` üstünde zemin saydamlaşıyor ve boşluk geri geliyor: orada
+ * kartlar gri zeminde yüzen kutular.
  */
 export const RehberIzgarasi: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">{children}</div>
+  <div
+    className={`grid grid-cols-2 gap-px bg-gray-200 sm:gap-4 sm:bg-transparent lg:grid-cols-3 ${YUZEY.kap}`}
+  >
+    {children}
+  </div>
 );

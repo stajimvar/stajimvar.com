@@ -126,8 +126,14 @@ interface IzgaraProps {
 
 const KART_KABI = 'rounded-2xl border border-gray-200 bg-white p-2.5 sm:p-3.5';
 
-/** Sade ızgara: her genişlikte üç sütun, hücreler arasında yalnız 2 px. */
-export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-0.5';
+/**
+ * Sade ızgara: her genişlikte üç sütun, hücreler arasında yalnız 1 px.
+ *
+ * 2 pikseldi. Site genelinde yüzey ayırıcısı 1 piksel (liste kartları,
+ * rehber ızgarası, akış); ızgaranın tek başına 2 pikselde kalması aynı
+ * ekranda iki farklı kalınlıkta çizgi demekti.
+ */
+export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-px';
 
 /** Ayrıntılı ızgara depodaki kart kalıbında (RehberKartlari.tsx). */
 export const AYRINTILI_IZGARA = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3';

@@ -347,7 +347,7 @@ export const ProfilBasligi: React.FC<Props> = ({
     boşluk aynı. Geniş ekranda blok sol sütunun bir parçası ve nerede
     bittiğinin görünmesi gerekiyor.
   */
-  <Card mobilYuzey className={`space-y-3 p-4 sm:space-y-4 sm:p-6 ${className}`}>
+  <Card mobilYuzey className={`space-y-3 px-4 py-3.5 sm:space-y-4 sm:p-6 ${className}`}>
     {/*
       FOTOĞRAF VE AD AYNI SATIRDA, SAYAÇLAR ALTTA TAM GENİŞLİKTE
 
@@ -363,7 +363,7 @@ export const ProfilBasligi: React.FC<Props> = ({
       yanındaki boşluğa çıktı. Kart bir satır uzamadı: ad bloğu zaten
       bir satırdı, yalnız yer değiştirdi.
     */}
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3.5 sm:gap-4">
       {/*
         KAMERA DÜĞMESİ KALDIRILDI — TEK FOTOĞRAF, TEK YÜKLEME YERİ
 
@@ -395,7 +395,13 @@ export const ProfilBasligi: React.FC<Props> = ({
       </Halka>
 
       <div className="min-w-0 flex-1 space-y-0.5">
-        <h1 className="text-base font-bold text-gray-900">{adYazimi(ad)}</h1>
+        {/*
+          `break-words`: "Mustafa Oğulcan Doğan" gibi bir ad 375 pikselde
+          fotoğrafın yanındaki 240 piksellik kaba sığmayıp kabı
+          taşırıyordu — kırpma değil sarma isteniyor, çünkü ad kısaltılınca
+          kimin profili olduğu okunmuyor.
+        */}
+        <h1 className="min-w-0 break-words text-base font-bold text-gray-900">{adYazimi(ad)}</h1>
         {/*
           KULLANICI ADI ADIN HEMEN ALTINDA
 
@@ -440,7 +446,7 @@ export const ProfilBasligi: React.FC<Props> = ({
           satırda birleşti. Kart yüksekliğinden bir satır kazanmak,
           altındaki başvuru bölümünü o kadar yukarı çekiyor.
         */}
-        <p className="text-sm text-gray-500">
+        <p className="min-w-0 break-words text-sm leading-snug text-gray-500">
           {okul || 'Okulun eksik'}
           {bolum ? ` · ${bolum}` : ''}
           {sinif ? ` · ${sinif}` : ''}

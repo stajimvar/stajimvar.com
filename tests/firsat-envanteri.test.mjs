@@ -126,9 +126,23 @@ test('SÜRESİ DOLAN ANA LİSTEDE YOK, ARŞİVDE VAR', () => {
   );
   assert.match(arsiv, /\.eq\('status', 'expired'\)/);
 
-  /* Arşiv görünümündeki kartta başvuru düğmesi kurulmuyor. */
+  /*
+    ARŞİV KARTINDA İLERİ GİDEN BİR ŞEY YOK
+
+    Kartta `opportunityCta` ile kurulan bir başvuru düğmesi vardı ve
+    arşivde `null` veriliyordu. Düğme kartta tamamen kalktı — başvuru
+    detay sayfasında, şartların altında — yerine detaya götüren bir
+    inceleme satırı geldi. Aynı kural o satır için de geçerli: dönemi
+    kapanmış kayıtta "incele" demek, yapılacak bir şey varmış gibi
+    okunur.
+
+    Kaydet düğmesi de arşivde verilmiyor: kapanmış dönemi "daha sonra
+    bakmak için" kaydetmenin karşılığı yok.
+  */
   const sayfa = oku('src/components/OpportunitiesPage.tsx');
-  assert.match(sayfa, /const cta = arsivde \? null : opportunityCta\(item\)/);
+  assert.doesNotMatch(sayfa, /opportunityCta/, 'kartta başvuru düğmesi geri gelmiş');
+  assert.match(sayfa, /\{!arsivde && \(\s*<p\s+aria-hidden/);
+  assert.match(sayfa, /onKaydet=\{filters\.arsiv \? undefined : \(\) => kaydiDegistir\(item\)\}/);
 });
 
 /* ------------------------------------------------- 5) haricî başvuru */

@@ -114,3 +114,91 @@ export const ANLAM = {
  * 48–52 pikselden başlıyor, ikon düğmelerinde 44.
  */
 export const DOKUNMA = 'min-h-11';
+
+/**
+ * TELEFONDA LİSTE YÜZEYİ
+ *
+ * NEDEN
+ * -----
+ * Liste ekranlarında kartlar gri zemin üzerinde yüzen kutulardı: iki
+ * yanında 16 pikselik şeritler, köşelerinde yuvarlatma, aralarında 12
+ * pikselik boşluk. 375 piksellik bir ekranda bu, içeriğe kalan yerin
+ * 343 piksele inmesi demek — üstelik ekranın her yerinde farklı bir
+ * kutu ritmi.
+ *
+ * Telefonda kart KUTU değil YÜZEY: ekranın iki kenarına yaslanıyor,
+ * köşesi ve gölgesi yok, komşusundan yalnızca 1 pikselik açık gri bir
+ * çizgiyle ayrılıyor. `sm:` ve üstünde kart olduğu gibi geri geliyor —
+ * orada içerik gri zeminde yüzen bir kutu ve kartın nerede bittiğini
+ * söyleyen şey zeminin rengi.
+ *
+ * NASIL
+ * -----
+ * Sınıflar EKLENMİYOR, DEĞİŞTİRİLİYOR. `rounded-none` ile
+ * `rounded-2xl` aynı katmanda; hangisinin kazanacağı üretilen CSS'in
+ * sırasına kalırdı. Her değer kendi dalında tam yazılıyor.
+ *
+ * Kenar boşluğu KABIN İŞİ. Sayfanın `main` alanı `px-4` taşımaya devam
+ * ediyor (formlar ve hesap eylemleri ekranın kenarına yapışmamalı);
+ * yüzey olması gereken liste onu `-mx-4` ile geri alıyor.
+ */
+export const YUZEY = {
+  /** Liste kabı: sayfanın yan boşluğunu telefonda geri alıyor. */
+  kap: '-mx-4 sm:mx-0',
+  /**
+   * Kartın kabuğu. Telefonda tek bir alt çizgi — hem kabuk hem komşudan
+   * ayıran 1 piksel o çizgi; `sm:` üstünde dört kenar ve köşe geri
+   * geliyor. Sıra önemli: Tailwind `sm:` kurallarını taban kuralların
+   * ARDINA yazıyor, `sm:border` böylece `border-b`yi eziyor.
+   */
+  kabuk: 'border-b border-gray-200 sm:rounded-2xl sm:border',
+  /**
+   * Liste SÜTUNU: telefonda baştan sona beyaz.
+   *
+   * Kartlar kenara yaslandıktan sonra geriye bloklar ARASINDAKİ boşluk
+   * kaldı — şeritle liste arasındaki 16 piksel, gri sayfa zeminini
+   * gösteren bir bant olarak okunuyordu. Boşluğu sıfırlamak yanlış
+   * olurdu: nefes payı gerçekten gerekiyor, sorun rengi.
+   *
+   * Sütun telefonda kendi beyaz zeminini taşıyor ve sayfanın yan
+   * boşluğunu `-mx-4 px-4` ile geri alıp geri veriyor: zemin ekranın
+   * iki kenarına yaslanıyor ama içerik yine 16 piksel içeriden
+   * başlıyor. `sm:` üstünde zemin saydamlaşıyor ve kartlar yine gri
+   * sayfada yüzen kutular oluyor.
+   */
+  kolon: 'bg-white -mx-4 px-4 sm:mx-0 sm:bg-transparent sm:px-0',
+  /** Kartın iç boşluğu — metinde 12–16 piksel. */
+  ic: 'px-4 py-3.5 sm:p-4.5',
+  /** Izgara hücrelerinde iç boşluk 10–12 piksel. */
+  icDar: 'px-3 py-2.5',
+} as const;
+
+/**
+ * KURUM / KATEGORİ ŞERİDİ — TELEFONDA KABUKSUZ
+ *
+ * Şerit yuvarlatılmış, çerçeveli beyaz bir kutunun içindeydi ve o kutu
+ * sayfanın yan boşluğunun da içinde duruyordu: 375 piksellik ekranda
+ * dairelere kalan yer 343 - 24 = 319 piksel. Yani beşinci daire hep
+ * yarım görünüyordu ve kaydırılacağı belli olmuyordu.
+ *
+ * Telefonda kabuk kalkıyor, şerit ekranın iki kenarına yaslanıyor ve
+ * dikey boşluğu 12'den 8 piksele iniyor. Halkalar, seçim durumu ve
+ * yatay kaydırma aynen duruyor — değişen yalnız kabuk.
+ *
+ * İki şerit de (şirket ve konu) buradan besleniyor; ayrı ayrı yazılınca
+ * biri ötekinden farklı bir yükseklikte kalıyordu.
+ */
+export const SERIT = {
+  kabuk: `border-b border-gray-200 bg-white py-2 sm:rounded-2xl sm:border sm:py-3 ${YUZEY.kap}`,
+  /**
+   * Kaydırma kabı: telefonda ilk daire ekranın kenarından 16 piksel
+   * içeride.
+   *
+   * `no-scrollbar`: şerit ekranın iki kenarına yaslanınca tarayıcının
+   * klasik kaydırma çubuğu şeridin altında bütün genişlik boyunca gri
+   * bir bant olarak duruyordu. Kaydırılabilirliğin işareti çubuk değil,
+   * kenardan yarım görünen daire — şerit zaten öyle tasarlandı. Üst
+   * çubuktaki alt menü de aynı sınıfı kullanıyor.
+   */
+  ic: 'relative overflow-x-auto px-4 no-scrollbar sm:px-3',
+} as const;

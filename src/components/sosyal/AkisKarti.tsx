@@ -1,5 +1,6 @@
 import React from 'react';
 import { Bookmark, Heart, Send } from 'lucide-react';
+import { YUZEY } from '../../ui/tokens';
 import { ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import {
   SOSYAL_PAYLASIM_KOVASI,
@@ -128,9 +129,15 @@ export const AkisKarti: React.FC<Props> = ({
   };
 
   return (
-    <article className="bg-white sm:rounded-2xl sm:border sm:border-gray-200">
+    /*
+      Kabuk ortak belirteçten: liste ekranlarındaki kartlarla AYNI —
+      telefonda köşesiz ve yalnız bir alt çizgi, `sm:` üstünde kart.
+      Akış tek yerde elle yazılınca ötekilerden farklı kalıyordu
+      (ayırıcı çizgisi yoktu, komşu paylaşımlar birbirine yapışıyordu).
+    */
+    <article className={`bg-white ${YUZEY.kabuk}`}>
       {/* -------------------------------------------------- yazar satırı */}
-      <header className="flex items-center gap-3 px-3 py-2.5 sm:px-4">
+      <header className="flex items-center gap-3 px-4 py-2.5">
         <button type="button" onClick={profilAc} className={`shrink-0 cursor-pointer rounded-full ${ODAK_HALKASI}`}>
           <ProfilFotografi
             ad={ad}
@@ -201,7 +208,10 @@ export const AkisKarti: React.FC<Props> = ({
       </div>
 
       {/* --------------------------------------------------- eylem satırı */}
-      <div className="flex items-center gap-1 px-1.5 pt-1 sm:px-2.5">
+      {/* `px-2.5`: düğmenin kendi 44 piksellik kutusu 6 piksel iç boşluk
+          taşıyor; ikonun görsel sol kenarı böylece yazıyla aynı 16
+          piksele oturuyor. */}
+      <div className="flex items-center gap-1 px-2.5 pt-1">
         <button
           type="button"
           onClick={begeniDegistir}
@@ -229,7 +239,7 @@ export const AkisKarti: React.FC<Props> = ({
       </div>
 
       {/* ------------------------------------------- sayı, açıklama, zaman */}
-      <div className="space-y-1 px-3 pb-4 sm:px-4">
+      <div className="space-y-1 px-4 pb-4">
         {/*
           Sıfır beğeni YAZILMIYOR. Sayı görünürlük kapısından geçiyor ve
           yetkisi olmayan çağırana sıfır satır dönüyor; "0 beğeni" yazmak
