@@ -233,6 +233,9 @@ const CompanyPortalView = React.lazy(() =>
 const SkillQuizzesView = React.lazy(() =>
   import('./components/SkillQuizzesView').then((m) => ({ default: m.SkillQuizzesView }))
 );
+const KayitliAramalar = React.lazy(() =>
+  import('./components/KayitliAramalar').then((m) => ({ default: m.KayitliAramalar }))
+);
 const KisiselTakipListesi = React.lazy(() =>
   import('./components/KisiselTakipListesi').then((m) => ({ default: m.KisiselTakipListesi }))
 );
@@ -2158,6 +2161,53 @@ export default function App() {
     </AdminRouteGate>;
   }
 
+  /*
+    BİLDİRİM AYARLARI
+
+    Kendi adresi var: günlük özet e-postası buraya bağlanıyor ve
+    bağlantı oturum açmadan da açılabilmeli (içerik oturum istiyor,
+    adres istemiyor). WhatsApp/SMS alanı YOK — olmayan bir kanalı
+    "yakında" diye göstermek vaat olurdu.
+  */
+  if (temizYol === '/ayarlar/bildirimler') {
+    return icerikSayfasi(
+      <div className="max-w-3xl mx-auto space-y-4">
+        <h1 className="text-lg font-extrabold tracking-tight text-gray-900 sm:text-xl">
+          Bildirim ayarları
+        </h1>
+        {session ? (
+          <>
+            <section className="space-y-2">
+              <h2 className="text-base font-bold text-gray-900">Kayıtlı aramalarım</h2>
+              <p className="text-xs text-gray-600">
+                Her arama için günlük e-posta özetini ayrı ayrı açıp kapatabilirsin. Özet
+                Türkiye saatiyle 09.00'da gönderiliyor ve yeni eşleşme yoksa e-posta
+                gitmiyor.
+              </p>
+              <React.Suspense
+                fallback={<div className="h-24 rounded-2xl bg-gray-100 animate-pulse" />}
+              >
+                <KayitliAramalar
+                  onToast={showToast}
+                  onNavigate={navigate}
+                  /*
+                    İŞVEREN HESABINA ÖĞRENCİ ÖZETİ AÇILMIYOR: bölüm
+                    yalnız öğrenci bağlamında çiziliyor.
+                  */
+                  ogrenciMi={Boolean(activeStudent)}
+                />
+              </React.Suspense>
+            </section>
+          </>
+        ) : (
+          <p className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-600">
+            Bildirim ayarlarını görmek için giriş yapman gerekiyor.
+          </p>
+        )}
+      </div>
+    );
+  }
+
   /* /ilan/frontend-stajyeri-3f2a1b9c */
   if (temizYol.startsWith('/ilan/')) {
     const onek = idPrefixFromSlug(temizYol.slice('/ilan/'.length));
@@ -2867,6 +2917,17 @@ export default function App() {
                 onNavigate={navigate}
                 onRequireLogin={handleOpenLogin}
                 countrySelection={globalListings.country}
+                onToast={showToast}
+                /*
+                  Giriş kapısı burada: kaydetme oturum istiyor ve dönüş
+                  yolu kullanıcının baktığı liste.
+                */
+                onAramaKaydetGirisi={() => {
+                  setAuthDonusYolu(window.location.pathname + window.location.search);
+                  setAuthModalMode('register');
+                  setIsAuthModalOpen(true);
+                  showToast('Aramayı kaydetmek için önce giriş yapman gerekiyor.');
+                }}
                 countryFacets={globalListings.page.facets.countries}
                 onCountryChange={globalListings.setCountry}
                 catalogTotal={globalListings.page.total}
