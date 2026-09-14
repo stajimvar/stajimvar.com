@@ -95,7 +95,7 @@ def detect_mandatory_staj(description: str | None) -> tuple[bool, str | None]:
 # listesiydi -- "Istanbul, Ankara, Antalya, Adana, Bursa ve Izmir
 # ofisleri". Yani Bursa'daki her ilan "ucretli" olarak isaretlenebilirdi.
 _UCRETLI = re.compile(
-    r"ucretli staj|maas|\bburs\b|burslu|bursiyer|stipend|yemek ve yol|paid internship"
+    r"ucretli staj|\bmaas\b|\bburs\b|burslu|bursiyer|stipend|yemek ve yol|paid internship"
 )
 _UCRETSIZ = re.compile(r"ucretsiz staj|unpaid")
 

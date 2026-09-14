@@ -48,6 +48,13 @@ const KURUMLAR = [
   { ad: 'Anadolu Grubu', kok: 'https://kariyer.anadolugrubu.com.tr', grup: 'holding' },
   { ad: 'Eczacıbaşı', kok: 'https://kariyer.eczacibasi.com.tr', grup: 'holding' },
   { ad: 'Zorlu Holding', kok: 'https://kariyer.zorlu.com', grup: 'holding' },
+  /*
+    OYAK ilk turda kurumsal kariyer sayfasindan yoklandi (HTTP 200,
+    okunabilir imza yok); ikinci turda listeden dusmustu ve denenen
+    kurum sayisi 17 iken 16 gorunuyordu. Kurum listesi DENENENLERIN
+    tamami olmali, yoksa rapordaki sayi koddan dogrulanamaz.
+  */
+  { ad: 'OYAK', kok: 'https://www.oyak.com.tr/tr/kariyer', grup: 'holding' },
   // Savunma
   { ad: 'ASELSAN', kok: 'https://kariyer.aselsan.com.tr', grup: 'savunma' },
   { ad: 'TUSAŞ', kok: 'https://kariyer.tusas.com', grup: 'savunma' },
@@ -145,6 +152,6 @@ for (const kurum of KURUMLAR) {
 const kullanilabilir = sonuclar.filter((s) => s.platform || s.jobPosting);
 const engelli = sonuclar.filter((s) => s.engel);
 console.log('');
-console.log(`yoklanan: ${sonuclar.length}`);
+console.log(`yoklanan kurum: ${sonuclar.length} (tekil: ${new Set(sonuclar.map((s) => s.ad)).size})`);
 console.log(`kullanılabilir imza: ${kullanilabilir.length} (${kullanilabilir.map((s) => s.ad).join(', ') || '—'})`);
 console.log(`engelli (bırakıldı): ${engelli.length} (${engelli.map((s) => s.ad).join(', ') || '—'})`);

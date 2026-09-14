@@ -139,23 +139,77 @@ function kapanmaSebebi(yanit, govde) {
  *     yazarken doğrulanan şey ilan değil, şirketin kariyer sayfasıydı.
  *   · KAPANMIŞ ilan `status='published'` ile yayına GERİ ALINIYORDU.
  *
- * İki kanıttan biri aranıyor:
- *   1. Sayfanın kendi JobPosting yapısal verisi — sayfa "burada bir iş
- *      ilanı var" diyor.
- *   2. İlanın başlığındaki ayırt edici kelimeler görünür metinde.
- *      Genel kariyer sayfası şirket adını taşır ama pozisyon başlığını
- *      taşımaz.
+ * ÜÇ KANIT, ÜÇÜ DE SAYFANIN KENDİSİ HAKKINDA:
+ *   1. schema.org JobPosting — sayfa "burada bir iş ilanı var" diyor.
+ *   2. Kanonik adres bizim ilan kimliğimizi taşıyor — sayfa "ben o
+ *      ilanım" diyor.
+ *   3. <h1> ana başlığı ilanın ayırt edici kelimelerini taşıyor.
  *
- * Kanıt yoksa sonuç 'belirsiz': kapalı demiyoruz, açık da demiyoruz.
+ * BAŞLIK ARTIK GÖRÜNÜR METNİN HER YERİNDE ARANMIYOR. Görünür metin
+ * menüyü, "önerilen ilanlar" şeridini, "geçmiş ilanlar" listesini ve
+ * genel ilan listesini de kapsıyor: kapanmış bir ilanın başlığı, onu
+ * hâlâ listeleyen bir sayfada geçebilir ve ilan yanlışlıkla "açık"
+ * damgası alırdı. <h1> sayfanın KENDİ konusu.
+ *
+ * Kanıt yoksa sonuç 'belirsiz': kapalı demiyoruz, açık da demiyoruz —
+ * ilan ne kapatılıyor ne yeniden açılıyor.
  */
-function acikKaniti(govde, baslik) {
+/** Sayfanin ANA basligi (ilk <h1>). Menu ve serit basliklari h1 degil. */
+function anaBaslik(govde) {
+  const m = govde.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+  return m ? gorunurMetin(m[1]) : '';
+}
+
+/** Sayfanin kendi beyan ettigi kanonik adres. */
+function kanonikAdres(govde) {
+  const m = govde.match(/<link[^>]+rel=["']canonical["'][^>]*>/i);
+  if (!m) return '';
+  const h = m[0].match(/href=["']([^"']+)["']/i);
+  return h ? h[1] : '';
+}
+
+/**
+ * ILAN KIMLIGI — adresin icindeki uzun, ayirt edici parca.
+ *
+ * Workday `.../job/.../R-12345`, Workable `.../j/ABCD1234EF`, Lever ve
+ * Greenhouse sayisal kimlik kullaniyor. Kalip bunlarin hepsini tek
+ * kurala indiriyor: adresin son parcalari icinde en az alti karakterli,
+ * icinde rakam gecen parca.
+ */
+function ilanKimligi(adres) {
+  const parcalar = String(adres || '').split(/[/?#]/).filter(Boolean);
+  for (const p of parcalar.reverse()) {
+    if (p.length >= 6 && /\d/.test(p) && /^[A-Za-z0-9._-]+$/.test(p)) return p;
+  }
+  return '';
+}
+
+function acikKaniti(govde, baslik, adres) {
   if (/"@type"\s*:\s*"JobPosting"/i.test(govde)) return 'sayfada JobPosting verisi';
 
   /*
-    Başlıktan ayırt edici kelimeler: üç harften uzun olanlar ve
-    "stajyer/intern" gibi her ilanda geçen genel kelimeler dışarıda.
-    Kalanların yarısı görünür metinde geçiyorsa sayfa bu ilanı
-    gösteriyor sayılıyor.
+    KANONİK ADRES BİZİM İLANI GÖSTERİYOR
+
+    Sayfa kendi kimliğini beyan ediyor. Kaynak ilanı kaldırıp adresi
+    genel kariyer sayfasına yönlendirdiğinde canonical O sayfayı
+    gösteriyor, bizim ilan kimliğimizi değil.
+  */
+  const kimlik = ilanKimligi(adres);
+  if (kimlik) {
+    const kanonik = kanonikAdres(govde);
+    if (kanonik && kanonik.includes(kimlik)) return `canonical ilan kimliğini taşıyor (${kimlik})`;
+  }
+
+  /*
+    BAŞLIK ANA BAŞLIKTA — GÖRÜNÜR METNİN HER YERİNDE DEĞİL
+
+    Önceki kural başlığın kelimelerini SAYFANIN TAMAMINDA arıyordu.
+    Görünür metin menüyü, "önerilen ilanlar" şeridini, "geçmiş
+    ilanlar" listesini ve genel ilan listesini de kapsıyor: kapanmış
+    bir ilanın başlığı, onu hâlâ listeleyen bir liste sayfasında
+    geçebilir ve ilan "açık" damgası alırdı.
+
+    <h1> sayfanın KENDİ konusu. Menü ve öneri şeritleri h1'de olmuyor.
   */
   const genel = /^(staj|stajyer|intern|internship|program|programi|programı|uzun|donem|dönem|yaz|kis|kış|ve|for|the)$/i;
   const kelimeler = gorunurMetin(baslik)
@@ -164,10 +218,16 @@ function acikKaniti(govde, baslik) {
     .filter((k) => k.length > 3 && !genel.test(k));
   if (kelimeler.length === 0) return null;
 
-  const metin = gorunurMetin(govde).toLowerCase();
-  const bulunan = kelimeler.filter((k) => metin.includes(k)).length;
-  return bulunan * 2 >= kelimeler.length
-    ? `başlık metinde (${bulunan}/${kelimeler.length})`
+  const h1 = anaBaslik(govde).toLowerCase();
+  if (!h1) return null;
+  const bulunan = kelimeler.filter((k) => h1.includes(k)).length;
+  /*
+    EŞİK YARIDAN ÜÇTE İKİYE ÇIKTI: h1 kısa bir metin, tesadüfi
+    eşleşme payı daha yüksek. "Yazılım Stajyeri" ile "Yazılım
+    Mimarı" arasındaki farkı kaybetmemek için çoğunluk yetmiyor.
+  */
+  return bulunan * 3 >= kelimeler.length * 2
+    ? `ana başlık ilanı gösteriyor (${bulunan}/${kelimeler.length})`
     : null;
 }
 
@@ -285,7 +345,7 @@ for (const ilan of ilanlar) {
         adresi genel kariyer sayfasına yönlendirdiğinde o sayfa da 200
         dönüyor; kapanma metni yok, ilan da yok.
       */
-      const kanit = acikKaniti(govde, ilan.title);
+      const kanit = acikKaniti(govde, ilan.title, adres);
 
       if (kanit) {
         acik++;
