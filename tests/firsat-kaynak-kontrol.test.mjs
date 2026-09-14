@@ -30,20 +30,43 @@ test('başka alan adına düşen kaynak "taşındı"; www ve alt alan aynı kuru
   assert.equal(ayniKurum.durum, 'ok');
 });
 
-test('geçici hata sayacı DEĞİŞTİRMİYOR; kapanma artırıyor; üçüncüde expired; ok sıfırlıyor', () => {
+test('geçici hata sayaca dokunmuyor; kesin kapanma ikide, taşınma üçte düşüyor; ok sıfırlıyor', () => {
+  /*
+    EŞİK DEĞİŞTİ — TEK 3 YERİNE İKİ AYRI EŞİK
+
+    Bu test "üçüncü art arda kapanmada expired" bekliyordu. Kontrol üç
+    günde bir koştuğu için o kural, KESİN kapanmış (404/410) bir fırsatı
+    dokuz gün aktif listede tutuyordu; canlıda iki kayıt 404 döndü ve
+    ikisi de `published` kaldı.
+
+    İşçi geçici ile kesini zaten ayırıyor (403/429/5xx sayaca hiç
+    girmiyor), yani sayaca giren şey baştan kesin bir sinyal:
+      closed 2 teyit · moved 3 teyit (yönlendirme geçici olabilir)
+  */
   const satir = { status: 'published', source_failure_count: 2 };
+
+  /* GEÇİCİ HATA: ne artırıyor ne sıfırlıyor, kapatmıyor. */
   const gecici = guncellemeyiHesapla(satir, { durum: 'transient_error' }, SIMDI);
   assert.equal(gecici.source_failure_count, undefined, 'GEÇİCİ HATA SAYACA DOKUNMAMALI');
   assert.equal(gecici.status, undefined, 'geçici hata kapatmamalı');
 
+  /* KESİN KAPANMA: ilk vuruş düşürmüyor, ikinci düşürüyor. */
+  const ilk = guncellemeyiHesapla({ status: 'published', source_failure_count: 0 }, { durum: 'closed' }, SIMDI);
+  assert.equal(ilk.source_failure_count, 1);
+  assert.equal(ilk.status, undefined, 'tek 404 düşürmemeli: dağıtım hatası olabilir');
+
   const ikinci = guncellemeyiHesapla({ status: 'published', source_failure_count: 1 }, { durum: 'closed' }, SIMDI);
   assert.equal(ikinci.source_failure_count, 2);
-  assert.equal(ikinci.status, undefined, 'iki vuruşta henüz kapanmamalı');
+  assert.equal(ikinci.status, 'expired', 'İKİNCİ TEYİTTE AKTİF LİSTEDEN ÇIKIYOR');
 
-  const ucuncu = guncellemeyiHesapla(satir, { durum: 'closed' }, SIMDI);
-  assert.equal(ucuncu.source_failure_count, 3);
-  assert.equal(ucuncu.status, 'expired', 'ÜÇÜNCÜ ART ARDA KAPANMADA EXPIRED');
+  /* TAŞINMA: yönlendirme geçici olabilir, üç teyit istiyor. */
+  const tasindiIki = guncellemeyiHesapla({ status: 'published', source_failure_count: 1 }, { durum: 'moved' }, SIMDI);
+  assert.equal(tasindiIki.status, undefined, 'taşınmada iki vuruş yetmiyor');
+  const tasindiUc = guncellemeyiHesapla(satir, { durum: 'moved' }, SIMDI);
+  assert.equal(tasindiUc.source_failure_count, 3);
+  assert.equal(tasindiUc.status, 'expired');
 
+  /* Kaynak toparlanırsa sayaç sıfırlanıyor ve doğrulama damgası düşüyor. */
   const toparlandi = guncellemeyiHesapla(satir, { durum: 'ok' }, SIMDI);
   assert.equal(toparlandi.source_failure_count, 0, 'ok sayacı sıfırlamalı');
   assert.equal(toparlandi.verified_at, SIMDI);
