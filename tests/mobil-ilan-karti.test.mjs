@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 
 /**
  * MOBİL İLAN KARTI — BİLGİ DOĞRULUĞU
@@ -143,39 +143,29 @@ test('kolon listesine eklenen her kolonun okuma yetkisi var', () => {
     "İlan yüklenemedi" gösterdi.
 
     `listings` tablosunda SELECT tablo düzeyinde DEĞİL, kolon kolon
-    veriliyor. Yetkisi olmayan tek bir kolonu istemek sorgunun
+    veriliyor. Yetkisi olmayan TEK bir kolonu istemek sorgunun
     TAMAMINI düşürüyor.
 
-    Bu test o bağı kuruyor: kolon listesindeki her yeni kolon için bir
-    `grant select` bulunmalı.
+    Bu test o bağı kuruyor. Göç adlarını elle eşlemiyor: dizini
+    tarıyor, yoksa yeni bir göç eklendiğinde test sessizce eksik
+    kalırdı. Regex de kullanmıyor — ilk hâlinde kaçış bozulmuş ve test
+    kendi kalıbında patlamıştı.
   */
-  const goc = ['20260905020000', '20260906010000', '20261001010000', '20261004010000']
-    .map((k) => {
-      try {
-        return readFileSync(
-          new URL(`../supabase/migrations/${k}_${
-            {
-              '20260905020000': 'ilan_kaynak_sagligi_sutunlari',
-              '20260906010000': 'ilan_kolon_yetkileri',
-              '20261001010000': 'ilan_veri_dogrulugu',
-              '20261004010000': 'yeni_ilan_kolon_yetkileri',
-            }[k]
-          }.sql`, import.meta.url),
-          'utf8'
-        );
-      } catch {
-        return '';
-      }
-    })
+  const dizin = new URL('../supabase/migrations/', import.meta.url);
+  const tumGocler = readdirSync(dizin)
+    .filter((ad) => ad.endsWith('.sql'))
+    .map((ad) => readFileSync(new URL(ad, dizin), 'utf8'))
     .join('\n');
 
-  /* Göç 20261001010000'ın eklediği üç kolonun yetkisi verilmiş olmalı. */
+  /* Göç 20261001010000'ın eklediği üç kolon. */
   for (const kolon of ['location_raw', 'insurance_provider', 'department_tags']) {
-    assert.ok(
-      new RegExp(`grant select \([^)]*${kolon}`).test(goc),
-      `${kolon} için grant select yok — bütün ilan sorgularını düşürür`
-    );
+    const yetkiliMi = tumGocler
+      .split('grant select (')
+      .slice(1)
+      .some((parca) => parca.slice(0, parca.indexOf(')')).includes(kolon));
+    assert.ok(yetkiliMi, `${kolon} icin grant select yok — butun ilan sorgularini dusurur`);
   }
+
   /* Kolon listesinde olan `insurance_provider` gerçekten yetkili. */
   assert.match(MAPPER, /'insurance_provider',/);
 });
