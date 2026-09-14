@@ -28,6 +28,7 @@ import requests
 
 from automation import repository
 from automation.country_normalization import infer_country_code
+from automation.promote import detect_paid
 from automation.kariyer_html import HamIlan, kariyer_sayfasini_oku
 from automation.radar_cozucu import sadelestir
 from automation.radar_cozum import eslesme_guveni
@@ -213,7 +214,11 @@ def _yayinla(db, aday: Aday, kaynak_id: str, sayac: Counter) -> Aday:
         "country_code": infer_country_code(location=aday.konum, title=aday.baslik),
         "mandatory_staj_accepted": False,
         "voluntary_staj_accepted": True,
-        "is_paid": False,
+        # ONCE SABIT False YAZIYORDU: kariyer sayfasindan derlenen ilanin
+        # ucret bilgisi hic BAKILMADAN "ucretsiz" kaydediliyordu. Bu
+        # adaptor aciklama metnini tasiyor, yani kanit elde var; kanit
+        # yoksa alan bos kaliyor.
+        "is_paid": detect_paid(aday.aciklama),
         "description": aday.aciklama[:12000],
         "status": "published",
         "origin": "scraped",

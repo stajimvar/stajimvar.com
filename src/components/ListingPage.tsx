@@ -130,9 +130,24 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     biçimleniyor, ham ISO basılmıyor.
   */
   const sonBasvuru = tarihMetni(listing?.applicationDeadline);
-  const ucretMetni = listing?.stipend?.isPaid
-    ? listing.stipend.amountText?.trim() || 'Ücretli'
-    : null;
+  /*
+    UC DEGER, UC CEVAP
+
+      true  -> tutar varsa tutar, yoksa "Ucretli"
+      false -> "Ucretsiz"  (kaynagin ACIK beyani; goc 20261001010000'dan
+               beri bu deger yalnizca kanitla yaziliyor)
+      null  -> kutu hic cizilmiyor
+
+    Onceden sutun `not null default false` idi: false hem "ucretsiz" hem
+    "kaynak soylemiyor" demekti ve ikisi ayrilamadigi icin yalniz pozitif
+    bilgi gosteriliyordu. Artik ayrim veride var.
+  */
+  const ucretMetni =
+    listing?.stipend?.isPaid === true
+      ? listing.stipend.amountText?.trim() || 'Ücretli'
+      : listing?.stipend?.isPaid === false
+        ? 'Ücretsiz'
+        : null;
   const zorunluStajMetni = listing?.mandatoryStajAccepted
     ? 'Kabul ediliyor'
     : listing?.insuranceNote?.trim() || null;
@@ -321,10 +336,9 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                   ızgarada iki delik açıyor ve okuyucuya hiçbir şey
                   söylemiyordu. Eksik bilgi artık aşağıda TEK bir notta.
 
-                  `isPaid === false` gerçek bir bilgi olsaydı ("ücretsiz")
-                  yazılırdı; ama veri modelinde false hem "ücretsiz" hem
-                  "bilinmiyor" anlamına geliyor ve ikisi ayrılamıyor. Bu
-                  yüzden yalnız POZİTİF bilgi gösteriliyor: uydurmuyoruz.
+                  `isPaid` ÜÇ DEĞERLİ (göç 20261001010000): false artık
+                  kaynağın açık beyanı ve "Ücretsiz" yazılıyor. Bilinmeyen
+                  `null` ve kutu hiç çizilmiyor — uydurmuyoruz.
                 */}
                 {ucretMetni && (
                   <Bilgi
