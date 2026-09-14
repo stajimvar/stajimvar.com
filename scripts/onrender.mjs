@@ -665,7 +665,13 @@ async function firsatlariGetir() {
   */
   const secim =
     'slug,title,organization_name,short_description,application_deadline,updated_at,status,' +
-    'opportunity_type,amount_status,amount_text';
+    /*
+      `countries`: /yurtdisi-firsatlari kapısının bölge süzgeci bu alanı
+      okuyor (`yurtDisiFirsatMi`). Taşınmadığında süzgeç hiçbir kaydı
+      geçirmiyor ve sayfa boş çiziliyor — `opportunity_type` ile birebir
+      aynı hata, iki kez yaşandı.
+    */
+    'opportunity_type,amount_status,amount_text,countries';
   const istek = `${urlAdres}/rest/v1/opportunities?status=eq.published&select=${encodeURIComponent(secim)}`;
   const yanit = await fetch(istek, { headers: { apikey: anahtar, Authorization: `Bearer ${anahtar}` } });
   if (!yanit.ok) { console.log(`  fırsatlar alınamadı: HTTP ${yanit.status}`); return []; }
@@ -1262,7 +1268,7 @@ async function main() {
     geçemiyordu.
   */
   const firsatlar = await firsatlariGetir();
-  const { firsatKategorisi } = await icerikDerle(
+  const { firsatKategorisi, yurtDisiFirsatMi } = await icerikDerle(
     path.join(kok, 'src', 'lib', 'firsat-kategori.mjs'),
     'firsat-kategori'
   );
@@ -1303,10 +1309,19 @@ async function main() {
    * 104'ünde NULL. Doğrulanmamış bir sınıflandırmayı yazmak, öğrenciye
    * geri ödemesiz sandığı bir krediyi önermek olabilirdi.
    */
-  const firsatListesi = (kategori, tur = null) => {
+  const firsatListesi = (kategori, tur = null, bolge = null) => {
     const kayitlar = firsatlar
       /* Sayfası üretilmeyen kayda bağlantı verilmiyor: 404'e giden iç bağlantı olmaz. */
       .filter(firsatSayfasiVar)
+      /*
+        BÖLGE SÜZGECİ /yurtdisi-firsatlari İÇİN
+
+        Ölçüt arayüzle AYNI fonksiyondan (`yurtDisiFirsatMi`): ülke
+        alanında Türkiye dışı bir ülke var mı. "Ülke alanı boş =
+        Türkiye" bir varsayım olurdu; boş alanlı kayıt yurt dışı
+        tarafına KOYULMUYOR, hakkında bir iddia da taşınmıyor.
+      */
+      .filter((f) => (bolge === 'yurtdisi' ? yurtDisiFirsatMi(f) : true))
       .filter((f) => (kategori ? firsatKategorisi(f.opportunity_type) === kategori : true))
       /*
         TÜR SÜZGECİ /kyk İÇİN: o sayfa "burslar" kategorisinin içinde
@@ -1451,6 +1466,7 @@ async function main() {
     '/burslar': firsatListesi('burslar'),
     '/yarismalar': firsatListesi('yarismalar'),
     '/kyk': firsatListesi('burslar', 'kyk'),
+    '/yurtdisi-firsatlari': firsatListesi('programlar', null, 'yurtdisi'),
     '/isveren': isverenSssHtml,
     '/rehber': merkezListeleri.rehberler,
     '/bolumler': merkezListeleri.bolumler,

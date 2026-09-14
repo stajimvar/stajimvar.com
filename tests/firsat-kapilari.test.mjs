@@ -36,6 +36,7 @@ test('kategori kapıları gerçek kayıtlara bağlanıyor', () => {
   for (const [ad, enAz] of [
     ['firsatlar', 40],
     ['burslar', 20],
+    ['yurtdisi-firsatlari', 20],
     ['kyk', 1],
     ['yarismalar', 1],
   ]) {
@@ -85,7 +86,7 @@ test('kategori kuralı PAYLAŞILAN modülden; ikinci tablo yok', () => {
     kayıt gösterebilirdi.
   */
   const betik = oku('scripts/onrender.mjs');
-  assert.match(betik, /const \{ firsatKategorisi \} = await icerikDerle\(/);
+  assert.match(betik, /const \{ firsatKategorisi, yurtDisiFirsatMi \} = await icerikDerle\(/);
   assert.match(betik, /'firsat-kategori'/);
   /* /kyk'nin tür süzgeci arayüzdekiyle aynı alanı karşılaştırıyor. */
   assert.match(betik, /f\.opportunity_type === tur/);
@@ -97,5 +98,37 @@ test('kategori kuralı PAYLAŞILAN modülden; ikinci tablo yok', () => {
     `firsatKategorisi(undefined)` bilinmeyen türü 'programlar'a
     düşürüyor, yani hiçbir kayıt 'burslar' süzgecine uymuyordu.
   */
-  assert.match(betik, /'opportunity_type,amount_status,amount_text'/);
+  assert.match(betik, /'opportunity_type,amount_status,amount_text,countries'/);
+});
+
+test('BÖLGE SÜZGECİ ARAYÜZLE AYNI FONKSİYONDAN', () => {
+  /*
+    Kural `OpportunitiesPage.tsx` içinde yaşıyordu ve ön render de
+    /yurtdisi-firsatlari kapısını basmak için aynı ölçütü kullanmak
+    zorunda. İki kopya olsaydı ekranda yurt dışı sayılan bir kayıt
+    statik HTML'de sayılmayabilirdi.
+  */
+  const kural = oku('src/lib/firsat-kategori.mjs');
+  assert.match(kural, /export function yurtDisiFirsatMi\(item\)/);
+
+  const sayfa = oku('src/components/OpportunitiesPage.tsx');
+  assert.match(sayfa, /const yurtDisiMi = \(item: Opportunity\) => yurtDisiFirsatMi\(item\);/);
+  assert.match(sayfa, /yurtDisiFirsatMi,/);
+
+  const betik = oku('scripts/onrender.mjs');
+  assert.match(betik, /const \{ firsatKategorisi, yurtDisiFirsatMi \} = await icerikDerle\(/);
+  assert.match(betik, /bolge === 'yurtdisi' \? yurtDisiFirsatMi\(f\) : true/);
+
+  /*
+    "ÜLKE ALANI BOŞ = TÜRKİYE" BİR VARSAYIM OLURDU: boş alanlı kayıt
+    yurt dışı tarafına konmuyor, hakkında bir iddia da taşınmıyor.
+  */
+  assert.match(kural, /ad !== '' && ad !== 'türkiye' && ad !== 'turkey' && ad !== 'tr'/);
+
+  /*
+    SEÇİM `countries` TAŞIMAK ZORUNDA. Taşımadığında süzgeç hiçbir
+    kaydı geçirmiyor ve sayfa boş çiziliyor — `opportunity_type` ile
+    birebir aynı hata, iki kez yaşandı.
+  */
+  assert.match(betik, /amount_text,countries'/);
 });

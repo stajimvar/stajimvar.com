@@ -151,3 +151,28 @@ export function firsatRozetleri(item, { fit = null, saklanan = 'published', simd
 
   return rozetler;
 }
+
+/*
+  BÖLGE SÜZGECİ — ÖLÇÜT DAR VE AÇIK
+
+  Kural `OpportunitiesPage.tsx` içinde yaşıyordu; ön render de
+  /yurtdisi-firsatlari kapısını basmak için aynı ölçütü kullanmak
+  zorunda. İkinci bir kopya yazmak, iki tanımın zamanla ayrışması
+  demekti: ekranda yurt dışı sayılan bir kayıt statik HTML'de
+  sayılmayabilirdi. Kural bu yüzden buraya, kategori tablosunun yanına
+  taşındı — iki taraf da aynı fonksiyonu çağırıyor.
+
+  "ÜLKE ALANI BOŞ = TÜRKİYE" BİR VARSAYIM OLURDU: süzgeç boş alanlı
+  kayıtlar hakkında bir iddia taşımıyor, onları yalnızca "yurt dışı"
+  tarafına KOYMUYOR.
+*/
+const kucult = (metin) => String(metin ?? '').toLocaleLowerCase('tr-TR');
+
+/** Kayıt yurt dışına mı işaret ediyor: ülke alanında Türkiye dışı bir ülke var mı. */
+export function yurtDisiFirsatMi(item) {
+  const ulkeler = item?.countries ?? item?.ulkeler ?? [];
+  return (Array.isArray(ulkeler) ? ulkeler : []).some((ulke) => {
+    const ad = kucult(ulke);
+    return ad !== '' && ad !== 'türkiye' && ad !== 'turkey' && ad !== 'tr';
+  });
+}
