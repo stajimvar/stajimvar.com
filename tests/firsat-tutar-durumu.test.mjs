@@ -391,3 +391,24 @@ test('arka arkaya kapanan kayıt göçle geri değerlendiriliyor', () => {
   /* Kayıt "açık" ilan EDİLMİYOR: doğrulama damgası atılmıyor. */
   assert.ok(!/set[\s\S]{0,200}verified_at = now\(\)/.test(GOC), 'verified_at elle atılmamalı');
 });
+
+test('DETAY SAYFASI da "açıklanmadı" demiyor', () => {
+  /*
+    Bir tur önce `TUTAR_METNI` içindeki ifadeyi düzelttim ama detay
+    sayfası KENDİ sabit dizesini taşıyordu ("Resmî kaynakta
+    açıklanmadı") ve değişmemişti — canlıda ölçünce ortaya çıktı.
+    Metin artık tek kaynaktan geliyor.
+  */
+  /*
+    YORUMSUZ KODA bakıyor: dosyada eski ifadenin NEDEN kaldırıldığını
+    anlatan bir yorum var ve düz arama onu da yakalıyordu — bu denetim
+    bir kez o yüzden kırmızı döndü.
+  */
+  const DETAY = oku('src/components/OpportunityDetailPage.tsx')
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ');
+  assert.ok(!/Resmî kaynakta açıklanmadı/.test(DETAY), 'kurum adına beyan kalmamalı');
+  assert.match(DETAY, /\{tutar\.satir \?\? 'Tutar doğrulanamadı'\}/);
+  /* Doğrulanmış tutar dalı bozulmadı. */
+  assert.match(DETAY, /<span className="font-bold">\{tutar\.metin\}<\/span>/);
+});

@@ -493,9 +493,26 @@ export const OpportunityDetailPage: React.FC<{
             yılın rakamını bu yılınmış gibi sunmak, hiç göstermemekten
             kötü.
           */}
+          {/*
+            "AÇIKLANMADI" DEĞİL "DOĞRULANAMADI"
+
+            Burada sabit "Resmî kaynakta açıklanmadı" yazıyordu ve bu
+            KURUM ADINA bir beyan: "kurum tutarı açıklamadı". Bildiğimiz
+            tek şey BİZİM okuduğumuz sayfada rakam görmediğimiz — rakam
+            bir PDF'te, giriş arkasında ya da ayrıştırıcının atladığı bir
+            tabloda olabilir.
+
+            Aynı düzeltmeyi bir tur önce `TUTAR_METNI` içinde yapmıştım
+            ama bu satır kendi dizesini taşıdığı için değişmemişti;
+            canlıda ölçünce ortaya çıktı. Metin artık tek kaynaktan
+            (`opportunityAmount`) geliyor.
+
+            `satir` null olan durum (hiç bakılmamış ya da kararsız) için
+            de aynı cümle doğru: doğrulayamadık.
+          */}
           {tutar.bilinmiyor ? (
             <>
-              Resmî kaynakta açıklanmadı
+              {tutar.satir ?? 'Tutar doğrulanamadı'}
               {tutar.geriOdeme && <span className="font-semibold"> · {tutar.geriOdeme}</span>}
             </>
           ) : (
