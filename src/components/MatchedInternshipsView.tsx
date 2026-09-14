@@ -464,10 +464,23 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         country: countrySelection,
         city: selectedCity === 'diger' ? 'all' : selectedCity,
         workTypes,
+        /* Şirket ve tarih aralığı artık KAYDEDİLİYOR: ikisinin de
+           kalıcı arama anlamı var ve listede uygulanıyorlar. */
+        companies: selectedCompanies,
+        postedWithinDays: dateRange === 'all' ? null : Number(dateRange),
         pay: onlyPaid ? 'paid' : 'all',
         mandatory: onlyMandatory,
       }),
-    [searchQuery, countrySelection, selectedCity, workTypes, onlyPaid, onlyMandatory]
+    [
+      searchQuery,
+      countrySelection,
+      selectedCity,
+      workTypes,
+      selectedCompanies,
+      dateRange,
+      onlyPaid,
+      onlyMandatory,
+    ]
   );
 
   const gecer = React.useCallback(
@@ -487,6 +500,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         ...(atla === 'bicim' ? { workTypes: [] } : {}),
         ...(atla === 'ucretli' ? { pay: 'all' } : {}),
         ...(atla === 'zorunlu' ? { mandatory: false } : {}),
+        ...(atla === 'sirket' ? { companies: [] } : {}),
+        ...(atla === 'tarih' ? { postedWithinDays: null } : {}),
       });
       if (!aramaEslesiyorMu(ilaniNormalize(listing), paylasilan)) return false;
 
@@ -501,15 +516,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         return false;
       }
 
-      if (atla !== 'sirket' && selectedCompanies.length > 0 && !selectedCompanies.includes(listing.companyName)) {
-        return false;
-      }
-
-      if (atla !== 'tarih' && dateRange !== 'all') {
-        const eklenme = eklenmeZamani(listing.postedAt);
-        if (!eklenme) return false;
-        if (Date.now() - eklenme > Number(dateRange) * 86400000) return false;
-      }
+      /* Şirket ve tarih aralığı YUKARIDA kanonik modülde. */
 
       /* Zorunlu staj ve ucret kosullari YUKARIDA kanonik modulde. */
       if (atla !== 'uyum' && match.overallScore < minMatchScore) return false;
