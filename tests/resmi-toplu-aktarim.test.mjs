@@ -109,7 +109,8 @@ function sahteDb({ mevcut = null, yuklemeHatasi = null } = {}) {
   };
 }
 
-const SET = setleriOku().find((s) => s.kod === 'nasil-calisir');
+const SET = setleriOku().find((s) => (s.kartlar ?? []).length > 0);
+assert.ok(SET, 'aktarımı sınamak için en az bir görselli paylaşım seti bulunmalı');
 const YAZAR = '00000000-0000-4000-8000-000000000001';
 
 /* ------------------------------------------------------------ kararlar */
