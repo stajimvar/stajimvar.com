@@ -1600,6 +1600,38 @@ async function main() {
     const ozet = sehirEki ? `${sehirEki}. ${ozetGovde}` : ozetGovde;
 
     /*
+      SÜRESİ GEÇMİŞ İLAN GÖRÜNÜR SAYFADA DA KAPANMIŞ
+
+      Ölçüldü (14 Eylül 2026): "KEY+ Uzun Dönem Staj Programı" son
+      başvurusu 2026-09-06, sekiz gün geçmiş, hâlâ `status = published`.
+      Yapısal veri `validThrough` ile Google'a "kapandı" diyordu ama
+      GÖRÜNÜR sayfada kapanışa dair tek kelime yoktu ve adres site
+      haritasında bildiriliyordu. İşaretleme "kapandı", sayfa ve harita
+      "açık" diyordu.
+
+      Sayfa 404 YAPILMIYOR: kapanmış bir ilanın sayfasının kalması hem
+      Google'ın istediği hem de kullanıcıya yararlı (programın varlığı,
+      şirket, tarih). Eksik olan şey, kapandığının SÖYLENMESİYDİ.
+
+      Tarih ham dizeden biçimlendiriliyor; gerekçesi fırsat
+      listelerindeki aynı kararla bir (saatsiz tarih + UTC batısı).
+    */
+    const sonBasvuruHam = String(i.application_deadline || '').slice(0, 10);
+    const sonBasvuruParca = sonBasvuruHam.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const suresiGecti = Boolean(
+      sonBasvuruParca && new Date(`${sonBasvuruHam}T23:59:59Z`).getTime() < Date.now()
+    );
+    const AYLAR_ILAN = [
+      'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+    ];
+    const kapanisNotu =
+      suresiGecti && sonBasvuruParca
+        ? `Başvuru dönemi kapandı. Son başvuru: ${Number(sonBasvuruParca[3])} ` +
+          `${AYLAR_ILAN[Number(sonBasvuruParca[2]) - 1]} ${sonBasvuruParca[1]}.`
+        : '';
+
+    /*
       JobPosting — Google for Jobs uygunluğu.
 
       DİKKAT: uydurma alan yazılmıyor. `validThrough` ancak veritabanında
@@ -1635,14 +1667,40 @@ async function main() {
         ...(guvenliDisAdres(sirket.website_url) ? { sameAs: guvenliDisAdres(sirket.website_url) } : {}),
         ...(guvenliDisAdres(sirket.logo_url) ? { logo: guvenliDisAdres(sirket.logo_url) } : {}),
       },
-      jobLocation: {
-        '@type': 'Place',
-        address: {
-          '@type': 'PostalAddress',
-          ...(i.city ? { addressLocality: i.city } : {}),
-          addressCountry: 'TR',
-        },
-      },
+      /*
+        İÇİ BOŞ `jobLocation` BASILMIYOR
+
+        Şehri olmayan ilanlarda şöyle bir blok çıkıyordu (ölçüldü,
+        159 sayfanın 7'si):
+
+          {"@type":"Place","address":{"@type":"PostalAddress","addressCountry":"TR"}}
+
+        Yani "bir yer var" diyor ama yerin kendisini söylemiyor: yerel
+        bilgi yok, uzaktan işareti de yok. Şehir uydurmak yerine alan
+        hiç yazılmıyor.
+
+        Üç hâl, üçü ayrı:
+          şehir var                  Place + addressLocality
+          şehir yok, çalışma uzaktan TELECOMMUTE (aşağıda) — yer
+                                     gerekmiyor, Google bunu kabul ediyor
+          şehir yok, yerinde/hibrit  alan HİÇ YAZILMIYOR
+
+        TAKAS AÇIK: üçüncü hâldeki ilanlar iş zengin sonucuna
+        giremeyebilir. Eksik alanla da giremiyorlardı; fark, artık
+        söylemediğimiz bir şeyi söylüyormuş gibi yapmıyoruz.
+      */
+      ...(i.city
+        ? {
+            jobLocation: {
+              '@type': 'Place',
+              address: {
+                '@type': 'PostalAddress',
+                addressLocality: i.city,
+                addressCountry: 'TR',
+              },
+            },
+          }
+        : {}),
       ...(i.application_deadline ? { validThrough: i.application_deadline } : {}),
       ...(i.work_type === 'Remote' ? { jobLocationType: 'TELECOMMUTE' } : {}),
     };
@@ -1654,17 +1712,30 @@ async function main() {
       altMetin: [sirket.name, i.city ? konumEtiketi(i.city) : ''].filter(Boolean).join(' · '),
     });
 
+    /*
+      Süresi geçmiş ilan haritaya girmiyor; sayfası duruyor ve görünür
+      metninde kapandığı yazıyor. `sitemap.py` de aynı kuralı uyguluyor,
+      burası dağıtılan kopyayı tutarlı tutuyor.
+    */
+    if (suresiGecti) HARITADAN_DISLANAN.add(yol);
+
     sayfaYaz(yol, {
       gorsel: `/og/ilan-${onek}.png`,
       baslik: `${i.title}${sehirEki ? ` (${sehirEki})` : ''}${sirket.name ? ' — ' + sirket.name : ''} | StajımVar`,
       aciklama: ozet,
       govde: govde(
         i.title,
-        ozet,
+        /*
+          Kapanış notu açıklamanın BAŞINA giriyor: arama sonucundan
+          gelen kişi ilk cümlede durumu görüyor, sayfayı okuyup en
+          sonda öğrenmiyor.
+        */
+        kapanisNotu ? `${kapanisNotu} ${ozet}` : ozet,
         [
           sirket.name && `Şirket: ${sirket.name}`,
           i.city && `Şehir: ${konumEtiketi(i.city)}`,
           i.work_type && `Çalışma şekli: ${i.work_type}`,
+          kapanisNotu && 'Durum: başvuru dönemi kapandı',
         ].filter(Boolean)
       ),
       jsonLd,
@@ -2208,6 +2279,17 @@ async function main() {
  * `public/sitemap.xml` DEĞİŞTİRİLMİYOR — o dosya saatlik işin çıktısı.
  * Düzeltme yalnızca dağıtılan kopyada.
  */
+/*
+  SAYFASI VAR AMA HARİTADA OLMAMASI GEREKEN ADRESLER
+
+  Süresi geçmiş ilanın sayfası KALIYOR (Google kapanmış ilanın sayfasının
+  durmasını istiyor ve kullanıcıya da yararlı) ama arama motoruna "bunu
+  tara" demenin anlamı yok. Uzlaştırma yazılan her `/ilan/` adresini
+  haritaya eklediği için, `sitemap.py` onu çıkarsa bile geri koyardı —
+  iki üretici birbirinin işini bozardı.
+*/
+const HARITADAN_DISLANAN = new Set();
+
 function siteHaritasiniUzlastir() {
   const harita = path.join(dist, 'sitemap.xml');
   if (!fs.existsSync(harita)) {
@@ -2235,7 +2317,9 @@ function siteHaritasiniUzlastir() {
   const AILELER = ['/ilan/', '/sirket/', '/bolum/', '/rehber/', '/firsatlar/', '/kesfet/'];
   const aileninMi = (yol) => AILELER.some((a) => yol.startsWith(a));
 
-  const bizim = new Set([...YAZILAN_ADRESLER].filter(aileninMi));
+  const bizim = new Set(
+    [...YAZILAN_ADRESLER].filter((y) => aileninMi(y) && !HARITADAN_DISLANAN.has(y))
+  );
 
   let xml = fs.readFileSync(harita, 'utf8');
 

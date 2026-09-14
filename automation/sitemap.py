@@ -146,7 +146,12 @@ def main() -> None:
 
     ilanlar = (
         db.table("listings")
-        .select("id,title,updated_at,companies(slug)")
+        # `application_deadline` SECIMDE OLMAK ZORUNDA: asagidaki
+        # `ilan_acik` suzgeci onu okuyor. Tasinmadiginda suzgec her kaydi
+        # "acik" sayiyor ve suresi gecmis ilan yine haritaya giriyor.
+        # Ayni sinifta hata bu iste UC KEZ yasandi (opportunity_type,
+        # countries, application_deadline).
+        .select("id,title,updated_at,application_deadline,companies(slug)")
         .eq("status", "published")
         .execute()
         .data
@@ -192,7 +197,35 @@ def main() -> None:
         )
 
     sirketler: set[str] = set()
+    # SURESI GECMIS ILAN HARITADA DEGIL
+    #
+    # Firsatlarda bu kural zaten vardi (`application_deadline.gte.now`),
+    # ilanlarda YOKTU. Olculdu (14 Eylul 2026): "KEY+ Uzun Donem Staj
+    # Programi" son basvurusu 2026-09-06, sekiz gun gecmis, hala
+    # status=published ve adresi haritada bildiriliyordu. Yapisal veri
+    # `validThrough` ile Google'a "kapandi" derken harita "bunu tara"
+    # diyordu -- celiskili sinyal.
+    #
+    # Sayfa SILINMIYOR: kapanmis ilanin sayfasi duruyor ve gorunur
+    # metninde kapandigi yaziyor (bkz. scripts/onrender.mjs). Degisen
+    # tek sey, arama motorunu ona yonlendirmemek.
+    simdi_ilan = datetime.now(UTC)
+
+    def ilan_acik(kayit: dict) -> bool:
+        son = kayit.get("application_deadline")
+        if not son:
+            return True
+        try:
+            bitis = datetime.fromisoformat(str(son).replace("Z", "+00:00"))
+        except ValueError:
+            return True
+        if bitis.tzinfo is None:
+            bitis = bitis.replace(tzinfo=UTC)
+        return bitis >= simdi_ilan
+
     for ilan in ilanlar:
+        if not ilan_acik(ilan):
+            continue
         onek = ilan["id"].split("-")[0]
         yol = f"/ilan/{slugla(ilan['title'])}-{onek}"
         tarih = (ilan.get("updated_at") or "")[:10]
