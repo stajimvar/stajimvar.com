@@ -162,8 +162,16 @@ export const IlanFormu: React.FC<{
   /* Aday kartlarının açılması doğrulanmış şirkete bağlı; başvurunun
      nereye geldiğine değil. Form bunu ilan verilirken söylüyor. */
   const adayKimligiAcik = Number(kademe) >= 2;
-  const baslangicDurumu = ilanBaslangicDurumu({ kademe, siteUrl, eposta });
-  const yayindaBaslar = baslangicDurumu === 'published';
+  const baslangicDurumu = ilanBaslangicDurumu({ kademe });
+  /*
+    YAYINDA BAŞLAYAN İLAN YOK
+
+    Eskiden doğrulanmış şirkette ya da alan adı eşleşmesinde ilan
+    doğrudan yayına çıkıyordu. Artık istisnasız taslak: yayına alma
+    yalnızca yöneticide ve aynı kural veritabanında da zorlanıyor.
+    `siteUrl`/`eposta` prop'ları imzada kalıyor — şirket profili
+    eksiksizliğini gösteren başka yerler onları kullanıyor.
+  */
   const bayraklar = ilanBayraklari(deger.aciklama);
 
   const gonder = async () => {
@@ -179,7 +187,7 @@ export const IlanFormu: React.FC<{
       const satir = ilanSatiri(deger, { companyId: '', durum: baslangicDurumu });
       const kayit = await onKaydet(satir);
       if (!kayit) throw new Error('İlan kaydedilemedi.');
-      setSonuc({ id: kayit.id, yayinda: yayindaBaslar });
+      setSonuc({ id: kayit.id, yayinda: false });
       setDurum('bitti');
     } catch (e) {
       setHata(e instanceof Error ? e.message : 'İlan kaydedilemedi.');
@@ -193,12 +201,22 @@ export const IlanFormu: React.FC<{
       <div className={`space-y-4 ${KUTU}`} style={kutuStil}>
         <p className="flex items-center gap-2 text-lg font-extrabold" style={{ color: SIRKET_METIN }}>
           <Check className="h-5 w-5" style={{ color: SIRKET_VURGU_KOYU }} />
-          {sonuc.yayinda ? 'İlan canlı' : 'İlan taslak olarak kaydedildi'}
+          İlan incelemeye gönderildi
         </p>
         <p className="text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
-          {sonuc.yayinda
-            ? 'İlan öğrenci listesinde görünüyor. Bağlantıyı paylaşabilirsin.'
-            : 'Kurumsal e-posta alan adın site adresinle eşleşmediği için ilan önce bizde inceleniyor. Genellikle bir iş günü içinde yayına alıyoruz; sonucu e-postayla yazacağız.'}
+          {/*
+            TEK CÜMLE, TEK GERÇEK
+
+            Burada iki dal vardı ve biri "İlan canlı · öğrenci
+            listesinde görünüyor" diyordu. O dal artık hiç
+            çalışmıyor: yayına alma yalnızca yöneticide. İki dalı
+            bırakmak, çalışmayan bir yolu ekranda tutmak olurdu.
+          */}
+          Her ilan yayına alınmadan önce bizde inceleniyor — şirketin
+          doğrulanmış olması bu adımı atlatmıyor. Genellikle bir iş günü
+          içinde sonuçlandırıyoruz. Sonucu şirket panelinde göreceksin:
+          onaylanırsa ilan yayına çıkar, reddedilirse taslakta kalır ve
+          nedeni ilanın altına yazılır.
         </p>
 
         {sonuc.yayinda && (
@@ -268,9 +286,7 @@ export const IlanFormu: React.FC<{
           {duzenlenenId
             ? /* Düzenleme durumu değiştirmiyor; yayınla/kapat ayrı eylem. */
               'Değişiklikler kaydedilir; ilanın yayın durumu aynı kalır'
-            : yayindaBaslar
-              ? 'Yayınla dediğinde canlıya çıkar'
-              : 'Yayınla dediğinde incelemeye gider'}
+            : 'Gönderdiğinde incelemeye gider; onaylanınca yayına çıkar'}
         </p>
       </div>
 
@@ -440,9 +456,7 @@ export const IlanFormu: React.FC<{
             ? 'Kaydediliyor…'
             : duzenlenenId
               ? 'Değişiklikleri kaydet'
-              : yayindaBaslar
-                ? 'Yayınla'
-                : 'İncelemeye gönder'}
+              : 'İncelemeye gönder'}
         </button>
         <button
           type="button"

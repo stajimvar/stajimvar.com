@@ -60,7 +60,15 @@ select
   '00000000-0000-4000-8000-00000000000b'::uuid as b,
   '00000000-0000-4000-8000-00000000000c'::uuid as c,
   '00000000-0000-4000-8000-00000000000d'::uuid as d,
-  '00000000-0000-4000-8000-00000000000e'::uuid as e;
+  '00000000-0000-4000-8000-00000000000e'::uuid as e,
+  -- YONETICI KIMLIGI
+  --
+  -- Fiksturde hic yonetici yoktu: a/b/d sirket, c/e ogrenci. Ilan
+  -- onayi artik YALNIZ yoneticide oldugu icin akisin ortasinda bir
+  -- yonetici gerekiyor. Ayri bir kimlik: mevcut birinin rolunu
+  -- degistirmek, yukaridaki yetki yukselmesi testlerinin varsaydigi
+  -- durumu bozardi.
+  '00000000-0000-4000-8000-00000000000f'::uuid as f;
 
 -- `authenticated` rolüne geçildikten sonra da okunabilmeli.
 grant select on k to authenticated;
@@ -92,6 +100,7 @@ union all select b, 'b@test-b.com', 'company'::user_role from k
 union all select c, 'c@ogrenci.test', 'student'::user_role from k
 union all select d, 'd@test-d.com', 'company'::user_role from k
 union all select e, 'e@ogrenci.test', 'student'::user_role from k
+union all select f, 'f@yonetim.test', 'admin'::user_role from k
 on conflict (id) do update set role = excluded.role;
 
 insert into public.student_profiles (id, university, department, is_open_to_offers)
@@ -664,15 +673,56 @@ select pg_temp.bekle(
     where id = '11111111-aaaa-4000-8000-000000000001'::uuid),
   'Kurulum: A yeniden dogrulanmis durumda');
 
-select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+-- KURAL DEGISTI: SIRKET KENDI TASLAGINI YAYINA ALAMAZ
+--
+-- Bu blok eskiden "A, kendi taslagini yayina alabilir" bekliyordu ve
+-- geciyordu: guard_listing_publish dogrulanmis sirkete ve kurumsal
+-- e-posta alan adi eslesmesine ONAYSIZ yayin hakki veriyordu. Iki baypas
+-- da kaldirildi (20261008010000): alan adi eslesmesi "bu kisi bu
+-- sirkette calisiyor" icin makul bir sinyal ama ilanin ICERIGI hakkinda
+-- hicbir sey soylemiyor.
+--
+-- A hala DOGRULANMIS durumda (yukarida geri acildi) ve yine de
+-- yayinlayamiyor -- yani engel dogrulama eksikliginden degil, kuraldan
+-- geliyor.
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
   $q$update public.listings set status='published'
       where id='22222222-aaaa-4000-8000-000000000002'$q$),
-  'A, kendi taslagini yayina alabilir');
+  'A, dogrulanmis olsa bile kendi taslagini yayina ALAMAZ');
 
 select pg_temp.bekle(
-  (select status::text = 'published' from public.listings
+  (select status::text = 'draft' from public.listings
     where id = '22222222-aaaa-4000-8000-000000000002'::uuid),
-  'Yayina alinan taslak gercekten published oldu');
+  'Taslak taslak kaldi: reddedilen yazma satiri degistirmedi');
+
+-- YAYINA ALAN YONETICI
+--
+-- Akisin devami (ogrenci basvurusu) yayinda bir ilan istiyor; onu artik
+-- yonetici yayina aliyor. `ilan_incele` tek islemde durumu, notu ve izi
+-- yaziyor.
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', f::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$select public.ilan_incele('22222222-aaaa-4000-8000-000000000002', 'onayla', 'Uygun')$q$),
+  'Yonetici ilani onaylayabilir');
+
+select pg_temp.bekle(
+  (select status::text = 'published' and reviewed_at is not null
+     from public.listings where id = '22222222-aaaa-4000-8000-000000000002'::uuid),
+  'Onaylanan ilan published oldu ve inceleme izi dustu');
+
+-- SIRKET UYESI RPC'YI CAGIRAMAZ: is_admin() iceride sorguluyor.
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$select public.ilan_incele('22222222-aaaa-4000-8000-000000000002', 'onayla', null)$q$),
+  'Sirket uyesi ilan_incele cagiramaz');
 
 reset role;
 select set_config('request.jwt.claims',

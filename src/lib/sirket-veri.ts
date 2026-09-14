@@ -110,8 +110,14 @@ export async function sirketIlanlari(companyId: string) {
   const { data, error } = await db
     .from('listings')
     .select(
+      /*
+        `review_note` OKUNUYOR: reddedilen ilan taslağa düşüyor ve
+        nedeni şirketin bu listede görmesi gerekiyor. Şirket bu kolona
+        YAZAMIYOR — insert/update yetki listesine girmedi, yalnız
+        select verildi.
+      */
       'id, title, city, status, origin, application_method, applicants_count, ' +
-        'posted_at, created_at, apply_url, application_deadline'
+        'posted_at, created_at, apply_url, application_deadline, review_note, reviewed_at'
     )
     .eq('company_id', companyId)
     /* Arşivlenen ilan listeden kalkıyor ama veri duruyor: başvurular ve

@@ -1764,6 +1764,40 @@ export interface IsverenKontrolu {
   üç yüzey farklı şey gösterir.
 */
 
+/**
+ * YÖNETİCİ İLAN İNCELEMESİ — TEK RPC, TEK İŞLEM
+ *
+ * Kuyruk eskiden `publishListing` / `archiveListing` ile iki ayrı düz
+ * UPDATE atıyordu. Karar artık not ve iz de bırakıyor (kim, ne zaman,
+ * niye) ve üçü ATOMİK olmalı: durum değişip not yazılmazsa şirket
+ * panelinde "niye reddedildi?" sorusunun cevabı olmaz.
+ *
+ * Yetki `is_admin()` ile RPC'nin İÇİNDE sorgulanıyor; `anon` çağıramıyor
+ * (execute yetkisi yalnız `authenticated`).
+ *
+ * RET ARŞİVLEMİYOR, TASLAĞA DÜŞÜRÜYOR: arşivlenen ilan şirket panelinde
+ * hiç görünmüyor (`sirketIlanlari` arşivi süzüyor), yani şirket ne
+ * olduğunu da göremiyordu. Taslak + not, şirketin düzeltip yeniden
+ * göndermesine izin veriyor.
+ */
+export async function ilanIncele(
+  ilanId: string,
+  karar: 'onayla' | 'reddet',
+  not?: string | null
+): Promise<void> {
+  const { error } = await supabase.rpc('ilan_incele', {
+    p_ilan: ilanId,
+    p_karar: karar,
+    p_not: not ?? null,
+  });
+  if (error) {
+    const mesaj = (error as { message?: string }).message ?? '';
+    if (/yalnizca yoneticiye/i.test(mesaj)) throw new Error('Bu işlem yalnızca yöneticiye açık.');
+    if (/not zorunlu/i.test(mesaj)) throw new Error('Ret için not yazman gerekiyor.');
+    throw new Error('İlan incelemesi kaydedilemedi.');
+  }
+}
+
 /** Dizindeki şirketlerin logo kayıtları — yine tek okuma. */
 export async function fetchIsverenLogolari(
   sluglar: string[]

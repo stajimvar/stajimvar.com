@@ -463,10 +463,16 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
             değiştirseniz bile şirketin gördüğü belge değişmiyor.
           </p>
           <p>
-            Şirketler kendi ilanlarını giriyor: önce şirket sayfasını sahipleniyor.
-            Kurumsal e-posta alan adı şirketin site adresiyle eşleşiyorsa ilan doğrudan
-            yayına çıkıyor; eşleşmiyorsa önce bizde inceleniyor ve o sırada listede
-            görünmüyor.
+            <strong>Şirketler kendi ilanlarını giriyor, ama hiçbir ilan onaysız
+            yayınlanmıyor.</strong> Şirket önce kendi sayfasını sahipleniyor; sonra ilanı
+            yazıyor ve incelemeye gönderiyor. Onaylanana kadar ilan öğrenci listesinde
+            görünmüyor. <strong>Şirketin doğrulanmış olması bu adımı atlatmıyor:</strong>{' '}
+            kurumsal e-posta alan adının şirket sitesiyle eşleşmesi o kişinin orada
+            çalıştığına dair bir sinyal, ilanın içeriği hakkında bir kanıt değil — ücret
+            ya da teminat isteyen bir ilan da kurumsal bir adresten açılabilir. Reddedilen
+            ilanda nedeni şirketin paneline yazıyoruz, şirket düzeltip yeniden
+            gönderebiliyor. Kararı şirket panelinden görüyor; bu karar için
+            ayrıca e-posta göndermiyoruz.
           </p>
         </S>
 
