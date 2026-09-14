@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import {
   KADEME,
@@ -72,25 +73,59 @@ test('alan adı eşleşmesi alt alan adlarını da kabul ediyor', () => {
 
 /* --------------------------------------------------------------- ilan */
 
-test('kurumsal mail ile ilan anında yayında', () => {
+test('HİÇBİR ilan yayında başlamıyor: kurumsal mail de yetmiyor', () => {
+  /*
+    İKİ BAYPAS KALDIRILDI
+
+    Bu testler eskiden 'published' bekliyordu: doğrulanmış şirket ve
+    alan adı eşleşmesi insan incelemesini tamamen atlıyordu. Alan adı
+    eşleşmesi "bu kişi bu şirkette çalışıyor" için makul bir sinyal ama
+    ilanın İÇERİĞİ hakkında hiçbir şey söylemiyor — ücret/teminat
+    isteyen bir ilan da kurumsal bir e-postadan açılabilir.
+  */
   assert.equal(
     ilanBaslangicDurumu({ kademe: KADEME.ILAN_VEREN, siteUrl: 'https://aselsan.com', eposta: 'ik@aselsan.com' }),
-    'published'
+    'draft'
   );
-});
-
-test('serbest mail ile ilan taslakta bekliyor', () => {
   assert.equal(
     ilanBaslangicDurumu({ kademe: KADEME.ILAN_VEREN, siteUrl: 'https://aselsan.com', eposta: 'ik@gmail.com' }),
     'draft'
   );
-});
-
-test('doğrulanmış şirkette mail alan adına bakılmıyor', () => {
   assert.equal(
     ilanBaslangicDurumu({ kademe: KADEME.DOGRULANMIS, siteUrl: '', eposta: 'ik@gmail.com' }),
-    'published'
+    'draft'
   );
+  /* Parametresiz de çalışıyor: karar artık kademeden başka şeye bakmıyor. */
+  assert.equal(ilanBaslangicDurumu({ kademe: KADEME.DOGRULANMIS }), 'draft');
+});
+
+test('aynı kural veritabanında da zorlanıyor', () => {
+  /*
+    Arayüz kuralı tek başına yeterli değil: isteği elle düzenleyen biri
+    `status: 'published'` gönderebilir. Tetikleyici kademe baypaslarını
+    artık tanımıyor.
+  */
+  const GOC = readFileSync(
+    new URL('../supabase/migrations/20261008010000_ilan_yayini_yonetici_onayina_bagli.sql', import.meta.url),
+    'utf8'
+  );
+  assert.match(GOC, /create or replace function public\.guard_listing_publish/);
+  assert.match(GOC, /raise exception 'Ilan yayina ancak yonetici onayiyla alinir'/);
+  /* `verified` ve alan adı dalları GİTMİŞ olmalı. */
+  const govde = GOC.slice(GOC.indexOf('create or replace function public.guard_listing_publish'));
+  /*
+    YORUMSUZ GÖVDE: göç dosyası kaldırılan dalları AÇIKLIYOR ve düz
+    arama o açıklamayı da yakalıyordu (bu denetim bir kez o yüzden
+    kırmızı döndü). SQL blok ve satır yorumları atılıyor.
+  */
+  const fn = govde
+    .slice(0, govde.indexOf('$function$;'))
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/^\s*--.*$/gm, ' ');
+  assert.ok(!/s\.verified/.test(fn), 'verified baypası kalmamalı');
+  assert.ok(!/alan_adi_eslesiyor/.test(fn), 'alan adı baypası kalmamalı');
+  /* Otomasyon muafiyeti KORUNUYOR: derlenen ilanlar kırılmasın. */
+  assert.match(fn, /rol = 'service_role'/);
 });
 
 test('ziyaretçi ilan açamıyor', () => {

@@ -148,7 +148,14 @@ export const IsverenLanding: React.FC<{
             <button
               type="button"
               onClick={() => (onIsverenGirisi ? onIsverenGirisi('login') : onNavigate('/isveren/ilan-ver'))}
-              className={`inline-flex min-h-12 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white px-6 text-sm font-bold text-gray-800 hover:bg-gray-50 ${RENK_GECISI} ${ODAK_HALKASI}`}
+              /*
+                GİRİŞ BELİRGİNLEŞTİ: `border-gray-200` ince ve açıktı,
+                düğme arka planla neredeyse aynı tondaydı. Artık iki
+                piksel kenar ve işveren alanının kendi kenar rengi —
+                birincil eylemle yarışmıyor ama kayboluyor da değil.
+              */
+              className={`inline-flex min-h-12 cursor-pointer items-center justify-center rounded-xl border-2 bg-white px-6 text-sm font-bold text-gray-900 hover:bg-gray-50 ${RENK_GECISI} ${ODAK_HALKASI}`}
+              style={{ borderColor: SIRKET_KENAR }}
             >
               Şirket girişi
             </button>
@@ -316,16 +323,47 @@ export const IsverenLanding: React.FC<{
         style={{ borderColor: SIRKET_KENAR, background: SIRKET_ROZET }}
       >
         <h2 className="text-xl font-black tracking-tight text-gray-950 sm:text-2xl">
-          İlanınızı bugün yayınlayın
+          İlanınızı bugün gönderin
         </h2>
+        {/*
+          "BUGÜN YAYINLAYIN" DEMİYOR — VERMEDİĞİMİZ SÖZ
+
+          Başlık "İlanınızı bugün yayınlayın" diyordu. Yayına alma
+          yalnızca yöneticide olduğu için yayın tarihi bizim
+          elimizde; şirkete "bugün yayında olur" demek tutamayacağımız
+          bir söz. Gönderme bugün, yayın onaydan sonra.
+
+          SAYI YOK: "kaç öğrenci", "kaç başvuru" gibi bir rakam
+          eklenmedi; doğrulanmadığı sürece o rakam bir vaat olur.
+        */}
         <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-gray-700">
-          Hesap açmak bir dakika, ilan girmek iki dakika sürüyor.
+          Hesap açmak bir dakika, ilan girmek iki dakika sürüyor. İlanı
+          gönderdikten sonra biz inceliyoruz; onaylanınca öğrenci listesinde
+          görünüyor. Sonucu şirket panelinizde görüyorsunuz.
         </p>
-        {/* Sayfanın alt tekrarı; üsttekiyle aynı kalıp, aynı renk. */}
-        <button type="button" onClick={anaEylem} className={`mt-5 ${BIRINCIL_EYLEM}`}>
-          {sirketUyesiMi ? 'Şirket paneline git' : 'Ücretsiz şirket hesabı oluştur'}
-          <ArrowRight className="h-4 w-4" />
-        </button>
+        {/*
+          İKİ EYLEM ALTTA DA YAN YANA
+
+          Altta yalnız "hesap oluştur" vardı. Sayfanın sonuna gelen bir
+          işveren HESABI OLAN biri de olabilir ve o kişi için tek yol
+          başa dönmekti. Giriş burada da duruyor.
+        */}
+        <div className="mt-5 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
+          <button type="button" onClick={anaEylem} className={BIRINCIL_EYLEM}>
+            {sirketUyesiMi ? 'Şirket paneline git' : 'Ücretsiz şirket hesabı oluştur'}
+            <ArrowRight className="h-4 w-4" />
+          </button>
+          {!sirketUyesiMi && (
+            <button
+              type="button"
+              onClick={() => (onIsverenGirisi ? onIsverenGirisi('login') : onNavigate('/isveren/ilan-ver'))}
+              className={`inline-flex min-h-12 w-full cursor-pointer items-center justify-center rounded-xl border-2 bg-white px-6 text-sm font-bold text-gray-900 hover:bg-gray-50 sm:w-auto ${RENK_GECISI} ${ODAK_HALKASI}`}
+              style={{ borderColor: SIRKET_KENAR }}
+            >
+              Hesabım var, giriş yap
+            </button>
+          )}
+        </div>
       </section>
     </main>
   );

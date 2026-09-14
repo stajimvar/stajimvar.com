@@ -493,9 +493,29 @@ export const Ilanlar: React.FC<{
                     büyükse: "0 başvuru" bir bilgi değil, gürültü.
                   */}
                   <p className="truncate text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
-                    {String(i.city ?? '')} · {yayinda ? 'Yayında' : taslak ? 'Taslak' : 'Kapalı'}
+                    {String(i.city ?? '')} ·{' '}
+                    {yayinda ? 'Yayında' : taslak ? 'İncelemede / taslak' : 'Kapalı'}
                     {kartAcik && basvuruSayisi > 0 ? ` · ${basvuruSayisi} başvuru` : ''}
                   </p>
+                  {/*
+                    RET NOTU — ŞİRKET NEDENİ BURADA OKUYOR
+
+                    Ret eskiden ilanı ARŞİVLİYORDU ve arşivlenen ilan bu
+                    listede hiç görünmüyordu; yani şirket reddedildiğini
+                    de nedenini de göremiyordu. Ret artık taslağa
+                    düşürüyor ve notu zorunlu kılıyor.
+
+                    `truncate` YOK: tek satıra kısaltılan bir gerekçe işe
+                    yaramaz. Not yoksa satır hiç çizilmiyor.
+                  */}
+                  {taslak && i.review_note ? (
+                    <p
+                      className="mt-1 rounded-lg px-2 py-1.5 text-xs leading-relaxed"
+                      style={{ background: SIRKET_ROZET, color: SIRKET_METIN }}
+                    >
+                      <strong>İnceleme notu:</strong> {String(i.review_note)}
+                    </p>
+                  ) : null}
                 </div>
 
                 {/*

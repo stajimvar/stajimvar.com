@@ -1,12 +1,7 @@
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Check, MapPin, X } from 'lucide-react';
-import {
-  archiveListing,
-  fetchPendingListings,
-  publishListing,
-  type PendingListing,
-} from '../lib/queries';
+import { fetchPendingListings, ilanIncele, type PendingListing } from '../lib/queries';
 
 /**
  * Şirketlerin girdiği ilanların onay kuyruğu.
@@ -20,7 +15,17 @@ import {
  * şirketin kendi kariyer sayfasında yayınlanmış, ikinci kez onaylamak hem
  * anlamsız hem de kuyruğu kullanılamaz hale getirirdi.
  *
- * Reddedilen ilan silinmiyor, arşivleniyor — şirket ne olduğunu görebilmeli.
+ * RET ARŞİVLEMİYOR, TASLAĞA DÜŞÜRÜYOR
+ * ------------------------------------
+ * Önce `archiveListing` çağrılıyordu ve arşivlenen ilan şirket
+ * panelinde HİÇ görünmüyor (`sirketIlanlari` arşivi süzüyor) — yani
+ * "şirket ne olduğunu görebilmeli" gerekçesi karşılıksızdı. Ret artık
+ * ilanı taslağa düşürüyor ve NOT ZORUNLU: şirket nedeni panelinde
+ * okuyup düzeltip yeniden gönderebiliyor.
+ *
+ * Karar tek RPC ile yazılıyor (`ilan_incele`): durum, not ve iz (kim,
+ * ne zaman) aynı işlemde. Yetki `is_admin()` ile RPC'nin içinde
+ * sorgulanıyor — bu ekranı açabilmek yetki değil, görünüm.
  */
 
 interface AdminListingsQueueProps {
@@ -58,15 +63,34 @@ export const AdminListingsQueue: React.FC<AdminListingsQueueProps> = ({ onToast 
   useEffect(yukle, [yukle]);
 
   const uygula = async (ilan: PendingListing, yayinla: boolean) => {
+    /*
+      RET'TE NOT ZORUNLU VE ÖNCE SORULUYOR
+
+      Sunucu da zorunlu tutuyor (`Ret icin not zorunlu`); burada
+      sorulması, isteği boşa göndermemek için. Boş bırakılır ya da
+      iptal edilirse hiçbir şey yazılmıyor.
+    */
+    let not: string | null = null;
+    if (!yayinla) {
+      const yazilan = window.prompt(
+        `"${ilan.title}" neden reddedildi? Bu not şirketin paneline yazılacak.`
+      );
+      if (yazilan === null) return;
+      if (!yazilan.trim()) {
+        onToast('Ret için not yazman gerekiyor.');
+        return;
+      }
+      not = yazilan.trim();
+    }
+
     setIslemde(ilan.id);
     try {
-      if (yayinla) {
-        await publishListing(ilan.id);
-        onToast(`"${ilan.title}" yayına alındı.`);
-      } else {
-        await archiveListing(ilan.id);
-        onToast(`"${ilan.title}" arşivlendi.`);
-      }
+      await ilanIncele(ilan.id, yayinla ? 'onayla' : 'reddet', not);
+      onToast(
+        yayinla
+          ? `"${ilan.title}" yayına alındı.`
+          : `"${ilan.title}" reddedildi; şirkete not yazıldı.`
+      );
       setIlanlar((p) => p.filter((x) => x.id !== ilan.id));
     } catch (error) {
       onToast(error instanceof Error ? error.message : 'İşlem başarısız.');

@@ -1569,6 +1569,16 @@ export type Database = {
         `anon` çağıramıyor; yetki fonksiyonun İÇİNDE `is_admin()` ile
         denetleniyor, yani arayüzü atlamak işe yaramıyor.
       */
+      /*
+        İlan onay/ret kararı. `is_admin()` fonksiyonun İÇİNDE
+        sorgulanıyor; `anon`a execute verilmedi. Ret için `p_not`
+        zorunlu — nedensiz ret, şirketin aynı ilanı birebir yeniden
+        göndermesiyle sonuçlanıyor.
+      */
+      ilan_incele: {
+        Args: { p_ilan: string; p_karar: 'onayla' | 'reddet'; p_not?: string | null };
+        Returns: undefined;
+      };
       ilan_bildirimi_incele: {
         Args: { p_id: string; p_durum: string; p_not?: string | null };
         Returns: undefined;

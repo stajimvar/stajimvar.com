@@ -117,19 +117,43 @@ export function alanAdiEslesiyor(site, eposta) {
 /* --------------------------------------------------------------- ilan */
 
 /**
- * Yeni ilan yayında mı başlar, taslak mı?
+ * Yeni ilan HANGİ DURUMDA başlar?
  *
- *   Kademe 2                       → yayında
- *   Kademe 1 + alan adı eşleşiyor  → yayında
- *   Kademe 1 + serbest/eşleşmeyen  → taslak, yönetici kuyruğuna
- *   Kademe 0                       → hiç
+ *   İlan açabilen her kademe  → taslak, yönetici kuyruğuna
+ *   Kademe 0                  → hiç
  *
- * @returns {'published'|'draft'|null}
+ * İSTİSNASIZ TASLAK — İKİ BAYPAS KALDIRILDI
+ * -----------------------------------------
+ * Bu işlev şöyleydi:
+ *
+ *   kademe >= DOGRULANMIS        → 'published'
+ *   alan adı eşleşiyor           → 'published'
+ *
+ * Yani doğrulanmış şirket ya da kurumsal e-postası site adresiyle
+ * eşleşen şirket ilanı DOĞRUDAN yayına alıyordu; insan incelemesi
+ * tamamen atlanıyordu.
+ *
+ * Alan adı eşleşmesi "bu kişi bu şirkette çalışıyor" için makul bir
+ * sinyal ama ilanın İÇERİĞİ hakkında hiçbir şey söylemiyor. Ücret
+ * isteyen, teminat isteyen, WhatsApp'tan başvuru toplayan bir ilan da
+ * kurumsal bir e-postadan açılabilir — `ilanBayraklari` tam bu
+ * kalıpları arıyor ve yöneticiye gösteriyor. İlan çoktan yayına
+ * çıkmışsa o ekranın anlamı kalmıyor.
+ *
+ * `kademe` ve alan adı bilgileri PARAMETREDE KALIYOR: çağıran taraf
+ * ilan açma hakkını (`ilanAsabilir`) yine buradan soruyor ve imza
+ * değişmediği için çağrı yerleri kırılmıyor.
+ *
+ * Aynı kural veritabanında da zorlanıyor
+ * (`20261008010000_ilan_yayini_yonetici_onayina_bagli.sql`): arayüz
+ * 'published' göndermeye kalksa `guard_listing_publish` reddediyor.
+ * Tek taraflı bir arayüz kuralı değil.
+ *
+ * @returns {'draft'|null}
  */
-export function ilanBaslangicDurumu({ kademe, siteUrl, eposta }) {
+export function ilanBaslangicDurumu({ kademe }) {
   if (!ilanAsabilir(kademe)) return null;
-  if (kademe >= KADEME.DOGRULANMIS) return 'published';
-  return alanAdiEslesiyor(siteUrl, eposta) ? 'published' : 'draft';
+  return 'draft';
 }
 
 /**
