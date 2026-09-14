@@ -33,7 +33,19 @@ jobs:
           persist-credentials: false
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # SÜRÜM SABİT — `latest` DEĞİL
+          #
+          # Bu iş akışı üretim şemasını depodan kurulan şemayla
+          # karşılaştırıyor; yani çıktısı CLI'ın döküm biçimine doğrudan
+          # bağlı. `latest` ile her koşu farklı bir sürüm çekebiliyordu ve
+          # dökümdeki bir biçim değişikliği, şema hiç değişmediği hâlde
+          # "fark var" diye okunabilirdi. Denetimin kendisi
+          # yeniden üretilebilir olmak zorunda.
+          #
+          # v2.117.0 en son KARARLI sürüm (beta olmayan); beta etiketleri
+          # günde birkaç kez değişiyor ve denetim kapısı onlara
+          # bağlanamaz.
+          version: 2.117.0
       - name: Require protected production credentials
         run: |
           # Yalnızca DOLU OLUP OLMADIĞINA bakılıyor; hiçbir değer yazdırılmıyor.
@@ -51,15 +63,6 @@ jobs:
           [ "$SUPABASE_PROJECT_ID" = "gdumgdgwlfnohkaucfow" ] || { echo "::error::Unexpected Supabase production project id."; exit 1; }
       - name: Link production for schema-only inspection
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
-      - name: Dump production public schema and extensions without data
-        run: |
-          mkdir -p .schema-audit
-          supabase db dump --linked --schema public,extensions --file .schema-audit/production.sql
-      - name: Normalize and validate production snapshot
-        id: production_snapshot
-        run: |
-          node scripts/normalize-schema-dump.mjs .schema-audit/production.sql .schema-audit/production.normalized.sql | tee .schema-audit/production-fingerprint.json
-          grep -E '^(GRANT|REVOKE) ' .schema-audit/production.sql > .schema-audit/production-grants.sql || true
       - name: Verify 0022 behavior in a rolled-back transaction
         id: verify_0022
         continue-on-error: true
@@ -71,9 +74,42 @@ jobs:
       - name: Dump and normalize local schema
         id: local_snapshot
         run: |
+          # DİZİN BURADA AÇILIYOR: bu adım artık üretim dökümünden ÖNCE
+          # koşuyor ve `mkdir` eskiden o adımın içindeydi. Sıra
+          # değiştirilirken taşınmasa `--file .schema-audit/local.sql`
+          # olmayan dizine yazmaya kalkıp düşerdi.
+          mkdir -p .schema-audit
           supabase db dump --local --schema public,extensions --file .schema-audit/local.sql
           node scripts/normalize-schema-dump.mjs .schema-audit/local.sql .schema-audit/local.normalized.sql | tee .schema-audit/local-fingerprint.json
           grep -E '^(GRANT|REVOKE) ' .schema-audit/local.sql > .schema-audit/local-grants.sql || true
+      # ÜRETİM ANLIK GÖRÜNTÜSÜ ARTIK YEREL YAPIDAN SONRA
+      #
+      # NEDEN SIRA DEĞİŞTİ — ÖLÇÜLDÜ
+      #
+      # Bu denetim `main`'e push ile tetikleniyor, sürüm hattı
+      # (supabase-production.yml) da aynı push ile tetikleniyor ve ikisi
+      # PARALEL koşuyor. Denetim üretimi hemen döküyordu; göç ise
+      # sürüm hattının `migrate_and_functions` işinde uygulanıyor.
+      #
+      # 14 Eylül 2026 koşusunda ölçülen zamanlar:
+      #   üretim dökümü bitti   20:11:06
+      #   göç tamamlandı        20:11:17
+      # Döküm, göçten ON BİR SANİYE ÖNCE alınmış. Sonuç: üretimde
+      # `employer_career_checks.program_url` kolonu yok, göçten kurulan
+      # yerel şemada var ve `differenceCount: 1` çıkıyor. Şema kayması
+      # DEĞİL, sıralama hatası.
+      #
+      # Yerel yapı (supabase start + db reset) yaklaşık iki dakika
+      # sürüyor; üretim dökümünü ona ALDIRMAK, göçün uygulanması için
+      # zaten doğal bir pencere açıyor. Aşağıdaki sınırlı yeniden deneme
+      # de kalan yarışı kapatıyor.
+      - name: Dump and normalize production snapshot
+        id: production_snapshot
+        run: |
+          mkdir -p .schema-audit
+          supabase db dump --linked --schema public,extensions --file .schema-audit/production.sql
+          node scripts/normalize-schema-dump.mjs .schema-audit/production.sql .schema-audit/production.normalized.sql | tee .schema-audit/production-fingerprint.json
+          grep -E '^(GRANT|REVOKE) ' .schema-audit/production.sql > .schema-audit/production-grants.sql || true
       # DEPOLAMA POLİTİKALARI — DENETİMİN ESKİ KÖR NOKTASI
       #
       # Yukarıdaki döküm yalnızca public ve extensions şemalarını
@@ -106,10 +142,54 @@ jobs:
             exit 1
           fi
 
+      # SINIRLI YENİDEN DENEME — GERÇEK KAYMAYI GİZLEMİYOR
+      #
+      # Fark bulunursa üretim yeniden dökülüp yeniden karşılaştırılıyor.
+      # Amaç yalnızca YARIŞI kapatmak: göç bir dakika sonra uygulanmışsa
+      # ikinci deneme temiz geçiyor.
+      #
+      # Gerçek bir şema kayması bundan ETKİLENMİYOR: kayma üç denemede de
+      # duruyor ve adım kırmızı bitiyor. Her deneme ayrı ayrı loglanıyor
+      # ve son `schema-diff.json` artifact'a yükleniyor — yani "denedik,
+      # geçti" diye bir şey saklanmıyor, kaçıncı denemede geçtiği
+      # görünüyor.
       - name: Build semantic schema comparison
         id: semantic_diff
         continue-on-error: true
-        run: node scripts/schema-semantic-diff.mjs .schema-audit/production.normalized.sql .schema-audit/local.normalized.sql .schema-audit/schema-diff.json
+        run: |
+          set -o pipefail
+          deneme=1
+          enfazla=3
+          while :; do
+            echo "::group::semantik karşılaştırma — deneme $deneme/$enfazla"
+            if node scripts/schema-semantic-diff.mjs \
+                 .schema-audit/production.normalized.sql \
+                 .schema-audit/local.normalized.sql \
+                 .schema-audit/schema-diff.json; then
+              echo "fark yok (deneme $deneme)"
+              echo '::endgroup::'
+              exit 0
+            fi
+            echo "fark bulundu (deneme $deneme):"
+            cat .schema-audit/schema-diff.json
+            echo '::endgroup::'
+
+            if [ "$deneme" -ge "$enfazla" ]; then
+              echo "::error::Üretim şeması depodaki göçlerle $enfazla denemede de eşleşmedi. Fark gerçek: schema-diff.json artifact'ında."
+              exit 1
+            fi
+
+            # Göç sürüm hattında hâlâ uygulanıyor olabilir.
+            echo "60 saniye sonra üretim yeniden dökülecek."
+            sleep 60
+            supabase db dump --linked --schema public,extensions --file .schema-audit/production.sql
+            node scripts/normalize-schema-dump.mjs \
+              .schema-audit/production.sql \
+              .schema-audit/production.normalized.sql \
+              | tee .schema-audit/production-fingerprint.json
+            grep -E '^(GRANT|REVOKE) ' .schema-audit/production.sql > .schema-audit/production-grants.sql || true
+            deneme=$((deneme + 1))
+          done
       - name: Upload schema-only audit artifact
         if: always() && steps.production_snapshot.outcome == 'success' && steps.local_snapshot.outcome == 'success'
         uses: actions/upload-artifact@v4
@@ -133,10 +213,21 @@ jobs:
             echo '- Data dump: not requested; schema dump defaults to schema-only.'
             echo '- Migration repair: not run.'
           } >> "$GITHUB_STEP_SUMMARY"
+      # HANGİ KAPI DÜŞTÜ — MESAJDA YAZIYOR
+      #
+      # Bu adım eskiden yalnız "baseline is not verified" diyordu ve üç
+      # kapıdan hangisinin düştüğünü söylemiyordu. Üç kapı da
+      # `continue-on-error: true` olduğu için GitHub API'si onların
+      # `conclusion` değerini `success` gösteriyor (`outcome` değerini
+      # göstermiyor) — yani `gh run view` ile bakıldığında BÜTÜN adımlar
+      # yeşil, yalnız bu son adım kırmızı görünüyordu. Nedeni bulmak için
+      # ham log indirmek gerekti.
+      #
+      # Artık üç outcome mesajın içinde.
       - name: Fail closed on schema or 0022 differences
         if: steps.semantic_diff.outcome != 'success' || steps.verify_0022.outcome != 'success' || steps.storage_policies.outcome != 'success'
         run: |
-          echo '::error::Production schema baseline is not verified. Baseline, repair, migration push, Edge Function, and Cloudflare deployment are blocked.'
+          echo "::error::Üretim şema temeli doğrulanmadı — semantik diff: ${{ steps.semantic_diff.outcome }}, 0022 doğrulama: ${{ steps.verify_0022.outcome }}, storage politikaları: ${{ steps.storage_policies.outcome }}. Temel alma, onarım, göç gönderimi, Edge Function ve Cloudflare dağıtımı bloke."
           exit 1
       - name: Stop disposable local Supabase database
         if: always()
