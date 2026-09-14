@@ -210,3 +210,19 @@ test('Pages Functions tip kontrolü gerçek ve CI kapısında', () => {
 
   assert.match(oku('.github/workflows/dagit.yml'), /run: npm run lint:functions/);
 });
+
+test('kuyruk görünümü RLS atlamıyor', () => {
+  /*
+    ÖLÇÜLDÜ (14 Eylül 2026, üretim): anon anahtarı `listing_reports`'ta
+    `[]` alıyordu ama `ilan_bildirim_kuyrugu` görünümünde bekleyen
+    bildirimin adresini ve şirketini OKUYABİLİYORDU.
+
+    Sebep: Postgres'te görünüm varsayılan olarak SAHİBİ yetkisiyle
+    çalışıyor ve sahip RLS'e tabi değil. Tabloya politika yazmak görünümü
+    kapatmıyor. Bu test o dersi bağlıyor: bu görünüm bir daha
+    `security_invoker` olmadan yayına çıkmasın.
+  */
+  const yama = oku('supabase/migrations/20260930020000_ilan_bildirim_kuyrugu_sizintisi.sql');
+  assert.match(yama, /alter view public\.ilan_bildirim_kuyrugu set \(security_invoker = on\)/);
+  assert.match(yama, /revoke select on public\.ilan_bildirim_kuyrugu from anon/);
+});

@@ -289,7 +289,10 @@ def main() -> None:
     print(
         f"sitemap.xml yazildi: {len(duragan)} duragan ({len(bolumler)} bolum) "
         f"+ {len(ilanlar)} ilan + {len(firsatlar)} firsat "
-        f"+ {len(etkinlikler)} etkinlik(yayinda) "
+        # `etkinlikler` yukarida sorgusuyla birlikte kalkti ama BU SATIRDA
+        # kaldi: dosya yazildiktan SONRA NameError firlatiyordu, yani
+        # sitemap.xml dogru uretiliyor, betik exit 1 veriyordu.
+        # supabase-production.yml'nin dagitim isi bu yuzden kirikti.
         f"+ {len(sirketler)} sirket = {len(satirlar)} adres "
         f"({datetime.now(UTC).isoformat(timespec='seconds')})"
     )
