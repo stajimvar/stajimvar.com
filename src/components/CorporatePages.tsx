@@ -1,4 +1,5 @@
 import React from 'react';
+import { IlanBildirFormu, type BildirimOnDolgusu } from './IlanBildirFormu';
 import {
   BellRing,
   Building2,
@@ -153,6 +154,26 @@ const YAPMADIKLARIMIZ = [
     govde: 'Hazır olmadan "var" demiyoruz; sıra da satılmıyor.',
   },
 ] as const;
+
+/**
+ * Form ön dolgusu ADRES SORGUSUNDAN.
+ *
+ * İlan detayındaki "Bu ilanı bildir" bağlantısı bilgileri sorgu
+ * parametresiyle taşıyor; burada okunuyor. Uygulama içi bir durum
+ * nesnesiyle taşınsaydı bağlantı kopyalanıp paylaşıldığında ön dolgu
+ * kaybolurdu.
+ */
+function bildirimOnDolgusu(): BildirimOnDolgusu | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const sorgu = new URLSearchParams(window.location.search);
+  const al = (ad: string) => (sorgu.get(ad) || '').trim().slice(0, 600) || undefined;
+  const dolgu: BildirimOnDolgusu = {
+    listingUrl: al('ilan'),
+    companyName: al('sirket'),
+    positionTitle: al('pozisyon'),
+  };
+  return dolgu.listingUrl || dolgu.companyName || dolgu.positionTitle ? dolgu : undefined;
+}
 
 export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) => {
   if (slug === 'hakkimizda') {
@@ -524,23 +545,22 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
       <S baslik="Ne bildirebilirsiniz">
         <p>
           Sitede gördüğünüz bir ilan veya içerik hatalıysa, güncelliğini yitirmişse ya da
-          kurallarımıza aykırıysa bize bildirin. Bildirimler için özel bir form henüz yok;{' '}
-          <a
-            className="text-blue-600 font-semibold hover:underline"
-            href={`mailto:${ILETISIM}?subject=${encodeURIComponent('İlan bildirimi')}`}
-          >
-            {ILETISIM}
-          </a>{' '}
-          adresine yazmanız yeterli.
+          kurallarımıza aykırıysa aşağıdaki formla bildirin. Bir ilan sayfasından
+          geldiyseniz bağlantı, şirket ve başlık hazır gelir.
         </p>
       </S>
 
-      <S baslik="Bildiriminizde neler olmalı">
-        <p>
-          İlanın sitedeki bağlantısı, şirket adı ve pozisyon başlığı; sorunun ne olduğu
-          (kapanmış ilan, yanlış bilgi, ücret talebi, ayrımcı ifade, sahte ilan vb.);
-          varsa ekran görüntüsü.
-        </p>
+      {/*
+        FORM SAYFANIN KENDİSİNDE
+
+        Burada "özel bir form henüz yok, e-posta yazın" yazıyordu.
+        Kapanmış bir ilanı gören öğrencinin yapacağı iş, e-posta
+        istemcisi açıp bağlantıyı elle kopyalamaktı — pratikte kimse
+        bildirmiyordu. Oysa kapanmış ilanı listeden düşürmek bu ürünün
+        asıl vaadi.
+      */}
+      <S baslik="Bildirim formu">
+        <IlanBildirFormu onDolgu={bildirimOnDolgusu()} />
       </S>
 
       <S baslik="Ne kadar sürede işlenir">
