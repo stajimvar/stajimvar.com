@@ -95,7 +95,21 @@ jobs:
           node-version: '22'
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # SÜRÜM SABİT — `latest` ETİKETİ GITHUB API'SİNE GİDİYOR
+          #
+          # Sürüm etiketi `latest` bırakıldığında setup-cli her koşuda
+          # GitHub release API'sini sorguluyor ve o çağrı rate limit'e
+          # takıldı:
+          #   "Failed to resolve latest Supabase CLI release:
+          #    rate limit exceeded"
+          # CLI hiç kurulmadı, ardından temizlik adımı
+          # "supabase: command not found" (exit 127) ile düştü ve
+          # `security_regression` kırmızı oldu. Güvenlik kontrolünde bir
+          # sorun YOKTU — kurulum adımı düşmüştü ve iş adı yanıltıyordu.
+          #
+          # Sabit sürüm o API çağrısını tamamen kaldırıyor ve sürüm
+          # hattını yeniden üretilebilir yapıyor.
+          version: 2.117.0
       - run: supabase start
       - name: Migrationlari sifirdan uygula (temiz kurulum duman testi)
         run: supabase db reset --local --no-seed
@@ -119,7 +133,9 @@ jobs:
           persist-credentials: false
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Sabit sürüm: bkz. yukarıdaki not — etiket çözümlemesi rate
+          # limit'e takılınca CLI kurulmuyor ve iş exit 127 ile düşüyor.
+          version: 2.117.0
       # ELLE UYGULANMIŞ MIGRATION'LARI GEÇMİŞE İŞLE
       #
       # NEDEN GEREKİYOR

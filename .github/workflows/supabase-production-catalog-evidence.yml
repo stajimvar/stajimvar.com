@@ -20,7 +20,9 @@ jobs:
       - uses: actions/checkout@v4
         with: { persist-credentials: false }
       - uses: supabase/setup-cli@v1
-        with: { version: latest }
+        # Sabit sürüm: etiket çözümlemesi GitHub release API'sine gidiyor
+        # ve rate limit'e takılınca CLI'ı hiç kurmadan işi düşürebiliyor.
+        with: { version: 2.117.0 }
       - name: Require access token
         run: '[ -n "$SUPABASE_ACCESS_TOKEN" ] || { echo "::error::SUPABASE_ACCESS_TOKEN GitHub Actions secreti eksik."; exit 1; }'
       - name: Link production read-only session
