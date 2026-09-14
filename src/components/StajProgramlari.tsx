@@ -8,6 +8,13 @@ import { sadelestir } from '../lib/rehber-arama.mjs';
 import { kaydedilenIsverenler, isverenKaydiDegistir } from '../lib/rehber-veri';
 import type { StudentProfile } from '../types';
 import { tarihMetni } from '../lib/tarih.mjs';
+import {
+  baglantiEtiketi,
+  dizini,
+  fetchIsverenKontrolleri,
+  programDurumMetni,
+  urlDurumMetni,
+} from '../lib/isveren-dizini.mjs';
 
 /**
  * /staj-programlari — büyük işverenlerin resmi staj sayfaları dizini.
@@ -23,11 +30,16 @@ import { tarihMetni } from '../lib/tarih.mjs';
  *
  * Şimdi: logo, bölüm ve sektör süzgeci, son kontrol tarihi ve kaydetme.
  *
- * "BAŞVURULAR AÇIK" ETİKETİ YOK
- * -----------------------------
- * Kariyer sayfasının ayakta olması başvuru alındığı anlamına gelmiyor.
- * Doğrulayabildiğimiz şey adresin çalıştığı; kart da tam olarak onu
- * söylüyor. Doğrulayamadığımızı yazmamak bu dizinin kurucu kuralı.
+ * "BAŞVURULAR AÇIK" ETİKETİ KANITA BAĞLI
+ * --------------------------------------
+ * Kariyer sayfasının ayakta olması başvuru alındığı anlamına gelmiyor;
+ * kart iki durumu AYRI satırda söylüyor. "Staj programı açık" yalnız
+ * programın kendi sayfasında aktif başvuru ölçüldüğünde çıkıyor ve o
+ * durumda bağlantı da genel kariyer sayfasına değil o sayfaya gidiyor.
+ *
+ * 14 Eylül 2026 ölçümü: 44 şirketin hiçbirinde bu kanıt yok. Bir ara
+ * sekizi "açık" görünüyordu; eşleşen "başvuru" ifadeleri tedarikçi
+ * portalı, POS başvurusu ve sayfa başlığı çıktı.
  *
  * TEK KAYNAK
  * ----------
@@ -56,8 +68,32 @@ export const Kart: React.FC<{
   kayitli?: boolean;
   onKaydet?: (slug: string) => void;
   kaydetmeEtiketi?: string;
-}> = ({ program, onNavigate, kayitli = false, onKaydet, kaydetmeEtiketi }) => {
-  const kontrol = tarihYaz(program.sonKontrol);
+  /*
+    ÖLÇÜM — ÖN RENDER'DA YOK, TARAYICIDA VAR
+
+    Ön render ağ isteği atmıyor, yani durum satırlarını çizemiyor.
+    Orada "Henüz kontrol edilmedi" yazmak YANLIŞ olurdu: ölçüm var,
+    ön render onu okuyamıyor. Bu yüzden `olcum` yokken durum
+    satırları hiç çizilmiyor ve tarayıcı hidrasyondan sonra ekliyor.
+  */
+  olcum?: {
+    urlDurumu: string | null;
+    urlBasarili: string | null;
+    programDurumu: string | null;
+    programUrl: string | null;
+    kariyerUrl: string;
+  };
+}> = ({ program, onNavigate, kayitli = false, onKaydet, kaydetmeEtiketi, olcum }) => {
+  /*
+    TARİH ARTIK EDİTORYAL DEĞİL
+
+    Eskiden `program.sonKontrol` okunuyordu: o alanı eski betik kaynak
+    dosyanın İÇİNE yazıyordu, yani her ölçüm bir commit gerektiriyordu.
+    Şimdi son BAŞARILI kontrol ölçüm tablosundan geliyor; editoryal
+    alan yalnız ölçüm hiç okunamadığında yedek.
+  */
+  const kontrol = tarihYaz(olcum?.urlBasarili ?? program.sonKontrol);
+  const baglanti = baglantiEtiketi(olcum ?? { kariyerUrl: program.kariyerUrl });
 
   return (
     <div id={program.slug} className="flex h-full flex-col gap-2.5 rounded-2xl border border-gray-200 bg-white p-5 scroll-mt-24">
@@ -139,15 +175,67 @@ export const Kart: React.FC<{
       )}
 
       {/*
-        SON KONTROL — "başvurular açık" DEĞİL
+        İKİ AYRI DURUM, İKİ AYRI SATIR
 
-        Söylediğimiz tek şey: bu adresi çağırdık ve çalışıyordu. Kariyer
-        sayfasının ayakta olması başvuru alındığı anlamına gelmiyor.
+        Adresin çalışması ile staj programının açık olması ayrı iddialar
+        ve kart ikisini ayrı söylüyor. Eskiden tek satır vardı — "Adres
+        çalışıyor" — ve program durumu hiç yazmıyordu.
+
+        DURUM YALNIZ RENKLE ANLATILMIYOR: her satırda metin var. Renk
+        körü bir kullanıcı ya da renk basmayan bir ekran için yeşil
+        nokta hiçbir şey söylemez.
       */}
-      {kontrol && (
-        <p className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
+      {olcum && (
+        <dl className="flex flex-col gap-1 pt-0.5 text-[11px] leading-snug">
+          <div className="flex items-start gap-1.5">
+            <dt className="sr-only">Program durumu</dt>
+            <span
+              aria-hidden="true"
+              className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${
+                olcum.programDurumu === 'acik'
+                  ? 'bg-emerald-600'
+                  : olcum.programDurumu === 'kapali'
+                    ? 'bg-gray-400'
+                    : 'bg-amber-500'
+              }`}
+            />
+            <dd
+              className={`font-semibold ${
+                olcum.programDurumu === 'acik' ? 'text-emerald-700' : 'text-gray-600'
+              }`}
+            >
+              {programDurumMetni(olcum.programDurumu)}
+            </dd>
+          </div>
+          {/*
+            BAĞLANTI SATIRI — ÖLÇÜLDÜYSE
+
+            Son BAŞARILI kontrol tarihi burada: başarısız denemede
+            korunuyor, yani "adres en son ne zaman çalıştığı
+            doğrulandı" sorusunun cevabı bir 403 ile silinmiyor.
+          */}
+          {urlDurumMetni(olcum.urlDurumu) && (
+            <div className="flex items-start gap-1.5">
+              <dt className="sr-only">Bağlantı durumu</dt>
+              <ShieldCheck
+                aria-hidden="true"
+                className={`mt-0.5 h-3 w-3 shrink-0 ${
+                  olcum.urlDurumu === 'calisiyor' ? 'text-emerald-600' : 'text-gray-400'
+                }`}
+              />
+              <dd className="text-gray-500">
+                {urlDurumMetni(olcum.urlDurumu)}
+                {kontrol && <> · Son başarılı kontrol: {kontrol}</>}
+              </dd>
+            </div>
+          )}
+        </dl>
+      )}
+      {/* Ölçüm okunamadığında (ön render) eski tek satır korunuyor. */}
+      {!olcum && kontrol && (
+        <p className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500">
           <ShieldCheck className="h-3 w-3" />
-          Adres çalışıyor · Son kontrol: {kontrol}
+          Son başarılı kontrol: {kontrol}
         </p>
       )}
 
@@ -170,19 +258,43 @@ export const Kart: React.FC<{
               onNavigate(`/sirket/${program.slug}`);
             }
           }}
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 hover:underline"
+          className="inline-flex min-h-11 items-center gap-1.5 text-xs font-bold text-blue-700 hover:underline"
         >
           Şirketi incele
         </a>
-        <a
-          href={program.kariyerUrl}
-          target="_blank"
-          rel="noopener"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-800 hover:underline"
-        >
-          Resmî başvuru sayfası
-          <ExternalLink className="h-3.5 w-3.5" />
-        </a>
+        {/*
+          ETİKET NEREYE GİTTİĞİNİ SÖYLÜYOR
+
+          Eskiden burada sabit "Resmî başvuru sayfası" yazıyordu ve
+          hedef 44 şirketin 44'ünde genel kariyer sayfasıydı
+          (`/kariyer`, `/career`, `/insan-kaynaklari`) — yani etiket
+          başvuru sayfası sözü veriyor, bağlantı kurumsal bir sayfaya
+          gidiyordu. Artık etiket `baglantiEtiketi()` kararından
+          geliyor ve "başvuru" sözü yalnız kanıtlanmış açık programda
+          çıkıyor.
+
+          BOZUK ADRESTE HİÇ BAĞLANTI YOK: çalışmadığını ölçtüğümüz bir
+          adrese tıklanabilir düğme koymak, öğrenciyi 404'e göndermek.
+        */}
+        {baglanti.tur === 'yok' ? (
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-400">
+            Bağlantı bozuk — yeniden kontrol edilecek
+          </span>
+        ) : (
+          <a
+            href={baglanti.adres ?? program.kariyerUrl}
+            target="_blank"
+            rel="noopener"
+            className={`inline-flex min-h-11 items-center gap-1.5 text-xs font-semibold ${
+              baglanti.tur === 'program'
+                ? 'text-emerald-700 hover:underline'
+                : 'text-gray-500 hover:text-gray-800 hover:underline'
+            }`}
+          >
+            {baglanti.etiket}
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        )}
       </div>
     </div>
   );
@@ -234,6 +346,31 @@ export const StajProgramlariSayfasi: React.FC<{
   const [sektorSuzgeci, setSektorSuzgeci] = React.useState('');
   const [arama, setArama] = React.useState('');
   const [kayitlilar, setKayitlilar] = React.useState<Set<string>>(new Set());
+  /*
+    ÖLÇÜMLER — KART BAŞINA SORGU YOK
+
+    44 satırın tamamı TEK istekte geliyor ve `dizini()` editoryal kayıtla
+    eşleştiriyor. Önbellek modülün içinde: bölüm sayfası ya da boş sonuç
+    ekranı aynı anda açıksa ikinci istek hiç çıkmıyor.
+  */
+  const [olcumler, setOlcumler] = React.useState<Map<string, ReturnType<typeof dizini>[number]> | null>(
+    null
+  );
+
+  React.useEffect(() => {
+    let iptal = false;
+    fetchIsverenKontrolleri()
+      .then((kontroller) => {
+        if (iptal) return;
+        setOlcumler(new Map(dizini(STAJ_PROGRAMLARI, kontroller).map((i) => [i.slug, i])));
+      })
+      .catch(() => {
+        /* Ölçüm gelmezse dizin gitmiyor: durum satırları çizilmiyor. */
+      });
+    return () => {
+      iptal = true;
+    };
+  }, []);
 
   React.useEffect(() => {
     if (!ogrenci?.id) return;
@@ -402,6 +539,7 @@ export const StajProgramlariSayfasi: React.FC<{
                     kayitli={kayitlilar.has(p.slug)}
                     onKaydet={ogrenci?.id || onGirisGerekli ? kaydet : undefined}
                     kaydetmeEtiketi={ogrenci?.id ? undefined : 'Kaydetmek için giriş yap'}
+                    olcum={olcumler?.get(p.slug)}
                   />
                 ))}
               </div>
@@ -426,6 +564,7 @@ export const StajProgramlariSayfasi: React.FC<{
                         kayitli={kayitlilar.has(p.slug)}
                         onKaydet={ogrenci?.id || onGirisGerekli ? kaydet : undefined}
                         kaydetmeEtiketi={ogrenci?.id ? undefined : 'Kaydetmek için giriş yap'}
+                        olcum={olcumler?.get(p.slug)}
                       />
                     ))}
                   </div>

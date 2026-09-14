@@ -1,7 +1,8 @@
 import React from 'react';
 import { BOLUMLER, BOLUM_GRUPLARI, OKUL_YERLESTIRIR, type Bolum } from '../data/bolumler';
 import { BolumKapagi } from './BolumGorseli';
-import { bolumeGoreProgramlar } from '../data/stajProgramlari';
+import { STAJ_PROGRAMLARI } from '../data/stajProgramlari';
+import { dizini, uygunIsverenler } from '../lib/isveren-dizini.mjs';
 import { ILAN_KAYNAGI_KISA } from '../lib/urun-metni';
 import { tarihMetni } from '../lib/tarih.mjs';
 
@@ -254,7 +255,30 @@ export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
         çizilmiyor — boş başlık göstermek, olmayan bir şey vaat etmek olur.
       */}
       {(() => {
-        const isverenler = bolumeGoreProgramlar(bolum.slug);
+        /*
+          ORTAK MODÜL — AYNI BÖLÜM EŞLEŞMESİ, AYNI ŞİRKET VERİSİ
+
+          Eskiden `bolumeGoreProgramlar` çağrılıyordu: aynı eşleşmeyi
+          yapıyordu ama AYRI bir yoldan. Üç yüzeyin aynı bölüm için
+          farklı şirket listesi göstermesi mümkündü. Artık dizin
+          sayfası, boş sonuç ekranı ve bu sayfa tek sözleşmeden
+          geçiyor.
+
+          ÖLÇÜM YOK, KASITLI: bu ağaç ön render tarafından da çiziliyor
+          ve orada ağ isteği atılamıyor. Bağlantılar şirketin
+          StajımVar sayfasına (`/sirket/...`) gidiyor — dışa giden
+          kariyer adresi burada hiç kullanılmıyor, yani genel kariyer
+          sayfasını açık program gibi gösterme riski de yok.
+
+          SINIR YOK: `uygunIsverenler` varsayılan olarak 6 kayıtla
+          kesiyor; bölüm sayfasında bütün eşleşmeler görünmeli.
+        */
+        const isverenler = uygunIsverenler(
+          dizini(STAJ_PROGRAMLARI),
+          { country: 'TR', departments: [bolum.slug] },
+          Number.MAX_SAFE_INTEGER
+        );
+        /* Eşleşme yoksa blok hiç çizilmiyor. */
         if (isverenler.length === 0) return null;
         return (
           <section className="space-y-2 pt-1">

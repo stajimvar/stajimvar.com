@@ -55,9 +55,28 @@ export function programDurumMetni(durum) {
       return 'Staj programı açık';
     case 'kapali':
       return 'Staj programı kapalı';
-    default:
+    case 'bilinmiyor':
       return 'Güncel açık program doğrulanamadı';
+    /*
+      ÖLÇÜLMEDİ İLE BİLİNMİYOR AYNI ŞEY DEĞİL
+
+      `null` = bu şirketin sayfasına HİÇ bakamadık (adres 403 döndü,
+      ağ hatası aldık ya da yumuşak 404'e düştü). `bilinmiyor` =
+      baktık ve kanıt bulamadık. İkisini aynı cümleyle anlatmak,
+      bakmadığımız yerde bakmış gibi görünmek olurdu.
+
+      Ölçülen durum (14 Eylül 2026): 6 şirket bu durumda —
+      akcansa ve turk-telekom erişilemedi; tusas, tupras,
+      yildiz-holding ve acibadem-saglik bozuk adres.
+    */
+    default:
+      return 'Henüz kontrol edilmedi';
   }
+}
+
+/** Program durumu gerçekten ÖLÇÜLDÜ mü? */
+export function programOlculduMu(durum) {
+  return durum === 'acik' || durum === 'kapali' || durum === 'bilinmiyor';
 }
 
 /**
@@ -80,15 +99,39 @@ export function urlDurumMetni(durum) {
 }
 
 /**
- * Kartta gösterilecek eylem metni.
+ * KARTTAKİ BAĞLANTI — ETİKET NEREYE GİTTİĞİNİ SÖYLÜYOR
  *
- * "Başvur" ya da "Açık ilan" DEMİYOR: hedef şirketin genel kariyer
- * sayfası ve orada o an başvuru olup olmadığını bilmiyoruz. Program
- * durumu `acik` olsa bile bağlantı yine kariyer sayfasına gidiyor —
- * "Başvur" demek, tek tıkla bir forma gideceği izlenimi verirdi.
+ * Üç ayrı sonuç var ve hangisinin çıktığı KANITA bağlı:
+ *
+ *   1. `program` — kanıtlanmış açık programın KENDİ adresi var.
+ *      "Açık programı incele" denebilir, çünkü hedef gerçekten o
+ *      programın sayfası.
+ *
+ *   2. `kariyer` — elimizde yalnız genel kariyer sayfası var.
+ *      "Şirketin kariyer sayfası". "Programa başvur" demek, öğrenciyi
+ *      başvuru formuna gideceğini sanarak kurumsal bir sayfaya
+ *      göndermek olurdu. 14 Eylül 2026 ölçümünde 44 şirketin 44'ü
+ *      burada.
+ *
+ *   3. `yok` — adres bozuk. AKTİF BAĞLANTI HİÇ ÇİZİLMİYOR: çalışmadığını
+ *      ölçtüğümüz bir adrese düğme koymak, öğrenciyi 404'e göndermek.
+ *
+ * @returns {{tur:'program'|'kariyer'|'yok', etiket:string|null, adres:string|null}}
  */
-export function baglantiEtiketi() {
-  return 'Şirketin kariyer sayfası';
+export function baglantiEtiketi(isveren) {
+  /* Kanıt: hem durum `acik` HEM de programın kendi adresi. Biri eksikse
+     "açık program" iddiası arayüzde kullanılmıyor. */
+  if (isveren?.programDurumu === 'acik' && isveren?.programUrl) {
+    return { tur: 'program', etiket: 'Açık programı incele', adres: isveren.programUrl };
+  }
+  if (isveren?.urlDurumu === 'bozuk') {
+    return { tur: 'yok', etiket: null, adres: null };
+  }
+  return {
+    tur: 'kariyer',
+    etiket: 'Şirketin kariyer sayfası',
+    adres: isveren?.kariyerUrl ?? null,
+  };
 }
 
 function tarih(deger) {
@@ -126,7 +169,8 @@ export function isvereniBirlestir(program, kontrol, sirket) {
     /*
       BELGE / ÜCRET / SİGORTA — YALNIZ KAYNAKTA VARSA
 
-      46 kaydın hiçbirinde bu bilgiler yok ve UYDURULMUYOR. Alanlar
+      44 kaydın hiçbirinde bu bilgiler yok ve UYDURULMUYOR. (Bu sayıyı
+      bir ara 46 diye yazmıştım; dosyayı saydım, 44.) Alanlar
       sözleşmede duruyor ki bir gün kaynağından doğrulanınca
       eklenecek yer belli olsun.
     */
@@ -142,9 +186,20 @@ export function isvereniBirlestir(program, kontrol, sirket) {
     */
     urlBasarili: tarih(kontrol?.url_basarili_at) ?? tarih(program.sonKontrol),
     urlHata: kontrol?.url_hata ?? null,
-    programDurumu: kontrol?.program_durumu ?? 'bilinmiyor',
+    /*
+      VARSAYILAN 'bilinmiyor' DEĞİL, `null`
+
+      Eskiden `?? 'bilinmiyor'` yazıyordu ve bu, hiç kontrol edilmemiş
+      şirketi "baktık, bulamadık" gibi gösteriyordu. Ölçümün yokluğu
+      arayüze aynen taşınıyor.
+    */
+    programDurumu: kontrol?.program_durumu ?? null,
     programKaniti: kontrol?.program_kaniti ?? null,
     programKontrol: tarih(kontrol?.program_kontrol_at),
+    /* Yalnız kanıtlanmış açık programda dolu; yoksa `null`. */
+    programUrl: kontrol?.program_url ?? null,
+    /* Satır hiç yok mu (işçi bu şirkete hiç bakmamış mı)? */
+    olculdu: Boolean(kontrol),
 
     /* ---- şirket kaydı (varsa) ---- */
     /*
@@ -192,4 +247,66 @@ export function uygunIsverenler(dizin, filtreler, sinir = 6) {
       : dizin.filter((i) => i.bolumler.some((b) => bolumler.includes(b)));
 
   return havuz.slice(0, sinir);
+}
+
+/*
+  ÖLÇÜMLERİ GETİRME — TEK İSTEK, PAYLAŞILAN ÖNBELLEK
+
+  KART BAŞINA SORGU YOK: üç yüzeyin hepsi bu işlevi çağırıyor, işlev de
+  44 satırın tamamını BİR istekte alıyor. 44 kart × 1 sorgu, mobil
+  bağlantıda saniyeler demekti.
+
+  ÖNBELLEK SÖZÜ AYNI SEKMEDE: ilk çağrı isteği başlatıyor, eşzamanlı
+  çağrılar AYNI sözü bekliyor. İki bileşen aynı anda mount olduğunda
+  (bölüm sayfası + boş sonuç ekranı) ikinci istek hiç çıkmıyor.
+*/
+let kontrolSozu = null;
+let kontrolZamani = 0;
+
+/** Önbellek ömrü. Ölçüm günde bir kez yazılıyor; dakikalar fazlasıyla taze. */
+export const KONTROL_ONBELLEK_MS = 5 * 60 * 1000;
+
+/** Testler ve yüzey değişimleri için önbelleği boşaltır. */
+export function kontrolOnbelleginiBosalt() {
+  kontrolSozu = null;
+  kontrolZamani = 0;
+}
+
+/**
+ * `employer_career_checks` satırlarının tamamı.
+ *
+ * HATA SESSİZ VE BOŞ DÖNÜYOR: ölçüm gelmezse dizin gitmiyor, yalnız
+ * durum satırları "Henüz kontrol edilmedi" oluyor. Editoryal bilgi
+ * (ad, sektör, bölüm, kariyer adresi) veritabanına hiç bağlı değil.
+ *
+ * ÖN RENDER'DA AĞ YOK: `import.meta.env` orada tanımsız ve
+ * `./supabase` içe aktarımı fırlatıyor. `try` bunu yutuyor ve ön
+ * render edilen sayfa ölçüm satırlarını hiç çizmiyor — yanlış bir
+ * durum basmaktansa hiç basmamak.
+ */
+export async function fetchIsverenKontrolleri() {
+  const simdi = Date.now();
+  if (kontrolSozu && simdi - kontrolZamani < KONTROL_ONBELLEK_MS) return kontrolSozu;
+
+  kontrolZamani = simdi;
+  kontrolSozu = (async () => {
+    try {
+      const { supabase } = await import('./supabase');
+      const { data, error } = await supabase
+        .from('employer_career_checks')
+        .select(
+          'slug, url_durumu, url_denendi_at, url_basarili_at, url_hata, program_durumu, program_kaniti, program_kontrol_at, program_url'
+        );
+      if (error) return [];
+      return data ?? [];
+    } catch {
+      return [];
+    }
+  })();
+
+  const sonuc = await kontrolSozu;
+  /* Boş sonuç önbelleğe ÇAKILMASIN: geçici bir hata dizini beş dakika
+     ölçümsüz bırakmasın. */
+  if (sonuc.length === 0) kontrolOnbelleginiBosalt();
+  return sonuc;
 }

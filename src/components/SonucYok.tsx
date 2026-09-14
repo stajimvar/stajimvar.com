@@ -1,4 +1,5 @@
 import React from 'react';
+import { baglantiEtiketi, programDurumMetni } from '../lib/isveren-dizini.mjs';
 import { Building2, FileText, Mail, RotateCcw, Search, Sparkles, X } from 'lucide-react';
 
 /**
@@ -39,13 +40,22 @@ export type AktifSuzgec = {
   kazanc?: number;
 };
 
-/** `lib/bos-sonuc-isverenler` çıktısı. */
+/**
+ * `lib/isveren-dizini` çıktısı — DİZİN SAYFASIYLA AYNI BİÇİM.
+ *
+ * Eskiden `lib/bos-sonuc-isverenler` vardı ve `durum` alanını her
+ * kayıtta sabit `'bilinmiyor'` yazıyordu: boş sonuç ekranı dizin
+ * sayfasından FARKLI bir durum hesabı gösteriyordu. O modül kaldırıldı;
+ * durum artık ölçümden geliyor ve `null` = hiç kontrol edilmedi.
+ */
 export type BosSonucIsveren = {
   slug: string;
   isveren: string;
   sektor: string;
   kariyerUrl: string;
-  durum: 'acik' | 'kapali' | 'bilinmiyor';
+  programDurumu: 'acik' | 'kapali' | 'bilinmiyor' | null;
+  programUrl: string | null;
+  urlDurumu: 'calisiyor' | 'gecici_hata' | 'bozuk' | null;
 };
 
 type SonucYokProps = {
@@ -191,18 +201,24 @@ export const SonucYok: React.FC<SonucYokProps> = ({
             Bu bölüm ve ülkede staj alan işverenler
           </p>
           <p className="text-xs leading-relaxed text-gray-600">
-            Bunlar açık ilan değil, şirketin kendi başvuru sayfası. Programın o an açık olup
-            olmadığını doğrulayamıyoruz.
+            Bunlar açık ilan değil, şirketin kendi kariyer sayfası. Programın o an başvuru
+            alıp almadığını ancak şirketin kendi staj sayfasında aktif başvuru gördüğümüzde
+            yazıyoruz.
           </p>
           <ul className="space-y-1.5">
-            {isverenler.map((i) => (
-              <li key={i.slug}>
-                <a
-                  href={i.kariyerUrl}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow"
-                  className="flex items-start gap-2 rounded-xl border border-gray-200 bg-white p-3 transition-colors hover:border-blue-300 hover:bg-blue-50/40"
-                >
+            {isverenler.map((i) => {
+              /*
+                ETİKET VE HEDEF ORTAK KARARDAN
+
+                Aynı işlev dizin sayfasında da çağrılıyor; iki yüzeyin
+                aynı şirket için farklı şey yazması imkânsız. Bozuk
+                adreste `tur === 'yok'` dönüyor ve satır TIKLANAMAZ
+                oluyor — çalışmadığını ölçtüğümüz adrese bağlantı
+                koymak, öğrenciyi 404'e göndermek.
+              */
+              const baglanti = baglantiEtiketi(i);
+              const govde = (
+                <>
                   <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
                   <span className="min-w-0 flex-1">
                     <span className="block break-words text-sm font-bold text-gray-900">
@@ -210,16 +226,32 @@ export const SonucYok: React.FC<SonucYokProps> = ({
                     </span>
                     <span className="block text-xs text-gray-500">{i.sektor}</span>
                   </span>
-                  <span className="shrink-0 rounded-md border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[11px] font-bold text-gray-600">
-                    {i.durum === 'acik'
-                      ? 'Açık'
-                      : i.durum === 'kapali'
-                        ? 'Kapalı'
-                        : 'Durum bilinmiyor'}
+                  {/* Durum METİNLE; rozet rengi tek başına bilgi taşımıyor. */}
+                  <span className="shrink-0 self-center rounded-md border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-right text-[11px] font-bold text-gray-600">
+                    {programDurumMetni(i.programDurumu)}
                   </span>
-                </a>
-              </li>
-            ))}
+                </>
+              );
+              return (
+                <li key={i.slug}>
+                  {baglanti.tur === 'yok' ? (
+                    <span className="flex min-h-11 items-start gap-2 rounded-xl border border-gray-200 bg-gray-50 p-3">
+                      {govde}
+                    </span>
+                  ) : (
+                    <a
+                      href={baglanti.adres ?? i.kariyerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      title={baglanti.etiket ?? undefined}
+                      className="flex min-h-11 items-start gap-2 rounded-xl border border-gray-200 bg-white p-3 transition-colors hover:border-blue-300 hover:bg-blue-50/40"
+                    >
+                      {govde}
+                    </a>
+                  )}
+                </li>
+              );
+            })}
           </ul>
           <button
             type="button"

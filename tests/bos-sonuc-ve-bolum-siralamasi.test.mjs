@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
-import { ulkeUygunMu, uygunIsverenler } from '../src/lib/bos-sonuc-isverenler.mjs';
+import { dizini, ulkeUygunMu, uygunIsverenler } from '../src/lib/isveren-dizini.mjs';
 import { bolumSkoru, bolumeGoreSirala } from '../src/lib/bolum-eslestirme.mjs';
 import { adresTenFiltreler, aramaEslesiyorMu, ilaniNormalize } from '../src/lib/kayitli-arama.mjs';
 
@@ -63,8 +63,8 @@ test('Fırsatlar küçük ve ikincil, ana sonuç değil', () => {
 
 test('uygun şirket yoksa blok gizleniyor', () => {
   assert.match(SONUCYOK, /\{isverenler\.length > 0 && \(/);
-  assert.deepEqual(uygunIsverenler(PROGRAMLAR, { country: 'all', departments: ['hukuk'] }), []);
-  assert.deepEqual(uygunIsverenler([], { country: 'all' }), []);
+  assert.deepEqual(uygunIsverenler(dizini(PROGRAMLAR), { country: 'all', departments: ['hukuk'] }), []);
+  assert.deepEqual(uygunIsverenler(dizini([]), { country: 'all' }), []);
 });
 
 test('ülke uygunluğu gerçek alandan: başka ülkede öneri yok', () => {
@@ -74,12 +74,12 @@ test('ülke uygunluğu gerçek alandan: başka ülkede öneri yok', () => {
   /* `remote` de dışarıda: bunlar kariyer sayfaları, uzaktan çalışma
      vaadi taşımıyorlar. */
   assert.equal(ulkeUygunMu('remote'), false);
-  assert.deepEqual(uygunIsverenler(PROGRAMLAR, { country: 'FR' }), []);
-  assert.equal(uygunIsverenler(PROGRAMLAR, { country: 'TR' }).length, 3);
+  assert.deepEqual(uygunIsverenler(dizini(PROGRAMLAR), { country: 'FR' }), []);
+  assert.equal(uygunIsverenler(dizini(PROGRAMLAR), { country: 'TR' }).length, 3);
 });
 
 test('bölüm eşleşmesi TAM slug, alt dize değil', () => {
-  const sonuc = uygunIsverenler(PROGRAMLAR, {
+  const sonuc = uygunIsverenler(dizini(PROGRAMLAR), {
     country: 'all',
     departments: ['bilgisayar-muhendisligi'],
   });
@@ -93,25 +93,66 @@ test('bölüm eşleşmesi TAM slug, alt dize değil', () => {
     burada tekrarlanmıyor.
   */
   assert.deepEqual(
-    uygunIsverenler(PROGRAMLAR, { country: 'all', departments: ['islet'] }).map((x) => x.slug),
+    uygunIsverenler(dizini(PROGRAMLAR), { country: 'all', departments: ['islet'] }).map((x) => x.slug),
     []
   );
 });
 
 test('genel kariyer sayfası açık ilan gibi gösterilmiyor', () => {
-  for (const i of uygunIsverenler(PROGRAMLAR, { country: 'all' })) {
-    assert.equal(i.durum, 'bilinmiyor');
+  /*
+    ÖLÇÜM YOKSA DURUM `null` — "bilinmiyor" DEĞİL
+
+    Eskiden bu modül durumu her kayıtta sabit 'bilinmiyor' yazıyordu:
+    hiç bakılmamış şirketi "baktık, bulamadık" gibi gösteriyordu.
+  */
+  for (const i of uygunIsverenler(dizini(PROGRAMLAR), { country: 'all' })) {
+    assert.equal(i.programDurumu, null);
+    assert.equal(i.programUrl, null);
   }
-  assert.match(SONUCYOK, /Durum bilinmiyor/);
-  assert.match(SONUCYOK, /Bunlar açık ilan değil, şirketin kendi başvuru sayfası/);
+  assert.match(SONUCYOK, /programDurumMetni\(i\.programDurumu\)/);
+  assert.match(SONUCYOK, /Bunlar açık ilan değil, şirketin kendi kariyer sayfası/);
   /* Sabit sayı sözü yok. */
   assert.ok(!/10 şirket|10 işveren/.test(SONUCYOK));
 });
 
-test('ikinci şirket dizini kurulmuyor, kart başına sorgu yok', () => {
+test('ikinci şirket dizini YOK: eski modül kaldırıldı, üç yüzey aynı kaynakta', () => {
   assert.match(LISTE, /import \{ STAJ_PROGRAMLARI \} from '\.\.\/data\/stajProgramlari'/);
-  const MODUL = oku('src/lib/bos-sonuc-isverenler.mjs');
-  assert.ok(!/supabase|fetch\(|rest\/v1/.test(MODUL), 'veri katmanına dokunmamalı');
+
+  /* Eski ikinci liste gerçekten silinmiş olmalı. */
+  assert.ok(
+    !existsSync(new URL('../src/lib/bos-sonuc-isverenler.mjs', import.meta.url)),
+    'bos-sonuc-isverenler.mjs kaldırılmalı: ikinci şirket listesi ve ikinci durum hesabıydı'
+  );
+  /*
+    İÇE AKTARIMA bakıyor, metne değil: dosyalarda eski modülün NEDEN
+    kaldırıldığını anlatan yorumlar var ve düz `includes` onları da
+    yakalıyordu (kendi testim bir kez bu yüzden kırmızı döndü).
+  */
+  for (const dosya of [
+    'src/components/SonucYok.tsx',
+    'src/components/MatchedInternshipsView.tsx',
+    'src/components/StajProgramlari.tsx',
+  ]) {
+    assert.ok(
+      !/from '[^']*bos-sonuc-isverenler/.test(oku(dosya)),
+      `${dosya} eski modülü içe aktarmamalı`
+    );
+  }
+
+  /* Üç yüzeyin hepsi ortak modülü çağırıyor. */
+  assert.match(SONUCYOK, /from '\.\.\/lib\/isveren-dizini\.mjs'/);
+  assert.match(LISTE, /from '\.\.\/lib\/isveren-dizini\.mjs'/);
+  assert.match(oku('src/components/StajProgramlari.tsx'), /from '\.\.\/lib\/isveren-dizini\.mjs'/);
+  assert.match(oku('src/components/BolumIcerik.tsx'), /isveren-dizini\.mjs|isveren-olcum/);
+
+  /* Ortak modül veri katmanına YALNIZ tek toplu okumayla dokunuyor. */
+  const MODUL = oku('src/lib/isveren-dizini.mjs');
+  assert.equal(
+    (MODUL.match(/\.from\('employer_career_checks'\)/g) ?? []).length,
+    1,
+    'tek toplu okuma olmalı'
+  );
+  assert.match(MODUL, /export function kontrolOnbelleginiBosalt/);
 });
 
 test('mevsim bandı ve eğitim tanıtımı yok', () => {
