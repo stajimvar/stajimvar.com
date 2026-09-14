@@ -70,6 +70,15 @@ jobs:
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
         run: npx tsc --noEmit
 
+      # PAGES FUNCTIONS AYRI KAPI
+      #
+      # Yukaridaki kontrol `tsconfig.json`'i kullaniyor ve o dosya
+      # `include: ["src"]` diyor: `functions/` bugune kadar hic tip
+      # kontrolunden gecmedi. Uc nokta kodu Supabase'e servis anahtariyla
+      # yaziyor; imza hatasinin uretimde ortaya cikmasi kabul edilemez.
+      - name: Pages Functions tip kontrolu
+        run: npm run lint:functions
+
       # SİTE HARİTASI BURADA DA ÜRETİLİYOR
       #
       # public/sitemap.xml depoda duran bir dosya ve yalnızca saatlik iş

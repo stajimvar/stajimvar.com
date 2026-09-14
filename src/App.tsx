@@ -256,6 +256,9 @@ const AdminClaimsView = React.lazy(() =>
 const AdminListingsQueue = React.lazy(() =>
   import('./components/AdminListingsQueue').then((m) => ({ default: m.AdminListingsQueue }))
 );
+const AdminIlanBildirimleri = React.lazy(() =>
+  import('./components/AdminIlanBildirimleri').then((m) => ({ default: m.AdminIlanBildirimleri }))
+);
 const AdminDashboard = React.lazy(() =>
   import('./components/AdminDashboard').then((m) => ({ default: m.AdminDashboard }))
 );
@@ -2522,6 +2525,18 @@ export default function App() {
                   <AdminListingsQueue onToast={showToast} />
                 </section>
                 <AdminClaimsView onToast={showToast} />
+                {/*
+                  İLAN BİLDİRİMLERİ AYNI YOLDA
+
+                  Ayrı bir adres açılmadı: yönetici zaten onay kuyruğuna
+                  bakmak için buraya geliyor ve iki iş de "yayındaki ilan
+                  doğru mu" sorusunun parçası. Üçüncü bir yol, bildirimin
+                  bakılmayan bir sekmede birikmesi olurdu.
+                */}
+                <section className="space-y-3">
+                  <h2 className="text-lg font-bold text-gray-900">İlan bildirimleri</h2>
+                  <AdminIlanBildirimleri onToast={showToast} />
+                </section>
               </>
             ) : (
               <AdminDashboard onNavigate={navigate} />

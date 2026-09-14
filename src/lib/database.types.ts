@@ -1015,6 +1015,68 @@ export type Database = {
         };
         Relationships: [];
       };
+      /*
+        İLAN BİLDİRİMLERİ
+
+        Yazma istemcide DEĞİL: `Insert` burada tam olsa da tabloda INSERT
+        politikası yok ve kayıt yalnız sunucu katmanındaki
+        `ilan_bildirimi_gonder` fonksiyonundan geçiyor
+        (bkz. 20260929010000). Tip, yöneticinin OKUDUĞU satırı tanımlıyor.
+      */
+      listing_reports: {
+        Row: {
+          id: string;
+          listing_url: string;
+          company_name: string | null;
+          position_title: string | null;
+          reason: Database['public']['Enums']['ilan_bildirim_sebebi'];
+          details: string | null;
+          reporter_email: string | null;
+          ip_ozeti: string | null;
+          status: Database['public']['Enums']['ilan_bildirim_durumu'];
+          review_note: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          created_at: string;
+          notified_at: string | null;
+          notify_attempts: number;
+          notify_last_error: string | null;
+          notify_next_attempt_at: string;
+          test_mi: boolean;
+        };
+        Insert: {
+          id?: string;
+          listing_url: string;
+          company_name?: string | null;
+          position_title?: string | null;
+          reason: Database['public']['Enums']['ilan_bildirim_sebebi'];
+          details?: string | null;
+          reporter_email?: string | null;
+          ip_ozeti?: string | null;
+          status?: Database['public']['Enums']['ilan_bildirim_durumu'];
+          review_note?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          created_at?: string;
+          notified_at?: string | null;
+          notify_attempts?: number;
+          notify_last_error?: string | null;
+          notify_next_attempt_at?: string;
+          test_mi?: boolean;
+        };
+        Update: {
+          status?: Database['public']['Enums']['ilan_bildirim_durumu'];
+          review_note?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          notified_at?: string | null;
+          notify_attempts?: number;
+          notify_last_error?: string | null;
+          notify_next_attempt_at?: string;
+          test_mi?: boolean;
+        };
+        Relationships: [];
+      };
       import_runs: {
         Row: {
           created_count: number;
@@ -1329,6 +1391,18 @@ export type Database = {
         Args: { p_basvuru: string; p_kabul: boolean };
         Returns: Database['public']['Enums']['application_status'];
       };
+      /*
+        İlan bildirimi incelemesi — durum + sonuç notu.
+
+        `anon` çağıramıyor; yetki fonksiyonun İÇİNDE `is_admin()` ile
+        denetleniyor, yani arayüzü atlamak işe yaramıyor.
+      */
+      ilan_bildirimi_incele: {
+        Args: { p_id: string; p_durum: string; p_not?: string | null };
+        Returns: undefined;
+      };
+      /* Denemesi tükenmiş bildirimi yeniden kuyruğa alır (yalnız yönetici). */
+      ilan_bildirimi_yeniden_dene: { Args: { p_id: string }; Returns: undefined };
       /* Bütün okunmamış bildirimleri okundu yapar; sayıyı döndürür. */
       bildirimleri_okundu_isaretle: { Args: Record<string, never>; Returns: number };
       /* Görüşme davetine yanıt — kabul/ret yalnızca bu kapıdan geçiyor. */
@@ -1350,6 +1424,15 @@ export type Database = {
     };
     Enums: {
       application_method: 'email_application' | 'external' | 'internal';
+      ilan_bildirim_sebebi:
+        | 'kapanmis_ilan'
+        | 'yanlis_bilgi'
+        | 'ucret_talebi'
+        | 'ayirimci_ifade'
+        | 'sahte_ilan'
+        | 'kirik_baglanti'
+        | 'diger';
+      ilan_bildirim_durumu: 'yeni' | 'inceleniyor' | 'kapatildi';
       channel_type: 'email' | 'external_url' | 'internal';
       channel_verification: 'unverified' | 'verified' | 'rejected';
       import_event_type:

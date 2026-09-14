@@ -1,0 +1,53 @@
+{
+  /*
+    PAGES FUNCTIONS AYRI BİR TİP DÜNYASI
+
+    Kök `tsconfig.json` `include: ["src"]` diyor, yani `functions/` bugüne
+    kadar HİÇ tip kontrolünden geçmedi: `PagesFunction`, `Response`,
+    `crypto.subtle` gibi adlar editörde kırmızıydı ama `npm run lint`
+    temiz dönüyordu. Kapı, kontrol ettiğini sandığımız kodu kontrol
+    etmiyordu.
+
+    Ayrı dosya olmasının sebebi: bu kod tarayıcıda değil workerd'de
+    çalışıyor. Kökün `lib: ["DOM"]` ayarıyla birleştirilirse iki farklı
+    `Response`/`fetch` tanımı çakışıyor ve hatalar gerçeği yansıtmıyor.
+    `types` yalnız workers-types: DOM tipleri BİLEREK dışarıda.
+  */
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["es2022"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["@cloudflare/workers-types"],
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+
+    /* Üretilen çıktı wrangler'ın işi; burada yalnız kontrol yapılıyor. */
+    "noEmit": true,
+    "skipLibCheck": true,
+
+    /*
+      PAYLAŞILAN .mjs MODÜLLERİ GERÇEKTEN OKUNUYOR
+
+      Functions kodu `src/lib/*.mjs` içindeki saf JS modüllerini
+      içe alıyor (önbellek politikası, Instagram durum makinesi).
+      `allowJs` olmadan her biri TS7016 veriyordu: "bildirim dosyası yok,
+      örtük any". O hatayı `any` ile susturmak, tam da bu kapının
+      yakalaması gereken şeyi kör etmek olurdu — çağrının imzası yanlışsa
+      kimse görmezdi.
+
+      `allowJs` ile tsc modülün KENDİ kaynağından tip çıkarıyor: fonksiyon
+      adı, parametre sayısı ve dönüş şekli gerçekten denetleniyor.
+      `checkJs` kapalı: paylaşılan JS'in İÇİ bu kapının konusu değil, o
+      dosyalar `src` tarafında ayrıca test ediliyor.
+    */
+    "allowJs": true,
+    "checkJs": false
+  },
+  "include": ["**/*.ts"]
+}

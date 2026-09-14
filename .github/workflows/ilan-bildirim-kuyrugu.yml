@@ -1,0 +1,70 @@
+name: İlan bildirim kuyruğu
+
+# SAATTE BİR
+#
+# /ilan-bildir formu kapanmış ya da sahte bir ilanı haber veriyor; bu
+# bilgi bayatladıkça değerini kaybediyor. Günde bir kez, öğrencinin
+# bildirdiği kapanmış ilanın bir gün daha listede kalması demek.
+#
+# Saatlik koşu üçüncü taraf bir sunucuya yük bindirmiyor: yalnız kendi
+# veritabanımızı okuyup posta sağlayıcımıza istek atıyor ve kuyruk çoğu
+# koşuda boş.
+
+on:
+  workflow_dispatch:
+    inputs:
+      kuru:
+        description: "Hiçbir e-posta göndermeden kuyruğu raporla"
+        type: boolean
+        default: false
+  schedule:
+    # Her saatin 25. dakikası: saatlik tarama (17) ve bağlantı kontrolü
+    # (04:40) ile çakışmıyor.
+    - cron: "25 * * * *"
+
+permissions:
+  contents: read
+
+# İKİ KOŞU AYNI ANDA ÇALIŞMASIN
+#
+# `pending: false` ile birlikte, elle tetikleme zamanlanmış koşunun üstüne
+# binmiyor. Bu tek başına yeterli DEĞİL — betiğin kendisi de kayıtları
+# `for update skip locked` ile alıyor, çünkü eş zamanlılığı iş akışı
+# düzeyinde garanti etmek kırılgan olurdu.
+concurrency:
+  group: ilan-bildirim-kuyrugu
+  cancel-in-progress: false
+
+jobs:
+  kuyruk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      RESEND_FROM: ${{ secrets.RESEND_FROM }}
+      ILAN_BILDIRIM_ALICI: ${{ secrets.ILAN_BILDIRIM_ALICI }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Betik `fetch` dışında hiçbir şey kullanmıyor: `npm ci` gerekmiyor
+      # ve saatlik koşu bağımlılık kurulumu kadar beklemiyor.
+      - name: Sırları doğrula
+        run: |
+          eksik=""
+          [ -z "$SUPABASE_URL" ] && eksik="$eksik SUPABASE_URL"
+          [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] && eksik="$eksik SUPABASE_SERVICE_ROLE_KEY"
+          [ -z "$RESEND_API_KEY" ] && eksik="$eksik RESEND_API_KEY"
+          [ -z "$ILAN_BILDIRIM_ALICI" ] && eksik="$eksik ILAN_BILDIRIM_ALICI"
+          if [ -n "$eksik" ]; then
+            echo "::error::Depo sırları eksik:$eksik"
+            exit 1
+          fi
+          echo "Sırlar tanımlı."
+
+      - name: Kuyruğu işle
+        run: node scripts/ilan-bildirim-kuyrugu.mjs ${{ inputs.kuru && '--kuru' || '' }}
