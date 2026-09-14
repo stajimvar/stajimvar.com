@@ -62,7 +62,18 @@ export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
     yalnız geçerli bir bölüm kaydıyla geliyor (yol çözümü
     `BOLUMLER`den buluyor), bulunamazsa sayfa hiç çizilmiyor.
   */
-  const aramaYolu = `/staj-ilanlari?bolum=${encodeURIComponent(bolum.slug)}`;
+  /*
+    HEDEF `/`, `/staj-ilanlari` DEĞİL — ÖLÇÜLDÜ
+
+    Bir ara `/staj-ilanlari?bolum=...` yazmıştım ve tarayıcıda gördüm:
+    o adres STATİK SEO sayfası (`StajIlanlariSayfasi`) ve filtre
+    parametrelerini hiç okumuyor. Bağlantı çalışıyor gibi görünüp
+    filtresiz bir sayfa açıyordu.
+
+    Etkileşimli liste `/` yolunda (`MatchedInternshipsView`) ve
+    `?bolum=` orada uygulanıyor.
+  */
+  const aramaYolu = `/?bolum=${encodeURIComponent(bolum.slug)}`;
   const digerleri = BOLUMLER.filter((b) => b.slug !== bolum.slug && b.grup === bolum.grup);
 
   return (
