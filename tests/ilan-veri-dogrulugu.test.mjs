@@ -90,9 +90,20 @@ test('null hiçbir ekranda "Ücretsiz" görünmüyor', () => {
      gibi gösterirdi. */
   assert.match(DETAY, /listing\?\.stipend\?\.isPaid === true/);
   assert.match(DETAY, /listing\?\.stipend\?\.isPaid === false\n\s*\? 'Ücretsiz'/);
-  /* Kart yalnız pozitif bilgiyi basıyor: null ve false rozet üretmiyor. */
-  assert.match(KART, /\{listing\.stipend\.isPaid && \(/);
-  assert.ok(!/Ücretsiz/.test(KART), 'kartta ücretsiz rozeti yok');
+  /*
+    KART DA ÜÇ DEĞERİ AYIRIYOR (davranış bilerek genişledi)
+
+    Önce yalnız pozitif bilgi basılıyordu çünkü false hem "ücretsiz"
+    hem "bilinmiyor" demekti. Ayrım veride olduğuna göre kart da
+    söyleyebilir: false → "Ücretsiz". Değişmeyen kural, NULL'un rozet
+    üretmemesi — üçlü `&&` null'u false gibi gösterirdi.
+  */
+  assert.match(KART, /listing\.stipend\.isPaid === true && \(/);
+  assert.match(KART, /listing\.stipend\.isPaid === false && \(/);
+  assert.ok(
+    !/\{listing\.stipend\.isPaid && \(/.test(KART),
+    'null ücret rozet üretmemeli'
+  );
 });
 
 test('ürün tipi üç değeri taşıyor', () => {

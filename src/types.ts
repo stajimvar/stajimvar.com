@@ -221,6 +221,14 @@ export interface InternshipListing {
    */
   applicationChannelId?: string;
   insuranceNote?: string;
+  /*
+    SİGORTAYI SAĞLAYAN TARAF
+
+    `undefined` = kaynak söylemiyor. 'yok' ile AYNI ŞEY DEĞİL: bilinmeyen
+    sigortayı "sigortasız" göstermek, zorunlu staj arayan öğrenci için
+    yanlış bilgi olurdu (göç 20261001010000).
+  */
+  insuranceProvider?: 'isveren' | 'universite' | 'aday' | 'yok';
 }
 
 export interface MatchBreakdown {
