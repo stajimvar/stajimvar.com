@@ -498,3 +498,26 @@ test('ayarlar ekranı tüm özetleri kapatma sunuyor', () => {
   assert.match(AYARLAR, /Bütün ilan özetlerini kapat/);
   assert.match(oku('src/lib/queries/index.ts'), /export async function tumOzetleriKapat/);
 });
+
+test('rıza sürümü beyan edilmeden e-posta açılamıyor', () => {
+  /*
+    ÖLÇÜLDÜ (14 Eylül 2026, üretim): `{"email_enabled":true,
+    "consent_text_version":null}` HTTP 201 ile kabul ediliyordu. Ekleme
+    tetikleyicisi `consent_at`i KENDİSİ dolduruyor, dolayısıyla kısıt
+    hiç ihlal edilemiyordu — "rıza kaydedildi" bir zaman damgasına
+    indirgenmişti ve kullanıcının NEYE onay verdiği kayıtta
+    olmayabiliyordu.
+  */
+  const YAMA = oku('supabase/migrations/20261003020000_riza_surumu_zorunlu.sql');
+  /* Tetikleyici artık uydurmuyor, reddediyor — hem ekleme hem açma. */
+  const sayi = (YAMA.match(/riza-surumu-yok/g) || []).length;
+  assert.equal(sayi, 2, 'ekleme ve açma yollarının ikisi de reddetmeli');
+  assert.ok(!/coalesce\(new\.consent_text_version, 1\)/.test(YAMA), 'varsayılan atanmamalı');
+  /* Kısıt da sürümü istiyor: tetikleyici atlanırsa tablo tutuyor. */
+  assert.match(
+    YAMA,
+    /check \(\s*email_enabled = false\s*or \(consent_at is not null and consent_text_version is not null\)\s*\)/
+  );
+  /* Kapatmada sürüm korunuyor: denetim sorusu sonradan da cevaplanabilir. */
+  assert.match(YAMA, /new\.consent_text_version := old\.consent_text_version;/);
+});
