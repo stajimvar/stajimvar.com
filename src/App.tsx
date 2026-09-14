@@ -233,6 +233,9 @@ const CompanyPortalView = React.lazy(() =>
 const SkillQuizzesView = React.lazy(() =>
   import('./components/SkillQuizzesView').then((m) => ({ default: m.SkillQuizzesView }))
 );
+const KisiselTakipListesi = React.lazy(() =>
+  import('./components/KisiselTakipListesi').then((m) => ({ default: m.KisiselTakipListesi }))
+);
 const ApplicationsTrackerView = React.lazy(() =>
   import('./components/ApplicationsTrackerView').then((m) => ({
     default: m.ApplicationsTrackerView,
@@ -1225,6 +1228,41 @@ export default function App() {
     setApplyTarget({ listing, matchScore });
   };
 
+  /**
+   * "BAŞVURDUĞUMU İŞARETLE" — yalnız kişisel takip.
+   *
+   * `handleApplyToJob`den AYRI: o gerçek başvuru gönderiyor, bu
+   * yalnız öğrencinin defterine yazıyor. Şirkete hiçbir şey gitmiyor.
+   *
+   * HARİCİ BAĞLANTIYA TIKLAMAK BUNU TETİKLEMİYOR: ilan sayfasındaki
+   * "Resmî sitede başvur" bağlantısı düz bir `<a>` ve hesapsız
+   * kullanıcı da kullanabiliyor. Kayıt ayrı ve açık bir işlem.
+   *
+   * Giriş gerekiyorsa dönüş yolu İLANIN KENDİSİ: kullanıcı giriş
+   * yaptıktan sonra baktığı ilana geri geliyor.
+   */
+  const handleTrackApplication = async (listing: InternshipListing) => {
+    if (!session || !activeStudent) {
+      setAuthDonusYolu(window.location.pathname);
+      setAuthModalMode('register');
+      setIsAuthModalOpen(true);
+      showToast('Takip listene eklemek için önce giriş yapman gerekiyor.');
+      return;
+    }
+    try {
+      const { basvurdumIsaretle } = await import('./lib/queries');
+      await basvurdumIsaretle({
+        listingId: listing.id,
+        listingTitle: listing.title,
+        companyName: listing.companyName,
+        studentId: session.userId,
+      });
+      showToast('Takip listene eklendi. Şirkete başvuru gönderilmedi.');
+    } catch (hata) {
+      showToast(hata instanceof Error ? hata.message : 'Takip kaydı oluşturulamadı.');
+    }
+  };
+
   const submitApplication = async (consent: boolean) => {
     if (!applyTarget || !activeStudent) return;
 
@@ -1830,6 +1868,29 @@ export default function App() {
                 acilacakBasvuru={acilacakBasvuru}
                 onBasvuruAcildi={() => setAcilacakBasvuru(null)}
               />
+
+      {/*
+        KİŞİSEL TAKİP DEFTERİ — AYNI SEKMEDE, AYRI BÖLÜM
+
+        Yeni bir adres açılmadı: öğrenci başvurularına bakmak için
+        buraya geliyor. İki liste AYRI bölümde çünkü iki farklı şey:
+        yukarısı GERÇEK başvurular (platform içi / e-postayla
+        ilettiğimiz), burası öğrencinin kendi işaretlediği harici
+        başvurular. Tek listede birleşseydi "başvurun şirkete gitti"
+        ile "ben başvurdum diye işaretledim" aynı görünürdü.
+      */}
+      <section className="space-y-3 pt-2">
+        <h2 className="text-base font-bold text-gray-900">Kendi takip listem</h2>
+        <p className="text-xs text-gray-600">
+          Şirketin kendi sayfasından yaptığın başvurular. Bu kayıtlar yalnızca senin takibin
+          içindir; şirkete başvuru göndermez ve şirketler bu listeyi görmez.
+        </p>
+        <React.Suspense
+          fallback={<div className="h-24 rounded-2xl bg-gray-100 animate-pulse" />}
+        >
+          <KisiselTakipListesi onToast={showToast} onNavigate={navigate} />
+        </React.Suspense>
+      </section>
     </div>
   ) : null;
 
@@ -2108,6 +2169,7 @@ export default function App() {
             onBack={goHome}
             onNavigate={navigate}
             onApply={(ilan) => handleApplyToJob(ilan, 0)}
+            onTrack={handleTrackApplication}
           />
           {girisModali}
           {adPenceresi}
