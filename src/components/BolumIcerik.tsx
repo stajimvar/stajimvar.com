@@ -45,7 +45,24 @@ const Blok: React.FC<{ baslik: string; maddeler: string[] }> = ({ baslik, maddel
 
 export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
   const okulYerlestirir = OKUL_YERLESTIRIR.includes(bolum.grup);
-  const aramaYolu = `/?q=${encodeURIComponent(bolum.aramaKelimeleri[0])}`;
+  /*
+    KANONİK BÖLÜM PARAMETRESİ — SERBEST `q` METNİ DEĞİL
+
+    Bağlantı `/?q=<ilk arama kelimesi>` üretiyordu: yaklaşık bir metin
+    araması. "Makine" yazan bir `q`, başlığında "makine öğrenmesi" geçen
+    yazılım ilanını da getiriyordu ve bölüm sayfasından gelen öğrenci
+    kendi bölümünün ilanı sanıyordu.
+
+    Kayıtlı arama sözleşmesindeki `bolum` parametresi kullanılıyor
+    (`lib/kayitli-arama`): liste onu AÇIK BÖLÜM FİLTRESİ olarak
+    uyguluyor — eleme, yaklaşık eşleşme değil. Aynı sözlük liste, bölüm
+    sayfası ve sıralama tarafından paylaşılıyor.
+
+    Geçersiz slug güvenli varsayılana düşüyor: `bolum.slug` bu bileşene
+    yalnız geçerli bir bölüm kaydıyla geliyor (yol çözümü
+    `BOLUMLER`den buluyor), bulunamazsa sayfa hiç çizilmiyor.
+  */
+  const aramaYolu = `/staj-ilanlari?bolum=${encodeURIComponent(bolum.slug)}`;
   const digerleri = BOLUMLER.filter((b) => b.slug !== bolum.slug && b.grup === bolum.grup);
 
   return (

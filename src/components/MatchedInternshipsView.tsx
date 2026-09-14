@@ -33,7 +33,7 @@ import { SonrakiAdim } from './SonrakiAdim';
 import { BasvuruSablonu } from './BasvuruSablonu';
 import { ilBul } from '../lib/sehir';
 import { BolumCipleri } from './BolumCipleri';
-import { alanaGoreSirala, alanSayilari } from '../lib/bolum-eslestirme.mjs';
+import { alanSayilari, bolumeGoreSirala } from '../lib/bolum-eslestirme.mjs';
 /*
   TEK ESLESME GERCEGI
 
@@ -43,11 +43,18 @@ import { alanaGoreSirala, alanSayilari } from '../lib/bolum-eslestirme.mjs';
   (ya da tersi) demekti ve ayrismayi kimse fark etmezdi.
 */
 import {
+  adresTenFiltreler,
   aramaEslesiyorMu,
   filtreleriDogrula,
   ilaniNormalize,
 } from '../lib/kayitli-arama.mjs';
 import { AramayiKaydet } from './AramayiKaydet';
+/*
+  Boş sonuçta gösterilecek işverenler MEVCUT dizinden (`stajProgramlari`);
+  ikinci bir şirket dizini kurulmuyor ve kart başına sorgu yok.
+*/
+import { STAJ_PROGRAMLARI } from '../data/stajProgramlari';
+import { uygunIsverenler } from '../lib/bos-sonuc-isverenler.mjs';
 import { SirketSeridi } from './SirketSeridi';
 import { ILAN_KAYNAGI_PARCALI } from '../lib/urun-metni';
 import { ListingCountrySelector } from './ListingCountrySelector';
@@ -447,7 +454,16 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     ayrışması ve kullanıcıya yanlış sayı gösterilmesi demekti. `atla`
     parametresi yalnız o filtreyi gevşetiyor, geri kalan aynen uygulanıyor.
   */
-  type SuzgecAdi = 'arama' | 'sehir' | 'bicim' | 'sirket' | 'tarih' | 'zorunlu' | 'ucretli' | 'uyum';
+  type SuzgecAdi =
+    | 'arama'
+    | 'sehir'
+    | 'bicim'
+    | 'sirket'
+    | 'tarih'
+    | 'zorunlu'
+    | 'ucretli'
+    | 'uyum'
+    | 'bolum';
 
   /*
     KANONIK FILTRE NESNESI
@@ -457,6 +473,31 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     `diger` ozel degeri kanonik sozlesmede yok -- o secim listeye ozel
     kaliyor (asagida ayri ele aliniyor).
   */
+  /*
+    AÇIK BÖLÜM FİLTRESİ — ADRESTEN, ELEME OLARAK
+
+    İki ayrı şey vardı ve biri hiç çalışmıyordu:
+      `bolumAlani` (çipler)  SIRALAMA sinyali — hiçbir ilanı elemiyor
+      `?bolum=<slug>`        AÇIK FİLTRE — eleme yapmalı
+
+    İkincisi kanonik nesnede YOKTU: bölüm sayfasından gelen bağlantı
+    parametreyi taşıyor ama liste onu okumuyordu. `adresTenFiltreler`
+    ayrıştırıyordu, kimse uygulamıyordu.
+
+    Adresten okunuyor ve geri/ileri ile birlikte çalışıyor: `popstate`
+    dinleniyor, yani tarayıcı geçmişinde gezinmek filtreyi doğru
+    değiştiriyor.
+  */
+  const [acikBolumler, setAcikBolumler] = useState<string[]>(() =>
+    typeof window === 'undefined' ? [] : adresTenFiltreler(window.location.search).departments
+  );
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const oku = () => setAcikBolumler(adresTenFiltreler(window.location.search).departments);
+    window.addEventListener('popstate', oku);
+    return () => window.removeEventListener('popstate', oku);
+  }, []);
+
   const kanonikFiltreler = React.useMemo(
     () =>
       filtreleriDogrula({
@@ -467,6 +508,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         /* Şirket ve tarih aralığı artık KAYDEDİLİYOR: ikisinin de
            kalıcı arama anlamı var ve listede uygulanıyorlar. */
         companies: selectedCompanies,
+        /* Açık bölüm filtresi: eleme. Çipler ayrı ve yalnız sıralıyor. */
+        departments: acikBolumler,
         postedWithinDays: dateRange === 'all' ? null : Number(dateRange),
         pay: onlyPaid ? 'paid' : 'all',
         mandatory: onlyMandatory,
@@ -477,6 +520,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       selectedCity,
       workTypes,
       selectedCompanies,
+      acikBolumler,
       dateRange,
       onlyPaid,
       onlyMandatory,
@@ -502,6 +546,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         ...(atla === 'zorunlu' ? { mandatory: false } : {}),
         ...(atla === 'sirket' ? { companies: [] } : {}),
         ...(atla === 'tarih' ? { postedWithinDays: null } : {}),
+        ...(atla === 'bolum' ? { departments: [] } : {}),
       });
       if (!aramaEslesiyorMu(ilaniNormalize(listing), paylasilan)) return false;
 
@@ -594,16 +639,23 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         return 0;
       });
     /*
-      YALNIZCA BAŞLIK
+      AĞIRLIKLI BÖLÜM SIRALAMASI — FİLTRELEMEZ
 
-      Şirket adı da verilince yanlış eşleşme çıktı: "invent.ai" içindeki
-      "ai", "İnsan Kaynakları Stajyeri" ilanını Yazılım alanına sokuyordu
-      (tarayıcıda görüldü). Alanı belirleyen şey pozisyonun adı; şirket
-      adı bu soruda gürültü.
+      `alanaGoreSirala` ikili çalışıyordu ve `department_tags`ı HİÇ
+      okumuyordu: ilanın kendi bölüm etiketi — en güçlü sinyal — hesaba
+      girmiyordu. Ağırlıklar: etiket 3, başlık 2, açıklama 1.
+
+      ŞİRKET ADI HÂLÂ DIŞARIDA: "invent.ai" içindeki "ai", "İnsan
+      Kaynakları Stajyeri" ilanını Yazılım alanına sokuyordu (tarayıcıda
+      görüldü). `bolumSkoru` başlık ve açıklamaya bakıyor, şirket adına
+      bakmıyor.
+
+      BU SATIR FİLTRELENMİŞ KÜMENİN TAMAMI ÜZERİNDE koşuyor; sayfalama
+      aşağıda, `gosterilecekIlanSayisi` ile yapılıyor. Yalnız görünen
+      sayfayı sıralamak, "daha fazla göster"e basınca sıranın değişmesi
+      demekti.
     */
-    return alanaGoreSirala(sirali, bolumAlani, (x: { listing: InternshipListing }) => [
-      x.listing.title,
-    ]);
+    return bolumeGoreSirala(sirali, bolumAlani, (x: { listing: InternshipListing }) => x.listing);
   }, [matchedData, gecer, sortBy, bolumAlani]);
 
   const topMatch = matchedData.sort((a, b) => b.match.overallScore - a.match.overallScore)[0];
@@ -1588,6 +1640,11 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             <SonucYok
               aramaTerimi={searchQuery.trim()}
               suzgecler={aktifSuzgecler}
+              /*
+                Seçili ÜLKE VE BÖLÜME gerçekten uyanlar. Uyan yoksa boş
+                dizi gidiyor ve blok hiç çizilmiyor.
+              */
+              isverenler={uygunIsverenler(STAJ_PROGRAMLARI, kanonikFiltreler)}
               firsatSayisi={firsatSayisi}
               onFirsatlaraGit={() =>
                 onNavigate?.(

@@ -235,3 +235,89 @@ export const BOLUM_ALANI = {
 export function bolumunAlani(bolumSlug) {
   return BOLUM_ALANI[bolumSlug] ?? null;
 }
+
+/* ------------------------------------------------- ağırlıklı sıralama */
+
+/**
+ * BÖLÜM SİNYALİ — AĞIRLIKLI SKOR
+ *
+ * `alanaGoreSirala` ikili çalışıyordu: eşleşen öne, kalan altta. İki
+ * sorun vardı:
+ *
+ *   1. `department_tags` HİÇ OKUNMUYORDU. O alan ilanın kendi bölüm
+ *      etiketi — yani en güçlü sinyal — ve sıralama yalnız başlık
+ *      metnine bakıyordu.
+ *   2. Bütün eşleşmeler eşit sayılıyordu: etiketi "yazilim" olan ilan
+ *      ile açıklamasında "yazılım" geçen ilan aynı sıraya giriyordu.
+ *
+ * AĞIRLIKLAR
+ *   3  `department_tags` / `department` alanında TAM eşleşme
+ *   2  başlıkta güvenli eşleşme (mevcut `alanEslestir`)
+ *   1  açıklamada eşleşme
+ *   0  eşleşme yok — İLAN GİZLENMİYOR, yalnız altta duruyor
+ *
+ * ALT DİZE EŞLEŞMESİ YOK: etiket karşılaştırması dizi üyeliği,
+ * başlık/açıklama karşılaştırması ise mevcut `KALIPLAR` regex'leri
+ * (kelime sınırlı). `burs`/Bursa ve `maaş`/Maastricht sınıfı hataları
+ * burada tekrarlanmıyor.
+ */
+export function bolumSkoru(ilan, alanId) {
+  if (!alanGecerli(alanId) || !ilan) return 0;
+
+  /*
+    ETİKET → ALAN
+
+    `department_tags` bölüm SLUG'ları taşıyor ("bilgisayar-muhendisligi");
+    `alanId` ise alan ("yazilim"). Köprü `bolumunAlani` — liste, bölüm
+    sayfası ve sıralama AYNI sözlüğü kullanıyor.
+  */
+  const etiketler = [
+    ...(Array.isArray(ilan.departmentTags) ? ilan.departmentTags : []),
+    ...(Array.isArray(ilan.department_tags) ? ilan.department_tags : []),
+    ...(ilan.department ? [ilan.department] : []),
+  ].filter(Boolean);
+
+  for (const etiket of etiketler) {
+    /*
+      İki yol: etiket zaten bir bölüm slug'ı ise sözlükten alanına
+      bakılıyor; değilse metin olarak `alanEslestir`e veriliyor (eski
+      `department` alanı serbest metin olabiliyor — geriye uyumluluk).
+    */
+    if (bolumunAlani(etiket) === alanId || alanEslestir(etiket) === alanId) return 3;
+  }
+
+  if (alanEslestir(ilan.title) === alanId) return 2;
+  if (alanEslestir(ilan.description) === alanId) return 1;
+  return 0;
+}
+
+/**
+ * Listeyi bölüm sinyaline göre sıralar — FİLTRELEMEZ.
+ *
+ * ÖNCE BÜTÜN KÜMEYE SKOR, SONRA SAYFALAMA: çağıran bu fonksiyonu
+ * filtrelenmiş kümenin TAMAMI üzerinde çalıştırıyor ve sayfalama daha
+ * sonra yapılıyor. Yalnız görünen sayfayı sıralamak, "daha fazla
+ * göster"e basınca sıranın değişmesi demekti.
+ *
+ * KARARLI: eşit skorda önce mevcut güncellik sırası (girdinin sırası),
+ * tam eşitlikte İLAN KİMLİĞİ. Kimlik olmadan aynı skorlu iki ilanın
+ * sırası girdiye göre kayabiliyor ve sayfalar arasında tekrar/kayıp
+ * üretebiliyordu.
+ *
+ * @param {Array} kayitlar
+ * @param {string|null} alanId
+ * @param {(kayit: any) => any} ilanAl Kayıttan ilan nesnesini çıkarır.
+ */
+export function bolumeGoreSirala(kayitlar, alanId, ilanAl) {
+  if (!alanGecerli(alanId) || !Array.isArray(kayitlar)) return kayitlar ?? [];
+  const al = typeof ilanAl === 'function' ? ilanAl : (k) => k;
+
+  return kayitlar
+    .map((k, i) => ({ k, i, skor: bolumSkoru(al(k), alanId), id: String(al(k)?.id ?? '') }))
+    .sort((a, b) => {
+      if (a.skor !== b.skor) return b.skor - a.skor;
+      if (a.i !== b.i) return a.i - b.i;
+      return a.id.localeCompare(b.id);
+    })
+    .map((x) => x.k);
+}
