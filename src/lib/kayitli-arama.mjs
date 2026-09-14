@@ -343,11 +343,23 @@ export function aramaEslesiyorMu(ilan, filtreler) {
       /* Tanınmayan bölüm: güvenli varsayılan — eleme YAPMIYOR. */
       return true;
     }
+    /*
+      FİLTRE YALNIZ GÜÇLÜ SİNYALLER: ETİKET VE BAŞLIK
+
+      Açıklama BİLEREK dışarıda. Canlıda ölçtüm:
+      `?bolum=bilgisayar-muhendisligi` sonucunda "2027 Bahar Dönemi
+      Staj — İnsan Kaynakları" ilanı da geliyordu, çünkü açıklamasında
+      yazılımdan söz ediliyor. Açıklama bir ilanın NE OLDUĞUNU değil
+      neyden bahsettiğini söylüyor.
+
+      Açıklama SIRALAMA sinyali olarak duruyor (`bolumSkoru`, ağırlık
+      1): orada zarar yok, ilan gizlenmiyor yalnız altta kalıyor.
+      Filtrede ise eleme kararı veriyor ve yanlış ilanı listeye sokuyor.
+    */
     const ilanAlanlari = new Set(
       [
         ...i.departments.map((e) => bolumunAlani(e) ?? alanEslestir(e)),
         alanEslestir(i.title),
-        alanEslestir(i.description),
       ].filter(Boolean)
     );
     const eslesti = [...istenenAlanlar].some((a) => ilanAlanlari.has(a));
