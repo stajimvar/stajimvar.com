@@ -71,19 +71,67 @@ def extract_skills(*texts: str | None) -> list[str]:
 # --- Sigorta / ücret sinyalleri ---------------------------------------------
 
 
-def detect_mandatory_staj(description: str | None) -> tuple[bool, str | None]:
-    """(kabul_ediyor_mu, not).
+def detect_mandatory_staj(description: str | None) -> tuple[bool | None, str | None]:
+    """(kabul_ediyor_mu, not) — UC DEGERLI.
 
-    Emin olunamadığında `False` dönülüyor ama sebebi nota yazılıyor.
-    Bilinmeyeni `True` saymak, arayüzde "SGK'lı" rozetini uydurmak olurdu;
-    `False` saymak yalnızca ilanı zorunlu staj filtresinde göstermez.
+    ONCEKI HALI emin olunamadiginda `False` donuyordu ve gerekcesi
+    "False saymak yalnizca ilani zorunlu staj filtresinde gostermez"
+    idi. Bu yanlisti: sutun `not null default true` oldugu icin false
+    arayuzde "kabul ETMIYOR" diye okunabilir hale geldi ve uretimde 53
+    kayit boyle duruyordu -- hicbirinde acik ret kaniti yok.
+
+    Uc deger:
+      True  kaynakta acik kabul/gereklilik ifadesi
+      False kaynakta acik RET ifadesi
+      None  kaynak soylemiyor
     """
     text = _fold(description or "")
     if not text:
-        return False, "Kaynakta belirtilmemiş"
-    if re.search(r"zorunlu staj|staj sigortasi|isletmede mesleki egitim|sgk", text):
+        return None, None
+    # ACIK RET ONCE: "zorunlu staj kabul edilmiyor" icinde "zorunlu
+    # staj" da geciyor ve kabul kalibi once bakilsa yanlis True verirdi.
+    if re.search(
+        r"zorunlu staj (kabul edilmiyor|alinmiyor|kabul edilmemektedir)"
+        r"|zorunlu stajyer alinmamaktadir",
+        text,
+    ):
+        return False, "Kaynak zorunlu staj kabul etmediğini yazıyor"
+    if re.search(
+        r"zorunlu staj|staj sigortasi|isletmede mesleki egitim|\bsgk\b"
+        r"|mandatory internship|compulsory internship",
+        text,
+    ):
         return True, None
-    return False, "Kaynakta belirtilmemiş"
+    # KANIT YOKSA None. Onceki hali `False, "Kaynakta belirtilmemiş"`
+    # donuyordu; o not da arayuzde bilgi gibi gorunuyordu.
+    return None, None
+
+
+def detect_voluntary_staj(description: str | None) -> bool | None:
+    """Gonullu staj kabulu — UC DEGERLI.
+
+    Alan once sabit `True` yaziliyordu ve sutun `not null default true`
+    oldugu icin uretimdeki 175 ilanin 175'inde true gorunuyordu. Hicbiri
+    olculmus degildi: alan hicbir sey ifade etmiyordu.
+
+    ILANIN "STAJ TURU" ILE AYNI SEY DEGIL: bir ilan yaz stajiysa bu,
+    sirketin gonullu staj kabul ETMEDIGI anlamina gelmez.
+    """
+    text = _fold(description or "")
+    if not text:
+        return None
+    if re.search(
+        r"gonullu staj (kabul edilmiyor|alinmiyor)|yalnizca zorunlu staj"
+        r"|sadece zorunlu staj",
+        text,
+    ):
+        return False
+    if re.search(
+        r"gonullu staj|gonulluluk esasli staj|zorunlu olmayan staj|voluntary internship",
+        text,
+    ):
+        return True
+    return None
 
 
 # Aciik ucretli ve aciik ucretsiz kaliplari AYRI: ucuncu bir sonuc var.
@@ -235,7 +283,10 @@ def promote_one(db, raw: dict, source: dict, *, dry: bool) -> str:
         "country_code": (raw.get("raw") or {}).get("country_code"),
         "original_language": (raw.get("raw") or {}).get("original_language"),
         "mandatory_staj_accepted": mandatory,
-        "voluntary_staj_accepted": True,
+        # SABIT True DEGIL: alan sirketin "gonullu staj kabul ediyorum"
+        # beyanini iddia ediyor. Sabit True, 175 ilan hakkinda kanitsiz
+        # bir iddiaydi (olculdu; goc 20261005010000).
+        "voluntary_staj_accepted": detect_voluntary_staj(description),
         "is_paid": detect_paid(description),
         "insurance_note": insurance_note,
         # Bazı kaynaklar (ör. Workday) listede açıklama vermiyor. Boş bir kart

@@ -53,14 +53,31 @@ function katla(metin) {
   "sgk" kısa bir parça ve alt dize olarak eşleşirse ("sgkli" gibi
   uydurma bir kelimede) yanlış kanıt üretir.
 */
-const ZORUNLU_KABUL = /zorunlu staj|staj sigortasi|isletmede mesleki egitim|\bsgk\b/;
-const ZORUNLU_RET = /zorunlu staj (kabul edilmiyor|alinmiyor)|zorunlu stajyer alinmamaktadir/;
-const GONULLU_KABUL = /gonullu staj|gonulluluk esasli staj|zorunlu olmayan staj/;
-const GONULLU_RET = /gonullu staj (kabul edilmiyor|alinmiyor)|yalnizca zorunlu staj/;
+const ZORUNLU_KABUL =
+  /zorunlu staj|staj sigortasi|isletmede mesleki egitim|\bsgk\b|mandatory internship|compulsory internship/;
+const ZORUNLU_RET =
+  /zorunlu staj (kabul edilmiyor|alinmiyor|kabul edilmemektedir)|zorunlu stajyer alinmamaktadir/;
+const GONULLU_KABUL = /gonullu staj|gonulluluk esasli staj|zorunlu olmayan staj|voluntary internship/;
+const GONULLU_RET =
+  /gonullu staj (kabul edilmiyor|alinmiyor)|yalnizca zorunlu staj|sadece zorunlu staj/;
 
 /** Bir alanın kararı: true / false / null + sebep. */
 export function stajTuruKarari(ilan, tur) {
-  const metin = katla(`${ilan.description || ''} ${ilan.insurance_note || ''}`);
+  /*
+    KANIT HAVUZU — KAYNAĞIN ELDEKİ BÜTÜN METNİ
+
+    `description` çevrilmiş olabiliyor; `raw` kaynağın ham cevabını,
+    `source_title` şirketin kendi ilan adını taşıyor. Yalnız çevrilmiş
+    açıklamaya bakmak, kanıtı çevirinin kelime seçimine bağlamak olurdu.
+  */
+  const metin = katla(
+    [
+      ilan.description || '',
+      ilan.insurance_note || '',
+      ilan.source_title || '',
+      JSON.stringify(ilan.raw ?? {}),
+    ].join(' ')
+  );
   const [kabul, ret] =
     tur === 'zorunlu' ? [ZORUNLU_KABUL, ZORUNLU_RET] : [GONULLU_KABUL, GONULLU_RET];
 
@@ -97,7 +114,19 @@ if (adres && anahtar) {
       const govde = {};
 
       /*
-        `mandatory_staj_accepted`A DOKUNULMUYOR — PROVENANSI BELİRSİZ
+        `mandatory_staj_accepted` DE KANITA BAĞLANIYOR
+
+        Geçen turda bu alanı korumuştum: "119 kaydın provenansı
+        belirsiz, silmek doğrulanmış olabilecek bilgiyi silmek olurdu."
+        O gerekçe yanlıştı — "doğrulanmış OLABİLİR" bir kanıt değil ve
+        bu alan şirketin kabul beyanını iddia ediyor.
+
+        Ölçüldü (kanıt havuzu: description + insurance_note +
+        source_title + raw): 122 true kaydın 3'ünde açık kabul kanıtı
+        var, 119'unda YOK. 53 false kaydın hiçbirinde açık RET kanıtı
+        yok. Kanıtsız olan null oluyor; üç kanıtlı true korunuyor.
+
+        ESKİ YORUM (kaldırıldı): provenans belirsizliği
 
         Ölçüldü: 122 ilanda true, ama metinde kanıt bulunan yalnız 3.
         Geri kalan 119'un nereden geldiğini KANITLAYAMIYORUM:
@@ -116,7 +145,7 @@ if (adres && anahtar) {
         `z` yine hesaplanıyor: kuru koşu raporunda "kanıt bulunan kaç
         kayıt var" görünsün.
       */
-      void z;
+      if (z.deger !== ilan.mandatory_staj_accepted) govde.mandatory_staj_accepted = z.deger;
 
       /*
         `voluntary_staj_accepted` KANITSIZ OLDUĞU KANITLI
