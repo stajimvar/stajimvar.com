@@ -392,7 +392,26 @@ test('tek toplu okuma: kart başına sorgu yok', () => {
   */
   const MODUL = oku('src/lib/isveren-dizini.mjs');
   assert.match(MODUL, /export async function fetchIsverenKontrolleri/);
-  assert.equal((MODUL.match(/\.from\('employer_career_checks'\)/g) ?? []).length, 1);
+  /*
+    TEK TOPLU OKUMA — YEDEK DENEME DAHİL EN FAZLA İKİ
+
+    İki `.from()` var ve ikincisi YALNIZ hata dalında: `program_url`
+    kolonu göç uygulanmadan istenince PostgREST bütün sorguyu 42703 ile
+    düşürüyordu ve 44 satırın hepsi kayboluyordu. Yedek, eski kolon
+    kümesiyle bir kez daha deniyor.
+
+    Değişmez olan şey "tek sorgu" değil, KART BAŞINA SORGU OLMAMASI:
+    aşağıdaki denetim tek kayıt çeken kalıpları yasaklıyor.
+  */
+  const okumalar = (MODUL.match(/\.from\('employer_career_checks'\)/g) ?? []).length;
+  assert.ok(okumalar >= 1 && okumalar <= 2, `en fazla iki okuma, bulunan: ${okumalar}`);
+  assert.ok(!/\.eq\('slug'/.test(MODUL), 'tek kayıt çeken sorgu olmamalı');
+  assert.ok(!/\.in\(/.test(MODUL), 'slug listesiyle sorgu olmamalı');
+  /* Yedek gerçekten hata dalında: `if (!error) return` ondan ÖNCE. */
+  assert.ok(
+    MODUL.indexOf('if (!error) return') < MODUL.indexOf('const yedek ='),
+    'yedek yalnız hata dalında olmalı'
+  );
   /* Program adresi kolonu SEÇİLİYOR: yoksa kart etiketi hep genel kalır. */
   assert.match(MODUL, /program_url/);
   /* Önbellek var: her ziyaretçide ağır sorgu koşmuyor. */

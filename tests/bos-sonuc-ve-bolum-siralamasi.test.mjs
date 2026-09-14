@@ -147,11 +147,20 @@ test('ikinci şirket dizini YOK: eski modül kaldırıldı, üç yüzey aynı ka
 
   /* Ortak modül veri katmanına YALNIZ tek toplu okumayla dokunuyor. */
   const MODUL = oku('src/lib/isveren-dizini.mjs');
-  assert.equal(
-    (MODUL.match(/\.from\('employer_career_checks'\)/g) ?? []).length,
-    1,
-    'tek toplu okuma olmalı'
-  );
+  /*
+    TEK TOPLU OKUMA — YEDEK DENEME DAHİL EN FAZLA İKİ
+
+    İki `.from()` var ve ikincisi YALNIZ hata dalında: `program_url`
+    kolonu göç uygulanmadan istenince PostgREST bütün sorguyu 42703 ile
+    düşürüyordu ve 44 satırın hepsi kayboluyordu. Yedek, eski kolon
+    kümesiyle bir kez daha deniyor.
+
+    Değişmez olan şey "tek sorgu" değil, KART BAŞINA SORGU OLMAMASI:
+    aşağıdaki denetim tek kayıt çeken kalıpları yasaklıyor.
+  */
+  const okumalar = (MODUL.match(/\.from\('employer_career_checks'\)/g) ?? []).length;
+  assert.ok(okumalar >= 1 && okumalar <= 2, `en fazla iki okuma, bulunan: ${okumalar}`);
+  assert.ok(!/\.eq\('slug'/.test(MODUL), 'kart başına sorgu olmamalı');
   assert.match(MODUL, /export function kontrolOnbelleginiBosalt/);
 });
 
