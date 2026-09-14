@@ -376,6 +376,30 @@ export const InternshipDetailModal: React.FC<InternshipDetailModalProps> = ({
               </button>
             )}
           </div>
+
+          {/*
+            BU İLANI BİLDİR
+
+            Kapanmış ya da yanlış bir ilanı gören kişi burada duruyor;
+            bildirim yolu da burada olmalı. Bağlantı, ilanın adresini ve
+            başlığını sorgu parametresiyle taşıyor: form o alanları
+            hazır açıyor, kullanıcı elle kopyalamıyor.
+
+            Sessiz ve küçük: eylemin kendisi sık değil, başvuru
+            düğmesiyle yarışmamalı.
+          */}
+          <div className="mt-3 text-center">
+            <a
+              href={`/ilan-bildir?${new URLSearchParams({
+                ilan: typeof window === 'undefined' ? '' : window.location.href,
+                sirket: listing.companyName ?? '',
+                pozisyon: listing.title ?? '',
+              }).toString()}`}
+              className="inline-flex min-h-11 items-center text-xs font-semibold text-gray-500 underline hover:text-gray-700"
+            >
+              Bu ilanı bildir
+            </a>
+          </div>
         </div>
       </div>
     </div>
