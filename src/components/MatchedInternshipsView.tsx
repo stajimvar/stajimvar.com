@@ -54,7 +54,8 @@ import { AramayiKaydet } from './AramayiKaydet';
   ikinci bir şirket dizini kurulmuyor ve kart başına sorgu yok.
 */
 import { STAJ_PROGRAMLARI } from '../data/stajProgramlari';
-import { uygunIsverenler } from '../lib/bos-sonuc-isverenler.mjs';
+import { dizini, uygunIsverenler } from '../lib/isveren-dizini.mjs';
+import { useIsverenDizini } from '../lib/isveren-olcum';
 import { SirketSeridi } from './SirketSeridi';
 import { ILAN_KAYNAGI_PARCALI } from '../lib/urun-metni';
 import { ListingCountrySelector } from './ListingCountrySelector';
@@ -223,6 +224,14 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     Giriş yapılmamışsa düğme hiç çizilmiyor — kaydedilen bir şeyin kaybolması
     kaydetmemekten kötü.
   */
+  /*
+    İŞVEREN ÖLÇÜMÜ — TEK TOPLU İSTEK, PAYLAŞILAN ÖNBELLEK
+
+    Boş sonuç ekranı ancak filtre hiçbir ilana uymadığında çiziliyor,
+    ama kanca burada koşuyor: liste dolu da olsa istek bir kez çıkıyor
+    ve önbellek dizin sayfasıyla paylaşılıyor.
+  */
+  const isverenDizini = useIsverenDizini();
   const [kayitliIlanlar, setKayitliIlanlar] = React.useState<Set<string>>(new Set());
 
   React.useEffect(() => {
@@ -1648,7 +1657,24 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                 Seçili ÜLKE VE BÖLÜME gerçekten uyanlar. Uyan yoksa boş
                 dizi gidiyor ve blok hiç çizilmiyor.
               */
-              isverenler={uygunIsverenler(STAJ_PROGRAMLARI, kanonikFiltreler)}
+              /*
+                ORTAK MODÜL — İKİNCİ LİSTE YOK
+
+                Eskiden `lib/bos-sonuc-isverenler.mjs` çağrılıyordu: o
+                modül kendi şirket listesini süzüyor VE durumu her
+                kayıtta sabit 'bilinmiyor' yazıyordu. Yani boş sonuç
+                ekranı, dizin sayfasından farklı bir durum hesabı
+                gösteriyordu. Şimdi ikisi de `isveren-dizini.mjs`
+                kullanıyor ve durum ölçümden geliyor.
+
+                `isverenDizini` gelmemişse (ön render, ağ hatası)
+                editoryal kayıtlar ölçümsüz birleştiriliyor: şirketler
+                yine listelenir, durum satırı çizilmez.
+              */
+              isverenler={uygunIsverenler(
+                isverenDizini ?? dizini(STAJ_PROGRAMLARI, []),
+                kanonikFiltreler
+              )}
               firsatSayisi={firsatSayisi}
               /*
                 Adres de terimsiz: staj aramasını fırsat sayfasına

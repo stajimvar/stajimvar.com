@@ -51,9 +51,25 @@ test('görüşme ve teklif akışı anlatılıyor', () => {
 
 /* ------------------------------- 2. olmayana "var" denmiyor */
 
-test('e-posta ya da push bildirimi vaat edilmiyor', () => {
-  assert.match(kurumsal, /E-posta, SMS ya da telefon bildirimi göndermiyoruz/);
+test('SMS/telefon yok; e-posta YALNIZ kayıtlı arama özeti', () => {
+  /*
+    ESKİ İDDİA ARTIK DOĞRU DEĞİLDİ
+
+    Bu test "E-posta, SMS ya da telefon bildirimi göndermiyoruz"
+    cümlesini arıyordu. Kayıtlı arama paketi geldiğinden beri ürün
+    GERÇEKTEN e-posta gönderiyor: kullanıcı özeti kendisi açarsa,
+    Türkiye saatiyle günde en fazla bir özet. Cümleyi korumak, çalışan
+    bir davranışı sayfada yok saymak olurdu.
+
+    Değişmeyen kısım sabit: SMS ve telefon bildirimi HİÇ yok.
+  */
+  assert.match(kurumsal, /SMS ya da telefon bildirimi hiç göndermiyoruz/);
   assert.match(kurumsal, /Bildirimler uygulama içinde/);
+
+  /* E-posta anlatılıyor ama rızaya ve günde bir sınırına bağlı. */
+  assert.match(kurumsal, /kayıtlı arama özeti/i);
+  assert.match(kurumsal, /Türkiye saatiyle günde en fazla bir/);
+  assert.match(kurumsal, /Özet kapalı gelir/);
 });
 
 test('otomatik düşürme "devre dışı" denmiyor', () => {
@@ -81,10 +97,26 @@ test('doğrulanmamış büyük sayı vaadi yok', () => {
 
 /* ------------------------------------ 3. iki ilan modeli */
 
-test('harici ve dahili ilan ayrımı anlatılıyor', () => {
-  assert.match(kurumsal, /İki ilan modelimiz var/);
+test('üç ilan modeli anlatılıyor: external, e-posta, dahili', () => {
+  /*
+    İKİ DEĞİL ÜÇ
+
+    Sayfa "İki ilan modelimiz var" diyordu ve e-postayla başvuruyu hiç
+    anlatmıyordu — oysa o akış gerçekten çalışıyor, gönderimi kuyruğa
+    alıyor ve başarısız denemeyi yineliyor. Anlatılmayan bir üçüncü
+    davranış, kullanıcı için sürpriz demek.
+  */
+  assert.match(kurumsal, /Üç ilan modelimiz var/);
+  /* 1. external */
   assert.match(kurumsal, /ilanın resmî kaynağına/);
+  /* 2. email_application */
+  assert.match(kurumsal, /E-postayla başvuru/);
+  assert.match(kurumsal, /şirketin ilanda yazdığı adrese/);
+  /* 3. internal */
   assert.match(kurumsal, /doğrudan StajımVar/);
+
+  /* "Başvurdum" işareti şirkete gitmiyor. */
+  assert.match(kurumsal, /işareti şirkete gitmiyor/);
 });
 
 test('bütün başvurular externalmış gibi anlatılmıyor', () => {

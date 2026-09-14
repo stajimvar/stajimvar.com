@@ -1750,29 +1750,19 @@ export interface IsverenKontrolu {
   program_kontrol_at: string | null;
 }
 
-/**
- * Bütün işveren kontrolleri — TEK TOPLU OKUMA.
- *
- * Kart başına istek YOK: dizin 44 kayıt ve hepsi bir sorguyla geliyor.
- * Editoryal liste `src/data/stajProgramlari.ts`; bu sorgu ona yalnız
- * ölçüm ekliyor (bkz. lib/isveren-dizini).
- */
-export async function fetchIsverenKontrolleri(): Promise<IsverenKontrolu[]> {
-  const { data, error } = await supabase
-    .from('employer_career_checks')
-    .select(
-      'slug,url_durumu,url_denendi_at,url_basarili_at,url_hata,' +
-        'program_durumu,program_kaniti,program_kontrol_at'
-    );
-  /*
-    HATA SESSİZ: ölçüm gelmezse dizin editoryal bilgiyle çiziliyor ve
-    her kart "Güncel açık program doğrulanamadı" gösteriyor. Sayfayı
-    hiç göstermemek, ölçüm yokluğu yüzünden bütün dizini kaybetmek
-    olurdu.
-  */
-  if (error) return [];
-  return (data ?? []) as unknown as IsverenKontrolu[];
-}
+/*
+  `fetchIsverenKontrolleri` BURADAN KALDIRILDI
+
+  İki kopya olmuştu: biri burada, biri `src/lib/isveren-dizini.mjs`
+  içinde. Buradaki hiçbir bileşen tarafından çağrılmıyordu, önbelleği
+  yoktu ve `program_url` kolonunu seçmiyordu — yani kartta "Açık
+  programı incele" kararını veremezdi.
+
+  İşveren sunumunun tamamı (durum metinleri, bağlantı etiketi,
+  birleştirme ve toplu okuma) tek sözleşmede: `src/lib/isveren-dizini.mjs`.
+  İki yerde duran bir sorgu, zamanla iki farklı kolon kümesi seçer ve
+  üç yüzey farklı şey gösterir.
+*/
 
 /** Dizindeki şirketlerin logo kayıtları — yine tek okuma. */
 export async function fetchIsverenLogolari(

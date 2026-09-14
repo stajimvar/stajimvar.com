@@ -14,6 +14,12 @@ import {
 import { BOLUMLER } from '../data/bolumler';
 import { REHBERLER } from '../data/rehberler';
 import { KAYNAK_SISTEMLERI, KAYNAK_TOPLAM } from '../data/kaynak-sistemleri';
+import {
+  METRIK_ADLARI,
+  fetchIstatistikler,
+  metrikGosterilsinMi,
+  taramaKapsamiMetni,
+} from '../lib/gercek-istatistikler.mjs';
 
 /**
  * Kurumsal sayfalar: Hakkımızda, İletişim, Kullanım Koşulları,
@@ -42,6 +48,82 @@ import type { CorporateSlug } from '../lib/yasal-rotalar';
 
 
 const ILETISIM = 'iletisim@stajimvar.com';
+
+/**
+ * CANLI SAYILAR — HER BİRİ AYRI SORGU
+ *
+ * NEDEN İLAN LİSTESİNİN ÜSTÜNDE DEĞİL
+ * -----------------------------------
+ * Bu sayılar güven bilgisi, arama aracı değil. İlan listesinin üstüne
+ * büyük bir sayaç bandı koymak, mobilde ilk ekranı sayılara verip
+ * aradığı ilanı aşağıya itmek olurdu. Yeri Hakkımızda sayfası: sayıyı
+ * merak eden buraya geliyor.
+ *
+ * ÖLÇÜLEMEYEN METRİK ÇİZİLMİYOR: `null` gelen satır hiç görünmüyor.
+ * Sıfır ise görünüyor — "ölçtük, sıfır çıktı" ile "okuyamadık" aynı
+ * şey değil.
+ */
+const CanliSayilar: React.FC = () => {
+  const [veri, setVeri] = React.useState<Awaited<
+    ReturnType<typeof fetchIstatistikler>
+  > | null>(null);
+
+  React.useEffect(() => {
+    let iptal = false;
+    fetchIstatistikler(KAYNAK_TOPLAM)
+      .then((x) => {
+        if (!iptal) setVeri(x);
+      })
+      .catch(() => {
+        /* Sayılar gelmezse sayfanın kalanı duruyor. */
+      });
+    return () => {
+      iptal = true;
+    };
+  }, []);
+
+  if (!veri) return null;
+
+  /*
+    İKİ SAYI AYRI SATIRDA VE AYRI ADLA
+
+    "Etkin ilan kaynağı" ilan TOPLADIĞIMIZ sistemler; "kontrol edilen
+    işveren kariyer sayfası" ilan toplamadığımız, yalnız durumunu
+    ölçtüğümüz şirket adresleri. Tek başlık altında toplamak anlamsız
+    bir toplam üretirdi.
+  */
+  const satirlar: Array<[string, number]> = [
+    [METRIK_ADLARI.aktifIlan, veri.aktifIlan],
+    [METRIK_ADLARI.etkinKaynak, veri.etkinKaynak],
+    [METRIK_ADLARI.isverenSayfasi, veri.isverenSayfasi],
+    [METRIK_ADLARI.kapanan, veri.kapanan],
+    [METRIK_ADLARI.bozuk, veri.bozuk],
+  ].filter((satir): satir is [string, number] => metrikGosterilsinMi(satir[1]));
+
+  const kapsam = taramaKapsamiMetni(veri.taramaKontrolEdilen, veri.aktifIlan, veri.sonKontrol);
+  if (satirlar.length === 0 && !kapsam) return null;
+
+  return (
+    <div className="space-y-3">
+      {satirlar.length > 0 && (
+        <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {satirlar.map(([ad, deger]) => (
+            <div
+              key={ad}
+              className="flex items-baseline justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2"
+            >
+              <dt className="text-xs font-semibold leading-snug text-gray-600">{ad}</dt>
+              <dd className="shrink-0 text-base font-extrabold tabular-nums text-gray-900">
+                {deger}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {kapsam && <p className="text-xs leading-relaxed text-gray-600">{kapsam}</p>}
+    </div>
+  );
+};
 
 const S: React.FC<{ baslik: string; children: React.ReactNode }> = ({ baslik, children }) => (
   <section className="space-y-2">
@@ -251,9 +333,25 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
         */}
         <S baslik="Takip ettiğimiz resmî kaynaklardan bazıları">
           <p>
-            Şu anda {KAYNAK_TOPLAM} şirket kaynağını takip ediyoruz. Aşağıdaki adlar,
-            şirketlerin ilanlarını yayımladığı işe alım sistemleri; parantez içindeki
-            sayı o sistemden okuduğumuz şirket kaynağı sayısı.
+            Şu anda {KAYNAK_TOPLAM} <strong>etkin ilan kaynağı</strong> takip ediyoruz.
+            Aşağıdaki adlar, şirketlerin ilanlarını yayımladığı işe alım sistemleri;
+            parantez içindeki sayı o sistemden okuduğumuz şirket kaynağı sayısı.
+          </p>
+          {/*
+            CANLI SAYILAR BURADA
+
+            Bu blok "kaç kaynak" sorusunun yanına "kaç ilan, kaç kapanan,
+            kaç erişilemeyen" cevaplarını koyuyor. Hepsi ayrı sorgu ve
+            ölçülemeyen satır çizilmiyor.
+          */}
+          <CanliSayilar />
+          <p>
+            <strong>İki sayıyı karıştırmıyoruz.</strong> &quot;Etkin ilan kaynağı&quot;
+            ilan <em>topladığımız</em> sistemler. Büyük işveren dizinindeki şirketlerin
+            kariyer sayfalarından ilan toplamıyoruz; orada yalnız adresin çalıştığını ve
+            staj programının açık olup olmadığını kontrol ediyoruz. Bu yüzden
+            &quot;kontrol edilen işveren kariyer sayfası&quot; ayrı bir satır ve iki sayı
+            hiçbir yerde toplanmıyor.
           </p>
           <ul className="flex flex-wrap gap-1.5">
             {KAYNAK_SISTEMLERI.map((sistem) => (
@@ -314,17 +412,49 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
             tarafın iletişim bilgileri karşılıklı açılıyor — o ana kadar açılmıyor.
           </p>
           <p>
-            <strong>İki ilan modelimiz var ve ikisi farklı işliyor.</strong>{' '}
-            Şirketin kendi kariyer sayfasında ya da başvuru sisteminde bulduğumuz
-            ilanlarda başvuruyu biz almıyoruz: sizi ilanın resmî kaynağına
-            gönderiyoruz ve süreç orada yürüyor. Şirketin doğrudan StajımVar&apos;da
-            açtığı ilanlarda ise başvuru ve sonrasındaki aday süreci burada
-            yürüyor.
+            <strong>Üç ilan modelimiz var ve üçü farklı işliyor.</strong>
+          </p>
+          <ul className="list-disc space-y-1.5 pl-5">
+            <li>
+              <strong>Şirketin kendi sayfasında başvuru.</strong> İlanı şirketin kariyer
+              sayfasında ya da başvuru sisteminde bulduysak başvuruyu biz almıyoruz: sizi
+              ilanın resmî kaynağına gönderiyoruz ve süreç tamamen orada yürüyor. Bizde
+              hiçbir başvuru kaydı oluşmuyor.
+            </li>
+            <li>
+              <strong>E-postayla başvuru.</strong> Bazı ilanlarda şirket başvuruyu
+              e-postayla alıyor. O ilanlarda başvurunuzu StajımVar üzerinden
+              hazırlıyorsunuz ve biz şirketin ilanda yazdığı adrese <em>gerçekten</em>{' '}
+              gönderiyoruz; özgeçmişiniz eke bağlanıyor. Gönderim kuyruğa alınıyor ve
+              başarısız olursa yeniden deniyoruz, yani &quot;gönderildi&quot; yazısı ancak
+              kalıcı olarak kaydedildiğinde çıkıyor. Şirketin cevabı kendi e-posta
+              adresine geliyor; o yazışmayı biz görmüyoruz.
+            </li>
+            <li>
+              <strong>StajımVar içinde başvuru.</strong> Şirket ilanı doğrudan burada
+              açtıysa başvuru ve sonrasındaki aday süreci sitede yürüyor.
+            </li>
+          </ul>
+          <p>
+            <strong>&quot;Başvurdum&quot; işareti şirkete gitmiyor.</strong> Bir ilanı
+            kendiniz için &quot;başvurdum&quot; diye işaretlediğinizde bu yalnızca sizin
+            takip listenize giriyor: şirkete hiçbir bildirim, başvuru ya da veri
+            gönderilmiyor. Şirketin kendi sayfasına yaptığınız başvurunun sonucunu da
+            göremiyoruz — o kayıt sizin not defteriniz.
           </p>
           <p>
             <strong>Bildirimler uygulama içinde.</strong> Başvurunuzda bir şey
             değiştiğinde site içindeki bildirim merkezinde görüyorsunuz.{' '}
-            E-posta, SMS ya da telefon bildirimi göndermiyoruz.
+            <strong>SMS ya da telefon bildirimi hiç göndermiyoruz</strong> ve telefon
+            numaranızı bildirim için kullanmıyoruz.
+          </p>
+          <p>
+            <strong>Tek istisna: kayıtlı arama özeti.</strong> Bir aramayı kaydedip
+            e-posta özetini kendiniz açarsanız, o aramaya uyan yeni ilanlar için{' '}
+            <strong>Türkiye saatiyle günde en fazla bir</strong> özet e-postası
+            gönderiyoruz. Aynı gün ikinci bir e-posta gitmiyor ve aynı ilan iki kez
+            özete girmiyor. Özet kapalı gelir; açmadığınız sürece hiçbir e-posta
+            gitmez ve her e-postadaki bağlantıyla tek tıkla kapatabilirsiniz.
           </p>
           <p>
             <strong>Özgeçmiş dosyası:</strong> profilinize PDF yükleyebiliyorsunuz.
@@ -366,6 +496,37 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
             üzerinden değil, ilan açmamış bir şirkete doğrudan yazarak bulunuyor. Sitede
             aradığını bulamazsan bu bir çıkmaz değil; nasıl yapılacağını{' '}
             <strong>Staj nasıl bulunur</strong> rehberinde adım adım anlatıyoruz.
+          </p>
+          {/*
+            KARARLAR KANITA DAYANIYOR — VE BU BİR KEZ YANLIŞ İŞLEDİ
+
+            Sekiz şirketin staj programı bir süre "açık" göründü. Kural
+            "sayfada staj programı ifadesi var VE başvuru ifadesi var"
+            diyordu; eşleşen "başvuru"lar tedarikçi portalı, POS
+            başvurusu ve sayfa başlığı çıktı. Kural sıkıldı ve sekizi de
+            "doğrulanamadı" durumuna indi. Bunu burada yazıyoruz çünkü
+            kararın kanıta dayandığını söylemek, kanıtın bir kez yanlış
+            okunduğunu saklamakla birlikte olmaz.
+          */}
+          <p>
+            <strong>Açık, belirsiz ve kapalı kararları kanıta dayanıyor.</strong> Bir
+            ilanın ya da staj programının &quot;açık&quot; olduğunu ancak sayfasında o
+            programa ait aktif bir başvuru yolu gördüğümüzde yazıyoruz. Şirketin genel
+            kariyer sayfasının açılıyor olması <em>tek başına</em> kanıt değil ve
+            &quot;açık&quot; saymıyoruz. &quot;Kapalı&quot; da yalnız başvurunun
+            kapandığını açıkça söyleyen bir ifade bulduğumuzda yazılıyor; ilan
+            bulamamak kapanma kanıtı değil. Geri kalan her şey{' '}
+            <strong>doğrulanamadı</strong> olarak duruyor — bilmediğimizi bildiğimiz
+            gibi göstermemek için.
+          </p>
+          <p>
+            <strong>Bağlantıya ulaşamadığımızda ilanı hemen kaldırmıyoruz.</strong> Bir
+            adres 403 döndüğünde, zaman aşımına düştüğünde ya da sunucu geçici olarak
+            hata verdiğinde bu, ilanın bittiği anlamına gelmiyor; çoğu zaman bizim
+            isteğimizin engellenmesi demek. İlanı o an silmek, hâlâ başvuru alan bir
+            stajı listeden çıkarmak olurdu. Bunun yerine ilan listede kalıyor, durumu{' '}
+            <strong>erişilemedi</strong> olarak işaretleniyor ve bir sonraki taramada
+            yeniden deniyoruz. Kesin kapandığını gördüğümüzde kaldırıyoruz.
           </p>
         </S>
 

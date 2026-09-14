@@ -4,6 +4,7 @@ import test from 'node:test';
 
 import {
   DIZIN_ULKESI,
+  programOlculduMu,
   baglantiEtiketi,
   dizini,
   isvereniBirlestir,
@@ -12,7 +13,13 @@ import {
   urlDurumMetni,
   uygunIsverenler,
 } from '../src/lib/isveren-dizini.mjs';
-import { programKarari, programlariOku, urlKarari } from '../scripts/isveren-kariyer-kontrol.mjs';
+import { programlariOku, urlKarari } from '../scripts/isveren-kariyer-kontrol.mjs';
+import {
+  kariyerSayfasiKarari,
+  programSayfasiKarari,
+  stajBaglantisi,
+  yumusak404,
+} from '../src/lib/isveren-kanit.mjs';
 
 const oku = (y) => readFileSync(new URL(`../${y}`, import.meta.url), 'utf8');
 const yorumsuz = (m) => m.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
@@ -31,22 +38,116 @@ test('HTTP 200 açık program üretmiyor', () => {
     göstermiyor.
   */
   assert.equal(urlKarari(200), 'calisiyor');
-  /* Aynı gövde program kanıtı taşımıyorsa sonuç bilinmiyor. */
-  const karar = programKarari('<html><body><h1>Kariyer</h1><p>Bize katıl</p></body></html>');
+  const karar = kariyerSayfasiKarari('<html><body><h1>Kariyer</h1><p>Bize katıl</p></body></html>');
   assert.equal(karar.durum, 'bilinmiyor');
   assert.equal(karar.kanit, 'kanit-yok');
 });
 
-test('gerçek açık program doğru işaretleniyor', () => {
-  const karar = programKarari(
-    '<p>Yaz staj programımıza başvuru formu üzerinden başvurun.</p>'
+test('GENEL KARİYER SAYFASI TEK BAŞINA "açık" ÜRETEMİYOR', () => {
+  /*
+    BU TEST SEKİZ ŞİRKETİN YANLIŞ İŞARETLENMESİNİ BAĞLIYOR
+
+    Eski kural "sayfada staj programı ifadesi VAR ve başvuru ifadesi
+    VAR" diyordu ve şu gerçek sayfalarda "açık" üretti:
+
+      roketsan    "Tedarik Zinciri Portalı BAŞVURU Kılavuzu"  (tedarikçi)
+      is-bankasi  "POS BAŞVURU"                               (banka menüsü)
+      kordsa      "iş başvuru platformumuzdur"                 (tüm pozisyonlar)
+      vodafone    sayfa başlığı "Kariyer & İş Başvurusu"       (sayfa kromu)
+      bilim-ilac  "başvuru sürecinin ardından testler"         (süreç anlatımı)
+
+    Aşağıdaki gövdeler o beş eşleşmenin sadeleştirilmiş hâli. Hiçbiri
+    artık "açık" üretmiyor.
+  */
+  const yanlisEslesmeler = [
+    '<p>Yaz staj programımız var.</p><p>Tedarik Zinciri Portalı Başvuru Kılavuzu</p>',
+    '<p>MasterClass Staj Programı</p><nav><a href="/pos">POS Başvuru</a></nav>',
+    '<p>Kısa Dönem Staj Programı</p><p>iş başvuru platformumuzdur</p>',
+    '<title>Kariyer &amp; İş Başvurusu</title><p>Staj programlarımız</p>',
+    '<p>Staj Programı</p><p>başvuru sürecinin ardından genel yetenek testleri</p>',
+  ];
+  for (const govde of yanlisEslesmeler) {
+    const k = kariyerSayfasiKarari(govde);
+    assert.notEqual(k.durum, 'acik', govde.slice(0, 55));
+  }
+
+  /* Birinci adım kararı `acik` DÖNDÜREMEZ — tür olarak bile. */
+  const KANIT = oku('src/lib/isveren-kanit.mjs');
+  const fnKariyer = KANIT.slice(KANIT.indexOf('export function kariyerSayfasiKarari'));
+  assert.ok(!/'acik'/.test(fnKariyer.slice(0, fnKariyer.indexOf('\n}'))), 'birinci adım açık yazmamalı');
+});
+
+test('"açık" YALNIZ staj sayfasının kendisinden geliyor', () => {
+  /* Genel kariyer sayfası en fazla "staj sayfası şurada" diyor. */
+  const birinci = kariyerSayfasiKarari(
+    '<p>Staj programımız</p><a href="/kariyer/staj-basvurusu">Staj Başvurusu</a>'
   );
-  assert.equal(karar.durum, 'acik');
-  assert.equal(karar.kanit, 'staj-programi-ve-basvuru-yolu');
-  /* Program ifadesi var ama başvuru yolu yok: AÇIK DEMEYE YETMEZ. */
-  const yarim = programKarari('<p>Uzun dönem staj programımız hakkında bilgi</p>');
-  assert.equal(yarim.durum, 'bilinmiyor');
-  assert.equal(yarim.kanit, 'program-ifadesi-var-basvuru-yolu-yok');
+  assert.equal(birinci.durum, 'bilinmiyor');
+  assert.equal(birinci.kanit, 'staj-sayfasi-baglantisi');
+  assert.equal(birinci.izlenecek, '/kariyer/staj-basvurusu');
+
+  /* İkinci adım: aktif başvuru varsa açık. */
+  const ikinci = programSayfasiKarari('<h1>Yaz Stajı</h1><p>Hemen başvur</p>');
+  assert.equal(ikinci.durum, 'acik');
+  assert.equal(ikinci.kanit, 'staj-sayfasinda-aktif-basvuru');
+});
+
+test('genel ilan havuzuna yönlendiren staj sayfası "açık" DEĞİL', () => {
+  /*
+    Ölçülen gerçek durum: vodafone'un staj sayfasında "Tüm açık
+    ilanlarımıza başvurmak için tıklayın" yazıyor. Bu, belirli bir staj
+    programının açık olduğunu söylemiyor.
+  */
+  const k = programSayfasiKarari(
+    '<p>Staj programlarımız</p><p>Tüm açık ilanlarımıza başvurmak için tıklayın</p><p>Hemen başvur</p>'
+  );
+  assert.equal(k.durum, 'bilinmiyor');
+  assert.equal(k.kanit, 'genel-ilan-havuzuna-yonlendiriyor');
+});
+
+test('HTML yorumundaki başvuru düğmesi aktif sayılmıyor', () => {
+  /*
+    Ölçüm: borusan'ın sayfasında "Şimdi Başvur" bir HTML yorumunun
+    içinde duruyordu (`Detaylı Bilgi Şimdi Başvur -->`). Sayfada
+    GÖRÜNMEYEN bir düğmeyi aktif başvuru saymak, tam da kaçınılan hata.
+  */
+  const k = programSayfasiKarari('<p>Alpha Staj Programı</p><!-- <a>Şimdi Başvur</a> -->');
+  assert.equal(k.durum, 'bilinmiyor');
+});
+
+test('blog yazısı başvuru yolu sayılmıyor', () => {
+  /*
+    Ölçüm: vodafone'un tek staj bağlantısı
+    "/insan-kaynaklari/blog/staj-basvurusunda-dikkat-edilmesi-gerekenler"
+    çıktı — başvuru nasıl yapılır diye ANLATAN bir yazı.
+  */
+  const bag = stajBaglantisi(
+    '<a href="/insan-kaynaklari/blog/staj-basvurusunda-dikkat-edilmesi-gerekenler">Staj Başvurusunda Dikkat Edilmesi Gerekenler</a>'
+  );
+  assert.equal(bag, null);
+});
+
+test('"intern" alt dizesi internet/international yakalamıyor', () => {
+  /* `burs`/Bursa ve `maas`/Maastricht hataları burada tekrarlamıyor. */
+  assert.equal(stajBaglantisi('<a href="/internet-basvuru">İnternet başvurusu</a>'), null);
+  assert.equal(stajBaglantisi('<a href="/international-apply">International apply</a>'), null);
+});
+
+test('YUMUŞAK 404 bozuk sayılıyor', () => {
+  /*
+    Ölçüm: tupras, tusas ve yildiz-holding kariyer adreslerinden 404
+    sayfasına yönlendi ve sunucu HTTP 200 döndü. Eski kural bunu
+    "çalışıyor" yazıyordu — kartta çalışan bir adres gösterip öğrenciyi
+    boş sayfaya göndermek bozuk bağlantıdan farksız.
+  */
+  assert.match(yumusak404('https://www.tupras.com.tr/tr/404', '<p>x</p>'), /404/);
+  assert.match(yumusak404('https://x.example/kariyer', '<title>404 — Sayfa bulunamadı</title>'), /404/);
+  assert.equal(yumusak404('https://x.example/kariyer', '<title>Kariyer</title>'), null);
+
+  /* İşçi bunu bağlantı durumuna GERÇEKTEN uyguluyor. */
+  const kod = yorumsuz(ISCI);
+  assert.match(kod, /const gercekUrlDurumu = sahte404 \? 'bozuk' : urlDurumu/);
+  assert.match(kod, /url_durumu: gercekUrlDurumu/);
 });
 
 test('açık kapanış kanıtı Kapalı üretiyor', () => {
@@ -56,7 +157,7 @@ test('açık kapanış kanıtı Kapalı üretiyor', () => {
     '<p>Applications are closed for our internship program</p>',
     '<p>Son başvuru tarihi geçti</p>',
   ]) {
-    const k = programKarari(govde);
+    const k = kariyerSayfasiKarari(govde);
     assert.equal(k.durum, 'kapali', govde);
     assert.equal(k.kanit, 'basvuru-kapandi-ifadesi');
   }
@@ -65,10 +166,10 @@ test('açık kapanış kanıtı Kapalı üretiyor', () => {
     "başvuru" da geçiyor ve başvuru yolu kalıbı onu aktif bir yol
     sanardı.
   */
-  const kod = yorumsuz(ISCI);
-  const fn = kod.slice(kod.indexOf('export function programKarari'));
+  const KANIT = oku('src/lib/isveren-kanit.mjs');
+  const fn = KANIT.slice(KANIT.indexOf('export function kariyerSayfasiKarari'));
   assert.ok(
-    fn.indexOf('KAPANIS_IFADESI.test') < fn.indexOf('PROGRAM_IFADESI.test'),
+    fn.indexOf('KAPANIS_IZI.test') < fn.indexOf('stajBaglantisi('),
     'kapanış kontrolü önce olmalı'
   );
 });
@@ -85,18 +186,34 @@ test('403/429/5xx ve zaman aşımı program durumunu bozmuyor', () => {
     hatada mevcut karar ve kanıt aynen taşınıyor.
   */
   const kod = yorumsuz(ISCI);
-  assert.match(kod, /if \(urlDurumu === 'calisiyor'\) \{/);
-  const hazir = kod.slice(kod.indexOf('let program = {'), kod.indexOf("if (urlDurumu === 'calisiyor')"));
+  assert.match(kod, /if \(gercekUrlDurumu === 'calisiyor'\) \{/);
+  const hazir = kod.slice(kod.indexOf('let program = {'), kod.indexOf('let sahte404'));
   assert.match(hazir, /program_durumu: eski\?\.program_durumu \?\? null/);
   /* Zaman aşımı 0 durum kodu üretiyor ve geçici sayılıyor. */
   assert.match(kod, /cevap\.durum === 0 \? 'gecici_hata' : urlKarari\(cevap\.durum\)/);
 });
 
-test('belirsiz sonuç mevcut kararı kanıtsız değiştirmiyor', () => {
+test('BELİRSİZ SONUÇ ESKİ "açık" KARARINI ARTIK KORUMUYOR', () => {
+  /*
+    Eskiden koruyordu: `if (karar.durum === 'bilinmiyor' && eski?.program_durumu)`
+    dalı eski kararı aynen geri yazıyordu. Bu, bir kez YANLIŞ ölçülen
+    sekiz şirketin "açık" kalmasını kalıcı hâle getiriyordu — yeni
+    kanıt bulunamaması eski kararı silmiyordu. Kanıtın kaybolması da
+    bir bulgudur.
+  */
   const kod = yorumsuz(ISCI);
-  assert.match(kod, /if \(karar\.durum === 'bilinmiyor' && eski\?\.program_durumu\)/);
-  /* Karar korunuyor ama KANIT TÜRÜ güncelleniyor: ne gördüğümüz belli. */
-  assert.match(kod, /program_durumu: eski\.program_durumu,\s*\n?\s*program_kaniti: karar\.kanit/);
+  assert.ok(
+    !/karar\.durum === 'bilinmiyor' && eski\?\.program_durumu/.test(kod),
+    'yapışkan açık kararı kaldırılmalı'
+  );
+  assert.match(kod, /program_durumu: karar\.durum/);
+});
+
+test('program adresi YALNIZ kanıtlı açık programda saklanıyor', () => {
+  const kod = yorumsuz(ISCI);
+  assert.match(kod, /if \(karar\.durum === 'acik'\) programAdresi = hedef/);
+  /* Genel kariyer adresi buraya YAZILMIYOR. */
+  assert.ok(!/programAdresi = guvenli/.test(kod));
 });
 
 test('URL durumu ile program durumu ayrı kolonlarda', () => {
@@ -113,8 +230,18 @@ test('URL durumu ile program durumu ayrı kolonlarda', () => {
   ]) {
     assert.ok(GOC.includes(kolon), `${kolon} kolonu olmalı`);
   }
-  /* Son deneme ile son BAŞARILI kontrol ayrı; başarısızda korunuyor. */
-  assert.match(ISCI, /urlDurumu === 'calisiyor' \? simdi : \(eski\?\.url_basarili_at \?\? null\)/);
+  /*
+    Son deneme ile son BAŞARILI kontrol ayrı; başarısızda korunuyor.
+    Karşılaştırma `gercekUrlDurumu` ile: yumuşak 404 alan bir adres
+    HTTP 200 dönse bile başarılı sayılmamalı.
+  */
+  assert.match(
+    ISCI,
+    /gercekUrlDurumu === 'calisiyor' \? simdi : \(eski\?\.url_basarili_at \?\? null\)/
+  );
+  /* Program adresi kolonu da göçte olmalı. */
+  const GOC_URL = oku('supabase/migrations/20261007010000_isveren_program_adresi.sql');
+  assert.match(GOC_URL, /add column if not exists program_url text/);
 });
 
 /* --------------------------------------- EDİTORYAL / ÖLÇÜM AYRIMI */
@@ -176,15 +303,26 @@ test('hata nedeni güvenli: sayfa içeriği ve kişisel veri yok', () => {
   /* Gövde hiçbir yere yazılmıyor. */
   assert.ok(!/govde: cevap\.govde/.test(kod));
   assert.ok(!/program_kaniti: metin/.test(kod), 'kanıt türü saklanıyor, içerik değil');
-  /* Kanıt türleri sabit etiketler. */
+  /*
+    Kanıt türleri sabit etiketler ve artık `src/lib/isveren-kanit.mjs`
+    içinde. Etiket kümesi değişti çünkü kural değişti: eski
+    'staj-programi-ve-basvuru-yolu' etiketi sekiz şirketi yanlış yere
+    "açık" yapan kuralın adıydı.
+  */
+  const KANIT = oku('src/lib/isveren-kanit.mjs');
   for (const etiket of [
-    'staj-programi-ve-basvuru-yolu',
+    'staj-sayfasi-baglantisi',
+    'staj-sayfasinda-aktif-basvuru',
+    'staj-sayfasinda-aktif-basvuru-yok',
+    'genel-ilan-havuzuna-yonlendiriyor',
+    'genel-kariyer-sayfasi',
     'basvuru-kapandi-ifadesi',
-    'program-ifadesi-var-basvuru-yolu-yok',
     'kanit-yok',
   ]) {
-    assert.ok(ISCI.includes(etiket), `${etiket} kanıt türü olmalı`);
+    assert.ok(KANIT.includes(etiket), `${etiket} kanıt türü olmalı`);
   }
+  /* Eski yanlış kuralın etiketi hiçbir yerde kalmadı. */
+  assert.ok(!KANIT.includes('staj-programi-ve-basvuru-yolu'));
 });
 
 /* ------------------------------------------- TEK VERİ SÖZLEŞMESİ */
@@ -219,10 +357,21 @@ test('editoryal bilgi ile ölçüm tek sözleşmede birleşiyor', () => {
   assert.equal(birlesik.logoUrl, 'https://cdn.example/a.png');
   assert.equal(birlesik.ulke, DIZIN_ULKESI);
 
-  /* Ölçüm yoksa program durumu BİLİNMİYOR, logo null — uydurulmuyor. */
+  /*
+    ÖLÇÜM YOKSA `null` — 'bilinmiyor' DEĞİL
+
+    Eskiden `?? 'bilinmiyor'` yazıyordu: hiç kontrol edilmemiş şirketi
+    "baktık, bulamadık" gibi gösteriyordu. İkisi ayrı durum ve arayüzde
+    ayrı cümle.
+  */
   const olcumsuz = isvereniBirlestir(PROGRAM, undefined, undefined);
-  assert.equal(olcumsuz.programDurumu, 'bilinmiyor');
+  assert.equal(olcumsuz.programDurumu, null);
+  assert.equal(olcumsuz.olculdu, false);
+  assert.equal(programOlculduMu(olcumsuz.programDurumu), false);
+  assert.equal(programOlculduMu('bilinmiyor'), true);
   assert.equal(olcumsuz.logoUrl, null);
+  /* Program adresi de uydurulmuyor. */
+  assert.equal(olcumsuz.programUrl, null);
   /* Belge / ücret / sigorta kaynakta yoksa boş — üretilmiyor. */
   assert.deepEqual(olcumsuz.gerekliBelgeler, []);
   assert.equal(olcumsuz.ucretSigortaNotu, null);
@@ -233,30 +382,121 @@ test('tek toplu okuma: kart başına sorgu yok', () => {
   const d = dizini([PROGRAM], [{ slug: 'a', program_durumu: 'kapali' }], []);
   assert.equal(d.length, 1);
   assert.equal(d[0].programDurumu, 'kapali');
-  /* Modül veri katmanına hiç dokunmuyor. */
+  /*
+    TOPLU OKUMA ORTAK MODÜLDE VE TEK KOPYA
+
+    Sorgu bir ara İKİ yerdeydi: `src/lib/queries/index.ts` ve bu modül.
+    Oradaki hiç çağrılmıyordu, önbelleği yoktu ve `program_url`
+    kolonunu seçmiyordu; yani "Açık programı incele" kararını
+    veremezdi. Kaldırıldı.
+  */
   const MODUL = oku('src/lib/isveren-dizini.mjs');
-  assert.ok(!/supabase|fetch\(|rest\/v1/.test(MODUL));
-  /* Sorgu katmanı tek `select` ile bütün kontrolleri alıyor. */
+  assert.match(MODUL, /export async function fetchIsverenKontrolleri/);
+  /*
+    TEK TOPLU OKUMA — YEDEK DENEME DAHİL EN FAZLA İKİ
+
+    İki `.from()` var ve ikincisi YALNIZ hata dalında: `program_url`
+    kolonu göç uygulanmadan istenince PostgREST bütün sorguyu 42703 ile
+    düşürüyordu ve 44 satırın hepsi kayboluyordu. Yedek, eski kolon
+    kümesiyle bir kez daha deniyor.
+
+    Değişmez olan şey "tek sorgu" değil, KART BAŞINA SORGU OLMAMASI:
+    aşağıdaki denetim tek kayıt çeken kalıpları yasaklıyor.
+  */
+  const okumalar = (MODUL.match(/\.from\('employer_career_checks'\)/g) ?? []).length;
+  assert.ok(okumalar >= 1 && okumalar <= 2, `en fazla iki okuma, bulunan: ${okumalar}`);
+  assert.ok(!/\.eq\('slug'/.test(MODUL), 'tek kayıt çeken sorgu olmamalı');
+  assert.ok(!/\.in\(/.test(MODUL), 'slug listesiyle sorgu olmamalı');
+  /* Yedek gerçekten hata dalında: `if (!error) return` ondan ÖNCE. */
+  assert.ok(
+    MODUL.indexOf('if (!error) return') < MODUL.indexOf('const yedek ='),
+    'yedek yalnız hata dalında olmalı'
+  );
+  /* Program adresi kolonu SEÇİLİYOR: yoksa kart etiketi hep genel kalır. */
+  assert.match(MODUL, /program_url/);
+  /* Önbellek var: her ziyaretçide ağır sorgu koşmuyor. */
+  assert.match(MODUL, /KONTROL_ONBELLEK_MS/);
+
   const SORGU = oku('src/lib/queries/index.ts');
-  assert.match(SORGU, /export async function fetchIsverenKontrolleri/);
-  assert.match(SORGU, /\.from\('employer_career_checks'\)/);
+  assert.ok(
+    !/export async function fetchIsverenKontrolleri/.test(SORGU),
+    'ikinci kopya kaldırılmalı'
+  );
 });
 
 test('metinler: açık ilan ya da başvur demiyor', () => {
   assert.equal(programDurumMetni('acik'), 'Staj programı açık');
   assert.equal(programDurumMetni('kapali'), 'Staj programı kapalı');
   assert.equal(programDurumMetni('bilinmiyor'), 'Güncel açık program doğrulanamadı');
-  assert.equal(programDurumMetni(null), 'Güncel açık program doğrulanamadı');
+  /*
+    ÖLÇÜLMEDİ AYRI CÜMLE
+
+    `null` = sayfasına hiç bakamadık (403, ağ hatası, yumuşak 404).
+    Ölçülen durum: 44 şirketin 6'sı böyle. Bunu "doğrulanamadı" diye
+    yazmak, bakmadığımız yerde bakmış gibi görünmek olurdu.
+  */
+  assert.equal(programDurumMetni(null), 'Henüz kontrol edilmedi');
   assert.equal(urlDurumMetni('calisiyor'), 'Bağlantı çalışıyor');
   assert.equal(urlDurumMetni('gecici_hata'), 'Geçici olarak erişilemedi');
   assert.equal(urlDurumMetni('bozuk'), 'Bağlantı bozuk');
   assert.equal(urlDurumMetni(null), null);
   /* Genel sayfa etiketi: "Başvur" ya da "Açık ilan" DEĞİL. */
-  assert.equal(baglantiEtiketi(), 'Şirketin kariyer sayfası');
+  const genel = baglantiEtiketi({ kariyerUrl: 'https://a.example/kariyer' });
+  assert.equal(genel.tur, 'kariyer');
+  assert.equal(genel.etiket, 'Şirketin kariyer sayfası');
+  assert.equal(genel.adres, 'https://a.example/kariyer');
+
+  /*
+    "Açık programı incele" YALNIZ İKİ KOŞUL BİRLİKTE
+
+    Durum `acik` VE programın kendi adresi var. Biri eksikse etiket
+    genel kariyer sayfasına düşüyor: "Programa başvur" yazıp öğrenciyi
+    kurumsal bir sayfaya göndermek, tam olarak kaçınılan şey.
+  */
+  const kanitli = baglantiEtiketi({
+    programDurumu: 'acik',
+    programUrl: 'https://a.example/staj-basvuru',
+    kariyerUrl: 'https://a.example/kariyer',
+  });
+  assert.equal(kanitli.tur, 'program');
+  assert.equal(kanitli.etiket, 'Açık programı incele');
+  assert.equal(kanitli.adres, 'https://a.example/staj-basvuru');
+
+  const adressiz = baglantiEtiketi({
+    programDurumu: 'acik',
+    programUrl: null,
+    kariyerUrl: 'https://a.example/kariyer',
+  });
+  assert.equal(adressiz.tur, 'kariyer');
+  assert.equal(adressiz.etiket, 'Şirketin kariyer sayfası');
+
+  /* BOZUK ADRESTE AKTİF BAĞLANTI YOK. */
+  const bozuk = baglantiEtiketi({
+    urlDurumu: 'bozuk',
+    kariyerUrl: 'https://a.example/kariyer',
+  });
+  assert.equal(bozuk.tur, 'yok');
+  assert.equal(bozuk.adres, null);
+
   const MODUL = oku('src/lib/isveren-dizini.mjs');
   const kod = yorumsuz(MODUL);
-  assert.ok(!kod.includes('Başvur'), 'modül "Başvur" demiyor');
+  /* Modül hiçbir yerde "Başvur" ya da "Açık ilan" demiyor. */
+  assert.ok(!/Ba[şs]vur\b/.test(kod), 'modül "Başvur" demiyor');
   assert.ok(!kod.includes('Açık ilan'), 'modül "Açık ilan" demiyor');
+
+  /* Kartta bozuk adreste düğme yerine açıklama var. */
+  const KART = oku('src/components/StajProgramlari.tsx');
+  assert.match(KART, /baglanti\.tur === 'yok'/);
+  assert.match(KART, /Bağlantı bozuk/);
+  /*
+    YORUMSUZ KODA bakıyor: dosyada eski etiketin NEDEN kaldırıldığını
+    anlatan bir yorum var ve düz `includes` onu da yakalıyordu (bu
+    denetim bir kez o yüzden kırmızı döndü).
+  */
+  assert.ok(
+    !yorumsuz(KART).includes('Resmî başvuru sayfası'),
+    'sabit "başvuru sayfası" etiketi kalmamalı'
+  );
 });
 
 test('ülke ve bölüm uygunluğu korunuyor', () => {
