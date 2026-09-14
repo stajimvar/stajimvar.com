@@ -1026,7 +1026,7 @@ export interface PendingListing {
   workType: string;
   description?: string;
   requiredSkills: string[];
-  isPaid: boolean;
+  isPaid: boolean | null;
   stipendText?: string;
   applicationDeadline?: string;
   createdAt: string;

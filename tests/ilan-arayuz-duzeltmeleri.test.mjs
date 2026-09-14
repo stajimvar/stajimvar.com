@@ -133,11 +133,16 @@ test('karar için gereken bilgi eksikse TEK dürüst not var', () => {
 
 test('FALSE GERÇEK BİR DEĞER — "boş" sayılıp gizlenmiyor', () => {
   /*
-    `isPaid: false` "ücretsiz" demek, "bilinmiyor" değil; `?? ''` ile
-    boşa çevrilirse ücretsiz staj ücretli gibi sessizleşirdi. Bu yüzden
-    ücret dalı isPaid'e AÇIKÇA bakıyor.
+    `isPaid: false` "ücretsiz" demek; `?? ''` ile boşa çevrilirse
+    ücretsiz staj ücretli gibi sessizleşirdi.
+
+    ŞEKİL DEĞİŞTİ, KURAL DEĞİŞMEDİ: sütun artık nullable (göç
+    20261001010000) ve üç değer taşıyor. `isPaid ? … : …` üçlü
+    operatörü null'u da false gibi gösterirdi — ikisi ayrı şey, biri
+    "ücretsiz" biri "bilinmiyor". Bu yüzden karşılaştırma kesin.
   */
-  assert.match(detay, /listing\?\.stipend\?\.isPaid\s+\?/);
+  assert.match(detay, /listing\?\.stipend\?\.isPaid === true/);
+  assert.match(detay, /listing\?\.stipend\?\.isPaid === false/);
   assert.doesNotMatch(detay, /stipend\?\.isPaid \|\| /, 'false değeri || ile yutulmamalı');
   assert.match(detay, /listing\?\.mandatoryStajAccepted\s+\?/);
 });

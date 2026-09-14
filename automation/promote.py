@@ -86,11 +86,38 @@ def detect_mandatory_staj(description: str | None) -> tuple[bool, str | None]:
     return False, "Kaynakta belirtilmemiş"
 
 
-def detect_paid(description: str | None) -> bool:
+# Aciik ucretli ve aciik ucretsiz kaliplari AYRI: ucuncu bir sonuc var.
+#
+# `burs` KELIME SINIRIYLA ARANIYOR
+#
+# Onceki kalip cıplak `burs` idi ve "Bursa" ile eslesiyordu. Olculdu
+# (14 Eylul 2026, uretim): ucretli sanilan iki kaydin ikisi de sehir
+# listesiydi -- "Istanbul, Ankara, Antalya, Adana, Bursa ve Izmir
+# ofisleri". Yani Bursa'daki her ilan "ucretli" olarak isaretlenebilirdi.
+_UCRETLI = re.compile(
+    r"ucretli staj|maas|\bburs\b|burslu|bursiyer|stipend|yemek ve yol|paid internship"
+)
+_UCRETSIZ = re.compile(r"ucretsiz staj|unpaid")
+
+
+def detect_paid(description: str | None) -> bool | None:
+    """Ucret bilgisi: True acik ucretli, False acik ucretsiz, None bilinmiyor.
+
+    ONCEKI HALI `bool` donduruyordu ve kanit yoksa False diyordu -- yani
+    "kaynak soylemiyor" ile "kaynak ucretsiz diyor" ayni degere
+    dusuyordu. Sutun da `not null default false` oldugu icin bu, 166
+    ilan hakkinda kanitsiz bir iddiaya donusmustu.
+
+    None DONMEK ONEMLI: cagiran taraf bu degeri veritabanina yaziyor ve
+    `is_paid` artik nullable. Bilinmeyeni bos birakmak, yanlis bir
+    cevaptan iyi.
+    """
     text = _fold(description or "")
-    if re.search(r"ucretsiz staj|unpaid", text):
+    if _UCRETSIZ.search(text):
         return False
-    return bool(re.search(r"ucretli staj|maas|burs|stipend|yemek ve yol|paid internship", text))
+    if _UCRETLI.search(text):
+        return True
+    return None
 
 
 WORK_TYPE = {"remote": "Remote", "hybrid": "Hybrid", "onsite": "On-site"}

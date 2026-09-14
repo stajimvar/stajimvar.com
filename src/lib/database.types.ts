@@ -400,6 +400,12 @@ export type Database = {
           imported_at: string | null;
           raw_listing_id: string | null;
           insurance_note: string | null;
+          /* Sigortayi kim sagliyor. null = bilinmiyor, "yok" DEGIL. */
+          insurance_provider: string | null;
+          /* Kaynagin verdigi ham konum dizesi; `city` normalize hali. */
+          location_raw: string | null;
+          /* Coklu bolum etiketi; `department` listenin ilkini tutuyor. */
+          department_tags: string[] | null;
           last_seen_at: string | null;
           source_verified_at: string | null;
           source_checked_at: string | null;
@@ -415,7 +421,12 @@ export type Database = {
           duration: string | null;
           featured: boolean;
           id: string;
-          is_paid: boolean;
+          /*
+            null OLABILIR: sutun artik `not null default false`
+            degil (goc 20261001010000). true = acik ucretli kaniti,
+            false = acik ucretsiz kaniti, null = kaynak soylemiyor.
+          */
+          is_paid: boolean | null;
           mandatory_staj_accepted: boolean;
           min_grade_level: string | null;
           perks: string[];
@@ -445,6 +456,9 @@ export type Database = {
           imported_at?: string | null;
           raw_listing_id?: string | null;
           insurance_note?: string | null;
+          insurance_provider?: string | null;
+          location_raw?: string | null;
+          department_tags?: string[] | null;
           last_seen_at?: string | null;
           source_verified_at?: string | null;
           source_checked_at?: string | null;
@@ -467,7 +481,7 @@ export type Database = {
           duration?: string | null;
           featured?: boolean;
           id?: string;
-          is_paid?: boolean;
+          is_paid?: boolean | null;
           mandatory_staj_accepted?: boolean;
           min_grade_level?: string | null;
           perks?: string[];
@@ -497,6 +511,9 @@ export type Database = {
           imported_at?: string | null;
           raw_listing_id?: string | null;
           insurance_note?: string | null;
+          insurance_provider?: string | null;
+          location_raw?: string | null;
+          department_tags?: string[] | null;
           last_seen_at?: string | null;
           source_verified_at?: string | null;
           source_checked_at?: string | null;
@@ -519,7 +536,7 @@ export type Database = {
           duration?: string | null;
           featured?: boolean;
           id?: string;
-          is_paid?: boolean;
+          is_paid?: boolean | null;
           mandatory_staj_accepted?: boolean;
           min_grade_level?: string | null;
           perks?: string[];

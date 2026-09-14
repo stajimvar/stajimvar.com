@@ -153,7 +153,18 @@ export interface InternshipListing {
   mandatoryStajAccepted: boolean; // Zorunlu staj kabul ediliyor mu
   voluntaryStajAccepted: boolean;
   stipend: {
-    isPaid: boolean;
+    /*
+      UC DEGER, UC ANLAM
+        true  kaynakta acik ucretli kaniti
+        false kaynakta acik ucretsiz kaniti
+        null  kaynak soylemiyor
+
+      Onceden `boolean` idi ve veritabani varsayilani false oldugu
+      icin "bilinmiyor" ile "ucretsiz" ayni degere dusuyordu.
+      Ekranlar yalniz POZITIF bilgiyi basiyor; null hicbir yerde
+      "Ucretsiz" diye gorunmuyor.
+    */
+    isPaid: boolean | null;
     amountText?: string; // e.g. "Asgari Ücret / Aylık Yemek & Yol"
   };
   duration: string; // e.g. "20 İş Günü (Yaz Stajı)", "3-6 Ay Uzun Dönem"

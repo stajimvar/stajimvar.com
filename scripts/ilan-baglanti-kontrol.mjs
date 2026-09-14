@@ -125,6 +125,52 @@ function kapanmaSebebi(yanit, govde) {
   return null;
 }
 
+/**
+ * İLANIN HÂLÂ AÇIK OLDUĞUNA DAİR POZİTİF KANIT
+ *
+ * HTTP 200 tek başına kanıt DEĞİL. Kaynak sitesi ilanı kaldırdığında
+ * adres çoğu zaman 404 dönmüyor: genel kariyer sayfasına, arama
+ * sonuçlarına ya da "bu pozisyon artık listede değil" demeyen bir
+ * şablona yönlendiriyor. O sayfa 200 dönüyor ve kapanma metni de
+ * içermiyor.
+ *
+ * Eski davranışta bu, iki kere yanlıştı:
+ *   · `source_verified_at` ilerliyordu — kartta "Son kontrol: bugün"
+ *     yazarken doğrulanan şey ilan değil, şirketin kariyer sayfasıydı.
+ *   · KAPANMIŞ ilan `status='published'` ile yayına GERİ ALINIYORDU.
+ *
+ * İki kanıttan biri aranıyor:
+ *   1. Sayfanın kendi JobPosting yapısal verisi — sayfa "burada bir iş
+ *      ilanı var" diyor.
+ *   2. İlanın başlığındaki ayırt edici kelimeler görünür metinde.
+ *      Genel kariyer sayfası şirket adını taşır ama pozisyon başlığını
+ *      taşımaz.
+ *
+ * Kanıt yoksa sonuç 'belirsiz': kapalı demiyoruz, açık da demiyoruz.
+ */
+function acikKaniti(govde, baslik) {
+  if (/"@type"\s*:\s*"JobPosting"/i.test(govde)) return 'sayfada JobPosting verisi';
+
+  /*
+    Başlıktan ayırt edici kelimeler: üç harften uzun olanlar ve
+    "stajyer/intern" gibi her ilanda geçen genel kelimeler dışarıda.
+    Kalanların yarısı görünür metinde geçiyorsa sayfa bu ilanı
+    gösteriyor sayılıyor.
+  */
+  const genel = /^(staj|stajyer|intern|internship|program|programi|programı|uzun|donem|dönem|yaz|kis|kış|ve|for|the)$/i;
+  const kelimeler = gorunurMetin(baslik)
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((k) => k.length > 3 && !genel.test(k));
+  if (kelimeler.length === 0) return null;
+
+  const metin = gorunurMetin(govde).toLowerCase();
+  const bulunan = kelimeler.filter((k) => metin.includes(k)).length;
+  return bulunan * 2 >= kelimeler.length
+    ? `başlık metinde (${bulunan}/${kelimeler.length})`
+    : null;
+}
+
 /** Sayfanın kendi JobPosting verisinden gerçek yayın tarihi. */
 function yayinTarihi(govde) {
   const bloklar = [...govde.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)];
@@ -159,6 +205,8 @@ const simdi = new Date().toISOString();
 let acik = 0;
 let kapali = 0;
 let erisilemedi = 0;
+/* Belirsiz: cevap alındı ama ilanın açık olduğu doğrulanamadı. */
+let belirsizSayisi = 0;
 let tarihYazildi = 0;
 /*
   AYRINTILI SAYAÇLAR
@@ -168,7 +216,7 @@ let tarihYazildi = 0;
   dokuz sitenin bizi engellediğini mi yoksa dokuz kez zaman aşımı mı
   olduğunu söylemiyor. Birincisi User-Agent/oran sorunu, ikincisi ağ.
 */
-const sayac = { adresYok: 0, kapanma404: 0, kapanma410: 0, kapanmaMetin: 0, engel403: 0, oran429: 0, sunucu5xx: 0, digerHTTP: 0, zamanAsimi: 0, agHatasi: 0 };
+const sayac = { adresYok: 0, kapanma404: 0, kapanma410: 0, kapanmaMetin: 0, engel403: 0, oran429: 0, sunucu5xx: 0, digerHTTP: 0, zamanAsimi: 0, agHatasi: 0, belirsiz: 0 };
 /*
   Yazma hatası sayılıyor: tek bir üçüncü taraf hatası işi kırmamalı ama
   veritabanına hiç yazamıyorsak bu gerçek bir betik/yetki hatasıdır ve
@@ -194,6 +242,16 @@ for (const ilan of ilanlar) {
     continue;
   }
 
+  /*
+    BAŞARISIZ VE BELİRSİZ DENEMEDE `source_verified_at` YAZILMIYOR
+
+    Güncelleme nesnesi yalnız `source_checked_at` ile başlıyor ve
+    `source_verified_at` YALNIZCA kanıtlı açık dalında ekleniyor.
+    Alanın hiç yazılmaması korunmasının ta kendisi.
+
+    Ölçüldü (14 Eylül 2026, üretim): 10 ilanda `source_checked_at >
+    source_verified_at` — yani bu davranış gerçekten çalışıyor.
+  */
   let guncelleme = { source_checked_at: simdi };
   let etiket = '';
 
@@ -220,20 +278,47 @@ for (const ilan of ilanlar) {
         deactivation_reason: `başvuru bağlantısı kapandı — ${sebep}`,
       };
     } else if (yanit.ok) {
-      acik++;
-      etiket = 'açık';
-      guncelleme = { ...guncelleme, source_status: 'acik', source_verified_at: simdi };
       /*
-        İlan yeniden açıldıysa yayına geri alınıyor: kapanmış diye
-        işaretlenen bir ilan sonsuza kadar kapalı kalmamalı.
-      */
-      if (ilan.status === 'closed') guncelleme.status = 'published';
+        200 ALINDI — ŞİMDİ KANIT ARANIYOR
 
-      const tarih = yayinTarihi(govde);
-      if (tarih && tarih !== ilan.posted_at) {
-        guncelleme.posted_at = tarih;
-        tarihYazildi++;
-        etiket += `  yayın tarihi: ${tarih.slice(0, 10)}`;
+        `yanit.ok` doğrudan 'acik' sayılıyordu. Kaynak ilanı kaldırıp
+        adresi genel kariyer sayfasına yönlendirdiğinde o sayfa da 200
+        dönüyor; kapanma metni yok, ilan da yok.
+      */
+      const kanit = acikKaniti(govde, ilan.title);
+
+      if (kanit) {
+        acik++;
+        etiket = `açık  (${kanit})`;
+        guncelleme = { ...guncelleme, source_status: 'acik', source_verified_at: simdi };
+        /*
+          İlan yeniden açıldıysa yayına geri alınıyor: kapanmış diye
+          işaretlenen bir ilan sonsuza kadar kapalı kalmamalı.
+
+          GERİ ALMA YALNIZ KANIT VARSA: eskiden 200 yeterliydi, yani
+          kariyer sayfası cevap veren her kapanmış ilan yayına dönüyordu.
+        */
+        if (ilan.status === 'closed') guncelleme.status = 'published';
+
+        const tarih = yayinTarihi(govde);
+        if (tarih && tarih !== ilan.posted_at) {
+          guncelleme.posted_at = tarih;
+          tarihYazildi++;
+          etiket += `  yayın tarihi: ${tarih.slice(0, 10)}`;
+        }
+      } else {
+        /*
+          BELİRSİZ — ÜÇÜNCÜ SONUÇ
+
+          Kapalı demiyoruz (kapanma işareti yok), açık da demiyoruz
+          (ilanın kendi kanıtı yok). `source_checked_at` ilerliyor,
+          `source_verified_at` KORUNUYOR ve ilanın durumu değişmiyor:
+          yanlış kapatma da yanlış doğrulama da yapılmıyor.
+        */
+        sayac.belirsiz++;
+        belirsizSayisi++;
+        etiket = 'BELİRSİZ  200 ama ilanın kanıtı yok';
+        guncelleme = { ...guncelleme, source_status: 'belirsiz' };
       }
     } else {
       /*
@@ -289,6 +374,7 @@ console.log(
   `kirilim: kontrol=${ilanlar.length} acik=${acik} 404=${sayac.kapanma404} 410=${sayac.kapanma410} ` +
     `metinle_kapali=${sayac.kapanmaMetin} 403=${sayac.engel403} 429=${sayac.oran429} ` +
     `5xx=${sayac.sunucu5xx} diger_http=${sayac.digerHTTP} zaman_asimi=${sayac.zamanAsimi} ` +
+    `belirsiz=${sayac.belirsiz} ` +
     `ag_hatasi=${sayac.agHatasi} adres_yok=${sayac.adresYok} yazma_hatasi=${yazmaHatasiSayisi}`
 );
 
