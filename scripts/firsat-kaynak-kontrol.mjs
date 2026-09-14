@@ -43,7 +43,33 @@ import { createClient } from '@supabase/supabase-js';
 
 const KOK = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const KURU = process.argv.includes('--kuru');
-const ESIK = 3;
+/*
+  KAPANIŞ EŞİĞİ — KESİN İLE TAŞINDI AYRI
+
+  Tek eşik vardı: 3. Kontrol üç günde bir koştuğu için KESİN kapanmış
+  (HTTP 404/410 — sayfa yok) bir fırsat DOKUZ GÜN aktif listede
+  kalıyordu. Ölçüldü: iki kayıt 404 döndü ve `published` kaldı.
+
+  Oysa işçi geçici ile kesini ZATEN ayırıyor: 403/429/5xx/zaman aşımı
+  `transient_error` ve sayacı hiç artırmıyor. Yani sayaca giren şey
+  baştan kesin bir sinyal; onu üç kez teyit etmek, ölü bir bağlantıyı
+  bir haftadan fazla listede tutmak demek.
+
+  İKİ AYRI EŞİK
+    closed  404/410, sayfa yok        → 2  (bir teyit yeter)
+    moved   başka alan adına düşüyor  → 3  (yönlendirme geçici olabilir)
+
+  Neden `closed` için 1 değil 2: tek bir dağıtım hatası ya da bakım
+  penceresi 404 döndürebilir. Üç gün arayla İKİ bağımsız ölçüm, gerçek
+  bir kapanış için makul ve gereksiz bekletmiyor.
+*/
+const ESIK_KAPALI = 2;
+const ESIK_TASINDI = 3;
+
+/** Karara göre kaç teyit gerekiyor. */
+export function kapanisEsigi(durum) {
+  return durum === 'moved' ? ESIK_TASINDI : ESIK_KAPALI;
+}
 const ZAMAN_ASIMI_MS = 20_000;
 
 function ortamOku() {
@@ -141,7 +167,7 @@ export function guncellemeyiHesapla(satir, karar, simdi) {
   }
   const yeniSayac = (satir.source_failure_count ?? 0) + 1;
   const guncelleme = { ...temel, source_failure_count: yeniSayac };
-  if (yeniSayac >= ESIK && satir.status === 'published') {
+  if (yeniSayac >= kapanisEsigi(karar.durum) && satir.status === 'published') {
     guncelleme.status = 'expired';
   }
   return guncelleme;
@@ -194,7 +220,7 @@ async function ana() {
     if (guncelleme.status === 'expired') sayac.expiredYapilan++;
 
     console.log(
-      `${karar.durum.padEnd(15)} ${String(guncelleme.source_failure_count ?? firsat.source_failure_count ?? 0)}/${ESIK}  ${firsat.slug}  (${karar.sebep})` +
+      `${karar.durum.padEnd(15)} ${String(guncelleme.source_failure_count ?? firsat.source_failure_count ?? 0)}/${kapanisEsigi(karar.durum)}  ${firsat.slug}  (${karar.sebep})` +
         (guncelleme.status === 'expired' ? '  → EXPIRED' : ''),
     );
 

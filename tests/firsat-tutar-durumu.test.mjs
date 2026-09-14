@@ -237,3 +237,33 @@ test('kaynak kontrolü açılış okumasını yeniden deniyor', () => {
   assert.match(AKIS, /cron: "10 5 \*\/3 \* \*"/);
   assert.equal((AKIS.match(/cron:/g) ?? []).length, 1, 'tek zamanlama olmalı');
 });
+
+test('kesin kapanış iki teyitte aktif listeden çıkıyor', async () => {
+  /*
+    ÖLÇÜLDÜ: tek eşik 3'tü ve kontrol üç günde bir koştuğu için KESİN
+    kapanmış (404/410) bir fırsat DOKUZ GÜN aktif listede kalıyordu.
+    Canlıda iki kayıt 404 döndü ve `published` kaldı.
+
+    İşçi geçici ile kesini zaten ayırıyor (403/429/5xx sayaca hiç
+    girmiyor), yani sayaca giren şey baştan kesin bir sinyal.
+  */
+  const { guncellemeyiHesapla, kapanisEsigi } = await import(
+    '../scripts/firsat-kaynak-kontrol.mjs'
+  );
+  const kur = (sayac, durum) =>
+    guncellemeyiHesapla({ source_failure_count: sayac, status: 'published' }, { durum, sebep: 'x' }, 'T');
+
+  assert.equal(kapanisEsigi('closed'), 2);
+  /* Taşınma geçici bir yönlendirme olabilir: üç teyit. */
+  assert.equal(kapanisEsigi('moved'), 3);
+
+  assert.equal(kur(0, 'closed').status, undefined, 'ilk 404 tek başına düşürmüyor');
+  assert.equal(kur(1, 'closed').status, 'expired', 'ikinci teyitte aktif listeden çıkıyor');
+  assert.equal(kur(1, 'moved').status, undefined);
+  assert.equal(kur(2, 'moved').status, 'expired');
+
+  /* GEÇİCİ HATA SAYACA HİÇ GİRMİYOR: ne artırıyor ne sıfırlıyor. */
+  const gecici = kur(1, 'transient_error');
+  assert.equal(gecici.status, undefined, 'geçici hata kaydı kapatmıyor');
+  assert.ok(!('source_failure_count' in gecici), 'sayaca dokunmuyor');
+});
