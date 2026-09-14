@@ -12,7 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
-        with: { version: latest }
+        # Sabit sürüm: etiket çözümlemesi GitHub release API'sine gidiyor
+        # ve rate limit'e takılınca CLI'ı hiç kurmadan işi düşürebiliyor.
+        with: { version: 2.117.0 }
       - run: supabase start
       - run: supabase db reset --local --no-seed
       # `supabase db reset --local --no-seed` migration'lari SIFIRDAN

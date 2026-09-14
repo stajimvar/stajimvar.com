@@ -15,7 +15,7 @@ import { aciklamaKur, paylasimSorunlari } from '../src/lib/instagram-paylasim.mj
  *
  *   `setiAktar` kartı DÜZ DİZE olarak kullanıyor
  *   (`kart.replace(/^\\//, '')`) — yani düz dize canonical biçim ve
- *   manifestteki 28 setin 28'i o biçimde.
+ *   manifestteki setlerin hepsi o biçimde.
  *
  * Kırmızı test tamamen benim COMMIT ETMEDİĞİM yerel `setler.json`
  * kopyamdan geliyordu: PR #57'de eski setleri birleştirmişim ve
@@ -49,8 +49,22 @@ test('kartlar biçimi canonical: düz dize, setiAktar bunu okuyor', () => {
   }
 });
 
-test('28 setin tamamı panele taslak olarak aktarılabiliyor', () => {
-  assert.equal(setler.length, 28, 'panel iki haftalık takvim');
+test('manifestteki her set panele taslak olarak aktarılabiliyor', () => {
+  /*
+    SAYILAR MANİFESTTEN TÜRETİLİYOR — SABİT 28 KALDIRILDI
+
+    Bu test `setler.length === 28` diyordu. Takvime üçüncü ve dördüncü
+    hafta eklendi (manifest 36 sete çıktı) ve test kırmızı döndü; üç
+    Instagram testi birlikte `validate_app` işini düşürdü ve
+    `cloudflare_production` SKIPPED kaldı — yani takvime set eklemek
+    dağıtımı kilitliyordu.
+
+    Sabit sayı zaten yanlış güvenceydi: koruduğu şey "28 set var" değil,
+    "manifestteki HER set aktarılabiliyor ve her kartın dosyası
+    diskte". İkisi de aşağıda ölçülüyor ve manifest büyüdükçe kapsam
+    kendiliğinden büyüyor.
+  */
+  assert.ok(setler.length > 0, 'manifest boş olmamalı');
 
   const anahtarlar = new Set();
   for (const set of setler) {
@@ -77,7 +91,8 @@ test('28 setin tamamı panele taslak olarak aktarılabiliyor', () => {
       assert.ok(fs.existsSync(dosya), `${set.kod}: ${kart} diskte yok`);
     }
   }
-  assert.equal(anahtarlar.size, 28);
+  /* Her set için tekil anahtar: sayı manifestten. */
+  assert.equal(anahtarlar.size, setler.length);
 });
 
 test('yayın isteği öncesi veri Instagram kurallarını geçiyor', () => {
@@ -123,12 +138,23 @@ test('eski set kaydı silinmedi: üreticisi ve testi yerinde', () => {
   );
 
   /*
-    Asıl korunması istenen şey takvimin kendi dosyaları: 28 set × 4
-    kart = 112 görsel. Hepsi DEPODA izlenir olmalı, yoksa CI'da
-    aktarım kırılır.
+    Asıl korunması istenen şey takvimin kendi dosyaları: her set dört
+    kart taşıyor ve hepsi DEPODA izlenir olmalı, yoksa CI'da aktarım
+    kırılır. Beklenen sayı manifestten türetiliyor (set × 4), sabit
+    değil — takvim büyüdüğünde test kendiliğinden daha fazlasını
+    doğruluyor.
+
+    TEST GEVŞETİLMEDİ: her kartın diskte olduğu tek tek ölçülüyor.
+    Ölçüm (15 Eylül 2026): 36 set × 4 = 144 görselin 144'ü yerinde.
   */
   const tumKartlar = setler.flatMap((set) => set.kartlar ?? []);
-  assert.equal(tumKartlar.length, 112, 'takvimin 112 görseli');
+  assert.equal(
+    tumKartlar.length,
+    setler.length * 4,
+    `her set dört kart taşımalı: ${setler.length} set için ${setler.length * 4} görsel`
+  );
+  /* Kart yolları tekil olmalı: iki set aynı görseli paylaşmıyor. */
+  assert.equal(new Set(tumKartlar).size, tumKartlar.length, 'kart yolları tekil olmalı');
   for (const kart of tumKartlar) {
     assert.ok(
       fs.existsSync(path.join(kok, 'public', kart.replace(/^\//, ''))),

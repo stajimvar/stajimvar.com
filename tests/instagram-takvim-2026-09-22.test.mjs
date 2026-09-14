@@ -35,13 +35,36 @@ const ikinciHafta = [
   ['2026-09-28-2030-haftalik-dersler', '28 Eylül 2026 Pazartesi • 20.30 • Başvurulardan haftalık ders çıkarma'],
 ];
 
-test('ikinci hafta önceki 14 gönderiyi koruyup paneli 28 sete tamamlar', () => {
+test('ikinci hafta önceki 14 gönderiyi koruyup sırasıyla ekleniyor', () => {
+  /*
+    TOPLAM UZUNLUK İDDİASI KALDIRILDI
+
+    Bu test `setler.length === 28` ve `slice(14)` ile manifestin TAM
+    28 set olduğunu varsayıyordu. Takvime üçüncü ve dördüncü hafta
+    eklendi (36 set) ve `slice(14)` 14 yerine 22 kayıt döndürdüğü için
+    kırıldı — takvime set eklemek dağıtımı kilitliyordu.
+
+    Bu testin işi ikinci haftanın DOĞRU ve SIRASIYLA eklendiğini
+    ölçmek; manifestin toplam boyu onun işi değil. Sonraki haftalar
+    aşağıdaki pencerenin dışında kalıyor ve bu testi ilgilendirmiyor.
+  */
   const setler = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  assert.equal(setler.length, 28);
-  assert.deepEqual(setler.slice(0, 14).map((set) => set.kod), oncekiKodlar);
-  assert.deepEqual(setler.slice(14).map(({ kod, ad }) => [kod, ad]), ikinciHafta);
-  assert.equal(new Set(setler.map((set) => set.kod)).size, 28);
-  assert.equal(new Set(setler.map((set) => set.ad)).size, 28);
+  assert.ok(setler.length >= oncekiKodlar.length + ikinciHafta.length);
+
+  /* Birinci hafta başta ve bozulmamış. */
+  assert.deepEqual(setler.slice(0, oncekiKodlar.length).map((set) => set.kod), oncekiKodlar);
+
+  /* İkinci hafta hemen ardından, aynı sırayla. */
+  assert.deepEqual(
+    setler
+      .slice(oncekiKodlar.length, oncekiKodlar.length + ikinciHafta.length)
+      .map(({ kod, ad }) => [kod, ad]),
+    ikinciHafta
+  );
+
+  /* Kod ve ad bütün manifestte tekil: mükerrer set yok. */
+  assert.equal(new Set(setler.map((set) => set.kod)).size, setler.length, 'kodlar tekil olmalı');
+  assert.equal(new Set(setler.map((set) => set.ad)).size, setler.length, 'adlar tekil olmalı');
 });
 
 test('ikinci haftadaki 14 gönderinin dört paylaşılabilir JPEG kartı vardır', async () => {
