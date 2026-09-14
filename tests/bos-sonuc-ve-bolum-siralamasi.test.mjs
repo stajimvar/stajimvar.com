@@ -210,7 +210,12 @@ test('açık bölüm filtresi eleme yapıyor, çipler yalnız sıralıyor', () =
 
 test('bölüm sayfası kanonik bölüm parametresini açıyor', () => {
   const BOLUM = oku('src/components/BolumIcerik.tsx');
-  assert.match(BOLUM, /\/staj-ilanlari\?bolum=\$\{encodeURIComponent\(bolum\.slug\)\}/);
+  /*
+    HEDEF `/` — bir ara `/staj-ilanlari` yazmıştım ve tarayıcıda
+    gördüm: o adres STATİK SEO sayfası ve filtre parametrelerini hiç
+    okumuyor. Bağlantı çalışıyor gibi görünüp filtresiz sayfa açıyordu.
+  */
+  assert.match(BOLUM, /\/\?bolum=\$\{encodeURIComponent\(bolum\.slug\)\}/);
   /*
     Serbest `q` metni ARTIK YOK: "Makine" yazan bir `q`, başlığında
     "makine öğrenmesi" geçen yazılım ilanını da getiriyordu.

@@ -342,7 +342,14 @@ export function aramaEslesiyorMu(ilan, filtreler) {
  * Liste ekranının kendi parametrelerini kullanıyor; ikinci bir adres
  * sözleşmesi kurulmuyor.
  */
-export function aramaAdresine(filtreler, taban = '/staj-ilanlari') {
+/*
+  TABAN `/` — ETKİLEŞİMLİ LİSTENİN YOLU
+
+  `/staj-ilanlari` statik SEO sayfası ve filtre parametrelerini
+  okumuyor (tarayıcıda ölçüldü). Kayıtlı aramayı oraya açmak, filtresiz
+  bir sayfa göstermek olurdu.
+*/
+export function aramaAdresine(filtreler, taban = '/') {
   const f = filtreleriDogrula(filtreler);
   const p = new URLSearchParams();
   if (f.q) p.set('q', f.q);
