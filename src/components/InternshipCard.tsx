@@ -24,6 +24,11 @@ import { ILAN_KAYNAGI } from '../lib/urun-metni';
 import { CTA_BASARI, CTA_BIRINCIL, CTA_ORTAK } from '../lib/kart-cta';
 import { tarihMetni } from '../lib/tarih.mjs';
 import { YUZEY } from '../ui/tokens';
+/*
+  Staj türü kararı ayrı dosyada: kart ve detay AYNI kuralı kullanıyor
+  ve kural React ağacı kurmadan sınanabiliyor.
+*/
+import { stajTuruRozeti } from '../lib/staj-turu.mjs';
 
 /**
  * SİGORTAYI SAĞLAYAN TARAFIN OKUNABİLİR ADI.
@@ -482,26 +487,24 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               </span>
             )}
 
-            {/* Mandatory SGK Badge */}
-            {listing.mandatoryStajAccepted && (
+            {/*
+              STAJ TÜRÜ — İKİSİ BİRBİRİNİ DIŞLAMIYOR
+
+              Önce gönüllü rozetini yalnız zorunlu YOKKEN çiziyordum ve
+              bu bir kusurdu: ölçüldü, üretimde 122 ilanda ikisi de
+              true. "Zorunlu var" diye gönüllü bilgisini gizlemek,
+              gönüllü staj arayan öğrenciye uygun ilanı saklamaktı.
+
+              Dört hâl, dördü ayrı:
+                ikisi true   → tek kompakt rozet "Zorunlu ve gönüllü"
+                yalnız biri  → o rozet
+                açık RET     → "kabul etmiyor" (false GERÇEK bilgi)
+                ikisi null   → rozet YOK
+            */}
+            {stajTuruRozeti(listing) && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600"/>
-                <span>Zorunlu Staj (SGK)</span>
-              </span>
-            )}
-
-            {/*
-              GÖNÜLLÜ STAJ — YALNIZ BİLİNİYORSA VE ZORUNLU YOKSA
-
-              İkisi birlikte yazılınca satır uzuyor ve ayrım kayboluyor.
-              Zorunlu staj kabulü daha bağlayıcı bilgi (SGK'lı staj
-              arayan öğrenci onu arıyor); gönüllü rozeti yalnız
-              zorunlunun olmadığı kartta çıkıyor.
-            */}
-            {!listing.mandatoryStajAccepted && listing.voluntaryStajAccepted && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-50 text-sky-800 font-semibold border border-sky-200">
-                <ShieldCheck className="w-3.5 h-3.5 text-sky-600"/>
-                <span>Gönüllü staj</span>
+                <span>{stajTuruRozeti(listing)}</span>
               </span>
             )}
 

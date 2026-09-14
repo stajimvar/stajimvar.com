@@ -2,7 +2,7 @@ import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import React, { useEffect, useState } from 'react';
 import {
   ArrowLeft, MapPin, Calendar, DollarSign, ShieldCheck, ExternalLink, RefreshCw,
-  Building2, Clock, AlertTriangle, Share2, Check, Link2,
+  Building2, Clock, AlertTriangle, Share2, Check,
 } from 'lucide-react';
 import type { InternshipListing } from '../types';
 import { fetchListingByIdPrefix } from '../lib/queries';
@@ -11,6 +11,14 @@ import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { tarihMetni } from '../lib/tarih.mjs';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 import { sonKontrolMetni } from '../lib/zaman';
+/*
+  Ücret, staj türü ve sigorta kararları kartla AYNI dosyadan geliyor.
+*/
+import {
+  sigortaMetni,
+  stajTuruSatirlari,
+  ucretMetniHesapla,
+} from '../lib/staj-turu.mjs';
 import { Logo } from './Logo';
 import { slugify } from '../lib/slug';
 import { UlkeRozeti } from './UlkeRozeti';
@@ -144,27 +152,61 @@ export const ListingPage: React.FC<ListingPageProps> = ({
   */
   const sonBasvuru = tarihMetni(listing?.applicationDeadline);
   /*
-    UC DEGER, UC CEVAP
+    KARAR ORTAK DOSYADA
 
-      true  -> tutar varsa tutar, yoksa "Ucretli"
-      false -> "Ucretsiz"  (kaynagin ACIK beyani; goc 20261001010000'dan
-               beri bu deger yalnizca kanitla yaziliyor)
-      null  -> kutu hic cizilmiyor
-
-    Onceden sutun `not null default false` idi: false hem "ucretsiz" hem
-    "kaynak soylemiyor" demekti ve ikisi ayrilamadigi icin yalniz pozitif
-    bilgi gosteriliyordu. Artik ayrim veride var.
+    Kart ve detay aynı `lib/staj-turu` kurallarını kullanıyor. İki ayrı
+    kopya, birinin "Ücretsiz" derken ötekinin susması demekti.
   */
-  const ucretMetni =
-    listing?.stipend?.isPaid === true
-      ? listing.stipend.amountText?.trim() || 'Ücretli'
-      : listing?.stipend?.isPaid === false
-        ? 'Ücretsiz'
-        : null;
-  const zorunluStajMetni = listing?.mandatoryStajAccepted
-    ? 'Kabul ediliyor'
-    : listing?.insuranceNote?.trim() || null;
+  const ucretMetni = ucretMetniHesapla(listing?.stipend);
+
+  /*
+    STAJ TÜRÜ — BİLİNEN İKİ BİLGİ DE AÇIKÇA
+
+    Kartta tek kompakt rozet var (yer yok); detayda her bilinen alan
+    kendi satırında. İkisi birbirini dışlamıyor: ölçüldü, üretimde 122
+    ilanda ikisi de true.
+
+    `insuranceNote` ARTIK BU SATIRDA DEĞİL: eskiden zorunlu staj
+    bilinmediğinde onun yerine not basılıyordu ve iki farklı şey aynı
+    kutuda görünüyordu ("Kabul ediliyor" ile "Kaynakta belirtilmemiş").
+    Not kendi satırına taşındı.
+  */
+  const stajTuru = stajTuruSatirlari(listing ?? {});
+
+  /*
+    SİGORTAYI SAĞLAYAN — YALNIZ BİLİNİYORSA
+
+    `null` (kaynak söylemiyor) satır üretmiyor. `'yok'` ÜRETİYOR:
+    o kaynağın açık beyanı ve öğrenci için gerçek bilgi.
+  */
+  const sigorta = sigortaMetni(listing?.insuranceProvider);
+
+  /*
+    SİGORTA NOTU — SERBEST METİN, AYRI SATIR
+
+    Eskiden zorunlu staj bilinmediğinde onun kutusunda basılıyordu ve
+    iki farklı şey aynı yerde görünüyordu ("Kabul ediliyor" ile
+    "Kaynakta belirtilmemiş"). Not kaynağın kendi cümlesi; yapısal
+    `insurance_provider` alanının yerine geçmiyor, onu tamamlıyor.
+
+    "Kaynakta belirtilmemiş" GÖSTERİLMİYOR: bilgi yokluğunu bilgi gibi
+    sunmak, kutuyu boşa doldurmak olurdu.
+  */
+  const sigortaNotu = (() => {
+    const not = listing?.insuranceNote?.trim();
+    if (!not) return null;
+    return /belirtilmemi[sş]/i.test(not) ? null : not;
+  })();
+
   const sureMetni = listing?.duration?.trim() || null;
+  /*
+    DÖNEM VE ÇALIŞMA BİÇİMİ — yalnız biliniyorsa.
+
+    `term` şemada zorunlu ama boş dize gelebiliyor; `workType`
+    'On-site' | 'Hybrid' | 'Remote'.
+  */
+  const donemMetni = listing?.term?.trim() || null;
+  const bicimMetni = listing?.workType ? calismaEtiketi(listing.workType) : null;
 
   /*
     Not yalnızca ikisi de eksikse tek cümle; biri varsa eksik olanı
@@ -360,11 +402,36 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                     deger={ucretMetni}
                   />
                 )}
-                {zorunluStajMetni && (
+                {stajTuru.map((satir) => (
+                  <Bilgi
+                    key={satir.etiket}
+                    ikon={<ShieldCheck className="w-4 h-4" />}
+                    etiket={satir.etiket}
+                    deger={satir.deger}
+                  />
+                ))}
+                {sigorta && (
                   <Bilgi
                     ikon={<ShieldCheck className="w-4 h-4" />}
-                    etiket="Zorunlu staj"
-                    deger={zorunluStajMetni}
+                    etiket="Sigorta"
+                    deger={sigorta}
+                  />
+                )}
+                {sigortaNotu && (
+                  <Bilgi
+                    ikon={<ShieldCheck className="w-4 h-4" />}
+                    etiket="Sigorta notu"
+                    deger={sigortaNotu}
+                  />
+                )}
+                {donemMetni && (
+                  <Bilgi ikon={<Calendar className="w-4 h-4" />} etiket="Dönem" deger={donemMetni} />
+                )}
+                {bicimMetni && (
+                  <Bilgi
+                    ikon={<Building2 className="w-4 h-4" />}
+                    etiket="Çalışma biçimi"
+                    deger={bicimMetni}
                   />
                 )}
                 {/*
