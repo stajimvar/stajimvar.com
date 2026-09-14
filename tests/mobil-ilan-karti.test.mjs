@@ -134,3 +134,48 @@ test('başvuru yöntemine göre ana düğme', () => {
   /* İlan bildir bağlantısı korunuyor. */
   assert.match(oku('src/components/InternshipDetailModal.tsx'), /Bu ilanı bildir/);
 });
+
+test('kolon listesine eklenen her kolonun okuma yetkisi var', () => {
+  /*
+    CANLIDA KIRIKTI (14 Eylül 2026): `insurance_provider`
+    `LISTING_COLUMNS`a eklendiği anda bütün ilan sorguları
+    `42501 permission denied for table listings` verdi ve ilan detayı
+    "İlan yüklenemedi" gösterdi.
+
+    `listings` tablosunda SELECT tablo düzeyinde DEĞİL, kolon kolon
+    veriliyor. Yetkisi olmayan tek bir kolonu istemek sorgunun
+    TAMAMINI düşürüyor.
+
+    Bu test o bağı kuruyor: kolon listesindeki her yeni kolon için bir
+    `grant select` bulunmalı.
+  */
+  const goc = ['20260905020000', '20260906010000', '20261001010000', '20261004010000']
+    .map((k) => {
+      try {
+        return readFileSync(
+          new URL(`../supabase/migrations/${k}_${
+            {
+              '20260905020000': 'ilan_kaynak_sagligi_sutunlari',
+              '20260906010000': 'ilan_kolon_yetkileri',
+              '20261001010000': 'ilan_veri_dogrulugu',
+              '20261004010000': 'yeni_ilan_kolon_yetkileri',
+            }[k]
+          }.sql`, import.meta.url),
+          'utf8'
+        );
+      } catch {
+        return '';
+      }
+    })
+    .join('\n');
+
+  /* Göç 20261001010000'ın eklediği üç kolonun yetkisi verilmiş olmalı. */
+  for (const kolon of ['location_raw', 'insurance_provider', 'department_tags']) {
+    assert.ok(
+      new RegExp(`grant select \([^)]*${kolon}`).test(goc),
+      `${kolon} için grant select yok — bütün ilan sorgularını düşürür`
+    );
+  }
+  /* Kolon listesinde olan `insurance_provider` gerçekten yetkili. */
+  assert.match(MAPPER, /'insurance_provider',/);
+});
