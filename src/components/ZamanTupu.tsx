@@ -56,7 +56,7 @@ export const ZamanTupu: React.FC<{
   if (durum === 'takvimsiz') {
     return (
       <p className={`text-[13px] font-semibold ${className ?? ''}`} style={{ color: renk.yazi }}>
-        Takvim açıklanmadı
+        Başvuru takvimi için resmî kaynağı kontrol edin
       </p>
     );
   }

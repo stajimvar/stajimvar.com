@@ -122,7 +122,19 @@ export function tupMetni(item, now = new Date()) {
   const durum = tupDurumu(item, now);
   const tarih = gunAyYil(item?.applicationDeadline);
 
-  if (durum === 'takvimsiz') return { vurgu: 'Takvim açıklanmadı', tarih: null };
+/*
+    "TAKVİM AÇIKLANMADI" BİR ÇIKARIMDI
+  
+    `applicationDeadline` boşsa kurumun takvimi açıklamadığı SONUCU
+    çıkmaz: kayıt henüz derlenmemiş, kaynak okunamamış ya da tarih
+    başka bir alanda olabilir. Doğrulanmamış bir olumsuzlamayı kuruma
+    atfetmek, öğrenciye "beklemeye gerek yok" demek olurdu.
+  
+    Cümle artık bir iddia değil, bir yönlendirme. Aynı metin ön
+    render'daki kategori listelerinde de kullanılıyor; ilk HTML ile
+    ekranda görünen yazı aynı.
+  */
+  if (durum === 'takvimsiz') return { vurgu: 'Başvuru takvimi için resmî kaynağı kontrol edin', tarih: null };
   if (durum === 'kapali') return { vurgu: 'Başvuru dönemi kapandı', tarih };
   if (durum === 'yakinda') {
     const acilis = gunAyYil(item?.applicationStartAt);
