@@ -150,12 +150,38 @@ export function guncellemeyiHesapla(satir, karar, simdi) {
 async function ana() {
   const db = istemciAc();
   const simdi = new Date().toISOString();
-  const { data: firsatlar, error } = await db
-    .from('opportunities')
-    .select('id, slug, source_url, status, source_failure_count')
-    .eq('status', 'published');
-  if (error) {
-    console.error('fırsatlar okunamadı:', error.message);
+  /*
+    AÇILIŞ OKUMASI YENİDEN DENENİYOR — TEK 504 BÜTÜN KOŞUYU ÖLDÜRDÜ
+
+    ÖLÇÜLDÜ: 13 Eylül 2026 koşusu "fırsatlar okunamadı: Gateway Timeout"
+    ile düştü. Okuma tek denemeydi ve hata ölümcüldü; cron üç günde bir
+    koştuğu için 120 kaydın `source_status` alanı GÜN­LERCE boş kaldı.
+    Yani kapanış kontrolü hiç çalışmadı ve hiç kimse fark etmedi.
+
+    Geçici bir ağ geçidi hatası, kaynak kontrolünü iptal etmek için
+    sebep değil — kaydın kendisine bile dokunmadan ölüyordu.
+
+    Üç deneme, artan bekleme. Üçü de düşerse hâlâ hata veriyor:
+    kalıcı bir sorun gizlenmiyor.
+  */
+  let firsatlar = null;
+  let sonHata = null;
+  for (let deneme = 1; deneme <= 3; deneme += 1) {
+    const { data, error } = await db
+      .from('opportunities')
+      .select('id, slug, source_url, status, source_failure_count')
+      .eq('status', 'published');
+    if (!error) {
+      firsatlar = data;
+      if (deneme > 1) console.log(`fırsatlar ${deneme}. denemede okundu.`);
+      break;
+    }
+    sonHata = error.message;
+    console.warn(`fırsatlar okunamadı (deneme ${deneme}/3): ${error.message}`);
+    if (deneme < 3) await new Promise((c) => setTimeout(c, deneme * 5000));
+  }
+  if (!firsatlar) {
+    console.error(`::error::fırsatlar üç denemede de okunamadı: ${sonHata}`);
     process.exit(1);
   }
 

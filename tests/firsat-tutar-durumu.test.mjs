@@ -65,7 +65,7 @@ test('her durumun ekranda tek bir karşılığı var', () => {
   const bekleme = {
     aciklanacak: 'Tutar kurumca açıklanacak',
     mali_destek: 'Mali destek sağlanıyor',
-    belirtilmemis: 'Tutar belirtilmemiş',
+    belirtilmemis: 'Tutar doğrulanamadı',
     ucretsiz: 'Ücretsiz',
   };
   for (const [durum, metin] of Object.entries(bekleme)) {
@@ -95,7 +95,7 @@ test('ESKİ DÖNEM TUTARI KULLANILMIYOR: damgasız sayı rakam sayılmıyor', ()
     kayit({ amountStatus: 'belirtilmemis', amountMin: 22500, currency: 'TRY', paymentPeriod: 'yearly' }),
   );
   assert.equal(t.durum, 'belirtilmemis');
-  assert.equal(t.satir, 'Tutar belirtilmemiş');
+  assert.equal(t.satir, 'Tutar doğrulanamadı');
   assert.doesNotMatch(t.satir, /22\.500/);
 });
 
@@ -111,7 +111,7 @@ test('metinler tek yerde tanımlı ve kart oradan okuyor', () => {
   assert.deepEqual(TUTAR_METNI, {
     aciklanacak: 'Tutar kurumca açıklanacak',
     mali_destek: 'Mali destek sağlanıyor',
-    belirtilmemis: 'Tutar belirtilmemiş',
+    belirtilmemis: 'Tutar doğrulanamadı',
     ucretsiz: 'Ücretsiz',
   });
   assert.equal(TUTAR_DURUMU.kesin, 'kesin');
@@ -190,4 +190,50 @@ test('öteki para birimlerinin gösterimi değişmedi', () => {
   assert.match(paraBicimi(500, 'XYZ'), /XYZ/);
   assert.equal(paraBicimi(null, 'TRY'), null);
   assert.equal(paraBicimi('abc', 'TRY'), null);
+});
+
+test('KURUM ADINA BEYAN YOK: "belirtilmemiş" iddiası kaldırıldı', () => {
+  /*
+    `belirtilmemis` satırı "Tutar belirtilmemiş" yazıyordu ve bu KURUM
+    ADINA bir beyan: "kurum tutarı açıklamadı". Bildiğimiz tek şey BİZİM
+    okuduğumuz sayfada rakam GÖRMEDİĞİMİZ — rakam bir PDF'te, giriş
+    arkasında ya da ayrıştırıcının atladığı bir tabloda olabilir.
+
+    Ölçüm: 120 kaydın 89'u bu durumdaydı, yani iddia ekranın dörtte
+    üçünde çıkıyordu.
+  */
+  assert.equal(TUTAR_METNI.belirtilmemis, 'Tutar doğrulanamadı');
+  for (const metin of Object.values(TUTAR_METNI)) {
+    assert.ok(
+      !/belirtilmemi|açıklanmadı|açıklamadı/i.test(metin),
+      `kurum adına beyan olmamalı: ${metin}`
+    );
+  }
+  /*
+    ÖTEKİ ÜÇ DURUM KAYNAĞIN KENDİ İFADESİ: "açıklanacak", "mali destek
+    sağlanıyor", "ücretsiz" — onlar bizim değil kurumun beyanı ve
+    değişmedi.
+  */
+  assert.equal(TUTAR_METNI.aciklanacak, 'Tutar kurumca açıklanacak');
+  assert.equal(TUTAR_METNI.mali_destek, 'Mali destek sağlanıyor');
+  assert.equal(TUTAR_METNI.ucretsiz, 'Ücretsiz');
+});
+
+test('kaynak kontrolü açılış okumasını yeniden deniyor', () => {
+  /*
+    ÖLÇÜLDÜ: 13 Eylül 2026 koşusu "fırsatlar okunamadı: Gateway Timeout"
+    ile düştü. Okuma tek denemeydi ve hata ölümcüldü; cron üç günde bir
+    koştuğu için 120 kaydın `source_status` alanı boş kaldı — kapanış
+    kontrolü hiç çalışmadı.
+  */
+  const ISCI = oku('scripts/firsat-kaynak-kontrol.mjs');
+  assert.match(ISCI, /deneme <= 3/);
+  assert.match(ISCI, /fırsatlar okunamadı \(deneme \$\{deneme\}\/3\)/);
+  /* Üçü de düşerse hâlâ hata veriyor: kalıcı sorun gizlenmiyor. */
+  assert.match(ISCI, /üç denemede de okunamadı/);
+  assert.match(ISCI, /process\.exit\(1\)/);
+  /* Cron üç günde bir: mevcut otomasyon, ikinci zamanlama yok. */
+  const AKIS = oku('.github/workflows/firsat-kaynak-kontrolu.yml');
+  assert.match(AKIS, /cron: "10 5 \*\/3 \* \*"/);
+  assert.equal((AKIS.match(/cron:/g) ?? []).length, 1, 'tek zamanlama olmalı');
 });

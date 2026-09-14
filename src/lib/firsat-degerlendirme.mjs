@@ -102,7 +102,9 @@ export function paraBicimi(deger, currency) {
     kesin          Güncel dönem için kesin rakam → "Aylık 5.000 TL"
     aciklanacak    Kaynak "tutar sonra açıklanacak" diyor
     mali_destek    Destek var, miktar programa/şehre/kişiye göre değişiyor
-    belirtilmemis  Güncel sayfa okundu, tutardan hiç söz etmiyor
+    belirtilmemis  Güncel sayfa okundu, tutar BULUNAMADI (kurumun
+                   açıklamadığı iddia EDİLMİYOR — ekranda "Tutar
+                   doğrulanamadı" yazıyor)
     ucretsiz       Katılımın ücretsiz olduğu açıkça yazıyor
     belirsiz       Açılamadı, çelişkili ya da karar verilemedi
 
@@ -125,11 +127,27 @@ export const TUTAR_DURUMU = {
   belirsiz: 'belirsiz',
 };
 
-/* Ekranda görünen karşılıklar. Listede olmayan durum satır çizmiyor. */
+/*
+  EKRANDA GÖRÜNEN KARŞILIKLAR — "BELİRTİLMEMİŞ" ARTIK İDDİA ETMİYOR
+
+  `belirtilmemis` satırı "Tutar belirtilmemiş" yazıyordu ve bu, KURUM
+  ADINA bir beyan: "kurum tutarı açıklamadı". Oysa bildiğimiz tek şey
+  BİZİM okuduğumuz sayfada rakam GÖRMEDİĞİMİZ. Rakam bir PDF'te, giriş
+  arkasında, bir tabloda ya da ayrıştırıcımızın atladığı bir yerde
+  olabilir. Ölçüm: 120 kaydın 89'u bu durumda, yani bu iddia ekranın
+  dörtte üçünde çıkıyordu.
+
+  Yeni metin yalnızca ölçümün kendisini söylüyor. Aynı ayrım
+  `programDurumMetni`'nde de yapıldı: "bakmadık" ile "baktık,
+  bulamadık" ayrı cümleler.
+
+  ÖTEKİ ÜÇ DURUM DEĞİŞMEDİ: `aciklanacak`, `mali_destek` ve `ucretsiz`
+  kaynağın KENDİ ifadesine dayanıyor — onlar bizim değil kurumun beyanı.
+*/
 export const TUTAR_METNI = {
   aciklanacak: 'Tutar kurumca açıklanacak',
   mali_destek: 'Mali destek sağlanıyor',
-  belirtilmemis: 'Tutar belirtilmemiş',
+  belirtilmemis: 'Tutar doğrulanamadı',
   ucretsiz: 'Ücretsiz',
 };
 
