@@ -790,5 +790,357 @@
       "/paylasim/2026-10-02-2030-haftalik-ozet/03-v1.jpg",
       "/paylasim/2026-10-02-2030-haftalik-ozet/04-v1.jpg"
     ]
+  },
+  {
+    "kod": "2026-10-03-1230-sahte-staj-ilani",
+    "ad": "3 Ekim 2026 Cumartesi • 12.30 • Sahte staj ilanını ayırt etme",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Bir staj ilanına başvurmadan önce kurumun resmî sitesini ve kariyer kanalını kontrol et. İletişim adresinin gerçekten kuruma ait olduğundan, bağlantının doğru alan adına yöneldiğinden emin ol. Başvuru için para, hesap şifresi veya gereksiz kişisel belge isteyen ilanlarda işlemi durdur. Şüpheli durumu ilandaki numaradan değil, kurumun resmî iletişim kanalından doğrula.",
+    "etiketler": [
+      "#güvenlibaşvuru",
+      "#stajilanı",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#dolandırıcılık",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-03-1230-sahte-staj-ilani/01-v1.jpg",
+      "/paylasim/2026-10-03-1230-sahte-staj-ilani/02-v1.jpg",
+      "/paylasim/2026-10-03-1230-sahte-staj-ilani/03-v1.jpg",
+      "/paylasim/2026-10-03-1230-sahte-staj-ilani/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-03-2030-eposta-konu-satiri",
+    "ad": "3 Ekim 2026 Cumartesi • 20.30 • Başvuru e-postasının konu satırı",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Başvuru e-postasının konu satırı, alıcının mesajın amacını açmadan anlamasını sağlamalıdır. İlanda belirtilen pozisyon adını, adını ve varsa referans kodunu kısa biçimde yaz. “CV”, “başvuru” veya “acil” gibi tek başına belirsiz ifadeler kullanma. İlan özel bir konu biçimi istiyorsa onu aynen uygula.",
+    "etiketler": [
+      "#başvuruepostası",
+      "#stajbaşvurusu",
+      "#eposta",
+      "#öğrenci",
+      "#kariyer",
+      "#işarama",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-03-2030-eposta-konu-satiri/01-v1.jpg",
+      "/paylasim/2026-10-03-2030-eposta-konu-satiri/02-v1.jpg",
+      "/paylasim/2026-10-03-2030-eposta-konu-satiri/03-v1.jpg",
+      "/paylasim/2026-10-03-2030-eposta-konu-satiri/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-04-1230-kariyer-etkinligi",
+    "ad": "4 Ekim 2026 Pazar • 12.30 • Kariyer etkinliğine hazırlanma",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Kariyer etkinliğinden önce programı incele ve görüşmek istediğin en fazla üç kurumu önceliklendir. Bölümünü, ilgilendiğin alanı ve aradığın fırsatı anlatan kısa bir tanıtım hazırla. Her kurum için resmî kaynaklarda cevabını bulamadığın tek bir soru yaz. Böylece kalabalık bir etkinlikte rastgele dolaşmak yerine anlamlı görüşmeler yapabilirsin.",
+    "etiketler": [
+      "#kariyeretkinliği",
+      "#networking",
+      "#öğrenci",
+      "#staj",
+      "#kariyer",
+      "#işarama",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-04-1230-kariyer-etkinligi/01-v1.jpg",
+      "/paylasim/2026-10-04-1230-kariyer-etkinligi/02-v1.jpg",
+      "/paylasim/2026-10-04-1230-kariyer-etkinligi/03-v1.jpg",
+      "/paylasim/2026-10-04-1230-kariyer-etkinligi/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-04-2030-baglanti-mesaji",
+    "ad": "4 Ekim 2026 Pazar • 20.30 • Etkinlik sonrası bağlantı mesajı",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Etkinlik sonrası bağlantı mesajında nerede tanıştığınızı ve konuşmadan hatırladığın gerçek bir noktayı belirt. Paylaşılan bilginin sana nasıl yardımcı olduğunu kısa biçimde söyle ve teşekkür et. İlk mesajı doğrudan iş istemeye dönüştürme; gelecekte ilgili bir gelişme olduğunda iletişim kurabilmek için doğal bir kapı bırak.",
+    "etiketler": [
+      "#networking",
+      "#bağlantı",
+      "#kariyeretkinliği",
+      "#öğrenci",
+      "#kariyer",
+      "#iletişim",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-04-2030-baglanti-mesaji/01-v1.jpg",
+      "/paylasim/2026-10-04-2030-baglanti-mesaji/02-v1.jpg",
+      "/paylasim/2026-10-04-2030-baglanti-mesaji/03-v1.jpg",
+      "/paylasim/2026-10-04-2030-baglanti-mesaji/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-05-1230-ders-projesi-cv",
+    "ad": "5 Ekim 2026 Pazartesi • 12.30 • Ders projesini CV’de anlatma",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Ders projesini CV’ye eklerken yalnızca ders ve proje adını yazma. Çözülen problemi, ekipte üstlendiğin kısmı ve ortaya çıkan somut çıktıyı anlat. Kullandığın araçları ancak gerçekten uyguladıysan ekle; ekip sonucunu tamamen kendi başarın gibi sunma. Mümkünse rapor, prototip veya kod gibi paylaşılabilir bir kanıt bağlantısı kullan.",
+    "etiketler": [
+      "#dersprojesi",
+      "#stajcv",
+      "#cvhazırlama",
+      "#öğrenci",
+      "#proje",
+      "#kariyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-05-1230-ders-projesi-cv/01-v1.jpg",
+      "/paylasim/2026-10-05-1230-ders-projesi-cv/02-v1.jpg",
+      "/paylasim/2026-10-05-1230-ders-projesi-cv/03-v1.jpg",
+      "/paylasim/2026-10-05-1230-ders-projesi-cv/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-05-2030-mulakat-sorulari",
+    "ad": "5 Ekim 2026 Pazartesi • 20.30 • Mülakatta sorulacak doğru sorular",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Mülakat sonunda soracağın sorular, rolü ve çalışma ortamını anlamana yardımcı olmalı. Stajyerin ilk sorumluluklarını, geri bildirim düzenini ve başarının nasıl değerlendirildiğini sorabilirsin. Cevabı ilanda veya şirket sitesinde açıkça bulunan soruları tekrar etme. Maaş ve koşullar kadar öğrenme desteğini de kararının parçası yap.",
+    "etiketler": [
+      "#mülakatsoruları",
+      "#stajmülakatı",
+      "#mülakat",
+      "#öğrenci",
+      "#kariyer",
+      "#staj",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-05-2030-mulakat-sorulari/01-v1.jpg",
+      "/paylasim/2026-10-05-2030-mulakat-sorulari/02-v1.jpg",
+      "/paylasim/2026-10-05-2030-mulakat-sorulari/03-v1.jpg",
+      "/paylasim/2026-10-05-2030-mulakat-sorulari/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-06-1230-uzaktan-staj-alani",
+    "ad": "6 Ekim 2026 Salı • 12.30 • Uzaktan staj çalışma alanı hazırlama",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Uzaktan staj başlamadan önce internet bağlantını, mikrofonunu, kameranı ve gerekli erişimleri dene. Görüşmeler için sessiz ve sade bir alan oluştur; kurum dosyalarını ortak veya güvensiz cihazlarda bırakma. Çalışma saatlerini, molalarını ve ulaşılabilirlik düzenini yöneticinle netleştir. Teknik sorunlar için yedek bağlantı veya iletişim yolunu önceden bil.",
+    "etiketler": [
+      "#uzaktanstaj",
+      "#remotework",
+      "#stajyer",
+      "#öğrenci",
+      "#işhayatı",
+      "#verimlilik",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-06-1230-uzaktan-staj-alani/01-v1.jpg",
+      "/paylasim/2026-10-06-1230-uzaktan-staj-alani/02-v1.jpg",
+      "/paylasim/2026-10-06-1230-uzaktan-staj-alani/03-v1.jpg",
+      "/paylasim/2026-10-06-1230-uzaktan-staj-alani/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-06-2030-geri-bildirim-uygulama",
+    "ad": "6 Ekim 2026 Salı • 20.30 • Gelen geri bildirimi uygulama",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Geri bildirim aldığında hemen açıklama yapmaya çalışmak yerine örneği ve beklenen değişikliği dinle. Anladığını kendi cümlenle tekrar et, gerekiyorsa önceliği ve teslim zamanını sor. Düzenlemeyi yaptıktan sonra yalnız “tamamlandı” demek yerine değişen kısmı göster. Aynı geri bildirimi tekrar almamak için kısa bir not tut.",
+    "etiketler": [
+      "#geribildirim",
+      "#stajyer",
+      "#gelişim",
+      "#işhayatı",
+      "#öğrenci",
+      "#iletişim",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-06-2030-geri-bildirim-uygulama/01-v1.jpg",
+      "/paylasim/2026-10-06-2030-geri-bildirim-uygulama/02-v1.jpg",
+      "/paylasim/2026-10-06-2030-geri-bildirim-uygulama/03-v1.jpg",
+      "/paylasim/2026-10-06-2030-geri-bildirim-uygulama/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-07-1230-teslim-kontrolu",
+    "ad": "7 Ekim 2026 Çarşamba • 12.30 • Görevi teslim etmeden önce kontrol",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Bir görevi teslim etmeden önce istenen maddelerle çıktını yan yana karşılaştır. İçerikte eksik, yazım hatası veya doğrulanmamış bilgi olup olmadığını tara. Dosyanın açıldığını, doğru adlandırıldığını ve son sürüm olduğunu kontrol et. Teslimi istenen kanal üzerinden yap ve gerekiyorsa kısa bir özetle ne gönderdiğini belirt.",
+    "etiketler": [
+      "#teslimkontrolü",
+      "#stajyer",
+      "#işhayatı",
+      "#verimlilik",
+      "#öğrenci",
+      "#görevtakibi",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-07-1230-teslim-kontrolu/01-v1.jpg",
+      "/paylasim/2026-10-07-1230-teslim-kontrolu/02-v1.jpg",
+      "/paylasim/2026-10-07-1230-teslim-kontrolu/03-v1.jpg",
+      "/paylasim/2026-10-07-1230-teslim-kontrolu/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-07-2030-mentor-gorusmesi",
+    "ad": "7 Ekim 2026 Çarşamba • 20.30 • Mentör görüşmesine hazırlanma",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Mentör görüşmesine giderken yalnızca yaptığın işleri sıralamak yerine öğrenmek istediğin tek hedefi belirle. Üzerinde konuşulabilecek gerçek bir örnek götür ve genel tavsiye istemek yerine somut bir kararı sor. Önceki görüşmede verilen öneriyi nasıl uyguladığını paylaş. Görüşme sonunda atacağın adımı ve yeniden ne zaman değerlendireceğinizi netleştir.",
+    "etiketler": [
+      "#mentörlük",
+      "#stajyer",
+      "#kariyer",
+      "#gelişim",
+      "#öğrenci",
+      "#işhayatı",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-07-2030-mentor-gorusmesi/01-v1.jpg",
+      "/paylasim/2026-10-07-2030-mentor-gorusmesi/02-v1.jpg",
+      "/paylasim/2026-10-07-2030-mentor-gorusmesi/03-v1.jpg",
+      "/paylasim/2026-10-07-2030-mentor-gorusmesi/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-08-1230-sure-tahmini",
+    "ad": "8 Ekim 2026 Perşembe • 12.30 • İş için gerçekçi süre tahmini verme",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Bir iş için süre verirken önce beklenen çıktıyı ve kalite düzeyini doğrula. İşi araştırma, üretim, kontrol ve teslim adımlarına böl; başka bir kişi veya dosyaya bağlıysan bunu belirt. Bilmediğin kısmı saklamak yerine varsayımını açıkla ve ara kontrol zamanı öner. Gecikme riski oluştuğunda tahmini erkenden güncelle.",
+    "etiketler": [
+      "#zamanyönetimi",
+      "#süretahmini",
+      "#stajyer",
+      "#işhayatı",
+      "#öğrenci",
+      "#verimlilik",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-08-1230-sure-tahmini/01-v1.jpg",
+      "/paylasim/2026-10-08-1230-sure-tahmini/02-v1.jpg",
+      "/paylasim/2026-10-08-1230-sure-tahmini/03-v1.jpg",
+      "/paylasim/2026-10-08-1230-sure-tahmini/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-08-2030-hata-iletisimi",
+    "ad": "8 Ekim 2026 Perşembe • 20.30 • Hata yaptığında doğru iletişim kurma",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Bir hata fark ettiğinde saklamak veya başkasının bulmasını beklemek yerine doğru kişiye erken haber ver. Ne olduğunu, ne zaman fark ettiğini ve bilinen etkisini kısa biçimde açıkla. Emin olmadığın noktaları tahmin olarak belirt. Mümkünse düzeltme adımını ve aynı hatanın tekrarını önleyecek küçük değişikliği öner; sorumluluk almak kendini suçlamak değildir.",
+    "etiketler": [
+      "#hatayönetimi",
+      "#stajyer",
+      "#iletişim",
+      "#işhayatı",
+      "#öğrenci",
+      "#sorumluluk",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-08-2030-hata-iletisimi/01-v1.jpg",
+      "/paylasim/2026-10-08-2030-hata-iletisimi/02-v1.jpg",
+      "/paylasim/2026-10-08-2030-hata-iletisimi/03-v1.jpg",
+      "/paylasim/2026-10-08-2030-hata-iletisimi/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-09-1230-eposta-guvenligi",
+    "ad": "9 Ekim 2026 Cuma • 12.30 • E-posta eki ve bağlantı güvenliği",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Beklemediğin bir e-posta eki veya bağlantı geldiğinde görünen ada güvenmek yerine tam gönderen adresini kontrol et. Bağlantının gerçek hedefini tıklamadan incele; şifre, doğrulama kodu veya ödeme isteyen mesajlarda işlemi durdur. Tanıdığın birinden gelmiş görünse bile beklenmeyen dosyayı farklı bir iletişim kanalından doğrula ve kurumun güvenlik politikasını izle.",
+    "etiketler": [
+      "#dijitalgüvenlik",
+      "#epostagüvenliği",
+      "#stajyer",
+      "#öğrenci",
+      "#işhayatı",
+      "#güvenlik",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-09-1230-eposta-guvenligi/01-v1.jpg",
+      "/paylasim/2026-10-09-1230-eposta-guvenligi/02-v1.jpg",
+      "/paylasim/2026-10-09-1230-eposta-guvenligi/03-v1.jpg",
+      "/paylasim/2026-10-09-1230-eposta-guvenligi/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-09-2030-sirket-kulturu",
+    "ad": "9 Ekim 2026 Cuma • 20.30 • Şirket kültürü ifadelerini değerlendirme",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "İlanlarda geçen “dinamik”, “aile gibi” veya “girişimci” gibi kültür ifadeleri tek başına yeterli bilgi vermez. Bu sözlerin günlük işte nasıl göründüğünü; görev paylaşımı, geri bildirim, çalışma saatleri ve öğrenme desteği üzerinden sor. Kendi önceliklerini de belirle. Şirket kültürü hakkında yalnız tanıtım sloganına veya tek bir çevrim içi yoruma dayanarak kesin hüküm verme.",
+    "etiketler": [
+      "#şirketkültürü",
+      "#stajbaşvurusu",
+      "#işhayatı",
+      "#öğrenci",
+      "#kariyer",
+      "#mülakat",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-09-2030-sirket-kulturu/01-v1.jpg",
+      "/paylasim/2026-10-09-2030-sirket-kulturu/02-v1.jpg",
+      "/paylasim/2026-10-09-2030-sirket-kulturu/03-v1.jpg",
+      "/paylasim/2026-10-09-2030-sirket-kulturu/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-10-1230-gizli-deneyim",
+    "ad": "10 Ekim 2026 Cumartesi • 12.30 • Staj deneyimini gizliliği koruyarak anlatma",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Staj deneyimini CV’de veya mülakatta anlatırken kurumun ve müşterilerin gizli bilgilerini paylaşma. Projenin adını vermek yerine problem türünü genelleştir, kendi sorumluluğunu ve kullandığın yöntemi açıkla. Rakam, ekran görüntüsü veya dosya kullanmadan önce izin durumunu kontrol et. Güçlü bir anlatım için gizli ayrıntıya değil kararlarına ve öğrendiklerine odaklan.",
+    "etiketler": [
+      "#gizlilik",
+      "#stajdeneyimi",
+      "#stajcv",
+      "#mülakat",
+      "#öğrenci",
+      "#kariyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-10-1230-gizli-deneyim/01-v1.jpg",
+      "/paylasim/2026-10-10-1230-gizli-deneyim/02-v1.jpg",
+      "/paylasim/2026-10-10-1230-gizli-deneyim/03-v1.jpg",
+      "/paylasim/2026-10-10-1230-gizli-deneyim/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-10-2030-iletisimi-surdurme",
+    "ad": "10 Ekim 2026 Cumartesi • 20.30 • Staj bittikten sonra iletişimi sürdürme",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Staj bittikten sonra ekibine ve mentörüne öğrendiğin somut bir noktayı belirterek teşekkür et. Sonraki aylarda verilen bir öneriyi uyguladığında veya ilgili bir çalışma tamamladığında kısa bir güncelleme paylaşabilirsin. Yalnız fırsat istediğinde yazmak yerine gerçek bir bağlam oluştur; sık ve amaçsız mesajlarla kişisel sınırları aşma.",
+    "etiketler": [
+      "#stajsonrası",
+      "#networking",
+      "#mentörlük",
+      "#kariyer",
+      "#öğrenci",
+      "#iletişim",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-10-2030-iletisimi-surdurme/01-v1.jpg",
+      "/paylasim/2026-10-10-2030-iletisimi-surdurme/02-v1.jpg",
+      "/paylasim/2026-10-10-2030-iletisimi-surdurme/03-v1.jpg",
+      "/paylasim/2026-10-10-2030-iletisimi-surdurme/04-v1.jpg"
+    ]
   }
 ]
