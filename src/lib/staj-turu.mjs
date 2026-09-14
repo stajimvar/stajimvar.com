@@ -109,3 +109,27 @@ export function ucretMetniHesapla(stipend) {
   if (odenir === false) return 'Ücretsiz';
   return null;
 }
+
+/**
+ * DÖNEM ETİKETİ — ENUM DEĞERİ EKRANA SIZMASIN
+ *
+ * Ölçüldü (canlı, 14 Eylül 2026): detay sayfasında "DÖNEM: All Year"
+ * yazıyordu. `listing_term` şema enum'ı ("Summer 2026",
+ * "Long-term 2026", "All Year") ve ham hâliyle Türkçe bir arayüze
+ * İngilizce bir teknik değer basıyordu.
+ *
+ * Tanınmayan değer OLDUĞU GİBİ dönüyor: uydurma bir çeviri üretmek,
+ * yeni bir dönem değeri eklendiğinde onu sessizce yanlış göstermek
+ * olurdu.
+ */
+export function donemEtiketi(term) {
+  const ham = (term || '').trim();
+  if (!ham) return null;
+  const sozluk = {
+    'Summer 2026': 'Yaz 2026',
+    'Fall 2026': 'Güz 2026',
+    'Long-term 2026': 'Uzun dönem 2026',
+    'All Year': 'Yıl boyu',
+  };
+  return sozluk[ham] ?? ham;
+}
