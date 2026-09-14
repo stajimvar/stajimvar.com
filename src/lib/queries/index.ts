@@ -1720,7 +1720,8 @@ export async function fetchEslesmeIcinIlanlar(): Promise<Array<Record<string, un
     .from('listings')
     .select(
       'id,title,city,work_type,country_code,is_paid,mandatory_staj_accepted,' +
-        'voluntary_staj_accepted,department,department_tags,description,required_skills,status'
+        'voluntary_staj_accepted,department,department_tags,description,required_skills,status,' +
+        'posted_at,created_at'
     )
     .eq('status', 'published')
     .limit(5000);

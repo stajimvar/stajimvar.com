@@ -241,8 +241,20 @@ test('geç içe aktarılan ilan kaçmıyor: published_at ölçüt değil', () =>
     ya da `published_at` eşiği kullanılsaydı, geç içe aktarılan eski
     tarihli bir ilan hiç gönderilmezdi.
   */
-  assert.ok(!/posted_at|published_at/.test(ISCI), 'tarih eşiği kullanılmamalı');
-  assert.match(ISCI, /if \(teslimEdilmis\.has\(ham\.id\)\) continue;/);
+  /*
+    `posted_at` artık işçide OKUNUYOR ama aday kararında değil: kayıtlı
+    aramanın "son N günde eklenen" FİLTRESİ için. İlk hâlde bütün
+    dosyada arıyordum ve o iddia, alan başka bir iş için eklenince
+    kırıldı — kontrol aday kararının kendisine daraltıldı.
+  */
+  const aday = yorumsuz(ISCI).slice(
+    yorumsuz(ISCI).indexOf('function adaylariBul'),
+    yorumsuz(ISCI).indexOf('async function gonder')
+  );
+  assert.ok(!/published_at/.test(aday), 'aday kararı published_at kullanmamalı');
+  assert.match(aday, /ham\.first_seen_at/, 'aday kararı bizim gördüğümüz anı kullanmalı');
+  /* Defterde olan ilan tekrar değerlendirilmiyor. */
+  assert.match(aday, /const mevcut = defter\.get\(ham\.id\);/);
 });
 
 test('kapanmış ilan gönderilmiyor ve eşleşme gönderim anında tekrar koşuyor', () => {
@@ -520,4 +532,95 @@ test('rıza sürümü beyan edilmeden e-posta açılamıyor', () => {
   );
   /* Kapatmada sürüm korunuyor: denetim sorusu sonradan da cevaplanabilir. */
   assert.match(YAMA, /new\.consent_text_version := old\.consent_text_version;/);
+});
+
+/* ------------------------------------------------ KAPANIŞ KONTROLÜ */
+
+test('taban kararı işçide: istemci düşse de eski ilan gönderilmiyor', () => {
+  /*
+    ÖLÇÜLDÜ (14 Eylül 2026): canlı doğrulamada aramayı doğrudan REST'e
+    yazdım, yani `AramayiKaydet`in taban çağrısı hiç koşmadı ve 159
+    ilanın 82'si aday oldu, 10'u gönderildi. Taban yalnız istemcide
+    olduğu için sekme kapanması da aynı sonucu verirdi.
+
+    Kural artık işçide de var: eşleşen ama defterde olmayan bir ilan,
+    ARAMADAN ÖNCE envanterimize girmişse taban sayılıyor.
+  */
+  const kod = yorumsuz(ISCI);
+  assert.match(kod, /const aramadanOnce =/);
+  assert.match(kod, /geldigiAn <= aramaAnı/);
+  assert.match(kod, /if \(aramadanOnce && !mevcut\)/);
+  /* İşçi eksik tabanı `reason='baseline'` ile tamamlıyor. */
+  assert.match(kod, /reason: 'baseline'/);
+  /* Arama tarihi okunuyor. */
+  assert.match(ISCI, /select=id,student_id,name,filters,email_enabled,created_at/);
+});
+
+test('baseline sonraki gün candidate olmuyor', () => {
+  const kod = yorumsuz(ISCI);
+  /*
+    Defterdeki satır tekrar değerlendirilmiyor; tek istisna `candidate`
+    ve gönderilmemiş olanlar (onuncu sıradan sonra devredenler).
+    `baseline` bu kapıdan geçmiyor.
+  */
+  assert.match(kod, /if \(mevcut && !\(mevcut\.reason === 'candidate' && !mevcut\.sent_at\)\) continue;/);
+  assert.match(ISCI, /select=listing_id,sent_at,reason/);
+});
+
+test('şirket ve tarih aralığı artık kaydediliyor', () => {
+  const f = filtreleriDogrula({ companies: ['Örnek A.Ş.'], postedWithinDays: '7' });
+  assert.deepEqual(f.companies, ['Örnek A.Ş.']);
+  assert.equal(f.postedWithinDays, 7);
+  assert.equal(filtreleriDogrula({ postedWithinDays: 99 }).postedWithinDays, null);
+  /* Eşleşmede gerçekten uygulanıyor. */
+  const bugun = ilaniNormalize({ id: 'a', title: 'Stajyer', posted_at: new Date().toISOString() });
+  const eski = ilaniNormalize({ id: 'b', title: 'Stajyer', posted_at: '2020-01-01T00:00:00Z' });
+  assert.equal(aramaEslesiyorMu(bugun, { postedWithinDays: 7 }), true);
+  assert.equal(aramaEslesiyorMu(eski, { postedWithinDays: 7 }), false);
+  assert.equal(
+    aramaEslesiyorMu(ilaniNormalize({ id: 'c', title: 'S', company_name: 'A' }), { companies: ['B'] }),
+    false
+  );
+  /* Liste de bu ikisini kanonik nesneye veriyor ve kendi kopyasını
+     tutmuyor. */
+  const kod = yorumsuz(LISTE);
+  assert.match(kod, /companies: selectedCompanies/);
+  assert.match(kod, /postedWithinDays: dateRange === 'all' \? null : Number\(dateRange\)/);
+  assert.ok(
+    !/selectedCompanies\.includes\(listing\.companyName\)/.test(kod),
+    'şirket koşulunun ikinci kopyası kalmamalı'
+  );
+});
+
+test('kanonik tarih alanı iki tarafın da okuyabildiği alan', () => {
+  /*
+    `first_seen_at` daha doğru alan ama İSTEMCİ OKUYAMIYOR: ölçüldü,
+    `42501 permission denied` (kolon yetkileri, 20260906010000) ve
+    ürün nesnesinde de yok. Modül onu okusaydı arayüzde filtre her
+    ilanı eler, e-postada elemezdi — tam olarak kaçınılan ayrışma.
+  */
+  const MODUL = oku('src/lib/kayitli-arama.mjs');
+  assert.match(MODUL, /const t = new Date\(i\.postedAt \?\? 0\)\.getTime\(\)/);
+  assert.ok(
+    !/i\.firstSeenAt/.test(MODUL),
+    'filtre istemcinin okuyamadığı alanı kullanmamalı'
+  );
+  /* İşçinin "yeni mi" kararı AYRI konu ve orada `first_seen_at` doğru. */
+  assert.match(ISCI, /ham\.first_seen_at/);
+});
+
+test('kaydedilmeyen filtreler sessizce yok sayılmıyor', () => {
+  /* Ekran hem kaydedilenleri hem dışarıda kalanları yazıyor. */
+  assert.match(KAYDET, /Kaydedilecek filtreler/);
+  assert.match(KAYDET, /Kaydedilmeyenler: \{KAYDEDILMEYEN_FILTRELER\.join\(', '\)\}/);
+  /* Dışarıda kalanlar SUNUM kararları: veri filtresi gibi
+     kaydedilmiyorlar. */
+  const MODUL = oku('src/lib/kayitli-arama.mjs');
+  const liste = MODUL.slice(MODUL.indexOf('KAYDEDILMEYEN_FILTRELER'));
+  for (const beklenen of ['Uyum puanı eşiği', 'Görünüm sekmesi', 'Şehirde “diğer”']) {
+    assert.ok(liste.includes(beklenen), `${beklenen} listelenmeli`);
+  }
+  /* Kanonik sözleşmede bunlara karşılık gelen alan YOK. */
+  const f = filtreleriDogrula({ minMatchScore: 80, subTab: 'yeni', city: 'diger' });
+  assert.ok(!('minMatchScore' in f) && !('subTab' in f));
 });

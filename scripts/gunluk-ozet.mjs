@@ -175,26 +175,75 @@ function govdeKur({ ilanlar, adlar, kalan, token }) {
  * üzerinde yapılıyor. "Mevcut sayfada eşleştirme" yapmak, ikinci
  * sayfadaki bir ilanı hiç görmemek demekti.
  */
-function adaylariBul({ aramalar, ilanlar, teslimEdilmis }) {
+function adaylariBul({ aramalar, ilanlar, defter }) {
   const secilen = new Map();
+  const taban = new Map();
+
   for (const arama of aramalar) {
     if (!arama.email_enabled) continue;
     const filtreler = filtreleriDogrula(arama.filters);
+    const aramaAnı = new Date(arama.created_at).getTime();
+
     for (const ham of ilanlar) {
-      if (teslimEdilmis.has(ham.id)) continue;
+      /*
+        DEFTERDE OLAN İLAN TEKRAR DEĞERLENDİRİLMİYOR
+
+        Tek istisna: `candidate` ve henüz gönderilmemiş satırlar — onlar
+        onuncu sıradan sonra kalıp devreden ilanlar ve yine aday.
+
+        `baseline` satırları buraya HİÇ girmiyor: bir gün sonra
+        `candidate`a dönmeleri, kaydedilmeden önceki geçmişin
+        gönderilmesi demek olurdu.
+      */
+      const mevcut = defter.get(ham.id);
+      if (mevcut && !(mevcut.reason === 'candidate' && !mevcut.sent_at)) continue;
+
       /*
         GÖNDERİM ANINDA ARTIK EŞLEŞMEYEN YA DA KAPANMIŞ İLAN GİRMİYOR:
         sorgu `status=published` ile geliyor ve eşleşme burada tekrar
         koşuyor — aday listesi dünden kalmış olabilir.
       */
       if (!aramaEslesiyorMu(ilaniNormalize(ham), filtreler)) continue;
+
+      /*
+        TABAN KARARI İŞÇİDE — İSTEMCİYE BAĞLI DEĞİL
+
+        Taban `AramayiKaydet` içinde, arama yazıldıktan SONRA ayrı bir
+        çağrıyla işaretleniyor. O çağrı düşerse (sekme kapandı, ağ
+        koptu) ilk özet geçmişin tamamını gönderirdi — ölçüldü:
+        aramayı doğrudan REST'e yazdığım doğrulamada 82 eski ilan aday
+        olmuştu.
+
+        Kural artık burada da var: eşleşen ama defterde olmayan bir
+        ilan, ARAMADAN ÖNCE envanterimize girmişse TABAN sayılıyor ve
+        gönderilmiyor. `first_seen_at` kullanılıyor — bizim ilk
+        gördüğümüz an; `posted_at` değil, çünkü geç içe aktarılan
+        eski tarihli bir ilan bizim için yenidir.
+      */
+      const geldigiAn = new Date(ham.first_seen_at ?? 0).getTime();
+      const aramadanOnce =
+        Number.isFinite(aramaAnı) &&
+        Number.isFinite(geldigiAn) &&
+        geldigiAn > 0 &&
+        geldigiAn <= aramaAnı;
+
+      if (aramadanOnce && !mevcut) {
+        if (!taban.has(ham.id)) taban.set(ham.id, { ilan: ham, aramaId: arama.id });
+        continue;
+      }
+
       /* Aynı ilan birden çok aramaya eşleşse BİR KEZ: ilk arama adıyla. */
       if (!secilen.has(ham.id)) {
         secilen.set(ham.id, { ilan: ham, aramaAdi: arama.name || null, aramaId: arama.id });
       }
     }
   }
-  return [...secilen.values()];
+
+  /* Bir ilan hem taban hem aday çıktıysa aday kazanıyor: sonradan
+     eklenen bir arama onu gerçekten yeni görüyor. */
+  for (const id of secilen.keys()) taban.delete(id);
+
+  return { adaylar: [...secilen.values()], taban: [...taban.values()] };
 }
 
 async function gonder({ eposta, ilanlar, adlar, kalan, token, runId, studentId }) {
@@ -239,7 +288,7 @@ async function main() {
   /* 1) E-postası AÇIK aramalar. Rıza yoksa satır buraya hiç gelmiyor
         (veritabanı kısıtı `email_enabled = false or consent_at not null`). */
   const aramalar = await rest(
-    'saved_searches?select=id,student_id,name,filters,email_enabled&email_enabled=is.true'
+    'saved_searches?select=id,student_id,name,filters,email_enabled,created_at&email_enabled=is.true'
   );
   if (!aramalar.length) {
     console.log('E-posta açık kayıtlı arama yok.');
@@ -253,7 +302,7 @@ async function main() {
   const ilanlar = await rest(
     'listings?select=id,title,city,work_type,country_code,is_paid,mandatory_staj_accepted,' +
       'voluntary_staj_accepted,department,department_tags,description,required_skills,status,' +
-      'source_status,source_verified_at,first_seen_at,company_id,companies(name)' +
+      'source_status,source_verified_at,first_seen_at,posted_at,created_at,company_id,companies(name)' +
       '&status=eq.published&limit=5000'
   );
   const zenginIlanlar = ilanlar.map((i) => ({ ...i, company_name: i.companies?.name ?? null }));
@@ -267,18 +316,40 @@ async function main() {
   for (const studentId of kisiler) {
     try {
       const teslim = await rest(
-        `digest_deliveries?select=listing_id,sent_at&student_id=eq.${studentId}`
+        `digest_deliveries?select=listing_id,sent_at,reason&student_id=eq.${studentId}`
       );
-      /* Gönderilmiş VE taban kayıtları aday değil; `sent_at is null`
-         olanlar (onuncu sıradan sonra kalanlar) YİNE aday. */
-      const teslimEdilmis = new Set(teslim.filter((t) => t.sent_at).map((t) => t.listing_id));
+      const defter = new Map(teslim.map((t) => [t.listing_id, t]));
 
       const kendiAramalari = aramalar.filter((a) => a.student_id === studentId);
-      const adaylar = adaylariBul({
+      const { adaylar, taban } = adaylariBul({
         aramalar: kendiAramalari,
         ilanlar: zenginIlanlar,
-        teslimEdilmis,
+        defter,
       });
+
+      /*
+        EKSİK TABANI İŞÇİ TAMAMLIYOR
+
+        `reason='baseline'` + `sent_at` dolu: aday listesine girmiyorlar
+        ve "gönderilmiş e-posta" olarak da raporlanmıyorlar — `reason`
+        ayrımı tam bunun için var.
+      */
+      if (taban.length && !kuru) {
+        await rest('digest_deliveries', {
+          method: 'POST',
+          headers: { Prefer: 'resolution=ignore-duplicates' },
+          body: JSON.stringify(
+            taban.map((t) => ({
+              student_id: studentId,
+              listing_id: t.ilan.id,
+              reason: 'baseline',
+              sent_at: new Date().toISOString(),
+              matched_search_id: t.aramaId,
+            }))
+          ),
+        });
+        console.log(`  ${studentId.slice(0, 8)}: ${taban.length} ilan taban olarak işaretlendi`);
+      }
 
       if (adaylar.length === 0) {
         atlandi += 1;
@@ -287,9 +358,7 @@ async function main() {
 
       /* Aday defterine yaz: 10 sınırının dışında kalanlar da kayıtlı
          kalsın ve sonraki güne devretsin. */
-      const yeniAdaylar = adaylar.filter(
-        (a) => !teslim.some((t) => t.listing_id === a.ilan.id)
-      );
+      const yeniAdaylar = adaylar.filter((a) => !defter.has(a.ilan.id));
       if (yeniAdaylar.length && !kuru) {
         await rest('digest_deliveries', {
           method: 'POST',
