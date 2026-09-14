@@ -108,7 +108,7 @@ test('HTTP 200 tek başına açık kanıtı sayılmıyor', () => {
     "açık" sayıp `source_verified_at` damgası atıyordu — envanterin
     %27'si hakkında doğrulanmamış bir iddia.
   */
-  assert.match(KONTROL, /function acikKaniti\(govde, baslik\)/);
+  assert.match(KONTROL, /function acikKaniti\(govde, baslik, adres\)/);
   const dal = KONTROL.slice(KONTROL.indexOf('} else if (yanit.ok) {'));
   const kanitSatiri = dal.indexOf('const kanit = acikKaniti(');
   const acikYazma = dal.indexOf("source_status: 'acik'");
@@ -249,4 +249,81 @@ test('yoklama betiği yazmıyor ve engelde bırakıyor', () => {
   assert.match(YOKLA, /captcha\|are you a robot/);
   /* Kuruma en fazla bir istek, arada bekleme. */
   assert.match(YOKLA, /await new Promise\(\(r\) => setTimeout\(r, BEKLEME_MS\)\)/);
+});
+
+/* ------------------------------------------------- VERİ DOĞRULUĞU KAPANIŞI */
+
+test('"maas" kalıbı kelime sınırında — Maastricht ücretli sayılmıyor', () => {
+  /*
+    `burs`/Bursa ile AYNI SINIF kusur, ölçüldü (14 Eylül 2026): Mondi
+    ilanının kaynak sayfasındaki tek "ücretli" eşleşmesi konum
+    açılırındaki "Maastricht (2)" idi. Bu kayıt bu yüzden true
+    görünüyordu.
+  */
+  const satir = PROMOTE.match(/^\s*r"ucretli staj.*$/m);
+  const kalip = new RegExp(satir[0].replace(/^\s*r"/, '').replace(/"\s*$/, ''));
+  assert.equal(kalip.test('maastricht (2) madrid (2) milan (1)'), false, 'Maastricht eşleşmemeli');
+  assert.equal(kalip.test('aylik maas odenir'), true, 'gerçek maaş eşleşmeli');
+  /* Düzeltme betiği aynı kuralı kullanmalı: iki yerde iki kural,
+     içe aktarımın yazdığıyla düzeltmenin beklediğinin ayrışması olurdu. */
+  assert.match(DUZELT, /\bmaas\b/);
+});
+
+test('açık kanıtı ana başlıkta aranıyor, sayfanın her yerinde değil', () => {
+  /*
+    ÖLÇÜLDÜ (14 Eylül 2026, kuru koşu): kural daraltılınca acik 110→107,
+    belirsiz 46→49. Üç ilan, başlığının menüde/önerilen ilanlar
+    şeridinde/genel listede geçmesi sayesinde "doğrulandı" damgası
+    alıyordu.
+  */
+  assert.match(KONTROL, /function anaBaslik\(govde\)/);
+  assert.match(KONTROL, /<h1\[\^>\]\*>/, 'ana başlık h1\'den okunmalı');
+  const fn = KONTROL.slice(KONTROL.indexOf('function acikKaniti('));
+  const son = fn.indexOf('\n/** Sayfanın kendi JobPosting');
+  const govde = fn.slice(0, son > 0 ? son : 2500);
+  /* Başlık karşılaştırması h1 üzerinde; tüm görünür metin üzerinde DEĞİL. */
+  assert.match(govde, /const h1 = anaBaslik\(govde\)\.toLowerCase\(\)/);
+  assert.ok(
+    !/gorunurMetin\(govde\)\.toLowerCase\(\)/.test(govde),
+    'başlık kanıtı sayfanın tamamında aranmamalı'
+  );
+  /* Üçüncü kanıt: canonical ilan kimliğini taşıyor. */
+  assert.match(govde, /kanonik\.includes\(kimlik\)/);
+  /* Kanıt yoksa null → çağıran taraf 'belirsiz' yazıyor. */
+  assert.match(govde, /if \(!h1\) return null;/);
+});
+
+test('yoklanan kurum sayısı koddan doğrulanabiliyor', () => {
+  /*
+    Rapor 16 demişti, liste 17 kurumdu: ikinci turda OYAK listeden
+    düşmüş ve sayı koddan doğrulanamaz hâle gelmişti.
+  */
+  const YOKLA = oku('scripts/tr-kaynak-yokla.mjs');
+  const blok = YOKLA.slice(YOKLA.indexOf('const KURUMLAR = ['), YOKLA.indexOf('];', YOKLA.indexOf('const KURUMLAR = [')));
+  const adlar = [...blok.matchAll(/ad: '([^']+)'/g)].map((m) => m[1]);
+  assert.equal(adlar.length, 17, 'denenen kurum sayısı 17');
+  assert.equal(new Set(adlar).size, 17, 'kurum adları tekil');
+  /* Betik sayıyı kendisi raporluyor: rapor ile kod bir daha ayrışmasın. */
+  assert.match(YOKLA, /yoklanan kurum: \$\{sonuclar\.length\}/);
+});
+
+test('"42 şirket kaynağı" yalnız yapılandırılmış ve aktif kaynakları sayıyor', () => {
+  const kaynaklar = JSON.parse(oku('automation/sources.json'));
+  const liste = Array.isArray(kaynaklar) ? kaynaklar : Object.values(kaynaklar)[0];
+  const aktif = liste.filter((k) => k.enabled !== false);
+  /* Her kaynağın gerçekten bir uç noktası var: yoklanıp eklenmemiş
+     kurumlar bu sayıya girmiyor. */
+  for (const k of aktif) {
+    assert.ok(
+      k.list_url || k.urls || k.url || k.careers_url,
+      `${k.id} için yapılandırılmış adres olmalı`
+    );
+  }
+  const { KAYNAK_TOPLAM } = { KAYNAK_TOPLAM: Number(oku('src/data/kaynak-sistemleri.ts').match(/KAYNAK_TOPLAM = (\d+)/)[1]) };
+  assert.equal(KAYNAK_TOPLAM, aktif.length, 'gösterilen sayı aktif kaynak sayısı olmalı');
+  /* Yoklanıp EKLENMEYEN kurumlar sources.json'da yok. */
+  const adlar = liste.map((k) => `${k.name} ${k.company_name ?? ''}`).join(' ').toLowerCase();
+  for (const k of ['aselsan', 'tusaş', 'roketsan', 'havelsan', 'turkcell', 'türk telekom', 'koç holding']) {
+    assert.ok(!adlar.includes(k), `${k} eklenmediği hâlde sayıya girmemeli`);
+  }
 });

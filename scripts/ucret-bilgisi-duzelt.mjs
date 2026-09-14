@@ -50,7 +50,15 @@ const kuru = process.argv.includes('--kuru');
   `burs` KELİME SINIRIYLA: çıplak `burs` "Bursa" ile eşleşiyor. Ölçüldü —
   ücretli sanılan iki kaydın ikisi de şehir listesiydi.
 */
-const UCRETLI = /ucretli staj|maas|\bburs\b|burslu|bursiyer|stipend|yemek ve yol|paid internship/;
+/*
+  `maas` DA KELİME SINIRINDA — "Maastricht" TUZAĞI
+
+  `burs`/Bursa ile aynı sınıf kusur, ölçüldü (14 Eylül 2026): Mondi
+  ilanının kaynak sayfasında tek "ücretli" eşleşmesi konum
+  açılırındaki "Maastricht (2)" idi. Şehir adı, ilanı ücretli
+  gösteriyordu.
+*/
+const UCRETLI = /ucretli staj|\bmaas\b|\bburs\b|burslu|bursiyer|stipend|yemek ve yol|paid internship/;
 const UCRETSIZ = /ucretsiz staj|unpaid/;
 
 function katla(metin) {
