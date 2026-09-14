@@ -71,7 +71,14 @@ export function basvuruYolu(ilan) {
   if (resmiAdres) {
     return {
       anaEylem: 'resmi-site',
-      anaEtiket: 'Resmî sitede başvur',
+      /*
+        "ŞİRKET SAYFASINDA BAŞVUR" — "Resmî sitede" DEĞİL
+
+        "Resmî site" hangi site olduğunu söylemiyor: öğrenci StajımVar'ı
+        da resmî bir site sayabilir. Düğmenin söylemesi gereken şey
+        başvurunun NEREDE yapılacağı — şirketin kendi sayfasında.
+      */
+      anaEtiket: 'Şirket sayfasında başvur',
       resmiAdres,
       teslimEdiliyor: false,
       ozet: 'Bu ilanın başvuruları şirketin kendi sayfasından alınıyor. Başvuru StajımVar üzerinden şirkete iletilmiyor.',

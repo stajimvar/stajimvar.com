@@ -28,7 +28,7 @@ test('DIŞ BAŞVURU: adres doğrudan resmî siteye, giriş kapısı yok', () => 
   const yol = basvuruYolu({ applicationMethod: 'external', applyUrl: 'https://kariyer.ornek.com/staj' });
   assert.equal(yol.anaEylem, 'resmi-site');
   assert.equal(yol.resmiAdres, 'https://kariyer.ornek.com/staj');
-  assert.equal(yol.anaEtiket, 'Resmî sitede başvur');
+  assert.equal(yol.anaEtiket, 'Şirket sayfasında başvur');
   assert.equal(yol.teslimEdiliyor, false, 'dış başvuru şirkete iletilmiyor; öyle denmemeli');
 });
 

@@ -6,7 +6,7 @@ import { guvenliDisAdres, yerelKonakMi } from '../src/lib/guvenli-url.mjs';
 test('dış ilanda ana eylem resmî siteye gider ve teslim vaadi vermez', () => {
   const yol = basvuruYolu({ applicationMethod: 'external', applyUrl: 'https://ornek.com/staj' });
   assert.equal(yol.anaEylem, 'resmi-site');
-  assert.equal(yol.anaEtiket, 'Resmî sitede başvur');
+  assert.equal(yol.anaEtiket, 'Şirket sayfasında başvur');
   assert.equal(yol.resmiAdres, 'https://ornek.com/staj');
   assert.equal(yol.teslimEdiliyor, false);
   assert.equal(yol.takipEtiketi, 'Başvurduğumu işaretle');
@@ -41,7 +41,7 @@ test('e-posta yolu, gönderici kapalıyken teslim vaadi vermez', () => {
     assert.equal(yol.teslimEdiliyor, true);
   } else {
     assert.equal(yol.teslimEdiliyor, false);
-    assert.equal(yol.anaEtiket, 'Resmî sitede başvur');
+    assert.equal(yol.anaEtiket, 'Şirket sayfasında başvur');
   }
 });
 
