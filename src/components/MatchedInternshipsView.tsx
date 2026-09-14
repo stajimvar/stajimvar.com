@@ -922,16 +922,19 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     void fetchOpportunities()
       .then((hepsi) => {
         if (iptal) return;
-        const terim = searchQuery.trim().toLocaleLowerCase('tr-TR');
-        /* Arama boşsa "eşleşen" demek yanlış olur; o zaman tümü sayılıyor. */
-        const eslesen = terim
-          ? hepsi.filter((f) =>
-              [f.title, f.organizationName, f.shortDescription]
-                .filter(Boolean)
-                .some((alan) => String(alan).toLocaleLowerCase('tr-TR').includes(terim)),
-            )
-          : hepsi;
-        setFirsatSayisi(eslesen.length);
+        /*
+          STAJ ARAMA METNİ FIRSAT VERİSİNE UYGULANMIYOR
+
+          Önce `searchQuery` fırsatların başlık/kurum/özetinde
+          aranıyordu ve sonuç "eşleşen N öğrenci fırsatı" diye
+          sunuluyordu. İki sorun: staj araması ("yazılım stajyeri")
+          burs verisinde anlamlı bir eşleşme üretmiyor, ve ürettiğinde
+          de o eşleşme tesadüfi — kullanıcı burs aramamıştı.
+
+          Sayılan tek şey: sistemde AÇIK fırsat var mı. Varsa en altta
+          küçük bir bağlantı çıkıyor, yoksa hiç çıkmıyor.
+        */
+        setFirsatSayisi(hepsi.length);
       })
       .catch(() => {
         /* Fırsatlar okunamazsa ekran diğer önerilerle çalışmaya devam etsin. */
@@ -940,7 +943,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     return () => {
       iptal = true;
     };
-  }, [sonucYok, searchQuery]);
+    /* `searchQuery` bağımlılıktan çıktı: terim artık kullanılmıyor. */
+  }, [sonucYok]);
 
   /*
     Bir filtre kaldırılsa kaç ilan görünürdü? Diğer bütün filtreler açık
@@ -1646,13 +1650,12 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               */
               isverenler={uygunIsverenler(STAJ_PROGRAMLARI, kanonikFiltreler)}
               firsatSayisi={firsatSayisi}
-              onFirsatlaraGit={() =>
-                onNavigate?.(
-                  searchQuery.trim()
-                    ? `/firsatlar?q=${encodeURIComponent(searchQuery.trim())}`
-                    : '/firsatlar',
-                )
-              }
+              /*
+                Adres de terimsiz: staj aramasını fırsat sayfasına
+                taşımak, kullanıcıyı aramadığı bir sonuç kümesine
+                göndermek olurdu.
+              */
+              onFirsatlaraGit={() => onNavigate?.('/firsatlar')}
               onTumunuTemizle={() => {
                 setSearchQuery('');
                 suzgecleriTemizle();
