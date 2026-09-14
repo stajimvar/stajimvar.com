@@ -39,9 +39,25 @@ export type AktifSuzgec = {
   kazanc?: number;
 };
 
+/** `lib/bos-sonuc-isverenler` çıktısı. */
+export type BosSonucIsveren = {
+  slug: string;
+  isveren: string;
+  sektor: string;
+  kariyerUrl: string;
+  durum: 'acik' | 'kapali' | 'bilinmiyor';
+};
+
 type SonucYokProps = {
   aramaTerimi: string;
   suzgecler: AktifSuzgec[];
+  /**
+   * Seçili ÜLKE VE BÖLÜME gerçekten uyan işverenler.
+   *
+   * Boş dizi gelirse blok HİÇ çizilmiyor: uymayan öneri, filtreyi yok
+   * saymaktan başka bir şey değil.
+   */
+  isverenler?: BosSonucIsveren[];
   /** Aynı kelimeyle eşleşen burs/fırsat sayısı; null ise henüz sayılıyor. */
   firsatSayisi: number | null;
   onFirsatlaraGit: () => void;
@@ -73,6 +89,7 @@ const Eylem: React.FC<{
 export const SonucYok: React.FC<SonucYokProps> = ({
   aramaTerimi,
   suzgecler,
+  isverenler = [],
   firsatSayisi,
   onFirsatlaraGit,
   onTumunuTemizle,
@@ -91,7 +108,15 @@ export const SonucYok: React.FC<SonucYokProps> = ({
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 space-y-5">
       <div className="space-y-2">
-        <p className="text-base font-bold text-gray-900">Bu aramada staj ilanı yok.</p>
+        {/*
+          1. ADIM — NE OLDUĞUNU SÖYLE
+
+          "Bu aramada staj ilanı yok" belirsizdi: hangi arama, ve "yok"
+          kalıcı mı? Cümle artık filtreye ve AÇIK ilana atıf yapıyor.
+        */}
+        <p className="text-base font-bold text-gray-900">
+          Bu filtrelere uygun açık ilan bulunamadı.
+        </p>
 
         {(aramaTerimi || suzgecler.length > 0) && (
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
@@ -117,25 +142,15 @@ export const SonucYok: React.FC<SonucYokProps> = ({
         )}
       </div>
 
-      {/* Alternatif fırsat: aynı kelime burslarda karşılık buluyorsa. */}
-      {firsatSayisi !== null && firsatSayisi > 0 && (
-        <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
-          <Sparkles className="w-5 h-5 text-blue-600 shrink-0" />
-          <p className="text-sm text-gray-800 flex-1">
-            Ancak eşleşen <strong>{firsatSayisi} öğrenci fırsatı</strong> bulduk — burs, kredi ve
-            yurt dışı programları.
-          </p>
-          <button
-            type="button"
-            onClick={onFirsatlaraGit}
-            className="shrink-0 px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer"
-          >
-            Fırsatları gör
-          </button>
-        </div>
-      )}
+      {/*
+        FIRSATLAR BURADAN KALKTI — EN ALTA, KÜÇÜK VE İKİNCİL
 
-      {/* Hangi filtre daralttı: tahmin değil, ölçülmüş kazanç. */}
+        Burada dolgulu düğmeli büyük bir mavi kutuydu ve boş staj
+        listesinin ANA SONUCU gibi duruyordu. Öğrenci staj arıyor;
+        burs listesi bir alternatif, cevabın kendisi değil.
+      */}
+
+      {/* 2. ADIM — Hangi filtre daralttı: tahmin değil, ölçülmüş kazanç. */}
       {daraltan && (
         <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 flex flex-wrap items-center gap-2 text-sm">
           <span className="text-gray-800">
@@ -151,19 +166,73 @@ export const SonucYok: React.FC<SonucYokProps> = ({
         </div>
       )}
 
-      <div className="grid sm:grid-cols-2 gap-2.5">
-        <Eylem
-          ikon={<RotateCcw className="w-4 h-4" />}
-          baslik="Filtreleri temizle"
-          aciklama="Arama ve tüm filtreler sıfırlanır, bütün ilanlar listelenir."
-          onClick={onTumunuTemizle}
-        />
-        <Eylem
-          ikon={<Building2 className="w-4 h-4" />}
-          baslik="Büyük işverenleri incele"
-          aciklama="İlan açmasa da staj alan kurumların kariyer sayfaları."
-          onClick={onIsverenlereGit}
-        />
+      {/* 2. ADIM (devamı) — filtreleri temizle. */}
+      <Eylem
+        ikon={<RotateCcw className="w-4 h-4" />}
+        baslik="Filtreleri temizle"
+        aciklama="Arama ve tüm filtreler sıfırlanır, bütün ilanlar listelenir."
+        onClick={onTumunuTemizle}
+      />
+
+      {/*
+        3. ADIM — SEÇİLİ ÜLKE VE BÖLÜME UYAN GERÇEK İŞVERENLER
+
+        Kaynak `src/data/stajProgramlari.ts`; ikinci bir dizin yok ve
+        kart başına sorgu yok (statik veri). Uyan kayıt yoksa blok HİÇ
+        çizilmiyor — uymayan öneri, filtreyi yok saymak olurdu.
+
+        BUNLAR AÇIK İLAN DEĞİL: şirketin kendi başvuru sayfası. Durum
+        her kayıtta "bilinmiyor" çünkü sayfanın çalıştığını doğruladık,
+        programın açık olduğunu doğrulamadık.
+      */}
+      {isverenler.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm font-bold text-gray-900">
+            Bu bölüm ve ülkede staj alan işverenler
+          </p>
+          <p className="text-xs leading-relaxed text-gray-600">
+            Bunlar açık ilan değil, şirketin kendi başvuru sayfası. Programın o an açık olup
+            olmadığını doğrulayamıyoruz.
+          </p>
+          <ul className="space-y-1.5">
+            {isverenler.map((i) => (
+              <li key={i.slug}>
+                <a
+                  href={i.kariyerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="flex items-start gap-2 rounded-xl border border-gray-200 bg-white p-3 transition-colors hover:border-blue-300 hover:bg-blue-50/40"
+                >
+                  <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block break-words text-sm font-bold text-gray-900">
+                      {i.isveren}
+                    </span>
+                    <span className="block text-xs text-gray-500">{i.sektor}</span>
+                  </span>
+                  <span className="shrink-0 rounded-md border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[11px] font-bold text-gray-600">
+                    {i.durum === 'acik'
+                      ? 'Açık'
+                      : i.durum === 'kapali'
+                        ? 'Kapalı'
+                        : 'Durum bilinmiyor'}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={onIsverenlereGit}
+            className="text-xs font-bold text-blue-600 hover:underline cursor-pointer"
+          >
+            Bütün işveren dizinini aç
+          </button>
+        </div>
+      )}
+
+      {/* 4. ADIM — ilan açmayan şirkete başvuru rehberi ve şablon. */}
+      <div className="grid gap-2.5 sm:grid-cols-2">
         <Eylem
           ikon={<FileText className="w-4 h-4" />}
           baslik="İlan açmamış şirkete nasıl yazılır?"
@@ -177,6 +246,25 @@ export const SonucYok: React.FC<SonucYokProps> = ({
           onClick={onSablonAc}
         />
       </div>
+
+      {/*
+        5. ADIM — FIRSATLAR: KÜÇÜK, İKİNCİL, EN ALTTA
+
+        Kutu yok, dolgulu düğme yok, ikon yok: tek satır metin bağlantısı.
+        Öğrenci staj arıyor ve burs listesi cevabın kendisi değil.
+      */}
+      {firsatSayisi !== null && firsatSayisi > 0 && (
+        <p className="text-xs text-gray-500">
+          Aynı aramayla eşleşen {firsatSayisi} öğrenci fırsatı da var (burs, kredi, yurt dışı).{' '}
+          <button
+            type="button"
+            onClick={onFirsatlaraGit}
+            className="font-bold text-blue-600 hover:underline cursor-pointer"
+          >
+            Fırsatlara bak
+          </button>
+        </p>
+      )}
     </div>
   );
 };
