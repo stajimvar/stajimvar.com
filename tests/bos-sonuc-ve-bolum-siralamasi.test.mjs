@@ -341,3 +341,32 @@ test('form ücreti üç değerli: belirtilmeyecek ücretsiz değil', () => {
   );
   assert.match(FORM, /deger\.ucret === 'belirtilmeyecek' \? null/);
 });
+
+test('açık bölüm filtresi açıklama sinyaliyle yanlış ilan sokmuyor', () => {
+  /*
+    CANLIDA ÖLÇTÜM: `?bolum=bilgisayar-muhendisligi` sonucunda
+    "2027 Bahar Dönemi Staj — İnsan Kaynakları" ilanı da geliyordu,
+    çünkü açıklamasında yazılımdan söz ediliyor.
+
+    Açıklama bir ilanın NE OLDUĞUNU değil neyden bahsettiğini söylüyor.
+    Filtrede eleme kararı veriyor ve yanlış ilanı listeye sokuyordu;
+    SIRALAMADA ise zararsız (ağırlık 1, ilan gizlenmiyor).
+  */
+  const f = { departments: ['bilgisayar-muhendisligi'] };
+  const ik = ilaniNormalize({
+    id: 'ik',
+    title: '2027 Bahar Dönemi Staj — İnsan Kaynakları',
+    description: 'yazılım ekipleriyle çalışacak',
+  });
+  assert.equal(aramaEslesiyorMu(ik, f), false, 'açıklama filtreye girmemeli');
+  /* Ama sıralamada hâlâ sinyal — ilan gizlenmiyor, altta kalıyor. */
+  assert.equal(
+    bolumSkoru({ id: 'ik', title: 'İnsan Kaynakları Stajyeri', description: 'yazılım' }, 'yazilim'),
+    1
+  );
+  /* Başlık ve etiket filtrede geçerli. */
+  assert.equal(
+    aramaEslesiyorMu(ilaniNormalize({ id: 'y', title: 'Bilgi Teknolojileri Stajyeri' }), f),
+    true
+  );
+});
