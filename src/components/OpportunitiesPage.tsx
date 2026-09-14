@@ -1309,7 +1309,7 @@ export const Card: React.FC<{
         */}
         <p className="col-start-2 col-span-2 row-start-3 min-w-0 line-clamp-2 text-xs text-gray-500 sm:hidden">
           {opportunityTypeLabel(item.opportunityType)}
-          {tutar.satir ? ` · ${tutar.satir}` : ''}
+          {tutar.kartSatiri ? ` · ${tutar.kartSatiri}` : ''}
         </p>
 
         {/*
@@ -1408,11 +1408,11 @@ export const Card: React.FC<{
             "Belirtilmemiş" demek, bakmadığımız bir sayfa hakkında
             iddiada bulunmak olurdu.
           */}
-          {tutar.satir && (
+          {tutar.kartSatiri && (
             <div className="min-w-0">
               <dt className="text-[11px] text-gray-500">Tutar</dt>
               {tutar.bilinmiyor ? (
-                <dd className="text-sm font-semibold text-gray-500">{tutar.satir}</dd>
+                <dd className="text-sm font-semibold text-gray-500">{tutar.kartSatiri}</dd>
               ) : (
                 <dd className="text-sm font-extrabold leading-tight text-gray-900 sm:text-base">
                   {tutar.metin}
