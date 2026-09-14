@@ -1,0 +1,67 @@
+name: Günlük eşleşme özeti
+
+# 06:00 UTC = 09:00 TÜRKİYE, YIL BOYUNCA
+#
+# Türkiye 2016'dan beri KALICI UTC+3 ve yaz/kış saati uygulamıyor.
+# Bu yüzden sabit bir UTC saati yıl boyunca aynı yerel saate denk
+# geliyor; ayrı bir yaz saati ayarı gerekmiyor. Kural değişirse
+# `turkiyeSaati` yardımcısını kullanan test kırmızıya döner.
+
+on:
+  workflow_dispatch:
+    inputs:
+      kuru:
+        description: "Hiçbir e-posta göndermeden adayları raporla"
+        type: boolean
+        default: false
+      gun:
+        description: "Türkiye takvim günü (YYYY-MM-DD) — boşsa bugün"
+        type: string
+        default: ""
+  schedule:
+    - cron: "0 6 * * *"
+
+permissions:
+  contents: read
+
+# Aynı gün iki koşu üst üste binmesin. Bu tek başına YETERLİ DEĞİL:
+# betik koşuları `for update skip locked` ile alıyor ve Resend
+# idempotency anahtarı kullanıcı+gün+kalıcı koşu kimliğinden türüyor.
+concurrency:
+  group: gunluk-ozet
+  cancel-in-progress: false
+
+jobs:
+  ozet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      RESEND_FROM: ${{ secrets.RESEND_FROM }}
+      OZET_ABONELIK_SIRRI: ${{ secrets.OZET_ABONELIK_SIRRI }}
+      OZET_GUNU: ${{ inputs.gun }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Betik yalnız `fetch` kullanıyor: `npm ci` gerekmiyor.
+      - name: Sırları doğrula
+        # Değerler YAZDIRILMIYOR: yalnız varlık kontrolü. Actions
+        # maskelemesi olsa da sırrı log'a hiç göndermemek daha iyi.
+        run: |
+          eksik=""
+          for ad in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY RESEND_API_KEY OZET_ABONELIK_SIRRI; do
+            [ -z "${!ad}" ] && eksik="$eksik $ad"
+          done
+          if [ -n "$eksik" ]; then
+            echo "::error::Depo sırları eksik:$eksik"
+            exit 1
+          fi
+          echo "Sırlar tanımlı."
+
+      - name: Özeti gönder
+        run: node scripts/gunluk-ozet.mjs ${{ inputs.kuru && '--kuru' || '' }}

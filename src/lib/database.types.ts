@@ -1144,6 +1144,85 @@ export type Database = {
         };
         Relationships: [];
       };
+      /*
+        KAYITLI ARAMA
+
+        `email_enabled` VARSAYILAN FALSE: arama kaydetmek bildirim
+        aboneligi degil. Riza damgalari (`consent_at`, `opted_out_at`)
+        Update tipinde YOK -- onlari veritabani tetikleyicisi atiyor;
+        istemci gecmis bir tarih yazip "ben izin vermistim" diyemesin.
+      */
+      saved_searches: {
+        Row: {
+          id: string;
+          student_id: string;
+          name: string | null;
+          filters: Json;
+          filters_version: number;
+          email_enabled: boolean;
+          consent_at: string | null;
+          consent_text_version: number | null;
+          opted_out_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          student_id: string;
+          name?: string | null;
+          filters: Json;
+          filters_version?: number;
+          email_enabled?: boolean;
+          consent_text_version?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          name?: string | null;
+          filters?: Json;
+          filters_version?: number;
+          email_enabled?: boolean;
+          consent_text_version?: number | null;
+        };
+        Relationships: [];
+      };
+      /*
+        TESLIM DEFTERI -- ISTEMCI YAZAMAZ
+
+        Insert/Update tipleri BILEREK bos: tabloda istemciye acik bir
+        yazma politikasi yok. Yazan tek taraf servis anahtariyla kosan
+        isci; aksi halde kullanici `sent_at`i temizleyip ayni ilani
+        kendine tekrar gonderebilirdi.
+      */
+      digest_deliveries: {
+        Row: {
+          student_id: string;
+          listing_id: string;
+          first_matched_at: string;
+          sent_at: string | null;
+          reason: string;
+          matched_search_id: string | null;
+        };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      digest_runs: {
+        Row: {
+          student_id: string;
+          gun: string;
+          run_id: string;
+          listing_ids: string[];
+          sent_at: string | null;
+          attempts: number;
+          last_error: string | null;
+          next_attempt_at: string;
+          created_at: string;
+        };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       import_runs: {
         Row: {
           created_count: number;
@@ -1470,6 +1549,14 @@ export type Database = {
       };
       /* Denemesi tükenmiş bildirimi yeniden kuyruğa alır (yalnız yönetici). */
       ilan_bildirimi_yeniden_dene: { Args: { p_id: string }; Returns: undefined };
+      /*
+        Taban kayitlari. `auth.uid()` fonksiyonun ICINDE okunuyor:
+        parametre olsaydi baskasi adina taban yazilabilirdi.
+      */
+      kayitli_arama_taban_yaz: {
+        Args: { p_search_id: string; p_listing_ids: string[] };
+        Returns: number;
+      };
       /* Bütün okunmamış bildirimleri okundu yapar; sayıyı döndürür. */
       bildirimleri_okundu_isaretle: { Args: Record<string, never>; Returns: number };
       /* Görüşme davetine yanıt — kabul/ret yalnızca bu kapıdan geçiyor. */

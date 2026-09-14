@@ -34,6 +34,20 @@ import { BasvuruSablonu } from './BasvuruSablonu';
 import { ilBul } from '../lib/sehir';
 import { BolumCipleri } from './BolumCipleri';
 import { alanaGoreSirala, alanSayilari } from '../lib/bolum-eslestirme.mjs';
+/*
+  TEK ESLESME GERCEGI
+
+  Arama metni, ulke/Remote, sehir, calisma bicimi ve ucret kosullari bu
+  modulden geliyor; gunluk ozet iscisi de AYNI dosyayi cagiriyor. Iki
+  ayri uygulama yazmak, listede gorunen ilanin e-postada gorunmemesi
+  (ya da tersi) demekti ve ayrismayi kimse fark etmezdi.
+*/
+import {
+  aramaEslesiyorMu,
+  filtreleriDogrula,
+  ilaniNormalize,
+} from '../lib/kayitli-arama.mjs';
+import { AramayiKaydet } from './AramayiKaydet';
 import { SirketSeridi } from './SirketSeridi';
 import { ILAN_KAYNAGI_PARCALI } from '../lib/urun-metni';
 import { ListingCountrySelector } from './ListingCountrySelector';
@@ -148,6 +162,9 @@ interface MatchedInternshipsViewProps {
   countrySelection?: string;
   countryFacets?: Array<{code:string;count:number}>;
   onCountryChange?: (country:string)=>void;
+  /* "Bu aramayı kaydet" için: toast ve giriş kapısı çağıranda. */
+  onToast?: (mesaj: string) => void;
+  onAramaKaydetGirisi?: () => void;
   catalogTotal?: number;
   /*
     Sunucudan gelen şirket ve şehir toplamları. İstemci bunları
@@ -178,6 +195,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   countrySelection='all',
   countryFacets=[],
   onCountryChange,
+  onToast,
+  onAramaKaydetGirisi,
   catalogTotal,
   catalogCompanyTotal,
   catalogCityTotal,
@@ -430,26 +449,57 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   */
   type SuzgecAdi = 'arama' | 'sehir' | 'bicim' | 'sirket' | 'tarih' | 'zorunlu' | 'ucretli' | 'uyum';
 
+  /*
+    KANONIK FILTRE NESNESI
+
+    Listenin durumundan uretiliyor ve "Bu aramayi kaydet" ile gunluk
+    ozet iscisinin kullandigi sozlesmenin ta kendisi. Sehir icin
+    `diger` ozel degeri kanonik sozlesmede yok -- o secim listeye ozel
+    kaliyor (asagida ayri ele aliniyor).
+  */
+  const kanonikFiltreler = React.useMemo(
+    () =>
+      filtreleriDogrula({
+        q: searchQuery,
+        country: countrySelection,
+        city: selectedCity === 'diger' ? 'all' : selectedCity,
+        workTypes,
+        pay: onlyPaid ? 'paid' : 'all',
+        mandatory: onlyMandatory,
+      }),
+    [searchQuery, countrySelection, selectedCity, workTypes, onlyPaid, onlyMandatory]
+  );
+
   const gecer = React.useCallback(
     (listing: InternshipListing, match: MatchBreakdown, atla?: SuzgecAdi): boolean => {
       if (!matchesCategory(listing, match, subTab)) return false;
 
-      if (atla !== 'arama' && searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const eslesti =
-          listing.title.toLowerCase().includes(q) ||
-          listing.companyName.toLowerCase().includes(q) ||
-          listing.city.toLowerCase().includes(q) ||
-          listing.requiredSkills.some((s) => s.toLowerCase().includes(q));
-        if (!eslesti) return false;
-      }
+      /*
+        PAYLASILAN KOSULLAR KANONIK MODULDE
 
-      if (atla !== 'sehir' && selectedCity !== 'all') {
-        const il = ilBul(listing.city);
-        if (selectedCity === 'diger' ? il !== null : il !== selectedCity) return false;
-      }
+        `atla` bir suzgeci gevsetiyor: o durumda ilgili alan kanonik
+        nesneden CIKARILIYOR, ayri bir kopya kural yazilmiyor.
+      */
+      const paylasilan = filtreleriDogrula({
+        ...kanonikFiltreler,
+        ...(atla === 'arama' ? { q: '' } : {}),
+        ...(atla === 'sehir' ? { city: 'all' } : {}),
+        ...(atla === 'bicim' ? { workTypes: [] } : {}),
+        ...(atla === 'ucretli' ? { pay: 'all' } : {}),
+        ...(atla === 'zorunlu' ? { mandatory: false } : {}),
+      });
+      if (!aramaEslesiyorMu(ilaniNormalize(listing), paylasilan)) return false;
 
-      if (atla !== 'bicim' && workTypes.length > 0 && !workTypes.includes(listing.workType)) return false;
+      /*
+        SEHIR `diger` LISTEYE OZEL
+
+        Kanonik sozlesmede "tanimli il listesinin disinda kalanlar"
+        diye bir deger yok ve olmamali: kayitli arama somut bir sehir
+        (ya da hepsi) tutuyor. Bu secim yalnizca listedeki gorunum.
+      */
+      if (atla !== 'sehir' && selectedCity === 'diger' && ilBul(listing.city) !== null) {
+        return false;
+      }
 
       if (atla !== 'sirket' && selectedCompanies.length > 0 && !selectedCompanies.includes(listing.companyName)) {
         return false;
@@ -461,13 +511,13 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         if (Date.now() - eklenme > Number(dateRange) * 86400000) return false;
       }
 
-      if (atla !== 'zorunlu' && onlyMandatory && !listing.mandatoryStajAccepted) return false;
-      if (atla !== 'ucretli' && onlyPaid && !listing.stipend.isPaid) return false;
+      /* Zorunlu staj ve ucret kosullari YUKARIDA kanonik modulde. */
       if (atla !== 'uyum' && match.overallScore < minMatchScore) return false;
 
       return true;
     },
     [
+      kanonikFiltreler,
       subTab,
       searchQuery,
       selectedCity,
@@ -1213,6 +1263,25 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             </button>
           )}
         </div>
+
+        {/*
+          "BU ARAMAYI KAYDET" — FİLTRE VARKEN
+
+          Süzgeç başlığının hemen altında: kullanıcı filtreyi kurduğu
+          yerde kaydediyor. Boş filtrede bileşen kendini hiç çizmiyor
+          (bkz. `filtreBosMu`) — "bütün ilanlar"ı kaydetmek her gün her
+          ilanı e-postalamak olurdu.
+        */}
+        {onToast && (
+          <div className="px-3 pb-3">
+            <AramayiKaydet
+              filtreler={kanonikFiltreler}
+              studentId={student?.id ?? null}
+              onToast={onToast}
+              onGirisGerekli={() => onAramaKaydetGirisi?.()}
+            />
+          </div>
+        )}
 
         {/*
           Süzgeçler. Mobilde `filtreAcik` kapalıyken çizilmiyor; geniş ekranda
