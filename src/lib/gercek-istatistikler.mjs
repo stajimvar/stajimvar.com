@@ -207,12 +207,24 @@ export async function fetchIstatistikler(etkinKaynak) {
         ),
       ]);
 
-      /* Son kontrol damgası: tek satır, en yeni. */
+      /*
+        SON KONTROL DAMGASI — NULL'LAR BAŞA GELMESİN
+
+        `order(... desc)` Postgres'te varsayılan olarak NULLS FIRST
+        çalışıyor. Canlıda tam bunu gördüm: en üst satırın
+        `source_checked_at` alanı boş geldi ve kapsam cümlesindeki
+        "En son kontrol: …" kısmı hiç yazılmadı.
+
+        Hem boş değerler dışarıda bırakılıyor hem sıralama açıkça
+        NULLS LAST yapılıyor — ikisi ayrı ayrı yeterli, ikisi birlikte
+        sürücü davranışına bağımlılığı bitiriyor.
+      */
       let sonKontrol = null;
       const { data } = await supabase
         .from('listings')
         .select('source_checked_at')
-        .order('source_checked_at', { ascending: false })
+        .not('source_checked_at', 'is', null)
+        .order('source_checked_at', { ascending: false, nullsFirst: false })
         .limit(1);
       if (Array.isArray(data) && data[0]?.source_checked_at) {
         sonKontrol = data[0].source_checked_at;
