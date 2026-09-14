@@ -1354,3 +1354,105 @@ export async function fetchAdminOzet(): Promise<AdminOzet> {
       .sort((a, b) => a.tarih.localeCompare(b.tarih)),
   };
 }
+
+/* ------------------------------------------------------------------ */
+/* İLAN BİLDİRİMLERİ — YÖNETİCİ İNCELEMESİ                             */
+/* ------------------------------------------------------------------ */
+
+export type IlanBildirimDurumu = 'yeni' | 'inceleniyor' | 'kapatildi';
+
+export interface IlanBildirimi {
+  id: string;
+  listingUrl: string;
+  companyName?: string;
+  positionTitle?: string;
+  reason: string;
+  details?: string;
+  /**
+   * İLETİŞİM E-POSTASI
+   *
+   * Alan yalnızca yöneticiye geliyor; RLS `select` politikası tabloyu
+   * `is_admin()` dışına hiç açmıyor, yani yetkisiz bir istemci satırı
+   * alamadığı için bu alanı da alamıyor. Arayüzde saklamak tek başına
+   * yeterli olmazdı — veri gelmiyor.
+   */
+  reporterEmail?: string;
+  status: IlanBildirimDurumu;
+  reviewNote?: string;
+  reviewedAt?: string;
+  createdAt: string;
+  notifiedAt?: string;
+  notifyAttempts: number;
+  notifyLastError?: string;
+  notifyNextAttemptAt?: string;
+  testMi: boolean;
+}
+
+/**
+ * Yöneticinin gördüğü bildirim listesi.
+ *
+ * Görünüm (`ilan_bildirim_kuyrugu`) yerine tablo okunuyor: görünüm yalnız
+ * BEKLEYEN kayıtları veriyor, yönetici ekranı ise gönderilmişleri ve
+ * denemesi TÜKENMİŞ olanları da göstermek zorunda.
+ */
+export async function fetchIlanBildirimleri(): Promise<IlanBildirimi[]> {
+  const { data, error } = await supabase
+    .from('listing_reports')
+    .select(
+      'id,listing_url,company_name,position_title,reason,details,reporter_email,' +
+        'status,review_note,reviewed_at,created_at,notified_at,notify_attempts,' +
+        'notify_last_error,notify_next_attempt_at,test_mi'
+    )
+    .order('created_at', { ascending: false })
+    .limit(200);
+
+  if (error) fail('İlan bildirimleri yüklenemedi', error);
+
+  return (data ?? []).map((r) => {
+    const row = r as Record<string, any>;
+    return {
+      id: row.id,
+      listingUrl: row.listing_url,
+      companyName: row.company_name ?? undefined,
+      positionTitle: row.position_title ?? undefined,
+      reason: row.reason,
+      details: row.details ?? undefined,
+      reporterEmail: row.reporter_email ?? undefined,
+      status: row.status,
+      reviewNote: row.review_note ?? undefined,
+      reviewedAt: row.reviewed_at ?? undefined,
+      createdAt: row.created_at,
+      notifiedAt: row.notified_at ?? undefined,
+      notifyAttempts: row.notify_attempts ?? 0,
+      notifyLastError: row.notify_last_error ?? undefined,
+      notifyNextAttemptAt: row.notify_next_attempt_at ?? undefined,
+      testMi: Boolean(row.test_mi),
+    };
+  });
+}
+
+/**
+ * Durumu ve sonuç notunu yazar.
+ *
+ * Doğrudan `update` yerine RPC: politika yöneticiye satırın tamamını
+ * açıyor ve arayüzün kuyruk alanlarına (deneme sayısı, sonraki deneme)
+ * yazma yetkisi olmamalı. Yetki de fonksiyonun İÇİNDE denetleniyor.
+ */
+export async function ilanBildirimiIncele(
+  id: string,
+  durum: IlanBildirimDurumu,
+  sonucNotu: string
+): Promise<void> {
+  const { error } = await supabase.rpc('ilan_bildirimi_incele', {
+    p_id: id,
+    p_durum: durum,
+    p_not: sonucNotu,
+  });
+  if (error) fail('Bildirim güncellenemedi', error);
+}
+
+/** Denemesi tükenmiş bildirimi yeniden kuyruğa alır (yalnız yönetici). */
+export async function ilanBildirimiYenidenDene(id: string): Promise<void> {
+  const { error } = await supabase.rpc('ilan_bildirimi_yeniden_dene', { p_id: id });
+  if (error) fail('Bildirim yeniden kuyruğa alınamadı', error);
+}
