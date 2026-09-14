@@ -51,6 +51,7 @@ import {
 import {
   firsatKategorisi,
   firsatRozetleri,
+  yurtDisiFirsatMi,
   FIRSAT_KATEGORILERI,
   KATEGORI_ETIKETLERI,
 } from '../lib/firsat-kategori.mjs';
@@ -155,19 +156,15 @@ const kisaTarih = (value?: string) => kisaTarihMetni(value, { yil: false });
 
 const kucult = (metin: string) => String(metin ?? '').toLocaleLowerCase('tr-TR');
 
-/**
- * Kayıt yurt dışına mı işaret ediyor?
- *
- * Ölçüt DAR ve açık: ülke alanında Türkiye dışında bir ülke yazıyor mu.
- * "Ülke alanı boş = Türkiye" bir varsayım olurdu; bu yüzden süzgeç boş
- * alanlı kayıtlar hakkında bir iddia taşımıyor, onları yalnızca "Yurt
- * dışı" tarafına KOYMUYOR.
- */
-const yurtDisiMi = (item: Opportunity) =>
-  (item.countries || []).some((ulke) => {
-    const ad = kucult(ulke);
-    return ad !== '' && ad !== 'türkiye' && ad !== 'turkey' && ad !== 'tr';
-  });
+/*
+  KURAL PAYLAŞILAN MODÜLDE
+
+  Ön render /yurtdisi-firsatlari kapısını basarken aynı ölçütü kullanmak
+  zorunda. Burada ayrı bir kopya kalsaydı iki tanım zamanla ayrışırdı:
+  ekranda yurt dışı sayılan bir kayıt statik HTML'de sayılmayabilirdi.
+  Gerekçesi `lib/firsat-kategori.mjs` içinde.
+*/
+const yurtDisiMi = (item: Opportunity) => yurtDisiFirsatMi(item);
 
 type Suzgec = typeof BOS_FIRSAT_SUZGECI;
 

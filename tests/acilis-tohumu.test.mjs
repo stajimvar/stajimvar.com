@@ -113,6 +113,33 @@ test('görünür her ilan site haritasında', () => {
     .filter((ad) => ad.endsWith('.html'))
     .map((ad) => `/ilan/${ad.slice(0, -'.html'.length)}`);
   assert.ok(sayfalar.length > 0, 'hiç ilan sayfası üretilmemiş');
-  const eksik = sayfalar.filter((yol) => !xml.includes(`<loc>https://stajimvar.com${yol}</loc>`));
+
+  /*
+    SÜRESİ GEÇMİŞ İLAN BİLEREK HARİTADA DEĞİL
+
+    Sayfası KALIYOR (Google kapanmış ilanın sayfasının durmasını istiyor
+    ve kullanıcıya da yararlı) ama arama motoruna "bunu tara" demenin
+    anlamı yok. Kapandığı görünür metinde yazıyor; bu testin kuralı da
+    o yüzden "her sayfa haritada" değil, "kapanmamış her sayfa
+    haritada".
+
+    Kapanmış olduğu sayfanın KENDİ metninden okunuyor: harita ile sayfa
+    arasında üçüncü bir kaynak yok.
+  */
+  const acikSayfalar = sayfalar.filter((yol) => {
+    const dosya = path.join(DIST, `${yol.slice(1)}.html`);
+    if (!fs.existsSync(dosya)) return true;
+    return !fs.readFileSync(dosya, 'utf8').includes('Başvuru dönemi kapandı');
+  });
+  const eksik = acikSayfalar.filter(
+    (yol) => !xml.includes(`<loc>https://stajimvar.com${yol}</loc>`)
+  );
   assert.deepEqual(eksik, [], `site haritasında olmayan ilan sayfaları: ${eksik.slice(0, 5).join(', ')}`);
+
+  /* Kapanmış olanlar gerçekten dışarıda mı — kural iki yönlü sınanıyor. */
+  const kapanmis = sayfalar.filter((yol) => !acikSayfalar.includes(yol));
+  const haritadaKapanmis = kapanmis.filter((yol) =>
+    xml.includes(`<loc>https://stajimvar.com${yol}</loc>`)
+  );
+  assert.deepEqual(haritadaKapanmis, [], 'kapanmış ilan haritada bildiriliyor');
 });

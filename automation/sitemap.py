@@ -146,7 +146,12 @@ def main() -> None:
 
     ilanlar = (
         db.table("listings")
-        .select("id,title,updated_at,companies(slug)")
+        # `application_deadline` SECIMDE OLMAK ZORUNDA: asagidaki
+        # `ilan_acik` suzgeci onu okuyor. Tasinmadiginda suzgec her kaydi
+        # "acik" sayiyor ve suresi gecmis ilan yine haritaya giriyor.
+        # Ayni sinifta hata bu iste UC KEZ yasandi (opportunity_type,
+        # countries, application_deadline).
+        .select("id,title,updated_at,application_deadline,companies(slug)")
         .eq("status", "published")
         .execute()
         .data
@@ -176,35 +181,6 @@ def main() -> None:
         or []
     )
 
-    # Kesfet etkinlikleri. Ilan ve firsat gibi bunlarin da kendi adresi
-    # ve kendi yapisal verisi var; haritaya girmedikleri surece arama
-    # motoru onlari yalnizca liste sayfasindan bulabiliyordu.
-    etkinlikler = (
-        db.table("discover_events")
-        .select("slug,updated_at,starts_at,ends_at,short_description,description")
-        .eq("status", "published")
-        .execute()
-        .data
-        or []
-    )
-
-    # Aciklamasi bos etkinlik haritaya girmiyor.
-    #
-    # On render bu sayfalari noindex ile basiyor (bkz. reklam-kapisi.mjs
-    # icindeki NO_TEXT kurali: aciklamasi olmayan sayfada ozgun metin diye
-    # yalnizca baslik kaliyor). Harita onlari yine de bildiriyordu; ayni
-    # adres icin "dizine alma" ve "dizine al" sinyallerini birlikte
-    # gondermek celiskili. Olculdu: 136 etkinligin 22'si bu durumdaydi.
-    #
-    # Kural JS tarafinda tanimli; burada AYNI kosulun kopyasi var, cunku
-    # site haritasi Python ve o modulu calistiramiyor. Kural degisirse iki
-    # yer birlikte guncellenmeli.
-    etkinlikler = [
-        e
-        for e in etkinlikler
-        if (e.get("short_description") or e.get("description") or "").strip()
-    ]
-
     bolumler = kayit_sluglari("bolumler.ts")
     rehberler = rehber_sluglari()
     duragan = (
@@ -221,7 +197,35 @@ def main() -> None:
         )
 
     sirketler: set[str] = set()
+    # SURESI GECMIS ILAN HARITADA DEGIL
+    #
+    # Firsatlarda bu kural zaten vardi (`application_deadline.gte.now`),
+    # ilanlarda YOKTU. Olculdu (14 Eylul 2026): "KEY+ Uzun Donem Staj
+    # Programi" son basvurusu 2026-09-06, sekiz gun gecmis, hala
+    # status=published ve adresi haritada bildiriliyordu. Yapisal veri
+    # `validThrough` ile Google'a "kapandi" derken harita "bunu tara"
+    # diyordu -- celiskili sinyal.
+    #
+    # Sayfa SILINMIYOR: kapanmis ilanin sayfasi duruyor ve gorunur
+    # metninde kapandigi yaziyor (bkz. scripts/onrender.mjs). Degisen
+    # tek sey, arama motorunu ona yonlendirmemek.
+    simdi_ilan = datetime.now(UTC)
+
+    def ilan_acik(kayit: dict) -> bool:
+        son = kayit.get("application_deadline")
+        if not son:
+            return True
+        try:
+            bitis = datetime.fromisoformat(str(son).replace("Z", "+00:00"))
+        except ValueError:
+            return True
+        if bitis.tzinfo is None:
+            bitis = bitis.replace(tzinfo=UTC)
+        return bitis >= simdi_ilan
+
     for ilan in ilanlar:
+        if not ilan_acik(ilan):
+            continue
         onek = ilan["id"].split("-")[0]
         yol = f"/ilan/{slugla(ilan['title'])}-{onek}"
         tarih = (ilan.get("updated_at") or "")[:10]
@@ -242,26 +246,21 @@ def main() -> None:
             f"<changefreq>daily</changefreq><priority>0.7</priority></url>"
         )
 
-    # BITMIS ETKINLIK HARITADA DEGIL
+    # /kesfet ADRESLERI HARITADAN CIKTI
     #
-    # Sayfasi duruyor (paylasilmis olabilir) ve yapisal verisi bitmis
-    # oldugunu soyluyor; ama arama motoruna "bunu tara" demenin anlami
-    # yok. Firsatlarda da ayni kural: son basvurusu gecen kayit girmiyor.
-    simdi = datetime.now(UTC)
-    for etkinlik in etkinlikler:
-        bitis = etkinlik.get("ends_at") or etkinlik.get("starts_at")
-        if bitis:
-            try:
-                if datetime.fromisoformat(bitis.replace("Z", "+00:00")) < simdi:
-                    continue
-            except ValueError:
-                pass
-        tarih = (etkinlik.get("updated_at") or "")[:10]
-        tarih_etiketi = f"<lastmod>{tarih}</lastmod>" if tarih else ""
-        satirlar.append(
-            f"  <url><loc>{SITE}/kesfet/{kacir(etkinlik['slug'])}</loc>{tarih_etiketi}"
-            f"<changefreq>weekly</changefreq><priority>0.6</priority></url>"
-        )
+    # Kesfet bolumu 11 Eylul 2026'da kapandi ve /kesfet/* adresleri
+    # public/_redirects ile /firsatlar'a 301 aliyor. Durağan listeden o
+    # tarihte cikarilmis ama BU DONGU yerinde kalmisti: harita her
+    # uretimde 99 yonlendirilmis adres bildiriyordu.
+    #
+    # Olculdu (canli, 14 Eylul 2026): haritadaki /kesfet/ adreslerinden
+    # uc ornek de HTTP 301 dondu. Arama motoruna "bunu tara" derken ayni
+    # adres icin "baska yere git" demek celiskili sinyal.
+    #
+    # Kayitlar SILINMEDI, arsivde duruyor (goc 20260926120000); yalniz
+    # adresleri artik bildirilmiyor. `etkinlikler` sorgusu da kalkti:
+    # kullanilmayan bir okuma, yarin yanlislikla geri baglanmayi
+    # kolaylastirir.
 
     # Buyuk isveren sayfalari: dizindeki kurumlarin kendi adresleri.
     # Tabloda karsiligi olan slug iki kez yazilmasin diye set birlestiriliyor.
