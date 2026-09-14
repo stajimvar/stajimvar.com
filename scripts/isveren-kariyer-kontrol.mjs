@@ -35,6 +35,11 @@ import { pathToFileURL } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 
 import { guvenliDisAdres } from '../src/lib/guvenli-url.mjs';
+import {
+  kariyerSayfasiKarari,
+  programSayfasiKarari,
+  yumusak404,
+} from '../src/lib/isveren-kanit.mjs';
 
 const KOK = path.resolve(import.meta.dirname, '..');
 const VERI = path.join(KOK, 'src', 'data', 'stajProgramlari.ts');
@@ -56,61 +61,19 @@ const BASLIK = {
 };
 
 /*
-  PROGRAM KANITI — İKİ ŞEY BİRLİKTE ARANIYOR
+  PROGRAM KANITI ARTIK `src/lib/isveren-kanit.mjs` İÇİNDE
 
-  Tek başına "staj" kelimesi kanıt değil: neredeyse her kariyer
-  sayfasında geçiyor. Aranan şey bir STAJ PROGRAMI ifadesi VE aktif bir
-  BAŞVURU YOLU. İkisi birlikte yoksa sonuç `bilinmiyor`.
+  Eski kural burada duruyordu ve YANLIŞ ÖLÇTÜ: "sayfada staj programı
+  ifadesi var VE başvuru ifadesi var" diyordu, ikisi arasındaki mesafeye
+  ve başvurunun NEYE ait olduğuna bakmıyordu. Sekiz şirketi haksız yere
+  "açık" ilan etti; eşleşen "başvuru"lar tedarikçi portalı, POS başvurusu
+  ve sayfa başlığıydı.
+
+  Yeni kural iki adımlı ve bağlantıya dayanıyor:
+    1. Genel kariyer sayfasında STAJA ÖZGÜ bağlantı aranıyor.
+    2. O adres çağrılıp "açık" kararı ORADAN veriliyor.
+  Genel kariyer ana sayfası tek başına asla "açık" üretmiyor.
 */
-const PROGRAM_IFADESI =
-  /staj program|stajyer program|intern(ship)? program|trainee program|yaz staj|uzun d[öo]nem staj|graduate program/i;
-const BASVURU_YOLU =
-  /ba[şs]vur(u|mak|un)|apply now|apply for|ba[şs]vuru formu|application form|ilana git|open positions|a[çc][ıi]k pozisyon/i;
-/*
-  KAPANIŞ KANITI — AÇIK İFADE ŞART
-
-  "Başvurular kapandı", "son başvuru tarihi geçti", "form kapatıldı".
-  İlan bulunamaması kanıt DEĞİL: şirketin bütün programlarının kapalı
-  olduğu sonucu çıkarılamaz.
-*/
-const KAPANIS_IFADESI =
-  /ba[şs]vurular(ı|i)?m?[ıi]z? kapan|ba[şs]vuru d[öo]nemi (kapan|sona er)|son ba[şs]vuru tarihi ge[çc]|form(umuz)? kapat[ıi]l|applications? (are )?closed|no longer accepting applications/i;
-
-function gorunurMetin(govde) {
-  return govde
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ');
-}
-
-/**
- * Sayfa gövdesinden program kararı.
- *
- * @returns {{durum: 'acik'|'kapali'|'bilinmiyor', kanit: string}}
- */
-export function programKarari(govde) {
-  const metin = gorunurMetin(String(govde ?? ''));
-  /*
-    KAPANIŞ ÖNCE: "başvurular kapandı" cümlesi içinde "başvuru" da
-    geçiyor ve başvuru yolu kalıbı onu aktif bir yol sanardı.
-  */
-  if (KAPANIS_IFADESI.test(metin)) {
-    return { durum: 'kapali', kanit: 'basvuru-kapandi-ifadesi' };
-  }
-  if (PROGRAM_IFADESI.test(metin) && BASVURU_YOLU.test(metin)) {
-    return { durum: 'acik', kanit: 'staj-programi-ve-basvuru-yolu' };
-  }
-  if (PROGRAM_IFADESI.test(metin)) {
-    /*
-      Program var ama başvuru yolu görünmüyor: "açık" demeye yetmez.
-      Kanıt türü yine saklanıyor — bir sonraki kontrolde ne gördüğümüz
-      belli olsun.
-    */
-    return { durum: 'bilinmiyor', kanit: 'program-ifadesi-var-basvuru-yolu-yok' };
-  }
-  return { durum: 'bilinmiyor', kanit: 'kanit-yok' };
-}
 
 /** HTTP durumundan bağlantı kararı. */
 export function urlKarari(durum) {
@@ -136,13 +99,13 @@ async function adresiCagir(adres) {
         signal: AbortSignal.timeout(ZAMAN_ASIMI_MS),
       });
       const govde = yanit.ok ? await yanit.text() : '';
-      return { durum: yanit.status, govde, hata: null };
+      return { durum: yanit.status, govde, sonAdres: yanit.url, hata: null };
     } catch (hata) {
       sonHata = hata?.name === 'TimeoutError' ? 'zaman aşımı' : String(hata?.message ?? hata);
       sonDurum = 0;
     }
   }
-  return { durum: sonDurum, govde: '', hata: sonHata };
+  return { durum: sonDurum, govde: '', sonAdres: adres, hata: sonHata };
 }
 
 /** Editoryal dosyadan slug + adres. Liste kaynağı BURASI. */
@@ -169,7 +132,7 @@ async function main() {
   if (db) {
     const { data } = await db
       .from('employer_career_checks')
-      .select('slug, program_durumu, program_kaniti, program_kontrol_at, url_basarili_at');
+      .select('slug, program_durumu, program_kaniti, program_kontrol_at, program_url, url_basarili_at');
     mevcut = new Map((data ?? []).map((r) => [r.slug, r]));
   }
 
@@ -225,53 +188,104 @@ async function main() {
         program_durumu: eski?.program_durumu ?? null,
         program_kaniti: eski?.program_kaniti ?? null,
         program_kontrol_at: eski?.program_kontrol_at ?? null,
+        program_url: eski?.program_url ?? null,
       };
-      if (urlDurumu === 'calisiyor') {
-        const karar = programKarari(cevap.govde);
-        if (karar.durum === 'bilinmiyor' && eski?.program_durumu) {
-          /*
-            BELİRSİZ SONUÇ MEVCUT KARARI BOZMUYOR
 
-            Dün "açık" kanıtı bulduğumuz bir sayfa bugün JS ile
-            yükleniyorsa kanıt görünmez olabilir. O durumda eski karar
-            duruyor ama KANIT TÜRÜ güncelleniyor: ne gördüğümüz belli
-            olsun.
-          */
-          program = {
-            program_durumu: eski.program_durumu,
-            program_kaniti: karar.kanit,
-            program_kontrol_at: simdi,
-          };
-        } else {
-          program = {
-            program_durumu: karar.durum,
-            program_kaniti: karar.kanit,
-            program_kontrol_at: simdi,
-          };
+      /*
+        YUMUŞAK 404 BOZUK SAYILIYOR
+
+        Ölçümde üç şirket (tupras, tusas, yildiz-holding) kariyer
+        adresinden 404 sayfasına yönlendi ve sunucu HTTP 200 döndü. Eski
+        kural bunu "çalışıyor" yazıyordu: kartta çalışan bir adres
+        gösterip öğrenciyi boş sayfaya göndermek bozuk bağlantıdan
+        farksız.
+      */
+      let sahte404 = null;
+      if (urlDurumu === 'calisiyor') {
+        sahte404 = yumusak404(cevap.sonAdres ?? guvenli, cevap.govde);
+      }
+      const gercekUrlDurumu = sahte404 ? 'bozuk' : urlDurumu;
+      if (sahte404) {
+        sayac.calisiyor -= 1;
+        sayac.bozuk += 1;
+      }
+
+      if (gercekUrlDurumu === 'calisiyor') {
+        const birinci = kariyerSayfasiKarari(cevap.govde);
+        let karar = { durum: birinci.durum, kanit: birinci.kanit };
+        let programAdresi = null;
+
+        /*
+          İKİNCİ ADIM — "AÇIK" YALNIZ STAJ SAYFASINDAN
+
+          Genel kariyer sayfası en fazla "staj sayfası şurada" diyor.
+          Kararı o sayfa veriyor ve adres kartta bağlantı olarak
+          kullanılıyor. Bir adım: sayfa sayfa gezinmiyoruz.
+        */
+        if (birinci.izlenecek) {
+          const hedef = guvenliDisAdres(new URL(birinci.izlenecek, cevap.sonAdres ?? guvenli).href);
+          if (hedef) {
+            const ikinci = await adresiCagir(hedef);
+            const ikinciDurum = ikinci.durum === 0 ? 'gecici_hata' : urlKarari(ikinci.durum);
+            const ikinciSahte =
+              ikinciDurum === 'calisiyor' ? yumusak404(ikinci.sonAdres ?? hedef, ikinci.govde) : null;
+            if (ikinciDurum === 'calisiyor' && !ikinciSahte) {
+              karar = programSayfasiKarari(ikinci.govde);
+              /* Adres yalnız KANITLI açık programda saklanıyor. */
+              if (karar.durum === 'acik') programAdresi = hedef;
+            } else {
+              /*
+                Staj sayfasına ulaşılamadı. "Açık" demeye yetmez ve
+                kapalı demek de kanıtsız olur: kanıt türü ne gördüğümüzü
+                söylüyor.
+              */
+              karar = {
+                durum: 'bilinmiyor',
+                kanit: ikinciSahte ? 'staj-sayfasi-bulunamadi' : `staj-sayfasina-ulasilamadi-${ikinciDurum}`,
+              };
+            }
+          }
         }
+
+        /*
+          BELİRSİZ SONUÇ ESKİ "AÇIK" KARARINI ARTIK KORUMUYOR
+
+          Eskiden koruyordu ve bu, yanlış bir "açık" kararını kalıcı
+          yapıyordu: bir kez yanlış ölçülen sekiz şirket her koşuda
+          "açık" kalıyordu çünkü yeni kanıt bulunamaması eski kararı
+          silmiyordu. Kanıtın kaybolması da bir bulgudur.
+        */
+        program = {
+          program_durumu: karar.durum,
+          program_kaniti: karar.kanit,
+          program_kontrol_at: simdi,
+          program_url: programAdresi,
+        };
         sayac[program.program_durumu] += 1;
       }
 
       sonuclar.push({
         slug: kayit.slug,
-        url_durumu: urlDurumu,
+        url_durumu: gercekUrlDurumu,
         url_denendi_at: simdi,
         /* Başarısız denemede son başarılı tarih KORUNUYOR. */
         url_basarili_at:
-          urlDurumu === 'calisiyor' ? simdi : (eski?.url_basarili_at ?? null),
+          gercekUrlDurumu === 'calisiyor' ? simdi : (eski?.url_basarili_at ?? null),
         /*
           GÜVENLİ HATA NEDENİ: durum kodu ve kısa sebep. Sayfa içeriği
           ve kişisel veri saklanmıyor.
         */
         url_hata:
-          urlDurumu === 'calisiyor'
+          gercekUrlDurumu === 'calisiyor'
             ? null
-            : (cevap.hata ? `ağ: ${cevap.hata}`.slice(0, 120) : `HTTP ${cevap.durum}`),
+            : sahte404
+              ? sahte404
+              : (cevap.hata ? `ağ: ${cevap.hata}`.slice(0, 120) : `HTTP ${cevap.durum}`),
         ...program,
       });
 
       console.log(
-        `  ${kayit.slug.padEnd(22)} ${urlDurumu.padEnd(12)} ${program.program_durumu ?? '-'}`
+        `  ${kayit.slug.padEnd(22)} ${gercekUrlDurumu.padEnd(12)} ${program.program_durumu ?? '-'}`
       );
     }
   }
