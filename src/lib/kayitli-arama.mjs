@@ -90,6 +90,28 @@ export function filtreleriDogrula(ham) {
     ? [...new Set(g.workTypes.filter((w) => CALISMA_BICIMLERI.has(w)))]
     : [];
 
+  /*
+    ŞİRKET — KALICI ARAMA ANLAMI VAR
+
+    "Bu şirkette staj arıyorum" yarın da geçerli bir istek. Listede
+    uygulanabilen bir filtre olduğu hâlde kaydedilmiyordu: kullanıcı
+    şirket seçip aramayı kaydetseydi, e-posta bütün şirketleri
+    gönderirdi — yani kaydettiği aramadan farklı bir sonuç.
+  */
+  const companies = Array.isArray(g.companies)
+    ? [...new Set(g.companies.map((c) => metin(c).slice(0, 120)).filter(Boolean))].slice(0, 20)
+    : [];
+
+  /*
+    TARİH ARALIĞI — "SON N GÜNDE EKLENEN"
+
+    Listede 'all' | '1' | '3' | '7' | '30' olarak duruyor. Kayıtlı
+    aramada anlamı korunuyor: kullanıcı "yalnız yeni eklenenler"
+    dediyse e-posta da onu uygulamalı.
+  */
+  const gunler = Number(g.postedWithinDays);
+  const postedWithinDays = [1, 3, 7, 30].includes(gunler) ? gunler : null;
+
   const departments = Array.isArray(g.departments)
     ? [...new Set(g.departments.map((d) => metin(d).slice(0, 80)).filter(Boolean))].slice(0, 10)
     : [];
@@ -112,12 +134,35 @@ export function filtreleriDogrula(ham) {
     country,
     city,
     workTypes,
+    companies,
+    postedWithinDays,
     departments,
     pay,
     mandatory,
     voluntary,
   };
 }
+
+/*
+  KANONİK SÖZLEŞMEYE GİRMEYENLER — VE NEDEN
+
+  uyum puanı      Kullanıcının profiline göre hesaplanan bir SIRALAMA
+                  eşiği. Profil değişince aynı arama farklı sonuç
+                  verirdi; e-posta ile liste ayrışırdı.
+  kategori sekmesi Görünüm sekmesi ("Sana uygun", "Yeni"…), veri
+                  filtresi değil.
+  şehirde "diğer" "Tanımlı il listesinin dışında kalanlar" — liste
+                  görünümüne ait bir kova; kayıtlı arama somut bir
+                  şehir (ya da hepsi) tutuyor.
+
+  Bu üçü SESSİZCE yok sayılmıyor: kaydetme ekranı hangilerinin
+  kaydedildiğini ve hangilerinin dışarıda kaldığını yazıyor.
+*/
+export const KAYDEDILMEYEN_FILTRELER = [
+  'Uyum puanı eşiği',
+  'Görünüm sekmesi',
+  'Şehirde “diğer”',
+];
 
 /** Hiç filtre uygulanmamış mı? Boş arama kaydetmek anlamsız. */
 export function filtreBosMu(filtreler) {
@@ -127,6 +172,8 @@ export function filtreBosMu(filtreler) {
     f.country === 'all' &&
     f.city === 'all' &&
     f.workTypes.length === 0 &&
+    f.companies.length === 0 &&
+    f.postedWithinDays === null &&
     f.departments.length === 0 &&
     f.pay === 'all' &&
     !f.mandatory &&
@@ -173,6 +220,12 @@ export function ilaniNormalize(kayit) {
       return Array.isArray(v) ? v.map(metin).filter(Boolean) : [];
     })(),
     status: metin(sec('status', 'status')),
+    /*
+      Tarih aralığı filtresi için. `created_at` yedeği mapper ile aynı
+      (`postedAt: row.posted_at ?? row.created_at`): tarihi olmayan bir
+      ilan filtrede sessizce kaybolmasın.
+    */
+    postedAt: sec('posted_at', 'postedAt') ?? k.created_at ?? null,
   };
 }
 
@@ -215,6 +268,32 @@ export function aramaEslesiyorMu(ilan, filtreler) {
   }
 
   if (f.workTypes.length > 0 && !f.workTypes.includes(i.workType)) return false;
+
+  if (f.companies.length > 0 && !f.companies.includes(i.companyName)) return false;
+
+  /*
+    TARİH ARALIĞI — `posted_at`, VE NEDEN `first_seen_at` DEĞİL
+
+    Önce `first_seen_at` yazmıştım (bizim ilk gördüğümüz an) ve daha
+    doğru alan o. Ama ÖLÇÜLDÜ: istemci o kolonu OKUYAMIYOR — kolon
+    yetkileri kapatıyor (`42501`, bkz. 20260906010000) ve ürün
+    nesnesinde de yok. Modül onu okumaya çalışsaydı arayüzde filtre
+    her ilanı elerdi, e-postada elemezdi: tam olarak kaçınmak
+    istediğimiz ayrışma.
+
+    `posted_at` iki tarafın da okuyabildiği tek tarih. Listenin bugünkü
+    davranışı da bu — yani bu alan seçimi mevcut sonucu DEĞİŞTİRMİYOR.
+
+    AYRI KONU: özet işçisinin "bu ilan yeni mi" kararı hâlâ
+    `first_seen_at` ile veriliyor (işçi servis anahtarıyla okuyor).
+    Orada geç içe aktarılan eski tarihli ilanı kaçırmamak gerekiyor;
+    burada kullanıcının seçtiği bir filtre var.
+  */
+  if (f.postedWithinDays !== null) {
+    const t = new Date(i.postedAt ?? 0).getTime();
+    if (!Number.isFinite(t) || t === 0) return false;
+    if (Date.now() - t > f.postedWithinDays * 86_400_000) return false;
+  }
 
   /*
     BÖLÜM FİLTRESİ — ÖNE ÇIKARMA DEĞİL
@@ -270,6 +349,8 @@ export function aramaAdresine(filtreler, taban = '/staj-ilanlari') {
   if (f.country !== 'all') p.set('country', f.country);
   if (f.city !== 'all') p.set('city', f.city);
   if (f.workTypes.length) p.set('bicim', f.workTypes.join(','));
+  if (f.companies.length) p.set('sirket', f.companies.join('|'));
+  if (f.postedWithinDays !== null) p.set('gun', String(f.postedWithinDays));
   if (f.departments.length) p.set('bolum', f.departments.join(','));
   if (f.pay !== 'all') p.set('ucret', f.pay);
   if (f.mandatory) p.set('zorunlu', '1');
@@ -292,6 +373,9 @@ export function adresTenFiltreler(arama) {
     country: p.get('country') || 'all',
     city: p.get('city') || 'all',
     workTypes: bol('bicim'),
+    /* Şirket adları virgül içerebiliyor: ayırıcı `|`. */
+    companies: (p.get('sirket') || '').split('|').map((x) => x.trim()).filter(Boolean),
+    postedWithinDays: p.get('gun'),
     departments: bol('bolum'),
     pay: p.get('ucret') || 'all',
     mandatory: p.get('zorunlu') === '1',

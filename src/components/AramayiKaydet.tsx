@@ -7,6 +7,7 @@ import {
 } from '../lib/queries';
 import {
   FILTRE_SURUMU,
+  KAYDEDILMEYEN_FILTRELER,
   RIZA_METNI,
   RIZA_METNI_SURUMU,
   aramaEslesiyorMu,
@@ -31,6 +32,31 @@ import {
  * yalnız aday listesinin dışında kalıyorlar. Böylece ilk özet
  * geçmişin tamamını değil, bundan sonra gelenleri gönderiyor.
  */
+
+/**
+ * KAYDEDİLEN FİLTRELERİN OKUNABİLİR LİSTESİ
+ *
+ * Kullanıcı neyin kaydedildiğini görmeden kaydetmesin: ekranda beş
+ * filtre uygulanmışken üçünün kaydedildiğini fark etmemek, e-postanın
+ * beklediğinden farklı sonuç göndermesi demek.
+ */
+export function kaydedilenler(filtreler: unknown): string[] {
+  const f = filtreleriDogrula(filtreler);
+  const liste: string[] = [];
+  if (f.q) liste.push(`Arama: “${f.q}”`);
+  if (f.country === 'remote') liste.push('Uzaktan (Remote)');
+  else if (f.country !== 'all') liste.push(`Ülke: ${f.country}`);
+  if (f.city !== 'all') liste.push(`Şehir: ${f.city}`);
+  if (f.workTypes.length) liste.push(`Çalışma biçimi: ${f.workTypes.join(', ')}`);
+  if (f.companies.length) liste.push(`Şirket: ${f.companies.join(', ')}`);
+  if (f.postedWithinDays !== null) liste.push(`Son ${f.postedWithinDays} günde eklenen`);
+  if (f.departments.length) liste.push(`Bölüm: ${f.departments.join(', ')}`);
+  if (f.pay === 'paid') liste.push('Ücretli');
+  if (f.pay === 'unpaid') liste.push('Ücretsiz');
+  if (f.mandatory) liste.push('Zorunlu staj kabul ediliyor');
+  if (f.voluntary) liste.push('Gönüllü staj kabul ediliyor');
+  return liste;
+}
 
 interface AramayiKaydetProps {
   /** Listede o an uygulanmış filtreler (kanonik sözleşme). */
@@ -123,6 +149,31 @@ export const AramayiKaydet: React.FC<AramayiKaydetProps> = ({
 
   return (
     <div className="w-full space-y-3 rounded-2xl border border-gray-200 bg-white p-4">
+      {/*
+        NE KAYDEDİLİYOR, NE KAYDEDİLMİYOR — AÇIKÇA
+
+        Aktif bir filtrenin sessizce yok sayılması, kullanıcının
+        kaydettiğini sandığı aramadan farklı bir e-posta almasıydı.
+        Dışarıda kalanlar da yazılıyor: ikisi sunum kararı (uyum eşiği,
+        görünüm sekmesi), biri listeye özel bir kova (şehirde "diğer").
+      */}
+      <div className="rounded-xl bg-gray-50 p-3">
+        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">
+          Kaydedilecek filtreler
+        </p>
+        <ul className="mt-1 space-y-0.5 text-xs text-gray-800">
+          {kaydedilenler(filtreler).map((satir) => (
+            <li key={satir} className="break-words">
+              · {satir}
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 text-[11px] leading-relaxed text-gray-600">
+          Kaydedilmeyenler: {KAYDEDILMEYEN_FILTRELER.join(', ')}. Bunlar listeyi nasıl
+          sıraladığını/gösterdiğini belirliyor, hangi ilanların uyduğunu değil.
+        </p>
+      </div>
+
       <label className="block text-sm font-semibold text-gray-800" htmlFor="arama-adi">
         Aramaya bir ad ver <span className="font-normal text-gray-600">(isteğe bağlı)</span>
       </label>
