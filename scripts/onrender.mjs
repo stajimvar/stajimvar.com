@@ -2199,14 +2199,29 @@ function siteHaritasiniUzlastir() {
     return;
   }
 
-  /* Yalnız bu betiğin ürettiği aileler. */
-  const AILELER = ['/ilan/', '/sirket/', '/bolum/', '/rehber/'];
+  /*
+    Yalnız bu betiğin ürettiği aileler.
+
+    `/firsatlar/` ve `/kesfet/` EKLENDİ. Önce dışarıda bırakılmışlardı
+    ("sitemap.py'ın bileceği işler") ama ölçüm başka şey gösterdi
+    (canlı, 14 Eylül 2026):
+
+      /kesfet/     haritada 99 adres, hepsi 301 alıyor — bölüm 11
+                   Eylül'de kapandı
+      /firsatlar/  haritada 116 adres, üretilen sayfa 110; aradaki
+                   kayıtların bir kısmı HTTP 404 veriyor
+
+    Bu iki aileyi de bu betik üretiyor (`YAZILAN_ADRESLER` içinde), yani
+    hangisinin sayfası olduğunu burada KESİN biliyoruz. Kaynaktaki
+    üretici de düzeltildi (automation/sitemap.py); buradaki uzlaştırma,
+    saatlik iş koşana kadar dağıtılan kopyayı doğru tutuyor.
+  */
+  const AILELER = ['/ilan/', '/sirket/', '/bolum/', '/rehber/', '/firsatlar/', '/kesfet/'];
   const aileninMi = (yol) => AILELER.some((a) => yol.startsWith(a));
 
   const bizim = new Set([...YAZILAN_ADRESLER].filter(aileninMi));
 
   let xml = fs.readFileSync(harita, 'utf8');
-  const bugun = new Date().toISOString().slice(0, 10);
 
   /* Haritada duran, bize ait adresler. */
   const mevcut = new Map();
@@ -2227,14 +2242,30 @@ function siteHaritasiniUzlastir() {
   const fazla = [...mevcut.keys()].filter((y) => !bizim.has(y));
   for (const y of fazla) xml = xml.replace(mevcut.get(y), '');
 
-  /* Yazılmış ama haritada olmayan adresler giriyor. */
+  /*
+    Yazılmış ama haritada olmayan adresler giriyor.
+
+    LASTMOD YAZILMIYOR — BİLEREK
+
+    Önce `bugun` damgalanıyordu. Ama bu tarih sayfanın İÇERİĞİNİN
+    değiştiği gün değil, DERLEMENİN koştuğu gün: her dağıtımda aynı
+    adresler yeniden eklenip yeniden damgalanıyordu (ölçüldü: her
+    derlemede "+169 eklendi" ve canlı haritada 169 adres o günün
+    tarihiyle). Arama motoruna "bu sayfa bugün değişti" demek, değişmediği
+    hâlde tekrar taranmasını istemek ve sinyali değersizleştirmek.
+
+    Eksik alan, YANLIŞ alandan iyidir: `lastmod` yoksa arama motoru
+    kendi ölçümünü kullanıyor. Gerçek tarih ancak içeriğin kaynağından
+    (`updated_at`) gelebilir ve onu üretici biliyor — bu uzlaştırma
+    değil.
+  */
   const eksik = [...bizim].filter((y) => !mevcut.has(y));
   if (eksik.length) {
     const oncelik = (yol) => (yol.startsWith('/ilan/') ? '0.8' : '0.6');
     const yeni = eksik
       .map(
         (yol) =>
-          `<url><loc>${SITE}${yol}</loc><lastmod>${bugun}</lastmod>` +
+          `<url><loc>${SITE}${yol}</loc>` +
           `<changefreq>weekly</changefreq><priority>${oncelik(yol)}</priority></url>`
       )
       .join('');
