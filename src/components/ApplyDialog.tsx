@@ -207,7 +207,7 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
                   : 'text-white bg-blue-600 hover:bg-blue-700'
               }`}
             >
-              {rizaGerekli ? 'İlana git' : 'Resmî sitede başvur'}
+              {rizaGerekli ? 'İlana git' : 'Şirket sayfasında başvur'}
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           )}

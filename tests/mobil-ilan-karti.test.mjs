@@ -116,3 +116,21 @@ test('rozetler sarıyor, metin kırpılmıyor', () => {
   */
   assert.match(KART, /flex min-w-0 flex-wrap items-center gap-1\.5 text-xs/);
 });
+
+test('başvuru yöntemine göre ana düğme', () => {
+  /*
+    "Resmî site" hangi site olduğunu söylemiyor: öğrenci StajımVar'ı da
+    resmî sayabilir. Düğme başvurunun NEREDE yapılacağını söylemeli.
+  */
+  const YOL = oku('src/lib/basvuru-yolu.mjs');
+  assert.match(YOL, /anaEtiket: 'Şirket sayfasında başvur'/);
+  /* internal ve email_application mevcut platform içi işlemi
+     kullanmaya devam ediyor — ikisi de "StajımVar ile Başvur". */
+  assert.equal((YOL.match(/anaEtiket: 'StajımVar ile Başvur'/g) || []).length, 2);
+  /* Adres yoksa yapılabilecek tek şey kaydı tutmak. */
+  assert.match(YOL, /anaEtiket: 'Başvurduğumu işaretle'/);
+  /* Aynı etiket diyalogda da tutarlı. */
+  assert.match(oku('src/components/ApplyDialog.tsx'), /'Şirket sayfasında başvur'/);
+  /* İlan bildir bağlantısı korunuyor. */
+  assert.match(oku('src/components/InternshipDetailModal.tsx'), /Bu ilanı bildir/);
+});
