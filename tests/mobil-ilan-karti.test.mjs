@@ -2,6 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 
+/* Kart ve detayın PAYLAŞTIĞI kararlar — gerçekten çalıştırılıyor. */
+import {
+  sigortaMetni,
+  stajTuruRozeti,
+  stajTuruSatirlari,
+  ucretMetniHesapla,
+} from '../src/lib/staj-turu.mjs';
+
 /**
  * MOBİL İLAN KARTI — BİLGİ DOĞRULUĞU
  *
@@ -46,11 +54,45 @@ test('sigorta sağlayanı yalnız biliniyorsa görünüyor', () => {
   assert.match(TIPLER, /insuranceProvider\?: 'isveren' \| 'universite' \| 'aday' \| 'yok';/);
 });
 
-test('gönüllü staj rozeti zorunluyla çakışmıyor', () => {
-  assert.match(
-    KART,
-    /!listing\.mandatoryStajAccepted && listing\.voluntaryStajAccepted && \(/
+test('zorunlu ve gönüllü birlikte true olduğunda ikisi de kaybolmuyor', () => {
+  /*
+    ÖNCEKİ HÂL BİR KUSURDU: gönüllü rozetini yalnız zorunlu YOKKEN
+    çiziyordum. Ölçüldü (14 Eylül 2026, üretim): 175 ilanın 122'sinde
+    ikisi de true — yani o kural 122 ilanda gönüllü bilgisini
+    gizliyordu.
+
+    Kural artık ortak dosyada ve gerçekten çalıştırılıyor.
+  */
+  assert.equal(
+    stajTuruRozeti({ mandatoryStajAccepted: true, voluntaryStajAccepted: true }),
+    'Zorunlu ve gönüllü staj'
   );
+  assert.equal(
+    stajTuruRozeti({ mandatoryStajAccepted: true, voluntaryStajAccepted: null }),
+    'Zorunlu Staj (SGK)'
+  );
+  assert.equal(
+    stajTuruRozeti({ mandatoryStajAccepted: null, voluntaryStajAccepted: true }),
+    'Gönüllü staj'
+  );
+  /* İkisi de bilinmiyorsa rozet YOK. */
+  assert.equal(stajTuruRozeti({ mandatoryStajAccepted: null, voluntaryStajAccepted: null }), null);
+  /* Açık RET gerçek bilgi. */
+  assert.equal(
+    stajTuruRozeti({ mandatoryStajAccepted: false, voluntaryStajAccepted: null }),
+    'Zorunlu staj kabul etmiyor'
+  );
+  /* Detayda BİLİNEN İKİ BİLGİ DE ayrı satırda. */
+  assert.deepEqual(
+    stajTuruSatirlari({ mandatoryStajAccepted: true, voluntaryStajAccepted: false }),
+    [
+      { etiket: 'Zorunlu staj', deger: 'Kabul ediliyor' },
+      { etiket: 'Gönüllü staj', deger: 'Kabul edilmiyor' },
+    ]
+  );
+  assert.deepEqual(stajTuruSatirlari({}), []);
+  /* Kart tek kompakt rozet çiziyor. */
+  assert.match(KART, /\{stajTuruRozeti\(listing\)\}/);
 });
 
 test('doğrulama bilgisi source_verified_at üzerinden', () => {
@@ -98,8 +140,7 @@ test('rozetler sarıyor, metin kırpılmıyor', () => {
     orada DOĞRU. Kontrol rozetlerin kendisine daraltıldı.
   */
   const rozetler = [
-    'Zorunlu Staj (SGK)',
-    'Gönüllü staj',
+    'stajTuruRozeti(listing)',
     'Ücretsiz',
     'SIGORTA_ETIKET[listing.insuranceProvider]',
   ];

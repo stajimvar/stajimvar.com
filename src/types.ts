@@ -150,8 +150,20 @@ export interface InternshipListing {
   originalLanguage?: string;
   internationalApplicants?: boolean;
   visaSponsorship?: boolean;
-  mandatoryStajAccepted: boolean; // Zorunlu staj kabul ediliyor mu
-  voluntaryStajAccepted: boolean;
+  /*
+    STAJ TÜRÜ KABULÜ — ÜÇ DEĞER
+
+      true  kaynakta açık kabul ifadesi
+      false kaynakta açık RET ifadesi
+      null  kaynak söylemiyor
+
+    İKİSİ BİRBİRİNİ DIŞLAMIYOR: bir ilan hem zorunlu hem gönüllü staj
+    kabul edebilir (ölçüldü: üretimde 122 ilanda ikisi de true).
+    Önce `boolean` idi ve sütun `not null default true` olduğu için
+    "bilinmiyor" ile "kabul ediyor" ayrılamıyordu (göç 20261005010000).
+  */
+  mandatoryStajAccepted: boolean | null;
+  voluntaryStajAccepted: boolean | null;
   stipend: {
     /*
       UC DEGER, UC ANLAM
