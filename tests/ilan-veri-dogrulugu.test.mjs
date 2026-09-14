@@ -69,7 +69,11 @@ test('kariyer adaptörü artık sabit False yazmıyor', () => {
   */
   assert.ok(!/"is_paid": False/.test(KARIYER), 'sabit False geri gelmemeli');
   assert.match(KARIYER, /"is_paid": detect_paid\(/);
-  assert.match(KARIYER, /from automation\.promote import detect_paid/);
+  /* İçe alma satırı büyüdü: aynı dosyadan üç dedektör geliyor. */
+  assert.match(KARIYER, /from automation\.promote import .*detect_paid/);
+  /* Staj türü kabulü de sabit değer değil, dedektörden. */
+  assert.match(KARIYER, /"mandatory_staj_accepted": detect_mandatory_staj\(/);
+  assert.match(KARIYER, /"voluntary_staj_accepted": detect_voluntary_staj\(/);
 });
 
 test('düzeltme betiği körlemesine null yapmıyor', () => {

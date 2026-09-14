@@ -133,7 +133,18 @@ test('BOŞ META SATIRI ÇİZİLMİYOR — "Kaynakta belirtilmemiş" tekrarı kal
 
 test('karar için gereken bilgi eksikse TEK dürüst not var', () => {
   assert.match(detay, /const eksikBilgiNotu =/);
-  assert.match(detay, /Süre ve ödeme bilgisi resmî kaynakta açıklanmamış\./);
+  /*
+    ÖDEME NOTU KALDIRILDI: "resmî kaynakta açıklanmamış" cümlesi
+    kaynağı incelediğimizi VE kaynağın susduğunu iddia ediyordu;
+    `is_paid = null` ikisini de söylemiyor. Süre notu kaldı — o alan
+    kaynağın kendi cümlesinden geliyor ve boş olması gerçekten
+    "kaynakta yok" demek.
+  */
+  assert.match(detay, /Süre bilgisi resmî kaynakta açıklanmamış\./);
+  assert.ok(
+    !/Ödeme bilgisi resmî kaynakta açıklanmamış\.'/.test(detay),
+    'ödeme notu üretilmemeli'
+  );
   /* Not tek satır: üç ayrı kutuda üç kez tekrar etmiyor. */
   const kez = (detay.match(/\{eksikBilgiNotu && /g) || []).length;
   assert.equal(kez, 1, 'not yalnızca bir kez basılmalı');

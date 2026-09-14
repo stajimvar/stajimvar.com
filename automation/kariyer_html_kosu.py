@@ -28,7 +28,7 @@ import requests
 
 from automation import repository
 from automation.country_normalization import infer_country_code
-from automation.promote import detect_paid
+from automation.promote import detect_mandatory_staj, detect_paid, detect_voluntary_staj
 from automation.kariyer_html import HamIlan, kariyer_sayfasini_oku
 from automation.radar_cozucu import sadelestir
 from automation.radar_cozum import eslesme_guveni
@@ -212,8 +212,15 @@ def _yayinla(db, aday: Aday, kaynak_id: str, sayac: Counter) -> Aday:
         "work_type": "On-site",
         "city": aday.konum,
         "country_code": infer_country_code(location=aday.konum, title=aday.baslik),
-        "mandatory_staj_accepted": False,
-        "voluntary_staj_accepted": True,
+        # SABIT DEGERLER KALDIRILDI
+        #
+        # `False` / `True` yaziliyordu ve ikisi de tahmin: bu adaptor
+        # kariyer sayfasindan derliyor ve sayfa staj turu kabulunu
+        # genellikle hic soylemiyor. Ayni dedektorler kullaniliyor;
+        # kanit yoksa None yaziliyor ve sutunlar null kabul ediyor
+        # (goc 20261005010000).
+        "mandatory_staj_accepted": detect_mandatory_staj(aday.aciklama)[0],
+        "voluntary_staj_accepted": detect_voluntary_staj(aday.aciklama),
         # ONCE SABIT False YAZIYORDU: kariyer sayfasindan derlenen ilanin
         # ucret bilgisi hic BAKILMADAN "ucretsiz" kaydediliyordu. Bu
         # adaptor aciklama metnini tasiyor, yani kanit elde var; kanit

@@ -210,17 +210,21 @@ export const ListingPage: React.FC<ListingPageProps> = ({
   const bicimMetni = listing?.workType ? calismaEtiketi(listing.workType) : null;
 
   /*
-    Not yalnızca ikisi de eksikse tek cümle; biri varsa eksik olanı
-    adıyla söylüyor. Hiçbiri eksik değilse not hiç çıkmıyor.
+    ÖDEME NOTU KALDIRILDI — null "İNCELENDİ VE YAZILMAMIŞ" DEMİYOR
+
+    "Ödeme bilgisi resmî kaynakta açıklanmamış" cümlesi iki iddia
+    taşıyordu: kaynağı inceledik, ve kaynak bunu açıklamamış.
+    `is_paid = null` bunların HİÇBİRİNİ söylemiyor — yalnız "bizde bu
+    bilgi yok" demek. 168 ilanda null olduğu için bu cümle envanterin
+    neredeyse tamamında doğrulanmamış bir iddiaydı.
+
+    Ücret bilinmiyorsa alan TAMAMEN gizleniyor; cümle de yok.
+
+    SÜRE NOTU KALIYOR: `duration` serbest metin ve boş olması gerçekten
+    "kaynakta yok" demek — içe aktarıcı onu kaynağın kendi cümlesinden
+    alıyor, varsayılan üretmiyor.
   */
-  const eksikBilgiNotu =
-    !sureMetni && !ucretMetni
-      ? 'Süre ve ödeme bilgisi resmî kaynakta açıklanmamış.'
-      : !sureMetni
-        ? 'Süre bilgisi resmî kaynakta açıklanmamış.'
-        : !ucretMetni
-          ? 'Ödeme bilgisi resmî kaynakta açıklanmamış.'
-          : null;
+  const eksikBilgiNotu = !sureMetni ? 'Süre bilgisi resmî kaynakta açıklanmamış.' : null;
   const [metinAcik, setMetinAcik] = useState(false);
 
   return (

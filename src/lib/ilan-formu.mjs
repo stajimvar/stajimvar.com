@@ -40,9 +40,23 @@ export const STAJ_TURLERI = [
   { id: 'yaz', etiket: 'Yaz stajı' },
 ];
 
+/*
+  ÜCRET SEÇENEKLERİ — DÖRT, ÇÜNKÜ ÜÇ DEĞER VAR
+
+  Önce üç seçenek vardı ve "Belirtilmeyecek" `is_paid: false` olarak
+  kaydediliyordu: açıklamamayı "ücretsiz" beyanı saymak. Üstelik
+  gerçekten ücretsiz staj veren şirketin bunu söyleyeceği bir seçenek
+  YOKTU.
+
+  Artık üç değer üç seçenekten geliyor:
+    asgari / net      → is_paid = true
+    ucretsiz          → is_paid = false  (şirketin AÇIK beyanı)
+    belirtilmeyecek   → is_paid = null   (bilinmiyor)
+*/
 export const UCRET_SECENEKLERI = [
   { id: 'asgari', etiket: 'Asgari staj ücreti' },
   { id: 'net', etiket: 'Net tutar yazacağım' },
+  { id: 'ucretsiz', etiket: 'Ücretsiz staj' },
   { id: 'belirtilmeyecek', etiket: 'Belirtilmeyecek' },
 ];
 
@@ -163,11 +177,36 @@ export function ilanSatiri(deger, { companyId, durum }) {
     title: metin(deger.unvan),
     city: metin(deger.sehir),
     work_type: deger.calismaSekli,
-    mandatory_staj_accepted: tur === 'zorunlu' || tur === 'yaz',
-    voluntary_staj_accepted: tur === 'gonullu' || tur === 'uzun',
+    /*
+      ILANIN "STAJ TURU" ILE SIRKETIN "HANGI STAJLARI KABUL ETTIGI"
+      AYNI ALAN DEGIL
+
+      Form tek bir "staj turu" soruyor ve bu iki alan ondan
+      TURETILIYORDU: `tur === 'zorunlu'` ise mandatory true, degilse
+      false. Ama "yaz stajı" secmek, sirketin zorunlu staj kabul
+      ETMEDIGI anlamina gelmez -- tek secim oteki tur icin RET kaniti
+      degil.
+
+      Form bu iki bilgiyi AYRI AYRI sormadigi surece buraya tahmin
+      yazilmiyor: ikisi de `null` gidiyor ve arayuz "bilinmiyor"
+      gosteriyor. Form gelecekte Evet / Hayir / Belirtilmedi olarak
+      sorarsa degerler oradan gelir.
+
+      `term` DEGISMEDI: o gercekten ilanin donemi ve formun sordugu sey.
+    */
+    mandatory_staj_accepted: null,
+    voluntary_staj_accepted: null,
     term: tur === 'yaz' ? 'Summer 2026' : tur === 'uzun' ? 'Long-term 2026' : 'All Year',
     duration: metin(deger.sure),
-    is_paid: deger.ucret !== 'belirtilmeyecek',
+    /*
+      ÜÇ DEĞER — "Belirtilmeyecek" ÜCRETSİZ DEĞİL
+
+      `deger.ucret !== 'belirtilmeyecek'` yazıyordu, yani açıklamamak
+      "ücretsiz" olarak kaydediliyordu. Şirketin bilgi vermemesi, staj
+      hakkında bir beyan değil.
+    */
+    is_paid:
+      deger.ucret === 'ucretsiz' ? false : deger.ucret === 'belirtilmeyecek' ? null : true,
     stipend_text:
       deger.ucret === 'asgari'
         ? 'Asgari staj ücreti'
@@ -220,7 +259,21 @@ export function ilanFormDegeri(satir) {
         : 'gonullu';
 
   const odeme = metin(satir?.stipend_text);
-  const ucret = !satir?.is_paid ? 'belirtilmeyecek' : odeme === 'Asgari staj ucreti' || odeme === 'Asgari staj ücreti' ? 'asgari' : 'net';
+  /*
+    GERİ ÇEVİRİM DE ÜÇ DEĞERLİ
+
+    `!satir?.is_paid` hem false hem null'u "belirtilmeyecek"e
+    düşürüyordu: şirketin "ücretsiz" beyanı formu yeniden açınca
+    kayboluyordu.
+  */
+  const ucret =
+    satir?.is_paid === false
+      ? 'ucretsiz'
+      : satir?.is_paid == null
+        ? 'belirtilmeyecek'
+        : odeme === 'Asgari staj ucreti' || odeme === 'Asgari staj ücreti'
+          ? 'asgari'
+          : 'net';
 
   return {
     unvan: metin(satir?.title),
