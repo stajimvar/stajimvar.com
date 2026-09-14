@@ -98,13 +98,41 @@ test('yayın isteği öncesi veri Instagram kurallarını geçiyor', () => {
   }
 });
 
-test('eski setlerin görselleri diskte duruyor — kayıt silinmedi', () => {
+test('eski set kaydı silinmedi: üreticisi ve testi yerinde', () => {
   /*
-    Manifest iki haftalık takvime daraltıldı ama eski setlerin
-    DOSYALARI silinmedi. "Kayıtları silme" kuralı böyle karşılanıyor:
-    panel görünümü daraldı, varlıklar yerinde.
+    İDDİAMI DÜZELTİYORUM — CI YAKALADI
+
+    Önce `public/paylasim/staj-sigortasi/` klasörünün diskte durduğunu
+    iddia ediyordum ve o klasör DEPODA İZLENMİYOR: yerel çalışma
+    ağacımdaki bir artıktı (PR #57'deki birleşimimden). CI'da klasör
+    yok ve test haklı olarak kırmızı döndü.
+
+    "Kayıt silinmedi" güvencesinin gerçek dayanağı klasör değil
+    ÜRETİCİ: `scripts/paylasim-staj-sigortasi.mjs` duruyor ve kendi
+    testi setini manifeste ekleyip görsellerini üretiyor. Panel
+    görünümü iki haftalık takvime daraldı; set kaybolmadı, istendiğinde
+    yeniden üretiliyor.
   */
-  const eski = path.join(kok, 'public', 'paylasim', 'staj-sigortasi');
-  assert.ok(fs.existsSync(eski), 'eski set görselleri korunmalı');
-  assert.equal(fs.readdirSync(eski).filter((a) => a.endsWith('.jpg')).length, 4);
+  assert.ok(
+    fs.existsSync(path.join(kok, 'scripts', 'paylasim-staj-sigortasi.mjs')),
+    'eski setin üreticisi korunmalı'
+  );
+  assert.ok(
+    fs.existsSync(path.join(kok, 'tests', 'staj-sigortasi-set.test.mjs')),
+    'eski setin testi korunmalı'
+  );
+
+  /*
+    Asıl korunması istenen şey takvimin kendi dosyaları: 28 set × 4
+    kart = 112 görsel. Hepsi DEPODA izlenir olmalı, yoksa CI'da
+    aktarım kırılır.
+  */
+  const tumKartlar = setler.flatMap((set) => set.kartlar ?? []);
+  assert.equal(tumKartlar.length, 112, 'takvimin 112 görseli');
+  for (const kart of tumKartlar) {
+    assert.ok(
+      fs.existsSync(path.join(kok, 'public', kart.replace(/^\//, ''))),
+      `${kart} diskte olmalı`
+    );
+  }
 });
