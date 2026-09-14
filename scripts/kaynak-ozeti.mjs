@@ -47,6 +47,13 @@ const SISTEM_ADI = {
   workday: 'Workday',
   smartrecruiters: 'SmartRecruiters',
   official_jsonld: 'Şirketin kendi kariyer sayfası',
+  /*
+    `kurumsal_html` de şirketin KENDİ sayfası: ikisi aynı iddiayı
+    taşıyor ("ilanı sahibinden okuduk"), farkı yalnız sayfanın yapısal
+    veri yayınlayıp yayınlamaması. Okuyucuya iki ayrı satır göstermek
+    teknik bir ayrımı ürün diline sızdırmak olurdu.
+  */
+  kurumsal_html: 'Şirketin kendi kariyer sayfası',
 };
 
 export function kaynakOzeti(kayitlar) {

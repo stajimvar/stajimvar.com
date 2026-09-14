@@ -8,12 +8,12 @@ kontrolümüzde. İkisi aynı dosyada olsaydı şema her değiştiğinde çalı�
 adaptörleri riske atardık.
 """
 from __future__ import annotations
-import hashlib, json, os, re, unicodedata
+import hashlib, json, os, re, time, unicodedata
 from dataclasses import dataclass, replace
 from html import unescape
 from html.parser import HTMLParser
 from typing import Any, Iterable
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urljoin, urlsplit, urlunsplit
 import feedparser, requests
 from translation import translate_text, translate_title
 
@@ -221,6 +221,136 @@ def official_jsonld(config: dict[str, Any]) -> Iterable[Job]:
                     company_website=organization.get("sameAs"),
                     company_logo=organization.get("logo"),
                 )
+
+class _Baglantilar(HTMLParser):
+    """Sayfadaki tum href'leri toplar."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.hrefs: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        if tag != "a":
+            return
+        for ad, deger in attrs:
+            if ad == "href" and deger:
+                self.hrefs.append(deger)
+
+
+class _GorunurMetin(HTMLParser):
+    """Betik ve stil disindaki metni toplar."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.parcalar: list[str] = []
+        self._atla = 0
+        self.baslik: str | None = None
+        self._h1 = False
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        if tag in {"script", "style", "noscript"}:
+            self._atla += 1
+        elif tag == "h1":
+            self._h1 = True
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in {"script", "style", "noscript"} and self._atla:
+            self._atla -= 1
+        elif tag == "h1":
+            self._h1 = False
+
+    def handle_data(self, veri: str) -> None:
+        if self._atla:
+            return
+        if self._h1 and self.baslik is None:
+            metin = clean(veri)
+            if metin:
+                self.baslik = metin
+        self.parcalar.append(veri)
+
+    @property
+    def metin(self) -> str:
+        return clean(" ".join(self.parcalar))
+
+
+def kurumsal_html(config: dict[str, Any]) -> Iterable[Job]:
+    """Kurumun kendi sitesindeki ilan sayfalarini okur.
+
+    Yapilandirma:
+      list_url          ilan listesinin adresi
+      job_url_pattern   TEK ILANA giden adres kalibi (regex)
+      company_name      ilan sahibi
+      max_jobs          bir kosuda en fazla kac ilan sayfasi (varsayilan 40)
+
+    UCUNCU TARAFIN SUNUCUSUNA SAYGI: ilan sayfalari SIRAYLA ve arada
+    bekleyerek cagriliyor; ust sinir var. Engel (401/403/429) gorulurse
+    o kaynak BIRAKILIYOR -- asilmiyor.
+    """
+    liste_adresi = config.get("list_url")
+    kalip_metni = config.get("job_url_pattern")
+    if not liste_adresi or not kalip_metni:
+        return
+    kalip = re.compile(kalip_metni)
+    basliklar = {"User-Agent": "StajimVarJobs/1.0 (+https://stajimvar.com/bot)"}
+
+    yanit = requests.get(liste_adresi, timeout=25, headers=basliklar)
+    if yanit.status_code in {401, 403, 429}:
+        # Engeli asmak bu projenin isi degil: kaynak sessizce birakiliyor.
+        return
+    yanit.raise_for_status()
+
+    ayirici = _Baglantilar()
+    ayirici.feed(yanit.text)
+
+    adresler: list[str] = []
+    gorulen: set[str] = set()
+    for href in ayirici.hrefs:
+        tam = urljoin(liste_adresi, href.strip())
+        # Kirik kacis dizileri (%0D%0A) ayni ilani ikiye bolerdi.
+        tam = tam.split("%0D")[0].split("#")[0].rstrip("/")
+        if not kalip.search(tam) or tam in gorulen:
+            continue
+        gorulen.add(tam)
+        adresler.append(tam)
+
+    ust_sinir = int(config.get("max_jobs") or 40)
+    for adres in adresler[:ust_sinir]:
+        try:
+            sayfa = requests.get(adres, timeout=25, headers=basliklar)
+            if sayfa.status_code in {401, 403, 429}:
+                return
+            sayfa.raise_for_status()
+        except requests.RequestException:
+            # Tek bir ilanin okunamamasi kaynagi dusurmemeli.
+            continue
+        finally:
+            time.sleep(float(config.get("crawl_delay_seconds") or 1.5))
+
+        okuyucu = _GorunurMetin()
+        okuyucu.feed(sayfa.text)
+        baslik = okuyucu.baslik or ""
+        aciklama = okuyucu.metin[:12000]
+        if not baslik:
+            continue
+
+        # STAJ/YENI MEZUN OLMAYAN POZISYON ALINMIYOR: kurumun listesinde
+        # 20 ilan olup hicbiri staj degilse sonuc 0 olur.
+        if not is_early_career(baslik, aciklama):
+            continue
+
+        sehir = config.get("city_hint")
+        yield Job(
+            config["name"],
+            adres,
+            baslik,
+            config.get("company_name"),
+            sehir,
+            mode(f"{baslik} {aciklama}"),
+            aciklama,
+            email(aciklama),
+            company_website=config.get("website"),
+        )
+
 
 def greenhouse(config: dict[str, Any]) -> Iterable[Job]:
     """Greenhouse resmî Job Board API: yalnızca yayımlanmış iş panoları."""
@@ -561,4 +691,5 @@ ADAPTERS = {
     "personio": personio,
     "recruitee": recruitee,
     "official_jsonld": official_jsonld,
+    "kurumsal_html": kurumsal_html,
 }
