@@ -9,12 +9,13 @@ Bu belge bir sonraki Claude'un bağlamsız başlaması için yazıldı. Yalnız
 
 | | |
 |---|---|
-| main commit | `8561ac6` — "Detay sayfasi da \"aciklanmadi\" demiyor: kacirdigim sabit dize (#100)" |
-| Canlı | https://stajimvar.com — Cloudflare Pages, son dağıtım success |
+| main commit | `06e11b0` — "Dagitim engeli: manifestten turetilen sayilar + CLI surumu sabit (#102)" |
+| Canlı | https://stajimvar.com — Cloudflare Pages, son dağıtım success (`cloudflare_production` yeşil) |
 | Veritabanı | Supabase, proje `gdumgdgwlfnohkaucfow` (Frankfurt) |
-| Test | `1770` test; **1766 geçiyor, 4 kırmızı** — dördü de benim değişikliklerimle ilgisiz (bkz. §9) |
+| Test | **1770 test, 1770 geçiyor, çıkış kodu 0** |
 | Tip denetimi | `src` ve `functions` tsc temiz |
 | Ön render | 568 sayfa |
+| CI | Sürüm hattının 5 işi + disposable security tests + schema audit: **hepsi yeşil** |
 
 **Canlı ölçümler (15 Eylül 2026):**
 
@@ -46,6 +47,8 @@ Son turlarda kapanan işler (hepsi canlıda doğrulanmış):
 | Kesin kapanış eşiği ayrıldı | #97, #98 | — |
 | **Fırsat kapanış güvenliği (24 saat) + tutar satırı** | #99 | `20261009010000_firsat_kapanis_guvenligi` |
 | Detay sayfası tutar ifadesi | #100 | — |
+| Devir belgesi | #101 | — |
+| **Dağıtım engeli: türetilen sayılar + CLI sürümü sabit** | #102 | — |
 
 ### Bu turda düzeltilen iki şey (ayrıntı)
 
@@ -201,6 +204,10 @@ engeli aşılmıyor.
 > **Görev:** İlan onay/ret kararını mevcut Resend + kuyruk altyapısına
 > bağla.
 
+> Dağıtım engeli **kalktı** (#102): üç Instagram testindeki sabit
+> 28/112 sayıları manifestten türetiliyor ve `setup-cli` sürümü dört
+> iş akışında da sabit. CI'nin bütün zorunlu işleri yeşil.
+
 Neden bu: `/isveren` sayfası ve ilan formu şu an kararın **panelde**
 göründüğünü söylüyor, çünkü e-posta bağlı değil ve bağlanmamış bir
 davranışa söz vermedim. Şirket kararı öğrenmek için panele girmek
@@ -305,14 +312,29 @@ kendi** test kayıtlarını temizle.
 
 ## 10. Bilinen somut engeller
 
-**Üç Instagram testi kırmızı ve benim işimle ilgisiz.**
-`tests/instagram-panel-aktarimi.test.mjs` ve
-`tests/instagram-ikinci-hafta...` — temiz `origin/main`'de de kırmızı
-(ölçtüm: 2 geçti / 2 düştü). Başka bir çalışmanın
-`public/paylasim/setler.json` manifestine ait; çalışma ağacında o işe
-ait izlenmeyen klasörler var. **Dokunmadım** ve sen de kimin olduğunu
-doğrulamadan dokunma. Muhtemel sebep: manifesti değiştirip geri
-yazmayan bir test ya da commit edilmemiş yerel kopya.
+**~~Üç Instagram testi kırmızı~~ — ÇÖZÜLDÜ (#102).** Sebep: takvime
+üçüncü ve dördüncü hafta eklenmiş (manifest 28 → 36 set) ama testler
+`setler.length === 28` ve `tumKartlar.length === 112` diye sabit sayı
+taşıyordu; `instagram-takvim-2026-09-22` ayrıca `slice(14)` ile
+manifestin tam 28 set olduğunu varsayıyordu. Sayılar artık manifestten
+türetiliyor (`set × 4`) ve her kartın diskte olduğu tek tek ölçülüyor.
+`setler.json` ve 144 görsele dokunulmadı. Ölçüm: 36 set · 144 kart ·
+144 tekil · diskte eksik 0 · depoda izlenmeyen 0.
+
+> **Ders:** takvime set eklemek dağıtımı kilitliyordu. Yeni hafta
+> eklerken sabit sayı iddiası yazma; manifestten türet.
+
+**~~`security_regression` kırmızı~~ — ÇÖZÜLDÜ (#102) ve Instagram'la
+ilgisi yoktu.** Gerçek log:
+`Failed to resolve latest Supabase CLI release: rate limit exceeded`
+→ CLI hiç kurulmadı → `supabase: command not found` (exit 127). Sürüm
+etiketi `latest` bırakıldığında setup-cli her koşuda GitHub release
+API'sini sorguluyor. Dört iş akışında da sürüm `2.117.0`'a sabitlendi.
+Güvenlik kontrolü kapatılmadı.
+
+> **Ders:** iş adı yanıltıcıydı — "security_regression" kırmızıydı ama
+> güvenlik kontrolünde sorun yoktu, kurulum adımı düşmüştü. Kırmızı bir
+> işin adına göre değil **logune** göre karar ver.
 
 **`service_role` yerelde yok.** Canlı yazma gerektiren her şey (yeni
 fırsat ekleme, test şirketi kurma, veri düzeltme) GitHub Actions'ta
