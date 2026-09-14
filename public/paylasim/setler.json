@@ -614,5 +614,181 @@
       "/paylasim/2026-09-28-2030-haftalik-dersler/03-v1.jpg",
       "/paylasim/2026-09-28-2030-haftalik-dersler/04-v1.jpg"
     ]
+  },
+  {
+    "kod": "2026-09-29-1230-basvuru-formu",
+    "ad": "29 Eylül 2026 Salı • 12.30 • Başvuru formundaki açık uçlu sorular",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Başvuru formundaki açık uçlu sorular, şirketi ne kadar övdüğünü değil rol ile arandaki bağı görmeye yarar. Kurumun resmî kaynaklarında gerçekten gördüğün bir çalışma alanını seç, bu rolde öğrenmek istediğin somut görevi belirt ve hazırlığını gösteren kısa bir örnek ekle. Her şirkete gönderilebilecek genel cümleleri çıkar; yapmadığın araştırmayı veya sahip olmadığın deneyimi yazma.",
+    "etiketler": [
+      "#başvuruformu",
+      "#stajbaşvurusu",
+      "#kariyer",
+      "#öğrenci",
+      "#işarama",
+      "#ilkstaj",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-09-29-1230-basvuru-formu/01-v1.jpg",
+      "/paylasim/2026-09-29-1230-basvuru-formu/02-v1.jpg",
+      "/paylasim/2026-09-29-1230-basvuru-formu/03-v1.jpg",
+      "/paylasim/2026-09-29-1230-basvuru-formu/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-09-29-2030-cv-dosya-adi",
+    "ad": "29 Eylül 2026 Salı • 20.30 • CV dosya adını profesyonel hazırlama",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "CV dosyanı göndermeden önce adını düzenle. Ad ve soyadını, belgenin CV olduğunu ve gerekiyorsa hedef rolü açıkça belirten kısa bir dosya adı kullan. “final”, “son2” veya anlamsız sayı dizileri işe alım tarafında karışıklık yaratabilir. PDF’yi ekledikten sonra dosyayı bir kez aç; doğru sürümün, çalışan bağlantıların ve güncel iletişim bilgilerinin yer aldığını kontrol et.",
+    "etiketler": [
+      "#stajcv",
+      "#cvhazırlama",
+      "#stajbaşvurusu",
+      "#kariyer",
+      "#öğrenci",
+      "#işarama",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-09-29-2030-cv-dosya-adi/01-v1.jpg",
+      "/paylasim/2026-09-29-2030-cv-dosya-adi/02-v1.jpg",
+      "/paylasim/2026-09-29-2030-cv-dosya-adi/03-v1.jpg",
+      "/paylasim/2026-09-29-2030-cv-dosya-adi/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-09-30-1230-mulakat-provasi",
+    "ad": "30 Eylül 2026 Çarşamba • 12.30 • Mülakat provasını kayda alma",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Mülakat provasında kendini kaydetmek, ne söyleyeceğini ezberlemek için değil anlatımını görmek içindir. Tek bir soruyla başla ve cevabını altmış-doksan saniyede tamamlamaya çalış. Kaydı izlerken hız, gereksiz tekrarlar ve örneğin anlaşılır olup olmadığına bak. Her denemede yalnızca bir şeyi düzelt; kusursuz görünmeye değil, doğal ve net konuşmaya odaklan.",
+    "etiketler": [
+      "#mülakatprovasi",
+      "#stajmülakatı",
+      "#iletişim",
+      "#öğrenci",
+      "#kariyer",
+      "#ilkstaj",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-09-30-1230-mulakat-provasi/01-v1.jpg",
+      "/paylasim/2026-09-30-1230-mulakat-provasi/02-v1.jpg",
+      "/paylasim/2026-09-30-1230-mulakat-provasi/03-v1.jpg",
+      "/paylasim/2026-09-30-1230-mulakat-provasi/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-09-30-2030-toplanti-hazirligi",
+    "ad": "30 Eylül 2026 Çarşamba • 20.30 • Stajda toplantıya hazırlanma",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Stajda bir toplantıya hazırlanırken gündemi ve beklenen çıktıyı önceden öğren. Kendi işinle ilgili tamamlananları, sıradaki adımı ve varsa engeli üç kısa satırda hazırla. Yanıt beklediğin konuyu net bir soruya dönüştür. Toplantı boyunca kararları ve sana verilen işleri not et; anlamadığın noktayı uygun anda sor ve sonrasında sorumluluğunu tekrar doğrula.",
+    "etiketler": [
+      "#stajdailetişim",
+      "#toplantı",
+      "#işhayatı",
+      "#stajyer",
+      "#öğrenci",
+      "#kariyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-09-30-2030-toplanti-hazirligi/01-v1.jpg",
+      "/paylasim/2026-09-30-2030-toplanti-hazirligi/02-v1.jpg",
+      "/paylasim/2026-09-30-2030-toplanti-hazirligi/03-v1.jpg",
+      "/paylasim/2026-09-30-2030-toplanti-hazirligi/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-01-1230-sorumluluk-takibi",
+    "ad": "1 Ekim 2026 Perşembe • 12.30 • Stajda sorumluluk takibi",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Stajda verilen işleri yalnızca hafızanda tutma. Görevi, beklenen çıktıyı, teslim tarihini ve durumunu tek bir listede takip et. Bir dosya, onay veya başka kişinin yanıtı gerekiyorsa bunu da görevin yanına yaz. Gecikme riski oluştuğunda son günü beklemeden haber ver; yalnız sorunu değil, ilerleyebilmek için ihtiyaç duyduğun şeyi de belirt.",
+    "etiketler": [
+      "#görevtakibi",
+      "#stajyer",
+      "#işhayatı",
+      "#verimlilik",
+      "#öğrenci",
+      "#kariyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-01-1230-sorumluluk-takibi/01-v1.jpg",
+      "/paylasim/2026-10-01-1230-sorumluluk-takibi/02-v1.jpg",
+      "/paylasim/2026-10-01-1230-sorumluluk-takibi/03-v1.jpg",
+      "/paylasim/2026-10-01-1230-sorumluluk-takibi/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-01-2030-not-alma",
+    "ad": "1 Ekim 2026 Perşembe • 20.30 • İş yerinde etkili not alma",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "İş yerinde etkili not almak, söylenen her cümleyi yazmak değildir. Tarih ve konu başlığından sonra alınan kararları, sorumluları ve tarihleri ayrı biçimde kaydet. Sana verilen görevi kendi cümlenle tekrar ederek doğru anladığını doğrula. Hassas bilgileri kişisel veya izinsiz araçlara taşımadan kurumun uygun gördüğü yerde sakla ve notlarını aynı gün kısa bir düzene sok.",
+    "etiketler": [
+      "#notalma",
+      "#stajyer",
+      "#işhayatı",
+      "#toplantı",
+      "#öğrenci",
+      "#verimlilik",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-01-2030-not-alma/01-v1.jpg",
+      "/paylasim/2026-10-01-2030-not-alma/02-v1.jpg",
+      "/paylasim/2026-10-01-2030-not-alma/03-v1.jpg",
+      "/paylasim/2026-10-01-2030-not-alma/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-02-1230-portfoy-izni",
+    "ad": "2 Ekim 2026 Cuma • 12.30 • Staj çalışmasını portföye eklemek için izin isteme",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Staj sırasında hazırladığın bir işi portföye eklemeden önce kurumun gizlilik kurallarını öğren ve açık izin iste. Paylaşmak istediğin örneği, nerede yayımlayacağını ve hangi bilgileri kaldıracağını somut biçimde göster. İzin verilmiyorsa dosyayı yayımlama; bunun yerine problemi, kendi rolünü ve öğrendiğin yöntemi gizli bilgileri açıklamadan genel dille anlat.",
+    "etiketler": [
+      "#portföy",
+      "#stajyer",
+      "#gizlilik",
+      "#kariyer",
+      "#öğrenci",
+      "#işhayatı",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-02-1230-portfoy-izni/01-v1.jpg",
+      "/paylasim/2026-10-02-1230-portfoy-izni/02-v1.jpg",
+      "/paylasim/2026-10-02-1230-portfoy-izni/03-v1.jpg",
+      "/paylasim/2026-10-02-1230-portfoy-izni/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-02-2030-haftalik-ozet",
+    "ad": "2 Ekim 2026 Cuma • 20.30 • Yöneticiye haftalık durum özeti gönderme",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Hafta sonunda yöneticine veya mentörüne kısa bir durum özeti göndermek, yaptığın işi ve ihtiyaçlarını görünür kılar. Tamamlananları, devam eden işleri ve yanıt beklediğin konuları ayrı başlıklarda yaz. Her maddeyi somut tut ve gelecek haftanın ilk adımını ekle. Kurumda farklı bir raporlama düzeni varsa onu kullan; gereksiz uzunluk yerine karar vermeyi kolaylaştıran bilgi ver.",
+    "etiketler": [
+      "#haftalıközet",
+      "#stajyer",
+      "#işhayatı",
+      "#iletişim",
+      "#öğrenci",
+      "#kariyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-02-2030-haftalik-ozet/01-v1.jpg",
+      "/paylasim/2026-10-02-2030-haftalik-ozet/02-v1.jpg",
+      "/paylasim/2026-10-02-2030-haftalik-ozet/03-v1.jpg",
+      "/paylasim/2026-10-02-2030-haftalik-ozet/04-v1.jpg"
+    ]
   }
 ]
