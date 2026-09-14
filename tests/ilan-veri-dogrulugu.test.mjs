@@ -185,3 +185,68 @@ test('geri doldurma yalnız türetileni dolduruyor', () => {
   assert.ok(!/update public\.listings\s*\n\s*set location_raw/.test(GOC));
   assert.ok(!/update public\.listings\s*\n\s*set insurance_provider/.test(GOC));
 });
+
+/* ------------------------------------------------------ TÜRKİYE KAYNAKLARI */
+
+test('kurumsal_html adaptörü kayıtlı ve genel kariyer sayfasını ilan saymıyor', () => {
+  const KAZIYICI = oku('automation/scraper.py');
+  assert.match(KAZIYICI, /"kurumsal_html": kurumsal_html,/);
+
+  const govde = KAZIYICI.slice(KAZIYICI.indexOf('def kurumsal_html('));
+  const son = govde.indexOf('\ndef greenhouse(');
+  const fn = govde.slice(0, son > 0 ? son : undefined);
+
+  /*
+    İKİ KAPI
+
+    1. Adres kalıbı: yalnız TEK İLANA giden adres alınıyor. Liste,
+       kategori ve "tüm fırsatlar" sayfaları kalıbı geçmiyor.
+    2. `is_early_career`: staj/yeni mezun olmayan pozisyon atılıyor.
+
+    Ölçüldü (14 Eylül 2026, canlı): Garanti BBVA listesinde 100 tekil
+    ilan adresi var ve hiçbiri staj değil ("Yönetmen", "Lead",
+    "Yönetici"). Adaptör 0 ilan döndürüyor — bu doğru cevap.
+  */
+  assert.match(fn, /if not kalip\.search\(tam\)/);
+  assert.match(fn, /if not is_early_career\(baslik, aciklama\)/);
+});
+
+test('erişim engeli aşılmıyor, kaynak bırakılıyor', () => {
+  const KAZIYICI = oku('automation/scraper.py');
+  const fn = KAZIYICI.slice(KAZIYICI.indexOf('def kurumsal_html('));
+  /* 401/403/429 görünce dönülüyor: başka yol denenmiyor, tekrar
+     döngüsüne girilmiyor. */
+  const dalSayisi = (fn.match(/status_code in \{401, 403, 429\}/g) || []).length;
+  assert.equal(dalSayisi, 2, 'liste ve ilan sayfası için ayrı ayrı kontrol edilmeli');
+  /* Üçüncü tarafın sunucusuna saygı: sıralı istek, bekleme, üst sınır. */
+  assert.match(fn, /time\.sleep\(float\(config\.get\("crawl_delay_seconds"\)/);
+  assert.match(fn, /adresler\[:ust_sinir\]/);
+});
+
+test('yeni kaynak mevcut global kaynakları bozmuyor', () => {
+  const kaynaklar = JSON.parse(oku('automation/sources.json'));
+  const liste = Array.isArray(kaynaklar) ? kaynaklar : Object.values(kaynaklar)[0];
+  const garanti = liste.find((k) => k.id === 'garanti-bbva-kurumsal');
+  assert.ok(garanti, 'Garanti BBVA kaynağı tanımlı olmalı');
+  assert.equal(garanti.type, 'kurumsal_html');
+  /* Kurumun KENDİ sitesi: üçüncü taraf iş panosu değil. */
+  assert.match(garanti.list_url, /^https:\/\/kariyer\.garantibbva\.com\.tr\//);
+  /* Mevcut adaptörlü kaynaklar yerinde. */
+  const tipler = new Set(liste.map((k) => k.type));
+  for (const t of ['lever', 'greenhouse', 'workable', 'workday', 'ashby', 'official_jsonld']) {
+    assert.ok(tipler.has(t), `${t} kaynakları korunmalı`);
+  }
+  /* Mükerrer kaynak yok. */
+  const idler = liste.map((k) => k.id);
+  assert.equal(new Set(idler).size, idler.length, 'kaynak id\'leri tekil olmalı');
+});
+
+test('yoklama betiği yazmıyor ve engelde bırakıyor', () => {
+  const YOKLA = oku('scripts/tr-kaynak-yokla.mjs');
+  /* Ölçüm betiği: veritabanına hiç dokunmuyor. */
+  assert.ok(!/supabase|createClient|rest\/v1/i.test(YOKLA), 'yoklama betiği veri yazmamalı');
+  assert.match(YOKLA, /ENGEL \$\{kayit\.engel\} — bırakıldı/);
+  assert.match(YOKLA, /captcha\|are you a robot/);
+  /* Kuruma en fazla bir istek, arada bekleme. */
+  assert.match(YOKLA, /await new Promise\(\(r\) => setTimeout\(r, BEKLEME_MS\)\)/);
+});
