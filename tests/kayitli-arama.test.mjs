@@ -92,21 +92,42 @@ test('is_paid=null ne ücretli ne ücretsiz filtresine giriyor', () => {
 });
 
 test('bölüm filtresi eleme yapıyor, öne çıkarma değil', () => {
-  const f = { departments: ['Bilgisayar'] };
-  assert.equal(aramaEslesiyorMu(ilan(), f), true);
+  /*
+    SÖZLÜK ÜZERİNDEN — ALT DİZE KALDIRILDI
+
+    İlk hâlde istenen bölüm metni başlık/açıklama/etiketlerde ALT DİZE
+    olarak aranıyordu. Canlıda ölçtüm:
+    `?bolum=bilgisayar-muhendisligi` HİÇBİR ilanla eşleşmiyordu —
+    "bilgisayar-muhendisligi" hiçbir başlıkta geçmiyor ve
+    `department_tags` üretimde boş. Bölüm sayfasından gelen bağlantı
+    boş liste açıyordu.
+
+    Köprü artık sözlük: slug → alan (`bolumunAlani`), metin → alan
+    (`alanEslestir`). Aynı sözlük liste, bölüm sayfası ve sıralama
+    tarafından paylaşılıyor.
+  */
+  const f = { departments: ['bilgisayar-muhendisligi'] };
+  /* Slug ile başlık aynı ALANDA buluşuyor. */
+  assert.equal(aramaEslesiyorMu(ilan({ title: 'Yazılım Stajyeri' }), f), true);
+  /* Başka alandaki ilan ELENİYOR. */
   assert.equal(
-    aramaEslesiyorMu(ilan({ department: 'Makine Mühendisliği', description: 'CAD', title: 'Stajyer' }), f),
+    aramaEslesiyorMu(
+      ilan({ department: null, title: 'Makine Mühendisi Stajyeri', description: 'CAD' }),
+      f
+    ),
     false,
     'eşleşmeyen bölüm listeden ÇIKMALI'
   );
-  /* Çoklu etiket de okunuyor. */
+  /* Çoklu etiket de okunuyor (etiketler de alana çevriliyor). */
   assert.equal(
     aramaEslesiyorMu(
-      ilan({ department: null, department_tags: ['Elektrik', 'Bilgisayar'] }),
+      ilan({ department: null, title: 'Stajyer', department_tags: ['elektrik-elektronik-muhendisligi', 'bilgisayar-muhendisligi'] }),
       f
     ),
     true
   );
+  /* Tanınmayan bölüm: güvenli varsayılan — eleme YAPMIYOR. */
+  assert.equal(aramaEslesiyorMu(ilan({ title: 'Yazılım Stajyeri' }), { departments: ['uydurma'] }), true);
 });
 
 test('şehir, çalışma biçimi, arama metni ve staj türü', () => {
