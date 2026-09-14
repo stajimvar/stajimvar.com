@@ -152,8 +152,9 @@ export function toInternshipListing(row: ListingRowWithCompany): InternshipListi
     originalLanguage: row.original_language ?? undefined,
     internationalApplicants: row.international_applicants ?? undefined,
     visaSponsorship: row.visa_sponsorship ?? undefined,
-    mandatoryStajAccepted: row.mandatory_staj_accepted,
-    voluntaryStajAccepted: row.voluntary_staj_accepted,
+    /* `?? null` şart: `|| null` false'u da null yapar ve açık RET kaybolur. */
+    mandatoryStajAccepted: row.mandatory_staj_accepted ?? null,
+    voluntaryStajAccepted: row.voluntary_staj_accepted ?? null,
     stipend: {
       isPaid: row.is_paid,
       amountText: row.stipend_text ?? undefined,

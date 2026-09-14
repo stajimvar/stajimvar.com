@@ -118,7 +118,15 @@ test('BOŞ META SATIRI ÇİZİLMİYOR — "Kaynakta belirtilmemiş" tekrarı kal
   const govde = detay.slice(detay.indexOf('const sonBasvuru')).replace(/\/\*[\s\S]*?\*\//g, '');
   assert.doesNotMatch(govde, /Kaynakta belirtilmemiş/, 'kutular artık boş değerle çizilmiyor');
   assert.match(detay, /\{ucretMetni && /);
-  assert.match(detay, /\{zorunluStajMetni && /);
+  /*
+    `zorunluStajMetni` KALKTI: tek kutuda hem "Kabul ediliyor" hem
+    sigorta notu basılıyordu. Artık staj türü satırları ayrı
+    (`stajTuruSatirlari`) ve sigorta notu kendi kutusunda —
+    "Kaynakta belirtilmemiş" notu ise HİÇ basılmıyor.
+  */
+  assert.match(detay, /\{stajTuru\.map\(\(satir\) => \(/);
+  assert.match(detay, /\{sigortaNotu && /);
+  assert.match(detay, /belirtilmemi\[s/, 'boş not filtrelenmeli');
   assert.match(detay, /\{sureMetni && /);
   assert.match(detay, /\{sonBasvuru && /);
 });
@@ -141,10 +149,17 @@ test('FALSE GERÇEK BİR DEĞER — "boş" sayılıp gizlenmiyor', () => {
     operatörü null'u da false gibi gösterirdi — ikisi ayrı şey, biri
     "ücretsiz" biri "bilinmiyor". Bu yüzden karşılaştırma kesin.
   */
-  assert.match(detay, /listing\?\.stipend\?\.isPaid === true/);
-  assert.match(detay, /listing\?\.stipend\?\.isPaid === false/);
+  /*
+    ŞEKİL DEĞİŞTİ, KURAL DEĞİŞMEDİ
+
+    Ücret kararı `lib/staj-turu`ya taşındı (kart ve detay aynı
+    fonksiyonu çağırıyor). Zorunlu staj artık üçlü operatörle değil
+    `stajTuruSatirlari` ile: iki alan birbirini DIŞLAMIYOR ve ikisi de
+    biliniyorsa ikisi de yazılıyor.
+  */
+  assert.match(detay, /ucretMetniHesapla\(listing\?\.stipend\)/);
   assert.doesNotMatch(detay, /stipend\?\.isPaid \|\| /, 'false değeri || ile yutulmamalı');
-  assert.match(detay, /listing\?\.mandatoryStajAccepted\s+\?/);
+  assert.match(detay, /const stajTuru = stajTuruSatirlari\(listing \?\? \{\}\)/);
 });
 
 /* ------------------------------------------------------------------ 5 */

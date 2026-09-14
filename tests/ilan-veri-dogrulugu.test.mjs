@@ -88,8 +88,19 @@ test('null hiçbir ekranda "Ücretsiz" görünmüyor', () => {
   /* Detay sayfası üç değeri AYRI ele alıyor: false açık beyan, null kutu
      çizilmiyor. Kesin karşılaştırma şart — `isPaid ? …` null'u false
      gibi gösterirdi. */
-  assert.match(DETAY, /listing\?\.stipend\?\.isPaid === true/);
-  assert.match(DETAY, /listing\?\.stipend\?\.isPaid === false\n\s*\? 'Ücretsiz'/);
+  /*
+    KARAR ORTAK DOSYAYA TAŞINDI
+
+    Ücret metni artık `lib/staj-turu`daki `ucretMetniHesapla` ile
+    hesaplanıyor ve kart ile detay AYNI fonksiyonu çağırıyor. Bileşenin
+    içindeki üçlü operatörü aramak, kararı tek yere topladığımız anda
+    kırılan bir iddiaydı.
+  */
+  assert.match(DETAY, /const ucretMetni = ucretMetniHesapla\(listing\?\.stipend\)/);
+  const STAJ_TURU = oku('src/lib/staj-turu.mjs');
+  assert.match(STAJ_TURU, /if \(odenir === true\) return stipend\?\.amountText\?\.trim\(\) \|\| 'Ücretli'/);
+  assert.match(STAJ_TURU, /if \(odenir === false\) return 'Ücretsiz'/);
+  assert.match(STAJ_TURU, /return null;/);
   /*
     KART DA ÜÇ DEĞERİ AYIRIYOR (davranış bilerek genişledi)
 
