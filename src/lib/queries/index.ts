@@ -1734,3 +1734,55 @@ export async function fetchEslesmeIcinIlanlar(): Promise<Array<Record<string, un
   */
   return (data ?? []) as unknown as Array<Record<string, unknown>>;
 }
+
+/* ------------------------------------------------------------------ */
+/* İŞVEREN DİZİNİ — ÖLÇÜM SONUÇLARI                                    */
+/* ------------------------------------------------------------------ */
+
+export interface IsverenKontrolu {
+  slug: string;
+  url_durumu: 'calisiyor' | 'gecici_hata' | 'bozuk' | null;
+  url_denendi_at: string | null;
+  url_basarili_at: string | null;
+  url_hata: string | null;
+  program_durumu: 'acik' | 'kapali' | 'bilinmiyor' | null;
+  program_kaniti: string | null;
+  program_kontrol_at: string | null;
+}
+
+/**
+ * Bütün işveren kontrolleri — TEK TOPLU OKUMA.
+ *
+ * Kart başına istek YOK: dizin 44 kayıt ve hepsi bir sorguyla geliyor.
+ * Editoryal liste `src/data/stajProgramlari.ts`; bu sorgu ona yalnız
+ * ölçüm ekliyor (bkz. lib/isveren-dizini).
+ */
+export async function fetchIsverenKontrolleri(): Promise<IsverenKontrolu[]> {
+  const { data, error } = await supabase
+    .from('employer_career_checks')
+    .select(
+      'slug,url_durumu,url_denendi_at,url_basarili_at,url_hata,' +
+        'program_durumu,program_kaniti,program_kontrol_at'
+    );
+  /*
+    HATA SESSİZ: ölçüm gelmezse dizin editoryal bilgiyle çiziliyor ve
+    her kart "Güncel açık program doğrulanamadı" gösteriyor. Sayfayı
+    hiç göstermemek, ölçüm yokluğu yüzünden bütün dizini kaybetmek
+    olurdu.
+  */
+  if (error) return [];
+  return (data ?? []) as unknown as IsverenKontrolu[];
+}
+
+/** Dizindeki şirketlerin logo kayıtları — yine tek okuma. */
+export async function fetchIsverenLogolari(
+  sluglar: string[]
+): Promise<Array<{ slug: string; logo_url: string | null }>> {
+  if (sluglar.length === 0) return [];
+  const { data, error } = await supabase
+    .from('companies')
+    .select('slug,logo_url')
+    .in('slug', sluglar);
+  if (error) return [];
+  return (data ?? []) as unknown as Array<{ slug: string; logo_url: string | null }>;
+}

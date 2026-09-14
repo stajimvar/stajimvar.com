@@ -1223,6 +1223,32 @@ export type Database = {
         Update: Record<string, never>;
         Relationships: [];
       };
+      /*
+        ISVEREN KARIYER KONTROLLERI
+
+        Sirket LISTESI degil: liste `src/data/stajProgramlari.ts` icinde
+        ve anahtar oradaki slug. Editoryal bilgi ile olcum bilerek ayri.
+
+        Insert/Update BOS: istemci yazamiyor (yalniz select politikasi
+        var). Bir kullanici program durumunu "acik" yapip baskasini
+        yanlis yonlendirebilirdi.
+      */
+      employer_career_checks: {
+        Row: {
+          slug: string;
+          url_durumu: Database['public']['Enums']['isveren_url_durumu'] | null;
+          url_denendi_at: string | null;
+          url_basarili_at: string | null;
+          url_hata: string | null;
+          program_durumu: Database['public']['Enums']['isveren_program_durumu'] | null;
+          program_kaniti: string | null;
+          program_kontrol_at: string | null;
+          guncellendi_at: string;
+        };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       import_runs: {
         Row: {
           created_count: number;
@@ -1587,6 +1613,8 @@ export type Database = {
         | 'kirik_baglanti'
         | 'diger';
       ilan_bildirim_durumu: 'yeni' | 'inceleniyor' | 'kapatildi';
+      isveren_url_durumu: 'calisiyor' | 'gecici_hata' | 'bozuk';
+      isveren_program_durumu: 'acik' | 'kapali' | 'bilinmiyor';
       kisisel_basvuru_durumu:
         | 'basvurdum'
         | 'bekliyorum'
