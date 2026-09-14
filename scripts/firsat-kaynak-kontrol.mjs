@@ -105,6 +105,36 @@ const BASLIK = {
   'Accept-Language': 'tr,en;q=0.8',
 };
 
+/*
+  AÇIK KAPANIŞ İFADESİ — HTTP 200 İLE BİRLİKTE
+
+  Sayfa açılıyor (200) ama üstünde "başvurular kapandı" yazıyorsa, bu
+  KESİN bir kapanış kanıtı ve eşiği beklemeye gerek yok: kurumun kendi
+  cümlesi. Bu aynı zamanda "HTTP 200 tek başına açık kanıtı değildir"
+  kuralının öteki yarısı — 200 dönen bir sayfa kapanmış da olabilir.
+
+  Kalıp DAR tutuldu. "başvuru" kelimesi her burs sayfasında geçiyor;
+  aranan şey kapanmayı SÖYLEYEN cümle.
+*/
+const KAPANIS_IFADESI =
+  /ba[şs]vurular(ı|i)?m?[ıi]z? (kapan|sona er|bit)|ba[şs]vuru d[öo]nemi (kapan|sona er|bitt)|son ba[şs]vuru tarihi ge[çc]|ba[şs]vurular kapal[ıi]|applications? (are )?closed|no longer accepting applications|ba[şs]vuru al[ıi]nmamaktad[ıi]r/i;
+
+/** Etiketleri atıp okunur metin bırakır; yorumlar da atılıyor. */
+function gorunurMetin(govde) {
+  return String(govde ?? '')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ');
+}
+
+/** Sayfa gövdesi kapanmayı AÇIKÇA söylüyor mu? */
+export function acikKapanisVar(govde) {
+  return KAPANIS_IFADESI.test(gorunurMetin(govde));
+}
+
 /** Alan adının kayıtlı kökü: www. ve alt alanlar aynı kurum sayılıyor. */
 function alanKoku(adres) {
   try {
@@ -141,6 +171,20 @@ export async function kaynagiOlc(kaynakAdresi, fetchFn = fetch) {
       if (ilk && son && ilk !== son) {
         return { durum: 'moved', sebep: `alan adı değişti: ${ilk} → ${son}` };
       }
+      /*
+        GÖVDE OKUNUYOR: sayfa açılıyor olabilir ama üstünde
+        "başvurular kapandı" yazıyor olabilir. Kurumun kendi cümlesi
+        KESİN kanıt ve eşiği beklemiyor.
+      */
+      let govde = '';
+      try {
+        govde = await yanit.text();
+      } catch {
+        /* Gövde okunamazsa yalnız durum kodu kalıyor. */
+      }
+      if (acikKapanisVar(govde)) {
+        return { durum: 'closed', sebep: 'sayfada başvuruların kapandığı yazıyor', kesin: true };
+      }
       return { durum: 'ok', sebep: `HTTP ${yanit.status}` };
     }
     return { durum: 'transient_error', sebep: `HTTP ${yanit.status}` };
@@ -156,17 +200,79 @@ export async function kaynagiOlc(kaynakAdresi, fetchFn = fetch) {
  * Ölçümü satır güncellemesine çevirir. Saf fonksiyon: testte doğrudan
  * çağrılıyor, ağ yok.
  */
+/** Bağımsız teyit için iki ölçüm arasında gereken en az süre. */
+export const TEYIT_ARALIGI_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * İki ölçüm BAĞIMSIZ sayılabilir mi?
+ *
+ * ÖLÇÜLDÜ VE KENDİ ELİMLE ÜRETTİM: işçiyi elle iki kez koşturdum
+ * (aralarında ~30 dakika) ve bir kayıt ikinci koşuda `expired` oldu. O
+ * iki ölçüm bağımsız değil — aynı yarım saat içinde aynı geçici durumu
+ * iki kez gördüler. Kurumun sitesi bakımda olsaydı gerçekten açık bir
+ * burs yarım saatte listeden düşerdi.
+ *
+ * Eşiğin amacı "iki kez baktık" değil, "iki AYRI GÜN baktık".
+ * Zamanlanmış koşu üç günde bir olduğu için gerçek kapanışta gecikme
+ * olmuyor: iki zamanlı koşu zaten 72 saat arayla.
+ */
+export function bagimsizTeyitMi(sonHataDamgasi, simdi) {
+  if (!sonHataDamgasi) return true;
+  const fark = new Date(simdi).getTime() - new Date(sonHataDamgasi).getTime();
+  return Number.isFinite(fark) && fark >= TEYIT_ARALIGI_MS;
+}
+
 export function guncellemeyiHesapla(satir, karar, simdi) {
   const temel = { source_checked_at: simdi, source_status: karar.durum };
   if (karar.durum === 'ok') {
-    return { ...temel, source_failure_count: 0, last_checked_at: simdi, verified_at: simdi };
+    return {
+      ...temel,
+      source_failure_count: 0,
+      source_failure_last_at: null,
+      last_checked_at: simdi,
+      verified_at: simdi,
+    };
   }
   if (karar.durum === 'transient_error') {
     /* Sayaç DEĞİŞMİYOR: geçici hata ne artırıyor ne sıfırlıyor. */
     return temel;
   }
+
+  /*
+    KESİN KAPANIŞ EŞİĞİ BEKLEMİYOR
+
+    Kurumun kendi sayfasında "başvurular kapandı" yazıyorsa ya da kesin
+    bir son başvuru tarihi geçmişse, ikinci bir teyit istemek gereksiz:
+    kanıt tek ölçümde tam. Bu dal YALNIZ açık ifade ya da geçmiş kesin
+    tarih için çalışıyor — bir 404 buraya GİRMİYOR, çünkü 404 geçici
+    bir dağıtım hatası da olabilir.
+  */
+  if (karar.kesin && satir.status === 'published') {
+    return {
+      ...temel,
+      source_failure_count: (satir.source_failure_count ?? 0) + 1,
+      source_failure_last_at: simdi,
+      status: 'expired',
+    };
+  }
+
+  /*
+    SAYAÇ YALNIZ BAĞIMSIZ TEYİTTE ARTIYOR
+
+    Arka arkaya çalıştırılan kontroller sayacı ilerletmiyor; yalnız
+    `source_checked_at` güncelleniyor. Böylece elle iki kez koşmak bir
+    fırsatı kapatamıyor.
+  */
+  if (!bagimsizTeyitMi(satir.source_failure_last_at, simdi)) {
+    return temel;
+  }
+
   const yeniSayac = (satir.source_failure_count ?? 0) + 1;
-  const guncelleme = { ...temel, source_failure_count: yeniSayac };
+  const guncelleme = {
+    ...temel,
+    source_failure_count: yeniSayac,
+    source_failure_last_at: simdi,
+  };
   if (yeniSayac >= kapanisEsigi(karar.durum) && satir.status === 'published') {
     guncelleme.status = 'expired';
   }
@@ -195,7 +301,7 @@ async function ana() {
   for (let deneme = 1; deneme <= 3; deneme += 1) {
     const { data, error } = await db
       .from('opportunities')
-      .select('id, slug, source_url, status, source_failure_count')
+      .select('id, slug, source_url, status, source_failure_count, source_failure_last_at, application_deadline')
       .eq('status', 'published');
     if (!error) {
       firsatlar = data;

@@ -120,11 +120,16 @@ test('metinler tek yerde tanımlı ve kart oradan okuyor', () => {
   const sayfa = oku('src/components/OpportunitiesPage.tsx');
   /* Kart kendi cümlesini kurmuyor: `satir` ne diyorsa onu yazıyor. */
   assert.doesNotMatch(sayfa, /Tutar açıklanmadı/, 'eski tek cümle geri gelmiş');
-  assert.match(sayfa, /\{tutar\.satir \? ` · \$\{tutar\.satir\}` : ''\}/);
+  /*
+    KART ARTIK `kartSatiri` OKUYOR: "doğrulanamadı" satırı kartta
+    çizilmiyor, detayda duruyor. Kaynağın kendi ifadeleri ve
+    doğrulanmış rakam kartta kalıyor.
+  */
+  assert.match(sayfa, /\{tutar\.kartSatiri \? ` · \$\{tutar\.kartSatiri\}` : ''\}/);
   /* Telefonda metin uzasa da kart uzamıyor: en fazla iki satır. */
   assert.match(sayfa, /line-clamp-2 text-xs text-gray-500 sm:hidden/);
   /* Masaüstünde de durum yoksa alan hiç çizilmiyor. */
-  assert.match(sayfa, /\{tutar\.satir && \(/);
+  assert.match(sayfa, /\{tutar\.kartSatiri && \(/);
   assert.doesNotMatch(sayfa, /'Belirtilmemiş'/, 'masaüstü hâlâ varsayım basıyor');
   /*
     Logo yalnız HER ZAMAN VAR OLAN iki satırı kaplıyor; tutar satırı
@@ -266,4 +271,123 @@ test('kesin kapanış iki teyitte aktif listeden çıkıyor', async () => {
   const gecici = kur(1, 'transient_error');
   assert.equal(gecici.status, undefined, 'geçici hata kaydı kapatmıyor');
   assert.ok(!('source_failure_count' in gecici), 'sayaca dokunmuyor');
+});
+
+test('KARTTA "doğrulanamadı" satırı YOK, detayda var', () => {
+  /*
+    Kartta o satır ekranın dörtte üçünde çıkıyordu (120 kaydın 90'ı) ve
+    taşıdığı bilgi sıfır: kullanıcı kartı tarıyor, "doğrulanamadı"
+    cümlesi hiçbir kararı değiştirmiyor, yalnız gerçek bilgiyi (tür,
+    son tarih) bastırıyordu. Detayda yer var ve bilgi anlam taşıyor.
+  */
+  const b = opportunityAmount(kayit({ amountStatus: 'belirtilmemis' }));
+  assert.equal(b.satir, 'Tutar doğrulanamadı', 'detay satırı duruyor');
+  assert.equal(b.kartSatiri, null, 'KARTTA çizilmemeli');
+
+  /* KAYNAĞIN KENDİ İFADELERİ KARTTA KALIYOR: başvuru kararını etkiliyor. */
+  for (const durum of ['mali_destek', 'aciklanacak', 'ucretsiz']) {
+    const t = opportunityAmount(kayit({ amountStatus: durum }));
+    assert.equal(t.kartSatiri, t.satir, `${durum}: kartta kalmalı`);
+    assert.ok(t.kartSatiri, `${durum}: metin olmalı`);
+  }
+
+  /* DOĞRULANMIŞ RAKAM KARTTA KALIYOR. */
+  const d = opportunityAmount(
+    kayit({
+      amountStatus: 'kesin',
+      amountVerifiedAt: '2026-09-13',
+      amountMin: 5000,
+      currency: 'TRY',
+      paymentPeriod: 'monthly',
+    })
+  );
+  assert.equal(d.kartSatiri, d.satir);
+  assert.match(d.kartSatiri, /5\.000/);
+
+  /* Kart bileşeni gerçekten `kartSatiri` okuyor. */
+  const SAYFA = oku('src/components/OpportunitiesPage.tsx');
+  assert.match(SAYFA, /tutar\.kartSatiri \? ` · \$\{tutar\.kartSatiri\}` : ''/);
+  assert.match(SAYFA, /\{tutar\.kartSatiri && \(/);
+  assert.ok(!/\{tutar\.satir/.test(SAYFA), 'kart artık detay satırını kullanmıyor');
+});
+
+test('arka arkaya iki 404 bağımsız teyit sayılmıyor', async () => {
+  /*
+    KENDİ ELİMLE ÜRETTİM: işçiyi elle iki kez koşturdum (~30 dk arayla)
+    ve bir kayıt ikinci koşuda `expired` oldu. O iki ölçüm bağımsız
+    değil — aynı yarım saat içinde aynı durumu iki kez gördüler.
+    Kurumun sitesi bakımda olsaydı gerçekten açık bir burs yarım saatte
+    listeden düşerdi.
+  */
+  const { guncellemeyiHesapla, bagimsizTeyitMi, TEYIT_ARALIGI_MS } = await import(
+    '../scripts/firsat-kaynak-kontrol.mjs'
+  );
+  const SIMDI = '2026-09-15T12:00:00Z';
+  assert.equal(TEYIT_ARALIGI_MS, 24 * 60 * 60 * 1000);
+
+  /* Damga yoksa ilk ölçüm sayılıyor. */
+  assert.equal(bagimsizTeyitMi(null, SIMDI), true);
+  assert.equal(bagimsizTeyitMi('2026-09-15T11:30:00Z', SIMDI), false, '30 dk bağımsız değil');
+  assert.equal(bagimsizTeyitMi('2026-09-14T11:00:00Z', SIMDI), true, '25 saat bağımsız');
+
+  /* ARKA ARKAYA: sayaç ilerlemiyor, kayıt açık kalıyor. */
+  const arkaArkaya = guncellemeyiHesapla(
+    { status: 'published', source_failure_count: 1, source_failure_last_at: '2026-09-15T11:30:00Z' },
+    { durum: 'closed' },
+    SIMDI
+  );
+  assert.equal(arkaArkaya.status, undefined, 'elle arka arkaya koşu kapatmamalı');
+  assert.ok(!('source_failure_count' in arkaArkaya), 'sayaç ilerlememeli');
+
+  /* 24 SAAT SONRA: ikinci teyit sayılıyor ve kayıt düşüyor. */
+  const ertesiGun = guncellemeyiHesapla(
+    { status: 'published', source_failure_count: 1, source_failure_last_at: '2026-09-14T11:00:00Z' },
+    { durum: 'closed' },
+    SIMDI
+  );
+  assert.equal(ertesiGun.status, 'expired');
+  assert.equal(ertesiGun.source_failure_count, 2);
+  assert.equal(ertesiGun.source_failure_last_at, SIMDI);
+});
+
+test('açık "başvurular kapandı" ifadesi tek ölçümde kapatıyor', async () => {
+  const { acikKapanisVar, guncellemeyiHesapla } = await import(
+    '../scripts/firsat-kaynak-kontrol.mjs'
+  );
+  assert.equal(acikKapanisVar('<p>2026 dönemi başvurularımız kapandı.</p>'), true);
+  assert.equal(acikKapanisVar('<p>Applications are closed</p>'), true);
+  /* Açık bir sayfa yanlışlıkla kapanmıyor. */
+  assert.equal(acikKapanisVar('<p>Başvuru formunu doldurun, son başvuru 30 Eylül.</p>'), false);
+  /* HTML yorumundaki metin sayılmıyor: sayfada GÖRÜNMÜYOR. */
+  assert.equal(acikKapanisVar('<!-- başvurular kapandı -->'), false);
+
+  /*
+    KESİN KANIT EŞİĞİ BEKLEMİYOR: kurumun kendi cümlesi tek ölçümde
+    yeterli. Bir 404 buraya GİRMİYOR — o geçici dağıtım hatası da
+    olabilir.
+  */
+  const k = guncellemeyiHesapla(
+    { status: 'published', source_failure_count: 0, source_failure_last_at: null },
+    { durum: 'closed', kesin: true },
+    '2026-09-15T12:00:00Z'
+  );
+  assert.equal(k.status, 'expired');
+
+  const dortyuzdort = guncellemeyiHesapla(
+    { status: 'published', source_failure_count: 0, source_failure_last_at: null },
+    { durum: 'closed' },
+    '2026-09-15T12:00:00Z'
+  );
+  assert.equal(dortyuzdort.status, undefined, '404 tek ölçümde kapatmamalı');
+});
+
+test('arka arkaya kapanan kayıt göçle geri değerlendiriliyor', () => {
+  const GOC = oku('supabase/migrations/20261009010000_firsat_kapanis_guvenligi.sql');
+  assert.match(GOC, /add column if not exists source_failure_last_at timestamptz/);
+  /* Dar koşul: yalnız bugün, closed ve tam iki sayaçla düşenler. */
+  assert.match(GOC, /source_failure_count = 2/);
+  assert.match(GOC, /source_checked_at >= now\(\) - interval '24 hours'/);
+  assert.match(GOC, /set status = 'published'/);
+  /* Kayıt "açık" ilan EDİLMİYOR: doğrulama damgası atılmıyor. */
+  assert.ok(!/set[\s\S]{0,200}verified_at = now\(\)/.test(GOC), 'verified_at elle atılmamalı');
 });

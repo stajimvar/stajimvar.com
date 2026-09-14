@@ -159,6 +159,8 @@ export function opportunityAmount(item) {
     bilinmiyor: true,
     durum: null,
     satir: null,
+    /* Kart satırı: doğrulanmamış tutar kartta HİÇ çizilmiyor. */
+    kartSatiri: null,
   };
   if (!item) return bos;
 
@@ -171,11 +173,29 @@ export function opportunityAmount(item) {
     etiketi kullanıcıya okutmaktansa susmak doğru.
   */
   const durum = item.amountStatus ?? null;
+  /*
+    KART SATIRI İLE DETAY SATIRI AYRI
+    ---------------------------------
+    `satir` DETAY sayfası için: orada yer var ve "tutarı
+    doğrulayamadık" bilgisi okuyucuya bir şey söylüyor.
+
+    `kartSatiri` LİSTE kartı için ve `belirtilmemis` durumunda NULL.
+    Kartta o satır ekranın dörtte üçünde çıkıyordu ve taşıdığı bilgi
+    sıfır: kullanıcı kartı tarıyor, "doğrulanamadı" cümlesi hiçbir
+    kararı değiştirmiyor, yalnız gerçek bilgiyi (tür, son tarih)
+    bastırıyordu.
+
+    KAYNAĞIN KENDİ İFADELERİ KARTTA KALIYOR: "Mali destek sağlanıyor",
+    "Tutar kurumca açıklanacak", "Ücretsiz" — üçü de kurumun beyanı ve
+    başvuru kararını gerçekten etkiliyor.
+  */
+  const kartaUygun = (metin) => (durum === TUTAR_DURUMU.belirtilmemis ? null : metin);
   const rakamsiz = () => ({
     ...bos,
     geriOdeme,
     durum,
     satir: TUTAR_METNI[durum] ?? null,
+    kartSatiri: kartaUygun(TUTAR_METNI[durum] ?? null),
   });
 
   /*
@@ -217,6 +237,8 @@ export function opportunityAmount(item) {
     durum: TUTAR_DURUMU.kesin,
     /* Kartta tek satır: rakam ve varsa ödeme dönemi. */
     satir: donem ? `${metin} · ${donem}` : metin,
+    /* Doğrulanmış rakam kartta KALIYOR: başvuru kararını etkiliyor. */
+    kartSatiri: donem ? `${metin} · ${donem}` : metin,
   };
 }
 

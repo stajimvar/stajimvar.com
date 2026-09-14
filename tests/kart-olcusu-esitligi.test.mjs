@@ -143,7 +143,15 @@ test('FIRSAT KARTI TELEFONDA KOMPAKT IZGARA, GENİŞ EKRANDA DİKEY AKIŞ', () =
     `line-clamp-2`: metin uzasa da kart uzamıyor.
   */
   assert.match(kart, /\{opportunityTypeLabel\(item\.opportunityType\)\}/);
-  assert.match(kart, /\{tutar\.satir \? ` · \$\{tutar\.satir\}` : ''\}/);
+  /*
+    KART ARTIK `kartSatiri` OKUYOR
+
+    `belirtilmemis` durumunda kartta tutar satırı hiç çizilmiyor
+    (ölçüm: 120 kaydın 90'ı bu durumdaydı ve satır gerçek bilgiyi
+    bastırıyordu). Detay sayfası `satir` ile "Tutar doğrulanamadı"
+    demeye devam ediyor.
+  */
+  assert.match(kart, /\{tutar\.kartSatiri \? ` · \$\{tutar\.kartSatiri\}` : ''\}/);
   assert.match(kart, /col-start-2 col-span-2 row-start-3 min-w-0 line-clamp-2 text-xs text-gray-500 sm:hidden/);
 
   /* Doğrulama ve kalan süre kutusuz, ikonlu — kaynak aynı rozet listesi. */
@@ -189,8 +197,8 @@ test('İLERLEME ÇUBUĞU YOK; TUTAR VE TARİH GERÇEK KAYITTAN', () => {
     edilmediyse alan HİÇ çizilmiyor: bakmadığımız bir sayfa hakkında
     "Belirtilmemiş" demek bir iddia olurdu.
   */
-  assert.match(firsat, /\{tutar\.satir && \(/);
-  assert.match(firsat, /<dd className="text-sm font-semibold text-gray-500">\{tutar\.satir\}<\/dd>/);
+  assert.match(firsat, /\{tutar\.kartSatiri && \(/);
+  assert.match(firsat, /<dd className="text-sm font-semibold text-gray-500">\{tutar\.kartSatiri\}<\/dd>/);
   /*
     "TAKVİM AÇIKLANMADI" BİR ÇIKARIMDI
 
