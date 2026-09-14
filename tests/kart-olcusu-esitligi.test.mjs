@@ -191,7 +191,15 @@ test('İLERLEME ÇUBUĞU YOK; TUTAR VE TARİH GERÇEK KAYITTAN', () => {
   */
   assert.match(firsat, /\{tutar\.satir && \(/);
   assert.match(firsat, /<dd className="text-sm font-semibold text-gray-500">\{tutar\.satir\}<\/dd>/);
-  assert.match(firsat, /Takvim açıklanmadı/);
+  /*
+    "TAKVİM AÇIKLANMADI" BİR ÇIKARIMDI
+
+    Boş `applicationDeadline`, kurumun takvimi açıklamadığını
+    KANITLAMIYOR: kayıt derlenmemiş, kaynak okunamamış ya da tarih
+    başka bir alanda olabilir. Doğrulanmamış bir olumsuzlamayı kuruma
+    atfetmek yerine okuyucu resmî kaynağa gönderiliyor.
+  */
+  assert.match(firsat, /Başvuru takvimi için resmî kaynağı kontrol edin/);
 });
 
 test('LOGO 40 PİKSEL VE IZGARANIN İLK SÜTUNU', () => {

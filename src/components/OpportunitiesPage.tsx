@@ -1434,7 +1434,8 @@ export const Card: React.FC<{
               {item.applicationDeadline ? (
                 kisaTarih(item.applicationDeadline)
               ) : (
-                <span className="font-semibold text-gray-500">Takvim açıklanmadı</span>
+                /* Başvuru takvimi için resmî kaynağı kontrol edin — gerekçe `zaman-tupu.mjs` içinde. */
+                <span className="font-semibold text-gray-500">Başvuru takvimi için resmî kaynağı kontrol edin</span>
               )}
             </dd>
           </div>
@@ -1468,7 +1469,7 @@ export const Card: React.FC<{
         <span className="min-w-0 truncate">
           {item.applicationDeadline
             ? `${arsivde ? 'Kapandı' : 'Son başvuru'}: ${kisaTarih(item.applicationDeadline)}`
-            : 'Takvim açıklanmadı'}
+            : 'Başvuru takvimi için resmî kaynağı kontrol edin'}
         </span>
         {!arsivde && (
           <span

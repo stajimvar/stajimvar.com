@@ -651,7 +651,21 @@ async function firsatlariGetir() {
   const urlAdres = envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL');
   const anahtar = envOku('SUPABASE_SERVICE_ROLE_KEY') || envOku('VITE_SUPABASE_ANON_KEY');
   if (!urlAdres || !anahtar) return [];
-  const secim = 'slug,title,organization_name,short_description,application_deadline,updated_at,status';
+  /*
+    KATEGORİ VE TUTAR ALANLARI DA GEREKİYOR
+
+    Seçim `opportunity_type` taşımıyordu ve kategori kapıları
+    (/burslar, /yarismalar) bu yüzden BOŞ çiziliyordu:
+    `firsatKategorisi(undefined)` bilinmeyen türü 'programlar'a
+    düşürüyor, yani hiçbir kayıt 'burslar' süzgecine uymuyordu.
+    Ölçüldü — /firsatlar 113 bağlantı alırken /burslar sıfır aldı.
+
+    `amount_status` + `amount_text`: tutar YALNIZ kesin olduğunda
+    yazılıyor (113 kaydın 1'i), o yüzden ikisi de gerekli.
+  */
+  const secim =
+    'slug,title,organization_name,short_description,application_deadline,updated_at,status,' +
+    'opportunity_type,amount_status,amount_text';
   const istek = `${urlAdres}/rest/v1/opportunities?status=eq.published&select=${encodeURIComponent(secim)}`;
   const yanit = await fetch(istek, { headers: { apikey: anahtar, Authorization: `Bearer ${anahtar}` } });
   if (!yanit.ok) { console.log(`  fırsatlar alınamadı: HTTP ${yanit.status}`); return []; }
@@ -1236,6 +1250,130 @@ async function main() {
     ve anahtar kelimeyle başlıyor. Başlık cümlesi sayfanın kendini tanıtma
     biçimi, title ise arama sonucundaki adı — ikisinin aynı olması gerekmiyor.
   */
+  /*
+    FIRSATLAR SABİTLERDEN ÖNCE ÇEKİLİYOR
+
+    /firsatlar, /burslar, /kyk, /yurtdisi-firsatlari ve /yarismalar
+    sayfalarının gövdesi bu veriyle yazılıyor ve o sayfalar aşağıdaki
+    `sabitler` döngüsünde basılıyor. Ölçüldü (canlı, 14 Eylül 2026):
+    /burslar'ın ilk HTML'inde 69 karakter metin ve SIFIR bağlantı vardı;
+    /firsatlar'da 88 karakter, sıfır bağlantı. Yani 113 fırsat sayfasının
+    tarama kapısı bomboştu — tarayıcı oradan tek bir fırsata bile
+    geçemiyordu.
+  */
+  const firsatlar = await firsatlariGetir();
+  const { firsatKategorisi } = await icerikDerle(
+    path.join(kok, 'src', 'lib', 'firsat-kategori.mjs'),
+    'firsat-kategori'
+  );
+
+  /**
+   * Bu fırsatın SAYFASI ÜRETİLİYOR MU?
+   *
+   * Detay döngüsü son başvurusu geçmiş kaydı atlıyor (aşağıda,
+   * `for (const f of firsatlar)`). Kategori listeleri bu kuralı
+   * bilmediği için 113 kaydın tamamına bağlantı veriyordu ve üçü
+   * canlıda HTTP 404 dönüyordu:
+   *
+   *   2026-09-13  yeni-dunya-vakfi-bursu
+   *   2026-09-14  mustafa-oncel-vakfi-ogrenci-destek-bursu
+   *   2026-09-14  fulbright-yabanci-dil-ogretim-asistanligi-flta
+   *
+   * Kural artık TEK YERDE ve iki taraf da onu çağırıyor. Ayrı
+   * yazılsaydı bir sonraki eşik değişikliğinde liste yine sayfası
+   * olmayan adreslere bağlanırdı.
+   */
+  const firsatSayfasiVar = (f) =>
+    !(f.application_deadline && new Date(f.application_deadline).getTime() < Date.now());
+
+  /**
+   * Bir kategorinin fırsat listesi — GERÇEK KAYITLAR, UYDURMA YOK.
+   *
+   * Satırda yalnız veritabanında DOLU olan alanlar yazılıyor:
+   *
+   *   son başvuru tarihi   113 kaydın 30'unda dolu; boş olanda
+   *                        "Takvim açıklanmadı" yazıyor. Tarih
+   *                        uydurmak, öğrenciyi olmayan bir son güne
+   *                        göre plan yaptırmak olurdu.
+   *   tutar                yalnız `amount_status = 'kesin'` ve
+   *                        `amount_text` dolu olduğunda. 113 kaydın
+   *                        yalnız 1'i bu durumda.
+   *
+   * "KARŞILIKSIZ" DİYE BİR ETİKET YOK: `repayable` alanı 113 kaydın
+   * 104'ünde NULL. Doğrulanmamış bir sınıflandırmayı yazmak, öğrenciye
+   * geri ödemesiz sandığı bir krediyi önermek olabilirdi.
+   */
+  const firsatListesi = (kategori, tur = null) => {
+    const kayitlar = firsatlar
+      /* Sayfası üretilmeyen kayda bağlantı verilmiyor: 404'e giden iç bağlantı olmaz. */
+      .filter(firsatSayfasiVar)
+      .filter((f) => (kategori ? firsatKategorisi(f.opportunity_type) === kategori : true))
+      /*
+        TÜR SÜZGECİ /kyk İÇİN: o sayfa "burslar" kategorisinin içinde
+        yalnız KYK kaynağını gösteriyor ve arayüz de aynı şeyi yapıyor
+        (`burslar.filter((item) => item.opportunityType === 'kyk')`).
+        Aynı kural, iki yerde ayrı yazılmasın diye burada da tür
+        karşılaştırması.
+      */
+      .filter((f) => (tur ? f.opportunity_type === tur : true))
+      .filter((f) => (f.short_description || '').trim())
+      .sort((a, b) => String(a.title || '').localeCompare(String(b.title || ''), 'tr'));
+    if (!kayitlar.length) return '';
+
+    const satirlar = kayitlar
+      .map((f) => {
+        const notlar = [];
+        if (f.organization_name) notlar.push(kacir(f.organization_name));
+        /*
+          BOŞ TARİH, "KURUM AÇIKLAMADI" DEMEK DEĞİL
+
+          Önce boş `application_deadline` için "Takvim açıklanmadı"
+          yazıyordu. O bir ÇIKARIM: alan boşsa kurumun takvimi
+          açıklamadığı sonucu çıkmaz — kayıt henüz derlenmemiş,
+          kaynak okunamamış ya da tarih başka bir alanda olabilir.
+          Doğrulanmamış bir olumsuzlamayı kuruma atfetmek, öğrenciye
+          "beklemeye gerek yok" demek olurdu.
+
+          Tarih doluysa tarih yazılıyor; boşsa okuyucu resmî kaynağa
+          gönderiliyor. Bu ikinci cümle bir iddia değil, bir yönlendirme.
+        */
+        /*
+          TARİH HAM DİZEDEN OKUNUYOR, Date ARİTMETİĞİNDEN DEĞİL
+
+          `application_deadline` saatsiz gelebiliyor ("2026-09-14") ve
+          `new Date()` onu UTC gece yarısı sayıyor. Derleme UTC'nin
+          BATISINDA koşsaydı `toLocaleDateString` bir gün ERKEN tarih
+          yazardı — öğrenciye son günü yanlış söylemek. Aynı tuzak bu
+          depoda daha önce ölçülmüş ve `firsat-kategori.mjs` içinde
+          `calendarDay` ile çözülmüş.
+
+          Ölçüldü (bu derleme): 27 tarihin 27'si ham değerle birebir
+          aynı. Yine de biçimlendirme artık yıl-ay-gün parçalarından
+          yapılıyor; ortam değişse de kaymıyor.
+        */
+        const AYLAR = [
+          'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+          'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+        ];
+        const gunAyYil = String(f.application_deadline || '').slice(0, 10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        notlar.push(
+          gunAyYil
+            ? `Son başvuru: ${Number(gunAyYil[3])} ${AYLAR[Number(gunAyYil[2]) - 1]} ${gunAyYil[1]}`
+            : 'Başvuru takvimi için resmî kaynağı kontrol edin'
+        );
+        if (f.amount_status === 'kesin' && (f.amount_text || '').trim()) {
+          notlar.push(kacir(f.amount_text.trim()));
+        }
+        return (
+          `<li><a href="/firsatlar/${kacir(f.slug)}">${kacir(f.title)}</a>` +
+          ` — ${notlar.join(' · ')}<p>${kacir(ozetle(f.short_description, 160))}</p></li>`
+        );
+      })
+      .join('');
+
+    return `<section><h2>${kayitlar.length} kayıt</h2><ul>${satirlar}</ul></section>`;
+  };
+
   const sabitler = [
     ['/rehber', 'Öğrenci rehberi | StajımVar', "Stajdan bursa, KYK'dan yurda; öğrencilikte ihtiyaç duyacağın bilgiler resmî kaynağıyla, adım adım.", 'Öğrenci rehberleri, tek listede.'],
     ['/bolumler', 'Bölüme göre staj rehberi | StajımVar', `${bolumler.length} bölüm için: staj nerede yapılır, stajyer ne iş yapar, ne öğrenmeli.`, 'Bölüme göre staj'],
@@ -1296,6 +1434,23 @@ async function main() {
   };
 
   const EK_LISTE = {
+    /*
+      FIRSAT KAPILARI ARTIK LİSTE TAŞIYOR
+
+      Bu beş sayfa tarayıcının tek tek fırsat sayfalarına geçtiği kapı.
+      Listesiz hâllerinde yalnız başlık ve tek cümleden ibaretlerdi ve
+      hiçbir bağlantı taşımıyorlardı (ölçüldü: 69 ve 88 karakter, sıfır
+      bağlantı). Aynı kalıp /rehber ve /bolumler için de uygulanmıştı.
+
+      Kategori kuralı PAYLAŞILAN modülden (`firsatKategorisi`): arayüzün
+      süzgeci de aynı tablodan besleniyor, yani ön render ile ekranda
+      görünen liste aynı mantığı kullanıyor. İkinci bir tablo tutmak,
+      arama motoruna sayfada olmayan bir kayıt göstermek olurdu.
+    */
+    '/firsatlar': firsatListesi(null),
+    '/burslar': firsatListesi('burslar'),
+    '/yarismalar': firsatListesi('yarismalar'),
+    '/kyk': firsatListesi('burslar', 'kyk'),
     '/isveren': isverenSssHtml,
     '/rehber': merkezListeleri.rehberler,
     '/bolumler': merkezListeleri.bolumler,
@@ -1319,7 +1474,7 @@ async function main() {
 
   /* ---- ilanlar: JobPosting ---- */
   const ilanlar = await ilanlariGetir();
-  const firsatlar = await firsatlariGetir();
+  /* `firsatlar` yukarıda, sabitlerden önce çekildi: kategori kapıları onu kullanıyor. */
   /*
     Şehir adı arayüzde konumEtiketi ile düzeltiliyor ("Turkey - Istanbul" →
     "İstanbul", "Zincirlikuyu, Istanbul" → "Zincirlikuyu, İstanbul") ama ön
@@ -1520,7 +1675,8 @@ async function main() {
   }
 
   for (const f of firsatlar) {
-    if (f.application_deadline && new Date(f.application_deadline).getTime() < Date.now()) continue;
+    /* Kural yukarıda tek yerde: kategori listeleri de aynı çağrıyı kullanıyor. */
+    if (!firsatSayfasiVar(f)) continue;
     await kartYaz(`firsat-${f.slug}`, {
       tur: 'firsat',
       etiket: 'ÖĞRENCİ FIRSATI',

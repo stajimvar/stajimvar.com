@@ -137,7 +137,15 @@ test('tarih satırı Türkçe ek almıyor', () => {
 });
 
 test('takvimsiz ve kapalı kayıtta metin var', () => {
-  assert.equal(tupMetni({}).vurgu, 'Takvim açıklanmadı');
+  /*
+    "TAKVİM AÇIKLANMADI" BİR ÇIKARIMDI
+
+    Boş `applicationDeadline`, kurumun takvimi açıklamadığını
+    KANITLAMIYOR: kayıt derlenmemiş, kaynak okunamamış ya da tarih
+    başka bir alanda olabilir. Doğrulanmamış bir olumsuzlamayı kuruma
+    atfetmek yerine okuyucu resmî kaynağa gönderiliyor.
+  */
+  assert.equal(tupMetni({}).vurgu, 'Başvuru takvimi için resmî kaynağı kontrol edin');
   assert.equal(tupMetni({}).tarih, null);
   assert.equal(tupMetni(firsat(-2)).vurgu, 'Başvuru dönemi kapandı');
 });
