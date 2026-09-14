@@ -598,3 +598,18 @@ test('kapsam oranı: pay paydayı aşarsa cümle yazılmıyor', async () => {
   const IST = oku('src/lib/gercek-istatistikler.mjs');
   assert.equal((IST.match(/\.eq\('status', 'published'\)/g) ?? []).length, 2);
 });
+
+test('son kontrol damgası: NULL satırlar başa gelmiyor', () => {
+  /*
+    CANLIDA ÖLÇTÜM: kapsam cümlesi "…yeniden kontrol edildi." ile
+    bitiyordu, "En son kontrol: …" kısmı hiç yazılmıyordu. Neden:
+    `order(desc)` Postgres'te varsayılan NULLS FIRST ve en üst satırın
+    damgası boş geliyordu.
+  */
+  const IST = oku('src/lib/gercek-istatistikler.mjs');
+  assert.match(IST, /\.not\('source_checked_at', 'is', null\)/);
+  assert.match(IST, /nullsFirst: false/);
+  /* Damga varsa cümlede Türkiye saati YAZIYOR. */
+  const { turkiyeSaatMetni } = { turkiyeSaatMetni: null };
+  assert.match(IST, /En son kontrol: \$\{saat\} \(Türkiye saati\)/);
+});
