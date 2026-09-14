@@ -4,6 +4,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 
 /* Kart ve detayın PAYLAŞTIĞI kararlar — gerçekten çalıştırılıyor. */
 import {
+  donemEtiketi,
   sigortaMetni,
   stajTuruRozeti,
   stajTuruSatirlari,
@@ -209,4 +210,37 @@ test('kolon listesine eklenen her kolonun okuma yetkisi var', () => {
 
   /* Kolon listesinde olan `insurance_provider` gerçekten yetkili. */
   assert.match(MAPPER, /'insurance_provider',/);
+});
+
+test('dönem etiketi enum değerini ekrana sızdırmıyor', () => {
+  /*
+    ÖLÇÜLDÜ (canlı, 14 Eylül 2026): detayda "DÖNEM: All Year" yazıyordu
+    — `listing_term` şema enum'ının ham hâli.
+  */
+  assert.equal(donemEtiketi('All Year'), 'Yıl boyu');
+  assert.equal(donemEtiketi('Summer 2026'), 'Yaz 2026');
+  assert.equal(donemEtiketi('Long-term 2026'), 'Uzun dönem 2026');
+  /* Tanınmayan değer olduğu gibi dönüyor: uydurma çeviri üretmiyoruz. */
+  assert.equal(donemEtiketi('Spring 2027'), 'Spring 2027');
+  assert.equal(donemEtiketi(''), null);
+  assert.equal(donemEtiketi(null), null);
+  assert.match(oku('src/components/ListingPage.tsx'), /donemEtiketi\(listing\?\.term\)/);
+});
+
+test('mobilde ikincil takip işlemi var ve iOS güvenli alanı korunuyor', () => {
+  const DETAY = oku('src/components/ListingPage.tsx');
+  /*
+    ÖLÇÜLDÜ: masaüstü blokta "Başvurduğumu işaretle" vardı ama o blok
+    `hidden lg:flex`; telefonda yalnız birincil düğme çiziliyordu ve
+    detaydan takip listesine ekleme yolu HİÇ YOKTU.
+  */
+  const cubuk = DETAY.slice(DETAY.indexOf('aria-label="Başvuru"'));
+  assert.match(cubuk.slice(0, 2600), /onClick=\{\(\) => onTrack\(listing\)\}/);
+  assert.match(cubuk.slice(0, 2600), /Başvurdum/);
+  /* Yalnız doğru bağlamda: `takipEtiketi` harici ilanda dolu. */
+  assert.match(cubuk.slice(0, 2600), /\{yol\.takipEtiketi && \(/);
+  /* iOS güvenli alanı ve alt menü: çubuk kendi dolgusunu taşıyor. */
+  assert.match(DETAY, /pb-\[max\(0\.75rem,env\(safe-area-inset-bottom\)\)\]/);
+  /* Dokunma hedefi 48 px (min-h-12). */
+  assert.match(cubuk.slice(0, 2600), /min-h-12/);
 });

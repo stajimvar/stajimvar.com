@@ -15,6 +15,7 @@ import { sonKontrolMetni } from '../lib/zaman';
   Ücret, staj türü ve sigorta kararları kartla AYNI dosyadan geliyor.
 */
 import {
+  donemEtiketi,
   sigortaMetni,
   stajTuruSatirlari,
   ucretMetniHesapla,
@@ -205,7 +206,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     `term` şemada zorunlu ama boş dize gelebiliyor; `workType`
     'On-site' | 'Hybrid' | 'Remote'.
   */
-  const donemMetni = listing?.term?.trim() || null;
+  const donemMetni = donemEtiketi(listing?.term);
   const bicimMetni = listing?.workType ? calismaEtiketi(listing.workType) : null;
 
   /*
@@ -630,16 +631,40 @@ export const ListingPage: React.FC<ListingPageProps> = ({
           aria-label="Başvuru"
         >
           {yol.resmiAdres && yol.anaEylem === 'resmi-site' ? (
-            <a
-              href={yol.resmiAdres}
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-              title={yol.ozet}
-              className="flex min-h-12 w-full items-center justify-center gap-1.5 rounded-2xl bg-blue-600 px-5 text-sm font-bold text-white shadow-xs transition-colors hover:bg-blue-700"
-            >
-              {yol.anaEtiket}
-              <ExternalLink className="h-4 w-4 shrink-0" />
-            </a>
+            /*
+              HARİCİ İLANDA İKİ İŞLEM — ÖLÇÜLDÜ, İKİNCİSİ MOBİLDE YOKTU
+
+              Masaüstü blokta "Başvurduğumu işaretle" vardı ama o blok
+              `hidden lg:flex`; telefonda yalnız birincil düğme
+              çiziliyordu. Yani mobilde detay sayfasından takip
+              listesine ekleme yolu HİÇ YOKTU.
+
+              Birincil geniş, ikincil dar: karar "başvur", kayıt onun
+              yanında duran ikincil bir işlem. İkisi eşit genişlikte
+              olsaydı hangisinin asıl iş olduğu belirsizleşirdi.
+            */
+            <div className="flex items-stretch gap-2">
+              <a
+                href={yol.resmiAdres}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                title={yol.ozet}
+                className="flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-blue-600 px-4 text-sm font-bold text-white shadow-xs transition-colors hover:bg-blue-700"
+              >
+                {yol.anaEtiket}
+                <ExternalLink className="h-4 w-4 shrink-0" />
+              </a>
+              {yol.takipEtiketi && (
+                <button
+                  type="button"
+                  onClick={() => onTrack(listing)}
+                  title="Yalnızca senin takibin için; şirkete başvuru göndermez."
+                  className="flex min-h-12 shrink-0 items-center justify-center rounded-2xl border border-gray-200 px-3 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50"
+                >
+                  Başvurdum
+                </button>
+              )}
+            </div>
           ) : (
             <button
               type="button"
