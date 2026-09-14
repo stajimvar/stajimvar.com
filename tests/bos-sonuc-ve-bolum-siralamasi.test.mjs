@@ -370,3 +370,34 @@ test('açık bölüm filtresi açıklama sinyaliyle yanlış ilan sokmuyor', () 
     true
   );
 });
+
+test('SGK tek başına mandatory=true üretmiyor', () => {
+  /*
+    ÖLÇÜLDÜ (14 Eylül 2026, üretim, 3 kayıt): birinde tek kanıt
+    "okulu tarafından SGK'sı karşılanan" cümlesiydi. O cümle sigortanın
+    KİM tarafından yapıldığını anlatıyor; stajın ZORUNLU olup
+    olmadığını anlatmıyor. Kayıt bu yüzden true görünüyordu.
+
+    Bilgi silinmedi: `insurance_provider = 'universite'` olarak doğru
+    alana taşındı (üretimde uygulandı).
+  */
+  const BETIK = oku('scripts/staj-turu-duzelt.mjs');
+  const kalipSatiri = BETIK.split('\n').find((s) => s.includes('|isletmede mesleki egitim|'));
+  assert.ok(kalipSatiri, 'zorunlu kalıbı bulunamadı');
+  assert.ok(!/sgk/i.test(kalipSatiri), 'SGK zorunlu kalıbında olmamalı');
+  assert.ok(!/staj sigortasi/.test(kalipSatiri), 'sigorta ifadesi zorunlu kalıbında olmamalı');
+  assert.ok(kalipSatiri.includes('zorunlu staj'), 'gerçek kanıt kalıpta kalmalı');
+
+  /* Sigorta kararı ayrı fonksiyonda ve kanıt yoksa DOKUNMUYOR. */
+  assert.match(BETIK, /export function sigortaKarari\(ilan\)/);
+  assert.match(BETIK, /if \(sig !== null && sig !== ilan\.insurance_provider\)/);
+
+  /* İçe aktarıcıda da ayrı. */
+  const PROMOTE = oku('automation/promote.py');
+  assert.match(PROMOTE, /def detect_insurance_provider\(description: str \| None\) -> str \| None:/);
+  const zorunlu = PROMOTE.slice(
+    PROMOTE.indexOf('def detect_mandatory_staj'),
+    PROMOTE.indexOf('def detect_insurance_provider')
+  );
+  assert.ok(!/sgk/i.test(zorunlu), 'SGK zorunlu dedektöründe olmamalı');
+});

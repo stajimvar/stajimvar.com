@@ -54,12 +54,52 @@ function katla(metin) {
   uydurma bir kelimede) yanlış kanıt üretir.
 */
 const ZORUNLU_KABUL =
-  /zorunlu staj|staj sigortasi|isletmede mesleki egitim|\bsgk\b|mandatory internship|compulsory internship/;
+  /*
+    SGK ZORUNLU STAJ KANITI DEĞİL — ÖLÇÜLDÜ
+
+    Üç `mandatory=true` kaydın birinde tek kanıt "okulu tarafından
+    SGK'sı karşılanan" cümlesiydi. O cümle sigortanın KİM tarafından
+    yapıldığını anlatıyor; stajın ZORUNLU olup olmadığını anlatmıyor.
+
+    Sigorta ifadeleri kalıptan çıkarıldı ve `sigortaKarari` ile kendi
+    alanına taşındı — bilgi silinmiyor, doğru alana gidiyor.
+  */
+  /zorunlu staj|isletmede mesleki egitim|mandatory internship|compulsory internship/;
 const ZORUNLU_RET =
   /zorunlu staj (kabul edilmiyor|alinmiyor|kabul edilmemektedir)|zorunlu stajyer alinmamaktadir/;
 const GONULLU_KABUL = /gonullu staj|gonulluluk esasli staj|zorunlu olmayan staj|voluntary internship/;
 const GONULLU_RET =
   /gonullu staj (kabul edilmiyor|alinmiyor)|yalnizca zorunlu staj|sadece zorunlu staj/;
+
+/**
+ * SİGORTAYI SAĞLAYAN TARAF — kanıt yoksa null.
+ *
+ * `promote.py:detect_insurance_provider` ile aynı kurallar: iki yerde
+ * iki farklı kural, içe aktarımın yazdığıyla düzeltmenin beklediğinin
+ * ayrışması demek olurdu.
+ */
+export function sigortaKarari(ilan) {
+  const metin = katla(
+    [ilan.description || '', ilan.insurance_note || '', JSON.stringify(ilan.raw ?? {})].join(' ')
+  );
+  /* Ret önce: "sigorta yapılmaz" içinde "sigorta" da geçiyor. */
+  if (/sigorta (yapilmaz|yapilmiyor|karsilanmaz)|sigortasiz/.test(metin)) return 'yok';
+  if (
+    /okulu(?:nuz)? tarafindan (sgk|sigorta)|universite(?:si)? tarafindan (sgk|sigorta)|sgk'?si okulu tarafindan|sigortasi okulu tarafindan/.test(
+      metin
+    )
+  ) {
+    return 'universite';
+  }
+  if (
+    /sgk (girisi|kaydi)? ?(tarafimizca|sirketimiz tarafindan|isveren tarafindan)|tarafimizca (sgk|sigorta)|full social security|sigorta(?:si)? tarafimizdan/.test(
+      metin
+    )
+  ) {
+    return 'isveren';
+  }
+  return null;
+}
 
 /** Bir alanın kararı: true / false / null + sebep. */
 export function stajTuruKarari(ilan, tur) {
@@ -90,7 +130,10 @@ export function stajTuruKarari(ilan, tur) {
 if (adres && anahtar) {
   const { data: ilanlar, error } = await db
     .from('listings')
-    .select('id, title, description, insurance_note, mandatory_staj_accepted, voluntary_staj_accepted');
+    .select(
+      'id, title, description, insurance_note, source_title, raw, ' +
+        'mandatory_staj_accepted, voluntary_staj_accepted, insurance_provider'
+    );
 
   if (error) {
     console.error(`::error::İlanlar okunamadı: ${error.message}`);
@@ -146,6 +189,19 @@ if (adres && anahtar) {
         kayıt var" görünsün.
       */
       if (z.deger !== ilan.mandatory_staj_accepted) govde.mandatory_staj_accepted = z.deger;
+
+      /*
+        SİGORTA BİLGİSİ KAYBOLMUYOR
+
+        `mandatory` kalıbından çıkarılan SGK ifadeleri kendi alanına
+        yazılıyor. Kanıt yoksa DOKUNULMUYOR (mevcut değer korunuyor):
+        elle girilmiş bir sigorta bilgisini metin kanıtı bulamadığımız
+        için silmek, doğrulanmış bilgiyi kaybetmek olurdu.
+      */
+      const sig = sigortaKarari(ilan);
+      if (sig !== null && sig !== ilan.insurance_provider) {
+        govde.insurance_provider = sig;
+      }
 
       /*
         `voluntary_staj_accepted` KANITSIZ OLDUĞU KANITLI
