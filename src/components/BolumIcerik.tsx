@@ -304,7 +304,7 @@ export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
                 <a
                   key={i.slug}
                   href={`/sirket/${i.slug}`}
-                  className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 hover:border-blue-300 hover:text-blue-700"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-700 hover:border-blue-300 hover:text-blue-700"
                 >
                   <img
                     src={`/isveren-logolari/${i.slug}.png`}

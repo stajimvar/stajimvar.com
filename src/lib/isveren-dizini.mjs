@@ -292,13 +292,31 @@ export async function fetchIsverenKontrolleri() {
   kontrolSozu = (async () => {
     try {
       const { supabase } = await import('./supabase');
+      /*
+        YENİ KOLON ESKİ ŞEMAYI DÜŞÜRMESİN
+
+        `listings` tablosunda tam olarak bu oldu: üç yeni kolon
+        eklendi, yetki verilmedi ve TEK yetkisiz kolon bütün sorguyu
+        `42501` ile düşürdü — üretimde her ilan "yüklenemedi" oldu.
+        Burada aynı sınıf hata ölçüldü: `program_url` kolonu göç
+        uygulanmadan önce istenince PostgREST `42703` döndürüyor ve
+        44 satırın hepsi kayboluyor, dizin "Henüz kontrol edilmedi"ye
+        düşüyor.
+
+        Ön yüz ile göç aynı PR'da gidiyor ama sıra garanti değil. Yeni
+        kolon isteği düşerse ESKİ KOLON KÜMESİYLE bir kez daha
+        deneniyor: ölçüm görünmeye devam ediyor, yalnız "Açık programı
+        incele" etiketi (bugün hiçbir kayıtta yok) çıkmıyor.
+      */
+      const ESKI = 'slug, url_durumu, url_denendi_at, url_basarili_at, url_hata, program_durumu, program_kaniti, program_kontrol_at';
       const { data, error } = await supabase
         .from('employer_career_checks')
-        .select(
-          'slug, url_durumu, url_denendi_at, url_basarili_at, url_hata, program_durumu, program_kaniti, program_kontrol_at, program_url'
-        );
-      if (error) return [];
-      return data ?? [];
+        .select(`${ESKI}, program_url`);
+      if (!error) return data ?? [];
+
+      const yedek = await supabase.from('employer_career_checks').select(ESKI);
+      if (yedek.error) return [];
+      return yedek.data ?? [];
     } catch {
       return [];
     }

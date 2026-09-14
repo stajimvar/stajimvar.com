@@ -165,7 +165,7 @@ export const Kart: React.FC<{
                   e.preventDefault();
                   onNavigate(`/bolum/${slug}`);
                 }}
-                className="rounded-lg bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-600 hover:bg-blue-50 hover:text-blue-700"
+                className="inline-flex min-h-11 items-center rounded-lg bg-gray-100 px-2.5 text-[11px] font-semibold text-gray-600 hover:bg-blue-50 hover:text-blue-700"
               >
                 {bolum.ad}
               </a>
