@@ -187,8 +187,12 @@ test('403/429/5xx ve zaman aşımı program durumunu bozmuyor', () => {
   */
   const kod = yorumsuz(ISCI);
   assert.match(kod, /if \(gercekUrlDurumu === 'calisiyor'\) \{/);
-  const hazir = kod.slice(kod.indexOf('let program = {'), kod.indexOf('let sahte404'));
-  assert.match(hazir, /program_durumu: eski\?\.program_durumu \?\? null/);
+  const hazir = kod.slice(kod.indexOf('const eskiKararGuvenilir'), kod.indexOf('let sahte404'));
+  /*
+    Korunan karar GÜVENİLİRSE taşınıyor. Adressiz bir "acik" korunmuyor
+    — o karar yalnız eski kuraldan gelebilir (ayrı testte ölçülüyor).
+  */
+  assert.match(hazir, /program_durumu: eskiKararGuvenilir \? \(eski\?\.program_durumu \?\? null\) : null/);
   /* Zaman aşımı 0 durum kodu üretiyor ve geçici sayılıyor. */
   assert.match(kod, /cevap\.durum === 0 \? 'gecici_hata' : urlKarari\(cevap\.durum\)/);
 });
@@ -346,14 +350,21 @@ test('editoryal bilgi ile ölçüm tek sözleşmede birleşiyor', () => {
       url_basarili_at: '2026-09-14T10:00:00Z',
       url_hata: null,
       program_durumu: 'acik',
-      program_kaniti: 'staj-programi-ve-basvuru-yolu',
+      program_kaniti: 'staj-sayfasinda-aktif-basvuru',
       program_kontrol_at: '2026-09-14T10:00:00Z',
+      /*
+        `acik` kararı ARTIK ADRESİYLE BİRLİKTE anlam taşıyor: adressiz
+        bir "acik" eski kuraldan kalmış sayılıyor ve `bilinmiyor`a
+        indiriliyor. Fixture da gerçek kuralı yansıtıyor.
+      */
+      program_url: 'https://a.example/staj-basvuru',
     },
     { slug: 'a', logo_url: 'https://cdn.example/a.png' }
   );
   assert.equal(birlesik.isveren, 'A Holding');
   assert.equal(birlesik.urlDurumu, 'calisiyor');
   assert.equal(birlesik.programDurumu, 'acik');
+  assert.equal(birlesik.programUrl, 'https://a.example/staj-basvuru');
   assert.equal(birlesik.logoUrl, 'https://cdn.example/a.png');
   assert.equal(birlesik.ulke, DIZIN_ULKESI);
 
@@ -523,4 +534,48 @@ test('genel başvuru dönemi eski dönem tarihi gibi sunulmuyor', () => {
   assert.match(MODUL, /GENEL BAŞVURU DÖNEMİ — GEÇMİŞ DÖNEMLERDEN TÜRETİLMİŞ/);
   /* Editoryal dosyada uydurma dönem yok: hiçbir kayıtta alan dolu değil. */
   assert.ok(!/genelBasvuruDonemi/.test(VERI), 'kaynakta doğrulanmamış dönem yazılmamış');
+});
+
+test('ADRESSİZ "acik" GÜVENİLMEZ: eski kuraldan kalmış demek', () => {
+  /*
+    ÖLÇÜLDÜ VE GERÇEKTEN OLDU
+
+    Sekiz yanlış kaydı düzeltmek için koşan işçi tupras'ın adresini
+    `bozuk` (yumuşak 404) buldu. Program alanlarına yalnız `calisiyor`
+    dalında dokunulduğu için satır ESKİ kuralın "acik" kararıyla kaldı —
+    hem de eski kuralın kanıt etiketiyle.
+
+    "Geçici hata kararı bozmuyor" kuralı doğru ama korunan değerin
+    YANLIŞ olabileceği durumu kapsamıyordu. Yeni kuralda `acik` tanımı
+    gereği programın kendi adresiyle yazılıyor; adressiz `acik` yalnız
+    eski kuraldan gelebilir.
+  */
+  const p = { slug: 'a', isveren: 'A Holding', kariyerUrl: 'https://a.example/kariyer', bolumler: [] };
+
+  const adressiz = isvereniBirlestir(
+    p,
+    { slug: 'a', program_durumu: 'acik', program_url: null, url_durumu: 'bozuk' },
+    undefined
+  );
+  assert.equal(adressiz.programDurumu, 'bilinmiyor', 'adressiz acik kabul edilmemeli');
+  /* Bozuk adreste aktif bağlantı da yok. */
+  assert.equal(baglantiEtiketi(adressiz).tur, 'yok');
+
+  const adresli = isvereniBirlestir(
+    p,
+    {
+      slug: 'a',
+      program_durumu: 'acik',
+      program_url: 'https://a.example/staj',
+      url_durumu: 'calisiyor',
+    },
+    undefined
+  );
+  assert.equal(adresli.programDurumu, 'acik');
+  assert.equal(baglantiEtiketi(adresli).etiket, 'Açık programı incele');
+
+  /* İşçi de aynı kararı veriyor: adressiz acik korunmuyor. */
+  const kod = yorumsuz(ISCI);
+  assert.match(kod, /const eskiKararGuvenilir = !\(eski\?\.program_durumu === 'acik' && !eski\?\.program_url\)/);
+  assert.match(kod, /adressiz-acik-karari-dusuruldu/);
 });
