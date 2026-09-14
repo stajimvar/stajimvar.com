@@ -220,12 +220,29 @@ function adaylariBul({ aramalar, ilanlar, defter }) {
         gördüğümüz an; `posted_at` değil, çünkü geç içe aktarılan
         eski tarihli bir ilan bizim için yenidir.
       */
-      const geldigiAn = new Date(ham.first_seen_at ?? 0).getTime();
+      /*
+        `first_seen_at` ÇOĞU İLANDA BOŞ — ÖLÇÜLDÜ
+
+        14 Eylül 2026, üretim: yayındaki 159 ilanın 151'inde
+        `first_seen_at` NULL. Alan yalnız otomasyonun derlediklerinde
+        doluyor; elle girilen ilanlarda hiç yazılmıyor.
+
+        İlk hâlde boş alan "aramadan sonra geldi" sayılıyordu ve
+        normal akış ölçümünde 10 eski ilan yine gönderildi. Yedek
+        `created_at`: satırın veritabanımıza girdiği an, her ilanda
+        dolu ve "envanterimize ne zaman girdi" sorusunun cevabı.
+
+        İKİSİ DE YOKSA TABAN SAYILIYOR
+
+        Geliş anını kuramadığımız bir ilanı "yeni" saymak, yaşını
+        bilmediğimiz bir ilanı e-postalamak olurdu. Güvenli taraf
+        göndermemek: bir ilanı bir gün geç göndermek, eski bir ilanı
+        yeni diye göndermekten iyi.
+      */
+      const geldigiAn = new Date(ham.first_seen_at ?? ham.created_at ?? 0).getTime();
+      const gelisBilinmiyor = !Number.isFinite(geldigiAn) || geldigiAn === 0;
       const aramadanOnce =
-        Number.isFinite(aramaAnı) &&
-        Number.isFinite(geldigiAn) &&
-        geldigiAn > 0 &&
-        geldigiAn <= aramaAnı;
+        gelisBilinmiyor || (Number.isFinite(aramaAnı) && geldigiAn <= aramaAnı);
 
       if (aramadanOnce && !mevcut) {
         if (!taban.has(ham.id)) taban.set(ham.id, { ilan: ham, aramaId: arama.id });

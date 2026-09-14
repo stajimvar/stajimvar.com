@@ -624,3 +624,19 @@ test('kaydedilmeyen filtreler sessizce yok sayılmıyor', () => {
   const f = filtreleriDogrula({ minMatchScore: 80, subTab: 'yeni', city: 'diger' });
   assert.ok(!('minMatchScore' in f) && !('subTab' in f));
 });
+
+test('first_seen_at boşsa created_at, ikisi de yoksa TABAN', () => {
+  /*
+    ÖLÇÜLDÜ (14 Eylül 2026, üretim): yayındaki 159 ilanın 151'inde
+    `first_seen_at` NULL — alan yalnız otomasyonun derlediklerinde
+    doluyor. İlk hâlde boş alan "aramadan sonra geldi" sayılıyordu ve
+    normal akış ölçümünde 10 eski ilan yine gönderildi.
+  */
+  const kod = yorumsuz(ISCI);
+  assert.match(kod, /new Date\(ham\.first_seen_at \?\? ham\.created_at \?\? 0\)/);
+  /* Geliş anı kurulamıyorsa taban: yaşını bilmediğimiz ilan
+     e-postalanmıyor. */
+  assert.match(kod, /const gelisBilinmiyor =/);
+  assert.match(kod, /gelisBilinmiyor \|\| \(Number\.isFinite\(aramaAnı\) && geldigiAn <= aramaAnı\)/);
+  assert.match(ISCI, /first_seen_at,posted_at,created_at/);
+});
