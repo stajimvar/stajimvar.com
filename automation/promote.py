@@ -96,8 +96,15 @@ def detect_mandatory_staj(description: str | None) -> tuple[bool | None, str | N
         text,
     ):
         return False, "Kaynak zorunlu staj kabul etmediğini yazıyor"
+    # SGK / "staj sigortasi" / "social security" ARTIK KANIT DEGIL
+    #
+    # Olculdu: "okulu tarafindan SGK'si karsilanan" cumlesi bir kaydi
+    # `mandatory=true` yapiyordu. O cumle sigortanin KIM tarafindan
+    # yapildigini anlatiyor; stajin ZORUNLU olup olmadigini anlatmiyor.
+    # Sigorta bilgisi `detect_insurance_provider` ile kendi alanina
+    # gidiyor.
     if re.search(
-        r"zorunlu staj|staj sigortasi|isletmede mesleki egitim|\bsgk\b"
+        r"zorunlu staj|isletmede mesleki egitim"
         r"|mandatory internship|compulsory internship",
         text,
     ):
@@ -105,6 +112,37 @@ def detect_mandatory_staj(description: str | None) -> tuple[bool | None, str | N
     # KANIT YOKSA None. Onceki hali `False, "Kaynakta belirtilmemiş"`
     # donuyordu; o not da arayuzde bilgi gibi gorunuyordu.
     return None, None
+
+
+def detect_insurance_provider(description: str | None) -> str | None:
+    """Staj sigortasini kim sagliyor — kanit yoksa None.
+
+    `mandatory_staj_accepted` kalibindan CIKARILAN sigorta ifadeleri
+    buraya tasindi: SGK'dan soz etmek stajin zorunlu oldugunu degil,
+    sigortanin yapildigini anlatiyor.
+
+    Doner: 'isveren' | 'universite' | 'aday' | 'yok' | None
+    (sema kisitiyla ayni kume, goc 20261001010000).
+    """
+    text = _fold(description or "")
+    if not text:
+        return None
+    # Ret once: "sigorta yapilmaz" icinde "sigorta" da geciyor.
+    if re.search(r"sigorta (yapilmaz|yapilmiyor|karsilanmaz)|sigortasiz", text):
+        return "yok"
+    if re.search(
+        r"okulu(?:nuz)? tarafindan (sgk|sigorta)|universite(?:si)? tarafindan (sgk|sigorta)"
+        r"|sgk'?si okulu tarafindan|sigortasi okulu tarafindan",
+        text,
+    ):
+        return "universite"
+    if re.search(
+        r"sgk (girisi|kaydi)? ?(tarafimizca|sirketimiz tarafindan|isveren tarafindan)"
+        r"|tarafimizca (sgk|sigorta)|full social security|sigorta(?:si)? tarafimizdan",
+        text,
+    ):
+        return "isveren"
+    return None
 
 
 def detect_voluntary_staj(description: str | None) -> bool | None:

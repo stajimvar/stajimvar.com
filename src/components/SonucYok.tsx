@@ -255,13 +255,22 @@ export const SonucYok: React.FC<SonucYokProps> = ({
       */}
       {firsatSayisi !== null && firsatSayisi > 0 && (
         <p className="text-xs text-gray-500">
-          Aynı aramayla eşleşen {firsatSayisi} öğrenci fırsatı da var (burs, kredi, yurt dışı).{' '}
+          {/*
+            "AYNI ARAMAYLA EŞLEŞEN" İDDİASI KALKTI
+
+            Staj arama metni fırsat verisine uygulanıyordu ve sayı
+            "eşleşen" diye sunuluyordu. Staj araması burs verisinde
+            anlamlı eşleşme üretmiyor; ürettiğinde de tesadüfi.
+
+            Söylenen tek şey artık doğru: sistemde açık fırsat var.
+          */}
+          Burs, kredi ve yurt dışı programları ayrı bir listede.{' '}
           <button
             type="button"
             onClick={onFirsatlaraGit}
             className="font-bold text-blue-600 hover:underline cursor-pointer"
           >
-            Fırsatlara bak
+            Açık öğrenci fırsatlarına bak
           </button>
         </p>
       )}

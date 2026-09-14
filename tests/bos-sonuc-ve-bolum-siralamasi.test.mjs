@@ -38,7 +38,7 @@ test('boş sonuç adımları doğru sırada', () => {
     'Filtreleri temizle',
     'Bu bölüm ve ülkede staj alan işverenler',
     'İlan açmamış şirkete nasıl yazılır?',
-    'Fırsatlara bak',
+    'Açık öğrenci fırsatlarına bak',
   ];
   let onceki = -1;
   for (const parca of sira) {
@@ -54,7 +54,7 @@ test('Fırsatlar küçük ve ikincil, ana sonuç değil', () => {
     listesinin ana sonucu gibi duruyordu. Öğrenci staj arıyor; burs
     listesi bir alternatif, cevabın kendisi değil.
   */
-  const firsat = SONUCYOK.slice(SONUCYOK.indexOf('Fırsatlara bak') - 700);
+  const firsat = SONUCYOK.slice(SONUCYOK.indexOf('Açık öğrenci fırsatlarına bak') - 900);
   assert.ok(!/bg-blue-50\/60/.test(firsat), 'kutu olmamalı');
   assert.ok(!/bg-blue-600/.test(firsat.slice(0, 600)), 'dolgulu düğme olmamalı');
   /* Sparkles ikonlu tanıtım kutusu kalktı. */
@@ -369,4 +369,66 @@ test('açık bölüm filtresi açıklama sinyaliyle yanlış ilan sokmuyor', () 
     aramaEslesiyorMu(ilaniNormalize({ id: 'y', title: 'Bilgi Teknolojileri Stajyeri' }), f),
     true
   );
+});
+
+test('SGK tek başına mandatory=true üretmiyor', () => {
+  /*
+    ÖLÇÜLDÜ (14 Eylül 2026, üretim, 3 kayıt): birinde tek kanıt
+    "okulu tarafından SGK'sı karşılanan" cümlesiydi. O cümle sigortanın
+    KİM tarafından yapıldığını anlatıyor; stajın ZORUNLU olup
+    olmadığını anlatmıyor. Kayıt bu yüzden true görünüyordu.
+
+    Bilgi silinmedi: `insurance_provider = 'universite'` olarak doğru
+    alana taşındı (üretimde uygulandı).
+  */
+  const BETIK = oku('scripts/staj-turu-duzelt.mjs');
+  const kalipSatiri = BETIK.split('\n').find((s) => s.includes('|isletmede mesleki egitim|'));
+  assert.ok(kalipSatiri, 'zorunlu kalıbı bulunamadı');
+  assert.ok(!/sgk/i.test(kalipSatiri), 'SGK zorunlu kalıbında olmamalı');
+  assert.ok(!/staj sigortasi/.test(kalipSatiri), 'sigorta ifadesi zorunlu kalıbında olmamalı');
+  assert.ok(kalipSatiri.includes('zorunlu staj'), 'gerçek kanıt kalıpta kalmalı');
+
+  /* Sigorta kararı ayrı fonksiyonda ve kanıt yoksa DOKUNMUYOR. */
+  assert.match(BETIK, /export function sigortaKarari\(ilan\)/);
+  assert.match(BETIK, /if \(sig !== null && sig !== ilan\.insurance_provider\)/);
+
+  /* İçe aktarıcıda da ayrı. */
+  const PROMOTE = oku('automation/promote.py');
+  assert.match(PROMOTE, /def detect_insurance_provider\(description: str \| None\) -> str \| None:/);
+  /*
+    YORUMSUZ KONTROL
+
+    İlk hâlde fonksiyonun tamamında arıyordum ve kendi açıklama
+    yorumumla eşleşiyordu ("SGK ... ARTIK KANIT DEGIL"). Yorumlar
+    niyeti anlatıyor, kalıbı değil.
+  */
+  const zorunlu = PROMOTE.slice(
+    PROMOTE.indexOf('def detect_mandatory_staj'),
+    PROMOTE.indexOf('def detect_insurance_provider')
+  )
+    .replace(/\"\"\"[\s\S]*?\"\"\"/g, ' ')
+    .replace(/^\s*#.*$/gm, ' ');
+  assert.ok(!/sgk/i.test(zorunlu), 'SGK zorunlu dedektöründe olmamalı');
+});
+
+test('staj arama metni Fırsatlar verisine uygulanmıyor', () => {
+  /*
+    `searchQuery` fırsatların başlık/kurum/özetinde aranıyor ve sonuç
+    "aynı aramayla eşleşen N öğrenci fırsatı" diye sunuluyordu. Staj
+    araması ("yazılım stajyeri") burs verisinde anlamlı eşleşme
+    üretmiyor; ürettiğinde de tesadüfi.
+
+    Sayılan tek şey: sistemde AÇIK fırsat var mı.
+  */
+  const kod = yorumsuz(LISTE);
+  const etki = kod.slice(kod.indexOf('void fetchOpportunities()'), kod.indexOf('}, [sonucYok]'));
+  assert.ok(!/searchQuery/.test(etki), 'arama terimi fırsat verisine uygulanmamalı');
+  assert.match(etki, /setFirsatSayisi\(hepsi\.length\)/);
+  /* Adres de terimsiz. */
+  assert.match(kod, /onFirsatlaraGit=\{\(\) => onNavigate\?\.\('\/firsatlar'\)\}/);
+  /* Metin "eşleşen" demiyor. */
+  assert.ok(!/Aynı aramayla eşleşen/.test(SONUCYOK));
+  assert.match(SONUCYOK, /Açık öğrenci fırsatlarına bak/);
+  /* Aktif fırsat yoksa bağlantı gizli. */
+  assert.match(SONUCYOK, /\{firsatSayisi !== null && firsatSayisi > 0 && \(/);
 });
