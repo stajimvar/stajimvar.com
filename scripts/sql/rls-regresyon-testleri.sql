@@ -81,7 +81,16 @@ from (select a as id, 'a@test-a.com' as eposta from k
       union all select b, 'b@test-b.com' from k
       union all select c, 'c@ogrenci.test' from k
       union all select d, 'd@test-d.com' from k
-      union all select e, 'e@ogrenci.test' from k) x
+      union all select e, 'e@ogrenci.test' from k
+      -- YONETICI KIMLIGI BURAYA DA GIRMELI
+      --
+      -- `profiles.id` auth.users(id) referans veriyor. Yonetici kimligini
+      -- (f) yalnizca profiles listesine ekleyip burayi atlamisim ve
+      -- kosu su hatayla dustu:
+      --   insert or update on table "profiles" violates foreign key
+      --   constraint "profiles_id_fkey"
+      -- Iki liste ayni kimlikleri tasimak zorunda.
+      union all select f, 'f@yonetim.test' from k) x
 on conflict (id) do nothing;
 
 -- Kurulum service_role kimliğiyle: guard_listing_publish yayına çıkmayı
