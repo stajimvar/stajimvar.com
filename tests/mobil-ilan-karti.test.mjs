@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 
 /**
  * MOBİL İLAN KARTI — BİLGİ DOĞRULUĞU
@@ -133,4 +133,39 @@ test('başvuru yöntemine göre ana düğme', () => {
   assert.match(oku('src/components/ApplyDialog.tsx'), /'Şirket sayfasında başvur'/);
   /* İlan bildir bağlantısı korunuyor. */
   assert.match(oku('src/components/InternshipDetailModal.tsx'), /Bu ilanı bildir/);
+});
+
+test('kolon listesine eklenen her kolonun okuma yetkisi var', () => {
+  /*
+    CANLIDA KIRIKTI (14 Eylül 2026): `insurance_provider`
+    `LISTING_COLUMNS`a eklendiği anda bütün ilan sorguları
+    `42501 permission denied for table listings` verdi ve ilan detayı
+    "İlan yüklenemedi" gösterdi.
+
+    `listings` tablosunda SELECT tablo düzeyinde DEĞİL, kolon kolon
+    veriliyor. Yetkisi olmayan TEK bir kolonu istemek sorgunun
+    TAMAMINI düşürüyor.
+
+    Bu test o bağı kuruyor. Göç adlarını elle eşlemiyor: dizini
+    tarıyor, yoksa yeni bir göç eklendiğinde test sessizce eksik
+    kalırdı. Regex de kullanmıyor — ilk hâlinde kaçış bozulmuş ve test
+    kendi kalıbında patlamıştı.
+  */
+  const dizin = new URL('../supabase/migrations/', import.meta.url);
+  const tumGocler = readdirSync(dizin)
+    .filter((ad) => ad.endsWith('.sql'))
+    .map((ad) => readFileSync(new URL(ad, dizin), 'utf8'))
+    .join('\n');
+
+  /* Göç 20261001010000'ın eklediği üç kolon. */
+  for (const kolon of ['location_raw', 'insurance_provider', 'department_tags']) {
+    const yetkiliMi = tumGocler
+      .split('grant select (')
+      .slice(1)
+      .some((parca) => parca.slice(0, parca.indexOf(')')).includes(kolon));
+    assert.ok(yetkiliMi, `${kolon} icin grant select yok — butun ilan sorgularini dusurur`);
+  }
+
+  /* Kolon listesinde olan `insurance_provider` gerçekten yetkili. */
+  assert.match(MAPPER, /'insurance_provider',/);
 });
