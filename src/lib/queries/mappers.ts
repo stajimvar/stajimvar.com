@@ -52,6 +52,14 @@ const num = (v: number | string | null | undefined, fallback = 0): number => {
  * istemcinin SELECT yetkisi yok, `*` sorgusu 401 döner.
  * Yeni kolon eklendiğinde hem buraya hem 0005 migrasyonundaki GRANT listesine ekle.
  */
+/** Şemadaki check kısıtıyla aynı küme (göç 20261001010000). */
+const SIGORTA_SAGLAYICILARI: Array<InternshipListing['insuranceProvider']> = [
+  'isveren',
+  'universite',
+  'aday',
+  'yok',
+];
+
 export const LISTING_COLUMNS = [
   'id',
   'company_id',
@@ -88,6 +96,7 @@ export const LISTING_COLUMNS = [
   'posted_at',
   'last_seen_at',
   'source_verified_at',
+  'insurance_provider',
   'source_status',
   'created_at',
   'updated_at',
@@ -198,6 +207,19 @@ export function toInternshipListing(row: ListingRowWithCompany): InternshipListi
     sourceUrl: row.source_url ?? undefined,
     applicationChannelId: row.application_channel_id ?? undefined,
     insuranceNote: row.insurance_note ?? undefined,
+    /*
+      null = bilinmiyor; 'yok' ayrı bir değer.
+
+      Sütun `text` + check kısıtı (göç 20261001010000), yani tip
+      düzeyinde `string`. Tanınmayan bir değer `undefined`a düşüyor:
+      veritabanına elle yazılmış bir yazım hatası arayüzde
+      "bilinmiyor" olarak görünür, uydurma bir etiket olarak değil.
+    */
+    insuranceProvider: SIGORTA_SAGLAYICILARI.includes(
+      row.insurance_provider as InternshipListing['insuranceProvider']
+    )
+      ? (row.insurance_provider as InternshipListing['insuranceProvider'])
+      : undefined,
   };
 }
 

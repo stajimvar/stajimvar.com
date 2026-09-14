@@ -25,6 +25,23 @@ import { CTA_BASARI, CTA_BIRINCIL, CTA_ORTAK } from '../lib/kart-cta';
 import { tarihMetni } from '../lib/tarih.mjs';
 import { YUZEY } from '../ui/tokens';
 
+/**
+ * SİGORTAYI SAĞLAYAN TARAFIN OKUNABİLİR ADI.
+ *
+ * "yok" da GÖSTERİLİYOR: kaynağın açık beyanı ve öğrenci için gerçek
+ * bir bilgi. Gösterilmeyen tek hâl `undefined` — kaynağın hiç
+ * konuşmadığı hâl.
+ */
+const SIGORTA_ETIKET: Record<
+  NonNullable<InternshipListing['insuranceProvider']>,
+  string
+> = {
+  isveren: 'Sigorta: işveren',
+  universite: 'Sigorta: üniversite',
+  aday: 'Sigorta: aday',
+  yok: 'Sigorta yok',
+};
+
 /*
   ALT CTA GEOMETRİSİ — TEK AİLE
 
@@ -473,11 +490,58 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               </span>
             )}
 
-            {/* Stipend */}
-            {listing.stipend.isPaid && (
+            {/*
+              GÖNÜLLÜ STAJ — YALNIZ BİLİNİYORSA VE ZORUNLU YOKSA
+
+              İkisi birlikte yazılınca satır uzuyor ve ayrım kayboluyor.
+              Zorunlu staj kabulü daha bağlayıcı bilgi (SGK'lı staj
+              arayan öğrenci onu arıyor); gönüllü rozeti yalnız
+              zorunlunun olmadığı kartta çıkıyor.
+            */}
+            {!listing.mandatoryStajAccepted && listing.voluntaryStajAccepted && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-50 text-sky-800 font-semibold border border-sky-200">
+                <ShieldCheck className="w-3.5 h-3.5 text-sky-600"/>
+                <span>Gönüllü staj</span>
+              </span>
+            )}
+
+            {/*
+              ÜCRET — ÜÇ DEĞER, ÜÇ DAVRANIŞ
+
+                true  → tutar varsa tutar, yoksa "Ücretli"
+                false → "Ücretsiz" (kaynağın AÇIK beyanı)
+                null  → rozet YOK
+
+              Önce `isPaid &&` yazıyordu: sütun `not null default false`
+              olduğu için false hem "ücretsiz" hem "bilinmiyor"
+              anlamına geliyordu ve yalnız pozitif bilgi
+              gösterilebiliyordu. Göç 20261001010000'dan beri ayrım
+              veride var (ölçüldü: üretimde 168 null, 7 true, 0 false).
+            */}
+            {listing.stipend.isPaid === true && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 font-semibold border border-amber-200">
                 <DollarSign className="w-3.5 h-3.5 text-amber-600"/>
                 <span>{listing.stipend.amountText?.split('+')[0] || 'Ücretli'}</span>
+              </span>
+            )}
+            {listing.stipend.isPaid === false && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-50 text-gray-700 font-semibold border border-gray-200">
+                <DollarSign className="w-3.5 h-3.5 text-gray-500"/>
+                <span>Ücretsiz</span>
+              </span>
+            )}
+
+            {/*
+              SİGORTAYI SAĞLAYAN — YALNIZ BİLİNİYORSA
+
+              `undefined` (kaynak söylemiyor) rozet üretmiyor.
+              Bilinmeyen sigortayı "sigortasız" göstermek, zorunlu staj
+              arayan öğrenci için yanlış bilgi olurdu.
+            */}
+            {listing.insuranceProvider && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-50 text-gray-700 font-semibold border border-gray-200">
+                <ShieldCheck className="w-3.5 h-3.5 text-gray-500"/>
+                <span>{SIGORTA_ETIKET[listing.insuranceProvider]}</span>
               </span>
             )}
 
