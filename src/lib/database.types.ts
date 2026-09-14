@@ -1094,6 +1094,56 @@ export type Database = {
         };
         Relationships: [];
       };
+      /*
+        KISISEL BASVURU TAKIBI
+
+        `applications` GERCEK basvuru; bu tablo ogrencinin kendi takip
+        defteri. Sirketlere kapali (select politikasi yok).
+      */
+      application_tracking: {
+        Row: {
+          id: string;
+          student_id: string;
+          listing_id: string | null;
+          listing_title: string | null;
+          company_name: string | null;
+          application_id: string | null;
+          channel: Database['public']['Enums']['application_method'];
+          applied_at: string;
+          personal_status: Database['public']['Enums']['kisisel_basvuru_durumu'];
+          personal_note: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          student_id: string;
+          listing_id?: string | null;
+          listing_title?: string | null;
+          company_name?: string | null;
+          application_id?: string | null;
+          channel: Database['public']['Enums']['application_method'];
+          applied_at?: string;
+          personal_status?: Database['public']['Enums']['kisisel_basvuru_durumu'];
+          personal_note?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          /*
+            `student_id` ve `application_id` BILEREK YOK: sahip
+            degistirilemiyor (tetikleyici de geri yaziyor) ve gercek
+            basvuru bagi arayuzden kurulmuyor.
+          */
+          listing_title?: string | null;
+          company_name?: string | null;
+          personal_status?: Database['public']['Enums']['kisisel_basvuru_durumu'];
+          personal_note?: string | null;
+          applied_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       import_runs: {
         Row: {
           created_count: number;
@@ -1450,6 +1500,13 @@ export type Database = {
         | 'kirik_baglanti'
         | 'diger';
       ilan_bildirim_durumu: 'yeni' | 'inceleniyor' | 'kapatildi';
+      kisisel_basvuru_durumu:
+        | 'basvurdum'
+        | 'bekliyorum'
+        | 'gorusme'
+        | 'teklif'
+        | 'olumsuz'
+        | 'vazgectim';
       channel_type: 'email' | 'external_url' | 'internal';
       channel_verification: 'unverified' | 'verified' | 'rejected';
       import_event_type:

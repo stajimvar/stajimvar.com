@@ -27,7 +27,20 @@ interface ListingPageProps {
   idPrefix: string;
   onBack: () => void;
   onNavigate: (path: string) => void;
+  /** Platform içi başvuru (internal / email_application). */
   onApply: (listing: InternshipListing) => void;
+  /**
+   * "BAŞVURDUĞUMU İŞARETLE" — GERÇEK BAŞVURU DEĞİL
+   *
+   * Harici ilanlarda başvuru şirketin kendi sayfasından alınıyor ve
+   * o başvuru bizde YOK. Bu işlem yalnız öğrencinin takip defterine
+   * kayıt düşüyor.
+   *
+   * Ölçüldü: bu düğme eskiden `onApply`i çağırıyordu ve üretimde 4
+   * `external` başvuru `applications` tablosuna yazılmıştı —
+   * göndermediğimiz başvuruyu göndermiş gibi kaydetmek.
+   */
+  onTrack: (listing: InternshipListing) => void;
 }
 
 const Bilgi: React.FC<{
@@ -56,7 +69,7 @@ const Bilgi: React.FC<{
 );
 
 export const ListingPage: React.FC<ListingPageProps> = ({
-  idPrefix, onBack, onNavigate, onApply,
+  idPrefix, onBack, onNavigate, onApply, onTrack,
 }) => {
   const [listing, setListing] = useState<InternshipListing | null>(null);
   const [durum, setDurum] = useState<'yukleniyor' | 'hazir' | 'yok' | 'hata'>('yukleniyor');
@@ -507,7 +520,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
               )}
               <button
                 type="button"
-                onClick={() => onApply(listing)}
+                onClick={() => (yol.anaEylem === 'platform-ici' ? onApply(listing) : onTrack(listing))}
                 className={`flex-1 inline-flex items-center justify-center gap-1.5 px-5 py-3 rounded-2xl text-sm font-bold transition-colors shadow-xs ${
                   yol.anaEylem === 'resmi-site'
                     ? 'border border-gray-200 bg-white hover:bg-gray-50 text-gray-800'
@@ -563,7 +576,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
           ) : (
             <button
               type="button"
-              onClick={() => onApply(listing)}
+              onClick={() => (yol.anaEylem === 'platform-ici' ? onApply(listing) : onTrack(listing))}
               className="flex min-h-12 w-full items-center justify-center gap-1.5 rounded-2xl bg-blue-600 px-5 text-sm font-bold text-white shadow-xs transition-colors hover:bg-blue-700"
             >
               {yol.anaEtiket}

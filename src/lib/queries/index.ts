@@ -1456,3 +1456,140 @@ export async function ilanBildirimiYenidenDene(id: string): Promise<void> {
   const { error } = await supabase.rpc('ilan_bildirimi_yeniden_dene', { p_id: id });
   if (error) fail('Bildirim yeniden kuyruğa alınamadı', error);
 }
+
+/* ------------------------------------------------------------------ */
+/* KİŞİSEL BAŞVURU TAKİBİ                                              */
+/* ------------------------------------------------------------------ */
+
+export type KisiselBasvuruDurumu =
+  | 'basvurdum'
+  | 'bekliyorum'
+  | 'gorusme'
+  | 'teklif'
+  | 'olumsuz'
+  | 'vazgectim';
+
+export interface BasvuruTakibi {
+  id: string;
+  listingId?: string;
+  listingTitle: string;
+  companyName?: string;
+  /** Gerçek başvuru kaydı — external'da yok. */
+  applicationId?: string;
+  channel: 'external' | 'email_application' | 'internal';
+  appliedAt: string;
+  personalStatus: KisiselBasvuruDurumu;
+  personalNote?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const TAKIP_ALANLARI =
+  'id,listing_id,listing_title,company_name,application_id,channel,' +
+  'applied_at,personal_status,personal_note,created_at,updated_at';
+
+function takibeCevir(row: Record<string, any>): BasvuruTakibi {
+  return {
+    id: row.id,
+    listingId: row.listing_id ?? undefined,
+    listingTitle: row.listing_title ?? '(ilan adı yok)',
+    companyName: row.company_name ?? undefined,
+    applicationId: row.application_id ?? undefined,
+    channel: row.channel,
+    appliedAt: row.applied_at,
+    personalStatus: row.personal_status,
+    personalNote: row.personal_note ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+/**
+ * Öğrencinin kendi takip defteri.
+ *
+ * RLS `student_id = auth.uid()` olduğu için sorguya kullanıcı filtresi
+ * YAZILMIYOR: istemcide filtre, güvenlik değil görünüm olurdu.
+ */
+export async function fetchBasvuruTakibi(): Promise<BasvuruTakibi[]> {
+  const { data, error } = await supabase
+    .from('application_tracking')
+    .select(TAKIP_ALANLARI)
+    .order('applied_at', { ascending: false });
+
+  if (error) fail('Başvuru takibi yüklenemedi', error);
+  return (data ?? []).map((r) => takibeCevir(r as Record<string, any>));
+}
+
+/**
+ * "Başvurdum" işareti — HARİCİ ilanlar için.
+ *
+ * Bu kayıt şirkete hiçbir şey göndermiyor; `applications` tablosuna da
+ * dokunmuyor. Harici bağlantıya tıklamak bunu TETİKLEMİYOR: öğrencinin
+ * ayrı ve açık bir işlemi.
+ *
+ * İlan başlığı ve şirket adı satıra yazılıyor (anlık görüntü): ilan
+ * sonradan değişse ya da silinse bile defter okunabilir kalıyor.
+ */
+export async function basvurdumIsaretle(girdi: {
+  listingId: string;
+  listingTitle: string;
+  companyName?: string;
+  studentId: string;
+}): Promise<BasvuruTakibi> {
+  const { data, error } = await supabase
+    .from('application_tracking')
+    .insert({
+      student_id: girdi.studentId,
+      listing_id: girdi.listingId,
+      listing_title: girdi.listingTitle,
+      company_name: girdi.companyName ?? null,
+      channel: 'external',
+      personal_status: 'basvurdum',
+    })
+    .select(TAKIP_ALANLARI)
+    .single();
+
+  /*
+    Mükerrer işaret hata DEĞİL: kullanıcı iki kez bastıysa mevcut kaydı
+    döndürüyoruz. `23505` unique ihlali.
+  */
+  if (error && (error as { code?: string }).code === '23505') {
+    const { data: mevcut, error: okumaHatasi } = await supabase
+      .from('application_tracking')
+      .select(TAKIP_ALANLARI)
+      .eq('listing_id', girdi.listingId)
+      .is('application_id', null)
+      .maybeSingle();
+    if (okumaHatasi || !mevcut) fail('Takip kaydı okunamadı', okumaHatasi);
+    return takibeCevir(mevcut as Record<string, any>);
+  }
+  if (error) fail('Takip kaydı oluşturulamadı', error);
+  return takibeCevir(data as Record<string, any>);
+}
+
+/** Kişisel durum ve not — yalnız öğrencinin kendi alanları. */
+export async function takipGuncelle(
+  id: string,
+  degisiklik: { personalStatus?: KisiselBasvuruDurumu; personalNote?: string }
+): Promise<void> {
+  /*
+    Tip `Record<string, unknown>` DEĞİL: üretilen `Update` şekli yalnız
+    öğrencinin kendi alanlarını içeriyor ve gevşek bir sözlük o kapıyı
+    açardı — `student_id` göndermek derleme hatası olmalı.
+  */
+  const govde: TablesUpdate<'application_tracking'> = {};
+  if (degisiklik.personalStatus) govde.personal_status = degisiklik.personalStatus;
+  if (degisiklik.personalNote !== undefined) {
+    govde.personal_note = degisiklik.personalNote.trim() || null;
+  }
+  if (Object.keys(govde).length === 0) return;
+
+  const { error } = await supabase.from('application_tracking').update(govde).eq('id', id);
+  if (error) fail('Takip güncellenemedi', error);
+}
+
+/** Takip kaydını siler. Gerçek başvuruyu SİLMİYOR. */
+export async function takipSil(id: string): Promise<void> {
+  const { error } = await supabase.from('application_tracking').delete().eq('id', id);
+  if (error) fail('Takip kaydı silinemedi', error);
+}
