@@ -87,17 +87,40 @@ test('taslakta yayın tarihi yazılmıyor', () => {
   assert.equal(satir.posted_at, null);
 });
 
-test('tür alanları doğru eşleşiyor', () => {
-  const zorunlu = ilanSatiri({ ...GECERLI, tur: 'zorunlu' }, { companyId: 'a', durum: 'draft' });
-  assert.equal(zorunlu.mandatory_staj_accepted, true);
-  const gonullu = ilanSatiri({ ...GECERLI, tur: 'gonullu' }, { companyId: 'a', durum: 'draft' });
-  assert.equal(gonullu.voluntary_staj_accepted, true);
-  assert.equal(gonullu.mandatory_staj_accepted, false);
+test('tek "staj türü" seçimi kabul alanlarına tahmin yazmıyor', () => {
+  /*
+    ÖNCEKİ HÂL: `mandatory = tur === 'zorunlu' || tur === 'yaz'`.
+    "Yaz stajı" seçmek şirketin zorunlu staj kabul ETMEDİĞİ anlamına
+    gelmez — tek seçim öteki tür için RET kanıtı değil. Form bu iki
+    bilgiyi ayrı ayrı sormadığı sürece buraya tahmin yazılmıyor.
+
+    `term` DEĞİŞMEDİ: o gerçekten ilanın dönemi ve formun sorduğu şey.
+  */
+  for (const tur of ['zorunlu', 'gonullu', 'yaz', 'uzun']) {
+    const satir = ilanSatiri({ ...GECERLI, tur }, { companyId: 'a', durum: 'draft' });
+    assert.equal(satir.mandatory_staj_accepted, null, `${tur}: zorunlu tahmini olmamalı`);
+    assert.equal(satir.voluntary_staj_accepted, null, `${tur}: gönüllü tahmini olmamalı`);
+  }
+  /* Dönem hâlâ seçimden geliyor. */
+  assert.equal(
+    ilanSatiri({ ...GECERLI, tur: 'yaz' }, { companyId: 'a', durum: 'draft' }).term,
+    'Summer 2026'
+  );
 });
 
-test('belirtilmeyecek ücret is_paid false', () => {
-  const satir = ilanSatiri({ ...GECERLI, ucret: 'belirtilmeyecek' }, { companyId: 'a', durum: 'draft' });
-  assert.equal(satir.is_paid, false);
+test('ücret üç değerli: belirtilmeyecek ÜCRETSİZ DEĞİL', () => {
+  /*
+    `is_paid: deger.ucret !== 'belirtilmeyecek'` yazıyordu — açıklamamayı
+    "ücretsiz" beyanı saymak. Üstelik gerçekten ücretsiz staj veren
+    şirketin bunu söyleyeceği seçenek YOKTU.
+  */
+  const bilinmiyor = ilanSatiri({ ...GECERLI, ucret: 'belirtilmeyecek' }, { companyId: 'a', durum: 'draft' });
+  assert.equal(bilinmiyor.is_paid, null);
+  const ucretsiz = ilanSatiri({ ...GECERLI, ucret: 'ucretsiz' }, { companyId: 'a', durum: 'draft' });
+  assert.equal(ucretsiz.is_paid, false);
+  const asgari = ilanSatiri({ ...GECERLI, ucret: 'asgari' }, { companyId: 'a', durum: 'draft' });
+  assert.equal(asgari.is_paid, true);
+  const satir = bilinmiyor;
   assert.equal(satir.stipend_text, null);
 });
 
