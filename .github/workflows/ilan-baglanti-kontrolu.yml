@@ -75,3 +75,15 @@ jobs:
       # `set -e` altında çalıştığı için sessiz yeşil mümkün değil.
       - name: Başvuru adreslerini kontrol et
         run: node scripts/ilan-baglanti-kontrol.mjs ${{ inputs.kuru && '--kuru' || '' }}
+
+      # İŞVEREN KARİYER SAYFALARI — AYNI İŞ, İKİNCİ ZAMANLAMA YOK
+      #
+      # Aynı soruyu soruyor ("bu adres hâlâ çalışıyor mu") ve aynı
+      # günlük ritme ait. Ayrı bir workflow açmak, iki cron, iki sır
+      # listesi ve iki ayrı kırmızı/yeşil demek olurdu.
+      #
+      # `if: always()`: ilan kontrolü üçüncü taraf hatasıyla düşse de
+      # işveren kontrolü koşuyor. İki ölçüm birbirinin önkoşulu değil.
+      - name: İşveren kariyer sayfalarını kontrol et
+        if: always()
+        run: node scripts/isveren-kariyer-kontrol.mjs ${{ inputs.kuru && '--kuru' || '' }}
