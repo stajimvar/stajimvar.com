@@ -193,7 +193,29 @@ export function isvereniBirlestir(program, kontrol, sirket) {
       şirketi "baktık, bulamadık" gibi gösteriyordu. Ölçümün yokluğu
       arayüze aynen taşınıyor.
     */
-    programDurumu: kontrol?.program_durumu ?? null,
+    /*
+      ADRESSİZ "acik" GÜVENİLMEZ — ESKİ KURALDAN KALMIŞ DEMEK
+
+      Yeni kuralda `acik` kararı TANIMI GEREĞİ programın kendi adresiyle
+      birlikte yazılıyor (`program_url`). Adressiz bir `acik`, yalnız
+      eski kuralın ürünü olabilir.
+
+      ÖLÇÜLDÜ VE GERÇEKTEN OLDU: işçi sekiz yanlış kaydı düzeltmek için
+      koştuğunda tupras'ın adresi artık `bozuk` (yumuşak 404) çıktı ve
+      program alanlarına yalnız `calisiyor` dalında dokunulduğu için
+      satır ESKİ "acik" kararıyla kaldı — hem de eski kuralın kanıt
+      etiketiyle (`staj-programi-ve-basvuru-yolu`).
+
+      "Geçici hata kararı bozmuyor" kuralı doğru; ama korunan değerin
+      YANLIŞ olabileceği durumu kapsamıyordu. Arayüz artık o kararı
+      kabul etmiyor: adres yoksa `bilinmiyor`. Kartta "Staj programı
+      açık" yazıp arkasında hiçbir adres gösteremeyecek olmak, zaten o
+      iddianın kanıtsız olduğunun işareti.
+    */
+    programDurumu:
+      kontrol?.program_durumu === 'acik' && !kontrol?.program_url
+        ? 'bilinmiyor'
+        : (kontrol?.program_durumu ?? null),
     programKaniti: kontrol?.program_kaniti ?? null,
     programKontrol: tarih(kontrol?.program_kontrol_at),
     /* Yalnız kanıtlanmış açık programda dolu; yoksa `null`. */

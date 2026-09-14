@@ -184,11 +184,26 @@ async function main() {
         dokunulmuyor: mevcut karar ve kanıtı korunuyor. Bir 429,
         şirketin programını kapalı ilan etmek için sebep değil.
       */
+      /*
+        KORUNAN KARAR ADRESSİZ "acik" İSE KORUNMUYOR
+
+        Bağlantıya ulaşılamadığında program kararı korunuyor — doğru
+        kural, bir 403 şirketin programını kapalı ilan etmek için sebep
+        değil. Ama korunan değerin YANLIŞ olabileceği durum bunun
+        dışındaydı ve gerçekten oldu: sekiz yanlış kaydı düzeltmek için
+        koşan işçi tupras'ın adresini `bozuk` (yumuşak 404) buldu, program
+        alanına dokunmadı ve satır ESKİ kuralın "acik" kararıyla kaldı.
+
+        Yeni kuralda `acik` tanımı gereği programın kendi adresiyle
+        birlikte yazılıyor. Adressiz bir `acik` yalnız eski kuraldan
+        gelebilir ve korunmayı hak etmiyor.
+      */
+      const eskiKararGuvenilir = !(eski?.program_durumu === 'acik' && !eski?.program_url);
       let program = {
-        program_durumu: eski?.program_durumu ?? null,
-        program_kaniti: eski?.program_kaniti ?? null,
-        program_kontrol_at: eski?.program_kontrol_at ?? null,
-        program_url: eski?.program_url ?? null,
+        program_durumu: eskiKararGuvenilir ? (eski?.program_durumu ?? null) : null,
+        program_kaniti: eskiKararGuvenilir ? (eski?.program_kaniti ?? null) : 'adressiz-acik-karari-dusuruldu',
+        program_kontrol_at: eskiKararGuvenilir ? (eski?.program_kontrol_at ?? null) : simdi,
+        program_url: null,
       };
 
       /*
