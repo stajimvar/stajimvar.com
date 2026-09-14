@@ -184,18 +184,34 @@ test('sıralama sayfalamadan ÖNCE, bütün filtrelenmiş kümeye', () => {
 });
 
 test('açık bölüm filtresi eleme yapıyor, çipler yalnız sıralıyor', () => {
-  const f = { departments: ['Bilgisayar'] };
+  /*
+    SÖZLÜK ÜZERİNDEN — CANLIDA ÖLÇÜLDÜ
+
+    İlk hâlde slug başlık/açıklamada ALT DİZE olarak aranıyordu ve
+    `?bolum=bilgisayar-muhendisligi` HİÇBİR ilanla eşleşmiyordu:
+    "bilgisayar-muhendisligi" hiçbir başlıkta geçmiyor ve
+    `department_tags` üretimde boş. Bölüm sayfasından gelen bağlantı
+    boş liste açıyordu.
+  */
+  const f = { departments: ['bilgisayar-muhendisligi'] };
   assert.equal(
-    aramaEslesiyorMu(
-      ilaniNormalize({ id: 'a', title: 'Stajyer', department: 'Bilgisayar Mühendisliği' }),
-      f
-    ),
-    true
+    aramaEslesiyorMu(ilaniNormalize({ id: 'a', title: 'Yazılım Stajyeri' }), f),
+    true,
+    'slug ile başlık aynı ALANDA buluşmalı'
   );
   assert.equal(
-    aramaEslesiyorMu(ilaniNormalize({ id: 'b', title: 'Stajyer', department: 'Makine' }), f),
+    aramaEslesiyorMu(ilaniNormalize({ id: 'm', title: 'Makine Mühendisi Stajyeri' }), f),
     false
   );
+  /* Tanınmayan bölüm: güvenli varsayılan — eleme yapmıyor. */
+  assert.equal(
+    aramaEslesiyorMu(ilaniNormalize({ id: 'a', title: 'Yazılım Stajyeri' }), {
+      departments: ['uydurma-bolum'],
+    }),
+    true
+  );
+  /* Aynı sözlük liste, bölüm sayfası ve sıralama tarafından paylaşılıyor. */
+  assert.match(oku('src/lib/kayitli-arama.mjs'), /from '\.\/bolum-eslestirme\.mjs'/);
   /* Liste bunu ADRESTEN okuyor ve geri/ileri ile çalışıyor. */
   assert.match(LISTE, /adresTenFiltreler\(window\.location\.search\)\.departments/);
   assert.match(LISTE, /window\.addEventListener\('popstate', oku\)/);

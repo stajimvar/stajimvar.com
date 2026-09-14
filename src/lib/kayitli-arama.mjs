@@ -35,6 +35,21 @@
 */
 import { normalizeCountryCode } from './global-preferences.mjs';
 
+/*
+  AYNI BÖLÜM SÖZLÜĞÜ — LİSTE, BÖLÜM SAYFASI VE SIRALAMA
+
+  Bölüm filtresi ilk hâlde slug'ı başlık/açıklamada ALT DİZE olarak
+  arıyordu ve canlıda ölçtüm: `?bolum=bilgisayar-muhendisligi` HİÇBİR
+  ilanla eşleşmiyor, çünkü "bilgisayar-muhendisligi" hiçbir başlıkta
+  geçmiyor ve `department_tags` üretimde boş.
+
+  Doğru köprü sözlük: slug → alan (`bolumunAlani`), metin → alan
+  (`alanEslestir`). Böylece "bilgisayar-muhendisligi" ile "Yazılım
+  Stajyeri" aynı alanda buluşuyor ve bölüm sayfasından gelen bağlantı
+  gerçek sonuç gösteriyor.
+*/
+import { alanEslestir, bolumunAlani } from './bolum-eslestirme.mjs';
+
 /** Şu anki filtre sözleşmesi. Alan eklenince artıyor. */
 export const FILTRE_SURUMU = 1;
 
@@ -309,15 +324,33 @@ export function aramaEslesiyorMu(ilan, filtreler) {
     alanı boş ve yalnız ona bakmak filtreyi işlevsiz yapardı.
   */
   if (f.departments.length > 0) {
-    const havuz = [
-      ...i.departments.map(katla),
-      katla(i.title),
-      katla(i.description),
-    ];
-    const eslesti = f.departments.some((d) => {
-      const dk = katla(d);
-      return havuz.some((h) => h.includes(dk));
-    });
+    /*
+      SÖZLÜK ÜZERİNDEN, ALT DİZE İLE DEĞİL
+
+      İstenen her bölüm bir ALANA çevriliyor (slug ise `bolumunAlani`,
+      serbest metinse `alanEslestir`). İlanın alanı da kendi
+      etiketinden, başlığından ya da açıklamasından çıkarılıyor. İkisi
+      aynı alansa eşleşme var.
+
+      Alt dize karşılaştırması kaldırıldı: `burs`/Bursa sınıfı hataya
+      açıktı ve canlıda ölçüldüğü gibi slug hiçbir başlıkla
+      eşleşmiyordu.
+    */
+    const istenenAlanlar = new Set(
+      f.departments.map((d) => bolumunAlani(d) ?? alanEslestir(d)).filter(Boolean)
+    );
+    if (istenenAlanlar.size === 0) {
+      /* Tanınmayan bölüm: güvenli varsayılan — eleme YAPMIYOR. */
+      return true;
+    }
+    const ilanAlanlari = new Set(
+      [
+        ...i.departments.map((e) => bolumunAlani(e) ?? alanEslestir(e)),
+        alanEslestir(i.title),
+        alanEslestir(i.description),
+      ].filter(Boolean)
+    );
+    const eslesti = [...istenenAlanlar].some((a) => ilanAlanlari.has(a));
     if (!eslesti) return false;
   }
 
