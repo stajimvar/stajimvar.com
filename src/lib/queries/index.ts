@@ -1593,3 +1593,143 @@ export async function takipSil(id: string): Promise<void> {
   const { error } = await supabase.from('application_tracking').delete().eq('id', id);
   if (error) fail('Takip kaydı silinemedi', error);
 }
+
+/* ------------------------------------------------------------------ */
+/* KAYITLI ARAMA                                                       */
+/* ------------------------------------------------------------------ */
+
+export interface KayitliArama {
+  id: string;
+  name?: string;
+  /** Doğrulanmış filtre nesnesi (bkz. lib/kayitli-arama.mjs). */
+  filters: Record<string, unknown>;
+  emailEnabled: boolean;
+  consentAt?: string;
+  optedOutAt?: string;
+  createdAt: string;
+}
+
+const ARAMA_ALANLARI =
+  'id,name,filters,filters_version,email_enabled,consent_at,opted_out_at,created_at';
+
+function aramayaCevir(row: Record<string, any>): KayitliArama {
+  return {
+    id: row.id,
+    name: row.name ?? undefined,
+    filters: (row.filters ?? {}) as Record<string, unknown>,
+    emailEnabled: Boolean(row.email_enabled),
+    consentAt: row.consent_at ?? undefined,
+    optedOutAt: row.opted_out_at ?? undefined,
+    createdAt: row.created_at,
+  };
+}
+
+/** Kullanıcının kayıtlı aramaları. RLS filtreliyor; istemcide filtre yok. */
+export async function fetchKayitliAramalar(): Promise<KayitliArama[]> {
+  const { data, error } = await supabase
+    .from('saved_searches')
+    .select(ARAMA_ALANLARI)
+    .order('created_at', { ascending: false });
+  if (error) fail('Kayıtlı aramalar yüklenemedi', error);
+  return (data ?? []).map((r) => aramayaCevir(r as Record<string, any>));
+}
+
+/**
+ * Aramayı kaydeder.
+ *
+ * `emailEnabled` VARSAYILAN FALSE: arama kaydetmek bir bildirim
+ * aboneliği değil. Açıksa rıza damgası SUNUCUDA atılıyor (tetikleyici),
+ * istemciden gelen bir tarihe güvenilmiyor.
+ */
+export async function aramayiKaydet(girdi: {
+  studentId: string;
+  name: string;
+  filters: Record<string, unknown>;
+  filtersVersion: number;
+  emailEnabled: boolean;
+  consentTextVersion: number;
+}): Promise<KayitliArama> {
+  const { data, error } = await supabase
+    .from('saved_searches')
+    .insert({
+      student_id: girdi.studentId,
+      name: girdi.name.trim().slice(0, 80) || null,
+      filters: girdi.filters as never,
+      filters_version: girdi.filtersVersion,
+      email_enabled: girdi.emailEnabled,
+      consent_text_version: girdi.emailEnabled ? girdi.consentTextVersion : null,
+    })
+    .select(ARAMA_ALANLARI)
+    .single();
+  if (error) fail('Arama kaydedilemedi', error);
+  return aramayaCevir(data as Record<string, any>);
+}
+
+/** Ad ve e-posta tercihi. Rıza damgaları sunucuda. */
+export async function aramayiGuncelle(
+  id: string,
+  degisiklik: { name?: string; emailEnabled?: boolean; consentTextVersion?: number }
+): Promise<void> {
+  const govde: TablesUpdate<'saved_searches'> = {};
+  if (degisiklik.name !== undefined) govde.name = degisiklik.name.trim().slice(0, 80) || null;
+  if (degisiklik.emailEnabled !== undefined) {
+    govde.email_enabled = degisiklik.emailEnabled;
+    if (degisiklik.emailEnabled && degisiklik.consentTextVersion !== undefined) {
+      govde.consent_text_version = degisiklik.consentTextVersion;
+    }
+  }
+  if (Object.keys(govde).length === 0) return;
+  const { error } = await supabase.from('saved_searches').update(govde).eq('id', id);
+  if (error) fail('Arama güncellenemedi', error);
+}
+
+export async function aramayiSil(id: string): Promise<void> {
+  const { error } = await supabase.from('saved_searches').delete().eq('id', id);
+  if (error) fail('Arama silinemedi', error);
+}
+
+/** Bütün ilan özetlerini kapatır — tek işlemle. */
+export async function tumOzetleriKapat(): Promise<void> {
+  const { error } = await supabase
+    .from('saved_searches')
+    .update({ email_enabled: false })
+    .eq('email_enabled', true);
+  if (error) fail('Özetler kapatılamadı', error);
+}
+
+/**
+ * TABAN KAYITLARI — ilk özette geçmişin tamamı gitmesin.
+ *
+ * RPC kullanılıyor çünkü `digest_deliveries`e istemci YAZAMIYOR ve
+ * yazmamalı: kullanıcı `sent_at`i temizleyip kendine tekrar
+ * gönderebilirdi. Fonksiyon `auth.uid()`i içeride okuyor.
+ */
+export async function tabanKayitlariniYaz(searchId: string, listingIds: string[]): Promise<number> {
+  if (listingIds.length === 0) return 0;
+  const { data, error } = await supabase.rpc('kayitli_arama_taban_yaz', {
+    p_search_id: searchId,
+    p_listing_ids: listingIds,
+  });
+  if (error) fail('Taban kayıtları yazılamadı', error);
+  return Number(data ?? 0);
+}
+
+/** Eşleşme için gereken ham ilan alanları — kanonik modüle veriliyor. */
+export async function fetchEslesmeIcinIlanlar(): Promise<Array<Record<string, unknown>>> {
+  const { data, error } = await supabase
+    .from('listings')
+    .select(
+      'id,title,city,work_type,country_code,is_paid,mandatory_staj_accepted,' +
+        'voluntary_staj_accepted,department,department_tags,description,required_skills,status'
+    )
+    .eq('status', 'published')
+    .limit(5000);
+  if (error) fail('İlanlar yüklenemedi', error);
+  /*
+    İki aşamalı dönüşüm: üretilen tipler `department_tags`ı henüz
+    ilişkili kolon olarak tanımıyor ve doğrudan çevrim `GenericStringError`
+    olasılığı yüzünden reddediliyor. `unknown` üzerinden geçmek, gevşek
+    bir `any` koymadan derleyiciye niyeti söylüyor.
+  */
+  return (data ?? []) as unknown as Array<Record<string, unknown>>;
+}

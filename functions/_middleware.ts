@@ -106,6 +106,19 @@ const UYGULAMA_ADRESLERI = new Set([
   */
   '/topluluklar',
   '/basvuru-sablonu',
+  /*
+    BİLDİRİM AYARLARI
+
+    Günlük özet e-postasındaki "Bildirim ayarları" bağlantısı buraya
+    geliyor; adres 404 dönerse kullanıcı tercihini kapatmak için
+    gidecek bir yer bulamaz. İçerik oturum istiyor, ADRES istemiyor:
+    kabuk 200 ile geliyor ve giriş kapısı sayfanın içinde.
+
+    ÖN RENDER EDİLMİYOR: sayfa tamamen kişiye özel, statik bir hâli
+    yok. Arama motoru için de değeri yok (`noindex` gerektirmiyor
+    çünkü içerik boş bir kabuk).
+  */
+  '/ayarlar/bildirimler',
   '/sifre-yenile',
   '/stajyer-nasil-alinir',
   '/bana-uygun',
