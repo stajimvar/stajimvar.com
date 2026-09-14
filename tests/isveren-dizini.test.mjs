@@ -579,3 +579,22 @@ test('ADRESSİZ "acik" GÜVENİLMEZ: eski kuraldan kalmış demek', () => {
   assert.match(kod, /const eskiKararGuvenilir = !\(eski\?\.program_durumu === 'acik' && !eski\?\.program_url\)/);
   assert.match(kod, /adressiz-acik-karari-dusuruldu/);
 });
+
+test('kapsam oranı: pay paydayı aşarsa cümle yazılmıyor', async () => {
+  /*
+    CANLIDA ÖLÇTÜM: "158 aktif ilanın 172 tanesi son 24 saatte yeniden
+    kontrol edildi." 172 > 158 — pay bütün ilanları, payda yalnız
+    YAYINDA olanları sayıyordu; fark taramanın az önce kapattığı 14
+    ilandı. Sorgu aynı kümeye çekildi; bu denetim de saçma oranın
+    yazılmasını engelliyor.
+  */
+  const { taramaKapsamiMetni } = await import('../src/lib/gercek-istatistikler.mjs');
+  assert.equal(taramaKapsamiMetni(172, 158, null), null, 'pay > payda ise gizlenmeli');
+  assert.equal(taramaKapsamiMetni(0, 158, null), null, 'hiç kontrol yoksa gizlenmeli');
+  assert.equal(taramaKapsamiMetni(null, 158, null), null, 'ölçüm yoksa gizlenmeli');
+  assert.match(taramaKapsamiMetni(158, 158, null), /158 aktif ilanın 158 tanesi/);
+
+  /* İki sayım da aynı kümeden: ikisinde de `status = 'published'`. */
+  const IST = oku('src/lib/gercek-istatistikler.mjs');
+  assert.equal((IST.match(/\.eq\('status', 'published'\)/g) ?? []).length, 2);
+});

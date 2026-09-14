@@ -87,6 +87,14 @@ export function turkiyeSaatMetni(damga) {
 export function taramaKapsamiMetni(kontrolEdilen, toplam, sonDamga) {
   if (!metrikGosterilsinMi(kontrolEdilen) || !metrikGosterilsinMi(toplam)) return null;
   if (kontrolEdilen === 0) return null;
+  /*
+    SON SAVUNMA: pay paydayı aşarsa cümle HİÇ yazılmıyor.
+
+    Canlıda tam bunu gördüm ("158 aktif ilanın 172 tanesi"). Sorgu
+    düzeltildi ama bu denetim duruyor: sayım kümeleri bir gün yine
+    ayrışırsa saçma bir oran yazmak yerine satırı gizlemek doğru.
+  */
+  if (kontrolEdilen > toplam) return null;
   const saat = turkiyeSaatMetni(sonDamga);
   const govde = `${toplam} aktif ilanın ${kontrolEdilen} tanesi son 24 saatte yeniden kontrol edildi`;
   return saat ? `${govde}. En son kontrol: ${saat} (Türkiye saati)` : `${govde}.`;
@@ -178,10 +186,23 @@ export async function fetchIstatistikler(etkinKaynak) {
             .eq('source_status', 'erisilemedi')
             .gte('source_checked_at', esik)
         ),
+        /*
+          KAPSAM AYNI KÜMEDEN SAYILMALI — CANLIDA YANLIŞ ÇIKTI
+
+          Bu sayım `status` süzgeci olmadan koşuyordu ve cümle şunu
+          yazdı: "158 aktif ilanın 172 tanesi son 24 saatte yeniden
+          kontrol edildi." 172 > 158 çünkü pay bütün ilanları, payda
+          yalnız YAYINDA olanları sayıyordu; aradaki fark taramanın az
+          önce kapattığı 14 ilan.
+
+          Oran ancak pay ile payda aynı kümeden gelirse anlam taşıyor:
+          ikisi de `status = 'published'`.
+        */
         say(
           supabase
             .from('listings')
             .select('id', { count: 'exact', head: true })
+            .eq('status', 'published')
             .gte('source_checked_at', esik)
         ),
       ]);
