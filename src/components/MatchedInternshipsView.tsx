@@ -1162,9 +1162,6 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             niyetinin kelimesi ön render edilen HTML'de kalıyor — başlığın
             kendisi artık o kelimeyi taşımıyor.
           */}
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500">
-            Staj ilanları
-          </p>
           <h1 className="[font-size:clamp(1.75rem,8vw,2.25rem)] lg:[font-size:clamp(1.5rem,2.4vw,2.5rem)] font-black leading-[1.1] tracking-tight text-gray-900 break-words">
             İlk adımın burada.
           </h1>
@@ -1186,34 +1183,6 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               rozetle söylüyor.
           */}
           <div className="space-y-3 lg:hidden">
-            <div className="flex items-center gap-2">
-              <label className="relative flex min-w-0 flex-1 items-center">
-                <span className="sr-only">Pozisyon veya şirket ara</span>
-                <Search aria-hidden className="pointer-events-none absolute left-3.5 h-5 w-5 text-gray-400" />
-                <input
-                  type="search"
-                  value={searchQuery}
-                  onChange={(olay) => setSearchQuery(olay.target.value)}
-                  placeholder="Pozisyon veya şirket ara"
-                  className="min-h-12 w-full rounded-2xl border border-gray-200 bg-white pl-11 pr-3 text-[15px] text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
-                />
-              </label>
-              <button
-                type="button"
-                onClick={suzgecAcKapa}
-                aria-expanded={filtreAcik}
-                aria-controls="ilan-filtreleri"
-                aria-label={acikSuzgecSayisi > 0 ? `Filtreler (${acikSuzgecSayisi} açık)` : 'Filtreler'}
-                className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50"
-              >
-                <SlidersHorizontal aria-hidden className="h-5 w-5" />
-                {acikSuzgecSayisi > 0 && (
-                  <span className="absolute right-1 top-1 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white">
-                    {acikSuzgecSayisi}
-                  </span>
-                )}
-              </button>
-            </div>
 
             <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {(() => {
@@ -1703,9 +1672,20 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               sıralamanın gerçekten eşleşmeye göre yapıldığı tek durum o;
               ziyaretçide bunu yazmak kişiselleştirme iddiası olurdu.
             */}
-            <h2 className={LISTE_BASLIGI_YAZISI}>
+            {/*
+              LİSTE BAŞLIĞI GÖRSELDEN KALKTI, METİNDEN KALKMADI
+
+              Sayfanın kendi başlığı ("İlk adımın burada.") hemen üstünde
+              duruyordu; ikisi arka arkaya iki başlık gibi okunuyor ve
+              ilanları aşağı itiyordu (onaylanan tasarımda üstü çizili).
+
+              `sr-only`: öğe ekrandan çıkıyor ama DOM'da ve erişilebilirlik
+              ağacında kalıyor — ekran okuyucu listenin neyin listesi
+              olduğunu ve kaç ilan olduğunu duymaya devam ediyor. Görünen
+              sayı da kaybolmadı: şirket şeridindeki "Tümü — N ilan".
+            */}
+            <h2 className={`${LISTE_BASLIGI_YAZISI} sr-only`}>
               İlanları keşfet ({gosterilecekToplam})
-              {student && <span className="sr-only"> — sana uygun sıralandı</span>}
             </h2>
             {/*
               Açıklama metni mobilde gizli.
