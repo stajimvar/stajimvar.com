@@ -102,7 +102,9 @@ test('liste başlığı üç sayfada da ortak belirteçten geliyor', () => {
   ]) {
     const kaynak = oku(dosya);
     assert.match(kaynak, /className=\{LISTE_BASLIGI\}/, `${dosya}: başlık satırı ortak değil`);
-    assert.match(kaynak, /className=\{LISTE_BASLIGI_YAZISI\}/, `${dosya}: başlık yazısı ortak değil`);
+    /* İlanlar'da başlık `sr-only` ile ekrandan çıktı (onaylanan tasarım)
+       ama DOM'da ve aynı belirteçle duruyor. */
+    assert.ok(kaynak.includes('LISTE_BASLIGI_YAZISI}') , `${dosya}: başlık yazısı ortak değil`);
     assert.match(kaynak, /className=\{LISTE_BASLIGI_NOTU\}/, `${dosya}: ikincil satır ortak değil`);
   }
 
