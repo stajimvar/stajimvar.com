@@ -1,0 +1,4158 @@
+{
+  "generatedAt": "2026-09-15T21:35:10.949Z",
+  "listingCount": 196,
+  "companyCount": 149,
+  "companies": [
+    {
+      "id": "59a19606-1f25-4329-90c9-c236a901fe87",
+      "name": "British American Tobacco",
+      "slug": "british-american-tobacco",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "5385f21b-db96-406d-8bad-eea2d0b02c1b",
+          "title": "BAT- HR Intern",
+          "sourceUrl": "https://careers.bat.com/en/job/istanbul/bat-hr-intern/1045/44671289984"
+        }
+      ],
+      "sourceUrl": "https://careers.bat.com/en/job/istanbul/bat-hr-intern/1045/44671289984",
+      "finalUrl": "https://careers.bat.com/en/job/istanbul/bat-hr-intern/1045/44671289984",
+      "logo": {
+        "source": "https://cdn.radancy.eu/company/1045/v1_0_gst/img/logos/bat_logo_1600x800px.jpg",
+        "evidence": "og:image https://cdn.radancy.eu/company/1045/v1_0_gst/img/logos/bat_logo_1600x800px.jpg",
+        "filename": "british-american-tobacco-logo.jpg",
+        "bytes": 18117,
+        "sha256": "c0bc89d4a1b7fcde966cd1dc7595062251e13edd8ec0e428879c4356dd81d972",
+        "review": "manual_required"
+      },
+      "photo": {
+        "source": "https://cdn.radancy.eu/company/1045/v1_0_gst/img/logos/bat_logo_1600x800px.jpg",
+        "evidence": "og:image https://cdn.radancy.eu/company/1045/v1_0_gst/img/logos/bat_logo_1600x800px.jpg",
+        "filename": "british-american-tobacco-foto.jpg",
+        "bytes": 18117,
+        "sha256": "c0bc89d4a1b7fcde966cd1dc7595062251e13edd8ec0e428879c4356dd81d972",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "b9fb8a5b-e530-45a0-b1c9-fd50f7f34561",
+      "name": "Veralto Global",
+      "slug": "veralto-global",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "c600867a-39df-49b8-bf01-146ac0b82b51",
+          "title": "Part-time Inside Sales Intern",
+          "sourceUrl": "https://jobs.veralto.com/global/en/job/DANVGTGLOBALR10268207EXTERNALENGLOBAL/Part-time-Inside-Sales-Intern"
+        }
+      ],
+      "sourceUrl": "https://jobs.veralto.com/global/en/job/DANVGTGLOBALR10268207EXTERNALENGLOBAL/Part-time-Inside-Sales-Intern",
+      "finalUrl": "https://jobs.veralto.com/global/en/job/DANVGTGLOBALR10268207EXTERNALENGLOBAL/Part-time-Inside-Sales-Intern",
+      "logo": null,
+      "photo": {
+        "source": "https://assets.phenompeople.com/CareerConnectResources/pp/DANVGTGLOBAL/social/1024x512-1682072764481.jpg",
+        "evidence": "twitter:image https://assets.phenompeople.com/CareerConnectResources/pp/DANVGTGLOBAL/social/1024x512-1682072764481.jpg",
+        "filename": "veralto-global-foto.jpg",
+        "bytes": 101187,
+        "sha256": "2ac8d80f823e8172045a82667da61ee6d66cb7b4766dc237cbd85f743cea6ada",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": [
+        "Logo indirilemedi: Görsel değil: text/css",
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "ced1b114-5ac3-42c4-8966-08547361856c",
+      "name": "Kantar Media",
+      "slug": "kantar-media",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/kantar-media.png",
+      "listings": [
+        {
+          "id": "46debb0a-12a1-4645-be20-86d842b89daa",
+          "title": "IT Systems & Network Administrator Trainee",
+          "sourceUrl": "https://adgbl.wd502.myworkdayjobs.com/Fifty5Blue/job/Istanbul-Baglar-Street/IT-Systems---Network-Administrator-Trainee_R100607"
+        }
+      ],
+      "sourceUrl": "https://adgbl.wd502.myworkdayjobs.com/Fifty5Blue/job/Istanbul-Baglar-Street/IT-Systems---Network-Administrator-Trainee_R100607",
+      "finalUrl": "https://adgbl.wd502.myworkdayjobs.com/Fifty5Blue/job/Istanbul-Baglar-Street/IT-Systems---Network-Administrator-Trainee_R100607",
+      "logo": null,
+      "photo": {
+        "filename": "kantar-media-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative image for IT systems and network administration",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": []
+    },
+    {
+      "id": "13a5e3d5-405a-4d29-9329-aa12cd416fd5",
+      "name": "Picnic",
+      "slug": "picnic",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "2a1eee04-3e15-4740-9aeb-28c50a06241a",
+          "title": "Internship Talent Acquisition/ Recruiting (m/w/d)",
+          "sourceUrl": "https://jobs.picnic.app/nl/vacancies?gh_jid=8201562"
+        }
+      ],
+      "sourceUrl": "https://jobs.picnic.app/nl/vacancies?gh_jid=8201562",
+      "finalUrl": "https://jobs.picnic.app/nl/vacancies?gh_jid=8201562",
+      "logo": null,
+      "photo": {
+        "source": "https://d1gr3r269tafbs.cloudfront.net/nextjs/jobs/join-picnic_1718635254.png",
+        "evidence": "og:image https://d1gr3r269tafbs.cloudfront.net/nextjs/jobs/join-picnic_1718635254.png",
+        "filename": "picnic-foto.png",
+        "bytes": 417651,
+        "sha256": "71032136205a524ee44da2db587ad369a877c90c63f40611af5dd845705b7420",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "518551ba-a558-4389-bfea-df20f8f662fe",
+      "name": "Neckar Hub",
+      "slug": "neckar-hub",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "8bcb8de3-b627-49f0-9560-976317b2e9bf",
+          "title": "Praktikum für Studierende: Junior Consultant Marketing (m,w,d)",
+          "sourceUrl": "https://join.com/companies/neckar-hub/16689648-praktikum-fuer-studierende-junior-consultant-marketing-m-w-d"
+        }
+      ],
+      "sourceUrl": "https://join.com/companies/neckar-hub/16689648-praktikum-fuer-studierende-junior-consultant-marketing-m-w-d",
+      "finalUrl": "https://join.com/companies/neckar-hub/16689648-praktikum-fuer-studierende-junior-consultant-marketing-m-w-d",
+      "logo": null,
+      "photo": {
+        "filename": "neckar-hub-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Praktikum für Studierende: Junior Consultant Marketing (m,w,d)",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "4f37f2ed-0d27-47c5-818d-984b2277a457",
+      "name": "2zero GmbH",
+      "slug": "2zero-gmbh",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "01bdd31d-f893-4bcf-8ce0-83717b49c05c",
+          "title": "Praktikum - Online Marketing / Social Media / Kommunikation - Nachhaltigkeits Start-Up",
+          "sourceUrl": "https://join.com/companies/2zero/16690371-praktikum-online-marketing-social-media-kommunikation-nachhaltigkeits-start-up"
+        }
+      ],
+      "sourceUrl": "https://join.com/companies/2zero/16690371-praktikum-online-marketing-social-media-kommunikation-nachhaltigkeits-start-up",
+      "finalUrl": "https://join.com/companies/2zero/16690371-praktikum-online-marketing-social-media-kommunikation-nachhaltigkeits-start-up",
+      "logo": null,
+      "photo": {
+        "filename": "2zero-gmbh-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Praktikum - Online Marketing / Social Media / Kommunikation - Nachhaltigkeits Start-Up",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "8f9e0640-6556-4f47-9691-3cb571577206",
+      "name": "Klara Blau",
+      "slug": "klara-blau",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "63fd741e-827d-41e1-b981-69c6019ddc43",
+          "title": "Praktikum Business Management & Operations | Raum Stuttgart | 3-6 Monate ab September / Oktober 2026",
+          "sourceUrl": "https://join.com/companies/klarablau/16667416-praktikum-business-management-und-operations-oder-raum-stuttgart-oder-3-6-monate-ab-september-oktober-2026"
+        }
+      ],
+      "sourceUrl": "https://join.com/companies/klarablau/16667416-praktikum-business-management-und-operations-oder-raum-stuttgart-oder-3-6-monate-ab-september-oktober-2026",
+      "finalUrl": "https://join.com/companies/klarablau/16667416-praktikum-business-management-und-operations-oder-raum-stuttgart-oder-3-6-monate-ab-september-oktober-2026",
+      "logo": null,
+      "photo": {
+        "filename": "klara-blau-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Praktikum Business Management & Operations | Raum Stuttgart | 3-6 Monate ab September / Oktober 2026",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "e0f94e56-1cde-47c5-bc2c-a50f26eba7f4",
+      "name": "inca",
+      "slug": "inca",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "f2c6c744-19e8-42cd-8ffa-a893581e5b78",
+          "title": "Founder's Associate Intern (m/f/d)",
+          "sourceUrl": "https://join.com/companies/get-incacom/16678193-founder-s-associate-intern-m-f-d"
+        },
+        {
+          "id": "7446a39c-a7bf-4045-a7e2-cbfff369f379",
+          "title": "Venture Development Intern (m/f/d)",
+          "sourceUrl": "https://join.com/companies/get-incacom/16681661-venture-development-intern-m-f-d"
+        }
+      ],
+      "sourceUrl": "https://join.com/companies/get-incacom/16678193-founder-s-associate-intern-m-f-d",
+      "finalUrl": "https://join.com/companies/get-incacom/16678193-founder-s-associate-intern-m-f-d",
+      "logo": null,
+      "photo": {
+        "filename": "inca-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Founder's Associate Intern (m/f/d) | Venture Development Intern (m/f/d)",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "5d3e771c-93a1-45a3-801d-09cbb6b3faa2",
+      "name": "KLUUU",
+      "slug": "kluuu",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "89f99792-16bc-4222-9576-3e0769da8d2c",
+          "title": "Praktikum Marketing & Growth (m/w/d)",
+          "sourceUrl": "https://join.com/companies/kluuucom/16697598-praktikum-marketing-und-growth-m-w-d"
+        }
+      ],
+      "sourceUrl": "https://join.com/companies/kluuucom/16697598-praktikum-marketing-und-growth-m-w-d",
+      "finalUrl": "https://join.com/companies/kluuucom/16697598-praktikum-marketing-und-growth-m-w-d",
+      "logo": null,
+      "photo": {
+        "filename": "kluuu-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Praktikum Marketing & Growth (m/w/d)",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "2f7e2be4-71dd-4706-9253-0bc04c0efad3",
+      "name": "FixFirst",
+      "slug": "fixfirst",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "a67768ee-5da5-43d6-86ea-cd201ac07fc4",
+          "title": "Founders Associate - Intern",
+          "sourceUrl": "https://join.com/companies/fixfirst/16668569-founders-associate-intern"
+        }
+      ],
+      "sourceUrl": "https://join.com/companies/fixfirst/16668569-founders-associate-intern",
+      "finalUrl": "https://join.com/companies/fixfirst/16668569-founders-associate-intern",
+      "logo": null,
+      "photo": {
+        "filename": "fixfirst-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Founders Associate - Intern",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "b4cbde82-e89c-4202-8cec-c03fc90a0a92",
+      "name": "Lidl",
+      "slug": "lidl",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "4fa47f05-f965-494f-963d-b7d13b2d9acb",
+          "title": "Praktikum Vertrieb",
+          "sourceUrl": "https://jobs.lidl.de/jobs/praktikum-vertrieb-essen-746881"
+        }
+      ],
+      "sourceUrl": "https://jobs.lidl.de/jobs/praktikum-vertrieb-essen-746881",
+      "finalUrl": "https://jobs.lidl.de/jobs/praktikum-vertrieb-essen-746881",
+      "logo": null,
+      "photo": {
+        "source": "https://career.img.schwarz/M8ci1k6KVHWJ-1u0IC_9jtSF1GjR39vWfwgw_hSOJm8/dpr:1/h:617/rt:fill/w:1096/czM6Ly9jYXJlZXItcG9ydGFscy1wcm9kLWFzc2V0cy9jYXJlZXItcHJvZC9pbWFnZXMvMy82LzUvNC8xMTU2ODQ1NjMtMS1nZXItREUvMjE2NWZhNjc2YmI5LTE2enU5X01pdGFyYmVpdGVyLUJyb2V0Y2hlbi5qcGc",
+        "evidence": "Kollege backt Laugenbrezel auf trinity-image__img https://career.img.schwarz/M8ci1k6KVHWJ-1u0IC_9jtSF1GjR39vWfwgw_hSOJm8/dpr:1/h:617/rt:fill/w:1096/czM6Ly9jYXJlZXItcG9ydGFscy1wcm9kLWFzc2V0cy9jYXJlZXItcHJvZC9pbWFnZXMvMy82LzUvNC8xMTU2ODQ1NjMtMS1nZXItREUvMjE2NWZhNjc2YmI5LTE2enU5X01pdGFyYmVpdGVyLUJyb2V0Y2hlbi5qcGc",
+        "filename": "lidl-foto.jpg",
+        "bytes": 82312,
+        "sha256": "6c7eb84b74874e8572cfd2bddf1251b753e4cbca8a2c82930538b8e0ca67849b",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "ed3dc76f-46c3-405d-b051-11f42ea70c1e",
+      "name": "Sony Pictures Entertainment",
+      "slug": "sony-pictures-entertainment",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "77be2d86-668d-473d-89a5-cc91dbced587",
+          "title": "Marketing Praktikant im Bereich Kinofilm-Releases (m/w/d)",
+          "sourceUrl": "https://www.sonypicturesjobs.com/job/berlin/marketing-praktikant-im-bereich-kinofilm-releases-m-w-d/22978/98417984512"
+        }
+      ],
+      "sourceUrl": "https://www.sonypicturesjobs.com/job/berlin/marketing-praktikant-im-bereich-kinofilm-releases-m-w-d/22978/98417984512",
+      "finalUrl": "https://www.sonypicturesjobs.com/job/berlin/marketing-praktikant-im-bereich-kinofilm-releases-m-w-d/22978/98417984512",
+      "logo": {
+        "source": "https://tbcdn.talentbrew.com/company/22978/16206/content/sony-pictures-logo.svg",
+        "evidence": "Sony Pictures Entertainment, Inc. //tbcdn.talentbrew.com/company/22978/16206/content/sony-pictures-logo.svg",
+        "filename": "sony-pictures-entertainment-logo.svg",
+        "bytes": 2401,
+        "sha256": "185838c220c809dcd4fb25e60cdd151407e46ab5cef324b23f1fe422f255a79b",
+        "review": "manual_required"
+      },
+      "photo": {
+        "source": "https://tbcdn.talentbrew.com/company/22978/v1_0/BANNER-CAREERSSITE-THUMBNAIL-ENGLISH.jpg",
+        "evidence": "og:image https://tbcdn.talentbrew.com/company/22978/v1_0/BANNER-CAREERSSITE-THUMBNAIL-ENGLISH.jpg",
+        "filename": "sony-pictures-entertainment-foto.jpg",
+        "bytes": 454148,
+        "sha256": "f1eef947568d2b8ad775e659080984fca4e9b8565c2175e64def05a26d31bb54",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "fd41bb82-947a-41c5-993d-4f17f8b3f545",
+      "name": "Trading 212",
+      "slug": "trading-212",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "43f222b6-7b75-4a17-ba83-00235c956923",
+          "title": "Social Media Intern",
+          "sourceUrl": "https://jobs.ashbyhq.com/trading212/f8d628f4-6093-48bc-942e-6057b44707fc"
+        }
+      ],
+      "sourceUrl": "https://jobs.ashbyhq.com/trading212/f8d628f4-6093-48bc-942e-6057b44707fc",
+      "finalUrl": "https://jobs.ashbyhq.com/trading212/f8d628f4-6093-48bc-942e-6057b44707fc",
+      "logo": null,
+      "photo": {
+        "source": "https://app.ashbyhq.com/api/images/org-theme-social/1c5ce563-aadb-4d3e-9404-9cd9b674adea/ee8b0d0d-85b3-472f-80a1-daa38e8e6f43/709717c1-ad91-4ee1-b429-08792478a55e.png",
+        "evidence": "og:image https://app.ashbyhq.com/api/images/org-theme-social/1c5ce563-aadb-4d3e-9404-9cd9b674adea/ee8b0d0d-85b3-472f-80a1-daa38e8e6f43/709717c1-ad91-4ee1-b429-08792478a55e.png",
+        "filename": "trading-212-foto.png",
+        "bytes": 348709,
+        "sha256": "0f8386197c0c9385f56e691e2f879d3c29465965f7c1b9adef106128d9337819",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": [
+        "Logo indirilemedi: Görsel değil: text/html; charset=utf-8",
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "04f5ad82-2f14-495d-9421-5fd435313b0d",
+      "name": "Mars",
+      "slug": "mars",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "b6fbbc41-7d71-4d6f-9349-041a31f2bdb9",
+          "title": "Internship in Trade Marketing",
+          "sourceUrl": "https://careers.mars.com/global/en/job/R163385/Internship-in-Trade-Marketing"
+        }
+      ],
+      "sourceUrl": "https://careers.mars.com/global/en/job/R163385/Internship-in-Trade-Marketing",
+      "finalUrl": "https://careers.mars.com/global/en/job/R163385/Internship-in-Trade-Marketing",
+      "logo": null,
+      "photo": {
+        "source": "https://assets.phenompeople.com/CareerConnectResources/pp/MARSGLOBAL/social/1024x512-1546945343045.jpg",
+        "evidence": "twitter:image https://assets.phenompeople.com/CareerConnectResources/pp/MARSGLOBAL/social/1024x512-1546945343045.jpg",
+        "filename": "mars-foto.jpg",
+        "bytes": 18576,
+        "sha256": "cd3ac0421d31beffff9a7d6c3dc038d07170d14415481e53311e33736c37b524",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": [
+        "Logo indirilemedi: Görsel değil: text/css",
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "6706bcf2-d218-4c10-a03a-ebffa7d2dfd8",
+      "name": "Red Bull",
+      "slug": "red-bull",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "616c21df-c377-4a1e-a6df-ff1f2a9b3f44",
+          "title": "Intern Customer Service",
+          "sourceUrl": "https://jobs.redbull.com/de-de/intern-customer-service--ref33253j"
+        }
+      ],
+      "sourceUrl": "https://jobs.redbull.com/de-de/intern-customer-service--ref33253j",
+      "finalUrl": "https://jobs.redbull.com/de-de/intern-customer-service--ref33253j",
+      "logo": null,
+      "photo": {
+        "source": "https://img.redbull.com/images/w_1200,h_630,c_fill,g_auto,q_auto,f_auto/rbjobs/staging/p8kaninydfj8yt6recr7/filename",
+        "evidence": "og:image https://img.redbull.com/images/w_1200,h_630,c_fill,g_auto,q_auto,f_auto/rbjobs/staging/p8kaninydfj8yt6recr7/filename",
+        "filename": "red-bull-foto.jpg",
+        "bytes": 147526,
+        "sha256": "3b114453b1ac7642a9935845bfdb18ecc8e565fb09eeb387036cc1010d91be88",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "6c1e53d7-c164-4b07-b2fd-a50633fac36c",
+      "name": "Inception Media",
+      "slug": "inception-media",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "96e8bfca-8fab-4bdc-b01a-6c8db3977abb",
+          "title": "Intern - Sales (m/w/d)",
+          "sourceUrl": "https://join.com/companies/inception-media/16670441-intern-sales-m-w-d"
+        }
+      ],
+      "sourceUrl": "https://join.com/companies/inception-media/16670441-intern-sales-m-w-d",
+      "finalUrl": "https://join.com/companies/inception-media/16670441-intern-sales-m-w-d",
+      "logo": null,
+      "photo": {
+        "filename": "inception-media-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Intern - Sales (m/w/d)",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "48d832f6-a28b-4520-a26e-d0d4b71e0cfc",
+      "name": "Yami Studios UG",
+      "slug": "yami-studios-ug",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "4a6b97ec-028b-4855-9b29-67c1f319501f",
+          "title": "Project Management Internship",
+          "sourceUrl": "https://join.com/companies/yami-studioscom/16668662-project-management-internship"
+        }
+      ],
+      "sourceUrl": "https://join.com/companies/yami-studioscom/16668662-project-management-internship",
+      "finalUrl": "https://join.com/companies/yami-studioscom/16668662-project-management-internship",
+      "logo": null,
+      "photo": {
+        "filename": "yami-studios-ug-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Project Management Internship",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "022b9741-352e-46f5-9f87-63870f7e41df",
+      "name": "Craftly",
+      "slug": "craftly",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "d534b8d1-e682-4693-b6dd-1c0d6ecfd73f",
+          "title": "Mandatory internship performance marketing and social media",
+          "sourceUrl": "https://join.com/companies/maxdrei/16691853-mandatory-internship-performance-marketing-and-social-media"
+        }
+      ],
+      "sourceUrl": "https://join.com/companies/maxdrei/16691853-mandatory-internship-performance-marketing-and-social-media",
+      "finalUrl": "https://join.com/companies/maxdrei/16691853-mandatory-internship-performance-marketing-and-social-media",
+      "logo": null,
+      "photo": {
+        "filename": "craftly-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Mandatory internship performance marketing and social media",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "efa7d28e-b6e4-4fce-968b-007fff272180",
+      "name": "careloop",
+      "slug": "careloop",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "f935c107-4b30-4c42-a0da-c6b06db591dd",
+          "title": "Praktikum (m/w/d) HR & Recruiting",
+          "sourceUrl": "https://careloop.jobs.personio.com/job/2144283"
+        }
+      ],
+      "sourceUrl": "https://careloop.jobs.personio.com/job/2144283",
+      "finalUrl": "https://careloop.jobs.personio.com/job/2144283",
+      "logo": {
+        "source": "https://assets.cdn.personio.de/logos/102916/social/72f15edf629e52bfb6e955c29de3eb58.png",
+        "evidence": "preload https://assets.cdn.personio.de/logos/102916/social/72f15edf629e52bfb6e955c29de3eb58.png",
+        "filename": "careloop-logo.png",
+        "bytes": 10206,
+        "sha256": "ca668618de57e5678e8b24819a5d38454907baf009f568f54109bde05cab56ab",
+        "review": "manual_required"
+      },
+      "photo": {
+        "source": "https://assets.cdn.personio.de/logos/102916/social/72f15edf629e52bfb6e955c29de3eb58.png",
+        "evidence": "og:image https://assets.cdn.personio.de/logos/102916/social/72f15edf629e52bfb6e955c29de3eb58.png",
+        "filename": "careloop-foto.png",
+        "bytes": 10206,
+        "sha256": "ca668618de57e5678e8b24819a5d38454907baf009f568f54109bde05cab56ab",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "50c248f3-629e-4bbb-b26e-2eabbce167da",
+      "name": "WongDoody",
+      "slug": "wongdoody",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "04217342-a22a-421c-8c16-870f7b17cae1",
+          "title": "Intern – Digital Creative Copy",
+          "sourceUrl": "https://job-boards.greenhouse.io/wongdoody/jobs/7988851003"
+        }
+      ],
+      "sourceUrl": "https://job-boards.greenhouse.io/wongdoody/jobs/7988851003",
+      "finalUrl": "https://job-boards.greenhouse.io/wongdoody/jobs/7988851003",
+      "logo": null,
+      "photo": {
+        "filename": "wongdoody-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Intern – Digital Creative Copy",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "6eb31711-6fd4-4217-822e-f50cbfd8029b",
+      "name": "Estée Lauder Companies",
+      "slug": "estee-lauder",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/estee-lauder.png",
+      "listings": [
+        {
+          "id": "8786af0e-b742-41cb-87e8-5b3ca1542526",
+          "title": "Marketing Intern (m/w/d) Estée Lauder",
+          "sourceUrl": "https://careers.elcompanies.com/careers/job/1168275507157"
+        },
+        {
+          "id": "aad7946e-8b97-43e1-bac8-e4e2d6ee2eb9",
+          "title": "Ticari Mükemmellik Yönetici Adayı (MT)",
+          "sourceUrl": "https://careers.elcompanies.com/careers/job/1168274371399"
+        }
+      ],
+      "sourceUrl": "https://careers.elcompanies.com/careers/job/1168275507157",
+      "finalUrl": "https://careers.elcompanies.com/careers/job/1168275507157",
+      "logo": null,
+      "photo": {
+        "source": "https://static.vscdn.net/images/careers/demo/elcompanies/1771510573::new_company_logo_url",
+        "evidence": "Estee Lauder Logo elc_logo https://static.vscdn.net/images/careers/demo/elcompanies/1771510573::new_company_logo_url",
+        "filename": "estee-lauder-foto.png",
+        "bytes": 9086,
+        "sha256": "abe278c084b0f50bfa13c68d07954e5fa67c9bec4e3db6c02415f99bfede84b8",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "25a4479a-efe4-4dc5-926a-e2317b1f7189",
+      "name": "telli",
+      "slug": "telli",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "1bc7f8bf-4ddd-4a99-b52b-f413b06bcabb",
+          "title": "Internship - Workplace and People Operations",
+          "sourceUrl": "https://jobs.ashbyhq.com/telli/f63fa9a6-3ecf-4826-a0cb-60b659535565"
+        }
+      ],
+      "sourceUrl": "https://jobs.ashbyhq.com/telli/f63fa9a6-3ecf-4826-a0cb-60b659535565",
+      "finalUrl": "https://jobs.ashbyhq.com/telli/f63fa9a6-3ecf-4826-a0cb-60b659535565",
+      "logo": {
+        "source": "https://app.ashbyhq.com/api/images/org-theme-logo/6f2bad00-61cb-4e2b-9fce-bec70fd65a1a/b8c9d1e5-afb8-475c-86d9-06105f4c0f65/2a7208a5-7d9f-4b99-a10b-2f9c51db83c6.png",
+        "evidence": "og:image https://app.ashbyhq.com/api/images/org-theme-logo/6f2bad00-61cb-4e2b-9fce-bec70fd65a1a/b8c9d1e5-afb8-475c-86d9-06105f4c0f65/2a7208a5-7d9f-4b99-a10b-2f9c51db83c6.png",
+        "filename": "telli-logo.png",
+        "bytes": 20809,
+        "sha256": "c4015424f9884f7e701944361d496db8eadcd9b01678c76f1174cadbf0a68c77",
+        "review": "manual_required"
+      },
+      "photo": {
+        "source": "https://app.ashbyhq.com/api/images/org-theme-logo/6f2bad00-61cb-4e2b-9fce-bec70fd65a1a/b8c9d1e5-afb8-475c-86d9-06105f4c0f65/2a7208a5-7d9f-4b99-a10b-2f9c51db83c6.png",
+        "evidence": "og:image https://app.ashbyhq.com/api/images/org-theme-logo/6f2bad00-61cb-4e2b-9fce-bec70fd65a1a/b8c9d1e5-afb8-475c-86d9-06105f4c0f65/2a7208a5-7d9f-4b99-a10b-2f9c51db83c6.png",
+        "filename": "telli-foto.png",
+        "bytes": 20809,
+        "sha256": "c4015424f9884f7e701944361d496db8eadcd9b01678c76f1174cadbf0a68c77",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "00d18e1a-f959-4025-b5d4-f9e1277a2a4f",
+      "name": "Atrya",
+      "slug": "atrya",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "cc55e6ec-1f28-4eff-96c3-0dff58cce627",
+          "title": "Intern - Marketing",
+          "sourceUrl": "https://join.com/companies/atryaio/16693517-intern-marketing"
+        }
+      ],
+      "sourceUrl": "https://join.com/companies/atryaio/16693517-intern-marketing",
+      "finalUrl": "https://join.com/companies/atryaio/16693517-intern-marketing",
+      "logo": null,
+      "photo": {
+        "filename": "atrya-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Intern - Marketing",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "ba4a63a1-1bc9-4cee-baf7-cb3253b9e0b8",
+      "name": "HOPn UG",
+      "slug": "hopn-ug",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "8ae39960-f33b-4078-8381-22480aae70a0",
+          "title": "Internship: HR - Unpaid",
+          "sourceUrl": "https://join.com/companies/hopneu/16672784-internship-hr-unpaid"
+        }
+      ],
+      "sourceUrl": "https://join.com/companies/hopneu/16672784-internship-hr-unpaid",
+      "finalUrl": "https://join.com/companies/hopneu/16672784-internship-hr-unpaid",
+      "logo": null,
+      "photo": {
+        "filename": "hopn-ug-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Internship: HR - Unpaid",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "154591bd-14c5-47cf-9893-a14e2356c983",
+      "name": "LANCH",
+      "slug": "lanch",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "35638d58-6eee-4d34-8f1f-c71221219823",
+          "title": "Founders Associate Intern (m/w/d)",
+          "sourceUrl": "https://lanch.jobs.personio.de/job/1378303"
+        }
+      ],
+      "sourceUrl": "https://lanch.jobs.personio.de/job/1378303",
+      "finalUrl": "https://lanch.jobs.personio.de/job/1378303",
+      "logo": {
+        "source": "https://assets.cdn.personio.de/logos/127470/social/453b6f0f04a3a48045205aa2401268e3.png",
+        "evidence": "preload https://assets.cdn.personio.de/logos/127470/social/453b6f0f04a3a48045205aa2401268e3.png",
+        "filename": "lanch-logo.png",
+        "bytes": 18054,
+        "sha256": "276d029520470ab75056ea485961a41cf166d656944d6c9c4079b5e71b8ab126",
+        "review": "manual_required"
+      },
+      "photo": {
+        "source": "https://assets.cdn.personio.de/logos/127470/social/453b6f0f04a3a48045205aa2401268e3.png",
+        "evidence": "og:image https://assets.cdn.personio.de/logos/127470/social/453b6f0f04a3a48045205aa2401268e3.png",
+        "filename": "lanch-foto.png",
+        "bytes": 18054,
+        "sha256": "276d029520470ab75056ea485961a41cf166d656944d6c9c4079b5e71b8ab126",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "1c2ee47b-8b2d-45d7-9387-7293837a01ec",
+      "name": "Bertelsmann",
+      "slug": "bertelsmann",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "130ae4cc-955a-4927-99e8-0b925b08efa6",
+          "title": "Praktikum Produktion",
+          "sourceUrl": "https://jobs.smartrecruiters.com/Bertelsmann-Jobs/744000144324449-praktikum-produktion"
+        },
+        {
+          "id": "369288a2-6c3f-41f4-8f11-aa210fab86e5",
+          "title": "Praktikum Medienproduktion (w/m/d)",
+          "sourceUrl": "https://jobs.smartrecruiters.com/Bertelsmann-Jobs/744000148143159-praktikum-medienproduktion-w-m-d-"
+        }
+      ],
+      "sourceUrl": "https://jobs.smartrecruiters.com/Bertelsmann-Jobs/744000144324449-praktikum-produktion",
+      "finalUrl": "https://jobs.smartrecruiters.com/Bertelsmann-Jobs/744000144324449-praktikum-produktion",
+      "logo": null,
+      "photo": {
+        "filename": "bertelsmann-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Praktikum Produktion | Praktikum Medienproduktion (w/m/d)",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "f2d92a04-fd4f-4582-a82b-631cffcc7559",
+      "name": "Melagence GmbH",
+      "slug": "melagence-gmbh",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "0a684a87-e5ef-4317-8732-50f952490d45",
+          "title": "Internship at Berlin based Fashion Agency and Showroom (Paris, Berlin, Munich)",
+          "sourceUrl": "https://join.com/companies/melagence/16681281-internship-at-berlin-based-fashion-agency-and-showroom-paris-berlin-munich"
+        }
+      ],
+      "sourceUrl": "https://join.com/companies/melagence/16681281-internship-at-berlin-based-fashion-agency-and-showroom-paris-berlin-munich",
+      "finalUrl": "https://join.com/companies/melagence/16681281-internship-at-berlin-based-fashion-agency-and-showroom-paris-berlin-munich",
+      "logo": null,
+      "photo": {
+        "filename": "melagence-gmbh-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Internship at Berlin based Fashion Agency and Showroom (Paris, Berlin, Munich)",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "9d21fce0-89bd-4bbc-85c4-7e014db1526a",
+      "name": "Wegain GmbH",
+      "slug": "wegain-gmbh",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "7c9f3c68-ad9d-413f-a1dc-fc2531007d2e",
+          "title": "Praktikant Marketing",
+          "sourceUrl": "https://join.com/companies/wegain/16661216-praktikant-marketing"
+        }
+      ],
+      "sourceUrl": "https://join.com/companies/wegain/16661216-praktikant-marketing",
+      "finalUrl": "https://join.com/companies/wegain/16661216-praktikant-marketing",
+      "logo": null,
+      "photo": {
+        "filename": "wegain-gmbh-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Praktikant Marketing",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "eaebf277-ea75-44cc-994c-16d408db4a5b",
+      "name": "PUMA",
+      "slug": "puma",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "7cfe444b-8b99-43fc-8768-023c3496a8db",
+          "title": "Internship Planning E-Commerce Europe",
+          "sourceUrl": "https://puma.wd502.myworkdayjobs.com/Jobs_at_Puma/job/PUMA-Way-PEG/Internship-Planning--E-Commerce-Europe_R42934"
+        }
+      ],
+      "sourceUrl": "https://puma.wd502.myworkdayjobs.com/Jobs_at_Puma/job/PUMA-Way-PEG/Internship-Planning--E-Commerce-Europe_R42934",
+      "finalUrl": "https://puma.wd502.myworkdayjobs.com/Jobs_at_Puma/job/PUMA-Way-PEG/Internship-Planning--E-Commerce-Europe_R42934",
+      "logo": null,
+      "photo": {
+        "source": "https://puma.wd502.myworkdayjobs.com/Jobs_at_Puma/assets/logo",
+        "evidence": "og:image image https://puma.wd502.myworkdayjobs.com/Jobs_at_Puma/assets/logo",
+        "filename": "puma-foto.png",
+        "bytes": 26915,
+        "sha256": "7e72e01918bf76f617529ea0b634d2b1b7aa662fbaa21285d4b33acf0305ea86",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": [
+        "Logo indirilemedi: HTTP 414",
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "db59bd4c-4d8f-4fc7-891f-970decd6e100",
+      "name": "eBay",
+      "slug": "ebay",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "2d594eb6-ee14-42ba-8535-5235fa946c20",
+          "title": "Intern Category Mgmt. Fashion (f/m/d)",
+          "sourceUrl": "https://jobs.ebayinc.com/us/en/job/EBAEBAUSR0075958EXTERNALENUS/Intern-Category-Mgmt-Fashion-f-m-d"
+        }
+      ],
+      "sourceUrl": "https://jobs.ebayinc.com/us/en/job/EBAEBAUSR0075958EXTERNALENUS/Intern-Category-Mgmt-Fashion-f-m-d",
+      "finalUrl": "https://jobs.ebayinc.com/us/en/job/EBAEBAUSR0075958EXTERNALENUS/Intern-Category-Mgmt-Fashion-f-m-d",
+      "logo": null,
+      "photo": {
+        "source": "https://assets.phenompeople.com/CareerConnectResources/pp/EBAEBAUS/social/1024x512-1656398793472.jpg",
+        "evidence": "twitter:image https://assets.phenompeople.com/CareerConnectResources/pp/EBAEBAUS/social/1024x512-1656398793472.jpg",
+        "filename": "ebay-foto.jpg",
+        "bytes": 23132,
+        "sha256": "7ea75ba61e20173d72cdd3cabac1984f4e3e25d388b7d63f140ac7012a99096c",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": [
+        "Logo indirilemedi: Görsel değil: text/css",
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "75d553c6-2315-43d1-9e74-4083b468024e",
+      "name": "justDice",
+      "slug": "justdice",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "9e268dab-34e7-4c2c-af30-13be999fc42b",
+          "title": "Working Student/Intern - Marketing (f/m/d)",
+          "sourceUrl": "https://jobs.ashbyhq.com/justDice/837ac361-7035-4a57-831a-b3574a06780d"
+        }
+      ],
+      "sourceUrl": "https://jobs.ashbyhq.com/justDice/837ac361-7035-4a57-831a-b3574a06780d",
+      "finalUrl": "https://jobs.ashbyhq.com/justDice/837ac361-7035-4a57-831a-b3574a06780d",
+      "logo": null,
+      "photo": {
+        "source": "https://app.ashbyhq.com/api/images/org-theme-logo/78c8a632-3b8b-4886-9e14-0ba0d5852e3e/cd8e0f62-9b57-4bef-8343-85e274c92abb/6c403397-576c-417a-b3b9-93856334d66e.png",
+        "evidence": "og:image https://app.ashbyhq.com/api/images/org-theme-logo/78c8a632-3b8b-4886-9e14-0ba0d5852e3e/cd8e0f62-9b57-4bef-8343-85e274c92abb/6c403397-576c-417a-b3b9-93856334d66e.png",
+        "filename": "justdice-foto.png",
+        "bytes": 6690,
+        "sha256": "17b1866ad2ae5b768406a75b0d7ea48ff762f2964639b0fd1e11f8ee445d56a9",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": [
+        "Logo indirilemedi: Görsel değil: text/html; charset=utf-8",
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "85c13655-d0d9-4cca-ab8e-24062fd07435",
+      "name": "ABOUT YOU",
+      "slug": "about-you",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "35aefad6-58cb-40c7-8c7d-79ee4fa6a707",
+          "title": "Intern Marketing & Campaign Management (all genders)",
+          "sourceUrl": "https://jobs.smartrecruiters.com/ABOUTYOUGmbH/744000148794432-intern-marketing-campaign-management-all-genders-"
+        },
+        {
+          "id": "580dbeed-68aa-4a62-a4ea-feac97f795fc",
+          "title": "Praktikant*in Marketing & Campaign Management (all genders)",
+          "sourceUrl": "https://jobs.smartrecruiters.com/ABOUTYOUGmbH/744000148796992-praktikant-in-marketing-campaign-management-all-genders-"
+        }
+      ],
+      "sourceUrl": "https://jobs.smartrecruiters.com/ABOUTYOUGmbH/744000148794432-intern-marketing-campaign-management-all-genders-",
+      "finalUrl": "https://jobs.smartrecruiters.com/ABOUTYOUGmbH/744000148794432-intern-marketing-campaign-management-all-genders-",
+      "logo": null,
+      "photo": {
+        "filename": "about-you-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Intern Marketing & Campaign Management (all genders) | Praktikant*in Marketing & Campaign Management (all genders)",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "3e0ab8d1-af7f-43f6-9d61-541f9ed26b23",
+      "name": "emnify",
+      "slug": "emnify",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "b25cc736-e359-46d3-aaad-ffd608b34496",
+          "title": "Marketing Internship",
+          "sourceUrl": "https://www.emnify-jobs.com/emnify/?gh_jid=4971650101"
+        }
+      ],
+      "sourceUrl": "https://www.emnify-jobs.com/emnify/?gh_jid=4971650101",
+      "finalUrl": "https://www.emnify.com/careers/openings/job-detail?gh_jid=4971650101&jobtitle=Marketing+Internship&hsDebug=true",
+      "logo": {
+        "source": "https://www.emnify.com/hubfs/logo-Feb-08-2023-09-20-08-9335-AM.png",
+        "evidence": "logo-Feb-08-2023-09-20-08-9335-AM https://www.emnify.com/hubfs/logo-Feb-08-2023-09-20-08-9335-AM.png",
+        "filename": "emnify-logo.png",
+        "bytes": 12306,
+        "sha256": "be4fe611e322e497eb41cba6f02df7fd1ee5349c3cf7882c00cd0c11a5981c39",
+        "review": "manual_required"
+      },
+      "photo": {
+        "source": "https://www.emnify.com/hs-fs/hubfs/Career%20Images/Emnify%20Stock%20July%2026-22.jpg?width=1000&name=Emnify%20Stock%20July%2026-22.jpg",
+        "evidence": "js-departmentImage https://www.emnify.com/hs-fs/hubfs/Career%20Images/Emnify%20Stock%20July%2026-22.jpg?width=1000&amp;name=Emnify%20Stock%20July%2026-22.jpg",
+        "filename": "emnify-foto.jpg",
+        "bytes": 86810,
+        "sha256": "bc38a41e3108c4e7ecbac140b419665e6191f86ae63af49d914274d09446ec0f",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "ef665ff6-3779-4df0-959e-8ae7b3e2f4e1",
+      "name": "Bosch",
+      "slug": "bosch",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/bosch.png",
+      "listings": [
+        {
+          "id": "221a0347-79e0-44a3-9a19-b94b904e8999",
+          "title": "Praktikum Logistics Warehouse Management",
+          "sourceUrl": "https://jobs.smartrecruiters.com/BoschGroup/744000149315349-praktikum-logistics-warehouse-management"
+        },
+        {
+          "id": "55f7c3af-9afc-4ffc-8e59-548b16f18caf",
+          "title": "İnsan Kaynakları Operasyonları Uzun Dönem Stajyeri (Smart Start)",
+          "sourceUrl": "https://jobs.smartrecruiters.com/BoschGroup/744000148680248-hr-operations-smart-start"
+        }
+      ],
+      "sourceUrl": "https://jobs.smartrecruiters.com/BoschGroup/744000149315349-praktikum-logistics-warehouse-management",
+      "finalUrl": "https://jobs.smartrecruiters.com/BoschGroup/744000149315349-praktikum-logistics-warehouse-management",
+      "logo": null,
+      "photo": {
+        "filename": "bosch-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Praktikum Logistics Warehouse Management | İnsan Kaynakları Operasyonları Uzun Dönem Stajyeri (Smart Start)",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": []
+    },
+    {
+      "id": "d9802faa-3976-46e7-bfee-52ba4e32e7db",
+      "name": "FedEx",
+      "slug": "fedex",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/fedex.png",
+      "listings": [
+        {
+          "id": "106b8e3e-6f96-4bc0-9cfe-09b76f2d16e0",
+          "title": "Yaz Dönemi Stajyeri",
+          "sourceUrl": "https://careers.fedex.com/stajyer-summer-intern/job/9C00E502708EB058ECAB1B77A40D0007"
+        }
+      ],
+      "sourceUrl": "https://careers.fedex.com/stajyer-summer-intern/job/9C00E502708EB058ECAB1B77A40D0007",
+      "finalUrl": "https://careers.fedex.com/stajyer-summer-intern/job/9C00E502708EB058ECAB1B77A40D0007",
+      "logo": null,
+      "photo": {
+        "source": "https://d2xra9v1z0mbwm.cloudfront.net/oms/000000/image/2024/5/B8QDB_share/share_-1x-1.jpg",
+        "evidence": "og:image https://d2xra9v1z0mbwm.cloudfront.net/oms/000000/image/2024/5/B8QDB_share/share_-1x-1.jpg",
+        "filename": "fedex-foto.jpg",
+        "bytes": 12416,
+        "sha256": "7ed5a10b3f383c4a1701753fd7dfb56b6ba95b5fc297c5bd7c658c8b97162715",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "28cecde3-b7a3-4ae2-8c75-821b4b97321b",
+      "name": "Haleon",
+      "slug": "haleon",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "057dc73c-94cf-4bca-8b8f-dcbae47500f4",
+          "title": "Ruhsatlandırma (Regulatory Affairs) Stajyeri",
+          "sourceUrl": "https://gsknch.wd3.myworkdayjobs.com/tr-TR/GSKCareers/job/Turkey---Istanbul/Regulatory-Affairs-Intern_547774"
+        }
+      ],
+      "sourceUrl": "https://gsknch.wd3.myworkdayjobs.com/tr-TR/GSKCareers/job/Turkey---Istanbul/Regulatory-Affairs-Intern_547774",
+      "finalUrl": "https://gsknch.wd3.myworkdayjobs.com/tr-TR/GSKCareers/job/Turkey---Istanbul/Regulatory-Affairs-Intern_547774",
+      "logo": null,
+      "photo": {
+        "source": "https://gsknch.wd3.myworkdayjobs.com/tr-TR/GSKCareers/assets/logo",
+        "evidence": "og:image image https://gsknch.wd3.myworkdayjobs.com/tr-TR/GSKCareers/assets/logo",
+        "filename": "haleon-foto.png",
+        "bytes": 42768,
+        "sha256": "8be25d59bdcd4bd764cf192496bfebcd529b56767994aca8093717dc4b79e306",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": [
+        "Logo indirilemedi: Görsel değil: text/html",
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "40846b98-9ab4-4890-aaeb-8b556e5f5ba4",
+      "name": "Envista",
+      "slug": "envista",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/envista.ico",
+      "listings": [
+        {
+          "id": "88d5debc-58da-4c27-920f-567bc871c08c",
+          "title": "Warehouse Operations Intern",
+          "sourceUrl": "https://careers.envistaco.com/apply/R5026433"
+        }
+      ],
+      "sourceUrl": "https://careers.envistaco.com/apply/R5026433",
+      "finalUrl": "https://careers.envistaco.com/apply/R5026433",
+      "logo": null,
+      "photo": {
+        "filename": "envista-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Warehouse Operations Intern",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": []
+    },
+    {
+      "id": "a21dcdb0-b4bb-476f-9f05-16b48061f114",
+      "name": "Fater",
+      "slug": "fater",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/fater.png",
+      "listings": [
+        {
+          "id": "51ee5431-c22c-4a2e-9968-cc54b2682d50",
+          "title": "F&A Asistanı (Geçici)",
+          "sourceUrl": "https://iaahwm.fa.ocs.oraclecloud.eu/hcmUI/CandidateExperience/en/sites/CX_1/job/35"
+        },
+        {
+          "id": "ad90f8ec-d7b2-4d29-9dd0-b6ee737d9978",
+          "title": "Satış Stajyeri",
+          "sourceUrl": "https://iaahwm.fa.ocs.oraclecloud.eu/hcmUI/CandidateExperience/en/sites/CX_1/job/48"
+        }
+      ],
+      "sourceUrl": "https://iaahwm.fa.ocs.oraclecloud.eu/hcmUI/CandidateExperience/en/sites/CX_1/job/35",
+      "finalUrl": "https://iaahwm.fa.ocs.oraclecloud.eu/hcmUI/CandidateExperience/en/sites/CX_1/job/35",
+      "logo": null,
+      "photo": {
+        "source": "https://iaahwm.fa.ocs.oraclecloud.eu/hcmUI/CandidateExperience/images?imageId=78F40F9E-C02B-46D8-AD29-06816DCCE151",
+        "evidence": "og:image https://iaahwm.fa.ocs.oraclecloud.eu:443/hcmUI/CandidateExperience/images?imageId=78F40F9E-C02B-46D8-AD29-06816DCCE151",
+        "filename": "fater-foto.png",
+        "bytes": 50439,
+        "sha256": "a41c3876864ab9813a04137257be157e4761ba88e0fbb6bc5ce9492b43805c2d",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "2ae07776-6d90-406f-adab-ebb38f7baa93",
+      "name": "Texas Instruments",
+      "slug": "texas-instruments",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/texas-instruments.png",
+      "listings": [
+        {
+          "id": "e514dd80-7520-4d9f-86cd-1ad1335f9738",
+          "title": "Technical Sales Engineering Intern",
+          "sourceUrl": "https://edbz.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/25011568"
+        }
+      ],
+      "sourceUrl": "https://edbz.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/25011568",
+      "finalUrl": "https://edbz.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/25011568",
+      "logo": null,
+      "photo": {
+        "source": "https://www.ti.com/content/dam/ticom/images/identities/ti-brand/ti-careers-logo-hz-white.svg",
+        "evidence": "og:image https://www.ti.com/content/dam/ticom/images/identities/ti-brand/ti-careers-logo-hz-white.svg",
+        "filename": "texas-instruments-foto.svg",
+        "bytes": 9549,
+        "sha256": "898002f49eb307a4ec25b6feb09ad581e5f87ab0aaddb4766e89a87b3bcde86d",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "5865cbfa-95fa-4e96-bf53-cdce7e08cb1d",
+      "name": "IMCD",
+      "slug": "imcd",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/imcd.png",
+      "listings": [
+        {
+          "id": "83f7bc65-fa8a-4ed0-b393-897ef5037970",
+          "title": "Zorunlu Stajyer — Laboratuvar",
+          "sourceUrl": "https://imcdgroup.csod.com/ux/ats/careersite/6/home/requisition/2103?c=imcdgroup"
+        }
+      ],
+      "sourceUrl": "https://imcdgroup.csod.com/ux/ats/careersite/6/home/requisition/2103?c=imcdgroup",
+      "finalUrl": "https://imcdgroup.csod.com/ux/ats/careersite/6/home/requisition/2103?c=imcdgroup",
+      "logo": null,
+      "photo": {
+        "source": "http://imcdgroup.csod.com/clientimg/imcdgroup/logo/Option1_f2cb4dd9-59c1-4db8-bddd-8939089ca839.png",
+        "evidence": "og:image http://imcdgroup.csod.com/clientimg/imcdgroup/logo/Option1_f2cb4dd9-59c1-4db8-bddd-8939089ca839.png",
+        "filename": "imcd-foto.png",
+        "bytes": 605649,
+        "sha256": "f9b8c42a277bf1d53449a0d83317875f24e151258bc3bf26e329454427796bae",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "e61d0c05-e77a-4ad4-8295-6154cc8a9cad",
+      "name": "J.P. Morgan",
+      "slug": "jpmorgan",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/jpmorgan.png",
+      "listings": [
+        {
+          "id": "ff6e2e36-a931-4a9c-8e59-2150b0025964",
+          "title": "2027 Kurumsal ve Yatırım Bankacılığı — Markets Off-cycle Stajı",
+          "sourceUrl": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210788269"
+        },
+        {
+          "id": "bf46a932-de4a-4d2f-bba7-b3a364168120",
+          "title": "2027 Global Private Bank - Advisor Summer Internship Program - Paris",
+          "sourceUrl": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210774216?utm_medium=jobboard&utm_source"
+        },
+        {
+          "id": "f04b6f76-d46d-4fd7-bae6-34ecdeb59fd3",
+          "title": "2027 – Sales – Summer Internship - Paris",
+          "sourceUrl": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210780537?utm_medium=jobboard&utm_source"
+        },
+        {
+          "id": "d81d46fd-7a60-4446-9bd2-15b730731fb3",
+          "title": "2027 – Global Markets – Summer Internship - Paris",
+          "sourceUrl": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210780497?utm_medium=jobboard&utm_source"
+        }
+      ],
+      "sourceUrl": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210788269",
+      "finalUrl": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210788269",
+      "logo": null,
+      "photo": {
+        "source": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/images?imageId=0848BB3A-5E59-48BF-9AEC-F465299455DA",
+        "evidence": "og:image https://jpmc.fa.oraclecloud.com:443/hcmUI/CandidateExperience/images?imageId=0848BB3A-5E59-48BF-9AEC-F465299455DA",
+        "filename": "jpmorgan-foto.png",
+        "bytes": 108323,
+        "sha256": "a5384bbf2713ee689e241c688c904cb76b798c2e782ba4b1b2b10c9e0eb939a4",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "d32f8d48-296f-480a-90f5-f57cab897a90",
+      "name": "Cummins",
+      "slug": "cummins",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/cummins.ico",
+      "listings": [
+        {
+          "id": "3139a257-3cab-48d8-a4ca-efa091cb18d6",
+          "title": "Uzun Dönem Lojistik Stajyeri",
+          "sourceUrl": "https://cummins.jobs/tuzla-tur/long-term-internship-logistics/AC8A552495B94CC291ADCF56189841E5/job/"
+        }
+      ],
+      "sourceUrl": "https://cummins.jobs/tuzla-tur/long-term-internship-logistics/AC8A552495B94CC291ADCF56189841E5/job/",
+      "finalUrl": "https://cummins.jobs/tuzla-tur/long-term-internship-logistics/AC8A552495B94CC291ADCF56189841E5/job/",
+      "logo": null,
+      "photo": {
+        "source": "https://seo.nlx.org/cummins/img6/cummins-og.jpg",
+        "evidence": "og:image https://seo.nlx.org/cummins/img6/cummins-og.jpg",
+        "filename": "cummins-foto.jpg",
+        "bytes": 91995,
+        "sha256": "c92190fb705ef6f97635252f65e857b476740b75e34ce99a81f177ed76fdf6be",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "19fe7da3-4e9d-4de9-a63f-e93398668921",
+      "name": "MAHLE",
+      "slug": "mahle",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/mahle.ico",
+      "listings": [
+        {
+          "id": "05745bb2-aa3a-4edb-8269-531dc948e5d7",
+          "title": "Uzun Dönem İnsan Kaynakları Stajyeri",
+          "sourceUrl": "https://careers.mahle.com/job/GebzeKocaeli-Long-Term-Human-Resources-Intern/1434447833/"
+        }
+      ],
+      "sourceUrl": "https://careers.mahle.com/job/GebzeKocaeli-Long-Term-Human-Resources-Intern/1434447833/",
+      "finalUrl": "https://careers.mahle.com/job/GebzeKocaeli-Long-Term-Human-Resources-Intern/1434447833/",
+      "logo": null,
+      "photo": {
+        "filename": "mahle-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Uzun Dönem İnsan Kaynakları Stajyeri",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": []
+    },
+    {
+      "id": "7b4aca19-d8a8-400c-a069-897e34287003",
+      "name": "Oğuz Law",
+      "slug": "oguz-law",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "cf392df9-e7eb-41f5-8d4b-b88a4fad9388",
+          "title": "Bilgi Teknolojileri Stajyeri",
+          "sourceUrl": "https://ats.rippling.com/oguz-law/jobs/567987d1-2a0e-44d5-9a3b-5e3ad5f956c9"
+        },
+        {
+          "id": "b150e94a-961b-4416-b896-5ce6213da369",
+          "title": "İş Geliştirme ve Büyüme Stajyeri",
+          "sourceUrl": "https://ats.rippling.com/oguz-law/jobs/cc2f19ae-ed4d-43d3-b65b-a77b4bd4898d"
+        }
+      ],
+      "sourceUrl": "https://ats.rippling.com/oguz-law/jobs/567987d1-2a0e-44d5-9a3b-5e3ad5f956c9",
+      "finalUrl": "https://ats.rippling.com/oguz-law/jobs/567987d1-2a0e-44d5-9a3b-5e3ad5f956c9",
+      "logo": null,
+      "photo": {
+        "filename": "oguz-law-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Bilgi Teknolojileri Stajyeri | İş Geliştirme ve Büyüme Stajyeri",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "cc95c826-c92f-43b8-92eb-fc534da5bd54",
+      "name": "Baykar",
+      "slug": "baykar",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/baykar.png",
+      "listings": [
+        {
+          "id": "4e098371-6886-4550-be22-c0554310d9e8",
+          "title": "2027 Bahar Dönemi Staj — Yapay Zekâ Yazılım Geliştirme",
+          "sourceUrl": "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-bahar-donemi-staj-yapay-zeka-yazilim-gelistir"
+        },
+        {
+          "id": "8eaebfc8-e114-4ab4-bb07-32e758994cb0",
+          "title": "2027 Bahar Dönemi Staj — İnsan Kaynakları",
+          "sourceUrl": "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-bahar-donemi-staj-insan-kaynaklari"
+        },
+        {
+          "id": "78be5302-a48f-4f9e-a807-45190488c41e",
+          "title": "2027 Bahar Dönemi Staj — Üretim Yönetimi",
+          "sourceUrl": "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-bahar-donemi-staj-uretim-yonetimi"
+        },
+        {
+          "id": "cca042e1-2370-4314-ae54-6800eabe6b84",
+          "title": "2027 Bahar Dönemi Staj — Finansal Kontrol ve Raporlama",
+          "sourceUrl": "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-bahar-donemi-staj-finansal-kontrol-ve-raporla"
+        },
+        {
+          "id": "010d0c3f-a26b-4bdc-b8ac-3667205ade6c",
+          "title": "2027 Bahar Dönemi Staj — Dijital Sistemler Proje Mühendisliği",
+          "sourceUrl": "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-bahar-donemi-staj-dijital-sistemler-proje-muh"
+        },
+        {
+          "id": "73d37778-1605-4f95-959f-f80faee1c788",
+          "title": "2027 Bahar Dönemi Staj — İş Geliştirme",
+          "sourceUrl": "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-bahar-donemi-staj-is-gelistirme"
+        }
+      ],
+      "sourceUrl": "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-bahar-donemi-staj-yapay-zeka-yazilim-gelistir",
+      "finalUrl": "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-bahar-donemi-staj-yapay-zeka-yazilim-gelistir",
+      "logo": null,
+      "photo": {
+        "filename": "baykar-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: 2027 Bahar Dönemi Staj — Yapay Zekâ Yazılım Geliştirme | 2027 Bahar Dönemi Staj — İnsan Kaynakları | 2027 Bahar Dönemi Staj — Üretim Yönetimi | 2027 Bahar Dönemi Staj — Finansal Kontrol ve Raporlama | 2027 Bahar Dönemi Staj — Dijital Sistemler Proje Mühendisliği | 2027 Bahar Dönemi Staj — İş Geliştirme",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": []
+    },
+    {
+      "id": "bbec46b0-52d9-4cc2-aecc-3eafedda879c",
+      "name": "Plus Bahçeşehir Eğitim",
+      "slug": "plus-bahcesehir-egitim",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "7d107ffb-e351-4d79-bb20-15d0baafb5cc",
+          "title": "Stajyer Matematik Öğretmeni",
+          "sourceUrl": "https://cvbenim.com/is-ilani/stajyer-matematik-ogretmeni-42410"
+        }
+      ],
+      "sourceUrl": "https://cvbenim.com/is-ilani/stajyer-matematik-ogretmeni-42410",
+      "finalUrl": "https://cvbenim.com/is-ilani/stajyer-matematik-ogretmeni-42410",
+      "logo": null,
+      "photo": {
+        "filename": "plus-bahcesehir-egitim-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Stajyer Matematik Öğretmeni",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "000f2b3d-0e2c-457d-b1db-194d6c19087d",
+      "name": "Öğretmenim Dergisi",
+      "slug": "ogretmenim-dergisi",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "06ebe469-1765-46b6-8076-b7bb5e29ebed",
+          "title": "Stajyer — Reklam ve Satış",
+          "sourceUrl": "https://cvbenim.com/is-ilani/stajyer-42431"
+        }
+      ],
+      "sourceUrl": "https://cvbenim.com/is-ilani/stajyer-42431",
+      "finalUrl": "https://cvbenim.com/is-ilani/stajyer-42431",
+      "logo": null,
+      "photo": {
+        "filename": "ogretmenim-dergisi-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Stajyer — Reklam ve Satış",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "9aa9fe3c-1679-48ed-a329-3a659fbbb041",
+      "name": "Protel",
+      "slug": "protel",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/protel.png",
+      "listings": [
+        {
+          "id": "946b5f11-3cec-4615-abbc-07f1e2b8145d",
+          "title": "Eğitim Stajyeri",
+          "sourceUrl": "https://protel.hrpanda.co/tr/egitim-stajyeri"
+        }
+      ],
+      "sourceUrl": "https://protel.hrpanda.co/tr/egitim-stajyeri",
+      "finalUrl": "https://protel.hrpanda.co/tr/egitim-stajyeri",
+      "logo": null,
+      "photo": {
+        "source": "https://protel.hrpanda.co/api/og.png",
+        "evidence": "og:image https://protel.hrpanda.co/api/og.png",
+        "filename": "protel-foto.png",
+        "bytes": 12583,
+        "sha256": "8e27fd06bf730cec9a08d28a8f6946e3f1584f421c8e3e63016496ccee247cf9",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "58f7576e-61a0-49bc-bf31-ba254802216a",
+      "name": "Zeren Group",
+      "slug": "zeren-group",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "25648cc1-bd5d-43ef-9c75-cdf47bb9086b",
+          "title": "YourZ Genç Yetenek Programı",
+          "sourceUrl": "https://careers2.zerengroup.com/job/%C4%B0stanbul-YourZ-Young-Talent/1367489655/"
+        }
+      ],
+      "sourceUrl": "https://careers2.zerengroup.com/job/%C4%B0stanbul-YourZ-Young-Talent/1367489655/",
+      "finalUrl": "https://careers2.zerengroup.com/job/%C4%B0stanbul-YourZ-Young-Talent/1367489655/",
+      "logo": {
+        "source": "https://careers.zerengroup.com/images/logo/zeren_career_logo.png",
+        "evidence": "https://careers.zerengroup.com/images/logo/zeren_career_logo.png",
+        "filename": "zeren-group-logo.png",
+        "bytes": 1786,
+        "sha256": "5ff5c9f827e15580ab4ba7e6f2b46ff5e4e60da4257141c7b009f309d18d8629",
+        "review": "manual_required"
+      },
+      "photo": {
+        "source": "https://careers.zerengroup.com/images/logo/zeren_career_logo.png",
+        "evidence": "https://careers.zerengroup.com/images/logo/zeren_career_logo.png",
+        "filename": "zeren-group-foto.png",
+        "bytes": 1786,
+        "sha256": "5ff5c9f827e15580ab4ba7e6f2b46ff5e4e60da4257141c7b009f309d18d8629",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "a551ae9d-c5eb-4e05-aadd-ab202a5b2507",
+      "name": "Siemens",
+      "slug": "siemens",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/siemens.ico",
+      "listings": [
+        {
+          "id": "5754b4a4-737c-4dc7-97be-e77a4a47ef5a",
+          "title": "Yarı Zamanlı Öğrenci — Stratejik Satın Alma",
+          "sourceUrl": "https://jobs.siemens.com/en_US/externaljobs/JobDetail/512876"
+        },
+        {
+          "id": "e569b271-d9e8-4c19-8631-ba912f6d2bb9",
+          "title": "Yarı Zamanlı Öğrenci — Satış Finansmanı",
+          "sourceUrl": "https://jobs.siemens.com/en_US/externaljobs/JobDetail/521570"
+        }
+      ],
+      "sourceUrl": "https://jobs.siemens.com/en_US/externaljobs/JobDetail/512876",
+      "finalUrl": "https://jobs.siemens.com/en_US/externaljobs/JobDetail/512876",
+      "logo": null,
+      "photo": {
+        "source": "https://jobs.siemens.com/_cms/144/image/logoHiringOrganizationJobDetail/1?version=251971078",
+        "evidence": "og:image https://jobs.siemens.com/_cms/144/image/logoHiringOrganizationJobDetail/1?version=251971078",
+        "filename": "siemens-foto.png",
+        "bytes": 13046,
+        "sha256": "752ea84fbb5dc120fa40d8d8e6ec089a4eeeed27e08724b1a38db65f90f04882",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "bff088c6-aed6-4840-b7c3-5ba747223184",
+      "name": "JTI",
+      "slug": "jti",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/jti.png",
+      "listings": [
+        {
+          "id": "3f316b3a-8590-4c58-be15-ce993a6b3d2f",
+          "title": "İnsan Kaynakları Yeni Mezun Programı (11 Aylık Sözleşme)",
+          "sourceUrl": "https://jobs.jti.com/job/TORBALI-People-&-Culture-New-Graduate-35860/1436283533/"
+        }
+      ],
+      "sourceUrl": "https://jobs.jti.com/job/TORBALI-People-&-Culture-New-Graduate-35860/1436283533/",
+      "finalUrl": "https://jobs.jti.com/job/TORBALI-People-&-Culture-New-Graduate-35860/1436283533/",
+      "logo": null,
+      "photo": {
+        "source": "https://performancemanager5.successfactors.eu/doc/custom/JTIPROD/Internal_banner.jpg",
+        "evidence": "https://performancemanager5.successfactors.eu/doc/custom/JTIPROD/Internal_banner.jpg",
+        "filename": "jti-foto.jpg",
+        "bytes": 1574587,
+        "sha256": "7edf481f40498541165816bc3530c39f22b1374deb719b374791c3744acc4ffa",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "0c482b9d-47b6-4f5e-87cd-cd091b75f539",
+      "name": "Festo",
+      "slug": "festo",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/festo.jpg",
+      "listings": [
+        {
+          "id": "cff42cac-0dfc-473a-92da-9303ac210604",
+          "title": "Genel Staj Başvurusu",
+          "sourceUrl": "https://jobs.festo.com/job/Yunusemre-Manisa-Genel-Staj-Ba%C5%9Fvurusu-45030/1377425733/"
+        },
+        {
+          "id": "b4727eb8-ebb7-4b1e-bc4e-407c5f2b2f11",
+          "title": "Operasyonel Mükemmellik Stajyeri",
+          "sourceUrl": "https://jobs.festo.com/job/Yunusemre-Manisa-Operational-Excellence-Intern-45030/1432230933/"
+        },
+        {
+          "id": "22209eb7-73d4-4857-847b-08cf552e3846",
+          "title": "Uzun Dönem Stajyer — Yatırım ve Projeler",
+          "sourceUrl": "https://jobs.festo.com/job/Yunusemre-Manisa-Long-Term-Intern-%28Investment-Projects%29-45030/1435327633/"
+        }
+      ],
+      "sourceUrl": "https://jobs.festo.com/job/Yunusemre-Manisa-Genel-Staj-Ba%C5%9Fvurusu-45030/1377425733/",
+      "finalUrl": "https://jobs.festo.com/job/Yunusemre-Manisa-Genel-Staj-Ba%C5%9Fvurusu-45030/1377425733/",
+      "logo": null,
+      "photo": {
+        "filename": "festo-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Genel Staj Başvurusu | Operasyonel Mükemmellik Stajyeri | Uzun Dönem Stajyer — Yatırım ve Projeler",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": []
+    },
+    {
+      "id": "b9771e06-f04c-4b4e-8366-521af5f87822",
+      "name": "Dgpays",
+      "slug": "dgpays",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "c9bd999d-4900-4e02-8f94-6624bd690ee4",
+          "title": "Genç Yetenek İş Analisti Stajyer Programı",
+          "sourceUrl": "https://dgpays.tr.hrpanda.co/genc-yetenek-is-analisti-stajyer-programi"
+        }
+      ],
+      "sourceUrl": "https://dgpays.tr.hrpanda.co/genc-yetenek-is-analisti-stajyer-programi",
+      "finalUrl": "https://dgpays.tr.hrpanda.co/",
+      "logo": null,
+      "photo": {
+        "source": "https://dgpays.tr.hrpanda.co/api/og.png",
+        "evidence": "og:image https://dgpays.tr.hrpanda.co/api/og.png",
+        "filename": "dgpays-foto.png",
+        "bytes": 24433,
+        "sha256": "6fec38d6ad7cf2ed6185e75216150fd53f783028201cdd68f6f842f5af44e46e",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": [
+        "Logo indirilemedi: Görsel değil: application/octet-stream",
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "1c436482-d8ec-4a41-b7ed-59ae521826fd",
+      "name": "TikTok",
+      "slug": "tiktok",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/tiktok.png",
+      "listings": [
+        {
+          "id": "d61688f8-ec69-4b09-a41c-a013a1a911f4",
+          "title": "Ajans Operasyonları Stajyeri (TikTok LIVE) — 2027 Başlangıçlı",
+          "sourceUrl": "https://lifeattiktok.com/search/7675688298135767349"
+        },
+        {
+          "id": "386e64d1-b144-46fd-91c8-f40b759a485b",
+          "title": "Luxury & Fashion Project Intern",
+          "sourceUrl": "https://lifeattiktok.com/search/7616686192683665669?spread=5MWH5CQ"
+        },
+        {
+          "id": "da418308-6567-4cc4-b82c-35f77965fd3b",
+          "title": "Consumer Goods Project Intern (GBS)",
+          "sourceUrl": "https://lifeattiktok.com/search/7586919482171148597?spread=5MWH5CQ"
+        },
+        {
+          "id": "743eea2d-2bc3-4898-959b-7b9e1b9bdb19",
+          "title": "Business Development Project Intern - TikTok Shop France (Home & Living)",
+          "sourceUrl": "https://lifeattiktok.com/search/7576993035981932853?spread=5MWH5CQ"
+        },
+        {
+          "id": "65dd741d-5cd0-4861-b53e-a54bd0139da5",
+          "title": "İçerik Üretici Operasyonları Stajyeri (TikTok LIVE)",
+          "sourceUrl": "https://lifeattiktok.com/search/7676409186784528645"
+        },
+        {
+          "id": "c7bffad4-f996-47be-9e01-823438f5eacd",
+          "title": "Ajans Operasyonları Proje Stajyeri (TikTok LIVE)",
+          "sourceUrl": "https://lifeattiktok.com/search/7611569275694254341"
+        }
+      ],
+      "sourceUrl": "https://lifeattiktok.com/search/7675688298135767349",
+      "finalUrl": "https://lifeattiktok.com/search/7675688298135767349",
+      "logo": null,
+      "photo": {
+        "filename": "tiktok-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Ajans Operasyonları Stajyeri (TikTok LIVE) — 2027 Başlangıçlı | Luxury & Fashion Project Intern | Consumer Goods Project Intern (GBS) | Business Development Project Intern - TikTok Shop France (Home & Living) | İçerik Üretici Operasyonları Stajyeri (TikTok LIVE) | Ajans Operasyonları Proje Stajyeri (TikTok LIVE)",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Fotoğraf indirilemedi: Uygun olmayan boyut: 309"
+      ]
+    },
+    {
+      "id": "f544da2d-2f69-447f-b830-478fba1524e6",
+      "name": "Paynion",
+      "slug": "paynion",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/paynion.png",
+      "listings": [
+        {
+          "id": "c90f7996-0ffa-4faf-a36e-86220c4323c0",
+          "title": "İş Analisti Stajyeri",
+          "sourceUrl": "https://paynion.com/en/careers/business-analyst-intern/"
+        },
+        {
+          "id": "db3dd716-ddce-419e-ba2c-1c208ac22835",
+          "title": "Yazılım Mühendisliği Stajyeri",
+          "sourceUrl": "https://paynion.com/en/careers/software-engineering-intern/"
+        }
+      ],
+      "sourceUrl": "https://paynion.com/en/careers/business-analyst-intern/",
+      "finalUrl": "https://paynion.com/en/careers/business-analyst-intern/",
+      "logo": null,
+      "photo": {
+        "filename": "paynion-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: İş Analisti Stajyeri | Yazılım Mühendisliği Stajyeri",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": []
+    },
+    {
+      "id": "c38e79fd-33a6-4774-9d50-68368f8e173e",
+      "name": "Institut Pasteur",
+      "slug": "institut-pasteur",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/institut-pasteur.jpg",
+      "listings": [
+        {
+          "id": "80fc4102-40ef-4194-83ce-3eec438e85ae",
+          "title": "M2 Internship — Emergence, Stability and Resilience in Biological Systems",
+          "sourceUrl": "https://research.pasteur.fr/en/job/m2-internship-offer-emergence-stability-and-resilience-in-biological-systems-a-dynamical-systems-approach/"
+        }
+      ],
+      "sourceUrl": "https://research.pasteur.fr/en/job/m2-internship-offer-emergence-stability-and-resilience-in-biological-systems-a-dynamical-systems-approach/",
+      "finalUrl": "https://research.pasteur.fr/en/job/m2-internship-offer-emergence-stability-and-resilience-in-biological-systems-a-dynamical-systems-approach/",
+      "logo": null,
+      "photo": {
+        "source": "https://research.pasteur.fr/wp-content/uploads/2022/11/research_pasteur-bandeau-unite-t-gregor-v2-e1668772198357-1024x573.jpg",
+        "evidence": "og:image https://research.pasteur.fr/wp-content/uploads/2022/11/research_pasteur-bandeau-unite-t-gregor-v2-e1668772198357-1024x573.jpg",
+        "filename": "institut-pasteur-foto.jpg",
+        "bytes": 72996,
+        "sha256": "c1e2f7a193aa92ace9bebf9a62047d8518a0127b2b0ef94c7386834c68c1ebbb",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "d1d7c7d2-d068-41bf-9104-6fd318e9249b",
+      "name": "Marriott International",
+      "slug": "marriott-international",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/marriott-international.png",
+      "listings": [
+        {
+          "id": "287e10df-3af2-42f7-86ae-7bf0c712fe42",
+          "title": "Otel Stajyeri — JW Marriott Istanbul Marmara Sea",
+          "sourceUrl": "https://careers.marriott.com/intern-jw-marriott-istanbul-marmara-sea/job/C658687A274FA350EDFB4FD093751FF3"
+        }
+      ],
+      "sourceUrl": "https://careers.marriott.com/intern-jw-marriott-istanbul-marmara-sea/job/C658687A274FA350EDFB4FD093751FF3",
+      "finalUrl": "https://careers.marriott.com/intern-jw-marriott-istanbul-marmara-sea/job/C658687A274FA350EDFB4FD093751FF3",
+      "logo": null,
+      "photo": {
+        "source": "https://dokumfe7mps0i.cloudfront.net/oms/7527/image/2025/11/YH9HK_MarriottHotelsLogo/MarriottHotelsLogo.jpg",
+        "evidence": "og:image https://dokumfe7mps0i.cloudfront.net/oms/7527/image/2025/11/YH9HK_MarriottHotelsLogo/MarriottHotelsLogo.jpg",
+        "filename": "marriott-international-foto.jpg",
+        "bytes": 98385,
+        "sha256": "2371efac35eaec9130df9179b91c86b47d3ff2a74979fcfe0008fcef3b9368cc",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "9fab06a6-5477-4958-b3b4-a18d33a8e150",
+      "name": "Vodafone Türkiye",
+      "slug": "vodafone-turkiye",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/vodafone-turkiye.png",
+      "listings": [
+        {
+          "id": "45ee953f-8131-4208-92e0-426287b8ba81",
+          "title": "FDS IT Stajyeri",
+          "sourceUrl": "https://jobs.vodafone.com/careers/job/563018697998136"
+        },
+        {
+          "id": "731a9a26-8c7c-4472-b6e8-9cd14b8139c0",
+          "title": "Martech Stajyeri",
+          "sourceUrl": "https://jobs.vodafone.com/careers/job/563018697963760"
+        },
+        {
+          "id": "56fa0e48-809f-4c45-8b54-81796beee8b2",
+          "title": "Finansal Planlama ve Analiz Stajyeri",
+          "sourceUrl": "https://jobs.vodafone.com/careers/job/563018697823473"
+        }
+      ],
+      "sourceUrl": "https://jobs.vodafone.com/careers/job/563018697998136",
+      "finalUrl": "https://jobs.vodafone.com/careers/job/563018697998136",
+      "logo": null,
+      "photo": {
+        "filename": "vodafone-turkiye-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: FDS IT Stajyeri | Martech Stajyeri | Finansal Planlama ve Analiz Stajyeri",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": []
+    },
+    {
+      "id": "5efa2c0a-0c5f-444c-895d-0792cbd84433",
+      "name": "Kenvue",
+      "slug": "kenvue",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/kenvue.png",
+      "listings": [
+        {
+          "id": "59a183f0-34a4-477d-9130-e19f339f89ee",
+          "title": "Pazarlama Stajyeri — Neutrogena",
+          "sourceUrl": "https://kenvue.wd5.myworkdayjobs.com/kenvue/job/EuropeMiddle-EastAfrica-Turkey-Istanbul-Istanbul/Marketing-Intern---Neutrogena_2607048768W"
+        }
+      ],
+      "sourceUrl": "https://kenvue.wd5.myworkdayjobs.com/kenvue/job/EuropeMiddle-EastAfrica-Turkey-Istanbul-Istanbul/Marketing-Intern---Neutrogena_2607048768W",
+      "finalUrl": "https://kenvue.wd5.myworkdayjobs.com/kenvue/job/EuropeMiddle-EastAfrica-Turkey-Istanbul-Istanbul/Marketing-Intern---Neutrogena_2607048768W",
+      "logo": null,
+      "photo": {
+        "filename": "kenvue-foto-generated.png",
+        "source": null,
+        "evidence": "AI-generated representative workplace image based on listing titles: Pazarlama Stajyeri — Neutrogena",
+        "review": "manual_required",
+        "rights": "generated_by_openai",
+        "kind": "generated_representative",
+        "disclosureRequired": true
+      },
+      "notes": [
+        "Fotoğraf indirilemedi: fetch failed"
+      ]
+    },
+    {
+      "id": "0e11021c-ec6c-4375-a62b-be7c1fb5caba",
+      "name": "Pfizer",
+      "slug": "pfizer",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/pfizer.ico",
+      "listings": [
+        {
+          "id": "4d50407a-44e8-4966-b2c3-0ab376fd17ef",
+          "title": "MAPP Operasyonları Yarı Zamanlı Öğrenci",
+          "sourceUrl": "https://pfizer.wd1.myworkdayjobs.com/tr-TR/PfizerCareers/job/Turkey---Istanbul/Pfizer-Part-Time-Universe-MAPP-Operations-Part-Time_4963444"
+        }
+      ],
+      "sourceUrl": "https://pfizer.wd1.myworkdayjobs.com/tr-TR/PfizerCareers/job/Turkey---Istanbul/Pfizer-Part-Time-Universe-MAPP-Operations-Part-Time_4963444",
+      "finalUrl": "https://pfizer.wd1.myworkdayjobs.com/tr-TR/PfizerCareers/job/Turkey---Istanbul/Pfizer-Part-Time-Universe-MAPP-Operations-Part-Time_4963444",
+      "logo": null,
+      "photo": {
+        "source": "https://pfizer.wd1.myworkdayjobs.com/tr-TR/PfizerCareers/assets/logo",
+        "evidence": "og:image image https://pfizer.wd1.myworkdayjobs.com/tr-TR/PfizerCareers/assets/logo",
+        "filename": "pfizer-foto.png",
+        "bytes": 8548,
+        "sha256": "407ec36eff869fe10b01c2836aaab0066a424709280dfa6fb2c9adeaf57879a1",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "cf54afd3-c6ec-4bd6-a49a-c933abdada58",
+      "name": "Kraft Heinz",
+      "slug": "kraft-heinz",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/kraft-heinz.png",
+      "listings": [
+        {
+          "id": "453e766e-4ce1-462e-879f-0445b8d7d0a1",
+          "title": "Perakende Satış Stajyeri",
+          "sourceUrl": "https://jobs.kraftheinz.com/careers/job/1970324837514020?domain=kraftheinz.com"
+        }
+      ],
+      "sourceUrl": "https://jobs.kraftheinz.com/careers/job/1970324837514020?domain=kraftheinz.com",
+      "finalUrl": "https://jobs.kraftheinz.com/careers/job/1970324837514020?domain=kraftheinz.com",
+      "logo": null,
+      "photo": {
+        "source": "https://static.vscdn.net/images/careers/demo/kraftheinz/1770663595::Kraft+Heinz+main+logo",
+        "evidence": "og:image og:image https://static.vscdn.net/images/careers/demo/kraftheinz/1770663595::Kraft+Heinz+main+logo",
+        "filename": "kraft-heinz-foto.png",
+        "bytes": 4302,
+        "sha256": "843140846ef849d9155a986007b4fbb1bdd179ada5dc541468ef0a59a4f6076e",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "0f77d084-811c-4347-9910-0f5ecf1e1f26",
+      "name": "GE HealthCare",
+      "slug": "ge-healthcare",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/ge-healthcare.png",
+      "listings": [
+        {
+          "id": "47cca3a4-92f6-4ec3-aa61-540742aad3b2",
+          "title": "Erken Kariyer Programı — Servis Satış",
+          "sourceUrl": "https://careers.gehealthcare.com/global/en/job/GEVGHLGLOBALR4046178EXTERNALENGLOBAL/Early-Career-Trainee-Service-Sales"
+        }
+      ],
+      "sourceUrl": "https://careers.gehealthcare.com/global/en/job/GEVGHLGLOBALR4046178EXTERNALENGLOBAL/Early-Career-Trainee-Service-Sales",
+      "finalUrl": "https://careers.gehealthcare.com/global/en/job/GEVGHLGLOBALR4046178EXTERNALENGLOBAL/Early-Career-Trainee-Service-Sales",
+      "logo": null,
+      "photo": {
+        "source": "https://assets.phenompeople.com/CareerConnectResources/pp/GEVGHLGLOBAL/social/1024x512-1677501297247.jpg",
+        "evidence": "twitter:image https://assets.phenompeople.com/CareerConnectResources/pp/GEVGHLGLOBAL/social/1024x512-1677501297247.jpg",
+        "filename": "ge-healthcare-foto.jpg",
+        "bytes": 144873,
+        "sha256": "9927ae4f6f35fa3b42801ad5ad29fe199ed272d19846f64b40c72a00ce662297",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "29630600-4992-499c-91a6-f446dc5201f9",
+      "name": "Abbott",
+      "slug": "abbott",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/abbott.png",
+      "listings": [
+        {
+          "id": "da3c6c77-859c-4760-97eb-0ea1750a0cfd",
+          "title": "Pazarlama Yetiştirme Programı (1 Yıllık Sözleşme)",
+          "sourceUrl": "https://www.jobs.abbott/us/en/job/ABLAUS31160407ENUSEXTERNAL/Marketing-Trainee-1-Year-Contract"
+        }
+      ],
+      "sourceUrl": "https://www.jobs.abbott/us/en/job/ABLAUS31160407ENUSEXTERNAL/Marketing-Trainee-1-Year-Contract",
+      "finalUrl": "https://www.jobs.abbott/us/en/job/ABLAUS31160407ENUSEXTERNAL/Marketing-Trainee-1-Year-Contract",
+      "logo": null,
+      "photo": {
+        "source": "https://cdn.phenompeople.com/CareerConnectResources/ABLAUS/images/Jobs.abbottexternal_EnglishJDpage_OG_5.2022_1200x630-1652909528653.png",
+        "evidence": "og:image https://cdn.phenompeople.com/CareerConnectResources/ABLAUS/images/Jobs.abbottexternal_EnglishJDpage_OG_5.2022_1200x630-1652909528653.png",
+        "filename": "abbott-foto.png",
+        "bytes": 205160,
+        "sha256": "75ad5123558a1216ea356d8b2045792e63acaf4eeb3b9bce4aacee2da9339425",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "936ec2d0-7251-42cd-8316-da688b5977c4",
+      "name": "Medtronic",
+      "slug": "medtronic",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/medtronic.png",
+      "listings": [
+        {
+          "id": "3b98a92a-e8a3-4de6-abc6-15cc71b88060",
+          "title": "Dolaylı Pazarlar Pazarlama Stajyeri",
+          "sourceUrl": "https://medtronic.wd1.myworkdayjobs.com/MedtronicCareers/job/Istanbul-Istanbul-Trkiye/International-Markets-Marketing-Intern_R76700-1"
+        },
+        {
+          "id": "e9ad446c-80f6-474e-b851-d6bc3f96c56f",
+          "title": "Pazarlama Stajyeri",
+          "sourceUrl": "https://medtronic.wd1.myworkdayjobs.com/MedtronicCareers/job/Istanbul-Istanbul-Trkiye/Marketing-Intern_R68564-1"
+        }
+      ],
+      "sourceUrl": "https://medtronic.wd1.myworkdayjobs.com/MedtronicCareers/job/Istanbul-Istanbul-Trkiye/International-Markets-Marketing-Intern_R76700-1",
+      "finalUrl": "https://medtronic.wd1.myworkdayjobs.com/MedtronicCareers/job/Istanbul-Istanbul-Trkiye/International-Markets-Marketing-Intern_R76700-1",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf indirilemedi: Görsel değil: text/plain; charset=UTF-8",
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "7f1ff554-d4f1-4dfe-9ebd-548215d580b3",
+      "name": "AstraZeneca",
+      "slug": "astrazeneca",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "2013ba00-da58-4396-858f-b230ff88a134",
+          "title": "AZ201 – AstraZeneca Internship Program – Human Resources Intern",
+          "sourceUrl": "https://astrazeneca.wd3.myworkdayjobs.com/Careers/job/Turkey---Istanbul/AZ201---AstraZeneca-Internship-Program---Human-Resources-Intern_R-259544"
+        },
+        {
+          "id": "75df9b22-58db-4b0b-b7f2-1dad3f23ae5b",
+          "title": "AZ201 Staj Programı — İnsan Kaynakları Stajyeri",
+          "sourceUrl": "https://careers.astrazeneca.com/job/-/-/7684/100300065856"
+        }
+      ],
+      "sourceUrl": "https://astrazeneca.wd3.myworkdayjobs.com/Careers/job/Turkey---Istanbul/AZ201---AstraZeneca-Internship-Program---Human-Resources-Intern_R-259544",
+      "finalUrl": "https://astrazeneca.wd3.myworkdayjobs.com/Careers/job/Turkey---Istanbul/AZ201---AstraZeneca-Internship-Program---Human-Resources-Intern_R-259544",
+      "logo": null,
+      "photo": {
+        "source": "https://astrazeneca.wd3.myworkdayjobs.com/Careers/assets/logo",
+        "evidence": "og:image image https://astrazeneca.wd3.myworkdayjobs.com/Careers/assets/logo",
+        "filename": "astrazeneca-foto.jpg",
+        "bytes": 15047,
+        "sha256": "1e715a0d2d7a2bf664dd21ead0c2594b976f4856edda5a33865771cbdd90109c",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": [
+        "Logo indirilemedi: HTTP 414",
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "1f04d75b-77b2-4238-9d74-796d88446e1a",
+      "name": "Aviagen",
+      "slug": "aviagen",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "e6561752-45d8-4f1c-9264-5684c31d6a9d",
+          "title": "Veri Analizi Stajyeri",
+          "sourceUrl": "https://aviagen.wd1.myworkdayjobs.com/tr-TR/aviagen-careers/job/Ankara-ankaya-Trkiye/Data-Analysis-Intern_JR102515"
+        }
+      ],
+      "sourceUrl": "https://aviagen.wd1.myworkdayjobs.com/tr-TR/aviagen-careers/job/Ankara-ankaya-Trkiye/Data-Analysis-Intern_JR102515",
+      "finalUrl": "https://aviagen.wd1.myworkdayjobs.com/tr-TR/aviagen-careers/job/Ankara-ankaya-Trkiye/Data-Analysis-Intern_JR102515",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Logo indirilemedi: Görsel değil: text/plain; charset=UTF-8",
+        "Fotoğraf indirilemedi: Görsel değil: text/plain; charset=UTF-8",
+        "Logo adayı bulunamadı",
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "7bb8a775-bcbd-4867-ac61-635111baa101",
+      "name": "Coderspace",
+      "slug": "coderspace",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/coderspace.png",
+      "listings": [
+        {
+          "id": "428abd3a-85bb-41d3-ab34-6db7238f3e59",
+          "title": "Sosyal Medya ve İçerik Stajyeri",
+          "sourceUrl": "https://app.gethirex.com/o/coderspace/zosuwa4qybpkikvy--social-media-and-content-intern-2/"
+        }
+      ],
+      "sourceUrl": "https://app.gethirex.com/o/coderspace/zosuwa4qybpkikvy--social-media-and-content-intern-2/",
+      "finalUrl": "https://app.gethirex.com/o/coderspace/zosuwa4qybpkikvy--social-media-and-content-intern-2/",
+      "logo": null,
+      "photo": {
+        "source": "https://8b125a621466d77d7c35699585b749c1.r2.cloudflarestorage.com/hirex/media/cache/06/1f/061fc44c60baafb225d2e2e469e3c9c1.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=c535b2f29793bfb9b5151dea10666c9b%2F20260915%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260915T213359Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=94250b57055b08f0883a6113ee8b18e014cbc08742930905e3177fbd6c82a5e4",
+        "evidence": "og:image https://8b125a621466d77d7c35699585b749c1.r2.cloudflarestorage.com/hirex/media/cache/06/1f/061fc44c60baafb225d2e2e469e3c9c1.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=c535b2f29793bfb9b5151dea10666c9b%2F20260915%2Fauto%2Fs3%2Faws4_request&amp;X-Amz-Date=20260915T213359Z&amp;X-Amz-Expires=3600&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=94250b57055b08f0883a6113ee8b18e014cbc08742930905e3177fbd6c82a5e4",
+        "filename": "coderspace-foto.jpg",
+        "bytes": 2838,
+        "sha256": "54ae96b8cceeef9798bf98bc53a49baaaa0502c2b8dd212a12fbf3e0243aa908",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "5d0f94cc-f89e-4607-a41e-cb30715143e5",
+      "name": "MUFG",
+      "slug": "mufg",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/mufg.png",
+      "listings": [
+        {
+          "id": "2aeb2933-7f6c-4f3d-8c36-57e56676cfc0",
+          "title": "Global Kurumsal Bankacılık Stajyeri",
+          "sourceUrl": "https://mufgub.wd3.myworkdayjobs.com/ja-JP/MUFG-Careers/job/Turkey/Global-Corporate-Banking-Intern_10079302-WD"
+        }
+      ],
+      "sourceUrl": "https://mufgub.wd3.myworkdayjobs.com/ja-JP/MUFG-Careers/job/Turkey/Global-Corporate-Banking-Intern_10079302-WD",
+      "finalUrl": "https://mufgub.wd3.myworkdayjobs.com/ja-JP/MUFG-Careers/job/Turkey/Global-Corporate-Banking-Intern_10079302-WD",
+      "logo": null,
+      "photo": {
+        "source": "https://mufgub.wd3.myworkdayjobs.com/ja-JP/MUFG-Careers/assets/logo",
+        "evidence": "og:image image https://mufgub.wd3.myworkdayjobs.com/ja-JP/MUFG-Careers/assets/logo",
+        "filename": "mufg-foto.png",
+        "bytes": 2537,
+        "sha256": "dcf82f97435e8d3ea420dfda9fdfc1c69f29a0e7c3a05892aee87cf5451aa900",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "55ed6dbe-890d-465e-8c88-7d9ebf27f0cf",
+      "name": "Analog Devices",
+      "slug": "analog-devices",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "179c07ec-2e23-458e-9fd2-d29f5da354bf",
+          "title": "Entegre Devre Tasarım Mühendisliği Stajyeri",
+          "sourceUrl": "https://analogdevices.wd1.myworkdayjobs.com/External/job/Turkey-Istanbul-Bilisim-Vadisi/IC-Design-Engineering-Intern_R264204"
+        }
+      ],
+      "sourceUrl": "https://analogdevices.wd1.myworkdayjobs.com/External/job/Turkey-Istanbul-Bilisim-Vadisi/IC-Design-Engineering-Intern_R264204",
+      "finalUrl": "https://analogdevices.wd1.myworkdayjobs.com/External/job/Turkey-Istanbul-Bilisim-Vadisi/IC-Design-Engineering-Intern_R264204",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Logo indirilemedi: Görsel değil: text/plain; charset=UTF-8",
+        "Fotoğraf indirilemedi: Görsel değil: text/plain; charset=UTF-8",
+        "Logo adayı bulunamadı",
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "277dd212-4914-4149-a712-ee036caf960f",
+      "name": "Martha",
+      "slug": "martha",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "c7a9da5d-de33-4e5e-8a5b-30dd0e3e34f6",
+          "title": "Stage - Bras droit du CEO (Chief of Staff)",
+          "sourceUrl": "https://ats.welcometothejungle.com/board/martha-q27NqU/job/4034d9d8-1d44-4013-b9af-9b600f0f3a05/apply?referrer=vonq_opn&igbTracker"
+        }
+      ],
+      "sourceUrl": "https://ats.welcometothejungle.com/board/martha-q27NqU/job/4034d9d8-1d44-4013-b9af-9b600f0f3a05/apply?referrer=vonq_opn&igbTracker",
+      "finalUrl": "https://ats.welcometothejungle.com/board/martha-q27NqU/job/4034d9d8-1d44-4013-b9af-9b600f0f3a05/apply?referrer=vonq_opn&igbTracker",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Logo adayı bulunamadı",
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "2cb85754-6cbc-4230-b28b-f7baf8c48dc0",
+      "name": "Louis Vuitton",
+      "slug": "louis-vuitton",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/louis-vuitton.png",
+      "listings": [
+        {
+          "id": "da9f217b-a50e-4779-a33b-1abf54db6296",
+          "title": "Stage - Talent Acquisition and Candidate Experience Projects Intern (F/H)",
+          "sourceUrl": "https://jobs.louisvuitton.com/en/search-page/job/stage-talent-acquisition-and-candidate-experience-projects-intern-f-h-janvier-2027-france-paris-LVM33780?sType"
+        }
+      ],
+      "sourceUrl": "https://jobs.louisvuitton.com/en/search-page/job/stage-talent-acquisition-and-candidate-experience-projects-intern-f-h-janvier-2027-france-paris-LVM33780?sType",
+      "finalUrl": "https://jobs.louisvuitton.com/en/search-page/job/stage-talent-acquisition-and-candidate-experience-projects-intern-f-h-janvier-2027-france-paris-LVM33780?sType",
+      "logo": null,
+      "photo": {
+        "source": "https://www.louisvuitton.com/images/is/image/lv/job_HR.jpeg",
+        "evidence": "og:image https://www.louisvuitton.com/images/is/image/lv/job_HR.jpeg",
+        "filename": "louis-vuitton-foto.jpg",
+        "bytes": 623697,
+        "sha256": "8f6b0f7131416f89371edafbf4b5b0251d7e467b778e0b6436dae70efae9f1c3",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "bf6f6dc8-8cf3-431c-815e-d0e060282868",
+      "name": "Loro Piana",
+      "slug": "loro-piana",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "d85976d3-68d3-42a2-a92f-fd503b4aec75",
+          "title": "Client Advisor Intern - Paris",
+          "sourceUrl": "https://www.loropiana.com/career/details.php?jobId=1090913&jobTitle=Client+Advisor+Intern+-+Paris&sType"
+        }
+      ],
+      "sourceUrl": "https://www.loropiana.com/career/details.php?jobId=1090913&jobTitle=Client+Advisor+Intern+-+Paris&sType",
+      "finalUrl": "https://www.loropiana.com/career/details.php?jobId=1090913&jobTitle=Client+Advisor+Intern+-+Paris&sType",
+      "logo": {
+        "source": "https://www.loropiana.com/career/talentlink/images/logo_LP_KUMMEL_a1330a%20(002).png",
+        "evidence": "banner-logo talentlink/images/logo_LP_KUMMEL_a1330a%20(002).png",
+        "filename": "loro-piana-logo.png",
+        "bytes": 9885,
+        "sha256": "aa93b7de7e0ac79b317639cd494eeec57b3338c5d66e9c51e16c387e99f81f4c",
+        "review": "manual_required"
+      },
+      "photo": {
+        "source": "https://www.loropiana.com/career/talentlink/images/logo_LP_KUMMEL_a1330a%20(002).png",
+        "evidence": "banner-logo talentlink/images/logo_LP_KUMMEL_a1330a%20(002).png",
+        "filename": "loro-piana-foto.png",
+        "bytes": 9885,
+        "sha256": "aa93b7de7e0ac79b317639cd494eeec57b3338c5d66e9c51e16c387e99f81f4c",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "53f3b9ca-f132-4aad-9140-8e9a3cb2975e",
+      "name": "Balmain",
+      "slug": "balmain",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/balmain.png",
+      "listings": [
+        {
+          "id": "c7281b78-3e16-412d-a53e-d279b182dc7e",
+          "title": "Stage - Assistant.e ADV / SAV H/F",
+          "sourceUrl": "https://balmain-career.talent-soft.com/Pages/Offre/detailoffre.aspx?idOffre=915&idOrigine"
+        }
+      ],
+      "sourceUrl": "https://balmain-career.talent-soft.com/Pages/Offre/detailoffre.aspx?idOffre=915&idOrigine",
+      "finalUrl": "https://balmain-career.talent-soft.com/accueil.aspx?LCID=2057",
+      "logo": null,
+      "photo": {
+        "source": "https://balmain-career.talent-soft.com/Handlers/Image.ashx?imagetype=logo",
+        "evidence": "ctl00_ctl00_placeHolderMeta_placeHolderMeta_idMetaImage og:image image https://balmain-career.talent-soft.com/Handlers/Image.ashx?imagetype=logo",
+        "filename": "balmain-foto.jpg",
+        "bytes": 31412,
+        "sha256": "d519bde0e328a3685f5bb15863a3409d1f94fa5fb49b7296bacfa49dd23013c1",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "e92bac68-1f54-46bc-8681-a668c656a6d3",
+      "name": "Christian Dior Couture",
+      "slug": "dior",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/dior.png",
+      "listings": [
+        {
+          "id": "016907ed-5eac-4619-ac79-a97a6558653c",
+          "title": "INTERNSHIP - E-Business Performance Analyst - H/F",
+          "sourceUrl": "https://www.dior.com/carrieres/details.html?jobId=1087387&sType"
+        },
+        {
+          "id": "e3f19dde-ac7c-450a-b054-f81ab01812ba",
+          "title": "Technical Textile and Administrative Assistant - INTERNSHIP",
+          "sourceUrl": "https://www.dior.com/carrieres/details.html?jobId=1088011&sType"
+        }
+      ],
+      "sourceUrl": "https://www.dior.com/carrieres/details.html?jobId=1087387&sType",
+      "finalUrl": "https://www.dior.com/carrieres/details.html?jobId=1087387&sType",
+      "logo": null,
+      "photo": {
+        "source": "https://www.dior.com/carrieres/talentlink/assets/Images/banner/1.DIOR.png",
+        "evidence": "og:image https://www.dior.com/carrieres/talentlink/assets/Images/banner/1.DIOR.png",
+        "filename": "dior-foto.png",
+        "bytes": 91203,
+        "sha256": "60a3fee80e0cf711a657517870d9875d1e747588da0c7fa73af3c6410a16632d",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "ebb4ea33-560d-4382-adfc-89d30c2ed794",
+      "name": "Casavo",
+      "slug": "casavo",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/casavo.png",
+      "listings": [
+        {
+          "id": "fbcaf27f-a504-4124-9dcc-955996cb379f",
+          "title": "Operations Intern (Stage)",
+          "sourceUrl": "https://casavo.factorial.it/apply/operations-intern-stage-314202?utm_source"
+        }
+      ],
+      "sourceUrl": "https://casavo.factorial.it/apply/operations-intern-stage-314202?utm_source",
+      "finalUrl": "https://casavo.factorial.it/apply/operations-intern-stage-314202?utm_source",
+      "logo": null,
+      "photo": {
+        "source": "https://s3.eu-central-1.amazonaws.com/assets.factorial.co/q0mqeqm6sq9yspbhlmi4hobkuasm?response-content-disposition=inline%3B%20filename%3D%22Casavo_Wordmark_Charcoal_RGB%20%25281%2529.png%22%3B%20filename%2A%3DUTF-8%27%27Casavo_Wordmark_Charcoal_RGB%2520%25281%2529.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA3HJH4LZGCZA3XC6S%2F20260915%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20260915T213406Z&X-Amz-Expires=3900&X-Amz-SignedHeaders=host&X-Amz-Signature=595b24e90a44ae75cb2b89f30d11fc22f2c2f7a6bf8f3ff681bf4c50708681a1",
+        "evidence": "og:image https://s3.eu-central-1.amazonaws.com/assets.factorial.co/q0mqeqm6sq9yspbhlmi4hobkuasm?response-content-disposition=inline%3B%20filename%3D%22Casavo_Wordmark_Charcoal_RGB%20%25281%2529.png%22%3B%20filename%2A%3DUTF-8%27%27Casavo_Wordmark_Charcoal_RGB%2520%25281%2529.png&amp;response-content-type=image%2Fpng&amp;X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=AKIA3HJH4LZGCZA3XC6S%2F20260915%2Feu-central-1%2Fs3%2Faws4_request&amp;X-Amz-Date=20260915T213406Z&amp;X-Amz-Expires=3900&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=595b24e90a44ae75cb2b89f30d11fc22f2c2f7a6bf8f3ff681bf4c50708681a1",
+        "filename": "casavo-foto.png",
+        "bytes": 4045,
+        "sha256": "43e39290638c4a4732bb1ce4d4b5a7877290ede3a52735b20863a50784c7198e",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "07a6899f-ee57-4672-be17-65ee6a99918c",
+      "name": "Puig",
+      "slug": "puig",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/puig.png",
+      "listings": [
+        {
+          "id": "9dc33f16-1cf9-40d8-b265-0883f9cf337a",
+          "title": "Stage - Chef de Projets Culturels et Sociaux",
+          "sourceUrl": "https://jobs.puig.com/job/Paris-Stage-Strategic-Project-75/1286692701/?utm_campaign=LinkedinJobPostings&utm_source=LinkedinJobPostings&applySourceOverride"
+        }
+      ],
+      "sourceUrl": "https://jobs.puig.com/job/Paris-Stage-Strategic-Project-75/1286692701/?utm_campaign=LinkedinJobPostings&utm_source=LinkedinJobPostings&applySourceOverride",
+      "finalUrl": "https://jobs.puig.com/job/Paris-Stage-Strategic-Project-75/1286692701/?utm_campaign=LinkedinJobPostings&utm_source=LinkedinJobPostings&applySourceOverride",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "38fbec7b-337b-40c2-8f65-6d5aba46dc50",
+      "name": "FIFA",
+      "slug": "fifa",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/fifa.png",
+      "listings": [
+        {
+          "id": "f6e9d8c7-857d-40a7-b05c-019ab955b649",
+          "title": "IT Strategy & Operations Intern - FIFA Clearing House",
+          "sourceUrl": "https://jobs.fifa.com/postings/138c403e-6fd0-4c97-8a7e-53d481e67b4d/applications/new?utm_medium=job_board&utm_source"
+        },
+        {
+          "id": "048dee11-6b9a-4dab-99ac-4c4c1e525813",
+          "title": "MA Africa, Intern/Apprentice",
+          "sourceUrl": "https://jobs.fifa.com/postings/c213a4fd-f5e3-4101-9527-d1f2dce98722/applications/new?utm_medium=job_board&utm_source"
+        }
+      ],
+      "sourceUrl": "https://jobs.fifa.com/postings/138c403e-6fd0-4c97-8a7e-53d481e67b4d/applications/new?utm_medium=job_board&utm_source",
+      "finalUrl": "https://jobs.fifa.com/",
+      "logo": null,
+      "photo": {
+        "source": "https://res.cloudinary.com/pinpointhq/image/upload/f_auto,q_auto/v1/uploads/production/qrlkuornexykxetbwuvh.jpg",
+        "evidence": "og:image https://res.cloudinary.com/pinpointhq/image/upload/f_auto,q_auto/v1/uploads/production/qrlkuornexykxetbwuvh.jpg",
+        "filename": "fifa-foto.png",
+        "bytes": 314180,
+        "sha256": "b58c5e31cdf5946601c1c9779fc53de553c88bb8a17e15da32ca4749f94c84ac",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "62050ce1-3d52-4aa9-a36d-c8c5437d54ea",
+      "name": "Moët Hennessy",
+      "slug": "moet-hennessy",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "d00973a6-fd6f-48cc-aa97-9975456e5b10",
+          "title": "Global Events & Experiences Office Manager Assistant",
+          "sourceUrl": "https://www.lvmh.com/join-us/our-job-offers/MHWS00997?Stype"
+        }
+      ],
+      "sourceUrl": "https://www.lvmh.com/join-us/our-job-offers/MHWS00997?Stype",
+      "finalUrl": "https://www.lvmh.com/join-us/our-job-offers/MHWS00997?Stype",
+      "logo": {
+        "source": "https://images.prismic.io/lvmh-com/ZoZ7ih5LeNNTwyci_LogoLVMHsurfondbleu-1-.jpg?auto=format,compress?auto=compress,format&rect=420,0,1080,1080&w=1800&h=1800",
+        "evidence": "icon https://images.prismic.io/lvmh-com/ZoZ7ih5LeNNTwyci_LogoLVMHsurfondbleu-1-.jpg?auto=format,compress?auto=compress,format&amp;rect=420,0,1080,1080&amp;w=1800&amp;h=1800",
+        "filename": "moet-hennessy-logo.jpg",
+        "bytes": 36304,
+        "sha256": "01c3457f693eafb3a75a7319145c2ac529fda2579505e18697b7757cc4d8391c",
+        "review": "manual_required"
+      },
+      "photo": null,
+      "notes": [
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "8a6a2cf0-3609-4be5-8e12-4c64cc08c88d",
+      "name": "LVMH",
+      "slug": "lvmh",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/lvmh.png",
+      "listings": [
+        {
+          "id": "5b20c7e4-9cec-415e-9068-e2f5127119f3",
+          "title": "Internship - Talent & HR Projects Assistant",
+          "sourceUrl": "https://www.lvmh.com/join-us/our-job-offers/LVMHBEA00006?sType"
+        },
+        {
+          "id": "1408339b-d324-4394-b581-1ccabf6d2d09",
+          "title": "Talent & HR Projects Assistant Intern",
+          "sourceUrl": "https://www.lvmh.com/join-us/our-job-offers/LVMH03148?sType"
+        },
+        {
+          "id": "4859c860-22ab-4cdc-9614-1badefc3e309",
+          "title": "Internship - HR DATA Analyst",
+          "sourceUrl": "https://www.lvmh.com/join-us/our-job-offers/LVMHPC00054?sType"
+        }
+      ],
+      "sourceUrl": "https://www.lvmh.com/join-us/our-job-offers/LVMHBEA00006?sType",
+      "finalUrl": "https://www.lvmh.com/join-us/our-job-offers/LVMHBEA00006?sType",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "5181b7b9-56e4-41e1-a9a0-455b2866ffdb",
+      "name": "Prada Group",
+      "slug": "prada-group",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "eb16b776-3d85-4163-bc96-5de411d71268",
+          "title": "Talent Acquisition Intern (h/f)",
+          "sourceUrl": "https://jobs.pradagroup.com/job/Paris-Talent-Acquisition-Intern-%28hf%29-Paris/1402311733/"
+        }
+      ],
+      "sourceUrl": "https://jobs.pradagroup.com/job/Paris-Talent-Acquisition-Intern-%28hf%29-Paris/1402311733/",
+      "finalUrl": "https://jobs.pradagroup.com/job/Paris-Talent-Acquisition-Intern-%28hf%29-Paris/1402311733/",
+      "logo": null,
+      "photo": {
+        "source": "https://rmkcdn.successfactors.com/f7cb97d3/ee7ee6db-22e1-48bf-970e-f.jpg",
+        "evidence": "og:image https://rmkcdn.successfactors.com/f7cb97d3/ee7ee6db-22e1-48bf-970e-f.jpg",
+        "filename": "prada-group-foto.jpg",
+        "bytes": 379318,
+        "sha256": "6ef63377ec20124eb7bbbf44373ee004e9320606e3fb0c904a774424c931bf24",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "5fd9238f-2de9-460a-ac9d-c5260d01c031",
+      "name": "CELINE",
+      "slug": "celine",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "afdbf79c-ef32-4360-99b2-24ade4e25080",
+          "title": "Image Assistant Intern",
+          "sourceUrl": "https://www.lvmh.com/join-us/our-job-offers/CELI05185?sType"
+        },
+        {
+          "id": "0d2f3e58-ea0c-4f42-8b49-aa537072ed50",
+          "title": "Image Assistant Internship",
+          "sourceUrl": "https://www.lvmh.com/join-us/our-job-offers/CELI05606?sType"
+        }
+      ],
+      "sourceUrl": "https://www.lvmh.com/join-us/our-job-offers/CELI05185?sType",
+      "finalUrl": "https://www.lvmh.com/join-us/our-job-offers/CELI05185?sType",
+      "logo": {
+        "source": "https://images.prismic.io/lvmh-com/ZoZ7ih5LeNNTwyci_LogoLVMHsurfondbleu-1-.jpg?auto=format,compress?auto=compress,format&rect=420,0,1080,1080&w=1800&h=1800",
+        "evidence": "icon https://images.prismic.io/lvmh-com/ZoZ7ih5LeNNTwyci_LogoLVMHsurfondbleu-1-.jpg?auto=format,compress?auto=compress,format&amp;rect=420,0,1080,1080&amp;w=1800&amp;h=1800",
+        "filename": "celine-logo.jpg",
+        "bytes": 36304,
+        "sha256": "01c3457f693eafb3a75a7319145c2ac529fda2579505e18697b7757cc4d8391c",
+        "review": "manual_required"
+      },
+      "photo": null,
+      "notes": [
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "d7ab7eee-1796-43ec-8241-99f89d544de1",
+      "name": "OneFlash",
+      "slug": "oneflash",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "a55cc3ca-0c41-4d80-8bd4-62731ffd2f22",
+          "title": "Customer Success / Account Management Intern",
+          "sourceUrl": "https://jobs.stationf.co/companies/oneflash/jobs/account-manager_paris"
+        }
+      ],
+      "sourceUrl": "https://jobs.stationf.co/companies/oneflash/jobs/account-manager_paris",
+      "finalUrl": "https://jobs.stationf.co/companies/oneflash/jobs/account-manager_paris",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Logo adayı bulunamadı",
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "61f154dd-5701-4bdb-b570-a3db511765ec",
+      "name": "Miu Miu",
+      "slug": "miu-miu",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/miu-miu.png",
+      "listings": [
+        {
+          "id": "47a7dc75-29d2-421d-8bdb-f6d3dce9cbc7",
+          "title": "MIU MIU Training Specialist Intern",
+          "sourceUrl": "https://jobs.pradagroup.com/job/Paris-MIU-MIU-Training-specialist-intern-Paris/1433104233/"
+        }
+      ],
+      "sourceUrl": "https://jobs.pradagroup.com/job/Paris-MIU-MIU-Training-specialist-intern-Paris/1433104233/",
+      "finalUrl": "https://jobs.pradagroup.com/job/Paris-MIU-MIU-Training-specialist-intern-Paris/1433104233/",
+      "logo": null,
+      "photo": {
+        "source": "https://rmkcdn.successfactors.com/f7cb97d3/ee7ee6db-22e1-48bf-970e-f.jpg",
+        "evidence": "og:image https://rmkcdn.successfactors.com/f7cb97d3/ee7ee6db-22e1-48bf-970e-f.jpg",
+        "filename": "miu-miu-foto.jpg",
+        "bytes": 379318,
+        "sha256": "6ef63377ec20124eb7bbbf44373ee004e9320606e3fb0c904a774424c931bf24",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "80880843-9d7a-47d5-acd3-1f2fd95b5714",
+      "name": "Coty",
+      "slug": "coty",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/coty.png",
+      "listings": [
+        {
+          "id": "3cfa640e-c9a5-4ab2-a63f-78ebdb867b24",
+          "title": "Global Business Development Internship",
+          "sourceUrl": "https://careers.coty.com/job/Paris-Global-Business-Development%C2%A0-Internship-J-75002/1433290033/"
+        }
+      ],
+      "sourceUrl": "https://careers.coty.com/job/Paris-Global-Business-Development%C2%A0-Internship-J-75002/1433290033/",
+      "finalUrl": "https://careers.coty.com/job/Paris-Global-Business-Development%C2%A0-Internship-J-75002/1433290033/",
+      "logo": null,
+      "photo": {
+        "source": "https://rmkcdn.successfactors.com/90fd0000/c7539a0f-3919-481e-ae85-a.jpg",
+        "evidence": "og:image https://rmkcdn.successfactors.com/90fd0000/c7539a0f-3919-481e-ae85-a.jpg",
+        "filename": "coty-foto.jpg",
+        "bytes": 19252,
+        "sha256": "921a96ef2c55a5479730d59c99a012afda50cec9107185d2eb2cf6fe7bade4e1",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "45427e7a-09d8-4edd-b139-94b372335169",
+      "name": "Nespresso",
+      "slug": "nespresso",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "63b0d464-fa2d-4286-a4a3-8605cb047308",
+          "title": "Stagiaire (H/F)",
+          "sourceUrl": "https://jobdetails.nestle.com/job/Cannes-Stagiaire-%28HF%29/1415244633/?feedId=256801&utm_source"
+        }
+      ],
+      "sourceUrl": "https://jobdetails.nestle.com/job/Cannes-Stagiaire-%28HF%29/1415244633/?feedId=256801&utm_source",
+      "finalUrl": "https://jobdetails.nestle.com/job/Cannes-Stagiaire-%28HF%29/1415244633/?feedId=256801&utm_source",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Logo adayı bulunamadı",
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "bc764957-08da-43ff-a52d-8d263fbff658",
+      "name": "Vinted",
+      "slug": "vinted",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/vinted.png",
+      "listings": [
+        {
+          "id": "1fb0ffc2-0f63-417b-aa48-29349680c303",
+          "title": "Operations Integration Intern, Vinted Go",
+          "sourceUrl": "https://careers.vinted.com/jobs/j/4894833101"
+        }
+      ],
+      "sourceUrl": "https://careers.vinted.com/jobs/j/4894833101",
+      "finalUrl": "https://careers.vinted.com/jobs/j/4894833101",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "1c407c92-94ae-4aed-8275-13aa2dffcd50",
+      "name": "Danone",
+      "slug": "danone",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/danone.png",
+      "listings": [
+        {
+          "id": "40287a51-9b2f-4020-921f-93d5864601b7",
+          "title": "Global HR Digital Analyst Intern",
+          "sourceUrl": "https://careers.danone.com/fr/en/jobs/internship-global-hr-digital-analyst-intern-january-2027-h-f-27290-en-us.html?utm_source"
+        },
+        {
+          "id": "fa6c5b60-301b-46c5-a7b0-62f670cb328d",
+          "title": "EU Strategy Intern",
+          "sourceUrl": "https://careers.danone.com/fr/en/jobs/internship-eu-strategy-intern-january-2027-w-m-27022-en-us.html?utm_source"
+        }
+      ],
+      "sourceUrl": "https://careers.danone.com/fr/en/jobs/internship-global-hr-digital-analyst-intern-january-2027-h-f-27290-en-us.html?utm_source",
+      "finalUrl": "https://careers.danone.com/fr/en/jobs/internship-global-hr-digital-analyst-intern-january-2027-h-f-27290-en-us.html?utm_source",
+      "logo": null,
+      "photo": {
+        "source": "https://careers.danone.com/content/dam/corp/global/hr/global/french-feature-image-new.png",
+        "evidence": "og:image /content/dam/corp/global/hr/global/french-feature-image-new.png",
+        "filename": "danone-foto.png",
+        "bytes": 740458,
+        "sha256": "c5cbbd7deff9babfeda2975abb64f4d76d4107bc006546aaed1637ff06351555",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "a6c27ce3-d26a-42b0-a487-2a742e022752",
+      "name": "Amazon",
+      "slug": "amazon",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "6605a8c3-4d63-4477-a453-5048cf6aeaf2",
+          "title": "Operations Intern - Île-de-France - Start Date 2027",
+          "sourceUrl": "https://www.amazon.jobs/en/jobs/10504822/operations-intern-ile-de-france-start-date-2027"
+        }
+      ],
+      "sourceUrl": "https://www.amazon.jobs/en/jobs/10504822/operations-intern-ile-de-france-start-date-2027",
+      "finalUrl": "https://www.amazon.jobs/en/jobs/10504822/operations-intern-ile-de-france-start-date-2027",
+      "logo": null,
+      "photo": {
+        "source": "https://static.amazon.jobs/global_images/2/images/1x91x1_121025.jpg?1765844445",
+        "evidence": "og:image https://static.amazon.jobs/global_images/2/images/1x91x1_121025.jpg?1765844445",
+        "filename": "amazon-foto.jpg",
+        "bytes": 65034,
+        "sha256": "a9f1649e83cc067c56f0c3feb3085c09c70a3d59649179949ac00985dbf8c7e5",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "fb3a839b-9a1c-4000-844a-1d4a9323ab50",
+      "name": "Kuzeyden İçecek",
+      "slug": "kuzeyden-icecek",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/kuzeyden-icecek.png",
+      "listings": [
+        {
+          "id": "33c2dff2-ba9c-4deb-9adf-49be586bde73",
+          "title": "Grafik Tasarım Stajyeri",
+          "sourceUrl": "https://kuzeyden.hrpanda.co/grafik-tasarim-stajyeri"
+        }
+      ],
+      "sourceUrl": "https://kuzeyden.hrpanda.co/grafik-tasarim-stajyeri",
+      "finalUrl": "https://kuzeyden.hrpanda.co/",
+      "logo": null,
+      "photo": {
+        "source": "https://kuzeyden.hrpanda.co/api/og.png",
+        "evidence": "og:image https://kuzeyden.hrpanda.co/api/og.png",
+        "filename": "kuzeyden-icecek-foto.png",
+        "bytes": 37188,
+        "sha256": "1419101008156aba7e852bcee1cf685d8832e34750e46052012c12b65aad8ec6",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "144a681e-8bc1-421e-af4e-869177721b58",
+      "name": "SorsX",
+      "slug": "sorsx",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/sorsx.png",
+      "listings": [
+        {
+          "id": "db44fa5f-8e9c-4441-9102-009ea3abbdfd",
+          "title": "AI Wizard Stajyeri (Yapay Zekâ, Otomasyon ve Vibe Coding)",
+          "sourceUrl": "https://www.sorsx.com/job/sorsx/67932068-0b14-4e1f-af90-6fad623c7e9a/apply"
+        }
+      ],
+      "sourceUrl": "https://www.sorsx.com/job/sorsx/67932068-0b14-4e1f-af90-6fad623c7e9a/apply",
+      "finalUrl": "https://www.sorsx.com/job/sorsx/67932068-0b14-4e1f-af90-6fad623c7e9a/apply",
+      "logo": null,
+      "photo": {
+        "source": "https://www.sorsx.com/social-share-image.png",
+        "evidence": "og:image https://www.sorsx.com/social-share-image.png",
+        "filename": "sorsx-foto.png",
+        "bytes": 58517,
+        "sha256": "c720f0373acab542b7a345da95b2d8fca9814efa462eb28da722824bf2322fe3",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "158e1e07-1954-46a0-8e24-1174c79dcdb8",
+      "name": "Aygaz",
+      "slug": "aygaz",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/aygaz.png",
+      "listings": [
+        {
+          "id": "b1b9b508-6699-4fe4-980d-9c159b2a79ff",
+          "title": "KEY+ Uzun Dönem Staj Programı",
+          "sourceUrl": "https://aygaz.onenewone.com/"
+        }
+      ],
+      "sourceUrl": "https://aygaz.onenewone.com/",
+      "finalUrl": "https://aygaz.onenewone.com/",
+      "logo": null,
+      "photo": {
+        "source": "https://aygaz.onenewone.com/_nuxt/keyplus-hero.Cg0CpoLq.jpg",
+        "evidence": "Aygaz KEY+ Long-Term Internship Program absolute inset-0 h-full w-full object-cover object-center /_nuxt/keyplus-hero.Cg0CpoLq.jpg",
+        "filename": "aygaz-foto.jpg",
+        "bytes": 864053,
+        "sha256": "41e1a8c8f4ee9a8e69313214f2c75c929ef0dcca760acfe3a28cbede44647354",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "e049cd3a-b0b0-4c7c-91c9-3fd775e528dd",
+      "name": "EGGER Türkiye",
+      "slug": "egger-turkiye",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/egger-turkiye.png",
+      "listings": [
+        {
+          "id": "e4055b44-361c-422d-bb9e-0bbf7fb7b968",
+          "title": "SID Staj Programı 2026",
+          "sourceUrl": "https://egger-production.p78quickapply.com/comp78sfrecruitingp78quickapplyui/index.html?Reqid=6918&sap-language=tr_TR&sap-theme=eggerquickapplytheme&sap-ui-versionedLibCss=true"
+        }
+      ],
+      "sourceUrl": "https://egger-production.p78quickapply.com/comp78sfrecruitingp78quickapplyui/index.html?Reqid=6918&sap-language=tr_TR&sap-theme=eggerquickapplytheme&sap-ui-versionedLibCss=true",
+      "finalUrl": "https://egger-production.p78quickapply.com/comp78sfrecruitingp78quickapplyui/index.html?Reqid=6918&sap-language=tr_TR&sap-theme=eggerquickapplytheme&sap-ui-versionedLibCss=true",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "50044671-2deb-49c9-b6a6-da373ae1a623",
+      "name": "Kepekçi & Sepetçi Hukuk Bürosu",
+      "slug": "kepekci-sepetci-hukuk",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/kepekci-sepetci-hukuk.png",
+      "listings": [
+        {
+          "id": "6c0afadb-c033-4678-ad9b-dead098e1243",
+          "title": "Stajyer Avukat ve Hukuk Fakültesi Öğrencisi Başvurusu",
+          "sourceUrl": "https://kslaw.com.tr/kariyer/"
+        }
+      ],
+      "sourceUrl": "https://kslaw.com.tr/kariyer/",
+      "finalUrl": "https://kslaw.com.tr/kariyer/",
+      "logo": null,
+      "photo": {
+        "source": "https://kslaw.com.tr/og-image.png",
+        "evidence": "og:image https://kslaw.com.tr/og-image.png",
+        "filename": "kepekci-sepetci-hukuk-foto.png",
+        "bytes": 203549,
+        "sha256": "9b8c045a348ee3975c81bbb68c9729458900498173a6f5c599f66345b0617245",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "910f3990-3c53-469a-8647-14a25238049c",
+      "name": "Luron AI",
+      "slug": "luron-ai",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "b39b1b88-9e04-44bb-a3a7-8e057a03b678",
+          "title": "QA Stajyeri (AI Voice Agent)",
+          "sourceUrl": "https://careers.luron.ai/jobs/qa-intern"
+        }
+      ],
+      "sourceUrl": "https://careers.luron.ai/jobs/qa-intern",
+      "finalUrl": "https://careers.luron.ai/jobs/qa-intern",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Logo adayı bulunamadı",
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "873c4039-d7a7-4d81-ac4c-bbfc44778b34",
+      "name": "KPMG Türkiye",
+      "slug": "kpmg-turkiye",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "ad90c1f2-45c3-49f0-8e6f-2033f1cee35e",
+          "title": "Denetim Uzun Dönem Stajyeri (Audit Long Term Intern 2026)",
+          "sourceUrl": "https://live.peoplise.com/kpmg/Application/Landing/925c3673-27e0-4f52-8de0-743fdee24214"
+        }
+      ],
+      "sourceUrl": "https://live.peoplise.com/kpmg/Application/Landing/925c3673-27e0-4f52-8de0-743fdee24214",
+      "finalUrl": "https://live.peoplise.com/kpmg/Application/Landing/925c3673-27e0-4f52-8de0-743fdee24214",
+      "logo": {
+        "source": "https://live.peoplise.com/Repository/CustomerLogos/458/a72dd011-31eb-488b-ba22-e1bd7d7698fd.png?v=133215484819711995",
+        "evidence": "KPMG Audit Long Term Intern 2026 | KPMG https://live.peoplise.com/Repository/CustomerLogos/458/a72dd011-31eb-488b-ba22-e1bd7d7698fd.png?v=133215484819711995",
+        "filename": "kpmg-turkiye-logo.png",
+        "bytes": 7525,
+        "sha256": "1b21f0db74569ebc21ff0c4474caf937528d8f6de13cdcb8e047eef467cc4f64",
+        "review": "manual_required"
+      },
+      "photo": null,
+      "notes": [
+        "Fotoğraf indirilemedi: Görsel değil: application/octet-stream",
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "06f7cdf5-ede5-4186-aa7d-f092fc35f767",
+      "name": "Maya Okulları",
+      "slug": "maya-okullari",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/maya-okullari.png",
+      "listings": [
+        {
+          "id": "a69694be-b8d2-49c7-9abb-c72a35aa98e9",
+          "title": "Stajyer Sınıf Öğretmeni",
+          "sourceUrl": "https://kariyer.maya.k12.tr/is-ilanlari/stajyer-sinif-ogretmeni/"
+        }
+      ],
+      "sourceUrl": "https://kariyer.maya.k12.tr/is-ilanlari/stajyer-sinif-ogretmeni/",
+      "finalUrl": "https://kariyer.maya.k12.tr/is-ilanlari/stajyer-sinif-ogretmeni/",
+      "logo": null,
+      "photo": {
+        "source": "https://kariyer.maya.k12.tr/wp-content/uploads/2024/01/maya-favicon.jpg",
+        "evidence": "og:image https://kariyer.maya.k12.tr/wp-content/uploads/2024/01/maya-favicon.jpg",
+        "filename": "maya-okullari-foto.jpg",
+        "bytes": 150017,
+        "sha256": "749f578635f677e82f6a9876436551dda89f4189fee94b22cce8fbfd5aa8d48e",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "42c1f876-bad2-400d-8aaf-81cc792f6821",
+      "name": "Peak",
+      "slug": "peak",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/peak.png",
+      "listings": [
+        {
+          "id": "8130066d-3c48-4c54-af39-e0b06ee1f132",
+          "title": "Motion Designer Uzun Dönem Stajyeri (Performance Marketing)",
+          "sourceUrl": "https://peak.com/open-positions/motion-designer-long-term-intern-performance-marketing"
+        }
+      ],
+      "sourceUrl": "https://peak.com/open-positions/motion-designer-long-term-intern-performance-marketing",
+      "finalUrl": "https://peak.com/open-positions/motion-designer-long-term-intern-performance-marketing",
+      "logo": null,
+      "photo": {
+        "source": "https://cdn.peak.com/static/assets/departments/art.46c8b562.jpg",
+        "evidence": "og:image https://cdn.peak.com/static/assets/departments/art.46c8b562.jpg",
+        "filename": "peak-foto.jpg",
+        "bytes": 235502,
+        "sha256": "a7b1dc0d53b526b90efb2fdda4fad37fbd5d8f655d38fd9cf853a95fe9502cc8",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "f60f04ee-3908-41b8-8ae3-309dab597c1d",
+      "name": "SC Johnson",
+      "slug": "sc-johnson",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "380061e2-5ffb-4ec0-95e3-5651fbef3a53",
+          "title": "İnsan Kaynakları Stajyeri",
+          "sourceUrl": "https://jobs.scjohnson.com/en/job/-/-/5362/99166759600"
+        }
+      ],
+      "sourceUrl": "https://jobs.scjohnson.com/en/job/-/-/5362/99166759600",
+      "finalUrl": "https://jobs.scjohnson.com/en",
+      "logo": {
+        "source": "https://tbcdn.talentbrew.com/company/5362/gst-v1/icons/SCJohnson_logo.png",
+        "evidence": "SC Johnson Logo https://tbcdn.talentbrew.com/company/5362/gst-v1/icons/SCJohnson_logo.png",
+        "filename": "sc-johnson-logo.png",
+        "bytes": 114052,
+        "sha256": "b30792c3c3d95d5c8be4a442e2622c45828562bcae62c9280f299f44163f38ac",
+        "review": "manual_required"
+      },
+      "photo": {
+        "source": "https://tbcdn.talentbrew.com/company/5362/gst-v1/img/intro-yourself-scj-day-updated-v1.jpg",
+        "evidence": "og:image https://tbcdn.talentbrew.com/company/5362/gst-v1/img/intro-yourself-scj-day-updated-v1.jpg",
+        "filename": "sc-johnson-foto.jpg",
+        "bytes": 59842,
+        "sha256": "b799b5afa2adcc7e0ad72503bfdfdb0dd5baf3fccade00aaa676b1b4c62bdb98",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "609158a2-979e-4faf-9ac4-7b62dca922f8",
+      "name": "Boehringer Ingelheim",
+      "slug": "boehringer-ingelheim",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/boehringer-ingelheim.png",
+      "listings": [
+        {
+          "id": "f800f3ad-ffd4-4b21-8fef-c4a176e40980",
+          "title": "İnsan Kaynakları Stajyeri",
+          "sourceUrl": "https://jobs.boehringer-ingelheim.com/job/Istanbul-HR-Intern-Turk/1393635933/"
+        }
+      ],
+      "sourceUrl": "https://jobs.boehringer-ingelheim.com/job/Istanbul-HR-Intern-Turk/1393635933/",
+      "finalUrl": "https://jobs.boehringer-ingelheim.com/job/Istanbul-HR-Intern-Turk/1393635933/",
+      "logo": null,
+      "photo": {
+        "source": "https://rmkcdn.successfactors.com/184f78cf/c52d6789-e535-422f-9804-c.jpg",
+        "evidence": "og:image https://rmkcdn.successfactors.com/184f78cf/c52d6789-e535-422f-9804-c.jpg",
+        "filename": "boehringer-ingelheim-foto.jpg",
+        "bytes": 3077,
+        "sha256": "b3627d2a8d15660747e84ee9042064723a138f5a0d8a85417ebbb1b02415e0f4",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "9a50a761-a3aa-4742-9ef9-f1f896932f00",
+      "name": "Pernod Ricard",
+      "slug": "pernod-ricard",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/pernod-ricard.png",
+      "listings": [
+        {
+          "id": "cff3d1a3-d558-4c48-9812-e24bd647a8b1",
+          "title": "SHAKE UP YOUR INTERNSHIP - 2027 Human Resources Interns",
+          "sourceUrl": "https://pernodricard.wd3.myworkdayjobs.com/fr-FR/pernod-ricard/job/Paris/SHAKE-UP-YOUR-INTERNSHIP--Pernod-Ricard-is-recruiting-2027-Human-Resources-Interns_JR-054859-2"
+        }
+      ],
+      "sourceUrl": "https://pernodricard.wd3.myworkdayjobs.com/fr-FR/pernod-ricard/job/Paris/SHAKE-UP-YOUR-INTERNSHIP--Pernod-Ricard-is-recruiting-2027-Human-Resources-Interns_JR-054859-2",
+      "finalUrl": "https://pernodricard.wd3.myworkdayjobs.com/fr-FR/pernod-ricard/job/Paris/SHAKE-UP-YOUR-INTERNSHIP--Pernod-Ricard-is-recruiting-2027-Human-Resources-Interns_JR-054859-2",
+      "logo": null,
+      "photo": {
+        "source": "https://pernodricard.wd3.myworkdayjobs.com/fr-FR/pernod-ricard/assets/logo",
+        "evidence": "og:image image https://pernodricard.wd3.myworkdayjobs.com/fr-FR/pernod-ricard/assets/logo",
+        "filename": "pernod-ricard-foto.png",
+        "bytes": 7988,
+        "sha256": "e154c545d21f47e164130c4c7c18ec116ddbc967658031d90f0de24eb41e3609",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "54fa0f73-dbf7-4be3-a87d-5f094d6ea90c",
+      "name": "DHL Global Forwarding Taşımacılık A.Ş.",
+      "slug": "dhl-global-forwarding-tasimacilik-a-s",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/dhl-global-forwarding-tasimacilik-a-s.png",
+      "listings": [
+        {
+          "id": "81a92c82-8fb7-445e-bfe8-301addc8b426",
+          "title": "Uzun Dönem Stajyer",
+          "sourceUrl": "https://careers.dhl.com/global/en/job/DPDHGLOBALAV373558ENGLOBALEXTERNAL/Uzun-D%C3%B6nem-Stajyer"
+        }
+      ],
+      "sourceUrl": "https://careers.dhl.com/global/en/job/DPDHGLOBALAV373558ENGLOBALEXTERNAL/Uzun-D%C3%B6nem-Stajyer",
+      "finalUrl": "https://careers.dhl.com/global/en/job/DPDHGLOBALAV373558ENGLOBALEXTERNAL/Uzun-D%C3%B6nem-Stajyer",
+      "logo": null,
+      "photo": {
+        "source": "https://cdn.phenompeople.com/CareerConnectResources/DPDHGLOBAL/images/YourFutureDeliveredDHL_x-1714123350035.jpg",
+        "evidence": "twitter:image https://cdn.phenompeople.com/CareerConnectResources/DPDHGLOBAL/images/YourFutureDeliveredDHL_x-1714123350035.jpg",
+        "filename": "dhl-global-forwarding-tasimacilik-a-s-foto.jpg",
+        "bytes": 178991,
+        "sha256": "3bb316f49de2dc8f3786bc390d9368c44bf34fada2c7d1c7b3586390bfc07c04",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "918e3d9d-53d5-46a3-9b82-a1a845f5e495",
+      "name": "VavaCars",
+      "slug": "vavacars",
+      "existingLogoUrl": "https://workablehr.s3.amazonaws.com/uploads/account/logo/350657/logo",
+      "listings": [
+        {
+          "id": "1b6681c9-5970-4d27-8fb2-7682dcad9c3a",
+          "title": "Muhasebe Stajyeri",
+          "sourceUrl": "https://jobs.workable.com/view/cNYRW9qU3V7XawgtjG4qoh/muhasebe-stajyeri-in-i%CC%87stanbul-at-vavacars"
+        }
+      ],
+      "sourceUrl": "https://jobs.workable.com/view/cNYRW9qU3V7XawgtjG4qoh/muhasebe-stajyeri-in-i%CC%87stanbul-at-vavacars",
+      "finalUrl": "https://jobs.workable.com/view/cNYRW9qU3V7XawgtjG4qoh/muhasebe-stajyeri-in-i%CC%87stanbul-at-vavacars",
+      "logo": null,
+      "photo": {
+        "source": "https://workablehr.s3.amazonaws.com/uploads/account/open_graph_logo/350657/social",
+        "evidence": "og:image https://workablehr.s3.amazonaws.com/uploads/account/open_graph_logo/350657/social",
+        "filename": "vavacars-foto.png",
+        "bytes": 776886,
+        "sha256": "35a9993bdb495ae713fce6204e06ab951ba0b96607e24116e0401ffa125c05de",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "15f50f81-ecf5-433a-a4e4-3841098ee40b",
+      "name": "BASF Türk",
+      "slug": "basf-turk",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/basf-turk.png",
+      "listings": [
+        {
+          "id": "4e382a89-a18d-4c55-85ed-e2a14476e168",
+          "title": "Uzun Dönem Stajyer (SOP ve Lojistik)",
+          "sourceUrl": "https://basf.jobs/dark_blue_EMEA/job/Istanbul-BASF-T%C3%BCrk-Kimya-SOP-&-Lojistik-Dept_-Uzun-D%C3%B6nem-Stajyer/143661-en_US/"
+        }
+      ],
+      "sourceUrl": "https://basf.jobs/dark_blue_EMEA/job/Istanbul-BASF-T%C3%BCrk-Kimya-SOP-&-Lojistik-Dept_-Uzun-D%C3%B6nem-Stajyer/143661-en_US/",
+      "finalUrl": "https://basf.jobs/dark_blue_EMEA/job/Istanbul-BASF-T%C3%BCrk-Kimya-SOP-&-Lojistik-Dept_-Uzun-D%C3%B6nem-Stajyer/143661-en_US/",
+      "logo": null,
+      "photo": {
+        "source": "https://rmkcdn.successfactors.com/60d4b366/d9fd469a-72ab-4eea-bdc8-f.png",
+        "evidence": "og:image https://rmkcdn.successfactors.com/60d4b366/d9fd469a-72ab-4eea-bdc8-f.png",
+        "filename": "basf-turk-foto.png",
+        "bytes": 2976,
+        "sha256": "8fc1a37051695a6d785dd8a247051b306832d4bb9627aebc05fd308f1ce8552e",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "914d1062-500a-4cbd-81eb-a187146b4e51",
+      "name": "SAP",
+      "slug": "sap",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/sap.png",
+      "listings": [
+        {
+          "id": "19cee4c0-5fa0-4d01-8b7c-a268b2e369fc",
+          "title": "SAP Young Professionals Programı Türkiye 2026",
+          "sourceUrl": "https://jobs.sap.com/job/Istanbul-SAP-Young-Professionals-Program-Turkiye-2026-34700/1422732333/"
+        }
+      ],
+      "sourceUrl": "https://jobs.sap.com/job/Istanbul-SAP-Young-Professionals-Program-Turkiye-2026-34700/1422732333/",
+      "finalUrl": "https://jobs.sap.com/job/Istanbul-SAP-Young-Professionals-Program-Turkiye-2026-34700/1422732333/",
+      "logo": null,
+      "photo": {
+        "source": "https://rmkcdn.successfactors.com/84a30c28/6021250a-41db-4992-b279-5.jpg",
+        "evidence": "og:image https://rmkcdn.successfactors.com/84a30c28/6021250a-41db-4992-b279-5.jpg",
+        "filename": "sap-foto.jpg",
+        "bytes": 58351,
+        "sha256": "56fef90b2ebdc2cdeed3789b63db304333d1cc6c0d602f04acc02a50064ce47f",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "63f37372-7e78-400b-965d-6beb1737e8f1",
+      "name": "Danfoss",
+      "slug": "danfoss",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/danfoss.png",
+      "listings": [
+        {
+          "id": "2c49bba5-9922-422e-a198-53555f4fd768",
+          "title": "Satış Stajyeri",
+          "sourceUrl": "https://jobs.danfoss.com/job/Sales-Intern/51360-en_GB/"
+        }
+      ],
+      "sourceUrl": "https://jobs.danfoss.com/job/Sales-Intern/51360-en_GB/",
+      "finalUrl": "https://jobs.danfoss.com/job/Sales-Intern/51360-en_GB/",
+      "logo": null,
+      "photo": {
+        "source": "https://rmkcdn.successfactors.com/ef55fddb/f2939fc0-1bd6-49b0-8cb0-d.jpg",
+        "evidence": "og:image https://rmkcdn.successfactors.com/ef55fddb/f2939fc0-1bd6-49b0-8cb0-d.jpg",
+        "filename": "danfoss-foto.jpg",
+        "bytes": 208749,
+        "sha256": "570a1e8e6e988e40e83ded498e49c6f39970dc1b4c8da5688944dee31f27e0fc",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "c2dfadfd-ce03-48f0-99b8-ad6d3bd42b03",
+      "name": "Eczacıbaşı",
+      "slug": "eczacibasi",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/eczacibasi.png",
+      "listings": [
+        {
+          "id": "6edddbe6-2f46-4c92-a3a7-1296b8fe5626",
+          "title": "Kariyer Deneyim Sürüşü Stajyeri",
+          "sourceUrl": "https://careers.eczacibasi.com/job/KAR%C4%B0YER-DENEY%C4%B0M-S%C3%9CR%C3%9C%C5%9E%C3%9C-STAJYER%C4%B0/873-tr_TR/"
+        },
+        {
+          "id": "4367d4c7-95a0-4746-9935-ac552dfb1ca4",
+          "title": "Kariyer Deneyim Sürüşü Stajyeri — VitrA Karo Ürün Yönetimi",
+          "sourceUrl": "https://careers.eczacibasi.com/job/KAR%C4%B0YER-DENEY%C4%B0M-S%C3%9CR%C3%9C%C5%9E%C3%9C-STAJYER%C4%B0-%C3%9CR%C3%9CN-Y%C3%96NET%C4%B0M%C4%B0/875-tr_TR/"
+        },
+        {
+          "id": "d71dc20d-0815-4fc5-a42c-8c8e8c5094cb",
+          "title": "Kariyer Deneyim Sürüşü Stajyeri — Ticari Mükemmeliyet ve Büyüme",
+          "sourceUrl": "https://careers.eczacibasi.com/job/KAR%C4%B0YER-DENEY%C4%B0M-S%C3%9CR%C3%9C%C5%9E%C3%9C-%28KDS%29-STAJYER%C4%B0-T%C4%B0CAR%C4%B0-M%C3%9CKEMMEL%C4%B0YET-VE-B%C3%9CY%C3%9CME/837-tr_TR"
+        },
+        {
+          "id": "0bf0c3fe-cd62-407f-9300-89d04d0a7e08",
+          "title": "Kariyer Deneyim Sürüşü Stajyeri — İntema Satış Operasyonları",
+          "sourceUrl": "https://careers.eczacibasi.com/job/KAR%C4%B0YER-DENEY%C4%B0M-S%C3%9CR%C3%9C%C5%9E%C3%9C-%28KDS%29-STAJYER%C4%B0/793-tr_TR/"
+        }
+      ],
+      "sourceUrl": "https://careers.eczacibasi.com/job/KAR%C4%B0YER-DENEY%C4%B0M-S%C3%9CR%C3%9C%C5%9E%C3%9C-STAJYER%C4%B0/873-tr_TR/",
+      "finalUrl": "https://careers.eczacibasi.com/job/KAR%C4%B0YER-DENEY%C4%B0M-S%C3%9CR%C3%9C%C5%9E%C3%9C-STAJYER%C4%B0/873-tr_TR/",
+      "logo": null,
+      "photo": {
+        "source": "https://rmkcdn.successfactors.com/da961abf/6922218e-561b-440a-99c6-6.png",
+        "evidence": "Careers at Eczacıbaşı logo //rmkcdn.successfactors.com/da961abf/6922218e-561b-440a-99c6-6.png",
+        "filename": "eczacibasi-foto.png",
+        "bytes": 10852,
+        "sha256": "d4323cefc7b90ee0a7d29371018c52a88913f28b6f0f3d0f8eb6434fe631715d",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "4c24a0ca-653d-4814-aab7-b3fe8c081812",
+      "name": "Mondi",
+      "slug": "mondi",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/mondi.png",
+      "listings": [
+        {
+          "id": "309b29d3-c1a3-4ed9-9afc-ba65fb697e48",
+          "title": "Tedarik Zinciri Stajyeri",
+          "sourceUrl": "https://www.mondigroup.com/careers/available-jobs/tedarik-zinciri-stajyeri-karaman"
+        }
+      ],
+      "sourceUrl": "https://www.mondigroup.com/careers/available-jobs/tedarik-zinciri-stajyeri-karaman",
+      "finalUrl": "https://www.mondigroup.com/careers/available-jobs/",
+      "logo": null,
+      "photo": {
+        "source": "https://www.mondigroup.com/cdn-cgi/image/f=auto,fit=cover,w=1200,h=630,g=auto,sharpen=1/AdaptiveImages/celum/367276/221128_RICHBAY_2_WOOD_0192.jpg?stamp=aa9f7c1f87faaaa10d3ca3a905cd3f7e5f323f5b",
+        "evidence": "og:image https://www.mondigroup.com/cdn-cgi/image/f=auto,fit=cover,w=1200,h=630,g=auto,sharpen=1/AdaptiveImages/celum/367276/221128_RICHBAY_2_WOOD_0192.jpg?stamp=aa9f7c1f87faaaa10d3ca3a905cd3f7e5f323f5b",
+        "filename": "mondi-foto.jpg",
+        "bytes": 108979,
+        "sha256": "2e5b050f13505379e7d25ef0d6947a9b42a94b4996b617463f585574c2e43ff8",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "9a9c3fff-d3bc-4419-a479-c0061b8dfcbf",
+      "name": "Formed",
+      "slug": "formed",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/formed.png",
+      "listings": [
+        {
+          "id": "92d787ea-c0e6-45d7-b8a8-92b5935745c5",
+          "title": "Kurucu Asistanı Stajyeri",
+          "sourceUrl": "https://formed.design/careers/founders-associate-intern"
+        }
+      ],
+      "sourceUrl": "https://formed.design/careers/founders-associate-intern",
+      "finalUrl": "https://formed.design/careers/founders-associate-intern",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "2525c830-ac66-4023-867d-9cadeff53dd5",
+      "name": "EY Türkiye",
+      "slug": "ey-turkiye",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/ey-turkiye.png",
+      "listings": [
+        {
+          "id": "2d2b2b0e-ab6f-44c7-8e4b-7ff495aed780",
+          "title": "Denetim Uzun Dönem Stajyeri",
+          "sourceUrl": "https://eyglobal.yello.co/jobs/cGO6sAl9_0yHitWHawgmJg?job_board_id=c1riT--B2O-KySgYWsZO1Q"
+        }
+      ],
+      "sourceUrl": "https://eyglobal.yello.co/jobs/cGO6sAl9_0yHitWHawgmJg?job_board_id=c1riT--B2O-KySgYWsZO1Q",
+      "finalUrl": "https://eyglobal.yello.co/jobs/cGO6sAl9_0yHitWHawgmJg?job_board_id=c1riT--B2O-KySgYWsZO1Q",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf indirilemedi: Görsel değil: bilinmiyor",
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "bb048b4f-f20c-4984-813b-897b7813bba9",
+      "name": "PlusMinusOne",
+      "slug": "plusminusone",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/plusminusone.png",
+      "listings": [
+        {
+          "id": "76aca329-2059-4e0b-a63f-a6533f526ee9",
+          "title": "Pazarlama Tasarım Stajyeri",
+          "sourceUrl": "https://plusminusone.bamboohr.com/careers/83"
+        }
+      ],
+      "sourceUrl": "https://plusminusone.bamboohr.com/careers/83",
+      "finalUrl": "https://plusminusone.bamboohr.com/careers/83",
+      "logo": null,
+      "photo": {
+        "source": "https://plusminusone.bamboohr.com/jobs/share_image/35",
+        "evidence": "og:image https://plusminusone.bamboohr.com/jobs/share_image/35",
+        "filename": "plusminusone-foto.png",
+        "bytes": 4765,
+        "sha256": "3b0ac65e12604c9020ef748a441934f2c2262b75d20dcaedddb22592f69dbede",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "d7e0b99c-1f88-4bd0-9621-e0568a6475f8",
+      "name": "SHFT",
+      "slug": "shft",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/shft.png",
+      "listings": [
+        {
+          "id": "ef943efd-74d6-4f92-b329-f95021ae02c4",
+          "title": "Vibe Coder Stajyeri",
+          "sourceUrl": "https://shft.hrpanda.co/vibe-coder-intern"
+        }
+      ],
+      "sourceUrl": "https://shft.hrpanda.co/vibe-coder-intern",
+      "finalUrl": "https://shft.hrpanda.co/vibe-coder-intern",
+      "logo": null,
+      "photo": {
+        "source": "https://shft.hrpanda.co/api/og.png",
+        "evidence": "og:image https://shft.hrpanda.co/api/og.png",
+        "filename": "shft-foto.png",
+        "bytes": 15723,
+        "sha256": "63d1bb690d5b5ce28eded3e20e1644b034bee60a0e9d7602f2c7c6279f653a8d",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "f3e4c34f-b93a-46e9-809d-3d6784c69912",
+      "name": "Kiwa",
+      "slug": "kiwa",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/kiwa.png",
+      "listings": [
+        {
+          "id": "9148fdcd-7680-4b9a-bd5c-15fed0a5abcc",
+          "title": "Eğitim Stajyeri",
+          "sourceUrl": "https://careers.kiwa.com/tr/careers/eitim-stajyeri/"
+        }
+      ],
+      "sourceUrl": "https://careers.kiwa.com/tr/careers/eitim-stajyeri/",
+      "finalUrl": "https://careers.kiwa.com/tr/careers/eitim-stajyeri/",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "57294bc6-4083-47e2-bc77-065ca784d940",
+      "name": "Armut Teknoloji",
+      "slug": "armut-teknoloji",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/armut-teknoloji.png",
+      "listings": [
+        {
+          "id": "c6f58adf-6b04-4d0c-9878-4b612afa9882",
+          "title": "Dijital Pazarlama Stajyeri — Display Kanalları",
+          "sourceUrl": "https://armut.applytojob.com/apply/jobs/details/Y0WkyhqKJl"
+        },
+        {
+          "id": "9418eb77-5fad-4851-be65-c51be09c4293",
+          "title": "Dijital Pazarlama Stajyeri (Display Kanalları)",
+          "sourceUrl": "https://armut.applytojob.com/apply/Y0WkyhqKJl/Digital-Marketing-Intern-Display-Channels"
+        }
+      ],
+      "sourceUrl": "https://armut.applytojob.com/apply/jobs/details/Y0WkyhqKJl",
+      "finalUrl": "https://armut.applytojob.com/apply/jobs/details/Y0WkyhqKJl",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "3238fb86-54d3-43ca-83bb-ded933791f0e",
+      "name": "The Magnum Ice Cream Company",
+      "slug": "magnum-ice-cream",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/magnum-ice-cream.png",
+      "listings": [
+        {
+          "id": "5acd4bc8-2c6f-4590-81e1-b86f55e09f62",
+          "title": "Kalite Stajyeri",
+          "sourceUrl": "https://tmicc.wd502.myworkdayjobs.com/Magnum_External_Career_Site/job/Corlu-SU-IC/Quality-Intern_R-2"
+        },
+        {
+          "id": "3f8aa433-dc83-4c8e-8791-944abc915e2c",
+          "title": "Ar-Ge Stajyeri",
+          "sourceUrl": "https://tmicc.wd502.myworkdayjobs.com/Magnum_External_Career_Site/job/Sarigazi-RD-IC/R-D-Intern_R-1186474"
+        }
+      ],
+      "sourceUrl": "https://tmicc.wd502.myworkdayjobs.com/Magnum_External_Career_Site/job/Corlu-SU-IC/Quality-Intern_R-2",
+      "finalUrl": "https://tmicc.wd502.myworkdayjobs.com/Magnum_External_Career_Site/job/Corlu-SU-IC/Quality-Intern_R-2",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf indirilemedi: Görsel değil: text/plain; charset=UTF-8",
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "b938236c-38e7-4f88-8fc2-8750c4ebd574",
+      "name": "Flender",
+      "slug": "flender",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/flender.png",
+      "listings": [
+        {
+          "id": "a99af629-18c4-4d1c-a3bc-7ac259d1ae58",
+          "title": "Tedarik Zinciri ve Lojistik Stajyeri (Yarı Zamanlı)",
+          "sourceUrl": "https://flender.wd3.myworkdayjobs.com/tr-TR/Flender_Global/job/Istanbul/Part-time-Working-Student--Supply-Chain---Logistics--_R10212"
+        },
+        {
+          "id": "a0b857b6-f729-48cd-a9d0-7643c82ecc51",
+          "title": "Muhasebe ve Ticari Operasyon Stajyeri (Yarı Zamanlı)",
+          "sourceUrl": "https://flender.wd3.myworkdayjobs.com/tr-TR/Flender_Global/job/Istanbul/Part-Time-Working-Student--Accounting---Commercial-_R10211"
+        }
+      ],
+      "sourceUrl": "https://flender.wd3.myworkdayjobs.com/tr-TR/Flender_Global/job/Istanbul/Part-time-Working-Student--Supply-Chain---Logistics--_R10212",
+      "finalUrl": "https://flender.wd3.myworkdayjobs.com/tr-TR/Flender_Global/job/Istanbul/Part-time-Working-Student--Supply-Chain---Logistics--_R10212",
+      "logo": null,
+      "photo": {
+        "source": "https://flender.wd3.myworkdayjobs.com/tr-TR/Flender_Global/assets/logo",
+        "evidence": "og:image image https://flender.wd3.myworkdayjobs.com/tr-TR/Flender_Global/assets/logo",
+        "filename": "flender-foto.jpg",
+        "bytes": 9193,
+        "sha256": "f49d91f210028a5505efa4f61baa461c83ceb84710e5511cacb55b3e05bbfec0",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "1397a14d-dc3e-474a-a759-6514152dc088",
+      "name": "Bank of America",
+      "slug": "bank-of-america",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/bank-of-america.png",
+      "listings": [
+        {
+          "id": "9452a2c8-0daf-4694-8be2-fe8cbd622ca3",
+          "title": "GCIB Credit, 2027 Summer Analyst",
+          "sourceUrl": "https://careers.bankofamerica.com/en-us/students/job-detail/14677/gcib-credit-2027-summer-analyst-paris-paris-france"
+        }
+      ],
+      "sourceUrl": "https://careers.bankofamerica.com/en-us/students/job-detail/14677/gcib-credit-2027-summer-analyst-paris-paris-france",
+      "finalUrl": "https://careers.bankofamerica.com/en-us/students/job-detail/14677/gcib-credit-2027-summer-analyst-paris-paris-france",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf indirilemedi: HTTP 404",
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "b0ea4420-0d47-4538-8b58-58ded55cec0f",
+      "name": "L'Oréal",
+      "slug": "loreal",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/loreal.png",
+      "listings": [
+        {
+          "id": "7e43af8f-4944-4ef5-b4ce-fe2e62be0751",
+          "title": "Marketing Intern - L'Oréal Dermatological Beauty",
+          "sourceUrl": "https://careers.loreal.com/en_US/jobs/JobDetail/254737?src"
+        },
+        {
+          "id": "49d5430d-d3ce-42f6-99f2-8ffcfd6a6cf4",
+          "title": "Pazarlama Stajyeri (Armani, L'Oréal Luxe)",
+          "sourceUrl": "https://careers.loreal.com/en_US/jobs/JobDetail/254406"
+        }
+      ],
+      "sourceUrl": "https://careers.loreal.com/en_US/jobs/JobDetail/254737?src",
+      "finalUrl": "https://careers.loreal.com/en_US/jobs/JobDetail/254737?src",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "4540ce5a-cbb3-443d-9bf0-084daf3265b3",
+      "name": "Luxurynsight",
+      "slug": "luxurynsight",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/luxurynsight.png",
+      "listings": [
+        {
+          "id": "f06d704f-ace7-4dfd-aa1a-9d913ff451c2",
+          "title": "Luxury Business Analyst Internship",
+          "sourceUrl": "https://www.welcometothejungle.com/en/companies/luxurynsight/jobs/luxury-business-analyst_paris_LUXUR_oMVy2aK?fromApply=true&igbTracker"
+        }
+      ],
+      "sourceUrl": "https://www.welcometothejungle.com/en/companies/luxurynsight/jobs/luxury-business-analyst_paris_LUXUR_oMVy2aK?fromApply=true&igbTracker",
+      "finalUrl": "https://www.welcometothejungle.com/en/companies/luxurynsight/jobs/luxury-business-analyst_paris_LUXUR_oMVy2aK?fromApply=true&igbTracker",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "e48d03c6-f717-415a-8dca-deda2501932b",
+      "name": "Makrops",
+      "slug": "makrops",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/makrops.png",
+      "listings": [
+        {
+          "id": "e53428b6-0f63-4b25-86b4-15847e7b5e46",
+          "title": "Grafik Tasarım Stajyeri (Sosyal Medya)",
+          "sourceUrl": "https://makrops.com/en/careers/graphic-design-intern"
+        }
+      ],
+      "sourceUrl": "https://makrops.com/en/careers/graphic-design-intern",
+      "finalUrl": "https://makrops.com/en/careers/graphic-design-intern",
+      "logo": null,
+      "photo": {
+        "source": "https://makrops.com/images/banner/Get%20a%20Special%20Offer-en.png",
+        "evidence": "og:image https://makrops.com/images/banner/Get%20a%20Special%20Offer-en.png",
+        "filename": "makrops-foto.png",
+        "bytes": 48758,
+        "sha256": "ebc19b873b12e888f340b179d50334bba7d57ddd8b45a7cd43f30ab8ff1f3b83",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "e625afec-a9ce-4c9f-8dcd-d142fe7e62d3",
+      "name": "Maersk",
+      "slug": "maersk",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/maersk.png",
+      "listings": [
+        {
+          "id": "e0029868-6bf5-4b3d-8535-783344d9de7c",
+          "title": "Soğuk Zincir Lojistiği ve Hasar Müşteri Deneyimi Stajyeri",
+          "sourceUrl": "https://maersk.wd3.myworkdayjobs.com/Maersk_Careers/job/Turkey-Izmir-35530/Cold-Chain-Logistics---Claims-Customer-Experience-Intern_R193961"
+        }
+      ],
+      "sourceUrl": "https://maersk.wd3.myworkdayjobs.com/Maersk_Careers/job/Turkey-Izmir-35530/Cold-Chain-Logistics---Claims-Customer-Experience-Intern_R193961",
+      "finalUrl": "https://maersk.wd3.myworkdayjobs.com/Maersk_Careers/job/Turkey-Izmir-35530/Cold-Chain-Logistics---Claims-Customer-Experience-Intern_R193961",
+      "logo": null,
+      "photo": {
+        "source": "https://maersk.wd3.myworkdayjobs.com/Maersk_Careers/assets/logo",
+        "evidence": "og:image image https://maersk.wd3.myworkdayjobs.com/Maersk_Careers/assets/logo",
+        "filename": "maersk-foto.png",
+        "bytes": 19537,
+        "sha256": "7c7aa3ad904f51a5d42f81721e650beb3f7fc206c45bf85abf17c66b26eb9ba9",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "cf58416e-ba59-4312-8764-2318e694a834",
+      "name": "invent.ai",
+      "slug": "invent-ai",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/invent-ai.png",
+      "listings": [
+        {
+          "id": "a2fc18c0-bde2-41ca-8b9a-a515e4da2236",
+          "title": "İnsan Kaynakları Stajyeri",
+          "sourceUrl": "https://app.gethirex.com/o/invent-ai/zz8eemzyzy8ma3gz--hr-intern-2/"
+        }
+      ],
+      "sourceUrl": "https://app.gethirex.com/o/invent-ai/zz8eemzyzy8ma3gz--hr-intern-2/",
+      "finalUrl": "https://app.gethirex.com/o/invent-ai/",
+      "logo": null,
+      "photo": {
+        "source": "https://8b125a621466d77d7c35699585b749c1.r2.cloudflarestorage.com/hirex/media/cache/6c/58/6c58c3518c4901b8f07bb97b40cb8d78.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=c535b2f29793bfb9b5151dea10666c9b%2F20260915%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260915T213440Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=f1d7f91bd795628c9f25e7af2acb06d0365e8d6211a79a1bda40f8a83968c09a",
+        "evidence": "og:image https://8b125a621466d77d7c35699585b749c1.r2.cloudflarestorage.com/hirex/media/cache/6c/58/6c58c3518c4901b8f07bb97b40cb8d78.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=c535b2f29793bfb9b5151dea10666c9b%2F20260915%2Fauto%2Fs3%2Faws4_request&amp;X-Amz-Date=20260915T213440Z&amp;X-Amz-Expires=3600&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=f1d7f91bd795628c9f25e7af2acb06d0365e8d6211a79a1bda40f8a83968c09a",
+        "filename": "invent-ai-foto.jpg",
+        "bytes": 4885,
+        "sha256": "04628ddb3d7b3b706554fc37a1b9e56b2bcb201bc6596cee8e1098ae830988da",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "109d8e9c-26ac-47ee-b626-3434e190dd59",
+      "name": "sunday",
+      "slug": "sunday",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/sunday.png",
+      "listings": [
+        {
+          "id": "701446ef-ca7e-498b-83e7-e3f0a5a580dc",
+          "title": "EU Strategy Intern",
+          "sourceUrl": "https://careers.sundayapp.com/jobs/8275379-eu-strategy-intern"
+        }
+      ],
+      "sourceUrl": "https://careers.sundayapp.com/jobs/8275379-eu-strategy-intern",
+      "finalUrl": "https://careers.sundayapp.com/jobs/8275379-eu-strategy-intern",
+      "logo": null,
+      "photo": {
+        "source": "https://screenshots.teamtailor-cdn.com/2e548384-c535-4839-a3e3-acae6f11f337-facebook.png?update=1789374647",
+        "evidence": "og:image https://screenshots.teamtailor-cdn.com/2e548384-c535-4839-a3e3-acae6f11f337-facebook.png?update=1789374647",
+        "filename": "sunday-foto.png",
+        "bytes": 763409,
+        "sha256": "1378afa00b4e48dbacbbb616b409dd57ab49498ba72b19be6d32e7c048ab188d",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "973f24c0-b0a5-453c-b77f-87ae2ac2c71b",
+      "name": "Evyap",
+      "slug": "evyap",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/evyap.png",
+      "listings": [
+        {
+          "id": "69d1b140-567f-4d01-b688-af2ca1d48f7d",
+          "title": "Yurt İçi Lojistik Uzun Dönem Stajyeri",
+          "sourceUrl": "https://app.gethirex.com/o/evyap/ea8h5qtbe484iuax--domestic-logistics-long-term-intern/"
+        }
+      ],
+      "sourceUrl": "https://app.gethirex.com/o/evyap/ea8h5qtbe484iuax--domestic-logistics-long-term-intern/",
+      "finalUrl": "https://app.gethirex.com/o/evyap/ea8h5qtbe484iuax--domestic-logistics-long-term-intern/",
+      "logo": null,
+      "photo": {
+        "source": "https://8b125a621466d77d7c35699585b749c1.r2.cloudflarestorage.com/hirex/media/cache/92/9e/929eb0797367c3fa8aea826d79da550d.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=c535b2f29793bfb9b5151dea10666c9b%2F20260915%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260915T213441Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=dc93fdeded5384aca96b851c56c10bfd3433b6068b9a13ecf5ca211db59d6a73",
+        "evidence": "og:image https://8b125a621466d77d7c35699585b749c1.r2.cloudflarestorage.com/hirex/media/cache/92/9e/929eb0797367c3fa8aea826d79da550d.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=c535b2f29793bfb9b5151dea10666c9b%2F20260915%2Fauto%2Fs3%2Faws4_request&amp;X-Amz-Date=20260915T213441Z&amp;X-Amz-Expires=3600&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=dc93fdeded5384aca96b851c56c10bfd3433b6068b9a13ecf5ca211db59d6a73",
+        "filename": "evyap-foto.jpg",
+        "bytes": 7203,
+        "sha256": "60722ecf74aa51ac8ebcc1989ed325c3b622bd3e5a4c43f50725bebd42e9288f",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "e3a9d691-8c2b-40fb-9436-133d33e8a762",
+      "name": "Balenciaga",
+      "slug": "balenciaga",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "1f39e175-bc7b-4498-803e-a69250cf741e",
+          "title": "BALENCIAGA - Demand Planning Intern - September 2026 (F/H)",
+          "sourceUrl": "https://careers.kering.com/careers?domain=kering.com&query=R166947&start=0&pid=563705891993841&sort_by=relevance"
+        }
+      ],
+      "sourceUrl": "https://careers.kering.com/careers?domain=kering.com&query=R166947&start=0&pid=563705891993841&sort_by=relevance",
+      "finalUrl": "https://careers.kering.com/careers?domain=kering.com&query=R166947&start=0&pid=563705891993841&sort_by=relevance",
+      "logo": null,
+      "photo": {
+        "source": "https://static.vscdn.net/images/careers/demo/kering/1777538311::KERING",
+        "evidence": "og:image og:image https://static.vscdn.net/images/careers/demo/kering/1777538311::KERING",
+        "filename": "balenciaga-foto.png",
+        "bytes": 17398,
+        "sha256": "c26113c26bfc7647be6163039e6985af0c77fe0319349e9f7b9b7c6cae062582",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": [
+        "Logo adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "847e622e-f776-48d2-8401-aeb3eb3a60aa",
+      "name": "Guess Europe Sagl",
+      "slug": "guess-europe-sagl",
+      "existingLogoUrl": "https://workablehr.s3.amazonaws.com/uploads/account/logo/452934/logo",
+      "listings": [
+        {
+          "id": "a0de0769-e356-45a5-99b5-6ad378dfadf3",
+          "title": "IT Stajyeri",
+          "sourceUrl": "https://jobs.workable.com/view/c8EVgR8VdXrhsnFCiDLBWh/it-intern-in-istanbul-at-guess-europe-sagl"
+        }
+      ],
+      "sourceUrl": "https://jobs.workable.com/view/c8EVgR8VdXrhsnFCiDLBWh/it-intern-in-istanbul-at-guess-europe-sagl",
+      "finalUrl": "https://jobs.workable.com/view/c8EVgR8VdXrhsnFCiDLBWh/it-intern-in-istanbul-at-guess-europe-sagl",
+      "logo": null,
+      "photo": {
+        "source": "https://workablehr.s3.amazonaws.com/uploads/account/open_graph_logo/452934/social",
+        "evidence": "og:image https://workablehr.s3.amazonaws.com/uploads/account/open_graph_logo/452934/social",
+        "filename": "guess-europe-sagl-foto.jpg",
+        "bytes": 907817,
+        "sha256": "fd71af591617b72048b332c582d7cec1dc3e7643d395729fdf0b670468ae43ae",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "6ccfc067-6c1a-45c4-9d39-3c9b366f47b1",
+      "name": "Connectinno",
+      "slug": "connectinno",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/connectinno.png",
+      "listings": [
+        {
+          "id": "188ef3f5-c585-4eb0-b367-108b00d2f62f",
+          "title": "Yapay Zekâ Ürün Stajyeri",
+          "sourceUrl": "https://app.recruspace.com/applications/9922709394e54d35b801e437dbe16d4c"
+        }
+      ],
+      "sourceUrl": "https://app.recruspace.com/applications/9922709394e54d35b801e437dbe16d4c",
+      "finalUrl": "https://app.recruspace.com/applications/9922709394e54d35b801e437dbe16d4c",
+      "logo": null,
+      "photo": {
+        "source": "https://cdn.recruspace.com/uploads/47a2442dfb5a40f7b420ee624db0e0ae.png",
+        "evidence": "og:image https://cdn.recruspace.com/uploads/47a2442dfb5a40f7b420ee624db0e0ae.png",
+        "filename": "connectinno-foto.png",
+        "bytes": 20761,
+        "sha256": "9b2561239d595b1fc1e35b02645a698fc4d61f0bfbca7d6c7a8969e00878b2be",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "82458f3f-45d8-47bc-b481-a02ffa21e4b1",
+      "name": "Richemont",
+      "slug": "richemont",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/richemont.png",
+      "listings": [
+        {
+          "id": "d0024f48-ceed-4bab-9a8b-fbf0928e7f81",
+          "title": "Intern - Fashion Market Analyst (H/F)",
+          "sourceUrl": "https://richemont.wd3.myworkdayjobs.com/richemont/job/PARIS/Intern---Fashion-Market-Analyst--H-F-_JR132959-1/apply?source"
+        }
+      ],
+      "sourceUrl": "https://richemont.wd3.myworkdayjobs.com/richemont/job/PARIS/Intern---Fashion-Market-Analyst--H-F-_JR132959-1/apply?source",
+      "finalUrl": "https://richemont.wd3.myworkdayjobs.com/richemont/job/PARIS/Intern---Fashion-Market-Analyst--H-F-_JR132959-1/apply?source",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf indirilemedi: fetch failed",
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "d12c8b92-2688-465e-ba61-193cf79f675b",
+      "name": "papernest",
+      "slug": "papernest",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/papernest.png",
+      "listings": [
+        {
+          "id": "2a151bb2-a303-428d-8ed6-bcb61956f79f",
+          "title": "Chief of Staff Intern",
+          "sourceUrl": "https://papernest.wd502.myworkdayjobs.com/External_Careers_Global/job/Paris/Chief-of-Staff-Intern_JR100043?source"
+        }
+      ],
+      "sourceUrl": "https://papernest.wd502.myworkdayjobs.com/External_Careers_Global/job/Paris/Chief-of-Staff-Intern_JR100043?source",
+      "finalUrl": "https://papernest.wd502.myworkdayjobs.com/External_Careers_Global/job/Paris/Chief-of-Staff-Intern_JR100043?source",
+      "logo": null,
+      "photo": {
+        "source": "https://papernest.wd502.myworkdayjobs.com/External_Careers_Global/assets/logo",
+        "evidence": "og:image image https://papernest.wd502.myworkdayjobs.com/External_Careers_Global/assets/logo",
+        "filename": "papernest-foto.jpg",
+        "bytes": 100446,
+        "sha256": "a26a1d8018eb84f6a08371003fb28426800104ff1dfc85822d15a31b005be0cb",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "07489082-d69c-4ff2-bc9c-3544b9693aaf",
+      "name": "Rolls-Royce Solutions Türkiye",
+      "slug": "rolls-royce-solutions-turkiye",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/rolls-royce-solutions-turkiye.png",
+      "listings": [
+        {
+          "id": "a5019100-dab6-4c42-9bf8-f580e86ee7e3",
+          "title": "QHSE Yönetici Adayı (MT)",
+          "sourceUrl": "https://rollsroyce.wd3.myworkdayjobs.com/en-US/professional/job/Istanbul/QHSE-Management-Trainee_JR6156297"
+        },
+        {
+          "id": "082e91e0-6d5e-41bf-9a2d-7e5221081089",
+          "title": "Satın Alma Yönetici Adayı (MT)",
+          "sourceUrl": "https://rollsroyce.wd3.myworkdayjobs.com/rrpowersystemsearlycareer/job/Istanbul/Purchasing-Management-Trainee_JR6156139-1"
+        }
+      ],
+      "sourceUrl": "https://rollsroyce.wd3.myworkdayjobs.com/en-US/professional/job/Istanbul/QHSE-Management-Trainee_JR6156297",
+      "finalUrl": "https://rollsroyce.wd3.myworkdayjobs.com/en-US/professional/job/Istanbul/QHSE-Management-Trainee_JR6156297",
+      "logo": null,
+      "photo": {
+        "source": "https://rollsroyce.wd3.myworkdayjobs.com/en-US/professional/assets/logo",
+        "evidence": "og:image image https://rollsroyce.wd3.myworkdayjobs.com/en-US/professional/assets/logo",
+        "filename": "rolls-royce-solutions-turkiye-foto.jpg",
+        "bytes": 16298,
+        "sha256": "4b9cddda5997f3f75fd8e705f64960d1a2b819666110725025df328f4db80c18",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "22868ae1-9554-42e3-96be-fb5a702933da",
+      "name": "AXA Türkiye",
+      "slug": "axa-turkiye",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/axa-turkiye.png",
+      "listings": [
+        {
+          "id": "5e945d81-b09d-469f-839c-277c0000b418",
+          "title": "Nakliyat, Sorumluluk ve Özel Riskler UW Uzun Dönem Stajyeri",
+          "sourceUrl": "https://careers.axa.com/careers-home/jobs/25992?lang=tr-tr"
+        }
+      ],
+      "sourceUrl": "https://careers.axa.com/careers-home/jobs/25992?lang=tr-tr",
+      "finalUrl": "https://careers.axa.com/careers-home/jobs/25992?lang=tr-tr",
+      "logo": null,
+      "photo": {
+        "source": "https://cms-eu.jibecdn.com/prod/axa/assets/OPENGRAPH-IMAGE-en-us-1777069483578.png",
+        "evidence": "og:image https://cms-eu.jibecdn.com/prod/axa/assets/OPENGRAPH-IMAGE-en-us-1777069483578.png",
+        "filename": "axa-turkiye-foto.png",
+        "bytes": 1021940,
+        "sha256": "8c2d2811be9757dc027e1ec3b6a506655ba5728d5c4a69d5fd652996d31f239d",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "fe48eefa-8e7f-4ea1-a537-035478d33e23",
+      "name": "Van Cleef & Arpels",
+      "slug": "van-cleef-arpels",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/van-cleef-arpels.png",
+      "listings": [
+        {
+          "id": "74018f87-3a89-4e50-9610-896d348bbb9f",
+          "title": "Internship - High Jewelry Business Development Assistant",
+          "sourceUrl": "https://richemont.wd3.myworkdayjobs.com/richemont/job/PARIS/Internship---High-Jewelry-Business-Development-Assistant_JR132227-1/apply?source"
+        },
+        {
+          "id": "44776ad4-c63b-4008-b7ae-4f0738760d5b",
+          "title": "High Jewelry Business Development Assistant",
+          "sourceUrl": "https://richemont.wd3.myworkdayjobs.com/richemont/job/PARIS/High-Jewelry-Business-Development-Assistant_JR132225-2/apply?source"
+        }
+      ],
+      "sourceUrl": "https://richemont.wd3.myworkdayjobs.com/richemont/job/PARIS/Internship---High-Jewelry-Business-Development-Assistant_JR132227-1/apply?source",
+      "finalUrl": "https://richemont.wd3.myworkdayjobs.com/richemont/job/PARIS/Internship---High-Jewelry-Business-Development-Assistant_JR132227-1/apply?source",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf indirilemedi: fetch failed",
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "9462caae-eb0b-4ad5-8bd6-d3eeb30419fa",
+      "name": "UPS",
+      "slug": "ups",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/ups.png",
+      "listings": [
+        {
+          "id": "e891f4ad-386f-4d7f-9418-77dcd1909cc2",
+          "title": "Operasyon Stajyeri",
+          "sourceUrl": "https://www.jobs-ups.com/global/en/job/UPBUPSGLOBALR26020734EXTERNALENGLOBAL/Stajyer"
+        },
+        {
+          "id": "71985d25-d867-4eba-8359-63bdf55b48f5",
+          "title": "Operasyon Stajyeri",
+          "sourceUrl": "https://www.jobs-ups.com/tr/tr/job/UPBUPSGLOBALR26020734EXTERNALTRTR/Stajyer"
+        }
+      ],
+      "sourceUrl": "https://www.jobs-ups.com/global/en/job/UPBUPSGLOBALR26020734EXTERNALENGLOBAL/Stajyer",
+      "finalUrl": "https://www.jobs-ups.com/global/en/job/UPBUPSGLOBALR26020734EXTERNALENGLOBAL/Stajyer",
+      "logo": null,
+      "photo": {
+        "source": "https://cdn.phenompeople.com/CareerConnectResources/UPBUPSGLOBAL/social/1024x512-1733915910510.jpg",
+        "evidence": "twitter:image https://cdn.phenompeople.com/CareerConnectResources/UPBUPSGLOBAL/social/1024x512-1733915910510.jpg",
+        "filename": "ups-foto.jpg",
+        "bytes": 86099,
+        "sha256": "637b84ca861b8d23a6d144c4c683fac2bbb35251e53349195c5ed70012d30f89",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "a9569bde-ae47-4844-9df4-7aae24f87eea",
+      "name": "Vontier",
+      "slug": "vontier",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/vontier.png",
+      "listings": [
+        {
+          "id": "1ce125d3-67ab-43de-8147-59e7d83ef2a5",
+          "title": "Ürün ve İş Analizi Stajyeri (6 Ay)",
+          "sourceUrl": "https://careers.vontier.com/us/en/job/VONTUSINV001512/Intern-Product-Business-Analysis-6-months"
+        }
+      ],
+      "sourceUrl": "https://careers.vontier.com/us/en/job/VONTUSINV001512/Intern-Product-Business-Analysis-6-months",
+      "finalUrl": "https://careers.vontier.com/us/en/job/VONTUSINV001512/Intern-Product-Business-Analysis-6-months",
+      "logo": null,
+      "photo": {
+        "source": "https://assets.phenompeople.com/CareerConnectResources/pp/VONTUS/social/1024x512-Vontier-1583338858721.jpg",
+        "evidence": "twitter:image https://assets.phenompeople.com/CareerConnectResources/pp/VONTUS/social/1024x512-Vontier-1583338858721.jpg",
+        "filename": "vontier-foto.jpg",
+        "bytes": 87959,
+        "sha256": "5d6b5a634687c1d04ea54eb80eeec38377bf732783c8536eb829a7cd2a994632",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "b1d05785-a8ea-4a16-a1b4-9f886add9774",
+      "name": "Kaizen Loyalty",
+      "slug": "kaizen-loyalty",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/kaizen-loyalty.png",
+      "listings": [
+        {
+          "id": "11c26e17-bc4f-4cdb-8464-834cbe58567d",
+          "title": "Ürün Uzmanı Stajyeri (Yarı Zamanlı)",
+          "sourceUrl": "https://app.gethirex.com/o/kaizen-technology/uyiv8wb6ymtfh4ys--part-time-product-specialist-student-position-4/"
+        }
+      ],
+      "sourceUrl": "https://app.gethirex.com/o/kaizen-technology/uyiv8wb6ymtfh4ys--part-time-product-specialist-student-position-4/",
+      "finalUrl": "https://app.gethirex.com/o/kaizen-technology/uyiv8wb6ymtfh4ys--part-time-product-specialist-student-position-4/",
+      "logo": null,
+      "photo": {
+        "source": "https://8b125a621466d77d7c35699585b749c1.r2.cloudflarestorage.com/hirex/media/cache/ca/5a/ca5a8e398b077963cbd116bcac6c9a3e.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=c535b2f29793bfb9b5151dea10666c9b%2F20260915%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260915T213458Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=2db0e47a6c124356ea4655dc0ca948f066d93073e1608cd7af9b5b0f5512bf4c",
+        "evidence": "og:image https://8b125a621466d77d7c35699585b749c1.r2.cloudflarestorage.com/hirex/media/cache/ca/5a/ca5a8e398b077963cbd116bcac6c9a3e.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=c535b2f29793bfb9b5151dea10666c9b%2F20260915%2Fauto%2Fs3%2Faws4_request&amp;X-Amz-Date=20260915T213458Z&amp;X-Amz-Expires=3600&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=2db0e47a6c124356ea4655dc0ca948f066d93073e1608cd7af9b5b0f5512bf4c",
+        "filename": "kaizen-loyalty-foto.jpg",
+        "bytes": 2517,
+        "sha256": "360e56d7e32cdf70bf7fb29aaa035a9155bb5f51e5ab0427808f2a0c5106eef1",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "1da22bff-fd24-4268-a620-bdd8b3aab55e",
+      "name": "Novartis",
+      "slug": "novartis",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "f5eff36e-0dca-4f52-b7f4-63a27f605b6d",
+          "title": "Hukuk Stajyeri",
+          "sourceUrl": "https://www.novartis.com/careers/career-search/job/details/req-10066986-legal-intern"
+        }
+      ],
+      "sourceUrl": "https://www.novartis.com/careers/career-search/job/details/req-10066986-legal-intern",
+      "finalUrl": "https://www.novartis.com/careers/career-search/job/details/req-10066986-legal-intern",
+      "logo": {
+        "source": "https://www.novartis.com/sites/novartis_com/files/2023-11/novartis-animated-logo-1x.gif",
+        "evidence": "og:image https://www.novartis.com/sites/novartis_com/files/2023-11/novartis-animated-logo-1x.gif",
+        "filename": "novartis-logo.gif",
+        "bytes": 39516,
+        "sha256": "18067102fa44a918ba11a6fb4eb474d3cc942df992f3242ec1267dbdebf51132",
+        "review": "manual_required"
+      },
+      "photo": {
+        "source": "https://www.novartis.com/sites/novartis_com/files/2023-11/novartis-animated-logo-1x.gif",
+        "evidence": "og:image https://www.novartis.com/sites/novartis_com/files/2023-11/novartis-animated-logo-1x.gif",
+        "filename": "novartis-foto.gif",
+        "bytes": 39516,
+        "sha256": "18067102fa44a918ba11a6fb4eb474d3cc942df992f3242ec1267dbdebf51132",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "37f5a7f8-3ac6-4c5f-95ad-508901801c56",
+      "name": "Mondelēz International",
+      "slug": "mondelez-international",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/mondelez-international.png",
+      "listings": [
+        {
+          "id": "b041279f-786a-4357-ab0f-c5aee6f87013",
+          "title": "Uzun Dönem Üretim Stajyeri (Taste the Future)",
+          "sourceUrl": "https://wd3.myworkdaysite.com/tr-TR/recruiting/mdlz/External/job/Gebze-Turkey/Taste-the-Future--Long-term-Intern--Production_R-169760-1"
+        }
+      ],
+      "sourceUrl": "https://wd3.myworkdaysite.com/tr-TR/recruiting/mdlz/External/job/Gebze-Turkey/Taste-the-Future--Long-term-Intern--Production_R-169760-1",
+      "finalUrl": "https://wd3.myworkdaysite.com/tr-TR/recruiting/mdlz/External/job/Gebze-Turkey/Taste-the-Future--Long-term-Intern--Production_R-169760-1",
+      "logo": null,
+      "photo": {
+        "source": "https://wd3.myworkdaysite.com/tr-TR/recruiting/mdlz/External/assets/logo",
+        "evidence": "og:image image https://wd3.myworkdaysite.com/tr-TR/recruiting/mdlz/External/assets/logo",
+        "filename": "mondelez-international-foto.jpg",
+        "bytes": 229858,
+        "sha256": "fa1a85ef5b423a1404944e95af4b55b5ffdf22659c8309163d7433d3a04d371d",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "5c2954cc-ef2b-4e59-9a49-da8215b0a2cf",
+      "name": "Rapsodo",
+      "slug": "rapsodo",
+      "existingLogoUrl": "https://workablehr.s3.amazonaws.com/uploads/account/logo/602728/logo",
+      "listings": [
+        {
+          "id": "e2ad254a-dc4a-4114-a617-69f5f7d000bf",
+          "title": "Araştırma Stajyeri",
+          "sourceUrl": "https://jobs.workable.com/view/wg3ambnn7RvCsvUnqrQEYV/research-intern-in-i%CC%87zmir-at-rapsodo"
+        }
+      ],
+      "sourceUrl": "https://jobs.workable.com/view/wg3ambnn7RvCsvUnqrQEYV/research-intern-in-i%CC%87zmir-at-rapsodo",
+      "finalUrl": "https://jobs.workable.com/view/wg3ambnn7RvCsvUnqrQEYV/research-intern-in-i%CC%87zmir-at-rapsodo",
+      "logo": null,
+      "photo": {
+        "source": "https://workablehr.s3.amazonaws.com/uploads/account/open_graph_logo/602728/social",
+        "evidence": "og:image https://workablehr.s3.amazonaws.com/uploads/account/open_graph_logo/602728/social",
+        "filename": "rapsodo-foto.png",
+        "bytes": 56102,
+        "sha256": "16df4e21d219763ebe7bf35b07862337239818a743511016147e642e75285b9d",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "2da94067-6989-4d9d-9c7c-55e2aa34bd51",
+      "name": "Choco",
+      "slug": "choco",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/choco.png",
+      "listings": [
+        {
+          "id": "747cab0a-6b2c-4095-be83-bf2e64317997",
+          "title": "People & Workplace Operations Intern",
+          "sourceUrl": "https://jobs.ashbyhq.com/choco/33017ed4-49f9-4c9b-8e6b-fe9e7382b3d4?utm_source"
+        }
+      ],
+      "sourceUrl": "https://jobs.ashbyhq.com/choco/33017ed4-49f9-4c9b-8e6b-fe9e7382b3d4?utm_source",
+      "finalUrl": "https://jobs.ashbyhq.com/choco/33017ed4-49f9-4c9b-8e6b-fe9e7382b3d4?utm_source",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "0c2f1f01-23bb-47c4-bc13-347e6a5c6b69",
+      "name": "Air Liquide",
+      "slug": "air-liquide",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/air-liquide.png",
+      "listings": [
+        {
+          "id": "a494cf73-02a0-4840-a541-e2ee0ece715c",
+          "title": "Supply Chain Internship",
+          "sourceUrl": "https://airliquidehr.wd3.myworkdayjobs.com/tr-TR/AirLiquideExternalCareer/job/France-Paris/Supply-chain-Internship_R10095106/apply?source"
+        }
+      ],
+      "sourceUrl": "https://airliquidehr.wd3.myworkdayjobs.com/tr-TR/AirLiquideExternalCareer/job/France-Paris/Supply-chain-Internship_R10095106/apply?source",
+      "finalUrl": "https://airliquidehr.wd3.myworkdayjobs.com/tr-TR/AirLiquideExternalCareer/job/France-Paris/Supply-chain-Internship_R10095106/apply?source",
+      "logo": null,
+      "photo": {
+        "source": "https://airliquidehr.wd3.myworkdayjobs.com/tr-TR/AirLiquideExternalCareer/assets/logo",
+        "evidence": "og:image image https://airliquidehr.wd3.myworkdayjobs.com/tr-TR/AirLiquideExternalCareer/assets/logo",
+        "filename": "air-liquide-foto.png",
+        "bytes": 1769,
+        "sha256": "b1e962d1c4f6be6160e21e6e09b8b1497e76a98371edc5f899399b194e228719",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "109e9c65-5d69-487a-a0b1-3e4a6dfaebde",
+      "name": "AXA Fransa",
+      "slug": "axa-fransa",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/axa-fransa.png",
+      "listings": [
+        {
+          "id": "e118ef9a-9fe7-4154-86d8-3f80879190e8",
+          "title": "Internship - Life & Health Claims Performance & Transformation",
+          "sourceUrl": "https://careers.axa.com/careers-home/jobs/23470?lang=en-us&iis=LINKEDIN&iisn"
+        },
+        {
+          "id": "9588942a-658b-495b-9e3f-d48c576b3114",
+          "title": "Internship | Risk Analyst",
+          "sourceUrl": "https://careers.axa.com/careers-home/jobs/19942?lang=en-us&iis"
+        }
+      ],
+      "sourceUrl": "https://careers.axa.com/careers-home/jobs/23470?lang=en-us&iis=LINKEDIN&iisn",
+      "finalUrl": "https://careers.axa.com/careers-home/jobs/23470?lang=en-us&iis=LINKEDIN&iisn",
+      "logo": null,
+      "photo": {
+        "source": "https://cms-eu.jibecdn.com/prod/axa/assets/OPENGRAPH-IMAGE-en-us-1777069483578.png",
+        "evidence": "og:image https://cms-eu.jibecdn.com/prod/axa/assets/OPENGRAPH-IMAGE-en-us-1777069483578.png",
+        "filename": "axa-fransa-foto.png",
+        "bytes": 1021940,
+        "sha256": "8c2d2811be9757dc027e1ec3b6a506655ba5728d5c4a69d5fd652996d31f239d",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "79a4c197-2684-42eb-8b76-e14061839907",
+      "name": "BlackRock",
+      "slug": "blackrock",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "0f643236-da3e-4267-9120-7a782bfff24a",
+          "title": "2027 Off-Cycle Internship Program - EMEA (Paris)",
+          "sourceUrl": "https://careers.blackrock.com/job/-/-/45831/97104654800?source"
+        }
+      ],
+      "sourceUrl": "https://careers.blackrock.com/job/-/-/45831/97104654800?source",
+      "finalUrl": "https://careers.blackrock.com/job/-/-/45831/97104654800?source",
+      "logo": {
+        "source": "https://tbcdn.talentbrew.com/company/45831/cms/img/general/blackrock-logo-308x76.webp",
+        "evidence": "homepage https://tbcdn.talentbrew.com/company/45831/cms/img/general/blackrock-logo-308x76.webp",
+        "filename": "blackrock-logo.webp",
+        "bytes": 5832,
+        "sha256": "6d2d6ebc49f5fa40e7b1c0aecac6daa697e995ba7c1d55d50fcd952ffcded331",
+        "review": "manual_required"
+      },
+      "photo": {
+        "source": "https://tbcdn.talentbrew.com/company/45831/img/photo/ogimage.jpg",
+        "evidence": "og:image https://tbcdn.talentbrew.com/company/45831/img/photo/ogimage.jpg",
+        "filename": "blackrock-foto.jpg",
+        "bytes": 104421,
+        "sha256": "1bda2c4ba8f47c7284e4f1f70cea7ca760b5020b17a3bd82d51f7374cdf76d69",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "6d5e12d1-3766-40df-a7ce-f32c76d9efc4",
+      "name": "TransPerfect",
+      "slug": "transperfect",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/transperfect.png",
+      "listings": [
+        {
+          "id": "b173c427-3f15-4054-8c57-a5fac85ffce7",
+          "title": "Çeviri Proje Yönetimi Stajyeri",
+          "sourceUrl": "https://transperfect.wd5.myworkdayjobs.com/en-US/transperfect/job/TR-Ankara/Internship-in-Translation-Project-Management_R2025-244096"
+        }
+      ],
+      "sourceUrl": "https://transperfect.wd5.myworkdayjobs.com/en-US/transperfect/job/TR-Ankara/Internship-in-Translation-Project-Management_R2025-244096",
+      "finalUrl": "https://transperfect.wd5.myworkdayjobs.com/en-US/transperfect/job/TR-Ankara/Internship-in-Translation-Project-Management_R2025-244096",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf indirilemedi: fetch failed",
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "f47b5bba-b194-4b04-9bf1-1e95bed5c077",
+      "name": "Deezer",
+      "slug": "deezer",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/deezer.png",
+      "listings": [
+        {
+          "id": "c86cf311-e085-4c81-9f57-d35d02357ce9",
+          "title": "Procurement Intern - 6 months (m/f/d)",
+          "sourceUrl": "https://deezer.teamtailor.com/jobs/7633290-procurement-intern-6-months-m-f-d"
+        }
+      ],
+      "sourceUrl": "https://deezer.teamtailor.com/jobs/7633290-procurement-intern-6-months-m-f-d",
+      "finalUrl": "https://deezer.teamtailor.com/jobs/7633290-procurement-intern-6-months-m-f-d",
+      "logo": null,
+      "photo": {
+        "source": "https://screenshots.teamtailor-cdn.com/e7cde566-cc9e-454c-805f-85b3ea2c1229-facebook.png?update=1788362153",
+        "evidence": "og:image https://screenshots.teamtailor-cdn.com/e7cde566-cc9e-454c-805f-85b3ea2c1229-facebook.png?update=1788362153",
+        "filename": "deezer-foto.png",
+        "bytes": 39759,
+        "sha256": "5a50d9886f627c5f37e4ea62ce5b3ea313c46ce597e861b576a560dd992b9c9c",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "f3c7573c-c90f-4644-96a5-997b20d9f2ad",
+      "name": "Tether",
+      "slug": "tether",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/tether.png",
+      "listings": [
+        {
+          "id": "15d9acdb-6a19-4cdb-8b76-80c9f1c1f6e5",
+          "title": "Research Engineer Intern — Multimodal LLM (Uzaktan)",
+          "sourceUrl": "https://careers.tether.io/o/research-engineer-intern-videomultimodal-llm-remote"
+        }
+      ],
+      "sourceUrl": "https://careers.tether.io/o/research-engineer-intern-videomultimodal-llm-remote",
+      "finalUrl": "https://careers.tether.io/o/research-engineer-intern-videomultimodal-llm-remote",
+      "logo": null,
+      "photo": {
+        "source": "https://careers.recruiteecdn.com/image/upload/q_auto,w_1920,c_limit/production/images/BYHs/B9EkuMWN89r6.png",
+        "evidence": "og:image https://careers.recruiteecdn.com/image/upload/q_auto,w_1920,c_limit/production/images/BYHs/B9EkuMWN89r6.png",
+        "filename": "tether-foto.png",
+        "bytes": 170029,
+        "sha256": "d743db5d2c9beca332dd470533aa302a4720b7f8bef5cb01fbfde9b8257bbb0d",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "39e54dcd-2b7d-4027-a27e-87f4857cb3ef",
+      "name": "Alumil",
+      "slug": "alumil",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/alumil.png",
+      "listings": [
+        {
+          "id": "d52ee0cf-7114-49ce-a021-95921c2d0ab8",
+          "title": "Alumil NextGen Staj Programı: Kariyerinize Alumil ile Başlayın",
+          "sourceUrl": "https://jobs.workable.com/view/n2YYX3nqXj7Loet9txk3s7/alumil-nextgen-internship-program%3A-launch-your-career-with-alumil-in-%C3%A7orlu-at-alumil"
+        },
+        {
+          "id": "27d7f86f-e080-42cf-929a-d6d01eac5546",
+          "title": "Alumil NextGen Staj Programı: Kariyerinize Alumil ile Başlayın",
+          "sourceUrl": "https://jobs.workable.com/view/venxzDrKhh7HjYFYBFb13C/alumil-nextgen-internship-program%3A-launch-your-career-with-alumil-in-istanbul-at-alumil"
+        },
+        {
+          "id": "f2bc4067-6d8f-4cc5-8ac0-f30df61790f4",
+          "title": "Alumil NextGen Staj Programı: Kariyerinize Alumil ile Başlayın",
+          "sourceUrl": "https://jobs.workable.com/view/pz2pmd7D8eT4q5atvUEkqd/alumil-nextgen-internship-program%3A-launch-your-career-with-alumil-in-i%CC%87zmir-at-alumil"
+        }
+      ],
+      "sourceUrl": "https://jobs.workable.com/view/n2YYX3nqXj7Loet9txk3s7/alumil-nextgen-internship-program%3A-launch-your-career-with-alumil-in-%C3%A7orlu-at-alumil",
+      "finalUrl": "https://jobs.workable.com/view/n2YYX3nqXj7Loet9txk3s7/alumil-nextgen-internship-program%3A-launch-your-career-with-alumil-in-%C3%A7orlu-at-alumil",
+      "logo": null,
+      "photo": {
+        "source": "https://workablehr-ui.s3.us-east-1.amazonaws.com/job-board/assets/social-share-image-v2.jpg",
+        "evidence": "og:image https://workablehr-ui.s3.us-east-1.amazonaws.com/job-board/assets/social-share-image-v2.jpg",
+        "filename": "alumil-foto.jpg",
+        "bytes": 258631,
+        "sha256": "52bf6fb39f34d80e0d0b154b22b0487df801eea6afecd68fad6567849511130d",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "f8f49c75-cbab-4021-b8f9-77baa64ee6b5",
+      "name": "Qubbe Medya",
+      "slug": "qubbe-medya",
+      "existingLogoUrl": null,
+      "listings": [
+        {
+          "id": "c3e9e059-1cf8-42a5-9386-7aaf6dee285d",
+          "title": "Ajans Stajyeri",
+          "sourceUrl": "https://ajansgiller.com/ilan/stajyer-araniyor-qubbe-medya/"
+        }
+      ],
+      "sourceUrl": "https://ajansgiller.com/ilan/stajyer-araniyor-qubbe-medya/",
+      "finalUrl": "https://ajansgiller.com/ilan/stajyer-araniyor-qubbe-medya/",
+      "logo": {
+        "source": "https://ajansgiller.com/wp-content/uploads/2025/06/Ajansgiller-logo-renkli-scaled.png",
+        "evidence": "Ajansgiller https://ajansgiller.com/wp-content/uploads/2025/06/Ajansgiller-logo-renkli-scaled.png",
+        "filename": "qubbe-medya-logo.png",
+        "bytes": 96179,
+        "sha256": "c18081265483b941493da424fb049514b05d8720b3fefd53f82fdcadff5de264",
+        "review": "manual_required"
+      },
+      "photo": {
+        "source": "https://ajansgiller.com/wp-content/uploads/2025/08/stajyer-araniyor-qubbe-medya.jpg",
+        "evidence": "og:image https://ajansgiller.com/wp-content/uploads/2025/08/stajyer-araniyor-qubbe-medya.jpg",
+        "filename": "qubbe-medya-foto.jpg",
+        "bytes": 173288,
+        "sha256": "be855ca288b4ea70ac6f43805c35d92d172dd19a879a17c80a9e574eb3027944",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "2e5b0bf9-1642-4265-a927-0e921164d5dc",
+      "name": "Lalamove",
+      "slug": "lalamove",
+      "existingLogoUrl": "https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/lalamove.png",
+      "listings": [
+        {
+          "id": "b96176ca-f2ea-447e-b5da-134ddf6d02b7",
+          "title": "Pazarlama Stajyeri",
+          "sourceUrl": "https://jobs.lever.co/lalamove/9053e477-835b-40ac-9fd9-52411b63edd4"
+        }
+      ],
+      "sourceUrl": "https://jobs.lever.co/lalamove/9053e477-835b-40ac-9fd9-52411b63edd4",
+      "finalUrl": "https://jobs.lever.co/lalamove/9053e477-835b-40ac-9fd9-52411b63edd4",
+      "logo": null,
+      "photo": null,
+      "notes": [
+        "Fotoğraf adayı bulunamadı"
+      ]
+    },
+    {
+      "id": "8bb3384f-7e2c-4bd1-8dd2-953eebd3e036",
+      "name": "Prometeia",
+      "slug": "prometeia",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/prometeia.png",
+      "listings": [
+        {
+          "id": "c5ef88ed-4a93-4de4-8b7f-1304ddcf56c9",
+          "title": "Finansal Risk Yönetimi Danışman Stajyeri",
+          "sourceUrl": "https://prometeia.wd3.myworkdayjobs.com/Prometeia_External_Career_Portal/job/Istanbul/Junior-Consultant-Intern---Financial-Risk-Management_JR100022"
+        }
+      ],
+      "sourceUrl": "https://prometeia.wd3.myworkdayjobs.com/Prometeia_External_Career_Portal/job/Istanbul/Junior-Consultant-Intern---Financial-Risk-Management_JR100022",
+      "finalUrl": "https://prometeia.wd3.myworkdayjobs.com/Prometeia_External_Career_Portal/job/Istanbul/Junior-Consultant-Intern---Financial-Risk-Management_JR100022",
+      "logo": null,
+      "photo": {
+        "source": "https://prometeia.wd3.myworkdayjobs.com/Prometeia_External_Career_Portal/assets/logo",
+        "evidence": "og:image image https://prometeia.wd3.myworkdayjobs.com/Prometeia_External_Career_Portal/assets/logo",
+        "filename": "prometeia-foto.png",
+        "bytes": 3770,
+        "sha256": "e2bb42b1fa699608ff450bac959ceb30ddd5654905617bb73c33eba60d7d64ce",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    },
+    {
+      "id": "13a921f5-fa5e-4ce5-bcef-feb7543e0b40",
+      "name": "CHANEL",
+      "slug": "chanel",
+      "existingLogoUrl": "https://stajimvar.com/isveren-logolari/chanel.png",
+      "listings": [
+        {
+          "id": "e6bb55d3-51de-4993-aeb7-0b43e131baa1",
+          "title": "Internship - Global Learning & Development F/H/X - Corporate",
+          "sourceUrl": "https://cc.wd3.myworkdayjobs.com/en-US/ChanelCareers/job/Paris/Internship---Global-Learning---Development-F-H-X----Corporate_JOBREQ00091278?source"
+        }
+      ],
+      "sourceUrl": "https://cc.wd3.myworkdayjobs.com/en-US/ChanelCareers/job/Paris/Internship---Global-Learning---Development-F-H-X----Corporate_JOBREQ00091278?source",
+      "finalUrl": "https://cc.wd3.myworkdayjobs.com/en-US/ChanelCareers/job/Paris/Internship---Global-Learning---Development-F-H-X----Corporate_JOBREQ00091278?source",
+      "logo": null,
+      "photo": {
+        "source": "https://cc.wd3.myworkdayjobs.com/en-US/ChanelCareers/assets/logo",
+        "evidence": "og:image image https://cc.wd3.myworkdayjobs.com/en-US/ChanelCareers/assets/logo",
+        "filename": "chanel-foto.png",
+        "bytes": 3534,
+        "sha256": "7e7c520d411465d61e071c42e87f337ffd82a6ff98221c0d63fcd28fa7103a5f",
+        "review": "manual_required",
+        "rights": "unknown_do_not_publish_without_review"
+      },
+      "notes": []
+    }
+  ]
+}
