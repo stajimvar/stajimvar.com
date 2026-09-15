@@ -216,6 +216,7 @@ export type Database = {
           industry: string | null;
           location: string | null;
           logo_url: string | null;
+          cover_url: string | null;
           name: string;
           plan: Database['public']['Enums']['company_plan'];
           rating: number;
@@ -236,6 +237,7 @@ export type Database = {
           industry?: string | null;
           location?: string | null;
           logo_url?: string | null;
+          cover_url?: string | null;
           name: string;
           plan?: Database['public']['Enums']['company_plan'];
           rating?: number;
@@ -256,6 +258,7 @@ export type Database = {
           industry?: string | null;
           location?: string | null;
           logo_url?: string | null;
+          cover_url?: string | null;
           name?: string;
           plan?: Database['public']['Enums']['company_plan'];
           rating?: number;

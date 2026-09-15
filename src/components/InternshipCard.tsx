@@ -228,6 +228,33 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           (öğrenci giriş yapmamış ya da ilanda beceri şartı yok) boş bir
           halka çizmek, olmayan bir ölçümü varmış gibi gösterirdi.
         */}
+        {/*
+          KAPAK GÖRSELİ — VARSA ÇİZİLİYOR, YOKSA ALAN HİÇ AÇILMIYOR
+
+          Onaylanan tasarımda kartın sağında şirketin kapak görseli var.
+          `companyCover` boşken bu blok HİÇ çizilmiyor: yer tutan gri bir
+          kutu ya da uydurma bir görsel, olmayan bir şeyi varmış gibi
+          gösterirdi. Kart o durumda eskisi gibi tek sütun akıyor.
+
+          Dekoratif: `alt=""` ve `aria-hidden` — ilanın kaynağı, konumu
+          ve doğrulaması metinde yazıyor, görsel bir iddia taşımıyor.
+          Yüklenemezse kendini gizliyor (kırık görsel simgesi kalmasın).
+        */}
+        {listing.companyCover && (
+          <div className="col-start-3 row-span-3 row-start-2 w-[104px] shrink-0 self-start overflow-hidden rounded-xl border border-gray-200 sm:w-[124px] lg:w-[168px]">
+            <img
+              src={listing.companyCover}
+              alt=""
+              aria-hidden
+              loading="lazy"
+              className="h-[84px] w-full object-cover sm:h-[104px] lg:h-[116px]"
+              onError={(olay) => {
+                olay.currentTarget.parentElement?.classList.add('hidden');
+              }}
+            />
+          </div>
+        )}
+
         <div className="col-start-1 row-start-1 shrink-0 sm:row-span-4">
           {/*
             Logo HER ZAMAN yuvarlak, halka yalnızca puan varken.
@@ -477,15 +504,14 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               yüzde `sm:` altında gizli, çünkü orada ilk satırı iki katına
               çıkarıyordu. Halka hep duruyor, sayı burada.
             */}
-            {match.isScorable && (
-              <span
-                className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-bold tabular-nums sm:hidden"
-                style={{ color: halkaRengi, borderColor: halkaRengi }}
-                title={`%${match.overallScore} uyum — ${match.summaryInsight}`}
-              >
-                %{match.overallScore} uyum
-              </span>
-            )}
+            {/*
+              "%N uyum" YAZI ROZETİ KALDIRILDI (onaylanan tasarım)
+
+              Aynı sayı logonun etrafındaki halkada zaten duruyor ve
+              halka her ekranda çiziliyor; rozet onun telefona özel
+              kopyasıydı. Puan kaybolmadı — halkanın `title` metni ve
+              ilan sayfasındaki ayrıntı yerinde.
+            */}
 
             {/*
               STAJ TÜRÜ — İKİSİ BİRBİRİNİ DIŞLAMIYOR

@@ -137,6 +137,12 @@ export interface InternshipListing {
   /** Şirket sayfası adresi için. Yeniden slug üretmek yazım farkı riski taşır. */
   companySlug?: string;
   companyLogo: string;
+  /**
+   * Kart kapak görseli. İSTEĞE BAĞLI: boşken kart tek sütun çiziliyor,
+   * uydurma bir görsel konmuyor. Dekoratif — ilanın kaynağı ya da
+   * doğrulanması hakkında bir iddia taşımıyor.
+   */
+  companyCover?: string;
   companyIndustry: string;
   companySize: string;
   companyLocation: string;

@@ -126,7 +126,7 @@ type ReadableListingRow = Omit<
 export type ListingRowWithCompany = ReadableListingRow & {
   companies: Pick<
     Tables<'companies'>,
-    'name' | 'slug' | 'logo_url' | 'industry' | 'size' | 'location' | 'description' | 'rating'
+    | 'name' | 'slug' | 'logo_url' | 'cover_url' | 'industry' | 'size' | 'location' | 'description' | 'rating'
   > | null;
 };
 
@@ -138,6 +138,8 @@ export function toInternshipListing(row: ListingRowWithCompany): InternshipListi
     companyName: c?.name ?? 'Bilinmeyen Şirket',
     companySlug: c?.slug ?? undefined,
     companyLogo: c?.logo_url ?? '',
+    /* Kart kapağı: yalnız gerçek dosya varsa çiziliyor (bkz. InternshipCard). */
+    companyCover: c?.cover_url ?? undefined,
     companyIndustry: c?.industry ?? '',
     companySize: c?.size ?? '',
     companyLocation: c?.location ?? '',
