@@ -185,20 +185,75 @@ sonra panelden temizleme ve Instagram'daki gönderiyi koruma davranışları
 
 ## 6. Kalan işler
 
-**a) Yeni gerçek fırsatlar.** Mevcut 112 aktif kayıt düzeltildi ama
-**yeni kayıt eklenmedi**. Eklemek için: resmî kaynak listesi + insan
-incelemesi + `service_role` yazma (yalnız Actions'ta). Mükerrer
-eklememek için `slug` unique ve `source_url` kontrolü var. Tutarı
-kaynaktan doğrulanmayan kaydı "açıklanmadı" diye işaretleme.
+**a) Yeni gerçek fırsatlar — ARAŞTIRMA DURDURULDU (15 Eylül 2026).**
+Mevcut kayıtlar düzeltildi ama yeni kayıt eklenmedi. Ölçülen dağılım:
+121 kayıt (112 yayında + 9 süresi geçmiş) — `international` 66,
+`scholarship` 39, `kyk` 2, `student_support` 2, `competition` 1,
+`education` 1, `youth_program` 1.
 
-**b) `/universiteler` + kit.** Rota **yok** (`grep '/universiteler'`
-boş). `src/data/kariyerMerkezleri.ts` 22 üniversite kariyer merkezi
-taşıyor — sayfa onun üstüne kurulabilir. Kit içeriği tanımlı değil.
+> **Kullanıcı kararı: fırsat araştırmasına devam ETME.** İnternette
+> toplu fırsat ya da staj ilanı araması yapma, aday dosyası üretme.
+> Bir tur başlatılmıştı ve tam bu noktada durduruldu — plan onaylanmadı,
+> hiçbir aday dosyası yazılmadı.
 
-**c) Türkiye staj kaynaklarını artırma.** `automation/sources.json`
-42 etkin kaynak. Yeni kaynak eklemeden önce **robots kuralları elle
-inceleniyor** (Hakkımızda bunu yazıyor, iddiayı boşa çıkarma). Erişim
-engeli aşılmıyor.
+Hat hazır duruyor, gerektiğinde kullanılır (yenisini kurma):
+`scripts/data/firsat-adaylari.json` (60 aday) → `scripts/firsat-dogrula.mjs`
+(her adresi gerçekten çağırıp erişim/dönem/konu/tarih ölçüyor; girdi ve
+çıktı yolu argümanla verilebiliyor) → `scripts/data/firsat-dogrulama.json`
+→ `scripts/data/firsat-ekle.sql`. Mükerrer koruması `slug` unique +
+`source_url`. Tutarı doğrulanmayan kaydı "açıklanmadı" diye işaretleme.
+
+**b) ~~`/universiteler` + kit~~ — ESASEN TAMAMLANMIŞ, madde yanlıştı.**
+Önceki sürüm "rota yok" diyordu; bu literal olarak doğru ama **yanıltıcı**.
+`kariyerMerkezleri.ts`'in üstüne kurulacak sayfa **kurulmuş ve canlıda**:
+
+| Kanıt | Yer |
+|---|---|
+| Rota | `src/App.tsx:2527` → `/universite-kariyer-merkezleri` |
+| Bileşen (254 satır) | `src/components/KariyerMerkezleri.tsx` — 22 merkez, şehre göre gruplu, logolu, "benim merkezim" kişiselleştirmesi |
+| Ön render + SEO | `scripts/onrender.mjs:1412` (başlık + açıklama tanımlı) |
+| Menü/altlık | `src/App.tsx:3051` |
+| İç bağlantılar | `BolumEylemleri`, `RehberSonuclari`, `SonrakiAdim`, `YolHaritasi` |
+
+**`/universiteler` diye ikinci bir sayfa AÇMA** — aynı içerikle iki URL
+SEO'da birbirini yer. "Kit" ise depoda ve belgelerde **yalnız o tek
+satırda** geçiyordu; hiçbir yerde tanımı yok. Madde kapandı.
+
+**c) Türkiye staj kaynaklarını artırma — artık kullanıcı bağlantısıyla
+yürüyor (§6d).** `automation/sources.json` 42 etkin kaynak. Yeni kaynak
+eklemeden önce **robots kuralları elle inceleniyor** (Hakkımızda bunu
+yazıyor, iddiayı boşa çıkarma). Erişim engeli aşılmıyor.
+
+**d) İlan bağlantısından resmî kaynak çıkarma — KULLANICI BAĞLANTI
+GÖNDERİNCE (15 Eylül 2026 kararı).**
+
+Akış şu: kullanıcı bir **staj ilanı bağlantısı** gönderiyor, sen o
+ilandan yola çıkıp **şirketin resmî kaynağını** sisteme ekliyorsun.
+Bağlantı gelmeden **hiçbir araştırma başlatma**.
+
+Bağlantı geldiğinde sırayla:
+
+1. İlan sitesini **yalnız keşif amacıyla** kullan — şirketi ve pozisyonu
+   belirlemek için. İlan sitesi kaynak olarak kaydedilmiyor.
+2. Aynı ilanı **şirketin resmî kariyer/ATS sayfasında** bul.
+3. Kayda **yalnız resmî kaynak erişilebilir ve doğrulanabilirse** geç.
+   Bulunamıyorsa kayıt yok — uydurma adres yazma.
+4. **İlan sitesinden izinsiz içerik kopyalama, erişim engeli aşma yok.**
+5. **Genel kariyer sayfasını açık ilan olarak kaydetme.** (§5'teki kural:
+   "açık" demek için ilanın kendi sayfasında aktif başvuru görülmeli.
+   Genel kariyer adresi ancak §1'deki *işveren dizini* anlamında
+   tutulabilir — o dizin ilan toplamıyor, 42 etkin kaynakla karıştırma.)
+6. **Mükerrerlik kontrolü:** hem `automation/sources.json` içindeki
+   kaynaklarla hem canlıdaki ilanlarla.
+7. Şirketi **mevcut adaptörlerden biriyle** bağla. Kayıtlı tür dağılımı:
+   `lever` 13, `greenhouse` 10, `workable` 7, `ashby` 6, `workday` 2,
+   `official_jsonld` 1, `smartrecruiters` 1, `workable_search` 1,
+   `kurumsal_html` 1. Dispatch tablosu `automation/scraper.py` içinde
+   (`personio` ve `recruitee` de tanımlı, henüz kullanılmıyor).
+   Hiçbiri uymuyorsa **küçük bir resmî kaynak adaptörü** eklenebilir.
+8. **Global ve ülke/Remote kurallarını koru** —
+   `supabase/migrations/20260919010000_global_listing_preferences.sql`
+   ve `automation/country_normalization.py`.
 
 ---
 
@@ -264,35 +319,38 @@ gönderecek. Ölçülecek iki şey:
 
 ---
 
-## 7b. Sıradaki Claude'un doğrudan uygulayacağı ilk görev
+## 7b. Sıradaki Claude ne yapacak: BEKLE
 
-> **Görev:** `/universiteler` sayfasını aç (§6b).
+> **Kendi başına yeni bir iş paketi başlatma.** İki bekleyen iş var ve
+> ikisi de **kullanıcının bir şey sağlamasına** bağlı.
 
-Neden bu: §6'daki üç kalan işten tek başına ilerletilebilen bu.
-§6a (yeni fırsat eklemek) canlı yazma istiyor ve `service_role` yerelde
-yok; §6c (kaynak eklemek) her kaynak için elle robots incelemesi
-istiyor. `/universiteler` ise var olan veriyle kurulabiliyor.
+**1. İlan bağlantıları bekleniyor (§6d).** Kullanıcı staj ilanı
+bağlantıları gönderecek; akış ve sınırlar §6d'de yazılı. **Bağlantı
+gelmeden internette ilan/fırsat araması yapma, aday dosyası üretme.**
 
-Somut durum:
+**2. Elle işveren testi bekleniyor (§9).** Kullanıcı kendi şirket
+hesabıyla ilan oluşturma → yönetici onay/ret akışını deneyecek. Karar
+e-postasının **gerçek teslimi ve mükerrer gönderim ölçümü** o testin
+içinde (§9 adım 5b). Bunu üretime test verisi yazarak öne almaya
+çalışma — bir kez denendi ve kapatıldı (§7, PR #105).
 
-- Rota **yok** — `grep -rn "/universiteler" src/` boş dönüyor.
-- `src/data/kariyerMerkezleri.ts` **22 üniversite kariyer merkezi**
-  taşıyor; sayfa bunun üstüne kurulabilir.
-- **Kit içeriği tanımlı değil** — sayfanın ne vaat ettiğine karar
-  vermeden koda başlama. Uydurma sayı, uydurma "anlaşmalı üniversite"
-  iddiası ya da olmayan bir indirme dosyası **yazma** (§5).
-- Frontend kodu `stajimvar-frontend-builder` ajanıyla yazılıyor
-  (depo kuralı).
+Bu iki şey gelmeden yapılacak iş yok. §6a araştırması **durduruldu**,
+§6b **kapandı**. Kullanıcı yeni bir yön verirse ona uy; vermediyse
+"sıradaki görevi" kendin icat etme.
+
+> **Bu belgeyi okuyup hemen bir şey yapmak zorunda değilsin.** Önceki
+> turda §6b'ye başlanmıştı ve madde **yanlış** çıktı: sayfa zaten
+> canlıydı. Ölçmeden başlama.
 
 ---
 
 ## 8. Komutlar
 
 ```bash
-npm test                                  # 1770 test
+npm test                                  # 1782 test
 npx tsc -p tsconfig.json --noEmit         # src tip denetimi
 npx tsc -p functions/tsconfig.json --noEmit
-npm run build                             # vite + ön render (568 sayfa)
+npm run build                             # vite + ön render (560 sayfa)
 ```
 
 ```bash
