@@ -18,13 +18,39 @@ TURKEY_CITIES = {
     'zonguldak',
 }
 
-LOCATION_COUNTRIES = {
+COUNTRY_NAMES = {
     'turkiye': 'TR', 'turkey': 'TR',
-    'berlin': 'DE', 'germany': 'DE', 'deutschland': 'DE',
-    'paris': 'FR', 'france': 'FR',
-    'london': 'GB', 'united kingdom': 'GB',
-    'amsterdam': 'NL', 'netherlands': 'NL',
-    'new york': 'US', 'united states': 'US',
+    'germany': 'DE', 'deutschland': 'DE',
+    'france': 'FR',
+    'united kingdom': 'GB',
+    'netherlands': 'NL',
+    'united states': 'US',
+}
+
+# ALMANYA VE FRANSA ŞEHİRLERİ (15 Eylül 2026)
+#
+# Ülke-duyarlı ilan hattı konumu yalnız şehir yazan ilanları ("Hamburg",
+# "Köln") ancak bu listeden tanıyabiliyor. Başka ülkede de yaygın geçen
+# adlar BİLEREK yok: "Nice" (İngilizce sıfat), "Hof", "Halle" gibi. Yanlış
+# ülke, bir ilanı kaçırmaktan kötü.
+GERMANY_CITIES = (
+    'berlin', 'hamburg', 'munchen', 'muenchen', 'munich', 'koln', 'koeln', 'cologne',
+    'frankfurt', 'stuttgart', 'dusseldorf', 'duesseldorf', 'leipzig', 'dortmund', 'essen',
+    'bremen', 'dresden', 'hannover', 'hanover', 'nurnberg', 'nuernberg', 'nuremberg', 'bonn',
+    'mannheim', 'karlsruhe', 'heidelberg', 'potsdam', 'boblingen', 'tubingen', 'herzogenaurach',
+)
+FRANCE_CITIES = (
+    'paris', 'lyon', 'marseille', 'toulouse', 'nantes', 'strasbourg', 'montpellier',
+    'bordeaux', 'lille', 'rennes', 'cannes',
+)
+
+LOCATION_COUNTRIES = {
+    **COUNTRY_NAMES,
+    **{city: 'DE' for city in GERMANY_CITIES},
+    **{city: 'FR' for city in FRANCE_CITIES},
+    'london': 'GB',
+    'amsterdam': 'NL',
+    'new york': 'US',
 }
 
 REMOTE_ONLY = {'remote', 'global', 'worldwide', 'anywhere'}
@@ -35,7 +61,8 @@ def _fold(value):
     return ' '.join(''.join(ch for ch in text if not unicodedata.combining(ch)).split())
 
 
-def _location_signals(location):
+def location_country_signals(location):
+    """Konum metninin işaret ettiği ülkeler; uzaktan/boş metin sinyal vermez."""
     folded = _fold(location)
     if not folded or folded in REMOTE_ONLY:
         return set()
@@ -47,11 +74,18 @@ def _location_signals(location):
     return signals
 
 
+def structured_country_code(value):
+    """ATS'nin yapısal ülke alanı: ISO kodu ("de") ya da ülke adı ("Germany")."""
+    raw = str(value or '').strip()
+    if re.fullmatch(r'[A-Za-z]{2}', raw):
+        return raw.upper()
+    return COUNTRY_NAMES.get(_fold(raw))
+
+
 def infer_country_code(*, structured_country=None, location=None, title=None):
     """Return a country only from structured or explicit location evidence; title is ignored."""
-    structured = str(structured_country or '').strip().upper()
-    structured_code = structured if re.fullmatch(r'[A-Z]{2}', structured) else LOCATION_COUNTRIES.get(_fold(structured_country))
-    signals = _location_signals(location)
+    signals = location_country_signals(location)
+    structured_code = structured_country_code(structured_country)
     if structured_code:
         signals.add(structured_code)
     return next(iter(signals)) if len(signals) == 1 else None

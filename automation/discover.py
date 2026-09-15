@@ -102,7 +102,9 @@ def process_source(db, config: dict, source_id: str, *, write: bool, allow_deact
         return {**stats, "slug": slug, "health": "FAILED", "error": message}
 
     try:
-        jobs = [scraper.translate_job(job, config) for job in adapter(config)]
+        # Doğrulanmış kipteki kaynak (`dogrulanmis_ilanlar`) yalnız tek tek
+        # doğrulanmış ilanları alıyor; alan yoksa hiçbir şey değişmiyor.
+        jobs = [scraper.translate_job(job, config) for job in scraper.dogrulanmis_ilanlarla_sinirla(config, adapter(config))]
         # Adaptör çok parçalıysa (şehir × sorgu) kapsama sayaçlarını
         # config'e yazıyor. Tek istekli adaptörlerde sözlük hiç oluşmuyor
         # ve alanlar 0 kalıyor — o kaynakların davranışı değişmiyor.

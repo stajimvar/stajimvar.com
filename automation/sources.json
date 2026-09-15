@@ -532,6 +532,495 @@
       "urls": [
         "https://careers.bat.com/en/job/-/-/1045/44671289984"
       ]
+    },
+    {
+      "id": "aboutyou-smartrecruiters-de",
+      "name": "ABOUT YOU (Almanya)",
+      "type": "smartrecruiters",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "ABOUT YOU",
+      "careers_url": "https://jobs.smartrecruiters.com/ABOUTYOUGmbH",
+      "company_identifier": "ABOUTYOUGmbH",
+      "dogrulanmis_ilanlar": [
+        "744000148796992",
+        "744000148794432"
+      ]
+    },
+    {
+      "id": "bertelsmann-smartrecruiters-de",
+      "name": "Bertelsmann (Almanya)",
+      "type": "smartrecruiters",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Bertelsmann",
+      "careers_url": "https://jobs.smartrecruiters.com/Bertelsmann-Jobs",
+      "company_identifier": "Bertelsmann-Jobs",
+      "dogrulanmis_ilanlar": [
+        "744000148143159",
+        "744000144324449"
+      ]
+    },
+    {
+      "id": "bosch-smartrecruiters-de",
+      "name": "Bosch (Almanya)",
+      "type": "smartrecruiters",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Bosch",
+      "careers_url": "https://jobs.smartrecruiters.com/BoschGroup",
+      "company_identifier": "BoschGroup",
+      "dogrulanmis_ilanlar": [
+        "744000149315349"
+      ]
+    },
+    {
+      "id": "emnify-greenhouse-de",
+      "name": "emnify (Almanya)",
+      "type": "greenhouse",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "emnify",
+      "careers_url": "https://www.emnify.com/careers",
+      "board_token": "emnify",
+      "dogrulanmis_ilanlar": [
+        "4971650101"
+      ]
+    },
+    {
+      "id": "wongdoody-greenhouse-de",
+      "name": "WongDoody (Almanya)",
+      "type": "greenhouse",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "WongDoody",
+      "careers_url": "https://job-boards.greenhouse.io/wongdoody",
+      "board_token": "wongdoody",
+      "dogrulanmis_ilanlar": [
+        "7988851003"
+      ]
+    },
+    {
+      "id": "picnic-greenhouse-de",
+      "name": "Picnic (Almanya)",
+      "type": "greenhouse",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Picnic",
+      "careers_url": "https://jobs.picnic.app",
+      "board_token": "teampicnic",
+      "dogrulanmis_ilanlar": [
+        "8201562"
+      ]
+    },
+    {
+      "id": "trading212-ashby-de",
+      "name": "Trading 212 (Almanya)",
+      "type": "ashby",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Trading 212",
+      "careers_url": "https://jobs.ashbyhq.com/trading212",
+      "job_board": "trading212",
+      "dogrulanmis_ilanlar": [
+        "f8d628f4-6093-48bc-942e-6057b44707fc"
+      ]
+    },
+    {
+      "id": "telli-ashby-de",
+      "name": "telli (Almanya)",
+      "type": "ashby",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "telli",
+      "careers_url": "https://jobs.ashbyhq.com/telli",
+      "job_board": "telli",
+      "dogrulanmis_ilanlar": [
+        "f63fa9a6-3ecf-4826-a0cb-60b659535565"
+      ]
+    },
+    {
+      "id": "justdice-ashby-de",
+      "name": "justDice (Almanya)",
+      "type": "ashby",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "justDice",
+      "careers_url": "https://jobs.ashbyhq.com/justDice",
+      "job_board": "justDice",
+      "dogrulanmis_ilanlar": [
+        "837ac361-7035-4a57-831a-b3574a06780d"
+      ]
+    },
+    {
+      "id": "puma-workday-de",
+      "name": "PUMA (Almanya)",
+      "type": "workday",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "PUMA",
+      "careers_url": "https://puma.wd502.myworkdayjobs.com/Jobs_at_Puma",
+      "host": "puma.wd502.myworkdayjobs.com",
+      "tenant": "puma",
+      "site": "Jobs_at_Puma",
+      "dogrulanmis_ilanlar": [
+        "R42934"
+      ]
+    },
+    {
+      "id": "careloop-personio-de",
+      "name": "careloop (Almanya)",
+      "type": "personio",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "careloop",
+      "careers_url": "https://careloop.jobs.personio.com",
+      "tenant": "careloop",
+      "domain": "com",
+      "dogrulanmis_ilanlar": [
+        "2144283"
+      ]
+    },
+    {
+      "id": "lanch-personio-de",
+      "name": "LANCH (Almanya)",
+      "type": "personio",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "LANCH",
+      "careers_url": "https://lanch.jobs.personio.de",
+      "tenant": "lanch",
+      "domain": "de",
+      "dogrulanmis_ilanlar": [
+        "1378303"
+      ]
+    },
+    {
+      "id": "esteelauder-jsonld-de",
+      "name": "Estée Lauder Companies (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Estée Lauder Companies",
+      "careers_url": "https://careers.elcompanies.com",
+      "urls": [
+        "https://careers.elcompanies.com/careers/job/1168275507157"
+      ]
+    },
+    {
+      "id": "redbull-jsonld-de",
+      "name": "Red Bull (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Red Bull",
+      "careers_url": "https://jobs.redbull.com",
+      "urls": [
+        "https://jobs.redbull.com/de-de/intern-customer-service--ref33253j"
+      ]
+    },
+    {
+      "id": "mars-jsonld-de",
+      "name": "Mars (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Mars",
+      "careers_url": "https://careers.mars.com",
+      "urls": [
+        "https://careers.mars.com/global/en/job/R163385/Internship-in-Trade-Marketing"
+      ]
+    },
+    {
+      "id": "sonypictures-jsonld-de",
+      "name": "Sony Pictures Entertainment (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Sony Pictures Entertainment",
+      "careers_url": "https://www.sonypicturesjobs.com",
+      "urls": [
+        "https://www.sonypicturesjobs.com/job/berlin/marketing-praktikant-im-bereich-kinofilm-releases-m-w-d/22978/98417984512"
+      ]
+    },
+    {
+      "id": "lidl-jsonld-de",
+      "name": "Lidl (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Lidl",
+      "careers_url": "https://jobs.lidl.de",
+      "urls": [
+        "https://jobs.lidl.de/jobs/praktikum-vertrieb-essen-746881"
+      ]
+    },
+    {
+      "id": "ebay-jsonld-de",
+      "name": "eBay (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "eBay",
+      "careers_url": "https://jobs.ebayinc.com",
+      "urls": [
+        "https://jobs.ebayinc.com/us/en/job/EBAEBAUSR0075958EXTERNALENUS/Intern-Category-Mgmt-Fashion-f-m-d"
+      ]
+    },
+    {
+      "id": "wegain-join-de",
+      "name": "Wegain GmbH (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Wegain GmbH",
+      "careers_url": "https://join.com/companies/wegain",
+      "urls": [
+        "https://join.com/companies/wegain/16661216-praktikant-marketing"
+      ]
+    },
+    {
+      "id": "melagence-join-de",
+      "name": "Melagence GmbH (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Melagence GmbH",
+      "careers_url": "https://join.com/companies/melagence",
+      "urls": [
+        "https://join.com/companies/melagence/16681281-internship-at-berlin-based-fashion-agency-and-showroom-paris-berlin-munich"
+      ]
+    },
+    {
+      "id": "maxdrei-join-de",
+      "name": "Craftly (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Craftly",
+      "careers_url": "https://join.com/companies/maxdrei",
+      "urls": [
+        "https://join.com/companies/maxdrei/16691853-mandatory-internship-performance-marketing-and-social-media"
+      ]
+    },
+    {
+      "id": "hopneu-join-de",
+      "name": "HOPn UG (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "HOPn UG",
+      "careers_url": "https://join.com/companies/hopneu",
+      "urls": [
+        "https://join.com/companies/hopneu/16672784-internship-hr-unpaid"
+      ]
+    },
+    {
+      "id": "atryaio-join-de",
+      "name": "Atrya (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Atrya",
+      "careers_url": "https://join.com/companies/atryaio",
+      "urls": [
+        "https://join.com/companies/atryaio/16693517-intern-marketing"
+      ]
+    },
+    {
+      "id": "yami-studioscom-join-de",
+      "name": "Yami Studios UG (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Yami Studios UG",
+      "careers_url": "https://join.com/companies/yami-studioscom",
+      "urls": [
+        "https://join.com/companies/yami-studioscom/16668662-project-management-internship"
+      ]
+    },
+    {
+      "id": "fixfirst-join-de",
+      "name": "FixFirst (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "FixFirst",
+      "careers_url": "https://join.com/companies/fixfirst",
+      "urls": [
+        "https://join.com/companies/fixfirst/16668569-founders-associate-intern"
+      ]
+    },
+    {
+      "id": "kluuucom-join-de",
+      "name": "KLUUU (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "KLUUU",
+      "careers_url": "https://join.com/companies/kluuucom",
+      "urls": [
+        "https://join.com/companies/kluuucom/16697598-praktikum-marketing-und-growth-m-w-d"
+      ]
+    },
+    {
+      "id": "get-incacom-join-de",
+      "name": "inca (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "inca",
+      "careers_url": "https://join.com/companies/get-incacom",
+      "urls": [
+        "https://join.com/companies/get-incacom/16681661-venture-development-intern-m-f-d",
+        "https://join.com/companies/get-incacom/16678193-founder-s-associate-intern-m-f-d"
+      ]
+    },
+    {
+      "id": "2zero-join-de",
+      "name": "2zero GmbH (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "2zero GmbH",
+      "careers_url": "https://join.com/companies/2zero",
+      "urls": [
+        "https://join.com/companies/2zero/16690371-praktikum-online-marketing-social-media-kommunikation-nachhaltigkeits-start-up"
+      ]
+    },
+    {
+      "id": "klarablau-join-de",
+      "name": "Klara Blau (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Klara Blau",
+      "careers_url": "https://join.com/companies/klarablau",
+      "urls": [
+        "https://join.com/companies/klarablau/16667416-praktikum-business-management-und-operations-oder-raum-stuttgart-oder-3-6-monate-ab-september-oktober-2026"
+      ]
+    },
+    {
+      "id": "inception-media-join-de",
+      "name": "Inception Media (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Inception Media",
+      "careers_url": "https://join.com/companies/inception-media",
+      "urls": [
+        "https://join.com/companies/inception-media/16670441-intern-sales-m-w-d"
+      ]
+    },
+    {
+      "id": "neckar-hub-join-de",
+      "name": "Neckar Hub (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Neckar Hub",
+      "careers_url": "https://join.com/companies/neckar-hub",
+      "urls": [
+        "https://join.com/companies/neckar-hub/16689648-praktikum-fuer-studierende-junior-consultant-marketing-m-w-d"
+      ]
+    },
+    {
+      "id": "bmwgroup-ilan-sayfasi-de",
+      "name": "BMW Group (Almanya, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "BMW Group",
+      "careers_url": "https://www.bmwgroup.jobs/de/de/jobfinder.html",
+      "aciklik_dogrulanmadi": true,
+      "urls": [
+        "https://www.bmwgroup.jobs/de/de/jobfinder/job-description.195753.html",
+        "https://www.bmwgroup.jobs/de/de/jobfinder/job-description.190132.html"
+      ]
+    },
+    {
+      "id": "porsche-ilan-sayfasi-de",
+      "name": "Porsche (Almanya, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Dr. Ing. h.c. F. Porsche AG",
+      "careers_url": "https://jobs.porsche.com/",
+      "aciklik_dogrulanmadi": true,
+      "urls": [
+        "https://jobs.porsche.com/index.php?ac=jobad&id=18107",
+        "https://jobs.porsche.com/index.php?ac=jobad&id=18498",
+        "https://jobs.porsche.com/index.php?ac=jobad&id=18113",
+        "https://jobs.porsche.com/index.php?ac=jobad&id=19450"
+      ]
+    },
+    {
+      "id": "amazon-ilan-sayfasi-de",
+      "name": "Amazon (Almanya, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Amazon",
+      "careers_url": "https://www.amazon.jobs/en/search",
+      "aciklik_dogrulanmadi": true,
+      "urls": [
+        "https://www.amazon.jobs/en/jobs/10488197/praktikum-im-bereich-logistik-gera-start-2027",
+        "https://www.amazon.jobs/en/jobs/10488201/praktikum-im-bereich-logistik-erfurt-start-2027"
+      ]
+    },
+    {
+      "id": "festool-ilan-sayfasi-de",
+      "name": "Festool Group (Almanya, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Festool Group",
+      "careers_url": "https://www.festool-group.com/karriere",
+      "aciklik_dogrulanmadi": true,
+      "urls": [
+        "https://www.festool-group.com/job/Praktikum-HR-Recruiting-Talent-Acquisition-%28SoSe-27%29/875-de_DE"
+      ]
+    },
+    {
+      "id": "barilla-ilan-sayfasi-de",
+      "name": "Barilla Group (Almanya, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Barilla Group",
+      "careers_url": "https://jobs.barillagroup.com/",
+      "aciklik_dogrulanmadi": true,
+      "urls": [
+        "https://jobs.barillagroup.com/job/Cologne-Praktikum-im-Trade-Marketing-Barilla-Pasta-Colo-Cologne/1373285733/"
+      ],
+      "city_hint": "Cologne"
+    },
+    {
+      "id": "stiebel-eltron-ilan-sayfasi-de",
+      "name": "Stiebel Eltron (Almanya, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Stiebel Eltron",
+      "careers_url": "https://karriere.stiebel-eltron.de/",
+      "aciklik_dogrulanmadi": true,
+      "urls": [
+        "https://karriere.stiebel-eltron.de/job/Holzminden-WerkstudentPraktikant-PR-und-Kommunikation-%28mwd%29-NI-37603/1434297833/"
+      ],
+      "city_hint": "Holzminden"
+    },
+    {
+      "id": "renault-ilan-sayfasi-de",
+      "name": "Renault Deutschland (Almanya, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Renault Deutschland AG",
+      "careers_url": "https://recruitingapp-5229.de.umantis.com/Vacancies/",
+      "aciklik_dogrulanmadi": true,
+      "urls": [
+        "https://recruitingapp-5229.de.umantis.com/Vacancies/806/Description"
+      ]
     }
   ],
   "notes": "Only add verified public ATS/API endpoints. Keep credentials in environment variables, never here."

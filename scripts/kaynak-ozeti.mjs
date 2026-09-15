@@ -46,6 +46,7 @@ const SISTEM_ADI = {
   ashby: 'Ashby',
   workday: 'Workday',
   smartrecruiters: 'SmartRecruiters',
+  personio: 'Personio',
   official_jsonld: 'Şirketin kendi kariyer sayfası',
   /*
     `kurumsal_html` de şirketin KENDİ sayfası: ikisi aynı iddiayı
@@ -54,6 +55,13 @@ const SISTEM_ADI = {
     teknik bir ayrımı ürün diline sızdırmak olurdu.
   */
   kurumsal_html: 'Şirketin kendi kariyer sayfası',
+  /*
+    Açıklığı doğrulanmamış tek ilan sayfası da şirketin KENDİ
+    sayfası: iddia aynı ("ilanı sahibinden okuduk"). Farkı ilanın
+    açık olup olmadığının kanıtlanamaması ve o fark ürün dilinde
+    değil, ilanın kendi kaydında duruyor (taslak kalıyor).
+  */
+  resmi_ilan_sayfasi: 'Şirketin kendi kariyer sayfası',
 };
 
 export function kaynakOzeti(kayitlar) {

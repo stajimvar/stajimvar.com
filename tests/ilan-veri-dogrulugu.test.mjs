@@ -227,19 +227,23 @@ test('kurumsal_html adaptörü kayıtlı ve genel kariyer sayfasını ilan saym�
 
     1. Adres kalıbı: yalnız TEK İLANA giden adres alınıyor. Liste,
        kategori ve "tüm fırsatlar" sayfaları kalıbı geçmiyor.
-    2. `is_early_career`: staj/yeni mezun olmayan pozisyon atılıyor.
+    2. `erken_kariyer_mi`: staj/yeni mezun olmayan pozisyon atılıyor.
+       Türkiye profilinde bu doğrudan `is_early_career` (ülke-duyarlı
+       hat, 15 Eylül 2026; davranışı automation/tests/test_ulke_duyarli_hat.py
+       sabitliyor).
 
     Ölçüldü (14 Eylül 2026, canlı): Garanti BBVA listesinde 100 tekil
     ilan adresi var ve hiçbiri staj değil ("Yönetmen", "Lead",
     "Yönetici"). Adaptör 0 ilan döndürüyor — bu doğru cevap.
   */
   assert.match(fn, /if not kalip\.search\(tam\)/);
-  assert.match(fn, /if not is_early_career\(baslik, aciklama\)/);
+  assert.match(fn, /if not erken_kariyer_mi\(config, baslik, aciklama\)/);
 });
 
 test('erişim engeli aşılmıyor, kaynak bırakılıyor', () => {
   const KAZIYICI = oku('automation/scraper.py');
-  const fn = KAZIYICI.slice(KAZIYICI.indexOf('def kurumsal_html('));
+  const bas = KAZIYICI.indexOf('def kurumsal_html(');
+  const fn = KAZIYICI.slice(bas, KAZIYICI.indexOf('\ndef ', bas + 1));
   /* 401/403/429 görünce dönülüyor: başka yol denenmiyor, tekrar
      döngüsüne girilmiyor. */
   const dalSayisi = (fn.match(/status_code in \{401, 403, 429\}/g) || []).length;
@@ -247,6 +251,13 @@ test('erişim engeli aşılmıyor, kaynak bırakılıyor', () => {
   /* Üçüncü tarafın sunucusuna saygı: sıralı istek, bekleme, üst sınır. */
   assert.match(fn, /time\.sleep\(float\(config\.get\("crawl_delay_seconds"\)/);
   assert.match(fn, /adresler\[:ust_sinir\]/);
+
+  /* Açıklığı belirsiz ilan sayfası adaptörü de aynı kurala tabi:
+     engelde bırakıyor, istekler arasında bekliyor. */
+  const belirsizBas = KAZIYICI.indexOf('def resmi_ilan_sayfasi(');
+  const belirsiz = KAZIYICI.slice(belirsizBas, KAZIYICI.indexOf('\ndef ', belirsizBas + 1));
+  assert.match(belirsiz, /status_code in \{401, 403, 429\}/);
+  assert.match(belirsiz, /time\.sleep\(float\(config\.get\("crawl_delay_seconds"\)/);
 });
 
 test('yeni kaynak mevcut global kaynakları bozmuyor', () => {

@@ -252,10 +252,22 @@ function yayinTarihi(govde) {
 
 const kuru = process.argv.includes('--kuru');
 
+/*
+  HANGİ İLANLAR GEZİLİYOR
+
+  Yayındakiler ve kapanmış olanlar (geri açılabilir). Buna ek olarak
+  AÇIKLIĞI DOĞRULANMAMIŞ TASLAKLAR: kaynak sayfası duran ama açık olduğu
+  kanıtlanamayan ilanlar `status='draft'`, `origin='scraped'` olarak
+  kaydediliyor (automation/promote.py). Gezilmeselerdi envanterde sessizce
+  eskirlerdi; asıl soruları — "sayfa hâlâ duruyor mu" — yanıtsız kalırdı.
+
+  İşveren taslakları (origin='employer') KAPSAM DIŞI: onlar yönetici
+  onayını bekleyen kayıtlar, tarama otomasyonunun işi değil.
+*/
 const { data: ilanlar, error } = await db
   .from('listings')
-  .select('id, title, apply_url, source_url, status, posted_at')
-  .in('status', ['published', 'closed']);
+  .select('id, title, apply_url, source_url, status, origin, posted_at')
+  .or('status.in.(published,closed),and(status.eq.draft,origin.eq.scraped)');
 if (error) {
   console.error('İlanlar okunamadı:', error.message);
   process.exit(1);
@@ -357,6 +369,12 @@ for (const ilan of ilanlar) {
 
           GERİ ALMA YALNIZ KANIT VARSA: eskiden 200 yeterliydi, yani
           kariyer sayfası cevap veren her kapanmış ilan yayına dönüyordu.
+        */
+        /*
+          TASLAK KANIT BULUNSA DA YAYINA ÇIKMIYOR: başlığın sayfada
+          geçmesi "ilan açık" demek değil; bu ilanların açıklığı zaten
+          kanıtlanamadığı için taslakta duruyorlar. Yalnız `source_status`
+          ilerliyor.
         */
         if (ilan.status === 'closed') guncelleme.status = 'published';
 
