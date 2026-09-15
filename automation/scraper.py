@@ -13,7 +13,7 @@ from dataclasses import dataclass, replace
 from html import unescape
 from html.parser import HTMLParser
 from typing import Any, Iterable
-from urllib.parse import urljoin, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
 import feedparser, requests
 from country_normalization import location_country_signals, structured_country_code
 from translation import translate_text, translate_title
@@ -43,10 +43,36 @@ class Job:
     aciklik_dogrulanmadi: bool = False
 
 def clean(text: str) -> str: return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", unescape(text))).strip()
+# TIKLAMA İZİ PARAMETRELERİ
+#
+# Bunlar ilanı değil, ziyaretin nereden geldiğini anlatıyor; kimliğin
+# parçası değiller ve atılıyorlar. LİSTE KAPALI: tanımadığımız bir
+# parametre KİMLİK SAYILIYOR. Ters tercih (her şeyi at) ölçülmüş zarar
+# verdi — Porsche'nin dört ayrı ilanı tek kayda düşüyordu.
+TAKIP_PARAMETRELERI = {
+    "utm", "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
+    "fbclid", "gclid", "msclkid", "yclid", "igshid", "mc_cid", "mc_eid",
+}
+
 def canonical(url: str) -> str:
+    """Adresin kimliği: şema + alan adı + yol + KİMLİK TAŞIYAN sorgu.
+
+    Sorgu dizesi tümüyle atılıyordu. Ölçüldü (15 Eylül 2026, üretim):
+    `jobs.porsche.com/index.php?ac=jobad&id=...` biçimindeki dört ilan
+    tek kimliğe düştü ve birbirinin üzerine yazdı ("bulunan=4 yeni=1
+    güncel=3"). Aynı tuzak Greenhouse'un `?gh_jid=` adreslerinde de var:
+    yolun tek başına ilanı ayırt etmediği kaynaklar yaygın.
+
+    Parametreler sıralanıyor: aynı ilanın adresi farklı sırayla gelse de
+    kimliği değişmiyor.
+    """
     p = urlsplit(url)
     if p.scheme.lower() not in {"http", "https"} or not p.netloc: raise ValueError("unsafe or malformed URL")
-    return urlunsplit((p.scheme.lower(), p.netloc.lower(), p.path.rstrip("/"), "", ""))
+    kimlik = sorted(
+        (ad, deger) for ad, deger in parse_qsl(p.query, keep_blank_values=True)
+        if ad.casefold() not in TAKIP_PARAMETRELERI
+    )
+    return urlunsplit((p.scheme.lower(), p.netloc.lower(), p.path.rstrip("/"), urlencode(kimlik), ""))
 def key(job: Job) -> str: return hashlib.sha256(f"{job.source_name}|{canonical(job.source_url)}".encode()).hexdigest()
 def mode(text: str) -> str | None:
     text = text.casefold()
