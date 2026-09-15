@@ -493,6 +493,45 @@
       "job_url_pattern": "kariyer\\.garantibbva\\.com\\.tr/ilan/R\\d+/\\d+/",
       "crawl_delay_seconds": 2,
       "max_jobs": 25
+    },
+    {
+      "id": "kantar-media-workday",
+      "name": "Kantar Media Türkiye",
+      "type": "workday",
+      "host": "adgbl.wd502.myworkdayjobs.com",
+      "tenant": "adgbl",
+      "site": "Fifty5Blue",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Kantar Media",
+      "careers_url": "https://adgbl.wd502.myworkdayjobs.com/Fifty5Blue",
+      "website": "kantar.com"
+    },
+    {
+      "id": "veralto-official-jsonld",
+      "name": "Veralto Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Veralto Global",
+      "careers_url": "https://jobs.veralto.com/global/en",
+      "website": "https://www.veralto.com",
+      "urls": [
+        "https://jobs.veralto.com/global/en/job/DANVGTGLOBALR10268207EXTERNALENGLOBAL/Part-time-Inside-Sales-Intern"
+      ]
+    },
+    {
+      "id": "bat-official-jsonld",
+      "name": "BAT Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "British American Tobacco",
+      "careers_url": "https://careers.bat.com/en",
+      "website": "https://www.bat.com",
+      "urls": [
+        "https://careers.bat.com/en/job/-/-/1045/44671289984"
+      ]
     }
   ],
   "notes": "Only add verified public ATS/API endpoints. Keep credentials in environment variables, never here."

@@ -423,6 +423,24 @@ def workable(config: dict[str, Any]) -> Iterable[Job]:
         if not is_turkey_location(location) or not is_early_career(title, description): continue
         yield Job(config["name"], item["url"], title, config.get("organization_name") or config.get("company_name"), city_of(locations), mode(str(item.get("workplace_type", ""))), description, email(description))
 
+def workday_ilan_adresi(host: str, site: str, path: str) -> str:
+    """Workday ilanının herkese açık adresi.
+
+    GERÇEK CXS YANITINDA `externalPath` SİTEYİ TAŞIMIYOR. Ölçüldü
+    (15 Eylül 2026): `/job/Istanbul-Baglar-Street/..._R100607`. Eskiden
+    `https://{host}{path}` diye birleştiriliyordu ve adres 404 veriyordu;
+    site parçasıyla aynı adres 200. Canlı zarar: AstraZeneca R-259544
+    Workday API'sine göre AÇIK iken bağlantı kontrolü 404 görüp ilanı
+    kapatmıştı.
+
+    Yol site parçasını zaten taşıyorsa (`/Careers/job/...` ya da
+    `/en-US/Careers/job/...`) ikinci kez eklenmiyor.
+    """
+    parcalar = [p for p in path.split("/") if p]
+    if site in parcalar[:2]:
+        return f"https://{host}{path}"
+    return f"https://{host}/{site}{path}"
+
 def workday(config: dict[str, Any]) -> Iterable[Job]:
     """Public Workday CXS search; bounded pagination and no company-specific DOM parsing."""
     host, tenant, site = config["host"], config["tenant"], config["site"]
@@ -434,7 +452,7 @@ def workday(config: dict[str, Any]) -> Iterable[Job]:
         for item in postings:
             title=clean(item.get("title", "")); location=item.get("locationsText") or ""; path=item.get("externalPath")
             if not path or not is_turkey_location(location) or not is_early_career(title, ""): continue
-            yield Job(config["name"], f"https://{host}{path}", title, config.get("company_name"), location, mode(item.get("timeType", "")), "")
+            yield Job(config["name"], workday_ilan_adresi(host, site, path), title, config.get("company_name"), location, mode(item.get("timeType", "")), "")
         if len(postings) < 20: break
 
 def smartrecruiters(config: dict[str, Any]) -> Iterable[Job]:
