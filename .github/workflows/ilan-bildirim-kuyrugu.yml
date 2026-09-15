@@ -68,3 +68,10 @@ jobs:
 
       - name: Kuyruğu işle
         run: node scripts/ilan-bildirim-kuyrugu.mjs ${{ inputs.kuru && '--kuru' || '' }}
+
+      # İkinci bir zamanlama sistemi kurulmadı: ilan onay/ret kararının
+      # şirkete e-postası aynı saatlik işin ikinci adımı. Alıcı sabit bir
+      # sır değil, RPC'nin döndürdüğü şirket üyesi e-postası; bu yüzden
+      # ILAN_BILDIRIM_ALICI'ya ihtiyacı yok.
+      - name: Karar bildirimlerini işle
+        run: node scripts/ilan-karar-bildirimi-kuyrugu.mjs ${{ inputs.kuru && '--kuru' || '' }}

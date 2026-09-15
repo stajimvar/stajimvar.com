@@ -211,12 +211,18 @@ export const IlanFormu: React.FC<{
             listesinde görünüyor" diyordu. O dal artık hiç
             çalışmıyor: yayına alma yalnızca yöneticide. İki dalı
             bırakmak, çalışmayan bir yolu ekranda tutmak olurdu.
+
+            Karar artık iki kanaldan geliyor ama ikisi de aynı
+            `ilan_incele` çağrısına bağlı: RPC panele yazdığı anda
+            aynı satırdan kuyruğa da düşüyor (bkz. scripts/
+            ilan-karar-bildirimi-kuyrugu.mjs). Tek doğru kaynak
+            bozulmuyor, sadece o kaynağın iki çıkışı var.
           */}
           Her ilan yayına alınmadan önce bizde inceleniyor — şirketin
           doğrulanmış olması bu adımı atlatmıyor. Genellikle bir iş günü
-          içinde sonuçlandırıyoruz. Sonucu şirket panelinde göreceksin:
-          onaylanırsa ilan yayına çıkar, reddedilirse taslakta kalır ve
-          nedeni ilanın altına yazılır.
+          içinde sonuçlandırıyoruz. Sonucu e-posta ile ve şirket
+          panelinde göreceksin: onaylanırsa ilan yayına çıkar,
+          reddedilirse taslakta kalır ve nedeni ilanın altına yazılır.
         </p>
 
         {sonuc.yayinda && (
