@@ -1293,6 +1293,33 @@ async function main() {
     !(f.application_deadline && new Date(f.application_deadline).getTime() < Date.now());
 
   /**
+   * DETAY SAYFASININ <title> METNİ — KURUM ADINI İKİ KEZ YAZMIYOR
+   *
+   * Şablon `${title} — ${organization_name} | StajımVar` idi ve kayıtların
+   * çoğunda başlık kurumun adını ZATEN taşıyor. Ölçüldü (canlı,
+   * 15 Eylül 2026): yayındaki 112 kaydın **47'sinde** kurum adı başlığın
+   * içinde geçiyor, yani ek tamamen tekrar:
+   *
+   *   "Erciyes Organ Nakli Vakfı Bursu — Erciyes Organ Nakli Vakfı | StajımVar"
+   *
+   * Aynı ölçümde 112 başlığın **71'i 60 karakteri aşıyor** (ortalama 65),
+   * yani arama sonucunda kırpılıyor. Tekrarı atmak, kırpılan yerde
+   * ayırt edici bilgiye yer açıyor.
+   *
+   * Kurum adı başlıkta GEÇMİYORSA ek korunuyor: orada gerçekten yeni
+   * bilgi taşıyor (65 kayıt bu durumda).
+   *
+   * Karşılaştırma Türkçe küçük harfle: "İ" ile "i" ayrımı yapılmazsa
+   * "İhsan Arslan Vakfı" gibi kayıtlarda tekrar yakalanamazdı.
+   */
+  const firsatBasligi = (f) => {
+    const kurum = (f.organization_name || '').trim();
+    if (!kurum) return f.title;
+    const kucuk = (s) => s.toLocaleLowerCase('tr-TR');
+    return kucuk(f.title).includes(kucuk(kurum)) ? f.title : `${f.title} — ${kurum}`;
+  };
+
+  /**
    * Bir kategorinin fırsat listesi — GERÇEK KAYITLAR, UYDURMA YOK.
    *
    * Satırda yalnız veritabanında DOLU olan alanlar yazılıyor:
@@ -1773,7 +1800,7 @@ async function main() {
 
     sayfaYaz(`/firsatlar/${f.slug}`, {
       gorsel: `/og/firsat-${f.slug}.png`,
-      baslik: `${f.title} — ${f.organization_name} | StajımVar`,
+      baslik: `${firsatBasligi(f)} | StajımVar`,
       aciklama: ozetle(f.short_description || ''),
       govde: govde(f.title, f.short_description || '', [f.organization_name, f.application_deadline && `Son başvuru: ${f.application_deadline.slice(0, 10)}`].filter(Boolean)),
     });
