@@ -131,7 +131,11 @@ test('kategori kuralı PAYLAŞILAN modülden; ikinci tablo yok', () => {
     kayıt gösterebilirdi.
   */
   const betik = oku('scripts/onrender.mjs');
-  assert.match(betik, /const \{ firsatKategorisi, yurtDisiFirsatMi \} = await icerikDerle\(/);
+  /* `firsatDurumu` de aynı modülden: tarih kuralı da paylaşılıyor. */
+  assert.match(
+    betik,
+    /const \{ firsatKategorisi, yurtDisiFirsatMi, firsatDurumu \} = await icerikDerle\(/
+  );
   assert.match(betik, /'firsat-kategori'/);
   /* /kyk'nin tür süzgeci arayüzdekiyle aynı alanı karşılaştırıyor. */
   assert.match(betik, /f\.opportunity_type === tur/);
@@ -161,7 +165,11 @@ test('BÖLGE SÜZGECİ ARAYÜZLE AYNI FONKSİYONDAN', () => {
   assert.match(sayfa, /yurtDisiFirsatMi,/);
 
   const betik = oku('scripts/onrender.mjs');
-  assert.match(betik, /const \{ firsatKategorisi, yurtDisiFirsatMi \} = await icerikDerle\(/);
+  /* `firsatDurumu` de aynı modülden: tarih kuralı da paylaşılıyor. */
+  assert.match(
+    betik,
+    /const \{ firsatKategorisi, yurtDisiFirsatMi, firsatDurumu \} = await icerikDerle\(/
+  );
   assert.match(betik, /bolge === 'yurtdisi' \? yurtDisiFirsatMi\(f\) : true/);
 
   /*

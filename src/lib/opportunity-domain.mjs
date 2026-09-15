@@ -73,9 +73,47 @@ export function opportunityCta(item, now = new Date()) {
   return null;
 }
 
+/**
+ * Kaynak bir GÜN mü verdi, gerçek bir AN mı?
+ *
+ * "2026-09-15" açıkça gün. Ama veritabanı aynı bilgiyi
+ * `2026-09-15T00:00:00+00:00` olarak döndürüyor ve bu, saat bileşeni
+ * varmış gibi görünüyor. ÖLÇÜLDÜ (canlı, 15 Eylül 2026): tarihi olan 38
+ * fırsat kaydının 38'i de tam `00:00:00 UTC`; anlamlı saat taşıyan kayıt
+ * YOK. Yani gece yarısı damgası, kaynağın verdiği GÜNÜN taşıyıcısı.
+ *
+ * Gerçek saat taşıyan bir değer gelirse (örn. `23:59:59`) damga
+ * karşılaştırması korunuyor — o durumda saat gerçekten bilgi.
+ */
+function gunSemantigiTasiyor(value) {
+  if (isDateOnly(value)) return true;
+  const d = value instanceof Date ? value : new Date(value);
+  if (!Number.isFinite(d.getTime())) return false;
+  return (
+    d.getUTCHours() === 0 &&
+    d.getUTCMinutes() === 0 &&
+    d.getUTCSeconds() === 0 &&
+    d.getUTCMilliseconds() === 0
+  );
+}
+
+/**
+ * SON BAŞVURU GÜNÜ DAHİL AÇIK
+ *
+ * Gün semantiği taşıyan değerde Türkiye takvim günü karşılaştırılıyor —
+ * `firsatDurumu` ile aynı ölçüt. Eskiden yalnız "2026-09-15" biçimi bu
+ * dala giriyordu; veritabanı tam damga döndürdüğü için kayıtlar damga
+ * dalına düşüyor ve KENDİ SON GÜNLERİNİN sabahında (TRT 03:00) kapanmış
+ * sayılıyordu.
+ *
+ * Bunun görünür sonucu ölçüldü: son başvurusu BUGÜN olan bir kayıtta
+ * rozet "Kapalı" ve "Başvuru dönemi kapandı" yazarken, aynı ekranda
+ * başvuru düğmesi açık duruyordu — `firsatDurumu` doğru, bu yanlış
+ * hesaplıyordu.
+ */
 export function isExpiredOpportunity(opportunity, now = new Date()) {
   if (!opportunity.applicationDeadline) return false;
-  if (isDateOnly(opportunity.applicationDeadline)) {
+  if (gunSemantigiTasiyor(opportunity.applicationDeadline)) {
     const deadlineDay = calendarDay(opportunity.applicationDeadline);
     const currentDay = calendarDay(now);
     return deadlineDay != null && currentDay != null && deadlineDay < currentDay;
