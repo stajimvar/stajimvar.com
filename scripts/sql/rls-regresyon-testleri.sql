@@ -733,6 +733,32 @@ select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
   $q$select public.ilan_incele('22222222-aaaa-4000-8000-000000000002', 'onayla', null)$q$),
   'Sirket uyesi ilan_incele cagiramaz');
 
+-- KARAR BILDIRIM KUYRUGU (20261010010000): ilan_incele HER kararda
+-- kuyrugu sifirliyor ve kuyruk RPC'leri de is_admin() gibi service_role'e
+-- kapali -- burada dogrudan REVOKE ile kapali, sirket uyesi cagiramaz.
+--
+-- Kolon dogrudan service_role ile okunuyor: authenticated'a bu dort
+-- kolona SELECT hic verilmedi (client'in ihtiyaci yok), o yuzden 'a'
+-- rolunden okumak 42501 verir -- bu RLS ihlali degil, tasarim.
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+select pg_temp.bekle(
+  (select karar_bildirim_at is null from public.listings
+    where id = '22222222-aaaa-4000-8000-000000000002'::uuid),
+  'Onaylanan ilan karar bildirim kuyruguna girdi (karar_bildirim_at null)');
+
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$select public.ilan_karar_bildirimi_kuyruktan_al(10, 10)$q$),
+  'Sirket uyesi karar bildirim kuyrugunu cekemez');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$select public.ilan_karar_bildirimi_kuyruk_isaretle('22222222-aaaa-4000-8000-000000000002', true, null)$q$),
+  'Sirket uyesi karar bildirimini isaretleyemez');
+
 reset role;
 select set_config('request.jwt.claims',
   (select json_build_object('sub', c::text, 'role', 'authenticated')::text from k), true);

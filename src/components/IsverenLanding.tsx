@@ -339,7 +339,8 @@ export const IsverenLanding: React.FC<{
         <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-gray-700">
           Hesap açmak bir dakika, ilan girmek iki dakika sürüyor. İlanı
           gönderdikten sonra biz inceliyoruz; onaylanınca öğrenci listesinde
-          görünüyor. Sonucu şirket panelinizde görüyorsunuz.
+          görünüyor. Sonucu hesap sahibi e-postanıza ve şirket
+          panelinize düşüyor.
         </p>
         {/*
           İKİ EYLEM ALTTA DA YAN YANA

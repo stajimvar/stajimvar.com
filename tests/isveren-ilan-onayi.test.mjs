@@ -139,20 +139,21 @@ test('RLS regresyonu yeni kuralı ölçüyor', () => {
 
 /* ------------------------------------------ 6. VERİLMEYEN SÖZ YOK */
 
-test('karar için e-posta sözü verilmiyor', () => {
+test('karar e-postayla ve panelde bildiriliyor', () => {
   /*
-    E-posta altyapısı (Resend + kuyruk) var ama ilan KARARI için bağlı
-    bir yol yok. Arayüz "kararı e-postayla yazıyoruz" diyordu; bağlı
-    olmayan bir davranışı söz vermek, kullanıcıyı bekletmek olur.
-    Söylenen tek şey panelde görüneceği — o gerçekten çalışıyor.
+    20261010010000_ilan_karar_bildirimi.sql ile `ilan_incele` kararı
+    aynı çağrıda bildirim kuyruğuna yazıyor ve saatlik iş (scripts/
+    ilan-karar-bildirimi-kuyrugu.mjs) onu şirketin hesap sahibi
+    üyesinin profil e-postasına gönderiyor. Artık bağlı bir davranış
+    olduğu için arayüz de bunu söylüyor olmalı — söylemezse gerçek
+    kanalı gizlemiş olur.
   */
-  for (const dosya of ['src/sirket/IlanFormu.tsx', 'src/components/IsverenLanding.tsx']) {
-    const kod = tsYorumsuz(oku(dosya));
-    assert.ok(
-      !/e-postayla (yazıyoruz|yazacağız|bildiriyoruz)/i.test(kod),
-      `${dosya}: bağlanmamış e-posta sözü olmamalı`
-    );
-  }
+  const formKod = tsYorumsuz(oku('src/sirket/IlanFormu.tsx'));
+  assert.match(formKod, /Sonucu e-posta ile ve şirket\s+panelinde göreceksin/);
+
+  const landingKod = tsYorumsuz(oku('src/components/IsverenLanding.tsx'));
+  assert.match(landingKod, /Sonucu hesap sahibi e-postanıza ve şirket\s+panelinize düşüyor/);
+
   assert.match(tsYorumsuz(oku('src/sirket/SirketPaneli.tsx')), /İnceleme notu/);
 });
 
