@@ -113,12 +113,14 @@ test('null hiçbir ekranda "Ücretsiz" görünmüyor', () => {
     söyleyebilir: false → "Ücretsiz". Değişmeyen kural, NULL'un rozet
     üretmemesi — üçlü `&&` null'u false gibi gösterirdi.
   */
-  assert.match(KART, /listing\.stipend\.isPaid === true && \(/);
-  assert.match(KART, /listing\.stipend\.isPaid === false && \(/);
-  assert.ok(
-    !/\{listing\.stipend\.isPaid && \(/.test(KART),
-    'null ücret rozet üretmemeli'
-  );
+  /*
+    KART TEK TİPE İNDİ (onaylanan tasarım): ücret rozeti karttan kalktı
+    ve kararın tamamı detay sayfasında, ortak `lib/staj-turu` ile
+    veriliyor. Kartta hiç çizilmediği için null'u "Ücretsiz" gösterme
+    ihtimali de yok — kontrol bunu bağlıyor.
+  */
+  assert.ok(!/stipend\.isPaid/.test(KART), 'kart ücret rozeti taşımıyor');
+  assert.match(DETAY, /ucretMetni && \(/);
 });
 
 test('ürün tipi üç değeri taşıyor', () => {

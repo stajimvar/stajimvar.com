@@ -23,6 +23,9 @@ const oku = (y) => readFileSync(new URL(`../${y}`, import.meta.url), 'utf8');
 const yorumsuz = (m) => m.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
 
 const KART = oku('src/components/InternshipCard.tsx');
+/* Kart tek tipe indi (onaylanan tasarım): ücret, sigorta ve staj türü
+   artık ilan DETAY sayfasında. Kararlar yine lib/staj-turu'da. */
+const ILAN_DETAYI = oku('src/components/ListingPage.tsx');
 const TOKEN = oku('src/ui/tokens.ts');
 const MAPPER = oku('src/lib/queries/mappers.ts');
 const TIPLER = oku('src/types.ts');
@@ -33,23 +36,20 @@ test('ücret rozeti üç değeri ayırıyor', () => {
     için false hem "ücretsiz" hem "bilinmiyor" demekti. Göç
     20261001010000'dan beri ayrım veride var.
   */
-  assert.match(KART, /listing\.stipend\.isPaid === true && \(/);
-  assert.match(KART, /listing\.stipend\.isPaid === false && \(/);
-  assert.match(KART, /<span>Ücretsiz<\/span>/);
-  /* Doğruluk testi: üçlü `&&` geri gelmesin — null'u false gibi
-     gösterirdi. */
-  const kod = yorumsuz(KART);
-  assert.ok(
-    !/\{listing\.stipend\.isPaid && \(/.test(kod),
-    'null ücret rozet üretmemeli'
-  );
+  /* Kartta ücret rozeti YOK (tek tip kart); karar detay sayfasında ve
+     ortak dosyada. Üç değer ayrımı burada gerçekten çalıştırılıyor. */
+  assert.ok(!/stipend\.isPaid/.test(yorumsuz(KART)), 'kart ücret rozeti taşımıyor');
+  assert.match(ILAN_DETAYI, /ucretMetni && \(/);
+  assert.equal(ucretMetniHesapla({ isPaid: false }), 'Ücretsiz');
+  assert.equal(ucretMetniHesapla({ isPaid: null }), null, 'bilinmeyen ücret metin üretmiyor');
 });
 
 test('sigorta sağlayanı yalnız biliniyorsa görünüyor', () => {
-  assert.match(KART, /\{listing\.insuranceProvider && \(/);
-  assert.match(KART, /SIGORTA_ETIKET\[listing\.insuranceProvider\]/);
-  /* "yok" gösteriliyor (kaynağın açık beyanı), `undefined` gösterilmiyor. */
-  assert.match(KART, /yok: 'Sigorta yok'/);
+  /* Sigorta kartta değil, detayda: kart tek tip. */
+  assert.ok(!/insuranceProvider/.test(yorumsuz(KART)), 'kart sigorta rozeti taşımıyor');
+  assert.match(ILAN_DETAYI, /sigorta && \(/);
+  assert.equal(sigortaMetni('yok'), 'Sigorta yok');
+  assert.equal(sigortaMetni(undefined), null, 'bilinmeyen sağlayıcı metin üretmiyor');
   /* Tanınmayan değer `undefined`a düşüyor: uydurma etiket yok. */
   assert.match(MAPPER, /SIGORTA_SAGLAYICILARI\.includes\(/);
   assert.match(TIPLER, /insuranceProvider\?: 'isveren' \| 'universite' \| 'aday' \| 'yok';/);
@@ -93,7 +93,8 @@ test('zorunlu ve gönüllü birlikte true olduğunda ikisi de kaybolmuyor', () =
   );
   assert.deepEqual(stajTuruSatirlari({}), []);
   /* Kart tek kompakt rozet çiziyor. */
-  assert.match(KART, /\{stajTuruRozeti\(listing\)\}/);
+  /* Rozet kartta değil; kural ortak dosyada ve yukarıda çalıştırıldı. */
+  assert.match(ILAN_DETAYI, /stajTuru\.map\(/);
 });
 
 test('doğrulama bilgisi source_verified_at üzerinden', () => {
@@ -104,7 +105,8 @@ test('doğrulama bilgisi source_verified_at üzerinden', () => {
     gösteriyor — mapper `lastSeenAt`i o kolondan besliyor.
   */
   assert.match(MAPPER, /lastSeenAt: row\.source_verified_at \?\? undefined/);
-  assert.match(KART, /sonKontrolMetni\(listing\.lastSeenAt\)/);
+  /* Son kontrol kartta değil, ilan sayfasında: kart tek tip. */
+  assert.match(ILAN_DETAYI, /lastSeenAt/);
   /* `source_checked_at` arayüze HİÇ geçmiyor: ilerlemiş bir kontrol
      doğrulama gibi sunulmasın. */
   assert.ok(!/source_checked_at/.test(MAPPER), 'checked alanı ürün modeline girmemeli');
@@ -134,29 +136,20 @@ test('mobil düzen: tam genişlik, köşesiz, gölgesiz, 1 px ayırıcı', () =>
   assert.match(KART, /rounded-2xl border border-gray-200 p-3\.5 hover:border-blue-500 hover:shadow-xs sm:p-4\.5/);
 });
 
-test('rozetler sarıyor, metin kırpılmıyor', () => {
+test('kart tek tip: ilana göre değişen rozet yığını yok', () => {
   /*
-    İlk hâlde dilimi `match.isScorable`dan başlatmıştım ve içine
-    şirket sektörü satırı giriyordu — o satır `truncate` kullanıyor ve
-    orada DOĞRU. Kontrol rozetlerin kendisine daraltıldı.
+    Kartta "%N uyum", "Eksik: <beceri>", "Son kontrol", yayın tarihi,
+    süre, ücret ve sigorta rozetleri vardı; her ilanda farklı sayıda
+    çip çıkıyor, aynı listedeki kartlar birbirine benzemiyordu.
+    Onaylanan tasarımda kart tek tip: şirket, pozisyon, konum, kaynak.
   */
-  const rozetler = [
-    'stajTuruRozeti(listing)',
-    'Ücretsiz',
-    'SIGORTA_ETIKET[listing.insuranceProvider]',
-  ];
-  for (const r of rozetler) {
-    const i = KART.indexOf(r);
-    assert.ok(i > 0, `rozet bulunamadı: ${r}`);
-    /* Rozetin kendi <span>'ında kırpma yok. */
-    const span = KART.slice(KART.lastIndexOf('<span', i), i);
-    assert.ok(!/truncate|line-clamp/.test(span), `rozet kırpılmamalı: ${r}`);
+  const kod = yorumsuz(KART);
+  for (const kalinti of ['Eksik:', 'sonKontrolMetni', 'SIGORTA_ETIKET', 'stipend.isPaid']) {
+    assert.ok(!kod.includes(kalinti), `kartta kalmamalı: ${kalinti}`);
   }
-  /*
-    Şerit sarıyor: rozetler tek satıra zorlanmıyor. Izgara hücresi
-    olduğu için sınıf `flex min-w-0 flex-wrap items-center` sırasında.
-  */
-  assert.match(KART, /flex min-w-0 flex-wrap items-center gap-1\.5 text-xs/);
+  /* Kaynak çipi KALIYOR: her ilanda var ve başvurunun nereye gittiğini
+     söylüyor. */
+  assert.match(KART, /ILAN_KAYNAGI\.dis\.etiket/);
 });
 
 test('başvuru yöntemine göre ana düğme', () => {

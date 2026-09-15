@@ -18,7 +18,6 @@ import { listingSlug } from '../lib/slug';
 import { SIRKET_KENAR_GUCLU, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import { UlkeRozeti } from './UlkeRozeti';
-import { eklenmeMetni, sonKontrolMetni, uzunSuredirAcik } from '../lib/zaman';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { ILAN_KAYNAGI } from '../lib/urun-metni';
 import { CTA_BASARI, CTA_BIRINCIL, CTA_ORTAK } from '../lib/kart-cta';
@@ -28,7 +27,6 @@ import { YUZEY } from '../ui/tokens';
   Staj türü kararı ayrı dosyada: kart ve detay AYNI kuralı kullanıyor
   ve kural React ağacı kurmadan sınanabiliyor.
 */
-import { stajTuruRozeti } from '../lib/staj-turu.mjs';
 
 /**
  * SİGORTAYI SAĞLAYAN TARAFIN OKUNABİLİR ADI.
@@ -37,15 +35,6 @@ import { stajTuruRozeti } from '../lib/staj-turu.mjs';
  * bir bilgi. Gösterilmeyen tek hâl `undefined` — kaynağın hiç
  * konuşmadığı hâl.
  */
-const SIGORTA_ETIKET: Record<
-  NonNullable<InternshipListing['insuranceProvider']>,
-  string
-> = {
-  isveren: 'Sigorta: işveren',
-  universite: 'Sigorta: üniversite',
-  aday: 'Sigorta: aday',
-  yok: 'Sigorta yok',
-};
 
 /*
   ALT CTA GEOMETRİSİ — TEK AİLE
@@ -270,17 +259,16 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             kaymıyor.
           */}
           <div
-            className="rounded-full p-[3px]"
-            style={{
-              background: match.isScorable
-                ? `conic-gradient(${halkaRengi} ${match.overallScore * 3.6}deg, #e5e7eb ${match.overallScore * 3.6}deg)`
-                : 'transparent',
-            }}
-            title={
-              match.isScorable
-                ? `%${match.overallScore} uyum — ${match.summaryInsight}`
-                : listing.companyName
-            }
+            /*
+              UYUM HALKASI KALDIRILDI
+
+              Logonun etrafındaki renkli halka ilana göre değişiyordu ve
+              kartı tek tip olmaktan çıkarıyordu; üstelik "bu logo neden
+              yeşil/sarı" sorusunu kartın kendisi yanıtlamıyordu. Uyum
+              puanı ilan sayfasında duruyor.
+            */
+            className="rounded-xl"
+            title={listing.companyName}
           >
             <div className="rounded-full bg-white p-[2px]">
               {/*
@@ -497,115 +485,22 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             )}
           </p>
 
-          {/* Satır 4: rozetler — yalnız ayırt edici özellikler */}
+          {/*
+            SATIR 4: TEK TİP KÜNYE — YALNIZ KAYNAK
+
+            Burada ilana göre değişen bir rozet yığını vardı: "%N uyum",
+            "Eksik: <beceri>", "Son kontrol: bugün", "dün yayınlandı",
+            süre, ücret, ülke, zorunlu/gönüllü... Kartlar birbirine
+            benzemiyordu; aynı listede kimi kart iki, kimi kart beş çip
+            taşıyor, göz her kartta yeniden yer arıyordu.
+
+            Onaylanan tasarımda kart tek tip: şirket, pozisyon, konum ve
+            KAYNAK. Kaldırılan bilgiler silinmedi — hepsi ilan sayfasında
+            duruyor; doğrulama ve son kontrol de orada, kaynağıyla
+            birlikte. Kaynak çipi kartta kalıyor çünkü her ilanda var ve
+            başvurunun nereye gittiğini söylüyor.
+          */}
           <div className="col-span-3 col-start-1 row-start-4 flex min-w-0 flex-wrap items-center gap-1.5 text-xs sm:col-span-2 sm:col-start-2">
-            {/*
-              Uyum puanı telefonda buraya düşüyor: logonun altındaki
-              yüzde `sm:` altında gizli, çünkü orada ilk satırı iki katına
-              çıkarıyordu. Halka hep duruyor, sayı burada.
-            */}
-            {/*
-              "%N uyum" YAZI ROZETİ KALDIRILDI (onaylanan tasarım)
-
-              Aynı sayı logonun etrafındaki halkada zaten duruyor ve
-              halka her ekranda çiziliyor; rozet onun telefona özel
-              kopyasıydı. Puan kaybolmadı — halkanın `title` metni ve
-              ilan sayfasındaki ayrıntı yerinde.
-            */}
-
-            {/*
-              STAJ TÜRÜ — İKİSİ BİRBİRİNİ DIŞLAMIYOR
-
-              Önce gönüllü rozetini yalnız zorunlu YOKKEN çiziyordum ve
-              bu bir kusurdu: ölçüldü, üretimde 122 ilanda ikisi de
-              true. "Zorunlu var" diye gönüllü bilgisini gizlemek,
-              gönüllü staj arayan öğrenciye uygun ilanı saklamaktı.
-
-              Dört hâl, dördü ayrı:
-                ikisi true   → tek kompakt rozet "Zorunlu ve gönüllü"
-                yalnız biri  → o rozet
-                açık RET     → "kabul etmiyor" (false GERÇEK bilgi)
-                ikisi null   → rozet YOK
-            */}
-            {stajTuruRozeti(listing) && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600"/>
-                <span>{stajTuruRozeti(listing)}</span>
-              </span>
-            )}
-
-            {/*
-              ÜCRET — ÜÇ DEĞER, ÜÇ DAVRANIŞ
-
-                true  → tutar varsa tutar, yoksa "Ücretli"
-                false → "Ücretsiz" (kaynağın AÇIK beyanı)
-                null  → rozet YOK
-
-              Önce `isPaid &&` yazıyordu: sütun `not null default false`
-              olduğu için false hem "ücretsiz" hem "bilinmiyor"
-              anlamına geliyordu ve yalnız pozitif bilgi
-              gösterilebiliyordu. Göç 20261001010000'dan beri ayrım
-              veride var (ölçüldü: üretimde 168 null, 7 true, 0 false).
-            */}
-            {listing.stipend.isPaid === true && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 font-semibold border border-amber-200">
-                <DollarSign className="w-3.5 h-3.5 text-amber-600"/>
-                <span>{listing.stipend.amountText?.split('+')[0] || 'Ücretli'}</span>
-              </span>
-            )}
-            {listing.stipend.isPaid === false && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-50 text-gray-700 font-semibold border border-gray-200">
-                <DollarSign className="w-3.5 h-3.5 text-gray-500"/>
-                <span>Ücretsiz</span>
-              </span>
-            )}
-
-            {/*
-              SİGORTAYI SAĞLAYAN — YALNIZ BİLİNİYORSA
-
-              `undefined` (kaynak söylemiyor) rozet üretmiyor.
-              Bilinmeyen sigortayı "sigortasız" göstermek, zorunlu staj
-              arayan öğrenci için yanlış bilgi olurdu.
-            */}
-            {listing.insuranceProvider && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-50 text-gray-700 font-semibold border border-gray-200">
-                <ShieldCheck className="w-3.5 h-3.5 text-gray-500"/>
-                <span>{SIGORTA_ETIKET[listing.insuranceProvider]}</span>
-              </span>
-            )}
-
-            {/* Matched Skills */}
-            {match.matchedRequiredSkills.slice(0, 3).map((skill) => (
-              <span
-                key={skill}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50/80 text-emerald-800 border border-emerald-200/80"
-              >
-                <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0"/>
-                <span>{skill}</span>
-              </span>
-            ))}
-
-            {/*
-              KAYNAK ETİKETİ — İKİ TÜR, İKİ CÜMLE
-
-              Önce yalnızca derlenen ilanda "Kariyer sayfasından" yazıyordu;
-              şirketin buraya kendi açtığı ilanda hiçbir şey yazmıyordu. İki
-              tür kart yan yana duruyor ve ikisinin başvuru yolu farklı —
-              öğrenci düğmeye basmadan hangisinde olduğunu bilmiyordu.
-
-              Şirket adı satırındaydı ve orada kaydet düğmesiyle aynı sarma
-              satırını paylaşıyordu; ad uzayınca ikisinin sırası değişiyordu.
-              Buraya indi.
-
-              Şeridin BAŞINA değil SONUNA kondu: 375 pikselde bu çip tek
-              başına bir satır dolduruyor ve başta durduğunda konumu alt
-              satıra itiyordu (ölçüldü: konum çipi 131 pikselden başlıyordu).
-              Öğrencinin taradığı bilgi konum ve ücret; kaydın nereden
-              geldiği künye, o yüzden artakalan yere düşüyor.
-
-              Çip dili komşularıyla aynı, rengi nötr: bu bir kazanım değil
-              (ücret, zorunlu staj gibi), bir künye.
-            */}
             {kariyerSayfasindanIlan ? (
               <span
                 className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 font-medium text-gray-700"
@@ -614,86 +509,15 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                 <span>{ILAN_KAYNAGI.dis.etiket}</span>
               </span>
-            ) : sirketinKendiIlani ? (
+            ) : (
               <span
                 className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 font-medium text-gray-700"
                 title="Bu ilanı şirket doğrudan StajımVar'da yayımladı; başvuru burada tamamlanıyor"
               >
-                <Building2 className="w-3.5 h-3.5 text-emerald-600" />
+                <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
                 <span>{ILAN_KAYNAGI.ic.etiket}</span>
               </span>
-            ) : null}
-
-            {/*
-              Ne zaman eklendiği. Sıralamada "Önce Yeni Eklenenler" seçeneği
-              var; kartta karşılığı görünmezse kullanıcı sıralamanın işleyip
-              işlemediğini anlayamaz.
-
-              Yayın tarihi çok eski ama başvuru adresi yakın zamanda
-              doğrulanmışsa tarih yerine ne anlama geldiği yazılıyor:
-              "10 ay önce yayınlandı" listenin bakımsız olduğunu düşündürüyor,
-              oysa ilan gerçekten açık. Ayrıntısı src/lib/zaman.ts içinde.
-            */}
-            {uzunSuredirAcik(listing.postedAt, listing.postedAtDogrulandi, listing.lastSeenAt) ? (
-              <span
-                className="text-[11px] text-gray-600"
-                title={`İlk yayın: ${eklenmeMetni(listing.postedAt, listing.postedAtDogrulandi)}`}
-              >
-                Uzun süredir açık
-              </span>
-            ) : (
-              eklenmeMetni(listing.postedAt, listing.postedAtDogrulandi) && (
-                <span className="text-[11px] text-gray-600">
-                  {eklenmeMetni(listing.postedAt, listing.postedAtDogrulandi)}
-                </span>
-              )
             )}
-
-            {/*
-              SON KONTROL
-
-              "1 hafta önce eklendi" ilanın hâlâ açık olduğunu söylemiyor;
-              "bugün kontrol edildi" söylüyor. Sitenin en ayırt edici
-              iddiası bu ve görünmediği sürece iddia olarak kalıyor.
-
-              Tarih tazelenmezse metin de eskiyor — bu doğru davranış:
-              kaynaktan kalkan ilanın kaç gündür doğrulanmadığı görünmeli.
-            */}
-            {sonKontrolMetni(listing.lastSeenAt) && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
-                <ShieldCheck className="w-3 h-3" />
-                {sonKontrolMetni(listing.lastSeenAt)}
-              </span>
-            )}
-
-            {/*
-              Eksik beceri, sahip olunan becerilerle aynı biçimde çizilince
-              ikisi ayırt edilemiyordu. Başına "Eksik:" geldi.
-
-              GİRİŞ YAPMAMIŞ ZİYARETÇİYE "EKSİK" DENMEZ
-
-              Karşılaştırılacak bir profil yokken ilanın istediği her beceri
-              "eksik" sayılıyordu: hesabı olmayan ziyaretçi ilk kartta
-              "Eksik: React" görüyor ve kendisi hakkında bir yargı sanıyordu.
-              Oysa site onun hakkında hiçbir şey bilmiyor.
-
-              Aynı beceri artık ne olduğu olarak yazılıyor: ilanın istediği
-              bir beceri. Karşılaştırma ancak profil varken anlamlı.
-            */}
-            {match.missingRequiredSkills.slice(0, 1).map((skill) => (
-              <span
-                key={skill}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-gray-50 text-gray-600 border border-gray-200"
-                title={
-                  girisGerekli
-                    ? 'İlanın istediği becerilerden biri. Giriş yaparsan profilinle karşılaştırılıyor.'
-                    : 'İlanın istediği ama profilinde olmayan beceri'
-                }
-              >
-                <AlertCircle className="w-3 h-3 text-gray-500 shrink-0" />
-                <span>{girisGerekli ? `İlanda geçen: ${skill}` : `Eksik: ${skill}`}</span>
-              </span>
-            ))}
           </div>
       </div>
 
