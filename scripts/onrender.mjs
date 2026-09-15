@@ -535,11 +535,24 @@ async function rehberleriCiz() {
 
 /* ------------------------------------------------------- Supabase'ten ilanlar */
 
+/**
+ * YALNIZCA ANONİM ANAHTAR — bkz. `firsatlariGetir` ve `katalogTohumuGetir`.
+ *
+ * Servis anahtarı RLS'i atlıyor; herkese açık HTML üreten bir yol onu
+ * kullanırsa ziyaretçinin göremeyeceği bir satır sayfaya girebilir ya da
+ * statik HTML ile hidrasyon ayrışır. `envOku` `automation/.env`'i de
+ * okuyor ve orada servis anahtarı bulunabiliyor — yani bu, yerelde
+ * sessizce devreye giren bir fark.
+ *
+ * Kayıp yok, ölçüldü: `listings` okuma politikası
+ * `status='published' OR is_company_member(...)`; bu sorgu zaten
+ * `status=eq.published` süzüyor, yani anon aynı satırları görüyor.
+ */
 async function ilanlariGetir() {
   const urlAdres = envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL');
-  const anahtar = envOku('SUPABASE_SERVICE_ROLE_KEY') || envOku('VITE_SUPABASE_ANON_KEY');
+  const anahtar = envOku('VITE_SUPABASE_ANON_KEY');
   if (!urlAdres || !anahtar) {
-    console.log('  ilanlar atlandı (Supabase bilgisi yok)');
+    console.log('  ilanlar atlandı (anonim anahtar yok)');
     return [];
   }
   const secim =
@@ -631,9 +644,14 @@ async function katalogTohumuGetir(ulke) {
  * Bu liste "hangi adres GERÇEKTEN var" sorusunun cevabı; sayfa yazılıp
  * yazılmadığından bağımsız. Ara katman bunu okuyup karar veriyor.
  */
+/*
+  YALNIZCA ANONİM ANAHTAR — yukarıdaki `ilanlariGetir` ile aynı gerekçe.
+  Kayıp yok, ölçüldü: `companies` okuma politikasının koşulu `true`,
+  yani anon bütün şirketleri zaten görüyor.
+*/
 async function sirketSluglariniGetir() {
   const urlAdres = envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL');
-  const anahtar = envOku('SUPABASE_SERVICE_ROLE_KEY') || envOku('VITE_SUPABASE_ANON_KEY');
+  const anahtar = envOku('VITE_SUPABASE_ANON_KEY');
   if (!urlAdres || !anahtar) return [];
   const istek = `${urlAdres}/rest/v1/companies?select=slug`;
   const yanit = await fetch(istek, {

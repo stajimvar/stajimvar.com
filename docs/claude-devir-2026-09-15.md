@@ -9,12 +9,12 @@ Bu belge bir sonraki Claude'un bağlamsız başlaması için yazıldı. Yalnız
 
 | | |
 |---|---|
-| main commit | `1d46753` — "Ilan karar e-postasi: onay/ret artik sirkete gidiyor (#104)" |
+| main commit | `06e11b0` — "Dagitim engeli: manifestten turetilen sayilar + CLI surumu sabit (#102)" |
 | Canlı | https://stajimvar.com — Cloudflare Pages, son dağıtım success (`cloudflare_production` yeşil) |
 | Veritabanı | Supabase, proje `gdumgdgwlfnohkaucfow` (Frankfurt) |
-| Test | **1782 test, 1782 geçiyor, çıkış kodu 0** |
+| Test | **1770 test, 1770 geçiyor, çıkış kodu 0** |
 | Tip denetimi | `src` ve `functions` tsc temiz |
-| Ön render | 560 sayfa |
+| Ön render | 568 sayfa |
 | CI | Sürüm hattının 5 işi + disposable security tests + schema audit: **hepsi yeşil** |
 
 **Canlı ölçümler (15 Eylül 2026):**
@@ -49,9 +49,6 @@ Son turlarda kapanan işler (hepsi canlıda doğrulanmış):
 | Detay sayfası tutar ifadesi | #100 | — |
 | Devir belgesi | #101 | — |
 | **Dağıtım engeli: türetilen sayılar + CLI sürümü sabit** | #102 | — |
-| Devir belgesi | #103 | — |
-| **İlan onay/ret kararı şirkete e-postayla gidiyor** | #104 | `20261010010000_ilan_karar_bildirimi` |
-| ~~Geçici canlı doğrulama düzeneği~~ — **KAPATILDI**, main'e alınmadı | #105 | — |
 
 ### Bu turda düzeltilen iki şey (ayrıntı)
 
@@ -76,7 +73,7 @@ sağlanıyor", "Tutar kurumca açıklanacak", "Ücretsiz") kartta kalıyor.
 
 | Workflow | Cron (UTC) | TRT | İş |
 |---|---|---|---|
-| `ilan-bildirim-kuyrugu.yml` | `25 * * * *` | saat başı | **İki adım:** ilan bildirimi kuyruğu + **ilan karar bildirimi** kuyruğu (#104) |
+| `ilan-bildirim-kuyrugu.yml` | `25 * * * *` | saat başı | İlan bildirimi e-posta kuyruğu |
 | `stajimvar-automation.yml` | `17 * * * *` | saat başı | İlan toplama / içe aktarma |
 | `ilan-baglanti-kontrolu.yml` | `40 4 * * *` | 07:40 | İlan bağlantısı + **işveren kariyer sayfası** kontrolü |
 | `firsat-kaynak-kontrolu.yml` | `10 5 */3 * *` | 08:10, **3 günde bir** | Fırsat kaynak/kapanış kontrolü |
@@ -116,11 +113,38 @@ GEOAPIFY_API_KEY
 BRAVE_SEARCH_API_KEY
 ```
 
-Yerel `.env` **yalnız** `VITE_SUPABASE_URL` ve `VITE_SUPABASE_ANON_KEY`
-taşıyor (ikisi de tarayıcıya gidiyor, gizli değil). **`service_role`
-anahtarı yerelde yok ve olmamalı** — yazma gerektiren işler GitHub
-Actions'ta koşuyor. Bu, canlı yazma testlerini yerelden yapmanı
-engelliyor (§9).
+Kök dizindeki `.env` **yalnız** `VITE_SUPABASE_URL` ve
+`VITE_SUPABASE_ANON_KEY` taşıyor (ikisi de tarayıcıya gidiyor, gizli
+değil).
+
+**`service_role` YERELDE VAR — belgenin önceki hâli yanlıştı.**
+Burada "yerelde yok ve olmamalı" yazıyordu; ölçüldü (15 Eylül 2026) ve
+durum farklı: anahtar `automation/.env` içinde ve **bu kasıtlı**. Onu
+okumak üzere yazılmış ~12 Node bakım betiği (veri düzeltme, avatar
+taşıma, paylaşım temizleme…) ve 6 Python betiği var;
+`automation/.env.example` ile `automation/repository.py`'ın hata mesajı
+kullanıcıyı doğrudan o dosyaya yönlendiriyor.
+
+Sızıntı kanıtı **yok**: dosya `automation/.gitignore` ile korunuyor, git
+tarafından izlenmiyor ve tüm dal/etiketlerde **0 commit** geçmişi var.
+
+Gerçek kural şu:
+
+- **Elle koşan bakım betikleri** servis anahtarını kullanabiliyor; yazma
+  yapıyorlar ve buna gerçekten ihtiyaçları var.
+- **Herkese açık HTML üreten yollar KULLANAMAZ.** Ön render'ın üç veri
+  çağrısı da (`ilanlariGetir`, `sirketSluglariniGetir`,
+  `firsatlariGetir`) ve katalog tohumu yalnız anonim anahtar okuyor;
+  `tests/onrender-anon-anahtari.test.mjs` bunu bağlıyor.
+
+  Sebebi ölçülmüş bir zarar: servis anahtarı RLS'i atlıyor ve ön render
+  onu kullandığında yerel derleme üretimi temsil etmiyordu — ziyaretçinin
+  çekemeyeceği kayıtların sayfası yazılıyor, hidrasyondan sonra ekran
+  "bulunamadı"ya düşüyordu.
+
+- **Canlı yazma gerektiren işler** (yeni fırsat, test şirketi, veri
+  düzeltme) yine GitHub Actions'ta koşuyor; §9'daki elle test bu yüzden
+  duruyor.
 
 ---
 
@@ -185,172 +209,65 @@ sonra panelden temizleme ve Instagram'daki gönderiyi koruma davranışları
 
 ## 6. Kalan işler
 
-**a) Yeni gerçek fırsatlar — ARAŞTIRMA DURDURULDU (15 Eylül 2026).**
-Mevcut kayıtlar düzeltildi ama yeni kayıt eklenmedi. Ölçülen dağılım:
-121 kayıt (112 yayında + 9 süresi geçmiş) — `international` 66,
-`scholarship` 39, `kyk` 2, `student_support` 2, `competition` 1,
-`education` 1, `youth_program` 1.
+**a) Yeni gerçek fırsatlar.** Mevcut 112 aktif kayıt düzeltildi ama
+**yeni kayıt eklenmedi**. Eklemek için: resmî kaynak listesi + insan
+incelemesi + `service_role` yazma (yalnız Actions'ta). Mükerrer
+eklememek için `slug` unique ve `source_url` kontrolü var. Tutarı
+kaynaktan doğrulanmayan kaydı "açıklanmadı" diye işaretleme.
 
-> **Kullanıcı kararı: fırsat araştırmasına devam ETME.** İnternette
-> toplu fırsat ya da staj ilanı araması yapma, aday dosyası üretme.
-> Bir tur başlatılmıştı ve tam bu noktada durduruldu — plan onaylanmadı,
-> hiçbir aday dosyası yazılmadı.
+**b) `/universiteler` + kit.** Rota **yok** (`grep '/universiteler'`
+boş). `src/data/kariyerMerkezleri.ts` 22 üniversite kariyer merkezi
+taşıyor — sayfa onun üstüne kurulabilir. Kit içeriği tanımlı değil.
 
-Hat hazır duruyor, gerektiğinde kullanılır (yenisini kurma):
-`scripts/data/firsat-adaylari.json` (60 aday) → `scripts/firsat-dogrula.mjs`
-(her adresi gerçekten çağırıp erişim/dönem/konu/tarih ölçüyor; girdi ve
-çıktı yolu argümanla verilebiliyor) → `scripts/data/firsat-dogrulama.json`
-→ `scripts/data/firsat-ekle.sql`. Mükerrer koruması `slug` unique +
-`source_url`. Tutarı doğrulanmayan kaydı "açıklanmadı" diye işaretleme.
-
-**b) ~~`/universiteler` + kit~~ — ESASEN TAMAMLANMIŞ, madde yanlıştı.**
-Önceki sürüm "rota yok" diyordu; bu literal olarak doğru ama **yanıltıcı**.
-`kariyerMerkezleri.ts`'in üstüne kurulacak sayfa **kurulmuş ve canlıda**:
-
-| Kanıt | Yer |
-|---|---|
-| Rota | `src/App.tsx:2527` → `/universite-kariyer-merkezleri` |
-| Bileşen (254 satır) | `src/components/KariyerMerkezleri.tsx` — 22 merkez, şehre göre gruplu, logolu, "benim merkezim" kişiselleştirmesi |
-| Ön render + SEO | `scripts/onrender.mjs:1412` (başlık + açıklama tanımlı) |
-| Menü/altlık | `src/App.tsx:3051` |
-| İç bağlantılar | `BolumEylemleri`, `RehberSonuclari`, `SonrakiAdim`, `YolHaritasi` |
-
-**`/universiteler` diye ikinci bir sayfa AÇMA** — aynı içerikle iki URL
-SEO'da birbirini yer. "Kit" ise depoda ve belgelerde **yalnız o tek
-satırda** geçiyordu; hiçbir yerde tanımı yok. Madde kapandı.
-
-**c) Türkiye staj kaynaklarını artırma — artık kullanıcı bağlantısıyla
-yürüyor (§6d).** `automation/sources.json` 42 etkin kaynak. Yeni kaynak
-eklemeden önce **robots kuralları elle inceleniyor** (Hakkımızda bunu
-yazıyor, iddiayı boşa çıkarma). Erişim engeli aşılmıyor.
-
-**d) İlan bağlantısından resmî kaynak çıkarma — KULLANICI BAĞLANTI
-GÖNDERİNCE (15 Eylül 2026 kararı).**
-
-Akış şu: kullanıcı bir **staj ilanı bağlantısı** gönderiyor, sen o
-ilandan yola çıkıp **şirketin resmî kaynağını** sisteme ekliyorsun.
-Bağlantı gelmeden **hiçbir araştırma başlatma**.
-
-Bağlantı geldiğinde sırayla:
-
-1. İlan sitesini **yalnız keşif amacıyla** kullan — şirketi ve pozisyonu
-   belirlemek için. İlan sitesi kaynak olarak kaydedilmiyor.
-2. Aynı ilanı **şirketin resmî kariyer/ATS sayfasında** bul.
-3. Kayda **yalnız resmî kaynak erişilebilir ve doğrulanabilirse** geç.
-   Bulunamıyorsa kayıt yok — uydurma adres yazma.
-4. **İlan sitesinden izinsiz içerik kopyalama, erişim engeli aşma yok.**
-5. **Genel kariyer sayfasını açık ilan olarak kaydetme.** (§5'teki kural:
-   "açık" demek için ilanın kendi sayfasında aktif başvuru görülmeli.
-   Genel kariyer adresi ancak §1'deki *işveren dizini* anlamında
-   tutulabilir — o dizin ilan toplamıyor, 42 etkin kaynakla karıştırma.)
-6. **Mükerrerlik kontrolü:** hem `automation/sources.json` içindeki
-   kaynaklarla hem canlıdaki ilanlarla.
-7. Şirketi **mevcut adaptörlerden biriyle** bağla. Kayıtlı tür dağılımı:
-   `lever` 13, `greenhouse` 10, `workable` 7, `ashby` 6, `workday` 2,
-   `official_jsonld` 1, `smartrecruiters` 1, `workable_search` 1,
-   `kurumsal_html` 1. Dispatch tablosu `automation/scraper.py` içinde
-   (`personio` ve `recruitee` de tanımlı, henüz kullanılmıyor).
-   Hiçbiri uymuyorsa **küçük bir resmî kaynak adaptörü** eklenebilir.
-8. **Global ve ülke/Remote kurallarını koru** —
-   `supabase/migrations/20260919010000_global_listing_preferences.sql`
-   ve `automation/country_normalization.py`.
+**c) Türkiye staj kaynaklarını artırma.** `automation/sources.json`
+42 etkin kaynak. Yeni kaynak eklemeden önce **robots kuralları elle
+inceleniyor** (Hakkımızda bunu yazıyor, iddiayı boşa çıkarma). Erişim
+engeli aşılmıyor.
 
 ---
 
-## 7. İlan karar e-postası — KOD CANLI, GERÇEK TESLİM BEKLİYOR
+## 7. Sıradaki Claude'un doğrudan uygulayacağı ilk görev
 
-Önceki turun görevi (#104) **tamamlandı ve canlıda**. Ne yapıldığı ve
-neyin HÂLÂ ölçülmediği aşağıda; ikisini karıştırma.
+> **Görev:** İlan onay/ret kararını mevcut Resend + kuyruk altyapısına
+> bağla.
 
-**Yapılan ve ölçülen:**
+> Dağıtım engeli **kalktı** (#102): üç Instagram testindeki sabit
+> 28/112 sayıları manifestten türetiliyor ve `setup-cli` sürümü dört
+> iş akışında da sabit. CI'nin bütün zorunlu işleri yeşil.
 
-- Göç `20261010010000_ilan_karar_bildirimi` canlıda uygulandı. Sürüm
-  hattının beş işi de yeşil (`migrate_and_functions` logunda
-  "Applying migration 20261010010000…").
-- Canlı şemada dört kolon doğrulandı: `karar_bildirim_at` (**nullable**,
-  default `now()`), `karar_bildirim_denemeleri`,
-  `karar_bildirim_sonraki_at`, `karar_bildirim_son_hata`.
-- `ilan_incele` her kararda kuyruğu sıfırlıyor (durum + not + iz + kuyruk
-  aynı işlemde). Kuyruk RPC'leri `anon`/`authenticated`'a tamamen kapalı;
-  RLS regresyonu bunu gerçek rollerle ölçüyor.
-- İşçi `scripts/ilan-karar-bildirimi-kuyrugu.mjs`, mevcut saatlik
-  `ilan-bildirim-kuyrugu.yml` işinin **ikinci adımı** olarak koşuyor.
-  İkinci bir zamanlama sistemi kurulmadı.
-- **Zamanlanmış koşuda gerçekten çalıştı:** koşu `34935972622`
-  (15 Eylül 06:13 UTC) → adım "Karar bildirimlerini işle" **success**,
-  çıktı `Karar bildirim kuyruğu boş.` Yani betik üretimde koşuyor, canlı
-  Supabase'e bağlanıyor, RPC'yi hatasız çağırıyor ve **boş kuyruğu doğru
-  işliyor**.
-- **Geriye dönük tarama olmadığı ölçüldü:** göçten sonra canlıda
-  175 ilan / `reviewed_at` dolu **0** / kuyrukta bekleyen **0**. Yani göç
-  tek bir geçmiş karar için e-posta kuyruğa sokmadı.
-- Alıcı `company_members` (`is_owner` önce, yoksa en eski üye) →
-  `profiles.email` ile çözülüyor. **Devir belgesinin önceki sürümü
-  `hr_email` diyordu; öyle bir kolon YOK** — `companies`'te e-posta alanı
-  hiç yok.
-- Arayüz artık e-postayı söylüyor (`IlanFormu.tsx`,
-  `IsverenLanding.tsx`); bunu önceden yasaklayan test tersine çevrildi.
+Neden bu: `/isveren` sayfası ve ilan formu şu an kararın **panelde**
+göründüğünü söylüyor, çünkü e-posta bağlı değil ve bağlanmamış bir
+davranışa söz vermedim. Şirket kararı öğrenmek için panele girmek
+zorunda.
 
-**HÂLÂ ÖLÇÜLMEDİ — iddia etme:**
+Somut adımlar:
 
-> **Gerçek Resend teslimi ve mükerrer gönderim testi yapılmadı.** Bugüne
-> kadar kuyruk canlıda hiç dolmadı, dolayısıyla tek bir gerçek e-posta
-> bile gönderilmedi. "Şirkete e-posta gidiyor" cümlesi **kod yolu
-> doğrulandı** demek; **teslim doğrulandı demek değil**.
+1. `scripts/ilan-bildirim-kuyrugu.mjs` kalıbını oku — Resend çağrısı,
+   `Idempotency-Key`, üstel geri çekilme ve `for update skip locked`
+   ile kuyruktan alma orada.
+2. `listings` üzerine kuyruk kolonları ekle (`karar_bildirim_at`,
+   `karar_bildirim_denemeleri`, `karar_bildirim_sonraki_at`) ya da
+   mevcut bildirim kuyruğuna ilan kararı türü ekle. **İkinci kuyruk
+   sistemi kurma.**
+3. `ilan_incele` RPC'si kararı yazdıktan sonra kuyruğa satır bıraksın
+   (aynı işlemde).
+4. Alıcı: şirketin `hr_email`. Gerçek şirkete test e-postası
+   **gönderme** — `--kuru` ile doğrula.
+5. Gönderim çalıştıktan sonra `IlanFormu.tsx` ve `IsverenLanding.tsx`
+   metinlerine e-posta cümlesini geri ekle, `tests/isveren-ilan-onayi.test.mjs`
+   içindeki "karar için e-posta sözü verilmiyor" denetimini güncelle.
 
-Bu doğrulama §9'daki **elle işveren testiyle birlikte** yapılacak:
-gerçek şirket hesabıyla ilan oluştur → yönetici onayla/reddet → o karar
-kuyruğa düşecek ve saatlik işçi (en fazla bir saat sonra, ya da
-`gh workflow run ilan-bildirim-kuyrugu.yml` ile hemen) e-postayı
-gönderecek. Ölçülecek iki şey:
-
-1. E-posta gerçekten geldi mi (ret ise `review_note` gövdede mi).
-2. İşçiyi **ikinci kez** koştur → aynı karar için ikinci e-posta
-   GİTMEMELİ. Beklenen: kayıt kuyruktan düştüğü için çıktı
-   `Karar bildirim kuyruğu boş.` ve `karar_bildirim_denemeleri` **1'de
-   kalıyor**. İkinci kilit sağlayıcı tarafındaki `Idempotency-Key`
-   (`ilan-karar-<ilan>-<reviewed_at>`).
-
-> **Üretime geçici test verisi yazan bir düzenek kurmayı denemeyin.**
-> Bir kez denendi (PR #105) ve **kapatıldı**: canlıya sahte şirket/ilan
-> yazmak, üretimde kalıcı bir test baypası bırakma riski taşıyor ve
-> gerçek işveren testi zaten aynı şeyi gerçek veriyle ölçüyor. Düzenek
-> main'e **alınmadı**.
-
----
-
-## 7b. Sıradaki Claude ne yapacak: BEKLE
-
-> **Kendi başına yeni bir iş paketi başlatma.** İki bekleyen iş var ve
-> ikisi de **kullanıcının bir şey sağlamasına** bağlı.
-
-**1. İlan bağlantıları bekleniyor (§6d).** Kullanıcı staj ilanı
-bağlantıları gönderecek; akış ve sınırlar §6d'de yazılı. **Bağlantı
-gelmeden internette ilan/fırsat araması yapma, aday dosyası üretme.**
-
-**2. Elle işveren testi bekleniyor (§9).** Kullanıcı kendi şirket
-hesabıyla ilan oluşturma → yönetici onay/ret akışını deneyecek. Karar
-e-postasının **gerçek teslimi ve mükerrer gönderim ölçümü** o testin
-içinde (§9 adım 5b). Bunu üretime test verisi yazarak öne almaya
-çalışma — bir kez denendi ve kapatıldı (§7, PR #105).
-
-Bu iki şey gelmeden yapılacak iş yok. §6a araştırması **durduruldu**,
-§6b **kapandı**. Kullanıcı yeni bir yön verirse ona uy; vermediyse
-"sıradaki görevi" kendin icat etme.
-
-> **Bu belgeyi okuyup hemen bir şey yapmak zorunda değilsin.** Önceki
-> turda §6b'ye başlanmıştı ve madde **yanlış** çıktı: sayfa zaten
-> canlıydı. Ölçmeden başlama.
+Bu iş tek PR'a sığar ve mevcut altyapıyı kullanır.
 
 ---
 
 ## 8. Komutlar
 
 ```bash
-npm test                                  # 1782 test
+npm test                                  # 1770 test
 npx tsc -p tsconfig.json --noEmit         # src tip denetimi
 npx tsc -p functions/tsconfig.json --noEmit
-npm run build                             # vite + ön render (560 sayfa)
+npm run build                             # vite + ön render (568 sayfa)
 ```
 
 ```bash
@@ -407,15 +324,7 @@ Sırayla:
 5. Yönetici hesabıyla onay kuyruğunu aç → **Reddet** → not yaz.
    **Beklenen:** şirket panelinde ilanın altında "İnceleme notu".
    Not yazmadan reddetmeye çalış → engellenmeli.
-5b. **KARAR E-POSTASI (§7'nin bekleyen ölçümü).** Ret kararı kuyruğa
-   düştü; saatlik işçiyi bekle ya da hemen tetikle:
-   `gh workflow run ilan-bildirim-kuyrugu.yml`. **Beklenen:** şirket
-   hesabının e-postasına ret bildirimi geldi ve **ret notu gövdede**.
-   Sonra işçiyi **ikinci kez** koştur → **ikinci e-posta GELMEMELİ**;
-   çıktı `Karar bildirim kuyruğu boş.` ve `karar_bildirim_denemeleri`
-   1'de kalmalı.
 6. Yönetici → **Onayla**. İlan yayına çıkmalı, `posted_at` dolmalı.
-   Onay için de ayrı bir e-posta gelmeli (gövdede ret notu olmadan).
 7. Öğrenci hesabıyla başvur. Şirket panelinde başvuru görünmeli;
    durumu güncelle.
 8. **İkinci bir şirket hesabıyla** birinci şirketin ilanını ve
@@ -454,9 +363,11 @@ Güvenlik kontrolü kapatılmadı.
 > güvenlik kontrolünde sorun yoktu, kurulum adımı düşmüştü. Kırmızı bir
 > işin adına göre değil **logune** göre karar ver.
 
-**`service_role` yerelde yok.** Canlı yazma gerektiren her şey (yeni
-fırsat ekleme, test şirketi kurma, veri düzeltme) GitHub Actions'ta
-koşmak zorunda. Bu yüzden bu belgedeki §9 elle yapılacak.
+**Canlı yazma Actions'ta koşuyor.** Yeni fırsat ekleme, test şirketi
+kurma gibi işler sürüm hattında/iş akışlarında yapılıyor; bu yüzden §9
+elle yapılacak. (Bu maddenin eski hâli "`service_role` yerelde yok"
+diyordu — yanlıştı; anahtar `automation/.env` içinde ve elle koşan bakım
+betikleri onu kullanıyor. Ayrıntı ve kural §4'te.)
 
 **Supabase CLI hesabı ayrı.** CLI canlı projeye `403` veriyor; `db push`
 bu hâliyle çalışmıyor. Göçler sürüm hattının
@@ -468,18 +379,4 @@ dökümünü yerel yapıdan sonra alıyor ve fark bulursa 3 kez yeniden
 deniyor; yine de yeni bir göçten hemen sonra kırmızı görürsen önce
 `schema-diff.json` artifact'ına bak — gerçek kayma orada yazıyor.
 
-**~~İlan onay/ret e-postası bağlı değil~~ — BAĞLANDI (#104).** Göç, RPC,
-işçi ve saatlik adım canlıda; zamanlanmış koşu boş kuyruğu doğru işliyor.
-**Ama gerçek Resend teslimi ve mükerrer gönderim testi hâlâ ölçülmedi**
-(§7). Kuyruk canlıda bugüne kadar hiç dolmadı.
-
-**Canlı yazma izni ajanda kısıtlı.** Bu turda iki yazma yolu da
-engellendi: `gh pr merge` ve MCP `execute_sql` ile canlıya yazma. Yani
-canlı veri gerektiren doğrulamalar (§6a, §7'deki teslim testi) insan
-onayı/eylemi olmadan tamamlanamıyor. Bunu bir arıza sanma; kasıtlı bir
-koruma.
-
-**Yönetici onay kuyruğu canlıda hiç kullanılmadı.** Ölçüldü (15 Eylül):
-`listings` içinde `reviewed_at` dolu **0** kayıt var. Yani native işveren
-ilanı akışı uçtan uca hiç çalıştırılmadı — §9 bu yüzden hâlâ açık ve
-karar e-postası da o yüzden hiç tetiklenmedi.
+**İlan onay/ret e-postası bağlı değil.** §7'deki ilk görev bu.
