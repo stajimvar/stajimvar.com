@@ -50,8 +50,16 @@ test('yüzey belirteci tek yerde: kenara yaslanma, kabuk ve iç boşluk', () => 
 });
 
 test('beş ekran da ortak kabuğu kullanıyor, kendi kutusunu çizmiyor', () => {
+  /*
+    İLAN KARTI BU LİSTEDEN ÇIKTI (onaylanan tasarım, 15 Eylül 2026)
+
+    Ortak kabuk telefonda tam genişlik + köşesiz + 1 px ayırıcı veriyor.
+    Onaylanan ilan tasarımında kartlar her ekranda beyaz, yuvarlak
+    köşeli ve kenarlıklı. Token DEĞİŞMEDİ: fırsat ve akış kartları onu
+    kullanmaya devam ediyor, kural yalnız ilan kartı için ayrıldı.
+    Kartın iç dolgusu hâlâ ortak (`YUZEY.ic`) — ölçüler ayrışmıyor.
+  */
   const kaynaklar = [
-    ['ilan kartı', oku('src/components/InternshipCard.tsx')],
     ['fırsat kartı', oku('src/components/OpportunitiesPage.tsx')],
     ['akış kartı', oku('src/components/sosyal/AkisKarti.tsx')],
   ];
@@ -66,6 +74,10 @@ test('beş ekran da ortak kabuğu kullanıyor, kendi kutusunu çizmiyor', () => 
     görünüyor. Kartın kendi kenarlığı olsaydı iki hücrenin kenarlıkları
     yan yana gelip 2 piksel olurdu.
   */
+  const ilanKarti = oku('src/components/InternshipCard.tsx');
+  assert.match(ilanKarti, /rounded-2xl border border-gray-200 bg-white \$\{YUZEY\.ic\}/, 'ilan kartı kendi çerçevesini çiziyor');
+  assert.match(ilanKarti, /YUZEY\.ic/, 'iç dolgu yine ortak belirteçten');
+
   const rehber = oku('src/components/RehberKartlari.tsx');
   assert.match(rehber, /grid-cols-2 gap-px bg-gray-200 sm:gap-4 sm:bg-transparent/);
   assert.match(rehber, /YUZEY\.kap/);

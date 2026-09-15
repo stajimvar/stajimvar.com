@@ -130,8 +130,15 @@ test('mobil düzen: tam genişlik, köşesiz, gölgesiz, 1 px ayırıcı', () =>
   /* Düzen token'da: sınıflar EKLENMİYOR, dala göre tam yazılıyor. */
   assert.match(TOKEN, /kap: '-mx-4 sm:mx-0'/);
   assert.match(TOKEN, /kabuk: 'border-b border-gray-200 sm:rounded-2xl sm:border'/);
-  /* Kart mobil dalda YUZEY kullanıyor; gölge yalnız `sm:` üstünde. */
-  assert.match(KART, /\$\{YUZEY\.kabuk\} \$\{YUZEY\.ic\} sm:hover:border-blue-500 sm:hover:shadow-xs/);
+  /*
+    KART TELEFONDA DA KENDİ ÇERÇEVESİNDE (onaylanan tasarım)
+
+    Mobilde tam genişlik, köşesiz ve 1 px ayırıcıydı; tasarımda kartlar
+    beyaz, yuvarlak köşeli ve kenarlıklı. YUZEY token'ı DEĞİŞMEDİ —
+    başka listeler onu kullanmaya devam ediyor; değişen yalnız ilan
+    kartının kabuğu.
+  */
+  assert.match(KART, /rounded-2xl border border-gray-200 bg-white \$\{YUZEY\.ic\} hover:border-blue-400/);
   /* Masaüstü dalı korunuyor: yuvarlak köşe + kenar + gölge. */
   assert.match(KART, /rounded-2xl border border-gray-200 p-3\.5 hover:border-blue-500 hover:shadow-xs sm:p-4\.5/);
 });

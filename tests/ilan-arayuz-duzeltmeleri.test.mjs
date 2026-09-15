@@ -38,14 +38,21 @@ test('dış başvuru düğmesi DisBaglanti (giriş kapısı) kullanmıyor', () =
     gidiyordu. Kart ve ilan detayında dış bağlantı artık düz bir <a>.
   */
   /* Yorumlar atılıyor: eski kapıyı ANLATAN yorum, kapının kendisi değil. */
-  const kod = kart.replace(/\/\*[\s\S]*?\*\//g, '');
-  const disDal = kod.slice(kod.indexOf("if (yol.resmiAdres && yol.anaEylem === 'resmi-site')"));
+  /*
+    DIŞ BAŞVURU KARTTAN İLAN SAYFASINA TAŞINDI (onaylanan tasarım).
+    Kart tek tip ve tek eylemi var: "İlanı incele". Başvuru düğmesi —
+    ve dolayısıyla bu güvence — ilan sayfasında.
+  */
+  const kod = detay.replace(/\/\*[\s\S]*?\*\//g, '');
+  const disDal = kod.slice(kod.indexOf("resmiAdres"));
   const govde = disDal.slice(0, disDal.indexOf('</a>'));
   assert.match(govde, /href=\{yol\.resmiAdres\}/);
   assert.match(govde, /target="_blank"/);
   assert.match(govde, /rel="noopener noreferrer nofollow"/);
   assert.doesNotMatch(govde, /DisBaglanti|girisGerekli|onGirisGerekli/);
   assert.doesNotMatch(kod, /import .*DisBaglanti/);
+  /* Kartta dış başvuru hiç yok. */
+  assert.doesNotMatch(kart, /target="_blank"/);
 });
 
 test('ADRESİ OLMAYAN İLANDA sahte dış CTA basılmıyor', () => {
@@ -53,8 +60,8 @@ test('ADRESİ OLMAYAN İLANDA sahte dış CTA basılmıyor', () => {
   assert.equal(yol.resmiAdres, null);
   assert.notEqual(yol.anaEylem, 'resmi-site', 'adressiz ilanda dış düğme çizilmemeli');
   assert.equal(yol.anaEtiket, 'Başvurduğumu işaretle');
-  /* Kart bu dala ancak resmiAdres VARSA giriyor. */
-  assert.match(kart, /if \(yol\.resmiAdres && yol\.anaEylem === 'resmi-site'\)/);
+  /* Dış düğme ilan sayfasında ve ancak adres VARSA çiziliyor. */
+  assert.match(detay, /resmiAdres/);
 });
 
 test('internal ve email_application yolları bozulmadı', () => {
@@ -189,9 +196,10 @@ test('kart bağlantısı yeni sekmede açılabiliyor ve klavyeyle erişiliyor', 
 
 test('bağımsız eylemler örtünün üstünde kalıyor', () => {
   /* Kaydet ve başvur düğmesi gerilmiş bağlantının altında kalırsa tıklanamaz. */
+  /* Kartta iki bağımsız eylem katmanı: kaydet ve "İlanı incele". */
   const kez = (kart.match(/relative z-10/g) || []).length;
   assert.ok(kez >= 2, `en az iki bağımsız eylem katmanı bekleniyordu, ${kez} bulundu`);
-  assert.match(kart, /onClick=\{\(e\) => e\.stopPropagation\(\)\}/);
+  assert.match(kart, /e\.stopPropagation\(\);/);
 });
 
 /* ------------------------------------------------------------------ 6 */
