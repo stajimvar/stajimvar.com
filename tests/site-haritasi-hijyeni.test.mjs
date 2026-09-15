@@ -76,10 +76,43 @@ test('dağıtılan harita ile üretilen sayfalar birebir örtüşüyor', () => {
     readdirSync(klasor).filter((f) => f.endsWith('.html')).map((f) => f.slice(0, -5)),
   );
 
-  const haritadaOlmayanSayfa = [...uretilen].filter((s) => !haritada.has(s));
+  /*
+    İLİŞKİ ARTIK SİMETRİK DEĞİL — VE OLMAMALI
+
+    Eskiden iki küme birebir eşitti, çünkü süresi geçen fırsatın sayfası
+    hiç üretilmiyordu. O davranış canlıda ölçülen bir zarar üretiyordu
+    (15 Eylül 2026): son başvuru tarihi gelen kayıtların adresi bir günde
+    HTTP 404 oluyordu ve bunlardan biri arama sonuçlarında hâlâ gösterim
+    alıyordu.
+
+    Yeni kural `/ilan/` ailesindekiyle aynı: süresi geçen kaydın sayfası
+    DURUYOR (200, metninde kapandığı yazıyor) ama site haritasına
+    GİRMİYOR. Yani:
+
+      haritadaki her adresin sayfası olmalı      → hâlâ KESİN kural
+      her sayfanın haritada olması gerekmez      → kapanmışlar hariç
+
+    Tek yönlü kalan iddia asıl korunması gereken: haritada 404 veren
+    adres bulunmamalı.
+  */
   const sayfasiOlmayanAdres = [...haritada].filter((s) => !uretilen.has(s));
   assert.deepEqual(sayfasiOlmayanAdres, [], 'haritada sayfası olmayan adres var');
-  assert.deepEqual(haritadaOlmayanSayfa, [], 'üretilmiş ama haritada olmayan sayfa var');
+
+  /*
+    Haritada olmayan sayfaların HEPSİ kapanmış olmalı. Kapanmamış bir
+    sayfanın haritadan düşmesi sessiz bir görünürlük kaybı olurdu; bu
+    yüzden gerekçe sayfanın kendi metninden okunuyor.
+  */
+  const haritadaOlmayanSayfa = [...uretilen].filter((s) => !haritada.has(s));
+  const gerekcesizDusen = haritadaOlmayanSayfa.filter((s) => {
+    const html = readFileSync(path.join(klasor, `${s}.html`), 'utf8');
+    return !html.includes('Başvuru dönemi kapandı');
+  });
+  assert.deepEqual(
+    gerekcesizDusen,
+    [],
+    'haritada olmayan ama kapandığı yazmayan sayfa var'
+  );
 
   /* Kapanmış bölümün adresi hiç yok. */
   assert.equal((xml.match(/\/kesfet\//g) || []).length, 0);

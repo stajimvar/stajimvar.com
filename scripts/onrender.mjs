@@ -647,10 +647,34 @@ async function sirketSluglariniGetir() {
   return veri.map((x) => x.slug).filter(Boolean);
 }
 
+/**
+ * YALNIZCA ANONİM ANAHTAR — AYRIŞMA TANIM GEREĞİ İMKÂNSIZ OLSUN
+ *
+ * Burada `SUPABASE_SERVICE_ROLE_KEY || VITE_SUPABASE_ANON_KEY` yazıyordu
+ * ve servis anahtarı RLS'i ATLIYOR. Sonuç: ön render, ziyaretçinin
+ * çekemeyeceği bir kaydın sayfasını yazabiliyordu — statik HTML dolu,
+ * hidrasyondan sonra "bulunamadı".
+ *
+ * Bu teorik bir risk değildi; ÖLÇÜLDÜ (15 Eylül 2026): `envOku`
+ * `automation/.env` dosyasını da okuyor ve orada servis anahtarı VAR.
+ * Yani yerel derleme RLS'i atlayıp üretimde çizilmeyecek sayfalar
+ * üretiyordu — yerel çıktı üretimi temsil etmiyordu.
+ *
+ * Üretimde dağıtımı yapan iş (`cloudflare_production`) zaten yalnız
+ * `VITE_SUPABASE_ANON_KEY` taşıyor; servis anahtarı orada iş düzeyinde
+ * tanımlı değil. Bu değişiklik yereli üretime EŞİTLİYOR.
+ *
+ * Aynı gerekçe katalog tohumu için zaten yazılmıştı
+ * (`katalogTohumuGetir`): herkese açık HTML'e giren şey, siteye giren
+ * herhangi birinin görebileceği yanıtın aynısı olmalı.
+ */
 async function firsatlariGetir() {
   const urlAdres = envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL');
-  const anahtar = envOku('SUPABASE_SERVICE_ROLE_KEY') || envOku('VITE_SUPABASE_ANON_KEY');
-  if (!urlAdres || !anahtar) return [];
+  const anahtar = envOku('VITE_SUPABASE_ANON_KEY');
+  if (!urlAdres || !anahtar) {
+    console.log('  fırsatlar atlandı (anonim anahtar yok)');
+    return [];
+  }
   /*
     KATEGORİ VE TUTAR ALANLARI DA GEREKİYOR
 
@@ -672,7 +696,20 @@ async function firsatlariGetir() {
       aynı hata, iki kez yaşandı.
     */
     'opportunity_type,amount_status,amount_text,countries';
-  const istek = `${urlAdres}/rest/v1/opportunities?status=eq.published&select=${encodeURIComponent(secim)}`;
+  /*
+    `expired` DE ÇEKİLİYOR — SAYFASI DURUYOR
+
+    Süresi dolan fırsatın sayfası silinmiyor (bkz. detay döngüsündeki
+    açıklama): adres 200 dönmeye devam ediyor, görünür metninde
+    kapandığı yazıyor, yalnız site haritasından düşüyor. Bu, `/ilan/`
+    ailesinde zaten uygulanan kural.
+
+    Satır güvenliği de aynı kümeyi okutuyor: politika
+    `status='published' ... OR status='expired'`. Yani burada çekilen
+    küme, tarayıcının da okuyabildiği kümeyle örtüşüyor; statik HTML'de
+    olup hidrasyonda kaybolan sayfa üretmiyoruz.
+  */
+  const istek = `${urlAdres}/rest/v1/opportunities?status=in.(published,expired)&select=${encodeURIComponent(secim)}`;
   const yanit = await fetch(istek, { headers: { apikey: anahtar, Authorization: `Bearer ${anahtar}` } });
   if (!yanit.ok) { console.log(`  fırsatlar alınamadı: HTTP ${yanit.status}`); return []; }
   return yanit.json();
@@ -1268,29 +1305,38 @@ async function main() {
     geçemiyordu.
   */
   const firsatlar = await firsatlariGetir();
-  const { firsatKategorisi, yurtDisiFirsatMi } = await icerikDerle(
+  const { firsatKategorisi, yurtDisiFirsatMi, firsatDurumu } = await icerikDerle(
     path.join(kok, 'src', 'lib', 'firsat-kategori.mjs'),
     'firsat-kategori'
   );
 
   /**
-   * Bu fırsatın SAYFASI ÜRETİLİYOR MU?
+   * SÜRESİ GEÇTİ Mİ? — ARAYÜZLE AYNI FONKSİYONDAN
    *
-   * Detay döngüsü son başvurusu geçmiş kaydı atlıyor (aşağıda,
-   * `for (const f of firsatlar)`). Kategori listeleri bu kuralı
-   * bilmediği için 113 kaydın tamamına bağlantı veriyordu ve üçü
-   * canlıda HTTP 404 dönüyordu:
+   * Burada kendi eşiği olan bir predicate vardı:
    *
-   *   2026-09-13  yeni-dunya-vakfi-bursu
-   *   2026-09-14  mustafa-oncel-vakfi-ogrenci-destek-bursu
-   *   2026-09-14  fulbright-yabanci-dil-ogretim-asistanligi-flta
+   *   !(deadline && new Date(deadline).getTime() < Date.now())
    *
-   * Kural artık TEK YERDE ve iki taraf da onu çağırıyor. Ayrı
-   * yazılsaydı bir sonraki eşik değişikliğinde liste yine sayfası
-   * olmayan adreslere bağlanırdı.
+   * Bu bir DAMGA karşılaştırmasıydı; arayüz ise `firsatDurumu` ile
+   * TÜRKİYE TAKVİM GÜNÜ karşılaştırıyor (`calendarDay`,
+   * Europe/Istanbul). İkisi son başvuru gününde ayrışıyordu:
+   *
+   *   Tarihler 00:00 UTC olarak saklanıyor. "Son başvuru 15 Eylül"
+   *   Türkçede 15 Eylül DAHİL demek; damga karşılaştırması ise kaydı
+   *   15 Eylül saat 03:00 TRT'de kapanmış sayıyordu — kendi son
+   *   gününün sabahında, bir gün erken.
+   *
+   * ÖLÇÜLDÜ (canlı, 15 Eylül 2026): son başvurusu "geçmiş" görünen 10
+   * kaydın 8'inin tarihi O GÜNDÜ ve Türkiye gününe göre HÂLÂ AÇIKTI.
+   * Sekizinin de sayfası üretilmiyordu; biri (btso-yuksekogrenim-bursu)
+   * arama sonuçlarında gösterim alırken canlıda HTTP 404 dönüyordu.
+   *
+   * Bu, deponun iki kez düzelttiği hatanın aynısı: kural arayüzde bir,
+   * ön render'da bir daha yazılmıştı (`firsatKategorisi` ve
+   * `yurtDisiFirsatMi` de böyle ayrışmıştı). Kural artık TEK YERDE.
    */
-  const firsatSayfasiVar = (f) =>
-    !(f.application_deadline && new Date(f.application_deadline).getTime() < Date.now());
+  const firsatSuresiGectiMi = (f) =>
+    firsatDurumu(f.status, f.application_deadline) === 'expired';
 
   /**
    * DETAY SAYFASININ <title> METNİ — KURUM ADINI İKİ KEZ YAZMIYOR
@@ -1338,8 +1384,16 @@ async function main() {
    */
   const firsatListesi = (kategori, tur = null, bolge = null) => {
     const kayitlar = firsatlar
-      /* Sayfası üretilmeyen kayda bağlantı verilmiyor: 404'e giden iç bağlantı olmaz. */
-      .filter(firsatSayfasiVar)
+      /*
+        KAPI LİSTELERİ YALNIZ AÇIK KAYITLARI TAŞIYOR
+
+        Süresi geçmiş kaydın sayfası artık DURUYOR (aşağıdaki detay
+        döngüsü onu da yazıyor), ama kategori kapısı "şu an
+        başvurabileceğin fırsatlar" vaadi taşıyor. Kapanmış kaydı o
+        listeye koymak, okuyucuyu kapanmış bir başvuruya yönlendirmek
+        olurdu. Süzgeç arayüzle aynı fonksiyondan.
+      */
+      .filter((f) => !firsatSuresiGectiMi(f))
       /*
         BÖLGE SÜZGECİ /yurtdisi-firsatlari İÇİN
 
@@ -1789,8 +1843,22 @@ async function main() {
   }
 
   for (const f of firsatlar) {
-    /* Kural yukarıda tek yerde: kategori listeleri de aynı çağrıyı kullanıyor. */
-    if (!firsatSayfasiVar(f)) continue;
+    /*
+      SÜRESİ GEÇEN KAYDIN SAYFASI SİLİNMİYOR
+
+      Eskiden `continue` ile atlanıyordu ve adres canlıda HTTP 404
+      dönüyordu — arama sonuçlarında sıralanan bir sayfa bir günde yok
+      oluyordu. Artık `/ilan/` ailesindeki kuralın aynısı geçerli:
+
+        sayfa DURUYOR (200) · görünür metninde KAPANDIĞI yazıyor ·
+        site haritasından DÜŞÜYOR
+
+      Arayüz bu durumu zaten çiziyor (OpportunityDetailPage: başvuru
+      düğmesi gizleniyor, "Bu fırsatın süresi doldu" uyarısı çıkıyor);
+      statik HTML de aynı şeyi söylemek zorunda, yoksa ilk HTML ile
+      hidrasyon sonrası ekran ayrışırdı.
+    */
+    const suresiGecti = firsatSuresiGectiMi(f);
     await kartYaz(`firsat-${f.slug}`, {
       tur: 'firsat',
       etiket: 'ÖĞRENCİ FIRSATI',
@@ -1798,11 +1866,41 @@ async function main() {
       altMetin: f.organization_name || '',
     });
 
-    sayfaYaz(`/firsatlar/${f.slug}`, {
+    const firsatYolu = `/firsatlar/${f.slug}`;
+    /*
+      Süresi geçmiş fırsat haritaya girmiyor; sayfası duruyor ve görünür
+      metninde kapandığı yazıyor. `/ilan/` ailesinde uygulanan kuralın
+      aynısı — iki aile ayrı davranırsa hangi adresin haritada olduğu
+      tahmin edilemez hale gelirdi.
+    */
+    if (suresiGecti) HARITADAN_DISLANAN.add(firsatYolu);
+
+    sayfaYaz(firsatYolu, {
       gorsel: `/og/firsat-${f.slug}.png`,
       baslik: `${firsatBasligi(f)} | StajımVar`,
       aciklama: ozetle(f.short_description || ''),
-      govde: govde(f.title, f.short_description || '', [f.organization_name, f.application_deadline && `Son başvuru: ${f.application_deadline.slice(0, 10)}`].filter(Boolean)),
+      govde: govde(
+        f.title,
+        f.short_description || '',
+        [
+          f.organization_name,
+          /*
+            KAPANDIĞI GÖRÜNÜR METİNDE YAZIYOR
+
+            "Başvuru dönemi kapandı" ifadesi doğrulanmış tek şeye
+            dayanıyor: kaydın kendi son başvuru tarihi. Tarihin kendisi
+            yoksa bu satır da yazılmıyor — çünkü o durumda kaydın
+            kapandığını bilmiyoruz (`firsatDurumu` tarihsiz kaydı zaten
+            'active' sayıyor).
+
+            "Başvurusu açık" DENMİYOR: açık olduğunu kaynağın kendi
+            sayfasında görmeden iddia edemeyiz.
+          */
+          f.application_deadline &&
+            `${suresiGecti ? 'Başvuru dönemi kapandı — son başvuru' : 'Son başvuru'}: ` +
+              `${f.application_deadline.slice(0, 10)}`,
+        ].filter(Boolean)
+      ),
     });
     sayac++;
   }
