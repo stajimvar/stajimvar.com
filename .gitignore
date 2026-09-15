@@ -39,3 +39,4 @@ radar-*.json
 # o günkü ilan listesine bağlı. Defterin KENDİSİ (kariyer-sayfalari.json)
 # depoda duruyor — izlenen sayfalar kalıcı, rapor geçici.
 automation/kariyer-tarama-raporu.json
+public/ilan-gorselleri/kaynak/

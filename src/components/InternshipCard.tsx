@@ -24,6 +24,7 @@ import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { ILAN_KAYNAGI } from '../lib/urun-metni';
 import { tarihMetni } from '../lib/tarih.mjs';
 import { YUZEY } from '../ui/tokens';
+import { sirketGorseli } from '../data/sirket-gorselleri';
 /*
   Staj türü kararı ayrı dosyada: kart ve detay AYNI kuralı kullanıyor
   ve kural React ağacı kurmadan sınanabiliyor.
@@ -175,6 +176,15 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
   /* Ham ISO yerine "6 Eylül 2026"; değer yoksa satır hiç basılmıyor. */
   const sonBasvuru = tarihMetni(listing.applicationDeadline);
 
+  /*
+    KART GÖRSELİ ŞİRKETE BAĞLI
+
+    Aynı şirketin bütün ilanları aynı görseli alıyor: eşleme slug ile
+    yapılıyor, ilan kimliğiyle değil. Eşlemesi olmayan şirkette blok
+    hiç çizilmiyor.
+  */
+  const kartGorseli = sirketGorseli(listing.companySlug);
+
   return (
     <div
       id={`internship-card-${listing.id}`}
@@ -230,18 +240,30 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           ve doğrulaması metinde yazıyor, görsel bir iddia taşımıyor.
           Yüklenemezse kendini gizliyor (kırık görsel simgesi kalmasın).
         */}
-        {listing.companyCover && (
-          <div className="col-start-3 row-span-3 row-start-2 w-[104px] shrink-0 self-start overflow-hidden rounded-xl border border-gray-200 sm:w-[124px] lg:w-[168px]">
+        {kartGorseli && (
+          <div className="relative col-start-3 row-span-3 row-start-2 w-[104px] shrink-0 self-start overflow-hidden rounded-xl border border-gray-200 sm:w-[124px] lg:w-[168px]">
             <img
-              src={listing.companyCover}
-              alt=""
-              aria-hidden
+              src={kartGorseli.yol}
+              /*
+                TEMSİLİ GÖRSEL GERÇEK OFİS GİBİ SUNULMUYOR
+
+                Üretilmiş bir sahne; şirketin kendi fotoğrafı değil.
+                Görünen etiket bunu yazıyor, `alt` metni de aynı şeyi
+                ekran okuyucuya söylüyor — ikisi ayrışmasın diye tek
+                kaynaktan.
+              */
+              alt={kartGorseli.tur === 'temsili' ? 'Temsili görsel' : ''}
               loading="lazy"
               className="h-[84px] w-full object-cover sm:h-[104px] lg:h-[116px]"
               onError={(olay) => {
-                olay.currentTarget.parentElement?.classList.add('hidden');
+                olay.currentTarget.parentElement?.parentElement?.classList.add('hidden');
               }}
             />
+            {kartGorseli.tur === 'temsili' && (
+              <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-black/55 px-1.5 py-0.5 text-center text-[10px] font-semibold leading-tight text-white">
+                Temsili görsel
+              </span>
+            )}
           </div>
         )}
 
