@@ -172,5 +172,33 @@ class KaynakKaydi(unittest.TestCase):
                 self.assertNotIn(k["id"], izinli)
 
 
+class AdresKimligi(unittest.TestCase):
+    """SORGU DİZESİ KİMLİĞİN PARÇASI OLABİLİR
+
+    Ölçüldü (15 Eylül 2026, üretim): Porsche'nin dört ayrı ilanı tek ham
+    kayda düştü — adresler yalnız `?id=` ile ayrışıyor ve `canonical()`
+    sorguyu tümüyle atıyordu ("bulunan=4 yeni=1 güncel=3"). Aynı tuzak
+    Greenhouse'un `?gh_jid=` adreslerinde de var.
+
+    Takip parametreleri (utm_*, fbclid...) atılmaya DEVAM ediyor: onlar
+    ilanı değil, tıklamanın nereden geldiğini anlatıyor.
+    """
+
+    def test_ilan_kimligi_tasiyan_sorgu_korunuyor(self):
+        adresler = [f"https://jobs.porsche.com/index.php?ac=jobad&id={k}" for k in (18107, 18498, 18113, 19450)]
+        self.assertEqual(len({scraper.canonical(a) for a in adresler}), 4)
+        self.assertEqual(scraper.canonical("https://jobs.picnic.app/nl/vacancies?gh_jid=8201562"),
+                         "https://jobs.picnic.app/nl/vacancies?gh_jid=8201562")
+
+    def test_takip_parametreleri_atiliyor(self):
+        self.assertEqual(scraper.canonical("https://Example.com/jobs/?utm=x"), "https://example.com/jobs")
+        self.assertEqual(scraper.canonical("https://example.com/j?utm_source=x&gh_jid=5&fbclid=y"),
+                         "https://example.com/j?gh_jid=5")
+
+    def test_sira_kimligi_degistirmiyor(self):
+        self.assertEqual(scraper.canonical("https://example.com/j?b=2&a=1"),
+                         scraper.canonical("https://example.com/j?a=1&b=2"))
+
+
 if __name__ == "__main__":
     unittest.main()
