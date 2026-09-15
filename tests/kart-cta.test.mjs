@@ -47,8 +47,16 @@ test('geometri ve punto tek yerde tanımlı', () => {
   assert.doesNotMatch(ortak, /bg-(blue|white|gray)/);
 });
 
-test('ilan kartı paylaşılan tanımları kullanıyor', () => {
-  assert.match(ILAN, /from '\.\.\/lib\/kart-cta'/, 'paylaşılan tanım alınmamış');
+test('ilan kartında tam genişlikte düğme kalmadı', () => {
+  /*
+    Kart, paylaşılan CTA tanımlarını (`lib/kart-cta`) kullanıyordu çünkü
+    altında tam genişlikte bir başvuru düğmesi vardı. Onaylanan tasarımda
+    kartın tek eylemi sağ alttaki "İlanı incele" bağlantısı; başvuru
+    düğmesi ilan sayfasında, şartların yanında duruyor. Tanım dosyası
+    DURUYOR — fırsat kartı ve başka yüzeyler onu kullanmaya devam ediyor.
+  */
+  assert.doesNotMatch(ILAN, /from '\.\.\/lib\/kart-cta'/);
+  assert.match(ILAN, /İlanı incele/);
 });
 
 /*
@@ -117,5 +125,14 @@ test('İLAN KARTINDA TEK EYLEM VAR ve o birincil', () => {
   */
   assert.doesNotMatch(ILAN, />\s*Detaylar\s*</);
   assert.doesNotMatch(ILAN, /CTA_IKINCIL/, 'ilan kartında ikincil rol kalmadı');
-  assert.match(ILAN, /className=\{`\$\{CTA_ORTAK\} \$\{CTA_BIRINCIL\}`\}/);
+  /*
+    TEK EYLEM ARTIK "İLANI İNCELE" (onaylanan tasarım)
+
+    Kartta tam genişlikte dış başvuru düğmesi vardı ve öğrenciyi ilanın
+    kendi sayfasındaki ücret, sigorta, staj türü ve doğrulama
+    bilgisini atlayarak dış siteye yolluyordu. Başvuru düğmesi o
+    sayfada duruyor; kart oraya götürüyor.
+  */
+  assert.match(ILAN, /İlanı incele/);
+  assert.doesNotMatch(ILAN, /CTA_BIRINCIL/, 'kartta tam genişlikte düğme kalmadı');
 });

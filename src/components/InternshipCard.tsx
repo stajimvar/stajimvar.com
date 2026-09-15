@@ -11,6 +11,8 @@ import {
   ExternalLink,
   ShieldCheck,
   Star,
+  ArrowUpRight,
+  FileText,
 } from 'lucide-react';
 import { InternshipListing, MatchBreakdown } from '../types';
 import { ListingLogo } from './ListingLogo';
@@ -20,7 +22,6 @@ import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import { UlkeRozeti } from './UlkeRozeti';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { ILAN_KAYNAGI } from '../lib/urun-metni';
-import { CTA_BASARI, CTA_BIRINCIL, CTA_ORTAK } from '../lib/kart-cta';
 import { tarihMetni } from '../lib/tarih.mjs';
 import { YUZEY } from '../ui/tokens';
 /*
@@ -190,7 +191,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
       */
       className={`group relative flex min-w-0 flex-col gap-3 bg-white transition-all duration-150 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 sm:gap-3.5 ${
         yuzey
-          ? `${YUZEY.kabuk} ${YUZEY.ic} sm:hover:border-blue-500 sm:hover:shadow-xs`
+          ? `rounded-2xl border border-gray-200 bg-white ${YUZEY.ic} hover:border-blue-400`
           : 'rounded-2xl border border-gray-200 p-3.5 hover:border-blue-500 hover:shadow-xs sm:p-4.5'
       }`}
     >
@@ -270,7 +271,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             className="rounded-xl"
             title={listing.companyName}
           >
-            <div className="rounded-full bg-white p-[2px]">
+            <div className="bg-white">
               {/*
                 TELEFONDA BİR KADEME KÜÇÜK
 
@@ -283,8 +284,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               <ListingLogo
                 name={listing.companyName}
                 logoUrl={listing.companyLogo || undefined}
-                halkaIcinde
-                className="!h-9 !w-9 !text-xs sm:!h-[46px] sm:!w-[46px] sm:!text-sm group-hover:scale-105 transition-transform"
+                className="!h-12 !w-12 !rounded-lg !text-sm sm:!h-14 sm:!w-14"
               />
             </div>
           </div>
@@ -334,7 +334,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               tamamı zaten aynı ilana gidiyor (aşağıdaki uzatılmış bağlantı).
               İki ayrı tıklama hedefi üst üste binince biri ötekini yutuyordu.
             */}
-            <h3 className="font-bold text-blue-600 text-sm sm:text-base transition-colors">
+            <h3 className="font-bold text-gray-900 text-[15px] sm:text-base">
               {listing.companyName}
             </h3>
             {/*
@@ -503,18 +503,18 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           <div className="col-span-3 col-start-1 row-start-4 flex min-w-0 flex-wrap items-center gap-1.5 text-xs sm:col-span-2 sm:col-start-2">
             {kariyerSayfasindanIlan ? (
               <span
-                className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 font-medium text-gray-700"
+                className="inline-flex items-center gap-1.5 text-gray-600"
                 title="Bu ilan şirketin kendi kariyer sayfasından alındı"
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <FileText className="w-4 h-4 text-gray-400" />
                 <span>{ILAN_KAYNAGI.dis.etiket}</span>
               </span>
             ) : (
               <span
-                className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 font-medium text-gray-700"
+                className="inline-flex items-center gap-1.5 text-gray-600"
                 title="Bu ilanı şirket doğrudan StajımVar'da yayımladı; başvuru burada tamamlanıyor"
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                <FileText className="w-4 h-4 text-gray-400" />
                 <span>{ILAN_KAYNAGI.ic.etiket}</span>
               </span>
             )}
@@ -574,114 +574,22 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           bağlantının örtüsünün üstünde kalması gerekiyor, yoksa başvuru
           tıklaması karta gidiyor.
         */}
-        <div className="relative z-10 grid grid-cols-1 gap-2">
-          {(() => {
-            /*
-              Kendi ilanında başvuru yok, nötr bir durum: suçlayıcı ya da
-              hata gibi değil, yalnızca bilgi. Şirket kendi ilanını
-              öğrenci gözüyle görebilmeli.
-            */
-            if (kendiIlanim) {
-              return (
-                <span
-                  className={`${CTA_ORTAK} border`}
-                  style={{
-                    borderColor: SIRKET_KENAR_GUCLU,
-                    background: SIRKET_ROZET,
-                    color: SIRKET_VURGU_KOYU,
-                  }}
-                  title="Bu ilanı şirket hesabınız yönetiyor"
-                >
-                  <Building2 className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">Şirketinizin ilanı</span>
-                </span>
-              );
-            }
+        {/*
+          ALT EYLEM: "İLANI İNCELE" (onaylanan tasarım)
 
-            /*
-              BAŞVURULDU BİR AKSİYON DEĞİL
+          Kartta tam genişlikte "Şirket sayfasında başvur" düğmesi vardı
+          ve öğrenciyi karttan doğrudan dış siteye atıyordu: ilanın kendi
+          sayfasındaki ücret, sigorta, staj türü ve doğrulama bilgisi
+          atlanıyordu. Kart artık ilan sayfasına götürüyor; başvuru
+          düğmesi orada, bilgiyle birlikte duruyor.
 
-              Platform üzerinden başvurulmuş ilanda ikinci kutu bir başarı
-              durumu: `span`, tıklanmıyor, imleç değişmiyor, hover'ı yok.
-              Geometrisi düğmeyle aynı — kart alt alanı durum değişince
-              aynı yüksekliği koruyor.
-            */
-            if (hasApplied && yol.teslimEdiliyor) {
-              return (
-                <span className={`${CTA_ORTAK} ${CTA_BASARI}`}>
-                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">Başvuruldu</span>
-                </span>
-              );
-            }
-
-            /*
-              Ana eylem: derlenen ilanda şirketin kendi sayfası, StajımVar
-              ilanında site içi başvuru. Karar tek yerde:
-              lib/basvuru-yolu.mjs.
-            */
-            /*
-              Niyet kaydı: hangi ilandan başlandığı ve nereye gidileceği
-              girişten önce yazılıyor. OAuth tam sayfa yönlendirmesi React
-              durumunu siliyor; bu kayıt sekmede kalıyor (lib/basvuru-niyeti).
-            */
-            /*
-              DIŞ BAŞVURUDA GİRİŞ KAPISI KALDIRILDI
-
-              Buradaki düğme `DisBaglanti` ile giriş penceresine bağlıydı:
-              misafir "Resmî sitede başvur"a basınca ilana değil kayıt
-              ekranına gidiyordu. Başvuru zaten ŞİRKETİN kendi sayfasında
-              tamamlanıyor; araya kayıt koymak öğrenciyi ilandan uzaklaştıran
-              bir engel oluyordu.
-
-              Kaydetme, "başvurdum" işaretleme ve takip giriş istemeye devam
-              ediyor — onlar gerçekten hesaba yazılan şeyler. Kapı yalnızca
-              dışarı çıkan başvuru bağlantısından kalktı.
-
-              Adres `basvuruYolu` içinde `guvenliDisAdres`ten geçiyor; yoksa
-              bu dal hiç çalışmıyor ve aşağıdaki "işaretle" eylemi çiziliyor,
-              yani bozuk bir CTA basılmıyor.
-            */
-            if (yol.resmiAdres && yol.anaEylem === 'resmi-site') {
-              return (
-                <a
-                  id={`external-apply-btn-${listing.id}`}
-                  href={yol.resmiAdres}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow"
-                  onClick={(e) => e.stopPropagation()}
-                  title={yol.ozet}
-                  className={`${CTA_ORTAK} ${CTA_BIRINCIL}`}
-                >
-                  <span className="truncate">{yol.anaEtiket}</span>
-                  <ExternalLink className="h-3 w-3 shrink-0" />
-                </a>
-              );
-            }
-
-            /*
-              UZUN ETİKET KIRPILMASIN
-
-              Resmî adresi olmayan kayıtta ana eylem "Başvurduğumu
-              işaretle" ve bu etiket 160 piksellik kutuya 12 punto ile
-              sığmıyordu (ölçüldü: 130 px metin, 122 px yer). Etiketi
-              kısaltmak anlamı bozardı — "İşaretle" neyi işaretlediğini
-              söylemiyor. Yazı bir punto küçülüyor; geometri aynı kalıyor.
-            */
-            const uzunEtiket = yol.anaEtiket.length > 18;
-
-            return (
-              <button
-                id={`quick-apply-btn-${listing.id}`}
-                onClick={onQuickApply}
-                title={yol.ozet}
-                className={`${CTA_ORTAK} ${CTA_BIRINCIL} ${uzunEtiket ? 'text-[11px]' : ''}`}
-              >
-                <span className="truncate">{yol.anaEtiket}</span>
-                <ArrowRight className="h-3 w-3 shrink-0" />
-              </button>
-            );
-          })()}
+          `relative z-10`: uzatılmış kart bağlantısının örtüsünün üstünde.
+        */}
+        <div className="relative z-10 flex justify-end">
+          <span className="inline-flex items-center gap-1 text-sm font-bold text-blue-600">
+            İlanı incele
+            <ArrowUpRight aria-hidden className="h-4 w-4" />
+          </span>
         </div>
       </div>
     </div>
