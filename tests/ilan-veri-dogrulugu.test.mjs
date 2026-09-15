@@ -227,14 +227,17 @@ test('kurumsal_html adaptörü kayıtlı ve genel kariyer sayfasını ilan saym�
 
     1. Adres kalıbı: yalnız TEK İLANA giden adres alınıyor. Liste,
        kategori ve "tüm fırsatlar" sayfaları kalıbı geçmiyor.
-    2. `is_early_career`: staj/yeni mezun olmayan pozisyon atılıyor.
+    2. `erken_kariyer_mi`: staj/yeni mezun olmayan pozisyon atılıyor.
+       Türkiye profilinde bu doğrudan `is_early_career` (ülke-duyarlı
+       hat, 15 Eylül 2026; davranışı automation/tests/test_ulke_duyarli_hat.py
+       sabitliyor).
 
     Ölçüldü (14 Eylül 2026, canlı): Garanti BBVA listesinde 100 tekil
     ilan adresi var ve hiçbiri staj değil ("Yönetmen", "Lead",
     "Yönetici"). Adaptör 0 ilan döndürüyor — bu doğru cevap.
   */
   assert.match(fn, /if not kalip\.search\(tam\)/);
-  assert.match(fn, /if not is_early_career\(baslik, aciklama\)/);
+  assert.match(fn, /if not erken_kariyer_mi\(config, baslik, aciklama\)/);
 });
 
 test('erişim engeli aşılmıyor, kaynak bırakılıyor', () => {

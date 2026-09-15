@@ -15,6 +15,7 @@ from html.parser import HTMLParser
 from typing import Any, Iterable
 from urllib.parse import urljoin, urlsplit, urlunsplit
 import feedparser, requests
+from country_normalization import location_country_signals, structured_country_code
 from translation import translate_text, translate_title
 
 @dataclass(frozen=True)
@@ -98,6 +99,74 @@ def is_turkey_location(location: str | None) -> bool: return bool(TURKEY_LOCATIO
 def is_early_career(title: str, description: str) -> bool:
     return bool(EARLY_CAREER.search(f"{title} {description}"))
 
+# ÜLKE PROFİLLERİ — TÜRKİYE BİREBİR AYNI
+#
+# Hat yapısal olarak yalnız Türkiye'yi işliyordu: kullanıcının verdiği 13
+# Almanya kaynağı gerçek adaptörlerle kuru çalıştırıldı, 13'ü de 0 ilan
+# üretti (15 Eylül 2026). Kaynağın `country` alanı artık profili seçiyor.
+#
+# Türkiye profili eski iki fonksiyonu olduğu gibi çağırıyor. Almanya ve
+# Fransa'da konum ancak TEK ülke sinyali verirse eşleşiyor; yapısal ülke
+# alanı metinle çelişirse ilan alınmıyor. Bilinmeyen ülke kodu sessizce
+# Türkiye'ye düşmüyor: kaynak koşusu hata veriyor.
+DESTEKLENEN_ULKELER = frozenset({"TR", "DE", "FR"})
+
+# Türkiye dışı profillerde staj terimleri YALNIZ BAŞLIKTA aranıyor:
+# Almanca açıklamada "intern" ("dahilî") sıradan bir kelime, Fransızca
+# metinde "stage" başka anlamlarda da geçiyor; açıklama her ilanı staj
+# sayardı.
+YEREL_STAJ_TERIMLERI = {
+    "DE": re.compile(r"\b(?:pflicht)?praktik(?:um|ant\w*)", re.I),
+    "FR": re.compile(r"\b(?:stagiaire|stage)s?\b", re.I),
+}
+
+def kaynak_ulkesi(config: dict[str, Any]) -> str:
+    ulke = str(config.get("country") or "TR").strip().upper()
+    if ulke not in DESTEKLENEN_ULKELER:
+        raise ValueError(f"{config.get('name', 'kaynak')}: desteklenmeyen ülke {ulke!r}")
+    return ulke
+
+def konum_eslesiyor(config: dict[str, Any], konum: str | None, yapisal_ulke: Any = None) -> bool:
+    ulke = kaynak_ulkesi(config)
+    if ulke == "TR":
+        return is_turkey_location(konum)
+    sinyaller = location_country_signals(konum)
+    yapisal = structured_country_code(yapisal_ulke)
+    if yapisal and yapisal != ulke:
+        return False
+    if sinyaller and sinyaller != {ulke}:
+        return False
+    return yapisal == ulke or sinyaller == {ulke}
+
+def erken_kariyer_mi(config: dict[str, Any], baslik: str, aciklama: str) -> bool:
+    ulke = kaynak_ulkesi(config)
+    if ulke == "TR":
+        return is_early_career(baslik, aciklama)
+    return bool(EARLY_CAREER.search(baslik) or YEREL_STAJ_TERIMLERI[ulke].search(baslik))
+
+def ulke_etiketi(config: dict[str, Any]) -> str | None:
+    """Türkiye ilanlarında alan boş kalıyor (davranış değişmesin); ülke
+    eskisi gibi şehirden çıkarılıyor."""
+    ulke = kaynak_ulkesi(config)
+    return None if ulke == "TR" else ulke
+
+def dogrulanmis_ilanlarla_sinirla(config: dict[str, Any], jobs: Iterable[Job]) -> list[Job]:
+    """DOĞRULANMIŞ KİP: kaynak şirketin bütün panosunu değil, resmî
+    kaynaktan açık olduğu tek tek doğrulanmış ilanları alır.
+
+    `dogrulanmis_ilanlar` ilan kimlikleri; kimlik adreste bağımsız bir
+    parça olarak geçmeli ("222", ".../jobs/2224"ü tutmaz). Alan yoksa
+    sınırlama yok; alan var ama boşsa HİÇBİR ilan alınmıyor (fail-closed).
+    """
+    jobs = list(jobs)
+    if "dogrulanmis_ilanlar" not in config:
+        return jobs
+    kimlikler = [str(k) for k in config.get("dogrulanmis_ilanlar") or []]
+    return [
+        job for job in jobs
+        if any(re.search(rf"(?<![A-Za-z0-9]){re.escape(k)}(?![A-Za-z0-9])", job.source_url) for k in kimlikler)
+    ]
+
 def translate_job(job: Job, config: dict[str, Any]) -> Job:
     """Ilani gorunum icin Turkcelestirir; KAYNAK BASLIGI korunur.
 
@@ -169,6 +238,14 @@ def _jsonld_items(value: Any) -> Iterable[dict[str, Any]]:
             yield value
 
 
+def _basvuru_ulkesi(item: dict[str, Any]) -> str | None:
+    gereksinim = item.get("applicantLocationRequirements")
+    adaylar = gereksinim if isinstance(gereksinim, list) else [gereksinim]
+    adlar = {str(a.get("name")) for a in adaylar if isinstance(a, dict) and a.get("name")}
+    # Birden çok başvuru ülkesi tek ülke kanıtı değil.
+    return next(iter(adlar)) if len(adlar) == 1 else None
+
+
 def official_jsonld(config: dict[str, Any]) -> Iterable[Job]:
     """İzinli resmî kariyer sayfalarındaki schema.org JobPosting verisini okur."""
     for requested_url in config.get("urls", []):
@@ -201,11 +278,24 @@ def official_jsonld(config: dict[str, Any]) -> Iterable[Job]:
                 address = location.get("address") or {} if isinstance(location, dict) else {}
                 city = address.get("addressLocality") if isinstance(address, dict) else None
                 country = address.get("addressCountry") if isinstance(address, dict) else None
+                if isinstance(country, dict):
+                    country = country.get("name")
                 location_label = " ".join(str(x) for x in (city, country) if x)
+                uzaktan = str(item.get("jobLocationType") or "").upper() == "TELECOMMUTE"
 
-                if not title or not is_turkey_location(location_label):
+                if not title:
                     continue
-                if not is_early_career(title, description):
+                if kaynak_ulkesi(config) == "TR":
+                    if not is_turkey_location(location_label):
+                        continue
+                elif city or country:
+                    if not konum_eslesiyor(config, city, country):
+                        continue
+                elif not (uzaktan and konum_eslesiyor(config, None, _basvuru_ulkesi(item))):
+                    # Uzaktan ilanın ülke kanıtı schema.org
+                    # `applicantLocationRequirements`; o da yoksa ilan alınmıyor.
+                    continue
+                if not erken_kariyer_mi(config, title, description):
                     continue
 
                 source_url = item.get("url") or requested_url
@@ -215,11 +305,12 @@ def official_jsonld(config: dict[str, Any]) -> Iterable[Job]:
                     title,
                     organization.get("name") or config.get("company_name"),
                     city,
-                    mode(f"{title} {description} {item.get('jobLocationType', '')}"),
+                    "remote" if uzaktan and ulke_etiketi(config) else mode(f"{title} {description} {item.get('jobLocationType', '')}"),
                     description,
                     email(description),
                     company_website=organization.get("sameAs"),
                     company_logo=organization.get("logo"),
+                    country_code=ulke_etiketi(config),
                 )
 
 class _Baglantilar(HTMLParser):
@@ -335,10 +426,12 @@ def kurumsal_html(config: dict[str, Any]) -> Iterable[Job]:
 
         # STAJ/YENI MEZUN OLMAYAN POZISYON ALINMIYOR: kurumun listesinde
         # 20 ilan olup hicbiri staj degilse sonuc 0 olur.
-        if not is_early_career(baslik, aciklama):
+        if not erken_kariyer_mi(config, baslik, aciklama):
             continue
 
         sehir = config.get("city_hint")
+        if ulke_etiketi(config) and not konum_eslesiyor(config, sehir):
+            return
         yield Job(
             config["name"],
             adres,
@@ -349,6 +442,7 @@ def kurumsal_html(config: dict[str, Any]) -> Iterable[Job]:
             aciklama,
             email(aciklama),
             company_website=config.get("website"),
+            country_code=ulke_etiketi(config),
         )
 
 
@@ -359,8 +453,8 @@ def greenhouse(config: dict[str, Any]) -> Iterable[Job]:
     for item in response.json().get("jobs", []):
         description = clean(item.get("content", "")); title = clean(item.get("title", ""))
         location = (item.get("location") or {}).get("name")
-        if not is_turkey_location(location) or not is_early_career(title, description): continue
-        yield Job(config["name"], item["absolute_url"], title, config.get("organization_name") or item.get("company_name"), location, mode(title + " " + description), description, email(description))
+        if not konum_eslesiyor(config, location) or not erken_kariyer_mi(config, title, description): continue
+        yield Job(config["name"], item["absolute_url"], title, config.get("organization_name") or item.get("company_name"), location, mode(title + " " + description), description, email(description), country_code=ulke_etiketi(config))
 
 def ashby(config: dict[str, Any]) -> Iterable[Job]:
     """Ashby resmî Public Job Postings API: yalnızca yayımlanmış ilanlar."""
@@ -370,10 +464,11 @@ def ashby(config: dict[str, Any]) -> Iterable[Job]:
         if not item.get("isListed", True): continue
         description = clean(item.get("descriptionPlain", item.get("descriptionHtml", ""))); title = clean(item.get("title", ""))
         locations = " ".join([item.get("location") or ""] + [entry.get("location", "") for entry in item.get("secondaryLocations") or []])
-        if not is_turkey_location(locations) or not is_early_career(title, description): continue
+        yapisal = ((item.get("address") or {}).get("postalAddress") or {}).get("addressCountry")
+        if not konum_eslesiyor(config, locations, yapisal) or not erken_kariyer_mi(config, title, description): continue
         workplace = (item.get("workplaceType") or "").lower()
         work_mode = "remote" if item.get("isRemote") or workplace == "remote" else ("hybrid" if workplace == "hybrid" else mode(title + " " + description))
-        yield Job(config["name"], item.get("jobUrl") or item["applyUrl"], title, config.get("organization_name"), item.get("location"), work_mode, description, email(description))
+        yield Job(config["name"], item.get("jobUrl") or item["applyUrl"], title, config.get("organization_name"), item.get("location"), work_mode, description, email(description), country_code=ulke_etiketi(config))
 
 def lever(config: dict[str, Any]) -> Iterable[Job]:
     """Lever'in herkese açık Postings API'si; yalnızca Türkiye konumlu erken kariyer ilanları."""
@@ -382,10 +477,10 @@ def lever(config: dict[str, Any]) -> Iterable[Job]:
     for item in response.json():
         categories = item.get("categories") or {}; location = " ".join([categories.get("location") or ""] + (categories.get("allLocations") or []))
         title = clean(item.get("text", "")); description = clean(item.get("descriptionPlain", item.get("description", "")))
-        if not is_turkey_location(location) or not is_early_career(title, description): continue
+        if not konum_eslesiyor(config, location, item.get("country")) or not erken_kariyer_mi(config, title, description): continue
         workplace = (item.get("workplaceType") or "").lower()
         work_mode = "remote" if workplace == "remote" else ("hybrid" if workplace == "hybrid" else "onsite")
-        yield Job(config["name"], item.get("hostedUrl") or item["applyUrl"], title, config.get("organization_name"), categories.get("location"), work_mode, description, email(description))
+        yield Job(config["name"], item.get("hostedUrl") or item["applyUrl"], title, config.get("organization_name"), categories.get("location"), work_mode, description, email(description), country_code=ulke_etiketi(config))
 
 def location_text(locations: Any) -> str:
     """Konum listesini arama metnine çevirir. Workable sözlük, diğerleri düz metin döndürür."""
@@ -420,8 +515,8 @@ def workable(config: dict[str, Any]) -> Iterable[Job]:
         locations = item.get("locations", [])
         location = location_text(locations)
         title = clean(item.get("title", "")); description = clean(item.get("description", ""))
-        if not is_turkey_location(location) or not is_early_career(title, description): continue
-        yield Job(config["name"], item["url"], title, config.get("organization_name") or config.get("company_name"), city_of(locations), mode(str(item.get("workplace_type", ""))), description, email(description))
+        if not konum_eslesiyor(config, location) or not erken_kariyer_mi(config, title, description): continue
+        yield Job(config["name"], item["url"], title, config.get("organization_name") or config.get("company_name"), city_of(locations), mode(str(item.get("workplace_type", ""))), description, email(description), country_code=ulke_etiketi(config))
 
 def workday_ilan_adresi(host: str, site: str, path: str) -> str:
     """Workday ilanının herkese açık adresi.
@@ -441,19 +536,42 @@ def workday_ilan_adresi(host: str, site: str, path: str) -> str:
         return f"https://{host}{path}"
     return f"https://{host}/{site}{path}"
 
+WORKDAY_DETAY_UST_SINIRI = 25
+
 def workday(config: dict[str, Any]) -> Iterable[Job]:
-    """Public Workday CXS search; bounded pagination and no company-specific DOM parsing."""
+    """Public Workday CXS search; bounded pagination and no company-specific DOM parsing.
+
+    Türkiye dışı profilde konum metni ülke vermeyebiliyor: PUMA'nın
+    ilanında yalnız "PUMA Way PEG" yazıyor, "Germany" yalnız ilan
+    detayında (`jobPostingInfo.country`). Detay yalnız erken-kariyer
+    başlıklarında ve koşu başına üst sınırla soruluyor; Türkiye profilinde
+    hiç sorulmuyor (davranış aynı).
+    """
     host, tenant, site = config["host"], config["tenant"], config["site"]
     endpoint = f"https://{host}/wday/cxs/{tenant}/{site}/jobs"
+    detay_hakki = WORKDAY_DETAY_UST_SINIRI
     for offset in range(0, 200, 20):
         response = requests.post(endpoint, json={"limit":20,"offset":offset,"searchText":"intern"}, timeout=25, headers={"User-Agent":"StajimVarJobs/1.0"}); response.raise_for_status()
         postings = response.json().get("jobPostings", [])
         if not postings: break
         for item in postings:
             title=clean(item.get("title", "")); location=item.get("locationsText") or ""; path=item.get("externalPath")
-            if not path or not is_turkey_location(location) or not is_early_career(title, ""): continue
-            yield Job(config["name"], workday_ilan_adresi(host, site, path), title, config.get("company_name"), location, mode(item.get("timeType", "")), "")
+            if not path or not erken_kariyer_mi(config, title, ""): continue
+            if not konum_eslesiyor(config, location):
+                if kaynak_ulkesi(config) == "TR" or detay_hakki <= 0: continue
+                detay_hakki -= 1
+                if not konum_eslesiyor(config, None, _workday_detay_ulkesi(host, tenant, site, path)): continue
+            yield Job(config["name"], workday_ilan_adresi(host, site, path), title, config.get("company_name"), location, mode(item.get("timeType", "")), "", country_code=ulke_etiketi(config))
         if len(postings) < 20: break
+
+def _workday_detay_ulkesi(host: str, tenant: str, site: str, path: str) -> str | None:
+    try:
+        yanit = requests.get(f"https://{host}/wday/cxs/{tenant}/{site}{path}", timeout=25, headers={"User-Agent":"StajimVarJobs/1.0"})
+        if yanit.status_code != 200:
+            return None
+        return ((yanit.json().get("jobPostingInfo") or {}).get("country") or {}).get("descriptor")
+    except (requests.RequestException, ValueError, AttributeError):
+        return None
 
 def smartrecruiters(config: dict[str, Any]) -> Iterable[Job]:
     """SmartRecruiters herkese açık Posting API'si.
@@ -461,13 +579,42 @@ def smartrecruiters(config: dict[str, Any]) -> Iterable[Job]:
     Eskiden burada SMARTRECRUITERS_API_KEY zorunlu tutuluyordu; oysa
     `/v1/companies/{id}/postings` uç noktası anahtarsız çalışıyor (test edildi).
     Anahtar şartı, çalışabilecek bir kaynağı gereksiz yere kapatıyordu.
+
+    ÜLKE PARAMETRESİ KÜÇÜK HARF. Ölçüldü (15 Eylül 2026): Delivery Hero
+    için `country=TR` 0 ilan, `country=tr` 6 ilan döndürüyor. Büyük harf
+    sabit olduğu için bu kaynak sessizce hep boş dönüyordu.
+
+    `ref` API ADRESİ, BAŞVURU ADRESİ DEĞİL. Liste öğesinin `ref` alanı
+    `api.smartrecruiters.com/.../postings/<id>`; öğrenciye JSON açılırdı.
+    Herkese açık ilan `jobs.smartrecruiters.com/<şirket>/<id>` (200).
+
+    DOĞRULANMIŞ KİPTE liste taranmıyor: Bertelsmann'ın Almanya'da 471
+    ilanı var, doğrulanmış ilan ilk 100'de değildi. İlan kimliğiyle
+    çekiliyor; 404 ya da `active=false` ilan alınmıyor.
     """
-    url = f"https://api.smartrecruiters.com/v1/companies/{config['company_identifier']}/postings?country=TR&limit=100"
-    response = requests.get(url, timeout=25, headers={"User-Agent":"StajimVarJobs/1.0"}); response.raise_for_status()
+    sirket = config["company_identifier"]
+    basliklar = {"User-Agent":"StajimVarJobs/1.0"}
+    if "dogrulanmis_ilanlar" in config:
+        for kimlik in config.get("dogrulanmis_ilanlar") or []:
+            response = requests.get(f"https://api.smartrecruiters.com/v1/companies/{sirket}/postings/{kimlik}", timeout=25, headers=basliklar)
+            if response.status_code == 404: continue
+            response.raise_for_status()
+            item = response.json()
+            if item.get("active") is False: continue
+            yield from _smartrecruiters_ilani(config, item, item.get("postingUrl"))
+        return
+    url = f"https://api.smartrecruiters.com/v1/companies/{sirket}/postings?country={kaynak_ulkesi(config).lower()}&limit=100"
+    response = requests.get(url, timeout=25, headers=basliklar); response.raise_for_status()
     for item in response.json().get("content", []):
-        location = " ".join(filter(None, [item.get("location", {}).get("city"), item.get("location", {}).get("country")])); title = clean(item.get("name", ""))
-        if not is_turkey_location(location) or not is_early_career(title, ""): continue
-        yield Job(config["name"], item["ref"], title, config.get("organization_name"), location, None, "Detay için kaynak ilana gidin.")
+        yield from _smartrecruiters_ilani(config, item, None)
+
+def _smartrecruiters_ilani(config: dict[str, Any], item: dict[str, Any], ilan_adresi: str | None) -> Iterable[Job]:
+    konum = item.get("location") or {}
+    location = " ".join(filter(None, [konum.get("city"), konum.get("country")])); title = clean(item.get("name", ""))
+    eslesme = is_turkey_location(location) if kaynak_ulkesi(config) == "TR" else konum_eslesiyor(config, konum.get("city"), konum.get("country"))
+    if not eslesme or not erken_kariyer_mi(config, title, ""): return
+    adres = ilan_adresi or f"https://jobs.smartrecruiters.com/{config['company_identifier']}/{item['id']}"
+    yield Job(config["name"], adres, title, config.get("organization_name"), location, None, "Detay için kaynak ilana gidin.", country_code=ulke_etiketi(config))
 
 def workable_search(config: dict[str, Any]) -> Iterable[Job]:
     """Workable'ın şirketler arası herkese açık iş arama uç noktası.
@@ -565,9 +712,9 @@ def workable_search(config: dict[str, Any]) -> Iterable[Job]:
                 location_text = " ".join(
                     str(v) for v in [loc.get("city"), loc.get("region"), loc.get("countryName")] if v
                 )
-                if not is_turkey_location(location_text):
+                if not konum_eslesiyor(config, location_text, loc.get("countryCode")):
                     continue
-                if not is_early_career(title, description):
+                if not erken_kariyer_mi(config, title, description):
                     continue
 
                 birim_sonucu += 1
@@ -583,6 +730,7 @@ def workable_search(config: dict[str, Any]) -> Iterable[Job]:
                     email(description),
                     company_website=company.get("website"),
                     company_logo=company.get("image"),
+                    country_code=ulke_etiketi(config),
                 )
 
             # Bu sorgunun son sayfasına gelindiyse dur.
@@ -638,9 +786,9 @@ def personio(config: dict[str, Any]) -> Iterable[Job]:
         description = clean(ET.tostring(aciklama_dugumu, encoding="unicode")) if aciklama_dugumu is not None else ""
 
         kidem = al("seniority").casefold()
-        erken_kariyer = kidem in {"intern", "student", "entry"} or is_early_career(title, description)
+        erken_kariyer = kidem in {"intern", "student", "entry"} or erken_kariyer_mi(config, title, description)
 
-        if not is_turkey_location(ofisler) or not erken_kariyer:
+        if not konum_eslesiyor(config, ofisler) or not erken_kariyer:
             continue
 
         yield Job(
@@ -652,6 +800,7 @@ def personio(config: dict[str, Any]) -> Iterable[Job]:
             mode(f"{title} {description} {al('schedule')}"),
             description,
             email(description),
+            country_code=ulke_etiketi(config),
         )
 
 
@@ -675,7 +824,7 @@ def recruitee(config: dict[str, Any]) -> Iterable[Job]:
         location = " ".join(
             str(v) for v in [item.get("city"), item.get("country_code"), item.get("location")] if v
         )
-        if not is_turkey_location(location) or not is_early_career(title, description):
+        if not konum_eslesiyor(config, location, item.get("country_code")) or not erken_kariyer_mi(config, title, description):
             continue
 
         yield Job(
@@ -687,6 +836,7 @@ def recruitee(config: dict[str, Any]) -> Iterable[Job]:
             mode(f"{title} {description} {item.get('remote', '')}"),
             description,
             email(description),
+            country_code=ulke_etiketi(config),
         )
 
 

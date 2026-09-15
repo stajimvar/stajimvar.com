@@ -46,6 +46,7 @@ const SISTEM_ADI = {
   ashby: 'Ashby',
   workday: 'Workday',
   smartrecruiters: 'SmartRecruiters',
+  personio: 'Personio',
   official_jsonld: 'Şirketin kendi kariyer sayfası',
   /*
     `kurumsal_html` de şirketin KENDİ sayfası: ikisi aynı iddiayı

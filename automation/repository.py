@@ -49,6 +49,11 @@ KIND_BY_ADAPTER = {
 OFFICIAL_ADAPTERS = {
     "lever", "greenhouse", "ashby", "workable", "workday",
     "smartrecruiters", "workable_search",
+    # Personio'nun müşteri başına `/xml` akışı da aynı türden: kimlik
+    # istemeyen, dışarıdan okunsun diye yayımlanan besleme. Listede
+    # olmadığında kaynak `discovery_signal` oluyor ve ilanı hiçbir zaman
+    # yayına çıkmıyordu (adaptör vardı, kaynak yoktu; 15 Eylül 2026).
+    "personio",
     # Şirketin kendi kariyer sayfasından okunan ilan da resmî kaynaktır:
     # toplayıcı değil, işverenin kendi yayını.
     "generic_career", "official_jsonld",
