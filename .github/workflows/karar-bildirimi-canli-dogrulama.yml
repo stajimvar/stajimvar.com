@@ -1,0 +1,77 @@
+name: Karar bildirimi canlı doğrulama (geçici)
+
+# GEÇİCİ İŞ AKIŞI — DOĞRULAMA BİTİNCE SİLİNİYOR
+#
+# Yalnız elle tetikleniyor: zamanlanmış hiçbir tetikleyicisi yok, yani
+# kendi kendine asla koşmuyor. Tek işi, ilan karar bildiriminin GERÇEK
+# Resend teslimini bir kez ölçmek ve arkasında kayıt bırakmamak.
+#
+# Alıcı `ILAN_BILDIRIM_ALICI` (yetkili iç test adresi). Gerçek bir
+# şirkete e-posta gitmesi yapısal olarak imkânsız: kuyruğa yalnız bu
+# koşunun kurduğu test kaydı bırakılıyor ve koşu öncesi kuyruğun boş
+# olduğu ayrıca ölçülüyor.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: karar-bildirimi-canli-dogrulama
+  cancel-in-progress: false
+
+jobs:
+  dogrula:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      RESEND_FROM: ${{ secrets.RESEND_FROM }}
+      ILAN_BILDIRIM_ALICI: ${{ secrets.ILAN_BILDIRIM_ALICI }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # KOŞU ÖNCESİ GÜVENLİK ÖLÇÜMÜ
+      # Kuyruk boş olmalı. Boş değilse gerçek bir şirkete e-posta gitme
+      # riski var demektir ve doğrulama başlamadan durmalı.
+      - name: Kuyruk baştan boş mu
+        run: node scripts/karar-bildirimi-canli-dogrula.mjs durum
+
+      - name: Test kaydını kur ve kuyruğa karar bırak
+        run: node scripts/karar-bildirimi-canli-dogrula.mjs kur
+
+      - name: Kuyruk durumu (gönderim öncesi)
+        run: node scripts/karar-bildirimi-canli-dogrula.mjs durum
+
+      # BİRİNCİ KOŞU — gerçek e-posta burada gidiyor.
+      - name: İşçi 1. koşu (gerçek gönderim)
+        run: node scripts/ilan-karar-bildirimi-kuyrugu.mjs
+
+      - name: Kuyruk durumu (gönderim sonrası)
+        run: node scripts/karar-bildirimi-canli-dogrula.mjs durum
+
+      # İKİNCİ KOŞU — mükerrer e-posta ölçümü.
+      # Beklenen: "Karar bildirim kuyruğu boş." ve deneme sayısı 1'de
+      # kalıyor. Kayıt kuyruktan düştüğü için ikinci bir istek hiç
+      # kurulmuyor; sağlayıcı tarafındaki Idempotency-Key ikinci kilit.
+      - name: İşçi 2. koşu (mükerrer olmamalı)
+        run: node scripts/ilan-karar-bildirimi-kuyrugu.mjs
+
+      - name: Kuyruk durumu (2. koşudan sonra)
+        run: node scripts/karar-bildirimi-canli-dogrula.mjs durum
+
+      # TEMİZLİK HER DURUMDA
+      # Yukarıdaki adımlar düşse bile test kaydı canlıda kalmıyor.
+      - name: Test kayıtlarını temizle
+        if: always()
+        run: node scripts/karar-bildirimi-canli-dogrula.mjs temizle
+
+      - name: Temizlik sonrası doğrulama
+        if: always()
+        run: node scripts/karar-bildirimi-canli-dogrula.mjs durum
