@@ -212,6 +212,18 @@ WORK_TYPE = {"remote": "Remote", "hybrid": "Hybrid", "onsite": "On-site"}
 # --- Pipeline ----------------------------------------------------------------
 
 
+def ilan_durumu(raw: dict) -> str:
+    """Yayına mı çıkacak, taslakta mı kalacak?
+
+    AÇIKLIĞI DOĞRULANMAMIŞ İLAN YAYINLANMAZ. Kaynak sayfası duruyor ama
+    ilanın hâlâ açık olduğu kanıtlanamıyorsa (ne JSON-LD ne ATS API'si),
+    onu yayına koymak "bu staj açık" demek olurdu. Taslak kayıt hem
+    envanterde durur hem günlük bağlantı kontrolüne girer; öğrenciye
+    yalnız doğrulanmış ilanlar gösterilir.
+    """
+    return "draft" if (raw.get("raw") or {}).get("aciklik_dogrulanmadi") else "published"
+
+
 def reject(db, row_id: str, reason: str, *, run_source: str, dry: bool) -> None:
     if dry:
         return
@@ -333,7 +345,7 @@ def promote_one(db, raw: dict, source: dict, *, dry: bool) -> str:
         # Beceri çıkarımı tahminî; ilkler zorunlu, kalanlar tercih edilen sayılıyor.
         "required_skills": skills[:4],
         "preferred_skills": skills[4:10],
-        "status": "published",
+        "status": ilan_durumu(raw),
         "origin": "scraped",
         "source_id": source_id,
         "source_url": raw.get("url"),
@@ -361,7 +373,7 @@ def promote_one(db, raw: dict, source: dict, *, dry: bool) -> str:
         db, run_id=None, source_id=source_id, raw_listing_id=raw_id,
         event_type="promoted", message=raw["title"],
     )
-    return "published"
+    return ilan_durumu(raw)
 
 
 def main() -> None:

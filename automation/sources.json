@@ -923,6 +923,104 @@
       "urls": [
         "https://join.com/companies/neckar-hub/16689648-praktikum-fuer-studierende-junior-consultant-marketing-m-w-d"
       ]
+    },
+    {
+      "id": "bmwgroup-ilan-sayfasi-de",
+      "name": "BMW Group (Almanya, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "BMW Group",
+      "careers_url": "https://www.bmwgroup.jobs/de/de/jobfinder.html",
+      "aciklik_dogrulanmadi": true,
+      "urls": [
+        "https://www.bmwgroup.jobs/de/de/jobfinder/job-description.195753.html",
+        "https://www.bmwgroup.jobs/de/de/jobfinder/job-description.190132.html"
+      ]
+    },
+    {
+      "id": "porsche-ilan-sayfasi-de",
+      "name": "Porsche (Almanya, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Dr. Ing. h.c. F. Porsche AG",
+      "careers_url": "https://jobs.porsche.com/",
+      "aciklik_dogrulanmadi": true,
+      "urls": [
+        "https://jobs.porsche.com/index.php?ac=jobad&id=18107",
+        "https://jobs.porsche.com/index.php?ac=jobad&id=18498",
+        "https://jobs.porsche.com/index.php?ac=jobad&id=18113",
+        "https://jobs.porsche.com/index.php?ac=jobad&id=19450"
+      ]
+    },
+    {
+      "id": "amazon-ilan-sayfasi-de",
+      "name": "Amazon (Almanya, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Amazon",
+      "careers_url": "https://www.amazon.jobs/en/search",
+      "aciklik_dogrulanmadi": true,
+      "urls": [
+        "https://www.amazon.jobs/en/jobs/10488197/praktikum-im-bereich-logistik-gera-start-2027",
+        "https://www.amazon.jobs/en/jobs/10488201/praktikum-im-bereich-logistik-erfurt-start-2027"
+      ]
+    },
+    {
+      "id": "festool-ilan-sayfasi-de",
+      "name": "Festool Group (Almanya, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Festool Group",
+      "careers_url": "https://www.festool-group.com/karriere",
+      "aciklik_dogrulanmadi": true,
+      "urls": [
+        "https://www.festool-group.com/job/Praktikum-HR-Recruiting-Talent-Acquisition-%28SoSe-27%29/875-de_DE"
+      ]
+    },
+    {
+      "id": "barilla-ilan-sayfasi-de",
+      "name": "Barilla Group (Almanya, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Barilla Group",
+      "careers_url": "https://jobs.barillagroup.com/",
+      "aciklik_dogrulanmadi": true,
+      "urls": [
+        "https://jobs.barillagroup.com/job/Cologne-Praktikum-im-Trade-Marketing-Barilla-Pasta-Colo-Cologne/1373285733/"
+      ],
+      "city_hint": "Cologne"
+    },
+    {
+      "id": "stiebel-eltron-ilan-sayfasi-de",
+      "name": "Stiebel Eltron (Almanya, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Stiebel Eltron",
+      "careers_url": "https://karriere.stiebel-eltron.de/",
+      "aciklik_dogrulanmadi": true,
+      "urls": [
+        "https://karriere.stiebel-eltron.de/job/Holzminden-WerkstudentPraktikant-PR-und-Kommunikation-%28mwd%29-NI-37603/1434297833/"
+      ],
+      "city_hint": "Holzminden"
+    },
+    {
+      "id": "renault-ilan-sayfasi-de",
+      "name": "Renault Deutschland (Almanya, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Renault Deutschland AG",
+      "careers_url": "https://recruitingapp-5229.de.umantis.com/Vacancies/",
+      "aciklik_dogrulanmadi": true,
+      "urls": [
+        "https://recruitingapp-5229.de.umantis.com/Vacancies/806/Description"
+      ]
     }
   ],
   "notes": "Only add verified public ATS/API endpoints. Keep credentials in environment variables, never here."

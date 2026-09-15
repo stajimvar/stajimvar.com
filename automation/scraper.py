@@ -35,6 +35,12 @@ class Job:
     source_title: str | None = None
     country_code: str | None = None
     original_language: str | None = None
+    # AÇIKLIĞI DOĞRULANMADI
+    #
+    # Kaynak sayfası duruyor ama ilanın HÂLÂ AÇIK olduğu makine-okunur
+    # biçimde kanıtlanamıyor (JSON-LD yok, ATS API'si yok). Bu ilanlar
+    # yayına çıkmıyor; `promote` onları taslak olarak kaydediyor.
+    aciklik_dogrulanmadi: bool = False
 
 def clean(text: str) -> str: return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", unescape(text))).strip()
 def canonical(url: str) -> str:
@@ -804,6 +810,96 @@ def personio(config: dict[str, Any]) -> Iterable[Job]:
         )
 
 
+# SAYFANIN KENDİ KAPANMA BEYANI
+#
+# Bu kalıplar ilanın kapandığını SAYFANIN SÖYLEDİĞİ durumlar. Ölçüldü
+# (15 Eylül 2026): UBS ilan sayfası HTTP 200 dönüyor ama metninde
+# "expired" ve "no longer" geçiyor — sayfa duruyor diye açık saymak
+# öğrenciyi kapanmış ilana gönderirdi.
+KAPANMA_ISARETLERI = re.compile(
+    r"(?:no longer accept|position (?:has been )?(?:filled|closed)"
+    r"|job\s*(?:posting|ad)?\s*(?:has\s*)?expired|posting has expired"
+    r"|nicht mehr verf[uü]gbar|anzeige ist abgelaufen|bewerbungsfrist abgelaufen"
+    r"|stelle ist besetzt)",
+    re.I,
+)
+
+# Sayfa başlığındaki site ekleri. "Praktikum HR: Recruiting (SoSe 27)
+# Stellendetails | Festool Group" ilanın adı değil; ilanın adı + sitenin
+# imzası. İmza atılıyor, uydurma yapılmıyor.
+BASLIK_EKLERI = re.compile(r"\s*(?:stellendetails|stellenangebot|stellenanzeige|job details|job description)\s*$", re.I)
+
+def ilan_sayfasi_basligi(html: str) -> str | None:
+    """Önce h1, yoksa <title>. Hiçbiri yoksa None — başlık uydurulmuyor."""
+    okuyucu = _GorunurMetin()
+    okuyucu.feed(html)
+    if okuyucu.baslik:
+        return okuyucu.baslik
+    eslesme = re.search(r"<title[^>]*>(.*?)</title>", html, re.S | re.I)
+    if not eslesme:
+        return None
+    baslik = BASLIK_EKLERI.sub("", clean(eslesme.group(1)).split("|")[0].strip()).strip()
+    return baslik or None
+
+
+def resmi_ilan_sayfasi(config: dict[str, Any]) -> Iterable[Job]:
+    """AÇIKLIĞI DOĞRULANMAMIŞ ilan sayfası: tek tek adresler okunur.
+
+    Kullanıcının verdiği 15 Almanya ilanının hiçbiri makine-okunur
+    JobPosting verisi vermiyor (ölçüldü, 15 Eylül 2026): ne JSON-LD ne de
+    resmî bir ATS uç noktası var. Yani "bu ilan açık" diyemiyoruz; yalnız
+    "şirketin resmî ilan sayfası şu anda duruyor" diyebiliyoruz.
+
+    Bu yüzden:
+      · başlık SAYFANIN KENDİ metninden alınır (h1, yoksa <title>),
+      · ülke KÜRATÖR beyanıdır (`country`) ve ham kayıtta öyle işaretlenir,
+      · her ilan `aciklik_dogrulanmadi` ile damgalanır ve TASLAK kalır,
+      · sayfa kapandığını söylüyorsa ya da 404/410 dönüyorsa alınmaz,
+      · 401/403/429 görülürse kaynak BIRAKILIR — engel aşılmaz.
+
+    Bayrak zorunlu: bu adaptör yanlışlıkla doğrulanmış hatta kullanılırsa
+    kanıtsız ilan yayına çıkardı.
+    """
+    if config.get("aciklik_dogrulanmadi") is not True:
+        raise ValueError(f"{config.get('name', 'kaynak')}: resmi_ilan_sayfasi yalnız açıklığı doğrulanmamış hatta kullanılır")
+
+    basliklar = {"User-Agent": "StajimVarJobs/1.0 (+https://stajimvar.com/bot)"}
+    for adres in config.get("urls", []):
+        try:
+            yanit = requests.get(adres, timeout=25, headers=basliklar)
+        except requests.RequestException:
+            # Tek sayfanın okunamaması kaynağı düşürmemeli.
+            continue
+        finally:
+            time.sleep(float(config.get("crawl_delay_seconds") or 1.5))
+
+        if yanit.status_code in {401, 403, 429}:
+            return
+        if yanit.status_code != 200:
+            continue
+
+        okuyucu = _GorunurMetin()
+        okuyucu.feed(yanit.text)
+        if KAPANMA_ISARETLERI.search(okuyucu.metin):
+            continue
+
+        baslik = ilan_sayfasi_basligi(yanit.text)
+        if not baslik or not erken_kariyer_mi(config, baslik, ""):
+            continue
+
+        yield Job(
+            config["name"],
+            adres,
+            baslik,
+            config.get("company_name"),
+            config.get("city_hint"),
+            None,
+            "",
+            country_code=ulke_etiketi(config),
+            aciklik_dogrulanmadi=True,
+        )
+
+
 def recruitee(config: dict[str, Any]) -> Iterable[Job]:
     """Recruitee'nin herkese açık teklif (offers) API'si.
 
@@ -860,4 +956,5 @@ ADAPTERS = {
     "recruitee": recruitee,
     "official_jsonld": official_jsonld,
     "kurumsal_html": kurumsal_html,
+    "resmi_ilan_sayfasi": resmi_ilan_sayfasi,
 }

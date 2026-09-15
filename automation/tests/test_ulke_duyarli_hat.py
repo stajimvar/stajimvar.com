@@ -285,19 +285,37 @@ class KaynakKaydi(unittest.TestCase):
             with self.subTest(kaynak=k["id"]):
                 self.assertTrue(k.get("dogrulanmis_ilanlar") or k.get("urls"), "doğrulanmış ilan listesi ya da urls şart")
 
-    def test_almanya_ilk_kapsami_34_ilan(self):
-        de = [k for k in self.kaynaklar if k.get("country") == "DE"]
+    def test_almanya_ilk_kapsami_34_dogrulanmis_ilan(self):
+        """Doğrulanmış hat. Açıklığı belirsiz ilanlar ayrı hatta ve bu
+        sayıya GİRMİYOR (bkz. test_aciklik_belirsiz.py)."""
+        de = [k for k in self.kaynaklar
+              if k.get("country") == "DE" and not k.get("aciklik_dogrulanmadi")]
         adet = sum(len(k.get("dogrulanmis_ilanlar") or k.get("urls") or []) for k in de)
         self.assertEqual(adet, 34)
 
     def test_kanitsiz_ya_da_ulkesi_belirsiz_kaynak_yok(self):
+        """Hiçbir hatta girmeyenler: ülkesi kanıtlanamayan (Trade Republic,
+        L'Oréal), bota kapalı (Louis Vuitton), sayfası kapandığını söyleyen
+        (UBS), sunucudan boş gelen (Audi, EF), ilan sitesi/keşif bağlantısı
+        ve robots ile kapatılmış kariyer portalları."""
         metin = json.dumps(self.kaynaklar).lower()
-        for yasak in ["traderepublic", "loreal", "bmwgroup", "porsche", "amazon.jobs", "festool", "barilla",
-                      "stiebel", "umantis", "jobs.ubs.com", "careers.audi.com", "jobs.ef.com", "interny",
-                      "notion.site", "docs.google.com", "ausbildung-autohaus", "successfactors.eu", "sapsf.eu",
-                      "lufthansa", "fcbayern", "ai-academy", "louisvuitton"]:
+        for yasak in ["traderepublic", "loreal", "jobs.ubs.com", "careers.audi.com", "jobs.ef.com",
+                      "louisvuitton", "interny", "notion.site", "docs.google.com",
+                      "ausbildung-autohaus", "successfactors.eu", "sapsf.eu",
+                      "lufthansa", "fcbayern", "ai-academy"]:
             with self.subTest(yasak=yasak):
                 self.assertNotIn(yasak, metin)
+
+    def test_acikligi_kanitlanamayan_sayfalar_yalniz_belirsiz_hatta(self):
+        """Bu alan adlarında makine-okunur ilan verisi yok (ölçüldü).
+        Doğrulanmış hatta görünmeleri, kanıtsız ilanı yayına sokardı."""
+        for alan in ["bmwgroup.jobs", "jobs.porsche.com", "amazon.jobs", "festool-group.com",
+                     "barillagroup.com", "stiebel-eltron.de", "umantis.com"]:
+            for k in self.kaynaklar:
+                if alan in json.dumps(k):
+                    with self.subTest(alan=alan, kaynak=k["id"]):
+                        self.assertTrue(k.get("aciklik_dogrulanmadi"))
+                        self.assertEqual(k["type"], "resmi_ilan_sayfasi")
 
     def test_yeni_ulkeler_pasiflestirme_izin_listesinde_degil(self):
         """İzin listesine giriş 14 günlük ölçülmüş tur geçmişine bağlı (iş

@@ -41,6 +41,10 @@ KIND_BY_ADAPTER = {
     # JobPosting JSON-LD'si.
     "generic_career": "jsonld",
     "official_jsonld": "jsonld",
+    # Açıklığı doğrulanmamış tek ilan sayfası: sayfada yapılandırılmış veri
+    # YOK, adresi küratör seçti. "jsonld" demek olmayan bir kanıtı iddia
+    # etmek olurdu; enum'daki en dürüst karşılık "manual".
+    "resmi_ilan_sayfasi": "manual",
 }
 
 # Resmî ATS iş panosu API'leri: sağlayıcıların ilanların dışarıdan okunması
@@ -54,6 +58,10 @@ OFFICIAL_ADAPTERS = {
     # olmadığında kaynak `discovery_signal` oluyor ve ilanı hiçbir zaman
     # yayına çıkmıyordu (adaptör vardı, kaynak yoktu; 15 Eylül 2026).
     "personio",
+    # Şirketin kendi ilan sayfası: kaynağın SAHİBİ resmî, belirsiz olan
+    # ilanın açık olup olmadığı. O belirsizlik `aciklik_dogrulanmadi` ile
+    # taşınıyor ve ilanı taslakta tutuyor.
+    "resmi_ilan_sayfasi",
     # Şirketin kendi kariyer sayfasından okunan ilan da resmî kaynaktır:
     # toplayıcı değil, işverenin kendi yayını.
     "generic_career", "official_jsonld",
@@ -309,6 +317,15 @@ def raw_listing_payload(job: Any, source_id: str, canonical_url: str, now: str) 
             "city": job.city,
             "work_mode": job.work_mode,
             "country_code": country_code,
+            # ÜLKE KANITI KİMDEN
+            #
+            # "kaynak": ülke kaynağın kendi verisinden çıktı (konum ya da
+            # yapısal ülke alanı). "kurator": sayfa ülkeyi makine-okunur
+            # biçimde söylemiyor, kaydı açan kişi beyan etti. İkisi aynı
+            # güçte değil; ayrımı kaydetmeyen bir satır bunu gizlerdi.
+            "ulke_kaniti": "kurator" if getattr(job, "aciklik_dogrulanmadi", False) else "kaynak",
+            # Açıklığı doğrulanmadıysa ilan yayına çıkmıyor (promote).
+            "aciklik_dogrulanmadi": bool(getattr(job, "aciklik_dogrulanmadi", False)),
             "original_language": getattr(job, "original_language", None),
             "source_name": job.source_name,
             # Bazı kaynaklar şirket sitesini ve logosunu ilanla veriyor;
