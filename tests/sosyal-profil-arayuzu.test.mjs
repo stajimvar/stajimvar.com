@@ -1879,34 +1879,45 @@ test('ziyaretçi görünümü iki sütun, ızgara sahibin ekranıyla aynı ölç
   assert.doesNotMatch(gorunum, /PortfolyoUstSatiri/);
 });
 
-test('dört sayaç kimlik kartında tek şeritte; sağ sütun doğrudan ızgarayla başlıyor', () => {
+test('şeritte iki sayaç; kişisel listeler kilitli satırda, sağ sütun doğrudan ızgarayla başlıyor', () => {
   /*
-    "N Paylaşım · N Bağlantı", "Paylaş" ve dişli sağ sütunun üstünde
-    AYRI bir satırdı; sol kart zaten sayaçları ve bir eylem satırı
-    çiziyordu — aynı ekranda iki sayaç şeridi, iki eylem bölgesi. Hepsi
-    tek şeride indi ve hepsi aynı öğe (`StatItem`): sağ sütundaki
-    satır içi "sayı etiket" biçimi karta taşınmadı.
+    ŞERİT İKİ SAYACA İNDİ (onaylanan tasarım, 15 Eylül 2026)
+
+    "kaydedilen" ve "başvuru" paylaşım/bağlantıyla aynı dört hücreli
+    şeritteydi. Ama bunlar profilin büyüklüğünü anlatan sayılar değil:
+    kişinin KENDİ listeleri, yalnız ona görünüyorlar. Aynı şeritte
+    dururken herkese açık bir profil bilgisi gibi okunuyorlardı.
+
+    İkisi artık CV/düzenle düğmelerinin altında, KİLİT simgeli kendi
+    satırında ve her biri kendi listesini açıyor — sayı kaybolmadı.
 
     "MÜLAKAT" ŞERİTTE YOK: beş hücre 390 piksele sığmıyordu (kullanıcı
-    ekran görüntüsü). Sayı veri olarak duruyor — prop'lar silinmedi —
-    yalnız çizilmiyor; sütun sayısı 2/4.
+    ekran görüntüsü). Sayı veri olarak duruyor — prop'lar silinmedi.
 
     Veri yolu TEK: kart sosyal veri çekmiyor, panel `onPortfolyoSatiri`
     ile yukarı veriyor (App → profil ekranı → kart). Bağlantı sayacı
     yine gerçek `<a href="/baglantilar">`.
   */
-  const serit = govdeAl(profilBasligi, 'className={`grid ${sosyalHucre', '</div>');
-  assert.match(serit, /'grid-cols-2' : 'grid-cols-4'/);
-  for (const etiket of ['kaydedilen', 'başvuru', 'paylaşım', 'bağlantı']) {
+  const serit = govdeAl(profilBasligi, 'className="grid grid-cols-2 items-start"', '</div>');
+  for (const etiket of ['paylaşım', 'bağlantı']) {
     assert.match(serit, new RegExp(`<StatItem[^>]*etiket="${etiket}"`), `${etiket} sayacı şeritte`);
   }
-  assert.doesNotMatch(serit, /mülakat|grid-cols-5/, 'mülakat hücresi şeritten kalktı');
+  for (const etiket of ['kaydedilen', 'başvuru']) {
+    assert.doesNotMatch(
+      serit,
+      new RegExp(`etiket="${etiket}"`),
+      `${etiket} sayaç şeridinden kalktı`,
+    );
+  }
+  assert.doesNotMatch(serit, /mülakat|grid-cols-4|grid-cols-5/, 'şerit iki hücre');
   assert.match(profilBasligi, /mulakatSayisi: number;/, 'sayı veri olarak duruyor');
-  assert.ok(
-    serit.indexOf('etiket="başvuru"') < serit.indexOf('etiket="paylaşım"') &&
-      serit.indexOf('etiket="paylaşım"') < serit.indexOf('etiket="bağlantı"'),
-    'sosyal ikili öğrenci ikilisinden sonra',
-  );
+
+  /* Kişisel satır: kilit, gerçek sayı ve kendi ekranına giden eylem. */
+  const kisisel = govdeAl(profilBasligi, "{ etiket: 'Kaydedilenler'", '</div>');
+  assert.match(kisisel, /etiket: 'Kaydedilenler', deger: kaydedilenSayisi, git: onKaydedilenlere/);
+  assert.match(kisisel, /etiket: 'Başvurular', deger: basvuruSayisi, git: onBasvurulara/);
+  assert.match(kisisel, /<Lock aria-hidden/, 'yalnız sahibine görünür olduğu simgeyle söyleniyor');
+
   assert.match(serit, /href="\/baglantilar"/);
   assert.match(sayacOgesi, /<a\n\s*href=\{href\}/);
   /*

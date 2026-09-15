@@ -62,6 +62,14 @@ interface GirisProps {
   onTamamlandi: () => void;
   /** Simge ölçüsü çağırandan: Ağım'ın çubuğu ile site çubuğu aynı değil. */
   dugmeSinifi: string;
+  /*
+    Düğmenin YANINDA yazı — yalnız isteyen ekranda. Üst çubukta ve
+    profilde düğme bir simge (yer dar, anlamı `aria-label` taşıyor);
+    Ağım'ın geniş ekran sol sütununda ise tam genişlikte bir eylem
+    düğmesi ve orada yazısız bir kare "neyi paylaşıyorum" sorusunu
+    cevapsız bırakırdı.
+  */
+  etiket?: string;
   ikonSinifi?: string;
 }
 
@@ -85,6 +93,7 @@ export const FotografPaylasGirisi = React.forwardRef<FotografPaylasKolu, GirisPr
   onNavigate,
   onTamamlandi,
   dugmeSinifi,
+  etiket,
   ikonSinifi = 'h-6 w-6',
 }, kol) => {
   const dosyaGirdisi = React.useRef<HTMLInputElement>(null);
@@ -138,6 +147,7 @@ export const FotografPaylasGirisi = React.forwardRef<FotografPaylasKolu, GirisPr
         className={`${dugmeSinifi} disabled:cursor-default disabled:opacity-40`}
       >
         <ImagePlus aria-hidden className={ikonSinifi} />
+        {etiket && <span>{etiket}</span>}
       </button>
 
       {/*

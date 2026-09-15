@@ -277,6 +277,26 @@ export const AgimSayfasi: React.FC<Props> = ({
     */
     <header className="sticky top-0 z-20 border-b border-gray-200 bg-white lg:hidden">
       <div className="relative flex h-15 items-center gap-1 px-2.5">
+      {/*
+        MARKA SOL ÜSTTE — ONAYLANAN TASARIM
+
+        Marka bir süre ortadaydı (mutlak konumla). Sitenin bütün
+        ekranlarında olduğu gibi burada da sol üstte duruyor ve işlem
+        simgeleri sağda toplanıyor; telefonda sitenin büyük üst çubuğu
+        gizli olduğu için kullanıcının hangi üründe olduğunu söyleyen
+        tek yer yine bu satır.
+
+        Ölçü SİTE LOGOSUYLA AYNI: `Logo` bileşeni `md` boyutunda
+        `text-[23px] sm:text-2xl tracking-[-0.03em]` ve `font-black`
+        kullanıyor.
+      */}
+      <h1 className="text-[23px] font-black leading-none tracking-[-0.03em] text-gray-900 sm:text-2xl">
+        Stajım<span className="text-blue-600">Var</span>
+      </h1>
+
+      {/* İşlemler sağda: marka solda kaldığı için boşluğu bu alıyor. */}
+      <span aria-hidden className="flex-1" />
+
       <FotografPaylasGirisi
         ref={paylasKolu}
         hazirMi={durum !== 'yukleniyor'}
@@ -305,33 +325,6 @@ export const AgimSayfasi: React.FC<Props> = ({
         )}
       </button>
 
-      {/*
-        Ortada akışın adı değil MARKA duruyor.
-
-        Önce "Senin için" yazıyordu ve yanına bir akış seçici düşünülmüştü.
-        İkinci bir akış yok: tek akışı adlandırmak, olmayan bir seçim
-        varmış gibi durdu. Telefonda sitenin büyük üst çubuğu gizli
-        olduğu için kullanıcının hangi üründe olduğunu söyleyen tek yer
-        de burası.
-      */}
-      {/*
-        Ölçü SİTE LOGOSUYLA AYNI: `Logo` bileşeni `md` boyutunda
-        `text-xl sm:text-2xl tracking-[-0.03em]` kullanıyor ve marka
-        telefonda 20 piksel duruyor. Yazı tipi ağırlığı da logoyla aynı
-        (`font-black`).
-
-        ORTALAMA MUTLAK, `flex-1` DEĞİL: iki yandaki simge kümeleri bugün
-        eşit (ikişer düğme) ama biri değişince marka sessizce kayardı.
-        Header.tsx'te aynı kayma ölçülmüştü (14 piksel) ve aynı yolla
-        çözülmüştü. `pointer-events-none`: marka bir düğme değil, altındaki
-        simgelerin tıklamasını yutmamalı.
-      */}
-      <h1 className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-[23px] font-black leading-none tracking-[-0.03em] text-gray-900 sm:text-2xl">
-        Stajım<span className="text-blue-600">Var</span>
-      </h1>
-
-      {/* Sağdaki küme sola yaslanmasın: marka mutlak olduğu için boşluğu bu alıyor. */}
-      <span aria-hidden className="flex-1" />
 
       <button
         type="button"
@@ -598,8 +591,62 @@ export const AgimSayfasi: React.FC<Props> = ({
 
         Sağ sütunda ÖNERİ LİSTESİ YOK — gerekçe boş durumun yanında.
       */}
-      <div className="mx-auto w-full max-w-[975px] gap-8 px-0 lg:flex lg:items-start lg:px-6 lg:pt-6">
-        <main className="min-w-0 flex-1 lg:max-w-[600px]">
+      <div className="mx-auto w-full max-w-[1180px] gap-8 px-0 lg:flex lg:items-start lg:px-6 lg:pt-6">
+        {/*
+          SOL NAVİGASYON — YALNIZ GENİŞ EKRAN (onaylanan tasarım)
+
+          Telefonda alt menü zaten bu işi yapıyor; orada ikinci bir menü
+          çizmek aynı bağlantıları iki kez göstermek olurdu. Geniş
+          ekranda akışın solu boştu ve akış 600 piksele kadar
+          genişliyordu: fotoğraf kartı gereğinden büyük, göz satır başını
+          kaybediyordu. Akış 500 piksele indi, sol sütun gezinmeyi aldı.
+
+          Üç bağlantı da GERÇEK adres: `/agim`, `/agim/baglantilar`,
+          `/cv`. "Fotoğraf paylaş" üst çubuktaki ile AYNI bileşen —
+          ikinci bir paylaşım yolu değil, aynı kolun ikinci tutamağı.
+        */}
+        <nav aria-label="Ağım" className="hidden w-[220px] shrink-0 lg:block">
+          <div className="sticky top-6 space-y-1">
+            {[
+              { ad: 'Akış', yol: '/agim' },
+              { ad: 'Bağlantılar', yol: '/agim/baglantilar' },
+              { ad: 'Profilim', yol: '/cv' },
+            ].map((oge) => {
+              const secili = oge.yol === '/agim';
+              return (
+                <a
+                  key={oge.yol}
+                  href={oge.yol}
+                  onClick={(olay) => {
+                    if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.button !== 0) return;
+                    olay.preventDefault();
+                    onNavigate(oge.yol);
+                  }}
+                  aria-current={secili ? 'page' : undefined}
+                  className={`flex min-h-11 items-center rounded-xl px-3 text-sm font-bold transition-colors ${
+                    secili ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  {oge.ad}
+                </a>
+              );
+            })}
+
+            <div className="pt-3">
+              <FotografPaylasGirisi
+                hazirMi={durum !== 'yukleniyor'}
+                paylasabilirMi={paylasabilirMi}
+                onOnKosulEksik={() => (onPaylasimOlustur ? onPaylasimOlustur() : onNavigate('/cv'))}
+                onNavigate={onNavigate}
+                onTamamlandi={() => setTazeleme((n) => n + 1)}
+                dugmeSinifi="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition-colors hover:bg-blue-700"
+                etiket="Fotoğraf paylaş"
+              />
+            </div>
+          </div>
+        </nav>
+
+        <main className="min-w-0 flex-1 lg:max-w-[500px]">
           {akisGovdesi}
         </main>
 

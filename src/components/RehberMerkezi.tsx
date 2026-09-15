@@ -434,9 +434,26 @@ export const RehberMerkezi: React.FC<{
             motoru ve ekran okuyucu için hiçbir şey değişmiyor. Geniş
             ekranda (`lg:not-sr-only`) başlık eskisi gibi görünüyor.
           */}
-          <h1 className="sr-only lg:not-sr-only min-w-0 text-center [font-size:clamp(1rem,5vw,1.5rem)] font-extrabold leading-tight tracking-tight text-gray-950 break-words lg:text-left lg:[font-size:clamp(1.125rem,1.82vw,1.85rem)]">
-            Öğrenci rehberleri, <span className="text-blue-600">tek listede</span>.
-          </h1>
+          {/*
+            ONAYLANAN TASARIM: SAYFA ADI + NİYET CÜMLESİ
+
+            Başlık telefonda `sr-only` idi. Onaylanan tasarımda sayfanın
+            adı ("Rehber") ve ne işe yaradığı ("Bir sonraki adımın için.")
+            telefonda da okunuyor: alt menüden gelen kişi nereye geldiğini
+            görüyor.
+
+            Arama kelimesi kaybolmuyor — `h1` hâlâ "Öğrenci rehberleri"
+            diyor, ikinci satır onun altında ikinci derece metin.
+          */}
+          <div className="min-w-0 space-y-1">
+            <h1 className="min-w-0 [font-size:clamp(1.75rem,8vw,2.25rem)] font-black leading-[1.1] tracking-tight text-gray-950 break-words lg:[font-size:clamp(1.5rem,2.4vw,2.5rem)]">
+              Rehber
+            </h1>
+            <p className="text-[15px] font-semibold text-gray-500 sm:text-base">
+              Bir sonraki adımın için.
+            </p>
+            <p className="sr-only">Öğrenci rehberleri, tek listede.</p>
+          </div>
 
           {/*
             TELEFONDA ARAMA VE SÜZGEÇ ÜST ÇUBUKTA
