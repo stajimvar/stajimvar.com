@@ -1149,11 +1149,22 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             erişilebilirlik ağacında bırakıyor — ön render edilen `h1`
             yerinde. Geniş ekranda eskisi gibi görünüyor.
           */}
-          <h1 className="sr-only lg:not-sr-only text-center lg:text-left [font-size:clamp(1rem,5vw,1.5rem)] lg:[font-size:clamp(1.125rem,1.82vw,1.85rem)] font-extrabold leading-tight tracking-tight text-gray-900 break-words">
-            <span className="inline lg:block">Şirketlerin staj ilanları, </span>
-            <span className="inline lg:block">
-              <span className="text-blue-600">tek listede</span>.
-            </span>
+          {/*
+            ONAYLANAN TASARIM: ÜST ETİKET + KISA BAŞLIK
+
+            Başlık telefonda `sr-only` idi (dikey yer ilanın hakkı diye).
+            Onaylanan tasarımda sayfanın adı telefonda da GÖRÜNÜYOR: kişi
+            alt menüden "İlanlar"a bastığında nereye geldiğini okuyor.
+
+            Üst etiket ("STAJ İLANLARI") gerçek metin, süs değil: arama
+            niyetinin kelimesi ön render edilen HTML'de kalıyor — başlığın
+            kendisi artık o kelimeyi taşımıyor.
+          */}
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500">
+            Staj ilanları
+          </p>
+          <h1 className="[font-size:clamp(1.75rem,8vw,2.25rem)] lg:[font-size:clamp(1.5rem,2.4vw,2.5rem)] font-black leading-[1.1] tracking-tight text-gray-900 break-words">
+            İlk adımın burada.
           </h1>
 
           {/*

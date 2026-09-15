@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Check, ChevronRight, ImagePlus, Plus } from 'lucide-react';
+import { Award, Check, ChevronRight, ImagePlus, Lock, Plus } from 'lucide-react';
 import { adYazimi } from '../lib/ad';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
 import { ProfilAyarMenusu } from './sosyal/ProfilAyarMenusu';
@@ -482,11 +482,9 @@ export const ProfilBasligi: React.FC<Props> = ({
       kural burada söz konusu değil: bu kart yalnız sahibin ekranında.
     */}
     <div
-      className={`grid ${sosyalHucre === 'yok' ? 'grid-cols-2' : 'grid-cols-4'} items-start`}
+      className="grid grid-cols-2 items-start"
       aria-busy={sosyalHucre === 'yukleniyor' || undefined}
     >
-      <StatItem deger={kaydedilenSayisi} etiket="kaydedilen" onClick={onKaydedilenlere} />
-      <StatItem deger={basvuruSayisi} etiket="başvuru" onClick={onBasvurulara} />
       {sosyalHucre === 'yukleniyor' && (
         <>
           <SayacIskeleti />
@@ -646,6 +644,44 @@ export const ProfilBasligi: React.FC<Props> = ({
       <Button tur="secondary" onClick={onDuzenle} tamGenislik>
         {eksikler.length > 0 ? 'Profilini tamamla' : 'Profili düzenle'}
       </Button>
+    </div>
+
+    {/*
+      KAYDEDİLENLER VE BAŞVURULAR — SAYAÇ DEĞİL, KİŞİSEL İŞLEM
+
+      İkisi paylaşım ve bağlantının yanında, dört hücreli bir sayaç
+      şeridindeydi. Ama bunlar profilin "büyüklüğünü" anlatan sayılar
+      değil: kişinin KENDİ listeleri ve yalnız ona görünüyorlar. Aynı
+      şeritte durdukları sürece herkese açık bir profil bilgisi gibi
+      okunuyorlardı.
+
+      Kilit simgesi bunu söylüyor, sayı da kayıp değil: her satır kendi
+      listesini açıyor ve kaç kayıt olduğunu yanında yazıyor.
+    */}
+    <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-gray-200">
+      {[
+        { etiket: 'Kaydedilenler', deger: kaydedilenSayisi, git: onKaydedilenlere },
+        { etiket: 'Başvurular', deger: basvuruSayisi, git: onBasvurulara },
+      ].map((oge, sira) => (
+        <button
+          key={oge.etiket}
+          type="button"
+          onClick={oge.git}
+          disabled={!oge.git}
+          className={`flex min-h-12 items-center justify-between gap-1.5 px-2.5 text-left transition-colors hover:bg-gray-50 disabled:cursor-default disabled:hover:bg-transparent ${
+            sira === 0 ? 'border-r border-gray-200' : ''
+          }`}
+        >
+          <span className="flex min-w-0 items-center gap-2">
+            <Lock aria-hidden className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+            <span className="truncate text-[13px] font-semibold text-gray-900">{oge.etiket}</span>
+          </span>
+          <span className="flex shrink-0 items-center gap-0.5 text-[13px] font-bold tabular-nums text-gray-500">
+            {oge.deger}
+            {oge.git && <ChevronRight aria-hidden className="h-4 w-4 text-gray-400" />}
+          </span>
+        </button>
+      ))}
     </div>
 
     {/*

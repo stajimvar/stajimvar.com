@@ -651,6 +651,36 @@ export const Header: React.FC<HeaderProps> = ({
           */}
           <div className="flex flex-1 items-center gap-2 sm:gap-3 lg:flex-none lg:gap-6 min-w-0">
             {/*
+              MARKA GERÇEKTEN ORTADA.
+
+              MARKA SOL ÜSTTE — TELEFONDA DA.
+
+              Bir süre telefonda ortalanmıştı (mutlak konumla). Onaylanan
+              tasarımda marka her ekranda sol üstte duruyor ve işlem
+              simgeleri sağda toplanıyor: göz sayfayı soldan okumaya
+              başlıyor, "neredeyim" sorusunu ilk gördüğü şey yanıtlıyor.
+
+              Telefonda yalnız "StajımVar" yazısı çiziliyor — amblem ve
+              nokta `lg:` üstünde geliyor (bkz. Logo bileşeni).
+            */}
+            <div className="shrink-0">
+              <Logo
+                onClick={() => {
+                  setUserRole('student');
+                  setActiveTab('internships');
+                }}
+              />
+            </div>
+            {/*
+              İŞLEM SİMGELERİ SAĞDA TOPLANIYOR
+
+              Marka sola alınınca bu simgeler onun sağına yapışıyordu;
+              `ml-auto` ile aradaki boşluğu alıp sağ kümenin (bildirim,
+              hesap) hemen yanına oturuyorlar. Dar ekranda çakışma yok:
+              marka `shrink-0`, küme sabit genişlikli düğmelerden oluşuyor.
+            */}
+            <div className="ml-auto flex items-center gap-1 sm:gap-2 lg:hidden">
+            {/*
               FOTOĞRAF PAYLAŞMA — YALNIZ KENDİ PROFİLİNDE
 
               Ağım'ın üst çubuğundaki simgenin AYNISI: aynı bileşen,
@@ -749,25 +779,6 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
                 )}
 
-            {/*
-              MARKA GERÇEKTEN ORTADA.
-
-              Önce `flex-1 justify-center` ile ortalanıyordu ama o, iki
-              yan kümenin ARASINI ortalıyor: sol küme (iki simge, 98 px)
-              sağdan (69 px) geniş olduğu için marka 14 piksel sağa
-              kayıyordu (ölçüldü). Mutlak konum ekranın kendisini
-              ortalıyor, yan kümelerin genişliğinden bağımsız.
-
-              `lg:` üstünde eski akışına dönüyor: orada logo solda ve
-              gezinme onun sağında.
-            */}
-            <div className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 shrink-0">
-              <Logo
-                onClick={() => {
-                  setUserRole('student');
-                  setActiveTab('internships');
-                }}
-              />
             </div>
 
             {/* Desktop Student Navigation Bar */}

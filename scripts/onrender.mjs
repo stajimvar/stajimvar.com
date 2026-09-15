@@ -2294,7 +2294,16 @@ async function main() {
       '<div class="sv-govde">' +
       '<div class="sv-kutu sv-yan"></div>' +
       '<main class="sv-liste">' +
-      '<h1>Şirketlerin staj ilanları, tek listede</h1>' +
+      /*
+        ÖN RENDER İLE UYGULAMA AYNI BAŞLIĞI SÖYLÜYOR
+
+        Ekran başlığı onaylanan tasarımla "İlk adımın burada." oldu
+        (MatchedInternshipsView). Buradaki h1 eski cümlede kalsaydı
+        arama motorunun gördüğü sayfa ile kullanıcının gördüğü sayfa
+        ayrışırdı. Arama niyetinin kelimesi üst etikette duruyor.
+      */
+      '<p class="sv-etiket">Staj ilanları</p>' +
+      '<h1>İlk adımın burada.</h1>' +
       '<p class="sv-giris">Farklı kariyer sayfalarını tek tek gezme. İlanları aracı ' +
       'sitelerden değil, şirketlerin kendi kariyer sayfalarından derliyoruz; her ' +
       'ilanda şirketin kendi başvuru bağlantısı var.</p>' +
