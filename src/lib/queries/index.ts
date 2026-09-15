@@ -42,7 +42,7 @@ function fail(context: string, error: { message: string } | null): never {
 
 const LISTING_SELECT = `
   ${LISTING_COLUMNS},
-  companies ( name, slug, logo_url, industry, size, location, description, rating )
+  companies ( name, slug, logo_url, cover_url, industry, size, location, description, rating )
 `;
 
 /**

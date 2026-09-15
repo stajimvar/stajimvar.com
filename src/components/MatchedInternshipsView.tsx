@@ -23,6 +23,8 @@ import {
   Calendar,
   Users,
   X,
+  Home,
+  BookOpen,
 } from 'lucide-react';
 import { InternshipListing, StudentProfile, MatchBreakdown, ApplicationRecord } from '../types';
 import { calculateInternshipMatch } from '../utils/matchingEngine';
@@ -1168,6 +1170,99 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           </h1>
 
           {/*
+            ARAMA VE HIZLI ÇİPLER — BAŞLIĞIN ALTINDA (onaylanan tasarım)
+
+            Telefonda arama ve süzgeç yalnız üst çubuktaki iki simgeydi;
+            tasarımda ikisi de sayfanın kendi gövdesinde ve görünür.
+            Simgeler üst çubukta DURUYOR (kaydırınca da erişilebilsin);
+            burası ilk karşılaşma.
+
+            ÇİPLER GERÇEK SÜZGECE BAĞLI ve hiçbiri sabit değil:
+            · "Tümü" arama ve çalışma biçimi seçimini temizliyor,
+            · şehir çipi YALNIZ kullanıcı bir şehir seçtiyse çiziliyor —
+              örnekteki "İstanbul" koda yazılmadı, seçilen şehir neyse o,
+            · "Uzaktan" gerçek `Remote` süzgecini açıp kapatıyor,
+            · "Filtrele" mevcut paneli açıyor ve açık süzgeç sayısını
+              rozetle söylüyor.
+          */}
+          <div className="space-y-3 lg:hidden">
+            <div className="flex items-center gap-2">
+              <label className="relative flex min-w-0 flex-1 items-center">
+                <span className="sr-only">Pozisyon veya şirket ara</span>
+                <Search aria-hidden className="pointer-events-none absolute left-3.5 h-5 w-5 text-gray-400" />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(olay) => setSearchQuery(olay.target.value)}
+                  placeholder="Pozisyon veya şirket ara"
+                  className="min-h-12 w-full rounded-2xl border border-gray-200 bg-white pl-11 pr-3 text-[15px] text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={suzgecAcKapa}
+                aria-expanded={filtreAcik}
+                aria-controls="ilan-filtreleri"
+                aria-label={acikSuzgecSayisi > 0 ? `Filtreler (${acikSuzgecSayisi} açık)` : 'Filtreler'}
+                className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50"
+              >
+                <SlidersHorizontal aria-hidden className="h-5 w-5" />
+                {acikSuzgecSayisi > 0 && (
+                  <span className="absolute right-1 top-1 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white">
+                    {acikSuzgecSayisi}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {(() => {
+                const cip = (secili: boolean) =>
+                  `flex min-h-10 shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-4 text-sm font-bold transition-colors ${
+                    secili ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`;
+                const secilenSehir = selectedCity !== 'all' ? selectedCity : null;
+                return (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setWorkTypes([]);
+                      }}
+                      className={cip(!daraltmaVar)}
+                    >
+                      Tümü
+                    </button>
+                    {secilenSehir && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCity('all')}
+                        className={cip(true)}
+                      >
+                        <MapPin aria-hidden className="h-4 w-4" />
+                        {secilenSehir}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => calismaSec('Remote')}
+                      className={cip(workTypes.includes('Remote'))}
+                    >
+                      <Home aria-hidden className="h-4 w-4" />
+                      Uzaktan
+                    </button>
+                    <button type="button" onClick={suzgecAcKapa} className={cip(false)}>
+                      <SlidersHorizontal aria-hidden className="h-4 w-4" />
+                      Filtrele
+                    </button>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+
+          {/*
             GÜVEN SATIRI
 
             Başlık ne yaptığımızı söylüyor, bu satır onu KANITLIYOR: kaç
@@ -1596,9 +1691,21 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               Profili olmayan ziyaretçiye "sana uygun" ve "eşleşme puanına göre
               sıralı" demek yanlış: ortada kişiselleştirme yok.
             */}
+            {/*
+              ONAYLANAN TASARIM: "İlanları keşfet"
+
+              Başlık "Sana Uygun Staj İlanları (108)" idi ve sayfanın
+              kendi h1'i ("İlk adımın burada.") ile arka arkaya iki başlık
+              gibi okunuyordu. Sayı kaybolmadı: listenin gerçek toplamı
+              başlığın yanında duruyor.
+
+              "Sana uygun" ibaresi profili olan kullanıcıda korunuyor —
+              sıralamanın gerçekten eşleşmeye göre yapıldığı tek durum o;
+              ziyaretçide bunu yazmak kişiselleştirme iddiası olurdu.
+            */}
             <h2 className={LISTE_BASLIGI_YAZISI}>
-              {student ? 'Sana Uygun Staj İlanları' : 'Açık Staj İlanları'} (
-              {gosterilecekToplam})
+              İlanları keşfet ({gosterilecekToplam})
+              {student && <span className="sr-only"> — sana uygun sıralandı</span>}
             </h2>
             {/*
               Açıklama metni mobilde gizli.
@@ -1749,6 +1856,40 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                 ))}
               </div>
               {hasMoreCountriesPage && <button type="button" onClick={onLoadMoreCountriesPage} className="min-h-11 w-full rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm font-bold text-blue-700">Daha fazla ilan göster</button>}
+
+              {/*
+                CV REHBERİ KUTUSU — ONAYLANAN TASARIM
+
+                Listenin altında: ilanlara bakıp "başvuracak neyim var?"
+                sorusuna gelen kişiyi karşılıyor. Gerçek rehbere gidiyor
+                (`/rehber/staj-cv-nasil-yazilir`).
+              */}
+              <a
+                href="/rehber/staj-cv-nasil-yazilir"
+                onClick={(olay) => {
+                  if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.button !== 0) return;
+                  olay.preventDefault();
+                  onNavigate?.('/rehber/staj-cv-nasil-yazilir');
+                }}
+                className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 p-4 transition-colors hover:border-blue-300"
+              >
+                <BookOpen aria-hidden className="mt-0.5 h-6 w-6 shrink-0 text-blue-600" />
+                <span className="min-w-0">
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.14em] text-blue-700">
+                    Daha iyi bir başvuru için
+                  </span>
+                  <span className="mt-0.5 block text-base font-extrabold text-gray-900">
+                    Başvuruya hazır mısın?
+                  </span>
+                  <span className="mt-1 block text-sm leading-relaxed text-gray-600">
+                    Staj sürecinde öne çıkmana yardımcı olacak ipuçları, örnekler ve
+                    profesyonel öneriler.
+                  </span>
+                  <span className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-blue-700">
+                    CV rehberine göz at →
+                  </span>
+                </span>
+              </a>
 
               {/*
                 LİSTENİN SONU ÇIKMAZ DEĞİL
