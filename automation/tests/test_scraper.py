@@ -121,6 +121,52 @@ class ScraperFixtureTests(unittest.TestCase):
         self.assertEqual(jobs[0].city, "Istanbul, Turkey")
         self.assertEqual(post.call_count, 1)
 
+    @patch("scraper.requests.post")
+    def test_workday_gercek_cxs_yolu_site_parcasini_tasimiyor(self, post):
+        """GERÇEK CXS YANITI `/job/...` DÖNDÜRÜYOR — SİTE PARÇASI EKLENMELİ.
+
+        Yukarıdaki fikstür `externalPath` içine `/en-US/Careers/` yazıyordu;
+        gerçek yanıt öyle değil. Ölçüldü (15 Eylül 2026, adgbl/Fifty5Blue CXS):
+        `externalPath` = `/job/Istanbul-Baglar-Street/..._R100607`.
+
+        Adaptör bunu `https://{host}{path}` diye birleştiriyordu ve adres
+        404 veriyordu. Canlı zarar: AstraZeneca "Human Resources Intern"
+        (R-259544) Workday API'sine göre AÇIK (canApply=true, son gün
+        31 Ekim) ama bağlantı kontrolü 404 görüp ilanı kapatmıştı.
+        """
+        response = Mock()
+        response.json.return_value = {"jobPostings": [{
+            "title": "IT Systems & Network Administrator Trainee",
+            "locationsText": "Istanbul, Baglar Street",
+            "externalPath": "/job/Istanbul-Baglar-Street/IT-Systems---Network-Administrator-Trainee_R100607",
+            "timeType": "Full time",
+        }]}
+        post.return_value = response
+        jobs = list(scraper.workday({
+            "host": "adgbl.wd502.myworkdayjobs.com", "tenant": "adgbl", "site": "Fifty5Blue",
+            "name": "Kantar Media Türkiye", "company_name": "Kantar Media",
+        }))
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(
+            jobs[0].source_url,
+            "https://adgbl.wd502.myworkdayjobs.com/Fifty5Blue/job/Istanbul-Baglar-Street/IT-Systems---Network-Administrator-Trainee_R100607",
+        )
+
+    def test_workday_ilan_adresi_site_parcasini_iki_kez_eklemiyor(self):
+        """Yol zaten site (ve dil) taşıyorsa olduğu gibi kalır."""
+        self.assertEqual(
+            scraper.workday_ilan_adresi("h.wd3.myworkdayjobs.com", "Careers", "/en-US/Careers/job/X/Y_1"),
+            "https://h.wd3.myworkdayjobs.com/en-US/Careers/job/X/Y_1",
+        )
+        self.assertEqual(
+            scraper.workday_ilan_adresi("h.wd3.myworkdayjobs.com", "Careers", "/Careers/job/X/Y_1"),
+            "https://h.wd3.myworkdayjobs.com/Careers/job/X/Y_1",
+        )
+        self.assertEqual(
+            scraper.workday_ilan_adresi("h.wd3.myworkdayjobs.com", "Careers", "/job/X/Y_1"),
+            "https://h.wd3.myworkdayjobs.com/Careers/job/X/Y_1",
+        )
+
     @patch("scraper.requests.get")
     def test_official_jsonld_extracts_dhl_jobposting(self, get):
         """JobPosting ayrıştırması kırılırsa resmî DHL ilanı sessizce kaybolmamalı."""
