@@ -1142,5 +1142,533 @@
       "/paylasim/2026-10-10-2030-iletisimi-surdurme/03-v1.jpg",
       "/paylasim/2026-10-10-2030-iletisimi-surdurme/04-v1.jpg"
     ]
+  },
+  {
+    "kod": "2026-10-11-1230-on-yazi-ilk-paragraf",
+    "ad": "11 Ekim 2026 Pazar • 12.30 • Ön yazının ilk paragrafını hazırlama",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Ön yazının ilk paragrafında başvurduğun rolü açıkça belirt, kurumun gerçek çalışma alanıyla ilgini bağla ve hazırlığını gösteren tek bir örnek ver. Şirketi genel sözlerle övmek yerine neden bu göreve yöneldiğini anlat. Her yere gönderilebilecek kalıp bir giriş kullanma.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-11-1230-on-yazi-ilk-paragraf/01-v1.jpg",
+      "/paylasim/2026-10-11-1230-on-yazi-ilk-paragraf/02-v1.jpg",
+      "/paylasim/2026-10-11-1230-on-yazi-ilk-paragraf/03-v1.jpg",
+      "/paylasim/2026-10-11-1230-on-yazi-ilk-paragraf/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-11-2030-bolum-disi-staj",
+    "ad": "11 Ekim 2026 Pazar • 20.30 • Bölüm dışı staja başvurma",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Bölüm dışı bir staja başvururken rolün günlük görevlerini incele ve mevcut deneyimlerinden aktarılabilecek becerileri seç. Ders projesi, kulüp görevi veya gönüllülük çalışmasıyla somut kanıt sun. Eksik olduğun alanı saklama; öğrenme planını kısa ve gerçekçi biçimde anlat.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-11-2030-bolum-disi-staj/01-v1.jpg",
+      "/paylasim/2026-10-11-2030-bolum-disi-staj/02-v1.jpg",
+      "/paylasim/2026-10-11-2030-bolum-disi-staj/03-v1.jpg",
+      "/paylasim/2026-10-11-2030-bolum-disi-staj/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-12-1230-yabanci-dil-seviyesi",
+    "ad": "12 Ekim 2026 Pazartesi • 12.30 • CV’de yabancı dil seviyesini doğru yazma",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "CV’de yabancı dil seviyesini tek bir belirsiz sıfatla yazmak yerine hangi becerileri kullanabildiğini düşün. Varsa güncel ve geçerli sınav sonucunu ekle. Dil bilgisini iş bağlamında nasıl kullandığını gösterebiliyorsan kısa bir örnek ver. Mülakatta sürdüremeyeceğin seviyeyi yazma.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-12-1230-yabanci-dil-seviyesi/01-v1.jpg",
+      "/paylasim/2026-10-12-1230-yabanci-dil-seviyesi/02-v1.jpg",
+      "/paylasim/2026-10-12-1230-yabanci-dil-seviyesi/03-v1.jpg",
+      "/paylasim/2026-10-12-1230-yabanci-dil-seviyesi/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-12-2030-sertifika-secimi",
+    "ad": "12 Ekim 2026 Pazartesi • 20.30 • Sertifikayı CV’ye ekleme kararı",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "CV’ye yalnızca hedef rolle ilgili, kaynağı ve tarihi doğrulanabilir sertifikaları ekle. Katıldığın her eğitimi sıralamak yerine öğrendiğin beceriyi nerede uyguladığını göster. Süresi geçmiş veya açıklayamayacağın belgeleri öne çıkarma; birkaç güçlü seçim uzun bir listeden daha anlaşılırdır.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-12-2030-sertifika-secimi/01-v1.jpg",
+      "/paylasim/2026-10-12-2030-sertifika-secimi/02-v1.jpg",
+      "/paylasim/2026-10-12-2030-sertifika-secimi/03-v1.jpg",
+      "/paylasim/2026-10-12-2030-sertifika-secimi/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-13-1230-github-profili",
+    "ad": "13 Ekim 2026 Salı • 12.30 • GitHub profilini başvuruya hazırlama",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "GitHub profilinde hedef rolle ilgili birkaç projeyi öne çıkar. Her proje için amacı, nasıl çalıştırıldığını ve kendi katkını açıklayan kısa bir README hazırla. Kullanılmayan denemeleri vitrine taşımak zorunda değilsin. Kodda API anahtarı, şifre veya kişisel veri bulunmadığını kontrol et.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-13-1230-github-profili/01-v1.jpg",
+      "/paylasim/2026-10-13-1230-github-profili/02-v1.jpg",
+      "/paylasim/2026-10-13-1230-github-profili/03-v1.jpg",
+      "/paylasim/2026-10-13-1230-github-profili/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-13-2030-portfoy-ilk-sayfa",
+    "ad": "13 Ekim 2026 Salı • 20.30 • Tasarım portföyünde ilk sayfa",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Tasarım portföyünün ilk sayfası ziyaretçiye kim olduğunu, hangi alana odaklandığını ve hangi projeden başlaması gerektiğini göstermeli. En güçlü çalışmalarına doğrudan yol ver ve güncel iletişim bağlantısı ekle. Uzun bir hayat hikâyesi yerine kısa, okunabilir ve işlevsel bir açılış kullan.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-13-2030-portfoy-ilk-sayfa/01-v1.jpg",
+      "/paylasim/2026-10-13-2030-portfoy-ilk-sayfa/02-v1.jpg",
+      "/paylasim/2026-10-13-2030-portfoy-ilk-sayfa/03-v1.jpg",
+      "/paylasim/2026-10-13-2030-portfoy-ilk-sayfa/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-14-1230-telefon-mulakati",
+    "ad": "14 Ekim 2026 Çarşamba • 12.30 • Telefon mülakatına hazırlanma",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Telefon mülakatından önce sessiz ve bağlantısı güçlü bir yer seç. İlanı, gönderdiğin CV’yi ve şirket hakkında kısa notunu önünde açık tut. Ses tonun ve anlatım hızın daha görünür olacağı için kısa ve net cevaplar ver. Görüşmenin sonunda sürecin sonraki adımını sor ve not et.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-14-1230-telefon-mulakati/01-v1.jpg",
+      "/paylasim/2026-10-14-1230-telefon-mulakati/02-v1.jpg",
+      "/paylasim/2026-10-14-1230-telefon-mulakati/03-v1.jpg",
+      "/paylasim/2026-10-14-1230-telefon-mulakati/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-14-2030-online-mulakat-duzeni",
+    "ad": "14 Ekim 2026 Çarşamba • 20.30 • Online mülakatta teknik düzen",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Online mülakattan önce davet bağlantısını, gerekli uygulamayı ve görünen adını kontrol et. Kamera, mikrofon, ışık ve internet bağlantısını dene; bildirimleri kapat. Teknik sorun yaşarsan ulaşabileceğin iletişim adresini ve yedek cihazı hazır tut. Görüşmeye son anda bağlanmayı bekleme.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-14-2030-online-mulakat-duzeni/01-v1.jpg",
+      "/paylasim/2026-10-14-2030-online-mulakat-duzeni/02-v1.jpg",
+      "/paylasim/2026-10-14-2030-online-mulakat-duzeni/03-v1.jpg",
+      "/paylasim/2026-10-14-2030-online-mulakat-duzeni/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-15-1230-mulakat-kiyafeti",
+    "ad": "15 Ekim 2026 Perşembe • 12.30 • Mülakat kıyafeti seçme",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Mülakat kıyafetini sektörün ve görüşme biçiminin genel ortamına göre seç. Temiz, düzenli ve rahat bir görünüm çoğu durumda yeterlidir. Kendini yabancı hissettiren bir kostüme dönüşme; kıyafeti bir gün önce dene ve çevrim içi görüşmede kamera kadrajında nasıl göründüğüne bak.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-15-1230-mulakat-kiyafeti/01-v1.jpg",
+      "/paylasim/2026-10-15-1230-mulakat-kiyafeti/02-v1.jpg",
+      "/paylasim/2026-10-15-1230-mulakat-kiyafeti/03-v1.jpg",
+      "/paylasim/2026-10-15-1230-mulakat-kiyafeti/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-15-2030-basarisizlik-sorusu",
+    "ad": "15 Ekim 2026 Perşembe • 20.30 • Mülakatta başarısızlık sorusuna cevap",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Başarısızlık sorusunda gerçek ve iş bağlamında anlatılabilir bir örnek seç. Durumdaki kendi payını bahane üretmeden açıkla, ne öğrendiğini ve sonraki benzer işte neyi değiştirdiğini göster. Başkalarını suçlamak veya hiç hata yapmadığını söylemek yerine gelişim kanıtı sun.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-15-2030-basarisizlik-sorusu/01-v1.jpg",
+      "/paylasim/2026-10-15-2030-basarisizlik-sorusu/02-v1.jpg",
+      "/paylasim/2026-10-15-2030-basarisizlik-sorusu/03-v1.jpg",
+      "/paylasim/2026-10-15-2030-basarisizlik-sorusu/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-16-1230-vaka-calismasi-sunumu",
+    "ad": "16 Ekim 2026 Cuma • 12.30 • Vaka çalışmasını sunma",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Vaka çalışmasını sunarken önce problemi ve kapsamı netleştir. Kullandığın verileri, eksik bilgiler için yaptığın varsayımları ve değerlendirdiğin seçenekleri göster. Önerini ölçülebilir bir hedefe bağla ve risklerini belirt. Amaç tek doğruyu bulmuş gibi görünmek değil, düşünme biçimini anlaşılır kılmaktır.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-16-1230-vaka-calismasi-sunumu/01-v1.jpg",
+      "/paylasim/2026-10-16-1230-vaka-calismasi-sunumu/02-v1.jpg",
+      "/paylasim/2026-10-16-1230-vaka-calismasi-sunumu/03-v1.jpg",
+      "/paylasim/2026-10-16-1230-vaka-calismasi-sunumu/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-16-2030-sunum-heyecani",
+    "ad": "16 Ekim 2026 Cuma • 20.30 • Sunum sırasında heyecanı yönetme",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Sunum heyecanını tamamen yok etmeye çalışmak yerine yönetilebilir hâle getir. İlk iki cümleni ve sunum akışını önceden bil, tam metin yerine anahtar sözcükler kullan. Hızlandığını fark ettiğinde kısa bir durak ver ve nefesine dön. Küçük bir prova, belirsizliği önemli ölçüde azaltır.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-16-2030-sunum-heyecani/01-v1.jpg",
+      "/paylasim/2026-10-16-2030-sunum-heyecani/02-v1.jpg",
+      "/paylasim/2026-10-16-2030-sunum-heyecani/03-v1.jpg",
+      "/paylasim/2026-10-16-2030-sunum-heyecani/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-17-1230-beklenti-netlestirme",
+    "ad": "17 Ekim 2026 Cumartesi • 12.30 • Göreve başlamadan beklentiyi netleştirme",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Yeni bir göreve başlamadan önce beklenen çıktıyı, değerlendirme ölçütünü ve teslim zamanını netleştir. Görevi kendi cümlenle tekrar ederek doğru anladığını doğrula. Gerekli dosya veya erişim eksikse başta belirt ve uygun bir ara kontrol zamanı öner. Bu kısa konuşma gereksiz yeniden çalışmayı azaltır.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-17-1230-beklenti-netlestirme/01-v1.jpg",
+      "/paylasim/2026-10-17-1230-beklenti-netlestirme/02-v1.jpg",
+      "/paylasim/2026-10-17-1230-beklenti-netlestirme/03-v1.jpg",
+      "/paylasim/2026-10-17-1230-beklenti-netlestirme/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-17-2030-oncelik-cakismasi",
+    "ad": "17 Ekim 2026 Cumartesi • 20.30 • Çakışan öncelikleri yöneticiye bildirme",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "İki önemli görev aynı zamana geldiğinde yetiştiremeyeceğini son anda söyleme. Görevleri, teslim tarihlerini ve tahmini sürelerini kısa biçimde paylaş; çakışmanın etkisini açıkla. Mümkünse iki seçenek öner ve yöneticinden öncelik sırası iste. Verilen kararı not ederek yeni planını güncelle.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-17-2030-oncelik-cakismasi/01-v1.jpg",
+      "/paylasim/2026-10-17-2030-oncelik-cakismasi/02-v1.jpg",
+      "/paylasim/2026-10-17-2030-oncelik-cakismasi/03-v1.jpg",
+      "/paylasim/2026-10-17-2030-oncelik-cakismasi/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-18-1230-kurumsal-mesajlasma",
+    "ad": "18 Ekim 2026 Pazar • 12.30 • Kurumsal mesajlaşmada profesyonellik",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Kurumsal mesajlaşmada yalnızca “merhaba” yazıp devamı için cevap beklemek yerine selam, kısa bağlam ve isteğini aynı mesajda belirt. Gerçek bir son tarih varsa açıkça yaz; gereksiz aciliyet oluşturma. Mesajı göndermeden önce karşı tarafın tek okumada ne yapması gerektiğini anlayıp anlamayacağını düşün.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-18-1230-kurumsal-mesajlasma/01-v1.jpg",
+      "/paylasim/2026-10-18-1230-kurumsal-mesajlasma/02-v1.jpg",
+      "/paylasim/2026-10-18-1230-kurumsal-mesajlasma/03-v1.jpg",
+      "/paylasim/2026-10-18-1230-kurumsal-mesajlasma/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-18-2030-toplanti-daveti",
+    "ad": "18 Ekim 2026 Pazar • 20.30 • Toplantı davetine doğru yanıt verme",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Toplantı davetini aldığında başlığı, gündemi, saati ve konumu kontrol et. Katılabiliyorsan kabul et; çakışma varsa sessiz bırakmak yerine kısa açıklamayla alternatif zaman öner. Saat dilimine ve çevrim içi bağlantıya dikkat et. Hazırlık gerektiren dosyaları davetin not bölümünden önceden incele.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-18-2030-toplanti-daveti/01-v1.jpg",
+      "/paylasim/2026-10-18-2030-toplanti-daveti/02-v1.jpg",
+      "/paylasim/2026-10-18-2030-toplanti-daveti/03-v1.jpg",
+      "/paylasim/2026-10-18-2030-toplanti-daveti/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-19-1230-dosya-bilgi-isteme",
+    "ad": "19 Ekim 2026 Pazartesi • 12.30 • İş arkadaşından dosya veya bilgi isteme",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Bir dosya veya bilgi isterken neye ihtiyaç duyduğunu, hangi iş için kullanacağını ve ne zamana gerektiğini açıkça belirt. Önce erişebildiğin ortak klasörleri kontrol et. Dosyada hassas bilgi varsa uygun paylaşım kanalını kullan ve karşı tarafın yetkisini varsayma. Net istek, gereksiz yazışmayı azaltır.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-19-1230-dosya-bilgi-isteme/01-v1.jpg",
+      "/paylasim/2026-10-19-1230-dosya-bilgi-isteme/02-v1.jpg",
+      "/paylasim/2026-10-19-1230-dosya-bilgi-isteme/03-v1.jpg",
+      "/paylasim/2026-10-19-1230-dosya-bilgi-isteme/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-19-2030-mesai-disi-iletisim",
+    "ad": "19 Ekim 2026 Pazartesi • 20.30 • Mesai dışı iletişim sınırlarını anlama",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Mesai dışı mesajlara nasıl yaklaşılacağını kurumun çalışma düzeni ve rolün belirler. Başlangıçta ulaşılabilirlik beklentisini, gerçek acil durum kanalını ve normal yanıt süresini sor. Özel nöbet veya görev yoksa bildirimleri düzenleyerek dinlenme alanını koru. Belirsizlik olduğunda sessizce varsaymak yerine yöneticinle netleştir.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-19-2030-mesai-disi-iletisim/01-v1.jpg",
+      "/paylasim/2026-10-19-2030-mesai-disi-iletisim/02-v1.jpg",
+      "/paylasim/2026-10-19-2030-mesai-disi-iletisim/03-v1.jpg",
+      "/paylasim/2026-10-19-2030-mesai-disi-iletisim/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-20-1230-ogrendigini-paylasma",
+    "ad": "20 Ekim 2026 Salı • 12.30 • Stajda öğrendiğini ekipte paylaşma",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Stajda öğrendiğin faydalı bir yöntemi ekiple paylaşmadan önce konuyu daralt ve işe bağlanan küçük bir örnek hazırla. Kaynağını belirt, bilmediğin noktayı kesin bilgi gibi sunma. Kısa bir not veya beş dakikalık anlatım çoğu zaman yeterlidir. Kuruma ait gizli bilgileri örneğe taşımamaya dikkat et.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-20-1230-ogrendigini-paylasma/01-v1.jpg",
+      "/paylasim/2026-10-20-1230-ogrendigini-paylasma/02-v1.jpg",
+      "/paylasim/2026-10-20-1230-ogrendigini-paylasma/03-v1.jpg",
+      "/paylasim/2026-10-20-1230-ogrendigini-paylasma/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-20-2030-staj-degerlendirmesi",
+    "ad": "20 Ekim 2026 Salı • 20.30 • Staj değerlendirme görüşmesine hazırlanma",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Staj değerlendirme görüşmesinden önce tamamladığın işleri ve aldığın geri bildirimleri gözden geçir. İlk haftaya göre gelişen bir becerini somut örnekle anlat. Yöneticinden güçlü yönün ve üzerinde çalışman gereken alan için açık geri bildirim iste. Görüşme sonunda bir sonraki gelişim hedefini netleştir.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-20-2030-staj-degerlendirmesi/01-v1.jpg",
+      "/paylasim/2026-10-20-2030-staj-degerlendirmesi/02-v1.jpg",
+      "/paylasim/2026-10-20-2030-staj-degerlendirmesi/03-v1.jpg",
+      "/paylasim/2026-10-20-2030-staj-degerlendirmesi/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-21-1230-staj-devir-dosyasi",
+    "ad": "21 Ekim 2026 Çarşamba • 12.30 • Staj bitiş teslim dosyasını düzenleme",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Staj bitiminde onaylı son dosyaları kurumun belirlediği klasörde düzenle. Tamamlanan, açık ve bekleyen işleri kısa bir devir notunda belirt; ilgili kişi ve sonraki adımı yaz. Kişisel cihazındaki kurum dosyalarını politika doğrultusunda temizle ve hesap erişimlerinin kapatılmasını doğrula.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-21-1230-staj-devir-dosyasi/01-v1.jpg",
+      "/paylasim/2026-10-21-1230-staj-devir-dosyasi/02-v1.jpg",
+      "/paylasim/2026-10-21-1230-staj-devir-dosyasi/03-v1.jpg",
+      "/paylasim/2026-10-21-1230-staj-devir-dosyasi/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-21-2030-yaptigin-isi-sunma",
+    "ad": "21 Ekim 2026 Çarşamba • 20.30 • Yaptığın işi kısa sunumla anlatma",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Yaptığın işi sunarken önce hangi problemi çözdüğünü, ardından kendi katkını ve ortaya çıkan sonucu anlat. Ekip çalışmasını tamamen kendine mal etme; karar verdiğin veya ürettiğin kısmı açıkça ayır. Sunumu birkaç dakikaya sığdır ve kurumun gizli bilgilerini göstermeden önce izin sınırlarını kontrol et.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-21-2030-yaptigin-isi-sunma/01-v1.jpg",
+      "/paylasim/2026-10-21-2030-yaptigin-isi-sunma/02-v1.jpg",
+      "/paylasim/2026-10-21-2030-yaptigin-isi-sunma/03-v1.jpg",
+      "/paylasim/2026-10-21-2030-yaptigin-isi-sunma/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-22-1230-kariyer-hedefi-cumlesi",
+    "ad": "22 Ekim 2026 Perşembe • 12.30 • Kariyer hedefi cümlesi oluşturma",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Kariyer hedefi cümlen kesin bir ömür planı olmak zorunda değildir. Şimdilik ilgilendiğin alanı, katkı vermek istediğin problem türünü ve yakın dönemde deneyeceğin adımı birleştir. “Başarılı olmak” gibi ölçülemeyen sözler yerine yön gösteren, gerektiğinde güncellenebilir bir cümle kur.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-22-1230-kariyer-hedefi-cumlesi/01-v1.jpg",
+      "/paylasim/2026-10-22-1230-kariyer-hedefi-cumlesi/02-v1.jpg",
+      "/paylasim/2026-10-22-1230-kariyer-hedefi-cumlesi/03-v1.jpg",
+      "/paylasim/2026-10-22-1230-kariyer-hedefi-cumlesi/04-v1.jpg"
+    ]
+  },
+  {
+    "kod": "2026-10-22-2030-gelisim-haritasi",
+    "ad": "22 Ekim 2026 Perşembe • 20.30 • Bir sonraki staj için gelişim haritası",
+    "surum": "v1",
+    "guncellendi": "2026-09-15",
+    "metin": "Bir sonraki staj için gelişim planı yaparken gerçek ilanlardan hedef bir rol seç. Mevcut projelerinle gösterebildiğin becerileri çıkar ve en önemli tek boşluğu belirle. Bu boşluğu kapatacak küçük bir proje, ders veya sorumluluk seçip tarih koy. Kurs sayısını değil ürettiğin kanıtı artır.",
+    "etiketler": [
+      "#staj",
+      "#stajbaşvurusu",
+      "#öğrenci",
+      "#kariyer",
+      "#işhayatı",
+      "#stajyer",
+      "#stajimvar"
+    ],
+    "kartlar": [
+      "/paylasim/2026-10-22-2030-gelisim-haritasi/01-v1.jpg",
+      "/paylasim/2026-10-22-2030-gelisim-haritasi/02-v1.jpg",
+      "/paylasim/2026-10-22-2030-gelisim-haritasi/03-v1.jpg",
+      "/paylasim/2026-10-22-2030-gelisim-haritasi/04-v1.jpg"
+    ]
   }
 ]
