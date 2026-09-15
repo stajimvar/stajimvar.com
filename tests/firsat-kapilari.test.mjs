@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
 /*
@@ -46,6 +46,51 @@ test('kategori kapıları gerçek kayıtlara bağlanıyor', () => {
     const metin = g.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     assert.ok(metin.length > 200, `/${ad}: ilk HTML metni kısa (${metin.length})`);
   }
+});
+
+test('detay <title> kurum adını iki kez yazmıyor', () => {
+  /*
+    ÖLÇÜLDÜ (canlı, 15 Eylül 2026): yayındaki 112 kaydın 47'sinde kurum
+    adı başlığın İÇİNDE zaten geçiyor, yani `— {kurum}` eki tekrardı:
+
+      "Erciyes Organ Nakli Vakfı Bursu — Erciyes Organ Nakli Vakfı | StajımVar"
+
+    Aynı ölçümde 112 başlığın 71'i 60 karakteri aşıyordu (ortalama 65),
+    yani arama sonucunda kırpılıyordu. Tekrar atıldı; kurum adı başlıkta
+    GEÇMİYORSA ek duruyor (65 kayıt) çünkü orada yeni bilgi taşıyor.
+  */
+  const betik = oku('scripts/onrender.mjs');
+
+  /* Şablon artık ekleme kararını veren yardımcıdan geçiyor. */
+  assert.match(betik, /baslik: `\$\{firsatBasligi\(f\)\} \| StajımVar`/);
+  assert.doesNotMatch(betik, /\$\{f\.title\} — \$\{f\.organization_name\}/);
+  /* Karşılaştırma Türkçe küçük harfle: "İ/i" ayrımı olmadan tekrar kaçardı. */
+  assert.match(betik, /toLocaleLowerCase\('tr-TR'\)/);
+
+  /*
+    DAVRANIŞ: derlenmiş sayfalarda tekrar kalmamalı. Derleme yapılmadan
+    koşan testte dosyalar yok; sessizce geçiliyor.
+  */
+  const dizin = path.join(KOK, 'dist', 'firsatlar');
+  if (!existsSync(dizin)) return;
+
+  const kucuk = (s) => s.toLocaleLowerCase('tr-TR');
+  let olculen = 0;
+  for (const ad of readdirSync(dizin).filter((a) => a.endsWith('.html'))) {
+    const html = readFileSync(path.join(dizin, ad), 'utf8');
+    const eslesme = html.match(/<title>([^<]*)<\/title>/);
+    if (!eslesme) continue;
+    const baslik = eslesme[1].replace(/\s*\|\s*StajımVar\s*$/, '');
+    const parcalar = baslik.split(' — ');
+    if (parcalar.length !== 2) continue;
+    const [ilk, kurum] = parcalar;
+    assert.ok(
+      !kucuk(ilk).includes(kucuk(kurum)),
+      `${ad}: kurum adı başlıkta iki kez geçiyor — "${baslik}"`
+    );
+    olculen += 1;
+  }
+  console.log(`  (ölçülen iki parçalı fırsat başlığı: ${olculen})`);
 });
 
 test('TARİH VE TUTAR UYDURULMUYOR', () => {
