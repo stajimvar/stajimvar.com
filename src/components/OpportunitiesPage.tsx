@@ -23,6 +23,7 @@ import type { StudentProfile } from '../types';
 import { ListingLogo } from './ListingLogo';
 import { FiltreBlogu, SecenekSatiri } from '../ui';
 import { KonuSeridi } from './KonuSeridi';
+import { donukKure, kureDokunusu } from '../lib/kure-donusu.mjs';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import {
   LISTE_BASLIGI,
@@ -386,6 +387,20 @@ export const OpportunitiesPage: React.FC<{
     [filters, saved, student]
   );
 
+  /*
+    DAİRE DÖNÜŞÜ — SÜZGEÇTEN AYRI DURUM
+
+    Seçili daireye tekrar dokununca daire dönüp sayısını gösteriyor;
+    süzgeç değişmiyor. Durum süzgeç imzasıyla saklanıyor: süzgeç
+    değişince eski dönüş görünmüyor (lib/kure-donusu.mjs). Sayı zaten
+    dairenin altında yazan gerçek sayı; bütün kayıtlar tek istekte geliyor.
+  */
+  const suzgecImzasi = JSON.stringify(filters);
+  const [daireDurumu, setDaireDurumu] = React.useState<{ anahtar: string; imza: string } | null>(null);
+  const donukDaire = donukKure(daireDurumu, suzgecImzasi);
+  const daireCevir = (id: string) =>
+    setDaireDurumu((durum) => kureDokunusu(durum, { anahtar: id, secili: true, imza: suzgecImzasi }).durum);
+
   const sayimTabani = React.useMemo(
     () => taban.filter(kategoriDisiSuzgec),
     [taban, kategoriDisiSuzgec]
@@ -650,6 +665,9 @@ export const OpportunitiesPage: React.FC<{
               ikonlar={KATEGORI_IKONLARI}
               varsayilanIkon={Layers}
               tumuEtiketi="Tüm kategoriler"
+              donuk={donukDaire}
+              onCevir={daireCevir}
+              donukSayi={filtered.length}
             />
           )}
 

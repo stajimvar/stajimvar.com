@@ -42,6 +42,17 @@ const IKONLAR: Record<string, React.ComponentType<{ className?: string }>> = {
   kariyer: TrendingUp,
 };
 
+/*
+  DÖNEN DAİRE (Fırsatlar)
+
+  Seçili daireye tekrar dokununca daire Y ekseninde 180 derece dönüyor ve
+  arka yüzde büyük sayı ile birimi ("fırsat") gösteriyor; bir dokunuş daha
+  ön yüze döndürüyor. Süzgeç değişmiyor — durum çağıranda, kuralları
+  lib/kure-donusu.mjs içinde (İlanlar şeridiyle aynı). Altındaki ad ve
+  adet satırı sabit kalıyor.
+*/
+const YUZ = 'absolute inset-0 flex items-center justify-center rounded-full [backface-visibility:hidden]';
+
 const Daire: React.FC<{
   etiket: string;
   adet: number;
@@ -50,8 +61,12 @@ const Daire: React.FC<{
   okunan: string;
   secili: boolean;
   onClick: () => void;
+  /** Arka yüz açık mı (yalnız seçili dairede anlamlı). */
+  donuk?: boolean;
+  /** Arka yüzdeki sayı; verilmezse `adet`. */
+  arkaSayi?: number;
   children: React.ReactNode;
-}> = ({ etiket, adet, birim, okunan, secili, onClick, children }) => (
+}> = ({ etiket, adet, birim, okunan, secili, onClick, donuk = false, arkaSayi = adet, children }) => (
   <button
     type="button"
     onClick={onClick}
@@ -66,12 +81,32 @@ const Daire: React.FC<{
       style={secili ? { background: '#111827' } : { background: '#e5e7eb' }}
     >
       <span className="block rounded-full bg-white p-[2px]">
-        <span
-          className={`flex h-14 w-14 items-center justify-center overflow-hidden rounded-full ${
-            secili ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-600'
-          }`}
-        >
-          {children}
+        <span className="block h-14 w-14 [perspective:600px]">
+          <span
+            className={`relative block h-full w-full transition-transform duration-[350ms] ease-out [transform-style:preserve-3d] motion-reduce:transition-none ${
+              donuk ? '[transform:rotateY(180deg)]' : ''
+            }`}
+          >
+            <span
+              className={`${YUZ} overflow-hidden ${
+                secili ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-600'
+              }`}
+            >
+              {children}
+            </span>
+            {secili && (
+              <span className={`${YUZ} flex-col bg-gray-900 text-white [transform:rotateY(180deg)]`}>
+                <span
+                  className={`font-extrabold leading-none tabular-nums ${
+                    String(arkaSayi).length > 3 ? 'text-[15px]' : 'text-[19px]'
+                  }`}
+                >
+                  {arkaSayi.toLocaleString('tr-TR')}
+                </span>
+                <span className="mt-0.5 text-[10px] font-medium leading-none">{birim}</span>
+              </span>
+            )}
+          </span>
         </span>
       </span>
     </span>
@@ -118,6 +153,16 @@ export const KonuSeridi: React.FC<{
   varsayilanIkon?: SimgeBileseni;
   /** "Tümü" dairesinin okunan metni. */
   tumuEtiketi?: string;
+  /** Arka yüzü açık dairenin id'si ("" = Tümü); `null` = hiçbiri. */
+  donuk?: string | null;
+  /** Seçili daireye tekrar dokunuş: süzgeç değişmiyor, daire dönüyor. */
+  onCevir?: (id: string) => void;
+  /**
+   * Dönen dairenin sayısı: listenin o anki gerçek toplamı. Burslar'da
+   * kaynak alt süzgeci (KYK) açıkken daire altındaki kategori sayısından
+   * az olabiliyor.
+   */
+  donukSayi?: number;
 }> = ({
   konular,
   secili,
@@ -128,6 +173,9 @@ export const KonuSeridi: React.FC<{
   ikonlar = IKONLAR,
   varsayilanIkon: VarsayilanIkon = BookOpen,
   tumuEtiketi = 'Tüm konular',
+  donuk = null,
+  onCevir,
+  donukSayi,
 }) => {
   /* Konu yoksa şerit çizilmiyor — SehirSeridi ve SirketSeridi kalıbı. */
   if (konular.length === 0) return null;
@@ -151,7 +199,9 @@ export const KonuSeridi: React.FC<{
             birim={birim}
             okunan={`${tumuEtiketi}, ${toplam} ${birim}`}
             secili={secili === ''}
-            onClick={onTumu}
+            donuk={secili === '' && donuk === ''}
+            arkaSayi={donukSayi ?? toplam}
+            onClick={() => (secili === '' && onCevir ? onCevir('') : onTumu())}
           >
             <VarsayilanIkon className="h-6 w-6" />
           </Daire>
@@ -165,7 +215,9 @@ export const KonuSeridi: React.FC<{
                 birim={birim}
                 okunan={`${konu.etiket}, ${konu.adet} ${birim}`}
                 secili={secili === konu.id}
-                onClick={() => onSec(konu.id)}
+                donuk={secili === konu.id && donuk === konu.id}
+                arkaSayi={donukSayi ?? konu.adet}
+                onClick={() => (secili === konu.id && onCevir ? onCevir(konu.id) : onSec(konu.id))}
               >
                 <Ikon className="h-6 w-6" />
               </Daire>
@@ -173,6 +225,12 @@ export const KonuSeridi: React.FC<{
           })}
         </div>
       </div>
+      {/* Dönen dairenin sayısı ekran okuyucuya da söyleniyor. */}
+      <span className="sr-only" aria-live="polite">
+        {donuk !== null && donuk === secili
+          ? `${donukSayi ?? (donuk === '' ? toplam : (konular.find((k) => k.id === donuk)?.adet ?? 0))} ${birim}`
+          : ''}
+      </span>
     </div>
   );
 };
