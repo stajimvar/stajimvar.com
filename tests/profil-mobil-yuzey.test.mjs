@@ -110,12 +110,11 @@ test('kenara yaslanma yalnız kimlik bloğu ve fotoğraf ızgarasında', () => {
   assert.match(ogrenciProfili, /className="order-1 -mx-4 min-w-0 sm:mx-0 lg:order-none"/);
 
   /*
-    Hesap eylemleri KUTU: kenara yaslanmamalı. Yaslansaydı düğmeler
-    ekranın kenarına yapışır ve kimlik bloğuyla aynı şeymiş gibi
-    okunurdu.
+    Hesap eylemleri artık kimlik kartının alt satırında (kullanıcı isteği,
+    17 Eylül 2026); sayfanın altında ayrı bir kutu yok.
   */
-  const hesap = ogrenciProfili.match(/className="order-2 mt-6 [^"]*"/)[0];
-  assert.ok(!hesap.includes('-mx-'), 'hesap eylemleri kenara yaslanmamalı');
+  assert.doesNotMatch(ogrenciProfili, /className="order-2 mt-6 /);
+  assert.match(ogrenciProfili, /hesapEylemleri=\{/);
 });
 
 test('iki ekranın mobil iskeleti birebir aynı', () => {

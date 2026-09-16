@@ -1096,6 +1096,37 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             }
             onKaydedilenlere={onKaydedilenlere}
             /*
+              HESAP EYLEMLERİ KARTTA — dişlinin solunda. Düzenleme sırasında
+              çizilmiyor: form doldururken yanında duran "Çıkış yap"
+              yanlışlıkla basılacak bir tuzak olurdu.
+            */
+            hesapEylemleri={
+              !duzenleme && (onLogout || (isAdmin && onOpenAdmin)) ? (
+                <>
+                  {isAdmin && onOpenAdmin && (
+                    <button
+                      type="button"
+                      onClick={onOpenAdmin}
+                      className="inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-100"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Yönetim paneli
+                    </button>
+                  )}
+                  {onLogout && (
+                    <button
+                      type="button"
+                      onClick={onLogout}
+                      className="inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-rose-200 px-3 text-sm font-bold text-rose-700 transition-colors hover:bg-rose-50"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Çıkış yap
+                    </button>
+                  )}
+                </>
+              ) : undefined
+            }
+            /*
               İKİ SAYAÇ DA AYRI BAŞVURU EKRANINA GİDİYOR
 
               Eskiden ikisi de bu sayfadaki `basvuru` bölümünü açıyordu; o
@@ -2137,47 +2168,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       </div>
       )}
 
-      {/*
-        HESAP EYLEMLERİ — SAYFANIN EN ALTI
-
-        Üst çubuktaki avatar menüsü mobilde kaldırıldı; oradaki iki gerçek
-        eylem (yönetim paneli ve çıkış) buraya indi. Menünün diğer
-        satırları ("Profilim ve CV", "Başvurularım", "Rozetler ve testler")
-        zaten bu sayfanın kendisiydi.
-
-        Çıkış kırmızı ama DOLU DEĞİL: dolu kırmızı bir düğme, sayfadaki en
-        güçlü eylemin "hesabımdan çık" olduğunu söylerdi. Kenarlıkla
-        veriliyor — bulunur ama çağırmaz.
-
-        DÜZENLEMEDE ÇİZİLMİYOR: form doldururken hemen altında duran bir
-        "Çıkış yap", yanlışlıkla basılacak bir tuzak olurdu. Eylem
-        kaybolmuyor, ana görünümde aynı yerde duruyor.
-      */}
-      {!duzenleme && (onLogout || (isAdmin && onOpenAdmin)) && (
-        /* `order-2`: mobilde en son, gönderi alanının altında. */
-        <div className="order-2 mt-6 flex flex-col gap-2 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end lg:order-none">
-          {isAdmin && onOpenAdmin && (
-            <button
-              type="button"
-              onClick={onOpenAdmin}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-100 cursor-pointer"
-            >
-              <Settings className="h-4 w-4" />
-              Yönetim paneli
-            </button>
-          )}
-          {onLogout && (
-            <button
-              type="button"
-              onClick={onLogout}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-rose-200 px-4 text-sm font-bold text-rose-700 transition-colors hover:bg-rose-50 cursor-pointer"
-            >
-              <LogOut className="h-4 w-4" />
-              Çıkış yap
-            </button>
-          )}
-        </div>
-      )}
         </div>
       </div>
     </div>
