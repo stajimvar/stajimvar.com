@@ -1745,13 +1745,11 @@ test('mobilde gönderi alanı kimlik kartının altında; masaüstü iskeleti ay
   const kart = ogrenciProfili.indexOf('<ProfilBasligi');
   /* `-mx-4 sm:mx-0`: ızgara telefonda ekranın iki kenarına yaslı. */
   const gonderi = ogrenciProfili.indexOf('<div className="order-1 -mx-4 min-w-0 sm:mx-0 lg:order-none">');
-  const hesap = ogrenciProfili.indexOf('className="order-2 mt-6 flex flex-col gap-2');
-  for (const [ad, i] of Object.entries({ kart, gonderi, hesap })) {
+  /* Hesap eylemleri kartın içinde (hesapEylemleri, 17 Eylül 2026): sıra kart → gönderi. */
+  for (const [ad, i] of Object.entries({ kart, gonderi })) {
     assert.ok(i > 0, `${ad} bulunamadı`);
   }
-  assert.ok(kart < gonderi && gonderi < hesap, 'DOM masaüstü sırasında');
-  const hesapSatiri = ogrenciProfili.slice(hesap, ogrenciProfili.indexOf('>', hesap));
-  assert.match(hesapSatiri, /lg:order-none/);
+  assert.ok(kart < gonderi, 'DOM masaüstü sırasında');
   /* Üçüncü ve sonraki `order` yok: kaldırılan kartların sınıfı geri gelmiyor. */
   assert.doesNotMatch(yorumsuz(ogrenciProfili), /order-[3-9]/);
   /* Ortada tek örnek: `space-y-3` mobilde ızgara `gap`iyle çakışmıyor. */
@@ -1982,7 +1980,8 @@ test('sosyal satır yokken kartta Paylaş ve dişli çizilmiyor, sayı uydurulmu
     paylaşımla ilgisi yok. Satır tek öğeyle kaldığı için `justify-end`
     yeterli; kaldırılan düğmenin yerinde boşluk durmuyor.
   */
-  assert.match(profilBasligi, /\{satir && \(\n\s*<div className="flex items-center justify-end gap-2">/);
+  /* Satırda solda hesap eylemleri, sağda dişli (17 Eylül 2026). */
+  assert.match(profilBasligi, /\{\(satir \|\| hesapEylemleri\) && \(\n\s*<div className="flex items-center justify-between gap-2">/);
   assert.doesNotMatch(profilBasligi, /\{satir\.onPaylasimOlustur && \(/);
   assert.doesNotMatch(profilBasligi, />\s*Paylaş\s*</);
   assert.match(profilBasligi, /<ProfilAyarMenusu \{\.\.\.satir\.menu\} \/>/);
@@ -2157,7 +2156,8 @@ test('kariyer hedefi ve yetkinlik testleri kartları ana görünümde YOK; testl
   /* Giriş "Profilin tamamlandı" satırından sonra, "Paylaş" düğmesinden önce. */
   const tamamlandi = kartTemiz.indexOf('Profilin tamamlandı');
   const girisYeri = kartTemiz.indexOf('onClick={onTestlere}');
-  const paylas = kartTemiz.indexOf('{satir && (');
+  /* Alt satır artık hesap eylemleriyle birlikte açılıyor (17 Eylül 2026). */
+  const paylas = kartTemiz.indexOf('{(satir || hesapEylemleri) && (');
   assert.ok(tamamlandi > 0 && tamamlandi < girisYeri && girisYeri < paylas, 'giriş yanlış yerde');
 });
 

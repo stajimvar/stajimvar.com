@@ -224,6 +224,12 @@ interface Props {
   onDuzenle: () => void;
   onCv?: () => void;
   onKaydedilenlere?: () => void;
+  /**
+   * Hesap eylemleri (yönetim paneli, çıkış) — kartın alt satırında,
+   * dişlinin solunda (kullanıcı isteği, 17 Eylül 2026). Sayfanın en
+   * altında, akıştan uzakta duruyordu.
+   */
+  hesapEylemleri?: React.ReactNode;
   onBasvurulara?: () => void;
   onMulakatlara?: () => void;
   /**
@@ -293,6 +299,7 @@ export const ProfilBasligi: React.FC<Props> = ({
   onDuzenle,
   onCv,
   onKaydedilenlere,
+  hesapEylemleri,
   onBasvurulara,
   onMulakatlara,
   portfolyo,
@@ -722,9 +729,10 @@ export const ProfilBasligi: React.FC<Props> = ({
       Dişli `ProfilAyarMenusu` — satırları burada seçilmiyor, nesne
       olduğu gibi geçiyor.
     */}
-    {satir && (
-      <div className="flex items-center justify-end gap-2">
-        <ProfilAyarMenusu {...satir.menu} />
+    {(satir || hesapEylemleri) && (
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">{hesapEylemleri}</div>
+        {satir && <ProfilAyarMenusu {...satir.menu} />}
       </div>
     )}
 

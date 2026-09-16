@@ -123,7 +123,8 @@ test("/cv ekranı çıkışı her öğrenciye, yönetim panelini yalnız yöneti
   assert.match(app, /const ogrenciProfilEkrani = \(\) =>[\s\S]{0,1200}onLogout=\{handleLogout\}[\s\S]{0,200}isAdmin=\{isAdmin\}[\s\S]{0,200}onOpenAdmin=\{\(\) => navigate\('\/yonetim'\)\}/);
 
   /* Çıkış yalnız `onLogout` varlığına bağlı — yönetici koşulu yok. */
-  assert.match(profil, /\{!duzenleme && \(onLogout \|\| \(isAdmin && onOpenAdmin\)\) && \(/);
+  /* Kartın alt satırında (hesapEylemleri), düzenlemede çizilmiyor — 17 Eylül 2026. */
+  assert.match(profil, /!duzenleme && \(onLogout \|\| \(isAdmin && onOpenAdmin\)\) \?/);
   assert.match(profil, /\{onLogout && \([\s\S]{0,500}Çıkış yap/);
   /* Yönetim paneli yalnız yöneticide DOM'a giriyor. */
   assert.match(profil, /\{isAdmin && onOpenAdmin && \([\s\S]{0,500}Yönetim paneli/);
