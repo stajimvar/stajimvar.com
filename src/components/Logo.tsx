@@ -16,9 +16,6 @@ export const Logo: React.FC<LogoProps> = ({
   onClick,
   href = '/',
 }) => {
-  // Dimensions (with responsive classes)
-  const circleSize = size === 'sm' ? 26 : size === 'lg' ? 44 : 34;
-
   const textClass =
     size === 'sm'
       ? 'text-base sm:text-lg tracking-[-0.03em]'
@@ -36,14 +33,15 @@ export const Logo: React.FC<LogoProps> = ({
           yazılıyor. Yazı karakteri, ağırlık, harf aralığı ve renkler
           aynı — değişen yalnız punto.
 
-          `sm:text-2xl` OLDUĞU GİBİ: geniş ekran bu işin dışında, orada
-          marka 24 pikselde kalıyor.
+          `sm:text-2xl` OLDUĞU GİBİ. Masaüstünde (`lg:`) 28 piksel: amblem
+          ve nokta kalkınca marka yalnız kelimeden oluşuyor; 24 pikselde
+          sekme çubuğunun yanında küçük kalıyordu.
 
           Yükseklik BUNA BAĞLI DEĞİL: `leading-none` satır yüksekliğini
           puntodan ayırıyor ve çubuğun kendi yüksekliği sabit
           (`h-15` / `sm:h-18`).
         */
-        'text-[23px] sm:text-2xl tracking-[-0.03em]';
+        'text-[23px] sm:text-2xl lg:text-[28px] tracking-[-0.03em]';
 
   /*
     TIKLANABİLİR LOGO GERÇEK BİR BAĞLANTI
@@ -65,36 +63,11 @@ export const Logo: React.FC<LogoProps> = ({
   const icerik = (
     <>
       {/*
-        Amblem: markanın kendi çizimi, `assets/logo-kaynak.png`.
-
-        Vektörle yeniden çizilmiş bir taklit denendi ve orijinalden gözle
-        görülür biçimde sapıyordu; artık çizimin kendisi ölçekleniyor.
-        Daire dışı saydam, böylece amblem gri sayfa zemininde de beyaz bir
-        kare bırakmıyor. Aynı dosyadan sekme ve uygulama ikonları da
-        üretiliyor: `npm run ikonlar`.
+        MARKA YALNIZ KELİME
+        Amblem (`/logo.png`) ve "Var"dan sonraki mavi nokta her boyutta
+        kaldırıldı; telefonda zaten gizliydiler. Sekme ve uygulama
+        ikonları aynı dosyadan üretilmeye devam ediyor (`npm run ikonlar`).
       */}
-      <img
-        src="/logo.png"
-        alt=""
-        width={circleSize}
-        height={circleSize}
-        style={{ width: circleSize, height: circleSize }}
-        /*
-          İKON TELEFONDA GİZLİ.
-
-          Üst çubukta marka artık ortada duruyor ve ortalanan şey BLOK:
-          ikon + yazı + nokta. Blok ortalanınca yazının kendisi göz
-          hizasında sağa kayıyordu. Telefonda yalnız kelime kalıyor,
-          böylece ortalanan şey doğrudan "StajımVar" oluyor — `/agim`
-          başlığındaki marka da zaten düz yazı.
-
-          `lg:` üstünde ikon geri geliyor: orada logo solda, ortalama
-          yok ve marka tam hâliyle duruyor.
-        */
-        className="hidden lg:block shrink-0 rounded-full shadow-xs transition-transform duration-200 group-hover:scale-105"
-        title="stajimvar.com"
-      />
-
       {/* Monochromatic Pure Brand Wordmark */}
       <div className="relative inline-flex items-baseline leading-none">
         <span
@@ -106,8 +79,6 @@ export const Logo: React.FC<LogoProps> = ({
         >
           Stajım<span className="text-blue-600 font-black">Var</span>
         </span>
-        {/* Nokta da ikonla birlikte: ortalanan şey yalnız kelime olsun. */}
-        <span className="hidden lg:inline-block w-1.5 h-1.5 rounded-full bg-blue-600 ml-1 mb-0.5 group-hover:scale-125 transition-transform"/>
 
         {showTagline && (
           <span className="hidden lg:inline-block ml-2 text-[10px] font-bold text-gray-600 uppercase tracking-wider pl-2 border-l border-gray-200">
