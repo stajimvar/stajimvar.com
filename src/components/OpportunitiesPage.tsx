@@ -540,25 +540,6 @@ export const OpportunitiesPage: React.FC<{
           aynısı.)
         */}
         <div className="contents lg:block lg:col-span-3 lg:space-y-4 lg:sticky lg:top-4">
-          {/*
-            Başlık ve açıklama telefonda GÖRSELDEN kalktı, metinden
-            kalkmadı: `sr-only` öğeyi ekrandan çıkarıyor ama DOM'da ve
-            erişilebilirlik ağacında bırakıyor. Geniş ekranda eskisi gibi.
-          */}
-          <header className="lg:space-y-1">
-            {/*
-              `sr-only` KAPSAYICIYA DEĞİL ÖĞELERE veriliyor: sınıf
-              öğenin kendisini 1×1 piksele indiriyor, çocuklarını
-              kırpmıyor — kapsayıcıya verilince başlık ekranda kalmıştı
-              (ölçüldü).
-            */}
-            {/*
-              MASAÜSTÜNDE DE GÖRÜNMÜYOR (kullanıcı isteği, 16 Eylül 2026):
-              İlanlar ve Rehber'le aynı — sayfa başlığı yalnız ekran
-              okuyucuda; açıklama satırı kaldırıldı.
-            */}
-            <h1 className="sr-only">Fırsatlar</h1>
-          </header>
 
           {/*
             TELEFONDA ARAMA VE SÜZGEÇ ÜST ÇUBUKTA (lib/sayfa-aramasi).
@@ -566,6 +547,14 @@ export const OpportunitiesPage: React.FC<{
           */}
 
           <div className="hidden lg:block">{suzgecler}</div>
+
+          {/*
+            SAYFA BAŞLIĞI YALNIZ EKRAN OKUYUCUDA ve sütunun EN SONUNDA.
+            Önce başlığı saran boş bir <header> sütunun ilk çocuğuydu;
+            `space-y-4` süzgeç kutusunu 16 piksel aşağı itiyor ve küre
+            şeridiyle hizası kayıyordu (canlıda ölçüldü, 17 Eylül 2026).
+          */}
+          <h1 className="sr-only">Fırsatlar</h1>
 
           {/*
             AYIRICI KALDIRILDI.
