@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bookmark, Clock } from 'lucide-react';
+import { Bookmark, ChevronRight, Clock } from 'lucide-react';
 import { konuEtiketi, rehberOkumaDakika, type Rehber } from '../data/rehberler';
 import { tarihMetni } from '../lib/tarih.mjs';
 import { YUZEY } from '../ui/tokens';
@@ -238,4 +238,192 @@ export const RehberIzgarasi: React.FC<{ children: React.ReactNode }> = ({ childr
   >
     {children}
   </div>
+);
+
+/* ------------------------------------------------------------------ *
+ * REHBER MERKEZİ DÜZENİ (onaylanan tasarım, 16 Eylül 2026)
+ *
+ * Merkez sayfası artık ızgara değil: en üstte büyük bir ÖNE ÇIKAN rehber,
+ * altında konu bölümleri ve her bölümde kapaklı SATIRLAR. Aşağıdaki
+ * parçalar yalnız o sayfanın; tek rehber sayfasındaki "ilgili rehberler"
+ * ve arama sonuçları yukarıdaki `RehberKarti`/`RehberIzgarasi` ile
+ * çizilmeye devam ediyor.
+ *
+ * TIKLAMA: kartın tamamı başlık bağlantısının `after:` örtüsüyle rehbere
+ * gidiyor; kaydet düğmesi örtünün üstünde (`relative z-10`). Bağlantının
+ * içine düğme koymak geçersiz HTML olurdu.
+ * ------------------------------------------------------------------ */
+
+/** Rehber kapağı — kartla AYNI sürümlü dosyalar. */
+const RehberKapagi: React.FC<{ slug: string; oncelikli?: boolean }> = ({ slug, oncelikli = false }) => (
+  <picture>
+    <source
+      srcSet={`/rehber-gorselleri/${slug}.avif?v=rehber-fotograf-20260907-tam`}
+      type="image/avif"
+    />
+    <img
+      src={`/rehber-gorselleri/${slug}.webp?v=rehber-fotograf-20260907-tam`}
+      alt=""
+      aria-hidden="true"
+      loading={oncelikli ? 'eager' : 'lazy'}
+      decoding="async"
+      width={720}
+      height={405}
+      onError={(e) => {
+        e.currentTarget.style.display = 'none';
+      }}
+      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+    />
+  </picture>
+);
+
+const baglantiTiklamasi =
+  (yol: string, onNavigate?: (yol: string) => void) =>
+  (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!onNavigate) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    onNavigate(yol);
+  };
+
+const KaydetDugmesi: React.FC<{
+  rehber: Rehber;
+  kayitli: boolean;
+  onKaydet: (slug: string) => void;
+  kaydetmeEtiketi?: string;
+  className?: string;
+}> = ({ rehber, kayitli, onKaydet, kaydetmeEtiketi, className = '' }) => (
+  <button
+    type="button"
+    aria-pressed={kaydetmeEtiketi ? undefined : kayitli}
+    aria-label={kaydetmeEtiketi ?? (kayitli ? 'Kaydı kaldır' : 'Rehberi kaydet')}
+    title={kaydetmeEtiketi ?? (kayitli ? 'Kaydı kaldır' : 'Rehberi kaydet')}
+    onClick={(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onKaydet(rehber.slug);
+    }}
+    className={`relative z-10 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl transition-colors ${
+      kayitli ? 'text-blue-700 hover:bg-blue-50' : 'text-slate-700 hover:bg-gray-100'
+    } ${className}`}
+  >
+    <Bookmark aria-hidden className={`h-6 w-6 ${kayitli ? 'fill-current' : ''}`} strokeWidth={1.75} />
+  </button>
+);
+
+/** Büyük öne çıkan rehber: tam genişlik kapak, konu etiketi, özet. */
+export const OneCikanRehberKarti: React.FC<KartProps> = ({
+  rehber,
+  onNavigate,
+  kayitli = false,
+  onKaydet,
+  kaydetmeEtiketi,
+}) => {
+  const yol = `/rehber/${rehber.slug}`;
+  return (
+    <article className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-colors hover:border-gray-300">
+      <div className="relative aspect-[12/5] w-full overflow-hidden bg-gray-100">
+        <RehberKapagi slug={rehber.slug} oncelikli />
+        <span className="absolute left-2.5 top-2.5 rounded-full bg-white px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-slate-800 shadow-sm">
+          {konuEtiketi(rehber.konu)}
+        </span>
+      </div>
+      <div className="px-3.5 pb-1.5 pt-2.5 sm:px-4">
+        <h3 className="text-[17px] font-bold leading-snug text-slate-900 sm:text-lg">
+          <a
+            href={yol}
+            onClick={baglantiTiklamasi(yol, onNavigate)}
+            className="outline-none after:absolute after:inset-0 after:content-[''] focus-visible:underline group-hover:text-blue-700"
+          >
+            {rehber.baslik}
+          </a>
+        </h3>
+        <p className="mt-0.5 line-clamp-2 text-sm leading-snug text-slate-500">{rehber.ozet}</p>
+        <div className="flex items-center justify-between gap-3">
+          <span className="inline-flex items-center gap-1.5 text-sm text-slate-600">
+            <Clock aria-hidden className="h-4 w-4" />
+            {rehberOkumaDakika(rehber)} dk
+          </span>
+          {onKaydet && (
+            <KaydetDugmesi
+              rehber={rehber}
+              kayitli={kayitli}
+              onKaydet={onKaydet}
+              kaydetmeEtiketi={kaydetmeEtiketi}
+              className="-mr-2"
+            />
+          )}
+        </div>
+      </div>
+    </article>
+  );
+};
+
+/** Konu bölümündeki satır: solda kapak, ortada başlık/özet/süre, sağda kaydet. */
+export const RehberSatiri: React.FC<KartProps> = ({
+  rehber,
+  onNavigate,
+  kayitli = false,
+  onKaydet,
+  kaydetmeEtiketi,
+}) => {
+  const yol = `/rehber/${rehber.slug}`;
+  return (
+    <article className="group relative flex gap-3 py-3">
+      <div className="relative h-[72px] w-[96px] shrink-0 overflow-hidden rounded-lg bg-gray-100 min-[400px]:w-[104px]">
+        <RehberKapagi slug={rehber.slug} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <h3 className="line-clamp-2 text-[15px] font-bold leading-tight text-slate-900">
+          <a
+            href={yol}
+            onClick={baglantiTiklamasi(yol, onNavigate)}
+            className="outline-none after:absolute after:inset-0 after:content-[''] focus-visible:underline group-hover:text-blue-700"
+          >
+            {rehber.baslik}
+          </a>
+        </h3>
+        <p className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-slate-500">{rehber.ozet}</p>
+        <span className="mt-1 inline-flex items-center gap-1.5 text-[13px] text-slate-600">
+          <Clock aria-hidden className="h-4 w-4" />
+          {rehberOkumaDakika(rehber)} dk
+        </span>
+      </div>
+      {onKaydet && (
+        <KaydetDugmesi
+          rehber={rehber}
+          kayitli={kayitli}
+          onKaydet={onKaydet}
+          kaydetmeEtiketi={kaydetmeEtiketi}
+          className="-mr-2 self-end"
+        />
+      )}
+    </article>
+  );
+};
+
+/** Başlıklı satır bölümü; "Tümünü gör" yalnız gösterilmeyen rehber varsa. */
+export const RehberBolumu: React.FC<{
+  baslik: string;
+  onTumunuGor?: () => void;
+  tumunuGorEtiketi?: string;
+  children: React.ReactNode;
+}> = ({ baslik, onTumunuGor, tumunuGorEtiketi, children }) => (
+  <section>
+    <div className="flex items-center justify-between gap-3">
+      <h2 className="text-[21px] font-extrabold tracking-tight text-slate-900">{baslik}</h2>
+      {onTumunuGor && (
+        <button
+          type="button"
+          onClick={onTumunuGor}
+          aria-label={tumunuGorEtiketi ?? `${baslik}: tümünü gör`}
+          className="-mr-1 inline-flex min-h-10 shrink-0 cursor-pointer items-center gap-0.5 px-1 text-sm font-semibold text-blue-700 hover:text-blue-800"
+        >
+          Tümünü gör
+          <ChevronRight aria-hidden className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+    <div className="divide-y divide-gray-200">{children}</div>
+  </section>
 );

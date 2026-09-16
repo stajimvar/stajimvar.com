@@ -27,20 +27,22 @@ const rehberMerkezi = oku('src/components/RehberMerkezi.tsx');
 
 test('ŞERİT KOPYALANMADI, PAYLAŞILDI', () => {
   assert.match(firsatlar, /import \{ KonuSeridi \} from '\.\/KonuSeridi'/);
-  assert.match(rehberMerkezi, /import \{ KonuSeridi \} from '\.\/KonuSeridi'/);
+  /*
+    REHBER MERKEZİ ARTIK DAİRE ŞERİDİ KULLANMIYOR (onaylanan tasarım,
+    16 Eylül 2026): konu seçimi simgeli haplarla (RehberKonuSekmeleri).
+    KonuSeridi fırsat sayfasının bileşeni olarak kalıyor.
+  */
+  assert.doesNotMatch(rehberMerkezi, /from '\.\/KonuSeridi'/);
+  assert.match(rehberMerkezi, /<RehberKonuSekmeleri/);
   /* Fırsatlar sayfası kendi daire markup'ını yazmıyor. */
   assert.doesNotMatch(firsatlar, /rounded-full p-\[2\.5px\]/, 'daire markup kopyalanmış');
 });
 
-test('REHBER TARAFI DEĞİŞMEDİ — varsayılanlar eski davranış', () => {
+test('ŞERİT VARSAYILANLARI DEĞİŞMEDİ', () => {
   assert.match(serit, /birim = 'rehber'/);
   assert.match(serit, /ikonlar = IKONLAR/);
   assert.match(serit, /varsayilanIkon: VarsayilanIkon = BookOpen/);
   assert.match(serit, /tumuEtiketi = 'Tüm konular'/);
-  /* Rehber çağrısı yeni propları geçmiyor; varsayılanlarla çalışıyor. */
-  const cagri = rehberMerkezi.slice(rehberMerkezi.indexOf('<KonuSeridi'));
-  const govde = cagri.slice(0, cagri.indexOf('/>'));
-  assert.doesNotMatch(govde, /birim=|ikonlar=|varsayilanIkon=/);
 });
 
 test('FIRSAT ŞERİDİ KATEGORİ SAYIYOR', () => {
