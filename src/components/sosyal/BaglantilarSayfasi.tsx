@@ -15,6 +15,7 @@ import {
 import { profilYolu } from '../../lib/sosyal-kullanici-adi.mjs';
 import { ProfilFotografi } from './ProfilFotografi';
 import { ResmiTik } from './ResmiTik';
+import { BaglantiKaldirMenusu } from './BaglantiKaldirMenusu';
 
 /**
  * BAĞLANTILAR — TEK ADRES, ÜÇ BÖLÜM
@@ -386,16 +387,12 @@ export const BaglantilarSayfasi: React.FC<BaglantilarProps> = ({
               kisi={kisi}
               onNavigate={onNavigate}
               eylemler={
-                <button
-                  type="button"
-                  disabled={islemdeki === kisi.kisiId}
-                  onClick={() =>
-                    eylemiCalistir(kisi.kisiId, () => baglantiKaldir(kullaniciId, kisi.kisiId))
-                  }
-                  className={IKINCIL}
-                >
-                  Bağlantıyı kaldır
-                </button>
+                /* Kaldırma "⋯" menüsünde ve onaylı (BaglantiKaldirMenusu). */
+                <BaglantiKaldirMenusu
+                  ad={kisi.profil?.gorunenAd ?? (kisi.profil?.kullaniciAdi ? `@${kisi.profil.kullaniciAdi}` : 'Bu kişi')}
+                  islemde={islemdeki === kisi.kisiId}
+                  onKaldir={() => eylemiCalistir(kisi.kisiId, () => baglantiKaldir(kullaniciId, kisi.kisiId))}
+                />
               }
             />
           )}
