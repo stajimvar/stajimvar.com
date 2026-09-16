@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Search, X } from 'lucide-react';
+import { Bell, Home, Search, X } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import {
   akisiGetir,
@@ -310,6 +310,20 @@ export const AgimSayfasi: React.FC<Props> = ({
       <h1 className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[28px] font-black leading-none tracking-[-0.03em] text-gray-900 sm:text-2xl">
         Stajım<span className="text-blue-600">Var</span>
       </h1>
+
+      {/* Ana sayfa düğmesi: sitenin üst çubuğuyla aynı yerde (sol köşe), İlanlar'a götürüyor. */}
+      <a
+        href="/"
+        aria-label="Ana sayfa: staj ilanları"
+        onClick={(olay) => {
+          if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0) return;
+          olay.preventDefault();
+          onNavigate('/');
+        }}
+        className={IKON}
+      >
+        <Home aria-hidden className="h-6 w-6" />
+      </a>
 
       <FotografPaylasGirisi
         ref={paylasKolu}
