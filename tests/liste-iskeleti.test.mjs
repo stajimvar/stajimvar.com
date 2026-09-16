@@ -101,7 +101,9 @@ test('liste başlığı üç sayfada da ortak belirteçten geliyor', () => {
     'src/components/RehberMerkezi.tsx',
   ]) {
     const kaynak = oku(dosya);
-    assert.match(kaynak, /className=\{LISTE_BASLIGI\}/, `${dosya}: başlık satırı ortak değil`);
+    /* İlanlar'da satır telefonda gizli (`max-sm:hidden`, onaylanan düzen)
+       ama belirteç aynı. */
+    assert.ok(/className=\{`?\$?\{?LISTE_BASLIGI\b(?!_)/.test(kaynak), `${dosya}: başlık satırı ortak değil`);
     /* İlanlar'da başlık `sr-only` ile ekrandan çıktı (onaylanan tasarım)
        ama DOM'da ve aynı belirteçle duruyor. */
     assert.ok(kaynak.includes('LISTE_BASLIGI_YAZISI}') , `${dosya}: başlık yazısı ortak değil`);

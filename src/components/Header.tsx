@@ -758,15 +758,38 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
 
             {/*
-              SÜZGEÇ SİMGESİ ÜST ÇUBUKTAN KALKTI (onaylanan tasarım)
+              SÜZGEÇ SİMGESİ ÜST ÇUBUKTA (onaylanan tasarım)
 
-              Aynı işi listenin kendi "Filtrele" çipi yapıyor ve o, süzgeç
-              panelinin hemen üstünde duruyor. Üst çubuktaki ikinci giriş,
-              aynı paneli iki ayrı yerden açan iki düğme demekti.
-
-              Arama simgesi DURUYOR: aramanın sayfa gövdesinde karşılığı
-              yok, tek girişi burası.
+              Bir süre kaldırılmıştı ve paneli sayfadaki "Filtrele" çipi
+              açıyordu. Onaylanan İlanlar tasarımında çip satırı yok: panelin
+              tek girişi yine burası. Rozet açık süzgeç sayısını söylüyor.
             */}
+            {/*
+              YALNIZ İLANLAR'DA. Fırsatlar ve Rehber de süzgeç tutamağı
+              kaydediyor; simge onlarda çizilseydi o sayfaların başlığı da
+              değişirdi. Onaylanan düzen yalnız İlanlar'ın.
+            */}
+            {ilanlardaMi && sayfaAramasi?.onSuzgec && (
+              <button
+                type="button"
+                onClick={sayfaAramasi.onSuzgec}
+                aria-expanded={sayfaAramasi.suzgecAcik ?? false}
+                aria-label={
+                  sayfaAramasi.acikSuzgec
+                ? `Filtreler (${sayfaAramasi.acikSuzgec} açık)`
+                : 'Filtreler'
+                }
+                className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-700 transition-colors hover:bg-gray-100 lg:hidden"
+              >
+                <SlidersHorizontal className="h-6 w-6" />
+                {/* Rozet GERÇEK sayı; sıfırken hiç çizilmiyor. */}
+                {Boolean(sayfaAramasi.acikSuzgec) && (
+                  <span className="absolute right-1 top-1 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white">
+                {sayfaAramasi.acikSuzgec}
+                  </span>
+                )}
+              </button>
+                )}
 
             </div>
 

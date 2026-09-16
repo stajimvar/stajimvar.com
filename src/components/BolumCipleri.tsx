@@ -64,7 +64,17 @@ export const BolumCipleri: React.FC<{
   onSec: (alan: string | null) => void;
   /** Alan başına eşleşen ilan sayısı — sıfır olan çip çizilmiyor. */
   sayilar?: Record<string, number>;
-}> = ({ secili, onSec, sayilar }) => {
+  /**
+   * Süzgeç panelinin içinde mi çiziliyor.
+   *
+   * İlanlar sayfasında onaylanan tasarım başlığın altına yalnız küre
+   * şeridini koyuyor ve ilanlar doğrudan onun altından başlıyor. Bu soru
+   * o yüzden panele taşındı. Panelde kutu değil sade bir bölüm; "Şimdi
+   * değil" yok, çünkü panel zaten isteyerek açılıyor ve bölüm seçimi
+   * orada her zaman erişilebilir olmalı.
+   */
+  panelde?: boolean;
+}> = ({ secili, onSec, sayilar, panelde = false }) => {
   /*
     TERCİH İLK ÇİZİMDE OKUNUYOR — ETKİDE DEĞİL.
 
@@ -100,7 +110,7 @@ export const BolumCipleri: React.FC<{
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!gorunur) return null;
+  if (!gorunur && !panelde) return null;
 
   const sec = (alan: string | null) => {
     tercihYaz(window.localStorage, alan);
@@ -121,7 +131,11 @@ export const BolumCipleri: React.FC<{
         öğe olduğu için bozuk görünüyordu. `sm:` üstünde kutu aynen
         geri geliyor.
       */
-      className={`border-y border-blue-100 bg-blue-50/60 p-4 sm:rounded-2xl sm:border ${YUZEY.kap}`}
+      className={
+        panelde
+          ? 'px-4 py-3'
+          : `border-y border-blue-100 bg-blue-50/60 p-4 sm:rounded-2xl sm:border ${YUZEY.kap}`
+      }
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -132,7 +146,7 @@ export const BolumCipleri: React.FC<{
               : 'Seç, alanına uyan ilanlar başa gelsin. Hiçbir ilan gizlenmiyor.'}
           </p>
         </div>
-        {!secili && (
+        {!secili && !panelde && (
           <button
             type="button"
             onClick={() => {

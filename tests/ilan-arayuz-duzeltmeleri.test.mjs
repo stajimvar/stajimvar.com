@@ -184,7 +184,9 @@ test('FALSE GERÇEK BİR DEĞER — "boş" sayılıp gizlenmiyor', () => {
 
 test('KARTIN TAMAMI DETAYA GİDİYOR ve "Detaylar" düğmesi kalktı', () => {
   assert.match(kart, /after:absolute after:inset-0/, 'gerilmiş bağlantı');
-  assert.match(kart, /href=\{`\/ilan\/\$\{listingSlug\(listing\)\}`\}/, 'gerçek adres, tarayıcı gösterebilsin');
+  /* Adres tek sabitte; hem pozisyon bağlantısı hem "İncele" onu kullanıyor. */
+  assert.ok(kart.includes('const ilanAdresi = `/ilan/${listingSlug(listing)}`;'), 'gerçek adres, tarayıcı gösterebilsin');
+  assert.match(kart, /href=\{ilanAdresi\}/);
   assert.doesNotMatch(kart, />\s*Detaylar\s*</, 'ayrı Detaylar düğmesi kalmamalı');
 });
 
