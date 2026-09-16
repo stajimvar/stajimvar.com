@@ -1,4 +1,5 @@
 import React from 'react';
+import { YatayKaydirma } from './YatayKaydirma';
 import { SERIT } from '../ui/tokens';
 import {
   BookOpen,
@@ -194,7 +195,7 @@ export const KonuSeridi: React.FC<{
         700 pikselin üstüne çıkıyor. Aynı hata Keşfet'te ölçülmüştü;
         SehirSeridi.tsx içindeki uzun not sebebi anlatıyor.
       */}
-      <div className={SERIT.ic}>
+      <YatayKaydirma className={SERIT.ic}>
         <div className="flex min-w-max gap-2.5 py-1 sm:py-0">
           {/* İlk daire "Tümü": konu seçiliyken çıkış yolu. */}
           <Daire
@@ -228,7 +229,7 @@ export const KonuSeridi: React.FC<{
             );
           })}
         </div>
-      </div>
+      </YatayKaydirma>
       {/* Dönen dairenin sayısı ekran okuyucuya da söyleniyor. */}
       <span className="sr-only" aria-live="polite">
         {donuk !== null && donuk === secili

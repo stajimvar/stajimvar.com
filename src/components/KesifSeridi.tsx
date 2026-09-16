@@ -1,4 +1,5 @@
 import React from 'react';
+import { YatayKaydirma } from './YatayKaydirma';
 import { SERIT } from '../ui/tokens';
 
 export const KesifDairesi: React.FC<{
@@ -60,8 +61,8 @@ export const KesifSeridi: React.FC<{
     {baslik && (
       <h2 className="px-4 pb-2 text-sm font-extrabold text-gray-900 sm:px-3 sm:pb-3">{baslik}</h2>
     )}
-    <div className={SERIT.ic}>
+    <YatayKaydirma className={SERIT.ic}>
       <div className="flex gap-3 min-w-max">{children}</div>
-    </div>
+    </YatayKaydirma>
   </div>
 );

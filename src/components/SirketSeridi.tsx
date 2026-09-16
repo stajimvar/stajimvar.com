@@ -1,4 +1,5 @@
 import React from 'react';
+import { YatayKaydirma } from './YatayKaydirma';
 import { Globe, Laptop, Layers, MapPin } from 'lucide-react';
 
 /**
@@ -160,7 +161,7 @@ export const SirketSeridi: React.FC<{
     aria-label="İlanları daralt"
     className="-mx-4 border-b border-gray-200 bg-white sm:mx-0 sm:rounded-2xl sm:border"
   >
-    <div className="overflow-x-auto px-4 py-3 [scrollbar-width:none] sm:px-3 [&::-webkit-scrollbar]:hidden">
+    <YatayKaydirma className="overflow-x-auto px-4 py-3 [scrollbar-width:none] sm:px-3 [&::-webkit-scrollbar]:hidden">
       <ul className="flex min-w-max gap-2.5">
         {BOLGELER.map((b) => {
           /* "Tümü" bir şirket seçiliyken seçili sayılmıyor: liste daralmış. */
@@ -245,7 +246,7 @@ export const SirketSeridi: React.FC<{
           );
         })}
       </ul>
-    </div>
+    </YatayKaydirma>
     {/* Dönen kürenin sayısı ekran okuyucuya da söyleniyor. */}
     <span className="sr-only" aria-live="polite">
       {donuk ? (donukSayi === null ? 'İlan sayısı yükleniyor' : `${donukSayi} ilan`) : ''}
