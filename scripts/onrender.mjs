@@ -556,7 +556,7 @@ async function ilanlariGetir() {
     return [];
   }
   const secim =
-    'id,title,description,city,work_type,apply_url,application_method,posted_at,created_at,application_deadline,is_paid,stipend_text,companies(name,slug,website_url,logo_url,industry,location,description)';
+    'id,title,description,city,country_code,work_type,apply_url,application_method,posted_at,created_at,application_deadline,is_paid,stipend_text,companies(name,slug,website_url,logo_url,industry,location,description)';
   const istek = `${urlAdres}/rest/v1/listings?status=eq.published&select=${encodeURIComponent(secim)}`;
   const yanit = await fetch(istek, {
     headers: { apikey: anahtar, Authorization: `Bearer ${anahtar}` },
@@ -1612,10 +1612,21 @@ async function main() {
     istiyor ve o veri (`ilanlar`) ancak bu satırdan sonra elde. Sayılar
     hesaplanmıyor, SAYILIYOR — uydurulan tek bir rakam yok.
   */
+  /*
+    /staj-ilanlari TÜRKİYE KAPISI (17 Eylül 2026)
+
+    Ön render'daki sayfa Türkiye görünümünün metnini taşıyor ("Türkiye
+    genelindeki..."). Sayılar, şehir dökümü ve son ilanlar da yalnız Türkiye
+    sınıfındaki ilanlardan (lib/ilan-cografyasi.mjs): Paris/Berlin Türkiye
+    şehri gibi sunulmuyor. İlan sayfaları ve site haritası bundan
+    etkilenmiyor — her yayındaki ilan kendi sayfasında kalıyor.
+  */
+  const { ilanCografyasi: cografya } = await import('../src/lib/ilan-cografyasi.mjs');
+  const turkiyeIlanlari = ilanlar.filter((i) => cografya({ countryCode: i.country_code ?? null, city: i.city ?? null }) === 'turkiye');
   const stajIlanlariVerisi = (() => {
     const sehirSayaci = new Map();
     const sirketler = new Set();
-    for (const ilan of ilanlar) {
+    for (const ilan of turkiyeIlanlari) {
       const sirket = ilan.companies?.name;
       if (sirket) sirketler.add(sirket);
       const ham = (ilan.city || '').trim();
@@ -1626,7 +1637,7 @@ async function main() {
 
     /* En yeni ilanlar: `posted_at` yoksa `created_at`. İkisi de yoksa sona. */
     const zaman = (i) => new Date(i.posted_at || i.created_at || 0).getTime() || 0;
-    const enYeniler = ilanlar
+    const enYeniler = turkiyeIlanlari
       .slice()
       .sort((a, b) => zaman(b) - zaman(a))
       .slice(0, 12)
@@ -1639,7 +1650,8 @@ async function main() {
       }));
 
     return {
-      toplam: ilanlar.length,
+      gorunum: 'turkiye',
+      toplam: turkiyeIlanlari.length,
       sirketToplam: sirketler.size,
       sehirToplam: sehirSayaci.size,
       ilanlar: enYeniler,
@@ -1795,7 +1807,11 @@ async function main() {
               address: {
                 '@type': 'PostalAddress',
                 addressLocality: i.city,
-                addressCountry: 'TR',
+                /*
+                  Ülke GERÇEK VERİDEN: sabit 'TR' Paris ve Berlin ilanlarını
+                  da Türkiye'de gösteriyordu. Kod yoksa alan yazılmıyor.
+                */
+                ...(i.country_code ? { addressCountry: i.country_code } : {}),
               },
             },
           }

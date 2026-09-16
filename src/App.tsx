@@ -1,4 +1,5 @@
 import React, { useState, useRef, Suspense } from 'react';
+import { COGRAFYA, ilanCografyasi } from './lib/ilan-cografyasi.mjs';
 import {
   baglantiDurumu,
   baglantilarimiGetir,
@@ -2500,17 +2501,40 @@ export default function App() {
   */
   if (temizYol === '/staj-ilanlari') {
     const sayfa = globalListings.page;
+    /*
+      METİN VE SAYILAR SEÇİLİ KAPIYA GÖRE (17 Eylül 2026)
+
+      Türkiye kataloğunda sunucu sayıları doğrudan Türkiye'yi anlatıyor.
+      Yurtdışı `country=all` kataloğundan sınıflandırmayla ayrılıyor: toplam
+      ülke dağılımındaki TR dışı ülkelerin toplamı, liste de yalnız
+      yurtdışı sınıfındaki ilanlar; şirket/şehir sayısı o kapsam için
+      sunucuda yok, yazılmıyor.
+    */
+    const adresParam = new URLSearchParams(window.location.search);
+    const kapi: 'turkiye' | 'yurtdisi' | 'tumu' =
+      globalListings.country === 'TR'
+        ? 'turkiye'
+        : adresParam.get('bolge') === 'yurtdisi' || (/^[A-Z]{2}$/.test(globalListings.country) && globalListings.country !== 'TR')
+          ? 'yurtdisi'
+          : 'tumu';
+    const kapidakiIlanlar = (sayfa?.listings ?? []).filter(
+      (ilan) => kapi !== 'yurtdisi' || ilanCografyasi(ilan) === COGRAFYA.YURTDISI,
+    );
+    const yurtdisiToplami = (sayfa?.facets.countries ?? [])
+      .filter((u) => u.code !== 'TR')
+      .reduce((n, u) => n + u.count, 0);
     return icerikSayfasi(
       <StajIlanlariSayfasi
         onBack={goHome}
         onNavigate={navigate}
         veri={{
-          toplam: sayfa?.total,
-          sirketToplam: sayfa?.companyTotal,
-          sehirToplam: sayfa?.cityTotal,
-          dogrulananToplam: sayfa?.verifiedTotal,
+          gorunum: kapi,
+          toplam: kapi === 'yurtdisi' && globalListings.country === 'all' ? yurtdisiToplami : sayfa?.total,
+          sirketToplam: kapi === 'yurtdisi' && globalListings.country === 'all' ? undefined : sayfa?.companyTotal,
+          sehirToplam: kapi === 'yurtdisi' && globalListings.country === 'all' ? undefined : sayfa?.cityTotal,
+          dogrulananToplam: kapi === 'yurtdisi' && globalListings.country === 'all' ? undefined : sayfa?.verifiedTotal,
           sonKontrol: sayfa?.lastVerifiedAt ?? null,
-          ilanlar: (sayfa?.listings ?? []).slice(0, 12).map((ilan) => ({
+          ilanlar: kapidakiIlanlar.slice(0, 12).map((ilan) => ({
             yol: `/ilan/${listingSlug(ilan)}`,
             baslik: ilan.title,
             sirket: ilan.companyName,
