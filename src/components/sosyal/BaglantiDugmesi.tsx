@@ -1,4 +1,5 @@
 import React from 'react';
+import { BaglantiKaldirMenusu } from './BaglantiKaldirMenusu';
 import { BIRINCIL_EYLEM, ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import {
   SosyalHata,
@@ -190,14 +191,12 @@ export const BaglantiDugmesi: React.FC<BaglantiDugmesiProps> = ({ bakanId, hedef
     govde = (
       <>
         <p className="text-sm font-semibold text-gray-700">Bağlantınız var</p>
-        <button
-          type="button"
-          disabled={islemde}
-          onClick={() => eylemiCalistir(() => baglantiKaldir(bakanId, hedefId))}
-          className={IKINCIL}
-        >
-          {islemde ? 'Kaldırılıyor…' : 'Bağlantıyı kaldır'}
-        </button>
+        {/* Kaldırma "⋯" menüsünde ve onaylı (BaglantiKaldirMenusu). */}
+        <BaglantiKaldirMenusu
+          ad="Bu kişi"
+          islemde={islemde}
+          onKaldir={() => eylemiCalistir(() => baglantiKaldir(bakanId, hedefId))}
+        />
       </>
     );
   } else if (bilgi.durum === 'red' && !bilgi.benMiGonderdim) {

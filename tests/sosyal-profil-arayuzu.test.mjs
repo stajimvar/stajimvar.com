@@ -1429,13 +1429,20 @@ test('yedi durumun her birinin kendi metni var', () => {
     'Kabul et',
     'Reddet',
     'Bağlantınız var',
-    'Bağlantıyı kaldır',
     'Bu isteği reddettin',
     'Yeniden gönderilebilir',
   ];
   for (const metin of metinler) {
     assert.ok(baglantiDugmesi.includes(metin), `bağlantı durumu metni eksik: ${metin}`);
   }
+  /*
+    "Bağlantıyı kaldır" düğmede değil, "⋯" menüsünde ve onaylı (kullanıcı
+    isteği, 17 Eylül 2026): kaldırmak kolay bir dokunuş olmasın.
+  */
+  assert.match(baglantiDugmesi, /<BaglantiKaldirMenusu/);
+  const menu = readFileSync(new URL('../src/components/sosyal/BaglantiKaldirMenusu.tsx', import.meta.url), 'utf8');
+  assert.ok(menu.includes('Bağlantıyı kaldır'));
+  assert.match(menu, /role="alertdialog"/, 'onay adımı yok');
   /* Yedinci durum (engel) bir metin değil: satırın hiç çizilmemesi. */
   assert.match(baglantiDugmesi, /if \(!bilgi\) return null;/);
 });
