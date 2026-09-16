@@ -552,12 +552,12 @@ export const OpportunitiesPage: React.FC<{
               kırpmıyor — kapsayıcıya verilince başlık ekranda kalmıştı
               (ölçüldü).
             */}
-            <h1 className="sr-only lg:not-sr-only [font-size:clamp(1.25rem,2.4vw,1.75rem)] font-extrabold leading-tight tracking-tight text-gray-950">
-              Fırsatlar
-            </h1>
-            <p className="sr-only lg:not-sr-only text-sm leading-relaxed text-gray-600">
-              Bursları, öğrenci programlarını, yarışmaları ve kariyer etkinliklerini keşfet.
-            </p>
+            {/*
+              MASAÜSTÜNDE DE GÖRÜNMÜYOR (kullanıcı isteği, 16 Eylül 2026):
+              İlanlar ve Rehber'le aynı — sayfa başlığı yalnız ekran
+              okuyucuda; açıklama satırı kaldırıldı.
+            */}
+            <h1 className="sr-only">Fırsatlar</h1>
           </header>
 
           {/*
@@ -637,10 +637,12 @@ export const OpportunitiesPage: React.FC<{
 
           {listeDurumu === 'ready' && (
             /*
-              TELEFONDA BAŞLIK YOK — İlanlar'la tek tip: küre şeridinin üstünde
-              yazı durmuyor; sayı dönen kürede, masaüstünde başlıkta.
+              LİSTE BAŞLIĞI YALNIZ EKRAN OKUYUCUDA — her genişlikte
+              (kullanıcı isteği, 16 Eylül 2026). Küre şeridinin üstünde yazı
+              durmuyor; sayı dönen kürede. Listenin adı ve sayısı ekran
+              okuyucuya söylenmeye devam ediyor.
             */
-            <div className={`${LISTE_BASLIGI} max-sm:hidden`}>
+            <div className={`${LISTE_BASLIGI} sr-only`}>
               <h2 className={LISTE_BASLIGI_YAZISI}>
                 {filters.arsiv
                   ? 'Süresi dolan fırsatlar'

@@ -566,14 +566,13 @@ export const RehberMerkezi: React.FC<{
         {/* --------------------------------------------------- orta: liste */}
         <section aria-label="Rehberler" className="min-w-0 space-y-4 lg:col-span-6">
           {/*
-            LİSTE BAŞLIĞI TELEFONDA YALNIZ EKRAN OKUYUCUYA
+            LİSTE BAŞLIĞI YALNIZ EKRAN OKUYUCUYA — her genişlikte
 
-            Onaylanan düzende başlığın altında doğrudan konu sekmeleri
-            başlıyor. "TÜM REHBERLER (71)" satırı geniş ekranda duruyor;
-            telefonda `sr-only` — listenin neyin listesi olduğu ve kaç rehber
-            olduğu ekran okuyucuya söylenmeye devam ediyor.
+            "TÜM REHBERLER (71)" satırı masaüstünden de kalktı (kullanıcı
+            isteği, 16 Eylül 2026): konu küreleri doğrudan başlıyor, sayı
+            dönen kürede. Listenin adı ve sayısı ekran okuyucuda kalıyor.
           */}
-          <div className={`${LISTE_BASLIGI} max-sm:sr-only`}>
+          <div className={`${LISTE_BASLIGI} sr-only`}>
             <h2 className={LISTE_BASLIGI_YAZISI}>
               {aktifSuzgecler.length ? 'Filtrelenen rehberler' : 'Tüm rehberler'} ({sonuclar.length}
               )
