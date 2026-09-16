@@ -278,24 +278,19 @@ export const AgimSayfasi: React.FC<Props> = ({
     <header className="sticky top-0 z-20 border-b border-gray-200 bg-white lg:hidden">
       <div className="relative flex h-15 items-center gap-1 px-2.5">
       {/*
-        MARKA SOL ÜSTTE — ONAYLANAN TASARIM
+        MARKA ORTADA, SİMGELER İKİ YANDA (kullanıcı isteği, 16 Eylül 2026)
 
-        Marka bir süre ortadaydı (mutlak konumla). Sitenin bütün
-        ekranlarında olduğu gibi burada da sol üstte duruyor ve işlem
-        simgeleri sağda toplanıyor; telefonda sitenin büyük üst çubuğu
-        gizli olduğu için kullanıcının hangi üründe olduğunu söyleyen
-        tek yer yine bu satır.
+        Site üst çubuğuyla aynı kural: marka mutlak konumla tam ortada.
+        Dört simge ikiye bölünüyor — solda paylaş ve bağlantılar, sağda
+        arama ve zil yan yana (sitenin her sayfasında arama zilin yanında).
 
         Ölçü SİTE LOGOSUYLA AYNI: `Logo` bileşeni `md` boyutunda
         `text-[28px] sm:text-2xl tracking-[-0.03em]` ve `font-black`
         kullanıyor.
       */}
-      <h1 className="text-[28px] font-black leading-none tracking-[-0.03em] text-gray-900 sm:text-2xl">
+      <h1 className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[28px] font-black leading-none tracking-[-0.03em] text-gray-900 sm:text-2xl">
         Stajım<span className="text-blue-600">Var</span>
       </h1>
-
-      {/* İşlemler sağda: marka solda kaldığı için boşluğu bu alıyor. */}
-      <span aria-hidden className="flex-1" />
 
       <FotografPaylasGirisi
         ref={paylasKolu}
@@ -307,24 +302,6 @@ export const AgimSayfasi: React.FC<Props> = ({
         onTamamlandi={() => setTazeleme((n) => n + 1)}
         dugmeSinifi={IKON}
       />
-
-      <button
-        type="button"
-        onClick={() => {
-          setAramaAcik((a) => !a);
-          if (aramaAcik) setArama('');
-        }}
-        aria-label={aramaAcik ? 'Aramayı kapat' : 'Kişi ara'}
-        aria-expanded={aramaAcik}
-        className={IKON}
-      >
-        {aramaAcik ? (
-          <X aria-hidden className="h-6 w-6" />
-        ) : (
-          <Search aria-hidden className="h-6 w-6" />
-        )}
-      </button>
-
 
       <button
         type="button"
@@ -340,6 +317,26 @@ export const AgimSayfasi: React.FC<Props> = ({
           <span className="absolute -right-0.5 -top-0.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
             {bekleyenIstek > 9 ? '9+' : bekleyenIstek}
           </span>
+        )}
+      </button>
+
+      {/* Sağ küme: arama ve zil yan yana. */}
+      <span aria-hidden className="flex-1" />
+
+      <button
+        type="button"
+        onClick={() => {
+          setAramaAcik((a) => !a);
+          if (aramaAcik) setArama('');
+        }}
+        aria-label={aramaAcik ? 'Aramayı kapat' : 'Kişi ara'}
+        aria-expanded={aramaAcik}
+        className={IKON}
+      >
+        {aramaAcik ? (
+          <X aria-hidden className="h-6 w-6" />
+        ) : (
+          <Search aria-hidden className="h-6 w-6" />
         )}
       </button>
 
