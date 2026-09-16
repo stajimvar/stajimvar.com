@@ -1234,12 +1234,6 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Sağ taraf: rol değiştirici ve profil */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto">
             {/*
-              ARAMA TELEFONDA HEP SAĞDA — zilin ya da girişin yanında. Sol köşeye
-              ana sayfa düğmesi gelince solda üç simge ortadaki markaya
-              çarpıyordu (360 pikselde ölçüldü: 41 piksel üst üste).
-            */}
-            {aramaDugmesi}
-            {/*
               Auth Buttons or User Profile / Logout
               onOpenLogin/onOpenRegister verilmediyse kayıt akışı henüz hazır
               değil demektir; çalışmayan düğme göstermek yerine hiç çizmiyoruz.
@@ -1648,6 +1642,11 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
             )}
+            {/*
+              ARAMA TELEFONDA EN SAĞDA (kullanıcı isteği, 17 Eylül 2026) —
+              zilin, ☰'ın ya da giriş simgesinin sağında, her sekmede aynı yer.
+            */}
+            {aramaDugmesi}
           </div>
         </div>
 
