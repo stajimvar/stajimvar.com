@@ -93,7 +93,7 @@ test('kartın tamamı detaya gidiyor, kaydet örtünün üstünde', () => {
   /* Gerilmiş bağlantı kartı kaplıyor; kaydet düğmesi z-10 ile üstte kalıyor. */
   assert.match(FIRSAT, /after:absolute after:inset-0/, 'gerilmiş bağlantı yok');
   assert.match(FIRSAT, /href=\{`\/firsatlar\/\$\{item\.slug\}`\}/, 'gerçek adres olmalı');
-  assert.match(FIRSAT, /relative z-10 col-start-3 row-start-1 -mr-1 -mt-1 shrink-0 cursor-pointer/, 'kaydet örtünün altında kalır');
+  assert.match(FIRSAT, /relative z-10 flex shrink-0 flex-col items-end justify-between gap-3/, 'kaydet örtünün altında kalır');
   assert.match(FIRSAT, /onClick=\{\(e\) => \{\s*e\.stopPropagation\(\);/, 'kaydet tıklaması karta taşıyor');
 });
 
@@ -109,8 +109,8 @@ test('inceleme satırı tür tür yazılıyor, şablonla üretilmiyor', () => {
   assert.match(alan, /competition: 'Yarışmayı incele'/);
   assert.match(alan, /export function opportunityReviewLabel/);
   assert.match(FIRSAT, /opportunityReviewLabel\(item\.opportunityType\)/);
-  /* Ekran okuyucu aynı hedefi iki kez duymamalı: satır `aria-hidden`. */
-  assert.match(FIRSAT, /\{!arsivde && \(\s*<p\s+aria-hidden/);
+  /* İlan kartıyla tek tip: görünen yazı "İncele", tür tür ifade bağlantının adında. */
+  assert.match(FIRSAT, /aria-label=\{`\$\{item\.title\}: \$\{opportunityReviewLabel\(item\.opportunityType\)\}`\}/);
 });
 
 test('İLAN KARTINDA TEK EYLEM VAR ve o birincil', () => {

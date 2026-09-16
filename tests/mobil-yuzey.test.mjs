@@ -113,7 +113,7 @@ test('liste kapları kenara yaslı, kutular değil', () => {
   assert.ok(ilanlar.includes('<div className={`flex flex-col gap-1.5 sm:gap-3 ${YUZEY.kap}`}>'));
   assert.match(ilanlar, /hasMoreCountriesPage && <button/);
   /* Fırsatlar da İlanlar gibi: kenara yaslı, kartlar arasında küçük boşluk. */
-  assert.match(firsatlar, /grid grid-cols-1 gap-1\.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 \$\{YUZEY\.kap\} sm:mx-0/);
+  assert.match(firsatlar, /flex flex-col gap-1\.5 sm:gap-3 \$\{YUZEY\.kap\} sm:mx-0/);
 });
 
 test('akışta ayırıcı kartta duruyor, listede ikinci kez çizilmiyor', () => {

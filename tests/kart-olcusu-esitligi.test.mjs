@@ -102,11 +102,12 @@ test('FIRSAT IZGARASI: TELEFONDA TEK SÜTUN, sm ÜSTÜNDE REHBERLE AYNI', () => 
     `sm:` ve üstünde ikisi yine aynı ızgarada: 16 piksel boşluk, `lg:`
     üstünde üç sütun.
   */
-  assert.match(firsat, /grid grid-cols-1 gap-1\.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3/);
+  /* İlanlar gibi tek sütun (17 Eylül 2026). */
+  assert.match(firsat, /flex flex-col gap-1\.5 sm:gap-3 \$\{YUZEY\.kap\} sm:mx-0/);
   assert.match(firsat, /\$\{YUZEY\.kap\} sm:mx-0/, 'liste kenara yaslanmıyor');
   /* İskelet listenin oturacağı yere oturuyor: gelince sayfa zıplamamalı. */
   const iskelet = firsat.slice(firsat.indexOf('const ListeIskeleti'));
-  assert.match(iskelet, /grid grid-cols-1 gap-1\.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3/);
+  assert.match(iskelet, /flex flex-col gap-1\.5 sm:gap-3/);
 });
 
 test('FIRSAT KARTI TELEFONDA İLAN KARTIYLA TEK TİP, GENİŞ EKRANDA DİKEY AKIŞ', () => {
@@ -118,8 +119,8 @@ test('FIRSAT KARTI TELEFONDA İLAN KARTIYLA TEK TİP, GENİŞ EKRANDA DİKEY AKI
   */
   const kart = firsat.slice(firsat.indexOf('<article'));
   assert.match(kart.slice(0, 500), /rounded-xl border border-gray-200 bg-white px-3 py-3/);
-  assert.match(kart, /flex min-w-0 items-stretch gap-3 min-\[390px\]:gap-3\.5 min-\[430px\]:gap-4 sm:hidden/);
-  assert.match(kart, /<div className="hidden sm:flex sm:flex-col sm:gap-2">/);
+  assert.match(kart, /flex min-w-0 items-stretch gap-3 min-\[390px\]:gap-3\.5 min-\[430px\]:gap-4">/);
+  assert.doesNotMatch(kart, /hidden sm:flex sm:flex-col/, 'masaüstü ızgara kartı geri gelmiş');
 
   /* Punto ve renkler ilan kartıyla aynı. */
   const ilan = oku('src/components/InternshipCard.tsx');
@@ -133,7 +134,6 @@ test('FIRSAT KARTI TELEFONDA İLAN KARTIYLA TEK TİP, GENİŞ EKRANDA DİKEY AKI
   }
 
   /* Uzun başlık telefonda kırpılmıyor; dar masaüstü kartında iki satır. */
-  assert.match(kart, /sm:line-clamp-2/);
   assert.doesNotMatch(kart, /<h2 className="line-clamp-2/, 'telefonda başlık hâlâ kırpılıyor');
 
   /* Tür ve destek: `kartSatiri` null ise yalnız tür (tests/firsat-tutar-durumu). */
@@ -146,21 +146,19 @@ test('FIRSAT KARTI TELEFONDA İLAN KARTIYLA TEK TİP, GENİŞ EKRANDA DİKEY AKI
 
   /* Son başvuru künyenin altında, "İncele" sağ altta gerçek bağlantı. */
   assert.match(kart, /\{arsivde \? 'Kapandı' : 'Son başvuru'\}/);
-  assert.match(kart, /aria-label=\{`\$\{item\.title\} fırsatını incele`\}/);
+  assert.match(kart, /opportunityReviewLabel\(item\.opportunityType\)/);
 });
 
-test('MASAÜSTÜ BLOKLARI DURUYOR: çipler, uygunluk, iki alanlı künye', () => {
+test('MASAÜSTÜNDE DE İLAN KARTI DÜZENİ', () => {
   /*
-    Telefon düzeni kazanınca masaüstündeki dar kartın anlattıkları
-    kaybolmamalı. Üçü de `hidden sm:*` ile yerinde: renkli çip şeridi,
-    kime/nerede satırı ve iki alanlı tutar/son başvuru künyesi.
+    Kullanıcı isteği (17 Eylül 2026): Fırsatlar kartları masaüstünde de
+    İlanlar kartları gibi. Üç sütunlu dar ızgara kartı ve onun çip şeridi,
+    kime/nerede satırı, iki alanlı künyesi kalktı; bilgiler detay sayfasında.
   */
   const kart = firsat.slice(firsat.indexOf('<article'));
-  assert.match(kart, /hidden min-w-0 flex-wrap items-center gap-1\.5 text-\[10px\] font-bold sm:flex/);
-  assert.match(kart, /hidden min-w-0 text-xs leading-relaxed text-gray-500 sm:block/);
-  assert.match(kart, /<dl className="hidden grid-cols-2 items-start gap-x-3 gap-y-1 border-t border-gray-100 pt-2 sm:grid">/);
-  /* Geniş ekrandaki inceleme satırı da yerinde ve kartın altına yapışıyor. */
-  assert.match(kart, /mt-auto hidden items-center gap-1 pt-0\.5 text-sm font-bold text-blue-700 sm:inline-flex/);
+  assert.doesNotMatch(kart, /<dl className=/);
+  assert.doesNotMatch(kart, /sm:inline-flex/);
+  assert.match(kart, /sm:p-4/);
 });
 
 test('İLERLEME ÇUBUĞU YOK; TUTAR VE TARİH GERÇEK KAYITTAN', () => {
@@ -175,16 +173,14 @@ test('İLERLEME ÇUBUĞU YOK; TUTAR VE TARİH GERÇEK KAYITTAN', () => {
     doğrudan son başvuru tarihinden hesaplanıyor (firsatRozetleri).
   */
   assert.doesNotMatch(firsat, /ZamanTupu/, 'ilerleme çubuğu karta geri gelmiş');
-  assert.match(firsat, /<dt className="text-\[11px\] text-gray-500">Tutar<\/dt>/);
-  assert.match(firsat, /\{arsivde \? 'Kapanış' : 'Son başvuru'\}/);
+  assert.match(firsat, /\{arsivde \? 'Kapandı' : 'Son başvuru'\}/);
   /*
     Metin telefondakiyle AYNI kaynaktan geliyor (`opportunityAmount.satir`)
     ve ızgara iki sütun kalıyor. Kaynak tutar açısından henüz kontrol
     edilmediyse alan HİÇ çizilmiyor: bakmadığımız bir sayfa hakkında
     "Belirtilmemiş" demek bir iddia olurdu.
   */
-  assert.match(firsat, /\{tutar\.kartSatiri && \(/);
-  assert.match(firsat, /<dd className="text-sm font-semibold text-gray-500">\{tutar\.kartSatiri\}<\/dd>/);
+  assert.match(firsat, /\{tutar\.kartSatiri \? ` · \$\{tutar\.kartSatiri\}` : ''\}/);
   /*
     "TAKVİM AÇIKLANMADI" BİR ÇIKARIMDI
 
