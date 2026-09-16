@@ -32,6 +32,7 @@ import {
 } from './mappers';
 import { basvuruYolu } from '../basvuru-yolu.mjs';
 import { requestPublishedListingsCatalog } from '../global-listings-api.mjs';
+import { istanbulGunBaslangici, nabizAdedi } from '../kontrol-nabzi.mjs';
 
 /** PostgREST hatalarını tek biçimde yükseltir. */
 function fail(context: string, error: { message: string } | null): never {
@@ -130,6 +131,21 @@ export interface PublishedListingsCatalogPage {
   hasMore: boolean;
   nextCursor: PublishedListingsCursor | null;
   snapshot: string;
+}
+
+/**
+ * Bugün (Europe/Istanbul) kaynağında açık olduğu doğrulanan yayındaki ilan
+ * sayısı — tek `count` sorgusu, satır indirmiyor. Kurallar lib/kontrol-nabzi.
+ * Alınamazsa ya da sıfırsa `null`: arayüz sayaç uydurmuyor.
+ */
+export async function fetchBugunDogrulananIlanSayisi(): Promise<number | null> {
+  const { count, error } = await supabase
+    .from('listings')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'published')
+    .gte('source_verified_at', istanbulGunBaslangici());
+  if (error) return null;
+  return nabizAdedi(count);
 }
 
 export async function fetchPublishedListingsCatalog(

@@ -34,6 +34,8 @@ import { SonucYok, type AktifSuzgec } from './SonucYok';
 import { SonrakiAdim } from './SonrakiAdim';
 import { BasvuruSablonu } from './BasvuruSablonu';
 import { ilBul } from '../lib/sehir';
+import { COGRAFYA, ilanCografyasi } from '../lib/ilan-cografyasi.mjs';
+import { fetchBugunDogrulananIlanSayisi } from '../lib/queries';
 import { BolumCipleri } from './BolumCipleri';
 import { alanSayilari, bolumeGoreSirala } from '../lib/bolum-eslestirme.mjs';
 /*
@@ -551,6 +553,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       filtreleriDogrula({
         q: searchQuery,
         country: countrySelection,
+        /* Yurtdışı görünümü kayıtlı aramada da korunuyor (lib/ilan-cografyasi). */
+        bolge: yurtdisiSecili ? 'yurtdisi' : null,
         city: selectedCity === 'diger' ? 'all' : selectedCity,
         workTypes,
         /* Şirket ve tarih aralığı artık KAYDEDİLİYOR: ikisinin de
@@ -565,6 +569,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     [
       searchQuery,
       countrySelection,
+      yurtdisiSecili,
       selectedCity,
       workTypes,
       selectedCompanies,
@@ -611,9 +616,11 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
       /* Şirket ve tarih aralığı YUKARIDA kanonik modülde. */
 
-      if (yurtdisiSecili && !(listing.countryCode && listing.countryCode !== 'TR')) {
-        return false;
-      }
+      /*
+        Yurtdışı görünümü kanonik filtrede (`bolge`) uygulanıyor — tek kural
+        lib/ilan-cografyasi.mjs. Konumu belirsiz ilan yurtdışı SAYILMIYOR;
+        "Tüm ilanlar"da duruyor.
+      */
 
       /* Zorunlu staj ve ucret kosullari YUKARIDA kanonik modulde. */
       if (atla !== 'uyum' && match.overallScore < minMatchScore) return false;
@@ -915,12 +922,23 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     iki yer ayrışamıyor. Panelden belirli bir ülke (ör. Almanya)
     seçildiyse dört küreden hiçbiri seçili görünmüyor.
   */
-  const seciliBolge: IlanBolgesi | null = yurtdisiSecili
-    ? 'yurtdisi'
-    : countrySelection === 'TR'
-      ? 'turkiye'
-      : countrySelection === 'remote'
-        ? 'uzaktan'
+  /*
+    TÜRKİYE / YURTDIŞI / TÜM İLANLAR (17 Eylül 2026)
+
+    Üç kapı, hepsi mevcut durumdan türüyor:
+      Türkiye     → sunucu kataloğu `country=TR`
+      Yurtdışı    → `country=all` + `?bolge=yurtdisi` (sınıflandırma istemcide,
+                    kataloğun tamamı yükleniyor) ya da panelden seçilen
+                    TR dışı bir ülke kodu
+      Tüm ilanlar → `country=all`; konumu belirsiz ilanlar dahil katalogun tamamı
+    "Uzaktan" bir kapı değil, çalışma biçimi süzgeci (panel).
+  */
+  const ulkeKoduSecili = /^[A-Z]{2}$/.test(countrySelection);
+  const seciliBolge: IlanBolgesi | null =
+    yurtdisiSecili || (ulkeKoduSecili && countrySelection !== 'TR')
+      ? 'yurtdisi'
+      : countrySelection === 'TR'
+        ? 'turkiye'
         : countrySelection === 'all'
           ? 'tumu'
           : null;
@@ -928,15 +946,61 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   const bolgeSec = (bolge: IlanBolgesi) => {
     setYurtdisiSecili(bolge === 'yurtdisi');
     if (bolge === 'tumu') setSelectedCompanies([]);
-    const ulke = bolge === 'turkiye' ? 'TR' : bolge === 'uzaktan' ? 'remote' : 'all';
+    /* Kapı değişince geçersiz kalan şehir seçimi temizleniyor. */
+    if (bolge !== 'turkiye') setSelectedCity('all');
+    const ulke = bolge === 'turkiye' ? 'TR' : 'all';
     if (ulke !== countrySelection) onCountryChange?.(ulke);
   };
 
-  /* Panelden ülke değişirse Yurtdışı seçimi düşüyor: iki seçim çakışmasın. */
+  /* Panelden ülke değişirse Yurtdışı bayrağı düşüyor (ülke kodu zaten yurtdışını söylüyor). */
   const ulkeDegistir = (ulke: string) => {
+    if (ulke === 'yurtdisi') {
+      bolgeSec('yurtdisi');
+      return;
+    }
     setYurtdisiSecili(false);
+    if (ulke !== 'TR') setSelectedCity('all');
     onCountryChange?.(ulke);
   };
+
+  /*
+    KONTROL NABZI — gerçek kayıttan
+
+    Bugün (Europe/Istanbul) kaynağında açık olduğu doğrulanan yayındaki ilan
+    sayısı: `source_verified_at` bağlantı kontrolünün BAŞARILI sonucunda
+    yazılıyor (scripts/ilan-baglanti-kontrol.mjs). `updated_at` kullanılmıyor.
+    Sayı alınamazsa ya da sıfırsa satır çizilmiyor.
+  */
+  const [bugunDogrulanan, setBugunDogrulanan] = useState<number | null>(null);
+  useEffect(() => {
+    let iptal = false;
+    fetchBugunDogrulananIlanSayisi()
+      .then((adet) => !iptal && setBugunDogrulanan(adet))
+      .catch(() => !iptal && setBugunDogrulanan(null));
+    return () => {
+      iptal = true;
+    };
+  }, []);
+
+  /* Yurtdışı görünümünden mevcut rehberlere bağlantı — yalnız gerçekten var olanlar. */
+  const [yurtdisiRehberleri, setYurtdisiRehberleri] = useState<Array<{ slug: string; baslik: string }>>([]);
+  useEffect(() => {
+    if (seciliBolge !== 'yurtdisi' || yurtdisiRehberleri.length > 0) return;
+    let iptal = false;
+    import('../data/rehberler')
+      .then(({ REHBERLER }) => {
+        if (iptal) return;
+        setYurtdisiRehberleri(
+          REHBERLER.filter((r) => r.kategori === 'ogrenci' && r.konu === 'yurtdisi')
+            .slice(0, 3)
+            .map((r) => ({ slug: r.slug, baslik: r.baslik })),
+        );
+      })
+      .catch(() => {});
+    return () => {
+      iptal = true;
+    };
+  }, [seciliBolge, yurtdisiRehberleri.length]);
 
   /*
     YURTDIŞI SEÇİLİYKEN KATALOĞUN TAMAMI YÜKLENİYOR
@@ -1183,6 +1247,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
     for (const { listing, match } of matchedData) {
       if (!matchesCategory(listing, match, subTab)) continue;
+      /* Şehir menüsü yalnız Türkiye görünümünde: Paris/Berlin Türkiye şehri gibi sunulmuyor. */
+      if (ilanCografyasi(listing) !== COGRAFYA.TURKIYE) continue;
       const il = ilBul(listing.city);
       if (il) sayim.set(il, (sayim.get(il) ?? 0) + 1);
       else bilinmeyen += 1;
@@ -1574,13 +1640,15 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             `onCountryChange` verilmemişse seçici hiç çizilmiyor: değiştirmesi
             bir işe yaramayan bir kutu göstermek yanıltıcı olur.
           */}
-          {onCountryChange && (
+          {onCountryChange && seciliBolge !== 'turkiye' && (
             <ListingCountrySelector
-              value={countrySelection}
-              countries={countryFacets}
+              value={yurtdisiSecili ? 'yurtdisi' : countrySelection}
+              countries={seciliBolge === 'yurtdisi' ? countryFacets.filter((u) => u.code !== 'TR') : countryFacets}
+              yurtdisi={seciliBolge === 'yurtdisi'}
               onChange={ulkeDegistir}
             />
           )}
+          {seciliBolge === 'turkiye' && (
           <div className="relative">
             <MapPin className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <select
@@ -1598,6 +1666,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             </select>
             <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
+          )}
         </FiltreBlogu>
 
         {/* ---- çalışma tercihi ---- */}
@@ -1865,6 +1934,34 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             onCevir={kureCevir}
           />
 
+          {/*
+            YURTDIŞI GÖRÜNÜMÜNDE MEVCUT REHBERLER — yalnız sitede gerçekten
+            bulunan, konusu "yurtdışı" olan öğrenci rehberleri. Burs/fırsat
+            listeleri buraya karışmıyor.
+          */}
+          {seciliBolge === 'yurtdisi' && yurtdisiRehberleri.length > 0 && (
+            <nav aria-label="Yurtdışında staj rehberleri" className="-mx-4 border-b border-gray-200 bg-white px-4 py-3 sm:mx-0 sm:rounded-2xl sm:border">
+              <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Yurtdışına başvurmadan önce</p>
+              <ul className="mt-1.5 space-y-1">
+                {yurtdisiRehberleri.map((r) => (
+                  <li key={r.slug}>
+                    <a
+                      href={`/rehber/${r.slug}`}
+                      onClick={(e) => {
+                        if (!onNavigate || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                        e.preventDefault();
+                        onNavigate(`/rehber/${r.slug}`);
+                      }}
+                      className="text-sm font-semibold text-blue-700 hover:underline"
+                    >
+                      {r.baslik}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          )}
+
           </div>
 
           {/*
@@ -1963,6 +2060,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                     onGirisGerekli={onRequireLogin}
                     kendiIlanim={Boolean(kendiSirketId && listing.companyId === kendiSirketId)}
                     yuzey
+                    cografyaEtiketi={seciliBolge === 'tumu'}
                   />
 
                   {/*
@@ -2074,6 +2172,11 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             Bu metin önce başlığın altında tam genişlikteydi, bir kopyası da
             sol sütunda duruyordu. İkisi de kaldırıldı; tek kopya burada.
           */}
+          {typeof bugunDogrulanan === 'number' && bugunDogrulanan > 0 && (
+            <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900">
+              Bugün {bugunDogrulanan} ilan kaynağından yeniden kontrol edildi.
+            </p>
+          )}
           <aside className="bg-white rounded-2xl p-5 border border-gray-200 space-y-4">
             <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
               İlanlar nereden geliyor

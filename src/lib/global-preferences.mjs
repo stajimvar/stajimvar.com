@@ -33,11 +33,20 @@ export function resolveListingCountry({
   locale,
   cloudflareCountry,
 }) {
+  /*
+    İLK ZİYARET TÜRKİYE (17 Eylül 2026)
+
+    Öncelik: adresteki açık seçim → bu tarayıcıda daha önce yapılmış açık
+    seçim → hesabın tercih ettiği ülke → Türkiye. Tarayıcı dili ve
+    Cloudflare ülkesi artık varsayılanı belirlemiyor: "Yurtdışında staj"
+    kullanıcının seçtiği bir kapı, konumdan tahmin edilen bir varsayılan
+    değil. Parametreler imzada kalıyor (çağıranlar değişmesin).
+  */
+  void locale;
+  void cloudflareCountry;
   return normalizeCountryCode(urlCountry, { allowSpecial: true })
     ?? normalizeCountryCode(browserCountry, { allowSpecial: true })
     ?? accountCountries.map((value) => normalizeCountryCode(value)).find(Boolean)
-    ?? countryFromLocale(locale)
-    ?? normalizeCountryCode(cloudflareCountry)
     ?? 'TR';
 }
 

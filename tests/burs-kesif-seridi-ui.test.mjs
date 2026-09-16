@@ -30,9 +30,11 @@ test('ilan küre şeridi kendi kürelerini çiziyor, ortak bileşeni değiştirm
   */
   const sirket = oku('src/components/SirketSeridi.tsx');
   assert.doesNotMatch(sirket, /from ['"]\.\/KesifSeridi['"]/);
-  for (const etiket of ['Tümü', 'Türkiye', 'Yurtdışı', 'Uzaktan']) {
+  /* Kapılar: Türkiye · Yurtdışı · Tüm ilanlar; "Uzaktan" çalışma biçimi süzgecine taşındı (17 Eylül 2026). */
+  for (const etiket of ['Türkiye', 'Yurtdışı', 'Tüm ilanlar']) {
     assert.ok(sirket.includes(`etiket: '${etiket}'`), `${etiket} küresi yok`);
   }
+  assert.ok(!sirket.includes("etiket: 'Uzaktan'"), 'Uzaktan kapı olmamalı');
   const ortak = oku('src/components/KesifSeridi.tsx');
   assert.match(ortak, /seciliRenk = '#111827'/, 'ortak küre bileşeni değişmemeli');
 });

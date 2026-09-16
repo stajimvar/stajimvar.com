@@ -71,12 +71,7 @@ export function useGlobalListingPreferences(accountCountries: string[] = []) {
   },[]);
 
   React.useEffect(()=>{ void load(country); },[country,load]);
-  React.useEffect(()=>{
-    if(readCountryQuery(window.location.search)||window.localStorage.getItem(STORAGE_KEY)||accountCountries.length||/-[A-Z]{2}$/i.test(navigator.language))return;
-    void fetch('/api/visitor-context').then(r=>r.ok?r.json():null).then(data=>{
-      if(data?.countryCode)setCountryState(resolveListingCountry({urlCountry:null,browserCountry:null,accountCountries:[],locale:navigator.language,cloudflareCountry:data.countryCode}));
-    }).catch(()=>undefined);
-  },[accountCountries.join('|')]);
+  /* Ziyaretçi ülkesi (Cloudflare) artık varsayılanı değiştirmiyor: ilk ziyaret Türkiye. */
   React.useEffect(()=>{
     if(readCountryQuery(window.location.search)||window.localStorage.getItem(STORAGE_KEY)||!accountCountries.length)return;
     setCountryState(initial());
