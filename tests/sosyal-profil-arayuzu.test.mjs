@@ -649,7 +649,7 @@ test('kullanıcıya basılan metinde "yayımla" ve "yayından" kalmadı', () => 
   assert.match(sorgular, /yayinda_mi: yayindaMi/);
 });
 
-test('resmî bölüm adı katalogdan, eğitim notu ikincil satır', () => {
+test('öğrenci hesabında resmî bölüm katalogdan, eğitim notu ikincil satır', () => {
   /*
     Kullanıcı `bolum_etiketi` alanına başka bir bölüm yazarak sistem
     bölümünü taklit edememeli. Bu yüzden resmî satır HER ZAMAN
@@ -658,10 +658,10 @@ test('resmî bölüm adı katalogdan, eğitim notu ikincil satır', () => {
   */
   assert.match(sorgular, /departments \( ad \)/);
   assert.match(sorgular, /bolumAdi: satir\.departments\?\.ad \?\? null/);
-  assert.match(gorunum, /\{profil\.bolumAdi && /);
+  assert.match(gorunum, /ogrenciKimligiGorunur && profil\.bolumAdi && /);
   assert.match(gorunum, /Eğitim notu/);
   /* Etiket yalnız DOLUYKEN çiziliyor: boş satır bir bilgi taşımaz. */
-  assert.match(gorunum, /\{profil\.bolumEtiketi && \(/);
+  assert.match(gorunum, /ogrenciKimligiGorunur && profil\.bolumEtiketi && \(/);
   /* Bu alanın etiketinde "Bölüm" kelimesi geçmiyor — düzenleme ekranında da. */
   assert.match(duzenleme, /etiket="Eğitim notu"/);
   assert.doesNotMatch(duzenleme, /etiket="Bölüm"/);
@@ -840,7 +840,8 @@ test('kullanıcının yazdığı uzun metin kırpılmadan sarıyor', () => {
     ulaşamıyordu. Aynı koruma bölüm/sınıf ve şehir satırlarında da var:
     üçünün de içeriğini kullanıcı yazıyor.
   */
-  assert.match(gorunum, /\{profil\.sinifEtiketi && <p className="break-words">\{profil\.sinifEtiketi\}<\/p>\}/);
+  assert.match(gorunum, /ogrenciKimligiGorunur && profil\.sinifEtiketi && \(/);
+  assert.match(gorunum, /<p className="break-words">\{profil\.sinifEtiketi\}<\/p>/);
   assert.match(gorunum, /\{profil\.sehir && <p className="break-words">\{profil\.sehir\}<\/p>\}/);
   assert.match(gorunum, /whitespace-pre-line break-words/);
 
