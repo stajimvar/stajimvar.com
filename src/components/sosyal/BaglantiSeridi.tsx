@@ -7,7 +7,8 @@ import { ProfilFotografi } from './ProfilFotografi';
  * Ağım'ın bağlantı şeridi — İlanlar ve Fırsatlar küreleriyle TEK TİP.
  *
  * Tümü → bağlantılar (profil fotoğrafı) → Bağlantılar sayfası. Kürelerin
- * altında ve üstünde yazı yok (kullanıcı isteği, 16 Eylül 2026).
+ * altında kişinin adı tek satır, İlanlar'daki şirket küreleri gibi
+ * (kullanıcı isteği, 16 Eylül 2026).
  *
  * DOKUNUŞLAR (İlanlar şeridiyle aynı kural, lib/kure-donusu.mjs)
  *   1. dokunuş: akış o kişinin paylaşımlarına süzülüyor.
@@ -52,7 +53,7 @@ const DonenKure: React.FC<{
   </span>
 );
 
-const OGE = 'flex w-[clamp(68px,19vw,78px)] shrink-0 cursor-pointer flex-col items-center';
+const OGE = 'flex w-[clamp(68px,19vw,78px)] shrink-0 cursor-pointer flex-col items-center gap-1.5';
 
 export const BaglantiSeridi: React.FC<{
   kisiler: BaglantiKisisi[];
@@ -90,6 +91,14 @@ export const BaglantiSeridi: React.FC<{
               >
                 <Layers className="h-[26px] w-[26px]" strokeWidth={1.75} />
               </span>
+              <span
+                aria-hidden
+                className={`block w-full truncate text-center text-[13px] leading-tight ${
+                  secili === null ? 'font-bold text-slate-900' : 'font-medium text-slate-700'
+                }`}
+              >
+                Tümü
+              </span>
             </button>
           </li>
 
@@ -123,6 +132,14 @@ export const BaglantiSeridi: React.FC<{
                       className="h-full w-full rounded-full"
                     />
                   </DonenKure>
+                  <span
+                    aria-hidden
+                    className={`block w-full truncate text-center text-[13px] leading-tight ${
+                      aktif ? 'font-bold text-slate-900' : 'font-medium text-slate-700'
+                    }`}
+                  >
+                    {ad}
+                  </span>
                 </button>
               </li>
             );
@@ -146,6 +163,9 @@ export const BaglantiSeridi: React.FC<{
                     {bekleyenIstek > 9 ? '9+' : bekleyenIstek}
                   </span>
                 )}
+              </span>
+              <span aria-hidden className="block w-full truncate text-center text-[13px] font-medium leading-tight text-slate-700">
+                Bağlantılar
               </span>
             </button>
           </li>
