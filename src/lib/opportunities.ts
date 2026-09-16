@@ -224,6 +224,26 @@ export async function fetchSavedListingIds(userId: string): Promise<string[]> {
   return (data ?? []).map((row: any) => row.listing_id);
 }
 
+/*
+  PROFİLDEKİ "KAYDEDİLENLER" SAYISI YALNIZ AÇIK İLANLARI SAYIYOR
+
+  Kayıt, ilan kapandıktan sonra da tabloda kalıyor. Sayı bütün kayıtlardan
+  gelince profilde "5" yazıyor, kutuya basınca açılan listede ise yalnız
+  yayındaki 2 ilan görünüyordu (kullanıcı bildirdi, 17 Eylül 2026). Sayı
+  artık listeyle aynı kümeyi sayıyor: kaydedilmiş VE yayında olan ilanlar.
+*/
+export async function fetchOpenSavedListingCount(userId: string): Promise<number> {
+  const idler = await fetchSavedListingIds(userId);
+  if (idler.length === 0) return 0;
+  const { data, error } = await supabase
+    .from('listings')
+    .select('id')
+    .in('id', idler)
+    .eq('status', 'published');
+  if (error) hataAt('Kaydedilen ilanlar yüklenemedi.', error);
+  return (data ?? []).length;
+}
+
 export async function toggleSavedListing(userId: string, listingId: string, saved: boolean): Promise<void> {
   const table = supabase.from('saved_listings' as any) as any;
   const { error } = saved
