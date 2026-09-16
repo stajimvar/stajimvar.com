@@ -185,14 +185,14 @@ test('marka 23 piksel: telefondaki 20 pikselin %15 üstü', () => {
     23 piksel = telefondaki 20'nin %15 üstü. Tailwind'in basamaklarında
     20 ile 24 arasında bir değer yok; bu yüzden açıkça yazılıyor.
 
-    `sm:` DALI DEĞİŞMEDİ: geniş ekranda marka 24 pikselde kalıyor,
-    istenen büyütme yalnız telefon için.
+    `sm:` DALI DEĞİŞMEDİ. Masaüstünde (`lg:`) 28 piksel: amblem ve nokta
+    kaldırılınca marka yalnız kelime oldu ve büyütüldü.
 
     Akışın kendi başlığı AYNI değeri taşımak zorunda: iki üst çubuk
     birbirinden ayrışmasın diye.
   */
   const logo = oku('src/components/Logo.tsx');
-  assert.match(logo, /'text-\[23px\] sm:text-2xl tracking-\[-0\.03em\]'/, 'md marka ölçüsü değişmiş');
+  assert.match(logo, /'text-\[23px\] sm:text-2xl lg:text-\[28px\] tracking-\[-0\.03em\]'/, 'md marka ölçüsü değişmiş');
   assert.doesNotMatch(logo, /text-xl sm:text-2xl/, 'telefondaki eski 20 piksel geri gelmiş');
   /* Yazı karakteri, ağırlık ve renkler aynı kaldı: değişen yalnız punto. */
   assert.match(logo, /font-black/);
