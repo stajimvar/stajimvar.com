@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Search, Users, X } from 'lucide-react';
+import { Bell, Search, X } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import {
   akisiGetir,
@@ -11,11 +11,14 @@ import {
   resmiSessizMi,
   resmiSessizYaz,
   type AkisPaylasimi,
+  type BaglantiKisisi,
   type BegeniDurumu,
   type SosyalAramaSonucu,
   type SosyalProfil,
 } from '../../lib/queries/sosyal';
 import { AkisKarti } from './AkisKarti';
+import { BaglantiSeridi } from './BaglantiSeridi';
+import { donukKure, kureDokunusu } from '../../lib/kure-donusu.mjs';
 import { FotografPaylasGirisi, type FotografPaylasKolu } from './FotografPaylasGirisi';
 import { ProfilFotografi } from './ProfilFotografi';
 import { KisiListesi, KullaniciAramaSonuclari } from './KullaniciArama';
@@ -91,6 +94,18 @@ export const AgimSayfasi: React.FC<Props> = ({
   const [akis, setAkis] = React.useState<AkisPaylasimi[]>([]);
   const [benim, setBenim] = React.useState<SosyalProfil | null>(null);
   const [bekleyenIstek, setBekleyenIstek] = React.useState(0);
+  /*
+    BAĞLANTI KÜRELERİ (kullanıcı isteği, 16 Eylül 2026)
+
+    İlk dokunuş akışı o kişinin paylaşımlarına süzüyor; seçili küreye
+    tekrar dokunuş küreyi çevirip adı gösteriyor. Dönüş durumu seçimin
+    imzasıyla tutuluyor: başka kişi seçilince eski dönüş görünmüyor.
+  */
+  const [baglantilar, setBaglantilar] = React.useState<BaglantiKisisi[]>([]);
+  const [seciliKisi, setSeciliKisi] = React.useState<string | null>(null);
+  const [kureDurumu, setKureDurumu] = React.useState<{ anahtar: string; imza: string } | null>(null);
+  const kureImzasi = seciliKisi ?? '';
+  const donukKisi = donukKure(kureDurumu, kureImzasi);
   const [begeniler, setBegeniler] = React.useState<Map<string, BegeniDurumu>>(new Map());
   const [kayitlilar, setKayitlilar] = React.useState<Set<string>>(new Set());
   /*
@@ -159,6 +174,7 @@ export const AgimSayfasi: React.FC<Props> = ({
         setAkis(paylasimlar);
         setBenim(profil);
         setBekleyenIstek(baglantilar.gelen.length);
+        setBaglantilar(baglantilar.kabul);
         setResmiSessiz(await resmiSessizMi(kullaniciId).catch(() => false));
 
         /*
@@ -281,8 +297,9 @@ export const AgimSayfasi: React.FC<Props> = ({
         MARKA ORTADA, SİMGELER İKİ YANDA (kullanıcı isteği, 16 Eylül 2026)
 
         Site üst çubuğuyla aynı kural: marka mutlak konumla tam ortada.
-        Dört simge ikiye bölünüyor — solda paylaş ve bağlantılar, sağda
-        arama ve zil yan yana (sitenin her sayfasında arama zilin yanında).
+        Solda paylaş, sağda arama ve zil yan yana (sitenin her sayfasında
+        arama zilin yanında). Bağlantılar simgesi başlıktan kalktı: bağlantılar
+        artık akışın üstündeki küre şeridinde, bekleyen istek rozeti de orada.
 
         Ölçü SİTE LOGOSUYLA AYNI: `Logo` bileşeni `md` boyutunda
         `text-[28px] sm:text-2xl tracking-[-0.03em]` ve `font-black`
@@ -303,22 +320,6 @@ export const AgimSayfasi: React.FC<Props> = ({
         dugmeSinifi={IKON}
       />
 
-      <button
-        type="button"
-        onClick={() => onNavigate('/agim/baglantilar')}
-        aria-label={
-          bekleyenIstek > 0 ? `Bağlantılar, ${bekleyenIstek} bekleyen istek` : 'Bağlantılar'
-        }
-        className={IKON}
-      >
-        <Users aria-hidden className="h-6 w-6" />
-        {/* Rozet GERÇEK sayı; sıfırken hiç çizilmiyor. */}
-        {bekleyenIstek > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
-            {bekleyenIstek > 9 ? '9+' : bekleyenIstek}
-          </span>
-        )}
-      </button>
 
       {/* Sağ küme: arama ve zil yan yana. */}
       <span aria-hidden className="flex-1" />
@@ -514,6 +515,8 @@ export const AgimSayfasi: React.FC<Props> = ({
     </section>
   ) : null;
 
+  const gorunenAkis = seciliKisi ? akis.filter((p) => p.yazarId === seciliKisi) : akis;
+
   const akisGovdesi =
     durum === 'yukleniyor' ? (
       <div aria-busy="true" className="space-y-6 py-3">
@@ -557,7 +560,10 @@ export const AgimSayfasi: React.FC<Props> = ({
       <div className="sm:space-y-4">
         {/* Sessizlik satırı akışın en üstünde: kaybolan içeriğin yerinde. */}
         {sessizlikSatiri}
-        {akis.map((p) => (
+        {seciliKisi && gorunenAkis.length === 0 && (
+          <p className="px-4 py-8 text-center text-sm text-gray-600">Bu kişinin akışında paylaşımı yok.</p>
+        )}
+        {gorunenAkis.map((p) => (
           <AkisKarti
             key={p.id}
             paylasim={p}
@@ -644,6 +650,24 @@ export const AgimSayfasi: React.FC<Props> = ({
         </nav>
 
         <main className="min-w-0 flex-1 lg:max-w-[500px]">
+          {baglantilar.length > 0 && (
+            <div className="px-4 sm:mb-4 sm:px-0">
+              <BaglantiSeridi
+                kisiler={baglantilar}
+                secili={seciliKisi}
+                donuk={donukKisi}
+                onSec={(kisiId) => {
+                  setSeciliKisi(kisiId);
+                  setKureDurumu(null);
+                }}
+                onCevir={(kisiId) =>
+                  setKureDurumu((d) => kureDokunusu(d, { anahtar: kisiId, secili: true, imza: kureImzasi }).durum)
+                }
+                bekleyenIstek={bekleyenIstek}
+                onBaglantilar={() => onNavigate('/agim/baglantilar')}
+              />
+            </div>
+          )}
           {akisGovdesi}
         </main>
 
