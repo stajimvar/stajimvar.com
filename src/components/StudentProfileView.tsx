@@ -43,7 +43,7 @@ import {
   kolon da duruyor ve eski fotoğraflar okunmaya devam ediyor.
 */
 import { CvAlani } from './CvAlani';
-import { fetchSavedListingIds } from '../lib/opportunities';
+import { fetchOpenSavedListingCount } from '../lib/opportunities';
 import { adYazimi , okulKisaltmasi} from '../lib/ad';
 import { useModalErisim } from '../lib/modal-erisim';
 import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
@@ -552,9 +552,10 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   useEffect(() => {
     let iptal = false;
     if (!student.id) return;
-    fetchSavedListingIds(student.id)
-      .then((idler) => {
-        if (!iptal) setKaydedilenSayisi(idler.length);
+    /* Yalnız yayındaki ilanlar: kutunun açtığı listeyle aynı sayı. */
+    fetchOpenSavedListingCount(student.id)
+      .then((adet) => {
+        if (!iptal) setKaydedilenSayisi(adet);
       })
       .catch(() => {});
     return () => {
