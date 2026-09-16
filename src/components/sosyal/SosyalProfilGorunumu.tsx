@@ -2,6 +2,7 @@ import React from 'react';
 import { ImagePlus, Pencil } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI, RENK_PRIMARY } from '../../lib/renk-token';
 import type { SosyalPaylasim, SosyalProfil, SosyalSayaclar } from '../../lib/queries/sosyal';
+import { ogrenciKimligiGorunurMu } from '../../lib/sosyal-profil-kimligi.mjs';
 import { BaglantiDugmesi } from './BaglantiDugmesi';
 import { PaylasimIzgarasi } from './PaylasimIzgarasi';
 import { ProfilFotografi } from './ProfilFotografi';
@@ -212,6 +213,7 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
     (örneğin e-postanın baş kısmı) üretilmiyor.
   */
   const baslik = profil.gorunenAd ?? `@${profil.kullaniciAdi}`;
+  const ogrenciKimligiGorunur = ogrenciKimligiGorunurMu(profil.resmiMi);
 
   return (
     /*
@@ -334,7 +336,7 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
                 etmiyordu. Ad gelmediyse rozet hiç çizilmiyor — "alanı"
                 sözcüğü tek başına bir bilgi taşımaz.
               */}
-              {profil.sektorAdi && (
+              {ogrenciKimligiGorunur && profil.sektorAdi && (
                 <p
                   className={`inline-flex max-w-full items-center rounded-full border px-2.5 py-0.5 text-xs font-bold ${RENK_PRIMARY.kenar} ${RENK_PRIMARY.yumusakZemin} ${RENK_PRIMARY.metin}`}
                 >
@@ -355,9 +357,8 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
             zaman katalogdan, kullanıcının notu ise açıkça "Eğitim notu"
             etiketiyle ve daha zayıf ağırlıkta.
           */}
-          {(profil.bolumAdi ||
-            profil.bolumEtiketi ||
-            profil.sinifEtiketi ||
+          {((ogrenciKimligiGorunur &&
+            (profil.bolumAdi || profil.bolumEtiketi || profil.sinifEtiketi)) ||
             profil.sehir ||
             profil.biyografi) && (
             /*
@@ -385,15 +386,17 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
               ölçümde taşmıyorlar.
             */
             <div className="space-y-1 text-sm text-gray-700">
-              {profil.bolumAdi && (
+              {ogrenciKimligiGorunur && profil.bolumAdi && (
                 <p className="break-words font-semibold text-gray-900">{profil.bolumAdi}</p>
               )}
-              {profil.bolumEtiketi && (
+              {ogrenciKimligiGorunur && profil.bolumEtiketi && (
                 <p className="break-words text-xs text-gray-600">
                   <span className="font-semibold">Eğitim notu:</span> {profil.bolumEtiketi}
                 </p>
               )}
-              {profil.sinifEtiketi && <p className="break-words">{profil.sinifEtiketi}</p>}
+              {ogrenciKimligiGorunur && profil.sinifEtiketi && (
+                <p className="break-words">{profil.sinifEtiketi}</p>
+              )}
               {profil.sehir && <p className="break-words">{profil.sehir}</p>}
               {profil.biyografi && (
                 <p className="whitespace-pre-line break-words leading-relaxed text-gray-800">
