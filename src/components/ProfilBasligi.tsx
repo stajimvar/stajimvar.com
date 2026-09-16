@@ -1,8 +1,9 @@
 import React from 'react';
-import { Award, Check, ChevronRight, ImagePlus, Lock, Plus } from 'lucide-react';
+import { Award, Bookmark, Check, ChevronRight, FileText, ImagePlus, LogOut, Menu, Plus, Settings } from 'lucide-react';
 import { adYazimi } from '../lib/ad';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
-import { ProfilAyarMenusu } from './sosyal/ProfilAyarMenusu';
+import { profilAyarOgeleri } from './sosyal/ProfilAyarMenusu';
+import { ProfilAyarlarSayfasi, type AyarBolumu } from './ProfilAyarlarSayfasi';
 import type { PortfolyoSatiri } from './sosyal/SosyalProfilSayfasi';
 import { profilYolu } from '../lib/sosyal-kullanici-adi.mjs';
 import { ODAK_HALKASI } from '../lib/renk-token';
@@ -224,12 +225,10 @@ interface Props {
   onDuzenle: () => void;
   onCv?: () => void;
   onKaydedilenlere?: () => void;
-  /**
-   * Hesap eylemleri (yönetim paneli, çıkış) — kartın alt satırında,
-   * dişlinin solunda (kullanıcı isteği, 17 Eylül 2026). Sayfanın en
-   * altında, akıştan uzakta duruyordu.
-   */
-  hesapEylemleri?: React.ReactNode;
+  /** Yönetim paneli — yalnız yöneticide verilir. "Ayarlar ve hareketler"de. */
+  onYonetim?: () => void;
+  /** Çıkış — "Ayarlar ve hareketler"in en altında. */
+  onCikis?: () => void;
   onBasvurulara?: () => void;
   onMulakatlara?: () => void;
   /**
@@ -299,7 +298,8 @@ export const ProfilBasligi: React.FC<Props> = ({
   onDuzenle,
   onCv,
   onKaydedilenlere,
-  hesapEylemleri,
+  onYonetim,
+  onCikis,
   onBasvurulara,
   onMulakatlara,
   portfolyo,
@@ -323,6 +323,87 @@ export const ProfilBasligi: React.FC<Props> = ({
         ? 'hazir'
         : 'alinamadi';
   const satir = portfolyo?.satir ?? null;
+
+  /*
+    "AYARLAR VE HAREKETLER" (☰) — kullanıcı isteği, 17 Eylül 2026
+
+    Profil durumu, yetkinlik testleri, kaydedilenler, başvurular, dişli
+    menüsünün satırları, yönetim paneli ve çıkış karttan kalktı; hepsi
+    Instagram'daki gibi tek bir tam ekran listede. Telefonda üst çubuğun
+    sağındaki ☰ açıyor (Header `stajimvar:profil-menusu` olayı), geniş
+    ekranda kartın sağ üstündeki ☰.
+  */
+  const [menuAcik, setMenuAcik] = React.useState(false);
+  const menuKapat = React.useCallback(() => setMenuAcik(false), []);
+  React.useEffect(() => {
+    const ac = () => setMenuAcik(true);
+    window.addEventListener('stajimvar:profil-menusu', ac);
+    return () => window.removeEventListener('stajimvar:profil-menusu', ac);
+  }, []);
+  const menudenGit = (eylem?: () => void) => () => {
+    setMenuAcik(false);
+    eylem?.();
+  };
+  const ikon = 'h-6 w-6';
+  const sosyalOgeler = satir ? profilAyarOgeleri(satir.menu) : [];
+  const ayarBolumleri: AyarBolumu[] = [
+    {
+      baslik: 'Hesabın',
+      ogeler: [
+        {
+          anahtar: 'profil-durumu',
+          etiket: eksikler.length === 0 ? 'Profilin tamamlandı' : `Profilin %${oran} tamamlandı`,
+          ikon: <Check className={ikon} strokeWidth={1.75} />,
+          sag: eksikler.length > 0 ? `${eksikler.length} adım` : undefined,
+          onClick: menudenGit(onDuzenle),
+        },
+        ...(onCv
+          ? [{ anahtar: 'cv', etiket: "CV'ni görüntüle", ikon: <FileText className={ikon} strokeWidth={1.75} />, onClick: menudenGit(onCv) }]
+          : []),
+        ...sosyalOgeler.map((o) => ({
+          anahtar: `sosyal-${o.anahtar}`,
+          etiket: o.anahtar === 'kaydedilenler' ? 'Kaydedilen paylaşımlar' : o.etiket,
+          ikon: o.ikon,
+          pasif: o.pasif,
+          onClick: menudenGit(o.calistir),
+        })),
+      ],
+    },
+    {
+      baslik: "StajımVar'ı nasıl kullanıyorsun?",
+      ogeler: [
+        {
+          anahtar: 'kaydedilen-ilanlar',
+          etiket: 'Kaydedilen ilanlar',
+          ikon: <Bookmark className={ikon} strokeWidth={1.75} />,
+          sag: kaydedilenSayisi,
+          onClick: menudenGit(onKaydedilenlere),
+          pasif: !onKaydedilenlere,
+        },
+        {
+          anahtar: 'basvurular',
+          etiket: 'Başvurular',
+          ikon: <FileText className={ikon} strokeWidth={1.75} />,
+          sag: basvuruSayisi,
+          onClick: menudenGit(onBasvurulara),
+          pasif: !onBasvurulara,
+        },
+        {
+          anahtar: 'testler',
+          etiket: 'Yetkinlik testleri',
+          ikon: <Award className={ikon} strokeWidth={1.75} />,
+          sag: rozetSayisi > 0 ? `${rozetSayisi} rozet` : undefined,
+          onClick: menudenGit(onTestlere),
+        },
+      ],
+    },
+    ...(onYonetim
+      ? [{ baslik: 'Yönetim', ogeler: [{ anahtar: 'yonetim', etiket: 'Yönetim paneli', ikon: <Settings className={ikon} strokeWidth={1.75} />, onClick: menudenGit(onYonetim) }] }]
+      : []),
+    ...(onCikis
+      ? [{ ogeler: [{ anahtar: 'cikis', etiket: 'Çıkış yap', ikon: <LogOut className={ikon} strokeWidth={1.75} />, onClick: menudenGit(onCikis), tehlike: true }] }]
+      : []),
+  ];
 
   return (
     /*
@@ -354,7 +435,18 @@ export const ProfilBasligi: React.FC<Props> = ({
     boşluk aynı. Geniş ekranda blok sol sütunun bir parçası ve nerede
     bittiğinin görünmesi gerekiyor.
   */
-  <Card mobilYuzey className={`space-y-3 px-4 py-3.5 sm:space-y-4 sm:p-6 ${className}`}>
+  <Card mobilYuzey className={`relative space-y-3 px-4 py-3.5 sm:space-y-4 sm:p-6 ${className}`}>
+    {/* Geniş ekranda ☰ kartın sağ üstünde; telefonda üst çubukta. */}
+    <button
+      type="button"
+      onClick={() => setMenuAcik(true)}
+      aria-label="Ayarlar ve hareketler"
+      aria-haspopup="dialog"
+      className={`absolute right-3 top-3 hidden h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-gray-800 hover:bg-gray-100 lg:inline-flex ${ODAK_HALKASI}`}
+    >
+      <Menu aria-hidden className="h-6 w-6" />
+    </button>
+    <ProfilAyarlarSayfasi acik={menuAcik} onKapat={menuKapat} bolumler={ayarBolumleri} />
     {/*
       FOTOĞRAF VE AD AYNI SATIRDA, SAYAÇLAR ALTTA TAM GENİŞLİKTE
 
@@ -598,37 +690,7 @@ export const ProfilBasligi: React.FC<Props> = ({
       altındaki başvuru bölümünü aşağı itiyordu. Kutu tamamen kalkıyor,
       yerine tek satır kalıyor.
     */}
-    {eksikler.length === 0 && (
-      <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-        <Check className="w-3.5 h-3.5" />
-        Profilin tamamlandı
-      </p>
-    )}
 
-    {/*
-      ROZETLER VE TESTLER — TEK SATIR, KARTIN EYLEMLERİNDEN ÖNCE
-
-      Kartın altındaki ayrı "Yetkinlik testleri" kartı kalktı; bu satır
-      testlere giden tek giriş. Ayrı bir kart ya da üçüncü bir düğme
-      değil: kartta iki ana düğme zaten var ve eşit ağırlıkta üçüncüsü
-      hangisinin asıl iş olduğunu bulanıklaştırırdı. Metin duruma göre:
-      rozet varsa sayı ("3 rozet · Testler"), yoksa yalnız bölümün adı.
-      Sıfır rozeti "0 rozet" diye basmak, henüz hiç test çözmemiş
-      kullanıcıya bir eksiklik sayacı göstermek olurdu.
-
-      Ölçü ve stil `@ad` bağlantısıyla aynı ikincil satır (text-sm,
-      gray-700, hover altı çizgi); dokunma hedefi 44 piksel (`min-h-11`).
-      İkon tek başına bilgi taşımıyor: `aria-hidden`, yanında metin.
-    */}
-    <button
-      type="button"
-      onClick={onTestlere}
-      className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-semibold text-gray-700 hover:underline ${ODAK_HALKASI}`}
-    >
-      <Award aria-hidden className="h-4 w-4 shrink-0" />
-      {rozetSayisi > 0 ? `${rozetSayisi} rozet · Testler` : 'Yetkinlik testleri'}
-      <ChevronRight aria-hidden className="h-4 w-4 shrink-0" />
-    </button>
 
     {/*
       CV ANA DÜĞME, DÜZENLE İKİNCİL
@@ -652,89 +714,6 @@ export const ProfilBasligi: React.FC<Props> = ({
         {eksikler.length > 0 ? 'Profilini tamamla' : 'Profili düzenle'}
       </Button>
     </div>
-
-    {/*
-      KAYDEDİLENLER VE BAŞVURULAR — SAYAÇ DEĞİL, KİŞİSEL İŞLEM
-
-      İkisi paylaşım ve bağlantının yanında, dört hücreli bir sayaç
-      şeridindeydi. Ama bunlar profilin "büyüklüğünü" anlatan sayılar
-      değil: kişinin KENDİ listeleri ve yalnız ona görünüyorlar. Aynı
-      şeritte durdukları sürece herkese açık bir profil bilgisi gibi
-      okunuyorlardı.
-
-      Kilit simgesi bunu söylüyor, sayı da kayıp değil: her satır kendi
-      listesini açıyor ve kaç kayıt olduğunu yanında yazıyor.
-    */}
-    <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-gray-200">
-      {[
-        { etiket: 'Kaydedilenler', deger: kaydedilenSayisi, git: onKaydedilenlere },
-        { etiket: 'Başvurular', deger: basvuruSayisi, git: onBasvurulara },
-      ].map((oge, sira) => (
-        <button
-          key={oge.etiket}
-          type="button"
-          onClick={oge.git}
-          disabled={!oge.git}
-          className={`flex min-h-12 items-center justify-between gap-1.5 px-2.5 text-left transition-colors hover:bg-gray-50 disabled:cursor-default disabled:hover:bg-transparent ${
-            sira === 0 ? 'border-r border-gray-200' : ''
-          }`}
-        >
-          <span className="flex min-w-0 items-center gap-2">
-            <Lock aria-hidden className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-            <span className="truncate text-[13px] font-semibold text-gray-900">{oge.etiket}</span>
-          </span>
-          <span className="flex shrink-0 items-center gap-0.5 text-[13px] font-bold tabular-nums text-gray-500">
-            {oge.deger}
-            {oge.git && <ChevronRight aria-hidden className="h-4 w-4 text-gray-400" />}
-          </span>
-        </button>
-      ))}
-    </div>
-
-    {/*
-      "PAYLAŞ" VE DİŞLİ — KARTIN EYLEM ALANINDA, İKİNCİ SATIR
-
-      İkisi sağ sütunun üstündeydi; kartın altındaki düğme satırıyla aynı
-      ekranda iki ayrı eylem bölgesi vardı. Aynı yükseklik (`Button` md =
-      `min-h-12`, dişli 44 piksel ve satırda ortalı) ve aynı köşe
-      (`rounded-xl`) — dördü tek ailenin düğmeleri.
-
-      NEDEN CV/DÜZENLE SATIRININ ALTINDA VE NEDEN İKİNCİL: bu satır
-      üstteyken ekranda iki mavi birincil düğme vardı ("Paylaş" ve "CV'ni
-      görüntüle") ve ikisi de tam genişlikte olduğu için hangisinin asıl
-      iş olduğu okunmuyordu (`Button` sözleşmesi: bir ekranda tek
-      primary). Kartın asıl işi CV/profil; paylaşım onun yanındaki gerçek
-      seçenek. "Paylaş" bu yüzden beyaz-kenarlıklı ikincil ve satır
-      CV/düzenle satırının altına indi. İkon, metin, eylem ve koşullar
-      aynı; yalnız tür ve sıra değişti.
-
-      YALNIZ SATIR VARKEN: sosyal satır gelmediyse (`null`) ne "Paylaş" ne
-      dişli çiziliyor; sebep sağ sütundaki hata kutusunda yazıyor. Satır
-      henüz okunmadıysa da çizilmiyor — eylemi olmayan bir düğme, basınca
-      hiçbir şey yapmayan bir düğmedir.
-
-      GENİŞ "PAYLAŞ" DÜĞMESİ KALKTI
-
-      Paylaşım girişi artık sayfanın sol üstünde, Ağım'daki simgenin
-      AYNISI (`FotografPaylasGirisi`, Header'dan çiziliyor). İki giriş
-      birden bırakmak, aynı işi yapan iki düğme demekti: biri kartın
-      altında geniş ve metinli, öteki tepede simge. Kullanıcı hangisinin
-      ne yaptığını denemeden bilemezdi.
-
-      Satır kaldırılmadı, dişli hâlâ burada: kart ayarlarının yeri
-      burası ve o eylemin paylaşımla ilgisi yok. Düğme kalkınca satır
-      tek öğeyle kaldığı için `justify-end` da yeterli — boşluk
-      bırakmıyor, dişli sağda duruyor.
-
-      Dişli `ProfilAyarMenusu` — satırları burada seçilmiyor, nesne
-      olduğu gibi geçiyor.
-    */}
-    {(satir || hesapEylemleri) && (
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">{hesapEylemleri}</div>
-        {satir && <ProfilAyarMenusu {...satir.menu} />}
-      </div>
-    )}
 
   </Card>
   );

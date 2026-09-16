@@ -142,7 +142,7 @@ export interface ProfilAyarMenusuProps {
   onDuzenle?: () => void;
 }
 
-interface Oge {
+export interface ProfilAyarOgesi {
   anahtar: string;
   etiket: string;
   ikon: React.ReactNode;
@@ -173,7 +173,11 @@ function useGenisEkran(): boolean {
   return genis;
 }
 
-export const ProfilAyarMenusu: React.FC<ProfilAyarMenusuProps> = ({
+/**
+ * Menünün satırları — dişli menüsü ve "Ayarlar ve hareketler" sayfası
+ * AYNI listeyi kullanıyor; etiket ve koşullar tek yerde.
+ */
+export function profilAyarOgeleri({
   onPaylas,
   yayindaMi,
   onGorunurluk,
@@ -186,17 +190,7 @@ export const ProfilAyarMenusu: React.FC<ProfilAyarMenusuProps> = ({
   onKaydedilenler,
   onArsiv,
   onDuzenle,
-}) => {
-  const [acik, setAcik] = React.useState(false);
-  const [monte, setMonte] = React.useState(false);
-  const genisEkran = useGenisEkran();
-  const tetikRef = React.useRef<HTMLButtonElement>(null);
-  const panelRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    setMonte(true);
-  }, []);
-
+}: ProfilAyarMenusuProps): ProfilAyarOgesi[] {
   /*
     ETİKET DURUMU OLDUĞU GİBİ SÖYLÜYOR
 
@@ -230,7 +224,7 @@ export const ProfilAyarMenusu: React.FC<ProfilAyarMenusuProps> = ({
   */
   const fotografGonderiliyor = fotografDurumu === 'gonderiliyor';
 
-  const ogeler: Oge[] = [
+  const ogeler: ProfilAyarOgesi[] = [
     {
       anahtar: 'paylas',
       etiket: 'Profil bağlantısını paylaş',
@@ -335,6 +329,38 @@ export const ProfilAyarMenusu: React.FC<ProfilAyarMenusuProps> = ({
     },
   ];
 
+  return ogeler;
+}
+
+export const ProfilAyarMenusu: React.FC<ProfilAyarMenusuProps> = ({
+  onPaylas,
+  yayindaMi,
+  onGorunurluk,
+  gorunurlukDurumu = 'bekliyor',
+  onFotografDegistir,
+  avatarVarMi = false,
+  onFotografKaldir,
+  fotografDurumu = 'bekliyor',
+  onBegendiklerim,
+  onKaydedilenler,
+  onArsiv,
+  onDuzenle,
+}) => {
+  const [acik, setAcik] = React.useState(false);
+  const [monte, setMonte] = React.useState(false);
+  const genisEkran = useGenisEkran();
+  const tetikRef = React.useRef<HTMLButtonElement>(null);
+  const panelRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    setMonte(true);
+  }, []);
+
+  const ogeler = profilAyarOgeleri({
+    onPaylas, yayindaMi, onGorunurluk, gorunurlukDurumu, onFotografDegistir, avatarVarMi,
+    onFotografKaldir, fotografDurumu, onBegendiklerim, onKaydedilenler, onArsiv, onDuzenle,
+  });
+
   const kapat = React.useCallback(() => {
     setAcik(false);
     /* Odak tetikleyiciye dönüyor: klavye kullanıcısı sayfanın başına düşmesin. */
@@ -406,7 +432,7 @@ export const ProfilAyarMenusu: React.FC<ProfilAyarMenusuProps> = ({
     return () => document.removeEventListener('mousedown', disariTikla);
   }, [acik, genisEkran]);
 
-  const ogeyeBas = (oge: Oge) => {
+  const ogeyeBas = (oge: ProfilAyarOgesi) => {
     /* `disabled` zaten tıklamayı kesiyor; bu ikinci kapı sunumlar ayrışırsa diye. */
     if (oge.pasif) return;
     /*

@@ -1095,37 +1095,9 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                 : undefined
             }
             onKaydedilenlere={onKaydedilenlere}
-            /*
-              HESAP EYLEMLERİ KARTTA — dişlinin solunda. Düzenleme sırasında
-              çizilmiyor: form doldururken yanında duran "Çıkış yap"
-              yanlışlıkla basılacak bir tuzak olurdu.
-            */
-            hesapEylemleri={
-              !duzenleme && (onLogout || (isAdmin && onOpenAdmin)) ? (
-                <>
-                  {isAdmin && onOpenAdmin && (
-                    <button
-                      type="button"
-                      onClick={onOpenAdmin}
-                      className="inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-100"
-                    >
-                      <Settings className="h-4 w-4" />
-                      Yönetim paneli
-                    </button>
-                  )}
-                  {onLogout && (
-                    <button
-                      type="button"
-                      onClick={onLogout}
-                      className="inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-rose-200 px-3 text-sm font-bold text-rose-700 transition-colors hover:bg-rose-50"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Çıkış yap
-                    </button>
-                  )}
-                </>
-              ) : undefined
-            }
+            /* Yönetim paneli ve çıkış "Ayarlar ve hareketler" menüsünde (ProfilBasligi). */
+            onYonetim={isAdmin && onOpenAdmin ? onOpenAdmin : undefined}
+            onCikis={onLogout}
             /*
               İKİ SAYAÇ DA AYRI BAŞVURU EKRANINA GİDİYOR
 

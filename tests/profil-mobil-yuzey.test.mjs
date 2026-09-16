@@ -114,7 +114,7 @@ test('kenara yaslanma yalnız kimlik bloğu ve fotoğraf ızgarasında', () => {
     17 Eylül 2026); sayfanın altında ayrı bir kutu yok.
   */
   assert.doesNotMatch(ogrenciProfili, /className="order-2 mt-6 /);
-  assert.match(ogrenciProfili, /hesapEylemleri=\{/);
+  assert.match(ogrenciProfili, /onCikis=\{onLogout\}/);
 });
 
 test('iki ekranın mobil iskeleti birebir aynı', () => {
