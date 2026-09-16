@@ -287,10 +287,10 @@ export const AgimSayfasi: React.FC<Props> = ({
         tek yer yine bu satır.
 
         Ölçü SİTE LOGOSUYLA AYNI: `Logo` bileşeni `md` boyutunda
-        `text-[23px] sm:text-2xl tracking-[-0.03em]` ve `font-black`
+        `text-[28px] sm:text-2xl tracking-[-0.03em]` ve `font-black`
         kullanıyor.
       */}
-      <h1 className="text-[23px] font-black leading-none tracking-[-0.03em] text-gray-900 sm:text-2xl">
+      <h1 className="text-[28px] font-black leading-none tracking-[-0.03em] text-gray-900 sm:text-2xl">
         Stajım<span className="text-blue-600">Var</span>
       </h1>
 

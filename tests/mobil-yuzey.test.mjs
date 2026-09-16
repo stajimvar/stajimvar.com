@@ -176,7 +176,7 @@ test('masaüstü düzeni korunuyor: her yüzey değeri sm ile geri dönüyor', (
   assert.match(ilan, /<div className="relative z-10 flex shrink-0 flex-col items-end justify-between gap-3">/);
 });
 
-test('marka 23 piksel: telefondaki 20 pikselin %15 üstü', () => {
+test('marka telefonda 28 piksel (önce 23)', () => {
   /*
     Telefonda 20, `sm:` üstünde 24 pikseldi. Üst çubuktaki simgeler her
     boyutta 24 piksel; marka onlardan küçük kalınca sayfanın adı,
@@ -186,18 +186,19 @@ test('marka 23 piksel: telefondaki 20 pikselin %15 üstü', () => {
     20 ile 24 arasında bir değer yok; bu yüzden açıkça yazılıyor.
 
     `sm:` DALI DEĞİŞMEDİ. Masaüstünde (`lg:`) 28 piksel: amblem ve nokta
-    kaldırılınca marka yalnız kelime oldu ve büyütüldü.
+    kaldırılınca marka yalnız kelime oldu ve büyütüldü. Telefonda da
+    23'ten 28 piksele çıktı (kullanıcı isteği).
 
     Akışın kendi başlığı AYNI değeri taşımak zorunda: iki üst çubuk
     birbirinden ayrışmasın diye.
   */
   const logo = oku('src/components/Logo.tsx');
-  assert.match(logo, /'text-\[23px\] sm:text-2xl lg:text-\[28px\] tracking-\[-0\.03em\]'/, 'md marka ölçüsü değişmiş');
+  assert.match(logo, /'text-\[28px\] sm:text-2xl lg:text-\[28px\] tracking-\[-0\.03em\]'/, 'md marka ölçüsü değişmiş');
   assert.doesNotMatch(logo, /text-xl sm:text-2xl/, 'telefondaki eski 20 piksel geri gelmiş');
   /* Yazı karakteri, ağırlık ve renkler aynı kaldı: değişen yalnız punto. */
   assert.match(logo, /font-black/);
 
   const agim = oku('src/components/sosyal/AgimSayfasi.tsx');
-  assert.match(agim, /text-\[23px\] font-black leading-none tracking-\[-0\.03em\][^"]*sm:text-2xl/);
+  assert.match(agim, /text-\[28px\] font-black leading-none tracking-\[-0\.03em\][^"]*sm:text-2xl/);
   assert.doesNotMatch(agim, /text-xl font-black[^"]*sm:text-2xl/, 'akış başlığı markadan ayrışmış');
 });
