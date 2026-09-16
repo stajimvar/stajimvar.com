@@ -59,10 +59,16 @@ test('beş ekran da ortak kabuğu kullanıyor, kendi kutusunu çizmiyor', () => 
     kullanmaya devam ediyor, kural yalnız ilan kartı için ayrıldı.
     Kartın iç dolgusu hâlâ ortak (`YUZEY.ic`) — ölçüler ayrışmıyor.
   */
-  const kaynaklar = [
-    ['fırsat kartı', oku('src/components/OpportunitiesPage.tsx')],
-    ['akış kartı', oku('src/components/sosyal/AkisKarti.tsx')],
-  ];
+  /*
+    FIRSAT KARTI DA ÇIKTI (16 Eylül 2026): Fırsatlar telefonda İlanlar'la
+    tek tip; kart ilan kartı gibi kendi çerçevesini çiziyor.
+  */
+  assert.match(
+    oku('src/components/OpportunitiesPage.tsx'),
+    /rounded-xl border border-gray-200 bg-white px-3 py-3/,
+    'fırsat kartı ilan kartıyla aynı çerçeveyi çizmiyor',
+  );
+  const kaynaklar = [['akış kartı', oku('src/components/sosyal/AkisKarti.tsx')]];
   for (const [ad, kaynak] of kaynaklar) {
     assert.match(kaynak, /YUZEY\.kabuk/, `${ad}: ortak kabuk kullanılmıyor`);
     assert.match(kaynak, /from '(\.\.\/)+ui\/tokens'/, `${ad}: belirteç alınmamış`);
@@ -106,7 +112,8 @@ test('liste kapları kenara yaslı, kutular değil', () => {
   /* Kartlar hâlâ kenara yaslı; aralarında 1 px çizgi değil küçük boşluk var. */
   assert.ok(ilanlar.includes('<div className={`flex flex-col gap-1.5 sm:gap-3 ${YUZEY.kap}`}>'));
   assert.match(ilanlar, /hasMoreCountriesPage && <button/);
-  assert.match(firsatlar, /grid grid-cols-1 gap-0 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 \$\{YUZEY\.kap\} sm:mx-0/);
+  /* Fırsatlar da İlanlar gibi: kenara yaslı, kartlar arasında küçük boşluk. */
+  assert.match(firsatlar, /grid grid-cols-1 gap-1\.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 \$\{YUZEY\.kap\} sm:mx-0/);
 });
 
 test('akışta ayırıcı kartta duruyor, listede ikinci kez çizilmiyor', () => {

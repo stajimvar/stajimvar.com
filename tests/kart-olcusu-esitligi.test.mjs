@@ -102,65 +102,51 @@ test('FIRSAT IZGARASI: TELEFONDA TEK SÜTUN, sm ÜSTÜNDE REHBERLE AYNI', () => 
     `sm:` ve üstünde ikisi yine aynı ızgarada: 16 piksel boşluk, `lg:`
     üstünde üç sütun.
   */
-  assert.match(firsat, /grid grid-cols-1 gap-0 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3/);
+  assert.match(firsat, /grid grid-cols-1 gap-1\.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3/);
   assert.match(firsat, /\$\{YUZEY\.kap\} sm:mx-0/, 'liste kenara yaslanmıyor');
   /* İskelet listenin oturacağı yere oturuyor: gelince sayfa zıplamamalı. */
   const iskelet = firsat.slice(firsat.indexOf('const ListeIskeleti'));
-  assert.match(iskelet, /grid grid-cols-1 gap-0 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3/);
+  assert.match(iskelet, /grid grid-cols-1 gap-1\.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3/);
 });
 
-test('FIRSAT KARTI TELEFONDA KOMPAKT IZGARA, GENİŞ EKRANDA DİKEY AKIŞ', () => {
+test('FIRSAT KARTI TELEFONDA İLAN KARTIYLA TEK TİP, GENİŞ EKRANDA DİKEY AKIŞ', () => {
+  /*
+    Kullanıcı isteği (16 Eylül 2026): Fırsatlar telefonda İlanlar'la aynı
+    görünmeli. Kart İlan kartının üç bölümünü alıyor — solda büyük logo,
+    ortada künye, sağda kaydet ve "İncele". Geniş ekrandaki dar ızgara
+    kartı olduğu gibi duruyor.
+  */
   const kart = firsat.slice(firsat.indexOf('<article'));
-  /* Kabuk ortak belirteçten: liste ekranlarındaki kartlarla aynı. */
-  assert.match(kart.slice(0, 400), /\$\{YUZEY\.kabuk\} \$\{YUZEY\.ic\}/);
+  assert.match(kart.slice(0, 500), /rounded-xl border border-gray-200 bg-white px-3 py-3/);
+  assert.match(kart, /flex min-w-0 items-stretch gap-3 min-\[390px\]:gap-3\.5 min-\[430px\]:gap-4 sm:hidden/);
+  assert.match(kart, /<div className="hidden sm:flex sm:flex-col sm:gap-2">/);
 
-  /*
-    Telefonda üç sütun: 40 piksellik logo, künye, kaydet. `sm:flex
-    sm:flex-col` ızgara yerleşimini tamamen düşürüyor ve çocuklar kaynak
-    sırasıyla diziliyor — masaüstündeki dar kart olduğu gibi kalıyor.
-    Izgara yerleşim sınıfları esnek kapta hiçbir şey yapmadığı için
-    `sm:` karşılıkları yazılmıyor.
-  */
-  assert.match(kart, /grid grid-cols-\[40px_minmax\(0,1fr\)_auto\] items-start gap-x-3 gap-y-1 sm:flex sm:flex-col sm:gap-2/);
-  /* Logo/kurum/kaydet satırı telefonda düzenden çıkıyor, sm üstünde geri geliyor. */
-  assert.match(kart, /className="contents sm:flex sm:w-full sm:min-w-0 sm:items-center sm:gap-2\.5"/);
+  /* Punto ve renkler ilan kartıyla aynı. */
+  const ilan = oku('src/components/InternshipCard.tsx');
+  for (const sinif of [
+    'break-words text-[15px] font-bold leading-snug text-slate-900 min-[430px]:text-base',
+    'mt-0.5 break-words text-[15px] font-semibold leading-snug text-slate-800 min-[430px]:text-base',
+    'mb-1 inline-flex items-center gap-1 whitespace-nowrap text-[15px] font-bold text-blue-600 hover:text-blue-700',
+  ]) {
+    assert.ok(ilan.includes(sinif), `ilan kartında yok: ${sinif}`);
+    assert.ok(kart.includes(sinif), `fırsat kartında yok: ${sinif}`);
+  }
 
-  /* Kurum adı 13 punto orta kalınlıkta mavi; başlık 16/600, satır yüksekliği 21. */
-  assert.match(kart, /text-\[13px\] font-medium text-blue-600/);
-  assert.match(kart, /text-\[16px\] font-semibold leading-\[21px\] text-gray-900/);
-  /*
-    UZUN BAŞLIK TELEFONDA KIRPILMIYOR: `line-clamp` yalnız `sm:`
-    üstünde, çünkü dar masaüstü kartında üç satırlık bir başlık
-    ızgaradaki bütün kartların boyunu belirliyor.
-  */
+  /* Uzun başlık telefonda kırpılmıyor; dar masaüstü kartında iki satır. */
   assert.match(kart, /sm:line-clamp-2/);
   assert.doesNotMatch(kart, /<h2 className="line-clamp-2/, 'telefonda başlık hâlâ kırpılıyor');
 
-  /*
-    Tür ve destek telefonda tek gri satır; kutu ve renk yok. Destek
-    metni `opportunityAmount` belirliyor (bkz.
-    tests/firsat-tutar-durumu) ve `satir` null ise yalnız tür yazılıyor.
-    `line-clamp-2`: metin uzasa da kart uzamıyor.
-  */
+  /* Tür ve destek: `kartSatiri` null ise yalnız tür (tests/firsat-tutar-durumu). */
   assert.match(kart, /\{opportunityTypeLabel\(item\.opportunityType\)\}/);
-  /*
-    KART ARTIK `kartSatiri` OKUYOR
-
-    `belirtilmemis` durumunda kartta tutar satırı hiç çizilmiyor
-    (ölçüm: 120 kaydın 90'ı bu durumdaydı ve satır gerçek bilgiyi
-    bastırıyordu). Detay sayfası `satir` ile "Tutar doğrulanamadı"
-    demeye devam ediyor.
-  */
   assert.match(kart, /\{tutar\.kartSatiri \? ` · \$\{tutar\.kartSatiri\}` : ''\}/);
-  assert.match(kart, /col-start-2 col-span-2 row-start-3 min-w-0 line-clamp-2 text-xs text-gray-500 sm:hidden/);
 
-  /* Doğrulama ve kalan süre kutusuz, ikonlu — kaynak aynı rozet listesi. */
+  /* Doğrulama ve kalan süre ikonlu — kaynak aynı rozet listesi. */
   assert.match(firsat, /const sonGunlerRozeti = rozetler\.find\(\(r\) => r\.id === 'son_gunler'\) \?\? null;/);
-  assert.match(kart, /<Clock className="h-3\.5 w-3\.5 shrink-0" aria-hidden \/>/);
+  assert.match(kart, /<Clock className="h-4 w-4 shrink-0" aria-hidden \/>/);
 
-  /* Alt satır: solda son başvuru, sağda küçük mavi "İncele". */
-  assert.match(kart, /flex items-center justify-between gap-3 text-xs text-gray-600 sm:hidden/);
-  assert.match(kart, /\$\{arsivde \? 'Kapandı' : 'Son başvuru'\}: \$\{kisaTarih\(item\.applicationDeadline\)\}/);
+  /* Son başvuru künyenin altında, "İncele" sağ altta gerçek bağlantı. */
+  assert.match(kart, /\{arsivde \? 'Kapandı' : 'Son başvuru'\}/);
+  assert.match(kart, /aria-label=\{`\$\{item\.title\} fırsatını incele`\}/);
 });
 
 test('MASAÜSTÜ BLOKLARI DURUYOR: çipler, uygunluk, iki alanlı künye', () => {
@@ -210,17 +196,15 @@ test('İLERLEME ÇUBUĞU YOK; TUTAR VE TARİH GERÇEK KAYITTAN', () => {
   assert.match(firsat, /Başvuru takvimi için resmî kaynağı kontrol edin/);
 });
 
-test('LOGO 40 PİKSEL VE IZGARANIN İLK SÜTUNU', () => {
+test('LOGO İLAN KARTIYLA AYNI ÖLÇÜDE', () => {
   /*
-    Sütun genişliği ve logonun kendi ölçüsü AYNI değer olmalı (40), yoksa
-    künye sütunu logonun soluna ya da sağına kayar. Logo ilk üç satırı
-    kaplıyor (kurum · başlık · tür-tutar) ve dikeyde ortalanıyor.
-
-    `object-contain` CompanyLogo içinde: kare olmayan kurum logoları
-    kırpılmadan kutuya oturuyor.
+    Telefonda logo ilan kartıyla aynı: 72–92 piksel, yuvarlak köşeli kare.
+    Geniş ekrandaki dar kartta 40 piksel kaldı. `object-contain`
+    CompanyLogo içinde: kare olmayan kurum logoları kırpılmıyor.
   */
-  assert.match(firsat, /grid-cols-\[40px_minmax\(0,1fr\)_auto\]/);
-  assert.match(firsat, /col-start-1 row-start-1 row-span-2 !h-10 !w-10/);
+  const olcu = '!h-[clamp(72px,21vw,92px)] !w-[clamp(72px,21vw,92px)] !rounded-xl !p-2 !text-2xl';
+  assert.ok(firsat.includes(olcu), 'fırsat kartı logo ölçüsü');
+  assert.ok(oku('src/components/InternshipCard.tsx').includes(olcu), 'ilan kartı logo ölçüsü');
   assert.match(oku('src/components/CompanyLogo.tsx'), /object-contain/);
 });
 
