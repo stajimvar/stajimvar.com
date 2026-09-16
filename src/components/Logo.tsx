@@ -22,7 +22,7 @@ export const Logo: React.FC<LogoProps> = ({
       : size === 'lg'
       ? 'text-2xl sm:text-3xl tracking-[-0.035em]'
       : /*
-          MARKA TELEFONDA 23 PİKSEL
+          MARKA TELEFONDA 28 PİKSEL (önce 23)
 
           Telefonda 20 pikseldi. Üst çubuktaki simgeler her boyutta 24
           piksel; marka onlardan küçük kalınca sayfanın adı, yanındaki
@@ -41,7 +41,7 @@ export const Logo: React.FC<LogoProps> = ({
           puntodan ayırıyor ve çubuğun kendi yüksekliği sabit
           (`h-15` / `sm:h-18`).
         */
-        'text-[23px] sm:text-2xl lg:text-[28px] tracking-[-0.03em]';
+        'text-[28px] sm:text-2xl lg:text-[28px] tracking-[-0.03em]';
 
   /*
     TIKLANABİLİR LOGO GERÇEK BİR BAĞLANTI
