@@ -626,6 +626,34 @@ export const Header: React.FC<HeaderProps> = ({
   */
   const profildeMi = cvEkranindaMi || (!rehberdeMi && !kurumsalSayfada && !agimdaMi && activeTab === 'profile');
 
+  /*
+    TELEFONDA ARAMA ZİLİN YANINDA
+
+    Marka telefonda ortada. Zil varsa arama sağda zille yan yana,
+    diğer simgeler (paylaş, süzgeç) solda; zil yoksa arama da solda.
+    Masaüstünde düğme zaten `lg:hidden`.
+  */
+  const zilVarMi = Boolean(isLoggedIn && onBildirimAc);
+  const aramaDugmesi = sayfaAramasi ? (
+    <button
+      type="button"
+      onClick={() => {
+        setAramaAcik((a) => {
+          if (a) {
+            setAramaMetni('');
+            sayfaAramasi.onDegisti('');
+          }
+          return !a;
+        });
+      }}
+      aria-label={aramaAcik ? 'Aramayı kapat' : sayfaAramasi.yerTutucu}
+      aria-expanded={aramaAcik}
+      className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-700 transition-colors hover:bg-gray-100 lg:hidden"
+    >
+      {aramaAcik ? <X className="h-6 w-6" /> : <Search className="h-6 w-6" />}
+    </button>
+  ) : null;
+
   return (
     <>
       <header
@@ -651,19 +679,13 @@ export const Header: React.FC<HeaderProps> = ({
           */}
           <div className="flex flex-1 items-center gap-2 sm:gap-3 lg:flex-none lg:gap-6 min-w-0">
             {/*
-              MARKA GERÇEKTEN ORTADA.
+              MARKA TELEFONDA ORTADA (kullanıcı isteği, 16 Eylül 2026).
 
-              MARKA SOL ÜSTTE — TELEFONDA DA.
-
-              Bir süre telefonda ortalanmıştı (mutlak konumla). Onaylanan
-              tasarımda marka her ekranda sol üstte duruyor ve işlem
-              simgeleri sağda toplanıyor: göz sayfayı soldan okumaya
-              başlıyor, "neredeyim" sorusunu ilk gördüğü şey yanıtlıyor.
-
-              Telefonda yalnız "StajımVar" yazısı çiziliyor — amblem ve
-              nokta `lg:` üstünde geliyor (bkz. Logo bileşeni).
+              Mutlak konumla çubuğun tam ortasında; simgelerin sayısı
+              değişse de kaymıyor. `lg:` üstünde eski hizasına (solda)
+              dönüyor. Telefonda yalnız "StajımVar" yazısı çiziliyor.
             */}
-            <div className="shrink-0">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 shrink-0 lg:static lg:translate-x-0 lg:translate-y-0">
               <Logo
                 onClick={() => {
                   setUserRole('student');
@@ -679,7 +701,7 @@ export const Header: React.FC<HeaderProps> = ({
               hesap) hemen yanına oturuyorlar. Dar ekranda çakışma yok:
               marka `shrink-0`, küme sabit genişlikli düğmelerden oluşuyor.
             */}
-            <div className="ml-auto flex items-center gap-1 sm:gap-2 lg:hidden">
+            <div className="flex items-center gap-1 sm:gap-2 lg:hidden">
             {/*
               FOTOĞRAF PAYLAŞMA — YALNIZ KENDİ PROFİLİNDE
 
@@ -737,25 +759,7 @@ export const Header: React.FC<HeaderProps> = ({
               çizilmiyor — çalışmayan bir simge göstermek olmayan
               bir özelliği vaat etmek olurdu.
                 */}
-            {sayfaAramasi && (
-              <button
-                type="button"
-                onClick={() => {
-                  setAramaAcik((a) => {
-                if (a) {
-                  setAramaMetni('');
-                  sayfaAramasi.onDegisti('');
-                }
-                return !a;
-                  });
-                }}
-                aria-label={aramaAcik ? 'Aramayı kapat' : sayfaAramasi.yerTutucu}
-                aria-expanded={aramaAcik}
-                className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-700 transition-colors hover:bg-gray-100 lg:hidden"
-              >
-                {aramaAcik ? <X className="h-6 w-6" /> : <Search className="h-6 w-6" />}
-              </button>
-                )}
+            {!zilVarMi && aramaDugmesi}
 
             {/*
               SÜZGEÇ SİMGESİ ÜST ÇUBUKTA (onaylanan tasarım)
@@ -1348,6 +1352,7 @@ export const Header: React.FC<HeaderProps> = ({
                   bildirimler. Rozet yalnız sayı SUNUCUDAN geldiğinde
                   çiziliyor.
                 */}
+                {zilVarMi && aramaDugmesi}
                 {onBildirimAc && (
                   <BildirimDugmesi
                     okunmamis={okunmamisBildirim ?? null}
