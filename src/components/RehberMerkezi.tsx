@@ -2,7 +2,7 @@ import { useSayfaAramasiKaydet } from '../lib/sayfa-aramasi';
 import React from 'react';
 import { ArrowRight, Search, SlidersHorizontal } from 'lucide-react';
 import { FiltreBlogu, SecenekSatiri } from '../ui';
-import { KonuSeridi } from './KonuSeridi';
+import { RehberKonuSekmeleri } from './RehberKonuSekmeleri';
 import {
   LISTE_BASLIGI,
   LISTE_BASLIGI_NOTU,
@@ -10,7 +10,7 @@ import {
   YUZEY,
 } from '../ui/tokens';
 import { SayfaKabugu } from './SayfaKabugu';
-import { RehberIzgarasi, RehberKarti, RehberKartiIskeleti } from './RehberKartlari';
+import { OneCikanRehberKarti, RehberBolumu, RehberSatiri } from './RehberKartlari';
 import { YolHaritasi } from './YolHaritasi';
 import { RehberSonuclari } from './RehberSonuclari';
 import { StajYollari } from './StajYollari';
@@ -19,17 +19,10 @@ import { BOLUMLER } from '../data/bolumler';
 import { STAJ_PROGRAMLARI } from '../data/stajProgramlari';
 import { KARIYER_MERKEZLERI } from '../data/kariyerMerkezleri';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
-import {
-  enCokOkunanlar,
-  kisisellestirilebilir,
-  kisiyeGoreSirala,
-  okunmaVerisiYeterli,
-  sadelestir,
-  yeniEklenenler,
-} from '../lib/rehber-siralama.mjs';
+import { kisisellestirilebilir, kisiyeGoreSirala, sadelestir } from '../lib/rehber-siralama.mjs';
 import { gecmisiOku } from '../lib/rehber-gecmis.mjs';
 import { birlesikArama } from '../lib/rehber-arama.mjs';
-import { kaydedilenRehberler, okunmaSayilari, rehberKaydiDegistir } from '../lib/rehber-veri';
+import { kaydedilenRehberler, rehberKaydiDegistir } from '../lib/rehber-veri';
 import type { StudentProfile } from '../types';
 
 /*
@@ -170,7 +163,6 @@ export const RehberMerkezi: React.FC<{
 
   /* ---------------------------------------------------------- yan veriler */
 
-  const [okunma, setOkunma] = React.useState<Record<string, number>>({});
   const [kayitlilar, setKayitlilar] = React.useState<Set<string>>(new Set());
   const [veriDurumu, setVeriDurumu] = React.useState<'yukleniyor' | 'hazir' | 'hata'>('yukleniyor');
   const [gecmis, setGecmis] = React.useState<{ slug: string; zaman: number }[]>([]);
@@ -186,11 +178,7 @@ export const RehberMerkezi: React.FC<{
         İki istek paralel. Kaydedilenler yalnızca giriş yapılmışsa
         isteniyor: ziyaretçi için boş bir sorgu atmanın anlamı yok.
       */
-      const [sayilar, kayitli] = await Promise.all([
-        okunmaSayilari(),
-        ogrenci?.id ? kaydedilenRehberler(ogrenci.id).catch(() => []) : Promise.resolve([]),
-      ]);
-      setOkunma(sayilar);
+      const kayitli = ogrenci?.id ? await kaydedilenRehberler(ogrenci.id) : [];
       setKayitlilar(new Set(kayitli));
       setVeriDurumu('hazir');
     } catch {
@@ -296,21 +284,6 @@ export const RehberMerkezi: React.FC<{
     [gecmis, ogrenciRehberleri]
   );
 
-  const populer = React.useMemo(
-    () =>
-      okunmaVerisiYeterli(okunma)
-        ? (enCokOkunanlar(ogrenciRehberleri, okunma, 3) as Rehber[])
-        : [],
-    [okunma, ogrenciRehberleri]
-  );
-
-  const yeniler = React.useMemo(
-    () => yeniEklenenler(ogrenciRehberleri, 3) as Rehber[],
-    [ogrenciRehberleri]
-  );
-
-  /* --------------------------------------------------------------- sekmeler */
-
   const sekmeSec = (id: Sekme) => {
     setSekmeyeDokunuldu(true);
     setSekme(id);
@@ -366,6 +339,56 @@ export const RehberMerkezi: React.FC<{
 
   /* Şeritte seçili görünen konu: arama varken ya da "uygun"dayken hiçbiri. */
   const seritSecili = terim || sekme === 'uygun' || sekme === 'tumu' ? '' : (sekme as string);
+
+  /*
+    BÖLÜM SIRASI VE BAŞLIKLARI — onaylanan tasarım
+
+    Konu sekmeleri rehber sayısına göre diziliyor; bölümler ise okurun
+    yolculuğuna göre: önce başvuruya hazırlık, sonra burs, sonra staj
+    süreci. Öne çıkan rehber çoğunlukla staj konusunda olduğu için staj
+    bölümü hemen altına gelip aynı konuyu tekrarlamıyor. Başlıklar konu
+    adı değil, okurun yapacağı iş ("Başvuruya hazırlan"); konu adı
+    sekmede ve "Tümünü gör" etiketinde duruyor.
+  */
+  const KONU_BOLUMU_SIRASI = ['cv', 'burs', 'staj', 'yurtdisi', 'universite', 'yurt', 'kariyer'];
+  const KONU_BOLUMU_BASLIGI: Record<string, string> = {
+    cv: 'Başvuruya hazırlan',
+    burs: 'Burs ve KYK',
+    staj: 'Staj sürecinde',
+    yurtdisi: 'Yurtdışına açıl',
+    universite: 'Üniversite hayatı',
+    yurt: 'Yurt ve barınma',
+    kariyer: 'İlk iş ve kariyer',
+  };
+  const KONU_BOLUMU_SATIRI = 3;
+  const konuBolumleri = React.useMemo(() => {
+    const oneCikanSlug = seciliOlanlar[0]?.slug;
+    const sira = (id: string) => {
+      const i = KONU_BOLUMU_SIRASI.indexOf(id);
+      return i === -1 ? KONU_BOLUMU_SIRASI.length : i;
+    };
+    return [...seritKonulari]
+      .sort((a, b) => sira(a.id) - sira(b.id))
+      .map((k) => {
+        const hepsi = ogrenciRehberleri.filter((r) => r.konu === k.id && r.slug !== oneCikanSlug);
+        return {
+          id: k.id,
+          etiket: k.etiket,
+          baslik: KONU_BOLUMU_BASLIGI[k.id] ?? k.etiket,
+          toplam: k.adet,
+          rehberler: hepsi.slice(0, KONU_BOLUMU_SATIRI),
+          fazlasiVar: k.adet > KONU_BOLUMU_SATIRI,
+        };
+      })
+      .filter((b) => b.rehberler.length > 0);
+  }, [seritKonulari, ogrenciRehberleri, seciliOlanlar]);
+
+  /* "Tümünü gör": konunun sekmesi açılıyor ve göz sekmelere dönüyor. */
+  const sekmelerRef = React.useRef<HTMLDivElement>(null);
+  const tumunuGor = (id: Sekme) => {
+    sekmeSec(id);
+    sekmelerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const aktifSuzgecler = [
     terim ? `Arama: ${arama.trim()}` : '',
@@ -435,25 +458,19 @@ export const RehberMerkezi: React.FC<{
             ekranda (`lg:not-sr-only`) başlık eskisi gibi görünüyor.
           */}
           {/*
-            ONAYLANAN TASARIM: SAYFA ADI + NİYET CÜMLESİ
+            SAYFA BAŞLIĞI GÖRSELDEN KALKTI, METİNDEN KALKMADI
 
-            Başlık telefonda `sr-only` idi. Onaylanan tasarımda sayfanın
-            adı ("Rehber") ve ne işe yaradığı ("Bir sonraki adımın için.")
-            telefonda da okunuyor: alt menüden gelen kişi nereye geldiğini
-            görüyor.
+            "Rehber / Bir sonraki adımın için." başlığı kaldırıldı: sayfanın
+            adı zaten alt menüde (telefonda) ve üst gezinmede (geniş ekranda)
+            seçili sekme olarak yazıyor; aynı adı sayfanın tepesinde bir kez
+            daha büyük puntoyla göstermek konu sekmelerini ve öne çıkan
+            rehberi aşağı itiyordu.
 
-            Arama kelimesi kaybolmuyor — `h1` hâlâ "Öğrenci rehberleri"
-            diyor, ikinci satır onun altında ikinci derece metin.
+            `h1` DOM'da `sr-only` olarak duruyor ve ön render edilen başlıkla
+            aynı cümleyi söylüyor — arama motoru ve ekran okuyucu için sayfanın
+            başlığı değişmedi.
           */}
-          <div className="min-w-0 space-y-1">
-            <h1 className="min-w-0 [font-size:clamp(1.75rem,8vw,2.25rem)] font-black leading-[1.1] tracking-tight text-gray-950 break-words lg:[font-size:clamp(1.5rem,2.4vw,2.5rem)]">
-              Rehber
-            </h1>
-            <p className="text-[15px] font-semibold text-gray-500 sm:text-base">
-              Bir sonraki adımın için.
-            </p>
-            <p className="sr-only">Öğrenci rehberleri, tek listede.</p>
-          </div>
+          <h1 className="sr-only">Öğrenci rehberleri, tek listede.</h1>
 
           {/*
             TELEFONDA ARAMA VE SÜZGEÇ ÜST ÇUBUKTA
@@ -535,7 +552,15 @@ export const RehberMerkezi: React.FC<{
 
         {/* --------------------------------------------------- orta: liste */}
         <section aria-label="Rehberler" className="min-w-0 space-y-4 lg:col-span-6">
-          <div className={LISTE_BASLIGI}>
+          {/*
+            LİSTE BAŞLIĞI TELEFONDA YALNIZ EKRAN OKUYUCUYA
+
+            Onaylanan düzende başlığın altında doğrudan konu sekmeleri
+            başlıyor. "TÜM REHBERLER (71)" satırı geniş ekranda duruyor;
+            telefonda `sr-only` — listenin neyin listesi olduğu ve kaç rehber
+            olduğu ekran okuyucuya söylenmeye devam ediyor.
+          */}
+          <div className={`${LISTE_BASLIGI} max-sm:sr-only`}>
             <h2 className={LISTE_BASLIGI_YAZISI}>
               {aktifSuzgecler.length ? 'Filtrelenen rehberler' : 'Tüm rehberler'} ({sonuclar.length}
               )
@@ -545,39 +570,19 @@ export const RehberMerkezi: React.FC<{
             </span>
           </div>
 
-          {/*
-            KONU ŞERİDİ — KEŞFET'TEKİ ŞEHİR ŞERİDİNİN YERİNDE
-
-            Konu süzgeci yalnızca bir açılır menüydü; kapalıyken hangi
-            konuların olduğunu göstermiyordu. Şerit yedi konuyu ve her
-            birindeki yazı sayısını tek bakışta veriyor. Menü kaldırılmadı,
-            filtre panelinde duruyor ve aynı durumu paylaşıyor.
-          */}
-          <KonuSeridi
-            konular={seritKonulari}
-            secili={seritSecili}
-            toplam={ogrenciRehberleri.length}
-            onSec={(id) => sekmeSec(id as Sekme)}
-            onTumu={() => sekmeSec('tumu')}
-          />
-
-          {/*
-            AÇIKLAMA SATIRI KALDIRILDI
-
-            "Eğitim bilgilerine göre senin için öne çıkardık." satırı
-            şeritle "Sana özel seçilenler" başlığı arasında duruyordu ve
-            aynı şeyi iki kez söylüyordu: başlık zaten "sana özel" diyor.
-            Negatif bir üst boşlukla (`-mt-3`) yukarı çekiliyordu, yani
-            sütunun ritmiyle de kavgalıydı.
-
-            KİŞİSELLEŞTİRME KALKMADI: `kisisel` bayrağı duruyor ve başlığı
-            hâlâ o seçiyor ("Sana özel seçilenler" / "Öne çıkan
-            rehberler"); sıralama da değişmedi. Kalkan yalnız cümle.
-          */}
+          <div ref={sekmelerRef} className="scroll-mt-20">
+            <RehberKonuSekmeleri
+              konular={seritKonulari}
+              secili={seritSecili}
+              toplam={ogrenciRehberleri.length}
+              onSec={(id) => sekmeSec(id as Sekme)}
+              onTumu={() => sekmeSec('tumu')}
+            />
+          </div>
 
         {veriDurumu === 'hata' && (
           <p className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs text-amber-900">
-            Kaydettiklerin ve okunma sayıları yüklenemedi. Rehberler açılıyor.
+            Kaydettiklerin yüklenemedi. Rehberler açılıyor.
             <button
               type="button"
               onClick={() => void veriYukle()}
@@ -588,30 +593,12 @@ export const RehberMerkezi: React.FC<{
           </p>
         )}
 
-        {/*
-          KİŞİLER, REHBER SONUÇLARININ ÜSTÜNDE
-
-          Aynı kutu kişi de arıyor. Mantık kopyalanmadı: geciktirme, üç
-          harf sınırı ve `sosyalKullaniciAra` çağrısı yalnız
-          `KullaniciAramaSonuclari` içinde; burada yalnız iki kapı var.
-          Oturum yoksa parça DOM'a hiç girmiyor — RPC zaten ziyaretçiye
-          satır vermiyor ve boş bir "Kişiler" bölümü, ziyaretçiye
-          aramanın çalışmadığını düşündürürdü. `gomuluBaslik` ile parça
-          eşleşme yokken de hiç çizilmiyor: "eşleşen profil yok" satırı
-          rehber arayan kullanıcı için gürültü olurdu.
-
-          `fallback={null}`: parça yüklenirken iskelet çizilmiyor çünkü
-          parçanın kendisi de üç harfin altında ya da eşleşme yokken
-          hiçbir şey çizmiyor; yükleme anında boş bir kutu göstermek,
-          sonra kaldırmak sıçrama yaratırdı.
-        */}
         {ogrenci && terim ? (
           <React.Suspense fallback={null}>
             <KullaniciAramaSonuclari sorgu={arama} onNavigate={onNavigate} gomuluBaslik="Kişiler" />
           </React.Suspense>
         ) : null}
 
-        {/* ================================================== içerikler */}
         {terim && aramaSonuclari.toplam > 0 ? (
           <RehberSonuclari
             sonuclar={aramaSonuclari}
@@ -642,104 +629,52 @@ export const RehberMerkezi: React.FC<{
             </button>
           </section>
         ) : suzuluyor ? (
-          <Bolum
-            baslik={terim ? 'Arama sonuçları' : konuEtiketi(sekme as KonuId)}
-            sag={
-              <span className="flex items-center gap-3">
-                <span className="text-sm text-gray-600">{sonuclar.length} yazı</span>
-                {KonuSecici}
-              </span>
-            }
-          >
-            <RehberIzgarasi>
-              {sonuclar.map((r) => (
-                <RehberKarti key={r.slug} {...kartOzellikleri(r)} />
-              ))}
-            </RehberIzgarasi>
-          </Bolum>
+          <RehberBolumu baslik={terim ? 'Arama sonuçları' : konuEtiketi(sekme as KonuId)}>
+            {sonuclar.map((r) => (
+              <RehberSatiri key={r.slug} {...kartOzellikleri(r)} />
+            ))}
+          </RehberBolumu>
         ) : (
           <>
-            <Bolum baslik={kisisel ? 'Sana özel seçilenler' : 'Öne çıkan rehberler'}>
-              <RehberIzgarasi>
-                {seciliOlanlar.map((r) => (
-                  <RehberKarti key={r.slug} {...kartOzellikleri(r)} />
-                ))}
-              </RehberIzgarasi>
-            </Bolum>
+            {/*
+              ÖNE ÇIKAN REHBER
 
-            {/* Yalnızca gerçekten okuma geçmişi olana gösteriliyor. */}
+              Profili olan öğrencide ona göre sıralanmış listenin ilki,
+              diğerlerinde editörün öne çıkardığı ilk rehber.
+            */}
+            {seciliOlanlar[0] && <OneCikanRehberKarti {...kartOzellikleri(seciliOlanlar[0])} />}
+
             {devamEdilecekler.length > 0 && (
-              <Bolum baslik="Kaldığın yerden devam et">
-                <RehberIzgarasi>
-                  {devamEdilecekler.map((r) => (
-                    <RehberKarti key={r.slug} {...kartOzellikleri(r)} />
-                  ))}
-                </RehberIzgarasi>
-              </Bolum>
+              <RehberBolumu baslik="Kaldığın yerden devam et">
+                {devamEdilecekler.map((r) => (
+                  <RehberSatiri key={r.slug} {...kartOzellikleri(r)} />
+                ))}
+              </RehberBolumu>
             )}
 
             {/*
-              Okunma sayıları gerçek: uydurma bir popülerlik sıralaması
-              göstermektense bölüm hiç çizilmiyor. Sayım yüklenirken
-              iskelet duruyor.
+              KONU BÖLÜMLERİ
+
+              Sekmelerle aynı sırada (en çok rehberi olan konu önce). Her
+              bölümde ilk üç rehber; daha fazlası varsa "Tümünü gör" o
+              konunun sekmesini açıp sekmelere kaydırıyor. Öne çıkan rehber
+              kendi konusunda ikinci kez listelenmiyor.
             */}
-            {veriDurumu === 'yukleniyor' ? (
-              <Bolum baslik="En çok okunanlar">
-                <RehberIzgarasi>
-                  <RehberKartiIskeleti />
-                  <RehberKartiIskeleti />
-                  <RehberKartiIskeleti />
-                </RehberIzgarasi>
-              </Bolum>
-            ) : (
-              populer.length > 0 && (
-                <Bolum baslik="En çok okunanlar">
-                  <RehberIzgarasi>
-                    {populer.map((r) => (
-                      <RehberKarti key={r.slug} {...kartOzellikleri(r)} />
-                    ))}
-                  </RehberIzgarasi>
-                </Bolum>
-              )
-            )}
-
-            {yeniler.length > 0 && (
-              <Bolum baslik="Yeni eklenenler">
-                <RehberIzgarasi>
-                  {yeniler.map((r) => (
-                    <RehberKarti key={r.slug} {...kartOzellikleri(r)} />
-                  ))}
-                </RehberIzgarasi>
-              </Bolum>
-            )}
-
-            <Bolum
-              baslik="Tüm rehberler"
-              sag={
-                <span className="flex items-center gap-3">
-                  <span className="text-sm text-gray-600">{sonuclar.length} yazı</span>
-                  {KonuSecici}
-                </span>
-              }
-            >
-              <RehberIzgarasi>
-                {sonuclar.map((r) => (
-                  <RehberKarti key={r.slug} {...kartOzellikleri(r)} />
+            {konuBolumleri.map((b) => (
+              <RehberBolumu
+                key={b.id}
+                baslik={b.baslik}
+                onTumunuGor={b.fazlasiVar ? () => tumunuGor(b.id as Sekme) : undefined}
+                tumunuGorEtiketi={`${b.etiket}: tümünü gör (${b.toplam} rehber)`}
+              >
+                {b.rehberler.map((r) => (
+                  <RehberSatiri key={r.slug} {...kartOzellikleri(r)} />
                 ))}
-              </RehberIzgarasi>
-            </Bolum>
+              </RehberBolumu>
+            ))}
           </>
         )}
 
-          {/*
-            YOLCULUK VE DİZİN BLOKLARI LİSTENİN ALTINA İNDİ
-
-            İkisi de sayfanın tepesindeydi ve masaüstünde kaydırmadan tek
-            bir rehber BAŞLIĞI görünmüyordu — bu dosyanın kendi notu da
-            aynı sorunu anlatıyor. Bloklar silinmedi: rehber listesi ilk
-            ekrana çıktıktan sonra, "başka nereye bakayım" sorusunun
-            geldiği yerde duruyorlar.
-          */}
           <StajYollari onNavigate={onNavigate} />
 
           <YolHaritasi onNavigate={onNavigate} ogrenci={ogrenci} />
