@@ -1002,11 +1002,13 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   const sayiIcinYukle = donukAnahtar !== null && donukSayi === null;
   useEffect(() => {
     if (!hasMoreCountriesPage) return;
-    if (!sayiIcinYukle && (!yurtdisiSecili || countrySelection !== 'all')) return;
+    /* Kaydettiklerim de kataloğun tamamını istiyor: kayıtlı ilan ilk sayfada olmayabilir. */
+    const kayitlilarAcik = subTab === 'kaydettiklerim';
+    if (!sayiIcinYukle && !kayitlilarAcik && (!yurtdisiSecili || countrySelection !== 'all')) return;
     if (yurtdisiIstenenUzunluk.current === allListings.length) return;
     yurtdisiIstenenUzunluk.current = allListings.length;
     onLoadMoreCountriesPage?.();
-  }, [yurtdisiSecili, sayiIcinYukle, countrySelection, hasMoreCountriesPage, allListings.length, onLoadMoreCountriesPage]);
+  }, [yurtdisiSecili, sayiIcinYukle, subTab, countrySelection, hasMoreCountriesPage, allListings.length, onLoadMoreCountriesPage]);
 
   const gosterilecekToplam = gosterilecekIlanSayisi({
     catalogTotal,
@@ -1828,6 +1830,29 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             bir tık uzağa taşıdık. Süzgeç panelindeki şirket listesi de
             çalışmaya devam ediyor, ikisi aynı seçimi paylaşıyor.
           */}
+          {/*
+            KAYDETTİKLERİM AÇIKKEN GÖRÜNÜR ÇIKIŞ
+
+            Kategori çipleri kalktığı için bu görünüm profildeki
+            "Kaydedilenler" kutusundan açılıyor ve başka hiçbir yerde
+            yazmıyordu; kullanıcı listenin neden daraldığını göremez ve
+            geri dönemezdi.
+          */}
+          {subTab === 'kaydettiklerim' && (
+            <div className="-mx-4 flex items-center justify-between gap-3 border-b border-gray-200 bg-blue-50 px-4 py-2.5 sm:mx-0 sm:rounded-2xl sm:border">
+              <p className="text-sm font-bold text-blue-900">
+                Kaydettiğin ilanlar
+                {hasMoreCountriesPage ? '' : ` · ${filteredListings.length}`}
+              </p>
+              <button
+                type="button"
+                onClick={() => onSubTabChange?.('all')}
+                className="cursor-pointer rounded-lg px-2.5 py-1.5 text-sm font-bold text-blue-700 hover:bg-blue-100"
+              >
+                Tüm ilanlara dön
+              </button>
+            </div>
+          )}
           <SirketSeridi
             sirketler={seritSirketleri}
             secili={selectedCompanies}

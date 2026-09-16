@@ -2040,7 +2040,16 @@ export default function App() {
                     Kaydedilen sayısı ilan listesindeki "Kaydettiklerim"
                     kategorisini açıyor: sayının gittiği yerde aynı sayı
                     duruyor.
+
+                    ÖNCE ANA SAYFAYA DÖNÜLÜYOR: kutu `/cv` üzerinde ve orada
+                    yalnız sekme durumunu değiştirmek hiçbir şey yapmıyordu —
+                    rota `/cv` kaldığı için ekran değişmiyordu (kullanıcı
+                    bildirdi, 17 Eylül 2026). Başvurular kutusuyla aynı kural.
+                    Ülke `all`: kayıtlı ilan başka bir ülkede olabilir ve
+                    sayıdaki ilanların hepsi listede görünmeli.
                   */
+                  if (temizYol !== '/') navigate('/');
+                  if (globalListings.country !== 'all') globalListings.setCountry('all');
                   setActiveTab('internships');
                   setActiveSubTab('kaydettiklerim');
                 }}
