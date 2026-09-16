@@ -59,6 +59,7 @@ import { STAJ_PROGRAMLARI } from '../data/stajProgramlari';
 import { dizini, uygunIsverenler } from '../lib/isveren-dizini.mjs';
 import { useIsverenDizini } from '../lib/isveren-olcum';
 import { SirketSeridi, type IlanBolgesi } from './SirketSeridi';
+import { donukKure, kureDokunusu, kureSayisi } from '../lib/kure-donusu.mjs';
 import { ILAN_KAYNAGI_PARCALI } from '../lib/urun-metni';
 import { ListingCountrySelector } from './ListingCountrySelector';
 import { gosterilecekIlanSayisi } from '../lib/ilan-sayisi.mjs';
@@ -945,13 +946,67 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     Her yeni sayfa geldiğinde bir sonraki isteniyor — aynı anda tek istek
     (son istenen uzunluk tutuluyor), sayfa bitince duruyor.
   */
+  /*
+    KÜRE DÖNÜŞÜ — FİLTREDEN AYRI DURUM
+
+    Seçili küreye tekrar dokunuş filtreyi değiştirmiyor, yalnız küreyi
+    çeviriyor (kurallar lib/kure-donusu.mjs). Durum açıldığı andaki filtre
+    imzasıyla saklanıyor; filtre değişince imza tutmuyor ve küre ön yüzüne
+    dönüyor.
+  */
+  const filtreImzasi = JSON.stringify([kanonikFiltreler, yurtdisiSecili, subTab, selectedCity, minMatchScore]);
+  const [kureDurumu, setKureDurumu] = useState<{ anahtar: string; imza: string } | null>(null);
+  const donukAnahtar = donukKure(kureDurumu, filtreImzasi);
+  const kureCevir = (anahtar: string) =>
+    setKureDurumu((durum) => kureDokunusu(durum, { anahtar, secili: true, imza: filtreImzasi }).durum);
+
+  /*
+    DÖNEN KÜRENİN SAYISI
+
+    Daraltma yoksa sunucu toplamı kesin. Yurtdışında sunucunun ülke
+    dağılımı (`facets.countries`) kullanılıyor: TR dışındaki ülkelerin
+    toplamı. Ülkesi boş ilanlar o dağılımda yok, yani Türkiye ya da
+    Yurtdışı diye varsayılmıyor. Şirket küresinde ve daraltma varken sayı
+    ancak bütün sayfalar yüklenince kesin; o sırada "…".
+  */
+  const tumuYuklendi = !hasMoreCountriesPage;
+  const digerDaraltma = acikSuzgecSayisi > 0 || searchQuery.trim().length > 0 || subTab !== 'all';
+  const donukSayi = (() => {
+    if (!donukAnahtar) return null;
+    const suzulmusSirketler = filteredListings.map((x) => x.listing.companyName?.trim() ?? '');
+    if (donukAnahtar.startsWith('sirket:')) {
+      return kureSayisi({
+        sirketAdi: donukAnahtar.slice('sirket:'.length),
+        daraltmaVar: true,
+        catalogTotal,
+        tumuYuklendi,
+        suzulmusSirketler,
+      });
+    }
+    if (donukAnahtar === 'bolge:yurtdisi') {
+      const yurtdisiToplami = countryFacets
+        .filter((f) => f.code !== 'TR')
+        .reduce((toplam, f) => toplam + f.count, 0);
+      return kureSayisi({
+        daraltmaVar: digerDaraltma || countrySelection !== 'all',
+        catalogTotal: yurtdisiToplami,
+        tumuYuklendi,
+        suzulmusSirketler,
+      });
+    }
+    return kureSayisi({ daraltmaVar, catalogTotal, tumuYuklendi, suzulmusSirketler });
+  })();
+
   const yurtdisiIstenenUzunluk = useRef(-1);
+  /* Dönen kürenin sayısı bilinmiyorsa da kalan sayfalar yükleniyor. */
+  const sayiIcinYukle = donukAnahtar !== null && donukSayi === null;
   useEffect(() => {
-    if (!yurtdisiSecili || countrySelection !== 'all' || !hasMoreCountriesPage) return;
+    if (!hasMoreCountriesPage) return;
+    if (!sayiIcinYukle && (!yurtdisiSecili || countrySelection !== 'all')) return;
     if (yurtdisiIstenenUzunluk.current === allListings.length) return;
     yurtdisiIstenenUzunluk.current = allListings.length;
     onLoadMoreCountriesPage?.();
-  }, [yurtdisiSecili, countrySelection, hasMoreCountriesPage, allListings.length, onLoadMoreCountriesPage]);
+  }, [yurtdisiSecili, sayiIcinYukle, countrySelection, hasMoreCountriesPage, allListings.length, onLoadMoreCountriesPage]);
 
   const gosterilecekToplam = gosterilecekIlanSayisi({
     catalogTotal,
@@ -1775,6 +1830,9 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             onSec={sirketSec}
             bolge={seciliBolge}
             onBolge={bolgeSec}
+            donuk={donukAnahtar}
+            donukSayi={donukSayi}
+            onCevir={kureCevir}
           />
 
           </div>

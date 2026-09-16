@@ -74,6 +74,45 @@ const KureLogosu: React.FC<{ ad: string; logo?: string }> = ({ ad, logo }) => {
   );
 };
 
+/*
+  DÖNEN KÜRE
+
+  Seçili küreye tekrar dokununca küre Y ekseninde 180 derece dönüyor; arka
+  yüzde büyük ilan sayısı ve altında küçük "ilan" yazıyor. Etiket kürenin
+  altında sabit kalıyor. Dönüş filtreyi değiştirmiyor (durum çağıranda,
+  bkz. lib/kure-donusu.mjs).
+
+  350 ms rotateY; `perspective` dış kapta, `backface-visibility` iki yüzde.
+  Hareket azaltma tercihinde geçiş yok, yüz anında değişiyor.
+*/
+const YUZ = 'absolute inset-0 flex items-center justify-center rounded-full [backface-visibility:hidden]';
+
+function sayiMetni(sayi: number | null): string {
+  return sayi === null ? '…' : sayi.toLocaleString('tr-TR');
+}
+
+const ArkaYuz: React.FC<{ sayi: number | null }> = ({ sayi }) => {
+  const metin = sayiMetni(sayi);
+  return (
+    <span className={`${YUZ} flex-col bg-slate-900 text-white [transform:rotateY(180deg)]`}>
+      <span className={`font-extrabold leading-none tabular-nums ${metin.length > 3 ? 'text-[15px]' : 'text-[19px]'}`}>
+        {metin}
+      </span>
+      <span className="mt-0.5 text-[10px] font-medium leading-none">ilan</span>
+    </span>
+  );
+};
+
+const DonenKap: React.FC<{ donuk: boolean; children: React.ReactNode }> = ({ donuk, children }) => (
+  <span
+    className={`relative block h-full w-full transition-transform duration-[350ms] ease-out [transform-style:preserve-3d] motion-reduce:transition-none ${
+      donuk ? '[transform:rotateY(180deg)]' : ''
+    }`}
+  >
+    {children}
+  </span>
+);
+
 const BOLGELER: Array<{ id: IlanBolgesi; etiket: string; ikon: React.ReactNode }> = [
   { id: 'tumu', etiket: 'Tümü', ikon: <Layers aria-hidden className={IKON} strokeWidth={1.75} /> },
   { id: 'turkiye', etiket: 'Türkiye', ikon: <MapPin aria-hidden className={IKON} strokeWidth={1.75} /> },
@@ -105,7 +144,13 @@ export const SirketSeridi: React.FC<{
   /** Şu an seçili bölge; bir ülke süzgeç panelinden seçildiyse `null`. */
   bolge: IlanBolgesi | null;
   onBolge: (bolge: IlanBolgesi) => void;
-}> = ({ sirketler, secili, toplam, onSec, bolge, onBolge }) => (
+  /** Arka yüzü açık kürenin anahtarı (`bolge:turkiye`, `sirket:FedEx`). */
+  donuk?: string | null;
+  /** Dönük kürenin kesin ilan sayısı; bilinmiyorsa `null` ("…"). */
+  donukSayi?: number | null;
+  /** Seçili küreye tekrar dokunuş: filtre değişmiyor, yalnız küre dönüyor. */
+  onCevir?: (anahtar: string) => void;
+}> = ({ sirketler, secili, toplam, onSec, bolge, onBolge, donuk = null, donukSayi = null, onCevir }) => (
   /*
     Telefonda ekranın iki kenarına yaslı bant; altındaki ince çizgi
     ilanların başladığı yeri gösteriyor. Geniş ekranda sütunun içinde
@@ -120,24 +165,31 @@ export const SirketSeridi: React.FC<{
         {BOLGELER.map((b) => {
           /* "Tümü" bir şirket seçiliyken seçili sayılmıyor: liste daralmış. */
           const aktif = bolge === b.id && (b.id !== 'tumu' || secili.length === 0);
+          const anahtar = `bolge:${b.id}`;
+          const donukMu = aktif && donuk === anahtar;
+          const ad = b.id === 'tumu' ? `Tümü, ${toplam} ilan` : b.etiket;
           return (
             <li key={b.id}>
               <button
                 type="button"
-                onClick={() => onBolge(b.id)}
+                onClick={() => (aktif && onCevir ? onCevir(anahtar) : onBolge(b.id))}
                 aria-pressed={aktif}
-                aria-label={b.id === 'tumu' ? `Tümü, ${toplam} ilan` : b.etiket}
+                aria-label={donukMu ? `${b.etiket}, ${donukSayi === null ? 'ilan sayısı yükleniyor' : `${donukSayi} ilan`}` : ad}
                 className={OGE}
               >
-                <span
-                  aria-hidden
-                  className={`${KURE} flex items-center justify-center rounded-full border-2 transition-colors ${
-                    aktif
-                      ? 'border-slate-900 bg-slate-900 text-white'
-                      : 'border-slate-800 bg-white text-slate-800 hover:bg-slate-50'
-                  }`}
-                >
-                  {b.ikon}
+                <span aria-hidden className={`${KURE} block [perspective:600px]`}>
+                  <DonenKap donuk={donukMu}>
+                    <span
+                      className={`${YUZ} border-2 transition-colors ${
+                        aktif
+                          ? 'border-slate-900 bg-slate-900 text-white'
+                          : 'border-slate-800 bg-white text-slate-800 hover:bg-slate-50'
+                      }`}
+                    >
+                      {b.ikon}
+                    </span>
+                    {aktif && <ArkaYuz sayi={donukSayi} />}
+                  </DonenKap>
                 </span>
                 <span aria-hidden className={etiketSinifi(aktif)}>
                   {b.etiket}
@@ -149,13 +201,19 @@ export const SirketSeridi: React.FC<{
 
         {sirketler.map((s) => {
           const aktif = secili.includes(s.ad);
+          const anahtar = `sirket:${s.ad}`;
+          const donukMu = aktif && donuk === anahtar;
           return (
             <li key={s.ad}>
               <button
                 type="button"
-                onClick={() => onSec(s.ad)}
+                onClick={() => (aktif && onCevir ? onCevir(anahtar) : onSec(s.ad))}
                 aria-pressed={aktif}
-                aria-label={`${s.ad}, ${s.yeni ? 'yeni ilan' : `${s.adet} ilan`}`}
+                aria-label={
+                  donukMu
+                    ? `${s.ad}, ${donukSayi === null ? 'ilan sayısı yükleniyor' : `${donukSayi} ilan`}`
+                    : `${s.ad}, ${s.yeni ? 'yeni ilan' : `${s.adet} ilan`}`
+                }
                 title={s.ad}
                 className={OGE}
               >
@@ -170,8 +228,13 @@ export const SirketSeridi: React.FC<{
                         : '#e5e7eb',
                   }}
                 >
-                  <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white">
-                    <KureLogosu ad={s.ad} logo={s.logo} />
+                  <span className="block h-full w-full [perspective:600px]">
+                    <DonenKap donuk={donukMu}>
+                      <span className={`${YUZ} overflow-hidden bg-white`}>
+                        <KureLogosu ad={s.ad} logo={s.logo} />
+                      </span>
+                      {aktif && <ArkaYuz sayi={donukSayi} />}
+                    </DonenKap>
                   </span>
                 </span>
                 <span aria-hidden className={etiketSinifi(aktif)}>
@@ -183,5 +246,9 @@ export const SirketSeridi: React.FC<{
         })}
       </ul>
     </div>
+    {/* Dönen kürenin sayısı ekran okuyucuya da söyleniyor. */}
+    <span className="sr-only" aria-live="polite">
+      {donuk ? (donukSayi === null ? 'İlan sayısı yükleniyor' : `${donukSayi} ilan`) : ''}
+    </span>
   </nav>
 );
