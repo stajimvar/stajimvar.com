@@ -340,6 +340,17 @@ export const AgimSayfasi: React.FC<Props> = ({
       {/* Sağ küme: arama ve zil yan yana. */}
       <span aria-hidden className="flex-1" />
 
+
+      <button
+        type="button"
+        onClick={() => onNavigate('/agim/baglantilar')}
+        aria-label="Bildirimler"
+        className={IKON}
+      >
+        <Bell aria-hidden className="h-6 w-6" />
+      </button>
+
+      {/* Arama en sağda: sitenin üst çubuğuyla aynı sıra (zil, sonra arama). */}
       <button
         type="button"
         onClick={() => {
@@ -355,15 +366,6 @@ export const AgimSayfasi: React.FC<Props> = ({
         ) : (
           <Search aria-hidden className="h-6 w-6" />
         )}
-      </button>
-
-      <button
-        type="button"
-        onClick={() => onNavigate('/agim/baglantilar')}
-        aria-label="Bildirimler"
-        className={IKON}
-      >
-        <Bell aria-hidden className="h-6 w-6" />
       </button>
       </div>
     </header>
