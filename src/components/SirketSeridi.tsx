@@ -174,7 +174,12 @@ export const SirketSeridi: React.FC<{
           const aktif = bolge === b.id && (b.id !== 'tumu' || secili.length === 0);
           const anahtar = `bolge:${b.id}`;
           const donukMu = aktif && donuk === anahtar;
-          const ad = b.id === 'tumu' ? `Tüm ilanlar, ${toplam} ilan` : b.tamAd;
+          /*
+            Sayı yalnız "Tüm ilanlar" seçiliyken yazılıyor: `toplam` o anki
+            görünümün toplamı; Türkiye görünümündeyken "Tüm ilanlar, 109 ilan"
+            demek tüm kataloğu olduğundan az gösteriyordu.
+          */
+          const ad = b.id === 'tumu' && bolge === 'tumu' ? `Tüm ilanlar, ${toplam} ilan` : b.tamAd;
           return (
             <li key={b.id}>
               <button
