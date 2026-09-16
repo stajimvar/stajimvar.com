@@ -56,7 +56,7 @@ test('ilan kartında tam genişlikte düğme kalmadı', () => {
     DURUYOR — fırsat kartı ve başka yüzeyler onu kullanmaya devam ediyor.
   */
   assert.doesNotMatch(ILAN, /from '\.\.\/lib\/kart-cta'/);
-  assert.match(ILAN, /İlanı incele/);
+  assert.match(ILAN, />\s*İncele\s*</);
 });
 
 /*
@@ -133,6 +133,6 @@ test('İLAN KARTINDA TEK EYLEM VAR ve o birincil', () => {
     bilgisini atlayarak dış siteye yolluyordu. Başvuru düğmesi o
     sayfada duruyor; kart oraya götürüyor.
   */
-  assert.match(ILAN, /İlanı incele/);
+  assert.match(ILAN, />\s*İncele\s*</);
   assert.doesNotMatch(ILAN, /CTA_BIRINCIL/, 'kartta tam genişlikte düğme kalmadı');
 });

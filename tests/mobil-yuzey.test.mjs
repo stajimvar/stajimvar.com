@@ -75,8 +75,13 @@ test('beş ekran da ortak kabuğu kullanıyor, kendi kutusunu çizmiyor', () => 
     yan yana gelip 2 piksel olurdu.
   */
   const ilanKarti = oku('src/components/InternshipCard.tsx');
-  assert.match(ilanKarti, /rounded-2xl border border-gray-200 bg-white \$\{YUZEY\.ic\}/, 'ilan kartı kendi çerçevesini çiziyor');
-  assert.match(ilanKarti, /YUZEY\.ic/, 'iç dolgu yine ortak belirteçten');
+  /*
+    ÜÇ BÖLÜMLÜ KART (onaylanan tasarım): ince açık gri çerçeve, hafif
+    yuvarlak köşe, gölge yok. İç dolgu dar ekranda kademeli daralıyor
+    (360 → 390 → 430), bu yüzden ortak `YUZEY.ic` yerine kartın kendisinde.
+  */
+  assert.match(ilanKarti, /rounded-xl border border-gray-200 bg-white px-3 py-3/, 'ilan kartı kendi çerçevesini çiziyor');
+  assert.doesNotMatch(ilanKarti, /shadow-(md|lg|xl)/, 'ağır gölge yok');
 
   const rehber = oku('src/components/RehberKartlari.tsx');
   assert.match(rehber, /grid-cols-2 gap-px bg-gray-200 sm:gap-4 sm:bg-transparent/);
@@ -98,7 +103,8 @@ test('liste kapları kenara yaslı, kutular değil', () => {
     listeden sonra gelen kontroller — kenara yaslanınca listenin devamı
     gibi okunurlardı.
   */
-  assert.match(ilanlar, /<div className=\{`flex flex-col \$\{YUZEY\.kap\}`\}>/);
+  /* Kartlar hâlâ kenara yaslı; aralarında 1 px çizgi değil küçük boşluk var. */
+  assert.ok(ilanlar.includes('<div className={`flex flex-col gap-1.5 sm:gap-3 ${YUZEY.kap}`}>'));
   assert.match(ilanlar, /hasMoreCountriesPage && <button/);
   assert.match(firsatlar, /grid grid-cols-1 gap-0 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 \$\{YUZEY\.kap\} sm:mx-0/);
 });
@@ -160,9 +166,14 @@ test('masaüstü düzeni korunuyor: her yüzey değeri sm ile geri dönüyor', (
     assert.ok(tokens.includes(parca), `belirteçte sm: dalı eksik: ${parca}`);
   }
   const ilan = oku('src/components/InternshipCard.tsx');
-  /* Izgara: telefonda başlık üç sütun, sm üstünde eskisi gibi ikinci sütundan. */
-  assert.match(ilan, /col-span-3 col-start-1 row-start-2 min-w-0 sm:col-span-2 sm:col-start-2/);
-  assert.match(ilan, /col-start-1 row-start-1 shrink-0 sm:row-span-4/);
+  /*
+    Kart her genişlikte üç bölüm yan yana: logo (`shrink-0`), bilgiler
+    (`min-w-0 flex-1`, uzun ad burada sarıyor), eylemler (`shrink-0`,
+    örtünün üstünde). Bilgi logonun altına, "İncele" ayrı satıra inmiyor.
+  */
+  assert.match(ilan, /<div className="shrink-0" title=\{listing\.companyName\}>/);
+  assert.match(ilan, /<div className="flex min-w-0 flex-1 flex-col justify-center">/);
+  assert.match(ilan, /<div className="relative z-10 flex shrink-0 flex-col items-end justify-between gap-3">/);
 });
 
 test('marka 23 piksel: telefondaki 20 pikselin %15 üstü', () => {

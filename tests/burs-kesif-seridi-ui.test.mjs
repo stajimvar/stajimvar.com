@@ -20,12 +20,21 @@ test('ortak keşif dairesi şirket ölçüsünü ve yatay kaydırmayı tek yerde
   assert.match(oku('src/ui/tokens.ts'), /ic: 'relative overflow-x-auto/);
 });
 
-test('şirket şeridi ortak bileşeni varsayılan görünümle kullanıyor', () => {
+test('ilan küre şeridi kendi kürelerini çiziyor, ortak bileşeni değiştirmiyor', () => {
+  /*
+    Onaylanan İlanlar tasarımında şerit Tümü → Türkiye → Yurtdışı →
+    Uzaktan → şirketler; küreler büyük ve etiket tek satır. Ortak
+    `KesifDairesi` fırsat şeritlerinde kullanılıyor; onu değiştirmek
+    Fırsatlar sayfasını da değiştirirdi. Bu yüzden ilan şeridi kendi
+    kürelerini çiziyor ve ortak bileşen olduğu gibi kalıyor.
+  */
   const sirket = oku('src/components/SirketSeridi.tsx');
-  assert.match(sirket, /from ['"]\.\/KesifSeridi['"]/);
-  assert.match(sirket, /<KesifSeridi/);
-  assert.match(sirket, /<KesifDairesi/);
-  assert.doesNotMatch(sirket, /seciliRenk=/);
+  assert.doesNotMatch(sirket, /from ['"]\.\/KesifSeridi['"]/);
+  for (const etiket of ['Tümü', 'Türkiye', 'Yurtdışı', 'Uzaktan']) {
+    assert.ok(sirket.includes(`etiket: '${etiket}'`), `${etiket} küresi yok`);
+  }
+  const ortak = oku('src/components/KesifSeridi.tsx');
+  assert.match(ortak, /seciliRenk = '#111827'/, 'ortak küre bileşeni değişmemeli');
 });
 
 test('burs şeridi sekiz kategoriyi mavi seçim halkasıyla çiziyor', () => {

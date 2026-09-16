@@ -24,7 +24,6 @@ import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { ILAN_KAYNAGI } from '../lib/urun-metni';
 import { tarihMetni } from '../lib/tarih.mjs';
 import { YUZEY } from '../ui/tokens';
-import { sirketGorseli } from '../data/sirket-gorselleri';
 /*
   Staj türü kararı ayrı dosyada: kart ve detay AYNI kuralı kullanıyor
   ve kural React ağacı kurmadan sınanabiliyor.
@@ -176,443 +175,143 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
   /* Ham ISO yerine "6 Eylül 2026"; değer yoksa satır hiç basılmıyor. */
   const sonBasvuru = tarihMetni(listing.applicationDeadline);
 
-  /*
-    KART GÖRSELİ ŞİRKETE BAĞLI
 
-    Aynı şirketin bütün ilanları aynı görseli alıyor: eşleme slug ile
-    yapılıyor, ilan kimliğiyle değil. Eşlemesi olmayan şirkette blok
-    hiç çizilmiyor.
+  /*
+    İLAN KARTI — ÜÇ BÖLÜM YAN YANA (onaylanan tasarım)
+
+      SOL   büyük şirket logosu
+      ORTA  şirket adı · pozisyon · konum/çalışma biçimi · kaynak
+      SAĞ   üstte kaydet, altta "İncele"
+
+    Bölümler çizgiyle değil hizalama ve boşlukla ayrılıyor. Bilgiler
+    logonun altına, "İncele" ayrı bir alt satıra İNMİYOR: uzun pozisyon
+    adı orta bölümün içinde satır atlıyor, logo ve eylemler yerinde kalıyor.
+
+    LOGO BÜYÜK VE HERKESE EŞİT
+    KOBİ ile büyük şirket aynı logo alanını alıyor. Oran korunuyor
+    (`object-contain`, CompanyLogo); logosu olmayan ya da yüklenemeyen
+    şirkette aynı ölçüde pastel zeminli baş harf alanı. Dar ekranda önce
+    boşluklar azalıyor, logo 72 pikselin altına inmiyor — avatara dönmüyor.
+
+    ŞİRKET/OFİS FOTOĞRAFI YOK
+    Kart yalnız logoyu taşıyor.
+
+    TIKLAMA
+    Kartın tamamı pozisyon bağlantısının `after:` örtüsüyle ilana gidiyor.
+    Kaydet ve "İncele" örtünün üstünde (`relative z-10`); "İncele" aynı
+    adrese giden gerçek bir bağlantı — ctrl/orta tuş tarayıcıya kalıyor.
   */
-  const kartGorseli = sirketGorseli(listing.companySlug);
+  const ilanAdresi = `/ilan/${listingSlug(listing)}`;
+  const ilanaGit = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    onViewDetails();
+  };
 
   return (
     <div
       id={`internship-card-${listing.id}`}
-      /*
-        MASAÜSTÜNDE DE TEK SÜTUN
-
-        Kart `lg:flex-row` idi: geniş ekranda sol yarı bilgiye, sağ yarı
-        düğmelere gidiyordu. Ölçüldü: 622 piksellik kartta başlığa kalan yer
-        144 piksel — uzun bir ilan başlığı beş altı satıra sarıyor, kartın
-        boyu 300 pikseli buluyordu.
-
-        Başlık artık tam genişlikte ve en fazla iki satır; düğmeler alta,
-        sağa yaslı tek satıra indi. Aynı bilgi, yarı yükseklik.
-      */
-      className={`group relative flex min-w-0 flex-col gap-3 bg-white transition-all duration-150 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 sm:gap-3.5 ${
-        yuzey
-          ? `rounded-2xl border border-gray-200 bg-white ${YUZEY.ic} hover:border-blue-400`
-          : 'rounded-2xl border border-gray-200 p-3.5 hover:border-blue-500 hover:shadow-xs sm:p-4.5'
+      className={`group relative flex min-w-0 items-stretch gap-3 rounded-xl border border-gray-200 bg-white px-3 py-3 transition-colors hover:border-gray-300 focus-within:ring-2 focus-within:ring-blue-600 min-[390px]:gap-3.5 min-[390px]:px-3.5 min-[430px]:gap-4 min-[430px]:px-4 sm:p-4 ${
+        yuzey ? '' : 'sm:hover:border-blue-400'
       }`}
     >
-      {/*
-        KÜNYE IZGARASI — BAŞLIK TELEFONDA TAM GENİŞLİKTE
-
-        Burası `flex` idi: solda logo sütunu, sağda bütün metin. Bu,
-        başlığın 375 piksellik ekranda logo genişliği kadar (48 + 12 =
-        60 piksel) içeriden başlaması demekti — kartın sol kenarıyla
-        başlığın arasında, altındaki hiçbir şeyin doldurmadığı boş bir
-        sütun kalıyordu.
-
-        Izgara ikisini birden verebiliyor: telefonda başlık üç sütunu
-        birden kaplıyor (yani kartın tam iç genişliğini), `sm:` ve
-        üstünde eskisi gibi ikinci sütundan başlıyor. Logo da aynı
-        şekilde telefonda yalnız ilk satırda, geniş ekranda bütün
-        satırlar boyunca duruyor.
-      */}
-      <div className="grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 sm:items-start sm:gap-x-3.5">
-        {/*
-          Şirket logosu — uyum puanı hesaplanabiliyorsa halkanın içinde.
-
-          Halka yalnızca puan varken çiziliyor. Hesaplanamayan ilanlarda
-          (öğrenci giriş yapmamış ya da ilanda beceri şartı yok) boş bir
-          halka çizmek, olmayan bir ölçümü varmış gibi gösterirdi.
-        */}
-        {/*
-          KAPAK GÖRSELİ — VARSA ÇİZİLİYOR, YOKSA ALAN HİÇ AÇILMIYOR
-
-          Onaylanan tasarımda kartın sağında şirketin kapak görseli var.
-          `companyCover` boşken bu blok HİÇ çizilmiyor: yer tutan gri bir
-          kutu ya da uydurma bir görsel, olmayan bir şeyi varmış gibi
-          gösterirdi. Kart o durumda eskisi gibi tek sütun akıyor.
-
-          Dekoratif: `alt=""` ve `aria-hidden` — ilanın kaynağı, konumu
-          ve doğrulaması metinde yazıyor, görsel bir iddia taşımıyor.
-          Yüklenemezse kendini gizliyor (kırık görsel simgesi kalmasın).
-        */}
-        {kartGorseli && (
-          <div className="relative col-start-3 row-span-3 row-start-2 w-[104px] shrink-0 self-start overflow-hidden rounded-xl border border-gray-200 sm:w-[124px] lg:w-[168px]">
-            <img
-              src={kartGorseli.yol}
-              /*
-                TEMSİLİ GÖRSEL GERÇEK OFİS GİBİ SUNULMUYOR
-
-                Üretilmiş bir sahne; şirketin kendi fotoğrafı değil.
-                Görünen etiket bunu yazıyor, `alt` metni de aynı şeyi
-                ekran okuyucuya söylüyor — ikisi ayrışmasın diye tek
-                kaynaktan.
-              */
-              alt={kartGorseli.tur === 'temsili' ? 'Temsili görsel' : ''}
-              loading="lazy"
-              className="h-[84px] w-full object-cover sm:h-[104px] lg:h-[116px]"
-              onError={(olay) => {
-                olay.currentTarget.parentElement?.parentElement?.classList.add('hidden');
-              }}
-            />
-            {kartGorseli.tur === 'temsili' && (
-              <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-black/55 px-1.5 py-0.5 text-center text-[10px] font-semibold leading-tight text-white">
-                Temsili görsel
-              </span>
-            )}
-          </div>
-        )}
-
-        <div className="col-start-1 row-start-1 shrink-0 sm:row-span-4">
-          {/*
-            Logo HER ZAMAN yuvarlak, halka yalnızca puan varken.
-
-            Önce iki ayrı biçim vardı: puanı olan ilanda yuvarlak, olmayanda
-            kare. Aynı listede iki farklı logo biçimi, sayfayı derli toplu
-            olmaktan çıkarıyordu — üstelik şirket şeridindeki logolar da
-            yuvarlak.
-
-            Yapı tek: sarmalayıcı hep aynı boyutta duruyor, yalnızca zemini
-            değişiyor. Puan yoksa zemin saydam, yani halka görünmüyor ama
-            logo aynı yerde ve aynı boyutta kalıyor — kartlar birbirinden
-            kaymıyor.
-          */}
-          <div
-            /*
-              UYUM HALKASI KALDIRILDI
-
-              Logonun etrafındaki renkli halka ilana göre değişiyordu ve
-              kartı tek tip olmaktan çıkarıyordu; üstelik "bu logo neden
-              yeşil/sarı" sorusunu kartın kendisi yanıtlamıyordu. Uyum
-              puanı ilan sayfasında duruyor.
-            */
-            className="rounded-xl"
-            title={listing.companyName}
-          >
-            <div className="bg-white">
-              {/*
-                TELEFONDA BİR KADEME KÜÇÜK
-
-                46 piksellik logo halkasıyla birlikte 56 piksellik bir
-                hücre yapıyor; yanındaki şirket adı 20 piksel. Kartın
-                ilk satırı, taşıdığı yazının iki buçuk katı yükseklikte
-                kalıyordu. Telefonda 36 piksele iniyor, `sm:` üstünde
-                eski ölçü — orada satırda sektör ve puan da var.
-              */}
-              <ListingLogo
-                name={listing.companyName}
-                logoUrl={listing.companyLogo || undefined}
-                className="!h-12 !w-12 !rounded-lg !text-sm sm:!h-14 sm:!w-14"
-              />
-            </div>
-          </div>
-
-          {/*
-            Sayı halkanın altında, şirket şeridindeki gibi. Halka oranı
-            gösteriyor ama kaç olduğunu söylemiyor; ikisi birlikte tam
-            bilgi veriyor ve yine tek bir yerde duruyor.
-          */}
-          {match.isScorable && (
-            /*
-              Telefonda bu satır GİZLİ: logonun altına inen yüzde, ilk
-              satırın yüksekliğini şirket adının iki katına çıkarıyor ve
-              adın yanında karşılığı olmayan bir boşluk bırakıyordu.
-              Sayı orada kaybolmuyor — şirket adının yanındaki künye
-              şeridine giriyor (aşağıda).
-            */
-            <span
-              className="mt-1 hidden text-center text-[10px] font-bold tabular-nums sm:block"
-              style={{ color: halkaRengi }}
-            >
-              %{match.overallScore}
-            </span>
-          )}
-        </div>
-
-        {/*
-          SATIR 1: KAYDET HEP SAĞ ÜST KÖŞEDE
-
-            Şirket adı, sektör, puan, kaydet düğmesi ve kaynak rozeti tek bir
-            `flex-wrap` satırındaydı. Ad kısayken hepsi yan yana sığıyor, ad
-            uzayınca sarma sırası değişiyordu: kaydet düğmesi kimi kartta
-            rozetin soluna düşüyor, kimi kartta rozet alt satıra kayıyordu.
-            Ölçüldü — "TikTok"ta düğme ortada, "The Magnum Ice Cream
-            Company"de rozet ikinci satırda.
-
-            Artık iki parça var: solda sarabilen künye grubu, sağda
-            sarmayan (`shrink-0`) kaydet düğmesi. Düğmenin yeri şirket adının
-            uzunluğundan bağımsız.
-
-            Kaynak rozeti bu satırdan çıkıp aşağıdaki künye şeridine indi;
-            orası zaten konum ve ücret gibi aynı türden bilgilerin yeri.
-          */}
-          <div className="col-start-2 row-start-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-500">
-            {/*
-              Şirket adı artık kendi tıklama işleyicisini taşımıyor: kartın
-              tamamı zaten aynı ilana gidiyor (aşağıdaki uzatılmış bağlantı).
-              İki ayrı tıklama hedefi üst üste binince biri ötekini yutuyordu.
-            */}
-            <h3 className="font-bold text-gray-900 text-[15px] sm:text-base">
-              {listing.companyName}
-            </h3>
-            {/*
-              Toplanan şirketlerde sektör ve puan bilgisi yok. Boş bir alanı
-              ayraçla göstermek "• • 0" gibi bozuk bir satır üretiyordu;
-              bilinmeyen alanlar artık hiç çizilmiyor.
-            */}
-            {listing.companyIndustry && (
-              <>
-                <span className="text-gray-300">•</span>
-                <span className="truncate">{listing.companyIndustry}</span>
-              </>
-            )}
-
-            {listing.companyRating > 0 && (
-              <>
-                <span className="text-gray-300">•</span>
-                <div className="flex items-center text-amber-500 font-bold">
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 inline mr-1" />
-                  <span>{listing.companyRating}</span>
-                </div>
-              </>
-            )}
-          </div>
-
-            {/*
-              KAYDET: KENDİ IZGARA HÜCRESİ
-
-              `ml-auto` ile sol taraftan itiliyordu ve sarma satırında bu
-              "son öğenin solu" demek, "kartın sağ üstü" değil. Şimdi
-              ızgaranın üçüncü sütununda: solundaki künye ne kadar sararsa
-              sarsın düğme aynı yerde kalıyor. `-mr-1` görsel hizayı kartın
-              kenarına çekiyor, dokunma hedefini küçültmeden.
-            */}
-            {onToggleKayit && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleKayit();
-                }}
-                aria-pressed={girisGerekli ? undefined : kayitli}
-                aria-label={
-                  girisGerekli
-                    ? 'Kaydetmek için giriş yap'
-                    : kayitli
-                      ? 'Kayıtlardan çıkar'
-                      : 'Daha sonra bakmak için kaydet'
-                }
-                title={
-                  girisGerekli
-                    ? 'Kaydetmek için giriş yap'
-                    : kayitli
-                      ? 'Kayıtlardan çıkar'
-                      : 'Daha sonra bakmak için kaydet'
-                }
-                /* `relative z-10`: uzatılmış kart bağlantısının örtüsünün üstünde. */
-              className={`relative z-10 col-start-3 row-start-1 -mr-1 shrink-0 cursor-pointer rounded-lg p-1.5 transition-colors ${
-                  kayitli ? 'text-blue-600 bg-blue-50' : 'text-gray-300 hover:text-blue-600 hover:bg-blue-50'
-                }`}
-              >
-                <Bookmark className={`w-4 h-4 ${kayitli ? 'fill-blue-600' : ''}`} />
-              </button>
-            )}
-
-          {/* Satır 2: ilan başlığı — telefonda kartın tam iç genişliği */}
-          <div className="col-span-3 col-start-1 row-start-2 min-w-0 sm:col-span-2 sm:col-start-2">
-            {/*
-              İki satır sınırı: başlık artık tam genişlikte olduğu için iki
-              satır neredeyse her ilanı alıyor. Sınır olmadan tek bir uzun
-              başlık ızgaradaki bütün kartların boyunu belirliyordu.
-            */}
-            {/*
-              KARTIN TAMAMI TIKLANABİLİR — UZATILMIŞ BAĞLANTI
-
-              Önce ayrı bir "Detaylar" düğmesi vardı ve başlık `onClick`
-              taşıyordu. İkisi de gerçek bir bağlantı değildi: sağ tıkla
-              yeni sekmede açmak, orta tuş, adresi kopyalamak ve bağlantıyı
-              gören arama motoru — hiçbiri çalışmıyordu.
-
-              Şimdi başlık gerçek bir `<a href>` ve `after:absolute
-              after:inset-0` ile kartın tamamına yayılıyor. İç içe `<a>`
-              üretilmiyor: kartta başka bağlantı yok, bağımsız denetimler
-              (kaydet, başvuru) `relative z-10` ile örtünün ÜSTÜNDE duruyor
-              ve kendi işlerini yapmaya devam ediyor.
-
-              Değiştirici tuşlu tıklamalar tarayıcıya bırakılıyor; yalnız
-              düz sol tık SPA gezinmesine çevriliyor.
-            */}
-            <h4 className="text-base sm:text-lg font-bold text-gray-900 leading-snug line-clamp-2">
-              <a
-                href={`/ilan/${listingSlug(listing)}`}
-                onClick={(e) => {
-                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-                  e.preventDefault();
-                  onViewDetails();
-                }}
-                title={listing.title}
-                className="rounded-sm outline-none transition-colors after:absolute after:inset-0 after:content-[''] group-hover:text-blue-600"
-              >
-                {listing.title}
-              </a>
-            </h4>
-            {listing.department && (
-              <p className="text-xs sm:text-sm text-gray-600 font-normal mt-0.5">
-                ({listing.department})
-              </p>
-            )}
-          </div>
-
-          {/*
-            SATIR 3: KONUM SADE METİN
-
-            Konum ve çalışma modeli mavi bir çipti ve kartın en dikkat
-            çeken ikinci öğesiydi — oysa "İstanbul · Hibrit" bir kazanım
-            değil, künye. Rozet ücret, sigorta ve zorunlu staj gibi
-            gerçekten ayırt edici özelliklere kaldı; bunlar sade metne
-            indi ve şerit okunur hâle geldi.
-          */}
-          <p className="col-span-3 col-start-1 row-start-3 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-gray-600 sm:col-span-2 sm:col-start-2">
-            <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-            {/*
-              Ham konum metni "Turkey - Istanbul" gibi gelebiliyor.
-              konumEtiketi ülke önekini atıyor ve ilçeyi iliyle birlikte
-              yazıyor: "Şişli, İstanbul".
-            */}
-            <span className="min-w-0">
-              {konumEtiketi(listing.city)} · {calismaEtiketi(listing.workType)}
-            </span>
-            {/*
-              Ülke yalnız yurt dışı ilanlarda yazılıyor; kararı tek kural
-              dosyası (lib/ulke-rozeti.mjs) veriyor. Konumun hemen yanında
-              duruyor: "Paris" tek başına yurt içi bir ilan gibi okunuyordu.
-            */}
-            <UlkeRozeti countryCode={listing.countryCode} />
-            {/*
-              Süre de künye: takvim ikonlu gri bir çipti, aynı şeridin
-              düz metnine indi.
-            */}
-            {listing.duration?.trim() && (
-              <>
-                <span className="text-gray-300">·</span>
-                <span className="inline-flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-                  {listing.duration}
-                </span>
-              </>
-            )}
-          </p>
-
-          {/*
-            SATIR 4: TEK TİP KÜNYE — YALNIZ KAYNAK
-
-            Burada ilana göre değişen bir rozet yığını vardı: "%N uyum",
-            "Eksik: <beceri>", "Son kontrol: bugün", "dün yayınlandı",
-            süre, ücret, ülke, zorunlu/gönüllü... Kartlar birbirine
-            benzemiyordu; aynı listede kimi kart iki, kimi kart beş çip
-            taşıyor, göz her kartta yeniden yer arıyordu.
-
-            Onaylanan tasarımda kart tek tip: şirket, pozisyon, konum ve
-            KAYNAK. Kaldırılan bilgiler silinmedi — hepsi ilan sayfasında
-            duruyor; doğrulama ve son kontrol de orada, kaynağıyla
-            birlikte. Kaynak çipi kartta kalıyor çünkü her ilanda var ve
-            başvurunun nereye gittiğini söylüyor.
-          */}
-          <div className="col-span-3 col-start-1 row-start-4 flex min-w-0 flex-wrap items-center gap-1.5 text-xs sm:col-span-2 sm:col-start-2">
-            {kariyerSayfasindanIlan ? (
-              <span
-                className="inline-flex items-center gap-1.5 text-gray-600"
-                title="Bu ilan şirketin kendi kariyer sayfasından alındı"
-              >
-                <FileText className="w-4 h-4 text-gray-400" />
-                <span>{ILAN_KAYNAGI.dis.etiket}</span>
-              </span>
-            ) : (
-              <span
-                className="inline-flex items-center gap-1.5 text-gray-600"
-                title="Bu ilanı şirket doğrudan StajımVar'da yayımladı; başvuru burada tamamlanıyor"
-              >
-                <FileText className="w-4 h-4 text-gray-400" />
-                <span>{ILAN_KAYNAGI.ic.etiket}</span>
-              </span>
-            )}
-          </div>
+      {/* ---- SOL: logo ---- */}
+      <div className="shrink-0" title={listing.companyName}>
+        <ListingLogo
+          name={listing.companyName}
+          logoUrl={listing.companyLogo || undefined}
+          className="!h-[clamp(72px,21vw,92px)] !w-[clamp(72px,21vw,92px)] !rounded-xl !p-2 !text-2xl"
+        />
       </div>
 
-      {/* Right Actions & Match Score Area */}
-      {/*
-        EYLEMLER ALTTA, SAĞA YASLI
-
-        Bu alan geniş ekranda kartın SAĞ SÜTUNUYDU ve başlığın yerini
-        yiyordu. Artık her ekranda kartın alt satırı: solda son başvuru
-        bilgisi, sağda düğmeler. Satır sarabiliyor — dar ekranda üç düğme
-        yan yana sığmadığında kartın kenarından taşıyorlardı.
-      */}
-      <div className="w-full min-w-0 border-t border-gray-100 pt-2.5">
-        {/*
-          ÜST SATIR: YALNIZCA SON BAŞVURU TARİHİ
-
-          Burada bir de "✓ İşaretledin" durumu vardı. Kaldırıldı: dış
-          ilanda "başvurduğumu işaretle" kartta bir eylem olarak
-          sunulmuyor ve olmayan bir özelliğin durumunu göstermek
-          kullanıcıya yapmadığı bir şeyi hatırlatıyordu. Kartın işi ilanı
-          göstermek; kişisel işaretleme kaydı "Başvurularım" tarafının işi.
-
-          Tarih düğmelerle aynı satırdaydı; düğme sayısı değişince satır
-          sağa sola kayıyordu. Ayrı satırda duruyor.
-        */}
-        {/*
-          Tarih ham ISO olarak basılıyordu: "Son: 2026-09-06" (canlıda
-          ölçüldü). Biçimlendirme `lib/tarih` içinde ve saatsiz değerlerde
-          gün kaymasına karşı UTC'de yapılıyor.
-        */}
-        {sonBasvuru && (
-          <p className="mb-2 text-[11px] text-gray-600">
-            Son: <strong className="text-gray-700">{sonBasvuru}</strong>
-          </p>
+      {/* ---- ORTA: bilgiler ---- */}
+      <div className="flex min-w-0 flex-1 flex-col justify-center">
+        <h3 className="break-words text-[15px] font-bold leading-snug text-slate-900 min-[430px]:text-base">
+          {listing.companyName}
+        </h3>
+        <h4 className="mt-0.5 break-words text-[15px] font-semibold leading-snug text-slate-800 min-[430px]:text-base">
+          <a
+            href={ilanAdresi}
+            onClick={ilanaGit}
+            className="rounded-sm outline-none after:absolute after:inset-0 after:content-[''] group-hover:text-blue-700"
+          >
+            {listing.title}
+          </a>
+        </h4>
+        {listing.department && (
+          <p className="mt-0.5 break-words text-xs text-gray-500">({listing.department})</p>
         )}
 
-        {/*
-          ALT CTA: HER KARTTA AYNI GEOMETRİ
-
-          Önce dış ilanda üç aksiyon vardı — "Detaylar" (çerçevesiz metin),
-          "Başvurdum" ve "Resmî sitede başvur" — ve dar ekranda satır
-          sarıyordu. Üstelik "Detaylar" düz yazıyken diğer ikisi düğmeydi,
-          yani üç farklı görsel ağırlık yan yana duruyordu.
-
-          Artık her durumda İKİ EŞİT KUTU: solda "Detaylar" (ikincil),
-          sağda tek ana eylem. Üçünün de geometrisi aynı yerden geliyor
-          (CTA_ORTAK); değişen yalnızca renk ve etkileşim. Böylece kartlar
-          arasında alt alan zıplamıyor.
-        */}
-        {/*
-          "Detaylar" düğmesi kalktı: kartın tamamı zaten ilana gidiyor,
-          ikinci bir "aynı yere git" düğmesi yer kaplıyordu. Geriye tek ana
-          eylem kaldı ve tam genişlikte duruyor. `relative z-10`: uzatılmış
-          bağlantının örtüsünün üstünde kalması gerekiyor, yoksa başvuru
-          tıklaması karta gidiyor.
-        */}
-        {/*
-          ALT EYLEM: "İLANI İNCELE" (onaylanan tasarım)
-
-          Kartta tam genişlikte "Şirket sayfasında başvur" düğmesi vardı
-          ve öğrenciyi karttan doğrudan dış siteye atıyordu: ilanın kendi
-          sayfasındaki ücret, sigorta, staj türü ve doğrulama bilgisi
-          atlanıyordu. Kart artık ilan sayfasına götürüyor; başvuru
-          düğmesi orada, bilgiyle birlikte duruyor.
-
-          `relative z-10`: uzatılmış kart bağlantısının örtüsünün üstünde.
-        */}
-        <div className="relative z-10 flex justify-end">
-          <span className="inline-flex items-center gap-1 text-sm font-bold text-blue-600">
-            İlanı incele
-            <ArrowUpRight aria-hidden className="h-4 w-4" />
+        <p className="mt-1.5 flex min-w-0 items-start gap-1.5 text-[13px] leading-snug text-gray-500">
+          <MapPin aria-hidden className="mt-px h-4 w-4 shrink-0 text-gray-400" />
+          <span className="min-w-0 break-words">
+            {konumEtiketi(listing.city)} · {calismaEtiketi(listing.workType)}
           </span>
-        </div>
+          <UlkeRozeti countryCode={listing.countryCode} />
+        </p>
+
+        <p
+          className="mt-1 flex min-w-0 items-center gap-1.5 text-[13px] text-gray-500"
+          title={
+            kariyerSayfasindanIlan
+              ? 'Bu ilan şirketin kendi kariyer sayfasından alındı'
+              : "Bu ilanı şirket doğrudan StajımVar'da yayımladı; başvuru burada tamamlanıyor"
+          }
+        >
+          <FileText aria-hidden className="h-4 w-4 shrink-0 text-gray-400" />
+          <span>{kariyerSayfasindanIlan ? ILAN_KAYNAGI.dis.etiket : ILAN_KAYNAGI.ic.etiket}</span>
+        </p>
+
+        {sonBasvuru && (
+          <p className="mt-1 text-xs text-gray-500">
+            Son başvuru: <strong className="font-semibold text-gray-700">{sonBasvuru}</strong>
+          </p>
+        )}
+      </div>
+
+      {/* ---- SAĞ: kaydet ve İncele ---- */}
+      <div className="relative z-10 flex shrink-0 flex-col items-end justify-between gap-3">
+        {onToggleKayit ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleKayit();
+            }}
+            aria-pressed={girisGerekli ? undefined : kayitli}
+            aria-label={
+              girisGerekli
+                ? 'Kaydetmek için giriş yap'
+                : kayitli
+                  ? 'Kayıtlardan çıkar'
+                  : 'Daha sonra bakmak için kaydet'
+            }
+            title={
+              girisGerekli
+                ? 'Kaydetmek için giriş yap'
+                : kayitli
+                  ? 'Kayıtlardan çıkar'
+                  : 'Daha sonra bakmak için kaydet'
+            }
+            className={`-mr-1.5 -mt-1 flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg transition-colors ${
+              kayitli ? 'text-blue-600' : 'text-slate-700 hover:bg-gray-100 hover:text-blue-600'
+            }`}
+          >
+            <Bookmark aria-hidden className={`h-6 w-6 ${kayitli ? 'fill-blue-600' : ''}`} strokeWidth={1.75} />
+          </button>
+        ) : (
+          <span aria-hidden className="h-10 w-10" />
+        )}
+
+        <a
+          href={ilanAdresi}
+          onClick={ilanaGit}
+          aria-label={`${listing.title} ilanını incele`}
+          className="mb-1 inline-flex items-center gap-1 whitespace-nowrap text-[15px] font-bold text-blue-600 hover:text-blue-700"
+        >
+          İncele
+          <ArrowUpRight aria-hidden className="h-4 w-4" strokeWidth={2.25} />
+        </a>
       </div>
     </div>
   );

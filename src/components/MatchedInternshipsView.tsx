@@ -58,7 +58,7 @@ import { AramayiKaydet } from './AramayiKaydet';
 import { STAJ_PROGRAMLARI } from '../data/stajProgramlari';
 import { dizini, uygunIsverenler } from '../lib/isveren-dizini.mjs';
 import { useIsverenDizini } from '../lib/isveren-olcum';
-import { SirketSeridi } from './SirketSeridi';
+import { SirketSeridi, type IlanBolgesi } from './SirketSeridi';
 import { ILAN_KAYNAGI_PARCALI } from '../lib/urun-metni';
 import { ListingCountrySelector } from './ListingCountrySelector';
 import { gosterilecekIlanSayisi } from '../lib/ilan-sayisi.mjs';
@@ -299,6 +299,42 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     Bos dizi = hicbir sinirlama.
   */
   const [workTypes, setWorkTypes] = useState<string[]>([]);
+
+  /*
+    YURTDIŞI — ÜLKESİ BİLİNEN VE TÜRKİYE OLMAYAN İLANLAR
+
+    Sunucu kataloğu ülke kodu (`TR`, `DE`…), `all` ya da `remote` ile
+    seçiliyor; "Türkiye dışı" diye bir seçenek yok. Küre şeridindeki
+    Yurtdışı bu yüzden `all` kataloğunu istiyor ve listede ülkesi bilinen,
+    `TR` olmayan ilanları bırakıyor. Ülkesi BOŞ olan ilan buraya da
+    Türkiye'ye de girmiyor: tahmin edilmiyor.
+  */
+  /*
+    SEÇİM ADRESTE (`?bolge=yurtdisi`), BİLEŞENDE DEĞİL
+
+    Katalog ülkesi değişince liste yeniden yükleniyor ve bu görünüm
+    yeniden kuruluyor; yalnız bileşen durumunda tutulan seçim o anda
+    kayboluyordu (ölçüldü: Yurtdışı'na basınca "Tümü" seçili kalıyordu).
+    Adreste durunca yeniden kurulumda okunuyor, paylaşılan bağlantıda ve
+    geri tuşunda da doğru bölge açılıyor.
+  */
+  const yurtdisiAdreste = () =>
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('bolge') === 'yurtdisi';
+  const [yurtdisiSecili, setYurtdisiDurumu] = useState(yurtdisiAdreste);
+  const setYurtdisiSecili = (acik: boolean) => {
+    const params = new URLSearchParams(window.location.search);
+    if (acik) params.set('bolge', 'yurtdisi');
+    else params.delete('bolge');
+    const sorgu = params.toString();
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}${sorgu ? `?${sorgu}` : ''}`);
+    setYurtdisiDurumu(acik);
+  };
+  useEffect(() => {
+    const oku = () => setYurtdisiDurumu(yurtdisiAdreste());
+    window.addEventListener('popstate', oku);
+    return () => window.removeEventListener('popstate', oku);
+  }, []);
 
   /** Tarih araligi: ilanin eklenme zamanina gore. */
   const [dateRange, setDateRange] = useState<'all' | '1' | '3' | '7' | '30'>('all');
@@ -574,6 +610,10 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
       /* Şirket ve tarih aralığı YUKARIDA kanonik modülde. */
 
+      if (yurtdisiSecili && !(listing.countryCode && listing.countryCode !== 'TR')) {
+        return false;
+      }
+
       /* Zorunlu staj ve ucret kosullari YUKARIDA kanonik modulde. */
       if (atla !== 'uyum' && match.overallScore < minMatchScore) return false;
 
@@ -591,6 +631,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       onlyPaid,
       minMatchScore,
       kayitliIlanlar,
+      yurtdisiSecili,
     ],
   );
 
@@ -862,7 +903,55 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     arama kutusu ve kategori sekmesi. Bölüm çipleri (`bolumAlani`) BİLEREK
     dışarıda: alanaGoreSirala listeyi sıralıyor, hiçbir ilanı elemiyor.
   */
-  const daraltmaVar = acikSuzgecSayisi > 0 || searchQuery.trim().length > 0 || subTab !== 'all';
+  /* Yurtdışı da daraltma: sayı sunucu toplamından değil süzülmüş listeden gelir. */
+  const daraltmaVar = acikSuzgecSayisi > 0 || searchQuery.trim().length > 0 || subTab !== 'all' || yurtdisiSecili;
+
+  /*
+    KÜRE ŞERİDİNDE HANGİ BÖLGE SEÇİLİ
+
+    Durumun kendisinden türetiliyor, ayrı bir kopyası tutulmuyor: süzgeç
+    panelindeki ülke seçicisi de aynı `countrySelection`ı değiştiriyor ve
+    iki yer ayrışamıyor. Panelden belirli bir ülke (ör. Almanya)
+    seçildiyse dört küreden hiçbiri seçili görünmüyor.
+  */
+  const seciliBolge: IlanBolgesi | null = yurtdisiSecili
+    ? 'yurtdisi'
+    : countrySelection === 'TR'
+      ? 'turkiye'
+      : countrySelection === 'remote'
+        ? 'uzaktan'
+        : countrySelection === 'all'
+          ? 'tumu'
+          : null;
+
+  const bolgeSec = (bolge: IlanBolgesi) => {
+    setYurtdisiSecili(bolge === 'yurtdisi');
+    if (bolge === 'tumu') setSelectedCompanies([]);
+    const ulke = bolge === 'turkiye' ? 'TR' : bolge === 'uzaktan' ? 'remote' : 'all';
+    if (ulke !== countrySelection) onCountryChange?.(ulke);
+  };
+
+  /* Panelden ülke değişirse Yurtdışı seçimi düşüyor: iki seçim çakışmasın. */
+  const ulkeDegistir = (ulke: string) => {
+    setYurtdisiSecili(false);
+    onCountryChange?.(ulke);
+  };
+
+  /*
+    YURTDIŞI SEÇİLİYKEN KATALOĞUN TAMAMI YÜKLENİYOR
+
+    `all` kataloğu 24'erli sayfalarla geliyor ve ilk sayfada yurtdışı ilanı
+    az olabiliyor; sayfalar tamamlanmadan liste yarım ve sayı eksik kalırdı.
+    Her yeni sayfa geldiğinde bir sonraki isteniyor — aynı anda tek istek
+    (son istenen uzunluk tutuluyor), sayfa bitince duruyor.
+  */
+  const yurtdisiIstenenUzunluk = useRef(-1);
+  useEffect(() => {
+    if (!yurtdisiSecili || countrySelection !== 'all' || !hasMoreCountriesPage) return;
+    if (yurtdisiIstenenUzunluk.current === allListings.length) return;
+    yurtdisiIstenenUzunluk.current = allListings.length;
+    onLoadMoreCountriesPage?.();
+  }, [yurtdisiSecili, countrySelection, hasMoreCountriesPage, allListings.length, onLoadMoreCountriesPage]);
 
   const gosterilecekToplam = gosterilecekIlanSayisi({
     catalogTotal,
@@ -1162,74 +1251,14 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             niyetinin kelimesi ön render edilen HTML'de kalıyor — başlığın
             kendisi artık o kelimeyi taşımıyor.
           */}
-          <h1 className="[font-size:clamp(1.75rem,8vw,2.25rem)] lg:[font-size:clamp(1.5rem,2.4vw,2.5rem)] font-black leading-[1.1] tracking-tight text-gray-900 break-words">
-            İlk adımın burada.
-          </h1>
-
           {/*
-            ARAMA VE HIZLI ÇİPLER — BAŞLIĞIN ALTINDA (onaylanan tasarım)
+            BAŞLIK GÖRSELDEN KALKTI, METİNDEN KALKMADI (onaylanan tasarım)
 
-            Telefonda arama ve süzgeç yalnız üst çubuktaki iki simgeydi;
-            tasarımda ikisi de sayfanın kendi gövdesinde ve görünür.
-            Simgeler üst çubukta DURUYOR (kaydırınca da erişilebilsin);
-            burası ilk karşılaşma.
-
-            ÇİPLER GERÇEK SÜZGECE BAĞLI ve hiçbiri sabit değil:
-            · "Tümü" arama ve çalışma biçimi seçimini temizliyor,
-            · şehir çipi YALNIZ kullanıcı bir şehir seçtiyse çiziliyor —
-              örnekteki "İstanbul" koda yazılmadı, seçilen şehir neyse o,
-            · "Uzaktan" gerçek `Remote` süzgecini açıp kapatıyor,
-            · "Filtrele" mevcut paneli açıyor ve açık süzgeç sayısını
-              rozetle söylüyor.
+            Onaylanan düzende üst çubuğun hemen altında küre şeridi var ve
+            ilanlar doğrudan başlıyor. `sr-only` başlığı DOM'da ve
+            erişilebilirlik ağacında tutuyor; ön render edilen `h1` de yerinde.
           */}
-          <div className="space-y-3 lg:hidden">
-
-            <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {(() => {
-                const cip = (secili: boolean) =>
-                  `flex min-h-10 shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-4 text-sm font-bold transition-colors ${
-                    secili ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`;
-                const secilenSehir = selectedCity !== 'all' ? selectedCity : null;
-                return (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSearchQuery('');
-                        setWorkTypes([]);
-                      }}
-                      className={cip(!daraltmaVar)}
-                    >
-                      Tümü
-                    </button>
-                    {secilenSehir && (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedCity('all')}
-                        className={cip(true)}
-                      >
-                        <MapPin aria-hidden className="h-4 w-4" />
-                        {secilenSehir}
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => calismaSec('Remote')}
-                      className={cip(workTypes.includes('Remote'))}
-                    >
-                      <Home aria-hidden className="h-4 w-4" />
-                      Uzaktan
-                    </button>
-                    <button type="button" onClick={suzgecAcKapa} className={cip(false)}>
-                      <SlidersHorizontal aria-hidden className="h-4 w-4" />
-                      Filtrele
-                    </button>
-                  </>
-                );
-              })()}
-            </div>
-          </div>
+          <h1 className="sr-only">İlk adımın burada.</h1>
 
           {/*
             GÜVEN SATIRI
@@ -1457,6 +1486,22 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           </div>
         )}
 
+        {/*
+          ---- bölüm ----
+
+          İlk ziyarette sorulan "Bölümün ne?" sorusu listenin üstündeydi.
+          Onaylanan düzende küre şeridinden sonra doğrudan ilanlar geliyor;
+          soru panelin başına taşındı ve burada her zaman erişilebilir.
+          Bileşen panel kapalıyken de bağlı (panel CSS ile gizleniyor), yani
+          kayıtlı bölüm tercihi açılışta yine uygulanıyor.
+        */}
+        <BolumCipleri
+          panelde
+          secili={bolumAlani}
+          onSec={setBolumAlani}
+          sayilar={bolumSayilari as Record<string, number>}
+        />
+
         {/* ---- konum ---- */}
         <FiltreBlogu baslik="Konum">
           {/*
@@ -1471,7 +1516,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             <ListingCountrySelector
               value={countrySelection}
               countries={countryFacets}
-              onChange={onCountryChange}
+              onChange={ulkeDegistir}
             />
           )}
           <div className="relative">
@@ -1654,8 +1699,21 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             (ui/tokens · LISTE_BLOGU). Negatif kenar boşluğu yok;
             listeye düşen bir margin de yok.
           */}
-          <div className="space-y-4">
-          <div className={LISTE_BASLIGI}>
+          {/*
+            TELEFONDA ŞERİT ÜST ÇUBUĞA YASLI
+
+            Onaylanan düzende üst çubuğun çizgisinin hemen altında küre
+            şeridi başlıyor. Başlık satırı telefonda görünür bir şey
+            taşımıyordu (başlık `sr-only`, not `sm:` üstünde) ama `pt-4` ve
+            `space-y-4` ile 32 piksellik boş bir bant bırakıyordu; o satır
+            telefonda gizli ve ritim `sm:` üstünde başlıyor. Ekran okuyucu
+            için liste başlığı satırın DIŞINDA, her genişlikte erişilebilir.
+          */}
+          <div className="space-y-0 sm:space-y-4">
+          <h2 className={`${LISTE_BASLIGI_YAZISI} sr-only`}>
+            İlanları keşfet ({gosterilecekToplam})
+          </h2>
+          <div className={`${LISTE_BASLIGI} max-sm:hidden`}>
             {/*
               Profili olmayan ziyaretçiye "sana uygun" ve "eşleşme puanına göre
               sıralı" demek yanlış: ortada kişiselleştirme yok.
@@ -1684,9 +1742,6 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               olduğunu ve kaç ilan olduğunu duymaya devam ediyor. Görünen
               sayı da kaybolmadı: şirket şeridindeki "Tümü — N ilan".
             */}
-            <h2 className={`${LISTE_BASLIGI_YAZISI} sr-only`}>
-              İlanları keşfet ({gosterilecekToplam})
-            </h2>
             {/*
               Açıklama metni mobilde gizli.
 
@@ -1713,18 +1768,13 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             bir tık uzağa taşıdık. Süzgeç panelindeki şirket listesi de
             çalışmaya devam ediyor, ikisi aynı seçimi paylaşıyor.
           */}
-          <BolumCipleri
-            secili={bolumAlani}
-            onSec={setBolumAlani}
-            sayilar={bolumSayilari as Record<string, number>}
-          />
-
           <SirketSeridi
             sirketler={seritSirketleri}
             secili={selectedCompanies}
             toplam={gosterilecekToplam}
             onSec={sirketSec}
-            onTumu={() => setSelectedCompanies([])}
+            bolge={seciliBolge}
+            onBolge={bolgeSec}
           />
 
           </div>
@@ -1802,7 +1852,12 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                 Aşağıdaki "daha fazla" düğmesi ve yönlendirme bloğu bu
                 kabın DIŞINDA: onlar kutu, kenara yaslanmamalı.
               */}
-              <div className={`flex flex-col ${YUZEY.kap}`}>
+              {/*
+                Onaylanan tasarımda kartlar ekranın iki kenarına kadar uzanıyor
+                (`YUZEY.kap` = telefonda `-mx-4`) ve her kartın kendi ince
+                çerçevesi var; aralarında 1 piksellik çizgi değil küçük boşluk.
+              */}
+              <div className={`flex flex-col gap-1.5 sm:gap-3 ${YUZEY.kap}`}>
                 {filteredListings.map(({ listing, match, hasApplied }, index) => (
                 <React.Fragment key={listing.id}>
                   {/* Internship Card */}

@@ -113,9 +113,13 @@ test('bilinmeyen şirkette görsel yok — uydurma eşleme olmuyor', () => {
   assert.equal(sirketGorseli(''), null);
 });
 
-test('üretilmiş görsel kartta "Temsili görsel" diye söyleniyor', () => {
+test('ilan kartında şirket/ofis fotoğrafı yok', () => {
+  /*
+    İkili görselli kart denendi ve onaylanan tasarımda kaldırıldı: kart
+    yalnız büyük şirket logosunu taşıyor. Eşleme ve kart türevleri depoda
+    duruyor (ileride başka bir yüzeyde kullanılabilir) ama ilan kartı
+    onları okumuyor.
+  */
   const kart = oku('src/components/InternshipCard.tsx');
-  assert.match(kart, /Temsili görsel/, 'etiket kartta yok');
-  /* Ekran okuyucu da duyuyor: alt metin ya da sr-only ile. */
-  assert.match(kart, /sr-only|alt=\{/);
+  assert.doesNotMatch(kart, /sirket-gorselleri|sirketGorseli|kartGorseli/);
 });

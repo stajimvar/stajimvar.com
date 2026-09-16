@@ -138,9 +138,10 @@ test('mobil düzen: tam genişlik, köşesiz, gölgesiz, 1 px ayırıcı', () =>
     başka listeler onu kullanmaya devam ediyor; değişen yalnız ilan
     kartının kabuğu.
   */
-  assert.match(KART, /rounded-2xl border border-gray-200 bg-white \$\{YUZEY\.ic\} hover:border-blue-400/);
-  /* Masaüstü dalı korunuyor: yuvarlak köşe + kenar + gölge. */
-  assert.match(KART, /rounded-2xl border border-gray-200 p-3\.5 hover:border-blue-500 hover:shadow-xs sm:p-4\.5/);
+  assert.match(KART, /rounded-xl border border-gray-200 bg-white px-3 py-3/);
+  /* Tek kabuk her genişlikte: `yuzey` dalı artık yalnız masaüstü üzerine geçişi değiştiriyor. */
+  assert.match(KART, /yuzey \? '' : 'sm:hover:border-blue-400'/);
+  assert.match(KART, /sm:p-4/);
 });
 
 test('kart tek tip: ilana göre değişen rozet yığını yok', () => {
