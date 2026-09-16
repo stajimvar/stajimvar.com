@@ -17,6 +17,8 @@ import {
   type SosyalProfil,
 } from '../../lib/queries/sosyal';
 import { AkisKarti } from './AkisKarti';
+import { AgimYanSutun } from './AgimYanSutun';
+import { SAYFA_GENISLIGI } from '../../lib/duzen';
 import { BaglantiSeridi } from './BaglantiSeridi';
 import { donukKure, kureDokunusu } from '../../lib/kure-donusu.mjs';
 import { FotografPaylasGirisi, type FotografPaylasKolu } from './FotografPaylasGirisi';
@@ -594,7 +596,12 @@ export const AgimSayfasi: React.FC<Props> = ({
 
         Sağ sütunda ÖNERİ LİSTESİ YOK — gerekçe boş durumun yanında.
       */}
-      <div className="mx-auto w-full max-w-[1180px] gap-8 px-0 lg:flex lg:items-start lg:px-6 lg:pt-6">
+      {/*
+        GENİŞLİK ÜST ÇUBUKLA AYNI (kullanıcı isteği, 17 Eylül 2026): kap
+        `SAYFA_GENISLIGI` ve aynı yan boşluklar; akış ortada genişliyor,
+        sağ sütunda öneriler, yeni ilanlar ve rehberler.
+      */}
+      <div className={`mx-auto w-full ${SAYFA_GENISLIGI} gap-6 px-0 lg:flex lg:items-start lg:px-8 lg:pt-6 xl:gap-8 xl:px-10`}>
         {/*
           SOL NAVİGASYON — YALNIZ GENİŞ EKRAN (onaylanan tasarım)
 
@@ -608,7 +615,7 @@ export const AgimSayfasi: React.FC<Props> = ({
           `/cv`. "Fotoğraf paylaş" üst çubuktaki ile AYNI bileşen —
           ikinci bir paylaşım yolu değil, aynı kolun ikinci tutamağı.
         */}
-        <nav aria-label="Ağım" className="hidden w-[220px] shrink-0 lg:block">
+        <nav aria-label="Ağım" className="hidden w-[240px] shrink-0 lg:block xl:w-[260px]">
           <div className="sticky top-6 space-y-1">
             {[
               { ad: 'Akış', yol: '/agim' },
@@ -649,7 +656,7 @@ export const AgimSayfasi: React.FC<Props> = ({
           </div>
         </nav>
 
-        <main className="min-w-0 flex-1 lg:max-w-[500px]">
+        <main className="min-w-0 flex-1">
           {baglantilar.length > 0 && (
             <div className="px-4 sm:mb-4 sm:px-0">
               <BaglantiSeridi
@@ -671,8 +678,8 @@ export const AgimSayfasi: React.FC<Props> = ({
           {akisGovdesi}
         </main>
 
-        <aside className="hidden w-[320px] shrink-0 lg:block">
-          <div className="sticky top-6 space-y-4">
+        <aside className="hidden w-[320px] shrink-0 lg:block xl:w-[360px]">
+          <div className="space-y-4">
             <div className="rounded-2xl border border-gray-200 bg-white p-4">
               <div className="flex items-center gap-3">
                 <ProfilFotografi
@@ -698,6 +705,10 @@ export const AgimSayfasi: React.FC<Props> = ({
                 {bekleyenIstek > 0 ? `Bağlantılar · ${bekleyenIstek} istek` : 'Bağlantılar'}
               </button>
             </div>
+
+            {kullaniciId && (
+              <AgimYanSutun kullaniciId={kullaniciId} sektorId={benim?.sektorId ?? null} onNavigate={onNavigate} />
+            )}
           </div>
         </aside>
       </div>
