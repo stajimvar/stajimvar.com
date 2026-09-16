@@ -2,7 +2,8 @@ import { useSayfaAramasiKaydet } from '../lib/sayfa-aramasi';
 import React from 'react';
 import { ArrowRight, Search, SlidersHorizontal } from 'lucide-react';
 import { FiltreBlogu, SecenekSatiri } from '../ui';
-import { RehberKonuSekmeleri } from './RehberKonuSekmeleri';
+import { KonuSeridi } from './KonuSeridi';
+import { donukKure, kureDokunusu } from '../lib/kure-donusu.mjs';
 import {
   LISTE_BASLIGI,
   LISTE_BASLIGI_NOTU,
@@ -106,6 +107,15 @@ const Bolum: React.FC<{
 );
 
 /* ------------------------------------------------------------------ merkez */
+
+/* Kürenin altına sığan kısa konu adları; tam ad ekran okuyucuda. */
+const KONU_KISA_ETIKET: Record<string, string> = {
+  cv: 'CV',
+  yurt: 'Yurt',
+  universite: 'Üniversite',
+  kariyer: 'Kariyer',
+  yurtdisi: 'Yurtdışı',
+};
 
 export const RehberMerkezi: React.FC<{
   onNavigate: (path: string) => void;
@@ -283,6 +293,9 @@ export const RehberMerkezi: React.FC<{
         .slice(0, 3),
     [gecmis, ogrenciRehberleri]
   );
+
+  /* Konu küresinin dönüş durumu; seçim değişince imza tutmuyor ve kapanıyor. */
+  const [konuKureDurumu, setKonuKureDurumu] = React.useState<{ anahtar: string; imza: string } | null>(null);
 
   const sekmeSec = (id: Sekme) => {
     setSekmeyeDokunuldu(true);
@@ -571,12 +584,22 @@ export const RehberMerkezi: React.FC<{
           </div>
 
           <div ref={sekmelerRef} className="scroll-mt-20">
-            <RehberKonuSekmeleri
+            {/*
+              KONU KÜRELERİ — İlanlar ve Fırsatlar ile tek tip (kullanıcı
+              isteği, 16 Eylül 2026). Haplar kalktı; altında kısa ad, seçili
+              küreye tekrar dokununca dönüp rehber sayısını gösteriyor.
+            */}
+            <KonuSeridi
               konular={seritKonulari}
               secili={seritSecili}
               toplam={ogrenciRehberleri.length}
               onSec={(id) => sekmeSec(id as Sekme)}
               onTumu={() => sekmeSec('tumu')}
+              kisaEtiketler={KONU_KISA_ETIKET}
+              donuk={donukKure(konuKureDurumu, seritSecili)}
+              onCevir={(id) =>
+                setKonuKureDurumu((d) => kureDokunusu(d, { anahtar: id, secili: true, imza: seritSecili }).durum)
+              }
             />
           </div>
 

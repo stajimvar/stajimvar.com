@@ -151,6 +151,11 @@ export const KonuSeridi: React.FC<{
   varsayilanIkon?: SimgeBileseni;
   /** "Tümü" dairesinin okunan metni. */
   tumuEtiketi?: string;
+  /**
+   * Kürenin altındaki kısa ad (ör. "CV ve başvuru" → "CV"). Tam ad ekran
+   * okuyucuda ve ipucunda kalıyor.
+   */
+  kisaEtiketler?: Record<string, string>;
   /** Arka yüzü açık dairenin id'si ("" = Tümü); `null` = hiçbiri. */
   donuk?: string | null;
   /** Seçili daireye tekrar dokunuş: süzgeç değişmiyor, daire dönüyor. */
@@ -171,6 +176,7 @@ export const KonuSeridi: React.FC<{
   ikonlar = IKONLAR,
   varsayilanIkon: VarsayilanIkon = BookOpen,
   tumuEtiketi = 'Tüm konular',
+  kisaEtiketler = {},
   donuk = null,
   onCevir,
   donukSayi,
@@ -208,7 +214,7 @@ export const KonuSeridi: React.FC<{
             return (
               <Daire
                 key={konu.id}
-                etiket={konu.etiket}
+                etiket={kisaEtiketler[konu.id] ?? konu.etiket}
                 adet={konu.adet}
                 birim={birim}
                 okunan={`${konu.etiket}, ${konu.adet} ${birim}`}

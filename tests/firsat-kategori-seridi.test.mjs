@@ -28,12 +28,11 @@ const rehberMerkezi = oku('src/components/RehberMerkezi.tsx');
 test('ŞERİT KOPYALANMADI, PAYLAŞILDI', () => {
   assert.match(firsatlar, /import \{ KonuSeridi \} from '\.\/KonuSeridi'/);
   /*
-    REHBER MERKEZİ ARTIK DAİRE ŞERİDİ KULLANMIYOR (onaylanan tasarım,
-    16 Eylül 2026): konu seçimi simgeli haplarla (RehberKonuSekmeleri).
-    KonuSeridi fırsat sayfasının bileşeni olarak kalıyor.
+    REHBER DE KÜRE ŞERİDİNE DÖNDÜ (kullanıcı isteği, 16 Eylül 2026):
+    haplar kalktı, İlanlar ve Fırsatlar ile tek tip küreler. Aynı bileşen.
   */
-  assert.doesNotMatch(rehberMerkezi, /from '\.\/KonuSeridi'/);
-  assert.match(rehberMerkezi, /<RehberKonuSekmeleri/);
+  assert.match(rehberMerkezi, /import \{ KonuSeridi \} from '\.\/KonuSeridi'/);
+  assert.doesNotMatch(rehberMerkezi, /RehberKonuSekmeleri/);
   /* Fırsatlar sayfası kendi daire markup'ını yazmıyor. */
   assert.doesNotMatch(firsatlar, /rounded-full p-\[2\.5px\]/, 'daire markup kopyalanmış');
 });
