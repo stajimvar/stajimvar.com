@@ -126,8 +126,11 @@ test('metinler tek yerde tanımlı ve kart oradan okuyor', () => {
     doğrulanmış rakam kartta kalıyor.
   */
   assert.match(sayfa, /\{tutar\.kartSatiri \? ` · \$\{tutar\.kartSatiri\}` : ''\}/);
-  /* Telefonda metin uzasa da kart uzamıyor: en fazla iki satır. */
-  assert.match(sayfa, /line-clamp-2 text-xs text-gray-500 sm:hidden/);
+  /*
+    Telefonda tür ve destek ilan kartındaki konum satırı gibi ikonlu tek
+    satır; uzun metin kırpılmadan sarıyor (İlanlar'la tek tip, 16 Eylül 2026).
+  */
+  assert.match(sayfa, /<Tag aria-hidden className="mt-px h-4 w-4 shrink-0 text-gray-400" \/>/);
   /* Masaüstünde de durum yoksa alan hiç çizilmiyor. */
   assert.match(sayfa, /\{tutar\.kartSatiri && \(/);
   assert.doesNotMatch(sayfa, /'Belirtilmemiş'/, 'masaüstü hâlâ varsayım basıyor');

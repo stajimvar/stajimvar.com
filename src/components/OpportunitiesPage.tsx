@@ -5,6 +5,7 @@ import {
   CalendarDays,
   CheckCircle2,
   ArrowRight,
+  ArrowUpRight,
   Bookmark,
   ChevronRight,
   Clock,
@@ -16,6 +17,7 @@ import {
   Search,
   SlidersHorizontal,
   Sparkles,
+  Tag,
   Trophy,
   X,
 } from 'lucide-react';
@@ -634,7 +636,11 @@ export const OpportunitiesPage: React.FC<{
           )}
 
           {listeDurumu === 'ready' && (
-            <div className={LISTE_BASLIGI}>
+            /*
+              TELEFONDA BAŞLIK YOK — İlanlar'la tek tip: küre şeridinin üstünde
+              yazı durmuyor; sayı dönen kürede, masaüstünde başlıkta.
+            */
+            <div className={`${LISTE_BASLIGI} max-sm:hidden`}>
               <h2 className={LISTE_BASLIGI_YAZISI}>
                 {filters.arsiv
                   ? 'Süresi dolan fırsatlar'
@@ -749,7 +755,7 @@ export const OpportunitiesPage: React.FC<{
               gösteriyor. `sm:` üstünde iki, `lg:` üstünde üç sütun —
               masaüstü düzeni değişmedi.
             */
-            <div className={`grid grid-cols-1 gap-0 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 ${YUZEY.kap} sm:mx-0`}>
+            <div className={`grid grid-cols-1 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 ${YUZEY.kap} sm:mx-0`}>
               {filtered.map((item: Opportunity) => (
                 <Card
                   key={item.id}
@@ -1211,31 +1217,131 @@ export const Card: React.FC<{
 
   return (
     <article
-      className={`group relative flex min-w-0 flex-col gap-2 bg-white transition-all duration-150 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 ${YUZEY.kabuk} ${YUZEY.ic} sm:hover:border-blue-500 sm:hover:shadow-xs`}
+      className={`group relative flex min-w-0 flex-col gap-2 rounded-xl border border-gray-200 bg-white px-3 py-3 transition-all duration-150 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 min-[390px]:px-3.5 min-[430px]:px-4 sm:rounded-2xl sm:p-4.5 sm:hover:border-blue-500 sm:hover:shadow-xs`}
     >
       {/*
-        TELEFONDA IZGARA, GENİŞ EKRANDA DİKEY AKIŞ
+        TELEFONDA İLAN KARTIYLA AYNI DÜZEN, GENİŞ EKRANDA DİKEY AKIŞ
 
-        Telefonda kart üç sütunlu bir ızgara: solda 40 piksellik logo,
-        ortada kurum adı + başlık + künye, sağ üstte kaydet. Logo sütunu
-        ilk üç satırı birden kaplıyor ve dikeyde ortalanıyor.
-
-        `sm:flex sm:flex-col`: geniş ekranda ızgara yerleşimi tamamen
-        düşüyor ve çocuklar kaynak sırasıyla alt alta diziliyor — yani
-        masaüstündeki dar kart olduğu gibi kalıyor. Izgara yerleşim
-        sınıfları (`col-start-*`, `row-start-*`) esnek kapta hiçbir şey
-        yapmıyor, bu yüzden `sm:` karşılıkları yazılmıyor.
+        Telefon düzeni hemen aşağıda (`sm:hidden`); geniş ekrandaki dar
+        kart onun altında (`hidden sm:flex`) olduğu gibi duruyor.
 
         SABİT YÜKSEKLİK YOK: satırlar içeriğe göre büyüyor, uzun başlık
         kırpılmadan sarıyor.
       */}
-      <div className="grid grid-cols-[40px_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-1 sm:flex sm:flex-col sm:gap-2">
+      {/*
+        TELEFONDA İLAN KARTIYLA TEK TİP (InternshipCard)
+
+          SOL   büyük kurum logosu
+          ORTA  kurum · başlık · tür ve destek · doğrulama/kalan süre · son başvuru
+          SAĞ   üstte kaydet, altta "İncele"
+
+        Aynı ölçüler, aynı punto, aynı "İncele". Geniş ekrandaki dar
+        ızgara kartı aşağıda olduğu gibi duruyor (`hidden sm:flex`).
+      */}
+      <div className="flex min-w-0 items-stretch gap-3 min-[390px]:gap-3.5 min-[430px]:gap-4 sm:hidden">
+        <div className="shrink-0" title={item.organizationName}>
+          <ListingLogo
+            name={item.organizationName}
+            logoUrl={item.organizationLogoUrl}
+            className="!h-[clamp(72px,21vw,92px)] !w-[clamp(72px,21vw,92px)] !rounded-xl !p-2 !text-2xl"
+          />
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col justify-center">
+          <p className="break-words text-[15px] font-bold leading-snug text-slate-900 min-[430px]:text-base">
+            {item.organizationName}
+          </p>
+          <h2 className="mt-0.5 break-words text-[15px] font-semibold leading-snug text-slate-800 min-[430px]:text-base">
+            <a
+              href={`/firsatlar/${item.slug}`}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                onNavigate(`/firsatlar/${item.slug}`);
+              }}
+              className="rounded-sm outline-none after:absolute after:inset-0 after:content-[''] group-hover:text-blue-700"
+            >
+              {item.title}
+            </a>
+          </h2>
+          <p className="mt-1.5 flex min-w-0 items-start gap-1.5 text-[13px] leading-snug text-gray-500">
+            <Tag aria-hidden className="mt-px h-4 w-4 shrink-0 text-gray-400" />
+            <span className="min-w-0 break-words">
+              {opportunityTypeLabel(item.opportunityType)}
+              {tutar.kartSatiri ? ` · ${tutar.kartSatiri}` : ''}
+            </span>
+          </p>
+          {(item.verifiedAt || sonGunlerRozeti) && (
+            <p className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
+              {item.verifiedAt && (
+                <span className="inline-flex items-center gap-1.5 text-emerald-700">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
+                  Resmî kaynak
+                </span>
+              )}
+              {sonGunlerRozeti && (
+                <span className="inline-flex items-center gap-1.5 text-amber-700">
+                  <Clock className="h-4 w-4 shrink-0" aria-hidden />
+                  {sonGunlerRozeti.etiket}
+                </span>
+              )}
+            </p>
+          )}
+          <p className="mt-1 text-xs text-gray-500">
+            {item.applicationDeadline ? (
+              <>
+                {arsivde ? 'Kapandı' : 'Son başvuru'}:{' '}
+                <strong className="font-semibold text-gray-700">{kisaTarih(item.applicationDeadline)}</strong>
+              </>
+            ) : (
+              'Başvuru takvimi için resmî kaynağı kontrol edin'
+            )}
+          </p>
+        </div>
+        <div className="relative z-10 flex shrink-0 flex-col items-end justify-between gap-3">
+          {onKaydet ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onKaydet();
+              }}
+              aria-pressed={girisGerekli ? undefined : kayitli}
+              aria-label={kaydetEtiketi}
+              title={kaydetEtiketi}
+              className={`-mr-1.5 -mt-1 flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg transition-colors ${
+                kayitli ? 'text-blue-600' : 'text-slate-700 hover:bg-gray-100 hover:text-blue-600'
+              }`}
+            >
+              <Bookmark aria-hidden className={`h-6 w-6 ${kayitli ? 'fill-blue-600' : ''}`} strokeWidth={1.75} />
+            </button>
+          ) : (
+            <span aria-hidden className="h-10 w-10" />
+          )}
+          {!arsivde && (
+            <a
+              href={`/firsatlar/${item.slug}`}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                onNavigate(`/firsatlar/${item.slug}`);
+              }}
+              aria-label={`${item.title} fırsatını incele`}
+              className="mb-1 inline-flex items-center gap-1 whitespace-nowrap text-[15px] font-bold text-blue-600 hover:text-blue-700"
+            >
+              İncele
+              <ArrowUpRight aria-hidden className="h-4 w-4" strokeWidth={2.25} />
+            </a>
+          )}
+        </div>
+      </div>
+
+      <div className="hidden sm:flex sm:flex-col sm:gap-2">
         {/*
           `contents`: telefonda bu sarmalayıcı düzenden çıkıyor ve üç
           çocuk doğrudan ızgaranın hücresi oluyor. `sm:` üstünde eski
           tek satırına dönüyor — logo, kurum ve kaydet yan yana.
         */}
-        <div className="contents sm:flex sm:w-full sm:min-w-0 sm:items-center sm:gap-2.5">
+        <div className="flex w-full min-w-0 items-center gap-2.5">
           {/*
             Logo ilan kartıyla AYNI bileşen (ListingLogo): aynı dairesel
             kutu, `object-contain` ve logosu olmayan kurumda aynı ölçüde
@@ -1308,53 +1414,6 @@ export const Card: React.FC<{
             {item.title}
           </a>
         </h2>
-
-        {/*
-          TÜR VE DESTEK TEK SATIRDA — TELEFON
-
-          Geniş ekranda tür bir çip, tutar ise alttaki iki alanlı
-          künyenin yarısı. Telefonda ikisi tek gri satıra iniyor:
-          "Burs · Tutar kurumca açıklanacak". Kutu ve renk yok, çünkü
-          ikisi de bir kazanım değil künye.
-
-          Destek metnini `opportunityAmount` veriyor ve `satir` null ise
-          yalnız tür yazılıyor — parayla ilgisi olmayan yarışmada
-          tutar hakkında hiçbir şey iddia edilmiyor.
-
-          `line-clamp-2`: en uzun metin ("Tutar kurumca açıklanacak")
-          dar ekranda ikinci satıra sarabiliyor; üçüncü satıra
-          geçemiyor, yani kart uzamıyor.
-        */}
-        <p className="col-start-2 col-span-2 row-start-3 min-w-0 line-clamp-2 text-xs text-gray-500 sm:hidden">
-          {opportunityTypeLabel(item.opportunityType)}
-          {tutar.kartSatiri ? ` · ${tutar.kartSatiri}` : ''}
-        </p>
-
-        {/*
-          DOĞRULAMA VE KALAN SÜRE — KUTUSUZ, İKONLU
-
-          Geniş ekranda ikisi de renkli çip. Telefonda çip kalkıyor,
-          geriye ikon ve metin kalıyor. İçerik aynı yerden geliyor:
-          "Resmî kaynak" `verifiedAt` alanından, "Son 3 gün"
-          `firsatRozetleri`nin son başvuru tarihinden hesapladığı
-          rozetten — yeni bir kural yazılmadı.
-        */}
-        {(item.verifiedAt || sonGunlerRozeti) && (
-          <div className="col-start-2 col-span-2 row-start-4 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:hidden">
-            {item.verifiedAt && (
-              <span className="inline-flex items-center gap-1 text-emerald-700">
-                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                Resmî kaynak
-              </span>
-            )}
-            {sonGunlerRozeti && (
-              <span className="inline-flex items-center gap-1 text-amber-700">
-                <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                {sonGunlerRozeti.etiket}
-              </span>
-            )}
-          </div>
-        )}
 
         {/*
           TÜR ETİKETİ VE ROZETLER — YALNIZ GENİŞ EKRAN
@@ -1480,22 +1539,6 @@ export const Card: React.FC<{
         yüzden `aria-hidden` — ekran okuyucu aynı hedefi iki kez
         duymamalı.
       */}
-      <div className="flex items-center justify-between gap-3 text-xs text-gray-600 sm:hidden">
-        <span className="min-w-0 truncate">
-          {item.applicationDeadline
-            ? `${arsivde ? 'Kapandı' : 'Son başvuru'}: ${kisaTarih(item.applicationDeadline)}`
-            : 'Başvuru takvimi için resmî kaynağı kontrol edin'}
-        </span>
-        {!arsivde && (
-          <span
-            aria-hidden
-            className="inline-flex shrink-0 items-center gap-1 text-[13px] font-semibold text-blue-700"
-          >
-            İncele
-            <ArrowRight className="h-3.5 w-3.5 shrink-0" />
-          </span>
-        )}
-      </div>
 
       {/*
         Geniş ekranda inceleme satırı kartın en altına yapışıyor
@@ -1535,7 +1578,7 @@ const ListeIskeleti: React.FC = () => (
   <div
     role="status"
     aria-label="Fırsatlar yükleniyor"
-    className="grid grid-cols-1 gap-0 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3"
+    className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3"
   >
     {[1, 2, 3, 4, 5, 6].map((x) => (
       <div key={x} aria-hidden className="h-56 rounded-2xl bg-gray-100 animate-pulse" />

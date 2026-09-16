@@ -48,8 +48,8 @@ const IKONLAR: Record<string, React.ComponentType<{ className?: string }>> = {
   Seçili daireye tekrar dokununca daire Y ekseninde 180 derece dönüyor ve
   arka yüzde büyük sayı ile birimi ("fırsat") gösteriyor; bir dokunuş daha
   ön yüze döndürüyor. Süzgeç değişmiyor — durum çağıranda, kuralları
-  lib/kure-donusu.mjs içinde (İlanlar şeridiyle aynı). Altındaki ad ve
-  adet satırı sabit kalıyor.
+  lib/kure-donusu.mjs içinde (İlanlar şeridiyle aynı). Altındaki ad
+  sabit kalıyor.
 */
 const YUZ = 'absolute inset-0 flex items-center justify-center rounded-full [backface-visibility:hidden]';
 
@@ -72,53 +72,51 @@ const Daire: React.FC<{
     onClick={onClick}
     aria-pressed={secili}
     title={`${etiket} — ${adet} ${birim}`}
-    /* min-h-11 = 44px dokunma hedefi. */
-    className="group flex min-h-11 w-[76px] shrink-0 cursor-pointer flex-col items-center gap-1.5"
+    /*
+      İLANLAR ŞERİDİYLE TEK TİP (SirketSeridi)
+
+      Aynı küre ölçüsü (360 pikselde 58, 400 ve üstünde 64), aynı kalın
+      koyu kenar, seçilince koyu dolgu; ad kürenin altında tek satır ve
+      13 punto. Sayı satırı yok: sayı dönen kürenin arka yüzünde.
+    */
+    className="group flex w-[clamp(68px,19vw,78px)] shrink-0 cursor-pointer flex-col items-center gap-1.5"
   >
-    <span
-      aria-hidden
-      className="rounded-full p-[2.5px] transition-colors"
-      style={secili ? { background: '#111827' } : { background: '#e5e7eb' }}
-    >
-      <span className="block rounded-full bg-white p-[2px]">
-        <span className="block h-14 w-14 [perspective:600px]">
-          <span
-            className={`relative block h-full w-full transition-transform duration-[350ms] ease-out [transform-style:preserve-3d] motion-reduce:transition-none ${
-              donuk ? '[transform:rotateY(180deg)]' : ''
-            }`}
-          >
-            <span
-              className={`${YUZ} overflow-hidden ${
-                secili ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-600'
-              }`}
-            >
-              {children}
-            </span>
-            {secili && (
-              <span className={`${YUZ} flex-col bg-gray-900 text-white [transform:rotateY(180deg)]`}>
-                <span
-                  className={`font-extrabold leading-none tabular-nums ${
-                    String(arkaSayi).length > 3 ? 'text-[15px]' : 'text-[19px]'
-                  }`}
-                >
-                  {arkaSayi.toLocaleString('tr-TR')}
-                </span>
-                <span className="mt-0.5 text-[10px] font-medium leading-none">{birim}</span>
-              </span>
-            )}
-          </span>
-        </span>
-      </span>
-    </span>
-    <span aria-hidden className="w-full text-center">
+    <span aria-hidden className="block h-[clamp(58px,16vw,64px)] w-[clamp(58px,16vw,64px)] [perspective:600px]">
       <span
-        className={`block truncate text-[11px] ${
-          secili ? 'font-bold text-gray-900' : 'font-semibold text-gray-700'
+        className={`relative block h-full w-full transition-transform duration-[350ms] ease-out [transform-style:preserve-3d] motion-reduce:transition-none ${
+          donuk ? '[transform:rotateY(180deg)]' : ''
         }`}
       >
-        {etiket}
+        <span
+          className={`${YUZ} border-2 transition-colors ${
+            secili
+              ? 'border-slate-900 bg-slate-900 text-white'
+              : 'border-slate-800 bg-white text-slate-800 group-hover:bg-slate-50'
+          }`}
+        >
+          {children}
+        </span>
+        {secili && (
+          <span className={`${YUZ} flex-col bg-slate-900 text-white [transform:rotateY(180deg)]`}>
+            <span
+              className={`font-extrabold leading-none tabular-nums ${
+                String(arkaSayi).length > 3 ? 'text-[15px]' : 'text-[19px]'
+              }`}
+            >
+              {arkaSayi.toLocaleString('tr-TR')}
+            </span>
+            <span className="mt-0.5 text-[10px] font-medium leading-none">{birim}</span>
+          </span>
+        )}
       </span>
-      <span className="block truncate text-[10px] tabular-nums text-gray-600">{adet} {birim}</span>
+    </span>
+    <span
+      aria-hidden
+      className={`block w-full truncate text-center text-[13px] leading-tight ${
+        secili ? 'font-bold text-slate-900' : 'font-medium text-slate-700'
+      }`}
+    >
+      {etiket}
     </span>
     {/*
       Görünen iki satır `aria-hidden`; ekran okuyucu düğmenin tamamını tek
@@ -191,7 +189,7 @@ export const KonuSeridi: React.FC<{
         SehirSeridi.tsx içindeki uzun not sebebi anlatıyor.
       */}
       <div className={SERIT.ic}>
-        <div className="flex min-w-max gap-3">
+        <div className="flex min-w-max gap-2.5 py-1 sm:py-0">
           {/* İlk daire "Tümü": konu seçiliyken çıkış yolu. */}
           <Daire
             etiket="Tümü"
@@ -203,7 +201,7 @@ export const KonuSeridi: React.FC<{
             arkaSayi={donukSayi ?? toplam}
             onClick={() => (secili === '' && onCevir ? onCevir('') : onTumu())}
           >
-            <VarsayilanIkon className="h-6 w-6" />
+            <VarsayilanIkon className="h-[26px] w-[26px]" />
           </Daire>
           {konular.map((konu) => {
             const Ikon = ikonlar[konu.id] ?? VarsayilanIkon;
@@ -219,7 +217,7 @@ export const KonuSeridi: React.FC<{
                 arkaSayi={donukSayi ?? konu.adet}
                 onClick={() => (secili === konu.id && onCevir ? onCevir(konu.id) : onSec(konu.id))}
               >
-                <Ikon className="h-6 w-6" />
+                <Ikon className="h-[26px] w-[26px]" />
               </Daire>
             );
           })}

@@ -146,11 +146,16 @@ test('şeritler aynı ölçüde ve yatay taşmaya karşı korumalı', () => {
     burs şeritleri ortak bir daire bileşenine (KesifSeridi) taşındı; onlar
     ölçüyü oradan alıyor, burada ikinci kez aranmıyor.
   */
-  for (const dosya of ['src/components/SehirSeridi.tsx', 'src/components/KonuSeridi.tsx']) {
-    const kaynak = oku(dosya);
-    assert.match(kaynak, /w-\[76px\]/, `${dosya}: daire genişliği ortak değil`);
-    assert.match(kaynak, /h-14 w-14/, `${dosya}: daire ölçüsü ortak değil`);
-  }
+  const sehir = oku('src/components/SehirSeridi.tsx');
+  assert.match(sehir, /w-\[76px\]/, 'SehirSeridi: daire genişliği ortak değil');
+  assert.match(sehir, /h-14 w-14/, 'SehirSeridi: daire ölçüsü ortak değil');
+  /*
+    Fırsatlar şeridi (KonuSeridi) İlanlar küreleriyle TEK TİP: ölçüsünü
+    SirketSeridi'den alıyor (kullanıcı isteği, 16 Eylül 2026).
+  */
+  const konu = oku('src/components/KonuSeridi.tsx');
+  assert.match(konu, /h-\[clamp\(58px,16vw,64px\)\] w-\[clamp\(58px,16vw,64px\)\]/);
+  assert.match(oku('src/components/SirketSeridi.tsx'), /h-\[clamp\(58px,16vw,64px\)\] w-\[clamp\(58px,16vw,64px\)\]/);
 
   /*
     `sr-only` düğümleri `position: absolute`; sarmalayıcı
