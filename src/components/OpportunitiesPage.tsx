@@ -757,7 +757,7 @@ export const OpportunitiesPage: React.FC<{
               gösteriyor. `sm:` üstünde iki, `lg:` üstünde üç sütun —
               masaüstü düzeni değişmedi.
             */
-            <div className={`grid grid-cols-1 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 ${YUZEY.kap} sm:mx-0`}>
+            <div className={`flex flex-col gap-1.5 sm:gap-3 ${YUZEY.kap} sm:mx-0`}>
               {filtered.map((item: Opportunity) => (
                 <Card
                   key={item.id}
@@ -1191,56 +1191,21 @@ export const Card: React.FC<{
     hesabıyla yanıyorsa burada da onunla yanıyor.
   */
   const sonGunlerRozeti = rozetler.find((r) => r.id === 'son_gunler') ?? null;
-  const yer = [...item.cities, ...item.countries];
-  const seviye = item.educationLevels.length ? item.educationLevels.join(', ') : null;
-  const bolumVeSinif = [...item.eligibleDepartments, ...item.eligibleClassYears];
-  const katilim =
-    item.eventMode === 'online'
-      ? 'Çevrim içi'
-      : item.eventMode === 'hybrid'
-        ? 'Karma'
-        : item.eventMode === 'in_person'
-          ? 'Yüz yüze'
-          : null;
-
-  /*
-    Açılış tarihi yalnızca GELECEKTEYSE gösteriliyor — takvimin kuralının
-    aynısı (opportunityCalendar). Geçmiş bir açılış, öğrencinin
-    yapabileceği bir şey söylemiyor.
-  */
-  const acilisTarihi = (() => {
-    if (!item.applicationStartAt) return null;
-    const acilis = new Date(item.applicationStartAt);
-    if (Number.isNaN(acilis.getTime())) return null;
-    const bugun = new Date();
-    bugun.setHours(0, 0, 0, 0);
-    return acilis >= bugun ? kisaTarih(item.applicationStartAt) : null;
-  })();
-
   return (
     <article
-      className={`group relative flex min-w-0 flex-col gap-2 rounded-xl border border-gray-200 bg-white px-3 py-3 transition-all duration-150 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 min-[390px]:px-3.5 min-[430px]:px-4 sm:rounded-2xl sm:p-4.5 sm:hover:border-blue-500 sm:hover:shadow-xs`}
+      className={`group relative flex min-w-0 flex-col rounded-xl border border-gray-200 bg-white px-3 py-3 transition-colors hover:border-gray-300 focus-within:ring-2 focus-within:ring-blue-600 min-[390px]:px-3.5 min-[430px]:px-4 sm:p-4`}
     >
       {/*
-        TELEFONDA İLAN KARTIYLA AYNI DÜZEN, GENİŞ EKRANDA DİKEY AKIŞ
-
-        Telefon düzeni hemen aşağıda (`sm:hidden`); geniş ekrandaki dar
-        kart onun altında (`hidden sm:flex`) olduğu gibi duruyor.
-
-        SABİT YÜKSEKLİK YOK: satırlar içeriğe göre büyüyor, uzun başlık
-        kırpılmadan sarıyor.
-      */}
-      {/*
-        TELEFONDA İLAN KARTIYLA TEK TİP (InternshipCard)
+        İLAN KARTIYLA TEK TİP — HER GENİŞLİKTE (InternshipCard)
 
           SOL   büyük kurum logosu
           ORTA  kurum · başlık · tür ve destek · doğrulama/kalan süre · son başvuru
           SAĞ   üstte kaydet, altta "İncele"
 
-        Aynı ölçüler, aynı punto, aynı "İncele". Geniş ekrandaki dar
-        ızgara kartı aşağıda olduğu gibi duruyor (`hidden sm:flex`).
+        Masaüstündeki üç sütunlu dar ızgara kartı kalktı (kullanıcı isteği,
+        17 Eylül 2026): Fırsatlar listesi İlanlar gibi tek sütun.
       */}
-      <div className="flex min-w-0 items-stretch gap-3 min-[390px]:gap-3.5 min-[430px]:gap-4 sm:hidden">
+      <div className="flex min-w-0 items-stretch gap-3 min-[390px]:gap-3.5 min-[430px]:gap-4">
         <div className="shrink-0" title={item.organizationName}>
           <ListingLogo
             name={item.organizationName}
@@ -1327,7 +1292,7 @@ export const Card: React.FC<{
                 e.preventDefault();
                 onNavigate(`/firsatlar/${item.slug}`);
               }}
-              aria-label={`${item.title} fırsatını incele`}
+              aria-label={`${item.title}: ${opportunityReviewLabel(item.opportunityType)}`}
               className="mb-1 inline-flex items-center gap-1 whitespace-nowrap text-[15px] font-bold text-blue-600 hover:text-blue-700"
             >
               İncele
@@ -1337,225 +1302,6 @@ export const Card: React.FC<{
         </div>
       </div>
 
-      <div className="hidden sm:flex sm:flex-col sm:gap-2">
-        {/*
-          `contents`: telefonda bu sarmalayıcı düzenden çıkıyor ve üç
-          çocuk doğrudan ızgaranın hücresi oluyor. `sm:` üstünde eski
-          tek satırına dönüyor — logo, kurum ve kaydet yan yana.
-        */}
-        <div className="flex w-full min-w-0 items-center gap-2.5">
-          {/*
-            Logo ilan kartıyla AYNI bileşen (ListingLogo): aynı dairesel
-            kutu, `object-contain` ve logosu olmayan kurumda aynı ölçüde
-            baş harf kutusu. Telefonda 40 piksel — kurum adı 13, başlık
-            16 punto; 40 piksel ikisinin toplam yüksekliğine oturuyor.
-          */}
-          <ListingLogo
-            name={item.organizationName}
-            logoUrl={item.organizationLogoUrl}
-            /*
-              `row-span-2`: logo yalnız HER ZAMAN VAR OLAN iki satırı
-              kaplıyor (kurum · başlık). Üçüncü satır (tür · destek)
-              gizlenebiliyor; üçe yayılsaydı o satır yokken ızgara
-              boş bir örtük satır açar ve kart uzardı.
-            */
-            className="col-start-1 row-start-1 row-span-2 !h-10 !w-10 shrink-0 self-center !p-1 !text-[11px] sm:row-auto sm:self-auto sm:!text-xs"
-          />
-          <span className="col-start-2 row-start-1 min-w-0 truncate text-[13px] font-medium text-blue-600 sm:text-sm sm:font-bold">
-            {item.organizationName}
-          </span>
-          {/*
-            KAYDET AYRI ÇALIŞIYOR
-
-            `relative z-10`: gerilmiş bağlantının örtüsünün üstünde
-            durmalı, yoksa tıklama karta gider ve detay sayfası açılırdı.
-            `-mt-1`: 44 piksellik dokunma kutusu 20 piksellik kurum
-            satırını aşağı itmesin diye görsel hizası yukarı alınıyor.
-          */}
-          {onKaydet && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onKaydet();
-              }}
-              aria-pressed={girisGerekli ? undefined : kayitli}
-              aria-label={kaydetEtiketi}
-              title={kaydetEtiketi}
-              className={`relative z-10 col-start-3 row-start-1 -mr-1 -mt-1 shrink-0 cursor-pointer rounded-lg p-1.5 transition-colors sm:mt-0 ${
-                kayitli
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-400 hover:bg-blue-50 hover:text-blue-600'
-              }`}
-            >
-              <Bookmark className={`h-5 w-5 ${kayitli ? 'fill-blue-600' : ''}`} />
-            </button>
-          )}
-        </div>
-
-        {/*
-          Gerilmiş bağlantı (`after:inset-0`) kartın tamamını kaplıyor;
-          gerçek bir `href` olduğu için orta tuş ve "yeni sekmede aç"
-          çalışıyor, arama motoru da bağlantıyı görüyor.
-
-          `line-clamp` TELEFONDA YOK: uzun başlık kırpılmadan sarıyor.
-          Dar masaüstü kartında iki satır sınırı kalıyor, orada üç
-          satırlık bir başlık ızgaradaki bütün kartların boyunu belirler.
-        */}
-        <h2 className="col-start-2 col-span-2 row-start-2 min-w-0 text-[16px] font-semibold leading-[21px] text-gray-900 sm:line-clamp-2 sm:text-base sm:font-bold sm:leading-snug">
-          <a
-            href={`/firsatlar/${item.slug}`}
-            onClick={(e) => {
-              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-              e.preventDefault();
-              onNavigate(`/firsatlar/${item.slug}`);
-            }}
-            title={item.title}
-            className={`rounded-sm outline-none transition-colors after:absolute after:inset-0 after:content-[''] group-hover:text-blue-700 ${ODAK_HALKASI}`}
-          >
-            {item.title}
-          </a>
-        </h2>
-
-        {/*
-          TÜR ETİKETİ VE ROZETLER — YALNIZ GENİŞ EKRAN
-
-          Rozetlerin üçü de tek bir alandan geliyor: "Yeni" published_at'ten,
-          "Son 3 gün" son başvuru tarihinden, "Sana uygun" doğrulanmış
-          kısıtlardan (lib/firsat-kategori · firsatRozetleri). Hesaplanmamış
-          etiket yok.
-        */}
-        <div className="hidden min-w-0 flex-wrap items-center gap-1.5 text-[10px] font-bold sm:flex">
-          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700">
-            {opportunityTypeLabel(item.opportunityType)}
-          </span>
-          {rozetler.map((rozet) => (
-            <span
-              key={rozet.id}
-              className={`rounded-full px-2 py-0.5 ${
-                rozet.id === 'son_gunler'
-                  ? 'bg-amber-50 text-amber-900'
-                  : rozet.id === 'uygun'
-                    ? 'bg-emerald-50 text-emerald-800'
-                    : 'bg-gray-100 text-gray-700'
-              }`}
-            >
-              {rozet.etiket}
-            </span>
-          ))}
-          {item.verifiedAt && (
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">
-              <CheckCircle2 className="h-2.5 w-2.5 shrink-0" aria-hidden />
-              Resmî kaynak
-            </span>
-          )}
-        </div>
-
-        {/*
-          Kime ve nerede. Hiçbiri yoksa satır çizilmiyor. TELEFONDA
-          GİZLİ: kompakt düzende kartın söylediği şey "kimden, ne, ne
-          kadar, ne zamana kadar"; uygunluk şartları detay sayfasının
-          işi ve süzgeçte zaten duruyor.
-        */}
-        {(seviye || bolumVeSinif.length > 0 || yer.length > 0 || katilim) && (
-          <p className="hidden min-w-0 text-xs leading-relaxed text-gray-500 sm:block">
-            {[seviye, bolumVeSinif.slice(0, 2).join(', '), yer.join(', '), katilim]
-              .filter(Boolean)
-              .join(' · ')}
-          </p>
-        )}
-
-        {acilisTarihi && !arsivde && (
-          <p className="hidden min-w-0 items-start gap-1.5 text-xs font-semibold leading-snug text-blue-800 sm:flex">
-            <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-            <span>{acilisTarihi} tarihinde başvuruya açılıyor</span>
-          </p>
-        )}
-
-        {/*
-          TUTAR VE SON BAŞVURU — İKİ HİZALI ALAN, YALNIZ GENİŞ EKRAN
-
-          Telefonda tutar yukarıdaki gri satıra, son başvuru da kartın
-          alt satırına taşındı; burada ikisi yan yana duruyor çünkü dar
-          masaüstü kartında alt satır için yer yok.
-        */}
-        <dl className="hidden grid-cols-2 items-start gap-x-3 gap-y-1 border-t border-gray-100 pt-2 sm:grid">
-          {/*
-            Metin telefondakiyle AYNI kaynaktan (`opportunityAmount`) ve
-            ızgara iki sütun kalıyor. Kaynak tutar açısından henüz
-            kontrol edilmediyse (`satir` null) alan HİÇ çizilmiyor:
-            "Belirtilmemiş" demek, bakmadığımız bir sayfa hakkında
-            iddiada bulunmak olurdu.
-          */}
-          {tutar.kartSatiri && (
-            <div className="min-w-0">
-              <dt className="text-[11px] text-gray-500">Tutar</dt>
-              {tutar.bilinmiyor ? (
-                <dd className="text-sm font-semibold text-gray-500">{tutar.kartSatiri}</dd>
-              ) : (
-                <dd className="text-sm font-extrabold leading-tight text-gray-900 sm:text-base">
-                  {tutar.metin}
-                  {tutar.donem && (
-                    <span className="block text-[11px] font-medium text-gray-500">
-                      {tutar.donem}
-                    </span>
-                  )}
-                </dd>
-              )}
-            </div>
-          )}
-          <div className="min-w-0">
-            <dt className="text-[11px] text-gray-500">{arsivde ? 'Kapanış' : 'Son başvuru'}</dt>
-            <dd className="text-sm font-extrabold leading-tight text-gray-900 sm:text-base">
-              {item.applicationDeadline ? (
-                kisaTarih(item.applicationDeadline)
-              ) : (
-                /* Başvuru takvimi için resmî kaynağı kontrol edin — gerekçe `zaman-tupu.mjs` içinde. */
-                <span className="font-semibold text-gray-500">Başvuru takvimi için resmî kaynağı kontrol edin</span>
-              )}
-            </dd>
-          </div>
-        </dl>
-
-        {fit?.not && (
-          <p
-            className={`hidden min-w-0 text-xs leading-relaxed sm:block ${
-              fit.durum === 'sart_uymuyor' ? 'text-amber-800' : 'text-gray-500'
-            }`}
-          >
-            {fit.not}
-          </p>
-        )}
-      </div>
-
-      {/*
-        ALT SATIR — TELEFON
-
-        Solda son başvuru tarihi, sağda inceleme bağlantısı. İkisi de
-        gerçek kayıttan: tarih `application_deadline`, biçimlendirme
-        `lib/tarih` (saatsiz günlerde gün kayması olmasın diye UTC'de).
-
-        "İncele" GERÇEK BİR BAĞLANTI DEĞİL: kartın tamamını zaten
-        gerilmiş bağlantı kaplıyor ve iç içe iki `<a>` üretilemez. İşi
-        nereye gidileceğini söylemek; tıklamayı üstteki örtü alıyor. Bu
-        yüzden `aria-hidden` — ekran okuyucu aynı hedefi iki kez
-        duymamalı.
-      */}
-
-      {/*
-        Geniş ekranda inceleme satırı kartın en altına yapışıyor
-        (`mt-auto`): ızgaradaki kartların boyu farklı ve bağlantı hepsinde
-        aynı hizada durmalı.
-      */}
-      {!arsivde && (
-        <p
-          aria-hidden
-          className="mt-auto hidden items-center gap-1 pt-0.5 text-sm font-bold text-blue-700 sm:inline-flex"
-        >
-          {opportunityReviewLabel(item.opportunityType)}
-          <ArrowRight className="h-3.5 w-3.5 shrink-0" />
-        </p>
-      )}
     </article>
   );
 };
@@ -1580,10 +1326,10 @@ const ListeIskeleti: React.FC = () => (
   <div
     role="status"
     aria-label="Fırsatlar yükleniyor"
-    className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3"
+    className="flex flex-col gap-1.5 sm:gap-3"
   >
     {[1, 2, 3, 4, 5, 6].map((x) => (
-      <div key={x} aria-hidden className="h-56 rounded-2xl bg-gray-100 animate-pulse" />
+      <div key={x} aria-hidden className="h-32 rounded-xl bg-gray-100 animate-pulse" />
     ))}
   </div>
 );

@@ -141,7 +141,8 @@ test('SÜRESİ DOLAN ANA LİSTEDE YOK, ARŞİVDE VAR', () => {
   */
   const sayfa = oku('src/components/OpportunitiesPage.tsx');
   assert.doesNotMatch(sayfa, /opportunityCta/, 'kartta başvuru düğmesi geri gelmiş');
-  assert.match(sayfa, /\{!arsivde && \(\s*<p\s+aria-hidden/);
+  /* İlan kartıyla tek tip kartta inceleme bağlantısı (17 Eylül 2026). */
+  assert.match(sayfa, /\{!arsivde && \(\s*<a\b/);
   assert.match(sayfa, /onKaydet=\{filters\.arsiv \? undefined : \(\) => kaydiDegistir\(item\)\}/);
 });
 

@@ -131,15 +131,11 @@ test('metinler tek yerde tanımlı ve kart oradan okuyor', () => {
     satır; uzun metin kırpılmadan sarıyor (İlanlar'la tek tip, 16 Eylül 2026).
   */
   assert.match(sayfa, /<Tag aria-hidden className="mt-px h-4 w-4 shrink-0 text-gray-400" \/>/);
-  /* Masaüstünde de durum yoksa alan hiç çizilmiyor. */
-  assert.match(sayfa, /\{tutar\.kartSatiri && \(/);
+  /* Masaüstündeki ayrı tutar alanı kalktı: kart her genişlikte aynı satırı çiziyor. */
+  assert.doesNotMatch(sayfa, /<dt className="text-\[11px\] text-gray-500">Tutar<\/dt>/);
   assert.doesNotMatch(sayfa, /'Belirtilmemiş'/, 'masaüstü hâlâ varsayım basıyor');
-  /*
-    Logo yalnız HER ZAMAN VAR OLAN iki satırı kaplıyor; tutar satırı
-    gizlenebildiği için üçe yayılsaydı ızgara boş bir örtük satır açar
-    ve kart uzardı.
-  */
-  assert.match(sayfa, /col-start-1 row-start-1 row-span-2 !h-10 !w-10/);
+  /* Logo ilan kartıyla aynı ölçüde; tutar satırı gizlenince kart kısalıyor, boş satır açılmıyor. */
+  assert.match(sayfa, /!h-\[clamp\(72px,21vw,92px\)\]/);
 });
 
 test('sorgu ve tip yeni alanları taşıyor', () => {
@@ -310,7 +306,7 @@ test('KARTTA "doğrulanamadı" satırı YOK, detayda var', () => {
   /* Kart bileşeni gerçekten `kartSatiri` okuyor. */
   const SAYFA = oku('src/components/OpportunitiesPage.tsx');
   assert.match(SAYFA, /tutar\.kartSatiri \? ` · \$\{tutar\.kartSatiri\}` : ''/);
-  assert.match(SAYFA, /\{tutar\.kartSatiri && \(/);
+  assert.match(SAYFA, /\{tutar\.kartSatiri \? ` · \$\{tutar\.kartSatiri\}` : ''\}/);
   assert.ok(!/\{tutar\.satir/.test(SAYFA), 'kart artık detay satırını kullanmıyor');
 });
 
