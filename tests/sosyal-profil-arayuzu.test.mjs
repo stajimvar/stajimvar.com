@@ -1918,11 +1918,12 @@ test('şeritte iki sayaç; kişisel listeler kilitli satırda, sağ sütun doğr
   assert.doesNotMatch(serit, /mülakat|grid-cols-4|grid-cols-5/, 'şerit iki hücre');
   assert.match(profilBasligi, /mulakatSayisi: number;/, 'sayı veri olarak duruyor');
 
-  /* Kişisel satır: kilit, gerçek sayı ve kendi ekranına giden eylem. */
-  const kisisel = govdeAl(profilBasligi, "{ etiket: 'Kaydedilenler'", '</div>');
-  assert.match(kisisel, /etiket: 'Kaydedilenler', deger: kaydedilenSayisi, git: onKaydedilenlere/);
-  assert.match(kisisel, /etiket: 'Başvurular', deger: basvuruSayisi, git: onBasvurulara/);
-  assert.match(kisisel, /<Lock aria-hidden/, 'yalnız sahibine görünür olduğu simgeyle söyleniyor');
+  /*
+    Kişisel listeler "Ayarlar ve hareketler" (☰) menüsünde (17 Eylül 2026):
+    gerçek sayı ve kendi ekranına giden eylem.
+  */
+  assert.match(profilBasligi, /etiket: 'Kaydedilen ilanlar',[\s\S]{0,120}sag: kaydedilenSayisi,\s*onClick: menudenGit\(onKaydedilenlere\)/);
+  assert.match(profilBasligi, /etiket: 'Başvurular',[\s\S]{0,120}sag: basvuruSayisi,\s*onClick: menudenGit\(onBasvurulara\)/);
 
   assert.match(serit, /href="\/baglantilar"/);
   assert.match(sayacOgesi, /<a\n\s*href=\{href\}/);
@@ -1944,7 +1945,6 @@ test('şeritte iki sayaç; kişisel listeler kilitli satırda, sağ sütun doğr
   );
   assert.doesNotMatch(profilBasligi, /sosyalSayaclariGetir|kendiSosyalProfiliGetir|supabase/);
   /* Dişli menüsü karta olduğu gibi geçiyor; satırları burada seçilmiyor. */
-  assert.match(profilBasligi, /<ProfilAyarMenusu \{\.\.\.satir\.menu\} \/>/);
   /*
     `@ad` satırı da aynı nesneden: panel `kullaniciAdi`yi satıra koyuyor,
     kart yalnız değer varsa (`satir?.kullaniciAdi &&`) çiziyor — null'da
@@ -1981,10 +1981,11 @@ test('sosyal satır yokken kartta Paylaş ve dişli çizilmiyor, sayı uydurulmu
     yeterli; kaldırılan düğmenin yerinde boşluk durmuyor.
   */
   /* Satırda solda hesap eylemleri, sağda dişli (17 Eylül 2026). */
-  assert.match(profilBasligi, /\{\(satir \|\| hesapEylemleri\) && \(\n\s*<div className="flex items-center justify-between gap-2">/);
+  /* Dişli karttan kalktı; satırları ☰ menüsünde aynı listeden (profilAyarOgeleri). */
+  assert.match(profilBasligi, /const sosyalOgeler = satir \? profilAyarOgeleri\(satir\.menu\) : \[\];/);
   assert.doesNotMatch(profilBasligi, /\{satir\.onPaylasimOlustur && \(/);
   assert.doesNotMatch(profilBasligi, />\s*Paylaş\s*</);
-  assert.match(profilBasligi, /<ProfilAyarMenusu \{\.\.\.satir\.menu\} \/>/);
+  assert.doesNotMatch(profilBasligi, /<ProfilAyarMenusu /, 'dişli karttan kalktı; satırlar ☰ menüsünde');
   assert.match(profilBasligi, /sosyalHucre === 'hazir' && satir\?\.sayaclar && \(/);
   assert.match(profilBasligi, /Paylaşım ve bağlantı sayısı alınamadı/);
   assert.doesNotMatch(profilBasligi, /deger=\{0\}|etiket="paylaşım" deger=\{0\}|\?\? 0/);
@@ -2145,20 +2146,9 @@ test('kariyer hedefi ve yetkinlik testleri kartları ana görünümde YOK; testl
   /* Karta giden iki prop: gerçek sayı ve mevcut eylem. */
   assert.match(temiz, /rozetSayisi=\{rozetler\.length\}/);
   assert.match(temiz, /onTestlere=\{\(\) => bolumeGit\('rozet'\)\}/);
+  /* Testlere giriş ☰ menüsünde (17 Eylül 2026); sayı uydurulmuyor. */
   const kartTemiz = yorumsuz(profilBasligi);
-  assert.match(kartTemiz, /onClick=\{onTestlere\}/);
-  assert.match(kartTemiz, /rozetSayisi > 0 \? `\$\{rozetSayisi\} rozet · Testler` : 'Yetkinlik testleri'/);
-  /* Satır: 44 piksel dokunma hedefi, odak halkası, ikon aria-hidden. */
-  const giris = govdeAl(kartTemiz, 'onClick={onTestlere}', '</button>');
-  assert.match(giris, /min-h-11/);
-  assert.match(giris, /ODAK_HALKASI/);
-  assert.match(giris, /<Award aria-hidden/);
-  /* Giriş "Profilin tamamlandı" satırından sonra, "Paylaş" düğmesinden önce. */
-  const tamamlandi = kartTemiz.indexOf('Profilin tamamlandı');
-  const girisYeri = kartTemiz.indexOf('onClick={onTestlere}');
-  /* Alt satır artık hesap eylemleriyle birlikte açılıyor (17 Eylül 2026). */
-  const paylas = kartTemiz.indexOf('{(satir || hesapEylemleri) && (');
-  assert.ok(tamamlandi > 0 && tamamlandi < girisYeri && girisYeri < paylas, 'giriş yanlış yerde');
+  assert.match(kartTemiz, /etiket: 'Yetkinlik testleri',[\s\S]{0,160}sag: rozetSayisi > 0 \? `\$\{rozetSayisi\} rozet` : undefined,\s*onClick: menudenGit\(onTestlere\)/);
 });
 
 test('arama en az üç harf istiyor ve profile_id kullanmıyor', () => {

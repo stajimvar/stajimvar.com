@@ -20,6 +20,7 @@ import {
   Search,
   SlidersHorizontal,
   X,
+  Menu,
 } from 'lucide-react';
 import { StudentProfile, CompanyAccount } from '../types';
 import { Avatar } from './Avatar';
@@ -1359,6 +1360,22 @@ export const Header: React.FC<HeaderProps> = ({
                     renk="#2563EB"
                     onAc={onBildirimAc}
                   />
+                )}
+                {/*
+                  ☰ AYARLAR VE HAREKETLER — yalnız kendi profilinde ve telefonda
+                  (Instagram'daki gibi sağ üst köşe). Menünün kendisi
+                  ProfilBasligi'nde; buradan olayla açılıyor.
+                */}
+                {kendiProfilimde && (
+                  <button
+                    type="button"
+                    onClick={() => window.dispatchEvent(new Event('stajimvar:profil-menusu'))}
+                    aria-label="Ayarlar ve hareketler"
+                    aria-haspopup="dialog"
+                    className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-800 transition-colors hover:bg-gray-100 lg:hidden"
+                  >
+                    <Menu className="h-6 w-6" />
+                  </button>
                 )}
 
                 {/*

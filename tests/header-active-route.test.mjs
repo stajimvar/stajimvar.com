@@ -123,11 +123,15 @@ test("/cv ekranı çıkışı her öğrenciye, yönetim panelini yalnız yöneti
   assert.match(app, /const ogrenciProfilEkrani = \(\) =>[\s\S]{0,1200}onLogout=\{handleLogout\}[\s\S]{0,200}isAdmin=\{isAdmin\}[\s\S]{0,200}onOpenAdmin=\{\(\) => navigate\('\/yonetim'\)\}/);
 
   /* Çıkış yalnız `onLogout` varlığına bağlı — yönetici koşulu yok. */
-  /* Kartın alt satırında (hesapEylemleri), düzenlemede çizilmiyor — 17 Eylül 2026. */
-  assert.match(profil, /!duzenleme && \(onLogout \|\| \(isAdmin && onOpenAdmin\)\) \?/);
-  assert.match(profil, /\{onLogout && \([\s\S]{0,500}Çıkış yap/);
-  /* Yönetim paneli yalnız yöneticide DOM'a giriyor. */
-  assert.match(profil, /\{isAdmin && onOpenAdmin && \([\s\S]{0,500}Yönetim paneli/);
+  /*
+    İkisi "Ayarlar ve hareketler" (☰) menüsünde — 17 Eylül 2026. Çıkış
+    her öğrenciye; yönetim paneli yalnız yöneticide veriliyor.
+  */
+  assert.match(profil, /onYonetim=\{isAdmin && onOpenAdmin \? onOpenAdmin : undefined\}/);
+  assert.match(profil, /onCikis=\{onLogout\}/);
+  const baslik = readFileSync("src/components/ProfilBasligi.tsx", "utf8");
+  assert.match(baslik, /\.\.\.\(onYonetim\s*\?[\s\S]{0,200}Yönetim paneli/);
+  assert.match(baslik, /\.\.\.\(onCikis\s*\?[\s\S]{0,200}Çıkış yap/);
 });
 
 /*
