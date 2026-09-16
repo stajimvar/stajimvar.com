@@ -1334,7 +1334,12 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             ikisi yan yana okunmuyor.
           */}
           {guven && (
-            <p className="hidden lg:block text-center lg:text-left text-[11px] sm:text-xs font-semibold text-gray-500 tabular-nums">
+            /*
+              GÖRÜNÜMDEN KALKTI (kullanıcı isteği, 17 Eylül 2026): filtre
+              paneli ve küre şeridi aynı hizadan başlasın — Fırsatlar ve
+              Rehber'le tek tip. Cümle ekran okuyucuda duruyor.
+            */
+            <p className="sr-only">
               {guven.ilan}
               {guven.dogrulama && (
                 <>
@@ -1768,7 +1773,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           <h2 className={`${LISTE_BASLIGI_YAZISI} sr-only`}>
             İlanları keşfet ({gosterilecekToplam})
           </h2>
-          <div className={`${LISTE_BASLIGI} max-sm:hidden`}>
+          <div className={`${LISTE_BASLIGI} sr-only`}>
             {/*
               Profili olmayan ziyaretçiye "sana uygun" ve "eşleşme puanına göre
               sıralı" demek yanlış: ortada kişiselleştirme yok.

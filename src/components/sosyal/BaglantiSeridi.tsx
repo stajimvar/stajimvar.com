@@ -1,4 +1,5 @@
 import React from 'react';
+import { YatayKaydirma } from '../YatayKaydirma';
 import { Layers, Users } from 'lucide-react';
 import type { BaglantiKisisi } from '../../lib/queries/sosyal';
 import { ProfilFotografi } from './ProfilFotografi';
@@ -71,7 +72,7 @@ export const BaglantiSeridi: React.FC<{
 
   return (
     <nav aria-label="Bağlantılarım" className="-mx-4 border-b border-gray-200 bg-white sm:mx-0 sm:rounded-2xl sm:border">
-      <div className="overflow-x-auto px-4 py-3 [scrollbar-width:none] sm:px-3 [&::-webkit-scrollbar]:hidden">
+      <YatayKaydirma className="overflow-x-auto px-4 py-3 [scrollbar-width:none] sm:px-3 [&::-webkit-scrollbar]:hidden">
         <ul className="flex min-w-max gap-2.5">
           <li>
             <button
@@ -170,7 +171,7 @@ export const BaglantiSeridi: React.FC<{
             </button>
           </li>
         </ul>
-      </div>
+      </YatayKaydirma>
       {/* Dönen kürenin adı ekran okuyucuya da söyleniyor. */}
       <span className="sr-only" aria-live="polite">
         {donukKisi ? kisiAdi(donukKisi) : ''}
