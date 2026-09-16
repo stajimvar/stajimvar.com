@@ -21,6 +21,8 @@ import {
   SlidersHorizontal,
   X,
   Menu,
+  Home,
+  UserRound,
 } from 'lucide-react';
 import { StudentProfile, CompanyAccount } from '../types';
 import { Avatar } from './Avatar';
@@ -704,6 +706,28 @@ export const Header: React.FC<HeaderProps> = ({
             */}
             <div className="flex items-center gap-1 sm:gap-2 lg:hidden">
             {/*
+              ANA SAYFA DÜĞMESİ — telefonda her başlığın sol köşesinde
+              (kullanıcı isteği, 17 Eylül 2026). İlanlar dışındaki bir
+              sayfadan İlanlar'a götürüyor; İlanlar'dayken sayfayı yeniliyor.
+              Gerçek `<a href="/">`: orta tuş ve yeni sekme çalışıyor.
+            */}
+            <a
+              href="/"
+              aria-label={ilanlardaMi ? 'İlanları yenile' : 'Ana sayfa: staj ilanları'}
+              onClick={baglantiTiklamasi(() => {
+                if (ilanlardaMi) {
+                  window.location.reload();
+                  return;
+                }
+                setUserRole('student');
+                setActiveTab('internships');
+                setActiveSubTab('all');
+              })}
+              className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-800 transition-colors hover:bg-gray-100 lg:hidden"
+            >
+              <Home className="h-6 w-6" />
+            </a>
+            {/*
               FOTOĞRAF PAYLAŞMA — YALNIZ KENDİ PROFİLİNDE
 
               Ağım'ın üst çubuğundaki simgenin AYNISI: aynı bileşen,
@@ -760,7 +784,6 @@ export const Header: React.FC<HeaderProps> = ({
               çizilmiyor — çalışmayan bir simge göstermek olmayan
               bir özelliği vaat etmek olurdu.
                 */}
-            {!zilVarMi && aramaDugmesi}
 
             {/*
               SÜZGEÇ SİMGESİ ÜST ÇUBUKTA (onaylanan tasarım)
@@ -1211,6 +1234,12 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Sağ taraf: rol değiştirici ve profil */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto">
             {/*
+              ARAMA TELEFONDA HEP SAĞDA — zilin ya da girişin yanında. Sol köşeye
+              ana sayfa düğmesi gelince solda üç simge ortadaki markaya
+              çarpıyordu (360 pikselde ölçüldü: 41 piksel üst üste).
+            */}
+            {aramaDugmesi}
+            {/*
               Auth Buttons or User Profile / Logout
               onOpenLogin/onOpenRegister verilmediyse kayıt akışı henüz hazır
               değil demektir; çalışmayan düğme göstermek yerine hiç çizmiyoruz.
@@ -1272,9 +1301,15 @@ export const Header: React.FC<HeaderProps> = ({
                     <button
                       id="header-login-btn"
                       onClick={onOpenLogin}
-                      className="px-2.5 sm:px-4 py-1.5 rounded-full text-xs font-bold text-gray-700 hover:text-blue-600 hover:bg-gray-100 transition-all cursor-pointer whitespace-nowrap"
+                      aria-label="Giriş Yap"
+                      /*
+                        TELEFONDA SİMGE: yazılı düğme (69 px) ile arama simgesi
+                        sağda ortadaki markaya çarpıyordu. `sm:` üstünde yazı.
+                      */
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-gray-800 hover:bg-gray-100 transition-all cursor-pointer whitespace-nowrap sm:h-auto sm:w-auto sm:rounded-full sm:px-4 sm:py-1.5 sm:text-xs sm:font-bold sm:text-gray-700 sm:hover:text-blue-600"
                     >
-                      Giriş Yap
+                      <UserRound aria-hidden className="h-6 w-6 sm:hidden" />
+                      <span className="hidden sm:inline">Giriş Yap</span>
                     </button>
                     <button
                       id="header-register-btn"
@@ -1353,7 +1388,6 @@ export const Header: React.FC<HeaderProps> = ({
                   bildirimler. Rozet yalnız sayı SUNUCUDAN geldiğinde
                   çiziliyor.
                 */}
-                {zilVarMi && aramaDugmesi}
                 {onBildirimAc && (
                   <BildirimDugmesi
                     okunmamis={okunmamisBildirim ?? null}
