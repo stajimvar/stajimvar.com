@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { profilDolulugu } from '../lib/cv-hazirlik.mjs';
 import {
   ArrowLeft,
   Award,
@@ -51,6 +52,7 @@ import { Card, IKON_KUTUSU } from '../ui';
 import { ODAK_HALKASI } from '../lib/renk-token';
 import { ProfilBasligi, ProfilBolumListesi, type EksikAdim, type OneCikan } from './ProfilBasligi';
 import type { PortfolyoSatiri } from './sosyal/SosyalProfilSayfasi';
+import { ONERILEN_SOSYAL, POPULER_ARACLAR } from '../data/cv-secenekleri';
 import { AutocompleteField } from './AutocompleteField';
 import { PredictiveInput } from './PredictiveInput';
 import {
@@ -222,21 +224,7 @@ type BolumId =
   bölüm duruyor.
 */
 
-const POPULER_ARACLAR = [
-  'Python', 'JavaScript', 'React', 'SQL', 'Git & GitHub', 'HTML / CSS',
-  'Excel (İleri)', 'AutoCAD', 'SolidWorks', 'Photoshop', 'Figma', 'Canva',
-];
-
-const ONERILEN_SOSYAL = [
-  'Problem Çözme',
-  'Ekip Çalışması',
-  'İletişim',
-  'Zaman Yönetimi',
-  'Hızlı Öğrenme',
-  'Sunum Becerisi',
-  'Detaylara Dikkat',
-  'Sorumluluk Alma',
-];
+/* Hızlı ekleme seçenekleri CV oluşturma ekranıyla ortak: src/data/cv-secenekleri.ts */
 
 const HEDEF_POZISYONLAR = [
   'Yazılım Geliştirme Stajyeri', 'Frontend Stajyeri', 'Backend Stajyeri',
@@ -465,40 +453,16 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     şeridi kaldırıldı — şerit zaten eksikleri gösteriyor. Kullanılmayan
     alanı bırakmak sonradan okuyanı yanıltır.
   */
-  const adimlar: { tamam: boolean; etiket: string; bolum: BolumId }[] = [
-    { tamam: Boolean(student.university && student.department), etiket: 'okulunu gir', bolum: 'kisisel' },
-    { tamam: Boolean(student.bio), etiket: 'kendini tanıt', bolum: 'kisisel' },
-    /*
-      FOTOĞRAF ADIMI TEK KAYNAĞA BAKIYOR
+  /*
+    DOLULUK TEK KAYNAKTAN (lib/cv-hazirlik.mjs, 17 Eylül 2026)
 
-      Ölçüt artık `avatar_url` değil: yükleme yalnız düzenleme ekranının
-      sosyal bloğundan yapılıyor ve oraya yazılan şey `avatar_path`. Eski
-      kolon yedek olarak duruyor, o yüzden ikisinden biri doluysa adım
-      tamam — eskiden fotoğraf yüklemiş kullanıcıya "fotoğraf ekle"
-      demek, zaten duran bir fotoğrafı yokmuş gibi göstermek olurdu.
-
-      Rozet düzenleme ekranını açıyor ('kisisel'): fotoğraf bloğu o
-      ekranın sosyal bölümünde, yani rozetin gittiği yerde. Kendi
-      `BolumId`si yok çünkü şeritteki bir bölüm değil.
-    */
-    {
-      tamam: Boolean(sosyalAvatarYolu || student.avatarUrl),
-      etiket: 'fotoğraf ekle',
-      bolum: 'kisisel',
-    },
-    { tamam: Boolean(student.phone), etiket: 'telefonunu gir', bolum: 'kisisel' },
-    /* CV artık gerçek bir belge: yüklenmişse adım tamam sayılıyor. */
-    { tamam: Boolean(student.cvPath), etiket: 'CV yükle', bolum: 'cv' },
-    { tamam: yetenekler.length > 0, etiket: 'program ekle', bolum: 'teknik' },
-    { tamam: sosyal.length > 0, etiket: 'beceri ekle', bolum: 'sosyal' },
-    { tamam: diller.length > 0, etiket: 'dil ekle', bolum: 'dil' },
-    /* "çalışma ekle" iş deneyimi mi proje mi belli değildi; bölümde tutulan şey proje. */
-    { tamam: projeler.length > 0, etiket: 'proje ekle', bolum: 'proje' },
-    { tamam: hedefler.length > 0, etiket: 'hedefini seç', bolum: 'tercih' },
-    { tamam: sehirler.length > 0, etiket: 'şehir seç', bolum: 'tercih' },
-  ];
-  const tamamlanan = adimlar.filter((a) => a.tamam).length;
-  const oran = Math.round((tamamlanan / adimlar.length) * 100);
+    İlan sayfası aynı hesabı ayrı bir listeyle yapıyordu ve aynı profil iki
+    ekranda iki yüzde gösteriyordu. Kurallar orada yazılı: fotoğraf isteğe
+    bağlı ve yüzdeye girmiyor; CV adımı platformda oluşturulan CV ya da
+    yüklenen PDF'ten biriyle tamamlanıyor.
+  */
+  const { adimlar: dolulukAdimlari, oran } = profilDolulugu(student);
+  const adimlar = dolulukAdimlari as { tamam: boolean; etiket: string; bolum: BolumId }[];
 
   /*
     EKSİKLER

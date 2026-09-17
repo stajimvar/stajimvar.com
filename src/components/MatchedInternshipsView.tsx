@@ -1,4 +1,5 @@
 import { useSayfaAramasiKaydet } from '../lib/sayfa-aramasi';
+import { cvCagrisiKapatildiMi, cvCagrisiniKapat, cvVarMi, profilDolulugu } from '../lib/cv-hazirlik.mjs';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Search,
@@ -149,6 +150,8 @@ interface MatchedInternshipsViewProps {
   kendiSirketId?: string | null;
   /** Profil sekmesine geçiş. Verilmezse profil çubuğu bir şey yapmaz. */
   onGoToProfile?: () => void;
+  /** CV oluşturma akışını açar (App'teki `CvOlusturucu`). */
+  onCvOlustur?: () => void;
   /** Giriş penceresini açar; misafirin kaydet düğmesi buraya bağlanıyor. */
   /*
     Niyet parametresi isteğe bağlı: kaydet düğmesi niyetsiz çağırıyor,
@@ -201,6 +204,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   onQuickApply,
   kendiSirketId,
   onGoToProfile,
+  onCvOlustur,
   onRequireLogin,
   searchQuery,
   onSearchChange,
@@ -771,23 +775,31 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
    * dolu olan alanlardan hesaplanıyor, yoksa öğrenci hiç dokunmadığı bir
    * profil için "neredeyse bitti" mesajı görüyordu.
    */
-  const profileChecks: boolean[] = student
-    ? [
-        Boolean(student.university),
-        Boolean(student.department),
-        Boolean(student.bio),
-        Boolean(student.gpa),
-        student.skills.length > 0,
-        (student.languages?.length ?? 0) > 0,
-        student.projects.length > 0,
-        student.targetRoles.length > 0,
-        student.preferences.cities.length > 0,
-        Boolean(student.phone),
-      ]
-    : [];
-  const profileCompletion = profileChecks.length
-    ? Math.round((profileChecks.filter(Boolean).length / profileChecks.length) * 100)
-    : 0;
+  /*
+    DOLULUK PROFİL EKRANIYLA AYNI KAYNAKTAN (lib/cv-hazirlik.mjs)
+
+    Burada ayrı bir liste vardı (not ortalaması dahil, CV hariç) ve aynı
+    profil iki ekranda iki farklı yüzde gösteriyordu.
+  */
+  const doluluk = student ? profilDolulugu(student) : null;
+  const profileChecks: boolean[] = doluluk ? doluluk.adimlar.map((a) => a.tamam) : [];
+  const profileCompletion = doluluk ? doluluk.oran : 0;
+
+  /*
+    KÜÇÜK CV ÇAĞRISI — YALNIZ CV'Sİ OLMAYAN VE KAPATMAMIŞ ÖĞRENCİYE
+
+    Doluluk çubuğunun yerinde, aynı ölçüde tek satır; yeni bir banner değil.
+    Kapatma bu hesap için saklanıyor (`cvCagrisiniKapat`).
+  */
+  const [cvCagrisiKapali, setCvCagrisiKapali] = useState<boolean>(() => {
+    if (!student) return true;
+    try {
+      return cvCagrisiKapatildiMi(window.localStorage, student.id);
+    } catch {
+      return false;
+    }
+  });
+  const cvCagrisiGoster = Boolean(student && onCvOlustur && !cvVarMi(student) && !cvCagrisiKapali);
 
   /** İlan veren farklı şirket sayısı. Profil yokken uyum yerine bu gösteriliyor. */
   /* Çip sayıları TÜM eşleşen ilanlardan; seçim listeyi daraltmadığı için
@@ -1481,7 +1493,36 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             eksikken, tek satır ve dokununca profili açan bir çubuk kaldı.
             Profil tamamlandığında hiçbir şey gösterilmiyor.
           */}
-          {student && profileCompletion < 100 && (
+          {cvCagrisiGoster && (
+            <div className="flex w-full items-center gap-2 rounded-2xl border border-blue-100 bg-blue-50/70 py-1.5 pl-3 pr-1.5">
+              <p className="min-w-0 flex-1 text-xs font-semibold text-blue-900 sm:text-sm">
+                Başvurularında kullanabileceğin CV’ni oluştur.
+              </p>
+              <button
+                type="button"
+                onClick={onCvOlustur}
+                className="inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-xl bg-blue-600 px-3 text-xs font-bold text-white hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:text-sm"
+              >
+                CV’mi oluştur
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCvCagrisiKapali(true);
+                  try {
+                    cvCagrisiniKapat(window.localStorage, student!.id);
+                  } catch {
+                    /* Depo kapalı: bu oturumda kapalı kalıyor. */
+                  }
+                }}
+                aria-label="CV çağrısını kapat"
+                className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-blue-800/70 hover:bg-blue-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+              >
+                <X aria-hidden className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+          {student && !cvCagrisiGoster && profileCompletion < 100 && (
             <button
               type="button"
               onClick={onGoToProfile}
