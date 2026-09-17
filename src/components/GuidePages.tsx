@@ -11,7 +11,12 @@ import {
   Sparkles,
   ExternalLink,
   List,
+  Clock,
+  CalendarCheck,
+  Lightbulb,
+  HelpCircle,
 } from 'lucide-react';
+import { IcindekilerMobil, IcindekilerYan, OkumaCubugu, REHBER_GOVDE_STILI, useRehberBasliklari } from './RehberOkuma';
 import { RehberdeIlanlar } from './RehberdeIlanlar';
 import { SayfaKabugu } from './SayfaKabugu';
 import { RenkliKart } from './RehberGorseller';
@@ -20,7 +25,7 @@ import { BOLUMLER } from '../data/bolumler';
 import { ARACLAR } from './AraclarListesi';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { RehberMerkezi as RehberMerkeziBilesen } from './RehberMerkezi';
-import { RehberIzgarasi, RehberKarti } from './RehberKartlari';
+import { RehberIzgarasi, RehberKapagi, RehberKarti } from './RehberKartlari';
 import { gecmiseYaz } from '../lib/rehber-gecmis.mjs';
 import { rehberOkunduBildir } from '../lib/rehber-veri';
 import type { StudentProfile } from '../types';
@@ -48,8 +53,12 @@ import { tarihMetni } from '../lib/tarih.mjs';
   Kabuğun genel "Geri" düğmesi ile gövdedeki "← Tüm rehberler" aynı işi
   yapıyordu. Nereye gittiğini söyleyen kaldı.
 */
-const Kabuk: React.FC<{ onBack?: () => void; children: React.ReactNode }> = ({ children }) => (
-  <SayfaKabugu>{children}</SayfaKabugu>
+const Kabuk: React.FC<{ onBack?: () => void; genis?: boolean; children: React.ReactNode }> = ({
+  genis = false,
+  children,
+}) => (
+  /* Rehber yazısı site genişliğinde (17 Eylül 2026): ana sayfadan girince daralmıyor. */
+  <SayfaKabugu icerikGenisligi={genis ? SAYFA_GENISLIGI : undefined}>{children}</SayfaKabugu>
 );
 
 /* ------------------------------------------------------------------ merkez */
@@ -285,14 +294,15 @@ export const RehberBaglantilari: React.FC<{
     <>
       {digerleri.length > 0 && (
         <section className="mt-10 space-y-2">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-600">
+          <h2 className="text-2xl font-extrabold tracking-tight text-gray-900">
             Bunlar da işine yarar
           </h2>
-          <ul className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          {/* Fotoğraflı kartlar: rehber merkeziyle aynı kart (RehberKarti), gerçek <a href>. */}
+          <RehberIzgarasi>
             {digerleri.map((r) => (
-              <Satir key={r.slug} rehber={r} onNavigate={onNavigate} />
+              <RehberKarti key={r.slug} rehber={r} onNavigate={onNavigate} />
             ))}
-          </ul>
+          </RehberIzgarasi>
           <a
             href="/rehber"
             onClick={(e) => yakala(e, '/rehber')}
@@ -366,64 +376,6 @@ export const RehberBaglantilari: React.FC<{
  * Kısa yazılarda hiç çizilmiyor — üç başlıklı bir yazıda içindekiler
  * gezinmeye yardım etmiyor, yalnızca yer kaplıyor.
  */
-const Icindekiler: React.FC<{ kap: React.RefObject<HTMLDivElement | null>; anahtar: string }> = ({
-  kap,
-  anahtar,
-}) => {
-  const [basliklar, setBasliklar] = React.useState<{ id: string; metin: string }[]>([]);
-
-  React.useEffect(() => {
-    const kok = kap.current;
-    if (!kok) return;
-    const bulunan = Array.from(kok.querySelectorAll('h2')).map((h, i) => {
-      if (!h.id) h.id = `bolum-${i + 1}`;
-      /* scroll-mt: yapışkan başlık çubuğu hedefin üstünü örtmesin. */
-      h.classList.add('scroll-mt-24');
-      return { id: h.id, metin: h.textContent || '' };
-    });
-    setBasliklar(bulunan.length >= 4 ? bulunan : []);
-  }, [kap, anahtar]);
-
-  if (!basliklar.length) return null;
-
-  /*
-    KENDİ NUMARAMIZI HER ZAMAN EKLEMİYORUZ
-
-    Elle yazılan rehberlerde başlıkların bir kısmı zaten numaralı
-    ("1. Okulunun staj birimiyle başla"). Listeye bir de biz numara
-    koyunca "1. 1. Okulunun…" çıkıyordu.
-
-    Numarayı başlıktan silmek yerine listeninkini kaldırıyoruz: oradaki
-    sayı yazarın adım sırası, metnin içinde de öyle görünüyor. Kendi
-    saydığımız sıra ona uymayabilir.
-  */
-  const kendiNumarasiVar = basliklar.some((b) => /^\d+[.)]\s/.test(b.metin.trim()));
-
-  return (
-    <nav aria-label="İçindekiler" className="rounded-2xl border border-gray-200 bg-white p-4">
-      <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-500">
-        <List className="w-3.5 h-3.5" />
-        İçindekiler
-      </p>
-      <ol className="mt-2 space-y-1.5">
-        {basliklar.map((b, i) => (
-          <li key={b.id}>
-            <a
-              href={`#${b.id}`}
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById(b.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }}
-              className="text-sm text-blue-700 hover:underline"
-            >
-              {kendiNumarasiVar ? b.metin : `${i + 1}. ${b.metin}`}
-            </a>
-          </li>
-        ))}
-      </ol>
-    </nav>
-  );
-};
 
 export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }) => {
   /* Rehbere karşılık gelen ürün yüzeyleri; eşlemesi yoksa boş dizi. */
@@ -443,6 +395,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
   const reklamUygun = REKLAM_UYGUN_REHBERLER.includes(slug);
   const rehber = rehberBul(slug);
   const icerikRef = React.useRef<HTMLDivElement>(null);
+  const { basliklar, tumBasliklar, etkin, kendiNumarasiVar } = useRehberBasliklari(icerikRef, slug);
 
   useEffect(() => {
     /*
@@ -498,22 +451,60 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
   }
 
   return (
-    <Kabuk onBack={onBack}>
-      <article className="space-y-3">
+    <Kabuk onBack={onBack} genis>
+      <style>{REHBER_GOVDE_STILI}</style>
+      <OkumaCubugu />
+      <article>
         <button
           type="button"
           onClick={() => onNavigate('/rehber')}
-          className="text-sm font-semibold text-blue-600 hover:underline cursor-pointer"
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-blue-600 hover:underline cursor-pointer"
         >
-          &larr; Tüm rehberler
+          <ArrowLeft aria-hidden className="h-4 w-4" />
+          Tüm rehberler
         </button>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">
-          {rehber.baslik}
-        </h1>
 
-        <p className="text-xs text-gray-600">
-          {konuEtiketi(rehber.konu)} · {rehberOkumaDakika(rehber)} dk okuma
-        </p>
+        {/*
+          KAPAK: rehberin kartta görünen fotoğrafı, üstünde başlık.
+          Fotoğraf yüklenemezse gizleniyor; koyu degrade başlığı yine okunur tutuyor.
+        */}
+        <header className="relative mt-2 overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-blue-800 text-white shadow-sm">
+          <div aria-hidden className="absolute inset-0 [&_img]:h-full [&_img]:w-full [&_img]:object-cover [&_picture]:block [&_picture]:h-full">
+            <RehberKapagi slug={rehber.slug} oncelikli />
+          </div>
+          <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-900/60 to-slate-900/10" />
+          <div className="relative flex min-h-[320px] flex-col justify-end gap-4 p-6 sm:min-h-[420px] sm:p-10 lg:p-12">
+            <span className="inline-flex w-fit items-center rounded-full bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white backdrop-blur">
+              {konuEtiketi(rehber.konu)}
+            </span>
+            <h1 className="max-w-4xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">
+              {rehber.baslik}
+            </h1>
+            {rehber.ozet && <p className="max-w-3xl text-base leading-relaxed text-white/85 sm:text-lg">{rehber.ozet}</p>}
+            <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 backdrop-blur">
+                <Clock aria-hidden className="h-4 w-4" />
+                {rehberOkumaDakika(rehber)} dk okuma
+              </span>
+              {tumBasliklar.length > 0 && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 backdrop-blur">
+                  <List aria-hidden className="h-4 w-4" />
+                  {tumBasliklar.length} bölüm
+                </span>
+              )}
+              {rehber.guncelleme && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 backdrop-blur">
+                  <CalendarCheck aria-hidden className="h-4 w-4" />
+                  {tarihMetni(rehber.guncelleme)}
+                </span>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* İKİ SÜTUN (geniş ekranda): solda yazı, sağda yapışkan içindekiler. */}
+        <div className="mt-6 lg:mt-10 lg:grid lg:grid-cols-12 lg:gap-10">
+        <div className="min-w-0 space-y-5 lg:col-span-8">
 
         {/*
           HIZLI CEVAP
@@ -523,15 +514,19 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
           Ayrıntı aşağıda duruyor; kısası burada.
         */}
         {rehber.hizliCevap && (
-          <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700">Kısa cevap</p>
-            <p className="mt-1 text-sm sm:text-base text-gray-800 leading-relaxed">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 p-6 text-white shadow-sm sm:p-7">
+            <Lightbulb aria-hidden className="absolute -right-4 -top-4 h-28 w-28 text-white/10" />
+            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-blue-100">
+              <Lightbulb aria-hidden className="h-4 w-4" />
+              Kısa cevap
+            </p>
+            <p className="relative mt-2 text-lg font-semibold leading-relaxed sm:text-xl">
               {rehber.hizliCevap}
             </p>
           </div>
         )}
 
-        <Icindekiler kap={icerikRef} anahtar={rehber.slug} />
+        <IcindekilerMobil basliklar={basliklar} kendiNumarasiVar={kendiNumarasiVar} />
         {/*
           İÇERİK İÇİ BAĞLANTILARI YAKALA
 
@@ -551,7 +546,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
         */}
         <div
           ref={icerikRef}
-          className="space-y-3"
+          className={`rehber-govde rounded-3xl border border-gray-200 bg-white p-5 sm:p-8 lg:p-10 ${kendiNumarasiVar ? '' : 'rehber-govde--sayili'}`}
           onClick={(e) => {
             const bag = (e.target as HTMLElement).closest('a');
             if (!bag) return;
@@ -576,15 +571,20 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
         */}
         {rehber.sss && rehber.sss.length > 0 && (
           <section className="mt-10 space-y-3">
-            <h2 className="text-lg font-bold text-gray-900">Sık sorulanlar</h2>
-            <div className="rounded-2xl border border-gray-200 bg-white divide-y divide-gray-100">
+            <h2 className="flex items-center gap-2.5 text-2xl font-extrabold tracking-tight text-gray-900">
+              <span aria-hidden className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                <HelpCircle className="h-5 w-5" />
+              </span>
+              Sık sorulanlar
+            </h2>
+            <div className="space-y-2.5">
               {rehber.sss.map((s) => (
-                <details key={s.soru} className="group px-4 py-3.5">
-                  <summary className="flex items-center gap-3 cursor-pointer list-none font-semibold text-gray-900 text-sm sm:text-base">
-                    <ChevronRight className="w-4 h-4 shrink-0 text-gray-400 transition-transform group-open:rotate-90" />
+                <details key={s.soru} className="group rounded-2xl border border-gray-200 bg-white px-5 py-4 transition-colors open:border-blue-200 open:bg-blue-50/40">
+                  <summary className="flex min-h-8 items-center gap-3 cursor-pointer list-none font-bold text-gray-900 text-base">
+                    <ChevronRight className="w-5 h-5 shrink-0 text-blue-600 transition-transform group-open:rotate-90" />
                     {s.soru}
                   </summary>
-                  <p className="mt-2 pl-7 text-sm text-gray-600 leading-relaxed">{s.cevap}</p>
+                  <p className="mt-2 pl-8 text-base text-gray-700 leading-relaxed">{s.cevap}</p>
                 </details>
               ))}
             </div>
@@ -774,6 +774,30 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
             {rehber.inceleyen && <>Gözden geçiren: {rehber.inceleyen}</>}
           </p>
         )}
+        </div>
+
+        <aside className="hidden lg:col-span-4 lg:block" aria-label="Yazı içinde gezin">
+          <div className="sticky top-24 space-y-4">
+            <IcindekilerYan basliklar={basliklar} etkin={etkin} kendiNumarasiVar={kendiNumarasiVar} />
+            <div className="rounded-3xl bg-gradient-to-br from-slate-900 to-blue-900 p-5 text-white">
+              <p className="text-xs font-bold uppercase tracking-wide text-blue-200">Okuduğunu uygula</p>
+              <p className="mt-1 text-base font-bold leading-snug">Rehberi bitirince güncel staj ilanlarına göz at.</p>
+              <a
+                href="/staj-ilanlari"
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  onNavigate('/staj-ilanlari');
+                }}
+                className="mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white px-4 text-sm font-bold text-slate-900 hover:bg-blue-50"
+              >
+                İlanlara git
+                <ChevronRight aria-hidden className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+        </aside>
+        </div>
       </article>
 
       <RehberBaglantilari

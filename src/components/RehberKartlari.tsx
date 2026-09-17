@@ -255,7 +255,7 @@ export const RehberIzgarasi: React.FC<{ children: React.ReactNode }> = ({ childr
  * ------------------------------------------------------------------ */
 
 /** Rehber kapağı — kartla AYNI sürümlü dosyalar. */
-const RehberKapagi: React.FC<{ slug: string; oncelikli?: boolean }> = ({ slug, oncelikli = false }) => (
+export const RehberKapagi: React.FC<{ slug: string; oncelikli?: boolean }> = ({ slug, oncelikli = false }) => (
   <picture>
     <source
       srcSet={`/rehber-gorselleri/${slug}.avif?v=rehber-fotograf-20260907-tam`}
