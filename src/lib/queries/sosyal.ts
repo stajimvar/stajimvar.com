@@ -2413,3 +2413,31 @@ export async function akisiGetir(
     })
     .filter((x): x is AkisPaylasimi => x !== null);
 }
+
+/**
+ * BİLDİRİM KİŞİLERİNİN AD VE FOTOĞRAFI
+ *
+ * Zil paneli açılınca bir kez, bildirimlerdeki kişi kimlikleri
+ * (`lib/bildirim-kisisi.mjs`) için tek sorgu. Okuma `social_profiles`
+ * üzerinden ve satır düzeyi erişim kuralları geçerli: görünmeyen profil
+ * dönmüyor ve o bildirim tür simgesiyle kalıyor — fotoğraf ya da ad
+ * uydurulmuyor. Fotoğrafın kendisi `ProfilFotografi` ile yetkili iniyor.
+ */
+export async function bildirimKisileriniGetir(
+  kimlikler: string[],
+): Promise<Map<string, { ad: string; avatarYolu: string | null }>> {
+  const temiz = Array.from(new Set(kimlikler.filter((k) => UUID_DESENI.test(k)))).slice(0, 50);
+  const sonuc = new Map<string, { ad: string; avatarYolu: string | null }>();
+  if (temiz.length === 0) return sonuc;
+  const { data, error } = await db
+    .from('social_profiles')
+    .select('profile_id, username, gorunen_ad, avatar_path')
+    .in('profile_id', temiz);
+  if (error) hata('Bildirim kişileri alınamadı', error);
+  for (const satir of (data ?? []) as any[]) {
+    const ad = satir.gorunen_ad || (satir.username ? `@${satir.username}` : null);
+    if (!ad) continue;
+    sonuc.set(satir.profile_id, { ad, avatarYolu: satir.avatar_path ?? null });
+  }
+  return sonuc;
+}
