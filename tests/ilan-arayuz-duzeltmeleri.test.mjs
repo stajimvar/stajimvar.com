@@ -207,7 +207,14 @@ test('bağımsız eylemler örtünün üstünde kalıyor', () => {
 /* ------------------------------------------------------------------ 6 */
 
 test('MOBİL SABİT ÇUBUK alt gezinmeyi kapatmıyor', () => {
-  assert.match(detay, /lg:hidden fixed inset-x-0 bottom-0/);
+  assert.match(detay, /lg:hidden fixed inset-x-0 z-40/);
+  /*
+    17 Eylül 2026: ilan detayı artık site kabuğunda (`gomulu`) ve alt
+    gezinme o rotada da çiziliyor. Çubuk gezinmenin ÜSTÜNE çıkıyor
+    (390 px'te ölçüldü: çubuk 711–784, gezinme 787–844); kabuksuz kipte
+    eskisi gibi en altta.
+  */
+  assert.match(detay, /gomulu \? 'bottom-\[calc\(60px\+env\(safe-area-inset-bottom\)\)\] pb-3' : 'bottom-0 /);
   /*
     Yüzen alt gezinme `Header` içinde ve z-50; ilan detayı kendi
     başlığıyla açıldığı için o rotada hiç çizilmiyor (ölçüldü, 390px:
@@ -241,7 +248,9 @@ test('sayfa altında çubuk kadar boşluk var — son satır çubuğun altında 
 });
 
 test('masaüstü görünümü değişmedi: eski eylem satırı lg üstünde duruyor', () => {
-  assert.match(detay, /hidden lg:flex flex-col sm:flex-row gap-2\.5 sticky bottom-4/);
+  /* 17 Eylül 2026: eylemler geniş ekranda sağdaki yapışkan sütunda, alt alta. */
+  assert.match(detay, /hidden lg:flex flex-col gap-2\.5/);
+  assert.match(detay, /lg:col-span-4 lg:sticky lg:top-6/);
 });
 
 test('sabit çubuktaki dış başvuru da giriş istemeden resmî adrese gidiyor', () => {

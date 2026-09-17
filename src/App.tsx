@@ -1802,6 +1802,34 @@ export default function App() {
     </Suspense>
   );
 
+  /*
+    BAŞVURU PENCERESİ TEK YERDE
+
+    Yalnız ana kabukta çiziliyordu; ilan detay sayfasındaki (`/ilan/…`)
+    "StajımVar ile Başvur" düğmesi `applyTarget`i dolduruyor ama pencere o
+    rotada çizilmiyordu. Aynı öğe iki kabuğa da giriyor.
+  */
+  const basvuruPenceresi = applyTarget ? (
+    <Suspense fallback={null}>
+      <ApplyDialog
+        listing={applyTarget.listing}
+        alreadyApplied={applications.some((a) => a.listingId === applyTarget.listing.id)}
+        onClose={() => setApplyTarget(null)}
+        onSubmit={submitApplication}
+        /* Yalnız CV'si olmayan öğrenciye; dönüşte aynı ilanın penceresi yeniden açılıyor. */
+        onCvOlustur={
+          activeStudent && !cvVarMi(activeStudent)
+            ? () => {
+                const ilan = applyTarget.listing;
+                setApplyTarget(null);
+                setCvAkisi({ baslangic: 'form', ilan });
+              }
+            : undefined
+        }
+      />
+    </Suspense>
+  ) : null;
+
   const cvPenceresi =
     cvAkisi && session && activeStudent ? (
       <Suspense fallback={null}>
@@ -2361,18 +2389,25 @@ export default function App() {
   if (temizYol.startsWith('/ilan/')) {
     const onek = idPrefixFromSlug(temizYol.slice('/ilan/'.length));
     if (onek) {
-      return (
+      /*
+        İLAN DETAYI SİTE KABUĞUNDA (17 Eylül 2026)
+
+        Sayfa kendi sade başlığıyla ve `max-w-3xl` dar sütunla açılıyordu;
+        ana sayfadan ilana girince site bir anda daralıyordu. Artık üst
+        çubuk ve genişlik öteki sayfalarla aynı (`icerikSayfasi`).
+      */
+      return icerikSayfasi(
         <>
           <ListingPage
+            gomulu
             idPrefix={onek}
             onBack={goHome}
             onNavigate={navigate}
             onApply={(ilan) => handleApplyToJob(ilan, 0)}
             onTrack={handleTrackApplication}
           />
-          {girisModali}
-          {adPenceresi}
-        </>
+          {basvuruPenceresi}
+        </>,
       );
     }
   }
@@ -3181,24 +3216,7 @@ export default function App() {
         />
       )}
 
-      {applyTarget && (
-        <ApplyDialog
-          listing={applyTarget.listing}
-          alreadyApplied={applications.some((a) => a.listingId === applyTarget.listing.id)}
-          onClose={() => setApplyTarget(null)}
-          onSubmit={submitApplication}
-          /* Yalnız CV'si olmayan öğrenciye; dönüşte aynı ilanın penceresi yeniden açılıyor. */
-          onCvOlustur={
-            activeStudent && !cvVarMi(activeStudent)
-              ? () => {
-                  const ilan = applyTarget.listing;
-                  setApplyTarget(null);
-                  setCvAkisi({ baslangic: 'form', ilan });
-                }
-              : undefined
-          }
-        />
-      )}
+      {basvuruPenceresi}
 
       {activeQuiz && activeStudent && (
         <SkillAssessmentModal

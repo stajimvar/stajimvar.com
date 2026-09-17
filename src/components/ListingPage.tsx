@@ -1,4 +1,5 @@
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
+import { SAYFA_GENISLIGI } from '../lib/duzen';
 import React, { useEffect, useState } from 'react';
 import {
   ArrowLeft, MapPin, Calendar, DollarSign, ShieldCheck, ExternalLink, RefreshCw,
@@ -33,6 +34,12 @@ import { UlkeRozeti } from './UlkeRozeti';
  */
 
 interface ListingPageProps {
+  /**
+   * Sitenin kabuğunda mı (üst çubuk ve alt gezinme App'ten). Öyleyse kendi
+   * başlığını çizmiyor, genişliği sitenin öteki sayfalarıyla aynı ve
+   * telefondaki sabit başvuru çubuğu alt gezinmenin ÜSTÜNDE duruyor.
+   */
+  gomulu?: boolean;
   idPrefix: string;
   onBack: () => void;
   onNavigate: (path: string) => void;
@@ -78,7 +85,7 @@ const Bilgi: React.FC<{
 );
 
 export const ListingPage: React.FC<ListingPageProps> = ({
-  idPrefix, onBack, onNavigate, onApply, onTrack,
+  gomulu = false, idPrefix, onBack, onNavigate, onApply, onTrack,
 }) => {
   const [listing, setListing] = useState<InternshipListing | null>(null);
   const [durum, setDurum] = useState<'yukleniyor' | 'hazir' | 'yok' | 'hata'>('yukleniyor');
@@ -228,7 +235,8 @@ export const ListingPage: React.FC<ListingPageProps> = ({
   const [metinAcik, setMetinAcik] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-gray-900">
+    <div className={gomulu ? 'flex-1 text-gray-900' : 'min-h-screen bg-[#F9FAFB] text-gray-900'}>
+      {!gomulu && (
       <header className="border-b border-gray-200 bg-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <button type="button" onClick={onBack} aria-label="Ana sayfa">
@@ -244,6 +252,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
           </button>
         </div>
       </header>
+      )}
 
       {/*
         ALT BOŞLUK: MOBİL SABİT ÇUBUK İÇİN
@@ -252,7 +261,17 @@ export const ListingPage: React.FC<ListingPageProps> = ({
         güvenli alan. Boşluk bırakılmazsa sayfanın son satırı çubuğun
         altında kalıyor. Masaüstünde çubuk yok, bu yüzden `lg:pb-8`.
       */}
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-[calc(96px+env(safe-area-inset-bottom))] lg:pb-8 space-y-6">
+      {/*
+        GENİŞLİK: site kabuğunda öteki sayfalarla aynı (`SAYFA_GENISLIGI`);
+        telefonda alt boşluk hem başvuru çubuğunu hem alt gezinmeyi karşılıyor.
+      */}
+      <main
+        className={
+          gomulu
+            ? `${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-4 sm:pt-6 pb-[calc(170px+env(safe-area-inset-bottom))] lg:pb-8 space-y-6`
+            : 'max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-[calc(96px+env(safe-area-inset-bottom))] lg:pb-8 space-y-6'
+        }
+      >
         {durum === 'yukleniyor' && (
           <div className="space-y-4" role="status" aria-live="polite">
             <div className="h-28 rounded-3xl bg-gray-100 animate-pulse"/>
@@ -291,7 +310,13 @@ export const ListingPage: React.FC<ListingPageProps> = ({
         )}
 
         {durum === 'hazir' && listing && (
-          <>
+          /*
+            İKİ SÜTUN (geniş ekranda): solda ilanın kendisi, sağda yapışkan
+            başvuru alanı. Telefonda sıra aynı: içerik, uyarı; eylemler
+            alttaki sabit çubukta.
+          */
+          <div className="space-y-6 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:space-y-0">
+          <div className="min-w-0 space-y-6 lg:col-span-8">
             <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-7 space-y-4">
               <div className="flex items-start gap-4">
                 <ListingLogo
@@ -554,6 +579,8 @@ export const ListingPage: React.FC<ListingPageProps> = ({
               )}
             </div>
 
+          </div>
+          <aside className="min-w-0 space-y-3 lg:col-span-4 lg:sticky lg:top-6" aria-label="Başvuru seçenekleri">
             {/*
               Açıklama, kart ve başvuru diyaloğuyla aynı cümleyi kuruyor:
               karar lib/basvuru-yolu.mjs'te. Önce burada "şirkete talebi
@@ -574,7 +601,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
               eylemler ekranın altındaki sabit çubukta duruyor ve ikisi
               birden çizilirse aynı düğme sayfada iki kez görünüyor.
             */}
-            <div className="hidden lg:flex flex-col sm:flex-row gap-2.5 sticky bottom-4">
+            <div className="hidden lg:flex flex-col gap-2.5">
               {yol.resmiAdres && (
                 <a
                   href={yol.resmiAdres}
@@ -602,7 +629,8 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                 {yol.anaEylem === 'resmi-site' ? yol.takipEtiketi : yol.anaEtiket}
               </button>
             </div>
-          </>
+          </aside>
+          </div>
         )}
       </main>
 
@@ -630,7 +658,10 @@ export const ListingPage: React.FC<ListingPageProps> = ({
       */}
       {listing && (yol.resmiAdres || yol.anaEylem !== 'resmi-site') && (
         <div
-          className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(15,23,42,0.10)]"
+          className={`lg:hidden fixed inset-x-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur px-3 pt-3 shadow-[0_-8px_24px_rgba(15,23,42,0.10)] ${
+            /* Site kabuğunda alt gezinmenin üstünde; güvenli alanı gezinme karşılıyor. */
+            gomulu ? 'bottom-[calc(60px+env(safe-area-inset-bottom))] pb-3' : 'bottom-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]'
+          }`}
           role="region"
           aria-label="Başvuru"
         >
