@@ -872,10 +872,15 @@ test('kısa ve tek satırlık alanlar hâlâ truncate ile kesiliyor', () => {
     alanlara yayılmamalı. Kullanıcı adı, başlık ve alan rozeti ölçümde
     zaten doğruydu — üç nokta ile kesiliyorlar, taşırmıyorlar.
   */
-  assert.match(gorunum, /<h1 className="truncate text-lg/);
+  /*
+    17 Eylül 2026: ad büyük başlık oldu ve SARIYOR (break-words) — uzun ad
+    kırpılınca kimin profili olduğu okunmuyordu. Kullanıcı adı ve rozet
+    hâlâ tek satır ve truncate.
+  */
+  assert.match(gorunum, /<h1 className="min-w-0 break-words text-xl/);
   assert.match(
     gorunum,
-    /<p className="min-w-0 truncate text-sm text-gray-600">@\{profil\.kullaniciAdi\}<\/p>/,
+    /<p className="min-w-0 truncate text-sm text-gray-600 sm:text-base">@\{profil\.kullaniciAdi\}<\/p>/,
   );
   assert.match(gorunum, /inline-flex max-w-full items-center rounded-full/);
   assert.match(gorunum, /<span className="truncate">\{profil\.sektorAdi\} alanı<\/span>/);
@@ -1382,7 +1387,7 @@ test('sahibe özel her şey sahibiMi koşulunun içinde, bağlantı düğmesi d�
   );
   assert.match(gorunum, /\{sahibiMi && yayimlamaDurumu === 'hata' && \(/);
   /* Bağlantı düğmesi bunun TERSİ dalda: kendi profilinde çizilmiyor. */
-  assert.match(gorunum, /\{!sahibiMi && bakanId && \(/);
+  assert.match(gorunum, /\{!sahibiMi && bakanId && <BaglantiDugmesi/);
 });
 
 test('görünmeyen, olmayan ve farklı alandaki profil aynı güvenli ekranı veriyor', () => {
@@ -1878,11 +1883,14 @@ test('ziyaretçi görünümü iki sütun, ızgara sahibin ekranıyla aynı ölç
     Testin AMACI değişmedi: iki ekranın iskeleti hâlâ dize dize aynı
     olmak zorunda.
   */
-  const iskelet = /grid grid-cols-1 gap-0 sm:gap-6 lg:grid-cols-12 items-start/;
-  assert.match(gorunum, iskelet);
-  assert.match(ogrenciProfili, iskelet);
-  assert.match(gorunum, /className="lg:col-span-4 lg:sticky lg:top-4"/);
-  assert.match(gorunum, /className="lg:col-span-8 min-w-0"/);
+  /*
+    17 Eylül 2026: iki sütun iki ekrandan da kalktı. Ziyaretçi görünümü de
+    sahibin /cv ekranı gibi: üstte yatay kart, altında galeri. Düzenleme
+    ekranı iki sütunlu iskeleti kullanmaya devam ediyor.
+  */
+  assert.match(ogrenciProfili, /grid grid-cols-1 gap-0 sm:gap-6 lg:grid-cols-12 items-start/);
+  assert.doesNotMatch(gorunum, /lg:col-span-4 lg:sticky/);
+  assert.match(gorunum, /<div className="space-y-0 sm:space-y-6">/);
 
   /*
     Izgara sabiti DEĞİŞMEDİ ve iki ekran da `gorunum="sade"` istiyor: iki
@@ -1894,12 +1902,8 @@ test('ziyaretçi görünümü iki sütun, ızgara sahibin ekranıyla aynı ölç
     ),
     'ızgara sabiti değişmemeli',
   );
-  assert.match(gorunum, /<PaylasimIzgarasi[\s\S]{0,400}?gorunum="sade"/);
-  /*
-    17 Eylül 2026: sahibin /cv ekranı yeni tasarıma geçti (kart üstte,
-    ayrık karolu galeri). Ziyaretçi profili bu işin kapsamı dışında ve
-    `sade` ızgarada kaldı; iki ekran bu tarihten sonra bilerek ayrışıyor.
-  */
+  /* İki ekran yine aynı ızgarayı istiyor: `galeri` (Instagram gibi 3/4 sütun). */
+  assert.match(gorunum, /<PaylasimIzgarasi[\s\S]{0,400}?gorunum="galeri"/);
   assert.match(sayfa, /<PaylasimIzgarasi[\s\S]{0,400}?gorunum="galeri"/);
 
   /* Sol sütun yalnız herkese açık alanlar: sahibin üst satırı burada yok. */

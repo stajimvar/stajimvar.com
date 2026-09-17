@@ -100,7 +100,8 @@ test('mobilYuzey köşesi KOSE.kart ile aynı değerde', () => {
 
 test('kimlik bloğu ve sosyal başlık sm üstünde kart olmaya devam ediyor', () => {
   assert.match(profilBasligi, /<Card mobilYuzey className=/);
-  assert.match(sosyalGorunum, /border-b border-gray-200 bg-white p-3 sm:rounded-2xl sm:border/);
+  /* 17 Eylül 2026: ziyaretçi kartı da yatay tasarımda; telefonda yüzey, sm üstünde kart. */
+  assert.match(sosyalGorunum, /border-b border-gray-200 bg-white px-4 py-5 sm:rounded-2xl sm:border/);
 });
 
 /* ------------------------------------------------------------- bleed */
@@ -117,12 +118,13 @@ test('kenara yaslanma yalnız kimlik bloğu ve fotoğraf ızgarasında', () => {
   assert.match(ogrenciProfili, /onCikis=\{onLogout\}/);
 });
 
-test('iki ekranın mobil iskeleti birebir aynı', () => {
+test('iki ekran aynı düzende: üstte yatay kart, altında galeri', () => {
   /*
-    Aynı dize iki dosyada: kişi kendi ekranıyla başkasınınki arasında
-    geçerken sütunlar kaymasın.
+    17 Eylül 2026: iki sütunlu iskelet iki ekrandan da kalktı. Sahibin
+    /cv ana görünümü tek sütun (sütunlar lg:col-span-12), ziyaretçi
+    görünümü de kart + "Paylaşımlar" + aynı galeri ızgarası.
   */
-  const iskelet = 'grid grid-cols-1 gap-0 sm:gap-6 lg:grid-cols-12 items-start';
-  assert.ok(ogrenciProfili.includes(iskelet));
-  assert.ok(sosyalGorunum.includes(iskelet));
+  assert.ok(ogrenciProfili.includes("'contents lg:block lg:col-span-12'"));
+  assert.match(sosyalGorunum, /<div className="space-y-0 sm:space-y-6">/);
+  assert.match(sosyalGorunum, /gorunum="galeri"/);
 });
