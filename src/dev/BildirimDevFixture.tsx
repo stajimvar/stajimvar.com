@@ -20,6 +20,29 @@ import type { Bildirim } from '../lib/bildirim';
 const dk = (n: number) => new Date(Date.now() - n * 60000).toISOString();
 
 const OGRENCI: Bildirim[] = [
+  /* Sosyal örnekler (geliştirici fikstürü): bağlantı isteği satır içi yanıtı ve beğeni. */
+  {
+    id: 's1',
+    tur: 'baglanti_istegi',
+    baslik: 'Yeni bağlantı isteği',
+    govde: '@ornekkullanici seninle bağlantı kurmak istiyor.',
+    hedef: '/baglantilar',
+    basvuruId: null,
+    anahtar: 'baglanti_istegi:ornek:ben',
+    okunduMu: false,
+    tarih: dk(1),
+  },
+  {
+    id: 's2',
+    tur: 'paylasim_begeni',
+    baslik: 'Paylaşımın beğenildi',
+    govde: '@ornekkullanici paylaşımını beğendi.',
+    hedef: '/cv',
+    basvuruId: null,
+    anahtar: null,
+    okunduMu: true,
+    tarih: dk(60 * 24 * 12),
+  },
   {
     id: '1',
     tur: 'gorusme_daveti',
@@ -197,6 +220,10 @@ export const BildirimDevFixture: React.FC = () => {
             setAcik(false);
           }}
           onTumunuOkundu={() => setKayitlar((o) => o.map((x) => ({ ...x, okunduMu: true })))}
+          onBaglantiYanitla={async (id, karar) => {
+            setKayitlar((o) => o.map((x) => (x.id === id ? { ...x, okunduMu: true } : x)));
+            return karar;
+          }}
         />
       )}
     </div>

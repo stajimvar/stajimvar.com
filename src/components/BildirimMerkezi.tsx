@@ -1,7 +1,8 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, Briefcase, CalendarClock, CheckCircle2, FileText, Heart, UserPlus, X } from 'lucide-react';
+import { Bell, Briefcase, CalendarClock, CheckCircle2, ChevronLeft, FileText, Heart, UserPlus, X } from 'lucide-react';
 import { gecenSure, type Bildirim } from '../lib/bildirim';
+import { bildirimleriGrupla } from '../lib/bildirim-grubu.mjs';
 
 /**
  * BİLDİRİM MERKEZİ — İKİ DÜNYA, TEK SİSTEM
@@ -19,13 +20,28 @@ import { gecenSure, type Bildirim } from '../lib/bildirim';
 
 /** Bildirim türünden ikon. Tanınmayan türde nötr bir belge ikonu. */
 function BildirimIkonu({ tur, renk }: { tur: string; renk: string }) {
-  const ortak = { className: 'h-4 w-4 shrink-0', style: { color: renk } };
-  if (tur === 'gorusme_daveti' || tur === 'gorusme_guncellendi') return <CalendarClock {...ortak} />;
-  if (tur === 'teklif' || tur === 'teklif_kabul') return <CheckCircle2 {...ortak} />;
-  if (tur === 'yeni_basvuru') return <Briefcase {...ortak} />;
-  if (tur === 'baglanti_istegi' || tur === 'baglanti_kabul') return <UserPlus {...ortak} />;
-  if (tur === 'paylasim_begeni') return <Heart {...ortak} />;
-  return <FileText {...ortak} />;
+  /*
+    Yuvarlak simge (telefonda 56, geniş ekranda 44 px): Instagram'da kişinin fotoğrafının durduğu yer.
+    Bildirim satırı kişi bilgisi taşımadığı için türün simgesi çiziliyor;
+    renk tek vurgu rengi, zemin onun açık tonu.
+  */
+  const ortak = { className: 'h-5 w-5 shrink-0', style: { color: renk }, strokeWidth: 1.9 };
+  const simge =
+    tur === 'gorusme_daveti' || tur === 'gorusme_guncellendi' ? <CalendarClock {...ortak} />
+    : tur === 'teklif' || tur === 'teklif_kabul' ? <CheckCircle2 {...ortak} />
+    : tur === 'yeni_basvuru' ? <Briefcase {...ortak} />
+    : tur === 'baglanti_istegi' || tur === 'baglanti_kabul' ? <UserPlus {...ortak} />
+    : tur === 'paylasim_begeni' ? <Heart {...ortak} />
+    : <FileText {...ortak} />;
+  return (
+    <span
+      aria-hidden="true"
+      className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-white sm:h-11 sm:w-11"
+    >
+      <span className="absolute inset-0 opacity-10" style={{ background: renk }} />
+      <span className="relative">{simge}</span>
+    </span>
+  );
 }
 
 /**
@@ -195,23 +211,162 @@ export const BildirimMerkezi: React.FC<{
     return () => document.removeEventListener('keydown', tus);
   }, [onKapat]);
 
+  /*
+    TELEFONDA SAYFANIN ARKASI KAYMIYOR
+
+    Telefonda bildirimler tam ekran bir sayfa gibi açılıyor; arkadaki
+    sayfa parmakla kaydırılınca birlikte kaymasın. Geniş ekranda panel
+    küçük bir açılır kutu ve sayfa kaydırılabilir kalıyor.
+  */
+  React.useEffect(() => {
+    if (!window.matchMedia('(max-width: 639px)').matches) return;
+    const onceki = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = onceki;
+    };
+  }, []);
+
+  /*
+    INSTAGRAM'DAN ESİNLENEN LİSTE (17 Eylül 2026)
+
+    - Bekleyen BAĞLANTI İSTEKLERİ en üstte kendi bölümünde; yanıtlanınca
+      satır panel kapanana kadar yerinde kalıyor ve sonuç cümlesini
+      gösteriyor (aşağı zıplamıyor).
+    - Kalanlar zaman gruplarında: Bugün / Dün / Son 7 gün / Son 30 gün /
+      Daha önce (`lib/bildirim-grubu.mjs`).
+    - Satır: solda yuvarlak tür simgesi, ortada kalın başlık + metin tek
+      paragrafta ve yanında gri zaman, sağda okunmamış için nokta.
+      Nokta tek başına bilgi taşımıyor: yanında ekran okuyucuya "Yeni".
+    - TELEFONDA TAM EKRAN: geri okuyla açılan ayrı bir sayfa gibi; satırlar
+      ve yazı daha büyük. GENİŞ EKRANDA sağ üstte küçük açılır panel.
+
+    Kişi fotoğrafı ya da paylaşım küçük resmi ÇİZİLMİYOR: bildirim satırı
+    bu bilgiyi taşımıyor ve uydurulmuyor; yerini türün simgesi tutuyor.
+  */
+  const istekSatiriMi = (b: Bildirim) =>
+    b.tur === 'baglanti_istegi' && Boolean(onBaglantiYanitla) && (dugmeCizilsin(b) || Boolean(sonuc[b.id]));
+  const istekler = bildirimler.filter(istekSatiriMi);
+  const gruplar = bildirimleriGrupla(bildirimler.filter((b) => !istekSatiriMi(b)));
+
+  const satirCiz = (b: Bildirim) => (
+    <li key={b.id} className="flex flex-wrap items-center gap-x-2 pr-4 transition-colors hover:bg-gray-50 sm:flex-nowrap">
+      <button
+        type="button"
+        onClick={() => onAc(b)}
+        className="flex min-h-11 min-w-0 flex-1 items-center gap-3.5 py-3 pl-4 text-left sm:gap-3 sm:py-2.5 sm:pl-5"
+      >
+        <BildirimIkonu tur={b.tur} renk={renk} />
+        <span className="min-w-0 flex-1">
+          {/*
+            Karar bekleyen istekte metin kırpılmıyor: düğmeler satırın
+            sağında yer kaplıyor ve kırpılan bir istek kimin bağlantı
+            istediğini gizliyordu (ölçüldü, 420 px).
+          */}
+          <span
+            className={`break-words text-[15px] leading-snug text-gray-900 sm:text-sm ${
+              b.tur === 'baglanti_istegi' && onBaglantiYanitla && dugmeCizilsin(b) ? '' : 'line-clamp-3'
+            }`}
+          >
+            <span className="font-bold">{b.baslik}</span>
+            {b.govde && <span className="text-gray-700"> {b.govde}</span>}
+            <span className="whitespace-nowrap text-gray-500"> · {gecenSure(b.tarih)}</span>
+          </span>
+          {b.tur === 'baglanti_istegi' && onBaglantiYanitla && gosterilecekSonuc(b) && (
+            <span
+              role="status"
+              className={`mt-0.5 block text-xs font-semibold ${
+                gosterilecekSonuc(b) === 'gecersiz'
+                  ? 'text-amber-800'
+                  : gosterilecekSonuc(b) === 'kabul'
+                    ? 'text-emerald-700'
+                    : 'text-gray-600'
+              }`}
+            >
+              {SONUC_METNI[gosterilecekSonuc(b)!]}
+            </span>
+          )}
+        </span>
+        {/* OKUNMAMIŞ YALNIZCA RENKLE ANLATILMIYOR: nokta görsel, "Yeni" ekran okuyucu için. */}
+        {!b.okunduMu && !(b.tur === 'baglanti_istegi' && onBaglantiYanitla && dugmeCizilsin(b)) && (
+          <span className="flex shrink-0 items-center">
+            <span aria-hidden="true" className="h-2 w-2 rounded-full" style={{ background: renk }} />
+            <span className="sr-only">Yeni</span>
+          </span>
+        )}
+      </button>
+
+      {/*
+        KARAR SATIRIN SAĞINDA, AMA BAĞLANTININ DIŞINDA
+
+        Düğmeler yukarıdaki `<button>`ın İÇİNDE olamaz — iç içe iki düğme
+        geçersiz ve tıklama hedefleri karışır. Kardeş olarak duruyorlar;
+        satıra basmak yine bildirimi açıyor.
+      */}
+      {b.tur === 'baglanti_istegi' && onBaglantiYanitla && dugmeCizilsin(b) && (
+        /*
+          Telefonda düğmeler metnin ALTINDA, metinle aynı hizada (56 px simge
+          + 14 px boşluk + 16 px kenar): yan yana durunca istek cümlesi dört
+          satıra bölünüyordu (375 px'te ölçüldü). Geniş ekranda sağda.
+        */
+        <div className="flex w-full shrink-0 gap-2 pb-3 pl-[86px] sm:w-auto sm:gap-1.5 sm:pb-0 sm:pl-0">
+          <button
+            type="button"
+            disabled={islemdeki === b.id}
+            onClick={() => void yanitla(b.id, 'kabul')}
+            className="min-h-9 flex-1 rounded-lg px-3 text-sm font-bold text-white disabled:opacity-60 sm:flex-none sm:text-xs"
+            style={{ background: renk }}
+          >
+            {islemdeki === b.id ? 'İşleniyor…' : 'Kabul et'}
+          </button>
+          <button
+            type="button"
+            disabled={islemdeki === b.id}
+            onClick={() => void yanitla(b.id, 'red')}
+            className="min-h-9 flex-1 rounded-lg bg-gray-100 px-3 text-sm font-bold text-gray-900 hover:bg-gray-200 disabled:opacity-60 sm:flex-none sm:text-xs"
+          >
+            Reddet
+          </button>
+        </div>
+      )}
+    </li>
+  );
+
+  const bolumBasligi = 'px-4 pb-1 pt-4 text-lg font-bold text-gray-900 sm:px-5 sm:pt-3 sm:text-base';
+
   const govde = (
     <div
       ref={kapsayici}
       tabIndex={-1}
       role="dialog"
       aria-label="Bildirimler"
-      className="flex max-h-[85vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl outline-none sm:max-h-[70vh] sm:w-96 sm:rounded-2xl sm:border sm:border-gray-200"
+      className="flex h-full w-full flex-col overflow-hidden bg-white outline-none sm:h-auto sm:max-h-[75vh] sm:w-[420px] sm:rounded-2xl sm:border sm:border-gray-200 sm:shadow-2xl"
     >
-      <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-        <h2 className="text-sm font-extrabold text-gray-900">Bildirimler</h2>
+      {/*
+        BAŞLIK: telefonda solda yuvarlak geri düğmesi (Instagram gibi),
+        geniş ekranda sağda kapatma çarpısı. İkisi de aynı `onKapat`.
+      */}
+      <div
+        className="flex items-center gap-3 px-4 pb-2 pt-3 sm:justify-between sm:px-5 sm:pt-4"
+        style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))' }}
+      >
+        <button
+          type="button"
+          onClick={onKapat}
+          aria-label="Bildirimleri kapat"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-900 shadow-sm hover:bg-gray-50 sm:hidden"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <h2 className="min-w-0 flex-1 truncate text-2xl font-extrabold tracking-tight text-gray-900 sm:text-xl">
+          Bildirimler
+        </h2>
         <div className="flex items-center gap-1">
-          {/* Yalnız okunmamış varsa: yapacak bir şey yokken düğme göstermenin anlamı yok. */}
           {(okunmamis ?? 0) > 0 && (
             <button
               type="button"
               onClick={onTumunuOkundu}
-              className="min-h-9 rounded-lg px-2 text-xs font-bold"
+              className="min-h-9 rounded-lg px-2 text-sm font-bold"
               style={{ color: renk }}
             >
               Tümü okundu
@@ -221,105 +376,48 @@ export const BildirimMerkezi: React.FC<{
             type="button"
             onClick={onKapat}
             aria-label="Bildirimleri kapat"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100"
+            className="hidden h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 sm:flex"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
       </div>
 
-      <div className="overflow-y-auto overscroll-contain">
+      <div
+        className="flex-1 overflow-y-auto overscroll-contain pb-2"
+        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))' }}
+      >
         {yukleniyor ? (
-          <p className="px-4 py-8 text-center text-xs text-gray-500">Yükleniyor…</p>
+          <p className="px-5 py-8 text-center text-sm text-gray-500">Yükleniyor…</p>
         ) : bildirimler.length === 0 ? (
-          <p className="px-4 py-10 text-center text-sm text-gray-500">Henüz bildirimin yok.</p>
+          <div className="flex flex-col items-center gap-3 px-5 py-16 text-center sm:py-12">
+            <span
+              aria-hidden="true"
+              className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-gray-900 text-gray-900"
+            >
+              <Bell className="h-7 w-7" strokeWidth={1.75} />
+            </span>
+            <p className="text-sm text-gray-500">Henüz bildirimin yok.</p>
+          </div>
         ) : (
-          <ul>
-            {bildirimler.map((b) => (
-              <li key={b.id}>
-                <button
-                  type="button"
-                  onClick={() => onAc(b)}
-                  className="flex w-full min-h-11 items-start gap-3 border-b border-gray-50 px-4 py-3 text-left transition-colors hover:bg-gray-50"
-                  style={b.okunduMu ? undefined : { background: '#F8FAFF' }}
-                >
-                  <span className="mt-0.5">
-                    <BildirimIkonu tur={b.tur} renk={b.okunduMu ? '#9CA3AF' : renk} />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-baseline gap-2">
-                      <span
-                        className={`min-w-0 flex-1 truncate text-xs ${
-                          b.okunduMu ? 'font-semibold text-gray-700' : 'font-extrabold text-gray-900'
-                        }`}
-                      >
-                        {b.baslik}
-                      </span>
-                      <span className="shrink-0 text-[10px] text-gray-400">{gecenSure(b.tarih)}</span>
-                    </span>
-                    {b.govde && (
-                      <span className="mt-0.5 block truncate text-[11px] text-gray-500">{b.govde}</span>
-                    )}
-                    {/*
-                      OKUNMAMIŞ YALNIZCA RENKLE ANLATILMIYOR: yanına
-                      metin de yazılıyor, ekran okuyucu ve renk ayrımı
-                      güçlüğü olan kullanıcı için.
-                    */}
-                    {!b.okunduMu && (
-                      <span className="mt-0.5 inline-block text-[10px] font-bold" style={{ color: renk }}>
-                        Yeni
-                      </span>
-                    )}
-                  </span>
-                </button>
-
-                {/*
-                  KARAR SATIRIN İÇİNDE, AMA BAĞLANTININ DIŞINDA
-
-                  Düğmeler yukarıdaki `<button>`ın İÇİNDE olamaz — iç içe
-                  iki düğme geçersiz ve tıklama hedefleri karışır. Kardeş
-                  olarak duruyorlar; satıra basmak yine bildirimi açıyor,
-                  düğmeler kendi işlerini yapıyor.
-                */}
-                {b.tur === 'baglanti_istegi' && onBaglantiYanitla && gosterilecekSonuc(b) && (
-                  <p
-                    role="status"
-                    className={`border-b border-gray-50 px-4 pb-3 text-[11px] font-semibold ${
-                      gosterilecekSonuc(b) === 'gecersiz'
-                        ? 'text-amber-800'
-                        : gosterilecekSonuc(b) === 'kabul'
-                          ? 'text-emerald-700'
-                          : 'text-gray-600'
-                    }`}
-                  >
-                    {SONUC_METNI[gosterilecekSonuc(b)!]}
-                  </p>
-                )}
-
-                {b.tur === 'baglanti_istegi' && onBaglantiYanitla && dugmeCizilsin(b) && (
-                  <div className="flex gap-2 border-b border-gray-50 px-4 pb-3">
-                    <button
-                      type="button"
-                      disabled={islemdeki === b.id}
-                      onClick={() => void yanitla(b.id, 'kabul')}
-                      className="min-h-9 flex-1 rounded-lg px-3 text-xs font-bold text-white disabled:opacity-60"
-                      style={{ background: renk }}
-                    >
-                      {islemdeki === b.id ? 'İşleniyor…' : 'Kabul et'}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={islemdeki === b.id}
-                      onClick={() => void yanitla(b.id, 'red')}
-                      className="min-h-9 flex-1 rounded-lg border border-gray-200 px-3 text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
-                    >
-                      Reddet
-                    </button>
-                  </div>
-                )}
-              </li>
+          <>
+            {istekler.length > 0 && (
+              <section aria-label="Bağlantı istekleri">
+                <h3 className={bolumBasligi}>Bağlantı istekleri</h3>
+                <ul>{istekler.map(satirCiz)}</ul>
+              </section>
+            )}
+            {gruplar.map((grup, sira) => (
+              <section
+                key={grup.baslik}
+                aria-label={grup.baslik}
+                className={sira > 0 || istekler.length > 0 ? 'border-t border-gray-100' : undefined}
+              >
+                <h3 className={bolumBasligi}>{grup.baslik}</h3>
+                <ul>{grup.ogeler.map(satirCiz)}</ul>
+              </section>
             ))}
-          </ul>
+          </>
         )}
       </div>
     </div>
@@ -327,13 +425,18 @@ export const BildirimMerkezi: React.FC<{
 
   return createPortal(
     <>
-      {/* Panel dışına dokunmak kapatıyor. */}
+      {/* Panel dışına dokunmak kapatıyor (geniş ekranda; telefonda sayfa tam ekran). */}
       <div
         className="fixed inset-0 z-[190] bg-black/25 sm:bg-transparent"
         onClick={onKapat}
         aria-hidden="true"
       />
-      <div className="fixed inset-x-0 bottom-0 z-[200] flex justify-center sm:inset-x-auto sm:bottom-auto sm:right-4 sm:top-16 sm:justify-end">
+      {/*
+        TELEFONDA TAM EKRAN (`inset-0`), geniş ekranda sağ üstte açılır
+        panel. Alttan açılan yarım sayfa kalktı: kullanıcı Instagram'daki
+        gibi ayrı bir sayfa istedi (17 Eylül 2026).
+      */}
+      <div className="fixed inset-0 z-[200] flex sm:inset-auto sm:right-4 sm:top-16 sm:justify-end">
         {govde}
       </div>
     </>,
