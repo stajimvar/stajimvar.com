@@ -2960,9 +2960,11 @@ export default function App() {
   if (temizYol.startsWith('/sirket/')) {
     const sirketSlug = temizYol.slice('/sirket/'.length);
     if (sirketSlug) {
-      return (
+      /* Şirket profili site kabuğunda (17 Eylül 2026): üst çubuk ve genişlik öteki sayfalarla aynı. */
+      return icerikSayfasi(
         <>
           <CompanyPage
+            gomulu
             slug={sirketSlug}
             onBack={goHome}
             onNavigate={navigate}
@@ -2976,9 +2978,7 @@ export default function App() {
             */
             onRequireLogin={() => isverenGirisiAc('login', `/sirket/${sirketSlug}`)}
           />
-          {girisModali}
-          {adPenceresi}
-        </>
+        </>,
       );
     }
   }

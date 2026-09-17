@@ -7,6 +7,8 @@ import { fetchCompanyPage } from '../lib/queries';
 import { STAJ_PROGRAMLARI } from '../data/stajProgramlari';
 import { IsverenKimlikSayfasi } from './IsverenKimlikSayfasi';
 import { ListingLogo } from './ListingLogo';
+import { CompanyLogo } from './CompanyLogo';
+import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { BOLUMLER } from '../data/bolumler';
 import { eklenmeMetni, sonKontrolMetni } from '../lib/zaman';
 import { guvenliDisAdres } from '../lib/guvenli-url.mjs';
@@ -26,6 +28,8 @@ import { CompanyClaimForm } from './CompanyClaimForm';
  */
 
 interface CompanyPageProps {
+  /** Site kabuğunda mı (üst çubuk App'ten). Öyleyse kendi başlığını çizmiyor. */
+  gomulu?: boolean;
   slug: string;
   onBack: () => void;
   onNavigate: (path: string) => void;
@@ -39,6 +43,7 @@ type Durum = 'yukleniyor' | 'hazir' | 'yok' | 'hata';
 type Veri = Awaited<ReturnType<typeof fetchCompanyPage>>;
 
 export const CompanyPage: React.FC<CompanyPageProps> = ({
+  gomulu = false,
   slug,
   onBack,
   onNavigate,
@@ -117,7 +122,8 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
   }, [veri]);
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-gray-900">
+    <div className={gomulu ? 'flex-1 text-gray-900' : 'min-h-screen bg-[#F9FAFB] text-gray-900'}>
+      {!gomulu && (
       <header className="border-b border-gray-200 bg-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <button type="button" onClick={onBack} aria-label="Ana sayfa">
@@ -133,8 +139,20 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
           </button>
         </div>
       </header>
+      )}
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      {/*
+        YERLEŞİM (17 Eylül 2026): ilan ve fırsat detayıyla aynı dil — site
+        genişliği, üstte kimlik kartı, geniş ekranda iki sütun (solda ilanlar,
+        sağda künye ve sahiplenme).
+      */}
+      <main
+        className={
+          gomulu
+            ? `${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-5 sm:pt-7 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-10 space-y-6`
+            : 'max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6'
+        }
+      >
         {durum === 'yukleniyor' && (
           <div className="h-40 rounded-3xl bg-gray-100 animate-pulse"/>
         )}
@@ -175,12 +193,16 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
 
         {durum === 'hazir' && veri && (
           <>
-            <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-7 space-y-4">
-              <div className="flex items-start gap-4">
-                <ListingLogo name={veri.company.name} logoUrl={veri.company.logoUrl} />
+            <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-8 space-y-5 shadow-sm">
+              <div className="flex items-center gap-4 sm:gap-6">
+                <CompanyLogo
+                  name={veri.company.name}
+                  logoUrl={veri.company.logoUrl}
+                  className="h-16 w-16 shrink-0 rounded-2xl p-2 text-xl sm:h-24 sm:w-24 sm:p-3 sm:text-3xl"
+                />
                 <div className="min-w-0 space-y-1.5">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-xl sm:text-2xl font-extrabold">{veri.company.name}</h1>
+                    <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">{veri.company.name}</h1>
                     {/*
                       İKİ AYRI DURUM, İKİ AYRI ROZET
 
@@ -219,7 +241,10 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                     */}
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-gray-600">
+                    <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 font-bold text-blue-700">
+                      {veri.listings.length} açık ilan
+                    </span>
                     {veri.company.industry && <span>{veri.company.industry}</span>}
                     {veri.company.location && (
                       <span className="inline-flex items-center gap-1">
@@ -250,7 +275,7 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
               </div>
 
               {veri.company.description && (
-                <p className="text-sm text-gray-600 leading-relaxed pt-3 border-t border-gray-100">
+                <p className="text-base text-gray-700 leading-relaxed pt-4 border-t border-gray-100">
                   {veri.company.description}
                 </p>
               )}
@@ -275,9 +300,11 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
               )}
             </div>
 
+            <div className="space-y-6 lg:grid lg:grid-cols-12 lg:gap-8 lg:space-y-0">
+            <div className="min-w-0 space-y-6 lg:col-span-8">
             <div className="space-y-3">
-              <h2 className="text-xs font-bold text-gray-600 uppercase tracking-widest px-1">
-                Açık ilanlar ({veri.listings.length})
+              <h2 className="px-1 text-xl font-extrabold tracking-tight text-gray-900">
+                Açık ilanlar <span className="text-gray-400">({veri.listings.length})</span>
               </h2>
 
               {veri.listings.length === 0 ? (
@@ -291,9 +318,9 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                     key={ilan.id}
                     type="button"
                     onClick={() => onNavigate(`/ilan/${listingSlug(ilan)}`)}
-                    className="w-full text-left bg-white rounded-2xl border border-gray-200 hover:border-blue-500 transition-colors p-4 space-y-1.5"
+                    className="w-full text-left bg-white rounded-2xl border border-gray-200 hover:border-blue-500 hover:shadow-sm transition-all p-5 space-y-2"
                   >
-                    <p className="font-bold text-gray-900">{ilan.title}</p>
+                    <p className="text-lg font-bold text-gray-900">{ilan.title}</p>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
                       <span className="inline-flex items-center gap-1">
                         <MapPin className="w-3.5 h-3.5" />
@@ -348,7 +375,7 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
             */}
             {veri.benzerler.length > 0 && (
               <div className="space-y-3">
-                <h2 className="px-1 text-xs font-bold uppercase tracking-widest text-gray-600">
+                <h2 className="px-1 text-xl font-extrabold tracking-tight text-gray-900">
                   {veri.listings.length === 0 ? 'Bunun yerine bakabilirsin' : 'Benzer şirketler'}
                 </h2>
                 <ul className="grid gap-2 sm:grid-cols-2">
@@ -381,6 +408,11 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
               </div>
             )}
 
+            </div>
+
+            {/* ---------------- SAĞ SÜTUN: künye, bölümler, sahiplenme ---------------- */}
+            <aside className="min-w-0 lg:col-span-4" aria-label="Şirket künyesi">
+            <div className="space-y-6 lg:sticky lg:top-24">
             {/*
               KÜNYE VE İLGİLİ BÖLÜMLER
 
@@ -396,7 +428,7 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
                 <h2 className="text-xs font-bold text-gray-600 uppercase tracking-widest">
                   Künye
                 </h2>
-                <dl className="mt-3 grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                <dl className="mt-3 grid sm:grid-cols-2 lg:grid-cols-1 gap-x-6 gap-y-3 text-sm">
                   {veri.company.industry && (
                     <div>
                       <dt className="text-xs text-gray-500">Sektör</dt>
@@ -488,6 +520,9 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
               />
             </div>
             )}
+            </div>
+            </aside>
+            </div>
           </>
         )}
       </main>

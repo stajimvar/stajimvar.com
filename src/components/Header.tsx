@@ -1271,7 +1271,8 @@ export const Header: React.FC<HeaderProps> = ({
                     <button
                       id="header-employer-login-btn"
                       onClick={() => onOpenEmployerLogin?.('login')}
-                      className="px-2.5 sm:px-4 py-1.5 rounded-full text-xs font-bold text-gray-700 hover:text-blue-600 hover:bg-gray-100 transition-all cursor-pointer whitespace-nowrap"
+                      /* Telefonda gizli: logo ile yan yana sığmıyordu (şirket profilinde ölçüldü, 390 px). */
+                      className="hidden sm:inline-flex px-2.5 sm:px-4 py-1.5 rounded-full text-xs font-bold text-gray-700 hover:text-blue-600 hover:bg-gray-100 transition-all cursor-pointer whitespace-nowrap"
                     >
                       İşveren Girişi
                     </button>
@@ -1280,7 +1281,9 @@ export const Header: React.FC<HeaderProps> = ({
                       onClick={() => onOpenEmployer?.()}
                       className="px-3 sm:px-4.5 py-1.5 rounded-full text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-xs cursor-pointer whitespace-nowrap shrink-0"
                     >
-                      Ücretsiz ilan ver
+                      {/* Telefonda kısa: ortadaki logoya değmesin. */}
+                      <span className="sm:hidden">İlan ver</span>
+                      <span className="hidden sm:inline">Ücretsiz ilan ver</span>
                     </button>
                   </>
                 ) : (
