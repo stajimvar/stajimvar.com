@@ -409,6 +409,13 @@ export const SirketPanelDevFixture: React.FC = () => {
   );
   const [senaryo, setSenaryo] = React.useState<Senaryo>('alti');
   const [profilEksik, setProfilEksik] = React.useState(false);
+  /*
+    ŞİRKET KAYDI YOK SENARYOSU
+
+    Üyeliği olmayan hesap Şirket sekmesinde sonsuz iskelet görüyordu; bu
+    kol companyId'yi boşaltıp o ekranı çizdiriyor.
+  */
+  const [sirketYok, setSirketYok] = React.useState(false);
 
   /*
     DURUM DEĞİŞİMİ GERÇEKTEN UYGULANIYOR
@@ -514,6 +521,15 @@ export const SirketPanelDevFixture: React.FC = () => {
         >
           Profil: {profilEksik ? 'eksik' : 'tam'}
         </button>
+        <button
+          type="button"
+          id="dev-sirket-yok"
+          onClick={() => setSirketYok((p) => !p)}
+          aria-pressed={sirketYok}
+          className={kolSinifi}
+        >
+          Şirket kaydı: {sirketYok ? 'yok' : 'var'}
+        </button>
       </div>
 
       <SirketKabugu
@@ -527,7 +543,6 @@ export const SirketPanelDevFixture: React.FC = () => {
                 : 'ilanlar'
         }
         onNavigate={() => undefined}
-        onOgrenciyeDon={() => undefined}
         durumRozeti={
           <span
             className="rounded-lg border px-2 py-1 text-[11px] font-bold"
@@ -575,9 +590,10 @@ export const SirketPanelDevFixture: React.FC = () => {
             yerleşim, hiyerarşi ve tema sızıntısını görmek.
           */
           <SirketProfilFormu
-            baglam={TEST_BAGLAMI(kademe)}
+            baglam={sirketYok ? { ...TEST_BAGLAMI(kademe), companyId: null, ad: '' } : TEST_BAGLAMI(kademe)}
             userId="00000000-0000-4000-8000-000000000001"
             onKaydedildi={() => undefined}
+            onNavigate={() => undefined}
           />
         ) : ekran === 'form' ? (
           <IlanFormu

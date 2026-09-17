@@ -23,6 +23,8 @@ const HEADER = oku('src/components/Header.tsx');
 const SHEET = oku('src/components/AccountSheet.tsx');
 const APP = oku('src/App.tsx');
 const KABUK = oku('src/sirket/SirketKabugu.tsx');
+const PROFIL_FORMU = oku('src/sirket/SirketProfilFormu.tsx');
+const PANEL = oku('src/sirket/SirketPaneli.tsx');
 
 test('A/B) masaüstü bağlantısı ŞİRKET ÜYELİĞİNE bağlı', () => {
   /* Koşul olmasaydı normal öğrenci de işveren bağlantısı görürdü. */
@@ -132,7 +134,30 @@ test('MOBİL ERİŞİM HESAP MENÜSÜNE BAĞLI OLMAMALI', () => {
   );
 });
 
-test('şirket panelindeki eylem GÖRÜNÜM değiştirdiğini söylüyor', () => {
-  /* "Öğrenci" tek başına hesap türü değiştiriyormuş gibi okunuyordu. */
-  assert.match(KABUK, /Öğrenci görünümü/);
+test('öğrenci görünümü kapısı panelde YOK; şirket kaydı yokken iskelet YOK', () => {
+  /*
+    Kullanıcı mobil ekran görüntüsünde üst çubuktaki kep ikonunu çizip
+    istemedi; karar: şirket hesabına giren şirket hesabında kalır. Kapı
+    ne kabukta ne formda ne panelde.
+  */
+  for (const [ad, kaynak] of [['kabuk', KABUK], ['form', PROFIL_FORMU], ['panel', PANEL]]) {
+    assert.doesNotMatch(kaynak, /Öğrenci görünümü/, `kapı metni hâlâ ${ad} içinde`);
+    assert.doesNotMatch(kaynak, /GraduationCap/, `kep ikonu hâlâ ${ad} içinde`);
+    assert.doesNotMatch(kaynak, /onOgrenciyeDon/, `kapı prop'u hâlâ ${ad} içinde`);
+  }
+
+  /*
+    companyId boşken yükleme efekti hiç başlamıyordu ve durum
+    'yukleniyor'da kalıyordu: sonsuz iskelet. Boş-şirket dalı iskelet
+    dalından ÖNCE gelmeli ve içinde animate-pulse olmamalı.
+  */
+  const bosDal = PROFIL_FORMU.indexOf('if (!baglam.companyId) {');
+  const iskeletDal = PROFIL_FORMU.indexOf('if (!deger) {');
+  assert.ok(bosDal > -1 && bosDal < iskeletDal, 'boş-şirket dalı iskeletten önce değil');
+  assert.doesNotMatch(
+    PROFIL_FORMU.slice(bosDal, iskeletDal),
+    /animate-pulse|aria-busy/,
+    'şirket kaydı yokken iskelet çiziliyor'
+  );
+  assert.match(PROFIL_FORMU.slice(bosDal, iskeletDal), /şirket kaydı yok/);
 });

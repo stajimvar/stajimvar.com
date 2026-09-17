@@ -2930,10 +2930,6 @@ export default function App() {
           userId={session?.userId ?? null}
           yoneticiMi={isAdmin}
           onNavigate={navigate}
-          onOgrenciyeDon={() => {
-            setDunyaGecisi('ogrenciye');
-            navigate('/');
-          }}
           okunmamisBildirim={bildirim.okunmamis}
           onBildirimAc={() => void bildirim.ac()}
           acilacakAday={acilacakAday}
