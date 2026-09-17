@@ -21,6 +21,8 @@ import { firsatDurumu } from '../lib/firsat-kategori.mjs';
 import { bursTarihDurumu, turkiyeGeneliMi } from '../lib/burs-kesif.mjs';
 import { ZamanTupu } from './ZamanTupu';
 import { ScholarshipCover } from './ScholarshipCover';
+import { CompanyLogo } from './CompanyLogo';
+import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { BursUyumMiniBlok } from './BursCakismaMatrisi';
 import { kurumEslestir } from '../lib/burs-cakisma.mjs';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
@@ -316,7 +318,13 @@ export const OpportunityDetailPage: React.FC<{
   );
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-5 px-4 pb-[calc(150px+env(safe-area-inset-bottom))] pt-5 sm:px-6 sm:pb-12 sm:pt-7">
+    /*
+      YERLEŞİM (17 Eylül 2026): ilan detayıyla aynı dil. Site genişliği;
+      ekranın yarısını kaplayan dekoratif kapak kalktı, yerinde kompakt logo
+      ve başlık var. Geniş ekranda iki sütun: solda fırsatın bilgileri, sağda
+      yapışkan başvuru kartı ve hazırlık listesi. Telefonda sıra değişmedi.
+    */
+    <main className={`${SAYFA_GENISLIGI} mx-auto w-full space-y-5 px-4 pb-[calc(150px+env(safe-area-inset-bottom))] pt-5 sm:px-6 sm:pb-12 sm:pt-7 lg:px-8 xl:px-10`}>
       <button
         onClick={onBack}
         className="inline-flex cursor-pointer items-center gap-1 text-sm font-bold text-gray-600 hover:text-gray-950"
@@ -337,21 +345,32 @@ export const OpportunityDetailPage: React.FC<{
       )}
 
       {/* ------------------------------------------------------------ üst */}
+      <div className="space-y-5 lg:grid lg:grid-cols-12 lg:gap-8 lg:space-y-0">
+      <div className="min-w-0 space-y-5 lg:col-span-8">
       <article className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
-        <div className="relative">
+        {/* Kurumun gerçek kapak fotoğrafı varsa şerit olarak; dekoratif kapak çizilmiyor. */}
+        {item.coverImageUrl && (
           <ScholarshipCover
             coverImageUrl={item.coverImageUrl}
             logoUrl={item.organizationLogoUrl}
             organizationName={item.organizationName}
             title={item.title}
+            className="max-h-64"
           />
-          {/* İki eylem de 44 piksel: telefonda dokunma hedefi altına düşmüyor. */}
-          <div className="absolute right-3 top-3 flex items-center gap-2">
+        )}
+        <div className="flex items-start gap-4 px-5 pt-5 sm:gap-5 sm:px-8 sm:pt-8">
+          <CompanyLogo
+            name={item.organizationName}
+            logoUrl={item.organizationLogoUrl}
+            className="h-16 w-16 shrink-0 rounded-2xl p-1.5 text-lg sm:h-20 sm:w-20 sm:text-xl"
+          />
+          <p className="min-w-0 flex-1 self-center text-sm font-bold text-gray-600 sm:text-base">{item.organizationName}</p>
+          <div className="flex shrink-0 items-center gap-2">
             <button
               type="button"
               aria-label={paylasimDurumu === 'kopyalandi' ? 'Bağlantı kopyalandı' : 'Paylaş'}
               onClick={paylas}
-              className="grid h-11 w-11 cursor-pointer place-items-center rounded-full bg-white/90 text-gray-700 backdrop-blur transition-colors hover:bg-white"
+              className="grid h-11 w-11 cursor-pointer place-items-center rounded-full border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50"
             >
               {paylasimDurumu === 'kopyalandi' ? (
                 <Check className="h-4 w-4" aria-hidden />
@@ -365,15 +384,14 @@ export const OpportunityDetailPage: React.FC<{
               aria-pressed={saved}
               onClick={toggle}
               className={`grid h-11 w-11 cursor-pointer place-items-center rounded-full backdrop-blur transition-colors ${
-                saved ? 'bg-blue-600 text-white' : 'bg-white/90 text-gray-700 hover:bg-white'
+                saved ? 'border border-blue-600 bg-blue-600 text-white' : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
               }`}
             >
               <Bookmark className="h-4 w-4" fill={saved ? 'currentColor' : 'none'} aria-hidden />
             </button>
           </div>
         </div>
-
-        <div className="p-5 sm:p-8">
+        <div className="px-5 pb-5 pt-4 sm:px-8 sm:pb-8">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">
               {opportunityTypeLabel(item.opportunityType)}
@@ -402,21 +420,20 @@ export const OpportunityDetailPage: React.FC<{
             )}
           </div>
 
-          <h1 className="mt-2.5 text-2xl font-extrabold leading-tight text-gray-950 sm:text-3xl">
+          <h1 className="mt-2.5 text-2xl font-extrabold leading-tight text-gray-950 sm:text-4xl">
             {item.title}
           </h1>
-          <p className="mt-1.5 font-semibold text-gray-600">{item.organizationName}</p>
 
           {/*
             Detayda da aynı gösterge: kart ile detay arasında iki farklı
             tarih dili olmasın. Genişliği sınırlı, çünkü burada tüp bir
             yardımcı sinyal — asıl odak başlık ve başvuru düğmesi.
           */}
-          <ZamanTupu item={item} className="mt-3 max-w-xs" />
+          <ZamanTupu item={item} className="mt-3 max-w-xs lg:hidden" />
 
           {/* Masaüstünde burada; mobilde altta yapışkan olarak da duruyor. */}
-          <div className="mt-5 hidden sm:block">{anaEylem}</div>
-          <p className="mt-2 hidden text-xs text-gray-500 sm:block">
+          <div className="mt-5 hidden sm:block lg:hidden">{anaEylem}</div>
+          <p className="mt-2 hidden text-xs text-gray-500 sm:block lg:hidden">
             Başvuru kurumun kendi sayfasında yapılıyor. StajımVar üzerinden başvuru alınmıyor.
           </p>
 
@@ -566,6 +583,38 @@ export const OpportunityDetailPage: React.FC<{
         biri güncellenip diğeri eskirdi.
       */}
       <BursUyumMiniBlok kurumId={uyumKurumu} />
+      </div>
+
+      {/* ---------------- SAĞ SÜTUN: başvuru kartı ve hazırlık listesi ---------------- */}
+      <aside className="min-w-0 space-y-5 lg:col-span-4" aria-label="Başvuru">
+      <div className="space-y-5 lg:sticky lg:top-24">
+      {(anaEylem || onemliTarihler || !tutar.bilinmiyor) && (
+        <section className="hidden rounded-3xl border border-gray-200 bg-white p-6 shadow-sm lg:block">
+          <h2 className="text-base font-extrabold text-gray-900">Başvuru</h2>
+          <dl className="mt-3 space-y-3 text-sm">
+            {onemliTarihler && (
+              <div>
+                <dt className="text-xs font-bold uppercase tracking-wide text-gray-500">Tarihler</dt>
+                <dd className="mt-0.5 font-semibold text-gray-900">{onemliTarihler}</dd>
+              </div>
+            )}
+            {!tutar.bilinmiyor && (
+              <div>
+                <dt className="text-xs font-bold uppercase tracking-wide text-gray-500">Tutar</dt>
+                <dd className="mt-0.5 font-semibold text-gray-900">
+                  {tutar.metin}
+                  {odemeDonemi && <span className="font-normal text-gray-600"> · {odemeDonemi}</span>}
+                </dd>
+              </div>
+            )}
+          </dl>
+          <ZamanTupu item={item} className="mt-4" />
+          {anaEylem && <div className="mt-5 [&>*]:w-full">{anaEylem}</div>}
+          <p className="mt-2 text-xs leading-relaxed text-gray-500">
+            Başvuru kurumun kendi sayfasında yapılıyor. StajımVar üzerinden başvuru alınmıyor.
+          </p>
+        </section>
+      )}
 
       {/* ---------------------------- kontrol listesi ---------------------- */}
       <section className="rounded-3xl border border-gray-200 bg-white p-5 sm:p-8">
@@ -621,6 +670,10 @@ export const OpportunityDetailPage: React.FC<{
           </>
         )}
       </section>
+
+      </div>
+      </aside>
+      </div>
 
       {/*
         MOBİLDE YAPIŞKAN BAŞVURU
