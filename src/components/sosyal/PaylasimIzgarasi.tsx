@@ -144,11 +144,11 @@ export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-px';
 /** Ayrıntılı ızgara depodaki kart kalıbında (RehberKartlari.tsx). */
 /**
  * Galeri ızgarası — Instagram profil ızgarası gibi (17 Eylül 2026, kullanıcı
- * isteği): her genişlikte üç sütun, dikey 3:4 karo, köşe yuvarlaması yok.
- * Aralık telefonda 1 px, geniş ekranda 4 px. Son satırdaki az sayıda karo
- * büyütülmüyor; kendi sütununda kalıyor.
+ * isteği): telefonda ve tablette üç, geniş ekranda (lg) dört sütun — Instagram
+ * webdeki gibi. Dikey 3:4 karo, köşe yuvarlaması yok. Aralık telefonda 1 px,
+ * daha genişte 2 px. Son satırdaki az sayıda karo büyütülmüyor.
  */
-export const GALERI_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-1';
+export const GALERI_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-0.5 lg:grid-cols-4';
 
 export const AYRINTILI_IZGARA = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3';
 
