@@ -996,8 +996,22 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     <div className="w-full pb-16 animate-in fade-in duration-200">
       <div className="grid grid-cols-1 gap-0 sm:gap-6 lg:grid-cols-12 items-start">
 
-        {/* ---------------- SOL: profil başlığı ---------------- */}
-        <div className="contents lg:block lg:col-span-4 lg:sticky lg:top-4 lg:space-y-3">
+        {/*
+          ---------------- ÜST / SOL: profil başlığı ----------------
+
+          ANA GÖRÜNÜM TEK SÜTUN (17 Eylül 2026 tasarımı): profil kartı
+          üstte tam genişlikte, paylaşım galerisi altında. İskelet dizesi
+          (`grid ... lg:grid-cols-12`) ziyaretçi görünümüyle ortak kaldı;
+          yalnız sütun genişlikleri değişiyor. DÜZENLEMEDE iki sütun
+          (solda bölüm listesi, sağda form) aynen duruyor.
+        */}
+        <div
+          className={
+            duzenleme
+              ? 'contents lg:block lg:col-span-4 lg:sticky lg:top-4 lg:space-y-3'
+              : 'contents lg:block lg:col-span-12'
+          }
+        >
           {/*
             DÜZENLEMEDE SOL SÜTUN GEZİNME OLUYOR
 
@@ -1071,6 +1085,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             okul={student.university}
             bolum={student.department}
             sinif={student.gradeLevel}
+            /* Oturduğu il (`student_profiles.city`); boşsa satır çizilmiyor. */
+            konum={student.city}
             durum={durum}
             onEtiketDuzenle={() => bolumeGit('tercih')}
             oran={oran}
@@ -1192,7 +1208,13 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         </div>
 
         {/* ---------------- SAĞ: portfolyo ya da açık bölüm ---------------- */}
-        <div className="contents lg:block lg:col-span-8 min-w-0 lg:space-y-3">
+        <div
+          className={
+            duzenleme
+              ? 'contents lg:block lg:col-span-8 min-w-0 lg:space-y-3'
+              : 'contents lg:block lg:col-span-12 min-w-0 lg:space-y-3'
+          }
+        >
 
       {/*
         ---------------- SOSYAL FOTOĞRAF PORTFOLYOSU ----------------

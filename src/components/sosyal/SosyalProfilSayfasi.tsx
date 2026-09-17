@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus } from 'lucide-react';
 import { SayfaKabugu } from '../SayfaKabugu';
 import { SAYFA_GENISLIGI } from '../../lib/duzen';
 import { BIRINCIL_EYLEM, ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
@@ -427,7 +427,7 @@ const ProfilIskeleti: React.FC<{ kip?: 'sayfa' | 'panel' | 'form' }> = ({ kip = 
     </div>
   ) : kip === 'panel' ? (
     <div aria-busy="true">
-      <PaylasimIzgarasi paylasimlar={[]} durum="yukleniyor" gorunum="sade" />
+      <PaylasimIzgarasi paylasimlar={[]} durum="yukleniyor" gorunum="galeri" />
     </div>
   ) : (
   <div aria-busy="true" className="space-y-4">
@@ -1085,7 +1085,16 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   */
   const kabuk = (icerik: React.ReactNode, onBack?: () => void) =>
     gomulu ? (
-      <div className="min-w-0 space-y-3">
+      /*
+        ALT EKRANLAR ESKİ GENİŞLİKTE (17 Eylül 2026)
+
+        Birleşik ekranın ana görünümü tek sütuna indi; panel artık sayfanın
+        tam genişliğinde. Arşiv, Beğendiklerim, Kaydedilenler ve paylaşım
+        oluşturma ekranları önceki sağ sütun genişliğinde (12'de 8) ve
+        ortada kalıyor — düzenleri bu iş kapsamında değişmesin. Düzenleme
+        kipi zaten kendi iki sütunlu iskeletinde; orada daraltılmıyor.
+      */
+      <div className={`min-w-0 space-y-3 ${onBack && !duzenlemeKipi ? 'lg:mx-auto lg:w-2/3' : ''}`}>
         {onBack && (
           <button type="button" onClick={onBack} className={GERI_SATIRI}>
             <ArrowLeft aria-hidden className="h-4 w-4 shrink-0" />
@@ -1606,17 +1615,42 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     çalışıyor.
   */
   return kabuk(
-    <section aria-labelledby="portfolyo-basligi" className="min-w-0 space-y-3">
+    <section aria-labelledby="portfolyo-basligi" className="min-w-0 space-y-4 px-4 pt-5 sm:px-0 sm:pt-0">
       {/*
-        Bölümün adı ekranda YAZILI DEĞİL: sağ sütunda ızgaranın üstünde
-        bir başlık, sol sütundaki kartla aynı hizada durmuyordu ve iki
-        sütunlu düzende ikinci bir "başlık" gibi okunuyordu. Ad ekran
-        okuyucu için duruyor — bölümün nerede başladığı klavye ve okuyucu
-        araçlarında hâlâ belli.
+        BAŞLIK SATIRI GÖRÜNÜR (17 Eylül 2026 tasarımı)
+
+        Profil kartı artık üstte tam genişlikte; ızgara onun altında tek
+        sütun. İki sütunlu düzende sağ sütunda yüzen bir başlık gerekçesi
+        kalmadı: solda "Paylaşımlar", sağda paylaşım akışını açan düğme.
+
+        Düğme mevcut akışa bağlı (`paylasimOlustur` → `PaylasimOlustur`
+        ekranı) ve yalnız iki sunucu önkoşulu sağlanınca çiziliyor —
+        karttaki sayaçlara giden `onPaylasimOlustur` ile aynı koşul. Bu dal
+        zaten `if (!sahibiMi)` satırından sonra: ziyaretçi görmüyor.
+
+        TELEFONDA KENAR BOŞLUĞU BURADA: sarmalayıcı (`-mx-4`) paneli ekran
+        kenarına yaslıyor, alt ekranlar (arşiv, kaydedilenler) bunu
+        kullanıyor. Galeri ayrık karolar olduğu için kenara yapışmıyor;
+        `px-4` yalnız bu bölümde.
       */}
-      <h2 id="portfolyo-basligi" className="sr-only">
-        Fotoğraf portfolyon
-      </h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2
+          id="portfolyo-basligi"
+          className="text-xl font-extrabold tracking-tight text-gray-900 sm:text-2xl"
+        >
+          Paylaşımlar
+        </h2>
+        {yayindaMi && alaniVarMi && (
+          <button
+            type="button"
+            onClick={sabitEylemler.paylasimOlustur}
+            className="inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition-colors hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:text-base"
+          >
+            <Plus aria-hidden className="h-5 w-5" strokeWidth={2.25} />
+            Fotoğraf paylaş
+          </button>
+        )}
+      </div>
 
       {/*
         "TOPLULUĞA KATILMADIN" UYARISI KALDIRILDI
@@ -1666,7 +1700,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
         onYenidenDene={() => setPaylasimDeneme((sayi) => sayi + 1)}
         sahibiMi
         onArsivlendi={paylasimlariTazele}
-        gorunum="sade"
+        gorunum="galeri"
         kullaniciAdi={profil?.kullaniciAdi ?? null}
       />
     </section>,
