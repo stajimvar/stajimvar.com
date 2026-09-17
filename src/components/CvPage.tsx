@@ -1,34 +1,19 @@
 import React, { useEffect } from 'react';
-import { ArrowLeft, CheckCircle2, Printer } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, Code2, Globe, Link2, Mail, MapPin, Phone, Printer } from 'lucide-react';
 import type { StudentProfile } from '../types';
 import { adYazimi } from '../lib/ad';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
-
-/**
- * Yazdırılabilir CV.
- *
- * NEDEN PDF KÜTÜPHANESİ YOK
- * -------------------------
- * jsPDF ve benzerleri varsayılan yazı tipleriyle Türkçe karakterleri
- * bozuyor; düzgün çıktı için font gömmek gerekiyor ve bu pakete 300KB'ın
- * üzerinde yük bindiriyor. Tarayıcının kendi yazdırma motoru hem Türkçeyi
- * sorunsuz basıyor hem de "PDF olarak kaydet" seçeneğini zaten sunuyor —
- * mobil dahil.
- *
- * Bu yüzden sayfa ekranda okunur, yazdırıldığında A4'e oturur. Yazdırma
- * kuralları aşağıdaki `<style>` içinde; site kabuğu (başlık, düğmeler)
- * çıktıda görünmüyor.
- *
- * NEDEN VAR
- * ---------
- * Öğrenci profilini dolduruyor ama elinde kullanabileceği bir şey kalmıyordu.
- * Başvuruların şirkete iletilmesi henüz çözülmedi (İK adresi bulunamıyor);
- * indirilebilir CV, profil doldurmanın o çözülene kadar da karşılığı olsun.
- */
+import { ProfilFotografi } from './sosyal/ProfilFotografi';
 
 interface CvPageProps {
   student: StudentProfile;
   onBack: () => void;
+  /**
+   * Profil fotoğrafının depolama yolu (`social_profiles.avatar_path`).
+   * Yol da yedek adres de yoksa CV'de fotoğraf alanı HİÇ çizilmiyor:
+   * baş harfli bir daire belgede eksik bir fotoğraf gibi durur.
+   */
+  fotografYolu?: string | null;
 }
 
 const SEVIYE: Record<string, string> = {
@@ -38,16 +23,57 @@ const SEVIYE: Record<string, string> = {
   Expert: 'Uzman',
 };
 
-const Bolum: React.FC<{ baslik: string; children: React.ReactNode }> = ({ baslik, children }) => (
-  <section className="cv-bolum space-y-2">
-    <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 border-b border-gray-300 pb-1">
-      {baslik}
+/** Seviye göstergesi için 1–4. Bilinmeyen seviyede gösterge çizilmiyor. */
+const SEVIYE_PUANI: Record<string, number> = {
+  Beginner: 1,
+  Intermediate: 2,
+  Advanced: 3,
+  Expert: 4,
+};
+
+/** Adresin okunur hâli: protokol ve sondaki eğik çizgi atılıyor. */
+const adresMetni = (adres: string) => adres.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, '');
+
+const tamAdres = (adres: string) => (/^https?:\/\//i.test(adres) ? adres : `https://${adres}`);
+
+/*
+  BÖLÜM BAŞLIĞI — StajımVar mavisinde küçük büyük harf ve ince çizgi.
+  `break-inside: avoid` yazdırmada başlığın bir sayfada, içeriğinin
+  ötekinde kalmasını önlüyor.
+*/
+const Bolum: React.FC<{ baslik: string; children: React.ReactNode; className?: string }> = ({
+  baslik,
+  children,
+  className = '',
+}) => (
+  <section className={`cv-bolum ${className}`}>
+    <h2 className="mb-3 flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-blue-700">
+      <span>{baslik}</span>
+      <span aria-hidden className="h-px flex-1 bg-blue-100" />
     </h2>
     {children}
   </section>
 );
 
-export const CvPage: React.FC<CvPageProps> = ({ student, onBack }) => {
+const Etiket: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <li className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-800">
+    {children}
+  </li>
+);
+
+/*
+  YAZDIRILABİLİR CV — StajımVar belgesi (17 Eylül 2026 tasarımı)
+
+  Her alan öğrencinin kendi profilinden; boş alanın bölümü çizilmiyor ve
+  yerine doldurma metni yazılmıyor. Yan sütun kısa ve taranabilir bilgiler
+  (aradığı pozisyon, yetenekler, diller, sosyal beceriler), ana sütun
+  anlatı (eğitim, projeler).
+
+  Yazdırmada A4'e göre iki sütun korunuyor, renkler basılıyor
+  (`print-color-adjust: exact`), araç çubuğu ve açıklama satırı düşüyor.
+  Telefonda sütunlar alt alta.
+*/
+export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = null }) => {
   useEffect(() => {
     document.title = `${student.fullName} — CV | StajımVar`;
   }, [student.fullName]);
@@ -56,147 +82,289 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack }) => {
   const diller = student.languages ?? [];
   const projeler = student.projects ?? [];
   const sosyal = student.softSkills ?? [];
+  const hedefler = student.targetRoles ?? [];
+
+  /*
+    KONUM OTURDUĞU İL: önce `preferences.cities` (staj yapmak istediği
+    şehirler) yazılıyordu ve CV'de "yaşadığı yer" gibi okunuyordu.
+    `student.city` oturduğu il; boşsa satır yok.
+  */
+  const iletisim: { anahtar: string; ikon: React.ReactNode; metin: string; href?: string }[] = [
+    ...(student.email
+      ? [{ anahtar: 'eposta', ikon: <Mail className="h-3.5 w-3.5" />, metin: student.email, href: `mailto:${student.email}` }]
+      : []),
+    ...(student.phone
+      ? [{ anahtar: 'telefon', ikon: <Phone className="h-3.5 w-3.5" />, metin: student.phone, href: `tel:${student.phone.replace(/\s/g, '')}` }]
+      : []),
+    ...(student.city ? [{ anahtar: 'konum', ikon: <MapPin className="h-3.5 w-3.5" />, metin: student.city }] : []),
+    ...(student.linkedinUrl
+      ? [{ anahtar: 'linkedin', ikon: <Link2 className="h-3.5 w-3.5" />, metin: adresMetni(student.linkedinUrl), href: tamAdres(student.linkedinUrl) }]
+      : []),
+    ...(student.githubUsername
+      ? [{ anahtar: 'github', ikon: <Code2 className="h-3.5 w-3.5" />, metin: `github.com/${student.githubUsername}`, href: `https://github.com/${student.githubUsername}` }]
+      : []),
+    ...(student.portfolioUrl
+      ? [{ anahtar: 'portfolyo', ikon: <Globe className="h-3.5 w-3.5" />, metin: adresMetni(student.portfolioUrl), href: tamAdres(student.portfolioUrl) }]
+      : []),
+  ];
+
+  const fotografVar = Boolean(fotografYolu || student.avatarUrl);
+  const altBaslik = [student.department, student.gradeLevel].filter(Boolean).join(' · ');
+  const yanSutunVar = hedefler.length > 0 || yetenekler.length > 0 || diller.length > 0 || sosyal.length > 0;
+  const bugun = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 print:min-h-0 print:bg-white">
       <style>{`
         @media print {
-          /* Site kabuğu çıktıda yok; kağıda yalnızca CV gitsin. */
           .yazdirma-disi { display: none !important; }
-          body { background: #fff !important; }
+          html, body { background: #fff !important; }
           .cv-kagit {
             box-shadow: none !important;
             margin: 0 !important;
+            border: 0 !important;
             border-radius: 0 !important;
             max-width: none !important;
-            padding: 0 !important;
           }
-          /* Bir bölüm sayfa sonunda ikiye bölünmesin. */
-          .cv-bolum { break-inside: avoid; }
+          .cv-kagit, .cv-kagit * {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .cv-bolum, .cv-oge { break-inside: avoid; }
         }
-        @page { margin: 16mm 14mm; }
+        @page { size: A4; margin: 10mm; }
       `}</style>
 
-      <div className="yazdirma-disi sticky top-0 bg-white border-b border-gray-200 z-10">
-        {/* Baslik cubugu ana sayfayla ayni genislikte. */}
-        <div className={`${SAYFA_GENISLIGI} mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10 py-3 flex items-center justify-between gap-3`}>
+      {/* Araç çubuğu: yalnız ekranda. */}
+      <div className="yazdirma-disi sticky top-0 z-10 border-b border-gray-200 bg-white">
+        <div className={`${SAYFA_GENISLIGI} mx-auto flex items-center justify-between gap-3 px-2.5 py-3 sm:px-6 lg:px-8 xl:px-10`}>
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-gray-900 cursor-pointer"
+            className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-gray-900"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4" />
             Profile dön
           </button>
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
+            className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white hover:bg-blue-700"
           >
-            <Printer className="w-4 h-4" />
+            <Printer className="h-4 w-4" />
             PDF olarak kaydet
           </button>
         </div>
       </div>
 
-      <p className="yazdirma-disi max-w-3xl mx-auto px-4 pt-4 text-xs text-gray-500">
+      <p className="yazdirma-disi mx-auto max-w-[850px] px-4 pt-4 text-xs leading-relaxed text-gray-500">
         Açılan pencerede yazıcı olarak <strong>"PDF olarak kaydet"</strong> seçeneğini seçin.
         Telefonda paylaş menüsünden de kaydedebilirsiniz.
       </p>
 
-      <main className="cv-kagit max-w-3xl mx-auto my-4 bg-white p-8 sm:p-10 shadow-sm rounded-lg space-y-5 text-gray-800">
-        <header className="space-y-1">
-          <h1 className="text-2xl font-bold text-gray-900">{adYazimi(student.fullName)}</h1>
-          <p className="text-sm text-gray-600">
-            {student.department}
-            {student.university ? ` · ${student.university}` : ''}
-          </p>
-          <p className="text-xs text-gray-500">
-            {[student.email, student.phone, student.preferences?.cities?.join(', ')]
-              .filter(Boolean)
-              .join(' · ')}
-          </p>
+      <main className="cv-kagit mx-auto my-4 max-w-[850px] overflow-hidden border-gray-200 bg-white text-gray-800 shadow-sm sm:my-6 sm:rounded-2xl sm:border">
+        {/* Marka şeridi */}
+        <div aria-hidden className="h-1.5 bg-blue-600" />
+
+        {/* ---------------- Başlık ---------------- */}
+        <header className="flex flex-col gap-5 px-6 pb-6 pt-7 sm:flex-row sm:items-center sm:gap-7 sm:px-10 sm:pt-9 print:flex-row print:items-center print:px-8">
+          {fotografVar && (
+            <ProfilFotografi
+              ad={student.fullName}
+              yol={fotografYolu}
+              yedekAdres={student.avatarUrl || null}
+              className="h-24 w-24 shrink-0 rounded-full text-2xl ring-4 ring-blue-50 sm:h-28 sm:w-28"
+            />
+          )}
+          <div className="min-w-0 flex-1">
+            <h1 className="break-words text-3xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-[34px]">
+              {adYazimi(student.fullName)}
+            </h1>
+            {altBaslik && <p className="mt-1 text-base font-semibold text-blue-700">{altBaslik}</p>}
+            {student.university && <p className="text-sm text-gray-600">{student.university}</p>}
+
+            {iletisim.length > 0 && (
+              <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] text-gray-700">
+                {iletisim.map((o) => (
+                  <li key={o.anahtar} className="flex min-w-0 items-center gap-1.5">
+                    <span className="shrink-0 text-blue-600">{o.ikon}</span>
+                    {o.href ? (
+                      <a href={o.href} className="min-w-0 break-all hover:underline">
+                        {o.metin}
+                      </a>
+                    ) : (
+                      <span className="min-w-0 break-words">{o.metin}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </header>
 
         {student.bio && (
-          <Bolum baslik="Hakkında">
-            <p className="text-sm leading-relaxed">{student.bio}</p>
-          </Bolum>
-        )}
-
-        <Bolum baslik="Eğitim">
-          <div className="text-sm">
-            <p className="font-semibold text-gray-900">{student.university || 'Belirtilmemiş'}</p>
-            <p className="text-gray-600">
-              {[student.department, student.gradeLevel].filter(Boolean).join(' · ')}
-              {student.gpa ? ` · Not ortalaması ${student.gpa}` : ''}
-            </p>
+          <div className="cv-bolum mx-6 mb-6 rounded-xl bg-blue-50/60 px-5 py-4 sm:mx-10 print:mx-8">
+            <p className="text-sm leading-relaxed text-gray-800">{student.bio}</p>
           </div>
-        </Bolum>
-
-        {yetenekler.length > 0 && (
-          <Bolum baslik="Teknik yetenekler">
-            <ul className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
-              {yetenekler.map((y) => (
-                <li key={y.name} className="flex items-center gap-1.5">
-                  <span className="font-medium">{y.name}</span>
-                  <span className="text-gray-500 text-xs">({SEVIYE[y.level] ?? y.level})</span>
-                  {/*
-                    Doğrulanmış rozet CV'de ayrıca işaretleniyor: testi sunucu
-                    puanladığı için bu işaret gerçekten bir şey ifade ediyor.
-                  */}
-                  {y.verified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
-                </li>
-              ))}
-            </ul>
-          </Bolum>
         )}
 
-        {sosyal.length > 0 && (
-          <Bolum baslik="Sosyal beceriler">
-            <p className="text-sm">{sosyal.join(' · ')}</p>
-          </Bolum>
-        )}
+        {/* ---------------- Gövde: ana sütun + yan sütun ---------------- */}
+        <div
+          className={`grid gap-8 px-6 pb-8 sm:px-10 print:px-8 ${
+            yanSutunVar ? 'md:grid-cols-[minmax(0,1fr)_250px] print:grid-cols-[minmax(0,1fr)_220px]' : ''
+          }`}
+        >
+          <div className="min-w-0 space-y-7">
+            <Bolum baslik="Eğitim">
+              <div className="cv-oge">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+                  <p className="font-bold text-gray-900">{student.university || 'Belirtilmemiş'}</p>
+                  {student.graduationYear ? (
+                    <p className="text-xs font-semibold text-gray-500">Mezuniyet {student.graduationYear}</p>
+                  ) : null}
+                </div>
+                <p className="text-sm text-gray-600">
+                  {[student.faculty, student.department, student.gradeLevel].filter(Boolean).join(' · ')}
+                </p>
+                {student.gpa ? (
+                  <p className="mt-1 text-sm text-gray-700">
+                    Not ortalaması <span className="font-semibold text-gray-900">{student.gpa}</span>
+                  </p>
+                ) : null}
+              </div>
+            </Bolum>
 
-        {diller.length > 0 && (
-          <Bolum baslik="Yabancı diller">
-            <ul className="text-sm space-y-0.5">
-              {diller.map((d) => (
-                <li key={d.id}>
-                  <span className="font-medium">{d.language}</span>
-                  <span className="text-gray-600"> — {d.proficiencyText || d.level}</span>
-                </li>
-              ))}
-            </ul>
-          </Bolum>
-        )}
+            {projeler.length > 0 && (
+              <Bolum baslik="Projeler">
+                <ul className="space-y-4">
+                  {projeler.map((p) => (
+                    <li key={p.id} className="cv-oge border-l-2 border-blue-100 pl-4">
+                      <p className="font-bold text-gray-900">{p.title}</p>
+                      {p.description && (
+                        <p className="mt-0.5 text-sm leading-relaxed text-gray-700">{p.description}</p>
+                      )}
+                      {p.techStack.length > 0 && (
+                        <ul className="mt-2 flex flex-wrap gap-1.5">
+                          {p.techStack.map((t) => (
+                            <li key={t} className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-700">
+                              {t}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {(p.liveUrl || p.githubUrl) && (
+                        <p className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                          {p.liveUrl && (
+                            <a href={tamAdres(p.liveUrl)} className="inline-flex items-center gap-1 text-blue-700 hover:underline">
+                              <Globe className="h-3 w-3" />
+                              {adresMetni(p.liveUrl)}
+                            </a>
+                          )}
+                          {p.githubUrl && (
+                            <a href={tamAdres(p.githubUrl)} className="inline-flex items-center gap-1 text-blue-700 hover:underline">
+                              <Code2 className="h-3 w-3" />
+                              {adresMetni(p.githubUrl)}
+                            </a>
+                          )}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </Bolum>
+            )}
+          </div>
 
-        {projeler.length > 0 && (
-          <Bolum baslik="Projeler">
-            <ul className="space-y-2 text-sm">
-              {projeler.map((p) => (
-                <li key={p.id}>
-                  <p className="font-semibold text-gray-900">{p.title}</p>
-                  {p.description && <p className="text-gray-600">{p.description}</p>}
-                  {p.techStack.length > 0 && (
-                    <p className="text-xs text-gray-500">{p.techStack.join(', ')}</p>
-                  )}
-                  {p.githubUrl && <p className="text-xs text-blue-700">{p.githubUrl}</p>}
-                </li>
-              ))}
-            </ul>
-          </Bolum>
-        )}
+          {yanSutunVar && (
+            <aside className="min-w-0 space-y-7 md:border-l md:border-gray-100 md:pl-7 print:border-l print:border-gray-100 print:pl-6">
+              {hedefler.length > 0 && (
+                <Bolum baslik="Aradığı pozisyon">
+                  <ul className="flex flex-wrap gap-1.5">
+                    {hedefler.map((h) => (
+                      <Etiket key={h}>{h}</Etiket>
+                    ))}
+                  </ul>
+                </Bolum>
+              )}
 
-        {student.targetRoles.length > 0 && (
-          <Bolum baslik="Aradığı pozisyon">
-            <p className="text-sm">{student.targetRoles.join(' · ')}</p>
-          </Bolum>
-        )}
+              {yetenekler.length > 0 && (
+                <Bolum baslik="Teknik yetenekler">
+                  <ul className="space-y-2.5">
+                    {yetenekler.map((y) => {
+                      const puan = SEVIYE_PUANI[y.level];
+                      return (
+                        <li key={y.name} className="cv-oge">
+                          <div className="flex items-center justify-between gap-2 text-sm">
+                            <span className="flex min-w-0 items-center gap-1 font-semibold text-gray-900">
+                              <span className="truncate">{y.name}</span>
+                              {/*
+                                Doğrulanmış rozet: testi sunucu puanladığı için
+                                işaret gerçekten bir şey ifade ediyor.
+                              */}
+                              {y.verified && (
+                                <BadgeCheck aria-label="Doğrulandı" className="h-4 w-4 shrink-0 text-emerald-600" />
+                              )}
+                            </span>
+                            <span className="shrink-0 text-xs text-gray-500">{SEVIYE[y.level] ?? y.level}</span>
+                          </div>
+                          {puan && (
+                            <div aria-hidden className="mt-1 grid grid-cols-4 gap-1">
+                              {[1, 2, 3, 4].map((n) => (
+                                <span key={n} className={`h-1 rounded-full ${n <= puan ? 'bg-blue-600' : 'bg-gray-200'}`} />
+                              ))}
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </Bolum>
+              )}
 
-        <p className="text-[10px] text-gray-600 pt-2">
-          Bu CV stajimvar.com profilinden oluşturuldu.
-        </p>
+              {diller.length > 0 && (
+                <Bolum baslik="Yabancı diller">
+                  <ul className="space-y-2">
+                    {diller.map((d) => (
+                      <li key={d.id} className="cv-oge flex items-start justify-between gap-2 text-sm">
+                        <span className="min-w-0">
+                          <span className="block font-semibold text-gray-900">{d.language}</span>
+                          {d.proficiencyText && d.proficiencyText !== d.level && (
+                            <span className="block text-xs text-gray-500">{d.proficiencyText}</span>
+                          )}
+                        </span>
+                        {d.level && (
+                          <span className="shrink-0 rounded-md bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-700">
+                            {d.level}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </Bolum>
+              )}
+
+              {sosyal.length > 0 && (
+                <Bolum baslik="Sosyal beceriler">
+                  <ul className="flex flex-wrap gap-1.5">
+                    {sosyal.map((s) => (
+                      <Etiket key={s}>{s}</Etiket>
+                    ))}
+                  </ul>
+                </Bolum>
+              )}
+            </aside>
+          )}
+        </div>
+
+        {/* ---------------- Alt bilgi ---------------- */}
+        <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 bg-gray-50 px-6 py-3 sm:px-10 print:px-8">
+          <span className="text-sm font-extrabold tracking-tight text-gray-900">
+            Stajım<span className="text-blue-600">Var</span>
+          </span>
+          <span className="text-[11px] text-gray-500">
+            stajimvar.com profilinden oluşturuldu · {bugun}
+          </span>
+        </footer>
       </main>
     </div>
   );
