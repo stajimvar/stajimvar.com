@@ -42,7 +42,7 @@ import { ProfilFotografi } from './ProfilFotografi';
   (20260924020000): burada gevşek davranmak, kullanıcıya ancak yükleme
   bittikten sonra hata göstermek olurdu.
 */
-const IZIN_VERILEN_TURLER = ['image/jpeg', 'image/png', 'image/webp'];
+export const IZIN_VERILEN_TURLER = ['image/jpeg', 'image/png', 'image/webp'];
 
 /*
   KARE KENARI: 512 PİKSEL
@@ -64,7 +64,7 @@ const KALITE = 0.85;
 /** Kovanın sunucu tarafındaki sınırı (20260924020000): 2 MB. */
 const KOVA_SINIRI = 2 * 1024 * 1024;
 
-interface HazirKare {
+export interface HazirKare {
   veri: Blob;
   uzanti: string;
   /**
@@ -108,7 +108,19 @@ function uzantiCevir(tur: string): string | null {
  * yönünü zaten uyguluyor ve `naturalWidth/Height` çevrilmiş ölçüyü
  * veriyor.
  */
-async function kareyeCevir(dosya: File): Promise<HazirKare> {
+/**
+ * Kırpma: kare çerçevenin kaynak görseldeki merkezi (`x`, `y`, 0–1) ve
+ * yakınlık (1 = en kısa kenarın tamamı). Verilmezse ortadan kare — mevcut
+ * yükleme ekranının davranışı. Kaynak dosya DEĞİŞMİYOR; yalnız yüklenecek
+ * kare üretiliyor.
+ */
+export interface Kirpma {
+  x: number;
+  y: number;
+  yakinlik: number;
+}
+
+export async function kareyeCevir(dosya: File, kirpma?: Kirpma): Promise<HazirKare> {
   const kaynakAdres = URL.createObjectURL(dosya);
   try {
     const gorsel = new Image();
@@ -120,18 +132,22 @@ async function kareyeCevir(dosya: File): Promise<HazirKare> {
 
     const enKisa = Math.min(gorsel.naturalWidth, gorsel.naturalHeight);
     if (enKisa === 0) throw new Error('gorsel-okunamadi');
+    /* Kesme penceresi: kırpma yoksa ortada, yüzler çoğunlukla merkeze yakın. */
+    const yakinlik = Math.min(4, Math.max(1, kirpma?.yakinlik ?? 1));
+    const kaynakKenar = Math.round(enKisa / yakinlik);
     /* Kaynak kareden küçükse BÜYÜTÜLMÜYOR: bulanık piksel üretmiyoruz. */
-    const kenar = Math.min(KENAR, enKisa);
-    /* Kesme penceresi ortada: yüzler çoğunlukla merkeze yakın duruyor. */
-    const kaynakX = Math.round((gorsel.naturalWidth - enKisa) / 2);
-    const kaynakY = Math.round((gorsel.naturalHeight - enKisa) / 2);
+    const kenar = Math.min(KENAR, kaynakKenar);
+    const merkezX = (kirpma?.x ?? 0.5) * gorsel.naturalWidth;
+    const merkezY = (kirpma?.y ?? 0.5) * gorsel.naturalHeight;
+    const kaynakX = Math.round(Math.min(Math.max(merkezX - kaynakKenar / 2, 0), gorsel.naturalWidth - kaynakKenar));
+    const kaynakY = Math.round(Math.min(Math.max(merkezY - kaynakKenar / 2, 0), gorsel.naturalHeight - kaynakKenar));
 
     const tuval = document.createElement('canvas');
     tuval.width = kenar;
     tuval.height = kenar;
     const kalem = tuval.getContext('2d');
     if (!kalem) throw new Error('tuval-yok');
-    kalem.drawImage(gorsel, kaynakX, kaynakY, enKisa, enKisa, 0, 0, kenar, kenar);
+    kalem.drawImage(gorsel, kaynakX, kaynakY, kaynakKenar, kaynakKenar, 0, 0, kenar, kenar);
 
     /*
       JPEG kaynağı JPEG kalıyor; PNG ve WebP kaynağı WebP'ye gidiyor.

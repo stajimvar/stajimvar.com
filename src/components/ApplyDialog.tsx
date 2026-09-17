@@ -25,6 +25,13 @@ interface ApplyDialogProps {
   alreadyApplied: boolean;
   onClose: () => void;
   onSubmit: (consent: boolean) => Promise<void>;
+  /**
+   * CV'si olmayan öğrenci için ikincil seçenek. Yalnız şirket sitesinden
+   * başvurulan ilanda çiziliyor; birincil eylem yine "Şirket sayfasında
+   * başvur". Şirketin CV isteyip istemediği bilinmediği için öyle bir iddia
+   * yazılmıyor.
+   */
+  onCvOlustur?: () => void;
 }
 
 export const ApplyDialog: React.FC<ApplyDialogProps> = ({
@@ -32,6 +39,7 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
   alreadyApplied,
   onClose,
   onSubmit,
+  onCvOlustur,
 }) => {
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -237,6 +245,17 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
             </button>
           )}
         </div>
+        {!rizaGerekli && onCvOlustur && (
+          <p className="px-5 pb-5 text-center text-xs text-gray-600 sm:px-6 sm:pb-6">
+            <button
+              type="button"
+              onClick={onCvOlustur}
+              className="inline-flex min-h-11 cursor-pointer items-center font-semibold text-blue-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            >
+              CV’ye ihtiyacın varsa oluştur
+            </button>
+          </p>
+        )}
       </div>
     </div>
   );

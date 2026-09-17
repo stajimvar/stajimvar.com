@@ -32,6 +32,12 @@ export interface AuthResult {
   userId: string;
   role: UserRole;
   displayName: string;
+  /**
+   * Hesabın açılış anı (`auth.users.created_at`). Kayıt sonrası CV
+   * karşılamasının yalnız YENİ hesaplara gösterilmesi buna bakıyor.
+   * Giriş ve kayıt dönüşlerinde gelmeyebilir; o zaman karşılama açılmıyor.
+   */
+  hesapOlusturmaAni?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -370,6 +376,7 @@ export async function getCurrentUser(): Promise<AuthResult | null> {
     userId: session.user.id,
     role: profile.role as UserRole,
     displayName: profile.full_name || session.user.email?.split('@')[0] || '',
+    hesapOlusturmaAni: session.user.created_at,
   };
 }
 

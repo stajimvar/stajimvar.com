@@ -99,11 +99,25 @@ const AnaBolum: React.FC<{ baslik: string; ikon?: React.ReactNode; children: Rea
   kadar gidiyor; renkler `print-color-adjust: exact` ile basılıyor. Ekranda
   da aynı A4 kâğıdı gösteriliyor, dar ekranda küçültülerek.
 */
-export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = null }) => {
-  useEffect(() => {
-    document.title = `${student.fullName} — CV | StajımVar`;
-  }, [student.fullName]);
-
+/**
+ * CV BELGESİ — A4 kâğıdın kendisi (794 × 1123 px).
+ *
+ * `/cv/yazdir`, kayıt sonrası karşılamadaki örnek ve CV oluşturma
+ * ekranındaki canlı önizleme AYNI bileşeni çiziyor: şablon tek yerde.
+ * Ölçekleme `CvOnizleme`nin işi; bu bileşen her zaman tam A4 boyutunda.
+ */
+export const CvBelgesi = React.forwardRef<
+  HTMLElement,
+  {
+    student: StudentProfile;
+    fotografYolu?: string | null;
+    /** Sayfanın ana içeriği mi (`main`) yoksa önizleme mi (`div`). */
+    anaIcerik?: boolean;
+    stil?: React.CSSProperties;
+    etiket?: string;
+  }
+>(({ student, fotografYolu = null, anaIcerik = false, stil, etiket }, kagitRef) => {
+  const Kap = (anaIcerik ? 'main' : 'div') as 'main';
   const yetenekler = student.skills ?? [];
   const diller = student.languages ?? [];
   const projeler = student.projects ?? [];
@@ -148,100 +162,14 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = 
       ? `${student.gradeLevel} Öğrencisi`
       : student.gradeLevel
     : null;
-  /*
-    EKRANDA DA A4 (17 Eylül 2026)
-
-    Kâğıt her genişlikte 210 × 297 mm'nin 96 dpi karşılığı (794 × 1123 px)
-    ve PDF'te çıkacağı düzende çiziliyor; telefonda alt alta dizilmiş ayrı
-    bir hâl yok. Ekran kâğıttan darsa kâğıt `transform: scale` ile sığacak
-    kadar küçülüyor ve kabın yüksekliği ölçeğe göre ayarlanıyor (transform
-    yerleşimi değiştirmediği için boşluk elle veriliyor). Yakınlaştırma
-    tarayıcının kendisinde. Yazdırmada ölçek yok (`print` kuralları).
-  */
-  const kapRef = useRef<HTMLDivElement>(null);
-  const kagitRef = useRef<HTMLElement>(null);
-  const [olcu, setOlcu] = useState<{ olcek: number; yukseklik: number | null }>({ olcek: 1, yukseklik: null });
-  useLayoutEffect(() => {
-    const kap = kapRef.current;
-    const kagit = kagitRef.current;
-    if (!kap || !kagit) return;
-    const hesapla = () => {
-      /* `clientWidth` iç boşluğu da sayıyor; kâğıdın sığacağı genişlik ondan az. */
-      const stil = getComputedStyle(kap);
-      const genislik = kap.clientWidth - parseFloat(stil.paddingLeft) - parseFloat(stil.paddingRight);
-      const olcek = Math.min(1, genislik / A4_GENISLIK);
-      setOlcu({ olcek, yukseklik: kagit.offsetHeight * olcek });
-    };
-    hesapla();
-    const gozlemci = new ResizeObserver(hesapla);
-    gozlemci.observe(kap);
-    gozlemci.observe(kagit);
-    return () => gozlemci.disconnect();
-  }, []);
-
   const egitimAlt = [student.gradeLevel, student.gpa ? `Not ortalaması: ${student.gpa}` : null].filter(Boolean).join(' · ');
 
   return (
-    <div className="min-h-screen bg-gray-100 print:min-h-0 print:bg-white">
-      <style>{`
-        @media print {
-          .yazdirma-disi { display: none !important; }
-          html, body { background: #fff !important; }
-          .cv-kap { height: auto !important; width: auto !important; padding: 0 !important; }
-          .cv-kap > div { height: auto !important; }
-          .cv-kagit {
-            box-shadow: none !important;
-            margin: 0 !important;
-            border-radius: 0 !important;
-            width: auto !important;
-            transform: none !important;
-          }
-          .cv-kagit, .cv-kagit * {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-          .cv-sutun {
-            -webkit-box-decoration-break: clone;
-            box-decoration-break: clone;
-          }
-          .cv-bolum, .cv-oge { break-inside: avoid; }
-        }
-        @page { size: A4; margin: 0; }
-      `}</style>
-
-      {/* Araç çubuğu: yalnız ekranda. */}
-      <div className="yazdirma-disi sticky top-0 z-10 border-b border-gray-200 bg-white">
-        <div className={`${SAYFA_GENISLIGI} mx-auto flex items-center justify-between gap-3 px-2.5 py-3 sm:px-6 lg:px-8 xl:px-10`}>
-          <button
-            type="button"
-            onClick={onBack}
-            className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-gray-900"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Profile dön
-          </button>
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white hover:bg-blue-700"
-          >
-            <Printer className="h-4 w-4" />
-            PDF olarak kaydet
-          </button>
-        </div>
-      </div>
-
-      <p className="yazdirma-disi mx-auto max-w-[794px] px-4 pt-4 text-xs leading-relaxed text-gray-500">
-        Açılan pencerede yazıcı olarak <strong>"PDF olarak kaydet"</strong> seçeneğini seçin.
-        Telefonda paylaş menüsünden de kaydedebilirsiniz.
-      </p>
-
-      <div ref={kapRef} className="cv-kap mx-auto w-full max-w-[794px] px-3 py-4 sm:px-0 sm:py-6">
-      <div className="overflow-hidden" style={{ height: olcu.yukseklik ?? undefined }}>
-      <main
+      <Kap
         ref={kagitRef}
         className="cv-kagit grid min-h-[297mm] w-[794px] grid-cols-[35%_65%] overflow-hidden bg-white shadow-md"
-        style={{ ...SERIF, transform: olcu.olcek < 1 ? `scale(${olcu.olcek})` : undefined, transformOrigin: 'top left' }}
+        style={{ ...SERIF, ...stil }}
+        aria-label={etiket}
       >
         {/* ---------------- Lacivert yan sütun ---------------- */}
         <aside
@@ -403,9 +331,137 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = 
 
           <p className="mt-auto pt-2 text-right text-xs text-gray-500">StajımVar profilinden oluşturuldu.</p>
         </div>
-      </main>
+      </Kap>
+  );
+});
+CvBelgesi.displayName = 'CvBelgesi';
+
+/**
+ * CV ÖNİZLEMESİ — belgeyi kabın genişliğine sığacak kadar küçülten sarmalayıcı.
+ * `kapSinifi` kabın iç boşluğunu verebilir; hesap iç boşluğu düşüyor.
+ */
+export const CvOnizleme: React.FC<{
+  student: StudentProfile;
+  fotografYolu?: string | null;
+  anaIcerik?: boolean;
+  kapSinifi?: string;
+  etiket?: string;
+  /** Önizleme bir resim gibi: içindeki bağlantılar odak ve tıklama almıyor. */
+  etkilesimsiz?: boolean;
+}> = ({ student, fotografYolu = null, anaIcerik = false, kapSinifi = '', etiket, etkilesimsiz = false }) => {
+  /*
+    EKRANDA DA A4 (17 Eylül 2026)
+
+    Kâğıt her genişlikte 210 × 297 mm'nin 96 dpi karşılığı (794 × 1123 px)
+    ve PDF'te çıkacağı düzende çiziliyor; telefonda alt alta dizilmiş ayrı
+    bir hâl yok. Ekran kâğıttan darsa kâğıt `transform: scale` ile sığacak
+    kadar küçülüyor ve kabın yüksekliği ölçeğe göre ayarlanıyor (transform
+    yerleşimi değiştirmediği için boşluk elle veriliyor). Yakınlaştırma
+    tarayıcının kendisinde. Yazdırmada ölçek yok (`print` kuralları).
+  */
+  const kapRef = useRef<HTMLDivElement>(null);
+  const kagitRef = useRef<HTMLElement>(null);
+  const [olcu, setOlcu] = useState<{ olcek: number; yukseklik: number | null }>({ olcek: 1, yukseklik: null });
+  useLayoutEffect(() => {
+    const kap = kapRef.current;
+    const kagit = kagitRef.current;
+    if (!kap || !kagit) return;
+    const hesapla = () => {
+      /* `clientWidth` iç boşluğu da sayıyor; kâğıdın sığacağı genişlik ondan az. */
+      const stil = getComputedStyle(kap);
+      const genislik = kap.clientWidth - parseFloat(stil.paddingLeft) - parseFloat(stil.paddingRight);
+      const olcek = Math.min(1, genislik / A4_GENISLIK);
+      setOlcu({ olcek, yukseklik: kagit.offsetHeight * olcek });
+    };
+    hesapla();
+    const gozlemci = new ResizeObserver(hesapla);
+    gozlemci.observe(kap);
+    gozlemci.observe(kagit);
+    return () => gozlemci.disconnect();
+  }, []);
+
+  return (
+    <div ref={kapRef} className={`cv-kap w-full ${kapSinifi}`} inert={etkilesimsiz || undefined}>
+      <div className="overflow-hidden" style={{ height: olcu.yukseklik ?? undefined }}>
+        <CvBelgesi
+          ref={kagitRef}
+          student={student}
+          fotografYolu={fotografYolu}
+          anaIcerik={anaIcerik}
+          etiket={etiket}
+          stil={{ transform: olcu.olcek < 1 ? `scale(${olcu.olcek})` : undefined, transformOrigin: 'top left' }}
+        />
       </div>
+    </div>
+  );
+};
+
+export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = null }) => {
+  useEffect(() => {
+    document.title = `${student.fullName} — CV | StajımVar`;
+  }, [student.fullName]);
+
+  return (
+    <div className="min-h-screen bg-gray-100 print:min-h-0 print:bg-white">
+      <style>{`
+        @media print {
+          .yazdirma-disi { display: none !important; }
+          html, body { background: #fff !important; }
+          .cv-kap { height: auto !important; width: auto !important; padding: 0 !important; }
+          .cv-kap > div { height: auto !important; }
+          .cv-kagit {
+            box-shadow: none !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            width: auto !important;
+            transform: none !important;
+          }
+          .cv-kagit, .cv-kagit * {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .cv-sutun {
+            -webkit-box-decoration-break: clone;
+            box-decoration-break: clone;
+          }
+          .cv-bolum, .cv-oge { break-inside: avoid; }
+        }
+        @page { size: A4; margin: 0; }
+      `}</style>
+
+      {/* Araç çubuğu: yalnız ekranda. */}
+      <div className="yazdirma-disi sticky top-0 z-10 border-b border-gray-200 bg-white">
+        <div className={`${SAYFA_GENISLIGI} mx-auto flex items-center justify-between gap-3 px-2.5 py-3 sm:px-6 lg:px-8 xl:px-10`}>
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Profile dön
+          </button>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white hover:bg-blue-700"
+          >
+            <Printer className="h-4 w-4" />
+            PDF olarak kaydet
+          </button>
+        </div>
       </div>
+
+      <p className="yazdirma-disi mx-auto max-w-[794px] px-4 pt-4 text-xs leading-relaxed text-gray-500">
+        Açılan pencerede yazıcı olarak <strong>"PDF olarak kaydet"</strong> seçeneğini seçin.
+        Telefonda paylaş menüsünden de kaydedebilirsiniz.
+      </p>
+
+      <CvOnizleme
+        student={student}
+        fotografYolu={fotografYolu}
+        anaIcerik
+        kapSinifi="mx-auto max-w-[794px] px-3 py-4 sm:px-0 sm:py-6"
+      />
     </div>
   );
 };

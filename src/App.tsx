@@ -1,4 +1,5 @@
 import React, { useState, useRef, Suspense } from 'react';
+import { cvVarMi, karsilamaGosterilsinMi, karsilamaIsaretle } from './lib/cv-hazirlik.mjs';
 import { bildirimKisisi } from './lib/bildirim-kisisi.mjs';
 import { COGRAFYA, ilanCografyasi } from './lib/ilan-cografyasi.mjs';
 import {
@@ -252,6 +253,9 @@ const SkillAssessmentModal = React.lazy(() =>
 );
 const AuthModal = React.lazy(() =>
   import('./components/AuthModal').then((m) => ({ default: m.AuthModal }))
+);
+const CvOlusturucu = React.lazy(() =>
+  import('./components/CvOlusturucu').then((m) => ({ default: m.CvOlusturucu }))
 );
 const CvPage = React.lazy(() =>
   import('./components/CvPage').then((m) => ({ default: m.CvPage }))
@@ -1165,6 +1169,50 @@ export default function App() {
   }, [sessionReady, session, allListings]);
 
 
+  /*
+    CV AKIŞI — KAYIT SONRASI KARŞILAMA VE KISA CV OLUŞTURMA (17 Eylül 2026)
+
+    Katman adres değil durum: `null` kapalı. `ilan` doluysa akış bir ilanın
+    başvuru penceresinden açıldı; "İlana dön" o pencereyi yeniden açıyor.
+
+    KARŞILAMA YALNIZ YENİ HESABA, BİR KEZ. Karar `lib/cv-hazirlik.mjs`:
+    hesap yayından sonra açılmış ve 14 günden yeni, CV'si yok ve bu hesap
+    için işaret yazılmamış. İşaret AÇILDIĞI ANDA yazılıyor; kullanıcı
+    sayfayı yenilese de ikinci kez çıkmıyor. Başvuru niyetiyle kayıt olan
+    (ilan sayfası, bekleyen niyet) ya da işveren alanındaki kullanıcıda
+    açılmıyor: başvurusunun önüne geçmesin.
+  */
+  const [cvAkisi, setCvAkisi] = useState<{
+    baslangic: 'karsilama' | 'form';
+    ilan: InternshipListing | null;
+  } | null>(null);
+  React.useEffect(() => {
+    if (!sessionReady || !session || !student || cvAkisi) return;
+    if (session.userId !== student.id) return;
+    const yol = window.location.pathname;
+    if (yol.startsWith('/sirket') || yol.startsWith('/ilan/') || yol.startsWith('/cv/yazdir')) return;
+    if (niyetOku(window.sessionStorage)) return;
+    let depo: Storage | null = null;
+    try {
+      depo = window.localStorage;
+    } catch {
+      depo = null;
+    }
+    if (
+      !karsilamaGosterilsinMi({
+        depo,
+        kullaniciId: session.userId,
+        hesapOlusturmaAni: session.hesapOlusturmaAni,
+        cvVar: cvVarMi(student),
+      })
+    )
+      return;
+    /* İşaret yazılamıyorsa (gizli sekme, kapalı depo) her açılışta tekrar etmesin diye hiç açılmıyor. */
+    if (!karsilamaIsaretle(depo, session.userId, 'gosterildi')) return;
+    setCvAkisi({ baslangic: 'karsilama', ilan: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionReady, session?.userId, session?.hesapOlusturmaAni, student?.id]);
+
   /**
    * Profil güncelleme. Önce ekranda gösterir, sonra Supabase'e yazar.
    *
@@ -1172,8 +1220,8 @@ export default function App() {
    * sayfayı yenileyince her şey kayboluyordu. Yazma başarısız olursa değişiklik
    * geri alınıyor — "kaydedildi" deyip kaybetmek en kötüsü.
    */
-  const handleUpdateProfile = async (updated: Partial<StudentProfile>) => {
-    if (!session || !activeStudent) return;
+  const handleUpdateProfile = async (updated: Partial<StudentProfile>): Promise<boolean> => {
+    if (!session || !activeStudent) return false;
     const onceki = activeStudent;
 
     setStudent((prev) =>
@@ -1192,11 +1240,14 @@ export default function App() {
     try {
       await saveStudentProfile(session.userId, updated);
       showToast('Profil kaydedildi.');
+      /* Sonuç çağırana dönüyor: CV akışı "hazır" demeden önce buna bakıyor. */
+      return true;
     } catch (error) {
       setStudent(onceki);
       showToast(
         error instanceof Error ? `Kaydedilemedi: ${error.message}` : 'Profil kaydedilemedi.'
       );
+      return false;
     }
   };
 
@@ -1751,8 +1802,46 @@ export default function App() {
     </Suspense>
   );
 
+  const cvPenceresi =
+    cvAkisi && session && activeStudent ? (
+      <Suspense fallback={null}>
+        <CvOlusturucu
+          student={activeStudent}
+          kullaniciId={session.userId}
+          fotografYolu={sosyalAvatarYolu ?? null}
+          baslangic={cvAkisi.baslangic}
+          ilanaDonus={Boolean(cvAkisi.ilan)}
+          onKaydet={handleUpdateProfile}
+          onFotografKaydedildi={(yol) => {
+            setSosyalAvatarYolu(yol);
+            showToast('Fotoğrafın kaydedildi.');
+          }}
+          onKapat={(sebep) => {
+            const ilan = cvAkisi.ilan;
+            setCvAkisi(null);
+            if (sebep !== 'ilanlar') return;
+            if (ilan) {
+              /* Geldiği ilanın başvuru penceresine geri. */
+              setApplyTarget({ listing: ilan, matchScore: 0 });
+              return;
+            }
+            setActiveTab('internships');
+            if (window.location.pathname !== '/') navigate('/');
+          }}
+          onPdf={() => {
+            setCvAkisi(null);
+            navigate('/cv/yazdir');
+          }}
+          onProfil={() => {
+            setCvAkisi(null);
+            navigate('/cv');
+          }}
+        />
+      </Suspense>
+    ) : null;
+
   /* Eksik ad penceresi: oturum açık her sayfada çizilebilmeli. */
-  const adPenceresi = adSoruluyor ? (
+  const adSorusu = adSoruluyor ? (
     <Suspense fallback={null}>
     <ProfilTamamla
       isveren={authBaglam === 'isveren'}
@@ -1765,6 +1854,13 @@ export default function App() {
     />
     </Suspense>
   ) : null;
+  /* Ad sorusu ve CV akışı aynı noktadan her kabuğa giriyor. */
+  const adPenceresi = (
+    <>
+      {adSorusu}
+      {cvPenceresi}
+    </>
+  );
 
   /*
     ÇEREZ BANDI HER İKİ KABUKTA DA
@@ -1980,6 +2076,7 @@ export default function App() {
                   sunucu tarafında da tanımlı (functions/_middleware.ts).
                 */
                 onOpenCv={() => navigate('/cv/yazdir')}
+                onCvOlustur={() => setCvAkisi({ baslangic: 'form', ilan: null })}
                 basvurular={applications}
                 /*
                   Başlıktaki iki sayaç artık AYRI başvuru ekranına
@@ -2994,6 +3091,7 @@ export default function App() {
                   handleApplyToJob(listing, match.overallScore)
                 }
                 onGoToProfile={() => setActiveTab('profile')}
+                onCvOlustur={() => setCvAkisi({ baslangic: 'form', ilan: null })}
                 searchQuery={aramaTerimi}
                 onSearchChange={setAramaTerimi}
                 onNavigate={navigate}
@@ -3089,6 +3187,16 @@ export default function App() {
           alreadyApplied={applications.some((a) => a.listingId === applyTarget.listing.id)}
           onClose={() => setApplyTarget(null)}
           onSubmit={submitApplication}
+          /* Yalnız CV'si olmayan öğrenciye; dönüşte aynı ilanın penceresi yeniden açılıyor. */
+          onCvOlustur={
+            activeStudent && !cvVarMi(activeStudent)
+              ? () => {
+                  const ilan = applyTarget.listing;
+                  setApplyTarget(null);
+                  setCvAkisi({ baslangic: 'form', ilan });
+                }
+              : undefined
+          }
         />
       )}
 

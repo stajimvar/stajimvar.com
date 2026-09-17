@@ -1782,7 +1782,11 @@ test('CV eylemi yazdırılabilir belgeye gidiyor, birleşik ekrana değil', () =
     de birleşik ekrana götürüyor. Oluşturma ekranı orada; akışa ikinci
     bir kopyasını koymak aynı formu iki yerde tutmak olurdu.
   */
-  assert.equal((app.match(/navigate\('\/cv'\)/g) ?? []).length, 3);
+  /*
+    Dördüncü çağrı CV oluşturma akışının "Proje ve dil eklemek için profilini
+    aç" eylemi (17 Eylül 2026): kısa formda olmayan alanlar birleşik ekranda.
+  */
+  assert.equal((app.match(/navigate\('\/cv'\)/g) ?? []).length, 4);
 });
 
 test('Başvurularım sağ sütundan kalktı ama yolu duruyor', () => {
