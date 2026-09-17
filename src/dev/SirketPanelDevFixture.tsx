@@ -5,9 +5,16 @@ import { IlanFormu } from '../sirket/IlanFormu';
 import { AdayIzgarasi } from '../sirket/AdayIzgarasi';
 import { GenelBakis } from '../sirket/GenelBakis';
 import { SirketProfilFormu } from '../sirket/SirketProfilFormu';
-import { SIRKET_KENAR, SIRKET_METIN, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
+import {
+  SIRKET_KENAR,
+  SIRKET_KENAR_VURGU,
+  SIRKET_METIN_IKINCIL,
+  SIRKET_ROZET,
+  SIRKET_VURGU_KOYU,
+} from '../sirket/renk';
 import { KADEME } from '../lib/sirket-kademe.mjs';
 import { kartVerisi } from '../lib/aday-kart.mjs';
+import type { SirketProfilDegeri } from '../lib/sirket-veri';
 
 /**
  * Şirket panelinin görsel testi.
@@ -280,11 +287,128 @@ const TEST_BAGLAMI = (kademe: number) => ({
   kademe,
 });
 
+/*
+  SABİT "BUGÜN"
+
+  "3 gün kaldı" rozeti gerçek tarihten hesaplanıyor; fikstür sabit bir
+  gün vermezse ekran görüntüsü her gün başka bir sayı gösterir ve bir
+  hafta sonra "Kapalı"ya düşer.
+*/
+const BUGUN = new Date('2026-09-17T09:00:00Z');
+
+/** Profil: tam (uyarı satırı yok) ya da eksik (logo, açıklama, site boş). */
+const PROFIL_TAM: SirketProfilDegeri = {
+  logoUrl: 'https://ornek.com/logo.png',
+  industry: 'Yazılım',
+  size: '11-50',
+  location: 'İstanbul',
+  websiteUrl: 'https://ornek.com',
+  description: 'Örnek açıklama.',
+  hrEmail: 'ik@ornek.com',
+};
+const PROFIL_EKSIK: SirketProfilDegeri = {
+  ...PROFIL_TAM,
+  logoUrl: '',
+  websiteUrl: '',
+  description: '',
+};
+
+/*
+  İLAN SENARYOLARI
+
+  Üçü de gerçek `listings` satır biçiminde (id, title, city, status,
+  origin, application_method, application_deadline, applicants_count).
+  Altı ilanlı senaryo Genel ekranın ölçeklenmesini ölçüyor: biri 3 gün
+  kaldı (BUGUN + 3), biri kapalı, biri 12 yeni başvuranlı (avatar
+  şeridi 5 + "+7" olmalı), biri taslak ve inceleme notlu, biri
+  toplama hattından (düzenlenemez).
+*/
+const ILAN = (
+  n: number,
+  alanlar: Record<string, unknown>,
+): Record<string, unknown> => ({
+  id: `2d7aa946-0000-4000-8000-00000000000${n}`,
+  origin: 'employer_posted',
+  application_method: 'internal',
+  applicants_count: 0,
+  ...alanlar,
+});
+
+const TEK_ILAN = [
+  ILAN(1, { title: 'Yazılım Stajyeri', city: 'İstanbul', status: 'published', applicants_count: 3 }),
+];
+
+const ALTI_ILAN = [
+  ILAN(1, { title: 'Yazılım Stajyeri', city: 'İstanbul', status: 'published', applicants_count: 3 }),
+  ILAN(2, {
+    title: 'Veri Analisti Stajyeri',
+    city: 'Ankara',
+    status: 'published',
+    application_deadline: '2026-09-20',
+    applicants_count: 1,
+  }),
+  ILAN(3, { title: 'Pazarlama Stajyeri', city: 'İzmir', status: 'closed', applicants_count: 7 }),
+  ILAN(4, {
+    title: 'Ürün Tasarımı Stajyeri',
+    city: 'Uzaktan',
+    status: 'published',
+    applicants_count: 12,
+  }),
+  ILAN(5, {
+    title: 'Finans Stajyeri',
+    city: 'İstanbul',
+    status: 'draft',
+    review_note: 'Ücret bilgisi eksik; net ya da brüt aylık tutar yazılmalı.',
+  }),
+  ILAN(6, {
+    title: 'İnsan Kaynakları Stajyeri (kaynaktan)',
+    city: 'İstanbul',
+    status: 'published',
+    origin: 'scraped',
+    application_method: 'external',
+  }),
+];
+
+/*
+  Senaryoya göre başvuru satırları. Tek ilan: 3 yeni. Altı ilan: ilan
+  1'e 3 yeni, ilan 2'ye 1 incelemede, ilan 3'e 7 karar verilmiş, ilan
+  4'e 12 yeni. Adlar bilerek "Aday X": gerçek isme benzeyen uydurma ad,
+  ekran görüntüsüne düştüğünde gerçek sanılır.
+*/
+const YENI_BASVURU = (id: string, ilanNo: number, ad: string, status = 'submitted') => ({
+  id,
+  status,
+  applied_at: '2026-09-16T09:00:00Z',
+  match_score: null,
+  listing_id: `2d7aa946-0000-4000-8000-00000000000${ilanNo}`,
+  ilanBasligi: String(ALTI_ILAN[ilanNo - 1].title),
+  application_method: 'internal',
+  contact_share_consent_at: '2026-09-16T09:00:00Z',
+  profile_snapshot: { ad, universite: 'Örnek Üniversitesi', yetenekler: [] },
+});
+
+const HARFLER = 'ABCDEFGHIJKLMNOP';
+const TEK_ILAN_BASVURULARI = [1, 2, 3].map((n) =>
+  YENI_BASVURU(`tek-${n}`, 1, `Aday ${HARFLER[n - 1]}`),
+);
+const ALTI_ILAN_BASVURULARI = [
+  ...TEK_ILAN_BASVURULARI,
+  YENI_BASVURU('iki-1', 2, 'Aday D', 'under_review'),
+  ...[1, 2, 3, 4, 5, 6, 7].map((n) => YENI_BASVURU(`uc-${n}`, 3, `Aday ${HARFLER[n + 3]}`, 'rejected')),
+  ...Array.from({ length: 12 }, (_, i) =>
+    YENI_BASVURU(`dort-${i + 1}`, 4, `Aday ${HARFLER[i % HARFLER.length]}${i + 1}`),
+  ),
+];
+
+type Senaryo = 'sifir' | 'bir' | 'alti';
+
 export const SirketPanelDevFixture: React.FC = () => {
-  const [kademe, setKademe] = React.useState<number>(KADEME.ILAN_VEREN);
+  const [kademe, setKademe] = React.useState<number>(KADEME.DOGRULANMIS);
   const [ekran, setEkran] = React.useState<'genel' | 'ilanlar' | 'form' | 'adaylar' | 'profil'>(
     'genel',
   );
+  const [senaryo, setSenaryo] = React.useState<Senaryo>('alti');
+  const [profilEksik, setProfilEksik] = React.useState(false);
 
   /*
     DURUM DEĞİŞİMİ GERÇEKTEN UYGULANIYOR
@@ -300,7 +424,15 @@ export const SirketPanelDevFixture: React.FC = () => {
     [satirlar]
   );
 
-  /* Son aday her zaman hata veriyor: satır içi hata mesajı görülebilsin. */
+  const ilanlar = senaryo === 'sifir' ? [] : senaryo === 'bir' ? TEK_ILAN : ALTI_ILAN;
+  const ilanBasvurulari = React.useMemo(
+    () =>
+      (senaryo === 'bir' ? TEK_ILAN_BASVURULARI : senaryo === 'alti' ? ALTI_ILAN_BASVURULARI : []).map(
+        (s) => kartVerisi(s, { yetenekler: [] }),
+      ),
+    [senaryo],
+  );
+
   /*
     Kasten hata veren aday: yazma hatasının satır içinde göründüğü
     doğrulanabilsin. Sondaki kayıt değil sabit bir kimlik — listeye yeni
@@ -320,15 +452,17 @@ export const SirketPanelDevFixture: React.FC = () => {
       }, 250);
     });
 
+  const kolSinifi = 'min-h-8 rounded-lg border border-gray-300 px-2 py-1 font-bold';
+
   return (
     <>
       {/* Test kolları — gerçek panelde yok. */}
-      <div className="fixed left-2 top-20 z-[300] flex gap-2 rounded-xl bg-white p-2 text-xs shadow-lg">
+      <div className="fixed left-2 top-20 z-[300] flex flex-wrap gap-2 rounded-xl bg-white p-2 text-xs shadow-lg">
         <button
           type="button"
           id="dev-kademe-1"
           onClick={() => setKademe(KADEME.ILAN_VEREN)}
-          className="rounded-lg border px-2 py-1 font-bold"
+          className={kolSinifi}
         >
           Kademe 1
         </button>
@@ -336,7 +470,7 @@ export const SirketPanelDevFixture: React.FC = () => {
           type="button"
           id="dev-kademe-2"
           onClick={() => setKademe(KADEME.DOGRULANMIS)}
-          className="rounded-lg border px-2 py-1 font-bold"
+          className={kolSinifi}
         >
           Kademe 2
         </button>
@@ -356,9 +490,29 @@ export const SirketPanelDevFixture: React.FC = () => {
                       : 'genel',
             )
           }
-          className="rounded-lg border px-2 py-1 font-bold"
+          className={kolSinifi}
         >
-          Ekran
+          Ekran: {ekran}
+        </button>
+        <select
+          id="dev-senaryo"
+          value={senaryo}
+          onChange={(e) => setSenaryo(e.target.value as Senaryo)}
+          aria-label="İlan senaryosu"
+          className={kolSinifi}
+        >
+          <option value="sifir">0 ilan</option>
+          <option value="bir">1 ilan · 3 yeni</option>
+          <option value="alti">6 ilan</option>
+        </select>
+        <button
+          type="button"
+          id="dev-profil"
+          onClick={() => setProfilEksik((p) => !p)}
+          aria-pressed={profilEksik}
+          className={kolSinifi}
+        >
+          Profil: {profilEksik ? 'eksik' : 'tam'}
         </button>
       </div>
 
@@ -378,9 +532,9 @@ export const SirketPanelDevFixture: React.FC = () => {
           <span
             className="rounded-lg border px-2 py-1 text-[11px] font-bold"
             style={{
-              borderColor: kademe === KADEME.DOGRULANMIS ? SIRKET_VURGU_KOYU : SIRKET_KENAR,
-              background: SIRKET_ROZET,
-              color: SIRKET_VURGU_KOYU,
+              borderColor: kademe === KADEME.DOGRULANMIS ? SIRKET_KENAR_VURGU : SIRKET_KENAR,
+              background: kademe === KADEME.DOGRULANMIS ? SIRKET_ROZET : undefined,
+              color: kademe === KADEME.DOGRULANMIS ? SIRKET_VURGU_KOYU : SIRKET_METIN_IKINCIL,
             }}
           >
             {kademe === KADEME.DOGRULANMIS ? 'Doğrulanmış kurum' : 'İlan açık · kartlar kapalı'}
@@ -389,77 +543,30 @@ export const SirketPanelDevFixture: React.FC = () => {
       >
         {ekran === 'genel' ? (
           <GenelBakis
-            baglam={{
-              companyId: 'test',
-              ad: 'Örnek Teknoloji A.Ş.',
-              slug: 'ornek',
-              siteUrl: 'https://ornek.com',
-              hrEmail: 'ik@ornek.com',
-              vkn: null,
-              dogrulandi: kademe === KADEME.DOGRULANMIS,
-              kademe,
-            }}
-            ilanlar={[
-              { id: '1', title: 'Yazılım Stajyeri', status: 'published', application_deadline: '2026-09-05' },
-              { id: '2', title: 'Pazarlama Stajyeri', status: 'draft' },
-            ]}
-            basvurular={kartlar}
+            baglam={TEST_BAGLAMI(kademe)}
+            ilanlar={ilanlar}
+            basvurular={ilanBasvurulari}
+            profil={profilEksik ? PROFIL_EKSIK : PROFIL_TAM}
             onNavigate={() => undefined}
+            simdi={BUGUN}
           />
         ) : ekran === 'ilanlar' ? (
           /*
             İLANLAR EKRANI FİKSTÜRDE
 
-            Bu ekran giriş arkasında olduğu için tarayıcıda hiç
-            görülmeden değişiyordu. Üç durum birden çiziliyor: yayında
-            (düzenle + kapat), taslak (düzenle + yayınla + sil), başvurusu
+            Genel'le aynı senaryo listesi: yayında (düzenle + kapat),
+            taslak ve inceleme notlu (düzenle + yayınla + sil), başvurusu
             olan kapalı ilan (sil değil arşivle) ve toplama hattından
             gelen ilan (düzenlenemez).
           */
           <Ilanlar
             baglam={TEST_BAGLAMI(kademe)}
-            ilanlar={[
-              {
-                id: '2d7aa946-0000-4000-8000-000000000001',
-                title: 'Yazılım Stajyeri',
-                city: 'İstanbul',
-                status: 'published',
-                origin: 'employer_posted',
-                application_method: 'internal',
-                applicants_count: 4,
-              },
-              {
-                id: '2d7aa946-0000-4000-8000-000000000002',
-                title: 'Pazarlama Stajyeri',
-                city: 'Ankara',
-                status: 'draft',
-                origin: 'employer_posted',
-                application_method: 'internal',
-                applicants_count: 0,
-              },
-              {
-                id: '2d7aa946-0000-4000-8000-000000000003',
-                title: 'Veri Analisti Stajyeri',
-                city: 'İzmir',
-                status: 'closed',
-                origin: 'employer_posted',
-                application_method: 'internal',
-                applicants_count: 7,
-              },
-              {
-                id: '2d7aa946-0000-4000-8000-000000000004',
-                title: 'İnsan Kaynakları Stajyeri (kaynaktan)',
-                city: 'İstanbul',
-                status: 'published',
-                origin: 'scraped',
-                application_method: 'external',
-                applicants_count: 0,
-              },
-            ]}
-            basvuruSayisi={11}
+            ilanlar={ilanlar}
+            basvurular={ilanBasvurulari}
             onNavigate={() => undefined}
             onDurum={async () => undefined}
             onKaldir={async () => undefined}
+            simdi={BUGUN}
           />
         ) : ekran === 'profil' ? (
           /*
@@ -468,16 +575,7 @@ export const SirketPanelDevFixture: React.FC = () => {
             yerleşim, hiyerarşi ve tema sızıntısını görmek.
           */
           <SirketProfilFormu
-            baglam={{
-              companyId: 'test',
-              ad: 'Örnek Teknoloji A.Ş.',
-              slug: 'ornek',
-              siteUrl: 'https://ornek.com',
-              hrEmail: 'ik@ornek.com',
-              vkn: null,
-              dogrulandi: kademe === KADEME.DOGRULANMIS,
-              kademe,
-            }}
+            baglam={TEST_BAGLAMI(kademe)}
             userId="00000000-0000-4000-8000-000000000001"
             onKaydedildi={() => undefined}
           />
