@@ -6,7 +6,7 @@ import {
   IKINCIL_DUGME,
   KUTU,
   SIRKET_KENAR,
-  SIRKET_KENAR_GUCLU,
+  SIRKET_KENAR_VURGU,
   SIRKET_METIN,
   SIRKET_METIN_IKINCIL,
   SIRKET_ROZET,
@@ -268,7 +268,7 @@ export const SirketProfilFormu: React.FC<{
                 onChange={(e) => yaz('description')(e.target.value)}
                 rows={5}
                 placeholder="Şirketinizin ne yaptığını ve stajyerin nasıl bir ekibe katılacağını birkaç cümleyle anlatın."
-                className="w-full rounded-xl border p-3 text-sm leading-relaxed outline-none placeholder:text-[#69796F]"
+                className="w-full rounded-xl border p-3 text-sm leading-relaxed outline-none placeholder:text-gray-500"
                 style={alanStil}
               />
             </label>
@@ -397,7 +397,7 @@ const ProfilOzeti: React.FC<{
             <span
               className="inline-flex shrink-0 items-center gap-1 rounded-lg border px-2 py-0.5 text-[11px] font-bold"
               style={{
-                borderColor: SIRKET_KENAR_GUCLU,
+                borderColor: SIRKET_KENAR_VURGU,
                 background: SIRKET_ROZET,
                 color: SIRKET_VURGU_KOYU,
               }}
@@ -436,7 +436,7 @@ const ProfilOzeti: React.FC<{
       >
         <span
           className="block h-full rounded-full transition-[width] duration-500"
-          /* Panelin ana yeşili geniş dolguda; yüzde yanında yazılı
+          /* Panelin marka mavisi geniş dolguda; yüzde yanında yazılı
              olduğu için anlam yalnızca renge bağlı değil. */
           style={{ width: `${oran}%`, background: SIRKET_VURGU }}
         />

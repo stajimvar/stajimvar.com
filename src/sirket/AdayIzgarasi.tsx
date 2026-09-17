@@ -7,6 +7,7 @@ import {
   IKINCIL_DUGME,
   KUTU,
   SIRKET_KENAR,
+  SIRKET_KENAR_VURGU,
   SIRKET_METIN,
   SIRKET_METIN_IKINCIL,
   SIRKET_ROZET,
@@ -54,6 +55,8 @@ const yaziAlaninda = (h: EventTarget | null) => {
 export const AdayIzgarasi: React.FC<{
   kartlar: Record<string, any>[];
   ilanAdresi: string | null;
+  /** Adresten gelen ilan süzgeci (`?ilan=<id>`); Genel'deki karttan. */
+  baslangicIlan?: string | null;
   onNavigate: (y: string) => void;
   onDurum: (id: string, durum: string) => Promise<void>;
   onMulakatTarihi: (id: string, tarih: string) => Promise<void>;
@@ -73,6 +76,7 @@ export const AdayIzgarasi: React.FC<{
 }> = ({
   kartlar,
   ilanAdresi,
+  baslangicIlan,
   onNavigate,
   onDurum,
   onMulakatTarihi,
@@ -84,7 +88,21 @@ export const AdayIzgarasi: React.FC<{
   onNot,
 }) => {
   const [onyargisiz, setOnyargisiz] = React.useState(false);
-  const [ilanSuzgeci, setIlanSuzgeci] = React.useState('');
+  const [ilanSuzgeci, setIlanSuzgeci] = React.useState(baslangicIlan ?? '');
+
+  /*
+    Süzgeç adrese yazılıyor ki sayfa yenilenince ya da bağlantı
+    paylaşılınca aynı liste gelsin; temizlenince sorgu da kalkıyor.
+    replaceState: her süzgeç değişimi geri tuşuna bir adım eklemesin.
+  */
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const adres = new URL(window.location.href);
+    if (adres.searchParams.get('ilan') === (ilanSuzgeci || null)) return;
+    if (ilanSuzgeci) adres.searchParams.set('ilan', ilanSuzgeci);
+    else adres.searchParams.delete('ilan');
+    window.history.replaceState({}, '', adres.pathname + adres.search);
+  }, [ilanSuzgeci]);
   const [durumSuzgeci, setDurumSuzgeci] = React.useState('');
   const [arama, setArama] = React.useState('');
   const [odak, setOdak] = React.useState(0);
@@ -255,7 +273,9 @@ export const AdayIzgarasi: React.FC<{
         çalışanına klavye dizilimi öğretmesi gerekmiyor.
       */}
       <div className="flex flex-wrap items-center gap-2">
-        {ilanSecenekleri.length > 1 && (
+        {/* Seçici, süzgeç adresten geldiyse tek ilanla da görünür: yoksa
+            "neden 3/11 aday" sorusunun cevabı ekranda olmazdı. */}
+        {(ilanSecenekleri.length > 1 || ilanSuzgeci !== '') && (
           <select
             value={ilanSuzgeci}
             onChange={(e) => setIlanSuzgeci(e.target.value)}
@@ -313,7 +333,7 @@ export const AdayIzgarasi: React.FC<{
           className={IKINCIL_DUGME}
           style={
             onyargisiz
-              ? { borderColor: SIRKET_VURGU_KOYU, background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }
+              ? { borderColor: SIRKET_KENAR_VURGU, background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }
               : ikincilStil
           }
         >

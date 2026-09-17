@@ -55,11 +55,13 @@ export const BottomNavigation: React.FC<{
   etiket: string;
   /**
    * Çubuğun hangi genişlikten sonra gizleneceği. Öğrenci tarafında yan
-   * gezinme `lg`'de açılıyor, işveren panelinde üst sekmeler `sm`'de.
-   * Tailwind sınıfları taranabilir olsun diye iki tam sınıf arasından
+   * gezinme `lg`'de açılıyor, işveren panelinde üst sekmeler `md`'de
+   * (640-767 aralığında dört sekme, zil, öğrenci kapısı ve Yeni ilan
+   * tek satıra sığmıyordu; `sm` eşiği çubuğu erken kaldırıyordu).
+   * Tailwind sınıfları taranabilir olsun diye tam sınıflar arasından
    * seçiliyor; birleştirilmiş bir dize derlenen CSS'e girmez.
    */
-  esik?: 'sm' | 'lg';
+  esik?: 'sm' | 'md' | 'lg';
   tema?: AltMenuTemasi;
   children: React.ReactNode;
 }> = ({ gorunur, etiket, esik = 'lg', tema = OGRENCI_TEMASI, children }) => (
@@ -78,7 +80,9 @@ export const BottomNavigation: React.FC<{
     className={
       esik === 'sm'
         ? 'fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 z-50 flex items-center justify-around gap-0.5 rounded-full border px-1.5 py-1.5 shadow-[0_10px_30px_rgba(15,23,42,0.18)] transition-transform duration-200 sm:hidden'
-        : 'fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 z-50 flex items-center justify-around gap-0.5 rounded-full border px-1.5 py-1.5 shadow-[0_10px_30px_rgba(15,23,42,0.18)] transition-transform duration-200 lg:hidden'
+        : esik === 'md'
+          ? 'fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 z-50 flex items-center justify-around gap-0.5 rounded-full border px-1.5 py-1.5 shadow-[0_10px_30px_rgba(15,23,42,0.18)] transition-transform duration-200 md:hidden'
+          : 'fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 z-50 flex items-center justify-around gap-0.5 rounded-full border px-1.5 py-1.5 shadow-[0_10px_30px_rgba(15,23,42,0.18)] transition-transform duration-200 lg:hidden'
     }
   >
     {children}

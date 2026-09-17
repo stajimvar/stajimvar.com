@@ -1,28 +1,17 @@
 import React from 'react';
-import {
-  Archive,
-  BadgeCheck,
-  Lock,
-  MoreHorizontal,
-  Pencil,
-  Plus,
-  Send,
-  ShieldCheck,
-  Trash2,
-} from 'lucide-react';
+import { Archive, BadgeCheck, Lock, MoreHorizontal, Send, ShieldCheck, Trash2 } from 'lucide-react';
 import { SirketKabugu, type SirketSekmesi } from './SirketKabugu';
 import {
-  ALAN,
   BIRINCIL_DUGME,
   IKINCIL_DUGME,
   KUTU,
   SIRKET_KENAR,
+  SIRKET_KENAR_VURGU,
   SIRKET_METIN,
   SIRKET_METIN_IKINCIL,
   SIRKET_ROZET,
   SIRKET_VURGU_KOYU,
   SIRKET_YUZEY,
-  alanStil,
   birincilStil,
   ikincilStil,
   kutuStil,
@@ -32,8 +21,9 @@ import { AdayIzgarasi } from './AdayIzgarasi';
 import type { Iletisim } from './AdayCekmecesi';
 import { SirketProfilFormu } from './SirketProfilFormu';
 import { GenelBakis } from './GenelBakis';
+import { IlanKarti, YeniIlanKarti, type AdayOzeti } from './IlanKarti';
 import { ilanEylemleri } from '../lib/ilan-formu.mjs';
-import { KADEME, adayGorebilir, vknGecerli } from '../lib/sirket-kademe.mjs';
+import { KADEME, adayGorebilir } from '../lib/sirket-kademe.mjs';
 import { kartVerisi } from '../lib/aday-kart.mjs';
 import {
   adayYetenekleri,
@@ -51,8 +41,9 @@ import {
   sirketBaglami,
   sirketBasvurulari,
   sirketIlanlari,
-  vknKaydet,
+  sirketProfiliOku,
   type SirketBaglami,
+  type SirketProfilDegeri,
 } from '../lib/sirket-veri';
 
 /**
@@ -93,13 +84,12 @@ function useNoindex() {
 const DurumRozeti: React.FC<{ baglam: SirketBaglami }> = ({ baglam }) =>
   baglam.dogrulandi ? (
     /*
-      Doğrulanmış damgası panelde TURUNCU çizgili. Yeşil rozet öğrenci
-      tarafının dili; panelde yeşil kullanmak iki dünyanın rengini
-      birbirine karıştırırdı.
+      Doğrulanmış damgası marka rozetinde (blue-50 / blue-700, kenar
+      blue-200) — öğrenci tarafındaki "Resmî kaynak" rozetiyle aynı dil.
     */
     <span
       className="inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-bold"
-      style={{ borderColor: SIRKET_VURGU_KOYU, background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
+      style={{ borderColor: SIRKET_KENAR_VURGU, background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
     >
       <BadgeCheck className="h-3.5 w-3.5" />
       Doğrulanmış kurum
@@ -142,6 +132,11 @@ export const SirketPaneli: React.FC<{
   const [baglam, setBaglam] = React.useState<SirketBaglami | null>(null);
   const [ilanlar, setIlanlar] = React.useState<Record<string, unknown>[]>([]);
   const [basvurular, setBasvurular] = React.useState<Record<string, any>[]>([]);
+  /*
+    Profil alanları Genel'deki eksik-profil satırı için. Okunamazsa null
+    kalıyor ve satır çizilmiyor; panelin kendisi bu yüzden düşmüyor.
+  */
+  const [profil, setProfil] = React.useState<SirketProfilDegeri | null>(null);
   const [durum, setDurum] = React.useState<'yukleniyor' | 'hazir' | 'hata'>('yukleniyor');
 
   const yukle = React.useCallback(async () => {
@@ -152,6 +147,7 @@ export const SirketPaneli: React.FC<{
 
       if (b.companyId) {
         setIlanlar((await sirketIlanlari(b.companyId)) as Record<string, unknown>[]);
+        setProfil(await sirketProfiliOku(b.companyId).catch(() => null));
 
         /*
           Başvurular yalnızca kart görebilen kademede isteniyor. Kademe
@@ -278,14 +274,15 @@ export const SirketPaneli: React.FC<{
         <GenelBakis
           baglam={baglam}
           ilanlar={ilanlar}
-          basvurular={basvurular}
+          basvurular={basvurular as AdayOzeti[]}
+          profil={profil}
           onNavigate={onNavigate}
         />
       ) : sekme === 'ilanlar' ? (
         <Ilanlar
           baglam={baglam}
           ilanlar={ilanlar}
-          basvuruSayisi={basvurular.length}
+          basvurular={basvurular as AdayOzeti[]}
           onNavigate={onNavigate}
           onDurum={async (id, d) => {
             await ilanDurumuDegistir(id, d);
@@ -367,11 +364,14 @@ export const SirketPaneli: React.FC<{
 export const Ilanlar: React.FC<{
   baglam: SirketBaglami;
   ilanlar: Record<string, unknown>[];
-  basvuruSayisi: number;
+  /** Kart görebilen kademede şirketin tüm başvuruları; değilse boş. */
+  basvurular: AdayOzeti[];
   onNavigate: (y: string) => void;
   onDurum: (id: string, d: 'published' | 'closed') => Promise<void>;
   onKaldir: (id: string, arsivle: boolean) => Promise<void>;
-}> = ({ baglam, ilanlar, basvuruSayisi, onNavigate, onDurum, onKaldir }) => {
+  /** Fikstürün sabit "bugün"ü; üretimde verilmiyor. */
+  simdi?: Date;
+}> = ({ baglam, ilanlar, basvurular, onNavigate, onDurum, onKaldir, simdi }) => {
   /* Yanlışlıkla basmaya açık olmasın: kaldırma iki adımda. */
   const [kaldirilacak, setKaldirilacak] = React.useState<{
     id: string;
@@ -387,48 +387,28 @@ export const Ilanlar: React.FC<{
   const kartAcik = adayGorebilir(baglam.kademe);
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="min-w-0">
-          {/*
-            Şirket adı yoksa başlık "İlanlar". Önce "Şirketin" yazıyordu:
-            hem kimsenin şirketinin adı değil hem de sayfanın ne olduğunu
-            söylemiyordu.
-          */}
-          <h1
-            className="truncate text-2xl font-extrabold tracking-tight"
-            style={{ color: SIRKET_METIN }}
-          >
-            {baglam.ad || 'İlanlar'}
-          </h1>
-          {/*
-            DÖRT SAYI KAROSU KALDIRILDI
-
-            Aynı bilgi ekranda üç kez yazıyordu: bu satırda, altındaki dört
-            karoda ve doğrulama için üstteki rozette. Telefonda karolar
-            ilanın kendisini ekranın altına itiyordu — İK'nın buraya
-            geldiğinde aradığı şey ilan listesi, sayaç değil.
-
-            Kaybolan bilgi yok: başvuru sayısı bu satıra katıldı,
-            doğrulama zaten üst çubuktaki rozette duruyor. Genel bakış
-            ekranı da aynı sebeple karolarını bırakmıştı; iki ekran artık
-            aynı dili konuşuyor.
-          */}
-          <p className="text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-            {acik} açık ilan{taslak > 0 ? ` · ${taslak} taslak` : ''}
-            {kartAcik && basvuruSayisi > 0 ? ` · ${basvuruSayisi} başvuru` : ''}
-          </p>
-        </div>
+    <div className="space-y-4">
+      <div className="min-w-0">
         {/*
-          İKİNCİ "YENİ İLAN" DÜĞMESİ KALDIRILDI
-
-          Aynı yeşil düğme üst çubukta zaten duruyor ve her ekranda
-          görünüyor; burada ikincisi tam onun altına, aynı hizaya
-          düşüyordu. İki birincil düğme yan yana durunca hangisinin ana
-          eylem olduğu belirsizleşiyor. Boş ekrandaki çağrı ise kartın
-          içinde kalıyor — orada kullanıcı zaten "peki nasıl" diye
-          soruyor.
+          Şirket adı yoksa başlık "İlanlar". Önce "Şirketin" yazıyordu:
+          hem kimsenin şirketinin adı değil hem de sayfanın ne olduğunu
+          söylemiyordu.
         */}
+        <h1
+          className="truncate text-2xl font-extrabold tracking-tight"
+          style={{ color: SIRKET_METIN }}
+        >
+          {baglam.ad || 'İlanlar'}
+        </h1>
+        {/*
+          Sayı karoları yok; aynı bilgi bu satırda. Başvuru sayısı yalnız
+          kart görebilen kademede ve sıfırdan büyükse — "0 başvuru" bir
+          bilgi değil, gürültü.
+        */}
+        <p className="text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
+          {acik} açık ilan{taslak > 0 ? ` · ${taslak} taslak` : ''}
+          {kartAcik && basvurular.length > 0 ? ` · ${basvurular.length} başvuru` : ''}
+        </p>
       </div>
 
       {ilanlar.length === 0 ? (
@@ -454,177 +434,147 @@ export const Ilanlar: React.FC<{
             className={`mx-auto mt-5 ${BIRINCIL_DUGME}`}
             style={{ ...birincilStil, minHeight: 56, paddingInline: 28, fontSize: 16 }}
           >
-            <Plus className="h-5 w-5" />
-            Yeni ilan
+            İlk ilanını aç
           </button>
         </div>
       ) : (
-        <ul className="space-y-2">
+        /*
+          GENEL'LE AYNI KART
+
+          İlan kartı ortak bileşen (./IlanKarti): başlık, şehir, durum
+          rozeti ve avatar şeridi orada. Bu sekmenin farkı sağdaki
+          yönetim eylemleri — Kapat/Yayınla ve taşma menüsü — ve
+          başlığın altına düşen inceleme notu.
+        */
+        <ul className="space-y-3">
           {ilanlar.map((i) => {
             const id = String(i.id);
             const yayinda = i.status === 'published';
-            const taslak = i.status === 'draft';
+            const taslakMi = i.status === 'draft';
             const platformdan = i.application_method === 'internal';
             const basvuruSayisi = Number(i.applicants_count ?? 0);
             /* Kural tek yerde ve test altında: lib/ilan-formu.mjs. */
             const eylem = ilanEylemleri(i);
 
             return (
-              <li
+              <IlanKarti
                 key={id}
-                className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border p-4"
-                style={kutuStil}
-              >
-                <div className="min-w-0 flex-1 basis-full sm:basis-auto">
-                  <p className="truncate font-bold" style={{ color: SIRKET_METIN }}>
-                    {String(i.title ?? '')}
-                  </p>
-                  {/*
-                    ALT SATIR SADELEŞTİ
+                ilan={i}
+                basvurular={
+                  kartAcik ? basvurular.filter((b) => String(b.ilanId ?? '') === id) : null
+                }
+                onNavigate={onNavigate}
+                simdi={simdi}
+                /*
+                  BAŞVURU YOLU ETİKETİ YALNIZCA FARKLIYSA
 
-                    Önce "İstanbul · YAYINDA · #2d7aa946" yazıyordu: durum
-                    monospace ve BÜYÜK HARF, yanında da UUID'nin ilk sekiz
-                    karakteri. İkisi de panele terminal görüntüsü veriyordu
-                    ve sekiz karakterlik kimlikle şirketin yapabileceği bir
-                    şey yok. Durum artık paneldeki diğer ekranlarla aynı
-                    yazımda ("Yayında"), kimlik satırdan çıktı.
+                  Buradan açılan her ilan StajımVar üzerinden başvuru
+                  alıyor; etiket yalnız AYKIRI durumda: toplama hattından
+                  gelen ilanda başvuru şirketin kendi sayfasında.
+                */
+                ekRozet={
+                  !platformdan ? (
+                    <span
+                      className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-bold"
+                      style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
+                    >
+                      <Send className="h-3 w-3" aria-hidden />
+                      Kariyer sayfasından
+                    </span>
+                  ) : null
+                }
+                /*
+                  RET NOTU — ŞİRKET NEDENİ BURADA OKUYOR
 
-                    Başvuru sayısı yalnızca doğrulanmış şirkette VE sıfırdan
-                    büyükse: "0 başvuru" bir bilgi değil, gürültü.
-                  */}
-                  <p className="truncate text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
-                    {String(i.city ?? '')} ·{' '}
-                    {yayinda ? 'Yayında' : taslak ? 'İncelemede / taslak' : 'Kapalı'}
-                    {kartAcik && basvuruSayisi > 0 ? ` · ${basvuruSayisi} başvuru` : ''}
-                  </p>
-                  {/*
-                    RET NOTU — ŞİRKET NEDENİ BURADA OKUYOR
-
-                    Ret eskiden ilanı ARŞİVLİYORDU ve arşivlenen ilan bu
-                    listede hiç görünmüyordu; yani şirket reddedildiğini
-                    de nedenini de göremiyordu. Ret artık taslağa
-                    düşürüyor ve notu zorunlu kılıyor.
-
-                    `truncate` YOK: tek satıra kısaltılan bir gerekçe işe
-                    yaramaz. Not yoksa satır hiç çizilmiyor.
-                  */}
-                  {taslak && i.review_note ? (
+                  Ret ilanı taslağa düşürüyor ve notu zorunlu kılıyor.
+                  `truncate` YOK: tek satıra kısaltılan gerekçe işe
+                  yaramaz. Not yoksa satır hiç çizilmiyor.
+                */
+                altNot={
+                  taslakMi && i.review_note ? (
                     <p
-                      className="mt-1 rounded-lg px-2 py-1.5 text-xs leading-relaxed"
+                      className="mt-2 rounded-lg px-2 py-1.5 text-xs leading-relaxed"
                       style={{ background: SIRKET_ROZET, color: SIRKET_METIN }}
                     >
                       <strong>İnceleme notu:</strong> {String(i.review_note)}
                     </p>
-                  ) : null}
-                </div>
-
-                {/*
-                  BAŞVURU YOLU ETİKETİ YALNIZCA FARKLIYSA
-
-                  Şirketin buradan açtığı her ilan StajımVar üzerinden
-                  başvuru alıyor — yol artık sistem tarafından sabit. Her
-                  satıra "StajımVar ile başvuru" yazmak, hepsinde aynı olan
-                  bir şeyi tekrar etmek ve satırı şişirmekti. Etiket artık
-                  yalnızca AYKIRI durumda çıkıyor: toplama hattından gelen
-                  ilanda başvuru şirketin kendi sayfasında tamamlanıyor ve
-                  o ilanı buradan düzenlemek de mümkün değil.
-                */}
-                {!platformdan && (
-                  <span
-                    className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold"
-                    style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
-                  >
-                    <Send className="h-3 w-3" />
-                    Kariyer sayfasından
-                  </span>
-                )}
-
-                <div className="flex shrink-0 flex-wrap items-center gap-2">
-                  {eylem.duzenlenebilir && (
+                  ) : null
+                }
+                ekEylemler={
+                  <>
                     <button
                       type="button"
-                      onClick={() => onNavigate(`/sirket/ilan/${id}/duzenle`)}
+                      onClick={() => void onDurum(id, yayinda ? 'closed' : 'published')}
                       className={IKINCIL_DUGME}
                       style={ikincilStil}
                     >
-                      <Pencil className="h-3.5 w-3.5" />
-                      Düzenle
+                      {eylem.durumEtiketi}
                     </button>
-                  )}
 
-                  <button
-                    type="button"
-                    onClick={() => void onDurum(id, yayinda ? 'closed' : 'published')}
-                    className={IKINCIL_DUGME}
-                    style={ikincilStil}
-                  >
-                    {eylem.durumEtiketi}
-                  </button>
+                    {/*
+                      ÜÇÜNCÜ EYLEM MENÜDE
 
-                  {/*
-                    ÜÇÜNCÜ EYLEM MENÜDE
+                      Düzenle ve Yayınla/Kapat görünür kalıyor; seyrek ve
+                      geri alınamaz olan kaldırma menüye giriyor.
+                    */}
+                    {eylem.kaldirilabilir && (
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setAcikMenu((m) => (m === id ? null : id))}
+                          aria-label="Diğer işlemler"
+                          aria-expanded={acikMenu === id}
+                          className={`${IKINCIL_DUGME} min-w-11`}
+                          /* Ölçüldü: yalnız `paddingInline: 10` ile genişlik 38 px'e
+                             düşüyordu; dokunma hedefi 44×44 olmalı. */
+                          style={{ ...ikincilStil, paddingInline: 10 }}
+                        >
+                          <MoreHorizontal className="h-4 w-4" aria-hidden />
+                        </button>
 
-                    Satırda üç düğme yan yana durunca hangisinin asıl iş
-                    olduğu kayboluyordu. Düzenle ve Yayınla/Kapat görünür
-                    kalıyor; seyrek ve geri alınamaz olan kaldırma menüye
-                    giriyor.
-                  */}
-                  {eylem.kaldirilabilir && (
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setAcikMenu((m) => (m === id ? null : id))}
-                        aria-label="Diğer işlemler"
-                        aria-expanded={acikMenu === id}
-                        className={`${IKINCIL_DUGME} min-w-11`}
-                        /* Ölçüldü: yalnız `paddingInline: 10` ile genişlik 38 px'e
-                           düşüyordu; dokunma hedefi 44×44 olmalı. */
-                        style={{ ...ikincilStil, paddingInline: 10 }}
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
-
-                      {acikMenu === id && (
-                        <>
-                          <span
-                            className="fixed inset-0 z-10"
-                            onClick={() => setAcikMenu(null)}
-                            aria-hidden
-                          />
-                          <div
-                            className="absolute right-0 top-full z-20 mt-1 w-44 overflow-hidden rounded-xl border shadow-lg"
-                            style={kutuStil}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setAcikMenu(null);
-                                setKaldirilacak({
-                                  id,
-                                  baslik: String(i.title ?? ''),
-                                  basvuruSayisi,
-                                  arsivlenecek: eylem.arsivlenecek,
-                                });
-                              }}
-                              className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm font-bold"
-                              style={{ color: SIRKET_METIN }}
+                        {acikMenu === id && (
+                          <>
+                            <span
+                              className="fixed inset-0 z-10"
+                              onClick={() => setAcikMenu(null)}
+                              aria-hidden
+                            />
+                            <div
+                              className="absolute right-0 top-full z-20 mt-1 w-44 overflow-hidden rounded-xl border shadow-lg"
+                              style={kutuStil}
                             >
-                              {eylem.arsivlenecek ? (
-                                <Archive className="h-4 w-4" />
-                              ) : (
-                                <Trash2 className="h-4 w-4" />
-                              )}
-                              {eylem.arsivlenecek ? 'Arşivle' : 'Sil'}
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </li>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAcikMenu(null);
+                                  setKaldirilacak({
+                                    id,
+                                    baslik: String(i.title ?? ''),
+                                    basvuruSayisi,
+                                    arsivlenecek: eylem.arsivlenecek,
+                                  });
+                                }}
+                                className="flex min-h-11 w-full cursor-pointer items-center gap-2 px-3 text-left text-sm font-bold hover:bg-gray-50"
+                                style={{ color: SIRKET_METIN }}
+                              >
+                                {eylem.arsivlenecek ? (
+                                  <Archive className="h-4 w-4" aria-hidden />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" aria-hidden />
+                                )}
+                                {eylem.arsivlenecek ? 'Arşivle' : 'Sil'}
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </>
+                }
+              />
             );
           })}
+          <YeniIlanKarti onNavigate={onNavigate} />
         </ul>
       )}
 
@@ -776,6 +726,18 @@ const Basvuranlar: React.FC<{
       ? `${window.location.origin}/ilan/${String(yayindaki.id)}`
       : null;
 
+  /*
+    GENEL'DEN GELEN İLAN SÜZGECİ
+
+    Genel'deki kartın "Adaylar" düğmesi buraya `?ilan=<id>` ile geliyor.
+    Rota durumu yalnız yolu tutuyor (App.navigate), sorgu adresten
+    okunuyor — öğrenci tarafındaki süzgeçlerle aynı kural.
+  */
+  const baslangicIlan =
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('ilan')
+      : null;
+
   return (
     /*
       BAŞLIK BİR KEZ
@@ -789,6 +751,7 @@ const Basvuranlar: React.FC<{
       <AdayIzgarasi
         kartlar={kartlar}
         ilanAdresi={ilanAdresi}
+        baslangicIlan={baslangicIlan}
         onNavigate={onNavigate}
         onDurum={onDurum}
         onMulakatTarihi={onMulakatTarihi}

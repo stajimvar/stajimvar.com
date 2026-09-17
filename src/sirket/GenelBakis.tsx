@@ -1,218 +1,165 @@
 import React from 'react';
-import { AlertCircle, ArrowRight, Lock, Plus, ShieldCheck } from 'lucide-react';
+import { AlertCircle, ArrowRight, Plus } from 'lucide-react';
 import {
   BIRINCIL_DUGME,
-  IKINCIL_DUGME,
   KUTU,
-  SIRKET_KENAR,
   SIRKET_METIN,
   SIRKET_METIN_IKINCIL,
-  SIRKET_ROZET,
-  SIRKET_VURGU_KOYU,
+  SIRKET_ODAK,
   birincilStil,
-  ikincilStil,
   kutuStil,
 } from './renk';
+import { IlanKarti, YeniIlanKarti, type AdayOzeti } from './IlanKarti';
 import { adayGorebilir } from '../lib/sirket-kademe.mjs';
-import { daysUntilDeadline } from '../lib/opportunity-domain.mjs';
-import type { SirketBaglami } from '../lib/sirket-veri';
+import type { SirketBaglami, SirketProfilDegeri } from '../lib/sirket-veri';
 
 /**
- * Şirket panelinin genel bakışı.
+ * Şirket panelinin Genel ekranı.
  *
- * SAHTE GÖSTERGE YOK
- * ------------------
- * Görüntülenme sayısı, dönüşüm oranı, "bu hafta %12 artış" gibi hiçbir
- * metrik yok — bunların hiçbiri veritabanında tutulmuyor ve uydurmak
- * paneli bir gösterge tahtası taklidine çevirirdi. Buradaki dört sayı
- * gerçekten sayılabilen şeyler: kaç ilan yayında, kaç taslak bekliyor,
- * kaç başvuru geldi, doğrulama hangi durumda.
+ * GÖSTERGE TAHTASI DEĞİL, İLANLARIN KENDİSİ
+ * -----------------------------------------
+ * Önce sayı karoları, sonra "sıradaki iş" kutusu ve ayrı bir ilan listesi
+ * vardı. İK'nın 2 saniyede görmek istediği şey tek: hangi ilanımda kim
+ * bekliyor. Bu yüzden ekran ilan kartlarından ibaret; her kart kendi
+ * yeni başvuranlarını taşıyor ve bir dokunuşla o adaylara gidiyor.
+ * Kart bileşeni İlanlar sekmesiyle ortak (./IlanKarti).
  *
- * SAYI DEĞİL, SIRADAKİ İŞ
- * -----------------------
- * Kutuların altında "şimdi ne yapmalı" satırı duruyor. İlan yoksa tek
- * güçlü çağrı; taslak varsa taslağa, doğrulama eksikse doğrulamaya
- * götürüyor. Bir gösterge tahtası sayı gösterir; bir panel iş çıkartır.
+ * PROFİL UYARISI TEK SATIR, VE YALNIZ EKSİKSE
+ * -------------------------------------------
+ * Öğrenci ilana bakmadan önce şirket sayfasını görüyor; logosu,
+ * açıklaması ya da sitesi olmayan şirket "bu gerçek mi" sorusunu
+ * doğuruyor. Eksik yoksa satır HİÇ çizilmiyor — "profilin tamam" demek
+ * için yer harcamıyoruz. Profil okunamadıysa da çizilmiyor: bilmediğimiz
+ * bir eksik iddia edilmez.
+ *
+ * SAHTE SAYI YOK
+ * --------------
+ * Görüntülenme, dönüşüm, "bu hafta %12" yok — veri modelinde yok.
+ * Karttaki her sayı `applications` satırlarından.
  */
 
+/** Genel'de uyarılan üç alan: öğrencinin şirket sayfasında ilk gördükleri. */
+const PROFIL_EKSIK_ADLARI: Partial<Record<keyof SirketProfilDegeri, string>> = {
+  logoUrl: 'logo',
+  description: 'açıklama',
+  websiteUrl: 'web sitesi',
+};
+
+export function profilEksikleri(profil: SirketProfilDegeri | null): string[] {
+  if (!profil) return [];
+  return (Object.keys(PROFIL_EKSIK_ADLARI) as (keyof SirketProfilDegeri)[])
+    .filter((alan) => !String(profil[alan] ?? '').trim())
+    .map((alan) => PROFIL_EKSIK_ADLARI[alan] as string);
+}
 
 export const GenelBakis: React.FC<{
   baglam: SirketBaglami;
   ilanlar: Record<string, unknown>[];
-  basvurular: Record<string, any>[];
+  basvurular: AdayOzeti[];
+  /** `null` = henüz okunmadı ya da okunamadı; uyarı satırı çizilmez. */
+  profil: SirketProfilDegeri | null;
   onNavigate: (yol: string) => void;
-}> = ({ baglam, ilanlar, basvurular, onNavigate }) => {
-  const acik = ilanlar.filter((i) => i.status === 'published');
-  const taslak = ilanlar.filter((i) => i.status === 'draft');
+  simdi?: Date;
+}> = ({ baglam, ilanlar, basvurular, profil, onNavigate, simdi }) => {
   const kartAcik = adayGorebilir(baglam.kademe);
-  const yeni = basvurular.filter((b) => b.durum === 'submitted');
+  const eksikler = profilEksikleri(profil);
 
-  /* Yaklaşan kapanışlar: yalnızca son başvuru tarihi GİRİLMİŞ ilanlar. */
-  const yaklasan = acik
-    .map((i) => ({ ilan: i, kalan: daysUntilDeadline(i.application_deadline as string, new Date()) }))
-    .filter((x) => x.kalan != null && x.kalan <= 14)
-    .sort((a, b) => (a.kalan as number) - (b.kalan as number));
+  /*
+    0 İLAN: TEK KART, BAŞKA HİÇBİR ŞEY
 
-  /* Sıradaki iş: tek bir cümle, tek bir düğme. */
-  const siradaki = (() => {
-    if (ilanlar.length === 0)
-      return {
-        metin: 'Henüz aktif ilanınız yok. İlk ilanı açmak iki dakika sürüyor.',
-        etiket: 'İlk ilanını oluştur',
-        yol: '/sirket/ilan/yeni',
-        birincil: true,
-      };
-    if (taslak.length > 0)
-      return {
-        metin: `${taslak.length} ilan taslakta bekliyor. Yayınlamadan öğrenciye görünmüyor.`,
-        etiket: 'Taslakları aç',
-        yol: '/sirket/ilanlar',
-        birincil: true,
-      };
-    if (!baglam.dogrulandi)
-      return {
-        /*
-          Başvuru yolu artık seçenek değil — her ilan StajımVar üzerinden
-          başvuru alıyor. Doğrulamanın açtığı tek şey ADAY KİMLİĞİ:
-          doğrulanana kadar şirket başvuru sayısını görüyor, kimin
-          başvurduğunu görmüyor.
-        */
-        metin:
-          'Şirketiniz henüz doğrulanmadı. Başvurular geliyor ama adayların kim olduğunu doğrulamadan sonra görebilirsiniz.',
-        etiket: 'Doğrulamaya gönder',
-        yol: '/sirket/profil',
-        birincil: true,
-      };
-    if (kartAcik && yeni.length > 0)
-      return {
-        metin: `${yeni.length} başvuru henüz incelenmedi.`,
-        etiket: 'Başvuranları aç',
-        yol: '/sirket/basvuranlar',
-        birincil: true,
-      };
-    return {
-      metin: 'Her şey yolunda. Yeni bir pozisyon açmak istersen ilan formu hazır.',
-      etiket: 'Yeni ilan',
-      yol: '/sirket/ilan/yeni',
-      birincil: false,
-    };
-  })();
+    Profil uyarısı bile yok: ilanı olmayan şirketin ilk işi ilan açmak,
+    ikinci işi değil.
+  */
+  if (ilanlar.length === 0) {
+    return (
+      <div className={`${KUTU} text-center`} style={kutuStil}>
+        <h1 className="text-lg font-extrabold" style={{ color: SIRKET_METIN }}>
+          Henüz ilan yok
+        </h1>
+        <p
+          className="mx-auto mt-1 max-w-md text-sm leading-relaxed"
+          style={{ color: SIRKET_METIN_IKINCIL }}
+        >
+          İlk ilanı açmak iki dakika sürüyor: pozisyon, şehir, süre, ücret ve iş tanımı. İş
+          tanımı için hazır şablon var.
+        </p>
+        <button
+          type="button"
+          onClick={() => onNavigate('/sirket/ilan/yeni')}
+          className={`mx-auto mt-5 ${BIRINCIL_DUGME}`}
+          style={{ ...birincilStil, minHeight: 56, paddingInline: 28, fontSize: 16 }}
+        >
+          <Plus className="h-5 w-5" aria-hidden />
+          İlk ilanını aç
+        </button>
+      </div>
+    );
+  }
+
+  const yeniToplam = basvurular.filter((b) => b.durum === 'submitted').length;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div>
         <h1
           className="truncate text-2xl font-extrabold tracking-tight"
           style={{ color: SIRKET_METIN }}
         >
-          {baglam.ad || 'Genel bakış'}
+          {baglam.ad || 'Genel'}
         </h1>
+        {/*
+          Alt satır gerçek sayılar: ilan adedi ve (kart görülüyorsa) yeni
+          başvuru. Kademe pili üst çubukta `lg`den itibaren görünüyor;
+          daha dar ekranda aynı cümle buraya iniyor ki durum kaybolmasın.
+        */}
         <p className="text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-          {baglam.dogrulandi ? 'Doğrulanmış kurum' : 'İlan açık · aday kartları kapalı'}
+          {ilanlar.length} ilan
+          {kartAcik && yeniToplam > 0 ? ` · ${yeniToplam} yeni başvuru` : ''}
+          <span className="lg:hidden">
+            {' · '}
+            {baglam.dogrulandi ? 'Doğrulanmış kurum' : 'İlan açık · aday kartları kapalı'}
+          </span>
         </p>
       </div>
 
-      {/* -------------------------------------------------- sıradaki iş */}
-      <div className={KUTU} style={{ ...kutuStil, borderColor: SIRKET_VURGU_KOYU }}>
-        <p className="text-sm font-semibold leading-relaxed" style={{ color: SIRKET_METIN }}>
-          {siradaki.metin}
-        </p>
-        <button
-          type="button"
-          onClick={() => onNavigate(siradaki.yol)}
-          className={`mt-3 ${siradaki.birincil ? BIRINCIL_DUGME : IKINCIL_DUGME}`}
-          style={siradaki.birincil ? birincilStil : ikincilStil}
+      {eksikler.length > 0 && (
+        <div
+          role="status"
+          className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border px-4 py-2.5"
+          style={{ background: '#FFFBEB', borderColor: '#FDE68A', color: '#92400E' }}
         >
-          {siradaki.yol === '/sirket/ilan/yeni' && <Plus className="h-4 w-4" />}
-          {siradaki.etiket}
-          {siradaki.yol !== '/sirket/ilan/yeni' && <ArrowRight className="h-4 w-4" />}
-        </button>
-      </div>
-
-      {/*
-        AKTİF İLANLAR — DÖRT KARO YERİNE TEK LİSTE
-
-        Önce dört sayı karosu vardı (yayındaki ilan, taslak, başvuru,
-        doğrulama). Sayılar doğruydu ama ekran "gösterge paneli" gibi
-        duruyor ve hiçbiri tıklandığında nereye gidileceğini
-        söylemiyordu. İK'nın burada aradığı tek şey belli: hangi ilanım
-        açık ve kaç başvuru gelmiş.
-
-        Kapanış tarihi ayrı bir bölümdü; aynı ilanı iki kez listeliyordu.
-        Artık satırın kendi içinde.
-      */}
-      {ilanlar.length > 0 && (
-        <section className={KUTU} style={kutuStil}>
-          <div className="flex items-baseline justify-between gap-2">
-            <h2 className="font-bold" style={{ color: SIRKET_METIN }}>
-              İlanlarınız
-            </h2>
-            <button
-              type="button"
-              onClick={() => onNavigate('/sirket/ilanlar')}
-              className="text-xs font-bold"
-              style={{ color: SIRKET_VURGU_KOYU }}
-            >
-              Tümünü aç
-            </button>
-          </div>
-
-          <ul className="mt-3 space-y-1">
-            {ilanlar.slice(0, 5).map((ilan) => {
-              const id = String(ilan.id);
-              const yayinda = ilan.status === 'published';
-              const kalan = yaklasan.find((y) => String(y.ilan.id) === id)?.kalan;
-              return (
-                <li key={id}>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('/sirket/ilanlar')}
-                    className="flex min-h-11 w-full items-center gap-3 rounded-xl px-2 text-left"
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span
-                        className="block truncate text-sm font-bold"
-                        style={{ color: SIRKET_METIN }}
-                      >
-                        {String(ilan.title ?? '')}
-                      </span>
-                      <span className="block text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
-                        {yayinda ? 'Yayında' : ilan.status === 'draft' ? 'Taslak' : 'Kapalı'}
-                        {/* Başvuru sayısı yalnızca doğrulanmış şirkette:
-                            göremeyeceği bir sayıyı göstermek doğrulamayı
-                            satmak olurdu. */}
-                        {kartAcik && ` · ${Number(ilan.applicants_count ?? 0)} başvuru`}
-                        {kalan !== undefined &&
-                          ` · ${kalan === 0 ? 'bugün kapanıyor' : `${kalan} gün kaldı`}`}
-                      </span>
-                    </span>
-                    <ArrowRight
-                      className="h-4 w-4 shrink-0"
-                      style={{ color: SIRKET_METIN_IKINCIL }}
-                    />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden />
+          <p className="min-w-0 flex-1 text-sm">
+            Profilde eksik: {eksikler.join(', ')}. Öğrenci ilana bakmadan önce şirket sayfanı
+            görüyor.
+          </p>
+          <button
+            type="button"
+            onClick={() => onNavigate('/sirket/profil')}
+            className={`inline-flex min-h-11 cursor-pointer items-center gap-1 rounded-xl px-2 text-sm font-bold underline-offset-2 hover:underline ${SIRKET_ODAK}`}
+            style={{ color: '#92400E' }}
+          >
+            Profili tamamla
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </button>
+        </div>
       )}
 
-      {/* ------------------------------------------ doğrulama bilgilendirme */}
-      {!baglam.dogrulandi && (
-        <section className={KUTU} style={kutuStil}>
-          <h2 className="flex items-center gap-2 font-bold" style={{ color: SIRKET_METIN }}>
-            <ShieldCheck className="h-4 w-4" style={{ color: SIRKET_VURGU_KOYU }} />
-            Şu an neler yapabilirsiniz?
-          </h2>
-          <ul className="mt-2 space-y-1.5 text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
-            <li>✓ İlan açabilir, düzenleyebilir ve kapatabilirsiniz.</li>
-            <li>✓ Şirket profilinizi doldurabilirsiniz.</li>
-            <li>✓ Başvurular StajımVar üzerinden gelir; sayısını görürsünüz.</li>
-            <li>✕ Adayların kim olduğu doğrulama sonrası açılıyor.</li>
-          </ul>
-        </section>
-      )}
+      <ul className="space-y-3">
+        {ilanlar.map((ilan) => {
+          const id = String(ilan.id);
+          return (
+            <IlanKarti
+              key={id}
+              ilan={ilan}
+              basvurular={kartAcik ? basvurular.filter((b) => String(b.ilanId ?? '') === id) : null}
+              onNavigate={onNavigate}
+              simdi={simdi}
+            />
+          );
+        })}
+        <YeniIlanKarti onNavigate={onNavigate} />
+      </ul>
     </div>
   );
 };

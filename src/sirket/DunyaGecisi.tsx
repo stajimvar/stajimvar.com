@@ -6,17 +6,16 @@ import { SIRKET_VURGU, SIRKET_ZEMIN } from './renk';
  *
  * NEDEN VAR
  * ---------
- * İki dünya tek hesapta yaşıyor ve renkleri farklı: öğrenci tarafı
- * mavi-beyaz, şirket tarafı turuncu-beyaz. Geçiş anında hiçbir şey
- * olmazsa kullanıcı bir an "yanlış siteye mi düştüm" diye duraksıyor.
- * Kısa bir eşik, o duraksamayı "başka bir moda geçtim" bilgisine
- * çeviriyor.
+ * İki dünya tek hesapta yaşıyor. Renkleri artık aynı aile (./renk):
+ * geçişi anlatan şey boya değil, kısa bir eşik. Eşik olmazsa kullanıcı
+ * "hangi tarafa geçtim" diye duraksıyor; 800 ms'lik tek tarama çizgisi
+ * o duraksamayı "başka bir moda geçtim" bilgisine çeviriyor.
  *
  * GIMMICK DEĞİL
  * -------------
- * 800 ms, oturumda BİR KEZ. Karanlık invert, yeşil kod yağmuru, üç
- * saniyelik giriş yok: perde mavi-beyazdan turuncu-beyaza dönüyor ve
- * sönüyor. Karartma hiç yok — iki dünya da aydınlık.
+ * 800 ms, oturumda BİR KEZ. Karanlık invert, kod yağmuru, üç saniyelik
+ * giriş yok: perde iki tarafın ortak zemininde açılıp sönüyor. Karartma
+ * hiç yok — iki dünya da aydınlık.
  *
  * ERİŞİLEBİLİRLİK
  * ---------------
@@ -36,7 +35,7 @@ export const hareketKisitli = () =>
   window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
 export const DunyaGecisi: React.FC<{
-  /** 'sirkete' turuncuya geçiş, 'ogrenciye' maviye dönüş (daha kısa). */
+  /** 'sirkete' panele geçiş, 'ogrenciye' dönüş (daha kısa). */
   yon: 'sirkete' | 'ogrenciye';
   onBitti: () => void;
 }> = ({ yon, onBitti }) => {

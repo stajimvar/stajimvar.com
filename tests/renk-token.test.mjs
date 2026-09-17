@@ -43,13 +43,18 @@ test('İŞVEREN LANDING ARTIK PANEL YEŞİLİYLE EYLEM ÇİZMİYOR', () => {
   assert.match(landing, /SIRKET_ROZET/);
 });
 
-test('PANELİN KENDİ ALT TEMASI KORUNDU', () => {
+test('PANEL ÖĞRENCİ DÜNYASININ MAVİSİNDE; YEŞİL ALT TEMA BİTTİ', () => {
   /*
-    Yeşil bir kaza değil, belgelenmiş bir alt marka; giriş yapmış
-    işveren panelinde kendi kabuğuyla birlikte duruyor. Bu test onun
-    silinmediğini garanti ediyor.
+    Bu test eskiden panelin yeşil alt markasının (#25D366) silinmediğini
+    garanti ediyordu. 17 Eylül 2026'da kullanıcı kararı bunu tersine
+    çevirdi: işveren paneli öğrenci tarafıyla aynı mavi-beyaz dünyada,
+    "başka bir ürün" gibi durmuyor. Artık garanti edilen şey yeşilin
+    GERİ GELMEMESİ ve token adlarının korunması (tüm ağaç renk.ts'den
+    okuyor; ad değişirse kabuk parça parça bozulur).
   */
-  assert.match(sirketRenk, /SIRKET_VURGU = '#25D366'/);
+  assert.match(sirketRenk, /SIRKET_VURGU = '#2563EB'/);
+  /* Atama biçiminde arıyor: yorumdaki tarihçe anlatımı serbest. */
+  assert.doesNotMatch(sirketRenk, /=\s*'#(25D366|F5FBF7|075E54)'/i);
   assert.match(sirketRenk, /export const birincilStil/);
 });
 
