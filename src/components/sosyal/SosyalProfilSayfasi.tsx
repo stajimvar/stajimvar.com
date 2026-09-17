@@ -1694,15 +1694,18 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
         </p>
       )}
 
-      <PaylasimIzgarasi
-        paylasimlar={paylasimlar}
-        durum={paylasimDurumu}
-        onYenidenDene={() => setPaylasimDeneme((sayi) => sayi + 1)}
-        sahibiMi
-        onArsivlendi={paylasimlariTazele}
-        gorunum="galeri"
-        kullaniciAdi={profil?.kullaniciAdi ?? null}
-      />
+      {/* Telefonda ızgara Instagram'daki gibi ekranın iki kenarına yaslı. */}
+      <div className="-mx-4 sm:mx-0">
+        <PaylasimIzgarasi
+          paylasimlar={paylasimlar}
+          durum={paylasimDurumu}
+          onYenidenDene={() => setPaylasimDeneme((sayi) => sayi + 1)}
+          sahibiMi
+          onArsivlendi={paylasimlariTazele}
+          gorunum="galeri"
+          kullaniciAdi={profil?.kullaniciAdi ?? null}
+        />
+      </div>
     </section>,
   );
 };
