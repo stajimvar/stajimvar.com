@@ -253,7 +253,7 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = 
               ad={student.fullName}
               yol={fotografYolu}
               yedekAdres={student.avatarUrl || null}
-              className="mx-auto aspect-square w-[170px] shrink-0 rounded-full text-4xl grayscale"
+              className="mx-auto aspect-square w-[170px] shrink-0 rounded-full text-4xl"
             />
           )}
 
