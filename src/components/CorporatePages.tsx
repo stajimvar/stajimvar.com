@@ -492,7 +492,9 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
 
         <S baslik="Kapsam ve sınırlar">
           <p>
-            Kapsamımız Türkiye&apos;deki staj ilanları. Kaynak sayısı sürekli artıyor ama
+            Listede Türkiye&apos;deki staj ilanlarıyla birlikte çalışma konumu yurtdışında olan
+            staj ilanları da var; liste Türkiye görünümüyle açılıyor, &quot;Yurtdışında
+            staj&quot; ve &quot;Tüm ilanlar&quot; görünümleri de seçilebiliyor. Kaynak sayısı sürekli artıyor ama
             hiçbir zaman &quot;bütün staj ilanları burada&quot; demiyoruz — çünkü doğru
             olmaz. Kendi kariyer sayfası olmayan, ilanını yalnızca sosyal medyada duyuran ya
             da hiç ilan açmayan çok sayıda işletme var.
@@ -667,8 +669,13 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
             otomatik olarak elenir.
           </p>
           <p>
-            İlanın Türkiye'de bir konuma bağlı olması veya Türkiye'den uzaktan
-            yapılabilir olması gerekir.
+            İlanlar çalışma konumuna göre üç görünümde listelenir:{' '}
+            <strong>Türkiye&apos;de staj</strong> (konumu Türkiye olan ya da açıkça
+            Türkiye&apos;den uzaktan yapılabilen), <strong>Yurtdışında staj</strong> (konumu
+            Türkiye dışında olan) ve <strong>Tüm ilanlar</strong> (konumu kaynakta
+            belirtilmemiş olanlar dahil hepsi). Konum bir yayın koşulu değildir.
+            Yurtdışı ilanlarında dil, vize ve başvuru koşullarını ilanın kendi kaynak
+            sayfasında kontrol edin; bu bilgiler kaynakta yazmıyorsa tahminle eklenmez.
           </p>
         </S>
 

@@ -10,13 +10,14 @@ import {
   writeCountryQuery,
 } from '../src/lib/global-preferences.mjs';
 
-test('ulke secimi URL sonra tarayici sonra hesap sonra locale sonra Cloudflare onceligini korur', () => {
-  const common = { browserCountry: 'DE', accountCountries: ['TR'], locale: 'en-US', cloudflareCountry: 'GB' };
+test('ulke secimi URL sonra tarayici sonra hesap sonra Turkiye onceligini korur', () => {
+  /* 17 Eylül 2026: dil ve Cloudflare ülkesi varsayılanı belirlemiyor; ilk ziyaret Türkiye. */
+  const common = { browserCountry: 'DE', accountCountries: ['FR'], locale: 'en-US', cloudflareCountry: 'GB' };
   assert.equal(resolveListingCountry({ ...common, urlCountry: 'FR' }), 'FR');
   assert.equal(resolveListingCountry({ ...common, urlCountry: null }), 'DE');
-  assert.equal(resolveListingCountry({ ...common, urlCountry: null, browserCountry: null }), 'TR');
-  assert.equal(resolveListingCountry({ ...common, urlCountry: null, browserCountry: null, accountCountries: [] }), 'US');
-  assert.equal(resolveListingCountry({ ...common, urlCountry: null, browserCountry: null, accountCountries: [], locale: 'fr' }), 'GB');
+  assert.equal(resolveListingCountry({ ...common, urlCountry: null, browserCountry: null }), 'FR');
+  assert.equal(resolveListingCountry({ ...common, urlCountry: null, browserCountry: null, accountCountries: [] }), 'TR');
+  assert.equal(resolveListingCountry({ ...common, urlCountry: null, browserCountry: null, accountCountries: [], locale: 'fr' }), 'TR');
   assert.equal(resolveListingCountry({ urlCountry: null, browserCountry: null, accountCountries: [], locale: 'fr', cloudflareCountry: null }), 'TR');
 });
 
@@ -72,15 +73,14 @@ test('ILK KEZ GELEN TURKIYE KULLANICISI Turkiye ilanlarini goruyor', () => {
   assert.equal(resolveListingCountry({}), 'TR');
 });
 
-test('ILK KEZ GELEN YABANCI KULLANICI kendi ulkesini goruyor', () => {
+test('ILK KEZ GELEN YABANCI DILLI ZIYARETCI de Turkiye ile basliyor; yurtdisi acik secim', () => {
   assert.equal(
     resolveListingCountry({ urlCountry: null, browserCountry: null, accountCountries: [], locale: 'fr-FR', cloudflareCountry: 'FR' }),
-    'FR'
+    'TR'
   );
-  /* Dil bölgesizse Cloudflare basamağı devreye giriyor. */
   assert.equal(
     resolveListingCountry({ urlCountry: null, browserCountry: null, accountCountries: [], locale: 'de', cloudflareCountry: 'DE' }),
-    'DE'
+    'TR'
   );
 });
 

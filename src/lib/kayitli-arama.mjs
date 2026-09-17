@@ -34,6 +34,7 @@
   listenin kabul etmediği bir ülkeyi kabul etmesi demekti.
 */
 import { normalizeCountryCode } from './global-preferences.mjs';
+import { COGRAFYA, ilanCografyasi } from './ilan-cografyasi.mjs';
 
 /*
   AYNI BÖLÜM SÖZLÜĞÜ — LİSTE, BÖLÜM SAYFASI VE SIRALAMA
@@ -101,6 +102,16 @@ export function filtreleriDogrula(ham) {
 
   const city = metin(g.city).slice(0, 60) || 'all';
 
+  /*
+    BÖLGE — null | 'yurtdisi'
+
+    "Yurtdışında staj" görünümü bir ülke kodu değil, coğrafi sınıflandırma
+    (lib/ilan-cografyasi.mjs). Kayıtlı arama bu seçimi korusun diye ayrı
+    alan; eski kayıtlarda yok ve null okunuyor (sürüm değişmedi, alan
+    eklemeli).
+  */
+  const bolge = metin(g.bolge) === COGRAFYA.YURTDISI ? COGRAFYA.YURTDISI : null;
+
   const workTypes = Array.isArray(g.workTypes)
     ? [...new Set(g.workTypes.filter((w) => CALISMA_BICIMLERI.has(w)))]
     : [];
@@ -147,6 +158,7 @@ export function filtreleriDogrula(ham) {
     surum: FILTRE_SURUMU,
     q,
     country,
+    bolge,
     city,
     workTypes,
     companies,
@@ -185,6 +197,7 @@ export function filtreBosMu(filtreler) {
   return (
     !f.q &&
     f.country === 'all' &&
+    f.bolge === null &&
     f.city === 'all' &&
     f.workTypes.length === 0 &&
     f.companies.length === 0 &&
@@ -277,6 +290,9 @@ export function aramaEslesiyorMu(ilan, filtreler) {
   } else if (f.country !== 'all') {
     if (i.countryCode !== f.country) return false;
   }
+
+  /* Yurtdışı görünümü: tek kural (ilan-cografyasi); belirsiz konum girmiyor. */
+  if (f.bolge === COGRAFYA.YURTDISI && ilanCografyasi(i) !== COGRAFYA.YURTDISI) return false;
 
   if (f.city !== 'all') {
     if (katla(i.city) !== katla(f.city)) return false;
@@ -399,6 +415,7 @@ export function aramaAdresine(filtreler, taban = '/') {
   const p = new URLSearchParams();
   if (f.q) p.set('q', f.q);
   if (f.country !== 'all') p.set('country', f.country);
+  if (f.bolge) p.set('bolge', f.bolge);
   if (f.city !== 'all') p.set('city', f.city);
   if (f.workTypes.length) p.set('bicim', f.workTypes.join(','));
   if (f.companies.length) p.set('sirket', f.companies.join('|'));
@@ -423,6 +440,7 @@ export function adresTenFiltreler(arama) {
   return filtreleriDogrula({
     q: p.get('q') || '',
     country: p.get('country') || 'all',
+    bolge: p.get('bolge'),
     city: p.get('city') || 'all',
     workTypes: bol('bicim'),
     /* Şirket adları virgül içerebiliyor: ayırıcı `|`. */

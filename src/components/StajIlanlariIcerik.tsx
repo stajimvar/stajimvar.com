@@ -52,7 +52,43 @@ export interface StajIlanlariVerisi {
   ilanlar?: IlanOzeti[];
   /** İlanı olan şehirler, çoktan aza. */
   sehirler?: SehirSayisi[];
+  /**
+   * Hangi kapının metni: Türkiye (varsayılan; ön render ve arama motoru
+   * bunu görüyor), Yurtdışı ya da Tüm ilanlar. Sayılar çağıranda o kapının
+   * kapsamından sayılıyor — Türkiye metninde yurtdışı ilanı yok.
+   */
+  gorunum?: 'turkiye' | 'yurtdisi' | 'tumu';
 }
+
+const GORUNUM_METNI = {
+  turkiye: {
+    h1: 'Güncel Staj İlanları',
+    aciklama:
+      'Türkiye genelindeki güncel staj ilanlarını şehir, bölüm ve staj türüne göre filtrele. Şirketlerin resmî başvuru sayfalarına doğrudan ulaş.',
+    liste: 'Tüm staj ilanlarını filtrele',
+    adres: '/?country=TR',
+    son: 'Son eklenen staj ilanları',
+    sehir: "Türkiye'de ilanın en çok olduğu şehirler",
+  },
+  yurtdisi: {
+    h1: 'Yurtdışında Staj İlanları',
+    aciklama:
+      'Çalışma konumu Türkiye dışında olan staj ilanları. Dil, vize ve başvuru koşullarını her ilanın kendi kaynak sayfasında kontrol et.',
+    liste: 'Yurtdışı ilanlarını filtrele',
+    adres: '/?country=all&bolge=yurtdisi',
+    son: 'Son eklenen yurtdışı staj ilanları',
+    sehir: 'Yurtdışında ilanın en çok olduğu şehirler',
+  },
+  tumu: {
+    h1: 'Tüm Staj İlanları',
+    aciklama:
+      "Türkiye'deki ve yurtdışındaki bütün yayındaki staj ilanları; konumu kaynakta belirtilmemiş ilanlar dahil.",
+    liste: 'Tüm ilanları filtrele',
+    adres: '/?country=all',
+    son: 'Son eklenen staj ilanları',
+    sehir: 'İlanın en çok olduğu şehirler',
+  },
+} as const;
 
 /* Tasarım sistemi aynen: bölüm ve rehber sayfalarındaki kart ve başlık ölçüleri. */
 const KART = 'rounded-2xl border border-gray-200 bg-white p-5 sm:p-6';
@@ -128,7 +164,9 @@ export const StajIlanlariIcerik: React.FC<
   ilanlar = [],
   sehirler = [],
   onNavigate,
+  gorunum = 'turkiye',
 }) => {
+  const metin = GORUNUM_METNI[gorunum];
   const kontrolTarihi = tarihYaz(sonKontrol);
 
   /*
@@ -145,12 +183,9 @@ export const StajIlanlariIcerik: React.FC<
     <main className="space-y-6">
       <header className="space-y-3">
         <h1 className="text-2xl font-black tracking-tight text-gray-900 sm:text-3xl">
-          Güncel Staj İlanları
+          {metin.h1}
         </h1>
-        <p className="text-[15px] leading-relaxed text-gray-700">
-          Türkiye genelindeki güncel staj ilanlarını şehir, bölüm ve staj türüne göre
-          filtrele. Şirketlerin resmî başvuru sayfalarına doğrudan ulaş.
-        </p>
+        <p className="text-[15px] leading-relaxed text-gray-700">{metin.aciklama}</p>
       </header>
 
       {/*
@@ -164,11 +199,11 @@ export const StajIlanlariIcerik: React.FC<
       */}
       <p>
         <Bag
-          href="/"
+          href={metin.adres}
           onNavigate={onNavigate}
           className="inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-bold text-white hover:bg-blue-700"
         >
-          Tüm staj ilanlarını filtrele
+          {metin.liste}
         </Bag>
       </p>
 
@@ -223,7 +258,7 @@ export const StajIlanlariIcerik: React.FC<
       {/* ------------------------------------------------------- ilanlar */}
       {ilanlar.length > 0 && (
         <section className="space-y-3">
-          <h2 className={BASLIK2}>Son eklenen staj ilanları</h2>
+          <h2 className={BASLIK2}>{metin.son}</h2>
           <ul className="space-y-2">
             {ilanlar.map((ilan) => {
               const alt = [ilan.sirket, ilan.sehir, calismaSekliYaz(ilan.calismaSekli)]
@@ -249,7 +284,7 @@ export const StajIlanlariIcerik: React.FC<
       {/* -------------------------------------------------------- şehir */}
       {sehirler.length > 0 && (
         <section className={KART}>
-          <h2 className={BASLIK2}>İlanın en çok olduğu şehirler</h2>
+          <h2 className={BASLIK2}>{metin.sehir}</h2>
           <p className="mt-2 text-sm leading-relaxed text-gray-600">
             Şehir süzgeci ilan listesinin içinde: listeyi açıp şehri seçebilirsin.
           </p>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { YatayKaydirma } from './YatayKaydirma';
-import { Globe, Laptop, Layers, MapPin } from 'lucide-react';
+import { Globe, Layers, MapPin } from 'lucide-react';
 
 /**
  * İlanlar sayfasının küre şeridi: Tümü → Türkiye → Yurtdışı → Uzaktan →
@@ -40,7 +40,7 @@ export interface SeritSirketi {
   yeni: boolean;
 }
 
-export type IlanBolgesi = 'tumu' | 'turkiye' | 'yurtdisi' | 'uzaktan';
+export type IlanBolgesi = 'tumu' | 'turkiye' | 'yurtdisi';
 
 /** Logo yoksa baş harfler. */
 function basHarfler(ad: string): string {
@@ -114,11 +114,17 @@ const DonenKap: React.FC<{ donuk: boolean; children: React.ReactNode }> = ({ don
   </span>
 );
 
-const BOLGELER: Array<{ id: IlanBolgesi; etiket: string; ikon: React.ReactNode }> = [
-  { id: 'tumu', etiket: 'Tümü', ikon: <Layers aria-hidden className={IKON} strokeWidth={1.75} /> },
-  { id: 'turkiye', etiket: 'Türkiye', ikon: <MapPin aria-hidden className={IKON} strokeWidth={1.75} /> },
-  { id: 'yurtdisi', etiket: 'Yurtdışı', ikon: <Globe aria-hidden className={IKON} strokeWidth={1.75} /> },
-  { id: 'uzaktan', etiket: 'Uzaktan', ikon: <Laptop aria-hidden className={IKON} strokeWidth={1.75} /> },
+/*
+  KAPILAR: Türkiye'de staj · Yurtdışında staj · Tüm ilanlar (17 Eylül 2026)
+
+  İlk ziyarette Türkiye seçili. "Uzaktan" küresi kalktı: uzaktan çalışma bir
+  ülke değil, panelde çalışma biçimi süzgeci olarak duruyor. Görünen etiket
+  kısa (küre altına sığsın), erişilebilir ad tam.
+*/
+const BOLGELER: Array<{ id: IlanBolgesi; etiket: string; tamAd: string; ikon: React.ReactNode }> = [
+  { id: 'turkiye', etiket: 'Türkiye', tamAd: "Türkiye'de staj", ikon: <MapPin aria-hidden className={IKON} strokeWidth={1.75} /> },
+  { id: 'yurtdisi', etiket: 'Yurtdışı', tamAd: 'Yurtdışında staj', ikon: <Globe aria-hidden className={IKON} strokeWidth={1.75} /> },
+  { id: 'tumu', etiket: 'Tüm ilanlar', tamAd: 'Tüm ilanlar', ikon: <Layers aria-hidden className={IKON} strokeWidth={1.75} /> },
 ];
 
 /*
@@ -168,14 +174,19 @@ export const SirketSeridi: React.FC<{
           const aktif = bolge === b.id && (b.id !== 'tumu' || secili.length === 0);
           const anahtar = `bolge:${b.id}`;
           const donukMu = aktif && donuk === anahtar;
-          const ad = b.id === 'tumu' ? `Tümü, ${toplam} ilan` : b.etiket;
+          /*
+            Sayı yalnız "Tüm ilanlar" seçiliyken yazılıyor: `toplam` o anki
+            görünümün toplamı; Türkiye görünümündeyken "Tüm ilanlar, 109 ilan"
+            demek tüm kataloğu olduğundan az gösteriyordu.
+          */
+          const ad = b.id === 'tumu' && bolge === 'tumu' ? `Tüm ilanlar, ${toplam} ilan` : b.tamAd;
           return (
             <li key={b.id}>
               <button
                 type="button"
                 onClick={() => (aktif && onCevir ? onCevir(anahtar) : onBolge(b.id))}
                 aria-pressed={aktif}
-                aria-label={donukMu ? `${b.etiket}, ${donukSayi === null ? 'ilan sayısı yükleniyor' : `${donukSayi} ilan`}` : ad}
+                aria-label={donukMu ? `${b.tamAd}, ${donukSayi === null ? 'ilan sayısı yükleniyor' : `${donukSayi} ilan`}` : ad}
                 className={OGE}
               >
                 <span aria-hidden className={`${KURE} block [perspective:600px]`}>

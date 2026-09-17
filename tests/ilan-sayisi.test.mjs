@@ -145,7 +145,8 @@ test('ülke seçici filtre panelinin Konum bloğunda ve şehrin üstünde', () =
 });
 
 test('onCountryChange yoksa ülke seçici çizilmiyor', () => {
-  assert.match(gorunum, /\{onCountryChange && \(\s*<ListingCountrySelector/);
+  /* Türkiye kapısında ülke seçici yok (şehir var); Yurtdışı ve Tüm ilanlar'da var — 17 Eylül 2026. */
+  assert.match(gorunum, /\{onCountryChange && seciliBolge !== 'turkiye' && \(\s*<ListingCountrySelector/);
 });
 
 test('"Toplam N açık ilan" satırı tekrar çizilmiyor', () => {

@@ -20,6 +20,7 @@ import { listingSlug } from '../lib/slug';
 import { SIRKET_KENAR_GUCLU, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import { UlkeRozeti } from './UlkeRozeti';
+import { COGRAFYA, ilanCografyasi } from '../lib/ilan-cografyasi.mjs';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { ILAN_KAYNAGI } from '../lib/urun-metni';
 import { tarihMetni } from '../lib/tarih.mjs';
@@ -111,6 +112,12 @@ interface InternshipCardProps {
     davranışı yalnız liste ekranının kararı.
   */
   yuzey?: boolean;
+  /**
+   * "Tüm ilanlar" görünümünde Türkiye ilanlarına da "Türkiye" etiketi.
+   * Yurtdışı ilanlarında ülke rozeti her görünümde; konumu belirsiz ilana
+   * etiket konmuyor.
+   */
+  cografyaEtiketi?: boolean;
 }
 
 export const InternshipCard: React.FC<InternshipCardProps> = ({
@@ -125,6 +132,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
   onGirisGerekli,
   kendiIlanim = false,
   yuzey = false,
+  cografyaEtiketi = false,
 }) => {
   /*
     UYUM PUANI LOGONUN ETRAFINDA HALKA OLARAK
@@ -245,9 +253,15 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
         <p className="mt-1.5 flex min-w-0 items-start gap-1.5 text-[13px] leading-snug text-gray-500">
           <MapPin aria-hidden className="mt-px h-4 w-4 shrink-0 text-gray-400" />
           <span className="min-w-0 break-words">
-            {konumEtiketi(listing.city)} · {calismaEtiketi(listing.workType)}
+            {/* Çalışma biçimi bilinmiyorsa yazılmıyor — varsayılan uydurulmuyor. */}
+            {[konumEtiketi(listing.city), calismaEtiketi(listing.workType)].filter(Boolean).join(' · ')}
           </span>
-          <UlkeRozeti countryCode={listing.countryCode} />
+          {ilanCografyasi(listing) === COGRAFYA.YURTDISI && <UlkeRozeti countryCode={listing.countryCode} />}
+          {cografyaEtiketi && ilanCografyasi(listing) === COGRAFYA.TURKIYE && (
+            <span className="inline-flex items-center rounded-md border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-800">
+              Türkiye
+            </span>
+          )}
         </p>
 
         <p
