@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Bell, Briefcase, CalendarClock, CheckCircle2, ChevronLeft, FileText, Heart, UserPlus, X } from 'lucide-react';
 import { gecenSure, type Bildirim } from '../lib/bildirim';
 import { bildirimleriGrupla } from '../lib/bildirim-grubu.mjs';
+import { ProfilFotografi } from './sosyal/ProfilFotografi';
 
 /**
  * BİLDİRİM MERKEZİ — İKİ DÜNYA, TEK SİSTEM
@@ -19,7 +20,15 @@ import { bildirimleriGrupla } from '../lib/bildirim-grubu.mjs';
  */
 
 /** Bildirim türünden ikon. Tanınmayan türde nötr bir belge ikonu. */
-function BildirimIkonu({ tur, renk }: { tur: string; renk: string }) {
+function BildirimIkonu({
+  tur,
+  renk,
+  kisi = null,
+}: {
+  tur: string;
+  renk: string;
+  kisi?: { ad: string; avatarYolu: string | null } | null;
+}) {
   /*
     Yuvarlak simge (telefonda 56, geniş ekranda 44 px): Instagram'da kişinin fotoğrafının durduğu yer.
     Bildirim satırı kişi bilgisi taşımadığı için türün simgesi çiziliyor;
@@ -33,6 +42,34 @@ function BildirimIkonu({ tur, renk }: { tur: string; renk: string }) {
     : tur === 'baglanti_istegi' || tur === 'baglanti_kabul' ? <UserPlus {...ortak} />
     : tur === 'paylasim_begeni' ? <Heart {...ortak} />
     : <FileText {...ortak} />;
+  /*
+    KİŞİ VARSA FOTOĞRAFI (Instagram gibi): olayı yapan kişinin profil
+    fotoğrafı, sağ altında küçük tür rozeti (beğenide kırmızı kalp). Kişi
+    bilinmiyorsa ya da profili görünmüyorsa tür simgesi.
+  */
+  if (kisi) {
+    const begeni = tur === 'paylasim_begeni';
+    return (
+      <span className="relative h-14 w-14 shrink-0 sm:h-11 sm:w-11">
+        <ProfilFotografi
+          ad={kisi.ad}
+          yol={kisi.avatarYolu}
+          className="h-14 w-14 rounded-full text-lg sm:h-11 sm:w-11 sm:text-sm"
+        />
+        <span
+          aria-hidden="true"
+          className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white sm:h-5 sm:w-5"
+          style={{ background: begeni ? '#EF4444' : renk }}
+        >
+          {begeni ? (
+            <Heart className="h-3 w-3 fill-white text-white sm:h-2.5 sm:w-2.5" strokeWidth={2.5} />
+          ) : (
+            <UserPlus className="h-3 w-3 text-white sm:h-2.5 sm:w-2.5" strokeWidth={2.5} />
+          )}
+        </span>
+      </span>
+    );
+  }
   return (
     <span
       aria-hidden="true"
@@ -129,6 +166,12 @@ export const BildirimMerkezi: React.FC<{
     eski davranış, dev fikstürü için.
   */
   istekDurumu?: (b: Bildirim) => IstekDurumu;
+  /**
+   * Olayı yapan kişinin adı ve fotoğraf yolu. Çağıran olay anahtarından
+   * okuyup sunucudan getiriyor; bilinmiyorsa `null` ve satır tür simgesiyle
+   * kalıyor.
+   */
+  kisi?: (b: Bildirim) => { ad: string; avatarYolu: string | null } | null;
 }> = ({
   bildirimler,
   okunmamis,
@@ -139,6 +182,7 @@ export const BildirimMerkezi: React.FC<{
   onTumunuOkundu,
   onBaglantiYanitla,
   istekDurumu,
+  kisi,
 }) => {
   const kapsayici = React.useRef<HTMLDivElement>(null);
   /* Hangi bildirimin düğmeleri işlemde: çift dokunma ikinci istek atmasın. */
@@ -256,7 +300,7 @@ export const BildirimMerkezi: React.FC<{
         onClick={() => onAc(b)}
         className="flex min-h-11 min-w-0 flex-1 items-center gap-3.5 py-3 pl-4 text-left sm:gap-3 sm:py-2.5 sm:pl-5"
       >
-        <BildirimIkonu tur={b.tur} renk={renk} />
+        <BildirimIkonu tur={b.tur} renk={renk} kisi={kisi?.(b) ?? null} />
         <span className="min-w-0 flex-1">
           {/*
             Karar bekleyen istekte metin kırpılmıyor: düğmeler satırın

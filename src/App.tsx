@@ -1,8 +1,10 @@
 import React, { useState, useRef, Suspense } from 'react';
+import { bildirimKisisi } from './lib/bildirim-kisisi.mjs';
 import { COGRAFYA, ilanCografyasi } from './lib/ilan-cografyasi.mjs';
 import {
   baglantiDurumu,
   baglantilarimiGetir,
+  bildirimKisileriniGetir,
   baglantiYanitla,
   kendiSosyalProfiliGetir,
 } from './lib/queries/sosyal';
@@ -1505,6 +1507,45 @@ export default function App() {
     };
   }, [bildirim.acik, session?.userId]);
 
+  /*
+    BİLDİRİMDEKİ KİŞİNİN AD VE FOTOĞRAFI
+
+    Panel açıkken, listedeki kişi kimlikleri (olay anahtarından,
+    `lib/bildirim-kisisi.mjs`) için tek sorgu. Görünmeyen ya da okunamayan
+    profil haritaya girmiyor; o satır tür simgesiyle kalıyor.
+  */
+  const [bildirimKisileri, setBildirimKisileri] = useState<
+    Map<string, { ad: string; avatarYolu: string | null }>
+  >(() => new Map());
+  const bildirimKisiAnahtari = bildirim.acik
+    ? bildirim.bildirimler
+        .map((b) => bildirimKisisi(b.anahtar, session?.userId ?? null))
+        .filter(Boolean)
+        .sort()
+        .join(',')
+    : '';
+  React.useEffect(() => {
+    if (!bildirimKisiAnahtari) return;
+    let iptal = false;
+    void bildirimKisileriniGetir(bildirimKisiAnahtari.split(','))
+      .then((harita) => {
+        if (!iptal) setBildirimKisileri(harita);
+      })
+      .catch(() => {
+        if (!iptal) setBildirimKisileri(new Map());
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [bildirimKisiAnahtari]);
+  const bildirimKisiBilgisi = React.useCallback(
+    (b: { anahtar: string | null }) => {
+      const kimlik = bildirimKisisi(b.anahtar, session?.userId ?? null);
+      return kimlik ? (bildirimKisileri.get(kimlik) ?? null) : null;
+    },
+    [bildirimKisileri, session?.userId],
+  );
+
   /* Bildirimin işaret ettiği kişi, olayın kimliğinden okunuyor. */
   const istekDurumu = React.useCallback(
     (b: { anahtar: string | null }): IstekDurumu => {
@@ -1527,6 +1568,7 @@ export default function App() {
       onTumunuOkundu={() => void bildirim.tumunuOkunduYap()}
       onBaglantiYanitla={baglantiIsteginiYanitla}
       istekDurumu={istekDurumu}
+      kisi={bildirimKisiBilgisi}
     />
   ) : null;
 

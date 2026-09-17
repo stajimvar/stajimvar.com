@@ -220,6 +220,8 @@ export const BildirimDevFixture: React.FC = () => {
             setAcik(false);
           }}
           onTumunuOkundu={() => setKayitlar((o) => o.map((x) => ({ ...x, okunduMu: true })))}
+          /* Fikstür: fotoğraf yolu yok, bileşen baş harfleri çiziyor. */
+          kisi={(b) => (b.id.startsWith('s') ? { ad: 'Örnek Kullanıcı', avatarYolu: null } : null)}
           onBaglantiYanitla={async (id, karar) => {
             setKayitlar((o) => o.map((x) => (x.id === id ? { ...x, okunduMu: true } : x)));
             return karar;
