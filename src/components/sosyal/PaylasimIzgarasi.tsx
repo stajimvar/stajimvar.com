@@ -143,10 +143,12 @@ export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-px';
 
 /** Ayrıntılı ızgara depodaki kart kalıbında (RehberKartlari.tsx). */
 /**
- * Galeri ızgarası: eşit sütunlar, 12–20 px aralık. Son satırdaki az sayıda
- * karo büyütülmüyor; ızgara hücresi olarak kendi sütununda kalıyor.
+ * Galeri ızgarası — Instagram profil ızgarası gibi (17 Eylül 2026, kullanıcı
+ * isteği): her genişlikte üç sütun, dikey 3:4 karo, köşe yuvarlaması yok.
+ * Aralık telefonda 1 px, geniş ekranda 4 px. Son satırdaki az sayıda karo
+ * büyütülmüyor; kendi sütununda kalıyor.
  */
-export const GALERI_IZGARASI = 'grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5';
+export const GALERI_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-1';
 
 export const AYRINTILI_IZGARA = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3';
 
@@ -166,7 +168,7 @@ export const AYRINTILI_IZGARA = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-
  * uzatırdı.
  */
 const KAPAK_KABI = 'relative aspect-[3/4] w-full overflow-hidden bg-gray-100';
-const GALERI_KAPAK_KABI = 'relative aspect-square w-full overflow-hidden rounded-xl bg-gray-100 lg:rounded-2xl';
+const GALERI_KAPAK_KABI = 'relative aspect-[3/4] w-full overflow-hidden bg-gray-100';
 const AYRINTILI_KAPAK_KABI = 'relative aspect-square w-full overflow-hidden rounded-xl bg-gray-100';
 
 interface KartProps {
@@ -243,7 +245,7 @@ const PaylasimKarti: React.FC<KartProps> = ({
       aria-label={sade ? sadeAd : undefined}
       className={
         sade
-          ? `block h-full w-full min-w-0 cursor-pointer ${galeri ? 'rounded-xl lg:rounded-2xl' : ''} ${RENK_GECISI} ${ODAK_HALKASI}`
+          ? `block h-full w-full min-w-0 cursor-pointer ${RENK_GECISI} ${ODAK_HALKASI}`
           : `${KART_KABI} flex h-full min-w-0 flex-col gap-1.5 cursor-pointer text-left hover:border-gray-300 ${RENK_GECISI} ${ODAK_HALKASI}`
       }
     >
@@ -295,7 +297,7 @@ const PaylasimKarti: React.FC<KartProps> = ({
         {paylasim.gorselSayisi > 1 && (
           <span
             className={`absolute inline-flex items-center rounded-full bg-slate-950/60 text-white ${
-              galeri ? 'right-2.5 top-2.5 p-2 lg:right-3 lg:top-3' : 'right-1.5 top-1.5 p-1.5'
+              galeri ? 'right-1.5 top-1.5 p-1.5 sm:right-2 sm:top-2' : 'right-1.5 top-1.5 p-1.5'
             }`}
           >
             <Images aria-hidden className={galeri ? 'h-4 w-4' : 'h-3.5 w-3.5'} />

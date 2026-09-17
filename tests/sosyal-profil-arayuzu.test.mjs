@@ -921,8 +921,9 @@ test('ayrıntılı ızgara kutulu ekranların ölçüsünde, sade ızgara üç s
     GALERİ (17 Eylül 2026): yalnız /cv sahibin ızgarası. Telefonda iki,
     geniş ekranda üç eşit sütun; 12–20 px aralık, yuvarlatılmış kare karo.
   */
-  assert.ok(izgara.includes("export const GALERI_IZGARASI = 'grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5';"));
-  assert.match(izgara, /const GALERI_KAPAK_KABI = 'relative aspect-square w-full overflow-hidden rounded-xl bg-gray-100 lg:rounded-2xl';/);
+  /* 17 Eylül 2026 (ikinci istek): Instagram gibi üç sütun, 3:4, yuvarlamasız, 1–4 px aralık. */
+  assert.ok(izgara.includes("export const GALERI_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-1';"));
+  assert.match(izgara, /const GALERI_KAPAK_KABI = 'relative aspect-\[3\/4\] w-full overflow-hidden bg-gray-100';/);
 });
 
 test('kart kabı depodaki ölçüde', () => {
