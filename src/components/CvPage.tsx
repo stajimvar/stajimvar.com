@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -47,6 +47,9 @@ const SEVIYE: Record<string, string> = {
 */
 const SERIF = { fontFamily: 'Georgia, "Noto Serif", "Times New Roman", serif' } as const;
 
+/** A4'ün 96 dpi'deki genişliği (210 mm). */
+const A4_GENISLIK = 794;
+
 /** Belgenin lacivert zemini ve mavi vurgusu. */
 const LACIVERT = '#10284A';
 
@@ -57,7 +60,7 @@ const tamAdres = (adres: string) => (/^https?:\/\//i.test(adres) ? adres : `http
 /** Yan sütun bölüm başlığı: beyaz, aralıklı büyük harf, altında mavi çizgi. */
 const YanBolum: React.FC<{ baslik: string; children: React.ReactNode }> = ({ baslik, children }) => (
   <section className="cv-bolum">
-    <h2 className="mb-4 border-b-2 border-blue-500 pb-2 text-[15px] print:mb-3 font-bold uppercase tracking-[0.12em] text-white">
+    <h2 className="mb-3 border-b-2 border-blue-500 pb-2 text-[15px] font-bold uppercase tracking-[0.12em] text-white">
       {baslik}
     </h2>
     {children}
@@ -92,13 +95,9 @@ const AnaBolum: React.FC<{ baslik: string; ikon?: React.ReactNode; children: Rea
   başlığı ve madde işaretleri profil verisinde ayrı alan olmadığı için
   yok — proje adı, açıklaması, teknolojileri ve bağlantısı olduğu gibi.
 
-  TELEFONDA ÖNCE AD: lacivert sütun ekranın altına iniyor; önce gelseydi
-  kişinin adı fotoğraf, iletişim ve beceri listesinin altında kalırdı.
-  Geniş ekranda ve yazdırmada sütun yine solda.
-
   Yazdırmada sayfa kenar boşluğu sıfır: lacivert sütun kâğıdın kenarına
-  kadar gidiyor; renkler `print-color-adjust: exact` ile basılıyor. Telefonda
-  sütunlar alt alta.
+  kadar gidiyor; renkler `print-color-adjust: exact` ile basılıyor. Ekranda
+  da aynı A4 kâğıdı gösteriliyor, dar ekranda küçültülerek.
 */
 export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = null }) => {
   useEffect(() => {
@@ -140,15 +139,46 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = 
   /* Uzun adlar büyük harfte taşmasın: harf sayısına göre ölçü küçülüyor. */
   const adOlcusu =
     ad.length > 22
-      ? 'text-4xl sm:text-[42px] print:text-[40px]'
+      ? 'text-[40px]'
       : ad.length > 14
-        ? 'text-4xl sm:text-[48px] print:text-[46px]'
-        : 'text-5xl sm:text-[58px] print:text-[54px]';
+        ? 'text-[46px]'
+        : 'text-[54px]';
   const sinifSatiri = student.gradeLevel
     ? /Sınıf$/.test(student.gradeLevel)
       ? `${student.gradeLevel} Öğrencisi`
       : student.gradeLevel
     : null;
+  /*
+    EKRANDA DA A4 (17 Eylül 2026)
+
+    Kâğıt her genişlikte 210 × 297 mm'nin 96 dpi karşılığı (794 × 1123 px)
+    ve PDF'te çıkacağı düzende çiziliyor; telefonda alt alta dizilmiş ayrı
+    bir hâl yok. Ekran kâğıttan darsa kâğıt `transform: scale` ile sığacak
+    kadar küçülüyor ve kabın yüksekliği ölçeğe göre ayarlanıyor (transform
+    yerleşimi değiştirmediği için boşluk elle veriliyor). Yakınlaştırma
+    tarayıcının kendisinde. Yazdırmada ölçek yok (`print` kuralları).
+  */
+  const kapRef = useRef<HTMLDivElement>(null);
+  const kagitRef = useRef<HTMLElement>(null);
+  const [olcu, setOlcu] = useState<{ olcek: number; yukseklik: number | null }>({ olcek: 1, yukseklik: null });
+  useLayoutEffect(() => {
+    const kap = kapRef.current;
+    const kagit = kagitRef.current;
+    if (!kap || !kagit) return;
+    const hesapla = () => {
+      /* `clientWidth` iç boşluğu da sayıyor; kâğıdın sığacağı genişlik ondan az. */
+      const stil = getComputedStyle(kap);
+      const genislik = kap.clientWidth - parseFloat(stil.paddingLeft) - parseFloat(stil.paddingRight);
+      const olcek = Math.min(1, genislik / A4_GENISLIK);
+      setOlcu({ olcek, yukseklik: kagit.offsetHeight * olcek });
+    };
+    hesapla();
+    const gozlemci = new ResizeObserver(hesapla);
+    gozlemci.observe(kap);
+    gozlemci.observe(kagit);
+    return () => gozlemci.disconnect();
+  }, []);
+
   const egitimAlt = [student.gradeLevel, student.gpa ? `Not ortalaması: ${student.gpa}` : null].filter(Boolean).join(' · ');
 
   return (
@@ -157,12 +187,14 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = 
         @media print {
           .yazdirma-disi { display: none !important; }
           html, body { background: #fff !important; }
+          .cv-kap { height: auto !important; width: auto !important; padding: 0 !important; }
+          .cv-kap > div { height: auto !important; }
           .cv-kagit {
             box-shadow: none !important;
             margin: 0 !important;
             border-radius: 0 !important;
-            max-width: none !important;
-            min-height: 297mm;
+            width: auto !important;
+            transform: none !important;
           }
           .cv-kagit, .cv-kagit * {
             -webkit-print-color-adjust: exact;
@@ -199,18 +231,21 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = 
         </div>
       </div>
 
-      <p className="yazdirma-disi mx-auto max-w-[900px] px-4 pt-4 text-xs leading-relaxed text-gray-500">
+      <p className="yazdirma-disi mx-auto max-w-[794px] px-4 pt-4 text-xs leading-relaxed text-gray-500">
         Açılan pencerede yazıcı olarak <strong>"PDF olarak kaydet"</strong> seçeneğini seçin.
         Telefonda paylaş menüsünden de kaydedebilirsiniz.
       </p>
 
+      <div ref={kapRef} className="cv-kap mx-auto w-full max-w-[794px] px-3 py-4 sm:px-0 sm:py-6">
+      <div className="overflow-hidden" style={{ height: olcu.yukseklik ?? undefined }}>
       <main
-        className="cv-kagit mx-auto my-4 grid max-w-[900px] overflow-hidden bg-white shadow-sm sm:my-6 md:grid-cols-[35%_65%] print:grid-cols-[35%_65%]"
-        style={SERIF}
+        ref={kagitRef}
+        className="cv-kagit grid min-h-[297mm] w-[794px] grid-cols-[35%_65%] overflow-hidden bg-white shadow-md"
+        style={{ ...SERIF, transform: olcu.olcek < 1 ? `scale(${olcu.olcek})` : undefined, transformOrigin: 'top left' }}
       >
         {/* ---------------- Lacivert yan sütun ---------------- */}
         <aside
-          className="cv-sutun order-2 flex min-w-0 flex-col gap-9 px-7 py-9 text-white md:order-1 print:order-1 sm:px-10 md:px-8 md:py-12 print:gap-6 print:px-8 print:py-9"
+          className="cv-sutun flex min-w-0 flex-col gap-6 px-8 py-9 text-white"
           style={{ background: LACIVERT }}
         >
           {fotografVar && (
@@ -218,13 +253,13 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = 
               ad={student.fullName}
               yol={fotografYolu}
               yedekAdres={student.avatarUrl || null}
-              className="mx-auto aspect-square w-40 shrink-0 rounded-full text-4xl grayscale md:w-full md:max-w-[220px] print:max-w-[170px]"
+              className="mx-auto aspect-square w-[170px] shrink-0 rounded-full text-4xl grayscale"
             />
           )}
 
           {iletisim.length > 0 && (
             <YanBolum baslik="İletişim">
-              <ul className="space-y-3.5 text-[15px] print:space-y-2.5">
+              <ul className="space-y-2.5 text-[15px]">
                 {iletisim.map((o) => (
                   <li key={o.anahtar} className="flex min-w-0 items-center gap-4">
                     {o.ikon}
@@ -243,7 +278,7 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = 
 
           {yetenekler.length > 0 && (
             <YanBolum baslik="Teknik yetkinlikler">
-              <ul className="space-y-2.5 text-[15px] print:space-y-1.5">
+              <ul className="space-y-1.5 text-[15px]">
                 {yetenekler.map((y) => (
                   <li key={y.name} className="cv-oge flex flex-wrap items-center gap-x-2">
                     <span>{y.name}</span>
@@ -259,7 +294,7 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = 
 
           {diller.length > 0 && (
             <YanBolum baslik="Yabancı diller">
-              <ul className="space-y-2.5 text-[15px] print:space-y-1.5">
+              <ul className="space-y-1.5 text-[15px]">
                 {diller.map((d) => (
                   <li key={d.id} className="cv-oge flex flex-wrap items-center gap-x-2">
                     <span>{d.language}</span>
@@ -277,7 +312,7 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = 
 
           {sosyal.length > 0 && (
             <YanBolum baslik="Sosyal beceriler">
-              <ul className="space-y-2 text-[15px] print:space-y-1">
+              <ul className="space-y-1 text-[15px]">
                 {sosyal.map((s) => (
                   <li key={s}>{s}</li>
                 ))}
@@ -295,16 +330,16 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = 
         </aside>
 
         {/* ---------------- Ana sütun ---------------- */}
-        <div className="cv-sutun order-1 flex min-w-0 flex-col gap-9 px-7 py-9 md:order-2 print:order-2 sm:px-10 md:px-12 md:py-12 print:gap-6 print:px-11 print:py-9">
+        <div className="cv-sutun flex min-w-0 flex-col gap-6 px-11 py-9">
           <header>
             <h1 className={`break-words font-bold leading-[1.05] ${adOlcusu}`} style={{ color: LACIVERT }}>
               {ad}
             </h1>
             {student.department && (
-              <p className="mt-4 text-2xl leading-snug text-blue-600 sm:text-3xl">{student.department}</p>
+              <p className="mt-4 text-3xl leading-snug text-blue-600">{student.department}</p>
             )}
-            {sinifSatiri && <p className="mt-1 text-xl text-gray-600 sm:text-2xl">{sinifSatiri}</p>}
-            <span aria-hidden className="mt-4 block h-1 w-24 rounded-full bg-blue-600 print:mt-3" />
+            {sinifSatiri && <p className="mt-1 text-2xl text-gray-600">{sinifSatiri}</p>}
+            <span aria-hidden className="mt-4 block h-1 w-24 rounded-full bg-blue-600" />
           </header>
 
           {student.bio && (
@@ -369,6 +404,8 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = 
           <p className="mt-auto pt-2 text-right text-xs text-gray-500">StajımVar profilinden oluşturuldu.</p>
         </div>
       </main>
+      </div>
+      </div>
     </div>
   );
 };
