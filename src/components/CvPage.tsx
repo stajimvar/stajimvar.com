@@ -1,34 +1,33 @@
 import React, { useEffect } from 'react';
-import { ArrowLeft, CheckCircle2, Printer } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  BadgeCheck,
+  Briefcase,
+  Code2,
+  FileText,
+  Globe,
+  GraduationCap,
+  Link2,
+  Mail,
+  MapPin,
+  Phone,
+  Printer,
+} from 'lucide-react';
 import type { StudentProfile } from '../types';
 import { adYazimi } from '../lib/ad';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
-
-/**
- * Yazdırılabilir CV.
- *
- * NEDEN PDF KÜTÜPHANESİ YOK
- * -------------------------
- * jsPDF ve benzerleri varsayılan yazı tipleriyle Türkçe karakterleri
- * bozuyor; düzgün çıktı için font gömmek gerekiyor ve bu pakete 300KB'ın
- * üzerinde yük bindiriyor. Tarayıcının kendi yazdırma motoru hem Türkçeyi
- * sorunsuz basıyor hem de "PDF olarak kaydet" seçeneğini zaten sunuyor —
- * mobil dahil.
- *
- * Bu yüzden sayfa ekranda okunur, yazdırıldığında A4'e oturur. Yazdırma
- * kuralları aşağıdaki `<style>` içinde; site kabuğu (başlık, düğmeler)
- * çıktıda görünmüyor.
- *
- * NEDEN VAR
- * ---------
- * Öğrenci profilini dolduruyor ama elinde kullanabileceği bir şey kalmıyordu.
- * Başvuruların şirkete iletilmesi henüz çözülmedi (İK adresi bulunamıyor);
- * indirilebilir CV, profil doldurmanın o çözülene kadar da karşılığı olsun.
- */
+import { ProfilFotografi } from './sosyal/ProfilFotografi';
 
 interface CvPageProps {
   student: StudentProfile;
   onBack: () => void;
+  /**
+   * Profil fotoğrafının depolama yolu (`social_profiles.avatar_path`).
+   * Yol da yedek adres de yoksa CV'de fotoğraf alanı HİÇ çizilmiyor:
+   * baş harfli bir daire belgede eksik bir fotoğraf gibi durur.
+   */
+  fotografYolu?: string | null;
 }
 
 const SEVIYE: Record<string, string> = {
@@ -38,16 +37,70 @@ const SEVIYE: Record<string, string> = {
   Expert: 'Uzman',
 };
 
-const Bolum: React.FC<{ baslik: string; children: React.ReactNode }> = ({ baslik, children }) => (
-  <section className="cv-bolum space-y-2">
-    <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 border-b border-gray-300 pb-1">
+/*
+  YAZI TİPİ: SİSTEM SERİFİ
+
+  Belge serif ile basılıyor (Georgia ailesi). Web fontu yüklenmiyor: site
+  CSP'si `font-src 'self'` ve yazdırma anında inmemiş bir font PDF'e
+  yedek fontla geçerdi. Georgia Windows, macOS ve iOS'ta var, Türkçe
+  karakterleri taşıyor; Android'de Noto Serif'e düşüyor.
+*/
+const SERIF = { fontFamily: 'Georgia, "Noto Serif", "Times New Roman", serif' } as const;
+
+/** Belgenin lacivert zemini ve mavi vurgusu. */
+const LACIVERT = '#10284A';
+
+/** Adresin okunur hâli: protokol ve sondaki eğik çizgi atılıyor. */
+const adresMetni = (adres: string) => adres.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, '');
+const tamAdres = (adres: string) => (/^https?:\/\//i.test(adres) ? adres : `https://${adres}`);
+
+/** Yan sütun bölüm başlığı: beyaz, aralıklı büyük harf, altında mavi çizgi. */
+const YanBolum: React.FC<{ baslik: string; children: React.ReactNode }> = ({ baslik, children }) => (
+  <section className="cv-bolum">
+    <h2 className="mb-4 border-b-2 border-blue-500 pb-2 text-[15px] print:mb-3 font-bold uppercase tracking-[0.12em] text-white">
       {baslik}
     </h2>
     {children}
   </section>
 );
 
-export const CvPage: React.FC<CvPageProps> = ({ student, onBack }) => {
+/** Ana sütun bölüm başlığı: simge, lacivert büyük harf, sağa uzanan ince çizgi. */
+const AnaBolum: React.FC<{ baslik: string; ikon?: React.ReactNode; children: React.ReactNode }> = ({
+  baslik,
+  ikon,
+  children,
+}) => (
+  <section className="cv-bolum">
+    <h2 className="mb-3 flex items-center gap-3 text-lg font-bold uppercase tracking-[0.08em]" style={{ color: LACIVERT }}>
+      {ikon && <span className="shrink-0">{ikon}</span>}
+      <span>{baslik}</span>
+      {ikon && <span aria-hidden className="h-px flex-1" style={{ background: LACIVERT }} />}
+    </h2>
+    {children}
+  </section>
+);
+
+/*
+  YAZDIRILABİLİR CV — StajımVar belgesi (17 Eylül 2026, kullanıcının
+  onayladığı referans tasarım)
+
+  Solda lacivert sütun: fotoğraf, iletişim, teknik yetkinlikler, diller,
+  sosyal beceriler ve StajımVar imzası. Sağda: büyük harfli ad, bölüm ve
+  sınıf, hakkımda, eğitim, projeler (zaman çizgisi), aradığı pozisyonlar.
+
+  HER ŞEY PROFİLDEN: boş alanın bölümü çizilmiyor; referanstaki proje alt
+  başlığı ve madde işaretleri profil verisinde ayrı alan olmadığı için
+  yok — proje adı, açıklaması, teknolojileri ve bağlantısı olduğu gibi.
+
+  TELEFONDA ÖNCE AD: lacivert sütun ekranın altına iniyor; önce gelseydi
+  kişinin adı fotoğraf, iletişim ve beceri listesinin altında kalırdı.
+  Geniş ekranda ve yazdırmada sütun yine solda.
+
+  Yazdırmada sayfa kenar boşluğu sıfır: lacivert sütun kâğıdın kenarına
+  kadar gidiyor; renkler `print-color-adjust: exact` ile basılıyor. Telefonda
+  sütunlar alt alta.
+*/
+export const CvPage: React.FC<CvPageProps> = ({ student, onBack, fotografYolu = null }) => {
   useEffect(() => {
     document.title = `${student.fullName} — CV | StajımVar`;
   }, [student.fullName]);
@@ -56,147 +109,265 @@ export const CvPage: React.FC<CvPageProps> = ({ student, onBack }) => {
   const diller = student.languages ?? [];
   const projeler = student.projects ?? [];
   const sosyal = student.softSkills ?? [];
+  const hedefler = student.targetRoles ?? [];
+
+  /*
+    KONUM OTURDUĞU İL: önce `preferences.cities` (staj yapmak istediği
+    şehirler) yazılıyordu ve CV'de "yaşadığı yer" gibi okunuyordu.
+  */
+  const ikonSinifi = 'h-5 w-5 shrink-0 text-white';
+  const iletisim: { anahtar: string; ikon: React.ReactNode; metin: string; href?: string }[] = [
+    ...(student.email
+      ? [{ anahtar: 'eposta', ikon: <Mail className={ikonSinifi} strokeWidth={1.5} />, metin: student.email, href: `mailto:${student.email}` }]
+      : []),
+    ...(student.phone
+      ? [{ anahtar: 'telefon', ikon: <Phone className={ikonSinifi} strokeWidth={1.5} />, metin: student.phone, href: `tel:${student.phone.replace(/\s/g, '')}` }]
+      : []),
+    ...(student.city ? [{ anahtar: 'konum', ikon: <MapPin className={ikonSinifi} strokeWidth={1.5} />, metin: student.city }] : []),
+    ...(student.portfolioUrl
+      ? [{ anahtar: 'portfolyo', ikon: <Globe className={ikonSinifi} strokeWidth={1.5} />, metin: adresMetni(student.portfolioUrl), href: tamAdres(student.portfolioUrl) }]
+      : []),
+    ...(student.linkedinUrl
+      ? [{ anahtar: 'linkedin', ikon: <Link2 className={ikonSinifi} strokeWidth={1.5} />, metin: adresMetni(student.linkedinUrl), href: tamAdres(student.linkedinUrl) }]
+      : []),
+    ...(student.githubUsername
+      ? [{ anahtar: 'github', ikon: <Code2 className={ikonSinifi} strokeWidth={1.5} />, metin: `github.com/${student.githubUsername}`, href: `https://github.com/${student.githubUsername}` }]
+      : []),
+  ];
+
+  const fotografVar = Boolean(fotografYolu || student.avatarUrl);
+  const ad = adYazimi(student.fullName).toLocaleUpperCase('tr-TR');
+  /* Uzun adlar büyük harfte taşmasın: harf sayısına göre ölçü küçülüyor. */
+  const adOlcusu =
+    ad.length > 22
+      ? 'text-4xl sm:text-[42px] print:text-[40px]'
+      : ad.length > 14
+        ? 'text-4xl sm:text-[48px] print:text-[46px]'
+        : 'text-5xl sm:text-[58px] print:text-[54px]';
+  const sinifSatiri = student.gradeLevel
+    ? /Sınıf$/.test(student.gradeLevel)
+      ? `${student.gradeLevel} Öğrencisi`
+      : student.gradeLevel
+    : null;
+  const egitimAlt = [student.gradeLevel, student.gpa ? `Not ortalaması: ${student.gpa}` : null].filter(Boolean).join(' · ');
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 print:min-h-0 print:bg-white">
       <style>{`
         @media print {
-          /* Site kabuğu çıktıda yok; kağıda yalnızca CV gitsin. */
           .yazdirma-disi { display: none !important; }
-          body { background: #fff !important; }
+          html, body { background: #fff !important; }
           .cv-kagit {
             box-shadow: none !important;
             margin: 0 !important;
             border-radius: 0 !important;
             max-width: none !important;
-            padding: 0 !important;
+            min-height: 297mm;
           }
-          /* Bir bölüm sayfa sonunda ikiye bölünmesin. */
-          .cv-bolum { break-inside: avoid; }
+          .cv-kagit, .cv-kagit * {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .cv-sutun {
+            -webkit-box-decoration-break: clone;
+            box-decoration-break: clone;
+          }
+          .cv-bolum, .cv-oge { break-inside: avoid; }
         }
-        @page { margin: 16mm 14mm; }
+        @page { size: A4; margin: 0; }
       `}</style>
 
-      <div className="yazdirma-disi sticky top-0 bg-white border-b border-gray-200 z-10">
-        {/* Baslik cubugu ana sayfayla ayni genislikte. */}
-        <div className={`${SAYFA_GENISLIGI} mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10 py-3 flex items-center justify-between gap-3`}>
+      {/* Araç çubuğu: yalnız ekranda. */}
+      <div className="yazdirma-disi sticky top-0 z-10 border-b border-gray-200 bg-white">
+        <div className={`${SAYFA_GENISLIGI} mx-auto flex items-center justify-between gap-3 px-2.5 py-3 sm:px-6 lg:px-8 xl:px-10`}>
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-gray-900 cursor-pointer"
+            className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-gray-900"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4" />
             Profile dön
           </button>
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
+            className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white hover:bg-blue-700"
           >
-            <Printer className="w-4 h-4" />
+            <Printer className="h-4 w-4" />
             PDF olarak kaydet
           </button>
         </div>
       </div>
 
-      <p className="yazdirma-disi max-w-3xl mx-auto px-4 pt-4 text-xs text-gray-500">
+      <p className="yazdirma-disi mx-auto max-w-[900px] px-4 pt-4 text-xs leading-relaxed text-gray-500">
         Açılan pencerede yazıcı olarak <strong>"PDF olarak kaydet"</strong> seçeneğini seçin.
         Telefonda paylaş menüsünden de kaydedebilirsiniz.
       </p>
 
-      <main className="cv-kagit max-w-3xl mx-auto my-4 bg-white p-8 sm:p-10 shadow-sm rounded-lg space-y-5 text-gray-800">
-        <header className="space-y-1">
-          <h1 className="text-2xl font-bold text-gray-900">{adYazimi(student.fullName)}</h1>
-          <p className="text-sm text-gray-600">
-            {student.department}
-            {student.university ? ` · ${student.university}` : ''}
+      <main
+        className="cv-kagit mx-auto my-4 grid max-w-[900px] overflow-hidden bg-white shadow-sm sm:my-6 md:grid-cols-[35%_65%] print:grid-cols-[35%_65%]"
+        style={SERIF}
+      >
+        {/* ---------------- Lacivert yan sütun ---------------- */}
+        <aside
+          className="cv-sutun order-2 flex min-w-0 flex-col gap-9 px-7 py-9 text-white md:order-1 print:order-1 sm:px-10 md:px-8 md:py-12 print:gap-6 print:px-8 print:py-9"
+          style={{ background: LACIVERT }}
+        >
+          {fotografVar && (
+            <ProfilFotografi
+              ad={student.fullName}
+              yol={fotografYolu}
+              yedekAdres={student.avatarUrl || null}
+              className="mx-auto aspect-square w-40 shrink-0 rounded-full text-4xl grayscale md:w-full md:max-w-[220px] print:max-w-[170px]"
+            />
+          )}
+
+          {iletisim.length > 0 && (
+            <YanBolum baslik="İletişim">
+              <ul className="space-y-3.5 text-[15px] print:space-y-2.5">
+                {iletisim.map((o) => (
+                  <li key={o.anahtar} className="flex min-w-0 items-center gap-4">
+                    {o.ikon}
+                    {o.href ? (
+                      <a href={o.href} className="min-w-0 break-all hover:underline">
+                        {o.metin}
+                      </a>
+                    ) : (
+                      <span className="min-w-0 break-words">{o.metin}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </YanBolum>
+          )}
+
+          {yetenekler.length > 0 && (
+            <YanBolum baslik="Teknik yetkinlikler">
+              <ul className="space-y-2.5 text-[15px] print:space-y-1.5">
+                {yetenekler.map((y) => (
+                  <li key={y.name} className="cv-oge flex flex-wrap items-center gap-x-2">
+                    <span>{y.name}</span>
+                    <span aria-hidden className="text-blue-300">·</span>
+                    <span className="text-white/85">{SEVIYE[y.level] ?? y.level}</span>
+                    {/* Doğrulanmış yetkinlik: testi sunucu puanladı. */}
+                    {y.verified && <BadgeCheck aria-label="Doğrulandı" className="h-4 w-4 text-blue-300" />}
+                  </li>
+                ))}
+              </ul>
+            </YanBolum>
+          )}
+
+          {diller.length > 0 && (
+            <YanBolum baslik="Yabancı diller">
+              <ul className="space-y-2.5 text-[15px] print:space-y-1.5">
+                {diller.map((d) => (
+                  <li key={d.id} className="cv-oge flex flex-wrap items-center gap-x-2">
+                    <span>{d.language}</span>
+                    {(d.level || d.proficiencyText) && (
+                      <>
+                        <span aria-hidden className="text-blue-300">·</span>
+                        <span className="text-white/85">{d.level || d.proficiencyText}</span>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </YanBolum>
+          )}
+
+          {sosyal.length > 0 && (
+            <YanBolum baslik="Sosyal beceriler">
+              <ul className="space-y-2 text-[15px] print:space-y-1">
+                {sosyal.map((s) => (
+                  <li key={s}>{s}</li>
+                ))}
+              </ul>
+            </YanBolum>
+          )}
+
+          {/* StajımVar imzası: sütunun dibinde, sitenin logosuyla aynı yazı. */}
+          <p
+            className="mt-auto pt-4 text-center text-2xl font-extrabold tracking-tight text-white"
+            style={{ fontFamily: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' }}
+          >
+            Stajım<span className="text-blue-400">Var</span>
           </p>
-          <p className="text-xs text-gray-500">
-            {[student.email, student.phone, student.preferences?.cities?.join(', ')]
-              .filter(Boolean)
-              .join(' · ')}
-          </p>
-        </header>
+        </aside>
 
-        {student.bio && (
-          <Bolum baslik="Hakkında">
-            <p className="text-sm leading-relaxed">{student.bio}</p>
-          </Bolum>
-        )}
+        {/* ---------------- Ana sütun ---------------- */}
+        <div className="cv-sutun order-1 flex min-w-0 flex-col gap-9 px-7 py-9 md:order-2 print:order-2 sm:px-10 md:px-12 md:py-12 print:gap-6 print:px-11 print:py-9">
+          <header>
+            <h1 className={`break-words font-bold leading-[1.05] ${adOlcusu}`} style={{ color: LACIVERT }}>
+              {ad}
+            </h1>
+            {student.department && (
+              <p className="mt-4 text-2xl leading-snug text-blue-600 sm:text-3xl">{student.department}</p>
+            )}
+            {sinifSatiri && <p className="mt-1 text-xl text-gray-600 sm:text-2xl">{sinifSatiri}</p>}
+            <span aria-hidden className="mt-4 block h-1 w-24 rounded-full bg-blue-600 print:mt-3" />
+          </header>
 
-        <Bolum baslik="Eğitim">
-          <div className="text-sm">
-            <p className="font-semibold text-gray-900">{student.university || 'Belirtilmemiş'}</p>
-            <p className="text-gray-600">
-              {[student.department, student.gradeLevel].filter(Boolean).join(' · ')}
-              {student.gpa ? ` · Not ortalaması ${student.gpa}` : ''}
-            </p>
-          </div>
-        </Bolum>
+          {student.bio && (
+            <AnaBolum baslik="Hakkımda">
+              <p className="text-base leading-relaxed text-gray-700">{student.bio}</p>
+            </AnaBolum>
+          )}
 
-        {yetenekler.length > 0 && (
-          <Bolum baslik="Teknik yetenekler">
-            <ul className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
-              {yetenekler.map((y) => (
-                <li key={y.name} className="flex items-center gap-1.5">
-                  <span className="font-medium">{y.name}</span>
-                  <span className="text-gray-500 text-xs">({SEVIYE[y.level] ?? y.level})</span>
-                  {/*
-                    Doğrulanmış rozet CV'de ayrıca işaretleniyor: testi sunucu
-                    puanladığı için bu işaret gerçekten bir şey ifade ediyor.
-                  */}
-                  {y.verified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
-                </li>
-              ))}
-            </ul>
-          </Bolum>
-        )}
+          <AnaBolum baslik="Eğitim" ikon={<GraduationCap className="h-7 w-7" strokeWidth={2} />}>
+            <div className="cv-oge">
+              <p className="text-xl font-bold leading-snug" style={{ color: LACIVERT }}>
+                {student.university || 'Belirtilmemiş'}
+              </p>
+              {student.department && <p className="mt-1 text-base text-gray-700">{student.department}</p>}
+              {egitimAlt && <p className="mt-1 text-base text-gray-700">{egitimAlt}</p>}
+            </div>
+          </AnaBolum>
 
-        {sosyal.length > 0 && (
-          <Bolum baslik="Sosyal beceriler">
-            <p className="text-sm">{sosyal.join(' · ')}</p>
-          </Bolum>
-        )}
+          {projeler.length > 0 && (
+            <AnaBolum baslik="Projeler" ikon={<FileText className="h-7 w-7" strokeWidth={2} />}>
+              <ol className="space-y-5">
+                {projeler.map((p) => {
+                  const baglanti = p.liveUrl || p.githubUrl;
+                  return (
+                    <li key={p.id} className="cv-oge relative pl-11">
+                      {/* Zaman çizgisi: halka ve aşağı inen ince çizgi. */}
+                      <span aria-hidden className="absolute left-[3px] top-1.5 h-4 w-4 rounded-full border-2 border-blue-600 bg-white" />
+                      <span aria-hidden className="absolute bottom-0 left-[10px] top-6 w-px bg-blue-200" />
+                      <p className="text-xl font-bold leading-snug" style={{ color: LACIVERT }}>
+                        {p.title}
+                      </p>
+                      {p.techStack.length > 0 && (
+                        <p className="mt-0.5 text-base font-semibold text-blue-600">{p.techStack.join(' · ')}</p>
+                      )}
+                      {p.description && <p className="mt-1.5 text-base leading-relaxed text-gray-700">{p.description}</p>}
+                      {baglanti && (
+                        <a
+                          href={tamAdres(baglanti)}
+                          className="mt-2 inline-flex items-center gap-1.5 text-base text-blue-600 underline underline-offset-2"
+                        >
+                          {adresMetni(baglanti)}
+                          <ArrowUpRight aria-hidden className="h-4 w-4" />
+                        </a>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            </AnaBolum>
+          )}
 
-        {diller.length > 0 && (
-          <Bolum baslik="Yabancı diller">
-            <ul className="text-sm space-y-0.5">
-              {diller.map((d) => (
-                <li key={d.id}>
-                  <span className="font-medium">{d.language}</span>
-                  <span className="text-gray-600"> — {d.proficiencyText || d.level}</span>
-                </li>
-              ))}
-            </ul>
-          </Bolum>
-        )}
+          {hedefler.length > 0 && (
+            <AnaBolum baslik="Aradığım pozisyonlar" ikon={<Briefcase className="h-7 w-7" strokeWidth={2} />}>
+              <ul className="space-y-1.5 text-base text-gray-800">
+                {hedefler.map((h) => (
+                  <li key={h}>{h}</li>
+                ))}
+              </ul>
+            </AnaBolum>
+          )}
 
-        {projeler.length > 0 && (
-          <Bolum baslik="Projeler">
-            <ul className="space-y-2 text-sm">
-              {projeler.map((p) => (
-                <li key={p.id}>
-                  <p className="font-semibold text-gray-900">{p.title}</p>
-                  {p.description && <p className="text-gray-600">{p.description}</p>}
-                  {p.techStack.length > 0 && (
-                    <p className="text-xs text-gray-500">{p.techStack.join(', ')}</p>
-                  )}
-                  {p.githubUrl && <p className="text-xs text-blue-700">{p.githubUrl}</p>}
-                </li>
-              ))}
-            </ul>
-          </Bolum>
-        )}
-
-        {student.targetRoles.length > 0 && (
-          <Bolum baslik="Aradığı pozisyon">
-            <p className="text-sm">{student.targetRoles.join(' · ')}</p>
-          </Bolum>
-        )}
-
-        <p className="text-[10px] text-gray-600 pt-2">
-          Bu CV stajimvar.com profilinden oluşturuldu.
-        </p>
+          <p className="mt-auto pt-2 text-right text-xs text-gray-500">StajımVar profilinden oluşturuldu.</p>
+        </div>
       </main>
     </div>
   );

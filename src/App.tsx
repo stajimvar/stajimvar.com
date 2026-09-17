@@ -2357,7 +2357,14 @@ export default function App() {
       yeniden bulması gerekirdi.
     */
     if (temizYol === '/cv/yazdir') {
-      return <CvPage student={student} onBack={() => navigate('/cv')} />;
+      return (
+        <CvPage
+          student={student}
+          onBack={() => navigate('/cv')}
+          /* Profildeki fotoğrafla aynı kaynak; /cv'den gelinmediyse yedek adres. */
+          fotografYolu={sosyalAvatarYolu ?? null}
+        />
+      );
     }
 
     /*
