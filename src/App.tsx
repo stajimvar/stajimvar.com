@@ -2076,6 +2076,7 @@ export default function App() {
                   sunucu tarafında da tanımlı (functions/_middleware.ts).
                 */
                 onOpenCv={() => navigate('/cv/yazdir')}
+                onCvOlustur={() => setCvAkisi({ baslangic: 'form', ilan: null })}
                 basvurular={applications}
                 /*
                   Başlıktaki iki sayaç artık AYRI başvuru ekranına

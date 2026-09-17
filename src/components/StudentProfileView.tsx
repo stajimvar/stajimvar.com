@@ -95,6 +95,12 @@ interface StudentProfileViewProps {
   /** Yazdırılabilir CV sayfasına geçiş. */
   onOpenCv?: () => void;
   /**
+   * Kısa CV oluşturma akışını açar (App → `CvOlusturucu`). Doluluktaki
+   * "CV oluştur" adımı buraya gidiyor; PDF yükleme düzenleme ekranındaki
+   * "CV" bölümünde ayrı seçenek olarak duruyor.
+   */
+  onCvOlustur?: () => void;
+  /**
    * Başvuru KAYITLARI — yalnızca sayısı değil.
    *
    * Önce sadece `basvuruSayisi` geliyordu; "kaç mülakat" gibi bir soruyu
@@ -367,6 +373,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   onUpdateProfile,
   onOpenQuiz,
   onOpenCv,
+  onCvOlustur,
   quizzes = [],
   onStartQuiz,
   basvurular = [],
@@ -462,7 +469,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     yüklenen PDF'ten biriyle tamamlanıyor.
   */
   const { adimlar: dolulukAdimlari, oran } = profilDolulugu(student);
-  const adimlar = dolulukAdimlari as { tamam: boolean; etiket: string; bolum: BolumId }[];
+  const adimlar = dolulukAdimlari as { anahtar: string; tamam: boolean; etiket: string; bolum: BolumId }[];
 
   /*
     EKSİKLER
@@ -475,7 +482,12 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     .filter((a) => !a.tamam)
     .map((a) => ({
       etiket: a.etiket,
-      onClick: () => (a.bolum === 'kisisel' ? kisiselAc() : bolumeGit(a.bolum)),
+      onClick: () =>
+        a.anahtar === 'cv' && onCvOlustur
+          ? onCvOlustur()
+          : a.bolum === 'kisisel'
+            ? kisiselAc()
+            : bolumeGit(a.bolum),
     }));
 
   /*

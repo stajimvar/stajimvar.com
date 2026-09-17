@@ -75,3 +75,13 @@ test('depo erişilemezse karşılama açılmıyor değil, açılıyor ama işare
   assert.equal(cvCagrisiKapatildiMi(depo, A), true);
   assert.equal(cvCagrisiKapatildiMi(depo, B), false);
 });
+
+test('profildeki "CV oluştur" adımı kısa CV akışını açıyor; PDF yükleme ayrı bölümde', async () => {
+  const fs = await import('node:fs');
+  const profil = fs.readFileSync('src/components/StudentProfileView.tsx', 'utf8');
+  assert.match(profil, /a\.anahtar === 'cv' && onCvOlustur\s*\?\s*onCvOlustur\(\)/);
+  /* PDF yükleme bölümü (id="cv", CvAlani) yerinde. */
+  assert.match(profil, /id="cv"[\s\S]{0,600}<CvAlani/);
+  const app = fs.readFileSync('src/App.tsx', 'utf8');
+  assert.match(app, /onCvOlustur=\{\(\) => setCvAkisi\(\{ baslangic: 'form', ilan: null \}\)\}/);
+});
