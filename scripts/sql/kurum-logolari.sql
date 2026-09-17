@@ -183,3 +183,10 @@ update public.opportunities set organization_logo_url = '/kurum-logolari/ytb.png
 select organization_name, coalesce(organization_logo_url, '(baş harfler)') as logo
 from public.opportunities
 order by organization_logo_url nulls last, organization_name;
+
+-- 17 Eylül 2026: Yakın Doğu Üniversitesi logosu. Sitesi sunucudan indirmeyi
+-- engellediği için dosya proje sahibinin kendi verdiği görselden hazırlandı
+-- (kırpıldı, 256×256 beyaz zemine ortalandı). Önceki kayıt depodaki
+-- düşük çözünürlüklü amblemi gösteriyordu.
+update public.opportunities set organization_logo_url = '/kurum-logolari/yakin-dogu-universitesi.png'
+  where organization_name = 'Yakın Doğu Üniversitesi';
