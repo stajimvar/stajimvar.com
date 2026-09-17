@@ -72,7 +72,9 @@ export const SirketProfilFormu: React.FC<{
   baglam: SirketBaglami;
   userId: string | null;
   onKaydedildi: () => void;
-}> = ({ baglam, userId, onKaydedildi }) => {
+  /** Şirket kaydı yokken sahiplenme akışına gidiş (SirketPaneli'nden). */
+  onNavigate?: (yol: string) => void;
+}> = ({ baglam, userId, onKaydedildi, onNavigate }) => {
   const [deger, setDeger] = React.useState<SirketProfilDegeri | null>(null);
   const [durum, setDurum] = React.useState<'yukleniyor' | 'hazir' | 'kaydediliyor' | 'tamam' | 'hata'>(
     'yukleniyor'
@@ -128,6 +130,40 @@ export const SirketProfilFormu: React.FC<{
       setDurum('hata');
     }
   };
+
+  /*
+    ŞİRKET KAYDI YOKSA İSKELET DEĞİL, CÜMLE
+
+    `companyId` boşken yükleme efekti hiç başlamıyor ve `durum`
+    'yukleniyor'da kalıyordu: kullanıcı Şirket sekmesinde sonsuza kadar
+    tek bir `animate-pulse` çubuk görüyordu (mobil ekran görüntüsünde
+    ölçüldü). Bekleyen bir istek yok; o yüzden aria-busy da yok. Eylem
+    uydurulmadı: sahiplenme akışı zaten var (/isveren/ilan-ver), ona
+    gidiyor.
+  */
+  if (!baglam.companyId) {
+    return (
+      <div className={KUTU} style={kutuStil}>
+        <p className="font-bold" style={{ color: SIRKET_METIN }}>
+          Bu hesaba bağlı bir şirket kaydı yok
+        </p>
+        <p className="mt-1 max-w-xl text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+          Profil ve doğrulama, hesabınız bir şirkete üye olunca açılıyor. StajımVar&apos;da
+          görünen şirket sayfanızı sahiplenmek için talep gönderebilirsiniz.
+        </p>
+        {onNavigate && (
+          <button
+            type="button"
+            onClick={() => onNavigate('/isveren/ilan-ver')}
+            className={`mt-4 ${IKINCIL_DUGME}`}
+            style={ikincilStil}
+          >
+            Şirketini sahiplen
+          </button>
+        )}
+      </div>
+    );
+  }
 
   if (!deger) {
     return (

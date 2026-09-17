@@ -1,5 +1,5 @@
 import React from 'react';
-import { Briefcase, Building2, GraduationCap, LayoutGrid, Plus, Users } from 'lucide-react';
+import { Briefcase, Building2, LayoutGrid, Plus, Users } from 'lucide-react';
 import { BottomNavigation, BottomNavigationItem } from '../ui/BottomNavigation';
 import { BildirimDugmesi } from '../components/BildirimMerkezi';
 import {
@@ -26,21 +26,22 @@ import {
  * Kabuk o dört işi taşıyor; renk artık ayrı DEĞİL (bkz. ./renk) — ayrım
  * gezinmede, boyada değil.
  *
- * DÖRT SEKME, BİR KAPI
+ * DÖRT SEKME, KAPI YOK
  * --------------------
- * Genel, İlanlar, Başvuranlar, Şirket. "Öğrenci görünümü" sekme değil
- * KAPI: kullanıcıyı kendi öğrenci tarafına götürüyor. Eskiden alt
- * çubukta beşinci öğe olarak duruyordu ve "Çıkış" sanılıyordu; oturumu
- * kapatmak hesap menüsünün işi. Şimdi üst çubukta, sağda, kompakt.
- * Alt çubuk yalnız dört sekme.
+ * Genel, İlanlar, Başvuranlar, Şirket. Öğrenci tarafına geçiş kapısı
+ * artık panelde HİÇ yok: önce alt çubukta beşinci öğeydi ve "Çıkış"
+ * sanıldı; sonra üst çubuğa kep ikonu olarak taşındı ve kullanıcı mobil
+ * ekran görüntüsünde onu çizip istemedi. Karar: şirket hesabına giren
+ * şirket hesabında kalır. Oturum kapatma hesap menüsünün işi.
  *
  * ÜST ÇUBUĞUN GENİŞLİK BÜTÇESİ (hesaplandı, 16 px yazıyla)
  * -------------------------------------------------------
- * Marka 140 + dört sekme ~334 + öğrenci kapısı 44 + zil 44 + Yeni ilan
- * 44 + boşluklar 72 ≈ 680 px: sekmeler `md`den (768) itibaren sığıyor,
- * `sm`de (640) sığmıyordu — alt çubuk bu yüzden `md`ye kadar kalıyor.
- * Kademe pili (~170) ve "Yeni ilan" yazısı `lg`de, "Öğrenci görünümü"
- * yazısı `xl`de açılıyor; her biri bir alt eşikte satırı taşırırdı.
+ * Marka 140 + dört sekme ~334 + zil 44 + Yeni ilan 44 + boşluklar 64 ≈
+ * 626 px: sekmeler `md`den (768) itibaren sığıyor, `sm`de (640)
+ * sığmıyordu — alt çubuk bu yüzden `md`ye kadar kalıyor. Kapı kalkınca
+ * 44 px boşaldı; eşikler yeniden dizilmedi, yalnız öğe eksildi.
+ * Kademe pili (~170) ve "Yeni ilan" yazısı `lg`de açılıyor; her biri
+ * bir alt eşikte satırı taşırırdı.
  */
 
 export type SirketSekmesi = 'genel' | 'ilanlar' | 'basvuranlar' | 'sirket';
@@ -55,8 +56,6 @@ const SEKMELER: { id: SirketSekmesi; etiket: string; ikon: React.ReactNode; yol:
 export const SirketKabugu: React.FC<{
   secili: SirketSekmesi;
   onNavigate: (yol: string) => void;
-  /** Öğrenci dünyasına dönüş. Oturum kapatma DEĞİL. */
-  onOgrenciyeDon: () => void;
   /** Sağ üstte görünen kısa durum. Kademe numarası yazmıyor. */
   durumRozeti?: React.ReactNode;
   /* Bildirim durumu App'te; kabuk yalnızca düğmeyi çiziyor. */
@@ -66,7 +65,6 @@ export const SirketKabugu: React.FC<{
 }> = ({
   secili,
   onNavigate,
-  onOgrenciyeDon,
   durumRozeti,
   okunmamisBildirim,
   onBildirimAc,
@@ -117,27 +115,9 @@ export const SirketKabugu: React.FC<{
           ))}
         </nav>
 
-        {/* Sağ küme: kademe pili · öğrenci kapısı · zil · Yeni ilan */}
+        {/* Sağ küme: kademe pili · zil · Yeni ilan */}
         <div className="ml-auto flex shrink-0 items-center gap-2">
           {durumRozeti && <span className="hidden lg:inline-flex">{durumRozeti}</span>}
-
-          {/*
-            "Öğrenci" tek başına hesap türü değiştiriyormuş gibi
-            okunuyordu. Değişen yalnızca GÖRÜNÜM: oturum, rol ve şirket
-            üyeliği aynı kalıyor. Dar ekranda yalnız ikon; erişilebilir ad
-            ve title tam cümleyi taşıyor.
-          */}
-          <button
-            type="button"
-            onClick={onOgrenciyeDon}
-            aria-label="Öğrenci görünümüne geç"
-            title="Öğrenci görünümüne geç"
-            className={`flex h-11 min-w-11 cursor-pointer items-center justify-center gap-2 rounded-xl px-2 text-sm font-bold transition-[background-color,color] duration-150 hover:bg-gray-50 xl:px-3 ${SIRKET_ODAK}`}
-            style={{ color: SIRKET_METIN_IKINCIL }}
-          >
-            <GraduationCap className="h-5 w-5" aria-hidden />
-            <span className="hidden xl:inline">Öğrenci görünümü</span>
-          </button>
 
           {/*
             BİLDİRİM ZİLİ İKİ DÜNYADA DA AYNI SİSTEM
@@ -181,8 +161,8 @@ export const SirketKabugu: React.FC<{
       DAR EKRANDA DÖRT SEKME ALTTA — ÖĞRENCİ TARAFIYLA AYNI ÇUBUK
 
       Aynı yüzen hap, aynı köşe, aynı yükseklik. Seçili olan dolgulu
-      rozetin içinde yazısıyla, diğerleri yalnız ikon. Öğrenci kapısı
-      artık burada değil: kapı üst çubukta, çubuk yalnız sekme.
+      rozetin içinde yazısıyla, diğerleri yalnız ikon. Çubuk yalnız
+      sekme; öğrenci kapısı panelde yok.
     */}
     <BottomNavigation gorunur etiket="Şirket menüsü" esik="md" tema={SIRKET_ALT_MENU}>
       {SEKMELER.map((s) => (

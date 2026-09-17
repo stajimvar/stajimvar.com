@@ -25,7 +25,7 @@ web
 ## Operating Context
 
 - Panel `/sirket`, `/sirket/ilanlar`, `/sirket/basvuranlar`, `/sirket/profil`, `/sirket/ilan` adreslerinde; `noindex`.
-- Şirket kullanıcısı aynı zamanda bir öğrenci hesabına sahip olabiliyor; panelden "Öğrenci görünümü" kapısıyla kendi öğrenci tarafına dönüyor (oturum kapatma değil).
+- **Şirket hesabı şirket hesabında kalır (kullanıcı kararı, 18 Eylül 2026):** panelde öğrenci görünümüne geçiş kapısı YOK. Eski "Öğrenci görünümü" düğmesi kaldırıldı.
 - Kademeler (`src/lib/sirket-kademe.mjs`): ZİYARETÇİ → İLAN VEREN (ilan açabilir) → DOĞRULANMIŞ (aday kartlarını görür, platformdan başvuru alır) → YÖNETİCİ. Kademe numarası ekranda yazılmıyor; ne yapabildiği yazılıyor ("İlan açık · kartlar kapalı").
 - Aday kartı görünürlüğünün asıl kapısı veritabanı RLS'i; arayüz kapatılsa da veri gelmiyor.
 - Başvuru durumları `src/sirket/basvuru-durumu.ts`te; aday üzerinde mülakat tarihi, davet, teklif ve iletişim eylemleri var.
@@ -38,7 +38,7 @@ web
 - Görsel doğrulama için giriş gerektirmeyen fixture: `src/dev/SirketPanelDevFixture.tsx`.
 - **Korunacak bilgi mimarisi (kullanıcı kararı):** dört sekme — Genel · İlanlar · Başvuranlar · Şirket.
 - **Genel ekranının göstermesi gerekenler (kullanıcı kararı):** yeni başvurular ve hızlı aksiyon, ilanların durumu (açık / kapanmaya yakın / görüntülenme-başvuru sayısı), şirket profilinin görünürlüğü (tamamlanma, eksikler), tek düğmeyle yeni ilan.
-- Öğrenci görünümü kapısı korunması zorunlu tutulmadı; yeniden konumlandırılabilir ama işlevi kaldırılmamalı (oturumu kapatma ile karıştırılmasın).
+- Panelde öğrenci tarafına geçiş kontrolü bulunmaz; ileride eklenmesi teklif edilmemeli.
 - Ekranda sahte sayı, sahte eşleşme oranı, boş bağlantı, yatay taşma olmamalı.
 
 ## Brand Commitments

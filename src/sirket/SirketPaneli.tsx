@@ -51,7 +51,8 @@ import {
  *
  * DÖRT İŞ
  * -------
- * İlanlar, Başvuranlar, Şirket, Öğrenci tarafına dönüş. Grafik, huni,
+ * Genel, İlanlar, Başvuranlar, Şirket. Öğrenci tarafına geçiş YOK:
+ * şirket hesabına giren şirket hesabında kalıyor. Grafik, huni,
  * ısı haritası yok: gün içinde birkaç dakika ayıran İK'nın bakacağı şey
  * bunlar değil.
  *
@@ -109,7 +110,6 @@ export const SirketPaneli: React.FC<{
   userId: string | null;
   yoneticiMi: boolean;
   onNavigate: (yol: string) => void;
-  onOgrenciyeDon: () => void;
   /* Bildirim durumu App'te; panel yalnızca kabuğa geçiriyor. */
   okunmamisBildirim?: number | null;
   onBildirimAc?: () => void;
@@ -121,7 +121,6 @@ export const SirketPaneli: React.FC<{
   userId,
   yoneticiMi,
   onNavigate,
-  onOgrenciyeDon,
   okunmamisBildirim,
   onBildirimAc,
   acilacakAday,
@@ -188,7 +187,7 @@ export const SirketPaneli: React.FC<{
 
   if (durum === 'yukleniyor' || !baglam) {
     return (
-      <SirketKabugu secili={sekme} onNavigate={onNavigate} onOgrenciyeDon={onOgrenciyeDon}
+      <SirketKabugu secili={sekme} onNavigate={onNavigate}
         okunmamisBildirim={okunmamisBildirim}
         onBildirimAc={onBildirimAc}
       >
@@ -208,7 +207,7 @@ export const SirketPaneli: React.FC<{
 
   if (durum === 'hata') {
     return (
-      <SirketKabugu secili={sekme} onNavigate={onNavigate} onOgrenciyeDon={onOgrenciyeDon}
+      <SirketKabugu secili={sekme} onNavigate={onNavigate}
         okunmamisBildirim={okunmamisBildirim}
         onBildirimAc={onBildirimAc}
       >
@@ -246,7 +245,6 @@ export const SirketPaneli: React.FC<{
     <SirketKabugu
       secili={sekme}
       onNavigate={onNavigate}
-      onOgrenciyeDon={onOgrenciyeDon}
       okunmamisBildirim={okunmamisBildirim}
       onBildirimAc={onBildirimAc}
       durumRozeti={<DurumRozeti baglam={baglam} />}
@@ -343,7 +341,13 @@ export const SirketPaneli: React.FC<{
           <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
             {baglam.ad || 'Şirket'}
           </h1>
-          <SirketProfilFormu baglam={baglam} userId={userId} onKaydedildi={yukle} />
+          {/* Şirket kaydı yokken form onNavigate ile sahiplenme akışına yolluyor. */}
+          <SirketProfilFormu
+            baglam={baglam}
+            userId={userId}
+            onKaydedildi={yukle}
+            onNavigate={onNavigate}
+          />
         </div>
       )}
     </SirketKabugu>
