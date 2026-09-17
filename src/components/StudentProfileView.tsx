@@ -445,6 +445,28 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     });
   };
 
+  /*
+    GÖRÜNTÜLEYİCİDEKİ KALEM → DÜZENLEME EKRANININ FOTOĞRAF AKIŞI
+
+    Yükleme tek yerde (`ProfilFotografiYukleme`, sosyal panelin düzenleme
+    kipi); burada ikinci bir yükleme kapısı açılmıyor. Bu eylem yalnız
+    oraya GÖTÜRÜYOR: düzenlemeye geç (tek kapı `bolumeGit`, açık bölüm
+    neyse o), bir kare sonra (panel ancak o zaman ağaçta) panele
+    "fotoğraf ekranını aç" de ve sosyal bloğu görünür yere kaydır. Kare
+    zamanlayıcısı `bolumeGit` ile aynı gerekçe: hedef boyama bitmeden
+    yok; telefonda `bolumeGit`in kendi kaydırması aynı karede planlanıyor
+    ve sonra planlanan bu kaydırma onun yerine geçiyor.
+  */
+  const fotografDegistir = () => {
+    bolumeGit(acikBolum);
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event('stajimvar:profil-fotografi-degistir'));
+      document
+        .getElementById('sosyal-profil-duzenleme')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
   const yetenekler = student.skills ?? [];
   const sosyal = student.softSkills ?? [];
   const diller = student.languages ?? [];
@@ -1115,6 +1137,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             */
             rozetSayisi={rozetler.length}
             onTestlere={() => bolumeGit('rozet')}
+            /* Görüntüleyicideki kalem; yalnız sosyal panel varken (yükleme orada). */
+            onFotografDegistir={sosyalProfilDuzenleme ? fotografDegistir : undefined}
           />
           )}
 
@@ -2132,7 +2156,10 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         ederdi.
       */}
       {sosyalProfilDuzenleme && (
-        <div className="mt-6 border-t border-gray-200 pt-5">{sosyalProfilDuzenleme}</div>
+        /* `id`: görüntüleyicideki kalem buraya kaydırıyor (`fotografDegistir`). */
+        <div id="sosyal-profil-duzenleme" className="mt-6 border-t border-gray-200 pt-5">
+          {sosyalProfilDuzenleme}
+        </div>
       )}
 
       </div>

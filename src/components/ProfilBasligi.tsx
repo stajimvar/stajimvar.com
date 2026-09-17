@@ -269,6 +269,17 @@ interface Props {
    */
   rozetSayisi: number;
   onTestlere: () => void;
+  /**
+   * FOTOĞRAF GÖRÜNTÜLEYİCİDEKİ KALEM — var olan değiştirme akışına
+   *
+   * Avatara dokununca açılan tam ekran görüntüleyicide (Instagram
+   * kalıbı) sahibin fotoğrafının sağ altında kalem var; bu eylem onu
+   * düzenleme ekranındaki fotoğraf akışına götürüyor. Kart akışı
+   * kendisi bilmiyor — yükleme tek yerde (`ProfilFotografiYukleme`,
+   * düzenleme dalı) ve buradan ikinci bir kapı açılmıyor. Verilmezse
+   * kalem çizilmiyor.
+   */
+  onFotografDegistir?: () => void;
 }
 
 /**
@@ -306,6 +317,7 @@ export const ProfilBasligi: React.FC<Props> = ({
   portfolyo,
   rozetSayisi,
   onTestlere,
+  onFotografDegistir,
 }) => {
   /*
     Sosyal hücrelerin dört hâli tek yerde karara bağlanıyor; JSX'te iç
@@ -447,11 +459,24 @@ export const ProfilBasligi: React.FC<Props> = ({
         {/* ---------------- Fotoğraf ve kimlik ---------------- */}
         <div className="flex min-w-0 flex-1 items-center gap-4 sm:gap-6">
           <Halka oran={oran}>
+            {/*
+              BÜYÜTME (kullanıcı isteği, 17 Eylül 2026): fotoğrafa dokununca
+              Instagram gibi tam ekran açılıyor. Paylaş eylemi sosyal
+              panelin satırındaki var olan `onPaylas`; kopyalanacak adres
+              yalnız profil YAYINDAYKEN veriliyor (yayında değilse
+              paylaşılacak adres yok, düğme de yok). Fotoğraf yoksa
+              (baş harf) `ProfilFotografi` düğme çizmiyor.
+            */}
             <ProfilFotografi
               ad={ad}
               yol={sosyalAvatarYolu}
               yedekAdres={avatarUrl}
               className="h-20 w-20 rounded-full text-2xl sm:h-28 sm:w-28 sm:text-3xl lg:h-36 lg:w-36 lg:text-4xl"
+              buyutme={{
+                onPaylas: satir?.menu.onPaylas,
+                kullaniciAdi: satir?.menu.yayindaMi ? satir.kullaniciAdi : null,
+                onFotografDegistir,
+              }}
             />
           </Halka>
 

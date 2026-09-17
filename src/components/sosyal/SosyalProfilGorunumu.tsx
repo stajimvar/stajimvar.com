@@ -249,10 +249,22 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
               Yol boşsa baş harfler çiziliyor; sahte bir fotoğraf değil.
               Dosya kullanıcının oturumundan geçerek iniyor (`ProfilFotografi`).
             */}
+            {/*
+              BÜYÜTME (kullanıcı isteği, 17 Eylül 2026): dokununca tam ekran
+              görüntüleyici. Paylaş sayfanın var olan `onPaylas`ı; kopya
+              adresi yalnız profil YAYINDAYKEN (yayında olmayan profilin
+              herkese açık adresi yok). Kalem `sahibiMi` kapısının
+              arkasında: ziyaretçide prop hiç gitmiyor, DOM'a girmiyor.
+            */}
             <ProfilFotografi
               ad={baslik}
               yol={profil.avatarYolu}
               className="h-20 w-20 shrink-0 rounded-full text-2xl ring-1 ring-blue-500/20 sm:h-28 sm:w-28 sm:text-3xl lg:h-36 lg:w-36 lg:text-4xl"
+              buyutme={{
+                onPaylas,
+                kullaniciAdi: profil.yayindaMi ? profil.kullaniciAdi : null,
+                onFotografDegistir: sahibiMi ? onFotografDegistir : undefined,
+              }}
             />
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex min-w-0 items-center gap-1.5">

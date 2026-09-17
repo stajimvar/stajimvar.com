@@ -435,7 +435,14 @@ test('baş harf yedeği yalnız fotoğraf gösterilemediğinde; beklerken yanıp
     `student_profiles.avatar_url` yedeği) ve kaynağı `profilFotografi`
     seçiyor. Ölçülen kural aynı: adres varsa fotoğrafın kendisi çiziliyor.
   */
-  assert.match(fotograf, /if \(adres\) return <Avatar name=\{ad\} url=\{adres\}/);
+  /*
+    Dal yine tek ama artık bir blok: adres iki kaynaktan (yedek adres,
+    indirilen dosya) TEK değişkende toplanıyor ve fotoğraf varken
+    büyütme düğmesi de bu bloktan çıkıyor (profil fotoğrafı
+    görüntüleyicisi, 17 Eylül 2026). Ölçülen kural değişmedi: adres
+    varsa fotoğrafın kendisi, `url={adres}` ile çiziliyor.
+  */
+  assert.match(fotograf, /if \(adres\) \{\n\s*const gorsel = <Avatar name=\{ad\} url=\{adres\}/);
   /*
     Baş harf dalı HÂLÂ TEK: yol yoksa ve yedek adres de yoksa. Yedek
     dalının kendi `Avatar`ı var ve o `url` alıyor — baş harfe düşmüyor.
