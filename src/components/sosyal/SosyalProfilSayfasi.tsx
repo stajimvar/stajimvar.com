@@ -445,7 +445,7 @@ const ProfilIskeleti: React.FC<{ kip?: 'sayfa' | 'panel' | 'form' }> = ({ kip = 
         <div aria-hidden className="h-5 w-24 animate-pulse rounded bg-gray-100" />
       </div>
     </div>
-    <PaylasimIzgarasi paylasimlar={[]} durum="yukleniyor" />
+    <PaylasimIzgarasi paylasimlar={[]} durum="yukleniyor" gorunum="galeri" />
   </div>
   );
 
