@@ -3,6 +3,8 @@ import { Avatar } from '../Avatar';
 import { profilFotografi } from '../../lib/profil-fotografi';
 import { SOSYAL_AVATAR_KOVASI } from '../../lib/queries/sosyal';
 import { useGorselAdresleri } from './useGorselAdresleri';
+import { ODAK_HALKASI } from '../../lib/renk-token';
+import { ProfilFotografiGoruntuleyici } from './ProfilFotografiGoruntuleyici';
 
 /**
  * PROFİL FOTOĞRAFI — YOLDAN İNDİRİLEN DOSYAYA
@@ -51,6 +53,15 @@ import { useGorselAdresleri } from './useGorselAdresleri';
  * `profilFotografi` içinde kararlaştırılıyor — karar tek yerde olmasa
  * her çağrı yerinde ayrı bir `??` olurdu ve biri unutulduğunda aynı
  * kullanıcı iki ekranda iki farklı fotoğrafla görünürdü.
+ *
+ * BÜYÜTME — DOKUNMA HEDEFİ YALNIZ FOTOĞRAF VARKEN DÜĞME
+ * -----------------------------------------------------
+ * `buyutme` verilirse ve ekranda gerçekten bir fotoğraf çiziliyorsa
+ * (adres çözüldü) daire bir `<button>` oluyor ve tam ekran görüntüleyici
+ * (`ProfilFotografiGoruntuleyici`) AYNI adresle açılıyor — ikinci bir
+ * indirme ya da adres üretimi yok. Baş harf ve iskelet dallarında düğme
+ * yok: büyütülecek fotoğraf yok, düğme de yok. Karar burada çünkü
+ * adresin var olup olmadığını yalnız bu bileşen biliyor.
  */
 
 interface FotografProps {
@@ -68,6 +79,18 @@ interface FotografProps {
   yedekAdres?: string | null;
   /** Ölçü ve yuvarlaklık çağırandan geliyor: başlıkta ve formda farklı. */
   className?: string;
+  /**
+   * Verilirse fotoğraf dokununca tam ekran açılıyor. Alanlar
+   * görüntüleyicinin eylemleri: `onPaylas` sayfanın var olan paylaşımı,
+   * `kullaniciAdi` yalnız profil YAYINDAYKEN dolu (kopyalanacak adres),
+   * `onFotografDegistir` yalnız SAHİBİNDE. Verilmezse (düzenleme bloğu,
+   * bildirim satırları) bileşen eskisi gibi düz görsel.
+   */
+  buyutme?: {
+    onPaylas?: () => void;
+    kullaniciAdi?: string | null;
+    onFotografDegistir?: () => void;
+  };
 }
 
 /*
@@ -81,8 +104,13 @@ export const ProfilFotografi: React.FC<FotografProps> = ({
   yol,
   yedekAdres = null,
   className = '',
+  buyutme,
 }) => {
   const kaynak = profilFotografi(yol, yedekAdres);
+  /* Görüntüleyici; kapalıyken DOM'da hiçbir şey yok. Kancalar koşulsuz. */
+  const [acik, setAcik] = React.useState(false);
+  const dugmeRef = React.useRef<HTMLButtonElement>(null);
+  const kapat = React.useCallback(() => setAcik(false), []);
   /*
     İndirme yalnız 'yol' dalında anlamlı; kanca koşulsuz çağrılıyor çünkü
     React kancaları dallara giremez. Yol yokken liste boş ve istek atılmıyor.
@@ -98,15 +126,50 @@ export const ProfilFotografi: React.FC<FotografProps> = ({
   if (kaynak.tur === 'bilinmiyor') {
     return <div aria-hidden className={`animate-pulse bg-gray-100 ${className}`} />;
   }
-  if (kaynak.tur === 'adres') {
-    return <Avatar name={ad} url={kaynak.adres} className={className} />;
+  if (depolamaYolu && durum === 'yukleniyor') {
+    return <div aria-hidden className={`animate-pulse bg-gray-100 ${className}`} />;
   }
-  if (depolamaYolu) {
-    if (durum === 'yukleniyor') {
-      return <div aria-hidden className={`animate-pulse bg-gray-100 ${className}`} />;
-    }
-    const adres = adresler.get(depolamaYolu) ?? null;
-    if (adres) return <Avatar name={ad} url={adres} className={className} />;
+  /*
+    Gösterilecek adres: yedek adres doğrudan, depolama yolu indirilen
+    dosyanın bellek adresi. İki kaynak tek değişkende toplanıyor ki
+    büyütme kararı ("adres var mı") tek yerde verilsin.
+  */
+  const adres =
+    kaynak.tur === 'adres' ? kaynak.adres : depolamaYolu ? (adresler.get(depolamaYolu) ?? null) : null;
+  if (adres) {
+    const gorsel = <Avatar name={ad} url={adres} className={className} />;
+    if (!buyutme) return gorsel;
+    return (
+      <>
+        {/*
+          Gerçek düğme, `<a>` değil: görüntüleyicinin kalıcı adresi yok
+          (`PaylasimDetayi` ile aynı gerekçe). `shrink-0` düğmede: kabın
+          flex satırında görsel ezilmesin. Odak halkası daireyi izliyor.
+        */}
+        <button
+          ref={dugmeRef}
+          type="button"
+          onClick={() => setAcik(true)}
+          aria-haspopup="dialog"
+          aria-expanded={acik}
+          className={`block shrink-0 cursor-pointer rounded-full ${ODAK_HALKASI}`}
+        >
+          {gorsel}
+          <span className="sr-only">Profil fotoğrafını büyüt</span>
+        </button>
+        {acik && (
+          <ProfilFotografiGoruntuleyici
+            adres={adres}
+            ad={ad}
+            tetikleyici={dugmeRef.current}
+            onKapat={kapat}
+            onPaylas={buyutme.onPaylas}
+            kullaniciAdi={buyutme.kullaniciAdi}
+            onFotografDegistir={buyutme.onFotografDegistir}
+          />
+        )}
+      </>
+    );
   }
   /*
     Baş harfler: yol yoksa (fotoğraf yok) ya da dosya inemediyse.

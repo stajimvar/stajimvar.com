@@ -710,6 +710,28 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   }, [gomulu, profilDurumu, profilTamMi, rotaAdi, sahibiMi]);
 
   /*
+    FOTOĞRAF GÖRÜNTÜLEYİCİSİNDEKİ KALEM → BURADAKİ YÜKLEME EKRANI
+
+    `/cv` ana görünümündeki kimlik kartının kalemi düzenlemeye geçiyor
+    ve bir kare sonra bu olayı atıyor (kart sosyal dosyayı bilmiyor,
+    olayın adı yetiyor); düzenleme kipindeki bu panel de doğrudan
+    fotoğraf ekranını açıyor. Olay, Header'ın `stajimvar:profil-menusu`
+    kalıbıyla aynı: iki bileşen arasında App üzerinden yeni bir prop
+    zinciri kurmak, yalnız bu geçiş için üç dosyaya bağlantı eklemek
+    olurdu. Yalnız düzenleme kipinde dinleniyor: portfolyo panelinde
+    `'fotograf'` görünümü çizilmiyor, dinlense de ekran değişmezdi.
+
+    Yükleme ekranı yine `if (!sahibiMi) return <GuvenliEkran/>`
+    satırından SONRA çiziliyor; olay o kapıyı aşmıyor.
+  */
+  React.useEffect(() => {
+    if (!duzenlemeKipi) return;
+    const fotografEkraniniAc = () => setGorunum('fotograf');
+    window.addEventListener('stajimvar:profil-fotografi-degistir', fotografEkraniniAc);
+    return () => window.removeEventListener('stajimvar:profil-fotografi-degistir', fotografEkraniniAc);
+  }, [duzenlemeKipi]);
+
+  /*
     ZİYARETÇİ PROFİLİ — İKİ ADIM, İKİSİ DE RLS'E TABİ
 
     Önce kullanıcı adı kimliğe çevriliyor, sonra profil o kimlikle
@@ -884,13 +906,18 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
    * "kopyalandı" DENMİYOR — olmayan bir başarıyı bildirmek, kullanıcıyı
    * boş bir panoyla yapıştırmaya gönderirdi.
    */
-  const paylas = async () => {
-    if (!profil?.kullaniciAdi) return;
-    const adres = `${window.location.origin}${profilYolu(profil.kullaniciAdi)}`;
+  /*
+    Kullanıcı adı parametre: ziyaretçi görünümündeki fotoğraf
+    görüntüleyicisi de BAKILAN profili aynı yoldan paylaşıyor. İkinci bir
+    paylaşım fonksiyonu yazılmadı; verilmezse sahibin kendi adı.
+  */
+  const paylas = async (kullaniciAdi: string | null = profil?.kullaniciAdi ?? null) => {
+    if (!kullaniciAdi) return;
+    const adres = `${window.location.origin}${profilYolu(kullaniciAdi)}`;
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: `@${profil.kullaniciAdi}`, url: adres });
+        await navigator.share({ title: `@${kullaniciAdi}`, url: adres });
         return;
       } catch {
         /* Kullanıcı vazgeçti ya da paylaşım reddedildi; kopyalamaya düşülüyor. */
@@ -1233,6 +1260,18 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
             sahibiMi={false}
             bakanId={kullaniciId}
             onNavigate={onNavigate}
+            /*
+              Fotoğraf görüntüleyicisinin "Paylaş"ı: bakılan profilin
+              adresi, sahibin menüsüyle AYNI `paylas`. Yalnız yayındaki
+              profil — yayında olmayanın adresi alıcıda açılmaz.
+              Sonuç cümlesi (`bildirim`) başlıktaki durum satırında.
+            */
+            onPaylas={
+              ziyaretciProfili.yayindaMi
+                ? () => void paylas(ziyaretciProfili.kullaniciAdi)
+                : undefined
+            }
+            bildirim={bildirim}
             sayaclar={sayaclar}
             sayacDurumu={sayacDurumu}
             paylasimlar={paylasimlar}
