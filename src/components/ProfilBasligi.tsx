@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Bookmark, Check, ChevronRight, FileText, ImagePlus, LogOut, Menu, Plus, Settings } from 'lucide-react';
+import { Award, Bookmark, Check, FileText, LogOut, MapPin, Pencil, Settings } from 'lucide-react';
 import { adYazimi } from '../lib/ad';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
 import { profilAyarOgeleri } from './sosyal/ProfilAyarMenusu';
@@ -7,7 +7,7 @@ import { ProfilAyarlarSayfasi, type AyarBolumu } from './ProfilAyarlarSayfasi';
 import type { PortfolyoSatiri } from './sosyal/SosyalProfilSayfasi';
 import { profilYolu } from '../lib/sosyal-kullanici-adi.mjs';
 import { ODAK_HALKASI } from '../lib/renk-token';
-import { Button, Card, ProfileSectionGroup, ProfileSectionRow, Skeleton, StatItem } from '../ui';
+import { Button, Card, ProfileSectionGroup, ProfileSectionRow, Skeleton } from '../ui';
 
 /**
  * Profil başlığı — öğrencinin kişisel kontrol paneli.
@@ -190,6 +190,8 @@ interface Props {
   okul: string;
   bolum?: string;
   sinif: string;
+  /** Oturduğu il; boşsa konum satırı çizilmiyor. */
+  konum?: string;
   /**
    * Ne aradığı — tercihlerinden üretilen iki satır.
    *
@@ -288,8 +290,7 @@ export const ProfilBasligi: React.FC<Props> = ({
   okul,
   bolum,
   sinif,
-  durum,
-  onEtiketDuzenle,
+  konum,
   oran,
   eksikler,
   kaydedilenSayisi,
@@ -407,314 +408,182 @@ export const ProfilBasligi: React.FC<Props> = ({
 
   return (
     /*
-    Bloklar arası boşluk mobilde 16'dan 12 piksele indi. Kartta yedi blok
-    var; her boşluktan kazanılan 4 piksel, altındaki başvuru bölümünü 24
-    piksel yukarı çekiyor. Geniş ekranda yer sorunu yok, orada 16 kalıyor.
-  */
-  /*
-    KART YALNIZCA KİMLİK VE ANA İŞLEMLER
+      YATAY PROFİL KARTI (17 Eylül 2026 tasarımı)
 
-    İçine kimlik, istatistik, iki düğme ve sekiz menü öğesi doldurulmuştu.
-    Bölüm listesi karttan çıktı; kart artık avatar, bilgiler, tamamlanma
-    durumu ve ana işlemlerden ibaret.
+      Kart artık sayfanın üstünde TAM GENİŞLİKTE: solda fotoğraf, yanında
+      ad, kullanıcı adı, okul, bölüm · sınıf ve il; sağda ince bir çizgiyle
+      ayrılmış iki sayaç ve altlarında iki düğme. Dişli (ayarlar ve
+      hareketler) kartın sağ üstünde.
 
-    SARMALAYAN DIV DE KALKTI: içinde iki kutu vardı (kart ve bölüm
-    listesi) ve aralarındaki boşluğu o veriyordu. Liste düzenleme
-    ekranına taşınınca tek çocuklu bir kap kaldı; boşluğu artık çağıran
-    sütunun kendi `space-y`si veriyor.
-  */
-  /*
-    TELEFONDA KART DEĞİL YÜZEY — `mobilYuzey`.
+      KARTTAN KALKANLAR, KAYBOLMADI:
+        - Staj tercihi satırı ve eksik adım kutusu: tercihler ve eksik
+          bölümler "Profili düzenle" ekranında; tamamlanma yüzdesi ayar
+          menüsünün ilk satırında ve fotoğraf halkasında duruyor.
+        - Üçüncü sayaç yok: yalnız Paylaşım ve Bağlantı. Takipçi ya da
+          başka bir sayı uydurulmuyor.
 
-    Kimlik bloğu telefonda ekranın tamamını kaplıyor ve gri zemin
-    üzerinde yüzen bir kart olarak duruyordu: iki yanında gri şeritler,
-    köşelerde yuvarlatmanın açtığı gri üçgenler kalıyordu. Telefonda
-    kabuk yerini tek bir alt çizgiye bırakıyor.
+      Her değer çağıranın verdiği GERÇEK veriden: ad, okul, bölüm, sınıf ve
+      il `student_profiles`tan; kullanıcı adı ve sayılar sosyal panelin
+      satırından (`portfolyo.satir`). Veri yoksa satır çizilmiyor.
 
-    `sm:` ve üstünde HİÇBİR ŞEY DEĞİŞMEDİ: kart, kenarlık, köşe ve iç
-    boşluk aynı. Geniş ekranda blok sol sütunun bir parçası ve nerede
-    bittiğinin görünmesi gerekiyor.
-  */
-  <Card mobilYuzey className={`relative space-y-3 px-4 py-3.5 sm:space-y-4 sm:p-6 ${className}`}>
-    {/* Geniş ekranda ☰ kartın sağ üstünde; telefonda üst çubukta. */}
-    <button
-      type="button"
-      onClick={() => setMenuAcik(true)}
-      aria-label="Ayarlar ve hareketler"
-      aria-haspopup="dialog"
-      className={`absolute right-3 top-3 hidden h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-gray-800 hover:bg-gray-100 lg:inline-flex ${ODAK_HALKASI}`}
-    >
-      <Menu aria-hidden className="h-6 w-6" />
-    </button>
-    <ProfilAyarlarSayfasi acik={menuAcik} onKapat={menuKapat} bolumler={ayarBolumleri} />
-    {/*
-      FOTOĞRAF VE AD AYNI SATIRDA, SAYAÇLAR ALTTA TAM GENİŞLİKTE
+      TELEFONDA alt alta: fotoğraf ve kimlik bir satırda, sayaçlar ve
+      düğmeler altında tam genişlikte. Dişli telefonda üst çubukta
+      (Header `stajimvar:profil-menusu`).
+    */
+    <Card mobilYuzey className={`relative px-4 py-5 sm:p-6 lg:px-8 lg:py-7 ${className}`}>
+      <button
+        type="button"
+        onClick={() => setMenuAcik(true)}
+        aria-label="Ayarlar ve hareketler"
+        aria-haspopup="dialog"
+        className={`absolute right-3 top-3 hidden h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-gray-700 hover:bg-gray-100 lg:inline-flex ${ODAK_HALKASI}`}
+      >
+        <Settings aria-hidden className="h-6 w-6" strokeWidth={1.75} />
+      </button>
 
-      Sayaç şeridi fotoğrafın SAĞINDA duruyordu ve üç hücreydi. İki
-      sosyal hücre (paylaşım, bağlantı) aynı şeride eklenince beş hücre
-      oldu ve fotoğrafın yanına sığmıyor. Sınıf değerlerinden hesap
-      (tarayıcıda ölçülmedi): geniş ekranda `Halka` 96 + 2×6 = 108
-      piksel, fotoğrafla şerit arası `sm:gap-8` 32 piksel, şeridin
-      İÇİNDEKİ dört `sm:gap-8` aralığı 128 piksel — beş hücre daha
-      çizilmeden 268 piksel gidiyor ve sol sütun sayfanın 12'de 4'ü.
-      Etiketleri kısaltmak ya da kırpmak yerine şerit kendi satırına indi
-      ve kartın tam genişliğini alıyor; ad ile okul satırı fotoğrafın
-      yanındaki boşluğa çıktı. Kart bir satır uzamadı: ad bloğu zaten
-      bir satırdı, yalnız yer değiştirdi.
-    */}
-    <div className="flex items-center gap-3.5 sm:gap-4">
-      {/*
-        KAMERA DÜĞMESİ KALDIRILDI — TEK FOTOĞRAF, TEK YÜKLEME YERİ
+      <ProfilAyarlarSayfasi acik={menuAcik} onKapat={menuKapat} bolumler={ayarBolumleri} />
 
-        Buradaki düğme `student_profiles.avatar_url`e, düzenleme
-        ekranındaki sosyal blok `social_profiles.avatar_path`e yazıyordu.
-        İki yazma birbirinden habersizdi: aynı kullanıcı profil kartında
-        bir fotoğraf, sosyal profilinde başka bir fotoğraf gösterebiliyordu
-        ve hangisinin asıl olduğu hiçbir yerde yazmıyordu. Yükleme tek
-        yere indi; burası artık yalnız GÖSTERİYOR.
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:gap-8">
+        {/* ---------------- Fotoğraf ve kimlik ---------------- */}
+        <div className="flex min-w-0 flex-1 items-center gap-4 sm:gap-6">
+          <Halka oran={oran}>
+            <ProfilFotografi
+              ad={ad}
+              yol={sosyalAvatarYolu}
+              yedekAdres={avatarUrl}
+              className="h-20 w-20 rounded-full text-2xl sm:h-28 sm:w-28 sm:text-3xl lg:h-36 lg:w-36 lg:text-4xl"
+            />
+          </Halka>
 
-        Halka (doluluk) kaldı ve tıklanabilir değil: yüzdenin kendisi ne
-        yapılacağını söylemiyor, altındaki eksik adım rozetleri söylüyor.
-        Tıklanamayan bir daireye `title` da konmuyor — fare ile beliren bir
-        ipucu, dokunmatikte hiç okunmayan bir bilgi olurdu.
-      */}
-      {/* Sarmalayıcı yok: konumlandırılacak rozet kalmadı, `Halka` zaten `shrink-0`. */}
-      <Halka oran={oran}>
-          {/*
-            Fotoğrafın kaynağını `ProfilFotografi` seçiyor: önce
-            `avatar_path` (private kovadan oturumla iniyor), o yoksa eski
-            `avatar_url`. Karar tek yerde (`src/lib/profil-fotografi.ts`).
-          */}
-        <ProfilFotografi
-          ad={ad}
-          yol={sosyalAvatarYolu}
-          yedekAdres={avatarUrl}
-          className="w-20 h-20 sm:w-24 sm:h-24 rounded-full text-2xl sm:text-3xl"
-        />
-      </Halka>
+          <div className="min-w-0 flex-1">
+            {/* `break-words`: uzun ad kırpılmıyor, sarılıyor. */}
+            <h1 className="min-w-0 break-words text-xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-2xl lg:text-[28px]">
+              {adYazimi(ad)}
+            </h1>
 
-      <div className="min-w-0 flex-1 space-y-0.5">
-        {/*
-          `break-words`: "Mustafa Oğulcan Doğan" gibi bir ad 375 pikselde
-          fotoğrafın yanındaki 240 piksellik kaba sığmayıp kabı
-          taşırıyordu — kırpma değil sarma isteniyor, çünkü ad kısaltılınca
-          kimin profili olduğu okunmuyor.
-        */}
-        <h1 className="min-w-0 break-words text-base font-bold text-gray-900">{adYazimi(ad)}</h1>
-        {/*
-          KULLANICI ADI ADIN HEMEN ALTINDA
+            {portfolyo && portfolyo.satir === undefined && <Skeleton className="mt-1.5 h-4 w-32" />}
+            {satir?.kullaniciAdi && (
+              <a
+                href={profilYolu(satir.kullaniciAdi)}
+                onClick={(olay) => {
+                  if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0)
+                    return;
+                  olay.preventDefault();
+                  satir.onNavigate(profilYolu(satir.kullaniciAdi as string));
+                }}
+                className={`mt-0.5 block min-w-0 truncate text-sm text-gray-600 hover:underline sm:text-base ${ODAK_HALKASI}`}
+              >
+                <span className="select-none">@</span>
+                {satir.kullaniciAdi}
+              </a>
+            )}
 
-          Kartta görünen ad, okul ve sınıf vardı; `@ad` hiçbir yerde
-          yoktu. Kullanıcı herkese açık adresinin neyle başladığını ancak
-          dişli menüsündeki "Paylaş"tan öğreniyordu. Satır Instagram'daki
-          gibi adın altında ve gerçek `<a href="/profil/<ad>">`: orta tuş
-          ve yeni sekme çalışıyor, sol tık uygulama içi gezinmeye
-          dönüyor (`StatItem`deki değiştirici tuş kalıbı).
+            <div className="mt-1.5 space-y-0.5 text-sm leading-snug text-gray-500 sm:mt-2 sm:text-base">
+              <p className="min-w-0 break-words">{okul || 'Okulun eksik'}</p>
+              {(bolum || sinif) && (
+                <p className="min-w-0 break-words">{[bolum, sinif].filter(Boolean).join(' · ')}</p>
+              )}
+            </div>
 
-          Üç hâl, panelin satırıyla aynı kaynaktan:
-            satır `undefined`  → kısa iskelet (ad henüz okunmadı)
-            `kullaniciAdi` null → satır HİÇ yok (adsız profil olabilir)
-            ad var              → `@ad`
-          Panel verilmemişse (`portfolyo` yok) satır da yok.
+            {konum && (
+              <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-sm text-gray-700 sm:mt-2.5">
+                <MapPin aria-hidden className="h-4 w-4 shrink-0 text-gray-500" />
+                <span className="sr-only">Konum: </span>
+                <span className="min-w-0 truncate">{konum}</span>
+              </p>
+            )}
+          </div>
+        </div>
 
-          `@` işareti seçilemez (`select-none`): adres çubuğuna ya da
-          başka yere kopyalarken yalnız ad gelsin. Ekran okuyucuya yine
-          okunuyor; işaret satırın kullanıcı adı olduğunu söylüyor. Uzun ad 390 pikselde
-          `truncate` ile kırpılıyor; kap zaten `min-w-0`.
-        */}
-        {portfolyo && portfolyo.satir === undefined && (
-          <Skeleton className="h-4 w-28" />
-        )}
-        {satir?.kullaniciAdi && (
-          <a
-            href={profilYolu(satir.kullaniciAdi)}
-            onClick={(olay) => {
-              if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0)
-                return;
-              olay.preventDefault();
-              satir.onNavigate(profilYolu(satir.kullaniciAdi as string));
-            }}
-            className={`block min-w-0 truncate text-sm font-semibold text-gray-700 hover:underline ${ODAK_HALKASI}`}
+        {/* ---------------- Sayaçlar ve eylemler ---------------- */}
+        <div className="space-y-4 lg:w-[440px] lg:shrink-0 lg:self-stretch lg:border-l lg:border-gray-200 lg:pl-8 lg:flex lg:flex-col lg:justify-center">
+          <div
+            className="grid grid-cols-2 divide-x divide-gray-200 border-y border-gray-100 py-2 lg:border-y-0 lg:py-0"
+            aria-busy={sosyalHucre === 'yukleniyor' || undefined}
           >
-            <span className="select-none">@</span>
-            {satir.kullaniciAdi}
-          </a>
-        )}
-        {/*
-          Sınıf ayrı satırdaydı; okul satırının devamı olduğu için tek
-          satırda birleşti. Kart yüksekliğinden bir satır kazanmak,
-          altındaki başvuru bölümünü o kadar yukarı çekiyor.
-        */}
-        <p className="min-w-0 break-words text-sm leading-snug text-gray-500">
-          {okul || 'Okulun eksik'}
-          {bolum ? ` · ${bolum}` : ''}
-          {sinif ? ` · ${sinif}` : ''}
-        </p>
-      </div>
-    </div>
+            {sosyalHucre === 'yukleniyor' && (
+              <>
+                <SayacIskeleti />
+                <SayacIskeleti />
+              </>
+            )}
+            {sosyalHucre === 'hazir' && satir?.sayaclar && (
+              <>
+                <Sayac deger={satir.sayaclar.paylasim} etiket="paylaşım" />
+                <Sayac
+                  deger={satir.sayaclar.baglanti}
+                  etiket="bağlantı"
+                  href="/baglantilar"
+                  onNavigate={satir.onNavigate}
+                />
+              </>
+            )}
+            {sosyalHucre === 'alinamadi' && (
+              /* Sıfır ya da tire yazılmıyor: "sunucu vermedi" gerçek sıfır gibi okunurdu. */
+              <p className="col-span-2 self-center px-1 text-center text-xs leading-tight text-gray-600">
+                Paylaşım ve bağlantı sayısı alınamadı
+              </p>
+            )}
+          </div>
 
-    {/*
-      SÜREÇ ÜÇLÜSÜ + SOSYAL İKİLİ, TEK ŞERİT
-
-      Eskiden "başvuru / beceri / profil" duruyordu. "Beceri" öğrencinin
-      sürecine dair bir şey söylemiyor (kaç beceri girdiğini zaten
-      kendisi biliyor) ve alttaki şeritle çelişiyordu; "profil" yüzdesi
-      de halkanın tekrarıydı.
-
-      İkisi aynı hikâyenin adımları: baktım → başvurdum. Sosyal ikili de
-      aynı şeritte ve aynı tipografide: "Paylaşım" ve "Bağlantı" sağ
-      sütunda AYRI bir ölçüyle (satır içi sayı + etiket) duruyordu; aynı
-      ekranda iki sayaç biçimi vardı. Dördü de `StatItem`.
-
-      "MÜLAKAT" ŞERİTTEN KALKTI: kullanıcı mobil ekran görüntüsünde beş
-      hücrenin 390 piksele sığmadığını gösterdi. Sayı VERİ olarak
-      duruyor (`mulakatSayisi`, `onMulakatlara` prop'ları geçmeye devam
-      ediyor); yalnız bu şeritte çizilmiyor. Başvuru sayacı zaten
-      başvuru ekranına götürüyor, mülakatlar orada süzülüyor.
-
-      Sütun sayısı sabit sınıf: `grid-cols-2` / `grid-cols-4`. Tailwind
-      birleştirilmiş dizeyi görmüyor; ikisi de tam adıyla yazılı.
-
-      "Paylaşım" tıklanabilir değil: gittiği yer bu ekranın kendisi (sağ
-      sütundaki ızgara); "Bağlantı" ise gerçek `<a href="/baglantilar">`
-      — orta tuş ve yeni sekme çalışıyor. Ziyaretçi görünümündeki
-      kural burada söz konusu değil: bu kart yalnız sahibin ekranında.
-    */}
-    <div
-      className="grid grid-cols-2 items-start"
-      aria-busy={sosyalHucre === 'yukleniyor' || undefined}
-    >
-      {sosyalHucre === 'yukleniyor' && (
-        <>
-          <SayacIskeleti />
-          <SayacIskeleti />
-        </>
-      )}
-      {sosyalHucre === 'hazir' && satir?.sayaclar && (
-        <>
-          <StatItem deger={satir.sayaclar.paylasim} etiket="paylaşım" />
-          <StatItem
-            deger={satir.sayaclar.baglanti}
-            etiket="bağlantı"
-            href="/baglantilar"
-            onNavigate={satir.onNavigate}
-          />
-        </>
-      )}
-      {sosyalHucre === 'alinamadi' && (
-        /*
-          Satır gelmedi ya da sayaç RPC'si boş/hatalı döndü: iki hücrenin
-          yerine tek durum cümlesi. Sıfır ya da tire yazmak, "sunucu
-          vermedi"yi "gerçekten sıfır" gibi gösterirdi.
-        */
-        <p className="col-span-2 self-center px-1 text-center text-[11px] leading-tight text-gray-600">
-          Paylaşım ve bağlantı sayısı alınamadı
-        </p>
-      )}
-    </div>
-
-    {/*
-      NE ARADIĞI, TERCİHLERİNDEN
-
-      Başlıkta "Staj yapmak için yer arıyorum" yazıyordu: herkeste aynı
-      cümle. Onun yerine öğrencinin GERÇEK tercihleri okunuyor — böylece
-      hem kişiye özel bir şey yazıyor hem de yazan şey ilanları süzen
-      veriyle aynı veri.
-
-      Boşken metin bir talimat değil, tek dokunuşluk bir çağrı: "Ne
-      aradığını yaz" ne yapılacağını anlatıyordu, "Staj tercihlerini ekle"
-      nereye gidileceğini söylüyor.
-    */}
-    <button
-      type="button"
-      onClick={onEtiketDuzenle}
-      className="block w-full text-left cursor-pointer group"
-    >
-      {durum.basSatir || durum.altSatir ? (
-        <>
-          {durum.basSatir && (
-            <span className="block text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
-              {durum.basSatir}
-            </span>
-          )}
-          {durum.altSatir && (
-            <span className="block text-xs text-gray-500">{durum.altSatir}</span>
-          )}
-        </>
-      ) : (
-        /*
-          Önce "Staj tercihlerini ekle →" yazıyordu ve hemen altındaki
-          eksik listesinde zaten "şehir seç" ile "hedefini seç" duruyordu:
-          aynı çağrı iki kez. Burası artık bir çağrı değil, biyografi
-          satırının yerini tutan bir DURUM cümlesi. Tıklanabilirliği
-          duruyor ama eksik listesiyle yarışmıyor.
-        */
-        <span className="block text-sm text-gray-600 group-hover:text-blue-700 transition-colors">
-          Henüz staj tercihlerini belirtmedin.
-        </span>
-      )}
-    </button>
-
-    {/*
-      YÜZDE TIKLANABİLİR BİR CÜMLE
-
-      "%70 profil" bir sayıydı ve öğrenci ondan bir sonraki hareketi
-      çıkaramıyordu. Eksik adımların ADI yazıyor ve her biri kendi
-      bölümünü açıyor: yüzde artık bir ölçü değil, bir yapılacaklar listesi.
-    */}
-    {eksikler.length > 0 && (
-      <div className="rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-2.5 space-y-1.5">
-        <p className="text-xs font-bold text-blue-900">
-          Profilin %{oran} tamamlandı · {eksikler.length} adım kaldı
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          {eksikler.slice(0, 3).map((eksik) => (
-            <button
-              key={eksik.etiket}
-              type="button"
-              onClick={eksik.onClick}
-              className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-blue-700 bg-white border border-blue-200 rounded-full pl-2.5 pr-1.5 py-1 hover:bg-blue-100 transition-colors cursor-pointer"
+          <div className="grid grid-cols-2 gap-3">
+            {onCv ? (
+              <Button onClick={onCv} tamGenislik>
+                CV'ni görüntüle
+              </Button>
+            ) : (
+              <span aria-hidden />
+            )}
+            <Button
+              tur="secondary"
+              onClick={onDuzenle}
+              tamGenislik
+              ikon={<Pencil aria-hidden className="h-4 w-4 shrink-0" />}
             >
-              {eksik.etiket}
-              <ChevronRight className="w-3 h-3" />
-            </button>
-          ))}
+              Profili düzenle
+            </Button>
+          </div>
         </div>
       </div>
-    )}
+    </Card>
+  );
+};
 
-    {/*
-      TAMAMLANINCA KART KÜÇÜLÜYOR
+/*
+  KARTIN SAYACI
 
-      Eksik listesi profil dolduğunda anlamsız bir yer kaplıyordu ve
-      altındaki başvuru bölümünü aşağı itiyordu. Kutu tamamen kalkıyor,
-      yerine tek satır kalıyor.
-    */}
-
-
-    {/*
-      CV ANA DÜĞME, DÜZENLE İKİNCİL
-
-      İki düğme de gri ve eşit ağırlıktaydı; "Profili düzenle" düz gri
-      olduğu için tıklanabilir bile görünmüyordu — arayüzde gri dolgu
-      genelde DEVRE DIŞI demek. İkincil düğme artık beyaz ve kenarlıklı
-      (src/ui/Button.tsx).
-
-      İndirme yerine görüntüleme: CV ekranında zaten indirme ve paylaşma
-      var, buradan doğrudan indirmek eksik profille eksik bir dosya
-      üretebiliyordu.
-    */}
-    <div className="flex gap-2">
-      {onCv && (
-        <Button onClick={onCv} tamGenislik>
-          CV'ni görüntüle
-        </Button>
-      )}
-      <Button tur="secondary" onClick={onDuzenle} tamGenislik>
-        {eksikler.length > 0 ? 'Profilini tamamla' : 'Profili düzenle'}
-      </Button>
-    </div>
-
-  </Card>
+  `StatItem`in (src/ui) aynısı, yalnız daha büyük tipografide: bu kartta
+  sayılar başlık ölçüsünde okunuyor. Ortak bileşen değiştirilmedi, çünkü
+  başka ekranlar onu küçük ölçüde kullanıyor. Bağlantı gerçek `<a>`: orta
+  tuş ve yeni sekme çalışıyor, sol tık uygulama içi gezinme.
+*/
+const Sayac: React.FC<{
+  deger: number;
+  etiket: string;
+  href?: string;
+  onNavigate?: (yol: string) => void;
+}> = ({ deger, etiket, href, onNavigate }) => {
+  const icerik = (
+    <>
+      <span className="block text-2xl font-extrabold leading-tight tabular-nums text-gray-900 sm:text-[28px]">
+        {deger}
+      </span>
+      <span className="mt-0.5 block text-sm leading-tight text-gray-600">{etiket}</span>
+    </>
+  );
+  if (!href) return <span className="block min-w-0 py-1 text-center">{icerik}</span>;
+  return (
+    <a
+      href={href}
+      onClick={(olay) => {
+        if (!onNavigate) return;
+        if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0) return;
+        olay.preventDefault();
+        onNavigate(href);
+      }}
+      className={`mx-2 block min-h-11 min-w-0 rounded-xl py-1 text-center transition-colors hover:bg-gray-50 ${ODAK_HALKASI}`}
+    >
+      {icerik}
+    </a>
   );
 };

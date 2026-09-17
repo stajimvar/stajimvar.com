@@ -112,7 +112,13 @@ interface IzgaraProps {
    * bugünkü davranışı görüyor. Ters varsayılan, arşivdeki tarihi sessizce
    * kaldırırdı.
    */
-  gorunum?: 'sade' | 'ayrintili';
+  /*
+   * 'galeri' yalnız sahibin birleşik ekranında (`/cv`): sade hücrenin
+   * davranışı (çıplak fotoğraf, ayrıntı katmanı, çoklu görsel simgesi) ama
+   * ayrık, köşeleri yuvarlatılmış kare karolar; telefonda iki, geniş
+   * ekranda üç eşit sütun. Ziyaretçi profilindeki 'sade' ızgara değişmiyor.
+   */
+  gorunum?: 'sade' | 'ayrintili' | 'galeri';
   /**
    * Listedeki gönderilerin sahibi — akış başlığında "@ad" olarak yazılıyor.
    *
@@ -136,6 +142,12 @@ const KART_KABI = 'rounded-2xl border border-gray-200 bg-white p-2.5 sm:p-3.5';
 export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-px';
 
 /** Ayrıntılı ızgara depodaki kart kalıbında (RehberKartlari.tsx). */
+/**
+ * Galeri ızgarası: eşit sütunlar, 12–20 px aralık. Son satırdaki az sayıda
+ * karo büyütülmüyor; ızgara hücresi olarak kendi sütununda kalıyor.
+ */
+export const GALERI_IZGARASI = 'grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5';
+
 export const AYRINTILI_IZGARA = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3';
 
 /**
@@ -154,6 +166,7 @@ export const AYRINTILI_IZGARA = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-
  * uzatırdı.
  */
 const KAPAK_KABI = 'relative aspect-[3/4] w-full overflow-hidden bg-gray-100';
+const GALERI_KAPAK_KABI = 'relative aspect-square w-full overflow-hidden rounded-xl bg-gray-100 lg:rounded-2xl';
 const AYRINTILI_KAPAK_KABI = 'relative aspect-square w-full overflow-hidden rounded-xl bg-gray-100';
 
 interface KartProps {
@@ -165,6 +178,7 @@ interface KartProps {
   onGeriYukle?: (paylasim: SosyalPaylasim) => void;
   geriYukleKilidi?: boolean;
   sade: boolean;
+  galeri?: boolean;
 }
 
 const GERI_YUKLE_DUGMESI = `inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2 text-[13px] font-bold text-gray-800 hover:bg-gray-50 disabled:cursor-default disabled:opacity-40 sm:text-sm ${RENK_GECISI} ${ODAK_HALKASI}`;
@@ -177,6 +191,7 @@ const PaylasimKarti: React.FC<KartProps> = ({
   onGeriYukle,
   geriYukleKilidi = false,
   sade,
+  galeri = false,
 }) => {
   const tarih = tarihMetni(paylasim.arsivAni ?? paylasim.olusturmaAni);
 
@@ -228,11 +243,11 @@ const PaylasimKarti: React.FC<KartProps> = ({
       aria-label={sade ? sadeAd : undefined}
       className={
         sade
-          ? `block h-full w-full min-w-0 cursor-pointer ${RENK_GECISI} ${ODAK_HALKASI}`
+          ? `block h-full w-full min-w-0 cursor-pointer ${galeri ? 'rounded-xl lg:rounded-2xl' : ''} ${RENK_GECISI} ${ODAK_HALKASI}`
           : `${KART_KABI} flex h-full min-w-0 flex-col gap-1.5 cursor-pointer text-left hover:border-gray-300 ${RENK_GECISI} ${ODAK_HALKASI}`
       }
     >
-      <div className={sade ? KAPAK_KABI : AYRINTILI_KAPAK_KABI}>
+      <div className={galeri ? GALERI_KAPAK_KABI : sade ? KAPAK_KABI : AYRINTILI_KAPAK_KABI}>
         {kapakDurumu === 'yukleniyor' && paylasim.kapakYolu && (
           <span aria-hidden className="block h-full w-full animate-pulse bg-gray-100" />
         )}
@@ -278,8 +293,12 @@ const PaylasimKarti: React.FC<KartProps> = ({
           katmanında, gezinme satırında yazıyor.
         */}
         {paylasim.gorselSayisi > 1 && (
-          <span className="absolute right-1.5 top-1.5 inline-flex items-center rounded-full bg-slate-950/60 p-1.5 text-white">
-            <Images aria-hidden className="h-3.5 w-3.5" />
+          <span
+            className={`absolute inline-flex items-center rounded-full bg-slate-950/60 text-white ${
+              galeri ? 'right-2.5 top-2.5 p-2 lg:right-3 lg:top-3' : 'right-1.5 top-1.5 p-1.5'
+            }`}
+          >
+            <Images aria-hidden className={galeri ? 'h-4 w-4' : 'h-3.5 w-3.5'} />
             <span className="sr-only">Birden çok fotoğraf</span>
           </span>
         )}
@@ -343,9 +362,9 @@ const PaylasimKarti: React.FC<KartProps> = ({
  * Sade dalda metin çizgileri de yok — onları çizmek, gelmeyecek bir
  * satırın yerini ayırıp içerik gelince ızgarayı kısaltırdı.
  */
-const Iskelet: React.FC<{ sade: boolean }> = ({ sade }) =>
+const Iskelet: React.FC<{ sade: boolean; galeri?: boolean }> = ({ sade, galeri = false }) =>
   sade ? (
-    <div aria-hidden className={`${KAPAK_KABI} animate-pulse`} />
+    <div aria-hidden className={`${galeri ? GALERI_KAPAK_KABI : KAPAK_KABI} animate-pulse`} />
   ) : (
     <div aria-hidden className={`${KART_KABI} flex h-full flex-col gap-1.5`}>
       <div className={`${AYRINTILI_KAPAK_KABI} animate-pulse`} />
@@ -366,8 +385,9 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
   gorunum = 'ayrintili',
   kullaniciAdi = null,
 }) => {
-  const sade = gorunum === 'sade';
-  const izgaraSinifi = sade ? PAYLASIM_IZGARASI : AYRINTILI_IZGARA;
+  const galeri = gorunum === 'galeri';
+  const sade = gorunum === 'sade' || galeri;
+  const izgaraSinifi = galeri ? GALERI_IZGARASI : sade ? PAYLASIM_IZGARASI : AYRINTILI_IZGARA;
   /*
     Açık olan gönderinin KİMLİĞİ, nesnesi değil: katman ızgaranın güncel
     listesini alıyor (dar ekranda o listenin tamamı bir akış olarak
@@ -426,9 +446,9 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
     return (
       <>
         <div className={izgaraSinifi} aria-busy="true">
-          <Iskelet sade={sade} />
-          <Iskelet sade={sade} />
-          <Iskelet sade={sade} />
+          <Iskelet sade={sade} galeri={galeri} />
+          <Iskelet sade={sade} galeri={galeri} />
+          <Iskelet sade={sade} galeri={galeri} />
         </div>
         {katman}
       </>
@@ -528,6 +548,7 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
             onGeriYukle={onGeriYukle}
             geriYukleKilidi={geriYuklenenId === paylasim.id}
             sade={sade}
+            galeri={galeri}
           />
         ))}
       </div>

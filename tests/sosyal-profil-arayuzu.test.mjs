@@ -915,8 +915,14 @@ test('ayrıntılı ızgara kutulu ekranların ölçüsünde, sade ızgara üç s
     izgara,
     /const AYRINTILI_KAPAK_KABI = 'relative aspect-square w-full overflow-hidden rounded-xl bg-gray-100';/,
   );
-  assert.match(izgara, /<div className=\{sade \? KAPAK_KABI : AYRINTILI_KAPAK_KABI\}>/);
-  assert.match(izgara, /const izgaraSinifi = sade \? PAYLASIM_IZGARASI : AYRINTILI_IZGARA;/);
+  assert.match(izgara, /<div className=\{galeri \? GALERI_KAPAK_KABI : sade \? KAPAK_KABI : AYRINTILI_KAPAK_KABI\}>/);
+  assert.match(izgara, /const izgaraSinifi = galeri \? GALERI_IZGARASI : sade \? PAYLASIM_IZGARASI : AYRINTILI_IZGARA;/);
+  /*
+    GALERİ (17 Eylül 2026): yalnız /cv sahibin ızgarası. Telefonda iki,
+    geniş ekranda üç eşit sütun; 12–20 px aralık, yuvarlatılmış kare karo.
+  */
+  assert.ok(izgara.includes("export const GALERI_IZGARASI = 'grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5';"));
+  assert.match(izgara, /const GALERI_KAPAK_KABI = 'relative aspect-square w-full overflow-hidden rounded-xl bg-gray-100 lg:rounded-2xl';/);
 });
 
 test('kart kabı depodaki ölçüde', () => {
@@ -1739,8 +1745,12 @@ test('mobilde gönderi alanı kimlik kartının altında; masaüstü iskeleti ay
   */
   /* `gap-0 sm:gap-6`: telefonda kimlik bloğuyla ızgara arasında gri bant kalmıyor. */
   assert.match(ogrenciProfili, /grid grid-cols-1 gap-0 sm:gap-6 lg:grid-cols-12 items-start/);
-  assert.match(ogrenciProfili, /className="contents lg:block lg:col-span-4 lg:sticky lg:top-4 lg:space-y-3"/);
-  assert.match(ogrenciProfili, /className="contents lg:block lg:col-span-8 min-w-0 lg:space-y-3"/);
+  /*
+    17 Eylül 2026: ANA GÖRÜNÜM tek sütun (kart üstte tam genişlik, galeri
+    altında); DÜZENLEME iki sütun olarak kaldı. Dizeler iki dalda da literal.
+  */
+  assert.match(ogrenciProfili, /\? 'contents lg:block lg:col-span-4 lg:sticky lg:top-4 lg:space-y-3'\s*: 'contents lg:block lg:col-span-12'/);
+  assert.match(ogrenciProfili, /\? 'contents lg:block lg:col-span-8 min-w-0 lg:space-y-3'\s*: 'contents lg:block lg:col-span-12 min-w-0 lg:space-y-3'/);
   /* Mobil sıra: kart (order yok = 0) → gönderi 1 → hesap 2. */
   const kart = ogrenciProfili.indexOf('<ProfilBasligi');
   /* `-mx-4 sm:mx-0`: ızgara telefonda ekranın iki kenarına yaslı. */
@@ -1879,7 +1889,12 @@ test('ziyaretçi görünümü iki sütun, ızgara sahibin ekranıyla aynı ölç
     'ızgara sabiti değişmemeli',
   );
   assert.match(gorunum, /<PaylasimIzgarasi[\s\S]{0,400}?gorunum="sade"/);
-  assert.match(sayfa, /<PaylasimIzgarasi[\s\S]{0,400}?gorunum="sade"/);
+  /*
+    17 Eylül 2026: sahibin /cv ekranı yeni tasarıma geçti (kart üstte,
+    ayrık karolu galeri). Ziyaretçi profili bu işin kapsamı dışında ve
+    `sade` ızgarada kaldı; iki ekran bu tarihten sonra bilerek ayrışıyor.
+  */
+  assert.match(sayfa, /<PaylasimIzgarasi[\s\S]{0,400}?gorunum="galeri"/);
 
   /* Sol sütun yalnız herkese açık alanlar: sahibin üst satırı burada yok. */
   assert.doesNotMatch(gorunum, /PortfolyoUstSatiri/);
@@ -1904,9 +1919,10 @@ test('şeritte iki sayaç; kişisel listeler kilitli satırda, sağ sütun doğr
     ile yukarı veriyor (App → profil ekranı → kart). Bağlantı sayacı
     yine gerçek `<a href="/baglantilar">`.
   */
-  const serit = govdeAl(profilBasligi, 'className="grid grid-cols-2 items-start"', '</div>');
+  /* 17 Eylül 2026: kartın kendi büyük sayacı (`Sayac`), iki hücre ince ayraçla. */
+  const serit = govdeAl(profilBasligi, 'className="grid grid-cols-2 divide-x divide-gray-200', '</div>');
   for (const etiket of ['paylaşım', 'bağlantı']) {
-    assert.match(serit, new RegExp(`<StatItem[^>]*etiket="${etiket}"`), `${etiket} sayacı şeritte`);
+    assert.match(serit, new RegExp(`<Sayac[^>]*etiket="${etiket}"`), `${etiket} sayacı şeritte`);
   }
   for (const etiket of ['kaydedilen', 'başvuru']) {
     assert.doesNotMatch(
@@ -1935,7 +1951,7 @@ test('şeritte iki sayaç; kişisel listeler kilitli satırda, sağ sütun doğr
   assert.doesNotMatch(sayfa, /<PortfolyoUstSatiri|from '\.\/PortfolyoUstSatiri'/);
   const panelIskeleti = govdeAl(sayfa, "kip === 'panel' ? (", ') : (');
   assert.doesNotMatch(panelIskeleti, /h-5 w-24/);
-  assert.match(panelIskeleti, /<PaylasimIzgarasi paylasimlar=\{\[\]\} durum="yukleniyor" gorunum="sade" \/>/);
+  assert.match(panelIskeleti, /<PaylasimIzgarasi paylasimlar=\{\[\]\} durum="yukleniyor" gorunum="galeri" \/>/);
   /* Tek yol: panel → App state → profil ekranı → kart. */
   assert.match(app, /onPortfolyoSatiri=\{setSosyalPortfolyoSatiri\}/);
   assert.match(app, /sosyalPortfolyoSatiri=\{sosyalPortfolyoSatiri\}/);

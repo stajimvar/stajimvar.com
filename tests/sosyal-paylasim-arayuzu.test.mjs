@@ -759,7 +759,9 @@ test('sade hücre açıklama basmıyor; metin ayrıntı katmanında duruyor', ()
     yeniden göster" var ve kullanıcı hangi satırı geri yüklediğini çıplak
     kapaktan ayırt edemez.
   */
-  assert.match(izgara, /gorunum\?: 'sade' \| 'ayrintili';/);
+  /* 'galeri' (17 Eylül 2026): sahibin /cv galerisi; sade hücrenin davranışı, ayrık karolar. */
+  assert.match(izgara, /gorunum\?: 'sade' \| 'ayrintili' \| 'galeri';/);
+  assert.match(izgara, /const sade = gorunum === 'sade' \|\| galeri;/);
   assert.match(izgara, /gorunum = 'ayrintili',/);
   assert.match(izgara, /\{!sade && \(/);
   /* Açıklama ve tarih AYNI koşulun içinde: ikisi de sade kipte düşüyor. */
