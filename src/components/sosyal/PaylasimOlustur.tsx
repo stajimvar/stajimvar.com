@@ -7,6 +7,7 @@ import {
   paylasimOlustur,
   sosyalTopluluklariGetir,
   type PaylasimKitlesi,
+  type SirketKitlesi,
 } from '../../lib/queries/sosyal';
 import { AciklamaAlani, KayitHatasi } from './SosyalFormAlanlari';
 
@@ -218,6 +219,17 @@ interface OlusturProps {
    * ihtiyacı var.
    */
   onMesgulDegisti?: (mesgul: boolean) => void;
+  /**
+   * ŞİRKET SAYFASI: KİTLE SABİT, SEÇİCİ YOK
+   *
+   * `paylasim_kitlesi_kilidi` (20261014010000) şirket sayfasına yalnız
+   * 'sirket' kitlesini veriyor; öteki ikisini sunucu reddediyor. Seçici
+   * çizip iki seçeneği kapalı göstermek, kullanıcıya hiç yapamayacağı
+   * bir seçimi sunmak olurdu. Verildiğinde "Kimler görebilir?" bloğu DOM'a
+   * hiç girmiyor, topluluk üyeliği de sorulmuyor (şirketin topluluğu
+   * yok) ve gönderim bu değeri yolluyor.
+   */
+  sabitKitle?: SirketKitlesi;
 }
 
 /** Üyelik ekranının adresi; iki yerde (metin ve gezinme) tek dizeden. */
@@ -229,6 +241,7 @@ export const PaylasimOlustur: React.FC<OlusturProps> = ({
   onNavigate,
   baslangicDosyalari,
   onMesgulDegisti,
+  sabitKitle,
 }) => {
   const [secilenler, setSecilenler] = React.useState<HazirGorsel[]>([]);
   const [aciklama, setAciklama] = React.useState('');
@@ -289,6 +302,8 @@ export const PaylasimOlustur: React.FC<OlusturProps> = ({
     ekranı kapatıyor), yani tazelenecek bir değer yok.
   */
   React.useEffect(() => {
+    /* Şirket sayfasında kitle sabit; üyelik sorusu çizilmeyen bir seçici için atılmıyor. */
+    if (sabitKitle) return;
     let iptal = false;
     sosyalTopluluklariGetir()
       .then((liste) => {
@@ -451,7 +466,7 @@ export const PaylasimOlustur: React.FC<OlusturProps> = ({
       await paylasimOlustur({
         istemciAnahtari: anahtarRef.current as string,
         aciklama,
-        kitle,
+        kitle: sabitKitle ?? kitle,
         dosyalar: secilenler.map((gorsel) => ({
           veri: gorsel.veri,
           uzanti: gorsel.uzanti,
@@ -619,6 +634,8 @@ export const PaylasimOlustur: React.FC<OlusturProps> = ({
           />
         </div>
 
+        {/* Şirket sayfasında seçici yok: tek kitle var, seçilecek bir şey yok. */}
+        {!sabitKitle && (
         <fieldset className={`${KART} space-y-2`}>
           <legend className="text-sm font-bold text-gray-900">Kimler görebilir?</legend>
           {/*
@@ -725,6 +742,7 @@ export const PaylasimOlustur: React.FC<OlusturProps> = ({
             </p>
           )}
         </fieldset>
+        )}
 
         {gonderimHatasi && <KayitHatasi mesaj={gonderimHatasi} />}
 

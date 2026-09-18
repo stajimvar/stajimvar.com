@@ -166,6 +166,8 @@ const KITLE_METNI: Record<SosyalPaylasim['kitle'], string> = {
   baglantilarim: 'Bağlantılarım',
   'alan-toplulugum': 'Alan topluluğum',
   resmi: 'Resmî içerik — herkes',
+  /* Şirket sayfasının tek kitlesi (20261014010000): giriş yapmış herkes. */
+  sirket: 'Şirket paylaşımı — herkes',
 };
 
 export type GovdeYerlesimi = 'diyalog' | 'akis';

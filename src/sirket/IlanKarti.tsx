@@ -70,7 +70,16 @@ export function ilanDurumRozeti(
 ): { etiket: string; stil: React.CSSProperties } {
   const durum = String(ilan.status ?? '');
   if (durum === 'published') {
-    const kalan = daysUntilDeadline(ilan.application_deadline as string, simdi);
+    /*
+      TARİHSİZ İLAN "BUGÜN KAPANIYOR" DEĞİL
+
+      `daysUntilDeadline(null)` `new Date(null)` = 1970 üretip 0 gün
+      döndürüyor; son başvuru girilmemiş her yayındaki ilan kartta "Bugün
+      kapanıyor" çıkıyordu (yerelde ölçüldü, 18 Eylül 2026: deadline NULL
+      satır). Tarih yoksa hesap hiç yapılmıyor ve rozet "Açık".
+    */
+    const sonBasvuru = ilan.application_deadline;
+    const kalan = sonBasvuru ? daysUntilDeadline(sonBasvuru as string, simdi) : null;
     if (kalan != null && kalan <= 14) {
       return {
         etiket: kalan === 0 ? 'Bugün kapanıyor' : `${kalan} gün kaldı`,

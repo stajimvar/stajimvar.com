@@ -1526,6 +1526,50 @@ export type Database = {
           },
         ];
       };
+      /*
+        TAKİP (20261014010000_sirket_sosyal_profili_ve_takip.sql)
+
+        Tek yönlü, onaysız: `hedef_id` her zaman bir şirket sayfası
+        (social_profiles.sirket_id dolu), takipçi öğrenci ya da şirket.
+        Satırlar yalnız taraflara okunur; SAYI herkese `takipci_sayisi`
+        ile. Elle yazıldı, göçle birebir; `social_profiles`in kendisi
+        bu dosyada yok (sosyal katman dar istemciyle okunuyor, bkz.
+        src/lib/queries/sosyal.ts), dolayısıyla `sirket_id` kolonu da
+        burada değil.
+      */
+      takipler: {
+        Row: {
+          takipci_id: string;
+          hedef_id: string;
+          created_at: string;
+        };
+        Insert: {
+          takipci_id: string;
+          hedef_id: string;
+          created_at?: string;
+        };
+        Update: {
+          takipci_id?: string;
+          hedef_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'takipler_takipci_id_fkey';
+            columns: ['takipci_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'takipler_hedef_id_fkey';
+            columns: ['hedef_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: {
       quiz_questions_public: {
@@ -1614,6 +1658,13 @@ export type Database = {
           unvan: string | null;
         }[];
       };
+      /*
+        Takip sayacı ve "ben takip ediyor muyum" — ikisi de
+        `security definer`, yalnız `authenticated` çağırabiliyor
+        (20261014010000). Sayaç satırları açmıyor; yalnız count.
+      */
+      takipci_sayisi: { Args: { hedef: string }; Returns: number };
+      takip_ediyor_muyum: { Args: { hedef: string }; Returns: boolean };
     };
     Enums: {
       application_method: 'email_application' | 'external' | 'internal';

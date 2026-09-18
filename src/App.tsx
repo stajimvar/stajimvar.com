@@ -2997,6 +2997,13 @@ export default function App() {
               onCikis={() => void handleLogout()}
             />
           </main>,
+          /*
+            Şirket profili (/sirket/profil) öğrenci profiliyle (/cv) aynı
+            zemin: telefonda beyaz yüzey, `sm:` üstünde gri. Düzenleme
+            ve öteki panel ekranları kart üstüne kart çizdiği için gri
+            zeminde kalıyor.
+          */
+          sirketPanelYolu === '/sirket/profil' ? 'bg-white sm:bg-[#F9FAFB]' : undefined,
         )}
         {dunyaGecisi && (
           <DunyaGecisi yon={dunyaGecisi} onBitti={() => setDunyaGecisi(null)} />

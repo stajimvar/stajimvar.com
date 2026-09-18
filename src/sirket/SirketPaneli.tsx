@@ -20,7 +20,7 @@ import { IlanFormu } from './IlanFormu';
 import { AdayIzgarasi } from './AdayIzgarasi';
 import type { Iletisim } from './AdayCekmecesi';
 import { GenelBakis } from './GenelBakis';
-import { CikisDugmesi, SirketProfilSekmesi } from './SirketKimlikKarti';
+import { CikisDugmesi, SirketProfili } from './SirketProfili';
 import type { AdayOzeti } from './IlanKarti';
 import { KADEME, adayGorebilir } from '../lib/sirket-kademe.mjs';
 import { kartVerisi } from '../lib/aday-kart.mjs';
@@ -60,8 +60,10 @@ import {
  * ---------------------
  * İlanlar (/sirket/ilanlar) ve onun ikinci görünümü Başvuranlar
  * (/sirket/basvuranlar) aynı başlığın altında, bölümlü kontrolle
- * (src/ui/Tabs) geçiliyor. Profil (/sirket/profil) kimlik kartı +
- * düzenleme. İlan formu (/sirket/ilan/yeni, /sirket/ilan/<id>/duzenle)
+ * (src/ui/Tabs) geçiliyor. Profil (/sirket/profil) şirket sayfası —
+ * kimlik, üç sayaç, Paylaşımlar · İlanlar · Hakkımızda; düzenleme
+ * /sirket/profil/duzenle (SirketProfili). İlan formu (/sirket/ilan/yeni,
+ * /sirket/ilan/<id>/duzenle)
  * kendi ekranı. Eski "Genel" sekmesi kalktı; /sirket → /sirket/ilanlar.
  *
  * KADEME 1 BAŞVURANLARI GÖREMİYOR
@@ -254,15 +256,31 @@ export const SirketPaneli: React.FC<{
   }
 
   if (ekran.tur === 'profil') {
+    /*
+      Profil sekmesi ilan yönetimini de taşıyor (İlanlar sekmesiyle aynı
+      kartlar, aynı eylemler); bu yüzden durum/kaldırma geri çağrıları
+      aşağıdaki İlanlar sekmesiyle BİREBİR aynı — iki kopya olsaydı biri
+      değiştiğinde öteki geride kalırdı.
+    */
     return (
-      <SirketProfilSekmesi
+      <SirketProfili
+        yol={yol}
         baglam={baglam}
         profil={profil}
-        ilanSayisi={ilanlar.length}
-        basvuruSayisi={basvurular.length}
+        ilanlar={ilanlar}
+        basvurular={basvurular as AdayOzeti[]}
         userId={userId}
         onKaydedildi={yukle}
         onNavigate={onNavigate}
+        onDurum={async (id, d) => {
+          await ilanDurumuDegistir(id, d);
+          await yukle();
+        }}
+        onKaldir={async (id, arsivle) => {
+          if (arsivle) await ilanDurumuDegistir(id, 'archived');
+          else await ilanSil(id);
+          await yukle();
+        }}
         onCikis={onCikis}
       />
     );

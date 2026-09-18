@@ -1,6 +1,7 @@
 import React from 'react';
 import { ImagePlus, X } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
+import type { SirketKitlesi } from '../../lib/queries/sosyal';
 /*
   BESTECİ GECİKMELİ YÜKLENİYOR
 
@@ -71,6 +72,8 @@ interface GirisProps {
   */
   etiket?: string;
   ikonSinifi?: string;
+  /** Şirket sayfası: besteciye sabit kitle geçiyor, seçici çizilmiyor (bkz. PaylasimOlustur). */
+  sabitKitle?: SirketKitlesi;
 }
 
 /**
@@ -95,6 +98,7 @@ export const FotografPaylasGirisi = React.forwardRef<FotografPaylasKolu, GirisPr
   dugmeSinifi,
   etiket,
   ikonSinifi = 'h-6 w-6',
+  sabitKitle,
 }, kol) => {
   const dosyaGirdisi = React.useRef<HTMLInputElement>(null);
   /* `null` = besteci kapalı. Boş dizi diye bir durum yok: seçim olmadan açılmıyor. */
@@ -200,6 +204,7 @@ export const FotografPaylasGirisi = React.forwardRef<FotografPaylasKolu, GirisPr
             >
             <PaylasimOlustur
               baslangicDosyalari={olusturDosyalari}
+              sabitKitle={sabitKitle}
               onMesgulDegisti={setBesteciMesgul}
               onNavigate={onNavigate}
               onVazgec={() => setOlusturDosyalari(null)}

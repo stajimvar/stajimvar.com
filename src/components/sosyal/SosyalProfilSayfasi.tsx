@@ -29,6 +29,14 @@ import { ProfilFotografiYukleme } from './ProfilFotografiYukleme';
 import { SahipListesi } from './SahipListesi';
 import { SosyalProfilDuzenleme } from './SosyalProfilDuzenleme';
 import { SosyalProfilGorunumu } from './SosyalProfilGorunumu';
+/*
+  Şirket sayfası GECİKMELİ: ilan yardımcılarını ve şirket veri katmanını
+  çekiyor; öğrenci profilini açan herkesin indirmesi gerekmiyor. Parça
+  yalnız ziyaret edilen satırın `sirket_id`si doluysa iniyor.
+*/
+const SirketSayfasi = React.lazy(() =>
+  import('../../sirket/SirketSayfasi').then((m) => ({ default: m.SirketSayfasi })),
+);
 
 /**
  * SOSYAL PROFİL ROTASI — VERİ YÜKLEME VE YETKİ
@@ -1233,6 +1241,39 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     }
     if (ziyaretciDurumu === 'yok') {
       return <GuvenliEkran onNavigate={onNavigate} kendiAdi={profil?.kullaniciAdi ?? null} />;
+    }
+    /*
+      ŞİRKET SAYFASI — AYNI ROTA, BAŞKA GÖRÜNÜM
+
+      Satırın `sirket_id`si doluysa (20261014010000) bu bir şirket sayfası:
+      okul/bölüm/sınıf yok, sektör · konum var, "Şirket hesabı" etiketi,
+      ilanlar ve şirket paylaşımları. Aynı iki adım (ad → kimlik → satır)
+      ve aynı RLS kapısından geçti; yalnız çizilen bileşen değişiyor.
+      Paylaşımlar ve sayaç yukarıdaki okumalardan geliyor; ikinci kez
+      sorulmuyor. Sahip nesnesi verilmiyor: ziyaretçi dalı.
+    */
+    if (ziyaretciDurumu === 'hazir' && ziyaretciProfili && ziyaretciProfili.sirketId) {
+      return (
+        <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI} {...PROFIL_KABUGU}>
+          <React.Suspense fallback={<ProfilIskeleti />}>
+            <SirketSayfasi
+              profil={ziyaretciProfili}
+              paylasimlar={paylasimlar}
+              paylasimDurumu={paylasimDurumu}
+              paylasimSayaci={
+                sayacDurumu === 'hazir' && sayaclar
+                  ? { durum: 'hazir', deger: sayaclar.paylasim }
+                  : sayacDurumu === 'yukleniyor'
+                    ? { durum: 'yukleniyor' }
+                    : { durum: 'hata' }
+              }
+              onPaylasimlariYenile={() => setPaylasimDeneme((sayi) => sayi + 1)}
+              onNavigate={onNavigate}
+              bildirim={bildirim}
+            />
+          </React.Suspense>
+        </SayfaKabugu>
+      );
     }
     if (ziyaretciDurumu === 'hazir' && ziyaretciProfili) {
       return (
