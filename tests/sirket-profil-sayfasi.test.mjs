@@ -49,9 +49,17 @@ test('sahibe özel eylemler yalnız `sahip` nesnesinin içinde; ziyaretçi kabı
   /* Ziyaretçi kabı `sahip` prop'unu tanımıyor bile. */
   assert.doesNotMatch(ZIYARETCI, /sahip=/);
   assert.doesNotMatch(kod(ZIYARETCI), /İlan oluştur|Profili düzenle|Fotoğraf paylaş|Çıkış yap/);
-  /* Takip et düğmesi bu işte YOK: sayı var, sahte eylem yok. */
-  assert.doesNotMatch(GORUNUM, /Takip et/);
-  assert.doesNotMatch(ZIYARETCI, /Takip et/);
+  /*
+    Takip et (18 Eylül 2026): görünüm düğmeyi kendisi çizmiyor,
+    `ziyaretciEylemi` yuvasını YALNIZ sahip yokken açıyor; düğmeyi
+    ziyaretçi kabı veriyor ve bakan sayfanın sahibiyse (aynı kimlik) hiç
+    vermiyor. Sahip kabı yuvaya dokunmuyor.
+  */
+  assert.match(GORUNUM, /\{!sahip && ziyaretciEylemi && \(/);
+  assert.doesNotMatch(kod(GORUNUM), /Takip et|TakipDugmesi/);
+  assert.match(ZIYARETCI, /bakanId && bakanId !== profil\.profilId \? \(\s*<TakipDugmesi/);
+  assert.match(ZIYARETCI, /ziyaretciEylemi=\{takipDugmesi\}/);
+  assert.doesNotMatch(SAHIP, /ziyaretciEylemi|TakipDugmesi/);
 });
 
 test('üç sayaç üç ayrı durum; takipçi gerçek RPC; sıfır uydurulmuyor', () => {
@@ -60,9 +68,18 @@ test('üç sayaç üç ayrı durum; takipçi gerçek RPC; sıfır uydurulmuyor',
   assert.match(GORUNUM, /etiket="aktif ilan"/);
   assert.match(GORUNUM, /etiket="takipçi"/);
   assert.match(GORUNUM, /alınamadı/);
-  assert.match(SOSYAL, /db\.rpc\('takipci_sayisi', \{ hedef: hedefId \}\)/);
-  assert.match(SAHIP, /takipciSayisiGetir\(userId\)/);
-  assert.match(ZIYARETCI, /takipciSayisiGetir\(profil\.profilId\)/);
+  /*
+    Takipçi `sosyal_sayaclar`ın aynı satırından (20261015010000);
+    `takipci_sayisi` RPC'si istemciden hiç çağrılmıyor — aynı sayı iki
+    kez sorulmuyor. Ziyaretçi kabı sayacı sayfadan alıyor, kendi okumuyor.
+  */
+  assert.match(SOSYAL, /takipci: Number\(satir\.takipci \?\? 0\),\s*takip: Number\(satir\.takip \?\? 0\),/);
+  assert.doesNotMatch(kod(SOSYAL), /takipci_sayisi/);
+  assert.match(SAHIP, /setTakipciSayaci\(s \? \{ durum: 'hazir', deger: s\.takipci \} : \{ durum: 'hata' \}\)/);
+  assert.doesNotMatch(kod(SAHIP), /takipciSayisiGetir/);
+  assert.match(ZIYARETCI, /takipciSayaci: SayacDurumu;/);
+  assert.doesNotMatch(ZIYARETCI, /takipciSayisiGetir|sosyalSayaclariGetir/);
+  assert.match(SAYFA, /takipciSayaci=\{\s*sayacDurumu === 'hazir' && sayaclar\s*\? \{ durum: 'hazir', deger: sayaclar\.takipci \}/);
   /* Aktif ilan sahipte yayındaki satırlardan, ziyaretçide yayındaki ilan sorgusundan. */
   assert.match(SAHIP, /ilanlar\.filter\(\(i\) => i\.status === 'published'\)\.length/);
   assert.match(ZIYARETCI, /fetchPublishedCompanyListings\(sirketId\)/);

@@ -107,13 +107,18 @@ test('kitle varsayılanı dar olan: "Bağlantılarım"', () => {
   assert.match(olustur, /etiket: 'Bağlantılarım'/);
 });
 
-test('"takip" kavramı hiçbir ekranda geçmiyor', () => {
+test('paylaşım ekranlarında "Takip et" yok; takip yalnız şirket sayfasına', () => {
   /*
-    Üründe tek yönlü ilişki yok: bağlantı simetrik ve karşılıklı onaya
-    bağlı. "Takipçi" sözcüğü olmayan bir ilişki biçimini varmış gibi
-    anlatırdı.
+    Karar (18 Eylül 2026): takip tek yönlü ve hedefi yalnız ŞİRKET sayfası
+    (`takip_edilebilir`). Öğrenci profili görünümü takip edilen şirket
+    SAYISINI çiziyor (herkese açık, RPC aynı satırda veriyor); düğme ise
+    yalnız `SirketSayfasi`nde. Paylaşım bileşenlerinin hiçbirinde takip
+    düğmesi ya da "takipçi" çağrısı yok — bağlantı yine simetrik ve onaylı.
   */
   for (const kaynak of D_BILESENLERI) {
+    assert.doesNotMatch(yorumsuz(kaynak), /Takip et\b|Takip ediliyor|TakipDugmesi|takipEt\(|takibiBirak/);
+  }
+  for (const kaynak of [olustur, detay, govde, izgara]) {
     assert.doesNotMatch(yorumsuz(kaynak), /takip/i);
   }
 });

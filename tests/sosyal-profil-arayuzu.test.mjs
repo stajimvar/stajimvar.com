@@ -527,15 +527,22 @@ test('mesaj, yorum, engelleme ve şikâyet hiçbir yerde yok', () => {
   }
 });
 
-test('takip modeli hiçbir yerde geçmiyor — ürün kuralı', () => {
+test('takip TEK YÖNLÜ: öğrenci profilinde "Takip et" yok, "takip" sayacı var', () => {
   /*
-    Tek ilişki karşılıklı bağlantı. "Takipçi" ya da "takip et" ekranda
-    geçseydi, kullanıcı tek yönlü bir ilişki kurabileceğini sanardı;
-    veritabanında öyle bir şey yok.
+    Karar (18 Eylül 2026): takip yalnız ŞİRKET sayfasına (öğrenci→şirket,
+    şirket→şirket). Öğrenci profili hedef olamıyor — sunucu
+    `takip_edilebilir` ile reddediyor — ve düğme öğrenci bileşenlerinin
+    hiçbirinde çizilmiyor. Bağlantı yine karşılıklı ve onaylı; takip
+    onun yerine geçmiyor.
   */
   for (const kaynak of [...SOSYAL_BILESENLER_YORUMSUZ, yorumsuz(talepKuyrugu)]) {
-    assert.doesNotMatch(kaynak, /[Tt]akip|[Tt]akipçi/);
+    assert.doesNotMatch(kaynak, /Takip et\b|Takip ediliyor|TakipDugmesi/);
   }
+  /* Sayı herkese açık: takip edilen şirket sayısı ziyaretçi görünümünde de çiziliyor; LİSTE değil. */
+  assert.match(gorunum, /<Sayac etiket="Takip" deger=\{sayaclar\.takip\} \/>/);
+  assert.doesNotMatch(gorunum, /takipEttiklerim|takip_ettiklerim/);
+  /* Takip düğmesi şirket sayfasında ve bakanın kimliğini sayfa veriyor. */
+  assert.match(sayfa, /bakanId=\{kullaniciId\}\s*onPaylasimlariYenile/);
   assert.match(durumRpc, /TAKİPÇİ \/ TAKİP EDİLEN YOK/);
 });
 
@@ -749,10 +756,13 @@ test('görünürlük hatası sessiz kalmıyor ve tek cümleye indi', () => {
   assert.match(sayfa, /Profilinin görünürlüğü değiştirilemedi; eski ayarın duruyor/);
 });
 
-test('iki sayaç var, üçüncüsü yok', () => {
+test('üç sayaç var (paylaşım, bağlantı, takip); "Bağlantıda" yok; ayraç yok', () => {
   assert.match(gorunum, /etiket="Paylaşım"/);
   assert.match(gorunum, /etiket="Bağlantı"/);
+  assert.match(gorunum, /etiket="Takip"/);
   assert.doesNotMatch(yorumsuz(gorunum), /Bağlantıda/);
+  assert.match(gorunum, /<dl className="grid grid-cols-3 border-y border-gray-100/);
+  assert.doesNotMatch(gorunum, /divide-x/);
   /* Şema da aynı gerekçeyi yazıyor. */
   assert.match(sema, /"Bağlantıda" sayacı kaldırıldı/);
 });
@@ -1933,11 +1943,18 @@ test('şeritte iki sayaç; kişisel listeler kilitli satırda, sağ sütun doğr
     ile yukarı veriyor (App → profil ekranı → kart). Bağlantı sayacı
     yine gerçek `<a href="/baglantilar">`.
   */
-  /* 17 Eylül 2026: kartın kendi büyük sayacı (`Sayac`), iki hücre ince ayraçla. */
-  const serit = govdeAl(profilBasligi, 'className="grid grid-cols-2 divide-x divide-gray-200', '</div>');
-  for (const etiket of ['paylaşım', 'bağlantı']) {
+  /*
+    17 Eylül 2026: kartın kendi büyük sayacı (`Sayac`).
+    18 Eylül 2026: üçüncü hücre "takip" (takip edilen şirket sayısı,
+    `sosyal_sayaclar.takip`); dikey ayraç kalktı — üç hücrede iki çizgi
+    şeridi parçalıyordu, şirket sayfasının sayaç şeridiyle aynı kural.
+  */
+  const serit = govdeAl(profilBasligi, 'className="grid grid-cols-3 border-y border-gray-100', '</div>');
+  for (const etiket of ['paylaşım', 'bağlantı', 'takip']) {
     assert.match(serit, new RegExp(`<Sayac[^>]*etiket="${etiket}"`), `${etiket} sayacı şeritte`);
   }
+  assert.match(serit, /deger=\{satir\.sayaclar\.takip\} etiket="takip"/);
+  assert.doesNotMatch(serit, /divide-x/, 'sayaçlar arasında dikey çizgi yok');
   for (const etiket of ['kaydedilen', 'başvuru']) {
     assert.doesNotMatch(
       serit,
@@ -1945,7 +1962,7 @@ test('şeritte iki sayaç; kişisel listeler kilitli satırda, sağ sütun doğr
       `${etiket} sayaç şeridinden kalktı`,
     );
   }
-  assert.doesNotMatch(serit, /mülakat|grid-cols-4|grid-cols-5/, 'şerit iki hücre');
+  assert.doesNotMatch(serit, /mülakat|grid-cols-4|grid-cols-5/, 'şerit üç hücre');
   assert.match(profilBasligi, /mulakatSayisi: number;/, 'sayı veri olarak duruyor');
 
   /*
@@ -2017,7 +2034,7 @@ test('sosyal satır yokken kartta Paylaş ve dişli çizilmiyor, sayı uydurulmu
   assert.doesNotMatch(profilBasligi, />\s*Paylaş\s*</);
   assert.doesNotMatch(profilBasligi, /<ProfilAyarMenusu /, 'dişli karttan kalktı; satırlar ☰ menüsünde');
   assert.match(profilBasligi, /sosyalHucre === 'hazir' && satir\?\.sayaclar && \(/);
-  assert.match(profilBasligi, /Paylaşım ve bağlantı sayısı alınamadı/);
+  assert.match(profilBasligi, /Paylaşım, bağlantı ve takip sayısı alınamadı/);
   assert.doesNotMatch(profilBasligi, /deger=\{0\}|etiket="paylaşım" deger=\{0\}|\?\? 0/);
   assert.match(profilBasligi, /<SayacIskeleti \/>\n\s*<SayacIskeleti \/>/);
   /* Paneldeki kapı: yüklenirken `undefined`, sahibi değilse `null`, eylem koşullu. */

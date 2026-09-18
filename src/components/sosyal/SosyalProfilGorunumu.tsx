@@ -335,17 +335,27 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
 
           {/* ---------------- Sayaçlar ve eylemler ---------------- */}
           <div className="space-y-4 lg:flex lg:w-[400px] lg:shrink-0 lg:flex-col lg:justify-center lg:self-stretch lg:border-l lg:border-gray-200 lg:pl-8">
-            {/* Yalnız iki sayı: bağlantı simetrik, üçüncü bir sayı aynı şeyi tekrar ederdi. */}
+            {/*
+              ÜÇ SAYI: paylaşım, bağlantı, takip. "Bağlantıda" diye dördüncü
+              yok — bağlantı simetrik, o sayı aynı şeyi tekrar ederdi. Takip
+              ise tek yönlü (→ şirket), bu yüzden gerçekten ayrı bir bilgi:
+              kişinin kaç şirketi izlediği. Sayı herkese açık (RPC aynı
+              satırda veriyor); LİSTE değil — takip edilen şirketler yalnız
+              sahibinin Ağım'ında. Arada dikey çizgi yok: üç hücrede iki
+              ayraç şeridi parçalıyordu; sahibin /cv kartıyla aynı kural.
+            */}
             {sayacDurumu === 'yukleniyor' && (
-              <div aria-busy="true" className="grid grid-cols-2 gap-4">
-                <div aria-hidden className="mx-auto h-12 w-20 animate-pulse rounded bg-gray-100" />
-                <div aria-hidden className="mx-auto h-12 w-20 animate-pulse rounded bg-gray-100" />
+              <div aria-busy="true" className="grid grid-cols-3 gap-4">
+                <div aria-hidden className="mx-auto h-12 w-16 animate-pulse rounded bg-gray-100" />
+                <div aria-hidden className="mx-auto h-12 w-16 animate-pulse rounded bg-gray-100" />
+                <div aria-hidden className="mx-auto h-12 w-16 animate-pulse rounded bg-gray-100" />
               </div>
             )}
             {sayacDurumu === 'hazir' && sayaclar && (
-              <dl className="grid grid-cols-2 divide-x divide-gray-200 border-y border-gray-100 py-2 lg:border-y-0 lg:py-0">
+              <dl className="grid grid-cols-3 border-y border-gray-100 py-2 lg:border-y-0 lg:py-0">
                 <Sayac etiket="Paylaşım" deger={sayaclar.paylasim} />
                 <BaglantiSayaci deger={sayaclar.baglanti} sahibiMi={sahibiMi} onNavigate={onNavigate} />
+                <Sayac etiket="Takip" deger={sayaclar.takip} />
               </dl>
             )}
             {(sayacDurumu === 'hata' || (sayacDurumu === 'hazir' && !sayaclar)) && (
