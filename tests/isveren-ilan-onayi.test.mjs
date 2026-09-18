@@ -154,7 +154,8 @@ test('karar e-postayla ve panelde bildiriliyor', () => {
   const landingKod = tsYorumsuz(oku('src/components/IsverenLanding.tsx'));
   assert.match(landingKod, /Sonucu hesap sahibi e-postanıza ve şirket\s+panelinize düşüyor/);
 
-  assert.match(tsYorumsuz(oku('src/sirket/SirketPaneli.tsx')), /İnceleme notu/);
+  /* Not ilan kartının altında; kart listesi GenelBakis'te (Genel + İlanlar birleşti). */
+  assert.match(tsYorumsuz(oku('src/sirket/GenelBakis.tsx')), /İnceleme notu/);
 });
 
 test('işveren sayfasında sahte sayı ya da yayın sözü yok', () => {

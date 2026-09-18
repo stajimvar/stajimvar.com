@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { gecenSure } from '../src/lib/gecen-sure.mjs';
 
 /*
@@ -282,13 +282,20 @@ test('zili gösteren her dünyada panel de mount ediliyor', () => {
   */
   assert.match(app, /\{ogrenciBildirimleri\}/, 'öğrenci tarafında panel mount edilmiyor');
   assert.match(app, /const ogrenciBildirimleri = bildirim\.acik \?/);
-  /* İşveren tarafı kendi dalında. */
-  assert.match(app, /\{bildirim\.acik && \(\s*<BildirimMerkezi/);
+  /*
+    İşveren tarafının ayrı dalı KALKTI (tek kabuk, 18 Eylül 2026): şirket
+    ekranları da `icerikSayfasi` → `ustCubuk` üzerinden aynı ifadeyle
+    çiziliyor. Ayrı bir BildirimMerkezi bağlantısı geri gelirse iki
+    panel üst üste açılırdı.
+  */
+  assert.match(app, /icerikSayfasi\(\s*<main className=\{anaAlanSinifi\}>\s*<SirketPaneli/);
+  assert.equal((app.match(/<BildirimMerkezi/g) ?? []).length, 1, 'bildirim paneli tek yerde bağlanmalı');
 });
 
-test('iki dünyada da zil aynı bileşenden geliyor', () => {
+test('iki rolde de zil aynı bileşenden geliyor', () => {
   assert.match(header, /<BildirimDugmesi/);
-  assert.match(oku('src/sirket/SirketKabugu.tsx'), /<BildirimDugmesi/);
+  /* Eski şirket kabuğu silindi; zil artık yalnız ortak Header'da. */
+  assert.equal(existsSync('src/sirket/SirketKabugu.tsx'), false, 'SirketKabugu geri gelmiş');
 });
 
 test('zil gerçek button ve hedefi 44px', () => {

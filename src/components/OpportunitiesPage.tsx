@@ -177,7 +177,16 @@ export const OpportunitiesPage: React.FC<{
   student: StudentProfile | null;
   onNavigate: (path: string) => void;
   onRequireLogin: () => void;
-}> = ({ path, userId, student, onNavigate, onRequireLogin }) => {
+  /**
+   * SALT OKUNUR — şirket hesabı (tek kabuk, 18 Eylül 2026).
+   *
+   * "Bana uygun", kaydet ve profil çağrıları öğrenci profiline bağlı;
+   * şirket hesabının öğrenci profili yok. Açıkken: kişisel süzgeçler
+   * çizilmiyor, kaydet düğmesi yok, kayıt listesi hiç sorulmuyor ve
+   * adresten gelen `uygun`/`kaydedilen` süzgeçleri yok sayılıyor.
+   */
+  saltOkunur?: boolean;
+}> = ({ path, userId, student, onNavigate, onRequireLogin, saltOkunur = false }) => {
   const [items, setItems] = React.useState<Opportunity[]>([]);
   const [saved, setSaved] = React.useState<string[]>([]);
   const [state, setState] = React.useState<'loading' | 'ready' | 'error'>('loading');
@@ -216,11 +225,16 @@ export const OpportunitiesPage: React.FC<{
     [userId, saved, onRequireLogin],
   );
 
-  const [filters, setFilters] = React.useState<Suzgec>(() => ({
-    ...BOS_FIRSAT_SUZGECI,
-    ...readOpportunityFilters(window.location.search),
-    ...(ROTA_BASLANGICI[path] ?? {}),
-  }));
+  /* Salt okunur listede kişisel süzgeç yok; adresteki de düşüyor. */
+  const kisiselSuzgecsiz = (f: Suzgec): Suzgec =>
+    saltOkunur ? { ...f, banaUygun: false, kaydedilen: false } : f;
+  const [filters, setFilters] = React.useState<Suzgec>(() =>
+    kisiselSuzgecsiz({
+      ...BOS_FIRSAT_SUZGECI,
+      ...readOpportunityFilters(window.location.search),
+      ...(ROTA_BASLANGICI[path] ?? {}),
+    }),
+  );
 
   const set = (patch: Partial<Suzgec>) => setFilters((mevcut) => ({ ...mevcut, ...patch }));
 
@@ -240,7 +254,8 @@ export const OpportunitiesPage: React.FC<{
       ilkRender.current = false;
       return;
     }
-    setFilters({ ...BOS_FIRSAT_SUZGECI, ...(ROTA_BASLANGICI[path] ?? {}) });
+    setFilters(kisiselSuzgecsiz({ ...BOS_FIRSAT_SUZGECI, ...(ROTA_BASLANGICI[path] ?? {}) }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path]);
 
   /* Süzgeçlerin tek gerçek kaynağı adres: paylaşılabilir ve yenilemeye dayanıklı. */
@@ -265,7 +280,7 @@ export const OpportunitiesPage: React.FC<{
     setState('loading');
     Promise.all([
       fetchOpportunities(),
-      userId ? fetchSavedOpportunityIds(userId) : Promise.resolve([]),
+      userId && !saltOkunur ? fetchSavedOpportunityIds(userId) : Promise.resolve([]),
     ])
       .then(([kayitlar, kimlikler]) => {
         if (iptal) return;
@@ -279,7 +294,7 @@ export const OpportunitiesPage: React.FC<{
     return () => {
       iptal = true;
     };
-  }, [userId, deneme]);
+  }, [userId, saltOkunur, deneme]);
 
   /*
     ARŞİV YALNIZCA AÇILDIĞINDA ÇEKİLİYOR; kapalıyken ağa hiç çıkılmıyor.
@@ -515,8 +530,8 @@ export const OpportunitiesPage: React.FC<{
       aktifSuzgecSayisi={aktifSuzgecSayisi}
       kaynakSayimlari={kaynakSayimlari}
       modVar={modVar}
-      banaUygunVar={hazirSayisi > 0}
-      kaydedilenVar={Boolean(userId)}
+      banaUygunVar={!saltOkunur && hazirSayisi > 0}
+      kaydedilenVar={!saltOkunur && Boolean(userId)}
     />
   );
 
@@ -757,7 +772,7 @@ export const OpportunitiesPage: React.FC<{
                   onNavigate={onNavigate}
                   fit={student && !profilEksik ? opportunityFit(item, student) : null}
                   kayitli={saved.includes(item.id)}
-                  onKaydet={filters.arsiv ? undefined : () => kaydiDegistir(item)}
+                  onKaydet={filters.arsiv || saltOkunur ? undefined : () => kaydiDegistir(item)}
                 />
               ))}
             </div>

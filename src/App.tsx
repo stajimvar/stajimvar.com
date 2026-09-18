@@ -51,7 +51,7 @@ import {
   type IstekDurumu,
 } from './components/BildirimMerkezi';
 import { useBildirimler } from './lib/useBildirimler';
-import { SIRKET_VURGU_KOYU } from './sirket/renk';
+import { SirketAgimBos } from './sirket/SirketKimlikKarti';
 
 /*
   Panel yollari. Herkese acik sirket sayfasi (/sirket/<slug>) ile
@@ -815,11 +815,14 @@ export default function App() {
     şirketinin ilanına "Başvur" düğmesi çizilmemeli.
   */
   const [kendiSirketId, setKendiSirketId] = useState<string | null>(null);
+  /* Üst çubuktaki hesap bağlantısı için; aynı okumadan, ikinci sorgu yok. */
+  const [sirketAdi, setSirketAdi] = useState<string | null>(null);
   React.useEffect(() => {
     const kullanici = session?.userId;
     if (!kullanici) {
       setSirketUyesi(false);
       setKendiSirketId(null);
+      setSirketAdi(null);
       return;
     }
     let iptal = false;
@@ -829,6 +832,7 @@ export default function App() {
         if (iptal) return;
         setSirketUyesi(Boolean(b.companyId));
         setKendiSirketId(b.companyId);
+        setSirketAdi(b.ad || null);
       })
       .catch(() => {
         /* Okunamazsa uye degil sayiliyor; kapi zaten arkada. */
@@ -1458,6 +1462,29 @@ export default function App() {
   }, [safeTab, temizYol]);
 
   /*
+    TEK KABUK, İKİ ROL (kullanıcı kararı, 18 Eylül 2026)
+
+    Ayrı işveren paneli kalktı. Şirket hesabı (`profiles.role` =
+    'company') öğrenciyle AYNI kabuğu — Header ve alt menü — kullanıyor;
+    yalnız İlanlar ve Profil sekmeleri şirketin kendi ekranlarına
+    (/sirket/ilanlar, /sirket/profil) gidiyor, Fırsatlar salt okunur,
+    Ağım dürüst boş durum. `kabukRolu` Header'a hangi sekme takımının
+    çizileceğini söylüyor; bir yetki değil. Yetki company_members ve
+    RLS'te.
+
+    Öğrenci görünümüne geçiş YOK (kalıcı karar): şirket hesabı `/` ve
+    `/cv` adreslerine düşerse kendi karşılıklarına alınıyor. Ana sayfa
+    ve `/cv` öğrenci ekranları; şirket hesabının orada göreceği şey ya
+    "giriş yap" (profili yok) ya da başvuramayacağı bir liste olurdu.
+  */
+  const kabukRolu: 'student' | 'company' = session?.role === 'company' ? 'company' : 'student';
+  React.useEffect(() => {
+    if (kabukRolu !== 'company') return;
+    if (temizYol === '/' || temizYol === '/sirket') navigate('/sirket/ilanlar', { degistir: true });
+    else if (temizYol === '/cv' || temizYol === '/cv/yazdir') navigate('/sirket/profil', { degistir: true });
+  }, [kabukRolu, temizYol]);
+
+  /*
     BİLDİRİM PANELİ ÜST ÇUBUĞUN YANINDA
 
     P0: zile basılıyor, durum `acik` oluyor, ama PANEL HİÇBİR YERDE
@@ -1680,7 +1707,7 @@ export default function App() {
       }}
       activeSubTab={activeSubTab}
       setActiveSubTab={setActiveSubTab}
-      userRole={userRole}
+      userRole={kabukRolu}
       setUserRole={setUserRole}
       activeStudent={activeStudent}
       activeCompany={activeCompany}
@@ -1724,10 +1751,12 @@ export default function App() {
         okunuyor ve üyelik yoksa kullanıcı zaten ilan verme sayfasına
         düşüyor. Buradaki yönlendirme yalnızca yolu kısaltıyor.
       */
-      onDunyaDegistir={sirketDunyasinaGec}
+      /* Şirket kabuğunda "İşveren paneline dön" düğmesi anlamsız: zaten orada. */
+      onDunyaDegistir={kabukRolu === 'company' ? undefined : sirketDunyasinaGec}
       okunmamisBildirim={bildirim.okunmamis}
       onBildirimAc={() => void bildirim.ac()}
       sirketUyesiMi={sirketUyesi}
+      sirketAdi={sirketAdi}
       bulunulanYol={temizYol}
       searchQuery={aramaTerimi}
       onSearchChange={(q) => {
@@ -2273,6 +2302,12 @@ export default function App() {
         path={temizYol}
         userId={session?.userId ?? null}
         student={student}
+        /*
+          Şirket hesabında liste SALT OKUNUR: "Bana uygun", kaydet ve
+          profil çağrıları öğrenci profiline bağlı; şirketin öğrenci
+          profili yok. Kendi etkinliklerini duyurma sonraki PR (DB).
+        */
+        saltOkunur={kabukRolu === 'company'}
         onNavigate={(to) => {
           if (to === '/profil') { setActiveTab('profile'); navigate('/'); return; }
           navigate(to);
@@ -2578,6 +2613,21 @@ export default function App() {
     yüzden sitenin büyük üst çubuğu TELEFONDA gizleniyor (bkz. Header
     `akistaMi`) — iki başlık üst üste binerdi.
   */
+  /*
+    ŞİRKET HESABINDA AĞIM: TEK KART, SAHTE SAYI YOK
+
+    Takip modeli (öğrenci → şirket) sıradaki PR'da ve veritabanı
+    gerektiriyor. Sosyal akışı çizmek şirketi öğrenci profili kurmaya
+    çağırırdı; o profil şirkete ait değil.
+  */
+  if (kabukRolu === 'company' && /^\/(agim|baglantilar)(\/|$)/.test(temizYol)) {
+    return icerikSayfasi(
+      <main className={anaAlanSinifi}>
+        <SirketAgimBos />
+      </main>,
+    );
+  }
+
   if (temizYol === '/agim') {
     return icerikSayfasi(
       <AgimSayfasi
@@ -2651,6 +2701,7 @@ export default function App() {
       <GuideHub
         onBack={goHome}
         onNavigate={navigate}
+        sirketHesabi={kabukRolu === 'company'}
         ogrenci={isLoggedIn ? activeStudent : null}
         arama={aramaTerimi}
         onAramaDegis={setAramaTerimi}
@@ -2896,13 +2947,13 @@ export default function App() {
   const sirketPanelYolu = temizYol;
 
   /*
-    Çıplak /sirket kanonik adrese gidiyor: aynı bileşeni iki adresten
-    çizmek, aynı içeriğe iki public URL vermek demekti. Kenar tarafında
-    301 var (public/_redirects); bu satır uygulama içi gezinmeyi de aynı
-    yere alıyor.
+    Çıplak /sirket eski "Genel" sekmesiydi; Genel kalktı, İlanlar onun
+    yerini aldı. Uygulama içi gezinme buraya alınıyor. Kenar tarafındaki
+    301 (public/_redirects) hâlâ /isveren/ilan-ver'e gidiyor — o dosya bu
+    turun kapsamı dışında, rapora yazıldı.
   */
   if (temizYol === '/sirket') {
-    navigate('/isveren/ilan-ver');
+    navigate('/sirket/ilanlar', { degistir: true });
     return null;
   }
 
@@ -2923,28 +2974,29 @@ export default function App() {
         />
       );
     }
+    /*
+      PANEL ARTIK KABUĞUN İÇİNDE
+
+      `SirketPaneli` tam sayfa çiziliyor ve kendi üst çubuğunu taşıyordu;
+      şimdi öteki sayfalar gibi `icerikSayfasi` ile Header + alt menünün
+      içinde. Bildirim merkezi de artık ayrı bağlanmıyor: `ustCubuk`
+      zaten paneli zille aynı ifadede çiziyor (bkz. ogrenciBildirimleri).
+      `DunyaGecisi` eşiği olduğu gibi duruyor.
+    */
     return (
       <>
-        <SirketPaneli
-          yol={sirketPanelYolu}
-          userId={session?.userId ?? null}
-          yoneticiMi={isAdmin}
-          onNavigate={navigate}
-          okunmamisBildirim={bildirim.okunmamis}
-          onBildirimAc={() => void bildirim.ac()}
-          acilacakAday={acilacakAday}
-          onAdayAcildi={() => setAcilacakAday(null)}
-        />
-        {bildirim.acik && (
-          <BildirimMerkezi
-            bildirimler={bildirim.bildirimler}
-            okunmamis={bildirim.okunmamis}
-            yukleniyor={bildirim.yukleniyor}
-            renk={SIRKET_VURGU_KOYU}
-            onKapat={bildirim.kapat}
-            onAc={bildirimAc}
-            onTumunuOkundu={() => void bildirim.tumunuOkunduYap()}
-          />
+        {icerikSayfasi(
+          <main className={anaAlanSinifi}>
+            <SirketPaneli
+              yol={sirketPanelYolu}
+              userId={session?.userId ?? null}
+              yoneticiMi={isAdmin}
+              onNavigate={navigate}
+              acilacakAday={acilacakAday}
+              onAdayAcildi={() => setAcilacakAday(null)}
+              onCikis={() => void handleLogout()}
+            />
+          </main>,
         )}
         {dunyaGecisi && (
           <DunyaGecisi yon={dunyaGecisi} onBitti={() => setDunyaGecisi(null)} />

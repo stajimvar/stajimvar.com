@@ -254,10 +254,15 @@ export const AdayIzgarasi: React.FC<{
   return (
     <div className="space-y-4">
       {/* --------------------------------------------------- başlık */}
+      {/*
+        `h2`: ızgara artık İlanlar sekmesinin içinde bir görünüm ve
+        sayfanın `h1`'i sekmenin başında (şirket adı). Aynı sayfada iki
+        `h1` ekran okuyucuya iki sayfa gibi okunurdu.
+      */}
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="text-xl font-black" style={{ color: SIRKET_METIN }}>
+        <h2 className="text-xl font-black" style={{ color: SIRKET_METIN }}>
           Başvuranlar
-        </h1>
+        </h2>
         <p className="text-sm font-semibold" style={{ color: SIRKET_METIN_IKINCIL }}>
           {suzulmus.length === kartlar.length
             ? `${kartlar.length} aday`
