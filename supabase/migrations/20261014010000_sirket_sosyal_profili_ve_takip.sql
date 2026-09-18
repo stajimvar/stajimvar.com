@@ -181,6 +181,76 @@ begin
 end;
 $$;
 
+/*
+  PAYLAŞIM BAŞLATMA RPC'Sİ DE 'sirket'İ TANIMALI
+
+  ÖLÇÜLDÜ (18 Eylül 2026, yerel oturumla UI'dan): şirket "Fotoğraf
+  paylaş" deyince `sosyal_paylasim_baslat` 400 'gecersiz-kitle' döndü —
+  fonksiyon (20260926070000) kitleyi sabit listeyle doğruluyor ve
+  listede yalnız öğrenci kitleleri var. ('resmi' de yok: resmî hesap
+  paylaşımları RPC'yi atlayan yönetici betiğiyle giriyor.) Tetikleyici
+  kapıyı zaten tutuyor; burada erken ve okunur hata veriliyor: şirket
+  sayfası 'sirket' dışında kitle isteyemez, başkası 'sirket' isteyemez.
+  Gövdenin kalanı 20260926070000 ile birebir.
+*/
+create or replace function public.sosyal_paylasim_baslat(
+  p_istemci_anahtari uuid,
+  p_aciklama text default null,
+  p_kitle text default 'baglantilarim'
+)
+returns public.posts
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  ben        uuid := auth.uid();
+  sonuc      public.posts;
+  sirket_mi  boolean;
+begin
+  if ben is null then
+    raise exception 'Oturum gerekli' using errcode = '42501';
+  end if;
+  if p_istemci_anahtari is null then
+    raise exception 'istemci-anahtari-gerekli' using errcode = 'P0001';
+  end if;
+  if p_kitle is null or p_kitle not in ('baglantilarim', 'alan-toplulugum', 'sirket') then
+    raise exception 'gecersiz-kitle' using errcode = 'P0001';
+  end if;
+
+  select (s.sirket_id is not null) into sirket_mi
+    from public.social_profiles s
+   where s.profile_id = ben and s.username is not null;
+  if sirket_mi is null then
+    raise exception 'sosyal-profil-eksik' using errcode = 'P0001';
+  end if;
+  if sirket_mi and p_kitle <> 'sirket' then
+    raise exception 'sirket-kitlesi-sart' using errcode = 'P0001';
+  end if;
+  if not sirket_mi and p_kitle = 'sirket' then
+    raise exception 'sirket-sayfasi-degil' using errcode = 'P0001';
+  end if;
+
+  select * into sonuc
+    from public.posts p
+   where p.author_id = ben and p.istemci_anahtari = p_istemci_anahtari;
+  if found then
+    if sonuc.durum <> 'taslak' then
+      raise exception 'anahtar-kullanilmis' using errcode = 'P0001';
+    end if;
+    return sonuc;
+  end if;
+
+  insert into public.posts (author_id, aciklama, kitle, durum, istemci_anahtari)
+  values (ben, nullif(btrim(coalesce(p_aciklama, '')), ''), p_kitle, 'taslak', p_istemci_anahtari)
+  returning * into sonuc;
+  return sonuc;
+end;
+$$;
+
+revoke all on function public.sosyal_paylasim_baslat(uuid, text, text) from public;
+grant execute on function public.sosyal_paylasim_baslat(uuid, text, text) to authenticated;
+
 -- -------------------------------------------- 5. görünürlük (paylaşım)
 /*
   paylasim_gorunur() 20260928010000'daki gövde + tek dal: 'sirket'

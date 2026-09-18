@@ -52,7 +52,7 @@ test('tikin TEK kaynağı veritabanındaki bayrak', () => {
   const sorgu = oku('src/lib/queries/sosyal.ts');
   assert.match(sorgu, /resmiMi: satir\.resmi_mi === true,/);
   assert.match(sorgu, /resmiMi: \(p as any\)\.resmi_mi === true,/);
-  assert.match(sorgu, /yayinda_mi, resmi_mi, avatar_path/);
+  assert.match(sorgu, /yayinda_mi, resmi_mi, sirket_id, avatar_path/);
 });
 
 test('EMOJİ DEĞİL: ad ve biyografi metnine hiçbir şey eklenmiyor', () => {

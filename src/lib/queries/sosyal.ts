@@ -239,6 +239,14 @@ export interface SosyalProfil {
    * kendi satırında değiştiremiyor (20260928010000).
    */
   resmiMi: boolean;
+  /**
+   * `social_profiles.sirket_id` — dolu ise bu satır o ŞİRKETİN sayfası
+   * (20261014010000). Arayüzde şirket görünümünü (logo, sektör, ilanlar,
+   * "Şirket hesabı" etiketi) açan tek alan; öğrenci kimliği (okul, bölüm,
+   * sınıf) bu satırda çizilmiyor. Değeri kullanıcı yazamıyor:
+   * `sirket_sayfasi_kilidi` yalnız o şirketin sahibine izin veriyor.
+   */
+  sirketId: string | null;
 }
 
 /*
@@ -263,7 +271,7 @@ export interface SosyalProfil {
   `departments ( ad )` tek yollu, ipucu gerekmiyor (ölçüldü: 200).
 */
 const PROFIL_KOLONLARI =
-  'profile_id, username, sector_id, department_id, gorunen_ad, biyografi, bolum_etiketi, sinif_etiketi, sehir, yayinda_mi, resmi_mi, avatar_path, sectors!social_profiles_sector_id_fkey ( ad ), departments ( ad )';
+  'profile_id, username, sector_id, department_id, gorunen_ad, biyografi, bolum_etiketi, sinif_etiketi, sehir, yayinda_mi, resmi_mi, sirket_id, avatar_path, sectors!social_profiles_sector_id_fkey ( ad ), departments ( ad )';
 
 function profileCevir(satir: any): SosyalProfil {
   return {
@@ -282,6 +290,7 @@ function profileCevir(satir: any): SosyalProfil {
     avatarYolu: satir.avatar_path ?? null,
     /* Okunamayan satırda `false`: tik, VARLIĞI kanıtlanmadıkça çizilmiyor. */
     resmiMi: satir.resmi_mi === true,
+    sirketId: satir.sirket_id ?? null,
   };
 }
 
@@ -556,6 +565,22 @@ export async function sosyalSayaclariGetir(profilId: string): Promise<SosyalSaya
   };
 }
 
+/**
+ * Şirket sayfasının takipçi sayısı — `takipci_sayisi` RPC
+ * (20261014010000).
+ *
+ * Satırlar (`takipler`) yalnız taraflara açık; SAYI herkese. Fonksiyon
+ * `security definer` ve `count(*)` döndürüyor, yani sıfır satır diye bir
+ * dal yok: 0 gerçekten "kimse takip etmiyor" demek ve öyle basılıyor.
+ * Sayı alınamazsa (ağ, yetki) fırlatıyor; çağıran 'hata' çiziyor, sıfır
+ * uydurmuyor.
+ */
+export async function takipciSayisiGetir(hedefId: string): Promise<number> {
+  const { data, error } = await db.rpc('takipci_sayisi', { hedef: hedefId });
+  if (error) hata('Takipçi sayısı alınamadı', error);
+  return Number(data ?? 0);
+}
+
 // --------------------------------------------------------------- Paylaşımlar
 
 /** Şemadaki `posts.kitle` CHECK'inin iki değeri; üçüncüsü yok. */
@@ -569,8 +594,20 @@ export async function sosyalSayaclariGetir(profilId: string): Promise<SosyalSaya
  */
 export type PaylasimKitlesi = 'baglantilarim' | 'alan-toplulugum';
 
-/** Okunan bir satırın kitlesi — `resmi` DAHİL. */
-export type OkunanKitle = PaylasimKitlesi | 'resmi';
+/**
+ * ŞİRKET SAYFASININ TEK KİTLESİ
+ *
+ * `PaylasimKitlesi`ne EKLENMEDİ: o tip öğrencinin seçtiği iki seçeneği
+ * çiziyor ve buraya girseydi radyo listesine üçüncü bir satır olarak
+ * düşerdi — sunucu da öğrencide reddederdi. Şirket sayfası kitle
+ * SEÇMİYOR: `paylasim_kitlesi_kilidi` (20261014010000) şirkete başka
+ * kitle, başkasına bu kitleyi yasaklıyor. Oluşturma ekranı bu değeri
+ * sabit olarak alıyor (`sabitKitle`), seçici çizmiyor.
+ */
+export type SirketKitlesi = 'sirket';
+
+/** Okunan bir satırın kitlesi — `resmi` ve `sirket` DAHİL. */
+export type OkunanKitle = PaylasimKitlesi | 'resmi' | SirketKitlesi;
 
 export interface PaylasimGorseli {
   /** 1..10; kapak `sira = 1`. Şemadaki PK(post_id, sira) bunu garantiliyor. */
@@ -684,7 +721,7 @@ function paylasimSatiriCevir(satir: any): SosyalPaylasim {
     /* Tanınmayan bir değer DAR olana düşüyor; şema varsayılanıyla aynı yön. */
     /* Üç değer de olduğu gibi okunuyor; bilinmeyen bir değer dar olana düşüyor. */
     kitle:
-      satir.kitle === 'alan-toplulugum' || satir.kitle === 'resmi'
+      satir.kitle === 'alan-toplulugum' || satir.kitle === 'resmi' || satir.kitle === 'sirket'
         ? satir.kitle
         : 'baglantilarim',
     gorselSayisi: gorseller.length,
@@ -857,7 +894,7 @@ export interface PaylasimGirdisi {
    */
   istemciAnahtari: string;
   aciklama: string;
-  kitle: PaylasimKitlesi;
+  kitle: PaylasimKitlesi | SirketKitlesi;
   dosyalar: YuklenecekGorsel[];
   /** Yüklenen dosya sayısı; ekrandaki ilerleme satırı bunu yazıyor. */
   ilerleme?: (yuklenen: number, toplam: number) => void;

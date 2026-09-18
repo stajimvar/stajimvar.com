@@ -767,7 +767,9 @@ test('sade hücre açıklama basmıyor; metin ayrıntı katmanında duruyor', ()
     kapaktan ayırt edemez.
   */
   /* 'galeri' (17 Eylül 2026): sahibin /cv galerisi; sade hücrenin davranışı, ayrık karolar. */
-  assert.match(izgara, /gorunum\?: 'sade' \| 'ayrintili' \| 'galeri';/);
+  /* 'kare' (18 Eylül 2026): şirket sayfası; galerinin davranışı, kare karo, her genişlikte üç sütun. */
+  assert.match(izgara, /gorunum\?: 'sade' \| 'ayrintili' \| 'galeri' \| 'kare';/);
+  assert.match(izgara, /const galeri = gorunum === 'galeri' \|\| kare;/);
   assert.match(izgara, /const sade = gorunum === 'sade' \|\| galeri;/);
   assert.match(izgara, /gorunum = 'ayrintili',/);
   assert.match(izgara, /\{!sade && \(/);

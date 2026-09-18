@@ -555,3 +555,80 @@ export async function sirketProfiliKaydet(companyId: string, deger: SirketProfil
     .eq('id', companyId);
   if (error) throw new Error('Şirket profili kaydedilemedi.');
 }
+
+/* -------------------------------------------- herkese açık şirket kimliği */
+
+/**
+ * Şirket sayfasının HERKESE AÇIK alanları — İK e-postası yok.
+ *
+ * Aynı şekil iki yerden doluyor: sahip kendi panelinden (`SirketBaglami`
+ * + `SirketProfilDegeri`, `sirketAcikKimligi`), öğrenci ise
+ * `sirketAcikKimliginiOku` ile doğrudan tablodan. Tek şekil olması
+ * bilerek: sahip görünümü ile öğrenci görünümü aynı bileşeni çiziyor ve
+ * bileşen `hrEmail` diye bir alan hiç tanımıyor — sahibe özel bir bilgi
+ * ziyaretçi dalına ancak bu tipe eklenerek sızabilir, o da göze çarpar.
+ */
+export interface SirketAcikKimlik {
+  id: string;
+  ad: string;
+  slug: string;
+  logoUrl: string | null;
+  sektor: string | null;
+  calisanSayisi: string | null;
+  konum: string | null;
+  siteUrl: string | null;
+  aciklama: string | null;
+}
+
+const bosNull = (x: string | null | undefined): string | null => {
+  const t = (x ?? '').trim();
+  return t ? t : null;
+};
+
+/** Sahibin panel verisinden açık kimlik; `hrEmail` BİLEREK dışarıda. */
+export function sirketAcikKimligi(
+  baglam: Pick<SirketBaglami, 'companyId' | 'ad' | 'slug' | 'siteUrl'>,
+  profil: SirketProfilDegeri | null,
+): SirketAcikKimlik {
+  return {
+    id: baglam.companyId ?? '',
+    ad: baglam.ad,
+    slug: baglam.slug,
+    logoUrl: bosNull(profil?.logoUrl),
+    sektor: bosNull(profil?.industry),
+    calisanSayisi: bosNull(profil?.size),
+    konum: bosNull(profil?.location),
+    siteUrl: bosNull(profil?.websiteUrl) ?? bosNull(baglam.siteUrl),
+    aciklama: bosNull(profil?.description),
+  };
+}
+
+/**
+ * Öğrencinin gördüğü şirket kimliği — yalnız açık sütunlar seçiliyor.
+ *
+ * `hr_email`, `vkn`, `mersis` sorguya HİÇ girmiyor. Sütunu isteyip
+ * sonra atmak değil, hiç istememek: dönen satırda olmayan bir alan
+ * yanlışlıkla ekrana taşınamaz. Satır yoksa `null` (silinmiş şirket);
+ * okuma hatası fırlatıyor, çağıran "alınamadı" çiziyor.
+ */
+export async function sirketAcikKimliginiOku(companyId: string): Promise<SirketAcikKimlik | null> {
+  const db = await istemci();
+  const { data, error } = await db
+    .from('companies')
+    .select('id, name, slug, logo_url, industry, size, location, website_url, description')
+    .eq('id', companyId)
+    .maybeSingle();
+  if (error) throw new Error('Şirket bilgileri alınamadı.');
+  if (!data) return null;
+  return {
+    id: data.id,
+    ad: data.name ?? '',
+    slug: data.slug ?? '',
+    logoUrl: bosNull(data.logo_url),
+    sektor: bosNull(data.industry),
+    calisanSayisi: bosNull(data.size),
+    konum: bosNull(data.location),
+    siteUrl: bosNull(data.website_url),
+    aciklama: bosNull(data.description),
+  };
+}

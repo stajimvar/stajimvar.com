@@ -920,8 +920,12 @@ test('ayrıntılı ızgara kutulu ekranların ölçüsünde, sade ızgara üç s
     izgara,
     /const AYRINTILI_KAPAK_KABI = 'relative aspect-square w-full overflow-hidden rounded-xl bg-gray-100';/,
   );
-  assert.match(izgara, /<div className=\{galeri \? GALERI_KAPAK_KABI : sade \? KAPAK_KABI : AYRINTILI_KAPAK_KABI\}>/);
-  assert.match(izgara, /const izgaraSinifi = galeri \? GALERI_IZGARASI : sade \? PAYLASIM_IZGARASI : AYRINTILI_IZGARA;/);
+  assert.match(izgara, /<div className=\{kare \? KARE_KAPAK_KABI : galeri \? GALERI_KAPAK_KABI : sade \? KAPAK_KABI : AYRINTILI_KAPAK_KABI\}>/);
+  /* 'kare' dalı (şirket sayfası, 18 Eylül 2026) zincirin başında; öteki üç dal aynı. */
+  assert.match(
+    izgara,
+    /const izgaraSinifi = kare\s*\? KARE_IZGARASI\s*: galeri\s*\? GALERI_IZGARASI\s*: sade\s*\? PAYLASIM_IZGARASI\s*: AYRINTILI_IZGARA;/,
+  );
   /*
     GALERİ (17 Eylül 2026): yalnız /cv sahibin ızgarası. Telefonda iki,
     geniş ekranda üç eşit sütun; 12–20 px aralık, yuvarlatılmış kare karo.

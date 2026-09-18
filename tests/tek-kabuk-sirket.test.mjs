@@ -70,11 +70,13 @@ test('şirket sekmeleri dürüst: Fırsatlar salt okunur, Ağım tek boş kart, 
   assert.match(agim, /Seni takip eden öğrenciler burada görünecek/);
   assert.doesNotMatch(agim, /yakında|\b0 takipçi|tabular-nums/i);
 
-  /* Profil: sayaçlar yalnız gerçek sayılar (ilan, ve kart açıksa başvuru); takipçi yok; paylaşım ızgarası yok. */
-  const kart = KIMLIK.slice(KIMLIK.indexOf('export const SirketKimlikKarti'), KIMLIK.indexOf('export const SirketProfilSekmesi'));
-  assert.match(kart, /etiket="ilan" href="\/sirket\/ilanlar"/);
-  assert.match(kart, /\{basvuruSayisi !== null && \(/);
-  assert.doesNotMatch(kart, /takipçi|paylaşım/);
+  /*
+    Profil: şirket sayfası artık SirketProfili (tests/sirket-profil-sayfasi.test.mjs).
+    Eski kimlik kartı bu dosyada yok; yalnız fikstür sarmalayıcısı ve Ağım boş kartı duruyor.
+  */
+  assert.doesNotMatch(KIMLIK, /export const SirketKimlikKarti/);
+  assert.match(KIMLIK, /export const SirketProfilSekmesi/);
+  assert.match(KIMLIK, /<SirketProfili\s/);
 
   /* Rehber: şirket hesabında şirketler için rehber kartı listenin başında, öğrencide sonunda. */
   assert.match(REHBER, /<section aria-label="Rehberler"[^>]*>\s*\{sirketHesabi && sirketRehberKarti\}/);

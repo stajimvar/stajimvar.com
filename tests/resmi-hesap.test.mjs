@@ -225,7 +225,8 @@ test('etiket paylaşımdan okunuyor, yazardan değil', () => {
     seçenek olarak düşmesin diye `PaylasimKitlesi` dışında.
   */
   assert.match(sorgu, /export type PaylasimKitlesi = 'baglantilarim' \| 'alan-toplulugum';/);
-  assert.match(sorgu, /export type OkunanKitle = PaylasimKitlesi \| 'resmi';/);
+  /* 'sirket' (20261014010000) da okunan kitle; seçilebilen iki kitle değişmedi. */
+  assert.match(sorgu, /export type OkunanKitle = PaylasimKitlesi \| 'resmi' \| SirketKitlesi;/);
 });
 
 test('kaldırma yok, sessize alma var', () => {

@@ -360,6 +360,26 @@ export async function fetchCompanyListings(companyId: string): Promise<Internshi
   return (data as unknown as ListingRowWithCompany[]).map(toInternshipListing);
 }
 
+/**
+ * Şirket sayfasının YAYINDAKİ ilanları — öğrenci görünümü için.
+ *
+ * `fetchCompanyListings` durum süzmüyor; RLS öğrenciye yayındakileri
+ * VE kendi başvurduğu kapalı ilanları da veriyor. Şirket sayfasında o
+ * kapalı ilanın "aktif ilan" diye sayılması yanlış olurdu; sayaç ve liste
+ * aynı sorgudan geldiği için süzgeç burada, sorguda.
+ */
+export async function fetchPublishedCompanyListings(companyId: string): Promise<InternshipListing[]> {
+  const { data, error } = await supabase
+    .from('listings')
+    .select(LISTING_SELECT)
+    .eq('company_id', companyId)
+    .eq('status', 'published')
+    .order('posted_at', { ascending: false, nullsFirst: false });
+
+  if (error) fail('Şirket ilanları yüklenemedi', error);
+  return (data as unknown as ListingRowWithCompany[]).map(toInternshipListing);
+}
+
 export async function createListing(
   listing: InternshipListing,
   companyId: string,
