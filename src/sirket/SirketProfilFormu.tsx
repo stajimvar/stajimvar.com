@@ -74,7 +74,13 @@ export const SirketProfilFormu: React.FC<{
   onKaydedildi: () => void;
   /** Şirket kaydı yokken sahiplenme akışına gidiş (SirketPaneli'nden). */
   onNavigate?: (yol: string) => void;
-}> = ({ baglam, userId, onKaydedildi, onNavigate }) => {
+  /**
+   * Üst özet kartını çizme. Profil sekmesi kimliği kendi kartında
+   * (SirketKimlikKarti) gösteriyor; aynı logo ve ad iki kez alt alta
+   * durmasın. Tamamlanma yüzdesi de o karta taşındı.
+   */
+  ozetsiz?: boolean;
+}> = ({ baglam, userId, onKaydedildi, onNavigate, ozetsiz = false }) => {
   const [deger, setDeger] = React.useState<SirketProfilDegeri | null>(null);
   const [durum, setDurum] = React.useState<'yukleniyor' | 'hazir' | 'kaydediliyor' | 'tamam' | 'hata'>(
     'yukleniyor'
@@ -185,12 +191,14 @@ export const SirketProfilFormu: React.FC<{
        bırakmak sayfayı sebepsiz uzatırdı. */
     <div className={`space-y-4 lg:pb-0 ${degisti ? 'pb-36' : 'pb-20'}`}>
       {/* ------------------------------------------------------ üst özet */}
-      <ProfilOzeti
-        baglam={baglam}
-        oran={oran}
-        eksikler={eksikler}
-        logoUrl={deger.logoUrl}
-      />
+      {!ozetsiz && (
+        <ProfilOzeti
+          baglam={baglam}
+          oran={oran}
+          eksikler={eksikler}
+          logoUrl={deger.logoUrl}
+        />
+      )}
 
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-4">
         <div className="space-y-4">

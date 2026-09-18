@@ -143,7 +143,7 @@ test('SÜRESİ DOLAN ANA LİSTEDE YOK, ARŞİVDE VAR', () => {
   assert.doesNotMatch(sayfa, /opportunityCta/, 'kartta başvuru düğmesi geri gelmiş');
   /* İlan kartıyla tek tip kartta inceleme bağlantısı (17 Eylül 2026). */
   assert.match(sayfa, /\{!arsivde && \(\s*<a\b/);
-  assert.match(sayfa, /onKaydet=\{filters\.arsiv \? undefined : \(\) => kaydiDegistir\(item\)\}/);
+  assert.match(sayfa, /onKaydet=\{filters\.arsiv \|\| saltOkunur \? undefined : \(\) => kaydiDegistir\(item\)\}/);
 });
 
 /* ------------------------------------------------- 5) haricî başvuru */

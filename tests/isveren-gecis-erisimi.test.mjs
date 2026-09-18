@@ -22,7 +22,8 @@ const oku = (yol) => readFileSync(yol, 'utf8');
 const HEADER = oku('src/components/Header.tsx');
 const SHEET = oku('src/components/AccountSheet.tsx');
 const APP = oku('src/App.tsx');
-const KABUK = oku('src/sirket/SirketKabugu.tsx');
+/* Eski şirket kabuğu silindi (tek kabuk, 18 Eylül 2026); kapı metni artık ortak Header'da da aranıyor. */
+const KABUK = HEADER;
 const PROFIL_FORMU = oku('src/sirket/SirketProfilFormu.tsx');
 const PANEL = oku('src/sirket/SirketPaneli.tsx');
 

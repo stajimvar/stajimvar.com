@@ -65,7 +65,13 @@ test('sayfada tek "Başvuranlar" başlığı var', () => {
     0,
     'Başvuranlar bileşeni hâlâ kendi başlığını çiziyor',
   );
-  assert.equal((izgara.match(/<h1/g) ?? []).length, 1, 'ızgarada başlık yok ya da birden fazla');
+  /*
+    Izgaranın başlığı `h2`: sayfanın `h1`'i artık İlanlar sekmesinin
+    başında (şirket adı) ve ızgara o sekmenin bir görünümü. Izgarada
+    `h1` kalsaydı aynı sayfada iki `h1` olurdu.
+  */
+  assert.equal((izgara.match(/<h1/g) ?? []).length, 0, 'ızgara hâlâ h1 çiziyor');
+  assert.equal((izgara.match(/<h2/g) ?? []).length, 1, 'ızgarada başlık yok ya da birden fazla');
   assert.match(izgara, /Başvuranlar/);
 });
 

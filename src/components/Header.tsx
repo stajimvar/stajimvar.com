@@ -4,7 +4,6 @@ import {
   Building2,
   CheckCircle2,
   FileText,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Briefcase,
@@ -12,11 +11,7 @@ import {
   BookOpen,
   LogOut,
   ArrowRight,
-  ShieldCheck,
   Users,
-  Columns,
-  Plus,
-  Inbox,
   Search,
   SlidersHorizontal,
   X,
@@ -25,7 +20,6 @@ import {
   UserRound,
 } from 'lucide-react';
 import { StudentProfile, CompanyAccount } from '../types';
-import { Avatar } from './Avatar';
 import { SIRKET_KENAR_GUCLU, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
 import { Logo } from './Logo';
 import { adYazimi } from '../lib/ad';
@@ -169,6 +163,17 @@ interface HeaderProps {
     bile görünmüyor.
   */
   sirketUyesiMi?: boolean;
+  /*
+    ŞİRKET KABUĞU (kullanıcı kararı, 18 Eylül 2026)
+
+    `userRole === 'company'` artık eski "Şirket Portalı" sekmelerini
+    değil, öğrenciyle AYNI kabuğu çiziyor: aynı üst çubuk, aynı beş
+    sekme (İlanlar · Fırsatlar · Ağım · Rehber · Profil). Yalnız İlanlar
+    /sirket/ilanlar'a, Profil /sirket/profil'e gidiyor. Bu ad üst
+    çubuktaki hesap bağlantısında yazıyor; App şirket bağlamından
+    (company_members) veriyor, `profiles.role`dan değil.
+  */
+  sirketAdi?: string | null;
 }
 
 /*
@@ -226,6 +231,7 @@ export const Header: React.FC<HeaderProps> = ({
   okunmamisBildirim,
   onBildirimAc,
   sirketUyesiMi,
+  sirketAdi = null,
 }) => {
   /*
     YÜZEN ÇUBUK AŞAĞI KAYDIRIRKEN ÇEKİLİYOR
@@ -339,7 +345,6 @@ export const Header: React.FC<HeaderProps> = ({
   const altMenuYazisi = (secili: boolean) =>
     `w-full truncate text-center text-[10px] leading-none ${secili ? 'font-bold' : 'font-medium'}`;
 
-  const [companyDropdownOpen, setCompanyDropdownOpen] = useState(false);
   const subMenuScrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -479,7 +484,13 @@ export const Header: React.FC<HeaderProps> = ({
     görünmüyordu (bildirildi, ekran görüntüsüyle). Yalnız akışın kendi
     başlığı var, o yüzden yalnız akış dışlanıyor.
   */
-  const akistaMi = bulunulanYol === '/agim';
+  /*
+    `!sirketKabugu`: şirket hesabında /agim akış değil tek bir boş-durum
+    kartı ve o kartın kendi başlığı yok. Üst çubuk telefonda gizlenseydi
+    şirket o ekranda markasız ve zilsiz kalırdı (fikstürde ölçüldü:
+    390 px'te "İşveren" rozeti ve zil yok).
+  */
+  const akistaMi = bulunulanYol === '/agim' && userRole !== 'company';
 
   /*
     SAYFA ARAMASI ÜST ÇUBUKTA — TELEFONDA.
@@ -630,6 +641,20 @@ export const Header: React.FC<HeaderProps> = ({
   const profildeMi = cvEkranindaMi || (!rehberdeMi && !kurumsalSayfada && !agimdaMi && activeTab === 'profile');
 
   /*
+    ŞİRKET KABUĞUNUN SEKMELERİ ADRESLE YANIYOR
+
+    İlanlar sekmesi /sirket/ilanlar, ikinci görünümü /sirket/basvuranlar
+    ve ilan formu /sirket/ilan/*; Profil /sirket/profil. Herkese açık
+    şirket sayfası (/sirket/<slug>) BU KÜMEDE DEĞİL: orası bir sayfa,
+    sekme değil — öğrenci kabuğundaki kurumsal sayfa kuralıyla aynı.
+  */
+  const sirketKabugu = userRole === 'company';
+  const sirketIlanlarindaMi = /^\/sirket\/(ilanlar|basvuranlar|ilan)(\/|$)/.test(bulunulanYol);
+  const sirketProfilindeMi = /^\/sirket\/profil(\/|$)/.test(bulunulanYol);
+  /* Şirket ana adresi: marka ve telefon köşesindeki ev simgesi buraya. */
+  const anaAdres = sirketKabugu ? '/sirket/ilanlar' : '/';
+
+  /*
     TELEFONDA ARAMA ZİLİN YANINDA
 
     Marka telefonda ortada. Zil varsa arama sağda zille yan yana,
@@ -688,13 +713,41 @@ export const Header: React.FC<HeaderProps> = ({
               değişse de kaymıyor. `lg:` üstünde eski hizasına (solda)
               dönüyor. Telefonda yalnız "StajımVar" yazısı çiziliyor.
             */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 shrink-0 lg:static lg:translate-x-0 lg:translate-y-0">
+            {/*
+              Kap yalnız şirket kabuğunda `flex` (rozet markanın yanına
+              dizilsin diye); öğrencide sınıf listesi BİREBİR eski hâli —
+              önce/sonra DOM karşılaştırmasında tek fark bu satırdı.
+            */}
+            <div
+              className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 shrink-0 lg:static lg:translate-x-0 lg:translate-y-0${
+                sirketKabugu ? ' flex items-center gap-2' : ''
+              }`}
+            >
               <Logo
+                href={anaAdres}
                 onClick={() => {
+                  if (sirketKabugu) {
+                    onNavigate?.('/sirket/ilanlar');
+                    return;
+                  }
                   setUserRole('student');
                   setActiveTab('internships');
                 }}
               />
+              {/*
+                "İŞVEREN" ROZETİ — eski şirket kabuğundan korunan tek işaret.
+                Monospace YALNIZCA etikette; gövde metninde kullanmak
+                çubuğu terminal taklidine çevirirdi. Kontrast: #1D4ED8 /
+                #EFF6FF = 6.16:1 (sirket/renk.ts'de hesaplandı).
+              */}
+              {sirketKabugu && (
+                <span
+                  className="rounded px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest"
+                  style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
+                >
+                  İşveren
+                </span>
+              )}
             </div>
             {/*
               İŞLEM SİMGELERİ SAĞDA TOPLANIYOR
@@ -712,9 +765,19 @@ export const Header: React.FC<HeaderProps> = ({
               Gerçek `<a href="/">`: orta tuş ve yeni sekme çalışıyor.
             */}
             <a
-              href="/"
-              aria-label={ilanlardaMi ? 'İlanları yenile' : 'Ana sayfa: staj ilanları'}
+              href={anaAdres}
+              aria-label={
+                sirketKabugu
+                  ? 'Ana sayfa: ilanların'
+                  : ilanlardaMi
+                    ? 'İlanları yenile'
+                    : 'Ana sayfa: staj ilanları'
+              }
               onClick={baglantiTiklamasi(() => {
+                if (sirketKabugu) {
+                  onNavigate?.('/sirket/ilanlar');
+                  return;
+                }
                 if (ilanlardaMi) {
                   window.location.reload();
                   return;
@@ -1010,104 +1073,67 @@ export const Header: React.FC<HeaderProps> = ({
               </nav>
             )}
 
-            {/* Desktop Company Navigation Bar - Simple & Clean matching Student Navbar */}
-            {(userRole === 'company' || activeTab === 'company-portal') && (
+            {/*
+              MASAÜSTÜ ŞİRKET GEZİNMESİ — ÖĞRENCİYLE AYNI KAPSÜL
+
+              Eski "Şirket Portalı" sekmeleri (Başvuranlar, Aday Havuzu,
+              Kanban, Yeni İlan) kalktı; hiçbiri artık bir ekrana
+              bağlanmıyordu. Dört sekme öğrenci kapsülüyle birebir aynı
+              sınıflarda; yalnız İlanlar şirketin kendi ilanlarına gidiyor.
+              Profil sağdaki hesap bağlantısında (öğrencide de öyle).
+            */}
+            {sirketKabugu && (
               <nav className="hidden lg:flex items-center p-1 bg-gray-100/90 rounded-2xl border border-gray-200/90 shadow-2xs transition-all gap-0.5 shrink-0">
-                {/* 1. İlana Başvuranlar */}
-                <button
-                  id="nav-company-applicants"
-                  onClick={() => {
-                    setActiveTab('company-portal');
-                    setActiveSubTab('applicants');
-                  }}
+                <a
+                  id="nav-tab-sirket-ilanlar"
+                  href="/sirket/ilanlar"
+                  aria-current={sirketIlanlarindaMi ? 'page' : undefined}
+                  onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/sirket/ilanlar')) : undefined}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    activeSubTab === 'applicants'
-                      ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
-                      :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                    sirketIlanlarindaMi
+                      ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
-                  <Inbox
-                    className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                      activeSubTab === 'applicants'
-                        ?'text-blue-600'
-                        :'text-gray-400'
-                    }`}
-                  />
-                  <span className="hidden xl:inline">İlana Başvuranlar</span>
-                  <span className="inline xl:hidden">Başvuranlar</span>
-                </button>
-
-                {/* 2. Eşleşen Aday Havuzu */}
-                <button
-                  id="nav-company-candidates"
-                  onClick={() => {
-                    setActiveTab('company-portal');
-                    setActiveSubTab('all_candidates');
-                  }}
+                  <Briefcase className={`w-3.5 h-3.5 shrink-0 ${sirketIlanlarindaMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span>İlanlar</span>
+                </a>
+                <a
+                  id="nav-tab-sirket-firsatlar"
+                  href="/firsatlar"
+                  aria-current={firsatlardaMi ? 'page' : undefined}
+                  onClick={baglantiTiklamasi(() => onOpenOpportunities?.())}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    activeSubTab === 'all_candidates' || activeSubTab === 'all'
-                      ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
-                      :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                    firsatlardaMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
-                  <Users
-                    className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                      activeSubTab === 'all_candidates' || activeSubTab === 'all'
-                        ?'text-blue-600'
-                        :'text-gray-400'
-                    }`}
-                  />
-                  <span className="hidden xl:inline">Eşleşen Aday Havuzu</span>
-                  <span className="inline xl:hidden">Aday Havuzu</span>
-                </button>
-
-                {/* 3. Kanban Panosu */}
-                <button
-                  id="nav-company-kanban"
-                  onClick={() => {
-                    setActiveTab('company-portal');
-                    setActiveSubTab('kanban');
-                  }}
+                  <Sparkles className={`w-3.5 h-3.5 shrink-0 ${firsatlardaMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span>Fırsatlar</span>
+                </a>
+                <a
+                  id="nav-tab-sirket-agim"
+                  href="/agim"
+                  aria-current={agimdaMi ? 'page' : undefined}
+                  onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/agim')) : undefined}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    activeSubTab === 'kanban'
-                      ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
-                      :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                    agimdaMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
-                  <Columns
-                    className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                      activeSubTab === 'kanban'
-                        ?'text-purple-600'
-                        :'text-gray-400'
-                    }`}
-                  />
-                  <span className="hidden xl:inline">Kanban Süreç Panosu</span>
-                  <span className="inline xl:hidden">Kanban Panosu</span>
-                </button>
-
-                {/* 4. Yeni İlan Yayınla */}
-                <button
-                  id="nav-company-post-new"
-                  onClick={() => {
-                    setActiveTab('company-portal');
-                    setActiveSubTab('post_new');
-                  }}
+                  <Users className={`w-3.5 h-3.5 shrink-0 ${agimdaMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span>Ağım</span>
+                </a>
+                <a
+                  id="nav-tab-sirket-rehber"
+                  href="/rehber"
+                  aria-current={rehberdeMi && !isverendeMi ? 'page' : undefined}
+                  onClick={baglantiTiklamasi(() => onOpenGuides?.())}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    activeSubTab === 'post_new'
-                      ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
-                      :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                    rehberdeMi && !isverendeMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
-                  <Plus
-                    className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                      activeSubTab === 'post_new'
-                        ?'text-blue-600'
-                        :'text-gray-400'
-                    }`}
-                  />
-                  <span className="hidden xl:inline">+ Yeni İlan Yayınla</span>
-                  <span className="inline xl:hidden">+ Yeni İlan</span>
-                </button>
+                  <BookOpen className={`w-3.5 h-3.5 shrink-0 ${rehberdeMi && !isverendeMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span>Rehber</span>
+                </a>
               </nav>
             )}
           </div>
@@ -1120,8 +1146,14 @@ export const Header: React.FC<HeaderProps> = ({
             Yalnızca lg ve üstü: mobilde burada yer yok, orada kutu ilan
             listesinin başında duruyor.
           */}
+          {/*
+            Şirket kabuğunda kutu YALNIZ rehberde: orada terim rehberleri
+            süzüyor ve sayfanın kendi kutusu yok. Öteki sayfalarda kutu ilan
+            listesine götürürdü — şirketin İlanlar sekmesi kendi ilanları,
+            oraya "ara" demek yanlış yere götürmek olurdu.
+          */}
           {!burslardaMi &&
-            userRole === 'student' &&
+            (userRole === 'student' || rehberSayfasindaMi) &&
             activeTab !== 'company-portal' &&
             (sosyaldeMi ? kisiAramasiCizilsin : Boolean(onSearchChange)) && (
             <div className="hidden lg:block flex-1 min-w-0 max-w-xl mx-4">
@@ -1503,145 +1535,42 @@ export const Header: React.FC<HeaderProps> = ({
                   </a>
                 )}
 
-                {/* Company Account Menu */}
-                {userRole === 'company' && activeCompany && (
-                  <div className="relative shrink-0">
-                    <button
-                      id="company-account-menu-btn"
-                      onClick={() => setCompanyDropdownOpen(!companyDropdownOpen)}
-                      className="flex items-center gap-1.5 sm:gap-2 py-1 px-1.5 sm:px-2 rounded-xl text-gray-800 hover:bg-gray-100/80 border border-gray-200/80 transition-all text-left cursor-pointer select-none shadow-2xs"
-                      title="Şirket Hesabı Menüsü"
+                {/*
+                  ŞİRKET HESABI BAĞLANTISI — öğrencideki avatar bağlantısının
+                  karşılığı. Eski açılır menü (Başvuranlar, Kanban, "Şirket
+                  Portalından Çıkış") kalktı; satırlarının hiçbiri bir ekrana
+                  bağlanmıyordu. Çıkış Profil sekmesinin sonunda.
+
+                  Ad yoksa (bağlam henüz çözülmedi ya da şirket kaydı yok)
+                  "İşveren hesabı" tek başına; ad uydurulmuyor.
+                */}
+                {sirketKabugu && (
+                  <a
+                    href="/sirket/profil"
+                    data-testid="header-sirket-hesabi"
+                    aria-label={`Şirket profili${sirketAdi ? ` — ${sirketAdi}` : ''}, işveren hesabı`}
+                    aria-current={sirketProfilindeMi ? 'page' : undefined}
+                    onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/sirket/profil')) : undefined}
+                    className={`hidden min-h-11 shrink-0 select-none items-center gap-2 rounded-2xl border px-2 py-1.5 text-left text-gray-800 transition-all duration-200 sm:gap-2.5 sm:px-3 lg:flex ${ODAK_HALKASI} ${
+                      sirketProfilindeMi
+                        ? 'border-blue-200 bg-blue-50'
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span
+                      aria-hidden
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full sm:h-9 sm:w-9"
+                      style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
                     >
-                      <img
-                        src={activeCompany.logo}
-                        alt={activeCompany.name}
-                        className="w-7 h-7 rounded-lg object-cover shrink-0 ring-1 ring-gray-200 bg-white"
-                      />
-                      <div className="hidden md:block min-w-0 max-w-[140px] leading-tight">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs font-bold text-gray-900 truncate">
-                            {activeCompany.name}
-                          </span>
-                          {activeCompany.verified && (
-                            <ShieldCheck className="w-3 h-3 text-blue-600 shrink-0"/>
-                          )}
-                        </div>
-                        <span className="text-[10px] text-gray-500 truncate block">
-                          {activeCompany.recruiterName.split(' ')[0]} (İK)
-                        </span>
-                      </div>
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 text-gray-600 transition-transform duration-150 shrink-0 ${
-                          companyDropdownOpen ? 'rotate-180' : ''
-                        }`}
-                      />
-                    </button>
-
-                    {companyDropdownOpen && (
-                      <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200/90 py-3 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                        {/* Top Active Company Card */}
-                        <div className="px-4 pb-3 flex items-center gap-3">
-                          <img
-                            src={activeCompany.logo}
-                            alt={activeCompany.name}
-                            className="w-12 h-12 rounded-full object-cover shrink-0 ring-1 ring-gray-200 bg-white shadow-2xs"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5">
-                              <p className="text-sm font-extrabold text-gray-900 truncate">
-                                {activeCompany.name}
-                              </p>
-                              {activeCompany.verified && (
-                                <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0"/>
-                              )}
-                            </div>
-                            <p className="text-[11px] text-gray-500 truncate">
-                              {activeCompany.industry}
-                            </p>
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md mt-1">
-                              {activeCompany.recruiterName} • {activeCompany.recruiterRole}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Divider */}
-                        <div className="border-t border-gray-100 my-2"/>
-
-                        {/* Company Portal Navigation Links */}
-                        <div className="py-1 text-xs text-gray-800 font-medium">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveTab('company-portal');
-                              setActiveSubTab('applicants');
-                              setCompanyDropdownOpen(false);
-                            }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
-                          >
-                            <Inbox className="w-3.5 h-3.5 text-blue-600"/>
-                            <span>İlana Başvuranlar</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveTab('company-portal');
-                              setActiveSubTab('all_candidates');
-                              setCompanyDropdownOpen(false);
-                            }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
-                          >
-                            <Users className="w-3.5 h-3.5 text-gray-400" />
-                            <span>Aday Havuzu & Eşleşmeler</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveTab('company-portal');
-                              setActiveSubTab('kanban');
-                              setCompanyDropdownOpen(false);
-                            }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
-                          >
-                            <Columns className="w-3.5 h-3.5 text-gray-400" />
-                            <span>Kanban Süreç Panosu</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveTab('company-portal');
-                              setActiveSubTab('post_new');
-                              setCompanyDropdownOpen(false);
-                            }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2 text-blue-600 font-bold"
-                          >
-                            <Plus className="w-3.5 h-3.5 text-blue-600"/>
-                            <span>+ Yeni İlan Yayınla</span>
-                          </button>
-                        </div>
-
-                        {/* Divider */}
-                        <div className="border-t border-gray-100 my-2"/>
-
-                        {/* Logout Option */}
-                        <div className="px-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onLogout?.();
-                              setCompanyDropdownOpen(false);
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
-                          >
-                            <LogOut className="w-3.5 h-3.5" />
-                            <span>Şirket Portalından Çıkış Yap</span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                      <Building2 className="h-4 w-4" />
+                    </span>
+                    <span className="hidden min-w-0 max-w-[11rem] flex-col leading-tight md:flex">
+                      {sirketAdi && (
+                        <span className="truncate text-sm font-bold text-gray-900">{sirketAdi}</span>
+                      )}
+                      <span className="truncate text-[11px] text-gray-600">İşveren hesabı</span>
+                    </span>
+                  </a>
                 )}
               </div>
             )}
@@ -1953,85 +1882,84 @@ export const Header: React.FC<HeaderProps> = ({
 
       </nav>
     ) : (
-      /* Mobile Bottom Navigation for Company */
+      /*
+        ŞİRKET ALT MENÜSÜ — ÖĞRENCİYLE AYNI ÇUBUK, AYNI BEŞ SEKME
+
+        Eski dört öğe (Adaylar, %80+ Uyum, Kanban, İlan Ekle) kalktı;
+        turuncu/mor vurgular da onlarla gitti. Aynı `altMenuOgesi`
+        sınıfları: seçili öğe mavi kutu, diğerleri gri. Fırsatlar, Ağım
+        ve Rehber öğrencininkiyle aynı adrese; İlanlar ve Profil şirketin
+        kendi ekranına.
+      */
       <nav
         aria-label="Mobil Alt Şirket Navigasyon"
         className={altMenuClass}
         style={altMenuStil}
       >
-        <button
-          onClick={() => {
-            setActiveTab('company-portal');
-            setActiveSubTab('all_candidates');
-          }}
-          className={altMenuOgesi(activeSubTab === 'all_candidates' || activeSubTab === 'all')}
+        <a
+          href="/sirket/ilanlar"
+          aria-label="İlanların"
+          aria-current={sirketIlanlarindaMi ? 'page' : undefined}
+          onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/sirket/ilanlar')) : undefined}
+          className={altMenuOgesi(sirketIlanlarindaMi)}
         >
-          <span className={altMenuIkonu(activeSubTab === 'all_candidates' || activeSubTab === 'all')}>
-            <Users className="h-5 w-5" />
+          <span className={altMenuIkonu(sirketIlanlarindaMi)}>
+            <Briefcase className="h-5 w-5" />
           </span>
-          <span className={altMenuYazisi(activeSubTab === 'all_candidates' || activeSubTab === 'all')}>Adaylar</span>
-        </button>
+          <span className={altMenuYazisi(sirketIlanlarindaMi)}>İlanlar</span>
+        </a>
 
-        <button
-          onClick={() => {
-            setActiveTab('company-portal');
-            setActiveSubTab('top_matches');
-          }}
-          className={`flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 py-1 transition-colors ${
-            activeSubTab === 'top_matches' ? 'text-orange-600' : 'text-gray-500'
-          }`}
+        <a
+          href="/firsatlar"
+          aria-label="Fırsatlar"
+          aria-current={firsatlardaMi ? 'page' : undefined}
+          onClick={baglantiTiklamasi(() => onOpenOpportunities?.())}
+          className={altMenuOgesi(firsatlardaMi)}
         >
-          <span
-            className={`flex h-7 w-12 items-center justify-center rounded-xl transition-colors ${
-              activeSubTab === 'top_matches' ? 'bg-orange-50' : ''
-            }`}
-          >
+          <span className={altMenuIkonu(firsatlardaMi)}>
             <Sparkles className="h-5 w-5" />
           </span>
-          <span
-            className={`w-full truncate text-center text-[10px] leading-none ${
-              activeSubTab === 'top_matches' ? 'font-bold' : 'font-medium'
-            }`}
-          >
-            %80+ Uyum
-          </span>
-        </button>
+          <span className={altMenuYazisi(firsatlardaMi)}>Fırsatlar</span>
+        </a>
 
-        <button
-          onClick={() => {
-            setActiveTab('company-portal');
-            setActiveSubTab('kanban');
-          }}
-          className={`flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 py-1 transition-colors ${
-            activeSubTab === 'kanban' ? 'text-purple-600' : 'text-gray-500'
-          }`}
+        <a
+          href="/agim"
+          aria-label="Ağım"
+          aria-current={agimdaMi ? 'page' : undefined}
+          onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/agim')) : undefined}
+          className={altMenuOgesi(agimdaMi)}
         >
-          <span
-            className={`flex h-7 w-12 items-center justify-center rounded-xl transition-colors ${activeSubTab === 'kanban' ? 'bg-purple-50' : ''}`}
-          >
-            <Columns className="h-5 w-5" />
+          <span className={altMenuIkonu(agimdaMi)}>
+            <Users className="h-5 w-5" />
           </span>
-          <span
-            className={`w-full truncate text-center text-[10px] leading-none ${
-              activeSubTab === 'kanban' ? 'font-bold' : 'font-medium'
-            }`}
-          >
-            Kanban
-          </span>
-        </button>
+          <span className={altMenuYazisi(agimdaMi)}>Ağım</span>
+        </a>
 
-        <button
-          onClick={() => {
-            setActiveTab('company-portal');
-            setActiveSubTab('post_new');
-          }}
-          className="flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 py-1 transition-colors text-blue-700"
+        <a
+          href="/rehber"
+          aria-label="Rehber"
+          aria-current={rehberdeMi && !isverendeMi ? 'page' : undefined}
+          onClick={baglantiTiklamasi(() => onOpenGuides?.())}
+          className={altMenuOgesi(rehberdeMi && !isverendeMi)}
         >
-          <span className="flex h-7 w-12 items-center justify-center rounded-xl transition-colors bg-blue-50 text-blue-600">
-            <Plus className="h-5 w-5" />
+          <span className={altMenuIkonu(rehberdeMi && !isverendeMi)}>
+            <BookOpen className="h-5 w-5" />
           </span>
-          <span className="w-full truncate text-center text-[10px] leading-none font-bold">İlan Ekle</span>
-        </button>
+          <span className={altMenuYazisi(rehberdeMi && !isverendeMi)}>Rehber</span>
+        </a>
+
+        <a
+          href="/sirket/profil"
+          aria-label="Şirket profili"
+          aria-current={sirketProfilindeMi ? 'page' : undefined}
+          onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/sirket/profil')) : undefined}
+          className={altMenuOgesi(sirketProfilindeMi)}
+        >
+          <span className={altMenuIkonu(sirketProfilindeMi)}>
+            <Building2 className="h-5 w-5" />
+          </span>
+          <span className={altMenuYazisi(sirketProfilindeMi)}>Profil</span>
+        </a>
       </nav>
     )}
   </>
