@@ -10,6 +10,7 @@ import {
   kendiSosyalProfiliGetir,
   resmiSessizMi,
   resmiSessizYaz,
+  takipEttiklerimiGetir,
   type AkisPaylasimi,
   type BaglantiKisisi,
   type BegeniDurumu,
@@ -24,6 +25,7 @@ import { donukKure, kureDokunusu } from '../../lib/kure-donusu.mjs';
 import { FotografPaylasGirisi, type FotografPaylasKolu } from './FotografPaylasGirisi';
 import { ProfilFotografi } from './ProfilFotografi';
 import { KisiListesi, KullaniciAramaSonuclari } from './KullaniciArama';
+import { TakipListesi, useTakipListesi } from './TakipListesi';
 
 /**
  * /agim — bağlantılarının ve alanının akışı.
@@ -45,6 +47,15 @@ import { KisiListesi, KullaniciAramaSonuclari } from './KullaniciArama';
  * akıştan çıktı ve `/agim/baglantilar` ekranına taşındı. Üst
  * başlıktaki kişiler ikonu oraya götürüyor ve bekleyen istek varsa
  * üzerinde GERÇEK sayı taşıyor.
+ *
+ * TAKİP ETTİĞİN ŞİRKETLER (karar: 18 Eylül 2026)
+ * ----------------------------------------------
+ * Öğrencinin takip ettiği şirket sayfaları (`takip_ettiklerim`, yalnız
+ * kendi listesi). Geniş ekranda sağ sütunda kendi kartı (öneriler ve
+ * ilanlarla aynı kalıp); telefonda akışın ALTINDA, keşif bloğuyla aynı
+ * kalıpta — akışın üstüne koymak her açılışta paylaşımları aşağı
+ * iterdi. Veri bir kez okunuyor, iki yerleşimden yalnız biri görünüyor
+ * (`lg:hidden` / `hidden lg:block`). Boşsa kısa cümle; sahte satır yok.
  */
 
 interface Props {
@@ -158,6 +169,12 @@ export const AgimSayfasi: React.FC<Props> = ({
     akışın ortasında öneri listesi, akışın kendisiyle yarışırdı.
   */
   const [kesif, setKesif] = React.useState<SosyalAramaSonucu[]>([]);
+  /*
+    Takip ettiğin şirketler — oturum kapılarının ÜSTÜNDE (kancalar dallara
+    giremez; bkz. aşağıdaki keşif etkisinin gerekçesi). Oturum yokken
+    `etkin` false ve istek atılmıyor.
+  */
+  const takipEttiklerim = useTakipListesi(takipEttiklerimiGetir, Boolean(oturumHazir && kullaniciId));
 
   React.useEffect(() => {
     if (!oturumHazir || !kullaniciId) return;
@@ -533,6 +550,24 @@ export const AgimSayfasi: React.FC<Props> = ({
     </section>
   ) : null;
 
+  /* Aynı liste iki yerleşimde; hangisinin göründüğüne kırılım karar veriyor. */
+  const takipListesi = (
+    <TakipListesi
+      liste={takipEttiklerim}
+      bosMetin="Henüz şirket takip etmiyorsun."
+      hataMetni="Takip ettiğin şirketler alınamadı."
+      onNavigate={onNavigate}
+    />
+  );
+  const takipBlogu = (
+    <section aria-labelledby="agim-takip-mobil" className="space-y-3 border-t border-gray-200 px-4 py-5 lg:hidden">
+      <h2 id="agim-takip-mobil" className="text-base font-extrabold text-gray-900">
+        Takip ettiğin şirketler
+      </h2>
+      {takipListesi}
+    </section>
+  );
+
   const gorunenAkis = seciliKisi ? akis.filter((p) => p.yazarId === seciliKisi) : akis;
 
   const akisGovdesi =
@@ -692,6 +727,7 @@ export const AgimSayfasi: React.FC<Props> = ({
             </div>
           )}
           {akisGovdesi}
+          {takipBlogu}
         </main>
 
         <aside className="hidden w-[320px] shrink-0 lg:block xl:w-[360px]">
@@ -721,6 +757,13 @@ export const AgimSayfasi: React.FC<Props> = ({
                 {bekleyenIstek > 0 ? `Bağlantılar · ${bekleyenIstek} istek` : 'Bağlantılar'}
               </button>
             </div>
+
+            <section aria-labelledby="agim-takip" className="rounded-2xl border border-gray-200 bg-white p-4">
+              <h2 id="agim-takip" className="mb-3 text-sm font-extrabold text-gray-900">
+                Takip ettiğin şirketler
+              </h2>
+              {takipListesi}
+            </section>
 
             {kullaniciId && (
               <AgimYanSutun kullaniciId={kullaniciId} sektorId={benim?.sektorId ?? null} onNavigate={onNavigate} />

@@ -29,14 +29,20 @@ import {
  *
  * ÜÇ SAYAÇ, ÜÇÜ DE GERÇEK
  * -----------------------
- * Paylaşım `sosyal_sayaclar`, aktif ilan `listings` satırları, takipçi
- * `takipci_sayisi` RPC'sinden. Her sayaç kendi durumunu taşıyor: biri
+ * Paylaşım ve takipçi `sosyal_sayaclar`ın aynı satırından (20261015010000
+ * takipçi sütununu ekledi; `takipci_sayisi` ayrıca sorulmuyor), aktif
+ * ilan `listings` satırlarından. Her sayaç kendi durumunu taşıyor: biri
  * alınamayınca öteki ikisi düşmüyor ve alınamayan sayı "0" DEĞİL, "—"
  * ile "alınamadı" olarak basılıyor. Sıfır yalnız sunucu sıfır dediğinde.
  *
- * TAKİP ET DÜĞMESİ YOK (bu iş kapsamının dışında, ürün kararı ayrı
- * PR'da). Sayı gösteriliyor çünkü sunucu veriyor; eylem çizilmiyor çünkü
- * arayüzü henüz yok.
+ * TAKİP ET DÜĞMESİ ZİYARETÇİ DALINDA (karar: 18 Eylül 2026)
+ * -------------------------------------------------------
+ * `ziyaretciEylemi` yalnız `sahip` VERİLMEDİĞİNDE çiziliyor ve sayaçların
+ * altında, öğrenci profilindeki "Bağlantı kur" ile aynı yerde duruyor.
+ * Düğmenin kendisi (`TakipDugmesi`) bakanın kimliğini istiyor; kararı
+ * çağıran (`SirketSayfasi`) veriyor. Sahip dalında bu prop hiç
+ * verilmiyor: kendi sayfanı takip etmek şemada da yasak
+ * (`kendini_takip_yok`).
  *
  * ÖĞRENCİ KİMLİĞİ ÇİZİLMİYOR
  * --------------------------
@@ -93,6 +99,12 @@ interface GorunumProps {
   ilanlarIcerigi: React.ReactNode;
   /** Yalnız sahip dalında; ziyaretçide `undefined` ve sahibe özel hiçbir şey DOM'a girmiyor. */
   sahip?: SahipEylemleri;
+  /**
+   * Ziyaretçinin tek eylemi (takip düğmesi). `sahip` ile birlikte
+   * verilmez; verilse de sahip dalında çizilmiyor — iki dal aynı anda
+   * doğru olamaz.
+   */
+  ziyaretciEylemi?: React.ReactNode;
   onNavigate: (yol: string) => void;
   /** Panoya kopyalama gibi anlık geri bildirim. */
   bildirim?: string | null;
@@ -190,6 +202,7 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
   onPaylasimlariYenile,
   ilanlarIcerigi,
   sahip,
+  ziyaretciEylemi,
   onNavigate,
   bildirim,
 }) => {
@@ -286,6 +299,15 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
           <Sayac etiket="aktif ilan" deger={sayaclar.aktifIlan} />
           <Sayac etiket="takipçi" deger={sayaclar.takipci} />
         </dl>
+
+        {/*
+          Ziyaretçi eylemi sahip düğmeleriyle AYNI yerde ve aynı hizada:
+          telefonda tam genişlik, `sm:` üstünde içerik genişliğinde ve
+          ortada (ölçü gerekçesi sahip dalındaki yorumda).
+        */}
+        {!sahip && ziyaretciEylemi && (
+          <div className="mt-3 flex flex-col items-stretch sm:items-center">{ziyaretciEylemi}</div>
+        )}
 
         {sahip && (
           <div className="mt-3 space-y-2">

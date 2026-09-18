@@ -51,7 +51,7 @@ import {
   type IstekDurumu,
 } from './components/BildirimMerkezi';
 import { useBildirimler } from './lib/useBildirimler';
-import { SirketAgimBos } from './sirket/SirketKimlikKarti';
+import { SirketAgim } from './sirket/SirketAgim';
 
 /*
   Panel yollari. Herkese acik sirket sayfasi (/sirket/<slug>) ile
@@ -2614,16 +2614,17 @@ export default function App() {
     `akistaMi`) — iki başlık üst üste binerdi.
   */
   /*
-    ŞİRKET HESABINDA AĞIM: TEK KART, SAHTE SAYI YOK
+    ŞİRKET HESABINDA AĞIM: SENİ TAKİP EDENLER
 
-    Takip modeli (öğrenci → şirket) sıradaki PR'da ve veritabanı
-    gerektiriyor. Sosyal akışı çizmek şirketi öğrenci profili kurmaya
-    çağırırdı; o profil şirkete ait değil.
+    Takip modeli açık (öğrenci/şirket → şirket; 20261015010000 listeyi
+    veriyor). Sosyal akış yine çizilmiyor: akış öğrenci profili istiyor
+    ve o profil şirkete ait değil. Liste yalnız oturum sahibinin kendi
+    takipçileri (RPC `auth.uid()`i içeride okuyor).
   */
   if (kabukRolu === 'company' && /^\/(agim|baglantilar)(\/|$)/.test(temizYol)) {
     return icerikSayfasi(
       <main className={anaAlanSinifi}>
-        <SirketAgimBos />
+        <SirketAgim userId={session?.userId ?? null} onNavigate={navigate} />
       </main>,
     );
   }

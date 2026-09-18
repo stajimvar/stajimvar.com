@@ -4,27 +4,36 @@ import { ODAK_HALKASI, RENK_GECISI } from '../lib/renk-token';
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import { listingSlug } from '../lib/slug';
 import { fetchPublishedCompanyListings } from '../lib/queries';
-import { takipciSayisiGetir, type SosyalPaylasim, type SosyalProfil } from '../lib/queries/sosyal';
+import type { SosyalPaylasim, SosyalProfil } from '../lib/queries/sosyal';
 import { sirketAcikKimliginiOku, type SirketAcikKimlik } from '../lib/sirket-veri';
 import type { InternshipListing } from '../types';
+import { TakipDugmesi } from '../components/sosyal/TakipDugmesi';
 import { SirketProfilGorunumu, type SayacDurumu } from './SirketProfilGorunumu';
 
 /**
  * ŞİRKET SAYFASI — ÖĞRENCİNİN GÖRDÜĞÜ (/profil/<slug>)
  *
  * `SosyalProfilSayfasi` ziyaretçi dalında satırın `sirket_id`si doluysa
- * öğrenci görünümü yerine bunu çiziyor. Paylaşımlar ve paylaşım sayacı
- * o sayfadan geliyor (zaten okunmuş; ikinci kez sorulmuyor). Burada
- * yalnız şirkete özgü üç okuma var: açık kimlik (İK e-postası YOK —
- * `sirketAcikKimliginiOku` o sütunu hiç istemiyor), yayındaki ilanlar
- * ve takipçi sayısı.
+ * öğrenci görünümü yerine bunu çiziyor. Paylaşımlar, paylaşım sayacı ve
+ * takipçi sayacı o sayfadan geliyor (`sosyal_sayaclar` tek satırda ikisini
+ * de veriyor; zaten okunmuş, ikinci kez sorulmuyor). Burada yalnız şirkete
+ * özgü iki okuma var: açık kimlik (İK e-postası YOK —
+ * `sirketAcikKimliginiOku` o sütunu hiç istemiyor) ve yayındaki ilanlar.
  *
  * SAHİP NESNESİ HİÇ VERİLMİYOR: bu bileşen `sahip` prop'unu bilmiyor
  * bile. İlan oluşturma, düzenleme, paylaşım ekleme ve arşivleme burada
  * DOM'a giremiyor. Sunucu tarafı da aynı sınırı çiziyor (RLS).
  *
- * TAKİP ET YOK: sayı sunucudan geliyor ve gösteriliyor; eylem ayrı
- * işin konusu, sahte düğme çizilmiyor.
+ * TAKİP ET (karar: 18 Eylül 2026): ziyaretçi öğrenci de şirket de takip
+ * edebiliyor (RLS iki yöne de izinli: öğrenci→şirket, şirket→şirket).
+ * Düğme yalnız `bakanId` varsa ve bakan sayfanın sahibi değilse çiziliyor;
+ * sahip zaten bu dala düşmüyor (kendi sayfası /cv'ye yönleniyor) ama
+ * koşul yine de burada, bir yorumla değil gerçek bir dalla.
+ *
+ * TAKİPÇİ SAYACI DOKUNUŞTA DEĞİŞİYOR: düğme +1/-1 farkı bildiriyor, sayaç
+ * sunucudan gelen değere o farkı ekliyor. Sunucu reddederse düğme farkı
+ * geri alıyor. Sunucu değeri yeniden gelirse (prop değişirse) fark
+ * sıfırlanıyor — iki kaynak üst üste sayılmıyor.
  */
 
 type Durum = 'yukleniyor' | 'hazir' | 'hata';
@@ -36,16 +45,32 @@ export const SirketSayfasi: React.FC<{
   paylasimlar: SosyalPaylasim[];
   paylasimDurumu: Durum;
   paylasimSayaci: SayacDurumu;
+  /** `sosyal_sayaclar.takipci` — paylaşım sayacıyla aynı okumadan. */
+  takipciSayaci: SayacDurumu;
+  /** Bakan kişinin oturum kimliği; takip düğmesi bunu istiyor. */
+  bakanId: string | null;
   onPaylasimlariYenile: () => void;
   onNavigate: (yol: string) => void;
   bildirim?: string | null;
-}> = ({ profil, paylasimlar, paylasimDurumu, paylasimSayaci, onPaylasimlariYenile, onNavigate, bildirim }) => {
+}> = ({
+  profil,
+  paylasimlar,
+  paylasimDurumu,
+  paylasimSayaci,
+  takipciSayaci,
+  bakanId,
+  onPaylasimlariYenile,
+  onNavigate,
+  bildirim,
+}) => {
   const sirketId = profil.sirketId;
   const [kimlik, setKimlik] = React.useState<SirketAcikKimlik | null>(null);
   const [kimlikDurumu, setKimlikDurumu] = React.useState<Durum | 'yok'>('yukleniyor');
   const [ilanlar, setIlanlar] = React.useState<InternshipListing[]>([]);
   const [ilanDurumu, setIlanDurumu] = React.useState<Durum>('yukleniyor');
-  const [takipci, setTakipci] = React.useState<SayacDurumu>({ durum: 'yukleniyor' });
+  /* Takip düğmesinin bildirdiği fark; sunucu değeri yenilenince sıfırlanıyor. */
+  const [takipciFarki, setTakipciFarki] = React.useState(0);
+  React.useEffect(() => setTakipciFarki(0), [takipciSayaci]);
 
   React.useEffect(() => {
     if (!sirketId) return;
@@ -82,21 +107,6 @@ export const SirketSayfasi: React.FC<{
       iptal = true;
     };
   }, [sirketId]);
-
-  React.useEffect(() => {
-    let iptal = false;
-    setTakipci({ durum: 'yukleniyor' });
-    takipciSayisiGetir(profil.profilId)
-      .then((n) => {
-        if (!iptal) setTakipci({ durum: 'hazir', deger: n });
-      })
-      .catch(() => {
-        if (!iptal) setTakipci({ durum: 'hata' });
-      });
-    return () => {
-      iptal = true;
-    };
-  }, [profil.profilId]);
 
   if (kimlikDurumu === 'yukleniyor') {
     return (
@@ -139,6 +149,22 @@ export const SirketSayfasi: React.FC<{
         ? { durum: 'hata' }
         : { durum: 'yukleniyor' };
 
+  /* Sayaç sunucu değeri + dokunuş farkı; sıfırın altına inmiyor (sunucu da inmez). */
+  const takipci: SayacDurumu =
+    takipciSayaci.durum === 'hazir'
+      ? { durum: 'hazir', deger: Math.max(0, takipciSayaci.deger + takipciFarki) }
+      : takipciSayaci;
+
+  /* Sahibe düğme YOK: bakan ile sayfa aynı kimlikse eylem DOM'a girmiyor. */
+  const takipDugmesi =
+    bakanId && bakanId !== profil.profilId ? (
+      <TakipDugmesi
+        bakanId={bakanId}
+        hedefId={profil.profilId}
+        onTakipciFarki={(fark) => setTakipciFarki((f) => f + fark)}
+      />
+    ) : undefined;
+
   return (
     <SirketProfilGorunumu
       kimlik={kimlik}
@@ -149,6 +175,7 @@ export const SirketSayfasi: React.FC<{
       onPaylasimlariYenile={onPaylasimlariYenile}
       onNavigate={onNavigate}
       bildirim={bildirim}
+      ziyaretciEylemi={takipDugmesi}
       ilanlarIcerigi={<AcikIlanlar ilanlar={ilanlar} durum={ilanDurumu} onNavigate={onNavigate} />}
     />
   );

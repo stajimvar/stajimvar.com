@@ -49,13 +49,13 @@ export const SirketProfilSekmesi: React.FC<{
 export { CikisDugmesi };
 
 /**
- * Şirketin Ağım sekmesi — dürüst boş durum.
+ * Şirketin Ağım sekmesi — GERÇEK SIFIRIN kartı.
  *
- * Takip tablosu ve sayacı veritabanında (20261014010000) ve profil
- * sayfası takipçi SAYISINI gösteriyor; ama "takip et" düğmesi ve
- * takipçi LİSTESİ arayüzde henüz yok. Bugün çizilebilecek tek doğru şey
- * ne geleceğini söyleyen tek kart: sayı yok, iskelet yok, "yakında"
- * etiketi yok. Kesik kenar sitenin boş-durum dili (src/ui/EmptyState).
+ * Takip artık açık (öğrenci ve şirket, şirket sayfasındaki "Takip et"
+ * ile; 20261015010000 listeyi veriyor) ve liste `SirketAgim`de. Bu kart
+ * yalnız sunucu SIFIR satır dediğinde çiziliyor: sayı yok, iskelet yok,
+ * "yakında" yok. Kesik kenar sitenin boş-durum dili (src/ui/EmptyState).
+ * Başlık `p`: sayfanın `h1`i bölüm başlığında ("Seni takip edenler").
  */
 export const SirketAgimBos: React.FC = () => (
   <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center">
@@ -65,15 +65,14 @@ export const SirketAgimBos: React.FC = () => (
     >
       <Users className="h-6 w-6" aria-hidden />
     </span>
-    <h1 className="font-bold" style={{ color: SIRKET_METIN }}>
-      Seni takip eden öğrenciler burada görünecek
-    </h1>
+    <p className="font-bold" style={{ color: SIRKET_METIN }}>
+      Henüz seni takip eden yok
+    </p>
     <p
       className="mx-auto mt-1 max-w-md text-sm leading-relaxed"
       style={{ color: SIRKET_METIN_IKINCIL }}
     >
-      Takip özelliği henüz açık değil. Açıldığında şirketini takip eden öğrencileri ve
-      ilanlarına başvuranları bu sekmede göreceksin.
+      Şirket sayfanı takip eden öğrenciler ve şirketler burada görünecek.
     </p>
   </div>
 );

@@ -436,7 +436,24 @@ export function splitStudentUpdate(patch: Partial<StudentProfile>) {
 
 // ---------------------------------------------------------------- Şirket
 
-export type CompanyRowWithMembers = Tables<'companies'> & {
+/* Yalnız COMPANY_SELECT'in istediği sütunlar; özel sütunlar (hr_email, vkn…) tipte de yok. */
+export type CompanyRowWithMembers = Pick<
+  Tables<'companies'>,
+  | 'id'
+  | 'name'
+  | 'slug'
+  | 'logo_url'
+  | 'cover_url'
+  | 'industry'
+  | 'size'
+  | 'location'
+  | 'description'
+  | 'website_url'
+  | 'rating'
+  | 'verified'
+  | 'plan'
+  | 'created_at'
+> & {
   company_members: Array<
     Pick<Tables<'company_members'>, 'recruiter_role' | 'is_owner'> & {
       profiles: Pick<Tables<'profiles'>, 'full_name' | 'email' | 'avatar_url'> | null;

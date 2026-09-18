@@ -17,7 +17,6 @@ import {
   kendiSosyalProfiliGetir,
   paylasimlariGetir,
   sosyalSayaclariGetir,
-  takipciSayisiGetir,
   type SosyalPaylasim,
   type SosyalProfil,
 } from '../lib/queries/sosyal';
@@ -137,42 +136,37 @@ export const SirketProfili: React.FC<{
   }, [userId]);
 
   /*
-    Üç okuma birbirinden bağımsız: biri düşünce öteki ikisi durmuyor.
-    Her biri kendi hata dalını yazıyor — "0" yerine "alınamadı".
+    Sosyal satır, sayaçlar ve paylaşım listesi birbirinden bağımsız: biri
+    düşünce ötekiler durmuyor; her biri kendi hata dalını yazıyor — "0"
+    yerine "alınamadı".
+
+    PAYLAŞIM VE TAKİPÇİ TEK ÇAĞRIDAN: `sosyal_sayaclar` 20261015010000 ile
+    takipçi sütununu da döndürüyor; `takipci_sayisi` RPC'si ayrıca
+    sorulmuyordu, aynı sayı iki kez gelirdi. Kendi satırın `sosyal_gorunur`
+    kapısında her zaman açık (hedef = auth.uid()), yani sayfa yayında
+    olmasa da satır geliyor.
   */
   React.useEffect(() => {
     if (!userId) return;
     let iptal = false;
     setPaylasimSayaci({ durum: 'yukleniyor' });
+    setTakipciSayaci({ durum: 'yukleniyor' });
     sosyalSayaclariGetir(userId)
       .then((s) => {
         if (iptal) return;
         /* `null` = sunucu satır vermedi; kendi profilinde beklenmez ama sıfır uydurulmaz. */
         setPaylasimSayaci(s ? { durum: 'hazir', deger: s.paylasim } : { durum: 'hata' });
+        setTakipciSayaci(s ? { durum: 'hazir', deger: s.takipci } : { durum: 'hata' });
       })
       .catch(() => {
-        if (!iptal) setPaylasimSayaci({ durum: 'hata' });
+        if (iptal) return;
+        setPaylasimSayaci({ durum: 'hata' });
+        setTakipciSayaci({ durum: 'hata' });
       });
     return () => {
       iptal = true;
     };
   }, [userId, deneme]);
-
-  React.useEffect(() => {
-    if (!userId) return;
-    let iptal = false;
-    setTakipciSayaci({ durum: 'yukleniyor' });
-    takipciSayisiGetir(userId)
-      .then((n) => {
-        if (!iptal) setTakipciSayaci({ durum: 'hazir', deger: n });
-      })
-      .catch(() => {
-        if (!iptal) setTakipciSayaci({ durum: 'hata' });
-      });
-    return () => {
-      iptal = true;
-    };
-  }, [userId]);
 
   React.useEffect(() => {
     if (!userId) return;

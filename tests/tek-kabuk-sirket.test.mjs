@@ -64,11 +64,15 @@ test('şirket sekmeleri dürüst: Fırsatlar salt okunur, Ağım tek boş kart, 
   assert.match(FIRSATLAR, /onKaydet=\{filters\.arsiv \|\| saltOkunur \? undefined : \(\) => kaydiDegistir\(item\)\}/);
   assert.match(FIRSATLAR, /userId && !saltOkunur \? fetchSavedOpportunityIds\(userId\)/);
 
-  /* Ağım: takip modeli yok; tek kart, sayı yok, "yakında" yok. */
+  /*
+    Ağım: takipçi listesi (18 Eylül 2026). Boş kart yalnız sunucu sıfır
+    dediğinde; sayı yok, "yakında" yok. Liste bileşeni `SirketAgim`.
+  */
   assert.match(APP, /kabukRolu === 'company' && \/\^\\\/\(agim\|baglantilar\)\(\\\/\|\$\)\/\.test\(temizYol\)/);
+  assert.match(APP, /<SirketAgim userId=\{session\?\.userId \?\? null\} onNavigate=\{navigate\} \/>/);
   const agim = KIMLIK.slice(KIMLIK.indexOf('export const SirketAgimBos'));
-  assert.match(agim, /Seni takip eden öğrenciler burada görünecek/);
-  assert.doesNotMatch(agim, /yakında|\b0 takipçi|tabular-nums/i);
+  assert.match(agim, /Henüz seni takip eden yok/);
+  assert.doesNotMatch(agim, /yakında|henüz açık değil|\b0 takipçi|tabular-nums/i);
 
   /*
     Profil: şirket sayfası artık SirketProfili (tests/sirket-profil-sayfasi.test.mjs).

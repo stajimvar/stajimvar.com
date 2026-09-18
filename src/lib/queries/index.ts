@@ -595,8 +595,17 @@ export async function saveStudentProfile(
 
 // ---------------------------------------------------------------- Şirket
 
+/*
+  `*` DEĞİL, AÇIK SÜTUN LİSTESİ (20261016010000): `companies` tablosunun
+  SELECT yetkisi sütun sütun verildi; hr_email, vkn, mersis, doğrulama
+  notları, claimed_by/created_by anon ve authenticated'dan geri alındı.
+  `select *` o sütunları da istediği için ÖLÇÜLDÜ: "permission denied".
+  Liste `toCompanyAccount`ın okuduğu sütunların tamamı; yeni bir alan
+  okunacaksa hem buraya hem göçteki grant listesine girmeli.
+*/
 const COMPANY_SELECT = `
-  *,
+  id, name, slug, logo_url, cover_url, industry, size, location, description,
+  website_url, rating, verified, plan, created_at,
   company_members ( recruiter_role, is_owner, profiles ( full_name, email, avatar_url ) )
 `;
 

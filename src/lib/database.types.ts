@@ -1599,6 +1599,20 @@ export type Database = {
       };
       is_admin: { Args: Record<string, never>; Returns: boolean };
       is_company_member: { Args: { target_company: string }; Returns: boolean };
+      /*
+        Şirketin özel sütunları (20261016010000): hr_email, vkn, mersis,
+        vkn_dogrulandi_at tablo SELECT'inden geri alındı; yalnız üye ya da
+        yönetici bu RPC ile okuyor. Üye değilse SIFIR satır. Göçle birebir.
+      */
+      sirket_ozel_bilgilerim: {
+        Args: { p_company: string };
+        Returns: {
+          hr_email: string | null;
+          vkn: string | null;
+          mersis: string | null;
+          vkn_dogrulandi_at: string | null;
+        }[];
+      };
       submit_quiz_attempt: {
         Args: { p_quiz_id: string; p_answers: Json };
         Returns: Json;
@@ -1665,6 +1679,46 @@ export type Database = {
       */
       takipci_sayisi: { Args: { hedef: string }; Returns: number };
       takip_ediyor_muyum: { Args: { hedef: string }; Returns: boolean };
+      /*
+        Profil sayaçları — 20261015010000 iki sütun ekledi: `takipci`
+        (hedefi takip eden sayısı) ve `takip` (hedefin takip ettiği şirket
+        sayısı). Dönüş `sosyal_gorunur` kapısından geçiyor: göremediğin
+        profil için SIFIR SATIR, sıfır değer değil. Sosyal katman dar
+        istemciyle okuduğu için (`src/lib/queries/sosyal.ts`) bu tip
+        oradan kullanılmıyor; göçle birebir tutulsun diye elle yazıldı.
+      */
+      sosyal_sayaclar: {
+        Args: { hedef: string };
+        Returns: { paylasim: number; baglanti: number; takipci: number; takip: number }[];
+      };
+      /*
+        Takipçi ve takip listeleri (20261015010000). İkisi de YALNIZ
+        çağıranın kendi listesi: `auth.uid()` fonksiyonun İÇİNDE okunuyor,
+        parametre değil — başkasının takipçi listesi hiçbir yoldan
+        okunmuyor. Sayfalı: limit 1..100'e kırpılıyor, varsayılan 50.
+      */
+      takipcilerim: {
+        Args: { p_limit?: number; p_offset?: number };
+        Returns: {
+          profile_id: string;
+          username: string;
+          gorunen_ad: string | null;
+          avatar_path: string | null;
+          sirket_id: string | null;
+          takip_tarihi: string;
+        }[];
+      };
+      takip_ettiklerim: {
+        Args: { p_limit?: number; p_offset?: number };
+        Returns: {
+          profile_id: string;
+          username: string;
+          gorunen_ad: string | null;
+          avatar_path: string | null;
+          sirket_id: string | null;
+          takip_tarihi: string;
+        }[];
+      };
     };
     Enums: {
       application_method: 'email_application' | 'external' | 'internal';

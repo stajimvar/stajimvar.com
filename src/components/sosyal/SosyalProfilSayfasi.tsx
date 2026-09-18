@@ -1267,6 +1267,16 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
                     ? { durum: 'yukleniyor' }
                     : { durum: 'hata' }
               }
+              /* Aynı RPC satırının `takipci` sütunu; ikinci bir sayaç çağrısı yok. */
+              takipciSayaci={
+                sayacDurumu === 'hazir' && sayaclar
+                  ? { durum: 'hazir', deger: sayaclar.takipci }
+                  : sayacDurumu === 'yukleniyor'
+                    ? { durum: 'yukleniyor' }
+                    : { durum: 'hata' }
+              }
+              /* Takip düğmesi bakanın kimliğini istiyor; ziyaretçi dalı, sahip değil. */
+              bakanId={kullaniciId}
               onPaylasimlariYenile={() => setPaylasimDeneme((sayi) => sayi + 1)}
               onNavigate={onNavigate}
               bildirim={bildirim}

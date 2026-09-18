@@ -530,13 +530,21 @@ export async function sosyalProfilGuncelle(
 export interface SosyalSayaclar {
   paylasim: number;
   baglanti: number;
+  /** Bu profili takip edenlerin sayısı — yalnız şirket sayfasında anlamlı (hedef hep şirket). */
+  takipci: number;
+  /** Bu profilin takip ettiği şirket sayısı — öğrenci ve şirket profilinde. */
+  takip: number;
 }
 
 /**
- * Profildeki iki sayı: Paylaşım ve Bağlantı.
+ * Profildeki sayılar: paylaşım, bağlantı, takipçi, takip — tek RPC.
  *
- * "Bağlantıda" diye üçüncü bir sayaç YOK — bağlantı simetrik ve tek satır
+ * "Bağlantıda" diye ayrı bir sayaç YOK — bağlantı simetrik ve tek satır
  * olduğu için ikinci bir sayı aynı şeyi tekrar söylerdi (şemadaki gerekçe).
+ * Takip ise TEK YÖNLÜ (öğrenci/şirket → şirket), bu yüzden iki ayrı sayı
+ * gerçekten iki ayrı şey söylüyor: `takipci` sayfayı kimlerin izlediği,
+ * `takip` profilin kimleri izlediği. 20261015010000 ikisini aynı satıra
+ * ekledi; `takipci_sayisi` RPC'si ayrıca sorulmuyor (aynı sayı iki kez).
  *
  * RPC `sosyal_gorunur` kapısından geçiyor ve göremediğin profil için SIFIR
  * SATIR dönüyor. Sıfır satır "sayı sıfır" DEĞİL, "sana verilmiyor" demek;
@@ -562,23 +570,108 @@ export async function sosyalSayaclariGetir(profilId: string): Promise<SosyalSaya
   return {
     paylasim: Number(satir.paylasim ?? 0),
     baglanti: Number(satir.baglanti ?? 0),
+    takipci: Number(satir.takipci ?? 0),
+    takip: Number(satir.takip ?? 0),
+  };
+}
+
+// -------------------------------------------------------------------- Takip
+
+/**
+ * TAKİP — TEK YÖNLÜ, ONAYSIZ (20261014010000, 20261015010000)
+ *
+ * Hedef her zaman yayında bir şirket sayfası; takipçi öğrenci ya da
+ * şirket. Şirketin öğrenciyi takip etmesi YOK: politika (`takip_edilebilir`)
+ * bunu reddediyor ve arayüz o yönde düğme çizmiyor. Bağlantı ile
+ * karıştırılmamalı: burada istek, kabul, ret yok — satır ya var ya yok.
+ *
+ * Yazma doğrudan `takipler` tablosuna: insert kendi kimliğinle, delete
+ * kendi satırın. Kim neyi yazabilir sorusunun cevabı RLS'de; burası o
+ * kuralı tekrarlamıyor, 42501'i kullanıcı cümlesine çeviriyor.
+ */
+
+/** Bakan kişi bu sayfayı takip ediyor mu — `takip_ediyor_muyum` (security definer, yalnız kendi satırına bakıyor). */
+export async function takipEdiyorMuyum(hedefId: string): Promise<boolean> {
+  const { data, error } = await db.rpc('takip_ediyor_muyum', { hedef: hedefId });
+  if (error) hata('Takip durumu alınamadı', error);
+  return data === true;
+}
+
+export async function takipEt(kullaniciId: string, hedefId: string): Promise<void> {
+  const { error } = await db.from('takipler').insert({ takipci_id: kullaniciId, hedef_id: hedefId });
+  if (!error) return;
+  /* Çift tıklama ya da iki sekme: satır zaten var, ekran "takip ediliyor" demeli; hata değil. */
+  if (error.code === '23505') return;
+  if (error.code === '42501') {
+    throw new SosyalHata('Bu sayfa takip edilemiyor.', 'izin-yok');
+  }
+  hata('Takip edilemedi', error);
+}
+
+/**
+ * Takibi bırak. `.select()` ile silinen satır sayısı okunuyor: RLS
+ * reddettiğinde delete hata DEĞİL, sıfır satır döndürüyor ve o durumda
+ * "bıraktın" demek yalan olurdu.
+ */
+export async function takibiBirak(kullaniciId: string, hedefId: string): Promise<void> {
+  const { data, error } = await db
+    .from('takipler')
+    .delete()
+    .eq('takipci_id', kullaniciId)
+    .eq('hedef_id', hedefId)
+    .select('hedef_id');
+  if (error) hata('Takip bırakılamadı', error);
+  if (!data || data.length === 0) {
+    throw new SosyalHata('Takip bırakılamadı; kayıt değişmedi.', 'satir-yok');
+  }
+}
+
+/** `takipcilerim` / `takip_ettiklerim` satırı — ikisi aynı biçimde dönüyor. */
+export interface TakipKisisi {
+  profilId: string;
+  kullaniciAdi: string;
+  gorunenAd: string | null;
+  /** Depolama yolu, adres değil; dosya çizilirken oturumdan geçerek iniyor (`ProfilFotografi`). */
+  avatarYolu: string | null;
+  /** Dolu ise satır bir şirket sayfası; takipçi listesinde şirket→şirket takibi böyle ayırt ediliyor. */
+  sirketId: string | null;
+  takipTarihi: string;
+}
+
+/** Sunucunun `least(p_limit, 100)` kırpmasıyla aynı; arayüz "daha fazla" adımını buna göre atıyor. */
+export const TAKIP_SAYFA_BOYU = 50;
+
+function takipSatiri(satir: any): TakipKisisi {
+  return {
+    profilId: satir.profile_id,
+    kullaniciAdi: satir.username,
+    gorunenAd: satir.gorunen_ad ?? null,
+    avatarYolu: satir.avatar_path ?? null,
+    sirketId: satir.sirket_id ?? null,
+    takipTarihi: satir.takip_tarihi,
   };
 }
 
 /**
- * Şirket sayfasının takipçi sayısı — `takipci_sayisi` RPC
- * (20261014010000).
+ * Seni takip edenler — YALNIZ çağıranın kendi listesi.
  *
- * Satırlar (`takipler`) yalnız taraflara açık; SAYI herkese. Fonksiyon
- * `security definer` ve `count(*)` döndürüyor, yani sıfır satır diye bir
- * dal yok: 0 gerçekten "kimse takip etmiyor" demek ve öyle basılıyor.
- * Sayı alınamazsa (ağ, yetki) fırlatıyor; çağıran 'hata' çiziyor, sıfır
- * uydurmuyor.
+ * RPC `auth.uid()`i içeride okuyor; bir hedef parametresi yok, olmayacak:
+ * başkasının takipçi listesi hiçbir yoldan okunmuyor. Engellenmiş ve
+ * yayında olmayan profiller sunucuda süzülüyor; sayı ile liste bu yüzden
+ * ayrışabilir ve ekran "N takipçi" ile listedeki satır sayısını eşitlemeye
+ * çalışmıyor.
  */
-export async function takipciSayisiGetir(hedefId: string): Promise<number> {
-  const { data, error } = await db.rpc('takipci_sayisi', { hedef: hedefId });
-  if (error) hata('Takipçi sayısı alınamadı', error);
-  return Number(data ?? 0);
+export async function takipcilerimiGetir(offset = 0, limit = TAKIP_SAYFA_BOYU): Promise<TakipKisisi[]> {
+  const { data, error } = await db.rpc('takipcilerim', { p_limit: limit, p_offset: offset });
+  if (error) hata('Takipçiler alınamadı', error);
+  return (data ?? []).map(takipSatiri);
+}
+
+/** Takip ettiğin şirketler — simetrik RPC, aynı biçim, aynı sayfalama. */
+export async function takipEttiklerimiGetir(offset = 0, limit = TAKIP_SAYFA_BOYU): Promise<TakipKisisi[]> {
+  const { data, error } = await db.rpc('takip_ettiklerim', { p_limit: limit, p_offset: offset });
+  if (error) hata('Takip ettiklerin alınamadı', error);
+  return (data ?? []).map(takipSatiri);
 }
 
 // --------------------------------------------------------------- Paylaşımlar

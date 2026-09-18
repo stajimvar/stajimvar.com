@@ -522,12 +522,22 @@ export const ProfilBasligi: React.FC<Props> = ({
 
         {/* ---------------- Sayaçlar ve eylemler ---------------- */}
         <div className="space-y-4 lg:w-[440px] lg:shrink-0 lg:self-stretch lg:border-l lg:border-gray-200 lg:pl-8 lg:flex lg:flex-col lg:justify-center">
+          {/*
+            ÜÇ SAYAÇ, ARADA ÇİZGİ YOK (karar: 18 Eylül 2026). "takip"
+            öğrencinin takip ettiği şirket sayısı (`sosyal_sayaclar.takip`);
+            aynı RPC satırından geliyor, ikinci bir çağrı yok. Üçüncü hücre
+            gelince iki dikey ayraç şeridi parçalıyordu; şirket sayfasının
+            sayaç şeridiyle aynı kural: eşit sütunlar, ayraç yok. Sayaç
+            bağlantı DEĞİL: takip edilen şirketlerin listesi Ağım'da ve
+            bu sayıya basınca gidilecek ayrı bir liste ekranı yok.
+          */}
           <div
-            className="grid grid-cols-2 divide-x divide-gray-200 border-y border-gray-100 py-2 lg:border-y-0 lg:py-0"
+            className="grid grid-cols-3 border-y border-gray-100 py-2 lg:border-y-0 lg:py-0"
             aria-busy={sosyalHucre === 'yukleniyor' || undefined}
           >
             {sosyalHucre === 'yukleniyor' && (
               <>
+                <SayacIskeleti />
                 <SayacIskeleti />
                 <SayacIskeleti />
               </>
@@ -541,12 +551,13 @@ export const ProfilBasligi: React.FC<Props> = ({
                   href="/baglantilar"
                   onNavigate={satir.onNavigate}
                 />
+                <Sayac deger={satir.sayaclar.takip} etiket="takip" />
               </>
             )}
             {sosyalHucre === 'alinamadi' && (
               /* Sıfır ya da tire yazılmıyor: "sunucu vermedi" gerçek sıfır gibi okunurdu. */
-              <p className="col-span-2 self-center px-1 text-center text-xs leading-tight text-gray-600">
-                Paylaşım ve bağlantı sayısı alınamadı
+              <p className="col-span-3 self-center px-1 text-center text-xs leading-tight text-gray-600">
+                Paylaşım, bağlantı ve takip sayısı alınamadı
               </p>
             )}
           </div>

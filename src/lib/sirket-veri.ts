@@ -82,25 +82,64 @@ export async function sirketBaglami(
 
     const { data: sirket } = await db
       .from('companies')
-      .select('id, name, slug, website_url, hr_email, vkn, verified')
+      .select('id, name, slug, website_url, verified')
       .eq('id', companyId)
       .maybeSingle();
 
     if (!sirket) return bos;
+
+    /*
+      İK e-postası ve VKN artık tablo sütunundan okunamıyor (20261016010000
+      sütun yetkisini geri aldı); yalnız üyeye açık RPC veriyor. Satır
+      gelmezse (üye değil, RPC yok) değerler null — uydurulmuyor.
+    */
+    const ozel = await sirketOzelBilgileri(companyId);
 
     return {
       companyId: sirket.id,
       ad: sirket.name ?? '',
       slug: sirket.slug ?? '',
       siteUrl: sirket.website_url ?? null,
-      hrEmail: sirket.hr_email ?? null,
-      vkn: sirket.vkn ?? null,
+      hrEmail: ozel?.hrEmail ?? null,
+      vkn: ozel?.vkn ?? null,
       dogrulandi: Boolean(sirket.verified),
       kademe: kademeHesapla({ uyeMi: true, dogrulanmisMi: Boolean(sirket.verified), yoneticiMi }),
     };
   } catch {
     /* Bağlam okunamazsa kullanıcı kapıda kalıyor; panel açılmıyor. */
     return bos;
+  }
+}
+
+/**
+ * Şirketin özel bilgileri — `sirket_ozel_bilgilerim` RPC (20261016010000).
+ *
+ * `hr_email`, `vkn`, `mersis`, `vkn_dogrulandi_at` sütunları anon ve
+ * authenticated'dan geri alındı; tablo sorgusuna bu adları yazmak
+ * "permission denied" demek. RPC `security definer`, üye ya da yönetici
+ * değilse SIFIR satır: "yok" ile "göremezsin" ayrılmıyor, var-yok
+ * sızdırılmıyor. Sıfır satır burada `null`; hata da `null` — çağıran
+ * boş alan çiziyor, uydurma değer üretmiyor.
+ */
+export async function sirketOzelBilgileri(
+  companyId: string,
+): Promise<{ hrEmail: string | null; vkn: string | null; mersis: string | null; vknDogrulandiAt: string | null } | null> {
+  try {
+    const db = await istemci();
+    const { data, error } = await db.rpc('sirket_ozel_bilgilerim', { p_company: companyId });
+    if (error) return null;
+    const satir = (Array.isArray(data) ? data[0] : data) as
+      | { hr_email?: string | null; vkn?: string | null; mersis?: string | null; vkn_dogrulandi_at?: string | null }
+      | undefined;
+    if (!satir) return null;
+    return {
+      hrEmail: satir.hr_email ?? null,
+      vkn: satir.vkn ?? null,
+      mersis: satir.mersis ?? null,
+      vknDogrulandiAt: satir.vkn_dogrulandi_at ?? null,
+    };
+  } catch {
+    return null;
   }
 }
 
@@ -475,11 +514,15 @@ export function profilTamamlanmaOrani(deger: Partial<SirketProfilDegeri>): numbe
 
 export async function sirketProfiliOku(companyId: string): Promise<SirketProfilDegeri> {
   const db = await istemci();
-  const { data } = await db
-    .from('companies')
-    .select('logo_url, industry, size, location, website_url, description, hr_email')
-    .eq('id', companyId)
-    .maybeSingle();
+  /* İK e-postası açık sütun değil; RPC'den, tabloyla aynı anda (bkz. sirketOzelBilgileri). */
+  const [{ data }, ozel] = await Promise.all([
+    db
+      .from('companies')
+      .select('logo_url, industry, size, location, website_url, description')
+      .eq('id', companyId)
+      .maybeSingle(),
+    sirketOzelBilgileri(companyId),
+  ]);
 
   return {
     logoUrl: data?.logo_url ?? '',
@@ -488,7 +531,7 @@ export async function sirketProfiliOku(companyId: string): Promise<SirketProfilD
     location: data?.location ?? '',
     websiteUrl: data?.website_url ?? '',
     description: data?.description ?? '',
-    hrEmail: data?.hr_email ?? '',
+    hrEmail: ozel?.hrEmail ?? '',
   };
 }
 
