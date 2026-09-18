@@ -37,8 +37,12 @@ test('şirket sayfası sektörden bağımsız herkese açık ama engel korunuyor
   assert.match(politika, /yayinda_mi/);
   assert.match(politika, /not sosyal_gizli\.engelli_mi\(profile_id\)/);
   assert.doesNotMatch(politika, /aktif_sektor|sector_id/, 'sektör şartı şirket sayfasında olmamalı');
-  /* Yayın şartı: sektör YA DA şirket. */
-  assert.match(goc, /username is not null and \(sector_id is not null or sirket_id is not null\)/);
+  /*
+    Yayın şartına DOKUNULMUYOR: 20260926040000 sektör şartını kaldırmıştı;
+    ilk taslak onu geri getirip canlıda 16 öğrenci satırında patladı.
+    Göç kısıtı yeniden tanımlamamalı.
+  */
+  assert.doesNotMatch(goc, /add constraint yayin_icin_kimlik_sart/);
 });
 
 test('kitle kilidi iki yönlü: şirket yalnız "sirket", "sirket" yalnız şirket', () => {
