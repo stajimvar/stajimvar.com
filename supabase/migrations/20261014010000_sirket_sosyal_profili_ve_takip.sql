@@ -58,18 +58,14 @@ create unique index if not exists social_profiles_sirket_tek
   on public.social_profiles (sirket_id) where sirket_id is not null;
 
 /*
-  YAYIN ŞARTI: ŞİRKETTE SEKTÖR YERİNE ŞİRKET
-  Öğrenci sayfası sektör olmadan yayımlanamıyor (aynı-sektör görünürlüğü
-  ona bağlı). Şirket sayfasının görünürlüğü sektöre bağlı değil; kimlik
-  şartı kullanıcı adı + şirket.
+  YAYIN ŞARTINA DOKUNULMUYOR
+  İlk taslak burada "username + (sektör YA DA şirket)" kısıtını yeniden
+  kuruyordu. Canlıya push edilince 16 gerçek öğrenci satırında patladı:
+  20260926040000 (üç ayrı kavram) sektör şartını ÇOKTAN kaldırmış,
+  kısıt yalnız `not yayinda_mi or username is not null`. Yerel sıfırdan
+  kurulumda satır olmadığı için fark edilmedi. Mevcut kısıt şirket
+  sayfası için de yeterli: kullanıcı adı var, sektör zaten istenmiyor.
 */
-alter table public.social_profiles drop constraint if exists yayin_icin_kimlik_sart;
-alter table public.social_profiles
-  add constraint yayin_icin_kimlik_sart
-    check (
-      not yayinda_mi
-      or (username is not null and (sector_id is not null or sirket_id is not null))
-    );
 
 /*
   KİMSE KENDİNİ ŞİRKET İLAN EDEMEZ
