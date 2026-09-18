@@ -62,6 +62,28 @@ import {
 */
 const VERI_ONEKLERI = ['/ilan/', '/sirket/', '/firsatlar/', '/bolum/'];
 
+/*
+  ŞİRKET PANELİNİN YOLLARI VERİ DEĞİL, UYGULAMA
+
+  `/sirket/` bir veri öneki: `/sirket/<slug>` bir şirket sayfası ve dosyası
+  yoksa gerçekten yok. Ama `/sirket/ilanlar`, `/sirket/basvuranlar`,
+  `/sirket/profil` ve `/sirket/ilan` şirket sayfası değil, giriş yapmış
+  işverenin paneli (App.tsx: SIRKET_PANEL_YOLLARI). Aynı önek altında
+  oldukları için veri dalına düşüyor ve HTTP 404 dönüyorlardı — sayfa
+  yine açılıyordu (404.html uygulamayı başlatıyor) ama durum kodu
+  yanlıştı (17 Eylül 2026'da canlıda ölçüldü).
+
+  Bu liste App.tsx'teki SIRKET_PANEL_YOLLARI ile aynı olmalı; veri
+  dalından ÖNCE bakılıyor. Panel `noindex` ve giriş arkasında; 200 kabuk
+  burada var-yok sızdırmıyor, çünkü içerik oturuma bağlı.
+*/
+const SIRKET_PANEL_YOLLARI = ['/sirket/ilanlar', '/sirket/basvuranlar', '/sirket/profil', '/sirket/ilan'];
+
+function sirketPaneliMi(yol: string): boolean {
+  const temiz = yol.replace(/\/+$/, '');
+  return SIRKET_PANEL_YOLLARI.some((p) => temiz === p || temiz.startsWith(`${p}/`));
+}
+
 const UYGULAMA_ADRESLERI = new Set([
   /*
     /cv artık YAZDIRILABİLİR CV DEĞİL: profil kartı ile sosyal fotoğraf
@@ -129,6 +151,7 @@ const UYGULAMA_ADRESLERI = new Set([
 function uygulamaninMi(yol: string): boolean {
   const temiz = yol.replace(/\/+$/, '') || '/';
   if (UYGULAMA_ADRESLERI.has(temiz)) return true;
+  if (sirketPaneliMi(temiz)) return true;
   if (temiz === '/yonetim' || temiz.startsWith('/yonetim/')) return true;
   /*
     /profil/<kullaniciadi> — UYGULAMA ÖNEKİ, VERİ ÖNEKİ DEĞİL
@@ -342,9 +365,9 @@ export const onRequest: PagesFunction<Ortam> = async (baglam) => {
     otomasyon saat başı yeniden dağıtıyor. Var olmayan yüzlerce adresi
     indekslenebilir kılmaktansa bu pencere kabul edildi.
   */
-  const veriyeDayali = VERI_ONEKLERI.some(
-    (onek) => yol.startsWith(onek) && yol.length > onek.length,
-  );
+  const veriyeDayali =
+    !sirketPaneliMi(yol) &&
+    VERI_ONEKLERI.some((onek) => yol.startsWith(onek) && yol.length > onek.length);
 
   /*
     SAYFASI YAZILMAMIŞ AMA VAR OLAN KAYITLAR
