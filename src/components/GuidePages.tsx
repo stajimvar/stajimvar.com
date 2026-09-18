@@ -221,8 +221,10 @@ export const GuideHub: React.FC<
     onAramaDegis?: (terim: string) => void;
     onAramaTemizle?: () => void;
     onGirisGerekli?: () => void;
+    /** Şirket hesabında şirketlere yönelik rehber en üstte. */
+    sirketHesabi?: boolean;
   }
-> = ({ onNavigate, ogrenci = null, arama, onAramaDegis, onAramaTemizle, onGirisGerekli }) => (
+> = ({ onNavigate, ogrenci = null, arama, onAramaDegis, onAramaTemizle, onGirisGerekli, sirketHesabi }) => (
   <RehberMerkeziBilesen
     onNavigate={onNavigate}
     ogrenci={ogrenci}
@@ -230,6 +232,7 @@ export const GuideHub: React.FC<
     onAramaDegis={onAramaDegis}
     onAramaTemizle={onAramaTemizle}
     onGirisGerekli={onGirisGerekli}
+    sirketHesabi={sirketHesabi}
   />
 );
 

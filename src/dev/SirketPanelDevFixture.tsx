@@ -1,34 +1,39 @@
 import React from 'react';
-import { SirketKabugu } from '../sirket/SirketKabugu';
-import { Ilanlar } from '../sirket/SirketPaneli';
+import { Header } from '../components/Header';
+import { OpportunitiesPage } from '../components/OpportunitiesPage';
+import { GuideHub } from '../components/GuidePages';
+import { SayfaAramaSaglayici } from '../lib/sayfa-aramasi';
+import { SirketIlanlarSekmesi, sirketEkrani } from '../sirket/SirketPaneli';
+import { SirketAgimBos, SirketProfilSekmesi } from '../sirket/SirketKimlikKarti';
 import { IlanFormu } from '../sirket/IlanFormu';
-import { AdayIzgarasi } from '../sirket/AdayIzgarasi';
-import { GenelBakis } from '../sirket/GenelBakis';
-import { SirketProfilFormu } from '../sirket/SirketProfilFormu';
-import {
-  SIRKET_KENAR,
-  SIRKET_KENAR_VURGU,
-  SIRKET_METIN_IKINCIL,
-  SIRKET_ROZET,
-  SIRKET_VURGU_KOYU,
-} from '../sirket/renk';
 import { KADEME } from '../lib/sirket-kademe.mjs';
 import { kartVerisi } from '../lib/aday-kart.mjs';
 import type { SirketProfilDegeri } from '../lib/sirket-veri';
+import { SAYFA_GENISLIGI } from '../lib/duzen';
 
 /**
- * Şirket panelinin görsel testi.
+ * Şirket hesabının TEK KABUK görsel testi.
  *
  * NEDEN VAR
  * ---------
- * Panel şirket üyeliği gerektiriyor ve tarayıcıdan uçtan uca
+ * Şirket ekranları şirket üyeliği gerektiriyor ve tarayıcıdan uçtan uca
  * denenemiyor. Bu projede bir kez "tsc temiz, testler yeşil" deyip
  * yerleşimi bozuk bir şey canlıya çıktı; tip denetimi bir yerleşim
  * hatasını yakalamıyor.
  *
- * Burada kabuk, ilan formu ve aday ızgarası gerçek verilerle değil ama
- * GERÇEK bileşenlerle çiziliyor: ölçüler, tema sızıntısı, klavye
- * gezinmesi ve form davranışı ölçülebiliyor.
+ * NE ÇİZİYOR (18 Eylül 2026)
+ * --------------------------
+ * Gerçek Header (`userRole="company"`) + gerçek alt menü + sekme
+ * içerikleri, oturumsuz. Adres yerel durumda (`yol`); Header ve sekme
+ * bağlantıları `onNavigate` ile onu değiştiriyor, yani beş sekme
+ * arasındaki geçiş gerçek bileşenlerle ölçülüyor:
+ *   /sirket/ilanlar · /sirket/basvuranlar · /sirket/ilan/yeni ·
+ *   /firsatlar (salt okunur) · /agim (boş durum) · /rehber ·
+ *   /sirket/profil (kimlik kartı + form)
+ *
+ * Fırsatlar ve Rehber GERÇEK sayfalar: Fırsatlar listeyi Supabase'den
+ * okuyor (anon anahtar, herkese açık veri); anahtar yoksa hata durumu
+ * çizilir — o da ölçülebilir bir durum.
  *
  * Buradaki adaylar bilerek "Aday A/B/C": gerçek bir kişiye benzeyen
  * uydurma isim, ekran görüntüsüne düştüğünde gerçek sanılır.
@@ -404,15 +409,24 @@ type Senaryo = 'sifir' | 'bir' | 'alti';
 
 export const SirketPanelDevFixture: React.FC = () => {
   const [kademe, setKademe] = React.useState<number>(KADEME.DOGRULANMIS);
-  const [ekran, setEkran] = React.useState<'genel' | 'ilanlar' | 'form' | 'adaylar' | 'profil'>(
-    'genel',
-  );
+  /*
+    ADRES YEREL DURUMDA
+
+    Header, alt menü ve sekme içerikleri hep aynı `onNavigate`i alıyor;
+    gerçek uygulamada App.navigate'in yaptığı şey. Sorgu dizesi
+    (?ilan=…) atılıyor: fikstürde window.location değişmiyor.
+  */
+  const [yol, setYol] = React.useState('/sirket/ilanlar');
+  const git = React.useCallback((y: string) => {
+    setYol(y.split('?')[0] || '/sirket/ilanlar');
+    window.scrollTo(0, 0);
+  }, []);
   const [senaryo, setSenaryo] = React.useState<Senaryo>('alti');
   const [profilEksik, setProfilEksik] = React.useState(false);
   /*
     ŞİRKET KAYDI YOK SENARYOSU
 
-    Üyeliği olmayan hesap Şirket sekmesinde sonsuz iskelet görüyordu; bu
+    Üyeliği olmayan hesap Profil sekmesinde sonsuz iskelet görüyordu; bu
     kol companyId'yi boşaltıp o ekranı çizdiriyor.
   */
   const [sirketYok, setSirketYok] = React.useState(false);
@@ -459,12 +473,132 @@ export const SirketPanelDevFixture: React.FC = () => {
       }, 250);
     });
 
+  const baglam = sirketYok
+    ? { ...TEST_BAGLAMI(kademe), companyId: null, ad: '', slug: '' }
+    : TEST_BAGLAMI(kademe);
+  const profil = profilEksik ? PROFIL_EKSIK : PROFIL_TAM;
+  const ekran = sirketEkrani(yol);
+
   const kolSinifi = 'min-h-8 rounded-lg border border-gray-300 px-2 py-1 font-bold';
 
+  /*
+    Sekme içeriği. Başvuranlar görünümünde adaylar ORNEK_BASVURULAR'dan
+    (durum akışı denenebilsin); İlanlar görünümündeki avatar şeritleri
+    senaryo başvurularından. İki liste bilerek ayrı: biri akışı, öteki
+    ölçeklenmeyi ölçüyor.
+  */
+  const icerik =
+    yol === '/agim' ? (
+      <SirketAgimBos />
+    ) : yol === '/firsatlar' ? (
+      <OpportunitiesPage
+        path="/firsatlar"
+        userId="00000000-0000-4000-8000-000000000001"
+        student={null}
+        onNavigate={git}
+        onRequireLogin={() => undefined}
+        saltOkunur
+      />
+    ) : yol === '/rehber' ? (
+      <GuideHub onBack={() => git('/sirket/ilanlar')} onNavigate={git} sirketHesabi />
+    ) : ekran.tur === 'form' ? (
+      <IlanFormu
+        kademe={kademe}
+        sirketAdi="Örnek Teknoloji A.Ş."
+        siteUrl="https://ornek.com"
+        eposta={kademe === KADEME.DOGRULANMIS ? 'ik@gmail.com' : 'ik@ornek.com'}
+        onKaydet={async () => ({ id: '00000000-0000-0000-0000-000000000000' })}
+        onIptal={() => git('/sirket/ilanlar')}
+      />
+    ) : ekran.tur === 'profil' ? (
+      /*
+        Şirket profili: formun veri okuması Supabase'e gidiyor ve
+        fixture'da oturum yok, o yüzden form kendi hata/boş hâlini
+        çiziyor. Kimlik kartı fikstür profiliyle doluyor; amaç yerleşim,
+        hiyerarşi ve tema sızıntısını görmek.
+      */
+      <SirketProfilSekmesi
+        baglam={baglam}
+        profil={profil}
+        ilanSayisi={ilanlar.length}
+        basvuruSayisi={ilanBasvurulari.length}
+        userId="00000000-0000-4000-8000-000000000001"
+        onKaydedildi={() => undefined}
+        onNavigate={git}
+        onCikis={() => undefined}
+      />
+    ) : (
+      <SirketIlanlarSekmesi
+        baglam={baglam}
+        gorunum={ekran.tur}
+        ilanlar={ilanlar}
+        basvurular={ekran.tur === 'basvuranlar' ? kartlar : ilanBasvurulari}
+        profil={profil}
+        onNavigate={git}
+        onDurum={async () => undefined}
+        onKaldir={async () => undefined}
+        onBasvuruDurumu={(id, d) => satirYaz(id, { status: d })}
+        onMulakatTarihi={(id, tarih) => satirYaz(id, { interview_date: tarih || null })}
+        onTeklif={(id, teklif) =>
+          satirYaz(id, {
+            status: 'offer_extended',
+            offer_note: teklif.not.trim() || null,
+            offer_start_date: teklif.baslangic || null,
+            offer_compensation: teklif.ucret.trim() || null,
+          })
+        }
+        onDavet={(id, davet) =>
+          satirYaz(id, {
+            status: 'interview_scheduled',
+            interview_date: davet.tarih || null,
+            interview_time: davet.saat || null,
+            interview_type: davet.tur || null,
+            interview_location: davet.yer.trim() || null,
+            interview_note: davet.not.trim() || null,
+            /* Yeni davet eski yanıtı geçersiz kılıyor. */
+            interview_response: null,
+          })
+        }
+        /*
+          Gerçek kapı veritabanında; fikstür yalnızca kabul edilmiş
+          başvuruda satır döndürerek aynı davranışı taklit ediyor.
+          Bir adayda kasten hata veriyor: "yüklenemedi" hali de
+          tarayıcıda görülebilsin.
+        */
+        onIletisim={(id) =>
+          new Promise((coz, red) => {
+            window.setTimeout(() => {
+              const satir = satirlar.find((x) => x.id === id);
+              if (id === hataliId) {
+                red(new Error('Fikstür: iletişim okuma hatası.'));
+                return;
+              }
+              coz(
+                satir && satir.status === 'offer_accepted'
+                  ? {
+                      ad: 'Mustafa Oğulcan Doğan',
+                      eposta: 'mustafa.ogulcan@ornek.edu.tr',
+                      /* Ham biçim: ekranda okunur yazılıyor, kayıt değişmiyor. */
+                      telefon: '+905323311338',
+                      unvan: 'Aday',
+                    }
+                  : null,
+              );
+            }, 250);
+          })
+        }
+        onNot={async () => undefined}
+        simdi={BUGUN}
+      />
+    );
+
   return (
-    <>
-      {/* Test kolları — gerçek panelde yok. */}
-      <div className="fixed left-2 top-20 z-[300] flex flex-wrap gap-2 rounded-xl bg-white p-2 text-xs shadow-lg">
+    <SayfaAramaSaglayici>
+      {/* Test kolları — gerçek uygulamada yok. */}
+      <div
+        id="dev-kollar"
+        className="fixed bottom-24 left-2 z-[300] flex flex-wrap gap-2 rounded-xl bg-white p-2 text-xs shadow-lg lg:bottom-auto lg:top-24"
+      >
         <button
           type="button"
           id="dev-kademe-1"
@@ -481,26 +615,21 @@ export const SirketPanelDevFixture: React.FC = () => {
         >
           Kademe 2
         </button>
-        <button
-          type="button"
-          id="dev-ekran"
-          onClick={() =>
-            setEkran((e) =>
-              e === 'genel'
-                ? 'ilanlar'
-                : e === 'ilanlar'
-                  ? 'form'
-                  : e === 'form'
-                    ? 'adaylar'
-                    : e === 'adaylar'
-                      ? 'profil'
-                      : 'genel',
-            )
-          }
+        <select
+          id="dev-yol"
+          value={yol}
+          onChange={(e) => git(e.target.value)}
+          aria-label="Adres"
           className={kolSinifi}
         >
-          Ekran: {ekran}
-        </button>
+          <option value="/sirket/ilanlar">/sirket/ilanlar</option>
+          <option value="/sirket/basvuranlar">/sirket/basvuranlar</option>
+          <option value="/sirket/ilan/yeni">/sirket/ilan/yeni</option>
+          <option value="/firsatlar">/firsatlar</option>
+          <option value="/agim">/agim</option>
+          <option value="/rehber">/rehber</option>
+          <option value="/sirket/profil">/sirket/profil</option>
+        </select>
         <select
           id="dev-senaryo"
           value={senaryo}
@@ -532,140 +661,36 @@ export const SirketPanelDevFixture: React.FC = () => {
         </button>
       </div>
 
-      <SirketKabugu
-        secili={
-          ekran === 'adaylar'
-            ? 'basvuranlar'
-            : ekran === 'genel'
-              ? 'genel'
-              : ekran === 'profil'
-                ? 'sirket'
-                : 'ilanlar'
-        }
-        onNavigate={() => undefined}
-        durumRozeti={
-          <span
-            className="rounded-lg border px-2 py-1 text-[11px] font-bold"
-            style={{
-              borderColor: kademe === KADEME.DOGRULANMIS ? SIRKET_KENAR_VURGU : SIRKET_KENAR,
-              background: kademe === KADEME.DOGRULANMIS ? SIRKET_ROZET : undefined,
-              color: kademe === KADEME.DOGRULANMIS ? SIRKET_VURGU_KOYU : SIRKET_METIN_IKINCIL,
-            }}
-          >
-            {kademe === KADEME.DOGRULANMIS ? 'Doğrulanmış kurum' : 'İlan açık · kartlar kapalı'}
-          </span>
-        }
-      >
-        {ekran === 'genel' ? (
-          <GenelBakis
-            baglam={TEST_BAGLAMI(kademe)}
-            ilanlar={ilanlar}
-            basvurular={ilanBasvurulari}
-            profil={profilEksik ? PROFIL_EKSIK : PROFIL_TAM}
-            onNavigate={() => undefined}
-            simdi={BUGUN}
-          />
-        ) : ekran === 'ilanlar' ? (
-          /*
-            İLANLAR EKRANI FİKSTÜRDE
-
-            Genel'le aynı senaryo listesi: yayında (düzenle + kapat),
-            taslak ve inceleme notlu (düzenle + yayınla + sil), başvurusu
-            olan kapalı ilan (sil değil arşivle) ve toplama hattından
-            gelen ilan (düzenlenemez).
-          */
-          <Ilanlar
-            baglam={TEST_BAGLAMI(kademe)}
-            ilanlar={ilanlar}
-            basvurular={ilanBasvurulari}
-            onNavigate={() => undefined}
-            onDurum={async () => undefined}
-            onKaldir={async () => undefined}
-            simdi={BUGUN}
-          />
-        ) : ekran === 'profil' ? (
-          /*
-            Şirket profili: veri okuması Supabase'e gidiyor ve fixture'da
-            oturum yok, o yüzden ekran boş değerlerle çiziliyor. Amaç
-            yerleşim, hiyerarşi ve tema sızıntısını görmek.
-          */
-          <SirketProfilFormu
-            baglam={sirketYok ? { ...TEST_BAGLAMI(kademe), companyId: null, ad: '' } : TEST_BAGLAMI(kademe)}
-            userId="00000000-0000-4000-8000-000000000001"
-            onKaydedildi={() => undefined}
-            onNavigate={() => undefined}
-          />
-        ) : ekran === 'form' ? (
-          <IlanFormu
-            kademe={kademe}
-            sirketAdi="Örnek Teknoloji A.Ş."
-            siteUrl="https://ornek.com"
-            eposta={kademe === KADEME.DOGRULANMIS ? 'ik@gmail.com' : 'ik@ornek.com'}
-            onKaydet={async () => ({ id: '00000000-0000-0000-0000-000000000000' })}
-            onIptal={() => setEkran('adaylar')}
-          />
-        ) : (
-          /* Başlık ızgaranın kendisinde; fikstür de üretimi taklit ediyor. */
-          <div>
-            <AdayIzgarasi
-              kartlar={kartlar}
-              ilanAdresi="https://stajimvar.com/ilan/test"
-              onNavigate={() => undefined}
-              onDurum={(id, d) => satirYaz(id, { status: d })}
-              onMulakatTarihi={(id, tarih) => satirYaz(id, { interview_date: tarih || null })}
-              onTeklif={(id, teklif) =>
-                satirYaz(id, {
-                  status: 'offer_extended',
-                  offer_note: teklif.not.trim() || null,
-                  offer_start_date: teklif.baslangic || null,
-                  offer_compensation: teklif.ucret.trim() || null,
-                })
-              }
-              onDavet={(id, davet) =>
-                satirYaz(id, {
-                  status: 'interview_scheduled',
-                  interview_date: davet.tarih || null,
-                  interview_time: davet.saat || null,
-                  interview_type: davet.tur || null,
-                  interview_location: davet.yer.trim() || null,
-                  interview_note: davet.not.trim() || null,
-                  /* Yeni davet eski yanıtı geçersiz kılıyor. */
-                  interview_response: null,
-                })
-              }
-              /*
-                Gerçek kapı veritabanında; fikstür yalnızca kabul edilmiş
-                başvuruda satır döndürerek aynı davranışı taklit ediyor.
-                Bir adayda kasten hata veriyor: "yüklenemedi" hali de
-                tarayıcıda görülebilsin.
-              */
-              onIletisim={(id) =>
-                new Promise((coz, red) => {
-                  window.setTimeout(() => {
-                    const satir = satirlar.find((x) => x.id === id);
-                    if (id === hataliId) {
-                      red(new Error('Fikstür: iletişim okuma hatası.'));
-                      return;
-                    }
-                    coz(
-                      satir && satir.status === 'offer_accepted'
-                        ? {
-                            ad: 'Mustafa Oğulcan Doğan',
-                            eposta: 'mustafa.ogulcan@ornek.edu.tr',
-                            /* Ham biçim: ekranda okunur yazılıyor, kayıt değişmiyor. */
-                            telefon: '+905323311338',
-                            unvan: 'Aday',
-                          }
-                        : null,
-                    );
-                  }, 250);
-                })
-              }
-              onNot={async () => undefined}
-            />
-          </div>
-        )}
-      </SirketKabugu>
-    </>
+      {/*
+        GERÇEK KABUK: App.icerikSayfasi'nın yaptığı şey — üst çubuk ve
+        (Header'ın içinde) alt menü, altında ana alan. Sınıflar
+        App.anaAlanSinifi ile aynı; iki yerde farklı olsaydı fikstür
+        ölçtüğünü canlıda göstermezdi.
+      */}
+      <div className="min-h-screen flex flex-col bg-[#F9FAFB]">
+        <Header
+          activeTab="internships"
+          setActiveTab={() => undefined}
+          activeSubTab="all"
+          setActiveSubTab={() => undefined}
+          userRole="company"
+          setUserRole={() => undefined}
+          activeStudent={null}
+          isLoggedIn
+          bulunulanYol={yol}
+          onNavigate={git}
+          onOpenGuides={() => git('/rehber')}
+          onOpenOpportunities={() => git('/firsatlar')}
+          onBildirimAc={() => undefined}
+          okunmamisBildirim={null}
+          sirketUyesiMi={!sirketYok}
+          sirketAdi={sirketYok ? null : 'Örnek Teknoloji A.Ş.'}
+          onLogout={() => undefined}
+        />
+        <main className={`flex-1 ${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-0 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-8`}>
+          {icerik}
+        </main>
+      </div>
+    </SayfaAramaSaglayici>
   );
 };

@@ -138,5 +138,6 @@ test('Bağlantılar satırları telefonda yüzey', () => {
     sayfanın tepesinde hiçbir çubuk, hiçbir geri dönüş yolu
     görünmüyordu.
   */
-  assert.match(oku('src/components/Header.tsx'), /const akistaMi = bulunulanYol === '\/agim';/);
+  /* `userRole !== 'company'`: şirket hesabında /agim akış değil, tek kart; üst çubuk orada da duruyor. */
+  assert.match(oku('src/components/Header.tsx'), /const akistaMi = bulunulanYol === '\/agim' && userRole !== 'company';/);
 });

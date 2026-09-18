@@ -132,6 +132,14 @@ export const RehberMerkezi: React.FC<{
   onAramaTemizle?: () => void;
   /** Kaydetme giriş istiyor; ziyaretçide giriş ekranını açıyor. */
   onGirisGerekli?: () => void;
+  /**
+   * Şirket hesabı (tek kabuk, 18 Eylül 2026): şirketlere yönelik rehber
+   * listenin EN ÜSTÜNE çıkıyor. Bugün o rehber tek: "Stajyer nasıl
+   * alınır" (/stajyer-nasil-alinir, /isveren üzerinden). Öğrenci
+   * rehberleri olduğu gibi kalıyor; sıralama dışında hiçbir şey
+   * değişmiyor.
+   */
+  sirketHesabi?: boolean;
 }> = ({
   onNavigate,
   ogrenci = null,
@@ -139,6 +147,7 @@ export const RehberMerkezi: React.FC<{
   onAramaDegis,
   onAramaTemizle,
   onGirisGerekli,
+  sirketHesabi = false,
 }) => {
   React.useEffect(() => {
     document.title = 'Öğrenci rehberi | StajımVar';
@@ -441,6 +450,29 @@ export const RehberMerkezi: React.FC<{
     kaydetmeEtiketi: ogrenci?.id ? undefined : 'Kaydetmek için giriş yap',
   });
 
+  /*
+    Şirketler için rehber kartı: öğrencide listenin sonunda (nadir
+    ihtiyaç), şirket hesabında listenin başında. Aynı kart, tek tanım.
+  */
+  const sirketRehberKarti = (
+    <a
+      href="/isveren"
+      onClick={(e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+        e.preventDefault();
+        onNavigate('/isveren');
+      }}
+      data-testid="rehber-sirketler-icin"
+      className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-sm transition-colors hover:border-blue-300"
+    >
+      <span>
+        <b className="block font-bold text-gray-900">Şirketler için rehber</b>
+        <span className="text-gray-600">Stajyer nasıl alınır: sigorta, ücret, evrak</span>
+      </span>
+      <ArrowRight className="h-4 w-4 shrink-0 text-gray-500" aria-hidden />
+    </a>
+  );
+
   return (
     <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI} ustBosluk="pt-0 sm:pt-3">
       {/*
@@ -565,6 +597,7 @@ export const RehberMerkezi: React.FC<{
 
         {/* --------------------------------------------------- orta: liste */}
         <section aria-label="Rehberler" className="min-w-0 space-y-4 lg:col-span-6">
+          {sirketHesabi && sirketRehberKarti}
           {/*
             LİSTE BAŞLIĞI YALNIZ EKRAN OKUYUCUYA — her genişlikte
 
@@ -701,21 +734,7 @@ export const RehberMerkezi: React.FC<{
 
           <YolHaritasi onNavigate={onNavigate} ogrenci={ogrenci} />
 
-          <a
-            href="/isveren"
-            onClick={(e) => {
-              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-              e.preventDefault();
-              onNavigate('/isveren');
-            }}
-            className="flex items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-sm transition-colors hover:border-blue-300"
-          >
-            <span>
-              <b className="block font-bold text-gray-900">Şirketler için rehber</b>
-              <span className="text-gray-600">Stajyer nasıl alınır: sigorta, ücret, evrak</span>
-            </span>
-            <ArrowRight className="h-4 w-4 shrink-0 text-gray-500" />
-          </a>
+          {!sirketHesabi && sirketRehberKarti}
         </section>
 
         {/* --------------------------------------- sağ: sayaçlar ve bilgi */}

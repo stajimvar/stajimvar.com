@@ -29,11 +29,13 @@
  *   warning   #78350F yazı / #FEF3C7 = 10.9:1 ✓
  *   muted     #4B5563 / beyaz       = 7.56:1  ✓
  *
- * İŞVEREN PANELİ AYRI KALIYOR
- * ---------------------------
- * `src/sirket/renk.ts` giriş yapmış işveren panelinin kendi alt teması
- * ve kendi kabuğuyla (SirketKabugu) birlikte çalışıyor. Orası bilinçli
- * bir alt marka; bu dosya onu ezmiyor.
+ * İŞVEREN EKRANLARI KENDİ BELİRTEÇLERİYLE
+ * --------------------------------------
+ * `src/sirket/renk.ts` şirket ekranlarının belirteçleri; değerleri bu
+ * dosyadaki mavi-beyazın hex karşılığı. Ayrı kabuk artık YOK (tek kabuk,
+ * 18 Eylül 2026): şirket ekranları öğrenciyle aynı Header'ın içinde
+ * çiziliyor. İki belirteç dosyası aynı sayıları taşıyor; bu dosya onu
+ * ezmiyor.
  *
  * Ayrım şurada: /isveren HALKA AÇIK pazarlama sayfası ve öğrenci
  * başlığını taşıyor. Ölçüldü (canlı, 1440px): mavi logonun ve mavi
