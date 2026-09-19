@@ -5,7 +5,7 @@ import {
   KarsilastirmaTablosu,
   RehberFigur,
 } from '../components/RehberGorseller';
-import type { KonuId, Rehber, SoruCevap } from './rehberler';
+import type { KonuId, Rehber, RehberKategori, SoruCevap } from './rehberler';
 
 /**
  * Rehber gövdesi — metinden çizim.
@@ -169,6 +169,13 @@ export interface RehberTaslagi {
   baslik: string;
   ozet: string;
   konu: KonuId;
+  /*
+    Kime hitap ettiği. Boşsa 'ogrenci': mevcut yetmiş bir yazı bu alanı
+    yazmıyor ve değişmiyor. İşveren yazıları (rehber-yazilari/isveren.tsx)
+    'isveren' veriyor; bu değer rehber merkezinin öğrenci akışından ve tek
+    rehber sayfasındaki "ilgili rehberler" havuzundan ayrılmalarını sağlıyor.
+  */
+  kategori?: RehberKategori;
   aciklama: string;
   /* Yalnızca <title> için; boşsa `baslik` kullanılıyor (bkz. Rehber tipi). */
   seoBaslik?: string;
@@ -190,15 +197,17 @@ export interface RehberTaslagi {
 /**
  * Taslağı yayına hazır rehbere çeviriyor.
  *
- * `kategori` her zaman 'ogrenci': bu fabrikayla yazılan yazılar öğrenci
- * rehberleri. İşveren tarafı ayrı ve elle yazılıyor.
+ * `kategori` verilmezse 'ogrenci'. Önce sabitti ("işveren tarafı elle
+ * yazılıyor" gerekçesiyle); işveren rehberleri de aynı düz-veri kalıbıyla
+ * yazılınca sabit kaldırıldı — ikinci bir fabrika yazmak aynı çizimi iki
+ * yerde tutmak olurdu.
  */
 export function metinRehberi(t: RehberTaslagi): Rehber {
   return {
     slug: t.slug,
     baslik: t.baslik,
     ozet: t.ozet,
-    kategori: 'ogrenci',
+    kategori: t.kategori ?? 'ogrenci',
     konu: t.konu,
     aciklama: t.aciklama,
     seoBaslik: t.seoBaslik,

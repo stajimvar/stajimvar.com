@@ -134,10 +134,14 @@ export const RehberMerkezi: React.FC<{
   onGirisGerekli?: () => void;
   /**
    * Şirket hesabı (tek kabuk, 18 Eylül 2026): şirketlere yönelik rehber
-   * listenin EN ÜSTÜNE çıkıyor. Bugün o rehber tek: "Stajyer nasıl
-   * alınır" (/stajyer-nasil-alinir, /isveren üzerinden). Öğrenci
-   * rehberleri olduğu gibi kalıyor; sıralama dışında hiçbir şey
-   * değişmiyor.
+   * listenin EN ÜSTÜNE çıkıyor ve konu listesinde "Şirketler için"
+   * konusu görünüyor — seçilince /stajyer-nasil-alinir bağlantısı ve
+   * `kategori: 'isveren'` yazıları listeleniyor.
+   *
+   * Öğrenci hesabında hiçbir şey değişmiyor: konu listesi, öne çıkan
+   * rehber, konu bölümleri ve arama yalnız `kategori: 'ogrenci'`
+   * yazılarını görüyor; işveren içeriğine tek yol listenin sonundaki
+   * "Şirketler için rehber" kartı.
    */
   sirketHesabi?: boolean;
 }> = ({
@@ -174,11 +178,41 @@ export const RehberMerkezi: React.FC<{
     []
   );
 
+  /*
+    İŞVEREN YAZILARI ÖĞRENCİ AKIŞINA KARIŞMIYOR
+
+    Bu liste ayrı tutuluyor çünkü öğrenci akışının HER adımı — öne çıkan
+    rehber, "sana uygun" sıralaması, konu bölümleri ve birleşik arama —
+    `ogrenciRehberleri` üzerinden besleniyor. İşveren yazıları yalnızca
+    "Şirketler için" konusu SEÇİLDİĞİNDE listeleniyor; o konu da yalnız
+    şirket hesabında konu listesine giriyor (aşağıda).
+  */
+  const isverenRehberleri = React.useMemo(
+    () => REHBERLER.filter((r) => r.kategori === 'isveren'),
+    []
+  );
+
+  /*
+    Konu listesinin kaynağı hesaba göre değişiyor. Öğrencide kaynak
+    sadece öğrenci yazıları: "Şirketler için" konusu ne şeritte ne de
+    açılır menüde çıkıyor — öğrenciye yanlış bir kapı açılmıyor, o
+    içeriğe listenin sonundaki "Şirketler için rehber" kartından
+    ulaşılıyor (bugünkü davranış, değişmedi). Şirket hesabında işveren
+    yazıları ekleniyor ve konu listesinde "Şirketler için" görünüyor.
+  */
+  const konuKaynagi = React.useMemo(
+    () => (sirketHesabi ? [...ogrenciRehberleri, ...isverenRehberleri] : ogrenciRehberleri),
+    [sirketHesabi, ogrenciRehberleri, isverenRehberleri]
+  );
+
   /* Yalnızca yazısı OLAN konular sekme oluyor: boş sekme, çalışmayan sekme. */
   const doluKonular = React.useMemo(
-    () => KONULAR.filter((k) => ogrenciRehberleri.some((r) => r.konu === k.id)),
-    [ogrenciRehberleri]
+    () => KONULAR.filter((k) => konuKaynagi.some((r) => r.konu === k.id)),
+    [konuKaynagi]
   );
+
+  /* Konu gerçekten seçilebilir mi: şirkete kapalı bir konuya sekme düşmesin. */
+  const isverenKonusuAcik = doluKonular.some((k) => k.id === 'isveren');
 
   /* ---------------------------------------------------------- yan veriler */
 
@@ -278,11 +312,26 @@ export const RehberMerkezi: React.FC<{
   const sonuclar = React.useMemo(() => {
     if (terim) return aramaSonuclari.rehberler;
 
-    const liste = ogrenciRehberleri;
+    /*
+      "Şirketler için" seçiliyken kaynak işveren listesi. Konu yalnız
+      şirket hesabında seçilebildiği için ayrıca `isverenKonusuAcik`
+      soruluyor: koşul düşerse (öğrenciye dönen hesap) sekme boş liste
+      değil, öğrenci listesi gösteriyor.
+    */
+    const liste = sekme === 'isveren' && isverenKonusuAcik ? isverenRehberleri : ogrenciRehberleri;
     if (sekme === 'uygun' && kisisel) return kisiyeGoreSirala(liste, ogrenci) as Rehber[];
     if (sekme !== 'tumu' && sekme !== 'uygun') return liste.filter((r) => r.konu === sekme);
     return liste;
-  }, [terim, aramaSonuclari, sekme, kisisel, ogrenci, ogrenciRehberleri]);
+  }, [
+    terim,
+    aramaSonuclari,
+    sekme,
+    kisisel,
+    ogrenci,
+    ogrenciRehberleri,
+    isverenRehberleri,
+    isverenKonusuAcik,
+  ]);
 
   /* Bölümlü görünüm yalnızca varsayılan ekranda; süzgeç varken tek liste. */
   const suzuluyor = Boolean(terim) || (sekme !== 'tumu' && sekme !== 'uygun');
@@ -353,10 +402,10 @@ export const RehberMerkezi: React.FC<{
         .map((k) => ({
           id: k.id as string,
           etiket: k.etiket,
-          adet: ogrenciRehberleri.filter((r) => r.konu === k.id).length,
+          adet: konuKaynagi.filter((r) => r.konu === k.id).length,
         }))
         .sort((a, b) => b.adet - a.adet || a.etiket.localeCompare(b.etiket, 'tr')),
-    [doluKonular, ogrenciRehberleri]
+    [doluKonular, konuKaynagi]
   );
 
   /* Şeritte seçili görünen konu: arama varken ya da "uygun"dayken hiçbiri. */
@@ -392,6 +441,13 @@ export const RehberMerkezi: React.FC<{
     return [...seritKonulari]
       .sort((a, b) => sira(a.id) - sira(b.id))
       .map((k) => {
+        /*
+          Kaynak burada BİLEREK `ogrenciRehberleri`: varsayılan ekran
+          (öne çıkan + konu bölümleri) öğrenci yolculuğuna göre dizili.
+          Şirket hesabında "Şirketler için" konusu şeritte duruyor ama
+          bölümü boş kalıyor ve aşağıdaki `filter` onu düşürüyor —
+          işveren yazıları konuyu SEÇİNCE geliyor.
+        */
         const hepsi = ogrenciRehberleri.filter((r) => r.konu === k.id && r.slug !== oneCikanSlug);
         return {
           id: k.id,
@@ -451,26 +507,46 @@ export const RehberMerkezi: React.FC<{
   });
 
   /*
-    Şirketler için rehber kartı: öğrencide listenin sonunda (nadir
-    ihtiyaç), şirket hesabında listenin başında. Aynı kart, tek tanım.
+    İŞVEREN TARAFINA GEÇİŞ KARTI — TEK KALIP, İKİ HEDEF
+
+    Aynı satır iki yerde kullanılıyor ve ikisi de rehber verisinde
+    OLMAYAN bir sayfaya gidiyor (özel bileşen, `REHBERLER` içinde kayıt
+    yok). Bu yüzden `RehberSatiri` değil kendi kalıbı: tıklanan şey
+    gerçek `<a href>`, orta tuş ve "yeni sekmede aç" çalışıyor.
   */
-  const sirketRehberKarti = (
+  const isverenGecisKarti = (
+    adres: string,
+    baslik: string,
+    aciklama: string,
+    testId: string,
+  ) => (
     <a
-      href="/isveren"
+      href={adres}
       onClick={(e) => {
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
         e.preventDefault();
-        onNavigate('/isveren');
+        onNavigate(adres);
       }}
-      data-testid="rehber-sirketler-icin"
+      data-testid={testId}
       className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-sm transition-colors hover:border-blue-300"
     >
       <span>
-        <b className="block font-bold text-gray-900">Şirketler için rehber</b>
-        <span className="text-gray-600">Stajyer nasıl alınır: sigorta, ücret, evrak</span>
+        <b className="block font-bold text-gray-900">{baslik}</b>
+        <span className="text-gray-600">{aciklama}</span>
       </span>
       <ArrowRight className="h-4 w-4 shrink-0 text-gray-500" aria-hidden />
     </a>
+  );
+
+  /*
+    Şirketler için rehber kartı: öğrencide listenin sonunda (nadir
+    ihtiyaç), şirket hesabında listenin başında. Aynı kart, tek tanım.
+  */
+  const sirketRehberKarti = isverenGecisKarti(
+    '/isveren',
+    'Şirketler için rehber',
+    'Stajyer nasıl alınır: sigorta, ücret, evrak',
+    'rehber-sirketler-icin',
   );
 
   return (
@@ -684,11 +760,30 @@ export const RehberMerkezi: React.FC<{
             </button>
           </section>
         ) : suzuluyor ? (
-          <RehberBolumu baslik={terim ? 'Arama sonuçları' : konuEtiketi(sekme as KonuId)}>
-            {sonuclar.map((r) => (
-              <RehberSatiri key={r.slug} {...kartOzellikleri(r)} />
-            ))}
-          </RehberBolumu>
+          <>
+            {/*
+              "Stajyer nasıl alınır" konunun GİRİŞ yazısı ama `REHBERLER`
+              içinde değil: tablo, çizim ve canlı havuz sayısı taşıyan
+              özel bir bileşen (/stajyer-nasil-alinir). Metin rehberi
+              olmadığı için kart değil bağlantı satırı olarak, listenin
+              başında duruyor — sıraya girmesi için veriye sahte bir
+              kayıt eklemek gerekirdi.
+            */}
+            {!terim &&
+              sekme === 'isveren' &&
+              isverenKonusuAcik &&
+              isverenGecisKarti(
+                '/stajyer-nasil-alinir',
+                'Stajyer nasıl alınır?',
+                'Sigorta, ücret ve okulla imzalanan evrak: baştan sona süreç',
+                'rehber-stajyer-nasil-alinir',
+              )}
+            <RehberBolumu baslik={terim ? 'Arama sonuçları' : konuEtiketi(sekme as KonuId)}>
+              {sonuclar.map((r) => (
+                <RehberSatiri key={r.slug} {...kartOzellikleri(r)} />
+              ))}
+            </RehberBolumu>
+          </>
         ) : (
           <>
             {/*
