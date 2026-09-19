@@ -103,6 +103,14 @@ const kacirBagla = (metin) =>
     return `<a href="${adres}"${ek}>${yazi}</a>`;
   });
 
+/** Etiketleri ve fazla boşluğu atar; kısaltmaz. */
+function duzMetin(metin) {
+  return String(metin ?? '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /** Uzun metni arama sonucunda görünecek uzunluğa indirir. */
 function ozetle(metin, uzunluk = 155) {
   const duz = String(metin ?? '')
@@ -593,8 +601,18 @@ async function ilanlariGetir() {
     console.log('  ilanlar atlandı (anonim anahtar yok)');
     return [];
   }
+  /*
+    `responsibilities`, `required_skills`, `duration` ve `min_grade_level`
+    BU LİSTEYE 19 EYLÜL 2026'DA GİRDİ. Ölçülen durum: ön render edilen
+    ilan sayfasının görünür metni 52 kelimeydi ve açıklama 155 karakterde
+    üç noktayla kesiliyordu — oysa yayındaki 194 ilanın %70'inde
+    sorumluluk, %61'inde aranan nitelik YAZILI olarak duruyordu. React
+    ekranda gösteriyor, statik HTML göstermiyordu; yani arama motorunun
+    ve JavaScript'siz ziyaretçinin gördüğü sayfa, kullanıcının gördüğünden
+    çok daha yoksuldu. Veri zaten vardı, sorgu istemiyordu.
+  */
   const secim =
-    'id,title,description,city,country_code,work_type,apply_url,application_method,posted_at,created_at,application_deadline,is_paid,stipend_text,companies(name,slug,website_url,logo_url,industry,location,description)';
+    'id,title,description,responsibilities,required_skills,duration,min_grade_level,city,country_code,work_type,apply_url,application_method,posted_at,created_at,application_deadline,is_paid,stipend_text,companies(name,slug,website_url,logo_url,industry,location,description)';
   const istek = `${urlAdres}/rest/v1/listings?status=eq.published&select=${encodeURIComponent(secim)}`;
   const yanit = await fetch(istek, {
     headers: { apikey: anahtar, Authorization: `Bearer ${anahtar}` },
@@ -751,6 +769,16 @@ async function firsatlariGetir() {
       geçirmiyor ve sayfa boş çiziliyor — `opportunity_type` ile birebir
       aynı hata, iki kez yaşandı.
     */
+    /*
+      `description` ve `eligibility` 19 EYLÜL 2026'DA EKLENDİ. Ölçüldü:
+      fırsat sayfalarının görünür metni ortanca 30 kelimeydi — site
+      genelindeki en ince yüzey. Sebebin bir kısmı buydu: kayıtların
+      %9'unda ayrıntılı açıklama ve uygunluk koşulu YAZILI olduğu hâlde
+      ön render yalnız `short_description`i çekiyordu. Geri kalan %91'de
+      gösterilecek fazladan bir şey yok; onların çözümü aşağıda,
+      site haritası kuralında.
+    */
+    'description,eligibility,' +
     'opportunity_type,amount_status,amount_text,countries';
   /*
     `expired` DE ÇEKİLİYOR — SAYFASI DURUYOR
@@ -1084,10 +1112,29 @@ function sayfaYaz(yol, s) {
 }
 
 /** Ön render gövdesi: başlık + özet + isteğe bağlı ek satırlar. */
-function govde(baslik, ozet, satirlar = []) {
+/*
+  `bolumler` DÖRDÜNCÜ PARAMETRE OLARAK EKLENDİ (19 Eylül 2026).
+
+  Gövde bugüne kadar tek paragraf + tek liste çiziyordu. İlan sayfasının
+  elinde bundan fazlası var — sorumluluklar ve aranan nitelikler ayrı
+  ayrı yazılmış listeler — ve bunları tek bir `<ul>`e katmak iki farklı
+  şeyi aynı şeymiş gibi gösterirdi. Her bölüm kendi `<h2>`si ile
+  çiziliyor; boş bölüm hiç çizilmiyor, yani "Aranan nitelikler" başlığı
+  altında boş liste kalmıyor.
+*/
+function govde(baslik, ozet, satirlar = [], bolumler = []) {
   return (
     `<main><h1>${kacir(baslik)}</h1><p>${kacir(ozet)}</p>` +
     (satirlar.length ? `<ul>${satirlar.map((x) => `<li>${kacir(x)}</li>`).join('')}</ul>` : '') +
+    bolumler
+      .filter((b) => b && Array.isArray(b.maddeler) && b.maddeler.length)
+      .map(
+        (b) =>
+          `<h2>${kacir(b.baslik)}</h2><ul>${b.maddeler
+            .map((m) => `<li>${kacir(m)}</li>`)
+            .join('')}</ul>`
+      )
+      .join('') +
     '</main>'
   );
 }
@@ -1749,6 +1796,24 @@ async function main() {
     const ozet = sehirEki ? `${sehirEki}. ${ozetGovde}` : ozetGovde;
 
     /*
+      META AÇIKLAMA KISA, GÖVDE TAM (19 Eylül 2026)
+
+      `ozet` 155 karaktere kısaltılmış hâl; yeri <meta name="description">
+      ve arama sonucu. Ta ki bugüne kadar GÖVDEYE de o giriyordu, yani
+      sayfanın tek paragrafı üç noktayla bitiyordu. Ölçüldü: KPMG ilanının
+      açıklaması 49 kelime, sayfada görünen 30 kelime + "…". Kısaltma
+      arama sonucunun sınırı; sayfanın değil.
+    */
+    const tamAciklama = String(i.description ?? '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const govdeAciklamasi = sehirEki
+      ? `${sehirEki}. ${tamAciklama}`
+      : tamAciklama || ozet;
+    const dizi = (d) => (Array.isArray(d) ? d.map((x) => String(x ?? '').trim()).filter(Boolean) : []);
+
+    /*
       SÜRESİ GEÇMİŞ İLAN GÖRÜNÜR SAYFADA DA KAPANMIŞ
 
       Ölçüldü (14 Eylül 2026): "KEY+ Uzun Dönem Staj Programı" son
@@ -1883,13 +1948,19 @@ async function main() {
           gelen kişi ilk cümlede durumu görüyor, sayfayı okuyup en
           sonda öğrenmiyor.
         */
-        kapanisNotu ? `${kapanisNotu} ${ozet}` : ozet,
+        kapanisNotu ? `${kapanisNotu} ${govdeAciklamasi}` : govdeAciklamasi,
         [
           sirket.name && `Şirket: ${sirket.name}`,
           i.city && `Şehir: ${konumEtiketi(i.city)}`,
           i.work_type && `Çalışma şekli: ${i.work_type}`,
+          i.duration && `Süre: ${i.duration}`,
+          i.min_grade_level && `En az sınıf: ${i.min_grade_level}`,
           kapanisNotu && 'Durum: başvuru dönemi kapandı',
-        ].filter(Boolean)
+        ].filter(Boolean),
+        [
+          { baslik: 'Sorumluluklar', maddeler: dizi(i.responsibilities) },
+          { baslik: 'Aranan nitelikler', maddeler: dizi(i.required_skills) },
+        ]
       ),
       jsonLd,
     });
@@ -1947,13 +2018,38 @@ async function main() {
     */
     if (suresiGecti) HARITADAN_DISLANAN.add(firsatYolu);
 
+    /*
+      İÇERİĞİ OLMAYAN FIRSAT HARİTAYA GİRMİYOR (19 Eylül 2026)
+
+      Ölçüldü: 121 fırsat sayfasının görünür metni ortanca 30 kelime —
+      sitedeki en ince yüzey. Kayıtların yalnız %9'unda `description`
+      ya da `eligibility` var; geri kalanında sayfa "başlık + kurum +
+      son başvuru + koşullar resmî kaynakta"dan ibaret ve her kayıtta
+      aynı kalıp. Yüzlerce böyle sayfayı dizine sokmak, arama motoruna
+      birbirinin kopyası ince sayfalar sunmak demek.
+
+      Sayfa DURUYOR: adres 200 dönüyor, fırsatı arayan kullanıcı
+      buradan resmî kaynağa gidiyor. Kaydın ayrıntısı yazıldığı anda
+      sayfa kendiliğinden haritaya giriyor — kural içeriğe bakıyor,
+      kaydın kendisine değil.
+    */
+    if (!duzMetin(f.description) && !duzMetin(f.eligibility)) {
+      HARITADAN_DISLANAN.add(firsatYolu);
+    }
+
     sayfaYaz(firsatYolu, {
       gorsel: `/og/firsat-${f.slug}.png`,
       baslik: `${firsatBasligi(f)} | StajımVar`,
       aciklama: ozetle(f.short_description || ''),
       govde: govde(
         f.title,
-        f.short_description || '',
+        /*
+          AYRINTILI AÇIKLAMA VARSA O DA YAZILIYOR (19 Eylül 2026).
+          `short_description` arama sonucu için yazılmış tek cümle;
+          `description` ise kaydın kendi ayrıntısı. İkisi de varken
+          yalnız birincisini basmak, elimizdeki metni saklamaktı.
+        */
+        [f.short_description || '', duzMetin(f.description)].filter(Boolean).join(' '),
         [
           f.organization_name,
           /*
@@ -1971,7 +2067,8 @@ async function main() {
           f.application_deadline &&
             `${suresiGecti ? 'Başvuru dönemi kapandı — son başvuru' : 'Son başvuru'}: ` +
               `${f.application_deadline.slice(0, 10)}`,
-        ].filter(Boolean)
+        ].filter(Boolean),
+        [{ baslik: 'Kimler başvurabilir', maddeler: [duzMetin(f.eligibility)].filter(Boolean) }]
       ),
     });
     sayac++;
@@ -2182,6 +2279,25 @@ async function main() {
         '</ul>',
       '<p><a href="/staj-programlari">Büyük işverenlerde staj</a></p></main>',
     ];
+
+    /*
+      SİTE HARİTASINA GİRMİYOR (19 Eylül 2026)
+
+      Bu daldaki 42 sayfa TANIM GEREĞİ ilansız: gövdesinde "Şu anda
+      StajımVar'da doğruladığımız açık staj ilanı bulunmuyor" yazıyor.
+      Ölçüldü: görünür metin ortanca 82 kelime ve o metnin büyük kısmı
+      her sayfada aynı kalıp cümleler.
+
+      Sayfa SİLİNMİYOR — adresi olan bir kurumu arayan kullanıcı buraya
+      düşüp resmî kariyer sayfasına gidebiliyor, bu gerçek bir iş.
+      Ama arama motoruna "şunu da dizine al" demek için bir sebep yok:
+      dizine giren yüzeyin dörtte birini "burada bir şey yok" diyen
+      sayfalar oluşturuyordu. İlan girdiğinde sayfa zaten öteki dalda
+      üretiliyor ve haritaya giriyor.
+
+      Süresi geçmiş ilanla aynı kural, aynı mekanizma.
+    */
+    HARITADAN_DISLANAN.add(`/sirket/${k.slug}`);
 
     sayfaYaz(`/sirket/${k.slug}`, {
       baslik: `${k.displayName} Staj ve Kariyer | StajımVar`,
