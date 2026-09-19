@@ -2153,6 +2153,27 @@ async function main() {
         .join('') +
       '</ul>';
 
+    /*
+      TEK İLANLI ŞİRKET SAYFASI HARİTAYA GİRMİYOR (19 Eylül 2026)
+
+      AdSense sitemizi "Düşük değere sahip içerik" gerekçesiyle geri
+      çevirdi (panel, 19 Eylül 2026). Ölçüldü: ilanı olan 143 şirket
+      sayfasının 112'sinde TEK ilan var, 22'sinde iki. Tek ilanlı sayfa
+      bir merkez değil, bağlantı verdiği ilanın sarmalayıcısı: görünür
+      metni ortanca 78 kelime ve o metnin neredeyse tamamı her şirkette
+      aynı kalıp cümleler. Şirket kaydının kendi anlatısı da yok —
+      ölçüldü, 203 şirketin 2'sinde `description` dolu.
+
+      Üç ve üzeri ilanı olan sayfa GERÇEK bir merkez (örneğin Baykar'ın
+      altı ilanı); o haritada kalıyor. Eşik ilan sayısına bakıyor,
+      şirkete değil: bir şirket üçüncü ilanını açtığında sayfası
+      kendiliğinden haritaya giriyor.
+
+      Sayfa SİLİNMİYOR: adres 200 dönüyor, ilan sayfalarından ve iç
+      bağlantılardan erişiliyor. Yalnız "bunu da dizine al" demiyoruz.
+    */
+    if (s.ilanlar.length < 3) HARITADAN_DISLANAN.add(`/sirket/${slug}`);
+
     sayfaYaz(`/sirket/${slug}`, {
       baslik,
       aciklama,
