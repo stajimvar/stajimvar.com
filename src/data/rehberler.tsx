@@ -6,6 +6,7 @@ import { YURT_REHBERLERI } from './rehber-yazilari/yurt';
 import { UNIVERSITE_REHBERLERI } from './rehber-yazilari/universite';
 import { YURTDISI_REHBERLERI } from './rehber-yazilari/yurtdisi';
 import { KARIYER_REHBERLERI } from './rehber-yazilari/kariyer';
+import { ISVEREN_REHBERLERI } from './rehber-yazilari/isveren';
 import {
   Akis,
   CvIskeleti,
@@ -204,6 +205,12 @@ export const KONULAR = [
   { id: 'universite', etiket: 'Üniversite hayatı' },
   { id: 'yurtdisi', etiket: 'Yurtdışı' },
   { id: 'kariyer', etiket: 'İlk iş ve kariyer' },
+  /*
+    Tek işveren konusu, öğrenci konularından SONRA. Buradaki yazıların
+    kategorisi de 'isveren'; rehber merkezi bu konuyu öğrenci akışına
+    karıştırmıyor (bkz. RehberMerkezi.tsx).
+  */
+  { id: 'isveren', etiket: 'Şirketler için' },
 ] as const;
 
 export type KonuId = (typeof KONULAR)[number]['id'];
@@ -2372,6 +2379,8 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
   ...UNIVERSITE_REHBERLERI,
   ...YURTDISI_REHBERLERI,
   ...KARIYER_REHBERLERI,
+  // ------------------------------------------------------------------ işveren
+  ...ISVEREN_REHBERLERI,
 ];
 
 export function rehberBul(slug: string): Rehber | undefined {

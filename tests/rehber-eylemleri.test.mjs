@@ -35,7 +35,7 @@ const GECERLI_YOLLAR = new Set([
   '/bolumler',
 ]);
 
-function rehberSluglari() {
+function rehberSluglari({ isverenDahil = true } = {}) {
   const dosyalar = readdirSync(path.join(KOK, 'src/data/rehber-yazilari'))
     .filter((f) => f.endsWith('.tsx'))
     .map((f) => path.join(KOK, 'src/data/rehber-yazilari', f));
@@ -43,7 +43,15 @@ function rehberSluglari() {
 
   const sluglar = new Set();
   for (const d of dosyalar) {
-    for (const m of readFileSync(d, 'utf8').matchAll(/slug: '([^']+)'/g)) sluglar.add(m[1]);
+    const s = readFileSync(d, 'utf8');
+    const yerler = [...s.matchAll(/slug: '([^']+)'/g)];
+    yerler.forEach((m, i) => {
+      /* Rehberin gövdesi bir sonraki slug'a kadar; `kategori` orada. */
+      const son = i + 1 < yerler.length ? yerler[i + 1].index : s.length;
+      const isveren = /kategori: 'isveren'/.test(s.slice(m.index, son));
+      if (isveren && !isverenDahil) return;
+      sluglar.add(m[1]);
+    });
   }
   return sluglar;
 }
@@ -170,11 +178,45 @@ test('A: bağlamsız CTA metni yok', () => {
 
 /* ------------------------ kapsam: eşleme anlamlı bir orana ulaşmış */
 
-test('kapsam: rehberlerin en az yarısında eylem var', () => {
-  const toplam = rehberSluglari().size;
+test('kapsam: öğrenci rehberlerinin en az yarısında eylem var', () => {
+  /*
+    PAYDA ÖĞRENCİ REHBERLERİ — EŞLEME KATALOĞU ÖĞRENCİYE AİT
+
+    EYLEM tablosundaki sekiz adresin hepsi öğrenci yüzeyi (/cv, /burslar,
+    /kyk, /bolumler...). `kategori: 'isveren'` yazılarına bunlardan biri
+    bağlanırsa alakasız bağlantı olurdu; dosyanın kendi kuralı bunu
+    yasaklıyor ("alakasız bağlantı, hiç bağlantı olmamasından kötü").
+    İşveren yazıları okurun bir sonraki adımını kendi `sonrakiAdim`
+    alanıyla veriyor — aşağıdaki testte ölçülüyor.
+
+    Ölçüm (19 Eylül 2026): 71 öğrenci rehberi, 36'sında eşleme.
+  */
+  const toplam = rehberSluglari({ isverenDahil: false }).size;
   const esleme = eslemeliRehberler().length;
   assert.ok(toplam >= 60, `rehber sayısı ${toplam}`);
   assert.ok(esleme >= toplam / 2, `${toplam} rehberin yalnız ${esleme} tanesinde eşleme var`);
+});
+
+test('işveren rehberleri sonraki adımını kendi alanında veriyor', () => {
+  /*
+    Yukarıdaki payda daralmasının karşılığı: işveren yazısı eylemsiz
+    kalmıyor, yalnız eylemi BAŞKA bir alandan alıyor. Bu test olmadan
+    "isveren" etiketi eylem yükümlülüğünden kaçmanın yolu olurdu.
+  */
+  const hepsi = rehberSluglari();
+  const ogrenci = rehberSluglari({ isverenDahil: false });
+  const isverenSluglari = [...hepsi].filter((s) => !ogrenci.has(s));
+  assert.ok(isverenSluglari.length > 0, 'işveren rehberi bulunamadı');
+
+  const kaynak = readFileSync(path.join(KOK, 'src/data/rehber-yazilari/isveren.tsx'), 'utf8');
+  const eksik = isverenSluglari.filter((slug) => {
+    const bas = kaynak.indexOf(`slug: '${slug}'`);
+    if (bas === -1) return true;
+    const sonrakiSlug = kaynak.indexOf("slug: '", bas + 1);
+    const govde = kaynak.slice(bas, sonrakiSlug === -1 ? kaynak.length : sonrakiSlug);
+    return !/sonrakiAdim: \{/.test(govde);
+  });
+  assert.deepEqual(eksik, [], 'sonraki adımı olmayan işveren rehberi');
 });
 
 
