@@ -39,7 +39,8 @@ function BildirimIkonu({
     tur === 'gorusme_daveti' || tur === 'gorusme_guncellendi' ? <CalendarClock {...ortak} />
     : tur === 'teklif' || tur === 'teklif_kabul' ? <CheckCircle2 {...ortak} />
     : tur === 'yeni_basvuru' ? <Briefcase {...ortak} />
-    : tur === 'baglanti_istegi' || tur === 'baglanti_kabul' ? <UserPlus {...ortak} />
+    /* Takip de kişiye dair bir olay: belge simgesine düşüyordu, oysa ortada belge yok. */
+    : tur === 'baglanti_istegi' || tur === 'baglanti_kabul' || tur === 'takip' ? <UserPlus {...ortak} />
     : tur === 'paylasim_begeni' ? <Heart {...ortak} />
     : <FileText {...ortak} />;
   /*
