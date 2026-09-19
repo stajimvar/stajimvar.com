@@ -1680,6 +1680,20 @@ export type Database = {
       takipci_sayisi: { Args: { hedef: string }; Returns: number };
       takip_ediyor_muyum: { Args: { hedef: string }; Returns: boolean };
       /*
+        Bağlantı kuralının SEBEBİ (20261019010000) — `security definer`,
+        yalnız `authenticated`. Altı değerden biri dönüyor: 'yok',
+        'alanim-yok', 'alani-yok', 'farkli-alan', 'engel', 'gorunmez'.
+
+        `Returns` burada `string`, birleşim DEĞİL: bu dosya canlı şemadan
+        ÜRETİLİYOR ve üretici `text` dönüşünü daraltmıyor; elle
+        daraltmak bir sonraki `supabase gen types` çağrısında sessizce
+        geri alınacak bir yalan olurdu. Daraltma tek yerde, sosyal
+        katmanın kendi dar istemcisinde (`BaglantiEngeli`,
+        `src/lib/queries/sosyal.ts`) ve tanınmayan değer orada bir sebep
+        değil, `null`.
+      */
+      baglanti_engeli: { Args: { hedef: string }; Returns: string };
+      /*
         Profil sayaçları — 20261015010000 iki sütun ekledi: `takipci`
         (hedefi takip eden sayısı) ve `takip` (hedefin takip ettiği şirket
         sayısı). Dönüş `sosyal_gorunur` kapısından geçiyor: göremediğin

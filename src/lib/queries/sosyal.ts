@@ -1700,6 +1700,64 @@ export async function baglantiDurumu(hedefId: string): Promise<BaglantiBilgisi |
   };
 }
 
+/*
+  BAĞLANTI KURULAMIYORSA SEBEBİ (20261019010000)
+
+  Kullanıcı kararı (19 Eylül 2026): "Aynı sektörde olmayan insanlar
+  birbirleriyle bağlantı kuramamalı ve profillerini aratıp bulsalar bile
+  KURAL İZAH EDİLMELİ." Kuralın veritabanı tarafı iki uçta da duruyor;
+  arayüzün onu izah edebilmesi için sebebi BİLMESİ gerekiyor.
+
+  Sebep istemcide HESAPLANMIYOR: kendi alanımı ve karşı tarafın alanını
+  ayrı ayrı okuyup karşılaştırmak, karşı tarafın alanını istemciye
+  indirmek demekti — profilinde görünmeyen bir bilgi. Sunucu tek kelime
+  dönüyor, karşılaştırmayı kendi içinde yapıyor.
+*/
+const ENGEL_SEBEPLERI = [
+  'yok',
+  'alanim-yok',
+  'alani-yok',
+  'farkli-alan',
+  'engel',
+  'gorunmez',
+] as const;
+
+/** `baglanti_engeli` RPC'sinin döndürdüğü sebepler; göçteki `case` ile birebir. */
+export type BaglantiEngeli = (typeof ENGEL_SEBEPLERI)[number];
+
+/**
+ * "Bu kişiyle neden bağlantı kuramıyorum?" — tek kelime.
+ *
+ * NULL = SEBEP BİLİNMİYOR, "engel yok" DEĞİL
+ * ------------------------------------------
+ * Sunucu tanımadığımız bir değer döndürürse burada bir sebep
+ * UYDURULMUYOR; `null` dönüyor ve çağıran taraf cümle kurmuyor.
+ * Arayüzün o daldaki davranışı bugünküyle aynı kalıyor: düğme çiziliyor,
+ * kural çiğneniyorsa sunucu isteği zaten reddediyor ve ekrana mevcut
+ * hata cümlesi çıkıyor. Sessizce gizlenen bir düğme, sebebi hiçbir
+ * yerden okunamayan bir eksilme olurdu.
+ *
+ * `hata()` ile fırlatan dal duruyor: ağ ya da yetki hatasını "sebep yok"
+ * diye çevirmek, çağıranın iki durumu ayırmasını engellerdi.
+ */
+export async function baglantiEngeli(hedefId: string): Promise<BaglantiEngeli | null> {
+  const { data, error } = await db.rpc('baglanti_engeli', { hedef: hedefId });
+  if (error) hata('Bağlantı kuralı sorulamadı', error);
+
+  /*
+    RPC `returns text` — skaler. PostgREST skaler dönüşü doğrudan
+    veriyor (`takip_ediyor_muyum` ile aynı kalıp); yine de diziyle
+    sarılmış hâli okunuyor, çünkü bu iki biçim arasındaki fark bu
+    arayüz tarafında ÖLÇÜLMEDİ ve yanlış biçim sessizce "sebep yok"
+    gibi görünürdü.
+  */
+  const ham = Array.isArray(data) ? data[0] : data;
+  const deger = typeof ham === 'string' ? ham : null;
+  return (ENGEL_SEBEPLERI as readonly string[]).includes(deger ?? '')
+    ? (deger as BaglantiEngeli)
+    : null;
+}
+
 /**
  * Kimlik biçimi kontrolü.
  *
