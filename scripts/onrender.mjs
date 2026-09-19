@@ -2033,11 +2033,11 @@ async function main() {
       sayfa kendiliğinden haritaya giriyor — kural içeriğe bakıyor,
       kaydın kendisine değil.
     */
-    if (!duzMetin(f.description) && !duzMetin(f.eligibility)) {
-      HARITADAN_DISLANAN.add(firsatYolu);
-    }
+    const firsatInce = !duzMetin(f.description) && !duzMetin(f.eligibility);
+    if (firsatInce) HARITADAN_DISLANAN.add(firsatYolu);
 
     sayfaYaz(firsatYolu, {
+      dizinDisi: firsatInce,
       gorsel: `/og/firsat-${f.slug}.png`,
       baslik: `${firsatBasligi(f)} | StajımVar`,
       aciklama: ozetle(f.short_description || ''),
@@ -2172,9 +2172,11 @@ async function main() {
       Sayfa SİLİNMİYOR: adres 200 dönüyor, ilan sayfalarından ve iç
       bağlantılardan erişiliyor. Yalnız "bunu da dizine al" demiyoruz.
     */
-    if (s.ilanlar.length < 3) HARITADAN_DISLANAN.add(`/sirket/${slug}`);
+    const sirketInce = s.ilanlar.length < 3;
+    if (sirketInce) HARITADAN_DISLANAN.add(`/sirket/${slug}`);
 
     sayfaYaz(`/sirket/${slug}`, {
+      dizinDisi: sirketInce,
       baslik,
       aciklama,
       /*
@@ -2321,6 +2323,7 @@ async function main() {
     HARITADAN_DISLANAN.add(`/sirket/${k.slug}`);
 
     sayfaYaz(`/sirket/${k.slug}`, {
+      dizinDisi: true,
       baslik: `${k.displayName} Staj ve Kariyer | StajımVar`,
       aciklama,
       govde: govdeParcalari.filter(Boolean).join(''),
@@ -2629,6 +2632,25 @@ async function main() {
   tara" demenin anlamı yok. Uzlaştırma yazılan her `/ilan/` adresini
   haritaya eklediği için, `sitemap.py` onu çıkarsa bile geri koyardı —
   iki üretici birbirinin işini bozardı.
+*/
+/*
+  HARİTADAN ÇIKARMAK YETMİYOR, `noindex` GEREKİYOR (20 Eylül 2026)
+
+  19 Eylül'de ince sayfalar site haritasından çıkarıldı. Search Console
+  ertesi gün şunu gösterdi: "Keşfedildi — şu anda dizine eklenmiş değil"
+  214 sayfa, "Tarandı — dizine eklenmemiş" 25 sayfa. Yani haritadan
+  çıkmak Google'ın o sayfaları BİLMESİNİ engellemiyor; sayfa hâlâ 200
+  dönüyor ve iç bağlantılardan erişiliyor, dolayısıyla sitenin içerik
+  kalitesi değerlendirmesine giriyor. AdSense de siteyi "düşük değere
+  sahip içerik" gerekçesiyle geri çevirmişti.
+
+  `dizinDisi` ikisini birden yapıyor: adres haritaya girmiyor VE sayfaya
+  `noindex, follow` basılıyor. `follow` kasıtlı: şirket sayfası dizine
+  girmesin ama üzerindeki ilan bağlantıları taranmaya devam etsin.
+
+  SÜRESİ GEÇMİŞ İLAN BU KURALIN DIŞINDA: onun sayfası kasıtlı olarak
+  dizinde kalıyor (14 Eylül kararı), çünkü arama sonucunda hâlâ gösterim
+  alıyor ve metninde kapandığı yazıyor.
 */
 const HARITADAN_DISLANAN = new Set();
 
