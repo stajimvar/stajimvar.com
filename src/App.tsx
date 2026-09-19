@@ -641,16 +641,50 @@ export default function App() {
     (b: { hedef: string | null; basvuruId: string | null; id: string; okunduMu: boolean }) => {
       void bildirim.okunduYap(b as never);
       bildirim.kapat();
-      if (b.hedef?.startsWith('/sirket')) {
-        setAcilacakAday(b.basvuruId);
-        navigate('/sirket/basvuranlar');
-      } else {
-        setAcilacakBasvuru(b.basvuruId);
-        setActiveTab('profile');
-        navigate('/');
+      /*
+        BAŞVURU AKIŞI AYRI TUTULUYOR
+
+        Başvuruya bağlı bildirimde asıl iş bir KAYDI AÇMAK: adres tek
+        başına yetmiyor, kartın paneli kimlikle açılıyor. Bu yüzden
+        `basvuruId` doluyken hedef yine yalnızca hangi dünyaya
+        gidileceğini söylüyor.
+      */
+      if (b.basvuruId) {
+        if (b.hedef?.startsWith('/sirket')) {
+          setAcilacakAday(b.basvuruId);
+          navigate('/sirket/basvuranlar');
+        } else {
+          setAcilacakBasvuru(b.basvuruId);
+          setActiveTab('profile');
+          navigate('/');
+        }
+        return;
       }
+      /*
+        HEDEF ADRESİ YOK SAYMAK BİR KUSURDU
+
+        Sosyal bildirimler kendi adreslerini `target_url` ile getiriyor
+        (bağlantı isteği `/agim/baglantilar`, bağlantı kabul `/agim`,
+        beğeni `/cv`, takip `/profil/<kullaniciadi>`). Buradaki kod
+        `/sirket` ile başlamayan her hedefte `navigate('/')` çağırıyordu:
+        dokunan kullanıcı hedefe değil ana sayfaya düşüyordu, şirket
+        kabuğunda da `/` yönlendirmesi onu `/sirket/ilanlar`a atıyordu.
+        Yani hiçbir sosyal bildirim çalışmıyordu. Hedef varsa artık
+        doğrudan ona gidiliyor.
+      */
+      if (b.hedef) {
+        navigate(b.hedef);
+        return;
+      }
+      /*
+        Ne kayıt ne adres: gidilecek tek dürüst yer bulunulan dünyanın
+        ana ekranı. `kabukRolu` bu bileşende AŞAĞIDA tanımlı; bağımlılık
+        dizisi render sırasında okunduğu için onu burada kullanmak
+        zamansal ölü bölgeye (TDZ) düşüyor — aynı ifade yerinde okunuyor.
+      */
+      navigate(session?.role === 'company' ? '/sirket/ilanlar' : '/');
     },
-    [bildirim, navigate],
+    [bildirim, navigate, session?.role],
   );
   /*
     Testler veritabanindan geliyor. Eskiden uygulamayla birlikte gonderilen
