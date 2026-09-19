@@ -721,13 +721,40 @@ export const Header: React.FC<HeaderProps> = ({
               dönüyor. Telefonda yalnız "StajımVar" yazısı çiziliyor.
             */}
             {/*
-              Kap yalnız şirket kabuğunda `flex` (rozet markanın yanına
-              dizilsin diye); öğrencide sınıf listesi BİREBİR eski hâli —
-              önce/sonra DOM karşılaştırmasında tek fark bu satırdı.
+              KAP HER İKİ KABUKTA DA `flex items-center`; şirkette ayrıca
+              `gap-2` (rozet markanın yanına dizilsin diye).
+
+              Önce `flex` yalnız şirkette vardı. Öğrencide kap sıradan bir
+              blok kutu olduğu için içindeki satır içi bağlantının altına
+              satır kutusu boşluğu ekleniyordu: kap 31 piksel, bağlantı 28
+              piksel, bağlantı kabın tepesine yapışıyordu. Kap çubuğun
+              ortasına oturduğunda bile bağlantının merkezi 1,5 piksel
+              yukarıda kalıyordu (1280'de 34,5'e karşı pil 36). `flex` ile
+              kabın yüksekliği bağlantıya eşitleniyor ve fark 0 oluyor.
+            */}
+            {/*
+              ARA DEĞER İŞARETİNDEN ÖNCE BOŞLUK ŞART — yoksa SON SINIF
+              ÜRETİLMİYOR.
+
+              Tailwind v4 tarayıcısı (@tailwindcss/oxide) şablon dizesinde
+              sınıfa YAPIŞIK gelen ara değer işaretini sınır saymıyor.
+              Ölçüldü: `lg:translate-y-0` sonuna doğrudan ara değer
+              eklenmiş girdiden `scanFiles` yalnız `lg:static` ve
+              `lg:translate-x-0` adaylarını çıkarıyor, üçüncüsünü hiç
+              çıkarmıyor. Araya bir boşluk konunca üçü de çıkıyor. Bu
+              yüzden üretilen CSS'te ilgili kural 0 kez geçiyordu.
+
+              Sonuç masaüstünde ölçüldü: Tailwind v4 kaydırmayı
+              `transform` ile değil `translate` özelliğiyle yazdığı için
+              hesaplanan `transform` "none" görünürken kap hâlâ
+              `translate: 0 -50%` alıyordu. 1280 pikselde kap kendi
+              yüksekliğinin yarısı kadar (15,5 piksel) yukarı kayıyor,
+              logo bağlantısının merkezi y=19'da kalırken "Fırsatlar"
+              pilininki y=36'da duruyordu — 17 piksel fark.
             */}
             <div
-              className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 shrink-0 lg:static lg:translate-x-0 lg:translate-y-0${
-                sirketKabugu ? ' flex items-center gap-2' : ''
+              className={`absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center shrink-0 lg:static lg:translate-x-0 lg:translate-y-0 ${
+                sirketKabugu ? 'gap-2' : ''
               }`}
             >
               <Logo
