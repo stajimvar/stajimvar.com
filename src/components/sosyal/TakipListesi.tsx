@@ -159,7 +159,25 @@ export const TakipListesi: React.FC<{
                 }}
                 className={SATIR}
               >
-                <ProfilFotografi ad={ad} yol={kisi.avatarYolu} className="h-10 w-10 shrink-0 rounded-full text-sm" />
+                {/*
+                  ŞİRKET LOGOSU YEDEKTE (20 Eylül 2026)
+
+                  Şirket sayfalarında `avatar_path` boştu ve satır baş
+                  harflerle çiziliyordu (@ogulsize, @stajimvaryg: ikisinde
+                  de yol yok, `companies.logo_url` dolu). Logo artık
+                  `yedekAdres` ucundan geliyor; sırayı `profilFotografi`
+                  veriyor: sosyal profil fotoğrafı VARSA o kazanıyor,
+                  kurumsal logo yalnız o yokken çiziliyor — şirket bir gün
+                  kendi fotoğrafını yüklerse logo onu ezmemeli. Öğrenci
+                  satırında `logoAdresi` null olduğu için bu dal hiç
+                  çalışmıyor, baş harf davranışı aynı kalıyor.
+                */}
+                <ProfilFotografi
+                  ad={ad}
+                  yol={kisi.avatarYolu}
+                  yedekAdres={kisi.logoAdresi}
+                  className="h-10 w-10 shrink-0 rounded-full text-sm"
+                />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-bold text-gray-900">{ad}</span>
                   {adAyri && (
