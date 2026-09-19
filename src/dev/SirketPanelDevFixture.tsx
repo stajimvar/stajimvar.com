@@ -1,6 +1,5 @@
 import React from 'react';
 import { Header } from '../components/Header';
-import { OpportunitiesPage } from '../components/OpportunitiesPage';
 import { GuideHub } from '../components/GuidePages';
 import { SayfaAramaSaglayici } from '../lib/sayfa-aramasi';
 import { SirketIlanlarSekmesi, sirketEkrani } from '../sirket/SirketPaneli';
@@ -28,12 +27,11 @@ import { SAYFA_GENISLIGI } from '../lib/duzen';
  * bağlantıları `onNavigate` ile onu değiştiriyor, yani beş sekme
  * arasındaki geçiş gerçek bileşenlerle ölçülüyor:
  *   /sirket/ilanlar · /sirket/basvuranlar · /sirket/ilan/yeni ·
- *   /firsatlar (salt okunur) · /agim (boş durum) · /rehber ·
- *   /sirket/profil (kimlik kartı + form)
+ *   /agim (boş durum) · /rehber · /sirket/profil (kimlik kartı + form)
  *
- * Fırsatlar ve Rehber GERÇEK sayfalar: Fırsatlar listeyi Supabase'den
- * okuyor (anon anahtar, herkese açık veri); anahtar yoksa hata durumu
- * çizilir — o da ölçülebilir bir durum.
+ * /firsatlar YOK (18 Eylül 2026): şirket kabuğunda Fırsatlar sekmesi
+ * kalktı, yeri Başvuranlar; App şirketi o adresten
+ * /sirket/basvuranlar'a alıyor. Rehber GERÇEK sayfa.
  *
  * Buradaki adaylar bilerek "Aday A/B/C": gerçek bir kişiye benzeyen
  * uydurma isim, ekran görüntüsüne düştüğünde gerçek sanılır.
@@ -490,15 +488,6 @@ export const SirketPanelDevFixture: React.FC = () => {
   const icerik =
     yol === '/agim' ? (
       <SirketAgimBos />
-    ) : yol === '/firsatlar' ? (
-      <OpportunitiesPage
-        path="/firsatlar"
-        userId="00000000-0000-4000-8000-000000000001"
-        student={null}
-        onNavigate={git}
-        onRequireLogin={() => undefined}
-        saltOkunur
-      />
     ) : yol === '/rehber' ? (
       <GuideHub onBack={() => git('/sirket/ilanlar')} onNavigate={git} sirketHesabi />
     ) : ekran.tur === 'form' ? (
@@ -625,7 +614,6 @@ export const SirketPanelDevFixture: React.FC = () => {
           <option value="/sirket/ilanlar">/sirket/ilanlar</option>
           <option value="/sirket/basvuranlar">/sirket/basvuranlar</option>
           <option value="/sirket/ilan/yeni">/sirket/ilan/yeni</option>
-          <option value="/firsatlar">/firsatlar</option>
           <option value="/agim">/agim</option>
           <option value="/rehber">/rehber</option>
           <option value="/sirket/profil">/sirket/profil</option>
@@ -680,7 +668,6 @@ export const SirketPanelDevFixture: React.FC = () => {
           bulunulanYol={yol}
           onNavigate={git}
           onOpenGuides={() => git('/rehber')}
-          onOpenOpportunities={() => git('/firsatlar')}
           onBildirimAc={() => undefined}
           okunmamisBildirim={null}
           sirketUyesiMi={!sirketYok}

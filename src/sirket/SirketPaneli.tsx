@@ -15,7 +15,6 @@ import {
   ikincilStil,
   kutuStil,
 } from './renk';
-import { Tabs } from '../ui/Tabs';
 import { IlanFormu } from './IlanFormu';
 import { AdayIzgarasi } from './AdayIzgarasi';
 import type { Iletisim } from './AdayCekmecesi';
@@ -52,19 +51,22 @@ import {
  * Bu bileşen eskiden kendi üst çubuğunu ve alt menüsünü (SirketKabugu)
  * çiziyor, App onu TAM SAYFA yerleştiriyordu: Header ve alt menü yoktu.
  * Ayrı işveren paneli kalktı; şirket hesabı öğrenciyle aynı kabuğu
- * (Header + İlanlar · Fırsatlar · Ağım · Rehber · Profil) kullanıyor.
+ * (Header + İlanlar · Başvuranlar · Ağım · Rehber · Profil) kullanıyor.
  * Burası artık yalnız sekme İÇERİĞİNİ döndürüyor; App `icerikSayfasi`
  * ile öteki sayfalar gibi kabuğun içine koyuyor.
  *
- * İKİ SEKME, ÜÇ GÖRÜNÜM
- * ---------------------
- * İlanlar (/sirket/ilanlar) ve onun ikinci görünümü Başvuranlar
- * (/sirket/basvuranlar) aynı başlığın altında, bölümlü kontrolle
- * (src/ui/Tabs) geçiliyor. Profil (/sirket/profil) şirket sayfası —
- * kimlik, üç sayaç, Paylaşımlar · İlanlar · Hakkımızda; düzenleme
- * /sirket/profil/duzenle (SirketProfili). İlan formu (/sirket/ilan/yeni,
- * /sirket/ilan/<id>/duzenle)
- * kendi ekranı. Eski "Genel" sekmesi kalktı; /sirket → /sirket/ilanlar.
+ * ÜÇ SEKME, ÜÇ EKRAN
+ * ------------------
+ * Başvuranlar (/sirket/basvuranlar) 18 Eylül 2026'ya kadar İlanlar'ın
+ * içinde bölümlü kontrolle (src/ui/Tabs) geçilen ikinci görünümdü:
+ * şirketin asıl işi iki dokunuş uzaktaydı. Kabuktaki Fırsatlar sekmesi
+ * şirkete işe yaramayınca (salt okunur burs listesi) o yer Başvuranlar
+ * oldu; bölümlü kontrol kalktı, iki ekran iki sekme. İlanlar
+ * (/sirket/ilanlar) yalnız ilan listesi. Profil (/sirket/profil) şirket
+ * sayfası — kimlik, üç sayaç, Paylaşımlar · İlanlar · Hakkımızda;
+ * düzenleme /sirket/profil/duzenle (SirketProfili). İlan formu
+ * (/sirket/ilan/yeni, /sirket/ilan/<id>/duzenle) kendi ekranı. Eski
+ * "Genel" sekmesi kalktı; /sirket → /sirket/ilanlar.
  *
  * KADEME 1 BAŞVURANLARI GÖREMİYOR
  * -------------------------------
@@ -344,8 +346,11 @@ export const SirketPaneli: React.FC<{
 /* ------------------------------------------------------ İlanlar sekmesi */
 
 /**
- * İlanlar sekmesi: başlık satırı + kademe pili + bölümlü kontrol
- * (İlanlar | Başvuranlar) + seçili görünüm.
+ * İlanlar ve Başvuranlar sekmeleri: `gorunum` hangisinin çizileceğini
+ * seçiyor. İkisi tek bileşende, çünkü aynı veriyi (ilanlar +
+ * başvurular) ve aynı geri çağrıları paylaşıyor; iki bileşene bölmek
+ * on iki prop'u iki yerde tekrar ettirirdi. Bölümlü kontrol YOK: iki
+ * görünüm artık kabuğun iki ayrı sekmesi.
  *
  * `export`: geliştirme fikstürü (src/dev/SirketPanelDevFixture) bu
  * sekmeyi Header ve alt menüyle birlikte oturumsuz çiziyor — giriş
@@ -395,6 +400,25 @@ export const SirketIlanlarSekmesi: React.FC<{
 }) => {
   const kartAcik = adayGorebilir(baglam.kademe);
   const yeniToplam = kartAcik ? basvurular.filter((b) => b.durum === 'submitted').length : 0;
+
+  if (gorunum === 'basvuranlar') {
+    return (
+      <Basvuranlar
+        baglam={baglam}
+        kartlar={basvurular}
+        ilanlar={ilanlar}
+        onNavigate={onNavigate}
+        onDurum={onBasvuruDurumu}
+        onMulakatTarihi={onMulakatTarihi}
+        onTeklif={onTeklif}
+        onDavet={onDavet}
+        onIletisim={onIletisim}
+        onNot={onNot}
+        acilacakAday={acilacakAday}
+        onAdayAcildi={onAdayAcildi}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -446,49 +470,16 @@ export const SirketIlanlarSekmesi: React.FC<{
         </button>
       </div>
 
-      {/*
-        BÖLÜMLÜ KONTROL — sitedeki tek sekme bileşeni (src/ui/Tabs).
-        Sayı yalnız gerçek olduğunda: başvuru sayısı kart kapalı
-        kademede verilmiyor, çünkü orada sayı bilinmiyor.
-      */}
-      <Tabs
-        etiket="İlan görünümü"
-        ogeler={[
-          { id: 'ilanlar', etiket: 'İlanlar', sayi: ilanlar.length },
-          { id: 'basvuranlar', etiket: 'Başvuranlar', ...(kartAcik ? { sayi: basvurular.length } : {}) },
-        ]}
-        secili={gorunum}
-        onSec={(id) => onNavigate(id === 'basvuranlar' ? '/sirket/basvuranlar' : '/sirket/ilanlar')}
-        className="w-fit max-w-full"
+      <GenelBakis
+        baglam={baglam}
+        ilanlar={ilanlar}
+        basvurular={basvurular as AdayOzeti[]}
+        profil={profil}
+        onNavigate={onNavigate}
+        onDurum={onDurum}
+        onKaldir={onKaldir}
+        simdi={simdi}
       />
-
-      {gorunum === 'ilanlar' ? (
-        <GenelBakis
-          baglam={baglam}
-          ilanlar={ilanlar}
-          basvurular={basvurular as AdayOzeti[]}
-          profil={profil}
-          onNavigate={onNavigate}
-          onDurum={onDurum}
-          onKaldir={onKaldir}
-          simdi={simdi}
-        />
-      ) : (
-        <Basvuranlar
-          baglam={baglam}
-          kartlar={basvurular}
-          ilanlar={ilanlar}
-          onNavigate={onNavigate}
-          onDurum={onBasvuruDurumu}
-          onMulakatTarihi={onMulakatTarihi}
-          onTeklif={onTeklif}
-          onDavet={onDavet}
-          onIletisim={onIletisim}
-          onNot={onNot}
-          acilacakAday={acilacakAday}
-          onAdayAcildi={onAdayAcildi}
-        />
-      )}
     </div>
   );
 };
@@ -522,30 +513,60 @@ const Basvuranlar: React.FC<{
   onAdayAcildi,
   onNot,
 }) => {
-  if (!adayGorebilir(baglam.kademe)) {
+  const kartAcik = adayGorebilir(baglam.kademe);
+
+  /*
+    SAYFANIN KENDİ BAŞLIĞI
+
+    Başvuranlar artık kabuğun bir sekmesi; başlığı İlanlar'ın şirket
+    adından ödünç almıyor. `h1` burada, üç durumda da (kapalı kademe,
+    boş liste, dolu liste) aynı yerde — yalnız dolu listede başlık
+    çizilseydi kademe 1'deki şirket sayfanın adını hiç görmezdi.
+    Alt satır gerçek sayı ve kademe pili; sayı yalnız kart görebilen
+    kademede, çünkü öteki kademede bilinmiyor ("0 aday" yalan olurdu).
+  */
+  const baslik = (
+    <div className="min-w-0">
+      <h1 className="truncate text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
+        Başvuranlar
+      </h1>
+      <p
+        className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm"
+        style={{ color: SIRKET_METIN_IKINCIL }}
+      >
+        {kartAcik && <span>{kartlar.length} aday</span>}
+        <DurumRozeti baglam={baglam} />
+      </p>
+    </div>
+  );
+
+  if (!kartAcik) {
     return (
-      <div className={KUTU} style={kutuStil}>
-        <p
-          className="flex items-center gap-2 text-lg font-extrabold"
-          style={{ color: SIRKET_METIN }}
-        >
-          <Lock className="h-5 w-5" aria-hidden style={{ color: SIRKET_VURGU_KOYU }} />
-          Başvuran bilgileri kapalı
-        </p>
-        <p className="mt-2 max-w-xl text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
-          İlan asmak ile öğrenci bilgisi görmek ayrı iki yetki. Öğrencinin adı, okulu ve
-          projelerini görebilmek için şirketin doğrulanması gerekiyor — bu, bilgilerini bize
-          emanet eden öğrenciye verdiğimiz söz.
-        </p>
-        <button
-          type="button"
-          onClick={() => onNavigate('/sirket/profil')}
-          className={`mt-4 ${BIRINCIL_DUGME}`}
-          style={birincilStil}
-        >
-          <ShieldCheck className="h-5 w-5" aria-hidden />
-          Şirketini doğrula
-        </button>
+      <div className="space-y-4">
+        {baslik}
+        <div className={KUTU} style={kutuStil}>
+          <p
+            className="flex items-center gap-2 text-lg font-extrabold"
+            style={{ color: SIRKET_METIN }}
+          >
+            <Lock className="h-5 w-5" aria-hidden style={{ color: SIRKET_VURGU_KOYU }} />
+            Başvuran bilgileri kapalı
+          </p>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+            İlan asmak ile öğrenci bilgisi görmek ayrı iki yetki. Öğrencinin adı, okulu ve
+            projelerini görebilmek için şirketin doğrulanması gerekiyor — bu, bilgilerini bize
+            emanet eden öğrenciye verdiğimiz söz.
+          </p>
+          <button
+            type="button"
+            onClick={() => onNavigate('/sirket/profil')}
+            className={`mt-4 ${BIRINCIL_DUGME}`}
+            style={birincilStil}
+          >
+            <ShieldCheck className="h-5 w-5" aria-hidden />
+            Şirketini doğrula
+          </button>
+        </div>
       </div>
     );
   }
@@ -570,14 +591,15 @@ const Basvuranlar: React.FC<{
 
   return (
     /*
-      BAŞLIK BİR KEZ
-
-      Sekmenin başlığı yukarıda (şirket adı); AdayIzgarasi kendi
-      "Başvuranlar" başlığını aday sayısıyla çiziyor ve süzgeçler
-      doğrudan onun altında. Buraya ikinci bir sayfa başlığı konmuyor.
+      BAŞLIK BİR KEZ: sayfanın `h1`'i yukarıda; AdayIzgarasi kendi
+      "Başvuranlar" başlığını ÇİZMİYOR (`basliksiz`), yoksa aynı sözcük
+      alt alta iki kez okunurdu. Süzülmüş sayı ("3 / 12 aday") ızgarada
+      kalıyor — o süzgecin durumu, sayfanın değil.
     */
-    <div>
+    <div className="space-y-4">
+      {baslik}
       <AdayIzgarasi
+        basliksiz
         kartlar={kartlar}
         ilanAdresi={ilanAdresi}
         baslangicIlan={baslangicIlan}

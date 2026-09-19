@@ -167,9 +167,12 @@ interface HeaderProps {
     ŞİRKET KABUĞU (kullanıcı kararı, 18 Eylül 2026)
 
     `userRole === 'company'` artık eski "Şirket Portalı" sekmelerini
-    değil, öğrenciyle AYNI kabuğu çiziyor: aynı üst çubuk, aynı beş
-    sekme (İlanlar · Fırsatlar · Ağım · Rehber · Profil). Yalnız İlanlar
-    /sirket/ilanlar'a, Profil /sirket/profil'e gidiyor. Bu ad üst
+    değil, öğrenciyle AYNI kabuğu çiziyor: aynı üst çubuk, beş sekme.
+    Şirkette ikinci sekme Fırsatlar değil BAŞVURANLAR (İlanlar ·
+    Başvuranlar · Ağım · Rehber · Profil): Fırsatlar salt okunur bir
+    burs listesiydi ve şirketin orada yapacağı iş yoktu; şirketler
+    etkinlik de açmayacak. İlanlar /sirket/ilanlar'a, Başvuranlar
+    /sirket/basvuranlar'a, Profil /sirket/profil'e gidiyor. Bu ad üst
     çubuktaki hesap bağlantısında yazıyor; App şirket bağlamından
     (company_members) veriyor, `profiles.role`dan değil.
   */
@@ -643,13 +646,17 @@ export const Header: React.FC<HeaderProps> = ({
   /*
     ŞİRKET KABUĞUNUN SEKMELERİ ADRESLE YANIYOR
 
-    İlanlar sekmesi /sirket/ilanlar, ikinci görünümü /sirket/basvuranlar
-    ve ilan formu /sirket/ilan/*; Profil /sirket/profil. Herkese açık
-    şirket sayfası (/sirket/<slug>) BU KÜMEDE DEĞİL: orası bir sayfa,
-    sekme değil — öğrenci kabuğundaki kurumsal sayfa kuralıyla aynı.
+    İlanlar sekmesi /sirket/ilanlar ve ilan formu /sirket/ilan/*;
+    Başvuranlar /sirket/basvuranlar (18 Eylül 2026'ya kadar İlanlar'ın
+    ikinci görünümüydü, artık kendi sekmesi — iki sekme aynı anda
+    yanmasın diye İlanlar kümesinden çıktı); Profil /sirket/profil.
+    Herkese açık şirket sayfası (/sirket/<slug>) BU KÜMEDE DEĞİL: orası
+    bir sayfa, sekme değil — öğrenci kabuğundaki kurumsal sayfa
+    kuralıyla aynı.
   */
   const sirketKabugu = userRole === 'company';
-  const sirketIlanlarindaMi = /^\/sirket\/(ilanlar|basvuranlar|ilan)(\/|$)/.test(bulunulanYol);
+  const sirketIlanlarindaMi = /^\/sirket\/(ilanlar|ilan)(\/|$)/.test(bulunulanYol);
+  const sirketBasvuranlarindaMi = /^\/sirket\/basvuranlar(\/|$)/.test(bulunulanYol);
   const sirketProfilindeMi = /^\/sirket\/profil(\/|$)/.test(bulunulanYol);
   /* Şirket ana adresi: marka ve telefon köşesindeki ev simgesi buraya. */
   const anaAdres = sirketKabugu ? '/sirket/ilanlar' : '/';
@@ -1098,17 +1105,28 @@ export const Header: React.FC<HeaderProps> = ({
                   <Briefcase className={`w-3.5 h-3.5 shrink-0 ${sirketIlanlarindaMi ? 'text-blue-600' : 'text-gray-400'}`} />
                   <span>İlanlar</span>
                 </a>
+                {/*
+                  BAŞVURANLAR — FIRSATLAR'IN YERİNDE (kullanıcı kararı, 18 Eylül 2026)
+
+                  Şirkette Fırsatlar salt okunur bir burs listesiydi;
+                  tıklayanın yapacağı iş yoktu. Başvuranlar ise İlanlar
+                  sekmesinin içinde ikinci bir görünümdü: bulmak için
+                  önce İlanlar'a, sonra bölümlü kontrole basmak
+                  gerekiyordu. Şirketin asıl işi olan ekran artık bir
+                  dokunuş uzakta. İkon `Users` (aday listesi); ikon tek
+                  başına bilgi taşımıyor, etiket yanında.
+                */}
                 <a
-                  id="nav-tab-sirket-firsatlar"
-                  href="/firsatlar"
-                  aria-current={firsatlardaMi ? 'page' : undefined}
-                  onClick={baglantiTiklamasi(() => onOpenOpportunities?.())}
+                  id="nav-tab-sirket-basvuranlar"
+                  href="/sirket/basvuranlar"
+                  aria-current={sirketBasvuranlarindaMi ? 'page' : undefined}
+                  onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/sirket/basvuranlar')) : undefined}
                   className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    firsatlardaMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                    sirketBasvuranlarindaMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
-                  <Sparkles className={`w-3.5 h-3.5 shrink-0 ${firsatlardaMi ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <span>Fırsatlar</span>
+                  <Users className={`w-3.5 h-3.5 shrink-0 ${sirketBasvuranlarindaMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span>Başvuranlar</span>
                 </a>
                 <a
                   id="nav-tab-sirket-agim"
@@ -1887,9 +1905,10 @@ export const Header: React.FC<HeaderProps> = ({
 
         Eski dört öğe (Adaylar, %80+ Uyum, Kanban, İlan Ekle) kalktı;
         turuncu/mor vurgular da onlarla gitti. Aynı `altMenuOgesi`
-        sınıfları: seçili öğe mavi kutu, diğerleri gri. Fırsatlar, Ağım
-        ve Rehber öğrencininkiyle aynı adrese; İlanlar ve Profil şirketin
-        kendi ekranına.
+        sınıfları: seçili öğe mavi kutu, diğerleri gri. Ağım ve Rehber
+        öğrencininkiyle aynı adrese; İlanlar, Başvuranlar ve Profil
+        şirketin kendi ekranına. Fırsatlar şirkette YOK (18 Eylül 2026):
+        salt okunur burs listesinin şirkete işi yoktu.
       */
       <nav
         aria-label="Mobil Alt Şirket Navigasyon"
@@ -1909,17 +1928,24 @@ export const Header: React.FC<HeaderProps> = ({
           <span className={altMenuYazisi(sirketIlanlarindaMi)}>İlanlar</span>
         </a>
 
+        {/*
+          "Başvuranlar" bu çubuğun EN UZUN etiketi (11 harf; öğrencide
+          en uzunu "Fırsatlar", 48 px). Ölçüldü (Chromium, 390 px):
+          metin 55,3 px kalın / 52,8 px normal, etiket kutusu 75 px —
+          20 px pay var, `truncate` devreye girmiyor. 320 px'lik en dar
+          ekranda kutu 61 px'e iner; yine sığar.
+        */}
         <a
-          href="/firsatlar"
-          aria-label="Fırsatlar"
-          aria-current={firsatlardaMi ? 'page' : undefined}
-          onClick={baglantiTiklamasi(() => onOpenOpportunities?.())}
-          className={altMenuOgesi(firsatlardaMi)}
+          href="/sirket/basvuranlar"
+          aria-label="Başvuranlar"
+          aria-current={sirketBasvuranlarindaMi ? 'page' : undefined}
+          onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/sirket/basvuranlar')) : undefined}
+          className={altMenuOgesi(sirketBasvuranlarindaMi)}
         >
-          <span className={altMenuIkonu(firsatlardaMi)}>
-            <Sparkles className="h-5 w-5" />
+          <span className={altMenuIkonu(sirketBasvuranlarindaMi)}>
+            <Users className="h-5 w-5" />
           </span>
-          <span className={altMenuYazisi(firsatlardaMi)}>Fırsatlar</span>
+          <span className={altMenuYazisi(sirketBasvuranlarindaMi)}>Başvuranlar</span>
         </a>
 
         <a

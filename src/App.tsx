@@ -58,6 +58,22 @@ import { SirketAgim } from './sirket/SirketAgim';
   karismamalari icin acikca sayiliyorlar.
 */
 const SIRKET_PANEL_YOLLARI = ['/sirket/ilanlar', '/sirket/basvuranlar', '/sirket/profil', '/sirket/ilan'];
+/*
+  Fırsat listesinin adresleri — hepsi tek bileşen (OpportunitiesPage;
+  gerekçesi çizildiği yerde). Burada da sayılıyor, çünkü şirket
+  kabuğunun yönlendirme etkisi çizimden önce koşuyor ve aynı kümeyi
+  soruyor; iki liste ayrı düşmesin.
+*/
+const FIRSAT_LISTE_YOLLARI = new Set([
+  '/firsatlar',
+  '/burslar',
+  '/kyk',
+  '/yurtdisi-firsatlari',
+  '/yarismalar',
+  '/firsat-takvimi',
+  '/bana-uygun',
+  '/kaydedilen-firsatlar',
+]);
 import { OpportunitiesHomeSection } from './components/OpportunitiesHomeSection';
 import { basvuruSonucMesaji } from './lib/basvuru-yolu.mjs';
 import { basvuruKopyasi } from './lib/basvuru-kopyasi.mjs';
@@ -1466,8 +1482,8 @@ export default function App() {
 
     Ayrı işveren paneli kalktı. Şirket hesabı (`profiles.role` =
     'company') öğrenciyle AYNI kabuğu — Header ve alt menü — kullanıyor;
-    yalnız İlanlar ve Profil sekmeleri şirketin kendi ekranlarına
-    (/sirket/ilanlar, /sirket/profil) gidiyor, Fırsatlar salt okunur,
+    İlanlar, Başvuranlar ve Profil sekmeleri şirketin kendi ekranlarına
+    (/sirket/ilanlar, /sirket/basvuranlar, /sirket/profil) gidiyor,
     Ağım dürüst boş durum. `kabukRolu` Header'a hangi sekme takımının
     çizileceğini söylüyor; bir yetki değil. Yetki company_members ve
     RLS'te.
@@ -1476,12 +1492,23 @@ export default function App() {
     `/cv` adreslerine düşerse kendi karşılıklarına alınıyor. Ana sayfa
     ve `/cv` öğrenci ekranları; şirket hesabının orada göreceği şey ya
     "giriş yap" (profili yok) ya da başvuramayacağı bir liste olurdu.
+
+    FIRSATLAR DA ÖYLE (18 Eylül 2026): şirket kabuğunda Fırsatlar
+    sekmesi yok, yeri Başvuranlar. Salt okunur burs listesi şirkete
+    hiçbir iş yaptırmıyordu; şirketler etkinlik de açmayacak. Fırsat
+    listesinin sekiz adresi (`FIRSAT_LISTE_YOLLARI` — /burslar, /kyk…
+    hepsi aynı bileşen) şirkette Başvuranlar'a alınıyor; tek fırsat
+    sayfası (/firsatlar/<slug>) herkese açık içerik olduğu için
+    duruyor. `OpportunitiesPage`in `saltOkunur` dalı buradan artık
+    çağrılmıyor; prop ve dal bileşende duruyor — silmek ayrı bir iş,
+    burası küçük tutuldu.
   */
   const kabukRolu: 'student' | 'company' = session?.role === 'company' ? 'company' : 'student';
   React.useEffect(() => {
     if (kabukRolu !== 'company') return;
     if (temizYol === '/' || temizYol === '/sirket') navigate('/sirket/ilanlar', { degistir: true });
     else if (temizYol === '/cv' || temizYol === '/cv/yazdir') navigate('/sirket/profil', { degistir: true });
+    else if (FIRSAT_LISTE_YOLLARI.has(temizYol)) navigate('/sirket/basvuranlar', { degistir: true });
   }, [kabukRolu, temizYol]);
 
   /*
@@ -2286,28 +2313,19 @@ export default function App() {
     seçiyor (bkz. ROTA_BASLANGICI). Sekiz adresin hiçbiri silinmedi:
     hepsi ön-render edilip indekslenmiş durumda.
   */
-  const firsatSayfalari = new Set([
-    '/firsatlar',
-    '/burslar',
-    '/kyk',
-    '/yurtdisi-firsatlari',
-    '/yarismalar',
-    '/firsat-takvimi',
-    '/bana-uygun',
-    '/kaydedilen-firsatlar',
-  ]);
-  if (firsatSayfalari.has(temizYol)) {
+  if (FIRSAT_LISTE_YOLLARI.has(temizYol)) {
+    /*
+      Şirket hesabı buraya düşmüyor: yukarıdaki etki sekiz adresi
+      /sirket/basvuranlar'a alıyor (kabukRolu etkisi). Etki bir çizim
+      sonra koşuyor; o tek karede öğrenci listesi çizilmesin diye
+      burada da kapı var. `saltOkunur` artık geçilmiyor.
+    */
+    if (kabukRolu === 'company') return null;
     return icerikSayfasi(
       <OpportunitiesPage
         path={temizYol}
         userId={session?.userId ?? null}
         student={student}
-        /*
-          Şirket hesabında liste SALT OKUNUR: "Bana uygun", kaydet ve
-          profil çağrıları öğrenci profiline bağlı; şirketin öğrenci
-          profili yok. Kendi etkinliklerini duyurma sonraki PR (DB).
-        */
-        saltOkunur={kabukRolu === 'company'}
         onNavigate={(to) => {
           if (to === '/profil') { setActiveTab('profile'); navigate('/'); return; }
           navigate(to);

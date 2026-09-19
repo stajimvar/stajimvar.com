@@ -6,9 +6,14 @@ import { existsSync, readFileSync } from 'node:fs';
   TEK KABUK — ŞİRKET HESABI (kullanıcı kararı, 18 Eylül 2026)
 
   Ayrı işveren paneli kalktı. Şirket hesabı öğrenciyle AYNI kabuğu
-  (Header + alt menü İlanlar · Fırsatlar · Ağım · Rehber · Profil)
-  kullanıyor; yalnız İlanlar ve Profil şirketin kendi ekranlarına gidiyor,
-  Fırsatlar salt okunur, Ağım dürüst boş durum.
+  (Header + alt menü İlanlar · Başvuranlar · Ağım · Rehber · Profil)
+  kullanıyor; İlanlar, Başvuranlar ve Profil şirketin kendi ekranlarına
+  gidiyor, Ağım dürüst boş durum.
+
+  FIRSATLAR ŞİRKETTE YOK (kullanıcı kararı, 18 Eylül 2026): salt okunur
+  burs listesinin şirkete işi yoktu; o yer Başvuranlar oldu ve
+  Başvuranlar İlanlar'ın içindeki bölümlü kontrolden çıkıp kendi sekmesi
+  oldu. Öğrenci kabuğu DEĞİŞMEDİ.
 
   Bu testler kaynak üzerinden okuyor: bileşenler oturum ve Supabase
   istemcisi istiyor, jsdom kurulu değil. Ölçülen şey, kabuğun ve
@@ -43,7 +48,14 @@ test('şirket ekranları ortak kabukta; eski kabuk ve eski portal sekmeleri yok'
   /* Header: şirket alt menüsü beş sekme, doğru adreslerle; eski portal öğeleri kalmadı. */
   const altCubuk = HEADER.slice(HEADER.indexOf('aria-label="Mobil Alt Şirket Navigasyon"'));
   const hrefler = [...altCubuk.matchAll(/href="([^"]+)"/g)].map((e) => e[1]);
-  assert.deepEqual(hrefler, ['/sirket/ilanlar', '/firsatlar', '/agim', '/rehber', '/sirket/profil']);
+  assert.deepEqual(hrefler, ['/sirket/ilanlar', '/sirket/basvuranlar', '/agim', '/rehber', '/sirket/profil']);
+  /* Masaüstü şirket sekmeleri de aynı dört adres (Profil sağdaki hesap bağlantısında). */
+  const masaustu = HEADER.slice(HEADER.indexOf('id="nav-tab-sirket-ilanlar"'), HEADER.indexOf('id="nav-tab-sirket-rehber"'));
+  assert.deepEqual([...masaustu.matchAll(/href="([^"]+)"/g)].map((e) => e[1]), ['/sirket/ilanlar', '/sirket/basvuranlar', '/agim']);
+  assert.doesNotMatch(HEADER, /nav-tab-sirket-firsatlar/);
+  /* Aktiflik: Başvuranlar kendi kümesinde, İlanlar kümesinden çıktı — iki sekme birden yanmasın. */
+  assert.ok(HEADER.includes("const sirketIlanlarindaMi = \/^\\/sirket\\/(ilanlar|ilan)(\\/|$)\/.test(bulunulanYol);"), 'İlanlar kümesi basvuranlar içermemeli');
+  assert.ok(HEADER.includes("const sirketBasvuranlarindaMi = \/^\\/sirket\\/basvuranlar(\\/|$)\/.test(bulunulanYol);"), 'Başvuranlar kendi kümesi');
   const kod = HEADER.replace(/\/\*[\s\S]*?\*\//g, '');
   for (const iz of ['nav-company-kanban', '%80+ Uyum', 'companyDropdownOpen', 'Şirket Portalından Çıkış', 'Kanban']) {
     assert.ok(!kod.includes(iz), `${iz} hâlâ Header'da`);
@@ -56,13 +68,31 @@ test('şirket ekranları ortak kabukta; eski kabuk ve eski portal sekmeleri yok'
   assert.deepEqual([...ogrenci.matchAll(/href="([^"]+)"/g)].map((e) => e[1]), ['/', '/firsatlar', '/baglantilar', '/rehber']);
 });
 
-test('şirket sekmeleri dürüst: Fırsatlar salt okunur, Ağım tek boş kart, Rehber şirket yazısı üstte', () => {
-  /* Fırsatlar: kişisel süzgeç ve kaydet şirkette çizilmiyor; kayıt listesi sorulmuyor. */
-  assert.match(APP, /saltOkunur=\{kabukRolu === 'company'\}/);
-  assert.match(FIRSATLAR, /banaUygunVar=\{!saltOkunur && hazirSayisi > 0\}/);
-  assert.match(FIRSATLAR, /kaydedilenVar=\{!saltOkunur && Boolean\(userId\)\}/);
-  assert.match(FIRSATLAR, /onKaydet=\{filters\.arsiv \|\| saltOkunur \? undefined : \(\) => kaydiDegistir\(item\)\}/);
-  assert.match(FIRSATLAR, /userId && !saltOkunur \? fetchSavedOpportunityIds\(userId\)/);
+test('şirket sekmeleri dürüst: Fırsatlar şirkette yok, Başvuranlar tam sayfa, Ağım tek boş kart, Rehber şirket yazısı üstte', () => {
+  /*
+    Fırsatlar: şirket sekiz liste adresinden Başvuranlar'a alınıyor ve
+    OpportunitiesPage şirkette hiç çizilmiyor — `saltOkunur` App'ten
+    artık geçilmiyor (prop bileşende duruyor, dal silinmedi).
+  */
+  assert.match(APP, /else if \(FIRSAT_LISTE_YOLLARI\.has\(temizYol\)\) navigate\('\/sirket\/basvuranlar', \{ degistir: true \}\);/);
+  assert.match(APP, /if \(FIRSAT_LISTE_YOLLARI\.has\(temizYol\)\) \{[\s\S]*?if \(kabukRolu === 'company'\) return null;/);
+  assert.doesNotMatch(APP, /saltOkunur=/);
+  assert.match(FIRSATLAR, /saltOkunur\?: boolean/);
+  /* Öğrenci /firsatlar'a hâlâ Header'dan gidiyor (regresyon yok). */
+  assert.match(APP, /onOpenOpportunities=\{\(\) => navigate\('\/firsatlar'\)\}/);
+
+  /*
+    Başvuranlar kendi sayfası: İlanlar sekmesinde bölümlü kontrol yok,
+    sayfanın h1'i "Başvuranlar", karttaki "Adaylar" düğmesi ?ilan= ile
+    oraya gidiyor.
+  */
+  const PANEL = oku('src/sirket/SirketPaneli.tsx');
+  assert.doesNotMatch(PANEL, /import \{ Tabs \}/);
+  assert.doesNotMatch(PANEL, /<Tabs/);
+  assert.match(PANEL, /if \(gorunum === 'basvuranlar'\) \{\s*return \(\s*<Basvuranlar/);
+  assert.match(PANEL, /<h1[^>]*>\s*Başvuranlar\s*<\/h1>/);
+  assert.match(PANEL, /<AdayIzgarasi\s+basliksiz/);
+  assert.match(oku('src/sirket/IlanKarti.tsx'), /onNavigate\(`\/sirket\/basvuranlar\?ilan=\$\{encodeURIComponent\(id\)\}`\)/);
 
   /*
     Ağım: takipçi listesi (18 Eylül 2026). Boş kart yalnız sunucu sıfır

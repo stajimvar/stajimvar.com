@@ -52,26 +52,29 @@ const sql = oku('scripts/sql/rls-regresyon-testleri.sql');
 test('sayfada tek "Başvuranlar" başlığı var', () => {
   /*
     Masaüstünde başlık iki kez yazıyordu: panel kendi <h1>'ini
-    çiziyordu, AdayIzgarasi de kendi başlığını. Kalan ızgaranınki —
-    aday sayısını da taşıyor ve süzgeçler doğrudan altında.
-  */
-  /*
-    Panelin başka sekmeleri (İlanlar, Şirket) kendi başlıklarını
-    çiziyor; bakılan yer YALNIZCA Başvuranlar bileşeni.
+    çiziyordu, AdayIzgarasi de kendi başlığını.
+
+    18 Eylül 2026: Başvuranlar kabuğun kendi sekmesi oldu
+    (/sirket/basvuranlar tam sayfa), sayfanın `h1`'i yine panelin
+    Başvuranlar bileşeninde ve TEK. Izgara o sayfada `basliksiz`
+    çiziliyor — kendi "Başvuranlar" başlığını atlıyor; aynı sözcük
+    alt alta iki kez okunmuyor.
   */
   const basvuranlarBileseni = panel.slice(panel.indexOf('const Basvuranlar'));
   assert.equal(
     (basvuranlarBileseni.match(/<h1/g) ?? []).length,
-    0,
-    'Başvuranlar bileşeni hâlâ kendi başlığını çiziyor',
+    1,
+    'Başvuranlar bileşeni tek h1 çizmeli (sayfanın başlığı)',
   );
+  assert.match(basvuranlarBileseni, /<AdayIzgarasi\s+basliksiz/, 'ızgara başlıksız çağrılmalı');
   /*
-    Izgaranın başlığı `h2`: sayfanın `h1`'i artık İlanlar sekmesinin
-    başında (şirket adı) ve ızgara o sekmenin bir görünümü. Izgarada
-    `h1` kalsaydı aynı sayfada iki `h1` olurdu.
+    Izgaranın kendi başlığı `h2` ve yalnız `basliksiz` değilken: bir
+    sayfanın içinde bölüm başlığı. `h1` kalsaydı aynı sayfada iki `h1`
+    olurdu.
   */
   assert.equal((izgara.match(/<h1/g) ?? []).length, 0, 'ızgara hâlâ h1 çiziyor');
   assert.equal((izgara.match(/<h2/g) ?? []).length, 1, 'ızgarada başlık yok ya da birden fazla');
+  assert.match(izgara, /basliksiz \?/);
   assert.match(izgara, /Başvuranlar/);
 });
 
