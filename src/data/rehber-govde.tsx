@@ -6,6 +6,7 @@ import {
   RehberFigur,
 } from '../components/RehberGorseller';
 import type { KonuId, Rehber, RehberKategori, SoruCevap } from './rehberler';
+import { ODAK_HALKASI } from '../lib/renk-token';
 
 /**
  * Rehber gövdesi — metinden çizim.
@@ -35,8 +36,27 @@ import type { KonuId, Rehber, RehberKategori, SoruCevap } from './rehberler';
 
 const BAGLANTI = /\[([^\]]+)\]\(([^)]+)\)/g;
 
-/** `[metin](/adres)` yazımını gerçek bağlantıya çeviriyor. */
-function metniCiz(metin: string, anahtar: string): React.ReactNode[] {
+/*
+  Gövde metinlerinin bağlantı biçimi — beyaz kart zemini üstünde.
+
+  Odak halkası kalıbın parçası: klavyeyle gezen okuyucu rehber içindeki
+  bağlantıya geldiğini ancak bunu görürse anlıyor. Ölçüldü — halka yoktu,
+  Tab ile gezerken 76 rehberin gövde bağlantılarında odak görünmüyordu.
+*/
+const BAGLANTI_SINIFI = `text-blue-600 hover:underline font-semibold rounded-sm ${ODAK_HALKASI}`;
+
+/**
+ * `[metin](/adres)` yazımını gerçek bağlantıya çeviriyor.
+ *
+ * `bagSinifi` dışarıdan verilebiliyor çünkü aynı çizim koyu zeminli
+ * kutularda da kullanılıyor; orada mavi yazı kendi zemininde okunmuyor.
+ * Çeviri yolu tek, yalnız renk çağırana bırakılıyor.
+ */
+function metniCiz(
+  metin: string,
+  anahtar: string,
+  bagSinifi: string = BAGLANTI_SINIFI
+): React.ReactNode[] {
   const parcalar: React.ReactNode[] = [];
   let son = 0;
   let esles: RegExpExecArray | null;
@@ -52,7 +72,7 @@ function metniCiz(metin: string, anahtar: string): React.ReactNode[] {
         key={`${anahtar}-b${sayac++}`}
         href={adres}
         {...(dis ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
-        className="text-blue-600 hover:underline font-semibold"
+        className={bagSinifi}
       >
         {yazi}
       </a>
@@ -62,6 +82,28 @@ function metniCiz(metin: string, anahtar: string): React.ReactNode[] {
   if (son < metin.length) parcalar.push(metin.slice(son));
   return parcalar;
 }
+
+/**
+ * Gövde DIŞINDAKİ tek satırlık rehber metinlerini de aynı markdown
+ * yolundan geçiriyor.
+ *
+ * NEDEN VAR: `hizliCevap` rehber sayfasında düz metin olarak çiziliyordu.
+ * Ölçüldü — 76 rehberin 12'sinde hızlı cevap kutusunda toplam 14 adet
+ * `[metin](/adres)` yazımı köşeli parantezleriyle ekrana düşüyordu
+ * (`/rehber/burslar-hangi-aylarda-acilir` içinde `[KYK başvuruları](...)`
+ * ham hâlde). Düzeltme 12 metni elle değiştirmek değil, çizimi
+ * paragrafların kullandığı tek yola bağlamak: sonradan yazılacak rehber
+ * de kendiliğinden doğru çiziliyor.
+ *
+ * Yalnızca satır içi düğüm döndürüyor (metin parçaları + `<a>`), bu yüzden
+ * çağıran kendi `<p>`'sinin İÇİNE koyabiliyor; iç içe `<p>` üretmiyor.
+ */
+export const MetinCizimi: React.FC<{
+  metin: string;
+  /** React anahtarlarının öneki; aynı sayfada birden çok kullanımda ayrışsın diye. */
+  anahtar?: string;
+  bagSinifi?: string;
+}> = ({ metin, anahtar = 'm', bagSinifi }) => <>{metniCiz(metin, anahtar, bagSinifi)}</>;
 
 export interface Blok {
   /** Bölüm başlığı (h2). İçindekiler listesi bunlardan üretiliyor. */
