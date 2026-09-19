@@ -49,13 +49,16 @@ test("Ağım /agim ve /baglantilar'ta yanıyor; /profil/* ve Profil ayrı, her a
   /*
     Ağım artık akışa (`/agim`) gidiyor; `/baglantilar` o akışın bağlantı
     ekranı ve sekme orada da yanmaya devam ediyor — iki adres tek sekme.
+    `/takip` 19 Eylül 2026'da katıldı: profil kartındaki "takip"
+    sayacının açtığı liste. Kümeye girmeden önce 390'da alt çubukta
+    İLANLAR yanıyordu — üç adres, tek sekme.
   */
-  assert.match(source, /const agimdaMi = \/\^\\\/\(agim\|baglantilar\)\(\\\/\|\$\)\/\.test\(bulunulanYol\);/);
+  assert.match(source, /const agimdaMi = \/\^\\\/\(agim\|baglantilar\|takip\)\(\\\/\|\$\)\/\.test\(bulunulanYol\);/);
   /* Ağım'da Profil sönük: sekme durumu 'profile' kalsa bile adres eziyor. */
   assert.match(source, /const profildeMi = cvEkranindaMi \|\| \(!rehberdeMi && !kurumsalSayfada && !agimdaMi && activeTab === 'profile'\)/);
   assert.match(source, /aria-label="Ağım"\s*aria-current=\{agimdaMi \? 'page' : undefined\}/);
-  /* /baglantilar sosyal küme içinde, yani İlanlar da sönük (ilanlardaMi !sosyaldeMi). */
-  assert.match(source, /const sosyaldeMi = \/\^\\\/\(agim\|cv\|profil\|topluluklar\|baglantilar\)\(\\\/\|\$\)\/\.test\(bulunulanYol\);/);
+  /* /baglantilar ve /takip sosyal küme içinde, yani İlanlar da sönük (ilanlardaMi !sosyaldeMi). */
+  assert.match(source, /const sosyaldeMi = \/\^\\\/\(agim\|cv\|profil\|topluluklar\|baglantilar\|takip\)\(\\\/\|\$\)\/\.test\(bulunulanYol\);/);
 });
 
 test("sosyal rotada (/cv) İlanlar sönük, Profil aktif; aria-current görselle aynı", () => {
@@ -146,7 +149,7 @@ test("/cv ekranı çıkışı her öğrenciye, yönetim panelini yalnız yöneti
 */
 test("sosyal sayfada üst arama kişi arıyor ve ilan süzgecine yazmıyor", () => {
   assert.ok(
-    source.includes("const sosyaldeMi = /^\\/(agim|cv|profil|topluluklar|baglantilar)(\\/|$)/.test(bulunulanYol);"),
+    source.includes("const sosyaldeMi = /^\\/(agim|cv|profil|topluluklar|baglantilar|takip)(\\/|$)/.test(bulunulanYol);"),
   );
   assert.match(source, /sosyaldeMi\s*\? 'Kullanıcı adıyla ara'/);
   assert.match(source, /sosyaldeMi\s*\? 'Kişi ara'/);

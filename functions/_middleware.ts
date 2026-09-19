@@ -113,6 +113,13 @@ const UYGULAMA_ADRESLERI = new Set([
   */
   '/baglantilar',
   /*
+    /takip: /baglantilar ile aynı sebep ve aynı gün eklendi. Profildeki
+    "takip" sayacı da artık gerçek bir <a href> ve yeni sekmede
+    açılabiliyor; liste burada olmasaydı orta tuşla açılan sekme 404
+    görürdü. Adres kimlik taşımıyor — RPC `auth.uid()`i içeride okuyor.
+  */
+  '/takip',
+  /*
     /agim ve /agim/baglantilar: sosyal akış ve bağlantı yönetimi. Ön
     render edilmiyorlar (içerik kişiye göre değişiyor), bu yüzden
     doğrudan açıldıklarında kabuğu buradan alıyorlar — liste bu ikisini

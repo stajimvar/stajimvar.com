@@ -462,14 +462,20 @@ export const Header: React.FC<HeaderProps> = ({
   const rehberdeMi = /^\/(rehber|bolum|bolumler|araclar|isveren)(\/|$)/.test(bulunulanYol);
   const firsatlardaMi = /^\/(firsatlar|burslar|kyk|yurtdisi-firsatlari|yarismalar|firsat-takvimi|bana-uygun|kaydedilen-firsatlar)(\/|$)/.test(bulunulanYol);
   /*
-    AĞIM = /baglantilar
+    AĞIM = /baglantilar ve /takip
 
     Sosyal ağın girişi bugün bağlantılar sayfası (bağlantılar, gelen ve
     giden istekler). /profil/* BURAYA GİRMİYOR: başkasının profili bir
     sayfa, sekme değil; Profil de değil (o /cv). Orada hiçbir sekme
     yanmıyor, kurumsal sayfalardaki kuralla aynı.
+
+    /takip 19 Eylül 2026'da eklendi. Profil kartındaki "takip" sayacının
+    açtığı liste; kümeye girmeden önce 390'da ölçüldü — alt çubukta
+    İLANLAR yanıyordu (activeTab 'internships' kalıyor ve adres onu
+    ezmiyordu), 1280'de de üst sekme "Staj İlanları" idi. Kullanıcı Ağım
+    dünyasındayken İlanlar'ın yanması onu yanlış yere ait hissettirir.
   */
-  const agimdaMi = /^\/(agim|baglantilar)(\/|$)/.test(bulunulanYol);
+  const agimdaMi = /^\/(agim|baglantilar|takip)(\/|$)/.test(bulunulanYol);
   /*
     AKIŞIN KENDİ BAŞLIĞI VAR.
 
@@ -578,8 +584,12 @@ export const Header: React.FC<HeaderProps> = ({
 
     Yan etkisi de doğru: üst çubuktaki arama /agim'de de kişi arıyor —
     akışın kendi arama panelinin aradığı şeyle aynı.
+
+    /takip de bu kümede (19 Eylül 2026): takip ettiklerinin listesi bir
+    kişi listesi ve orada üst çubuğun "Pozisyon veya şirket ara" olması
+    ölçüldü — /baglantilar ile aynı ekran, aynı arama olmalı.
   */
-  const sosyaldeMi = /^\/(agim|cv|profil|topluluklar|baglantilar)(\/|$)/.test(bulunulanYol);
+  const sosyaldeMi = /^\/(agim|cv|profil|topluluklar|baglantilar|takip)(\/|$)/.test(bulunulanYol);
   /*
     Kişi araması yalnız oturumu olan öğrenci hesabına: `sosyal_kullanici_ara`
     çağıranın görebildiği profilleri tarıyor, oturumsuz çağrı boş döner ve

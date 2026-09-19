@@ -25,6 +25,12 @@ export const UYGULAMA_BOLUMLERI = [
   '/yonetim',
   '/cv',
   '/baglantilar',
+  /*
+    /takip: oturum sahibinin takip ettiklerinin listesi. Kabuk HTML'i
+    herkeste aynı olsa da /baglantilar ile aynı sınıfta — kişiye bağlı
+    bir bölüm kenarda tutulmuyor.
+  */
+  '/takip',
   /* Sosyal akış: içeriği kişinin bağlantılarına göre değişiyor. */
   '/agim',
   '/bana-uygun',
