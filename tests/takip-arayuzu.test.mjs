@@ -212,3 +212,32 @@ test('şirket Ağım: seni takip edenler (kendi listesi), boşta dürüst kart, 
   assert.match(bos, /Henüz seni takip eden yok/);
   assert.doesNotMatch(kod(bos), /henüz açık değil|yakında/i);
 });
+
+/*
+  ŞİRKETİN LOGOSU TAKİP SATIRINDA GÖRÜNÜYOR (20261020010000)
+
+  Kullanıcı bildirimi: Ağım'daki "Takip ettiğin şirketler" bölümünde
+  şirket, logosu yerine baş harfleriyle çiziliyordu. Ölçüldü: şirket
+  sosyal profillerinde `avatar_path` BOŞ, logo `companies.logo_url`de
+  duruyor ve liste RPC'leri onu hiç döndürmüyordu.
+*/
+test('liste satırı şirketin logosunu yedek adres olarak geçiriyor', () => {
+  assert.match(kod(SOSYAL), /logoAdresi: satir\.logo_url \?\? null/);
+  assert.match(kod(LISTE), /yedekAdres=\{kisi\.logoAdresi\}/);
+  /* İki RPC de döndürmeli; yalnız birini düzeltmek listelerden birini geride bırakırdı. */
+  const goc = oku('supabase/migrations/20261020010000_takip_listesinde_sirket_logosu.sql');
+  assert.equal((goc.match(/left join public\.companies c on c\.id = sp\.sirket_id/g) ?? []).length, 2);
+  assert.equal((goc.match(/logo_url {4}text,/g) ?? []).length, 2);
+});
+
+test('sosyal profil fotoğrafı logodan önce geliyor', () => {
+  /*
+    Şirket kendi sosyal profiline fotoğraf yüklediğinde kurumsal logo
+    onu EZMEMELİ. Sıra `ProfilFotografi`nin kendi dalında: `yol` doluysa
+    depolama yolundan iniyor, yoksa `yedekAdres`e düşülüyor.
+  */
+    const secici = kod(oku('src/lib/profil-fotografi.ts'));
+  const yol = secici.indexOf("{ tur: 'yol'");
+  const adres = secici.indexOf("{ tur: 'adres'");
+  assert.ok(yol > 0 && adres > yol, 'yol dalı adres dalından ÖNCE gelmeli');
+});

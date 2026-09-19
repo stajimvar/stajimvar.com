@@ -1696,6 +1696,11 @@ export type Database = {
         çağıranın kendi listesi: `auth.uid()` fonksiyonun İÇİNDE okunuyor,
         parametre değil — başkasının takipçi listesi hiçbir yoldan
         okunmuyor. Sayfalı: limit 1..100'e kırpılıyor, varsayılan 50.
+
+        `logo_url` 20261020010000 ile eklendi: şirket satırlarında
+        `avatar_path` boştu ve liste baş harf çiziyordu. `companies`e
+        left join; öğrenci satırında `sirket_id` boş olduğu için hep
+        null. Görünürlük genişlemiyor — kolon zaten okunabilirdi.
       */
       takipcilerim: {
         Args: { p_limit?: number; p_offset?: number };
@@ -1705,6 +1710,7 @@ export type Database = {
           gorunen_ad: string | null;
           avatar_path: string | null;
           sirket_id: string | null;
+          logo_url: string | null;
           takip_tarihi: string;
         }[];
       };
@@ -1716,6 +1722,7 @@ export type Database = {
           gorunen_ad: string | null;
           avatar_path: string | null;
           sirket_id: string | null;
+          logo_url: string | null;
           takip_tarihi: string;
         }[];
       };

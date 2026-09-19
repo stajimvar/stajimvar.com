@@ -635,6 +635,20 @@ export interface TakipKisisi {
   avatarYolu: string | null;
   /** Dolu ise satır bir şirket sayfası; takipçi listesinde şirket→şirket takibi böyle ayırt ediliyor. */
   sirketId: string | null;
+  /**
+   * `companies.logo_url` — DOĞRUDAN BİR ADRES, `avatarYolu` gibi bir
+   * depolama YOLU değil. İkisi aynı alana konamaz: `avatarYolu` private
+   * kovadan oturumla iniyor (her indirme okuma politikasından yeniden
+   * geçiyor), logo ise olduğu gibi `<img src>` oluyor. Bu yüzden ayrı
+   * adla duruyorlar; biri ötekinin yerine yazılamaz.
+   *
+   * Şirket satırında bile ÖNCELİKLİ DEĞİL: sosyal profil fotoğrafı varsa
+   * o kazanıyor, logo yedekte kalıyor (`TakipListesi`).
+   *
+   * Öğrenci satırında her zaman null — `sirket_id` boş olduğu için
+   * göçteki left join eşleşmiyor (20261020010000).
+   */
+  logoAdresi: string | null;
   takipTarihi: string;
 }
 
@@ -648,6 +662,7 @@ function takipSatiri(satir: any): TakipKisisi {
     gorunenAd: satir.gorunen_ad ?? null,
     avatarYolu: satir.avatar_path ?? null,
     sirketId: satir.sirket_id ?? null,
+    logoAdresi: satir.logo_url ?? null,
     takipTarihi: satir.takip_tarihi,
   };
 }
