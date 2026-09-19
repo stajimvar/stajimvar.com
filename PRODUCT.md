@@ -60,3 +60,33 @@ web
 3. Kademe görünür ama utandırmaz: ne yapabildiği yazılır, sayı ya da "yükselt" baskısı değil.
 4. İki kitle tek ekranda: 1 ilanlı şirket sahibine de 30 ilanlı İK'ya da aynı düzen ölçeklenir.
 5. Öğrenci dünyasıyla aynı aileden: aynı mavi, aynı köşe, aynı yazı; işveren tarafı "başka bir ürün" gibi durmaz.
+
+## Yön: Tek Dünya (kullanıcı kararı, 18 Eylül 2026)
+
+Ayrı "işveren paneli" kalkıyor. Şirket hesabı öğrenciyle AYNI kabuğu kullanır:
+aynı Header, aynı alt menü (İlanlar · Fırsatlar · Ağım · Rehber · Profil),
+aynı profil bileşeni. Yalnız İlanlar ve Fırsatlar sekmeleri role göre içerik
+değiştirir. Kullanıcının sözü: "öğrenci tasarımını zemin yapıp şirkete
+uyarlamalıyız; şirketlerin de paylaşım yaptığı bir profili olsun, ağları
+olsun, rehberde şirketleri bilgilendiren konular olsun."
+
+- **Profil (şirket):** öğrenci profiliyle aynı yapı — logo, tanıtım,
+  paylaşımlar (fotoğraf akışı), takipçi sayısı. Şirket kimliği alanları
+  (sektör, konum, çalışan sayısı, web, İK e-postası) profil düzenlemede.
+- **İlanlar (şirket):** kendi ilanları, Yeni ilan, Başvuranlar — öğrenci
+  tarafının kart diliyle. Eski panel işlevleri buraya taşınır.
+- **Fırsatlar (şirket): İPTAL (kullanıcı kararı, 18 Eylül 2026).** Şirketler
+  etkinlik düzenlemiyor; kariyer günü ve hackathon büyük kurumların işi ve
+  onlar zaten kendi sayfalarında duyuruyor, otomasyon oradan topluyor.
+  Elle ilan açan şirket tipik olarak küçük/orta işletme. Şirket hesabında
+  o sekme **Başvuranlar** oldu. Şirkete etkinlik açtırma teklif edilmemeli.
+- **Ağım (şirket):** TAKİP modeli, tek yönlü: öğrenci şirketi takip eder,
+  şirket şirketi takip eder. Karşılıklı onay yok. Şirket Ağım'da
+  takipçilerini ve başvuranlarını görür.
+- **Rehber (şirket):** şirketlere yönelik konular; mevcut "Stajyer nasıl
+  alınır" başlangıç.
+- Şirket hesabı şirket hesabında kalır; öğrenci görünümüne geçiş yok.
+- **Beş adımın hepsi 18-19 Eylül 2026'da tamamlandı ve yayına alındı:**
+  (1) tek kabuk + İlanlar #172, (2) şirket profili + paylaşım #173,
+  (3) takip: düğme, sayaçlar, Ağım listeleri #176, (4) Fırsatlar yerine
+  Başvuranlar #177, (5) Şirketler için rehber #179.
