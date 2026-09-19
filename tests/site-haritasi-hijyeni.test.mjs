@@ -99,19 +99,46 @@ test('dağıtılan harita ile üretilen sayfalar birebir örtüşüyor', () => {
   assert.deepEqual(sayfasiOlmayanAdres, [], 'haritada sayfası olmayan adres var');
 
   /*
-    Haritada olmayan sayfaların HEPSİ kapanmış olmalı. Kapanmamış bir
-    sayfanın haritadan düşmesi sessiz bir görünürlük kaybı olurdu; bu
-    yüzden gerekçe sayfanın kendi metninden okunuyor.
+    HARİTADAN DÜŞMENİN İKİ MEŞRU GEREKÇESİ VAR, ÜÇÜNCÜSÜ YOK
+
+    1. Başvuru dönemi kapandı (15 Eylül 2026 kuralı, yukarıda).
+    2. Sayfanın anlatacak bir şeyi yok (19 Eylül 2026): kayıtta ne
+       `description` ne `eligibility` var; geriye başlık, kurum ve son
+       başvuru tarihi kalıyor — her kayıtta aynı kalıp. Ölçüldü: 121
+       fırsat sayfasının görünür metni ortanca 30 kelimeydi, sitedeki
+       en ince yüzey. AdSense incelemesi bu yüzeyi "düşük değerli
+       içerik" diye geri çevirdi.
+
+    Gerekçe yine SAYFANIN KENDİ METNİNDEN okunuyor, veritabanından
+    değil: testin derlemeye bakması, kuralın çıktıda gerçekten
+    uygulandığını gösteriyor. "Kimler başvurabilir" başlığı ayrıntının
+    yazıldığı tek yer; o varsa sayfa ince değildir.
+
+    Üçüncü bir gerekçeyle düşen sayfa sessiz görünürlük kaybıdır ve
+    bu iddia onu yakalar.
   */
+  const gorunurKelime = (html) =>
+    html
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<!--[\s\S]*?-->/g, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&[a-z#0-9]+;/gi, ' ')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean).length;
+
   const haritadaOlmayanSayfa = [...uretilen].filter((s) => !haritada.has(s));
   const gerekcesizDusen = haritadaOlmayanSayfa.filter((s) => {
     const html = readFileSync(path.join(klasor, `${s}.html`), 'utf8');
-    return !html.includes('Başvuru dönemi kapandı');
+    if (html.includes('Başvuru dönemi kapandı')) return false;
+    const ince = !html.includes('Kimler başvurabilir') && gorunurKelime(html) < 60;
+    return !ince;
   });
   assert.deepEqual(
     gerekcesizDusen,
     [],
-    'haritada olmayan ama kapandığı yazmayan sayfa var'
+    'haritada olmayan ama ne kapanmış ne ince olan sayfa var'
   );
 
   /* Kapanmış bölümün adresi hiç yok. */
