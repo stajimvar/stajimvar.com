@@ -91,16 +91,80 @@ test('şirket sayfası: düğme yalnız ziyaretçiye ve sahibe değil; sayaç do
 });
 
 test('öğrenci profili: "takip" sayacı sahipte ve ziyaretçide, üç eşit sütun, ayraç yok; düğme yok', () => {
-  assert.match(PROFIL_BASLIGI, /<Sayac deger=\{satir\.sayaclar\.takip\} etiket="takip" \/>/);
-  assert.match(PROFIL_BASLIGI, /className="grid grid-cols-3 border-y border-gray-100 py-2 lg:border-y-0 lg:py-0"/);
+  assert.match(PROFIL_BASLIGI, /deger=\{satir\.sayaclar\.takip\}\s*etiket="takip"/);
+  /*
+    19 Eylül 2026: şerit telefonda fotoğrafın yanına taşındı (1. satır,
+    2. sütun) ve `border-y` kalktı — tam genişlikte kendi bandı değil
+    artık. Ziyaretçi görünümündeki şerit (OGRENCI_GORUNUM) kendi
+    ekranında tam genişlikte kaldığı için orada çizgiler duruyor.
+  */
+  assert.match(PROFIL_BASLIGI, /className="col-start-2 row-start-1 grid min-w-0 grid-cols-3"/);
   assert.match(OGRENCI_GORUNUM, /<Sayac etiket="Takip" deger=\{sayaclar\.takip\} \/>/);
   assert.match(OGRENCI_GORUNUM, /<dl className="grid grid-cols-3 border-y border-gray-100 py-2 lg:border-y-0 lg:py-0">/);
   for (const k of [PROFIL_BASLIGI, OGRENCI_GORUNUM]) {
     assert.doesNotMatch(k, /divide-x/);
     assert.doesNotMatch(kod(k), /TakipDugmesi|Takip et\b/);
   }
-  /* Sayaç bir bağlantı DEĞİL: takip edilenlerin listesi Ağım'da, ayrı liste ekranı yok. */
-  assert.doesNotMatch(PROFIL_BASLIGI, /etiket="takip"\s+href/);
+  /*
+    SAYAÇ ARTIK BİR BAĞLANTI (19 Eylül 2026)
+
+    Eskiden düz bir `<span>`di ve o doğruydu: gidilecek liste ekranı
+    yoktu. Kullanıcı sayıya basınca hiçbir şey olmadığını bildirdi;
+    liste artık `/takip` adresinde ve sayaç "bağlantı" ile BİREBİR
+    aynı `Sayac` yolundan geçiyor: gerçek `<a href>`, orta tuş ve
+    yeni sekme çalışıyor. "paylaşım" düz `<span>` kalıyor — paylaşımlar
+    aynı ekranın alt bölümünde, ayrı bir adresleri yok.
+  */
+  assert.match(PROFIL_BASLIGI, /etiket="takip"\s+href="\/takip"\s+onNavigate=\{satir\.onNavigate\}/);
+  assert.doesNotMatch(PROFIL_BASLIGI, /etiket="paylaşım"[^/]*href/);
+});
+
+test('/takip: yalnız kendi listesi, gerçek adres, dört durum; ara katman 404 vermiyor', () => {
+  const SAYFA = oku('src/components/sosyal/TakipEttiklerimSayfasi.tsx');
+  const ARA_KATMAN = oku('functions/_middleware.ts');
+
+  /* Rota `/baglantilar` ile aynı kalıpta ve aynı prop dörtlüsüyle. */
+  assert.match(APP, /if \(temizYol === '\/takip'\) \{/);
+  assert.match(
+    APP,
+    /<TakipEttiklerimSayfasi\s*kullaniciId=\{session\?\.userId \?\? null\}\s*oturumHazir=\{sessionReady\}\s*onNavigate=\{navigate\}\s*onGirisGerekli=\{AUTH_ENABLED \? handleOpenLogin : undefined\}/,
+  );
+  /*
+    Yeni sekmede açılabilen gerçek adres: ön render edilmiyor, ara
+    katman kabuğu vermezse orta tuşla açılan sekme 404 görürdü.
+  */
+  assert.match(ARA_KATMAN, /^\s*'\/takip',$/m);
+
+  /* Tek okuma; hedef parametresi YOK — RPC `auth.uid()`i içeride okuyor. */
+  assert.match(SAYFA, /useTakipListesi\(takipEttiklerimiGetir, Boolean\(oturumHazir && kullaniciId\)\)/);
+  assert.doesNotMatch(kod(SAYFA), /takipcilerimiGetir|hedef|profilId/);
+
+  /* Kanca yetki kapılarının ÜSTÜNDE: kancalar koşullu dala giremez. */
+  const kancaYeri = SAYFA.indexOf('useTakipListesi(');
+  const kapiYeri = SAYFA.indexOf('if (!oturumHazir)');
+  assert.ok(kancaYeri > 0 && kancaYeri < kapiYeri, 'kanca yetki kapısının üstünde');
+
+  /*
+    Dört durum ayrı ve cümleleri farklı: yetkisiz ("giriş gerekiyor"),
+    yükleniyor (iskelet), gerçek sıfır ve alınamadı (son ikisi
+    `TakipListesi`nin kendi dalları, metni buradan geliyor).
+  */
+  assert.match(SAYFA, /Takip listesi için giriş gerekiyor/);
+  assert.match(SAYFA, /aria-busy="true"/);
+  /*
+    Başlık ve boş cümle Ağım'daki bölümle BİREBİR: takip edilebilen tek
+    şey şirket (`takip_edilebilir` yalnız `sirket_id`li yayındaki
+    profilleri sayıyor). İki ekranda iki ad, iki ayrı şey gibi okunurdu.
+  */
+  assert.match(SAYFA, /Takip ettiğin şirketler/);
+  assert.match(OGRENCI_AGIM, /Takip ettiğin şirketler/);
+  assert.match(SAYFA, /bosMetin="Henüz şirket takip etmiyorsun\."/);
+  assert.match(OGRENCI_AGIM, /bosMetin="Henüz şirket takip etmiyorsun\."/);
+  assert.match(SAYFA, /hataMetni="Takip listesi alınamadı\. Bağlantı ya da sunucu kaynaklı olabilir\."/);
+
+  /* Sahte satır ve uydurma sayı yok: başlıkta "N kişi" yazmıyor. */
+  assert.doesNotMatch(kod(SAYFA), /ornek|örnek|placeholder/i);
+  assert.doesNotMatch(kod(SAYFA), /sayaclar|sosyalSayaclariGetir/);
 });
 
 test('liste bileşeni: gerçek <a href>, 50\'lik sayfa, tekrar satır yok, dört durum; görünen ad yoksa @ad iki kez yazılmıyor', () => {

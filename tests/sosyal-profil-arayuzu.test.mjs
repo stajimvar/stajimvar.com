@@ -1949,11 +1949,16 @@ test('şeritte iki sayaç; kişisel listeler kilitli satırda, sağ sütun doğr
     `sosyal_sayaclar.takip`); dikey ayraç kalktı — üç hücrede iki çizgi
     şeridi parçalıyordu, şirket sayfasının sayaç şeridiyle aynı kural.
   */
-  const serit = govdeAl(profilBasligi, 'className="grid grid-cols-3 border-y border-gray-100', '</div>');
+  /*
+    19 Eylül 2026: şerit telefonda fotoğrafın YANINA taşındı (1. satır,
+    2. sütun) ve yatay çizgileri kalktı; tam genişlikte kendi bandı
+    olmadığı için `border-y` ayırdığı bir şey kalmamıştı.
+  */
+  const serit = govdeAl(profilBasligi, 'className="col-start-2 row-start-1 grid min-w-0 grid-cols-3', '</div>');
   for (const etiket of ['paylaşım', 'bağlantı', 'takip']) {
     assert.match(serit, new RegExp(`<Sayac[^>]*etiket="${etiket}"`), `${etiket} sayacı şeritte`);
   }
-  assert.match(serit, /deger=\{satir\.sayaclar\.takip\} etiket="takip"/);
+  assert.match(serit, /deger=\{satir\.sayaclar\.takip\}\s*etiket="takip"/);
   assert.doesNotMatch(serit, /divide-x/, 'sayaçlar arasında dikey çizgi yok');
   for (const etiket of ['kaydedilen', 'başvuru']) {
     assert.doesNotMatch(
@@ -1973,6 +1978,8 @@ test('şeritte iki sayaç; kişisel listeler kilitli satırda, sağ sütun doğr
   assert.match(profilBasligi, /etiket: 'Başvurular',[\s\S]{0,120}sag: basvuruSayisi,\s*onClick: menudenGit\(onBasvurulara\)/);
 
   assert.match(serit, /href="\/baglantilar"/);
+  /* "takip" de 19 Eylül 2026'dan beri gerçek bir adres (bkz. takip-arayuzu). */
+  assert.match(serit, /href="\/takip"/);
   assert.match(sayacOgesi, /<a\n\s*href=\{href\}/);
   /*
     Sağ sütunda satır yok: ne içe aktarma ne bileşen çağrısı ne panel

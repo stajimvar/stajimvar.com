@@ -152,7 +152,7 @@ test('her an tek sekme yanıyor: /agim İlanlar sekmesini de yakmıyor', () => {
   */
   const header = oku('src/components/Header.tsx');
   assert.ok(
-    header.includes("const sosyaldeMi = /^\\/(agim|cv|profil|topluluklar|baglantilar)(\\/|$)/.test(bulunulanYol);"),
+    header.includes("const sosyaldeMi = /^\\/(agim|cv|profil|topluluklar|baglantilar|takip)(\\/|$)/.test(bulunulanYol);"),
   );
   /*
     /staj-ilanlari da "İlanlar" sekmesini yakıyor (sekme artık oraya

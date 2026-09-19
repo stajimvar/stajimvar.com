@@ -39,12 +39,23 @@ import { Button, Card, ProfileSectionGroup, ProfileSectionRow, Skeleton } from '
  * yüzde tek başına ne yapılacağını söylemiyor, eksik adımın adı söylüyor.
  */
 
-/** Doluluk halkası. Konik degrade ile çiziliyor; ek bir kütüphane yok. */
-const Halka: React.FC<{ oran: number; children: React.ReactNode }> = ({ oran, children }) => {
+/**
+ * Doluluk halkası. Konik degrade ile çiziliyor; ek bir kütüphane yok.
+ *
+ * `className` dışarıdan veriliyor: telefonda kart bir ızgara ve halka
+ * kendi hücresine açıkça yerleşiyor (bkz. kartın yerleşim yorumu).
+ * Yerleşimi bileşenin içine yazmak, halkayı tek bir kartın ızgarasına
+ * bağlardı.
+ */
+const Halka: React.FC<{ oran: number; className?: string; children: React.ReactNode }> = ({
+  oran,
+  className = '',
+  children,
+}) => {
   const renk = oran === 100 ? '#10b981' : '#2563eb';
   return (
     <div
-      className="rounded-full p-[3px] shrink-0"
+      className={`rounded-full p-[3px] shrink-0 ${className}`}
       style={{
         background: `conic-gradient(${renk} ${oran * 3.6}deg, #e5e7eb ${oran * 3.6}deg)`,
       }}
@@ -283,13 +294,22 @@ interface Props {
 }
 
 /**
- * Sosyal hücrenin iskeleti: `StatItem` ölçüsünde (sayı satırı + etiket
- * satırı) ki satır gelince şerit zıplamasın.
+ * Sosyal hücrenin iskeleti: sayı satırı + etiket satırı.
+ *
+ * ÖLÇÜLER GERÇEK HÜCREYLE BİREBİR — 19 Eylül 2026'da tarayıcıda ölçüldü.
+ * Dolu hücre 390'da 50, 1280'de 63 piksel; iskelet 46 ve 58 çiziyordu ve
+ * sayı gelince 1280'de düğme satırı 2 piksel kayıyordu. Kap `py-1`e
+ * (dolu hücrenin dolgusu) çekildi, lg kutuları da satır kutularına
+ * oturtuldu: 8 + 35 + 2 + 17,5 = 62,5; telefonda 8 + 24 + 6 + 12 = 50.
+ * Kayma iki kırılımda da 0 piksel.
+ *
+ * lg değerleri piksel çünkü yuvarlak bir sınıf tutmuyordu: 28 pikselik
+ * sayının satır kutusu 35, 14 pikselik etiketinki 17,5.
  */
 const SayacIskeleti: React.FC = () => (
-  <span aria-hidden className="block min-w-0 py-0.5">
-    <Skeleton className="mx-auto h-6 w-8" />
-    <Skeleton className="mx-auto mt-1.5 h-3 w-12" />
+  <span aria-hidden className="block min-w-0 py-1">
+    <Skeleton className="mx-auto h-6 w-8 lg:h-[35px] lg:w-10" />
+    <Skeleton className="mx-auto mt-1.5 h-3 w-12 lg:mt-0.5 lg:h-[17.5px] lg:w-16" />
   </span>
 );
 
@@ -431,16 +451,44 @@ export const ProfilBasligi: React.FC<Props> = ({
         - Staj tercihi satırı ve eksik adım kutusu: tercihler ve eksik
           bölümler "Profili düzenle" ekranında; tamamlanma yüzdesi ayar
           menüsünün ilk satırında ve fotoğraf halkasında duruyor.
-        - Üçüncü sayaç yok: yalnız Paylaşım ve Bağlantı. Takipçi ya da
-          başka bir sayı uydurulmuyor.
 
       Her değer çağıranın verdiği GERÇEK veriden: ad, okul, bölüm, sınıf ve
       il `student_profiles`tan; kullanıcı adı ve sayılar sosyal panelin
       satırından (`portfolyo.satir`). Veri yoksa satır çizilmiyor.
 
-      TELEFONDA alt alta: fotoğraf ve kimlik bir satırda, sayaçlar ve
-      düğmeler altında tam genişlikte. Dişli telefonda üst çubukta
-      (Header `stajimvar:profil-menusu`).
+      TELEFONDA (lg altı) INSTAGRAM SIRASI — kullanıcı isteği, 19 Eylül 2026
+
+      Eski sıra: fotoğraf + yanında ad/okul → altında tam genişlikte üç
+      sayaç şeridi → düğmeler. Yeni sıra:
+        1. fotoğraf | üç sayaç (fotoğrafın yanındaki kalan genişliğe
+           eşit üç sütun, dikey ortalı)
+        2. ad, @kullanıcıadı, okul ve bölüm · sınıf — tam genişlik
+        3. "CV'ni görüntüle" ve "Profili düzenle" — tam genişlik
+
+      Dişli telefonda üst çubukta (Header `stajimvar:profil-menusu`).
+
+      ŞERİT İKİ KEZ YAZILMIYOR: iki grup (kimlik / sayaç+düğme) telefonda
+      `display:contents` ile kutusunu bırakıyor ve dört parça dıştaki
+      ızgaraya kendi hücresine yerleşiyor; lg'de gruplar yeniden kutu
+      oluyor, ızgara yerleşimi flex öğesinde geçersiz olduğu için
+      kendiliğinden düşüyor. Kopyalansaydı biri değiştiğinde öteki geride
+      kalır ve aynı sayı iki farklı kalıpta çizilirdi.
+
+      BEDELİ: TELEFONDA SEKME SIRASI GÖZ SIRASIYLA AYNI DEĞİL
+
+      390'da ölçüldü — sekme sırası @kullanıcıadı (y=216) → bağlantı
+      (y=102) → takip (y=102) → düğmeler (y=299); yani odak bir kez
+      yukarı sıçrıyor. DOM sırası (ad, kullanıcı adı, okul → sayılar →
+      eylemler) ekran okuyucuda doğru cümleyi kuruyor, ama klavyeyle
+      gezen gören kullanıcı halkanın geri gittiğini görüyor.
+
+      KARAR (19 Eylül 2026): SIRA BÖYLE KALIYOR. Düzeltmenin iki yolu
+      vardı — şeridi ikinci kez yazmak ya da lg'deki dikey ayracı iki
+      ayrı kenarlığa bölmek, yani geniş ekran kartını yeniden kurmak.
+      Bir basamaklık sıçrama ikisine de değmiyor: DOM sırası ekran
+      okuyucuda doğru cümleyi kuruyor ("kim olduğun → sayıların →
+      eylemlerin") ve önemli olan o. Fikir değişirse doğru çözüm
+      şeridi kopyalamak değil, ızgarayı lg'de de kullanmak.
     */
     <Card mobilYuzey className={`relative px-4 py-5 sm:p-6 lg:px-8 lg:py-7 ${className}`}>
       <button
@@ -455,10 +503,10 @@ export const ProfilBasligi: React.FC<Props> = ({
 
       <ProfilAyarlarSayfasi acik={menuAcik} onKapat={menuKapat} bolumler={ayarBolumleri} />
 
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:gap-8">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-4 sm:gap-x-6 lg:flex lg:flex-row lg:items-center lg:gap-8">
         {/* ---------------- Fotoğraf ve kimlik ---------------- */}
-        <div className="flex min-w-0 flex-1 items-center gap-4 sm:gap-6">
-          <Halka oran={oran}>
+        <div className="contents lg:flex lg:min-w-0 lg:flex-1 lg:items-center lg:gap-6">
+          <Halka oran={oran} className="col-start-1 row-start-1">
             {/*
               BÜYÜTME (kullanıcı isteği, 17 Eylül 2026): fotoğrafa dokununca
               Instagram gibi tam ekran açılıyor. Paylaş eylemi sosyal
@@ -480,7 +528,13 @@ export const ProfilBasligi: React.FC<Props> = ({
             />
           </Halka>
 
-          <div className="min-w-0 flex-1">
+          {/*
+            KİMLİK — telefonda 2. SATIR, iki sütuna yayılı (bkz. kartın
+            yerleşim yorumu). Ad, fotoğrafın yanındaki dar sütunda değil
+            tam genişlikte duruyor; uzun okul adı da burada sarıyor.
+            lg'de fotoğrafın yanındaki sütun olmaya devam ediyor.
+          */}
+          <div className="col-span-2 col-start-1 row-start-2 min-w-0 lg:flex-1">
             {/* `break-words`: uzun ad kırpılmıyor, sarılıyor. */}
             <h1 className="min-w-0 break-words text-xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-2xl lg:text-[28px]">
               {adYazimi(ad)}
@@ -521,18 +575,31 @@ export const ProfilBasligi: React.FC<Props> = ({
         </div>
 
         {/* ---------------- Sayaçlar ve eylemler ---------------- */}
-        <div className="space-y-4 lg:w-[440px] lg:shrink-0 lg:self-stretch lg:border-l lg:border-gray-200 lg:pl-8 lg:flex lg:flex-col lg:justify-center">
+        <div className="contents lg:flex lg:w-[440px] lg:shrink-0 lg:flex-col lg:justify-center lg:gap-4 lg:self-stretch lg:border-l lg:border-gray-200 lg:pl-8">
           {/*
             ÜÇ SAYAÇ, ARADA ÇİZGİ YOK (karar: 18 Eylül 2026). "takip"
             öğrencinin takip ettiği şirket sayısı (`sosyal_sayaclar.takip`);
             aynı RPC satırından geliyor, ikinci bir çağrı yok. Üçüncü hücre
             gelince iki dikey ayraç şeridi parçalıyordu; şirket sayfasının
-            sayaç şeridiyle aynı kural: eşit sütunlar, ayraç yok. Sayaç
-            bağlantı DEĞİL: takip edilen şirketlerin listesi Ağım'da ve
-            bu sayıya basınca gidilecek ayrı bir liste ekranı yok.
+            sayaç şeridiyle aynı kural: eşit sütunlar, ayraç yok.
+
+            "TAKİP" ARTIK BİR BAĞLANTI (19 Eylül 2026). Eskiden düz bir
+            `<span>`di ve o doğruydu: gidilecek liste ekranı yoktu,
+            liste yalnız Ağım'ın içinde bir bölümdü. Kullanıcı sayıya
+            basıp hiçbir şey olmadığını bildirdi; liste artık kendi
+            adresinde (/takip, `TakipEttiklerimSayfasi`) ve sayaç
+            "bağlantı" ile BİREBİR aynı `Sayac` yolundan geçiyor —
+            gerçek `<a href>`, orta tuş ve yeni sekme çalışıyor.
+            "paylaşım" düz `<span>` kalıyor: paylaşımlar bu ekranın
+            kendi alt bölümünde, ayrı bir adresleri yok.
+
+            YATAY ÇİZGİLER KALKTI: `border-y` şeridi telefonda tam
+            genişlikte kendi bandı olduğu için ayırıyordu. Şerit artık
+            fotoğrafın yanında (1. satır, 2. sütun) ve iki hairline
+            fotoğrafın ortasından geçen bir kutu çiziyordu.
           */}
           <div
-            className="grid grid-cols-3 border-y border-gray-100 py-2 lg:border-y-0 lg:py-0"
+            className="col-start-2 row-start-1 grid min-w-0 grid-cols-3"
             aria-busy={sosyalHucre === 'yukleniyor' || undefined}
           >
             {sosyalHucre === 'yukleniyor' && (
@@ -551,7 +618,12 @@ export const ProfilBasligi: React.FC<Props> = ({
                   href="/baglantilar"
                   onNavigate={satir.onNavigate}
                 />
-                <Sayac deger={satir.sayaclar.takip} etiket="takip" />
+                <Sayac
+                  deger={satir.sayaclar.takip}
+                  etiket="takip"
+                  href="/takip"
+                  onNavigate={satir.onNavigate}
+                />
               </>
             )}
             {sosyalHucre === 'alinamadi' && (
@@ -562,7 +634,8 @@ export const ProfilBasligi: React.FC<Props> = ({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* Telefonda 3. ve son satır, iki sütuna yayılı; lg'de sağ sütunun alt bloğu. */}
+          <div className="col-span-2 col-start-1 row-start-3 grid grid-cols-2 gap-3">
             {onCv ? (
               <Button onClick={onCv} tamGenislik>
                 CV'ni görüntüle
@@ -601,10 +674,16 @@ const Sayac: React.FC<{
 }> = ({ deger, etiket, href, onNavigate }) => {
   const icerik = (
     <>
-      <span className="block text-2xl font-extrabold leading-tight tabular-nums text-gray-900 sm:text-[28px]">
+      {/*
+        ÖLÇÜ İKİ KIRILIMDA AYRI: telefonda şerit artık tam genişlikte
+        değil, fotoğrafın yanındaki kalan yerde — 28 pikselik sayı üç
+        sütuna sığmıyordu. lg'de şerit yine kendi sütununda ve başlık
+        ölçüsünde okunuyor.
+      */}
+      <span className="block text-xl font-extrabold leading-tight tabular-nums text-gray-900 lg:text-[28px]">
         {deger}
       </span>
-      <span className="mt-0.5 block text-sm leading-tight text-gray-600">{etiket}</span>
+      <span className="mt-0.5 block text-xs leading-tight text-gray-600 lg:text-sm">{etiket}</span>
     </>
   );
   if (!href) return <span className="block min-w-0 py-1 text-center">{icerik}</span>;

@@ -189,6 +189,11 @@ const AgimSayfasi = React.lazy(() =>
 const BaglantilarSayfasi = React.lazy(() =>
   import('./components/sosyal/BaglantilarSayfasi').then((m) => ({ default: m.BaglantilarSayfasi }))
 );
+const TakipEttiklerimSayfasi = React.lazy(() =>
+  import('./components/sosyal/TakipEttiklerimSayfasi').then((m) => ({
+    default: m.TakipEttiklerimSayfasi,
+  }))
+);
 const BolumTalepleri = React.lazy(() =>
   import('./components/yonetim/BolumTalepleri').then((m) => ({ default: m.BolumTalepleri }))
 );
@@ -2706,6 +2711,30 @@ export default function App() {
   if (temizYol === '/agim/baglantilar' || temizYol === '/baglantilar') {
     return icerikSayfasi(
       <BaglantilarSayfasi
+        kullaniciId={session?.userId ?? null}
+        oturumHazir={sessionReady}
+        onNavigate={navigate}
+        onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+      />
+    );
+  }
+
+  /*
+    /takip — takip ettiklerin.
+
+    Profil kartındaki "takip" sayacının gittiği yer; sayaç 19 Eylül
+    2026'ya kadar düz bir `<span>`di ve basılınca hiçbir şey olmuyordu.
+    `/baglantilar` ile birebir aynı kalıp: aynı prop dörtlüsü, oturum
+    yoksa aynı davranış (giriş kartı + `handleOpenLogin`).
+
+    Liste YALNIZ oturum sahibinin kendi listesi: RPC `takip_ettiklerim`
+    hedef parametresi almıyor, `auth.uid()`i içeride okuyor
+    (20261015010000). Bu yüzden adres bir kimlik taşımıyor — taşısaydı
+    başkasının takip listesini sormanın hazır bir yolu olurdu.
+  */
+  if (temizYol === '/takip') {
+    return icerikSayfasi(
+      <TakipEttiklerimSayfasi
         kullaniciId={session?.userId ?? null}
         oturumHazir={sessionReady}
         onNavigate={navigate}
