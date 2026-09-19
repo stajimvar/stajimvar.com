@@ -73,6 +73,13 @@ export const AdayIzgarasi: React.FC<{
   acilacakAday?: string | null;
   onAdayAcildi?: () => void;
   onNot: (id: string, metin: string) => Promise<void>;
+  /*
+    Sayfanın başlığı dışarıda (SirketPaneli, `h1` "Başvuranlar")
+    çizildiğinde ızgara kendi başlığını atlıyor; yalnız süzgeç sayısı
+    ("3 / 12 aday") kalıyor ve o da yalnız süzgeç açıkken — toplam sayı
+    zaten sayfa başlığının altında.
+  */
+  basliksiz?: boolean;
 }> = ({
   kartlar,
   ilanAdresi,
@@ -86,6 +93,7 @@ export const AdayIzgarasi: React.FC<{
   acilacakAday,
   onAdayAcildi,
   onNot,
+  basliksiz = false,
 }) => {
   const [onyargisiz, setOnyargisiz] = React.useState(false);
   const [ilanSuzgeci, setIlanSuzgeci] = React.useState(baslangicIlan ?? '');
@@ -255,20 +263,29 @@ export const AdayIzgarasi: React.FC<{
     <div className="space-y-4">
       {/* --------------------------------------------------- başlık */}
       {/*
-        `h2`: ızgara artık İlanlar sekmesinin içinde bir görünüm ve
-        sayfanın `h1`'i sekmenin başında (şirket adı). Aynı sayfada iki
-        `h1` ekran okuyucuya iki sayfa gibi okunurdu.
+        `h2`: ızgara bir sayfanın içinde bir bölüm; sayfanın `h1`'i
+        dışarıda. Aynı sayfada iki `h1` ekran okuyucuya iki sayfa gibi
+        okunurdu. `basliksiz`: /sirket/basvuranlar'da sayfa başlığı zaten
+        "Başvuranlar", burada tekrar yazılmıyor.
       */}
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-xl font-black" style={{ color: SIRKET_METIN }}>
-          Başvuranlar
-        </h2>
-        <p className="text-sm font-semibold" style={{ color: SIRKET_METIN_IKINCIL }}>
-          {suzulmus.length === kartlar.length
-            ? `${kartlar.length} aday`
-            : `${suzulmus.length} / ${kartlar.length} aday`}
-        </p>
-      </div>
+      {basliksiz ? (
+        suzulmus.length !== kartlar.length && (
+          <p className="text-sm font-semibold" style={{ color: SIRKET_METIN_IKINCIL }}>
+            {suzulmus.length} / {kartlar.length} aday
+          </p>
+        )
+      ) : (
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-xl font-black" style={{ color: SIRKET_METIN }}>
+            Başvuranlar
+          </h2>
+          <p className="text-sm font-semibold" style={{ color: SIRKET_METIN_IKINCIL }}>
+            {suzulmus.length === kartlar.length
+              ? `${kartlar.length} aday`
+              : `${suzulmus.length} / ${kartlar.length} aday`}
+          </p>
+        </div>
+      )}
 
       {/*
         SÜZGEÇLER — TANIDIK ÜÇLÜ
