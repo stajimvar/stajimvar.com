@@ -128,6 +128,36 @@ test('sekmeler ve kare ızgara; boş durumda stok görsel yok', () => {
   assert.doesNotMatch(kod(GORUNUM), /BadgeCheck|Doğrulanmış/);
 });
 
+test('bulanık kimlik bandı: zemin logonun kendisi ve logo yoksa zemin de yok', () => {
+  /*
+    BANDIN ZEMİNİ UYDURULMUYOR (19 Eylül 2026). Şirket profilinin üst
+    bandı logonun bulanıklaştırılmış hâliyle doluyor. Tek koşul:
+    bulanıklaştırılacak GÖRSEL olması. Logo girilmemişse ya da adres
+    kırılmışsa (`logoBozuk`) zemin hiç çizilmiyor — yerine stok görsel,
+    doku ya da gradyan KONMUYOR; bant beyaz kalıyor ve ortada baş harf
+    dairesi duruyor.
+
+    İkinci koşul: zemin ile ön plandaki logo AYNI adresi paylaşıyor.
+    Ayrı bir alan/istek olsaydı tarayıcı aynı görseli iki kez indirir
+    ve ikisi ayrışabilirdi.
+  */
+  assert.match(GORUNUM, /const bulanikZemin = kimlik\.logoUrl && !logoBozuk \? kimlik\.logoUrl : null;/);
+  assert.match(GORUNUM, /\{bulanikZemin && \(/);
+  assert.match(GORUNUM, /src=\{bulanikZemin\}/);
+  /* Kalıbın kendisi tam ekran görüntüleyiciden; aynı sınıf dizisi. */
+  assert.match(
+    GORUNUM,
+    /className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover blur-2xl"/,
+  );
+  /* Dekoratif: ad okunmuyor, işaretçi almıyor. */
+  assert.match(GORUNUM, /src=\{bulanikZemin\}\s*alt=""\s*aria-hidden/);
+  /* Kırıklık kararı tek yerde: logo baş harfe düşerse zemin de düşüyor. */
+  assert.match(GORUNUM, /onBozuk=\{\(\) => setLogoBozuk\(true\)\}/);
+  assert.doesNotMatch(kod(GORUNUM), /unsplash|placeholder|gradient|bg-gradient/i);
+  /* Kap kırpıyor; bulanıklık bandın dışına taşmıyor. */
+  assert.match(GORUNUM, /<div className="relative overflow-hidden px-4 pb-4 pt-5/);
+});
+
 test('sahip: düzenleme ve ilan yolları mevcut akışlara; ilan yönetimi paneldeki geri çağrılarla', () => {
   assert.match(SAHIP, /const DUZENLE_YOLU = '\/sirket\/profil\/duzenle';/);
   assert.match(SAHIP, /const ILAN_OLUSTUR_YOLU = '\/sirket\/ilan\/yeni';/);
