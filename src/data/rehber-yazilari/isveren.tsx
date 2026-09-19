@@ -153,7 +153,8 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       'Zorunlu staj alan işveren neyle yükümlü? Sigorta primini kim öder, hangi belgeler ' +
         'imzalanır, staj defteri nasıl onaylanır. Mekanizma anlatımı, resmî kaynağa yönlendirme.',
     hizliCevap:
-      'Üniversitenin müfredatındaki zorunlu stajda iş kazası ve meslek hastalığı sigortası ' +
+      'Üniversitenin müfredatındaki zorunlu stajda ' +
+        '[iş kazası ve meslek hastalığı sigortası](/rehber/staj-sigortasi-kim-yapar) ' +
         'öğrencinin okulu tarafından yapılıyor ve primi de okul ödüyor — işverenlerin en çok ' +
         'yanıldığı nokta bu. İşverenin işi: kabul belgesini imzalamak, stajyere bir sorumlu ' +
         'atamak, staj defterini ve değerlendirme formunu doldurmak. Ücret yükümlülüğü stajın ' +
@@ -284,8 +285,9 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       'Staj başvurusunda deneyim aramak yanlış ölçü; stajyer deneyim kazanmaya geliyor. ' +
         'Bakılacak şeyler: bölüm ve sınıf ilanla uyuyor mu, profil doldurulmuş mu (bu çabayı ' +
         'gösteriyor), öğrencinin yazdığı not ilanı gerçekten okuduğunu gösteriyor mu. ' +
-        'Başvuranlar ekranında her adayın profilini, CV\'sini ve durumunu tek yerde ' +
-        'görüyorsunuz; kısa listeye alma, mülakata davet ve karar aynı yerden.',
+        '[Başvuranlar ekranında](/sirket/basvuranlar) her adayın profilini, CV\'sini ve ' +
+        'durumunu tek yerde görüyorsunuz; kısa listeye alma, mülakata davet ve karar aynı ' +
+        'yerden.',
     bloklar: [
       {
         baslik: 'Neye bakılır, neye bakılmaz',

@@ -21,6 +21,7 @@ import { RehberdeIlanlar } from './RehberdeIlanlar';
 import { SayfaKabugu } from './SayfaKabugu';
 import { RenkliKart } from './RehberGorseller';
 import { REHBERLER, konuEtiketi, rehberBul, rehberOkumaDakika, type Rehber } from '../data/rehberler';
+import { MetinCizimi } from '../data/rehber-govde';
 import { BOLUMLER } from '../data/bolumler';
 import { ARACLAR } from './AraclarListesi';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
@@ -380,6 +381,23 @@ export const RehberBaglantilari: React.FC<{
  * gezinmeye yardım etmiyor, yalnızca yer kaplıyor.
  */
 
+/*
+  HIZLI CEVAP KUTUSUNDAKİ BAĞLANTININ BİÇİMİ
+
+  Gövdedeki varsayılan `text-blue-600` burada kullanılamaz: kutunun zemini
+  blue-600 → indigo-600 geçişi, yani yazı kendi zemininin üstüne düşüyor.
+  Beyaz yazı bu zeminde 8.59:1 (#FFFFFF / #2563EB) — kalan metinle aynı.
+
+  Bağlantı olduğu RENKTEN anlaşılamadığı için altı çiziliyor: renk tek
+  başına ayırt edici sinyal değil.
+
+  Odak halkası da beyaz; ODAK_HALKASI'nın blue-600'ü bu zeminde
+  görünmezdi (aynı renk).
+*/
+const HIZLI_CEVAP_BAGLANTISI =
+  'rounded-sm font-bold text-white underline decoration-white/60 decoration-2 underline-offset-4 ' +
+  'hover:decoration-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
+
 export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }) => {
   /* Rehbere karşılık gelen ürün yüzeyleri; eşlemesi yoksa boş dizi. */
   const eylemler = React.useMemo(() => rehberEylemleri(slug), [slug]);
@@ -399,6 +417,41 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
   const rehber = rehberBul(slug);
   const icerikRef = React.useRef<HTMLDivElement>(null);
   const { basliklar, tumBasliklar, etkin, kendiNumarasiVar } = useRehberBasliklari(icerikRef, slug);
+
+  /*
+    İÇERİK İÇİ BAĞLANTILARI YAKALA
+
+    Rehber metinleri düz veri; navigate işlevine erişimleri yok. Bir
+    rehberden diğerine bağlanmak için düz `<a href="/rehber/...">`
+    yazılıyor ve bu bilinçli: tarayıcı yalnızca gerçek `<a href>`
+    görüyor, düğmeye bastırılan bir geçişi bağlantı saymıyor. İç
+    bağlantı da sayfalar arası sinyal taşıdığı için bu şart.
+
+    Ama tıklamayı olduğu gibi bırakırsak tam sayfa yenileniyor:
+    uygulama baştan kuruluyor, kaydırma sıfırlanıyor. Tek bir yakalayıcı
+    ikisini birden veriyor — işaretlemede gerçek bağlantı, kullanıcıda
+    anında geçiş.
+
+    Gövdenin dışına çıkarıldı: hızlı cevap kutusu ayrı bir kap ve onun
+    içindeki bağlantılar da aynı davranmalı. İki ayrı kopya olsaydı biri
+    güncellenip öteki unutulurdu.
+
+    Yeni sekmede açma (Ctrl/Cmd/orta tuş) ve dış bağlantılar
+    dokunulmadan geçiyor.
+  */
+  const icBaglantiyiYakala = React.useCallback(
+    (e: React.MouseEvent<HTMLElement>) => {
+      const bag = (e.target as HTMLElement).closest('a');
+      if (!bag) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+      if (bag.target === '_blank') return;
+      const adres = bag.getAttribute('href');
+      if (!adres || !adres.startsWith('/')) return;
+      e.preventDefault();
+      onNavigate(adres);
+    },
+    [onNavigate]
+  );
 
   useEffect(() => {
     /*
@@ -517,49 +570,39 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
           Ayrıntı aşağıda duruyor; kısası burada.
         */}
         {rehber.hizliCevap && (
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 p-6 text-white shadow-sm sm:p-7">
+          <div
+            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 p-6 text-white shadow-sm sm:p-7"
+            onClick={icBaglantiyiYakala}
+          >
             <Lightbulb aria-hidden className="absolute -right-4 -top-4 h-28 w-28 text-white/10" />
             <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-blue-100">
               <Lightbulb aria-hidden className="h-4 w-4" />
               Kısa cevap
             </p>
+            {/*
+              Gövde paragraflarıyla AYNI markdown yolundan geçiyor.
+              Düz metin olarak çizildiğinde `[metin](/adres)` yazımı
+              köşeli parantezleriyle ekranda kalıyordu (ölçüldü: 76
+              rehberin 12'sinde, toplam 14 bağlantı). `MetinCizimi`
+              satır içi düğüm döndürüyor, bu yüzden aşağıdaki tek
+              `<p>`'nin içinde duruyor — iç içe `<p>` oluşmuyor.
+            */}
             <p className="relative mt-2 text-lg font-semibold leading-relaxed sm:text-xl">
-              {rehber.hizliCevap}
+              <MetinCizimi
+                metin={rehber.hizliCevap}
+                anahtar="hc"
+                bagSinifi={HIZLI_CEVAP_BAGLANTISI}
+              />
             </p>
           </div>
         )}
 
         <IcindekilerMobil basliklar={basliklar} kendiNumarasiVar={kendiNumarasiVar} />
-        {/*
-          İÇERİK İÇİ BAĞLANTILARI YAKALA
-
-          Rehber metinleri düz JSX; navigate işlevine erişimleri yok. Bir
-          rehberden diğerine bağlanmak için düz `<a href="/rehber/...">`
-          yazılıyor ve bu bilinçli: tarayıcı yalnızca gerçek `<a href>`
-          görüyor, düğmeye bastırılan bir geçişi bağlantı saymıyor. İç
-          bağlantı da sayfalar arası sinyal taşıdığı için bu şart.
-
-          Ama tıklamayı olduğu gibi bırakırsak tam sayfa yenileniyor:
-          uygulama baştan kuruluyor, kaydırma sıfırlanıyor. Burada tek bir
-          yakalayıcı ikisini birden veriyor — işaretlemede gerçek bağlantı,
-          kullanıcıda anında geçiş.
-
-          Yeni sekmede açma (Ctrl/Cmd/orta tuş) ve dış bağlantılar
-          dokunulmadan geçiyor.
-        */}
+        {/* Tıklama yakalayıcının gerekçesi yukarıda, tanımının yanında. */}
         <div
           ref={icerikRef}
           className={`rehber-govde rounded-3xl border border-gray-200 bg-white p-5 sm:p-8 lg:p-10 ${kendiNumarasiVar ? '' : 'rehber-govde--sayili'}`}
-          onClick={(e) => {
-            const bag = (e.target as HTMLElement).closest('a');
-            if (!bag) return;
-            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-            if (bag.target === '_blank') return;
-            const adres = bag.getAttribute('href');
-            if (!adres || !adres.startsWith('/')) return;
-            e.preventDefault();
-            onNavigate(adres);
-          }}
+          onClick={icBaglantiyiYakala}
         >
           {rehber.icerik}
         </div>
@@ -573,7 +616,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
           Google'ın kurallarına aykırı.
         */}
         {rehber.sss && rehber.sss.length > 0 && (
-          <section className="mt-10 space-y-3">
+          <section className="mt-10 space-y-3" onClick={icBaglantiyiYakala}>
             <h2 className="flex items-center gap-2.5 text-2xl font-extrabold tracking-tight text-gray-900">
               <span aria-hidden className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-700">
                 <HelpCircle className="h-5 w-5" />
@@ -587,7 +630,16 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
                     <ChevronRight className="w-5 h-5 shrink-0 text-blue-600 transition-transform group-open:rotate-90" />
                     {s.soru}
                   </summary>
-                  <p className="mt-2 pl-8 text-base text-gray-700 leading-relaxed">{s.cevap}</p>
+                  {/*
+                    Cevap da gövde paragraflarıyla AYNI markdown yolundan
+                    geçiyor: düz metinken `[metin](/adres)` yazımı köşeli
+                    parantezleriyle ekranda kalıyordu (ölçüldü: 76 rehberin
+                    8'inde). Zemin açıkken blue-50/40, yani gövdenin
+                    varsayılan mavi bağlantı rengi burada da okunuyor.
+                  */}
+                  <p className="mt-2 pl-8 text-base text-gray-700 leading-relaxed">
+                    <MetinCizimi metin={s.cevap} anahtar={`sss-${s.soru}`} />
+                  </p>
                 </details>
               ))}
             </div>

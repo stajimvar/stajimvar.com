@@ -65,6 +65,44 @@ const kacir = (s) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
+/*
+  MARKDOWN BAĞLANTISI STATİK HTML'DE DE GERÇEK BAĞLANTI
+
+  Rehber metinlerinde bağlantılar `[yazı](/adres)` yazılıyor ve ekranda
+  `metniCiz` (src/data/rehber-govde.tsx) onları <a> yapıyor. Hızlı cevap
+  ve SSS cevapları burada ham string olarak kaçırılıyordu: statik HTML'de
+  köşeli parantezler görünüyordu (12 rehberde ölçüldü). Bu dosyanın kendi
+  kuralı "sayfada görünen metin ile statik HTML aynı şeyi söylemeli"
+  diyor — söylemiyordu.
+
+  SIRA ÖNEMLİ: önce kaçır, sonra bağlantıyı kur. Tersi olsaydı ürettiğimiz
+  <a> etiketi de kaçırılır ve ekranda etiketin kendisi görünürdü. Kaçırma
+  sonrası desen hâlâ tutuyor, çünkü köşeli parantez ve parantez
+  kaçırılmıyor.
+
+  Desen `rehber-govde.tsx`'teki BAGLANTI ile aynı; ikisi ayrışırsa ekran
+  ve HTML yine ayrışır.
+*/
+const MD_BAGLANTI = /\[([^\]]+)\]\(([^)]+)\)/g;
+
+/*
+  YAPISAL VERİDE İŞARETLEME KALMAZ
+
+  FAQPage'in cevabı DÜZ METİN alanı: `[yazı](/adres)` oraya olduğu gibi
+  girerse Google'ın gördüğü metin ekranda görünenden farklı olur —
+  yapısal veri ile görünen içeriğin ayrışması ceza sebebi. Bağlantı
+  söz dizimi sadeleşiyor, yazı kalıyor.
+*/
+const baglantiyiSadelestir = (metin) =>
+  String(metin ?? '').replace(MD_BAGLANTI, (_, yazi) => yazi);
+
+const kacirBagla = (metin) =>
+  kacir(metin).replace(MD_BAGLANTI, (_, yazi, adres) => {
+    const dis = adres.startsWith('http');
+    const ek = dis ? ' target="_blank" rel="noreferrer noopener"' : '';
+    return `<a href="${adres}"${ek}>${yazi}</a>`;
+  });
+
 /** Uzun metni arama sonucunda görünecek uzunluğa indirir. */
 function ozetle(metin, uzunluk = 155) {
   const duz = String(metin ?? '')
@@ -1128,7 +1166,7 @@ async function main() {
         mainEntity: sorular.map((s) => ({
           '@type': 'Question',
           name: s.soru,
-          acceptedAnswer: { '@type': 'Answer', text: s.cevap },
+          acceptedAnswer: { '@type': 'Answer', text: baglantiyiSadelestir(s.cevap) },
         })),
       });
     }
@@ -1186,7 +1224,7 @@ async function main() {
         mainEntity: sorular.map((s) => ({
           '@type': 'Question',
           name: s.soru,
-          acceptedAnswer: { '@type': 'Answer', text: s.cevap },
+          acceptedAnswer: { '@type': 'Answer', text: baglantiyiSadelestir(s.cevap) },
         })),
       });
     }
@@ -1226,11 +1264,11 @@ async function main() {
           ile statik HTML'in aynı şeyi söylemesi ayrıca bir kural: yapısal
           veride ya da HTML'de olup ekranda olmayan içerik ceza sebebi.
         */
-        (r.hizliCevap ? `<p><strong>${kacir(r.hizliCevap)}</strong></p>` : '') +
+        (r.hizliCevap ? `<p><strong>${kacirBagla(r.hizliCevap)}</strong></p>` : '') +
         r.govde +
         (sorular.length
           ? `<section><h2>Sık sorulanlar</h2>${sorular
-              .map((s) => `<h3>${kacir(s.soru)}</h3><p>${kacir(s.cevap)}</p>`)
+              .map((s) => `<h3>${kacir(s.soru)}</h3><p>${kacirBagla(s.cevap)}</p>`)
               .join('')}</section>`
           : '') +
         /* Resmî kaynaklar dış bağlantı: nofollow değil, gerçekten kaynak. */
