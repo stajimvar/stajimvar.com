@@ -6,8 +6,29 @@ import { profilAyarOgeleri } from './sosyal/ProfilAyarMenusu';
 import { ProfilAyarlarSayfasi, type AyarBolumu } from './ProfilAyarlarSayfasi';
 import type { PortfolyoSatiri } from './sosyal/SosyalProfilSayfasi';
 import { profilYolu } from '../lib/sosyal-kullanici-adi.mjs';
-import { ODAK_HALKASI } from '../lib/renk-token';
-import { Button, Card, ProfileSectionGroup, ProfileSectionRow, Skeleton } from '../ui';
+import { ODAK_HALKASI, RENK_GECISI, RENK_PRIMARY } from '../lib/renk-token';
+import { Card, ProfileSectionGroup, ProfileSectionRow, Skeleton } from '../ui';
+
+/*
+  DÜĞME KALIBI ŞİRKET PROFİLİNDEN (kullanıcı kararı, 20 Eylül 2026:
+  "tüm profil görüntüleri şirket gibi olsun").
+
+  Dizeler `src/sirket/SirketProfilGorunumu.tsx` ve
+  `src/components/sosyal/SosyalProfilGorunumu.tsx` ile BİREBİR aynı;
+  `tests/sosyal-profil-arayuzu` üçünü karşılaştırıyor, biri ayrışırsa
+  test düşüyor.
+
+  NEDEN `Button` (src/ui) DEĞİL: ortak düğme ikincil türde
+  `border-gray-200` kullanıyor, şirket kalıbı `border-gray-300`; ayrıca
+  etiketi `truncate` ile kesiyor, kalıptaki düğmeler ise metni sarıyor.
+  İki fark da "birebir aynı" olma şartını bozuyordu. Ortak bileşen
+  DEĞİŞTİRİLMEDİ: onu başka ekranlar kendi ölçüsünde kullanıyor.
+
+  Üç kopya tek yere (renk-token) taşınmadı çünkü kaynak dosya şirket
+  profili ve bu işte ona dokunulmuyor; birleştirme ayrı bir adım.
+*/
+const BIRINCIL = `inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold ${RENK_PRIMARY.zemin} ${RENK_PRIMARY.zeminHover} ${RENK_PRIMARY.yazi} ${RENK_GECISI} ${ODAK_HALKASI}`;
+const IKINCIL = `inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 text-sm font-bold text-gray-900 hover:bg-gray-50 ${RENK_GECISI} ${ODAK_HALKASI}`;
 
 /**
  * Profil başlığı — öğrencinin kişisel kontrol paneli.
@@ -296,20 +317,26 @@ interface Props {
 /**
  * Sosyal hücrenin iskeleti: sayı satırı + etiket satırı.
  *
- * ÖLÇÜLER GERÇEK HÜCREYLE BİREBİR — 19 Eylül 2026'da tarayıcıda ölçüldü.
- * Dolu hücre 390'da 50, 1280'de 63 piksel; iskelet 46 ve 58 çiziyordu ve
- * sayı gelince 1280'de düğme satırı 2 piksel kayıyordu. Kap `py-1`e
- * (dolu hücrenin dolgusu) çekildi, lg kutuları da satır kutularına
- * oturtuldu: 8 + 35 + 2 + 17,5 = 62,5; telefonda 8 + 24 + 6 + 12 = 50.
- * Kayma iki kırılımda da 0 piksel.
+ * ÖLÇÜLER GERÇEK HÜCREYLE BİREBİR OLMAK ZORUNDA — sayı gelince satır
+ * zıplamamalı. Değerler 20 Eylül 2026'da yeniden ölçüldü çünkü hücrenin
+ * tipografisi şirket profilininkiyle eşitlendi ve `lg` basamağı kalktı:
+ * sayı `text-2xl leading-tight` → satır kutusu 30 piksel, etiket
+ * `text-sm` → 20 piksel, aralarında `mt-0.5` (2) ve kapta `py-1` (8).
+ * Toplam 60 piksel — şirket ve ziyaretçi profilindeki hücreyle aynı
+ * sayı (üçü de Chromium'da ölçüldü).
  *
- * lg değerleri piksel çünkü yuvarlak bir sınıf tutmuyordu: 28 pikselik
- * sayının satır kutusu 35, 14 pikselik etiketinki 17,5.
+ * ETİKETTEN `leading-tight` KALDIRILDI: onunla hücre 58 piksel
+ * oluyordu, öteki iki ekranda 60. Aynı kalıbın üç ekranda 2 piksel
+ * farkla çizilmesi, kullanıcı ekranlar arasında geçerken satırın
+ * oynaması demekti.
+ *
+ * İSKELET İLE DOLU HÜCRE AYNI KUTUDA: ölçüldü (375/390/1440), sayılar
+ * gelince düğme satırı 0 piksel kayıyor.
  */
 const SayacIskeleti: React.FC = () => (
   <span aria-hidden className="block min-w-0 py-1">
-    <Skeleton className="mx-auto h-6 w-8 lg:h-[35px] lg:w-10" />
-    <Skeleton className="mx-auto mt-1.5 h-3 w-12 lg:mt-0.5 lg:h-[17.5px] lg:w-16" />
+    <Skeleton className="mx-auto h-[30px] w-10" />
+    <Skeleton className="mx-auto mt-0.5 h-5 w-16" />
   </span>
 );
 
@@ -440,12 +467,32 @@ export const ProfilBasligi: React.FC<Props> = ({
 
   return (
     /*
-      YATAY PROFİL KARTI (17 Eylül 2026 tasarımı)
+      KİMLİK KARTI ŞİRKET PROFİLİNİN KALIBINDA (kullanıcı kararı,
+      20 Eylül 2026: "tüm profil görüntüleri şirket gibi olsun, onu
+      beğendim daha özgün")
 
-      Kart artık sayfanın üstünde TAM GENİŞLİKTE: solda fotoğraf, yanında
-      ad, kullanıcı adı, okul, bölüm · sınıf ve il; sağda ince bir çizgiyle
-      ayrılmış iki sayaç ve altlarında iki düğme. Dişli (ayarlar ve
-      hareketler) kartın sağ üstünde.
+      Üç profil ekranı artık aynı sırayı kuruyor — şirket
+      (`SirketProfilGorunumu`), ziyaretçiye görünen öğrenci profili
+      (`SosyalProfilGorunumu`) ve burası, sahibin kendi `/cv` ekranı:
+
+        ortalanmış kimlik bandı (daire → ad → @ad → kimlik satırları)
+        ince ayırıcı
+        sayaç satırı (üç eşit sütun)
+        eylem satırı
+
+      ÖNCEKİ DÜZEN VE NEDEN KALKTI: telefonda "fotoğraf | üç sayaç" ilk
+      satırı, altında kimlik, altında düğmeler (19 Eylül 2026 Instagram
+      sırası); lg'de solda kimlik, sağda `lg:w-[440px]` ayrı bir sütunda
+      sayaç+düğme ve aralarında `lg:border-l`. Şirket ekranında ne o
+      ızgara ne o sütun vardı: aynı kişi kendi şirket sayfasıyla kendi
+      `/cv`si arasında geçerken sayaçların ve düğmelerin yeri
+      değişiyordu.
+
+      BİR ERİŞİLEBİLİRLİK BORCU DA KAPANDI: eski ızgarada sekme sırası
+      göz sırasıyla uyuşmuyordu (390'da ölçülmüştü: @kullanıcıadı y=216 →
+      sayaçlar y=102 → düğmeler y=299, yani odak bir kez yukarı
+      sıçrıyordu). Tek sütunda DOM sırası ile görsel sıra aynı; sıçrama
+      kalmadı.
 
       KARTTAN KALKANLAR, KAYBOLMADI:
         - Staj tercihi satırı ve eksik adım kutusu: tercihler ve eksik
@@ -456,41 +503,18 @@ export const ProfilBasligi: React.FC<Props> = ({
       il `student_profiles`tan; kullanıcı adı ve sayılar sosyal panelin
       satırından (`portfolyo.satir`). Veri yoksa satır çizilmiyor.
 
-      TELEFONDA (lg altı) INSTAGRAM SIRASI — kullanıcı isteği, 19 Eylül 2026
+      YAN BOŞLUK KARTIN KENDİSİNDE DEĞİL, İÇİNDEKİ İKİ BLOKTA — şirketteki
+      ve ziyaretçi profilindeki kalıbın aynısı. Kartın kendi dolgusu
+      (`px-4 py-5 sm:p-6 lg:px-8 lg:py-7`) bu yüzden kalktı: ayırıcı
+      çizginin iki blok arasında, kenardan kenara değil, dolgunun içinde
+      durması gerekiyor.
 
-      Eski sıra: fotoğraf + yanında ad/okul → altında tam genişlikte üç
-      sayaç şeridi → düğmeler. Yeni sıra:
-        1. fotoğraf | üç sayaç (fotoğrafın yanındaki kalan genişliğe
-           eşit üç sütun, dikey ortalı)
-        2. ad, @kullanıcıadı, okul ve bölüm · sınıf — tam genişlik
-        3. "CV'ni görüntüle" ve "Profili düzenle" — tam genişlik
-
-      Dişli telefonda üst çubukta (Header `stajimvar:profil-menusu`).
-
-      ŞERİT İKİ KEZ YAZILMIYOR: iki grup (kimlik / sayaç+düğme) telefonda
-      `display:contents` ile kutusunu bırakıyor ve dört parça dıştaki
-      ızgaraya kendi hücresine yerleşiyor; lg'de gruplar yeniden kutu
-      oluyor, ızgara yerleşimi flex öğesinde geçersiz olduğu için
-      kendiliğinden düşüyor. Kopyalansaydı biri değiştiğinde öteki geride
-      kalır ve aynı sayı iki farklı kalıpta çizilirdi.
-
-      BEDELİ: TELEFONDA SEKME SIRASI GÖZ SIRASIYLA AYNI DEĞİL
-
-      390'da ölçüldü — sekme sırası @kullanıcıadı (y=216) → bağlantı
-      (y=102) → takip (y=102) → düğmeler (y=299); yani odak bir kez
-      yukarı sıçrıyor. DOM sırası (ad, kullanıcı adı, okul → sayılar →
-      eylemler) ekran okuyucuda doğru cümleyi kuruyor, ama klavyeyle
-      gezen gören kullanıcı halkanın geri gittiğini görüyor.
-
-      KARAR (19 Eylül 2026): SIRA BÖYLE KALIYOR. Düzeltmenin iki yolu
-      vardı — şeridi ikinci kez yazmak ya da lg'deki dikey ayracı iki
-      ayrı kenarlığa bölmek, yani geniş ekran kartını yeniden kurmak.
-      Bir basamaklık sıçrama ikisine de değmiyor: DOM sırası ekran
-      okuyucuda doğru cümleyi kuruyor ("kim olduğun → sayıların →
-      eylemlerin") ve önemli olan o. Fikir değişirse doğru çözüm
-      şeridi kopyalamak değil, ızgarayı lg'de de kullanmak.
+      DİŞLİ YERİNDE: "Ayarlar ve hareketler" kartın sağ üstünde
+      (`absolute`), telefonda üst çubukta. Şirket kalıbında böyle bir
+      düğme yok ama bu `/cv`nin kendi yeteneği — şirkette yok diye
+      silinmiyor.
     */
-    <Card mobilYuzey className={`relative px-4 py-5 sm:p-6 lg:px-8 lg:py-7 ${className}`}>
+    <Card mobilYuzey className={`relative ${className}`}>
       <button
         type="button"
         onClick={() => setMenuAcik(true)}
@@ -503,10 +527,23 @@ export const ProfilBasligi: React.FC<Props> = ({
 
       <ProfilAyarlarSayfasi acik={menuAcik} onKapat={menuKapat} bolumler={ayarBolumleri} />
 
-      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-4 sm:gap-x-6 lg:flex lg:flex-row lg:items-center lg:gap-8">
-        {/* ---------------- Fotoğraf ve kimlik ---------------- */}
-        <div className="contents lg:flex lg:min-w-0 lg:flex-1 lg:items-center lg:gap-6">
-          <Halka oran={oran} className="col-start-1 row-start-1">
+      {/* ------------------------------------------- kimlik bandı */}
+      <div className="px-4 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6">
+        {/*
+          Ortalanmış sütun `max-w-2xl` ile sınırlı — şirketteki ve
+          ziyaretçi profilindeki ölçünün aynısı. Sınır olmasaydı okul
+          adı gibi uzun satırlar 1440'ta bandın bir ucundan ötekine
+          uzanır ve ortalı metinde okunmazdı.
+        */}
+        <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+          {/*
+            HALKA ŞİRKETTE YOK, BURADA KALIYOR: profilin tamamlanma
+            oranını anlatan tek görsel gösterge bu (yüzde sayısı karttan
+            kalkmıştı). Şirkette karşılığı olmaması onu silmek için
+            sebep değil — "şirkette olmayanı sil" değil, "şirkette
+            olmayanı UYDURMA" kuralı geçerli.
+          */}
+          <Halka oran={oran}>
             {/*
               BÜYÜTME (kullanıcı isteği, 17 Eylül 2026): fotoğrafa dokununca
               Instagram gibi tam ekran açılıyor. Paylaş eylemi sosyal
@@ -529,129 +566,184 @@ export const ProfilBasligi: React.FC<Props> = ({
           </Halka>
 
           {/*
-            KİMLİK — telefonda 2. SATIR, iki sütuna yayılı (bkz. kartın
-            yerleşim yorumu). Ad, fotoğrafın yanındaki dar sütunda değil
-            tam genişlikte duruyor; uzun okul adı da burada sarıyor.
-            lg'de fotoğrafın yanındaki sütun olmaya devam ediyor.
+            ROZET YOK — UYDURULMADI: şirket kalıbında adın yanında
+            "Şirket hesabı" rozeti var. Öğrencinin karşılığı doğrulanmış
+            hesap tiki (`ResmiTik`) olurdu ama bu kart `resmi_mi`yi
+            GÖRMÜYOR: panel satırı (`PortfolyoSatiri`) o alanı taşımıyor.
+            Olmayan veriyle rozet çizmek yerine rozet çizilmiyor.
+
+            `mt-3`: şirketteki daire-ad boşluğunun aynısı.
           */}
-          <div className="col-span-2 col-start-1 row-start-2 min-w-0 lg:flex-1">
-            {/* `break-words`: uzun ad kırpılmıyor, sarılıyor. */}
-            <h1 className="min-w-0 break-words text-xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-2xl lg:text-[28px]">
-              {adYazimi(ad)}
-            </h1>
+          <h1 className="mt-3 min-w-0 max-w-full break-words text-xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-2xl">
+            {adYazimi(ad)}
+          </h1>
 
-            {portfolyo && portfolyo.satir === undefined && <Skeleton className="mt-1.5 h-4 w-32" />}
-            {satir?.kullaniciAdi && (
-              <a
-                href={profilYolu(satir.kullaniciAdi)}
-                onClick={(olay) => {
-                  if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0)
-                    return;
-                  olay.preventDefault();
-                  satir.onNavigate(profilYolu(satir.kullaniciAdi as string));
-                }}
-                className={`mt-0.5 block min-w-0 truncate text-sm text-gray-600 hover:underline sm:text-base ${ODAK_HALKASI}`}
-              >
-                <span className="select-none">@</span>
-                {satir.kullaniciAdi}
-              </a>
-            )}
+          {/*
+            KULLANICI ADI İSKELETİ GERÇEK SATIRLA AYNI KUTUDA
 
-            <div className="mt-1.5 space-y-0.5 text-sm leading-snug text-gray-500 sm:mt-2 sm:text-base">
-              <p className="min-w-0 break-words">{okul || 'Okulun eksik'}</p>
-              {(bolum || sinif) && (
-                <p className="min-w-0 break-words">{[bolum, sinif].filter(Boolean).join(' · ')}</p>
-              )}
-            </div>
+            Ölçüldü (Chromium, 20 Eylül 2026): gerçek satır `mt-0.5` +
+            20 piksel (sm üstünde 24), iskelet ise `mt-1.5` + 16 piksel.
+            Telefonda ikisi de 22 piksel tutuyordu ama 1440'ta iskelet 22,
+            gerçeği 26 piksel — satır gelince altındaki her şey 4 piksel
+            aşağı kayıyordu. İskelet artık aynı kutuyu çiziyor.
+          */}
+          {portfolyo && portfolyo.satir === undefined && (
+            <Skeleton className="mt-0.5 h-5 w-32 sm:h-6" />
+          )}
+          {satir?.kullaniciAdi && (
+            <a
+              href={profilYolu(satir.kullaniciAdi)}
+              onClick={(olay) => {
+                if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0)
+                  return;
+                olay.preventDefault();
+                satir.onNavigate(profilYolu(satir.kullaniciAdi as string));
+              }}
+              className={`mt-0.5 block min-w-0 max-w-full truncate text-sm text-gray-600 hover:underline sm:text-base ${ODAK_HALKASI}`}
+            >
+              <span className="select-none">@</span>
+              {satir.kullaniciAdi}
+            </a>
+          )}
 
-            {konum && (
-              <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-sm text-gray-700 sm:mt-2.5">
-                <MapPin aria-hidden className="h-4 w-4 shrink-0 text-gray-500" />
-                <span className="sr-only">Konum: </span>
-                <span className="min-w-0 truncate">{konum}</span>
-              </p>
+          {/*
+            KİMLİK SATIRLARI: şirkette sektör ve konum, burada okul ve
+            bölüm · sınıf. Aynı yer, aynı punto, içerik öğrencinin kendi
+            gerçeği. "Okulun eksik" bir yer tutucu değil, eksik alanın
+            adı — girilmemiş bir okulu uydurmak yerine eksik olduğunu
+            söylüyor.
+          */}
+          <div className="mt-1.5 max-w-full space-y-0.5 text-sm leading-snug text-gray-500 sm:mt-2 sm:text-base">
+            <p className="min-w-0 break-words">{okul || 'Okulun eksik'}</p>
+            {(bolum || sinif) && (
+              <p className="min-w-0 break-words">{[bolum, sinif].filter(Boolean).join(' · ')}</p>
             )}
           </div>
+
+          {konum && (
+            /* İkon tek başına bilgi taşımıyor: `aria-hidden` + `sr-only` etiket. */
+            <p className="mt-1.5 flex max-w-full min-w-0 items-center justify-center gap-1.5 text-sm text-gray-700 sm:mt-2.5">
+              <MapPin aria-hidden className="h-4 w-4 shrink-0 text-gray-500" />
+              <span className="sr-only">Konum: </span>
+              <span className="min-w-0 truncate">{konum}</span>
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/*
+        BANDIN ALTI: SAYAÇLAR VE EYLEMLER — şirketteki ayrımın aynısı.
+        Kimlik bandı kendi bloğunda, sayaç ve düğmeler ayrı bir blokta,
+        aralarında ince bir çizgi. Üst boşluğu bandın `pb`si veriyor.
+      */}
+      <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+
+        {/*
+          ÜÇ SAYAÇ, ARADA ÇİZGİ YOK (karar: 18 Eylül 2026). "takip"
+          öğrencinin takip ettiği şirket sayısı (`sosyal_sayaclar.takip`);
+          aynı RPC satırından geliyor, ikinci bir çağrı yok. Üçüncü hücre
+          gelince iki dikey ayraç şeridi parçalıyordu; şirket sayfasının
+          sayaç şeridiyle aynı kural: eşit sütunlar, ayraç yok.
+
+          "TAKİP" ARTIK BİR BAĞLANTI (19 Eylül 2026). Eskiden düz bir
+          `<span>`di ve o doğruydu: gidilecek liste ekranı yoktu,
+          liste yalnız Ağım'ın içinde bir bölümdü. Kullanıcı sayıya
+          basıp hiçbir şey olmadığını bildirdi; liste artık kendi
+          adresinde (/takip, `TakipEttiklerimSayfasi`) ve sayaç
+          "bağlantı" ile BİREBİR aynı `Sayac` yolundan geçiyor —
+          gerçek `<a href>`, orta tuş ve yeni sekme çalışıyor.
+          "paylaşım" düz `<span>` kalıyor: paylaşımlar bu ekranın
+          kendi alt bölümünde, ayrı bir adresleri yok.
+
+          ŞERİDİN YERİ VE ÇİZGİSİ DEĞİŞTİ (20 Eylül 2026): şerit
+          fotoğrafın yanındaki dar sütundan çıkıp tam genişliğe, kimlik
+          bandının altına indi. Ayırıcı da şirketteki dizenin aynısı:
+          `border-t border-gray-100 pt-3`. Çizgi ÜÇ DURUMDA da aynı
+          yerde (iskelet / sayılar / alınamadı), yani sayı gelince satır
+          zıplamıyor.
+
+          DÖRDÜNCÜ SAYAÇ UYDURULMADI: şirkette "aktif ilan" var,
+          öğrencide ilan kavramı yok; `sosyal_sayaclar.takipci` de
+          öğrenci satırında hep sıfır olurdu (hedef hep şirket).
+        */}
+        <div
+          className="grid min-w-0 grid-cols-3 border-t border-gray-100 pt-3"
+          aria-busy={sosyalHucre === 'yukleniyor' || undefined}
+        >
+          {sosyalHucre === 'yukleniyor' && (
+            <>
+              <SayacIskeleti />
+              <SayacIskeleti />
+              <SayacIskeleti />
+            </>
+          )}
+          {sosyalHucre === 'hazir' && satir?.sayaclar && (
+            <>
+              <Sayac deger={satir.sayaclar.paylasim} etiket="paylaşım" />
+              <Sayac
+                deger={satir.sayaclar.baglanti}
+                etiket="bağlantı"
+                href="/baglantilar"
+                onNavigate={satir.onNavigate}
+              />
+              <Sayac
+                deger={satir.sayaclar.takip}
+                etiket="takip"
+                href="/takip"
+                onNavigate={satir.onNavigate}
+              />
+            </>
+          )}
+          {sosyalHucre === 'alinamadi' && (
+            /* Sıfır ya da tire yazılmıyor: "sunucu vermedi" gerçek sıfır gibi okunurdu. */
+            <p className="col-span-3 self-center px-1 text-center text-sm leading-tight text-gray-600">
+              Paylaşım, bağlantı ve takip sayısı alınamadı
+            </p>
+          )}
         </div>
 
-        {/* ---------------- Sayaçlar ve eylemler ---------------- */}
-        <div className="contents lg:flex lg:w-[440px] lg:shrink-0 lg:flex-col lg:justify-center lg:gap-4 lg:self-stretch lg:border-l lg:border-gray-200 lg:pl-8">
-          {/*
-            ÜÇ SAYAÇ, ARADA ÇİZGİ YOK (karar: 18 Eylül 2026). "takip"
-            öğrencinin takip ettiği şirket sayısı (`sosyal_sayaclar.takip`);
-            aynı RPC satırından geliyor, ikinci bir çağrı yok. Üçüncü hücre
-            gelince iki dikey ayraç şeridi parçalıyordu; şirket sayfasının
-            sayaç şeridiyle aynı kural: eşit sütunlar, ayraç yok.
+        {/*
+          EYLEM SATIRI — ŞİRKETTEKİ IZGARANIN AYNISI
 
-            "TAKİP" ARTIK BİR BAĞLANTI (19 Eylül 2026). Eskiden düz bir
-            `<span>`di ve o doğruydu: gidilecek liste ekranı yoktu,
-            liste yalnız Ağım'ın içinde bir bölümdü. Kullanıcı sayıya
-            basıp hiçbir şey olmadığını bildirdi; liste artık kendi
-            adresinde (/takip, `TakipEttiklerimSayfasi`) ve sayaç
-            "bağlantı" ile BİREBİR aynı `Sayac` yolundan geçiyor —
-            gerçek `<a href>`, orta tuş ve yeni sekme çalışıyor.
-            "paylaşım" düz `<span>` kalıyor: paylaşımlar bu ekranın
-            kendi alt bölümünde, ayrı bir adresleri yok.
+          Kap sınıfları şirketle ve ziyaretçi profiliyle BİREBİR:
+          telefonda `grid grid-cols-2 gap-3`, `sm:` üstünde `flex
+          flex-wrap justify-center`.
 
-            YATAY ÇİZGİLER KALKTI: `border-y` şeridi telefonda tam
-            genişlikte kendi bandı olduğu için ayırıyordu. Şerit artık
-            fotoğrafın yanında (1. satır, 2. sütun) ve iki hairline
-            fotoğrafın ortasından geçen bir kutu çiziyordu.
-          */}
-          <div
-            className="col-start-2 row-start-1 grid min-w-0 grid-cols-3"
-            aria-busy={sosyalHucre === 'yukleniyor' || undefined}
+          İKİSİ DE `col-span-2`: şirkette iki BİRİNCİL eylem ilk satırı
+          paylaşıyor, üçüncüsü tam satır kaplıyor. Burada birincil eylem
+          tek ("CV'ni görüntüle"); yarım hücrede bırakılsaydı yanında
+          boş bir hücre kalırdı. Telefonda ikisi alt alta tam
+          genişlikte, `sm:` üstünde satır flex olduğu için `col-span`
+          etkisiz ve ikisi yan yana ortada.
+
+          "CV'Nİ GÖRÜNTÜLE" YOKSA HÜCRE DE YOK: eskiden yerine
+          `<span aria-hidden />` konuyordu çünkü iki sütunlu ızgarada
+          "Profili düzenle" sağ hücreye kayardı. Tam genişlikte
+          düğmelerde böyle bir hizalama sorunu yok; boş bir düğüm
+          çizmemek daha dürüst.
+
+          "FOTOĞRAF PAYLAŞ" BURAYA KONMADI: şirket kalıbında eylem
+          satırında duruyor ama `/cv`de o giriş zaten VAR ve başka
+          yerde — üst çubuktaki paylaşım simgesi ve ızgaranın başlık
+          satırındaki düğme. Buraya üçüncü bir kopyasını koymak aynı işi
+          yapan iki düğme demekti; o karar 17 Eylül 2026'da alınmış ve
+          testle kilitlenmiş (`sosyal-profil-arayuzu`: kartta "Paylaş"
+          yok).
+        */}
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-center">
+          {onCv && (
+            <button type="button" onClick={onCv} className={`${BIRINCIL} col-span-2 sm:min-w-52`}>
+              CV'ni görüntüle
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onDuzenle}
+            className={`${IKINCIL} col-span-2 sm:min-w-52`}
           >
-            {sosyalHucre === 'yukleniyor' && (
-              <>
-                <SayacIskeleti />
-                <SayacIskeleti />
-                <SayacIskeleti />
-              </>
-            )}
-            {sosyalHucre === 'hazir' && satir?.sayaclar && (
-              <>
-                <Sayac deger={satir.sayaclar.paylasim} etiket="paylaşım" />
-                <Sayac
-                  deger={satir.sayaclar.baglanti}
-                  etiket="bağlantı"
-                  href="/baglantilar"
-                  onNavigate={satir.onNavigate}
-                />
-                <Sayac
-                  deger={satir.sayaclar.takip}
-                  etiket="takip"
-                  href="/takip"
-                  onNavigate={satir.onNavigate}
-                />
-              </>
-            )}
-            {sosyalHucre === 'alinamadi' && (
-              /* Sıfır ya da tire yazılmıyor: "sunucu vermedi" gerçek sıfır gibi okunurdu. */
-              <p className="col-span-3 self-center px-1 text-center text-xs leading-tight text-gray-600">
-                Paylaşım, bağlantı ve takip sayısı alınamadı
-              </p>
-            )}
-          </div>
-
-          {/* Telefonda 3. ve son satır, iki sütuna yayılı; lg'de sağ sütunun alt bloğu. */}
-          <div className="col-span-2 col-start-1 row-start-3 grid grid-cols-2 gap-3">
-            {onCv ? (
-              <Button onClick={onCv} tamGenislik>
-                CV'ni görüntüle
-              </Button>
-            ) : (
-              <span aria-hidden />
-            )}
-            <Button
-              tur="secondary"
-              onClick={onDuzenle}
-              tamGenislik
-              ikon={<Pencil aria-hidden className="h-4 w-4 shrink-0" />}
-            >
-              Profili düzenle
-            </Button>
-          </div>
+            <Pencil aria-hidden className="h-4 w-4 shrink-0" />
+            Profili düzenle
+          </button>
         </div>
       </div>
     </Card>
@@ -675,15 +767,20 @@ const Sayac: React.FC<{
   const icerik = (
     <>
       {/*
-        ÖLÇÜ İKİ KIRILIMDA AYRI: telefonda şerit artık tam genişlikte
-        değil, fotoğrafın yanındaki kalan yerde — 28 pikselik sayı üç
-        sütuna sığmıyordu. lg'de şerit yine kendi sütununda ve başlık
-        ölçüsünde okunuyor.
+        ÖLÇÜ TEK, ŞİRKET PROFİLİYLE AYNI (kullanıcı kararı, 20 Eylül
+        2026: "tüm profil görüntüleri şirket gibi olsun").
+
+        Önce iki kırılım vardı: telefonda `text-xl`, lg'de `text-[28px]`
+        — çünkü şerit telefonda fotoğrafın yanındaki dar sütundaydı ve 28
+        piksellik sayı üç hücreye sığmıyordu. Şerit artık tam genişlikte
+        ve ortada (şirketteki gibi), dar sütun diye bir şey kalmadı;
+        `text-2xl` üç kırılımda da sığıyor. Ölçüldü (Chromium): hücre
+        genişliği 375'te 114, 390'da 119, 1440'ta 437 piksel.
       */}
-      <span className="block text-xl font-extrabold leading-tight tabular-nums text-gray-900 lg:text-[28px]">
+      <span className="block text-2xl font-extrabold leading-tight tabular-nums text-gray-900">
         {deger}
       </span>
-      <span className="mt-0.5 block text-xs leading-tight text-gray-600 lg:text-sm">{etiket}</span>
+      <span className="mt-0.5 block text-sm text-gray-600">{etiket}</span>
     </>
   );
   if (!href) return <span className="block min-w-0 py-1 text-center">{icerik}</span>;

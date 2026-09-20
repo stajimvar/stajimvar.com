@@ -26,12 +26,27 @@ import { ProfilAyarMenusu } from './ProfilAyarMenusu';
  * alandaki üç durum yine TEK güvenli ekrana düşüyor (ayrımı sayfa
  * yapıyor); bu bileşene ancak okunabilen bir profil geliyor.
  *
- * İKİ SÜTUN, SEKME YOK, ÖNE ÇIKANLAR YOK
- * --------------------------------------
- * Yerleşim sahibin birleşik ekranıyla (`/cv`) aynı iskeleti kullanıyor:
- * lg ve üstünde solda kimlik kartı, sağda ızgara;
- * altında tek sütun. Sekme yok — kimlikle paylaşımlar arasında geçiş
- * yapılacak bir şey kalmıyor, ikisi aynı anda ekranda.
+ * DÜZEN KALIBI ŞİRKET PROFİLİNDEN (kullanıcı isteği, 20 Eylül 2026)
+ * ----------------------------------------------------------------
+ * Kullanıcı iki profil ekranının aynı kalıbı paylaşmasını istedi; şirket
+ * referans (`src/sirket/SirketProfilGorunumu.tsx`), öğrenci uyarlanan.
+ * Sıra: ortalanmış kimlik bandı → ince ayırıcı → sayaç satırı → eylem
+ * satırı → "Paylaşımlar" ızgarası. Önceki yerleşimde kimlik solda,
+ * sayaçlar ve düğmeler `lg:w-[400px]` ayrı bir sütundaydı; şirkette öyle
+ * bir sütun hiç olmadığı için aynı kişi iki profili arasında geçerken
+ * sayaçların yeri değişiyordu.
+ *
+ * SEKME YOK — UYDURULMADI: şirkette üç bölüm var (kareler, ilanlar,
+ * hakkımızda), öğrencide bir tane (paylaşımlar). Tek bölüm için sekme
+ * çubuğu çizmek olmayan bir bölümlemeyi varmış gibi göstermek olurdu.
+ * Kimlikle paylaşımlar arasında geçiş yapılacak bir şey de yok: ikisi
+ * aynı anda ekranda.
+ *
+ * ŞİRKETTE OLUP BURADA OLMAYANLAR: "İlan paylaş" düğmesi (öğrencinin
+ * ilan açma yetkisi ve rotası yok), "aktif ilan" ve "takipçi" sayaçları
+ * (öğrenci profili takip edilemiyor, ilanı da olmuyor — ikisi de burada
+ * hep sıfır olurdu), logonun bulanık hâlinden yapılan bant zemini
+ * (öğrenci avatarı yetkili indirmeyle geliyor, doğrudan bir adres yok).
  *
  * Yuvarlak "öne çıkanlar" şeridi çizilmiyor çünkü hikâye altyapısı ve
  * `highlights` tablosu yok; boş bir şerit de bir vaat olurdu.
@@ -132,7 +147,20 @@ interface GorunumProps {
   onNavigate?: (yol: string) => void;
 }
 
-const IKINCIL_EYLEM = `inline-flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 text-sm font-bold text-gray-800 hover:bg-gray-50 sm:flex-none ${RENK_GECISI} ${ODAK_HALKASI}`;
+/*
+  DÜĞME KALIBI ŞİRKET PROFİLİNDEN (kullanıcı isteği, 20 Eylül 2026)
+
+  İki profil ekranı aynı düzen kalıbını paylaşacak; şirket referans,
+  öğrenci uyarlanan. Bu yüzden dizeler `SirketProfilGorunumu` ile BİREBİR
+  aynı: `min-h-12` (48 piksel, 44'lük dokunma eşiğinin üstünde), aynı
+  köşe, aynı punto, aynı odak halkası.
+
+  Önceki kalıp (`min-h-11 flex-1 ... border-gray-200 text-gray-800`)
+  kalktı: aynı iki eylem iki ekranda iki farklı yükseklikte ve iki farklı
+  gri tonunda duruyordu.
+*/
+const BIRINCIL = `inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold ${RENK_PRIMARY.zemin} ${RENK_PRIMARY.zeminHover} ${RENK_PRIMARY.yazi} ${RENK_GECISI} ${ODAK_HALKASI}`;
+const IKINCIL = `inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 text-sm font-bold text-gray-900 hover:bg-gray-50 ${RENK_GECISI} ${ODAK_HALKASI}`;
 
 /**
  * Tek sayaç.
@@ -141,11 +169,18 @@ const IKINCIL_EYLEM = `inline-flex min-h-11 flex-1 cursor-pointer items-center j
  * "sunucu vermedi" ile "gerçekten sıfır" aynı şey değil; birincisini
  * sıfır diye göstermek uydurma veridir.
  */
-/* Sayaç: büyük sayı üstte, küçük etiket altta — sahibin /cv kartıyla aynı ölçü. */
+/*
+  Sayaç: büyük sayı üstte, küçük etiket altta.
+
+  ÖLÇÜ ŞİRKET PROFİLİNDEKİYLE EŞİTLENDİ (20 Eylül 2026): sayı geniş
+  ekranda `sm:text-[28px]` ile bir punto daha büyüyordu, şirketinki
+  `text-2xl`de kalıyordu. İki profil aynı kalıbı paylaşacağı için
+  fazladan basamak kalktı; mobil ölçü (24 piksel) zaten eşitti.
+*/
 export const Sayac: React.FC<{ etiket: string; deger: number }> = ({ etiket, deger }) => (
   <div className="flex flex-col items-center py-1 text-center">
     <dt className="order-2 mt-0.5 text-sm text-gray-600">{etiket}</dt>
-    <dd className="order-1 text-2xl font-extrabold leading-tight tabular-nums text-gray-900 sm:text-[28px]">{deger}</dd>
+    <dd className="order-1 text-2xl font-extrabold leading-tight tabular-nums text-gray-900">{deger}</dd>
   </div>
 );
 
@@ -162,7 +197,13 @@ export const BaglantiSayaci: React.FC<{
   sahibiMi: boolean;
   onNavigate?: (yol: string) => void;
 }> = ({ deger, sahibiMi, onNavigate }) => {
-  if (!sahibiMi) return <Sayac etiket="Bağlantı" deger={deger} />;
+  /*
+    ETİKET KÜÇÜK HARF (kullanıcı kararı, 20 Eylül 2026: "tüm profil
+    görüntüleri şirket gibi olsun"). Şirket profili "paylaşım · aktif
+    ilan · takipçi" yazıyor, `/cv` kartı da "paylaşım · bağlantı ·
+    takip"; büyük harfle başlayan tek yer burasıydı.
+  */
+  if (!sahibiMi) return <Sayac etiket="bağlantı" deger={deger} />;
   return (
     <div className="flex flex-col items-center py-1 text-center">
       <dt className="order-2 mt-0.5 text-sm text-gray-600">
@@ -175,12 +216,26 @@ export const BaglantiSayaci: React.FC<{
             olay.preventDefault();
             onNavigate('/baglantilar');
           }}
-          className={`inline-flex min-h-11 items-center hover:underline ${ODAK_HALKASI}`}
+          /*
+            `items-start`, `items-center` DEĞİL (ölçüldü: Chromium, 390
+            piksel, sahip görünümü). Dokunma hedefi 44 piksel olduğu için
+            kutu kardeş etiketlerden (20 piksel) yüksek; ortalanınca
+            METİN 12 piksel aşağı kayıyordu ve üç sayacın etiketi tek
+            hizada durmuyordu. Üç hücrenin de `dt` üst kenarı 420
+            pikselde; `items-start` ile yazı da orada başlıyor.
+
+            BEDELİ ÖLÇÜLDÜ: sayaç satırı 73 → 97 piksel (fazlalık 24
+            piksel, hücrenin ALTINDA boşluk olarak duruyor). Negatif
+            margin ile geri alınmadı: 44 piksellik kutu alttaki eylem
+            düğmesinin üstüne biner ve düğmeye dokunmak isteyen parmak
+            bağlantı bağlantısına düşerdi.
+          */
+          className={`inline-flex min-h-11 items-start hover:underline ${ODAK_HALKASI}`}
         >
-          Bağlantı
+          bağlantı
         </a>
       </dt>
-      <dd className="order-1 text-2xl font-extrabold leading-tight tabular-nums text-gray-900 sm:text-[28px]">{deger}</dd>
+      <dd className="order-1 text-2xl font-extrabold leading-tight tabular-nums text-gray-900">{deger}</dd>
     </div>
   );
 };
@@ -224,27 +279,47 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
 
   return (
     /*
-      ZİYARETÇİ PROFİLİ — SAHİBİN /cv EKRANIYLA AYNI TASARIM (17 Eylül 2026)
+      ÖĞRENCİ PROFİLİ ŞİRKET PROFİLİYLE AYNI KALIPTA (kullanıcı isteği,
+      20 Eylül 2026)
 
-      Solda kart, sağda ızgara düzeni kalktı: üstte tam genişlikte yatay
-      kimlik kartı (solda fotoğraf ve kimlik, sağda iki sayaç ve eylem),
-      altında "Paylaşımlar" başlığı ve Instagram ızgarası (telefonda 3,
-      geniş ekranda 4 sütun, `gorunum="galeri"`). Kişi kendi ekranıyla
-      başkasının ekranı arasında geçerken düzen artık aynı.
+      Kullanıcı iki profil ekranının aynı düzeni paylaşmasını istedi;
+      ŞİRKET referans (`src/sirket/SirketProfilGorunumu.tsx`), öğrenci
+      uyarlanan. Kalıp sırayla: ortalanmış kimlik bandı (daire, ad,
+      kullanıcı adı, kimlik satırları), ince ayırıcının altında sayaç
+      satırı, onun altında eylem satırı.
 
-      Kartın İÇERİĞİ değişmedi: sahibe özel her şey (dişli, düzenleme,
+      ÖNCEKİ DÜZEN: solda fotoğraf + kimlik, sağda `lg:w-[400px]` bir
+      sütunda sayaçlar ve dikey dizilmiş eylemler; iki sütunu `lg:border-l`
+      ayırıyordu. Şirket ekranında böyle bir sütun hiç yoktu, yani aynı
+      kişi kendi şirketiyle kendi öğrenci profili arasında geçerken
+      sayaçların ve düğmelerin yeri değişiyordu.
+
+      SEKME ÇUBUĞU YOK — UYDURULMADI: şirkette üç bölüm var (kareler,
+      ilanlar, hakkımızda), öğrencide tek bölüm var (paylaşımlar). Tek
+      bölüm için sekme çizmek, olmayan bir bölümlemeyi varmış gibi
+      göstermek olurdu. Bölümün adı bu yüzden tek yerde, ızgaranın
+      üstündeki `h2`de kalıyor — şirkette kalkan başlık orada SEKMEYLE
+      yineleniyordu, burada yineleyen bir şey yok.
+
+      Kimlik İÇERİĞİ değişmedi: sahibe özel her şey (dişli, düzenleme,
       paylaşım düğmesi, hata cümleleri) yine `sahibiMi` koşulunun içinde;
       resmî hesapta öğrenci kimliği (`ogrenciKimligiGorunur`) yine gizli.
 
       TELEFONDA KART DEĞİL YÜZEY: kabuk telefonda kenarsız
       (`PROFIL_KABUGU`), kart tek alt çizgiyle bitiyor ve ızgara ekranın
-      iki kenarına yaslı.
+      iki kenarına yaslı. Yan boşluk bu yüzden `header`ın kendisinde
+      değil, içindeki iki bloğun `px-4`ünde — şirkettekiyle aynı.
     */
     <div className="space-y-0 sm:space-y-6">
-      <header className="border-b border-gray-200 bg-white px-4 py-5 sm:rounded-2xl sm:border sm:p-6 lg:px-8 lg:py-7">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:gap-8">
-          {/* ---------------- Fotoğraf ve kimlik ---------------- */}
-          <div className="flex min-w-0 flex-1 items-center gap-4 sm:gap-6">
+      <header className="border-b border-gray-200 bg-white sm:rounded-2xl sm:border">
+        {/* ------------------------------------------- kimlik bandı */}
+        <div className="px-4 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6">
+          {/*
+            Ortalanmış sütun `max-w-2xl` ile sınırlı: geniş ekranda
+            biyografi bandın bir ucundan ötekine uzanıyordu ve ortalı
+            metinde o satır uzunluğu okunmuyor (şirkette ölçülen gerekçe).
+          */}
+          <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
             {/*
               Yol boşsa baş harfler çiziliyor; sahte bir fotoğraf değil.
               Dosya kullanıcının oturumundan geçerek iniyor (`ProfilFotografi`).
@@ -266,151 +341,240 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
                 onFotografDegistir: sahibiMi ? onFotografDegistir : undefined,
               }}
             />
-            <div className="min-w-0 flex-1 space-y-1">
-              <div className="flex min-w-0 items-center gap-1.5">
-                <h1 className="min-w-0 break-words text-xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-2xl lg:text-[28px]">
-                  {baslik}
-                </h1>
-                {/* Tik kardeş düğüm ve `shrink-0`: ad kırpılsa da yerinde duruyor. */}
-                {!adAyri && <ResmiTik resmiMi={profil.resmiMi} />}
-              </div>
-              {(adAyri || (sahibiMi && onPaylas && onGorunurluk)) && (
-                <div className="flex items-center gap-1">
-                  {adAyri && (
-                    <>
-                      <p className="min-w-0 truncate text-sm text-gray-600 sm:text-base">@{profil.kullaniciAdi}</p>
-                      <ResmiTik resmiMi={profil.resmiMi} />
-                    </>
-                  )}
-                  {sahibiMi && onPaylas && onGorunurluk && (
-                    <ProfilAyarMenusu
-                      onPaylas={onPaylas}
-                      yayindaMi={profil.yayindaMi}
-                      onGorunurluk={onGorunurluk}
-                      onFotografDegistir={onFotografDegistir}
-                      /* Kaldırma satırının koşulu ekranda ne olduğunun kendisi: `avatar_path` dolu mu. */
-                      avatarVarMi={Boolean(profil.avatarYolu)}
-                      onFotografKaldir={onFotografKaldir}
-                      onBegendiklerim={onBegendiklerim}
-                      onKaydedilenler={onKaydedilenler}
-                      onArsiv={onArsiv}
-                      fotografDurumu={fotografKaldirmaDurumu === 'gonderiliyor' ? 'gonderiliyor' : 'bekliyor'}
-                      gorunurlukDurumu={yayimlamaDurumu === 'gonderiliyor' ? 'gonderiliyor' : 'bekliyor'}
-                    />
-                  )}
-                </div>
-              )}
-              {/* Ad gelmediyse rozet hiç çizilmiyor — "alanı" sözcüğü tek başına bilgi taşımaz. */}
-              {ogrenciKimligiGorunur && profil.sektorAdi && (
-                <p
-                  className={`inline-flex max-w-full items-center rounded-full border px-2.5 py-0.5 text-xs font-bold ${RENK_PRIMARY.kenar} ${RENK_PRIMARY.yumusakZemin} ${RENK_PRIMARY.metin}`}
-                >
-                  <span className="truncate">{profil.sektorAdi} alanı</span>
-                </p>
-              )}
-              {/*
-                RESMÎ BÖLÜM ADI KATALOGDAN, "EĞİTİM NOTU" KULLANICIDAN.
-                Kullanıcının yazdığı metin `break-words` ile sarıyor, sessizce
-                kırpılmıyor.
-              */}
-              {((ogrenciKimligiGorunur && (profil.bolumAdi || profil.bolumEtiketi || profil.sinifEtiketi)) ||
-                profil.sehir) && (
-                <div className="space-y-0.5 pt-1 text-sm text-gray-600 sm:text-base">
-                  {ogrenciKimligiGorunur && profil.bolumAdi && (
-                    <p className="break-words font-semibold text-gray-900">{profil.bolumAdi}</p>
-                  )}
-                  {ogrenciKimligiGorunur && profil.bolumEtiketi && (
-                    <p className="break-words text-xs text-gray-600 sm:text-sm">
-                      <span className="font-semibold">Eğitim notu:</span> {profil.bolumEtiketi}
-                    </p>
-                  )}
-                  {ogrenciKimligiGorunur && profil.sinifEtiketi && (
-                    <p className="break-words">{profil.sinifEtiketi}</p>
-                  )}
-                  {profil.sehir && <p className="break-words">{profil.sehir}</p>}
-                </div>
-              )}
+            {/*
+              `ring-offset` kadar nefes payı dairenin altında zaten var;
+              şirketteki `mt-3` aynen geçerli.
+
+              Ad ölçüsü de eşitlendi: `lg:text-[28px]` basamağı kalktı,
+              şirketteki gibi `text-xl` → `sm:text-2xl`. `flex-wrap`:
+              uzun ad ile tik dar ekranda alt satıra iniyor, kırpılmıyor.
+            */}
+            <div className="mt-3 flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1">
+              <h1 className="min-w-0 break-words text-xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-2xl">
+                {baslik}
+              </h1>
+              {/* Tik kardeş düğüm ve `shrink-0`: ad kırpılsa da yerinde duruyor. */}
+              {!adAyri && <ResmiTik resmiMi={profil.resmiMi} />}
             </div>
-          </div>
-
-          {/* ---------------- Sayaçlar ve eylemler ---------------- */}
-          <div className="space-y-4 lg:flex lg:w-[400px] lg:shrink-0 lg:flex-col lg:justify-center lg:self-stretch lg:border-l lg:border-gray-200 lg:pl-8">
             {/*
-              ÜÇ SAYI: paylaşım, bağlantı, takip. "Bağlantıda" diye dördüncü
-              yok — bağlantı simetrik, o sayı aynı şeyi tekrar ederdi. Takip
-              ise tek yönlü (→ şirket), bu yüzden gerçekten ayrı bir bilgi:
-              kişinin kaç şirketi izlediği. Sayı herkese açık (RPC aynı
-              satırda veriyor); LİSTE değil — takip edilen şirketler yalnız
-              sahibinin Ağım'ında. Arada dikey çizgi yok: üç hücrede iki
-              ayraç şeridi parçalıyordu; sahibin /cv kartıyla aynı kural.
+              KULLANICI ADI SATIRI ORTADA ama içerik değişmedi: şirkette
+              burada yalnız bir `<p>` var, öğrencide aynı satırda tik ve
+              sahibin dişli menüsü de duruyor. Bu yüzden satır bir flex
+              kabı; `justify-center` ortalamayı şirketle aynı yapıyor.
             */}
-            {sayacDurumu === 'yukleniyor' && (
-              <div aria-busy="true" className="grid grid-cols-3 gap-4">
-                <div aria-hidden className="mx-auto h-12 w-16 animate-pulse rounded bg-gray-100" />
-                <div aria-hidden className="mx-auto h-12 w-16 animate-pulse rounded bg-gray-100" />
-                <div aria-hidden className="mx-auto h-12 w-16 animate-pulse rounded bg-gray-100" />
+            {(adAyri || (sahibiMi && onPaylas && onGorunurluk)) && (
+              <div className="mt-0.5 flex max-w-full items-center justify-center gap-1">
+                {adAyri && (
+                  <>
+                    <p className="min-w-0 truncate text-sm text-gray-600 sm:text-base">@{profil.kullaniciAdi}</p>
+                    <ResmiTik resmiMi={profil.resmiMi} />
+                  </>
+                )}
+                {sahibiMi && onPaylas && onGorunurluk && (
+                  <ProfilAyarMenusu
+                    onPaylas={onPaylas}
+                    yayindaMi={profil.yayindaMi}
+                    onGorunurluk={onGorunurluk}
+                    onFotografDegistir={onFotografDegistir}
+                    /* Kaldırma satırının koşulu ekranda ne olduğunun kendisi: `avatar_path` dolu mu. */
+                    avatarVarMi={Boolean(profil.avatarYolu)}
+                    onFotografKaldir={onFotografKaldir}
+                    onBegendiklerim={onBegendiklerim}
+                    onKaydedilenler={onKaydedilenler}
+                    onArsiv={onArsiv}
+                    fotografDurumu={fotografKaldirmaDurumu === 'gonderiliyor' ? 'gonderiliyor' : 'bekliyor'}
+                    gorunurlukDurumu={yayimlamaDurumu === 'gonderiliyor' ? 'gonderiliyor' : 'bekliyor'}
+                  />
+                )}
               </div>
             )}
-            {sayacDurumu === 'hazir' && sayaclar && (
-              <dl className="grid grid-cols-3 border-y border-gray-100 py-2 lg:border-y-0 lg:py-0">
-                <Sayac etiket="Paylaşım" deger={sayaclar.paylasim} />
-                <BaglantiSayaci deger={sayaclar.baglanti} sahibiMi={sahibiMi} onNavigate={onNavigate} />
-                <Sayac etiket="Takip" deger={sayaclar.takip} />
-              </dl>
+            {/* Ad gelmediyse rozet hiç çizilmiyor — "alanı" sözcüğü tek başına bilgi taşımaz. */}
+            {ogrenciKimligiGorunur && profil.sektorAdi && (
+              <p
+                className={`mt-1.5 inline-flex max-w-full items-center rounded-full border px-2.5 py-0.5 text-xs font-bold ${RENK_PRIMARY.kenar} ${RENK_PRIMARY.yumusakZemin} ${RENK_PRIMARY.metin}`}
+              >
+                <span className="truncate">{profil.sektorAdi} alanı</span>
+              </p>
             )}
-            {(sayacDurumu === 'hata' || (sayacDurumu === 'hazir' && !sayaclar)) && (
-              <p className="text-center text-sm text-gray-600">Sayaçlar şu anda alınamadı.</p>
+            {/*
+              RESMÎ BÖLÜM ADI KATALOGDAN, "EĞİTİM NOTU" KULLANICIDAN.
+              Kullanıcının yazdığı metin `break-words` ile sarıyor, sessizce
+              kırpılmıyor.
+
+              Şirkette bu yerde sektör ve konum satırları var; öğrencide
+              karşılığı bölüm, eğitim notu, sınıf ve şehir. Aynı yer, aynı
+              punto, İÇERİK öğrencinin kendi gerçeği.
+            */}
+            {((ogrenciKimligiGorunur && (profil.bolumAdi || profil.bolumEtiketi || profil.sinifEtiketi)) ||
+              profil.sehir) && (
+              <div className="max-w-full space-y-0.5 pt-1 text-sm text-gray-600 sm:text-base">
+                {ogrenciKimligiGorunur && profil.bolumAdi && (
+                  <p className="break-words font-semibold text-gray-900">{profil.bolumAdi}</p>
+                )}
+                {ogrenciKimligiGorunur && profil.bolumEtiketi && (
+                  <p className="break-words text-xs text-gray-600 sm:text-sm">
+                    <span className="font-semibold">Eğitim notu:</span> {profil.bolumEtiketi}
+                  </p>
+                )}
+                {ogrenciKimligiGorunur && profil.sinifEtiketi && (
+                  <p className="break-words">{profil.sinifEtiketi}</p>
+                )}
+                {profil.sehir && <p className="break-words">{profil.sehir}</p>}
+              </div>
             )}
 
             {/*
-              BAĞLANTI DÜĞMESİ YALNIZ ZİYARETÇİ DALINDA: kendine istek göndermek
-              şemada da yasak. Düğme kendi durumunu sunucudan okuyor.
-            */}
-            {!sahibiMi && bakanId && <BaglantiDugmesi bakanId={bakanId} hedefId={profil.profilId} />}
+              BİYOGRAFİ BANDIN İÇİNDE, KISALTILMADAN
 
-            {/* PAYLAŞIM DÜĞMESİNİN ÖNKOŞULU SUNUCUDAN: `yayinda_mi` ve `sector_id`. */}
-            {sahibiMi && profil.yayindaMi && profil.sektorId && onPaylasimOlustur && (
-              <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={onPaylasimOlustur} className={IKINCIL_EYLEM}>
-                  <ImagePlus aria-hidden className="h-4 w-4" />
-                  Fotoğraf paylaş
-                </button>
-              </div>
-            )}
-            {sahibiMi && onDuzenle && (
-              <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={onDuzenle} className={IKINCIL_EYLEM}>
-                  <Pencil aria-hidden className="h-4 w-4" />
-                  Profili düzenle
-                </button>
-              </div>
+              Şirkette açıklama `line-clamp-3` ile üç satıra iniyor çünkü
+              tam metni "Hakkımızda" sekmesi taşıyor. Öğrencide o sekme
+              YOK — kısaltılsaydı metnin geri kalanına giden hiçbir yol
+              kalmazdı. Bu yüzden satır sayısı sınırlanmıyor; sarma
+              (`break-words`) ve satır sonları (`whitespace-pre-line`)
+              aynen duruyor.
+            */}
+            {profil.biyografi && (
+              <p className="mt-3 max-w-full whitespace-pre-line break-words text-sm leading-relaxed text-gray-800 sm:text-base">
+                {profil.biyografi}
+              </p>
             )}
           </div>
         </div>
 
-        {/* Biyografi kartın tam genişliğinde; kullanıcının yazdığı metin sarıyor. */}
-        {profil.biyografi && (
-          <p className="mt-4 whitespace-pre-line break-words text-sm leading-relaxed text-gray-800 sm:text-base">
-            {profil.biyografi}
-          </p>
-        )}
+        {/*
+          BANDIN ALTI: SAYAÇLAR VE EYLEMLER
 
-        {/* Sahibe özel hata cümleleri: menü tıklanınca kapandığı için burada. */}
-        {sahibiMi && yayimlamaDurumu === 'hata' && (
-          <p role="alert" className="mt-3 text-xs font-semibold leading-relaxed text-rose-700">
-            Profilinin görünürlüğü değiştirilemedi; eski ayarın duruyor. Yeniden deneyebilirsin.
-          </p>
-        )}
-        {sahibiMi && fotografKaldirmaDurumu === 'hata' && (
-          <p role="alert" className="mt-3 text-xs font-semibold leading-relaxed text-rose-700">
-            Profil fotoğrafın kaldırılamadı; fotoğrafın duruyor. Yeniden deneyebilirsin.
-          </p>
-        )}
-        {bildirim && (
-          <p role="status" className="mt-3 text-sm font-semibold text-gray-700">
-            {bildirim}
-          </p>
-        )}
+          Şirketteki ayrımın aynısı — kimlik bandı kendi bloğunda, sayaç
+          ve düğmeler ayrı bir blokta, aralarında ince bir çizgi. Üst
+          boşluğu bandın `pb`si veriyor.
+        */}
+        <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+          {/*
+            ÜÇ SAYI: paylaşım, bağlantı, takip. "Bağlantıda" diye dördüncü
+            yok — bağlantı simetrik, o sayı aynı şeyi tekrar ederdi. Takip
+            ise tek yönlü (→ şirket), bu yüzden gerçekten ayrı bir bilgi:
+            kişinin kaç şirketi izlediği. Sayı herkese açık (RPC aynı
+            satırda veriyor); LİSTE değil — takip edilen şirketler yalnız
+            sahibinin Ağım'ında. Arada dikey çizgi yok: üç hücrede iki
+            ayraç şeridi parçalıyordu.
+
+            DÖRDÜNCÜ SAYAÇ UYDURULMADI: `sosyal_sayaclar` bir de `takipci`
+            veriyor ama o sayı hedefi ŞİRKET olan takiplerin sayısı; bir
+            öğrenci profili takip edilemediği için burada hep sıfır
+            olurdu. Şirkette "takipçi" sayacı var, öğrencide YOK — sıfır
+            göstermek için sahte bir hücre açmıyoruz.
+
+            AYIRICI ŞİRKETTEKİYLE AYNI: `border-t ... pt-3`. Önceki
+            `border-y ... py-2 lg:border-y-0 lg:py-0` iki sütunlu düzenin
+            artığıydı — sayaçlar geniş ekranda kendi sütununa geçince
+            çizgiler kaldırılıyordu. O sütun kalktı. Çizgi üç durumda da
+            aynı yerde: yüklenirken, hazırken ve alınamadığında satır
+            zıplamıyor.
+          */}
+          {sayacDurumu === 'yukleniyor' && (
+            <div aria-busy="true" className="grid grid-cols-3 border-t border-gray-100 pt-3">
+              <div aria-hidden className="mx-auto h-12 w-16 animate-pulse rounded bg-gray-100" />
+              <div aria-hidden className="mx-auto h-12 w-16 animate-pulse rounded bg-gray-100" />
+              <div aria-hidden className="mx-auto h-12 w-16 animate-pulse rounded bg-gray-100" />
+            </div>
+          )}
+          {sayacDurumu === 'hazir' && sayaclar && (
+            <dl className="grid grid-cols-3 border-t border-gray-100 pt-3">
+              <Sayac etiket="paylaşım" deger={sayaclar.paylasim} />
+              <BaglantiSayaci deger={sayaclar.baglanti} sahibiMi={sahibiMi} onNavigate={onNavigate} />
+              <Sayac etiket="takip" deger={sayaclar.takip} />
+            </dl>
+          )}
+          {(sayacDurumu === 'hata' || (sayacDurumu === 'hazir' && !sayaclar)) && (
+            <p className="border-t border-gray-100 pt-3 text-center text-sm text-gray-600">
+              Sayaçlar şu anda alınamadı.
+            </p>
+          )}
+
+          {/*
+            BAĞLANTI DÜĞMESİ YALNIZ ZİYARETÇİ DALINDA: kendine istek göndermek
+            şemada da yasak. Düğme kendi durumunu sunucudan okuyor.
+
+            Kabı şirketteki ziyaretçi eyleminin (Takip et) kabıyla birebir
+            aynı: telefonda tam genişlik, `sm:` üstünde içerik genişliğinde
+            ve ortada. Düğme kendi `className`ini almıyor, bu yüzden hizayı
+            kap veriyor.
+          */}
+          {!sahibiMi && bakanId && (
+            <div className="mt-3 flex flex-col items-stretch sm:items-center">
+              <BaglantiDugmesi bakanId={bakanId} hedefId={profil.profilId} />
+            </div>
+          )}
+
+          {/*
+            SAHİBİN EYLEM SATIRI — ŞİRKETTEKİ IZGARANIN AYNISI
+
+            Kap sınıfları şirketle BİREBİR: telefonda `grid grid-cols-2
+            gap-3`, `sm:` üstünde `flex flex-wrap justify-center`. Sırayla
+            önce paylaşma, sonra düzenleme — şirketteki sıranın aynısı
+            (İlan paylaş · Fotoğraf paylaş · Profili düzenle).
+
+            İLAN PAYLAŞ YOK: öğrencinin ilan açma yetkisi de rotası da
+            yok. Şirkette olan her düğmeyi buraya kopyalamak, olmayan bir
+            eylemi varmış gibi göstermek olurdu.
+
+            İKİSİ DE `col-span-2`: şirkette iki BİRİNCİL eylem ilk satırı
+            paylaşıyor, üçüncüsü tam satır kaplıyor. Öğrencide birincil
+            eylem tek; yarım hücrede bırakılsaydı yanında boş bir hücre
+            kalırdı. Telefonda ikisi alt alta tam genişlikte, `sm:` üstünde
+            satır flex olduğu için `col-span` etkisiz ve ikisi yan yana.
+
+            Düğme rolleri şirketle aynı: Fotoğraf paylaş BİRİNCİL (mavi),
+            Profili düzenle İKİNCİL (beyaz çerçeveli). Öğrencide ikisi de
+            beyazdı; aynı eylem iki ekranda iki farklı ağırlıkta duruyordu.
+
+            SAHİBE ÖZEL: kap `sahibiMi` koşulunun İÇİNDE kuruluyor —
+            ziyaretçide DOM'a hiç girmiyor, CSS ile gizlenmiyor. Kapın
+            koşulu ayrıca "en az bir eylem var mı" diye soruyor: eylemsiz
+            bir sahipte boş bir ızgara ve 12 piksellik ölü boşluk kalırdı.
+
+            PAYLAŞIM DÜĞMESİNİN ÖNKOŞULU SUNUCUDAN: `yayinda_mi` ve
+            `sector_id` — `sosyal_paylasim_baslat` taslağı yalnız ikisi
+            birlikteyken açılıyor.
+          */}
+          {sahibiMi && (onDuzenle || (profil.yayindaMi && profil.sektorId && onPaylasimOlustur)) && (
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-center">
+              {profil.yayindaMi && profil.sektorId && onPaylasimOlustur && (
+                <button
+                  type="button"
+                  onClick={onPaylasimOlustur}
+                  className={`${BIRINCIL} col-span-2 sm:min-w-52`}
+                >
+                  <ImagePlus aria-hidden className="h-5 w-5" />
+                  Fotoğraf paylaş
+                </button>
+              )}
+              {onDuzenle && (
+                <button type="button" onClick={onDuzenle} className={`${IKINCIL} col-span-2 sm:min-w-52`}>
+                  <Pencil aria-hidden className="h-4 w-4" />
+                  Profili düzenle
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Sahibe özel hata cümleleri: menü tıklanınca kapandığı için burada. */}
+          {sahibiMi && yayimlamaDurumu === 'hata' && (
+            <p role="alert" className="mt-3 text-xs font-semibold leading-relaxed text-rose-700">
+              Profilinin görünürlüğü değiştirilemedi; eski ayarın duruyor. Yeniden deneyebilirsin.
+            </p>
+          )}
+          {sahibiMi && fotografKaldirmaDurumu === 'hata' && (
+            <p role="alert" className="mt-3 text-xs font-semibold leading-relaxed text-rose-700">
+              Profil fotoğrafın kaldırılamadı; fotoğrafın duruyor. Yeniden deneyebilirsin.
+            </p>
+          )}
+          {bildirim && (
+            <p role="status" className="mt-3 text-sm font-semibold text-gray-700">
+              {bildirim}
+            </p>
+          )}
+        </div>
       </header>
 
       {/*
