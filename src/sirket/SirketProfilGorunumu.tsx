@@ -15,8 +15,8 @@ import {
  *
  * Öğrenci profiliyle (`SosyalProfilGorunumu`) aynı kural: sahip görünümü
  * ve ziyaretçi görünümü AYRI BİLEŞENE ÇOĞALTILMIYOR. Sahibe özel her şey
- * (İlan oluştur, Profili düzenle, Öğrencinin gördüğü sayfa, Fotoğraf
- * paylaş, ilan yönetimi) `sahip` nesnesinin İÇİNDE çiziliyor; ziyaretçi
+ * (İlan paylaş, Fotoğraf paylaş, Profili düzenle, Öğrencinin gördüğü
+ * sayfa, ilan yönetimi) `sahip` nesnesinin İÇİNDE çiziliyor; ziyaretçi
  * dalında nesne hiç verilmediği için DOM'a girmiyor. Yetkinin asıl kapısı
  * sunucuda (`company_members`, `posts` politikaları, `paylasim_kitlesi_
  * kilidi`); burası yalnız hangi düğmenin çizileceğine karar veriyor.
@@ -232,8 +232,24 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
     .filter(Boolean)
     .join(' · ');
 
+  /*
+    ETİKET "ŞİRKETTEN KARELER", KİMLİK 'paylasimlar' (kullanıcı bildirimi,
+    20 Eylül 2026): sekme "Paylaşımlar" yazıyor, hemen altındaki başlık da
+    "Şirketten kareler" yazıyordu — aynı bölüm iki kez adlandırılmıştı.
+    Bölümün adı tek yerde, sekmenin üstünde kaldı. İÇ KİMLİK DEĞİŞMEDİ:
+    `sekme === 'paylasimlar'`, `sirket-sekme-paylasimlar` ve panel id'leri
+    aynı; paylaşılmış bağlantılar ve testler bu kimliklere bakıyor.
+
+    ETİKET TELEFONDA İKİ SATIRA SARIYOR — ölçüldü: 375 ve 390 pikselde
+    sekme 125/130 piksel, etiketin tek satır genişliği 115 piksel ve
+    `px-2` ile 109/114 piksel yer kalıyor, yani metin iki satıra iniyor
+    (430 pikselden itibaren tek satır). Kırpılma YOK, yatay taşma 0 ve
+    sekme yüksekliği 44 pikselde kalıyor (iki satır 40 piksel), yani
+    dokunma hedefi ve çubuk yüksekliği değişmiyor. Kısaltma bir ürün
+    kararı: adı kullanıcı seçti, kendiliğinden "Kareler"e indirilmedi.
+  */
   const sekmeler: { id: SirketSekmesi; etiket: string }[] = [
-    { id: 'paylasimlar', etiket: 'Paylaşımlar' },
+    { id: 'paylasimlar', etiket: 'Şirketten kareler' },
     { id: 'ilanlar', etiket: 'İlanlar' },
     { id: 'hakkimizda', etiket: 'Hakkımızda' },
   ];
@@ -242,6 +258,16 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
     Paylaşım giriş düğmesi: FotografPaylasGirisi'nin kendisi — aynı
     seçici, aynı besteci (öğrenci profiliyle ve Ağım'la aynı yol). Kitle
     sabit 'sirket'; besteci seçici çizmiyor.
+
+    Yeri artık sekmenin altı değil, sahibin eylem satırı: düğme "Şirketten
+    kareler" başlığıyla birlikte ayrı bir şerit kaplıyordu, başlık kalkınca
+    tek başına kalacaktı. `sahip && paylasabilirMi` koşulu değişmedi —
+    ziyaretçi dalında bileşen hiç kurulmuyor, DOM'a girmiyor.
+
+    Sıra kullanıcının kararı (20 Eylül 2026): İlan paylaş, Fotoğraf paylaş,
+    Profili düzenle. İki "paylaş" eylemi yan yana; düzenleme sonda. Telefonda
+    ikisi ızgaranın ilk satırını paylaşıyor, tam genişliği alan `col-span-2`
+    bu yüzden artık Profili düzenle'de.
   */
   const paylasGirisi = sahip && sahip.paylasabilirMi && (
     <FotografPaylasGirisi
@@ -253,7 +279,7 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
       sabitKitle="sirket"
       etiket="Fotoğraf paylaş"
       ikonSinifi="h-5 w-5"
-      dugmeSinifi={`${BIRINCIL} shrink-0`}
+      dugmeSinifi={`${BIRINCIL} shrink-0 sm:min-w-52`}
     />
   );
 
@@ -393,20 +419,49 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
                 içerik genişliğinde ve ortada — 1280 pikselde ölçüldü: tam
                 genişlikte her biri 569 piksel oluyor ve iki kocaman şerit
                 sayaçları eziyordu.
+
+                SIRA: İlan paylaş → Fotoğraf paylaş → Profili düzenle
+                (kullanıcı kararı, 20 Eylül 2026). İki paylaşma eylemi yan
+                yana, düzenleme sonda. Telefonda ilk satır ikisini taşıyor,
+                Profili düzenle `col-span-2` ile alt satırı tam kaplıyor —
+                üç hücrelik ızgarada sonuncusu yarım hücrede yalnız
+                kalmasın diye. `sm:` üstünde satır flex olduğu için
+                `col-span-2` etkisiz (flex öğesinde `grid-column` işlemiyor).
+
+                ÖLÇÜLDÜ (Chromium, bu dosyanın sınıflarıyla ve aynı
+                kapsayıcı zinciriyle kurulmuş düzen): 640 pikselde satır
+                542 piksel, üç düğme `min-w-52` ile 3·208 + 2·12 = 648
+                piksel isterdi ve taşardı — `sm:flex-wrap` sayesinde
+                üçüncüsü alta iniyor. 768 pikselde satır 670 piksel, üçü
+                tek sırada. Telefonda 375 pikselde ilk satırın hücreleri
+                166'şar, 390 pikselde 173'er piksel; Profili düzenle alt
+                satırda 343 / 358 piksel. Üç etiket de tek satır, yatay
+                taşma 0, yükseklik 48. DAR SINIR ÖLÇÜLDÜ: "Fotoğraf
+                paylaş"ın kendi genişliği 162 piksel, yani 375 piksel bu
+                düzenin tek satır kaldığı en dar ekran — 360 ve 320
+                pikselde etiket iki satıra sarıyor. Orada da kırpılma ve
+                taşma yok, `min-h-12` yüksekliği 48 pikselde tutuyor.
               */}
-              <div className="grid grid-cols-2 gap-3 sm:flex sm:justify-center">
+              <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-center">
+                {/*
+                  ETİKET "İLAN PAYLAŞ" (kullanıcı kararı, 20 Eylül 2026):
+                  yanındaki "Fotoğraf paylaş" ile aynı fiili kullanıyor.
+                  Yalnız görünen metin değişti — rota (`ilanOlusturYolu`),
+                  tıklama ve prop adları aynı kaldı.
+                */}
                 <a
                   href={sahip.ilanOlusturYolu}
                   onClick={icTiklama(onNavigate, sahip.ilanOlusturYolu)}
                   className={`${BIRINCIL} sm:min-w-52`}
                 >
                   <Briefcase aria-hidden className="h-5 w-5" />
-                  İlan oluştur
+                  İlan paylaş
                 </a>
+                {paylasGirisi}
                 <a
                   href={sahip.duzenleYolu}
                   onClick={icTiklama(onNavigate, sahip.duzenleYolu)}
-                  className={`${IKINCIL} sm:min-w-52`}
+                  className={`${IKINCIL} col-span-2 sm:min-w-52`}
                 >
                   <Pencil aria-hidden className="h-4 w-4" />
                   Profili düzenle
@@ -471,13 +526,19 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
           aria-labelledby="sirket-sekme-paylasimlar"
           className="space-y-3 pt-4 sm:pt-0"
         >
-          <div className="flex items-center justify-between gap-3 px-4 sm:px-0">
-            <h2 className="text-xl font-extrabold tracking-tight text-gray-900 sm:text-2xl">
-              Şirketten kareler
-            </h2>
-            {paylasGirisi}
-          </div>
+          {/*
+            BAŞLIK YOK, ŞERİT DE YOK
 
+            Burada "Şirketten kareler" diye bir `h2` ve yanında Fotoğraf
+            paylaş düğmesi duruyordu. Sekme aynı bölümü zaten adlandırdığı
+            için başlık aynı metni ikinci kez yazıyordu; düğme sahibin
+            eylem satırına taşındı. İkisi de gidince kapsayıcı `div` boş
+            kalacak ve `space-y-3` ölü bir boşluk bırakacaktı — bu yüzden
+            kabın kendisi silindi, `sr-only` bir başlık da konmadı:
+            `aria-labelledby` zaten sekme düğmesini (`sirket-sekme-
+            paylasimlar`) gösteriyor, panelin erişilebilir adı oradan
+            geliyor ve ikinci bir ad ekran okuyucuda tekrar olurdu.
+          */}
           {sahip?.paylasimEngeli && (
             <p role="status" className={`${KART} mx-4 text-sm leading-relaxed text-gray-600 sm:mx-0`}>
               {sahip.paylasimEngeli}
@@ -487,8 +548,11 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
           {paylasimDurumu === 'hazir' && paylasimlar.length === 0 ? (
             /*
               BOŞ DURUM: stok görsel yok, iskelet yok. Sahipte eylem
-              düğmesi başlıktaki girişin AYNI seçicisini açıyor (kol ile),
-              ikinci bir besteci kurulmuyor. Ziyaretçide yalnız cümle.
+              düğmesi eylem satırındaki girişin AYNI seçicisini açıyor
+              (`paylasKolu` ile), ikinci bir besteci kurulmuyor — giriş
+              artık üstteki eylem satırında çiziliyor ama kol aynı
+              bileşene bağlı olduğu için mekanizma değişmedi. Ziyaretçide
+              yalnız cümle.
             */
             <div className={`${KART} mx-4 flex flex-col items-center gap-3 py-8 text-center sm:mx-0`}>
               <p className="text-sm font-bold text-gray-900">Henüz paylaşım yok</p>
