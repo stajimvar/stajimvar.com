@@ -76,6 +76,30 @@ jobs:
       - name: Başvuru adreslerini kontrol et
         run: node scripts/ilan-baglanti-kontrol.mjs ${{ inputs.kuru && '--kuru' || '' }}
 
+      # İKİNCİ AŞAMA: BELİRSİZLERİ ÇİZEREK DOĞRULA
+      #
+      # Birinci aşama ham HTML okuyor. Ölçüldü (20 Eylül 2026): 55 aktif
+      # `belirsiz` kaydın 55'i de HTTP 200 dönüyor ama ham HTML'de iş
+      # içeriği YOK — Workday 6.5 KB'de 1 kelime, Oracle HCM 9 KB'de 1
+      # kelime. Yani `belirsiz`, ilanın durumunu değil sayfanın
+      # JavaScript ile çizilmesini ölçüyordu.
+      #
+      # Aynı sayfalar çizilince üç AYRI gerçek çıkıyor: ilan açık,
+      # ilan kaldırılmış, bot engeli. Bu adım o ayrımı yapıyor.
+      #
+      # YALNIZ BELİRSİZLERE bakıyor: ham HTML'de karara bağlanmış
+      # ilanı yeniden çizmek pahalı ve gereksiz. Yeni cron YOK.
+      #
+      # `if: always()`: birinci aşama üçüncü taraf hatasıyla düşse de
+      # bu koşuyor.
+      - name: Chromium kur (yalnız bu adım için)
+        if: always()
+        run: npx playwright install --with-deps chromium
+
+      - name: Belirsiz ilanları çizerek doğrula
+        if: always()
+        run: node scripts/ilan-js-dogrulama.mjs ${{ inputs.kuru && '--kuru' || '' }}
+
       # İŞVEREN KARİYER SAYFALARI — AYNI İŞ, İKİNCİ ZAMANLAMA YOK
       #
       # Aynı soruyu soruyor ("bu adres hâlâ çalışıyor mu") ve aynı
