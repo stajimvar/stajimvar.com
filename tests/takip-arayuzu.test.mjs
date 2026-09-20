@@ -98,9 +98,37 @@ test('öğrenci profili: "takip" sayacı sahipte ve ziyaretçide, üç eşit sü
     artık. Ziyaretçi görünümündeki şerit (OGRENCI_GORUNUM) kendi
     ekranında tam genişlikte kaldığı için orada çizgiler duruyor.
   */
-  assert.match(PROFIL_BASLIGI, /className="col-start-2 row-start-1 grid min-w-0 grid-cols-3"/);
-  assert.match(OGRENCI_GORUNUM, /<Sayac etiket="Takip" deger=\{sayaclar\.takip\} \/>/);
-  assert.match(OGRENCI_GORUNUM, /<dl className="grid grid-cols-3 border-y border-gray-100 py-2 lg:border-y-0 lg:py-0">/);
+  /*
+    20 EYLÜL 2026: o yerleşim kalktı. Kullanıcı bütün profil
+    görüntülerinin şirket kalıbında olmasını istedi; `/cv` şeridi de tam
+    genişliğe, kimlik bandının altına indi ve ayırıcısı şirketteki
+    `border-t border-gray-100 pt-3` oldu. ÜÇ EŞİT SÜTUN VE AYRAÇSIZLIK
+    DEĞİŞMEDİ — testin ölçtüğü şey buydu.
+  */
+  assert.match(
+    PROFIL_BASLIGI,
+    /className="grid min-w-0 grid-cols-3 border-t border-gray-100 pt-3"/,
+  );
+  /*
+    Etiket küçük harf (kullanıcı kararı, 20 Eylül 2026): üç profil
+    ekranı aynı yazımı paylaşıyor. `/cv` ve şirket zaten küçük harfle
+    yazıyordu; ziyaretçi profili tek ayrık ekrandı.
+  */
+  assert.match(OGRENCI_GORUNUM, /<Sayac etiket="takip" deger=\{sayaclar\.takip\} \/>/);
+  /*
+    20 Eylül 2026: öğrenci profili şirket profilinin düzen kalıbına
+    geçti (kullanıcı isteği). Sayaç sütunu ve dolayısıyla `lg:border-y-0
+    lg:py-0` iptalleri kalktı; şerit şirkettekiyle aynı ayırıcıyı
+    kullanıyor. ÜÇ EŞİT SÜTUN VE AYRAÇSIZLIK DEĞİŞMEDİ — testin ölçtüğü
+    şey buydu.
+  */
+  assert.match(OGRENCI_GORUNUM, /<dl className="grid grid-cols-3 border-t border-gray-100 pt-3">/);
+  /*
+    DÖRDÜNCÜ SAYAÇ HÂLÂ YOK: `sosyal_sayaclar` `takipci` de veriyor ama
+    hedefi şirket olmayan bir profilde o sayı hep sıfır olurdu. Şirket
+    kalıbı uyarlanırken "takipçi" hücresi kopyalanmadı.
+  */
+  assert.doesNotMatch(OGRENCI_GORUNUM, /etiket="Takipçi"|sayaclar\.takipci/);
   for (const k of [PROFIL_BASLIGI, OGRENCI_GORUNUM]) {
     assert.doesNotMatch(k, /divide-x/);
     assert.doesNotMatch(kod(k), /TakipDugmesi|Takip et\b/);

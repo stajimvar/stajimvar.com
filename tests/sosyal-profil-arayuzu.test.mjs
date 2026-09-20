@@ -538,8 +538,16 @@ test('takip TEK YÖNLÜ: öğrenci profilinde "Takip et" yok, "takip" sayacı va
   for (const kaynak of [...SOSYAL_BILESENLER_YORUMSUZ, yorumsuz(talepKuyrugu)]) {
     assert.doesNotMatch(kaynak, /Takip et\b|Takip ediliyor|TakipDugmesi/);
   }
-  /* Sayı herkese açık: takip edilen şirket sayısı ziyaretçi görünümünde de çiziliyor; LİSTE değil. */
-  assert.match(gorunum, /<Sayac etiket="Takip" deger=\{sayaclar\.takip\} \/>/);
+  /*
+    Sayı herkese açık: takip edilen şirket sayısı ziyaretçi görünümünde
+    de çiziliyor; LİSTE değil.
+
+    ETİKET KÜÇÜK HARF (kullanıcı kararı, 20 Eylül 2026: "tüm profil
+    görüntüleri şirket gibi olsun"). Şirket profili ve `/cv` kartı zaten
+    küçük harfle yazıyordu; büyük harfle başlayan tek ekran ziyaretçi
+    profiliydi.
+  */
+  assert.match(gorunum, /<Sayac etiket="takip" deger=\{sayaclar\.takip\} \/>/);
   assert.doesNotMatch(gorunum, /takipEttiklerim|takip_ettiklerim/);
   /* Takip düğmesi şirket sayfasında ve bakanın kimliğini sayfa veriyor. */
   assert.match(sayfa, /bakanId=\{kullaniciId\}\s*onPaylasimlariYenile/);
@@ -599,20 +607,133 @@ test('dokunma hedefi ve odak halkası menüde kalıbı izliyor', () => {
 
 test('sahibe özel her şey sahibiMi koşulunun içinde', () => {
   assert.match(gorunum, /\{sahibiMi && onPaylas && onGorunurluk && \(/);
-  assert.match(gorunum, /\{sahibiMi && onDuzenle && \(/);
   /*
-    ÜÇÜNCÜ KOŞUL DEĞİŞTİ: "yayında değilse uyarı" yerine "önkoşullar
-    tamsa Paylaş". Sunucudaki `sosyal_paylasim_baslat` taslağı yalnız
-    `yayinda_mi` VE `sector_id is not null` iken açıyor; düğmeyi bundan
-    daha geniş bir koşulla çizmek, her basışta reddedilen bir eylem
-    sunmak olurdu.
+    EYLEM SATIRI TEK KAPININ ARKASINA GEÇTİ (20 Eylül 2026)
+
+    "Fotoğraf paylaş" ve "Profili düzenle" ayrı ayrı `{sahibiMi && …}`
+    ile çiziliyordu. Öğrenci profili şirket profilinin kalıbına
+    uyarlanınca (kullanıcı isteği) ikisi TEK ızgarayı paylaşmaya başladı
+    ve `sahibiMi` kapısı tek tek düğmelerden ızgaranın kendisine taşındı.
+
+    İddia bu yüzden dize değil KAPSAMA ölçüyor: iki koşul da kapının
+    İÇİNDE mi. Kapı dışına taşınan bir düğme burada düşer — korunan
+    şey aynı, ziyaretçinin DOM'una sahibe özel hiçbir şey girmemeli.
   */
   assert.match(
     gorunum,
-    /\{sahibiMi && profil\.yayindaMi && profil\.sektorId && onPaylasimOlustur && \(/,
+    /\{sahibiMi && \(onDuzenle \|\| \(profil\.yayindaMi && profil\.sektorId && onPaylasimOlustur\)\) && \(/,
   );
+  const eylemSatiri = govdeAl(
+    gorunum,
+    '{sahibiMi && (onDuzenle ||',
+    '{/* Sahibe özel hata cümleleri',
+  );
+  assert.ok(eylemSatiri.length > 0, 'sahibin eylem satırı bulunamadı');
+  assert.match(eylemSatiri, /\{onDuzenle && \(/);
+  /*
+    PAYLAŞ DÜĞMESİNİN KOŞULU DEĞİŞMEDİ: sunucudaki
+    `sosyal_paylasim_baslat` taslağı yalnız `yayinda_mi` VE `sector_id
+    is not null` iken açıyor; düğmeyi bundan daha geniş bir koşulla
+    çizmek, her basışta reddedilen bir eylem sunmak olurdu.
+  */
+  assert.match(eylemSatiri, /\{profil\.yayindaMi && profil\.sektorId && onPaylasimOlustur && \(/);
   /* CSS ile gizleme yok: gizlenmiş düğme klavyeyle bulunur. */
   assert.doesNotMatch(gorunum, /hidden.*ProfilAyarMenusu/);
+});
+
+test('üç profil ekranı aynı kalıbı paylaşıyor: kap sınıfları birebir', () => {
+  /*
+    KULLANICI KARARI (20 Eylül 2026): "tüm profil görüntüleri şirket gibi
+    olsun, onu beğendim daha özgün." Şirket REFERANS; ziyaretçiye görünen
+    öğrenci profili ve sahibin `/cv` kartı uyarlanan.
+
+    Üç ekran de tek tek doğru görünebilir ama zamanla ayrışırlar: biri
+    `gap-3`ü `gap-2` yapar, öteki `min-h-12`yi düşürür ve aynı kullanıcı
+    üç ekranda üç farklı düğme yüksekliği görür. Bu yüzden iddia
+    "benzer mi" diye bakmıyor, DİZEYİ KARŞILAŞTIRIYOR. Biri değişirse
+    test düşer ve değiştiren kişi öteki ikisini de bilerek değiştirmek
+    zorunda kalır.
+  */
+  const sirket = oku('src/sirket/SirketProfilGorunumu.tsx');
+  const cvKarti = oku('src/components/ProfilBasligi.tsx');
+  const ekranlar = { sirket, ziyaretci: gorunum, cv: cvKarti };
+
+  /* 1. Eylem satırının kabı. */
+  const eylemKabi = 'mt-3 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-center';
+  for (const [ad, kaynak] of Object.entries(ekranlar)) {
+    assert.ok(kaynak.includes(eylemKabi), `${ad}: eylem ızgarası kalıptan ayrışmış`);
+  }
+
+  /* 2. Sayaç satırının ayırıcısı ve üç eşit sütunu. */
+  const sayacAyirici = 'grid-cols-3 border-t border-gray-100 pt-3';
+  for (const [ad, kaynak] of Object.entries(ekranlar)) {
+    assert.ok(kaynak.includes(sayacAyirici), `${ad}: sayaç ayırıcısı kalıptan ayrışmış`);
+  }
+
+  /* 3. Kimlik bandının ve alt bloğun dolguları. */
+  for (const [ad, kaynak] of Object.entries(ekranlar)) {
+    assert.ok(
+      kaynak.includes('px-4 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6'),
+      `${ad}: kimlik bandının dolgusu kalıptan ayrışmış`,
+    );
+    assert.ok(
+      kaynak.includes('px-4 pb-4 sm:px-6 sm:pb-6'),
+      `${ad}: sayaç/eylem bloğunun dolgusu kalıptan ayrışmış`,
+    );
+  }
+
+  /* 4. Ortalanmış kimlik sütunu ve daire ölçü basamakları. */
+  for (const [ad, kaynak] of Object.entries(ekranlar)) {
+    assert.ok(
+      kaynak.includes('mx-auto flex max-w-2xl flex-col items-center text-center'),
+      `${ad}: kimlik sütunu ortalanmış kalıptan ayrışmış`,
+    );
+    assert.ok(
+      /h-20 w-20[^"]*sm:h-28 sm:w-28[^"]*lg:h-36 lg:w-36/.test(kaynak),
+      `${ad}: daire ölçü basamakları (80/112/144) ayrışmış`,
+    );
+  }
+
+  /* 5. Birincil ve ikincil düğme dizeleri — üç dosyada da aynı satır. */
+  const dizeAl = (kaynak, ad) => {
+    const eslesme = kaynak.match(new RegExp(`^const ${ad} = \`([^\`]+)\`;$`, 'm'));
+    assert.ok(eslesme, `${ad} sabiti bulunamadı`);
+    return eslesme[1];
+  };
+  for (const ad of ['BIRINCIL', 'IKINCIL']) {
+    const [ilk, ...kalan] = Object.entries(ekranlar).map(([ekran, kaynak]) => [
+      ekran,
+      dizeAl(kaynak, ad),
+    ]);
+    for (const [ekran, dize] of kalan) {
+      assert.equal(dize, ilk[1], `${ekran}: ${ad} dizesi şirkettekinden ayrışmış`);
+    }
+    /* Dokunma hedefi kalıbın parçası: 48 piksel, 44'lük eşiğin üstünde. */
+    assert.match(ilk[1], /min-h-12/, `${ad} min-h-12 taşımalı`);
+  }
+
+  /*
+    Ziyaretçinin tek eylemi (bağlantı) de şirketteki ziyaretçi eylemiyle
+    aynı kapta: telefonda tam genişlik, sm üstünde ortada. `/cv` sahibin
+    kendi ekranı — orada ziyaretçi eylemi YOK, bu yüzden bu iddia iki
+    ekranda.
+  */
+  const ziyaretciKabi = 'mt-3 flex flex-col items-stretch sm:items-center';
+  assert.ok(sirket.includes(ziyaretciKabi));
+  assert.ok(gorunum.includes(ziyaretciKabi));
+
+  /*
+    ŞİRKETTE OLUP ÖĞRENCİDE OLMAYAN: "İlan paylaş" ve "aktif ilan"
+    sayacı. Öğrencinin ilan açma yetkisi de rotası da yok; kalıbı
+    uygularken bunların kopyalanmadığı burada kilitleniyor.
+  */
+  for (const [ad, kaynak] of [['ziyaretci', gorunum], ['cv', cvKarti]]) {
+    assert.doesNotMatch(
+      yorumsuz(kaynak),
+      /İlan paylaş|ilanOlusturYolu|etiket="aktif ilan"/,
+      `${ad}: şirkete özel eylem/sayaç kopyalanmış`,
+    );
+  }
 });
 
 test('dişli menüsünde topluluğa katılma/ayrılma eylemi YOK', () => {
@@ -757,11 +878,25 @@ test('görünürlük hatası sessiz kalmıyor ve tek cümleye indi', () => {
 });
 
 test('üç sayaç var (paylaşım, bağlantı, takip); "Bağlantıda" yok; ayraç yok', () => {
-  assert.match(gorunum, /etiket="Paylaşım"/);
-  assert.match(gorunum, /etiket="Bağlantı"/);
-  assert.match(gorunum, /etiket="Takip"/);
+  /*
+    Etiketler küçük harf: üç profil ekranı aynı yazımı paylaşıyor
+    (kullanıcı kararı, 20 Eylül 2026). Şirket "paylaşım · aktif ilan ·
+    takipçi", `/cv` ve burası "paylaşım · bağlantı · takip".
+  */
+  assert.match(gorunum, /etiket="paylaşım"/);
+  assert.match(gorunum, /etiket="bağlantı"/);
+  assert.match(gorunum, /etiket="takip"/);
   assert.doesNotMatch(yorumsuz(gorunum), /Bağlantıda/);
-  assert.match(gorunum, /<dl className="grid grid-cols-3 border-y border-gray-100/);
+  /*
+    AYIRICI ŞİRKETTEKİYLE EŞİTLENDİ (20 Eylül 2026): eskiden `border-y
+    … py-2 lg:border-y-0 lg:py-0` idi; alttaki çizgi ve `lg` iptalleri
+    iki sütunlu düzenin artığıydı (sayaçlar geniş ekranda kendi sütununa
+    geçiyordu). O sütun kalktı, şirket kalıbında sayaçların üstünde tek
+    bir ince çizgi var.
+  */
+  assert.match(gorunum, /<dl className="grid grid-cols-3 border-t border-gray-100 pt-3">/);
+  /* Üç durum da AYNI çizgiyi taşıyor: satır yüklenirken/hata alınca zıplamıyor. */
+  assert.equal((gorunum.match(/border-t border-gray-100 pt-3/g) ?? []).length, 3);
   assert.doesNotMatch(gorunum, /divide-x/);
   /* Şema da aynı gerekçeyi yazıyor. */
   assert.match(sema, /"Bağlantıda" sayacı kaldırıldı/);
@@ -1389,19 +1524,29 @@ test('sahibe özel her şey sahibiMi koşulunun içinde, bağlantı düğmesi d�
     CSS ile gizleme yok — gizlenmiş bir düğme klavyeyle bulunur.
   */
   assert.match(gorunum, /\{sahibiMi && onPaylas && onGorunurluk && \(/);
-  assert.match(gorunum, /\{sahibiMi && onDuzenle && \(/);
   /*
     "Yayında değilse uyarı kutusu" dalı KALKTI (üyelik artık bu kolonda
     değil); yerinde paylaşımın iki sunucu önkoşulu duruyor. Görünürlük
     hatası da tek dala indi.
+
+    20 Eylül 2026: iki sahip eylemi tek ızgaraya girdi (şirket kalıbı),
+    `sahibiMi` kapısı ızgaranın kendisinde. Gerekçesi ve kapsama
+    ölçümü "sahibe özel her şey sahibiMi koşulunun içinde" testinde.
   */
   assert.match(
     gorunum,
-    /\{sahibiMi && profil\.yayindaMi && profil\.sektorId && onPaylasimOlustur && \(/,
+    /\{sahibiMi && \(onDuzenle \|\| \(profil\.yayindaMi && profil\.sektorId && onPaylasimOlustur\)\) && \(/,
   );
   assert.match(gorunum, /\{sahibiMi && yayimlamaDurumu === 'hata' && \(/);
-  /* Bağlantı düğmesi bunun TERSİ dalda: kendi profilinde çizilmiyor. */
-  assert.match(gorunum, /\{!sahibiMi && bakanId && <BaglantiDugmesi/);
+  /*
+    Bağlantı düğmesi bunun TERSİ dalda: kendi profilinde çizilmiyor.
+    Düğme artık hizayı veren bir kabın içinde (şirketteki ziyaretçi
+    eylemiyle aynı kap), bu yüzden iddia iki satırda: kapı `!sahibiMi`
+    ve kapının içindeki tek şey bağlantı düğmesi.
+  */
+  assert.match(gorunum, /\{!sahibiMi && bakanId && \(/);
+  const ziyaretciDali = govdeAl(gorunum, '{!sahibiMi && bakanId && (', '{sahibiMi &&');
+  assert.match(ziyaretciDali, /<BaglantiDugmesi bakanId=\{bakanId\} hedefId=\{profil\.profilId\} \/>/);
 });
 
 test('görünmeyen, olmayan ve farklı alandaki profil aynı güvenli ekranı veriyor', () => {
@@ -1573,7 +1718,8 @@ test('bağlantı sayısı yalnız sahibinde bağlantı, ziyaretçide düz metin'
   */
   const sayac = govdeAl(gorunum, 'const BaglantiSayaci', 'export const SosyalProfilGorunumu');
   assert.ok(sayac.length > 0, 'bağlantı sayacı bulunamadı');
-  assert.match(sayac, /if \(!sahibiMi\) return <Sayac etiket="Bağlantı" deger=\{deger\} \/>;/);
+  /* Etiket küçük harf (20 Eylül 2026); DAL değişmedi, yalnız yazım. */
+  assert.match(sayac, /if \(!sahibiMi\) return <Sayac etiket="bağlantı" deger=\{deger\} \/>;/);
 
   /* Ziyaretçi dalı ERKEN DÖNÜYOR: `<a>` yalnız o dönüşten sonra kuruluyor. */
   const erkenDonusOncesi = sayac.slice(0, sayac.indexOf('if (!sahibiMi)'));
@@ -1951,10 +2097,16 @@ test('şeritte iki sayaç; kişisel listeler kilitli satırda, sağ sütun doğr
   */
   /*
     19 Eylül 2026: şerit telefonda fotoğrafın YANINA taşındı (1. satır,
-    2. sütun) ve yatay çizgileri kalktı; tam genişlikte kendi bandı
-    olmadığı için `border-y` ayırdığı bir şey kalmamıştı.
+    2. sütun) ve yatay çizgileri kalktı.
+
+    20 EYLÜL 2026: o yerleşim tamamen kalktı. Kullanıcı bütün profil
+    görüntülerinin şirket kalıbında olmasını istedi; şerit tam
+    genişliğe, kimlik bandının altına indi ve ayırıcısı şirketteki
+    `border-t border-gray-100 pt-3` oldu. İddianın ÖLÇTÜĞÜ ŞEY AYNI:
+    şeritte hangi üç sayaç var, aralarında ayraç var mı, kişisel
+    listeler (kaydedilen / başvuru) şeride sızmış mı.
   */
-  const serit = govdeAl(profilBasligi, 'className="col-start-2 row-start-1 grid min-w-0 grid-cols-3', '</div>');
+  const serit = govdeAl(profilBasligi, 'grid min-w-0 grid-cols-3 border-t border-gray-100 pt-3', '</div>');
   for (const etiket of ['paylaşım', 'bağlantı', 'takip']) {
     assert.match(serit, new RegExp(`<Sayac[^>]*etiket="${etiket}"`), `${etiket} sayacı şeritte`);
   }

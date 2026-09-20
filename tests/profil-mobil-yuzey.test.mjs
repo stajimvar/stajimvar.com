@@ -101,8 +101,18 @@ test('mobilYuzey köşesi KOSE.kart ile aynı değerde', () => {
 
 test('kimlik bloğu ve sosyal başlık sm üstünde kart olmaya devam ediyor', () => {
   assert.match(profilBasligi, /<Card mobilYuzey className=/);
-  /* 17 Eylül 2026: ziyaretçi kartı da yatay tasarımda; telefonda yüzey, sm üstünde kart. */
-  assert.match(sosyalGorunum, /border-b border-gray-200 bg-white px-4 py-5 sm:rounded-2xl sm:border/);
+  /*
+    20 Eylül 2026: öğrenci profili şirket profiliyle aynı kalıba geçti
+    (kullanıcı isteği). Yüzey kuralı DEĞİŞMEDİ — telefonda tek alt
+    çizgi, `sm:` üstünde kart — ama yan ve dikey boşluk artık `header`ın
+    kendisinde değil, içindeki iki bloğun (`kimlik bandı` ve `sayaçlar +
+    eylemler`) kendi `px-4`ünde. Şirket profilindeki kap sınıfı da
+    birebir böyle; iddia o yüzden `px-4 py-5` aramıyor.
+  */
+  assert.match(sosyalGorunum, /<header className="border-b border-gray-200 bg-white sm:rounded-2xl sm:border">/);
+  /* Boşluk kayboldu sanılmasın: iki iç blok da telefonda px-4 taşıyor. */
+  assert.match(sosyalGorunum, /<div className="px-4 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6">/);
+  assert.match(sosyalGorunum, /<div className="px-4 pb-4 sm:px-6 sm:pb-6">/);
 });
 
 /* ------------------------------------------------------------- bleed */
