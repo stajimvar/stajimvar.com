@@ -451,8 +451,12 @@ test('baş harf yedeği yalnız fotoğraf gösterilemediğinde; beklerken yanıp
   /*
     Baş harf dalı HÂLÂ TEK: yol yoksa ve yedek adres de yoksa. Yedek
     dalının kendi `Avatar`ı var ve o `url` alıyor — baş harfe düşmüyor.
+
+    Kalıp prop listesini SAYMIYOR (`[^>]*`): dal 20 Eylül 2026'da `tur`
+    propunu aldı (kurum logosunun alt metni, bkz. Avatar). Adres dalı yine
+    eşleşmiyor çünkü orada `url` `className`den ÖNCE geliyor.
   */
-  assert.equal((fotograf.match(/<Avatar name=\{ad\} className=\{className\} \/>/g) ?? []).length, 1);
+  assert.equal((fotograf.match(/<Avatar name=\{ad\} className=\{className\}[^>]*\/>/g) ?? []).length, 1);
 });
 
 test('paylaşım oluşturma ekranının geri düğmesi 44 piksel dokunma hedefinde', () => {

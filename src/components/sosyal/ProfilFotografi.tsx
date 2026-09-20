@@ -80,6 +80,15 @@ interface FotografProps {
   /** Ölçü ve yuvarlaklık çağırandan geliyor: başlıkta ve formda farklı. */
   className?: string;
   /**
+   * Satırın kime ait olduğu; `Avatar`ın `alt` metnine geçiyor.
+   *
+   * Şirket sayfalarında çizilen görsel `companies.logo_url` olabiliyor
+   * (`yedekAdres`, bkz. TakipListesi) ve ona "profil fotoğrafı" demek
+   * yanlış. Karar çağıranda: yalnız o biliyor satırın `sirketId`sinin
+   * dolu olup olmadığını.
+   */
+  tur?: 'kisi' | 'kurum';
+  /**
    * Verilirse fotoğraf dokununca tam ekran açılıyor. Alanlar
    * görüntüleyicinin eylemleri: `onPaylas` sayfanın var olan paylaşımı,
    * `kullaniciAdi` yalnız profil YAYINDAYKEN dolu (kopyalanacak adres),
@@ -104,6 +113,7 @@ export const ProfilFotografi: React.FC<FotografProps> = ({
   yol,
   yedekAdres = null,
   className = '',
+  tur = 'kisi',
   buyutme,
 }) => {
   const kaynak = profilFotografi(yol, yedekAdres);
@@ -137,7 +147,7 @@ export const ProfilFotografi: React.FC<FotografProps> = ({
   const adres =
     kaynak.tur === 'adres' ? kaynak.adres : depolamaYolu ? (adresler.get(depolamaYolu) ?? null) : null;
   if (adres) {
-    const gorsel = <Avatar name={ad} url={adres} className={className} />;
+    const gorsel = <Avatar name={ad} url={adres} className={className} tur={tur} />;
     if (!buyutme) return gorsel;
     return (
       <>
@@ -177,5 +187,5 @@ export const ProfilFotografi: React.FC<FotografProps> = ({
     profil başlığında sebebi kullanıcının çözemeyeceği bir hata satırı
     bırakırdı; `Avatar` kendi `onError` yedeğinde de aynı kararı veriyor.
   */
-  return <Avatar name={ad} className={className} />;
+  return <Avatar name={ad} className={className} tur={tur} />;
 };
