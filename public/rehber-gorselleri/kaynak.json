@@ -353,5 +353,30 @@
     "kaynak": "openai-imagegen:exec-3f123bc8-4d52-4134-bffe-7fc438eef3e0.png",
     "lisans": "generated",
     "tur": "ai-photorealistic"
+  },
+  "iyi-staj-ilani-nasil-yazilir": {
+    "kaynak": "openai-imagegen:exec-8db48dda-5783-47bd-bf0b-978fe6f8530f.png",
+    "lisans": "generated",
+    "tur": "ai-photorealistic"
+  },
+  "zorunlu-staj-isverenin-yukumlulukleri": {
+    "kaynak": "openai-imagegen:exec-67c7c7b6-cbaf-4c0f-94ff-1d131fbed157.png",
+    "lisans": "generated",
+    "tur": "ai-photorealistic"
+  },
+  "staj-basvurularini-degerlendirme": {
+    "kaynak": "openai-imagegen:exec-3c641d3d-3ff0-475c-ab25-9ac688cb8c33.png",
+    "lisans": "generated",
+    "tur": "ai-photorealistic"
+  },
+  "stajyerin-ilk-gunu-oryantasyon": {
+    "kaynak": "openai-imagegen:exec-2edb26c3-f396-4e06-a6a3-85217347e90e.png",
+    "lisans": "generated",
+    "tur": "ai-photorealistic"
+  },
+  "staj-sonu-referans-teklif-geri-bildirim": {
+    "kaynak": "openai-imagegen:exec-89a5b5eb-c7b2-467c-8e29-45f3d26a0db3.png",
+    "lisans": "generated",
+    "tur": "ai-photorealistic"
   }
 }
