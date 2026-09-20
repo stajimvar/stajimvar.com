@@ -40,7 +40,13 @@ test('herkese açık kimlik tipi İK e-postasını tanımıyor; öğrenci sorgus
 });
 
 test('sahibe özel eylemler yalnız `sahip` nesnesinin içinde; ziyaretçi kabı o nesneyi hiç vermiyor', () => {
-  for (const iz of ['İlan oluştur', 'Profili düzenle', 'Öğrencinin gördüğü sayfa', 'İlk fotoğrafınızı paylaşın']) {
+  /*
+    "İlan paylaş" (20 Eylül 2026, kullanıcı kararı): düğme "Fotoğraf
+    paylaş"ın yanına taşınınca aynı fiili kullanması istendi. Eski metin
+    "İlan oluştur"du; iddia GEVŞETİLMEDİ, yeni etikete göre yazıldı. Rota
+    ve tıklama değişmedi — onların iddiası aşağıdaki sahip testinde.
+  */
+  for (const iz of ['İlan paylaş', 'Profili düzenle', 'Öğrencinin gördüğü sayfa', 'İlk fotoğrafınızı paylaşın']) {
     assert.ok(GORUNUM.includes(iz), `${iz} görünümde yok`);
   }
   assert.match(GORUNUM, /\{sahip && \(/);
@@ -48,7 +54,8 @@ test('sahibe özel eylemler yalnız `sahip` nesnesinin içinde; ziyaretçi kabı
   assert.match(GORUNUM, /onArsivlendi=\{sahip\?\.onPaylasimArsivlendi\}/);
   /* Ziyaretçi kabı `sahip` prop'unu tanımıyor bile. */
   assert.doesNotMatch(ZIYARETCI, /sahip=/);
-  assert.doesNotMatch(kod(ZIYARETCI), /İlan oluştur|Profili düzenle|Fotoğraf paylaş|Çıkış yap/);
+  /* Etiketin eski hâli de yasak listesinde: ziyaretçi dalına iki metinden hiçbiri girmemeli. */
+  assert.doesNotMatch(kod(ZIYARETCI), /İlan paylaş|İlan oluştur|Profili düzenle|Fotoğraf paylaş|Çıkış yap/);
   /*
     Takip et (18 Eylül 2026): görünüm düğmeyi kendisi çizmiyor,
     `ziyaretciEylemi` yuvasını YALNIZ sahip yokken açıyor; düğmeyi
@@ -115,8 +122,43 @@ test('sosyal satır sirket_id okuyor; ziyaretçi dalı şirket satırını şirk
 
 test('sekmeler ve kare ızgara; boş durumda stok görsel yok', () => {
   assert.match(GORUNUM, /role="tablist"/);
-  for (const s of ["etiket: 'Paylaşımlar'", "etiket: 'İlanlar'", "etiket: 'Hakkımızda'"]) assert.ok(GORUNUM.includes(s), s);
-  assert.match(GORUNUM, /Şirketten kareler/);
+  /*
+    ETİKET "ŞİRKETTEN KARELER" (20 Eylül 2026, kullanıcı bildirimi)
+
+    Sekme "Paylaşımlar" yazarken panelin ilk satırında ikinci kez
+    "Şirketten kareler" yazan bir `h2` duruyordu: aynı bölüm iki kez
+    adlandırılıyordu. Bölümün adı sekmeye taşındı, `h2` ve onu taşıyan
+    şerit silindi. İddia GEVŞETİLMEDİ, yeni etikete göre yazıldı —
+    ayrıca artık "kodda hiç `h2` yok" diye daha sıkı bir iddia var.
+  */
+  for (const s of ["etiket: 'Şirketten kareler'", "etiket: 'İlanlar'", "etiket: 'Hakkımızda'"]) assert.ok(GORUNUM.includes(s), s);
+  assert.doesNotMatch(kod(GORUNUM), /<h2/);
+  /*
+    İÇ KİMLİKLER DEĞİŞMEDİ: paylaşılmış bağlantılar, `SirketSekmesi`
+    tipi ve ekran okuyucu ilişkisi bu adlara bakıyor; yalnız görünen
+    etiket değişti.
+  */
+  assert.ok(GORUNUM.includes("{ id: 'paylasimlar', etiket: 'Şirketten kareler' },"));
+  assert.match(GORUNUM, /export type SirketSekmesi = 'paylasimlar' \| 'ilanlar' \| 'hakkimizda';/);
+  assert.match(GORUNUM, /id=\{`sirket-sekme-\$\{s\.id\}`\}/);
+  assert.match(GORUNUM, /id="sirket-panel-paylasimlar"\s+aria-labelledby="sirket-sekme-paylasimlar"/);
+  /*
+    Fotoğraf paylaş düğmesi sahibin eylem satırında, "Profili düzenle"nin
+    hemen ardında; koşulu (`sahip && paylasabilirMi`) değişmediği için
+    ziyaretçi dalında hâlâ hiç kurulmuyor.
+  */
+  assert.match(
+    GORUNUM,
+    /İlan paylaş\s*<\/a>\s*\{paylasGirisi\}\s*<a[\s\S]{0,400}?Profili düzenle\s*<\/a>\s*<\/div>/,
+  );
+  /* Telefonda son düğme tam satır: üç hücrelik ızgarada yarım hücrede yalnız kalmıyor. */
+  assert.match(GORUNUM, /\$\{IKINCIL\} col-span-2 sm:min-w-52/);
+  /* Rota ve tıklama etiketten bağımsız: iç kimlik değişmedi. */
+  assert.match(GORUNUM, /href=\{sahip\.ilanOlusturYolu\}/);
+  assert.match(GORUNUM, /onClick=\{icTiklama\(onNavigate, sahip\.ilanOlusturYolu\)\}/);
+  assert.match(GORUNUM, /const paylasGirisi = sahip && sahip\.paylasabilirMi && \(/);
+  /* Boş durumdaki düğme hâlâ aynı seçiciyi kolla açıyor, ikinci besteci yok. */
+  assert.match(GORUNUM, /onClick=\{\(\) => paylasKolu\.current\?\.sec\(\)\}/);
   assert.match(GORUNUM, /gorunum="kare"/);
   assert.match(IZGARA, /export const KARE_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-0\.5';/);
   assert.match(IZGARA, /const KARE_KAPAK_KABI = 'relative aspect-square w-full overflow-hidden bg-gray-100';/);
