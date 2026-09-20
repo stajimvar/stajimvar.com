@@ -39,9 +39,21 @@ interface AvatarProps {
   name: string;
   url?: string;
   className?: string;
+  /**
+   * Görselin KİMİ anlattığı — yalnız `alt` metnini belirliyor, çizimi
+   * değiştirmiyor.
+   *
+   * Aynı bileşen hem öğrencinin profil fotoğrafını hem şirket sayfasının
+   * `companies.logo_url` logosunu çiziyor. Tek metin ("… profil
+   * fotoğrafı") kurum satırında yanlıştı: ekran okuyucu bir kurumun
+   * logosunu kişi fotoğrafı diye okuyordu. Varsayılan `kisi`, çünkü
+   * çağıranların hemen hepsi öğrenci; `kurum` yalnız satırın bir şirket
+   * sayfasına ait olduğu KANITLI yerlerde geçiliyor (`sirketId` dolu).
+   */
+  tur?: 'kisi' | 'kurum';
 }
 
-export const Avatar: React.FC<AvatarProps> = ({ name, url, className = '' }) => {
+export const Avatar: React.FC<AvatarProps> = ({ name, url, className = '', tur = 'kisi' }) => {
   const [basarisiz, setBasarisiz] = useState(false);
 
   useEffect(() => {
@@ -55,7 +67,7 @@ export const Avatar: React.FC<AvatarProps> = ({ name, url, className = '' }) => 
         /* Oran için: gerçek ölçüyü className veriyor, boyut yerleşim kaymasını önlüyor. */
         width={96}
         height={96}
-        alt={`${name} profil fotoğrafı`}
+        alt={tur === 'kurum' ? `${name} logosu` : `${name} profil fotoğrafı`}
         onError={() => setBasarisiz(true)}
         className={`object-cover bg-gray-100 ${className}`}
       />

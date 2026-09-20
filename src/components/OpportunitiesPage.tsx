@@ -236,24 +236,52 @@ export const OpportunitiesPage: React.FC<{
     }),
   );
 
-  const set = (patch: Partial<Suzgec>) => setFilters((mevcut) => ({ ...mevcut, ...patch }));
+  /*
+    `set` KARARLI OLMAK ZORUNDA
+
+    Her çizimde yeniden üretilen bir işlevdi. Ona bağlı `aramaDegisti` de
+    her çizimde değişiyor, `useSayfaAramasiKaydet` etkisini yeniden
+    koşturuyor, etki sağlayıcıda `setKapsam` çağırıyor ve uygulamanın
+    KÖKÜ yeniden çiziliyordu — döngü orada kapanıyordu. Ölçüm: /firsatlar
+    başarıyla yüklendiği hâlde konsolda 28+ "Maximum update depth
+    exceeded". Sözleşme `lib/sayfa-aramasi` başlığında yazılı: geri
+    çağrılar kararlı olacak.
+
+    Bağımlılık listesi boş kalabiliyor çünkü `setFilters` kararlı ve
+    güncelleme işlevsel — `patch` dışarıdan okunan hiçbir değere
+    dayanmıyor.
+  */
+  const set = React.useCallback(
+    (patch: Partial<Suzgec>) => setFilters((mevcut) => ({ ...mevcut, ...patch })),
+    [],
+  );
 
   /*
     ADRES DEĞİŞİNCE BAŞLANGIÇ DURUMU YENİDEN KURULUYOR
 
     `useState` başlatıcısı bir kez çalışıyor. Sayfa içi geçişte (/kyk'ye
     tıklamak) adres değişiyordu ama süzgeç yerinde kalıyordu: adres ve
-    başlık değişiyor, LİSTE DEĞİŞMİYORDU. İlk render atlanıyor, çünkü
-    başlatıcı adresi ve sorgu dizesini zaten doğru okudu — burada yeniden
-    yazmak paylaşılmış bir /firsatlar?kategori=burslar bağlantısının
-    süzgecini silerdi.
+    başlık değişiyor, LİSTE DEĞİŞMİYORDU. Sıfırlama YALNIZ yol değişince
+    koşuyor, çünkü başlatıcı adresi ve sorgu dizesini zaten doğru okudu —
+    mount anında yeniden yazmak paylaşılmış bir
+    /firsatlar?kategori=burslar bağlantısının süzgecini silerdi.
+
+    SORU "İLK RENDER MI" DEĞİL, "YOL DEĞİŞTİ Mİ"
+
+    Önce tek atışlık bir `ilkRender` bayrağı vardı ve StrictMode'un çift
+    mount etkisine dayanmıyordu: birinci koşu bayrağı tüketiyor, İKİNCİ
+    koşu sıfırlama dalına giriyordu. Ölçüm: /firsatlar?bolge=yurtdisi
+    açılınca adres /firsatlar'a düşüyor ve bölge süzgeci boşalıyordu —
+    yani korunması istenen tek şey siliniyordu.
+
+    Önceki YOL saklanınca etki idempotent oluyor: aynı yolda ikinci koşu
+    erken dönüyor, sıfırlama yalnız gerçek rota değişiminde (/firsatlar →
+    /kyk) çalışıyor.
   */
-  const ilkRender = React.useRef(true);
+  const oncekiYol = React.useRef(path);
   React.useEffect(() => {
-    if (ilkRender.current) {
-      ilkRender.current = false;
-      return;
-    }
+    if (oncekiYol.current === path) return;
+    oncekiYol.current = path;
     setFilters(kisiselSuzgecsiz({ ...BOS_FIRSAT_SUZGECI, ...(ROTA_BASLANGICI[path] ?? {}) }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path]);

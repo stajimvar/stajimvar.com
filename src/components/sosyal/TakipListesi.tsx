@@ -172,10 +172,19 @@ export const TakipListesi: React.FC<{
                   satırında `logoAdresi` null olduğu için bu dal hiç
                   çalışmıyor, baş harf davranışı aynı kalıyor.
                 */}
+                {/*
+                  ALT METNİ SATIRIN TÜRÜNÜ SÖYLÜYOR
+
+                  Aynı daire öğrencide fotoğraf, şirkette logo. `sirketId`
+                  dolu olan satır o şirketin sayfası (queries/sosyal ·
+                  TakipKisisi) — tek ayırt edici alan o, `logoAdresi`
+                  değil: logo boş olsa da satır yine bir şirket.
+                */}
                 <ProfilFotografi
                   ad={ad}
                   yol={kisi.avatarYolu}
                   yedekAdres={kisi.logoAdresi}
+                  tur={kisi.sirketId ? 'kurum' : 'kisi'}
                   className="h-10 w-10 shrink-0 rounded-full text-sm"
                 />
                 <span className="min-w-0 flex-1">

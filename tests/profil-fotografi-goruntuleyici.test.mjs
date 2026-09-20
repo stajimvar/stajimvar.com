@@ -31,11 +31,16 @@ test('fotoğraf yokken görüntüleyici açılmıyor; dokunma hedefi düğme de�
   /*
     Düğme ve görüntüleyici yalnız `if (adres) {` bloğunun içinde. Blok
     sınırı: `if (adres) {` ile baş harf dalı (`return <Avatar name={ad}
-    className={className} />`) arasındaki metin.
+    className={className} …>`) arasındaki metin.
+
+    SINIR PROP LİSTESİNİ SAYMIYOR: baş harf dalı 20 Eylül 2026'da bir prop
+    daha aldı (`tur`, kurum logosunun alt metni için) ve tam eşleşen
+    arama sınırı bulamayıp testi kırdı. Aranan şey dalın KENDİSİ, prop
+    sayısı değil.
   */
   const kod = yorumsuz(fotograf);
   const bas = kod.indexOf('if (adres) {');
-  const son = kod.indexOf('return <Avatar name={ad} className={className} />');
+  const son = kod.indexOf('return <Avatar name={ad} className={className}');
   assert.ok(bas > 0 && son > bas, 'adres dalı ve baş harf dalı bu sırayla olmalı');
   const adresDali = kod.slice(bas, son);
   const disi = kod.slice(0, bas) + kod.slice(son);
