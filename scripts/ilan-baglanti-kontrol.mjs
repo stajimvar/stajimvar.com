@@ -264,13 +264,86 @@ const kuru = process.argv.includes('--kuru');
   İşveren taslakları (origin='employer') KAPSAM DIŞI: onlar yönetici
   onayını bekleyen kayıtlar, tarama otomasyonunun işi değil.
 */
+/*
+  ÖNCELİK SIRASI — HEPSİ KONTROL EDİLİYOR, SIRASI FARKLI
+
+  Koşu bütün aktif ilanları kapsıyor (kapsam DEĞİŞMEDİ). Değişen şey
+  sıra: üçüncü taraf bizi oran sınırına takarsa ya da koşu kotayı
+  tüketirse, kuyruğun SONU kesiliyor. O yüzden en çok şüphe duyulan
+  kayıtlar başa alınıyor:
+
+    1. hiç kontrol edilmemiş        (`source_checked_at` null)
+    2. art arda çok hata vermiş     (`consecutive_failures` büyük)
+    3. en uzun süredir bakılmamış   (`source_checked_at` eski)
+
+  Son başvuru tarihi yaklaşanlar ayrıca öne çekiliyor; onu SQL ile
+  tek ifadede sıralamak yerine aşağıda JS ile yapıyoruz, çünkü
+  "yaklaşan" göreli bir eşik ve PostgREST'te okunaklı olmuyor.
+*/
 const { data: ilanlar, error } = await db
   .from('listings')
-  .select('id, title, apply_url, source_url, status, origin, posted_at')
-  .or('status.in.(published,closed),and(status.eq.draft,origin.eq.scraped)');
+  .select(
+    'id, title, apply_url, source_url, status, origin, posted_at, ' +
+      'consecutive_failures, application_deadline, source_checked_at'
+  )
+  .or('status.in.(published,closed),and(status.eq.draft,origin.eq.scraped)')
+  .order('source_checked_at', { ascending: true, nullsFirst: true })
+  .order('consecutive_failures', { ascending: false });
 if (error) {
   console.error('İlanlar okunamadı:', error.message);
   process.exit(1);
+}
+
+/*
+  SON BAŞVURUSU YAKLAŞAN İLANLAR ÖNE
+
+  Sipariş: "Son başvuru tarihi yaklaşanları ve daha önce hata
+  verenleri daha sık kontrol et." Hata verenleri SQL sıralaması
+  hallediyor; son tarih eşiği burada.
+
+  Yedi gün: staj başvurularında son haftada kapanma yoğunlaşıyor ve
+  o pencerede yanlış "açık" göstermek, öğrenciyi boşa başvuruya
+  gönderiyor.
+*/
+const YAKIN_GUN = 7;
+const yakinEsik = Date.now() + YAKIN_GUN * 24 * 60 * 60 * 1000;
+const yakinMi = (ilan) => {
+  if (!ilan.application_deadline) return false;
+  const t = new Date(ilan.application_deadline).getTime();
+  return Number.isFinite(t) && t > Date.now() && t <= yakinEsik;
+};
+/* Kararlı sıralama: yakın olanlar başa, geri kalanın SQL sırası korunuyor. */
+ilanlar.sort((a, b) => Number(yakinMi(b)) - Number(yakinMi(a)));
+
+/*
+  AYNI ALAN ADINA ART ARDA İSTEK ATMIYORUZ
+
+  Kuyrukta aynı ATS'den (Workable, Lever, Greenhouse…) onlarca ilan
+  yan yana olabiliyor. Art arda istek, üçüncü tarafın oran sınırına
+  girmenin en kolay yolu — ve 429 bizim için "erişilemedi" demek,
+  yani kendi ölçümümüzü kendimiz bozuyoruz.
+
+  Alan adı başına son istek zamanı tutuluyor; aynı alana ikinci istek
+  en az `ALAN_ARALIGI_MS` sonra gidiyor. Farklı alanlar birbirini
+  beklemiyor.
+*/
+const ALAN_ARALIGI_MS = 1500;
+const alanSonIstek = new Map();
+function alanKoku(adres) {
+  try {
+    const h = new URL(adres).hostname.toLowerCase().replace(/^www\./, '');
+    return h.split('.').slice(-2).join('.');
+  } catch {
+    return '';
+  }
+}
+async function alanSirasiniBekle(adres) {
+  const kok = alanKoku(adres);
+  if (!kok) return;
+  const oncekiZaman = alanSonIstek.get(kok) ?? 0;
+  const bekle = oncekiZaman + ALAN_ARALIGI_MS - Date.now();
+  if (bekle > 0) await new Promise((c) => setTimeout(c, bekle));
+  alanSonIstek.set(kok, Date.now());
 }
 
 const simdi = new Date().toISOString();
@@ -328,11 +401,14 @@ for (const ilan of ilanlar) {
   let etiket = '';
 
   try {
+    await alanSirasiniBekle(adres);
     const yanit = await fetch(adres, {
       headers: BASLIK,
       redirect: 'follow',
       signal: AbortSignal.timeout(ZAMAN_ASIMI_MS),
     });
+    /* Yönlendirmeler izlendikten sonra GERÇEKTEN okunan adres. */
+    guncelleme.final_checked_url = yanit.url || adres;
     const govde = await yanit.text();
     const sebep = kapanmaSebebi(yanit, govde);
 
@@ -346,6 +422,17 @@ for (const ilan of ilanlar) {
         ...guncelleme,
         source_status: 'kapali',
         status: 'closed',
+        /*
+          KARARIN İZİ
+
+          `sebep` zaten hesaplanıyordu ama yalnız konsola yazılıp
+          atılıyordu; ilan kapandıktan sonra "niye kapandı" sorusunun
+          veritabanında cevabı yoktu. Sayaç da sıfırlanıyor: kayıt
+          artık geçici hata kuyruğunda değil.
+        */
+        closure_reason: sebep,
+        closed_at: simdi,
+        consecutive_failures: 0,
         deactivated_at: simdi,
         deactivation_reason: `başvuru bağlantısı kapandı — ${sebep}`,
       };
@@ -362,7 +449,19 @@ for (const ilan of ilanlar) {
       if (kanit) {
         acik++;
         etiket = `açık  (${kanit})`;
-        guncelleme = { ...guncelleme, source_status: 'acik', source_verified_at: simdi };
+        guncelleme = {
+          ...guncelleme,
+          source_status: 'acik',
+          source_verified_at: simdi,
+          /*
+            Kanıtlı açık sonuç sayacı SIFIRLIYOR: art arda hata
+            serisi bitti. Kapanma izi de temizleniyor — ilan bir kez
+            kapanıp yeniden açıldıysa eski sebep yanıltıcı olur.
+          */
+          consecutive_failures: 0,
+          closure_reason: null,
+          closed_at: null,
+        };
         /*
           İlan yeniden açıldıysa yayına geri alınıyor: kapanmış diye
           işaretlenen bir ilan sonsuza kadar kapalı kalmamalı.
@@ -409,7 +508,18 @@ for (const ilan of ilanlar) {
       else if (yanit.status >= 500) sayac.sunucu5xx++;
       else sayac.digerHTTP++;
       etiket = `ERİŞİLEMEDİ  HTTP ${yanit.status}`;
-      guncelleme = { ...guncelleme, source_status: 'erisilemedi' };
+      /*
+        GEÇİCİ HATA SAYACI ARTIYOR — KAPATMIYOR
+
+        403/429/5xx ilanı kapatmıyor; yalnız bir sonraki koşuda bu
+        kaydı kuyruğun başına taşıyor. Kapatma hâlâ kesin kanıt
+        istiyor (404/410 ya da sayfadaki kapanma ifadesi).
+      */
+      guncelleme = {
+        ...guncelleme,
+        source_status: 'erisilemedi',
+        consecutive_failures: (ilan.consecutive_failures ?? 0) + 1,
+      };
     }
   } catch (hata) {
     erisilemedi++;
@@ -421,7 +531,18 @@ for (const ilan of ilanlar) {
     if (ad === 'TimeoutError' || ad === 'AbortError') sayac.zamanAsimi++;
     else sayac.agHatasi++;
     etiket = `ERİŞİLEMEDİ  ${String(hata.message).slice(0, 40)}`;
-    guncelleme = { ...guncelleme, source_status: 'erisilemedi' };
+    /*
+      ZAMAN AŞIMI VE AĞ HATASI DA GEÇİCİ
+
+      Bu dal `fetch` hiç cevap alamadığında çalışıyor. Sayaç burada da
+      artıyor: bir sonraki koşuda kayıt kuyruğun başına geçsin. İlan
+      KAPATILMIYOR — cevap alamamak, ilanın bittiğinin kanıtı değil.
+    */
+    guncelleme = {
+      ...guncelleme,
+      source_status: 'erisilemedi',
+      consecutive_failures: (ilan.consecutive_failures ?? 0) + 1,
+    };
   }
 
   console.log(`${ilan.title.slice(0, 42).padEnd(44)} ${etiket}`);
