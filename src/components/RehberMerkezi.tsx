@@ -115,6 +115,53 @@ const KONU_KISA_ETIKET: Record<string, string> = {
   universite: 'Üniversite',
   kariyer: 'Kariyer',
   yurtdisi: 'Yurtdışı',
+  /*
+    "Şirketler için" küre altındaki 78 piksellik satıra sığmıyor ve
+    `truncate` ile "Şirketl…" diye kırpılıyordu. Konu artık öğrenciye de
+    göründüğü için kırpılmış ad daha çok kişinin karşısına çıkıyor.
+  */
+  isveren: 'Şirket',
+};
+
+/*
+  SEÇİLİ KONU ADRESTE DURUYOR — `?konu=`
+
+  "Şirketler için rehber" kartı /isveren'e, yani "Doğru stajyeri daha
+  kolay bulun" PAZARLAMA sayfasına gidiyordu; şirket hesabıyla tıklayan
+  kullanıcı "sanki hesaptan çıkılmış gibi" diye bildirdi (20 Eylül 2026).
+  Kart artık sayfadan çıkmıyor, konuyu seçiyor — ama tıklanan şey yine
+  gerçek bir `<a href>` olmalı (orta tuş, "yeni sekmede aç"). Bunun için
+  konu seçiminin bir ADRESİ gerekiyor: `?konu=` hem kartın hedefi, hem
+  yenilemeye dayanan hem de paylaşılabilen hâli. `?q=` ile aynı gerekçe
+  (src/lib/arama-url.mjs).
+*/
+const KONU_PARAMETRESI = 'konu';
+
+const adrestenKonu = (): KonuId | null => {
+  /* Ön render Node'da çalışıyor: orada adres yok, varsayılan sekme geçerli. */
+  if (typeof window === 'undefined') return null;
+  try {
+    const deger = new URLSearchParams(window.location.search).get(KONU_PARAMETRESI);
+    return KONULAR.some((k) => k.id === deger) ? (deger as KonuId) : null;
+  } catch {
+    return null;
+  }
+};
+
+const konuyuAdreseYaz = (secilen: Sekme) => {
+  if (typeof window === 'undefined') return;
+  const parametreler = new URLSearchParams(window.location.search);
+  /* "tumu" ve "uygun" bir konu değil; boş parametre bırakmak aynı sayfanın
+     ikinci bir adresi demek olurdu (arama-url.mjs'deki kuralın aynısı). */
+  if (secilen === 'tumu' || secilen === 'uygun') parametreler.delete(KONU_PARAMETRESI);
+  else parametreler.set(KONU_PARAMETRESI, secilen);
+  const kuyruk = parametreler.toString();
+  /*
+    `replaceState`: şeritteki dairelere dokunmak sık bir hareket; her
+    dokunuş geçmişe kayıt düşseydi geri tuşu sayfadan çıkamaz hâle
+    gelirdi. Arama terimi de aynı sebeple replaceState ile yazılıyor.
+  */
+  window.history.replaceState({}, '', `${window.location.pathname}${kuyruk ? `?${kuyruk}` : ''}`);
 };
 
 export const RehberMerkezi: React.FC<{
@@ -134,14 +181,14 @@ export const RehberMerkezi: React.FC<{
   onGirisGerekli?: () => void;
   /**
    * Şirket hesabı (tek kabuk, 18 Eylül 2026): şirketlere yönelik rehber
-   * listenin EN ÜSTÜNE çıkıyor ve konu listesinde "Şirketler için"
-   * konusu görünüyor — seçilince /stajyer-nasil-alinir bağlantısı ve
-   * `kategori: 'isveren'` yazıları listeleniyor.
+   * kartı listenin EN ÜSTÜNE çıkıyor ve "Şirketler için" konusu şeritte
+   * yazı sayısına göre sıralanıyor — seçilince /stajyer-nasil-alinir
+   * bağlantısı ve `kategori: 'isveren'` yazıları listeleniyor.
    *
-   * Öğrenci hesabında hiçbir şey değişmiyor: konu listesi, öne çıkan
-   * rehber, konu bölümleri ve arama yalnız `kategori: 'ogrenci'`
-   * yazılarını görüyor; işveren içeriğine tek yol listenin sonundaki
-   * "Şirketler için rehber" kartı.
+   * Öğrencide aynı içerik ULAŞILABİLİR ama ÖNE ÇIKMIYOR (20 Eylül 2026):
+   * konu şeridin ve açılır menünün EN SONUNDA, kart listenin sonunda,
+   * arama sonuçlarında öğrenci yazılarından sonra. Öne çıkan rehber ve
+   * "sana uygun" sıralaması hâlâ yalnız `kategori: 'ogrenci'` görüyor.
    */
   sirketHesabi?: boolean;
 }> = ({
@@ -161,14 +208,22 @@ export const RehberMerkezi: React.FC<{
   const [filtrelerAcik, setFiltrelerAcik] = React.useState(false);
 
   const kisisel = kisisellestirilebilir(ogrenci);
-  const [sekme, setSekme] = React.useState<Sekme>(kisisel ? 'uygun' : 'tumu');
+
+  /*
+    Adreste konu varsa sekme ondan başlıyor: kartın orta tuşla açtığı yeni
+    sekme ve yenilenen sayfa, tıklanan konuyu göstermek zorunda.
+  */
+  const [baslangicKonusu] = React.useState(adrestenKonu);
+  const [sekme, setSekme] = React.useState<Sekme>(baslangicKonusu ?? (kisisel ? 'uygun' : 'tumu'));
 
   /*
     Profil sonradan gelebiliyor (oturum çözülünce). Sekme o anda "tumu"da
     kalırsa kişiselleştirme hiç görünmüyor; kullanıcı elle bir sekme
-    seçtiyse ona dokunulmuyor.
+    seçtiyse ona dokunulmuyor. Adresten gelen konu da elle seçim sayılıyor
+    — yoksa profil çözülür çözülmez "sana uygun" onun üstüne yazardı ve
+    paylaşılan bağlantı yanlış listeyi açardı.
   */
-  const [sekmeyeDokunuldu, setSekmeyeDokunuldu] = React.useState(false);
+  const [sekmeyeDokunuldu, setSekmeyeDokunuldu] = React.useState(Boolean(baslangicKonusu));
   React.useEffect(() => {
     if (!sekmeyeDokunuldu) setSekme(kisisel ? 'uygun' : 'tumu');
   }, [kisisel, sekmeyeDokunuldu]);
@@ -181,11 +236,15 @@ export const RehberMerkezi: React.FC<{
   /*
     İŞVEREN YAZILARI ÖĞRENCİ AKIŞINA KARIŞMIYOR
 
-    Bu liste ayrı tutuluyor çünkü öğrenci akışının HER adımı — öne çıkan
-    rehber, "sana uygun" sıralaması, konu bölümleri ve birleşik arama —
-    `ogrenciRehberleri` üzerinden besleniyor. İşveren yazıları yalnızca
-    "Şirketler için" konusu SEÇİLDİĞİNDE listeleniyor; o konu da yalnız
-    şirket hesabında konu listesine giriyor (aşağıda).
+    Bu liste ayrı tutuluyor çünkü öğrenci akışının belkemiği — öne çıkan
+    rehber, "sana uygun" sıralaması ve konu bölümleri — `ogrenciRehberleri`
+    üzerinden besleniyor; bir şirket yazısı oraya girerse öğrenciye yanlış
+    bir kişiselleştirme sunulmuş olur.
+
+    Ayrımın gerekçesi geçerli, yalnız "öğrenci hiç görmesin" kısmı kalktı
+    (20 Eylül 2026): işveren yazıları artık "Şirketler için" konusu
+    seçilince öğrencide de listeleniyor ve aramada çıkıyor — ama konu
+    şeridin SONUNDA, arama sonuçları da öğrenci yazılarından SONRA.
   */
   const isverenRehberleri = React.useMemo(
     () => REHBERLER.filter((r) => r.kategori === 'isveren'),
@@ -193,16 +252,17 @@ export const RehberMerkezi: React.FC<{
   );
 
   /*
-    Konu listesinin kaynağı hesaba göre değişiyor. Öğrencide kaynak
-    sadece öğrenci yazıları: "Şirketler için" konusu ne şeritte ne de
-    açılır menüde çıkıyor — öğrenciye yanlış bir kapı açılmıyor, o
-    içeriğe listenin sonundaki "Şirketler için rehber" kartından
-    ulaşılıyor (bugünkü davranış, değişmedi). Şirket hesabında işveren
-    yazıları ekleniyor ve konu listesinde "Şirketler için" görünüyor.
+    KONU LİSTESİNİN KAYNAĞI — İŞVEREN KONUSU HER HESAPTA VAR
+
+    Önce yalnız şirket hesabında ekleniyordu: öğrencide "Şirketler için"
+    ne şeritte ne açılır menüde çıkıyor, dolayısıyla listenin sonundaki
+    "Şirketler için rehber" kartı SEÇİLEMEYEN bir konuya işaret ediyordu.
+    Konu artık her hesapta listede; öğrencide sıralamanın sonunda
+    (aşağıda `seritKonulari`) — görünür, ama ilk göze çarpan değil.
   */
   const konuKaynagi = React.useMemo(
-    () => (sirketHesabi ? [...ogrenciRehberleri, ...isverenRehberleri] : ogrenciRehberleri),
-    [sirketHesabi, ogrenciRehberleri, isverenRehberleri]
+    () => [...ogrenciRehberleri, ...isverenRehberleri],
+    [ogrenciRehberleri, isverenRehberleri]
   );
 
   /* Yalnızca yazısı OLAN konular sekme oluyor: boş sekme, çalışmayan sekme. */
@@ -211,7 +271,11 @@ export const RehberMerkezi: React.FC<{
     [konuKaynagi]
   );
 
-  /* Konu gerçekten seçilebilir mi: şirkete kapalı bir konuya sekme düşmesin. */
+  /*
+    Konu gerçekten seçilebilir mi: işveren yazıları veriden kalkarsa ya da
+    kategorisi değişirse sekme boş listeye düşmesin, öğrenci listesine
+    dönsün. Adresten `?konu=isveren` gelen bağlantı için de bu kapı.
+  */
   const isverenKonusuAcik = doluKonular.some((k) => k.id === 'isveren');
 
   /* ---------------------------------------------------------- yan veriler */
@@ -291,32 +355,52 @@ export const RehberMerkezi: React.FC<{
 
     Kural src/lib/rehber-arama.mjs içinde ve sınanıyor.
   */
-  const aramaSonuclari = React.useMemo(
-    () =>
-      birlesikArama(arama, {
-        rehberler: ogrenciRehberleri.map((r) => ({ ...r, konuAdi: konuEtiketi(r.konu) })),
-        bolumler: BOLUMLER,
-        isverenler: STAJ_PROGRAMLARI,
-        merkezler: KARIYER_MERKEZLERI,
-      }) as {
-        aktif: boolean;
-        toplam: number;
-        rehberler: Rehber[];
-        bolumler: { slug: string; ad: string; ozet?: string }[];
-        isverenler: { slug: string; isveren: string; sektor?: string }[];
-        merkezler: { universite: string; sehir?: string; url: string }[];
-      },
-    [arama, ogrenciRehberleri]
-  );
+  const aramaSonuclari = React.useMemo(() => {
+    type AramaCiktisi = {
+      aktif: boolean;
+      toplam: number;
+      rehberler: Rehber[];
+      bolumler: { slug: string; ad: string; ozet?: string }[];
+      isverenler: { slug: string; isveren: string; sektor?: string }[];
+      merkezler: { universite: string; sehir?: string; url: string }[];
+    };
+
+    const ogrenciSonucu = birlesikArama(arama, {
+      rehberler: ogrenciRehberleri.map((r) => ({ ...r, konuAdi: konuEtiketi(r.konu) })),
+      bolumler: BOLUMLER,
+      isverenler: STAJ_PROGRAMLARI,
+      merkezler: KARIYER_MERKEZLERI,
+    }) as AramaCiktisi;
+
+    /*
+      İŞVEREN YAZILARI ARAMADA VAR AMA EN SONDA
+
+      Aramaya hiç girmiyorlardı: "sigorta" yazan öğrenci, cevabı taşıyan
+      şirket yazısını bulamıyordu. İki arama ayrı çalışıp sonuçlar
+      arka arkaya ekleniyor — tek havuzda arasaydı sıralama yazıların
+      eşleşme gücüne kalırdı ve bir şirket yazısı öğrenci listesinin
+      başına geçebilirdi. Aranan kişi büyük çoğunlukla öğrenci.
+    */
+    const isverenSonucu = birlesikArama(arama, {
+      rehberler: isverenRehberleri.map((r) => ({ ...r, konuAdi: konuEtiketi(r.konu) })),
+    }) as AramaCiktisi;
+
+    return {
+      ...ogrenciSonucu,
+      rehberler: [...ogrenciSonucu.rehberler, ...isverenSonucu.rehberler],
+      toplam: ogrenciSonucu.toplam + isverenSonucu.rehberler.length,
+    };
+  }, [arama, ogrenciRehberleri, isverenRehberleri]);
 
   const sonuclar = React.useMemo(() => {
     if (terim) return aramaSonuclari.rehberler;
 
     /*
-      "Şirketler için" seçiliyken kaynak işveren listesi. Konu yalnız
-      şirket hesabında seçilebildiği için ayrıca `isverenKonusuAcik`
-      soruluyor: koşul düşerse (öğrenciye dönen hesap) sekme boş liste
-      değil, öğrenci listesi gösteriyor.
+      "Şirketler için" seçiliyken kaynak işveren listesi — hesap türü fark
+      etmiyor, konuyu seçen ne aradığını biliyor. `isverenKonusuAcik`
+      ayrıca soruluyor: o yazılar veriden kalkarsa (ya da adresten
+      uydurma bir `?konu=` gelirse) sekme boş liste değil, öğrenci
+      listesi gösteriyor.
     */
     const liste = sekme === 'isveren' && isverenKonusuAcik ? isverenRehberleri : ogrenciRehberleri;
     if (sekme === 'uygun' && kisisel) return kisiyeGoreSirala(liste, ogrenci) as Rehber[];
@@ -358,6 +442,9 @@ export const RehberMerkezi: React.FC<{
   const sekmeSec = (id: Sekme) => {
     setSekmeyeDokunuldu(true);
     setSekme(id);
+    /* Seçim adrese de yazılıyor: yenileme ve paylaşılan bağlantı aynı
+       listeyi açsın (bkz. `konuyuAdreseYaz`). */
+    konuyuAdreseYaz(id);
     if (arama) onAramaTemizle?.();
   };
 
@@ -379,6 +466,11 @@ export const RehberMerkezi: React.FC<{
         className="min-h-11 w-full cursor-pointer rounded-xl border border-gray-200 bg-white px-3 text-sm font-medium text-gray-900 outline-none focus:border-blue-600"
       >
         <option value="tumu">Tüm konular</option>
+        {/*
+          Sıra `KONULAR` sırası; "Şirketler için" o dizinin sonunda
+          (src/data/rehberler.tsx) olduğu için menüde de en altta —
+          şeritteki sabitlemeyle aynı sonuç, ayrıca sıralamaya gerek yok.
+        */}
         {doluKonular.map((k) => (
           <option key={k.id} value={k.id}>
             {k.etiket}
@@ -396,17 +488,30 @@ export const RehberMerkezi: React.FC<{
     sıfırlanır ve şeritten başka konuya geçilemezdi. Şehir şeridinde de
     aynı kural geçerli.
   */
-  const seritKonulari = React.useMemo(
-    () =>
-      doluKonular
-        .map((k) => ({
-          id: k.id as string,
-          etiket: k.etiket,
-          adet: konuKaynagi.filter((r) => r.konu === k.id).length,
-        }))
-        .sort((a, b) => b.adet - a.adet || a.etiket.localeCompare(b.etiket, 'tr')),
-    [doluKonular, konuKaynagi]
-  );
+  /*
+    "ŞİRKETLER İÇİN" ÖĞRENCİDE EN SONDA
+
+    Konu öğrenciye de açıldı ama bu onun işi değil: beş yazılık liste
+    sayıya göre dizilse öğrenci konularının ortasına düşerdi. Sıralamaya
+    girmeden sona sabitleniyor — arayan bulur, aramayan takılmaz. Şirket
+    hesabında ASIL içerik olduğu için sabitleme yok, sayıya göre diziliyor
+    (18 Eylül 2026'daki davranış).
+  */
+  const seritKonulari = React.useMemo(() => {
+    const sonaSabit = (id: string) => (!sirketHesabi && id === 'isveren' ? 1 : 0);
+    return doluKonular
+      .map((k) => ({
+        id: k.id as string,
+        etiket: k.etiket,
+        adet: konuKaynagi.filter((r) => r.konu === k.id).length,
+      }))
+      .sort(
+        (a, b) =>
+          sonaSabit(a.id) - sonaSabit(b.id) ||
+          b.adet - a.adet ||
+          a.etiket.localeCompare(b.etiket, 'tr')
+      );
+  }, [doluKonular, konuKaynagi, sirketHesabi]);
 
   /* Şeritte seçili görünen konu: arama varken ya da "uygun"dayken hiçbiri. */
   const seritSecili = terim || sekme === 'uygun' || sekme === 'tumu' ? '' : (sekme as string);
@@ -444,7 +549,7 @@ export const RehberMerkezi: React.FC<{
         /*
           Kaynak burada BİLEREK `ogrenciRehberleri`: varsayılan ekran
           (öne çıkan + konu bölümleri) öğrenci yolculuğuna göre dizili.
-          Şirket hesabında "Şirketler için" konusu şeritte duruyor ama
+          "Şirketler için" konusu artık her hesapta şeritte duruyor ama
           bölümü boş kalıyor ve aşağıdaki `filter` onu düşürüyor —
           işveren yazıları konuyu SEÇİNCE geliyor.
         */
@@ -510,22 +615,30 @@ export const RehberMerkezi: React.FC<{
     İŞVEREN TARAFINA GEÇİŞ KARTI — TEK KALIP, İKİ HEDEF
 
     Aynı satır iki yerde kullanılıyor ve ikisi de rehber verisinde
-    OLMAYAN bir sayfaya gidiyor (özel bileşen, `REHBERLER` içinde kayıt
-    yok). Bu yüzden `RehberSatiri` değil kendi kalıbı: tıklanan şey
-    gerçek `<a href>`, orta tuş ve "yeni sekmede aç" çalışıyor.
+    OLMAYAN bir hedefe gidiyor (biri özel bir sayfa, öteki sayfa içi konu
+    seçimi; `REHBERLER` içinde kayıt yok). Bu yüzden `RehberSatiri` değil
+    kendi kalıbı: tıklanan şey gerçek `<a href>`, orta tuş ve "yeni
+    sekmede aç" çalışıyor.
   */
   const isverenGecisKarti = (
     adres: string,
     baslik: string,
     aciklama: string,
     testId: string,
+    /*
+      Verilirse sol tık SAYFADAN ÇIKMIYOR, bunu çağırıyor. `href` yine
+      gerçek adres: orta tuş, "yeni sekmede aç" ve bağlantıyı kopyalamak
+      aynı yeri açıyor.
+    */
+    sayfaIcindeAc?: () => void,
   ) => (
     <a
       href={adres}
       onClick={(e) => {
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
         e.preventDefault();
-        onNavigate(adres);
+        if (sayfaIcindeAc) sayfaIcindeAc();
+        else onNavigate(adres);
       }}
       data-testid={testId}
       className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-sm transition-colors hover:border-blue-300"
@@ -539,15 +652,35 @@ export const RehberMerkezi: React.FC<{
   );
 
   /*
-    Şirketler için rehber kartı: öğrencide listenin sonunda (nadir
-    ihtiyaç), şirket hesabında listenin başında. Aynı kart, tek tanım.
+    ŞİRKETLER İÇİN REHBER KARTI — ARTIK SAYFADAN ÇIKMIYOR
+
+    Kart `/isveren`e gidiyordu: "Doğru stajyeri daha kolay bulun"
+    PAZARLAMA sayfası. Şirket hesabıyla tıklayan kullanıcı "sanki
+    hesaptan çıkılmış gibi" diye bildirdi (20 Eylül 2026) — haklı, o
+    sayfa oturumsuz bir karşılama ekranı gibi duruyor. Oysa kartın vaat
+    ettiği içerik ZATEN bu sayfada: "Şirketler için" konusu seçilince
+    işveren yazıları listeleniyor. Kart artık o konuyu seçiyor, okuyucu
+    /rehber'de kalıyor. (`/isveren` duruyor; oraya üst menüden gidiliyor.)
+
+    Seçimden sonra şeride kaydırılıyor: kart öğrencide listenin dibinde
+    ve liste kısaldığı için okuyucu tıkladıktan sonra boş alana bakardı.
+
+    Öğrencide listenin sonunda (nadir ihtiyaç), şirket hesabında listenin
+    başında. Aynı kart, tek tanım.
+
+    Hedefi artık bir sayfa değil bir KONU olduğu için kart o konunun
+    yazısı varken çiziliyor: yazılar veriden kalkarsa kart boş bir
+    listeye götüren bir vaat olurdu.
   */
-  const sirketRehberKarti = isverenGecisKarti(
-    '/isveren',
-    'Şirketler için rehber',
-    'Stajyer nasıl alınır: sigorta, ücret, evrak',
-    'rehber-sirketler-icin',
-  );
+  const sirketRehberKarti = isverenKonusuAcik
+    ? isverenGecisKarti(
+        `/rehber?${KONU_PARAMETRESI}=isveren`,
+        'Şirketler için rehber',
+        'Stajyer nasıl alınır: sigorta, ücret, evrak',
+        'rehber-sirketler-icin',
+        () => tumunuGor('isveren'),
+      )
+    : null;
 
   return (
     <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI} ustBosluk="pt-0 sm:pt-3">
@@ -619,6 +752,10 @@ export const RehberMerkezi: React.FC<{
                     onClick={() => {
                       setSekmeyeDokunuldu(true);
                       setSekme('tumu');
+                      /* Süzgeç temizlenince `?konu=` de adresten düşüyor;
+                         yoksa yenileyen kullanıcı temizlediği konuya
+                         geri dönerdi. */
+                      konuyuAdreseYaz('tumu');
                       onAramaTemizle?.();
                     }}
                     className="ml-auto min-h-8 cursor-pointer text-xs font-bold text-blue-600 hover:underline"
@@ -752,6 +889,7 @@ export const RehberMerkezi: React.FC<{
               onClick={() => {
                 setSekmeyeDokunuldu(true);
                 setSekme('tumu');
+                konuyuAdreseYaz('tumu');
                 onAramaTemizle?.();
               }}
               className="min-h-11 cursor-pointer rounded-xl bg-blue-600 px-4 text-sm font-bold text-white"
