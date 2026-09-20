@@ -1,5 +1,5 @@
 import React from 'react';
-import { Briefcase, ExternalLink, Link as LinkIkonu, Pencil, Plus } from 'lucide-react';
+import { Briefcase, Link as LinkIkonu, Pencil, Plus } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI, RENK_PRIMARY } from '../lib/renk-token';
 import { guvenliDisAdres } from '../lib/guvenli-url.mjs';
 import type { SosyalPaylasim } from '../lib/queries/sosyal';
@@ -74,8 +74,6 @@ export type SirketSekmesi = 'paylasimlar' | 'ilanlar' | 'hakkimizda';
 export interface SahipEylemleri {
   ilanOlusturYolu: string;
   duzenleYolu: string;
-  /** Şirketin öğrenciye açık sayfası; kullanıcı adı yoksa `null` ve bağlantı çizilmez. */
-  ogrenciSayfasiYolu: string | null;
   /**
    * Paylaşım açılabilir mi — sunucu önkoşulunun aynısı: sosyal satırda
    * kullanıcı adı VE `sirket_id` var. Sağlanmıyorsa düğme çizilmiyor ve
@@ -112,7 +110,6 @@ interface GorunumProps {
 
 const BIRINCIL = `inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold ${RENK_PRIMARY.zemin} ${RENK_PRIMARY.zeminHover} ${RENK_PRIMARY.yazi} ${RENK_GECISI} ${ODAK_HALKASI}`;
 const IKINCIL = `inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 text-sm font-bold text-gray-900 hover:bg-gray-50 ${RENK_GECISI} ${ODAK_HALKASI}`;
-const SAKIN_BAGLANTI = `inline-flex min-h-11 cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-bold ${RENK_PRIMARY.metin} hover:underline ${ODAK_HALKASI}`;
 const KART = 'rounded-2xl border border-gray-200 bg-white p-2.5 sm:p-3.5';
 
 /** Uygulama içi gezinme; değiştirici tuşlarla tarayıcının kendi davranışı. */
@@ -148,12 +145,33 @@ const SirketLogosu: React.FC<{
   bozuk: boolean;
   onBozuk: () => void;
 }> = ({ url, ad, bozuk, onBozuk }) => {
+  /*
+    ÖLÇÜ BASAMAKLARI ÖĞRENCİ AVATARIYLA AYNI (kullanıcı isteği, 20 Eylül
+    2026): `SosyalProfilGorunumu` dairesi 80 → 112 (sm) → 144 (lg)
+    pikselken şirketinki 80 → 96 (sm) idi ve `lg` basamağı hiç yoktu;
+    yan yana bakılan iki profil ekranı farklı büyüklükte daire
+    gösteriyordu. Ölçü eşitlendi: `sm:h-24 w-24` yerine `sm:h-28 w-28`,
+    üstüne `lg:h-36 w-36`. Mobil 80 pikselde AYNEN kaldı (zaten eşitti).
+
+    HALKA VE ZEMİN EŞİTLENMEDİ: `ring-2 ring-blue-600 ring-offset-2` ve
+    `bg-white` şirketin kendi kimliği; öğrencinin `ring-1
+    ring-blue-500/20`ine çevrilmedi — istenen yalnız ölçüydü.
+  */
   const olcu =
-    'flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-blue-600 ring-offset-2 sm:h-24 sm:w-24';
+    'flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-blue-600 ring-offset-2 sm:h-28 sm:w-28 lg:h-36 lg:w-36';
 
   if (!url || bozuk) {
+    /*
+      Baş harf daireyle birlikte büyüyor: mevcut basamak zaten her
+      kırılımda bir adımdı (text-3xl → sm:text-4xl), yeni `lg` dairesi
+      için aynı mantıkla bir adım daha eklendi (lg:text-5xl). Harf/daire
+      oranı 30/80, 36/112 ve 48/144 — üçü de dairenin içinde kalıyor.
+    */
     return (
-      <span className={`${olcu} text-3xl font-black text-blue-900 sm:text-4xl`} aria-hidden>
+      <span
+        className={`${olcu} text-3xl font-black text-blue-900 sm:text-4xl lg:text-5xl`}
+        aria-hidden
+      >
         {basHarf(ad)}
       </span>
     );
@@ -412,73 +430,77 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
             <div className="mt-3 flex flex-col items-stretch sm:items-center">{ziyaretciEylemi}</div>
           )}
 
+          {/*
+            ÖĞRENCİNİN GÖRDÜĞÜ SAYFA BAĞLANTISI KALKTI (kullanıcı isteği,
+            20 Eylül 2026: ekran görüntüsünde üstünü çizip kaldırılmasını
+            istedi). Eylem satırının altında `ExternalLink` ikonlu sakin
+            bir bağlantı duruyordu; onunla birlikte `space-y-2` taşıyan
+            sarmalayıcı ve bağlantıyı ortalayan `flex` kabı da gitti —
+            tek çocuk kalınca ikisi de iş görmüyordu. `mt-3` artık
+            doğrudan ızgaranın üstünde: SAYAÇ SATIRI İLE ARASI 12
+            PİKSELDE AYNI, yalnız alttaki fazlalık gitti (8 piksel
+            boşluk + 44 piksellik bağlantı = 52 piksel). Kabın kendi
+            `pb-4 sm:pb-6`si duruyor: o yan boşlukla (`px-4`/`px-6`)
+            eşleşen kart dolgusu ve aynı kap ziyaretçi dalında da
+            kullanılıyor.
+
+            ÖLÇÜLDÜ (önce/sonra, eylem satırının altından sekme çubuğunun
+            üstüne): 375 ve 390 pikselde 69 → 17 piksel, 768 pikselden
+            yukarıda 93 → 41 piksel. Sayaç satırı ile eylem satırı arası
+            iki ölçümde de 12 piksel — üstteki denge bozulmadı.
+
+            Telefonda iki eşit sütun (referans); `sm:` üstünde düğmeler
+            içerik genişliğinde ve ortada — 1280 pikselde ölçüldü: tam
+            genişlikte her biri 569 piksel oluyor ve iki kocaman şerit
+            sayaçları eziyordu.
+
+            SIRA: İlan paylaş → Fotoğraf paylaş → Profili düzenle
+            (kullanıcı kararı, 20 Eylül 2026). İki paylaşma eylemi yan
+            yana, düzenleme sonda. Telefonda ilk satır ikisini taşıyor,
+            Profili düzenle `col-span-2` ile alt satırı tam kaplıyor —
+            üç hücrelik ızgarada sonuncusu yarım hücrede yalnız
+            kalmasın diye. `sm:` üstünde satır flex olduğu için
+            `col-span-2` etkisiz (flex öğesinde `grid-column` işlemiyor).
+
+            ÖLÇÜLDÜ (Chromium, bu dosyanın sınıflarıyla ve aynı
+            kapsayıcı zinciriyle kurulmuş düzen): 640 pikselde satır
+            542 piksel, üç düğme `min-w-52` ile 3·208 + 2·12 = 648
+            piksel isterdi ve taşardı — `sm:flex-wrap` sayesinde
+            üçüncüsü alta iniyor. 768 pikselde satır 670 piksel, üçü
+            tek sırada. Telefonda 375 pikselde ilk satırın hücreleri
+            166'şar, 390 pikselde 173'er piksel; Profili düzenle alt
+            satırda 343 / 358 piksel. Üç etiket de tek satır, yatay
+            taşma 0, yükseklik 48. DAR SINIR ÖLÇÜLDÜ: "Fotoğraf
+            paylaş"ın kendi genişliği 162 piksel, yani 375 piksel bu
+            düzenin tek satır kaldığı en dar ekran — 360 ve 320
+            pikselde etiket iki satıra sarıyor. Orada da kırpılma ve
+            taşma yok, `min-h-12` yüksekliği 48 pikselde tutuyor.
+          */}
           {sahip && (
-            <div className="mt-3 space-y-2">
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-center">
               {/*
-                Telefonda iki eşit sütun (referans); `sm:` üstünde düğmeler
-                içerik genişliğinde ve ortada — 1280 pikselde ölçüldü: tam
-                genişlikte her biri 569 piksel oluyor ve iki kocaman şerit
-                sayaçları eziyordu.
-
-                SIRA: İlan paylaş → Fotoğraf paylaş → Profili düzenle
-                (kullanıcı kararı, 20 Eylül 2026). İki paylaşma eylemi yan
-                yana, düzenleme sonda. Telefonda ilk satır ikisini taşıyor,
-                Profili düzenle `col-span-2` ile alt satırı tam kaplıyor —
-                üç hücrelik ızgarada sonuncusu yarım hücrede yalnız
-                kalmasın diye. `sm:` üstünde satır flex olduğu için
-                `col-span-2` etkisiz (flex öğesinde `grid-column` işlemiyor).
-
-                ÖLÇÜLDÜ (Chromium, bu dosyanın sınıflarıyla ve aynı
-                kapsayıcı zinciriyle kurulmuş düzen): 640 pikselde satır
-                542 piksel, üç düğme `min-w-52` ile 3·208 + 2·12 = 648
-                piksel isterdi ve taşardı — `sm:flex-wrap` sayesinde
-                üçüncüsü alta iniyor. 768 pikselde satır 670 piksel, üçü
-                tek sırada. Telefonda 375 pikselde ilk satırın hücreleri
-                166'şar, 390 pikselde 173'er piksel; Profili düzenle alt
-                satırda 343 / 358 piksel. Üç etiket de tek satır, yatay
-                taşma 0, yükseklik 48. DAR SINIR ÖLÇÜLDÜ: "Fotoğraf
-                paylaş"ın kendi genişliği 162 piksel, yani 375 piksel bu
-                düzenin tek satır kaldığı en dar ekran — 360 ve 320
-                pikselde etiket iki satıra sarıyor. Orada da kırpılma ve
-                taşma yok, `min-h-12` yüksekliği 48 pikselde tutuyor.
+                ETİKET "İLAN PAYLAŞ" (kullanıcı kararı, 20 Eylül 2026):
+                yanındaki "Fotoğraf paylaş" ile aynı fiili kullanıyor.
+                Yalnız görünen metin değişti — rota (`ilanOlusturYolu`),
+                tıklama ve prop adları aynı kaldı.
               */}
-              <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-center">
-                {/*
-                  ETİKET "İLAN PAYLAŞ" (kullanıcı kararı, 20 Eylül 2026):
-                  yanındaki "Fotoğraf paylaş" ile aynı fiili kullanıyor.
-                  Yalnız görünen metin değişti — rota (`ilanOlusturYolu`),
-                  tıklama ve prop adları aynı kaldı.
-                */}
-                <a
-                  href={sahip.ilanOlusturYolu}
-                  onClick={icTiklama(onNavigate, sahip.ilanOlusturYolu)}
-                  className={`${BIRINCIL} sm:min-w-52`}
-                >
-                  <Briefcase aria-hidden className="h-5 w-5" />
-                  İlan paylaş
-                </a>
-                {paylasGirisi}
-                <a
-                  href={sahip.duzenleYolu}
-                  onClick={icTiklama(onNavigate, sahip.duzenleYolu)}
-                  className={`${IKINCIL} col-span-2 sm:min-w-52`}
-                >
-                  <Pencil aria-hidden className="h-4 w-4" />
-                  Profili düzenle
-                </a>
-              </div>
-              {sahip.ogrenciSayfasiYolu && (
-                <div className="flex justify-center">
-                  <a
-                    href={sahip.ogrenciSayfasiYolu}
-                    onClick={icTiklama(onNavigate, sahip.ogrenciSayfasiYolu)}
-                    className={SAKIN_BAGLANTI}
-                  >
-                    <ExternalLink aria-hidden className="h-4 w-4" />
-                    Öğrencinin gördüğü sayfa
-                  </a>
-                </div>
-              )}
+              <a
+                href={sahip.ilanOlusturYolu}
+                onClick={icTiklama(onNavigate, sahip.ilanOlusturYolu)}
+                className={`${BIRINCIL} sm:min-w-52`}
+              >
+                <Briefcase aria-hidden className="h-5 w-5" />
+                İlan paylaş
+              </a>
+              {paylasGirisi}
+              <a
+                href={sahip.duzenleYolu}
+                onClick={icTiklama(onNavigate, sahip.duzenleYolu)}
+                className={`${IKINCIL} col-span-2 sm:min-w-52`}
+              >
+                <Pencil aria-hidden className="h-4 w-4" />
+                Profili düzenle
+              </a>
             </div>
           )}
 

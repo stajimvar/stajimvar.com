@@ -20,7 +20,6 @@ import {
   type SosyalPaylasim,
   type SosyalProfil,
 } from '../lib/queries/sosyal';
-import { profilYolu } from '../lib/sosyal-kullanici-adi.mjs';
 import {
   sirketAcikKimligi,
   type SirketBaglami,
@@ -33,7 +32,9 @@ import {
  * Bu bileşen görünüm çizmiyor, DURUM belirliyor: sosyal satırı, üç
  * sayacı ve paylaşım listesini okuyor; `SirketProfilGorunumu`na sahip
  * eylemleriyle veriyor. Öğrencinin gördüğü sayfa (/profil/<slug>) aynı
- * görünümü SAHİP NESNESİ OLMADAN çiziyor (`SirketSayfasi`).
+ * görünümü SAHİP NESNESİ OLMADAN çiziyor (`SirketSayfasi`); oraya giden
+ * bağlantı 20 Eylül 2026'da kullanıcı isteğiyle profilden kaldırıldı, bu
+ * yüzden `ogrenciSayfasiYolu` artık sahip nesnesinde de yok.
  *
  * ADRESLER
  * --------
@@ -265,7 +266,6 @@ export const SirketProfili: React.FC<{
         sahip={{
           ilanOlusturYolu: ILAN_OLUSTUR_YOLU,
           duzenleYolu: DUZENLE_YOLU,
-          ogrenciSayfasiYolu: sosyal?.kullaniciAdi ? profilYolu(sosyal.kullaniciAdi) : null,
           paylasabilirMi,
           paylasimEngeli,
           onPaylasimEklendi: () => {
