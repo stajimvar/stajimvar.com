@@ -26,6 +26,7 @@ const SOSYAL = oku('src/lib/queries/sosyal.ts');
 const SAYFA = oku('src/components/sosyal/SosyalProfilSayfasi.tsx');
 const OLUSTUR = oku('src/components/sosyal/PaylasimOlustur.tsx');
 const IZGARA = oku('src/components/sosyal/PaylasimIzgarasi.tsx');
+const OGRENCI_GORUNUM = oku('src/components/sosyal/SosyalProfilGorunumu.tsx');
 const PANEL = oku('src/sirket/SirketPaneli.tsx');
 const TIPLER = oku('src/lib/database.types.ts');
 
@@ -46,9 +47,20 @@ test('sahibe özel eylemler yalnız `sahip` nesnesinin içinde; ziyaretçi kabı
     "İlan oluştur"du; iddia GEVŞETİLMEDİ, yeni etikete göre yazıldı. Rota
     ve tıklama değişmedi — onların iddiası aşağıdaki sahip testinde.
   */
-  for (const iz of ['İlan paylaş', 'Profili düzenle', 'Öğrencinin gördüğü sayfa', 'İlk fotoğrafınızı paylaşın']) {
+  for (const iz of ['İlan paylaş', 'Profili düzenle', 'İlk fotoğrafınızı paylaşın']) {
     assert.ok(GORUNUM.includes(iz), `${iz} görünümde yok`);
   }
+  /*
+    "Öğrencinin gördüğü sayfa" KALDIRILDI (20 Eylül 2026, kullanıcı isteği:
+    ekran görüntüsünde üstünü çizdi). Eskiden "sahibe özel izler" listesinde
+    aranıyordu; iddia GEVŞETİLMEDİ, yönü çevrildi — artık kodda HİÇ
+    olmadığını doğruluyor. Bağlantıyla birlikte `SAKIN_BAGLANTI` sabiti,
+    `ExternalLink` ikonu ve `ogrenciSayfasiYolu` prop'u da kalktı; üçünün
+    de kodda kalmadığı burada kontrol ediliyor (yorumlar metni anabilir,
+    bu yüzden `kod()` süzgeci).
+  */
+  assert.doesNotMatch(kod(GORUNUM), /Öğrencinin gördüğü sayfa|SAKIN_BAGLANTI|ExternalLink|ogrenciSayfasiYolu/);
+  assert.doesNotMatch(kod(SAHIP), /ogrenciSayfasiYolu|profilYolu/);
   assert.match(GORUNUM, /\{sahip && \(/);
   assert.match(GORUNUM, /sahibiMi=\{Boolean\(sahip\)\}/);
   assert.match(GORUNUM, /onArsivlendi=\{sahip\?\.onPaylasimArsivlendi\}/);
@@ -198,6 +210,20 @@ test('bulanık kimlik bandı: zemin logonun kendisi ve logo yoksa zemin de yok',
   assert.doesNotMatch(kod(GORUNUM), /unsplash|placeholder|gradient|bg-gradient/i);
   /* Kap kırpıyor; bulanıklık bandın dışına taşmıyor. */
   assert.match(GORUNUM, /<div className="relative overflow-hidden px-4 pb-4 pt-5/);
+  /*
+    DAİRE ÖLÇÜSÜ ÖĞRENCİYLE AYNI (20 Eylül 2026, kullanıcı isteği): şirket
+    dairesi 80 → 96 (sm) idi, `lg` basamağı yoktu; öğrenci avatarı 80 →
+    112 → 144. Basamaklar eşitlendi. Halka ve zemin ŞİRKETİN KENDİSİ
+    kaldı — iddia bunu da koruyor, yoksa bir dahaki düzenlemede sessizce
+    öğrencininkine çevrilebilirdi.
+  */
+  assert.match(GORUNUM, /h-20 w-20 [^']*sm:h-28 sm:w-28 lg:h-36 lg:w-36/);
+  assert.match(GORUNUM, /ring-2 ring-blue-600 ring-offset-2/);
+  assert.doesNotMatch(kod(GORUNUM), /sm:h-24 sm:w-24/);
+  /* Baş harf daireyle birlikte üç basamak. */
+  assert.match(GORUNUM, /text-3xl font-black text-blue-900 sm:text-4xl lg:text-5xl/);
+  /* Öğrenci avatarının hedef ölçüsü değişmedi; eşitleme tek yönlü. */
+  assert.match(OGRENCI_GORUNUM, /h-20 w-20 shrink-0 rounded-full text-2xl[\s\S]{0,80}sm:h-28 sm:w-28[\s\S]{0,40}lg:h-36 lg:w-36/);
 });
 
 test('sahip: düzenleme ve ilan yolları mevcut akışlara; ilan yönetimi paneldeki geri çağrılarla', () => {
@@ -207,8 +233,12 @@ test('sahip: düzenleme ve ilan yolları mevcut akışlara; ilan yönetimi panel
   assert.match(SAHIP, /Henüz ilanınız yok/);
   assert.match(SAHIP, /<GenelBakis[\s\S]{0,300}onDurum=\{onDurum\}\s*onKaldir=\{onKaldir\}/);
   assert.match(PANEL, /<SirketProfili\s+yol=\{yol\}/);
-  assert.match(PANEL, /ogrenciSayfasiYolu|SirketProfili/);
-  assert.match(SAHIP, /ogrenciSayfasiYolu: sosyal\?\.kullaniciAdi \? profilYolu\(sosyal\.kullaniciAdi\) : null,/);
+  /*
+    Sahip nesnesi iki yol veriyor; üçüncüsü (`ogrenciSayfasiYolu`) 20 Eylül
+    2026'da bağlantıyla birlikte kalktığı için burada da aranmıyor.
+    Kalan ikisinin sabitleri yukarıda birebir doğrulanıyor.
+  */
+  assert.match(SAHIP, /ilanOlusturYolu: ILAN_OLUSTUR_YOLU,\s*duzenleYolu: DUZENLE_YOLU,\s*paylasabilirMi,/);
 });
 
 test('database.types: takipler ve iki RPC göçle birebir', () => {
