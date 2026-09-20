@@ -494,6 +494,41 @@ export const OpportunitiesPage: React.FC<{
     student,
   ]);
 
+  /*
+    SAĞ SÜTUN SAYAÇLARI — EKRANDAKİ LİSTEDEN TÜRÜYOR
+
+    Kaynak `filtered`: kullanıcı bir süzgeç açtığında sayılar gördüğü
+    listeyi anlatıyor, arkadaki katalogu değil. İlanlar'daki kural aynı
+    (MatchedInternshipsView, sağ sütun). İkinci bir sorgu atılmıyor —
+    sayı zaten yüklü olan diziden çıkıyor, ayrı bir sorgu liste ile
+    sayacın ayrışabileceği ikinci bir gerçek üretirdi.
+
+    Fırsat sayısı için ek bir "açık mı" denetimi YOK, çünkü gerekmiyor:
+    ana liste sorgusu zaten yayında VE son başvurusu geçmemiş kayıtları
+    getiriyor (lib/opportunities.ts · fetchOpportunities). Arşiv açıkken
+    şerit hiç çizilmiyor; orada "Açık fırsat" yazmak, süresi dolmuş
+    kayıtları açık göstermek olurdu.
+
+    ÜLKE YALNIZCA BİLİNENLERDEN: `countries` kayıtların bir kısmında boş.
+    Boş alan ne "Türkiye" sayılıyor ne de bir ülke olarak sayılıyor —
+    sayı ülkesi YAZAN kayıtlardan türüyor, eksik veri tahmin edilmiyor.
+    Ayrıştırma küçük harfe indirgenerek yapılıyor: aynı ülkenin iki farklı
+    yazımı tek ülke.
+  */
+  const sayaclar = React.useMemo(() => {
+    const kurumlar = new Set<string>();
+    const ulkeler = new Set<string>();
+    for (const item of filtered) {
+      const kurum = kucult(item.organizationName).trim();
+      if (kurum) kurumlar.add(kurum);
+      for (const ham of item.countries) {
+        const ulke = kucult(ham).trim();
+        if (ulke) ulkeler.add(ulke);
+      }
+    }
+    return { firsat: filtered.length, kurum: kurumlar.size, ulke: ulkeler.size };
+  }, [filtered]);
+
   const aktifSuzgecler = React.useMemo(
     () => aktifFirsatSuzgecleri(filters) as { id: string; etiket: string }[],
     [filters]
@@ -833,6 +868,54 @@ export const OpportunitiesPage: React.FC<{
 
         {/* ------------------------------------------ sağ: yardımcı sütun --- */}
         <div className="hidden lg:block lg:col-span-3 space-y-4 lg:sticky lg:top-4">
+          {/*
+            SAYAÇ ŞERİDİ — VERİ GELDİYSE, SIFIRLA DEĞİL
+
+            Yükleme sırasında sayı yerine iskelet çiziliyor: "0 açık
+            fırsat" ile "henüz yüklenmedi" aynı cümle değil ve sıfır
+            yazmak elimizde olmayan bir cevabı iddia etmek olurdu.
+
+            Hata, yetkisiz ve boş sonuçta şerit HİÇ çizilmiyor: üçünün
+            de cümlesi sol sütunda zaten yazıyor, yanına "0 / 0 / 0"
+            koymak aynı şeyi daha az doğru söylemek olurdu. Arşiv
+            görünümünde de yok — etiket "Açık fırsat" ve arşivdekiler
+            açık değil.
+
+            Kart kabı ve ölçüler İlanlar'daki şeridin birebir aynısı;
+            ikinci bir görünüm türetilmedi.
+          */}
+          {!filters.arsiv && listeDurumu === 'loading' ? (
+            <div
+              role="status"
+              aria-label="Fırsat sayıları yükleniyor"
+              className="grid grid-cols-3 gap-2 bg-white rounded-2xl border border-gray-200 px-4 py-3.5"
+            >
+              {[1, 2, 3].map((x) => (
+                <div key={x} aria-hidden className="min-w-0">
+                  <div className="mx-auto h-6 w-10 rounded bg-gray-100 animate-pulse" />
+                  <div className="mx-auto mt-1 h-3 w-14 rounded bg-gray-100 animate-pulse" />
+                </div>
+              ))}
+            </div>
+          ) : !filters.arsiv && listeDurumu === 'ready' && sayaclar.firsat > 0 ? (
+            <div className="grid grid-cols-3 gap-2 bg-white rounded-2xl border border-gray-200 px-4 py-3.5">
+              {[
+                { etiket: 'Açık fırsat', deger: String(sayaclar.firsat) },
+                { etiket: 'Kurum', deger: String(sayaclar.kurum) },
+                { etiket: 'Ülke', deger: String(sayaclar.ulke) },
+              ].map((kutu) => (
+                <div key={kutu.etiket} className="min-w-0 text-center">
+                  <p className="text-2xl font-black text-gray-900 tabular-nums leading-none">
+                    {kutu.deger}
+                  </p>
+                  <p className="text-[11px] font-semibold text-gray-500 mt-1 truncate">
+                    {kutu.etiket}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
           <aside className="rounded-2xl border border-gray-200 bg-white p-4 space-y-2">
             <p className="text-sm font-bold text-gray-900">Fırsatları nasıl seçiyoruz</p>
             <p className="text-xs text-gray-600 leading-relaxed">
