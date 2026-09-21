@@ -121,6 +121,25 @@ test('MIGRATION DEFTERİNİ DEĞİŞTİREN DOSYALAR DA ŞEMA İŞİNİ TETİKLER
   }
 });
 
+test('üretim migration işi uzak veritabanını sorgulamadan önce IPv4 bağlantısını kurar', () => {
+  const workflow = fs.readFileSync('.github/workflows/supabase-production.yml', 'utf8');
+  const migrationJob = workflow.slice(
+    workflow.indexOf('  migrate_and_functions:'),
+    workflow.indexOf('\n  cloudflare_production:'),
+  );
+
+  assert.match(migrationJob, /SUPABASE_DB_PASSWORD:\s*\$\{\{ secrets\.SUPABASE_DB_PASSWORD \}\}/);
+  assert.match(
+    migrationJob,
+    /supabase link --project-ref "\$SUPABASE_PROJECT_REF" --password "\$SUPABASE_DB_PASSWORD"/,
+  );
+  assert.ok(
+    migrationJob.indexOf('supabase link --project-ref') <
+      migrationJob.indexOf('supabase migration list --project-ref'),
+    'Supabase link adımı ilk uzak migration sorgusundan önce çalışmalı',
+  );
+});
+
 test('şema işini tetikleyen dosya aynı zamanda uygulama işini de tetikler', () => {
   /* `supabase/` dışında oldukları için uygulama derlemesi de çalışmalı;
      ikisini birbirinin alternatifi yapmak testleri atlatırdı. */
