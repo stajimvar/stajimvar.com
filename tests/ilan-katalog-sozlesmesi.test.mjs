@@ -218,6 +218,41 @@ test('geçmiş uydurulmuyor: content_updated_at created_at ile dolduruldu', () =
   assert.ok(!/content_updated_at\s*=\s*posted_at/.test(g), 'kaynağın tarihi sayfanın tarihi değil');
 });
 
+test('geri doldurma YENİ tetikleyiciden SONRA çalışıyor', () => {
+  /*
+    İlk yazımda geri doldurma dosyanın başındaydı, yani ESKİ genel
+    tetikleyici hâlâ bağlıyken koşuyordu. Ölçüldü (yerelde eski
+    tetikleyici geri kurularak): yalnız `content_updated_at` yazan bir
+    UPDATE bile `updated_at`'i ilerletiyor. Göç o hâliyle üretimde 237
+    satırın `updated_at` değerini yeniden kirletecekti — düzeltmeye
+    çalıştığı hatanın aynısını tekrarlayarak.
+
+    Sıra bu testle bağlanıyor: tetikleyici kurulumu geri doldurmadan
+    ÖNCE gelmeli.
+  */
+  const g = sqlYorumsuz(GOC_ZAMAN);
+  const tetikleyici = g.indexOf('create trigger t4');
+  const doldurma = g.indexOf('set content_updated_at = created_at');
+  assert.ok(tetikleyici > 0, 'tetikleyici kurulmalı');
+  assert.ok(doldurma > 0, 'geri doldurma olmalı');
+  assert.ok(tetikleyici < doldurma, 'geri doldurma yeni tetikleyiciden sonra olmalı');
+});
+
+test('açık content_updated_at yazımı tetikleyici tarafından geri alınmıyor', () => {
+  /*
+    Sıra düzeltilince yeni bir tuzak çıktı: geri doldurma yalnız
+    `content_updated_at` yazıyor, bu alan "anlamlı" listede değil ve
+    tetikleyici onu `old` değerine — yani NULL'a — döndürürdü. Alan
+    hiç dolmazdı. Açık yazım saygı görüyor.
+  */
+  const g = sqlYorumsuz(GOC_ZAMAN);
+  assert.match(
+    g,
+    /elsif new\.content_updated_at is distinct from old\.content_updated_at then/,
+    'açık yazım dalı olmalı',
+  );
+});
+
 /* ------------------------------------------------------- 6. YETKİLER */
 
 test('yeni kolonlar okunabiliyor ama yazılamıyor', () => {
