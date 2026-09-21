@@ -38,6 +38,7 @@ import path from 'node:path';
 import url from 'node:url';
 import { kartYaz } from './og-kartlari.mjs';
 import { guvenliDisAdres } from '../src/lib/guvenli-url.mjs';
+import { kunye, YAZAR } from '../src/lib/rehber-kunye.mjs';
 
 const kok = path.dirname(path.dirname(url.fileURLToPath(import.meta.url)));
 const dist = path.join(kok, 'dist');
@@ -561,6 +562,16 @@ async function rehberleriCiz() {
         konu: r.konu,
         hizliCevap: r.hizliCevap,
         kaynaklar: r.kaynaklar || [],
+        /*
+          `dayanak` BURADAN DÜŞÜYORDU.
+
+          Ölçüldü (canlı rehber/ats-uyumlu-cv): sayfanın "Bu rehber neye
+          dayanıyor" bölümü ön render edilmiş HTML'de YOKTU. Sebebi bu
+          satırın eksik olmasıydı — alan hiç çıkarılmadığı için aşağıdaki
+          gövde onu yazamıyordu. Resmî kaynağı olmayan 19 rehber,
+          JavaScript çalışmadan "neye dayandığını" hiç söylemiyordu.
+        */
+        dayanak: r.dayanak,
         sonrakiAdim: r.sonrakiAdim,
         govde: renderToStaticMarkup(r.icerik),
       };
@@ -1256,7 +1267,19 @@ async function main() {
         description: ozetle(r.aciklama || r.ozet),
         inLanguage: 'tr-TR',
         ...(r.guncelleme ? { dateModified: r.guncelleme } : {}),
-        author: { '@type': 'Organization', name: 'StajımVar', url: SITE },
+        /*
+          YAZAR ADI EKRANDAKİYLE BİREBİR AYNI.
+
+          Burada 'StajımVar' yazıyordu ama görünür künye 'StajımVar
+          Editör Ekibi' diyor. Yapısal veride olup ekranda olmayan (ya
+          da ekranda başka türlü görünen) bilgi Google'ın kurallarına
+          aykırı. Değer artık künyeyi üreten modülden geliyor, yani
+          ikisi ayrışamaz.
+
+          Tür yine `Organization`: rehberleri tek bir gerçek kişi
+          yazmıyor ve olmayan bir yazar adı uydurmak yanlış beyan olur.
+        */
+        author: { '@type': 'Organization', name: YAZAR, url: SITE },
         publisher: {
           '@type': 'Organization',
           name: 'StajımVar',
@@ -1350,6 +1373,35 @@ async function main() {
               )
               .join('')}</ul></section>`
           : '') +
+        /*
+          KÜNYE ÖN RENDER'A GİRİYOR — EKRANDAKİYLE AYNI KAYNAKTAN
+
+          Buradaki alanlar `src/lib/rehber-kunye.mjs` tarafından
+          hesaplanıyor ve `GuidePages.tsx` aynı işlevi çağırıyor. İki
+          yerde ayrı ayrı yazılsaydı zamanla ayrışırlardı — "dayanak"
+          bölümünün ön render'da hiç olmaması tam olarak böyle oluştu.
+
+          Yazar KURUM: rehberleri tek bir gerçek kişi yazmıyor ve
+          olmayan bir yazar adı uydurmak yanlış beyan olurdu. JSON-LD
+          de aynı kurumu gösteriyor.
+        */
+        ((() => {
+          const k = kunye(r);
+          const parcalar = [];
+          if (k.dayanak) {
+            parcalar.push(
+              `<section><h2>Bu rehber neye dayanıyor</h2><p>${kacir(k.dayanak)}</p></section>`
+            );
+          }
+          parcalar.push(
+            '<section><h2>Künye</h2><ul>' +
+              `<li>Hazırlayan: ${kacir(k.yazar)}</li>` +
+              (k.tarih ? `<li>Son güncelleme: ${kacir(k.tarih)}</li>` : '') +
+              `<li><a href="${k.bildirimYolu}">Hatalı bilgi bildir</a></li>` +
+              '</ul></section>'
+          );
+          return parcalar.join('');
+        })()) +
         /* Sıradaki adım bir İÇ bağlantı: rehberden ürüne sinyal taşıyor. */
         (r.sonrakiAdim
           ? `<p><a href="${kacir(r.sonrakiAdim.yol)}">${kacir(r.sonrakiAdim.etiket)}</a></p>`
