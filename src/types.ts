@@ -204,6 +204,38 @@ export interface InternshipListing {
   lastSeenAt?: string;
   /** 'acik' | 'kapali' | 'erisilemedi'. Kapanan ilan listede görünmüyor. */
   sourceStatus?: string;
+
+  /*
+    NORMALİZE ALANLAR — HAM ALANLARIN YANINDA, YERİNE DEĞİL.
+
+    `city` ham metin olarak duruyor ve hiç değişmiyor; `il` onun
+    normalize edilmiş karşılığı. Ölçüldü (21 Eylül 2026): Türkiye'deki
+    104 ilan 10 farklı ham şehir metni taşıyordu ama 7 gerçek il vardı
+    — "İstanbul", "Istanbul", "Atasehir Istanbul" ve "Turkey -
+    Istanbul" dört ayrı şehir gibi sayılıyordu.
+
+    Kanıt yoksa NULL: uydurulmuş il ya da tür yok.
+  */
+  /** Normalize Türkiye ili (81 ilden biri). TR dışında ve kanıt yoksa yok. */
+  il?: string;
+  /** Ham metinde açıkça geçen ilçe; tahmin edilmiyor. */
+  ilce?: string;
+  /** true/false/bilinmiyor — şehir metnindeki "REMOTE" şehir sanılmıyor. */
+  uzaktan?: boolean;
+  /** staj | uzun_donem | trainee | mt | erken_kariyer. Yok = sınıflandırılmadı. */
+  ilanTipi?: 'staj' | 'uzun_donem' | 'trainee' | 'mt' | 'erken_kariyer';
+  /**
+   * acik | belirsiz | erisilemedi — KAYNAĞIN doğrulanma durumu.
+   * Gizleme ya da kaldırma kararı DEĞİL; kartta görünür etiket üretir.
+   */
+  kaynakDurumu?: 'acik' | 'belirsiz' | 'erisilemedi';
+  /**
+   * gecerli | kirik | dogrulanamadi — BAŞVURU BAĞLANTISININ teknik durumu.
+   * Kaynağın güvenilirliği değil. Kırık bağlantı ilanı listeden ÇIKARMAZ.
+   */
+  applyUrlOk?: 'gecerli' | 'kirik' | 'dogrulanamadi';
+  /** İçeriğin son anlamlı değişim anı; sitemap lastmod bundan üretiliyor. */
+  contentUpdatedAt?: string;
   /** Yayın tarihi kaynağın kendi beyanından mı geliyor. */
   postedAtDogrulandi?: boolean;
   featured?: boolean;

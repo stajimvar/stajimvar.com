@@ -7,7 +7,17 @@ test('global katalog siniri exact RPC parametrelerini ve cursor hassasiyetini ko
   const calls=[];
   const client={rpc:async(name,args)=>{calls.push({name,args});return {data:{listings:[],total:67,companyTotal:51,cityTotal:6,verifiedTotal:67,lastVerifiedAt:'2026-09-06T04:50:09.961+00:00',facets:{countries:[]},hasMore:false,nextCursor:null,snapshot:'2026-09-05T10:00:00.123456+00:00'},error:null}}};
   const result=await requestPublishedListingsCatalog(client,{country:'FR',cursor:{value:'2026-09-01T10:00:00.654321+00:00',id:'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'},snapshot:'2026-09-05T10:00:00.123456+00:00'});
-  assert.deepEqual(calls,[{name:'get_published_listings_catalog_v2',args:{p_country:'FR',p_cursor_posted_at:'2026-09-01T10:00:00.654321+00:00',p_cursor_id:'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',p_snapshot:'2026-09-05T10:00:00.123456+00:00'}}]);
+  /*
+    RPC ADI v3: v2 son başvuru tarihine bakmıyordu ve şehir sayısını
+    ham `city` metninden hesaplıyordu. `p_tip` varsayılan staj
+    listesini kuran süzgeç; çağrıda YOKSA null gidiyor, yani tür
+    süzgeci uygulanmıyor ve davranış eskisi gibi kalıyor.
+
+    İmleç değerleri mikrosaniyesine kadar aynen geçiyor: sayfalama
+    (sort_value, id) ikilisiyle yürüyor ve yuvarlanan bir zaman damgası
+    aynı kaydı iki kez ya da hiç göstermeye yol açar.
+  */
+  assert.deepEqual(calls,[{name:'get_published_listings_catalog_v3',args:{p_country:'FR',p_cursor_posted_at:'2026-09-01T10:00:00.654321+00:00',p_cursor_id:'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',p_snapshot:'2026-09-05T10:00:00.123456+00:00',p_tip:null}}]);
   assert.equal(result.snapshot,'2026-09-05T10:00:00.123456+00:00');
   assert.equal(result.total,67);
   /* Şirket ve şehir sayısı da sunucudan geliyor; istemci hesaplamıyor. */
