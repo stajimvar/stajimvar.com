@@ -62,7 +62,7 @@ if (!/^pub-\d{10,}$/.test(yayinciKimligi)) {
 fs.writeFileSync(
   hedef,
   `# Bu dosya otomatik üretiliyor: scripts/ads-txt.mjs\n` +
-    `# Elle düzenleme; .env içindeki VITE_ADSENSE_CLIENT değerini değiştir.\n` +
+    `# Elle düzenleme; reklam.json içindeki yayinciKimligi değerini değiştir.\n` +
     `google.com, ${yayinciKimligi}, DIRECT, f08c47fec0942fa0\n`,
   'utf8'
 );

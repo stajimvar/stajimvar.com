@@ -45,11 +45,28 @@
       rehber sayfalarında ve rızadan sonra yükleniyor. Meta etiketi
       doğrulamayı o kısıttan bağımsız hâle getiriyor.
 
-      Değer .env'deki VITE_ADSENSE_CLIENT'tan geliyor — ads.txt ile aynı tek
-      kaynak. Kimlik tanımsızsa Vite bu satırı boş içerikle bırakır; yanlış
-      bir kimlik yazmaktansa boş kalması yeğ.
+      DEĞER DERLEME SIRASINDA `reklam.json`'DAN YAZILIYOR.
+
+      Burada bir Vite ortam değişkeni yer tutucusu duruyordu ve yorum
+      "kimlik tanımsızsa Vite bu satırı boş içerikle bırakır" diyordu.
+      ÜRETİM BUNU ÇÜRÜTTÜ: Vite yer tutucuyu yalnızca değişken TANIMLIYSA
+      değiştiriyor, tanımsızsa OLDUĞU GİBİ bırakıyor. CI'da o değişken hiç
+      yoktu; canlı ana sayfada aylarca yer tutucunun kendisi durdu ve
+      Google doğrulama için bu etiketi okuduğunda geçersiz değer gördü.
+
+      Yer tutucunun yazılışı bu yoruma bilerek KOPYALANMADI: üretim
+      HTML'inde o dizenin hiç geçmemesi test ediliyor ve yorumda geçmesi
+      testi yanıltırdı.
+
+      Kimlik artık `vite.config.ts` içindeki `reklamMetaEtiketi()`
+      eklentisiyle `reklam.json`'dan yazılıyor — ads.txt ile aynı tek
+      kaynak. Kimlik geçersizse etiket KOMPLE DÜŞÜYOR: yer tutuculu ya da
+      boş bir etiket, etiketin hiç olmamasından daha kötü.
+
+      Aşağıdaki değer bir yer tutucu değil, eklentinin değiştirdiği
+      hedef; doğrudan düzenlenmemeli.
     -->
-    <meta name="google-adsense-account" content="%VITE_ADSENSE_CLIENT%" />
+    <meta name="google-adsense-account" content="ca-pub-2635670487159819" />
     <meta name="description" content="Türkiye'deki staj ilanlarını şirketlerin kendi kariyer sayfalarından derliyoruz. Her ilanda şirketin kendi başvuru bağlantısı var." />
     <meta property="og:title" content="StajımVar - Staj Bulmanın En Akıllı Yolu" />
     <meta property="og:description" content="Türkiye'deki staj ilanlarını şirketlerin kendi kariyer sayfalarından derliyoruz. Her ilanda şirketin kendi başvuru bağlantısı var." />
