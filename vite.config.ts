@@ -1,6 +1,8 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import fs from 'fs';
 import path from 'path';
+import {fileURLToPath} from 'url';
 import {defineConfig, loadEnv} from 'vite';
 
 /*
@@ -38,11 +40,85 @@ function anahtarlariDogrula(mod: string) {
   );
 }
 
+/*
+  ADSENSE META ETİKETİ — DEĞER `reklam.json`'DAN, ORTAMDAN DEĞİL
+
+  `index.html` içinde `%VITE_ADSENSE_CLIENT%` yazıyordu ve Vite bunu
+  yalnızca ortam değişkeni TANIMLIYSA değiştiriyor. CI'da o değişken
+  yok; ölçüldü (21 Eylül 2026, canlı ana sayfa):
+
+    <meta name="google-adsense-account" content="%VITE_ADSENSE_CLIENT%" />
+
+  Yani yer tutucunun kendisi aylardır yayındaydı ve Google doğrulama
+  için bu etiketi okuduğunda geçersiz bir değer görüyordu.
+
+  Aynı ders `ads.txt` için bir kez öğrenilmişti: değerler `.env`'deydi,
+  dağıtım CI'ya taşınınca boşaldılar ve `ads.txt` canlıda kayboldu.
+  Çözüm olarak kimlik `reklam.json`'a taşındı — ama `index.html`
+  ortam değişkenine bağlı kaldı. Bu eklenti o boşluğu kapatıyor:
+  kimlik artık her yerde TEK kaynaktan geliyor.
+
+  KİMLİK YOKSA ETİKET HİÇ YAZILMIYOR. Boş içerikli ya da yer tutuculu
+  bir etiket, etiketin hiç olmamasından daha kötü: Google onu okuyup
+  geçersiz sayıyor ve doğrulama başarısız oluyor.
+*/
+const YAYINCI_BICIMI = /^ca-pub-\d{10,}$/;
+
+/*
+  `reklam.json` YOLU BİRDEN ÇOK YOLDAN ARANIYOR.
+
+  İlk sürüm `__dirname` kullanıyordu. Vite yapılandırmayı yüklerken onu
+  sağlıyor ama dosya bir testten ESM olarak içe aktarıldığında `__dirname`
+  TANIMSIZ: okuma hata veriyor, `catch` boş kimlik üretiyor ve eklenti
+  etiketi sessizce DÜŞÜRÜYORDU. Test bunu yakaladı — yani "kimlik yoksa
+  etiketi kaldır" kuralı, kimlik VARKEN de tetikleniyordu.
+
+  Artık üç aday sırayla deneniyor; ilk okunabilen kazanıyor.
+*/
+function reklamAyariniOku(): string {
+  const adaylar: string[] = [];
+  try {
+    adaylar.push(path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'reklam.json'));
+  } catch { /* CJS'e derlenmiş olabilir */ }
+  if (typeof __dirname !== 'undefined') adaylar.push(path.resolve(__dirname, 'reklam.json'));
+  adaylar.push(path.resolve(process.cwd(), 'reklam.json'));
+
+  for (const aday of adaylar) {
+    try {
+      const ayar = JSON.parse(fs.readFileSync(aday, 'utf8'));
+      const kimlik = String(ayar.yayinciKimligi ?? '').trim();
+      if (kimlik) return kimlik;
+    } catch { /* sonraki adaya geç */ }
+  }
+  return '';
+}
+
+export function reklamMetaEtiketi() {
+  return {
+    name: 'stajimvar-reklam-meta',
+    transformIndexHtml(html: string) {
+      const kimlik = reklamAyariniOku();
+
+      if (!YAYINCI_BICIMI.test(kimlik)) {
+        /* Etiketi komple düşür; yer tutucu yayına çıkmasın. */
+        return html.replace(
+          /[ \t]*<meta\s+name="google-adsense-account"[^>]*>\s*\n?/i,
+          ''
+        );
+      }
+      return html.replace(
+        /(<meta\s+name="google-adsense-account"\s+content=")[^"]*(")/i,
+        `$1${kimlik}$2`
+      );
+    },
+  };
+}
+
 export default defineConfig(({ command, mode }) => {
   if (command === 'build') anahtarlariDogrula(mode);
 
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), reklamMetaEtiketi()],
     build: {
       rollupOptions: {
         output: {
