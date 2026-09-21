@@ -43,10 +43,19 @@ alter table public.listings
 comment on column public.listings.content_updated_at is
   'Ziyaretçiye gösterilen içeriğin son anlamlı değişim anı. sitemap lastmod bundan üretilir. Normalize alanlar, kaynak doğrulama ve link kontrolü bu alanı İLERLETMEZ.';
 
-/* Geriye dönük doldurma: yalnız boş olanlar, yalnız created_at'ten. */
-update public.listings
-   set content_updated_at = created_at
- where content_updated_at is null;
+/*
+  SIRA ÖNEMLİ: GERİ DOLDURMA EN SONDA.
+
+  İlk yazımda geri doldurma buradaydı, yani ESKİ genel tetikleyici
+  hâlâ bağlıyken çalışıyordu. Ölçüldü (yerelde, eski tetikleyici geri
+  kurularak): yalnız `content_updated_at` yazan bir UPDATE bile
+  `updated_at`'i ilerletiyor. Göç bu hâliyle üretimde 237 satırın
+  `updated_at` değerini yeniden kirletecekti — düzeltmeye çalıştığı
+  hatanın aynısını tekrarlayarak.
+
+  Bu yüzden önce fonksiyonlar ve yeni tetikleyici kuruluyor, geri
+  doldurma dosyanın SONUNDA yapılıyor.
+*/
 
 /*
   42501 DERSİ: `listings` kolon kolon yetki veriyor; yetkisiz tek
@@ -169,8 +178,21 @@ begin
     new.updated_at := old.updated_at;
   end if;
 
+  /*
+    AÇIK YAZIM SAYGI GÖRÜYOR.
+
+    `content_updated_at`i doğrudan yazan bir UPDATE (bu göçün geri
+    doldurması gibi) tetikleyici tarafından geri alınmamalı. Aksi
+    hâlde geri doldurma cümlesi çalışır ama tetikleyici değeri eski
+    NULL'a döndürür ve alan hiç dolmaz.
+
+    Bu bir gevşeklik değil: `content_updated_at` üzerinde anon ve
+    authenticated'ın YAZMA yetkisi yok, yalnız service_role yazabiliyor.
+  */
   if icerik_degisti then
     new.content_updated_at := now();
+  elsif new.content_updated_at is distinct from old.content_updated_at then
+    null;
   else
     new.content_updated_at := old.content_updated_at;
   end if;
@@ -191,3 +213,19 @@ create trigger t4
 revoke all on function public.listings_zaman_damgalari() from public, anon, authenticated;
 revoke all on function public.listings_normalize_alanlari() from public, anon, authenticated;
 revoke all on function public.listings_anlamli_alanlar() from public, anon, authenticated;
+
+/* ------------------------------------------------------------------ */
+/*  GERİ DOLDURMA — YENİ TETİKLEYİCİ KURULDUKTAN SONRA                 */
+/* ------------------------------------------------------------------ */
+
+/*
+  Artık `t4` yeni fonksiyona bağlı: yalnız `content_updated_at`
+  değişiyor, içerik alanları değişmiyor, bu yüzden `updated_at`
+  OLDUĞU GİBİ KALIYOR. Değer açıkça yazıldığı için tetikleyici
+  ona dokunmuyor.
+
+  Kirlenmiş `updated_at` KOPYALANMIYOR; kaynak `created_at`.
+*/
+update public.listings
+   set content_updated_at = created_at
+ where content_updated_at is null;
