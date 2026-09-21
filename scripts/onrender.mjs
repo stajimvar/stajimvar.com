@@ -642,7 +642,7 @@ async function ilanlariGetir() {
  * ----------------
  * `ilanlariGetir` düz bir REST seçimi yapıyor ve arama motoru metni için
  * yeterli. Ama istemcinin beklediği şey o değil: `useGlobalListingPreferences`
- * `get_published_listings_catalog_v2` yanıtını bekliyor — sayfalama
+ * `get_published_listings_catalog_v3` yanıtını bekliyor — sayfalama
  * imleci, anlık görüntü kimliği ve sayaçlarıyla birlikte. Tohumun
  * istemcide doğrulamadan geçmesi için AYNI çağrıdan gelmesi gerekiyor.
  *
@@ -667,7 +667,15 @@ async function katalogTohumuGetir(ulke) {
     return null;
   }
   try {
-    const yanit = await fetch(`${urlAdres}/rest/v1/rpc/get_published_listings_catalog_v2`, {
+    /*
+      TOHUM DA v3'TEN GELİYOR.
+
+      v2 son başvuru tarihine bakmıyor ve şehir sayısını ham `city`
+      metninden hesaplıyordu. Tohum v2'den, canlı çağrı v3'ten gelseydi
+      ilk çizim ile saniyeler sonraki ekran FARKLI sayı gösterirdi —
+      tam olarak bu paketin kapatmaya çalıştığı ayrışma.
+    */
+    const yanit = await fetch(`${urlAdres}/rest/v1/rpc/get_published_listings_catalog_v3`, {
       method: 'POST',
       headers: {
         apikey: anahtar,
@@ -1760,6 +1768,15 @@ async function main() {
   */
   const { ilanCografyasi: cografya } = await import('../src/lib/ilan-cografyasi.mjs');
   const turkiyeIlanlari = ilanlar.filter((i) => cografya({ countryCode: i.country_code ?? null, city: i.city ?? null }) === 'turkiye');
+  /*
+    Ön render sayaçları canlı katalogla AYNI kaynaktan gelsin diye
+    TR katalogu burada bir kez çağrılıyor. Anonim anahtarla: gömülen
+    sayı, siteye giren herkesin zaten göreceği sayı.
+  */
+  const katalogSayaclari = await katalogTohumuGetir('TR');
+  if (!katalogSayaclari) {
+    console.log('  UYARI: katalog sayaçları alınamadı, yerel sayım kullanılıyor (ayrışabilir)');
+  }
   const stajIlanlariVerisi = (() => {
     const sehirSayaci = new Map();
     const sirketler = new Set();
@@ -1788,9 +1805,27 @@ async function main() {
 
     return {
       gorunum: 'turkiye',
-      toplam: turkiyeIlanlari.length,
-      sirketToplam: sirketler.size,
-      sehirToplam: sehirSayaci.size,
+      /*
+        SAYAÇLAR KATALOG SÖZLEŞMESİNDEN, BURADAN DEĞİL.
+
+        Bu blok sayıları kendi eliyle hesaplıyordu ve katalogun
+        DÖRDÜNCÜ uygulaması oluyordu. Ölçüldü (22 Eylül 2026): ön
+        render "105 ilan, 76 şirket, 8 şehir" yazıyordu, canlı katalog
+        ise 104 / 7 diyordu. İki fark:
+
+          · son başvurusu geçmiş ilan burada eleniyordu (105 vs 104)
+          · şehir, HAM `city` metninden türetilen etiketle sayılıyordu;
+            "İstanbul" ile "Istanbul" ayrı sayılıyordu (8 vs 7)
+
+        Artık `katalogSayaclari` v3 RPC'sinden geliyor — ekranın
+        saniyeler sonra göstereceği sayının aynısı. Çağrı başarısız
+        olursa buradaki yerel sayım yedek kalıyor: sayfa sayısız
+        kalmaktansa yaklaşık bir sayı göstersin, ama bu durumda
+        ayrışma yeniden mümkün olduğu için konsola yazılıyor.
+      */
+      toplam: katalogSayaclari?.total ?? turkiyeIlanlari.length,
+      sirketToplam: katalogSayaclari?.companyTotal ?? sirketler.size,
+      sehirToplam: katalogSayaclari?.cityTotal ?? sehirSayaci.size,
       ilanlar: enYeniler,
       sehirler: [...sehirSayaci.entries()]
         .sort((a, b) => b[1] - a[1])

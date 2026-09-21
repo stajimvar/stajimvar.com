@@ -25,6 +25,30 @@ import { normalizeCountryCode, normalizeLanguageCode } from '../global-preferenc
  * `SkillCategory` arayüz tipi, tasarımdan kalan eski küçük harfli değerleri de taşıyor
  * ('hard_skills', 'soft_skills', 'languages'). DB enum'unda bunlar yok — burada eşleniyor.
  */
+
+/*
+  DARALTICI — KÖR `as` DEĞİL.
+
+  Kolonlar veritabanında `text`; TypeScript onları `string` görüyor ama
+  arayüz tipi dar bir birlik. `as` ile zorlamak, beklenmedik bir değeri
+  geçerli etikete çevirirdi: veritabanına bir gün 'kapali' yazılsa kart
+  onu tanımadığı hâlde göstermeye çalışırdı.
+
+  Burada tanınmayan değer `undefined` oluyor — yani etiket HİÇ
+  çizilmiyor. Uydurma etiket göstermektense hiç göstermemek doğru.
+  Veritabanı tarafında CHECK kısıtı zaten var; bu ikinci kapı.
+*/
+const ILAN_TIPLERI = ['staj', 'uzun_donem', 'trainee', 'mt', 'erken_kariyer'] as const;
+const KAYNAK_DURUMLARI = ['acik', 'belirsiz', 'erisilemedi'] as const;
+const URL_DURUMLARI = ['gecerli', 'kirik', 'dogrulanamadi'] as const;
+
+function daralt<T extends string>(
+  deger: string | null | undefined,
+  izinli: readonly T[],
+): T | undefined {
+  return deger && (izinli as readonly string[]).includes(deger) ? (deger as T) : undefined;
+}
+
 export function toDbSkillCategory(category: SkillCategory): Enums<'skill_category'> {
   switch (category) {
     case 'hard_skills':
@@ -202,6 +226,23 @@ export function toInternshipListing(row: ListingRowWithCompany): InternshipListi
     lastSeenAt: row.source_verified_at ?? undefined,
     /* 'acik' | 'kapali' | 'erisilemedi' — kaynak sağlığı. */
     sourceStatus: row.source_status ?? undefined,
+    /*
+      NORMALİZE ALANLAR.
+
+      Katalog RPC'si v3 bunları satır yüküyle gönderiyor; v2
+      göndermiyordu, bu yüzden arayüzün "kaynağı belirsiz" ya da
+      "bağlantı kırık" etiketi göstermesi mümkün değildi.
+
+      `?? undefined`: veritabanında NULL "kanıt yok" demek ve arayüzde
+      de yokluk olarak görünmeli — boş dize ya da false değil.
+    */
+    il: row.il ?? undefined,
+    ilce: row.ilce ?? undefined,
+    uzaktan: row.uzaktan ?? undefined,
+    ilanTipi: daralt(row.ilan_tipi, ILAN_TIPLERI),
+    kaynakDurumu: daralt(row.kaynak_durumu, KAYNAK_DURUMLARI),
+    applyUrlOk: daralt(row.apply_url_ok, URL_DURUMLARI),
+    contentUpdatedAt: row.content_updated_at ?? undefined,
     featured: row.featured,
     category: row.category,
     origin: row.origin,

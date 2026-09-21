@@ -27,12 +27,32 @@ export function katalogYanitiniDogrula(data) {
   return data;
 }
 
+/*
+  KATALOG v3 — TEK SÖZLEŞME
+
+  v2 son başvuru tarihine BAKMIYORDU; sitemap bakıyordu. Ölçüldü
+  (20-21 Eylül 2026): /staj-ilanlari sayacı 107, sitemap 190,
+  veritabanı published 191 — üç yüzey üç ayrı SQL yazıyordu.
+
+  v2 ayrıca şehir sayısını HAM metinden hesaplıyordu: "İstanbul",
+  "Istanbul", "Atasehir Istanbul" ve "Turkey - Istanbul" dört ayrı
+  şehir sayılıyor, ekranda "10 şehirde" yazıyordu. Gerçek il sayısı 7.
+
+  v3 normalize `il` kolonunu sayıyor ve normalize alanları satır
+  yüküyle gönderiyor — kartın "kaynağı belirsiz" / "bağlantı kırık"
+  etiketi gösterebilmesi buna bağlı.
+
+  `tip` süzgeci varsayılan staj listesini kuruyor: MT, trainee ve
+  erken kariyer ilanları oraya SIZMIYOR ama silinmiyor; kendi
+  süzgeçlerinde erişilebilir kalıyorlar.
+*/
 export async function requestPublishedListingsCatalog(client, options = {}) {
-  const { data, error } = await client.rpc('get_published_listings_catalog_v2', {
+  const { data, error } = await client.rpc('get_published_listings_catalog_v3', {
     p_country: options.country ?? 'all',
     p_cursor_posted_at: options.cursor?.value ?? null,
     p_cursor_id: options.cursor?.id ?? null,
     p_snapshot: options.snapshot ?? null,
+    p_tip: options.tip ?? null,
   });
   if (error) throw new Error(error.message || 'İlan kataloğu yüklenemedi');
   return katalogYanitiniDogrula(data);
