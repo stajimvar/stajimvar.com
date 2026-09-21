@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { GoogleAdBanner } from './GoogleAdBanner';
 import { REKLAM_UYGUN_REHBERLER } from '../data/reklam-uygun-rehberler';
 import { rehberEylemleri } from '../lib/rehber-eylemleri.mjs';
+import { kunye } from '../lib/rehber-kunye.mjs';
 import {
   ArrowLeft,
   ChevronRight,
@@ -415,6 +416,12 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
   */
   const reklamUygun = REKLAM_UYGUN_REHBERLER.includes(slug);
   const rehber = rehberBul(slug);
+  /*
+    Künye ekranda, ön render'da ve JSON-LD'de AYNI kaynaktan geliyor
+    (bkz. src/lib/rehber-kunye.mjs). Ayrı ayrı yazılsaydı ayrışırlardı —
+    "neye dayanıyor" bölümünün ön render'da hiç olmaması böyle oluştu.
+  */
+  const sayfaKunyesi = React.useMemo(() => kunye(rehber ?? {}), [rehber]);
   const icerikRef = React.useRef<HTMLDivElement>(null);
   const { basliklar, tumBasliklar, etkin, kendiNumarasiVar } = useRehberBasliklari(icerikRef, slug);
 
@@ -816,19 +823,41 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
 
         {reklamUygun && <GoogleAdBanner format="in-feed" className="mt-8" />}
 
-        {(rehber.guncelleme || rehber.inceleyen) && (
-          <p className="mt-6 text-xs text-gray-600">
-            {rehber.guncelleme && (
-              <>
-                Son gözden geçirme:{' '}
-                {tarihMetni(rehber.guncelleme)}
-              </>
-            )}
-            {/* Gözden geçiren yalnızca yazılmışsa çiziliyor; uydurma unvan yok. */}
-            {rehber.guncelleme && rehber.inceleyen && ' · '}
-            {rehber.inceleyen && <>Gözden geçiren: {rehber.inceleyen}</>}
+        {/*
+          KÜNYE — EKRAN, ÖN RENDER VE JSON-LD AYNI KAYNAKTAN
+
+          Buradaki alanlar `rehber-kunye.mjs` tarafından hesaplanıyor ve
+          `scripts/onrender.mjs` AYNI işlevi çağırıyor. Daha önce künye
+          yalnız burada çiziliyordu; ölçüldü ki ön render edilmiş HTML'de
+          "neye dayanıyor" bölümü hiç yoktu — yani JavaScript çalışmadan
+          okuyucu rehberin neye dayandığını göremiyordu.
+
+          HAZIRLAYAN KURUM: rehberleri tek bir gerçek kişi yazmıyor;
+          olmayan bir yazar adı uydurmak yanlış beyan olurdu. Article
+          JSON-LD de aynı kurumu gösteriyor. `inceleyen` alanı yalnızca
+          GERÇEKTEN yazılmışsa çiziliyor — uydurma unvan yok.
+        */}
+        <section className="mt-6 border-t border-gray-200 pt-4">
+          <h2 className="sr-only">Künye</h2>
+          <p className="text-xs leading-relaxed text-gray-600">
+            Hazırlayan: {sayfaKunyesi.yazar}
+            {sayfaKunyesi.tarih && <> · Son gözden geçirme: {sayfaKunyesi.tarih}</>}
+            {rehber.inceleyen && <> · Gözden geçiren: {rehber.inceleyen}</>}
           </p>
-        )}
+          <p className="mt-1 text-xs text-gray-600">
+            <a
+              href={sayfaKunyesi.bildirimYolu}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                onNavigate(sayfaKunyesi.bildirimYolu);
+              }}
+              className="font-semibold text-blue-700 hover:underline"
+            >
+              Hatalı bilgi bildir
+            </a>
+          </p>
+        </section>
         </div>
 
         <aside className="hidden lg:col-span-4 lg:block" aria-label="Yazı içinde gezin">
