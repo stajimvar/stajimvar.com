@@ -151,7 +151,21 @@ def main() -> None:
         # "acik" sayiyor ve suresi gecmis ilan yine haritaya giriyor.
         # Ayni sinifta hata bu iste UC KEZ yasandi (opportunity_type,
         # countries, application_deadline).
-        .select("id,title,updated_at,application_deadline,companies(slug)")
+        # `content_updated_at` LASTMOD ICIN; `updated_at` DEGIL.
+        #
+        # 21 Eylul 2026'da normalize kolonlar yazildiginda `t4`
+        # tetikleyicisi 188 satirin `updated_at` degerini yazim anina
+        # tasidi ve buradaki lastmod "188 ilanin icerigi bugun degisti"
+        # diyecekti. Oysa degisen yalniz bizim siniflandirma
+        # kolonlarimizdi. `content_updated_at` yalnizca ziyaretcinin
+        # gordugu icerik degisince ilerliyor (bkz. 20261025010000).
+        #
+        # `created_at` yedek olarak SECIMDE duruyor: alan bos kalan bir
+        # satirda lastmod'u komple dusurmek yerine sayfanin var oldugu
+        # ilk an yaziliyor. Uydurma tarih yok.
+        .select(
+            "id,title,content_updated_at,created_at,application_deadline,companies(slug)"
+        )
         .eq("status", "published")
         .execute()
         .data
@@ -228,7 +242,7 @@ def main() -> None:
             continue
         onek = ilan["id"].split("-")[0]
         yol = f"/ilan/{slugla(ilan['title'])}-{onek}"
-        tarih = (ilan.get("updated_at") or "")[:10]
+        tarih = (ilan.get("content_updated_at") or ilan.get("created_at") or "")[:10]
         tarih_etiketi = f"<lastmod>{tarih}</lastmod>" if tarih else ""
         satirlar.append(
             f"  <url><loc>{kacir(SITE + yol)}</loc>{tarih_etiketi}"

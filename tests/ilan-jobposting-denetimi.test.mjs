@@ -97,7 +97,23 @@ test('SÜRESİ GEÇMİŞ İLAN: sayfa kalıyor, kapandığı YAZIYOR, haritada y
   */
   const uretici = oku('automation/sitemap.py');
   assert.match(uretici, /def ilan_acik\(kayit: dict\) -> bool:/);
-  assert.match(uretici, /"id,title,updated_at,application_deadline,companies\(slug\)"/);
+
+  /*
+    SEÇİM DİZESİ TAM OLARAK SABİTLENMİYOR, TAŞIDIĞI ALANLAR SABİTLENİYOR.
+
+    Burada `"id,title,updated_at,application_deadline,companies(slug)"`
+    dizesi birebir aranıyordu ve `lastmod` kaynağı `updated_at`'ten
+    `content_updated_at`'e taşınınca kırmızı döndü — oysa testin
+    koruduğu şey seçimin YAZILIŞI değil, süzgecin ve lastmod'un
+    okuduğu alanların seçimde BULUNMASI. Alan alan aranıyor: seçim
+    yeniden düzenlenebilir, eksilemez.
+  */
+  const secim = uretici.slice(uretici.indexOf('db.table("listings")'));
+  const govde = secim.slice(0, secim.indexOf('.execute()'));
+  for (const alan of ['id', 'title', 'application_deadline', 'content_updated_at', 'created_at']) {
+    assert.ok(govde.includes(alan), `sitemap seçimi ${alan} taşımalı`);
+  }
+  assert.ok(govde.includes('companies(slug)'), 'şirket slugı seçimde olmalı');
 });
 
 test('kapanmış ilanın canlı çıktısı tutarlı', () => {
