@@ -65,7 +65,29 @@ export function extractSchemaObjects(sql) {
     sahip olduğu için dolar etiketi üçüncü grup.
   */
   objectMatches(new RegExp(`^CREATE(?: OR REPLACE)? FUNCTION\\s+${object}\\s*\\([\\s\\S]*?AS (\\$[A-Za-z_0-9]*\\$)[\\s\\S]*?\\3;`, 'gmi'), (match) => add(map, 'functions', publicObjectName(match, 1), match[0]));
-  objectMatches(new RegExp(`^ALTER TABLE(?: ONLY)?\\s+${object}[\\s\\S]*?ADD CONSTRAINT\\s+"?([^"\\s]+)"?[\\s\\S]*?;\\s*$`, 'gmi'), (match) => add(map, 'constraints', `${publicObjectName(match, 1)}.${match[3]}`, match[0]));
+  /*
+    KISIT DESENI NOKTALI VIRGULU ASAMIYOR.
+
+    Onceki desen, tablo adi ile ADD CONSTRAINT arasinda her karakteri
+    kabul eden bir bosluk birakiyordu. ADD CONSTRAINT ICERMEYEN bir
+    ALTER TABLE -- dokumde bunlardan bol var: ENABLE ROW LEVEL SECURITY
+    ve identity sutunu icin yazilan ALTER COLUMN ... ADD GENERATED
+    ALWAYS AS IDENTITY -- eslesmeyi bir sonraki ifadeye tasiyordu.
+    Sonuc iki katli yanlisti: aradaki her sey yutuluyor ve BASKA bir
+    tablonun kisiti bu tabloya aitmis gibi anahtarlaniyordu.
+
+    Olculdu: site_olaylari tablosunun identity ifadesi bir sonraki
+    tablonun kisitiyla birlesip
+    public.site_olaylari.application_channels_company_id_type_value_key
+    diye bir anahtar uretti; uretim sema kapisi bu sahte farkla kapandi.
+    Gercek kisit da kendi anahtarini kaybettigi icin orada bir degisiklik
+    olsa fark edilmezdi. Kapinin gurultuye baglanmasi, kapinin hic
+    olmamasindan kotu.
+
+    Noktali virgul disi karakter sinifi ifade sinirini koruyor: eslesme
+    tek bir ifadenin icinde kaliyor.
+  */
+  objectMatches(new RegExp(`^ALTER TABLE(?: ONLY)?\\s+${object}[^;]*?ADD CONSTRAINT\\s+"?([^"\\s]+)"?[^;]*?;`, 'gmi'), (match) => add(map, 'constraints', `${publicObjectName(match, 1)}.${match[3]}`, match[0]));
   objectMatches(new RegExp(`^CREATE(?: UNIQUE)? INDEX\\s+"?([^"\\s]+)"?[\\s\\S]*?;\\s*$`, 'gmi'), (match) => add(map, 'indexes', match[1], match[0]));
   objectMatches(new RegExp(`^CREATE POLICY\\s+"?([^"\\s]+)"?\\s+ON\\s+${object}[\\s\\S]*?;\\s*$`, 'gmi'), (match) => add(map, 'policies', `${publicObjectName(match, 2)}.${match[1]}`, match[0]));
   objectMatches(new RegExp(`^CREATE TRIGGER\\s+"?([^"\\s]+)"?[\\s\\S]*?\\sON\\s+${object}[\\s\\S]*?;\\s*$`, 'gmi'), (match) => add(map, 'triggers', `${publicObjectName(match, 2)}.${match[1]}`, match[0]));
