@@ -1443,6 +1443,79 @@ export async function fetchYonetimTrafik(
 }
 
 /* ------------------------------------------------------------------ */
+/* ONAY KUYRUĞU — YÖNETİCİ                                             */
+/* ------------------------------------------------------------------ */
+
+export interface OnayIlani {
+  id: string;
+  baslik: string;
+  sirket: string | null;
+  sehir: string | null;
+  ulke: string | null;
+  kaynak: string;
+  calisma: string | null;
+  basvuruYolu: string | null;
+  adres: string | null;
+  sonBasvuru: string | null;
+  kaynakDurumu: string | null;
+  aciklamaUzunluk: number;
+  olustu: string;
+  guncellendi: string | null;
+}
+
+export interface OnaySahiplenme {
+  id: string;
+  sirket: string | null;
+  kisi: string | null;
+  unvan: string | null;
+  eposta: string | null;
+  not: string | null;
+  olustu: string;
+}
+
+export interface OnayBolum {
+  id: string;
+  istenen: string | null;
+  universite: string | null;
+  aciklama: string | null;
+  olustu: string;
+}
+
+export interface OnayKuyrugu {
+  ilanlar: OnayIlani[];
+  sahiplenmeler: OnaySahiplenme[];
+  bolumler: OnayBolum[];
+}
+
+export async function fetchOnayKuyrugu(): Promise<OnayKuyrugu> {
+  const { data, error } = await supabase.rpc('yonetim_onay_kuyrugu' as never);
+  if (error) fail('Onay kuyruğu alınamadı', error);
+  return data as unknown as OnayKuyrugu;
+}
+
+/**
+ * İlanı yayına alır ya da reddeder.
+ *
+ * Ret SİLMİYOR, arşivliyor: reddedilen ilan kayıtta kalıyor, kararı geri
+ * almak mümkün ve neyin neden elendiği görülebiliyor.
+ *
+ * `beklenenGuncellendi` gönderiliyor: iki yönetici aynı kuyruğa bakarken
+ * biri karar verdikten sonra ötekinin kararı sessizce üzerine yazmasın.
+ */
+export async function ilanKarariVer(
+  id: string,
+  karar: 'onayla' | 'reddet',
+  beklenenGuncellendi?: string | null,
+): Promise<void> {
+  const { error } = await supabase.rpc('yonetim_ilan_karari' as never, {
+    p_id: id,
+    p_karar: karar,
+    p_beklenen_updated_at: beklenenGuncellendi ?? null,
+  } as never);
+  if (error) fail('İlan kararı uygulanamadı', error);
+}
+
+/* ------------------------------------------------------------------ */
 /* İLAN BİLDİRİMLERİ — YÖNETİCİ İNCELEMESİ                             */
 /* ------------------------------------------------------------------ */
 

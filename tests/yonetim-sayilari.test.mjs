@@ -229,3 +229,120 @@ test('yonetim_ozet anon rolune kapali', () => {
     "Supabase yeni fonksiyonlara anon EXECUTE veriyor; `revoke ... from public` bunu kaldırmıyor",
   );
 });
+
+/* ------------------------------------------------------------------ */
+/*  ONAY KUYRUGU                                                       */
+/* ------------------------------------------------------------------ */
+
+test('onay sayfasi artik yer tutucu degil', () => {
+  /*
+    Panelde "Onay kuyruklari" acildiginda 9 taslak ilan incelenmeyi
+    beklerken ekranda "bu ekranda olacaklar" yazan bir kart duruyordu.
+  */
+  const panel = oku('src/components/yonetim/YonetimPaneli.tsx');
+  assert.ok(panel.includes("etkin === 'onay' && <OnaySayfasi"), 'onay sayfasi bagli olmali');
+  assert.ok(
+    !panel.includes('baslik="Onay kuyruklari"'),
+    'onay icin yer tutucu kart kalmamali',
+  );
+});
+
+test('onay kuyrugu sunucudaki RPC ile okunuyor', () => {
+  const sayfa = oku('src/components/yonetim/OnaySayfasi.tsx');
+  assert.ok(sayfa.includes('fetchOnayKuyrugu'));
+
+  const q = oku('src/lib/queries/index.ts');
+  const govde = q.slice(q.indexOf('export async function fetchOnayKuyrugu'));
+  const fn = govde.slice(0, govde.indexOf('export async function ilanKarariVer'));
+  assert.ok(fn.includes("supabase.rpc('yonetim_onay_kuyrugu'"), 'RPC ile okunmali');
+  assert.ok(
+    !fn.includes("select('*'"),
+    "listings SELECT iznini sutun sutun veriyor; select('*') 42501 ile duser",
+  );
+});
+
+test('ret ilani silmiyor, arsivliyor', () => {
+  const sql = oku('supabase/migrations/20261031010000_yonetim_onay_kuyrugu.sql');
+  const karar = sql.slice(sql.indexOf('function public.yonetim_ilan_karari'));
+
+  assert.ok(karar.includes("else 'archived'"), 'ret arsivlemeli');
+  assert.ok(
+    !karar.toLowerCase().includes('delete from listings'),
+    'reddedilen ilan silinmemeli: silinmis kayittan geriye donulemez',
+  );
+});
+
+test('karar eszamanli degisikligin uzerine yazmiyor', () => {
+  const sql = oku('supabase/migrations/20261031010000_yonetim_onay_kuyrugu.sql');
+  assert.ok(
+    sql.includes('p_beklenen_updated_at'),
+    'iki yonetici ayni kuyruga bakarken biri otekinin kararini ezmemeli',
+  );
+  assert.ok(sql.includes("'guncellendi', l.updated_at"), 'kuyruk damgayi geri dondurmeli');
+
+  const sayfa = oku('src/components/yonetim/OnaySayfasi.tsx');
+  assert.ok(sayfa.includes('ilanKarariVer(ilan.id, karar, ilan.guncellendi)'));
+});
+
+test('onay RPC uclari yonetici kapisinda', () => {
+  const sql = oku('supabase/migrations/20261031010000_yonetim_onay_kuyrugu.sql');
+  for (const ad of ['yonetim_onay_kuyrugu', 'yonetim_ilan_karari']) {
+    const bolum = sql.slice(sql.indexOf('function public.' + ad));
+    assert.ok(bolum.toLowerCase().includes('security definer'), ad + ' security definer olmali');
+    assert.ok(bolum.includes('if not public.is_admin()'), ad + ' yonetici kapisi olmali');
+  }
+  assert.ok(sql.toLowerCase().includes('from public, anon'), 'anon a kapali olmali');
+});
+
+test('onay satiri karari degistirecek bilgiyi gosteriyor', () => {
+  /*
+    Kuyruktaki 9 taslagin ikisinin baglantisi "erisilemedi" durumunda ve
+    hepsinin aciklamasi 82 karakter. Bunlari gormeden verilen bir onay,
+    ogrenciyi olu baglantiya gonderebilir.
+  */
+  const sayfa = oku('src/components/yonetim/OnaySayfasi.tsx');
+  assert.ok(sayfa.includes('erisilemedi'), 'baglanti durumu gorunmeli');
+  assert.ok(sayfa.includes('aciklamaUzunluk'), 'aciklama uzunlugu gorunmeli');
+  assert.ok(sayfa.includes('kaynağında aç'), 'kaynaga baglanti olmali');
+});
+
+/* ------------------------------------------------------------------ */
+/*  GRAFIK OKUNABILIR                                                  */
+/* ------------------------------------------------------------------ */
+
+test('cubuk grafikte deger yaziyor', () => {
+  /*
+    Deger yalniz `title` icindeydi. `title` masaustunde fareyle beklenince
+    cikiyor, TELEFONDA HIC CIKMIYOR -- panel ise cogunlukla telefonda
+    aciliyor. Ustelik en yuksek deger bari tam yukseklige cizdigi icin tek
+    ziyaretci de "cok" gibi gorunuyordu.
+  */
+  const g = oku('src/components/yonetim/Grafikler.tsx');
+  const cubuk = g.slice(g.indexOf('export const CubukGrafik'), g.indexOf('export const DagilimListesi'));
+
+  assert.ok(cubuk.includes('{sayi(n.deger)}'), 'birincil deger cubugun ustunde yazmali');
+  assert.ok(cubuk.includes('sayi(n.ikincil ?? 0)'), 'ikincil deger de yazmali');
+});
+
+test('huni adımı uygulamanın gerçek liste yoluna bakıyor', () => {
+  /*
+    Huni "İlan listesine baktı" adımı `/ilanlar` arıyordu. Böyle bir sayfa
+    yok: liste `/staj-ilanlari` adresinde, `/ilanlar` yalnızca oraya
+    yönlendiren eski bir adres. Canlıda ölçüldü — eski desen sıfır eşleşti
+    ve adım sonsuza kadar sıfır gösterecekti. Sessizce yanlış olan bir
+    sayı, hata veren bir sayıdan tehlikeli: "kimse bakmadı" diye okunur.
+  */
+  const sql = oku('supabase/migrations/20261030010000_huni_gercek_yollar.sql');
+  const huni = sql.slice(sql.indexOf("'huni'"));
+
+  assert.match(huni, /\/staj-ilanlari%/, 'gerçek liste yolu aranmalı');
+  assert.match(huni, /\/ilan\/%/, 'ilan detay yolu aranmalı');
+
+  /* Ve o yol uygulamada gerçekten bir sayfa olmalı. */
+  const app = oku('src/App.tsx');
+  assert.match(
+    app,
+    /temizYol === '\/staj-ilanlari'/,
+    'App.tsx bu yolu tanımıyorsa huni yine boş kalır',
+  );
+});
