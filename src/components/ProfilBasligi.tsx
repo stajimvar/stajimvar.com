@@ -545,6 +545,24 @@ export const ProfilBasligi: React.FC<Props> = ({
             sebep değil — "şirkette olmayanı sil" değil, "şirkette
             olmayanı UYDURMA" kuralı geçerli.
           */}
+          {/*
+            OKUL ROZETİ — okulunu girenlerde, fotoğrafın sağ alt köşesinde.
+
+            Amblemi olan okullarda üniversitenin KENDİ logosu çiziliyor;
+            kaynak her okulun resmi alan adındaki başlık logosu ve dosyalar
+            depoda (`public/universite-logolari`). Listede olmayan okulda
+            rozet kısaltmayı gösteriyor — benzer adlı bir okulun amblemini
+            koymaktansa harf daha doğru. Dosya bir gün kaybolursa bileşen de
+            kısaltmaya düşüyor. Okul girilmemişse rozet hiç çizilmiyor:
+            olmayan bir kimliği çizmek kartı yalan yapardı.
+
+            KÖŞE KONUMU: fotoğraf yuvarlak, kapsayıcı kare. Rozetin daireye
+            değdiği yer 45 derece; kutunun köşesi ise daha dışarıda kalıyor
+            ve fotoğraf büyüdükçe arada boşluk açılıyor. 80 piksellik
+            fotoğrafta köşe zaten 45 dereceye denk düşüyor; 112 ve 144'te
+            rozet birkaç piksel içeri alınıyor.
+          */}
+          <div className="relative">
           <Halka oran={oran}>
             {/*
               BÜYÜTME (kullanıcı isteği, 17 Eylül 2026): fotoğrafa dokununca
@@ -566,6 +584,12 @@ export const ProfilBasligi: React.FC<Props> = ({
               }}
             />
           </Halka>
+            {okul && (
+              <span className="absolute bottom-0 right-0 sm:bottom-0.5 sm:right-0.5 lg:bottom-1.5 lg:right-1.5">
+                <OkulRozeti okul={okul} logoAdresi={universiteLogosu(okul) ?? undefined} />
+              </span>
+            )}
+          </div>
 
           {/*
             ROZET YOK — UYDURULMADI: şirket kalıbında adın yanında
@@ -617,25 +641,15 @@ export const ProfilBasligi: React.FC<Props> = ({
           */}
           <div className="mt-1.5 max-w-full space-y-0.5 text-sm leading-snug text-gray-500 sm:mt-2 sm:text-base">
             {/*
-              OKUL ROZETİ — okulunu girenlerde.
+              OKUL SATIRI SAF METİN
 
-              Rozet okul adının YERİNE geçmiyor, yanında duruyor: rozet
-              kısaltma taşıyor ("MSGSÜ") ve tek başına hangi okul olduğunu
-              söylemiyor. Girilmemişse rozet de yok — olmayan bir kimliği
-              çizmek, satırın kendisini yalan yapardı.
-
-              LOGO (22 Eylül 2026): amblemi olan okullarda üniversitenin
-              KENDİ logosu çiziliyor; kaynak her okulun resmi alan adındaki
-              başlık logosu ve dosyalar depoda (`public/universite-logolari`).
-              Listede olmayan okulda rozet yine kısaltmayı gösteriyor —
-              benzer adlı bir okulun amblemini koymaktansa harf daha
-              doğru. Dosya bir gün kaybolursa bileşen de kısaltmaya
-              düşüyor.
+              Rozet bir süre buradaydı, adın solunda. Hangi ölçü denendiyse
+              yamalı durdu: satır telefonda 14 piksel, amblemlerin oranı
+              birbirini tutmuyor ve ortalanmış satırın başına takılan kutu
+              adı da ortadan kaydırıyordu. Rozet profil fotoğrafının
+              köşesine taşındı; burası yalnız ad.
             */}
-            <p className="flex min-w-0 items-center justify-center gap-2 break-words">
-              {okul && <OkulRozeti okul={okul} logoAdresi={universiteLogosu(okul) ?? undefined} />}
-              <span className="min-w-0 break-words">{okul || 'Okulun eksik'}</span>
-            </p>
+            <p className="min-w-0 break-words">{okul || 'Okulun eksik'}</p>
             {(bolum || sinif) && (
               <p className="min-w-0 break-words">{[bolum, sinif].filter(Boolean).join(' · ')}</p>
             )}
