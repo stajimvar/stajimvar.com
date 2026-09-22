@@ -293,6 +293,19 @@ const AdminListingsQueue = React.lazy(() =>
 const AdminIlanBildirimleri = React.lazy(() =>
   import('./components/AdminIlanBildirimleri').then((m) => ({ default: m.AdminIlanBildirimleri }))
 );
+/*
+  YÖNETİM PANELİ — kendi kabuğu, kendi sayfaları.
+
+  `AdminDashboard` duruyor ve özet kartlarının kaynağı hâlâ o veri
+  (`fetchAdminOzet`); panel onu kendi Özet sayfasında kullanıyor.
+  Eski bileşen kaldırılmadı: `/yonetim/talepler` gibi mevcut adresler
+  ona bağlı ve tek seferde hepsini taşımak, çalışan ekranları aynı
+  anda riske atmak olurdu.
+*/
+const YonetimPaneli = React.lazy(() =>
+  import('./components/yonetim/YonetimPaneli').then((m) => ({ default: m.YonetimPaneli }))
+);
+
 const AdminDashboard = React.lazy(() =>
   import('./components/AdminDashboard').then((m) => ({ default: m.AdminDashboard }))
 );
@@ -2964,8 +2977,50 @@ export default function App() {
     listeyi goremiyor -- RLS yalnizca admin'e satirlari veriyor, kuyruk
     bos gorunur ve onay fonksiyonu hata dondurur.
   */
-  if (temizYol === '/yonetim' || temizYol === '/yonetim/talepler') {
-    const kuyrukSayfasi = temizYol === '/yonetim/talepler';
+  /*
+    YENİ PANEL: /yonetim ve alt sayfaları.
+
+    `/yonetim/talepler`, `/yonetim/kesfet`, `/yonetim/instagram` ve
+    `/yonetim/bolum-talepleri` ESKİ ekranlarda kalıyor — onlar çalışan
+    kuyruklar ve tek seferde taşımak hepsini aynı anda riske atardı.
+    Yeni panel önce ölçüm sayfalarını (özet, trafik, canlı) devraldı.
+  */
+  const YENI_PANEL_YOLLARI = new Set([
+    '/yonetim', '/yonetim/trafik', '/yonetim/canli', '/yonetim/ogrenciler',
+    '/yonetim/ilanlar', '/yonetim/basvurular', '/yonetim/sirketler',
+    '/yonetim/onay', '/yonetim/tarama',
+  ]);
+  if (YENI_PANEL_YOLLARI.has(temizYol)) {
+    if (!isAdmin) {
+      return (
+        <div className="min-h-screen bg-gray-50 p-6">
+          <p className="text-sm font-bold text-gray-900">Bu sayfa yalnız yöneticiler içindir.</p>
+          <button
+            type="button"
+            onClick={goHome}
+            className="mt-3 min-h-11 cursor-pointer rounded-xl bg-blue-600 px-4 text-sm font-bold text-white"
+          >
+            Siteye dön
+          </button>
+        </div>
+      );
+    }
+    return (
+      <React.Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+        <YonetimPaneli yol={temizYol} onNavigate={navigate} />
+      </React.Suspense>
+    );
+  }
+
+  if (temizYol === '/yonetim/talepler') {
+    /*
+      `/yonetim` artık YENİ panele gidiyor; burası yalnız onay kuyruğu.
+      Değişken eskiden iki yolu ayırıyordu ve şimdi her zaman true —
+      ama koşullu dallar aşağıda okunaklı olsun diye korunuyor,
+      kaldırmak JSX'i baştan yazmayı gerektirirdi ve bu commit'in
+      konusu o değil.
+    */
+    const kuyrukSayfasi = true;
     return (
       <div className="min-h-screen bg-[#F9FAFB] font-sans text-[#111827] p-4 sm:p-8">
         <button
