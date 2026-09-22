@@ -680,6 +680,19 @@ export const ListingPage: React.FC<ListingPageProps> = ({
           role="region"
           aria-label="Başvuru"
         >
+          {/*
+            DURUM UYARISI ÇUBUĞUN İÇİNDE — TELEFONDA KARAR BURADA
+
+            Uyarı sayfanın "Başvuru seçenekleri" sütununda da var ama o
+            sütun telefonda içeriğin ALTINA düşüyor: ölçüldü, 375px'te
+            başvuru düğmesi uyarının 772 piksel ÜSTÜNDE kalıyordu. Yani
+            kullanıcı uyarıya hiç ulaşmadan başvuruyordu.
+
+            Çubuğu birkaç piksel büyütüyor; "başvuru bağlantısı
+            çalışmıyor" bilgisinin düğmenin yanında durması buna değer.
+          */}
+          <IlanDurumEtiketleri listing={listing} className="mb-2" />
+
           {yol.resmiAdres && yol.anaEylem === 'resmi-site' ? (
             /*
               HARİCİ İLANDA İKİ İŞLEM — ÖLÇÜLDÜ, İKİNCİSİ MOBİLDE YOKTU
