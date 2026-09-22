@@ -19,12 +19,16 @@ import { YonetimKabuk, type YonetimSayfaKimlik } from './YonetimKabuk';
  * durumunda tutulsaydı sayfa yenilenince özete düşerdi ve bir ekranı
  * paylaşmak mümkün olmazdı. Tarayıcının geri düğmesi de çalışıyor.
  *
- * HENÜZ YAZILMAMIŞ SAYFALAR
- * -------------------------
- * Menüdeki her bağlantı tıklanabilir. Yazılmamış olanlar boş ekran
- * değil, ne göstereceğini ve neyin beklendiğini söyleyen bir kart
- * çiziyor: tıklayınca hiçbir şey olmayan bir menü, panelin bozuk
- * olduğunu düşündürür.
+ * YER TUTUCU KALMADI
+ * ------------------
+ * Panelin her sayfası gerçek veriyle çalışıyor. Yazılmamış sayfalar için
+ * "bu ekranda olacaklar" diyen kartlar vardı; hepsi kaldırıldı.
+ *
+ * Keşfet arşivi, bölüm talepleri ve gönderi paylaşma ekranları bu panelden
+ * ÖNCE yazılmıştı ve kendi adreslerinde çalışıyor; bu yüzden buraya
+ * gelmiyorlar. Kenar çubuğundaki bağlantıları panel dışında açıldıklarını
+ * söyleyen bir simge taşıyor — sol sütunun sebepsiz kaybolması, panelin
+ * bozulduğunu düşündürürdü.
  */
 
 const YOL_ONEKI = '/yonetim';
@@ -52,27 +56,6 @@ export function yoldanKimlik(yol: string): YonetimSayfaKimlik {
   return eslesen ? eslesen[0] : 'ozet';
 }
 
-const Hazirlaniyor: React.FC<{ baslik: string; anlatim: string; bekleyen: string[] }> = ({
-  baslik,
-  anlatim,
-  bekleyen,
-}) => (
-  <section className="rounded-2xl border border-dashed border-gray-300 bg-white p-5">
-    <h2 className="text-sm font-bold text-gray-900">{baslik}</h2>
-    <p className="mt-1.5 text-sm leading-relaxed text-gray-600">{anlatim}</p>
-    <p className="mt-3 text-[11px] font-bold uppercase tracking-wider text-gray-500">
-      Bu ekranda olacaklar
-    </p>
-    <ul className="mt-1.5 space-y-1">
-      {bekleyen.map((b) => (
-        <li key={b} className="flex gap-2 text-sm text-gray-700">
-          <span aria-hidden className="mt-2 h-1 w-1 shrink-0 rounded-full bg-gray-400" />
-          <span className="min-w-0">{b}</span>
-        </li>
-      ))}
-    </ul>
-  </section>
-);
 
 export const YonetimPaneli: React.FC<{
   yol: string;
@@ -96,27 +79,6 @@ export const YonetimPaneli: React.FC<{
       {etkin === 'sirketler' && <SirketlerSayfasi />}
       {etkin === 'tarama' && <TaramaSayfasi />}
 
-      {etkin === 'kesfet' && (
-        <Hazirlaniyor
-          baslik="Keşfet arşivi"
-          anlatim="Arşivdeki kayıtları vitrine alma ya da gizleme."
-          bekleyen={['Vitrine al / gizle']}
-        />
-      )}
-      {etkin === 'bolum' && (
-        <Hazirlaniyor
-          baslik="Bölüm talepleri"
-          anlatim="Öğrencilerin açılmasını istediği bölüm sayfaları."
-          bekleyen={['Sayfa aç / reddet']}
-        />
-      )}
-      {etkin === 'paylasim' && (
-        <Hazirlaniyor
-          baslik="Gönderi paylaş"
-          anlatim="İlan seçip Instagram ve X metni üretme, kopyalama ve paylaşıldı işaretleme."
-          bekleyen={['İlan seç', 'Metin üret ve kopyala', 'Paylaşıldı işaretle']}
-        />
-      )}
     </YonetimKabuk>
   );
 };

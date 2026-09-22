@@ -1,7 +1,19 @@
 import React from 'react';
 import {
-  Activity, BarChart3, Building2, ClipboardCheck, Compass, FileText,
-  GraduationCap, LayoutDashboard, Menu, Radio, Send, Share2, X,
+  Activity,
+  BarChart3,
+  Building2,
+  ClipboardCheck,
+  Compass,
+  ExternalLink,
+  FileText,
+  GraduationCap,
+  LayoutDashboard,
+  Menu,
+  Radio,
+  Send,
+  Share2,
+  X,
 } from 'lucide-react';
 
 /**
@@ -28,6 +40,19 @@ export const YONETIM_SAYFALARI: {
   etiket: string;
   ikon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
   grup: 'olcum' | 'urun' | 'islem';
+  /*
+    KABUK DIŞINDA AÇILAN SAYFALAR
+
+    Keşfet arşivi, bölüm talepleri ve gönderi paylaşma ekranları panelden
+    ÖNCE yazılmıştı ve kendi adreslerinde çalışıyor. Bu yüzden tıklanınca
+    sol sütun kayboluyor. Bunu gizlemek yerine bağlantıda söylüyoruz:
+    sütunun sebepsiz kaybolması, panelin bozulduğunu düşündürürdü.
+
+    Kabuğun içine almak mümkün ama o ekranlar yalnız yönetici oturumuyla
+    görülebildiği için taşımayı gözle doğrulayamıyoruz; çalışan bir ekranı
+    göremeden taşımak, çalışanı bozma riski.
+  */
+  disarida?: boolean;
 }[] = [
   { kimlik: 'ozet', etiket: 'Özet', ikon: LayoutDashboard, grup: 'olcum' },
   { kimlik: 'trafik', etiket: 'Trafik', ikon: BarChart3, grup: 'olcum' },
@@ -38,9 +63,9 @@ export const YONETIM_SAYFALARI: {
   { kimlik: 'sirketler', etiket: 'Şirketler', ikon: Building2, grup: 'urun' },
   { kimlik: 'onay', etiket: 'Onay kuyrukları', ikon: ClipboardCheck, grup: 'islem' },
   { kimlik: 'tarama', etiket: 'Tarama', ikon: Activity, grup: 'islem' },
-  { kimlik: 'kesfet', etiket: 'Keşfet arşivi', ikon: Compass, grup: 'islem' },
-  { kimlik: 'bolum', etiket: 'Bölüm talepleri', ikon: GraduationCap, grup: 'islem' },
-  { kimlik: 'paylasim', etiket: 'Gönderi paylaş', ikon: Share2, grup: 'islem' },
+  { kimlik: 'kesfet', etiket: 'Keşfet arşivi', ikon: Compass, grup: 'islem', disarida: true },
+  { kimlik: 'bolum', etiket: 'Bölüm talepleri', ikon: GraduationCap, grup: 'islem', disarida: true },
+  { kimlik: 'paylasim', etiket: 'Gönderi paylaş', ikon: Share2, grup: 'islem', disarida: true },
 ];
 
 const GRUP_ADI: Record<string, string> = {
@@ -84,6 +109,13 @@ const MenuIcerik: React.FC<{
                   >
                     <Ikon aria-hidden className="h-4 w-4 shrink-0" />
                     <span className="min-w-0 truncate">{s.etiket}</span>
+                    {s.disarida && (
+                      <ExternalLink
+                        aria-hidden
+                        className="ml-auto h-3.5 w-3.5 shrink-0 text-gray-400"
+                      />
+                    )}
+                    {s.disarida && <span className="sr-only">(panel dışında açılır)</span>}
                   </button>
                 </li>
               );
