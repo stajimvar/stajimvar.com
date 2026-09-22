@@ -1,5 +1,6 @@
 import React from 'react';
 import { CanliSayfasi } from './CanliSayfasi';
+import { OnaySayfasi } from './OnaySayfasi';
 import { OzetSayfasi } from './OzetSayfasi';
 import { TrafikSayfasi } from './TrafikSayfasi';
 import { YonetimKabuk, type YonetimSayfaKimlik } from './YonetimKabuk';
@@ -83,6 +84,7 @@ export const YonetimPaneli: React.FC<{
       {etkin === 'ozet' && <OzetSayfasi onNavigate={onNavigate} git={git} />}
       {etkin === 'trafik' && <TrafikSayfasi />}
       {etkin === 'canli' && <CanliSayfasi />}
+      {etkin === 'onay' && <OnaySayfasi />}
 
       {etkin === 'ogrenciler' && (
         <Hazirlaniyor
@@ -121,13 +123,6 @@ export const YonetimPaneli: React.FC<{
           baslik="Şirketler"
           anlatim="Sahipsiz, sahiplenilmiş ve talebi bekleyen şirketler. Alan adı eşleşmesi otomatik onaylanmayacak: eşleşme bir ipucu, kanıt değil."
           bekleyen={['Sahiplenme talebi kuyruğu', 'Alan adı eşleşmesinde elle onay']}
-        />
-      )}
-      {etkin === 'onay' && (
-        <Hazirlaniyor
-          baslik="Onay kuyrukları"
-          anlatim="İlan, sahiplenme ve bölüm talepleri tek ekranda sekmelerle; onayla ve reddet çalışacak."
-          bekleyen={['Sekmeler: ilan, sahiplenme, bölüm', 'Onayla / Reddet']}
         />
       )}
       {etkin === 'tarama' && (

@@ -1,4 +1,5 @@
 import React from 'react';
+import { sayi } from '../../lib/yonetim-bicim.mjs';
 
 /**
  * YÖNETİM PANELİ GRAFİKLERİ — SVG, KÜTÜPHANESİZ
@@ -68,7 +69,29 @@ export const CubukGrafik: React.FC<{
       <div className="flex h-44 items-end gap-1.5" role="img" aria-label={baslik}>
         {veri.map((n) => (
           <div key={n.etiket} className="flex min-w-0 flex-1 flex-col items-center gap-1">
-            <div className="flex h-36 w-full items-end justify-center gap-0.5">
+            {/*
+              SAYI ÇUBUĞUN ÜSTÜNDE YAZIYOR.
+
+              Önceden değer yalnız `title` içindeydi; `title` masaüstünde
+              fareyle beklenince çıkıyor, TELEFONDA HİÇ ÇIKMIYOR. Panel
+              çoğunlukla telefonda açılıyor.
+
+              Sayısız bir çubuk yanıltıyor: en yüksek değer barı tam
+              yüksekliğe çiziyor, yani tek ziyaretçi de "çok" gibi
+              görünüyor. Ölçekten okunamayan bir grafikte sayıyı yazmak
+              süs değil, grafiğin okunabilmesinin şartı.
+            */}
+            <div className="flex flex-col items-center leading-none">
+              <span className="text-[10px] font-bold tabular-nums text-gray-900">
+                {sayi(n.deger)}
+              </span>
+              {ikincilEtiket !== undefined && (
+                <span className="mt-0.5 text-[9px] tabular-nums text-blue-400">
+                  {sayi(n.ikincil ?? 0)}
+                </span>
+              )}
+            </div>
+            <div className="flex h-32 w-full items-end justify-center gap-0.5">
               {ikincilEtiket !== undefined && (
                 <div
                   className="w-1/2 rounded-t bg-blue-200"
