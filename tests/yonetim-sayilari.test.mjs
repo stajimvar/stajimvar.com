@@ -165,3 +165,12 @@ test('yonetim_ozet yalnız yöneticiye açık', () => {
   assert.match(sql, /revoke all on function public\.yonetim_ozet\(\) from public/i);
   assert.match(sql, /grant execute on function public\.yonetim_ozet\(\) to authenticated/i);
 });
+
+test('yonetim_ozet anon rolune kapali', () => {
+  const sql = oku('supabase/migrations/20261028010000_yonetim_ozet_anon_izni.sql');
+  assert.match(
+    sql,
+    /revoke execute on function public\.yonetim_ozet\(\) from anon/i,
+    "Supabase yeni fonksiyonlara anon EXECUTE veriyor; `revoke ... from public` bunu kaldırmıyor",
+  );
+});
