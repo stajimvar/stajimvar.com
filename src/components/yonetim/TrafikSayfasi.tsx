@@ -1,18 +1,27 @@
 import React from 'react';
-import { sayi, sure, trafikOzeti, yuzde } from '../../lib/yonetim-demo.mjs';
-import { CubukGrafik, DagilimListesi, Huni } from './Grafikler';
+import { fetchYonetimTrafik, type TrafikOzeti } from '../../lib/queries';
+import { sayi, sure, yuzde } from '../../lib/yonetim-bicim.mjs';
+import { BosDurum, CubukGrafik, DagilimListesi, Huni, Iskelet } from './Grafikler';
 
 /**
- * TRAFİK
+ * TRAFİK — GERÇEK VERİ
  *
  * Dönem seçimi (bugün / 7 gün / 30 gün) ve dört temel ölçü; altında
- * kaynak, şehir, cihaz, sayfa dağılımları ve huni.
+ * kaynak, şehir, cihaz, sayfa dağılımları ve huni. Hepsi ziyaretçilerin
+ * bıraktığı gerçek olaylardan geliyor.
+ *
+ * HENÜZ VERİ YOKKEN
+ * -----------------
+ * Ölçüm yeni kurulduğu için ilk günlerde sayılar küçük, hatta sıfır
+ * olacak. Bu ekran onu gizlemiyor: sıfır, uydurulmuş bir sayıdan
+ * dürüsttür. Hiç oturum yoksa kutular yerine "henüz veri yok" yazıyor,
+ * çünkü sıfırlarla dolu bir tablo bozuk bir ekran gibi okunuyor.
  *
  * ORTALAMA OTURUM SÜRESİ NEDEN VAR
  * --------------------------------
- * Tekil ziyaretçi tek başına "ilgi" anlatmıyor: arama sonucundan
- * gelip iki saniyede çıkan da tekil sayılıyor. Süre ve bounce, gelen
- * kişinin kalıp kalmadığını söylüyor.
+ * Tekil ziyaretçi tek başına "ilgi" anlatmıyor: arama sonucundan gelip
+ * iki saniyede çıkan da tekil sayılıyor. Süre ve tek sayfada çıkan
+ * oranı, gelen kişinin kalıp kalmadığını söylüyor.
  */
 
 const DONEMLER = [
@@ -38,7 +47,27 @@ const Kart: React.FC<{ baslik: string; children: React.ReactNode }> = ({ baslik,
 
 export const TrafikSayfasi: React.FC = () => {
   const [donem, setDonem] = React.useState<'bugun' | 'yedi' | 'otuz'>('yedi');
-  const ozet = React.useMemo(() => trafikOzeti(donem), [donem]);
+  const [ozet, setOzet] = React.useState<TrafikOzeti | null>(null);
+  const [durum, setDurum] = React.useState<'yukleniyor' | 'hazir' | 'hata'>('yukleniyor');
+
+  React.useEffect(() => {
+    let iptal = false;
+    setDurum('yukleniyor');
+    fetchYonetimTrafik(donem)
+      .then((t) => {
+        if (iptal) return;
+        setOzet(t);
+        setDurum('hazir');
+      })
+      .catch(() => {
+        if (!iptal) setDurum('hata');
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [donem]);
+
+  const bosVeri = durum === 'hazir' && ozet !== null && ozet.tekil === 0;
 
   return (
     <div className="space-y-4">
@@ -61,54 +90,97 @@ export const TrafikSayfasi: React.FC = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Olcu deger={sayi(ozet.tekil)} etiket="tekil ziyaretçi" />
-        <Olcu deger={sayi(ozet.goruntuleme)} etiket="sayfa görüntüleme" />
-        <Olcu
-          deger={yuzde(ozet.bounce)}
-          etiket="tek sayfada çıkan"
-          not="Girip hiçbir yere tıklamadan ayrılan"
-        />
-        <Olcu deger={sure(ozet.ortalamaOturum)} etiket="ortalama oturum" />
-      </div>
+      {durum === 'yukleniyor' && <Iskelet yukseklik="h-40" />}
 
-      <Kart baslik={donem === 'bugun' ? 'Bugün saatlik değil, günlük toplam' : 'Günlük trafik'}>
-        <CubukGrafik
-          veri={ozet.gunler.map((g) => ({ etiket: g.etiket, deger: g.tekil, ikincil: g.goruntuleme }))}
-          baslik="Günlük tekil ziyaretçi ve sayfa görüntüleme"
-          birincilEtiket="Tekil"
-          ikincilEtiket="Görüntüleme"
-        />
-        <div className="mt-2 flex items-center gap-4 text-[11px] text-gray-600">
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: '#2563EB' }} aria-hidden />
-            Tekil ziyaretçi
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-sm bg-blue-200" aria-hidden />
-            Sayfa görüntüleme
-          </span>
+      {durum === 'hata' && (
+        <div className="rounded-2xl border border-rose-200 bg-white p-5 text-center">
+          <p className="font-bold text-rose-800">Trafik özeti yüklenemedi</p>
+          <p className="mt-1 text-sm text-gray-600">
+            Sayılar okunamadı. Sıfır göstermek yerine bunu yazıyoruz: ölçememek ile
+            ölçüp bir şey bulamamak aynı şey değil.
+          </p>
         </div>
-      </Kart>
+      )}
 
-      <div className="grid gap-3 lg:grid-cols-2">
-        <Kart baslik="Nereden geldiler">
-          <DagilimListesi veri={ozet.kaynaklar.map((k) => ({ ad: k.ad, adet: k.adet }))} toplam={ozet.tekil} />
-        </Kart>
-        <Kart baslik="Şehirler">
-          <DagilimListesi veri={ozet.sehirler.map((s) => ({ ad: s.ad, adet: s.adet }))} toplam={ozet.tekil} />
-        </Kart>
-        <Kart baslik="Cihaz">
-          <DagilimListesi veri={ozet.cihazlar.map((c) => ({ ad: c.ad, adet: c.adet }))} toplam={ozet.tekil} sinir={3} />
-        </Kart>
-        <Kart baslik="En çok bakılan sayfalar">
-          <DagilimListesi veri={ozet.sayfalar.map((s) => ({ ad: s.ad, adet: s.adet }))} toplam={ozet.goruntuleme} />
-        </Kart>
-      </div>
+      {bosVeri && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center">
+          <p className="font-bold text-gray-900">Bu dönemde henüz ziyaret kaydı yok</p>
+          <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed text-gray-600">
+            Ziyaretçi ölçümü yeni kuruldu; sayılar siteye giriş oldukça birikiyor.
+            Buraya uydurma bir sayı yazmıyoruz.
+          </p>
+        </div>
+      )}
 
-      <Kart baslik="Ziyaretten başvuruya">
-        <Huni adimlar={ozet.huni} />
-      </Kart>
+      {durum === 'hazir' && ozet && !bosVeri && (
+        <>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Olcu deger={sayi(ozet.tekil)} etiket="tekil ziyaretçi" />
+            <Olcu deger={sayi(ozet.goruntuleme)} etiket="sayfa görüntüleme" />
+            <Olcu
+              deger={yuzde(ozet.bounce)}
+              etiket="tek sayfada çıkan"
+              not="Girip hiçbir yere tıklamadan ayrılan"
+            />
+            <Olcu
+              deger={sure(ozet.ortalamaOturum)}
+              etiket="ortalama oturum"
+              not="Tek sayfalık ziyaretler ortalamaya girmiyor"
+            />
+          </div>
+
+          <Kart baslik="Günlük trafik">
+            <CubukGrafik
+              veri={ozet.gunler.map((g) => ({
+                etiket: g.etiket,
+                deger: g.tekil,
+                ikincil: g.goruntuleme,
+              }))}
+              baslik="Günlük tekil ziyaretçi ve sayfa görüntüleme"
+              birincilEtiket="Tekil"
+              ikincilEtiket="Görüntüleme"
+            />
+            <div className="mt-2 flex items-center gap-4 text-[11px] text-gray-600">
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: '#2563EB' }} aria-hidden />
+                Tekil ziyaretçi
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-sm bg-blue-200" aria-hidden />
+                Sayfa görüntüleme
+              </span>
+            </div>
+          </Kart>
+
+          <div className="grid gap-3 lg:grid-cols-2">
+            <Kart baslik="Nereden geldiler">
+              <DagilimListesi veri={ozet.kaynaklar} toplam={ozet.tekil} />
+            </Kart>
+            <Kart baslik="Şehirler">
+              <DagilimListesi veri={ozet.sehirler} toplam={ozet.tekil} />
+            </Kart>
+            <Kart baslik="Cihaz">
+              <DagilimListesi veri={ozet.cihazlar} toplam={ozet.tekil} sinir={3} />
+            </Kart>
+            {/*
+              Sayfa listesi BAKIŞ sayıyor, kişi değil: aynı kişi bir sayfaya
+              iki kez bakmışsa iki bakış. Yüzdeler bu yüzden görüntülemeye
+              bölünüyor; tekile bölmek yanlış tabana oturturdu.
+            */}
+            <Kart baslik="En çok bakılan sayfalar">
+              <DagilimListesi veri={ozet.sayfalar} toplam={ozet.goruntuleme} />
+            </Kart>
+          </div>
+
+          <Kart baslik="Ziyaretten başvuruya">
+            {ozet.huni.some((a) => a.adet > 0) ? (
+              <Huni adimlar={ozet.huni} />
+            ) : (
+              <BosDurum mesaj="Bu dönemde huni adımlarında hareket yok" />
+            )}
+          </Kart>
+        </>
+      )}
     </div>
   );
 };

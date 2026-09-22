@@ -1365,6 +1365,84 @@ export async function fetchAdminOzet(): Promise<AdminOzet> {
 }
 
 /* ------------------------------------------------------------------ */
+/* ZİYARETÇİ TRAFİĞİ — YÖNETİCİ                                        */
+/* ------------------------------------------------------------------ */
+
+/*
+  Bu iki uç, panelin ziyaretçi sayılarını GERÇEK veriden besliyor. Daha
+  önce sayılar demo bir üreteçten geliyordu; paneli telefonda açan kişi
+  "23 kişi bakıyor" yazısını gerçek sandı. Demo uyarısı kenar çubuğunun
+  dibindeydi ve mobilde kenar çubuğu hamburger menüsünün arkasında
+  olduğu için hiç görünmüyordu.
+
+  Veri henüz birikmemişse sayılar sıfır, listeler boş geliyor. Bu
+  dürüst bir cevap: sıfır "ölçtüm ve yok" demek.
+*/
+
+export interface CanliOturumKaydi {
+  kimlik: string;
+  ad: string | null;
+  rol: string | null;
+  yol: string;
+  sayfaAdi: string;
+  sehir: string | null;
+  ulke: string | null;
+  cihaz: string | null;
+  kaynak: string | null;
+  basladi: string;
+}
+
+export interface CanliOlayKaydi {
+  tur: 'girdi' | 'sayfa' | 'basvuru' | 'cikti';
+  an: string;
+  ad: string | null;
+  rol: string | null;
+  sayfaAdi: string;
+  sehir: string | null;
+  cihaz: string | null;
+  kaynak: string | null;
+}
+
+export interface CanliOzet {
+  bakiyor: number;
+  bugunGiren: number;
+  bugunCikan: number;
+  sayfaBakisi: number;
+  oturumlar: CanliOturumKaydi[];
+  olaylar: CanliOlayKaydi[];
+}
+
+export async function fetchYonetimCanli(): Promise<CanliOzet> {
+  const { data, error } = await supabase.rpc('yonetim_canli' as never);
+  if (error) fail('Canlı akış alınamadı', error);
+  return data as unknown as CanliOzet;
+}
+
+export interface TrafikOzeti {
+  donem: string;
+  tekil: number;
+  goruntuleme: number;
+  bounce: number;
+  ortalamaOturum: number;
+  gunler: Array<{ tarih: string; etiket: string; tekil: number; goruntuleme: number }>;
+  kaynaklar: Array<{ ad: string; adet: number }>;
+  sehirler: Array<{ ad: string; adet: number }>;
+  cihazlar: Array<{ ad: string; adet: number }>;
+  sayfalar: Array<{ ad: string; adet: number }>;
+  huni: Array<{ ad: string; adet: number }>;
+}
+
+export async function fetchYonetimTrafik(
+  donem: 'bugun' | 'yedi' | 'otuz' = 'yedi',
+): Promise<TrafikOzeti> {
+  const { data, error } = await supabase.rpc('yonetim_trafik' as never, {
+    p_donem: donem,
+  } as never);
+  if (error) fail('Trafik özeti alınamadı', error);
+  return data as unknown as TrafikOzeti;
+}
+
+/* ------------------------------------------------------------------ */
 /* İLAN BİLDİRİMLERİ — YÖNETİCİ İNCELEMESİ                             */
 /* ------------------------------------------------------------------ */
 

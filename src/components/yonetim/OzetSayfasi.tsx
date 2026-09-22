@@ -1,7 +1,12 @@
 import React from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { fetchAdminOzet, type AdminOzet } from '../../lib/queries';
-import { sayi, sure, trafikOzeti } from '../../lib/yonetim-demo.mjs';
+import {
+  fetchAdminOzet,
+  fetchYonetimTrafik,
+  type AdminOzet,
+  type TrafikOzeti,
+} from '../../lib/queries';
+import { sayi, sure } from '../../lib/yonetim-bicim.mjs';
 import { BosDurum, CubukGrafik, DagilimListesi, Huni, Iskelet } from './Grafikler';
 import { TUR_RENGI, oturumAdi, useCanliOturumlar } from './useCanliOturumlar';
 import type { YonetimSayfaKimlik } from './YonetimKabuk';
@@ -13,13 +18,15 @@ import type { YonetimSayfaKimlik } from './YonetimKabuk';
  * şirket tarafı), 7 gün trafik, 7 gün kayıt, canlı hareket, dikkat
  * gerektirenler, top sayfalar, şehirler ve huni.
  *
- * İKİ VERİ KAYNAĞI AYRI DURUYOR
- * -----------------------------
- * Ürün sayıları (öğrenci, ilan, başvuru, tarama) GERÇEK veritabanından
- * `fetchAdminOzet` ile geliyor. Ziyaretçi trafiği bugün hiç
- * toplanmadığı için demo veriden geliyor ve kenar çubuğunda bu
- * yazıyor. İkisini tek bir kutuda karıştırmak, hangisinin ölçülmüş
- * hangisinin üretilmiş olduğunu belirsizleştirirdi.
+ * BÜTÜN SAYILAR GERÇEK
+ * --------------------
+ * Ürün sayıları `fetchAdminOzet`, ziyaretçi trafiği `fetchYonetimTrafik`
+ * ve canlı akış `yonetim_canli` ile veritabanından geliyor. Panelde bir
+ * dönem trafik sayıları üretilmiş demo veriyle gösteriliyordu; telefonda
+ * paneli açan kişi "23 kişi bakıyor" yazısını gerçek sandı ve demo
+ * uyarısı kenar çubuğunun dibinde, hamburger menüsünün arkasında kaldığı
+ * için hiç görünmedi. Artık gösterilecek gerçek sayı yoksa sayı da yok:
+ * o kutunun yerinde "henüz veri yok" yazıyor.
  */
 
 const Kutu: React.FC<{
@@ -60,7 +67,15 @@ export const OzetSayfasi: React.FC<{
   const [ozet, setOzet] = React.useState<AdminOzet | null>(null);
   const [durum, setDurum] = React.useState<'yukleniyor' | 'hazir' | 'hata'>('yukleniyor');
   const { oturumlar, olaylar, bugunGiren, bugunCikan, sayfaBakisi } = useCanliOturumlar();
-  const trafik = React.useMemo(() => trafikOzeti('yedi'), []);
+  const [trafik, setTrafik] = React.useState<TrafikOzeti | null>(null);
+
+  React.useEffect(() => {
+    let iptal = false;
+    fetchYonetimTrafik('yedi')
+      .then((t) => { if (!iptal) setTrafik(t); })
+      .catch(() => { if (!iptal) setTrafik(null); });
+    return () => { iptal = true; };
+  }, []);
 
   const yukle = React.useCallback(() => {
     setDurum('yukleniyor');
@@ -245,10 +260,14 @@ export const OzetSayfasi: React.FC<{
 
           <div className="grid gap-3 lg:grid-cols-2">
             <Kart baslik="Son 7 günün trafiği">
-              <CubukGrafik
-                veri={trafik.gunler.map((g) => ({ etiket: g.etiket, deger: g.tekil }))}
-                baslik="Son 7 günün tekil ziyaretçisi"
-              />
+              {trafik && trafik.tekil > 0 ? (
+                <CubukGrafik
+                  veri={trafik.gunler.map((g) => ({ etiket: g.etiket, deger: g.tekil }))}
+                  baslik="Son 7 günün tekil ziyaretçisi"
+                />
+              ) : (
+                <BosDurum mesaj="Bu hafta ziyaret kaydı yok" />
+              )}
             </Kart>
             <Kart baslik="Son 7 günün kayıtları">
               {ozet.sonKayitlar.some((g) => g.sayi > 0) ? (
@@ -277,27 +296,35 @@ export const OzetSayfasi: React.FC<{
                   ))}
                 </ul>
               ) : (
-                <BosDurum mesaj="Akış birazdan başlıyor" />
+                <BosDurum mesaj="Şu an sitede hareket yok" />
               )}
             </Kart>
+            {/*
+              Sayfa listesi BAKIŞ sayıyor, şehir listesi KİŞİ: yüzdeler bu
+              yüzden farklı toplamlara bölünüyor.
+            */}
             <Kart baslik="En çok bakılan sayfalar">
-              <DagilimListesi
-                veri={trafik.sayfalar.map((s) => ({ ad: s.ad, adet: s.adet }))}
-                toplam={trafik.goruntuleme}
-                sinir={6}
-              />
+              {trafik && trafik.sayfalar.length ? (
+                <DagilimListesi veri={trafik.sayfalar} toplam={trafik.goruntuleme} sinir={6} />
+              ) : (
+                <BosDurum mesaj="Henüz sayfa bakışı yok" />
+              )}
             </Kart>
             <Kart baslik="Şehirler">
-              <DagilimListesi
-                veri={trafik.sehirler.map((s) => ({ ad: s.ad, adet: s.adet }))}
-                toplam={trafik.tekil}
-                sinir={6}
-              />
+              {trafik && trafik.sehirler.length ? (
+                <DagilimListesi veri={trafik.sehirler} toplam={trafik.tekil} sinir={6} />
+              ) : (
+                <BosDurum mesaj="Henüz ziyaretçi yok" />
+              )}
             </Kart>
           </div>
 
           <Kart baslik="Ziyaretten başvuruya">
-            <Huni adimlar={trafik.huni} />
+            {trafik && trafik.huni.some((a) => a.adet > 0) ? (
+              <Huni adimlar={trafik.huni} />
+            ) : (
+              <BosDurum mesaj="Huni adımlarında henüz hareket yok" />
+            )}
           </Kart>
 
           {/* ---- alt düğmeler ---- */}

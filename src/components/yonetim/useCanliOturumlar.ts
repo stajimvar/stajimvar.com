@@ -1,25 +1,31 @@
 import React from 'react';
-import { ilkOturumlar, oturumlariIlerlet, uretec } from '../../lib/yonetim-demo.mjs';
+import { fetchYonetimCanli, type CanliOlayKaydi, type CanliOturumKaydi } from '../../lib/queries';
 
 /**
- * CANLI OTURUM AKIŞI
+ * CANLI OTURUM AKIŞI — GERÇEK VERİ
  *
- * Birkaç saniyede bir oturumlar ilerliyor: kimisi çıkıyor, kimisi
- * sayfa değiştiriyor, yenileri giriyor. Panelin "şu an X kişi
- * bakıyor" sayacı buradan besleniyor.
+ * Sayılar `yonetim_canli()` RPC'sinden geliyor: sitede gezinen
+ * tarayıcıların bıraktığı gerçek olaylardan. Önceden bu akış demo bir
+ * üreteçten besleniyordu ve panelde "23 kişi bakıyor" yazıyordu; o sayı
+ * uydurmaydı.
+ *
+ * "ŞU AN BAKIYOR" NE DEMEK
+ * ------------------------
+ * Son olayı beş dakika içinde olan ve o olay çıkış OLMAYAN oturumlar.
+ * Tarayıcı çıkışta haber vermeye çalışıyor ama bu her zaman ulaşmıyor
+ * (sekme çöker, telefon uygulamayı öldürür); bu yüzden sessizlik de
+ * çıkış sayılıyor. Yalnız çıkış olayına güvenmek sayacı şişirirdi.
  *
  * NEDEN TEK KANCA
  * ---------------
- * Özet sayfasındaki canlı şerit ile "Giren · bakan · çıkan" sayfası
- * AYNI akışı göstermeli. İki ayrı zamanlayıcı kursalardı iki ekran
- * farklı sayı gösterirdi ve kullanıcı hangisinin doğru olduğunu
- * bilemezdi.
+ * Özet sayfasındaki canlı şerit ile "Giren · bakan · çıkan" sayfası AYNI
+ * akışı göstermeli. İki ayrı zamanlayıcı iki ekranda farklı sayı
+ * gösterirdi ve hangisinin doğru olduğu bilinemezdi.
  *
  * SEKME ARKA PLANDAYKEN DURUYOR
  * -----------------------------
- * `visibilitychange` dinleniyor. Arka planda çalışmaya devam etseydi
- * kullanıcı sekmeye döndüğünde yüzlerce birikmiş olay görürdü ve
- * "şu an" ifadesi anlamını yitirirdi. Ayrıca boşuna işlemci yakardı.
+ * Arka planda sorgu atmak boşuna yük; ayrıca "şu an" ifadesi sekmeye
+ * dönüldüğünde güncellenmiş oluyor.
  */
 
 export interface CanliOturum {
@@ -32,24 +38,62 @@ export interface CanliOturum {
   kaynak: string;
   cihaz: string;
   basladi: number;
-  sayfaSayisi: number;
 }
 
 export interface CanliOlay {
-  tur: 'girdi' | 'cikti' | 'sayfa';
+  tur: 'girdi' | 'cikti' | 'sayfa' | 'basvuru';
   oturum: CanliOturum;
   an: number;
 }
 
-const OLAY_SINIRI = 60;
+/**
+ * Rol adı panelde renge dönüşüyor.
+ *
+ * Rolü bilinmeyen ya da giriş yapmamış herkes misafir: bilmediğimiz bir
+ * kişiyi öğrenci saymak, olmayan bir bilgiyi varmış gibi göstermek olurdu.
+ */
+function turBul(rol: string | null | undefined): CanliOturum['tur'] {
+  if (rol === 'company') return 'sirket';
+  if (rol === 'student') return 'ogrenci';
+  return 'misafir';
+}
 
-export function useCanliOturumlar(araSaniye = 4) {
-  const [oturumlar, setOturumlar] = React.useState<CanliOturum[]>(() => ilkOturumlar(23));
+const oturumaCevir = (k: CanliOturumKaydi): CanliOturum => ({
+  kimlik: k.kimlik,
+  tur: turBul(k.rol),
+  ad: k.ad,
+  sehir: k.sehir || 'bilinmiyor',
+  yol: k.yol,
+  sayfaAdi: k.sayfaAdi || k.yol,
+  kaynak: k.kaynak || 'doğrudan',
+  cihaz: k.cihaz || 'bilinmiyor',
+  basladi: new Date(k.basladi).getTime(),
+});
+
+const olayaCevir = (o: CanliOlayKaydi): CanliOlay => ({
+  tur: o.tur,
+  an: new Date(o.an).getTime(),
+  oturum: {
+    kimlik: `${o.an}-${o.sayfaAdi}`,
+    tur: turBul(o.rol),
+    ad: o.ad,
+    sehir: o.sehir || 'bilinmiyor',
+    yol: o.sayfaAdi,
+    sayfaAdi: o.sayfaAdi,
+    kaynak: o.kaynak || 'doğrudan',
+    cihaz: o.cihaz || 'bilinmiyor',
+    basladi: new Date(o.an).getTime(),
+  },
+});
+
+export function useCanliOturumlar(araSaniye = 15) {
+  const [oturumlar, setOturumlar] = React.useState<CanliOturum[]>([]);
   const [olaylar, setOlaylar] = React.useState<CanliOlay[]>([]);
-  const [bugunGiren, setBugunGiren] = React.useState(412);
-  const [bugunCikan, setBugunCikan] = React.useState(389);
-  const [sayfaBakisi, setSayfaBakisi] = React.useState(1042);
+  const [bugunGiren, setBugunGiren] = React.useState(0);
+  const [bugunCikan, setBugunCikan] = React.useState(0);
+  const [sayfaBakisi, setSayfaBakisi] = React.useState(0);
   const [duraklatildi, setDuraklatildi] = React.useState(false);
+  const [durum, setDurum] = React.useState<'yukleniyor' | 'hazir' | 'hata'>('yukleniyor');
 
   React.useEffect(() => {
     const degisti = () => setDuraklatildi(document.visibilityState !== 'visible');
@@ -60,26 +104,33 @@ export function useCanliOturumlar(araSaniye = 4) {
 
   React.useEffect(() => {
     if (duraklatildi) return undefined;
-    const zaman = window.setInterval(() => {
-      const rnd = uretec(Date.now() & 0xffffffff);
-      setOturumlar((onceki) => {
-        const { oturumlar: yeni, olaylar: cikanOlaylar } = oturumlariIlerlet(onceki, rnd);
-        if (cikanOlaylar.length) {
-          setOlaylar((o) => [...cikanOlaylar.reverse(), ...o].slice(0, OLAY_SINIRI));
-          const giren = cikanOlaylar.filter((x) => x.tur === 'girdi').length;
-          const cikan = cikanOlaylar.filter((x) => x.tur === 'cikti').length;
-          const sayfa = cikanOlaylar.filter((x) => x.tur !== 'cikti').length;
-          if (giren) setBugunGiren((n) => n + giren);
-          if (cikan) setBugunCikan((n) => n + cikan);
-          if (sayfa) setSayfaBakisi((n) => n + sayfa);
-        }
-        return yeni;
-      });
-    }, araSaniye * 1000);
-    return () => window.clearInterval(zaman);
+
+    let iptal = false;
+    const cek = () => {
+      fetchYonetimCanli()
+        .then((c) => {
+          if (iptal) return;
+          setOturumlar((c.oturumlar ?? []).map(oturumaCevir));
+          setOlaylar((c.olaylar ?? []).map(olayaCevir));
+          setBugunGiren(c.bugunGiren ?? 0);
+          setBugunCikan(c.bugunCikan ?? 0);
+          setSayfaBakisi(c.sayfaBakisi ?? 0);
+          setDurum('hazir');
+        })
+        .catch(() => {
+          if (!iptal) setDurum('hata');
+        });
+    };
+
+    cek();
+    const zaman = window.setInterval(cek, araSaniye * 1000);
+    return () => {
+      iptal = true;
+      window.clearInterval(zaman);
+    };
   }, [araSaniye, duraklatildi]);
 
-  return { oturumlar, olaylar, bugunGiren, bugunCikan, sayfaBakisi, duraklatildi };
+  return { oturumlar, olaylar, bugunGiren, bugunCikan, sayfaBakisi, duraklatildi, durum };
 }
 
 /** Oturum türüne göre renk — öğrenci mavi, şirket turuncu, misafir gri. */
@@ -92,9 +143,9 @@ export const TUR_RENGI: Record<CanliOturum['tur'], { nokta: string; rozet: strin
 /**
  * Oturumun ekranda nasıl anılacağı.
  *
- * MİSAFİRDE AD YOK: şehir + sayfa ile anılıyor. Çerez tutulmadığı
- * için misafirin kim olduğu bilinmiyor ve bilinmemeli; ona bir takma
- * ad uydurmak, olmayan bir kimliği varmış gibi göstermek olurdu.
+ * MİSAFİRDE AD YOK: şehir + sayfa ile anılıyor. Çerez tutulmadığı için
+ * misafirin kim olduğu bilinmiyor ve bilinmemeli; ona bir takma ad
+ * uydurmak, olmayan bir kimliği varmış gibi göstermek olurdu.
  */
 export function oturumAdi(o: CanliOturum): string {
   if (o.ad) return o.ad;
