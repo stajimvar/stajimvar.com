@@ -204,14 +204,21 @@ export function trafikOzeti(donem = 'yedi') {
   const tekil = gunler.reduce((a, b) => a + b.tekil, 0);
   const goruntuleme = gunler.reduce((a, b) => a + b.goruntuleme, 0);
 
-  /* Dağılımlar tekil sayısına bölünüyor; toplamları tekile eşit. */
-  const dagit = (liste) => {
+  /*
+    Dağılımlar bir TOPLAMA bölünüyor ve payların toplamı o sayıya eşit
+    kalıyor. Hangi toplam olduğu dağılıma göre değişiyor: kaynak, şehir
+    ve cihaz KİŞİ sayar, dolayısıyla tekile bölünüyor; "en çok bakılan
+    sayfalar" ise BAKIŞ sayar ve görüntülemeye bölünüyor. İkisini de
+    tekile bölmek, sayfa listesinin yüzdelerini yanlış tabana oturtup
+    başlığıyla çelişen bir tablo çıkarıyordu.
+  */
+  const dagit = (liste, toplam) => {
     const toplamAgirlik = liste.reduce((a, b) => a + b.agirlik, 0);
-    let kalan = tekil;
+    let kalan = toplam;
     return liste.map((x, i) => {
       const pay = i === liste.length - 1
         ? kalan
-        : Math.round((tekil * x.agirlik) / toplamAgirlik);
+        : Math.round((toplam * x.agirlik) / toplamAgirlik);
       kalan -= pay;
       return { ...x, adet: Math.max(0, pay) };
     });
@@ -222,13 +229,21 @@ export function trafikOzeti(donem = 'yedi') {
 
     Adımlar bağımsız üretilseydi "ilan görüntüleyen sayısı siteye
     girenden fazla" gibi imkânsız bir tablo çıkabilirdi.
+
+    HUNİ NEDEN "HESAP OLUŞTURDU" İLE BİTMİYOR
+    -----------------------------------------
+    Kaç hesap açıldığını GERÇEKTEN biliyoruz; o sayı veritabanından
+    geliyor ve panelin Özet bölümünde yazıyor. Aynı ekrana bir de demo
+    huninin uydurduğu hesap sayısını koymak, panelin kendi kendisiyle
+    çeliştiği bir tablo yaratıyordu: üstte gerçek kayıt sayısı, altta
+    ondan kat kat büyük bir demo sayısı. Huni bu yüzden ölçemediğimiz
+    adımlarda kalıyor ve ölçtüğümüz adımı tekrar etmiyor.
   */
   const huni = [
     { ad: 'Siteye girdi', adet: tekil },
     { ad: 'İlan listesine baktı', adet: Math.round(tekil * 0.62) },
     { ad: 'İlan detayı açtı', adet: Math.round(tekil * 0.34) },
     { ad: 'Başvuru adımına gitti', adet: Math.round(tekil * 0.11) },
-    { ad: 'Hesap oluşturdu', adet: Math.round(tekil * 0.04) },
   ];
 
   return {
@@ -239,10 +254,10 @@ export function trafikOzeti(donem = 'yedi') {
     /* Tek sayfada kalıp çıkanların oranı. */
     bounce: 0.38 + rnd() * 0.06,
     ortalamaOturum: 96 + Math.round(rnd() * 60),
-    kaynaklar: dagit(KAYNAKLAR),
-    sehirler: dagit(SEHIRLER),
-    cihazlar: dagit(CIHAZLAR),
-    sayfalar: dagit(SAYFALAR).sort((a, b) => b.adet - a.adet),
+    kaynaklar: dagit(KAYNAKLAR, tekil),
+    sehirler: dagit(SEHIRLER, tekil),
+    cihazlar: dagit(CIHAZLAR, tekil),
+    sayfalar: dagit(SAYFALAR, goruntuleme).sort((a, b) => b.adet - a.adet),
     huni,
   };
 }
