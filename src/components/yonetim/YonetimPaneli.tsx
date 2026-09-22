@@ -1,8 +1,11 @@
 import React from 'react';
 import { CanliSayfasi } from './CanliSayfasi';
+import { BasvurularSayfasi } from './BasvurularSayfasi';
 import { IlanlarSayfasi } from './IlanlarSayfasi';
 import { OgrencilerSayfasi } from './OgrencilerSayfasi';
 import { OnaySayfasi } from './OnaySayfasi';
+import { SirketlerSayfasi } from './SirketlerSayfasi';
+import { TaramaSayfasi } from './TaramaSayfasi';
 import { OzetSayfasi } from './OzetSayfasi';
 import { TrafikSayfasi } from './TrafikSayfasi';
 import { YonetimKabuk, type YonetimSayfaKimlik } from './YonetimKabuk';
@@ -89,31 +92,10 @@ export const YonetimPaneli: React.FC<{
       {etkin === 'onay' && <OnaySayfasi />}
       {etkin === 'ogrenciler' && <OgrencilerSayfasi />}
       {etkin === 'ilanlar' && <IlanlarSayfasi />}
+      {etkin === 'basvurular' && <BasvurularSayfasi />}
+      {etkin === 'sirketler' && <SirketlerSayfasi />}
+      {etkin === 'tarama' && <TaramaSayfasi />}
 
-      {etkin === 'basvurular' && (
-        <Hazirlaniyor
-          baslik="Başvurular"
-          anlatim="Yalnız site içi ilanlar listelenecek. Kariyer sayfasına yönlendirilen ilanda başvuru kaydı oluşmuyor; onları burada göstermek, olmayan bir veriyi varmış gibi sunmak olurdu."
-          bekleyen={[
-            'Durum: yeni, incelemede, görüşme, teklif, red, kabul, çekildi',
-            'İlana ve şirkete göre süzme',
-          ]}
-        />
-      )}
-      {etkin === 'sirketler' && (
-        <Hazirlaniyor
-          baslik="Şirketler"
-          anlatim="Sahipsiz, sahiplenilmiş ve talebi bekleyen şirketler. Alan adı eşleşmesi otomatik onaylanmayacak: eşleşme bir ipucu, kanıt değil."
-          bekleyen={['Sahiplenme talebi kuyruğu', 'Alan adı eşleşmesinde elle onay']}
-        />
-      )}
-      {etkin === 'tarama' && (
-        <Hazirlaniyor
-          baslik="Tarama"
-          anlatim="83 kaynağın durumu; hangi sistemden kaç kaynak geldiği, son taramanın yaşı ve partial/fail notları."
-          bekleyen={['Sistem dağılımı', 'Son tarama yaşı ve durumu', 'Taramayı çalıştır']}
-        />
-      )}
       {etkin === 'kesfet' && (
         <Hazirlaniyor
           baslik="Keşfet arşivi"

@@ -1610,6 +1610,102 @@ export async function fetchPanelOgrencileri(secenek: {
 }
 
 /* ------------------------------------------------------------------ */
+/* PANEL: BAŞVURULAR, ŞİRKETLER, TARAMA                                */
+/* ------------------------------------------------------------------ */
+
+export interface PanelBasvurusu {
+  id: string;
+  durum: string;
+  ogrenci: string | null;
+  ilan: string | null;
+  sirket: string | null;
+  basvurdu: string | null;
+  durumDegisti: string | null;
+  gorusme: string | null;
+}
+
+export interface PanelBasvuruListesi {
+  toplam: number;
+  durumSayimlari: Record<string, number>;
+  satirlar: PanelBasvurusu[];
+}
+
+export async function fetchPanelBasvurulari(secenek: {
+  durum?: string | null;
+  limit?: number;
+  ofset?: number;
+} = {}): Promise<PanelBasvuruListesi> {
+  const { data, error } = await supabase.rpc('yonetim_basvurular' as never, {
+    p_durum: secenek.durum ?? null,
+    p_limit: secenek.limit ?? 50,
+    p_ofset: secenek.ofset ?? 0,
+  } as never);
+  if (error) fail('Başvuru listesi alınamadı', error);
+  return data as unknown as PanelBasvuruListesi;
+}
+
+export interface PanelSirketi {
+  id: string;
+  ad: string;
+  sahiplenildi: string | null;
+  yayinda: number;
+  taslak: number;
+}
+
+export interface PanelSirketListesi {
+  toplam: number;
+  sahiplenmisToplam: number;
+  sahipsizToplam: number;
+  satirlar: PanelSirketi[];
+}
+
+export async function fetchPanelSirketleri(secenek: {
+  sahiplenme?: string | null;
+  arama?: string | null;
+  limit?: number;
+  ofset?: number;
+} = {}): Promise<PanelSirketListesi> {
+  const { data, error } = await supabase.rpc('yonetim_sirketler' as never, {
+    p_sahiplenme: secenek.sahiplenme ?? null,
+    p_arama: secenek.arama ?? null,
+    p_limit: secenek.limit ?? 50,
+    p_ofset: secenek.ofset ?? 0,
+  } as never);
+  if (error) fail('Şirket listesi alınamadı', error);
+  return data as unknown as PanelSirketListesi;
+}
+
+export interface PanelTaramaKaynagi {
+  id: string;
+  ad: string;
+  adaptor: string | null;
+  acik: boolean;
+  guven: string | null;
+  sonDurum: string | null;
+  sonKosu: string | null;
+  sonBasari: string | null;
+  bulunan: number | null;
+  eklenen: number | null;
+  hata: string | null;
+}
+
+export interface PanelTarama {
+  kaynakSayisi: number;
+  acik: number;
+  kapali: number;
+  sonDurumSayimlari: Record<string, number>;
+  son7Gun: Record<string, number>;
+  sonKosu: string | null;
+  kaynaklar: PanelTaramaKaynagi[];
+}
+
+export async function fetchPanelTarama(): Promise<PanelTarama> {
+  const { data, error } = await supabase.rpc('yonetim_tarama' as never);
+  if (error) fail('Tarama durumu alınamadı', error);
+  return data as unknown as PanelTarama;
+}
+
+/* ------------------------------------------------------------------ */
 /* İLAN BİLDİRİMLERİ — YÖNETİCİ İNCELEMESİ                             */
 /* ------------------------------------------------------------------ */
 

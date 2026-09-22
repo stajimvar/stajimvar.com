@@ -430,3 +430,81 @@ test('teklife acik sutunu yaniltici okunmuyor', () => {
     'alanin varsayilan oldugu yazmali',
   );
 });
+
+/* ------------------------------------------------------------------ */
+/*  PANEL: BASVURULAR, SIRKETLER, TARAMA                               */
+/* ------------------------------------------------------------------ */
+
+const BST_GOC = 'supabase/migrations/20261102010000_yonetim_basvuru_sirket_tarama.sql';
+
+test('kalan uc sayfa da yer tutucu degil', () => {
+  const panel = oku('src/components/yonetim/YonetimPaneli.tsx');
+  for (const [kimlik, bilesen] of [
+    ['basvurular', 'BasvurularSayfasi'],
+    ['sirketler', 'SirketlerSayfasi'],
+    ['tarama', 'TaramaSayfasi'],
+  ]) {
+    assert.ok(
+      panel.includes("etkin === '" + kimlik + "' && <" + bilesen),
+      kimlik + ' bagli olmali',
+    );
+  }
+  assert.ok(!panel.includes('baslik="Başvurular"'), 'basvurular yer tutucusu kalmamali');
+  assert.ok(!panel.includes('baslik="Şirketler"'), 'sirketler yer tutucusu kalmamali');
+  assert.ok(!panel.includes('baslik="Tarama"'), 'tarama yer tutucusu kalmamali');
+});
+
+test('uc RPC de yonetici kapisinda ve anona kapali', () => {
+  const sql = oku(BST_GOC);
+  for (const ad of ['yonetim_basvurular', 'yonetim_sirketler', 'yonetim_tarama']) {
+    const bolum = sql.slice(sql.indexOf('function public.' + ad));
+    assert.ok(bolum.toLowerCase().includes('security definer'), ad + ' security definer olmali');
+    assert.ok(bolum.includes('if not public.is_admin()'), ad + ' yonetici kapisi olmali');
+  }
+  const anonKapali = sql.split('from public, anon').length - 1;
+  assert.equal(anonKapali, 3, 'uc RPC de anona kapatilmali');
+});
+
+test('dusuk basvuru sayisi ekranda aciklaniyor', () => {
+  /*
+    Yayindaki 189 ilanin HICBIRI site ici basvuru almiyor; hepsi kariyer
+    sayfasina yonlendiriyor. Aciklama olmadan "189 ilan var ama 6 basvuru"
+    panelin bozuk oldugunu dusundururdu.
+  */
+  const sayfa = oku('src/components/yonetim/BasvurularSayfasi.tsx');
+  assert.ok(sayfa.includes('kariyer sayfasına yönlendiriyor'), 'sebep yazmali');
+  assert.ok(sayfa.includes('bir arıza değil'), 'arıza olmadigi yazmali');
+});
+
+test('tarama her kaynagin yalniz SON kosusuna bakiyor', () => {
+  /*
+    25 binden fazla kosu satiri var. Hepsini saymak panelin sorusunu
+    cevaplamaz: soru "hangi kaynak bozuk", "toplam kac kez calisti" degil.
+  */
+  const sql = oku(BST_GOC);
+  const tarama = sql.slice(sql.indexOf('function public.yonetim_tarama'));
+  assert.ok(tarama.includes('distinct on (r.source_id)'), 'kaynak basina son kosu alinmali');
+});
+
+test('kapali kaynak basarisiz sayilmiyor', () => {
+  const sql = oku(BST_GOC);
+  const tarama = sql.slice(sql.indexOf('function public.yonetim_tarama'));
+  const sayim = tarama.slice(tarama.indexOf("'sonDurumSayimlari'"), tarama.indexOf("'son7Gun'"));
+  assert.ok(
+    sayim.includes('where is_enabled'),
+    'kapali kaynak son durum sayimina girmemeli: gercek arizayi gurultuye gomerdi',
+  );
+});
+
+test('calismayan dugme konmamis', () => {
+  /*
+    Tarama zamanli olarak GitHub Actions ta calisiyor; panelden tetikleme
+    icin ayri bir yetki yolu gerekiyor. Calismayan bir dugme, calisiyor
+    sanilmasina yol acardi.
+  */
+  const sayfa = oku('src/components/yonetim/TaramaSayfasi.tsx');
+  assert.ok(
+    sayfa.includes('tetikleme henüz yok'),
+    'tetikleme olmadigi yazmali',
+  );
+});
