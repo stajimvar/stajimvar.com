@@ -7,8 +7,10 @@ import { PALET, paletSirasi, rozetYazisi } from '../lib/okul-rozeti.mjs';
  * Mantığı `lib/okul-rozeti.mjs` içinde; gerekçeler de orada. Burası
  * yalnız çiziyor.
  *
- * LOGOYA HAZIR: `logoAdresi` verilirse görsel çiziliyor, yüklenemezse
- * monograma düşüyor — şirket tarafındaki `CompanyLogo` ile aynı davranış.
+ * LOGO: `logoAdresi` verilirse üniversitenin amblemi çiziliyor. Adresi
+ * `lib/universite-logosu.mjs` üretiyor ve dosyalar depoda duruyor; burası
+ * dışarıdan adres bilmiyor. Görsel yüklenemezse monograma düşüyor —
+ * şirket tarafındaki `CompanyLogo` ile aynı davranış.
  */
 
 export const OkulRozeti: React.FC<{

@@ -4,6 +4,7 @@ import { SayfaKabugu } from './SayfaKabugu';
 import { KARIYER_MERKEZLERI, type KariyerMerkezi } from '../data/kariyerMerkezleri';
 import { profilMerkezi } from '../lib/rehber-arama.mjs';
 import type { StudentProfile } from '../types';
+import { universiteKodu as kodUret } from '../lib/universite-logosu.mjs';
 
 /**
  * /universite-kariyer-merkezleri — doğrulanmış dış bağlantı dizini.
@@ -50,21 +51,14 @@ export const MerkezListesi: React.FC = () => {
   );
 };
 
-/**
- * Üniversite kodunu adından üretiyor.
- *
- * Logo dosyaları scripts/marka-logolari.mjs tarafından aynı kuralla
- * adlandırıldı; iki yerde ayrı yazılsaydı biri değiştiğinde logolar
- * sessizce kaybolurdu.
- */
-export function universiteKodu(ad: string): string {
-  return ad
-    .toLocaleLowerCase('tr-TR')
-    .replace(/ı/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u')
-    .replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
+/*
+  Kod üretimi `lib/universite-logosu.mjs`e taşındı: okul rozeti de aynı
+  eşleştirmeyi kullanıyor ve testi Node'da koşuyor, bir `.mjs` modülü
+  `.tsx`ten içe aktaramıyor. Kural tek yerde; buradan yeniden dışa
+  veriliyor, çağıranlar değişmedi.
+*/
+export { universiteKodu } from '../lib/universite-logosu.mjs';
+
 
 /**
  * Kariyer merkezi kartı.
@@ -87,7 +81,7 @@ const MerkezKarti: React.FC<{ merkez: KariyerMerkezi; oneCikan?: boolean }> = ({
   merkez,
   oneCikan = false,
 }) => {
-  const kod = universiteKodu(merkez.universite);
+  const kod = kodUret(merkez.universite);
   return (
     <div
       className={`flex h-full flex-col gap-2.5 rounded-2xl border bg-white p-4 ${

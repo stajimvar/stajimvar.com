@@ -1,6 +1,7 @@
 import React from 'react';
 import { Award, Bookmark, Check, FileText, LogOut, MapPin, Pencil, Settings } from 'lucide-react';
 import { OkulRozeti } from './OkulRozeti';
+import { universiteLogosu } from '../lib/universite-logosu.mjs';
 import { adYazimi } from '../lib/ad';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
 import { profilAyarOgeleri } from './sosyal/ProfilAyarMenusu';
@@ -623,13 +624,16 @@ export const ProfilBasligi: React.FC<Props> = ({
               söylemiyor. Girilmemişse rozet de yok — olmayan bir kimliği
               çizmek, satırın kendisini yalan yapardı.
 
-              Logo değil monogram: üniversite logoları tescilli marka ve bu
-              depoda hakkı belirsiz görsel yayımlanmıyor (#119). Bileşen
-              logoya hazır; hakkı net bir kaynak bulununca tek alan
-              doldurmak yetiyor.
+              LOGO (22 Eylül 2026): amblemi olan okullarda üniversitenin
+              KENDİ logosu çiziliyor; kaynak her okulun resmi alan adındaki
+              başlık logosu ve dosyalar depoda (`public/universite-logolari`).
+              Listede olmayan okulda rozet yine kısaltmayı gösteriyor —
+              benzer adlı bir okulun amblemini koymaktansa harf daha
+              doğru. Dosya bir gün kaybolursa bileşen de kısaltmaya
+              düşüyor.
             */}
             <p className="flex min-w-0 items-center justify-center gap-2 break-words">
-              {okul && <OkulRozeti okul={okul} />}
+              {okul && <OkulRozeti okul={okul} logoAdresi={universiteLogosu(okul) ?? undefined} />}
               <span className="min-w-0 break-words">{okul || 'Okulun eksik'}</span>
             </p>
             {(bolum || sinif) && (
