@@ -363,6 +363,23 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   const [filtreAcik, setFiltreAcik] = useState(false);
   const [onlyMandatory, setOnlyMandatory] = useState<boolean>(false);
   const [onlyPaid, setOnlyPaid] = useState<boolean>(false);
+  /*
+    İLAN TÜRÜ SÜZGECİ — VARSAYILAN LİSTE YALNIZ STAJ
+
+    Onaylanan karar (21 Eylül 2026): varsayılan staj listesi yalnız
+    `staj` ve `uzun_donem` gösterir. MT, trainee ve erken kariyer
+    ilanları SİLİNMİYOR, gizlenmiyor — bu süzgeçten seçilerek
+    görülüyorlar.
+
+    Ölçüldü (22 Eylül 2026, TR katalogu): staj 81 · uzun_donem 10 ·
+    sınıflandırılmadı 5 · erken_kariyer 4 · mt 3 · trainee 1.
+    Yani 13 ilan varsayılan listeye girmiyor ama erişilebilir kalıyor.
+
+    SINIFLANDIRILMAMIŞ (NULL) DA VARSAYILANA GİRMİYOR: kanıtı olmayan
+    kayda "staj" demek, sınıfı uydurmak olurdu. Kendi seçeneğinde
+    duruyor ve sayısı görünüyor.
+  */
+  const [ilanTipleri, setIlanTipleri] = useState<string[]>(['staj', 'uzun_donem']);
   const [minMatchScore, setMinMatchScore] = useState<number>(0);
   const [sortBy, setSortBy] = useState<
     | 'match'
@@ -377,6 +394,13 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     | 'city_asc'
     | 'newest'
     | 'oldest'
+    /*
+      Kaynağı en son doğrulanan önce. Sözleşmenin istediği üçüncü
+      sıralama: "bugün doğrulanan". `source_verified_at` damgası
+      başvuru sayfasının çağrılıp ÇALIŞTIĞI an — ilanın yeniden
+      görülmesi değil.
+    */
+    | 'verified_desc'
   >('match');
 
   const categoryScrollRef = useRef<HTMLDivElement>(null);
@@ -512,6 +536,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     | 'arama'
     | 'sehir'
     | 'bicim'
+    /* Tür süzgeci: sayım yapılırken kendi kendini elemesin. */
+    | 'tip'
     | 'sirket'
     | 'tarih'
     | 'zorunlu'
@@ -629,6 +655,21 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       /* Zorunlu staj ve ucret kosullari YUKARIDA kanonik modulde. */
       if (atla !== 'uyum' && match.overallScore < minMatchScore) return false;
 
+      /*
+        TÜR SÜZGECİ — ELEME, ama hiçbir ilanı YOK ETMİYOR.
+
+        Seçili türlerin dışında kalan ilan listeden düşüyor; kaydı,
+        sayfası ve site haritasındaki yeri duruyor. Kullanıcı süzgeci
+        genişletince geri geliyor.
+
+        `ilanTipi` yoksa kayıt "sınıflandırılmadı" kovasında: kanıtsız
+        sınıf uydurmuyoruz, ama kullanıcı isterse onları da görebiliyor.
+      */
+      if (atla !== 'tip' && ilanTipleri.length > 0) {
+        const tip = listing.ilanTipi ?? 'siniflandirilmadi';
+        if (!ilanTipleri.includes(tip)) return false;
+      }
+
       return true;
     },
     [
@@ -644,6 +685,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       minMatchScore,
       kayitliIlanlar,
       yurtdisiSecili,
+      ilanTipleri,
     ],
   );
 
@@ -673,6 +715,12 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         }
         if (sortBy === 'applicants_desc') {
           return b.listing.applicantsCount - a.listing.applicantsCount;
+        }
+        if (sortBy === 'verified_desc') {
+          /* Damgası olmayan sona: "doğrulanmadı" ile "en eski" aynı şey değil. */
+          const av = a.listing.lastSeenAt ? new Date(a.listing.lastSeenAt).getTime() : -1;
+          const bv = b.listing.lastSeenAt ? new Date(b.listing.lastSeenAt).getTime() : -1;
+          return bv - av;
         }
         if (sortBy === 'deadline_asc') {
           return new Date(a.listing.applicationDeadline).getTime() - new Date(b.listing.applicationDeadline).getTime();
@@ -842,6 +890,25 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     }
     return sayim;
   }, [matchedData, subTab, kayitliIlanlar]);
+
+  /*
+    TÜR SAYIMLARI — SÜZGECİN KENDİSİ HARİÇ.
+
+    `gecer(..., 'tip')` tür süzgecini atlayarak çağrılıyor: "erken
+    kariyer (4)" yazısının, o kutu işaretli değilken de doğru sayıyı
+    göstermesi gerekiyor. Kendi süzgecini uygulayarak sayarsa her
+    seçeneğin yanında 0 yazardı ve kullanıcı orada ilan olmadığını
+    sanırdı.
+  */
+  const ilanTipiSayimlari = useMemo(() => {
+    const sayim: Record<string, number> = {};
+    for (const { listing, match } of matchedData) {
+      if (!gecer(listing, match, 'tip')) continue;
+      const tip = listing.ilanTipi ?? 'siniflandirilmadi';
+      sayim[tip] = (sayim[tip] ?? 0) + 1;
+    }
+    return sayim;
+  }, [matchedData, gecer]);
 
   const companyOptions = useMemo(() => {
     const sayim = new Map<string, number>();
@@ -1728,6 +1795,51 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                   adet={adet}
                   secili={workTypes.includes(tur.id)}
                   onChange={() => calismaSec(tur.id)}
+                />
+              );
+            })}
+          </div>
+        </FiltreBlogu>
+
+        {/* ---- ilan türü ---- */}
+        {/*
+          VARSAYILAN LİSTE YALNIZ STAJ (onaylanan karar, 21 Eylül 2026)
+
+          `staj` ve `uzun_donem` açık geliyor. MT, trainee ve erken
+          kariyer ilanları silinmiyor, gizlenmiyor — buradan seçilerek
+          görülüyorlar. Sınıflandırılmamış kayıtlar da kendi
+          seçeneğinde: kanıtsız kayda "staj" demek sınıfı uydurmak
+          olurdu.
+
+          Sayısı sıfır olan seçenek çizilmiyor (işaretliyse duruyor):
+          boş bir kutu, orada bir şey olduğunu düşündürür.
+        */}
+        <FiltreBlogu baslik="İlan türü">
+          <div className="space-y-0.5">
+            {[
+              { id: 'staj', etiket: 'Staj' },
+              { id: 'uzun_donem', etiket: 'Uzun dönem staj' },
+              { id: 'trainee', etiket: 'Trainee' },
+              { id: 'mt', etiket: 'Yönetici adayı (MT)' },
+              { id: 'erken_kariyer', etiket: 'Erken kariyer' },
+              { id: 'siniflandirilmadi', etiket: 'Sınıflandırılmadı' },
+            ].map((tur) => {
+              const adet = ilanTipiSayimlari[tur.id] ?? 0;
+              if (adet === 0 && !ilanTipleri.includes(tur.id)) return null;
+              return (
+                <SecenekSatiri
+                  key={tur.id}
+                  tip="checkbox"
+                  etiket={tur.etiket}
+                  adet={adet}
+                  secili={ilanTipleri.includes(tur.id)}
+                  onChange={() =>
+                    setIlanTipleri((onceki) =>
+                      onceki.includes(tur.id)
+                        ? onceki.filter((x) => x !== tur.id)
+                        : [...onceki, tur.id],
+                    )
+                  }
                 />
               );
             })}
