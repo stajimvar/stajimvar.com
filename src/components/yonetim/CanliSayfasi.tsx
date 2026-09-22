@@ -1,5 +1,5 @@
 import React from 'react';
-import { sure } from '../../lib/yonetim-demo.mjs';
+import { sure } from '../../lib/yonetim-bicim.mjs';
 import { BosDurum } from './Grafikler';
 import { TUR_RENGI, oturumAdi, useCanliOturumlar, type CanliOlay, type CanliOturum } from './useCanliOturumlar';
 
@@ -82,7 +82,7 @@ export const CanliSayfasi: React.FC = () => {
           {girenler.length ? (
             <ul>{girenler.map((o) => <OturumSatiri key={o.oturum.kimlik + o.an} o={o.oturum} an={o.an} />)}</ul>
           ) : (
-            <div className="py-6"><BosDurum mesaj="Henüz yeni giren yok" /></div>
+            <div className="py-6"><BosDurum mesaj="Son iki saatte yeni giren yok" /></div>
           )}
         </Kolon>
 
@@ -98,7 +98,7 @@ export const CanliSayfasi: React.FC = () => {
           {cikanlar.length ? (
             <ul>{cikanlar.map((o) => <OturumSatiri key={o.oturum.kimlik + o.an} o={o.oturum} an={o.an} />)}</ul>
           ) : (
-            <div className="py-6"><BosDurum mesaj="Henüz çıkan yok" /></div>
+            <div className="py-6"><BosDurum mesaj="Son iki saatte çıkan yok" /></div>
           )}
         </Kolon>
       </div>
@@ -130,7 +130,7 @@ export const CanliSayfasi: React.FC = () => {
               ))}
             </ul>
           ) : (
-            <div className="py-6"><BosDurum mesaj="Akış birazdan başlıyor" /></div>
+            <div className="py-6"><BosDurum mesaj="Son iki saatte hareket yok" /></div>
           )}
         </div>
       </section>

@@ -94,6 +94,7 @@ import { listingSlug, idPrefixFromSlug } from './lib/slug';
 import { konfetiAt } from './lib/konfeti';
 import { CheckCircle2 } from 'lucide-react';
 import { SAYFA_GENISLIGI } from './lib/duzen';
+import { cikisiDinle, sayfaBildir } from './lib/izleme.mjs';
 
 /*
   GECİKMELİ YÜKLEME
@@ -645,6 +646,23 @@ export default function App() {
     aynı kayıtları görüyor, çünkü bildirim kullanıcıya ait, dünyaya
     değil. İki kabuk da bu durumu okuyor.
   */
+  /*
+    ZİYARET ÖLÇÜMÜ
+
+    Panel ziyaretçi sayılarını gösteriyor; o sayıların gerçek olması
+    için ziyaretin bildirilmesi gerekiyor. Yol her değiştiğinde bir
+    olay gidiyor, sekme gizlenince ya da kapanınca çıkış bildiriliyor.
+
+    Kullanıcı kimliği yalnız GİRİŞ YAPMIŞSA gönderiliyor; misafir
+    ziyaretçi şehir, sayfa ve kaynakla anılıyor, adı yok. Yönetim
+    paneli yolları hiç sayılmıyor — kendi bakışımız trafik değil.
+  */
+  React.useEffect(() => {
+    sayfaBildir(path, session?.userId ?? null);
+  }, [path, session?.userId]);
+
+  React.useEffect(() => cikisiDinle(() => window.location.pathname), []);
+
   const bildirim = useBildirimler(session?.userId ?? null);
 
   /*

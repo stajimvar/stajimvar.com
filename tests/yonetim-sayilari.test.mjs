@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { trafikOzeti } from '../src/lib/yonetim-demo.mjs';
 
 /*
   YÖNETİM PANELİNDEKİ SAYILAR YALAN SÖYLEMESİN
@@ -103,53 +102,109 @@ test('son kayıtlar boş günleri de sıfırla döndürüyor', () => {
   );
 });
 
+
 /* ------------------------------------------------------------------ */
-/*  DEMO VERİ GERÇEK VERİYLE ÇELİŞMİYOR                                */
+/*  DEMO VERİ TAMAMEN KALKTI                                           */
 /* ------------------------------------------------------------------ */
 
-test('demo huni, gerçekten ölçtüğümüz bir adımı tekrar etmiyor', () => {
-  for (const donem of ['bugun', 'yedi', 'otuz']) {
-    const ozet = trafikOzeti(donem);
-    const adlar = ozet.huni.map((a) => a.ad);
-    assert.ok(
-      !adlar.some((ad) => /hesap|kay[ıi]t|üye/i.test(ad)),
-      `huni "${adlar.join(' → ')}" — kayıt sayısı gerçek veriden geliyor, demo huni onu uydurmamalı`,
+test('demo trafik üreteci depoda kalmadı', () => {
+  assert.ok(
+    !fs.existsSync(path.join(KOK, 'src/lib/yonetim-demo.mjs')),
+    'üreteç silinmeli: panelde uydurma sayı gösterilmiyor',
+  );
+});
+
+test('panel hiçbir yerde demo üretecinden veri okumuyor', () => {
+  const dosyalar = fs
+    .readdirSync(path.join(KOK, 'src/components/yonetim'))
+    .filter((d) => /\.(tsx?|mjs)$/.test(d));
+
+  for (const d of dosyalar) {
+    const kaynak = oku(`src/components/yonetim/${d}`);
+    assert.doesNotMatch(
+      kaynak,
+      /from '.*yonetim-demo/,
+      `${d} hâlâ demo üretecinden okuyor`,
+    );
+    assert.doesNotMatch(
+      kaynak,
+      /trafikOzeti|ilkOturumlar|oturumlariIlerlet/,
+      `${d} demo üreteç işlevi çağırıyor`,
     );
   }
 });
 
-test('huni adımları azalarak iniyor', () => {
-  for (const donem of ['bugun', 'yedi', 'otuz']) {
-    const { huni } = trafikOzeti(donem);
-    for (let i = 1; i < huni.length; i += 1) {
-      assert.ok(
-        huni[i].adet <= huni[i - 1].adet,
-        `${huni[i].ad} (${huni[i].adet}) bir önceki adımdan büyük olamaz`,
-      );
-    }
+test('canlı akış gerçek RPC ile besleniyor', () => {
+  const kaynak = oku('src/components/yonetim/useCanliOturumlar.ts');
+  assert.match(kaynak, /fetchYonetimCanli/);
+  assert.doesNotMatch(
+    kaynak,
+    /useState\((?:23|412|389|1042)\)/,
+    'sayaçlar sabit bir sayıyla başlatılmamalı',
+  );
+});
+
+test('trafik sayfası gerçek RPC ile besleniyor', () => {
+  const kaynak = oku('src/components/yonetim/TrafikSayfasi.tsx');
+  assert.match(kaynak, /fetchYonetimTrafik/);
+});
+
+/* ------------------------------------------------------------------ */
+/*  ÖLÇÜM: ÇEREZ YOK, IP YOK                                           */
+/* ------------------------------------------------------------------ */
+
+test('oturum kimliği çerezde değil, sekme belleğinde', () => {
+  const kaynak = oku('src/lib/izleme.mjs');
+  assert.match(kaynak, /sessionStorage/);
+  assert.doesNotMatch(kaynak, /document\.cookie/, 'çerez kullanılmamalı');
+});
+
+test('toplama ucu IP saklamıyor', () => {
+  const kaynak = oku('functions/api/olay.ts');
+  assert.doesNotMatch(
+    kaynak,
+    /CF-Connecting-IP|p_ip|ipOzeti/,
+    'ziyaret sayısı için IP gerekmiyor; saklanmamalı',
+  );
+  assert.match(kaynak, /cf\.city/, 'şehir istekten okunmalı, istemciden değil');
+});
+
+test('istemci şehir ve cihaz göndermiyor', () => {
+  const kaynak = oku('src/lib/izleme.mjs');
+  const govde = kaynak.slice(kaynak.indexOf('const govde = JSON.stringify'));
+  const alanlar = govde.slice(0, govde.indexOf('});'));
+  for (const alan of ['sehir', 'cihaz', 'ulke']) {
+    assert.ok(!alanlar.includes(alan), `${alan} istemciden gönderilmemeli`);
   }
 });
 
-test('sayfa dağılımı görüntülemeye, kişi dağılımları tekile bölünüyor', () => {
-  for (const donem of ['bugun', 'yedi', 'otuz']) {
-    const o = trafikOzeti(donem);
-    const topla = (liste) => liste.reduce((a, b) => a + b.adet, 0);
+test('yönetim paneli ziyareti trafiğe sayılmıyor', () => {
+  const istemci = oku('src/lib/izleme.mjs');
+  assert.match(istemci, /\/yonetim/, 'istemci panel yollarını elemeli');
 
-    assert.equal(
-      topla(o.sayfalar),
-      o.goruntuleme,
-      'sayfa BAKIŞI sayıyor; tekile bölünürse yüzdeler yanlış tabana oturur',
-    );
-    assert.equal(topla(o.kaynaklar), o.tekil, 'kaynak KİŞİ sayıyor');
-    assert.equal(topla(o.sehirler), o.tekil, 'şehir KİŞİ sayıyor');
-    assert.equal(topla(o.cihazlar), o.tekil, 'cihaz KİŞİ sayıyor');
-  }
+  const sql = oku('supabase/migrations/20261029020000_site_olayi_yaz.sql');
+  assert.match(
+    sql,
+    /p_yol like '\/yonetim%'/,
+    'sunucu da elemeli: istemci filtresi atlatılabilir',
+  );
 });
 
-test('görüntüleme tekil ziyaretçiden küçük olamıyor', () => {
-  for (const donem of ['bugun', 'yedi', 'otuz']) {
-    const o = trafikOzeti(donem);
-    assert.ok(o.goruntuleme >= o.tekil, `${donem}: görüntüleme tekilden küçük`);
+test('olay tablosu istemci rollerine kapalı', () => {
+  const sql = oku('supabase/migrations/20261029010000_site_olaylari.sql');
+  assert.match(sql, /enable row level security/i);
+  assert.match(sql, /revoke all on table public\.site_olaylari from anon, authenticated/i);
+});
+
+test('trafik RPC uclari yonetici kapisinin arkasinda', () => {
+  for (const [dosya, ad] of [
+    ['20261029030000_yonetim_canli.sql', 'yonetim_canli'],
+    ['20261029040000_yonetim_trafik.sql', 'yonetim_trafik'],
+  ]) {
+    const sql = oku(`supabase/migrations/${dosya}`);
+    assert.match(sql, /security definer/i, `${ad} security definer olmalı`);
+    assert.match(sql, /if not public\.is_admin\(\)/, `${ad} yönetici kapısı olmalı`);
+    assert.match(sql, /from public, anon/i, `${ad} anon'a kapalı olmalı`);
   }
 });
 

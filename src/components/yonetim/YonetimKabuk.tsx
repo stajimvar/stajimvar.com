@@ -102,16 +102,14 @@ const MenuIcerik: React.FC<{
         Siteye dön
       </button>
       {/*
-        DEMO UYARISI SİDEBAR DİBİNDE, HER SAYFADA GÖRÜNÜR.
+        DEMO DİPNOTU KALDIRILDI.
 
-        Trafik sayıları bugün toplanmıyor; paneldeki ziyaretçi akışı
-        üretilmiş veri. Bunu yalnız bir sayfada yazmak, öteki sayfaya
-        giren kişinin gerçek sanmasına yol açardı.
+        Burada "ziyaretçi trafiği demo veriyle çalışıyor" yazıyordu.
+        İki sebeple işe yaramadı: mobilde bu kenar çubuğu hamburger
+        menüsünün arkasında olduğu için uyarı hiç görünmüyordu, ve
+        görünseydi bile bir dipnot uydurma sayıyı doğru yapmıyor.
+        Trafik artık gerçek olaylardan geldiği için uyarıya gerek yok.
       */}
-      <p className="mt-2 text-[10px] leading-relaxed text-gray-500">
-        Ziyaretçi trafiği <strong className="font-semibold">demo veriyle</strong> çalışıyor.
-        Ürün sayıları (öğrenci, ilan, başvuru) gerçek veritabanından geliyor.
-      </p>
     </div>
   </nav>
 );
