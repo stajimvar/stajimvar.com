@@ -1,5 +1,7 @@
 import React from 'react';
 import { CanliSayfasi } from './CanliSayfasi';
+import { IlanlarSayfasi } from './IlanlarSayfasi';
+import { OgrencilerSayfasi } from './OgrencilerSayfasi';
 import { OnaySayfasi } from './OnaySayfasi';
 import { OzetSayfasi } from './OzetSayfasi';
 import { TrafikSayfasi } from './TrafikSayfasi';
@@ -85,29 +87,9 @@ export const YonetimPaneli: React.FC<{
       {etkin === 'trafik' && <TrafikSayfasi />}
       {etkin === 'canli' && <CanliSayfasi />}
       {etkin === 'onay' && <OnaySayfasi />}
+      {etkin === 'ogrenciler' && <OgrencilerSayfasi />}
+      {etkin === 'ilanlar' && <IlanlarSayfasi />}
 
-      {etkin === 'ogrenciler' && (
-        <Hazirlaniyor
-          baslik="Öğrenciler"
-          anlatim="Kayıtlı öğrencilerin tablosu; satıra tıklayınca yan panelde profil ayrıntısı açılacak."
-          bekleyen={[
-            'Ad, e-posta, okul, bölüm, şehir, teklife açık, başvuru sayısı, son görülme',
-            'Okul, bölüm ve şehre göre süzme; ad ve e-postada arama',
-            'Satır tıklanınca detay çekmecesi',
-          ]}
-        />
-      )}
-      {etkin === 'ilanlar' && (
-        <Hazirlaniyor
-          baslik="İlanlar"
-          anlatim="Şirketin StajımVar'da açtığı native ilan ile taranan ilan AYRI sayılacak: ikisi aynı şey değil ve toplamak, başvuru alabildiğimiz ilan sayısını olduğundan büyük gösterir."
-          bekleyen={[
-            'Durum: yayında / onay bekliyor / reddedildi / süresi doldu',
-            'Kaynak: kariyer sayfası, Greenhouse, Lever, Ashby, Workday, native',
-            'Başvuru tipi: yönlendirme, e-posta, site içi',
-          ]}
-        />
-      )}
       {etkin === 'basvurular' && (
         <Hazirlaniyor
           baslik="Başvurular"

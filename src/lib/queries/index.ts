@@ -1516,6 +1516,100 @@ export async function ilanKarariVer(
 }
 
 /* ------------------------------------------------------------------ */
+/* PANEL LİSTELERİ — YÖNETİCİ                                          */
+/* ------------------------------------------------------------------ */
+
+/*
+  Süzme ve sayfalama SUNUCUDA. 189 yayındaki ilanın tamamını indirip
+  tarayıcıda süzmek bugün çalışırdı ama ilan sayısı arttıkça sessizce
+  yavaşlardı. Ayrıca `listings` SELECT iznini sütun sütun veriyor;
+  tarayıcıdan `select('*')` zaten 42501 ile düşüyor.
+*/
+
+export interface PanelIlani {
+  id: string;
+  baslik: string;
+  sirket: string | null;
+  sehir: string | null;
+  ulke: string | null;
+  durum: string;
+  kaynak: string;
+  calisma: string | null;
+  basvuruYolu: string | null;
+  adres: string | null;
+  sonBasvuru: string | null;
+  kaynakDurumu: string | null;
+  olustu: string;
+}
+
+export interface PanelIlanListesi {
+  toplam: number;
+  durumSayimlari: Record<string, number>;
+  kaynakSayimlari: Record<string, number>;
+  satirlar: PanelIlani[];
+}
+
+export async function fetchPanelIlanlari(secenek: {
+  durum?: string | null;
+  kaynak?: string | null;
+  arama?: string | null;
+  limit?: number;
+  ofset?: number;
+} = {}): Promise<PanelIlanListesi> {
+  const { data, error } = await supabase.rpc('yonetim_ilanlar' as never, {
+    p_durum: secenek.durum ?? null,
+    p_kaynak: secenek.kaynak ?? null,
+    p_arama: secenek.arama ?? null,
+    p_limit: secenek.limit ?? 50,
+    p_ofset: secenek.ofset ?? 0,
+  } as never);
+  if (error) fail('İlan listesi alınamadı', error);
+  return data as unknown as PanelIlanListesi;
+}
+
+/**
+ * Öğrenci listesi.
+ *
+ * Ad ve e-posta KİŞİSEL VERİ: yalnız yöneticiye dönüyor ve tablo
+ * istemciye hiç açık değil. "Son görülme" ziyaret ölçümünden geliyor;
+ * ölçüm 22 Eylül'de kurulduğu için ondan önceki ziyaretler bilinmiyor ve
+ * bu alan boş dönüyor. Boş olmak "hiç girmedi" demek değil.
+ */
+export interface PanelOgrencisi {
+  id: string;
+  ad: string | null;
+  eposta: string | null;
+  okul: string | null;
+  fakulte: string | null;
+  bolum: string | null;
+  sinif: number | null;
+  sehir: string | null;
+  teklifeAcik: boolean | null;
+  basvuru: number;
+  sonGorulme: string | null;
+  guncellendi: string | null;
+}
+
+export interface PanelOgrenciListesi {
+  toplam: number;
+  satirlar: PanelOgrencisi[];
+}
+
+export async function fetchPanelOgrencileri(secenek: {
+  arama?: string | null;
+  limit?: number;
+  ofset?: number;
+} = {}): Promise<PanelOgrenciListesi> {
+  const { data, error } = await supabase.rpc('yonetim_ogrenciler' as never, {
+    p_arama: secenek.arama ?? null,
+    p_limit: secenek.limit ?? 50,
+    p_ofset: secenek.ofset ?? 0,
+  } as never);
+  if (error) fail('Öğrenci listesi alınamadı', error);
+  return data as unknown as PanelOgrenciListesi;
+}
+
+/* ------------------------------------------------------------------ */
 /* İLAN BİLDİRİMLERİ — YÖNETİCİ İNCELEMESİ                             */
 /* ------------------------------------------------------------------ */
 
