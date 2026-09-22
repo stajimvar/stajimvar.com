@@ -9,6 +9,7 @@ import type { InternshipListing } from '../types';
 import { fetchListingByIdPrefix } from '../lib/queries';
 import { ListingLogo } from './ListingLogo';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
+import { IlanDurumEtiketleri } from './IlanDurumEtiketleri';
 import { tarihMetni } from '../lib/tarih.mjs';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 import { sonKontrolMetni } from '../lib/zaman';
@@ -581,6 +582,20 @@ export const ListingPage: React.FC<ListingPageProps> = ({
 
           </div>
           <aside className="min-w-0 space-y-3 lg:col-span-4 lg:sticky lg:top-6" aria-label="Başvuru seçenekleri">
+            {/*
+              DURUM UYARISI BAŞVURU SEÇENEKLERİNİN BAŞINDA
+
+              Bu etiketler kartta ve ilan önizlemesinde vardı ama BURADA
+              YOKTU. Oysa arama motorundan gelen kişi doğrudan bu sayfaya
+              düşüyor ve kartı hiç görmüyor: yani "kaynak doğrulanamadı"
+              ya da "başvuru bağlantısı çalışmıyor" uyarısını görmeden
+              başvuru düğmesine basıyordu.
+
+              Kartla aynı bileşen; iki kopya er geç ayrışır ve iki ekran
+              aynı ilan için farklı şey söylerdi.
+            */}
+            {listing && <IlanDurumEtiketleri listing={listing} />}
+
             {/*
               Açıklama, kart ve başvuru diyaloğuyla aynı cümleyi kuruyor:
               karar lib/basvuru-yolu.mjs'te. Önce burada "şirkete talebi

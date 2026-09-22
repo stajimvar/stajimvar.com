@@ -26,6 +26,7 @@ const MAPPER = oku('src/lib/queries/mappers.ts');
 const KART = oku('src/components/InternshipCard.tsx');
 const ETIKET = oku('src/components/IlanDurumEtiketleri.tsx');
 const DETAY = oku('src/components/InternshipDetailModal.tsx');
+const ILAN_SAYFASI = oku('src/components/ListingPage.tsx');
 
 const sqlYorumsuz = (s) => s.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*--.*$/gm, '');
 const tsYorumsuz = (s) => s.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ');
@@ -113,7 +114,7 @@ test('sorunlu durum etiketle söyleniyor', () => {
   assert.match(e, /Kaynak doğrulanamadı/);
 });
 
-test('etiketler hem kartta hem ilan detayında', () => {
+test('etiketler kartta, önizlemede ve ilan sayfasında', () => {
   /*
     Etiketler kartta vardı ama detayda YOKTU: kartta "başvuru bağlantısı
     çalışmıyor" uyarısını görüp tıklayan kişi, başvuru kararını verdiği
@@ -123,7 +124,7 @@ test('etiketler hem kartta hem ilan detayında', () => {
     Tek bileşen kullanılıyor; iki kopya er geç ayrışır ve iki ekran aynı
     ilan için farklı şey söylerdi.
   */
-  for (const [ad, kaynak] of [['kart', KART], ['detay', DETAY]]) {
+  for (const [ad, kaynak] of [['kart', KART], ['detay', DETAY], ['ilan sayfasi', ILAN_SAYFASI]]) {
     const t = tsYorumsuz(kaynak);
     assert.match(t, /<IlanDurumEtiketleri listing=\{listing\}/, ad + ' etiketleri göstermeli');
     assert.match(t, /from '\.\/IlanDurumEtiketleri'/, ad + ' ortak bileşeni kullanmalı');
@@ -142,7 +143,7 @@ test('etiket ilanı listeden çıkarmıyor', () => {
     Ortak bileşendeki `return null` ilanı değil ROZETİ gizliyor: durum
     sağlıklıyken rozet basmamak gürültüyü önlüyor.
   */
-  for (const [ad, kaynak] of [['kart', KART], ['detay', DETAY]]) {
+  for (const [ad, kaynak] of [['kart', KART], ['detay', DETAY], ['ilan sayfasi', ILAN_SAYFASI]]) {
     const t = tsYorumsuz(kaynak);
     assert.ok(
       !/kaynakDurumu ===/.test(t),
