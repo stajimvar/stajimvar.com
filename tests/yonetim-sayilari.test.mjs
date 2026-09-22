@@ -229,3 +229,26 @@ test('yonetim_ozet anon rolune kapali', () => {
     "Supabase yeni fonksiyonlara anon EXECUTE veriyor; `revoke ... from public` bunu kaldırmıyor",
   );
 });
+
+test('huni adımı uygulamanın gerçek liste yoluna bakıyor', () => {
+  /*
+    Huni "İlan listesine baktı" adımı `/ilanlar` arıyordu. Böyle bir sayfa
+    yok: liste `/staj-ilanlari` adresinde, `/ilanlar` yalnızca oraya
+    yönlendiren eski bir adres. Canlıda ölçüldü — eski desen sıfır eşleşti
+    ve adım sonsuza kadar sıfır gösterecekti. Sessizce yanlış olan bir
+    sayı, hata veren bir sayıdan tehlikeli: "kimse bakmadı" diye okunur.
+  */
+  const sql = oku('supabase/migrations/20261030010000_huni_gercek_yollar.sql');
+  const huni = sql.slice(sql.indexOf("'huni'"));
+
+  assert.match(huni, /\/staj-ilanlari%/, 'gerçek liste yolu aranmalı');
+  assert.match(huni, /\/ilan\/%/, 'ilan detay yolu aranmalı');
+
+  /* Ve o yol uygulamada gerçekten bir sayfa olmalı. */
+  const app = oku('src/App.tsx');
+  assert.match(
+    app,
+    /temizYol === '\/staj-ilanlari'/,
+    'App.tsx bu yolu tanımıyorsa huni yine boş kalır',
+  );
+});
