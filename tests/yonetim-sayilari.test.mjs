@@ -346,3 +346,87 @@ test('huni adımı uygulamanın gerçek liste yoluna bakıyor', () => {
     'App.tsx bu yolu tanımıyorsa huni yine boş kalır',
   );
 });
+
+/* ------------------------------------------------------------------ */
+/*  PANEL LISTELERI: ILANLAR VE OGRENCILER                             */
+/* ------------------------------------------------------------------ */
+
+const LISTE_GOC = 'supabase/migrations/20261101010000_yonetim_ilan_ogrenci_listeleri.sql';
+
+test('ilanlar ve ogrenciler sayfalari yer tutucu degil', () => {
+  const panel = oku('src/components/yonetim/YonetimPaneli.tsx');
+  assert.ok(panel.includes("etkin === 'ilanlar' && <IlanlarSayfasi"), 'ilanlar bagli olmali');
+  assert.ok(panel.includes("etkin === 'ogrenciler' && <OgrencilerSayfasi"), 'ogrenciler bagli olmali');
+  assert.ok(!panel.includes('baslik="Öğrenciler"'), 'ogrenciler yer tutucusu kalmamali');
+  assert.ok(!panel.includes('baslik="İlanlar"'), 'ilanlar yer tutucusu kalmamali');
+});
+
+test('listeler sunucudaki RPC ile okunuyor', () => {
+  const q = oku('src/lib/queries/index.ts');
+  for (const [fn, rpc] of [
+    ['fetchPanelIlanlari', 'yonetim_ilanlar'],
+    ['fetchPanelOgrencileri', 'yonetim_ogrenciler'],
+  ]) {
+    const govde = q.slice(q.indexOf('export async function ' + fn));
+    const kesit = govde.slice(0, govde.indexOf('export ', 30));
+    assert.ok(kesit.includes("supabase.rpc('" + rpc + "'"), fn + ' RPC kullanmali');
+    assert.ok(!kesit.includes("select('*'"), fn + " select('*') kullanmamali");
+  }
+});
+
+test('suzme ve sayfalama sunucuda', () => {
+  const sql = oku(LISTE_GOC);
+  const ilan = sql.slice(sql.indexOf('function public.yonetim_ilanlar'), sql.indexOf('function public.yonetim_ogrenciler'));
+  assert.ok(ilan.includes('limit sinir offset'), 'sayfalama SQL tarafinda olmali');
+  assert.ok(ilan.includes('p_arama'), 'arama SQL tarafinda olmali');
+
+  const sayfa = oku('src/components/yonetim/IlanlarSayfasi.tsx');
+  assert.ok(sayfa.includes('ofset'), 'sayfa sunucudan sayfa istemeli');
+});
+
+test('suzgec sayimlari suzulmus kumeden gelmiyor', () => {
+  /*
+    Suzgec dugmesindeki sayi, o dugmeye basinca kac satir gorulecegini
+    soylemeli. Suzulmus kumeden saymak, secili olan disindaki her sayiyi
+    sifir gosterirdi ve suzgec ise yaramaz hale gelirdi.
+  */
+  const sql = oku(LISTE_GOC);
+  const durumSayim = sql.slice(sql.indexOf("'durumSayimlari'"), sql.indexOf("'satirlar'"));
+  assert.ok(durumSayim.includes('from listings group by 1'), 'sayimlar tum ilanlardan olmali');
+  assert.ok(!durumSayim.includes('from suzulmus'), 'sayimlar suzulmus kumeden olmamali');
+});
+
+test('ogrenci listesi kisisel veriyi istemciye acmiyor', () => {
+  const sql = oku(LISTE_GOC);
+  const ogr = sql.slice(sql.indexOf('function public.yonetim_ogrenciler'));
+  assert.ok(ogr.toLowerCase().includes('security definer'));
+  assert.ok(ogr.includes('if not public.is_admin()'), 'yonetici kapisi olmali');
+  assert.ok(ogr.includes('auth.users'), 'e-posta auth.users tan gelmeli');
+  assert.ok(
+    sql.toLowerCase().includes('from public, anon'),
+    'RPC anon a kapali olmali',
+  );
+});
+
+test('son gorulme bos oldugunda ekranda aciklaniyor', () => {
+  /*
+    Bu alan ziyaret olcumunden geliyor ve olcum 22 Eylul 2026 da kuruldu.
+    Bos hucreye "hic girmemis" demek, olcemedigimiz seyi yokmus gibi
+    gostermek olurdu.
+  */
+  const sayfa = oku('src/components/yonetim/OgrencilerSayfasi.tsx');
+  assert.ok(sayfa.includes('Son görülme'), 'sutun olmali');
+  assert.ok(
+    sayfa.includes('hiç girmediği anlamına'),
+    'bos degerin ne demek OLMADIGI yazmali',
+  );
+});
+
+test('teklife acik sutunu yaniltici okunmuyor', () => {
+  const sayfa = oku('src/components/yonetim/OgrencilerSayfasi.tsx');
+  assert.ok(sayfa.includes('hepsiAcik'), 'hepsi acik durumu fark edilmeli');
+  assert.ok(
+    sayfa.includes('varsayılan olarak açık'),
+    'alanin varsayilan oldugu yazmali',
+  );
+});
