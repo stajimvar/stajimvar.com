@@ -38,13 +38,29 @@ async function ciziciyiKur() {
   const giris = path.join(KOK, 'node_modules', '.cache', 'hizli-cevap-giris.tsx');
   const cikti = path.join(KOK, 'node_modules', '.cache', 'hizli-cevap-giris.mjs');
   fs.mkdirSync(path.dirname(giris), { recursive: true });
+  /*
+    KAYNAK MUTLAK YOLDAN ÇAĞRILIYOR
+
+    Giriş dosyası `node_modules/.cache` içine yazılıyor ve kaynağı önce
+    `'../../src/...'` diye göreli çağırıyordu. `node_modules` bir bağlantı
+    (junction/symlink) olduğunda — paylaşılan kurulum, pnpm, ayrı bir
+    worktree — o iki üst dizin BAŞKA bir depoya çıkıyor ve test, kontrol
+    ettiğini sandığı dosya yerine oradaki eski kopyayı çiziyordu. Ölçüldü:
+    depodaki güncel `GuidePages.tsx` markdown'ı bağlantıya çevirirken test
+    "ham markdown kaldı" diyordu.
+
+    Mutlak yol bu belirsizliği kaldırıyor; ön render betiği de giriş
+    dosyalarını zaten mutlak veriyor (`scripts/onrender.mjs`).
+  */
+  const kaynak = (goreli) => JSON.stringify(path.join(KOK, goreli).replace(/\\/g, '/'));
+
   fs.writeFileSync(
     giris,
     [
       "import React from 'react';",
       "import { renderToStaticMarkup } from 'react-dom/server';",
-      "import { GuidePage } from '../../src/components/GuidePages';",
-      "export { REHBERLER } from '../../src/data/rehberler';",
+      `import { GuidePage } from ${kaynak('src/components/GuidePages.tsx')};`,
+      `export { REHBERLER } from ${kaynak('src/data/rehberler.tsx')};`,
       'export const ciz = (slug) =>',
       '  renderToStaticMarkup(React.createElement(GuidePage, { slug, onNavigate: () => {} }));',
       '',
