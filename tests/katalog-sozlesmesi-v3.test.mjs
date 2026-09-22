@@ -24,6 +24,8 @@ const GOC = oku('supabase/migrations/20261026010000_katalog_sozlesmesi_v3.sql');
 const API = oku('src/lib/global-listings-api.mjs');
 const MAPPER = oku('src/lib/queries/mappers.ts');
 const KART = oku('src/components/InternshipCard.tsx');
+const ETIKET = oku('src/components/IlanDurumEtiketleri.tsx');
+const DETAY = oku('src/components/InternshipDetailModal.tsx');
 
 const sqlYorumsuz = (s) => s.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*--.*$/gm, '');
 const tsYorumsuz = (s) => s.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ');
@@ -101,32 +103,58 @@ test('bilinmeyen değer etikete çevrilmiyor', () => {
 
 /* ------------------------------------------- 3. GÖRÜNÜR ETİKETLER */
 
-test('kart sorunlu durumu etiketle söylüyor', () => {
-  const k = tsYorumsuz(KART);
-  assert.match(k, /listing\.applyUrlOk === 'kirik'/);
-  assert.match(k, /listing\.applyUrlOk === 'dogrulanamadi'/);
-  assert.match(k, /listing\.kaynakDurumu === 'belirsiz'/);
-  assert.match(k, /listing\.kaynakDurumu === 'erisilemedi'/);
-  assert.match(k, /Başvuru bağlantısı çalışmıyor/);
-  assert.match(k, /Kaynak doğrulanamadı/);
+test('sorunlu durum etiketle söyleniyor', () => {
+  const e = tsYorumsuz(ETIKET);
+  assert.match(e, /listing\.applyUrlOk === 'kirik'/);
+  assert.match(e, /listing\.applyUrlOk === 'dogrulanamadi'/);
+  assert.match(e, /listing\.kaynakDurumu === 'belirsiz'/);
+  assert.match(e, /listing\.kaynakDurumu === 'erisilemedi'/);
+  assert.match(e, /Başvuru bağlantısı çalışmıyor/);
+  assert.match(e, /Kaynak doğrulanamadı/);
+});
+
+test('etiketler hem kartta hem ilan detayında', () => {
+  /*
+    Etiketler kartta vardı ama detayda YOKTU: kartta "başvuru bağlantısı
+    çalışmıyor" uyarısını görüp tıklayan kişi, başvuru kararını verdiği
+    ekranda uyarıyı göremiyordu. Uyarı tam da işe yarayacağı anda
+    kayboluyordu.
+
+    Tek bileşen kullanılıyor; iki kopya er geç ayrışır ve iki ekran aynı
+    ilan için farklı şey söylerdi.
+  */
+  for (const [ad, kaynak] of [['kart', KART], ['detay', DETAY]]) {
+    const t = tsYorumsuz(kaynak);
+    assert.match(t, /<IlanDurumEtiketleri listing=\{listing\}/, ad + ' etiketleri göstermeli');
+    assert.match(t, /from '\.\/IlanDurumEtiketleri'/, ad + ' ortak bileşeni kullanmalı');
+  }
 });
 
 test('etiket ilanı listeden çıkarmıyor', () => {
   /*
-    Kart bu durumlarda `return null` YAPMAMALI: kanıtsız gizlemek,
-    açık bir ilanı listeden silmek olur. Etiket durumu söylüyor,
-    kararı kullanıcıya bırakıyor.
+    Kanıtsız gizlemek, açık bir ilanı listeden silmek olur. Etiket durumu
+    söylüyor, kararı kullanıcıya bırakıyor.
+
+    Bu artık YAPISAL olarak garanti: kart ve detay durum alanlarına hiç
+    BAKMIYOR, yalnız ortak etiket bileşenini çiziyorlar. Bakmayan bir
+    bileşen, o alana göre gizleme kararı da veremez.
+
+    Ortak bileşendeki `return null` ilanı değil ROZETİ gizliyor: durum
+    sağlıklıyken rozet basmamak gürültüyü önlüyor.
   */
-  const k = tsYorumsuz(KART);
-  const blok = k.slice(k.indexOf("listing.applyUrlOk === 'kirik'"));
-  const govde = blok.slice(0, 2000);
-  assert.ok(!/return null/.test(govde), 'sorunlu ilan gizlenmemeli');
-  assert.ok(!/display:\s*none/.test(govde));
+  for (const [ad, kaynak] of [['kart', KART], ['detay', DETAY]]) {
+    const t = tsYorumsuz(kaynak);
+    assert.ok(
+      !/kaynakDurumu ===/.test(t),
+      ad + ' durum alanına göre dallanmamalı, etiketi ortak bileşene bırakmalı',
+    );
+    assert.ok(!/applyUrlOk ===/.test(t), ad + ' bağlantı durumuna göre dallanmamalı');
+  }
 });
 
 test('sağlıklı durumda etiket basılmıyor', () => {
   /* `gecerli` ve `acik` için rozet yok: her şey yolundayken rozet gürültü. */
-  const k = tsYorumsuz(KART);
+  const k = tsYorumsuz(ETIKET);
   assert.ok(!/applyUrlOk === 'gecerli'/.test(k), 'geçerli bağlantıya etiket basılmamalı');
   assert.ok(!/kaynakDurumu === 'acik'/.test(k), 'açık kaynağa etiket basılmamalı');
 });
