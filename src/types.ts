@@ -75,6 +75,16 @@ export interface StudentProfile {
   linkedinUrl?: string;
   portfolioUrl?: string;
   /*
+    ARAYIŞ DURUMU — AÇIK SEÇİM, VARSAYILAN DEĞİL
+
+    Öğrenci bunları kendisi açıyor ve açtığında profilinin doğrulanmış
+    şirketlere görüneceğini bilerek açıyor; arayüz ne paylaşıldığını
+    yazıyor. `isOpenToOffers` alanının aksine varsayılan KAPALI: o alan
+    kayıtta açık geliyor ve bu yüzden bir rıza kanıtı değil.
+  */
+  isArayan?: boolean;
+  stajArayan?: boolean;
+  /*
     CV DOSYASININ DEPOLAMA YOLU — ADRES DEĞİL
 
     `cvs` kovası gizli; burada tutulan şey `{user_id}/profil/<uuid>.pdf`
