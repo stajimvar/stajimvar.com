@@ -46,7 +46,21 @@ export const OkulRozeti: React.FC<{
         height={64}
         loading="lazy"
         onError={() => setDustu(true)}
-        className={`${boyut === 'orta' ? 'h-10 w-10' : 'h-7 w-7'} shrink-0 rounded-lg object-contain`}
+        /*
+          ÇERÇEVE VE ÖLÇÜ (22 Eylül 2026)
+
+          Logo satıra çıplak ve 28 piksel konuyordu; telefonda okul adı 14
+          piksel (satır 20) olduğu için rozet satırdan taşıyordu. Amblemlerin
+          oranı da birbirini tutmuyor — MSGSÜ'nün baykuşu geniş ve yassı,
+          mühürler kare — çerçevesiz hâlde geniş olan adın yanında havada
+          duruyordu.
+
+          Kutu 24 piksele indi, kenarlık ve iç boşlukla hepsi aynı kareye
+          oturuyor. Geniş ekranda ad 16 piksele çıktığı için kutu da 28'e
+          çıkıyor. Şirket logolarında (`CompanyLogo`) ve kariyer merkezi
+          kartında da aynı dil kullanılıyor.
+        */
+        className={`${boyut === 'orta' ? 'h-10 w-10 p-1' : 'h-6 w-6 p-0.5 sm:h-7 sm:w-7'} shrink-0 rounded-lg border border-gray-200 bg-white object-contain`}
       />
     );
   }

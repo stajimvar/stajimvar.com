@@ -107,3 +107,22 @@ test('uzun kisaltma kutuya sigiyor', () => {
   assert.ok(BILESEN.includes('px-1.5'), 'uzun kisaltma icin yatay dolgu olmali');
   assert.ok(!/h-7 w-7 text-/.test(BILESEN), 'monogram kutusu sabit genislikte kalmamali');
 });
+
+test('logo kutusu satira oturuyor ve cercevesi var', () => {
+  /*
+    22 Eylul 2026: logo 28 piksel ve cercevesizdi. Telefonda okul adi 14
+    piksel (satir 20) oldugu icin rozet satirdan tasiyordu; ustelik
+    amblemlerin orani birbirini tutmuyor (MSGSU'nun baykusu genis ve
+    yassi, muhurler kare) ve cercevesiz hali adin yaninda havada
+    duruyordu. Kutu 24'e indi, genis ekranda 28'e cikiyor; kenarlik ve ic
+    bosluk hepsini ayni kareye oturtuyor.
+  */
+  assert.ok(
+    BILESEN.includes('h-6 w-6 p-0.5 sm:h-7 sm:w-7'),
+    'logo kutusu satir olcusune gore buyumeli',
+  );
+  assert.ok(
+    BILESEN.includes('border border-gray-200 bg-white object-contain'),
+    'logo cercevesi sirket logolariyla ayni dilde olmali',
+  );
+});
