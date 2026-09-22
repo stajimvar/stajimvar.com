@@ -159,3 +159,24 @@ test('sağlıklı durumda etiket basılmıyor', () => {
   assert.ok(!/applyUrlOk === 'gecerli'/.test(k), 'geçerli bağlantıya etiket basılmamalı');
   assert.ok(!/kaynakDurumu === 'acik'/.test(k), 'açık kaynağa etiket basılmamalı');
 });
+
+test('tek ilan sorgusu da normalize alanlari cekiyor', () => {
+  /*
+    Katalog RPC'si normalize alanlari satir yuku ile gonderiyor, ama tek
+    ilan ceken sorgular LISTING_COLUMNS listesinden besleniyor ve alanlar
+    orada YOKTU. Sonuc: /ilan/<slug> sayfasinda kaynakDurumu hep undefined
+    kaliyor ve etiket hic basilmiyordu. Olculdu: kartta etiketi gorunen
+    ilan, kendi sayfasinda etiketsiz aciliyordu.
+
+    Arama motorundan gelen kisi dogrudan o sayfaya dusuyor ve karti hic
+    gormuyor -- yani uyariyi en cok gormesi gereken kisi gormuyordu.
+  */
+  const m = oku('src/lib/queries/mappers.ts');
+  const liste = m.slice(m.indexOf('export const LISTING_COLUMNS'), m.indexOf("].join(', ')"));
+  for (const alan of ['il', 'ilce', 'uzaktan', 'ilan_tipi', 'kaynak_durumu', 'apply_url_ok']) {
+    assert.ok(
+      liste.includes("'" + alan + "'"),
+      alan + " sutunu secilmeli; yoksa tek ilan sayfasinda etiket basilmaz",
+    );
+  }
+});

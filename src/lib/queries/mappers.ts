@@ -132,6 +132,29 @@ export const LISTING_COLUMNS = [
   'application_method',
   'application_channel_id',
   'insurance_note',
+  /*
+    NORMALİZE ALANLAR — KATALOG DIŞINDAKİ YOLLARDA DA GEREKLİ
+
+    Katalog RPC'si (v3) bunları zaten satır yüküyle gönderiyor, ama tek
+    ilan çeken sorgular bu listeden besleniyor ve alanlar burada YOKTU.
+    Sonuç: `/ilan/<slug>` sayfasında `kaynakDurumu` hep undefined kalıyor
+    ve "Kaynak doğrulanamadı" etiketi hiç basılmıyordu. Ölçüldü — kartta
+    etiketi görünen ilan, kendi sayfasında etiketsiz açılıyordu.
+
+    Arama motorundan gelen kişi doğrudan o sayfaya düşüyor ve kartı hiç
+    görmüyor; yani uyarıyı en çok görmesi gereken kişi görmüyordu.
+
+    Altı sütunun da `anon` SELECT izni var (ölçüldü). Bu önemli: bu tablo
+    izni sütun sütun veriyor ve izinsiz tek bir sütun sorgunun TAMAMINI
+    42501 ile düşürürdü.
+  */
+  'il',
+  'ilce',
+  'uzaktan',
+  'ilan_tipi',
+  'kaynak_durumu',
+  'apply_url_ok',
+  'content_updated_at',
 ].join(', ');
 
 /** Yalnızca yukarıdaki kolonlar okunduğu için satır tipi de daraltılmış. */
