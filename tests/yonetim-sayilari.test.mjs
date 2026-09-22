@@ -508,3 +508,53 @@ test('calismayan dugme konmamis', () => {
     'tetikleme olmadigi yazmali',
   );
 });
+
+test('panelde yer tutucu kart kalmadi', () => {
+  /*
+    Panelin her sayfasi gercek veriyle calisiyor. Kesfet, bolum ve
+    paylasim icin duran yer tutucular ULASILAMAYAN olu koddu: o yollar
+    YENI_PANEL_YOLLARI icinde degil, tiklaninca eski calisan ekranlara
+    gidiliyor.
+  */
+  const panel = oku('src/components/yonetim/YonetimPaneli.tsx');
+  assert.ok(!panel.includes('Hazirlaniyor'), 'yer tutucu bileseni kalmamali');
+  assert.ok(!panel.includes('Bu ekranda olacaklar'), 'yer tutucu metni kalmamali');
+});
+
+test('panel disinda acilan baglantilar isaretli', () => {
+  /*
+    Kesfet, bolum ve paylasim ekranlari panelden once yazildi ve kendi
+    adreslerinde calisiyor; tiklaninca sol sutun kayboluyor. Sutunun
+    sebepsiz kaybolmasi, panelin bozuldugunu dusundururdu.
+  */
+  const kabuk = oku('src/components/yonetim/YonetimKabuk.tsx');
+  const sayac = kabuk.split('disarida: true').length - 1;
+  assert.equal(sayac, 3, 'uc baglanti disarida isaretlenmeli');
+  assert.ok(kabuk.includes('panel dışında açılır'), 'ekran okuyucuya da soylenmeli');
+});
+
+test('yeni panel yollari ile panel sayfalari ortusuyor', () => {
+  /*
+    Kabuktaki her bağlantı ya panelin kendi yolunda ya da bilerek disarida
+    olmali. Uclusu de olmayan bir kimlik, tiklaninca hicbir sey olmayan
+    bir menu ogesi demek.
+  */
+  const app = oku('src/App.tsx');
+  const kabuk = oku('src/components/yonetim/YonetimKabuk.tsx');
+  const panel = oku('src/components/yonetim/YonetimPaneli.tsx');
+
+  const kume = app.slice(app.indexOf('YENI_PANEL_YOLLARI = new Set('));
+  const yollar = kume.slice(0, kume.indexOf(']'));
+
+  const kimlikler = [...kabuk.matchAll(/kimlik: '([a-z]+)'/g)].map((m) => m[1]);
+  assert.ok(kimlikler.length >= 12, 'kimlikler okunabilmeli');
+
+  for (const k of kimlikler) {
+    const disarida = new RegExp("kimlik: '" + k + "'[^}]*disarida: true").test(kabuk);
+    if (disarida) continue;
+    const cizilyor = panel.includes("etkin === '" + k + "'");
+    assert.ok(cizilyor, k + ' icin panelde bir sayfa olmali');
+    const yolVar = k === 'ozet' ? yollar.includes("'/yonetim'") : yollar.includes("/yonetim/" + k);
+    assert.ok(yolVar, k + ' yolu YENI_PANEL_YOLLARI icinde olmali');
+  }
+});
