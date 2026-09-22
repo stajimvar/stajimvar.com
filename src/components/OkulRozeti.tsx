@@ -33,7 +33,7 @@ export const OkulRozeti: React.FC<{
   const olcu =
     boyut === 'orta'
       ? 'h-10 min-w-10 px-2 text-[13px]'
-      : 'h-7 min-w-7 px-1.5 text-[11px]';
+      : 'h-6 min-w-6 px-1.5 text-[10px] sm:h-7 sm:min-w-7 sm:text-[11px]';
   const gorselVar = Boolean(logoAdresi) && !dustu;
 
   if (gorselVar) {
@@ -47,20 +47,22 @@ export const OkulRozeti: React.FC<{
         loading="lazy"
         onError={() => setDustu(true)}
         /*
-          ÇERÇEVE VE ÖLÇÜ (22 Eylül 2026)
+          YUVARLAK VE BEYAZ HALKALI (22 Eylül 2026)
 
-          Logo satıra çıplak ve 28 piksel konuyordu; telefonda okul adı 14
-          piksel (satır 20) olduğu için rozet satırdan taşıyordu. Amblemlerin
-          oranı da birbirini tutmuyor — MSGSÜ'nün baykuşu geniş ve yassı,
-          mühürler kare — çerçevesiz hâlde geniş olan adın yanında havada
-          duruyordu.
+          Rozet önce okul adının soluna konmuştu; hangi ölçü denendiyse
+          yamalı durdu — satır telefonda 14 piksel, amblemlerin oranı da
+          birbirini tutmuyor (MSGSÜ'nün baykuşu geniş ve yassı, mühürler
+          kare) ve ortalanmış satırın başındaki kutu adı ortadan
+          kaydırıyordu.
 
-          Kutu 24 piksele indi, kenarlık ve iç boşlukla hepsi aynı kareye
-          oturuyor. Geniş ekranda ad 16 piksele çıktığı için kutu da 28'e
-          çıkıyor. Şirket logolarında (`CompanyLogo`) ve kariyer merkezi
-          kartında da aynı dil kullanılıyor.
+          Artık profil fotoğrafının köşesinde: fotoğraf yuvarlak olduğu için
+          rozet de yuvarlak, beyaz halka da onu altındaki tamamlanma
+          halkasından ayırıyor — halkanın yeşili amblemin kenarına
+          karışmıyor. İç boşluk gerekiyor, dolgusuz hâlde geniş amblemler
+          daireden taşıyor. Şirket logolarında (`CompanyLogo`) da kenarlık +
+          beyaz zemin aynı işi görüyor.
         */
-        className={`${boyut === 'orta' ? 'h-10 w-10 p-1' : 'h-6 w-6 p-0.5 sm:h-7 sm:w-7'} shrink-0 rounded-lg border border-gray-200 bg-white object-contain`}
+        className={`${boyut === 'orta' ? 'h-10 w-10 p-1' : 'h-6 w-6 p-0.5 sm:h-7 sm:w-7'} shrink-0 rounded-full border border-gray-200 bg-white object-contain ring-2 ring-white`}
       />
     );
   }
@@ -74,7 +76,7 @@ export const OkulRozeti: React.FC<{
       */
       aria-hidden
       title={okul}
-      className={`${olcu} ${PALET[paletSirasi(okul)]} inline-flex shrink-0 items-center justify-center rounded-lg font-black tracking-tight`}
+      className={`${olcu} ${PALET[paletSirasi(okul)]} inline-flex shrink-0 items-center justify-center rounded-full font-black tracking-tight ring-2 ring-white`}
     >
       {yazi}
     </span>

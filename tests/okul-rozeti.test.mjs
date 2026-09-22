@@ -79,7 +79,7 @@ test('rozet okul adinin YERINE gecmiyor', () => {
 
 test('okul girilmemisse rozet cizilmiyor', () => {
   /* Olmayan bir kimligi cizmek, satirin kendisini yalan yapardi. */
-  assert.ok(BASLIK.includes('{okul && <OkulRozeti'));
+  assert.match(BASLIK, /\{okul && \([\s\S]{0,200}<OkulRozeti/);
   assert.ok(BILESEN.includes('if (!okul || !yazi) return null;'));
 });
 
@@ -94,7 +94,12 @@ test('kazanilan rozetlerle karistirilmiyor', () => {
     kimlik isareti. Ayri bilesen, ayri bicim.
   */
   assert.ok(!BILESEN.includes('earnedBadges'));
-  assert.ok(BILESEN.includes('rounded-lg'), 'kare-yuvarlak kutu, madalya degil');
+  /*
+    Bicim 22 Eylul 2026'da yuvarlaga dondu: rozet artik profil
+    fotografinin kosesinde duruyor ve fotograf yuvarlak. Kare bir etiket
+    orada yamali kaliyordu.
+  */
+  assert.ok(BILESEN.includes('rounded-full'), 'fotografin kosesinde yuvarlak duruyor');
 });
 
 test('uzun kisaltma kutuya sigiyor', () => {
@@ -108,21 +113,29 @@ test('uzun kisaltma kutuya sigiyor', () => {
   assert.ok(!/h-7 w-7 text-/.test(BILESEN), 'monogram kutusu sabit genislikte kalmamali');
 });
 
-test('logo kutusu satira oturuyor ve cercevesi var', () => {
+test('logo fotografin kosesinde, yuvarlak ve beyaz halkali', () => {
   /*
-    22 Eylul 2026: logo 28 piksel ve cercevesizdi. Telefonda okul adi 14
-    piksel (satir 20) oldugu icin rozet satirdan tasiyordu; ustelik
-    amblemlerin orani birbirini tutmuyor (MSGSU'nun baykusu genis ve
-    yassi, muhurler kare) ve cercevesiz hali adin yaninda havada
-    duruyordu. Kutu 24'e indi, genis ekranda 28'e cikiyor; kenarlik ve ic
-    bosluk hepsini ayni kareye oturtuyor.
+    22 Eylul 2026: rozet once okul adinin soluna konmustu. Hangi olcu
+    denendiyse yamali durdu -- satir telefonda 14 piksel, amblemlerin
+    orani birbirini tutmuyor (MSGSU'nun baykusu genis ve yassi, muhurler
+    kare) ve ortalanmis satirin basindaki kutu adi ortadan kaydiriyordu.
+
+    Rozet profil fotografinin sag alt kosesine tasindi. Beyaz halka onu
+    altindaki tamamlanma halkasindan ayiriyor: halkanin yesili amblemin
+    kenarina karismiyor.
   */
   assert.ok(
     BILESEN.includes('h-6 w-6 p-0.5 sm:h-7 sm:w-7'),
-    'logo kutusu satir olcusune gore buyumeli',
+    'logo kutusu ekran olcusune gore buyumeli',
   );
+  assert.ok(BILESEN.includes('ring-2 ring-white'), 'beyaz halka olmali');
   assert.ok(
     BILESEN.includes('border border-gray-200 bg-white object-contain'),
     'logo cercevesi sirket logolariyla ayni dilde olmali',
   );
+  /* Fotografin kosesi: kapsayici `relative`, rozet `absolute`. */
+  assert.match(BASLIK, /<div className="relative">[\s\S]{0,1500}<\/Halka>/);
+  assert.match(BASLIK, /<span className="absolute bottom-0 right-0 sm:/);
+  /* Satirda rozet kalmadi: okul adi tek basina. */
+  assert.ok(BASLIK.includes(`<p className="min-w-0 break-words">{okul || 'Okulun eksik'}</p>`));
 });
