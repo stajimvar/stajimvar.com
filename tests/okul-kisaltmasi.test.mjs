@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
+import { okulKisaltmasi as kisalt } from '../src/lib/ad-kisaltma.mjs';
 
 /*
   Profil satırında okul ve bölüm tek satıra sığmalı; uzun üniversite adı
@@ -9,26 +8,18 @@ import path from 'node:path';
   baş harf almak kimsenin kullanmadığı bir kısaltma üretiyor ("Boğaziçi
   Üniversitesi" için "BÜ" — herkes "Boğaziçi" der).
 
-  Kaynak TypeScript olduğu için kural burada birebir kopyalanıyor ve
-  eşikler dosyadan okunuyor; eşik kayarsa test kırılıyor.
+  KURAL ARTIK KOPYALANMIYOR
+
+  Fonksiyon `ad.ts` içindeydi ve Node bir `.ts` dosyasını çalıştıramadığı
+  için kural burada birebir kopyalanıyor, eşikler de dosyadan metin olarak
+  okunuyordu. Kopya, asıl fonksiyon değişince sessizce ayrışabilir bir
+  ikinci gerçek demekti.
+
+  Okul rozeti (`lib/okul-rozeti.mjs`) da aynı kısaltmayı kullanıyor ve bir
+  `.mjs` modülü `.ts`'ten içe aktaramıyor; fonksiyon bu yüzden
+  `ad-kisaltma.mjs`e taşındı ve `ad.ts` onu yeniden dışa veriyor. Test
+  artık ASIL fonksiyonu çağırıyor — eşik kayarsa davranış testleri kırılır.
 */
-const kaynak = fs.readFileSync(
-  path.resolve(import.meta.dirname, '..', 'src', 'lib', 'ad.ts'),
-  'utf8'
-);
-
-test('kısaltma eşikleri değişmemiş', () => {
-  assert.match(kaynak, /kelimeler\.length < 3 \|\| temiz\.length <= 20/);
-});
-
-/** src/lib/ad.ts içindeki okulKisaltmasi ile aynı kural. */
-function kisalt(ad) {
-  const temiz = (ad ?? '').trim();
-  if (!temiz) return '';
-  const kelimeler = temiz.split(/\s+/).filter(Boolean);
-  if (kelimeler.length < 3 || temiz.length <= 20) return temiz;
-  return kelimeler.map((k) => k[0].toLocaleUpperCase('tr-TR')).join('');
-}
 
 test('uzun ad baş harflere iniyor', () => {
   assert.equal(kisalt('Mimar Sinan Güzel Sanatlar Üniversitesi'), 'MSGSÜ');
@@ -54,4 +45,19 @@ test('boş girdide boş dönüyor', () => {
   assert.equal(kisalt(''), '');
   assert.equal(kisalt(null), '');
   assert.equal(kisalt(undefined), '');
+});
+
+test('ad.ts aynı fonksiyonu yeniden dışa veriyor', async () => {
+  /*
+    Çağıran taraf (`adYazimi` ile aynı dosyadan içe aktaran bileşenler)
+    değişmedi; dışa verme kalkarsa TypeScript tarafı kırılır, bu satır da
+    onu söyler.
+  */
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const kaynak = fs.readFileSync(
+    path.resolve(import.meta.dirname, '..', 'src', 'lib', 'ad.ts'),
+    'utf8',
+  );
+  assert.match(kaynak, /export \{ okulKisaltmasi \} from '\.\/ad-kisaltma\.mjs';/);
 });

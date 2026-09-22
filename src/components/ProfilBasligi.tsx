@@ -1,5 +1,6 @@
 import React from 'react';
 import { Award, Bookmark, Check, FileText, LogOut, MapPin, Pencil, Settings } from 'lucide-react';
+import { OkulRozeti } from './OkulRozeti';
 import { adYazimi } from '../lib/ad';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
 import { profilAyarOgeleri } from './sosyal/ProfilAyarMenusu';
@@ -614,7 +615,23 @@ export const ProfilBasligi: React.FC<Props> = ({
             söylüyor.
           */}
           <div className="mt-1.5 max-w-full space-y-0.5 text-sm leading-snug text-gray-500 sm:mt-2 sm:text-base">
-            <p className="min-w-0 break-words">{okul || 'Okulun eksik'}</p>
+            {/*
+              OKUL ROZETİ — okulunu girenlerde.
+
+              Rozet okul adının YERİNE geçmiyor, yanında duruyor: rozet
+              kısaltma taşıyor ("MSGSÜ") ve tek başına hangi okul olduğunu
+              söylemiyor. Girilmemişse rozet de yok — olmayan bir kimliği
+              çizmek, satırın kendisini yalan yapardı.
+
+              Logo değil monogram: üniversite logoları tescilli marka ve bu
+              depoda hakkı belirsiz görsel yayımlanmıyor (#119). Bileşen
+              logoya hazır; hakkı net bir kaynak bulununca tek alan
+              doldurmak yetiyor.
+            */}
+            <p className="flex min-w-0 items-center justify-center gap-2 break-words">
+              {okul && <OkulRozeti okul={okul} />}
+              <span className="min-w-0 break-words">{okul || 'Okulun eksik'}</span>
+            </p>
             {(bolum || sinif) && (
               <p className="min-w-0 break-words">{[bolum, sinif].filter(Boolean).join(' · ')}</p>
             )}
