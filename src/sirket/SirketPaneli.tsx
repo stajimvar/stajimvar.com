@@ -15,6 +15,7 @@ import {
   ikincilStil,
   kutuStil,
 } from './renk';
+import { SirketAdaylar } from './SirketAdaylar';
 import { IlanFormu } from './IlanFormu';
 import { AdayIzgarasi } from './AdayIzgarasi';
 import type { Iletisim } from './AdayCekmecesi';
@@ -114,7 +115,7 @@ export const DurumRozeti: React.FC<{ baglam: Pick<SirketBaglami, 'dogrulandi'> }
     </span>
   );
 
-export type SirketGorunumu = 'ilanlar' | 'basvuranlar';
+export type SirketGorunumu = 'ilanlar' | 'basvuranlar' | 'adaylar';
 
 /** Adresten görünüm; form ve profil ayrı. */
 export function sirketEkrani(
@@ -124,6 +125,7 @@ export function sirketEkrani(
   const duzenlenenId = yol.match(/^\/sirket\/ilan\/([0-9a-f-]{36})\/duzenle$/)?.[1] ?? null;
   if (duzenlenenId) return { tur: 'form', duzenlenenId };
   if (yol.startsWith('/sirket/profil')) return { tur: 'profil' };
+  if (yol.startsWith('/sirket/adaylar')) return { tur: 'adaylar' };
   if (yol.startsWith('/sirket/basvuranlar')) return { tur: 'basvuranlar' };
   return { tur: 'ilanlar' };
 }
@@ -401,6 +403,21 @@ export const SirketIlanlarSekmesi: React.FC<{
   const kartAcik = adayGorebilir(baglam.kademe);
   const yeniToplam = kartAcik ? basvurular.filter((b) => b.durum === 'submitted').length : 0;
 
+  if (gorunum === 'adaylar') {
+    /*
+      ADAYLAR — BAŞVURANLARDAN AYRI EKRAN
+
+      Başvuran, bir ilana başvurmuş kişi; aday, profilini iş/staj
+      listesine kendisi açmış kişi. İkisini tek listede karıştırmak
+      "bu kişi bize başvurdu" ile "bu kişi arıyor"u aynı şeye çevirirdi.
+
+      Alt gezinme çubuğuna SEKME EKLENMEDİ: orada zaten beş öğe var ve
+      genişlikleri 320 px için ölçülmüş. Altıncı öğe o ölçümü bozardı;
+      giriş Başvuranlar ekranının üstünden veriliyor.
+    */
+    return <SirketAdaylar />;
+  }
+
   if (gorunum === 'basvuranlar') {
     return (
       <Basvuranlar
@@ -530,6 +547,23 @@ const Basvuranlar: React.FC<{
       <h1 className="truncate text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
         Başvuranlar
       </h1>
+      {/*
+        ADAYLAR EKRANINA GİRİŞ
+
+        Başvuran ile aday farklı: başvuran bir ilana başvurmuş kişi, aday
+        profilini iş/staj listesine kendisi açmış kişi. İkisi ayrı ekran
+        ama giriş buradan veriliyor — alt gezinme çubuğunda zaten beş öğe
+        var ve genişlikleri 320 px için ölçülmüş; altıncı öğe o ölçümü
+        bozardı.
+      */}
+      <button
+        type="button"
+        onClick={() => onNavigate('/sirket/adaylar')}
+        className="mt-1.5 inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 text-sm font-bold text-emerald-800 hover:bg-emerald-100"
+      >
+        İş ve staj arayan öğrenciler
+        <span aria-hidden>→</span>
+      </button>
       <p
         className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm"
         style={{ color: SIRKET_METIN_IKINCIL }}

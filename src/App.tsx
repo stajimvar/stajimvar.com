@@ -57,7 +57,7 @@ import { SirketAgim } from './sirket/SirketAgim';
   Panel yollari. Herkese acik sirket sayfasi (/sirket/<slug>) ile
   karismamalari icin acikca sayiliyorlar.
 */
-const SIRKET_PANEL_YOLLARI = ['/sirket/ilanlar', '/sirket/basvuranlar', '/sirket/profil', '/sirket/ilan'];
+const SIRKET_PANEL_YOLLARI = ['/sirket/ilanlar', '/sirket/basvuranlar', '/sirket/adaylar', '/sirket/profil', '/sirket/ilan'];
 /*
   Fırsat listesinin adresleri — hepsi tek bileşen (OpportunitiesPage;
   gerekçesi çizildiği yerde). Burada da sayılıyor, çünkü şirket

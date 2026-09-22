@@ -1706,6 +1706,81 @@ export async function fetchPanelTarama(): Promise<PanelTarama> {
 }
 
 /* ------------------------------------------------------------------ */
+/* İŞ / STAJ ARAYAN ÖĞRENCİLER                                         */
+/* ------------------------------------------------------------------ */
+
+/*
+  Öğrenci profilindeki iki açık seçim. Aktif edilince öğrenci
+  DOĞRULANMIŞ şirketlerin gördüğü listeye giriyor; kapatınca anında
+  düşüyor.
+
+  Liste bir RPC'den geliyor çünkü öğrencinin adı `profiles`, e-postası
+  `auth.users` içinde ve ikisi de şirkete kapalı. `profiles` politikasını
+  genişletmek, arayan OLMAYAN öğrencilerin adını da açardı. RPC
+  döndüreceği alanları tek tek sayıyor: "şirket ne görüyor" sorusunun
+  cevabı tek yerde duruyor.
+*/
+
+export interface ArayanOgrenci {
+  id: string;
+  ad: string | null;
+  eposta: string | null;
+  okul: string | null;
+  fakulte: string | null;
+  bolum: string | null;
+  sinif: number | null;
+  sehir: string | null;
+  mezuniyet: number | null;
+  beceriler: string[] | null;
+  hedefRoller: string[] | null;
+  cvVar: boolean;
+  tanitim: string | null;
+  linkedin: string | null;
+  github: string | null;
+  acildi: string | null;
+}
+
+export interface ArayanListesi {
+  tur: 'is' | 'staj';
+  isArayan: number;
+  stajArayan: number;
+  ogrenciler: ArayanOgrenci[];
+}
+
+export async function fetchArayanOgrenciler(
+  tur: 'is' | 'staj' = 'staj',
+): Promise<ArayanListesi> {
+  const { data, error } = await supabase.rpc('arayan_ogrenciler' as never, {
+    p_tur: tur,
+  } as never);
+  if (error) fail('Aday listesi alınamadı', error);
+  return data as unknown as ArayanListesi;
+}
+
+/**
+ * Öğrencinin iş/staj arayış seçimini değiştirir.
+ *
+ * Rıza damgasını İSTEMCİ YAZMIYOR: tarih sunucudaki tetikleyiciden
+ * geliyor ve bu sütunlarda güncelleme izni yok. İstemciden gelen bir
+ * rıza tarihi kanıt olmazdı.
+ */
+export async function arayisiGuncelle(
+  userId: string,
+  yama: { isArayan?: boolean; stajArayan?: boolean },
+): Promise<void> {
+  const govde: Record<string, boolean> = {};
+  if (yama.isArayan !== undefined) govde.is_arayan = yama.isArayan;
+  if (yama.stajArayan !== undefined) govde.staj_arayan = yama.stajArayan;
+  if (Object.keys(govde).length === 0) return;
+
+  const { error } = await supabase
+    .from('student_profiles')
+    .update(govde as never)
+    .eq('id', userId);
+  if (error) fail('Arayış durumu kaydedilemedi', error);
+}
+
+/* ------------------------------------------------------------------ */
 /* İLAN BİLDİRİMLERİ — YÖNETİCİ İNCELEMESİ                             */
 /* ------------------------------------------------------------------ */
 

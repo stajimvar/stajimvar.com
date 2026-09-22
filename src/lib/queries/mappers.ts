@@ -347,6 +347,16 @@ export type StudentRowBundle = Tables<'student_profiles'> & {
   student_skills: Tables<'student_skills'>[];
   student_languages: Tables<'student_languages'>[];
   student_projects: Tables<'student_projects'>[];
+  /*
+    ARAYIŞ SÜTUNLARI — ÜRETİLMİŞ TİPLER HENÜZ BİLMİYOR
+
+    `database.types.ts` Supabase şemasından üretiliyor ve bu iki sütun
+    yeni. Üretilmiş dosyayı elle düzenlemek, bir sonraki üretimde sessizce
+    geri alınırdı; bu yüzden alanlar burada, İSTEĞE BAĞLI olarak
+    bildiriliyor. Tipler yeniden üretildiğinde bu satırlar düşebilir.
+  */
+  is_arayan?: boolean | null;
+  staj_arayan?: boolean | null;
 };
 
 export function toStudentProfile(row: StudentRowBundle): StudentProfile {
@@ -370,6 +380,9 @@ export function toStudentProfile(row: StudentRowBundle): StudentProfile {
     githubUsername: row.github_username ?? undefined,
     linkedinUrl: row.linkedin_url ?? undefined,
     portfolioUrl: row.portfolio_url ?? undefined,
+    /* Varsayılan KAPALI: alan yoksa "arıyor" sayılmıyor. */
+    isArayan: row.is_arayan ?? false,
+    stajArayan: row.staj_arayan ?? false,
     cvPath: row.cv_path ?? undefined,
     skills: (row.student_skills ?? []).map(toStudentSkill),
     softSkills: row.soft_skills,

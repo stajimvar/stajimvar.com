@@ -77,7 +77,7 @@ const VERI_ONEKLERI = ['/ilan/', '/sirket/', '/firsatlar/', '/bolum/'];
   dalından ÖNCE bakılıyor. Panel `noindex` ve giriş arkasında; 200 kabuk
   burada var-yok sızdırmıyor, çünkü içerik oturuma bağlı.
 */
-const SIRKET_PANEL_YOLLARI = ['/sirket/ilanlar', '/sirket/basvuranlar', '/sirket/profil', '/sirket/ilan'];
+const SIRKET_PANEL_YOLLARI = ['/sirket/ilanlar', '/sirket/basvuranlar', '/sirket/adaylar', '/sirket/profil', '/sirket/ilan'];
 
 function sirketPaneliMi(yol: string): boolean {
   const temiz = yol.replace(/\/+$/, '');

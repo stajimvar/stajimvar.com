@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { ArayisKartlari } from './ArayisKartlari';
 import { profilDolulugu } from '../lib/cv-hazirlik.mjs';
 import {
   ArrowLeft,
@@ -419,6 +420,22 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     götürürdü.
   */
   const [duzenleme, setDuzenleme] = useState(false);
+
+  /*
+    Arayış durumu yerel olarak tutuluyor: anahtar çevrildiğinde ekran
+    hemen güncelleniyor, profilin tamamı yeniden çekilmiyor. Yazma
+    başarısız olursa bileşen eski hâli koruyor ve sebebi yazıyor.
+  */
+  const [arayis, setArayis] = useState({
+    isArayan: student.isArayan ?? false,
+    stajArayan: student.stajArayan ?? false,
+  });
+  useEffect(() => {
+    setArayis({
+      isArayan: student.isArayan ?? false,
+      stajArayan: student.stajArayan ?? false,
+    });
+  }, [student.isArayan, student.stajArayan]);
   /**
    * Bölüme git — düzenleme ekranını açıp o bölümü seçiyor.
    *
@@ -1247,6 +1264,26 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         çünkü aynı sütunda kutu olarak kalması gereken başka bloklar da
         var.
       */}
+      {/*
+        ARAYIŞ ANAHTARLARI — DÜZENLEME MODUNDA DEĞİL, HER ZAMAN
+
+        Bu bir form alanı değil, bir DURUM: "şu an iş/staj arıyorum".
+        Düzenleme bölümlerinin içine koysaydık öğrencinin onu bulması
+        için önce "Profili düzenle"ye girmesi gerekirdi; oysa bu, profil
+        açılır açılmaz görünmesi gereken ve tek dokunuşla değişen bir
+        tercih.
+      */}
+      {!duzenleme && (
+        <div className="order-0 min-w-0 lg:order-none">
+          <ArayisKartlari
+            ogrenciId={student.id}
+            isArayan={arayis.isArayan}
+            stajArayan={arayis.stajArayan}
+            onDegisti={setArayis}
+          />
+        </div>
+      )}
+
       {!duzenleme && sosyalPortfolyo && (
         <div className="order-1 -mx-4 min-w-0 sm:mx-0 lg:order-none">
           {sosyalPortfolyo}
