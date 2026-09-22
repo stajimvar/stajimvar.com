@@ -22,8 +22,16 @@ const APP = oku('src/App.tsx');
 test('yönetici ekranı yönetim yoluna bağlı', () => {
   assert.match(APP, /AdminIlanBildirimleri/);
   assert.match(APP, /İlan bildirimleri/);
-  /* Yeni bir adres açılmadı: mevcut /yonetim/talepler yolunda. */
-  const yonetim = APP.slice(APP.indexOf("temizYol === '/yonetim'"));
+  /*
+    Yeni bir adres açılmadı: bildirim bölümü onay kuyruğu yolunda.
+
+    Çapa `temizYol === '/yonetim'` idi ve `/yonetim` yeni panele
+    taşınınca eşleşmez oldu — kapanış tırnağı yüzünden
+    `'/yonetim/talepler'` bu dizeyi içermiyor. Testin koruduğu şey
+    adresin YAZILIŞI değil, bölümün kuyruk bloğunun İÇİNDE olması;
+    çapa o bloğun gerçek yoluna alındı.
+  */
+  const yonetim = APP.slice(APP.indexOf("temizYol === '/yonetim/talepler'"));
   assert.ok(
     yonetim.indexOf('AdminIlanBildirimleri') > 0 &&
       yonetim.indexOf('AdminIlanBildirimleri') < yonetim.indexOf('/sirket/vertigo-games'),
