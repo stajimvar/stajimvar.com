@@ -52,12 +52,13 @@ test('ayni okul her zaman ayni rengi aliyor', () => {
   assert.ok(a >= 0 && a < PALET.length);
 });
 
-test('hakki belirsiz logo basilmiyor', () => {
+test('logo adresi disaridan geliyor', () => {
   /*
-    Universite logolari tescilli marka. Bu depoda yerlesik ilke: sirket
-    gorsellerinde hakki belirsiz olanlar disarida birakildi (#119). Ayni
-    cizgi burada da gecerli -- bilesen dis bir logo ADRESI GOMMUYOR,
-    yalnizca cagiran verirse ciziyor.
+    22 Eylul 2026: rozet artik okulun amblemini ciziyor. Dosyalar depoda
+    (`public/universite-logolari`) ve adresi `lib/universite-logosu.mjs`
+    veriyor; bilesen DIS BIR ADRES GOMMUYOR. Boylece logo listesi tek
+    yerden yonetiliyor ve profil sayfasi ucuncu bir sunucuya istek
+    atmiyor.
   */
   assert.ok(!/https?:\/\//.test(BILESEN), 'bilesende gomulu dis adres olmamali');
   assert.ok(BILESEN.includes('logoAdresi'), 'logo alani hazir olmali');
@@ -69,7 +70,7 @@ test('rozet okul adinin YERINE gecmiyor', () => {
     Rozet kisaltma tasiyor ("MSGSÜ") ve tek basina hangi okul oldugunu
     soylemiyor. Ad metin olarak yaninda kalmali.
   */
-  assert.ok(BASLIK.includes('<OkulRozeti okul={okul} />'));
+  assert.ok(BASLIK.includes('<OkulRozeti okul={okul} logoAdresi='));
   assert.ok(
     BASLIK.includes("{okul || 'Okulun eksik'}"),
     'okul adi metin olarak kalmali',
