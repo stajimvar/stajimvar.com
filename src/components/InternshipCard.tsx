@@ -18,6 +18,7 @@ import { ListingLogo } from './ListingLogo';
 import { listingSlug } from '../lib/slug';
 import { SIRKET_KENAR_GUCLU, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
+import { IlanDurumEtiketleri } from './IlanDurumEtiketleri';
 import { UlkeRozeti } from './UlkeRozeti';
 import { COGRAFYA, ilanCografyasi } from '../lib/ilan-cografyasi.mjs';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
@@ -282,67 +283,11 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
         )}
 
         {/*
-          GÖRÜNÜR DURUM ETİKETLERİ — İLANI LİSTEDEN ÇIKARMIYOR
-
-          Katalogdaki 104 Türkiye ilanının 29'unda kaynak doğrulanamadı
-          ve 8 ilanın başvuru bağlantısı kesin kanıtla ölü (ölçüldü,
-          21 Eylül 2026). Bu ilanlar listede DURUYOR: kanıtsız kapatmak
-          açık bir ilanı listeden silmek olurdu.
-
-          Eksik olan şey kullanıcının bunu BİLMESİYDİ. Etiket durumu
-          söylüyor, kararı kullanıcıya bırakıyor.
-
-          İKİ AYRI SORU, İKİ AYRI ETİKET
-            kaynakDurumu → kaynağa ulaşıp ilanın orada olduğunu
-                           doğrulayabildik mi
-            applyUrlOk   → başvuru bağlantısı teknik olarak çalışıyor mu
-          Birini ötekinin yerine kullanmak, "bizim tarafımızın sorunu"
-          ile "ilanın sorunu"nu aynı şeye çevirirdi.
-
-          `gecerli` ve `acik` için etiket YOK: her şey yolundayken
-          rozet basmak gürültü, sorunlu olanı da görünmez kılar.
+          Görünür durum etiketleri ortak bileşende: aynı etiketler ilan
+          detayında da gerekiyor ve iki kopya er geç ayrışırdı. Gerekçesi
+          ve hangi durumda neyin yazıldığı orada.
         */}
-        {(listing.kaynakDurumu === 'belirsiz'
-          || listing.kaynakDurumu === 'erisilemedi'
-          || listing.applyUrlOk === 'kirik'
-          || listing.applyUrlOk === 'dogrulanamadi') && (
-          <p className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            {listing.applyUrlOk === 'kirik' && (
-              <span
-                title="Başvuru bağlantısı çağrıldı ve ölü döndü (404/410). İlan listede kalıyor; şirketin kariyer sayfasından arayabilirsin."
-                className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700"
-              >
-                <AlertTriangle aria-hidden className="h-3 w-3" />
-                Başvuru bağlantısı çalışmıyor
-              </span>
-            )}
-            {listing.applyUrlOk === 'dogrulanamadi' && (
-              <span
-                title="Başvuru bağlantısına ulaşılamadı (bot engeli ya da zaman aşımı). Bağlantı ölü demek değil."
-                className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800"
-              >
-                <AlertTriangle aria-hidden className="h-3 w-3" />
-                Bağlantı doğrulanamadı
-              </span>
-            )}
-            {listing.kaynakDurumu === 'belirsiz' && (
-              <span
-                title="Kaynak sayfasına ulaşıldı ama ilanın hâlâ açık olduğuna dair kanıt bulunamadı."
-                className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-700"
-              >
-                Kaynak doğrulanamadı
-              </span>
-            )}
-            {listing.kaynakDurumu === 'erisilemedi' && (
-              <span
-                title="Kaynak sayfasına teknik olarak ulaşılamadı. İlan hakkında bir şey söylemiyor."
-                className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-700"
-              >
-                Kaynağa ulaşılamadı
-              </span>
-            )}
-          </p>
-        )}
+        <IlanDurumEtiketleri listing={listing} className="mt-1.5" />
       </div>
 
       {/* ---- SAĞ: kaydet ve İncele ---- */}
