@@ -45,3 +45,46 @@ test('runs both schema tools when invoked as CLI programs', () => {
   assert.match(fs.readFileSync(normalized, 'utf8'), /CREATE TABLE public\.a/);
   assert.equal(JSON.parse(fs.readFileSync(report, 'utf8')).changed.tables.length, 0);
 });
+
+test('kısıt eşleşmesi ifade sınırını aşmıyor', () => {
+  /*
+    GERÇEK OLAY
+
+    `site_olaylari` tablosu identity sütunuyla eklendi. pg_dump bunun için
+    ADD CONSTRAINT İÇERMEYEN bir ALTER TABLE yazıyor. Eski desen tablo adı
+    ile ADD CONSTRAINT arasında noktalı virgülü aşabildiği için eşleşme bir
+    sonraki ifadeye taşındı ve BAŞKA bir tablonun kısıtı bu tabloya aitmiş
+    gibi anahtarlandı:
+
+      public.site_olaylari.application_channels_company_id_type_value_key
+
+    Üretim şema kapısı bu sahte farkla kapandı. Daha kötüsü, gerçek kısıt
+    kendi anahtarını kaybettiği için orada bir değişiklik olsa fark
+    edilmezdi: kapı hem yanlış yerde kapanıyor hem doğru yerde açık
+    kalıyordu.
+  */
+  const dokum = [
+    'ALTER TABLE public.site_olaylari ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (',
+    '    SEQUENCE NAME public.site_olaylari_id_seq',
+    ');',
+    'ALTER TABLE public.site_olaylari ENABLE ROW LEVEL SECURITY;',
+    'ALTER TABLE ONLY public.application_channels',
+    '    ADD CONSTRAINT application_channels_company_id_type_value_key UNIQUE (company_id, type, value);',
+    'ALTER TABLE ONLY public.site_olaylari',
+    '    ADD CONSTRAINT site_olaylari_pkey PRIMARY KEY (id);',
+    '',
+  ].join('\n');
+
+  /* Aynı dökümü iki yana verince hiçbir fark çıkmamalı. */
+  const fark = compareSchemaObjects(dokum, dokum);
+  assert.deepEqual(fark.changed.constraints, []);
+  assert.deepEqual(fark.productionOnly.constraints, []);
+  assert.deepEqual(fark.localOnly.constraints, []);
+
+  /* Ve kısıtlar KENDİ tablolarına anahtarlanmalı. */
+  const tek = compareSchemaObjects(dokum, '');
+  assert.deepEqual(tek.productionOnly.constraints.sort(), [
+    'public.application_channels.application_channels_company_id_type_value_key',
+    'public.site_olaylari.site_olaylari_pkey',
+  ]);
+});
