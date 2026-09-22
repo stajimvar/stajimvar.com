@@ -102,7 +102,7 @@ export const TrafikSayfasi: React.FC = () => {
           <DagilimListesi veri={ozet.cihazlar.map((c) => ({ ad: c.ad, adet: c.adet }))} toplam={ozet.tekil} sinir={3} />
         </Kart>
         <Kart baslik="En çok bakılan sayfalar">
-          <DagilimListesi veri={ozet.sayfalar.map((s) => ({ ad: s.ad, adet: s.adet }))} toplam={ozet.tekil} />
+          <DagilimListesi veri={ozet.sayfalar.map((s) => ({ ad: s.ad, adet: s.adet }))} toplam={ozet.goruntuleme} />
         </Kart>
       </div>
 

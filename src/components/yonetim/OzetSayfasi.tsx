@@ -83,8 +83,8 @@ export const OzetSayfasi: React.FC<{
   */
   const dikkat = ozet
     ? [
-        ozet.taslakIlan > 0 && {
-          metin: `${sayi(ozet.taslakIlan)} ilan onay bekliyor`,
+        ozet.taslakToplam > 0 && {
+          metin: `${sayi(ozet.taslakToplam)} ilan onay bekliyor`,
           git: () => git('onay'),
         },
         ozet.bekleyenTalep > 0 && {
@@ -192,22 +192,34 @@ export const OzetSayfasi: React.FC<{
           </Bolum>
 
           <Bolum baslik="İlanlar ve başvurular">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-              {/*
-                "Yayındaki ilan" = şirketin StajımVar'da açtığı NATIVE ilan.
-                Taranan ilan ayrı bir KPI ve İlanlar sayfasında ayrı
-                sayılıyor: ikisini toplamak, başvuru alabildiğimiz ilan
-                sayısını olduğundan büyük gösterirdi.
-              */}
-              <Kutu deger={sayi(ozet.ilan)} etiket="yayındaki ilan" />
+            {/*
+              TEK BİR "YAYINDAKİ İLAN" SAYISI YANILTIYOR
+              ------------------------------------------
+              Şirketin StajımVar'da kendi açtığı native ilana başvuru site
+              içinde toplanıyor. Elle eklenen ve taranan ilan ise kariyer
+              sayfasına yönlendiriyor ve orada başvuru kaydı OLUŞMUYOR. Üçünü
+              tek sayıda toplayıp "yayındaki ilan" demek, başvuru
+              alabildiğimiz ilan sayısını olduğundan büyük gösterirdi. O
+              yüzden sitedeki toplam ile native ilan AYRI kutularda.
+            */}
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5 lg:gap-3">
+              <Kutu deger={sayi(ozet.ilanYayinToplam)} etiket="sitede yayında" />
+              <Kutu deger={sayi(ozet.ilanNative)} etiket="şirketin açtığı ilan" />
               <Kutu
-                deger={sayi(ozet.taslakIlan)}
+                deger={sayi(ozet.taslakToplam)}
                 etiket="onay bekleyen ilan"
-                vurgu={ozet.taslakIlan > 0 ? 'uyari' : 'normal'}
+                vurgu={ozet.taslakToplam > 0 ? 'uyari' : 'normal'}
               />
               <Kutu deger={sayi(ozet.basvuru)} etiket="toplam başvuru" />
               <Kutu deger={sayi(ozet.sirket)} etiket="şirket kaydı" />
             </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-gray-500">
+              Yayındaki {sayi(ozet.ilanYayinToplam)} ilanın {sayi(ozet.ilanElle)} tanesi elle
+              eklendi, {sayi(ozet.ilanTaranan)} tanesi taramadan geldi,{' '}
+              {sayi(ozet.ilanNative)} tanesini şirket kendi açtı. İlk iki grup kariyer
+              sayfasına yönlendirdiği için başvuru sayısına katkı vermiyor; “toplam
+              başvuru” yalnız site içinde alınan başvuruyu sayıyor.
+            </p>
           </Bolum>
 
           <Bolum baslik="Şirket tarafı">
@@ -239,7 +251,7 @@ export const OzetSayfasi: React.FC<{
               />
             </Kart>
             <Kart baslik="Son 7 günün kayıtları">
-              {ozet.sonKayitlar.length ? (
+              {ozet.sonKayitlar.some((g) => g.sayi > 0) ? (
                 <CubukGrafik
                   veri={ozet.sonKayitlar.map((g) => ({ etiket: g.tarih.slice(5), deger: g.sayi }))}
                   baslik="Son 7 günün öğrenci kaydı"
@@ -271,7 +283,7 @@ export const OzetSayfasi: React.FC<{
             <Kart baslik="En çok bakılan sayfalar">
               <DagilimListesi
                 veri={trafik.sayfalar.map((s) => ({ ad: s.ad, adet: s.adet }))}
-                toplam={trafik.tekil}
+                toplam={trafik.goruntuleme}
                 sinir={6}
               />
             </Kart>
@@ -295,8 +307,8 @@ export const OzetSayfasi: React.FC<{
             </button>
             <button type="button" onClick={() => git('onay')} className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700">
               Onay kuyrukları
-              {ozet.bekleyenTalep + ozet.taslakIlan > 0 && (
-                <span className="ml-1.5">({sayi(ozet.bekleyenTalep + ozet.taslakIlan)})</span>
+              {ozet.bekleyenTalep + ozet.taslakToplam > 0 && (
+                <span className="ml-1.5">({sayi(ozet.bekleyenTalep + ozet.taslakToplam)})</span>
               )}
             </button>
             <button type="button" onClick={() => git('bolum')} className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-bold text-gray-900 hover:bg-gray-50">

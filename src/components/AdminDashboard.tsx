@@ -106,11 +106,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
       <section className="space-y-2">
         <p className="text-xs font-bold uppercase tracking-wider text-gray-600">İlanlar ve başvurular</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-          <Kutu deger={ozet.ilan} etiket="yayındaki ilan" />
+          <Kutu deger={ozet.ilanYayinToplam} etiket="yayındaki ilan" />
           <Kutu
-            deger={ozet.taslakIlan}
+            deger={ozet.taslakToplam}
             etiket="onay bekleyen ilan"
-            vurgu={ozet.taslakIlan > 0 ? 'uyari' : 'normal'}
+            vurgu={ozet.taslakToplam > 0 ? 'uyari' : 'normal'}
           />
           <Kutu deger={ozet.basvuru} etiket="toplam başvuru" />
           <Kutu deger={ozet.sirket} etiket="şirket kaydı" />
@@ -198,8 +198,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
           className="inline-flex items-center justify-center min-h-11 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
         >
           Onay kuyrukları
-          {ozet.bekleyenTalep + ozet.taslakIlan > 0 && (
-            <span className="ml-1.5">({ozet.bekleyenTalep + ozet.taslakIlan})</span>
+          {ozet.bekleyenTalep + ozet.taslakToplam > 0 && (
+            <span className="ml-1.5">({ozet.bekleyenTalep + ozet.taslakToplam})</span>
           )}
         </button>
         {/*
