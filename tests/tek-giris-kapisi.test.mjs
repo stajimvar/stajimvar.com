@@ -96,8 +96,6 @@ test('giris penceresi kimligi de veriyor', () => {
     geliyor ve onu beklemek yönlendirmeyi geciktiriyordu.
   */
   assert.match(PENCERE, /onSuccess\(result\.role, result\.displayName, result\.userId\)/);
-  assert.match(
-    PENCERE,
-    /onSuccess: \(role: 'student' \| 'company' \| 'admin', name: string, userId\?: string\) => void;/,
-  );
+  /* İmza çok satırlı (kayıt niyeti de eklendi); aranan şey kimliğin taşınması. */
+  assert.match(PENCERE, /onSuccess: \([\s\S]{0,600}userId\?: string,/);
 });

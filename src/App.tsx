@@ -1020,6 +1020,7 @@ export default function App() {
     role: 'student' | 'company' | 'admin',
     name: string,
     userId?: string,
+    niyet?: 'ogrenci' | 'isveren',
   ) => {
     // Oturumun kendisi onAuthChange üzerinden geliyor; burada yalnızca
     // arayüzü kullanıcının rolüne göre konumlandırıyoruz.
@@ -1090,6 +1091,24 @@ export default function App() {
           ? `Hoş geldiniz, ${name}!`
           : `Hoş geldiniz, ${name}. İlan vermek için önce şirketini sahiplen.`,
       );
+      return;
+    }
+
+    /*
+      "İŞVERENİM" DİYEN SAHİPLENMEYE GİDİYOR
+
+      Kayıtta ne için geldiği soruluyor (AuthModal). İşveren seçen kişinin
+      sıradaki adımı şirketini sahiplenmek; kayıt düğmesi de bunu
+      söylüyor ("Devam Et — Şirketini Bul"). Eskiden bu yalnızca işveren
+      SAYFASINDAN gelene oluyordu (dönüş yoluyla); ana sayfadan kaydolan
+      işveren öğrenci akışında kalıyordu.
+
+      Şirketi zaten olan hesap bu dalın önünde: o doğrudan panele gidiyor.
+    */
+    if (niyet === 'isveren' && !sirketeUye) {
+      setActiveTab('internships');
+      navigate('/isveren/ilan-ver');
+      showToast(`Hoş geldiniz, ${name}. Şimdi şirketini bulalım.`);
       return;
     }
 
