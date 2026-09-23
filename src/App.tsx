@@ -1016,7 +1016,11 @@ export default function App() {
     showToast('Hesabınızdan güvenle çıkış yapıldı.');
   };
 
-  const handleAuthSuccess = (role: 'student' | 'company' | 'admin', name: string) => {
+  const handleAuthSuccess = async (
+    role: 'student' | 'company' | 'admin',
+    name: string,
+    userId?: string,
+  ) => {
     // Oturumun kendisi onAuthChange üzerinden geliyor; burada yalnızca
     // arayüzü kullanıcının rolüne göre konumlandırıyoruz.
     // Yönetici de öğrenci görünümünü kullanıyor.
@@ -1041,22 +1045,61 @@ export default function App() {
       Sahiplenme akışı buna bağlı: "Insider One'ı sahiplen" → giriş →
       formun başına dön. Dönüş yolu yoksa eski davranış sürüyor.
     */
+    /*
+      NEREYE GİDİLECEĞİNİ HESAP SÖYLÜYOR (kullanıcı kararı, 23 Eylül 2026)
+
+      Giriş ekranı tek kapıya indi; ayrı "öğrenci girişi / şirket girişi"
+      tabelaları kalktı. Dolayısıyla hedefi artık hangi düğmeden
+      gelindiği değil, hesabın kendisi belirliyor.
+
+      SİNYAL `company_members`, `profiles.role` DEĞİL: rol istemciden
+      gelen bir görünüm anahtarı, üyelik ise RLS'in de dayandığı gerçek
+      yetki. Üretimde role='company' olmayan ama şirketi sahiplenmiş
+      hesap da var; rol'e bakılsaydı onlar öğrenci tarafına düşerdi.
+
+      Üyelik okunamazsa (ağ hatası) öğrenci tarafına düşüyor: erişimi
+      olmayan bir panele göndermek, ana sayfaya göndermekten kötü.
+    */
+    let sirketeUye = role === 'company';
+    if (userId) {
+      try {
+        const m = await import('./lib/sirket-veri');
+        const baglam = await m.sirketBaglami(userId, false);
+        sirketeUye = Boolean(baglam.companyId);
+      } catch {
+        /* Okunamadı: aşağıdaki kural rol ile ilerliyor. */
+      }
+    }
+
+    /*
+      GELDİĞİ YERE GERİ DÖN
+
+      Sahiplenme akışı buna bağlı: "Insider One'ı sahiplen" → giriş →
+      formun başına dön. Tek istisna: dönüş yolu işveren paneliyse ve
+      hesabın şirketi yoksa panel boş bir ekran olurdu; oradaki doğru
+      adım şirketi sahiplenmek.
+    */
     if (authDonusYolu) {
-      const hedef = authDonusYolu;
+      const istenen = authDonusYolu;
       setAuthDonusYolu(null);
       setAuthBaglam('ogrenci');
+      const hedef = istenen.startsWith('/sirket') && !sirketeUye ? '/isveren/ilan-ver' : istenen;
       if (hedef !== window.location.pathname) navigate(hedef);
-      showToast(`Hoş geldiniz, ${name}!`);
+      showToast(
+        hedef === istenen
+          ? `Hoş geldiniz, ${name}!`
+          : `Hoş geldiniz, ${name}. İlan vermek için önce şirketini sahiplen.`,
+      );
       return;
     }
 
     setActiveTab('internships');
-    if (role !== 'company') {
-      showToast(`Hoş geldiniz, ${name}!`);
-    } else {
-      /* Şirket hesabı doğrudan işveren paneline gidiyor; eski portal yok. */
+    if (sirketeUye) {
+      /* Şirketi olan hesap doğrudan işveren paneline gidiyor; eski portal yok. */
       navigate('/sirket/ilanlar');
       showToast(`Hoş geldiniz, ${name}. İşveren paneli açık.`);
+    } else {
+      showToast(`Hoş geldiniz, ${name}!`);
     }
   };
 

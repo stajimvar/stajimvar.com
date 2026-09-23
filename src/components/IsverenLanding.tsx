@@ -157,7 +157,7 @@ export const IsverenLanding: React.FC<{
               className={`inline-flex min-h-12 cursor-pointer items-center justify-center rounded-xl border-2 bg-white px-6 text-sm font-bold text-gray-900 hover:bg-gray-50 ${RENK_GECISI} ${ODAK_HALKASI}`}
               style={{ borderColor: SIRKET_KENAR }}
             >
-              Şirket girişi
+              Giriş yap
             </button>
           )}
         </div>

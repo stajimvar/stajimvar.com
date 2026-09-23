@@ -1345,10 +1345,12 @@ export const Header: React.FC<HeaderProps> = ({
                   belirgin düğme öğrenci kaydıysa, işveren o düğmeye basıp
                   "Öğrenci Hesabı Oluşturun" penceresiyle karşılaşıyor.
 
-                  İşveren sayfalarında ikili değişiyor: "İşveren Girişi" ve
-                  ana düğme olarak "Ücretsiz İlan Ver". Öğrenci kaydı
-                  oradan kalkıyor — kaldırılan bir kapı değil, yanlış
-                  kapıya konmuş bir tabela.
+                  İşveren sayfalarında ikili değişiyor: "Giriş yap" ve ana
+                  düğme olarak "Ücretsiz İlan Ver". Öğrenci kaydı oradan
+                  kalkıyor — kaldırılan bir kapı değil, yanlış kapıya
+                  konmuş bir tabela. (23 Eylül 2026: giriş etiketi de
+                  "İşveren Girişi" değil, çünkü ayrı bir işveren hesabı
+                  yok; pencere herkeste aynı.)
 
                   Belirsiz "İşveren misiniz?" ifadesi de gitti: öğrenci
                   tarafında düğme artık ne yapacağını söylüyor.
@@ -1361,7 +1363,13 @@ export const Header: React.FC<HeaderProps> = ({
                       /* Telefonda gizli: logo ile yan yana sığmıyordu (şirket profilinde ölçüldü, 390 px). */
                       className="hidden sm:inline-flex px-2.5 sm:px-4 py-1.5 rounded-full text-xs font-bold text-gray-700 hover:text-blue-600 hover:bg-gray-100 transition-all cursor-pointer whitespace-nowrap"
                     >
-                      İşveren Girişi
+                      {/*
+                        TEK KAPI (23 Eylül 2026): "İşveren Girişi" yazıyordu
+                        ama açtığı pencere herkesle aynı; ayrı bir işveren
+                        hesabı yok. Ayrı tabela, olmayan bir kapıyı işaret
+                        ediyordu.
+                      */}
+                      Giriş yap
                     </button>
                     <button
                       id="header-employer-post-btn"
