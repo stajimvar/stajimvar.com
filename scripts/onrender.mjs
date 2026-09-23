@@ -2605,20 +2605,62 @@ async function main() {
       ziyaretçiye Türkiye listesi gösterilirdi.
     */
     tohum: katalogTohumu ? { country: TOHUM_ULKESI, page: katalogTohumu } : null,
+    /*
+      MARKA KİMLİĞİ (23 Eylül 2026)
+
+      Arama sonucunda marka zayıf duruyordu: Google "stajımvar" sorgusunu
+      "stajım var" diye düzeltiyor, başlık olarak da sayfanın kendi
+      başlığı yerine "Staj İlanları"nı yazıyordu.
+
+      `alternateName` markanın bitişik ve ayrık yazımlarını aynı varlığa
+      bağlıyor; `description` Organization'a bir tanım veriyor; `logo`
+      ölçüsüyle birlikte veriliyor (Google logo için en az 112 piksel
+      istiyor, 512'lik asıl ikon zaten var).
+
+      `SearchAction` UYDURMA DEĞİL: arama terimi gerçekten `?q=` ile
+      taşınıyor ve bağlantı açıldığında uygulanmış aramayı gösteriyor
+      (App.tsx → aramaTeriminiOku). Çalışmayan bir kutuyu yapısal veride
+      ilan etmek, Google'a tutulmayacak bir söz vermek olurdu.
+
+      `sameAs` BİLEREK YOK: depoda yayımlanmış bir sosyal hesap adresi
+      geçmiyor ve olmayan bir adresi uydurmak markayı yanlış bir hesaba
+      bağlardı. Hesaplar verildiğinde buraya eklenecek.
+    */
     jsonLd: {
       '@context': 'https://schema.org',
       '@graph': [
         {
           '@type': 'Organization',
+          '@id': `${SITE}/#kurum`,
           name: 'StajımVar',
+          alternateName: ['Stajım Var', 'stajimvar', 'StajimVar'],
           url: SITE,
-          logo: `${SITE}/icon-512.png`,
+          description:
+            "Türkiye'deki staj ilanlarını şirketlerin kendi kariyer sayfalarından derleyen "
+            + 'öğrenci platformu. Her ilanda şirketin kendi başvuru bağlantısı var.',
+          logo: {
+            '@type': 'ImageObject',
+            url: `${SITE}/icon-512.png`,
+            width: 512,
+            height: 512,
+          },
         },
         {
           '@type': 'WebSite',
+          '@id': `${SITE}/#site`,
           name: 'StajımVar',
+          alternateName: ['Stajım Var', 'stajimvar'],
           url: SITE,
           inLanguage: 'tr-TR',
+          publisher: { '@id': `${SITE}/#kurum` },
+          potentialAction: {
+            '@type': 'SearchAction',
+            target: {
+              '@type': 'EntryPoint',
+              urlTemplate: `${SITE}/?q={search_term_string}`,
+            },
+            'query-input': 'required name=search_term_string',
+          },
         },
       ],
     },
