@@ -66,6 +66,7 @@ import { donukKure, kureDokunusu, kureSayisi } from '../lib/kure-donusu.mjs';
 import { ILAN_KAYNAGI_PARCALI } from '../lib/urun-metni';
 import { ListingCountrySelector } from './ListingCountrySelector';
 import { gosterilecekIlanSayisi } from '../lib/ilan-sayisi.mjs';
+import { ilanlariDondur } from '../lib/ilan-donusu.mjs';
 import { guvenSatiri } from '../lib/guven-satiri.mjs';
 import { LISTE_BASLIGI, LISTE_BASLIGI_NOTU, LISTE_BASLIGI_YAZISI, LISTE_BLOGU, YUZEY } from '../ui/tokens';
 
@@ -767,7 +768,29 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       sayfayı sıralamak, "daha fazla göster"e basınca sıranın değişmesi
       demekti.
     */
-    return bolumeGoreSirala(sirali, bolumAlani, (x: { listing: InternshipListing }) => x.listing);
+    const alanaGore = bolumeGoreSirala(
+      sirali,
+      bolumAlani,
+      (x: { listing: InternshipListing }) => x.listing,
+    );
+
+    /*
+      HER YENİLEMEDE BAŞKA İLANLAR ÜSTTE
+
+      Ölçülen sorun (kullanıcı, 23 Eylül 2026): "3 gündür siteye
+      giriyorum, hep aynı ilan en üstte." Varsayılan sıralama `match` ve
+      profili olmayan ziyaretçide puanlar birbirine çok yakın çıkıyor;
+      sıra pratikte sabitleniyor, 188 ilanın hep aynı ilk beşi
+      görünüyordu.
+
+      Dönüş yalnız VARSAYILAN sıralamada: kullanıcı "en yeni" ya da "son
+      başvuru" seçtiyse o sırayı bozmak başka bir şey olurdu.
+
+      Bölüm tercihi dönüşten SONRA değil ÖNCE uygulanıyor (yukarıda):
+      alanına uyan ilanlar kendi aralarında öne geçiyor, dönüş de o
+      listeyi kaydırıyor.
+    */
+    return sortBy === 'match' ? ilanlariDondur(alanaGore) : alanaGore;
   }, [matchedData, gecer, sortBy, bolumAlani]);
 
   const topMatch = matchedData.sort((a, b) => b.match.overallScore - a.match.overallScore)[0];
