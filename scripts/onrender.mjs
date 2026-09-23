@@ -1959,6 +1959,26 @@ async function main() {
       title: i.title,
       description: `<p>${kacir(ozetle(i.description, 1200))}</p>`,
       datePosted: (i.posted_at || i.created_at || '').slice(0, 10),
+      /*
+        SON BAŞVURU TARİHİ (`validThrough`)
+
+        Search Console 22 Eylül 2026'da uyardı: "validThrough alanı
+        eksik". Alan veritabanında ZATEN VARDI (`application_deadline`,
+        ilan sorgusunda çekiliyor) ama yapısal veriye yazılmıyordu.
+
+        Tarihi OLAN ilana yazılıyor, olmayana YAZILMIYOR. Google'ın
+        kendi kılavuzu da böyle diyor: bitiş tarihi yoksa alanı koyma,
+        ilan bir süre sonra kendiliğinden düşürülür. Uydurma bir tarih
+        (ör. "ilan + 30 gün") yazmak, kapanmış bir ilanı açık ya da açık
+        bir ilanı kapalı göstermek demekti.
+
+        Saat kısmı atılıyor: kaynak bazen "2026-09-14", bazen tam zaman
+        damgası veriyor; ikisi de geçerli ama tek biçim tutmak
+        çıktıdaki farkı okunur kılıyor.
+      */
+      ...(String(i.application_deadline || '').slice(0, 10).match(/^\d{4}-\d{2}-\d{2}$/)
+        ? { validThrough: String(i.application_deadline).slice(0, 10) }
+        : {}),
       employmentType: 'INTERN',
       url: SITE + yol,
       directApply: i.application_method !== 'external',
