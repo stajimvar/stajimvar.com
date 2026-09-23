@@ -222,7 +222,11 @@ test('sıralama sayfalamadan ÖNCE, bütün filtrelenmiş kümeye', () => {
     kıyaslıyordum (dosyanın en başında) ve iddia anlamsızdı. Karşılaştırma
     ÇAĞRI yeriyle yapılıyor.
   */
-  const sirala = kod.indexOf('bolumeGoreSirala(sirali');
+  /*
+    Çağrı 23 Eylül 2026'da çok satırlı hâle geldi (dönüş eklenince
+    argümanlar alt satıra indi); arama boşluğa duyarsız yapıldı.
+  */
+  const sirala = kod.search(/bolumeGoreSirala\(\s*sirali/);
   const sayfala = kod.indexOf('gosterilecekIlanSayisi({');
   assert.ok(sirala > 0, 'sıralama çağrısı bulunmalı');
   assert.ok(sayfala > 0, 'sayfalama çağrısı bulunmalı');
@@ -230,7 +234,7 @@ test('sıralama sayfalamadan ÖNCE, bütün filtrelenmiş kümeye', () => {
   /* Dilimleme sıralanmış listeden yapılıyor. */
   assert.match(kod, /filteredListings\.slice\(0, gosterilecekToplam\)|filteredListings\.map\(/);
   /* Girdi filtrelenmiş kümenin TAMAMI (`sirali`), görünen sayfa değil. */
-  assert.match(kod, /bolumeGoreSirala\(sirali, bolumAlani/);
+  assert.match(kod, /bolumeGoreSirala\(\s*sirali,\s*bolumAlani/);
 });
 
 test('açık bölüm filtresi eleme yapıyor, çipler yalnız sıralıyor', () => {
