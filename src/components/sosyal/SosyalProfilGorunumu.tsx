@@ -1,11 +1,13 @@
 import React from 'react';
-import { ImagePlus, Pencil } from 'lucide-react';
+import { CalendarDays, ImagePlus, Pencil } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI, RENK_PRIMARY } from '../../lib/renk-token';
 import type { SosyalPaylasim, SosyalProfil, SosyalSayaclar } from '../../lib/queries/sosyal';
 import { ogrenciKimligiGorunurMu } from '../../lib/sosyal-profil-kimligi.mjs';
+import { katilmaMetni } from '../../lib/tarih.mjs';
 import { BaglantiDugmesi } from './BaglantiDugmesi';
 import { PaylasimIzgarasi } from './PaylasimIzgarasi';
 import { ProfilFotografi } from './ProfilFotografi';
+import { KapakFotografi } from './KapakFotografi';
 import { ResmiTik } from './ResmiTik';
 import { ProfilAyarMenusu } from './ProfilAyarMenusu';
 
@@ -276,6 +278,11 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
     ikinci kez yazmak (@stajimvar / @stajimvar) tekrar oluyordu.
   */
   const adAyri = Boolean(profil.gorunenAd);
+  /*
+    Katılma satırı resmî hesapta da var: öğrenci kimliği gibi gizlenecek
+    bir bilgi değil, hesabın yaşı. Okunamazsa (null) satır yok.
+  */
+  const katilma = katilmaMetni(profil.katilmaAni);
 
   return (
     /*
@@ -312,6 +319,20 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
     */
     <div className="space-y-0 sm:space-y-6">
       <header className="border-b border-gray-200 bg-white sm:rounded-2xl sm:border">
+        {/*
+          KAPAK BANDI (X kalıbı, 2/2) — başlığın en üstünde, 3:1
+
+          Sahipte de ziyaretçide de aynı bant: okuma kapısı avatarınkiyle
+          aynı fonksiyon (20261105010000), yani bu bileşene gelen profilin
+          kapağı da görünür. Kapak yoksa ya da inemediyse nötr bant; sahte
+          görsel yok. Değiştirme yolu burada DEĞİL — tek giriş düzenleme
+          ekranı.
+
+          `sm:rounded-t-[15px]`: başlığın köşesi 16, kenarı 1 piksel; bant
+          iç kenara oturuyor. Başlığa `overflow-hidden` verilmedi — dişli
+          menüsü başlığın içinden açılıyor ve kesilirdi.
+        */}
+        <KapakFotografi ad={baslik} yol={profil.kapakFotografiYolu} className="w-full sm:rounded-t-[15px]" />
         {/* ------------------------------------------- kimlik bandı */}
         <div className="px-4 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6">
           {/*
@@ -332,16 +353,28 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
               herkese açık adresi yok). Kalem `sahibiMi` kapısının
               arkasında: ziyaretçide prop hiç gitmiyor, DOM'a girmiyor.
             */}
-            <ProfilFotografi
-              ad={baslik}
-              yol={profil.avatarYolu}
-              className="h-20 w-20 shrink-0 rounded-full text-2xl ring-1 ring-blue-500/20 sm:h-28 sm:w-28 sm:text-3xl lg:h-36 lg:w-36 lg:text-4xl"
-              buyutme={{
-                onPaylas,
-                kullaniciAdi: profil.yayindaMi ? profil.kullaniciAdi : null,
-                onFotografDegistir: sahibiMi ? onFotografDegistir : undefined,
-              }}
-            />
+            {/*
+              FOTOĞRAF KAPAĞA BİNİYOR: bandın üst dolgusu üç profil
+              ekranının ortak dizesi (testle kilitli), bu yüzden dolgu
+              değil fotoğraf kabı negatif boşluk alıyor. Değer = üst
+              dolgu + dairenin yarısı: 20+40 → -mt-15, 24+56 → sm:-mt-20,
+              24+72 → lg:-mt-24. `relative` kabı kapağın ÜSTÜNDE
+              çizdiriyor. Halka `ring-1 ring-blue-500/20` idi; kapağın
+              üstünde o ince mavi çizgi kayboluyordu, yerini X'teki beyaz
+              ayraç (`ring-4 ring-white`) aldı.
+            */}
+            <div className="relative -mt-15 sm:-mt-20 lg:-mt-24">
+              <ProfilFotografi
+                ad={baslik}
+                yol={profil.avatarYolu}
+                className="h-20 w-20 shrink-0 rounded-full text-2xl ring-4 ring-white sm:h-28 sm:w-28 sm:text-3xl lg:h-36 lg:w-36 lg:text-4xl"
+                buyutme={{
+                  onPaylas,
+                  kullaniciAdi: profil.yayindaMi ? profil.kullaniciAdi : null,
+                  onFotografDegistir: sahibiMi ? onFotografDegistir : undefined,
+                }}
+              />
+            </div>
             {/*
               `ring-offset` kadar nefes payı dairenin altında zaten var;
               şirketteki `mt-3` aynen geçerli.
@@ -422,6 +455,14 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
                 )}
                 {profil.sehir && <p className="break-words">{profil.sehir}</p>}
               </div>
+            )}
+
+            {/* KATILMA TARİHİ — `/cv` kartındaki satırın aynısı; ikon `aria-hidden`. */}
+            {katilma && (
+              <p className="mt-1.5 flex max-w-full min-w-0 items-center gap-1.5 text-sm text-gray-700 sm:mt-2.5">
+                <CalendarDays aria-hidden className="h-4 w-4 shrink-0 text-gray-500" />
+                <span className="min-w-0 truncate">{katilma}</span>
+              </p>
             )}
 
             {/*

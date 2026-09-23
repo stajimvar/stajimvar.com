@@ -102,3 +102,60 @@ export function tarihSaatMetni(deger) {
     minute: '2-digit',
   }).format(t);
 }
+
+/*
+  YILA GELEN BULUNMA EKİ: "2026'da", "2025'te", "2020'de"
+
+  Yıl her zaman RAKAMLA yazılıyor; ek, rakamın SESLİ okunuşunun son
+  hecesine uyuyor. Tek bir "'da" sabiti 2026 için doğru ama 2027'de
+  ("yirmi yedi") "'de", 2025'te ("yirmi beş") "'te" olmak zorunda — sabit
+  bir ek ürün yaşlandıkça yanlış yazmaya başlardı. Tablo okunuşun son
+  kelimesine göre: ünlü uyumu (a/ı/o/u → a, e/i/ö/ü → e) ve sertleşme
+  (ç, f, h, k, p, s, ş, t ile biten kelimede d → t).
+
+  Yalnız son SIFIR OLMAYAN basamak bakılıyor: 2030 "otuz" diye, 2000
+  "bin" diye, 2100 "yüz" diye biter.
+*/
+const BIRLER_EKI = ['', 'de', 'de', 'te', 'te', 'te', 'da', 'de', 'de', 'da'];
+//                     bir   iki   üç    dört  beş   altı  yedi  sekiz dokuz
+const ONLAR_EKI = ['', 'da', 'de', 'da', 'ta', 'de', 'ta', 'te', 'de', 'da'];
+//                     on    yirmi otuz  kırk  elli  altmış yetmiş seksen doksan
+
+/**
+ * Rakamla yazılmış bir yıla gelen bulunma eki (kesme işaretsiz).
+ *
+ * @param {number} yil pozitif tam sayı
+ * @returns {string} 'da' | 'de' | 'ta' | 'te'
+ */
+export function yilBulunmaEki(yil) {
+  const n = Math.abs(Math.trunc(yil));
+  if (n % 10 !== 0) return BIRLER_EKI[n % 10];
+  if (n % 100 !== 0) return ONLAR_EKI[(n % 100) / 10];
+  /* "yüz" ve "bin" ince ünlüyle bitiyor; ikisi de "'de". Sıfır yıl yok. */
+  return 'de';
+}
+
+/**
+ * Profildeki katılma satırı: "Eylül 2026'da katıldı".
+ *
+ * Değer bir AN (`social_profiles.created_at`, saatli), takvim günü değil:
+ * okuyucunun kendi saat diliminde gösteriliyor — `tarihSaatMetni` ile
+ * aynı karar. Ay sonunda gece yarısına yakın açılmış bir hesap iki saat
+ * diliminde iki farklı ay gösterebilir; bu bir an için doğru davranış.
+ *
+ * Yıl `formatToParts`tan okunuyor, biçimlenmiş metnin sonundan kesilmiyor:
+ * ek YILA bağlı ve ay adının yazımı ileride değişse bile yıl parçası aynı
+ * kalıyor.
+ *
+ * @param {string|Date|null|undefined} deger
+ * @returns {string|null} metin ya da null (satır çizilmemeli)
+ */
+export function katilmaMetni(deger) {
+  const t = tarihNesnesi(deger);
+  if (!t) return null;
+  const parcalar = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric' }).formatToParts(t);
+  const ay = parcalar.find((p) => p.type === 'month')?.value;
+  const yil = parcalar.find((p) => p.type === 'year')?.value;
+  if (!ay || !yil) return null;
+  return `${ay} ${yil}'${yilBulunmaEki(Number(yil))} katıldı`;
+}

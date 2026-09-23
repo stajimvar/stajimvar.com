@@ -232,6 +232,23 @@ export interface SosyalProfil {
    */
   avatarYolu: string | null;
   /**
+   * Kapak fotoğrafının DEPOLAMA YOLU — `avatarYolu` ile aynı sözleşme.
+   *
+   * `sosyal-kapak` kovası da private (20261105010000); dosya gösterileceği
+   * anda `gorselIndir` ile oturumdan geçerek iniyor. Okuma kapısı
+   * avatarınkiyle AYNI fonksiyon: profili göremeyen kapağı da göremiyor.
+   */
+  kapakFotografiYolu: string | null;
+  /**
+   * `social_profiles.created_at` — profilde "… tarihinde katıldı" satırı.
+   *
+   * 20261105010000 bu kolonu HESABIN tarihine çekti: toplu doldurulan
+   * satırlarda değer satırın açıldığı andı (11 Eylül 2026), hesabınki
+   * değil. Kullanıcı yazamıyor (kolon yetkisi yok). Okunamazsa `null`;
+   * satır çizilmiyor, tarih uydurulmuyor.
+   */
+  katilmaAni: string | null;
+  /**
    * `social_profiles.resmi_mi` — doğrulanmış StajımVar resmî hesabı mı.
    *
    * Arayüzde kullanıcı adının yanındaki mavi tiki AÇAN tek alan
@@ -271,7 +288,7 @@ export interface SosyalProfil {
   `departments ( ad )` tek yollu, ipucu gerekmiyor (ölçüldü: 200).
 */
 const PROFIL_KOLONLARI =
-  'profile_id, username, sector_id, department_id, gorunen_ad, biyografi, bolum_etiketi, sinif_etiketi, sehir, yayinda_mi, resmi_mi, sirket_id, avatar_path, sectors!social_profiles_sector_id_fkey ( ad ), departments ( ad )';
+  'profile_id, username, sector_id, department_id, gorunen_ad, biyografi, bolum_etiketi, sinif_etiketi, sehir, yayinda_mi, resmi_mi, sirket_id, avatar_path, kapak_path, created_at, sectors!social_profiles_sector_id_fkey ( ad ), departments ( ad )';
 
 function profileCevir(satir: any): SosyalProfil {
   return {
@@ -288,6 +305,8 @@ function profileCevir(satir: any): SosyalProfil {
     sehir: satir.sehir ?? null,
     yayindaMi: Boolean(satir.yayinda_mi),
     avatarYolu: satir.avatar_path ?? null,
+    kapakFotografiYolu: satir.kapak_path ?? null,
+    katilmaAni: satir.created_at ?? null,
     /* Okunamayan satırda `false`: tik, VARLIĞI kanıtlanmadıkça çizilmiyor. */
     resmiMi: satir.resmi_mi === true,
     sirketId: satir.sirket_id ?? null,
@@ -852,6 +871,8 @@ function paylasimSatiriCevir(satir: any): SosyalPaylasim {
 */
 export const SOSYAL_PAYLASIM_KOVASI = 'sosyal-paylasim';
 export const SOSYAL_AVATAR_KOVASI = 'sosyal-avatar';
+/** 20261105010000 — kapak fotoğrafı; avatarla aynı okuma kapısı. */
+export const SOSYAL_KAPAK_KOVASI = 'sosyal-kapak';
 
 /**
  * Depolama yolundan GÖRSELİN KENDİSİNİ indiriyor.
@@ -1552,6 +1573,103 @@ export async function profilFotografiKaldir(kullaniciId: string): Promise<void> 
     await db.storage.from(SOSYAL_AVATAR_KOVASI).remove([eskiYol]);
   } catch {
     /* Yukarıdaki gerekçe: satır null, dosya sahipsiz ve görünmez. */
+  }
+}
+
+// ------------------------------------------------------------ Kapak fotoğrafı
+
+/**
+ * Kapak fotoğrafını yükle — `profilFotografiYukle`nin BİREBİR kalıbı.
+ *
+ * Sıra aynı ve aynı sebeple: eski yolu oku → yeni dosyayı yükle →
+ * `kapak_path`i yaz → EN SON eskisini sil. Satır yazılamazsa yeni dosya
+ * temizleniyor ve eski kapak yerinde kalıyor; en kötü sonuç kovada
+ * sahipsiz kalan tek bir eski dosya.
+ *
+ * Sunucu tarafı da avatarınkinin aynısı (20261105010000): yol yalnız kendi
+ * klasörüne yazılabiliyor (Storage politikası) ve `kapak_yolu_kilidi`
+ * başkasının klasörünü gösteren yolu 'kapak-yolu-kendi-klasorunde-olmali'
+ * ile reddediyor.
+ *
+ * İki fonksiyon ortak bir yardımcıya BİRLEŞTİRİLMEDİ: avatar akışı
+ * ölçülmüş ve testlerle kilitli; ona dokunmadan aynı sırayı ikinci kolon
+ * için yazmak, çalışan yolu yeniden açmaktan daha az risk.
+ */
+export async function profilKapagiYukle(kullaniciId: string, gorsel: YuklenecekGorsel): Promise<string> {
+  const { data: mevcut, error: okumaHatasi } = await db
+    .from('social_profiles')
+    .select('kapak_path')
+    .eq('profile_id', kullaniciId)
+    .maybeSingle();
+  if (okumaHatasi) hata('Kapak fotoğrafı okunamadı', okumaHatasi);
+  const eskiYol: string | null = mevcut?.kapak_path ?? null;
+
+  const yeniYol = `${kullaniciId}/${crypto.randomUUID()}.${gorsel.uzanti}`;
+  const { error: yuklemeHatasi } = await db.storage
+    .from(SOSYAL_KAPAK_KOVASI)
+    .upload(yeniYol, gorsel.veri, { contentType: gorsel.veri.type, upsert: false });
+  if (yuklemeHatasi) hata('Kapak fotoğrafı yüklenemedi', yuklemeHatasi);
+
+  const { data: yazilan, error: yazmaHatasi } = await db
+    .from('social_profiles')
+    .update({ kapak_path: yeniYol })
+    .eq('profile_id', kullaniciId)
+    .select('profile_id');
+
+  if (yazmaHatasi || !yazilan || yazilan.length === 0) {
+    /* Yeni dosya sahipsiz kaldı; ESKİ dosyaya dokunulmuyor — satırda hâlâ onun yolu var. */
+    try {
+      await db.storage.from(SOSYAL_KAPAK_KOVASI).remove([yeniYol]);
+    } catch {
+      /* Temizlik başarısız olabilir; asıl hata aşağıda anlatılıyor. */
+    }
+    if (yazmaHatasi) hata('Kapak fotoğrafı kaydedilemedi', yazmaHatasi);
+    throw new SosyalHata('Kapak fotoğrafı kaydedilemedi; mevcut kapağın değişmedi.', 'satir-yok');
+  }
+
+  if (eskiYol && eskiYol !== yeniYol) {
+    try {
+      await db.storage.from(SOSYAL_KAPAK_KOVASI).remove([eskiYol]);
+    } catch {
+      /* Eski dosya kalırsa hiçbir profile bağlı değil; yeni yol zaten yazıldı. */
+    }
+  }
+  return yeniYol;
+}
+
+/**
+ * Kapak fotoğrafını kaldır: `kapak_path` → null, SONRA dosya.
+ *
+ * `profilFotografiKaldir` ile aynı sıra: dosya önce silinip satır
+ * yazılamasaydı profilde var olmayan bir dosyanın yolu kalırdı. Dosya
+ * silme hatası yutuluyor — satır zaten null ve dosya kimseye görünmüyor.
+ */
+export async function profilKapagiKaldir(kullaniciId: string): Promise<void> {
+  const { data: mevcut, error: okumaHatasi } = await db
+    .from('social_profiles')
+    .select('kapak_path')
+    .eq('profile_id', kullaniciId)
+    .maybeSingle();
+  if (okumaHatasi) hata('Kapak fotoğrafı okunamadı', okumaHatasi);
+
+  const eskiYol: string | null = mevcut?.kapak_path ?? null;
+  if (!eskiYol) return;
+
+  const { data: yazilan, error: yazmaHatasi } = await db
+    .from('social_profiles')
+    .update({ kapak_path: null })
+    .eq('profile_id', kullaniciId)
+    .select('profile_id');
+
+  if (yazmaHatasi) hata('Kapak fotoğrafı kaldırılamadı', yazmaHatasi);
+  if (!yazilan || yazilan.length === 0) {
+    throw new SosyalHata('Kapak fotoğrafın kaldırılamadı; kapağın duruyor.', 'satir-yok');
+  }
+
+  try {
+    await db.storage.from(SOSYAL_KAPAK_KOVASI).remove([eskiYol]);
+  } catch {
+    /* Satır null, dosya sahipsiz ve görünmez. */
   }
 }
 

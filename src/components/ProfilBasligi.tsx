@@ -1,9 +1,11 @@
 import React from 'react';
-import { Award, Bookmark, Check, FileText, LogOut, MapPin, Pencil, Settings } from 'lucide-react';
+import { Award, Bookmark, CalendarDays, Check, FileText, LogOut, MapPin, Pencil, Settings } from 'lucide-react';
 import { OkulRozeti } from './OkulRozeti';
 import { universiteLogosu } from '../lib/universite-logosu.mjs';
 import { adYazimi } from '../lib/ad';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
+import { KapakFotografi } from './sosyal/KapakFotografi';
+import { katilmaMetni } from '../lib/tarih.mjs';
 import { profilAyarOgeleri } from './sosyal/ProfilAyarMenusu';
 import { ProfilAyarlarSayfasi, type AyarBolumu } from './ProfilAyarlarSayfasi';
 import type { PortfolyoSatiri } from './sosyal/SosyalProfilSayfasi';
@@ -387,6 +389,25 @@ export const ProfilBasligi: React.FC<Props> = ({
   const satir = portfolyo?.satir ?? null;
 
   /*
+    KAPAK YOLUNUN ÜÇ HÂLİ — `sosyalAvatarYolu` ile aynı sözleşme
+
+      undefined  panel satırı HENÜZ OKUNMADI → iskelet bant
+      null       panel yok, satır gelmedi ya da kapak yok → nötr bant
+      yol        kapağın kendisi
+
+    Panel hiç verilmediyse (`portfolyo` yok) kapak bilinemiyor; iskelet
+    sonsuza kadar yanıp sönerdi. O durumda nötr bant — "bilinmiyor"u
+    "yükleniyor" gibi göstermiyoruz.
+  */
+  const kapakYolu: string | null | undefined = !portfolyo
+    ? null
+    : portfolyo.satir === undefined
+      ? undefined
+      : (portfolyo.satir?.kapakFotografiYolu ?? null);
+  /* Tarih okunamadıysa satır YOK; uydurulmuş bir ay yazılmıyor. */
+  const katilma = katilmaMetni(satir?.katilmaAni ?? null);
+
+  /*
     "AYARLAR VE HAREKETLER" (☰) — kullanıcı isteği, 17 Eylül 2026
 
     Profil durumu, yetkinlik testleri, kaydedilenler, başvurular, dişli
@@ -522,12 +543,34 @@ export const ProfilBasligi: React.FC<Props> = ({
         onClick={() => setMenuAcik(true)}
         aria-label="Ayarlar ve hareketler"
         aria-haspopup="dialog"
-        className={`absolute right-3 top-3 hidden h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-gray-700 hover:bg-gray-100 lg:inline-flex ${ODAK_HALKASI}`}
+        /*
+          KAPAĞIN ÜSTÜNDE OKUNUR: düğme artık fotoğrafın üstüne düşüyor ve
+          koyu ya da karışık bir kapakta gri ikon kayboluyordu. Yarı saydam
+          beyaz zemin + gölge ikonu her kapakta beyaz bir yüzeye oturtuyor;
+          `z-10` kapak görselinin üstünde kalmasını garanti ediyor.
+
+          40 → 44 PİKSEL: kural dokunma hedefini en az 44 istiyor. Düğme
+          yalnız `lg`de görünüyor ama dokunmatik dizüstü ve tabletler de
+          `lg` genişliğinde.
+        */
+        className={`absolute right-3 top-3 z-10 hidden h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-white/90 text-gray-700 shadow-sm hover:bg-white lg:inline-flex ${ODAK_HALKASI}`}
       >
         <Settings aria-hidden className="h-6 w-6" strokeWidth={1.75} />
       </button>
 
       <ProfilAyarlarSayfasi acik={menuAcik} onKapat={menuKapat} bolumler={ayarBolumleri} />
+
+      {/*
+        KAPAK BANDI (X kalıbı, 2/2) — kartın en üstünde, 3:1
+
+        Telefonda kart `-mx-4` ile kenardan kenara ve üst kenarı yok;
+        bant da öyle. `sm:` üstünde kartın köşesi 20 piksel ve kenarı 1
+        piksel: bandın üst köşesi 19 piksel ki kartın iç kenarıyla
+        arasında beyaz bir üçgen kalmasın. Kartın kendisine
+        `overflow-hidden` verilmedi — ayar sayfası ve fotoğraf
+        görüntüleyici kartın içinden açılan katmanlar.
+      */}
+      <KapakFotografi ad={adYazimi(ad)} yol={kapakYolu} className="w-full sm:rounded-t-[19px]" />
 
       {/* ------------------------------------------- kimlik bandı */}
       <div className="px-4 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6">
@@ -572,8 +615,28 @@ export const ProfilBasligi: React.FC<Props> = ({
             fotoğrafta köşe zaten 45 dereceye denk düşüyor; 112 ve 144'te
             rozet birkaç piksel içeri alınıyor.
           */}
+          {/*
+            FOTOĞRAF KAPAĞA BİNİYOR — negatif üst boşluk
+
+            Bandın üst dolgusu (`pt-5` / `sm:pt-6`) üç profil ekranının
+            ortak dizesi ve testle kilitli (`sosyal-profil-arayuzu`); o
+            yüzden dolgu değiştirilmedi, fotoğraf kabı onu negatif
+            boşlukla geri alıyor. Değer = üst dolgu + halkalı dairenin
+            yaklaşık yarısı (daire + 2×6 piksel halka):
+              telefon  20 + 92/2  = 66 → -mt-16 (64)
+              sm       24 + 124/2 = 86 → -mt-21 (84)
+              lg       24 + 156/2 = 102 → -mt-25 (100)
+            `ring-4 ring-white` fotoğrafı kapaktan ayırıyor; halka yer
+            kaplamıyor (gölge), düzen değişmiyor.
+
+            Negatif boşluk AYRI bir kapta: içteki `relative` kap okul
+            rozetinin konum kabı ve dizesi rozet testinde kilitli. Kapağın
+            üstünde çizilmeyi de o `relative` sağlıyor (konumlu öğe,
+            konumsuz kapak görselinin üstüne boyanıyor).
+          */}
+          <div className="-mt-16 sm:-mt-21 lg:-mt-25">
           <div className="relative">
-          <Halka oran={oran}>
+          <Halka oran={oran} className="ring-4 ring-white">
             {/*
               BÜYÜTME (kullanıcı isteği, 17 Eylül 2026): fotoğrafa dokununca
               Instagram gibi tam ekran açılıyor. Paylaş eylemi sosyal
@@ -599,6 +662,7 @@ export const ProfilBasligi: React.FC<Props> = ({
                 <OkulRozeti okul={okul} logoAdresi={universiteLogosu(okul) ?? undefined} />
               </span>
             )}
+          </div>
           </div>
 
           {/*
@@ -671,6 +735,39 @@ export const ProfilBasligi: React.FC<Props> = ({
               <MapPin aria-hidden className="h-4 w-4 shrink-0 text-gray-500" />
               <span className="sr-only">Konum: </span>
               <span className="min-w-0 truncate">{konum}</span>
+            </p>
+          )}
+
+          {/*
+            KATILMA TARİHİ — konum satırının kalıbında, ikonu `aria-hidden`
+            ve metni kendi başına anlamlı ("Eylül 2026'da katıldı").
+            Kaynak `social_profiles.created_at`: 20261105010000 onu hesabın
+            tarihine çekti. Satır okunmadıysa aynı kutuda iskelet (satır
+            gelince altındaki biyografi zıplamasın), okunamadıysa HİÇ yok.
+          */}
+          {portfolyo && portfolyo.satir === undefined && (
+            <Skeleton className="mt-1.5 h-5 w-40 sm:mt-2.5" />
+          )}
+          {katilma && (
+            <p className="mt-1.5 flex max-w-full min-w-0 items-center gap-1.5 text-sm text-gray-700 sm:mt-2.5">
+              <CalendarDays aria-hidden className="h-4 w-4 shrink-0 text-gray-500" />
+              <span className="min-w-0 truncate">{katilma}</span>
+            </p>
+          )}
+
+          {/*
+            BİYOGRAFİ — ziyaretçi profilindeki paragrafın AYNI sınıfları
+
+            Sahip kendi `/cv` kartında biyografisini hiç görmüyordu: alan
+            düzenleme formunda yazılıyor, `/profil/:ad` çiziyor ama bu kart
+            çizmiyordu. Kısaltma yok — `SosyalProfilGorunumu`ndaki gerekçe:
+            tam metne giden başka bir yol yok. `whitespace-pre-line`
+            kullanıcının satır sonlarını, `break-words` uzun bağlantıları
+            koruyor.
+          */}
+          {satir?.biyografi && (
+            <p className="mt-3 max-w-full whitespace-pre-line break-words text-sm leading-relaxed text-gray-800 sm:text-base">
+              {satir.biyografi}
             </p>
           )}
         </div>
