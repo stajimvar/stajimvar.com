@@ -682,11 +682,20 @@ test('üç profil ekranı aynı kalıbı paylaşıyor: kap sınıfları birebir'
     );
   }
 
-  /* 4. Ortalanmış kimlik sütunu ve daire ölçü basamakları. */
+  /*
+    4. Kimlik sütunu ve daire ölçü basamakları.
+
+    SOLA HİZALANDI (kullanıcı kararı, 23 Eylül 2026). Ortalı düzende ad,
+    kullanıcı adı, okul ve konum farklı uzunlukta olduğu için her satır
+    başka bir yerden başlıyordu; göz her satırda satır başını yeniden
+    arıyordu. Şart DEĞİŞTİ ama KALMADI: üç ekranın aynı kalıbı
+    paylaşması kuralı sürüyor, yalnız kalıbın kendisi hizasını
+    değiştirdi.
+  */
   for (const [ad, kaynak] of Object.entries(ekranlar)) {
     assert.ok(
-      kaynak.includes('mx-auto flex max-w-2xl flex-col items-center text-center'),
-      `${ad}: kimlik sütunu ortalanmış kalıptan ayrışmış`,
+      kaynak.includes('mx-auto flex max-w-2xl flex-col items-start text-left'),
+      `${ad}: kimlik sütunu kalıptan ayrışmış`,
     );
     assert.ok(
       /h-20 w-20[^"]*sm:h-28 sm:w-28[^"]*lg:h-36 lg:w-36/.test(kaynak),
