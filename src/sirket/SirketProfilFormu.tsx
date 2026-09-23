@@ -813,6 +813,35 @@ const Dogrulama: React.FC<{ baglam: SirketBaglami; onKaydedildi: () => void }> =
     );
   }
 
+  /*
+    VKN GİRİLDİ AMA DOĞRULANMADI: İKİ AYRI HÂL
+
+    Burası eskiden yalnız formu çiziyordu. VKN'yi kaydeden şirket aynı
+    boş formu tekrar görüyor, "kaydoldu mu, bakan var mı" bilmiyordu —
+    23 Eylül 2026'da bildirilen sorun tam olarak buydu. Üstelik kuyruk da
+    yoktu; artık yönetici onay sayfasında "Doğrulama" sekmesi var.
+
+    Ret, "bekliyor"dan ayrılıyor: reddedilen şirkete sebebi yazılıyor ve
+    numarayı düzeltip yeniden gönderebiliyor (kayıt güncellenince kuyruğa
+    geri düşüyor).
+  */
+  const reddedildi = Boolean(baglam.dogrulamaReddiAt);
+  if (baglam.vkn && !reddedildi && durum !== 'tamam') {
+    return (
+      <div className={KUTU} style={kutuStil}>
+        <p className="flex items-center gap-2 font-bold" style={{ color: SIRKET_METIN }}>
+          <BadgeCheck className="h-5 w-5" />
+          Doğrulama inceleniyor
+        </p>
+        <p className="mt-1 max-w-xl text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+          VKN {baglam.vkn} kaydedildi ve yönetici kuyruğunda bekliyor. Ticari unvanla
+          numaranın aynı kuruma ait olduğunu bir insan kontrol ediyor; sonucu burada
+          göreceksin.
+        </p>
+      </div>
+    );
+  }
+
   const gonder = async () => {
     if (!bicimTamam || !baglam.companyId) return;
     setDurum('kaydediliyor');
@@ -832,10 +861,22 @@ const Dogrulama: React.FC<{ baglam: SirketBaglami; onKaydedildi: () => void }> =
       <p className="font-bold" style={{ color: SIRKET_METIN }}>
         Şirket doğrulama
       </p>
+      {/*
+        VAAT, GERÇEKLE AYNI OLMALI: burada "sonucu e-postayla yazıyoruz"
+        yazıyordu, oysa doğrulama kararı için e-posta gönderen bir akış
+        yok. Sonuç bu ekranda görünüyor; söylenen de o.
+      */}
       <p className="mt-1 max-w-xl text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
         Doğrulama başvuran kartlarını açıyor. Ticari unvan ve VKN'yi alıp bir insan kontrol
-        ediyor; genellikle bir iş günü sürüyor ve sonucu e-postayla yazıyoruz.
+        ediyor; sonucu bu sayfada göreceksin.
       </p>
+
+      {reddedildi && (
+        <p className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+          Doğrulama reddedildi{baglam.dogrulamaNotu ? `: ${baglam.dogrulamaNotu}` : '.'} Bilgileri
+          düzeltip yeniden gönderebilirsin.
+        </p>
+      )}
 
       {/*
         ŞAHIS ŞİRKETİNDEN TCKN İSTENMİYOR

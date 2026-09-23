@@ -3,6 +3,9 @@ import { AlertTriangle, ExternalLink } from 'lucide-react';
 import {
   fetchOnayKuyrugu,
   ilanKarariVer,
+  sirketDogrulamasiniReddet,
+  sirketiDogrula,
+  type OnayDogrulama,
   type OnayIlani,
   type OnayKuyrugu,
 } from '../../lib/queries';
@@ -146,7 +149,9 @@ const IlanSatiri: React.FC<{
 export const OnaySayfasi: React.FC = () => {
   const [kuyruk, setKuyruk] = React.useState<OnayKuyrugu | null>(null);
   const [durum, setDurum] = React.useState<'yukleniyor' | 'hazir' | 'hata'>('yukleniyor');
-  const [sekme, setSekme] = React.useState<'ilan' | 'sahiplenme' | 'bolum'>('ilan');
+  const [sekme, setSekme] = React.useState<'ilan' | 'dogrulama' | 'sahiplenme' | 'bolum'>('ilan');
+  const [redEdilen, setRedEdilen] = React.useState<string | null>(null);
+  const [redSebebi, setRedSebebi] = React.useState('');
   const [islemdeki, setIslemdeki] = React.useState<string | null>(null);
   const [uyari, setUyari] = React.useState<string | null>(null);
 
@@ -188,7 +193,37 @@ export const OnaySayfasi: React.FC = () => {
     }
   };
 
+  /*
+    DOĞRULAMA KARARI
+
+    VKN'yi yazan şirket burada bekliyordu ama kuyruk yoktu: fonksiyonlar
+    (`sirket_dogrula`, `sirket_dogrulamayi_reddet`) Ağustos'tan beri
+    veritabanında duruyor, arayüzde onları çağıran hiçbir yer yoktu.
+    Şirkete "bir insan kontrol ediyor" deniyor, o insana iş düşmüyordu.
+  */
+  const dogrulamaKarari = async (d: OnayDogrulama, karar: 'onayla' | 'reddet') => {
+    if (karar === 'reddet' && !redSebebi.trim()) return;
+    setIslemdeki(d.id);
+    setUyari(null);
+    try {
+      if (karar === 'onayla') await sirketiDogrula(d.id);
+      else await sirketDogrulamasiniReddet(d.id, redSebebi.trim());
+      setKuyruk((k) =>
+        k ? { ...k, dogrulamalar: k.dogrulamalar.filter((x) => x.id !== d.id) } : k,
+      );
+      setRedEdilen(null);
+      setRedSebebi('');
+    } catch {
+      setUyari(
+        `"${d.sirket ?? 'şirket'}" için karar uygulanamadı. Kuyruğu yenileyip tekrar dene.`,
+      );
+    } finally {
+      setIslemdeki(null);
+    }
+  };
+
   const ilanlar = kuyruk?.ilanlar ?? [];
+  const dogrulamalar = kuyruk?.dogrulamalar ?? [];
   const sahiplenmeler = kuyruk?.sahiplenmeler ?? [];
   const bolumler = kuyruk?.bolumler ?? [];
 
@@ -196,6 +231,12 @@ export const OnaySayfasi: React.FC = () => {
     <div className="space-y-4">
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="Kuyruk">
         <Sekme etkin={sekme === 'ilan'} etiket="İlan" adet={ilanlar.length} tikla={() => setSekme('ilan')} />
+        <Sekme
+          etkin={sekme === 'dogrulama'}
+          etiket="Doğrulama"
+          adet={dogrulamalar.length}
+          tikla={() => setSekme('dogrulama')}
+        />
         <Sekme
           etkin={sekme === 'sahiplenme'}
           etiket="Sahiplenme"
@@ -243,6 +284,101 @@ export const OnaySayfasi: React.FC = () => {
         )
       )}
 
+      {durum === 'hazir' && sekme === 'dogrulama' && (
+        dogrulamalar.length ? (
+          <ul className="space-y-3">
+            {dogrulamalar.map((d) => (
+              <li key={d.id} className="rounded-2xl border border-gray-200 bg-white p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-gray-900">{d.sirket ?? 'şirket bilinmiyor'}</p>
+                    <p className="mt-0.5 font-mono text-sm text-gray-700">VKN {d.vkn}</p>
+                    {d.mersis && <p className="font-mono text-xs text-gray-500">MERSİS {d.mersis}</p>}
+                    {/*
+                      KARARI DEĞİŞTİRECEK BİLGİ EKRANDA: VKN herkese açık ve
+                      tek başına yetkiyi kanıtlamıyor. Bakılan şey ticari
+                      unvanın, sitenin ve İK e-postasının aynı kuruma işaret
+                      edip etmediği.
+                    */}
+                    <p className="mt-1.5 text-sm text-gray-600">
+                      {d.ikEposta ?? 'İK e-postası yok'}
+                      {d.site && (
+                        <>
+                          {' · '}
+                          <a
+                            href={d.site}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-blue-700 hover:underline"
+                          >
+                            {d.site.replace(/^https?:\/\//, '')}
+                            <ExternalLink className="h-3 w-3" aria-hidden />
+                          </a>
+                        </>
+                      )}
+                    </p>
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      {d.uyeSayisi} üye
+                      {d.slug && (
+                        <>
+                          {' · '}
+                          <a href={`/sirket/${d.slug}`} className="text-blue-700 hover:underline">
+                            şirket sayfası
+                          </a>
+                        </>
+                      )}
+                    </p>
+                    {d.redNotu && (
+                      <p className="mt-1.5 text-xs text-amber-700">Önceki ret: {d.redNotu}</p>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <button
+                      type="button"
+                      disabled={islemdeki === d.id}
+                      onClick={() => void dogrulamaKarari(d, 'onayla')}
+                      className="min-h-9 cursor-pointer rounded-lg bg-gray-900 px-3 text-xs font-bold text-white disabled:opacity-50"
+                    >
+                      Doğrula
+                    </button>
+                    <button
+                      type="button"
+                      disabled={islemdeki === d.id}
+                      onClick={() => setRedEdilen((o) => (o === d.id ? null : d.id))}
+                      className="min-h-9 cursor-pointer rounded-lg border border-gray-300 px-3 text-xs font-bold text-gray-700 disabled:opacity-50"
+                    >
+                      Reddet
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sebep ZORUNLU: sebepsiz ret, şirketin ne yapacağını bilmemesi demek. */}
+                {redEdilen === d.id && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <input
+                      value={redSebebi}
+                      onChange={(e) => setRedSebebi(e.target.value)}
+                      placeholder="Ret sebebi — şirkete yazılacak"
+                      className="min-h-9 min-w-0 flex-1 rounded-lg border border-gray-300 px-3 text-sm"
+                    />
+                    <button
+                      type="button"
+                      disabled={!redSebebi.trim() || islemdeki === d.id}
+                      onClick={() => void dogrulamaKarari(d, 'reddet')}
+                      className="min-h-9 cursor-pointer rounded-lg bg-red-600 px-3 text-xs font-bold text-white disabled:opacity-50"
+                    >
+                      Reddi gönder
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <BosDurum mesaj="Doğrulama bekleyen şirket yok" />
+        )
+      )}
+
       {durum === 'hazir' && sekme === 'sahiplenme' && (
         sahiplenmeler.length ? (
           <ul className="space-y-3">
@@ -285,7 +421,7 @@ export const OnaySayfasi: React.FC = () => {
         farklı (sahiplenmede alan adı eşleşmesi elle doğrulanıyor).
         Çalışmayan bir düğme koymak, çalışıyor sanılmasına yol açardı.
       */}
-      {durum === 'hazir' && sekme !== 'ilan' && (
+      {durum === 'hazir' && (sekme === 'sahiplenme' || sekme === 'bolum') && (
         <p className="text-[11px] leading-relaxed text-gray-500">
           Bu kuyrukta karar düğmesi henüz yok: ikisi de boş ve karar akışları
           ilanınkinden farklı. Talep geldiğinde kendi akışıyla eklenecek.

@@ -287,6 +287,8 @@ const TEST_BAGLAMI = (kademe: number) => ({
   hrEmail: 'ik@ornek.com',
   vkn: null,
   dogrulandi: kademe === KADEME.DOGRULANMIS,
+  dogrulamaNotu: null,
+  dogrulamaReddiAt: null,
   kademe,
 });
 

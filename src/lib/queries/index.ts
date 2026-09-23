@@ -1481,16 +1481,66 @@ export interface OnayBolum {
   olustu: string;
 }
 
+/**
+ * Doğrulama bekleyen şirket.
+ *
+ * VKN girilmiş ama `verified` hâlâ false. Karar bir insan kararı: VKN'nin
+ * checksum'una makine bakabiliyor, o numaranın ticari unvanla aynı kuruma
+ * ait olup olmadığına bakamıyor.
+ */
+export interface OnayDogrulama {
+  id: string;
+  sirket: string | null;
+  slug: string | null;
+  site: string | null;
+  ikEposta: string | null;
+  vkn: string | null;
+  mersis: string | null;
+  uyeSayisi: number;
+  sahiplenildi: string | null;
+  redNotu: string | null;
+  redTarihi: string | null;
+  guncellendi: string | null;
+}
+
 export interface OnayKuyrugu {
   ilanlar: OnayIlani[];
   sahiplenmeler: OnaySahiplenme[];
   bolumler: OnayBolum[];
+  dogrulamalar: OnayDogrulama[];
 }
 
 export async function fetchOnayKuyrugu(): Promise<OnayKuyrugu> {
   const { data, error } = await supabase.rpc('yonetim_onay_kuyrugu' as never);
   if (error) fail('Onay kuyruğu alınamadı', error);
-  return data as unknown as OnayKuyrugu;
+  /*
+    `dogrulamalar` sonradan eklendi (20261104010000). Göç uygulanmadan
+    önceki bir sunucuya bakan arayüz undefined alır ve sekme çizilirken
+    düşerdi; boş dizi o boşluğu dolduruyor.
+  */
+  const kuyruk = data as unknown as OnayKuyrugu;
+  return { ...kuyruk, dogrulamalar: kuyruk?.dogrulamalar ?? [] };
+}
+
+/**
+ * Şirketi doğrular ya da reddeder.
+ *
+ * İkisi de veritabanındaki `security definer` fonksiyonlar; yetki orada
+ * (`is_admin`) sorgulanıyor, arayüzdeki kontrol yalnızca görünürlük.
+ * Ret sebebi zorunlu: sebepsiz red, şirketin ne yapacağını bilmemesi
+ * demek — fonksiyon da boş sebebi kabul etmiyor.
+ */
+export async function sirketiDogrula(id: string): Promise<void> {
+  const { error } = await supabase.rpc('sirket_dogrula' as never, { hedef: id } as never);
+  if (error) fail('Şirket doğrulanamadı', error);
+}
+
+export async function sirketDogrulamasiniReddet(id: string, sebep: string): Promise<void> {
+  const { error } = await supabase.rpc('sirket_dogrulamayi_reddet' as never, {
+    hedef: id,
+    sebep,
+  } as never);
+  if (error) fail('Doğrulama reddedilemedi', error);
 }
 
 /**
