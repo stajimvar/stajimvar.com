@@ -319,7 +319,8 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
             biyografi bandın bir ucundan ötekine uzanıyordu ve ortalı
             metinde o satır uzunluğu okunmuyor (şirkette ölçülen gerekçe).
           */}
-          <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+          {/* Sola hizalı kimlik (23 Eylül 2026): üç profil ekranı aynı kalıbı paylaşıyor. */}
+          <div className="mx-auto flex max-w-2xl flex-col items-start text-left">
             {/*
               Yol boşsa baş harfler çiziliyor; sahte bir fotoğraf değil.
               Dosya kullanıcının oturumundan geçerek iniyor (`ProfilFotografi`).

@@ -537,7 +537,17 @@ export const ProfilBasligi: React.FC<Props> = ({
           adı gibi uzun satırlar 1440'ta bandın bir ucundan ötekine
           uzanır ve ortalı metinde okunmazdı.
         */}
-        <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+        {/*
+          SOLA HİZALI KİMLİK (kullanıcı kararı, 23 Eylül 2026)
+
+          Ortalı düzen, X/LinkedIn'deki profil kalıbına göre okunması zor
+          bir blok üretiyordu: ad, kullanıcı adı, okul ve konum farklı
+          uzunlukta olduğu için her satır başka bir yerden başlıyor, göz
+          her seferinde satır başını yeniden arıyordu. Sola hizalı
+          düzende hepsi aynı hizadan başlıyor ve fotoğraf da kimliğin
+          yanında duruyor.
+        */}
+        <div className="mx-auto flex max-w-2xl flex-col items-start text-left">
           {/*
             HALKA ŞİRKETTE YOK, BURADA KALIYOR: profilin tamamlanma
             oranını anlatan tek görsel gösterge bu (yüzde sayısı karttan
@@ -657,7 +667,7 @@ export const ProfilBasligi: React.FC<Props> = ({
 
           {konum && (
             /* İkon tek başına bilgi taşımıyor: `aria-hidden` + `sr-only` etiket. */
-            <p className="mt-1.5 flex max-w-full min-w-0 items-center justify-center gap-1.5 text-sm text-gray-700 sm:mt-2.5">
+            <p className="mt-1.5 flex max-w-full min-w-0 items-center gap-1.5 text-sm text-gray-700 sm:mt-2.5">
               <MapPin aria-hidden className="h-4 w-4 shrink-0 text-gray-500" />
               <span className="sr-only">Konum: </span>
               <span className="min-w-0 truncate">{konum}</span>

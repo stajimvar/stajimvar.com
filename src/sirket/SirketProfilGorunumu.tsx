@@ -353,7 +353,8 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
             1216 piksel geniş ve açıklama satırı ekranın bir ucundan
             ötekine uzanıyordu — ortalı metinde bu okunmuyor.
           */}
-          <div className="relative mx-auto flex max-w-2xl flex-col items-center text-center">
+          {/* Sola hizalı kimlik (23 Eylül 2026): üç profil ekranı aynı kalıbı paylaşıyor. */}
+          <div className="relative mx-auto flex max-w-2xl flex-col items-start text-left">
             <SirketLogosu
               url={kimlik.logoUrl}
               ad={kimlik.ad}
