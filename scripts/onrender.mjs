@@ -2622,9 +2622,13 @@ async function main() {
       (App.tsx → aramaTeriminiOku). Çalışmayan bir kutuyu yapısal veride
       ilan etmek, Google'a tutulmayacak bir söz vermek olurdu.
 
-      `sameAs` BİLEREK YOK: depoda yayımlanmış bir sosyal hesap adresi
-      geçmiyor ve olmayan bir adresi uydurmak markayı yanlış bir hesaba
-      bağlardı. Hesaplar verildiğinde buraya eklenecek.
+      `sameAs` markanın resmi hesaplarını aynı varlığa bağlıyor. Adresler
+      hesapların sahibinden alındı ve dördü de 200 dönüyor; uydurma
+      adres markayı BAŞKA birinin hesabına bağlardı.
+
+      Bağ tek yönlü çalışmıyor: hesapların kendi bio'sunda da
+      stajimvar.com durmalı. Google iki tarafı da görünce bağa daha
+      çabuk güveniyor.
     */
     jsonLd: {
       '@context': 'https://schema.org',
@@ -2644,6 +2648,12 @@ async function main() {
             width: 512,
             height: 512,
           },
+          sameAs: [
+            'https://www.linkedin.com/company/stajimvar/',
+            'https://www.instagram.com/stajimvar/',
+            'https://www.tiktok.com/@stajimvar',
+            'https://www.youtube.com/@stajimvar',
+          ],
         },
         {
           '@type': 'WebSite',

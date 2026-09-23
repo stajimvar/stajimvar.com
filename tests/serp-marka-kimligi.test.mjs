@@ -45,15 +45,30 @@ test('arama kutusu iddiasi gercek adrese dayaniyor', () => {
   assert.match(APP, /aramaTeriminiOku\(window\.location\.search\)/);
 });
 
-test('uydurma sosyal hesap eklenmemis', () => {
+test('resmi hesaplar markaya bagli', () => {
   /*
-    `sameAs` markayı bir hesaba bağlar; yanlış hesap yanlış markaya
-    bağlamak demek. Depoda yayımlanmış hesap adresi yok, o yüzden alan da
-    yok — hesaplar verilince eklenecek.
+    `sameAs` markayı hesaplarına bağlıyor; Google'ın bir markayı tek
+    varlık olarak tanımasında en güçlü sinyallerden biri. Adresler
+    hesapların sahibinden alındı (23 Eylül 2026) ve dördü de 200
+    dönüyordu.
+
+    LISTE UYDURULMAZ: buraya elle bir hesap eklenecekse önce o hesabın
+    gerçekten markaya ait olduğu doğrulanmalı. Yanlış adres, markayı
+    başkasının hesabına bağlar.
   */
   const anaSayfa = ONRENDER.slice(ONRENDER.indexOf("sayfaYaz('/', {"));
-  /* Alan olarak aranıyor; gerekçe yorumu kelimeyi zaten anıyor. */
-  assert.ok(!/sameAs:/.test(anaSayfa.slice(0, 4000)));
+  const blok = anaSayfa.slice(0, 5000);
+  for (const adres of [
+    'https://www.linkedin.com/company/stajimvar/',
+    'https://www.instagram.com/stajimvar/',
+    'https://www.tiktok.com/@stajimvar',
+    'https://www.youtube.com/@stajimvar',
+  ]) {
+    assert.ok(blok.includes(adres), `${adres} eksik`);
+  }
+  /* Hepsi Organization altında: WebSite'a konsa kurum kimliğine bağlanmazdı. */
+  const kurum = blok.slice(blok.indexOf("'@type': 'Organization'"), blok.indexOf("'@type': 'WebSite'"));
+  assert.match(kurum, /sameAs: \[/);
 });
 
 test('simge 48in kati olcularde', () => {
