@@ -216,7 +216,8 @@ export const IsverenGirisi: React.FC<{
                 onClick={() => onIsverenGirisi('login')}
                 className="min-h-11 cursor-pointer rounded-xl border border-gray-200 px-4 text-sm font-bold text-gray-800 hover:bg-gray-50"
               >
-                İşveren Girişi
+                {/* Tek kapı (23 Eylül 2026): giriş penceresi herkesle aynı. */}
+                Giriş yap
               </button>
               <button
                 type="button"

@@ -32,7 +32,15 @@ interface AuthModalProps {
   activeCompanyId: string;
   onSelectCompany: (companyId: string) => void;
   onCreateCompany: (newCompany: CompanyAccount) => void;
-  onSuccess: (role: 'student' | 'company' | 'admin', name: string) => void;
+  /**
+   * Giriş/kayıt başarılı.
+   *
+   * `userId` de veriliyor: giriş sonrası nereye gidileceğini hesabın
+   * şirket üyeliği belirliyor (company_members) ve çağıran o sorguyu
+   * ancak kimlikle atabiliyor. Oturum `onAuthChange` ile biraz sonra
+   * geliyor; yönlendirmeyi onu beklemek geciktiriyordu.
+   */
+  onSuccess: (role: 'student' | 'company' | 'admin', name: string, userId?: string) => void;
   /** Şirket kaydı akışı hazır olana kadar kapalı. */
   allowCompanySignUp?: boolean;
   /**
@@ -151,7 +159,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       if (mode === 'login') {
         const result = await signIn(email, password);
-        onSuccess(result.role, result.displayName);
+        onSuccess(result.role, result.displayName, result.userId);
         onClose();
         return;
       }
@@ -169,7 +177,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           );
           return;
         }
-        onSuccess('student', result.displayName);
+        onSuccess('student', result.displayName, result.userId);
         onClose();
         return;
       }
@@ -266,21 +274,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div className="inline-block mb-3">
             <Logo size="md" />
           </div>
+          {/*
+            GİRİŞTE TEK KAPI (kullanıcı kararı, 23 Eylül 2026)
+
+            Giriş ekranı üç ayrı başlık gösteriyordu — "Öğrenci Hesabınıza
+            Giriş Yapın", "İşveren girişi", "Şirket Hesabınıza Giriş
+            Yapın" — oysa ARKADAKİ HESAP AYNI: tek kullanıcı sistemi,
+            şirket erişimini `company_members` veriyor. Üç tabela, olmayan
+            üç kapıyı işaret ediyordu: işveren hesabıyla öğrenci
+            kapısından giren insan "yanlış yerdeyim" diye geri dönüyordu.
+
+            Giriş artık herkes için aynı; nereye düşeceğini hesabın
+            kendisi söylüyor (bkz. App.tsx → handleAuthSuccess).
+
+            KAYIT AYNI KALDI: orada gerçekten iki farklı şey toplanıyor
+            (öğrencide ad, şirkette kurum bilgileri ve İK kimliği).
+          */}
           <h3 id="auth-modal-basligi" className="text-xl font-black text-gray-900 tracking-tight">
-            {role === 'company'
-              ? mode === 'login'
-                ? 'Şirket Hesabınıza Giriş Yapın'
-                : 'Kurumsal Şirket Hesabı Oluşturun'
+            {mode === 'login'
+              ? 'StajımVar’a giriş yap'
+              : role === 'company'
+              ? 'Kurumsal Şirket Hesabı Oluşturun'
               : isverenBaglami
-              ? mode === 'login'
-                ? 'İşveren girişi'
-                : 'İşveren hesabınızı oluşturun'
-              : mode === 'login'
-              ? 'Öğrenci Hesabınıza Giriş Yapın'
+              ? 'İşveren hesabınızı oluşturun'
               : 'Öğrenci Hesabı Oluşturun'}
           </h3>
           <p className="text-xs text-gray-500 mt-1">
-            {role === 'company'
+            {mode === 'login'
+              ? 'Tek giriş: hesabın şirkete bağlıysa işveren paneline, değilse öğrenci profiline gidiyorsun.'
+              : role === 'company'
               ? 'Her şirketin kendine ait bağımsız yetenek havuzu, ilan yönetimi ve İK paneli bulunur.'
               : isverenBaglami
               ? 'Şirketinizi doğrulayın, ücretsiz ilan yayınlayın ve başvuruları tek panelden yönetin.'
