@@ -332,7 +332,7 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
           iç kenara oturuyor. Başlığa `overflow-hidden` verilmedi — dişli
           menüsü başlığın içinden açılıyor ve kesilirdi.
         */}
-        <KapakFotografi ad={baslik} yol={profil.kapakFotografiYolu} className="w-full sm:rounded-t-[15px]" />
+        <KapakFotografi ad={baslik} yol={profil.kapakFotografiYolu} kip="bant" className="w-full sm:rounded-t-[15px]" />
         {/* ------------------------------------------- kimlik bandı */}
         <div className="px-4 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6">
           {/*

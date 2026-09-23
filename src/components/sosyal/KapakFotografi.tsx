@@ -32,13 +32,18 @@ import { useGorselAdresleri } from './useGorselAdresleri';
  * kullanıcının çözemeyeceği bir satır bırakırdı. `ProfilFotografi` baş
  * harfe düşerken verdiği kararın aynısı.
  *
- * ORAN BİLEŞENDE, KÖŞE ÇAĞIRANDA
- * ------------------------------
- * 3:1 yükleme ekranının kırptığı oran (`kapagaCevir`): gösterim başka bir
- * oranda olsaydı `object-cover` kaydedilen kadrajın kenarlarını keserdi
- * ve kullanıcı kırparken gördüğünü profilde görmezdi. Köşe ise kabın
- * kendi yarıçapına bağlı (kart 20, başlık 16 piksel) ve burada
- * bilinmiyor; `className` ile geliyor.
+ * ORAN BİLEŞENDE (`kip`), KÖŞE ÇAĞIRANDA
+ * --------------------------------------
+ *   kip="bant"   profil başlığı: 3:1, `lg:` ve üstünde 5:1. 1440'ta 3:1
+ *                bant 1343×448 ölçüldü, 900 piksellik ekranın yarısıydı.
+ *                Geniş ekranda dosyanın ortadaki şeridi görünüyor
+ *                (`object-center`); kırpma ekranı kesilen payı karartıyor.
+ *   kip="dosya"  her ekranda 3:1 — kaydedilen dosyanın tamamı (düzenleme
+ *                önizlemesi, yükleme ekranındaki "şu anki kapağın").
+ * Oran kararı yalnız burada: iki profil ekranı "bant" deyip kararı
+ * almıyor, sınıf da sessiz bir CSS önceliğine bırakılmıyor. Köşe kabın
+ * kendi yarıçapına bağlı (kart 20, başlık 16 piksel); `className` ile
+ * geliyor.
  *
  * BÜYÜTME YOK: kapak dekoratif bir bant, görüntüleyici gerekmiyor.
  */
@@ -54,6 +59,8 @@ interface KapakProps {
    * yanıp sönme üretirdi.
    */
   yol: string | null | undefined;
+  /** Oran: "bant" (profil başlığı, lg'de 5:1) ya da "dosya" (hep 3:1). */
+  kip: 'bant' | 'dosya';
   /** Genişlik, köşe ve dış boşluk — kabın kendi ölçüsüne göre çağırandan. */
   className?: string;
 }
@@ -70,23 +77,35 @@ const YOL_YOK: string[] = [];
   `w-40`. İkisi aynı dizeye girseydi hangisinin kazanacağı üretilen
   CSS'in sırasına kalırdı (`Card`daki `mobilYuzey` notunun aynısı).
 */
-const BANT = 'block aspect-[3/1] overflow-hidden bg-gray-100';
+const TABAN = 'block overflow-hidden bg-gray-100';
 
-export const KapakFotografi: React.FC<KapakProps> = ({ ad, yol, className = '' }) => {
+/*
+  Sınıflar LİTERAL: Tailwind kaynağı düz metin olarak tarıyor ve
+  `lg:aspect-[${GENIS_EKRAN_ORANI}/1]` gibi çalışma anında kurulan bir
+  dizeyi göremez. Sayılar `lib/kapak-orani`daki sabitlerle aynı olmak
+  zorunda; `profil-kapagi-arayuzu` testi ikisini karşılaştırıyor.
+*/
+const ORAN_SINIFI: Record<KapakProps['kip'], string> = {
+  bant: 'aspect-[3/1] lg:aspect-[5/1]',
+  dosya: 'aspect-[3/1]',
+};
+
+export const KapakFotografi: React.FC<KapakProps> = ({ ad, yol, kip, className = '' }) => {
+  const bant = `${TABAN} ${ORAN_SINIFI[kip]}`;
   const yollar = React.useMemo(() => (yol ? [yol] : YOL_YOK), [yol]);
   /* Kanca koşulsuz: React kancaları dallara giremez. Yol yokken istek atılmıyor. */
   const { durum, adresler } = useGorselAdresleri(SOSYAL_KAPAK_KOVASI, yollar);
 
   if (yol === undefined || (yol && durum === 'yukleniyor')) {
-    return <div aria-hidden className={`${BANT} animate-pulse ${className}`} />;
+    return <div aria-hidden className={`${bant} animate-pulse ${className}`} />;
   }
   const adres = yol ? (adresler.get(yol) ?? null) : null;
   if (!adres) {
-    return <div aria-hidden className={`${BANT} ${className}`} />;
+    return <div aria-hidden className={`${bant} ${className}`} />;
   }
   return (
-    <div className={`${BANT} ${className}`}>
-      <img src={adres} alt={`${ad} kapak fotoğrafı`} className="h-full w-full object-cover" />
+    <div className={`${bant} ${className}`}>
+      <img src={adres} alt={`${ad} kapak fotoğrafı`} className="h-full w-full object-cover object-center" />
     </div>
   );
 };

@@ -570,7 +570,7 @@ export const ProfilBasligi: React.FC<Props> = ({
         `overflow-hidden` verilmedi — ayar sayfası ve fotoğraf
         görüntüleyici kartın içinden açılan katmanlar.
       */}
-      <KapakFotografi ad={adYazimi(ad)} yol={kapakYolu} className="w-full sm:rounded-t-[19px]" />
+      <KapakFotografi ad={adYazimi(ad)} yol={kapakYolu} kip="bant" className="w-full sm:rounded-t-[19px]" />
 
       {/* ------------------------------------------- kimlik bandı */}
       <div className="px-4 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6">
