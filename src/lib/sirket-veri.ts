@@ -42,6 +42,16 @@ export interface SirketBaglami {
   hrEmail: string | null;
   vkn: string | null;
   dogrulandi: boolean;
+  /**
+   * Doğrulama reddedildiyse sebebi ve tarihi.
+   *
+   * VKN girili ama `dogrulandi` false olan şirketin iki hâli var:
+   * sırada bekliyor ya da reddedilmiş. İkisini ayırt edemeyince ekran
+   * herkese "inceleniyor" diyordu ve reddedilen şirket neyi
+   * düzelteceğini bilmiyordu.
+   */
+  dogrulamaNotu: string | null;
+  dogrulamaReddiAt: string | null;
   kademe: number;
 }
 
@@ -65,6 +75,8 @@ export async function sirketBaglami(
     hrEmail: null,
     vkn: null,
     dogrulandi: false,
+    dogrulamaNotu: null,
+    dogrulamaReddiAt: null,
     kademe: kademeHesapla({ yoneticiMi }),
   };
   if (!userId) return bos;
@@ -103,6 +115,8 @@ export async function sirketBaglami(
       hrEmail: ozel?.hrEmail ?? null,
       vkn: ozel?.vkn ?? null,
       dogrulandi: Boolean(sirket.verified),
+      dogrulamaNotu: ozel?.dogrulamaNotu ?? null,
+      dogrulamaReddiAt: ozel?.dogrulamaReddiAt ?? null,
       kademe: kademeHesapla({ uyeMi: true, dogrulanmisMi: Boolean(sirket.verified), yoneticiMi }),
     };
   } catch {
@@ -121,15 +135,29 @@ export async function sirketBaglami(
  * sızdırılmıyor. Sıfır satır burada `null`; hata da `null` — çağıran
  * boş alan çiziyor, uydurma değer üretmiyor.
  */
-export async function sirketOzelBilgileri(
-  companyId: string,
-): Promise<{ hrEmail: string | null; vkn: string | null; mersis: string | null; vknDogrulandiAt: string | null } | null> {
+export async function sirketOzelBilgileri(companyId: string): Promise<{
+  hrEmail: string | null;
+  vkn: string | null;
+  mersis: string | null;
+  vknDogrulandiAt: string | null;
+  /* Ret notu ve tarihi (20261104010000): bunlar olmadan reddedilen şirket
+     ekranda süresiz "inceleniyor" görüyordu. */
+  dogrulamaNotu: string | null;
+  dogrulamaReddiAt: string | null;
+} | null> {
   try {
     const db = await istemci();
     const { data, error } = await db.rpc('sirket_ozel_bilgilerim', { p_company: companyId });
     if (error) return null;
     const satir = (Array.isArray(data) ? data[0] : data) as
-      | { hr_email?: string | null; vkn?: string | null; mersis?: string | null; vkn_dogrulandi_at?: string | null }
+      | {
+          hr_email?: string | null;
+          vkn?: string | null;
+          mersis?: string | null;
+          vkn_dogrulandi_at?: string | null;
+          dogrulama_notu?: string | null;
+          dogrulama_reddi_at?: string | null;
+        }
       | undefined;
     if (!satir) return null;
     return {
@@ -137,6 +165,8 @@ export async function sirketOzelBilgileri(
       vkn: satir.vkn ?? null,
       mersis: satir.mersis ?? null,
       vknDogrulandiAt: satir.vkn_dogrulandi_at ?? null,
+      dogrulamaNotu: satir.dogrulama_notu ?? null,
+      dogrulamaReddiAt: satir.dogrulama_reddi_at ?? null,
     };
   } catch {
     return null;
