@@ -40,7 +40,19 @@ interface AuthModalProps {
    * ancak kimlikle atabiliyor. Oturum `onAuthChange` ile biraz sonra
    * geliyor; yönlendirmeyi onu beklemek geciktiriyordu.
    */
-  onSuccess: (role: 'student' | 'company' | 'admin', name: string, userId?: string) => void;
+  onSuccess: (
+    role: 'student' | 'company' | 'admin',
+    name: string,
+    userId?: string,
+    /**
+     * Kayıtta seçilen niyet.
+     *
+     * "İşverenim" diyen kişinin sıradaki adımı şirketini sahiplenmek;
+     * düğme de bunu söylüyor ("Devam Et — Şirketini Bul"). Niyet
+     * verilmezse çağıran eski davranışını sürdürüyor.
+     */
+    niyet?: 'ogrenci' | 'isveren',
+  ) => void;
   /** Şirket kaydı akışı hazır olana kadar kapalı. */
   allowCompanySignUp?: boolean;
   /**
@@ -90,11 +102,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [role, setRole] = useState<'student' | 'company'>('student');
 
   /*
-    İşveren bağlamı yalnızca METNİ değiştiriyor; hesap ikisinde de aynı.
-    `role === 'company'` ise ayrı bir şey: o, henüz açılmamış olan gerçek
-    şirket hesabı akışı.
+    KAYITTA NE İÇİN GELDİĞİ SORULUYOR (kullanıcı kararı, 23 Eylül 2026)
+
+    Kayıt formunun hangi dili konuşacağını HANGİ KAPIDAN gelindiği
+    belirliyordu: işveren sayfasından gelen "Yetkili adı soyadı" ve
+    "Kurumsal e-posta" görüyor, ana sayfadan gelen öğrenci formunu
+    görüyordu. Giriş tek kapıya indikten sonra bu bağlam görünmez bir
+    şey hâline geldi — aynı pencerede "Kayıt Ol" sekmesine geçen kişi
+    neye kaydolduğunu seçemiyordu.
+
+    Artık açıkça soruluyor. Geldiği kapı seçimi ÖN İŞARETLİYOR (işveren
+    sayfasından gelen "İşverenim" seçili başlıyor), ama değiştirilebilir.
+
+    Hesap yine tek tip: seçim METNİ ve kayıttan sonra nereye
+    gidileceğini belirliyor, veritabanındaki rolü değil. `role ===
+    'company'` ayrı bir şey: o, henüz açılmamış olan gerçek şirket
+    hesabı akışı.
   */
-  const isverenBaglami = baglam === 'isveren' && role !== 'company';
+  const [kayitTuru, setKayitTuru] = useState<'ogrenci' | 'isveren'>(
+    baglam === 'isveren' ? 'isveren' : 'ogrenci',
+  );
+  React.useEffect(() => {
+    if (isOpen) setKayitTuru(baglam === 'isveren' ? 'isveren' : 'ogrenci');
+  }, [isOpen, baglam]);
+
+  /*
+    Kurumsal dil: kayıtta SEÇİME, girişte geldiği kapıya bakıyor. Girişte
+    form zaten aynı; değişen tek şey ayıracın yazısı.
+  */
+  const isverenBaglami =
+    role !== 'company' && (mode === 'register' ? kayitTuru === 'isveren' : baglam === 'isveren');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -177,7 +214,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           );
           return;
         }
-        onSuccess('student', result.displayName, result.userId);
+        onSuccess('student', result.displayName, result.userId, kayitTuru);
         onClose();
         return;
       }
@@ -455,6 +492,38 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           olduğunu düşünüyor. Güvenlik modeli aynı kalıyor, değişen tek şey
           kullanıcının ne beklediği.
         */}
+        {mode === 'register' && role !== 'company' && (
+          <div className="mb-4" role="radiogroup" aria-label="Ne için hesap açıyorsun">
+            <div className="grid grid-cols-2 gap-2">
+              {(
+                [
+                  ['ogrenci', 'Öğrenciyim', 'Staj ve burs arıyorum'],
+                  ['isveren', 'İşverenim', 'İlan vereceğim'],
+                ] as const
+              ).map(([deger, baslik, alt]) => {
+                const secili = kayitTuru === deger;
+                return (
+                  <button
+                    key={deger}
+                    type="button"
+                    role="radio"
+                    aria-checked={secili}
+                    onClick={() => setKayitTuru(deger)}
+                    className={`cursor-pointer rounded-xl border p-3 text-left transition-colors ${
+                      secili
+                        ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600'
+                        : 'border-gray-200 bg-white hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="block text-sm font-bold text-gray-900">{baslik}</span>
+                    <span className="mt-0.5 block text-[11px] leading-snug text-gray-600">{alt}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {isverenBaglami && mode === 'register' && (
           <p className="mb-4 rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs leading-relaxed text-blue-900">
             Hesabınız kişisel kimliğinizle oluşturulur. Aday erişimi, şirket doğrulamasından sonra
