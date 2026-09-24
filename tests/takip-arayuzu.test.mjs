@@ -70,10 +70,26 @@ test('takip düğmesi: iki durum, iyimser güncelleme + geri alma, onay yok, "Ba
   assert.match(DUGME, /role="alert"/);
   /* Onay penceresi yok: bırakma tek dokunuş. */
   assert.doesNotMatch(kod(DUGME), /confirm\(|BaglantiKaldirMenusu|Emin misin/);
-  /* Ölçü "Bağlantı kur" ile aynı kalıp (BIRINCIL_EYLEM, min-h-12); iki durum aynı yükseklikte. */
-  assert.match(BAGLANTI_DUGMESI, /className=\{BIRINCIL_EYLEM\}\s*>\s*\{islemde \? 'Gönderiliyor…' : 'Bağlantı kur'\}/);
-  assert.match(DUGME, /takipEdiyor \? IKINCIL : BIRINCIL_EYLEM/);
-  assert.match(DUGME, /const IKINCIL = `inline-flex min-h-12 /);
+  /*
+    Ölçü "Bağlantı kur" ile aynı kalıp; iki durum aynı yükseklikte.
+
+    24 EYLÜL 2026 — HAP BİÇİMİ (kullanıcı onayı): eski şart "iki düğme de
+    `BIRINCIL_EYLEM` (min-h-12, rounded-xl), takip düğmesinin ikincili
+    kendi `min-h-12` dizesi" idi. Düğmeler profil başlığının hap sırasına
+    girince öteki haplarla ayrışıyordu. Yeni şart: biçim
+    `ProfilKimlikKalibi`nin HAP / HAP_BIRINCIL dizelerinden (yerel kopya
+    yok), eylem çağrısı dolu, durum çerçeveli. ÖLÇÜLEN ŞEY AYNI: iki düğme
+    aynı kalıpta ve iki durum aynı yükseklikte (ikisi de `min-h-11`).
+  */
+  assert.match(BAGLANTI_DUGMESI, /className=\{DOLU\}\s*>\s*\{islemde \? 'Gönderiliyor…' : 'Bağlantı kur'\}/);
+  assert.match(BAGLANTI_DUGMESI, /const DOLU = `\$\{HAP_BIRINCIL\} /);
+  assert.match(DUGME, /className=\{takipEdiyor \? CERCEVELI : DOLU\}/);
+  assert.match(DUGME, /const DOLU = `\$\{HAP_BIRINCIL\} /);
+  assert.match(DUGME, /const CERCEVELI = `\$\{HAP\} /);
+  for (const k of [DUGME, BAGLANTI_DUGMESI]) {
+    assert.match(k, /import \{ HAP, HAP_BIRINCIL \} from '\.\/ProfilKimlikKalibi';/);
+    assert.doesNotMatch(kod(k), /BIRINCIL_EYLEM|min-h-12|rounded-xl/);
+  }
   /* Yükleniyor / hata / hazır üç ayrı dal. */
   assert.match(DUGME, /if \(durum === 'yukleniyor'\)/);
   assert.match(DUGME, /Takip durumu alınamadı\./);

@@ -60,13 +60,20 @@ export const BaglantiKaldirMenusu: React.FC<{
         aria-haspopup="menu"
         aria-expanded={menuAcik}
         aria-label="Diğer seçenekler"
-        className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 ${ODAK_HALKASI}`}
+        /*
+          40 → 44 PİKSEL: dokunma hedefi kuralı en az 44 istiyor. Ölçüldü
+          (Chromium, 390): tetik 40×40'tı. Bağlantılar listesinde satırın
+          yüksekliğini 44 piksellik fotoğraf belirlediği için satır
+          büyümüyor; profilin hap sırasında öteki haplarla aynı boy.
+          Açılan menü ve onay kutusu bu yüzden `top-11` → `top-12`.
+        */
+        className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 ${ODAK_HALKASI}`}
       >
         <MoreHorizontal aria-hidden className="h-5 w-5" />
       </button>
 
       {menuAcik && (
-        <div role="menu" className="absolute right-0 top-11 z-30 w-56 rounded-xl border border-gray-200 bg-white p-1 shadow-lg">
+        <div role="menu" className="absolute right-0 top-12 z-30 w-56 rounded-xl border border-gray-200 bg-white p-1 shadow-lg">
           <button
             type="button"
             role="menuitem"
@@ -86,7 +93,7 @@ export const BaglantiKaldirMenusu: React.FC<{
         <div
           role="alertdialog"
           aria-labelledby={baslikId}
-          className="absolute right-0 top-11 z-30 w-72 rounded-xl border border-gray-200 bg-white p-4 shadow-lg"
+          className="absolute right-0 top-12 z-30 w-72 rounded-xl border border-gray-200 bg-white p-4 shadow-lg"
         >
           <p id={baslikId} className="text-sm font-bold text-gray-900">
             {ad} ile bağlantını kaldırmak istiyor musun?

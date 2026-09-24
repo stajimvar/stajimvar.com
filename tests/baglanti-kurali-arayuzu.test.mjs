@@ -180,7 +180,13 @@ test('iki istek tek yükleme turunda', () => {
 });
 
 test('yükleme iskeleti aynı kaldı', () => {
-  assert.match(dugme, /animate-pulse rounded-xl bg-gray-100/);
+  /*
+    24 Eylül 2026 (hap biçimi, kullanıcı onayı): düğme `rounded-full` ve 44
+    piksellik bir hap oldu; iskelet de aynı biçime geçti. Eski şart
+    `rounded-xl` idi — ölçülen şey aynı: iskelet gelecek düğmenin biçiminde
+    ve yüksekliğinde, düğme gelince yer değişmiyor.
+  */
+  assert.match(dugme, /h-11 w-32 animate-pulse rounded-full bg-gray-100/);
 });
 
 test('alan seçimine giden gerçek bir bağlantı var', () => {
