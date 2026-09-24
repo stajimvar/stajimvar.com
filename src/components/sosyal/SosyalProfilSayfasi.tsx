@@ -8,7 +8,9 @@ import {
   kendiSosyalProfiliGetir,
   paylasimlariGetir,
   profilFotografiKaldir,
+  profilKapagiKaldir,
   sosyalKullaniciAdiCoz,
+  sosyalOkullariniGetir,
   sosyalProfilGorunurluguAyarla,
   sosyalProfilKimligiGetir,
   sosyalProfiliGetir,
@@ -20,12 +22,15 @@ import {
 } from '../../lib/queries/sosyal';
 import { profilFotografi } from '../../lib/profil-fotografi';
 import { kullaniciAdiNormalize, profilYolu } from '../../lib/sosyal-kullanici-adi.mjs';
+import { ogrenciKimligiGorunurMu } from '../../lib/sosyal-profil-kimligi.mjs';
 import { BolumTalebi, type TalepKipi } from './BolumTalebi';
 import { PaylasimIzgarasi } from './PaylasimIzgarasi';
 import { PaylasimOlustur } from './PaylasimOlustur';
 import type { ProfilAyarMenusuProps } from './ProfilAyarMenusu';
 import { ProfilFotografi } from './ProfilFotografi';
 import { ProfilFotografiYukleme } from './ProfilFotografiYukleme';
+import { KapakFotografi } from './KapakFotografi';
+import { KapakFotografiYukleme } from './KapakFotografiYukleme';
 import { SahipListesi } from './SahipListesi';
 import { SosyalProfilDuzenleme } from './SosyalProfilDuzenleme';
 import { SosyalProfilGorunumu } from './SosyalProfilGorunumu';
@@ -107,6 +112,8 @@ type Gorunum =
   | 'profil'
   | 'paylasimOlustur'
   | 'fotograf'
+  /* Kapak yükleme — fotoğraf ekranının kardeşi, aynı katmanda açılıyor. */
+  | 'kapak'
   /*
     Bölüm/alan talebi AYRI bir görünüm, formun içinde bir blok değil:
     `BolumTalebi` kendi `<form>`unu taşıyor ve düzenleme bölümünün formu
@@ -248,6 +255,27 @@ export interface PortfolyoSatiri {
    * nesnede gidiyor ki kart ikinci bir profil sorgusu açmasın.
    */
   kullaniciAdi: string | null;
+  /*
+    KAPAK, BİYOGRAFİ VE KATILMA TARİHİ — AYNI NESNEDE
+
+    `/cv`nin kimlik kartı üçünü de çiziyor ve üçü de bu panelin
+    zaten okuduğu satırda. Ayrı bir `onKapakYolu` kanalı açılmadı:
+    avatar yolu (`onAvatarYolu`) App'e çıkıyor çünkü üst çubuk da onu
+    çiziyor; bu üçünü kartın dışında çizen yer yok, App'e bir state daha
+    eklemek yalnız taşıma yükü olurdu. Nesne `undefined`ken kart kapak
+    iskeleti çiziyor; `null` (satır gelmedi) iken nötr bant.
+
+    Düzenlemede yeni kapak yüklenince bu nesne o an güncellenmiyor —
+    düzenleme kipinde panel bu effect'i çalıştırmıyor. Gerek de yok:
+    `/cv` düzenlemeden dönerken portfolyo panelini yeniden kuruyor ve
+    satır sunucudan tazeleniyor.
+  */
+  /** `social_profiles.biyografi`; boşsa kart paragrafı çizmiyor. */
+  biyografi: string | null;
+  /** `social_profiles.kapak_path` — adres değil YOL; `KapakFotografi` indiriyor. */
+  kapakFotografiYolu: string | null;
+  /** `social_profiles.created_at` (ISO); null ise katılma satırı yok. */
+  katilmaAni: string | null;
   sayaclar: SosyalSayaclar | null;
   sayacDurumu: 'yukleniyor' | 'hazir' | 'hata';
   /** Yalnız iki sunucu önkoşulu sağlanınca var; yoksa kart düğme çizmiyor. */
@@ -507,8 +535,21 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     'bekliyor' | 'gonderiliyor' | 'hata'
   >('bekliyor');
 
+  /* Kapak kaldırma — fotoğrafınkinden AYRI: biri beklerken öteki kilitlenmesin. */
+  const [kapakKaldirmaDurumu, setKapakKaldirmaDurumu] = React.useState<
+    'bekliyor' | 'gonderiliyor' | 'hata'
+  >('bekliyor');
+
   const [gorunum, setGorunum] = React.useState<Gorunum>('profil');
   const [bildirim, setBildirim] = React.useState<string | null>(null);
+  /*
+    Kapağın bildirimi AYRI bir durum: ortak `bildirim` "Profil
+    fotoğrafın" bölümünün içinde çiziliyor. Kapak cümlesi orada
+    görünseydi, kullanıcı kapağı değiştirip onayı başka bir bölümün
+    altında okurdu; iki bölümde birden çizilseydi aynı cümle iki kez
+    duyurulurdu.
+  */
+  const [kapakBildirimi, setKapakBildirimi] = React.useState<string | null>(null);
 
   /*
     BÖLÜM TALEBİNİN GİRİŞİ ARTIK DÜZENLEME EKRANINDA
@@ -530,6 +571,8 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   const [ziyaretciDurumu, setZiyaretciDurumu] = React.useState<
     'yukleniyor' | 'hazir' | 'hata' | 'yok'
   >('yukleniyor');
+  /* Ziyaret edilen öğrencinin okulu; null = girilmemiş, alınamadı ya da sorulmadı. */
+  const [ziyaretciOkulu, setZiyaretciOkulu] = React.useState<string | null>(null);
 
   const rotaAdi = rotaKullaniciAdi ? kullaniciAdiNormalize(rotaKullaniciAdi) : null;
 
@@ -803,6 +846,39 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   }, [ziyaretciYolu, rotaAdi]);
 
   /*
+    ZİYARET EDİLEN ÖĞRENCİNİN OKULU — TEK KİMLİKLE TEK ÇAĞRI
+
+    Kullanıcı kararı (24 Eylül 2026): okul profili görebilen herkese
+    açık. Kaynak `sosyal_okullari()` (20261106010000); `student_profiles`
+    başkasına kapalı kalıyor. Sahibin `/cv`si okulu kendi satırından
+    okuyor, orada bu çağrı yok.
+
+    SORULMAYANLAR: resmî hesap (öğrenci kimliği gizli; sunucu da
+    vermiyor, arayüz yine de sormuyor) ve şirket satırı (şirket sayfası
+    çiziliyor, okul kavramı yok). Hata profili düşürmüyor: okul yalnız
+    yazılmıyor.
+  */
+  const okulSorulacakKimlik =
+    ziyaretciProfili && !ziyaretciProfili.sirketId && ogrenciKimligiGorunurMu(ziyaretciProfili.resmiMi)
+      ? ziyaretciProfili.profilId
+      : null;
+  React.useEffect(() => {
+    setZiyaretciOkulu(null);
+    if (!okulSorulacakKimlik) return;
+    let iptal = false;
+    sosyalOkullariniGetir([okulSorulacakKimlik])
+      .then((harita) => {
+        if (!iptal) setZiyaretciOkulu(harita?.get(okulSorulacakKimlik) ?? null);
+      })
+      .catch(() => {
+        if (!iptal) setZiyaretciOkulu(null);
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [okulSorulacakKimlik]);
+
+  /*
     Düzenleme kipinde sayaç ve ızgara ÇİZİLMİYOR; sorguları da atılmıyor.
     Bayrağı yalnız çizim tarafına koysaydık kullanıcı her düzenlemeye
     girişinde sonucu hiçbir yerde görünmeyen iki istek atardı.
@@ -971,6 +1047,28 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     }
   };
 
+  /**
+   * Kapak fotoğrafını kaldır — `kapak_path` → null.
+   *
+   * `fotografiKaldir`ın birebir kalıbı ve aynı gerekçeyle: sıra
+   * (önce satır, sonra dosya) `profilKapagiKaldir` içinde; yerel satır
+   * ANCAK sunucu kabul ettikten sonra null'a çekiliyor. Hata dalında
+   * kapak ekranda duruyor ve cümle de bunu söylüyor.
+   */
+  const kapagiKaldir = async () => {
+    if (!kullaniciId || kapakKaldirmaDurumu === 'gonderiliyor') return;
+    setKapakKaldirmaDurumu('gonderiliyor');
+    try {
+      await profilKapagiKaldir(kullaniciId);
+      setProfil((onceki) => (onceki ? { ...onceki, kapakFotografiYolu: null } : onceki));
+      setKapakKaldirmaDurumu('bekliyor');
+      setKapakBildirimi('Kapak fotoğrafın kaldırıldı.');
+      window.setTimeout(() => setKapakBildirimi(null), 2500);
+    } catch {
+      setKapakKaldirmaDurumu('hata');
+    }
+  };
+
   /*
     EYLEMLERİN KİMLİĞİ SABİT, İÇERİĞİ GÜNCEL
 
@@ -1033,6 +1131,9 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     }
     onPortfolyoSatiri({
       kullaniciAdi: profil?.kullaniciAdi ?? null,
+      biyografi: profil?.biyografi ?? null,
+      kapakFotografiYolu: profil?.kapakFotografiYolu ?? null,
+      katilmaAni: profil?.katilmaAni ?? null,
       sayaclar,
       sayacDurumu,
       onPaylasimOlustur: yayindaMi && alaniVarMi ? sabitEylemler.paylasimOlustur : undefined,
@@ -1054,6 +1155,9 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     profilDurumu,
     sahibiMi,
     profil?.kullaniciAdi,
+    profil?.biyografi,
+    profil?.kapakFotografiYolu,
+    profil?.katilmaAni,
     sayaclar,
     sayacDurumu,
     yayindaMi,
@@ -1311,6 +1415,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
             sahibiMi={false}
             bakanId={kullaniciId}
             onNavigate={onNavigate}
+            okul={ziyaretciOkulu}
             /*
               Fotoğraf görüntüleyicisinin "Paylaş"ı: bakılan profilin
               adresi, sahibin menüsüyle AYNI `paylas`. Yalnız yayındaki
@@ -1456,6 +1561,32 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     }
 
     /*
+      KAPAK YÜKLEME — fotoğraf ekranıyla aynı katman, aynı geri satırı.
+      Tek giriş düzenleme ekranındaki "Kapak fotoğrafın" bölümü; dişli
+      menüsünde ya da görüntüleyicide ikinci bir kapı yok.
+    */
+    if (gorunum === 'kapak') {
+      return kabuk(
+        <KapakFotografiYukleme
+          kullaniciId={kullaniciId}
+          ad={profil!.gorunenAd ?? `@${profil!.kullaniciAdi}`}
+          mevcutYol={profil!.kapakFotografiYolu}
+          onVazgec={() => setGorunum('profil')}
+          onKaydedildi={(yeniYol) => {
+            /* Yerel satır ancak sunucu `kapak_path`i yazdıktan sonra. */
+            setProfil((onceki) => (onceki ? { ...onceki, kapakFotografiYolu: yeniYol } : onceki));
+            /* Eski kaldırma hatası artık başka bir kapağı anlatırdı; siliniyor. */
+            setKapakKaldirmaDurumu('bekliyor');
+            setGorunum('profil');
+            setKapakBildirimi('Kapak fotoğrafın güncellendi.');
+            window.setTimeout(() => setKapakBildirimi(null), 2500);
+          }}
+        />,
+        () => setGorunum('profil'),
+      );
+    }
+
+    /*
       BÖLÜM / ALAN TALEBİ — FORMUN ÜSTÜNDE, KENDİ KATMANINDA
 
       Formun içine gömülemezdi: `BolumTalebi` kendi `<form>`unu taşıyor ve
@@ -1563,6 +1694,58 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
           {bildirim && (
             <p role="status" className="text-sm font-semibold text-gray-700">
               {bildirim}
+            </p>
+          )}
+        </section>
+
+        {/*
+          KAPAK FOTOĞRAFIN — "Profil fotoğrafın" bölümünün kalıbı
+
+          Aynı sıra: önizleme, "ekle/değiştir", yalnız `kapak_path` varken
+          "kaldır", hata ve bildirim bloğun içinde. Önizleme gerçek kapak
+          (`KapakFotografi`); kapak yoksa nötr bant ve yanındaki düğme
+          "Kapak ekle" diyor — yer tutucu bir görsel çizilmiyor.
+
+          Önizleme dar (`w-40`, 160×53): bu blok yalnız neyin kayıtlı
+          olduğunu hatırlatıyor, kırpma ve büyük önizleme yükleme
+          ekranında.
+        */}
+        <section aria-labelledby="sosyal-kapak-basligi" className={`${KART} space-y-3`}>
+          <h2 id="sosyal-kapak-basligi" className="text-base font-extrabold tracking-tight text-gray-900">
+            Kapak fotoğrafın
+          </h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <KapakFotografi
+              ad={profil!.gorunenAd ?? `@${profil!.kullaniciAdi}`}
+              yol={profil!.kapakFotografiYolu}
+              kip="dosya"
+              className="w-40 shrink-0 rounded-lg"
+            />
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => setGorunum('kapak')} className={IKINCIL}>
+                {profil!.kapakFotografiYolu ? 'Kapağı değiştir' : 'Kapak ekle'}
+              </button>
+              {/* Olmayan bir dosyayı silen düğme çizilmiyor — fotoğraftaki kuralın aynısı. */}
+              {profil!.kapakFotografiYolu && (
+                <button
+                  type="button"
+                  onClick={kapagiKaldir}
+                  disabled={kapakKaldirmaDurumu === 'gonderiliyor'}
+                  className={`${IKINCIL} disabled:opacity-40`}
+                >
+                  {kapakKaldirmaDurumu === 'gonderiliyor' ? 'Kaldırılıyor…' : 'Kapağı kaldır'}
+                </button>
+              )}
+            </div>
+          </div>
+          {kapakKaldirmaDurumu === 'hata' && (
+            <p role="alert" className="text-xs font-semibold leading-relaxed text-rose-700">
+              Kapak fotoğrafın kaldırılamadı; kapağın duruyor. Yeniden deneyebilirsin.
+            </p>
+          )}
+          {kapakBildirimi && (
+            <p role="status" className="text-sm font-semibold text-gray-700">
+              {kapakBildirimi}
             </p>
           )}
         </section>

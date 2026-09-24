@@ -643,93 +643,83 @@ test('sahibe özel her şey sahibiMi koşulunun içinde', () => {
 
 test('üç profil ekranı aynı kalıbı paylaşıyor: kap sınıfları birebir', () => {
   /*
-    KULLANICI KARARI (20 Eylül 2026): "tüm profil görüntüleri şirket gibi
-    olsun, onu beğendim daha özgün." Şirket REFERANS; ziyaretçiye görünen
-    öğrenci profili ve sahibin `/cv` kartı uyarlanan.
+    REFERANS DEĞİŞTİ — kullanıcı kararı 24 Eylül 2026: X web profili
+    ("stajımvar web profili x in profille girince olan web arayuzune
+    uyarla"). 20 Eylül kararı ("tüm profil görüntüleri şirket gibi
+    olsun") AYNEN geçerli: üç ekran aynı kalıbı paylaşıyor. Değişen
+    yalnız kalıbın referansı — şirket profili yerine X'in masaüstü profili:
 
-    Üç ekran de tek tek doğru görünebilir ama zamanla ayrışırlar: biri
-    `gap-3`ü `gap-2` yapar, öteki `min-h-12`yi düşürür ve aynı kullanıcı
-    üç ekranda üç farklı düğme yüksekliği görür. Bu yüzden iddia
-    "benzer mi" diye bakmıyor, DİZEYİ KARŞILAŞTIRIYOR. Biri değişirse
-    test düşer ve değiştiren kişi öteki ikisini de bilerek değiştirmek
-    zorunda kalır.
+      kapak bandı → avatar solda banda biniyor, sağda hap sırası (alt
+      hiza) → ad + tik, @ad → biyografi → ikonlu meta satırı → satır içi
+      sayaçlar. Her şey sola yaslı; ortalanmış `max-w-2xl` sütunu yok.
+
+    İLKE AYNI: üç ekran tek tek doğru görünebilir ama zamanla ayrışırlar.
+    Bu yüzden iddia "benzer mi" diye bakmıyor, DİZEYİ ölçüyor. Dizeler
+    artık tek modülde (`ProfilKimlikKalibi`); test (1) dizelerin kendisini,
+    (2) üç ekranın da onları o modülden içe aktarıp kullandığını, (3)
+    hiçbirinin kendi kopyasını yazmadığını ölçüyor. Biri kendi hap
+    dizesini yazarsa test düşer.
   */
   const sirket = oku('src/sirket/SirketProfilGorunumu.tsx');
   const cvKarti = oku('src/components/ProfilBasligi.tsx');
+  const kalip = oku('src/components/sosyal/ProfilKimlikKalibi.tsx');
   const ekranlar = { sirket, ziyaretci: gorunum, cv: cvKarti };
 
-  /* 1. Eylem satırının kabı. */
-  const eylemKabi = 'mt-3 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-center';
-  for (const [ad, kaynak] of Object.entries(ekranlar)) {
-    assert.ok(kaynak.includes(eylemKabi), `${ad}: eylem ızgarası kalıptan ayrışmış`);
+  /* 1. Kalıbın dizeleri. */
+  assert.match(kalip, /export const KIMLIK_BANDI = 'px-4 pb-4 sm:px-6 sm:pb-5';/);
+  assert.match(kalip, /export const AVATAR_SATIRI = 'flex items-end justify-between gap-3';/);
+  assert.match(kalip, /export const HAP_SIRASI = 'flex min-w-0 flex-wrap items-center justify-end gap-1.5 pt-3';/);
+  assert.match(kalip, /export const AVATAR_BINMESI = 'relative shrink-0 self-start -mt-10 sm:-mt-14 lg:-mt-18';/);
+  assert.match(kalip, /export const META_SATIRI = 'mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-600';/);
+  assert.match(kalip, /export const SAYAC_SATIRI = 'mt-1 flex flex-wrap items-center gap-x-5';/);
+  assert.match(kalip, /export const SAYAC_OGESI = 'inline-flex min-h-11 items-center gap-1 text-sm';/);
+  /* Haplar X'teki gibi `rounded-full`; dokunma hedefi 44 piksel. */
+  for (const ad of ['HAP', 'HAP_BIRINCIL']) {
+    const dize = kalip.match(new RegExp(`^export const ${ad} = \`([^\`]+)\`;$`, 'm'));
+    assert.ok(dize, `${ad} sabiti bulunamadı`);
+    assert.match(dize[1], /min-h-11/, `${ad} min-h-11 taşımalı`);
+    assert.match(dize[1], /rounded-full/, `${ad} hap olmalı`);
+    assert.match(dize[1], /ODAK_HALKASI/, `${ad} odak halkası taşımalı`);
   }
+  assert.match(kalip, /export const IKON_HAP = `inline-flex h-11 w-11 [^`]*rounded-full/);
+  /* Meta ikonu tek başına bilgi taşımıyor. */
+  assert.match(kalip, /<Ikon aria-hidden className="h-4 w-4 shrink-0 text-gray-500" \/>\n\s*<span className="sr-only">\{etiket\}: <\/span>/);
 
-  /* 2. Sayaç satırının ayırıcısı ve üç eşit sütunu. */
-  const sayacAyirici = 'grid-cols-3 border-t border-gray-100 pt-3';
+  /* 2. Üç ekran da aynı modülü içe aktarıyor ve kapları kullanıyor. */
   for (const [ad, kaynak] of Object.entries(ekranlar)) {
-    assert.ok(kaynak.includes(sayacAyirici), `${ad}: sayaç ayırıcısı kalıptan ayrışmış`);
-  }
-
-  /* 3. Kimlik bandının ve alt bloğun dolguları. */
-  for (const [ad, kaynak] of Object.entries(ekranlar)) {
+    assert.match(kaynak, /from '[./]+(components\/)?sosyal\/ProfilKimlikKalibi';|from '\.\/ProfilKimlikKalibi';/, `${ad}: kalıp içe aktarılmıyor`);
+    for (const kap of ['KIMLIK_BANDI', 'AVATAR_SATIRI', 'HAP_SIRASI', 'META_SATIRI', 'SAYAC_SATIRI']) {
+      assert.ok(kaynak.includes(`className={${kap}}`), `${ad}: ${kap} kullanılmıyor`);
+    }
+    assert.match(kaynak, /className=\{HAP\}/, `${ad}: çerçeveli hap yok`);
+    /* Kapak/bant kimlik bandından ÖNCE. */
+    const bant = Math.max(kaynak.indexOf('<KapakFotografi'), kaynak.indexOf('${KAPAK_BANDI_SINIFI}'));
+    assert.ok(bant > 0 && bant < kaynak.indexOf('className={KIMLIK_BANDI}'), `${ad}: bant kimliğin üstünde değil`);
+    /* 3. Kendi kopyası yok: eski 48 piksellik blok düğme ve ortalı sütun kalktı. */
+    assert.doesNotMatch(yorumsuz(kaynak), /^const (BIRINCIL|HAP|HAP_BIRINCIL|IKON_HAP) = /m, `${ad}: kalıbın dizesi yerelde yeniden yazılmış`);
+    assert.doesNotMatch(yorumsuz(kaynak), /mx-auto flex max-w-2xl flex-col/, `${ad}: ortalanmış sütun geri gelmiş`);
+    assert.doesNotMatch(yorumsuz(kaynak), /grid-cols-3 border-t border-gray-100 pt-3/, `${ad}: eski sayaç ızgarası geri gelmiş`);
+    /* Daire ölçü basamakları (80/112/144) üç ekranda aynı. */
     assert.ok(
-      kaynak.includes('px-4 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6'),
-      `${ad}: kimlik bandının dolgusu kalıptan ayrışmış`,
-    );
-    assert.ok(
-      kaynak.includes('px-4 pb-4 sm:px-6 sm:pb-6'),
-      `${ad}: sayaç/eylem bloğunun dolgusu kalıptan ayrışmış`,
-    );
-  }
-
-  /*
-    4. Kimlik sütunu ve daire ölçü basamakları.
-
-    SOLA HİZALANDI (kullanıcı kararı, 23 Eylül 2026). Ortalı düzende ad,
-    kullanıcı adı, okul ve konum farklı uzunlukta olduğu için her satır
-    başka bir yerden başlıyordu; göz her satırda satır başını yeniden
-    arıyordu. Şart DEĞİŞTİ ama KALMADI: üç ekranın aynı kalıbı
-    paylaşması kuralı sürüyor, yalnız kalıbın kendisi hizasını
-    değiştirdi.
-  */
-  for (const [ad, kaynak] of Object.entries(ekranlar)) {
-    assert.ok(
-      kaynak.includes('mx-auto flex max-w-2xl flex-col items-start text-left'),
-      `${ad}: kimlik sütunu kalıptan ayrışmış`,
-    );
-    assert.ok(
-      /h-20 w-20[^"]*sm:h-28 sm:w-28[^"]*lg:h-36 lg:w-36/.test(kaynak),
+      /h-20 w-20[^"']*sm:h-28 sm:w-28[^"']*lg:h-36 lg:w-36/.test(kaynak),
       `${ad}: daire ölçü basamakları (80/112/144) ayrışmış`,
     );
+    /* Avatar/logo banda beyaz ayraçla biniyor. */
+    assert.match(kaynak, /ring-4 ring-white/, `${ad}: beyaz halka yok`);
   }
-
-  /* 5. Birincil ve ikincil düğme dizeleri — üç dosyada da aynı satır. */
-  const dizeAl = (kaynak, ad) => {
-    const eslesme = kaynak.match(new RegExp(`^const ${ad} = \`([^\`]+)\`;$`, 'm'));
-    assert.ok(eslesme, `${ad} sabiti bulunamadı`);
-    return eslesme[1];
-  };
-  for (const ad of ['BIRINCIL', 'IKINCIL']) {
-    const [ilk, ...kalan] = Object.entries(ekranlar).map(([ekran, kaynak]) => [
-      ekran,
-      dizeAl(kaynak, ad),
-    ]);
-    for (const [ekran, dize] of kalan) {
-      assert.equal(dize, ilk[1], `${ekran}: ${ad} dizesi şirkettekinden ayrışmış`);
-    }
-    /* Dokunma hedefi kalıbın parçası: 48 piksel, 44'lük eşiğin üstünde. */
-    assert.match(ilk[1], /min-h-12/, `${ad} min-h-12 taşımalı`);
-  }
+  /* Öğrenci ziyaretçi ve şirket ortak binme payını kullanıyor; /cv halkalı daire için kendi değerini. */
+  assert.ok(gorunum.includes('className={AVATAR_BINMESI}'));
+  assert.ok(sirket.includes('className={AVATAR_BINMESI}'));
+  assert.ok(cvKarti.includes('-mt-[46px] sm:-mt-[62px] lg:-mt-[78px]'));
 
   /*
-    Ziyaretçinin tek eylemi (bağlantı) de şirketteki ziyaretçi eylemiyle
-    aynı kapta: telefonda tam genişlik, sm üstünde ortada. `/cv` sahibin
-    kendi ekranı — orada ziyaretçi eylemi YOK, bu yüzden bu iddia iki
-    ekranda.
+    ZİYARETÇİNİN TEK EYLEMİ hap sırasında: öğrencide bağlantı düğmesi,
+    şirkette takip düğmesi (yuva). `/cv` sahibin kendi ekranı — orada
+    ziyaretçi eylemi YOK, bu yüzden bu iddia iki ekranda.
   */
-  const ziyaretciKabi = 'mt-3 flex flex-col items-stretch sm:items-center';
-  assert.ok(sirket.includes(ziyaretciKabi));
-  assert.ok(gorunum.includes(ziyaretciKabi));
+  const hapSirasi = (kaynak) => kaynak.slice(kaynak.indexOf('<div className={HAP_SIRASI}>'));
+  assert.match(hapSirasi(gorunum), /^[\s\S]{0,2500}\{!sahibiMi && bakanId && \(\s*<BaglantiDugmesi/);
+  assert.match(hapSirasi(sirket), /^[\s\S]{0,200}\{!sahip && ziyaretciEylemi && /);
 
   /*
     ŞİRKETTE OLUP ÖĞRENCİDE OLMAYAN: "İlan paylaş" ve "aktif ilan"
@@ -897,15 +887,20 @@ test('üç sayaç var (paylaşım, bağlantı, takip); "Bağlantıda" yok; ayra�
   assert.match(gorunum, /etiket="takip"/);
   assert.doesNotMatch(yorumsuz(gorunum), /Bağlantıda/);
   /*
-    AYIRICI ŞİRKETTEKİYLE EŞİTLENDİ (20 Eylül 2026): eskiden `border-y
-    … py-2 lg:border-y-0 lg:py-0` idi; alttaki çizgi ve `lg` iptalleri
-    iki sütunlu düzenin artığıydı (sayaçlar geniş ekranda kendi sütununa
-    geçiyordu). O sütun kalktı, şirket kalıbında sayaçların üstünde tek
-    bir ince çizgi var.
+    SATIR İÇİ SAYAÇ (X kalıbı, kullanıcı kararı 24 Eylül 2026): eskiden
+    şirket kalıbındaki `grid grid-cols-3 border-t border-gray-100 pt-3`
+    ızgarasıydı (üç eşit hücre, üstte ince çizgi). X'te sayaçlar tek
+    satırda, satır içi ("6 paylaşım  3 bağlantı", sayı kalın) ve ayırıcı
+    çizgi yok; ızgara ve çizgi kalktı.
+
+    ÖLÇÜLEN ŞEY AYNI: üç durum (yükleniyor / hazır / alınamadı) AYNI
+    satır kabını taşıyor, yani satır yüklenirken ya da hata alınca
+    zıplamıyor; sayaçlar arasında dikey çizgi yok.
   */
-  assert.match(gorunum, /<dl className="grid grid-cols-3 border-t border-gray-100 pt-3">/);
-  /* Üç durum da AYNI çizgiyi taşıyor: satır yüklenirken/hata alınca zıplamıyor. */
-  assert.equal((gorunum.match(/border-t border-gray-100 pt-3/g) ?? []).length, 3);
+  assert.match(gorunum, /<dl className=\{SAYAC_SATIRI\}>/);
+  assert.match(gorunum, /<div aria-busy="true" className=\{SAYAC_SATIRI\}>/);
+  assert.match(gorunum, /className=\{`\$\{SAYAC_SATIRI\} \$\{SAYAC_ETIKETI\} min-h-11 text-sm`\}>Sayaçlar şu anda alınamadı\./);
+  assert.doesNotMatch(yorumsuz(gorunum), /border-t border-gray-100 pt-3/);
   assert.doesNotMatch(gorunum, /divide-x/);
   /* Şema da aynı gerekçeyi yazıyor. */
   assert.match(sema, /"Bağlantıda" sayacı kaldırıldı/);
@@ -978,9 +973,17 @@ test('ikon tek başına bilgi taşımıyor', () => {
   assert.ok(ithal, 'görünümde lucide içe aktarması bulunamadı');
   const adlar = ithal[1].split(',').map((ad) => ad.trim()).filter(Boolean);
   assert.ok(adlar.length >= 1, 'en az bir ikon bekleniyordu');
+  /*
+    META SATIRI İKONLARI PROP OLARAK GİDİYOR (X kalıbı, 24 Eylül 2026):
+    `<MetaOgesi ikon={MapPin} …>`. Çizimi `MetaOgesi` yapıyor ve orada
+    `aria-hidden` + `sr-only` etiket var. Doğrudan çizilen ikon yine
+    burada `aria-hidden` arıyor.
+  */
+  assert.match(oku('src/components/sosyal/ProfilKimlikKalibi.tsx'), /<Ikon aria-hidden /);
   for (const ad of adlar) {
     const kullanim = gorunum.match(new RegExp(`<${ad}\\b[^>]*>`, 'g')) ?? [];
-    assert.ok(kullanim.length > 0, `${ad} içe aktarılmış ama çizilmiyor`);
+    const propOlarak = gorunum.includes(`<MetaOgesi ikon={${ad}}`);
+    assert.ok(kullanim.length > 0 || propOlarak, `${ad} içe aktarılmış ama çizilmiyor`);
     for (const ikon of kullanim) assert.match(ikon, /aria-hidden/);
   }
 });
@@ -994,10 +997,17 @@ test('kullanıcının yazdığı uzun metin kırpılmadan sarıyor', () => {
     ulaşamıyordu. Aynı koruma bölüm/sınıf ve şehir satırlarında da var:
     üçünün de içeriğini kullanıcı yazıyor.
   */
-  assert.match(gorunum, /ogrenciKimligiGorunur && profil\.sinifEtiketi && \(/);
-  assert.match(gorunum, /<p className="break-words">\{profil\.sinifEtiketi\}<\/p>/);
-  assert.match(gorunum, /\{profil\.sehir && <p className="break-words">\{profil\.sehir\}<\/p>\}/);
-  assert.match(gorunum, /whitespace-pre-line break-words/);
+  /*
+    X kalıbında (24 Eylül 2026) sınıf ve şehir meta satırının öğeleri:
+    değer `MetaOgesi`nin `min-w-0 break-words` kutusunda sarıyor.
+    Biyografinin sınıfları ortak `BIYOGRAFI` sabitinde.
+  */
+  const kalip = oku('src/components/sosyal/ProfilKimlikKalibi.tsx');
+  assert.match(gorunum, /ogrenciKimligiGorunur && profil\.sinifEtiketi && \(\s*<MetaOgesi/);
+  assert.match(gorunum, /\{profil\.sehir && \(\s*<MetaOgesi ikon=\{MapPin\} etiket="Şehir">\s*\{profil\.sehir\}/);
+  assert.match(kalip, /<span className="min-w-0 break-words">\{children\}<\/span>/);
+  assert.match(kalip, /whitespace-pre-line break-words/);
+  assert.match(gorunum, /<p className=\{BIYOGRAFI\}>\{profil\.biyografi\}<\/p>/);
 
   /*
     Kart açıklamasında `line-clamp-3` satır SAYISINI sınırlıyor, satır
@@ -1034,10 +1044,15 @@ test('kısa ve tek satırlık alanlar hâlâ truncate ile kesiliyor', () => {
   assert.match(gorunum, /<h1 className="min-w-0 break-words text-xl/);
   assert.match(
     gorunum,
-    /<p className="min-w-0 truncate text-sm text-gray-600 sm:text-base">@\{profil\.kullaniciAdi\}<\/p>/,
+    /<p className="mt-0\.5 min-w-0 max-w-full truncate text-sm text-gray-600 sm:text-base">@\{profil\.kullaniciAdi\}<\/p>/,
   );
-  assert.match(gorunum, /inline-flex max-w-full items-center rounded-full/);
-  assert.match(gorunum, /<span className="truncate">\{profil\.sektorAdi\} alanı<\/span>/);
+  /*
+    ALAN ROZETİ KALKTI (X kalıbı, 24 Eylül 2026): mavi kapsül yerine meta
+    satırının bir öğesi. Kısa bir katalog adı ve meta satırı SARIYOR —
+    X'te de öğeler kesilmiyor, alt satıra iniyor. Kullanıcı adı hâlâ tek
+    satır ve truncate.
+  */
+  assert.match(gorunum, /<MetaOgesi ikon=\{Briefcase\} etiket="Alan">\s*\{profil\.sektorAdi\} alanı/);
 });
 
 /* ------------------------------------------------------------------ */
@@ -2114,8 +2129,12 @@ test('şeritte iki sayaç; kişisel listeler kilitli satırda, sağ sütun doğr
     `border-t border-gray-100 pt-3` oldu. İddianın ÖLÇTÜĞÜ ŞEY AYNI:
     şeritte hangi üç sayaç var, aralarında ayraç var mı, kişisel
     listeler (kaydedilen / başvuru) şeride sızmış mı.
+
+    24 EYLÜL 2026 (X kalıbı): şerit tek satır, satır içi sayaç oldu
+    (`SAYAC_SATIRI`); ızgara ve üstteki çizgi kalktı. Ölçülen şey yine
+    aynı; yalnız şeridin başlangıç işareti yeni kabın dizesi.
   */
-  const serit = govdeAl(profilBasligi, 'grid min-w-0 grid-cols-3 border-t border-gray-100 pt-3', '</div>');
+  const serit = govdeAl(profilBasligi, '<div className={SAYAC_SATIRI}', '</div>');
   for (const etiket of ['paylaşım', 'bağlantı', 'takip']) {
     assert.match(serit, new RegExp(`<Sayac[^>]*etiket="${etiket}"`), `${etiket} sayacı şeritte`);
   }

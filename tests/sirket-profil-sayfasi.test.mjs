@@ -159,12 +159,23 @@ test('sekmeler ve kare ızgara; boş durumda stok görsel yok', () => {
     hemen ardında; koşulu (`sahip && paylasabilirMi`) değişmediği için
     ziyaretçi dalında hâlâ hiç kurulmuyor.
   */
+  /*
+    24 Eylül 2026 (X kalıbı, kullanıcı kararı): üç eylem logonun
+    sağındaki hap sırasında. SIRA DEĞİŞMEDİ (İlan paylaş → Fotoğraf
+    paylaş → Profili düzenle). "İlan paylaş" metni telefonda `sr-only`
+    (hap yalnız ikon, `sm:` üstünde metinli) — bu yüzden etiket bir
+    `<span>`in içinde.
+
+    ESKİ ŞART KALKTI: "telefonda son düğme `col-span-2` ile tam satır".
+    O şart üç hücrelik ızgaranın sorunuydu (sonuncusu yarım hücrede yalnız
+    kalıyordu); hap sırası ızgara değil `flex-wrap`, yalnız kalan hücre
+    diye bir şey yok.
+  */
   assert.match(
     GORUNUM,
-    /İlan paylaş\s*<\/a>\s*\{paylasGirisi\}\s*<a[\s\S]{0,400}?Profili düzenle\s*<\/a>\s*<\/div>/,
+    /<span className="sr-only sm:not-sr-only">İlan paylaş<\/span>\s*<\/a>\s*\{paylasGirisi\}\s*<a[\s\S]{0,400}?Profili düzenle\s*<\/a>\s*<\/>/,
   );
-  /* Telefonda son düğme tam satır: üç hücrelik ızgarada yarım hücrede yalnız kalmıyor. */
-  assert.match(GORUNUM, /\$\{IKINCIL\} col-span-2 sm:min-w-52/);
+  assert.doesNotMatch(kod(GORUNUM), /col-span-2/);
   /* Rota ve tıklama etiketten bağımsız: iç kimlik değişmedi. */
   assert.match(GORUNUM, /href=\{sahip\.ilanOlusturYolu\}/);
   assert.match(GORUNUM, /onClick=\{icTiklama\(onNavigate, sahip\.ilanOlusturYolu\)\}/);
@@ -208,8 +219,13 @@ test('bulanık kimlik bandı: zemin logonun kendisi ve logo yoksa zemin de yok',
   /* Kırıklık kararı tek yerde: logo baş harfe düşerse zemin de düşüyor. */
   assert.match(GORUNUM, /onBozuk=\{\(\) => setLogoBozuk\(true\)\}/);
   assert.doesNotMatch(kod(GORUNUM), /unsplash|placeholder|gradient|bg-gradient/i);
-  /* Kap kırpıyor; bulanıklık bandın dışına taşmıyor. */
-  assert.match(GORUNUM, /<div className="relative overflow-hidden px-4 pb-4 pt-5/);
+  /*
+    Kap kırpıyor; bulanıklık bandın dışına taşmıyor. 24 Eylül 2026 (X
+    kalıbı): zemin kimlik metinlerinin arkasından kendi BANDINA taşındı —
+    öğrenci kapağıyla aynı oranlı sınıf (`KAPAK_BANDI_SINIFI`, 3:1 / lg
+    5:1). Kimlik metinleri bandın altında, beyaz zeminde.
+  */
+  assert.match(GORUNUM, /<div className=\{`relative w-full overflow-hidden bg-gray-100 \$\{KAPAK_BANDI_SINIFI\}`\}>/);
   /*
     DAİRE ÖLÇÜSÜ ÖĞRENCİYLE AYNI (20 Eylül 2026, kullanıcı isteği): şirket
     dairesi 80 → 96 (sm) idi, `lg` basamağı yoktu; öğrenci avatarı 80 →
@@ -218,7 +234,17 @@ test('bulanık kimlik bandı: zemin logonun kendisi ve logo yoksa zemin de yok',
     öğrencininkine çevrilebilirdi.
   */
   assert.match(GORUNUM, /h-20 w-20 [^']*sm:h-28 sm:w-28 lg:h-36 lg:w-36/);
-  assert.match(GORUNUM, /ring-2 ring-blue-600 ring-offset-2/);
+  /*
+    HALKA DEĞİŞTİ (24 Eylül 2026, X kalıbı — kullanıcı kararı): logo artık
+    bandın alt kenarına biniyor ve üç ekran X'teki beyaz ayracı taşıyor.
+    Eski şart ("şirketin kendi mavi halkası `ring-2 ring-blue-600
+    ring-offset-2` öğrencininkine çevrilmesin") kalktı: o şart, ölçü
+    eşitlenirken halkanın sessizce kaymasını önlüyordu; halkanın
+    değişmesi bu kez bilerek verilmiş bir karar. Zemin (`bg-white`)
+    şirketin kendisi kalıyor: saydam logo banda karışmıyor.
+  */
+  assert.match(GORUNUM, /rounded-full bg-white ring-4 ring-white/);
+  assert.doesNotMatch(kod(GORUNUM), /ring-blue-600/);
   assert.doesNotMatch(kod(GORUNUM), /sm:h-24 sm:w-24/);
   /* Baş harf daireyle birlikte üç basamak. */
   assert.match(GORUNUM, /text-3xl font-black text-blue-900 sm:text-4xl lg:text-5xl/);

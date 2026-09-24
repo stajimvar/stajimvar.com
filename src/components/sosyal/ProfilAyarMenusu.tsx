@@ -94,6 +94,15 @@ const ODAKLANABILIR =
 export interface ProfilAyarMenusuProps {
   onPaylas: () => void;
   /**
+   * Tetik düğmesinin sınıfı — verilmezse eski çerçevesiz kare düğme.
+   *
+   * Profil başlığı X kalıbına geçince (24 Eylül 2026) dişli, @ad satırından
+   * hap sırasına taşındı ve oradaki öteki düğmelerle aynı yuvarlak
+   * çerçeveli biçimi (`IKON_HAP`) alıyor. Biçim çağırandan geliyor; menünün
+   * davranışı ve dokunma hedefi (44 piksel) değişmiyor.
+   */
+  tetikSinifi?: string;
+  /**
    * `yayinda_mi` — PROFİL GÖRÜNÜRLÜĞÜ, topluluk üyeliği DEĞİL.
    *
    * Satırın yönünü belirliyor: profil açıksa gizleme, kapalıysa açma.
@@ -345,6 +354,7 @@ export const ProfilAyarMenusu: React.FC<ProfilAyarMenusuProps> = ({
   onKaydedilenler,
   onArsiv,
   onDuzenle,
+  tetikSinifi,
 }) => {
   const [acik, setAcik] = React.useState(false);
   const [monte, setMonte] = React.useState(false);
@@ -537,7 +547,10 @@ export const ProfilAyarMenusu: React.FC<ProfilAyarMenusuProps> = ({
         aria-expanded={acik}
         aria-label="Profil ayarları"
         onClick={() => setAcik((onceki) => !onceki)}
-        className={`inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-600 hover:bg-gray-100 ${RENK_GECISI} ${ODAK_HALKASI}`}
+        className={
+          tetikSinifi ??
+          `inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-600 hover:bg-gray-100 ${RENK_GECISI} ${ODAK_HALKASI}`
+        }
       >
         <Settings aria-hidden className="h-5 w-5" />
       </button>

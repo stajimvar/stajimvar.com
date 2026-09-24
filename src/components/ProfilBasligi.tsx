@@ -1,36 +1,49 @@
 import React from 'react';
-import { Award, Bookmark, Check, FileText, LogOut, MapPin, Pencil, Settings } from 'lucide-react';
+import {
+  Award,
+  BookOpen,
+  Bookmark,
+  CalendarDays,
+  Check,
+  FileText,
+  GraduationCap,
+  LogOut,
+  MapPin,
+  Settings,
+} from 'lucide-react';
 import { OkulRozeti } from './OkulRozeti';
 import { universiteLogosu } from '../lib/universite-logosu.mjs';
 import { adYazimi } from '../lib/ad';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
+import { KapakFotografi } from './sosyal/KapakFotografi';
+import {
+  AVATAR_SATIRI,
+  BIYOGRAFI,
+  HAP,
+  HAP_BIRINCIL,
+  HAP_SIRASI,
+  IKON_HAP,
+  KIMLIK_BANDI,
+  META_SATIRI,
+  MetaOgesi,
+  SAYAC_ETIKETI,
+  SAYAC_OGESI,
+  SAYAC_SATIRI,
+  SAYAC_SAYISI,
+} from './sosyal/ProfilKimlikKalibi';
+import { katilmaMetni } from '../lib/tarih.mjs';
 import { profilAyarOgeleri } from './sosyal/ProfilAyarMenusu';
 import { ProfilAyarlarSayfasi, type AyarBolumu } from './ProfilAyarlarSayfasi';
 import type { PortfolyoSatiri } from './sosyal/SosyalProfilSayfasi';
 import { profilYolu } from '../lib/sosyal-kullanici-adi.mjs';
-import { ODAK_HALKASI, RENK_GECISI, RENK_PRIMARY } from '../lib/renk-token';
+import { ODAK_HALKASI } from '../lib/renk-token';
 import { Card, ProfileSectionGroup, ProfileSectionRow, Skeleton } from '../ui';
 
 /*
-  DÜĞME KALIBI ŞİRKET PROFİLİNDEN (kullanıcı kararı, 20 Eylül 2026:
-  "tüm profil görüntüleri şirket gibi olsun").
-
-  Dizeler `src/sirket/SirketProfilGorunumu.tsx` ve
-  `src/components/sosyal/SosyalProfilGorunumu.tsx` ile BİREBİR aynı;
-  `tests/sosyal-profil-arayuzu` üçünü karşılaştırıyor, biri ayrışırsa
-  test düşüyor.
-
-  NEDEN `Button` (src/ui) DEĞİL: ortak düğme ikincil türde
-  `border-gray-200` kullanıyor, şirket kalıbı `border-gray-300`; ayrıca
-  etiketi `truncate` ile kesiyor, kalıptaki düğmeler ise metni sarıyor.
-  İki fark da "birebir aynı" olma şartını bozuyordu. Ortak bileşen
-  DEĞİŞTİRİLMEDİ: onu başka ekranlar kendi ölçüsünde kullanıyor.
-
-  Üç kopya tek yere (renk-token) taşınmadı çünkü kaynak dosya şirket
-  profili ve bu işte ona dokunulmuyor; birleştirme ayrı bir adım.
+  DÜĞME VE DÜZEN DİZELERİ `sosyal/ProfilKimlikKalibi`nden (X web profili
+  kalıbı, 24 Eylül 2026). Üç profil ekranı aynı modülü içe aktarıyor;
+  `tests/sosyal-profil-arayuzu` üçünün de oradan okuduğunu doğruluyor.
 */
-const BIRINCIL = `inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold ${RENK_PRIMARY.zemin} ${RENK_PRIMARY.zeminHover} ${RENK_PRIMARY.yazi} ${RENK_GECISI} ${ODAK_HALKASI}`;
-const IKINCIL = `inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 text-sm font-bold text-gray-900 hover:bg-gray-50 ${RENK_GECISI} ${ODAK_HALKASI}`;
 
 /**
  * Profil başlığı — öğrencinin kişisel kontrol paneli.
@@ -317,28 +330,15 @@ interface Props {
 }
 
 /**
- * Sosyal hücrenin iskeleti: sayı satırı + etiket satırı.
- *
- * ÖLÇÜLER GERÇEK HÜCREYLE BİREBİR OLMAK ZORUNDA — sayı gelince satır
- * zıplamamalı. Değerler 20 Eylül 2026'da yeniden ölçüldü çünkü hücrenin
- * tipografisi şirket profilininkiyle eşitlendi ve `lg` basamağı kalktı:
- * sayı `text-2xl leading-tight` → satır kutusu 30 piksel, etiket
- * `text-sm` → 20 piksel, aralarında `mt-0.5` (2) ve kapta `py-1` (8).
- * Toplam 60 piksel — şirket ve ziyaretçi profilindeki hücreyle aynı
- * sayı (üçü de Chromium'da ölçüldü).
- *
- * ETİKETTEN `leading-tight` KALDIRILDI: onunla hücre 58 piksel
- * oluyordu, öteki iki ekranda 60. Aynı kalıbın üç ekranda 2 piksel
- * farkla çizilmesi, kullanıcı ekranlar arasında geçerken satırın
- * oynaması demekti.
- *
- * İSKELET İLE DOLU HÜCRE AYNI KUTUDA: ölçüldü (375/390/1440), sayılar
- * gelince düğme satırı 0 piksel kayıyor.
+ * Sayacın iskeleti: satır içi sayacın aynı kutusu (`SAYAC_OGESI`, 44
+ * piksel), içinde sayı ve etiket genişliğinde iki gri şerit. Sayılar
+ * gelince satır zıplamıyor çünkü kutunun yüksekliği metinden değil
+ * `min-h-11`den geliyor.
  */
 const SayacIskeleti: React.FC = () => (
-  <span aria-hidden className="block min-w-0 py-1">
-    <Skeleton className="mx-auto h-[30px] w-10" />
-    <Skeleton className="mx-auto mt-0.5 h-5 w-16" />
+  <span aria-hidden className={SAYAC_OGESI}>
+    <Skeleton className="h-4 w-5" />
+    <Skeleton className="h-4 w-14" />
   </span>
 );
 
@@ -385,6 +385,25 @@ export const ProfilBasligi: React.FC<Props> = ({
         ? 'hazir'
         : 'alinamadi';
   const satir = portfolyo?.satir ?? null;
+
+  /*
+    KAPAK YOLUNUN ÜÇ HÂLİ — `sosyalAvatarYolu` ile aynı sözleşme
+
+      undefined  panel satırı HENÜZ OKUNMADI → iskelet bant
+      null       panel yok, satır gelmedi ya da kapak yok → nötr bant
+      yol        kapağın kendisi
+
+    Panel hiç verilmediyse (`portfolyo` yok) kapak bilinemiyor; iskelet
+    sonsuza kadar yanıp sönerdi. O durumda nötr bant — "bilinmiyor"u
+    "yükleniyor" gibi göstermiyoruz.
+  */
+  const kapakYolu: string | null | undefined = !portfolyo
+    ? null
+    : portfolyo.satir === undefined
+      ? undefined
+      : (portfolyo.satir?.kapakFotografiYolu ?? null);
+  /* Tarih okunamadıysa satır YOK; uydurulmuş bir ay yazılmıyor. */
+  const katilma = katilmaMetni(satir?.katilmaAni ?? null);
 
   /*
     "AYARLAR VE HAREKETLER" (☰) — kullanıcı isteği, 17 Eylül 2026
@@ -469,118 +488,72 @@ export const ProfilBasligi: React.FC<Props> = ({
 
   return (
     /*
-      KİMLİK KARTI ŞİRKET PROFİLİNİN KALIBINDA (kullanıcı kararı,
-      20 Eylül 2026: "tüm profil görüntüleri şirket gibi olsun, onu
-      beğendim daha özgün")
+      KİMLİK KARTI X WEB PROFİLİNİN KALIBINDA (kullanıcı kararı, 24 Eylül
+      2026: "stajımvar web profili x in profille girince olan web
+      arayuzune uyarla")
 
-      Üç profil ekranı artık aynı sırayı kuruyor — şirket
-      (`SirketProfilGorunumu`), ziyaretçiye görünen öğrenci profili
-      (`SosyalProfilGorunumu`) ve burası, sahibin kendi `/cv` ekranı:
+      Üç profil ekranı aynı kalıbı paylaşıyor (20 Eylül kararı); kalıbın
+      referansı şirket profiliydi, artık X. Sıra ve gerekçeler
+      `ProfilKimlikKalibi` başlığında: kapak → avatar + sağda hap sırası
+      → ad, @ad → biyografi → meta satırı → satır içi sayaçlar. Her şey
+      kartın sol dolgusundan başlıyor; `mx-auto max-w-2xl` ortalaması
+      kalktı, yalnız biyografi paragrafı okunabilirlik için sınırlı.
 
-        ortalanmış kimlik bandı (daire → ad → @ad → kimlik satırları)
-        ince ayırıcı
-        sayaç satırı (üç eşit sütun)
-        eylem satırı
+      DİŞLİ HAP SIRASINDA: "Ayarlar ve hareketler" kartın sağ üstünde
+      `absolute` duruyordu ve kapağın üstüne düşüyordu; X'teki "…" gibi
+      artık hap sırasında yuvarlak bir ikon düğmesi. Yalnız `lg`de
+      görünüyor — telefonda ve tablette aynı menüyü üst çubuktaki ☰ açıyor
+      (Header `stajimvar:profil-menusu` olayı, yukarıdaki effect).
 
-      ÖNCEKİ DÜZEN VE NEDEN KALKTI: telefonda "fotoğraf | üç sayaç" ilk
-      satırı, altında kimlik, altında düğmeler (19 Eylül 2026 Instagram
-      sırası); lg'de solda kimlik, sağda `lg:w-[440px]` ayrı bir sütunda
-      sayaç+düğme ve aralarında `lg:border-l`. Şirket ekranında ne o
-      ızgara ne o sütun vardı: aynı kişi kendi şirket sayfasıyla kendi
-      `/cv`si arasında geçerken sayaçların ve düğmelerin yeri
-      değişiyordu.
+      KARTTAN KALKANLAR, KAYBOLMADI: staj tercihi ve eksik adımlar
+      "Profili düzenle" ekranında; tamamlanma yüzdesi ayar menüsünün ilk
+      satırında ve fotoğraf halkasında.
 
-      BİR ERİŞİLEBİLİRLİK BORCU DA KAPANDI: eski ızgarada sekme sırası
-      göz sırasıyla uyuşmuyordu (390'da ölçülmüştü: @kullanıcıadı y=216 →
-      sayaçlar y=102 → düğmeler y=299, yani odak bir kez yukarı
-      sıçrıyordu). Tek sütunda DOM sırası ile görsel sıra aynı; sıçrama
-      kalmadı.
-
-      KARTTAN KALKANLAR, KAYBOLMADI:
-        - Staj tercihi satırı ve eksik adım kutusu: tercihler ve eksik
-          bölümler "Profili düzenle" ekranında; tamamlanma yüzdesi ayar
-          menüsünün ilk satırında ve fotoğraf halkasında duruyor.
-
-      Her değer çağıranın verdiği GERÇEK veriden: ad, okul, bölüm, sınıf ve
-      il `student_profiles`tan; kullanıcı adı ve sayılar sosyal panelin
-      satırından (`portfolyo.satir`). Veri yoksa satır çizilmiyor.
-
-      YAN BOŞLUK KARTIN KENDİSİNDE DEĞİL, İÇİNDEKİ İKİ BLOKTA — şirketteki
-      ve ziyaretçi profilindeki kalıbın aynısı. Kartın kendi dolgusu
-      (`px-4 py-5 sm:p-6 lg:px-8 lg:py-7`) bu yüzden kalktı: ayırıcı
-      çizginin iki blok arasında, kenardan kenara değil, dolgunun içinde
-      durması gerekiyor.
-
-      DİŞLİ YERİNDE: "Ayarlar ve hareketler" kartın sağ üstünde
-      (`absolute`), telefonda üst çubukta. Şirket kalıbında böyle bir
-      düğme yok ama bu `/cv`nin kendi yeteneği — şirkette yok diye
-      silinmiyor.
+      Her değer çağıranın verdiği GERÇEK veriden; veri yoksa öğe
+      çizilmiyor.
     */
-    <Card mobilYuzey className={`relative ${className}`}>
-      <button
-        type="button"
-        onClick={() => setMenuAcik(true)}
-        aria-label="Ayarlar ve hareketler"
-        aria-haspopup="dialog"
-        className={`absolute right-3 top-3 hidden h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-gray-700 hover:bg-gray-100 lg:inline-flex ${ODAK_HALKASI}`}
-      >
-        <Settings aria-hidden className="h-6 w-6" strokeWidth={1.75} />
-      </button>
-
+    <Card mobilYuzey className={className}>
       <ProfilAyarlarSayfasi acik={menuAcik} onKapat={menuKapat} bolumler={ayarBolumleri} />
 
+      {/*
+        KAPAK BANDI — kartın en üstünde, 3:1 (lg'de 5:1; oran kararı
+        `KapakFotografi` içinde). Telefonda kart `-mx-4` ile kenardan
+        kenara; `sm:` üstünde kartın köşesi 20, kenarı 1 piksel, bandın üst
+        köşesi 19. Kartın kendisine `overflow-hidden` verilmedi: ayar
+        sayfası ve fotoğraf görüntüleyici kartın içinden açılıyor.
+      */}
+      <KapakFotografi ad={adYazimi(ad)} yol={kapakYolu} kip="bant" className="w-full sm:rounded-t-[19px]" />
+
       {/* ------------------------------------------- kimlik bandı */}
-      <div className="px-4 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6">
-        {/*
-          Ortalanmış sütun `max-w-2xl` ile sınırlı — şirketteki ve
-          ziyaretçi profilindeki ölçünün aynısı. Sınır olmasaydı okul
-          adı gibi uzun satırlar 1440'ta bandın bir ucundan ötekine
-          uzanır ve ortalı metinde okunmazdı.
-        */}
-        {/*
-          SOLA HİZALI KİMLİK (kullanıcı kararı, 23 Eylül 2026)
-
-          Ortalı düzen, X/LinkedIn'deki profil kalıbına göre okunması zor
-          bir blok üretiyordu: ad, kullanıcı adı, okul ve konum farklı
-          uzunlukta olduğu için her satır başka bir yerden başlıyor, göz
-          her seferinde satır başını yeniden arıyordu. Sola hizalı
-          düzende hepsi aynı hizadan başlıyor ve fotoğraf da kimliğin
-          yanında duruyor.
-        */}
-        <div className="mx-auto flex max-w-2xl flex-col items-start text-left">
+      <div className={KIMLIK_BANDI}>
+        <div className={AVATAR_SATIRI}>
           {/*
+            FOTOĞRAF KAPAĞA YARI YARIYA BİNİYOR. Doluluk halkası daireye
+            2×6 piksel ekliyor (92 / 124 / 156), bu yüzden ortak
+            `AVATAR_BINMESI` (40 / 56 / 72) değil, halkalı dairenin yarısı:
+            46 / 62 / 78. İçteki `relative` kap okul rozetinin konum kabı
+            (rozet testinde kilitli) ve kapağın ÜSTÜNDE çizilmeyi de o
+            sağlıyor (konumlu öğe, konumsuz kapak görselinin üstüne
+            boyanıyor). `ring-4 ring-white` fotoğrafı kapaktan ayırıyor.
+
             HALKA ŞİRKETTE YOK, BURADA KALIYOR: profilin tamamlanma
-            oranını anlatan tek görsel gösterge bu (yüzde sayısı karttan
-            kalkmıştı). Şirkette karşılığı olmaması onu silmek için
-            sebep değil — "şirkette olmayanı sil" değil, "şirkette
-            olmayanı UYDURMA" kuralı geçerli.
-          */}
-          {/*
+            oranını anlatan tek görsel gösterge. "Şirkette olmayanı sil"
+            değil, "olmayanı UYDURMA" kuralı geçerli.
+
             OKUL ROZETİ — okulunu girenlerde, fotoğrafın sağ alt köşesinde.
-
-            Amblemi olan okullarda üniversitenin KENDİ logosu çiziliyor;
-            kaynak her okulun resmi alan adındaki başlık logosu ve dosyalar
-            depoda (`public/universite-logolari`). Listede olmayan okulda
-            rozet kısaltmayı gösteriyor — benzer adlı bir okulun amblemini
-            koymaktansa harf daha doğru. Dosya bir gün kaybolursa bileşen de
-            kısaltmaya düşüyor. Okul girilmemişse rozet hiç çizilmiyor:
-            olmayan bir kimliği çizmek kartı yalan yapardı.
-
-            KÖŞE KONUMU: fotoğraf yuvarlak, kapsayıcı kare. Rozetin daireye
-            değdiği yer 45 derece; kutunun köşesi ise daha dışarıda kalıyor
-            ve fotoğraf büyüdükçe arada boşluk açılıyor. 80 piksellik
-            fotoğrafta köşe zaten 45 dereceye denk düşüyor; 112 ve 144'te
-            rozet birkaç piksel içeri alınıyor.
+            Amblemi olan okullarda üniversitenin KENDİ logosu
+            (`public/universite-logolari`); listede olmayan okulda
+            kısaltma. Okul girilmemişse rozet hiç çizilmiyor. Köşe konumu:
+            80 piksellik fotoğrafta köşe zaten 45 dereceye denk düşüyor;
+            112 ve 144'te rozet birkaç piksel içeri alınıyor.
           */}
+          <div className="shrink-0 self-start -mt-[46px] sm:-mt-[62px] lg:-mt-[78px]">
           <div className="relative">
-          <Halka oran={oran}>
+          <Halka oran={oran} className="ring-4 ring-white">
             {/*
               BÜYÜTME (kullanıcı isteği, 17 Eylül 2026): fotoğrafa dokununca
-              Instagram gibi tam ekran açılıyor. Paylaş eylemi sosyal
-              panelin satırındaki var olan `onPaylas`; kopyalanacak adres
-              yalnız profil YAYINDAYKEN veriliyor (yayında değilse
-              paylaşılacak adres yok, düğme de yok). Fotoğraf yoksa
-              (baş harf) `ProfilFotografi` düğme çizmiyor.
+              tam ekran açılıyor. Kopyalanacak adres yalnız profil
+              YAYINDAYKEN; fotoğraf yoksa (baş harf) düğme çizilmiyor.
             */}
             <ProfilFotografi
               ad={ad}
@@ -600,208 +573,174 @@ export const ProfilBasligi: React.FC<Props> = ({
               </span>
             )}
           </div>
-
-          {/*
-            ROZET YOK — UYDURULMADI: şirket kalıbında adın yanında
-            "Şirket hesabı" rozeti var. Öğrencinin karşılığı doğrulanmış
-            hesap tiki (`ResmiTik`) olurdu ama bu kart `resmi_mi`yi
-            GÖRMÜYOR: panel satırı (`PortfolyoSatiri`) o alanı taşımıyor.
-            Olmayan veriyle rozet çizmek yerine rozet çizilmiyor.
-
-            `mt-3`: şirketteki daire-ad boşluğunun aynısı.
-          */}
-          <h1 className="mt-3 min-w-0 max-w-full break-words text-xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-2xl">
-            {adYazimi(ad)}
-          </h1>
-
-          {/*
-            KULLANICI ADI İSKELETİ GERÇEK SATIRLA AYNI KUTUDA
-
-            Ölçüldü (Chromium, 20 Eylül 2026): gerçek satır `mt-0.5` +
-            20 piksel (sm üstünde 24), iskelet ise `mt-1.5` + 16 piksel.
-            Telefonda ikisi de 22 piksel tutuyordu ama 1440'ta iskelet 22,
-            gerçeği 26 piksel — satır gelince altındaki her şey 4 piksel
-            aşağı kayıyordu. İskelet artık aynı kutuyu çiziyor.
-          */}
-          {portfolyo && portfolyo.satir === undefined && (
-            <Skeleton className="mt-0.5 h-5 w-32 sm:h-6" />
-          )}
-          {satir?.kullaniciAdi && (
-            <a
-              href={profilYolu(satir.kullaniciAdi)}
-              onClick={(olay) => {
-                if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0)
-                  return;
-                olay.preventDefault();
-                satir.onNavigate(profilYolu(satir.kullaniciAdi as string));
-              }}
-              className={`mt-0.5 block min-w-0 max-w-full truncate text-sm text-gray-600 hover:underline sm:text-base ${ODAK_HALKASI}`}
-            >
-              <span className="select-none">@</span>
-              {satir.kullaniciAdi}
-            </a>
-          )}
-
-          {/*
-            KİMLİK SATIRLARI: şirkette sektör ve konum, burada okul ve
-            bölüm · sınıf. Aynı yer, aynı punto, içerik öğrencinin kendi
-            gerçeği. "Okulun eksik" bir yer tutucu değil, eksik alanın
-            adı — girilmemiş bir okulu uydurmak yerine eksik olduğunu
-            söylüyor.
-          */}
-          <div className="mt-1.5 max-w-full space-y-0.5 text-sm leading-snug text-gray-500 sm:mt-2 sm:text-base">
-            {/*
-              OKUL SATIRI SAF METİN
-
-              Rozet bir süre buradaydı, adın solunda. Hangi ölçü denendiyse
-              yamalı durdu: satır telefonda 14 piksel, amblemlerin oranı
-              birbirini tutmuyor ve ortalanmış satırın başına takılan kutu
-              adı da ortadan kaydırıyordu. Rozet profil fotoğrafının
-              köşesine taşındı; burası yalnız ad.
-            */}
-            <p className="min-w-0 break-words">{okul || 'Okulun eksik'}</p>
-            {(bolum || sinif) && (
-              <p className="min-w-0 break-words">{[bolum, sinif].filter(Boolean).join(' · ')}</p>
-            )}
           </div>
 
-          {konum && (
-            /* İkon tek başına bilgi taşımıyor: `aria-hidden` + `sr-only` etiket. */
-            <p className="mt-1.5 flex max-w-full min-w-0 items-center gap-1.5 text-sm text-gray-700 sm:mt-2.5">
-              <MapPin aria-hidden className="h-4 w-4 shrink-0 text-gray-500" />
-              <span className="sr-only">Konum: </span>
-              <span className="min-w-0 truncate">{konum}</span>
-            </p>
-          )}
-        </div>
-      </div>
+          {/*
+            HAP SIRASI — X'teki "Edit profile" yeri: avatar satırının sağı,
+            alt hiza. Sıra: ⚙ (yalnız lg) → CV'ni görüntüle → Profili
+            düzenle; düzenleme X'teki gibi en sağda.
 
-      {/*
-        BANDIN ALTI: SAYAÇLAR VE EYLEMLER — şirketteki ayrımın aynısı.
-        Kimlik bandı kendi bloğunda, sayaç ve düğmeler ayrı bir blokta,
-        aralarında ince bir çizgi. Üst boşluğu bandın `pb`si veriyor.
-      */}
-      <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+            "CV'NI GÖRÜNTÜLE" TELEFONDA YALNIZ İKON. Ölçüldü (Chromium,
+            yerleşim genişliği 360): halkalı avatarın (92) yanında 224
+            piksel kalıyor; metinli iki hap 157.7 + 128.7 + 6 = 292.4
+            piksel tutuyor. İkon hâli 48 piksel, sıra 182.7 piksel ve tek
+            satır. Metin `sr-only` ile erişilebilir adda kalıyor, `sm:`
+            üstünde görünür.
 
-        {/*
-          ÜÇ SAYAÇ, ARADA ÇİZGİ YOK (karar: 18 Eylül 2026). "takip"
-          öğrencinin takip ettiği şirket sayısı (`sosyal_sayaclar.takip`);
-          aynı RPC satırından geliyor, ikinci bir çağrı yok. Üçüncü hücre
-          gelince iki dikey ayraç şeridi parçalıyordu; şirket sayfasının
-          sayaç şeridiyle aynı kural: eşit sütunlar, ayraç yok.
-
-          "TAKİP" ARTIK BİR BAĞLANTI (19 Eylül 2026). Eskiden düz bir
-          `<span>`di ve o doğruydu: gidilecek liste ekranı yoktu,
-          liste yalnız Ağım'ın içinde bir bölümdü. Kullanıcı sayıya
-          basıp hiçbir şey olmadığını bildirdi; liste artık kendi
-          adresinde (/takip, `TakipEttiklerimSayfasi`) ve sayaç
-          "bağlantı" ile BİREBİR aynı `Sayac` yolundan geçiyor —
-          gerçek `<a href>`, orta tuş ve yeni sekme çalışıyor.
-          "paylaşım" düz `<span>` kalıyor: paylaşımlar bu ekranın
-          kendi alt bölümünde, ayrı bir adresleri yok.
-
-          ŞERİDİN YERİ VE ÇİZGİSİ DEĞİŞTİ (20 Eylül 2026): şerit
-          fotoğrafın yanındaki dar sütundan çıkıp tam genişliğe, kimlik
-          bandının altına indi. Ayırıcı da şirketteki dizenin aynısı:
-          `border-t border-gray-100 pt-3`. Çizgi ÜÇ DURUMDA da aynı
-          yerde (iskelet / sayılar / alınamadı), yani sayı gelince satır
-          zıplamıyor.
-
-          DÖRDÜNCÜ SAYAÇ UYDURULMADI: şirkette "aktif ilan" var,
-          öğrencide ilan kavramı yok; `sosyal_sayaclar.takipci` de
-          öğrenci satırında hep sıfır olurdu (hedef hep şirket).
-        */}
-        <div
-          className="grid min-w-0 grid-cols-3 border-t border-gray-100 pt-3"
-          aria-busy={sosyalHucre === 'yukleniyor' || undefined}
-        >
-          {sosyalHucre === 'yukleniyor' && (
-            <>
-              <SayacIskeleti />
-              <SayacIskeleti />
-              <SayacIskeleti />
-            </>
-          )}
-          {sosyalHucre === 'hazir' && satir?.sayaclar && (
-            <>
-              <Sayac deger={satir.sayaclar.paylasim} etiket="paylaşım" />
-              <Sayac
-                deger={satir.sayaclar.baglanti}
-                etiket="bağlantı"
-                href="/baglantilar"
-                onNavigate={satir.onNavigate}
-              />
-              <Sayac
-                deger={satir.sayaclar.takip}
-                etiket="takip"
-                href="/takip"
-                onNavigate={satir.onNavigate}
-              />
-            </>
-          )}
-          {sosyalHucre === 'alinamadi' && (
-            /* Sıfır ya da tire yazılmıyor: "sunucu vermedi" gerçek sıfır gibi okunurdu. */
-            <p className="col-span-3 self-center px-1 text-center text-sm leading-tight text-gray-600">
-              Paylaşım, bağlantı ve takip sayısı alınamadı
-            </p>
-          )}
-        </div>
-
-        {/*
-          EYLEM SATIRI — ŞİRKETTEKİ IZGARANIN AYNISI
-
-          Kap sınıfları şirketle ve ziyaretçi profiliyle BİREBİR:
-          telefonda `grid grid-cols-2 gap-3`, `sm:` üstünde `flex
-          flex-wrap justify-center`.
-
-          İKİSİ DE `col-span-2`: şirkette iki BİRİNCİL eylem ilk satırı
-          paylaşıyor, üçüncüsü tam satır kaplıyor. Burada birincil eylem
-          tek ("CV'ni görüntüle"); yarım hücrede bırakılsaydı yanında
-          boş bir hücre kalırdı. Telefonda ikisi alt alta tam
-          genişlikte, `sm:` üstünde satır flex olduğu için `col-span`
-          etkisiz ve ikisi yan yana ortada.
-
-          "CV'Nİ GÖRÜNTÜLE" YOKSA HÜCRE DE YOK: eskiden yerine
-          `<span aria-hidden />` konuyordu çünkü iki sütunlu ızgarada
-          "Profili düzenle" sağ hücreye kayardı. Tam genişlikte
-          düğmelerde böyle bir hizalama sorunu yok; boş bir düğüm
-          çizmemek daha dürüst.
-
-          "FOTOĞRAF PAYLAŞ" BURAYA KONMADI: şirket kalıbında eylem
-          satırında duruyor ama `/cv`de o giriş zaten VAR ve başka
-          yerde — üst çubuktaki paylaşım simgesi ve ızgaranın başlık
-          satırındaki düğme. Buraya üçüncü bir kopyasını koymak aynı işi
-          yapan iki düğme demekti; o karar 17 Eylül 2026'da alınmış ve
-          testle kilitlenmiş (`sosyal-profil-arayuzu`: kartta "Paylaş"
-          yok).
-        */}
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-center">
-          {onCv && (
-            <button type="button" onClick={onCv} className={`${BIRINCIL} col-span-2 sm:min-w-52`}>
-              CV'ni görüntüle
+            "FOTOĞRAF PAYLAŞ" BURAYA KONMADI: `/cv`de o giriş zaten VAR —
+            üst çubuktaki paylaşım simgesi ve ızgaranın başlık satırı. 17
+            Eylül 2026 kararı, testle kilitli (`sosyal-profil-arayuzu`:
+            kartta "Paylaş" yok).
+          */}
+          <div className={HAP_SIRASI}>
+            {/*
+              GİZLEME SARMALAYICIDA, DÜĞMEDE DEĞİL: `IKON_HAP` `inline-flex`
+              taşıyor; aynı dizeye `hidden` eklemek, hangisinin kazanacağını
+              üretilen CSS'in sırasına bırakıyordu. Ölçüldü (Chromium, 375
+              piksel): `inline-flex` kazandı ve dişli telefonda göründü.
+            */}
+            <div className="hidden lg:block">
+              <button
+                type="button"
+                onClick={() => setMenuAcik(true)}
+                aria-label="Ayarlar ve hareketler"
+                aria-haspopup="dialog"
+                className={IKON_HAP}
+              >
+                <Settings aria-hidden className="h-5 w-5" strokeWidth={1.75} />
+              </button>
+            </div>
+            {onCv && (
+              <button type="button" onClick={onCv} aria-label="CV'ni görüntüle" className={HAP_BIRINCIL}>
+                <FileText aria-hidden className="h-4 w-4 shrink-0" />
+                <span className="sr-only sm:not-sr-only">CV'ni görüntüle</span>
+              </button>
+            )}
+            <button type="button" onClick={onDuzenle} className={HAP}>
+              Profili düzenle
             </button>
-          )}
-          <button
-            type="button"
-            onClick={onDuzenle}
-            className={`${IKINCIL} col-span-2 sm:min-w-52`}
-          >
-            <Pencil aria-hidden className="h-4 w-4 shrink-0" />
-            Profili düzenle
-          </button>
+          </div>
         </div>
+
+        {/*
+          ROZET YOK — UYDURULMADI: bu kart `resmi_mi`yi görmüyor (panel
+          satırı taşımıyor); olmayan veriyle tik çizilmiyor.
+        */}
+        <h1 className="mt-3 min-w-0 max-w-full break-words text-xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-2xl">
+          {adYazimi(ad)}
+        </h1>
+
+        {/*
+          KULLANICI ADI İSKELETİ GERÇEK SATIRLA AYNI KUTUDA: `mt-0.5` + 20
+          piksel (sm üstünde 24); satır gelince altı kaymıyor.
+        */}
+        {portfolyo && portfolyo.satir === undefined && (
+          <Skeleton className="mt-0.5 h-5 w-32 sm:h-6" />
+        )}
+        {satir?.kullaniciAdi && (
+          <a
+            href={profilYolu(satir.kullaniciAdi)}
+            onClick={(olay) => {
+              if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0)
+                return;
+              olay.preventDefault();
+              satir.onNavigate(profilYolu(satir.kullaniciAdi as string));
+            }}
+            className={`mt-0.5 block min-w-0 max-w-full truncate text-sm text-gray-600 hover:underline sm:text-base ${ODAK_HALKASI}`}
+          >
+            <span className="select-none">@</span>
+            {satir.kullaniciAdi}
+          </a>
+        )}
+
+        {/*
+          BİYOGRAFİ — X sırası: ad bloğunun altında, meta satırının üstünde.
+          Kısaltma yok (tam metne giden başka yol yok); `whitespace-pre-line`
+          satır sonlarını, `break-words` uzun bağlantıları koruyor. Tek
+          genişlik sınırı burada (`BIYOGRAFI` içinde `max-w-2xl`).
+        */}
+        {satir?.biyografi && <p className={BIYOGRAFI}>{satir.biyografi}</p>}
+
+        {/*
+          META SATIRI — okul, bölüm · sınıf, konum, katılma; ikonlu, sarıyor.
+
+          "OKULUN EKSİK" YER TUTUCUSU KALKTI: satır okul girilmemişken
+          eksik alanın adını yazıyordu. X kalıbında meta satırı yalnız VAR
+          olanı gösteriyor ve eksik adım zaten iki yerde anlatılıyor: ayar
+          menüsünün ilk satırı ("Profilin %N tamamlandı · N adım") ve
+          fotoğrafın doluluk halkası. Üçüncü kez, üstelik bir bilgi
+          satırının içinde söylemek gereksizdi.
+
+          Katılma: satır okunmadıysa aynı yerde iskelet, okunamadıysa HİÇ.
+        */}
+        {(okul || bolum || sinif || konum || katilma || (portfolyo && portfolyo.satir === undefined)) && (
+          <div className={META_SATIRI}>
+            {okul && <MetaOgesi ikon={GraduationCap} etiket="Okul">{okul}</MetaOgesi>}
+            {(bolum || sinif) && (
+              <MetaOgesi ikon={BookOpen} etiket="Bölüm">
+                {[bolum, sinif].filter(Boolean).join(' · ')}
+              </MetaOgesi>
+            )}
+            {konum && <MetaOgesi ikon={MapPin} etiket="Konum">{konum}</MetaOgesi>}
+            {portfolyo && portfolyo.satir === undefined && <Skeleton className="h-5 w-36" />}
+            {katilma && <MetaOgesi ikon={CalendarDays} etiket="Katılma">{katilma}</MetaOgesi>}
+          </div>
+        )}
+
+        {/*
+          SAYAÇ SATIRI — tek satır, satır içi: "6 paylaşım  3 bağlantı
+          1 takip", sayı kalın. Sayılar `sosyal_sayaclar`ın tek satırından;
+          "bağlantı" ve "takip" gerçek `<a href>` (orta tuş, yeni sekme).
+          "paylaşım" düz metin: paylaşımlar bu ekranın kendi alt bölümünde,
+          ayrı bir adresleri yok.
+
+          DÖRT HÂL: panel yoksa satır hiç yok; yüklenirken satır içi
+          iskelet; alınamadıysa cümle (sıfır ya da tire UYDURULMUYOR);
+          hazırsa üç sayı. DÖRDÜNCÜ SAYAÇ YOK: `takipci` öğrencide hep
+          sıfır olurdu (hedef hep şirket).
+        */}
+        {sosyalHucre !== 'yok' && (
+          <div className={SAYAC_SATIRI} aria-busy={sosyalHucre === 'yukleniyor' || undefined}>
+            {sosyalHucre === 'yukleniyor' && (
+              <>
+                <SayacIskeleti />
+                <SayacIskeleti />
+                <SayacIskeleti />
+              </>
+            )}
+            {sosyalHucre === 'hazir' && satir?.sayaclar && (
+              <>
+                <Sayac deger={satir.sayaclar.paylasim} etiket="paylaşım" />
+                <Sayac
+                  deger={satir.sayaclar.baglanti}
+                  etiket="bağlantı"
+                  href="/baglantilar"
+                  onNavigate={satir.onNavigate}
+                />
+                <Sayac
+                  deger={satir.sayaclar.takip}
+                  etiket="takip"
+                  href="/takip"
+                  onNavigate={satir.onNavigate}
+                />
+              </>
+            )}
+            {sosyalHucre === 'alinamadi' && (
+              <p className={`${SAYAC_OGESI} ${SAYAC_ETIKETI}`}>Paylaşım, bağlantı ve takip sayısı alınamadı</p>
+            )}
+          </div>
+        )}
       </div>
     </Card>
   );
 };
 
 /*
-  KARTIN SAYACI
+  KARTIN SAYACI — satır içi: kalın sayı + gri etiket (X kalıbı).
 
-  `StatItem`in (src/ui) aynısı, yalnız daha büyük tipografide: bu kartta
-  sayılar başlık ölçüsünde okunuyor. Ortak bileşen değiştirilmedi, çünkü
-  başka ekranlar onu küçük ölçüde kullanıyor. Bağlantı gerçek `<a>`: orta
-  tuş ve yeni sekme çalışıyor, sol tık uygulama içi gezinme.
+  Bağlantı gerçek `<a>`: orta tuş ve yeni sekme çalışıyor, sol tık
+  uygulama içi gezinme. Kutu `SAYAC_OGESI` (`min-h-11`): bağlantılı
+  sayacın dokunma hedefi 44 piksel, bağlantısız olan da aynı yükseklikte.
 */
 const Sayac: React.FC<{
   deger: number;
@@ -811,24 +750,11 @@ const Sayac: React.FC<{
 }> = ({ deger, etiket, href, onNavigate }) => {
   const icerik = (
     <>
-      {/*
-        ÖLÇÜ TEK, ŞİRKET PROFİLİYLE AYNI (kullanıcı kararı, 20 Eylül
-        2026: "tüm profil görüntüleri şirket gibi olsun").
-
-        Önce iki kırılım vardı: telefonda `text-xl`, lg'de `text-[28px]`
-        — çünkü şerit telefonda fotoğrafın yanındaki dar sütundaydı ve 28
-        piksellik sayı üç hücreye sığmıyordu. Şerit artık tam genişlikte
-        ve ortada (şirketteki gibi), dar sütun diye bir şey kalmadı;
-        `text-2xl` üç kırılımda da sığıyor. Ölçüldü (Chromium): hücre
-        genişliği 375'te 114, 390'da 119, 1440'ta 437 piksel.
-      */}
-      <span className="block text-2xl font-extrabold leading-tight tabular-nums text-gray-900">
-        {deger}
-      </span>
-      <span className="mt-0.5 block text-sm text-gray-600">{etiket}</span>
+      <span className={SAYAC_SAYISI}>{deger}</span>
+      <span className={SAYAC_ETIKETI}>{etiket}</span>
     </>
   );
-  if (!href) return <span className="block min-w-0 py-1 text-center">{icerik}</span>;
+  if (!href) return <span className={SAYAC_OGESI}>{icerik}</span>;
   return (
     <a
       href={href}
@@ -838,7 +764,7 @@ const Sayac: React.FC<{
         olay.preventDefault();
         onNavigate(href);
       }}
-      className={`mx-2 block min-h-11 min-w-0 rounded-xl py-1 text-center transition-colors hover:bg-gray-50 ${ODAK_HALKASI}`}
+      className={`${SAYAC_OGESI} hover:underline ${ODAK_HALKASI}`}
     >
       {icerik}
     </a>

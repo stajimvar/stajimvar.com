@@ -71,8 +71,15 @@ test('rozet okul adinin YERINE gecmiyor', () => {
     soylemiyor. Ad metin olarak yaninda kalmali.
   */
   assert.ok(BASLIK.includes('<OkulRozeti okul={okul} logoAdresi='));
+  /*
+    24 Eylul 2026 (X kalibi): okul adi meta satirinin bir ogesi. Sart
+    AYNI -- ad metin olarak rozetin yaninda kaliyor. Degisen: okul
+    girilmemisse "Okulun eksik" yer tutucusu artik yazilmiyor; eksik adim
+    ayar menusunun ilk satirinda ve dolulukta halkasinda anlatiliyor
+    (gerekce ProfilBasligi'ndaki meta satiri yorumunda).
+  */
   assert.ok(
-    BASLIK.includes("{okul || 'Okulun eksik'}"),
+    BASLIK.includes('{okul && <MetaOgesi ikon={GraduationCap} etiket="Okul">{okul}</MetaOgesi>}'),
     'okul adi metin olarak kalmali',
   );
 });
@@ -136,6 +143,7 @@ test('logo fotografin kosesinde, yuvarlak ve beyaz halkali', () => {
   /* Fotografin kosesi: kapsayici `relative`, rozet `absolute`. */
   assert.match(BASLIK, /<div className="relative">[\s\S]{0,1500}<\/Halka>/);
   assert.match(BASLIK, /<span className="absolute bottom-0 right-0 sm:/);
-  /* Satirda rozet kalmadi: okul adi tek basina. */
-  assert.ok(BASLIK.includes(`<p className="min-w-0 break-words">{okul || 'Okulun eksik'}</p>`));
+  /* Satirda rozet kalmadi: okul adi tek basina (24 Eylul 2026'dan beri meta satirinin ogesi). */
+  const okulOgesi = BASLIK.slice(BASLIK.indexOf('{okul && <MetaOgesi'));
+  assert.ok(okulOgesi.startsWith('{okul && <MetaOgesi ikon={GraduationCap} etiket="Okul">{okul}</MetaOgesi>}'));
 });

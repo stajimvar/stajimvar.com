@@ -1,10 +1,27 @@
 import React from 'react';
-import { Briefcase, Link as LinkIkonu, Pencil, Plus } from 'lucide-react';
+import { Briefcase, Link as LinkIkonu, MapPin, Pencil, Plus, Users } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI, RENK_PRIMARY } from '../lib/renk-token';
 import { guvenliDisAdres } from '../lib/guvenli-url.mjs';
 import type { SosyalPaylasim } from '../lib/queries/sosyal';
 import type { SirketAcikKimlik } from '../lib/sirket-veri';
 import { PaylasimIzgarasi } from '../components/sosyal/PaylasimIzgarasi';
+import {
+  AVATAR_BINMESI,
+  AVATAR_SATIRI,
+  BIYOGRAFI,
+  HAP,
+  HAP_BIRINCIL,
+  HAP_SIRASI,
+  IKON_HAP,
+  KIMLIK_BANDI,
+  META_SATIRI,
+  MetaOgesi,
+  SAYAC_ETIKETI,
+  SAYAC_OGESI,
+  SAYAC_SATIRI,
+  SAYAC_SAYISI,
+} from '../components/sosyal/ProfilKimlikKalibi';
+import { KAPAK_BANDI_SINIFI } from '../lib/kapak-orani';
 import {
   FotografPaylasGirisi,
   type FotografPaylasKolu,
@@ -37,8 +54,9 @@ import {
  *
  * TAKİP ET DÜĞMESİ ZİYARETÇİ DALINDA (karar: 18 Eylül 2026)
  * -------------------------------------------------------
- * `ziyaretciEylemi` yalnız `sahip` VERİLMEDİĞİNDE çiziliyor ve sayaçların
- * altında, öğrenci profilindeki "Bağlantı kur" ile aynı yerde duruyor.
+ * `ziyaretciEylemi` yalnız `sahip` VERİLMEDİĞİNDE çiziliyor ve logonun
+ * sağındaki hap sırasında, öğrenci profilindeki "Bağlantı kur" ile aynı
+ * yerde duruyor (X kalıbı, 24 Eylül 2026).
  * Düğmenin kendisi (`TakipDugmesi`) bakanın kimliğini istiyor; kararı
  * çağıran (`SirketSayfasi`) veriyor. Sahip dalında bu prop hiç
  * verilmiyor: kendi sayfanı takip etmek şemada da yasak
@@ -50,10 +68,11 @@ import {
  * hiçbiri yok — #121'deki resmî hesap kuralıyla aynı gerekçe (kurum
  * kimliği). Bu bileşen o alanları prop olarak bile almıyor.
  *
- * DEKORATİF HALKA, ROZET YOK
- * --------------------------
- * Logo çevresindeki mavi halka referans tasarımdan; anlam taşımıyor
- * (`aria-hidden` bir kenarlık). "Doğrulanmış" rozeti bilerek YOK:
+ * BEYAZ HALKA, ROZET YOK
+ * ---------------------
+ * Logo çevresindeki halka X kalıbındaki beyaz ayraç (`ring-4 ring-white`):
+ * logoyu bandın üstünde ayırıyor, anlam taşımıyor. "Doğrulanmış" rozeti
+ * bilerek YOK:
  * `companies.verified` bu ekranda okunmuyor, olmayan bir güven işareti
  * ima edilmiyor.
  */
@@ -108,7 +127,11 @@ interface GorunumProps {
   bildirim?: string | null;
 }
 
-const BIRINCIL = `inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold ${RENK_PRIMARY.zemin} ${RENK_PRIMARY.zeminHover} ${RENK_PRIMARY.yazi} ${RENK_GECISI} ${ODAK_HALKASI}`;
+/*
+  Başlığın hapları `ProfilKimlikKalibi`nden (X kalıbı, üç profil ekranı
+  aynı modül). `IKINCIL` yalnız başlığın DIŞINDAKİ panel düğmelerinde
+  (boş durum, Hakkımızda) kalıyor: onlar hap sırasının parçası değil.
+*/
 const IKINCIL = `inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 text-sm font-bold text-gray-900 hover:bg-gray-50 ${RENK_GECISI} ${ODAK_HALKASI}`;
 const KART = 'rounded-2xl border border-gray-200 bg-white p-2.5 sm:p-3.5';
 
@@ -153,12 +176,14 @@ const SirketLogosu: React.FC<{
     gösteriyordu. Ölçü eşitlendi: `sm:h-24 w-24` yerine `sm:h-28 w-28`,
     üstüne `lg:h-36 w-36`. Mobil 80 pikselde AYNEN kaldı (zaten eşitti).
 
-    HALKA VE ZEMİN EŞİTLENMEDİ: `ring-2 ring-blue-600 ring-offset-2` ve
-    `bg-white` şirketin kendi kimliği; öğrencinin `ring-1
-    ring-blue-500/20`ine çevrilmedi — istenen yalnız ölçüydü.
+    HALKA X KALIBINDA (24 Eylül 2026): logo artık bandın alt kenarına
+    biniyor; eski `ring-2 ring-blue-600 ring-offset-2` bandın üstünde mavi
+    bir çember ve beyaz bir boşluk bırakıyordu. Üç ekran aynı beyaz ayracı
+    (`ring-4 ring-white`) taşıyor. `bg-white` kalıyor: saydam logolar
+    bandın rengine karışmasın.
   */
   const olcu =
-    'flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-blue-600 ring-offset-2 sm:h-28 sm:w-28 lg:h-36 lg:w-36';
+    'flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-4 ring-white sm:h-28 sm:w-28 lg:h-36 lg:w-36';
 
   if (!url || bozuk) {
     /*
@@ -189,28 +214,27 @@ const SirketLogosu: React.FC<{
 };
 
 /**
- * Tek sayaç — üç durum ayrı.
+ * Tek sayaç — satır içi (X kalıbı), üç durum ayrı.
  *
- * "Alınamadı" ile "sıfır" aynı hücreye düşmüyor: hata dalı sayı değil
- * tire basıyor ve etiket bunu söylüyor. `aria-busy` yükleniyor dalında.
+ * "Alınamadı" ile "sıfır" aynı yere düşmüyor: hata dalı sayı değil tire
+ * basıyor ve etiketin yanında "alınamadı" yazıyor. `aria-busy` yükleniyor
+ * dalında; iskelet sayı genişliğinde, kutu `min-h-11` olduğu için sayı
+ * gelince satır zıplamıyor.
  */
 const Sayac: React.FC<{ etiket: string; deger: SayacDurumu }> = ({ etiket, deger }) => (
-  <div
-    className="flex min-w-0 flex-col items-center py-1 text-center"
-    aria-busy={deger.durum === 'yukleniyor' || undefined}
-  >
-    <dd className="order-1 text-2xl font-extrabold leading-tight tabular-nums text-gray-900">
+  <div className={SAYAC_OGESI} aria-busy={deger.durum === 'yukleniyor' || undefined}>
+    <dd className={`order-1 ${SAYAC_SAYISI}`}>
       {deger.durum === 'hazir' ? (
         deger.deger
       ) : deger.durum === 'yukleniyor' ? (
-        <span aria-hidden className="inline-block h-7 w-8 animate-pulse rounded bg-gray-100" />
+        <span aria-hidden className="inline-block h-4 w-5 animate-pulse rounded bg-gray-100 align-middle" />
       ) : (
         <span aria-hidden>—</span>
       )}
     </dd>
-    <dt className="order-2 mt-0.5 text-sm text-gray-600">
+    <dt className={`order-2 ${SAYAC_ETIKETI}`}>
       {etiket}
-      {deger.durum === 'hata' && <span className="block text-xs text-gray-500">alınamadı</span>}
+      {deger.durum === 'hata' && <span className="text-xs text-gray-500"> alınamadı</span>}
       {deger.durum === 'yukleniyor' && <span className="sr-only">yükleniyor</span>}
     </dt>
   </div>
@@ -246,9 +270,6 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
   const paylasKolu = React.useRef<FotografPaylasKolu>(null);
   const site = guvenliDisAdres(kimlik.siteUrl);
   const siteKonagi = site ? new URL(site).hostname.replace(/^www\./, '') : null;
-  const konumSatiri = [kimlik.konum, kimlik.calisanSayisi ? `${kimlik.calisanSayisi} çalışan` : null]
-    .filter(Boolean)
-    .join(' · ');
 
   /*
     ETİKET "ŞİRKETTEN KARELER", KİMLİK 'paylasimlar' (kullanıcı bildirimi,
@@ -283,9 +304,10 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
     ziyaretçi dalında bileşen hiç kurulmuyor, DOM'a girmiyor.
 
     Sıra kullanıcının kararı (20 Eylül 2026): İlan paylaş, Fotoğraf paylaş,
-    Profili düzenle. İki "paylaş" eylemi yan yana; düzenleme sonda. Telefonda
-    ikisi ızgaranın ilk satırını paylaşıyor, tam genişliği alan `col-span-2`
-    bu yüzden artık Profili düzenle'de.
+    Profili düzenle. X kalıbında (24 Eylül 2026) düğme hap sırasında
+    yuvarlak bir ikon düğmesi (`IKON_HAP`): etiket verilmiyor, anlamı
+    bileşenin kendi `aria-label="Fotoğraf paylaş"`ı taşıyor. Gerekçe
+    (telefonda üç metinli hap sığmıyor) başlıktaki hap sırası yorumunda.
   */
   const paylasGirisi = sahip && sahip.paylasabilirMi && (
     <FotografPaylasGirisi
@@ -295,9 +317,8 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
       onNavigate={onNavigate}
       onTamamlandi={sahip.onPaylasimEklendi}
       sabitKitle="sirket"
-      etiket="Fotoğraf paylaş"
       ikonSinifi="h-5 w-5"
-      dugmeSinifi={`${BIRINCIL} shrink-0 sm:min-w-52`}
+      dugmeSinifi={IKON_HAP}
     />
   );
 
@@ -313,197 +334,176 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
     <div className="space-y-0 sm:space-y-4">
       <header className="border-b border-gray-200 bg-white sm:overflow-hidden sm:rounded-2xl sm:border">
         {/*
-          KİMLİK BANDI — ZEMİNİ LOGONUN BULANIK HÂLİ
+          ÜST BANT — ZEMİNİ LOGONUN BULANIK HÂLİ (X kalıbı, 24 Eylül 2026)
 
-          Tam ekran fotoğraf görüntüleyicideki kalıbın aynısı
-          (`ProfilFotografiGoruntuleyici`): görselin kendisi `object-cover`
-          ile kabı dolduruyor, `blur-2xl` ile bulanıklaşıyor, `scale-110`
-          bulanıklığın kenarda açtığı şeffaf şeridi kabın dışına atıyor ve
-          kap `overflow-hidden` ile kırpıyor.
+          Şirketin kapak kolonu yok. Bulanık logo zemini eskiden kimlik
+          metinlerinin ARKASINDAYDI; X kalıbında metin bandın altına indi,
+          zemin de öğrenci kapağıyla AYNI oranlı bir banda taşındı (3:1,
+          lg'de 5:1 — sınıf `lib/kapak-orani`dan, tek yerde). Üç profil
+          ekranının üst bandı bu yüzden aynı yükseklikte.
 
-          ÖRTÜ BEYAZ, KOYU DEĞİL: bandın metinleri (gray-900 ad, gray-600
-          kullanıcı adı, gray-700 satırlar, blue-700 site) koyu yazı
-          ailesinden; koyu bir örtü hepsini beyaza çevirmeyi, yani bu
-          ekranın tipografi renklerini yeniden yazmayı gerektirirdi.
-          Örtünün opaklığı EN KÖTÜ DURUMA göre seçildi. Logo tamamen
-          siyah olsaydı zemin #D9D9D9 olur (0.85·255) ve WCAG 2.1 nispi
-          parlaklıkla HESAPLANAN oranlar: ad (#111827) 12.54:1,
-          @kullanıcı adı (#4B5563) 5.34:1, gri satırlar (#374151)
-          7.28:1, açıklama (#1F2937) 10.37:1, site bağlantısı (#1D4ED8)
-          4.74:1. Beşi de AA gövde eşiğinin (4.5:1) üstünde. Örtü %80
-          olsaydı site bağlantısı 4.17:1'e düşüyordu ve eşiğin altında
-          kalıyordu; %85 bu yüzden.
+          Kalıp tam ekran görüntüleyicideki gibi: görsel `object-cover` ile
+          bandı dolduruyor, `blur-2xl` ile bulanıklaşıyor, `scale-110`
+          bulanıklığın kenarda açtığı şeffaf şeridi bandın dışına atıyor,
+          bant `overflow-hidden` ile kırpıyor.
+
+          BEYAZ ÖRTÜ KALKTI: %85'lik örtü, bandın ÜSTÜNDEKİ metinlerin
+          (ad, @ad, site bağlantısı) kontrastı için seçilmişti. Bandın
+          üstünde artık metin yok; örtü yalnız logonun rengini
+          soldururdu.
+
+          Logo yoksa ya da adres kırıksa zemin de yok: bant nötr
+          `bg-gray-100` — stok görsel, doku ya da gradyan KONMUYOR.
         */}
-        <div className="relative overflow-hidden px-4 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6">
+        <div className={`relative w-full overflow-hidden bg-gray-100 ${KAPAK_BANDI_SINIFI}`}>
           {bulanikZemin && (
-            <>
-              <img
-                src={bulanikZemin}
-                alt=""
-                aria-hidden
-                draggable={false}
-                className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover blur-2xl"
+            <img
+              src={bulanikZemin}
+              alt=""
+              aria-hidden
+              draggable={false}
+              className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover blur-2xl"
+            />
+          )}
+        </div>
+
+        {/* ------------------------------------------- kimlik bandı */}
+        <div className={KIMLIK_BANDI}>
+          <div className={AVATAR_SATIRI}>
+            {/* Logo banda yarı yarıya biniyor; `relative` kap bandın ÜSTÜNDE çizdiriyor. */}
+            <div className={AVATAR_BINMESI}>
+              <SirketLogosu
+                url={kimlik.logoUrl}
+                ad={kimlik.ad}
+                bozuk={logoBozuk}
+                onBozuk={() => setLogoBozuk(true)}
               />
-              <div aria-hidden className="pointer-events-none absolute inset-0 bg-white/85" />
-            </>
+            </div>
+
+            {/*
+              HAP SIRASI — logo satırının sağı, alt hiza (X'teki "Edit
+              profile" / "Follow" yeri).
+
+              ZİYARETÇİ: tek eylem, "Takip et". Görünüm düğmeyi kendisi
+              çizmiyor; yuvayı YALNIZ sahip yokken açıyor, düğmeyi ziyaretçi
+              kabı veriyor (bakan sayfanın sahibiyse hiç vermiyor).
+
+              SAHİP: İlan paylaş → Fotoğraf paylaş → Profili düzenle
+              (kullanıcının 20 Eylül sırası; düzenleme X'teki gibi en sağda).
+
+              TELEFONDA NE YAPILDI (karar bu işte verildi): üç metinli hap
+              telefonda logonun yanına sığmıyor. Ölçüldü (Chromium, yerleşim
+              genişliği 360): logonun yanında 236 piksel kalıyor; "İlan
+              paylaş" 123.6 + metinli "Fotoğraf paylaş" 156.1 (öğrenci
+              ekranındaki aynı hap) + "Profili düzenle" 128.7 + aralar 12 =
+              420.4 piksel. Aşağıdaki hâliyle 48 + 44 + 128.7 + 12 = 232.7,
+              tek satır. X'in
+              yolu "tek hap + taşma menüsü"; burada taşma menüsü KURULMADI,
+              çünkü yeni bir açılır menü yeni bir odak/kapanış davranışı
+              demek ve bu işin konusu düzen. Onun yerine:
+                - İlan paylaş telefonda yalnız ikon (metin `sr-only`, `sm:`
+                  üstünde görünür),
+                - Fotoğraf paylaş her ekranda yuvarlak ikon düğmesi —
+                  `FotografPaylasGirisi` zaten `aria-label="Fotoğraf
+                  paylaş"` taşıyor,
+                - Profili düzenle metinli.
+              Üçü de her zaman görünür ve tek dokunuşla ulaşılıyor; sıra
+              yine `flex-wrap` taşıyor, sığmazsa alt satıra iniyor, kesilmiyor.
+            */}
+            <div className={HAP_SIRASI}>
+              {!sahip && ziyaretciEylemi && (
+                <>{ziyaretciEylemi}</>
+              )}
+              {sahip && (
+                <>
+                  <a
+                    href={sahip.ilanOlusturYolu}
+                    onClick={icTiklama(onNavigate, sahip.ilanOlusturYolu)}
+                    className={HAP_BIRINCIL}
+                  >
+                    <Briefcase aria-hidden className="h-4 w-4 shrink-0" />
+                    <span className="sr-only sm:not-sr-only">İlan paylaş</span>
+                  </a>
+                  {paylasGirisi}
+                  <a
+                    href={sahip.duzenleYolu}
+                    onClick={icTiklama(onNavigate, sahip.duzenleYolu)}
+                    className={HAP}
+                  >
+                    Profili düzenle
+                  </a>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Ad + "Şirket hesabı" rozeti; `break-words`: uzun ad kırpılmıyor, sarılıyor. */}
+          <div className="mt-3 flex max-w-full flex-wrap items-center gap-x-2 gap-y-1">
+            <h1 className="min-w-0 break-words text-xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-2xl">
+              {kimlik.ad}
+            </h1>
+            <span
+              className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${RENK_PRIMARY.yumusakZemin} ${RENK_PRIMARY.metin}`}
+            >
+              Şirket hesabı
+            </span>
+          </div>
+          {kullaniciAdi && (
+            <p className="mt-0.5 max-w-full truncate text-sm text-gray-600 sm:text-base">@{kullaniciAdi}</p>
           )}
 
           {/*
-            Ortalanmış sütun `max-w-2xl` ile sınırlı: 1280 pikselde bant
-            1216 piksel geniş ve açıklama satırı ekranın bir ucundan
-            ötekine uzanıyordu — ortalı metinde bu okunmuyor.
+            AÇIKLAMA — X sırası: ad bloğunun altında, meta satırının üstünde.
+            `line-clamp-3`: tam metni "Hakkımızda" sekmesi taşıyor.
           */}
-          {/* Sola hizalı kimlik (23 Eylül 2026): üç profil ekranı aynı kalıbı paylaşıyor. */}
-          <div className="relative mx-auto flex max-w-2xl flex-col items-start text-left">
-            <SirketLogosu
-              url={kimlik.logoUrl}
-              ad={kimlik.ad}
-              bozuk={logoBozuk}
-              onBozuk={() => setLogoBozuk(true)}
-            />
-            {/* `ring-offset-2` kadar nefes payı logonun altında zaten var. */}
-            <div className="mt-3 flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1">
-              {/* `break-words`: uzun ad kırpılmıyor, sarılıyor. */}
-              <h1 className="min-w-0 break-words text-xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-2xl">
-                {kimlik.ad}
-              </h1>
-              <span
-                className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${RENK_PRIMARY.yumusakZemin} ${RENK_PRIMARY.metin}`}
-              >
-                Şirket hesabı
-              </span>
+          {kimlik.aciklama && <p className={`${BIYOGRAFI} line-clamp-3`}>{kimlik.aciklama}</p>}
+
+          {/*
+            META SATIRI — sektör, konum, çalışan sayısı, site; ikonlu, gri,
+            sarıyor. Girilmemiş bilgi UYDURULMUYOR: öğe yoksa çizilmiyor.
+
+            Site adresi güvenli mutlak HTTPS'e çevriliyor (`guvenliDisAdres`);
+            çevrilemeyen adres hiç çizilmiyor. Konak adı `break-all`: uzun
+            adres telefonda taşmıyor. Bağlantı `min-h-11`: 44 piksellik
+            dokunma hedefi.
+          */}
+          {(kimlik.sektor || kimlik.konum || kimlik.calisanSayisi || (site && siteKonagi)) && (
+            <div className={META_SATIRI}>
+              {kimlik.sektor && (
+                <MetaOgesi ikon={Briefcase} etiket="Sektör">
+                  {kimlik.sektor}
+                </MetaOgesi>
+              )}
+              {kimlik.konum && (
+                <MetaOgesi ikon={MapPin} etiket="Konum">
+                  {kimlik.konum}
+                </MetaOgesi>
+              )}
+              {kimlik.calisanSayisi && (
+                <MetaOgesi ikon={Users} etiket="Çalışan sayısı">
+                  {kimlik.calisanSayisi} çalışan
+                </MetaOgesi>
+              )}
+              {site && siteKonagi && (
+                <a
+                  href={site}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`inline-flex min-h-11 max-w-full items-center gap-1 font-semibold ${RENK_PRIMARY.metin} hover:underline ${ODAK_HALKASI}`}
+                >
+                  <LinkIkonu aria-hidden className="h-4 w-4 shrink-0" />
+                  <span className="min-w-0 break-all">{siteKonagi}</span>
+                </a>
+              )}
             </div>
-            {kullaniciAdi && (
-              <p className="mt-0.5 max-w-full truncate text-sm text-gray-600 sm:text-base">@{kullaniciAdi}</p>
-            )}
-            {/* Girilmemiş bilgi UYDURULMUYOR: satır yoksa çizilmiyor. */}
-            {kimlik.sektor && (
-              <p className="mt-0.5 max-w-full break-words text-sm text-gray-700 sm:text-base">{kimlik.sektor}</p>
-            )}
-            {konumSatiri && (
-              <p className="mt-0.5 max-w-full break-words text-sm text-gray-700 sm:text-base">{konumSatiri}</p>
-            )}
+          )}
 
-            {kimlik.aciklama && (
-              <p className="mt-3 line-clamp-3 max-w-full whitespace-pre-line break-words text-sm leading-relaxed text-gray-800 sm:text-base">
-                {kimlik.aciklama}
-              </p>
-            )}
-            {/*
-              Site adresi güvenli mutlak HTTPS'e çevriliyor (`guvenliDisAdres`);
-              çevrilemeyen adres hiç çizilmiyor. Konak adı `break-all`: uzun
-              adres telefonda taşmıyor.
-            */}
-            {site && siteKonagi && (
-              <a
-                href={site}
-                target="_blank"
-                rel="noreferrer"
-                className={`mt-1.5 inline-flex min-h-11 max-w-full items-center gap-1.5 text-sm font-semibold ${RENK_PRIMARY.metin} hover:underline sm:text-base ${ODAK_HALKASI}`}
-              >
-                <LinkIkonu aria-hidden className="h-4 w-4 shrink-0" />
-                <span className="min-w-0 break-all">{siteKonagi}</span>
-              </a>
-            )}
-          </div>
-        </div>
-
-        {/*
-          BANDIN ALTI: sayaçlar ve düğmeler bandın bulanık zeminine
-          girmiyor — ölçüleri, ızgarası ve dizilişi değişmedi, yalnızca
-          ayrı bir beyaz alana taşındı. Üst boşluğu bandın `pb`si
-          veriyor; sayaçların kendi `mt-3`ü bu yüzden kalktı.
-        */}
-        <div className="px-4 pb-4 sm:px-6 sm:pb-6">
-          {/* Sayaçlar arasında dikey çizgi YOK (referans); eşit üç sütun. */}
-          <dl className="grid grid-cols-3 border-t border-gray-100 pt-3">
+          {/* SAYAÇ SATIRI — tek satır, satır içi; dikey çizgi ve üç sütunlu ızgara yok (X). */}
+          <dl className={SAYAC_SATIRI}>
             <Sayac etiket="paylaşım" deger={sayaclar.paylasim} />
             <Sayac etiket="aktif ilan" deger={sayaclar.aktifIlan} />
             <Sayac etiket="takipçi" deger={sayaclar.takipci} />
           </dl>
-
-          {/*
-            Ziyaretçi eylemi sahip düğmeleriyle AYNI yerde ve aynı hizada:
-            telefonda tam genişlik, `sm:` üstünde içerik genişliğinde ve
-            ortada (ölçü gerekçesi sahip dalındaki yorumda).
-          */}
-          {!sahip && ziyaretciEylemi && (
-            <div className="mt-3 flex flex-col items-stretch sm:items-center">{ziyaretciEylemi}</div>
-          )}
-
-          {/*
-            ÖĞRENCİNİN GÖRDÜĞÜ SAYFA BAĞLANTISI KALKTI (kullanıcı isteği,
-            20 Eylül 2026: ekran görüntüsünde üstünü çizip kaldırılmasını
-            istedi). Eylem satırının altında `ExternalLink` ikonlu sakin
-            bir bağlantı duruyordu; onunla birlikte `space-y-2` taşıyan
-            sarmalayıcı ve bağlantıyı ortalayan `flex` kabı da gitti —
-            tek çocuk kalınca ikisi de iş görmüyordu. `mt-3` artık
-            doğrudan ızgaranın üstünde: SAYAÇ SATIRI İLE ARASI 12
-            PİKSELDE AYNI, yalnız alttaki fazlalık gitti (8 piksel
-            boşluk + 44 piksellik bağlantı = 52 piksel). Kabın kendi
-            `pb-4 sm:pb-6`si duruyor: o yan boşlukla (`px-4`/`px-6`)
-            eşleşen kart dolgusu ve aynı kap ziyaretçi dalında da
-            kullanılıyor.
-
-            ÖLÇÜLDÜ (önce/sonra, eylem satırının altından sekme çubuğunun
-            üstüne): 375 ve 390 pikselde 69 → 17 piksel, 768 pikselden
-            yukarıda 93 → 41 piksel. Sayaç satırı ile eylem satırı arası
-            iki ölçümde de 12 piksel — üstteki denge bozulmadı.
-
-            Telefonda iki eşit sütun (referans); `sm:` üstünde düğmeler
-            içerik genişliğinde ve ortada — 1280 pikselde ölçüldü: tam
-            genişlikte her biri 569 piksel oluyor ve iki kocaman şerit
-            sayaçları eziyordu.
-
-            SIRA: İlan paylaş → Fotoğraf paylaş → Profili düzenle
-            (kullanıcı kararı, 20 Eylül 2026). İki paylaşma eylemi yan
-            yana, düzenleme sonda. Telefonda ilk satır ikisini taşıyor,
-            Profili düzenle `col-span-2` ile alt satırı tam kaplıyor —
-            üç hücrelik ızgarada sonuncusu yarım hücrede yalnız
-            kalmasın diye. `sm:` üstünde satır flex olduğu için
-            `col-span-2` etkisiz (flex öğesinde `grid-column` işlemiyor).
-
-            ÖLÇÜLDÜ (Chromium, bu dosyanın sınıflarıyla ve aynı
-            kapsayıcı zinciriyle kurulmuş düzen): 640 pikselde satır
-            542 piksel, üç düğme `min-w-52` ile 3·208 + 2·12 = 648
-            piksel isterdi ve taşardı — `sm:flex-wrap` sayesinde
-            üçüncüsü alta iniyor. 768 pikselde satır 670 piksel, üçü
-            tek sırada. Telefonda 375 pikselde ilk satırın hücreleri
-            166'şar, 390 pikselde 173'er piksel; Profili düzenle alt
-            satırda 343 / 358 piksel. Üç etiket de tek satır, yatay
-            taşma 0, yükseklik 48. DAR SINIR ÖLÇÜLDÜ: "Fotoğraf
-            paylaş"ın kendi genişliği 162 piksel, yani 375 piksel bu
-            düzenin tek satır kaldığı en dar ekran — 360 ve 320
-            pikselde etiket iki satıra sarıyor. Orada da kırpılma ve
-            taşma yok, `min-h-12` yüksekliği 48 pikselde tutuyor.
-          */}
-          {sahip && (
-            <div className="mt-3 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-center">
-              {/*
-                ETİKET "İLAN PAYLAŞ" (kullanıcı kararı, 20 Eylül 2026):
-                yanındaki "Fotoğraf paylaş" ile aynı fiili kullanıyor.
-                Yalnız görünen metin değişti — rota (`ilanOlusturYolu`),
-                tıklama ve prop adları aynı kaldı.
-              */}
-              <a
-                href={sahip.ilanOlusturYolu}
-                onClick={icTiklama(onNavigate, sahip.ilanOlusturYolu)}
-                className={`${BIRINCIL} sm:min-w-52`}
-              >
-                <Briefcase aria-hidden className="h-5 w-5" />
-                İlan paylaş
-              </a>
-              {paylasGirisi}
-              <a
-                href={sahip.duzenleYolu}
-                onClick={icTiklama(onNavigate, sahip.duzenleYolu)}
-                className={`${IKINCIL} col-span-2 sm:min-w-52`}
-              >
-                <Pencil aria-hidden className="h-4 w-4" />
-                Profili düzenle
-              </a>
-            </div>
-          )}
 
           {bildirim && (
             <p role="status" className="mt-3 text-sm font-semibold text-gray-700">
