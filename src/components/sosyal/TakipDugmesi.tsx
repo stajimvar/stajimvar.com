@@ -1,6 +1,6 @@
 import React from 'react';
 import { Check } from 'lucide-react';
-import { BIRINCIL_EYLEM, ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
+import { HAP, HAP_BIRINCIL } from './ProfilKimlikKalibi';
 import { SosyalHata, takibiBirak, takipEdiyorMuyum, takipEt } from '../../lib/queries/sosyal';
 
 /**
@@ -33,8 +33,11 @@ import { SosyalHata, takibiBirak, takipEdiyorMuyum, takipEt } from '../../lib/qu
  * burada değil: öğrenci profilinde bu bileşen çağrılmıyor ve sunucu o
  * yönde satırı zaten reddediyor (`takip_edilebilir`).
  *
- * ÖLÇÜ "BAĞLANTI KUR" İLE AYNI: `BIRINCIL_EYLEM` (min-h-12). İki durum
- * aynı yükseklikte ki geçişte sayfa zıplamasın.
+ * HAP BİÇİMİ, "BAĞLANTI KUR" İLE AYNI KALIP (kullanıcı onayı, 24 Eylül
+ * 2026): düğme şirket profilinin hap sırasında duruyor. Biçim
+ * `ProfilKimlikKalibi`nden — "Takip et" eylem çağrısı, dolu hap
+ * (`HAP_BIRINCIL`); "Takip ediliyor" durum, çerçeveli hap (`HAP`). İki
+ * durum aynı yükseklikte (44 piksel) ki geçişte sayfa zıplamasın.
  */
 
 interface TakipDugmesiProps {
@@ -49,7 +52,21 @@ interface TakipDugmesiProps {
   onTakipciFarki: (fark: 1 | -1) => void;
 }
 
-const IKINCIL = `inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-sm font-bold text-gray-900 hover:bg-gray-50 disabled:opacity-40 ${RENK_GECISI} ${ODAK_HALKASI}`;
+/*
+  `disabled:` sınıfları kalıbın dizesine EKLENİYOR, değiştirmiyor: kalıpta
+  karşılıkları yok, çakışma doğmuyor.
+
+  SABİT ALT GENİŞLİK `min-w-40` (160 piksel): iki durumun metni farklı
+  uzunlukta ("Takip et" / onay işaretli "Takip ediliyor"). Genişlik
+  metne göre değişseydi dokunuşta hap sırası kayar ve parmağın altındaki
+  düğme yer değiştirirdi. Ölçüldü (Chromium): doğal genişlik "Takip et"
+  83.9, "Takip ediliyor" 144.2 piksel. `min-w-36` (144) uzun durumu 0.2
+  piksel farkla karşılamıyordu; 160 ikisini de aynı genişlikte tutuyor.
+  Eski `w-full sm:w-auto sm:min-w-52` kalktı:
+  düğme artık avatarın yanındaki hap sırasında, tam genişlikte değil.
+*/
+const DOLU = `${HAP_BIRINCIL} min-w-40 disabled:cursor-default disabled:opacity-40`;
+const CERCEVELI = `${HAP} min-w-40 disabled:cursor-default disabled:opacity-40`;
 
 export const TakipDugmesi: React.FC<TakipDugmesiProps> = ({ bakanId, hedefId, onTakipciFarki }) => {
   const [takipEdiyor, setTakipEdiyor] = React.useState<boolean | null>(null);
@@ -108,7 +125,7 @@ export const TakipDugmesi: React.FC<TakipDugmesiProps> = ({ bakanId, hedefId, on
   if (durum === 'yukleniyor') {
     return (
       <div aria-busy="true" className="flex">
-        <span aria-hidden className="h-12 w-40 animate-pulse rounded-xl bg-gray-100" />
+        <span aria-hidden className="h-11 w-40 animate-pulse rounded-full bg-gray-100" />
       </div>
     );
   }
@@ -128,7 +145,7 @@ export const TakipDugmesi: React.FC<TakipDugmesiProps> = ({ bakanId, hedefId, on
         disabled={islemde}
         aria-pressed={takipEdiyor === true}
         onClick={() => void degistir()}
-        className={`${takipEdiyor ? IKINCIL : BIRINCIL_EYLEM} w-full sm:w-auto sm:min-w-52`}
+        className={takipEdiyor ? CERCEVELI : DOLU}
       >
         {takipEdiyor && <Check aria-hidden className="h-4 w-4" />}
         {takipEdiyor ? 'Takip ediliyor' : 'Takip et'}

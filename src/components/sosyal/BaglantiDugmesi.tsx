@@ -1,6 +1,7 @@
 import React from 'react';
 import { BaglantiKaldirMenusu } from './BaglantiKaldirMenusu';
-import { BIRINCIL_EYLEM, ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
+import { ODAK_HALKASI } from '../../lib/renk-token';
+import { HAP, HAP_BIRINCIL } from './ProfilKimlikKalibi';
 import {
   SosyalHata,
   baglantiDurumu,
@@ -71,7 +72,27 @@ interface BaglantiDugmesiProps {
   hedefId: string;
 }
 
-const IKINCIL = `inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-800 hover:bg-gray-50 disabled:opacity-40 ${RENK_GECISI} ${ODAK_HALKASI}`;
+/*
+  HAP BİÇİMİ (kullanıcı onayı, 24 Eylül 2026): düğme profil başlığının hap
+  sırasında duruyor ve öteki haplarla ayrışıyordu (`rounded-xl`, 48
+  piksellik `BIRINCIL_EYLEM`). Biçim `ProfilKimlikKalibi`nden — üçüncü
+  bir kopya yazılmadı. Rol durum başına, X'teki gibi:
+
+    EYLEM ÇAĞRISI (Bağlantı kur, Kabul et)   dolu hap (`HAP_BIRINCIL`)
+    İKİNCİL EYLEM (İsteği geri çek, Reddet)  çerçeveli hap (`HAP`)
+
+  DURUM BİR METİN, DÜĞME DEĞİL: "İstek gönderildi", "Bağlantınız var",
+  "Sana istek gönderdi" tıklanabilir bir hap olarak çizilmedi. X'te
+  "Pending" hapına basmak isteği geri çekiyor ve bu ancak üstüne
+  gelince görünüyor; burada geri çekme kendi adıyla ayrı bir düğme
+  ("İsteği geri çek") ve bu ayrım korundu — yalnız görünüm değişiyor,
+  eylemler ve durumlar aynı.
+
+  `disabled:` sınıfları kalıbın dizesine EKLENİYOR, değiştirmiyor: kalıpta
+  karşılıkları yok, hangisinin kazanacağı sorusu doğmuyor.
+*/
+const DOLU = `${HAP_BIRINCIL} disabled:cursor-default disabled:opacity-40`;
+const CERCEVELI = `${HAP} disabled:cursor-default disabled:opacity-40`;
 
 /**
  * Engel sebebi → kullanıcı cümlesi. `null` dönmesi "yazacak bir şey yok"
@@ -259,7 +280,7 @@ export const BaglantiDugmesi: React.FC<BaglantiDugmesiProps> = ({ bakanId, hedef
   if (durum === 'yukleniyor') {
     return (
       <div aria-busy="true" className="flex">
-        <span aria-hidden className="h-11 w-40 animate-pulse rounded-xl bg-gray-100" />
+        <span aria-hidden className="h-11 w-32 animate-pulse rounded-full bg-gray-100" />
       </div>
     );
   }
@@ -300,7 +321,7 @@ export const BaglantiDugmesi: React.FC<BaglantiDugmesiProps> = ({ bakanId, hedef
         type="button"
         disabled={islemde}
         onClick={() => eylemiCalistir(() => baglantiKur(bakanId, hedefId))}
-        className={BIRINCIL_EYLEM}
+        className={DOLU}
       >
         {islemde ? 'Gönderiliyor…' : 'Bağlantı kur'}
       </button>
@@ -313,7 +334,7 @@ export const BaglantiDugmesi: React.FC<BaglantiDugmesiProps> = ({ bakanId, hedef
           type="button"
           disabled={islemde}
           onClick={() => eylemiCalistir(() => baglantiKaldir(bakanId, hedefId))}
-          className={IKINCIL}
+          className={CERCEVELI}
         >
           {islemde ? 'Geri çekiliyor…' : 'İsteği geri çek'}
         </button>
@@ -328,7 +349,7 @@ export const BaglantiDugmesi: React.FC<BaglantiDugmesiProps> = ({ bakanId, hedef
             type="button"
             disabled={islemde}
             onClick={() => eylemiCalistir(() => baglantiYanitla(bakanId, hedefId, 'kabul'))}
-            className={BIRINCIL_EYLEM}
+            className={DOLU}
           >
             Kabul et
           </button>
@@ -336,7 +357,7 @@ export const BaglantiDugmesi: React.FC<BaglantiDugmesiProps> = ({ bakanId, hedef
             type="button"
             disabled={islemde}
             onClick={() => eylemiCalistir(() => baglantiYanitla(bakanId, hedefId, 'red'))}
-            className={IKINCIL}
+            className={CERCEVELI}
           >
             Reddet
           </button>
@@ -372,7 +393,7 @@ export const BaglantiDugmesi: React.FC<BaglantiDugmesiProps> = ({ bakanId, hedef
             type="button"
             disabled={islemde}
             onClick={() => eylemiCalistir(() => baglantiYenidenBaslat(hedefId))}
-            className={IKINCIL}
+            className={DOLU}
           >
             {islemde ? 'Gönderiliyor…' : 'Bağlantı kur'}
           </button>
@@ -404,7 +425,7 @@ export const BaglantiDugmesi: React.FC<BaglantiDugmesiProps> = ({ bakanId, hedef
             type="button"
             disabled={islemde}
             onClick={() => eylemiCalistir(() => baglantiYenidenGonder(bakanId, hedefId))}
-            className={IKINCIL}
+            className={DOLU}
           >
             {islemde ? 'Gönderiliyor…' : 'Bağlantı kur'}
           </button>
