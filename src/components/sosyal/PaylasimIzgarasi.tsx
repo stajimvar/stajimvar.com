@@ -152,11 +152,15 @@ export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-px';
 /** Ayrıntılı ızgara depodaki kart kalıbında (RehberKartlari.tsx). */
 /**
  * Galeri ızgarası — Instagram profil ızgarası gibi (17 Eylül 2026, kullanıcı
- * isteği): telefonda ve tablette üç, geniş ekranda (lg) dört sütun — Instagram
- * webdeki gibi. Dikey 3:4 karo, köşe yuvarlaması yok. Aralık telefonda 1 px,
+ * isteği): dikey 3:4 karo, köşe yuvarlaması yok. Aralık telefonda 1 px,
  * daha genişte 2 px. Son satırdaki az sayıda karo büyütülmüyor.
+ *
+ * HER GENİŞLİKTE ÜÇ SÜTUN (kullanıcı kararı 24 Eylül 2026: X sayfa düzeni,
+ * sol menü yok): geniş ekranda `lg:grid-cols-4` vardı çünkü ızgara
+ * sayfanın tamamına yayılıyordu. Profil artık en çok 600 piksellik bir
+ * sütunda; dört sütunda karolar 150 pikselin altına inerdi.
  */
-export const GALERI_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-0.5 lg:grid-cols-4';
+export const GALERI_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-0.5';
 
 /** Şirket sayfası: kare karo, her genişlikte üç sütun; aralık galeriyle aynı. */
 export const KARE_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-0.5';

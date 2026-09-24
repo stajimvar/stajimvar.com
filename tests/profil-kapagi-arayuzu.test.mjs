@@ -50,7 +50,6 @@ const oranlar = oku('src/lib/kapak-orani.ts');
 */
 const sabit = (ad) => Number(oranlar.match(new RegExp(`export const ${ad} = (\\d+);`))[1]);
 const KAPAK_ORANI = sabit('KAPAK_ORANI');
-const GENIS_EKRAN_ORANI = sabit('GENIS_EKRAN_ORANI');
 
 /* ------------------------------------------------------------------ */
 /*  KATILMA TARİHİ                                                     */
@@ -162,8 +161,8 @@ test('iki öğrenci ekranı kartın en üstünde 3:1 kapak bandı çiziyor, avat
     assert.match(kaynak, /ring-4 ring-white/, `${ad}: avatarı kapaktan ayıran beyaz halka`);
   }
   /* Köşeler kabın iç yarıçapına oturuyor: kart 20/1, başlık 16/1. */
-  assert.match(baslik, /<KapakFotografi ad=\{adYazimi\(ad\)\} yol=\{kapakYolu\} kip="bant" className="w-full sm:rounded-t-\[19px\]" \/>/);
-  assert.match(gorunum, /<KapakFotografi ad=\{baslik\} yol=\{profil\.kapakFotografiYolu\} kip="bant" className="w-full sm:rounded-t-\[15px\]" \/>/);
+  assert.match(baslik, /<KapakFotografi ad=\{adYazimi\(ad\)\} yol=\{kapakYolu\} className="w-full sm:rounded-t-\[19px\]" \/>/);
+  assert.match(gorunum, /<KapakFotografi ad=\{baslik\} yol=\{profil\.kapakFotografiYolu\} className="w-full sm:rounded-t-\[15px\]" \/>/);
   /*
     Negatif boşluk fotoğraf kabında. 24 Eylül 2026 (X kalıbı): kimlik
     bandının üst dolgusu kalktı, binme payı artık yalnız dairenin yarısı
@@ -315,75 +314,50 @@ test('kapak için dişli menüsünde ya da görüntüleyicide ikinci giriş yok'
 });
 
 /* ------------------------------------------------------------------ */
-/*  GENİŞ EKRAN ORANI VE KIRPMA KILAVUZU                               */
+/*  KAPAK HER GENİŞLİKTE 3:1                                           */
 /* ------------------------------------------------------------------ */
 
-test('bant lg ve üstünde 5:1, altında 3:1; oran kararı KapakFotografi içinde, kip ile açık', () => {
+test('kapak her genişlikte 3:1; oran ve sınıfı tek yerde, 5:1 kuralı yok', () => {
   /*
-    1440'ta 3:1 bant 1343×448 ölçüldü; 900 piksellik ekranın yarısı.
-    Geniş ekranda 5:1, altında dosyanın kendi oranı.
+    KULLANICI KARARI 24 EYLÜL 2026: X sayfa düzeni, sol menü yok. Profil
+    sütunu en çok 600 piksel; kapak geniş ekranda 600×200, X'in birebir
+    ölçüsü.
+
+    ESKİ ŞART: "`lg:` ve üstünde 5:1, altında 3:1" ve `KapakFotografi`nin
+    `kip` prop'u ("bant" / "dosya"). 5:1 kart 1343 piksele yayıldığı için
+    vardı (3:1'de 1343×448). Sütun 600'e inince gerek kalmadı; iki kip aynı
+    sınıfa düştüğü için prop da kalktı.
+    YENİ ŞART: tek oran (`KAPAK_ORANI = 3`), tek literal sınıf
+    (`aspect-[3/1]`), sayıyla sınıf aynı; hiçbir yerde `lg:aspect-`.
   */
   assert.equal(KAPAK_ORANI, 3);
-  assert.equal(GENIS_EKRAN_ORANI, 5);
-  /* Literal sınıflar sabitlerle aynı sayıyı taşıyor (Tailwind dinamik sınıf göremez). */
-  /*
-    24 Eylül 2026: sınıflar `lib/kapak-orani`ya, sayıların yanına taşındı —
-    şirketin logo bandı da aynı sınıfı okuyor. `KapakFotografi` kip'i yine
-    tek karar yeri.
-  */
-  assert.ok(oranlar.includes(`export const KAPAK_BANDI_SINIFI = 'aspect-[${KAPAK_ORANI}/1] lg:aspect-[${GENIS_EKRAN_ORANI}/1]';`));
-  assert.ok(oranlar.includes(`export const KAPAK_DOSYASI_SINIFI = 'aspect-[${KAPAK_ORANI}/1]';`));
-  assert.ok(kapak.includes('bant: KAPAK_BANDI_SINIFI,'));
-  assert.ok(kapak.includes('dosya: KAPAK_DOSYASI_SINIFI,'));
-  assert.match(kapak, /kip: 'bant' \| 'dosya';/);
+  assert.ok(oranlar.includes(`export const KAPAK_SINIFI = 'aspect-[${KAPAK_ORANI}/1]';`));
+  assert.doesNotMatch(yorumsuz(oranlar), /GENIS_EKRAN|lg:aspect/);
+  assert.match(kapak, /import \{ KAPAK_SINIFI \} from '\.\.\/\.\.\/lib\/kapak-orani';/);
+  assert.match(kapak, /const bant = `\$\{TABAN\} \$\{KAPAK_SINIFI\}`;/);
   assert.match(kapak, /object-cover object-center/);
-  /* İki profil ekranı "bant", düzenleme önizlemesi ve yükleme ekranı "dosya". */
-  assert.match(baslik, /<KapakFotografi [^>]*kip="bant"/);
-  assert.match(gorunum, /<KapakFotografi [^>]*kip="bant"/);
-  assert.match(yukleme, /<KapakFotografi [^>]*kip="dosya"/);
-  assert.match(sayfa, /yol=\{profil!\.kapakFotografiYolu\}\n\s*kip="dosya"\n\s*className="w-40/);
-  /* Çağıranlar oran sınıfı taşımıyor: karar tek yerde. */
-  for (const kaynak of [baslik, gorunum]) {
-    const cagri = kaynak.slice(kaynak.indexOf('<KapakFotografi'), kaynak.indexOf('/>', kaynak.indexOf('<KapakFotografi')));
-    assert.doesNotMatch(cagri, /aspect-/);
+  for (const [ad, kaynak] of Object.entries({ kapak, baslik, gorunum, yukleme, sayfa, sirket })) {
+    assert.doesNotMatch(yorumsuz(kaynak), /lg:aspect-|kip="(bant|dosya)"/, `${ad}: eski oran kuralı`);
   }
+  /* Şirketin logo bandı da aynı sınıfı okuyor. */
+  assert.match(sirket, /\$\{KAPAK_SINIFI\}/);
 });
 
-test('karartma payı sabitten türetiliyor: (1 − 3/5) / 2 = %20', () => {
-  assert.match(
-    oranlar,
-    /export const GENIS_EKRAN_KESIMI = \(1 - KAPAK_ORANI \/ GENIS_EKRAN_ORANI\) \/ 2;/,
-  );
-  assert.equal((1 - KAPAK_ORANI / GENIS_EKRAN_ORANI) / 2, 0.2);
-  assert.match(yukleme, /import \{ GENIS_EKRAN_KESIMI, KAPAK_ORANI \} from '\.\.\/\.\.\/lib\/kapak-orani';/);
-  /* Yükseklik elle yazılmıyor: iki katman da sabitten. */
-  assert.equal((yukleme.match(/style=\{\{ height: `\$\{GENIS_EKRAN_KESIMI \* 100\}%` \}\}/g) ?? []).length, 2);
-  assert.doesNotMatch(yorumsuz(yukleme), /h-\[20%\]|height: '20%'/);
-});
-
-test('kırpma çerçevesinde üst ve alt karartma katmanı pointer olaylarını yutmuyor', () => {
+test('kırpma ekranında geniş ekran kılavuzu ve cümlesi kalktı; sürükleme ve klavye aynı', () => {
+  /*
+    ESKİ ŞART: 3:1 çerçevenin üstünde ve altında %20'lik yarı saydam
+    karartma (5:1 kesimi) ve "Geniş ekranlarda kapağın yalnız açık kalan
+    orta şeridi görünür…" cümlesi.
+    YENİ ŞART: ikisi de yok. Kırpmada görülen artık her yerde profilde
+    görülenle aynı (her genişlikte 3:1). Çerçeve kendi kendini kapatıyor;
+    sürükleme ve ok tuşları çerçevenin kendisinde.
+  */
+  const kod = yorumsuz(yukleme);
+  assert.doesNotMatch(kod, /GENIS_EKRAN_KESIMI|bg-black\/35|border-dashed/);
+  assert.doesNotMatch(kod, /Geniş ekranlarda kapağın/);
   const cerceve = yukleme.slice(yukleme.indexOf('ref={cerceveRef}'), yukleme.indexOf('<label htmlFor="kapak-yakinlik"'));
-  for (const kenar of ['top-0 border-b', 'bottom-0 border-t']) {
-    assert.ok(
-      cerceve.includes(
-        `aria-hidden\n                  className="pointer-events-none absolute inset-x-0 ${kenar} border-dashed border-white/80 bg-black/35"`,
-      ),
-      `${kenar}: karartma katmanı`,
-    );
-  }
-  /* Sürükleme ve klavye çerçevenin kendisinde kaldı. */
   assert.match(cerceve, /onPointerDown=/);
   assert.match(cerceve, /onKeyDown=/);
   assert.match(cerceve, /olay\.currentTarget\.setPointerCapture/);
-});
-
-test('kırpma ekranı geniş ekrandaki kesimi cümleyle de söylüyor', () => {
-  assert.ok(
-    yukleme.includes(
-      'Geniş ekranlarda kapağın yalnız açık kalan orta şeridi görünür; telefonda ve tablette tamamı görünür.',
-    ),
-  );
-  /* Cümle çerçevenin hemen altında, kaydırıcıdan önce. */
-  const cumle = yukleme.indexOf('Geniş ekranlarda kapağın yalnız');
-  assert.ok(yukleme.indexOf('ref={cerceveRef}') < cumle && cumle < yukleme.indexOf('<label htmlFor="kapak-yakinlik"'));
+  assert.match(yukleme, /import \{ KAPAK_ORANI \} from '\.\.\/\.\.\/lib\/kapak-orani';/);
 });

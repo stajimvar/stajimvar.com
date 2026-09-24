@@ -185,8 +185,12 @@ test('sekmeler ve kare ızgara; boş durumda stok görsel yok', () => {
   assert.match(GORUNUM, /gorunum="kare"/);
   assert.match(IZGARA, /export const KARE_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-0\.5';/);
   assert.match(IZGARA, /const KARE_KAPAK_KABI = 'relative aspect-square w-full overflow-hidden bg-gray-100';/);
-  /* Öğrenci galerisi değişmedi. */
-  assert.match(IZGARA, /export const GALERI_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-0\.5 lg:grid-cols-4';/);
+  /*
+    Öğrenci galerisi: 24 Eylül 2026'dan beri (X sayfa düzeni, 600 piksellik
+    sütun) her genişlikte 3 sütun; eski `lg:grid-cols-4` kalktı. Gerekçe
+    `sosyal-profil-arayuzu`nun ızgara testinde.
+  */
+  assert.match(IZGARA, /export const GALERI_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-0\.5';/);
   assert.match(GORUNUM, /Henüz paylaşım yok/);
   assert.doesNotMatch(kod(GORUNUM), /unsplash|placeholder|stok/i);
   /* Doğrulanmış rozeti şirket sayfasında yok. */
@@ -222,10 +226,12 @@ test('bulanık kimlik bandı: zemin logonun kendisi ve logo yoksa zemin de yok',
   /*
     Kap kırpıyor; bulanıklık bandın dışına taşmıyor. 24 Eylül 2026 (X
     kalıbı): zemin kimlik metinlerinin arkasından kendi BANDINA taşındı —
-    öğrenci kapağıyla aynı oranlı sınıf (`KAPAK_BANDI_SINIFI`, 3:1 / lg
-    5:1). Kimlik metinleri bandın altında, beyaz zeminde.
+    öğrenci kapağıyla aynı oranlı sınıf. Kimlik metinleri bandın altında,
+    beyaz zeminde. Oran 24 Eylül 2026'dan beri (X sayfa düzeni) her
+    genişlikte 3:1 (`KAPAK_SINIFI`); eski `KAPAK_BANDI_SINIFI` (3:1 / lg
+    5:1) kalktı — profil sütunu 600 piksel.
   */
-  assert.match(GORUNUM, /<div className=\{`relative w-full overflow-hidden bg-gray-100 \$\{KAPAK_BANDI_SINIFI\}`\}>/);
+  assert.match(GORUNUM, /<div className=\{`relative w-full overflow-hidden bg-gray-100 \$\{KAPAK_SINIFI\}`\}>/);
   /*
     DAİRE ÖLÇÜSÜ ÖĞRENCİYLE AYNI (20 Eylül 2026, kullanıcı isteği): şirket
     dairesi 80 → 96 (sm) idi, `lg` basamağı yoktu; öğrenci avatarı 80 →

@@ -51,6 +51,8 @@ import { useModalErisim } from '../lib/modal-erisim';
 import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
 import { Card, IKON_KUTUSU } from '../ui';
 import { ODAK_HALKASI } from '../lib/renk-token';
+import { ProfilSayfaDuzeni } from './sosyal/ProfilSayfaDuzeni';
+import { AgimYanSutun } from './sosyal/AgimYanSutun';
 import { ProfilBasligi, ProfilBolumListesi, type EksikAdim, type OneCikan } from './ProfilBasligi';
 import type { PortfolyoSatiri } from './sosyal/SosyalProfilSayfasi';
 import { ONERILEN_SOSYAL, POPULER_ARACLAR } from '../data/cv-secenekleri';
@@ -1009,6 +1011,33 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       bunu dize dize karşılaştırıyor.
     */
     <div className="w-full pb-16 animate-in fade-in duration-200">
+      {/*
+        X SAYFA DÜZENİ (kullanıcı kararı 24 Eylül 2026: X sayfa düzeni, sol
+        menü yok): ana görünüm ortada en çok 600 piksellik bir sütunda,
+        sağında (xl ve üstü) yan sütun — öneriler, son ilanlar, rehberler
+        (`AgimYanSutun`, olduğu gibi). Ölçüler `ProfilSayfaDuzeni`nde tek
+        yerde; `/profil/:ad` ve şirket sayfası da aynı kabı kullanıyor.
+
+        İÇERİDEKİ 12'LİK IZGARA DEĞİŞMEDİ: ana görünümde iki blok zaten
+        `lg:col-span-12` (üst üste); sütun daralınca ızgara onu izliyor.
+        DÜZENLEME kipinde kap devre dışı — iki sütunlu form iskeleti aynen.
+
+        YAN SÜTUN BAKAN İÇİN: `/cv`de bakan sahibin kendisi; kimliği ve
+        alanı portfolyo panelinin satırından (`profilId`, `sektorId`).
+        Satır yoksa (oturum yok ya da henüz okunmadı) yan sütun çizilmiyor.
+      */}
+      <ProfilSayfaDuzeni
+        devreDisi={duzenleme}
+        yanSutun={
+          sosyalPortfolyoSatiri?.profilId ? (
+            <AgimYanSutun
+              kullaniciId={sosyalPortfolyoSatiri.profilId}
+              sektorId={sosyalPortfolyoSatiri.sektorId}
+              onNavigate={sosyalPortfolyoSatiri.onNavigate}
+            />
+          ) : undefined
+        }
+      >
       <div className="grid grid-cols-1 gap-0 sm:gap-6 lg:grid-cols-12 items-start">
 
         {/*
@@ -2204,6 +2233,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
 
         </div>
       </div>
+      </ProfilSayfaDuzeni>
     </div>
   );
 };

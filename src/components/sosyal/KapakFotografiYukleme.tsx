@@ -5,7 +5,7 @@ import { SosyalHata, profilKapagiYukle } from '../../lib/queries/sosyal';
 import { KayitHatasi } from './SosyalFormAlanlari';
 import { IZIN_VERILEN_TURLER, type Kirpma } from './ProfilFotografiYukleme';
 import { KapakFotografi } from './KapakFotografi';
-import { GENIS_EKRAN_KESIMI, KAPAK_ORANI } from '../../lib/kapak-orani';
+import { KAPAK_ORANI } from '../../lib/kapak-orani';
 
 /**
  * KAPAK FOTOĞRAFI YÜKLEME — YALNIZ KENDİ PROFİLİ
@@ -31,8 +31,9 @@ import { GENIS_EKRAN_KESIMI, KAPAK_ORANI } from '../../lib/kapak-orani';
 /*
   ÇIKTI: EN ÇOK 1500×500, HER ZAMAN JPEG 0.85
 
-  Genişlik: kapak telefonda ekranın, geniş ekranda kartın tamamına
-  yayılıyor. 1500, X'in kapak için önerdiği ölçü ve göçün 2 MB sınırının
+  Genişlik: kapak telefonda ekranın, geniş ekranda profil sütununun
+  (en çok 600 piksel) tamamına yayılıyor; 1500, yüksek yoğunluklu
+  ekranda 600 piksellik sütunun 2.5 katını karşılıyor. 1500, X'in kapak için önerdiği ölçü ve göçün 2 MB sınırının
   gerekçesi de bu ölçüye göre yazıldı (20261105010000). Kaynak daha
   küçükse BÜYÜTÜLMÜYOR: bulanık piksel üretmiyoruz.
 
@@ -50,7 +51,7 @@ import { GENIS_EKRAN_KESIMI, KAPAK_ORANI } from '../../lib/kapak-orani';
   iki ekranda iki farklı sıkıştırmayla görünmesin.
 */
 const EN_GENIS = 1500;
-/* Dosyanın oranı `lib/kapak-orani`dan: gösterim ve kılavuz aynı sayıyı okuyor. */
+/* Dosyanın oranı `lib/kapak-orani`dan: kırpma ve profildeki gösterim aynı sayıyı okuyor. */
 const ORAN = KAPAK_ORANI;
 const KALITE = 0.85;
 
@@ -351,7 +352,7 @@ export const KapakFotografiYukleme: React.FC<YuklemeProps> = ({
               yuvası çizilmiyor. Kapak yoksa bant nötr ve cümle bunu söylüyor.
             */
             <div className="space-y-1">
-              <KapakFotografi ad={ad} yol={mevcutYol} kip="dosya" className="w-full rounded-xl" />
+              <KapakFotografi ad={ad} yol={mevcutYol} className="w-full rounded-xl" />
               <p className="text-[11px] font-semibold text-gray-600">
                 {mevcutYol ? 'Şu anki kapağın' : 'Kapak fotoğrafın yok'}
               </p>
@@ -419,36 +420,14 @@ export const KapakFotografiYukleme: React.FC<YuklemeProps> = ({
                   olay.preventDefault();
                   setKirpma((k) => sinirla({ ...k, x: k.x + d[0], y: k.y + d[1] }));
                 }}
-              >
-                {/*
-                  GENİŞ EKRAN KILAVUZU — profilde `lg:` ve üstünde bant 5:1
-                  ve dosyanın yalnız orta şeridi görünüyor. Kırpmada görülen
-                  ile profilde görülen ayrışmasın diye üstten ve alttan
-                  kesilen pay karartılıyor; yükseklik sabitten türetiliyor
-                  (`GENIS_EKRAN_KESIMI`, bugün %20), oran değişince kılavuz da
-                  değişiyor. Tailwind sınıfı çalışma anında üretilemediği için
-                  inline style.
-
-                  `pointer-events-none`: sürükleme çerçevenin kendisinde
-                  (pointer capture `currentTarget`e bağlı); katman olayları
-                  yutsaydı karartılmış bölgeden başlayan sürükleme kopardı.
-                  `aria-hidden`: çerçevenin etiketi ve alttaki cümle aynı
-                  bilgiyi metinle veriyor.
-                */}
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-x-0 top-0 border-b border-dashed border-white/80 bg-black/35"
-                  style={{ height: `${GENIS_EKRAN_KESIMI * 100}%` }}
-                />
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-x-0 bottom-0 border-t border-dashed border-white/80 bg-black/35"
-                  style={{ height: `${GENIS_EKRAN_KESIMI * 100}%` }}
-                />
-              </div>
-              <p className="text-xs leading-relaxed text-gray-600">
-                Geniş ekranlarda kapağın yalnız açık kalan orta şeridi görünür; telefonda ve tablette tamamı görünür.
-              </p>
+              />
+              {/*
+                KILAVUZ YOK (kullanıcı kararı 24 Eylül 2026: X sayfa düzeni):
+                profilde kapak her genişlikte 3:1 ve bu çerçeve de 3:1 —
+                kırparken görülen, profilde görülenin kendisi. Geniş ekrandaki
+                5:1 kesimi için çizilen üst/alt karartma ve "Geniş
+                ekranlarda…" cümlesi o kesimle birlikte kalktı.
+              */}
               <div>
                 <label htmlFor="kapak-yakinlik" className="block text-sm font-bold text-gray-900">
                   Yakınlaştır
