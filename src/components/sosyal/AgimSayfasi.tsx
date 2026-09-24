@@ -22,7 +22,6 @@ import { AgimYanSutun } from './AgimYanSutun';
 import { MesajKutusuDugmesi } from '../mesaj/MesajKutusuDugmesi';
 import { SAYFA_GENISLIGI } from '../../lib/duzen';
 import { BaglantiSeridi } from './BaglantiSeridi';
-import { donukKure, kureDokunusu } from '../../lib/kure-donusu.mjs';
 import { FotografPaylasGirisi, type FotografPaylasKolu } from './FotografPaylasGirisi';
 import { ProfilFotografi } from './ProfilFotografi';
 import { KisiListesi, KullaniciAramaSonuclari } from './KullaniciArama';
@@ -109,17 +108,12 @@ export const AgimSayfasi: React.FC<Props> = ({
   const [benim, setBenim] = React.useState<SosyalProfil | null>(null);
   const [bekleyenIstek, setBekleyenIstek] = React.useState(0);
   /*
-    BAĞLANTI KÜRELERİ (kullanıcı isteği, 16 Eylül 2026)
+    BAĞLANTI KÜRELERİ (kullanıcı kararı, 24 Eylül 2026: küre profile götürür)
 
-    İlk dokunuş akışı o kişinin paylaşımlarına süzüyor; seçili küreye
-    tekrar dokunuş küreyi çevirip adı gösteriyor. Dönüş durumu seçimin
-    imzasıyla tutuluyor: başka kişi seçilince eski dönüş görünmüyor.
+    Küreler akışı süzmüyor; her küre kişinin profiline giden bağlantı
+    (gerekçe BaglantiSeridi'nde). Akış her zaman bütün akış.
   */
   const [baglantilar, setBaglantilar] = React.useState<BaglantiKisisi[]>([]);
-  const [seciliKisi, setSeciliKisi] = React.useState<string | null>(null);
-  const [kureDurumu, setKureDurumu] = React.useState<{ anahtar: string; imza: string } | null>(null);
-  const kureImzasi = seciliKisi ?? '';
-  const donukKisi = donukKure(kureDurumu, kureImzasi);
   const [begeniler, setBegeniler] = React.useState<Map<string, BegeniDurumu>>(new Map());
   const [kayitlilar, setKayitlilar] = React.useState<Set<string>>(new Set());
   /*
@@ -578,8 +572,6 @@ export const AgimSayfasi: React.FC<Props> = ({
     </section>
   );
 
-  const gorunenAkis = seciliKisi ? akis.filter((p) => p.yazarId === seciliKisi) : akis;
-
   const akisGovdesi =
     durum === 'yukleniyor' ? (
       <div aria-busy="true" className="space-y-6 py-3">
@@ -623,10 +615,7 @@ export const AgimSayfasi: React.FC<Props> = ({
       <div className="sm:space-y-4">
         {/* Sessizlik satırı akışın en üstünde: kaybolan içeriğin yerinde. */}
         {sessizlikSatiri}
-        {seciliKisi && gorunenAkis.length === 0 && (
-          <p className="px-4 py-8 text-center text-sm text-gray-600">Bu kişinin akışında paylaşımı yok.</p>
-        )}
-        {gorunenAkis.map((p) => (
+        {akis.map((p) => (
           <AkisKarti
             key={p.id}
             paylasim={p}
@@ -722,17 +711,9 @@ export const AgimSayfasi: React.FC<Props> = ({
             <div className="px-4 sm:mb-4 sm:px-0">
               <BaglantiSeridi
                 kisiler={baglantilar}
-                secili={seciliKisi}
-                donuk={donukKisi}
-                onSec={(kisiId) => {
-                  setSeciliKisi(kisiId);
-                  setKureDurumu(null);
-                }}
-                onCevir={(kisiId) =>
-                  setKureDurumu((d) => kureDokunusu(d, { anahtar: kisiId, secili: true, imza: kureImzasi }).durum)
-                }
                 bekleyenIstek={bekleyenIstek}
                 onBaglantilar={() => onNavigate('/agim/baglantilar')}
+                onNavigate={onNavigate}
               />
             </div>
           )}
