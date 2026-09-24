@@ -1,5 +1,5 @@
 import React from 'react';
-import type { LucideIcon } from 'lucide-react';
+import { MessageCircle, Share, type LucideIcon } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI, RENK_PRIMARY } from '../../lib/renk-token';
 
 /**
@@ -113,4 +113,50 @@ export const MetaOgesi: React.FC<{ ikon: LucideIcon; etiket: string; children: R
     <span className="sr-only">{etiket}: </span>
     <span className="min-w-0 break-words">{children}</span>
   </span>
+);
+
+/*
+  ZİYARETÇİ EYLEM SATIRI — X mobil kalıbı (kullanıcı ekran görüntüsü,
+  24 Eylül 2026). Başkasının profilinde eylemler avatar satırında değil,
+  SAYAÇLARIN ALTINDA tam genişlikte bir satırda: [Mesaj] [durum hapı],
+  iki eşit hücre. Avatar satırının sağında yalnız yuvarlak ikon düğmeleri
+  kalıyor. Sahip dalları değişmiyor: X'te de "Edit profile" avatar
+  satırında.
+
+  NEDEN `grid-cols-2` DEĞİL, EŞİT TABANLI `flex-wrap`: hücrenin genişliği
+  duruma göre değişiyor ve kararı durumun sahibi veriyor. Gelen istekte
+  "Kabul et" + "Reddet" tam satırı kaplıyor (`TAM_HUCRE`); ızgarada bunun
+  için kabın durumu bilmesi gerekirdi. Tek hücre kaldığında (`onMesaj`
+  yok) `grow` onu tam genişliğe açıyor. İki hücre `basis` 50% − 4 piksel
+  ile eşit. `flex-1` KULLANILMADI: `flex: 1 1 0%` taban değerini de
+  yazıyor ve aynı dizedeki `basis-*` ile hangisinin kazanacağı CSS
+  sırasına kalırdı; `grow` yalnız büyümeyi ayarlıyor.
+*/
+export const ZIYARETCI_EYLEMLERI = 'mt-3 flex flex-wrap gap-2';
+export const YARIM_HUCRE = 'min-w-0 grow basis-[calc(50%-0.25rem)]';
+export const TAM_HUCRE = 'min-w-0 grow basis-full';
+
+/**
+ * Profil bağlantısını paylaş — ziyaretçinin avatar satırındaki tek ikon
+ * düğmesi. X'teki zil KONMADI: bildirim aboneliğinin arka ucu yok.
+ */
+export const PaylasIkonDugmesi: React.FC<{ onPaylas: () => void }> = ({ onPaylas }) => (
+  <button type="button" onClick={onPaylas} aria-label="Profili paylaş" className={IKON_HAP}>
+    <Share aria-hidden className="h-5 w-5" />
+  </button>
+);
+
+/**
+ * "Mesaj" hapı — eylem satırının sol hücresi.
+ *
+ * YALNIZ `onMesaj` VERİLİRSE ÇİZİLİYOR. Bugün hiçbir çağıran vermiyor:
+ * mesajlaşmanın arka ucu yok. Arka uç gelince sayfa verecek, gelmeden
+ * düğme çizilmiyor — basınca hiçbir şey yapmayan bir düğme sahte bir
+ * özellik olurdu.
+ */
+export const MesajHapi: React.FC<{ onMesaj: () => void }> = ({ onMesaj }) => (
+  <button type="button" onClick={onMesaj} className={`${HAP} ${YARIM_HUCRE}`}>
+    <MessageCircle aria-hidden className="h-4 w-4 shrink-0" />
+    Mesaj
+  </button>
 );

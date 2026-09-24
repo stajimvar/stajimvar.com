@@ -1420,6 +1420,17 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
               onPaylasimlariYenile={() => setPaylasimDeneme((sayi) => sayi + 1)}
               onNavigate={onNavigate}
               bildirim={bildirim}
+              /*
+                "Profili paylaş" ikonu (X mobil kalıbı): öğrenci
+                ziyaretçisindeki AYNI `paylas`; yalnız yayındaki profil —
+                yayında olmayanın adresi alıcıda açılmaz. Sonuç cümlesi
+                başlıktaki `bildirim` satırında.
+              */
+              onPaylas={
+                ziyaretciProfili.yayindaMi
+                  ? () => void paylas(ziyaretciProfili.kullaniciAdi)
+                  : undefined
+              }
             />
           </React.Suspense>
           </ProfilSayfaDuzeni>

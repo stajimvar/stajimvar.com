@@ -713,13 +713,39 @@ test('üç profil ekranı aynı kalıbı paylaşıyor: kap sınıfları birebir'
   assert.ok(cvKarti.includes('-mt-[46px] sm:-mt-[62px] lg:-mt-[78px]'));
 
   /*
-    ZİYARETÇİNİN TEK EYLEMİ hap sırasında: öğrencide bağlantı düğmesi,
-    şirkette takip düğmesi (yuva). `/cv` sahibin kendi ekranı — orada
-    ziyaretçi eylemi YOK, bu yüzden bu iddia iki ekranda.
+    ZİYARETÇİ EYLEMLERİ — X mobil kalıbı (kullanıcı ekran görüntüsü, 24
+    Eylül 2026).
+
+    ESKİ ŞART: ziyaretçinin tek eylemi (öğrencide bağlantı düğmesi,
+    şirkette takip yuvası) avatar satırının hap sırasında.
+    YENİ ŞART: avatar satırında ziyaretçiye yalnız yuvarlak "Profili
+    paylaş" ikonu; bağlantı / takip hapı ve (verilirse) Mesaj sayaçların
+    ALTINDAKİ tam genişlik eylem satırında (`ZIYARETCI_EYLEMLERI`), iki
+    ekranda da aynı kap. `/cv` sahibin kendi ekranı — orada ziyaretçi
+    eylemi YOK, bu yüzden bu iddia iki ekranda. Sahip dalları değişmedi.
   */
-  const hapSirasi = (kaynak) => kaynak.slice(kaynak.indexOf('<div className={HAP_SIRASI}>'));
-  assert.match(hapSirasi(gorunum), /^[\s\S]{0,2500}\{!sahibiMi && bakanId && \(\s*<BaglantiDugmesi/);
-  assert.match(hapSirasi(sirket), /^[\s\S]{0,200}\{!sahip && ziyaretciEylemi && /);
+  const hapSirasi = (kaynak) =>
+    kaynak.slice(kaynak.indexOf('<div className={HAP_SIRASI}>'), kaynak.indexOf('className={META_SATIRI}'));
+  assert.match(hapSirasi(gorunum), /\{!sahibiMi && onPaylas && <PaylasIkonDugmesi onPaylas=\{onPaylas\} \/>\}/);
+  assert.match(hapSirasi(sirket), /\{!sahip && onPaylas && <PaylasIkonDugmesi onPaylas=\{onPaylas\} \/>\}/);
+  assert.doesNotMatch(hapSirasi(gorunum), /<BaglantiDugmesi/);
+  assert.doesNotMatch(hapSirasi(sirket), /ziyaretciEylemi/);
+  const eylemSatiri = (kaynak) => kaynak.slice(kaynak.indexOf('className={SAYAC_SATIRI}'));
+  assert.match(
+    eylemSatiri(gorunum),
+    /\{!sahibiMi && bakanId && \(\s*<div className=\{ZIYARETCI_EYLEMLERI\}>\s*\{onMesaj && <MesajHapi onMesaj=\{onMesaj\} \/>\}\s*<BaglantiDugmesi/,
+  );
+  assert.match(
+    eylemSatiri(sirket),
+    /\{!sahip && ziyaretciEylemi && \(\s*<div className=\{ZIYARETCI_EYLEMLERI\}>\s*\{onMesaj && <MesajHapi onMesaj=\{onMesaj\} \/>\}\s*\{ziyaretciEylemi\}/,
+  );
+  /* Mesaj bugün HİÇBİR çağırandan verilmiyor: arka ucu yok, düğme çizilmiyor. */
+  for (const dosya of ['src/components/sosyal/SosyalProfilSayfasi.tsx', 'src/sirket/SirketSayfasi.tsx', 'src/App.tsx']) {
+    assert.doesNotMatch(yorumsuz(oku(dosya)), /onMesaj=/, `${dosya}: onMesaj verilmemeli`);
+  }
+  assert.match(kalip, /export const ZIYARETCI_EYLEMLERI = 'mt-3 flex flex-wrap gap-2';/);
+  assert.match(kalip, /export const YARIM_HUCRE = 'min-w-0 grow basis-\[calc\(50%-0\.25rem\)\]';/);
+  assert.match(kalip, /export const TAM_HUCRE = 'min-w-0 grow basis-full';/);
 
   /*
     ŞİRKETTE OLUP ÖĞRENCİDE OLMAYAN: "İlan paylaş" ve "aktif ilan"
@@ -1625,28 +1651,56 @@ test('sıfır satırda bağlantı düğmesi DOM içine hiç girmiyor', () => {
 });
 
 test('yedi durumun her birinin kendi metni var', () => {
+  /*
+    DURUM HAPIN KENDİSİ — kullanıcı kararı 24 Eylül 2026: durum hapın
+    kendisi, eylem görünür menüde.
+
+    ESKİ ŞART: "Sana istek gönderdi", "Bağlantınız var", "Bu isteği
+    reddettin" ayrı satırda düz METİN, düğme değil; "⋯" onların altında
+    ayrı satırda. Kullanıcı canlıdan telefon görüntüsü gönderdi: metinli
+    dallar hap sırasını iki satıra (84 piksel) çıkarıyor ve /cv'deki tek
+    satırlık hap sırasıyla ayrışıyordu.
+
+    YENİ ŞART: her durum tek satır hap. "Bağlantıdasın" ve "İstek
+    gönderildi" haplarının kendisi menü tetiği; eylem (kaldır / geri çek)
+    menüde yazılı ve onaylı — gizli eylem yok. Hapın göstermediği bilgi
+    (isteği kimin gönderdiği, kendi reddin) grubun erişilebilir adında.
+    Ölçüm YORUMSUZ kaynakta: yorumlar eski metinleri gerekçe için anıyor.
+  */
+  const kod = yorumsuz(baglantiDugmesi);
   const metinler = [
     'Bağlantı kur',
     'İstek gönderildi',
     'İsteği geri çek',
-    'Sana istek gönderdi',
     'Kabul et',
     'Reddet',
-    'Bağlantınız var',
-    'Bu isteği reddettin',
+    'Bağlantıdasın',
+    'aria-label="Sana bağlantı isteği gönderdi"',
+    'aria-label="Bu isteği reddettin"',
     'Yeniden gönderilebilir',
   ];
   for (const metin of metinler) {
-    assert.ok(baglantiDugmesi.includes(metin), `bağlantı durumu metni eksik: ${metin}`);
+    assert.ok(kod.includes(metin), `bağlantı durumu metni eksik: ${metin}`);
   }
+  /* Durum yazısı ayrı satırda yok: eski düz metin paragrafları kalktı. */
+  assert.doesNotMatch(kod, /<p className="text-sm font-semibold text-gray-700">/);
+  assert.doesNotMatch(kod, /Bağlantınız var|>Sana istek gönderdi</);
   /*
-    "Bağlantıyı kaldır" düğmede değil, "⋯" menüsünde ve onaylı (kullanıcı
-    isteği, 17 Eylül 2026): kaldırmak kolay bir dokunuş olmasın.
+    "Bağlantıyı kaldır" düğmede değil, menüde ve onaylı (kullanıcı isteği,
+    17 Eylül 2026): kaldırmak kolay bir dokunuş olmasın. Menünün tetiği
+    profil başlığında "Bağlantıdasın" hapı, listede "⋯".
   */
   assert.match(baglantiDugmesi, /<BaglantiKaldirMenusu/);
+  assert.match(kod, /<BaglantiKaldirMenusu[\s\S]{0,400}tetik=\{\{[\s\S]{0,200}Bağlantıdasın/);
+  assert.match(kod, /<OnayliEylemMenusu[\s\S]{0,400}İstek gönderildi[\s\S]{0,300}etiket: 'İsteği geri çek'/);
   const menu = readFileSync(new URL('../src/components/sosyal/BaglantiKaldirMenusu.tsx', import.meta.url), 'utf8');
   assert.ok(menu.includes('Bağlantıyı kaldır'));
   assert.match(menu, /role="alertdialog"/, 'onay adımı yok');
+  /* Tetik görünür bir düğme ve menüyü duyuruyor. */
+  assert.match(menu, /aria-haspopup="menu"\s*aria-expanded=\{menuAcik\}/);
+  /* Odak: Escape ve Vazgeç tetiğe dönüyor. */
+  assert.match(menu, /requestAnimationFrame\(\(\) => tetikRef\.current\?\.focus\(\)\)/);
+  assert.match(menu, /if \(e\.key === 'Escape'\) kapatVeTetigeDon\(\);/);
   /* Yedinci durum (engel) bir metin değil: satırın hiç çizilmemesi. */
   assert.match(baglantiDugmesi, /if \(!bilgi\) return null;/);
 });
@@ -2510,4 +2564,24 @@ test('/topluluklar rotası App içinde tek dala bağlı', () => {
   );
   assert.equal((app.match(/<TopluluklarSayfasi\b/g) ?? []).length, 1);
   assert.match(app, /slug=\{hamSlug\}/);
+});
+
+test('meta satırı iki öğrenci ekranında aynı sırada: okul → bölüm → sınıf → alan → şehir → katılma', () => {
+  /*
+    Kullanıcı bildirimi (24 Eylül 2026): /cv'de okul / bölüm · sınıf /
+    katılma sırası, başkasının profilinde okul / alan + bölüm aynı satırda
+    / katılma — aynı bilgiler iki ekranda farklı sırada okunuyordu.
+    Ziyaretçide bölüm ile sınıf AYRI öğe (kullanıcı metni resmî bölümü
+    taklit etmesin), ama sıra aynı. Alan öğesi /cv'de yok.
+  */
+  const sira = (kaynak, etiketler) =>
+    etiketler.map((etiket) => {
+      const yer = kaynak.indexOf(`etiket="${etiket}"`);
+      assert.ok(yer > 0, `${etiket} öğesi yok`);
+      return yer;
+    });
+  const ziyaretci = sira(gorunum, ['Okul', 'Bölüm', 'Sınıf', 'Alan', 'Şehir', 'Katılma']);
+  assert.deepEqual([...ziyaretci].sort((a, b) => a - b), ziyaretci, 'ziyaretçi meta sırası');
+  const cv = sira(profilBasligi, ['Okul', 'Bölüm', 'Konum', 'Katılma']);
+  assert.deepEqual([...cv].sort((a, b) => a - b), cv, '/cv meta sırası');
 });

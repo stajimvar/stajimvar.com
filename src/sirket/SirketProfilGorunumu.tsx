@@ -11,6 +11,9 @@ import {
   BIYOGRAFI,
   HAP,
   HAP_BIRINCIL,
+  MesajHapi,
+  PaylasIkonDugmesi,
+  ZIYARETCI_EYLEMLERI,
   HAP_SIRASI,
   IKON_HAP,
   KIMLIK_BANDI,
@@ -122,6 +125,14 @@ interface GorunumProps {
    * doğru olamaz.
    */
   ziyaretciEylemi?: React.ReactNode;
+  /** Profil bağlantısını paylaş — ziyaretçi dalı; sayfa yalnız yayındaki profilde veriyor. */
+  onPaylas?: () => void;
+  /**
+   * Mesaj ekranını açar — ZİYARETÇİ DALI, isteğe bağlı. Bugün hiçbir
+   * çağıran vermiyor: mesajlaşmanın arka ucu yok. Arka uç gelince sayfa
+   * verecek, gelmeden düğme çizilmiyor.
+   */
+  onMesaj?: () => void;
   onNavigate: (yol: string) => void;
   /** Panoya kopyalama gibi anlık geri bildirim. */
   bildirim?: string | null;
@@ -253,6 +264,8 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
   ilanlarIcerigi,
   sahip,
   ziyaretciEylemi,
+  onPaylas,
+  onMesaj,
   onNavigate,
   bildirim,
 }) => {
@@ -384,9 +397,9 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
               HAP SIRASI — logo satırının sağı, alt hiza (X'teki "Edit
               profile" / "Follow" yeri).
 
-              ZİYARETÇİ: tek eylem, "Takip et". Görünüm düğmeyi kendisi
-              çizmiyor; yuvayı YALNIZ sahip yokken açıyor, düğmeyi ziyaretçi
-              kabı veriyor (bakan sayfanın sahibiyse hiç vermiyor).
+              ZİYARETÇİ: burada yalnız yuvarlak "Profili paylaş" ikonu (X
+              mobil kalıbı, 24 Eylül 2026). "Takip et" ve Mesaj sayaçların
+              altındaki eylem satırında — aşağıda.
 
               SAHİP: İlan paylaş → Fotoğraf paylaş → Profili düzenle
               (kullanıcının 20 Eylül sırası; düzenleme X'teki gibi en sağda).
@@ -411,9 +424,7 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
               yine `flex-wrap` taşıyor, sığmazsa alt satıra iniyor, kesilmiyor.
             */}
             <div className={HAP_SIRASI}>
-              {!sahip && ziyaretciEylemi && (
-                <>{ziyaretciEylemi}</>
-              )}
+              {!sahip && onPaylas && <PaylasIkonDugmesi onPaylas={onPaylas} />}
               {sahip && (
                 <>
                   <a
@@ -504,6 +515,22 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
             <Sayac etiket="aktif ilan" deger={sayaclar.aktifIlan} />
             <Sayac etiket="takipçi" deger={sayaclar.takipci} />
           </dl>
+
+          {/*
+            ZİYARETÇİ EYLEM SATIRI — X mobil kalıbı (kullanıcı ekran
+            görüntüsü, 24 Eylül 2026): sayaçların altında, tam genişlik.
+            [Mesaj] ["Takip et"] iki eşit hücre; Mesaj yoksa (bugün hep yok,
+            arka ucu yok) takip hapı tek başına tam satır. Görünüm takip
+            düğmesini kendisi çizmiyor; yuvayı YALNIZ sahip yokken açıyor,
+            düğmeyi ziyaretçi kabı veriyor (bakan sayfanın sahibiyse hiç
+            vermiyor).
+          */}
+          {!sahip && ziyaretciEylemi && (
+            <div className={ZIYARETCI_EYLEMLERI}>
+              {onMesaj && <MesajHapi onMesaj={onMesaj} />}
+              {ziyaretciEylemi}
+            </div>
+          )}
 
           {bildirim && (
             <p role="status" className="mt-3 text-sm font-semibold text-gray-700">

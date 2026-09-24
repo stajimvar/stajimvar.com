@@ -52,6 +52,8 @@ export const SirketSayfasi: React.FC<{
   onPaylasimlariYenile: () => void;
   onNavigate: (yol: string) => void;
   bildirim?: string | null;
+  /** Profil bağlantısını paylaş — sayfa yalnız yayındaki profilde veriyor. */
+  onPaylas?: () => void;
 }> = ({
   profil,
   paylasimlar,
@@ -62,6 +64,7 @@ export const SirketSayfasi: React.FC<{
   onPaylasimlariYenile,
   onNavigate,
   bildirim,
+  onPaylas,
 }) => {
   const sirketId = profil.sirketId;
   const [kimlik, setKimlik] = React.useState<SirketAcikKimlik | null>(null);
@@ -176,6 +179,7 @@ export const SirketSayfasi: React.FC<{
       onNavigate={onNavigate}
       bildirim={bildirim}
       ziyaretciEylemi={takipDugmesi}
+      onPaylas={onPaylas}
       ilanlarIcerigi={<AcikIlanlar ilanlar={ilanlar} durum={ilanDurumu} onNavigate={onNavigate} />}
     />
   );
