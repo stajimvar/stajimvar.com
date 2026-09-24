@@ -27,6 +27,7 @@ import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { ODAK_HALKASI } from '../lib/renk-token';
 
 import { BildirimDugmesi } from './BildirimMerkezi';
+import { MesajKutusuDugmesi } from './mesaj/MesajKutusuDugmesi';
 import { useSayfaAramasi } from '../lib/sayfa-aramasi';
 import { KullaniciAramaSonuclari } from './sosyal/KullaniciArama';
 import { FotografPaylasGirisi } from './sosyal/FotografPaylasGirisi';
@@ -1479,7 +1480,17 @@ export const Header: React.FC<HeaderProps> = ({
                   Zil, gerçekten var olan şeyi anlatıyor: okunmamış
                   bildirimler. Rozet yalnız sayı SUNUCUDAN geldiğinde
                   çiziliyor.
+
+                  MESAJ İKONU (24 Eylül 2026): mesajlaşma artık VAR
+                  (20261107010000) ve kendi adresinde (`/mesajlar`). Zarf
+                  geri gelmedi: bildirimlerle mesajlar AYRI iki ikon,
+                  ikisi de kendi rozetiyle. Yalnız oturum açık öğrencide —
+                  mesajlaşma şimdilik öğrenciler arasında. Rozet sayısını
+                  bileşen kendisi okuyor (`MesajKutusuDugmesi`).
                 */}
+                {isLoggedIn && userRole === 'student' && onNavigate && (
+                  <MesajKutusuDugmesi onNavigate={onNavigate} />
+                )}
                 {onBildirimAc && (
                   <BildirimDugmesi
                     okunmamis={okunmamisBildirim ?? null}

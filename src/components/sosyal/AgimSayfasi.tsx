@@ -19,6 +19,7 @@ import {
 } from '../../lib/queries/sosyal';
 import { AkisKarti } from './AkisKarti';
 import { AgimYanSutun } from './AgimYanSutun';
+import { MesajKutusuDugmesi } from '../mesaj/MesajKutusuDugmesi';
 import { SAYFA_GENISLIGI } from '../../lib/duzen';
 import { BaglantiSeridi } from './BaglantiSeridi';
 import { donukKure, kureDokunusu } from '../../lib/kure-donusu.mjs';
@@ -357,6 +358,15 @@ export const AgimSayfasi: React.FC<Props> = ({
       {/* Sağ küme: arama ve zil yan yana. */}
       <span aria-hidden className="flex-1" />
 
+
+      {/*
+        MESAJLAR — sitenin üst çubuğundaki ikonun aynısı (kendi rozetini
+        kendisi okuyor). Telefonda Ağım'da büyük çubuk gizli olduğu için
+        burada ayrıca duruyor; yoksa akıştaki öğrencinin mesaj kutusuna
+        giden bir yolu kalmazdı. Rengi bu çubuğun ikonlarıyla aynı; ölçüsü
+        (44×44) bileşenden.
+      */}
+      <MesajKutusuDugmesi onNavigate={onNavigate} className="rounded-full text-gray-800 hover:bg-gray-100" />
 
       <button
         type="button"

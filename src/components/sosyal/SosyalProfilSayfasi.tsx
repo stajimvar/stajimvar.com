@@ -1464,6 +1464,27 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
             sahibiMi={false}
             bakanId={kullaniciId}
             onNavigate={onNavigate}
+            /*
+              MESAJ (20261107010000): mesajlaşmanın arka ucu geldi, düğme
+              artık veriliyor. Koşullar sunucunun kuralının yansıması
+              (`ogrenci_sosyal_mi`, 'kendine-mesaj-yok'):
+                - bakan oturumlu ÖĞRENCİ: kendi sosyal satırı var ve
+                  `sirketId` boş,
+                - hedef öğrenci: `sirketId` boş,
+                - kendisi değil,
+                - adresi var (kullanıcı adı).
+              Şirket sayfasında hiç verilmiyor (şimdilik yalnız öğrenciler).
+            */
+            onMesaj={
+              kullaniciId &&
+              profil &&
+              !profil.sirketId &&
+              !ziyaretciProfili.sirketId &&
+              ziyaretciProfili.profilId !== kullaniciId &&
+              ziyaretciProfili.kullaniciAdi
+                ? () => onNavigate(`/mesajlar/${encodeURIComponent(ziyaretciProfili.kullaniciAdi as string)}`)
+                : undefined
+            }
             okul={ziyaretciOkulu}
             /*
               Fotoğraf görüntüleyicisinin "Paylaş"ı: bakılan profilin

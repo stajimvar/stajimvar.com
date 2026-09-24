@@ -149,10 +149,11 @@ export const PaylasIkonDugmesi: React.FC<{ onPaylas: () => void }> = ({ onPaylas
 /**
  * "Mesaj" hapı — eylem satırının sol hücresi.
  *
- * YALNIZ `onMesaj` VERİLİRSE ÇİZİLİYOR. Bugün hiçbir çağıran vermiyor:
- * mesajlaşmanın arka ucu yok. Arka uç gelince sayfa verecek, gelmeden
- * düğme çizilmiyor — basınca hiçbir şey yapmayan bir düğme sahte bir
- * özellik olurdu.
+ * YALNIZ `onMesaj` VERİLİRSE ÇİZİLİYOR. Mesajlaşmanın arka ucu geldi
+ * (20261107010000); sayfa düğmeyi yalnız öğrenciden öğrenciye veriyor
+ * (koşullar `SosyalProfilSayfasi`nde). Verilmeyen yerde (şirket sayfası,
+ * oturumsuz ziyaretçi) düğme çizilmiyor — basınca hiçbir şey yapmayan
+ * ya da sunucunun reddedeceği bir düğme sahte bir özellik olurdu.
  */
 export const MesajHapi: React.FC<{ onMesaj: () => void }> = ({ onMesaj }) => (
   <button type="button" onClick={onMesaj} className={`${HAP} ${YARIM_HUCRE}`}>

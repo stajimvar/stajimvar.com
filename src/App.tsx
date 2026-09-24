@@ -190,6 +190,9 @@ const AgimSayfasi = React.lazy(() =>
 const BaglantilarSayfasi = React.lazy(() =>
   import('./components/sosyal/BaglantilarSayfasi').then((m) => ({ default: m.BaglantilarSayfasi }))
 );
+const MesajlarSayfasi = React.lazy(() =>
+  import('./components/mesaj/MesajlarSayfasi').then((m) => ({ default: m.MesajlarSayfasi }))
+);
 const TakipEttiklerimSayfasi = React.lazy(() =>
   import('./components/sosyal/TakipEttiklerimSayfasi').then((m) => ({
     default: m.TakipEttiklerimSayfasi,
@@ -2825,6 +2828,41 @@ export default function App() {
     (20261015010000). Bu yüzden adres bir kimlik taşımıyor — taşısaydı
     başkasının takip listesini sormanın hazır bir yolu olurdu.
   */
+  /*
+    /mesajlar · /mesajlar?kutu=istekler · /mesajlar/<kullaniciadi>
+
+    Mesajlaşma (20261107010000). Adresteki ad yalnız bir GİRDİ; sohbetin
+    kime ait olduğu sunucuda (`sohbet_kimligi`, RLS). `decodeURIComponent`
+    profil rotasındaki gerekçeyle try içinde. Oturum yoksa aynı giriş
+    akışı. Yetki (öğrenci mi) sayfanın içinde ve sunucuda.
+
+    İSTEK SEKMESİ SORGUDA (24 Eylül 2026 kararı): `/mesajlar/<ad>` HER
+    kullanıcı adı için sohbet; "istekler" adlı bir kullanıcıyla çakışmasın
+    diye sekme yolda değil. Kutuyu sayfa sorgudan kendisi okuyor — rota
+    durumu yalnız yolu tutuyor (bkz. `navigate`).
+  */
+  if (temizYol === '/mesajlar' || temizYol.startsWith('/mesajlar/')) {
+    const parca = temizYol.slice('/mesajlar/'.length);
+    let mesajRotasi: { liste: true } | { kullaniciAdi: string } = { liste: true };
+    if (temizYol !== '/mesajlar' && parca) {
+      try {
+        mesajRotasi = { kullaniciAdi: decodeURIComponent(parca) };
+      } catch {
+        mesajRotasi = { kullaniciAdi: parca };
+      }
+    }
+    return icerikSayfasi(
+      <MesajlarSayfasi
+        kullaniciId={session?.userId ?? null}
+        oturumHazir={sessionReady}
+        rota={mesajRotasi}
+        onNavigate={navigate}
+        onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+      />,
+      'bg-white sm:bg-[#F9FAFB]',
+    );
+  }
+
   if (temizYol === '/takip') {
     return icerikSayfasi(
       <TakipEttiklerimSayfasi
