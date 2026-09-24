@@ -693,7 +693,7 @@ test('üç profil ekranı aynı kalıbı paylaşıyor: kap sınıfları birebir'
     }
     assert.match(kaynak, /className=\{HAP\}/, `${ad}: çerçeveli hap yok`);
     /* Kapak/bant kimlik bandından ÖNCE. */
-    const bant = Math.max(kaynak.indexOf('<KapakFotografi'), kaynak.indexOf('${KAPAK_BANDI_SINIFI}'));
+    const bant = Math.max(kaynak.indexOf('<KapakFotografi'), kaynak.indexOf('${KAPAK_SINIFI}'));
     assert.ok(bant > 0 && bant < kaynak.indexOf('className={KIMLIK_BANDI}'), `${ad}: bant kimliğin üstünde değil`);
     /* 3. Kendi kopyası yok: eski 48 piksellik blok düğme ve ortalı sütun kalktı. */
     assert.doesNotMatch(yorumsuz(kaynak), /^const (BIRINCIL|HAP|HAP_BIRINCIL|IKON_HAP) = /m, `${ad}: kalıbın dizesi yerelde yeniden yazılmış`);
@@ -1099,8 +1099,17 @@ test('ayrıntılı ızgara kutulu ekranların ölçüsünde, sade ızgara üç s
     GALERİ (17 Eylül 2026): yalnız /cv sahibin ızgarası. Telefonda iki,
     geniş ekranda üç eşit sütun; 12–20 px aralık, yuvarlatılmış kare karo.
   */
-  /* 17 Eylül 2026: Instagram gibi telefonda 3, geniş ekranda 4 sütun; 3:4, yuvarlamasız, 1–2 px aralık. */
-  assert.ok(izgara.includes("export const GALERI_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-0.5 lg:grid-cols-4';"));
+  /*
+    17 Eylül 2026: Instagram gibi telefonda 3, geniş ekranda 4 sütun; 3:4,
+    yuvarlamasız, 1–2 px aralık.
+
+    24 EYLÜL 2026 (kullanıcı kararı: X sayfa düzeni, sol menü yok): eski
+    şart "geniş ekranda `lg:grid-cols-4`" idi — ızgara sayfanın tamamına
+    yayılıyordu. Profil artık en çok 600 piksellik bir sütunda; yeni şart
+    her genişlikte 3 sütun (4 sütunda karo 150 pikselin altına inerdi).
+    Karo oranı, köşe ve aralık aynı.
+  */
+  assert.ok(izgara.includes("export const GALERI_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-0.5';"));
   assert.match(izgara, /const GALERI_KAPAK_KABI = 'relative aspect-\[3\/4\] w-full overflow-hidden bg-gray-100';/);
 });
 

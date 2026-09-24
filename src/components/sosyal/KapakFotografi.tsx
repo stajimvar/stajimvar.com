@@ -1,7 +1,7 @@
 import React from 'react';
 import { SOSYAL_KAPAK_KOVASI } from '../../lib/queries/sosyal';
 import { useGorselAdresleri } from './useGorselAdresleri';
-import { KAPAK_BANDI_SINIFI, KAPAK_DOSYASI_SINIFI } from '../../lib/kapak-orani';
+import { KAPAK_SINIFI } from '../../lib/kapak-orani';
 
 /**
  * KAPAK FOTOĞRAFI — `ProfilFotografi`NİN BANT HÂLİ
@@ -33,18 +33,14 @@ import { KAPAK_BANDI_SINIFI, KAPAK_DOSYASI_SINIFI } from '../../lib/kapak-orani'
  * kullanıcının çözemeyeceği bir satır bırakırdı. `ProfilFotografi` baş
  * harfe düşerken verdiği kararın aynısı.
  *
- * ORAN BİLEŞENDE (`kip`), KÖŞE ÇAĞIRANDA
- * --------------------------------------
- *   kip="bant"   profil başlığı: 3:1, `lg:` ve üstünde 5:1. 1440'ta 3:1
- *                bant 1343×448 ölçüldü, 900 piksellik ekranın yarısıydı.
- *                Geniş ekranda dosyanın ortadaki şeridi görünüyor
- *                (`object-center`); kırpma ekranı kesilen payı karartıyor.
- *   kip="dosya"  her ekranda 3:1 — kaydedilen dosyanın tamamı (düzenleme
- *                önizlemesi, yükleme ekranındaki "şu anki kapağın").
- * Oran kararı yalnız burada: iki profil ekranı "bant" deyip kararı
- * almıyor, sınıf da sessiz bir CSS önceliğine bırakılmıyor. Köşe kabın
- * kendi yarıçapına bağlı (kart 20, başlık 16 piksel); `className` ile
- * geliyor.
+ * ORAN BİLEŞENDE, KÖŞE ÇAĞIRANDA
+ * ------------------------------
+ * Her yerde 3:1 — kaydedilen dosyanın oranı (`lib/kapak-orani`). Profil
+ * sütunu X'in sayfa düzeninde en çok 600 piksel olduğu için geniş
+ * ekranda kapak 600×200. Eskiden `kip` prop'u profil bandını (lg'de 5:1)
+ * dosyanın kendisinden (3:1) ayırıyordu; 5:1 kuralı kalkınca iki kip aynı
+ * sınıfa düştü ve prop kaldırıldı. Köşe kabın kendi yarıçapına bağlı
+ * (kart 20, başlık 16 piksel); `className` ile geliyor.
  *
  * BÜYÜTME YOK: kapak dekoratif bir bant, görüntüleyici gerekmiyor.
  */
@@ -60,8 +56,6 @@ interface KapakProps {
    * yanıp sönme üretirdi.
    */
   yol: string | null | undefined;
-  /** Oran: "bant" (profil başlığı, lg'de 5:1) ya da "dosya" (hep 3:1). */
-  kip: 'bant' | 'dosya';
   /** Genişlik, köşe ve dış boşluk — kabın kendi ölçüsüne göre çağırandan. */
   className?: string;
 }
@@ -80,14 +74,10 @@ const YOL_YOK: string[] = [];
 */
 const TABAN = 'block overflow-hidden bg-gray-100';
 
-/* Oran sınıfları `lib/kapak-orani`da, sayılarla aynı yerde; şirket bandı da oradan okuyor. */
-const ORAN_SINIFI: Record<KapakProps['kip'], string> = {
-  bant: KAPAK_BANDI_SINIFI,
-  dosya: KAPAK_DOSYASI_SINIFI,
-};
+/* Oran sınıfı `lib/kapak-orani`da, sayıyla aynı yerde; şirket bandı da oradan okuyor. */
+const bant = `${TABAN} ${KAPAK_SINIFI}`;
 
-export const KapakFotografi: React.FC<KapakProps> = ({ ad, yol, kip, className = '' }) => {
-  const bant = `${TABAN} ${ORAN_SINIFI[kip]}`;
+export const KapakFotografi: React.FC<KapakProps> = ({ ad, yol, className = '' }) => {
   const yollar = React.useMemo(() => (yol ? [yol] : YOL_YOK), [yol]);
   /* Kanca koşulsuz: React kancaları dallara giremez. Yol yokken istek atılmıyor. */
   const { durum, adresler } = useGorselAdresleri(SOSYAL_KAPAK_KOVASI, yollar);

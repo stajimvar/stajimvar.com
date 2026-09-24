@@ -34,6 +34,8 @@ import { KapakFotografiYukleme } from './KapakFotografiYukleme';
 import { SahipListesi } from './SahipListesi';
 import { SosyalProfilDuzenleme } from './SosyalProfilDuzenleme';
 import { SosyalProfilGorunumu } from './SosyalProfilGorunumu';
+import { ProfilSayfaDuzeni } from './ProfilSayfaDuzeni';
+import { AgimYanSutun } from './AgimYanSutun';
 /*
   Şirket sayfası GECİKMELİ: ilan yardımcılarını ve şirket veri katmanını
   çekiyor; öğrenci profilini açan herkesin indirmesi gerekmiyor. Parça
@@ -255,6 +257,15 @@ export interface PortfolyoSatiri {
    * nesnede gidiyor ki kart ikinci bir profil sorgusu açmasın.
    */
   kullaniciAdi: string | null;
+  /*
+    SAHİBİN KİMLİĞİ VE ALANI — `/cv` sağ sütunu için (X sayfa düzeni,
+    24 Eylül 2026). Sağ sütunun bağlantı önerileri BAKAN kişi için:
+    `/cv`de bakan sahibin kendisi. İkisi bu nesneyle gidiyor çünkü satırı
+    zaten bu panel okuyor; kart ya da sayfa kimliği başka bir yerden
+    tahmin etmiyor.
+  */
+  profilId: string | null;
+  sektorId: string | null;
   /*
     KAPAK, BİYOGRAFİ VE KATILMA TARİHİ — AYNI NESNEDE
 
@@ -1131,6 +1142,8 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     }
     onPortfolyoSatiri({
       kullaniciAdi: profil?.kullaniciAdi ?? null,
+      profilId: profil?.profilId ?? null,
+      sektorId: profil?.sektorId ?? null,
       biyografi: profil?.biyografi ?? null,
       kapakFotografiYolu: profil?.kapakFotografiYolu ?? null,
       katilmaAni: profil?.katilmaAni ?? null,
@@ -1155,6 +1168,8 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     profilDurumu,
     sahibiMi,
     profil?.kullaniciAdi,
+    profil?.profilId,
+    profil?.sektorId,
     profil?.biyografi,
     profil?.kapakFotografiYolu,
     profil?.katilmaAni,
@@ -1193,6 +1208,19 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     Yükleme iskeleti gelecek içeriğin ölçüsünde: düzenleme kipinde form,
     gömülü portfolyoda ızgara, ayrı adreste tam sayfa.
   */
+  /*
+    YAN SÜTUN BAKAN İÇİN (X sayfa düzeni, kullanıcı kararı 24 Eylül 2026)
+
+    Ziyaretçi profilinin ve şirket sayfasının sağ sütunu (`AgimYanSutun`,
+    olduğu gibi): bağlantı önerileri, son ilanlar, rehberler. Öneriler
+    bakılan kişi için değil BAKAN için — kimlik oturumdan, alan bakanın
+    kendi satırından (`profil`, bu sayfada her oturumda okunuyor). Oturum
+    yoksa sütun hiç çizilmiyor ve ana sütun tek başına ortada duruyor.
+  */
+  const bakaninYanSutunu = kullaniciId ? (
+    <AgimYanSutun kullaniciId={kullaniciId} sektorId={profil?.sektorId ?? null} onNavigate={onNavigate} />
+  ) : undefined;
+
   const iskeletKipi: 'sayfa' | 'panel' | 'form' = duzenlemeKipi
     ? 'form'
     : gomulu
@@ -1324,10 +1352,17 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
 
         Hata kartı bilerek bunun dışında: orada yerini tutacak bir ızgara
         yok, ortalanmış tek bir kart geniş kapta gereksiz yayılırdı.
+
+        X SAYFA DÜZENİ (24 Eylül 2026): hazır dal 600 piksellik ana sütuna
+        indi; iskelet de aynı kapta (`ProfilSayfaDuzeni`), yoksa profil
+        gelince içerik tam genişlikten 600'e daralırdı. Yan sütun iskelette
+        çizilmiyor: kendi verisini kendisi çekiyor ve hazır dalda geliyor.
       */
       return (
         <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI}>
-          <ProfilIskeleti />
+          <ProfilSayfaDuzeni>
+            <ProfilIskeleti />
+          </ProfilSayfaDuzeni>
         </SayfaKabugu>
       );
     }
@@ -1359,6 +1394,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     if (ziyaretciDurumu === 'hazir' && ziyaretciProfili && ziyaretciProfili.sirketId) {
       return (
         <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI} {...PROFIL_KABUGU}>
+          <ProfilSayfaDuzeni yanSutun={bakaninYanSutunu}>
           <React.Suspense fallback={<ProfilIskeleti />}>
             <SirketSayfasi
               profil={ziyaretciProfili}
@@ -1386,6 +1422,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
               bildirim={bildirim}
             />
           </React.Suspense>
+          </ProfilSayfaDuzeni>
         </SayfaKabugu>
       );
     }
@@ -1410,6 +1447,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
           boşluğu kaldırıp üst bloğu ekranın kenarına yaslıyor.
         */
         <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI} {...PROFIL_KABUGU}>
+          <ProfilSayfaDuzeni yanSutun={bakaninYanSutunu}>
           <SosyalProfilGorunumu
             profil={ziyaretciProfili}
             sahibiMi={false}
@@ -1434,6 +1472,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
             paylasimDurumu={paylasimDurumu}
             onPaylasimlariYenile={() => setPaylasimDeneme((sayi) => sayi + 1)}
           />
+          </ProfilSayfaDuzeni>
         </SayfaKabugu>
       );
     }
@@ -1718,7 +1757,6 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
             <KapakFotografi
               ad={profil!.gorunenAd ?? `@${profil!.kullaniciAdi}`}
               yol={profil!.kapakFotografiYolu}
-              kip="dosya"
               className="w-40 shrink-0 rounded-lg"
             />
             <div className="flex flex-wrap gap-2">

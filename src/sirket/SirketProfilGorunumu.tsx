@@ -21,7 +21,7 @@ import {
   SAYAC_SATIRI,
   SAYAC_SAYISI,
 } from '../components/sosyal/ProfilKimlikKalibi';
-import { KAPAK_BANDI_SINIFI } from '../lib/kapak-orani';
+import { KAPAK_SINIFI } from '../lib/kapak-orani';
 import {
   FotografPaylasGirisi,
   type FotografPaylasKolu,
@@ -338,8 +338,8 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
 
           Şirketin kapak kolonu yok. Bulanık logo zemini eskiden kimlik
           metinlerinin ARKASINDAYDI; X kalıbında metin bandın altına indi,
-          zemin de öğrenci kapağıyla AYNI oranlı bir banda taşındı (3:1,
-          lg'de 5:1 — sınıf `lib/kapak-orani`dan, tek yerde). Üç profil
+          zemin de öğrenci kapağıyla AYNI oranlı bir banda taşındı (her
+          genişlikte 3:1 — sınıf `lib/kapak-orani`dan, tek yerde). Üç profil
           ekranının üst bandı bu yüzden aynı yükseklikte.
 
           Kalıp tam ekran görüntüleyicideki gibi: görsel `object-cover` ile
@@ -355,7 +355,7 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
           Logo yoksa ya da adres kırıksa zemin de yok: bant nötr
           `bg-gray-100` — stok görsel, doku ya da gradyan KONMUYOR.
         */}
-        <div className={`relative w-full overflow-hidden bg-gray-100 ${KAPAK_BANDI_SINIFI}`}>
+        <div className={`relative w-full overflow-hidden bg-gray-100 ${KAPAK_SINIFI}`}>
           {bulanikZemin && (
             <img
               src={bulanikZemin}
