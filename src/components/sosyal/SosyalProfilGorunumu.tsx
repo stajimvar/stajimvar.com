@@ -14,6 +14,9 @@ import {
   BIYOGRAFI,
   HAP,
   HAP_BIRINCIL,
+  MesajHapi,
+  PaylasIkonDugmesi,
+  ZIYARETCI_EYLEMLERI,
   HAP_SIRASI,
   IKON_HAP,
   KIMLIK_BANDI,
@@ -169,6 +172,13 @@ interface GorunumProps {
    * girilmemiş ya da alınamadı — öğe çizilmiyor, profil yine çiziliyor.
    */
   okul?: string | null;
+  /**
+   * Mesaj ekranını açar — ZİYARETÇİ DALI, isteğe bağlı.
+   *
+   * Bugün hiçbir çağıran vermiyor: mesajlaşmanın arka ucu yok. Arka uç
+   * gelince sayfa verecek, gelmeden düğme çizilmiyor.
+   */
+  onMesaj?: () => void;
 }
 
 /*
@@ -261,6 +271,7 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
   bakanId,
   onNavigate,
   okul = null,
+  onMesaj,
 }) => {
   /*
     Başlıkta görünen ad yoksa kullanıcı adı geçiyor. Uydurma bir ad
@@ -351,9 +362,10 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
 
                 sahip      dişli menüsü (X'teki "…"; @ad satırından buraya
                            taşındı), Fotoğraf paylaş, Profili düzenle
-                ziyaretçi  bağlantı düğmesi — kendi durumunu sunucudan
-                           okuyor; kendine istek şemada da yasak
-                           (`kendine_istek_yok`)
+                ziyaretçi  yalnız yuvarlak ikon düğmesi: profili paylaş
+                           (X mobil kalıbı, 24 Eylül 2026). Bağlantı
+                           durumu ve Mesaj sayaçların altındaki eylem
+                           satırında — aşağıda.
 
               "FOTOĞRAF PAYLAŞ" KALDI: ızgaranın başlığında da var ama
               buradaki kopyanın koşulu sunucunun önkoşulunu ölçüyor
@@ -386,9 +398,7 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
                   tetikSinifi={IKON_HAP}
                 />
               )}
-              {!sahibiMi && bakanId && (
-                <BaglantiDugmesi bakanId={bakanId} hedefId={profil.profilId} />
-              )}
+              {!sahibiMi && onPaylas && <PaylasIkonDugmesi onPaylas={onPaylas} />}
               {sahibiMi && (onDuzenle || (profil.yayindaMi && profil.sektorId && onPaylasimOlustur)) && (
                 <>
                   {profil.yayindaMi && profil.sektorId && onPaylasimOlustur && (
@@ -461,11 +471,6 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
                   {okul}
                 </MetaOgesi>
               )}
-              {ogrenciKimligiGorunur && profil.sektorAdi && (
-                <MetaOgesi ikon={Briefcase} etiket="Alan">
-                  {profil.sektorAdi} alanı
-                </MetaOgesi>
-              )}
               {/*
                 BÖLÜM VE SINIF İKİ AYRI ÖĞE, "·" İLE BİRLEŞMİYOR: bölüm adı
                 katalogdan (`departments`), sınıf etiketi kullanıcının
@@ -481,6 +486,19 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
               {ogrenciKimligiGorunur && profil.sinifEtiketi && (
                 <MetaOgesi ikon={Layers} etiket="Sınıf">
                   {profil.sinifEtiketi}
+                </MetaOgesi>
+              )}
+              {/*
+                SIRA İKİ EKRANDA AYNI (kullanıcı bildirimi, 24 Eylül 2026):
+                okul → bölüm → sınıf → alan → şehir → katılma. /cv kartında
+                okul → bölüm · sınıf → konum → katılma; alan orada yok, öteki
+                öğeler aynı sırada. Alan eskiden okulun hemen ardındaydı ve
+                bölümle aynı satıra düşüyordu; iki ekranda aynı bilgiler
+                farklı sırada okunuyordu.
+              */}
+              {ogrenciKimligiGorunur && profil.sektorAdi && (
+                <MetaOgesi ikon={Briefcase} etiket="Alan">
+                  {profil.sektorAdi} alanı
                 </MetaOgesi>
               )}
               {profil.sehir && (
@@ -546,6 +564,26 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
           )}
           {(sayacDurumu === 'hata' || (sayacDurumu === 'hazir' && !sayaclar)) && (
             <p className={`${SAYAC_SATIRI} ${SAYAC_ETIKETI} min-h-11 text-sm`}>Sayaçlar şu anda alınamadı.</p>
+          )}
+
+          {/*
+            ZİYARETÇİ EYLEM SATIRI — X mobil kalıbı (kullanıcı ekran
+            görüntüsü, 24 Eylül 2026): sayaçların altında, tam genişlik.
+            [Mesaj] [bağlantı durumu] iki eşit hücre; Mesaj yoksa (bugün
+            hep yok, arka ucu yok) bağlantı hapı tek başına tam satır.
+            Hücre genişliğini bağlantı düğmesi kendi durumundan seçiyor
+            (gelen istekte Kabul et + Reddet tam satır); gerekçe
+            `ProfilKimlikKalibi`nde.
+
+            Bağlantı düğmesi YALNIZ ZİYARETÇİ DALINDA: kendine istek
+            göndermek şemada da yasak (`kendine_istek_yok`). Düğme kendi
+            durumunu sunucudan okuyor.
+          */}
+          {!sahibiMi && bakanId && (
+            <div className={ZIYARETCI_EYLEMLERI}>
+              {onMesaj && <MesajHapi onMesaj={onMesaj} />}
+              <BaglantiDugmesi bakanId={bakanId} hedefId={profil.profilId} />
+            </div>
           )}
 
           {/* Sahibe özel hata cümleleri: menü tıklanınca kapandığı için burada. */}

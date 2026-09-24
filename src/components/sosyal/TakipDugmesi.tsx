@@ -1,6 +1,6 @@
 import React from 'react';
 import { Check } from 'lucide-react';
-import { HAP, HAP_BIRINCIL } from './ProfilKimlikKalibi';
+import { HAP, HAP_BIRINCIL, TAM_HUCRE, YARIM_HUCRE } from './ProfilKimlikKalibi';
 import { SosyalHata, takibiBirak, takipEdiyorMuyum, takipEt } from '../../lib/queries/sosyal';
 
 /**
@@ -65,8 +65,8 @@ interface TakipDugmesiProps {
   Eski `w-full sm:w-auto sm:min-w-52` kalktı:
   düğme artık avatarın yanındaki hap sırasında, tam genişlikte değil.
 */
-const DOLU = `${HAP_BIRINCIL} min-w-40 disabled:cursor-default disabled:opacity-40`;
-const CERCEVELI = `${HAP} min-w-40 disabled:cursor-default disabled:opacity-40`;
+const DOLU = `${HAP_BIRINCIL} w-full min-w-40 disabled:cursor-default disabled:opacity-40`;
+const CERCEVELI = `${HAP} w-full min-w-40 disabled:cursor-default disabled:opacity-40`;
 
 export const TakipDugmesi: React.FC<TakipDugmesiProps> = ({ bakanId, hedefId, onTakipciFarki }) => {
   const [takipEdiyor, setTakipEdiyor] = React.useState<boolean | null>(null);
@@ -124,22 +124,28 @@ export const TakipDugmesi: React.FC<TakipDugmesiProps> = ({ bakanId, hedefId, on
 
   if (durum === 'yukleniyor') {
     return (
-      <div aria-busy="true" className="flex">
-        <span aria-hidden className="h-11 w-40 animate-pulse rounded-full bg-gray-100" />
+      <div aria-busy="true" className={`${YARIM_HUCRE} flex`}>
+        <span aria-hidden className="h-11 w-full animate-pulse rounded-full bg-gray-100" />
       </div>
     );
   }
 
   if (durum === 'hata') {
     return (
-      <p role="alert" className="text-sm text-gray-600">
+      <p role="alert" className={`${TAM_HUCRE} text-sm text-gray-600`}>
         Takip durumu alınamadı.
       </p>
     );
   }
 
   return (
-    <div className="space-y-2">
+    /*
+      Kök öğe ziyaretçi eylem satırının bir hücresi (X mobil kalıbı, 24
+      Eylül 2026): "Mesaj" varsa yanında eşit genişlikte, yoksa tam satır.
+      Hap `w-full` ile hücreyi dolduruyor; `min-w-40` iki durumun aynı
+      genişlikte kalmasını satır daraldığında da koruyor.
+    */
+    <div className={`${YARIM_HUCRE} flex flex-col gap-2`}>
       <button
         type="button"
         disabled={islemde}

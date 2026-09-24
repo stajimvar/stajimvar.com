@@ -186,7 +186,13 @@ test('yükleme iskeleti aynı kaldı', () => {
     `rounded-xl` idi — ölçülen şey aynı: iskelet gelecek düğmenin biçiminde
     ve yüksekliğinde, düğme gelince yer değişmiyor.
   */
-  assert.match(dugme, /h-11 w-32 animate-pulse rounded-full bg-gray-100/);
+  /*
+    24 Eylül 2026 (X mobil kalıbı): düğme ziyaretçi eylem satırının bir
+    hücresi ve hap hücreyi dolduruyor (`w-full`); iskelet de hücre
+    genişliğinde. Ölçülen şey aynı: iskelet gelecek hapın biçiminde ve
+    yüksekliğinde.
+  */
+  assert.match(dugme, /h-11 w-full animate-pulse rounded-full bg-gray-100/);
 });
 
 test('alan seçimine giden gerçek bir bağlantı var', () => {

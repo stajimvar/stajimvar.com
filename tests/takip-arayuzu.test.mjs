@@ -87,7 +87,12 @@ test('takip düğmesi: iki durum, iyimser güncelleme + geri alma, onay yok, "Ba
   assert.match(DUGME, /const DOLU = `\$\{HAP_BIRINCIL\} /);
   assert.match(DUGME, /const CERCEVELI = `\$\{HAP\} /);
   for (const k of [DUGME, BAGLANTI_DUGMESI]) {
-    assert.match(k, /import \{ HAP, HAP_BIRINCIL \} from '\.\/ProfilKimlikKalibi';/);
+    /*
+      24 Eylül 2026 (X mobil kalıbı): iki düğme ziyaretçi eylem satırının
+      hücresi; hücre sınıfları da aynı modülden (YARIM_HUCRE / TAM_HUCRE).
+      Şart aynı: biçim kalıptan, yerel kopya yok.
+    */
+    assert.match(k, /import \{ HAP, HAP_BIRINCIL, TAM_HUCRE, YARIM_HUCRE \} from '\.\/ProfilKimlikKalibi';/);
     assert.doesNotMatch(kod(k), /BIRINCIL_EYLEM|min-h-12|rounded-xl/);
   }
   /* Yükleniyor / hata / hazır üç ayrı dal. */

@@ -1,7 +1,8 @@
 import React from 'react';
-import { BaglantiKaldirMenusu } from './BaglantiKaldirMenusu';
+import { Clock, Undo2, UserCheck } from 'lucide-react';
+import { BaglantiKaldirMenusu, OnayliEylemMenusu } from './BaglantiKaldirMenusu';
 import { ODAK_HALKASI } from '../../lib/renk-token';
-import { HAP, HAP_BIRINCIL } from './ProfilKimlikKalibi';
+import { HAP, HAP_BIRINCIL, TAM_HUCRE, YARIM_HUCRE } from './ProfilKimlikKalibi';
 import {
   SosyalHata,
   baglantiDurumu,
@@ -14,7 +15,7 @@ import {
   type BaglantiBilgisi,
   type BaglantiEngeli,
 } from '../../lib/queries/sosyal';
-import { tarihMetni } from '../../lib/tarih.mjs';
+import { kisaTarihMetni, tarihMetni } from '../../lib/tarih.mjs';
 
 /**
  * BAĞLANTI DÜĞMESİ — YEDİ DURUM
@@ -23,13 +24,17 @@ import { tarihMetni } from '../../lib/tarih.mjs';
  * bir hiyerarşi değil, yalnız isteğin kimden çıktığı; ama düğmenin ne
  * yazacağını o belirliyor.
  *
- *   yok                 "Bağlantı kur"            yeni satır
- *   giden bekliyor      "İstek gönderildi"        geri çek (satır silinir)
- *   gelen bekliyor      "Sana istek gönderdi"     kabul / reddet
- *   bağlı               "Bağlantınız var"         bağlantıyı kaldır
- *   reddettim           kendi reddim              yeniden başlat (RPC)
- *   reddedildim         yeniden deneme tarihi     süre dolunca yeniden gönder
- *   engel               —                          SATIR HİÇ ÇİZİLMİYOR
+ *   yok                 hap "Bağlantı kur"         yeni satır
+ *   giden bekliyor      hap "İstek gönderildi"     menü → geri çek (satır silinir)
+ *   gelen bekliyor      "Kabul et" + "Reddet"      grup adı: isteği kim gönderdi
+ *   bağlı               hap "Bağlantıdasın"        menü → bağlantıyı kaldır
+ *   reddettim           hap "Bağlantı kur"         yeniden başlat (RPC)
+ *   reddedildim         hap, tarih gelene kadar    süre dolunca yeniden gönder
+ *                       devre dışı
+ *   görünmeyen hedef    —                          SATIR HİÇ ÇİZİLMİYOR
+ *
+ * Her durum TEK SATIR hap (kullanıcı kararı 24 Eylül 2026: durum hapın
+ * kendisi, eylem görünür menüde); gerekçe `govde` dallarının başında.
  *
  * SIFIR SATIR = DÜĞME YOK
  * -----------------------
@@ -81,18 +86,24 @@ interface BaglantiDugmesiProps {
     EYLEM ÇAĞRISI (Bağlantı kur, Kabul et)   dolu hap (`HAP_BIRINCIL`)
     İKİNCİL EYLEM (İsteği geri çek, Reddet)  çerçeveli hap (`HAP`)
 
-  DURUM BİR METİN, DÜĞME DEĞİL: "İstek gönderildi", "Bağlantınız var",
-  "Sana istek gönderdi" tıklanabilir bir hap olarak çizilmedi. X'te
-  "Pending" hapına basmak isteği geri çekiyor ve bu ancak üstüne
-  gelince görünüyor; burada geri çekme kendi adıyla ayrı bir düğme
-  ("İsteği geri çek") ve bu ayrım korundu — yalnız görünüm değişiyor,
-  eylemler ve durumlar aynı.
+  DURUM HAPIN KENDİSİ (kullanıcı kararı 24 Eylül 2026: durum hapın
+  kendisi, eylem görünür menüde). Önceki karar "durum bir metin, düğme
+  değil" idi ve metinli dallar hap sırasını 84 piksele, iki satıra
+  çıkarıyordu; kullanıcı bunu istemedi. Gizli eylem YİNE yok: X'te
+  "Pending" hapına basmak isteği doğrudan geri çekiyor; burada hap bir
+  menü açıyor, menüde eylemin adı yazılı ve sonuç bir onay adımında
+  (`OnayliEylemMenusu`). Ayrıntı `govde` dallarının başındaki tabloda.
 
   `disabled:` sınıfları kalıbın dizesine EKLENİYOR, değiştirmiyor: kalıpta
   karşılıkları yok, hangisinin kazanacağı sorusu doğmuyor.
 */
-const DOLU = `${HAP_BIRINCIL} disabled:cursor-default disabled:opacity-40`;
-const CERCEVELI = `${HAP} disabled:cursor-default disabled:opacity-40`;
+/*
+  `w-full`: ziyaretçi eylem satırında hap hücresinin tamamını dolduruyor
+  (X mobil kalıbı, 24 Eylül 2026). Kalıbın dizesinde genişlik yok,
+  eklemek çakışma doğurmuyor.
+*/
+const DOLU = `${HAP_BIRINCIL} w-full disabled:cursor-default disabled:opacity-40`;
+const CERCEVELI = `${HAP} w-full disabled:cursor-default disabled:opacity-40`;
 
 /**
  * Engel sebebi → kullanıcı cümlesi. `null` dönmesi "yazacak bir şey yok"
@@ -279,15 +290,15 @@ export const BaglantiDugmesi: React.FC<BaglantiDugmesiProps> = ({ bakanId, hedef
 
   if (durum === 'yukleniyor') {
     return (
-      <div aria-busy="true" className="flex">
-        <span aria-hidden className="h-11 w-32 animate-pulse rounded-full bg-gray-100" />
+      <div aria-busy="true" className={`${YARIM_HUCRE} flex`}>
+        <span aria-hidden className="h-11 w-full animate-pulse rounded-full bg-gray-100" />
       </div>
     );
   }
 
   if (durum === 'hata') {
     return (
-      <p role="alert" className="text-sm text-gray-600">
+      <p role="alert" className={`${TAM_HUCRE} text-sm text-gray-600`}>
         Bağlantı durumu alınamadı.
       </p>
     );
@@ -310,7 +321,30 @@ export const BaglantiDugmesi: React.FC<BaglantiDugmesiProps> = ({ bakanId, hedef
   */
   const kuralCumlesi = engelCumlesi(engel);
 
-  /* Her durumun kendi başlığı ve kendi eylemleri; ortak bir "belki" dalı yok. */
+  /*
+    HER DURUM TEK SATIR HAP (kullanıcı kararı 24 Eylül 2026: durum hapın
+    kendisi, eylem görünür menüde). Kullanıcı canlıdan iki telefon
+    görüntüsü gönderdi: /cv'de avatarın sağında tek satır hap vardı,
+    başkasının profilinde ise düz yazı "Bağlantınız var" ve altında ayrı
+    bir satırda "⋯" — sıra 84 piksel, avatar alt hizası yok.
+
+      yok                 dolu hap "Bağlantı kur"
+      giden bekliyor      çerçeveli hap "İstek gönderildi" → menü: İsteği geri çek → onay
+      gelen bekliyor      dolu "Kabul et" + çerçeveli "Reddet", tek satır
+      bağlı               çerçeveli hap "Bağlantıdasın" → menü: Bağlantıyı kaldır → onay
+      reddettim           dolu hap "Bağlantı kur" (yeniden başlat)
+      reddedildim         süre dolduysa dolu "Bağlantı kur"; dolmadıysa
+                          devre dışı hap, bekleme tarihiyle
+      engel               kural cümlesi (aşağıda)
+
+    Durum yazısı ayrı satırda DURMUYOR. Hapın göstermediği bilgi (kimin
+    isteği, kendi reddin) grubun erişilebilir adında: ekran okuyucu onu
+    okuyor, göz hapı görüyor.
+
+    ENGEL KURAL CÜMLESİ KALIYOR: kullanıcı kararı (19 Eylül 2026) kuralın
+    İZAH EDİLMESİNİ istiyor; eylem yoksa hap da yok ve yerinde sebebi
+    yazan satır duruyor. Mevcut davranış korundu.
+  */
   let govde: React.ReactNode = null;
 
   if (bilgi.durum === 'yok') {
@@ -328,64 +362,76 @@ export const BaglantiDugmesi: React.FC<BaglantiDugmesiProps> = ({ bakanId, hedef
     );
   } else if (bilgi.durum === 'bekliyor' && bilgi.benMiGonderdim) {
     govde = (
-      <>
-        <p className="text-sm font-semibold text-gray-700">İstek gönderildi</p>
-        <button
-          type="button"
-          disabled={islemde}
-          onClick={() => eylemiCalistir(() => baglantiKaldir(bakanId, hedefId))}
-          className={CERCEVELI}
-        >
-          {islemde ? 'Geri çekiliyor…' : 'İsteği geri çek'}
-        </button>
-      </>
+      <OnayliEylemMenusu
+        tetik={{
+          icerik: (
+            <>
+              <Clock aria-hidden className="h-4 w-4 shrink-0" />
+              {islemde ? 'Geri çekiliyor…' : 'İstek gönderildi'}
+            </>
+          ),
+          sinif: CERCEVELI,
+        }}
+        eylem={{ etiket: 'İsteği geri çek', ikon: <Undo2 aria-hidden className="h-4 w-4 text-gray-600" /> }}
+        onay={{
+          soru: 'Bağlantı isteğini geri çekmek istiyor musun?',
+          aciklama: 'İstek silinir ve karşı taraf onu artık göremez. İstersen yeniden gönderebilirsin.',
+          dugme: 'Geri çek',
+          islemdeDugme: 'Geri çekiliyor…',
+        }}
+        islemde={islemde}
+        onOnayla={() => eylemiCalistir(() => baglantiKaldir(bakanId, hedefId))}
+      />
     );
   } else if (bilgi.durum === 'bekliyor') {
     govde = (
-      <>
-        <p className="text-sm font-semibold text-gray-700">Sana istek gönderdi</p>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={islemde}
-            onClick={() => eylemiCalistir(() => baglantiYanitla(bakanId, hedefId, 'kabul'))}
-            className={DOLU}
-          >
-            Kabul et
-          </button>
-          <button
-            type="button"
-            disabled={islemde}
-            onClick={() => eylemiCalistir(() => baglantiYanitla(bakanId, hedefId, 'red'))}
-            className={CERCEVELI}
-          >
-            Reddet
-          </button>
-        </div>
-      </>
+      /* "Sana istek gönderdi" yazısı kalktı; haplar kendini anlatıyor, grup adı okuyucuya söylüyor. */
+      <div role="group" aria-label="Sana bağlantı isteği gönderdi" className="grid w-full grid-cols-2 gap-2">
+        <button
+          type="button"
+          disabled={islemde}
+          onClick={() => eylemiCalistir(() => baglantiYanitla(bakanId, hedefId, 'kabul'))}
+          className={DOLU}
+        >
+          Kabul et
+        </button>
+        <button
+          type="button"
+          disabled={islemde}
+          onClick={() => eylemiCalistir(() => baglantiYanitla(bakanId, hedefId, 'red'))}
+          className={CERCEVELI}
+        >
+          Reddet
+        </button>
+      </div>
     );
   } else if (bilgi.durum === 'kabul') {
     govde = (
-      <>
-        <p className="text-sm font-semibold text-gray-700">Bağlantınız var</p>
-        {/* Kaldırma "⋯" menüsünde ve onaylı (BaglantiKaldirMenusu). */}
-        <BaglantiKaldirMenusu
-          ad="Bu kişi"
-          islemde={islemde}
-          onKaldir={() => eylemiCalistir(() => baglantiKaldir(bakanId, hedefId))}
-        />
-      </>
+      /* Kaldırma menüde ve onaylı; tetik hapın kendisi (ayrı "⋯" yok). */
+      <BaglantiKaldirMenusu
+        ad="Bu kişi"
+        islemde={islemde}
+        onKaldir={() => eylemiCalistir(() => baglantiKaldir(bakanId, hedefId))}
+        tetik={{
+          icerik: (
+            <>
+              <UserCheck aria-hidden className="h-4 w-4 shrink-0" />
+              Bağlantıdasın
+            </>
+          ),
+          sinif: CERCEVELI,
+        }}
+      />
     );
   } else if (bilgi.durum === 'red' && !bilgi.benMiGonderdim) {
     /*
       REDDEDEN TARAF: kendi reddini "kabul"e çeviremiyor (kabul, karşı
       tarafın hâlâ istediği anlamına gelir ve bu tek taraflı varsayılamaz).
-      Fikrini değiştirdiyse yolu kendi isteğini başlatmak.
+      Fikrini değiştirdiyse yolu kendi isteğini başlatmak. Kendi reddim bir
+      OLGU: grubun adında ("Bu isteği reddettin"), hap ayrı satır açmıyor.
     */
     govde = (
-      <>
-        {/* Kendi reddim bir OLGU; kural cümlesi çizilse de yerinde kalıyor. */}
-        <p className="text-sm font-semibold text-gray-700">Bu isteği reddettin</p>
+      <div role="group" aria-label="Bu isteği reddettin" className="flex w-full">
         {kuralCumlesi ? (
           <EngelSatiri engel={engel} cumle={kuralCumlesi} />
         ) : (
@@ -398,7 +444,7 @@ export const BaglantiDugmesi: React.FC<BaglantiDugmesiProps> = ({ bakanId, hedef
             {islemde ? 'Gönderiliyor…' : 'Bağlantı kur'}
           </button>
         )}
-      </>
+      </div>
     );
   } else if (kuralCumlesi) {
     /*
@@ -409,36 +455,62 @@ export const BaglantiDugmesi: React.FC<BaglantiDugmesiProps> = ({ bakanId, hedef
       kuralı o tarihte de aynı yerde duruyor ve istek yine reddedilirdi.
     */
     govde = <EngelSatiri engel={engel} cumle={kuralCumlesi} />;
-  } else {
+  } else if (sureDoldu) {
     /*
-      REDDEDİLEN TARAF: bekleme süresi dolmadan düğme çizilmiyor. Süre
-      dolduğunda aynı satır yeniden "bekliyor"a dönüyor; yeni bir satır
-      açılmıyor (ters yön indeksi buna izin vermezdi).
+      REDDEDİLEN TARAF, SÜRE DOLDU: aynı satır yeniden "bekliyor"a dönüyor;
+      yeni bir satır açılmıyor (ters yön indeksi buna izin vermezdi).
     */
     govde = (
-      <>
-        {yenidenDenemeMetni && !sureDoldu && (
-          <p className="text-sm text-gray-600">Yeniden gönderilebilir: {yenidenDenemeMetni}</p>
-        )}
-        {sureDoldu && (
-          <button
-            type="button"
-            disabled={islemde}
-            onClick={() => eylemiCalistir(() => baglantiYenidenGonder(bakanId, hedefId))}
-            className={DOLU}
-          >
-            {islemde ? 'Gönderiliyor…' : 'Bağlantı kur'}
-          </button>
-        )}
-        {!yenidenDenemeMetni && !sureDoldu && (
-          <p className="text-sm text-gray-600">Yeniden gönderilebilir bir tarih bilinmiyor.</p>
-        )}
-      </>
+      <button
+        type="button"
+        disabled={islemde}
+        onClick={() => eylemiCalistir(() => baglantiYenidenGonder(bakanId, hedefId))}
+        className={DOLU}
+      >
+        {islemde ? 'Gönderiliyor…' : 'Bağlantı kur'}
+      </button>
+    );
+  } else {
+    /*
+      REDDEDİLEN TARAF, SÜRE DOLMADI: eylem henüz yok. Ayrı satırdaki
+      "Yeniden gönderilebilir: …" cümlesi yerine DEVRE DIŞI bir hap: aynı
+      eylemin adı ve açılacağı gün, kısa tarihle ("12 Eki"), ki 390
+      piksellik satırda tek satır kalsın. Tam tarih erişilebilir adda ve
+      imleç ipucunda. Tarih bilinmiyorsa yalnız eylemin adı; ad bunu da
+      söylüyor. Devre dışı olduğu görünüyor (soluk), basınca bir şey olmuyor
+      — çalışmayan bir eylem sunulmuyor.
+    */
+    const aciklama = yenidenDenemeMetni
+      ? `Yeniden gönderilebilir: ${yenidenDenemeMetni}`
+      : 'Yeniden gönderilebilir bir tarih bilinmiyor.';
+    const kisa = kisaTarihMetni(bilgi.yenidenDenemeAni, { yil: false });
+    govde = (
+      <button type="button" disabled aria-label={aciklama} title={aciklama} className={DOLU}>
+        <Clock aria-hidden className="h-4 w-4 shrink-0" />
+        {kisa ? `Bağlantı kur · ${kisa}` : 'Bağlantı kur'}
+      </button>
     );
   }
 
+  /*
+    HÜCRE GENİŞLİĞİ DURUMDAN (X mobil kalıbı, 24 Eylül 2026): kök öğe,
+    ziyaretçi eylem satırının (`ZIYARETCI_EYLEMLERI`) bir hücresi. Tek
+    haplı durumlar yarım hücre — "Mesaj" varsa yanında eşit genişlikte,
+    yoksa tek başına tam satır. İki hap (Kabul et + Reddet) ya da kural
+    cümlesi tam satır: yarım hücrede iki hap 80 piksele iner, cümle
+    sıkışırdı. "Mesaj" o durumda üst satırda tek başına kalıyor; DOM
+    sırası görsel sırayla aynı (önce Mesaj, sonra karar).
+  */
+  const tamSatir =
+    (bilgi.durum === 'bekliyor' && !bilgi.benMiGonderdim) ||
+    (Boolean(kuralCumlesi) && bilgi.durum !== 'bekliyor' && bilgi.durum !== 'kabul');
+
   return (
-    <div className="space-y-2">
+    /*
+      Hata cümlesi bir DURUM değil, başarısız bir işlemin sonucu; nadir ve
+      kısa ömürlü, bu yüzden hapın altında, aynı hücrede kalıyor.
+    */
+    <div className={`${tamSatir ? TAM_HUCRE : YARIM_HUCRE} flex flex-col gap-1.5`}>
       {govde}
       {hataMesaji && (
         <p role="alert" className="text-xs font-semibold leading-relaxed text-rose-700">
