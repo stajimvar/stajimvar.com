@@ -220,13 +220,18 @@ export async function mesajiSikayetEt(kullaniciId: string, mesajId: string, sebe
  * Dönen fonksiyon aboneliği kapatıyor; bileşen sökülürken çağrılmalı.
  * Olay RLS'ten geçtiği için başka bir sohbetin mesajı gelmiyor; süzgeç
  * (`sohbet_id=eq.`) yalnız trafiği azaltmak için.
+ *
+ * KANAL ADI HER ABONELİKTE TEKİL: realtime-js aynı adla ikinci bir
+ * kanal açılınca hata veriyor ve biri kapanınca öteki de susuyor. Üst
+ * çubuk rozeti ile mesaj listesi aynı anda dinliyor; sabit ad o yüzden
+ * gerçek bir çakışmaydı.
  */
 export function sohbetiDinle(
   sohbetId: string,
   olaylar: { mesaj?: (m: Mesaj) => void; okuma?: (profilId: string, an: string) => void },
 ): () => void {
   const kanal = supabase
-    .channel(`sohbet:${sohbetId}`)
+    .channel(`sohbet:${sohbetId}:${crypto.randomUUID()}`)
     .on(
       'postgres_changes' as any,
       { event: 'INSERT', schema: 'public', table: 'mesajlar', filter: `sohbet_id=eq.${sohbetId}` },
@@ -254,7 +259,7 @@ export function sohbetiDinle(
  */
 export function gelenKutusunuDinle(degisti: () => void): () => void {
   const kanal = supabase
-    .channel('gelen-kutusu')
+    .channel(`gelen-kutusu:${crypto.randomUUID()}`)
     .on('postgres_changes' as any, { event: 'INSERT', schema: 'public', table: 'mesajlar' }, () => degisti())
     .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'sohbetler' }, () => degisti())
     .subscribe();

@@ -128,9 +128,10 @@ interface GorunumProps {
   /** Profil bağlantısını paylaş — ziyaretçi dalı; sayfa yalnız yayındaki profilde veriyor. */
   onPaylas?: () => void;
   /**
-   * Mesaj ekranını açar — ZİYARETÇİ DALI, isteğe bağlı. Bugün hiçbir
-   * çağıran vermiyor: mesajlaşmanın arka ucu yok. Arka uç gelince sayfa
-   * verecek, gelmeden düğme çizilmiyor.
+   * Mesaj ekranını açar — ZİYARETÇİ DALI, isteğe bağlı. Şirket sayfasında
+   * VERİLMİYOR: mesajlaşma şimdilik yalnız öğrenciler arasında (kullanıcı
+   * kararı 24 Eylül 2026; sunucuda `ogrenci_sosyal_mi`). Kalıp iki ekranda
+   * aynı kalsın diye yuva duruyor; verilmezse düğme çizilmiyor.
    */
   onMesaj?: () => void;
   onNavigate: (yol: string) => void;

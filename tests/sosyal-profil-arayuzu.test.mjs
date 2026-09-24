@@ -739,8 +739,26 @@ test('üç profil ekranı aynı kalıbı paylaşıyor: kap sınıfları birebir'
     eylemSatiri(sirket),
     /\{!sahip && ziyaretciEylemi && \(\s*<div className=\{ZIYARETCI_EYLEMLERI\}>\s*\{onMesaj && <MesajHapi onMesaj=\{onMesaj\} \/>\}\s*\{ziyaretciEylemi\}/,
   );
-  /* Mesaj bugün HİÇBİR çağırandan verilmiyor: arka ucu yok, düğme çizilmiyor. */
-  for (const dosya of ['src/components/sosyal/SosyalProfilSayfasi.tsx', 'src/sirket/SirketSayfasi.tsx', 'src/App.tsx']) {
+  /*
+    MESAJ — kullanıcı kararı 24 Eylül 2026: herkes yazabilir, şimdilik
+    yalnız öğrenciler (20261107010000).
+
+    ESKİ ŞART: "hiçbir çağıran onMesaj vermiyor" (arka uç yoktu, düğme
+    çizilmiyordu). YENİ ŞART: yalnız öğrenci profilinin ziyaretçi dalı
+    veriyor ve yalnız şu koşullarda — bakan oturumlu öğrenci (kendi sosyal
+    satırı var, `sirketId` boş), hedef öğrenci, kendisi değil, adresi var.
+    Şirket sayfası ve App vermiyor.
+  */
+  const sosyalSayfa = yorumsuz(oku('src/components/sosyal/SosyalProfilSayfasi.tsx'));
+  assert.equal((sosyalSayfa.match(/onMesaj=/g) ?? []).length, 1, 'onMesaj tek yerde veriliyor');
+  assert.match(
+    sosyalSayfa,
+    /onMesaj=\{\s*kullaniciId &&\s*profil &&\s*!profil\.sirketId &&\s*!ziyaretciProfili\.sirketId &&\s*ziyaretciProfili\.profilId !== kullaniciId &&\s*ziyaretciProfili\.kullaniciAdi\s*\? \(\) => onNavigate\(`\/mesajlar\/\$\{encodeURIComponent\(ziyaretciProfili\.kullaniciAdi as string\)\}`\)\s*: undefined\s*\}/,
+  );
+  /* Verildiği yer öğrenci görünümü, şirket dalı değil. */
+  const mesajYeri = sosyalSayfa.indexOf('onMesaj=');
+  assert.ok(sosyalSayfa.lastIndexOf('<SosyalProfilGorunumu', mesajYeri) > sosyalSayfa.lastIndexOf('<SirketSayfasi', mesajYeri));
+  for (const dosya of ['src/sirket/SirketSayfasi.tsx', 'src/App.tsx']) {
     assert.doesNotMatch(yorumsuz(oku(dosya)), /onMesaj=/, `${dosya}: onMesaj verilmemeli`);
   }
   assert.match(kalip, /export const ZIYARETCI_EYLEMLERI = 'mt-3 flex flex-wrap gap-2';/);

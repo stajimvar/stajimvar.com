@@ -175,8 +175,9 @@ interface GorunumProps {
   /**
    * Mesaj ekranını açar — ZİYARETÇİ DALI, isteğe bağlı.
    *
-   * Bugün hiçbir çağıran vermiyor: mesajlaşmanın arka ucu yok. Arka uç
-   * gelince sayfa verecek, gelmeden düğme çizilmiyor.
+   * Sayfa yalnız öğrenciden öğrenciye veriyor (koşullar
+   * `SosyalProfilSayfasi`nde, sunucunun kuralının yansıması); verilmezse
+   * düğme çizilmiyor.
    */
   onMesaj?: () => void;
 }

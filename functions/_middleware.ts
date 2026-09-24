@@ -188,6 +188,12 @@ function uygulamaninMi(yol: string): boolean {
     politikası ve tek güvenli ekran yapıyor.
   */
   if (temiz === '/topluluklar' || temiz.startsWith('/topluluklar/')) return true;
+  /*
+    /mesajlar ve /mesajlar/<kullaniciadi> — oturuma bağlı, ön render yok.
+    Aynı gerekçe: var olan ya da olmayan her ad aynı 200 kabuğunu alıyor;
+    sohbetin kendisi sunucudaki satır politikasından geçiyor.
+  */
+  if (temiz === '/mesajlar' || temiz.startsWith('/mesajlar/')) return true;
   return VERI_ONEKLERI.some((onek) => yol.startsWith(onek) && yol.length > onek.length);
 }
 

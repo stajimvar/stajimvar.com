@@ -43,10 +43,16 @@ test('iki profil ekranı da aynı zemini kullanıyor: telefonda beyaz, sm üstü
     mantığında — telefonda beyaz, geniş ekranda gri — ve aynı dizeyi
     paylaşıyorlar ki biri değişince ötekiler geride kalmasın.
   */
+  /*
+    24 Eylül 2026: beşinci ekran `/mesajlar` (mesajlaşma). Sohbet de
+    telefonda kenardan kenara beyaz bir yüzey, geniş ekranda gri zeminde
+    bir kart; aynı dizeyi paylaşıyor. Eski şart "dört ekran" idi; ölçülen
+    şey aynı — yüzey mantığındaki ekranlar tek dizede.
+  */
   assert.equal(
     [...app.matchAll(zemin)].length,
-    4,
-    '/cv, ziyaretçi profili, akış ve şirket profili aynı zemin dizesini paylaşmalı',
+    5,
+    '/cv, ziyaretçi profili, akış, şirket profili ve mesajlar aynı zemin dizesini paylaşmalı',
   );
 });
 
