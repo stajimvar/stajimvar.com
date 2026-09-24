@@ -110,9 +110,17 @@ test('kimlik bloğu ve sosyal başlık sm üstünde kart olmaya devam ediyor', (
     birebir böyle; iddia o yüzden `px-4 py-5` aramıyor.
   */
   assert.match(sosyalGorunum, /<header className="border-b border-gray-200 bg-white sm:rounded-2xl sm:border">/);
-  /* Boşluk kayboldu sanılmasın: iki iç blok da telefonda px-4 taşıyor. */
-  assert.match(sosyalGorunum, /<div className="px-4 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6">/);
-  assert.match(sosyalGorunum, /<div className="px-4 pb-4 sm:px-6 sm:pb-6">/);
+  /*
+    Boşluk kayboldu sanılmasın: kimlik bloğu telefonda px-4 taşıyor.
+    24 Eylül 2026 (X kalıbı): iki iç blok (kimlik + sayaç/eylem) teke
+    indi — sayaçlar ve haplar kimliğin içinde. Kabın dizesi ortak
+    `KIMLIK_BANDI` sabitinde; üst dolgu yok çünkü avatar kapağa biniyor.
+  */
+  assert.match(sosyalGorunum, /<div className=\{KIMLIK_BANDI\}>/);
+  assert.match(
+    oku('src/components/sosyal/ProfilKimlikKalibi.tsx'),
+    /export const KIMLIK_BANDI = 'px-4 pb-4 sm:px-6 sm:pb-5';/,
+  );
 });
 
 /* ------------------------------------------------------------- bleed */

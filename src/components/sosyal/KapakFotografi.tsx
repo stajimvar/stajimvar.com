@@ -1,6 +1,7 @@
 import React from 'react';
 import { SOSYAL_KAPAK_KOVASI } from '../../lib/queries/sosyal';
 import { useGorselAdresleri } from './useGorselAdresleri';
+import { KAPAK_BANDI_SINIFI, KAPAK_DOSYASI_SINIFI } from '../../lib/kapak-orani';
 
 /**
  * KAPAK FOTOĞRAFI — `ProfilFotografi`NİN BANT HÂLİ
@@ -79,15 +80,10 @@ const YOL_YOK: string[] = [];
 */
 const TABAN = 'block overflow-hidden bg-gray-100';
 
-/*
-  Sınıflar LİTERAL: Tailwind kaynağı düz metin olarak tarıyor ve
-  `lg:aspect-[${GENIS_EKRAN_ORANI}/1]` gibi çalışma anında kurulan bir
-  dizeyi göremez. Sayılar `lib/kapak-orani`daki sabitlerle aynı olmak
-  zorunda; `profil-kapagi-arayuzu` testi ikisini karşılaştırıyor.
-*/
+/* Oran sınıfları `lib/kapak-orani`da, sayılarla aynı yerde; şirket bandı da oradan okuyor. */
 const ORAN_SINIFI: Record<KapakProps['kip'], string> = {
-  bant: 'aspect-[3/1] lg:aspect-[5/1]',
-  dosya: 'aspect-[3/1]',
+  bant: KAPAK_BANDI_SINIFI,
+  dosya: KAPAK_DOSYASI_SINIFI,
 };
 
 export const KapakFotografi: React.FC<KapakProps> = ({ ad, yol, kip, className = '' }) => {

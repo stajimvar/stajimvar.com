@@ -24,3 +24,17 @@ export const GENIS_EKRAN_ORANI = 5;
  * (yükseklik oranı). 3 ve 5 için (1 − 3/5) / 2 = 0,2.
  */
 export const GENIS_EKRAN_KESIMI = (1 - KAPAK_ORANI / GENIS_EKRAN_ORANI) / 2;
+
+/*
+  BANT ORANININ TAILWIND SINIFI — sayılarla aynı yerde
+
+  Literal yazılıyor: Tailwind kaynağı düz metin olarak tarıyor ve
+  `lg:aspect-[${GENIS_EKRAN_ORANI}/1]` gibi çalışma anında kurulan bir
+  dizeyi göremez. Sayılar yukarıdaki sabitlerle aynı olmak zorunda;
+  `profil-kapagi-arayuzu` testi ikisini karşılaştırıyor. Öğrenci kapağı
+  (`KapakFotografi kip="bant"`) ve şirketin logo bandı bu sınıfı okuyor:
+  üç profil ekranının üst bandı aynı yükseklikte.
+*/
+export const KAPAK_BANDI_SINIFI = 'aspect-[3/1] lg:aspect-[5/1]';
+/** Dosyanın kendisi — her ekranda 3:1 (düzenleme önizlemesi, yükleme ekranı). */
+export const KAPAK_DOSYASI_SINIFI = 'aspect-[3/1]';

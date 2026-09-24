@@ -10,6 +10,7 @@ import {
   profilFotografiKaldir,
   profilKapagiKaldir,
   sosyalKullaniciAdiCoz,
+  sosyalOkullariniGetir,
   sosyalProfilGorunurluguAyarla,
   sosyalProfilKimligiGetir,
   sosyalProfiliGetir,
@@ -21,6 +22,7 @@ import {
 } from '../../lib/queries/sosyal';
 import { profilFotografi } from '../../lib/profil-fotografi';
 import { kullaniciAdiNormalize, profilYolu } from '../../lib/sosyal-kullanici-adi.mjs';
+import { ogrenciKimligiGorunurMu } from '../../lib/sosyal-profil-kimligi.mjs';
 import { BolumTalebi, type TalepKipi } from './BolumTalebi';
 import { PaylasimIzgarasi } from './PaylasimIzgarasi';
 import { PaylasimOlustur } from './PaylasimOlustur';
@@ -569,6 +571,8 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   const [ziyaretciDurumu, setZiyaretciDurumu] = React.useState<
     'yukleniyor' | 'hazir' | 'hata' | 'yok'
   >('yukleniyor');
+  /* Ziyaret edilen öğrencinin okulu; null = girilmemiş, alınamadı ya da sorulmadı. */
+  const [ziyaretciOkulu, setZiyaretciOkulu] = React.useState<string | null>(null);
 
   const rotaAdi = rotaKullaniciAdi ? kullaniciAdiNormalize(rotaKullaniciAdi) : null;
 
@@ -840,6 +844,39 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
       iptal = true;
     };
   }, [ziyaretciYolu, rotaAdi]);
+
+  /*
+    ZİYARET EDİLEN ÖĞRENCİNİN OKULU — TEK KİMLİKLE TEK ÇAĞRI
+
+    Kullanıcı kararı (24 Eylül 2026): okul profili görebilen herkese
+    açık. Kaynak `sosyal_okullari()` (20261106010000); `student_profiles`
+    başkasına kapalı kalıyor. Sahibin `/cv`si okulu kendi satırından
+    okuyor, orada bu çağrı yok.
+
+    SORULMAYANLAR: resmî hesap (öğrenci kimliği gizli; sunucu da
+    vermiyor, arayüz yine de sormuyor) ve şirket satırı (şirket sayfası
+    çiziliyor, okul kavramı yok). Hata profili düşürmüyor: okul yalnız
+    yazılmıyor.
+  */
+  const okulSorulacakKimlik =
+    ziyaretciProfili && !ziyaretciProfili.sirketId && ogrenciKimligiGorunurMu(ziyaretciProfili.resmiMi)
+      ? ziyaretciProfili.profilId
+      : null;
+  React.useEffect(() => {
+    setZiyaretciOkulu(null);
+    if (!okulSorulacakKimlik) return;
+    let iptal = false;
+    sosyalOkullariniGetir([okulSorulacakKimlik])
+      .then((harita) => {
+        if (!iptal) setZiyaretciOkulu(harita?.get(okulSorulacakKimlik) ?? null);
+      })
+      .catch(() => {
+        if (!iptal) setZiyaretciOkulu(null);
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [okulSorulacakKimlik]);
 
   /*
     Düzenleme kipinde sayaç ve ızgara ÇİZİLMİYOR; sorguları da atılmıyor.
@@ -1378,6 +1415,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
             sahibiMi={false}
             bakanId={kullaniciId}
             onNavigate={onNavigate}
+            okul={ziyaretciOkulu}
             /*
               Fotoğraf görüntüleyicisinin "Paylaş"ı: bakılan profilin
               adresi, sahibin menüsüyle AYNI `paylas`. Yalnız yayındaki

@@ -105,10 +105,15 @@ test('öğrenci profili: "takip" sayacı sahipte ve ziyaretçide, üç eşit sü
     `border-t border-gray-100 pt-3` oldu. ÜÇ EŞİT SÜTUN VE AYRAÇSIZLIK
     DEĞİŞMEDİ — testin ölçtüğü şey buydu.
   */
-  assert.match(
-    PROFIL_BASLIGI,
-    /className="grid min-w-0 grid-cols-3 border-t border-gray-100 pt-3"/,
-  );
+  /*
+    24 EYLÜL 2026 (X kalıbı, kullanıcı kararı): şerit tek satır, satır
+    içi sayaç oldu — "6 paylaşım  3 bağlantı  1 takip", sayı kalın.
+    Üç eşit sütunlu ızgara ve `border-t` X'te yok, kalktı. AYRAÇSIZLIK
+    DEĞİŞMEDİ; sütun eşitliği artık bir şart değil (satır içi öğeler
+    kendi genişliğinde).
+  */
+  assert.match(PROFIL_BASLIGI, /<div className=\{SAYAC_SATIRI\}/);
+  assert.doesNotMatch(PROFIL_BASLIGI, /grid-cols-3 border-t/);
   /*
     Etiket küçük harf (kullanıcı kararı, 20 Eylül 2026): üç profil
     ekranı aynı yazımı paylaşıyor. `/cv` ve şirket zaten küçük harfle
@@ -122,7 +127,8 @@ test('öğrenci profili: "takip" sayacı sahipte ve ziyaretçide, üç eşit sü
     kullanıyor. ÜÇ EŞİT SÜTUN VE AYRAÇSIZLIK DEĞİŞMEDİ — testin ölçtüğü
     şey buydu.
   */
-  assert.match(OGRENCI_GORUNUM, /<dl className="grid grid-cols-3 border-t border-gray-100 pt-3">/);
+  /* 24 Eylül 2026: satır içi sayaç (X kalıbı); ızgara ve çizgi kalktı, ayraçsızlık duruyor. */
+  assert.match(OGRENCI_GORUNUM, /<dl className=\{SAYAC_SATIRI\}>/);
   /*
     DÖRDÜNCÜ SAYAÇ HÂLÂ YOK: `sosyal_sayaclar` `takipci` de veriyor ama
     hedefi şirket olmayan bir profilde o sayı hep sıfır olurdu. Şirket

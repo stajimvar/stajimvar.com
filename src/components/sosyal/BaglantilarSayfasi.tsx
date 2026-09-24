@@ -9,6 +9,7 @@ import {
   baglantiKaldir,
   baglantiYanitla,
   baglantilarimiGetir,
+  sosyalOkullariniGetir,
   type BaglantiKisisi,
   type Baglantilarim,
 } from '../../lib/queries/sosyal';
@@ -67,23 +68,31 @@ const BOS_LISTE: Baglantilarim = { kabul: [], gelen: [], giden: [] };
  */
 const BaglantiSatiri: React.FC<{
   kisi: BaglantiKisisi;
+  /**
+   * Karşı tarafın okulu — sayfanın TEK okul çağrısından.
+   * `null`: okul girilmemiş, resmî hesap ya da okullar alınamadı; üçünde
+   * de okul yazılmıyor ve satır yine çiziliyor.
+   */
+  okul: string | null;
   eylemler: React.ReactNode;
   onNavigate: (yol: string, secenek?: { degistir?: boolean }) => void;
-}> = ({ kisi, eylemler, onNavigate }) => {
+}> = ({ kisi, okul, eylemler, onNavigate }) => {
   /*
-    ALT SATIR YALNIZ SEKTÖR — BÖLÜM VE ÜNİVERSİTE HENÜZ GELMİYOR
+    ALT SATIR: OKUL · ALAN
 
-    Bağlantı sorgusu (`baglantilarimiGetir`) profilden dört alan
-    çekiyor: kullanıcı adı, görünen ad, sektör, avatar yolu. Bölüm
-    `social_profiles` içinde VAR ama bu sorguda seçilmiyor; üniversite
-    ise hiç yok — okul bilgisi `student_profiles` tablosunda ve o tablo
-    başkasının satırını okutmuyor (RLS).
+    Kullanıcı kararı (24 Eylül 2026): başka öğrencinin okulu, bağlantı
+    şartı olmadan, profili görebilen herkese görünüyor. Okul
+    `student_profiles`ta ve o tablo başkasına KAPALI kalıyor (aynı satırda
+    not ortalaması, CV yolu, tercihler var); okul adı yalnız
+    `sosyal_okullari()` (20261106010000) üzerinden geliyor ve profilin
+    kendi görünürlük kapısından geçiyor. Resmî hesap orada zaten dışarıda.
 
-    Uydurulmuyor: bugün okunabilen tek alan yazılıyor. Bölümü de
-    göstermek sorguyu genişletmeyi, üniversiteyi göstermek ise sosyal
-    profile yeni bir alan ve bir görünürlük kararı eklemeyi gerektiriyor.
+    Biçim "Okul · Sektör alanı"; yalnız biri varsa o, ikisi de yoksa satır
+    hiç çizilmiyor. `truncate`: uzun okul adı satırı iki satıra itmiyor,
+    satır yüksekliği sabit kalıyor.
   */
-  const altSatir = kisi.profil?.sektorAdi ? `${kisi.profil.sektorAdi} alanı` : null;
+  const alan = kisi.profil?.sektorAdi ? `${kisi.profil.sektorAdi} alanı` : null;
+  const altSatir = [okul, alan].filter(Boolean).join(' · ') || null;
   const ad = kisi.profil?.gorunenAd ?? (kisi.profil?.kullaniciAdi ? `@${kisi.profil.kullaniciAdi}` : null);
   const hedef = kisi.profil?.kullaniciAdi ? profilYolu(kisi.profil.kullaniciAdi) : null;
 
@@ -144,15 +153,7 @@ const BaglantiSatiri: React.FC<{
           /* Ad uydurulmuyor: profil gelmediyse durum olduğu gibi yazılıyor. */
           <p className="text-sm font-semibold text-gray-600">Bu profil şu anda görüntülenemiyor</p>
         )}
-        {/*
-          BÖLÜM VE ALAN — ÜNİVERSİTE YOK
-
-          `social_profiles` üniversite taşımıyor; okul bilgisi
-          `student_profiles` içinde ve o tablo başkasının satırını
-          okutmuyor (RLS). Uydurulmuyor: okunabilen iki alan yazılıyor —
-          bölüm (katalogdan ya da kullanıcının kendi yazdığı etiket) ve
-          sektör. İkisi de yoksa satır hiç çizilmiyor.
-        */}
+        {/* Okul · alan (gerekçe yukarıda); ikisi de yoksa satır yok. */}
         {altSatir && <p className="truncate text-xs text-gray-600">{altSatir}</p>}
       </div>
       {eylemler && <div className="flex shrink-0 flex-wrap gap-2">{eylemler}</div>}
@@ -208,6 +209,11 @@ export const BaglantilarSayfasi: React.FC<BaglantilarProps> = ({
 }) => {
   const [liste, setListe] = React.useState<Baglantilarim>(BOS_LISTE);
   const [durum, setDurum] = React.useState<Durum>('yukleniyor');
+  /*
+    Profil kimliği → okul. `null`: okullar alınamadı ya da henüz
+    gelmedi — satırlar yine çiziliyor, yalnız okul yazılmıyor.
+  */
+  const [okullar, setOkullar] = React.useState<Map<string, string> | null>(null);
   const [deneme, setDeneme] = React.useState(0);
   const [islemdeki, setIslemdeki] = React.useState<string | null>(null);
   const [islemHatasi, setIslemHatasi] = React.useState<string | null>(null);
@@ -230,6 +236,27 @@ export const BaglantilarSayfasi: React.FC<BaglantilarProps> = ({
         if (iptal) return;
         setListe(veri);
         setDurum('hazir');
+        /*
+          OKULLAR TEK ÇAĞRIDA: çizilen satırların (kurulmuş bağlantılar)
+          kimlikleri toplanıp tek istekte soruluyor; satır başına istek
+          atılmıyor. Profili RLS'e takılan satır (profil null) sorulmuyor
+          — adı bile görünmeyen birinin okulunu istemek anlamsız.
+
+          LİSTE OKULU BEKLEMİYOR: okul ek bilgi. Satırlar hemen çiziliyor,
+          okul gelince alt satıra ekleniyor. Satır yüksekliğini metin
+          değil 44 piksellik fotoğraf belirlediği için satır zıplamıyor.
+          Okul çağrısı patlarsa (`null` ya da istisna) liste 'hata'ya
+          DÜŞMÜYOR; yalnız okul yazılmıyor.
+        */
+        const kimlikler = veri.kabul.filter((kisi) => kisi.profil).map((kisi) => kisi.kisiId);
+        setOkullar(null);
+        sosyalOkullariniGetir(kimlikler)
+          .then((harita) => {
+            if (!iptal) setOkullar(harita);
+          })
+          .catch(() => {
+            if (!iptal) setOkullar(null);
+          });
       })
       .catch(() => {
         if (!iptal) setDurum('hata');
@@ -385,6 +412,7 @@ export const BaglantilarSayfasi: React.FC<BaglantilarProps> = ({
             <BaglantiSatiri
               key={kisi.kisiId}
               kisi={kisi}
+              okul={okullar?.get(kisi.kisiId) ?? null}
               onNavigate={onNavigate}
               eylemler={
                 /* Kaldırma "⋯" menüsünde ve onaylı (BaglantiKaldirMenusu). */

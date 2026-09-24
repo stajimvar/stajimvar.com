@@ -118,8 +118,9 @@ test('katılma anı okuyucunun saat diliminde: ay sınırı iki dilimde farklı 
 test('iki öğrenci ekranı da katılma satırını aynı kalıpla ve yalnız varken çiziyor', () => {
   for (const [ad, kaynak] of Object.entries({ baslik, gorunum })) {
     assert.match(kaynak, /import \{ katilmaMetni \} from '[./]+lib\/tarih\.mjs';/, `${ad}: yardımcı tarih.mjs'ten`);
-    assert.match(kaynak, /\{katilma && \(/, `${ad}: satır yalnız metin varken`);
-    assert.match(kaynak, /<CalendarDays aria-hidden className="h-4 w-4 shrink-0 text-gray-500" \/>/, `${ad}: ikon aria-hidden`);
+    assert.match(kaynak, /\{katilma && \(?\s*<MetaOgesi/, `${ad}: satır yalnız metin varken`);
+    /* 24 Eylül 2026 (X kalıbı): katılma meta satırının öğesi; ikonu `MetaOgesi` aria-hidden çiziyor. */
+    assert.match(kaynak, /<MetaOgesi ikon=\{CalendarDays\} etiket="Katılma">/, `${ad}: katılma meta öğesi`);
     /* Elle tarih biçimlendirme yok: depo kuralı tek kaynak. */
     assert.doesNotMatch(yorumsuz(kaynak), /toLocaleDateString/);
   }
@@ -156,16 +157,20 @@ test('iki öğrenci ekranı kartın en üstünde 3:1 kapak bandı çiziyor, avat
   /* Kapak kimlik bandından ÖNCE. */
   for (const [ad, kaynak] of Object.entries({ baslik, gorunum })) {
     const kapakYeri = kaynak.indexOf('<KapakFotografi');
-    const bantYeri = kaynak.indexOf('px-4 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6');
+    const bantYeri = kaynak.indexOf('className={KIMLIK_BANDI}');
     assert.ok(kapakYeri > 0 && kapakYeri < bantYeri, `${ad}: kapak kimlik bandının üstünde olmalı`);
     assert.match(kaynak, /ring-4 ring-white/, `${ad}: avatarı kapaktan ayıran beyaz halka`);
   }
   /* Köşeler kabın iç yarıçapına oturuyor: kart 20/1, başlık 16/1. */
   assert.match(baslik, /<KapakFotografi ad=\{adYazimi\(ad\)\} yol=\{kapakYolu\} kip="bant" className="w-full sm:rounded-t-\[19px\]" \/>/);
   assert.match(gorunum, /<KapakFotografi ad=\{baslik\} yol=\{profil\.kapakFotografiYolu\} kip="bant" className="w-full sm:rounded-t-\[15px\]" \/>/);
-  /* Negatif boşluk fotoğraf kabında; ortak dolgu dizesi dokunulmadan kaldı. */
-  assert.match(baslik, /<div className="-mt-16 sm:-mt-21 lg:-mt-25">\n\s*<div className="relative">/);
-  assert.match(gorunum, /<div className="relative -mt-15 sm:-mt-20 lg:-mt-24">/);
+  /*
+    Negatif boşluk fotoğraf kabında. 24 Eylül 2026 (X kalıbı): kimlik
+    bandının üst dolgusu kalktı, binme payı artık yalnız dairenin yarısı
+    (ziyaretçi 40/56/72, /cv halkalı daire 46/62/78).
+  */
+  assert.match(baslik, /<div className="shrink-0 self-start -mt-\[46px\] sm:-mt-\[62px\] lg:-mt-\[78px\]">\n\s*<div className="relative">/);
+  assert.match(gorunum, /<div className=\{AVATAR_BINMESI\}>/);
 });
 
 test('/cv kartında kapak yolunun üç hâli: okunmadı → iskelet, yok → nötr bant', () => {
@@ -175,11 +180,16 @@ test('/cv kartında kapak yolunun üç hâli: okunmadı → iskelet, yok → nö
   );
 });
 
-test('dişli düğmesi kapağın üstünde okunur ve 44 piksel', () => {
-  assert.match(
-    baslik,
-    /absolute right-3 top-3 z-10 hidden h-11 w-11 [^`]*bg-white\/90 [^`]*shadow-sm/,
-  );
+test('dişli düğmesi hap sırasında, yuvarlak ve 44 piksel; kapağın üstünde değil', () => {
+  /*
+    24 Eylül 2026 (X kalıbı): dişli kartın sağ üstünde `absolute` duruyordu
+    ve kapağın üstüne düşüyordu (okunurluk için yarı saydam beyaz zemin
+    almıştı). Artık X'teki "…" gibi hap sırasında, `IKON_HAP` (h-11 w-11,
+    rounded-full). Telefonda gizli: aynı menüyü üst çubuktaki ☰ açıyor.
+  */
+  /* Gizleme sarmalayıcıda: `IKON_HAP`in `inline-flex`i ile `hidden` aynı dizede çakışıyordu (375'te ölçüldü). */
+  assert.match(baslik, /<div className="hidden lg:block">\s*<button\s*type="button"\s*onClick=\{\(\) => setMenuAcik\(true\)\}\s*aria-label="Ayarlar ve hareketler"\s*aria-haspopup="dialog"\s*className=\{IKON_HAP\}/);
+  assert.doesNotMatch(yorumsuz(baslik), /absolute right-3 top-3/);
 });
 
 test('şirket profiline kapak girmedi (kapsam dışı)', () => {
@@ -191,11 +201,13 @@ test('şirket profiline kapak girmedi (kapsam dışı)', () => {
 /* ------------------------------------------------------------------ */
 
 test('sahibin /cv kartı biyografiyi ziyaretçi profiliyle AYNI sınıflarla çiziyor', () => {
-  const sinif =
-    'mt-3 max-w-full whitespace-pre-line break-words text-sm leading-relaxed text-gray-800 sm:text-base';
-  assert.ok(gorunum.includes(`<p className="${sinif}">\n                {profil.biyografi}`));
-  assert.ok(baslik.includes(`<p className="${sinif}">\n              {satir.biyografi}`));
-  assert.match(baslik, /\{satir\?\.biyografi && \(/);
+  /* 24 Eylül 2026: sınıflar ortak `BIYOGRAFI` sabitinde; sola yaslı `max-w-2xl` tek genişlik sınırı. */
+  assert.match(
+    oku('src/components/sosyal/ProfilKimlikKalibi.tsx'),
+    /export const BIYOGRAFI =\n\s*'mt-3 max-w-2xl whitespace-pre-line break-words text-sm leading-relaxed text-gray-800 sm:text-base';/,
+  );
+  assert.ok(gorunum.includes('<p className={BIYOGRAFI}>{profil.biyografi}</p>'));
+  assert.ok(baslik.includes('{satir?.biyografi && <p className={BIYOGRAFI}>{satir.biyografi}</p>}'));
   /* Kısaltma yok: tam metne giden başka bir yol yok. */
   assert.doesNotMatch(yorumsuz(baslik), /line-clamp/);
 });
@@ -314,8 +326,15 @@ test('bant lg ve üstünde 5:1, altında 3:1; oran kararı KapakFotografi içind
   assert.equal(KAPAK_ORANI, 3);
   assert.equal(GENIS_EKRAN_ORANI, 5);
   /* Literal sınıflar sabitlerle aynı sayıyı taşıyor (Tailwind dinamik sınıf göremez). */
-  assert.ok(kapak.includes(`bant: 'aspect-[${KAPAK_ORANI}/1] lg:aspect-[${GENIS_EKRAN_ORANI}/1]',`));
-  assert.ok(kapak.includes(`dosya: 'aspect-[${KAPAK_ORANI}/1]',`));
+  /*
+    24 Eylül 2026: sınıflar `lib/kapak-orani`ya, sayıların yanına taşındı —
+    şirketin logo bandı da aynı sınıfı okuyor. `KapakFotografi` kip'i yine
+    tek karar yeri.
+  */
+  assert.ok(oranlar.includes(`export const KAPAK_BANDI_SINIFI = 'aspect-[${KAPAK_ORANI}/1] lg:aspect-[${GENIS_EKRAN_ORANI}/1]';`));
+  assert.ok(oranlar.includes(`export const KAPAK_DOSYASI_SINIFI = 'aspect-[${KAPAK_ORANI}/1]';`));
+  assert.ok(kapak.includes('bant: KAPAK_BANDI_SINIFI,'));
+  assert.ok(kapak.includes('dosya: KAPAK_DOSYASI_SINIFI,'));
   assert.match(kapak, /kip: 'bant' \| 'dosya';/);
   assert.match(kapak, /object-cover object-center/);
   /* İki profil ekranı "bant", düzenleme önizlemesi ve yükleme ekranı "dosya". */

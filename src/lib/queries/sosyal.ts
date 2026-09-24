@@ -2039,6 +2039,37 @@ export interface Baglantilarim {
 }
 
 /**
+ * Görebildiğin profillerin OKUL ADI — profil kimliği → okul.
+ *
+ * Kullanıcı kararı (24 Eylül 2026): okul, ad ve bölüm gibi profilin
+ * kimliği; profili görebilen okulu da görür, bağlantı şartı yok.
+ * `student_profiles` başkasına kapalı ve kapalı KALIYOR (aynı satırda not
+ * ortalaması, CV yolu, tercihler var). `sosyal_okullari()`
+ * (20261106010000) yalnız okul adını veriyor ve profilin kendi kapısından
+ * (`sosyal_gorunur`: yayında + engel yok) geçiyor; resmî hesap dışarıda.
+ *
+ * HATA LİSTEYİ DÜŞÜRMÜYOR: okul bir ek bilgi. Alınamazsa `null` dönüyor,
+ * çağıran okul satırını çizmiyor; liste ya da profil yine çiziliyor. Okulu
+ * olmayan kişi haritada yok — "okul girilmemiş" ile "alınamadı" ayrı.
+ * Sunucu en çok 200 kimliğe cevap veriyor; fazlası parçalanıyor.
+ */
+export async function sosyalOkullariniGetir(profilIdler: string[]): Promise<Map<string, string> | null> {
+  const tekil = [...new Set(profilIdler)].sort();
+  const okullar = new Map<string, string>();
+  if (tekil.length === 0) return okullar;
+  return ucustaPaylas(`sosyalOkullari:${tekil.join(',')}`, async () => {
+    for (let i = 0; i < tekil.length; i += 200) {
+      const { data, error } = await db.rpc('sosyal_okullari', { hedefler: tekil.slice(i, i + 200) });
+      if (error || !Array.isArray(data)) return null;
+      for (const satir of data as Array<{ profil_id: string; okul: string | null }>) {
+        if (satir.okul) okullar.set(satir.profil_id, satir.okul);
+      }
+    }
+    return okullar;
+  });
+}
+
+/**
  * `/baglantilar` sayfasının üç bölümü — tek okumadan.
  *
  * NEDEN İKİ SORGU
