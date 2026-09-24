@@ -2738,6 +2738,8 @@ export default function App() {
         oturumHazir={sessionReady}
         onNavigate={navigate}
         onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+        /* Kampüsüm'ün burs uygunluğu BAKANIN profiliyle (Fırsatlar'a giden aynı `student`). */
+        bakanOgrenci={student}
       />,
       /*
         Zemin `/cv` ile BİREBİR AYNI: telefonda beyaz yüzey, `sm:`

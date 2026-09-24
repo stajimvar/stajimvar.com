@@ -49,7 +49,12 @@ create table if not exists public.universiteler (
   ad_anahtarlari       text[] not null,
   yemekhane_sayfasi    text,
   duyurular_sayfasi    text,
-  dogrulandi_at        timestamptz not null default now()
+  /* Alan adının nereden doğrulandığı: 'elle' ya da 'yok.gov.tr' (YÖK üniversite listesi). */
+  dogrulama_kaynagi    text not null default 'elle' check (dogrulama_kaynagi in ('elle', 'yok.gov.tr')),
+  dogrulandi_at        timestamptz not null default now(),
+  /* Otomatik kaynak keşfinin son denemesi ve sonucu (automation/kampus_kesif.py). */
+  kesif_at             timestamptz,
+  kesif_notu           text
 );
 
 create table if not exists public.universite_kaynaklari (
@@ -110,7 +115,7 @@ create table if not exists public.kampus_menuleri (
     uydurmuyor, "Günün menüsü" diyor.
   */
   ogun             text not null check (ogun in ('ogle', 'aksam', 'gunluk')),
-  yemekler         text[] not null check (cardinality(yemekler) between 1 and 12),
+  yemekler         text[] not null check (cardinality(yemekler) between 1 and 24),
   kalori           integer check (kalori between 1 and 5000),
   /* Menünün yayımlandığı belge (ör. aylık PDF) — "Ayın menüsünü gör". */
   kaynak_url       text not null,
@@ -216,33 +221,14 @@ grant execute on function public.kampusum() to authenticated;
 revoke all on function public.kaynak_resmi_alanda() from public, anon, authenticated;
 
 /* ================================================================== */
-/*  4) İLK DOĞRULANMIŞ KAYIT — Mimar Sinan Güzel Sanatlar Üniversitesi */
+/*  4) KAYITLAR                                                        */
 /* ================================================================== */
 
 /*
-  Doğrulama (24 Eylül 2026, elle):
-    · alan adı msgsu.edu.tr — üniversitenin resmî sitesi
-    · beslenme sayfası https://msgsu.edu.tr/ogrenci/kampuste-yasam/beslenme/
-    · aylık menü PDF'leri aynı sitenin WordPress medya kütüphanesinde
-      ("2026-Eylul-Ayi-Menu.pdf"); REST uç noktası /wp-json/wp/v2/media
-    · "Genel Duyurular" kategorisi (kimlik 1) /wp-json/wp/v2/posts
-    · robots.txt yalnız .jpg ve görsel botunu kapatıyor
+  Katalog satırları göçte DEĞİL, `automation/kampus_kesif.py` tarafından
+  yazılıyor: elle doğrulanmış olanlar depodaki
+  `automation/kampus_kaynaklari.json`dan, yenileri öğrencilerin girdiği
+  okul adından YÖK'ün resmî üniversite listesiyle doğrulanarak. Böylece
+  kaynak listesi kod incelemesinden geçen bir dosyada duruyor ve yeni bir
+  okul eklemek göç gerektirmiyor.
 */
-insert into public.universiteler (id, resmi_ad, resmi_alan_adi, ad_anahtarlari, yemekhane_sayfasi, duyurular_sayfasi)
-values (
-  'mimar-sinan-guzel-sanatlar-universitesi',
-  'Mimar Sinan Güzel Sanatlar Üniversitesi',
-  'msgsu.edu.tr',
-  array[public.kampus_ad_anahtari('Mimar Sinan Güzel Sanatlar Üniversitesi'), public.kampus_ad_anahtari('MSGSÜ')],
-  'https://msgsu.edu.tr/ogrenci/kampuste-yasam/beslenme/',
-  'https://msgsu.edu.tr/genel-duyurular/'
-)
-on conflict (id) do nothing;
-
-insert into public.universite_kaynaklari (universite_id, tur, ayristirici, url, ayar)
-values
-  ('mimar-sinan-guzel-sanatlar-universitesi', 'yemek', 'wordpress_aylik_menu_pdf',
-   'https://msgsu.edu.tr/wp-json/wp/v2/media', '{"arama": "menu"}'::jsonb),
-  ('mimar-sinan-guzel-sanatlar-universitesi', 'duyuru', 'wordpress_kategori',
-   'https://msgsu.edu.tr/wp-json/wp/v2/posts', '{"kategori": 1}'::jsonb)
-on conflict (universite_id, tur, url) do nothing;

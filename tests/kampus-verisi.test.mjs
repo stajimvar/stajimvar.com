@@ -58,6 +58,16 @@ before(async () => {
     grant select on public.student_profiles to authenticated;
   `);
   await db.exec(await readFile(GOC, 'utf8'));
+  /* Katalog satırları göçte değil, kampus_kesif.py'de yazılıyor; test kendisi ekliyor. */
+  await db.exec(`
+    insert into universiteler(id, resmi_ad, resmi_alan_adi, ad_anahtarlari, yemekhane_sayfasi, duyurular_sayfasi)
+    values ('${MSGSU}', 'Mimar Sinan Güzel Sanatlar Üniversitesi', 'msgsu.edu.tr',
+            array[kampus_ad_anahtari('Mimar Sinan Güzel Sanatlar Üniversitesi'), kampus_ad_anahtari('MSGSÜ')],
+            'https://msgsu.edu.tr/ogrenci/kampuste-yasam/beslenme/', 'https://msgsu.edu.tr/genel-duyurular/');
+    insert into universite_kaynaklari(universite_id, tur, ayristirici, url) values
+      ('${MSGSU}', 'yemek', 'wordpress_aylik_menu_pdf', 'https://msgsu.edu.tr/wp-json/wp/v2/media'),
+      ('${MSGSU}', 'duyuru', 'wordpress_kategori', 'https://msgsu.edu.tr/wp-json/wp/v2/posts');
+  `);
   await db.exec(`
     insert into public.student_profiles(id, university) values
       ('${MSGSU_OGRENCI}', 'Mimar Sinan Güzel Sanatlar Üniversitesi'),
