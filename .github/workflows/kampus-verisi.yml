@@ -1,0 +1,75 @@
+name: Kampüsüm verisi (resmî menü ve duyurular)
+
+# `universite_kaynaklari` tablosundaki her etkin kaynağı okuyup
+# `kampus_menuleri` ve `universite_duyurulari`na yazıyor (göç 20261108010000).
+#
+# SAAT: İstanbul 06:10 ve 12:10. Sabah koşusu günün menüsünü öğle
+# yemeğinden önce hazır ediyor; öğle koşusu ay başında geç yüklenen
+# PDF'leri ve gün içi duyuruları yakalıyor.
+on:
+  workflow_dispatch:
+    inputs:
+      kuru:
+        description: "Veritabanına yazma, yalnız çıktıyı göster"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "10 3 * * *"
+    - cron: "10 9 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stajimvar-kampus-verisi
+  cancel-in-progress: false
+
+jobs:
+  kampus:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Bağımlılıklar
+        run: pip install -r automation/requirements-dev.txt
+
+      - name: Ayrıştırıcı testleri
+        run: python -m pytest automation/tests/test_kampus_verisi.py -q
+
+      # Girdi kabuk satırına gömülmüyor; ortam değişkeninden okunuyor.
+      #
+      # ÖNCE KEŞİF: depodaki elle doğrulanmış kaynaklar (kampus_kaynaklari.json)
+      # işleniyor, sonra öğrencilerin girdiği ama katalogda olmayan okullar
+      # YÖK listesiyle doğrulanıp kaynakları aranıyor. Keşif düşse bile veri
+      # koşusu çalışıyor: bilinen okulların menüsü bir keşif hatasına takılmasın.
+      - name: Yeni okulları bul (YÖK + resmî site)
+        continue-on-error: true
+        env:
+          KURU: ${{ inputs.kuru }}
+        run: |
+          if [ "$KURU" = "true" ]; then
+            python -m automation.kampus_kesif --kuru
+          else
+            python -m automation.kampus_kesif
+          fi
+
+      - name: Resmî kaynakları oku ve yaz
+        env:
+          KURU: ${{ inputs.kuru }}
+        run: |
+          if [ "$KURU" = "true" ]; then
+            python -m automation.kampus_verisi --kuru
+          else
+            python -m automation.kampus_verisi
+          fi

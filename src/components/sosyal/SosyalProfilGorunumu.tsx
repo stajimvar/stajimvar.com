@@ -180,6 +180,13 @@ interface GorunumProps {
    * düğme çizilmiyor.
    */
   onMesaj?: () => void;
+  /**
+   * Kampüsüm paneli, dar ekranda (sol sütun kapalıyken) profil kartının
+   * altında ve "Paylaşımlar"dan önce. Panel BAKAN öğrencinin; sayfa
+   * hazırlayıp veriyor, bu bileşen yalnız yerini biliyor. Verilmezse
+   * (geniş ekran, bakan öğrenci değil) hiçbir şey çizilmiyor.
+   */
+  kampusPaneli?: React.ReactNode;
 }
 
 /*
@@ -273,6 +280,7 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
   onNavigate,
   okul = null,
   onMesaj,
+  kampusPaneli,
 }) => {
   /*
     Başlıkta görünen ad yoksa kullanıcı adı geçiyor. Uydurma bir ad
@@ -605,6 +613,8 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
           )}
         </div>
       </header>
+
+      {kampusPaneli}
 
       {/*
         PAYLAŞIMLAR — Instagram ızgarası (sahibin ekranıyla aynı `galeri`).

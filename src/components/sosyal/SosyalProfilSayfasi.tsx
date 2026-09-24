@@ -34,7 +34,9 @@ import { KapakFotografiYukleme } from './KapakFotografiYukleme';
 import { SahipListesi } from './SahipListesi';
 import { SosyalProfilDuzenleme } from './SosyalProfilDuzenleme';
 import { SosyalProfilGorunumu } from './SosyalProfilGorunumu';
-import { ProfilSayfaDuzeni } from './ProfilSayfaDuzeni';
+import { ProfilSayfaDuzeni, useSolSutunAcik } from './ProfilSayfaDuzeni';
+import { KampusumPaneli } from '../kampus/KampusumPaneli';
+import type { StudentProfile } from '../../types';
 import { AgimYanSutun } from './AgimYanSutun';
 /*
   Şirket sayfası GECİKMELİ: ilan yardımcılarını ve şirket veri katmanını
@@ -221,6 +223,11 @@ interface SayfaProps {
    * ziyaretçi görünümünde hiç.
    */
   onPortfolyoSatiri?: (satir: PortfolyoSatiri | null | undefined) => void;
+  /**
+   * BAKAN öğrencinin kendi profili (App'teki `student`). Yalnız Kampüsüm
+   * panelinin burs uygunluğu için; bakılan profilin bilgisi DEĞİL.
+   */
+  bakanOgrenci?: StudentProfile | null;
 }
 
 /**
@@ -507,6 +514,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   ogrenciAvatarAdresi = null,
   onAvatarYolu,
   onPortfolyoSatiri,
+  bakanOgrenci = null,
 }) => {
   /*
     Kip yalnız gömülü halde anlamlı: ayrı adreste (`/profil`) düzenleme
@@ -516,6 +524,8 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     önlüyor — biri unutulsaydı portfolyo ile form aynı anda çizilirdi.
   */
   const duzenlemeKipi = gomulu && gomuluKip === 'duzenleme';
+  /* Kampüsüm sol sütunda mı ana sütunda mı — kapla aynı sorgu (`ProfilSayfaDuzeni`). */
+  const solSutunAcik = useSolSutunAcik();
   const [profil, setProfil] = React.useState<SosyalProfil | null>(null);
   const [profilDurumu, setProfilDurumu] = React.useState<Durum>('yukleniyor');
   const [profilDeneme, setProfilDeneme] = React.useState(0);
@@ -1221,6 +1231,20 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     <AgimYanSutun kullaniciId={kullaniciId} sektorId={profil?.sektorId ?? null} onNavigate={onNavigate} />
   ) : undefined;
 
+  /*
+    KAMPÜSÜM BAKAN İÇİN (kullanıcı tasarımı, 25 Eylül 2026)
+
+    Yalnız bakan oturumlu ÖĞRENCİYSE: kendi sosyal satırı var ve
+    `sirketId` boş (mesaj düğmesiyle aynı tanım). Şirket hesabında ve
+    oturumsuzken panel yok. Okul sunucuda oturumdan çözülüyor; bakılan
+    profilin okulu (`ziyaretciOkulu`) panele GİTMİYOR. Aynı öğe iki
+    yerden birine konuyor: geniş ekranda sol sütun, dar ekranda ana sütun.
+  */
+  const bakanKampusu = (yerlesim: 'sutun' | 'akis') =>
+    kullaniciId && profil && !profil.sirketId ? (
+      <KampusumPaneli ogrenci={bakanOgrenci} onNavigate={onNavigate} yerlesim={yerlesim} />
+    ) : undefined;
+
   const iskeletKipi: 'sayfa' | 'panel' | 'form' = duzenlemeKipi
     ? 'form'
     : gomulu
@@ -1458,10 +1482,11 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
           boşluğu kaldırıp üst bloğu ekranın kenarına yaslıyor.
         */
         <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI} {...PROFIL_KABUGU}>
-          <ProfilSayfaDuzeni yanSutun={bakaninYanSutunu}>
+          <ProfilSayfaDuzeni yanSutun={bakaninYanSutunu} solSutun={bakanKampusu('sutun')}>
           <SosyalProfilGorunumu
             profil={ziyaretciProfili}
             sahibiMi={false}
+            kampusPaneli={solSutunAcik ? undefined : bakanKampusu('akis')}
             bakanId={kullaniciId}
             onNavigate={onNavigate}
             /*

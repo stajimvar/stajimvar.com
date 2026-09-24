@@ -69,12 +69,26 @@ test('/profil/:ad ve şirket sayfası aynı kapta; yan sütun BAKAN için, oturu
     sayfa,
     /const bakaninYanSutunu = kullaniciId \? \(\s*<AgimYanSutun kullaniciId=\{kullaniciId\} sektorId=\{profil\?\.sektorId \?\? null\} onNavigate=\{onNavigate\} \/>\s*\) : undefined;/,
   );
-  assert.equal((sayfa.match(/<ProfilSayfaDuzeni yanSutun=\{bakaninYanSutunu\}>/g) ?? []).length, 2);
+  /*
+    25 Eylül 2026 (Kampüsüm, kullanıcı tasarımı): ziyaretçi dalı sol
+    sütunu da alıyor; şirket dalı almıyor (şirket sayfası değişmedi).
+    Önceki iddia iki dalda da yalın `yanSutun` sayıyordu.
+  */
+  assert.equal((sayfa.match(/<ProfilSayfaDuzeni yanSutun=\{bakaninYanSutunu\}>/g) ?? []).length, 1);
+  assert.equal(
+    (sayfa.match(/<ProfilSayfaDuzeni yanSutun=\{bakaninYanSutunu\} solSutun=\{bakanKampusu\('sutun'\)\}>/g) ?? []).length,
+    1,
+  );
   /* Şirket dalı ve ziyaretçi dalı ayrı ayrı sarılı. */
   const sirketDali = sayfa.slice(sayfa.indexOf('<SirketSayfasi'), sayfa.indexOf('</React.Suspense>'));
   assert.ok(sirketDali.length > 0);
   assert.ok(sayfa.lastIndexOf('<ProfilSayfaDuzeni yanSutun={bakaninYanSutunu}>', sayfa.indexOf('<SirketSayfasi')) > 0);
-  assert.ok(sayfa.lastIndexOf('<ProfilSayfaDuzeni yanSutun={bakaninYanSutunu}>', sayfa.indexOf('profil={ziyaretciProfili}\n            sahibiMi={false}')) > 0);
+  assert.ok(
+    sayfa.lastIndexOf(
+      "<ProfilSayfaDuzeni yanSutun={bakaninYanSutunu} solSutun={bakanKampusu('sutun')}>",
+      sayfa.indexOf('profil={ziyaretciProfili}\n            sahibiMi={false}'),
+    ) > 0,
+  );
   /* İskelet de aynı sütunda: profil gelince genişlik zıplamıyor. */
   assert.match(sayfa, /<ProfilSayfaDuzeni>\s*<ProfilIskeleti \/>\s*<\/ProfilSayfaDuzeni>/);
 });

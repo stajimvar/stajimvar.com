@@ -51,7 +51,8 @@ import { useModalErisim } from '../lib/modal-erisim';
 import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
 import { Card, IKON_KUTUSU } from '../ui';
 import { ODAK_HALKASI } from '../lib/renk-token';
-import { ProfilSayfaDuzeni } from './sosyal/ProfilSayfaDuzeni';
+import { ProfilSayfaDuzeni, useSolSutunAcik } from './sosyal/ProfilSayfaDuzeni';
+import { KampusumPaneli } from './kampus/KampusumPaneli';
 import { AgimYanSutun } from './sosyal/AgimYanSutun';
 import { ProfilBasligi, ProfilBolumListesi, type EksikAdim, type OneCikan } from './ProfilBasligi';
 import type { PortfolyoSatiri } from './sosyal/SosyalProfilSayfasi';
@@ -422,6 +423,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     götürürdü.
   */
   const [duzenleme, setDuzenleme] = useState(false);
+  /* Kampüsüm sol sütunda mı ana sütunda mı — kapla aynı sorgu (`ProfilSayfaDuzeni`). */
+  const solSutunAcik = useSolSutunAcik();
 
   /*
     Arayış durumu yerel olarak tutuluyor: anahtar çevrildiğinde ekran
@@ -795,6 +798,28 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     bolumeGit('kisisel');
   };
 
+  /*
+    "ÜNİVERSİTENİ EKLE" → OKUL BÖLÜMÜ, ÜNİVERSİTE ALANI
+
+    Kampüsüm paneli okulu olmayan öğrenciye bu kapıyı gösteriyor. Aynı
+    ekrandaysa (`/cv`) düzenleme doğrudan açılıyor; başka bir profildeyse
+    bağlantı `/cv#universite`e gidiyor ve ekran açılırken adresteki işaret
+    okunuyor. Tek kapı `kisiselAc` (taslak tazeleme orada). Odak alanın
+    kendisine: öğrenci neyi dolduracağını aramak zorunda kalmasın. Bölüm
+    yalnız seçiliyken çiziliyor; odak bu yüzden bir kare sonra.
+  */
+  const universiteEkle = () => {
+    kisiselAc();
+    requestAnimationFrame(() => document.getElementById('universite')?.focus());
+  };
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.location.hash !== '#universite') return;
+    /* İşaret bir kez okunuyor: yenilemede düzenleme yeniden açılmasın. */
+    window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search);
+    universiteEkle();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const kisiselKaydet = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -960,6 +985,22 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
 
   const rozetler = student.earnedBadges ?? [];
 
+  /*
+    KAMPÜSÜM (kullanıcı tasarımı, 25 Eylül 2026): `/cv`de bakan sahibin
+    kendisi, burs uygunluğu onun profiliyle. Koşul yan sütunla aynı:
+    sosyal satır okunmadıysa (oturum yok ya da henüz gelmedi) panel yok.
+    Düzenleme kipinde kap devre dışı ve ana sütundaki kopya da çizilmiyor.
+  */
+  const kampusPaneli = (yerlesim: 'sutun' | 'akis') =>
+    sosyalPortfolyoSatiri?.profilId ? (
+      <KampusumPaneli
+        ogrenci={student}
+        onNavigate={sosyalPortfolyoSatiri.onNavigate}
+        onUniversiteEkle={universiteEkle}
+        yerlesim={yerlesim}
+      />
+    ) : undefined;
+
   return (
     /*
       İKİ SÜTUNLU DÜZEN (yalnızca lg ve üstü)
@@ -1028,6 +1069,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       */}
       <ProfilSayfaDuzeni
         devreDisi={duzenleme}
+        solSutun={kampusPaneli('sutun')}
         yanSutun={
           sosyalPortfolyoSatiri?.profilId ? (
             <AgimYanSutun
@@ -1311,6 +1353,18 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             onDegisti={setArayis}
           />
         </div>
+      )}
+
+      {/*
+        KAMPÜSÜM — DAR EKRANDA PROFİLİN ALTINDA, PAYLAŞIMLARDAN ÖNCE
+
+        Sol sütun kapalıyken (1440 altı) panel burada; açıkken burada hiç
+        yok (tek kopya, tek istek). `order-1` portfolyoyla aynı: telefonda
+        ızgara `contents` ve sıra `order`dan geliyor, DOM'da önce durduğu
+        için paylaşımların üstünde.
+      */}
+      {!duzenleme && !solSutunAcik && kampusPaneli('akis') && (
+        <div className="order-1 -mx-4 min-w-0 sm:mx-0 lg:order-none">{kampusPaneli('akis')}</div>
       )}
 
       {!duzenleme && sosyalPortfolyo && (

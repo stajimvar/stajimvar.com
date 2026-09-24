@@ -1,0 +1,103 @@
+{
+  "_aciklama": "Elle doğrulanmış kampüs kaynakları (24-25 Eylül 2026). Alan adları YÖK üniversite listesinden (yok.gov.tr/tr/university). Göç 20261108010000 bu dosyadan üretilen satırları içeriyor; kampus_kesif.py yeni okulları bu biçimde ekliyor.",
+  "universiteler": [
+    {
+      "id": "istanbul-universitesi",
+      "resmi_ad": "İstanbul Üniversitesi",
+      "resmi_alan_adi": "istanbul.edu.tr",
+      "kisa_adlar": ["İÜ"],
+      "yemekhane_sayfasi": "https://sks.istanbul.edu.tr/yemek-listesi",
+      "duyurular_sayfasi": "https://www.istanbul.edu.tr/tr/duyurular",
+      "kaynaklar": [
+        {"tur": "yemek", "ayristirici": "json_gunluk_ogun", "url": "https://sks.istanbul.edu.tr/meals-by-date",
+         "ayar": {"tarih_param": "date", "ogun_param": "category", "ogunler": {"ogle": "lunch", "aksam": "dinner"}, "alan": "meal", "gun_sayisi": 7, "kaynak_sayfasi": "https://sks.istanbul.edu.tr/yemek-listesi"}},
+        {"tur": "duyuru", "ayristirici": "json_duyuru_listesi", "url": "https://service-cms.istanbul.edu.tr/api/webclient/f_getNoticeBox",
+         "ayar": {"parametreler": {"siteKey": "0DF4F0F9B7154458AB3ADCEDFFB6B396", "Value": 1}, "veri": "Data", "baslik": "Header", "tarih": "Date", "url_sablonu": "https://www.istanbul.edu.tr/tr/duyurular/{Route}"}}
+      ]
+    },
+    {
+      "id": "istanbul-teknik-universitesi",
+      "resmi_ad": "İstanbul Teknik Üniversitesi",
+      "resmi_alan_adi": "itu.edu.tr",
+      "kisa_adlar": ["İTÜ"],
+      "yemekhane_sayfasi": "https://sks.itu.edu.tr/hizmetlerimiz/beslenme-hizmetleri",
+      "duyurular_sayfasi": null,
+      "_not": "Menü sayfası (sks.itu.edu.tr/ExternalPages/sks/yemek-menu) 25 Eylül 2026'da sunucu hatası (500) veriyor; /duyurular sayfası 2023'te kalmış kayıtlar gösteriyor. Bayat ya da kırık kaynak eklenmedi.",
+      "kaynaklar": []
+    },
+    {
+      "id": "bogazici-universitesi",
+      "resmi_ad": "Boğaziçi Üniversitesi",
+      "resmi_alan_adi": "bogazici.edu.tr",
+      "kisa_adlar": ["BÜ", "BOUN"],
+      "yemekhane_sayfasi": "https://yemekhane.bogazici.edu.tr/",
+      "duyurular_sayfasi": "https://bogazici.edu.tr/tr/announcements",
+      "kaynaklar": [
+        {"tur": "yemek", "ayristirici": "html_satir_menu", "url": "https://yemekhane.bogazici.edu.tr/", "ayar": {"varsayilan_ogun": "ogle"}},
+        {"tur": "duyuru", "ayristirici": "html_duyuru_listesi", "url": "https://bogazici.edu.tr/tr/announcements", "ayar": {"onek": "/tr/announcements/"}}
+      ]
+    },
+    {
+      "id": "yildiz-teknik-universitesi",
+      "resmi_ad": "Yıldız Teknik Üniversitesi",
+      "resmi_alan_adi": "yildiz.edu.tr",
+      "kisa_adlar": ["YTÜ"],
+      "yemekhane_sayfasi": "https://sks.yildiz.edu.tr/yemek-menusu",
+      "duyurular_sayfasi": "https://www.yildiz.edu.tr/universite/haberler/ytu-duyurular",
+      "kaynaklar": [
+        {"tur": "yemek", "ayristirici": "json_aylik_ogun", "url": "https://sks.yildiz.edu.tr/api/food-menu",
+         "ayar": {"ay_param": "list_date", "ay_bicimi": "%Y%m", "sabit": {"type": "student_food_menu", "sort_by": "date_asc"}, "tarih_alani": "date", "tarih_bicimi": "%d-%m-%Y", "ogunler": {"ogle": "lunch_menu", "aksam": "dinner_menu"}, "kaynak_sayfasi": "https://sks.yildiz.edu.tr/yemek-menusu"}},
+        {"tur": "duyuru", "ayristirici": "html_duyuru_listesi", "url": "https://www.yildiz.edu.tr/universite/haberler/ytu-duyurular", "ayar": {"onek": "/universite/ytu-duyurular/"}}
+      ]
+    },
+    {
+      "id": "marmara-universitesi",
+      "resmi_ad": "Marmara Üniversitesi",
+      "resmi_alan_adi": "marmara.edu.tr",
+      "kisa_adlar": ["MÜ"],
+      "yemekhane_sayfasi": "https://sks.marmara.edu.tr/yemek",
+      "duyurular_sayfasi": "https://www.marmara.edu.tr/allnotices",
+      "kaynaklar": [
+        {"tur": "yemek", "ayristirici": "html_satir_menu", "url": "https://sks.marmara.edu.tr/yemek", "ayar": {"varsayilan_ogun": "ogle"}},
+        {"tur": "duyuru", "ayristirici": "html_duyuru_listesi", "url": "https://www.marmara.edu.tr/allnotices", "ayar": {"onek": "/notice/"}}
+      ]
+    },
+    {
+      "id": "mimar-sinan-guzel-sanatlar-universitesi",
+      "resmi_ad": "Mimar Sinan Güzel Sanatlar Üniversitesi",
+      "resmi_alan_adi": "msgsu.edu.tr",
+      "kisa_adlar": ["MSGSÜ"],
+      "yemekhane_sayfasi": "https://msgsu.edu.tr/ogrenci/kampuste-yasam/beslenme/",
+      "duyurular_sayfasi": "https://msgsu.edu.tr/genel-duyurular/",
+      "kaynaklar": [
+        {"tur": "yemek", "ayristirici": "wordpress_aylik_menu_pdf", "url": "https://msgsu.edu.tr/wp-json/wp/v2/media", "ayar": {"arama": "menu"}},
+        {"tur": "duyuru", "ayristirici": "wordpress_kategori", "url": "https://msgsu.edu.tr/wp-json/wp/v2/posts", "ayar": {"kategori": 1}}
+      ]
+    },
+    {
+      "id": "galatasaray-universitesi",
+      "resmi_ad": "Galatasaray Üniversitesi",
+      "resmi_alan_adi": "gsu.edu.tr",
+      "kisa_adlar": ["GSÜ"],
+      "yemekhane_sayfasi": "https://gsu.edu.tr/tr/kesfet/kampuste-yasam/yemek-menusu",
+      "duyurular_sayfasi": "https://gsu.edu.tr/tr/guncel/duyurular",
+      "kaynaklar": [
+        {"tur": "yemek", "ayristirici": "sayfadaki_pdf_menu", "url": "https://gsu.edu.tr/tr/kesfet/kampuste-yasam/yemek-menusu",
+         "ayar": {"ogunler": {"ogle": "oglen|öğlen|öğle", "aksam": "aksam|akşam"}, "haric": "vegan"}},
+        {"tur": "duyuru", "ayristirici": "html_duyuru_listesi", "url": "https://gsu.edu.tr/tr/guncel/duyurular", "ayar": {"onek": "/tr/guncel/duyuru/"}}
+      ]
+    },
+    {
+      "id": "istanbul-medeniyet-universitesi",
+      "resmi_ad": "İstanbul Medeniyet Üniversitesi",
+      "resmi_alan_adi": "medeniyet.edu.tr",
+      "kisa_adlar": ["İMÜ"],
+      "yemekhane_sayfasi": "https://sks.medeniyet.edu.tr/tr/beslenme-hizmetleri-birimi/yemekhanelerimiz",
+      "duyurular_sayfasi": "https://www.medeniyet.edu.tr/tr/duyurular",
+      "_not": "Menü sayfası (sks.medeniyet.edu.tr/.../yemek-menusu) 25 Eylül 2026'da boş; yayımlanmış menü yok.",
+      "kaynaklar": [
+        {"tur": "duyuru", "ayristirici": "html_duyuru_listesi", "url": "https://www.medeniyet.edu.tr/tr/duyurular", "ayar": {"onek": "/tr/duyurular/"}}
+      ]
+    }
+  ]
+}
