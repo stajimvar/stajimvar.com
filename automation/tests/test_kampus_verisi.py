@@ -185,6 +185,34 @@ def test_duyuru_listesi_baslik_ve_tarih_kurallari(monkeypatch):
     assert "d" not in bulunan, "gelecek tarih yayın tarihi olamaz; detay da yoksa yazılmıyor"
 
 
+def test_duyuru_listesi_baslik_kaptaki_seciciden(monkeypatch):
+    """Nişantaşı: bağlantı metni yalnız "Detay →"; başlık ve tarih kapta."""
+
+    class _Html:
+        text = """
+        <div class="nev-ann-card"><div class="nev-ann-meta"><span class="nev-ann-date">23.09.2026</span></div>
+          <div class="nev-ann-title">İngilizce I-II Muafiyet Sınavı</div>
+          <div class="nev-ann-desc">Sevgili Öğrenciler, 30.09.2026 tarihinde...</div>
+          <a class="nev-ann-link" href="duyuru/muafiyet-318585">Detay →</a></div>
+        <div class="nev-ann-card"><div class="nev-ann-meta"><span class="nev-ann-date">20.09.2026</span></div>
+          <div class="nev-ann-title">Ders Programı Yayınlandı</div>
+          <a class="nev-ann-link" href="duyuru/ders-programi-732844">Detay →</a></div>
+        """
+        url = "https://www.nisantasi.edu.tr/duyurular"
+
+    monkeypatch.setattr(kv, "getir", lambda url, alan, **_: _Html())
+    monkeypatch.setattr(kv, "_detay_bilgisi", lambda url, alan, gun: (None, None))
+    s = kv.html_duyuru_listesi(
+        {"url": _Html.url, "ayar": {"onek": "/duyuru/", "baslik_secici": ".nev-ann-title"}},
+        "nisantasi.edu.tr",
+        date(2026, 9, 25),
+    )
+    assert [(d["baslik"], d["yayin_tarihi"]) for d in s.duyurular] == [
+        ("İngilizce I-II Muafiyet Sınavı", "2026-09-23"),
+        ("Ders Programı Yayınlandı", "2026-09-20"),
+    ]
+
+
 # ------------------------------------------------------------ keşif
 
 
