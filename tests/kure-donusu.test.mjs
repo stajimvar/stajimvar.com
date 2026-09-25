@@ -60,12 +60,14 @@ test('bütün sayfalar yüklenince süzülmüş liste sayılıyor', () => {
   assert.equal(kureSayisi({ daraltmaVar: true, catalogTotal: 194, tumuYuklendi: true, suzulmusSirketler: [] }), 0);
 });
 
-test('şerit dönüşü animasyonla ve erişilebilir çiziyor', () => {
+test('şeritte sayı gösterimi erişilebilir çiziyor', () => {
+  /*
+    Küreler hap filtreye döndü (mobil sadeleştirme, 25 Eylül 2026): dönen
+    küre yerine seçili hapa tekrar dokununca hapın YAZISI sayıyı
+    gösteriyor. Kural (kure-donusu.mjs) ve ekran okuyucu duyurusu aynı.
+  */
   const serit = oku('src/components/SirketSeridi.tsx');
-  assert.match(serit, /\[backface-visibility:hidden\]/);
-  assert.match(serit, /\[perspective:/);
-  assert.match(serit, /duration-\[350ms\]/);
-  assert.match(serit, /motion-reduce:transition-none/);
+  assert.match(serit, /donukMu \? `\$\{b\.etiket\} · \$\{sayiMetni\(donukSayi\)\}` : b\.etiket/);
   assert.match(serit, /aria-live="polite"/);
   const gorunum = oku('src/components/MatchedInternshipsView.tsx');
   assert.match(gorunum, /kureSayisi\(/);

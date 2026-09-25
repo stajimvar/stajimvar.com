@@ -72,6 +72,11 @@ interface GirisProps {
   */
   etiket?: string;
   ikonSinifi?: string;
+  /**
+   * Erişilebilir ad. Görünen yazı "Fotoğraf paylaş" değilse (Ağım'daki
+   * "Bir şey paylaş…" oluşturucusu) ad görünen yazıyı içermeli.
+   */
+  erisilebilirAd?: string;
   /** Şirket sayfası: besteciye sabit kitle geçiyor, seçici çizilmiyor (bkz. PaylasimOlustur). */
   sabitKitle?: SirketKitlesi;
 }
@@ -98,6 +103,7 @@ export const FotografPaylasGirisi = React.forwardRef<FotografPaylasKolu, GirisPr
   dugmeSinifi,
   etiket,
   ikonSinifi = 'h-6 w-6',
+  erisilebilirAd = 'Fotoğraf paylaş',
   sabitKitle,
 }, kol) => {
   const dosyaGirdisi = React.useRef<HTMLInputElement>(null);
@@ -140,7 +146,7 @@ export const FotografPaylasGirisi = React.forwardRef<FotografPaylasKolu, GirisPr
       <button
         type="button"
         onClick={fotografSec}
-        aria-label="Fotoğraf paylaş"
+        aria-label={erisilebilirAd}
         /*
           PROFİL OKUNANA KADAR KAPALI
 

@@ -9,6 +9,7 @@ import type { InternshipListing } from '../types';
 import { fetchListingByIdPrefix } from '../lib/queries';
 import { ListingLogo } from './ListingLogo';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
+import { ilanHedefi } from '../lib/ilan-hedefi.mjs';
 import { IlanDurumEtiketleri } from './IlanDurumEtiketleri';
 import { tarihMetni } from '../lib/tarih.mjs';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
@@ -151,6 +152,12 @@ export const ListingPage: React.FC<ListingPageProps> = ({
 
   /* Başvurunun gerçek işleyişi — açıklama ve düğmeler buradan besleniyor. */
   const yol = basvuruYolu(listing ?? {});
+  /*
+    DIŞ DÜĞMENİN YAZISI GERÇEK HEDEFİ SÖYLÜYOR (25 Eylül 2026): "İlana
+    git" ya da "Kariyer sayfasına git". Adresin başvuru formu olduğu
+    doğrulanmadıkça "başvur" denmiyor (kural lib/ilan-hedefi.mjs).
+  */
+  const hedef = ilanHedefi(listing ?? {});
 
   /*
     GÖSTERİLECEK META DEĞERLERİ — BOŞSA null
@@ -628,7 +635,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                       : 'border border-gray-200 bg-white hover:bg-gray-50'
                   }`}
                 >
-                  {yol.anaEylem === 'resmi-site' ? yol.anaEtiket : 'İlana git'}
+                  {yol.anaEylem === 'resmi-site' ? hedef.etiket : 'İlana git'}
                   <ExternalLink className="w-4 h-4" />
                 </a>
               )}
@@ -714,7 +721,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                 title={yol.ozet}
                 className="flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-blue-600 px-4 text-sm font-bold text-white shadow-xs transition-colors hover:bg-blue-700"
               >
-                {yol.anaEtiket}
+                {hedef.etiket}
                 <ExternalLink className="h-4 w-4 shrink-0" />
               </a>
               {yol.takipEtiketi && (

@@ -22,6 +22,8 @@ import { IlanDurumEtiketleri } from './IlanDurumEtiketleri';
 import { UlkeRozeti } from './UlkeRozeti';
 import { COGRAFYA, ilanCografyasi } from '../lib/ilan-cografyasi.mjs';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
+import { ILAN_TIPI_ETIKETI } from '../lib/ilan-hedefi.mjs';
+import { KART_EYLEMI } from '../lib/kart-cta';
 import { ILAN_KAYNAGI } from '../lib/urun-metni';
 import { tarihMetni } from '../lib/tarih.mjs';
 import { YUZEY } from '../ui/tokens';
@@ -185,29 +187,25 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
 
 
   /*
-    İLAN KARTI — ÜÇ BÖLÜM YAN YANA (onaylanan tasarım)
+    İLAN KARTI — HİYERARŞİ (mobil sadeleştirme, 25 Eylül 2026)
 
-      SOL   büyük şirket logosu
-      ORTA  şirket adı · pozisyon · konum/çalışma biçimi · kaynak
-      SAĞ   üstte kaydet, altta "İncele"
+      SOL     56 × 56 logo
+      ORTA    pozisyon (ana başlık) · şirket · konum/çalışma biçimi ·
+              varsa ilan türü ve son başvuru
+      SAĞ ÜST kaydet
+      ALT     solda kaynak, sağda "İlanı incele"
 
-    Bölümler çizgiyle değil hizalama ve boşlukla ayrılıyor. Bilgiler
-    logonun altına, "İncele" ayrı bir alt satıra İNMİYOR: uzun pozisyon
-    adı orta bölümün içinde satır atlıyor, logo ve eylemler yerinde kalıyor.
+    Önce şirket adı başlıktı, pozisyon ikinci satırdı; öğrencinin sorusu
+    "nereye başvurabilirim" — pozisyon önde.
 
-    LOGO BÜYÜK VE HERKESE EŞİT
-    KOBİ ile büyük şirket aynı logo alanını alıyor. Oran korunuyor
-    (`object-contain`, CompanyLogo); logosu olmayan ya da yüklenemeyen
-    şirkette aynı ölçüde pastel zeminli baş harf alanı. Dar ekranda önce
-    boşluklar azalıyor, logo 72 pikselin altına inmiyor — avatara dönmüyor.
+    DETAY ÖNCE (kullanıcı kararı, 25 Eylül 2026): kartın tek eylemi
+    StajımVar'daki ilan sayfası. Öğrenci şartları — ücret, sigorta, staj
+    türü, doğrulama — orada görüp dış siteye oradan gidiyor; o düğmenin
+    yazısı gerçek hedefi söylüyor (`ilanHedefi`, ListingPage). Kaydet ile
+    eylem örtünün üstünde (`relative z-10`), birbirinden bağımsız.
 
-    ŞİRKET/OFİS FOTOĞRAFI YOK
-    Kart yalnız logoyu taşıyor.
-
-    TIKLAMA
-    Kartın tamamı pozisyon bağlantısının `after:` örtüsüyle ilana gidiyor.
-    Kaydet ve "İncele" örtünün üstünde (`relative z-10`); "İncele" aynı
-    adrese giden gerçek bir bağlantı — ctrl/orta tuş tarayıcıya kalıyor.
+    Tarih ve tür yalnız veride varsa: ölçüldü (25 Eylül 2026) yayındaki
+    186 ilanın 9'unda son başvuru, 177'sinde tür var. Tahmin basılmıyor.
   */
   const ilanAdresi = `/ilan/${listingSlug(listing)}`;
   const ilanaGit = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -215,57 +213,114 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
     e.preventDefault();
     onViewDetails();
   };
+  const tipEtiketi = listing.ilanTipi ? ILAN_TIPI_ETIKETI[listing.ilanTipi] : null;
+  const konum = [konumEtiketi(listing.city), calismaEtiketi(listing.workType)].filter(Boolean).join(' · ');
+  const yurtdisi = ilanCografyasi(listing) === COGRAFYA.YURTDISI;
+  const turkiyeEtiketi = cografyaEtiketi && ilanCografyasi(listing) === COGRAFYA.TURKIYE;
+  const kayitMetni = girisGerekli
+    ? 'Kaydetmek için giriş yap'
+    : kayitli
+      ? 'Kayıtlardan çıkar'
+      : 'Daha sonra bakmak için kaydet';
 
   return (
     <div
       id={`internship-card-${listing.id}`}
-      className={`group relative flex min-w-0 items-stretch gap-3 rounded-xl border border-gray-200 bg-white px-3 py-3 transition-colors hover:border-gray-300 focus-within:ring-2 focus-within:ring-blue-600 min-[390px]:gap-3.5 min-[390px]:px-3.5 min-[430px]:gap-4 min-[430px]:px-4 sm:p-4 ${
+      className={`group relative flex min-w-0 flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300 focus-within:ring-2 focus-within:ring-blue-600 ${
         yuzey ? '' : 'sm:hover:border-blue-400'
       }`}
     >
-      {/* ---- SOL: logo ---- */}
-      <div className="shrink-0" title={listing.companyName}>
-        <ListingLogo
-          name={listing.companyName}
-          logoUrl={listing.companyLogo || undefined}
-          className="!h-[clamp(72px,21vw,92px)] !w-[clamp(72px,21vw,92px)] !rounded-xl !p-2 !text-2xl"
-        />
+      <div className="flex min-w-0 items-start gap-3">
+        {/* ---- SOL: logo ---- */}
+        <div className="shrink-0" title={listing.companyName}>
+          <ListingLogo
+            name={listing.companyName}
+            logoUrl={listing.companyLogo || undefined}
+            className="!h-14 !w-14 !rounded-xl !p-1.5 !text-lg"
+          />
+        </div>
+
+        {/* ---- ORTA: bilgiler ---- */}
+        <div className="min-w-0 flex-1">
+          <h3 className="break-words text-base font-semibold leading-[22px] text-slate-900">
+            <a
+              href={ilanAdresi}
+              onClick={ilanaGit}
+              className="rounded-sm outline-none after:absolute after:inset-0 after:rounded-2xl after:content-[''] group-hover:text-blue-700"
+            >
+              {listing.title}
+            </a>
+          </h3>
+          <p className="mt-0.5 break-words text-sm leading-5 text-gray-700">
+            {listing.companyName}
+            {listing.department && <span className="text-gray-500"> · {listing.department}</span>}
+          </p>
+
+          {(konum || yurtdisi || turkiyeEtiketi) && (
+            <p className="mt-1 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-sm leading-5 text-gray-600">
+              <MapPin aria-hidden className="h-4 w-4 shrink-0 text-gray-400" />
+              {/* Çalışma biçimi bilinmiyorsa yazılmıyor — varsayılan uydurulmuyor. */}
+              {konum && <span className="min-w-0 break-words">{konum}</span>}
+              {yurtdisi && <UlkeRozeti countryCode={listing.countryCode} />}
+              {turkiyeEtiketi && (
+                <span className="inline-flex items-center rounded-md border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-800">
+                  Türkiye
+                </span>
+              )}
+            </p>
+          )}
+
+          {(tipEtiketi || sonBasvuru) && (
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-4 text-gray-600">
+              {tipEtiketi && (
+                <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 font-semibold text-gray-700">
+                  {tipEtiketi}
+                </span>
+              )}
+              {sonBasvuru && (
+                <span>
+                  Son başvuru: <strong className="font-semibold text-gray-800">{sonBasvuru}</strong>
+                </span>
+              )}
+            </p>
+          )}
+
+          {/*
+            Görünür durum etiketleri ortak bileşende: aynı etiketler ilan
+            detayında da gerekiyor ve iki kopya er geç ayrışırdı. Gerekçesi
+            ve hangi durumda neyin yazıldığı orada.
+          */}
+          <IlanDurumEtiketleri listing={listing} className="mt-1.5" />
+        </div>
+
+        {/* ---- SAĞ ÜST: kaydet ---- */}
+        <div className="relative z-10 -mr-2 -mt-2 shrink-0">
+          {onToggleKayit ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleKayit();
+              }}
+              aria-pressed={girisGerekli ? undefined : kayitli}
+              aria-label={kayitMetni}
+              title={kayitMetni}
+              className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg transition-colors ${
+                kayitli ? 'text-blue-600' : 'text-slate-700 hover:bg-gray-100 hover:text-blue-600'
+              }`}
+            >
+              <Bookmark aria-hidden className={`h-6 w-6 ${kayitli ? 'fill-blue-600' : ''}`} strokeWidth={1.75} />
+            </button>
+          ) : (
+            <span aria-hidden className="block h-11 w-11" />
+          )}
+        </div>
       </div>
 
-      {/* ---- ORTA: bilgiler ---- */}
-      <div className="flex min-w-0 flex-1 flex-col justify-center">
-        <h3 className="break-words text-[15px] font-bold leading-snug text-slate-900 min-[430px]:text-base">
-          {listing.companyName}
-        </h3>
-        <h4 className="mt-0.5 break-words text-[15px] font-semibold leading-snug text-slate-800 min-[430px]:text-base">
-          <a
-            href={ilanAdresi}
-            onClick={ilanaGit}
-            className="rounded-sm outline-none after:absolute after:inset-0 after:content-[''] group-hover:text-blue-700"
-          >
-            {listing.title}
-          </a>
-        </h4>
-        {listing.department && (
-          <p className="mt-0.5 break-words text-xs text-gray-500">({listing.department})</p>
-        )}
-
-        <p className="mt-1.5 flex min-w-0 items-start gap-1.5 text-[13px] leading-snug text-gray-500">
-          <MapPin aria-hidden className="mt-px h-4 w-4 shrink-0 text-gray-400" />
-          <span className="min-w-0 break-words">
-            {/* Çalışma biçimi bilinmiyorsa yazılmıyor — varsayılan uydurulmuyor. */}
-            {[konumEtiketi(listing.city), calismaEtiketi(listing.workType)].filter(Boolean).join(' · ')}
-          </span>
-          {ilanCografyasi(listing) === COGRAFYA.YURTDISI && <UlkeRozeti countryCode={listing.countryCode} />}
-          {cografyaEtiketi && ilanCografyasi(listing) === COGRAFYA.TURKIYE && (
-            <span className="inline-flex items-center rounded-md border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-800">
-              Türkiye
-            </span>
-          )}
-        </p>
-
+      {/* ---- ALT: kaynak ve eylem ---- */}
+      <div className="flex min-w-0 items-center justify-between gap-3">
         <p
-          className="mt-1 flex min-w-0 items-center gap-1.5 text-[13px] text-gray-500"
+          className="flex min-w-0 items-center gap-1.5 text-xs leading-4 text-gray-600"
           title={
             kariyerSayfasindanIlan
               ? 'Bu ilan şirketin kendi kariyer sayfasından alındı'
@@ -273,66 +328,19 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           }
         >
           <FileText aria-hidden className="h-4 w-4 shrink-0 text-gray-400" />
-          <span>{kariyerSayfasindanIlan ? ILAN_KAYNAGI.dis.etiket : ILAN_KAYNAGI.ic.etiket}</span>
+          <span className="truncate">{kariyerSayfasindanIlan ? ILAN_KAYNAGI.dis.etiket : ILAN_KAYNAGI.ic.etiket}</span>
         </p>
 
-        {sonBasvuru && (
-          <p className="mt-1 text-xs text-gray-500">
-            Son başvuru: <strong className="font-semibold text-gray-700">{sonBasvuru}</strong>
-          </p>
-        )}
-
-        {/*
-          Görünür durum etiketleri ortak bileşende: aynı etiketler ilan
-          detayında da gerekiyor ve iki kopya er geç ayrışırdı. Gerekçesi
-          ve hangi durumda neyin yazıldığı orada.
-        */}
-        <IlanDurumEtiketleri listing={listing} className="mt-1.5" />
-      </div>
-
-      {/* ---- SAĞ: kaydet ve İncele ---- */}
-      <div className="relative z-10 flex shrink-0 flex-col items-end justify-between gap-3">
-        {onToggleKayit ? (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleKayit();
-            }}
-            aria-pressed={girisGerekli ? undefined : kayitli}
-            aria-label={
-              girisGerekli
-                ? 'Kaydetmek için giriş yap'
-                : kayitli
-                  ? 'Kayıtlardan çıkar'
-                  : 'Daha sonra bakmak için kaydet'
-            }
-            title={
-              girisGerekli
-                ? 'Kaydetmek için giriş yap'
-                : kayitli
-                  ? 'Kayıtlardan çıkar'
-                  : 'Daha sonra bakmak için kaydet'
-            }
-            className={`-mr-1.5 -mt-1 flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg transition-colors ${
-              kayitli ? 'text-blue-600' : 'text-slate-700 hover:bg-gray-100 hover:text-blue-600'
-            }`}
+        <div className="relative z-10 shrink-0">
+          <a
+            href={ilanAdresi}
+            onClick={ilanaGit}
+            aria-label={`${listing.title} ilanını incele`}
+            className={KART_EYLEMI.kenar}
           >
-            <Bookmark aria-hidden className={`h-6 w-6 ${kayitli ? 'fill-blue-600' : ''}`} strokeWidth={1.75} />
-          </button>
-        ) : (
-          <span aria-hidden className="h-10 w-10" />
-        )}
-
-        <a
-          href={ilanAdresi}
-          onClick={ilanaGit}
-          aria-label={`${listing.title} ilanını incele`}
-          className="mb-1 inline-flex items-center gap-1 whitespace-nowrap text-[15px] font-bold text-blue-600 hover:text-blue-700"
-        >
-          İncele
-          <ArrowUpRight aria-hidden className="h-4 w-4" strokeWidth={2.25} />
-        </a>
+            İlanı incele
+          </a>
+        </div>
       </div>
     </div>
   );

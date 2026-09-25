@@ -130,12 +130,12 @@ test('metinler tek yerde tanımlı ve kart oradan okuyor', () => {
     Telefonda tür ve destek ilan kartındaki konum satırı gibi ikonlu tek
     satır; uzun metin kırpılmadan sarıyor (İlanlar'la tek tip, 16 Eylül 2026).
   */
-  assert.match(sayfa, /<Tag aria-hidden className="mt-px h-4 w-4 shrink-0 text-gray-400" \/>/);
+  assert.match(sayfa, /<Tag aria-hidden className="h-4 w-4 shrink-0 text-gray-400" \/>/);
   /* Masaüstündeki ayrı tutar alanı kalktı: kart her genişlikte aynı satırı çiziyor. */
   assert.doesNotMatch(sayfa, /<dt className="text-\[11px\] text-gray-500">Tutar<\/dt>/);
   assert.doesNotMatch(sayfa, /'Belirtilmemiş'/, 'masaüstü hâlâ varsayım basıyor');
   /* Logo ilan kartıyla aynı ölçüde; tutar satırı gizlenince kart kısalıyor, boş satır açılmıyor. */
-  assert.match(sayfa, /!h-\[clamp\(72px,21vw,92px\)\]/);
+  assert.match(sayfa, /!h-14 !w-14/);
 });
 
 test('sorgu ve tip yeni alanları taşıyor', () => {

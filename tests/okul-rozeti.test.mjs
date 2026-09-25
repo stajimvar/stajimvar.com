@@ -141,7 +141,7 @@ test('logo fotografin kosesinde, yuvarlak ve beyaz halkali', () => {
     'logo cercevesi sirket logolariyla ayni dilde olmali',
   );
   /* Fotografin kosesi: kapsayici `relative`, rozet `absolute`. */
-  assert.match(BASLIK, /<div className="relative">[\s\S]{0,1500}<\/Halka>/);
+  assert.match(BASLIK, /<div className="relative">[\s\S]{0,600}<ProfilFotografi/);
   assert.match(BASLIK, /<span className="absolute bottom-0 right-0 sm:/);
   /* Satirda rozet kalmadi: okul adi tek basina (24 Eylul 2026'dan beri meta satirinin ogesi). */
   const okulOgesi = BASLIK.slice(BASLIK.indexOf('{okul && <MetaOgesi'));

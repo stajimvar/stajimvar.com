@@ -22,7 +22,7 @@ import { AgimYanSutun } from './AgimYanSutun';
 import { MesajKutusuDugmesi } from '../mesaj/MesajKutusuDugmesi';
 import { SAYFA_GENISLIGI } from '../../lib/duzen';
 import { BaglantiSeridi } from './BaglantiSeridi';
-import { FotografPaylasGirisi, type FotografPaylasKolu } from './FotografPaylasGirisi';
+import { FotografPaylasGirisi } from './FotografPaylasGirisi';
 import { ProfilFotografi } from './ProfilFotografi';
 import { KisiListesi, KullaniciAramaSonuclari } from './KullaniciArama';
 import { TakipListesi, useTakipListesi } from './TakipListesi';
@@ -141,10 +141,10 @@ export const AgimSayfasi: React.FC<Props> = ({
 
     Simge, gizli dosya kutusu ve besteci burada yazılmıştı; profil
     sayfasına da aynı giriş istendi. İkinci bir kopya, iki ekranın
-    zamanla ayrışması demekti. Kol, boş durumdaki geniş düğmenin aynı
-    seçiciyi açabilmesi için: o başka bir düğme ama aynı iş.
+    zamanla ayrışması demekti. (Boş durumdaki geniş düğme ve onun için
+    tutulan kol 25 Eylül 2026'da kalktı: akışın başındaki oluşturucu aynı
+    işi yapıyor.)
   */
-  const paylasKolu = React.useRef<FotografPaylasKolu>(null);
   /*
     RESMÎ İÇERİK SESSİZDE Mİ
 
@@ -306,7 +306,8 @@ export const AgimSayfasi: React.FC<Props> = ({
       `relative`: marka mutlak konumla ortalanıyor (aşağıda).
     */
     <header className="sticky top-0 z-20 border-b border-gray-200 bg-white lg:hidden">
-      <div className="relative flex h-15 items-center gap-1 px-2.5">
+      {/* 56 px ve 16 px yan boşluk: sitenin üst çubuğuyla aynı (25 Eylül 2026). */}
+      <div className="relative flex h-14 items-center gap-1 px-4">
       {/*
         MARKA ORTADA, SİMGELER İKİ YANDA (kullanıcı isteği, 16 Eylül 2026)
 
@@ -340,26 +341,18 @@ export const AgimSayfasi: React.FC<Props> = ({
         </a>
       </h1>
 
-      <FotografPaylasGirisi
-        ref={paylasKolu}
-        hazirMi={durum !== 'yukleniyor'}
-        paylasabilirMi={paylasabilirMi}
-        onOnKosulEksik={() => (onPaylasimOlustur ? onPaylasimOlustur() : onNavigate('/cv'))}
-        onNavigate={onNavigate}
-        /* Paylaşım bitince akış sunucudan yeniden okunuyor. */
-        onTamamlandi={() => setTazeleme((n) => n + 1)}
-        dugmeSinifi={IKON}
-      />
-
-
+      {/*
+        FOTOĞRAF PAYLAŞ SİMGESİ ÜST ÇUBUKTAN KALKTI (mobil sadeleştirme,
+        25 Eylül 2026): paylaşımın tek girişi akışın başındaki "Bir şey
+        paylaş…" oluşturucusu (aşağıda, `olusturucu`). Solda yalnız mesajlar.
+      */}
       {/*
         MESAJLAR — sitenin üst çubuğundaki ikonun aynısı (kendi rozetini
         kendisi okuyor). Telefonda Ağım'da büyük çubuk gizli olduğu için
         burada ayrıca duruyor; yoksa akıştaki öğrencinin mesaj kutusuna
-        giden bir yolu kalmazdı. SOLDA, fotoğraf paylaşmanın yanında
-        (kullanıcı isteği, 25 Eylül 2026: mesaj ikonu her sayfada solda).
+        giden bir yolu kalmazdı. Ağım'ın tek sol aksiyonu.
       */}
-      <MesajKutusuDugmesi onNavigate={onNavigate} className="rounded-full text-gray-800 hover:bg-gray-100" />
+      <MesajKutusuDugmesi onNavigate={onNavigate} className="-ml-2.5 rounded-full text-gray-800 hover:bg-gray-100" />
 
       {/* Sağ küme: zil ve arama yan yana. */}
       <span aria-hidden className="flex-1" />
@@ -502,13 +495,12 @@ export const AgimSayfasi: React.FC<Props> = ({
         >
           Bağlantılarını yönet
         </button>
-        <button
-          type="button"
-          onClick={() => paylasKolu.current?.sec()}
-          className={`inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-bold text-white hover:bg-blue-700 ${RENK_GECISI} ${ODAK_HALKASI}`}
-        >
-          İlk paylaşımını oluştur
-        </button>
+        {/*
+          "İlk paylaşımını oluştur" KALKTI (25 Eylül 2026): hemen üstteki
+          "Bir şey paylaş…" oluşturucusu aynı kolu açıyor; ikinci bir mavi
+          düğme aynı işi tekrarlıyordu. Geniş ekranda sol sütundaki
+          "Fotoğraf paylaş" duruyor.
+        */}
       </div>
     </div>
   );
@@ -719,6 +711,34 @@ export const AgimSayfasi: React.FC<Props> = ({
               />
             </div>
           )}
+          {/*
+            "BİR ŞEY PAYLAŞ…" OLUŞTURUCUSU — akışın başında, telefonda
+            (mobil sadeleştirme, 25 Eylül 2026). Üst çubuktaki simgenin
+            yerini aldı; aynı `FotografPaylasGirisi`. Boş akıştaki "İlk
+            paylaşımını oluştur" düğmesi de kalktı: aynı işi yapıyordu.
+            Paylaşım akışı fotoğrafla başlıyor; ikon bunu söylüyor. Geniş
+            ekranda sol sütundaki düğme duruyor; ikinci bir FAB yok.
+          */}
+          <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-3 lg:hidden">
+            <ProfilFotografi
+              ad={benimAd}
+              yol={benim?.avatarYolu ?? null}
+              yedekAdres={ogrenciAvatarAdresi}
+              className="h-10 w-10 shrink-0 rounded-full text-sm"
+            />
+            <FotografPaylasGirisi
+              hazirMi={durum !== 'yukleniyor'}
+              paylasabilirMi={paylasabilirMi}
+              onOnKosulEksik={() => (onPaylasimOlustur ? onPaylasimOlustur() : onNavigate('/cv'))}
+              onNavigate={onNavigate}
+              /* Paylaşım bitince akış sunucudan yeniden okunuyor. */
+              onTamamlandi={() => setTazeleme((n) => n + 1)}
+              dugmeSinifi={`flex min-h-11 min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-4 text-left text-sm text-gray-600 transition-colors hover:bg-gray-100 ${ODAK_HALKASI}`}
+              ikonSinifi="h-5 w-5 shrink-0 text-gray-500"
+              etiket="Bir şey paylaş…"
+              erisilebilirAd="Bir şey paylaş: fotoğraf seç"
+            />
+          </div>
           {akisGovdesi}
           {takipBlogu}
         </main>

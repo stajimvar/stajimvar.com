@@ -150,12 +150,17 @@ test('şeritler aynı ölçüde ve yatay taşmaya karşı korumalı', () => {
   assert.match(sehir, /w-\[76px\]/, 'SehirSeridi: daire genişliği ortak değil');
   assert.match(sehir, /h-14 w-14/, 'SehirSeridi: daire ölçüsü ortak değil');
   /*
-    Fırsatlar şeridi (KonuSeridi) İlanlar küreleriyle TEK TİP: ölçüsünü
-    SirketSeridi'den alıyor (kullanıcı isteği, 16 Eylül 2026).
+    Fırsatlar/Rehber şeridi (KonuSeridi) ve İlanlar şeridi (SirketSeridi)
+    TEK TİP: ikisi de ortak hap filtreyi kullanıyor (mobil sadeleştirme,
+    25 Eylül 2026; önce ikisi de aynı ölçüde küre çiziyordu).
   */
   const konu = oku('src/components/KonuSeridi.tsx');
-  assert.match(konu, /h-\[clamp\(58px,16vw,64px\)\] w-\[clamp\(58px,16vw,64px\)\]/);
-  assert.match(oku('src/components/SirketSeridi.tsx'), /h-\[clamp\(58px,16vw,64px\)\] w-\[clamp\(58px,16vw,64px\)\]/);
+  assert.match(konu, /<HapFiltre\b/);
+  assert.match(oku('src/components/SirketSeridi.tsx'), /<HapFiltre\b/);
+  const hap = oku('src/ui/HapFiltre.tsx');
+  assert.match(hap, /min-h-11/, 'dokunma alanı 44 px');
+  assert.match(hap, /h-9/, 'görünen hap 36 px');
+  assert.match(hap, /border-slate-900 bg-slate-900 text-white/, 'seçili hap lacivert, yazı beyaz');
 
   /*
     `sr-only` düğümleri `position: absolute`; sarmalayıcı

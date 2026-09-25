@@ -49,37 +49,30 @@ test('geometri ve punto tek yerde tanımlı', () => {
 
 test('ilan kartında tam genişlikte düğme kalmadı', () => {
   /*
-    Kart, paylaşılan CTA tanımlarını (`lib/kart-cta`) kullanıyordu çünkü
-    altında tam genişlikte bir başvuru düğmesi vardı. Onaylanan tasarımda
-    kartın tek eylemi sağ alttaki "İlanı incele" bağlantısı; başvuru
-    düğmesi ilan sayfasında, şartların yanında duruyor. Tanım dosyası
-    DURUYOR — fırsat kartı ve başka yüzeyler onu kullanmaya devam ediyor.
+    Kart tek eylem taşıyor: sağ altta "İlanı incele", mavi kenarlı ve 44
+    px (`KART_EYLEMI`, mobil sadeleştirme 25 Eylül 2026). Dış başvuru
+    ilan sayfasında, şartların yanında.
   */
-  assert.doesNotMatch(ILAN, /from '\.\.\/lib\/kart-cta'/);
-  assert.match(ILAN, />\s*İncele\s*</);
+  assert.match(ILAN, /from '\.\.\/lib\/kart-cta'/);
+  assert.match(ILAN, /className=\{KART_EYLEMI\.kenar\}\s*>\s*İlanı incele\s*</);
+  assert.doesNotMatch(ILAN, /target="_blank"/, 'kart dış siteye çıkmamalı');
+  assert.doesNotMatch(ILAN, /CTA_BIRINCIL|CTA_IKINCIL/, 'tam genişlikte eski düğme geometrisi geri gelmiş');
+  const cta = oku('src/lib/kart-cta.ts');
+  assert.match(cta, /export const KART_EYLEMI = \{/);
+  assert.match(cta, /min-h-11/);
 });
 
-/*
-  FIRSAT KARTINDAN DÜĞME KALKTI
-
-  Kartın altında tam genişlikte bir "Başvur" düğmesi vardı ve doğrudan
-  kurumun sitesine çıkıyordu: öğrenci şartları — kimler başvurabilir,
-  tutar ne, son tarih ne — okumadan dışarı gidiyordu. Düğme kaldırılmadı,
-  YERİ DEĞİŞTİ: detay sayfasında, şartların hemen altında duruyor.
-
-  Kartta yerine detaya götüren sakin bir satır var ("Bursu incele →") ve
-  o satır gerçek bir bağlantı DEĞİL — kartın tamamını zaten gerilmiş
-  bağlantı kaplıyor, iç içe iki `<a>` üretilemez.
-
-  Aşağıdaki testler bu kararın geri dönmesini engelliyor: kart yeniden
-  dışarı çıkan bir düğme taşımaya başlarsa ya da başvuru detaydan
-  kaybolursa yakalanıyor.
-*/
-
 test('FIRSAT KARTINDA DIŞARI ÇIKAN DÜĞME YOK', () => {
+  /*
+    Ayrıntı önce (kullanıcı kararı, 25 Eylül 2026 — yeniden teyit): kartın
+    tek eylemi "Ayrıntıları gör" ve fırsat sayfasına gidiyor. Kurumun
+    başvuru sayfası, giriş kapısıyla birlikte, detay sayfasında.
+  */
   assert.doesNotMatch(FIRSAT, /DisBaglanti/, 'kartta dış başvuru düğmesi geri gelmiş');
-  assert.doesNotMatch(FIRSAT, /CTA_BIRINCIL|CTA_IKINCIL|CTA_ORTAK/, 'kart düğme geometrisini geri almış');
-  assert.doesNotMatch(FIRSAT, />\s*Detayı gör\s*</, 'ayrı "Detayı gör" düğmesi kalmamalı');
+  assert.doesNotMatch(FIRSAT, /opportunityCta/, 'kart başvuru hedefini kendisi kuruyor');
+  assert.doesNotMatch(FIRSAT, /target="_blank"/, 'kart dış siteye çıkmamalı');
+  assert.doesNotMatch(FIRSAT, /CTA_BIRINCIL|CTA_IKINCIL|CTA_ORTAK/, 'kart eski düğme geometrisini geri almış');
+  assert.match(FIRSAT, /href=\{detayYolu\}\s*onClick=\{detayaGit\}[\s\S]{0,200}className=\{KART_EYLEMI\.kenar\}\s*>\s*Ayrıntıları gör\s*</);
 });
 
 test('BAŞVURU DETAY SAYFASINDA ERİŞİLEBİLİR', () => {
@@ -92,8 +85,9 @@ test('BAŞVURU DETAY SAYFASINDA ERİŞİLEBİLİR', () => {
 test('kartın tamamı detaya gidiyor, kaydet örtünün üstünde', () => {
   /* Gerilmiş bağlantı kartı kaplıyor; kaydet düğmesi z-10 ile üstte kalıyor. */
   assert.match(FIRSAT, /after:absolute after:inset-0/, 'gerilmiş bağlantı yok');
-  assert.match(FIRSAT, /href=\{`\/firsatlar\/\$\{item\.slug\}`\}/, 'gerçek adres olmalı');
-  assert.match(FIRSAT, /relative z-10 flex shrink-0 flex-col items-end justify-between gap-3/, 'kaydet örtünün altında kalır');
+  assert.match(FIRSAT, /const detayYolu = `\/firsatlar\/\$\{item\.slug\}`;/, 'gerçek adres olmalı');
+  assert.match(FIRSAT, /href=\{detayYolu\}/);
+  assert.match(FIRSAT, /relative z-10 -mr-2 -mt-2 shrink-0/, 'kaydet örtünün altında kalır');
   assert.match(FIRSAT, /onClick=\{\(e\) => \{\s*e\.stopPropagation\(\);/, 'kaydet tıklaması karta taşıyor');
 });
 
@@ -113,26 +107,15 @@ test('inceleme satırı tür tür yazılıyor, şablonla üretilmiyor', () => {
   assert.match(FIRSAT, /aria-label=\{`\$\{item\.title\}: \$\{opportunityReviewLabel\(item\.opportunityType\)\}`\}/);
 });
 
-test('İLAN KARTINDA TEK EYLEM VAR ve o birincil', () => {
+test('İLAN KARTINDA TEK EYLEM VAR: ilan sayfasına götürüyor', () => {
   /*
-    Kartta "Detaylar" adında ikincil bir düğme vardı. Kartın KENDİSİ zaten
-    detaya gidiyor (bkz. tests/ilan-arayuz-duzeltmeleri.test.mjs): aynı
-    hedefe giden ikinci bir düğme, kalan tek gerçek eylemi — başvuruyu —
-    eşit ağırlıkta bir rakiple paylaştırıyordu.
-
-    Fırsat kartında ikili düzen sürüyor, bu yüzden CTA_IKINCIL kalkmadı;
-    burada yalnızca kullanılmıyor.
+    "Detaylar" gibi ikinci bir düğme yok. Tek eylem "İlanı incele" ve kart
+    ile başlıkla aynı adrese (StajımVar ilan sayfası) gidiyor; dış
+    hedefin adı ("İlana git ↗", "Kariyer sayfasına git ↗") o sayfadaki
+    düğmede (tests/ilan-arayuz-duzeltmeleri).
   */
   assert.doesNotMatch(ILAN, />\s*Detaylar\s*</);
-  assert.doesNotMatch(ILAN, /CTA_IKINCIL/, 'ilan kartında ikincil rol kalmadı');
-  /*
-    TEK EYLEM ARTIK "İLANI İNCELE" (onaylanan tasarım)
-
-    Kartta tam genişlikte dış başvuru düğmesi vardı ve öğrenciyi ilanın
-    kendi sayfasındaki ücret, sigorta, staj türü ve doğrulama
-    bilgisini atlayarak dış siteye yolluyordu. Başvuru düğmesi o
-    sayfada duruyor; kart oraya götürüyor.
-  */
-  assert.match(ILAN, />\s*İncele\s*</);
-  assert.doesNotMatch(ILAN, /CTA_BIRINCIL/, 'kartta tam genişlikte düğme kalmadı');
+  assert.doesNotMatch(ILAN, /CTA_IKINCIL|CTA_BIRINCIL/);
+  assert.doesNotMatch(ILAN, /ilanHedefi\(/);
+  assert.match(ILAN, /<a href=\{ilanAdresi\} onClick=\{ilanaGit\}|href=\{ilanAdresi\}\s*onClick=\{ilanaGit\}\s*aria-label=\{`\$\{listing\.title\} ilanını incele`\}/);
 });

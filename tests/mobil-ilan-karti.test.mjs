@@ -138,10 +138,10 @@ test('mobil düzen: tam genişlik, köşesiz, gölgesiz, 1 px ayırıcı', () =>
     başka listeler onu kullanmaya devam ediyor; değişen yalnız ilan
     kartının kabuğu.
   */
-  assert.match(KART, /rounded-xl border border-gray-200 bg-white px-3 py-3/);
+  /* 16 px iç boşluk ve 16 px köşe her genişlikte (mobil sadeleştirme, 25 Eylül 2026). */
+  assert.match(KART, /rounded-2xl border border-gray-200 bg-white p-4/);
   /* Tek kabuk her genişlikte: `yuzey` dalı artık yalnız masaüstü üzerine geçişi değiştiriyor. */
   assert.match(KART, /yuzey \? '' : 'sm:hover:border-blue-400'/);
-  assert.match(KART, /sm:p-4/);
 });
 
 test('kart tek tip: ilana göre değişen rozet yığını yok', () => {

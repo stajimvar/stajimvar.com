@@ -15,7 +15,6 @@ import {
   Search,
   SlidersHorizontal,
   X,
-  Menu,
   University,
   UserRound,
 } from 'lucide-react';
@@ -443,13 +442,6 @@ export const Header: React.FC<HeaderProps> = ({
     hesaplama araçları ve işveren rehberi. Hepsi alt menüde "Rehber"
     altında toplanıyor — kullanıcı için hepsi aynı yerin parçası.
   */
-  /*
-    `/cv` = oturum sahibinin kendi profili. Başkasının profili
-    `/profil/<kullaniciadi>` adresinde ziyaretçi görünümüyle açılıyor,
-    yani orada bu koşul hiçbir zaman doğru olmuyor.
-  */
-  const kendiProfilimde = bulunulanYol === '/cv';
-
   const rehberdeMi = /^\/(rehber|bolum|bolumler|araclar|isveren)(\/|$)/.test(bulunulanYol);
   const firsatlardaMi = /^\/(firsatlar|burslar|kyk|yurtdisi-firsatlari|yarismalar|firsat-takvimi|bana-uygun|kaydedilen-firsatlar)(\/|$)/.test(bulunulanYol);
   /*
@@ -659,27 +651,6 @@ export const Header: React.FC<HeaderProps> = ({
   const profildeMi = cvEkranindaMi || (!rehberdeMi && !kurumsalSayfada && !agimdaMi && !kampustaMi && activeTab === 'profile');
 
   /*
-    KAMPÜSÜM İLANLAR VE FIRSATLAR SAYFASINDA YOK (kullanıcı isteği,
-    25 Eylül 2026: ilanlar ve fırsatlar sayfasında sol üstte Kampüsüm
-    simgesi istenmedi — iki ekran görüntüsünde simgenin üstü çizili).
-
-    NEDEN `ilanlardaMi` DEĞİL: o bayrak alt çubuktaki sekme için ve
-    "başka bir kümede değilse İlanlar" diye çalışıyor; `activeTab`
-    'internships' kaldığı sürece /mesajlar, /staj-programlari,
-    /universite-kariyer-merkezleri, /sirket/<ad> ve bulunamadı
-    sayfalarında da doğru. Düğme ona bağlansaydı istenmeyen onca sayfada
-    da kaybolurdu. Burada ADRES belirleyici: ilan listesi (`/` — yalnız
-    ilan sekmesi açıkken, aynı adreste profil sekmesi de çiziliyor —
-    ve /staj-ilanlari) ile tek ilan (/ilan/<slug>).
-
-    Tek ilan ve tek fırsat da dahil: alt çubukta orası da İlanlar /
-    Fırsatlar sekmesi; listeden ilana girip dönen kullanıcının sol
-    üstünde simge bir görünüp bir kaybolmasın. `firsatlardaMi` zaten
-    /firsatlar/<slug>'ı kapsıyor, ilan tarafı aynı kurala çekildi.
-  */
-  const ilanSayfasindaMi =
-    stajIlanlarindaMi || /^\/ilan\//.test(bulunulanYol) || (bulunulanYol === '/' && ilanlardaMi);
-  /*
     MESAJ DÜĞMESİ TELEFONDA SOLDA (kullanıcı isteği, 25 Eylül 2026:
     "Mesaj logosu tüm sayfalarda sol tarafa geçsin").
 
@@ -694,8 +665,31 @@ export const Header: React.FC<HeaderProps> = ({
   */
   const genisEkran = useGenisEkran();
   const mesajDugmesiCizilsin = isLoggedIn && userRole === 'student' && Boolean(onNavigate);
+  /*
+    SOLDA EN ÇOK BİR BAĞLAMSAL AKSİYON (mobil sadeleştirme, 25 Eylül 2026)
+
+    Telefonda sol küme sayfaya göre TEK düğme taşıyor; sağda zil ve arama,
+    ortada logo her sayfada aynı:
+      İlanlar                 → süzgeç
+      Ağım (/agim, /baglantilar, /takip) ve /mesajlar → mesajlar
+      Profil (/cv, /profil/<ad>, /kampusum) → Kampüs
+      diğerleri               → boş
+    Önce /cv'de Kampüs + mesaj, ilanlarda süzgeç + mesaj yan yana
+    çiziliyordu. Mesajların kapısı artık Ağım (Ağım'ın kendi üst çubuğunda
+    da solda); geniş ekranda sağ kümedeki yeri değişmedi.
+  */
+  const profilKumesindeMi = /^\/(cv|profil|kampusum)(\/|$)/.test(bulunulanYol);
+  const mesajKumesindeMi = agimdaMi || /^\/mesajlar(\/|$)/.test(bulunulanYol);
   const kampusDugmesiCizilsin =
-    isLoggedIn && userRole === 'student' && Boolean(activeStudent) && !ilanSayfasindaMi && !firsatlardaMi;
+    isLoggedIn && userRole === 'student' && Boolean(activeStudent) && profilKumesindeMi;
+  const solAksiyon: 'suzgec' | 'mesaj' | 'kampus' | null =
+    ilanlardaMi && sayfaAramasi?.onSuzgec
+      ? 'suzgec'
+      : mesajKumesindeMi && mesajDugmesiCizilsin
+        ? 'mesaj'
+        : kampusDugmesiCizilsin
+          ? 'kampus'
+          : null;
 
   /*
     ŞİRKET KABUĞUNUN SEKMELERİ ADRESLE YANIYOR
@@ -752,9 +746,9 @@ export const Header: React.FC<HeaderProps> = ({
           akistaMi ? 'hidden lg:block' : ''
         }`}
       >
-        <div className={`${SAYFA_GENISLIGI} mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10`}>
+        <div className={`${SAYFA_GENISLIGI} mx-auto px-4 sm:px-6 lg:px-8 xl:px-10`}>
         {/* Main Nav Bar */}
-        <div className="relative flex items-center justify-between h-15 sm:h-18 gap-2 sm:gap-4">
+        <div className="relative flex items-center justify-between h-14 sm:h-18 gap-2 sm:gap-4">
           {/*
             TELEFONDA DİZİLİM: SİMGELER · MARKA · SİMGELER
 
@@ -886,7 +880,7 @@ export const Header: React.FC<HeaderProps> = ({
               ekran görüntüsünde çizip istememişti. Aynı simge burada başka
               bir işe gitseydi o kapı geri gelmiş gibi okunurdu.
             */}
-            {kampusDugmesiCizilsin && onNavigate && (
+            {solAksiyon === 'kampus' && onNavigate && (
               <a
                 href={kampusYolu}
                 aria-label={profilAdi ? 'Bu kişinin kampüsü' : 'Kampüsüm'}
@@ -922,7 +916,7 @@ export const Header: React.FC<HeaderProps> = ({
               kaydediyor; simge onlarda çizilseydi o sayfaların başlığı da
               değişirdi. Onaylanan düzen yalnız İlanlar'ın.
             */}
-            {ilanlardaMi && sayfaAramasi?.onSuzgec && (
+            {solAksiyon === 'suzgec' && sayfaAramasi?.onSuzgec && (
               <button
                 type="button"
                 onClick={sayfaAramasi.onSuzgec}
@@ -945,7 +939,7 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
 
             {/* MESAJLAR — telefonda sol kümenin sonunda (gerekçe `mesajDugmesiCizilsin`de). */}
-            {!genisEkran && mesajDugmesiCizilsin && onNavigate && (
+            {!genisEkran && solAksiyon === 'mesaj' && onNavigate && (
               <MesajKutusuDugmesi onNavigate={onNavigate} />
             )}
 
@@ -1522,21 +1516,11 @@ export const Header: React.FC<HeaderProps> = ({
                   />
                 )}
                 {/*
-                  ☰ AYARLAR VE HAREKETLER — yalnız kendi profilinde ve telefonda
-                  (Instagram'daki gibi sağ üst köşe). Menünün kendisi
-                  ProfilBasligi'nde; buradan olayla açılıyor.
+                  ☰ KALDIRILDI (mobil sadeleştirme, 25 Eylül 2026): ayarlar ve
+                  hareketler menüsü artık profilin kendisinde, açıkça
+                  "Ayarlar" yazan düğmeyle açılıyor (ProfilBasligi). Üst
+                  çubuğun sağında her sayfada yalnız zil ve arama kalıyor.
                 */}
-                {kendiProfilimde && (
-                  <button
-                    type="button"
-                    onClick={() => window.dispatchEvent(new Event('stajimvar:profil-menusu'))}
-                    aria-label="Ayarlar ve hareketler"
-                    aria-haspopup="dialog"
-                    className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-800 transition-colors hover:bg-gray-100 lg:hidden"
-                  >
-                    <Menu className="h-6 w-6" />
-                  </button>
-                )}
 
                 {/*
                   GÜVENLİK AĞI: profil herhangi bir sebeple yüklenemezse
