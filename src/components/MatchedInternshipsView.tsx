@@ -39,6 +39,8 @@ import { COGRAFYA, ilanCografyasi } from '../lib/ilan-cografyasi.mjs';
 import { fetchBugunDogrulananIlanSayisi } from '../lib/queries';
 import { BolumCipleri } from './BolumCipleri';
 import { alanSayilari, bolumeGoreSirala } from '../lib/bolum-eslestirme.mjs';
+import { sektorleriGetir, type SosyalSektor } from '../lib/queries/sosyal';
+import { alanaUyuyorMu, alanSecenekleri } from '../lib/ilan-alan-suzgeci.mjs';
 /*
   TEK ESLESME GERCEGI
 
@@ -114,8 +116,21 @@ const SecenekSatiri: React.FC<{
   adet?: number;
   secili: boolean;
   onChange: () => void;
-}> = ({ tip, etiket, adet, secili, onChange }) => (
-  <label className="flex items-center gap-2.5 py-1.5 cursor-pointer select-none group">
+  /*
+    Uzun etiket kırpılmasın, alt satıra geçsin. Alan adları sabit ve
+    uzun ("Medya, İletişim ve Yaratıcı Endüstriler"): 1280 pikselde
+    277 piksellik blokta kırpıldığı ölçüldü ve kırpılan ad yalnız
+    `title` ile okunuyordu — dokunmatik ekranda hiç. Diğer bloklarda
+    (şirket adları dahil) davranış değişmedi.
+  */
+  satirKir?: boolean;
+}> = ({ tip, etiket, adet, secili, onChange, satirKir = false }) => (
+  /*
+    `min-h-11`: satırın tamamı etiket, yani dokunma hedefi satırın kendisi.
+    Yalnız `py-1.5` ile satır 32 piksel kalıyordu (20 px satır yüksekliği
+    + 12 px dolgu); sitenin dokunma hedefi alt sınırı 44 piksel.
+  */
+  <label className="flex min-h-11 items-center gap-2.5 py-1.5 cursor-pointer select-none group">
     <input
       type={tip}
       checked={secili}
@@ -125,10 +140,10 @@ const SecenekSatiri: React.FC<{
       }`}
     />
     <span
-      className={`min-w-0 flex-1 text-sm truncate transition-colors ${
+      className={`min-w-0 flex-1 text-sm transition-colors ${satirKir ? 'leading-snug' : 'truncate'} ${
         secili ? 'font-semibold text-gray-900' : 'text-gray-700 group-hover:text-gray-900'
       }`}
-      title={etiket}
+      title={satirKir ? undefined : etiket}
     >
       {etiket}
     </span>
@@ -178,6 +193,12 @@ interface MatchedInternshipsViewProps {
   onNavigate?: (yol: string) => void;
   countrySelection?: string;
   countryFacets?: Array<{code:string;count:number}>;
+  /*
+    Alan × tür dağılımı (`facets.alanlar`, `alan` = sectors.id). Verilmezse alan
+    bloğu çizilmiyor: eski açılış tohumunda yok ve sayısız seçenek ya da
+    istemcinin eksik sayımı yanlış bir sayı olurdu.
+  */
+  alanFacets?: Array<{ alan: string; tip: string; count: number }>;
   onCountryChange?: (country:string)=>void;
   /* "Bu aramayı kaydet" için: toast ve giriş kapısı çağıranda. */
   onToast?: (mesaj: string) => void;
@@ -212,6 +233,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   onNavigate,
   countrySelection='all',
   countryFacets=[],
+  alanFacets,
   onCountryChange,
   onToast,
   onAramaKaydetGirisi,
@@ -350,6 +372,40 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   /** Secili sirketler. Bos dizi = hepsi. */
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
   const [companySearch, setCompanySearch] = useState('');
+
+  /*
+    ALAN SÜZGECİ — sitenin 24 alanı (`sectors`), ilanın `alanIdleri`si
+
+    Seçili alanlar `sectors.id` olarak tutuluyor; ilan tarafı da id
+    taşıyor ve karşılaştırma ad üzerinden yapılmıyor (ad değişirse süzgeç
+    sessizce boşalırdı). Boş dizi = süzgeç yok.
+
+    ADRESE YAZILMIYOR: bu paneldeki süzgeçlerin hiçbiri (şehir, çalışma
+    tercihi, tür, tarih, şirket) adrese yazılmıyor; adreste yalnız küre
+    şeridinin bölgesi ve dışarıdan gelen `?bolum=` var. Tek başına alanı
+    adrese yazmak panelde iki ayrı davranış demekti.
+  */
+  const [seciliAlanlar, setSeciliAlanlar] = useState<string[]>([]);
+  /*
+    Alan ADLARI ayrı bir istekle geliyor: ilan yalnız id taşıyor. Gelene
+    kadar ya da istek düşerse `null` kalıyor ve blok hiç çizilmiyor —
+    adı bilinmeyen bir seçenek ya da "0 alan" yazmak yerine. Süzgecin
+    geri kalanı bu istekten bağımsız çalışıyor.
+  */
+  const [alanAdlari, setAlanAdlari] = useState<SosyalSektor[] | null>(null);
+  useEffect(() => {
+    let iptal = false;
+    sektorleriGetir()
+      .then((liste) => {
+        if (!iptal) setAlanAdlari(liste);
+      })
+      .catch(() => {
+        if (!iptal) setAlanAdlari(null);
+      });
+    return () => {
+      iptal = true;
+    };
+  }, []);
 
   /**
    * Filtre paneli MOBİLDE kapalı başlıyor.
@@ -544,7 +600,9 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     | 'zorunlu'
     | 'ucretli'
     | 'uyum'
-    | 'bolum';
+    | 'bolum'
+    /* Alan süzgeci: boş sonuç ekranı "alan kalksa kaç ilan açılır" diye soruyor. */
+    | 'alan';
 
   /*
     KANONIK FILTRE NESNESI
@@ -671,9 +729,17 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         if (!ilanTipleri.includes(tip)) return false;
       }
 
+      /*
+        ALAN — seçilenlerden HERHANGİ BİRİ yeter (lib/ilan-alan-suzgeci).
+        Kanonik nesnede değil: kayıtlı arama ve günlük özet işçisi alanı
+        henüz bilmiyor (bkz. aşağıda "Bu aramayı kaydet").
+      */
+      if (atla !== 'alan' && !alanaUyuyorMu(listing.alanIdleri ?? [], seciliAlanlar)) return false;
+
       return true;
     },
     [
+      seciliAlanlar,
       kanonikFiltreler,
       subTab,
       searchQuery,
@@ -898,10 +964,15 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   /**
    * Sirket suzgeci secenekleri.
    *
-   * Kariyer.net'in "Sektor" ve "Departman" bloklarinin bizdeki karsiligi.
-   * Sektor verimiz yok -- ilanlari sirketin kendi kariyer sayfasindan
-   * aliyoruz, sektor etiketi gelmiyor. Uydurmak yerine gercekten elimizde
-   * olani suzduruyoruz: sirket adi.
+   * Kariyer.net'in "Departman" blogunun bizdeki karsiligi: ilanlar
+   * sirketin kendi kariyer sayfasindan geliyor ve departman etiketi
+   * tasimiyor, elimizde gercekten olan sirket adi.
+   *
+   * "Sektor" karsiligi artik ayri bir blok: Alan (asagida `alanSecenekleri`).
+   * Ilanin alani kaynaktan gelmiyor, sunucuda basliktan ve sirketin sektor
+   * metninden TURETILIYOR (goc 20261109010000); alanini soylemeyen ilan
+   * bos kaliyor, bir alana zorlanmiyor. Sirket suzgeci bu yuzden kaldi:
+   * ikisi farkli sorulara cevap veriyor.
    */
   /** Calisma turu basina ilan sayisi; secenegin yaninda gosteriliyor. */
   const workTypeCounts = useMemo(() => {
@@ -932,6 +1003,39 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     }
     return sayim;
   }, [matchedData, gecer]);
+
+  /*
+    ALAN SEÇENEKLERİ VE SAYILARI — SUNUCUNUN ALAN × TÜR DAĞILIMINDAN
+
+    Sayılar kataloğun TÜM sayfalarından, ülke seçiminden sonra sunucuda
+    hesaplanıyor. İstemci sayamaz: elinde yalnız yüklenmiş 24'erli
+    sayfalar var — şehir dağılımının sunucuya taşınma gerekçesiyle aynı.
+    Dağılım alan × tür satırları hâlinde geliyor ve burada yalnız İlan
+    türü süzgecinde seçili türler toplanıyor (`ilanTipleri`); böylece
+    varsayılan seçimde (Staj + Uzun dönem) sayı varsayılan listeyle aynı.
+
+    SAYILAR ÜLKE VE TÜR SEÇİMİYLE DARALIYOR, BAŞKA HİÇBİR ŞEYLE DEĞİL.
+    Şehir, çalışma tercihi, tarih, şirket, arama ya da kategori sekmesi
+    değişince yanında yazan sayı aynı kalıyor ve o süzgeçlerin gizlediği
+    ilanları da içeriyor. Yurtdışı görünümü sunucuda `all` kataloğu olduğu
+    için oradaki sayılar Türkiye ilanlarını da kapsıyor. Hangi ilanın
+    listede kaldığı ise istemcide `alanIdleri` kesişimiyle, bütün
+    süzgeçlerle birlikte belirleniyor (`gecer`).
+
+    Dağılım yoksa (eski açılış tohumu) ya da alan adları gelmediyse `[]`
+    ve blok çizilmiyor. Seçili ama sayısı 0'a düşen alan "0" ile kalıyor;
+    yoksa işareti kaldırılamazdı.
+  */
+  const alanSecenekListesi = useMemo(
+    () =>
+      alanSecenekleri(alanAdlari ?? [], alanFacets, seciliAlanlar, ilanTipleri) as Array<{
+        id: string;
+        slug: string;
+        ad: string;
+        adet: number;
+      }>,
+    [alanAdlari, alanFacets, seciliAlanlar, ilanTipleri],
+  );
 
   const companyOptions = useMemo(() => {
     const sayim = new Map<string, number>();
@@ -991,6 +1095,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     workTypes.length +
     (dateRange !== 'all' ? 1 : 0) +
     selectedCompanies.length +
+    seciliAlanlar.length +
     (onlyMandatory ? 1 : 0) +
     (onlyPaid ? 1 : 0) +
     (minMatchScore > 0 ? 1 : 0);
@@ -1009,7 +1114,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
     "Daraltma" için yeni bir bayrak yok, ekranda zaten olan üç sinyal
     toplanıyor: süzgeç rozetindeki `acikSuzgecSayisi` (suzgecleriTemizle'nin
-    sıfırladığı şehir/çalışma tercihi/tarih/şirket/ilan özellikleri/uyum),
+    sıfırladığı şehir/çalışma tercihi/tarih/şirket/alan/ilan özellikleri/uyum),
     arama kutusu ve kategori sekmesi. Bölüm çipleri (`bolumAlani`) BİLEREK
     dışarıda: alanaGoreSirala listeyi sıralıyor, hiçbir ilanı elemiyor.
   */
@@ -1120,7 +1225,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     imzasıyla saklanıyor; filtre değişince imza tutmuyor ve küre ön yüzüne
     dönüyor.
   */
-  const filtreImzasi = JSON.stringify([kanonikFiltreler, yurtdisiSecili, subTab, selectedCity, minMatchScore]);
+  /* Alan kanonik nesnede değil; imzaya ayrıca giriyor, yoksa alan değişince küre dönük kalırdı. */
+  const filtreImzasi = JSON.stringify([kanonikFiltreler, yurtdisiSecili, subTab, selectedCity, minMatchScore, seciliAlanlar]);
   const [kureDurumu, setKureDurumu] = useState<{ anahtar: string; imza: string } | null>(null);
   const donukAnahtar = donukKure(kureDurumu, filtreImzasi);
   const kureCevir = (anahtar: string) =>
@@ -1170,11 +1276,17 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     if (!hasMoreCountriesPage) return;
     /* Kaydettiklerim de kataloğun tamamını istiyor: kayıtlı ilan ilk sayfada olmayabilir. */
     const kayitlilarAcik = subTab === 'kaydettiklerim';
-    if (!sayiIcinYukle && !kayitlilarAcik && (!yurtdisiSecili || countrySelection !== 'all')) return;
+    /*
+      Alan seçiliyken de: alan süzgeci istemcide ve sunucu kataloğu alana
+      göre süzmüyor. Yalnız ilk 24 ilanın içindeki eşleşmeleri gösterip
+      "Hukuk'ta bu kadar" dedirtmek yerine kalan sayfalar isteniyor.
+    */
+    const alanAcik = seciliAlanlar.length > 0;
+    if (!sayiIcinYukle && !kayitlilarAcik && !alanAcik && (!yurtdisiSecili || countrySelection !== 'all')) return;
     if (yurtdisiIstenenUzunluk.current === allListings.length) return;
     yurtdisiIstenenUzunluk.current = allListings.length;
     onLoadMoreCountriesPage?.();
-  }, [yurtdisiSecili, sayiIcinYukle, subTab, countrySelection, hasMoreCountriesPage, allListings.length, onLoadMoreCountriesPage]);
+  }, [yurtdisiSecili, sayiIcinYukle, subTab, seciliAlanlar.length, countrySelection, hasMoreCountriesPage, allListings.length, onLoadMoreCountriesPage]);
 
   const gosterilecekToplam = gosterilecekIlanSayisi({
     catalogTotal,
@@ -1299,6 +1411,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     ekle(selectedCompanies.length > 0, `Şirket (${selectedCompanies.length})`, 'sirket', () =>
       setSelectedCompanies([]),
     );
+    ekle(seciliAlanlar.length > 0, `Alan (${seciliAlanlar.length})`, 'alan', () => setSeciliAlanlar([]));
     ekle(onlyMandatory, 'Zorunlu staj kabul', 'zorunlu', () => setOnlyMandatory(false));
     ekle(onlyPaid, 'Ücretli', 'ucretli', () => setOnlyPaid(false));
     ekle(minMatchScore > 0, `En az %${minMatchScore} uyum`, 'uyum', () => setMinMatchScore(0));
@@ -1309,6 +1422,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     workTypes,
     dateRange,
     selectedCompanies,
+    seciliAlanlar,
     onlyMandatory,
     onlyPaid,
     minMatchScore,
@@ -1332,6 +1446,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     setDateRange('all');
     setSelectedCompanies([]);
     setCompanySearch('');
+    setSeciliAlanlar([]);
     setOnlyMandatory(false);
     setOnlyPaid(false);
     setMinMatchScore(0);
@@ -1342,6 +1457,9 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
   const sirketSec = (ad: string) =>
     setSelectedCompanies((o) => (o.includes(ad) ? o.filter((x) => x !== ad) : [...o, ad]));
+
+  const alanSec = (id: string) =>
+    setSeciliAlanlar((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id]));
 
   const cityOptions = useMemo(() => {
     const sayim = new Map<string, number>();
@@ -1647,8 +1765,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         sıralama menüsü yan yana duruyordu. Filtre sayısı arttıkça bu düzen
         tutmuyor — hangi seçeneğin neyi süzdüğü belirsizleşiyor.
 
-        Şimdi her ölçüt kendi başlıklı bloğunda: Konum, Çalışma tercihi,
-        Tarih, Şirket, İlan özellikleri. Kişi aradığı ölçütü başlığından
+        Şimdi her ölçüt kendi başlıklı bloğunda: Alan, Konum, Çalışma
+        tercihi, İlan türü, Tarih, İlan özellikleri, Şirket. Kişi aradığı ölçütü başlığından
         buluyor.
 
         Sıralama buradan çıkarıldı; ilan listesinin başına taşındı. Sıralama
@@ -1707,7 +1825,15 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           (bkz. `filtreBosMu`) — "bütün ilanlar"ı kaydetmek her gün her
           ilanı e-postalamak olurdu.
         */}
-        {onToast && (
+        {/*
+          ALAN SEÇİLİYKEN "KAYDET" ÇİZİLMİYOR
+
+          Kayıtlı aramanın sözleşmesi (lib/kayitli-arama.mjs) ve onu okuyan
+          günlük özet işçisi alanı henüz bilmiyor. Düğme kalsaydı kayıt alanı
+          sessizce düşürür ve e-posta, ekrandaki listede olmayan ilanları
+          getirirdi. Sözleşme alanı taşıyana kadar düğme yok.
+        */}
+        {onToast && seciliAlanlar.length === 0 && (
           <div className="px-3 pb-3">
             <AramayiKaydet
               filtreler={kanonikFiltreler}
@@ -1760,6 +1886,37 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           onSec={setBolumAlani}
           sayilar={bolumSayilari as Record<string, number>}
         />
+
+        {/*
+          ---- alan ----
+
+          YERİ: bölüm sorusunun hemen altı, konumun üstü. Alan ilanın NE İŞ
+          olduğunu söylüyor; kişi önce hangi işe baktığını, sonra nerede
+          olduğunu daraltıyor. Bölüm sorusu panelin başında kaldı (onaylanan
+          düzen), ama o bir sıralama — ilan elemiyor. Bu blok eliyor.
+
+          Çoklu seçim, "herhangi biri": iki alanlı ilan iki seçenekte de
+          sayılıyor. Uzun liste şirket bloğundaki gibi kendi içinde
+          kayıyor: 24 seçenek 44 piksellik satırlarla 1056 piksel eder ve
+          konum, tür, tarih blokları o kadar aşağı itilirdi.
+        */}
+        {alanSecenekListesi.length > 0 && (
+          <FiltreBlogu baslik="Alan">
+            <div className="space-y-0.5 max-h-56 overflow-y-auto -mr-1 pr-1">
+              {alanSecenekListesi.map((a) => (
+                <SecenekSatiri
+                  key={a.id}
+                  tip="checkbox"
+                  etiket={a.ad}
+                  adet={a.adet}
+                  secili={seciliAlanlar.includes(a.id)}
+                  onChange={() => alanSec(a.id)}
+                  satirKir
+                />
+              ))}
+            </div>
+          </FiltreBlogu>
+        )}
 
         {/* ---- konum ---- */}
         <FiltreBlogu baslik="Konum">

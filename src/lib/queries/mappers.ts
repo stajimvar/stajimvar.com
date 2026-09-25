@@ -155,6 +155,13 @@ export const LISTING_COLUMNS = [
   'kaynak_durumu',
   'apply_url_ok',
   'content_updated_at',
+  /*
+    İLANIN ALANLARI (20261109010000): sitenin 24 alanından en çok ikisi,
+    başlıktan ve şirketin sektör metninden tetikleyiciyle türetiliyor.
+    `anon` SELECT izni göçte verildi; izinsiz tek sütun bu sorgunun
+    TAMAMINI 42501 ile düşürürdü (bkz. yukarıdaki not).
+  */
+  'alan_idleri',
 ].join(', ');
 
 /** Yalnızca yukarıdaki kolonlar okunduğu için satır tipi de daraltılmış. */
@@ -266,6 +273,8 @@ export function toInternshipListing(row: ListingRowWithCompany): InternshipListi
     kaynakDurumu: daralt(row.kaynak_durumu, KAYNAK_DURUMLARI),
     applyUrlOk: daralt(row.apply_url_ok, URL_DURUMLARI),
     contentUpdatedAt: row.content_updated_at ?? undefined,
+    /* Boş dizi = ilan alanını söylemiyor; bir alana ZORLANMADI. */
+    alanIdleri: row.alan_idleri ?? [],
     featured: row.featured,
     category: row.category,
     origin: row.origin,
