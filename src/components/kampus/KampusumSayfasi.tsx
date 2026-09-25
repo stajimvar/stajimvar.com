@@ -13,7 +13,10 @@ import type { StudentProfile } from '../../types';
  * Telefonda başlığın sol üstündeki ana sayfa simgesi kalktı (logo zaten
  * ana sayfaya gidiyor) ve yerine Kampüsüm düğmesi geldi; düğmenin
  * gideceği, orta tuşla yeni sekmede de açılabilen bir adres gerekiyordu.
- * Panel burada YENİDEN YAZILMADI: aynı bileşen, aynı RPC, `yerlesim='akis'`.
+ * Panel burada YENİDEN YAZILMADI: aynı bileşen, aynı RPC. Görünüm kendi
+ * varyantında (`yerlesim='sayfa'`, 25 Eylül 2026): kompakt başlık, ilk
+ * belirgin kart olarak yemek, ince ayraçlı duyuru listesi. Profil paneli
+ * (`akis`, `sutun`) değişmedi.
  *
  * `lg` altında TEK YER BURASI: düğme gelince profil sayfaları telefonda
  * paneli çizmeyi bıraktı (kullanıcı isteği, 25 Eylül 2026: profilde
@@ -113,13 +116,12 @@ export const KampusumSayfasi: React.FC<{
 
   return (
     /*
-      Telefonda kenarsız ve üst boşluksuz: panelin `akis` kabı telefonda
-      kart değil yüzey (kenardan kenara, tek alt çizgi), profilin geri
-      kalanıyla aynı kalıp. `sm:` üstünde kart ve gri zemin.
+      Telefonda kenarsız ve üst boşluksuz: `sayfa` kabı telefonda beyaz
+      yüzey (16 px yan boşluk), `sm:` üstünde kart ve gri zemin.
     */
     <SayfaKabugu mobilKenarsiz ustBosluk="pt-0 sm:pt-6" icerikGenisligi="max-w-2xl">
       <h1 className="sr-only">{kullaniciAdi ? 'Kampüs' : 'Kampüsüm'}</h1>
-      <KampusumPaneli ogrenci={ogrenci} onNavigate={onNavigate} yerlesim="akis" kullaniciAdi={kullaniciAdi} />
+      <KampusumPaneli ogrenci={ogrenci} onNavigate={onNavigate} yerlesim="sayfa" kullaniciAdi={kullaniciAdi} />
     </SayfaKabugu>
   );
 };

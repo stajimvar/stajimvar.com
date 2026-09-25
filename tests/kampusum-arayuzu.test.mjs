@@ -229,7 +229,7 @@ test('lg altında profilde panel yok: Kampüsüm düğmesinin olduğu genişlik,
 
   /* Telefonda panelin tek yeri /kampusum; orada yerleşim sabit 'akis'. */
   const KAMPUS_SAYFASI = oku('src/components/kampus/KampusumSayfasi.tsx');
-  assert.match(KAMPUS_SAYFASI, /<KampusumPaneli ogrenci=\{ogrenci\} onNavigate=\{onNavigate\} yerlesim="akis" kullaniciAdi=\{kullaniciAdi\} \/>/);
+  assert.match(KAMPUS_SAYFASI, /<KampusumPaneli ogrenci=\{ogrenci\} onNavigate=\{onNavigate\} yerlesim="sayfa" kullaniciAdi=\{kullaniciAdi\} \/>/);
 
   /* Gerekçe iki sayfada ve kapta yazılı. */
   for (const kaynak of [DUZEN, CV, SAYFA]) {
@@ -256,7 +256,7 @@ test('yerleşim: sol 330 yapışkan, orta 600 ve sağ 350 değişmedi; 1024–14
 
 test('erişilebilirlik: section + başlıklar, listeler ul, dış bağlantı yeni sekme duyurusu, tarih <time>', () => {
   assert.match(PANEL, /<section aria-labelledby=\{`\$\{kimlik\}-baslik`\}/);
-  assert.match(PANEL, /<h2 id=\{`\$\{kimlik\}-baslik`\}/);
+  assert.match(PANEL, /<h2\s+id=\{`\$\{kimlik\}-baslik`\}/);
   assert.equal((PANEL.match(/<h3 id=\{kimlik\}/g) ?? []).length, 3);
   assert.match(PANEL, /<a href=\{href\} target="_blank" rel="noopener noreferrer" className=\{className\}>/);
   assert.match(PANEL, /<span className="sr-only"> \(yeni sekmede açılır\)<\/span>/);
