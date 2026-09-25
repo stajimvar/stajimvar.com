@@ -143,7 +143,8 @@ test('menü yalnız `menu` doluyken; kaynak null ise bölüm hiç yok', () => {
   assert.match(PANEL, /\{veri && veri\.universite && veri\.menuKaynagi && \(\s*<YemekBolumu/);
   assert.match(PANEL, /\{veri && veri\.universite && veri\.duyuruKaynagi && \(\s*<DuyuruBolumu/);
   /* Okulun kaynağı yoksa tek satır; yemek ve duyuru bölümü yok. */
-  assert.match(PANEL, /\{veri && veri\.ogrenciOkulu && !veri\.universite && \(/);
+  /* Katalogda olup iki kaynağı da tanımsız okul da "kaynak yok" (panel boş kalmıyor). */
+  assert.match(PANEL, /\{veri && veri\.ogrenciOkulu && \(!veri\.universite \|\| \(!veri\.menuKaynagi && !veri\.duyuruKaynagi\)\) && \(/);
   /* Hiç okunmamış kaynak "yok" demiyor. */
   assert.match(PANEL, /kaynak\.sonBasariAni \? 'Bugün için yayımlanmış menü yok\.' : 'Menü kaynağı henüz okunamadı\.'/);
   assert.match(PANEL, /kaynak\.sonBasariAni \? 'Son 30 günde duyuru yok\.' : 'Duyuru kaynağı henüz okunamadı\.'/);
