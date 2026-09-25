@@ -472,7 +472,11 @@ export const KampusumPaneli: React.FC<{
         </div>
       )}
 
-      {veri && veri.ogrenciOkulu && !veri.universite && (
+      {/*
+        Katalogda olup iki kaynağı da tanımsız okul (ör. Nişantaşı) da
+        "kaynak yok": aksi hâlde panel yalnız başlıkla boş kalıyordu.
+      */}
+      {veri && veri.ogrenciOkulu && (!veri.universite || (!veri.menuKaynagi && !veri.duyuruKaynagi)) && (
         <p className={`${BOLUM} ${ACIKLAMA}`}>
           Bu okul için yemek menüsünün ve duyuruların resmî kaynağı henüz eklenmedi.
         </p>
