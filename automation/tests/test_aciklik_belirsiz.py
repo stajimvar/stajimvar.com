@@ -91,6 +91,24 @@ class AdaptorKapilari(unittest.TestCase):
 
     @patch("scraper.time.sleep", lambda *a: None)
     @patch("scraper.requests.get")
+    def test_og_basligi_istenirse_og_title_okunuyor(self, get):
+        """Hilton (Oracle) sayfasında <title> yalnız "Hilton", Danone'da h1
+        bölüm adı; ilanın adı yalnız `og:title`da (ölçüldü, 26 Eylül 2026)."""
+        govde = ('<html><head><title>Hilton</title>'
+                 '<meta property="og:title" content="Front Office Intern - Hilton Istanbul Bomonti &amp; Co" />'
+                 '</head><body><h1>Human Resources</h1></body></html>')
+        get.return_value = sayfa(govde)
+        (is_,) = list(scraper.resmi_ilan_sayfasi({**BELIRSIZ, "baslik_kaynagi": "og"}))
+        self.assertEqual(is_.title, "Front Office Intern - Hilton Istanbul Bomonti & Co")
+        self.assertTrue(is_.aciklik_dogrulanmadi)
+        # Seçenek yoksa eski kural (h1): staj olmayan başlık alınmıyor.
+        self.assertEqual(list(scraper.resmi_ilan_sayfasi(dict(BELIRSIZ))), [])
+        # og:title yoksa başlık uydurulmuyor, h1'e de düşülmüyor.
+        get.return_value = sayfa("<html><head><title>Hilton</title></head><body><h1>Intern</h1></body></html>")
+        self.assertEqual(list(scraper.resmi_ilan_sayfasi({**BELIRSIZ, "baslik_kaynagi": "og"})), [])
+
+    @patch("scraper.time.sleep", lambda *a: None)
+    @patch("scraper.requests.get")
     def test_staj_olmayan_baslik_alinmiyor(self, get):
         get.return_value = sayfa(ILAN_SAYFASI.replace("<h1>Praktikum Logistik</h1>", "<h1>Senior Logistics Manager</h1>"))
         self.assertEqual(list(scraper.resmi_ilan_sayfasi(dict(BELIRSIZ))), [])
@@ -141,8 +159,17 @@ class KaynakKaydi(unittest.TestCase):
         cls.belirsiz = [k for k in cls.kaynaklar if k.get("aciklik_dogrulanmadi")]
 
     def test_belirsiz_kapsami_12_ilan(self):
-        self.assertEqual(sum(len(k["urls"]) for k in self.belirsiz), 12)
-        self.assertTrue(all(k["type"] == "resmi_ilan_sayfasi" and k.get("country") == "DE" for k in self.belirsiz))
+        """Almanya: 12 ilan (15 Eylül 2026). Türkiye: kullanıcının 26 Eylül
+        2026'da verdiği ve JSON-LD taşımayan 4 resmî ilan sayfası (Barilla,
+        Hyundai, Hilton, Danone; Tetra Pak sayfası eklenmeden kapandı) — kullanıcı kararıyla taslak hattında."""
+        de = [k for k in self.belirsiz if k.get("country") == "DE"]
+        tr = [k for k in self.belirsiz if k.get("country") == "TR"]
+        self.assertEqual(sum(len(k["urls"]) for k in de), 12)
+        self.assertEqual(sum(len(k["urls"]) for k in tr), 4)
+        self.assertEqual(len(de) + len(tr), len(self.belirsiz))
+        self.assertTrue(all(k["type"] == "resmi_ilan_sayfasi" for k in self.belirsiz))
+        # Türkiye kaynağında şehir küratör beyanı ve her birinde var (sayfanın kendi metninden).
+        self.assertTrue(all(k.get("city_hint") for k in tr))
 
     def test_dogrulanmis_34_ilan_karismiyor(self):
         dogrulanmis = [k for k in self.kaynaklar
