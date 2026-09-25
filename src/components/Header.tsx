@@ -626,6 +626,13 @@ export const Header: React.FC<HeaderProps> = ({
   */
   const kampustaMi = /^\/kampusum(\/|$)/.test(bulunulanYol);
   /*
+    BAŞKASININ PROFİLİNDE O KİŞİNİN KAMPÜSÜ (25 Eylül 2026): düğme
+    `/profil/<ad>`de `/kampusum/<ad>`e gidiyor, kalan her yerde bakanın
+    kendi kampüsüne. Okulun kapısı sunucuda (`kampus_profil`).
+  */
+  const profilAdi = /^\/profil\/([^/]+)\/?$/.exec(bulunulanYol)?.[1];
+  const kampusYolu = profilAdi ? `/kampusum/${profilAdi}` : '/kampusum';
+  /*
     /staj-ilanlari DA "ilanlar" SEKMESİ
 
     Sekme artık oraya götürüyor; koşul yalnız `activeTab`e bakınca sayfa
@@ -881,10 +888,10 @@ export const Header: React.FC<HeaderProps> = ({
             */}
             {kampusDugmesiCizilsin && onNavigate && (
               <a
-                href="/kampusum"
-                aria-label="Kampüsüm"
+                href={kampusYolu}
+                aria-label={profilAdi ? 'Bu kişinin kampüsü' : 'Kampüsüm'}
                 aria-current={kampustaMi ? 'page' : undefined}
-                onClick={baglantiTiklamasi(() => onNavigate('/kampusum'))}
+                onClick={baglantiTiklamasi(() => onNavigate(kampusYolu))}
                 className={`relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl transition-colors lg:hidden ${ODAK_HALKASI} ${
                   kampustaMi ? 'bg-blue-50 text-blue-600' : 'text-gray-800 hover:bg-gray-100'
                 }`}

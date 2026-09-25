@@ -201,6 +201,12 @@ function uygulamaninMi(yol: string): boolean {
     sohbetin kendisi sunucudaki satır politikasından geçiyor.
   */
   if (temiz === '/mesajlar' || temiz.startsWith('/mesajlar/')) return true;
+  /*
+    /kampusum/<kullaniciadi> — başkasının kampüsü (25 Eylül 2026). Aynı
+    gerekçe: her ad aynı 200 kabuğunu alıyor; okul bilgisi sunucuda
+    `kampus_profil`in kapısından geçiyor.
+  */
+  if (temiz.startsWith('/kampusum/')) return true;
   return VERI_ONEKLERI.some((onek) => yol.startsWith(onek) && yol.length > onek.length);
 }
 

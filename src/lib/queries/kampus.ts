@@ -81,7 +81,34 @@ function kaynak(k: any): KaynakDurumu | null {
 export async function kampusumuGetir(): Promise<Kampusum> {
   const { data, error } = await db.rpc('kampusum', {});
   if (error || !data) throw new Error(error?.message ?? 'kampus-verisi-yok');
+  return kampusCoz(data);
+}
+
+/** Başkasının kampüsü: cevap kimin kampüsü olduğunu da söylüyor. */
+export interface KisininKampusu extends Kampusum {
+  kisi: { kullaniciAdi: string; ad: string | null };
+}
+
+/**
+ * Bir kullanıcı adının kampüsü (göç 20261110010000, `kampus_profil`).
+ *
+ * Kapı profildeki okul bilgisinin kapısıyla aynı: profil yoksa, sana
+ * görünmüyorsa ya da okul boşsa sunucu NULL dönüyor ve burada `null`
+ * oluyor — var/yok ayrımı yapılmıyor. Çağrı hatası ise ayrı: fırlatılıyor,
+ * "yüklenemedi" ile "okul görünmüyor" karışmasın.
+ */
+export async function kampusProfiliGetir(kullaniciAdi: string): Promise<KisininKampusu | null> {
+  const { data, error } = await db.rpc('kampus_profil', { p_kullanici_adi: kullaniciAdi });
+  if (error) throw new Error(error.message);
+  if (!data) return null;
   const k = data as any;
+  return {
+    ...kampusCoz(k),
+    kisi: { kullaniciAdi: k.kisi?.kullanici_adi ?? kullaniciAdi, ad: k.kisi?.ad ?? null },
+  };
+}
+
+function kampusCoz(k: any): Kampusum {
   return {
     bugun: k.bugun,
     ogrenciOkulu: k.ogrenci_okulu ?? null,

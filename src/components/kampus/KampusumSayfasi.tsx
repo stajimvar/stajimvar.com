@@ -39,6 +39,12 @@ import type { StudentProfile } from '../../types';
  * Panel kendi görünür başlığını ("Kampüsüm", `h2`) çiziyor. Sayfanın `h1`i
  * aynı adı ekran okuyucuya veriyor ama görünmüyor: iki "Kampüsüm" alt
  * alta yazılırdı.
+ *
+ * /kampusum/<kullaniciadi> (25 Eylül 2026)
+ * ----------------------------------------
+ * Başkasının profilindeyken başlıktaki düğme buraya geliyor; aynı sayfa,
+ * panel `kullaniciAdi` ile o kişinin okulunu gösteriyor. Oturum ve şirket
+ * dalları aynı kalıyor.
  */
 
 const KART = 'rounded-2xl border border-gray-200 bg-white p-2.5 sm:p-3.5';
@@ -52,7 +58,9 @@ export const KampusumSayfasi: React.FC<{
   ogrenci: StudentProfile | null;
   onNavigate: (yol: string) => void;
   onGirisGerekli?: () => void;
-}> = ({ kullaniciId, oturumHazir, sirketHesabi, ogrenci, onNavigate, onGirisGerekli }) => {
+  /** `/kampusum/<ad>`: bakanın değil, bu kullanıcının kampüsü. */
+  kullaniciAdi?: string;
+}> = ({ kullaniciId, oturumHazir, sirketHesabi, ogrenci, onNavigate, onGirisGerekli, kullaniciAdi }) => {
   React.useEffect(() => {
     if (!oturumHazir || kullaniciId) return;
     onGirisGerekli?.();
@@ -110,8 +118,8 @@ export const KampusumSayfasi: React.FC<{
       kalanıyla aynı kalıp. `sm:` üstünde kart ve gri zemin.
     */
     <SayfaKabugu mobilKenarsiz ustBosluk="pt-0 sm:pt-6" icerikGenisligi="max-w-2xl">
-      <h1 className="sr-only">Kampüsüm</h1>
-      <KampusumPaneli ogrenci={ogrenci} onNavigate={onNavigate} yerlesim="akis" />
+      <h1 className="sr-only">{kullaniciAdi ? 'Kampüs' : 'Kampüsüm'}</h1>
+      <KampusumPaneli ogrenci={ogrenci} onNavigate={onNavigate} yerlesim="akis" kullaniciAdi={kullaniciAdi} />
     </SayfaKabugu>
   );
 };

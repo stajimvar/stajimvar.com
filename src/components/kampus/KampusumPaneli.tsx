@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowRight, ArrowUpRight, GraduationCap } from 'lucide-react';
-import { kampusumuGetir, type KaynakDurumu, type Kampusum } from '../../lib/queries/kampus';
+import { kampusProfiliGetir, kampusumuGetir, type KaynakDurumu, type Kampusum } from '../../lib/queries/kampus';
 import { fetchOpportunities, type Opportunity } from '../../lib/opportunities';
 import { profilYeterliMi } from '../../lib/burs-kesif.mjs';
 import {
@@ -40,6 +40,16 @@ import type { StudentProfile } from '../../types';
  * --------------------
  * Kampüs RPC'si ve burs listesi ayrı istek; biri düşerse öteki çiziliyor.
  * Burs bölümü okuldan bağımsız, okul yokken de duruyor.
+ *
+ * BAŞKASININ KAMPÜSÜ (`kullaniciAdi`, 25 Eylül 2026)
+ * -------------------------------------------------
+ * Başkasının profilindeyken başlıktaki Kampüsüm düğmesi `/kampusum/<ad>`
+ * açıyor ve panel o kişinin okulunu gösteriyor (`kampus_profil`). Sunucu
+ * kapısı profildeki okul bilgisinin kapısıyla aynı; kapıdan geçmeyen her
+ * durum tek cümle: "okul bilgisi görünmüyor". Bakana özel iki şey bu
+ * kipte YOK: burs bölümü (uygunluk bakanın profiline göre, başkasının
+ * sayfasında yanıltırdı) ve "Üniversiteni ekle" (başkasının profiline
+ * eklenemez).
  */
 
 type Yukleme<T> = { durum: 'yukleniyor' } | { durum: 'hazir'; veri: T } | { durum: 'hata' };
@@ -324,9 +334,15 @@ export const KampusumPaneli: React.FC<{
   onUniversiteEkle?: () => void;
   /** 'sutun': sol sütun kartı; 'akis': ana sütunda, profil kartının altında. */
   yerlesim: 'sutun' | 'akis';
-}> = ({ ogrenci, onNavigate, onUniversiteEkle, yerlesim }) => {
+  /** Verilirse bakanın değil, bu kullanıcı adının kampüsü gösteriliyor. */
+  kullaniciAdi?: string;
+}> = ({ ogrenci, onNavigate, onUniversiteEkle, yerlesim, kullaniciAdi }) => {
   const kimlik = React.useId();
-  const [kampus, setKampus] = React.useState<Yukleme<Kampusum>>({ durum: 'yukleniyor' });
+  const baskasi = Boolean(kullaniciAdi);
+  /* `null`: başkasının kampüsü kapıdan geçmedi (profil yok ya da görünmüyor). */
+  const [kampus, setKampus] = React.useState<Yukleme<(Kampusum & { kisi?: { kullaniciAdi: string; ad: string | null } }) | null>>({
+    durum: 'yukleniyor',
+  });
   const [kampusDeneme, setKampusDeneme] = React.useState(0);
   const [burslar, setBurslar] = React.useState<Yukleme<Opportunity[]>>({ durum: 'yukleniyor' });
   const [bursDeneme, setBursDeneme] = React.useState(0);
@@ -334,7 +350,7 @@ export const KampusumPaneli: React.FC<{
   React.useEffect(() => {
     let iptal = false;
     setKampus({ durum: 'yukleniyor' });
-    kampusumuGetir()
+    (kullaniciAdi ? kampusProfiliGetir(kullaniciAdi) : kampusumuGetir())
       .then((veri) => {
         if (!iptal) setKampus({ durum: 'hazir', veri });
       })
@@ -344,9 +360,11 @@ export const KampusumPaneli: React.FC<{
     return () => {
       iptal = true;
     };
-  }, [kampusDeneme]);
+  }, [kampusDeneme, kullaniciAdi]);
 
   React.useEffect(() => {
+    /* Başkasının kampüsünde burs bölümü yok; liste hiç istenmiyor. */
+    if (baskasi) return;
     let iptal = false;
     setBurslar({ durum: 'yukleniyor' });
     fetchOpportunities()
@@ -359,24 +377,64 @@ export const KampusumPaneli: React.FC<{
     return () => {
       iptal = true;
     };
-  }, [bursDeneme]);
+  }, [bursDeneme, baskasi]);
 
   const veri = kampus.durum === 'hazir' ? kampus.veri : null;
   const okulAdi = veri ? (veri.universite?.ad ?? veri.ogrenciOkulu) : null;
+  const kisiAdi = veri?.kisi ? (veri.kisi.ad?.trim() || `@${veri.kisi.kullaniciAdi}`) : null;
+  const profilYolu = veri?.kisi ? `/profil/${veri.kisi.kullaniciAdi}` : null;
 
   return (
     <section aria-labelledby={`${kimlik}-baslik`} aria-busy={kampus.durum === 'yukleniyor'} className={KAP[yerlesim]}>
       <h2 id={`${kimlik}-baslik`} className="text-lg font-extrabold tracking-tight text-gray-900">
-        Kampüsüm
+        {baskasi ? 'Kampüs' : 'Kampüsüm'}
       </h2>
       {kampus.durum === 'yukleniyor' && <Iskelet className="mt-1.5 h-4 w-48" />}
-      {okulAdi && (
+      {okulAdi && !baskasi && (
         <p className="mt-1 flex items-start gap-1.5 text-sm text-gray-600">
           <GraduationCap aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-gray-500" />
           <span className="min-w-0">
             Senin üniversiten · <span className="font-semibold text-gray-800">{okulAdi}</span>
           </span>
         </p>
+      )}
+      {okulAdi && kisiAdi && profilYolu && (
+        <p className="mt-1 flex items-start gap-1.5 text-sm text-gray-600">
+          <GraduationCap aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-gray-500" />
+          <span className="min-w-0">
+            <a
+              href={profilYolu}
+              onClick={(olay) => {
+                if (!solTik(olay)) return;
+                olay.preventDefault();
+                onNavigate(profilYolu);
+              }}
+              className={`rounded font-semibold text-blue-700 hover:text-blue-800 ${RENK_GECISI} ${ODAK_HALKASI}`}
+            >
+              {kisiAdi}
+            </a>
+            {' · '}
+            <span className="font-semibold text-gray-800">{okulAdi}</span>
+          </span>
+        </p>
+      )}
+
+      {kampus.durum === 'hazir' && kampus.veri === null && (
+        <div className={BOLUM}>
+          <p className={ACIKLAMA}>Bu kişinin okul bilgisi görünmüyor.</p>
+          <a
+            href="/kampusum"
+            onClick={(olay) => {
+              if (!solTik(olay)) return;
+              olay.preventDefault();
+              onNavigate('/kampusum');
+            }}
+            className={BAGLANTI}
+          >
+            Kendi kampüsüne dön
+            <ArrowRight aria-hidden className="h-4 w-4" />
+          </a>
+        </div>
       )}
 
       {kampus.durum === 'yukleniyor' && (
@@ -395,7 +453,7 @@ export const KampusumPaneli: React.FC<{
         </div>
       )}
 
-      {veri && !veri.ogrenciOkulu && (
+      {veri && !baskasi && !veri.ogrenciOkulu && (
         <div className={BOLUM}>
           <p className={ACIKLAMA}>Profilinde üniversite yazmıyor.</p>
           <a
@@ -427,13 +485,15 @@ export const KampusumPaneli: React.FC<{
         <DuyuruBolumu veri={veri} kaynak={veri.duyuruKaynagi} kimlik={`${kimlik}-duyuru`} />
       )}
 
-      <BursBolumu
-        burslar={burslar}
-        ogrenci={ogrenci}
-        onYenidenDene={() => setBursDeneme((n) => n + 1)}
-        onNavigate={onNavigate}
-        kimlik={`${kimlik}-burs`}
-      />
+      {!baskasi && (
+        <BursBolumu
+          burslar={burslar}
+          ogrenci={ogrenci}
+          onYenidenDene={() => setBursDeneme((n) => n + 1)}
+          onNavigate={onNavigate}
+          kimlik={`${kimlik}-burs`}
+        />
+      )}
     </section>
   );
 };
