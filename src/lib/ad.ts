@@ -38,8 +38,8 @@ export function adYazimi(ad: string): string {
 }
 
 /*
-  Okul adı kısaltması `ad-kisaltma.mjs` içinde: `okul-rozeti.mjs` onu
-  kullanıyor ve bir `.mjs` modülü `.ts` dosyasından içe aktaramıyor.
+  Okul adı kısaltması `ad-kisaltma.mjs` içinde: `.mjs` modülleri ve Node
+  testleri onu kullanıyor; bir `.mjs` modülü `.ts` dosyasından içe aktaramıyor.
   Buradan yeniden dışa veriliyor — çağıran taraf için hiçbir şey değişmedi.
 */
 export { okulKisaltmasi } from './ad-kisaltma.mjs';
