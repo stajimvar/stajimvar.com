@@ -101,12 +101,17 @@ test('kod üretimi tek yerde', () => {
   assert.doesNotMatch(bilesen, /function universiteKodu/);
 });
 
-test('profil başlığı rozete logo adresini veriyor', () => {
+test('profil başlığında okul rozeti yok (25 Eylül 2026)', () => {
+  /*
+    Kullanıcı isteği: fotoğrafın köşesindeki okul amblemi kalktı; okul adı
+    meta satırında yazıyor ve Kampüs'e gidiyor. Logolar kariyer merkezi
+    kartlarında kullanılmaya devam ediyor.
+  */
   const kaynak = fs.readFileSync(
     path.join(KOK, 'src', 'components', 'ProfilBasligi.tsx'),
     'utf8',
   );
-  assert.match(kaynak, /logoAdresi=\{universiteLogosu\(okul\)/);
+  assert.doesNotMatch(kaynak, /<OkulRozeti|universiteLogosu\(/);
 });
 
 test('logolar rozet boyutuna uygun kare ve saydam', async () => {

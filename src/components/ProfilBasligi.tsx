@@ -11,8 +11,6 @@ import {
   MapPin,
   Settings,
 } from 'lucide-react';
-import { OkulRozeti } from './OkulRozeti';
-import { universiteLogosu } from '../lib/universite-logosu.mjs';
 import { adYazimi } from '../lib/ad';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
 import { KapakFotografi } from './sosyal/KapakFotografi';
@@ -556,11 +554,11 @@ export const ProfilBasligi: React.FC<Props> = ({
                 onFotografDegistir,
               }}
             />
-            {okul && (
-              <span className="absolute bottom-0 right-0 sm:bottom-0.5 sm:right-0.5 lg:bottom-1.5 lg:right-1.5">
-                <OkulRozeti okul={okul} logoAdresi={universiteLogosu(okul) ?? undefined} />
-              </span>
-            )}
+            {/*
+              OKUL ROZETİ KALKTI (kullanıcı isteği, 25 Eylül 2026): fotoğrafın
+              köşesindeki okul amblemi, hemen altındaki meta satırında zaten
+              yazan okul adını (Kampüs bağlantısı) tekrar ediyordu.
+            */}
           </div>
           </div>
 

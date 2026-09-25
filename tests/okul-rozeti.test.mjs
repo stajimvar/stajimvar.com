@@ -70,7 +70,8 @@ test('rozet okul adinin YERINE gecmiyor', () => {
     Rozet kisaltma tasiyor ("MSGSÜ") ve tek basina hangi okul oldugunu
     soylemiyor. Ad metin olarak yaninda kalmali.
   */
-  assert.ok(BASLIK.includes('<OkulRozeti okul={okul} logoAdresi='));
+  /* 25 Eylul 2026: rozet profilden kalkti; okul adi meta satirinda tek basina. */
+  assert.ok(!BASLIK.includes('<OkulRozeti'), 'profilde okul rozeti olmamali');
   /*
     24 Eylul 2026 (X kalibi): okul adi meta satirinin bir ogesi. Sart
     AYNI -- ad metin olarak rozetin yaninda kaliyor. Degisen: okul
@@ -88,7 +89,6 @@ test('rozet okul adinin YERINE gecmiyor', () => {
 
 test('okul girilmemisse rozet cizilmiyor', () => {
   /* Olmayan bir kimligi cizmek, satirin kendisini yalan yapardi. */
-  assert.match(BASLIK, /\{okul && \([\s\S]{0,200}<OkulRozeti/);
   assert.ok(BILESEN.includes('if (!okul || !yazi) return null;'));
 });
 
@@ -142,9 +142,13 @@ test('logo fotografin kosesinde, yuvarlak ve beyaz halkali', () => {
     BILESEN.includes('border border-gray-200 bg-white object-contain'),
     'logo cercevesi sirket logolariyla ayni dilde olmali',
   );
-  /* Fotografin kosesi: kapsayici `relative`, rozet `absolute`. */
+  /*
+    25 Eylul 2026: rozet fotografin kosesinden de kalkti (kullanici istegi:
+    okul adi hemen altta yaziyor ve Kampus'e gidiyor). Bilesenin gorunumu
+    yukarida korunuyor; profilde kullanilmiyor.
+  */
   assert.match(BASLIK, /<div className="relative">[\s\S]{0,600}<ProfilFotografi/);
-  assert.match(BASLIK, /<span className="absolute bottom-0 right-0 sm:/);
+  assert.doesNotMatch(BASLIK, /<span className="absolute bottom-0 right-0 sm:/);
   /* Satirda rozet kalmadi: okul adi tek basina (24 Eylul 2026'dan beri meta satirinin ogesi). */
   const okulOgesi = BASLIK.slice(BASLIK.indexOf('{okul && (\n              <MetaOgesi'));
   assert.match(okulOgesi, /^\{okul && \(\s*<MetaOgesi ikon=\{GraduationCap\} etiket="Okul">\s*<OkulKampusBaglantisi okul=\{okul\} yol="\/kampusum" onNavigate=\{satir\?\.onNavigate\} \/>\s*<\/MetaOgesi>/);
