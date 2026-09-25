@@ -120,11 +120,10 @@ test('FIRSAT KARTI TELEFONDA İLAN KARTIYLA TEK TİP, GENİŞ EKRANDA DİKEY AKI
   const kart = firsat.slice(firsat.indexOf('<article'));
   const ilan = oku('src/components/InternshipCard.tsx');
   for (const sinif of [
-    'relative flex min-w-0 flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-4',
+    'rounded-2xl border border-gray-200 bg-white p-4',
     'flex min-w-0 items-start gap-3',
     'break-words text-base font-semibold leading-[22px] text-slate-900',
     'relative z-10 -mr-2 -mt-2 shrink-0',
-    'flex min-w-0 items-center justify-between gap-3',
   ]) {
     assert.ok(ilan.includes(sinif), `ilan kartında yok: ${sinif}`);
     assert.ok(kart.includes(sinif), `fırsat kartında yok: ${sinif}`);

@@ -64,35 +64,20 @@ test('sol üstte ana sayfa ve fotoğraf paylaşma simgesi yok; logo ana sayfaya 
   assert.match(HEADER, /ANA SAYFA VE FOTOĞRAF PAYLAŞMA SİMGELERİ KALDIRILDI\s*\n\s*\(kullanıcı isteği, 25 Eylül 2026\)/);
 });
 
-test('Kampüsüm: gerçek bağlantı, yalnız oturumu açık öğrencide, telefonda, 44 piksel, görünür odak', () => {
-  const kume = solKume();
-  const bas = kume.indexOf("{solAksiyon === 'kampus'");
-  assert.ok(bas > 0, 'Kampüsüm dalı bulunamadı');
-  const dal = kume.slice(bas, kume.indexOf('</a>', bas) + 4);
-
+test('profil üst çubuğunda Kampüs simgesi yok; sağda zil ve kişi araması', () => {
   /*
-    Ziyaretçide RPC `anon`a kapalı; şirket kabuğunda öğrenci profili
-    yüklenmiyor. Koşulun dört parçası da şart — biri düşerse düğme
-    işe yaramadığı bir hesapta çizilir.
+    Son rötuş (25 Eylül 2026): profil üst çubuğundaki Kampüs simgesi
+    kalktı, sağda öteki sekmelerle aynı yerde zil ve arama. Arama sitenin
+    çalışan kişi aramasına bağlı (geniş ekran kutusu ve Ağım'la aynı
+    parça, aynı yetki koşulu). Kampüs'ün kapısı okul satırı
+    (tests/baskasinin-kampusu).
   */
-  assert.match(dal, /^\{solAksiyon === 'kampus' && onNavigate && \(/);
-  assert.match(
-    HEADER,
-    /const kampusDugmesiCizilsin =\s*isLoggedIn && userRole === 'student' && Boolean\(activeStudent\) && profilKumesindeMi;/,
-  );
-  assert.match(dal, /<a\s+href=\{kampusYolu\}/);
-  assert.match(dal, /aria-label=\{profilAdi \? 'Bu kişinin kampüsü' : 'Kampüsüm'\}/);
-  assert.match(dal, /aria-current=\{kampustaMi \? 'page' : undefined\}/);
-  /* Sol tık uygulama içi, orta tuş / değiştirici tuş tarayıcıya. */
-  assert.match(dal, /onClick=\{baglantiTiklamasi\(\(\) => onNavigate\(kampusYolu\)\)\}/);
-  assert.match(dal, /h-11 w-11/);
-  assert.match(dal, /lg:hidden/);
-  assert.match(dal, /\$\{ODAK_HALKASI\}/);
-  /* Aktif görünüm alt çubuktaki seçili öğeyle aynı renk çifti. */
-  assert.match(dal, /kampustaMi \? 'bg-blue-50 text-blue-600' : 'text-gray-800 hover:bg-gray-100'/);
-  /* İkon tek başına bilgi taşımıyor; ad `aria-label`da. Kep değil: kullanıcı üst çubukta kep simgesini istemedi. */
-  assert.match(dal, /<University aria-hidden className="h-6 w-6" \/>/);
-  assert.doesNotMatch(HEADER, /GraduationCap/);
+  assert.doesNotMatch(HEADER, /solAksiyon === 'kampus'|kampusDugmesiCizilsin|<University\b/);
+  assert.match(HEADER, /const profilKisiAramasi =\s*!sayfaAramasi && kisiAramasiCizilsin && \/\^\\\/\(cv\|profil\)\(\\\/\|\$\)\/\.test\(bulunulanYol\);/);
+  assert.match(HEADER, /const aramaDugmesi = sayfaAramasi \|\| profilKisiAramasi \? \(/);
+  assert.match(HEADER, /aria-label=\{aramaAcik \? 'Aramayı kapat' : \(sayfaAramasi\?\.yerTutucu \?\? 'Kişi ara'\)\}/);
+  const satir = HEADER.slice(HEADER.indexOf('{aramaAcik && profilKisiAramasi && onNavigate && ('));
+  assert.match(satir.slice(0, 2000), /<KullaniciAramaSonuclari\s+sorgu=\{kisiSorgusu\}/);
 
   /* Adres sekmeyi eziyor: /kampusum'da İlanlar da Profil de sönük. */
   assert.ok(HEADER.includes("const kampustaMi = /^\\/kampusum(\\/|$)/.test(bulunulanYol);"));
@@ -106,8 +91,8 @@ test('Kampüsüm: gerçek bağlantı, yalnız oturumu açık öğrencide, telefo
   Önce Kampüsüm ilan ve fırsat dışındaki her sayfada, mesaj düğmesi de her
   sayfada soldaydı; /cv'de iki, ilanlarda süzgeçle iki düğme yan yana
   çiziliyordu. Karar: İlanlar'da süzgeç, Ağım ailesinde (ve /mesajlar)
-  mesajlar, Profil ailesinde (/cv, /profil/<ad>, /kampusum) Kampüs; öteki
-  sayfalarda sol boş.
+  mesajlar; öteki sayfalarda sol boş. Profil ailesindeki Kampüs simgesi
+  son rötuşta kalktı (25 Eylül 2026).
 
   Aşağıdaki ifadeler Header kaynağından okunup çalıştırılıyor; adres
   listesi elle yazılmış bir kopya değil, dosyadaki kalıbın kendisi.
@@ -120,10 +105,8 @@ function solAksiyon(yol, { ilanlardaMi = false, suzgecVar = false, ogrenci = tru
   };
   const govde = `
     const agimdaMi = ${ifade('agimdaMi')};
-    const profilKumesindeMi = ${ifade('profilKumesindeMi')};
     const mesajKumesindeMi = ${ifade('mesajKumesindeMi')};
     const mesajDugmesiCizilsin = ${ifade('mesajDugmesiCizilsin')};
-    const kampusDugmesiCizilsin = ${ifade('kampusDugmesiCizilsin')};
     return (${ifade('solAksiyon')});
   `;
   return new Function('bulunulanYol', 'ilanlardaMi', 'sayfaAramasi', 'isLoggedIn', 'userRole', 'activeStudent', 'onNavigate', govde)(
@@ -137,23 +120,18 @@ function solAksiyon(yol, { ilanlardaMi = false, suzgecVar = false, ogrenci = tru
   );
 }
 
-test('sol aksiyon: ilanlarda süzgeç, Ağım ve mesajlarda mesaj, profilde Kampüs, başka yerde yok', () => {
+test('sol aksiyon: ilanlarda süzgeç, Ağım ve mesajlarda mesaj, başka yerde yok', () => {
   assert.equal(solAksiyon('/', { ilanlardaMi: true, suzgecVar: true }), 'suzgec');
   for (const yol of ['/agim', '/agim/baglantilar', '/baglantilar', '/takip', '/mesajlar', '/mesajlar/ayse']) {
     assert.equal(solAksiyon(yol), 'mesaj', yol);
   }
-  for (const yol of ['/cv', '/profil/ayse', '/kampusum', '/kampusum/ayse']) {
-    assert.equal(solAksiyon(yol), 'kampus', yol);
-  }
-  for (const yol of ['/firsatlar', '/firsatlar/tubitak-2209-a', '/burslar', '/rehber', '/rehber/cv-hazirlama', '/ilan/x-3f2a1b9c']) {
+  for (const yol of ['/cv', '/profil/ayse', '/kampusum', '/kampusum/ayse', '/firsatlar', '/firsatlar/tubitak-2209-a', '/burslar', '/rehber', '/rehber/cv-hazirlama', '/ilan/x-3f2a1b9c']) {
     assert.equal(solAksiyon(yol), null, yol);
   }
-  /* Misafirde ne mesaj ne Kampüs. */
-  assert.equal(solAksiyon('/cv', { ogrenci: false }), null);
+  /* Misafirde mesaj yok. */
   assert.equal(solAksiyon('/agim', { ogrenci: false }), null);
 
   /* Sol kümede her düğme `solAksiyon`a bağlı: aynı anda ikisi çizilemiyor. */
-  assert.match(HEADER, /\{solAksiyon === 'kampus' && onNavigate && \(/);
   assert.match(HEADER, /\{solAksiyon === 'suzgec' && sayfaAramasi\?\.onSuzgec && \(/);
   assert.match(HEADER, /\{!genisEkran && solAksiyon === 'mesaj' && onNavigate && \(/);
   /* Gerekçe yorumda, tarihiyle. */

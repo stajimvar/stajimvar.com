@@ -44,9 +44,10 @@ export const CTA_BASARI = 'border border-emerald-200 bg-emerald-50 text-emerald-
 /**
  * KARTIN TEK EYLEMİ — mobil sadeleştirme (25 Eylül 2026)
  *
- * İlan ve fırsat kartında sağ altta tek düğme: "İlanı incele" /
- * "Ayrıntıları gör", mavi kenarlı, 44 px. İkisi de StajımVar'daki
- * ayrıntı sayfasını açıyor; dış başvuru o sayfada, şartların yanında.
+ * İlan kartında sağ altta tek düğme: "İlanı incele", mavi kenarlı, 44 px;
+ * StajımVar'daki ilan sayfasını açıyor, dış başvuru o sayfada. (Fırsat
+ * kartındaki "Ayrıntıları gör" son rötuşta kalktı: orada kartın kendisi
+ * bağlantı.)
  */
 const KART_EYLEMI_ORTAK =
   'inline-flex min-h-11 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-xl px-3.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2';

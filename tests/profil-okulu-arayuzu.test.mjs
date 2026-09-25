@@ -76,7 +76,7 @@ test('profilin meta satırında okul var; veri sayfa katmanından tek kimlikle',
   assert.match(gorunum, /okul\?: string \| null;/);
   assert.match(
     gorunum,
-    /\{ogrenciKimligiGorunur && okul && \(\s*<MetaOgesi ikon=\{GraduationCap\} etiket="Okul">\s*\{okul\}/,
+    /\{ogrenciKimligiGorunur && okul && \(\s*<MetaOgesi ikon=\{GraduationCap\} etiket="Okul">\s*<OkulKampusBaglantisi\s+okul=\{okul\}/,
   );
   /* Sayfa tek kimlikle soruyor ve prop olarak veriyor. */
   assert.match(sayfa, /sosyalOkullariniGetir\(\[okulSorulacakKimlik\]\)/);

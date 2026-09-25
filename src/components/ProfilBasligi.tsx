@@ -25,6 +25,7 @@ import {
   KIMLIK_BANDI,
   META_SATIRI,
   MetaOgesi,
+  OkulKampusBaglantisi,
   SAYAC_ETIKETI,
   SAYAC_OGESI,
   SAYAC_SATIRI,
@@ -652,7 +653,11 @@ export const ProfilBasligi: React.FC<Props> = ({
         */}
         {(okul || bolum || sinif || konum || katilma || (portfolyo && portfolyo.satir === undefined)) && (
           <div className={META_SATIRI}>
-            {okul && <MetaOgesi ikon={GraduationCap} etiket="Okul">{okul}</MetaOgesi>}
+            {okul && (
+              <MetaOgesi ikon={GraduationCap} etiket="Okul">
+                <OkulKampusBaglantisi okul={okul} yol="/kampusum" onNavigate={satir?.onNavigate} />
+              </MetaOgesi>
+            )}
             {(bolum || sinif) && (
               <MetaOgesi ikon={BookOpen} etiket="Bölüm">
                 {[bolum, sinif].filter(Boolean).join(' · ')}

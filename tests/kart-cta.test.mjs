@@ -72,7 +72,16 @@ test('FIRSAT KARTINDA DIŞARI ÇIKAN DÜĞME YOK', () => {
   assert.doesNotMatch(FIRSAT, /opportunityCta/, 'kart başvuru hedefini kendisi kuruyor');
   assert.doesNotMatch(FIRSAT, /target="_blank"/, 'kart dış siteye çıkmamalı');
   assert.doesNotMatch(FIRSAT, /CTA_BIRINCIL|CTA_IKINCIL|CTA_ORTAK/, 'kart eski düğme geometrisini geri almış');
-  assert.match(FIRSAT, /href=\{detayYolu\}\s*onClick=\{detayaGit\}[\s\S]{0,200}className=\{KART_EYLEMI\.kenar\}\s*>\s*Ayrıntıları gör\s*</);
+  /*
+    Son rötuş (25 Eylül 2026): her kartta tekrarlanan "Ayrıntıları gör"
+    de kalktı. Tek bağlantı başlıktaki `<a>` ve `after:` örtüsüyle kartın
+    tamamını kaplıyor; kartta başka bağlantı ya da eylem düğmesi yok.
+  */
+  assert.doesNotMatch(FIRSAT, /Ayrıntıları gör<|KART_EYLEMI/);
+  const kart = FIRSAT.slice(FIRSAT.indexOf('<article'), FIRSAT.indexOf('</article>'));
+  const kod = kart.replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
+  assert.equal((kod.match(/<a\b/g) || []).length, 1, 'kartta tek bağlantı olmalı');
+  assert.equal((kod.match(/<button\b/g) || []).length, 1, 'kartta yalnız kaydet düğmesi olmalı');
 });
 
 test('BAŞVURU DETAY SAYFASINDA ERİŞİLEBİLİR', () => {
