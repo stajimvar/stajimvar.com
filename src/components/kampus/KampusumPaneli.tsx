@@ -45,9 +45,11 @@ import type { StudentProfile } from '../../types';
 type Yukleme<T> = { durum: 'yukleniyor' } | { durum: 'hazir'; veri: T } | { durum: 'hata' };
 
 /*
-  Yan sütunla aynı kart. Ana sütunda (dar ekran) telefonda kart değil
-  yüzey: profilin geri kalanı gibi kenardan kenara ve tek alt çizgiyle
-  bitiyor; `sm` ve üstünde kart.
+  Yan sütunla aynı kart. `akis` telefonda kart değil yüzey: kenardan
+  kenara ve tek alt çizgiyle bitiyor; `sm` ve üstünde kart. Telefonda
+  panel yalnız `/kampusum`da çiziliyor — `lg` altında profil sayfaları
+  paneli hiç bağlamıyor (`useKampusYerlesimi`, 25 Eylül 2026); profilde
+  `akis` yalnız 1024–1439'da, yani hep kart hâlinde.
 */
 const KAP = {
   sutun: 'rounded-2xl border border-gray-200 bg-white p-4',

@@ -34,7 +34,7 @@ import { KapakFotografiYukleme } from './KapakFotografiYukleme';
 import { SahipListesi } from './SahipListesi';
 import { SosyalProfilDuzenleme } from './SosyalProfilDuzenleme';
 import { SosyalProfilGorunumu } from './SosyalProfilGorunumu';
-import { ProfilSayfaDuzeni, useSolSutunAcik } from './ProfilSayfaDuzeni';
+import { ProfilSayfaDuzeni, useKampusYerlesimi } from './ProfilSayfaDuzeni';
 import { KampusumPaneli } from '../kampus/KampusumPaneli';
 import type { StudentProfile } from '../../types';
 import { AgimYanSutun } from './AgimYanSutun';
@@ -524,8 +524,11 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     önlüyor — biri unutulsaydı portfolyo ile form aynı anda çizilirdi.
   */
   const duzenlemeKipi = gomulu && gomuluKip === 'duzenleme';
-  /* Kampüsüm sol sütunda mı ana sütunda mı — kapla aynı sorgu (`ProfilSayfaDuzeni`). */
-  const solSutunAcik = useSolSutunAcik();
+  /*
+    Kampüsüm sol sütunda mı, ana sütunda mı, hiç mi (`lg` altında yok:
+    başlıktaki düğme açıyor) — kararı `ProfilSayfaDuzeni` veriyor.
+  */
+  const kampusYerlesimi = useKampusYerlesimi();
   const [profil, setProfil] = React.useState<SosyalProfil | null>(null);
   const [profilDurumu, setProfilDurumu] = React.useState<Durum>('yukleniyor');
   const [profilDeneme, setProfilDeneme] = React.useState(0);
@@ -1238,7 +1241,10 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     `sirketId` boş (mesaj düğmesiyle aynı tanım). Şirket hesabında ve
     oturumsuzken panel yok. Okul sunucuda oturumdan çözülüyor; bakılan
     profilin okulu (`ziyaretciOkulu`) panele GİTMİYOR. Aynı öğe iki
-    yerden birine konuyor: geniş ekranda sol sütun, dar ekranda ana sütun.
+    yerden birine konuyor: 1440 ve üstünde sol sütun, 1024–1439'da ana
+    sütun. `lg` altında hiçbirine (kullanıcı isteği, 25 Eylül 2026:
+    telefonda Kampüsüm başlıktaki düğmeden açılıyor; başkasının
+    profilinde bakanın kendi kampüsünü tekrar göstermek gereksiz).
   */
   const bakanKampusu = (yerlesim: 'sutun' | 'akis') =>
     kullaniciId && profil && !profil.sirketId ? (
@@ -1486,7 +1492,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
           <SosyalProfilGorunumu
             profil={ziyaretciProfili}
             sahibiMi={false}
-            kampusPaneli={solSutunAcik ? undefined : bakanKampusu('akis')}
+            kampusPaneli={kampusYerlesimi === 'akis' ? bakanKampusu('akis') : undefined}
             bakanId={kullaniciId}
             onNavigate={onNavigate}
             /*

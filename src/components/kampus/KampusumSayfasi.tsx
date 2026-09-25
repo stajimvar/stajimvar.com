@@ -15,6 +15,10 @@ import type { StudentProfile } from '../../types';
  * gideceği, orta tuşla yeni sekmede de açılabilen bir adres gerekiyordu.
  * Panel burada YENİDEN YAZILMADI: aynı bileşen, aynı RPC, `yerlesim='akis'`.
  *
+ * `lg` altında TEK YER BURASI: düğme gelince profil sayfaları telefonda
+ * paneli çizmeyi bıraktı (kullanıcı isteği, 25 Eylül 2026: profilde
+ * tekrarı gereksiz; `useKampusYerlesimi`).
+ *
  * DÖRT DURUM — `/takip` ile aynı kalıp
  * ------------------------------------
  * Oturum okunuyor → iskelet; oturum yok → giriş kartı ve
@@ -102,8 +106,8 @@ export const KampusumSayfasi: React.FC<{
   return (
     /*
       Telefonda kenarsız ve üst boşluksuz: panelin `akis` kabı telefonda
-      kart değil yüzey (kenardan kenara, tek alt çizgi) ve profil
-      sayfasında da böyle duruyor. `sm:` üstünde kart ve gri zemin.
+      kart değil yüzey (kenardan kenara, tek alt çizgi), profilin geri
+      kalanıyla aynı kalıp. `sm:` üstünde kart ve gri zemin.
     */
     <SayfaKabugu mobilKenarsiz ustBosluk="pt-0 sm:pt-6" icerikGenisligi="max-w-2xl">
       <h1 className="sr-only">Kampüsüm</h1>

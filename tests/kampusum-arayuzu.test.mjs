@@ -22,9 +22,13 @@ import {
   Kurallar saf fonksiyonlarda (lib/kampusum.mjs) doğrudan, yerleşim ve
   yetki kaynaktan sınanıyor (jsdom yok). Tarayıcıda RPC ve fırsat
   isteği taklit edilerek ölçüldü (Chromium): 1710 ve 1440'ta üç sütun
-  330 / 600 / 350, 1280'de sol sütun yok (ana 600, yan 350), 390'da sıra
-  profil → panel → paylaşımlar; her genişlikte tek panel ve kampus +
-  fırsat için birer istek; boş, hata, okulsuz ve kaynaksız durumları.
+  330 / 600 / 350, 1280'de sol sütun yok (ana 600, yan 350); her
+  genişlikte tek panel ve kampus + fırsat için birer istek; boş, hata,
+  okulsuz ve kaynaksız durumları.
+
+  25 Eylül 2026 (kullanıcı isteği): telefon başlığına Kampüsüm düğmesi
+  gelince `lg` altında profilde panel YOK — ne `/cv`de ne
+  `/profil/<ad>`de; telefonda panelin tek yeri `/kampusum`.
 */
 const KOK = path.resolve(import.meta.dirname, '..');
 const oku = (p) => readFileSync(path.join(KOK, p), 'utf8').replace(/\r\n/g, '\n');
@@ -169,20 +173,69 @@ test('panel BAKAN öğrencinin verisiyle: okul prop olarak girmiyor, bakılan pr
   assert.match(CV, /<KampusumPaneli\s+ogrenci=\{student\}/);
 });
 
-test('görünmeyen yerleşimde DOM\'a girmiyor: sol sütun kancayla, ana sütundaki kopya tersi koşulla', () => {
+test('görünmeyen yerleşimde DOM\'a girmiyor: sol sütun kancayla, ana sütundaki kopya yalnız \'akis\'te', () => {
   assert.match(GENIS, /export const SOL_SUTUN_SORGUSU = '\(min-width: 1440px\)';/);
   assert.match(DUZEN, /export function useSolSutunAcik\(\): boolean \{\s*return useGenisEkran\(SOL_SUTUN_SORGUSU\);/);
   assert.match(DUZEN, /const sol = solAcik && solSutun \? solSutun : null;/);
   assert.match(DUZEN, /\{sol && <SolSutun>\{sol\}<\/SolSutun>\}/);
-  assert.match(SAYFA, /kampusPaneli=\{solSutunAcik \? undefined : bakanKampusu\('akis'\)\}/);
-  assert.match(CV, /\{!duzenleme && !solSutunAcik && kampusPaneli\('akis'\) && \(/);
+  assert.match(SAYFA, /kampusPaneli=\{kampusYerlesimi === 'akis' \? bakanKampusu\('akis'\) : undefined\}/);
+  assert.match(CV, /\{!duzenleme && kampusYerlesimi === 'akis' && kampusPaneli\('akis'\) && \(/);
   /* CSS ile gizleme yok: gizli kopya kendi isteğini atardı. */
   for (const kaynak of [DUZEN, SAYFA, CV, PANEL]) {
     assert.doesNotMatch(kod(kaynak), /hidden min-\[1440px\]:block|hidden 2xl:block|min-\[1440px\]:hidden/);
   }
 });
 
-test('yerleşim: sol 330 yapışkan, orta 600 ve sağ 350 değişmedi; dar ekranda profil kartının altında', () => {
+test('lg altında profilde panel yok: Kampüsüm düğmesinin olduğu genişlik, aynı sorgu, ilk karede', () => {
+  /*
+    Kullanıcı isteği (25 Eylül 2026): telefonda Kampüsüm başlıktaki
+    düğmeden açılıyor; profilde tekrarı gereksiz. Düğme `lg:hidden`,
+    panelin profilden kalktığı eşik de `lg` — iki ayrı sayı olsaydı ya
+    iki giriş birden ya da hiç giriş kalmayan bir aralık doğardı.
+  */
+  /* Yorumsuz kaynakta: düğmenin yorumunda da `<a href="/kampusum">` geçiyor. */
+  const HEADER = kod(oku('src/components/Header.tsx'));
+  const dugmeBasi = HEADER.indexOf('href="/kampusum"');
+  assert.ok(dugmeBasi > 0, 'Kampüsüm düğmesi bulunamadı');
+  const dugme = HEADER.slice(dugmeBasi, HEADER.indexOf('</a>', dugmeBasi));
+  assert.match(dugme, /lg:hidden/);
+  assert.match(GENIS, /export const LG_SORGUSU = '\(min-width: 1024px\)';/);
+
+  /* Üç durum tek kancada: sol sütun, ana sütun, hiç. */
+  const kanca = DUZEN.slice(DUZEN.indexOf('export function useKampusYerlesimi'));
+  assert.match(
+    kanca,
+    /^export function useKampusYerlesimi\(\): 'sutun' \| 'akis' \| null \{\s*const solAcik = useSolSutunAcik\(\);\s*const lg = useGenisEkran\(LG_SORGUSU\);\s*if \(solAcik\) return 'sutun';\s*return lg \? 'akis' : null;\s*\}/,
+  );
+  /*
+    İlk değer SENKRON (`useState(() => simdiGenisMi(...))`). Varsayılan bir
+    değerle başlayıp effect'te düzeltseydi telefonda panel bir kare
+    bağlanır ve effect'i `kampusum()` isteğini yine de atardı.
+  */
+  assert.match(GENIS, /React\.useState\(\(\) => simdiGenisMi\(medyaSorgusu\)\)/);
+
+  /* İki profil sayfası da kararı bu kancadan okuyor; eski ikili koşul yok. */
+  for (const [ad, kaynak] of Object.entries({ CV, SAYFA })) {
+    assert.match(kaynak, /const kampusYerlesimi = useKampusYerlesimi\(\);/, ad);
+    assert.doesNotMatch(kod(kaynak), /solSutunAcik/, ad);
+  }
+  /* Ana sütundaki kopya yalnız 'akis' dalında; başka bir yerde çağrılmıyor. */
+  assert.equal((kod(CV).match(/kampusPaneli\('akis'\)/g) ?? []).length, 2);
+  assert.equal((kod(SAYFA).match(/bakanKampusu\('akis'\)/g) ?? []).length, 1);
+  /* Telefon kalıbının sınıfları (`order-1 -mx-4`) bu kopyada yok: dal telefonda hiç çizilmiyor. */
+  assert.match(CV, /kampusPaneli\('akis'\) && \(\s*<div className="min-w-0">\{kampusPaneli\('akis'\)\}<\/div>/);
+
+  /* Telefonda panelin tek yeri /kampusum; orada yerleşim sabit 'akis'. */
+  const KAMPUS_SAYFASI = oku('src/components/kampus/KampusumSayfasi.tsx');
+  assert.match(KAMPUS_SAYFASI, /<KampusumPaneli ogrenci=\{ogrenci\} onNavigate=\{onNavigate\} yerlesim="akis" \/>/);
+
+  /* Gerekçe iki sayfada ve kapta yazılı. */
+  for (const kaynak of [DUZEN, CV, SAYFA]) {
+    assert.match(kaynak, /kullanıcı isteği,\s*(\*\s*)?25 Eylül\s*(\*\s*)?2026/);
+  }
+});
+
+test('yerleşim: sol 330 yapışkan, orta 600 ve sağ 350 değişmedi; 1024–1439 arasında profil kartının altında', () => {
   assert.match(DUZEN, /export const PROFIL_SOL_SUTUNU = 'w-\[330px\] min-w-0 sticky';/);
   assert.match(DUZEN, /export const PROFIL_ANA_SUTUNU = 'w-full min-w-0 lg:max-w-\[600px\]';/);
   assert.match(DUZEN, /export const PROFIL_YAN_SUTUNU = 'w-\[350px\] shrink-0 sticky top-4 space-y-4';/);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { SOL_SUTUN_SORGUSU, XL_SORGUSU, useGenisEkran } from './useGenisEkran';
+import { LG_SORGUSU, SOL_SUTUN_SORGUSU, XL_SORGUSU, useGenisEkran } from './useGenisEkran';
 
 /**
  * PROFİL SAYFA DÜZENİ — X'İN SAYFASI, SOL MENÜ YOK
@@ -45,11 +45,18 @@ import { SOL_SUTUN_SORGUSU, XL_SORGUSU, useGenisEkran } from './useGenisEkran';
  * Kaydırma çubuğu 17 piksel olan pencerede 1440'ta 1343 kalıyor; o bir
  * piksellik açığı sol sütun karşılıyor (`PROFIL_SOL_SUTUNU` notu).
  *
- * Görünmediği genişlikte panel ana sütunda, profil kartının altında
- * çiziliyor; kararı sayfalar `useSolSutunAcik` ile bu kapla AYNI sorgudan
- * okuyor. İki yerleşimden yalnız biri DOM'da: panel kendi verisini
- * çekiyor, görünmeyen kopya ikinci bir istek olurdu (yan sütunla aynı
- * gerekçe).
+ * 1024–1439 arasında panel ana sütunda, profil kartının altında
+ * çiziliyor. `lg` ALTINDA profilde HİÇ YOK (kullanıcı isteği, 25 Eylül
+ * 2026: telefonda Kampüsüm başlıktaki düğmeden açılıyor; profilde
+ * tekrarı gereksiz). Düğme `lg:hidden`, yani panelin profilden
+ * kalktığı genişlik tam olarak düğmenin olduğu genişlik; 1024–1439'da
+ * düğme de sol sütun da yok, ana sütundaki panel oradaki TEK giriş.
+ *
+ * Üç durumu sayfalar `useKampusYerlesimi` ile okuyor (sol sütun kapla
+ * AYNI sorgudan). Her genişlikte en çok bir yerleşim DOM'da: panel kendi
+ * verisini (`kampusum()` RPC'si, burs listesi) çekiyor; görünmeyen bir
+ * kopya — CSS ile gizlenmiş olsa bile — o istekleri boşuna atardı (yan
+ * sütunla aynı gerekçe).
  */
 
 export const PROFIL_SAYFA_DUZENI = 'lg:flex lg:items-start lg:justify-center lg:gap-8';
@@ -99,9 +106,34 @@ const SolSutun: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 };
 
-/** Sol sütun şu an açık mı — sayfalar paneli ana sütuna koyup koymayacağını buradan okuyor. */
+/** Sol sütun şu an açık mı — kap sol sütunu buna göre çiziyor. */
 export function useSolSutunAcik(): boolean {
   return useGenisEkran(SOL_SUTUN_SORGUSU);
+}
+
+/**
+ * Kampüsüm paneli profilde nerede çizilecek — ya da hiç çizilmeyecek mi.
+ *
+ *   ≥ 1440       'sutun'  sol sütunda (kap çiziyor)
+ *   1024 – 1439  'akis'   ana sütunda, profil kartının altında
+ *   < 1024       null     profilde yok; başlıktaki Kampüsüm düğmesi
+ *                         `/kampusum`u açıyor (kullanıcı isteği, 25 Eylül
+ *                         2026: profilde tekrarı gereksiz)
+ *
+ * İki sorgu da ilk değeri SENKRON okuyor (`useGenisEkran`), effect'i
+ * beklemiyor: telefonda ilk çizim zaten `null`, panel bağlanıp sökülmüyor
+ * ve isteği hiç atılmıyor. `true` varsayılanla başlasaydı telefonda panel
+ * bir kare bağlanır, effect'i RPC'yi yine de atardı; `false` varsayılanla
+ * 1024–1439'da panel bir kare geç gelirdi. Profil sayfaları ön render
+ * edilmiyor (`scripts/onrender.mjs` listesinde yoklar) ve uygulama
+ * `createRoot` ile istemcide çiziliyor; ilk çizimde okunacak bir pencere
+ * hep var.
+ */
+export function useKampusYerlesimi(): 'sutun' | 'akis' | null {
+  const solAcik = useSolSutunAcik();
+  const lg = useGenisEkran(LG_SORGUSU);
+  if (solAcik) return 'sutun';
+  return lg ? 'akis' : null;
 }
 
 export const ProfilSayfaDuzeni: React.FC<{
