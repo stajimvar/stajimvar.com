@@ -912,12 +912,18 @@ test('fotoğraf simgesi telefonun seçicisini doğrudan açıyor', () => {
   assert.match(agim, /dosyaGirdisi\.current\?\.click\(\);/);
   assert.doesNotMatch(agim, /const fotografSec = async/);
   assert.match(agim, /onClick=\{fotografSec\}\s*\n\s*aria-label="Fotoğraf paylaş"/);
-  /* Tek bileşen: iki ekran da onu çiziyor, kendi kopyasını değil. */
-  for (const ekran of ['src/components/sosyal/AgimSayfasi.tsx', 'src/components/Header.tsx']) {
-    const kaynak = oku(ekran);
-    assert.match(kaynak, /<FotografPaylasGirisi/, `${ekran}: ortak giriş çizilmiyor`);
-    assert.doesNotMatch(kaynak, /accept="image\/jpeg,image\/png,image\/webp"/, `${ekran}: kendi seçicisini kurmuş`);
-  }
+  /*
+    Tek bileşen: Ağım onu çiziyor, kendi kopyasını değil. Site üst
+    çubuğu da çiziyordu; telefondaki `/cv` simgesi kullanıcı isteğiyle
+    kalktı (25 Eylül 2026) — üst çubuk artık ne bileşeni ne kendi
+    seçicisini taşıyor.
+  */
+  const akisKaynagi = oku('src/components/sosyal/AgimSayfasi.tsx');
+  assert.match(akisKaynagi, /<FotografPaylasGirisi/, 'Ağım: ortak giriş çizilmiyor');
+  assert.doesNotMatch(akisKaynagi, /accept="image\/jpeg,image\/png,image\/webp"/, 'Ağım: kendi seçicisini kurmuş');
+  const ustCubukKaynagi = oku('src/components/Header.tsx');
+  assert.doesNotMatch(ustCubukKaynagi, /FotografPaylasGirisi/);
+  assert.doesNotMatch(ustCubukKaynagi, /accept="image\/jpeg,image\/png,image\/webp"/);
 
   /* Sunucudaki üç türle aynı liste; GIF, SVG ve video seçilemiyor. */
   assert.match(agim, /accept="image\/jpeg,image\/png,image\/webp"/);
@@ -940,14 +946,18 @@ test('fotoğraf simgesi telefonun seçicisini doğrudan açıyor', () => {
   assert.match(header, /fixed bottom-0 left-0 right-0 z-50/);
 
   /*
-    PROFİLDE DE AYNI GİRİŞ, AMA YALNIZ KENDİ PROFİLİNDE.
-
-    `/cv` oturum sahibinin kendi ekranı; başkasının profili
-    `/profil/<kullaniciadi>` adresinde açılıyor ve orada bu koşul
-    hiçbir zaman doğru olmuyor.
+    `/cv`DE PAYLAŞMA HÂLÂ VAR. Üst çubuktaki simge kalktı (25 Eylül
+    2026); "Paylaşımlar" başlığının yanındaki düğme duruyor ve koşulu
+    sunucunun önkoşulu (`yayinda_mi` + alan). `kendiProfilimde` üst
+    çubukta ☰ menüsü için yaşıyor.
   */
   assert.match(header, /const kendiProfilimde = bulunulanYol === '\/cv';/);
-  assert.match(header, /\{kendiProfilimde && \(\s*\n\s*<FotografPaylasGirisi/);
+  assert.doesNotMatch(header, /\{kendiProfilimde && \(\s*\n\s*<FotografPaylasGirisi/);
+  const sosyalSayfa = oku('src/components/sosyal/SosyalProfilSayfasi.tsx');
+  assert.match(
+    sosyalSayfa,
+    /\{yayindaMi && alaniVarMi && \(\s*<button\s+type="button"\s+onClick=\{sabitEylemler\.paylasimOlustur\}[\s\S]{0,400}Fotoğraf paylaş\s*<\/button>/,
+  );
 
   /*
     ÖN KOŞUL ÖNCE SORULUYOR
@@ -1027,8 +1037,9 @@ test('besteciden çıkış yolu tepede ve yükleme sürerken kilitli', () => {
 
 test('paylaşım girişi TEK bileşen; besteci ana pakete binmiyor', () => {
   /*
-    Giriş artık site üst çubuğundan da çiziliyor, yani ANA PAKETE
-    giriyor. `PaylasimOlustur` doğrudan içeri alınınca ana paket
+    Giriş bir süre site üst çubuğundan da çizildi ve ANA PAKETE girdi
+    (üst çubuktaki simge 25 Eylül 2026'da kalktı; Ağım ve şirket
+    profili hâlâ çiziyor). `PaylasimOlustur` doğrudan içeri alınınca ana paket
     438 → 453 KB oldu (ölçüldü): küçültme, EXIF düşürme ve form, hiç
     fotoğraf paylaşmayacak ziyaretçinin de indirdiği 16 KB. Besteci
     ancak dosya SEÇİLDİKTEN sonra çiziliyor; parça tam o anda iniyor.
@@ -1039,11 +1050,11 @@ test('paylaşım girişi TEK bileşen; besteci ana pakete binmiyor', () => {
   assert.match(giris, /<React\.Suspense/);
 
   /*
-    İKİ EKRAN, TEK GİRİŞ: Ağım ve kendi profilin. Ayrı kopya
+    İKİ EKRAN, TEK GİRİŞ: Ağım ve şirket profili. Ayrı kopya
     yazılsaydı biri seçiciyi dokunmadan açar öteki açmaz, biri ön
     koşulu sorar öteki sormazdı.
   */
-  for (const ekran of ['src/components/sosyal/AgimSayfasi.tsx', 'src/components/Header.tsx']) {
+  for (const ekran of ['src/components/sosyal/AgimSayfasi.tsx', 'src/sirket/SirketProfilGorunumu.tsx']) {
     assert.match(oku(ekran), /<FotografPaylasGirisi/, `${ekran}: ortak giriş yok`);
   }
 
@@ -1058,17 +1069,18 @@ test('paylaşım girişi TEK bileşen; besteci ana pakete binmiyor', () => {
   assert.match(giris, /React\.useImperativeHandle\(kol, \(\) => \(\{ sec: fotografSec \}\)\);/);
 });
 
-test('paylaşım düğmesi MASAÜSTÜNDE de görünüyor', () => {
+test('/cv paylaşım düğmesi hiçbir genişlikte gizlenmiyor', () => {
   /*
-    ÖLÇÜLDÜ (canlı, 1280 px): düğme DOM'daydı ama `lg:hidden` yüzünden
-    görünmüyordu. Yanındaki arama/süzgeç simgeleri telefona özel çünkü
-    masaüstünde sayfanın kendi arama kutusu var; paylaşımın öyle bir
-    karşılığı YOK. Kaldırılan geniş "Paylaş" düğmesi masaüstünde de
-    görünüyordu ve Ağım'ın kendi üst çubuğu `lg:hidden` — bu düğme de
-    gizlenseydi masaüstünde fotoğraf paylaşmanın hiçbir yolu kalmazdı.
+    Üst çubuktaki `/cv` simgesi kalktı (kullanıcı isteği, 25 Eylül 2026).
+    O simge `lg:hidden` bir kümenin içindeydi, yani geniş ekranda zaten
+    görünmüyordu; `/cv`de iki genişlikte de paylaşma yolu "Paylaşımlar"
+    başlığının yanındaki düğme. O düğme bir kırılımda gizlenseydi o
+    genişlikte `/cv`den fotoğraf paylaşmanın yolu kalmazdı.
   */
-  const header = oku('src/components/Header.tsx');
-  const blok = header.slice(header.indexOf('<FotografPaylasGirisi'), header.indexOf('ARAMA VE SÜZGEÇ'));
-  assert.match(blok, /dugmeSinifi="[^"]*h-11 w-11[^"]*"/);
-  assert.doesNotMatch(blok.slice(blok.indexOf('dugmeSinifi')), /lg:hidden/);
+  const sosyalSayfa = oku('src/components/sosyal/SosyalProfilSayfasi.tsx');
+  const bas = sosyalSayfa.indexOf('{yayindaMi && alaniVarMi && (');
+  assert.ok(bas > 0, '"Paylaşımlar" başlığındaki düğme bulunamadı');
+  const blok = sosyalSayfa.slice(bas, sosyalSayfa.indexOf('</button>', bas));
+  assert.match(blok, /min-h-11/);
+  assert.doesNotMatch(blok, /(^|\s)(hidden|sm:hidden|md:hidden|lg:hidden|xl:hidden)(\s|")/);
 });

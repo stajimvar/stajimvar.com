@@ -7,8 +7,16 @@ const source = readFileSync("src/components/Header.tsx", "utf8");
 test("adres sekmeyi eziyor: rehber, fırsat, kurumsal ve sosyal sayfalarda İlanlar sönük", () => {
   assert.match(
     source,
-    /\(!rehberdeMi && !firsatlardaMi && !kurumsalSayfada && !sosyaldeMi && activeTab === 'internships'\)/,
+    /\(!rehberdeMi && !firsatlardaMi && !kurumsalSayfada && !sosyaldeMi && !kampustaMi && activeTab === 'internships'\)/,
   );
+  /*
+    /kampusum (25 Eylül 2026) beş sekmenin hiçbiri değil: activeTab
+    'internships' kalıyor ve adres ezmezse İlanlar yanardı. Tanım
+    `ilanlardaMi`den ÖNCE olmalı — `const` ilk kullanımdan sonra
+    tanımlansa bileşen ilk çizimde ReferenceError fırlatırdı.
+  */
+  assert.ok(source.includes("const kampustaMi = /^\\/kampusum(\\/|$)/.test(bulunulanYol);"));
+  assert.ok(source.indexOf('const kampustaMi =') < source.indexOf('const ilanlardaMi ='));
   /*
     /staj-ilanlari DA "İlanlar" SEKMESİ
 
@@ -55,7 +63,7 @@ test("Ağım /agim ve /baglantilar'ta yanıyor; /profil/* ve Profil ayrı, her a
   */
   assert.match(source, /const agimdaMi = \/\^\\\/\(agim\|baglantilar\|takip\)\(\\\/\|\$\)\/\.test\(bulunulanYol\);/);
   /* Ağım'da Profil sönük: sekme durumu 'profile' kalsa bile adres eziyor. */
-  assert.match(source, /const profildeMi = cvEkranindaMi \|\| \(!rehberdeMi && !kurumsalSayfada && !agimdaMi && activeTab === 'profile'\)/);
+  assert.match(source, /const profildeMi = cvEkranindaMi \|\| \(!rehberdeMi && !kurumsalSayfada && !agimdaMi && !kampustaMi && activeTab === 'profile'\)/);
   assert.match(source, /aria-label="Ağım"\s*aria-current=\{agimdaMi \? 'page' : undefined\}/);
   /* /baglantilar ve /takip sosyal küme içinde, yani İlanlar da sönük (ilanlardaMi !sosyaldeMi). */
   assert.match(source, /const sosyaldeMi = \/\^\\\/\(agim\|cv\|profil\|topluluklar\|baglantilar\|takip\)\(\\\/\|\$\)\/\.test\(bulunulanYol\);/);

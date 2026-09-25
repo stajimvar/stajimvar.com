@@ -2285,11 +2285,13 @@ test('sosyal satır yokken kartta Paylaş ve dişli çizilmiyor, sayı uydurulmu
 
     GENİŞ "PAYLAŞ" DÜĞMESİ KARTTAN KALKTI
 
-    Paylaşım girişi artık sayfanın sol üstünde, Ağım'daki simgenin
-    aynısı (`FotografPaylasGirisi`, Header'dan çiziliyor). İki giriş
+    Paylaşım girişi o gün sayfanın sol üstüne, Ağım'daki simgenin
+    aynısına (`FotografPaylasGirisi`, Header'dan) taşındı. İki giriş
     birden bırakmak aynı işi yapan iki düğme demekti: biri kartın
     altında geniş ve metinli, öteki tepede simge — kullanıcı hangisinin
-    ne yaptığını denemeden bilemezdi.
+    ne yaptığını denemeden bilemezdi. (25 Eylül 2026: üst çubuktaki
+    simge de kullanıcı isteğiyle kalktı; `/cv`de giriş "Paylaşımlar"
+    başlığının yanındaki düğme — `sosyal-paylasim-arayuzu` sınıyor.)
 
     Dişli yerinde kaldı: kart ayarlarının yeri burası ve o eylemin
     paylaşımla ilgisi yok. Satır tek öğeyle kaldığı için `justify-end`

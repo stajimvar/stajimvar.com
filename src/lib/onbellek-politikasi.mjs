@@ -31,6 +31,11 @@ export const UYGULAMA_BOLUMLERI = [
     bir bölüm kenarda tutulmuyor.
   */
   '/takip',
+  /*
+    /kampusum: bakan öğrencinin okuluna göre kampüs paneli. Kabuk aynı
+    olsa da kişiye bağlı bir bölüm; /takip ile aynı sınıfta.
+  */
+  '/kampusum',
   /* Sosyal akış: içeriği kişinin bağlantılarına göre değişiyor. */
   '/agim',
   '/bana-uygun',
