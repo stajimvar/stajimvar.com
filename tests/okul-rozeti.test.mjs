@@ -78,8 +78,10 @@ test('rozet okul adinin YERINE gecmiyor', () => {
     ayar menusunun ilk satirinda ve dolulukta halkasinda anlatiliyor
     (gerekce ProfilBasligi'ndaki meta satiri yorumunda).
   */
-  assert.ok(
-    BASLIK.includes('{okul && <MetaOgesi ikon={GraduationCap} etiket="Okul">{okul}</MetaOgesi>}'),
+  /* Son rotus (25 Eylul 2026): ad metin olarak kaliyor, kampuse giden baglantinin yazisi. */
+  assert.match(
+    BASLIK,
+    /\{okul && \(\s*<MetaOgesi ikon=\{GraduationCap\} etiket="Okul">\s*<OkulKampusBaglantisi okul=\{okul\}/,
     'okul adi metin olarak kalmali',
   );
 });
@@ -144,6 +146,6 @@ test('logo fotografin kosesinde, yuvarlak ve beyaz halkali', () => {
   assert.match(BASLIK, /<div className="relative">[\s\S]{0,600}<ProfilFotografi/);
   assert.match(BASLIK, /<span className="absolute bottom-0 right-0 sm:/);
   /* Satirda rozet kalmadi: okul adi tek basina (24 Eylul 2026'dan beri meta satirinin ogesi). */
-  const okulOgesi = BASLIK.slice(BASLIK.indexOf('{okul && <MetaOgesi'));
-  assert.ok(okulOgesi.startsWith('{okul && <MetaOgesi ikon={GraduationCap} etiket="Okul">{okul}</MetaOgesi>}'));
+  const okulOgesi = BASLIK.slice(BASLIK.indexOf('{okul && (\n              <MetaOgesi'));
+  assert.match(okulOgesi, /^\{okul && \(\s*<MetaOgesi ikon=\{GraduationCap\} etiket="Okul">\s*<OkulKampusBaglantisi okul=\{okul\} yol="\/kampusum" onNavigate=\{satir\?\.onNavigate\} \/>\s*<\/MetaOgesi>/);
 });

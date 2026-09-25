@@ -23,7 +23,6 @@ import {
 import type { StudentProfile } from '../types';
 import { ListingLogo } from './ListingLogo';
 import { FiltreBlogu, SecenekSatiri } from '../ui';
-import { KART_EYLEMI } from '../lib/kart-cta';
 import { KonuSeridi } from './KonuSeridi';
 import { donukKure, kureDokunusu } from '../lib/kure-donusu.mjs';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
@@ -1321,14 +1320,19 @@ export const Card: React.FC<{
     .toLocaleLowerCase('tr-TR')
     .includes(item.organizationName.trim().toLocaleLowerCase('tr-TR'));
   /*
-    AYRINTI ÖNCE (kullanıcı kararı, 25 Eylül 2026): kartın tek eylemi
-    "Ayrıntıları gör" ve StajımVar'daki fırsat sayfasını açıyor. Kurumun
-    başvuru sayfasına giden düğme — giriş kapısıyla birlikte — o sayfada,
-    şartların altında (OpportunityDetailPage).
+    AYRINTI ÖNCE (kullanıcı kararı, 25 Eylül 2026): kart StajımVar'daki
+    fırsat sayfasını açıyor. Kurumun başvuru sayfasına giden düğme — giriş
+    kapısıyla birlikte — o sayfada, şartların altında (OpportunityDetailPage).
+
+    AYRI DÜĞME YOK (son rötuş): her kartta tekrarlanan "Ayrıntıları gör"
+    kalktı. Tek bağlantı başlıktaki `<a>`: gerçek bağlantı (Tab ile
+    odaklanıyor, orta tuş yeni sekme) ve `after:` örtüsüyle kartın tamamı
+    tıklanıyor. Kaydet örtünün üstünde (`relative z-10`) ayrı bir düğme;
+    iç içe bağlantı ya da düğme yok.
   */
   return (
     <article
-      className="group relative flex min-w-0 flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300 focus-within:ring-2 focus-within:ring-blue-600"
+      className="group relative flex min-w-0 flex-col rounded-2xl border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300 focus-within:ring-2 focus-within:ring-blue-600"
     >
       {/*
         FIRSAT KARTI — HİYERARŞİ (mobil sadeleştirme, 25 Eylül 2026)
@@ -1337,7 +1341,7 @@ export const Card: React.FC<{
           ORTA    başlık → gerekiyorsa kurum → tür (ve destek) →
                   son tarih ve aciliyet
           SAĞ ÜST kaydet
-          ALT     solda kaynak, sağda "Ayrıntıları gör"
+          ORTA    ... son olarak kaynak ("Resmî kaynak", yalnız doğrulandıysa)
 
         İlan kartıyla aynı dil ama aynı alanlara zorlanmadı. "Son 3 gün"
         kesin tarihin YANINDA, onun yerine değil.
@@ -1355,6 +1359,7 @@ export const Card: React.FC<{
             <a
               href={detayYolu}
               onClick={detayaGit}
+              aria-label={`${item.title}: ${opportunityReviewLabel(item.opportunityType)}`}
               className="rounded-sm outline-none after:absolute after:inset-0 after:rounded-2xl after:content-[''] group-hover:text-blue-700"
             >
               {item.title}
@@ -1386,6 +1391,13 @@ export const Card: React.FC<{
               </span>
             )}
           </p>
+          {/* "Resmî kaynak" yalnız kayıt doğrulandıysa (`verifiedAt`); yoksa bir şey yazılmıyor. */}
+          {item.verifiedAt && (
+            <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-xs leading-4 text-emerald-800">
+              <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
+              <span>Resmî kaynak</span>
+            </p>
+          )}
         </div>
         <div className="relative z-10 -mr-2 -mt-2 shrink-0">
           {onKaydet ? (
@@ -1410,31 +1422,6 @@ export const Card: React.FC<{
         </div>
       </div>
 
-      {(item.verifiedAt || !arsivde) && (
-        <div className="flex min-w-0 items-center justify-between gap-3">
-          {/* "Resmî kaynak" yalnız kayıt doğrulandıysa (`verifiedAt`); yoksa bir şey yazılmıyor. */}
-          {item.verifiedAt ? (
-            <span className="inline-flex min-w-0 items-center gap-1.5 text-xs leading-4 text-emerald-800">
-              <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="truncate">Resmî kaynak</span>
-            </span>
-          ) : (
-            <span aria-hidden />
-          )}
-          {!arsivde && (
-            <div className="relative z-10 shrink-0">
-              <a
-                href={detayYolu}
-                onClick={detayaGit}
-                aria-label={`${item.title}: ${opportunityReviewLabel(item.opportunityType)}`}
-                className={KART_EYLEMI.kenar}
-              >
-                Ayrıntıları gör
-              </a>
-            </div>
-          )}
-        </div>
-      )}
     </article>
   );
 };

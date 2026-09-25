@@ -141,8 +141,8 @@ test('SÜRESİ DOLAN ANA LİSTEDE YOK, ARŞİVDE VAR', () => {
   */
   const sayfa = oku('src/components/OpportunitiesPage.tsx');
   assert.doesNotMatch(sayfa, /opportunityCta/, 'kartta başvuru düğmesi geri gelmiş');
-  /* Kartın "Ayrıntıları gör" eylemi arşivde HİÇ çizilmiyor (25 Eylül 2026 kartı). */
-  assert.match(sayfa, /\{!arsivde && \(\s*<div className="relative z-10 shrink-0">\s*<a\b/);
+  /* Kartta ayrı eylem düğmesi yok (son rötuş, 25 Eylül 2026): arşivde de ileri giden bir düğme çizilmiyor. */
+  assert.doesNotMatch(sayfa, /Ayrıntıları gör</);
   assert.match(sayfa, /onKaydet=\{filters\.arsiv \|\| saltOkunur \? undefined : \(\) => kaydiDegistir\(item\)\}/);
 });
 

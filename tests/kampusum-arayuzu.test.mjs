@@ -194,12 +194,13 @@ test('lg altında profilde panel yok: Kampüsüm düğmesinin olduğu genişlik,
     panelin profilden kalktığı eşik de `lg` — iki ayrı sayı olsaydı ya
     iki giriş birden ya da hiç giriş kalmayan bir aralık doğardı.
   */
-  /* Yorumsuz kaynakta: düğmenin yorumunda da `<a href="/kampusum">` geçiyor. */
-  const HEADER = kod(oku('src/components/Header.tsx'));
-  const dugmeBasi = HEADER.indexOf('href={kampusYolu}');
-  assert.ok(dugmeBasi > 0, 'Kampüsüm düğmesi bulunamadı');
-  const dugme = HEADER.slice(dugmeBasi, HEADER.indexOf('</a>', dugmeBasi));
-  assert.match(dugme, /lg:hidden/);
+  /*
+    Son rötuş (25 Eylül 2026): üst çubuktaki düğme kalktı; lg altında
+    Kampüs'ün kapısı profildeki okul satırı (`OkulKampusBaglantisi`), lg
+    ve üstünde panel profilde. Okul satırı her genişlikte var: aralıkta
+    girişsiz kalan bir genişlik yok.
+  */
+  assert.match(oku('src/components/ProfilBasligi.tsx'), /<OkulKampusBaglantisi okul=\{okul\} yol="\/kampusum"/);
   assert.match(GENIS, /export const LG_SORGUSU = '\(min-width: 1024px\)';/);
 
   /* Üç durum tek kancada: sol sütun, ana sütun, hiç. */

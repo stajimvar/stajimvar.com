@@ -115,6 +115,33 @@ export const MetaOgesi: React.FC<{ ikon: LucideIcon; etiket: string; children: R
   </span>
 );
 
+/**
+ * OKUL ADI KAMPÜS'E GÖTÜRÜYOR (son rötuş, 25 Eylül 2026)
+ *
+ * Profil üst çubuğundaki Kampüs simgesi kalktı; telefonda Kampüs'ün başka
+ * kapısı yoktu. Okul satırı zaten o okulun adını söylüyor: kendi profilinde
+ * `/kampusum`, başkasınınkinde `/kampusum/<ad>`. Gerçek `<a>`: orta tuş ve
+ * yeni sekme tarayıcıya kalıyor, sol tık uygulama içinde.
+ */
+export const OkulKampusBaglantisi: React.FC<{
+  okul: string;
+  yol: string;
+  onNavigate?: (yol: string) => void;
+}> = ({ okul, yol, onNavigate }) => (
+  <a
+    href={yol}
+    onClick={(olay) => {
+      if (!onNavigate || olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0) return;
+      olay.preventDefault();
+      onNavigate(yol);
+    }}
+    aria-label={`${okul}: kampüs bilgileri`}
+    className={`rounded font-medium text-blue-700 underline-offset-2 hover:underline ${ODAK_HALKASI}`}
+  >
+    {okul}
+  </a>
+);
+
 /*
   ZİYARETÇİ EYLEM SATIRI — X mobil kalıbı (kullanıcı ekran görüntüsü,
   24 Eylül 2026). Başkasının profilinde eylemler avatar satırında değil,

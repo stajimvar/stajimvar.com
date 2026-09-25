@@ -46,10 +46,18 @@ test('veri katmanı: NULL "görünmüyor", hata "yüklenemedi" — ikisi karış
   assert.match(VERI, /if \(error\) throw new Error\(error\.message\);\s*if \(!data\) return null;/);
 });
 
-test('başlık düğmesi profilde o kişinin kampüsüne gidiyor', () => {
-  assert.ok(HEADER.includes(String.raw`const profilAdi = /^\/profil\/([^/]+)\/?$/.exec(bulunulanYol)?.[1];`));
-  assert.match(HEADER, /const kampusYolu = profilAdi \? `\/kampusum\/\$\{profilAdi\}` : '\/kampusum';/);
-  /* /kampusum/<ad>'da da düğme seçili görünüyor. */
+test('profilde okul adı o kişinin kampüsüne gidiyor', () => {
+  /*
+    Son rötuş (25 Eylül 2026): profil üst çubuğundaki Kampüs simgesi
+    kalktı. Kapı artık okul satırı: kendi profilinde `/kampusum`,
+    başkasınınkinde `/kampusum/<ad>`.
+  */
+  const kalip = oku('src/components/sosyal/ProfilKimlikKalibi.tsx');
+  assert.match(kalip, /export const OkulKampusBaglantisi/);
+  assert.match(oku('src/components/ProfilBasligi.tsx'), /<OkulKampusBaglantisi okul=\{okul\} yol="\/kampusum"/);
+  assert.match(oku('src/components/sosyal/SosyalProfilGorunumu.tsx'), /yol=\{`\/kampusum\/\$\{profil\.kullaniciAdi\}`\}/);
+  assert.doesNotMatch(HEADER, /kampusYolu|University/);
+  /* /kampusum/<ad> sekme kuralı yerinde. */
   assert.ok(HEADER.includes(String.raw`const kampustaMi = /^\/kampusum(\/|$)/.test(bulunulanYol);`));
 });
 

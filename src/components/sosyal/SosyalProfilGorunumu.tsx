@@ -22,6 +22,7 @@ import {
   KIMLIK_BANDI,
   META_SATIRI,
   MetaOgesi,
+  OkulKampusBaglantisi,
   SAYAC_ETIKETI,
   SAYAC_OGESI,
   SAYAC_SATIRI,
@@ -490,7 +491,11 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
               */}
               {ogrenciKimligiGorunur && okul && (
                 <MetaOgesi ikon={GraduationCap} etiket="Okul">
-                  {okul}
+                  <OkulKampusBaglantisi
+                    okul={okul}
+                    yol={`/kampusum/${profil.kullaniciAdi}`}
+                    onNavigate={onNavigate}
+                  />
                 </MetaOgesi>
               )}
               {/*

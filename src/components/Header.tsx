@@ -15,7 +15,6 @@ import {
   Search,
   SlidersHorizontal,
   X,
-  University,
   UserRound,
 } from 'lucide-react';
 import { StudentProfile, CompanyAccount } from '../types';
@@ -618,13 +617,6 @@ export const Header: React.FC<HeaderProps> = ({
   */
   const kampustaMi = /^\/kampusum(\/|$)/.test(bulunulanYol);
   /*
-    BAŞKASININ PROFİLİNDE O KİŞİNİN KAMPÜSÜ (25 Eylül 2026): düğme
-    `/profil/<ad>`de `/kampusum/<ad>`e gidiyor, kalan her yerde bakanın
-    kendi kampüsüne. Okulun kapısı sunucuda (`kampus_profil`).
-  */
-  const profilAdi = /^\/profil\/([^/]+)\/?$/.exec(bulunulanYol)?.[1];
-  const kampusYolu = profilAdi ? `/kampusum/${profilAdi}` : '/kampusum';
-  /*
     /staj-ilanlari DA "ilanlar" SEKMESİ
 
     Sekme artık oraya götürüyor; koşul yalnız `activeTab`e bakınca sayfa
@@ -672,24 +664,32 @@ export const Header: React.FC<HeaderProps> = ({
     ortada logo her sayfada aynı:
       İlanlar                 → süzgeç
       Ağım (/agim, /baglantilar, /takip) ve /mesajlar → mesajlar
-      Profil (/cv, /profil/<ad>, /kampusum) → Kampüs
       diğerleri               → boş
     Önce /cv'de Kampüs + mesaj, ilanlarda süzgeç + mesaj yan yana
     çiziliyordu. Mesajların kapısı artık Ağım (Ağım'ın kendi üst çubuğunda
     da solda); geniş ekranda sağ kümedeki yeri değişmedi.
+
+    PROFİLDE SOL BOŞ (son rötuş, 25 Eylül 2026): Kampüs simgesi profil
+    üst çubuğundan kalktı. Kampüs'ün telefondaki kapısı profildeki OKUL
+    satırı (ProfilBasligi ve ziyaretçi görünümü: okul adı `/kampusum` ya
+    da `/kampusum/<ad>` bağlantısı); geniş ekranda panel profilin içinde.
   */
-  const profilKumesindeMi = /^\/(cv|profil|kampusum)(\/|$)/.test(bulunulanYol);
   const mesajKumesindeMi = agimdaMi || /^\/mesajlar(\/|$)/.test(bulunulanYol);
-  const kampusDugmesiCizilsin =
-    isLoggedIn && userRole === 'student' && Boolean(activeStudent) && profilKumesindeMi;
-  const solAksiyon: 'suzgec' | 'mesaj' | 'kampus' | null =
+  const solAksiyon: 'suzgec' | 'mesaj' | null =
     ilanlardaMi && sayfaAramasi?.onSuzgec
       ? 'suzgec'
       : mesajKumesindeMi && mesajDugmesiCizilsin
         ? 'mesaj'
-        : kampusDugmesiCizilsin
-          ? 'kampus'
-          : null;
+        : null;
+  /*
+    PROFİLDE ARAMA = KİŞİ ARAMASI (son rötuş, 25 Eylül 2026): /cv ve
+    /profil/<ad> telefonda sayfa araması kaydetmiyor, sağda yalnız zil
+    kalıyordu. Simge sitenin çalışan kişi aramasını açıyor — geniş
+    ekrandaki üst çubuk kutusu ve Ağım'ın araması ile aynı parça
+    (`KullaniciAramaSonuclari`), aynı yetki (`kisiAramasiCizilsin`).
+  */
+  const profilKisiAramasi =
+    !sayfaAramasi && kisiAramasiCizilsin && /^\/(cv|profil)(\/|$)/.test(bulunulanYol);
 
   /*
     ŞİRKET KABUĞUNUN SEKMELERİ ADRESLE YANIYOR
@@ -718,19 +718,20 @@ export const Header: React.FC<HeaderProps> = ({
     Masaüstünde düğme zaten `lg:hidden`.
   */
   const zilVarMi = Boolean(isLoggedIn && onBildirimAc);
-  const aramaDugmesi = sayfaAramasi ? (
+  const aramaDugmesi = sayfaAramasi || profilKisiAramasi ? (
     <button
       type="button"
       onClick={() => {
         setAramaAcik((a) => {
           if (a) {
             setAramaMetni('');
-            sayfaAramasi.onDegisti('');
+            sayfaAramasi?.onDegisti('');
+            setKisiSorgusu('');
           }
           return !a;
         });
       }}
-      aria-label={aramaAcik ? 'Aramayı kapat' : sayfaAramasi.yerTutucu}
+      aria-label={aramaAcik ? 'Aramayı kapat' : (sayfaAramasi?.yerTutucu ?? 'Kişi ara')}
       aria-expanded={aramaAcik}
       className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-700 transition-colors hover:bg-gray-100 lg:hidden"
     >
@@ -858,41 +859,6 @@ export const Header: React.FC<HeaderProps> = ({
               bu kümenin içindeydi ve küme `lg:hidden`: geniş ekranda zaten
               görünmüyordu.
             */}
-            {/*
-              KAMPÜSÜM — YALNIZ OTURUMU AÇIK ÖĞRENCİDE.
-
-              Panel (`KampusumPaneli`) bakan öğrencinin okulunu sunucuda
-              oturumdan çözüyor (`kampusum()`); ziyaretçide RPC `anon`a
-              kapalı; şirket kabuğunda App öğrenci profilini hiç yüklemiyor
-              ve panel ona "üniversiteni ekle" derdi — ikisinde de işe
-              yaramayan bir düğme olurdu. `activeStudent` şartı: profil
-              okunamadıysa (aşağıdaki güvenlik ağı dalı) öğrenci olduğu
-              doğrulanmamış biri. Koşul `kampusDugmesiCizilsin`de; ilan ve
-              fırsat sayfalarında düğme yok (gerekçe orada).
-
-              Gerçek `<a href="/kampusum">`: orta tuş ve yeni sekme
-              çalışıyor (adres `_middleware` listesinde). Geniş ekranda
-              yok: istek telefon başlığı içindi ve geniş ekranda panel
-              `/cv` ile `/profil/<ad>` sayfalarında zaten çiziliyor.
-
-              SİMGE KAMPÜS BİNASI, KEP DEĞİL: kullanıcı üst çubuktaki kep
-              simgesini (şirket kabuğundaki eski "öğrenci görünümü" kapısı)
-              ekran görüntüsünde çizip istememişti. Aynı simge burada başka
-              bir işe gitseydi o kapı geri gelmiş gibi okunurdu.
-            */}
-            {solAksiyon === 'kampus' && onNavigate && (
-              <a
-                href={kampusYolu}
-                aria-label={profilAdi ? 'Bu kişinin kampüsü' : 'Kampüsüm'}
-                aria-current={kampustaMi ? 'page' : undefined}
-                onClick={baglantiTiklamasi(() => onNavigate(kampusYolu))}
-                className={`relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl transition-colors lg:hidden ${ODAK_HALKASI} ${
-                  kampustaMi ? 'bg-blue-50 text-blue-600' : 'text-gray-800 hover:bg-gray-100'
-                }`}
-              >
-                <University aria-hidden className="h-6 w-6" />
-              </a>
-            )}
 
             {/*
               ARAMA VE SÜZGEÇ — YALNIZ TELEFONDA VE YALNIZ KAPSAM VARSA.
@@ -1669,6 +1635,37 @@ export const Header: React.FC<HeaderProps> = ({
           Kutuyu doğrudan çubuğa koymak logoyu ve simgeleri sıkıştırırdı;
           bu satır tam genişlik veriyor ve kapalıyken hiç yer kaplamıyor.
         */}
+        {aramaAcik && profilKisiAramasi && onNavigate && (
+          <div className="py-2 lg:hidden">
+            <label className="relative block">
+              <span className="sr-only">Kişi ara</span>
+              <Search
+                aria-hidden
+                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+              />
+              <input
+                type="search"
+                autoFocus
+                autoComplete="off"
+                value={kisiSorgusu}
+                onChange={(olay) => setKisiSorgusu(olay.target.value)}
+                placeholder="Kullanıcı adıyla ara"
+                className="w-full rounded-2xl border border-gray-200 bg-white py-3 pl-10 pr-3 text-sm font-medium text-gray-900 placeholder:font-normal placeholder:text-gray-400 focus:border-blue-600 focus:outline-none"
+              />
+            </label>
+            <div className="mt-2">
+              <KullaniciAramaSonuclari
+                sorgu={kisiSorgusu}
+                onNavigate={onNavigate}
+                onSecildi={() => {
+                  setKisiSorgusu('');
+                  setAramaAcik(false);
+                }}
+                gomuluBaslik="Kişiler"
+              />
+            </div>
+          </div>
+        )}
         {aramaAcik && sayfaAramasi && (
           <div className="py-2 lg:hidden">
             <label className="relative block">
