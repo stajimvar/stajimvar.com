@@ -98,6 +98,18 @@
       "kaynaklar": [
         {"tur": "duyuru", "ayristirici": "html_duyuru_listesi", "url": "https://www.medeniyet.edu.tr/tr/duyurular", "ayar": {"onek": "/tr/duyurular/"}}
       ]
+    },
+    {
+      "id": "istanbul-nisantasi-universitesi",
+      "resmi_ad": "İstanbul Nişantaşı Üniversitesi",
+      "resmi_alan_adi": "nisantasi.edu.tr",
+      "kisa_adlar": ["Nişantaşı Üniversitesi"],
+      "yemekhane_sayfasi": null,
+      "duyurular_sayfasi": "https://www.nisantasi.edu.tr/duyurular",
+      "_not": "25 Eylül 2026: resmî sitede (www ve sksdb.nisantasi.edu.tr) yemek menüsü ya da yemekhane sayfası bulunamadı; yemek kaynağı yok. Duyuru bağlantılarının metni yalnız 'Detay →', başlık kaptaki .nev-ann-title'dan.",
+      "kaynaklar": [
+        {"tur": "duyuru", "ayristirici": "html_duyuru_listesi", "url": "https://www.nisantasi.edu.tr/duyurular", "ayar": {"onek": "/duyuru/", "baslik_secici": ".nev-ann-title"}}
+      ]
     }
   ]
 }

@@ -604,9 +604,14 @@ def _detay_bilgisi(url: str, alan: str, gun: date) -> tuple[str | None, date | N
 def html_duyuru_listesi(kaynak: dict[str, Any], alan: str, gun: date) -> Sonuc:
     """Duyuru liste sayfası: yolu `onek` içeren bağlantılar.
 
-    ayar: {"onek": "/tr/duyurular/", "detay": true}
+    ayar: {"onek": "/tr/duyurular/", "detay": true, "baslik_secici": ".x"}
     Tarih listede yazıyorsa oradan; yoksa (ya da başlık kısaltılmışsa)
     detay sayfasından. Tarihi bulunamayan duyuru YAZILMIYOR.
+
+    `baslik_secici`: bağlantının metni yalnız "Detay →" olan listelerde
+    (ör. Nişantaşı) başlık bağlantının KABINDAKİ bu öğeden okunuyor. Kap,
+    bağlantıdan en çok üç üst; seçici başka bir duyurunun kabına taşmasın
+    diye ilk eşleşen üstte duruluyor.
     """
     from bs4 import BeautifulSoup
     from urllib.parse import urljoin
@@ -657,7 +662,15 @@ def html_duyuru_listesi(kaynak: dict[str, Any], alan: str, gun: date) -> Sonuc:
 
     for href in sira:
         adaylar = [m for m in metinler[href] if len(m) >= 12 and not TARIH_METIN.fullmatch(kucuk(m))]
-        adaylar = [m for m in adaylar if not re.fullmatch(r"(devamı|detay|duyuru detayı|oku)", m, re.I)]
+        adaylar = [m for m in adaylar if not re.fullmatch(r"(devamı|detay|duyuru detayı|oku)\s*[→›»>]?", m, re.I)]
+        if a.get("baslik_secici"):
+            for kap in list(kaplar[href].parents)[:3]:
+                oge = kap.select_one(a["baslik_secici"])
+                if oge is not None:
+                    kap_basligi = oge.get_text(" ", strip=True)
+                    if len(kap_basligi) >= 5:
+                        adaylar.append(kap_basligi)
+                    break
         if not adaylar:
             continue
         baslik = max(adaylar, key=len)
