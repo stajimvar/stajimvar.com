@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Home, Search, X } from 'lucide-react';
+import { Bell, Search, X } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import {
   akisiGetir,
@@ -319,23 +319,26 @@ export const AgimSayfasi: React.FC<Props> = ({
         `text-[28px] sm:text-2xl tracking-[-0.03em]` ve `font-black`
         kullanıyor.
       */}
-      <h1 className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[28px] font-black leading-none tracking-[-0.03em] text-gray-900 sm:text-2xl">
-        Stajım<span className="text-blue-600">Var</span>
+      {/*
+        MARKA İLANLARA GÖTÜRÜYOR, EV SİMGESİ KALKTI (kullanıcı isteği,
+        25 Eylül 2026). Ev simgesi logoyla aynı adrese (`/`, öğrencide
+        İlanlar) gidiyordu; artık o işi marka yapıyor, sitenin ortak üst
+        çubuğundaki logo gibi. Gerçek `<a>`: orta tuş ve yeni sekme çalışıyor.
+      */}
+      <h1 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[28px] font-black leading-none tracking-[-0.03em] text-gray-900 sm:text-2xl">
+        <a
+          href="/"
+          aria-label="StajımVar — staj ilanları"
+          onClick={(olay) => {
+            if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0) return;
+            olay.preventDefault();
+            onNavigate('/');
+          }}
+          className={`rounded-lg ${ODAK_HALKASI}`}
+        >
+          Stajım<span className="text-blue-600">Var</span>
+        </a>
       </h1>
-
-      {/* Ana sayfa düğmesi: sitenin üst çubuğuyla aynı yerde (sol köşe), İlanlar'a götürüyor. */}
-      <a
-        href="/"
-        aria-label="Ana sayfa: staj ilanları"
-        onClick={(olay) => {
-          if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0) return;
-          olay.preventDefault();
-          onNavigate('/');
-        }}
-        className={IKON}
-      >
-        <Home aria-hidden className="h-6 w-6" />
-      </a>
 
       <FotografPaylasGirisi
         ref={paylasKolu}
@@ -349,18 +352,17 @@ export const AgimSayfasi: React.FC<Props> = ({
       />
 
 
-      {/* Sağ küme: arama ve zil yan yana. */}
-      <span aria-hidden className="flex-1" />
-
-
       {/*
         MESAJLAR — sitenin üst çubuğundaki ikonun aynısı (kendi rozetini
         kendisi okuyor). Telefonda Ağım'da büyük çubuk gizli olduğu için
         burada ayrıca duruyor; yoksa akıştaki öğrencinin mesaj kutusuna
-        giden bir yolu kalmazdı. Rengi bu çubuğun ikonlarıyla aynı; ölçüsü
-        (44×44) bileşenden.
+        giden bir yolu kalmazdı. SOLDA, fotoğraf paylaşmanın yanında
+        (kullanıcı isteği, 25 Eylül 2026: mesaj ikonu her sayfada solda).
       */}
       <MesajKutusuDugmesi onNavigate={onNavigate} className="rounded-full text-gray-800 hover:bg-gray-100" />
+
+      {/* Sağ küme: zil ve arama yan yana. */}
+      <span aria-hidden className="flex-1" />
 
       <button
         type="button"

@@ -28,6 +28,7 @@ import { ODAK_HALKASI } from '../lib/renk-token';
 
 import { BildirimDugmesi } from './BildirimMerkezi';
 import { MesajKutusuDugmesi } from './mesaj/MesajKutusuDugmesi';
+import { useGenisEkran } from './sosyal/useGenisEkran';
 import { useSayfaAramasi } from '../lib/sayfa-aramasi';
 import { KullaniciAramaSonuclari } from './sosyal/KullaniciArama';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
@@ -671,6 +672,21 @@ export const Header: React.FC<HeaderProps> = ({
   */
   const ilanSayfasindaMi =
     stajIlanlarindaMi || /^\/ilan\//.test(bulunulanYol) || (bulunulanYol === '/' && ilanlardaMi);
+  /*
+    MESAJ DÜĞMESİ TELEFONDA SOLDA (kullanıcı isteği, 25 Eylül 2026:
+    "Mesaj logosu tüm sayfalarda sol tarafa geçsin").
+
+    Tek bileşen, tek yer: düğme rozetini kendisi okuyor ve her örnek ayrı
+    bir abonelik açıyor, o yüzden CSS ile iki kopya çizip birini gizlemek
+    yerine matchMedia ile hangi kümede çizileceği seçiliyor. Geniş ekranda
+    yeri değişmedi (sağ küme, zilin solu).
+
+    Yan kazanç: telefonda sağda zil + arama kaldı. Oturumlu öğrencide ilan
+    sayfasında sağda üç düğme (mesaj, zil, arama) 28 px ortalı logoya
+    10 px biniyordu (ölçüldü); her yanda en çok iki düğme sığıyor.
+  */
+  const genisEkran = useGenisEkran();
+  const mesajDugmesiCizilsin = isLoggedIn && userRole === 'student' && Boolean(onNavigate);
   const kampusDugmesiCizilsin =
     isLoggedIn && userRole === 'student' && Boolean(activeStudent) && !ilanSayfasindaMi && !firsatlardaMi;
 
@@ -920,6 +936,11 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </button>
                 )}
+
+            {/* MESAJLAR — telefonda sol kümenin sonunda (gerekçe `mesajDugmesiCizilsin`de). */}
+            {!genisEkran && mesajDugmesiCizilsin && onNavigate && (
+              <MesajKutusuDugmesi onNavigate={onNavigate} />
+            )}
 
             </div>
 
@@ -1482,7 +1503,8 @@ export const Header: React.FC<HeaderProps> = ({
                   mesajlaşma şimdilik öğrenciler arasında. Rozet sayısını
                   bileşen kendisi okuyor (`MesajKutusuDugmesi`).
                 */}
-                {isLoggedIn && userRole === 'student' && onNavigate && (
+                {/* Geniş ekranda burada; telefonda sol kümede (bkz. `mesajDugmesiCizilsin`). */}
+                {genisEkran && mesajDugmesiCizilsin && onNavigate && (
                   <MesajKutusuDugmesi onNavigate={onNavigate} />
                 )}
                 {onBildirimAc && (
