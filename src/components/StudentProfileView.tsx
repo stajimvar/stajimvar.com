@@ -51,7 +51,7 @@ import { useModalErisim } from '../lib/modal-erisim';
 import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
 import { Card, IKON_KUTUSU } from '../ui';
 import { ODAK_HALKASI } from '../lib/renk-token';
-import { ProfilSayfaDuzeni, useSolSutunAcik } from './sosyal/ProfilSayfaDuzeni';
+import { ProfilSayfaDuzeni, useKampusYerlesimi } from './sosyal/ProfilSayfaDuzeni';
 import { KampusumPaneli } from './kampus/KampusumPaneli';
 import { AgimYanSutun } from './sosyal/AgimYanSutun';
 import { ProfilBasligi, ProfilBolumListesi, type EksikAdim, type OneCikan } from './ProfilBasligi';
@@ -423,8 +423,11 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     götürürdü.
   */
   const [duzenleme, setDuzenleme] = useState(false);
-  /* Kampüsüm sol sütunda mı ana sütunda mı — kapla aynı sorgu (`ProfilSayfaDuzeni`). */
-  const solSutunAcik = useSolSutunAcik();
+  /*
+    Kampüsüm sol sütunda mı, ana sütunda mı, hiç mi (`lg` altında yok:
+    başlıktaki düğme açıyor) — kararı `ProfilSayfaDuzeni` veriyor.
+  */
+  const kampusYerlesimi = useKampusYerlesimi();
 
   /*
     Arayış durumu yerel olarak tutuluyor: anahtar çevrildiğinde ekran
@@ -990,6 +993,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     kendisi, burs uygunluğu onun profiliyle. Koşul yan sütunla aynı:
     sosyal satır okunmadıysa (oturum yok ya da henüz gelmedi) panel yok.
     Düzenleme kipinde kap devre dışı ve ana sütundaki kopya da çizilmiyor.
+    Hangi yerleşimin çizileceği `kampusYerlesimi`nden; `lg` altında hiçbiri.
   */
   const kampusPaneli = (yerlesim: 'sutun' | 'akis') =>
     sosyalPortfolyoSatiri?.profilId ? (
@@ -1356,15 +1360,18 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       )}
 
       {/*
-        KAMPÜSÜM — DAR EKRANDA PROFİLİN ALTINDA, PAYLAŞIMLARDAN ÖNCE
+        KAMPÜSÜM — 1024–1439'DA PROFİLİN ALTINDA, PAYLAŞIMLARDAN ÖNCE
 
-        Sol sütun kapalıyken (1440 altı) panel burada; açıkken burada hiç
-        yok (tek kopya, tek istek). `order-1` portfolyoyla aynı: telefonda
-        ızgara `contents` ve sıra `order`dan geliyor, DOM'da önce durduğu
-        için paylaşımların üstünde.
+        Yalnız `lg` ile sol sütun eşiği arasında burada. 1440 ve üstünde
+        sol sütunda; `lg` altında profilde hiç yok (kullanıcı isteği,
+        25 Eylül 2026: telefonda Kampüsüm başlıktaki düğmeden açılıyor;
+        profilde tekrarı gereksiz). Her genişlikte tek kopya, tek istek.
+        Telefondaki `order-1 -mx-4 sm:mx-0` kalıbı bu dalda yok: dal yalnız
+        `lg` üstünde çiziliyor, orada ızgara `contents` değil ve DOM sırası
+        geçerli — arayış kartlarının altında, paylaşımların üstünde.
       */}
-      {!duzenleme && !solSutunAcik && kampusPaneli('akis') && (
-        <div className="order-1 -mx-4 min-w-0 sm:mx-0 lg:order-none">{kampusPaneli('akis')}</div>
+      {!duzenleme && kampusYerlesimi === 'akis' && kampusPaneli('akis') && (
+        <div className="min-w-0">{kampusPaneli('akis')}</div>
       )}
 
       {!duzenleme && sosyalPortfolyo && (

@@ -1,7 +1,12 @@
 import React from 'react';
 
-/** Tailwind `lg` kırılımı; sunum kararı da aynı sayıdan. */
-const LG_SORGUSU = '(min-width: 1024px)';
+/**
+ * Tailwind `lg` kırılımı; sunum kararı da aynı sayıdan. Telefon
+ * başlığındaki Kampüsüm düğmesi (`Header`, `lg:hidden`) bu eşiğin
+ * altında var; profil sayfaları paneli bu yüzden aynı sorguyla
+ * çizip çizmemeye karar veriyor (`useKampusYerlesimi`).
+ */
+export const LG_SORGUSU = '(min-width: 1024px)';
 
 /** Tailwind `xl` kırılımı — profil sayfasının yan sütunu (`ProfilSayfaDuzeni`). */
 export const XL_SORGUSU = '(min-width: 1280px)';

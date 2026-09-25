@@ -181,10 +181,12 @@ interface GorunumProps {
    */
   onMesaj?: () => void;
   /**
-   * Kampüsüm paneli, dar ekranda (sol sütun kapalıyken) profil kartının
-   * altında ve "Paylaşımlar"dan önce. Panel BAKAN öğrencinin; sayfa
-   * hazırlayıp veriyor, bu bileşen yalnız yerini biliyor. Verilmezse
-   * (geniş ekran, bakan öğrenci değil) hiçbir şey çizilmiyor.
+   * Kampüsüm paneli, 1024–1439 arasında (sol sütun kapalı, başlıkta
+   * Kampüsüm düğmesi yok) profil kartının altında ve "Paylaşımlar"dan
+   * önce. Panel BAKAN öğrencinin; sayfa hazırlayıp veriyor, bu bileşen
+   * yalnız yerini biliyor. Verilmezse (1440 ve üstü: sol sütunda; `lg`
+   * altı: başlıktaki düğme açıyor; bakan öğrenci değil) hiçbir şey
+   * çizilmiyor.
    */
   kampusPaneli?: React.ReactNode;
 }
