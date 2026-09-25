@@ -134,7 +134,15 @@ test('rozet sayı bilinmiyorsa çizilmiyor; 0 uydurulmuyor', () => {
   assert.match(bildirim, /if \(sayi === null \|\| sayi <= 0\) return null;/);
   assert.match(dinleme, /if \(!etkin\) \{\s*setSayac\(null\);/);
   /* Yalnız oturum açık öğrencide. */
-  assert.match(header, /\{isLoggedIn && userRole === 'student' && onNavigate && \(\s*<MesajKutusuDugmesi onNavigate=\{onNavigate\} \/>/);
+  assert.match(header, /const mesajDugmesiCizilsin = isLoggedIn && userRole === 'student' && Boolean\(onNavigate\);/);
+  /*
+    Tek örnek: telefonda sol kümede, geniş ekranda sağ kümede (kullanıcı
+    isteği, 25 Eylül 2026). Düğme kendi rozet aboneliğini açtığı için iki
+    kopya çizilip biri gizlenmiyor; `genisEkran` hangisinin çizileceğini seçiyor.
+  */
+  assert.match(header, /\{!genisEkran && mesajDugmesiCizilsin && onNavigate && \(\s*<MesajKutusuDugmesi onNavigate=\{onNavigate\} \/>/);
+  assert.match(header, /\{genisEkran && mesajDugmesiCizilsin && onNavigate && \(\s*<MesajKutusuDugmesi onNavigate=\{onNavigate\} \/>/);
+  assert.equal((header.match(/<MesajKutusuDugmesi /g) ?? []).length, 2);
   /* Gerçek bağlantı: orta tuş ve yeni sekme. */
   assert.match(dugme, /href="\/mesajlar"/);
 });
