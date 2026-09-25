@@ -517,7 +517,8 @@
       "careers_url": "https://jobs.veralto.com/global/en",
       "website": "https://www.veralto.com",
       "urls": [
-        "https://jobs.veralto.com/global/en/job/DANVGTGLOBALR10268207EXTERNALENGLOBAL/Part-time-Inside-Sales-Intern"
+        "https://jobs.veralto.com/global/en/job/DANVGTGLOBALR10268207EXTERNALENGLOBAL/Part-time-Inside-Sales-Intern",
+        "https://jobs.veralto.com/global/en/job/DANVGTGLOBALR10268068EXTERNALENGLOBAL/Part-time-Customer-Service-Intern"
       ]
     },
     {
@@ -1020,6 +1021,45 @@
       "aciklik_dogrulanmadi": true,
       "urls": [
         "https://recruitingapp-5229.de.umantis.com/Vacancies/806/Description"
+      ]
+    },
+    {
+      "id": "vylor-official-jsonld",
+      "name": "Vylor Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Vylor",
+      "careers_url": "https://apply.vylor.com/careers",
+      "website": "https://vylor.com",
+      "urls": [
+        "https://apply.vylor.com/careers/job/1443153647961"
+      ]
+    },
+    {
+      "id": "hellmann-workday",
+      "name": "Hellmann Worldwide Logistics Türkiye",
+      "type": "workday",
+      "host": "hellmann.wd103.myworkdayjobs.com",
+      "tenant": "hellmann",
+      "site": "hellmannexternaljobs",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Hellmann Worldwide Logistics",
+      "careers_url": "https://hellmann.wd103.myworkdayjobs.com/en-US/hellmannexternaljobs",
+      "website": "hellmann.com"
+    },
+    {
+      "id": "pmi-official-jsonld",
+      "name": "Philip Morris International Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Philip Morris International",
+      "careers_url": "https://join.pmicareers.com/gb/en",
+      "website": "https://www.pmi.com",
+      "urls": [
+        "https://join.pmicareers.com/gb/en/job/PMIPMIGB33659EXTERNALENGB/Hiring-People-with-Disabilities-Internship-Full-Time-Roles"
       ]
     }
   ],
