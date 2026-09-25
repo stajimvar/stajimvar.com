@@ -15,7 +15,7 @@ import { okulKisaltmasi as kisalt } from '../src/lib/ad-kisaltma.mjs';
   okunuyordu. Kopya, asıl fonksiyon değişince sessizce ayrışabilir bir
   ikinci gerçek demekti.
 
-  Okul rozeti (`lib/okul-rozeti.mjs`) da aynı kısaltmayı kullanıyor ve bir
+  Okul rozeti (26 Eylül 2026'da silindi) de aynı kısaltmayı kullanıyordu; bir
   `.mjs` modülü `.ts`'ten içe aktaramıyor; fonksiyon bu yüzden
   `ad-kisaltma.mjs`e taşındı ve `ad.ts` onu yeniden dışa veriyor. Test
   artık ASIL fonksiyonu çağırıyor — eşik kayarsa davranış testleri kırılır.

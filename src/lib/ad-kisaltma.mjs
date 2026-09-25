@@ -1,8 +1,8 @@
 /**
  * Ad ve okul adı yardımcıları — ÇALIŞMA ZAMANI SÜRÜMÜ.
  *
- * Bu fonksiyon `ad.ts` içindeydi. `okul-rozeti.mjs` onu kullanıyor ve
- * bir `.mjs` modülü `.ts` dosyasından içe aktaramıyor: Node testte
+ * Bu fonksiyon `ad.ts` içindeydi. `.mjs` modülleri (ve Node testleri) onu
+ * kullanıyor; bir `.mjs` modülü `.ts` dosyasından içe aktaramıyor: Node testte
  * modülü bulamıyordu. Mantığı ikinci kez yazmak yerine buraya taşındı;
  * `ad.ts` onu yeniden dışa veriyor, böylece TypeScript tarafındaki
  * çağrıların hiçbiri değişmedi.
