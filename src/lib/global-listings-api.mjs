@@ -21,6 +21,16 @@ export function katalogYanitiniDogrula(data) {
       || typeof data.hasMore !== 'boolean' || typeof data.snapshot !== 'string') {
     throw new Error('Global ilan kataloğu geçersiz yanıt verdi');
   }
+  /*
+    Alan dağılımı isteğe bağlı (eski açılış tohumunda yok) ama VARSA
+    biçimi doğru olmalı: bozuk bir dağılım süzgeçte uydurma sayı çizerdi.
+  */
+  if (data.facets.alanlar !== undefined && (!Array.isArray(data.facets.alanlar)
+      || data.facets.alanlar.some((x) => !x || typeof x.alan !== 'string'
+        || typeof x.tip !== 'string'
+        || !Number.isInteger(x.count) || x.count < 0))) {
+    throw new Error('Global ilan kataloğu geçersiz alan dağılımı verdi');
+  }
   if (data.hasMore && (!data.nextCursor || typeof data.nextCursor.value !== 'string' || typeof data.nextCursor.id !== 'string')) {
     throw new Error('Global ilan kataloğu geçersiz imleç verdi');
   }

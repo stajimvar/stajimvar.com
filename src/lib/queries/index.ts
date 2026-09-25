@@ -127,7 +127,20 @@ export interface PublishedListingsCatalogPage {
   /* Güven satırının verisi; bkz. lib/guven-satiri.mjs. */
   verifiedTotal: number;
   lastVerifiedAt: string | null;
-  facets: { countries: Array<{ code: string; count: number }> };
+  facets: {
+    countries: Array<{ code: string; count: number }>;
+    /*
+      Alan dağılımı (20261109010000): `alan` = sectors.id. Ülke süzgecinden
+      SONRA, tür süzgecinden ÖNCE ve TÜM sayfalar üzerinden sunucuda
+      sayılıyor — arayüz elindeki 24 satırdan saysaydı ikinci sayfadaki
+      alanlar hiç görünmezdi. İki alanlı ilan iki alanda da sayılıyor.
+      Satır alan × tür: tür süzgeci istemcide olduğu için arayüz seçili
+      türlerin sayılarını topluyor. `tip` = `tipler` dağılımındaki anahtar
+      (NULL → 'siniflandirilmadi').
+      Eski açılış tohumunda olmayabilir: yoksa undefined.
+    */
+    alanlar?: Array<{ alan: string; tip: string; count: number }>;
+  };
   hasMore: boolean;
   nextCursor: PublishedListingsCursor | null;
   snapshot: string;

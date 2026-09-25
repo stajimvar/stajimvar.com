@@ -419,6 +419,7 @@ export type Database = {
           ilan_tipi: string | null;
           kaynak_durumu: string | null;
           apply_url_ok: string | null;
+          alan_idleri: string[];
           content_updated_at: string | null;
           origin: Database['public']['Enums']['listing_origin'];
           raw: Json | null;
@@ -479,6 +480,7 @@ export type Database = {
           ilan_tipi?: string | null;
           kaynak_durumu?: string | null;
           apply_url_ok?: string | null;
+          alan_idleri?: string[];
           content_updated_at?: string | null;
           origin?: Database['public']['Enums']['listing_origin'];
           raw?: Json | null;
@@ -541,6 +543,7 @@ export type Database = {
           ilan_tipi?: string | null;
           kaynak_durumu?: string | null;
           apply_url_ok?: string | null;
+          alan_idleri?: string[];
           content_updated_at?: string | null;
           origin?: Database['public']['Enums']['listing_origin'];
           raw?: Json | null;

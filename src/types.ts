@@ -246,6 +246,13 @@ export interface InternshipListing {
   applyUrlOk?: 'gecerli' | 'kirik' | 'dogrulanamadi';
   /** İçeriğin son anlamlı değişim anı; sitemap lastmod bundan üretiliyor. */
   contentUpdatedAt?: string;
+  /**
+   * İlanın alanları (`sectors.id`), en çok 2, birincil önce. Başlıktan ve
+   * şirketin sektör metninden sunucuda türetiliyor (20261109010000).
+   * Boş ya da yok: ilan alanını söylemiyor (elle kurulan ilan nesnelerinde
+   * alan yok; tüketen taraf `?? []` ile okuyor).
+   */
+  alanIdleri?: string[];
   /** Yayın tarihi kaynağın kendi beyanından mı geliyor. */
   postedAtDogrulandi?: boolean;
   featured?: boolean;

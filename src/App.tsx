@@ -3477,6 +3477,7 @@ export default function App() {
                   showToast('Aramayı kaydetmek için önce giriş yapman gerekiyor.');
                 }}
                 countryFacets={globalListings.page.facets.countries}
+                alanFacets={globalListings.page.facets.alanlar}
                 onCountryChange={globalListings.setCountry}
                 catalogTotal={globalListings.page.total}
                 catalogCompanyTotal={globalListings.page.companyTotal}
