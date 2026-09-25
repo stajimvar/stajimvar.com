@@ -65,7 +65,7 @@ test('beş ekran da ortak kabuğu kullanıyor, kendi kutusunu çizmiyor', () => 
   */
   assert.match(
     oku('src/components/OpportunitiesPage.tsx'),
-    /rounded-xl border border-gray-200 bg-white px-3 py-3/,
+    /rounded-2xl border border-gray-200 bg-white p-4/,
     'fırsat kartı ilan kartıyla aynı çerçeveyi çizmiyor',
   );
   const kaynaklar = [['akış kartı', oku('src/components/sosyal/AkisKarti.tsx')]];
@@ -86,7 +86,8 @@ test('beş ekran da ortak kabuğu kullanıyor, kendi kutusunu çizmiyor', () => 
     yuvarlak köşe, gölge yok. İç dolgu dar ekranda kademeli daralıyor
     (360 → 390 → 430), bu yüzden ortak `YUZEY.ic` yerine kartın kendisinde.
   */
-  assert.match(ilanKarti, /rounded-xl border border-gray-200 bg-white px-3 py-3/, 'ilan kartı kendi çerçevesini çiziyor');
+  /* 25 Eylül 2026: 16 px iç boşluk ve 16 px köşe her genişlikte. */
+  assert.match(ilanKarti, /rounded-2xl border border-gray-200 bg-white p-4/, 'ilan kartı kendi çerçevesini çiziyor');
   assert.doesNotMatch(ilanKarti, /shadow-(md|lg|xl)/, 'ağır gölge yok');
 
   const rehber = oku('src/components/RehberKartlari.tsx');
@@ -179,8 +180,10 @@ test('masaüstü düzeni korunuyor: her yüzey değeri sm ile geri dönüyor', (
     örtünün üstünde). Bilgi logonun altına, "İncele" ayrı satıra inmiyor.
   */
   assert.match(ilan, /<div className="shrink-0" title=\{listing\.companyName\}>/);
-  assert.match(ilan, /<div className="flex min-w-0 flex-1 flex-col justify-center">/);
-  assert.match(ilan, /<div className="relative z-10 flex shrink-0 flex-col items-end justify-between gap-3">/);
+  assert.match(ilan, /<div className="min-w-0 flex-1">/);
+  /* Kaydet sağ üstte, eylem alt satırda sağda; ikisi de örtünün üstünde. */
+  assert.match(ilan, /<div className="relative z-10 -mr-2 -mt-2 shrink-0">/);
+  assert.match(ilan, /<div className="relative z-10 shrink-0">/);
 });
 
 test('marka telefonda 28 piksel (önce 23)', () => {

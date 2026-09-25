@@ -51,8 +51,12 @@ test('dış başvuru düğmesi DisBaglanti (giriş kapısı) kullanmıyor', () =
   assert.match(govde, /rel="noopener noreferrer nofollow"/);
   assert.doesNotMatch(govde, /DisBaglanti|girisGerekli|onGirisGerekli/);
   assert.doesNotMatch(kod, /import .*DisBaglanti/);
-  /* Kartta dış başvuru hiç yok. */
+  /* Kartta dış başvuru hiç yok: detay önce (25 Eylül 2026 kararı yeniden teyit edildi). */
   assert.doesNotMatch(kart, /target="_blank"/);
+  /* Detaydaki dış düğmenin yazısı gerçek hedefi söylüyor. */
+  assert.match(detay, /const hedef = ilanHedefi\(listing \?\? \{\}\);/);
+  assert.match(detay, /\{yol\.anaEylem === 'resmi-site' \? hedef\.etiket : 'İlana git'\}/);
+  assert.match(kod, /\{hedef\.etiket\}\s*<ExternalLink/);
 });
 
 test('ADRESİ OLMAYAN İLANDA sahte dış CTA basılmıyor', () => {

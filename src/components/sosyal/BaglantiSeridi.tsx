@@ -70,6 +70,37 @@ export const BaglantiSeridi: React.FC<{
     <nav aria-label="Bağlantılarım" className="-mx-4 border-b border-gray-200 bg-white sm:mx-0 sm:rounded-2xl sm:border">
       <YatayKaydirma className="overflow-x-auto px-4 py-3 [scrollbar-width:none] sm:px-3 [&::-webkit-scrollbar]:hidden">
         <ul className="flex min-w-max gap-2.5">
+          {/*
+            BAĞLANTILAR KISAYOLU KİŞİLERDEN AYRI (mobil sadeleştirme,
+            25 Eylül 2026): önce kişi dairelerinin sonunda, aynı kalın
+            çerçeveli daireyle duruyordu ve bir kişi gibi okunuyordu. Artık
+            şeridin başında köşeli bir kutu; ardından ince bir ayraç ve
+            kişiler geliyor.
+          */}
+          <li className="flex items-start border-r border-gray-200 pr-2.5">
+            <button
+              type="button"
+              onClick={onBaglantilar}
+              aria-label={bekleyenIstek > 0 ? `Bağlantılar, ${bekleyenIstek} bekleyen istek` : 'Bağlantılar'}
+              className={`${OGE} cursor-pointer`}
+            >
+              <span
+                aria-hidden
+                className={`${KURE} relative flex items-center justify-center rounded-2xl bg-gray-100 text-slate-800 hover:bg-gray-200`}
+              >
+                <Users className="h-6 w-6" strokeWidth={1.75} />
+                {/* Rozet GERÇEK sayı; sıfırken hiç çizilmiyor. */}
+                {bekleyenIstek > 0 && (
+                  <span className="absolute -right-1 -top-1 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
+                    {bekleyenIstek > 9 ? '9+' : bekleyenIstek}
+                  </span>
+                )}
+              </span>
+              <span aria-hidden className={AD}>
+                Bağlantılar
+              </span>
+            </button>
+          </li>
           {gorunen.map((kisi) => {
             const ad = kisiAdi(kisi);
             const kullaniciAdi = kisi.profil?.kullaniciAdi ?? null;
@@ -105,30 +136,6 @@ export const BaglantiSeridi: React.FC<{
             );
           })}
 
-          <li>
-            <button
-              type="button"
-              onClick={onBaglantilar}
-              aria-label={bekleyenIstek > 0 ? `Bağlantılar, ${bekleyenIstek} bekleyen istek` : 'Bağlantılar'}
-              className={`${OGE} cursor-pointer`}
-            >
-              <span
-                aria-hidden
-                className={`${KURE} relative flex items-center justify-center rounded-full border-2 border-slate-800 bg-white text-slate-800 hover:bg-slate-50`}
-              >
-                <Users className="h-[26px] w-[26px]" strokeWidth={1.75} />
-                {/* Rozet GERÇEK sayı; sıfırken hiç çizilmiyor. */}
-                {bekleyenIstek > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
-                    {bekleyenIstek > 9 ? '9+' : bekleyenIstek}
-                  </span>
-                )}
-              </span>
-              <span aria-hidden className={AD}>
-                Bağlantılar
-              </span>
-            </button>
-          </li>
         </ul>
       </YatayKaydirma>
     </nav>

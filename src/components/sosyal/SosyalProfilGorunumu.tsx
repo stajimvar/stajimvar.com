@@ -340,9 +340,18 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
           Başlığa `overflow-hidden` verilmedi — dişli menüsü başlığın
           içinden açılıyor ve kesilirdi.
         */}
-        <KapakFotografi ad={baslik} yol={profil.kapakFotografiYolu} className="w-full sm:rounded-t-[15px]" />
+        {/* Kapak yoksa bant yok; varsa telefonda 112 px (/cv kartıyla aynı kural, 25 Eylül 2026). */}
+        {profil.kapakFotografiYolu && (
+          <KapakFotografi
+            ad={baslik}
+            yol={profil.kapakFotografiYolu}
+            className="h-28 w-full sm:h-auto sm:rounded-t-[15px]"
+          />
+        )}
 
         {/* ------------------------------------------- kimlik bandı */}
+        {/* Kapak yokken kimlik bandının üst boşluğu (avatar binmediği için). */}
+        {!profil.kapakFotografiYolu && <div aria-hidden className="h-4 sm:h-6" />}
         <div className={KIMLIK_BANDI}>
           <div className={AVATAR_SATIRI}>
             {/*
@@ -354,11 +363,13 @@ export const SosyalProfilGorunumu: React.FC<GorunumProps> = ({
               görüntüleyici. Kalem `sahibiMi` kapısının arkasında:
               ziyaretçide prop hiç gitmiyor, DOM'a girmiyor.
             */}
-            <div className={AVATAR_BINMESI}>
+            <div className={profil.kapakFotografiYolu ? AVATAR_BINMESI : 'relative shrink-0 self-start'}>
               <ProfilFotografi
                 ad={baslik}
                 yol={profil.avatarYolu}
-                className="h-20 w-20 shrink-0 rounded-full text-2xl ring-4 ring-white sm:h-28 sm:w-28 sm:text-3xl lg:h-36 lg:w-36 lg:text-4xl"
+                className={`h-20 w-20 shrink-0 rounded-full text-2xl sm:h-28 sm:w-28 sm:text-3xl lg:h-36 lg:w-36 lg:text-4xl ${
+                  profil.kapakFotografiYolu ? 'ring-4 ring-white' : ''
+                }`}
                 buyutme={{
                   onPaylas,
                   kullaniciAdi: profil.yayindaMi ? profil.kullaniciAdi : null,

@@ -3597,7 +3597,13 @@ export default function App() {
         ve yasal metinler. Büyük harf ve geniş aralık kalktı; ikisi de satırı
         gereksiz uzatıp okumayı zorlaştırıyordu.
       */}
-      <footer className="border-t border-gray-200 bg-white mt-auto py-8 text-xs text-gray-500 shrink-0">
+      {/*
+        ALT MENÜNÜN ALTINDA KALMIYOR (mobil sadeleştirme, 25 Eylül 2026):
+        telefonda sabit alt menü (`lg:hidden`, ~60 px + güvenli alan) son
+        satırı ("© 2026 StajımVar") örtüyordu (430 px'te ölçüldü: satır
+        menünün 11 px altındaydı). Alt dolgu menü + güvenli alan kadar.
+      */}
+      <footer className="border-t border-gray-200 bg-white mt-auto pt-8 pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-8 text-xs text-gray-500 shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
           <nav aria-label="Alt bilgi" className="grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4 lg:gap-x-10">
             {[

@@ -322,14 +322,15 @@ export const OneCikanRehberKarti: React.FC<KartProps> = ({
   const yol = `/rehber/${rehber.slug}`;
   return (
     <article className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-colors hover:border-gray-300">
-      <div className="relative aspect-[12/5] w-full overflow-hidden bg-gray-100">
+      {/* 16:9 kapak; 18/24 başlık, 14/20 özet, süre ve kaydet aynı satırda, altında 16 px (25 Eylül 2026). */}
+      <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
         <RehberKapagi slug={rehber.slug} oncelikli />
         <span className="absolute left-2.5 top-2.5 rounded-full bg-white px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-slate-800 shadow-sm">
           {konuEtiketi(rehber.konu)}
         </span>
       </div>
-      <div className="px-3.5 pb-1.5 pt-2.5 sm:px-4">
-        <h3 className="text-[17px] font-bold leading-snug text-slate-900 sm:text-lg">
+      <div className="px-4 pb-4 pt-3">
+        <h3 className="text-lg font-bold leading-6 text-slate-900">
           <a
             href={yol}
             onClick={baglantiTiklamasi(yol, onNavigate)}
@@ -338,8 +339,8 @@ export const OneCikanRehberKarti: React.FC<KartProps> = ({
             {rehber.baslik}
           </a>
         </h3>
-        <p className="mt-0.5 line-clamp-2 text-sm leading-snug text-slate-500">{rehber.ozet}</p>
-        <div className="flex items-center justify-between gap-3">
+        <p className="mt-1 line-clamp-2 text-sm leading-5 text-slate-600">{rehber.ozet}</p>
+        <div className="-mb-2 mt-1 flex items-center justify-between gap-3">
           <span className="inline-flex items-center gap-1.5 text-sm text-slate-600">
             <Clock aria-hidden className="h-4 w-4" />
             {rehberOkumaDakika(rehber)} dk
@@ -370,11 +371,12 @@ export const RehberSatiri: React.FC<KartProps> = ({
   const yol = `/rehber/${rehber.slug}`;
   return (
     <article className="group relative flex gap-3 py-3">
-      <div className="relative h-[72px] w-[96px] shrink-0 overflow-hidden rounded-lg bg-gray-100 min-[400px]:w-[104px]">
+      {/* 88 × 66 küçük görsel, metinle arası 12 px (`gap-3`). */}
+      <div className="relative h-[66px] w-[88px] shrink-0 overflow-hidden rounded-lg bg-gray-100">
         <RehberKapagi slug={rehber.slug} />
       </div>
       <div className="min-w-0 flex-1">
-        <h3 className="line-clamp-2 text-[15px] font-bold leading-tight text-slate-900">
+        <h3 className="line-clamp-2 text-base font-semibold leading-[22px] text-slate-900">
           <a
             href={yol}
             onClick={baglantiTiklamasi(yol, onNavigate)}
@@ -383,8 +385,8 @@ export const RehberSatiri: React.FC<KartProps> = ({
             {rehber.baslik}
           </a>
         </h3>
-        <p className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-slate-500">{rehber.ozet}</p>
-        <span className="mt-1 inline-flex items-center gap-1.5 text-[13px] text-slate-600">
+        <p className="mt-0.5 line-clamp-2 text-sm leading-5 text-slate-600">{rehber.ozet}</p>
+        <span className="mt-1 inline-flex items-center gap-1.5 text-xs leading-4 text-slate-600">
           <Clock aria-hidden className="h-4 w-4" />
           {rehberOkumaDakika(rehber)} dk
         </span>
@@ -411,7 +413,7 @@ export const RehberBolumu: React.FC<{
 }> = ({ baslik, onTumunuGor, tumunuGorEtiketi, children }) => (
   <section>
     <div className="flex items-center justify-between gap-3">
-      <h2 className="text-[21px] font-extrabold tracking-tight text-slate-900">{baslik}</h2>
+      <h2 className="text-xl font-extrabold leading-[26px] tracking-tight text-slate-900">{baslik}</h2>
       {onTumunuGor && (
         <button
           type="button"

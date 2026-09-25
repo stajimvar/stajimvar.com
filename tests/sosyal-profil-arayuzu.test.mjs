@@ -707,10 +707,14 @@ test('üç profil ekranı aynı kalıbı paylaşıyor: kap sınıfları birebir'
     /* Avatar/logo banda beyaz ayraçla biniyor. */
     assert.match(kaynak, /ring-4 ring-white/, `${ad}: beyaz halka yok`);
   }
-  /* Öğrenci ziyaretçi ve şirket ortak binme payını kullanıyor; /cv halkalı daire için kendi değerini. */
-  assert.ok(gorunum.includes('className={AVATAR_BINMESI}'));
+  /*
+    Ortak binme payı; öğrenci ekranlarında yalnız kapak VARSA (25 Eylül
+    2026: kapaksız profilde bant yok, avatar binecek bir şey bulmuyor).
+    /cv'nin halkası da kalktı, o yüzden kendi binme değeri yok.
+  */
+  assert.ok(gorunum.includes('className={profil.kapakFotografiYolu ? AVATAR_BINMESI :'));
   assert.ok(sirket.includes('className={AVATAR_BINMESI}'));
-  assert.ok(cvKarti.includes('-mt-[46px] sm:-mt-[62px] lg:-mt-[78px]'));
+  assert.ok(cvKarti.includes('className={kapakYolu ? AVATAR_BINMESI :'));
 
   /*
     ZİYARETÇİ EYLEMLERİ — X mobil kalıbı (kullanıcı ekran görüntüsü, 24

@@ -1,6 +1,7 @@
 import React from 'react';
 import { YatayKaydirma } from './YatayKaydirma';
 import { SERIT } from '../ui/tokens';
+import { HapFiltre, HAP_SERIDI } from '../ui/HapFiltre';
 import {
   BookOpen,
   Briefcase,
@@ -42,90 +43,6 @@ const IKONLAR: Record<string, React.ComponentType<{ className?: string }>> = {
   yurtdisi: Plane,
   kariyer: TrendingUp,
 };
-
-/*
-  DÖNEN DAİRE (Fırsatlar)
-
-  Seçili daireye tekrar dokununca daire Y ekseninde 180 derece dönüyor ve
-  arka yüzde büyük sayı ile birimi ("fırsat") gösteriyor; bir dokunuş daha
-  ön yüze döndürüyor. Süzgeç değişmiyor — durum çağıranda, kuralları
-  lib/kure-donusu.mjs içinde (İlanlar şeridiyle aynı). Altındaki ad
-  sabit kalıyor.
-*/
-const YUZ = 'absolute inset-0 flex items-center justify-center rounded-full [backface-visibility:hidden]';
-
-const Daire: React.FC<{
-  etiket: string;
-  adet: number;
-  /** "rehber", "fırsat" — sayının yanında ve ipucunda geçen ad. */
-  birim: string;
-  okunan: string;
-  secili: boolean;
-  onClick: () => void;
-  /** Arka yüz açık mı (yalnız seçili dairede anlamlı). */
-  donuk?: boolean;
-  /** Arka yüzdeki sayı; verilmezse `adet`. */
-  arkaSayi?: number;
-  children: React.ReactNode;
-}> = ({ etiket, adet, birim, okunan, secili, onClick, donuk = false, arkaSayi = adet, children }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    aria-pressed={secili}
-    title={`${etiket} — ${adet} ${birim}`}
-    /*
-      İLANLAR ŞERİDİYLE TEK TİP (SirketSeridi)
-
-      Aynı küre ölçüsü (360 pikselde 58, 400 ve üstünde 64), aynı kalın
-      koyu kenar, seçilince koyu dolgu; ad kürenin altında tek satır ve
-      13 punto. Sayı satırı yok: sayı dönen kürenin arka yüzünde.
-    */
-    className="group flex w-[clamp(68px,19vw,78px)] shrink-0 cursor-pointer flex-col items-center gap-1.5"
-  >
-    <span aria-hidden className="block h-[clamp(58px,16vw,64px)] w-[clamp(58px,16vw,64px)] [perspective:600px]">
-      <span
-        className={`relative block h-full w-full transition-transform duration-[350ms] ease-out [transform-style:preserve-3d] motion-reduce:transition-none ${
-          donuk ? '[transform:rotateY(180deg)]' : ''
-        }`}
-      >
-        <span
-          className={`${YUZ} border-2 transition-colors ${
-            secili
-              ? 'border-slate-900 bg-slate-900 text-white'
-              : 'border-slate-800 bg-white text-slate-800 group-hover:bg-slate-50'
-          }`}
-        >
-          {children}
-        </span>
-        {secili && (
-          <span className={`${YUZ} flex-col bg-slate-900 text-white [transform:rotateY(180deg)]`}>
-            <span
-              className={`font-extrabold leading-none tabular-nums ${
-                String(arkaSayi).length > 3 ? 'text-[15px]' : 'text-[19px]'
-              }`}
-            >
-              {arkaSayi.toLocaleString('tr-TR')}
-            </span>
-            <span className="mt-0.5 text-[10px] font-medium leading-none">{birim}</span>
-          </span>
-        )}
-      </span>
-    </span>
-    <span
-      aria-hidden
-      className={`block w-full truncate text-center text-[13px] leading-tight ${
-        secili ? 'font-bold text-slate-900' : 'font-medium text-slate-700'
-      }`}
-    >
-      {etiket}
-    </span>
-    {/*
-      Görünen iki satır `aria-hidden`; ekran okuyucu düğmenin tamamını tek
-      cümle olarak duyuyor: "Staj, 18 rehber".
-    */}
-    <span className="sr-only">{okunan}</span>
-  </button>
-);
 
 type SimgeBileseni = React.ComponentType<{ className?: string }>;
 
@@ -185,52 +102,53 @@ export const KonuSeridi: React.FC<{
   /* Konu yoksa şerit çizilmiyor — SehirSeridi ve SirketSeridi kalıbı. */
   if (konular.length === 0) return null;
 
+  /*
+    HAP FİLTRE (mobil sadeleştirme, 25 Eylül 2026): büyük ikonlu daireler
+    yatay haplara döndü (`ui/HapFiltre`). Sayı erişilebilir adda; seçili
+    hapa tekrar dokununca (eski "dönen daire") hapın yazısında görünüyor.
+    `ikonlar` / `varsayilanIkon` props'u çağıranlar değişmesin diye
+    duruyor; hapta ikon çizilmiyor.
+  */
+  void ikonlar;
+  void VarsayilanIkon;
+  const sayiliEtiket = (etiket: string, sayi: number) => `${etiket} · ${sayi.toLocaleString('tr-TR')}`;
+
   return (
     <div className={SERIT.kabuk}>
       {/*
-        `relative` GÖRÜNÜM İÇİN DEĞİL, YATAY TAŞMAYI DURDURMAK İÇİN.
-        Her dairede `position: absolute` olan bir `sr-only` düğümü var;
-        sarmalayıcı konumlandırılmazsa bu kutuların kapsayıcı bloğu en dışa
-        düşüyor ve `overflow-x-auto` onları kırpamıyor — belge 375 yerine
-        700 pikselin üstüne çıkıyor. Aynı hata Keşfet'te ölçülmüştü;
-        SehirSeridi.tsx içindeki uzun not sebebi anlatıyor.
+        `relative` GÖRÜNÜM İÇİN DEĞİL, YATAY TAŞMAYI DURDURMAK İÇİN
+        (SehirSeridi.tsx'teki uzun not). Hapların sr-only düğümü yok ama
+        kap aynı kalıpta.
       */}
       <YatayKaydirma className={SERIT.ic}>
-        <div className="flex min-w-max gap-2.5 py-1 sm:py-0">
-          {/* İlk daire "Tümü": konu seçiliyken çıkış yolu. */}
-          <Daire
-            etiket="Tümü"
-            adet={toplam}
-            birim={birim}
-            okunan={`${tumuEtiketi}, ${toplam} ${birim}`}
+        <div className={HAP_SERIDI}>
+          {/* İlk hap "Tümü": konu seçiliyken çıkış yolu. */}
+          <HapFiltre
             secili={secili === ''}
-            donuk={secili === '' && donuk === ''}
-            arkaSayi={donukSayi ?? toplam}
+            ariaLabel={`${tumuEtiketi}, ${toplam} ${birim}`}
+            title={`Tümü — ${toplam} ${birim}`}
             onClick={() => (secili === '' && onCevir ? onCevir('') : onTumu())}
           >
-            <VarsayilanIkon className="h-[26px] w-[26px]" />
-          </Daire>
+            {secili === '' && donuk === '' ? sayiliEtiket('Tümü', donukSayi ?? toplam) : 'Tümü'}
+          </HapFiltre>
           {konular.map((konu) => {
-            const Ikon = ikonlar[konu.id] ?? VarsayilanIkon;
+            const etiket = kisaEtiketler[konu.id] ?? konu.etiket;
+            const donukMu = secili === konu.id && donuk === konu.id;
             return (
-              <Daire
+              <HapFiltre
                 key={konu.id}
-                etiket={kisaEtiketler[konu.id] ?? konu.etiket}
-                adet={konu.adet}
-                birim={birim}
-                okunan={`${konu.etiket}, ${konu.adet} ${birim}`}
                 secili={secili === konu.id}
-                donuk={secili === konu.id && donuk === konu.id}
-                arkaSayi={donukSayi ?? konu.adet}
+                ariaLabel={`${konu.etiket}, ${konu.adet} ${birim}`}
+                title={`${konu.etiket} — ${konu.adet} ${birim}`}
                 onClick={() => (secili === konu.id && onCevir ? onCevir(konu.id) : onSec(konu.id))}
               >
-                <Ikon className="h-[26px] w-[26px]" />
-              </Daire>
+                {donukMu ? sayiliEtiket(etiket, donukSayi ?? konu.adet) : etiket}
+              </HapFiltre>
             );
           })}
         </div>
       </YatayKaydirma>
-      {/* Dönen dairenin sayısı ekran okuyucuya da söyleniyor. */}
+      {/* Gösterilen sayı ekran okuyucuya da söyleniyor. */}
       <span className="sr-only" aria-live="polite">
         {donuk !== null && donuk === secili
           ? `${donukSayi ?? (donuk === '' ? toplam : (konular.find((k) => k.id === donuk)?.adet ?? 0))} ${birim}`

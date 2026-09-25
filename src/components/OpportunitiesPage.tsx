@@ -5,7 +5,6 @@ import {
   CalendarDays,
   CheckCircle2,
   ArrowRight,
-  ArrowUpRight,
   Bookmark,
   ChevronRight,
   Clock,
@@ -24,6 +23,7 @@ import {
 import type { StudentProfile } from '../types';
 import { ListingLogo } from './ListingLogo';
 import { FiltreBlogu, SecenekSatiri } from '../ui';
+import { KART_EYLEMI } from '../lib/kart-cta';
 import { KonuSeridi } from './KonuSeridi';
 import { donukKure, kureDokunusu } from '../lib/kure-donusu.mjs';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
@@ -1306,80 +1306,88 @@ export const Card: React.FC<{
     hesabıyla yanıyorsa burada da onunla yanıyor.
   */
   const sonGunlerRozeti = rozetler.find((r) => r.id === 'son_gunler') ?? null;
+  const detayYolu = `/firsatlar/${item.slug}`;
+  const detayaGit = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    onNavigate(detayYolu);
+  };
+  /*
+    KURUM ADI BAŞLIKTA TAMAMEN GEÇİYORSA ALT SATIRDA TEKRAR YOK
+    ("Erciyes Organ Nakli Vakfı" / "Erciyes Organ Nakli Vakfı Bursu").
+    Karşılaştırma Türkçe küçük harfe çevrilerek; adlar değiştirilmiyor.
+  */
+  const kurumBasliktaMi = item.title
+    .toLocaleLowerCase('tr-TR')
+    .includes(item.organizationName.trim().toLocaleLowerCase('tr-TR'));
+  /*
+    AYRINTI ÖNCE (kullanıcı kararı, 25 Eylül 2026): kartın tek eylemi
+    "Ayrıntıları gör" ve StajımVar'daki fırsat sayfasını açıyor. Kurumun
+    başvuru sayfasına giden düğme — giriş kapısıyla birlikte — o sayfada,
+    şartların altında (OpportunityDetailPage).
+  */
   return (
     <article
-      className={`group relative flex min-w-0 flex-col rounded-xl border border-gray-200 bg-white px-3 py-3 transition-colors hover:border-gray-300 focus-within:ring-2 focus-within:ring-blue-600 min-[390px]:px-3.5 min-[430px]:px-4 sm:p-4`}
+      className="group relative flex min-w-0 flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300 focus-within:ring-2 focus-within:ring-blue-600"
     >
       {/*
-        İLAN KARTIYLA TEK TİP — HER GENİŞLİKTE (InternshipCard)
+        FIRSAT KARTI — HİYERARŞİ (mobil sadeleştirme, 25 Eylül 2026)
 
-          SOL   büyük kurum logosu
-          ORTA  kurum · başlık · tür ve destek · doğrulama/kalan süre · son başvuru
-          SAĞ   üstte kaydet, altta "İncele"
+          SOL     56 × 56 kurum logosu
+          ORTA    başlık → gerekiyorsa kurum → tür (ve destek) →
+                  son tarih ve aciliyet
+          SAĞ ÜST kaydet
+          ALT     solda kaynak, sağda "Ayrıntıları gör"
 
-        Masaüstündeki üç sütunlu dar ızgara kartı kalktı (kullanıcı isteği,
-        17 Eylül 2026): Fırsatlar listesi İlanlar gibi tek sütun.
+        İlan kartıyla aynı dil ama aynı alanlara zorlanmadı. "Son 3 gün"
+        kesin tarihin YANINDA, onun yerine değil.
       */}
-      <div className="flex min-w-0 items-stretch gap-3 min-[390px]:gap-3.5 min-[430px]:gap-4">
+      <div className="flex min-w-0 items-start gap-3">
         <div className="shrink-0" title={item.organizationName}>
           <ListingLogo
             name={item.organizationName}
             logoUrl={item.organizationLogoUrl}
-            className="!h-[clamp(72px,21vw,92px)] !w-[clamp(72px,21vw,92px)] !rounded-xl !p-2 !text-2xl"
+            className="!h-14 !w-14 !rounded-xl !p-1.5 !text-lg"
           />
         </div>
-        <div className="flex min-w-0 flex-1 flex-col justify-center">
-          <p className="break-words text-[15px] font-bold leading-snug text-slate-900 min-[430px]:text-base">
-            {item.organizationName}
-          </p>
-          <h2 className="mt-0.5 break-words text-[15px] font-semibold leading-snug text-slate-800 min-[430px]:text-base">
+        <div className="min-w-0 flex-1">
+          <h2 className="break-words text-base font-semibold leading-[22px] text-slate-900">
             <a
-              href={`/firsatlar/${item.slug}`}
-              onClick={(e) => {
-                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-                e.preventDefault();
-                onNavigate(`/firsatlar/${item.slug}`);
-              }}
-              className="rounded-sm outline-none after:absolute after:inset-0 after:content-[''] group-hover:text-blue-700"
+              href={detayYolu}
+              onClick={detayaGit}
+              className="rounded-sm outline-none after:absolute after:inset-0 after:rounded-2xl after:content-[''] group-hover:text-blue-700"
             >
               {item.title}
             </a>
           </h2>
-          <p className="mt-1.5 flex min-w-0 items-start gap-1.5 text-[13px] leading-snug text-gray-500">
-            <Tag aria-hidden className="mt-px h-4 w-4 shrink-0 text-gray-400" />
+          {!kurumBasliktaMi && (
+            <p className="mt-0.5 break-words text-sm leading-5 text-gray-700">{item.organizationName}</p>
+          )}
+          <p className="mt-1 flex min-w-0 items-center gap-1.5 text-sm leading-5 text-gray-600">
+            <Tag aria-hidden className="h-4 w-4 shrink-0 text-gray-400" />
             <span className="min-w-0 break-words">
               {opportunityTypeLabel(item.opportunityType)}
               {tutar.kartSatiri ? ` · ${tutar.kartSatiri}` : ''}
             </span>
           </p>
-          {(item.verifiedAt || sonGunlerRozeti) && (
-            <p className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
-              {item.verifiedAt && (
-                <span className="inline-flex items-center gap-1.5 text-emerald-700">
-                  <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
-                  Resmî kaynak
-                </span>
-              )}
-              {sonGunlerRozeti && (
-                <span className="inline-flex items-center gap-1.5 text-amber-700">
-                  <Clock className="h-4 w-4 shrink-0" aria-hidden />
-                  {sonGunlerRozeti.etiket}
-                </span>
-              )}
-            </p>
-          )}
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-4 text-gray-600">
             {item.applicationDeadline ? (
-              <>
+              <span>
                 {arsivde ? 'Kapandı' : 'Son başvuru'}:{' '}
-                <strong className="font-semibold text-gray-700">{kisaTarih(item.applicationDeadline)}</strong>
-              </>
+                <strong className="font-semibold text-gray-800">{kisaTarih(item.applicationDeadline)}</strong>
+              </span>
             ) : (
-              'Başvuru takvimi için resmî kaynağı kontrol edin'
+              <span>Başvuru takvimi için resmî kaynağı kontrol edin</span>
+            )}
+            {sonGunlerRozeti && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 font-semibold text-amber-800">
+                <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                {sonGunlerRozeti.etiket}
+              </span>
             )}
           </p>
         </div>
-        <div className="relative z-10 flex shrink-0 flex-col items-end justify-between gap-3">
+        <div className="relative z-10 -mr-2 -mt-2 shrink-0">
           {onKaydet ? (
             <button
               type="button"
@@ -1390,33 +1398,43 @@ export const Card: React.FC<{
               aria-pressed={girisGerekli ? undefined : kayitli}
               aria-label={kaydetEtiketi}
               title={kaydetEtiketi}
-              className={`-mr-1.5 -mt-1 flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg transition-colors ${
+              className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg transition-colors ${
                 kayitli ? 'text-blue-600' : 'text-slate-700 hover:bg-gray-100 hover:text-blue-600'
               }`}
             >
               <Bookmark aria-hidden className={`h-6 w-6 ${kayitli ? 'fill-blue-600' : ''}`} strokeWidth={1.75} />
             </button>
           ) : (
-            <span aria-hidden className="h-10 w-10" />
-          )}
-          {!arsivde && (
-            <a
-              href={`/firsatlar/${item.slug}`}
-              onClick={(e) => {
-                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-                e.preventDefault();
-                onNavigate(`/firsatlar/${item.slug}`);
-              }}
-              aria-label={`${item.title}: ${opportunityReviewLabel(item.opportunityType)}`}
-              className="mb-1 inline-flex items-center gap-1 whitespace-nowrap text-[15px] font-bold text-blue-600 hover:text-blue-700"
-            >
-              İncele
-              <ArrowUpRight aria-hidden className="h-4 w-4" strokeWidth={2.25} />
-            </a>
+            <span aria-hidden className="block h-11 w-11" />
           )}
         </div>
       </div>
 
+      {(item.verifiedAt || !arsivde) && (
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          {/* "Resmî kaynak" yalnız kayıt doğrulandıysa (`verifiedAt`); yoksa bir şey yazılmıyor. */}
+          {item.verifiedAt ? (
+            <span className="inline-flex min-w-0 items-center gap-1.5 text-xs leading-4 text-emerald-800">
+              <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
+              <span className="truncate">Resmî kaynak</span>
+            </span>
+          ) : (
+            <span aria-hidden />
+          )}
+          {!arsivde && (
+            <div className="relative z-10 shrink-0">
+              <a
+                href={detayYolu}
+                onClick={detayaGit}
+                aria-label={`${item.title}: ${opportunityReviewLabel(item.opportunityType)}`}
+                className={KART_EYLEMI.kenar}
+              >
+                Ayrıntıları gör
+              </a>
+            </div>
+          )}
+        </div>
+      )}
     </article>
   );
 };

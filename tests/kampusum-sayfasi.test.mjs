@@ -66,7 +66,7 @@ test('sol üstte ana sayfa ve fotoğraf paylaşma simgesi yok; logo ana sayfaya 
 
 test('Kampüsüm: gerçek bağlantı, yalnız oturumu açık öğrencide, telefonda, 44 piksel, görünür odak', () => {
   const kume = solKume();
-  const bas = kume.indexOf('{kampusDugmesiCizilsin');
+  const bas = kume.indexOf("{solAksiyon === 'kampus'");
   assert.ok(bas > 0, 'Kampüsüm dalı bulunamadı');
   const dal = kume.slice(bas, kume.indexOf('</a>', bas) + 4);
 
@@ -75,10 +75,10 @@ test('Kampüsüm: gerçek bağlantı, yalnız oturumu açık öğrencide, telefo
     yüklenmiyor. Koşulun dört parçası da şart — biri düşerse düğme
     işe yaramadığı bir hesapta çizilir.
   */
-  assert.match(dal, /^\{kampusDugmesiCizilsin && onNavigate && \(/);
+  assert.match(dal, /^\{solAksiyon === 'kampus' && onNavigate && \(/);
   assert.match(
     HEADER,
-    /const kampusDugmesiCizilsin =\s*isLoggedIn && userRole === 'student' && Boolean\(activeStudent\) && !ilanSayfasindaMi && !firsatlardaMi;/,
+    /const kampusDugmesiCizilsin =\s*isLoggedIn && userRole === 'student' && Boolean\(activeStudent\) && profilKumesindeMi;/,
   );
   assert.match(dal, /<a\s+href=\{kampusYolu\}/);
   assert.match(dal, /aria-label=\{profilAdi \? 'Bu kişinin kampüsü' : 'Kampüsüm'\}/);
@@ -101,70 +101,63 @@ test('Kampüsüm: gerçek bağlantı, yalnız oturumu açık öğrencide, telefo
 });
 
 /*
-  İLANLAR VE FIRSATLAR SAYFASINDA KAMPÜSÜM YOK (kullanıcı isteği, 25 Eylül 2026)
+  SOLDA EN ÇOK BİR BAĞLAMSAL AKSİYON (mobil sadeleştirme, 25 Eylül 2026)
 
-  Kullanıcı iki telefon ekran görüntüsünde ilanlar ve fırsatlar
-  sayfasındaki sol üst simgenin üstünü çizdi. Koşul adres üzerinden:
-  `ilanlardaMi` alt çubuk bayrağı /mesajlar, /staj-programlari gibi
-  hiçbir kümeye girmeyen adreslerde de doğru, ona bağlanmadı (ölçüldü:
-  390'da /mesajlar ve /staj-programlari açıkken alt çubukta İlanlar
-  yanıyor).
-
-  Tarayıcıda ölçüldü (Chromium, 390, öğrenci oturumu Supabase yanıtları
-  taklit edilerek, herkese açık veri gerçek): /, /staj-ilanlari,
-  /ilan/<slug>, /firsatlar, /burslar, /firsatlar/<slug>'da düğme DOM'da
-  yok; /cv, /kampusum, /rehber, /mesajlar'da 44 × 44. /'da sol küme
-  Filtreler'le başlıyor (x 10). Logo merkezi hepsinde 195 (390 / 2),
-  yatay taşma 0.
+  Önce Kampüsüm ilan ve fırsat dışındaki her sayfada, mesaj düğmesi de her
+  sayfada soldaydı; /cv'de iki, ilanlarda süzgeçle iki düğme yan yana
+  çiziliyordu. Karar: İlanlar'da süzgeç, Ağım ailesinde (ve /mesajlar)
+  mesajlar, Profil ailesinde (/cv, /profil/<ad>, /kampusum) Kampüs; öteki
+  sayfalarda sol boş.
 
   Aşağıdaki ifadeler Header kaynağından okunup çalıştırılıyor; adres
   listesi elle yazılmış bir kopya değil, dosyadaki kalıbın kendisi.
 */
-function kampusGizliMi(yol, ilanlardaMi) {
+function solAksiyon(yol, { ilanlardaMi = false, suzgecVar = false, ogrenci = true } = {}) {
   const ifade = (ad) => {
-    const m = HEADER.match(new RegExp(`const ${ad} =\\s*([^;]+);`));
+    const m = HEADER.match(new RegExp(`const ${ad}(?::[^=]+)? =\s*([^;]+);`));
     assert.ok(m, `${ad} bulunamadı`);
     return m[1];
   };
   const govde = `
-    const stajIlanlarindaMi = ${ifade('stajIlanlarindaMi')};
-    const firsatlardaMi = ${ifade('firsatlardaMi')};
-    const ilanSayfasindaMi = ${ifade('ilanSayfasindaMi')};
-    return ilanSayfasindaMi || firsatlardaMi;
+    const agimdaMi = ${ifade('agimdaMi')};
+    const profilKumesindeMi = ${ifade('profilKumesindeMi')};
+    const mesajKumesindeMi = ${ifade('mesajKumesindeMi')};
+    const mesajDugmesiCizilsin = ${ifade('mesajDugmesiCizilsin')};
+    const kampusDugmesiCizilsin = ${ifade('kampusDugmesiCizilsin')};
+    return (${ifade('solAksiyon')});
   `;
-  return new Function('bulunulanYol', 'ilanlardaMi', govde)(yol, ilanlardaMi);
+  return new Function('bulunulanYol', 'ilanlardaMi', 'sayfaAramasi', 'isLoggedIn', 'userRole', 'activeStudent', 'onNavigate', govde)(
+    yol,
+    ilanlardaMi,
+    suzgecVar ? { onSuzgec: () => {} } : null,
+    ogrenci,
+    'student',
+    ogrenci ? {} : null,
+    () => {},
+  );
 }
 
-test('Kampüsüm: ilan ve fırsat sayfalarında çizilmiyor, öteki sayfalarda duruyor', () => {
-  /* İlan listesi: `/` yalnız ilan sekmesi açıkken; aynı adreste profil sekmesi de çiziliyor. */
-  assert.equal(kampusGizliMi('/', true), true);
-  assert.equal(kampusGizliMi('/', false), false);
-  assert.equal(kampusGizliMi('/staj-ilanlari', false), true);
-  /* Tek ilan: alt çubukta orası da İlanlar; `activeTab`ten bağımsız. */
-  assert.equal(kampusGizliMi('/ilan/frontend-stajyeri-3f2a1b9c', false), true);
-  assert.equal(kampusGizliMi('/ilan/frontend-stajyeri-3f2a1b9c', true), true);
-
-  /* Fırsat ailesinin bütün adresleri, tek fırsat dahil. */
-  for (const yol of [
-    '/firsatlar', '/firsatlar/tubitak-2209-a', '/burslar', '/kyk', '/yurtdisi-firsatlari',
-    '/yarismalar', '/firsat-takvimi', '/bana-uygun', '/kaydedilen-firsatlar',
-  ]) {
-    assert.equal(kampusGizliMi(yol, false), true, yol);
+test('sol aksiyon: ilanlarda süzgeç, Ağım ve mesajlarda mesaj, profilde Kampüs, başka yerde yok', () => {
+  assert.equal(solAksiyon('/', { ilanlardaMi: true, suzgecVar: true }), 'suzgec');
+  for (const yol of ['/agim', '/agim/baglantilar', '/baglantilar', '/takip', '/mesajlar', '/mesajlar/ayse']) {
+    assert.equal(solAksiyon(yol), 'mesaj', yol);
   }
-
-  /*
-    Öteki sayfalar — `ilanlardaMi` doğru gelse bile (activeTab
-    'internships' kalan adresler) düğme duruyor.
-  */
-  for (const yol of [
-    '/cv', '/agim', '/baglantilar', '/takip', '/profil/ayse', '/kampusum', '/rehber', '/rehber/cv-hazirlama',
-    '/mesajlar', '/staj-programlari', '/universite-kariyer-merkezleri', '/sirket/ornek', '/ilanlar-yok',
-  ]) {
-    assert.equal(kampusGizliMi(yol, true), false, yol);
+  for (const yol of ['/cv', '/profil/ayse', '/kampusum', '/kampusum/ayse']) {
+    assert.equal(solAksiyon(yol), 'kampus', yol);
   }
+  for (const yol of ['/firsatlar', '/firsatlar/tubitak-2209-a', '/burslar', '/rehber', '/rehber/cv-hazirlama', '/ilan/x-3f2a1b9c']) {
+    assert.equal(solAksiyon(yol), null, yol);
+  }
+  /* Misafirde ne mesaj ne Kampüs. */
+  assert.equal(solAksiyon('/cv', { ogrenci: false }), null);
+  assert.equal(solAksiyon('/agim', { ogrenci: false }), null);
 
+  /* Sol kümede her düğme `solAksiyon`a bağlı: aynı anda ikisi çizilemiyor. */
+  assert.match(HEADER, /\{solAksiyon === 'kampus' && onNavigate && \(/);
+  assert.match(HEADER, /\{solAksiyon === 'suzgec' && sayfaAramasi\?\.onSuzgec && \(/);
+  assert.match(HEADER, /\{!genisEkran && solAksiyon === 'mesaj' && onNavigate && \(/);
   /* Gerekçe yorumda, tarihiyle. */
-  assert.match(HEADER, /KAMPÜSÜM İLANLAR VE FIRSATLAR SAYFASINDA YOK \(kullanıcı isteği,\s*\n\s*25 Eylül 2026/);
+  assert.match(HEADER, /SOLDA EN ÇOK BİR BAĞLAMSAL AKSİYON \(mobil sadeleştirme, 25 Eylül 2026\)/);
 });
 
 test('/kampusum rotası: /takip kalıbı, bakanın profili, onUniversiteEkle yok, gecikmeli yükleme', () => {

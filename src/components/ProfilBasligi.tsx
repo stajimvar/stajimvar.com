@@ -17,12 +17,11 @@ import { adYazimi } from '../lib/ad';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
 import { KapakFotografi } from './sosyal/KapakFotografi';
 import {
+  AVATAR_BINMESI,
   AVATAR_SATIRI,
   BIYOGRAFI,
   HAP,
-  HAP_BIRINCIL,
   HAP_SIRASI,
-  IKON_HAP,
   KIMLIK_BANDI,
   META_SATIRI,
   MetaOgesi,
@@ -30,6 +29,9 @@ import {
   SAYAC_OGESI,
   SAYAC_SATIRI,
   SAYAC_SAYISI,
+  TAM_HUCRE,
+  YARIM_HUCRE,
+  ZIYARETCI_EYLEMLERI,
 } from './sosyal/ProfilKimlikKalibi';
 import { katilmaMetni } from '../lib/tarih.mjs';
 import { profilAyarOgeleri } from './sosyal/ProfilAyarMenusu';
@@ -67,40 +69,12 @@ import { Card, ProfileSectionGroup, ProfileSectionRow, Skeleton } from '../ui';
  * kendi listesine gidiyor. Sayıya basınca gittiği yerde aynı sayıyı
  * göremiyorsa, sayı yanlıştır.
  *
- * DOLULUK HALKASI
+ * DOLULUK HALKASI (25 Eylül 2026'da kalktı)
  * ---------------
- * Yüzde hem halkada hem sayılarda duruyordu — aynı bilgi iki kez. Halkada
- * kaldı (Instagram'daki gibi bir DURUMU anlatıyor: profil ne kadar dolu),
- * sayılardan çıktı. Yüzdenin kendisi de artık tıklanabilir bir cümle:
+ * Yüzde hem halkada hem sayılarda duruyordu — aynı bilgi iki kez. Halka
+ * da kalktı: avatar halkası hikâye demek. Oran ayarların ilk satırında. Yüzdenin kendisi de artık tıklanabilir bir cümle:
  * yüzde tek başına ne yapılacağını söylemiyor, eksik adımın adı söylüyor.
  */
-
-/**
- * Doluluk halkası. Konik degrade ile çiziliyor; ek bir kütüphane yok.
- *
- * `className` dışarıdan veriliyor: telefonda kart bir ızgara ve halka
- * kendi hücresine açıkça yerleşiyor (bkz. kartın yerleşim yorumu).
- * Yerleşimi bileşenin içine yazmak, halkayı tek bir kartın ızgarasına
- * bağlardı.
- */
-const Halka: React.FC<{ oran: number; className?: string; children: React.ReactNode }> = ({
-  oran,
-  className = '',
-  children,
-}) => {
-  const renk = oran === 100 ? '#10b981' : '#2563eb';
-  return (
-    <div
-      className={`rounded-full p-[3px] shrink-0 ${className}`}
-      style={{
-        background: `conic-gradient(${renk} ${oran * 3.6}deg, #e5e7eb ${oran * 3.6}deg)`,
-      }}
-    >
-      {/* Beyaz ara halka: dolu kısmın nerede bittiğini gözle ayırıyor. */}
-      <div className="rounded-full bg-white p-[3px]">{children}</div>
-    </div>
-  );
-};
 
 export interface OneCikan {
   id: string;
@@ -522,9 +496,18 @@ export const ProfilBasligi: React.FC<Props> = ({
         köşesi 19. Kartın kendisine `overflow-hidden` verilmedi: ayar
         sayfası ve fotoğraf görüntüleyici kartın içinden açılıyor.
       */}
-      <KapakFotografi ad={adYazimi(ad)} yol={kapakYolu} className="w-full sm:rounded-t-[19px]" />
+      {/*
+        KAPAK YOKSA BANT YOK (mobil sadeleştirme, 25 Eylül 2026): kapaksız
+        profilde boş gri bant ekranın üçte birini kaplıyordu. Kapak varsa
+        telefonda 112 px, `sm:` üstünde eski oran.
+      */}
+      {kapakYolu && (
+        <KapakFotografi ad={adYazimi(ad)} yol={kapakYolu} className="h-28 w-full sm:h-auto sm:rounded-t-[19px]" />
+      )}
 
       {/* ------------------------------------------- kimlik bandı */}
+      {/* Kapak yokken kimlik bandının üst boşluğu (avatar binmediği için). */}
+      {!kapakYolu && <div aria-hidden className="h-4 sm:h-6" />}
       <div className={KIMLIK_BANDI}>
         <div className={AVATAR_SATIRI}>
           {/*
@@ -547,9 +530,13 @@ export const ProfilBasligi: React.FC<Props> = ({
             80 piksellik fotoğrafta köşe zaten 45 dereceye denk düşüyor;
             112 ve 144'te rozet birkaç piksel içeri alınıyor.
           */}
-          <div className="shrink-0 self-start -mt-[46px] sm:-mt-[62px] lg:-mt-[78px]">
+          {/*
+            HALKA KALKTI (25 Eylül 2026): avatarın çevresindeki halka hikâye
+            demek ve burada hikâye yok; tamamlanma oranı ayarların ilk
+            satırında duruyor. Fotoğraf yalnız kapak VARSA ona biniyor.
+          */}
+          <div className={kapakYolu ? AVATAR_BINMESI : 'relative shrink-0 self-start'}>
           <div className="relative">
-          <Halka oran={oran} className="ring-4 ring-white">
             {/*
               BÜYÜTME (kullanıcı isteği, 17 Eylül 2026): fotoğrafa dokununca
               tam ekran açılıyor. Kopyalanacak adres yalnız profil
@@ -559,14 +546,15 @@ export const ProfilBasligi: React.FC<Props> = ({
               ad={ad}
               yol={sosyalAvatarYolu}
               yedekAdres={avatarUrl}
-              className="h-20 w-20 rounded-full text-2xl sm:h-28 sm:w-28 sm:text-3xl lg:h-36 lg:w-36 lg:text-4xl"
+              className={`h-20 w-20 rounded-full text-2xl sm:h-28 sm:w-28 sm:text-3xl lg:h-36 lg:w-36 lg:text-4xl ${
+                kapakYolu ? 'ring-4 ring-white' : ''
+              }`}
               buyutme={{
                 onPaylas: satir?.menu.onPaylas,
                 kullaniciAdi: satir?.menu.yayindaMi ? satir.kullaniciAdi : null,
                 onFotografDegistir,
               }}
             />
-          </Halka>
             {okul && (
               <span className="absolute bottom-0 right-0 sm:bottom-0.5 sm:right-0.5 lg:bottom-1.5 lg:right-1.5">
                 <OkulRozeti okul={okul} logoAdresi={universiteLogosu(okul) ?? undefined} />
@@ -592,32 +580,21 @@ export const ProfilBasligi: React.FC<Props> = ({
             Eylül 2026 kararı, testle kilitli (`sosyal-profil-arayuzu`:
             kartta "Paylaş" yok).
           */}
+          {/*
+            AYARLAR AÇIKÇA YAZIYOR (mobil sadeleştirme, 25 Eylül 2026):
+            menü önce telefonda üst çubuktaki ☰'dan, geniş ekranda adsız bir
+            dişliden açılıyordu. Artık her genişlikte avatar satırının
+            sağında "Ayarlar" yazan tek düğme; menünün satırları aynı.
+          */}
           <div className={HAP_SIRASI}>
-            {/*
-              GİZLEME SARMALAYICIDA, DÜĞMEDE DEĞİL: `IKON_HAP` `inline-flex`
-              taşıyor; aynı dizeye `hidden` eklemek, hangisinin kazanacağını
-              üretilen CSS'in sırasına bırakıyordu. Ölçüldü (Chromium, 375
-              piksel): `inline-flex` kazandı ve dişli telefonda göründü.
-            */}
-            <div className="hidden lg:block">
-              <button
-                type="button"
-                onClick={() => setMenuAcik(true)}
-                aria-label="Ayarlar ve hareketler"
-                aria-haspopup="dialog"
-                className={IKON_HAP}
-              >
-                <Settings aria-hidden className="h-5 w-5" strokeWidth={1.75} />
-              </button>
-            </div>
-            {onCv && (
-              <button type="button" onClick={onCv} aria-label="CV'ni görüntüle" className={HAP_BIRINCIL}>
-                <FileText aria-hidden className="h-4 w-4 shrink-0" />
-                <span className="sr-only sm:not-sr-only">CV'ni görüntüle</span>
-              </button>
-            )}
-            <button type="button" onClick={onDuzenle} className={HAP}>
-              Profili düzenle
+            <button
+              type="button"
+              onClick={() => setMenuAcik(true)}
+              aria-haspopup="dialog"
+              className={HAP}
+            >
+              <Settings aria-hidden className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+              Ayarlar
             </button>
           </div>
         </div>
@@ -730,6 +707,23 @@ export const ProfilBasligi: React.FC<Props> = ({
             )}
           </div>
         )}
+
+        {/*
+          PROFİLİ DÜZENLE · ÖZGEÇMİŞ — aynı görsel seviyede, yan yana
+          (25 Eylül 2026). "Özgeçmiş" önce telefonda yalnız ikonlu mavi bir
+          hapdı; ne yaptığı yazmıyordu. İkisi de 44 px, eşit genişlik.
+        */}
+        <div className={`${ZIYARETCI_EYLEMLERI} sm:max-w-md`}>
+          <button type="button" onClick={onDuzenle} className={`${HAP} ${onCv ? YARIM_HUCRE : TAM_HUCRE}`}>
+            Profili düzenle
+          </button>
+          {onCv && (
+            <button type="button" onClick={onCv} className={`${HAP} ${YARIM_HUCRE}`}>
+              <FileText aria-hidden className="h-4 w-4 shrink-0" />
+              Özgeçmiş
+            </button>
+          )}
+        </div>
       </div>
     </Card>
   );

@@ -223,6 +223,17 @@ export const AkisKarti: React.FC<Props> = ({
         )}
       </header>
 
+      {/*
+        PAYLAŞIM METNİ GÖRSELDEN ÖNCE (mobil sadeleştirme, 25 Eylül 2026):
+        sıra kişi → metin → görsel → etkileşimler. Yazar hemen üstte
+        durduğu için metnin başındaki @ad tekrarı kalktı.
+      */}
+      {paylasim.aciklama && (
+        <p className="whitespace-pre-line break-words px-4 pb-2.5 text-sm leading-5 text-gray-900">
+          {paylasim.aciklama}
+        </p>
+      )}
+
       {/* ------------------------------------------------------- görseller */}
       <div className="relative">
         {/*
@@ -241,9 +252,14 @@ export const AkisKarti: React.FC<Props> = ({
             const adres = adresler.get(g.storageYolu) ?? null;
             return (
               <div key={g.sira} className="w-full shrink-0 snap-center">
-                <div className="aspect-[4/5] w-full overflow-hidden bg-gray-100">
+                {/*
+                  KIRPMA YOK: portfolyo ve atölye fotoğrafı kenarından
+                  kesilmesin diye `object-contain`; çerçeve 4:5 kalıyor ki
+                  seri paylaşımda fotoğraflar arasında yükseklik zıplamasın.
+                */}
+                <div className="aspect-[4/5] w-full overflow-hidden bg-gray-50">
                   {adres ? (
-                    <img src={adres} alt={g.alt ?? ''} loading="lazy" className="h-full w-full object-cover" />
+                    <img src={adres} alt={g.alt ?? ''} loading="lazy" className="h-full w-full object-contain" />
                   ) : (
                     <span className="block h-full w-full animate-pulse bg-gray-100" />
                   )}
@@ -303,7 +319,7 @@ export const AkisKarti: React.FC<Props> = ({
         </button>
       </div>
 
-      {/* ------------------------------------------- sayı, açıklama, zaman */}
+      {/* ----------------------------------------------------- sayı, zaman */}
       <div className="space-y-1 px-4 pb-4">
         {/*
           Sıfır beğeni YAZILMIYOR. Sayı görünürlük kapısından geçiyor ve
@@ -313,19 +329,6 @@ export const AkisKarti: React.FC<Props> = ({
         */}
         {(begeni?.adet ?? 0) > 0 && (
           <p className="text-sm font-bold text-gray-900">{begeni!.adet} beğeni</p>
-        )}
-
-        {paylasim.aciklama && (
-          <p className="text-sm leading-relaxed text-gray-900 break-words">
-            <button
-              type="button"
-              onClick={profilAc}
-              className={`mr-1.5 font-bold cursor-pointer ${ODAK_HALKASI}`}
-            >
-              {paylasim.yazar.kullaniciAdi ? `@${paylasim.yazar.kullaniciAdi}` : ad}
-            </button>
-            {paylasim.aciklama}
-          </p>
         )}
 
         <p className="text-xs text-gray-500">{gecenSure(paylasim.olusturmaAni)}</p>

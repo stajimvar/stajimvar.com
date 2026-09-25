@@ -40,3 +40,17 @@ export const CTA_BIRINCIL = 'cursor-pointer bg-blue-600 text-white hover:bg-blue
   hiçbir şey yapmayan bir kutu, kullanıcıyı boşuna deneme yaptırır.
 */
 export const CTA_BASARI = 'border border-emerald-200 bg-emerald-50 text-emerald-800';
+
+/**
+ * KARTIN TEK EYLEMİ — mobil sadeleştirme (25 Eylül 2026)
+ *
+ * İlan ve fırsat kartında sağ altta tek düğme: "İlanı incele" /
+ * "Ayrıntıları gör", mavi kenarlı, 44 px. İkisi de StajımVar'daki
+ * ayrıntı sayfasını açıyor; dış başvuru o sayfada, şartların yanında.
+ */
+const KART_EYLEMI_ORTAK =
+  'inline-flex min-h-11 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-xl px-3.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2';
+
+export const KART_EYLEMI = {
+  kenar: `${KART_EYLEMI_ORTAK} cursor-pointer border border-blue-600 bg-white text-blue-700 hover:bg-blue-50`,
+} as const;

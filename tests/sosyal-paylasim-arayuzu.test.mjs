@@ -911,7 +911,9 @@ test('fotoğraf simgesi telefonun seçicisini doğrudan açıyor', () => {
   assert.match(agim, /const dosyaGirdisi = React\.useRef<HTMLInputElement>\(null\);/);
   assert.match(agim, /dosyaGirdisi\.current\?\.click\(\);/);
   assert.doesNotMatch(agim, /const fotografSec = async/);
-  assert.match(agim, /onClick=\{fotografSec\}\s*\n\s*aria-label="Fotoğraf paylaş"/);
+  /* Ad varsayılan "Fotoğraf paylaş"; Ağım'ın oluşturucusu görünen yazısını içeren adı veriyor. */
+  assert.match(agim, /onClick=\{fotografSec\}\s*\n\s*aria-label=\{erisilebilirAd\}/);
+  assert.match(agim, /erisilebilirAd = 'Fotoğraf paylaş',/);
   /*
     Tek bileşen: Ağım onu çiziyor, kendi kopyasını değil. Site üst
     çubuğu da çiziyordu; telefondaki `/cv` simgesi kullanıcı isteğiyle
@@ -948,11 +950,10 @@ test('fotoğraf simgesi telefonun seçicisini doğrudan açıyor', () => {
   /*
     `/cv`DE PAYLAŞMA HÂLÂ VAR. Üst çubuktaki simge kalktı (25 Eylül
     2026); "Paylaşımlar" başlığının yanındaki düğme duruyor ve koşulu
-    sunucunun önkoşulu (`yayinda_mi` + alan). `kendiProfilimde` üst
-    çubukta ☰ menüsü için yaşıyor.
+    sunucunun önkoşulu (`yayinda_mi` + alan). Üst çubukta ne paylaşım
+    simgesi ne ☰ kaldı (25 Eylül 2026).
   */
-  assert.match(header, /const kendiProfilimde = bulunulanYol === '\/cv';/);
-  assert.doesNotMatch(header, /\{kendiProfilimde && \(\s*\n\s*<FotografPaylasGirisi/);
+  assert.doesNotMatch(header, /<FotografPaylasGirisi/);
   const sosyalSayfa = oku('src/components/sosyal/SosyalProfilSayfasi.tsx');
   assert.match(
     sosyalSayfa,
@@ -1063,9 +1064,15 @@ test('paylaşım girişi TEK bileşen; besteci ana pakete binmiyor', () => {
     ama aynı iş. İkinci bir gizli kutu açmak yerine girişe bir kol
     veriliyor.
   */
+  /*
+    Ağım'da tek giriş akışın başındaki "Bir şey paylaş…" oluşturucusu
+    (25 Eylül 2026); boş durumdaki ikinci düğme kalktı. Kol şirket
+    profilindeki düğme için duruyor.
+  */
   const akis = oku('src/components/sosyal/AgimSayfasi.tsx');
-  assert.match(akis, /const paylasKolu = React\.useRef<FotografPaylasKolu>\(null\);/);
-  assert.match(akis, /onClick=\{\(\) => paylasKolu\.current\?\.sec\(\)\}/);
+  assert.match(akis, /etiket="Bir şey paylaş…"/);
+  assert.doesNotMatch(akis, /İlk paylaşımını oluştur\n/);
+  assert.match(oku('src/sirket/SirketProfilGorunumu.tsx'), /onClick=\{\(\) => paylasKolu\.current\?\.sec\(\)\}/);
   assert.match(giris, /React\.useImperativeHandle\(kol, \(\) => \(\{ sec: fotografSec \}\)\);/);
 });
 

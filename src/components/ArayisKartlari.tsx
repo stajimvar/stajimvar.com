@@ -1,5 +1,4 @@
 import React from 'react';
-import { Briefcase, Check, GraduationCap } from 'lucide-react';
 import { arayisiGuncelle } from '../lib/queries';
 
 /**
@@ -27,46 +26,41 @@ import { arayisiGuncelle } from '../lib/queries';
 const PAYLASILAN =
   'adın, e-postan, okul ve bölümün, sınıfın, şehrin, hedef rollerin ve CV yükleyip yüklemediğin';
 
+/*
+  METİN SOLDA, ANAHTAR SAĞDA (mobil sadeleştirme, 25 Eylül 2026)
+
+  Solda açıkken maviye dönen büyük onay kutusu vardı ve sağdaki anahtarla
+  AYNI durumu ikinci kez söylüyordu; kart da açıkken maviye boyanıyordu.
+  Durumu artık yalnız anahtar taşıyor (`role="switch"`, `aria-checked`).
+*/
 const Anahtar: React.FC<{
   acik: boolean;
   bekliyor: boolean;
   baslik: string;
   aciklama: string;
-  ikon: React.ReactNode;
   degistir: () => void;
-}> = ({ acik, bekliyor, baslik, aciklama, ikon, degistir }) => (
+}> = ({ acik, bekliyor, baslik, aciklama, degistir }) => (
   <button
     type="button"
+    role="switch"
     onClick={degistir}
     disabled={bekliyor}
-    aria-pressed={acik}
-    className={`flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-colors disabled:opacity-60 ${
-      acik
-        ? 'border-blue-300 bg-blue-50'
-        : 'border-gray-200 bg-white hover:border-gray-300'
-    }`}
+    aria-checked={acik}
+    className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:opacity-60"
   >
-    <span
-      aria-hidden
-      className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-        acik ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'
-      }`}
-    >
-      {acik ? <Check className="h-4 w-4" /> : ikon}
-    </span>
     <span className="min-w-0 flex-1">
-      <span className="block text-sm font-bold text-gray-900">{baslik}</span>
-      <span className="mt-0.5 block text-xs leading-relaxed text-gray-600">{aciklama}</span>
+      <span className="block text-base font-semibold leading-[22px] text-gray-900">{baslik}</span>
+      <span className="mt-0.5 block text-sm leading-5 text-gray-600">{aciklama}</span>
     </span>
     <span
       aria-hidden
-      className={`mt-1 h-5 w-9 shrink-0 rounded-full p-0.5 transition-colors ${
+      className={`h-7 w-12 shrink-0 rounded-full p-0.5 transition-colors ${
         acik ? 'bg-blue-600' : 'bg-gray-300'
       }`}
     >
       <span
-        className={`block h-4 w-4 rounded-full bg-white transition-transform ${
-          acik ? 'translate-x-4' : ''
+        className={`block h-6 w-6 rounded-full bg-white shadow-sm transition-transform ${
+          acik ? 'translate-x-5' : ''
         }`}
       />
     </span>
@@ -107,8 +101,9 @@ export const ArayisKartlari: React.FC<{
   const acikVar = isArayan || stajArayan;
 
   return (
-    <section className="space-y-2" aria-label="Arayış durumu">
-      <h2 className="px-1 text-base font-extrabold tracking-tight text-gray-900">
+    /* `pt-4`: telefonda profil kartı kenarsız; başlık üstteki çizgiye yapışmasın. */
+    <section className="space-y-2 pt-4 sm:pt-0" aria-label="Arayış durumu">
+      <h2 className="px-1 text-xl font-extrabold leading-[26px] tracking-tight text-gray-900">
         Ne arıyorsun?
       </h2>
 
@@ -117,7 +112,6 @@ export const ArayisKartlari: React.FC<{
         bekliyor={bekliyor === 'staj'}
         baslik="Staj arıyorum"
         aciklama="Staj arayan öğrenciler listesinde görünürsün."
-        ikon={<GraduationCap className="h-4 w-4" />}
         degistir={() => void degistir('staj')}
       />
 
@@ -126,7 +120,6 @@ export const ArayisKartlari: React.FC<{
         bekliyor={bekliyor === 'is'}
         baslik="İş arıyorum"
         aciklama="İş arayan öğrenciler listesinde görünürsün."
-        ikon={<Briefcase className="h-4 w-4" />}
         degistir={() => void degistir('is')}
       />
 
@@ -141,7 +134,8 @@ export const ArayisKartlari: React.FC<{
         Kapalıyken de yazması, öğrencinin açmadan önce ne olacağını
         bilmesini sağlıyor; rıza ancak o zaman bilgilendirilmiş olur.
       */}
-      <p className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-[11px] leading-relaxed text-gray-600">
+      {/* 12/16 yerine 14/20 ve daha koyu gri: rıza metni dipnot gibi okunmasın (25 Eylül 2026). */}
+      <p className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm leading-5 text-gray-700">
         {acikVar ? 'Şu an' : 'Açarsan'} yalnızca <strong>StajımVar’ın doğruladığı
         şirketler</strong> seni ilgili listede görebilir ve {PAYLASILAN} onlara
         görünür. İstediğin an kapatabilirsin; kapattığın anda listeden düşersin.

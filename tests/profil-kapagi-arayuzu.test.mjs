@@ -152,24 +152,24 @@ test('kapağın dört durumu: iskelet, nötr bant, iniyor, görsel — sahte gö
   assert.match(kapak, /alt=\{`\$\{ad\} kapak fotoğrafı`\}/);
 });
 
-test('iki öğrenci ekranı kartın en üstünde 3:1 kapak bandı çiziyor, avatar üstüne biniyor', () => {
-  /* Kapak kimlik bandından ÖNCE. */
+test('iki öğrenci ekranı kapak VARSA bandı çiziyor ve avatar ona biniyor; yoksa bant yok', () => {
+  /*
+    Mobil sadeleştirme (25 Eylül 2026): kapaksız profilde boş gri bant
+    kalktı; kapak varsa telefonda 112 px (`h-28`), `sm:` üstünde eski oran.
+    Avatar yalnız kapak varken binmiyor ve beyaz ayraç halkası da yalnız
+    o zaman.
+  */
   for (const [ad, kaynak] of Object.entries({ baslik, gorunum })) {
     const kapakYeri = kaynak.indexOf('<KapakFotografi');
     const bantYeri = kaynak.indexOf('className={KIMLIK_BANDI}');
     assert.ok(kapakYeri > 0 && kapakYeri < bantYeri, `${ad}: kapak kimlik bandının üstünde olmalı`);
-    assert.match(kaynak, /ring-4 ring-white/, `${ad}: avatarı kapaktan ayıran beyaz halka`);
+    assert.match(kaynak, /'ring-4 ring-white'/, `${ad}: avatarı kapaktan ayıran beyaz halka`);
+    assert.match(kaynak, /className="h-28 w-full sm:h-auto sm:rounded-t-\[1[59]px\]"/, `${ad}: kapak 112 px`);
   }
-  /* Köşeler kabın iç yarıçapına oturuyor: kart 20/1, başlık 16/1. */
-  assert.match(baslik, /<KapakFotografi ad=\{adYazimi\(ad\)\} yol=\{kapakYolu\} className="w-full sm:rounded-t-\[19px\]" \/>/);
-  assert.match(gorunum, /<KapakFotografi ad=\{baslik\} yol=\{profil\.kapakFotografiYolu\} className="w-full sm:rounded-t-\[15px\]" \/>/);
-  /*
-    Negatif boşluk fotoğraf kabında. 24 Eylül 2026 (X kalıbı): kimlik
-    bandının üst dolgusu kalktı, binme payı artık yalnız dairenin yarısı
-    (ziyaretçi 40/56/72, /cv halkalı daire 46/62/78).
-  */
-  assert.match(baslik, /<div className="shrink-0 self-start -mt-\[46px\] sm:-mt-\[62px\] lg:-mt-\[78px\]">\n\s*<div className="relative">/);
-  assert.match(gorunum, /<div className=\{AVATAR_BINMESI\}>/);
+  assert.match(baslik, /\{kapakYolu && \(\s*<KapakFotografi/);
+  assert.match(gorunum, /\{profil\.kapakFotografiYolu && \(\s*<KapakFotografi/);
+  assert.match(baslik, /className=\{kapakYolu \? AVATAR_BINMESI : 'relative shrink-0 self-start'\}/);
+  assert.match(gorunum, /className=\{profil\.kapakFotografiYolu \? AVATAR_BINMESI : 'relative shrink-0 self-start'\}/);
 });
 
 test('/cv kartında kapak yolunun üç hâli: okunmadı → iskelet, yok → nötr bant', () => {
@@ -179,16 +179,17 @@ test('/cv kartında kapak yolunun üç hâli: okunmadı → iskelet, yok → nö
   );
 });
 
-test('dişli düğmesi hap sırasında, yuvarlak ve 44 piksel; kapağın üstünde değil', () => {
+test('ayarlar açıkça "Ayarlar" yazan tek düğmede; üst çubukta ☰ yok', () => {
   /*
-    24 Eylül 2026 (X kalıbı): dişli kartın sağ üstünde `absolute` duruyordu
-    ve kapağın üstüne düşüyordu (okunurluk için yarı saydam beyaz zemin
-    almıştı). Artık X'teki "…" gibi hap sırasında, `IKON_HAP` (h-11 w-11,
-    rounded-full). Telefonda gizli: aynı menüyü üst çubuktaki ☰ açıyor.
+    Mobil sadeleştirme (25 Eylül 2026): menü telefonda üst çubuktaki ☰'dan,
+    geniş ekranda adsız bir dişliden açılıyordu. Artık her genişlikte
+    avatar satırının sağında "Ayarlar" yazan hap; menünün satırları aynı.
   */
-  /* Gizleme sarmalayıcıda: `IKON_HAP`in `inline-flex`i ile `hidden` aynı dizede çakışıyordu (375'te ölçüldü). */
-  assert.match(baslik, /<div className="hidden lg:block">\s*<button\s*type="button"\s*onClick=\{\(\) => setMenuAcik\(true\)\}\s*aria-label="Ayarlar ve hareketler"\s*aria-haspopup="dialog"\s*className=\{IKON_HAP\}/);
+  assert.match(baslik, /onClick=\{\(\) => setMenuAcik\(true\)\}\s*aria-haspopup="dialog"\s*className=\{HAP\}\s*>\s*<Settings[^>]*\/>\s*Ayarlar/);
+  assert.doesNotMatch(baslik, /hidden lg:block/);
   assert.doesNotMatch(yorumsuz(baslik), /absolute right-3 top-3/);
+  const header = oku('src/components/Header.tsx');
+  assert.doesNotMatch(yorumsuz(header), /stajimvar:profil-menusu/);
 });
 
 test('şirket profiline kapak girmedi (kapsam dışı)', () => {

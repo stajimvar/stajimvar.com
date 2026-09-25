@@ -112,40 +112,38 @@ test('FIRSAT IZGARASI: TELEFONDA TEK SÜTUN, sm ÜSTÜNDE REHBERLE AYNI', () => 
 
 test('FIRSAT KARTI TELEFONDA İLAN KARTIYLA TEK TİP, GENİŞ EKRANDA DİKEY AKIŞ', () => {
   /*
-    Kullanıcı isteği (16 Eylül 2026): Fırsatlar telefonda İlanlar'la aynı
-    görünmeli. Kart İlan kartının üç bölümünü alıyor — solda büyük logo,
-    ortada künye, sağda kaydet ve "İncele". Geniş ekrandaki dar ızgara
-    kartı olduğu gibi duruyor.
+    Fırsatlar İlanlar'la aynı kart dilinde (mobil sadeleştirme, 25 Eylül
+    2026): 16 px iç boşluk, 16 px köşe, 56 px logo, başlık 16/22 yarı
+    kalın; altta solda kaynak, sağda tek eylem. Alanlar aynıya
+    zorlanmadı — fırsatta tür ve aciliyet, ilanda konum ve ilan türü.
   */
   const kart = firsat.slice(firsat.indexOf('<article'));
-  assert.match(kart.slice(0, 500), /rounded-xl border border-gray-200 bg-white px-3 py-3/);
-  assert.match(kart, /flex min-w-0 items-stretch gap-3 min-\[390px\]:gap-3\.5 min-\[430px\]:gap-4">/);
-  assert.doesNotMatch(kart, /hidden sm:flex sm:flex-col/, 'masaüstü ızgara kartı geri gelmiş');
-
-  /* Punto ve renkler ilan kartıyla aynı. */
   const ilan = oku('src/components/InternshipCard.tsx');
   for (const sinif of [
-    'break-words text-[15px] font-bold leading-snug text-slate-900 min-[430px]:text-base',
-    'mt-0.5 break-words text-[15px] font-semibold leading-snug text-slate-800 min-[430px]:text-base',
-    'mb-1 inline-flex items-center gap-1 whitespace-nowrap text-[15px] font-bold text-blue-600 hover:text-blue-700',
+    'relative flex min-w-0 flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-4',
+    'flex min-w-0 items-start gap-3',
+    'break-words text-base font-semibold leading-[22px] text-slate-900',
+    'relative z-10 -mr-2 -mt-2 shrink-0',
+    'flex min-w-0 items-center justify-between gap-3',
   ]) {
     assert.ok(ilan.includes(sinif), `ilan kartında yok: ${sinif}`);
     assert.ok(kart.includes(sinif), `fırsat kartında yok: ${sinif}`);
   }
+  assert.doesNotMatch(kart, /hidden sm:flex sm:flex-col/, 'masaüstü ızgara kartı geri gelmiş');
+  assert.doesNotMatch(kart, /<h2 className="line-clamp-2/, 'başlık kırpılıyor');
 
-  /* Uzun başlık telefonda kırpılmıyor; dar masaüstü kartında iki satır. */
-  assert.doesNotMatch(kart, /<h2 className="line-clamp-2/, 'telefonda başlık hâlâ kırpılıyor');
+  /* Kurum adı başlıkta tamamen geçiyorsa ikinci kez yazılmıyor. */
+  assert.match(firsat, /const kurumBasliktaMi = item\.title/);
+  assert.match(kart, /\{!kurumBasliktaMi && \(/);
 
   /* Tür ve destek: `kartSatiri` null ise yalnız tür (tests/firsat-tutar-durumu). */
   assert.match(kart, /\{opportunityTypeLabel\(item\.opportunityType\)\}/);
   assert.match(kart, /\{tutar\.kartSatiri \? ` · \$\{tutar\.kartSatiri\}` : ''\}/);
 
-  /* Doğrulama ve kalan süre ikonlu — kaynak aynı rozet listesi. */
+  /* "Son 3 gün" kesin tarihin YANINDA — aynı satırda, onun yerine değil. */
   assert.match(firsat, /const sonGunlerRozeti = rozetler\.find\(\(r\) => r\.id === 'son_gunler'\) \?\? null;/);
-  assert.match(kart, /<Clock className="h-4 w-4 shrink-0" aria-hidden \/>/);
-
-  /* Son başvuru künyenin altında, "İncele" sağ altta gerçek bağlantı. */
-  assert.match(kart, /\{arsivde \? 'Kapandı' : 'Son başvuru'\}/);
+  const tarihSatiri = kart.slice(kart.indexOf("{arsivde ? 'Kapandı' : 'Son başvuru'}"));
+  assert.ok(tarihSatiri.indexOf('{sonGunlerRozeti && (') > 0 && tarihSatiri.indexOf('{sonGunlerRozeti && (') < 900);
   assert.match(kart, /opportunityReviewLabel\(item\.opportunityType\)/);
 });
 
@@ -158,7 +156,7 @@ test('MASAÜSTÜNDE DE İLAN KARTI DÜZENİ', () => {
   const kart = firsat.slice(firsat.indexOf('<article'));
   assert.doesNotMatch(kart, /<dl className=/);
   assert.doesNotMatch(kart, /sm:inline-flex/);
-  assert.match(kart, /sm:p-4/);
+  assert.match(kart.slice(0, 400), /rounded-2xl border border-gray-200 bg-white p-4/);
 });
 
 test('İLERLEME ÇUBUĞU YOK; TUTAR VE TARİH GERÇEK KAYITTAN', () => {
@@ -194,11 +192,11 @@ test('İLERLEME ÇUBUĞU YOK; TUTAR VE TARİH GERÇEK KAYITTAN', () => {
 
 test('LOGO İLAN KARTIYLA AYNI ÖLÇÜDE', () => {
   /*
-    Telefonda logo ilan kartıyla aynı: 72–92 piksel, yuvarlak köşeli kare.
-    Geniş ekrandaki dar kartta 40 piksel kaldı. `object-contain`
-    CompanyLogo içinde: kare olmayan kurum logoları kırpılmıyor.
+    56 × 56, yuvarlak köşeli kare (mobil sadeleştirme, 25 Eylül 2026; önce
+    72–92 px). `object-contain` CompanyLogo içinde: kare olmayan kurum
+    logoları kırpılmıyor.
   */
-  const olcu = '!h-[clamp(72px,21vw,92px)] !w-[clamp(72px,21vw,92px)] !rounded-xl !p-2 !text-2xl';
+  const olcu = '!h-14 !w-14 !rounded-xl !p-1.5 !text-lg';
   assert.ok(firsat.includes(olcu), 'fırsat kartı logo ölçüsü');
   assert.ok(oku('src/components/InternshipCard.tsx').includes(olcu), 'ilan kartı logo ölçüsü');
   assert.match(oku('src/components/CompanyLogo.tsx'), /object-contain/);
