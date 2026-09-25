@@ -151,7 +151,7 @@ test('menü yalnız `menu` doluyken; kaynak null ise bölüm hiç yok', () => {
 
 test('okulsuz öğrenciye "Üniversiteni ekle": gerçek adres, /cv içinde doğrudan düzenleme', () => {
   assert.equal(UNIVERSITE_EKLE_YOLU, '/cv#universite');
-  assert.match(PANEL, /\{veri && !veri\.ogrenciOkulu && \(/);
+  assert.match(PANEL, /\{veri && !baskasi && !veri\.ogrenciOkulu && \(/);
   assert.match(PANEL, /href=\{UNIVERSITE_EKLE_YOLU\}/);
   assert.match(PANEL, /if \(onUniversiteEkle\) onUniversiteEkle\(\);\s*else onNavigate\(UNIVERSITE_EKLE_YOLU\);/);
   /* /cv tarafı: işaret okununca okul bölümü açılıyor, odak üniversite alanına. */
@@ -162,8 +162,8 @@ test('okulsuz öğrenciye "Üniversiteni ekle": gerçek adres, /cv içinde doğr
 
 test('panel BAKAN öğrencinin verisiyle: okul prop olarak girmiyor, bakılan profilin okulu kullanılmıyor', () => {
   /* Bileşen okul ya da profil almıyor; okul RPC'de oturumdan. */
-  assert.match(PANEL, /\}> = \(\{ ogrenci, onNavigate, onUniversiteEkle, yerlesim \}\) => \{/);
-  assert.match(PANEL, /kampusumuGetir\(\)/);
+  assert.match(PANEL, /\}> = \(\{ ogrenci, onNavigate, onUniversiteEkle, yerlesim, kullaniciAdi \}\) => \{/);
+  assert.match(PANEL, /\(kullaniciAdi \? kampusProfiliGetir\(kullaniciAdi\) : kampusumuGetir\(\)\)/);
   /* Ziyaretçi sayfası: bakan öğrenci kapısı ve bakanın kendi profili. */
   assert.match(SAYFA, /kullaniciId && profil && !profil\.sirketId \? \(\s*<KampusumPaneli ogrenci=\{bakanOgrenci\}/);
   const kampusDali = SAYFA.slice(SAYFA.indexOf('const bakanKampusu'), SAYFA.indexOf(') : undefined;', SAYFA.indexOf('const bakanKampusu')));
@@ -195,7 +195,7 @@ test('lg altında profilde panel yok: Kampüsüm düğmesinin olduğu genişlik,
   */
   /* Yorumsuz kaynakta: düğmenin yorumunda da `<a href="/kampusum">` geçiyor. */
   const HEADER = kod(oku('src/components/Header.tsx'));
-  const dugmeBasi = HEADER.indexOf('href="/kampusum"');
+  const dugmeBasi = HEADER.indexOf('href={kampusYolu}');
   assert.ok(dugmeBasi > 0, 'Kampüsüm düğmesi bulunamadı');
   const dugme = HEADER.slice(dugmeBasi, HEADER.indexOf('</a>', dugmeBasi));
   assert.match(dugme, /lg:hidden/);
@@ -227,7 +227,7 @@ test('lg altında profilde panel yok: Kampüsüm düğmesinin olduğu genişlik,
 
   /* Telefonda panelin tek yeri /kampusum; orada yerleşim sabit 'akis'. */
   const KAMPUS_SAYFASI = oku('src/components/kampus/KampusumSayfasi.tsx');
-  assert.match(KAMPUS_SAYFASI, /<KampusumPaneli ogrenci=\{ogrenci\} onNavigate=\{onNavigate\} yerlesim="akis" \/>/);
+  assert.match(KAMPUS_SAYFASI, /<KampusumPaneli ogrenci=\{ogrenci\} onNavigate=\{onNavigate\} yerlesim="akis" kullaniciAdi=\{kullaniciAdi\} \/>/);
 
   /* Gerekçe iki sayfada ve kapta yazılı. */
   for (const kaynak of [DUZEN, CV, SAYFA]) {

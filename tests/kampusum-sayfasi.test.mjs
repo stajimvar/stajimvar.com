@@ -80,11 +80,11 @@ test('Kampüsüm: gerçek bağlantı, yalnız oturumu açık öğrencide, telefo
     HEADER,
     /const kampusDugmesiCizilsin =\s*isLoggedIn && userRole === 'student' && Boolean\(activeStudent\) && !ilanSayfasindaMi && !firsatlardaMi;/,
   );
-  assert.match(dal, /<a\s+href="\/kampusum"/);
-  assert.match(dal, /aria-label="Kampüsüm"/);
+  assert.match(dal, /<a\s+href=\{kampusYolu\}/);
+  assert.match(dal, /aria-label=\{profilAdi \? 'Bu kişinin kampüsü' : 'Kampüsüm'\}/);
   assert.match(dal, /aria-current=\{kampustaMi \? 'page' : undefined\}/);
   /* Sol tık uygulama içi, orta tuş / değiştirici tuş tarayıcıya. */
-  assert.match(dal, /onClick=\{baglantiTiklamasi\(\(\) => onNavigate\('\/kampusum'\)\)\}/);
+  assert.match(dal, /onClick=\{baglantiTiklamasi\(\(\) => onNavigate\(kampusYolu\)\)\}/);
   assert.match(dal, /h-11 w-11/);
   assert.match(dal, /lg:hidden/);
   assert.match(dal, /\$\{ODAK_HALKASI\}/);
@@ -171,12 +171,12 @@ test('/kampusum rotası: /takip kalıbı, bakanın profili, onUniversiteEkle yok
   assert.match(APP, /const KampusumSayfasi = React\.lazy\(\(\) =>\s*import\('\.\/components\/kampus\/KampusumSayfasi'\)/);
   assert.doesNotMatch(APP, /^import \{ KampusumSayfasi \}/m);
 
-  const bas = APP.indexOf("if (temizYol === '/kampusum') {");
+  const bas = APP.indexOf("if (temizYol === '/kampusum' || kampusKisisi) {");
   assert.ok(bas > 0, 'rota bulunamadı');
   const rota = APP.slice(bas, APP.indexOf('\n  }\n', bas));
   assert.match(
     rota,
-    /<KampusumSayfasi\s*kullaniciId=\{session\?\.userId \?\? null\}\s*oturumHazir=\{sessionReady\}\s*sirketHesabi=\{kabukRolu === 'company'\}\s*ogrenci=\{student\}\s*onNavigate=\{navigate\}\s*onGirisGerekli=\{AUTH_ENABLED \? handleOpenLogin : undefined\}\s*\/>/,
+    /<KampusumSayfasi\s*key=\{kampusKisisi \?\? ''\}\s*kullaniciId=\{session\?\.userId \?\? null\}\s*oturumHazir=\{sessionReady\}\s*sirketHesabi=\{kabukRolu === 'company'\}\s*ogrenci=\{student\}\s*onNavigate=\{navigate\}\s*onGirisGerekli=\{AUTH_ENABLED \? handleOpenLogin : undefined\}\s*kullaniciAdi=\{kampusKisisi\}\s*\/>/,
   );
   /* Panel o durumda kendisi `/cv#universite`e gidiyor. */
   assert.doesNotMatch(rota, /onUniversiteEkle/);
@@ -202,11 +202,11 @@ test('/kampusum sayfası: dört durum, panel akış yerleşiminde, adres kimlik 
   assert.match(govde.slice(sirket, panel), /Kampüsüm öğrenci hesaplarına açık/);
   assert.doesNotMatch(govde.slice(sirket, panel), /<KampusumPaneli/);
 
-  /* Panel: aynı bileşen, akış yerleşimi, `onUniversiteEkle` yok. */
-  assert.match(govde, /<KampusumPaneli ogrenci=\{ogrenci\} onNavigate=\{onNavigate\} yerlesim="akis" \/>/);
+  /* Panel: aynı bileşen, akış yerleşimi, `onUniversiteEkle` yok. `/kampusum/<ad>`de kullanıcı adı. */
+  assert.match(govde, /<KampusumPaneli ogrenci=\{ogrenci\} onNavigate=\{onNavigate\} yerlesim="akis" kullaniciAdi=\{kullaniciAdi\} \/>/);
   assert.doesNotMatch(govde, /onUniversiteEkle/);
   /* Sayfa başlığı: görünür başlık panelin `h2`si; `h1` ekran okuyucuya. */
-  assert.match(govde, /<h1 className="sr-only">Kampüsüm<\/h1>/);
+  assert.match(govde, /<h1 className="sr-only">\{kullaniciAdi \? 'Kampüs' : 'Kampüsüm'\}<\/h1>/);
   /* Okul/kimlik prop'u yok: okul sunucuda oturumdan çözülüyor. */
   assert.doesNotMatch(govde, /universiteId|okulAdi|ogrenciOkulu/);
 });

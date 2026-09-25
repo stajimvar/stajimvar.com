@@ -2883,15 +2883,32 @@ export default function App() {
     Zemin `/cv` ve profille aynı: telefonda panel kenardan kenara bir
     yüzey, `sm:` üstünde gri zeminde kart.
   */
-  if (temizYol === '/kampusum') {
+  /*
+    /kampusum/<kullaniciadi>: başkasının kampüsü (25 Eylül 2026). Ad
+    yalnız harf (`social_profiles.username` kuralı); başka bir şey
+    gelirse sayfa bakanın kendi kampüsüne düşmüyor, sunucu NULL dönüyor
+    ve panel "okul bilgisi görünmüyor" diyor.
+  */
+  let kampusKisisi: string | undefined;
+  if (temizYol.startsWith('/kampusum/')) {
+    const parca = temizYol.slice('/kampusum/'.length).split('/')[0];
+    try {
+      kampusKisisi = decodeURIComponent(parca) || undefined;
+    } catch {
+      kampusKisisi = parca || undefined;
+    }
+  }
+  if (temizYol === '/kampusum' || kampusKisisi) {
     return icerikSayfasi(
       <KampusumSayfasi
+        key={kampusKisisi ?? ''}
         kullaniciId={session?.userId ?? null}
         oturumHazir={sessionReady}
         sirketHesabi={kabukRolu === 'company'}
         ogrenci={student}
         onNavigate={navigate}
         onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+        kullaniciAdi={kampusKisisi}
       />,
       'bg-white sm:bg-[#F9FAFB]',
     );
