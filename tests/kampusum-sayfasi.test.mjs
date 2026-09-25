@@ -66,7 +66,7 @@ test('sol üstte ana sayfa ve fotoğraf paylaşma simgesi yok; logo ana sayfaya 
 
 test('Kampüsüm: gerçek bağlantı, yalnız oturumu açık öğrencide, telefonda, 44 piksel, görünür odak', () => {
   const kume = solKume();
-  const bas = kume.indexOf('{isLoggedIn && userRole');
+  const bas = kume.indexOf('{kampusDugmesiCizilsin');
   assert.ok(bas > 0, 'Kampüsüm dalı bulunamadı');
   const dal = kume.slice(bas, kume.indexOf('</a>', bas) + 4);
 
@@ -75,7 +75,11 @@ test('Kampüsüm: gerçek bağlantı, yalnız oturumu açık öğrencide, telefo
     yüklenmiyor. Koşulun dört parçası da şart — biri düşerse düğme
     işe yaramadığı bir hesapta çizilir.
   */
-  assert.match(dal, /^\{isLoggedIn && userRole === 'student' && activeStudent && onNavigate && \(/);
+  assert.match(dal, /^\{kampusDugmesiCizilsin && onNavigate && \(/);
+  assert.match(
+    HEADER,
+    /const kampusDugmesiCizilsin =\s*isLoggedIn && userRole === 'student' && Boolean\(activeStudent\) && !ilanSayfasindaMi && !firsatlardaMi;/,
+  );
   assert.match(dal, /<a\s+href="\/kampusum"/);
   assert.match(dal, /aria-label="Kampüsüm"/);
   assert.match(dal, /aria-current=\{kampustaMi \? 'page' : undefined\}/);
@@ -94,6 +98,73 @@ test('Kampüsüm: gerçek bağlantı, yalnız oturumu açık öğrencide, telefo
   assert.ok(HEADER.includes("const kampustaMi = /^\\/kampusum(\\/|$)/.test(bulunulanYol);"));
   assert.match(HEADER, /!sosyaldeMi && !kampustaMi && activeTab === 'internships'/);
   assert.match(HEADER, /!agimdaMi && !kampustaMi && activeTab === 'profile'/);
+});
+
+/*
+  İLANLAR VE FIRSATLAR SAYFASINDA KAMPÜSÜM YOK (kullanıcı isteği, 25 Eylül 2026)
+
+  Kullanıcı iki telefon ekran görüntüsünde ilanlar ve fırsatlar
+  sayfasındaki sol üst simgenin üstünü çizdi. Koşul adres üzerinden:
+  `ilanlardaMi` alt çubuk bayrağı /mesajlar, /staj-programlari gibi
+  hiçbir kümeye girmeyen adreslerde de doğru, ona bağlanmadı (ölçüldü:
+  390'da /mesajlar ve /staj-programlari açıkken alt çubukta İlanlar
+  yanıyor).
+
+  Tarayıcıda ölçüldü (Chromium, 390, öğrenci oturumu Supabase yanıtları
+  taklit edilerek, herkese açık veri gerçek): /, /staj-ilanlari,
+  /ilan/<slug>, /firsatlar, /burslar, /firsatlar/<slug>'da düğme DOM'da
+  yok; /cv, /kampusum, /rehber, /mesajlar'da 44 × 44. /'da sol küme
+  Filtreler'le başlıyor (x 10). Logo merkezi hepsinde 195 (390 / 2),
+  yatay taşma 0.
+
+  Aşağıdaki ifadeler Header kaynağından okunup çalıştırılıyor; adres
+  listesi elle yazılmış bir kopya değil, dosyadaki kalıbın kendisi.
+*/
+function kampusGizliMi(yol, ilanlardaMi) {
+  const ifade = (ad) => {
+    const m = HEADER.match(new RegExp(`const ${ad} =\\s*([^;]+);`));
+    assert.ok(m, `${ad} bulunamadı`);
+    return m[1];
+  };
+  const govde = `
+    const stajIlanlarindaMi = ${ifade('stajIlanlarindaMi')};
+    const firsatlardaMi = ${ifade('firsatlardaMi')};
+    const ilanSayfasindaMi = ${ifade('ilanSayfasindaMi')};
+    return ilanSayfasindaMi || firsatlardaMi;
+  `;
+  return new Function('bulunulanYol', 'ilanlardaMi', govde)(yol, ilanlardaMi);
+}
+
+test('Kampüsüm: ilan ve fırsat sayfalarında çizilmiyor, öteki sayfalarda duruyor', () => {
+  /* İlan listesi: `/` yalnız ilan sekmesi açıkken; aynı adreste profil sekmesi de çiziliyor. */
+  assert.equal(kampusGizliMi('/', true), true);
+  assert.equal(kampusGizliMi('/', false), false);
+  assert.equal(kampusGizliMi('/staj-ilanlari', false), true);
+  /* Tek ilan: alt çubukta orası da İlanlar; `activeTab`ten bağımsız. */
+  assert.equal(kampusGizliMi('/ilan/frontend-stajyeri-3f2a1b9c', false), true);
+  assert.equal(kampusGizliMi('/ilan/frontend-stajyeri-3f2a1b9c', true), true);
+
+  /* Fırsat ailesinin bütün adresleri, tek fırsat dahil. */
+  for (const yol of [
+    '/firsatlar', '/firsatlar/tubitak-2209-a', '/burslar', '/kyk', '/yurtdisi-firsatlari',
+    '/yarismalar', '/firsat-takvimi', '/bana-uygun', '/kaydedilen-firsatlar',
+  ]) {
+    assert.equal(kampusGizliMi(yol, false), true, yol);
+  }
+
+  /*
+    Öteki sayfalar — `ilanlardaMi` doğru gelse bile (activeTab
+    'internships' kalan adresler) düğme duruyor.
+  */
+  for (const yol of [
+    '/cv', '/agim', '/baglantilar', '/takip', '/profil/ayse', '/kampusum', '/rehber', '/rehber/cv-hazirlama',
+    '/mesajlar', '/staj-programlari', '/universite-kariyer-merkezleri', '/sirket/ornek', '/ilanlar-yok',
+  ]) {
+    assert.equal(kampusGizliMi(yol, true), false, yol);
+  }
+
+  /* Gerekçe yorumda, tarihiyle. */
+  assert.match(HEADER, /KAMPÜSÜM İLANLAR VE FIRSATLAR SAYFASINDA YOK \(kullanıcı isteği,\s*\n\s*25 Eylül 2026/);
 });
 
 test('/kampusum rotası: /takip kalıbı, bakanın profili, onUniversiteEkle yok, gecikmeli yükleme', () => {

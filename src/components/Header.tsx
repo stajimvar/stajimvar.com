@@ -651,6 +651,30 @@ export const Header: React.FC<HeaderProps> = ({
   const profildeMi = cvEkranindaMi || (!rehberdeMi && !kurumsalSayfada && !agimdaMi && !kampustaMi && activeTab === 'profile');
 
   /*
+    KAMPÜSÜM İLANLAR VE FIRSATLAR SAYFASINDA YOK (kullanıcı isteği,
+    25 Eylül 2026: ilanlar ve fırsatlar sayfasında sol üstte Kampüsüm
+    simgesi istenmedi — iki ekran görüntüsünde simgenin üstü çizili).
+
+    NEDEN `ilanlardaMi` DEĞİL: o bayrak alt çubuktaki sekme için ve
+    "başka bir kümede değilse İlanlar" diye çalışıyor; `activeTab`
+    'internships' kaldığı sürece /mesajlar, /staj-programlari,
+    /universite-kariyer-merkezleri, /sirket/<ad> ve bulunamadı
+    sayfalarında da doğru. Düğme ona bağlansaydı istenmeyen onca sayfada
+    da kaybolurdu. Burada ADRES belirleyici: ilan listesi (`/` — yalnız
+    ilan sekmesi açıkken, aynı adreste profil sekmesi de çiziliyor —
+    ve /staj-ilanlari) ile tek ilan (/ilan/<slug>).
+
+    Tek ilan ve tek fırsat da dahil: alt çubukta orası da İlanlar /
+    Fırsatlar sekmesi; listeden ilana girip dönen kullanıcının sol
+    üstünde simge bir görünüp bir kaybolmasın. `firsatlardaMi` zaten
+    /firsatlar/<slug>'ı kapsıyor, ilan tarafı aynı kurala çekildi.
+  */
+  const ilanSayfasindaMi =
+    stajIlanlarindaMi || /^\/ilan\//.test(bulunulanYol) || (bulunulanYol === '/' && ilanlardaMi);
+  const kampusDugmesiCizilsin =
+    isLoggedIn && userRole === 'student' && Boolean(activeStudent) && !ilanSayfasindaMi && !firsatlardaMi;
+
+  /*
     ŞİRKET KABUĞUNUN SEKMELERİ ADRESLE YANIYOR
 
     İlanlar sekmesi /sirket/ilanlar ve ilan formu /sirket/ilan/*;
@@ -672,7 +696,8 @@ export const Header: React.FC<HeaderProps> = ({
     TELEFONDA ARAMA ZİLİN YANINDA
 
     Marka telefonda ortada. Arama her zaman en sağda (bkz. aşağıdaki
-    `{aramaDugmesi}`); solda yalnız Kampüsüm ve İlanlar'daki süzgeç.
+    `{aramaDugmesi}`); solda yalnız Kampüsüm (İlanlar ve Fırsatlar
+    dışında) ve İlanlar'daki süzgeç.
     Masaüstünde düğme zaten `lg:hidden`.
   */
   const zilVarMi = Boolean(isLoggedIn && onBildirimAc);
@@ -825,7 +850,8 @@ export const Header: React.FC<HeaderProps> = ({
               ve panel ona "üniversiteni ekle" derdi — ikisinde de işe
               yaramayan bir düğme olurdu. `activeStudent` şartı: profil
               okunamadıysa (aşağıdaki güvenlik ağı dalı) öğrenci olduğu
-              doğrulanmamış biri.
+              doğrulanmamış biri. Koşul `kampusDugmesiCizilsin`de; ilan ve
+              fırsat sayfalarında düğme yok (gerekçe orada).
 
               Gerçek `<a href="/kampusum">`: orta tuş ve yeni sekme
               çalışıyor (adres `_middleware` listesinde). Geniş ekranda
@@ -837,7 +863,7 @@ export const Header: React.FC<HeaderProps> = ({
               ekran görüntüsünde çizip istememişti. Aynı simge burada başka
               bir işe gitseydi o kapı geri gelmiş gibi okunurdu.
             */}
-            {isLoggedIn && userRole === 'student' && activeStudent && onNavigate && (
+            {kampusDugmesiCizilsin && onNavigate && (
               <a
                 href="/kampusum"
                 aria-label="Kampüsüm"
