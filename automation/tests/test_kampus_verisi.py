@@ -219,7 +219,7 @@ def test_kesif_dogrulamasi():
     assert not kk.gecerli_duyuru(duyuru("2026-09-20", "2026-09-10", "2026-06-01"), gun), "en az 3 yakın tarihli"
     assert not kk.gecerli_duyuru(duyuru("2026-09-20", "2026-09-10"), gun), "en az 3 duyuru"
     assert not kk.gecerli_duyuru(duyuru("2026-06-01", "2026-05-01", "2026-04-01"), gun), "bayat liste"
-    menu = lambda *t: kv.Sonuc([{"tarih": x} for x in t], [], [])
+    menu = lambda *t: kv.Sonuc([{"tarih": x, "yemekler": ["MERCİMEK ÇORBA", "PİLAV"]} for x in t], [], [])
     assert kk.gecerli_menu(menu("2026-09-24", "2026-09-25", "2026-09-26"), gun)
     assert not kk.gecerli_menu(menu("2026-09-01", "2026-09-02", "2026-09-03"), gun), "bugüne yakın gün yok"
 
@@ -243,3 +243,20 @@ def test_kesif_arsiv_ve_kategori_sayfalarini_duyuru_saymiyor():
     assert not kk.gecerli_duyuru(akdeniz, gun), "AYLIK ARŞİV SAYFALARI DUYURU DEĞİL"
     assert not kk.gecerli_duyuru(hacettepe, gun), "KATEGORİ SAYFALARI DUYURU DEĞİL"
     assert kk.gecerli_duyuru(gercek, gun)
+
+
+def test_kalori_yer_tutucusu_yemek_sayilmiyor():
+    satirlar = ["25.09.2026 Cuma", "SEBZE ÇORBA", "-", "cal.", "İZMİR KÖFTE", "- cal.", "250 gr", "PİLAV", "130 kcal"]
+    m = kv.satir_menu_ayristir(satirlar, date(2026, 9, 25), "https://sks.uskudar.edu.tr/yemek-menusu", "gunluk")
+    assert m[0]["yemekler"] == ["SEBZE ÇORBA", "İZMİR KÖFTE", "PİLAV"]
+
+
+def test_kesif_gurultulu_menuyu_reddediyor():
+    from automation import kampus_kesif as kk
+
+    gun = date(2026, 9, 25)
+    gun_ = lambda t, y: {"tarih": t, "yemekler": y}
+    temiz = kv.Sonuc([gun_(t, ["SEBZE ÇORBA", "İZMİR KÖFTE"]) for t in ("2026-09-24", "2026-09-25", "2026-09-26")], [], [])
+    kirli = kv.Sonuc([gun_(t, ["SEBZE ÇORBA", "-", "cal.", "KÖFTE"]) for t in ("2026-09-24", "2026-09-25", "2026-09-26")], [], [])
+    assert kk.gecerli_menu(temiz, gun)
+    assert not kk.gecerli_menu(kirli, gun), "YARISI GÜRÜLTÜ OLAN MENÜ DOĞRULANMAMALI"
