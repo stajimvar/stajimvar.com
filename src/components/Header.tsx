@@ -16,7 +16,7 @@ import {
   SlidersHorizontal,
   X,
   Menu,
-  Home,
+  University,
   UserRound,
 } from 'lucide-react';
 import { StudentProfile, CompanyAccount } from '../types';
@@ -30,7 +30,6 @@ import { BildirimDugmesi } from './BildirimMerkezi';
 import { MesajKutusuDugmesi } from './mesaj/MesajKutusuDugmesi';
 import { useSayfaAramasi } from '../lib/sayfa-aramasi';
 import { KullaniciAramaSonuclari } from './sosyal/KullaniciArama';
-import { FotografPaylasGirisi } from './sosyal/FotografPaylasGirisi';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
 
 interface HeaderProps {
@@ -86,15 +85,6 @@ interface HeaderProps {
     açardı.
   */
   sosyalAvatarYolu?: string | null;
-  /**
-   * Kendi profil sayfasındaki fotoğraf paylaşma düğmesinin ön koşulu.
-   *
-   * `undefined` = profil henüz okunmadı; düğme o sırada KAPALI. Sunucu
-   * paylaşımı `yayinda_mi` + `sector_id` olmadan zaten reddediyor
-   * (20260924030000), o yüzden koşul seçimden ÖNCE soruluyor —
-   * kullanıcıya fotoğraflarını seçtirip sonra hayır demek olurdu.
-   */
-  sosyalPaylasabilir?: boolean | undefined;
   /** Rehber merkezine geçiş. */
   onOpenGuides?: () => void;
   /** Öğrenci fırsatları merkezi. */
@@ -220,7 +210,6 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   onOpenProfilVeCv,
   sosyalAvatarYolu = null,
-  sosyalPaylasabilir,
   onOpenGuides,
   onOpenOpportunities,
   onOpenEmployer,
@@ -629,6 +618,13 @@ export const Header: React.FC<HeaderProps> = ({
     Profil aynı anda basılı görünüyordu. Alt çubukta her an tek sekme.
   */
   /*
+    /kampusum (25 Eylül 2026): telefonda sol üstteki Kampüsüm düğmesinin
+    sayfası. Alt çubuktaki beş sekmenin hiçbiri değil; `activeTab`
+    'internships' ya da 'profile' kalıyor ve adres onu ezmezse İlanlar
+    ya da Profil yanardı. Seçili görünen tek şey düğmenin kendisi.
+  */
+  const kampustaMi = /^\/kampusum(\/|$)/.test(bulunulanYol);
+  /*
     /staj-ilanlari DA "ilanlar" SEKMESİ
 
     Sekme artık oraya götürüyor; koşul yalnız `activeTab`e bakınca sayfa
@@ -638,7 +634,7 @@ export const Header: React.FC<HeaderProps> = ({
   const stajIlanlarindaMi = bulunulanYol === '/staj-ilanlari';
   const ilanlardaMi =
     stajIlanlarindaMi ||
-    (!rehberdeMi && !firsatlardaMi && !kurumsalSayfada && !sosyaldeMi && activeTab === 'internships');
+    (!rehberdeMi && !firsatlardaMi && !kurumsalSayfada && !sosyaldeMi && !kampustaMi && activeTab === 'internships');
   /*
     Birleşik profil ekranının KENDİ ADRESİ var (/cv, /cv/yazdir). Alt
     menüdeki Profil oraya gidiyor ama seçili vurgusu yalnızca
@@ -652,7 +648,7 @@ export const Header: React.FC<HeaderProps> = ({
     activeTab değişmiyor; adres sekmeyi eziyor ki Profil ile Ağım aynı
     anda yanmasın. Alt çubukta her an tek sekme.
   */
-  const profildeMi = cvEkranindaMi || (!rehberdeMi && !kurumsalSayfada && !agimdaMi && activeTab === 'profile');
+  const profildeMi = cvEkranindaMi || (!rehberdeMi && !kurumsalSayfada && !agimdaMi && !kampustaMi && activeTab === 'profile');
 
   /*
     ŞİRKET KABUĞUNUN SEKMELERİ ADRESLE YANIYOR
@@ -669,14 +665,14 @@ export const Header: React.FC<HeaderProps> = ({
   const sirketIlanlarindaMi = /^\/sirket\/(ilanlar|ilan)(\/|$)/.test(bulunulanYol);
   const sirketBasvuranlarindaMi = /^\/sirket\/basvuranlar(\/|$)/.test(bulunulanYol);
   const sirketProfilindeMi = /^\/sirket\/profil(\/|$)/.test(bulunulanYol);
-  /* Şirket ana adresi: marka ve telefon köşesindeki ev simgesi buraya. */
+  /* Şirket ana adresi: marka buraya götürüyor. */
   const anaAdres = sirketKabugu ? '/sirket/ilanlar' : '/';
 
   /*
     TELEFONDA ARAMA ZİLİN YANINDA
 
-    Marka telefonda ortada. Zil varsa arama sağda zille yan yana,
-    diğer simgeler (paylaş, süzgeç) solda; zil yoksa arama da solda.
+    Marka telefonda ortada. Arama her zaman en sağda (bkz. aşağıdaki
+    `{aramaDugmesi}`); solda yalnız Kampüsüm ve İlanlar'daki süzgeç.
     Masaüstünde düğme zaten `lg:hidden`.
   */
   const zilVarMi = Boolean(isLoggedIn && onBildirimAc);
@@ -795,92 +791,64 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
             {/*
-              İŞLEM SİMGELERİ SAĞDA TOPLANIYOR
+              SOL KÜME — TELEFONDA MARKANIN SOLU
 
-              Marka sola alınınca bu simgeler onun sağına yapışıyordu;
-              `ml-auto` ile aradaki boşluğu alıp sağ kümenin (bildirim,
-              hesap) hemen yanına oturuyorlar. Dar ekranda çakışma yok:
-              marka `shrink-0`, küme sabit genişlikli düğmelerden oluşuyor.
+              Marka mutlak konumla çubuğun ortasında; bu küme akışta
+              kalan tek şey, `flex-1` kabın başında. Kümede ne kadar simge
+              olduğu logonun yerini DEĞİŞTİRMİYOR.
             */}
             <div className="flex items-center gap-1 sm:gap-2 lg:hidden">
             {/*
-              ANA SAYFA DÜĞMESİ — telefonda her başlığın sol köşesinde
-              (kullanıcı isteği, 17 Eylül 2026). İlanlar dışındaki bir
-              sayfadan İlanlar'a götürüyor; İlanlar'dayken sayfayı yeniliyor.
-              Gerçek `<a href="/">`: orta tuş ve yeni sekme çalışıyor.
+              ANA SAYFA VE FOTOĞRAF PAYLAŞMA SİMGELERİ KALDIRILDI
+              (kullanıcı isteği, 25 Eylül 2026).
+
+              Ana sayfa düğmesi (ev simgesi, 17 Eylül 2026) logoyla AYNI
+              adrese gidiyordu: logo zaten `href={anaAdres}` ve telefonda
+              ortada. Aynı yere giden iki öğe köşeyi boşa harcıyordu.
+
+              Fotoğraf paylaşma simgesi yalnız `/cv`de çiziliyordu. `/cv`de
+              aynı iş telefonda da görünen bir düğmeyle duruyor: "Paylaşımlar"
+              başlığının yanındaki "Fotoğraf paylaş" (`SosyalProfilSayfasi`,
+              koşulu sunucunun önkoşulu — `yayinda_mi` + `sector_id`). Önkoşul
+              yokken simge de bir şey yapmıyordu (`onOnKosulEksik` boştu),
+              yani kaybolan bir yol yok. Sahibin `/profil/<ad>` kartındaki
+              ikon hap ve Ağım'ın kendi üst çubuğundaki giriş yerinde. Simge
+              bu kümenin içindeydi ve küme `lg:hidden`: geniş ekranda zaten
+              görünmüyordu.
             */}
-            <a
-              href={anaAdres}
-              aria-label={
-                sirketKabugu
-                  ? 'Ana sayfa: ilanların'
-                  : ilanlardaMi
-                    ? 'İlanları yenile'
-                    : 'Ana sayfa: staj ilanları'
-              }
-              onClick={baglantiTiklamasi(() => {
-                if (sirketKabugu) {
-                  onNavigate?.('/sirket/ilanlar');
-                  return;
-                }
-                if (ilanlardaMi) {
-                  window.location.reload();
-                  return;
-                }
-                setUserRole('student');
-                setActiveTab('internships');
-                setActiveSubTab('all');
-              })}
-              className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-800 transition-colors hover:bg-gray-100 lg:hidden"
-            >
-              <Home className="h-6 w-6" />
-            </a>
             {/*
-              FOTOĞRAF PAYLAŞMA — YALNIZ KENDİ PROFİLİNDE
+              KAMPÜSÜM — YALNIZ OTURUMU AÇIK ÖĞRENCİDE.
 
-              Ağım'ın üst çubuğundaki simgenin AYNISI: aynı bileşen,
-              aynı seçici, aynı besteci (`FotografPaylasGirisi`). İkinci
-              bir kopya yazmak, iki ekranın zamanla ayrışması demekti.
+              Panel (`KampusumPaneli`) bakan öğrencinin okulunu sunucuda
+              oturumdan çözüyor (`kampusum()`); ziyaretçide RPC `anon`a
+              kapalı; şirket kabuğunda App öğrenci profilini hiç yüklemiyor
+              ve panel ona "üniversiteni ekle" derdi — ikisinde de işe
+              yaramayan bir düğme olurdu. `activeStudent` şartı: profil
+              okunamadıysa (aşağıdaki güvenlik ağı dalı) öğrenci olduğu
+              doğrulanmamış biri.
 
-              `/cv` oturum sahibinin KENDİ ekranı; başkasının profili
-              `/profil/<kullaniciadi>` adresinde açılıyor ve orada bu
-              düğme hiç çizilmiyor. Koşul adrese değil, adresin
-              anlamına bakıyor: `/cv` = kendi profilim.
+              Gerçek `<a href="/kampusum">`: orta tuş ve yeni sekme
+              çalışıyor (adres `_middleware` listesinde). Geniş ekranda
+              yok: istek telefon başlığı içindi ve geniş ekranda panel
+              `/cv` ile `/profil/<ad>` sayfalarında zaten çiziliyor.
 
-              Ağım'da çizilmiyor: orada sayfanın kendi üst çubuğu var ve
-              düğme zaten orada. İkisi birden çizilseydi aynı ekranda iki
-              paylaşım düğmesi olurdu.
+              SİMGE KAMPÜS BİNASI, KEP DEĞİL: kullanıcı üst çubuktaki kep
+              simgesini (şirket kabuğundaki eski "öğrenci görünümü" kapısı)
+              ekran görüntüsünde çizip istememişti. Aynı simge burada başka
+              bir işe gitseydi o kapı geri gelmiş gibi okunurdu.
             */}
-            {kendiProfilimde && (
-              <FotografPaylasGirisi
-                hazirMi={sosyalPaylasabilir !== undefined}
-                paylasabilirMi={sosyalPaylasabilir === true}
-                /*
-                  Ön koşul yoksa kullanıcı zaten kendi profilinde:
-                  eksikliği orada, kendi kartında görüyor. Başka bir
-                  yere götürmek onu bulunduğu yerden koparırdı.
-                */
-                onOnKosulEksik={() => {}}
-                onNavigate={onNavigate}
-                /*
-                  Paylaşım bitince akışa gidiliyor: yeni paylaşımın
-                  görüneceği yer orası. Profilde kalmak, kullanıcıyı
-                  paylaştığı şeyi göremediği bir ekranda bırakırdı.
-                */
-                onTamamlandi={() => onNavigate('/agim')}
-                /*
-                  `lg:hidden` YOK — BİLEREK.
-
-                  Yanındaki arama/süzgeç simgeleri telefona özel, çünkü
-                  masaüstünde sayfanın kendi arama kutusu var. Paylaşımın
-                  öyle bir karşılığı YOK: kaldırılan geniş "Paylaş"
-                  düğmesi masaüstünde de görünüyordu ve Ağım'ın kendi üst
-                  çubuğu `lg:hidden`. Bu düğme de gizlenseydi masaüstünde
-                  fotoğraf paylaşmanın hiçbir yolu kalmazdı (ölçüldü:
-                  1280 pikselde düğme DOM'daydı ama görünmüyordu).
-                */
-                dugmeSinifi="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-700 transition-colors hover:bg-gray-100"
-              />
+            {isLoggedIn && userRole === 'student' && activeStudent && onNavigate && (
+              <a
+                href="/kampusum"
+                aria-label="Kampüsüm"
+                aria-current={kampustaMi ? 'page' : undefined}
+                onClick={baglantiTiklamasi(() => onNavigate('/kampusum'))}
+                className={`relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl transition-colors lg:hidden ${ODAK_HALKASI} ${
+                  kampustaMi ? 'bg-blue-50 text-blue-600' : 'text-gray-800 hover:bg-gray-100'
+                }`}
+              >
+                <University aria-hidden className="h-6 w-6" />
+              </a>
             )}
 
             {/*

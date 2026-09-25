@@ -49,10 +49,15 @@ test('iki profil ekranı da aynı zemini kullanıyor: telefonda beyaz, sm üstü
     bir kart; aynı dizeyi paylaşıyor. Eski şart "dört ekran" idi; ölçülen
     şey aynı — yüzey mantığındaki ekranlar tek dizede.
   */
+  /*
+    25 Eylül 2026: altıncı ekran `/kampusum`. Kampüs paneli telefonda
+    profil sayfasındakiyle aynı `akis` yüzeyi (kenardan kenara, tek alt
+    çizgi), geniş ekranda gri zeminde kart.
+  */
   assert.equal(
     [...app.matchAll(zemin)].length,
-    5,
-    '/cv, ziyaretçi profili, akış, şirket profili ve mesajlar aynı zemin dizesini paylaşmalı',
+    6,
+    '/cv, ziyaretçi profili, akış, şirket profili, mesajlar ve kampüsüm aynı zemin dizesini paylaşmalı',
   );
 });
 

@@ -198,6 +198,13 @@ const TakipEttiklerimSayfasi = React.lazy(() =>
     default: m.TakipEttiklerimSayfasi,
   }))
 );
+/*
+  Kampüsüm sayfası GECİKMELİ: panel burs listesini ve kampüs sorgusunu
+  çekiyor; sayfayı hiç açmayan ziyaretçinin indirmesi gerekmiyor.
+*/
+const KampusumSayfasi = React.lazy(() =>
+  import('./components/kampus/KampusumSayfasi').then((m) => ({ default: m.KampusumSayfasi }))
+);
 const BolumTalepleri = React.lazy(() =>
   import('./components/yonetim/BolumTalepleri').then((m) => ({ default: m.BolumTalepleri }))
 );
@@ -542,23 +549,15 @@ export default function App() {
   */
   const [sosyalAvatarYolu, setSosyalAvatarYolu] = useState<string | null | undefined>(undefined);
   /*
-    PAYLAŞIM ÖN KOŞULU AYNI OKUMADAN GELİYOR
-
-    Üst çubuktaki fotoğraf paylaşma düğmesi, sunucudaki ön koşulu
-    (`yayinda_mi` + `sector_id`) seçimden ÖNCE sormak zorunda. Aynı
-    satır zaten avatar için okunuyor; ikinci bir sorgu aynı ekranda
-    aynı satırı iki kez okurdu.
-
-    `undefined` = henüz okunmadı; düğme o sırada kapalı duruyor.
-    Bilinmeyeni "sağlanmıyor" saymak, kullanıcıyı boş yere profil
-    ekranına atmak olurdu.
+    Paylaşım ön koşulu (`sosyalPaylasabilir`) da bu okumadan üst çubuğa
+    iniyordu; üst çubuktaki fotoğraf simgesi kullanıcı isteğiyle kalkınca
+    (25 Eylül 2026) okuyanı kalmadı ve durum silindi. `/cv`deki paylaşma
+    düğmesi ön koşulu kendi profil okumasından alıyor.
   */
-  const [sosyalPaylasabilir, setSosyalPaylasabilir] = useState<boolean | undefined>(undefined);
   React.useEffect(() => {
     const kimlik = session?.userId ?? null;
     if (!kimlik) {
       setSosyalAvatarYolu(undefined);
-      setSosyalPaylasabilir(undefined);
       return;
     }
     let iptal = false;
@@ -566,14 +565,10 @@ export default function App() {
       .then((profil) => {
         if (iptal) return;
         setSosyalAvatarYolu(profil?.avatarYolu ?? null);
-        setSosyalPaylasabilir(Boolean(profil?.yayindaMi && profil?.sektorId));
       })
       .catch(() => {
         /* Yol alınamadı: baş harfler kalıyor, ekran bozulmuyor. */
-        if (!iptal) {
-          setSosyalAvatarYolu(null);
-          setSosyalPaylasabilir(false);
-        }
+        if (!iptal) setSosyalAvatarYolu(null);
       });
     return () => {
       iptal = true;
@@ -1885,7 +1880,6 @@ export default function App() {
       */
       onOpenProfilVeCv={() => navigate('/cv')}
       sosyalAvatarYolu={sosyalAvatarYolu}
-      sosyalPaylasabilir={sosyalPaylasabilir}
       onOpenGuides={() => navigate('/rehber')}
       onOpenOpportunities={() => navigate('/firsatlar')}
       /*
@@ -2873,6 +2867,33 @@ export default function App() {
         onNavigate={navigate}
         onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
       />
+    );
+  }
+
+  /*
+    /kampusum — bakan öğrencinin kampüs paneli (kullanıcı isteği,
+    25 Eylül 2026). Telefonda başlığın sol üstündeki Kampüsüm düğmesinin
+    gittiği yer. `/takip` ile aynı prop dörtlüsü ve aynı oturumsuz
+    davranış (giriş kartı + `handleOpenLogin`); ayrıca şirket kabuğu ve
+    bakanın profili (`student`, profil sayfalarındaki `bakanOgrenci` ile
+    aynı kaynak). Adres kimlik taşımıyor: okul sunucuda `auth.uid()`den
+    çözülüyor. `onUniversiteEkle` verilmiyor — panel o durumda
+    `/cv#universite`e gidiyor.
+
+    Zemin `/cv` ve profille aynı: telefonda panel kenardan kenara bir
+    yüzey, `sm:` üstünde gri zeminde kart.
+  */
+  if (temizYol === '/kampusum') {
+    return icerikSayfasi(
+      <KampusumSayfasi
+        kullaniciId={session?.userId ?? null}
+        oturumHazir={sessionReady}
+        sirketHesabi={kabukRolu === 'company'}
+        ogrenci={student}
+        onNavigate={navigate}
+        onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+      />,
+      'bg-white sm:bg-[#F9FAFB]',
     );
   }
 

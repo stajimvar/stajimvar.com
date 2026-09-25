@@ -120,6 +120,13 @@ const UYGULAMA_ADRESLERI = new Set([
   */
   '/takip',
   /*
+    /kampusum: telefonda başlığın sol üstündeki Kampüsüm düğmesi gerçek
+    bir <a href> (25 Eylül 2026). /takip ile aynı sebep: ön render
+    edilmiyor, orta tuşla açılan sekme burada olmasaydı 404 görürdü.
+    Adres kimlik taşımıyor — okul `kampusum()` içinde `auth.uid()`den.
+  */
+  '/kampusum',
+  /*
     /agim ve /agim/baglantilar: sosyal akış ve bağlantı yönetimi. Ön
     render edilmiyorlar (içerik kişiye göre değişiyor), bu yüzden
     doğrudan açıldıklarında kabuğu buradan alıyorlar — liste bu ikisini

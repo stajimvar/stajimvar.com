@@ -159,7 +159,7 @@ test('her an tek sekme yanıyor: /agim İlanlar sekmesini de yakmıyor', () => {
     götürüyor), ama sosyal sayfalar hâlâ SÖNDÜRÜYOR: koşulun ikinci
     yarısı olduğu gibi duruyor.
   */
-  assert.match(header, /!sosyaldeMi && activeTab === 'internships'/);
+  assert.match(header, /!sosyaldeMi && !kampustaMi && activeTab === 'internships'/);
   assert.match(header, /const ilanlardaMi =\s+stajIlanlarindaMi \|\|/);
 });
 
