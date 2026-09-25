@@ -2603,10 +2603,8 @@ async function main() {
         arama motorunun gördüğü sayfa ile kullanıcının gördüğü sayfa
         ayrışırdı. Arama niyetinin kelimesi üst etikette duruyor.
       */
-      '<h1>İlk adımın burada.</h1>' +
-      '<p class="sv-giris">Farklı kariyer sayfalarını tek tek gezme. İlanları aracı ' +
-      'sitelerden değil, şirketlerin kendi kariyer sayfalarından derliyoruz; her ' +
-      'ilanda şirketin kendi başvuru bağlantısı var.</p>' +
+      '<h1>Staj aramaya buradan başla.</h1>' +
+      '<p class="sv-giris">Şirketlerin kariyer sayfalarından derlenen ve StajımVar’da yayımlanan staj ilanlarını keşfet.</p>' +
       ilanKartlari +
       anaSayfaNav +
       '</main>' +

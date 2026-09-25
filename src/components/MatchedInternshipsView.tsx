@@ -199,6 +199,8 @@ interface MatchedInternshipsViewProps {
     istemcinin eksik sayımı yanlış bir sayı olurdu.
   */
   alanFacets?: Array<{ alan: string; tip: string; count: number }>;
+  /** Katalogun tür dağılımı (tüm sayfalar); görünür sayının kaynağı. */
+  tipFacets?: Array<{ tip: string; count: number }>;
   onCountryChange?: (country:string)=>void;
   /* "Bu aramayı kaydet" için: toast ve giriş kapısı çağıranda. */
   onToast?: (mesaj: string) => void;
@@ -234,6 +236,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   countrySelection='all',
   countryFacets=[],
   alanFacets,
+  tipFacets,
   onCountryChange,
   onToast,
   onAramaKaydetGirisi,
@@ -1282,17 +1285,49 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       "Hukuk'ta bu kadar" dedirtmek yerine kalan sayfalar isteniyor.
     */
     const alanAcik = seciliAlanlar.length > 0;
-    if (!sayiIcinYukle && !kayitlilarAcik && !alanAcik && (!yurtdisiSecili || countrySelection !== 'all')) return;
+    /*
+      Her daraltmada da (A paketi, 26 Eylül 2026): süzme istemcide; kalan
+      sayfalar gelmeden görünür sayı kesin olamıyor ve "N ilan
+      gösteriliyor · devamı var" yazıyordu. Katalog birkaç sayfa.
+    */
+    if (!sayiIcinYukle && !kayitlilarAcik && !alanAcik && !daraltmaVar && (!yurtdisiSecili || countrySelection !== 'all')) return;
     if (yurtdisiIstenenUzunluk.current === allListings.length) return;
     yurtdisiIstenenUzunluk.current = allListings.length;
     onLoadMoreCountriesPage?.();
-  }, [yurtdisiSecili, sayiIcinYukle, subTab, seciliAlanlar.length, countrySelection, hasMoreCountriesPage, allListings.length, onLoadMoreCountriesPage]);
+  }, [yurtdisiSecili, sayiIcinYukle, subTab, seciliAlanlar.length, countrySelection, hasMoreCountriesPage, allListings.length, onLoadMoreCountriesPage, daraltmaVar]);
 
   const gosterilecekToplam = gosterilecekIlanSayisi({
     catalogTotal,
     suzulmusAdet: filteredListings.length,
     daraltmaVar,
   });
+
+  /*
+    GÖRÜNÜR SONUÇ SAYISI — YALNIZ KESİNSE "N İLAN" (A paketi, 26 Eylül 2026)
+
+    Katalog 24'lük sayfalarla geliyor ve süzme istemcide. Sunucu toplamı
+    (`catalogTotal`) tür süzgecinden ÖNCE sayılıyor; varsayılan "Staj +
+    Uzun dönem staj" süzgeci istemcide ve `daraltmaVar`a girmiyor. Bu
+    yüzden:
+      - tüm sayfalar yüklendiyse → çizilen kart sayısı kesin
+      - başka daraltma yoksa → sözleşmenin tür dağılımından
+        (`facets.tipler`, tüm sayfalar) seçili türlerin toplamı kesin;
+        tür süzgeci boşsa bütün türler
+      - aksi hâlde (ya da dağılım yoksa) sayı "toplam" diye sunulmuyor:
+        "N ilan gösteriliyor · devamı var". Ayrı sayaç ya da telafi yok.
+  */
+  const turToplami = React.useMemo(() => {
+    if (!tipFacets) return null;
+    return tipFacets
+      .filter((satir) => ilanTipleri.length === 0 || ilanTipleri.includes(satir.tip))
+      .reduce((toplam, satir) => toplam + satir.count, 0);
+  }, [tipFacets, ilanTipleri]);
+  const sayiKesin = !hasMoreCountriesPage || (!daraltmaVar && turToplami !== null);
+  const sonucSayisi = !hasMoreCountriesPage
+    ? filteredListings.length
+    : sayiKesin && turToplami !== null
+      ? Math.max(turToplami, filteredListings.length)
+      : null;
 
   /*
     SAĞ SÜTUN SAYAÇLARI — AYNI KURAL, AYNI KAYNAK
@@ -1601,7 +1636,11 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             ilanlar doğrudan başlıyor. `sr-only` başlığı DOM'da ve
             erişilebilirlik ağacında tutuyor; ön render edilen `h1` de yerinde.
           */}
-          <h1 className="sr-only">İlk adımın burada.</h1>
+          {/*
+            SAYFANIN h1'İ LİSTE SÜTUNUNA TAŞINDI (A paketi, 26 Eylül 2026):
+            görünür kısa giriş "Staj aramaya buradan başla." — aşağıda,
+            şeritlerin üstünde. Burada ikinci bir h1 bırakılmadı.
+          */}
 
           {/*
             GÜVEN SATIRI
@@ -1901,7 +1940,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           konum, tür, tarih blokları o kadar aşağı itilirdi.
         */}
         {alanSecenekListesi.length > 0 && (
-          <FiltreBlogu baslik="Alan">
+          <FiltreBlogu baslik="Bölüm veya alan">
             <div className="space-y-0.5 max-h-56 overflow-y-auto -mr-1 pr-1">
               {alanSecenekListesi.map((a) => (
                 <SecenekSatiri
@@ -1918,8 +1957,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           </FiltreBlogu>
         )}
 
-        {/* ---- konum ---- */}
-        <FiltreBlogu baslik="Konum">
+        {/* ---- konum: Türkiye'de şehir, dışında ülke (A paketi, 26 Eylül 2026) ---- */}
+        <FiltreBlogu baslik={seciliBolge === 'turkiye' ? 'Şehir' : 'Ülke'}>
           {/*
             Ülke şehrin ÜSTÜNDE: kapsamı geniş olan önce geliyor. Kişi önce
             hangi ülkenin ilanlarına baktığını seçiyor, sonra o ülkenin
@@ -1957,8 +1996,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           )}
         </FiltreBlogu>
 
-        {/* ---- çalışma tercihi ---- */}
-        <FiltreBlogu baslik="Çalışma tercihi">
+        {/* ---- çalışma biçimi: "Uzaktan" burada, staj türünde değil ---- */}
+        <FiltreBlogu baslik="Çalışma biçimi">
           <div className="space-y-0.5">
             {[
               { id: 'On-site', etiket: 'İş yerinde' },
@@ -1994,7 +2033,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           Sayısı sıfır olan seçenek çizilmiyor (işaretliyse duruyor):
           boş bir kutu, orada bir şey olduğunu düşündürür.
         */}
-        <FiltreBlogu baslik="İlan türü">
+        <FiltreBlogu baslik="Staj türü">
           <div className="space-y-0.5">
             {[
               { id: 'staj', etiket: 'Staj' },
@@ -2131,7 +2170,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               hatanın aynısı, sadece başka bir yerde. Tek kaynak:
               gosterilecekToplam, ikinci bir hesap yok.
             */}
-            {gosterilecekToplam} ilanı göster
+            {sonucSayisi !== null ? `${sonucSayisi} ilanı göster` : 'Sonuçları göster'}
           </button>
         </div>
         </div>
@@ -2174,6 +2213,22 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             için liste başlığı satırın DIŞINDA, her genişlikte erişilebilir.
           */}
           <div className="space-y-0 sm:space-y-4">
+          {/*
+            KISA GİRİŞ (A paketi, 26 Eylül 2026) — hero değil, iki satır.
+
+            Açıklama gerçek veriyle ölçüldü: yayındaki ilanların hepsi
+            şirketlerin kariyer sayfalarından derleniyor (elle ya da
+            otomatik) ve StajımVar'da yayımlanıyor. Kayıt ya da süzgeç
+            istemiyor; ilk kart 390 px'te ilk ekranda kalıyor.
+          */}
+          <div className="pb-2 pt-3 sm:pb-0 sm:pt-0">
+            <h1 className="text-lg font-extrabold leading-6 tracking-tight text-slate-900 sm:text-xl sm:leading-7">
+            Staj aramaya buradan başla.
+            </h1>
+            <p className="mt-0.5 text-sm leading-5 text-gray-600">
+            Şirketlerin kariyer sayfalarından derlenen ve StajımVar’da yayımlanan staj ilanlarını keşfet.
+            </p>
+          </div>
           <h2 className={`${LISTE_BASLIGI_YAZISI} sr-only`}>
             İlanları keşfet ({gosterilecekToplam})
           </h2>
@@ -2293,6 +2348,61 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                 ))}
               </ul>
             </nav>
+          )}
+
+          {/*
+            SONUÇ SATIRI (A paketi, 26 Eylül 2026)
+
+            Sayı `sonucSayisi` kuralından (yukarıda); kesin değilse toplam
+            gibi yazılmıyor. Bölüm tercihi SIRALAMA: ilan elemiyor, bu
+            yüzden "önce bölümüne uyanlar" deniyor, "süzüldü" denmiyor.
+            Etkin süzgeçler tek tek kaldırılabiliyor; "Filtreleri temizle"
+            panelin "Temizle"siyle aynı işlev (`suzgecleriTemizle`), ikinci
+            bir durum yok.
+          */}
+          {filteredListings.length > 0 && (
+            <div className="space-y-2 py-2.5 sm:py-0">
+              <div className="flex flex-wrap items-center justify-between gap-x-3">
+                <p className="text-sm text-gray-600" aria-live="polite">
+                  {sonucSayisi !== null ? (
+                    <>
+                      <strong className="font-bold text-slate-900">{sonucSayisi}</strong> ilan
+                    </>
+                  ) : (
+                    <>
+                      <strong className="font-bold text-slate-900">{filteredListings.length}</strong> ilan gösteriliyor · devamı var
+                    </>
+                  )}
+                  {bolumAlani && <span className="text-gray-500"> · önce bölümüne uyanlar</span>}
+                </p>
+                {aktifSuzgecler.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={suzgecleriTemizle}
+                    className="inline-flex min-h-11 cursor-pointer items-center rounded-lg text-sm font-semibold text-blue-700 hover:text-blue-800"
+                  >
+                    Filtreleri temizle
+                  </button>
+                )}
+              </div>
+              {aktifSuzgecler.length > 0 && (
+                <ul aria-label="Etkin filtreler" className="flex flex-wrap gap-1.5">
+                  {aktifSuzgecler.map((f) => (
+                    <li key={f.etiket}>
+                      <button
+                        type="button"
+                        onClick={f.kaldir}
+                        aria-label={`${f.etiket} filtresini kaldır`}
+                        className="inline-flex min-h-9 cursor-pointer items-center gap-1 rounded-full border border-gray-200 bg-white px-3 text-xs font-semibold text-slate-800 hover:bg-gray-50"
+                      >
+                        {f.etiket}
+                        <X aria-hidden className="h-3.5 w-3.5 text-gray-500" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
 
           </div>
@@ -2484,7 +2594,8 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           */}
           <div className="grid grid-cols-3 gap-2 bg-white rounded-2xl border border-gray-200 px-4 py-3.5">
             {[
-              { etiket: 'Açık ilan', deger: String(gosterilecekToplam) },
+              /* Listeyle aynı sayı (A paketi): kesinse `sonucSayisi`; değilse eski kural. */
+              { etiket: 'Açık ilan', deger: String(sonucSayisi ?? gosterilecekToplam) },
               { etiket: 'Şirket', deger: String(gosterilecekSirket) },
               { etiket: 'Şehir', deger: String(gosterilecekSehir) },
             ].map((kutu) => (

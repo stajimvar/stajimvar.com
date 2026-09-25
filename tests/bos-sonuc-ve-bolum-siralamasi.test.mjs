@@ -34,10 +34,10 @@ const PROGRAMLAR = [
 
 test('boş sonuç adımları doğru sırada', () => {
   const sira = [
-    'Bu filtrelere uygun açık ilan bulunamadı.',
+    'Bu filtrelere uygun ilan bulunamadı.',
     'Filtreleri temizle',
     'Bu bölüm ve ülkede staj alan işverenler',
-    'İlan açmamış şirkete nasıl yazılır?',
+    'İlan açmayan şirkete nasıl yazılır?',
     'Açık öğrenci fırsatlarına bak',
   ];
   let onceki = -1;
@@ -46,6 +46,15 @@ test('boş sonuç adımları doğru sırada', () => {
     assert.ok(i > onceki, `sıra bozuk: ${parca}`);
     onceki = i;
   }
+});
+
+test('filtre yokken boş liste filtreyi suçlamıyor (A paketi)', () => {
+  assert.match(SONUCYOK, /const filtreVar = Boolean\(aramaTerimi\) \|\| suzgecler\.length > 0;/);
+  assert.match(SONUCYOK, /\{filtreVar \? \(/);
+  assert.match(SONUCYOK, /Şu an listelenecek açık ilan yok\./);
+  assert.match(SONUCYOK, /Filtrelerini genişletebilir veya ilan açmayan şirketlere nasıl yazabileceğini öğrenebilirsin\./);
+  /* Temizlenecek bir şey yoksa "Filtreleri temizle" çizilmiyor. */
+  assert.match(SONUCYOK, /\{filtreVar && \(\s*<Eylem\s+ikon=\{<RotateCcw/);
 });
 
 test('Fırsatlar küçük ve ikincil, ana sonuç değil', () => {

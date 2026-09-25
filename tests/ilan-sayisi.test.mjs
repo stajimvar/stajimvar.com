@@ -87,7 +87,18 @@ test('başlık, şirket şeridi ve filtre düğmesi aynı türetilmiş sayıyı 
   // demekti. Tek kaynak: gosterilecekToplam.
   assert.match(gorunum, /\{gosterilecekToplam\}\)/);
   assert.match(gorunum, /toplam=\{gosterilecekToplam\}/);
-  assert.match(gorunum, /\{gosterilecekToplam\} ilanı göster/);
+  /*
+    A paketi (26 Eylül 2026): panel düğmesi ve görünür sonuç satırı aynı
+    `sonucSayisi`ni kullanıyor; o da `gosterilecekToplam`dan ve yalnız
+    kesinse sayı. Kesin değilse düğme "Sonuçları göster" diyor.
+  */
+  assert.match(gorunum, /\{sonucSayisi !== null \? `\$\{sonucSayisi\} ilanı göster` : 'Sonuçları göster'\}/);
+  assert.match(gorunum, /const sayiKesin = !hasMoreCountriesPage \|\| \(!daraltmaVar && turToplami !== null\);/);
+  /* Kaynak sözleşmenin tür dağılımı (tüm sayfalar), yüklenmiş kart değil. */
+  assert.match(gorunum, /return tipFacets\s*\.filter\(\(satir\) => ilanTipleri\.length === 0 \|\| ilanTipleri\.includes\(satir\.tip\)\)/);
+  assert.match(readFileSync('src/App.tsx', 'utf8'), /tipFacets=\{globalListings\.page\.facets\.tipler\}/);
+  /* Kesin değilken toplam gibi yazılmıyor. */
+  assert.match(gorunum, /ilan gösteriliyor · devamı var/);
   assert.match(gorunum, /gosterilecekIlanSayisi\(\{/);
 
   /*
@@ -128,7 +139,7 @@ test('daraltma bayrağı mevcut sinyallerden türetiliyor, bölüm çipinden de�
 });
 
 test('ülke seçici filtre panelinin Konum bloğunda ve şehrin üstünde', () => {
-  const bas = gorunum.indexOf('<FiltreBlogu baslik="Konum">');
+  const bas = gorunum.indexOf("<FiltreBlogu baslik={seciliBolge === 'turkiye' ? 'Şehir' : 'Ülke'}>");
   assert.notEqual(bas, -1, 'Konum bloğu bulunamadı');
   const son = gorunum.indexOf('</FiltreBlogu>', bas);
   assert.notEqual(son, -1);

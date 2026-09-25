@@ -31,6 +31,12 @@ export function katalogYanitiniDogrula(data) {
         || !Number.isInteger(x.count) || x.count < 0))) {
     throw new Error('Global ilan kataloğu geçersiz alan dağılımı verdi');
   }
+  /* Tür dağılımı da isteğe bağlı; varsa biçimi doğru olmalı (sayaç ondan). */
+  if (data.facets.tipler !== undefined && (!Array.isArray(data.facets.tipler)
+      || data.facets.tipler.some((x) => !x || typeof x.tip !== 'string'
+        || !Number.isInteger(x.count) || x.count < 0))) {
+    throw new Error('Global ilan kataloğu geçersiz tür dağılımı verdi');
+  }
   if (data.hasMore && (!data.nextCursor || typeof data.nextCursor.value !== 'string' || typeof data.nextCursor.id !== 'string')) {
     throw new Error('Global ilan kataloğu geçersiz imleç verdi');
   }

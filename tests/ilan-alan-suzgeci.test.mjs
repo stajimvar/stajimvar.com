@@ -138,11 +138,12 @@ test('alan seçiliyken kalan sayfalar yükleniyor', () => {
 });
 
 test('alan bloğu yalnız seçenek varken çiziliyor ve Konum bloğunun üstünde', () => {
-  const alan = gorunum.indexOf('<FiltreBlogu baslik="Alan">');
-  const konum = gorunum.indexOf('<FiltreBlogu baslik="Konum">');
+  /* A paketi (26 Eylül 2026): başlıklar "Bölüm veya alan" ve Türkiye'de "Şehir" / dışında "Ülke". */
+  const alan = gorunum.indexOf('<FiltreBlogu baslik="Bölüm veya alan">');
+  const konum = gorunum.indexOf("<FiltreBlogu baslik={seciliBolge === 'turkiye' ? 'Şehir' : 'Ülke'}>");
   assert.notEqual(alan, -1, 'Alan bloğu bulunamadı');
   assert.ok(alan < konum, 'Alan bloğu Konum bloğunun üstünde değil');
-  assert.match(gorunum, /\{alanSecenekListesi\.length > 0 && \(\s*<FiltreBlogu baslik="Alan">/);
+  assert.match(gorunum, /\{alanSecenekListesi\.length > 0 && \(\s*<FiltreBlogu baslik="Bölüm veya alan">/);
 });
 
 test('alan adları alınamazsa durum null kalıyor, sıfır yazılmıyor', () => {

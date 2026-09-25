@@ -3440,7 +3440,7 @@ export default function App() {
             {safeTab === 'internships' && globalListings.phase === 'error' && (
               <div className="w-full my-10 rounded-2xl border border-red-200 bg-red-50 p-6 text-center space-y-3">
                 <p className="font-bold text-red-800">
-                  İlanlar yüklenemedi
+                  İlanlar yüklenemedi.
                 </p>
                 <p className="text-xs text-red-700 max-w-lg mx-auto">
                   {globalListings.error}
@@ -3448,9 +3448,9 @@ export default function App() {
                 <button
                   type="button"
                   onClick={globalListings.retry}
-                  className="text-xs font-bold px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors"
+                  className="min-h-11 text-sm font-bold px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors"
                 >
-                  Tekrar dene
+                  Yeniden dene
                 </button>
               </div>
             )}
@@ -3495,6 +3495,7 @@ export default function App() {
                 }}
                 countryFacets={globalListings.page.facets.countries}
                 alanFacets={globalListings.page.facets.alanlar}
+                tipFacets={globalListings.page.facets.tipler}
                 onCountryChange={globalListings.setCountry}
                 catalogTotal={globalListings.page.total}
                 catalogCompanyTotal={globalListings.page.companyTotal}
