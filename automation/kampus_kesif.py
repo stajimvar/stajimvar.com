@@ -117,9 +117,22 @@ def gecerli_duyuru(sonuc: kv.Sonuc, gun: date) -> bool:
     )
 
 
+def yemek_gibi(kalem: str) -> bool:
+    """En az üç harf içeren kalem; birim, noktalama ya da sayı değil."""
+    return len(re.findall(r"[A-Za-zÇĞİÖŞÜçğıöşü]", kalem)) >= 3 and not kv.GURULTU.match(kalem.strip())
+
+
 def gecerli_menu(sonuc: kv.Sonuc, gun: date) -> bool:
+    """Bugüne yakın en az 3 gün ve kalemlerin en az %90'ı yemek adına benziyor.
+
+    İkinci şart ölçülen bir hatadan (25 Eylül 2026): Üsküdar'ın sayfası
+    her yemeğin ardından "-" ve "cal." yer tutucusu basıyordu ve menü
+    yarı yarıya gürültüyle doğrulamayı geçmişti.
+    """
     tarihler = {date.fromisoformat(m["tarih"]) for m in sonuc.menuler}
-    return len(tarihler) >= 3 and any(abs((t - gun).days) <= 7 for t in tarihler)
+    kalemler = [k for m in sonuc.menuler for k in m["yemekler"]]
+    oran = sum(yemek_gibi(k) for k in kalemler) / len(kalemler) if kalemler else 0
+    return len(tarihler) >= 3 and any(abs((t - gun).days) <= 7 for t in tarihler) and oran >= 0.9
 
 
 def dene(kaynak: dict[str, Any], alan: str, gun: date) -> kv.Sonuc | None:

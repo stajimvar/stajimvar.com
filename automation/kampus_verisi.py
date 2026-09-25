@@ -45,7 +45,13 @@ GUNLER = ["PAZARTESİ", "SALI", "ÇARŞAMBA", "PERŞEMBE", "CUMA", "CUMARTESİ",
 TARIH = re.compile(r"^(\d{1,2})[./](\d{1,2})[./](\d{4})$")
 KALORI = re.compile(r"^(\d{2,4})\s*kcal$", re.I)
 # Tek başına sayı (yemek başına kalori) ve sütun başlığı gürültüsü: yemek değil.
-GURULTU = re.compile(r"^(\d{1,4}|kcal|kalori)$", re.I)
+GURULTU = re.compile(
+    r"^(\d{1,4}|kcal|kalori)$"
+    # Boş kalori yer tutucusu ve noktalama (Üsküdar: "SEBZE ÇORBA", "-", "cal."),
+    # birimli sayı ("250 gr", "130 kcal").
+    r"|^[-–—.·*/|]+$|^-?\s*(cal|kal|kcal)\.?$|^\d{1,4}\s*(cal|kal|kcal|gr|g)\.?$",
+    re.I,
+)
 # Belgenin altındaki imza bloğu (unvanlar): hücre burada biter.
 IMZA = re.compile(r"DA[İI]RE BA[ŞS]KAN|V\.?H\.?K\.?[İI]|M[ÜU]D[ÜU]R|M[ÜU]HEND[İI]S|D[İI]YET[İI]SYEN|ONAY", re.I)
 
