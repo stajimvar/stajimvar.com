@@ -111,6 +111,7 @@ export const SonucYok: React.FC<SonucYokProps> = ({
     Listeyi en çok daraltan filtre: kaldırıldığında en çok ilan açan.
     Kullanıcıya "hangisini kaldırayım" sorusunu tahmin ettirmiyoruz.
   */
+  const filtreVar = Boolean(aramaTerimi) || suzgecler.length > 0;
   const daraltan = suzgecler
     .filter((s) => (s.kazanc ?? 0) > 0)
     .sort((a, b) => (b.kazanc ?? 0) - (a.kazanc ?? 0))[0];
@@ -124,9 +125,25 @@ export const SonucYok: React.FC<SonucYokProps> = ({
           "Bu aramada staj ilanı yok" belirsizdi: hangi arama, ve "yok"
           kalıcı mı? Cümle artık filtreye ve AÇIK ilana atıf yapıyor.
         */}
-        <p className="text-base font-bold text-gray-900">
-          Bu filtrelere uygun açık ilan bulunamadı.
-        </p>
+        {/*
+          FİLTRE YOKKEN FİLTREYİ SUÇLAMA (A paketi, 26 Eylül 2026): arama
+          ve süzgeç yoksa liste katalog yüzünden boş; cümle bunu söylüyor.
+        */}
+        {filtreVar ? (
+          <>
+            <p className="text-base font-bold text-gray-900">Bu filtrelere uygun ilan bulunamadı.</p>
+            <p className="text-sm leading-relaxed text-gray-600">
+              Filtrelerini genişletebilir veya ilan açmayan şirketlere nasıl yazabileceğini öğrenebilirsin.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-base font-bold text-gray-900">Şu an listelenecek açık ilan yok.</p>
+            <p className="text-sm leading-relaxed text-gray-600">
+              İlan açmayan şirketlere nasıl yazabileceğini öğrenebilirsin.
+            </p>
+          </>
+        )}
 
         {(aramaTerimi || suzgecler.length > 0) && (
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
@@ -176,13 +193,15 @@ export const SonucYok: React.FC<SonucYokProps> = ({
         </div>
       )}
 
-      {/* 2. ADIM (devamı) — filtreleri temizle. */}
-      <Eylem
-        ikon={<RotateCcw className="w-4 h-4" />}
-        baslik="Filtreleri temizle"
-        aciklama="Arama ve tüm filtreler sıfırlanır, bütün ilanlar listelenir."
-        onClick={onTumunuTemizle}
-      />
+      {/* 2. ADIM (devamı) — filtreleri temizle; temizlenecek bir şey yoksa yok. */}
+      {filtreVar && (
+        <Eylem
+          ikon={<RotateCcw className="w-4 h-4" />}
+          baslik="Filtreleri temizle"
+          aciklama="Arama ve tüm filtreler sıfırlanır, bütün ilanlar listelenir."
+          onClick={onTumunuTemizle}
+        />
+      )}
 
       {/*
         3. ADIM — SEÇİLİ ÜLKE VE BÖLÜME UYAN GERÇEK İŞVERENLER
@@ -267,7 +286,7 @@ export const SonucYok: React.FC<SonucYokProps> = ({
       <div className="grid gap-2.5 sm:grid-cols-2">
         <Eylem
           ikon={<FileText className="w-4 h-4" />}
-          baslik="İlan açmamış şirkete nasıl yazılır?"
+          baslik="İlan açmayan şirkete nasıl yazılır?"
           aciklama="Konu satırı, şablon ve en sık yapılan hatalar."
           onClick={onRehbereGit}
         />

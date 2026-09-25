@@ -145,6 +145,15 @@ export const BolumCipleri: React.FC<{
               ? 'Alanına uyan ilanlar listenin başına alındı. Diğer ilanlar altta duruyor.'
               : 'Seç, alanına uyan ilanlar başa gelsin. Hiçbir ilan gizlenmiyor.'}
           </p>
+          {/*
+            Tercih gerçekten saklanıyor (`stajimvar:bolum-tercihi`) ve açılışta
+            uygulanıyor; "Tümü" onu temizliyor. Cümle yalnız seçim varken.
+          */}
+          {secili && (
+            <p className="mt-1 text-xs leading-relaxed text-gray-500">
+              Tercihlerin bu tarayıcıda hatırlanır. İstediğin zaman temizleyebilirsin.
+            </p>
+          )}
         </div>
         {!secili && !panelde && (
           <button

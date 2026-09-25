@@ -140,6 +140,13 @@ export interface PublishedListingsCatalogPage {
       Eski açılış tohumunda olmayabilir: yoksa undefined.
     */
     alanlar?: Array<{ alan: string; tip: string; count: number }>;
+    /*
+      Tür dağılımı (katalog v3, 20261026010000): ülke süzgecinden SONRA,
+      tür süzgecinden ÖNCE ve tüm sayfalar üzerinden sunucuda sayılıyor
+      (NULL → 'siniflandirilmadi'). Varsayılan staj listesinin kesin
+      toplamı seçili türlerin toplamı. Eski açılış tohumunda yoksa undefined.
+    */
+    tipler?: Array<{ tip: string; count: number }>;
   };
   hasMore: boolean;
   nextCursor: PublishedListingsCursor | null;
