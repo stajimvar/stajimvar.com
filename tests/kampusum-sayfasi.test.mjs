@@ -174,7 +174,7 @@ test('/kampusum sayfası: dört durum, panel akış yerleşiminde, adres kimlik 
   assert.doesNotMatch(govde.slice(sirket, panel), /<KampusumPaneli/);
 
   /* Panel: aynı bileşen, akış yerleşimi, `onUniversiteEkle` yok. `/kampusum/<ad>`de kullanıcı adı. */
-  assert.match(govde, /<KampusumPaneli ogrenci=\{ogrenci\} onNavigate=\{onNavigate\} yerlesim="akis" kullaniciAdi=\{kullaniciAdi\} \/>/);
+  assert.match(govde, /<KampusumPaneli ogrenci=\{ogrenci\} onNavigate=\{onNavigate\} yerlesim="sayfa" kullaniciAdi=\{kullaniciAdi\} \/>/);
   assert.doesNotMatch(govde, /onUniversiteEkle/);
   /* Sayfa başlığı: görünür başlık panelin `h2`si; `h1` ekran okuyucuya. */
   assert.match(govde, /<h1 className="sr-only">\{kullaniciAdi \? 'Kampüs' : 'Kampüsüm'\}<\/h1>/);
