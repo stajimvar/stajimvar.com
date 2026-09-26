@@ -245,3 +245,24 @@ test('mobilde ikincil takip işlemi var ve iOS güvenli alanı korunuyor', () =>
   /* Dokunma hedefi 48 px (min-h-12). */
   assert.match(cubuk.slice(0, 2600), /min-h-12/);
 });
+
+test('tür etiketi konum satırında, kaynak başlıkla aynı sol hizada', () => {
+  /* Kullanıcı kararı (26 Eylül 2026): "İstanbul · Ofisten [Staj]". */
+  const kod = yorumsuz(KART);
+  const konumSatiri = kod.slice(kod.indexOf('{(konum || yurtdisi || turkiyeEtiketi || tipEtiketi) && ('));
+  const satirSonu = konumSatiri.indexOf('</p>');
+  assert.ok(satirSonu > 0, 'konum satırı bulunamadı');
+  const satir = konumSatiri.slice(0, satirSonu);
+  assert.match(satir, /flex-wrap/, 'dar ekranda etiket alt satıra geçebilmeli');
+  assert.match(satir, /\{tipEtiketi\}/, 'tür etiketi konum satırında');
+  assert.doesNotMatch(satir, /truncate/, 'yazı kesilmiyor');
+  /* Tür için ayrı satır yok; son başvuru yalnız varsa kendi satırında. */
+  assert.equal((kod.match(/\{tipEtiketi\}/g) || []).length, 1);
+  assert.match(kod, /\{sonBasvuru && \(\s*<p className="mt-1\.5 text-xs leading-4 text-gray-600">/);
+  /* Alt sıra logo sütunu kadar içeriden: 56 + 12, sm'de 80 + 12. */
+  assert.match(kod, /justify-between gap-3 pl-\[68px\] sm:pl-\[92px\]/);
+  /* Eylem ve kaydet yerinde; detay akışı aynı. */
+  assert.match(kod, /aria-label=\{`\$\{listing\.title\} ilanını incele`\}/);
+  assert.match(kod, /relative z-10 -mr-2 -mt-2 shrink-0/);
+  assert.equal((kod.match(/onClick=\{ilanaGit\}/g) || []).length, 2);
+});

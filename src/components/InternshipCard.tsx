@@ -189,11 +189,11 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
   /*
     İLAN KARTI — HİYERARŞİ (mobil sadeleştirme, 25 Eylül 2026)
 
-      SOL     56 × 56 logo
-      ORTA    pozisyon (ana başlık) · şirket · konum/çalışma biçimi ·
-              varsa ilan türü ve son başvuru
+      SOL     logo: telefonda 56 × 56, `sm` ve üstünde 80 × 80
+      ORTA    pozisyon (ana başlık) · şirket · konum/çalışma biçimi ve
+              yanında ilan türü · varsa son başvuru
       SAĞ ÜST kaydet
-      ALT     solda kaynak, sağda "İlanı incele"
+      ALT     solda kaynak (başlıkla aynı sol hizada), sağda "İlanı incele"
 
     Önce şirket adı başlıktı, pozisyon ikinci satırdı; öğrencinin sorusu
     "nereye başvurabilirim" — pozisyon önde.
@@ -203,6 +203,14 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
     türü, doğrulama — orada görüp dış siteye oradan gidiyor; o düğmenin
     yazısı gerçek hedefi söylüyor (`ilanHedefi`, ListingPage). Kaydet ile
     eylem örtünün üstünde (`relative z-10`), birbirinden bağımsız.
+
+    TÜR KONUM SATIRINDA (kullanıcı kararı, 26 Eylül 2026): "Staj" /
+    "Uzun dönem staj" etiketi kendi satırını kaplıyordu; artık konum ve
+    çalışma biçiminin yanında ("İstanbul · Ofisten [Staj]"). Satır
+    `flex-wrap`: dar ekranda etiket alt satıra geçiyor, yazı küçülmüyor
+    ya da kesilmiyor. Kaynak satırı logonun altına dönmüyor: alt sıra
+    logo sütunu kadar içeriden başlıyor (`pl-[68px]` = 56 + 12 boşluk,
+    `sm:pl-[92px]` = 80 + 12), eylem sağ altta kalıyor.
 
     Tarih ve tür yalnız veride varsa: ölçüldü (25 Eylül 2026) yayındaki
     186 ilanın 9'unda son başvuru, 177'sinde tür var. Tahmin basılmıyor.
@@ -236,7 +244,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           <ListingLogo
             name={listing.companyName}
             logoUrl={listing.companyLogo || undefined}
-            className="!h-14 !w-14 !rounded-xl !p-1.5 !text-lg"
+            className="!h-14 !w-14 !rounded-xl !p-1.5 !text-lg sm:!h-20 sm:!w-20 sm:!p-2 sm:!text-2xl"
           />
         </div>
 
@@ -256,9 +264,11 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             {listing.department && <span className="text-gray-500"> · {listing.department}</span>}
           </p>
 
-          {(konum || yurtdisi || turkiyeEtiketi) && (
+          {(konum || yurtdisi || turkiyeEtiketi || tipEtiketi) && (
             <p className="mt-1 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-sm leading-5 text-gray-600">
-              <MapPin aria-hidden className="h-4 w-4 shrink-0 text-gray-400" />
+              {(konum || yurtdisi || turkiyeEtiketi) && (
+                <MapPin aria-hidden className="h-4 w-4 shrink-0 text-gray-400" />
+              )}
               {/* Çalışma biçimi bilinmiyorsa yazılmıyor — varsayılan uydurulmuyor. */}
               {konum && <span className="min-w-0 break-words">{konum}</span>}
               {yurtdisi && <UlkeRozeti countryCode={listing.countryCode} />}
@@ -267,21 +277,17 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                   Türkiye
                 </span>
               )}
-            </p>
-          )}
-
-          {(tipEtiketi || sonBasvuru) && (
-            <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-4 text-gray-600">
               {tipEtiketi && (
-                <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 font-semibold text-gray-700">
+                <span className="inline-flex items-center break-words rounded-md bg-gray-100 px-2 py-0.5 text-xs font-semibold leading-4 text-gray-700">
                   {tipEtiketi}
                 </span>
               )}
-              {sonBasvuru && (
-                <span>
-                  Son başvuru: <strong className="font-semibold text-gray-800">{sonBasvuru}</strong>
-                </span>
-              )}
+            </p>
+          )}
+
+          {sonBasvuru && (
+            <p className="mt-1.5 text-xs leading-4 text-gray-600">
+              Son başvuru: <strong className="font-semibold text-gray-800">{sonBasvuru}</strong>
             </p>
           )}
 
@@ -318,7 +324,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
       </div>
 
       {/* ---- ALT: kaynak ve eylem ---- */}
-      <div className="flex min-w-0 items-center justify-between gap-3">
+      <div className="-mt-1 flex min-w-0 items-center justify-between gap-3 pl-[68px] sm:pl-[92px]">
         <p
           className="flex min-w-0 items-center gap-1.5 text-xs leading-4 text-gray-600"
           title={
