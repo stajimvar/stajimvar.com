@@ -27,6 +27,7 @@ import { BOLUMLER } from '../data/bolumler';
 import { ARACLAR } from './AraclarListesi';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { RehberMerkezi as RehberMerkeziBilesen } from './RehberMerkezi';
+import { IsverenRehberi } from '../sirket/IsverenRehberi';
 import { RehberIzgarasi, RehberKapagi, RehberKarti } from './RehberKartlari';
 import { gecmiseYaz } from '../lib/rehber-gecmis.mjs';
 import { rehberOkunduBildir } from '../lib/rehber-veri';
@@ -226,17 +227,61 @@ export const GuideHub: React.FC<
     /** Şirket hesabında şirketlere yönelik rehber en üstte. */
     sirketHesabi?: boolean;
   }
-> = ({ onNavigate, ogrenci = null, arama, onAramaDegis, onAramaTemizle, onGirisGerekli, sirketHesabi }) => (
-  <RehberMerkeziBilesen
-    onNavigate={onNavigate}
-    ogrenci={ogrenci}
-    arama={arama}
-    onAramaDegis={onAramaDegis}
-    onAramaTemizle={onAramaTemizle}
-    onGirisGerekli={onGirisGerekli}
-    sirketHesabi={sirketHesabi}
-  />
-);
+> = ({ onNavigate, ogrenci = null, arama, onAramaDegis, onAramaTemizle, onGirisGerekli, sirketHesabi }) => {
+  /*
+    ŞİRKET HESABINDA AÇILIŞ İŞVEREN REHBERİ (26 Eylül 2026)
+
+    Şirket /rehber'de önce işverene yönelik yazıları görüyor
+    (`IsverenRehberi`); "Tüm rehber" öğrenci merkezini açıyor, içerik
+    silinmiyor. Adreste konu varsa (paylaşılmış `?konu=` bağlantısı)
+    merkez doğrudan açılıyor. Öğrencide hiçbir şey değişmedi.
+  */
+  const [tumRehber, setTumRehber] = React.useState(
+    () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('konu'),
+  );
+  const [yerelArama, setYerelArama] = React.useState('');
+  const terim = arama ?? yerelArama;
+  const terimDegis = onAramaDegis ?? setYerelArama;
+
+  if (sirketHesabi && !tumRehber) {
+    return (
+      <SayfaKabugu icerikGenisligi="max-w-2xl" ustBosluk="pt-4 sm:pt-6">
+        <IsverenRehberi
+          onNavigate={onNavigate}
+          arama={terim}
+          onAramaDegis={terimDegis}
+          onTumRehber={() => setTumRehber(true)}
+        />
+      </SayfaKabugu>
+    );
+  }
+
+  return (
+    <>
+      {sirketHesabi && (
+        <div className={`mx-auto w-full ${SAYFA_GENISLIGI} px-4 pt-3`}>
+          <button
+            type="button"
+            onClick={() => setTumRehber(false)}
+            className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-bold text-blue-700 hover:text-blue-800"
+          >
+            <span aria-hidden>←</span>
+            İşveren rehberine dön
+          </button>
+        </div>
+      )}
+      <RehberMerkeziBilesen
+        onNavigate={onNavigate}
+        ogrenci={ogrenci}
+        arama={arama}
+        onAramaDegis={onAramaDegis}
+        onAramaTemizle={onAramaTemizle}
+        onGirisGerekli={onGirisGerekli}
+        sirketHesabi={sirketHesabi}
+      />
+    </>
+  );
+};
 
 /* ------------------------------------------------------------- tek rehber */
 

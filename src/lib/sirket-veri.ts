@@ -651,6 +651,13 @@ export interface SirketAcikKimlik {
   konum: string | null;
   siteUrl: string | null;
   aciklama: string | null;
+  /**
+   * `companies.verified` — herkese açık sütun (oturumsuz şirket sayfası
+   * da "Doğrulanmış" rozetini buradan çiziyor). Öğrencinin gördüğü şirket
+   * sayfası ile oturumsuz sayfa aynı gerçeği söylesin diye eklendi
+   * (26 Eylül 2026). Uydurulmuyor: yalnız sunucu true derse rozet var.
+   */
+  dogrulandi: boolean;
 }
 
 const bosNull = (x: string | null | undefined): string | null => {
@@ -660,7 +667,7 @@ const bosNull = (x: string | null | undefined): string | null => {
 
 /** Sahibin panel verisinden açık kimlik; `hrEmail` BİLEREK dışarıda. */
 export function sirketAcikKimligi(
-  baglam: Pick<SirketBaglami, 'companyId' | 'ad' | 'slug' | 'siteUrl'>,
+  baglam: Pick<SirketBaglami, 'companyId' | 'ad' | 'slug' | 'siteUrl' | 'dogrulandi'>,
   profil: SirketProfilDegeri | null,
 ): SirketAcikKimlik {
   return {
@@ -673,6 +680,7 @@ export function sirketAcikKimligi(
     konum: bosNull(profil?.location),
     siteUrl: bosNull(profil?.websiteUrl) ?? bosNull(baglam.siteUrl),
     aciklama: bosNull(profil?.description),
+    dogrulandi: baglam.dogrulandi === true,
   };
 }
 
@@ -688,7 +696,7 @@ export async function sirketAcikKimliginiOku(companyId: string): Promise<SirketA
   const db = await istemci();
   const { data, error } = await db
     .from('companies')
-    .select('id, name, slug, logo_url, industry, size, location, website_url, description')
+    .select('id, name, slug, logo_url, industry, size, location, website_url, description, verified')
     .eq('id', companyId)
     .maybeSingle();
   if (error) throw new Error('Şirket bilgileri alınamadı.');
@@ -703,5 +711,6 @@ export async function sirketAcikKimliginiOku(companyId: string): Promise<SirketA
     konum: bosNull(data.location),
     siteUrl: bosNull(data.website_url),
     aciklama: bosNull(data.description),
+    dogrulandi: data.verified === true,
   };
 }

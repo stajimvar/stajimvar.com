@@ -192,8 +192,24 @@ test('ayarlar açıkça "Ayarlar" yazan tek düğmede; üst çubukta ☰ yok', (
   assert.doesNotMatch(yorumsuz(header), /stajimvar:profil-menusu/);
 });
 
-test('şirket profiline kapak girmedi (kapsam dışı)', () => {
-  assert.doesNotMatch(sirket, /KapakFotografi|kapakFotografiYolu|katilmaMetni/);
+test('şirket profilinde kapak: aynı bileşen, sahibe yönlendirme, ziyaretçide eylem yok (26 Eylül 2026)', () => {
+  /*
+    Önce kapsam dışıydı. Şirketim ekranı "Kapak fotoğrafı ekle"
+    yönlendirmesi istedi; yeni bir yükleyici yazılmadı: bant öğrencinin
+    `KapakFotografi`si, yükleme `KapakFotografiYukleme` (şirketin KENDİ
+    sosyal satırına, `/sirket/profil/kapak`).
+  */
+  assert.match(sirket, /import \{ KapakFotografi \} from '\.\.\/components\/sosyal\/KapakFotografi';/);
+  assert.match(sirket, /\{kapakYolu \? \(\s*<KapakFotografi ad=\{kimlik\.ad\} yol=\{kapakYolu\} className="w-full" \/>/);
+  /* Yönlendirme yalnız sahip dalında ve yalnız kapak YOKKEN (null; undefined = bilinmiyor). */
+  assert.match(sirket, /\{sahip\?\.kapakYolu && kapakYolu === null && \(/);
+  assert.match(sirket, /Kapak fotoğrafı ekle/);
+  const sahipDali = oku('src/sirket/SirketProfili.tsx');
+  assert.match(sahipDali, /<KapakFotografiYukleme\s+kullaniciId=\{userId\}/);
+  assert.match(sahipDali, /mevcutYol=\{sosyal\.kapakFotografiYolu\}/);
+  assert.match(sahipDali, /const KAPAK_YOLU = '\/sirket\/profil\/kapak';/);
+  /* Katılma metni şirket sayfasında hâlâ yok. */
+  assert.doesNotMatch(sirket, /katilmaMetni/);
 });
 
 /* ------------------------------------------------------------------ */

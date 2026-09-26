@@ -1,5 +1,18 @@
 import React from 'react';
-import { AlertCircle, Archive, ArrowRight, MoreHorizontal, Plus, Send, Trash2 } from 'lucide-react';
+import {
+  AlertCircle,
+  Archive,
+  ArrowRight,
+  Briefcase,
+  Building2,
+  ChevronRight,
+  FileText,
+  MoreHorizontal,
+  Plus,
+  Send,
+  ShieldCheck,
+  Trash2,
+} from 'lucide-react';
 import {
   BIRINCIL_DUGME,
   IKINCIL_DUGME,
@@ -13,7 +26,7 @@ import {
   ikincilStil,
   kutuStil,
 } from './renk';
-import { IlanKarti, YeniIlanKarti, type AdayOzeti } from './IlanKarti';
+import { IlanKarti, type AdayOzeti } from './IlanKarti';
 import { ilanEylemleri } from '../lib/ilan-formu.mjs';
 import { adayGorebilir } from '../lib/sirket-kademe.mjs';
 import type { SirketBaglami, SirketProfilDegeri } from '../lib/sirket-veri';
@@ -71,6 +84,17 @@ export function profilEksikleri(profil: SirketProfilDegeri | null): string[] {
     .map((alan) => PROFIL_EKSIK_ADLARI[alan] as string);
 }
 
+/** İlk ilandan önce: yalnız var olan sayfalar (bkz. boş durum). */
+const BASLANGIC_ADIMLARI = [
+  { etiket: 'Şirket profilini gözden geçir', yol: '/sirket/profil', ikon: Building2 },
+  { etiket: 'İyi bir staj ilanı nasıl yazılır?', yol: '/rehber/iyi-staj-ilani-nasil-yazilir', ikon: FileText },
+  {
+    etiket: 'Zorunlu stajda işverenin yükümlülükleri',
+    yol: '/rehber/zorunlu-staj-isverenin-yukumlulukleri',
+    ikon: ShieldCheck,
+  },
+] as const;
+
 export const GenelBakis: React.FC<{
   baglam: SirketBaglami;
   ilanlar: Record<string, unknown>[];
@@ -106,30 +130,82 @@ export const GenelBakis: React.FC<{
   */
   if (ilanlar.length === 0) {
     return (
-      <div className={`${KUTU} text-center`} style={kutuStil}>
-        <h2 className="text-lg font-extrabold" style={{ color: SIRKET_METIN }}>
-          Henüz ilan yok
-        </h2>
-        <p
-          className="mx-auto mt-1 max-w-md text-sm leading-relaxed"
-          style={{ color: SIRKET_METIN_IKINCIL }}
-        >
-          İlk ilanı açmak iki dakika sürüyor: pozisyon, şehir, süre, ücret ve iş tanımı. İş
-          tanımı için hazır şablon var.
-        </p>
-        <button
-          type="button"
-          onClick={() => onNavigate('/sirket/ilan/yeni')}
-          className={`mx-auto mt-5 ${BIRINCIL_DUGME}`}
-          style={{ ...birincilStil, minHeight: 56, paddingInline: 28, fontSize: 16 }}
-        >
-          <Plus className="h-5 w-5" aria-hidden />
-          İlk ilanını aç
-        </button>
+      <div className="space-y-4">
+        {/*
+          TEK BİRİNCİL EYLEM (26 Eylül 2026): sayfada ilan oluşturan tek
+          düğme bu; üstteki "+" ilan yokken çizilmiyor (SirketPaneli).
+        */}
+        <div className={`${KUTU} text-center`} style={kutuStil}>
+          <span
+            aria-hidden
+            className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full"
+            style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
+          >
+            <Briefcase className="h-7 w-7" />
+          </span>
+          <h2 className="text-lg font-extrabold" style={{ color: SIRKET_METIN }}>
+            İlk ilanınızı oluşturun
+          </h2>
+          <p
+            className="mx-auto mt-1 max-w-md text-sm leading-relaxed"
+            style={{ color: SIRKET_METIN_IKINCIL }}
+          >
+            Pozisyonu ve çalışma koşullarını ekleyin, öğrencilerle buluşun.
+          </p>
+          <button
+            type="button"
+            onClick={() => onNavigate('/sirket/ilan/yeni')}
+            className={`mt-5 w-full sm:w-auto ${BIRINCIL_DUGME}`}
+            style={birincilStil}
+          >
+            <Plus className="h-5 w-5" aria-hidden />
+            İlan oluştur
+          </button>
+        </div>
+
+        {/*
+          BAŞLAMADAN ÖNCE — YALNIZ ÇALIŞAN YOLLAR
+
+          Her satır var olan bir sayfaya gidiyor: şirket profili ve iki
+          gerçek işveren rehberi (src/data/rehber-yazilari/isveren.tsx).
+          Başlıklar rehberlerin kendi adları. Tasarımdaki "Yayın öncesi
+          önizle" BİLEREK YOK: ilan formunda önizleme adımı yok, olmayan
+          bir işe bağlantı konmuyor.
+        */}
+        <section aria-labelledby="baslamadan-once" className={KUTU} style={kutuStil}>
+          <h2 id="baslamadan-once" className="font-extrabold" style={{ color: SIRKET_METIN }}>
+            Başlamadan önce
+          </h2>
+          <ul className="mt-1 divide-y divide-gray-100">
+            {BASLANGIC_ADIMLARI.map((adim) => (
+              <li key={adim.yol}>
+                <a
+                  href={adim.yol}
+                  onClick={(olay) => {
+                    if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0) return;
+                    olay.preventDefault();
+                    onNavigate(adim.yol);
+                  }}
+                  className={`flex min-h-14 items-center gap-3 py-2 ${SIRKET_ODAK}`}
+                >
+                  <span
+                    aria-hidden
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700"
+                  >
+                    <adim.ikon className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0 flex-1 text-sm font-semibold" style={{ color: SIRKET_METIN }}>
+                    {adim.etiket}
+                  </span>
+                  <ChevronRight aria-hidden className="h-4 w-4 shrink-0 text-gray-400" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     );
   }
-
   return (
     <div className="space-y-4">
       {eksikler.length > 0 && (
@@ -283,7 +359,6 @@ export const GenelBakis: React.FC<{
             />
           );
         })}
-        <YeniIlanKarti onNavigate={onNavigate} />
       </ul>
 
       {/*

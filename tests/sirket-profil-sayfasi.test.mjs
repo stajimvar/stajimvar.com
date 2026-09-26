@@ -34,7 +34,12 @@ test('herkese açık kimlik tipi İK e-postasını tanımıyor; öğrenci sorgus
   const tip = VERI.slice(VERI.indexOf('export interface SirketAcikKimlik'), VERI.indexOf('const bosNull'));
   assert.doesNotMatch(tip, /hrEmail|hr_email|vkn|mersis/i);
   const sorgu = VERI.slice(VERI.indexOf('export async function sirketAcikKimliginiOku'));
-  assert.match(sorgu, /\.select\('id, name, slug, logo_url, industry, size, location, website_url, description'\)/);
+  /*
+    26 Eylül 2026: `verified` eklendi — oturumsuz şirket sayfasının da
+    okuduğu herkese açık sütun (öğrenciye ve anon'a açık; `hr_email`
+    kapalı, yerelde 42501 ile doğrulandı).
+  */
+  assert.match(sorgu, /\.select\('id, name, slug, logo_url, industry, size, location, website_url, description, verified'\)/);
   assert.doesNotMatch(sorgu, /hr_email/);
   /* Görünüm bileşeni de bu alanları hiç anmıyor. */
   assert.doesNotMatch(kod(GORUNUM), /hrEmail|hr_email|vkn/i);
@@ -83,9 +88,14 @@ test('sahibe özel eylemler yalnız `sahip` nesnesinin içinde; ziyaretçi kabı
 
 test('üç sayaç üç ayrı durum; takipçi gerçek RPC; sıfır uydurulmuyor', () => {
   assert.match(GORUNUM, /\| \{ durum: 'yukleniyor' \}\s*\| \{ durum: 'hazir'; deger: number \}\s*\| \{ durum: 'hata' \}/);
-  assert.match(GORUNUM, /etiket="paylaşım"/);
-  assert.match(GORUNUM, /etiket="aktif ilan"/);
-  assert.match(GORUNUM, /etiket="takipçi"/);
+  /*
+    26 Eylül 2026: sayaçlar dizi üzerinden; sahipte sıra aktif ilan ·
+    takipçi · paylaşım, ziyaretçide eski sıra. Üç etiket ikisinde de var.
+  */
+  for (const e of ["etiket: 'paylaşım'", "etiket: 'aktif ilan'", "etiket: 'takipçi'"]) {
+    assert.equal(GORUNUM.split(e).length - 1, 2, `${e} iki sırada da olmalı`);
+  }
+  assert.match(GORUNUM, /<Sayac key=\{s\.etiket\} etiket=\{s\.etiket\} deger=\{s\.deger\} \/>/);
   assert.match(GORUNUM, /alınamadı/);
   /*
     Takipçi `sosyal_sayaclar`ın aynı satırından (20261015010000);
@@ -171,14 +181,19 @@ test('sekmeler ve kare ızgara; boş durumda stok görsel yok', () => {
     kalıyordu); hap sırası ızgara değil `flex-wrap`, yalnız kalan hücre
     diye bir şey yok.
   */
-  assert.match(
-    GORUNUM,
-    /<span className="sr-only sm:not-sr-only">İlan paylaş<\/span>\s*<\/a>\s*\{paylasGirisi\}\s*<a[\s\S]{0,400}?Profili düzenle\s*<\/a>\s*<\/>/,
-  );
+  /*
+    26 Eylül 2026 (Şirketim, kullanıcı kararı): hap sırasında yalnız
+    Fotoğraf paylaş ikonu; "Profili düzenle" (birincil) ve "Önizle"
+    (ikincil) adın altındaki iki hücreli satırda. "İlan paylaş" bu
+    ekrandan kalktı — İlanlarım'ın ve İlanlar sekmesinin birincil eylemi.
+  */
+  assert.match(GORUNUM, /\{sahip && paylasGirisi\}/);
+  assert.match(GORUNUM, /<div className="mt-3 grid grid-cols-2 gap-2">\s*<a\s+href=\{sahip\.duzenleYolu\}[\s\S]{0,200}className=\{HAP_BIRINCIL\}[\s\S]{0,160}Profili düzenle/);
+  assert.match(GORUNUM, /href=\{sahip\.onizleYolu\}[\s\S]{0,200}className=\{HAP\}[\s\S]{0,160}Önizle/);
   assert.doesNotMatch(kod(GORUNUM), /col-span-2/);
-  /* Rota ve tıklama etiketten bağımsız: iç kimlik değişmedi. */
-  assert.match(GORUNUM, /href=\{sahip\.ilanOlusturYolu\}/);
-  assert.match(GORUNUM, /onClick=\{icTiklama\(onNavigate, sahip\.ilanOlusturYolu\)\}/);
+  assert.doesNotMatch(kod(GORUNUM), /İlan paylaş/);
+  /* Sahipte varsayılan ve ilk sekme Hakkımızda; ziyaretçinin sırası değişmedi. */
+  assert.match(GORUNUM, /React\.useState<SirketSekmesi>\(sahip \? 'hakkimizda' : 'paylasimlar'\)/);
   assert.match(GORUNUM, /const paylasGirisi = sahip && sahip\.paylasabilirMi && \(/);
   /* Boş durumdaki düğme hâlâ aynı seçiciyi kolla açıyor, ikinci besteci yok. */
   assert.match(GORUNUM, /onClick=\{\(\) => paylasKolu\.current\?\.sec\(\)\}/);
@@ -193,8 +208,13 @@ test('sekmeler ve kare ızgara; boş durumda stok görsel yok', () => {
   assert.match(IZGARA, /export const GALERI_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-0\.5';/);
   assert.match(GORUNUM, /Henüz paylaşım yok/);
   assert.doesNotMatch(kod(GORUNUM), /unsplash|placeholder|stok/i);
-  /* Doğrulanmış rozeti şirket sayfasında yok. */
-  assert.doesNotMatch(kod(GORUNUM), /BadgeCheck|Doğrulanmış/);
+  /*
+    Doğrulanmış rozeti (26 Eylül 2026): YALNIZ ziyaretçi dalında ve yalnız
+    sunucu `verified` true derse — oturumsuz şirket sayfasıyla aynı gerçek.
+    Sahibin Şirketim ekranında tekrarlanmıyor.
+  */
+  assert.match(GORUNUM, /\{!sahip && kimlik\.dogrulandi && \(/);
+  assert.equal((kod(GORUNUM).match(/Doğrulanmış kurum/g) ?? []).length, 1);
 });
 
 test('bulanık kimlik bandı: zemin logonun kendisi ve logo yoksa zemin de yok', () => {
@@ -270,7 +290,18 @@ test('sahip: düzenleme ve ilan yolları mevcut akışlara; ilan yönetimi panel
     2026'da bağlantıyla birlikte kalktığı için burada da aranmıyor.
     Kalan ikisinin sabitleri yukarıda birebir doğrulanıyor.
   */
-  assert.match(SAHIP, /ilanOlusturYolu: ILAN_OLUSTUR_YOLU,\s*duzenleYolu: DUZENLE_YOLU,\s*paylasabilirMi,/);
+  /*
+    26 Eylül 2026: önizleme yolu geri geldi — bu kez ayrı bir öğrenci
+    rotası değil, `SirketSayfasi`nı sahip nesnesi OLMADAN çizen
+    /sirket/profil/onizle (yalnız açık sütunlar ve yayındaki ilanlar).
+  */
+  assert.match(SAHIP, /ilanOlusturYolu: ILAN_OLUSTUR_YOLU,\s*duzenleYolu: DUZENLE_YOLU,\s*onizleYolu: ONIZLE_YOLU,[\s\S]{0,200}kapakYolu: sosyal \? KAPAK_YOLU : undefined,\s*paylasabilirMi,/);
+  assert.match(SAHIP, /<SirketSayfasi\s+profil=\{sosyal\}[\s\S]{0,400}bakanId=\{userId\}/);
+  /* Çıkış ana içerikte değil, hesap ayarlarında (dişli). */
+  assert.match(SAHIP, /aria-label="Hesap ayarları"/);
+  assert.match(SAHIP, /etiket: 'Çıkış yap',[\s\S]{0,200}tehlike: true/);
+  const anaGorunum = SAHIP.slice(SAHIP.indexOf("const aktifIlan = ilanlar.filter"));
+  assert.doesNotMatch(anaGorunum, /<CikisDugmesi/);
 });
 
 test('database.types: takipler ve iki RPC göçle birebir', () => {

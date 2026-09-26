@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, LogOut, Plus } from 'lucide-react';
+import { ArrowLeft, Eye, ImagePlus, LogOut, Pencil, Plus, Settings } from 'lucide-react';
 import {
   IKINCIL_DUGME,
   KUTU,
@@ -12,6 +12,10 @@ import {
 import { GenelBakis } from './GenelBakis';
 import { SirketProfilFormu } from './SirketProfilFormu';
 import { SirketProfilGorunumu, type SayacDurumu } from './SirketProfilGorunumu';
+import { SirketSayfasi } from './SirketSayfasi';
+import { KapakFotografiYukleme } from '../components/sosyal/KapakFotografiYukleme';
+import { ProfilAyarlarSayfasi, type AyarBolumu } from '../components/ProfilAyarlarSayfasi';
+import { ProfilSayfaDuzeni } from '../components/sosyal/ProfilSayfaDuzeni';
 import type { AdayOzeti } from './IlanKarti';
 import {
   kendiSosyalProfiliGetir,
@@ -53,17 +57,34 @@ import {
  * yok. Tek fark kitle: şirket sayfası yalnız 'sirket' kitlesiyle
  * paylaşabiliyor (`paylasim_kitlesi_kilidi`), besteci seçici çizmiyor.
  *
- * ÇIKIŞ BURADA
- * ------------
- * Şirket hesabında üst çubukta hesap menüsü yok; çıkışın görünür yeri bu
- * sekmenin sonu (önceki sürümle aynı). Kaldırılsaydı kullanıcı giriş
- * yapmış hâlde kilitli kalırdı.
+ * ÇIKIŞ HESAP AYARLARINDA (26 Eylül 2026)
+ * -------------------------------------
+ * Şirket hesabında üst çubukta hesap menüsü yok. Çıkış sekmenin sonunda
+ * ana içeriğin içinde duruyordu; artık "Şirketim" başlığının yanındaki
+ * dişli düğmesinin açtığı ayarlar sayfasında (`ProfilAyarlarSayfasi`,
+ * öğrenci profilindeki aynı bileşen). Düğme her zaman görünür ve
+ * `aria-label` taşıyor; çıkış bir dokunuş daha uzakta ama kaybolmadı.
+ * Panel yüklenemediğinde ve şirket kaydı yokken dişli çizilmediği için
+ * orada çıkış düğmesi eskisi gibi sayfada.
+ *
+ * ŞİRKETİM ADRESLERİ (26 Eylül 2026)
+ * ---------------------------------
+ *   /sirket/profil/kapak   kapak fotoğrafı — öğrencinin kullandığı aynı
+ *                          `KapakFotografiYukleme`; yazdığı yer şirketin
+ *                          KENDİ sosyal satırı (`kapak_path`, sunucuda
+ *                          `kapak_yolu_kilidi` kendi klasörünü şart koşuyor).
+ *   /sirket/profil/onizle  öğrencinin gördüğü sayfa: `SirketSayfasi`
+ *                          sahip nesnesi OLMADAN — yalnız açık sütunlar
+ *                          (`sirketAcikKimliginiOku`) ve yayındaki ilanlar;
+ *                          İK e-postası, VKN, taslak ilan ve başvuru yok.
  */
 
 type Durum = 'yukleniyor' | 'hazir' | 'hata';
 
 const PROFIL_YOLU = '/sirket/profil';
 const DUZENLE_YOLU = '/sirket/profil/duzenle';
+const KAPAK_YOLU = '/sirket/profil/kapak';
+const ONIZLE_YOLU = '/sirket/profil/onizle';
 const ILAN_OLUSTUR_YOLU = '/sirket/ilan/yeni';
 
 const GERI_SATIRI = `inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 ${SIRKET_ODAK}`;
@@ -117,6 +138,8 @@ export const SirketProfili: React.FC<{
   */
   const [deneme, setDeneme] = React.useState(0);
   const [bildirim, setBildirim] = React.useState<string | null>(null);
+  const [ayarlarAcik, setAyarlarAcik] = React.useState(false);
+  const ayarlariKapat = React.useCallback(() => setAyarlarAcik(false), []);
 
   React.useEffect(() => {
     if (!userId) return;
@@ -220,6 +243,112 @@ export const SirketProfili: React.FC<{
     );
   }
 
+  const geriSatiri = (
+    <a
+      href={PROFIL_YOLU}
+      onClick={(olay) => {
+        if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0) return;
+        olay.preventDefault();
+        onNavigate(PROFIL_YOLU);
+      }}
+      className={GERI_SATIRI}
+    >
+      <ArrowLeft aria-hidden className="h-4 w-4 shrink-0" />
+      Şirketim'e dön
+    </a>
+  );
+
+  /* ---------------------------------------------------- kapak fotoğrafı */
+  if (yol.startsWith(KAPAK_YOLU) && baglam.companyId && userId) {
+    return (
+      <ProfilSayfaDuzeni>
+      <div className="space-y-3">
+        {geriSatiri}
+        <h1 className="text-xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
+          Kapak fotoğrafı
+        </h1>
+        {sosyalDurumu === 'yukleniyor' ? (
+          <span aria-busy="true" className="block h-32 w-full animate-pulse rounded-2xl bg-gray-100" />
+        ) : sosyalDurumu === 'hata' || !sosyal ? (
+          <p role="alert" className={`${KUTU} text-sm`} style={{ ...kutuStil, color: SIRKET_METIN_IKINCIL }}>
+            Şirket sayfanızın sosyal kaydı okunamadı; kapak şu anda eklenemiyor.
+          </p>
+        ) : (
+          <KapakFotografiYukleme
+            kullaniciId={userId}
+            ad={baglam.ad}
+            mevcutYol={sosyal.kapakFotografiYolu}
+            onVazgec={() => onNavigate(PROFIL_YOLU)}
+            onKaydedildi={(yeniYol) => {
+              setSosyal((onceki) => (onceki ? { ...onceki, kapakFotografiYolu: yeniYol } : onceki));
+              onNavigate(PROFIL_YOLU);
+            }}
+          />
+        )}
+      </div>
+      </ProfilSayfaDuzeni>
+    );
+  }
+
+  /* ------------------------------------------ öğrencinin gördüğü sayfa */
+  if (yol.startsWith(ONIZLE_YOLU) && baglam.companyId) {
+    return (
+      <ProfilSayfaDuzeni>
+      <div className="space-y-3">
+        {geriSatiri}
+        <p
+          role="note"
+          className="flex items-start gap-2 rounded-xl border px-3 py-2.5 text-sm"
+          style={{ background: '#EFF6FF', borderColor: '#BFDBFE', color: SIRKET_METIN }}
+        >
+          <Eye aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
+          <span>
+            Önizleme: giriş yapmış öğrenciler şirket sayfanızı böyle görüyor. Taslak ilanlar, başvurular
+            ve iletişim bilgileriniz burada yok. Oturumu kapalı ziyaretçiler{' '}
+            {baglam.slug ? (
+              <a
+                href={`/sirket/${baglam.slug}`}
+                onClick={(olay) => {
+                  if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0) return;
+                  olay.preventDefault();
+                  onNavigate(`/sirket/${baglam.slug}`);
+                }}
+                className="font-bold text-blue-700 underline-offset-2 hover:underline"
+              >
+                herkese açık şirket sayfasını
+              </a>
+            ) : (
+              'herkese açık şirket sayfasını'
+            )}{' '}
+            görür: kurum bilgileri ve yayındaki ilanlar; paylaşımlar ve takipçi sayısı giriş istiyor.
+          </span>
+        </p>
+        {sosyalDurumu === 'yukleniyor' ? (
+          <span aria-busy="true" className="block h-40 w-full animate-pulse rounded-2xl bg-gray-100" />
+        ) : sosyalDurumu === 'hata' || !sosyal || !sosyal.sirketId ? (
+          <p role="alert" className={`${KUTU} text-sm`} style={{ ...kutuStil, color: SIRKET_METIN_IKINCIL }}>
+            Şirket sayfanız henüz açılmamış ya da okunamadı; önizleme gösterilemiyor.
+          </p>
+        ) : (
+          <div className="-mx-4 sm:mx-0">
+            <SirketSayfasi
+              profil={sosyal}
+              paylasimlar={paylasimlar}
+              paylasimDurumu={paylasimDurumu}
+              paylasimSayaci={paylasimSayaci}
+              takipciSayaci={takipciSayaci}
+              /* Bakan = sayfanın sahibi: takip düğmesi DOM'a girmiyor (SirketSayfasi). */
+              bakanId={userId}
+              onPaylasimlariYenile={tazele}
+              onNavigate={onNavigate}
+            />
+          </div>
+        )}
+      </div>
+      </ProfilSayfaDuzeni>
+    );
+  }
+
   /* Şirket kaydı yokken profil görünümü yok; form o durumu anlatıyor. */
   if (!baglam.companyId) {
     return (
@@ -246,13 +375,100 @@ export const SirketProfili: React.FC<{
 
   const aktifIlan = ilanlar.filter((i) => i.status === 'published').length;
 
+  /*
+    AYARLAR — öğrenci profilindeki aynı tam ekran liste. Satırların hepsi
+    var olan bir işe gidiyor; çıkış en sonda, kırmızı.
+  */
+  const ayarBolumleri: AyarBolumu[] = [
+    {
+      baslik: 'Şirket sayfası',
+      ogeler: [
+        {
+          anahtar: 'duzenle',
+          etiket: 'Profili düzenle',
+          ikon: <Pencil aria-hidden className="h-5 w-5" />,
+          onClick: () => {
+            setAyarlarAcik(false);
+            onNavigate(DUZENLE_YOLU);
+          },
+        },
+        {
+          anahtar: 'kapak',
+          etiket: 'Kapak fotoğrafı',
+          ikon: <ImagePlus aria-hidden className="h-5 w-5" />,
+          onClick: () => {
+            setAyarlarAcik(false);
+            onNavigate(KAPAK_YOLU);
+          },
+        },
+        {
+          anahtar: 'onizle',
+          etiket: 'Öğrencinin gördüğü sayfa',
+          ikon: <Eye aria-hidden className="h-5 w-5" />,
+          onClick: () => {
+            setAyarlarAcik(false);
+            onNavigate(ONIZLE_YOLU);
+          },
+        },
+      ],
+    },
+    {
+      baslik: 'Hesap',
+      ogeler: onCikis
+        ? [
+            {
+              anahtar: 'cikis',
+              etiket: 'Çıkış yap',
+              ikon: <LogOut aria-hidden className="h-5 w-5" />,
+              onClick: () => {
+                setAyarlarAcik(false);
+                onCikis();
+              },
+              tehlike: true,
+            },
+          ]
+        : [],
+    },
+  ];
+
   return (
+    /*
+      MASAÜSTÜ GENİŞLİĞİ ÖĞRENCİ PROFİLİYLE AYNI (26 Eylül 2026): şirket
+      paneli sayfa genişliğinde çiziliyordu ve 3:1 kapak bandı 1280'de
+      ~1600×530 piksele büyüyordu. `ProfilSayfaDuzeni` öğrencinin /cv ve
+      /profil ekranlarındaki 600 piksellik ana sütun (lg ve üstü); telefonda
+      hiçbir sınıf eklemiyor, mobil görünüm aynı.
+    */
+    <ProfilSayfaDuzeni>
     <div className="space-y-4">
+      {/*
+        SAYFA BAŞLIĞI "ŞİRKETİM" (26 Eylül 2026): alt çubuktaki adla aynı.
+        Şirket adı aşağıda kimlik bandında (`h2`). Dişli hesap ayarlarını
+        açıyor — çıkış artık orada.
+      */}
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
+          Şirketim
+        </h1>
+        <button
+          type="button"
+          onClick={() => setAyarlarAcik(true)}
+          aria-label="Hesap ayarları"
+          className={`flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 ${SIRKET_ODAK}`}
+        >
+          <Settings aria-hidden className="h-5 w-5" />
+        </button>
+      </div>
+      <ProfilAyarlarSayfasi acik={ayarlarAcik} onKapat={ayarlariKapat} bolumler={ayarBolumleri} />
+
       {/* Ana alanın `px-4`ü telefonda geri alınıyor: görünüm kenarsız kap bekliyor. */}
       <div className="-mx-4 sm:mx-0">
       <SirketProfilGorunumu
         kimlik={sirketAcikKimligi(baglam, profil)}
         kullaniciAdi={sosyal?.kullaniciAdi ?? null}
+        adBasligi="h2"
+        /* Satır okunana kadar `undefined`: bant yönlendirmesi yanıp sönmesin. */
+        kapakYolu={sosyalDurumu === 'hazir' ? (sosyal?.kapakFotografiYolu ?? null) : undefined}
         sayaclar={{
           paylasim: paylasimSayaci,
           aktifIlan: { durum: 'hazir', deger: aktifIlan },
@@ -266,6 +482,9 @@ export const SirketProfili: React.FC<{
         sahip={{
           ilanOlusturYolu: ILAN_OLUSTUR_YOLU,
           duzenleYolu: DUZENLE_YOLU,
+          onizleYolu: ONIZLE_YOLU,
+          /* Sosyal satır yoksa kapağın yazılacağı yer de yok: yönlendirme çizilmiyor. */
+          kapakYolu: sosyal ? KAPAK_YOLU : undefined,
           paylasabilirMi,
           paylasimEngeli,
           onPaylasimEklendi: () => {
@@ -318,7 +537,7 @@ export const SirketProfili: React.FC<{
         }
       />
       </div>
-      {onCikis && <CikisDugmesi onCikis={onCikis} />}
     </div>
+    </ProfilSayfaDuzeni>
   );
 };

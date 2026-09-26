@@ -252,19 +252,33 @@ test('öğrenci Ağım: takip ettiğin şirketler tek okuma, iki yerleşim; kanc
   assert.match(OGRENCI_AGIM, /onNavigate\('\/agim\/baglantilar'\)/);
 });
 
-test('şirket Ağım: seni takip edenler (kendi listesi), boşta dürüst kart, takip ettiklerin yalnız varsa; rota bağlı', () => {
+test('şirket Takipçiler: kendi listesi, sayı sunucu sayacından, boşta dürüst kart, takip ettikleri yalnız varsa; rota bağlı', () => {
   assert.match(SIRKET_AGIM, /const takipciler = useTakipListesi\(takipcilerimiGetir, etkin\);/);
   assert.match(SIRKET_AGIM, /const takipEttiklerim = useTakipListesi\(takipEttiklerimiGetir, etkin\);/);
-  assert.match(SIRKET_AGIM, /Seni takip edenler/);
-  assert.match(SIRKET_AGIM, /\{takipciBos \? \(\s*<SirketAgimBos \/>/);
-  assert.match(SIRKET_AGIM, /\{takipEttiklerim\.durum === 'hazir' && takipEttiklerim\.satirlar\.length > 0 && \(/);
-  assert.match(SIRKET_AGIM, /Takip ettiğin şirketler/);
-  /* Takipçi SAYISI burada yazılmıyor; liste sayaçla birebir olmayabilir. */
-  assert.doesNotMatch(kod(SIRKET_AGIM), /takipci_sayisi|sosyalSayaclariGetir|tabular-nums/);
+  /* 26 Eylül 2026: ekranın adı "Takipçiler" (alt çubuktaki adla aynı). */
+  assert.match(SIRKET_AGIM, /<h1[^>]*>\s*Takipçiler\s*<\/h1>/);
+  assert.match(SIRKET_AGIM, /\{takipciBos \? \(\s*<SirketAgimBos onNavigate=\{onNavigate\} \/>/);
+  /*
+    İki liste açıkça ayrık (26 Eylül 2026): takip edilen şirketler varken
+    ilk liste "Sizi takip edenler" başlığını alıyor, ikincisi ayrı bölümde
+    ve takipçi sayısına girmediğini söylüyor.
+  */
+  assert.match(SIRKET_AGIM, /const takipEdilenVar = takipEttiklerim\.durum === 'hazir' && takipEttiklerim\.satirlar\.length > 0;/);
+  assert.match(SIRKET_AGIM, /\{takipEdilenVar && \(\s*<h2[^>]*>\s*Sizi takip edenler/);
+  assert.match(SIRKET_AGIM, /Takip ettiğiniz şirketler/);
+  assert.match(SIRKET_AGIM, /takipçi sayısına girmez/);
+  /*
+    Sayı listeden SAYILMIYOR (liste engelli/yayından kalkmışı süzüyor):
+    `sosyal_sayaclar.takipci`, Şirketim sayacıyla aynı okuma. Gelmezse
+    ya da sıfırsa satır hiç basılmıyor.
+  */
+  assert.match(SIRKET_AGIM, /sosyalSayaclariGetir\(userId\)/);
+  assert.match(SIRKET_AGIM, /\{takipciSayisi !== null && takipciSayisi > 0 && \(/);
+  assert.doesNotMatch(kod(SIRKET_AGIM), /takipci_sayisi|satirlar\.length\} hesap/);
   assert.match(APP, /<SirketAgim userId=\{session\?\.userId \?\? null\} onNavigate=\{navigate\} \/>/);
   assert.doesNotMatch(kod(APP), /<SirketAgimBos/);
   const bos = oku('src/sirket/SirketKimlikKarti.tsx');
-  assert.match(bos, /Henüz seni takip eden yok/);
+  assert.match(bos, /Henüz takipçiniz yok/);
   assert.doesNotMatch(kod(bos), /henüz açık değil|yakında/i);
 });
 

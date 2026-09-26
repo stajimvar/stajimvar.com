@@ -57,22 +57,42 @@ export { CikisDugmesi };
  * "yakında" yok. Kesik kenar sitenin boş-durum dili (src/ui/EmptyState).
  * Başlık `p`: sayfanın `h1`i bölüm başlığında ("Seni takip edenler").
  */
-export const SirketAgimBos: React.FC = () => (
-  <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center">
+export const SirketAgimBos: React.FC<{ onNavigate?: (yol: string) => void }> = ({ onNavigate }) => (
+  /*
+    SADE BOŞ DURUM (26 Eylül 2026): kesikli çerçeve "buraya bir şey
+    sürükle" gibi okunuyordu. Tek eylem gerçek: öğrencinin göreceği
+    sayfayı gözden geçirmek (Şirketim). `onNavigate` yoksa (fikstür)
+    yalnız cümle.
+  */
+  <div className="rounded-2xl border border-gray-200 bg-white px-5 py-8 text-center">
     <span
-      className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl"
+      className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full"
       style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
     >
       <Users className="h-6 w-6" aria-hidden />
     </span>
     <p className="font-bold" style={{ color: SIRKET_METIN }}>
-      Henüz seni takip eden yok
+      Henüz takipçiniz yok
     </p>
     <p
       className="mx-auto mt-1 max-w-md text-sm leading-relaxed"
       style={{ color: SIRKET_METIN_IKINCIL }}
     >
-      Şirket sayfanı takip eden öğrenciler ve şirketler burada görünecek.
+      Şirket sayfanızı takip eden öğrenciler ve şirketler burada görünecek.
     </p>
+    {onNavigate && (
+      <a
+        href="/sirket/profil"
+        onClick={(olay) => {
+          if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0) return;
+          olay.preventDefault();
+          onNavigate('/sirket/profil');
+        }}
+        className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-blue-700 hover:text-blue-800"
+      >
+        Şirket sayfanızı gözden geçirin
+        <span aria-hidden>→</span>
+      </a>
+    )}
   </div>
 );

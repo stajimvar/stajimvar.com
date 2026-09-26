@@ -16,6 +16,7 @@ import {
   SlidersHorizontal,
   X,
   UserRound,
+  Heart,
 } from 'lucide-react';
 import { StudentProfile, CompanyAccount } from '../types';
 import { SIRKET_KENAR_GUCLU, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
@@ -704,7 +705,8 @@ export const Header: React.FC<HeaderProps> = ({
   */
   const sirketKabugu = userRole === 'company';
   const sirketIlanlarindaMi = /^\/sirket\/(ilanlar|ilan)(\/|$)/.test(bulunulanYol);
-  const sirketBasvuranlarindaMi = /^\/sirket\/basvuranlar(\/|$)/.test(bulunulanYol);
+  /* "Öğrencileri keşfet" (/sirket/adaylar) Başvurular ekranından açılıyor; sekme yanık kalıyor. */
+  const sirketBasvuranlarindaMi = /^\/sirket\/(basvuranlar|adaylar)(\/|$)/.test(bulunulanYol);
   const sirketProfilindeMi = /^\/sirket\/profil(\/|$)/.test(bulunulanYol);
   /* Şirket ana adresi: marka buraya götürüyor. */
   const anaAdres = sirketKabugu ? '/sirket/ilanlar' : '/';
@@ -807,8 +809,15 @@ export const Header: React.FC<HeaderProps> = ({
                 sirketKabugu ? 'gap-2' : ''
               }`}
             >
+              {/*
+                ŞİRKET KABUĞUNDA LOGO 44 PİKSEL DOKUNMA ALANI (26 Eylül 2026):
+                bağlantı yalnız yazının kendisi kadardı (127×28). `min-h-11`
+                yalnız kutuyu uzatıyor; yazı boyutu `Logo`nun kendi
+                sınıflarında, değişmedi. Öğrenci kabuğundaki logo aynı kaldı.
+              */}
               <Logo
                 href={anaAdres}
+                className={sirketKabugu ? 'min-h-11' : ''}
                 onClick={() => {
                   if (sirketKabugu) {
                     onNavigate?.('/sirket/ilanlar');
@@ -1146,7 +1155,7 @@ export const Header: React.FC<HeaderProps> = ({
                   }`}
                 >
                   <Users className={`w-3.5 h-3.5 shrink-0 ${sirketBasvuranlarindaMi ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <span>Başvuranlar</span>
+                  <span>Başvurular</span>
                 </a>
                 <a
                   id="nav-tab-sirket-agim"
@@ -1157,8 +1166,8 @@ export const Header: React.FC<HeaderProps> = ({
                     agimdaMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                   }`}
                 >
-                  <Users className={`w-3.5 h-3.5 shrink-0 ${agimdaMi ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <span>Ağım</span>
+                  <Heart className={`w-3.5 h-3.5 shrink-0 ${agimdaMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span>Takipçiler</span>
                 </a>
                 <a
                   id="nav-tab-sirket-rehber"
@@ -1963,12 +1972,15 @@ export const Header: React.FC<HeaderProps> = ({
       /*
         ŞİRKET ALT MENÜSÜ — ÖĞRENCİYLE AYNI ÇUBUK, AYNI BEŞ SEKME
 
-        Eski dört öğe (Adaylar, %80+ Uyum, Kanban, İlan Ekle) kalktı;
-        turuncu/mor vurgular da onlarla gitti. Aynı `altMenuOgesi`
-        sınıfları: seçili öğe mavi kutu, diğerleri gri. Ağım ve Rehber
-        öğrencininkiyle aynı adrese; İlanlar, Başvuranlar ve Profil
-        şirketin kendi ekranına. Fırsatlar şirkette YOK (18 Eylül 2026):
-        salt okunur burs listesinin şirkete işi yoktu.
+        Sıra ve adlar (kullanıcı kararı, 26 Eylül 2026): İlanlar ·
+        Başvurular · Takipçiler · Rehber · Şirketim. "Başvuranlar"
+        "Başvurular" oldu (ekranın başlığıyla aynı), "Ağım" "Takipçiler"
+        (şirket hesabında ekran yalnız takipçileri gösteriyor), "Profil"
+        "Şirketim". İki ikon artık ayırt ediliyor: Başvurular `Users`
+        (aday listesi), Takipçiler `Heart` — ikisi de `Users` iken aynı
+        çubukta yan yana aynı simge duruyordu. Adresler DEĞİŞMEDİ
+        (/sirket/basvuranlar, /agim, /sirket/profil): paylaşılmış
+        bağlantılar ve bildirimler bu adreslere gidiyor.
       */
       <nav
         aria-label="Mobil Alt Şirket Navigasyon"
@@ -1989,15 +2001,14 @@ export const Header: React.FC<HeaderProps> = ({
         </a>
 
         {/*
-          "Başvuranlar" bu çubuğun EN UZUN etiketi (11 harf; öğrencide
-          en uzunu "Fırsatlar", 48 px). Ölçüldü (Chromium, 390 px):
-          metin 55,3 px kalın / 52,8 px normal, etiket kutusu 75 px —
-          20 px pay var, `truncate` devreye girmiyor. 320 px'lik en dar
-          ekranda kutu 61 px'e iner; yine sığar.
+          En uzun etiketler "Başvurular" ve "Takipçiler" (10 harf; önceki
+          "Başvuranlar" 11 idi). Ölçüldü (Chromium, 26 Eylül 2026): 320
+          ve 360 px'te beş etiketin hiçbiri kesilmiyor (metin genişliği =
+          kutu genişliği, 61 / 69 px); `truncate` devreye girmiyor.
         */}
         <a
           href="/sirket/basvuranlar"
-          aria-label="Başvuranlar"
+          aria-label="Başvurular"
           aria-current={sirketBasvuranlarindaMi ? 'page' : undefined}
           onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/sirket/basvuranlar')) : undefined}
           className={altMenuOgesi(sirketBasvuranlarindaMi)}
@@ -2005,25 +2016,25 @@ export const Header: React.FC<HeaderProps> = ({
           <span className={altMenuIkonu(sirketBasvuranlarindaMi)}>
             <Users className="h-5 w-5" />
           </span>
-          <span className={altMenuYazisi(sirketBasvuranlarindaMi)}>Başvuranlar</span>
+          <span className={altMenuYazisi(sirketBasvuranlarindaMi)}>Başvurular</span>
         </a>
 
         <a
           href="/agim"
-          aria-label="Ağım"
+          aria-label="Takipçiler"
           aria-current={agimdaMi ? 'page' : undefined}
           onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/agim')) : undefined}
           className={altMenuOgesi(agimdaMi)}
         >
           <span className={altMenuIkonu(agimdaMi)}>
-            <Users className="h-5 w-5" />
+            <Heart className="h-5 w-5" />
           </span>
-          <span className={altMenuYazisi(agimdaMi)}>Ağım</span>
+          <span className={altMenuYazisi(agimdaMi)}>Takipçiler</span>
         </a>
 
         <a
           href="/rehber"
-          aria-label="Rehber"
+          aria-label="İşveren rehberi"
           aria-current={rehberdeMi && !isverendeMi ? 'page' : undefined}
           onClick={baglantiTiklamasi(() => onOpenGuides?.())}
           className={altMenuOgesi(rehberdeMi && !isverendeMi)}
@@ -2036,7 +2047,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         <a
           href="/sirket/profil"
-          aria-label="Şirket profili"
+          aria-label="Şirketim"
           aria-current={sirketProfilindeMi ? 'page' : undefined}
           onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/sirket/profil')) : undefined}
           className={altMenuOgesi(sirketProfilindeMi)}
@@ -2044,7 +2055,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span className={altMenuIkonu(sirketProfilindeMi)}>
             <Building2 className="h-5 w-5" />
           </span>
-          <span className={altMenuYazisi(sirketProfilindeMi)}>Profil</span>
+          <span className={altMenuYazisi(sirketProfilindeMi)}>Şirketim</span>
         </a>
       </nav>
     )}
