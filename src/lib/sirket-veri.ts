@@ -38,6 +38,12 @@ export interface SirketBaglami {
   companyId: string | null;
   ad: string;
   slug: string;
+  /**
+   * `companies.logo_url` — üst çubuktaki hesap çipinde şirketin kendi
+   * logosu (27 Eylül 2026). Herkese açık sütun; aynı okumadan geliyor,
+   * ikinci sorgu yok. Yoksa çip genel bina simgesine düşüyor.
+   */
+  logoUrl?: string | null;
   siteUrl: string | null;
   hrEmail: string | null;
   vkn: string | null;
@@ -94,7 +100,7 @@ export async function sirketBaglami(
 
     const { data: sirket } = await db
       .from('companies')
-      .select('id, name, slug, website_url, verified')
+      .select('id, name, slug, website_url, verified, logo_url')
       .eq('id', companyId)
       .maybeSingle();
 
@@ -111,6 +117,7 @@ export async function sirketBaglami(
       companyId: sirket.id,
       ad: sirket.name ?? '',
       slug: sirket.slug ?? '',
+      logoUrl: (sirket as { logo_url?: string | null }).logo_url?.trim() || null,
       siteUrl: sirket.website_url ?? null,
       hrEmail: ozel?.hrEmail ?? null,
       vkn: ozel?.vkn ?? null,

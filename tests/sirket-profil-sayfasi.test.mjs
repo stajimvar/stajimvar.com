@@ -297,8 +297,14 @@ test('sahip: düzenleme ve ilan yolları mevcut akışlara; ilan yönetimi panel
   */
   assert.match(SAHIP, /ilanOlusturYolu: ILAN_OLUSTUR_YOLU,\s*duzenleYolu: DUZENLE_YOLU,\s*onizleYolu: ONIZLE_YOLU,[\s\S]{0,200}kapakYolu: sosyal \? KAPAK_YOLU : undefined,\s*paylasabilirMi,/);
   assert.match(SAHIP, /<SirketSayfasi\s+profil=\{sosyal\}[\s\S]{0,400}bakanId=\{userId\}/);
-  /* Çıkış ana içerikte değil, hesap ayarlarında (dişli). */
-  assert.match(SAHIP, /aria-label="Hesap ayarları"/);
+  /*
+    Çıkış ana içerikte değil, hesap ayarlarında. 27 Eylül 2026: "Şirketim"
+    başlığı ve yanındaki dişli kalktı; "Ayarlar" hapı kartın hap sırasında
+    (öğrenci /cv kartındaki gibi) ve ayarları sahip dalı açıyor.
+  */
+  assert.match(GORUNUM, /\{sahip\?\.onAyarlar && \(\s*<button type="button" onClick=\{sahip\.onAyarlar\} aria-label="Hesap ayarları" className=\{HAP\}>/);
+  assert.match(SAHIP, /onAyarlar: \(\) => setAyarlarAcik\(true\),/);
+  assert.doesNotMatch(SAHIP.replace(/\{\/\*[\s\S]*?\*\/\}/g, ''), />\s*Şirketim\s*</);
   assert.match(SAHIP, /etiket: 'Çıkış yap',[\s\S]{0,200}tehlike: true/);
   const anaGorunum = SAHIP.slice(SAHIP.indexOf("const aktifIlan = ilanlar.filter"));
   assert.doesNotMatch(anaGorunum, /<CikisDugmesi/);

@@ -901,12 +901,14 @@ export default function App() {
   const [kendiSirketId, setKendiSirketId] = useState<string | null>(null);
   /* Üst çubuktaki hesap bağlantısı için; aynı okumadan, ikinci sorgu yok. */
   const [sirketAdi, setSirketAdi] = useState<string | null>(null);
+  const [sirketLogosu, setSirketLogosu] = useState<string | null>(null);
   React.useEffect(() => {
     const kullanici = session?.userId;
     if (!kullanici) {
       setSirketUyesi(false);
       setKendiSirketId(null);
       setSirketAdi(null);
+      setSirketLogosu(null);
       return;
     }
     let iptal = false;
@@ -917,6 +919,7 @@ export default function App() {
         setSirketUyesi(Boolean(b.companyId));
         setKendiSirketId(b.companyId);
         setSirketAdi(b.ad || null);
+        setSirketLogosu(b.logoUrl ?? null);
       })
       .catch(() => {
         /* Okunamazsa uye degil sayiliyor; kapi zaten arkada. */
@@ -1913,6 +1916,7 @@ export default function App() {
       onBildirimAc={() => void bildirim.ac()}
       sirketUyesiMi={sirketUyesi}
       sirketAdi={sirketAdi}
+      sirketLogosu={sirketLogosu}
       bulunulanYol={temizYol}
       searchQuery={aramaTerimi}
       onSearchChange={(q) => {
