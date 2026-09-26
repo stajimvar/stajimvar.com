@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Eye, ImagePlus, LogOut, Pencil, Plus, Settings } from 'lucide-react';
+import { ArrowLeft, Eye, ImagePlus, LogOut, Pencil, Plus } from 'lucide-react';
 import {
   IKINCIL_DUGME,
   KUTU,
@@ -467,23 +467,11 @@ export const SirketProfili: React.FC<{
     >
     <div className="space-y-4">
       {/*
-        SAYFA BAŞLIĞI "ŞİRKETİM" (26 Eylül 2026): alt çubuktaki adla aynı.
-        Şirket adı aşağıda kimlik bandında (`h2`). Dişli hesap ayarlarını
-        açıyor — çıkış artık orada.
+        "ŞİRKETİM" BAŞLIĞI KALKTI (kullanıcı kararı, 27 Eylül 2026): öğrencinin
+        /cv ekranında da sayfa başlığı yok; sayfanın başlığı şirketin adı
+        (kimlik bandında `h1`). Alt çubukta sekmenin adı yine "Şirketim".
+        Dişli kartın içindeki hap sırasına taşındı ("Ayarlar"); çıkış orada.
       */}
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
-          Şirketim
-        </h1>
-        <button
-          type="button"
-          onClick={() => setAyarlarAcik(true)}
-          aria-label="Hesap ayarları"
-          className={`flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 ${SIRKET_ODAK}`}
-        >
-          <Settings aria-hidden className="h-5 w-5" />
-        </button>
-      </div>
       <ProfilAyarlarSayfasi acik={ayarlarAcik} onKapat={ayarlariKapat} bolumler={ayarBolumleri} />
 
       {/* Ana alanın `px-4`ü telefonda geri alınıyor: görünüm kenarsız kap bekliyor. */}
@@ -491,7 +479,6 @@ export const SirketProfili: React.FC<{
       <SirketProfilGorunumu
         kimlik={sirketAcikKimligi(baglam, profil)}
         kullaniciAdi={sosyal?.kullaniciAdi ?? null}
-        adBasligi="h2"
         /* Satır okunana kadar `undefined`: bant yönlendirmesi yanıp sönmesin. */
         kapakYolu={sosyalDurumu === 'hazir' ? (sosyal?.kapakFotografiYolu ?? null) : undefined}
         sayaclar={{
@@ -508,6 +495,7 @@ export const SirketProfili: React.FC<{
           ilanOlusturYolu: ILAN_OLUSTUR_YOLU,
           duzenleYolu: DUZENLE_YOLU,
           onizleYolu: ONIZLE_YOLU,
+          onAyarlar: () => setAyarlarAcik(true),
           /* Sosyal satır yoksa kapağın yazılacağı yer de yok: yönlendirme çizilmiyor. */
           kapakYolu: sosyal ? KAPAK_YOLU : undefined,
           paylasabilirMi,

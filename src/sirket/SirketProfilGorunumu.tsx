@@ -1,5 +1,5 @@
 import React from 'react';
-import { BadgeCheck, Briefcase, Camera, Eye, ImagePlus, Link as LinkIkonu, MapPin, Pencil, Plus, Users } from 'lucide-react';
+import { BadgeCheck, Briefcase, Camera, Eye, ImagePlus, Link as LinkIkonu, MapPin, Pencil, Plus, Settings, Users } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI, RENK_PRIMARY } from '../lib/renk-token';
 import { guvenliDisAdres } from '../lib/guvenli-url.mjs';
 import type { SosyalPaylasim } from '../lib/queries/sosyal';
@@ -110,6 +110,11 @@ export interface SahipEylemleri {
   onizleYolu?: string;
   /** Kapak fotoğrafı ekleme/değiştirme adresi; verilmezse bant yönlendirmesi yok. */
   kapakYolu?: string;
+  /**
+   * Hesap ayarlarını açar (çıkış orada). Öğrenci /cv kartındaki "Ayarlar"
+   * hapının karşılığı; hap sırasında, fotoğraf paylaş ikonunun yanında.
+   */
+  onAyarlar?: () => void;
   /**
    * Paylaşım açılabilir mi — sunucu önkoşulunun aynısı: sosyal satırda
    * kullanıcı adı VE `sirket_id` var. Sağlanmıyorsa düğme çizilmiyor ve
@@ -530,6 +535,17 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
                 sekmesinin birincil eylemi.
               */}
               {sahip && paylasGirisi}
+              {/*
+                AYARLAR KARTIN İÇİNDE (27 Eylül 2026): dişli sayfanın "Şirketim"
+                başlık satırındaydı; başlık kalkınca öğrencinin /cv kartındaki
+                gibi hap sırasına geldi — aynı `HAP` sınıfı, aynı etiket.
+              */}
+              {sahip?.onAyarlar && (
+                <button type="button" onClick={sahip.onAyarlar} aria-label="Hesap ayarları" className={HAP}>
+                  <Settings aria-hidden className="h-4 w-4 shrink-0" />
+                  Ayarlar
+                </button>
+              )}
             </div>
           </div>
 

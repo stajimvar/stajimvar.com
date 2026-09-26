@@ -168,6 +168,12 @@ interface HeaderProps {
     (company_members) veriyor, `profiles.role`dan değil.
   */
   sirketAdi?: string | null;
+  /**
+   * Şirketin logosu (`companies.logo_url`) — hesap çipinde bina simgesinin
+   * yerinde; öğrencinin çipinde profil fotoğrafı ne ise şirkette logo o
+   * (27 Eylül 2026). Yoksa ya da inmezse bina simgesi.
+   */
+  sirketLogosu?: string | null;
 }
 
 /*
@@ -225,7 +231,10 @@ export const Header: React.FC<HeaderProps> = ({
   onBildirimAc,
   sirketUyesiMi,
   sirketAdi = null,
+  sirketLogosu = null,
 }) => {
+  const [sirketLogosuBozuk, setSirketLogosuBozuk] = useState(false);
+  useEffect(() => setSirketLogosuBozuk(false), [sirketLogosu]);
   /*
     YÜZEN ÇUBUK AŞAĞI KAYDIRIRKEN ÇEKİLİYOR
 
@@ -1613,13 +1622,27 @@ export const Header: React.FC<HeaderProps> = ({
                         : 'border-gray-200 hover:bg-gray-50'
                     }`}
                   >
-                    <span
-                      aria-hidden
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full sm:h-9 sm:w-9"
-                      style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
-                    >
-                      <Building2 className="h-4 w-4" />
-                    </span>
+                    {sirketLogosu && !sirketLogosuBozuk ? (
+                      <span
+                        aria-hidden
+                        className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-white sm:h-9 sm:w-9"
+                      >
+                        <img
+                          src={sirketLogosu}
+                          alt=""
+                          onError={() => setSirketLogosuBozuk(true)}
+                          className="h-full w-full object-contain p-0.5"
+                        />
+                      </span>
+                    ) : (
+                      <span
+                        aria-hidden
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full sm:h-9 sm:w-9"
+                        style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
+                      >
+                        <Building2 className="h-4 w-4" />
+                      </span>
+                    )}
                     <span className="hidden min-w-0 max-w-[11rem] flex-col leading-tight md:flex">
                       {sirketAdi && (
                         <span className="truncate text-sm font-bold text-gray-900">{sirketAdi}</span>
