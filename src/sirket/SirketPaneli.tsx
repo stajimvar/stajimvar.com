@@ -1,5 +1,6 @@
 import React from 'react';
-import { BadgeCheck, Lock, Plus, ShieldCheck } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Lock, Plus, Search, ShieldCheck, Users } from 'lucide-react';
+import { listingSlug } from '../lib/slug';
 import {
   BIRINCIL_DUGME,
   IKINCIL_DUGME,
@@ -439,52 +440,52 @@ export const SirketIlanlarSekmesi: React.FC<{
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          {/*
-            Şirket adı yoksa başlık "İlanlar". "Şirketin" yazsaydı hem
-            kimsenin şirketinin adı olmazdı hem de sayfanın ne olduğunu
-            söylemezdi.
-          */}
-          <h1 className="truncate text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
-            {baglam.ad || 'İlanlar'}
-          </h1>
-          {/*
-            Alt satır gerçek sayılar ve kademe pili. Başvuru sayısı yalnız
-            kart görebilen kademede ve sıfırdan büyükse — "0 yeni başvuru"
-            bir bilgi değil, gürültü. Pil her genişlikte burada: üst
-            çubuk artık ortak kabuk ve kademeyi bilmiyor.
-          */}
-          <p
-            className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm"
-            style={{ color: SIRKET_METIN_IKINCIL }}
-          >
-            <span>
-              {ilanlar.length} ilan
-              {yeniToplam > 0 ? ` · ${yeniToplam} yeni başvuru` : ''}
-            </span>
-            <DurumRozeti baglam={baglam} />
-          </p>
+      {/*
+        BAŞLIK "İLANLARIM", ŞİRKET ADI İKİNCİL KİMLİKTE (26 Eylül 2026)
+
+        Başlık şirket adıydı; sekmenin ne olduğunu söylemiyordu. Artık
+        sayfanın adı `h1`, şirket adı ve gerçek doğrulama durumu üstte
+        küçük bir kimlik satırında. "Doğrulanmış kurum" rozeti yalnız bu
+        satırda (`companies.verified` → `baglam.dogrulandi`); Başvurular
+        ve öteki ekranlar tekrarlamıyor.
+
+        TEK OLUŞTURMA EYLEMİ: ilan yokken boş durum kartının "İlan
+        oluştur"u, ilan varken başlığın yanındaki etiketli "İlan oluştur".
+        Etiketsiz "+" ve listenin sonundaki kesikli "Yeni ilan" kartı
+        kalktı (26 Eylül 2026) — aynı sayfaya giden iki düğme yoktu artık.
+      */}
+      <div className="space-y-2">
+        <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold" style={{ color: SIRKET_METIN }}>
+          {baglam.ad && <span className="min-w-0 break-words">{baglam.ad}</span>}
+          <DurumRozeti baglam={baglam} />
+        </p>
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
+              İlanlarım
+            </h1>
+            {/*
+              Alt satır gerçek sayılar. Başvuru sayısı yalnız kart görebilen
+              kademede ve sıfırdan büyükse — "0 yeni başvuru" bilgi değil.
+            */}
+            <p className="mt-0.5 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
+              {ilanlar.length > 0
+                ? `${ilanlar.length} ilan${yeniToplam > 0 ? ` · ${yeniToplam} yeni başvuru` : ''}`
+                : 'Şirketinizin staj ilanlarını buradan yönetin.'}
+            </p>
+          </div>
+          {ilanlar.length > 0 && (
+            <button
+              type="button"
+              onClick={() => onNavigate('/sirket/ilan/yeni')}
+              className={`${BIRINCIL_DUGME} shrink-0 px-4`}
+              style={birincilStil}
+            >
+              <Plus className="h-5 w-5" aria-hidden />
+              İlan oluştur
+            </button>
+          )}
         </div>
-
-        {/*
-          ANA EYLEM SEKMENİN BAŞINDA
-
-          Eski kabukta üst çubuktaydı; ortak Header'a şirkete özel düğme
-          konmadı. Sekmenin tek asıl işi ilan açmak; liste uzun olsa da
-          düğme ilk ekranda. Listenin sonundaki kesikli kart da aynı yere
-          gidiyor. Dar ekranda yalnız ikon; dokunma hedefi 48 px.
-        */}
-        <button
-          type="button"
-          onClick={() => onNavigate('/sirket/ilan/yeni')}
-          aria-label="Yeni ilan oluştur"
-          className={`${BIRINCIL_DUGME} shrink-0 px-3 sm:px-5`}
-          style={birincilStil}
-        >
-          <Plus className="h-5 w-5" aria-hidden />
-          <span className="hidden sm:inline">Yeni ilan</span>
-        </button>
       </div>
 
       <GenelBakis
@@ -533,46 +534,108 @@ const Basvuranlar: React.FC<{
   const kartAcik = adayGorebilir(baglam.kademe);
 
   /*
-    SAYFANIN KENDİ BAŞLIĞI
+    SAYFANIN KENDİ BAŞLIĞI — "BAŞVURULAR" (26 Eylül 2026)
 
-    Başvuranlar artık kabuğun bir sekmesi; başlığı İlanlar'ın şirket
-    adından ödünç almıyor. `h1` burada, üç durumda da (kapalı kademe,
-    boş liste, dolu liste) aynı yerde — yalnız dolu listede başlık
-    çizilseydi kademe 1'deki şirket sayfanın adını hiç görmezdi.
-    Alt satır gerçek sayı ve kademe pili; sayı yalnız kart görebilen
-    kademede, çünkü öteki kademede bilinmiyor ("0 aday" yalan olurdu).
+    `h1` dört durumda da (ilan yok, kapalı kademe, boş liste, dolu liste)
+    aynı yerde. Sayı yalnız kart görebilen kademede ve liste doluyken:
+    öteki kademede bilinmiyor ("0 başvuru" yalan olurdu). Doğrulama
+    rozeti burada TEKRARLANMIYOR — İlanlarım'ın kimlik satırında.
   */
   const baslik = (
     <div className="min-w-0">
-      <h1 className="truncate text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
-        Başvuranlar
+      <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
+        Başvurular
       </h1>
-      {/*
-        ADAYLAR EKRANINA GİRİŞ
-
-        Başvuran ile aday farklı: başvuran bir ilana başvurmuş kişi, aday
-        profilini iş/staj listesine kendisi açmış kişi. İkisi ayrı ekran
-        ama giriş buradan veriliyor — alt gezinme çubuğunda zaten beş öğe
-        var ve genişlikleri 320 px için ölçülmüş; altıncı öğe o ölçümü
-        bozardı.
-      */}
-      <button
-        type="button"
-        onClick={() => onNavigate('/sirket/adaylar')}
-        className="mt-1.5 inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 text-sm font-bold text-emerald-800 hover:bg-emerald-100"
-      >
-        İş ve staj arayan öğrenciler
-        <span aria-hidden>→</span>
-      </button>
-      <p
-        className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm"
-        style={{ color: SIRKET_METIN_IKINCIL }}
-      >
-        {kartAcik && <span>{kartlar.length} aday</span>}
-        <DurumRozeti baglam={baglam} />
+      <p className="mt-0.5 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
+        {kartAcik && kartlar.length > 0
+          ? `İlanlarınıza gelen ${kartlar.length} başvuru.`
+          : 'İlanlarınıza gelen başvuruları buradan yönetin.'}
       </p>
     </div>
   );
+
+  /*
+    ÖĞRENCİLERİ KEŞFET — AYRI, İKİNCİL ALAN
+
+    Başvuran ile aday farklı: başvuran bir ilana başvurmuş kişi, aday
+    profilini iş/staj listesine kendisi açmış kişi. Giriş başlığın
+    altındaki yeşil düğmeydi ve sayfanın birincil eylemiyle yarışıyordu;
+    artık sayfanın sonunda ayrı bir alan. Alt çubuğa altıncı sekme
+    eklenmedi (beş öğe 320 px için ölçülü). Adaylar ekranının kendi
+    yetki kapısı değişmedi (SirketAdaylar).
+  */
+  const ogrencileriKesfet = (
+    <section
+      aria-labelledby="ogrencileri-kesfet"
+      className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4"
+    >
+      <span
+        aria-hidden
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+        style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
+      >
+        <Search className="h-5 w-5" />
+      </span>
+      <div className="min-w-0">
+        <h2 id="ogrencileri-kesfet" className="font-extrabold" style={{ color: SIRKET_METIN }}>
+          Aday mı arıyorsunuz?
+        </h2>
+        <p className="mt-0.5 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
+          İş ve staj aradığını belirten öğrencileri keşfedin.
+        </p>
+        <a
+          href="/sirket/adaylar"
+          onClick={(olay) => {
+            if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0) return;
+            olay.preventDefault();
+            onNavigate('/sirket/adaylar');
+          }}
+          className="mt-1 inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-blue-700 hover:text-blue-800"
+        >
+          Öğrencileri keşfet
+          <ArrowRight aria-hidden className="h-4 w-4" />
+        </a>
+      </div>
+    </section>
+  );
+
+  /*
+    HİÇ İLAN YOKSA: başvuru gelecek bir yer yok. Kademe ne olursa olsun
+    ilk iş ilan açmak (kademe 1 de ilan açabiliyor); kilitli kart ancak
+    ilan varken anlam taşıyor.
+  */
+  if (ilanlar.length === 0) {
+    return (
+      <div className="space-y-4">
+        {baslik}
+        <div className={`${KUTU} text-center`} style={kutuStil}>
+          <span
+            aria-hidden
+            className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full"
+            style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
+          >
+            <Users className="h-7 w-7" />
+          </span>
+          <h2 className="text-lg font-extrabold" style={{ color: SIRKET_METIN }}>
+            Henüz başvuru yok
+          </h2>
+          <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+            Başvuru almak için önce bir ilan yayınlayın.
+          </p>
+          <button
+            type="button"
+            onClick={() => onNavigate('/sirket/ilan/yeni')}
+            className={`mt-5 w-full sm:w-auto ${BIRINCIL_DUGME}`}
+            style={birincilStil}
+          >
+            <Plus className="h-5 w-5" aria-hidden />
+            İlan oluştur
+          </button>
+        </div>
+        {ogrencileriKesfet}
+      </div>
+    );
+  }
 
   if (!kartAcik) {
     return (
@@ -601,15 +664,24 @@ const Basvuranlar: React.FC<{
             Şirketini doğrula
           </button>
         </div>
+        {ogrencileriKesfet}
       </div>
     );
   }
 
+  /*
+    PAYLAŞILACAK ADRES İLANIN GERÇEK ADRESİ (26 Eylül 2026)
+
+    `/ilan/<uuid>` yazılıyordu; ilan yönlendirmesi adresin son parçasında
+    8 haneli kısa kimlik arıyor (`idPrefixFromSlug`) ve uuid'in son
+    parçası 12 hane: kopyalanan bağlantı hiçbir ilanı açmıyordu. Adres
+    artık öğrencinin gördüğü ilan kartıyla aynı `listingSlug`dan.
+  */
   const yayindaki = ilanlar.find((i) => i.status === 'published');
-  const ilanAdresi =
-    yayindaki && typeof window !== 'undefined'
-      ? `${window.location.origin}/ilan/${String(yayindaki.id)}`
-      : null;
+  const ilanYolu = yayindaki
+    ? `/ilan/${listingSlug({ id: String(yayindaki.id), title: String(yayindaki.title ?? '') })}`
+    : null;
+  const ilanAdresi = ilanYolu && typeof window !== 'undefined' ? `${window.location.origin}${ilanYolu}` : null;
 
   /*
     İLAN KARTINDAN GELEN SÜZGEÇ
@@ -647,6 +719,7 @@ const Basvuranlar: React.FC<{
         onAdayAcildi={onAdayAcildi}
         onNot={onNot}
       />
+      {ogrencileriKesfet}
     </div>
   );
 };

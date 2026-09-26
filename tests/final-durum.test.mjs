@@ -49,7 +49,7 @@ const sql = oku('scripts/sql/rls-regresyon-testleri.sql');
 
 /* ------------------------------------------------- 1. tek başlık */
 
-test('sayfada tek "Başvuranlar" başlığı var', () => {
+test('sayfada tek "Başvurular" başlığı var', () => {
   /*
     Masaüstünde başlık iki kez yazıyordu: panel kendi <h1>'ini
     çiziyordu, AdayIzgarasi de kendi başlığını.
@@ -73,7 +73,15 @@ test('sayfada tek "Başvuranlar" başlığı var', () => {
     olurdu.
   */
   assert.equal((izgara.match(/<h1/g) ?? []).length, 0, 'ızgara hâlâ h1 çiziyor');
-  assert.equal((izgara.match(/<h2/g) ?? []).length, 1, 'ızgarada başlık yok ya da birden fazla');
+  /*
+    26 Eylül 2026: boş durum ("ilan var, başvuru yok") kendi `h2`sini
+    taşıyor. İki dal birbirini dışlıyor (`if (kartlar.length === 0)
+    return`), yani ekranda yine tek bölüm başlığı var: boş dalda bir,
+    dolu dalda bir.
+  */
+  const bosDal = izgara.slice(izgara.indexOf('if (kartlar.length === 0) {'), izgara.indexOf('İlanlarıma git'));
+  assert.equal((bosDal.match(/<h2/g) ?? []).length, 1, 'boş durumda tek başlık');
+  assert.equal((izgara.match(/<h2/g) ?? []).length, 2, 'ızgarada başlık yok ya da dolu dalda birden fazla');
   assert.match(izgara, /basliksiz \?/);
   assert.match(izgara, /Başvuranlar/);
 });

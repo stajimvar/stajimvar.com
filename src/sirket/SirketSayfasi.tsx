@@ -180,6 +180,13 @@ export const SirketSayfasi: React.FC<{
       bildirim={bildirim}
       ziyaretciEylemi={takipDugmesi}
       onPaylas={onPaylas}
+      /*
+        Şirketin sosyal satırındaki kapak (26 Eylül 2026). Kova özel;
+        dosya `KapakFotografi` içinde bakanın oturumuyla ve profille aynı
+        okuma kapısından iniyor (`sosyal_gorunur`) — göremeyen için nötr
+        bant. Oturumsuz şirket sayfası (/sirket/<slug>) kapak çizmiyor.
+      */
+      kapakYolu={profil.kapakFotografiYolu ?? null}
       ilanlarIcerigi={<AcikIlanlar ilanlar={ilanlar} durum={ilanDurumu} onNavigate={onNavigate} />}
     />
   );

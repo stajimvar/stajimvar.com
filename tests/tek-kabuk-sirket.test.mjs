@@ -55,7 +55,16 @@ test('şirket ekranları ortak kabukta; eski kabuk ve eski portal sekmeleri yok'
   assert.doesNotMatch(HEADER, /nav-tab-sirket-firsatlar/);
   /* Aktiflik: Başvuranlar kendi kümesinde, İlanlar kümesinden çıktı — iki sekme birden yanmasın. */
   assert.ok(HEADER.includes("const sirketIlanlarindaMi = \/^\\/sirket\\/(ilanlar|ilan)(\\/|$)\/.test(bulunulanYol);"), 'İlanlar kümesi basvuranlar içermemeli');
-  assert.ok(HEADER.includes("const sirketBasvuranlarindaMi = \/^\\/sirket\\/basvuranlar(\\/|$)\/.test(bulunulanYol);"), 'Başvuranlar kendi kümesi');
+  /* 26 Eylül 2026: "Öğrencileri keşfet" (/sirket/adaylar) Başvurular ekranından açıldığı için o kümede. */
+  assert.ok(HEADER.includes("const sirketBasvuranlarindaMi = \/^\\/sirket\\/(basvuranlar|adaylar)(\\/|$)\/.test(bulunulanYol);"), 'Başvurular kendi kümesi');
+  /*
+    Adlar ve ikonlar (26 Eylül 2026): İlanlar · Başvurular · Takipçiler ·
+    Rehber · Şirketim. Başvurular ile Takipçiler ayrı ikon taşıyor.
+  */
+  const etiketler = [...altCubuk.matchAll(/<span className=\{altMenuYazisi\([^)]*\)\}>([^<]+)<\/span>/g)].map((e) => e[1]);
+  assert.deepEqual(etiketler, ['İlanlar', 'Başvurular', 'Takipçiler', 'Rehber', 'Şirketim']);
+  const ikonlar = [...altCubuk.matchAll(/<span className=\{altMenuIkonu\([^)]*\)\}>\s*<(\w+) /g)].map((e) => e[1]);
+  assert.equal(new Set(ikonlar).size, 5, `alt çubukta aynı ikon iki kez: ${ikonlar}`);
   const kod = HEADER.replace(/\/\*[\s\S]*?\*\//g, '');
   for (const iz of ['nav-company-kanban', '%80+ Uyum', 'companyDropdownOpen', 'Şirket Portalından Çıkış', 'Kanban']) {
     assert.ok(!kod.includes(iz), `${iz} hâlâ Header'da`);
@@ -90,7 +99,8 @@ test('şirket sekmeleri dürüst: Fırsatlar şirkette yok, Başvuranlar tam say
   assert.doesNotMatch(PANEL, /import \{ Tabs \}/);
   assert.doesNotMatch(PANEL, /<Tabs/);
   assert.match(PANEL, /if \(gorunum === 'basvuranlar'\) \{\s*return \(\s*<Basvuranlar/);
-  assert.match(PANEL, /<h1[^>]*>\s*Başvuranlar\s*<\/h1>/);
+  assert.match(PANEL, /<h1[^>]*>\s*Başvurular\s*<\/h1>/);
+  assert.match(PANEL, /<h1[^>]*>\s*İlanlarım\s*<\/h1>/);
   assert.match(PANEL, /<AdayIzgarasi\s+basliksiz/);
   assert.match(oku('src/sirket/IlanKarti.tsx'), /onNavigate\(`\/sirket\/basvuranlar\?ilan=\$\{encodeURIComponent\(id\)\}`\)/);
 
@@ -101,7 +111,7 @@ test('şirket sekmeleri dürüst: Fırsatlar şirkette yok, Başvuranlar tam say
   assert.match(APP, /kabukRolu === 'company' && \/\^\\\/\(agim\|baglantilar\)\(\\\/\|\$\)\/\.test\(temizYol\)/);
   assert.match(APP, /<SirketAgim userId=\{session\?\.userId \?\? null\} onNavigate=\{navigate\} \/>/);
   const agim = KIMLIK.slice(KIMLIK.indexOf('export const SirketAgimBos'));
-  assert.match(agim, /Henüz seni takip eden yok/);
+  assert.match(agim, /Henüz takipçiniz yok/);
   assert.doesNotMatch(agim, /yakında|henüz açık değil|\b0 takipçi|tabular-nums/i);
 
   /*
@@ -112,7 +122,13 @@ test('şirket sekmeleri dürüst: Fırsatlar şirkette yok, Başvuranlar tam say
   assert.match(KIMLIK, /export const SirketProfilSekmesi/);
   assert.match(KIMLIK, /<SirketProfili\s/);
 
-  /* Rehber: şirket hesabında şirketler için rehber kartı listenin başında, öğrencide sonunda. */
+  /*
+    Rehber: şirket hesabında açılış İŞVEREN REHBERİ (26 Eylül 2026);
+    "Tüm rehber" öğrenci merkezini açıyor ve orada şirketler için kart
+    yine listenin başında, öğrencide sonunda.
+  */
+  const REHBER_KABUGU = oku('src/components/GuidePages.tsx');
+  assert.match(REHBER_KABUGU, /if \(sirketHesabi && !tumRehber\) \{[\s\S]{0,300}<IsverenRehberi/);
   assert.match(REHBER, /<section aria-label="Rehberler"[^>]*>\s*\{sirketHesabi && sirketRehberKarti\}/);
   assert.match(REHBER, /\{!sirketHesabi && sirketRehberKarti\}\s*<\/section>/);
   assert.match(APP, /sirketHesabi=\{kabukRolu === 'company'\}/);

@@ -1,9 +1,10 @@
 import React from 'react';
-import { Check, Copy, Eye, EyeOff, Search, Users } from 'lucide-react';
+import { Check, Copy, Eye, EyeOff, Search, Share2, Users } from 'lucide-react';
 import { AdayKarti } from './AdayKarti';
 import { AdayCekmecesi, type Iletisim } from './AdayCekmecesi';
 import {
   ALAN,
+  BIRINCIL_DUGME,
   IKINCIL_DUGME,
   KUTU,
   SIRKET_KENAR,
@@ -13,6 +14,7 @@ import {
   SIRKET_ROZET,
   SIRKET_VURGU_KOYU,
   alanStil,
+  birincilStil,
   ikincilStil,
   kutuStil,
 } from './renk';
@@ -220,30 +222,62 @@ export const AdayIzgarasi: React.FC<{
   }, [gosterilen, odak, durumUygula]);
 
   if (kartlar.length === 0) {
+    /*
+      İLAN VAR, BAŞVURU YOK (26 Eylül 2026)
+
+      İki gerçek iş: ilanın bağlantısını paylaşmak ve ilanlara dönmek.
+      Paylaşım telefonda sistemin paylaşım menüsü (`navigator.share`);
+      yoksa ya da kullanıcı vazgeçerse panoya kopyalama. Yayında ilan
+      yoksa (yalnız taslak/kapalı) paylaşılacak bir adres yok ve düğme
+      çizilmiyor — cümle de bunu söylüyor.
+    */
+    const paylasilabilir = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+    const kopyala = () => {
+      if (!ilanAdresi) return;
+      navigator.clipboard
+        ?.writeText(ilanAdresi)
+        .then(() => setKopyalandi(true))
+        .catch(() => setKopyalandi(false));
+    };
     return (
-      <div className={KUTU} style={kutuStil}>
-        <p className="flex items-center gap-2 font-bold" style={{ color: SIRKET_METIN }}>
-          <Users className="h-5 w-5" style={{ color: SIRKET_VURGU_KOYU }} />
+      <div className={`${KUTU} text-center`} style={kutuStil}>
+        <span
+          aria-hidden
+          className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full"
+          style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
+        >
+          <Users className="h-7 w-7" />
+        </span>
+        <h2 className="text-lg font-extrabold" style={{ color: SIRKET_METIN }}>
           Henüz başvuru yok
+        </h2>
+        <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+          {ilanAdresi
+            ? 'İlanınızın bağlantısını paylaşın; gelen başvurular burada görünecek.'
+            : 'Yayında ilanınız yok. Bir ilanı yayınladığınızda başvurular burada görünecek.'}
         </p>
-        <p className="mt-1 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-          İlan bağlantısını paylaşınca başvurular buraya kart olarak düşecek.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
           {ilanAdresi && (
             <button
               type="button"
               onClick={() => {
-                navigator.clipboard
-                  ?.writeText(ilanAdresi)
-                  .then(() => setKopyalandi(true))
-                  .catch(() => setKopyalandi(false));
+                if (paylasilabilir) {
+                  navigator.share({ url: ilanAdresi }).catch(() => undefined);
+                  return;
+                }
+                kopyala();
               }}
-              className={IKINCIL_DUGME}
-              style={ikincilStil}
+              className={BIRINCIL_DUGME}
+              style={birincilStil}
             >
-              {kopyalandi ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {kopyalandi ? 'Kopyalandı' : 'İlan bağlantısını kopyala'}
+              {paylasilabilir ? (
+                <Share2 className="h-4 w-4" aria-hidden />
+              ) : kopyalandi ? (
+                <Check className="h-4 w-4" aria-hidden />
+              ) : (
+                <Copy className="h-4 w-4" aria-hidden />
+              )}
+              {paylasilabilir ? 'İlan bağlantısını paylaş' : kopyalandi ? 'Kopyalandı' : 'İlan bağlantısını kopyala'}
             </button>
           )}
           <button

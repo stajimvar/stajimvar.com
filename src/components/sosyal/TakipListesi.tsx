@@ -1,4 +1,5 @@
 import React from 'react';
+import { ChevronRight } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import { TAKIP_SAYFA_BOYU, type TakipKisisi } from '../../lib/queries/sosyal';
 import { profilYolu } from '../../lib/sosyal-kullanici-adi.mjs';
@@ -112,7 +113,13 @@ export const TakipListesi: React.FC<{
   /** Alınamadığında yazılan cümle. */
   hataMetni: string;
   onNavigate: (yol: string) => void;
-}> = ({ liste, bosMetin, hataMetni, onNavigate }) => {
+  /**
+   * Satırın sağında "profile geç" oku — şirketin Takipçiler ekranı
+   * (26 Eylül 2026). Öğrenci Ağım'ındaki liste değişmesin diye isteğe
+   * bağlı; satırın kendisi zaten bağlantı, ok yalnız bunu gösteriyor.
+   */
+  okGoster?: boolean;
+}> = ({ liste, bosMetin, hataMetni, onNavigate, okGoster = false }) => {
   if (liste.durum === 'yukleniyor') {
     return (
       <ul aria-busy="true" className="space-y-0.5">
@@ -193,6 +200,7 @@ export const TakipListesi: React.FC<{
                     <span className="block truncate text-xs text-gray-600">@{kisi.kullaniciAdi}</span>
                   )}
                 </span>
+                {okGoster && <ChevronRight aria-hidden className="h-4 w-4 shrink-0 text-gray-400" />}
               </a>
             </li>
           );

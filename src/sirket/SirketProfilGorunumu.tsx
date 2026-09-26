@@ -1,5 +1,5 @@
 import React from 'react';
-import { Briefcase, Link as LinkIkonu, MapPin, Pencil, Plus, Users } from 'lucide-react';
+import { BadgeCheck, Briefcase, Camera, Eye, ImagePlus, Link as LinkIkonu, MapPin, Pencil, Plus, Users } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI, RENK_PRIMARY } from '../lib/renk-token';
 import { guvenliDisAdres } from '../lib/guvenli-url.mjs';
 import type { SosyalPaylasim } from '../lib/queries/sosyal';
@@ -25,6 +25,7 @@ import {
   SAYAC_SAYISI,
 } from '../components/sosyal/ProfilKimlikKalibi';
 import { KAPAK_SINIFI } from '../lib/kapak-orani';
+import { KapakFotografi } from '../components/sosyal/KapakFotografi';
 import {
   FotografPaylasGirisi,
   type FotografPaylasKolu,
@@ -71,13 +72,19 @@ import {
  * hiçbiri yok — #121'deki resmî hesap kuralıyla aynı gerekçe (kurum
  * kimliği). Bu bileşen o alanları prop olarak bile almıyor.
  *
- * BEYAZ HALKA, ROZET YOK
- * ---------------------
+ * BEYAZ HALKA; DOĞRULAMA YALNIZ ZİYARETÇİDE VE YALNIZ GERÇEKSE
+ * ----------------------------------------------------------
  * Logo çevresindeki halka X kalıbındaki beyaz ayraç (`ring-4 ring-white`):
- * logoyu bandın üstünde ayırıyor, anlam taşımıyor. "Doğrulanmış" rozeti
- * bilerek YOK:
- * `companies.verified` bu ekranda okunmuyor, olmayan bir güven işareti
- * ima edilmiyor.
+ * logoyu bandın üstünde ayırıyor, anlam taşımıyor.
+ *
+ * "Doğrulanmış kurum" rozeti önce bilerek yoktu, çünkü `companies.verified`
+ * bu ekranda okunmuyordu. 26 Eylül 2026: oturumsuz şirket sayfası
+ * (`CompanyPage`) aynı herkese açık sütundan rozeti çiziyordu, giriş yapmış
+ * öğrencinin gördüğü bu sayfa çizmiyordu — iki sayfa aynı şirket için
+ * farklı şey söylüyordu. Sütun artık okunuyor (`kimlik.dogrulandi`) ve
+ * rozet YALNIZ ziyaretçi dalında, yalnız sunucu true dediğinde. Sahibin
+ * Şirketim ekranında tekrarlanmıyor (sahipte yeri İlanlarım'ın kimlik
+ * satırı).
  */
 
 export type SayacDurumu =
@@ -96,6 +103,13 @@ export type SirketSekmesi = 'paylasimlar' | 'ilanlar' | 'hakkimizda';
 export interface SahipEylemleri {
   ilanOlusturYolu: string;
   duzenleYolu: string;
+  /**
+   * Öğrencinin gördüğü sayfanın önizlemesi (26 Eylül 2026). Sahip
+   * verisi taşımayan `SirketSayfasi`nı açan adres; verilmezse düğme yok.
+   */
+  onizleYolu?: string;
+  /** Kapak fotoğrafı ekleme/değiştirme adresi; verilmezse bant yönlendirmesi yok. */
+  kapakYolu?: string;
   /**
    * Paylaşım açılabilir mi — sunucu önkoşulunun aynısı: sosyal satırda
    * kullanıcı adı VE `sirket_id` var. Sağlanmıyorsa düğme çizilmiyor ve
@@ -137,6 +151,17 @@ interface GorunumProps {
   onNavigate: (yol: string) => void;
   /** Panoya kopyalama gibi anlık geri bildirim. */
   bildirim?: string | null;
+  /**
+   * `social_profiles.kapak_path` (26 Eylül 2026). `undefined` = bilinmiyor
+   * (satır okunmadı ya da çağıran vermiyor) → eski bulanık logo bandı;
+   * `null` = kapak yok; dize = kapağın kendisi (`KapakFotografi`).
+   */
+  kapakYolu?: string | null;
+  /**
+   * Şirket adının başlık düzeyi. Şirketim ekranında sayfanın `h1`'i
+   * "Şirketim"; ad orada `h2`. Ziyaretçi sayfasında ad sayfanın başlığı.
+   */
+  adBasligi?: 'h1' | 'h2';
 }
 
 /*
@@ -269,8 +294,16 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
   onMesaj,
   onNavigate,
   bildirim,
+  kapakYolu,
+  adBasligi = 'h1',
 }) => {
-  const [sekme, setSekme] = React.useState<SirketSekmesi>('paylasimlar');
+  /*
+    SAHİPTE VARSAYILAN "HAKKIMIZDA" (26 Eylül 2026): şirket kendi
+    ekranında önce öğrenciye nasıl anlatıldığını ve eksiğini görüyor.
+    Ziyaretçi sayfasının sırası ve varsayılanı DEĞİŞMEDİ.
+  */
+  const [sekme, setSekme] = React.useState<SirketSekmesi>(sahip ? 'hakkimizda' : 'paylasimlar');
+  const AdEtiketi = adBasligi;
   const [logoBozuk, setLogoBozuk] = React.useState(false);
   React.useEffect(() => setLogoBozuk(false), [kimlik.logoUrl]);
   /*
@@ -301,11 +334,35 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
     dokunma hedefi ve çubuk yüksekliği değişmiyor. Kısaltma bir ürün
     kararı: adı kullanıcı seçti, kendiliğinden "Kareler"e indirilmedi.
   */
-  const sekmeler: { id: SirketSekmesi; etiket: string }[] = [
-    { id: 'paylasimlar', etiket: 'Şirketten kareler' },
-    { id: 'ilanlar', etiket: 'İlanlar' },
-    { id: 'hakkimizda', etiket: 'Hakkımızda' },
-  ];
+  const sekmeler: { id: SirketSekmesi; etiket: string }[] = sahip
+    ? [
+        { id: 'hakkimizda', etiket: 'Hakkımızda' },
+        { id: 'ilanlar', etiket: 'İlanlar' },
+        { id: 'paylasimlar', etiket: 'Şirketten kareler' },
+      ]
+    : [
+        { id: 'paylasimlar', etiket: 'Şirketten kareler' },
+        { id: 'ilanlar', etiket: 'İlanlar' },
+        { id: 'hakkimizda', etiket: 'Hakkımızda' },
+      ];
+  /* Sahipte sayaç sırası tasarımdaki gibi: aktif ilan · takipçi · paylaşım. */
+  const sayacSirasi: { etiket: string; deger: SayacDurumu }[] = sahip
+    ? [
+        { etiket: 'aktif ilan', deger: sayaclar.aktifIlan },
+        { etiket: 'takipçi', deger: sayaclar.takipci },
+        { etiket: 'paylaşım', deger: sayaclar.paylasim },
+      ]
+    : [
+        { etiket: 'paylaşım', deger: sayaclar.paylasim },
+        { etiket: 'aktif ilan', deger: sayaclar.aktifIlan },
+        { etiket: 'takipçi', deger: sayaclar.takipci },
+      ];
+  /* Hakkımızda'da eksik kalan alanlar — yalnız sahibe söyleniyor, uydurulmuyor. */
+  const eksikAlanlar = [
+    !kimlik.sektor && 'sektör',
+    !kimlik.konum && 'konum',
+    !site && 'internet sitesi',
+  ].filter(Boolean) as string[];
 
   /*
     Paylaşım giriş düğmesi: FotografPaylasGirisi'nin kendisi — aynı
@@ -369,15 +426,53 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
           Logo yoksa ya da adres kırıksa zemin de yok: bant nötr
           `bg-gray-100` — stok görsel, doku ya da gradyan KONMUYOR.
         */}
-        <div className={`relative w-full overflow-hidden bg-gray-100 ${KAPAK_SINIFI}`}>
-          {bulanikZemin && (
-            <img
-              src={bulanikZemin}
-              alt=""
-              aria-hidden
-              draggable={false}
-              className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover blur-2xl"
-            />
+        {/*
+          KAPAK FOTOĞRAFI (26 Eylül 2026): şirketin sosyal satırında
+          `kapak_path` varsa bant kapağın kendisi — öğrenci profilindeki
+          `KapakFotografi` ve aynı yükleme ekranı (`KapakFotografiYukleme`,
+          `/sirket/profil/kapak`). Yoksa eski bulanık logo bandı; SAHİBE bu
+          bandın ortasında "Kapak fotoğrafı ekle" yönlendirmesi çiziliyor ki
+          gri alan belirsiz bir boşluk gibi durmasın. Ziyaretçi dalında
+          yönlendirme hiç DOM'a girmiyor.
+        */}
+        <div className="relative">
+          {kapakYolu ? (
+            <KapakFotografi ad={kimlik.ad} yol={kapakYolu} className="w-full" />
+          ) : (
+            <div className={`relative w-full overflow-hidden bg-gray-100 ${KAPAK_SINIFI}`}>
+              {bulanikZemin && (
+                <img
+                  src={bulanikZemin}
+                  alt=""
+                  aria-hidden
+                  draggable={false}
+                  className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover blur-2xl"
+                />
+              )}
+            </div>
+          )}
+          {sahip?.kapakYolu && kapakYolu === null && (
+            <a
+              href={sahip.kapakYolu}
+              onClick={icTiklama(onNavigate, sahip.kapakYolu)}
+              className={`absolute inset-0 flex flex-col items-center justify-center gap-1 text-sm font-semibold text-gray-700 hover:text-gray-900 ${ODAK_HALKASI}`}
+            >
+              <span className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white/90 px-4 shadow-xs">
+                <ImagePlus aria-hidden className="h-5 w-5" />
+                Kapak fotoğrafı ekle
+              </span>
+            </a>
+          )}
+          {sahip?.kapakYolu && typeof kapakYolu === 'string' && (
+            <a
+              href={sahip.kapakYolu}
+              onClick={icTiklama(onNavigate, sahip.kapakYolu)}
+              aria-label="Kapak fotoğrafını değiştir"
+              className={`absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-xs hover:bg-white ${ODAK_HALKASI}`}
+            >
+              {/* Kamera: hap sırasındaki "Fotoğraf paylaş" (ImagePlus) ile karışmasın. */}
+              <Camera aria-hidden className="h-5 w-5" />
+            </a>
           )}
         </div>
 
@@ -426,34 +521,29 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
             */}
             <div className={HAP_SIRASI}>
               {!sahip && onPaylas && <PaylasIkonDugmesi onPaylas={onPaylas} />}
-              {sahip && (
-                <>
-                  <a
-                    href={sahip.ilanOlusturYolu}
-                    onClick={icTiklama(onNavigate, sahip.ilanOlusturYolu)}
-                    className={HAP_BIRINCIL}
-                  >
-                    <Briefcase aria-hidden className="h-4 w-4 shrink-0" />
-                    <span className="sr-only sm:not-sr-only">İlan paylaş</span>
-                  </a>
-                  {paylasGirisi}
-                  <a
-                    href={sahip.duzenleYolu}
-                    onClick={icTiklama(onNavigate, sahip.duzenleYolu)}
-                    className={HAP}
-                  >
-                    Profili düzenle
-                  </a>
-                </>
-              )}
+              {/*
+                ŞİRKETİM (26 Eylül 2026): sahibin birincil eylemi "Profili
+                düzenle", ikincili "Önizle" — ikisi adın altındaki tam
+                genişlik satırda. Burada yalnız Fotoğraf paylaş ikonu
+                kalıyor (aynı `FotografPaylasGirisi`). "İlan paylaş" bu
+                sıradan kalktı: aynı iş İlanlarım ekranının ve İlanlar
+                sekmesinin birincil eylemi.
+              */}
+              {sahip && paylasGirisi}
             </div>
           </div>
 
           {/* Ad + "Şirket hesabı" rozeti; `break-words`: uzun ad kırpılmıyor, sarılıyor. */}
           <div className="mt-3 flex max-w-full flex-wrap items-center gap-x-2 gap-y-1">
-            <h1 className="min-w-0 break-words text-xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-2xl">
+            <AdEtiketi className="min-w-0 break-words text-xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-2xl">
               {kimlik.ad}
-            </h1>
+            </AdEtiketi>
+            {!sahip && kimlik.dogrulandi && (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700">
+                <BadgeCheck aria-hidden className="h-3.5 w-3.5" />
+                Doğrulanmış kurum
+              </span>
+            )}
             <span
               className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${RENK_PRIMARY.yumusakZemin} ${RENK_PRIMARY.metin}`}
             >
@@ -462,6 +552,30 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
           </div>
           {kullaniciAdi && (
             <p className="mt-0.5 max-w-full truncate text-sm text-gray-600 sm:text-base">@{kullaniciAdi}</p>
+          )}
+
+          {/* SAHİBİN EYLEM SATIRI: birincil "Profili düzenle", ikincil "Önizle". */}
+          {sahip && (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <a
+                href={sahip.duzenleYolu}
+                onClick={icTiklama(onNavigate, sahip.duzenleYolu)}
+                className={HAP_BIRINCIL}
+              >
+                <Pencil aria-hidden className="h-4 w-4 shrink-0" />
+                Profili düzenle
+              </a>
+              {sahip.onizleYolu && (
+                <a
+                  href={sahip.onizleYolu}
+                  onClick={icTiklama(onNavigate, sahip.onizleYolu)}
+                  className={HAP}
+                >
+                  <Eye aria-hidden className="h-4 w-4 shrink-0" />
+                  Önizle
+                </a>
+              )}
+            </div>
           )}
 
           {/*
@@ -512,9 +626,9 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
 
           {/* SAYAÇ SATIRI — tek satır, satır içi; dikey çizgi ve üç sütunlu ızgara yok (X). */}
           <dl className={SAYAC_SATIRI}>
-            <Sayac etiket="paylaşım" deger={sayaclar.paylasim} />
-            <Sayac etiket="aktif ilan" deger={sayaclar.aktifIlan} />
-            <Sayac etiket="takipçi" deger={sayaclar.takipci} />
+            {sayacSirasi.map((s) => (
+              <Sayac key={s.etiket} etiket={s.etiket} deger={s.deger} />
+            ))}
           </dl>
 
           {/*
@@ -659,12 +773,32 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
             <p className="whitespace-pre-line break-words text-sm leading-relaxed text-gray-800 sm:text-base">
               {kimlik.aciklama}
             </p>
+          ) : sahip ? (
+            /*
+              AÇIKLAMA YOK — SAHİBE TEK EYLEM (26 Eylül 2026): açıklama
+              uydurulmuyor; düzenleme formunun "Hakkımızda" alanına gidiyor.
+            */
+            <div className="flex flex-col items-center gap-2 py-4 text-center">
+              <span aria-hidden className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-700">
+                <Pencil className="h-5 w-5" />
+              </span>
+              <p className="font-extrabold text-gray-900">Şirket açıklaması ekleyin</p>
+              <p className="max-w-sm text-sm leading-relaxed text-gray-600">
+                Faaliyet alanınızı ve staj yaklaşımınızı öğrencilere anlatın.
+              </p>
+              <div className="mt-1">
+                <a
+                  href={sahip.duzenleYolu}
+                  onClick={icTiklama(onNavigate, sahip.duzenleYolu)}
+                  className={HAP_BIRINCIL}
+                >
+                  <Plus aria-hidden className="h-4 w-4" />
+                  Açıklama ekle
+                </a>
+              </div>
+            </div>
           ) : (
-            <p className="text-sm text-gray-600">
-              {sahip
-                ? 'Şirketinizi anlatan bir açıklama henüz yok.'
-                : 'Şirket henüz kendini anlatan bir açıklama eklemedi.'}
-            </p>
+            <p className="text-sm text-gray-600">Şirket henüz kendini anlatan bir açıklama eklemedi.</p>
           )}
 
           {(kimlik.sektor || kimlik.konum || kimlik.calisanSayisi || site) && (
@@ -705,16 +839,27 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
             </dl>
           )}
 
-          {/* Eksik alanı olan sahibe düzenleme yolu; ziyaretçiye hiçbir eylem. */}
-          {sahip && (!kimlik.aciklama || !kimlik.sektor || !kimlik.konum || !site) && (
-            <a
-              href={sahip.duzenleYolu}
-              onClick={icTiklama(onNavigate, sahip.duzenleYolu)}
-              className={IKINCIL}
-            >
-              <Pencil aria-hidden className="h-4 w-4" />
-              Eksik bilgileri düzenle
-            </a>
+          {/*
+            Eksik alanı olan sahibe hangi alanın eksik olduğu ve düzenleme
+            yolu; ziyaretçiye hiçbir eylem. Açıklama yoksa yukarıdaki
+            "Açıklama ekle" aynı forma gidiyor, ikinci düğme çizilmiyor.
+          */}
+          {sahip && eksikAlanlar.length > 0 && (
+            <div className="space-y-2 border-t border-gray-100 pt-3">
+              <p className="text-sm text-gray-600">
+                Eklenmemiş: {eksikAlanlar.join(', ')}.
+              </p>
+              {kimlik.aciklama && (
+                <a
+                  href={sahip.duzenleYolu}
+                  onClick={icTiklama(onNavigate, sahip.duzenleYolu)}
+                  className={IKINCIL}
+                >
+                  <Pencil aria-hidden className="h-4 w-4" />
+                  Eksik bilgileri ekle
+                </a>
+              )}
+            </div>
           )}
         </section>
       )}
