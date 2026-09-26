@@ -113,7 +113,7 @@ test('FIRSAT IZGARASI: TELEFONDA TEK SÜTUN, sm ÜSTÜNDE REHBERLE AYNI', () => 
 test('FIRSAT KARTI TELEFONDA İLAN KARTIYLA TEK TİP, GENİŞ EKRANDA DİKEY AKIŞ', () => {
   /*
     Fırsatlar İlanlar'la aynı kart dilinde (mobil sadeleştirme, 25 Eylül
-    2026): 16 px iç boşluk, 16 px köşe, 56 px logo, başlık 16/22 yarı
+    2026): 16 px iç boşluk, 16 px köşe, 80 px logo (26 Eylül; önce 56), başlık 16/22 yarı
     kalın; altta solda kaynak, sağda tek eylem. Alanlar aynıya
     zorlanmadı — fırsatta tür ve aciliyet, ilanda konum ve ilan türü.
   */
@@ -198,21 +198,17 @@ test('İLERLEME ÇUBUĞU YOK; TUTAR VE TARİH GERÇEK KAYITTAN', () => {
 
 test('LOGO İLAN KARTIYLA AYNI ÖLÇÜDE', () => {
   /*
-    56 × 56, yuvarlak köşeli kare (mobil sadeleştirme, 25 Eylül 2026; önce
+    80 × 80, yuvarlak köşeli kare (26 Eylül 2026; önce 56, ondan önce
     72–92 px). `object-contain` CompanyLogo içinde: kare olmayan kurum
     logoları kırpılmıyor.
   */
-  const olcu = '!h-14 !w-14 !rounded-xl !p-1.5 !text-lg';
-  assert.ok(firsat.includes(olcu), 'fırsat kartı logo ölçüsü');
   /*
-    İlan kartı her genişlikte 80 × 80 (kullanıcı kararı, 26 Eylül 2026;
-    önce yalnız `sm` ve üstünde). Fırsat kartı 56'da kaldı.
+    İlan kartı ve fırsat kartı her genişlikte 80 × 80 (kullanıcı kararı,
+    26 Eylül 2026; önce 56).
   */
-  assert.ok(
-    oku('src/components/InternshipCard.tsx').includes('!h-20 !w-20 !rounded-xl !p-2 !text-2xl'),
-    'ilan kartı logo ölçüsü'
-  );
-  assert.doesNotMatch(firsat, /sm:!h-20/);
+  const olcu = '!h-20 !w-20 !rounded-xl !p-2 !text-2xl';
+  assert.ok(firsat.includes(olcu), 'fırsat kartı logo ölçüsü');
+  assert.ok(oku('src/components/InternshipCard.tsx').includes(olcu), 'ilan kartı logo ölçüsü');
   assert.match(oku('src/components/CompanyLogo.tsx'), /object-contain/);
 });
 
