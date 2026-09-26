@@ -723,6 +723,33 @@ def istemci():
     return create_client(url, anahtar)
 
 
+BOS_OKUMA_ONEKI = "okundu, veri yok"
+
+
+def kaynak_durumu(sonuc: Sonuc, simdi: str) -> dict[str, Any]:
+    """Kaynak satırına yazılacak durum — AYRIŞTIRMA HATASIZ BİTTİYSE.
+
+    YAZ DÖNEMİ DÜZELTMESİ (26 Eylül 2026). Önce boş sonuç başarı
+    sayılmıyordu: yemekhane yazın menü yayımlamayınca `son_basari_at`
+    eskiyor ve panel "Kaynak en son … tarihinde okundu" diyordu — sayfa
+    her gün okunduğu hâlde. Üç durum artık ayrı:
+
+      · siteye ulaşılamadı / ayrıştırma hata verdi → bu fonksiyona hiç
+        gelinmiyor; `son_basari_at` kalıyor, hata `son_hata`da (kos).
+      · okundu, veri var → `son_basari_at` şimdi, `son_hata` boş.
+      · okundu, veri yok → `son_basari_at` şimdi (kaynak gerçekten
+        okundu), `son_hata` "okundu, veri yok: …" notu. Not duruyor ki
+        sessizce bozulan bir ayrıştırıcı ile yayımlanmamış menü, kayıtta
+        birbirinden ayırt edilebilsin; panel bu notu okumuyor.
+
+    Eski veri hiçbir durumda silinmiyor.
+    """
+    if sonuc.menuler or sonuc.duyurular:
+        return {"son_kontrol_at": simdi, "son_basari_at": simdi, "son_hata": None}
+    ayrinti = "; ".join(sonuc.uyarilar) or "kaynak boş döndü"
+    return {"son_kontrol_at": simdi, "son_basari_at": simdi, "son_hata": f"{BOS_OKUMA_ONEKI}: {ayrinti}"[:500]}
+
+
 def kos(kuru: bool = False) -> int:
     db = istemci()
     kaynaklar = (
@@ -768,14 +795,7 @@ def kos(kuru: bool = False) -> int:
                 [{**d, "universite_id": k["universite_id"], "cekildi_at": simdi} for d in sonuc.duyurular],
                 on_conflict="universite_id,url",
             ).execute()
-        # Boş sonuç bir başarı değil: son başarı anı olduğu gibi kalıyor,
-        # uyarılar hata alanına yazılıyor. Eski veri silinmiyor.
-        durum: dict[str, Any] = {"son_kontrol_at": simdi}
-        if sonuc.menuler or sonuc.duyurular:
-            durum.update(son_basari_at=simdi, son_hata=None)
-        else:
-            durum["son_hata"] = ("; ".join(sonuc.uyarilar) or "kaynak boş döndü")[:500]
-        db.table("universite_kaynaklari").update(durum).eq("id", k["id"]).execute()
+        db.table("universite_kaynaklari").update(kaynak_durumu(sonuc, simdi)).eq("id", k["id"]).execute()
     return 1 if hatali and hatali == len(kaynaklar) else 0
 
 

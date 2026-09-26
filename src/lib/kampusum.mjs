@@ -52,6 +52,30 @@ export function kaynakEskiMi(sonBasariAni, bugun, esikGun = KAYNAK_ESKI_GUN) {
   return (gun - son) / 86400000 > esikGun;
 }
 
+/** Menü bu kadar gündür yoksa yemek bölümü tek satıra iniyor. */
+export const MENU_YOK_GUN = 7;
+
+/**
+ * Son menü eşikten eski mi (ya da hiç menü yok mu)?
+ *
+ * YAZ DÖNEMİ (26 Eylül 2026): yemekhane tatilde menü yayımlamıyor ve
+ * panel haftalarca her gün "Bugün için yayımlanmış menü yok." diyordu.
+ * Kaynak OKUNUYORSA (bileşen `sonBasariAni` ile kapıyı tutuyor) ve son
+ * menü 7 günden eskiyse bölüm tek satır. Hafta sonu ve kısa tatil
+ * (≤ 7 gün) eski cümlede kalıyor.
+ *
+ * @param {string|null} sonMenuTarihi YYYY-MM-DD, bugüne kadarki son menü
+ * @param {string} bugun YYYY-MM-DD (sunucunun İstanbul günü)
+ */
+export function menuUzunSuredirYok(sonMenuTarihi, bugun, esikGun = MENU_YOK_GUN) {
+  const gun = calendarDay(bugun);
+  if (gun == null) return false;
+  if (!sonMenuTarihi) return true;
+  const son = calendarDay(sonMenuTarihi);
+  if (son == null) return false;
+  return (gun - son) / 86400000 > esikGun;
+}
+
 /** Panelde gösterilen en çok burs. */
 export const KAMPUS_BURS_SINIRI = 3;
 

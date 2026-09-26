@@ -59,7 +59,7 @@ test('yemek ilk belirgin kart; satırlar 15/22, öğünler ayraçlı, kaynak met
   assert.match(s, /menuBaglantisi: `inline-flex min-h-11 [^`]*font-semibold text-blue-700/);
   assert.match(s, /yemekhaneBaglantisi: `inline-flex min-h-11 [^`]*font-medium text-gray-600/);
   /* "Okunamadı" ile "menü yok" ayrı cümle. */
-  assert.match(PANEL, /kaynak\.sonBasariAni \? 'Bugün için yayımlanmış menü yok\.' : 'Menü kaynağı henüz okunamadı\.'/);
+  assert.match(PANEL, /kaynak\.sonBasariAni\s*\? 'Bugün için yayımlanmış menü yok\.'\s*: 'Menü kaynağı henüz okunamadı\.'/);
 });
 
 test('duyurular ve burs: ince ayraçlı tek liste, başlık en çok üç satır, satırın tamamı bağlantı', () => {

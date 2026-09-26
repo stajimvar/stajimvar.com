@@ -7,6 +7,7 @@ import {
   guvenliDisAdres,
   kampusBurslari,
   kaynakEskiMi,
+  menuUzunSuredirYok,
   ogunEtiketi,
   UNIVERSITE_EKLE_YOLU,
 } from '../src/lib/kampusum.mjs';
@@ -146,7 +147,7 @@ test('menü yalnız `menu` doluyken; kaynak null ise bölüm hiç yok', () => {
   /* Katalogda olup iki kaynağı da tanımsız okul da "kaynak yok" (panel boş kalmıyor). */
   assert.match(PANEL, /\{veri && veri\.ogrenciOkulu && \(!veri\.universite \|\| \(!veri\.menuKaynagi && !veri\.duyuruKaynagi\)\) && \(/);
   /* Hiç okunmamış kaynak "yok" demiyor. */
-  assert.match(PANEL, /kaynak\.sonBasariAni \? 'Bugün için yayımlanmış menü yok\.' : 'Menü kaynağı henüz okunamadı\.'/);
+  assert.match(PANEL, /kaynak\.sonBasariAni\s*\? 'Bugün için yayımlanmış menü yok\.'\s*: 'Menü kaynağı henüz okunamadı\.'/);
   assert.match(PANEL, /kaynak\.sonBasariAni \? 'Son 30 günde duyuru yok\.' : 'Duyuru kaynağı henüz okunamadı\.'/);
 });
 
@@ -270,4 +271,28 @@ test('erişilebilirlik: section + başlıklar, listeler ul, dış bağlantı yen
   assert.match(PANEL, /Burslar alınamadı\./);
   assert.equal((PANEL.match(/Yeniden dene/g) ?? []).length, 2);
   assert.match(PANEL, /Şu an sana uygun, başvurusu açık burs yok\./);
+});
+
+test('yaz dönemi: 7 günden uzun süre menü yoksa bölüm tek satır ve resmî bağlantı', () => {
+  /* Eşik bugün dahil değil: tam 7 gün önceki menü hâlâ "kısa ara". */
+  assert.equal(menuUzunSuredirYok('2026-09-19', '2026-09-26'), false, 'tam 7 gün eşikte');
+  assert.equal(menuUzunSuredirYok('2026-09-18', '2026-09-26'), true);
+  assert.equal(menuUzunSuredirYok('2026-06-12', '2026-09-26'), true);
+  assert.equal(menuUzunSuredirYok(null, '2026-09-26'), true, 'hiç menü yok');
+  assert.equal(menuUzunSuredirYok('bozuk', '2026-09-26'), false);
+  assert.equal(menuUzunSuredirYok('2026-09-01', 'bozuk'), false);
+
+  /* Kural yalnız kaynak OKUNUYORSA ve sunucu son menü tarihini verdiyse. */
+  assert.match(PANEL, /const uzunSuredirYok =\s*!menu &&\s*Boolean\(kaynak\.sonBasariAni\) &&\s*veri\.sonMenuTarihi !== undefined &&\s*menuUzunSuredirYok\(veri\.sonMenuTarihi, bugun\);/);
+  assert.match(PANEL, /\{bugunMetni && !uzunSuredirYok && \(/);
+  assert.match(PANEL, /uzunSuredirYok\s*\? 'Yemekhane sayfasında son 7 günde menü bulunamadı\.'\s*: kaynak\.sonBasariAni\s*\? 'Bugün için yayımlanmış menü yok\.'\s*: 'Menü kaynağı henüz okunamadı\.'/);
+  /* "Yayımlamadı" iddiası yok: bildiğimiz yalnız bulunamadığı. */
+  assert.doesNotMatch(PANEL, /menü yayımlamadı/);
+
+  const sorgu = readFileSync(path.join(KOK, 'src/lib/queries/kampus.ts'), 'utf8');
+  assert.match(sorgu, /sonMenuTarihi: 'son_menu_tarihi' in k \? \(k\.son_menu_tarihi \?\? null\) : undefined,/);
+  const goc = readFileSync(path.join(KOK, 'supabase/migrations/20261111010000_kampus_son_menu.sql'), 'utf8');
+  assert.match(goc, /'son_menu_tarihi', \(select max\(m\.tarih\)/);
+  assert.match(goc, /m\.tarih <= bugun\.g/);
+  assert.match(goc, /revoke all on function sosyal_gizli\.kampus_paneli\(text\) from public, anon, authenticated;/);
 });

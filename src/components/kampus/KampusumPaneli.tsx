@@ -7,6 +7,7 @@ import {
   guvenliDisAdres,
   kampusBurslari,
   kaynakEskiMi,
+  menuUzunSuredirYok,
   ogunEtiketi,
   UNIVERSITE_EKLE_YOLU,
 } from '../../lib/kampusum.mjs';
@@ -230,13 +231,25 @@ const YemekBolumu: React.FC<{ veri: Kampusum; kaynak: KaynakDurumu; kimlik: stri
   const menuAdresi = guvenliDisAdres(menu?.kaynakUrl);
   const yemekhaneAdresi = guvenliDisAdres(universite?.yemekhaneSayfasi);
   const bugunMetni = tarihMetni(bugun, { yil: false });
+  /*
+    UZUN SÜRE MENÜ YOK (yaz dönemi, 26 Eylül 2026): kaynak okunuyor ama son
+    menü 7 günden eski (ya da hiç yok) → bölüm başlık, tek satır ve resmî
+    yemekhane sayfası; bugünün tarihi de çizilmiyor. "Yemekhane
+    yayımlamadı" denmiyor: bildiğimiz şey menünün BULUNAMADIĞI. Sunucu
+    tarihi vermediyse (eski yanıt) kural yok.
+  */
+  const uzunSuredirYok =
+    !menu &&
+    Boolean(kaynak.sonBasariAni) &&
+    veri.sonMenuTarihi !== undefined &&
+    menuUzunSuredirYok(veri.sonMenuTarihi, bugun);
   return (
     <section aria-labelledby={kimlik} className={stil.yemekKabi}>
       <div className={stil.yemekBaslikGrubu}>
         <h3 id={kimlik} className={stil.bolumBasligi}>
           Bugün yemekte ne var?
         </h3>
-        {bugunMetni && (
+        {bugunMetni && !uzunSuredirYok && (
           <p className={stil.yemekTarihi}>
             <time dateTime={bugun}>{bugunMetni}</time>
           </p>
@@ -271,7 +284,11 @@ const YemekBolumu: React.FC<{ veri: Kampusum; kaynak: KaynakDurumu; kimlik: stri
             Hiç okunamamış kaynakta "menü yok" demek bilinmeyeni yok diye
             yazmak olurdu; iki durum iki cümle.
           */}
-          {kaynak.sonBasariAni ? 'Bugün için yayımlanmış menü yok.' : 'Menü kaynağı henüz okunamadı.'}
+          {uzunSuredirYok
+            ? 'Yemekhane sayfasında son 7 günde menü bulunamadı.'
+            : kaynak.sonBasariAni
+              ? 'Bugün için yayımlanmış menü yok.'
+              : 'Menü kaynağı henüz okunamadı.'}
         </p>
       )}
       <EskiKaynakNotu kaynak={kaynak} bugun={bugun} />
