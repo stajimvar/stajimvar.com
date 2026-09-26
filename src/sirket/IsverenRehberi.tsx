@@ -1,6 +1,7 @@
 import React from 'react';
-import { ArrowRight, ChevronRight, Clock, FileText, Search, X } from 'lucide-react';
+import { ArrowRight, ChevronRight, Clock, Search, X } from 'lucide-react';
 import { REHBERLER, rehberOkumaDakika } from '../data/rehberler';
+import { RehberKapagi } from '../components/RehberKartlari';
 import { SIRKET_METIN, SIRKET_METIN_IKINCIL, SIRKET_ROZET, SIRKET_VURGU_KOYU, SIRKET_ODAK } from './renk';
 
 /**
@@ -21,6 +22,13 @@ import { SIRKET_METIN, SIRKET_METIN_IKINCIL, SIRKET_ROZET, SIRKET_VURGU_KOYU, SI
  * sınıflandırmayı elle yazmak, yazı eklendikçe sessizce yanlışlaşırdı.
  * Çipler bu yüzden gerçek iki kümeyi ayırıyor: işveren yazıları ve tüm
  * rehber.
+ *
+ * KAPAKLAR
+ * -------
+ * Her yazının satırında rehber merkezindeki AYNI kapak (`RehberKapagi`,
+ * `/rehber-gorselleri/<slug>.avif|webp`, aynı sürüm eki). Kapak yoksa ya
+ * da inmezse bileşen görseli gizliyor ve gri kutu kalıyor — uydurma
+ * görsel konmuyor.
  *
  * ÖĞRENCİ İÇERİĞİ SİLİNMİYOR
  * --------------------------
@@ -166,11 +174,8 @@ export const IsverenRehberi: React.FC<{
                   onClick={icTiklama(onNavigate, `/rehber/${r.slug}`)}
                   className={`flex items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4 hover:border-gray-300 ${SIRKET_ODAK}`}
                 >
-                  <span
-                    aria-hidden
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700"
-                  >
-                    <FileText className="h-5 w-5" />
+                  <span aria-hidden className="relative h-16 w-24 shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                    <RehberKapagi slug={r.slug} />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block break-words text-sm font-bold leading-snug" style={{ color: SIRKET_METIN }}>
