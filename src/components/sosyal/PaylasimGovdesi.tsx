@@ -18,6 +18,7 @@ import { begeniyiTersle, etkilesimGecisi } from '../../lib/sosyal-etkilesim.mjs'
 import { gezinmeKarari, parmakKaymasi, yonuBelirle } from '../../lib/kaydirma-gezinme.mjs';
 import { tarihMetni } from '../../lib/tarih.mjs';
 import { useGorselAdresleri } from './useGorselAdresleri';
+import { PaylasimAciklamasi } from './PaylasimAciklamasi';
 
 /**
  * PAYLAŞIM GÖVDESİ — TEK GÖNDERİNİN ŞERİDİ, METNİ VE EYLEMLERİ
@@ -658,9 +659,11 @@ export const PaylasimGovdesi: React.FC<GovdeProps> = ({
 
         <div className={`min-w-0 space-y-2 px-3 ${diyalog ? 'pt-3' : 'order-2 pb-3'}`}>
           {paylasim.aciklama ? (
-            <p className="whitespace-pre-line break-words text-sm leading-relaxed text-gray-800">
-              {paylasim.aciklama}
-            </p>
+            <PaylasimAciklamasi
+              metin={paylasim.aciklama}
+              kisaltilsin={!diyalog}
+              className="text-gray-800"
+            />
           ) : (
             /* Boş açıklama için başlık uydurulmuyor. */
             <p className="text-sm italic text-gray-500">Açıklama yok</p>
