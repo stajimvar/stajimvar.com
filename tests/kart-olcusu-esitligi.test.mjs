@@ -205,11 +205,11 @@ test('LOGO İLAN KARTIYLA AYNI ÖLÇÜDE', () => {
   const olcu = '!h-14 !w-14 !rounded-xl !p-1.5 !text-lg';
   assert.ok(firsat.includes(olcu), 'fırsat kartı logo ölçüsü');
   /*
-    İlan kartı telefonda aynı 56; `sm` ve üstünde 80 × 80 (kullanıcı
-    kararı, 26 Eylül 2026). Fırsat kartı değişmedi.
+    İlan kartı her genişlikte 80 × 80 (kullanıcı kararı, 26 Eylül 2026;
+    önce yalnız `sm` ve üstünde). Fırsat kartı 56'da kaldı.
   */
   assert.ok(
-    oku('src/components/InternshipCard.tsx').includes(`${olcu} sm:!h-20 sm:!w-20 sm:!p-2 sm:!text-2xl`),
+    oku('src/components/InternshipCard.tsx').includes('!h-20 !w-20 !rounded-xl !p-2 !text-2xl'),
     'ilan kartı logo ölçüsü'
   );
   assert.doesNotMatch(firsat, /sm:!h-20/);
