@@ -14,6 +14,7 @@ import {
 import { useGorselAdresleri } from './useGorselAdresleri';
 import { ProfilFotografi } from './ProfilFotografi';
 import { ResmiTik } from './ResmiTik';
+import { PaylasimAciklamasi } from './PaylasimAciklamasi';
 import { gecenSure } from '../../lib/gecen-sure.mjs';
 
 /**
@@ -223,17 +224,6 @@ export const AkisKarti: React.FC<Props> = ({
         )}
       </header>
 
-      {/*
-        PAYLAŞIM METNİ GÖRSELDEN ÖNCE (mobil sadeleştirme, 25 Eylül 2026):
-        sıra kişi → metin → görsel → etkileşimler. Yazar hemen üstte
-        durduğu için metnin başındaki @ad tekrarı kalktı.
-      */}
-      {paylasim.aciklama && (
-        <p className="whitespace-pre-line break-words px-4 pb-2.5 text-sm leading-5 text-gray-900">
-          {paylasim.aciklama}
-        </p>
-      )}
-
       {/* ------------------------------------------------------- görseller */}
       <div className="relative">
         {/*
@@ -329,6 +319,21 @@ export const AkisKarti: React.FC<Props> = ({
         */}
         {(begeni?.adet ?? 0) > 0 && (
           <p className="text-sm font-bold text-gray-900">{begeni!.adet} beğeni</p>
+        )}
+
+        {/*
+          AÇIKLAMA GÖRSELİN ALTINDA (kullanıcı kararı, 26 Eylül 2026):
+          sıra kişi → görsel → etkileşimler → @ad + açıklama. 25 Eylül'de
+          metin görselin üstüne alınmıştı; akışta görsel önce okunuyor.
+          Uzun metin kısa önizlemeyle başlıyor, "daha fazla" ile açılıyor
+          (PaylasimAciklamasi).
+        */}
+        {paylasim.aciklama && (
+          <PaylasimAciklamasi
+            metin={paylasim.aciklama}
+            yazar={paylasim.yazar.kullaniciAdi ? `@${paylasim.yazar.kullaniciAdi}` : ad}
+            onYazarAc={profilAc}
+          />
         )}
 
         <p className="text-xs text-gray-500">{gecenSure(paylasim.olusturmaAni)}</p>
