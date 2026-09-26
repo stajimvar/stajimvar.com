@@ -135,7 +135,7 @@ test('metinler tek yerde tanımlı ve kart oradan okuyor', () => {
   assert.doesNotMatch(sayfa, /<dt className="text-\[11px\] text-gray-500">Tutar<\/dt>/);
   assert.doesNotMatch(sayfa, /'Belirtilmemiş'/, 'masaüstü hâlâ varsayım basıyor');
   /* Logo ilan kartıyla aynı ölçüde; tutar satırı gizlenince kart kısalıyor, boş satır açılmıyor. */
-  assert.match(sayfa, /!h-14 !w-14/);
+  assert.match(sayfa, /!h-20 !w-20/);
 });
 
 test('sorgu ve tip yeni alanları taşıyor', () => {

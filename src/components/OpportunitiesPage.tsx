@@ -1337,7 +1337,7 @@ export const Card: React.FC<{
       {/*
         FIRSAT KARTI — HİYERARŞİ (mobil sadeleştirme, 25 Eylül 2026)
 
-          SOL     56 × 56 kurum logosu
+          SOL     80 × 80 kurum logosu (ilan kartıyla aynı, 26 Eylül 2026)
           ORTA    başlık → gerekiyorsa kurum → tür (ve destek) →
                   son tarih ve aciliyet
           SAĞ ÜST kaydet
@@ -1351,7 +1351,7 @@ export const Card: React.FC<{
           <ListingLogo
             name={item.organizationName}
             logoUrl={item.organizationLogoUrl}
-            className="!h-14 !w-14 !rounded-xl !p-1.5 !text-lg"
+            className="!h-20 !w-20 !rounded-xl !p-2 !text-2xl"
           />
         </div>
         <div className="min-w-0 flex-1">
