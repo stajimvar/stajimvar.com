@@ -14,7 +14,19 @@ const sluglar = readdirSync(KAPAK_DIZINI)
   .sort();
 
 test('her rehber kapağı fotoğraf kaynağıyla kayıtlı', () => {
-  assert.equal(sluglar.length, 71, `beklenen 71 kapak, bulunan ${sluglar.length}`);
+  /*
+    SABİT SAYI KALDIRILDI
+
+    Burada `71` yazıyordu ve rehber eklendiği gün eskiyordu: işveren
+    rehberlerinin beş kapağı klasöre girince test kırmızı döndü
+    (76 bulundu, 71 bekleniyordu) — oysa beş kapak da gerçek bir
+    rehbere ait ve eksik olan onlardı.
+
+    Sabit sayının koruduğu şey "kaç kapak var" değil, HER KAPAĞIN BİR
+    KAYNAK KAYDI OLMASI ve tersinin de doğru olması. İkisi de aşağıda
+    zaten ölçülüyor; klasör büyüdükçe kapsam kendiliğinden büyüyor.
+  */
+  assert.ok(sluglar.length > 0, 'kapak klasörü boş olmamalı');
   assert.deepEqual(Object.keys(kaynaklar).sort(), sluglar);
   for (const slug of sluglar) {
     assert.equal(kaynaklar[slug].tur, 'ai-photorealistic', `${slug}: ortak fotoğraf dili dışında`);

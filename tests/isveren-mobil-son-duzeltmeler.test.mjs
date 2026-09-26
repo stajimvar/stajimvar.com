@@ -52,3 +52,21 @@ test('öğrencinin gördüğü şirket sayfası kapağı ve gerçek doğrulamay�
   assert.match(sahip, /href=\{`\/sirket\/\$\{baglam\.slug\}`\}/);
   assert.match(sahip, /paylaşımlar ve takipçi sayısı giriş istiyor/);
 });
+
+test('işveren rehberi satırları rehber merkeziyle aynı kapağı kullanıyor; beş kapak dosyası var', async () => {
+  const { existsSync } = await import('node:fs');
+  const rehber = oku('src/sirket/IsverenRehberi.tsx');
+  assert.match(rehber, /import \{ RehberKapagi \} from '\.\.\/components\/RehberKartlari';/);
+  assert.match(rehber, /<RehberKapagi slug=\{r\.slug\} \/>/);
+  for (const slug of [
+    'iyi-staj-ilani-nasil-yazilir',
+    'zorunlu-staj-isverenin-yukumlulukleri',
+    'staj-basvurularini-degerlendirme',
+    'stajyerin-ilk-gunu-oryantasyon',
+    'staj-sonu-referans-teklif-geri-bildirim',
+  ]) {
+    for (const uzanti of ['avif', 'webp']) {
+      assert.ok(existsSync(path.join(KOK, 'public', 'rehber-gorselleri', `${slug}.${uzanti}`)), `${slug}.${uzanti}`);
+    }
+  }
+});
