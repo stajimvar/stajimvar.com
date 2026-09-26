@@ -189,7 +189,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
   /*
     İLAN KARTI — HİYERARŞİ (mobil sadeleştirme, 25 Eylül 2026)
 
-      SOL     logo: telefonda 56 × 56, `sm` ve üstünde 80 × 80
+      SOL     logo 80 × 80, her genişlikte (26 Eylül 2026; önce telefonda 56)
       ORTA    pozisyon (ana başlık) · şirket · konum/çalışma biçimi ve
               yanında ilan türü · varsa son başvuru
       SAĞ ÜST kaydet (kartın köşesine sabit)
@@ -217,8 +217,11 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
     konumun hemen altında, düğme bu iki satırın sağında ve alta hizalı
     (`items-end`); iki satır ≈ düğme yüksekliği, bant yok. Telefonda da
     aynı. Kaydet köşeye sabitlendi (`absolute`); başlık ve şirket onun
-    altına girmesin diye `pr-10`. Sol blok 128 px'in (`basis-32`)
-    altına düşerse düğme alt satıra sarıyor; yazı kesilmiyor.
+    altına girmesin diye `pr-10`. Sol blok 112 px'in (`basis-28`)
+    altına düşerse düğme alt satıra sarıyor; yazı kesilmiyor. Logo 80
+    olunca 360 px'te sol blok 124 px kalıyor (ölçüldü): 128 eşiğinde
+    düğme her kartta alta düşüp bandı geri getiriyordu; 112'de düğme
+    yanda, yalnız konum iki satıra sarabiliyor.
 
     Tarih ve tür yalnız veride varsa: ölçüldü (25 Eylül 2026) yayındaki
     186 ilanın 9'unda son başvuru, 177'sinde tür var. Tahmin basılmıyor.
@@ -252,7 +255,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
           <ListingLogo
             name={listing.companyName}
             logoUrl={listing.companyLogo || undefined}
-            className="!h-14 !w-14 !rounded-xl !p-1.5 !text-lg sm:!h-20 sm:!w-20 sm:!p-2 sm:!text-2xl"
+            className="!h-20 !w-20 !rounded-xl !p-2 !text-2xl"
           />
         </div>
 
@@ -274,7 +277,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
 
           {/* ---- ALT BLOK: solda konum/tür ve kaynak, sağ altta eylem ---- */}
           <div className="mt-1 flex min-w-0 flex-wrap items-end gap-x-3 gap-y-2">
-            <div className="min-w-0 flex-1 basis-32">
+            <div className="min-w-0 flex-1 basis-28">
               {(konum || yurtdisi || turkiyeEtiketi || tipEtiketi) && (
                 <p className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-sm leading-5 text-gray-600">
                   {/*

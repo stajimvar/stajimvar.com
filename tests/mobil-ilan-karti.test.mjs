@@ -265,7 +265,7 @@ test('tür etiketi konum satırında, kaynak başlıkla aynı sol hizada', () =>
     başlıkla aynı sütunda, kaynak yazısı kesilmiyor.
   */
   const orta = kod.slice(kod.indexOf('<div className="min-w-0 flex-1">'), kod.indexOf('<div className="absolute right-2 top-2 z-10">'));
-  assert.match(orta, /<div className="mt-1 flex min-w-0 flex-wrap items-end gap-x-3 gap-y-2">\s*<div className="min-w-0 flex-1 basis-32">/);
+  assert.match(orta, /<div className="mt-1 flex min-w-0 flex-wrap items-end gap-x-3 gap-y-2">\s*<div className="min-w-0 flex-1 basis-28">/);
   /* Sıra: konum/tür → kaynak → (son başvuru, durum) → eylem. */
   const sira = ['{(konum || yurtdisi || turkiyeEtiketi || tipEtiketi) && (', 'ILAN_KAYNAGI.dis.etiket', '{sonBasvuru && (', '<IlanDurumEtiketleri', 'ilanını incele'].map((x) => orta.indexOf(x));
   assert.ok(sira.every((x, i) => x > 0 && (i === 0 || x > sira[i - 1])), `sıra: ${sira}`);
