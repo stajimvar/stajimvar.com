@@ -1225,9 +1225,8 @@ export async function addApplicationNote(
 // ---------------------------------------------------------------- Yetenek havuzu
 
 export interface TalentPoolStat {
+  /** Teklife açık öğrenci sayısı — `staj_arayan_ogrenci_ozeti` RPC'sinin `toplam`ı. */
   toplam: number;
-  enCokBolum: Array<{ ad: string; sayi: number }>;
-  enCokSehir: Array<{ ad: string; sayi: number }>;
 }
 
 /**
@@ -1240,54 +1239,35 @@ export interface TalentPoolStat {
  *
  * Sayım yalnızca teklife açık öğrencileri kapsıyor; profilini kapalı tutan
  * öğrenci bu sayıya girmiyor.
+ *
+ * BÖLÜM/ŞEHİR DAĞILIMI KALDIRILDI (27 Eylül 2026)
+ * -----------------------------------------------
+ * Sayfa "En çok: Giyim Üretim Teknolojisi (0) · Şehirler: İstanbul (0)"
+ * yazıyordu, toplam 23 iken. Sebep bu fonksiyondaydı: RPC
+ * (`staj_arayan_ogrenci_ozeti`, 20260903010000) en çok görülen bölümün ve
+ * şehrin yalnız ADINI döndürüyor, sayısını döndürmüyor; burada `sayi: 0`
+ * yazılıp ekrana basılıyordu. Canlıda ölçüldü: 23 öğrencinin 9'unda bölüm
+ * var ve 8 farklı bölüme dağılıyor ("en çok" olan 2 kişi), şehir tercihi
+ * yalnız 2 kişide. Yani ad tek başına da temsil edici değil. Doğru dağılım
+ * RPC'nin değişmesini gerektiriyor; o yapılana kadar dağılım hiç
+ * döndürülmüyor, doğrulanmış toplam kalıyor.
+ *
+ * YEDEK SORGU KALDIRILDI: RPC hata verince `student_profiles` satırları
+ * okunup sayılıyordu. O tablo işverene/anon'a kapatıldı (yukarıdaki not);
+ * yedek yol ancak RLS'in bıraktığı birkaç satırı — kısmi, yanlış bir
+ * toplamı — sayabilirdi. Artık hata fırlıyor; çağıran bloğu hiç çizmiyor.
  */
 export async function fetchTalentPoolStats(): Promise<TalentPoolStat> {
-  /*
-    TOPLU SAYI ARTIK SATIR OKUMUYOR
-
-    Önce `student_profiles` satırları çekilip burada sayılıyordu. O erişim
-    kapatıldı: doğrulanmış bir şirket, kendisine hiç başvurmamış
-    öğrencilerin profilini okuyabiliyordu. Toplu sayı kimseyi
-    tanımlanabilir kılmadığı için ayrı bir fonksiyona alındı.
-  */
-  const { data: ozet, error: ozetHatasi } = await (supabase as any).rpc(
-    'staj_arayan_ogrenci_ozeti'
-  );
-  if (!ozetHatasi && Array.isArray(ozet) && ozet.length > 0) {
-    const satir = ozet[0] as { toplam: number; en_cok_bolum: string | null; en_cok_sehir: string | null };
-    return {
-      toplam: Number(satir.toplam ?? 0),
-      enCokBolum: satir.en_cok_bolum ? [{ ad: satir.en_cok_bolum, sayi: 0 }] : [],
-      enCokSehir: satir.en_cok_sehir ? [{ ad: satir.en_cok_sehir, sayi: 0 }] : [],
-    };
-  }
-
-  const { data, error } = await supabase
-    .from('student_profiles')
-    .select('department, pref_cities')
-    .eq('is_open_to_offers', true);
-
+  const { data: ozet, error } = await (supabase as any).rpc('staj_arayan_ogrenci_ozeti');
   if (error) fail('Öğrenci sayısı okunamadı', error);
-
-  const rows = (data ?? []) as Array<{ department: string | null; pref_cities: string[] | null }>;
-
-  const say = (degerler: string[]) => {
-    const harita = new Map<string, number>();
-    for (const d of degerler) {
-      const temiz = (d ?? '').trim();
-      if (temiz) harita.set(temiz, (harita.get(temiz) ?? 0) + 1);
-    }
-    return [...harita.entries()]
-      .map(([ad, sayi]) => ({ ad, sayi }))
-      .sort((a, b) => b.sayi - a.sayi || a.ad.localeCompare(b.ad, 'tr'))
-      .slice(0, 4);
-  };
-
-  return {
-    toplam: rows.length,
-    enCokBolum: say(rows.map((r) => r.department ?? '')),
-    enCokSehir: say(rows.flatMap((r) => r.pref_cities ?? [])),
-  };
+  if (!Array.isArray(ozet) || ozet.length === 0) {
+    throw new Error('Öğrenci sayısı okunamadı: özet boş döndü.');
+  }
+  const toplam = Number((ozet[0] as { toplam: number | string | null }).toplam);
+  if (!Number.isFinite(toplam) || toplam < 0) {
+    throw new Error('Öğrenci sayısı okunamadı: toplam geçersiz.');
+  }
+  return { toplam };
 }
 
 

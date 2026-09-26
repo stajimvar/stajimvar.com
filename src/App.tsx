@@ -3124,7 +3124,8 @@ export default function App() {
     );
   }
   if (temizYol === '/stajyer-nasil-alinir') {
-    return icerikSayfasi(<EmployerGuide onBack={goHome} onNavigate={navigate} />);
+    /* Şirket üyesiyse (company_members) sayfanın sonraki adımı sahiplenme değil, ilan açmak. */
+    return icerikSayfasi(<EmployerGuide onBack={goHome} onNavigate={navigate} sirketUyesi={sirketUyesi} />);
   }
 
   /*
