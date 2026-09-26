@@ -123,11 +123,18 @@ test('FIRSAT KARTI TELEFONDA İLAN KARTIYLA TEK TİP, GENİŞ EKRANDA DİKEY AKI
     'rounded-2xl border border-gray-200 bg-white p-4',
     'flex min-w-0 items-start gap-3',
     'break-words text-base font-semibold leading-[22px] text-slate-900',
-    'relative z-10 -mr-2 -mt-2 shrink-0',
   ]) {
     assert.ok(ilan.includes(sinif), `ilan kartında yok: ${sinif}`);
     assert.ok(kart.includes(sinif), `fırsat kartında yok: ${sinif}`);
   }
+  /*
+    Kaydet ikisinde de sağ üst köşede, aynı noktada (kart kenarından
+    8 px). İlan kartında köşeye sabit (`absolute right-2 top-2`), çünkü
+    kaynak ve eylem orta sütunun son satırına taşındı (26 Eylül 2026);
+    fırsat kartı değişmedi.
+  */
+  assert.ok(kart.includes('relative z-10 -mr-2 -mt-2 shrink-0'), 'fırsat kartı kaydet yeri');
+  assert.ok(ilan.includes('<div className="absolute right-2 top-2 z-10">'), 'ilan kartı kaydet yeri');
   assert.doesNotMatch(kart, /hidden sm:flex sm:flex-col/, 'masaüstü ızgara kartı geri gelmiş');
   assert.doesNotMatch(kart, /<h2 className="line-clamp-2/, 'başlık kırpılıyor');
 

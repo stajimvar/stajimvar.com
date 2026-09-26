@@ -181,9 +181,12 @@ test('masaüstü düzeni korunuyor: her yüzey değeri sm ile geri dönüyor', (
   */
   assert.match(ilan, /<div className="shrink-0" title=\{listing\.companyName\}>/);
   assert.match(ilan, /<div className="min-w-0 flex-1">/);
-  /* Kaydet sağ üstte, eylem alt satırda sağda; ikisi de örtünün üstünde. */
-  assert.match(ilan, /<div className="relative z-10 -mr-2 -mt-2 shrink-0">/);
-  assert.match(ilan, /<div className="relative z-10 shrink-0">/);
+  /*
+    Kaydet sağ üst köşede; eylem orta sütunun son satırında sağda (26
+    Eylül 2026). İkisi de örtünün üstünde.
+  */
+  assert.match(ilan, /<div className="absolute right-2 top-2 z-10">/);
+  assert.match(ilan, /<div className="relative z-10 ml-auto shrink-0">/);
 });
 
 test('marka telefonda 28 piksel (önce 23)', () => {

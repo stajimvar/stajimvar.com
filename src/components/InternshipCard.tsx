@@ -192,8 +192,9 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
       SOL     logo: telefonda 56 × 56, `sm` ve üstünde 80 × 80
       ORTA    pozisyon (ana başlık) · şirket · konum/çalışma biçimi ve
               yanında ilan türü · varsa son başvuru
-      SAĞ ÜST kaydet
-      ALT     solda kaynak (başlıkla aynı sol hizada), sağda "İlanı incele"
+      SAĞ ÜST kaydet (kartın köşesine sabit)
+      ALT BLOK solda konum/tür ve hemen altında kaynak; sağ altta
+              "İlanı incele" bu iki satırın hizasında
 
     Önce şirket adı başlıktı, pozisyon ikinci satırdı; öğrencinin sorusu
     "nereye başvurabilirim" — pozisyon önde.
@@ -208,9 +209,16 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
     "Uzun dönem staj" etiketi kendi satırını kaplıyordu; artık konum ve
     çalışma biçiminin yanında ("İstanbul · Ofisten [Staj]"). Satır
     `flex-wrap`: dar ekranda etiket alt satıra geçiyor, yazı küçülmüyor
-    ya da kesilmiyor. Kaynak satırı logonun altına dönmüyor: alt sıra
-    logo sütunu kadar içeriden başlıyor (`pl-[68px]` = 56 + 12 boşluk,
-    `sm:pl-[92px]` = 80 + 12), eylem sağ altta kalıyor.
+    ya da kesilmiyor.
+
+    BOŞLUK KALKTI (kullanıcı kararı, 26 Eylül 2026): kaynak ve eylem
+    kartın altında ayrı bir sıraydı; 44 px'lik düğme yüzünden konumla
+    kaynak arasında ve kaynağın altında boş bant kalıyordu. Artık kaynak
+    konumun hemen altında, düğme bu iki satırın sağında ve alta hizalı
+    (`items-end`); iki satır ≈ düğme yüksekliği, bant yok. Telefonda da
+    aynı. Kaydet köşeye sabitlendi (`absolute`); başlık ve şirket onun
+    altına girmesin diye `pr-10`. Sol blok 128 px'in (`basis-32`)
+    altına düşerse düğme alt satıra sarıyor; yazı kesilmiyor.
 
     Tarih ve tür yalnız veride varsa: ölçüldü (25 Eylül 2026) yayındaki
     186 ilanın 9'unda son başvuru, 177'sinde tür var. Tahmin basılmıyor.
@@ -234,7 +242,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
   return (
     <div
       id={`internship-card-${listing.id}`}
-      className={`group relative flex min-w-0 flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300 focus-within:ring-2 focus-within:ring-blue-600 ${
+      className={`group relative flex min-w-0 flex-col rounded-2xl border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300 focus-within:ring-2 focus-within:ring-blue-600 ${
         yuzey ? '' : 'sm:hover:border-blue-400'
       }`}
     >
@@ -250,7 +258,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
 
         {/* ---- ORTA: bilgiler ---- */}
         <div className="min-w-0 flex-1">
-          <h3 className="break-words text-base font-semibold leading-[22px] text-slate-900">
+          <h3 className="break-words text-base font-semibold leading-[22px] text-slate-900 pr-10">
             <a
               href={ilanAdresi}
               onClick={ilanaGit}
@@ -259,48 +267,83 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
               {listing.title}
             </a>
           </h3>
-          <p className="mt-0.5 break-words text-sm leading-5 text-gray-700">
+          <p className="mt-0.5 break-words pr-10 text-sm leading-5 text-gray-700">
             {listing.companyName}
             {listing.department && <span className="text-gray-500"> · {listing.department}</span>}
           </p>
 
-          {(konum || yurtdisi || turkiyeEtiketi || tipEtiketi) && (
-            <p className="mt-1 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-sm leading-5 text-gray-600">
-              {(konum || yurtdisi || turkiyeEtiketi) && (
-                <MapPin aria-hidden className="h-4 w-4 shrink-0 text-gray-400" />
+          {/* ---- ALT BLOK: solda konum/tür ve kaynak, sağ altta eylem ---- */}
+          <div className="mt-1 flex min-w-0 flex-wrap items-end gap-x-3 gap-y-2">
+            <div className="min-w-0 flex-1 basis-32">
+              {(konum || yurtdisi || turkiyeEtiketi || tipEtiketi) && (
+                <p className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-sm leading-5 text-gray-600">
+                  {/*
+                    Simge konum metnine bağlı: metin sarınca simge satırda
+                    yalnız kalmıyor (360 px'te ölçüldü, 26 Eylül 2026).
+                    Çalışma biçimi bilinmiyorsa yazılmıyor — varsayılan
+                    uydurulmuyor.
+                  */}
+                  {(konum || yurtdisi || turkiyeEtiketi) && (
+                    <span className="inline-flex min-w-0 items-start gap-1.5">
+                      <MapPin aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+                      {konum && <span className="min-w-0 break-words">{konum}</span>}
+                    </span>
+                  )}
+                  {yurtdisi && <UlkeRozeti countryCode={listing.countryCode} />}
+                  {turkiyeEtiketi && (
+                    <span className="inline-flex items-center rounded-md border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-800">
+                      Türkiye
+                    </span>
+                  )}
+                  {tipEtiketi && (
+                    <span className="inline-flex items-center break-words rounded-md bg-gray-100 px-2 py-0.5 text-xs font-semibold leading-4 text-gray-700">
+                      {tipEtiketi}
+                    </span>
+                  )}
+                </p>
               )}
-              {/* Çalışma biçimi bilinmiyorsa yazılmıyor — varsayılan uydurulmuyor. */}
-              {konum && <span className="min-w-0 break-words">{konum}</span>}
-              {yurtdisi && <UlkeRozeti countryCode={listing.countryCode} />}
-              {turkiyeEtiketi && (
-                <span className="inline-flex items-center rounded-md border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-800">
-                  Türkiye
-                </span>
-              )}
-              {tipEtiketi && (
-                <span className="inline-flex items-center break-words rounded-md bg-gray-100 px-2 py-0.5 text-xs font-semibold leading-4 text-gray-700">
-                  {tipEtiketi}
-                </span>
-              )}
-            </p>
-          )}
 
-          {sonBasvuru && (
-            <p className="mt-1.5 text-xs leading-4 text-gray-600">
-              Son başvuru: <strong className="font-semibold text-gray-800">{sonBasvuru}</strong>
-            </p>
-          )}
+              <p
+                className="mt-1 flex min-w-0 items-center gap-1.5 text-xs leading-4 text-gray-600"
+                title={
+                  kariyerSayfasindanIlan
+                    ? 'Bu ilan şirketin kendi kariyer sayfasından alındı'
+                    : "Bu ilanı şirket doğrudan StajımVar'da yayımladı; başvuru burada tamamlanıyor"
+                }
+              >
+                <FileText aria-hidden className="h-4 w-4 shrink-0 text-gray-400" />
+                <span>{kariyerSayfasindanIlan ? ILAN_KAYNAGI.dis.etiket : ILAN_KAYNAGI.ic.etiket}</span>
+              </p>
 
-          {/*
-            Görünür durum etiketleri ortak bileşende: aynı etiketler ilan
-            detayında da gerekiyor ve iki kopya er geç ayrışırdı. Gerekçesi
-            ve hangi durumda neyin yazıldığı orada.
-          */}
-          <IlanDurumEtiketleri listing={listing} className="mt-1.5" />
+              {sonBasvuru && (
+                <p className="mt-1.5 text-xs leading-4 text-gray-600">
+                  Son başvuru: <strong className="font-semibold text-gray-800">{sonBasvuru}</strong>
+                </p>
+              )}
+
+              {/*
+                Görünür durum etiketleri ortak bileşende: aynı etiketler ilan
+                detayında da gerekiyor ve iki kopya er geç ayrışırdı. Gerekçesi
+                ve hangi durumda neyin yazıldığı orada.
+              */}
+              <IlanDurumEtiketleri listing={listing} className="mt-1.5" />
+            </div>
+
+            <div className="relative z-10 ml-auto shrink-0">
+              <a
+                href={ilanAdresi}
+                onClick={ilanaGit}
+                aria-label={`${listing.title} ilanını incele`}
+                className={KART_EYLEMI.kenar}
+              >
+                İlanı incele
+              </a>
+            </div>
+          </div>
         </div>
 
         {/* ---- SAĞ ÜST: kaydet ---- */}
-        <div className="relative z-10 -mr-2 -mt-2 shrink-0">
+        <div className="absolute right-2 top-2 z-10">
           {onToggleKayit ? (
             <button
               type="button"
@@ -317,35 +360,7 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
             >
               <Bookmark aria-hidden className={`h-6 w-6 ${kayitli ? 'fill-blue-600' : ''}`} strokeWidth={1.75} />
             </button>
-          ) : (
-            <span aria-hidden className="block h-11 w-11" />
-          )}
-        </div>
-      </div>
-
-      {/* ---- ALT: kaynak ve eylem ---- */}
-      <div className="-mt-1 flex min-w-0 items-center justify-between gap-3 pl-[68px] sm:pl-[92px]">
-        <p
-          className="flex min-w-0 items-center gap-1.5 text-xs leading-4 text-gray-600"
-          title={
-            kariyerSayfasindanIlan
-              ? 'Bu ilan şirketin kendi kariyer sayfasından alındı'
-              : "Bu ilanı şirket doğrudan StajımVar'da yayımladı; başvuru burada tamamlanıyor"
-          }
-        >
-          <FileText aria-hidden className="h-4 w-4 shrink-0 text-gray-400" />
-          <span className="truncate">{kariyerSayfasindanIlan ? ILAN_KAYNAGI.dis.etiket : ILAN_KAYNAGI.ic.etiket}</span>
-        </p>
-
-        <div className="relative z-10 shrink-0">
-          <a
-            href={ilanAdresi}
-            onClick={ilanaGit}
-            aria-label={`${listing.title} ilanını incele`}
-            className={KART_EYLEMI.kenar}
-          >
-            İlanı incele
-          </a>
+          ) : null}
         </div>
       </div>
     </div>
