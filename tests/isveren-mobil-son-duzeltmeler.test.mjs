@@ -29,7 +29,13 @@ test("Şirketim masaüstünde öğrenci profiliyle aynı 600 px'lik sütunda; te
   const sahip = oku('src/sirket/SirketProfili.tsx');
   assert.match(sahip, /import \{ ProfilSayfaDuzeni \} from '\.\.\/components\/sosyal\/ProfilSayfaDuzeni';/);
   /* Ana görünüm, kapak ve önizleme dalları üçü de sütunda. */
-  assert.equal((yorumsuz(sahip).match(/<ProfilSayfaDuzeni>/g) ?? []).length, 3);
+  assert.equal((yorumsuz(sahip).match(/<ProfilSayfaDuzeni[\s>]/g) ?? []).length, 3);
+  /*
+    27 Eylül 2026: ana görünüm öğrencinin /cv ekranı gibi üç sütun — sol
+    şirket paneli, sağ son başvurular + işveren rehberi (SirketYanSutunlari).
+  */
+  assert.match(sahip, /solSutun=\{\s*<SirketSolSutun/);
+  assert.match(sahip, /yanSutun=\{\s*<SirketYanSutun/);
   const duzen = oku('src/components/sosyal/ProfilSayfaDuzeni.tsx');
   assert.match(duzen, /export const PROFIL_ANA_SUTUNU = 'w-full min-w-0 lg:max-w-\[600px\]';/);
 });
@@ -69,4 +75,26 @@ test('işveren rehberi satırları rehber merkeziyle aynı kapağı kullanıyor;
       assert.ok(existsSync(path.join(KOK, 'public', 'rehber-gorselleri', `${slug}.${uzanti}`)), `${slug}.${uzanti}`);
     }
   }
+});
+
+test('işveren rehberi masaüstünde öğrenci rehberiyle aynı 3/6/3 ızgara; sayılar yazılardan', () => {
+  const rehber = oku('src/sirket/IsverenRehberi.tsx');
+  assert.match(rehber, /grid grid-cols-1 items-start gap-5 lg:grid-cols-12/);
+  assert.match(rehber, /lg:col-span-3 lg:block" aria-label="Filtreler"/);
+  assert.match(rehber, /<div className="space-y-5 lg:col-span-6">/);
+  assert.match(rehber, /const TOPLAM_DAKIKA = ISVEREN_YAZILARI\.reduce\(\(t, r\) => t \+ rehberOkumaDakika\(r\), 0\);/);
+  /* Telefonda sayfa içi arama ve çipler; masaüstünde üst çubuk. */
+  assert.match(rehber, /<div className="relative lg:hidden">/);
+  const kabuk = oku('src/components/GuidePages.tsx');
+  assert.match(kabuk, /<SayfaKabugu icerikGenisligi=\{SAYFA_GENISLIGI\} ustBosluk="pt-4 sm:pt-3">\s*<IsverenRehberi/);
+});
+
+test('Şirketim yan sütunları gerçek veriden; kademe kapalıysa başvuru sayısı yazılmıyor', () => {
+  const yan = oku('src/sirket/SirketYanSutunlari.tsx');
+  assert.match(yan, /const basvuruBilgisi = !kartAcik\s*\? 'Doğrulamadan sonra açılır'/);
+  assert.match(yan, /const son = kartAcik \? basvurular\.slice\(0, 4\) : \[\];/);
+  assert.match(yan, /takipci\.durum === 'hazir' \? `\$\{takipci\.deger\} takipçi` : null/);
+  /* Rehber verisi panelin ilk yüklemesine binmiyor. */
+  assert.match(yan, /import\('\.\.\/data\/rehberler'\)/);
+  assert.doesNotMatch(yan, /^import \{[^}]*REHBERLER/m);
 });
