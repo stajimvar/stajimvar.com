@@ -26,11 +26,13 @@ test('kısa giriş: tek görünür h1, açıklama gerçek veriyle uyumlu, ön re
   assert.match(onRender, /Şirketlerin kariyer sayfalarından derlenen ve StajımVar’da yayımlanan staj ilanlarını keşfet\./);
 });
 
-test('sonuç satırı: kesin sayı, sıralama notu, etkin süzgeçler ve tek temizleme işlevi', () => {
-  assert.match(kod, /<strong className="font-bold text-slate-900">\{sonucSayisi\}<\/strong> ilan/);
-  assert.match(kod, /\{filteredListings\.length\}<\/strong> ilan gösteriliyor · devamı var/);
-  /* Bölüm tercihi sıralama; "süzüldü" denmiyor. */
-  assert.match(kod, /\{bolumAlani && <span className="text-gray-500"> · önce bölümüne uyanlar<\/span>\}/);
+test('liste üstünde sayaç yok; etkin süzgeçler ve tek temizleme işlevi', () => {
+  /* "N ilan" satırı kaldırıldı (kullanıcı kararı, 26 Eylül 2026). */
+  assert.doesNotMatch(kod, /<\/strong> ilan(\s|<)/);
+  assert.doesNotMatch(kod, /ilan gösteriliyor · devamı var/);
+  assert.doesNotMatch(kod, /önce bölümüne uyanlar/);
+  /* Satır yalnız süzgeç etkinken. */
+  assert.match(kod, /\{filteredListings\.length > 0 && aktifSuzgecler\.length > 0 && \(/);
   /* Etkin süzgeçler görünür, tek tek kaldırılabiliyor; temizleme panelle aynı işlev. */
   assert.match(kod, /<ul aria-label="Etkin filtreler"/);
   assert.match(kod, /onClick=\{f\.kaldir\}/);

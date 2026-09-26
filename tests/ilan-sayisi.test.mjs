@@ -97,8 +97,11 @@ test('başlık, şirket şeridi ve filtre düğmesi aynı türetilmiş sayıyı 
   /* Kaynak sözleşmenin tür dağılımı (tüm sayfalar), yüklenmiş kart değil. */
   assert.match(gorunum, /return tipFacets\s*\.filter\(\(satir\) => ilanTipleri\.length === 0 \|\| ilanTipleri\.includes\(satir\.tip\)\)/);
   assert.match(readFileSync('src/App.tsx', 'utf8'), /tipFacets=\{globalListings\.page\.facets\.tipler\}/);
-  /* Kesin değilken toplam gibi yazılmıyor. */
-  assert.match(gorunum, /ilan gösteriliyor · devamı var/);
+  /*
+    Listenin üstündeki "N ilan" satırı kaldırıldı (26 Eylül 2026); sayı
+    yalnız panel düğmesinde ve yan sütunda ("Açık ilan").
+  */
+  assert.doesNotMatch(gorunum.replace(/\/\*[\s\S]*?\*\//g, ''), /ilan gösteriliyor · devamı var/);
   assert.match(gorunum, /gosterilecekIlanSayisi\(\{/);
 
   /*
