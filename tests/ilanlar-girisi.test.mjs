@@ -64,3 +64,12 @@ test('istek hatası "0 ilan" değil: ayrı ekran ve "Yeniden dene"', () => {
   assert.match(hata.slice(0, 1200), /İlanlar yüklenemedi\./);
   assert.match(hata.slice(0, 1200), /onClick=\{globalListings\.retry\}[\s\S]{0,300}Yeniden dene/);
 });
+
+test('staj türünde önceden seçim yok; seçilirse etkin süzgeç ve temizlemeye giriyor', () => {
+  /* Kullanıcı kararı (26 Eylül 2026): liste her türü gösteriyor. */
+  assert.match(kod, /const \[ilanTipleri, setIlanTipleri\] = useState<string\[\]>\(\[\]\);/);
+  assert.doesNotMatch(kod, /useState<string\[\]>\(\['staj', 'uzun_donem'\]\)/);
+  assert.match(kod, /ekle\(ilanTipleri\.length > 0, `Staj türü \(\$\{ilanTipleri\.length\}\)`, 'tip', \(\) => setIlanTipleri\(\[\]\)\);/);
+  const temizle = kod.slice(kod.indexOf('const suzgecleriTemizle = () => {'));
+  assert.match(temizle.slice(0, 500), /setIlanTipleri\(\[\]\);/);
+});
