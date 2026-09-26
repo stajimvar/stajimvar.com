@@ -259,10 +259,21 @@ test('tür etiketi konum satırında, kaynak başlıkla aynı sol hizada', () =>
   /* Tür için ayrı satır yok; son başvuru yalnız varsa kendi satırında. */
   assert.equal((kod.match(/\{tipEtiketi\}/g) || []).length, 1);
   assert.match(kod, /\{sonBasvuru && \(\s*<p className="mt-1\.5 text-xs leading-4 text-gray-600">/);
-  /* Alt sıra logo sütunu kadar içeriden: 56 + 12, sm'de 80 + 12. */
-  assert.match(kod, /justify-between gap-3 pl-\[68px\] sm:pl-\[92px\]/);
-  /* Eylem ve kaydet yerinde; detay akışı aynı. */
-  assert.match(kod, /aria-label=\{`\$\{listing\.title\} ilanını incele`\}/);
-  assert.match(kod, /relative z-10 -mr-2 -mt-2 shrink-0/);
+  /*
+    Boşluk kalktı (26 Eylül 2026): kaynak konumun hemen altında, eylem
+    bu iki satırın sağında ve alta hizalı — ayrı alt sıra yok. Kaynak
+    başlıkla aynı sütunda, kaynak yazısı kesilmiyor.
+  */
+  const orta = kod.slice(kod.indexOf('<div className="min-w-0 flex-1">'), kod.indexOf('<div className="absolute right-2 top-2 z-10">'));
+  assert.match(orta, /<div className="mt-1 flex min-w-0 flex-wrap items-end gap-x-3 gap-y-2">\s*<div className="min-w-0 flex-1 basis-32">/);
+  /* Sıra: konum/tür → kaynak → (son başvuru, durum) → eylem. */
+  const sira = ['{(konum || yurtdisi || turkiyeEtiketi || tipEtiketi) && (', 'ILAN_KAYNAGI.dis.etiket', '{sonBasvuru && (', '<IlanDurumEtiketleri', 'ilanını incele'].map((x) => orta.indexOf(x));
+  assert.ok(sira.every((x, i) => x > 0 && (i === 0 || x > sira[i - 1])), `sıra: ${sira}`);
+  assert.match(orta, /<span>\{kariyerSayfasindanIlan \? ILAN_KAYNAGI\.dis\.etiket : ILAN_KAYNAGI\.ic\.etiket\}<\/span>/);
+  assert.match(orta, /aria-label=\{`\$\{listing\.title\} ilanını incele`\}/);
+  assert.doesNotMatch(kod, /pl-\[68px\]/);
+  /* Kaydet köşede; başlık ve şirket onun altına girmesin diye pr-10. */
+  assert.match(kod, /text-slate-900 pr-10">/);
+  assert.match(kod, /break-words pr-10 text-sm leading-5 text-gray-700/);
   assert.equal((kod.match(/onClick=\{ilanaGit\}/g) || []).length, 2);
 });
