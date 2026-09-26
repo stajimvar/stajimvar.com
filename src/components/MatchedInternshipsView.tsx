@@ -424,22 +424,20 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   const [onlyMandatory, setOnlyMandatory] = useState<boolean>(false);
   const [onlyPaid, setOnlyPaid] = useState<boolean>(false);
   /*
-    İLAN TÜRÜ SÜZGECİ — VARSAYILAN LİSTE YALNIZ STAJ
+    İLAN TÜRÜ SÜZGECİ — VARSAYILAN SEÇİM YOK
 
-    Onaylanan karar (21 Eylül 2026): varsayılan staj listesi yalnız
-    `staj` ve `uzun_donem` gösterir. MT, trainee ve erken kariyer
-    ilanları SİLİNMİYOR, gizlenmiyor — bu süzgeçten seçilerek
-    görülüyorlar.
+    Kullanıcı kararı (26 Eylül 2026): liste her türü gösteriyor, öğrenci
+    isterse "Staj türü"nden kendisi daraltıyor. Önce (21 Eylül kararı)
+    `staj` ve `uzun_donem` önceden işaretliydi; MT, trainee, erken
+    kariyer ve sınıflandırılmamış ilanlar varsayılan listeye girmiyor,
+    ilan sayısı olduğundan az görünüyordu.
 
-    Ölçüldü (22 Eylül 2026, TR katalogu): staj 81 · uzun_donem 10 ·
-    sınıflandırılmadı 5 · erken_kariyer 4 · mt 3 · trainee 1.
-    Yani 13 ilan varsayılan listeye girmiyor ama erişilebilir kalıyor.
-
-    SINIFLANDIRILMAMIŞ (NULL) DA VARSAYILANA GİRMİYOR: kanıtı olmayan
-    kayda "staj" demek, sınıfı uydurmak olurdu. Kendi seçeneğinde
-    duruyor ve sayısı görünüyor.
+    Seçim artık gerçek bir süzgeç: etkin süzgeç çiplerinde görünüyor ve
+    "Filtreleri temizle" onu da sıfırlıyor. Türler kartta ve süzgeçte
+    kendi adıyla ("Yönetici adayı (MT)", "Sınıflandırılmadı"); kanıtsız
+    kayda "staj" denmiyor.
   */
-  const [ilanTipleri, setIlanTipleri] = useState<string[]>(['staj', 'uzun_donem']);
+  const [ilanTipleri, setIlanTipleri] = useState<string[]>([]);
   const [minMatchScore, setMinMatchScore] = useState<number>(0);
   const [sortBy, setSortBy] = useState<
     | 'match'
@@ -1447,6 +1445,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       setSelectedCompanies([]),
     );
     ekle(seciliAlanlar.length > 0, `Alan (${seciliAlanlar.length})`, 'alan', () => setSeciliAlanlar([]));
+    ekle(ilanTipleri.length > 0, `Staj türü (${ilanTipleri.length})`, 'tip', () => setIlanTipleri([]));
     ekle(onlyMandatory, 'Zorunlu staj kabul', 'zorunlu', () => setOnlyMandatory(false));
     ekle(onlyPaid, 'Ücretli', 'ucretli', () => setOnlyPaid(false));
     ekle(minMatchScore > 0, `En az %${minMatchScore} uyum`, 'uyum', () => setMinMatchScore(0));
@@ -1458,6 +1457,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     dateRange,
     selectedCompanies,
     seciliAlanlar,
+    ilanTipleri,
     onlyMandatory,
     onlyPaid,
     minMatchScore,
@@ -1482,6 +1482,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     setSelectedCompanies([]);
     setCompanySearch('');
     setSeciliAlanlar([]);
+    setIlanTipleri([]);
     setOnlyMandatory(false);
     setOnlyPaid(false);
     setMinMatchScore(0);
@@ -2022,13 +2023,10 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
         {/* ---- ilan türü ---- */}
         {/*
-          VARSAYILAN LİSTE YALNIZ STAJ (onaylanan karar, 21 Eylül 2026)
-
-          `staj` ve `uzun_donem` açık geliyor. MT, trainee ve erken
-          kariyer ilanları silinmiyor, gizlenmiyor — buradan seçilerek
-          görülüyorlar. Sınıflandırılmamış kayıtlar da kendi
-          seçeneğinde: kanıtsız kayda "staj" demek sınıfı uydurmak
-          olurdu.
+          VARSAYILAN SEÇİM YOK (kullanıcı kararı, 26 Eylül 2026): hiçbir
+          tür önceden işaretli değil, liste her türü gösteriyor. Öğrenci
+          buradan daraltıyor. Sınıflandırılmamış kayıtlar kendi
+          seçeneğinde: kanıtsız kayda "staj" demek sınıfı uydurmak olurdu.
 
           Sayısı sıfır olan seçenek çizilmiyor (işaretliyse duruyor):
           boş bir kutu, orada bir şey olduğunu düşündürür.
