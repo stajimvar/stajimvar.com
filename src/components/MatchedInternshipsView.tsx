@@ -2351,57 +2351,39 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           )}
 
           {/*
-            SONUÇ SATIRI (A paketi, 26 Eylül 2026)
+            ETKİN SÜZGEÇ SATIRI (A paketi, 26 Eylül 2026)
 
-            Sayı `sonucSayisi` kuralından (yukarıda); kesin değilse toplam
-            gibi yazılmıyor. Bölüm tercihi SIRALAMA: ilan elemiyor, bu
-            yüzden "önce bölümüne uyanlar" deniyor, "süzüldü" denmiyor.
-            Etkin süzgeçler tek tek kaldırılabiliyor; "Filtreleri temizle"
-            panelin "Temizle"siyle aynı işlev (`suzgecleriTemizle`), ikinci
-            bir durum yok.
+            Listenin üstündeki "N ilan" sayacı kaldırıldı (kullanıcı
+            kararı, 26 Eylül 2026); toplam yan sütunda ("Açık ilan") ve
+            filtre panelinin düğmesinde duruyor. Satır artık yalnız süzgeç
+            etkinken çiziliyor: etkin süzgeçler tek tek kaldırılabiliyor,
+            "Filtreleri temizle" panelin "Temizle"siyle aynı işlev
+            (`suzgecleriTemizle`), ikinci bir durum yok.
           */}
-          {filteredListings.length > 0 && (
-            <div className="space-y-2 py-2.5 sm:py-0">
-              <div className="flex flex-wrap items-center justify-between gap-x-3">
-                <p className="text-sm text-gray-600" aria-live="polite">
-                  {sonucSayisi !== null ? (
-                    <>
-                      <strong className="font-bold text-slate-900">{sonucSayisi}</strong> ilan
-                    </>
-                  ) : (
-                    <>
-                      <strong className="font-bold text-slate-900">{filteredListings.length}</strong> ilan gösteriliyor · devamı var
-                    </>
-                  )}
-                  {bolumAlani && <span className="text-gray-500"> · önce bölümüne uyanlar</span>}
-                </p>
-                {aktifSuzgecler.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={suzgecleriTemizle}
-                    className="inline-flex min-h-11 cursor-pointer items-center rounded-lg text-sm font-semibold text-blue-700 hover:text-blue-800"
-                  >
-                    Filtreleri temizle
-                  </button>
-                )}
-              </div>
-              {aktifSuzgecler.length > 0 && (
-                <ul aria-label="Etkin filtreler" className="flex flex-wrap gap-1.5">
-                  {aktifSuzgecler.map((f) => (
-                    <li key={f.etiket}>
-                      <button
-                        type="button"
-                        onClick={f.kaldir}
-                        aria-label={`${f.etiket} filtresini kaldır`}
-                        className="inline-flex min-h-9 cursor-pointer items-center gap-1 rounded-full border border-gray-200 bg-white px-3 text-xs font-semibold text-slate-800 hover:bg-gray-50"
-                      >
-                        {f.etiket}
-                        <X aria-hidden className="h-3.5 w-3.5 text-gray-500" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+          {filteredListings.length > 0 && aktifSuzgecler.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 py-2.5 sm:py-0">
+              <ul aria-label="Etkin filtreler" className="flex flex-wrap gap-1.5">
+                {aktifSuzgecler.map((f) => (
+                  <li key={f.etiket}>
+                    <button
+                      type="button"
+                      onClick={f.kaldir}
+                      aria-label={`${f.etiket} filtresini kaldır`}
+                      className="inline-flex min-h-9 cursor-pointer items-center gap-1 rounded-full border border-gray-200 bg-white px-3 text-xs font-semibold text-slate-800 hover:bg-gray-50"
+                    >
+                      {f.etiket}
+                      <X aria-hidden className="h-3.5 w-3.5 text-gray-500" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                onClick={suzgecleriTemizle}
+                className="inline-flex min-h-11 cursor-pointer items-center rounded-lg text-sm font-semibold text-blue-700 hover:text-blue-800"
+              >
+                Filtreleri temizle
+              </button>
             </div>
           )}
 
