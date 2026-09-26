@@ -1061,6 +1061,64 @@
       "urls": [
         "https://join.pmicareers.com/gb/en/job/PMIPMIGB33659EXTERNALENGB/Hiring-People-with-Disabilities-Internship-Full-Time-Roles"
       ]
+    },
+    {
+      "id": "barilla-ilan-sayfasi-tr",
+      "name": "Barilla Group (Türkiye, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Barilla Group",
+      "careers_url": "https://jobs.barillagroup.com/",
+      "aciklik_dogrulanmadi": true,
+      "city_hint": "Istanbul",
+      "urls": [
+        "https://jobs.barillagroup.com/job/Istanbul-Trade-Marketing-Intern-Ista-Istanbul/1437888233/"
+      ]
+    },
+    {
+      "id": "hyundai-ilan-sayfasi-tr",
+      "name": "Hyundai Motor Türkiye (açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Hyundai Motor Türkiye",
+      "careers_url": "https://live.peoplise.com/hyundaimotorturkiye",
+      "aciklik_dogrulanmadi": true,
+      "city_hint": "Kocaeli",
+      "urls": [
+        "https://live.peoplise.com/hyundaimotorturkiye/Application/Landing/5df194e5-7434-4e81-b6c6-159f2c60be39"
+      ]
+    },
+    {
+      "id": "hilton-ilan-sayfasi-tr",
+      "name": "Hilton (Türkiye, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Hilton",
+      "careers_url": "https://efet.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1009",
+      "aciklik_dogrulanmadi": true,
+      "city_hint": "Istanbul",
+      "baslik_kaynagi": "og",
+      "urls": [
+        "https://efet.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1009/job/224661"
+      ]
+    },
+    {
+      "id": "danone-ilan-sayfasi-tr",
+      "name": "Danone Türkiye (açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Danone Türkiye",
+      "careers_url": "https://careers.danone.com/en-global/",
+      "aciklik_dogrulanmadi": true,
+      "city_hint": "Istanbul",
+      "baslik_kaynagi": "og",
+      "urls": [
+        "https://careers.danone.com/en-global/jobs/danable-internship-program-for-students-with-disabilities-15209-en-us.html"
+      ]
     }
   ],
   "notes": "Only add verified public ATS/API endpoints. Keep credentials in environment variables, never here."
