@@ -288,3 +288,35 @@ def test_kesif_gurultulu_menuyu_reddediyor():
     kirli = kv.Sonuc([gun_(t, ["SEBZE ÇORBA", "-", "cal.", "KÖFTE"]) for t in ("2026-09-24", "2026-09-25", "2026-09-26")], [], [])
     assert kk.gecerli_menu(temiz, gun)
     assert not kk.gecerli_menu(kirli, gun), "YARISI GÜRÜLTÜ OLAN MENÜ DOĞRULANMAMALI"
+
+
+# ------------------------------------------------------------ yaz dönemi (26 Eylül 2026)
+
+
+def test_okunan_ama_bos_kaynak_basarili_sayiliyor_notu_ayri():
+    """Yemekhane yazın menü yayımlamıyor: sayfa okundu, veri yok. Bu bir
+    ulaşılamama değil; `son_basari_at` güncelleniyor, panel "kaynak en son
+    … okundu" demiyor. Not `son_hata`da duruyor ki bozulan ayrıştırıcı
+    kayıtta görülebilsin."""
+    simdi = "2026-07-15T09:00:00+00:00"
+    d = kv.kaynak_durumu(kv.Sonuc([], [], ["bu ay için menü PDF'i yok"]), simdi)
+    assert d["son_basari_at"] == simdi
+    assert d["son_kontrol_at"] == simdi
+    assert d["son_hata"].startswith(kv.BOS_OKUMA_ONEKI)
+    assert "bu ay için menü PDF'i yok" in d["son_hata"]
+
+
+def test_veri_gelen_kaynakta_not_temizleniyor():
+    simdi = "2026-09-26T09:00:00+00:00"
+    d = kv.kaynak_durumu(kv.Sonuc([{"tarih": "2026-09-26"}], [], []), simdi)
+    assert d == {"son_kontrol_at": simdi, "son_basari_at": simdi, "son_hata": None}
+
+
+def test_ulasilamayan_kaynak_basari_anini_degistirmiyor():
+    """Hata dalı `kaynak_durumu`na hiç gelmiyor: yalnız kontrol anı ve hata yazılıyor."""
+    import inspect
+
+    kod = inspect.getsource(kv.kos)
+    hata_dali = kod[kod.index("except Exception"):kod.index("continue")]
+    assert "son_basari_at" not in hata_dali
+    assert '"son_kontrol_at": simdi, "son_hata": str(e)[:500]' in hata_dali

@@ -61,6 +61,11 @@ export interface Kampusum {
   } | null;
   /** Bugünün menüsü; yoksa null (yayımlanmamış ya da hafta sonu). */
   menu: KampusMenusu | null;
+  /**
+   * Bugüne kadarki son menünün tarihi (YYYY-MM-DD); hiç yoksa null.
+   * Eski sunucu yanıtında alan yoksa `undefined` — 7 gün kuralı uygulanmıyor.
+   */
+  sonMenuTarihi?: string | null;
   /** Yemek kaynağı tanımlı değilse null. */
   menuKaynagi: KaynakDurumu | null;
   /** Son 30 günün en yeni 4 duyurusu. */
@@ -133,6 +138,7 @@ function kampusCoz(k: any): Kampusum {
           })),
         }
       : null,
+    sonMenuTarihi: 'son_menu_tarihi' in k ? (k.son_menu_tarihi ?? null) : undefined,
     menuKaynagi: kaynak(k.menu_kaynagi),
     duyurular: (k.duyurular ?? []).map((d: any) => ({ baslik: d.baslik, tarih: d.tarih, url: d.url })),
     duyuruKaynagi: kaynak(k.duyuru_kaynagi),
