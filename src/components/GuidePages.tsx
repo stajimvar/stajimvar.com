@@ -245,7 +245,8 @@ export const GuideHub: React.FC<
 
   if (sirketHesabi && !tumRehber) {
     return (
-      <SayfaKabugu icerikGenisligi="max-w-2xl" ustBosluk="pt-4 sm:pt-6">
+      /* Öğrenci rehberiyle aynı kap: site genişliği, masaüstünde üç sütun (IsverenRehberi). */
+      <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI} ustBosluk="pt-4 sm:pt-3">
         <IsverenRehberi
           onNavigate={onNavigate}
           arama={terim}

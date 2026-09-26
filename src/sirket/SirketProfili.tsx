@@ -16,6 +16,8 @@ import { SirketSayfasi } from './SirketSayfasi';
 import { KapakFotografiYukleme } from '../components/sosyal/KapakFotografiYukleme';
 import { ProfilAyarlarSayfasi, type AyarBolumu } from '../components/ProfilAyarlarSayfasi';
 import { ProfilSayfaDuzeni } from '../components/sosyal/ProfilSayfaDuzeni';
+import { SirketSolSutun, SirketYanSutun } from './SirketYanSutunlari';
+import { adayGorebilir } from '../lib/sirket-kademe.mjs';
 import type { AdayOzeti } from './IlanKarti';
 import {
   kendiSosyalProfiliGetir,
@@ -439,7 +441,30 @@ export const SirketProfili: React.FC<{
       /profil ekranlarındaki 600 piksellik ana sütun (lg ve üstü); telefonda
       hiçbir sınıf eklemiyor, mobil görünüm aynı.
     */
-    <ProfilSayfaDuzeni>
+    <ProfilSayfaDuzeni
+      /*
+        MASAÜSTÜ ÜÇ SÜTUN (27 Eylül 2026): öğrencinin /cv ekranıyla aynı kap
+        ve eşikler — sol (1440+) şirket paneli, sağ (1280+) son başvurular
+        ve işveren rehberi. Telefonda ve dar ekranda sütunlar çizilmiyor.
+      */
+      solSutun={
+        <SirketSolSutun
+          ilanlar={ilanlar}
+          basvurular={basvurular}
+          kartAcik={adayGorebilir(baglam.kademe)}
+          takipci={takipciSayaci}
+          onNavigate={onNavigate}
+        />
+      }
+      yanSutun={
+        <SirketYanSutun
+          basvurular={basvurular}
+          ilanlar={ilanlar}
+          kartAcik={adayGorebilir(baglam.kademe)}
+          onNavigate={onNavigate}
+        />
+      }
+    >
     <div className="space-y-4">
       {/*
         SAYFA BAŞLIĞI "ŞİRKETİM" (26 Eylül 2026): alt çubuktaki adla aynı.
