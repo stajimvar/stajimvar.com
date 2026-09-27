@@ -133,7 +133,7 @@ test('adım düzeni: başlık → görsel → özet → ayrıntı; iç içe kart
   assert.ok(adim.indexOf('<SadeFotograf') < adim.indexOf('<p className={OZET}>'));
   assert.ok(adim.indexOf('<SecenekAlani') < adim.lastIndexOf('<p className={OZET}>'));
   /* h2 gövdenin doğrudan çocuğu (içindekiler `:scope > h2`). */
-  assert.match(adim, /return \(\s*<>\s*\{b\.baslik && <Baslik sade>/);
+  assert.match(adim, /return \(\s*<>\s*\{b\.baslik && \(\s*<Baslik sade id=/);
   const bolum = oku('src/components/RehberBolum.tsx');
   assert.match(bolum, /loading="lazy"/);
   assert.match(bolum, /width=\{1280\}\s*height=\{720\}/);
@@ -184,6 +184,25 @@ test('sigorta başlığı soru; kapsam ve koşul görünür özette, ücret ve s
   assert.match(veri, /İşverenin SGK\\'ya öğrenci için bildirim/);
   assert.match(veri, /3308 sayılı Kanun/);
   assert.match(veri, /Bu sayfada tutar, oran ve devlet katkısı payı yazmıyoruz/);
+});
+
+test('işveren rehberi girişi pilot düzeninde: başlık + adım şeridi + kapak; öğrenci rehberi kapakta kalıyor', () => {
+  const sayfa = oku('src/components/GuidePages.tsx');
+  assert.match(sayfa, /rehber\.kategori === 'isveren' && rehber\.adimlar\?\.length \? \(\s*<IsverenRehberGirisi rehber=\{rehber\} \/>/);
+  const giris = sayfa.slice(sayfa.indexOf('const IsverenRehberGirisi'), sayfa.indexOf('export const GuidePage'));
+  /* Pilotla aynı ızgara (EmployerGuide): solda başlık ve şerit, sağda fotoğraf. */
+  assert.match(giris, /lg:grid-cols-\[minmax\(0,5fr\)_minmax\(0,7fr\)\]/);
+  assert.match(giris, /<RehberKapagi slug=\{rehber\.slug\} oncelikli \/>/);
+  assert.match(giris, /Temsili görsel/);
+  assert.match(giris, /href=\{`#bolum-\$\{a\.no\}`\}/);
+  assert.match(giris, /min-h-12/);
+  /* Başlık kimliği gövdede baştan yazılı; şerit veriden türetiliyor. */
+  const govde = oku('src/data/rehber-govde.tsx');
+  assert.match(govde, /<Baslik sade id=\{no \? `bolum-\$\{no\}` : undefined\}>/);
+  assert.match(govde, /adimlar: adimSeridi\(t\.bloklar\)/);
+  /* 22 adımın her birinin kısa adı var. */
+  const veri = oku('src/data/rehber-yazilari/isveren.tsx');
+  assert.equal((veri.match(/\n        kisaAd: '/g) ?? []).length, 22);
 });
 
 test('nesne maddeli kontrol listesi bir kez sayılıyor (reklam eşiği şişmiyor)', () => {

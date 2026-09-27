@@ -33,6 +33,7 @@ import { gecmiseYaz } from '../lib/rehber-gecmis.mjs';
 import { rehberOkunduBildir } from '../lib/rehber-veri';
 import type { StudentProfile } from '../types';
 import { tarihMetni } from '../lib/tarih.mjs';
+import { ODAK_HALKASI } from '../lib/renk-token';
 
 /**
  * Rehber merkezi ve tek rehber sayfası.
@@ -445,6 +446,75 @@ const HIZLI_CEVAP_BAGLANTISI =
   'rounded-sm font-bold text-white underline decoration-white/60 decoration-2 underline-offset-4 ' +
   'hover:decoration-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
 
+/**
+ * İŞVEREN REHBERİ GİRİŞİ (27 Eylül 2026, kullanıcı isteği)
+ *
+ * Kullanıcının beğendiği /stajyer-nasil-alinir pilotunun girişi (EmployerGuide):
+ * solda başlık, tek cümlelik alt başlık ve numaralı adım şeridi, sağda
+ * büyük kapak fotoğrafı ("Temsili görsel"). Telefonda başlık → fotoğraf →
+ * şerit. Öğrenci rehberleri koyu, tam genişlik kapakta kalıyor.
+ *
+ * Şerit rehberin kendi adımlarından (`rehber.adimlar`, veriden türetiliyor);
+ * bağlantılar gövdedeki `#bolum-<no>` başlıklarına gidiyor. Kimlik başlığa
+ * baştan yazılı: ön render'da da, JavaScript inmeden de çalışıyor.
+ */
+const IsverenRehberGirisi: React.FC<{ rehber: Rehber }> = ({ rehber }) => {
+  const adimlar = rehber.adimlar ?? [];
+  return (
+    <header className="mt-2 grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-x-12 lg:gap-y-6">
+      <div className="space-y-2 lg:col-start-1 lg:row-start-1 lg:self-end">
+        <span className="inline-flex w-fit items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-700">
+          {konuEtiketi(rehber.konu)}
+        </span>
+        <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 sm:text-4xl xl:text-5xl">{rehber.baslik}</h1>
+        {rehber.ozet && <p className="text-base text-gray-600 sm:text-lg">{rehber.ozet}</p>}
+        <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium text-gray-600">
+          <span className="inline-flex items-center gap-1.5">
+            <Clock aria-hidden className="h-4 w-4" />
+            {rehberOkumaDakika(rehber)} dk okuma
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <List aria-hidden className="h-4 w-4" />
+            {adimlar.length} adım
+          </span>
+          {rehber.guncelleme && (
+            <span className="inline-flex items-center gap-1.5">
+              <CalendarCheck aria-hidden className="h-4 w-4" />
+              {tarihMetni(rehber.guncelleme)}
+            </span>
+          )}
+        </p>
+      </div>
+      <figure className="relative m-0 overflow-hidden rounded-2xl bg-gray-100 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center [&_img]:aspect-video [&_img]:h-auto">
+        <RehberKapagi slug={rehber.slug} oncelikli />
+        <figcaption className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
+          Temsili görsel
+        </figcaption>
+      </figure>
+      <nav aria-label="Adımlar" className="lg:col-start-1 lg:row-start-2 lg:self-start">
+        <ol className="grid grid-cols-2 gap-2">
+          {adimlar.map((a) => (
+            <li key={a.no}>
+              <a
+                href={`#bolum-${a.no}`}
+                className={`flex min-h-12 items-center gap-2.5 rounded-xl border border-gray-200 bg-white px-3 text-[15px] font-semibold text-gray-800 hover:border-blue-300 hover:bg-gray-50 hover:text-blue-900 ${ODAK_HALKASI}`}
+              >
+                <span
+                  aria-hidden
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white"
+                >
+                  {a.no}
+                </span>
+                <span className="min-w-0 leading-tight">{a.ad}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    </header>
+  );
+};
+
 export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }) => {
   /* Rehbere karşılık gelen ürün yüzeyleri; eşlemesi yoksa boş dizi. */
   const eylemler = React.useMemo(() => rehberEylemleri(slug), [slug]);
@@ -573,6 +643,10 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
           Tüm rehberler
         </button>
 
+        {rehber.kategori === 'isveren' && rehber.adimlar?.length ? (
+          <IsverenRehberGirisi rehber={rehber} />
+        ) : (
+        <>
         {/*
           KAPAK: rehberin kartta görünen fotoğrafı, üstünde başlık.
           Fotoğraf yüklenemezse gizleniyor; koyu degrade başlığı yine okunur tutuyor.
@@ -610,6 +684,8 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
             </div>
           </div>
         </header>
+        </>
+        )}
 
         {/* İKİ SÜTUN (geniş ekranda): solda yazı, sağda yapışkan içindekiler. */}
         <div className="mt-6 lg:mt-10 lg:grid lg:grid-cols-12 lg:gap-10">

@@ -48,6 +48,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
     bloklar: [
       {
         baslik: 'Başlık: pozisyon + alan, süs yok',
+        kisaAd: 'Başlık',
         ozet: 'Başlıkta işin ya da bölümün adı ve "stajyer" kelimesi olsun; öğrenci listede böyle arıyor.',
         bolumGorseli: {
           dosya: '11-ilan-baslik',
@@ -66,6 +67,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'İlk paragraf: stajyer ne yapacak?',
+        kisaAd: 'İlk paragraf',
         ozet: 'Stajyerin gerçekten dokunacağı iki-üç işi somut fiillerle ve kime bağlı çalışacağını yazın.',
         bolumGorseli: {
           dosya: '01-ilan-is-tanimi',
@@ -84,6 +86,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Süre, dönem ve ücret: belirsiz bırakmayın',
+        kisaAd: 'Süre ve ücret',
         ozet:
           'Süreyi okulun belirlediği aralıkla, haftalık gün beklentisini ve ücret durumunu açıkça yazın; tutar ' +
           'yazmak zorunda değilsiniz.',
@@ -106,6 +109,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Aranan nitelikler: üçten fazla yazmayın',
+        kisaAd: 'Nitelikler',
         ozet:
           'Yalnız gerçekten gerekli bir-iki şartı yazın ve bölüm seçin; bölüm seçilmeyen ilan "Sana uygun" ' +
           'listesine girmiyor.',
@@ -130,6 +134,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Yayınlamadan önce',
+        kisaAd: 'Son kontrol',
         ozet: 'İlanı yayınlamadan önce bu beş soruyu tek tek işaretleyin.',
         bolumGorseli: {
           dosya: '13-ilan-son-kontrol',
@@ -198,6 +203,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
     bloklar: [
       {
         baslik: 'Önce ayırın: zorunlu mu, gönüllü mü?',
+        kisaAd: 'Staj türü',
         ozet: 'Öğrenciye "Okuldan staj belgesi var mı?" diye sorun; belge varsa staj zorunludur.',
         /*
           Adımın görseli: teslim paketindeki 14-zorunlu-gonullu karşılaştırmasının
@@ -243,6 +249,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
           ayrıntıya saklanmıyor. SGK bildirimi cümlesi ayrıntıda duruyor.
         */
         baslik: 'Sigortayı kim yapar?',
+        kisaAd: 'Sigorta',
         ozet:
           'Üniversitenin zorunlu stajında iş kazası ve meslek hastalığı sigortasını okul yapar ve primini okul ' +
           'öder; gönüllü stajda ve meslek lisesi beceri eğitiminde kurallar farklı olduğundan okulun staj ' +
@@ -280,6 +287,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'İmzalayacağınız belgeler',
+        kisaAd: 'Belgeler',
         ozet:
           'Belgelerin adı okuldan okula değişiyor ama işlevleri aynı: öğrenci hepsini okulundan getiriyor, ' +
           'siz doldurup imzalıyor ve kaşeliyorsunuz.',
@@ -316,6 +324,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Bir sorumlu atayın — tek satırlık ama en önemli iş',
+        kisaAd: 'Sorumlu',
         ozet:
           'Staj belgesindeki "işletme sorumlusu", stajyerin fiilen yanında çalışacağı ve ilk gün soru ' +
           'soracağı kişi olsun.',
@@ -334,6 +343,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Ücret: yazmadığımız şey ve neden',
+        kisaAd: 'Ücret',
         ozet:
           'Ücret yükümlülüğü stajın türüne, çalışan sayınıza ve öğrencinin okul türüne göre değişiyor; güncel ' +
           'kural için SGK, İŞKUR ve okulun staj birimini esas alın.',
@@ -414,6 +424,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
     bloklar: [
       {
         baslik: 'Neye bakılır, neye bakılmaz',
+        kisaAd: 'Ölçütler',
         ozet:
           'Deneyim aramayın; her başvuruyu aynı dört soruyla okuyun: bölüm ve sınıf, dolu profil, ilana özel ' +
           'not ve şehir ya da çalışma biçimi.',
@@ -447,6 +458,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Kısa liste: en fazla beş kişi',
+        kisaAd: 'Kısa liste',
         ozet:
           'Dört soruyu geçenlerden en fazla beş kişiyi kısa listeye alın; elediklerinize de karar bildirin.',
         bolumGorseli: {
@@ -464,6 +476,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Mülakat: yirmi dakika, üç soru',
+        kisaAd: 'Mülakat',
         ozet:
           'Staj mülakatı işe alım mülakatı değil: yirmi dakika ve üç soru yeter; davette tarih, saat, süre ve ' +
           'görüşmeyi kimin yapacağını yazın.',
@@ -484,6 +497,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Karar ve teklif',
+        kisaAd: 'Karar ve teklif',
         ozet:
           'Kararı bir hafta içinde verin; teklifte başlangıç tarihi, süre, haftalık gün sayısı, ücret durumu ' +
           've ilk gün kime geleceği yazsın.',
@@ -548,6 +562,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
     bloklar: [
       {
         baslik: 'Staj başlamadan önce hazır olması gerekenler',
+        kisaAd: 'Hazırlık',
         ozet: 'Stajyer gelmeden dört şey hazır olsun: çalışacağı yer, sorumlusu, ilk haftanın işi ve kurallar.',
         bolumGorseli: {
           dosya: '19-ilk-gun-hazirlik',
@@ -583,6 +598,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'İlk gün: bir saat, üç şey',
+        kisaAd: 'İlk gün',
         ozet:
           'İlk saat sorumlunun: şirketi ve bölümü, yapılacak işi ve ekibi tanıtın; stajyer günün sonunda bir ' +
           'şey bitirmiş olsun.',
@@ -602,6 +618,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Haftalık hedef: yazılı ve küçük',
+        kisaAd: 'Haftalık hedef',
         ozet:
           'Pazartesi haftanın hedefini tek cümleyle yazın, cuma birlikte bakın; hedef küçük ve bitirilebilir ' +
           'olsun.',
@@ -621,6 +638,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Staj defteri: ertelemeyin',
+        kisaAd: 'Staj defteri',
         ozet: 'Defter her gün ya da her hafta doldurulsun; cuma görüşmesinde sorumlu okuyup imzalasın.',
         bolumGorseli: {
           dosya: '20-ilk-gun-defter',
@@ -683,6 +701,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
     bloklar: [
       {
         baslik: 'Okul belgeleri: form ve defter',
+        kisaAd: 'Okul belgeleri',
         ozet:
           'Değerlendirme formu ve imzalı defter eksikse öğrencinin stajı okul tarafından kabul ' +
           'edilmeyebiliyor; staj bitmeden bu üçünü kontrol edin.',
@@ -712,6 +731,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Geri bildirim: on dakika, iki yönlü',
+        kisaAd: 'Geri bildirim',
         ozet:
           'Son gün on dakikada iyi yaptığı somut bir şeyi, geliştirmesi gereken bir şeyi ve bir öneriyi ' +
           'söyleyin; sonra stajyere siz sorun.',
@@ -730,6 +750,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Referans: söyleyin ve yazın',
+        kisaAd: 'Referans',
         ozet:
           'Referans olabileceğinizi öğrenci istemeden siz söyleyin; üç-dört cümlelik bir e-posta yeter.',
         bolumGorseli: {
@@ -748,6 +769,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Teklif: dört seçenek',
+        kisaAd: 'Teklif',
         ozet:
           'Stajyerden memnunsanız ilişkiyi kapatmayın; dört seçeneğin hepsi Başvuranlar ekranındaki teklif ' +
           'alanından gönderilebiliyor.',

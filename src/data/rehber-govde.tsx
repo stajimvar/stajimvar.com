@@ -167,6 +167,8 @@ export interface Blok {
     rozetleri yalnız doğrudan çocuk başlıkları sayıyor (RehberOkuma).
   */
   ozet?: string;
+  /** Girişteki adım şeridinde görünen kısa ad (ör. "Sigorta"); boşsa başlık. */
+  kisaAd?: string;
   /**
    * `public/rehber-gorselleri/bolumler/<dosya>.avif|webp` (1280×720).
    * Alt metin ve kaynak `bolumler/kaynak.json`'daki kayıtla aynı.
@@ -184,10 +186,20 @@ export interface Blok {
   akis?: { baslik?: string; adimlar: AkisAdimi[] };
 }
 
-const Baslik: React.FC<{ children: React.ReactNode; sade?: boolean }> = ({ children, sade = false }) => (
+const Baslik: React.FC<{ children: React.ReactNode; sade?: boolean; id?: string }> = ({ children, sade = false, id }) => (
   /* `bolum-sade`: küçük numara dairesi ve kısa üst boşluk (REHBER_GOVDE_STILI). */
-  <h2 className={`text-lg font-bold text-gray-900 pt-4${sade ? ' bolum-sade' : ''}`}>{children}</h2>
+  <h2 id={id} className={`text-lg font-bold text-gray-900 pt-4${sade ? ' bolum-sade' : ''}`}>{children}</h2>
 );
+
+/**
+ * Başlıklı blokların sırası (1'den). Gövdedeki `#bolum-<no>` kimliği ile
+ * girişteki adım şeridi AYNI sayımı kullanıyor; içindekiler de başlıksız
+ * kimliği aynı biçimde (`bolum-<sıra>`) veriyor, çakışma yok.
+ */
+function baslikNumaralari(bloklar: Blok[]): (number | null)[] {
+  let no = 0;
+  return bloklar.map((b) => (b.baslik ? ++no : null));
+}
 
 const AYRINTI_LISTESI = 'list-disc space-y-1.5 pl-5';
 /* Gövde paragrafıyla aynı ölçü (REHBER_GOVDE_STILI `> p`): telefonda 16, geniş ekranda 17 px. */
@@ -201,7 +213,7 @@ const OZET = 'text-base leading-7 text-gray-700 sm:text-[17px] sm:leading-8';
  * kırpılmasın diye tam genişlikte, özet altında. Başlık gövdenin doğrudan
  * çocuğu; aradaki boşluk gövdenin `> * + *` kuralından.
  */
-const Adim: React.FC<{ b: Blok; i: number }> = ({ b, i }) => {
+const Adim: React.FC<{ b: Blok; i: number; no: number | null }> = ({ b, i, no }) => {
   const ayrintiVar = Boolean(b.paragraflar?.length || b.liste?.length || b.sirali?.length);
   const devam = (
     <>
@@ -240,7 +252,11 @@ const Adim: React.FC<{ b: Blok; i: number }> = ({ b, i }) => {
   );
   return (
     <>
-      {b.baslik && <Baslik sade>{b.baslik}</Baslik>}
+      {b.baslik && (
+        <Baslik sade id={no ? `bolum-${no}` : undefined}>
+          {b.baslik}
+        </Baslik>
+      )}
       {b.bolumGorseli ? (
         <div className="grid items-start gap-4 sm:grid-cols-2 sm:gap-5">
           <SadeFotograf dosya={b.bolumGorseli.dosya} alt={b.bolumGorseli.alt} />
@@ -267,11 +283,13 @@ const Adim: React.FC<{ b: Blok; i: number }> = ({ b, i }) => {
   );
 };
 
-export const GovdeCizimi: React.FC<{ bloklar: Blok[] }> = ({ bloklar }) => (
+export const GovdeCizimi: React.FC<{ bloklar: Blok[] }> = ({ bloklar }) => {
+  const numaralar = baslikNumaralari(bloklar);
+  return (
   <>
     {bloklar.map((b, i) =>
       b.ozet ? (
-        <Adim key={i} b={b} i={i} />
+        <Adim key={i} b={b} i={i} no={numaralar[i]} />
       ) : (
       <React.Fragment key={i}>
         {b.baslik && <Baslik>{b.baslik}</Baslik>}
@@ -325,7 +343,8 @@ export const GovdeCizimi: React.FC<{ bloklar: Blok[] }> = ({ bloklar }) => (
       )
     )}
   </>
-);
+  );
+};
 
 export interface RehberTaslagi {
   slug: string;
@@ -357,6 +376,16 @@ export interface RehberTaslagi {
   inceleyen?: string;
 }
 
+/** Adım düzenindeki bloklardan girişteki şeridin listesi; adım yoksa boş. */
+function adimSeridi(bloklar: Blok[]): Rehber['adimlar'] {
+  const numaralar = baslikNumaralari(bloklar);
+  const adimlar = bloklar.flatMap((b, i) => {
+    const no = numaralar[i];
+    return b.ozet && b.baslik && no ? [{ no, ad: b.kisaAd ?? b.baslik }] : [];
+  });
+  return adimlar.length ? adimlar : undefined;
+}
+
 /**
  * Taslağı yayına hazır rehbere çeviriyor.
  *
@@ -381,6 +410,7 @@ export function metinRehberi(t: RehberTaslagi): Rehber {
     dayanak: t.dayanak,
     sonrakiAdim: t.sonrakiAdim,
     sss: t.sss,
+    adimlar: adimSeridi(t.bloklar),
     /*
       GÜNCELLEME TARİHİ VARSAYILANI KALDIRILDI
 
