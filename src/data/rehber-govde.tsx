@@ -5,6 +5,7 @@ import {
   KarsilastirmaTablosu,
   RehberFigur,
 } from '../components/RehberGorseller';
+import { BolumAyrintisi, BolumFotografi, IsaretListesi, type IsaretMaddesi } from '../components/RehberBolum';
 import type { KonuId, Rehber, RehberKategori, SoruCevap } from './rehberler';
 import { ODAK_HALKASI } from '../lib/renk-token';
 
@@ -144,15 +145,103 @@ export interface Blok {
     ilk hâli statik HTML'e giriyor — tarayıcı boş bir kutu görmüyor.
   */
   bilesen?: React.ReactNode;
+  /*
+    BÖLÜM KARTI (27 Eylül 2026) — onaylanan /stajyer-nasil-alinir pilotunun
+    dili. `ozet` verilen blok başlığın altında tek kart olarak çiziliyor:
+    bir cümlelik özet, varsa temsili fotoğraf (telefonda üstte), bloğun
+    paragraf ve listeleri "Ayrıntıyı aç" kutusunda. Metin kaybolmuyor,
+    yalnız katlanıyor (statik HTML'de de duruyor). `ozet` olmayan blokların
+    çizimi aynen eskisi gibi: 71 öğrenci rehberi bu alanları kullanmıyor.
+
+    `h2` kartın DIŞINDA kalıyor: içindekiler listesi ve numara rozetleri
+    gövdenin doğrudan çocuğu olan başlıkları sayıyor (RehberOkuma).
+  */
+  ozet?: string;
+  /**
+   * `public/rehber-gorselleri/bolumler/<dosya>.avif|webp` (1280×720).
+   * Alt metin ve kaynak `bolumler/kaynak.json`'daki kayıtla aynı.
+   */
+  bolumGorseli?: { dosya: string; alt: string };
+  /** Açılır kutunun etiketi; boşsa "Ayrıntıyı aç". */
+  ayrintiEtiketi?: string;
+  /**
+   * İşaretlenebilir kontrol listesi (yalnız bu tarayıcıda saklanır).
+   * `depoAnahtari` rehber ve bölüme özgü olmalı; değişirse işaretler sıfırlanır.
+   */
+  isaretListesi?: { depoAnahtari: string; maddeler: IsaretMaddesi[] };
 }
 
 const Baslik: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <h2 className="text-lg font-bold text-gray-900 pt-4">{children}</h2>
 );
 
+const AYRINTI_LISTESI = 'list-disc space-y-1.5 pl-5';
+
+/** `ozet` alanı olan blok: başlık + kart (özet, fotoğraf, açılır ayrıntı) + kontrol listesi. */
+const BolumKarti: React.FC<{ b: Blok; i: number }> = ({ b, i }) => {
+  const ayrintiVar = Boolean(b.paragraflar?.length || b.liste?.length || b.sirali?.length);
+  /* Ne fotoğraf ne ayrıntı varsa (yalnız kontrol listesi) özet düz paragraf; tek cümlelik kutu çizilmiyor. */
+  const kartVar = Boolean(b.bolumGorseli) || ayrintiVar;
+  return (
+    <>
+      {b.baslik && <Baslik>{b.baslik}</Baslik>}
+      {!kartVar && <p>{metniCiz(b.ozet ?? '', `${i}-o`)}</p>}
+      {kartVar && (
+        <div
+          className={`overflow-hidden rounded-2xl border border-gray-200 bg-white ${
+            b.bolumGorseli ? 'sm:grid sm:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]' : ''
+          }`}
+        >
+          {b.bolumGorseli && <BolumFotografi dosya={b.bolumGorseli.dosya} alt={b.bolumGorseli.alt} />}
+          <div className="space-y-3 p-4 sm:p-5">
+            <p className="text-base font-medium leading-relaxed text-gray-800">{metniCiz(b.ozet ?? '', `${i}-o`)}</p>
+            {ayrintiVar && (
+              <BolumAyrintisi etiket={b.ayrintiEtiketi}>
+                {b.paragraflar?.map((p, j) => (
+                  <p key={j}>{metniCiz(p, `${i}-${j}`)}</p>
+                ))}
+                {b.liste && (
+                  <ul className={AYRINTI_LISTESI}>
+                    {b.liste.map((m, j) => (
+                      <li key={j}>{metniCiz(m, `${i}-l${j}`)}</li>
+                    ))}
+                  </ul>
+                )}
+                {b.sirali && (
+                  <ol className="list-decimal space-y-1.5 pl-5">
+                    {b.sirali.map((m, j) => (
+                      <li key={j}>{metniCiz(m, `${i}-s${j}`)}</li>
+                    ))}
+                  </ol>
+                )}
+              </BolumAyrintisi>
+            )}
+          </div>
+        </div>
+      )}
+      {b.isaretListesi && (
+        <IsaretListesi
+          depoAnahtari={b.isaretListesi.depoAnahtari}
+          maddeler={b.isaretListesi.maddeler}
+          metniCiz={metniCiz}
+        />
+      )}
+      {b.kontrol && <KontrolListesi baslik={b.kontrol.baslik} maddeler={b.kontrol.maddeler} />}
+      {b.uyari && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-relaxed">
+          {metniCiz(b.uyari, `${i}-u`)}
+        </div>
+      )}
+    </>
+  );
+};
+
 export const GovdeCizimi: React.FC<{ bloklar: Blok[] }> = ({ bloklar }) => (
   <>
-    {bloklar.map((b, i) => (
+    {bloklar.map((b, i) =>
+      b.ozet ? (
+        <BolumKarti key={i} b={b} i={i} />
+      ) : (
       <React.Fragment key={i}>
         {b.baslik && <Baslik>{b.baslik}</Baslik>}
         {b.paragraflar?.map((p, j) => (
@@ -202,7 +291,8 @@ export const GovdeCizimi: React.FC<{ bloklar: Blok[] }> = ({ bloklar }) => (
           </div>
         )}
       </React.Fragment>
-    ))}
+      )
+    )}
   </>
 );
 
