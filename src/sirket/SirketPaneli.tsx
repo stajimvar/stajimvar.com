@@ -21,6 +21,7 @@ import { IlanFormu } from './IlanFormu';
 import { AdayIzgarasi } from './AdayIzgarasi';
 import type { Iletisim } from './AdayCekmecesi';
 import { GenelBakis } from './GenelBakis';
+import { IlanSiralamasi } from './IlanSiralamasi';
 import { CikisDugmesi, SirketProfili } from './SirketProfili';
 import type { AdayOzeti } from './IlanKarti';
 import { KADEME, adayGorebilir } from '../lib/sirket-kademe.mjs';
@@ -455,10 +456,18 @@ export const SirketIlanlarSekmesi: React.FC<{
         kalktı (26 Eylül 2026) — aynı sayfaya giden iki düğme yoktu artık.
       */}
       <div className="space-y-2">
-        <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold" style={{ color: SIRKET_METIN }}>
-          {baglam.ad && <span className="min-w-0 break-words">{baglam.ad}</span>}
-          <DurumRozeti baglam={baglam} />
-        </p>
+        {/*
+          KİMLİK SATIRI KALKTI (27 Eylül 2026, kullanıcı kararı): şirket adı
+          ve "Doğrulanmış kurum" rozeti profil sayfasında (Şirketim) duruyor;
+          burada tekrar etmenin anlamı yok. Doğrulanmamış şirkette yalnız
+          işlevsel uyarı kalıyor ("İlan açık · kartlar kapalı"): başvuran
+          kartlarının neden kapalı olduğunu söylüyor.
+        */}
+        {!baglam.dogrulandi && (
+          <p className="flex min-w-0 flex-wrap items-center gap-2">
+            <DurumRozeti baglam={baglam} />
+          </p>
+        )}
         <div className="flex items-end justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
@@ -497,6 +506,12 @@ export const SirketIlanlarSekmesi: React.FC<{
         onDurum={onDurum}
         onKaldir={onKaldir}
         simdi={simdi}
+      />
+
+      {/* Öğrencinin ilanlar sayfasındaki sıra: kendi ilanının hangi şirketlerle, kaçıncı sırada durduğu. */}
+      <IlanSiralamasi
+        companyId={baglam.companyId}
+        yayindaIlanVar={ilanlar.some((i) => i.status === 'published')}
       />
     </div>
   );
@@ -539,7 +554,7 @@ const Basvuranlar: React.FC<{
     `h1` dört durumda da (ilan yok, kapalı kademe, boş liste, dolu liste)
     aynı yerde. Sayı yalnız kart görebilen kademede ve liste doluyken:
     öteki kademede bilinmiyor ("0 başvuru" yalan olurdu). Doğrulama
-    rozeti burada TEKRARLANMIYOR — İlanlarım'ın kimlik satırında.
+    rozeti burada TEKRARLANMIYOR — profil sayfasında (Şirketim).
   */
   const baslik = (
     <div className="min-w-0">

@@ -214,7 +214,8 @@ test('sekmeler ve kare ızgara; boş durumda stok görsel yok', () => {
     sunucu `verified` true derse — oturumsuz şirket sayfasıyla aynı gerçek.
     Sahibin Şirketim ekranında tekrarlanmıyor.
   */
-  assert.match(GORUNUM, /\{!sahip && kimlik\.dogrulandi && \(/);
+  /* 27 Eylül 2026: rozet sahipte de profil sayfasında (İlanlarım'daki kimlik satırı kalktı). */
+  assert.match(GORUNUM, /\{kimlik\.dogrulandi && \(/);
   assert.equal((kod(GORUNUM).match(/Doğrulanmış kurum/g) ?? []).length, 1);
 });
 

@@ -580,7 +580,11 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
             <AdEtiketi className="min-w-0 break-words text-xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-2xl">
               {kimlik.ad}
             </AdEtiketi>
-            {!sahip && kimlik.dogrulandi && (
+            {/*
+              Rozet sahipte de (27 Eylül 2026, kullanıcı kararı): İlanlarım'daki
+              kimlik satırı kalktı; doğrulama yalnız profil sayfasında görünüyor.
+            */}
+            {kimlik.dogrulandi && (
               <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700">
                 <BadgeCheck aria-hidden className="h-3.5 w-3.5" />
                 Doğrulanmış kurum
