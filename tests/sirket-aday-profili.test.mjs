@@ -15,7 +15,7 @@ import path from 'node:path';
 const KOK = path.resolve(import.meta.dirname, '..');
 const oku = (p) => fs.readFileSync(path.join(KOK, p), 'utf8');
 
-const GOC = oku('supabase/migrations/20261104010000_aday_profili.sql');
+const GOC = oku('supabase/migrations/20261114010000_aday_profili.sql');
 const KART = oku('src/sirket/SirketAdaylar.tsx');
 const PROFIL = oku('src/sirket/SirketAdayProfili.tsx');
 const ANAHTAR = oku('src/components/ArayisKartlari.tsx');
@@ -143,4 +143,22 @@ test('github kullanici adi bicimi dogrulaniyor', () => {
   /* Alanda adres degil kullanici adi var ve o da serbest metin. */
   assert.ok(PROFIL.includes('gecerliGithub'), 'dogrulanmis ad kullanilmali');
   assert.ok(!PROFIL.includes('github.com/${aday.github}'), 'ham ad adrese gomulmemeli');
+});
+
+test('goc numarasi en son gocten buyuk', () => {
+  /*
+    Ilk denemede 20261104010000 secilmisti; o numara sirket_dogrulama_kuyrugu
+    tarafindan coktan kullanilmisti ve CI "migration history divergence" ile
+    db push u durdurdu. Dogru davranis -- yarim bir durum yayina cikmadi --
+    ama numarayi bastan dogru secmek gerekiyordu.
+  */
+  const dizin = path.join(KOK, 'supabase/migrations');
+  const hepsi = fs.readdirSync(dizin).filter((f) => f.endsWith('.sql')).sort();
+  const benim = hepsi.filter((f) => f.includes('aday_profili'));
+  assert.equal(benim.length, 1, 'tek aday_profili gocu olmali');
+  assert.equal(hepsi[hepsi.length - 1], benim[0], 'aday_profili en son goc olmali');
+
+  /* Ayni surum numarasi iki dosyada olmamali. */
+  const surumler = hepsi.map((f) => f.split('_')[0]);
+  assert.equal(new Set(surumler).size, surumler.length, 'surum numarasi tekrar etmemeli');
 });
