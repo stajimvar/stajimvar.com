@@ -1632,7 +1632,12 @@ export interface PanelOgrencisi {
   okul: string | null;
   fakulte: string | null;
   bolum: string | null;
-  sinif: number | null;
+  /*
+    `grade_level` METİN ("2. Sınıf", "Yüksek Lisans / Mezun"), sayı değil.
+    Bu ekran alanı çizmiyor ama tip yanlıştı; sayı sanan bir sonraki
+    kullanım "2. Sınıf. sınıf" üretirdi (aday kartında ölçüldü).
+  */
+  sinif: string | null;
   sehir: string | null;
   teklifeAcik: boolean | null;
   basvuru: number;
@@ -1785,7 +1790,13 @@ export interface ArayanOgrenci {
   okul: string | null;
   fakulte: string | null;
   bolum: string | null;
-  sinif: number | null;
+  /*
+    `student_profiles.grade_level` METİN ve kendi içinde "Sınıf" sözcüğünü
+    taşıyor ("2. Sınıf", "Yüksek Lisans / Mezun"). Sayı sanıp sonuna
+    "sınıf" eklemek "2. Sınıf. sınıf" ve "Yüksek Lisans / Mezun. sınıf"
+    üretiyordu — ölçüldü, canlı veriden.
+  */
+  sinif: string | null;
   sehir: string | null;
   mezuniyet: number | null;
   beceriler: string[] | null;
@@ -1827,7 +1838,8 @@ export interface AdayProfili {
   okul: string | null;
   fakulte: string | null;
   bolum: string | null;
-  sinif: number | null;
+  /* Metin; bkz. ArayanOgrenci.sinif. */
+  sinif: string | null;
   sehir: string | null;
   mezuniyet: number | null;
   tanitim: string | null;

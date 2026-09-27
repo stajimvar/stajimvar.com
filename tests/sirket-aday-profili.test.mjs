@@ -110,3 +110,37 @@ test('sekmeler ve sayac mantigi degismedi', () => {
   assert.ok(KART.includes("veri?.isArayan"), 'is sayaci durmali');
   assert.ok(KART.includes('grid grid-cols-2 gap-2'), 'iki esit sekme durmali');
 });
+
+test('sinif olarak yazilmiyor -- deger zaten "2. Sinif"', () => {
+  /*
+    Canlida olculdu: student_profiles.grade_level METIN ve icinde "Sinif"
+    sozcugu var ("2. Sınıf", "Yüksek Lisans / Mezun"). Sayi sanip sonuna
+    "sinif" eklemek "2. Sınıf. sınıf" ve "Yüksek Lisans / Mezun. sınıf"
+    uretiyordu -- ekran goruntusunde de oyleydi.
+  */
+  for (const [ad, k] of [['kart', KART], ['profil', PROFIL]]) {
+    assert.ok(!k.includes('}. sınıf`'), ad + ' sinifi sayi gibi bicimlememeli');
+  }
+  const q = oku('src/lib/queries/index.ts');
+  assert.ok(!q.includes('sinif: number | null'), 'tip metin olmali');
+});
+
+test('ogrenci girdisi adresler suzuluyor -- javascript: calismiyor', () => {
+  /*
+    Portfoy, LinkedIn ve proje adreslerini OGRENCI giriyor. Ham degeri
+    href e koymak, "javascript:" yazan bir ogrencinin kodunu tiklayan
+    ISVERENIN oturumunda calistirmak demekti (arka plan guvenlik
+    incelemesi bildirdi, 27 Eylul 2026).
+  */
+  assert.ok(PROFIL.includes("import { guvenliDisAdres }"), 'suzgec ice aktarilmali');
+  assert.ok(PROFIL.includes('const guvenli = guvenliDisAdres(adres);'), 'adres suzulmeli');
+  assert.ok(PROFIL.includes('if (!guvenli) return null;'), 'suzgecten gecmeyen baglanti cizilmemeli');
+  assert.ok(PROFIL.includes('href={guvenli}'), 'href yalniz suzulmus adresi almali');
+  assert.ok(!PROFIL.includes('href={adres}'), 'ham adres href e girmemeli');
+});
+
+test('github kullanici adi bicimi dogrulaniyor', () => {
+  /* Alanda adres degil kullanici adi var ve o da serbest metin. */
+  assert.ok(PROFIL.includes('gecerliGithub'), 'dogrulanmis ad kullanilmali');
+  assert.ok(!PROFIL.includes('github.com/${aday.github}'), 'ham ad adrese gomulmemeli');
+});

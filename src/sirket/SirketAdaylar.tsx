@@ -78,9 +78,12 @@ const AdaySatiri: React.FC<{
           )}
           {(ogrenci.sinif || ogrenci.sehir) && (
             <p className="mt-0.5 truncate text-[13px] text-gray-500">
-              {[ogrenci.sinif ? `${ogrenci.sinif}. sınıf` : null, ogrenci.sehir]
-                .filter(Boolean)
-                .join(' · ')}
+              {/*
+                Sınıf OLDUĞU GİBİ yazılıyor: değerin kendisi zaten
+                "2. Sınıf" ya da "Yüksek Lisans / Mezun". Sonuna "sınıf"
+                eklemek "2. Sınıf. sınıf" üretiyordu.
+              */}
+              {[ogrenci.sinif, ogrenci.sehir].filter(Boolean).join(' · ')}
             </p>
           )}
           {/*

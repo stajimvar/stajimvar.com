@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowLeft, ExternalLink, FileText, Github, Linkedin, Mail } from 'lucide-react';
 import { fetchAdayProfili, type AdayProfili } from '../lib/queries';
 import { ProfilFotografi } from '../components/sosyal/ProfilFotografi';
+import { guvenliDisAdres } from '../lib/guvenli-url.mjs';
 import { SIRKET_KENAR, SIRKET_METIN, SIRKET_METIN_IKINCIL } from './renk';
 
 /**
@@ -57,13 +58,28 @@ const Etiketler: React.FC<{ liste: string[] }> = ({ liste }) => (
   </div>
 );
 
+/**
+ * Dış bağlantı — ADRES BURADA SÜZÜLÜYOR.
+ *
+ * Buradaki adreslerin hepsini ÖĞRENCİ giriyor (portföy, LinkedIn, proje
+ * adresi). Ham değeri `href`'e koymak, `javascript:` yazan bir öğrencinin
+ * kodunu tıklayan İŞVERENİN oturumunda çalıştırmak demekti.
+ *
+ * `guvenliDisAdres` yalnız mutlak HTTPS adrese izin veriyor; kimlik gömülü
+ * adresleri ("https://kullanici@site") ve yerel/özel ağ adreslerini de
+ * eliyor. Süzgeçten geçmeyen adres için bağlantı HİÇ çizilmiyor —
+ * tıklanamayan bir bağlantı göstermek, orada bir şey olduğunu ima ederdi.
+ */
 const DisBaglanti: React.FC<{ adres: string; etiket: string; ikon: React.ReactNode }> = ({
   adres,
   etiket,
   ikon,
-}) => (
+}) => {
+  const guvenli = guvenliDisAdres(adres);
+  if (!guvenli) return null;
+  return (
   <a
-    href={adres}
+    href={guvenli}
     target="_blank"
     rel="noopener noreferrer nofollow"
     className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-blue-700 hover:underline"
@@ -73,7 +89,8 @@ const DisBaglanti: React.FC<{ adres: string; etiket: string; ikon: React.ReactNo
     <ExternalLink aria-hidden className="h-3.5 w-3.5" />
     <span className="sr-only">(yeni sekmede açılır)</span>
   </a>
-);
+  );
+};
 
 export const SirketAdayProfili: React.FC<{
   adayId: string;
@@ -152,13 +169,24 @@ export const SirketAdayProfili: React.FC<{
     );
   }
 
+  const gecerliGithub =
+    aday.github && /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/.test(aday.github.trim())
+      ? aday.github.trim()
+      : null;
   const roller = aday.hedefRoller ?? [];
   const beceriler = aday.beceriler ?? [];
   const baglantilar = [
     aday.portfolyo && { adres: aday.portfolyo, etiket: 'Portföy', ikon: <ExternalLink aria-hidden className="h-4 w-4" /> },
     aday.linkedin && { adres: aday.linkedin, etiket: 'LinkedIn', ikon: <Linkedin aria-hidden className="h-4 w-4" /> },
-    aday.github && {
-      adres: `https://github.com/${aday.github}`,
+    /*
+      GitHub alanında ADRES değil KULLANICI ADI saklanıyor, ve o da
+      öğrencinin yazdığı serbest metin. Adresi kurmadan önce biçimi
+      doğrulanıyor: GitHub kullanıcı adları harf, rakam ve tire; en fazla
+      39 karakter. Doğrulamadan birleştirmek, alana tam bir adres ya da
+      yol parçası yazılmasına açık kapı bırakırdı.
+    */
+    gecerliGithub && {
+      adres: `https://github.com/${gecerliGithub}`,
       etiket: 'GitHub',
       ikon: <Github aria-hidden className="h-4 w-4" />,
     },
@@ -186,8 +214,9 @@ export const SirketAdayProfili: React.FC<{
               </p>
             )}
             <p className="mt-0.5 text-[13px] text-gray-500">
+              {/* Sınıf olduğu gibi: değer zaten "2. Sınıf" biçiminde. */}
               {[
-                aday.sinif ? `${aday.sinif}. sınıf` : null,
+                aday.sinif,
                 aday.sehir,
                 aday.mezuniyet ? `${aday.mezuniyet} mezuniyet` : null,
               ]
