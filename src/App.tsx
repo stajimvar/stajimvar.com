@@ -1,10 +1,12 @@
 import React, { useState, useRef, Suspense } from 'react';
 import { cvVarMi, karsilamaGosterilsinMi, karsilamaIsaretle } from './lib/cv-hazirlik.mjs';
+import { bildirimIcerigi } from './lib/bildirim-icerigi.mjs';
 import { bildirimKisisi } from './lib/bildirim-kisisi.mjs';
 import { COGRAFYA, ilanCografyasi } from './lib/ilan-cografyasi.mjs';
 import {
   baglantiDurumu,
   baglantilarimiGetir,
+  bildirimIcerikleriniGetir,
   bildirimKisileriniGetir,
   baglantiYanitla,
   kendiSosyalProfiliGetir,
@@ -1784,6 +1786,49 @@ export default function App() {
     [bildirimKisileri, session?.userId],
   );
 
+  /*
+    BEĞENİLEN PAYLAŞIMIN ÖZETİ VE KAPAĞI
+
+    Kişi çözümüyle aynı desen: panel açıkken, listedeki paylaşım
+    kimlikleri (olay anahtarından, `lib/bildirim-icerigi.mjs`) için tek
+    sorgu. Görünmeyen paylaşım haritaya girmiyor; o satır önizlemesiz
+    kalıyor — "silinmiş paylaşım" gibi bir yer tutucu çizilmiyor.
+
+    NEDEN: "… paylaşımını beğendi" satırları birbirinin aynısıydı ve
+    hangi paylaşımın beğenildiği hiçbir yerde yazmıyordu.
+  */
+  const [bildirimIcerikleri, setBildirimIcerikleri] = useState<
+    Map<string, { ozet: string | null; kapakYolu: string | null }>
+  >(() => new Map());
+  const bildirimIcerikAnahtari = bildirim.acik
+    ? bildirim.bildirimler
+        .map((b) => bildirimIcerigi(b.anahtar))
+        .filter(Boolean)
+        .sort()
+        .join(',')
+    : '';
+  React.useEffect(() => {
+    if (!bildirimIcerikAnahtari) return;
+    let iptal = false;
+    void bildirimIcerikleriniGetir(bildirimIcerikAnahtari.split(','))
+      .then((harita) => {
+        if (!iptal) setBildirimIcerikleri(harita);
+      })
+      .catch(() => {
+        if (!iptal) setBildirimIcerikleri(new Map());
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [bildirimIcerikAnahtari]);
+  const bildirimIcerikBilgisi = React.useCallback(
+    (b: { anahtar: string | null }) => {
+      const kimlik = bildirimIcerigi(b.anahtar);
+      return kimlik ? (bildirimIcerikleri.get(kimlik) ?? null) : null;
+    },
+    [bildirimIcerikleri],
+  );
+
   /* Bildirimin işaret ettiği kişi, olayın kimliğinden okunuyor. */
   const istekDurumu = React.useCallback(
     (b: { anahtar: string | null }): IstekDurumu => {
@@ -1807,6 +1852,7 @@ export default function App() {
       onBaglantiYanitla={baglantiIsteginiYanitla}
       istekDurumu={istekDurumu}
       kisi={bildirimKisiBilgisi}
+      icerik={bildirimIcerikBilgisi}
     />
   ) : null;
 
