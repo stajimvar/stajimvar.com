@@ -59,6 +59,10 @@ test('sayfada tek "Başvurular" başlığı var', () => {
     Başvuranlar bileşeninde ve TEK. Izgara o sayfada `basliksiz`
     çiziliyor — kendi "Başvuranlar" başlığını atlıyor; aynı sözcük
     alt alta iki kez okunmuyor.
+
+    27 Eylül 2026: başlık EKRANDA görünmüyor (`sr-only`) — alt gezinme
+    zaten "Başvurular" diyor. Kural değişmedi: h1 hâlâ TEK ve hâlâ var.
+    Silinseydi sayfa başlıksız kalırdı; gezinme etiketi başlık değildir.
   */
   const basvuranlarBileseni = panel.slice(panel.indexOf('const Basvuranlar'));
   assert.equal(

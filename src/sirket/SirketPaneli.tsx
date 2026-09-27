@@ -557,17 +557,26 @@ const Basvuranlar: React.FC<{
     öteki kademede bilinmiyor ("0 başvuru" yalan olurdu). Doğrulama
     rozeti burada TEKRARLANMIYOR — profil sayfasında (Şirketim).
   */
+  /*
+    SAYFA BAŞLIĞI EKRANDA YAZMIYOR, DOM'DA DURUYOR
+
+    "Başvurular" başlığı ve altındaki açıklama kaldırıldı: alt gezinme
+    çubuğunda zaten "Başvurular" seçili duruyor ve aynı sözcüğü iki kez
+    okumak ekranın en değerli yerini harcıyordu (kullanıcı bildirdi,
+    27 Eylül 2026).
+
+    `h1` SİLİNMEDİ, GÖRÜNMEZ OLDU. Sayfanın tek başlığı buydu; tamamen
+    kaldırmak ekran okuyucuyla başlıktan başlığa gezen kullanıcıya
+    başlıksız bir sayfa bırakırdı. Alt çubuktaki etiket bir başlık değil,
+    bir gezinme bağlantısı — onun yerini tutmuyor.
+
+    ALTTAKİ AÇIKLAMA CÜMLESİ GİTTİ ama içindeki SAYI kaybolmadı:
+    "İlanlarınıza gelen 3 başvuru." satırı toplam sayıyı gösteren tek
+    yerdi. Sayı artık ızgaranın kendi satırında (`AdayIzgarasi`,
+    `basliksiz` dalı) — listenin hemen üstünde, ait olduğu yerde.
+  */
   const baslik = (
-    <div className="min-w-0">
-      <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
-        Başvurular
-      </h1>
-      <p className="mt-0.5 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-        {kartAcik && kartlar.length > 0
-          ? `İlanlarınıza gelen ${kartlar.length} başvuru.`
-          : 'İlanlarınıza gelen başvuruları buradan yönetin.'}
-      </p>
-    </div>
+    <h1 className="sr-only">Başvurular</h1>
   );
 
   /*
