@@ -150,10 +150,18 @@ export const AkisKarti: React.FC<Props> = ({
       {/* -------------------------------------------------- yazar satırı */}
       <header className="flex items-center gap-3 px-4 py-2.5">
         <button type="button" onClick={profilAc} className={`shrink-0 cursor-pointer rounded-full ${ODAK_HALKASI}`}>
+          {/*
+            ŞİRKET LOGOSU YEDEKTE (27 Eylül 2026): takip listesindeki
+            kuralın aynısı — sosyal profil fotoğrafı varsa o, yoksa
+            kurumsal logo, o da yoksa baş harf. Öğrencinin eski kolondaki
+            fotoğrafı (`yedekAvatarAdresi`) yalnız kendi paylaşımında dolu
+            ve şirket yazarda hiç dolu gelmiyor; ikisi çakışmıyor.
+          */}
           <ProfilFotografi
             ad={ad}
             yol={paylasim.yazar.avatarYolu}
-            yedekAdres={yedekAvatarAdresi}
+            yedekAdres={yedekAvatarAdresi ?? paylasim.yazar.logoAdresi}
+            tur={paylasim.yazar.sirketId ? 'kurum' : 'kisi'}
             className="h-9 w-9 rounded-full text-sm"
           />
         </button>
