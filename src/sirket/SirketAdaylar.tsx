@@ -148,7 +148,18 @@ export const SirketAdaylar: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Arayış türü">
+      {/*
+        İKİ SEKME SATIRI DOLDURUYOR
+
+        Önce içerik genişliğindeydiler ve sağda geniş bir boşluk
+        kalıyordu; iki eşit kutu olması gerekirken ikisi de küçük
+        görünüyordu (kullanıcı bildirdi, 27 Eylül 2026).
+
+        `grid-cols-2`: ikisi EŞİT ve satırı dolduruyor. Genişlik içerikten
+        gelseydi "Staj arıyor" ile "İş arıyor" farklı boyda olurdu ve
+        eşdeğer iki seçim eşdeğer görünmezdi.
+      */}
+      <div className="grid grid-cols-2 gap-2" role="group" aria-label="Arayış türü">
         {sekmeler.map((s) => {
           const Ikon = s.ikon;
           const etkin = tur === s.deger;
@@ -158,7 +169,7 @@ export const SirketAdaylar: React.FC = () => {
               type="button"
               onClick={() => setTur(s.deger)}
               aria-pressed={etkin}
-              className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold transition-colors ${
+              className={`flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors ${
                 etkin
                   ? 'bg-blue-600 text-white'
                   : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'

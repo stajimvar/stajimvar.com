@@ -571,14 +571,25 @@ const Basvuranlar: React.FC<{
   );
 
   /*
-    ÖĞRENCİLERİ KEŞFET — AYRI, İKİNCİL ALAN
+    ÖĞRENCİLERİ KEŞFET — BAŞLIĞIN HEMEN ALTINDA
 
     Başvuran ile aday farklı: başvuran bir ilana başvurmuş kişi, aday
-    profilini iş/staj listesine kendisi açmış kişi. Giriş başlığın
-    altındaki yeşil düğmeydi ve sayfanın birincil eylemiyle yarışıyordu;
-    artık sayfanın sonunda ayrı bir alan. Alt çubuğa altıncı sekme
-    eklenmedi (beş öğe 320 px için ölçülü). Adaylar ekranının kendi
-    yetki kapısı değişmedi (SirketAdaylar).
+    profilini iş/staj listesine kendisi açmış kişi.
+
+    YERLEŞİM İKİ KEZ DEĞİŞTİ, İKİSİ DE KULLANICI KARARI
+    ---------------------------------------------------
+    Önce başlığın altında yeşil bir düğmeydi ve sayfanın birincil
+    eylemiyle yarışıyordu; sayfanın SONUNA alındı. Ama başvurusu
+    olmayan şirkette sayfa "Henüz başvuru yok" ile başlıyor ve aday
+    aramak tam da o şirketin işine yarayan şey — en altta kalması onu
+    görünmez kılıyordu. 27 Eylül 2026'da kullanıcı kartları yukarı
+    istedi; artık başlığın hemen altında, üç dalda da.
+
+    Yarışma sorunu biçimle çözüldü: kartlar ikincil yüzey (beyaz zemin,
+    ince kenar), birincil eylem hâlâ tek ve dolu mavi düğme.
+
+    Alt çubuğa altıncı sekme eklenmedi (beş öğe 320 px için ölçülü).
+    Adaylar ekranının kendi yetki kapısı değişmedi (SirketAdaylar).
   */
   const ogrencileriKesfet = (
     <section aria-labelledby="ogrencileri-kesfet" className="space-y-2">
@@ -664,6 +675,7 @@ const Basvuranlar: React.FC<{
     return (
       <div className="space-y-4">
         {baslik}
+        {ogrencileriKesfet}
         <div className={`${KUTU} text-center`} style={kutuStil}>
           <span
             aria-hidden
@@ -688,7 +700,6 @@ const Basvuranlar: React.FC<{
             İlan oluştur
           </button>
         </div>
-        {ogrencileriKesfet}
       </div>
     );
   }
@@ -697,6 +708,7 @@ const Basvuranlar: React.FC<{
     return (
       <div className="space-y-4">
         {baslik}
+        {ogrencileriKesfet}
         <div className={KUTU} style={kutuStil}>
           <p
             className="flex items-center gap-2 text-lg font-extrabold"
@@ -720,7 +732,6 @@ const Basvuranlar: React.FC<{
             Şirketini doğrula
           </button>
         </div>
-        {ogrencileriKesfet}
       </div>
     );
   }
@@ -760,6 +771,7 @@ const Basvuranlar: React.FC<{
     */
     <div className="space-y-4">
       {baslik}
+      {ogrencileriKesfet}
       <AdayIzgarasi
         basliksiz
         kartlar={kartlar}
@@ -775,7 +787,6 @@ const Basvuranlar: React.FC<{
         onAdayAcildi={onAdayAcildi}
         onNot={onNot}
       />
-      {ogrencileriKesfet}
     </div>
   );
 };
