@@ -58,3 +58,40 @@ test('kartlar panelin kendi renk belirteclerini kullaniyor', () => {
   assert.ok(kart.includes('SIRKET_VURGU_KOYU'), 'vurgu rengi belirtecten');
   assert.ok(!/#[0-9A-Fa-f]{6}/.test(kart), 'kartta elle hex renk olmamali');
 });
+
+test('aday kartlari basligin hemen altinda', () => {
+  /*
+    Once sayfanin SONUNDAYDI. Basvurusu olmayan sirkette sayfa "Henuz
+    basvuru yok" ile basliyor ve aday aramak tam da o sirketin isine
+    yarayan sey; en altta kalmasi onu gorunmez kiliyordu (kullanici
+    bildirdi, 27 Eylul 2026). Uc dalda da basligin hemen altinda.
+  */
+  const dallar = PANEL.split('{baslik}');
+  assert.equal(dallar.length, 4, 'uc dalda da baslik cizilmeli');
+  for (let i = 1; i < dallar.length; i += 1) {
+    const ilk120 = dallar[i].slice(0, 120);
+    assert.ok(
+      ilk120.includes('{ogrencileriKesfet}'),
+      'dal ' + i + ': kartlar basligin hemen ardinda olmali',
+    );
+  }
+});
+
+test('aday ekraninda iki sekme satiri dolduruyor', () => {
+  /*
+    Icerik genisligindeyken sagda genis bir bosluk kaliyordu ve iki esit
+    kutu olmasi gereken sey iki kucuk dugme gibi duruyordu.
+  */
+  const ADAYLAR2 = oku('src/sirket/SirketAdaylar.tsx');
+  /*
+    Yalniz SEKME satirina bakiyoruz. Karttaki rol etiketleri (hedefRoller)
+    sarmali akista kalmali; onlar etiket, sekme degil.
+  */
+  const i = ADAYLAR2.indexOf('aria-label="Arayış türü"');
+  assert.ok(i > 0, 'sekme satiri bulunmali');
+  const satir = ADAYLAR2.slice(i - 200, i + 60);
+  assert.ok(satir.includes('grid grid-cols-2 gap-2'), 'sekmeler esit iki sutun olmali');
+  assert.ok(!satir.includes('flex flex-wrap'), 'sekmeler icerik genisliginde kalmamali');
+  assert.ok(ADAYLAR2.includes('w-full cursor-pointer items-center justify-center'),
+            'sekme dugmesi hucreyi doldurmali');
+});
