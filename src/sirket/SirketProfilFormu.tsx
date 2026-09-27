@@ -285,8 +285,14 @@ export const SirketProfilFormu: React.FC<{
         />
       )}
 
-      {/* Masaüstünde form 640 px'i geçmiyor; önizleme yanında. */}
-      <div className="lg:grid lg:grid-cols-[minmax(0,640px)_300px] lg:items-start lg:gap-5">
+      {/*
+        YATAYA YAYILAN DÜZEN (27 Eylül 2026, kullanıcı isteği): form 640 px'te
+        sınırlıyken geniş ekranın sağı boş kalıyordu. Form kalan genişliği
+        alıyor, önizleme 340 px. xl'de (≥1280) kartın içi iki panel: solda
+        logo ve "Şirket hakkında" (okunur satır uzunluğu), sağda kısa alanlar.
+        Telefon ve tablette sıra aynı: logo → kısa alanlar → hakkında.
+      */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-5">
         <div className="min-w-0 space-y-4">
           <section className={KUTU} style={kutuStil} aria-labelledby={`${kimlik}-baslik`}>
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -300,8 +306,9 @@ export const SirketProfilFormu: React.FC<{
               </p>
             </div>
 
+            <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] xl:gap-x-8">
             {/* --------------------------------------------------- logo */}
-            <div className="mt-4">
+            <div className="mt-4 xl:col-start-1 xl:row-start-1">
               <LogoAlani
                 deger={deger.logoUrl}
                 sirketAdi={baglam.ad}
@@ -313,7 +320,10 @@ export const SirketProfilFormu: React.FC<{
             </div>
 
             {/* ------------------------------------------ kısa alanlar */}
-            <div className="mt-4 grid gap-4 border-t pt-4 sm:grid-cols-2 sm:gap-x-4 sm:gap-y-3" style={{ borderColor: SIRKET_KENAR }}>
+            <div
+              className="mt-4 grid gap-4 border-t pt-4 sm:grid-cols-2 sm:gap-x-4 sm:gap-y-3 xl:col-start-2 xl:row-span-2 xl:row-start-1 xl:content-start xl:border-l xl:border-t-0 xl:pl-8 xl:pt-0"
+              style={{ borderColor: SIRKET_KENAR }}
+            >
               <Alan etiket="Sektör" htmlFor={`${kimlik}-sektor`}>
                 <AutocompleteField
                   id={`${kimlik}-sektor`}
@@ -380,7 +390,7 @@ export const SirketProfilFormu: React.FC<{
             </div>
 
             {/* ---------------------------------------- şirket hakkında */}
-            <div className="mt-4 border-t pt-4" style={{ borderColor: SIRKET_KENAR }}>
+            <div className="mt-4 border-t pt-4 xl:col-start-1 xl:row-start-2" style={{ borderColor: SIRKET_KENAR }}>
               <Alan etiket="Şirket hakkında" htmlFor={`${kimlik}-hakkinda`}>
                 <UzayanMetin
                   id={`${kimlik}-hakkinda`}
@@ -392,6 +402,7 @@ export const SirketProfilFormu: React.FC<{
               <p className="mt-1 text-right text-xs tabular-nums" style={{ color: SIRKET_METIN_IKINCIL }}>
                 {deger.description.trim().length} karakter
               </p>
+            </div>
             </div>
 
             {/*
