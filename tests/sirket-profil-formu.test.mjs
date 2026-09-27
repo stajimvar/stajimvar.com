@@ -17,6 +17,8 @@ const KOK = path.resolve(import.meta.dirname, '..');
 const oku = (p) => readFileSync(path.join(KOK, p), 'utf8').replace(/\r\n/g, '\n');
 const FORM = oku('src/sirket/SirketProfilFormu.tsx');
 const OTO = oku('src/components/AutocompleteField.tsx');
+/* Alan boyu ve uzayan metin kutusu ilan formuyla ortak (27 Eylül 2026). */
+const PARCA = oku('src/sirket/form-parcalari.tsx');
 
 test('sektör gerçek listeden (sectors), konum 81 ilden; ikisi de öneri listeli ve serbest', () => {
   assert.match(FORM, /import \{ sektorleriGetir \} from '\.\.\/lib\/queries\/sosyal';/);
@@ -52,12 +54,16 @@ test('logo yükleme görünür; adres alanı katlı ve kayıtlı değeri koruyor
 test('isteğe bağlı alanlar açık, hakkında kısa başlıyor ve uzuyor, kayıtlı çalışan sayısı kaybolmuyor', () => {
   assert.match(FORM, /Tüm alanlar isteğe bağlı ·/);
   assert.match(FORM, /isteğe bağlı\n\s*<\/span>/);
-  assert.match(FORM, /rows=\{3\}/);
-  assert.match(FORM, /el\.style\.height = `\$\{el\.scrollHeight \+ 2\}px`;/);
+  assert.match(FORM, /import \{ FORM_ALAN, UzayanMetin \} from '\.\/form-parcalari';/);
+  /* Profilde "hakkında" satır sayısı verilmeden çiziliyor: varsayılan 3. */
+  assert.match(PARCA, /satir = 3/);
+  assert.match(PARCA, /rows=\{satir\}/);
+  assert.doesNotMatch(FORM, /<UzayanMetin[^>]*satir=/);
+  assert.match(PARCA, /el\.style\.height = `\$\{el\.scrollHeight \+ 2\}px`;/);
   assert.doesNotMatch(FORM, /rows=\{5\}/);
   assert.match(FORM, /\{deger\.size && !BOYUTLAR\.includes\(deger\.size\) && <option value=\{deger\.size\}>/);
   /* Telefonda 16 px (iOS odakta yakınlaştırmasın), sm üstünde 14 px. */
-  assert.match(FORM, /text-base text-gray-900 outline-none ' \+\s*'placeholder:text-gray-500 focus:outline-2 focus:outline-blue-600 sm:text-sm'/);
+  assert.match(PARCA, /text-base text-gray-900 outline-none ' \+\s*'placeholder:text-gray-500 focus:outline-2 focus:outline-blue-600 sm:text-sm'/);
 });
 
 test('kaydetme, eksik sayacı, önizleme ve doğrulama korunuyor', () => {

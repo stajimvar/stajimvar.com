@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Copy, ExternalLink } from 'lucide-react';
+import { Check, Copy, Info } from 'lucide-react';
 import {
   ACIKLAMA_EN_AZ,
   ACIKLAMA_EN_FAZLA,
@@ -14,8 +14,10 @@ import {
 } from '../lib/ilan-formu.mjs';
 import { ilanBaslangicDurumu, ilanBayraklari } from '../lib/sirket-kademe.mjs';
 import { ilanOku } from '../lib/sirket-veri';
+import { AutocompleteField } from '../components/AutocompleteField';
+import { TR_CITIES } from '../data/turkeyData';
+import { FORM_ALAN, UzayanMetin } from './form-parcalari';
 import {
-  ALAN,
   BIRINCIL_DUGME,
   IKINCIL_DUGME,
   KUTU,
@@ -25,7 +27,6 @@ import {
   SIRKET_ROZET,
   SIRKET_VURGU_KOYU,
   SIRKET_YUZEY,
-  alanStil,
   birincilStil,
   ikincilStil,
   kutuStil,
@@ -47,30 +48,63 @@ import {
  * bastıktan sonra "neden yayında değil" sorusu doğmasın.
  */
 
-const alanSinifi = ALAN;
+/*
+  SIKI FORM (27 Eylül 2026, kullanıcı isteği: "profil düzenlemesi gibi,
+  büyük boşluklar olmasın")
+  ---------------------------------------------------------------------
+  Şirket profil formuyla aynı dil: tek kart, başlık satırı, kısa alanlar
+  sm üstünde iki sütun, xl'de (≥1280) kartın içi iki panel — solda kısa
+  alanlar, sağda iş tanımı. Geniş ekranda seçim şeritlerinin yanında
+  kalan boşluk ve dokuz satırlık sabit metin kutusu gitti; metin kutusu
+  yazdıkça uzuyor. Alan boyu ve metin kutusu `form-parcalari.tsx`'ten.
 
-const Etiket: React.FC<{ children: React.ReactNode; sorun?: string }> = ({ children, sorun }) => (
-  <span className="mb-1 flex items-baseline justify-between gap-2">
-    <span className="text-xs font-bold" style={{ color: SIRKET_METIN }}>
+  Zorunlu alan yıldızla değil, başlık satırındaki tek cümleyle
+  söyleniyor; isteğe bağlı tek alan (son başvuru) kendi yanında yazıyor.
+*/
+
+/** Alan etiketi: solda ad, sağda (varsa) sorun ya da "isteğe bağlı". */
+const Etiket: React.FC<{
+  children: React.ReactNode;
+  sorun?: string;
+  htmlFor?: string;
+  id?: string;
+  istegeBagli?: boolean;
+}> = ({ children, sorun, htmlFor, id, istegeBagli }) => {
+  const ad = (
+    <span className="text-sm font-bold" style={{ color: SIRKET_METIN }}>
       {children}
     </span>
-    {sorun && <span className="text-[11px] font-semibold text-rose-700">{sorun}</span>}
-  </span>
-);
+  );
+  return (
+    <span className="mb-1 flex items-baseline justify-between gap-2">
+      {htmlFor ? <label htmlFor={htmlFor}>{ad}</label> : <span id={id}>{ad}</span>}
+      {sorun ? (
+        <span className="text-xs font-semibold text-rose-700">{sorun}</span>
+      ) : (
+        istegeBagli && (
+          <span className="text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+            isteğe bağlı
+          </span>
+        )
+      )}
+    </span>
+  );
+};
 
 const SecimSeridi: React.FC<{
   secenekler: { id: string; etiket: string }[];
   deger: string;
   onSec: (id: string) => void;
-}> = ({ secenekler, deger, onSec }) => (
-  <div className="flex flex-wrap gap-2">
+  etiketId: string;
+}> = ({ secenekler, deger, onSec, etiketId }) => (
+  <div role="group" aria-labelledby={etiketId} className="flex flex-wrap gap-2">
     {secenekler.map((s) => (
       <button
         key={s.id}
         type="button"
         onClick={() => onSec(s.id)}
         aria-pressed={deger === s.id}
-        className="min-h-11 cursor-pointer rounded-xl border px-3 text-sm font-bold transition-colors"
+        className="min-h-11 cursor-pointer rounded-xl border px-3 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-blue-600"
         style={
           deger === s.id
             ? { borderColor: SIRKET_VURGU_KOYU, color: SIRKET_VURGU_KOYU, background: SIRKET_ROZET }
@@ -128,6 +162,7 @@ export const IlanFormu: React.FC<{
   const [hata, setHata] = React.useState('');
   const [sonuc, setSonuc] = React.useState<{ id: string; yayinda: boolean } | null>(null);
   const [kopyalandi, setKopyalandi] = React.useState(false);
+  const k = React.useId();
 
   /* Düzenlemede kayıtlı satır forma çevriliyor (ilanFormDegeri,
      ilanSatiri'nin tersi). Okunamazsa form boş açılmıyor: hata yazıyor,
@@ -266,9 +301,9 @@ export const IlanFormu: React.FC<{
      kullanıcı bir an boş alanlar görüp "ilan silinmiş" sanmasın. */
   if (yukleniyor) {
     return (
-      <div className="space-y-5">
+      <div className="space-y-4">
         <span className="block h-8 w-48 animate-pulse rounded" style={{ background: SIRKET_ROZET }} />
-        <div className="space-y-3 rounded-2xl border p-4 sm:p-6" style={kutuStil}>
+        <div className={`space-y-3 ${KUTU}`} style={kutuStil}>
           {[0, 1, 2, 3].map((i) => (
             <span
               key={i}
@@ -282,9 +317,9 @@ export const IlanFormu: React.FC<{
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="space-y-1">
-        <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
+        <h1 className="text-xl font-extrabold tracking-tight sm:text-2xl" style={{ color: SIRKET_METIN }}>
           {duzenlenenId ? 'İlanı düzenle' : 'Yeni ilan'}
         </h1>
         <p className="text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
@@ -296,88 +331,180 @@ export const IlanFormu: React.FC<{
         </p>
       </div>
 
-      <div className="space-y-5 rounded-2xl border p-4 sm:p-6" style={kutuStil}>
-        <label className="block">
-          <Etiket sorun={goster('unvan')}>Pozisyon *</Etiket>
-          <input
-            value={deger.unvan}
-            onChange={(e) => yaz('unvan')(e.target.value)}
-            placeholder="Yazılım Stajyeri"
-            className={alanSinifi}
-            style={alanStil}
-          />
-        </label>
+      <section className={KUTU} style={kutuStil} aria-labelledby={`${k}-baslik`}>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <h2 id={`${k}-baslik`} className="text-base font-black" style={{ color: SIRKET_METIN }}>
+            İlan bilgileri
+          </h2>
+          <p className="text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+            Son başvuru dışında tüm alanlar zorunlu
+          </p>
+        </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block">
-            <Etiket sorun={goster('sehir')}>Şehir *</Etiket>
-            <input
-              value={deger.sehir}
-              onChange={(e) => yaz('sehir')(e.target.value)}
-              placeholder="İstanbul"
-              className={alanSinifi}
-              style={alanStil}
+        <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:gap-x-8">
+          {/* ------------------------------------------- kısa alanlar */}
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 sm:gap-x-4 sm:gap-y-3 xl:content-start">
+            <div className="min-w-0 sm:col-span-2">
+              <Etiket htmlFor={`${k}-unvan`} sorun={goster('unvan')}>
+                Pozisyon
+              </Etiket>
+              <input
+                id={`${k}-unvan`}
+                value={deger.unvan}
+                onChange={(e) => yaz('unvan')(e.target.value)}
+                placeholder="Ör. Yazılım Stajyeri"
+                className={FORM_ALAN}
+              />
+            </div>
+
+            <div className="min-w-0">
+              <Etiket htmlFor={`${k}-sehir`} sorun={goster('sehir')}>
+                Şehir
+              </Etiket>
+              {/* Kapalı liste değil: listede olmayan şehir de yazılabiliyor. */}
+              <AutocompleteField
+                id={`${k}-sehir`}
+                value={deger.sehir}
+                onChange={yaz('sehir')}
+                options={TR_CITIES}
+                placeholder="Ör. İstanbul"
+                className={FORM_ALAN}
+                klavyeDuzeni
+              />
+            </div>
+            <div className="min-w-0">
+              <Etiket id={`${k}-sekil`} sorun={goster('calismaSekli')}>
+                Çalışma şekli
+              </Etiket>
+              <SecimSeridi
+                etiketId={`${k}-sekil`}
+                secenekler={CALISMA_SEKILLERI}
+                deger={deger.calismaSekli}
+                onSec={yaz('calismaSekli')}
+              />
+            </div>
+
+            <div className="min-w-0 sm:col-span-2">
+              <Etiket id={`${k}-tur`} sorun={goster('tur')}>
+                Staj türü
+              </Etiket>
+              <SecimSeridi etiketId={`${k}-tur`} secenekler={STAJ_TURLERI} deger={deger.tur} onSec={yaz('tur')} />
+            </div>
+
+            <div className="min-w-0">
+              <Etiket htmlFor={`${k}-sure`} sorun={goster('sure')}>
+                Süre
+              </Etiket>
+              <input
+                id={`${k}-sure`}
+                value={deger.sure}
+                onChange={(e) => yaz('sure')(e.target.value)}
+                placeholder="Ör. 20 iş günü"
+                className={FORM_ALAN}
+              />
+            </div>
+            <div className="min-w-0">
+              <Etiket htmlFor={`${k}-son`} istegeBagli>
+                Son başvuru
+              </Etiket>
+              <input
+                id={`${k}-son`}
+                type="date"
+                value={deger.sonBasvuru}
+                onChange={(e) => yaz('sonBasvuru')(e.target.value)}
+                className={FORM_ALAN}
+              />
+            </div>
+
+            <div className="min-w-0 sm:col-span-2">
+              <Etiket id={`${k}-ucret`} sorun={goster('ucret')}>
+                Ücret
+              </Etiket>
+              <SecimSeridi
+                etiketId={`${k}-ucret`}
+                secenekler={UCRET_SECENEKLERI}
+                deger={deger.ucret}
+                onSec={yaz('ucret')}
+              />
+              {deger.ucret === 'net' && (
+                <input
+                  value={deger.ucretTutari}
+                  onChange={(e) => yaz('ucretTutari')(e.target.value)}
+                  placeholder="Ör. 17.000 TL / ay"
+                  aria-label="Net ücret tutarı"
+                  className={`mt-2 ${FORM_ALAN} sm:max-w-xs`}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* ---------------------------------------------- iş tanımı */}
+          <div
+            className="mt-4 min-w-0 border-t pt-4 xl:border-l xl:border-t-0 xl:pl-8 xl:pt-0"
+            style={{ borderColor: SIRKET_KENAR }}
+          >
+            <Etiket htmlFor={`${k}-aciklama`} sorun={goster('aciklama')}>
+              İş tanımı
+            </Etiket>
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <span className="text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+                Şablonla başla:
+              </span>
+              {SABLONLAR.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => yaz('aciklama')(s.metin)}
+                  className="min-h-11 cursor-pointer rounded-xl border px-3 text-xs font-bold focus-visible:outline-2 focus-visible:outline-blue-600 sm:min-h-9"
+                  style={ikincilStil}
+                >
+                  {s.etiket} şablonu
+                </button>
+              ))}
+            </div>
+            <UzayanMetin
+              id={`${k}-aciklama`}
+              value={deger.aciklama}
+              onChange={yaz('aciklama')}
+              satir={8}
+              /* xl'de iki panel aynı boyda bitsin: kısa alanlar sütunu kadar. */
+              ekSinif="xl:min-h-72"
+              aria-describedby={`${k}-sayac`}
+              placeholder="Stajyerin ne yapacağını, kimden destek alacağını ve neler beklediğinizi yazın."
             />
-          </label>
-          <div>
-            <Etiket sorun={goster('calismaSekli')}>Çalışma şekli *</Etiket>
-            <SecimSeridi
-              secenekler={CALISMA_SEKILLERI}
-              deger={deger.calismaSekli}
-              onSec={yaz('calismaSekli')}
-            />
+            <span
+              id={`${k}-sayac`}
+              className="mt-1 block text-right text-xs tabular-nums"
+              style={{ color: SIRKET_METIN_IKINCIL }}
+            >
+              {deger.aciklama.trim().length} / {ACIKLAMA_EN_AZ}–{ACIKLAMA_EN_FAZLA} karakter
+            </span>
+
+            {/*
+              Bayraklar uydurma bir puan değil, metinde GEÇEN şeyler.
+              Yayını engellemiyorlar; yalnızca yazana ne göründüğünü
+              söylüyorlar.
+            */}
+            {bayraklar.length > 0 && (
+              <div
+                className="mt-2 rounded-xl border px-3 py-2.5 text-xs leading-relaxed"
+                style={{ borderColor: SIRKET_VURGU_KOYU, background: SIRKET_ROZET, color: SIRKET_METIN }}
+              >
+                İlan metninde dikkat çeken ifadeler var: {bayraklar.join(', ')}. Staj ilanında
+                adaydan para, teminat ya da WhatsApp üzerinden başvuru istenmesi kabul edilmiyor.
+              </div>
+            )}
           </div>
         </div>
 
-        <div>
-          <Etiket sorun={goster('tur')}>Staj türü *</Etiket>
-          <SecimSeridi secenekler={STAJ_TURLERI} deger={deger.tur} onSec={yaz('tur')} />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block">
-            <Etiket sorun={goster('sure')}>Süre *</Etiket>
-            <input
-              value={deger.sure}
-              onChange={(e) => yaz('sure')(e.target.value)}
-              placeholder="20 iş günü"
-              className={alanSinifi}
-              style={alanStil}
-            />
-          </label>
-          <label className="block">
-            <Etiket>Son başvuru (isteğe bağlı)</Etiket>
-            <input
-              type="date"
-              value={deger.sonBasvuru}
-              onChange={(e) => yaz('sonBasvuru')(e.target.value)}
-              className={alanSinifi}
-              style={alanStil}
-            />
-          </label>
-        </div>
-
-        <div>
-          <Etiket sorun={goster('ucret')}>Ücret *</Etiket>
-          <SecimSeridi secenekler={UCRET_SECENEKLERI} deger={deger.ucret} onSec={yaz('ucret')} />
-          {deger.ucret === 'net' && (
-            <input
-              value={deger.ucretTutari}
-              onChange={(e) => yaz('ucretTutari')(e.target.value)}
-              placeholder="17.000 TL / ay"
-              className={`mt-2 ${alanSinifi}`}
-              style={alanStil}
-            />
-          )}
-        </div>
-
         {/*
-          BAŞVURU HER ZAMAN STAJIMVAR ÜZERİNDEN
+          GÖNDER KARTIN SON SATIRI; YANINDA BAŞVURU BİLGİSİ
 
-          "Kendi sitemizden" seçeneği ve başvuru adresi alanı kaldırıldı;
-          `application_method` sistem tarafından 'internal' sabitleniyor
-          ve şirketin o kolona yazma yetkisi yok. Yani burada seçim
-          sunulmuyor, bilgi veriliyor.
+          BAŞVURU HER ZAMAN STAJIMVAR ÜZERİNDEN: "Kendi sitemizden"
+          seçeneği ve başvuru adresi alanı kaldırıldı; `application_method`
+          sistem tarafından 'internal' sabitleniyor ve şirketin o kolona
+          yazma yetkisi yok. Yani burada seçim sunulmuyor, bilgi veriliyor
+          — ayrı bir kutu değil, düğmelerin yanında kısa not.
 
           Aday kimliğinin doğrulamaya bağlı olduğu AÇIKÇA yazılıyor:
           Kademe 1 şirket başvuru sayısını görüyor, adayın kim olduğunu
@@ -385,95 +512,50 @@ export const IlanFormu: React.FC<{
           sonra söylemekten iyi.
         */}
         <div
-          className="rounded-xl border px-3 py-2.5 text-[11px] leading-relaxed"
-          style={{ borderColor: SIRKET_KENAR, background: SIRKET_ROZET, color: SIRKET_METIN }}
+          className="mt-4 flex flex-col gap-3 border-t pt-4 lg:flex-row lg:items-center lg:justify-between lg:gap-6"
+          style={{ borderColor: SIRKET_KENAR }}
         >
-          <p className="font-bold">Başvurular StajımVar üzerinden gelir.</p>
-          <p className="mt-1">
-            Öğrenci ilanı burada görüp buradan başvuruyor; rıza verdiğinde kartı ve
-            CV'si panelinize düşer.
-          </p>
-          {!adayKimligiAcik && (
-            <p className="mt-1">
-              Şu an başvuru <b>sayısını</b> görüyorsunuz; adayların kim olduğunu
-              görebilmek için şirket doğrulaması gerekiyor.
-            </p>
-          )}
-        </div>
-
-        <div>
-          <Etiket sorun={goster('aciklama')}>İş tanımı *</Etiket>
-          <div className="mb-2 flex flex-wrap gap-2">
-            {SABLONLAR.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => yaz('aciklama')(s.metin)}
-                className="min-h-11 cursor-pointer rounded-xl border px-3 text-xs font-bold"
-                style={ikincilStil}
-              >
-                {s.etiket} şablonu
-              </button>
-            ))}
-          </div>
-          <textarea
-            value={deger.aciklama}
-            onChange={(e) => yaz('aciklama')(e.target.value)}
-            rows={9}
-            placeholder="Stajyerin ne yapacağını, kimden destek alacağını ve neler beklediğinizi yazın."
-            className="w-full rounded-xl border p-3 text-sm leading-relaxed outline-none placeholder:text-gray-500"
-            style={alanStil}
-          />
-          <span
-            className="mt-1 block text-right font-mono text-[11px]"
-            style={{ color: SIRKET_METIN_IKINCIL }}
-          >
-            {deger.aciklama.trim().length} / {ACIKLAMA_EN_AZ}–{ACIKLAMA_EN_FAZLA}
-          </span>
-
-          {/*
-            Bayraklar uydurma bir puan değil, metinde GEÇEN şeyler.
-            Yayını engellemiyorlar; yalnızca yazana ne göründüğünü
-            söylüyorlar.
-          */}
-          {bayraklar.length > 0 && (
-            <div
-              className="mt-2 rounded-xl border px-3 py-2.5 text-[11px] leading-relaxed"
-              style={{ borderColor: SIRKET_VURGU_KOYU, background: SIRKET_ROZET, color: SIRKET_METIN }}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void gonder()}
+              disabled={durum === 'kaydediliyor'}
+              className={BIRINCIL_DUGME}
+              style={birincilStil}
             >
-              İlan metninde dikkat çeken ifadeler var: {bayraklar.join(', ')}. Staj ilanında
-              adaydan para, teminat ya da WhatsApp üzerinden başvuru istenmesi kabul edilmiyor.
-            </div>
-          )}
+              {durum === 'kaydediliyor'
+                ? 'Kaydediliyor…'
+                : duzenlenenId
+                  ? 'Değişiklikleri kaydet'
+                  : 'İncelemeye gönder'}
+            </button>
+            <button type="button" onClick={onIptal} className={IKINCIL_DUGME} style={ikincilStil}>
+              Vazgeç
+            </button>
+          </div>
+
+          <p className="flex gap-2 text-xs leading-relaxed lg:max-w-xl" style={{ color: SIRKET_METIN_IKINCIL }}>
+            <Info aria-hidden className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              <b style={{ color: SIRKET_METIN }}>Başvurular StajımVar üzerinden gelir.</b> Öğrenci
+              rıza verdiğinde kartı ve CV'si panelinize düşer.
+              {!adayKimligiAcik && (
+                <>
+                  {' '}
+                  Şu an başvuru <b>sayısını</b> görüyorsunuz; adayların kim olduğunu görebilmek için
+                  şirket doğrulaması gerekiyor.
+                </>
+              )}
+            </span>
+          </p>
         </div>
-      </div>
 
-      {durum === 'hata' && <p className="text-sm font-semibold text-rose-700">{hata}</p>}
-
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={() => void gonder()}
-          disabled={durum === 'kaydediliyor'}
-          className={BIRINCIL_DUGME}
-          style={birincilStil}
-        >
-          {durum === 'kaydediliyor'
-            ? 'Kaydediliyor…'
-            : duzenlenenId
-              ? 'Değişiklikleri kaydet'
-              : 'İncelemeye gönder'}
-        </button>
-        <button
-          type="button"
-          onClick={onIptal}
-          className={IKINCIL_DUGME}
-          style={ikincilStil}
-        >
-          Vazgeç
-        </button>
-
-      </div>
+        {durum === 'hata' && (
+          <p role="alert" className="mt-3 text-sm font-semibold text-rose-700">
+            {hata}
+          </p>
+        )}
+      </section>
     </div>
   );
 };
