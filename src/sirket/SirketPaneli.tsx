@@ -16,6 +16,7 @@ import {
   ikincilStil,
   kutuStil,
 } from './renk';
+import { SirketAdayProfili } from './SirketAdayProfili';
 import { SirketAdaylar } from './SirketAdaylar';
 import { IlanFormu } from './IlanFormu';
 import { AdayIzgarasi } from './AdayIzgarasi';
@@ -122,11 +123,21 @@ export type SirketGorunumu = 'ilanlar' | 'basvuranlar' | 'adaylar';
 /** Adresten görünüm; form ve profil ayrı. */
 export function sirketEkrani(
   yol: string,
-): { tur: 'form'; duzenlenenId: string | null } | { tur: 'profil' } | { tur: SirketGorunumu } {
+):
+  | { tur: 'form'; duzenlenenId: string | null }
+  | { tur: 'profil' }
+  | { tur: 'adayProfili'; adayId: string }
+  | { tur: SirketGorunumu } {
   if (yol === '/sirket/ilan/yeni') return { tur: 'form', duzenlenenId: null };
   const duzenlenenId = yol.match(/^\/sirket\/ilan\/([0-9a-f-]{36})\/duzenle$/)?.[1] ?? null;
   if (duzenlenenId) return { tur: 'form', duzenlenenId };
   if (yol.startsWith('/sirket/profil')) return { tur: 'profil' };
+  /*
+    Aday profili adayların ALTINDA: /sirket/aday/<id>. Önce bakılıyor,
+    yoksa `/sirket/adaylar` öneki onu da yutardı.
+  */
+  const adayId = yol.match(/^\/sirket\/aday\/([0-9a-f-]{36})$/)?.[1] ?? null;
+  if (adayId) return { tur: 'adayProfili', adayId };
   if (yol.startsWith('/sirket/adaylar')) return { tur: 'adaylar' };
   if (yol.startsWith('/sirket/basvuranlar')) return { tur: 'basvuranlar' };
   return { tur: 'ilanlar' };
@@ -259,6 +270,18 @@ export const SirketPaneli: React.FC<{
         onIptal={() => onNavigate('/sirket/ilanlar')}
       />
     );
+  }
+
+  if (ekran.tur === 'adayProfili') {
+    /*
+      ADAY PROFİLİ KENDİ EKRANI
+
+      Karttaki "Profili incele" buraya geliyor. Sekme çubuğunun altına
+      değil, `SirketPaneli` düzeyine konuldu: bu bir sekme değil, bir
+      sekmenin içinden açılan derin sayfa — İlan formunun durduğu yerle
+      aynı düzey.
+    */
+    return <SirketAdayProfili adayId={ekran.adayId} onNavigate={onNavigate} />;
   }
 
   if (ekran.tur === 'profil') {
@@ -417,7 +440,7 @@ export const SirketIlanlarSekmesi: React.FC<{
       genişlikleri 320 px için ölçülmüş. Altıncı öğe o ölçümü bozardı;
       giriş Başvuranlar ekranının üstünden veriliyor.
     */
-    return <SirketAdaylar />;
+    return <SirketAdaylar onNavigate={onNavigate} />;
   }
 
   if (gorunum === 'basvuranlar') {

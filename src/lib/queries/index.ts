@@ -1632,7 +1632,12 @@ export interface PanelOgrencisi {
   okul: string | null;
   fakulte: string | null;
   bolum: string | null;
-  sinif: number | null;
+  /*
+    `grade_level` METİN ("2. Sınıf", "Yüksek Lisans / Mezun"), sayı değil.
+    Bu ekran alanı çizmiyor ama tip yanlıştı; sayı sanan bir sonraki
+    kullanım "2. Sınıf. sınıf" üretirdi (aday kartında ölçüldü).
+  */
+  sinif: string | null;
   sehir: string | null;
   teklifeAcik: boolean | null;
   basvuru: number;
@@ -1775,10 +1780,23 @@ export interface ArayanOgrenci {
   id: string;
   ad: string | null;
   eposta: string | null;
+  /*
+    Ortak avatar kaynağı (`social_profiles.avatar_path`) — aday listesine
+    özel ikinci bir alan YOK. Öğrenci fotoğrafını değiştirdiğinde liste
+    de değişiyor; ayrı alan olsaydı eski fotoğrafta kalırdı.
+  */
+  avatarYolu: string | null;
+  kullaniciAdi: string | null;
   okul: string | null;
   fakulte: string | null;
   bolum: string | null;
-  sinif: number | null;
+  /*
+    `student_profiles.grade_level` METİN ve kendi içinde "Sınıf" sözcüğünü
+    taşıyor ("2. Sınıf", "Yüksek Lisans / Mezun"). Sayı sanıp sonuna
+    "sınıf" eklemek "2. Sınıf. sınıf" ve "Yüksek Lisans / Mezun. sınıf"
+    üretiyordu — ölçüldü, canlı veriden.
+  */
+  sinif: string | null;
   sehir: string | null;
   mezuniyet: number | null;
   beceriler: string[] | null;
@@ -1787,6 +1805,7 @@ export interface ArayanOgrenci {
   tanitim: string | null;
   linkedin: string | null;
   github: string | null;
+  portfolyo: string | null;
   acildi: string | null;
 }
 
@@ -1795,6 +1814,66 @@ export interface ArayanListesi {
   isArayan: number;
   stajArayan: number;
   ogrenciler: ArayanOgrenci[];
+}
+
+export interface AdayYetkinligi {
+  ad: string;
+  seviye: string | null;
+  yil: number | null;
+}
+
+export interface AdayProjesi {
+  baslik: string;
+  aciklama: string | null;
+  teknoloji: string[] | null;
+  github: string | null;
+  adres: string | null;
+}
+
+export interface AdayProfili {
+  id: string;
+  ad: string | null;
+  eposta: string | null;
+  avatarYolu: string | null;
+  okul: string | null;
+  fakulte: string | null;
+  bolum: string | null;
+  /* Metin; bkz. ArayanOgrenci.sinif. */
+  sinif: string | null;
+  sehir: string | null;
+  mezuniyet: number | null;
+  tanitim: string | null;
+  hedefRoller: string[] | null;
+  beceriler: string[] | null;
+  linkedin: string | null;
+  github: string | null;
+  portfolyo: string | null;
+  cvVar: boolean;
+  isArayan: boolean;
+  stajArayan: boolean;
+  isAcildi: string | null;
+  stajAcildi: string | null;
+  yetkinlikler: AdayYetkinligi[];
+  projeler: AdayProjesi[];
+}
+
+/**
+ * Tek aday profili.
+ *
+ * Liste sorgusuyla aynı kapı: yalnız doğrulanmış şirket üyesi ve
+ * yönetici. Arayışı KAPALI öğrenci dönmüyor — kimliği bilen bir şirket,
+ * öğrenci anahtarı kapattıktan sonra profili açamamalı.
+ *
+ * Dönen alanlar sunucuda tek tek sayılıyor; öğrencinin anahtarında
+ * yazan listeyle birebir. Telefon, not ortalaması, CV dosyası ve
+ * çalışma tercihleri kasıtlı olarak dışarıda.
+ */
+export async function fetchAdayProfili(id: string): Promise<AdayProfili | null> {
+  const { data, error } = await supabase.rpc('aday_profili' as never, {
+    p_id: id,
+  } as never);
+  if (error) fail('Aday profili alınamadı', error);
+  return (data as unknown as AdayProfili | null) ?? null;
 }
 
 export async function fetchArayanOgrenciler(
