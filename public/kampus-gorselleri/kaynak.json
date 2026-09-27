@@ -1,0 +1,44 @@
+{
+  "kampus": {
+    "alt": "Kampüs çalışma alanında birlikte çalışan yetişkin öğrenciler.",
+    "etiket": "Temsili görsel",
+    "tur": "ai-photorealistic",
+    "lisans": "generated",
+    "uretici": "built-in imagegen",
+    "kaynak": "imagegen:exec-cb6e37cf-6a29-46c8-ba3a-1dc00e65ca90.png",
+    "dosyalar": [
+      "kampus-192.avif",
+      "kampus-192.webp",
+      "kampus-384.avif",
+      "kampus-384.webp"
+    ]
+  },
+  "yemekhane": {
+    "alt": "Öğrenci yemekhanesinde temsili bir yemek tepsisi.",
+    "etiket": "Temsili görsel",
+    "tur": "ai-photorealistic",
+    "lisans": "generated",
+    "uretici": "built-in imagegen",
+    "kaynak": "imagegen:exec-74a68444-ba0a-49bc-93d9-59dd58265eb6.png",
+    "dosyalar": [
+      "yemekhane-192.avif",
+      "yemekhane-192.webp",
+      "yemekhane-384.avif",
+      "yemekhane-384.webp"
+    ]
+  },
+  "duyurular": {
+    "alt": "Kampüs duyuru panosunu inceleyen yetişkin öğrenciler.",
+    "etiket": "Temsili görsel",
+    "tur": "ai-photorealistic",
+    "lisans": "generated",
+    "uretici": "built-in imagegen",
+    "kaynak": "imagegen:exec-209571dd-7687-4e73-9451-21ffa332eba5.png",
+    "dosyalar": [
+      "duyurular-192.avif",
+      "duyurular-192.webp",
+      "duyurular-384.avif",
+      "duyurular-384.webp"
+    ]
+  }
+}
