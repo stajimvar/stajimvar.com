@@ -48,7 +48,13 @@ test('sayfa kendi varyantında; profil paneli ayrı kartlar', () => {
 });
 
 test('başlık: 22/28, sayfada "Senin üniversiten" yok, uzun ad kırpılmıyor', () => {
-  assert.match(PANEL, /'text-\[22px\] font-extrabold leading-7 tracking-tight text-slate-900'/);
+  /*
+    Başlık artık koşullu bir dal içinde (`{sayfa && (`) ve sınıf düz bir
+    JSX özniteliği; eskiden bir üçlünün dalıydı. Ölçü değişmedi: sayfa
+    başlığı hâlâ 22 px.
+  */
+  assert.match(PANEL, /text-\[22px\] font-extrabold leading-7 tracking-tight text-slate-900/);
+  assert.match(PANEL, /\{sayfa && \(\s*<h2/, 'başlık yalnız bağımsız sayfada çizilmeli');
   assert.match(PANEL, /\{okulAdi && !baskasi && sayfa && \(\s*<p className=\{altSatir\}>[\s\S]{0,120}<span className="min-w-0 break-words font-medium">\{okulAdi\}<\/span>/);
   /*
     Panelde (27 Eylül 2026) "Senin üniversiten ·" satırı "Üniversiten"

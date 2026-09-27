@@ -601,10 +601,23 @@ const Basvuranlar: React.FC<{
     Adaylar ekranının kendi yetki kapısı değişmedi (SirketAdaylar).
   */
   const ogrencileriKesfet = (
-    <section aria-labelledby="ogrencileri-kesfet" className="space-y-2">
-      <h2 id="ogrencileri-kesfet" className="px-1 font-extrabold" style={{ color: SIRKET_METIN }}>
-        Aday mı arıyorsunuz?
-      </h2>
+    <section
+      /*
+        BAŞLIK KALDIRILDI (27 Eylül 2026)
+
+        "Aday mı arıyorsunuz?" satırı kartların üstünde boşuna yer
+        kaplıyordu: kartların kendi başlıkları ("Staj arayanlar",
+        "İş arayanlar") ne olduklarını zaten söylüyor. Kullanıcı
+        kaldırılmasını istedi.
+
+        Bölüm adsız kalmadı: ad doğrudan `aria-label` ile veriliyor.
+        Görünür bir `h2` bırakıp `sr-only` yapmak işe yaramazdı — kap
+        `space-y-2` kullanıyor ve gizli başlık yine ilk kardeş sayılır,
+        kartlar kaldırılan başlığın boşluğunu taşımaya devam ederdi.
+      */
+      aria-label="Aday arama"
+      className="space-y-2"
+    >
       {/*
         İKİ EŞİT KART, TEK BAĞLANTI DEĞİL
 

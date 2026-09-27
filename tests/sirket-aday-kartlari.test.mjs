@@ -126,3 +126,27 @@ test('toplam basvuru sayisi kaybolmadi', () => {
   assert.ok(!dal.includes('suzulmus.length !== kartlar.length &&'),
             'sayi yalniz suzulunce degil her zaman gorunmeli');
 });
+
+test('aday bolumunun basligi ekranda yok', () => {
+  /*
+    "Aday mi ariyorsunuz?" satiri kartlarin ustunde bosuna yer
+    kapliyordu: kartlarin kendi basliklari ("Staj arayanlar",
+    "Is arayanlar") ne olduklarini zaten soyluyor. Kullanici
+    kaldirilmasini istedi (27 Eylul 2026).
+  */
+  assert.ok(
+    !yorumsuz(PANEL).includes('Aday mı arıyorsunuz?'),
+    'baslik kaldirilmali (yorumdaki gecmis anlatimi sayilmaz)',
+  );
+});
+
+test('aday bolumu adsiz kalmadi', () => {
+  /*
+    Gorunur baslik yokken bolum ekran okuyucuda adsiz kalirdi.
+    sr-only bir h2 birakmak ise ise yaramazdi: kap space-y-2 kullaniyor
+    ve gizli baslik yine ilk kardes sayilir, kartlar kaldirilan basligin
+    bosluğunu tasimaya devam ederdi.
+  */
+  assert.ok(PANEL.includes('aria-label="Aday arama"'), 'bolum adi verilmeli');
+  assert.ok(!PANEL.includes('id="ogrencileri-kesfet"'), 'olu baslik bagi kalmamali');
+});

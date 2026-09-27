@@ -642,23 +642,51 @@ export const KampusumPaneli: React.FC<{
   const altSatirIkonu = sayfa ? 'mt-[3px] h-4 w-4 shrink-0 text-gray-500' : 'mt-0.5 h-4 w-4 shrink-0 text-gray-500';
 
   return (
-    <section aria-labelledby={`${kimlik}-baslik`} aria-busy={kampus.durum === 'yukleniyor'} className={KAP[yerlesim]}>
+    <section
+      /*
+        BÖLÜM ADI İKİ YOLDAN: sayfada görünür başlıktan (`aria-labelledby`),
+        panelde doğrudan `aria-label` ile. Panelde görünür başlık yok ama
+        bölümün adı olmalı — adsız bir bölüm, bölümler arasında gezen
+        ekran okuyucu kullanıcısı için "bölüm" diye okunur, o kadar.
+      */
+      {...(sayfa
+        ? { 'aria-labelledby': `${kimlik}-baslik` }
+        : { 'aria-label': baskasi ? 'Kampüs' : 'Kampüsüm' })}
+      aria-busy={kampus.durum === 'yukleniyor'}
+      className={KAP[yerlesim]}
+    >
       {/*
         SAYFA BAŞLIĞI (25 Eylül 2026): 22/28 ve altında yalnız okul adı —
         "Senin üniversiten ·" tekrarı sayfada kalktı (başlık zaten
         "Kampüsüm"). Uzun ad `break-words` ile satıra akıyor, kırpılmıyor.
         Profil panelindeki başlık aynı kaldı.
       */}
-      <h2
-        id={`${kimlik}-baslik`}
-        className={
-          sayfa
-            ? 'text-[22px] font-extrabold leading-7 tracking-tight text-slate-900'
-            : 'text-lg font-extrabold tracking-tight text-gray-900'
-        }
-      >
-        {baskasi ? 'Kampüs' : 'Kampüsüm'}
-      </h2>
+      {/*
+        BAŞLIK YALNIZ BAĞIMSIZ SAYFADA (27 Eylül 2026)
+
+        Profil sayfasının sol sütununda "Kampüsüm" başlığı, altındaki
+        kartların üstünde boşuna yer kaplıyordu: kartların kendi
+        başlıkları zaten ne olduklarını söylüyor ("Üniversiten", "Bugün
+        yemekte", "Üniversiteden duyurular"). Kullanıcı kaldırılmasını
+        istedi.
+
+        `sr-only` ile gizlemek YETMEZDİ: kap `space-y-4` kullanıyor ve
+        gizli başlık yine ilk kardeş sayılır — ilk kart 16 px üst boşluk
+        almaya devam eder, yani kaldırılan başlığın yeri boş kalırdı.
+        Bu yüzden panelde öğe hiç çizilmiyor ve bölümün adı `aria-label`
+        ile veriliyor; erişilebilirlik korunuyor, boşluk kapanıyor.
+
+        Bağımsız /kampusum sayfasında başlık DURUYOR: orada sayfanın
+        kendi adı.
+      */}
+      {sayfa && (
+        <h2
+          id={`${kimlik}-baslik`}
+          className="text-[22px] font-extrabold leading-7 tracking-tight text-slate-900"
+        >
+          {baskasi ? 'Kampüs' : 'Kampüsüm'}
+        </h2>
+      )}
       {kampus.durum === 'yukleniyor' && <Iskelet className="mt-1.5 h-4 w-48" />}
       {/*
         ÜNİVERSİTEN (panel, 27 Eylül 2026): başlığın altındaki tek satır üç
