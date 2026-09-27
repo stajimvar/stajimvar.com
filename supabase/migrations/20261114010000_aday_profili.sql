@@ -1,5 +1,11 @@
 -- ADAY KARTI VE ADAY PROFİLİ
 --
+-- NUMARA: dosya adındaki sürüm, uygulanmış EN SON göçten büyük olmalı.
+-- İlk denemede 20261104010000 seçilmişti; o numara `sirket_dogrulama_kuyrugu`
+-- tarafından çoktan kullanılmıştı ve CI "migration history divergence" ile
+-- `db push`'u durdurdu — doğru davranış, yarım bir durum yayına çıkmadı.
+-- Yeni numara seçerken `supabase/migrations` dizinindeki son dosyaya bakılmalı.
+--
 -- İşverenin gördüğü liste bir veri kaydı gibi duruyordu: ad, okul, birkaç
 -- etiket ve bir e-posta düğmesi. Aday profilini inceleyecek bir yer yoktu.
 --

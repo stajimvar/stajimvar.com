@@ -33,7 +33,7 @@ import { arayisiGuncelle } from '../lib/queries';
 
   27 Eylül 2026'da genişletildi: aday kartı ve aday profili artık
   profil fotoğrafını, hakkında metnini, becerileri ve projeleri de
-  gösteriyor (bkz. göç 20261104010000_aday_profili).
+  gösteriyor (bkz. göç 20261114010000_aday_profili).
 
   KASITLI OLARAK DIŞARIDA: telefon, not ortalaması, CV dosyasının
   kendisi ve çalışma tercihleri. Bunlar bu cümlede sayılmadığı için
