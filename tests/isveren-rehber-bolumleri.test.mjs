@@ -224,6 +224,18 @@ test('işveren rehberi gövdesi pilot dilinde: sağ sütun yok, açık kısa cev
   assert.match(sayfa, /href=\{rehber\.sonrakiAdim\.yol\}/);
 });
 
+test('ilgili rehberler: işveren rehberinde dört öneri, öğrencide üç; tek kalan son kart iki sütuna yayılıyor', () => {
+  const sayfa = oku('src/components/GuidePages.tsx');
+  assert.match(sayfa, /const oneriSayisi = kategori === 'isveren' \? 4 : 3;/);
+  assert.match(sayfa, /havuz\.filter\(\(r\) => !ayniKonu\.includes\(r\)\)\]\.slice\(0, oneriSayisi\)/);
+  /* Havuz yine aynı kategoriden ve bulunulan sayfa hariç. */
+  assert.match(sayfa, /REHBERLER\.filter\(\(r\) => r\.slug !== slug && r\.kategori === kategori\)/);
+  assert.match(sayfa, /<RehberIzgarasi dortSutun=\{oneriSayisi === 4\} tekKalaniYay>/);
+  const kart = oku('src/components/RehberKartlari.tsx');
+  assert.match(kart, /\[&>\*:last-child:nth-child\(odd\)\]:col-span-2 lg:\[&>\*:last-child:nth-child\(odd\)\]:col-span-1/);
+  assert.match(kart, /dortSutun\s*\? 'grid grid-cols-2 gap-px bg-gray-200 sm:gap-4 sm:bg-transparent lg:grid-cols-4'/);
+});
+
 test('nesne maddeli kontrol listesi bir kez sayılıyor (reklam eşiği şişmiyor)', () => {
   const govde = [
     '        maddeler: [',

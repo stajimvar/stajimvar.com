@@ -232,9 +232,29 @@ export const RehberKartiIskeleti: React.FC = () => (
  * `sm:` üstünde zemin saydamlaşıyor ve boşluk geri geliyor: orada
  * kartlar gri zeminde yüzen kutular.
  */
-export const RehberIzgarasi: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const RehberIzgarasi: React.FC<{
+  children: React.ReactNode;
+  /**
+   * Geniş ekranda dört sütun (işveren rehberinin "Diğer işveren rehberleri":
+   * dört öneri tek satırı dolduruyor). Varsayılan üç.
+   */
+  dortSutun?: boolean;
+  /**
+   * İki sütunlu görünümde (telefon ve sm) tek kalan son kart iki sütuna
+   * yayılıyor. Yayılmazsa telefonda yanında gri zeminli BOŞ bir hücre
+   * görünüyordu (zemin gri, hücreler beyaz; bkz. yukarı). Geniş ekranda
+   * sütun sayısı değiştiği için yayılma lg'de geri alınıyor.
+   */
+  tekKalaniYay?: boolean;
+}> = ({ children, dortSutun = false, tekKalaniYay = false }) => (
   <div
-    className={`grid grid-cols-2 gap-px bg-gray-200 sm:gap-4 sm:bg-transparent lg:grid-cols-3 ${YUZEY.kap}`}
+    className={`${
+      dortSutun
+        ? 'grid grid-cols-2 gap-px bg-gray-200 sm:gap-4 sm:bg-transparent lg:grid-cols-4'
+        : 'grid grid-cols-2 gap-px bg-gray-200 sm:gap-4 sm:bg-transparent lg:grid-cols-3'
+    } ${
+      tekKalaniYay ? '[&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child:nth-child(odd)]:col-span-1' : ''
+    } ${YUZEY.kap}`}
   >
     {children}
   </div>
