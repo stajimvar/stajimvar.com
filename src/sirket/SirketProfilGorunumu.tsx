@@ -167,6 +167,20 @@ interface GorunumProps {
    * "Şirketim"; ad orada `h2`. Ziyaretçi sayfasında ad sayfanın başlığı.
    */
   adBasligi?: 'h1' | 'h2';
+  /**
+   * SOSYAL KATMAN YOK (27 Eylül 2026): `/sirket/<slug>` — ilanları şirketin
+   * kariyer sayfasından derlenen ya da sosyal satırı okunmayan şirket.
+   * Paylaşım sekmesi, paylaşım ve takipçi sayaçları ÇİZİLMİYOR (olmayan bir
+   * sayıyı "0" diye göstermek yanlış olurdu); açılış sekmesi İlanlar.
+   */
+  sosyalYok?: boolean;
+  /**
+   * "Şirket hesabı" rozeti. Varsayılan açık (sosyal satırı olan şirket);
+   * derlenmiş şirket sayfası yalnız sahiplenilmişse veriyor.
+   */
+  hesapRozeti?: boolean;
+  /** Sayaçların altında kısa bilgi (ör. ilanların nereden derlendiği). */
+  bilgiNotu?: React.ReactNode;
 }
 
 /*
@@ -301,13 +315,18 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
   bildirim,
   kapakYolu,
   adBasligi = 'h1',
+  sosyalYok = false,
+  hesapRozeti = true,
+  bilgiNotu,
 }) => {
   /*
     SAHİPTE VARSAYILAN "HAKKIMIZDA" (26 Eylül 2026): şirket kendi
     ekranında önce öğrenciye nasıl anlatıldığını ve eksiğini görüyor.
     Ziyaretçi sayfasının sırası ve varsayılanı DEĞİŞMEDİ.
   */
-  const [sekme, setSekme] = React.useState<SirketSekmesi>(sahip ? 'hakkimizda' : 'paylasimlar');
+  const [sekme, setSekme] = React.useState<SirketSekmesi>(
+    sahip ? 'hakkimizda' : sosyalYok ? 'ilanlar' : 'paylasimlar'
+  );
   const AdEtiketi = adBasligi;
   const [logoBozuk, setLogoBozuk] = React.useState(false);
   React.useEffect(() => setLogoBozuk(false), [kimlik.logoUrl]);
@@ -339,7 +358,12 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
     dokunma hedefi ve çubuk yüksekliği değişmiyor. Kısaltma bir ürün
     kararı: adı kullanıcı seçti, kendiliğinden "Kareler"e indirilmedi.
   */
-  const sekmeler: { id: SirketSekmesi; etiket: string }[] = sahip
+  const sekmeler: { id: SirketSekmesi; etiket: string }[] = sosyalYok
+    ? [
+        { id: 'ilanlar', etiket: 'İlanlar' },
+        { id: 'hakkimizda', etiket: 'Hakkımızda' },
+      ]
+    : sahip
     ? [
         { id: 'hakkimizda', etiket: 'Hakkımızda' },
         { id: 'ilanlar', etiket: 'İlanlar' },
@@ -351,7 +375,9 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
         { id: 'hakkimizda', etiket: 'Hakkımızda' },
       ];
   /* Sahipte sayaç sırası tasarımdaki gibi: aktif ilan · takipçi · paylaşım. */
-  const sayacSirasi: { etiket: string; deger: SayacDurumu }[] = sahip
+  const sayacSirasi: { etiket: string; deger: SayacDurumu }[] = sosyalYok
+    ? [{ etiket: 'açık ilan', deger: sayaclar.aktifIlan }]
+    : sahip
     ? [
         { etiket: 'aktif ilan', deger: sayaclar.aktifIlan },
         { etiket: 'takipçi', deger: sayaclar.takipci },
@@ -560,11 +586,13 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
                 Doğrulanmış kurum
               </span>
             )}
-            <span
-              className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${RENK_PRIMARY.yumusakZemin} ${RENK_PRIMARY.metin}`}
-            >
-              Şirket hesabı
-            </span>
+            {hesapRozeti && (
+              <span
+                className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${RENK_PRIMARY.yumusakZemin} ${RENK_PRIMARY.metin}`}
+              >
+                Şirket hesabı
+              </span>
+            )}
           </div>
           {kullaniciAdi && (
             <p className="mt-0.5 max-w-full truncate text-sm text-gray-600 sm:text-base">@{kullaniciAdi}</p>
@@ -646,6 +674,7 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
               <Sayac key={s.etiket} etiket={s.etiket} deger={s.deger} />
             ))}
           </dl>
+          {bilgiNotu && <div className="mt-2 text-sm leading-relaxed text-gray-600">{bilgiNotu}</div>}
 
           {/*
             ZİYARETÇİ EYLEM SATIRI — X mobil kalıbı (kullanıcı ekran
