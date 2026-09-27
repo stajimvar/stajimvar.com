@@ -32,17 +32,22 @@ test('sahiplenme ve doğrulama ayrı alanlardan okunuyor', () => {
   assert.match(sayfa, /veri\.company\.sahiplenilmis/);
 });
 
-test('üç durum üç ayrı rozet', () => {
-  /* Doğrulanmış · Sahiplenilmiş · Henüz sahiplenilmemiş */
-  assert.match(sayfa, /\{veri\.company\.verified && \(/);
-  assert.match(sayfa, /!veri\.company\.verified && veri\.company\.sahiplenilmis/);
-  assert.match(sayfa, /!veri\.company\.verified && !veri\.company\.sahiplenilmis/);
+test('üç durum üç ayrı gösterge', () => {
+  /*
+    27 Eylül 2026: sayfa hesaplı şirket profiliyle aynı görünümü
+    (SirketProfilGorunumu) çiziyor. Doğrulanmış rozeti yalnız `verified`
+    true iken; "Şirket hesabı" rozeti yalnız sahiplenilmişse; derleme notu
+    yalnız ikisi de değilse.
+  */
+  assert.match(sayfa, /dogrulandi: veri\.company\.verified === true,/);
+  assert.match(sayfa, /hesapRozeti=\{veri\.company\.sahiplenilmis\}/);
+  assert.match(sayfa, /const derlemeNotu = !veri\.company\.verified && !veri\.company\.sahiplenilmis && \(/);
 });
 
 test('SAHİPLENİLMİŞ ŞİRKET TEKRAR SAHİPLENİLEMİYOR', () => {
   assert.match(
     sayfa,
-    /\{!veri\.company\.sahiplenilmis && \(\s*\n\s*<div className="mt-8">/,
+    /\{!veri\.company\.sahiplenilmis && \(\s*\n\s*<div>\s*<CompanyClaimForm/,
     'CompanyClaimForm sahiplenilmiş profilde çizilmemeli',
   );
 });

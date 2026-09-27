@@ -1,13 +1,12 @@
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Globe, MapPin, ShieldCheck, BadgeCheck } from 'lucide-react';
+import { ArrowLeft, Info, MapPin, ShieldCheck } from 'lucide-react';
 import type { InternshipListing } from '../types';
 import { fetchCompanyPage } from '../lib/queries';
 import { STAJ_PROGRAMLARI } from '../data/stajProgramlari';
 import { IsverenKimlikSayfasi } from './IsverenKimlikSayfasi';
 import { ListingLogo } from './ListingLogo';
-import { CompanyLogo } from './CompanyLogo';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { BOLUMLER } from '../data/bolumler';
 import { eklenmeMetni, sonKontrolMetni } from '../lib/zaman';
@@ -15,6 +14,12 @@ import { guvenliDisAdres } from '../lib/guvenli-url.mjs';
 import { Logo } from './Logo';
 import { listingSlug } from '../lib/slug';
 import { CompanyClaimForm } from './CompanyClaimForm';
+import { SayfaKabugu } from './SayfaKabugu';
+import { ProfilSayfaDuzeni } from './sosyal/ProfilSayfaDuzeni';
+import { useGenisEkran, XL_SORGUSU } from './sosyal/useGenisEkran';
+import { AgimYanSutun } from './sosyal/AgimYanSutun';
+import { SirketProfilGorunumu } from '../sirket/SirketProfilGorunumu';
+import type { SirketAcikKimlik } from '../lib/sirket-veri';
 
 /**
  * Şirket sayfası.
@@ -25,6 +30,16 @@ import { CompanyClaimForm } from './CompanyClaimForm';
  *
  * Şirket bilgileri şu an toplanan ilanlardan geliyor, yani eksik olabilir.
  * Eksik alanı uydurmuyoruz; sahiplenme akışıyla şirket kendisi dolduracak.
+ *
+ * PROFİL DİLİ (27 Eylül 2026, kullanıcı isteği): hesabı olan şirketin
+ * sayfası (/profil/<ad>) ile aynı görünüm — `SirketProfilGorunumu`, aynı
+ * kap (`SayfaKabugu` telefonda kenarsız + `ProfilSayfaDuzeni`): bulanık
+ * logo bandı, yuvarlak logo, ad, rozetler, açıklama, meta satırı, sayaç,
+ * İlanlar / Hakkımızda sekmeleri. Farkı dürüst: sosyal satırı olmayan
+ * şirkette paylaşım ve takipçi YOK (`sosyalYok`), "Şirket hesabı" rozeti
+ * yalnız sahiplenilmişse. Künye (kariyer sayfası), sahiplenme, benzer
+ * şirketler ve ilgili bölümler geniş ekranda sağ sütunda, dar ekranda
+ * profilin altında — hiçbiri kaybolmuyor.
  */
 
 interface CompanyPageProps {
@@ -121,6 +136,223 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
     }
   }, [veri]);
 
+  const genis = useGenisEkran(XL_SORGUSU);
+
+  if (durum === 'hazir' && veri) {
+    const kimlik: SirketAcikKimlik = {
+      id: veri.company.id,
+      ad: veri.company.name,
+      slug: veri.company.slug ?? slug,
+      logoUrl: veri.company.logoUrl ?? null,
+      sektor: veri.company.industry?.trim() || null,
+      calisanSayisi: veri.company.size?.trim() || null,
+      konum: veri.company.location ? konumEtiketi(veri.company.location) : null,
+      siteUrl: veri.company.websiteUrl ?? null,
+      aciklama: veri.company.description?.trim() || null,
+      dogrulandi: veri.company.verified === true,
+    };
+    const git = (yol: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+      e.preventDefault();
+      onNavigate(yol);
+    };
+
+    /*
+      Bu not "ilanlar derlendi, yetkiliyseniz yazın" diyor. Sahiplenilmiş
+      ya da doğrulanmış profilde yersiz: yetkilisi zaten burada.
+    */
+    const derlemeNotu = !veri.company.verified && !veri.company.sahiplenilmis && (
+      <p className="flex items-start gap-1.5">
+        <Info aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-gray-500" />
+        <span>
+          İlanlar {veri.company.name} şirketinin kendi kariyer sisteminden derlendi. Yetkiliyseniz sayfayı
+          sahiplenebilir ya da{' '}
+          <a className="font-semibold text-blue-700 hover:underline" href="mailto:iletisim@stajimvar.com">
+            iletisim@stajimvar.com
+          </a>{' '}
+          adresine yazabilirsiniz.
+        </span>
+      </p>
+    );
+
+    /* İlan kartları: öğrencinin gördüğü sade kart + yayın ve son kontrol tarihi. */
+    const ilanlarIcerigi =
+      veri.listings.length === 0 ? (
+        <p className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-600">
+          Şu anda açık ilanı yok. Kaynağı saatlik kontrol ediyoruz; yeni ilan açıldığında burada görünür.
+        </p>
+      ) : (
+        <ul className="space-y-3">
+          {veri.listings.map((ilan: InternshipListing) => {
+            const yol = `/ilan/${listingSlug(ilan)}`;
+            const eklenme = eklenmeMetni(ilan.postedAt, ilan.postedAtDogrulandi);
+            const kontrol = sonKontrolMetni(ilan.lastSeenAt);
+            return (
+              <li key={ilan.id}>
+                <a
+                  href={yol}
+                  onClick={git(yol)}
+                  className="block space-y-2 rounded-2xl border border-gray-200 bg-white p-4 transition-colors hover:border-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:p-5"
+                >
+                  <p className="break-words text-base font-bold text-gray-900 sm:text-lg">{ilan.title}</p>
+                  <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-600">
+                    <span className="inline-flex items-center gap-1">
+                      <MapPin aria-hidden className="h-4 w-4" />
+                      {konumEtiketi(ilan.city)} ({calismaEtiketi(ilan.workType)})
+                    </span>
+                    {ilan.stipend.isPaid && <span className="font-semibold text-amber-700">Ücretli</span>}
+                    {ilan.mandatoryStajAccepted && (
+                      <span className="inline-flex items-center gap-1 font-semibold text-emerald-700">
+                        <ShieldCheck aria-hidden className="h-4 w-4" />
+                        Zorunlu staj
+                      </span>
+                    )}
+                  </p>
+                  {(eklenme || kontrol) && (
+                    <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600">
+                      {eklenme && <span>{eklenme}</span>}
+                      {kontrol && <span className="font-semibold text-emerald-700">{kontrol}</span>}
+                    </p>
+                  )}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      );
+
+    const KUCUK_KART = 'rounded-2xl border border-gray-200 bg-white p-4';
+    /*
+      ŞİRKETE ÖZGÜ YAN BLOKLAR — hepsi var olan veriden; veri yoksa blok yok.
+      Künye yalnız bantta görünmeyen bilgiyi taşıyor (kariyer sayfası).
+    */
+    const sirketBloklari = (
+      <>
+        {kariyerAdresi && (
+          <section className={KUCUK_KART} aria-labelledby="sirket-kunye">
+            <h2 id="sirket-kunye" className="text-sm font-extrabold text-gray-900">
+              Künye
+            </h2>
+            <dl className="mt-2 text-sm">
+              <dt className="text-xs text-gray-500">Kariyer sayfası</dt>
+              <dd className="min-w-0 truncate font-semibold">
+                <a
+                  href={kariyerAdresi.adres}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="text-blue-700 hover:underline"
+                >
+                  {kariyerAdresi.konak}
+                </a>
+              </dd>
+            </dl>
+          </section>
+        )}
+
+        {/*
+          SAHİPLENİLMİŞ ŞİRKET TEKRAR SAHİPLENİLEMEZ: kendi şirketini açmış
+          bir yetkili kendi sayfasında "Bu şirketin yetkilisi misiniz?"
+          çağrısını görmesin.
+        */}
+        {!veri.company.sahiplenilmis && (
+          <div>
+            <CompanyClaimForm
+              companyId={veri.company.id}
+              companyName={veri.company.name}
+              userId={userId}
+              userEmail={userEmail}
+              onRequireLogin={onRequireLogin ?? (() => undefined)}
+            />
+          </div>
+        )}
+
+        {/* BENZER ŞİRKETLER: aynı sektör/şehir, yayında ilanı olan; eşleşme yoksa blok yok. */}
+        {veri.benzerler.length > 0 && (
+          <section className={KUCUK_KART} aria-labelledby="sirket-benzerler">
+            <h2 id="sirket-benzerler" className="text-sm font-extrabold text-gray-900">
+              {veri.listings.length === 0 ? 'Bunun yerine bakabilirsin' : 'Benzer şirketler'}
+            </h2>
+            <ul className="mt-2 space-y-1">
+              {veri.benzerler.map((b) => (
+                <li key={b.slug}>
+                  <a
+                    href={`/sirket/${b.slug}`}
+                    onClick={git(`/sirket/${b.slug}`)}
+                    className="-mx-2 flex min-h-12 items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-gray-50"
+                  >
+                    <ListingLogo name={b.name} logoUrl={b.logoUrl} />
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-bold text-gray-900">{b.name}</span>
+                      {b.industry && <span className="block truncate text-xs text-gray-500">{b.industry}</span>}
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {ilgiliBolumler.length > 0 && (
+          <section className={KUCUK_KART} aria-labelledby="sirket-bolumler">
+            <h2 id="sirket-bolumler" className="text-sm font-extrabold text-gray-900">
+              İlgili bölümler
+            </h2>
+            <p className="mt-1 text-sm text-gray-600">Bu şirketin ilanları şu bölümlerle örtüşüyor.</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {ilgiliBolumler.map((b) => (
+                <a
+                  key={b.slug}
+                  href={`/bolum/${b.slug}`}
+                  onClick={git(`/bolum/${b.slug}`)}
+                  className="rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-blue-300"
+                >
+                  {b.ad}
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+      </>
+    );
+
+    return (
+      /* /profil/<ad> ile aynı kap: telefonda kenarsız yüzey, sm üstünde kart. */
+      <SayfaKabugu icerikGenisligi={SAYFA_GENISLIGI} mobilKenarsiz ustBosluk="pt-0 sm:pt-8">
+        <ProfilSayfaDuzeni
+          yanSutun={
+            genis ? (
+              <>
+                {sirketBloklari}
+                {/* Hesaplı şirket sayfasıyla aynı öneriler (oturum varsa). */}
+                {userId && <AgimYanSutun kullaniciId={userId} sektorId={null} onNavigate={onNavigate} />}
+              </>
+            ) : undefined
+          }
+        >
+          <SirketProfilGorunumu
+            kimlik={kimlik}
+            kullaniciAdi={null}
+            sayaclar={{
+              paylasim: { durum: 'hazir', deger: 0 },
+              aktifIlan: { durum: 'hazir', deger: veri.listings.length },
+              takipci: { durum: 'hazir', deger: 0 },
+            }}
+            paylasimlar={[]}
+            paylasimDurumu="hazir"
+            onPaylasimlariYenile={() => undefined}
+            ilanlarIcerigi={ilanlarIcerigi}
+            onNavigate={onNavigate}
+            sosyalYok
+            hesapRozeti={veri.company.sahiplenilmis}
+            bilgiNotu={derlemeNotu || undefined}
+          />
+          {/* Dar ekranda sağ sütun yok: aynı bloklar profilin altında. */}
+          {!genis && <div className="mt-4 space-y-4 px-4 sm:px-0">{sirketBloklari}</div>}
+        </ProfilSayfaDuzeni>
+      </SayfaKabugu>
+    );
+  }
+
   return (
     <div className={gomulu ? 'flex-1 text-gray-900' : 'min-h-screen bg-[#F9FAFB] text-gray-900'}>
       {!gomulu && (
@@ -191,340 +423,6 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
           <p className="text-sm text-red-700">Şirket bilgisi yüklenemedi.</p>
         )}
 
-        {durum === 'hazir' && veri && (
-          <>
-            <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-8 space-y-5 shadow-sm">
-              <div className="flex items-center gap-4 sm:gap-6">
-                <CompanyLogo
-                  name={veri.company.name}
-                  logoUrl={veri.company.logoUrl}
-                  className="h-16 w-16 shrink-0 rounded-2xl p-2 text-xl sm:h-24 sm:w-24 sm:p-3 sm:text-3xl"
-                />
-                <div className="min-w-0 space-y-1.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">{veri.company.name}</h1>
-                    {/*
-                      İKİ AYRI DURUM, İKİ AYRI ROZET
-
-                      Burada tek bir alan (`verified`) okunuyordu: false ise
-                      "Henüz sahiplenilmemiş" yazıyordu. Oysa bunlar farklı
-                      şeyler — sahiplenme "yetkili olduğunu söyleyen biri
-                      var", doğrulama "biz kontrol ettik". Sahiplenilmiş ama
-                      henüz doğrulanmamış bir şirkete "kimse sahiplenmemiş"
-                      deniyordu.
-                    */}
-                    {veri.company.verified && (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                        <BadgeCheck className="w-3.5 h-3.5" />
-                        Doğrulanmış
-                      </span>
-                    )}
-                    {!veri.company.verified && veri.company.sahiplenilmis && (
-                      <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
-                        Sahiplenilmiş
-                      </span>
-                    )}
-                    {/*
-                      "HENÜZ SAHİPLENİLMEMİŞ" ROZETİ KALDIRILDI
-
-                      Bu rozet şirket adının hemen yanında duruyordu, yani
-                      sayfayı açan ÖĞRENCİNİN gördüğü ilk şeylerden biriydi.
-                      Ama söylediği şey öğrenciyi ilgilendirmiyor:
-                      sahiplenme işveren tarafının bir durumu ve öğrenciye
-                      yalnızca "burası eksik bir sayfa" hissi veriyordu —
-                      oysa ilanlar doğrulanmış kaynaktan derlenmiş, gerçek.
-
-                      "Doğrulanmış" ve "Sahiplenilmiş" rozetleri duruyor:
-                      onlar öğrenci için OLUMLU sinyal. Sahiplenme daveti de
-                      duruyor ama aşağıda, açıklamanın altındaki notta —
-                      yetkiliye hitap ettiği yerde.
-                    */}
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-gray-600">
-                    <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 font-bold text-blue-700">
-                      {veri.listings.length} açık ilan
-                    </span>
-                    {veri.company.industry && <span>{veri.company.industry}</span>}
-                    {veri.company.location && (
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        {veri.company.location}
-                      </span>
-                    )}
-                    {/*
-                      Adres şemasız kaydediliyor ("alumil.com"). Şemasız href
-                      göreli yol sayıldığı için bağlantı /sirket/alumil.com'a
-                      gidiyordu; ziyaretçi şirketin sitesine hiç ulaşamıyordu.
-                      guvenliDisAdres şemayı tamamlıyor ve güvensiz değeri
-                      hiç bağlantıya çevirmiyor.
-                    */}
-                    {guvenliDisAdres(veri.company.websiteUrl) && (
-                      <a
-                        href={guvenliDisAdres(veri.company.websiteUrl)!}
-                        target="_blank"
-                        rel="noopener noreferrer nofollow"
-                        className="inline-flex items-center gap-1 text-blue-600 font-semibold hover:underline"
-                      >
-                        <Globe className="w-3.5 h-3.5" />
-                        Web sitesi
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {veri.company.description && (
-                <p className="text-base text-gray-700 leading-relaxed pt-4 border-t border-gray-100">
-                  {veri.company.description}
-                </p>
-              )}
-
-              {/*
-                Bu not "ilanlar derlendi, yetkiliyseniz yazın" diyor.
-                Sahiplenilmiş profilde yersiz: yetkilisi zaten burada.
-              */}
-              {!veri.company.verified && !veri.company.sahiplenilmis && (
-                <div className="pt-3 border-t border-gray-100 text-xs text-gray-500 leading-relaxed">
-                  Bu sayfadaki ilanlar {veri.company.name} şirketinin kendi kariyer
-                  sisteminden derlendi. Şirket yetkilisiyseniz sayfayı sahiplenmek veya
-                  ilanların kaldırılmasını istemek için{' '}
-                  <a
-                    className="text-blue-600 font-semibold hover:underline"
-                    href="mailto:iletisim@stajimvar.com"
-                  >
-                    iletisim@stajimvar.com
-                  </a>{' '}
-                  adresine yazabilirsiniz.
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-6 lg:grid lg:grid-cols-12 lg:gap-8 lg:space-y-0">
-            <div className="min-w-0 space-y-6 lg:col-span-8">
-            <div className="space-y-3">
-              <h2 className="px-1 text-xl font-extrabold tracking-tight text-gray-900">
-                Açık ilanlar <span className="text-gray-400">({veri.listings.length})</span>
-              </h2>
-
-              {veri.listings.length === 0 ? (
-                <p className="text-sm text-gray-500 bg-white border border-gray-200 rounded-2xl p-6 text-center">
-                  Şu anda açık ilanı yok. Kaynağı saatlik kontrol ediyoruz; yeni ilan
-                  açıldığında burada görünür.
-                </p>
-              ) : (
-                veri.listings.map((ilan: InternshipListing) => (
-                  <button
-                    key={ilan.id}
-                    type="button"
-                    onClick={() => onNavigate(`/ilan/${listingSlug(ilan)}`)}
-                    className="w-full text-left bg-white rounded-2xl border border-gray-200 hover:border-blue-500 hover:shadow-sm transition-all p-5 space-y-2"
-                  >
-                    <p className="text-lg font-bold text-gray-900">{ilan.title}</p>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        {konumEtiketi(ilan.city)} ({calismaEtiketi(ilan.workType)})
-                      </span>
-                      {ilan.stipend.isPaid && (
-                        <span className="text-amber-700 font-semibold">Ücretli</span>
-                      )}
-                      {ilan.mandatoryStajAccepted && (
-                        <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold">
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                          Zorunlu staj
-                        </span>
-                      )}
-                    </div>
-                    {/*
-                      Tarih satırı: ilanın kaynaktaki gerçek yayın tarihi ve
-                      başvuru adresinin son doğrulandığı gün. Şirket sayfası
-                      bunları göstermiyordu; oysa "bu şirket ne zaman ilan
-                      açıyor" sorusunun cevabı burada.
-                    */}
-                    {(eklenmeMetni(ilan.postedAt, ilan.postedAtDogrulandi) ||
-                      sonKontrolMetni(ilan.lastSeenAt)) && (
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-600">
-                        {eklenmeMetni(ilan.postedAt, ilan.postedAtDogrulandi) && (
-                          <span>{eklenmeMetni(ilan.postedAt, ilan.postedAtDogrulandi)}</span>
-                        )}
-                        {sonKontrolMetni(ilan.lastSeenAt) && (
-                          <span className="text-emerald-700 font-semibold">
-                            {sonKontrolMetni(ilan.lastSeenAt)}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </button>
-                ))
-              )}
-            </div>
-
-            {/*
-              BENZER ŞİRKETLER
-
-              "Açık ilanı yok" tek başına çıkmaz sokaktı: öğrenci sayfaya
-              geliyor, ilan bulamıyor, geri dönmekten başka yolu olmuyor.
-              Burada aynı sektör ya da aynı şehirdeki, YAYINDA İLANI OLAN
-              şirketler duruyor.
-
-              Eşleşme uydurulmuyor (bkz. fetchCompanyPage): sektör ve şehir
-              boşsa liste boş dönüyor ve bölüm hiç çizilmiyor. Rastgele
-              şirket önermek, çıkmaz sokağı alakasız bir sayfaya taşımak
-              olurdu.
-            */}
-            {veri.benzerler.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="px-1 text-xl font-extrabold tracking-tight text-gray-900">
-                  {veri.listings.length === 0 ? 'Bunun yerine bakabilirsin' : 'Benzer şirketler'}
-                </h2>
-                <ul className="grid gap-2 sm:grid-cols-2">
-                  {veri.benzerler.map((b) => (
-                    <li key={b.slug}>
-                      <a
-                        href={`/sirket/${b.slug}`}
-                        onClick={(e) => {
-                          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-                          e.preventDefault();
-                          onNavigate(`/sirket/${b.slug}`);
-                        }}
-                        className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3 transition-colors hover:border-blue-500"
-                      >
-                        <ListingLogo name={b.name} logoUrl={b.logoUrl} />
-                        <span className="min-w-0">
-                          <span className="block truncate text-sm font-bold text-gray-900">
-                            {b.name}
-                          </span>
-                          {b.industry && (
-                            <span className="block truncate text-xs text-gray-500">
-                              {b.industry}
-                            </span>
-                          )}
-                        </span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            </div>
-
-            {/* ---------------- SAĞ SÜTUN: künye, bölümler, sahiplenme ---------------- */}
-            <aside className="min-w-0 lg:col-span-4" aria-label="Şirket künyesi">
-            <div className="space-y-6 lg:sticky lg:top-24">
-            {/*
-              KÜNYE VE İLGİLİ BÖLÜMLER
-
-              Sayfa masaüstünde neredeyse boştu: logo, bir satır meta ve
-              ilan listesi. Buradaki üç blok da var olan veriden üretiliyor,
-              hiçbiri uydurma değil — bilgi yoksa blok hiç çizilmiyor.
-            */}
-            {(veri.company.industry ||
-              veri.company.location ||
-              veri.company.size ||
-              kariyerAdresi) && (
-              <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-7">
-                <h2 className="text-xs font-bold text-gray-600 uppercase tracking-widest">
-                  Künye
-                </h2>
-                <dl className="mt-3 grid sm:grid-cols-2 lg:grid-cols-1 gap-x-6 gap-y-3 text-sm">
-                  {veri.company.industry && (
-                    <div>
-                      <dt className="text-xs text-gray-500">Sektör</dt>
-                      <dd className="font-semibold text-gray-900">{veri.company.industry}</dd>
-                    </div>
-                  )}
-                  {veri.company.location && (
-                    <div>
-                      <dt className="text-xs text-gray-500">Konum</dt>
-                      <dd className="font-semibold text-gray-900">
-                        {konumEtiketi(veri.company.location)}
-                      </dd>
-                    </div>
-                  )}
-                  {veri.company.size && (
-                    <div>
-                      <dt className="text-xs text-gray-500">Çalışan sayısı</dt>
-                      <dd className="font-semibold text-gray-900">{veri.company.size}</dd>
-                    </div>
-                  )}
-                  {kariyerAdresi && (
-                    <div className="min-w-0">
-                      <dt className="text-xs text-gray-500">Kariyer sayfası</dt>
-                      <dd className="font-semibold truncate">
-                        <a
-                          href={kariyerAdresi.adres}
-                          target="_blank"
-                          rel="noopener noreferrer nofollow"
-                          className="text-blue-600 hover:underline"
-                        >
-                          {kariyerAdresi.konak}
-                        </a>
-                      </dd>
-                    </div>
-                  )}
-                </dl>
-              </div>
-            )}
-
-            {ilgiliBolumler.length > 0 && (
-              <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-7">
-                <h2 className="text-xs font-bold text-gray-600 uppercase tracking-widest">
-                  İlgili bölümler
-                </h2>
-                <p className="mt-1 text-sm text-gray-600">
-                  Bu şirketin ilanları şu bölümlerle örtüşüyor. Bölüm sayfasında o alanda
-                  stajın nerede yapıldığı ve stajyerin ne iş yaptığı anlatılıyor.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {ilgiliBolumler.map((b) => (
-                    <a
-                      key={b.slug}
-                      href={`/bolum/${b.slug}`}
-                      onClick={(e) => {
-                        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-                        e.preventDefault();
-                        onNavigate(`/bolum/${b.slug}`);
-                      }}
-                      className="px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-700 bg-white border border-gray-200 hover:border-blue-300"
-                    >
-                      {b.ad}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/*
-              Sahiplenme çağrısı sayfanın altında, ilanlardan sonra.
-              Sayfanın asıl işi öğrenciye ilanları göstermek; şirket
-              yetkilisi zaten kendi şirketini arayarak buraya geliyor
-              ve sonuna kadar bakıyor.
-            */}
-            {/*
-              SAHİPLENİLMİŞ ŞİRKET TEKRAR SAHİPLENİLEMEZ
-
-              Form koşulsuz çiziliyordu: kendi şirketini açmış bir yetkili
-              kendi sayfasında "Bu şirketin yetkilisi misiniz?" çağrısını
-              görüyordu. Sahiplenilmiş profilde form hiç çizilmiyor.
-            */}
-            {!veri.company.sahiplenilmis && (
-            <div className="mt-8">
-              <CompanyClaimForm
-                companyId={veri.company.id}
-                companyName={veri.company.name}
-                userId={userId}
-                userEmail={userEmail}
-                onRequireLogin={onRequireLogin ?? (() => undefined)}
-              />
-            </div>
-            )}
-            </div>
-            </aside>
-            </div>
-          </>
-        )}
       </main>
     </div>
   );

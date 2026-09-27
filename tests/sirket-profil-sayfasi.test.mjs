@@ -193,7 +193,8 @@ test('sekmeler ve kare ızgara; boş durumda stok görsel yok', () => {
   assert.doesNotMatch(kod(GORUNUM), /col-span-2/);
   assert.doesNotMatch(kod(GORUNUM), /İlan paylaş/);
   /* Sahipte varsayılan ve ilk sekme Hakkımızda; ziyaretçinin sırası değişmedi. */
-  assert.match(GORUNUM, /React\.useState<SirketSekmesi>\(sahip \? 'hakkimizda' : 'paylasimlar'\)/);
+  /* Sosyal katmanı olmayan /sirket/<slug> sayfasında (27 Eylül 2026) paylaşım sekmesi yok; açılış İlanlar. */
+  assert.match(GORUNUM, /React\.useState<SirketSekmesi>\(\s*sahip \? 'hakkimizda' : sosyalYok \? 'ilanlar' : 'paylasimlar'\s*\)/);
   assert.match(GORUNUM, /const paylasGirisi = sahip && sahip\.paylasabilirMi && \(/);
   /* Boş durumdaki düğme hâlâ aynı seçiciyi kolla açıyor, ikinci besteci yok. */
   assert.match(GORUNUM, /onClick=\{\(\) => paylasKolu\.current\?\.sec\(\)\}/);
