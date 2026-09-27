@@ -74,6 +74,14 @@ export interface Rehber {
   seoBaslik?: string;
   icerik: React.ReactNode;
   /**
+   * Adım şeridi (27 Eylül 2026): adım düzenindeki (`ozet` alanlı) blokların
+   * kısa adları ve gövdedeki başlık numaraları. `metinRehberi` bloklardan
+   * türetiyor; işveren rehberinin girişinde /stajyer-nasil-alinir pilotundaki
+   * gibi numaralı şerit olarak çiziliyor. Bağlantı `#bolum-<no>`: başlık
+   * kimliği gövdede baştan yazılı, JavaScript beklemiyor.
+   */
+  adimlar?: { no: number; ad: string }[];
+  /**
    * Sık sorulanlar.
    *
    * NEDEN AYRI ALAN, İÇERİĞİN İÇİNDE DEĞİL
@@ -251,11 +259,11 @@ const METIN_OLMAYAN_PROPLAR = new Set([
 
 /*
   Bölüm kartı alanları (rehber-govde, 27 Eylül 2026): düz veri nesnesinde
-  duran dosya adı, depo anahtarı ve seçenek simgesinin adı okunacak metin
+  duran dosya adı, depo anahtarı, seçenek simgesi ve başlığın kısa adı okunacak metin
   değil. Yalnız bu adlar atlanıyor; düz nesnelerdeki diğer alanlar eskisi gibi sayılıyor ki başka
   rehberlerin okuma süresi değişmesin.
 */
-const METIN_OLMAYAN_ALANLAR = new Set(['dosya', 'depoAnahtari', 'ikon']);
+const METIN_OLMAYAN_ALANLAR = new Set(['dosya', 'depoAnahtari', 'ikon', 'kisaAd']);
 
 function metniTopla(dugum: unknown, kova: string[] = []): string[] {
   if (dugum == null || typeof dugum === 'boolean' || typeof dugum === 'function') return kova;
