@@ -132,8 +132,9 @@ test('adım düzeni: başlık → görsel → özet → ayrıntı; iç içe kart
   /* Fotoğraf ve seçenek alanı özetin önünde. */
   assert.ok(adim.indexOf('<SadeFotograf') < adim.indexOf('<p className={OZET}>'));
   assert.ok(adim.indexOf('<SecenekAlani') < adim.lastIndexOf('<p className={OZET}>'));
-  /* h2 gövdenin doğrudan çocuğu (içindekiler `:scope > h2`). */
-  assert.match(adim, /return \(\s*<>\s*\{b\.baslik && \(\s*<Baslik sade id=/);
+  /* Her adım TEK kart; başlık kartın ilk öğesi, fotoğraf ondan sonra. */
+  assert.match(adim, /return \(\s*<section className="adim overflow-hidden rounded-2xl border border-gray-200 bg-white">\s*\{b\.baslik && \(\s*<h2\s+id=/);
+  assert.ok(adim.indexOf('adim-baslik') < adim.indexOf('<SadeFotograf'));
   const bolum = oku('src/components/RehberBolum.tsx');
   assert.match(bolum, /loading="lazy"/);
   assert.match(bolum, /width=\{1280\}\s*height=\{720\}/);
@@ -151,9 +152,11 @@ test('adım düzeni: başlık → görsel → özet → ayrıntı; iç içe kart
   assert.doesNotMatch(liste, /rounded-2xl border/);
   assert.match(liste, /İşaretler yalnız bu tarayıcıda kalır; resmî bir onay/);
   assert.match(liste, /catch \{/);
-  /* Küçük numara dairesi. */
+  /* Küçük, gölgesiz numara dairesi sayaçtan (rakam başlık metnine girmiyor). */
   const stil = oku('src/components/RehberOkuma.tsx');
-  assert.match(stil, /\.rehber-govde--sayili > h2\.bolum-sade::before \{\s*width: 1\.75rem; height: 1\.75rem;[^}]*box-shadow: none;/);
+  assert.match(stil, /\.rehber-govde \.adim-baslik::before \{\s*content: counter\(rehber-bolum\);[^}]*width: 1\.75rem; height: 1\.75rem;/);
+  assert.doesNotMatch(stil, /\.adim-baslik::before \{[^}]*box-shadow/);
+  assert.match(stil, /\.rehber-govde--adimli > \* \+ \* \{ margin-top: 0; \}/);
 });
 
 test('karşılaştırmalar HTML: telefonda alt alta, geniş ekranda iki sütun, kırpılmıyor', () => {
@@ -188,7 +191,8 @@ test('sigorta başlığı soru; kapsam ve koşul görünür özette, ücret ve s
 
 test('işveren rehberi girişi pilot düzeninde: başlık + adım şeridi + kapak; öğrenci rehberi kapakta kalıyor', () => {
   const sayfa = oku('src/components/GuidePages.tsx');
-  assert.match(sayfa, /rehber\.kategori === 'isveren' && rehber\.adimlar\?\.length \? \(\s*<IsverenRehberGirisi rehber=\{rehber\} \/>/);
+  assert.match(sayfa, /const adimli = rehber\.kategori === 'isveren' && Boolean\(rehber\.adimlar\?\.length\);/);
+  assert.match(sayfa, /\{adimli \? \(\s*<IsverenRehberGirisi rehber=\{rehber\} \/>/);
   const giris = sayfa.slice(sayfa.indexOf('const IsverenRehberGirisi'), sayfa.indexOf('export const GuidePage'));
   /* Pilotla aynı ızgara (EmployerGuide): solda başlık ve şerit, sağda fotoğraf. */
   assert.match(giris, /lg:grid-cols-\[minmax\(0,5fr\)_minmax\(0,7fr\)\]/);
@@ -198,11 +202,26 @@ test('işveren rehberi girişi pilot düzeninde: başlık + adım şeridi + kapa
   assert.match(giris, /min-h-12/);
   /* Başlık kimliği gövdede baştan yazılı; şerit veriden türetiliyor. */
   const govde = oku('src/data/rehber-govde.tsx');
-  assert.match(govde, /<Baslik sade id=\{no \? `bolum-\$\{no\}` : undefined\}>/);
+  assert.match(govde, /id=\{no \? `bolum-\$\{no\}` : undefined\}/);
   assert.match(govde, /adimlar: adimSeridi\(t\.bloklar\)/);
   /* 22 adımın her birinin kısa adı var. */
   const veri = oku('src/data/rehber-yazilari/isveren.tsx');
   assert.equal((veri.match(/\n        kisaAd: '/g) ?? []).length, 22);
+});
+
+test('işveren rehberi gövdesi pilot dilinde: sağ sütun yok, açık kısa cevap, kart ızgarası, beyaz sonraki adım', () => {
+  const sayfa = oku('src/components/GuidePages.tsx');
+  /* Sağ sütun (içindekiler + "Okuduğunu uygula") yalnız öğrenci düzeninde. */
+  assert.match(sayfa, /\{!adimli && \(\s*<aside className="hidden lg:col-span-4 lg:block"/);
+  assert.match(sayfa, /\{!adimli && <IcindekilerMobil /);
+  /* Kısa cevap açık zeminde; koyu mavi degrade yalnız öğrenci düzeninde. */
+  assert.match(sayfa, /\{rehber\.hizliCevap && adimli && \([\s\S]{0,200}bg-blue-50\/60/);
+  assert.match(sayfa, /\{rehber\.hizliCevap && !adimli && \(\s*<div\s+className="relative overflow-hidden rounded-3xl bg-gradient-to-br/);
+  /* Gövde kart değil, adım kartlarının ızgarası. */
+  assert.match(sayfa, /'rehber-govde rehber-govde--adimli grid items-start gap-4 lg:grid-cols-2 lg:gap-5'/);
+  /* Sonraki adım beyaz kart, gerçek bağlantı. */
+  assert.match(sayfa, /\{rehber\.sonrakiAdim && adimli && \([\s\S]{0,200}rounded-2xl border border-gray-200 bg-white p-5/);
+  assert.match(sayfa, /href=\{rehber\.sonrakiAdim\.yol\}/);
 });
 
 test('nesne maddeli kontrol listesi bir kez sayılıyor (reklam eşiği şişmiyor)', () => {

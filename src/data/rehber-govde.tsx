@@ -157,14 +157,14 @@ export interface Blok {
   bilesen?: React.ReactNode;
   /*
     ADIM DÜZENİ (27 Eylül 2026, kullanıcı onayı): `ozet` verilen blok bir
-    ADIM olarak çiziliyor — kısa başlık → görsel (fotoğraf ya da seçenek
-    alanı) → tek cümlelik özet → düz "Ayrıntıyı aç" satırı. Kart içinde
-    kart yok. Paragraf ve listeler açılır satırda: metin kaybolmuyor,
+    ADIM KARTI olarak çiziliyor — kısa başlık → görsel (fotoğraf ya da
+    seçenek alanı) → tek cümlelik özet → düz "Ayrıntıyı aç" satırı. Kart
+    içinde kart yok. Paragraf ve listeler açılır satırda: metin kaybolmuyor,
     statik HTML'de de duruyor. `ozet` olmayan blokların çizimi aynen
     eskisi gibi; öğrenci rehberleri bu alanları kullanmıyor.
 
-    `h2` gövdenin DOĞRUDAN çocuğu kalıyor: içindekiler listesi ve numara
-    rozetleri yalnız doğrudan çocuk başlıkları sayıyor (RehberOkuma).
+    Adım kartlı rehberde (işveren rehberleri) yan sütundaki içindekiler
+    yok; yerini girişteki numaralı adım şeridi alıyor (GuidePages).
   */
   ozet?: string;
   /** Girişteki adım şeridinde görünen kısa ad (ör. "Sigorta"); boşsa başlık. */
@@ -186,9 +186,8 @@ export interface Blok {
   akis?: { baslik?: string; adimlar: AkisAdimi[] };
 }
 
-const Baslik: React.FC<{ children: React.ReactNode; sade?: boolean; id?: string }> = ({ children, sade = false, id }) => (
-  /* `bolum-sade`: küçük numara dairesi ve kısa üst boşluk (REHBER_GOVDE_STILI). */
-  <h2 id={id} className={`text-lg font-bold text-gray-900 pt-4${sade ? ' bolum-sade' : ''}`}>{children}</h2>
+const Baslik: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <h2 className="text-lg font-bold text-gray-900 pt-4">{children}</h2>
 );
 
 /**
@@ -205,14 +204,7 @@ const AYRINTI_LISTESI = 'list-disc space-y-1.5 pl-5';
 /* Gövde paragrafıyla aynı ölçü (REHBER_GOVDE_STILI `> p`): telefonda 16, geniş ekranda 17 px. */
 const OZET = 'text-base leading-7 text-gray-700 sm:text-[17px] sm:leading-8';
 
-/**
- * Adım: başlık → görsel → tek cümlelik özet → (akış / liste) → "Ayrıntıyı aç".
- *
- * Fotoğraflı adımda geniş ekranda fotoğraf solda, özet ve devamı sağda
- * (okuma sırası yine görsel → özet); telefonda alt alta. Seçenek alanı
- * kırpılmasın diye tam genişlikte, özet altında. Başlık gövdenin doğrudan
- * çocuğu; aradaki boşluk gövdenin `> * + *` kuralından.
- */
+/** Adım: başlık → görsel → tek cümlelik özet → (akış / liste) → "Ayrıntıyı aç". */
 const Adim: React.FC<{ b: Blok; i: number; no: number | null }> = ({ b, i, no }) => {
   const ayrintiVar = Boolean(b.paragraflar?.length || b.liste?.length || b.sirali?.length);
   const devam = (
@@ -250,36 +242,42 @@ const Adim: React.FC<{ b: Blok; i: number; no: number | null }> = ({ b, i, no })
       )}
     </>
   );
+  /*
+    ADIM KARTI (27 Eylül 2026, kullanıcı onayı): /stajyer-nasil-alinir
+    pilotundaki gibi her adım TEK beyaz kart — dış gövde kartı yok, kart
+    içinde kart yok. Sıra: başlık → görsel (kenardan kenara fotoğraf ya da
+    seçenek alanı) → özet → devamı. Numara dairesi CSS sayacıyla
+    (`.adim-baslik::before`, REHBER_GOVDE_STILI): rakam başlık metnine
+    girmiyor. `#bolum-<no>` kimliği girişteki adım şeridinin hedefi.
+  */
   return (
-    <>
+    <section className="adim overflow-hidden rounded-2xl border border-gray-200 bg-white">
       {b.baslik && (
-        <Baslik sade id={no ? `bolum-${no}` : undefined}>
+        <h2
+          id={no ? `bolum-${no}` : undefined}
+          className="adim-baslik scroll-mt-24 px-4 pt-4 text-lg font-extrabold leading-snug text-gray-900 sm:px-5 sm:pt-5 sm:text-xl"
+        >
           {b.baslik}
-        </Baslik>
+        </h2>
       )}
-      {b.bolumGorseli ? (
-        <div className="grid items-start gap-4 sm:grid-cols-2 sm:gap-5">
+      {b.bolumGorseli && (
+        <div className="mt-3">
           <SadeFotograf dosya={b.bolumGorseli.dosya} alt={b.bolumGorseli.alt} />
-          <div className="space-y-3">
-            <p className={OZET}>{metniCiz(b.ozet ?? '', `${i}-o`)}</p>
-            {devam}
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {b.secenekAlani && (
-            <SecenekAlani
-              etiket={b.secenekAlani.etiket}
-              ogeler={b.secenekAlani.ogeler}
-              not={b.secenekAlani.not}
-              metniCiz={metniCiz}
-            />
-          )}
-          <p className={OZET}>{metniCiz(b.ozet ?? '', `${i}-o`)}</p>
-          {devam}
         </div>
       )}
-    </>
+      <div className="space-y-3 p-4 sm:p-5">
+        {b.secenekAlani && (
+          <SecenekAlani
+            etiket={b.secenekAlani.etiket}
+            ogeler={b.secenekAlani.ogeler}
+            not={b.secenekAlani.not}
+            metniCiz={metniCiz}
+          />
+        )}
+        <p className={OZET}>{metniCiz(b.ozet ?? '', `${i}-o`)}</p>
+        {devam}
+      </div>
+    </section>
   );
 };
 
