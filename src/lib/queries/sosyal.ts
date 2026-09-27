@@ -2618,6 +2618,15 @@ export interface AkisPaylasimi extends SosyalPaylasim {
     avatarYolu: string | null;
     /* Kullanıcı adının yanındaki mavi tiki açan alan; bkz. `ResmiTik`. */
     resmiMi: boolean;
+    /**
+     * ŞİRKET SAYFASI YAZAR (27 Eylül 2026): dolu ise paylaşım bir şirket
+     * sayfasından. `logoAdresi` `companies.logo_url` — doğrudan adres,
+     * depolama yolu değil (bkz. `TakipKisisi.logoAdresi`). Şirket
+     * sayfalarında `avatar_path` çoğunlukla boş ve akış kartı baş harf
+     * çiziyordu (@ogulsize); logo artık yedekte. Öğrencide ikisi de null.
+     */
+    sirketId: string | null;
+    logoAdresi: string | null;
   };
 }
 
@@ -2735,7 +2744,7 @@ export async function akisiGetir(
   const { data: profiller, error: profilHatasi } = await db
     .from('social_profiles')
     .select(
-      'profile_id, username, gorunen_ad, avatar_path, resmi_mi, departments ( ad ), sectors!social_profiles_sector_id_fkey ( ad )',
+      'profile_id, username, gorunen_ad, avatar_path, resmi_mi, sirket_id, departments ( ad ), sectors!social_profiles_sector_id_fkey ( ad ), companies!social_profiles_sirket_id_fkey ( logo_url )',
     )
     .in('profile_id', yazarIdler);
   if (profilHatasi) hata('Akıştaki profiller alınamadı', profilHatasi);
@@ -2749,6 +2758,8 @@ export async function akisiGetir(
       bolumAdi: (p as any).departments?.ad ?? null,
       avatarYolu: (p as any).avatar_path ?? null,
       resmiMi: (p as any).resmi_mi === true,
+      sirketId: (p as any).sirket_id ?? null,
+      logoAdresi: (p as any).companies?.logo_url ?? null,
     });
   }
 
