@@ -1,100 +1,53 @@
 import React from 'react';
-import { Check, ChevronDown } from 'lucide-react';
+import { BriefcaseBusiness, CalendarDays, Check, ChevronDown, Clock, FileText, GraduationCap } from 'lucide-react';
 import { ODAK_HALKASI } from '../lib/renk-token';
 
 /*
-  REHBER BÖLÜM PARÇALARI (27 Eylül 2026)
+  REHBER ADIM PARÇALARI (27 Eylül 2026)
 
-  Onaylanan /stajyer-nasil-alinir pilotunun dili metin rehberlerine
-  taşınıyor: bölüm başına bir cümlelik özet, gerekiyorsa temsili fotoğraf,
-  ayrıntı açılır kutuda, yapılacaklar işaretlenebilir listede. Bileşenler
-  pilottakilerle (EmployerGuide: Fotograf, Ayrinti, "Başlamadan önce")
-  aynı ölçülerde; `rehber-govde.tsx` yalnız `ozet` alanı olan bloklarda
-  kullanıyor, diğer rehberlerin çizimi değişmiyor.
+  İşveren rehberlerinin her adımı aynı sırada: kısa başlık → görsel
+  (temsili fotoğraf ya da seçenek karşılaştırması) → tek cümlelik özet →
+  düz "Ayrıntıyı aç" satırı. Kullanıcı geri bildirimiyle kart içinde kart
+  yok: gövde zaten bir kart; adımın kendi çerçevesi, özet kutusu ya da
+  çerçeveli düğmesi çizilmiyor. `rehber-govde.tsx` bu parçaları yalnız
+  `ozet` alanı olan bloklarda kullanıyor; öğrenci rehberleri bu alanı
+  taşımıyor ve çizimleri değişmiyor.
 */
 
 /** Bölüm görsellerinin önbellek eki; dosya değişirse bu da değişmeli. */
 const BOLUM_SURUMU = 'bolum-20260927';
 
-/*
-  Görsel kutusu: telefonda kartın tam genişliği (sayfa boşluğu + gövde
-  kartının iç boşluğu düşülünce), sm üstünde kartın 5/11'lik sütunu.
-  Dosyalar tek boy (1280×720); `sizes` tarayıcıya yer tutmayı söylüyor.
-*/
-const BOLUM_BOYUTLARI = '(min-width: 1024px) 340px, (min-width: 640px) 42vw, calc(100vw - 74px)';
+/* Telefonda gövdenin tam genişliği; sm üstünde adımın yarısı. */
+const ADIM_BOYUTLARI = '(min-width: 1024px) 360px, (min-width: 640px) 45vw, calc(100vw - 66px)';
 
 /**
- * Temsili bölüm fotoğrafı: AVIF + WebP, 16:9 oran korunuyor (kırpma yok),
- * ilk ekranda olmadığı için gecikmeli. "Temsili görsel" etiketi her
- * zaman görünür; fotoğraftaki belge ya da ekran gerçek bir kayıt değil.
+ * Temsili adım fotoğrafı: AVIF + WebP, 16:9 oran korunuyor (kırpma yok),
+ * gecikmeli. "Temsili görsel" etiketi her zaman görünür; fotoğraftaki
+ * kişi, belge ya da ekran gerçek bir kayıt değil.
  */
-export const BolumFotografi: React.FC<{ dosya: string; alt: string }> = ({ dosya, alt }) => (
-  <figure className="relative m-0 sm:self-start sm:p-4 sm:pr-0">
-    <picture className="block overflow-hidden bg-gray-100 sm:rounded-xl">
-      <source
-        srcSet={`/rehber-gorselleri/bolumler/${dosya}.avif?v=${BOLUM_SURUMU} 1280w`}
-        sizes={BOLUM_BOYUTLARI}
-        type="image/avif"
-      />
-      <img
-        src={`/rehber-gorselleri/bolumler/${dosya}.webp?v=${BOLUM_SURUMU}`}
-        srcSet={`/rehber-gorselleri/bolumler/${dosya}.webp?v=${BOLUM_SURUMU} 1280w`}
-        sizes={BOLUM_BOYUTLARI}
-        alt={alt}
-        width={1280}
-        height={720}
-        loading="lazy"
-        decoding="async"
-        className="aspect-video h-auto w-full object-cover"
-      />
-    </picture>
-    <figcaption className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-semibold text-gray-700 sm:bottom-6">
-      Temsili görsel
-    </figcaption>
-  </figure>
-);
-
-/** Açılır ayrıntı — yerel `<details>`: klavye (Enter/Boşluk) ve ekran okuyucu kendiliğinden. */
-export const BolumAyrintisi: React.FC<{ etiket?: string; children: React.ReactNode }> = ({
-  etiket = 'Ayrıntıyı aç',
-  children,
-}) => (
-  <details className="group rounded-xl border border-gray-200 bg-white">
-    <summary
-      className={`flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-[15px] font-bold text-blue-700 hover:bg-blue-50/60 [&::-webkit-details-marker]:hidden ${ODAK_HALKASI}`}
-    >
-      <span>{etiket}</span>
-      <ChevronDown aria-hidden className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" />
-    </summary>
-    <div className="space-y-3 px-4 pb-4 text-[15px] leading-relaxed text-gray-700">{children}</div>
-  </details>
-);
-
-/* ------------------------------------------------------------------ SADE
-  SADE BÖLÜM PARÇALARI (27 Eylül 2026, kullanıcı geri bildirimi): kart içinde
-  kart yok. Bölüm = başlık, görünür kısa özet, TEK görsel alan (fotoğraf +
-  akış, fotoğraf + liste ya da iki seçenek), düz bir "Ayrıntıyı aç" satırı.
-  Çerçeve yalnız işaretlenebilir listede (dokunma alanlarını ayırıyor).
-*/
-
-/** Çerçevesiz temsili fotoğraf; oran korunuyor, gecikmeli. */
 export const SadeFotograf: React.FC<{ dosya: string; alt: string }> = ({ dosya, alt }) => (
   <figure className="relative m-0">
     <picture className="block overflow-hidden rounded-xl bg-gray-100">
       <source
         srcSet={`/rehber-gorselleri/bolumler/${dosya}.avif?v=${BOLUM_SURUMU} 1280w`}
-        sizes={SADE_BOYUTLARI}
+        sizes={ADIM_BOYUTLARI}
         type="image/avif"
       />
+      {/*
+        `loading` `src`'den ÖNCE: React öznitelikleri yazılış sırasıyla
+        koyuyor; `src` önce gelirse tarayıcı görseli gecikme özniteliğini
+        görmeden indirmeye başlıyor (ölçüldü: rehberin bütün adım
+        görselleri sayfa açılışında iniyordu).
+      */}
       <img
-        src={`/rehber-gorselleri/bolumler/${dosya}.webp?v=${BOLUM_SURUMU}`}
-        srcSet={`/rehber-gorselleri/bolumler/${dosya}.webp?v=${BOLUM_SURUMU} 1280w`}
-        sizes={SADE_BOYUTLARI}
-        alt={alt}
-        width={1280}
-        height={720}
         loading="lazy"
         decoding="async"
+        width={1280}
+        height={720}
+        sizes={ADIM_BOYUTLARI}
+        srcSet={`/rehber-gorselleri/bolumler/${dosya}.webp?v=${BOLUM_SURUMU} 1280w`}
+        src={`/rehber-gorselleri/bolumler/${dosya}.webp?v=${BOLUM_SURUMU}`}
+        alt={alt}
         className="aspect-video h-auto w-full object-cover"
       />
     </picture>
@@ -104,55 +57,80 @@ export const SadeFotograf: React.FC<{ dosya: string; alt: string }> = ({ dosya, 
   </figure>
 );
 
-/* Telefonda gövdenin tam genişliği; sm üstünde görsel alanın yarısı. */
-const SADE_BOYUTLARI = '(min-width: 1024px) 360px, (min-width: 640px) 45vw, calc(100vw - 66px)';
-
 /** Düz ayrıntı satırı: çerçeve yok, yalnız mavi yazı ve ok. Yerel `<details>`. */
-export const SadeAyrinti: React.FC<{ etiket?: string; children: React.ReactNode }> = ({
-  etiket = 'Ayrıntıyı aç',
-  children,
-}) => (
+export const SadeAyrinti: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <details className="group">
     <summary
       className={`inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-md text-[15px] font-bold text-blue-700 hover:text-blue-900 [&::-webkit-details-marker]:hidden ${ODAK_HALKASI}`}
     >
-      {etiket}
+      Ayrıntıyı aç
       <ChevronDown aria-hidden className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
     </summary>
     <div className="space-y-3 pt-1 text-[15px] leading-relaxed text-gray-700">{children}</div>
   </details>
 );
 
+/* ------------------------------------------------------ seçenek alanı */
+
+const SECENEK_SIMGELERI = {
+  mezuniyet: GraduationCap,
+  canta: BriefcaseBusiness,
+  saat: Clock,
+  takvim: CalendarDays,
+  belge: FileText,
+} as const;
+
 export interface Secenek {
   baslik: string;
+  /** Simge adı (SECENEK_SIMGELERI); süs, metin değil. */
+  ikon?: keyof typeof SECENEK_SIMGELERI;
   satirlar: string[];
 }
 
 /**
- * İki seçeneğin karşılaştırması (ör. zorunlu / gönüllü staj). İyi-kötü
- * değil, iki durum: aynı renk, aynı ağırlık. Telefonda alt alta (dar
- * sütunda iki madde yan yana okunmuyor), sm üstünde yan yana.
+ * Seçeneklerin karşılaştırması — teslim paketindeki iki karşılaştırma
+ * görselinin (14, 22) HTML hâli: metin seçilebilir, 16:9'a kırpılmıyor,
+ * telefonda alt alta (dar sütunda yan yana okunmuyor), sm üstünde iki
+ * sütun. İyi-kötü değil: her seçenek aynı renk ve ağırlıkta.
  */
-export const IkiSecenek: React.FC<{
-  secenekler: [Secenek, Secenek];
+export const SecenekAlani: React.FC<{
+  ogeler: Secenek[];
+  not?: string;
+  etiket: string;
   metniCiz: (metin: string, anahtar: string) => React.ReactNode;
-}> = ({ secenekler, metniCiz }) => (
-  <div className="grid gap-3 sm:grid-cols-2">
-    {secenekler.map((s, i) => (
-      <div key={s.baslik} className="rounded-xl bg-slate-50 px-4 py-3.5">
-        <p className="text-[15px] font-extrabold text-gray-900">{s.baslik}</p>
-        <ul className="mt-2 space-y-1.5">
-          {s.satirlar.map((m, j) => (
-            <li key={j} className="flex gap-2 text-[15px] leading-relaxed text-gray-700">
-              <span aria-hidden className="mt-[0.6rem] h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
-              <span>{metniCiz(m, `secenek-${i}-${j}`)}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    ))}
-  </div>
+}> = ({ ogeler, not, etiket, metniCiz }) => (
+  /* Tek kat: seçenekler doğrudan açık gri kutucuk; dış zemin/çerçeve yok. */
+  <figure className="m-0 pb-2" aria-label={etiket}>
+    <ul className="grid gap-2 sm:grid-cols-2 sm:gap-3">
+      {ogeler.map((s, i) => {
+        const Simge = s.ikon ? SECENEK_SIMGELERI[s.ikon] : null;
+        return (
+          <li key={s.baslik} className="rounded-xl bg-slate-50 px-4 py-3.5">
+            <p className="flex items-center gap-2.5 text-base font-extrabold text-gray-900">
+              {Simge && (
+                <span aria-hidden className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-blue-700">
+                  <Simge className="h-4 w-4" />
+                </span>
+              )}
+              {s.baslik}
+            </p>
+            <ul className="mt-2 space-y-1.5">
+              {s.satirlar.map((m, j) => (
+                <li key={j} className="flex gap-2 text-[15px] leading-relaxed text-gray-700">
+                  <span aria-hidden className="mt-[0.6rem] h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+                  <span>{metniCiz(m, `secenek-${i}-${j}`)}</span>
+                </li>
+              ))}
+            </ul>
+          </li>
+        );
+      })}
+    </ul>
+    {not && <figcaption className="pt-2 text-sm text-gray-600">{metniCiz(not, 'secenek-not')}</figcaption>}
+  </figure>
 );
+
+/* ------------------------------------------------------- işlem akışı */
 
 export interface AkisAdimi {
   ad: string;
@@ -166,7 +144,7 @@ export const IslemAkisi: React.FC<{
   metniCiz: (metin: string, anahtar: string) => React.ReactNode;
 }> = ({ baslik, adimlar, metniCiz }) => (
   <div>
-    {baslik && <p className="mb-2 text-sm font-bold text-gray-500">{baslik}</p>}
+    {baslik && <p className="mb-2 text-sm font-bold text-gray-600">{baslik}</p>}
     <ol className="space-y-0">
       {adimlar.map((a, i) => (
         <li key={a.ad} className="relative flex gap-3 pb-3 last:pb-0">
@@ -191,6 +169,29 @@ export const IslemAkisi: React.FC<{
   </div>
 );
 
+/** Ölçüt listesi (işaret tutulmuyor): onay simgeli düz satırlar, çerçeve yok. */
+export const SadeKontrol: React.FC<{
+  baslik?: string;
+  maddeler: string[];
+  metniCiz: (metin: string, anahtar: string) => React.ReactNode;
+}> = ({ baslik, maddeler, metniCiz }) => (
+  <div>
+    {baslik && <p className="mb-2 text-sm font-bold text-gray-600">{baslik}</p>}
+    <ul className="space-y-2">
+      {maddeler.map((m, i) => (
+        <li key={m} className="flex items-start gap-2.5 text-[15px] leading-relaxed text-gray-700">
+          <span aria-hidden className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-700">
+            <Check className="h-3 w-3" strokeWidth={3} />
+          </span>
+          <span>{metniCiz(m, `kontrol-${i}`)}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
+/* ------------------------------------------------ işaretlenebilir liste */
+
 export interface IsaretMaddesi {
   ad: string;
   ayrinti?: string;
@@ -201,7 +202,8 @@ export interface IsaretMaddesi {
  * (`localStorage`): kişisel takip, resmî bir onay değil; sunucuya
  * yazılmıyor. Depo kapalıysa (gizli sekme) işaretler sayfa açıkken kalıyor.
  * Ön render'da depo okunmuyor (etki yalnız tarayıcıda çalışıyor), statik
- * HTML'de liste boş işaretli çiziliyor.
+ * HTML'de liste boş işaretli çiziliyor. Kutu çerçevesi yok: satırlar ince
+ * çizgiyle ayrılıyor, her satır 56 px dokunma alanı.
  */
 export const IsaretListesi: React.FC<{
   depoAnahtari: string;
@@ -233,17 +235,13 @@ export const IsaretListesi: React.FC<{
   };
 
   return (
-    <div className="space-y-2">
-      <p className="text-sm leading-relaxed text-gray-600">
-        Kendi hazırlığınızı takip etmek için işaretleyin. İşaretler yalnız bu tarayıcıda kalır; resmî bir onay ya da
-        tamamlanmış bir işlem anlamına gelmez.
-      </p>
-      <ul className="divide-y divide-gray-100 rounded-2xl border border-gray-200 bg-white">
+    <div>
+      <ul className="divide-y divide-gray-100 border-y border-gray-100">
         {maddeler.map((m, i) => {
           const secili = Boolean(isaretler[String(i)]);
           return (
             <li key={m.ad}>
-              <label className="flex min-h-14 cursor-pointer items-start gap-3 px-4 py-3">
+              <label className="flex min-h-14 cursor-pointer items-start gap-3 py-3">
                 <input
                   type="checkbox"
                   checked={secili}
@@ -269,6 +267,10 @@ export const IsaretListesi: React.FC<{
           );
         })}
       </ul>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        Kendi hazırlığınızı takip etmek için işaretleyin. İşaretler yalnız bu tarayıcıda kalır; resmî bir onay ya da
+        tamamlanmış bir işlem anlamına gelmez.
+      </p>
     </div>
   );
 };

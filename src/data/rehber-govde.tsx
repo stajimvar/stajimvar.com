@@ -6,13 +6,12 @@ import {
   RehberFigur,
 } from '../components/RehberGorseller';
 import {
-  BolumAyrintisi,
-  BolumFotografi,
-  IkiSecenek,
   IsaretListesi,
   IslemAkisi,
   SadeAyrinti,
   SadeFotograf,
+  SadeKontrol,
+  SecenekAlani,
   type AkisAdimi,
   type IsaretMaddesi,
   type Secenek,
@@ -157,15 +156,15 @@ export interface Blok {
   */
   bilesen?: React.ReactNode;
   /*
-    BÖLÜM KARTI (27 Eylül 2026) — onaylanan /stajyer-nasil-alinir pilotunun
-    dili. `ozet` verilen blok başlığın altında tek kart olarak çiziliyor:
-    bir cümlelik özet, varsa temsili fotoğraf (telefonda üstte), bloğun
-    paragraf ve listeleri "Ayrıntıyı aç" kutusunda. Metin kaybolmuyor,
-    yalnız katlanıyor (statik HTML'de de duruyor). `ozet` olmayan blokların
-    çizimi aynen eskisi gibi: 71 öğrenci rehberi bu alanları kullanmıyor.
+    ADIM DÜZENİ (27 Eylül 2026, kullanıcı onayı): `ozet` verilen blok bir
+    ADIM olarak çiziliyor — kısa başlık → görsel (fotoğraf ya da seçenek
+    alanı) → tek cümlelik özet → düz "Ayrıntıyı aç" satırı. Kart içinde
+    kart yok. Paragraf ve listeler açılır satırda: metin kaybolmuyor,
+    statik HTML'de de duruyor. `ozet` olmayan blokların çizimi aynen
+    eskisi gibi; öğrenci rehberleri bu alanları kullanmıyor.
 
-    `h2` kartın DIŞINDA kalıyor: içindekiler listesi ve numara rozetleri
-    gövdenin doğrudan çocuğu olan başlıkları sayıyor (RehberOkuma).
+    `h2` gövdenin DOĞRUDAN çocuğu kalıyor: içindekiler listesi ve numara
+    rozetleri yalnız doğrudan çocuk başlıkları sayıyor (RehberOkuma).
   */
   ozet?: string;
   /**
@@ -173,24 +172,15 @@ export interface Blok {
    * Alt metin ve kaynak `bolumler/kaynak.json`'daki kayıtla aynı.
    */
   bolumGorseli?: { dosya: string; alt: string };
-  /** Açılır kutunun etiketi; boşsa "Ayrıntıyı aç". */
-  ayrintiEtiketi?: string;
   /**
-   * İşaretlenebilir kontrol listesi (yalnız bu tarayıcıda saklanır).
-   * `depoAnahtari` rehber ve bölüme özgü olmalı; değişirse işaretler sıfırlanır.
+   * Fotoğraf yerine seçenek karşılaştırması (HTML; kırpılmıyor). Madde
+   * anahtarı `satirlar`: özet maddeleri ayrıntıdaki metnin kısaltması,
+   * rehber sayımında ikinci kez liste sayılmasın diye.
    */
+  secenekAlani?: { etiket: string; ogeler: Secenek[]; not?: string };
+  /** İşaretlenebilir kontrol listesi (yalnız bu tarayıcıda). `depoAnahtari` değişirse işaretler sıfırlanır. */
   isaretListesi?: { depoAnahtari: string; maddeler: IsaretMaddesi[] };
-  /*
-    SADE DÜZEN (27 Eylül 2026, kullanıcı geri bildirimi): bölüm kartı yok.
-    Başlık (küçük numara), görünür kısa özet, tek görsel alan, düz
-    "Ayrıntıyı aç" satırı. Şimdilik yalnız zorunlu staj rehberinde; diğer
-    işveren rehberleri kart düzeninde kalıyor (kullanıcı onayından sonra
-    yayılacak).
-  */
-  sade?: boolean;
-  /** İki durumun karşılaştırması (görsel alan). Madde anahtarı `satirlar`. */
-  ikiSecenek?: [Secenek, Secenek];
-  /** Fotoğrafı tamamlayan kısa işlem akışı (görsel alanda fotoğrafın yanında). */
+  /** Fotoğrafı tamamlayan kısa işlem akışı. */
   akis?: { baslik?: string; adimlar: AkisAdimi[] };
 }
 
@@ -200,95 +190,28 @@ const Baslik: React.FC<{ children: React.ReactNode; sade?: boolean }> = ({ child
 );
 
 const AYRINTI_LISTESI = 'list-disc space-y-1.5 pl-5';
-
-/** `ozet` alanı olan blok: başlık + kart (özet, fotoğraf, açılır ayrıntı) + kontrol listesi. */
-const BolumKarti: React.FC<{ b: Blok; i: number }> = ({ b, i }) => {
-  const ayrintiVar = Boolean(b.paragraflar?.length || b.liste?.length || b.sirali?.length);
-  /* Ne fotoğraf ne ayrıntı varsa (yalnız kontrol listesi) özet düz paragraf; tek cümlelik kutu çizilmiyor. */
-  const kartVar = Boolean(b.bolumGorseli) || ayrintiVar;
-  return (
-    <>
-      {b.baslik && <Baslik>{b.baslik}</Baslik>}
-      {!kartVar && <p>{metniCiz(b.ozet ?? '', `${i}-o`)}</p>}
-      {kartVar && (
-        <div
-          className={`overflow-hidden rounded-2xl border border-gray-200 bg-white ${
-            b.bolumGorseli ? 'sm:grid sm:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]' : ''
-          }`}
-        >
-          {b.bolumGorseli && <BolumFotografi dosya={b.bolumGorseli.dosya} alt={b.bolumGorseli.alt} />}
-          <div className="space-y-3 p-4 sm:p-5">
-            <p className="text-base font-medium leading-relaxed text-gray-800">{metniCiz(b.ozet ?? '', `${i}-o`)}</p>
-            {ayrintiVar && (
-              <BolumAyrintisi etiket={b.ayrintiEtiketi}>
-                {b.paragraflar?.map((p, j) => (
-                  <p key={j}>{metniCiz(p, `${i}-${j}`)}</p>
-                ))}
-                {b.liste && (
-                  <ul className={AYRINTI_LISTESI}>
-                    {b.liste.map((m, j) => (
-                      <li key={j}>{metniCiz(m, `${i}-l${j}`)}</li>
-                    ))}
-                  </ul>
-                )}
-                {b.sirali && (
-                  <ol className="list-decimal space-y-1.5 pl-5">
-                    {b.sirali.map((m, j) => (
-                      <li key={j}>{metniCiz(m, `${i}-s${j}`)}</li>
-                    ))}
-                  </ol>
-                )}
-              </BolumAyrintisi>
-            )}
-          </div>
-        </div>
-      )}
-      {b.isaretListesi && (
-        <IsaretListesi
-          depoAnahtari={b.isaretListesi.depoAnahtari}
-          maddeler={b.isaretListesi.maddeler}
-          metniCiz={metniCiz}
-        />
-      )}
-      {b.kontrol && <KontrolListesi baslik={b.kontrol.baslik} maddeler={b.kontrol.maddeler} />}
-      {b.uyari && (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-relaxed">
-          {metniCiz(b.uyari, `${i}-u`)}
-        </div>
-      )}
-    </>
-  );
-};
+/* Gövde paragrafıyla aynı ölçü (REHBER_GOVDE_STILI `> p`): telefonda 16, geniş ekranda 17 px. */
+const OZET = 'text-base leading-7 text-gray-700 sm:text-[17px] sm:leading-8';
 
 /**
- * Sade bölüm: başlık → görünür özet → tek görsel alan → "Ayrıntıyı aç".
- * Hepsi gövdenin DOĞRUDAN çocuğu (h2 içindekiler için; aradaki boşluk
- * gövdenin `> * + *` kuralından). İç içe kart yok.
+ * Adım: başlık → görsel → tek cümlelik özet → (akış / liste) → "Ayrıntıyı aç".
+ *
+ * Fotoğraflı adımda geniş ekranda fotoğraf solda, özet ve devamı sağda
+ * (okuma sırası yine görsel → özet); telefonda alt alta. Seçenek alanı
+ * kırpılmasın diye tam genişlikte, özet altında. Başlık gövdenin doğrudan
+ * çocuğu; aradaki boşluk gövdenin `> * + *` kuralından.
  */
-const SadeBolum: React.FC<{ b: Blok; i: number }> = ({ b, i }) => {
+const Adim: React.FC<{ b: Blok; i: number }> = ({ b, i }) => {
   const ayrintiVar = Boolean(b.paragraflar?.length || b.liste?.length || b.sirali?.length);
-  const yardimci = b.akis ? (
-    <IslemAkisi baslik={b.akis.baslik} adimlar={b.akis.adimlar} metniCiz={metniCiz} />
-  ) : b.isaretListesi ? (
-    <IsaretListesi depoAnahtari={b.isaretListesi.depoAnahtari} maddeler={b.isaretListesi.maddeler} metniCiz={metniCiz} />
-  ) : null;
-  return (
+  const devam = (
     <>
-      {b.baslik && <Baslik sade>{b.baslik}</Baslik>}
-      {b.ozet && <p>{metniCiz(b.ozet, `${i}-o`)}</p>}
-      {b.ikiSecenek && <IkiSecenek secenekler={b.ikiSecenek} metniCiz={metniCiz} />}
-      {b.bolumGorseli ? (
-        /* Görsel alan: fotoğraf ve onu tamamlayan akış/liste; telefonda alt alta. */
-        <div className="grid items-start gap-4 sm:grid-cols-2 sm:gap-5">
-          <SadeFotograf dosya={b.bolumGorseli.dosya} alt={b.bolumGorseli.alt} />
-          {yardimci}
-        </div>
-      ) : (
-        yardimci
+      {b.akis && <IslemAkisi baslik={b.akis.baslik} adimlar={b.akis.adimlar} metniCiz={metniCiz} />}
+      {b.kontrol && <SadeKontrol baslik={b.kontrol.baslik} maddeler={b.kontrol.maddeler} metniCiz={metniCiz} />}
+      {b.isaretListesi && (
+        <IsaretListesi depoAnahtari={b.isaretListesi.depoAnahtari} maddeler={b.isaretListesi.maddeler} metniCiz={metniCiz} />
       )}
-      {b.kontrol && <KontrolListesi baslik={b.kontrol.baslik} maddeler={b.kontrol.maddeler} />}
       {ayrintiVar && (
-        <SadeAyrinti etiket={b.ayrintiEtiketi}>
+        <SadeAyrinti>
           {b.paragraflar?.map((p, j) => (
             <p key={j}>{metniCiz(p, `${i}-${j}`)}</p>
           ))}
@@ -315,15 +238,40 @@ const SadeBolum: React.FC<{ b: Blok; i: number }> = ({ b, i }) => {
       )}
     </>
   );
+  return (
+    <>
+      {b.baslik && <Baslik sade>{b.baslik}</Baslik>}
+      {b.bolumGorseli ? (
+        <div className="grid items-start gap-4 sm:grid-cols-2 sm:gap-5">
+          <SadeFotograf dosya={b.bolumGorseli.dosya} alt={b.bolumGorseli.alt} />
+          <div className="space-y-3">
+            <p className={OZET}>{metniCiz(b.ozet ?? '', `${i}-o`)}</p>
+            {devam}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {b.secenekAlani && (
+            <SecenekAlani
+              etiket={b.secenekAlani.etiket}
+              ogeler={b.secenekAlani.ogeler}
+              not={b.secenekAlani.not}
+              metniCiz={metniCiz}
+            />
+          )}
+          <p className={OZET}>{metniCiz(b.ozet ?? '', `${i}-o`)}</p>
+          {devam}
+        </div>
+      )}
+    </>
+  );
 };
 
 export const GovdeCizimi: React.FC<{ bloklar: Blok[] }> = ({ bloklar }) => (
   <>
     {bloklar.map((b, i) =>
-      b.sade ? (
-        <SadeBolum key={i} b={b} i={i} />
-      ) : b.ozet ? (
-        <BolumKarti key={i} b={b} i={i} />
+      b.ozet ? (
+        <Adim key={i} b={b} i={i} />
       ) : (
       <React.Fragment key={i}>
         {b.baslik && <Baslik>{b.baslik}</Baslik>}

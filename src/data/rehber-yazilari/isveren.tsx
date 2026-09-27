@@ -49,6 +49,10 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       {
         baslik: 'Başlık: pozisyon + alan, süs yok',
         ozet: 'Başlıkta işin ya da bölümün adı ve "stajyer" kelimesi olsun; öğrenci listede böyle arıyor.',
+        bolumGorseli: {
+          dosya: '11-ilan-baslik',
+          alt: 'Bir yönetici ilan taslağının kısa başlık alanını gözden geçiriyor.',
+        },
         paragraflar: [
           '"Dinamik ekibimize stajyer arıyoruz" bir başlık değil; hangi işin stajı olduğunu ' +
             'söylemiyor. "Muhasebe Stajyeri", "Ön Muhasebe ve Fatura Takibi Stajyeri", "Grafik ' +
@@ -67,7 +71,6 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
           dosya: '01-ilan-is-tanimi',
           alt: 'Bir yönetici ve ekip arkadaşı stajyerin görevlerini birlikte planlıyor.',
         },
-        ayrintiEtiketi: 'Örnek cümleleri aç',
         paragraflar: [
           'Öğrencinin en çok korktuğu şey üç hafta boş oturmak. İlk paragrafta stajyerin ' +
             'gerçekten dokunacağı iki-üç işi yazın: "Haftalık satış raporunu Excel\'de ' +
@@ -106,6 +109,10 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
         ozet:
           'Yalnız gerçekten gerekli bir-iki şartı yazın ve bölüm seçin; bölüm seçilmeyen ilan "Sana uygun" ' +
           'listesine girmiyor.',
+        bolumGorseli: {
+          dosya: '12-ilan-nitelikler',
+          alt: 'İlan için gerekli üç temel beceri kartı birlikte seçiliyor.',
+        },
         paragraflar: [
           'On maddelik nitelik listesi öğrenciyi eliyor, işvereni değil. Stajyer öğrenmek için ' +
             'geliyor; "ileri seviye Excel" ve "iki yıl deneyim" gibi şartlar staj ilanına ait ' +
@@ -124,6 +131,10 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       {
         baslik: 'Yayınlamadan önce',
         ozet: 'İlanı yayınlamadan önce bu beş soruyu tek tek işaretleyin.',
+        bolumGorseli: {
+          dosya: '13-ilan-son-kontrol',
+          alt: 'Bir yönetici ilanı yayımlamadan önce kontrol listesini gözden geçiriyor.',
+        },
         isaretListesi: {
           depoAnahtari: 'iyi-staj-ilani:yayinlamadan-once',
           maddeler: [
@@ -187,12 +198,19 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
     bloklar: [
       {
         baslik: 'Önce ayırın: zorunlu mu, gönüllü mü?',
-        sade: true,
         ozet: 'Öğrenciye "Okuldan staj belgesi var mı?" diye sorun; belge varsa staj zorunludur.',
-        /* Maddeler aşağıdaki paragraflardan ve sigorta bölümünden; yeni iddia yok. */
-        ikiSecenek: [
+        /*
+          Adımın görseli: teslim paketindeki 14-zorunlu-gonullu karşılaştırmasının
+          HTML hâli (kırpılmıyor, telefonda alt alta). Maddeler aşağıdaki
+          paragraflardan ve sigorta adımından; yeni iddia yok.
+        */
+        secenekAlani: {
+          etiket: 'Zorunlu staj ile gönüllü staj karşılaştırması',
+          not: 'Sigorta ve ücret yükümlülükleri ikisinde farklı işliyor.',
+          ogeler: [
           {
             baslik: 'Zorunlu staj',
+            ikon: 'mezuniyet',
             satirlar: [
               'Mezuniyet için gerekli; okul belgeyle tanımlar.',
               'Üniversitede sigortayı okul yapar, primini okul öder.',
@@ -200,12 +218,14 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
           },
           {
             baslik: 'Gönüllü staj',
+            ikon: 'canta',
             satirlar: [
               'Öğrencinin isteğiyle, müfredat dışında yapılır.',
               'Okulun sigortası otomatik devreye girmez; sigorta ve ücret işverene geçebilir.',
             ],
           },
-        ],
+          ],
+        },
         paragraflar: [
           'Zorunlu staj, öğrencinin mezun olabilmek için yapmak zorunda olduğu ve okulun ' +
             'belgeyle tanımladığı staj. Gönüllü staj öğrencinin kendi isteğiyle yaptığı, ' +
@@ -219,15 +239,14 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       {
         /*
           Başlık soru (27 Eylül 2026, kullanıcı kararı). Koşulsuz "okul yapar"
-          yazılmıyor: kapsam ve koşullar başlığın hemen altındaki GÖRÜNÜR
-          özette, açılır ayrıntıya saklanmıyor.
+          yazılmıyor: kapsam ve koşullar GÖRÜNÜR özette (tek cümle), açılır
+          ayrıntıya saklanmıyor. SGK bildirimi cümlesi ayrıntıda duruyor.
         */
         baslik: 'Sigortayı kim yapar?',
-        sade: true,
         ozet:
           'Üniversitenin zorunlu stajında iş kazası ve meslek hastalığı sigortasını okul yapar ve primini okul ' +
-          'öder; sizin SGK\'ya bildirim yapmanız gerekmez. Gönüllü stajda ve meslek lisesi beceri eğitiminde ' +
-          'kurallar farklı; okulun staj birimine yazılı sorun.',
+          'öder; gönüllü stajda ve meslek lisesi beceri eğitiminde kurallar farklı olduğundan okulun staj ' +
+          'birimine yazılı sorun.',
         bolumGorseli: {
           dosya: '04-yukumluluk-teyit',
           alt: 'Şirket sorumlusu staj belgelerini ve tarih planını karşılaştırıyor.',
@@ -261,10 +280,9 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'İmzalayacağınız belgeler',
-        sade: true,
         ozet:
-          'Belgelerin adı okuldan okula değişiyor ama işlevleri aynı. Öğrenci hepsini okulundan alıp ' +
-          'getiriyor; sizin işiniz doldurup imzalamak ve kaşelemek.',
+          'Belgelerin adı okuldan okula değişiyor ama işlevleri aynı: öğrenci hepsini okulundan getiriyor, ' +
+          'siz doldurup imzalıyor ve kaşeliyorsunuz.',
         bolumGorseli: {
           dosya: '03-yukumluluk-belgeler',
           alt: 'Yetişkin bir öğrenci staj evrakını şirket sorumlusuna teslim ediyor.',
@@ -298,10 +316,13 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Bir sorumlu atayın — tek satırlık ama en önemli iş',
-        sade: true,
         ozet:
           'Staj belgesindeki "işletme sorumlusu", stajyerin fiilen yanında çalışacağı ve ilk gün soru ' +
           'soracağı kişi olsun.',
+        bolumGorseli: {
+          dosya: '15-yukumluluk-sorumlu',
+          alt: 'Şirket yöneticisi stajyeri kendisine rehberlik edecek mentorla tanıştırıyor.',
+        },
         paragraflar: [
           'Staj belgesinde "işletme sorumlusu" alanı var; oraya yazılan kişi stajyerin ilk gün ' +
             'kime soracağı kişi. Bu alan boş ya da "genel müdür" olarak kalırsa stajyer üç hafta ' +
@@ -313,10 +334,14 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Ücret: yazmadığımız şey ve neden',
-        sade: true,
         ozet:
           'Ücret yükümlülüğü stajın türüne, çalışan sayınıza ve öğrencinin okul türüne göre değişiyor; güncel ' +
           'kural için SGK, İŞKUR ve okulun staj birimini esas alın.',
+        /* Fotoğraftaki hesap makinesi ve takvim temsili; sayfada tutar yazılmıyor. */
+        bolumGorseli: {
+          dosya: '16-yukumluluk-ucret',
+          alt: 'Şirket sorumlusu ödeme planını hesap makinesi ve takvimle hazırlıyor.',
+        },
         paragraflar: [
           'Bu sayfada tutar, oran ve devlet katkısı payı yazmıyoruz. Bunlar asgari ücrete ' +
             'endeksli ve her yıl değişiyor; sabit bir rakam bırakmak bir süre sonra yanlış ' +
@@ -390,8 +415,8 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       {
         baslik: 'Neye bakılır, neye bakılmaz',
         ozet:
-          'Deneyim aramayın; bölüm ve sınıfın ilana uyup uymadığına, profilin dolu olmasına ve başvuru notuna ' +
-          'bakın. Her başvuruyu aynı dört soruyla okuyun.',
+          'Deneyim aramayın; her başvuruyu aynı dört soruyla okuyun: bölüm ve sınıf, dolu profil, ilana özel ' +
+          'not ve şehir ya da çalışma biçimi.',
         bolumGorseli: {
           dosya: '05-basvuru-olcutler',
           alt: 'İki ekip üyesi anonim başvuruları ortak değerlendirme ölçütleriyle karşılaştırıyor.',
@@ -424,6 +449,10 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
         baslik: 'Kısa liste: en fazla beş kişi',
         ozet:
           'Dört soruyu geçenlerden en fazla beş kişiyi kısa listeye alın; elediklerinize de karar bildirin.',
+        bolumGorseli: {
+          dosya: '17-basvuru-kisa-liste',
+          alt: 'Anonim başvuru dosyaları incelenip kısa liste için ayrılıyor.',
+        },
         paragraflar: [
           'Otuz başvurunun hepsini mülakata çağırmak iki tarafı da yoruyor. Yukarıdaki dört ' +
             'soruyu geçenlerden en fazla beş kişiyi kısa listeye alın. Başvuranlar ekranında ' +
@@ -442,7 +471,6 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
           dosya: '06-basvuru-gorusme',
           alt: 'Bir işveren ve yetişkin stajyer adayı karşılıklı tanışma görüşmesi yapıyor.',
         },
-        ayrintiEtiketi: 'Üç soruyu ve daveti aç',
         paragraflar: [
           'Staj mülakatı işe alım mülakatı değil. Yirmi dakika ve üç soru yeter: bu ilana neden ' +
             'başvurdun, okulda en çok neyi seviyorsun, staj bitince ne öğrenmiş olmak istiyorsun. ' +
@@ -459,6 +487,10 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
         ozet:
           'Kararı bir hafta içinde verin; teklifte başlangıç tarihi, süre, haftalık gün sayısı, ücret durumu ' +
           've ilk gün kime geleceği yazsın.',
+        bolumGorseli: {
+          dosya: '18-basvuru-karar-teklif',
+          alt: 'İşveren adayla görüşme sonrasında teklif ayrıntılarını hazırlıyor.',
+        },
         paragraflar: [
           'Kararı bir hafta içinde verin; öğrenci aynı anda birkaç yere başvuruyor ve zorunlu ' +
             'staj için tarih baskısı var. Teklifte başlangıç tarihi, süre, haftalık gün sayısı, ' +
@@ -517,6 +549,10 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       {
         baslik: 'Staj başlamadan önce hazır olması gerekenler',
         ozet: 'Stajyer gelmeden dört şey hazır olsun: çalışacağı yer, sorumlusu, ilk haftanın işi ve kurallar.',
+        bolumGorseli: {
+          dosya: '19-ilk-gun-hazirlik',
+          alt: 'Mentor stajyer gelmeden çalışma masasını ve gerekli araçları hazırlıyor.',
+        },
         isaretListesi: {
           depoAnahtari: 'ilk-gun:baslamadan-once',
           maddeler: [
@@ -586,6 +622,10 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       {
         baslik: 'Staj defteri: ertelemeyin',
         ozet: 'Defter her gün ya da her hafta doldurulsun; cuma görüşmesinde sorumlu okuyup imzalasın.',
+        bolumGorseli: {
+          dosya: '20-ilk-gun-defter',
+          alt: 'Stajyer günlük çalışmalarını defterine kaydediyor, mentor yanında inceliyor.',
+        },
         paragraflar: [
           'Defter her gün ya da her hafta doldurulmalı; sonda toplu yazılan defter hem eksik ' +
             'olur hem öğrencinin notunu riske sokar. Cuma görüşmesi bunun için: o hafta yazılanı ' +
@@ -646,6 +686,10 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
         ozet:
           'Değerlendirme formu ve imzalı defter eksikse öğrencinin stajı okul tarafından kabul ' +
           'edilmeyebiliyor; staj bitmeden bu üçünü kontrol edin.',
+        bolumGorseli: {
+          dosya: '21-staj-sonu-belgeler',
+          alt: 'Staj sonu değerlendirme formu, defter ve zarf birlikte kontrol ediliyor.',
+        },
         isaretListesi: {
           depoAnahtari: 'staj-sonu:okul-belgeleri',
           maddeler: [
@@ -705,9 +749,41 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       {
         baslik: 'Teklif: dört seçenek',
         ozet:
-          'Memnunsanız ilişkiyi kapatmayın: yarı zamanlı devam, gelecek yaz sözü, mezuniyet sonrası teklif ya ' +
-          'da yalnız referans. Yarı zamanlı devamda ücret ve sigorta staj kuralına değil çalışma kuralına tabi.',
-        ayrintiEtiketi: 'Dört seçeneği aç',
+          'Stajyerden memnunsanız ilişkiyi kapatmayın; dört seçeneğin hepsi Başvuranlar ekranındaki teklif ' +
+          'alanından gönderilebiliyor.',
+        /*
+          Adımın görseli: teslim paketindeki 22-staj-sonu-secenekler
+          karşılaştırmasının HTML hâli. Satırlar aşağıdaki listeden; yarı
+          zamanlı devamın ücret ve sigorta koşulu görünür satırda kalıyor.
+        */
+        secenekAlani: {
+          etiket: 'Staj sonrası dört seçenek',
+          ogeler: [
+            {
+              baslik: 'Yarı zamanlı devam',
+              ikon: 'saat',
+              satirlar: [
+                'Okul dönemi boyunca haftada belirli günler.',
+                'Ücret ve sigorta artık staj kuralına değil çalışma kuralına tabi; SGK\'ya bakın.',
+              ],
+            },
+            {
+              baslik: 'Gelecek yaz için söz',
+              ikon: 'takvim',
+              satirlar: ['Bir sonraki staj döneminde öncelik; yazılı olsun, bir cümle yeter.'],
+            },
+            {
+              baslik: 'Mezuniyet sonrası teklif',
+              ikon: 'mezuniyet',
+              satirlar: ['Son sınıfsa; tarih ve pozisyon adı belirtin.'],
+            },
+            {
+              baslik: 'Yalnız referans',
+              ikon: 'belge',
+              satirlar: ['Teklif yoksa da bu var ve değerli.'],
+            },
+          ],
+        },
         paragraflar: [
           'Stajyerden memnunsanız ilişkiyi kapatmayın; dört yol var ve hepsi Başvuranlar ' +
             'ekranındaki teklif alanından gönderilebiliyor.',

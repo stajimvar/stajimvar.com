@@ -251,11 +251,11 @@ const METIN_OLMAYAN_PROPLAR = new Set([
 
 /*
   Bölüm kartı alanları (rehber-govde, 27 Eylül 2026): düz veri nesnesinde
-  duran dosya adı ve depo anahtarı okunacak metin değil. Yalnız bu iki ad
-  atlanıyor; düz nesnelerdeki diğer alanlar eskisi gibi sayılıyor ki başka
+  duran dosya adı, depo anahtarı ve seçenek simgesinin adı okunacak metin
+  değil. Yalnız bu adlar atlanıyor; düz nesnelerdeki diğer alanlar eskisi gibi sayılıyor ki başka
   rehberlerin okuma süresi değişmesin.
 */
-const METIN_OLMAYAN_ALANLAR = new Set(['dosya', 'depoAnahtari']);
+const METIN_OLMAYAN_ALANLAR = new Set(['dosya', 'depoAnahtari', 'ikon']);
 
 function metniTopla(dugum: unknown, kova: string[] = []): string[] {
   if (dugum == null || typeof dugum === 'boolean' || typeof dugum === 'function') return kova;
