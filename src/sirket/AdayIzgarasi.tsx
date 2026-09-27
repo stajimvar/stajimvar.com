@@ -303,11 +303,21 @@ export const AdayIzgarasi: React.FC<{
         "Başvuranlar", burada tekrar yazılmıyor.
       */}
       {basliksiz ? (
-        suzulmus.length !== kartlar.length && (
-          <p className="text-sm font-semibold" style={{ color: SIRKET_METIN_IKINCIL }}>
-            {suzulmus.length} / {kartlar.length} aday
-          </p>
-        )
+        /*
+          SAYI HER ZAMAN YAZIYOR, YALNIZ SÜZÜLÜNCE DEĞİL.
+
+          Eskiden sayfanın başlığı altındaki cümle toplamı söylüyordu
+          ("İlanlarınıza gelen 3 başvuru."). O cümle kalktı — alt gezinme
+          zaten "Başvurular" diyordu ve başlık ekranın en üstünü boşuna
+          harcıyordu. Sayı burada kaldı: listenin hemen üstünde, ait
+          olduğu yerde. Yalnız süzülünce yazsaydı, süzgeçsiz açan kişi
+          kaç başvurusu olduğunu hiçbir yerde göremezdi.
+        */
+        <p className="text-sm font-semibold" style={{ color: SIRKET_METIN_IKINCIL }}>
+          {suzulmus.length === kartlar.length
+            ? `${kartlar.length} aday`
+            : `${suzulmus.length} / ${kartlar.length} aday`}
+        </p>
       ) : (
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-xl font-black" style={{ color: SIRKET_METIN }}>

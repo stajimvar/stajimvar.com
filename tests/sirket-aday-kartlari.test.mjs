@@ -95,3 +95,34 @@ test('aday ekraninda iki sekme satiri dolduruyor', () => {
   assert.ok(ADAYLAR2.includes('w-full cursor-pointer items-center justify-center'),
             'sekme dugmesi hucreyi doldurmali');
 });
+
+test('sayfa basligi ekranda yok ama DOM da duruyor', () => {
+  /*
+    Alt gezinme zaten "Basvurular" diyor; ayni sozcugu ekranin en ustunde
+    tekrar yazmak yeri harciyordu (kullanici bildirdi, 27 Eylul 2026).
+
+    Silmek yerine gorunmez yapildi: sayfanin tek basligi buydu ve tamamen
+    kaldirmak, ekran okuyucuyla baslikta gezen kullaniciya basliksiz bir
+    sayfa birakirdi. Gezinme etiketi baslik degildir.
+  */
+  assert.ok(PANEL.includes('<h1 className="sr-only">Başvurular</h1>'),
+            'baslik sr-only olarak durmali');
+  assert.ok(!PANEL.includes('İlanlarınıza gelen başvuruları buradan yönetin'),
+            'aciklama cumlesi kaldirilmali');
+});
+
+test('toplam basvuru sayisi kaybolmadi', () => {
+  /*
+    Kaldirilan aciklama cumlesi toplam sayiyi gosteren TEK yerdi
+    ("Ilanlariniza gelen 3 basvuru."). Sayi izgaranin kendi satirina
+    tasindi ve artik yalniz suzulunce degil HER ZAMAN yaziliyor --
+    yoksa suzgecsiz acan kisi kac basvurusu oldugunu goremezdi.
+  */
+  const IZGARA = oku('src/sirket/AdayIzgarasi.tsx');
+  const i = IZGARA.indexOf('{basliksiz ? (');
+  assert.ok(i > 0, 'basliksiz dali bulunmali');
+  const dal = IZGARA.slice(i, i + 1400);
+  assert.ok(dal.includes('${kartlar.length} aday'), 'toplam sayi yazilmali');
+  assert.ok(!dal.includes('suzulmus.length !== kartlar.length &&'),
+            'sayi yalniz suzulunce degil her zaman gorunmeli');
+});

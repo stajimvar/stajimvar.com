@@ -99,7 +99,12 @@ test('şirket sekmeleri dürüst: Fırsatlar şirkette yok, Başvuranlar tam say
   assert.doesNotMatch(PANEL, /import \{ Tabs \}/);
   assert.doesNotMatch(PANEL, /<Tabs/);
   assert.match(PANEL, /if \(gorunum === 'basvuranlar'\) \{\s*return \(\s*<Basvuranlar/);
-  assert.match(PANEL, /<h1[^>]*>\s*Başvurular\s*<\/h1>/);
+  /*
+    Başlık 27 Eylül 2026'da EKRANDAN kalktı (alt gezinme zaten
+    "Başvurular" diyor) ama DOM'da duruyor: `sr-only`. Silinseydi sayfa
+    başlıksız kalır, ekran okuyucuyla başlıktan başlığa gezme kırılırdı.
+  */
+  assert.match(PANEL, /<h1 className="sr-only">Başvurular<\/h1>/);
   assert.match(PANEL, /<h1[^>]*>\s*İlanlarım\s*<\/h1>/);
   assert.match(PANEL, /<AdayIzgarasi\s+basliksiz/);
   assert.match(oku('src/sirket/IlanKarti.tsx'), /onNavigate\(`\/sirket\/basvuranlar\?ilan=\$\{encodeURIComponent\(id\)\}`\)/);
