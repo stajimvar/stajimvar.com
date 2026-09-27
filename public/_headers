@@ -13,6 +13,9 @@
 /rehber-gorselleri/*
   Cache-Control: public, max-age=86400
 
+/kampus-gorselleri/*
+  Cache-Control: public, max-age=86400
+
 /kurum-logolari/*
   Cache-Control: public, max-age=86400
 

@@ -136,7 +136,20 @@ test('burs süzgeci: en yakın son tarih önce, en çok 3', () => {
 /* ------------------------------------------------------------ bileşen */
 
 test('örnek içerik ve taslak etiketi yok', () => {
-  assert.doesNotMatch(kod(PANEL), /TEMS[İI]L|TASARIM ÖRNE|örnek|ornek|placeholder|lorem/i);
+  /*
+    27 Eylül 2026: yan sütundaki bölüm görselleri TEMSİLİ fotoğraf ve bunu
+    söylemek zorunlu ("Temsili görsel" etiketi, alt metinler). O iki yer
+    dışarıda tutuluyor; menü, duyuru ve okul adı yine yalnız veriden.
+  */
+  const gorselsiz = kod(PANEL)
+    .replace(/const KAMPUS_GORSELLERI = \{[\s\S]*?\} as const;/, '')
+    .replace(/Temsili görsel/g, '');
+  assert.doesNotMatch(gorselsiz, /TEMS[İI]L|TASARIM ÖRNE|örnek|ornek|placeholder|lorem/i);
+  /* Etiket tek yerde yazılı: her kart fotoğrafının altında okunur not (12 px). */
+  assert.equal((kod(PANEL).match(/Temsili görsel/g) ?? []).length, 1);
+  assert.match(PANEL, /<figcaption className="mt-1\.5 text-center text-xs leading-4 text-gray-500">Temsili görsel<\/figcaption>/);
+  /* Duyuru fotoğrafı yalnız kart başlığında, bir kez. */
+  assert.equal((PANEL.match(/<KartBasligi gorsel="duyurular">/g) ?? []).length, 1);
 });
 
 test('menü yalnız `menu` doluyken; kaynak null ise bölüm hiç yok', () => {
@@ -258,7 +271,9 @@ test('yerleşim: sol 330 yapışkan, orta 600 ve sağ 350 değişmedi; 1024–14
 test('erişilebilirlik: section + başlıklar, listeler ul, dış bağlantı yeni sekme duyurusu, tarih <time>', () => {
   assert.match(PANEL, /<section aria-labelledby=\{`\$\{kimlik\}-baslik`\}/);
   assert.match(PANEL, /<h2\s+id=\{`\$\{kimlik\}-baslik`\}/);
-  assert.equal((PANEL.match(/<h3 id=\{kimlik\}/g) ?? []).length, 3);
+  /* Yemek ve burs birer; duyuru başlığı panel (kartlı) ve sayfa dalında ikişer yazılı, biri çiziliyor. */
+  assert.equal((PANEL.match(/<h3 id=\{kimlik\}/g) ?? []).length, 4);
+  assert.match(PANEL, /<h3 id=\{`\$\{kimlik\}-okul`\}/);
   assert.match(PANEL, /<a href=\{href\} target="_blank" rel="noopener noreferrer" className=\{className\}>/);
   assert.match(PANEL, /<span className="sr-only"> \(yeni sekmede açılır\)<\/span>/);
   assert.match(PANEL, /<time dateTime=\{bugun\}>/);

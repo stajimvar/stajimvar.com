@@ -21,17 +21,26 @@ const stil = (ad) => {
   return PANEL.slice(bas, PANEL.indexOf('\n};', bas));
 };
 
-test('sayfa kendi varyantında; panel varyantları aynı', () => {
+test('sayfa kendi varyantında; profil paneli ayrı kartlar', () => {
   assert.match(SAYFA_KAYNAGI, /yerlesim="sayfa"/);
   assert.match(PANEL, /type Yerlesim = 'sutun' \| 'akis' \| 'sayfa';/);
-  /* Profil panelinin kapları 25 Eylül 2026 öncesiyle aynı. */
-  assert.match(PANEL, /sutun: 'rounded-2xl border border-gray-200 bg-white p-4',/);
-  assert.match(PANEL, /akis: 'border-b border-gray-200 bg-white px-4 py-5 sm:rounded-2xl sm:border sm:p-4',/);
+  /*
+    27 Eylül 2026 (kullanıcı tasarımı): profil panelinde tek kutu yok;
+    kap çerçevesiz, bölümler arasında 16 px olan ayrı beyaz kartlar.
+  */
+  assert.match(PANEL, /sutun: 'space-y-4',/);
+  assert.match(PANEL, /akis: 'space-y-4',/);
+  assert.match(PANEL, /const KART = 'rounded-2xl border border-gray-200 bg-white p-4';/);
   const panel = stil('PANEL');
-  assert.match(panel, /yemekKabi: BOLUM,/);
+  assert.match(panel, /yemekKabi: KART,/);
+  assert.match(panel, /bolum: KART,/);
   assert.match(panel, /bolumBasligi: BOLUM_BASLIGI,/);
-  assert.match(panel, /satirBasligi: 'line-clamp-2 text-sm font-semibold leading-snug text-gray-900 group-hover:text-blue-700',/);
+  /* Okunur yazı: duyuru başlığı ve açıklamalar 15 px. */
+  assert.match(panel, /satirBasligi: 'line-clamp-3 block text-\[15px\] font-semibold leading-\[21px\] text-gray-900 group-hover:text-blue-700',/);
+  assert.match(PANEL, /const ACIKLAMA = 'text-\[15px\] leading-\[22px\] text-gray-600';/);
   assert.match(panel, /tumuEtiketi: 'Duyuruları gör',/);
+  /* Kart fotoğrafı 88 px. */
+  assert.match(PANEL, /width=\{88\}\s*height=\{88\}/);
   /* Veri tek yerden: bölüm bileşenleri bir kez yazılı, stil parametre. */
   assert.equal((PANEL.match(/const YemekBolumu:/g) || []).length, 1);
   assert.equal((PANEL.match(/const DuyuruBolumu:/g) || []).length, 1);
@@ -40,9 +49,15 @@ test('sayfa kendi varyantında; panel varyantları aynı', () => {
 
 test('başlık: 22/28, sayfada "Senin üniversiten" yok, uzun ad kırpılmıyor', () => {
   assert.match(PANEL, /'text-\[22px\] font-extrabold leading-7 tracking-tight text-slate-900'/);
-  assert.match(PANEL, /\{sayfa \? \(\s*<span className="min-w-0 break-words font-medium">\{okulAdi\}<\/span>\s*\) : \(/);
-  /* Panelde eski cümle duruyor; başkasının kampüsünde kimin olduğu yazıyor. */
-  assert.match(PANEL, /Senin üniversiten · <span className="font-semibold text-gray-800">\{okulAdi\}<\/span>/);
+  assert.match(PANEL, /\{okulAdi && !baskasi && sayfa && \(\s*<p className=\{altSatir\}>[\s\S]{0,120}<span className="min-w-0 break-words font-medium">\{okulAdi\}<\/span>/);
+  /*
+    Panelde (27 Eylül 2026) "Senin üniversiten ·" satırı "Üniversiten"
+    alanı oldu: temsili görsel, başlık ve veriden okul adı. Başkasının
+    kampüsünde kimin olduğu yazıyor.
+  */
+  assert.doesNotMatch(PANEL.replace(/\/\*[\s\S]*?\*\//g, ''), /Senin üniversiten ·/);
+  /* Okul adı küçük alt açıklama değil, kartın başlığı (17 px, kırpılmıyor). */
+  assert.match(PANEL, /\{okulAdi && !baskasi && !sayfa && \([\s\S]{0,200}<KartBasligi gorsel="kampus">\s*<p[^>]*>Üniversiten<\/p>\s*<h3 id=\{`\$\{kimlik\}-okul`\} className="mt-0\.5 break-words text-\[17px\] font-extrabold[^"]*">\s*\{okulAdi\}/);
   assert.match(PANEL, /\{kisiAdi\}/);
 });
 

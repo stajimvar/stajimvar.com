@@ -11,7 +11,7 @@ import {
   ogunEtiketi,
   UNIVERSITE_EKLE_YOLU,
 } from '../../lib/kampusum.mjs';
-import { tarihMetni } from '../../lib/tarih.mjs';
+import { kisaTarihMetni, tarihMetni } from '../../lib/tarih.mjs';
 import { ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import type { StudentProfile } from '../../types';
 
@@ -56,9 +56,11 @@ import type { StudentProfile } from '../../types';
 type Yukleme<T> = { durum: 'yukleniyor' } | { durum: 'hazir'; veri: T } | { durum: 'hata' };
 
 /*
-  Yan sütunla aynı kart. `akis` telefonda kart değil yüzey: kenardan
-  kenara ve tek alt çizgiyle bitiyor; `sm` ve üstünde kart. Profilde
-  `akis` yalnız 1024–1439'da, yani hep kart hâlinde.
+  PROFİL PANELİ AYRI KARTLAR (27 Eylül 2026, kullanıcı tasarımı): `sutun`
+  (≥1440 sol sütun) ve `akis` (1024–1439, profil kartının altı) tek kutu
+  değil; "Kampüsüm" başlığının altında aralarında 16 px olan beyaz
+  kartlar — Üniversiten, Bugün yemekte, Üniversiteden duyurular, Burs
+  haberleri. Kap kendisi çerçeve çizmiyor; kart içinde kart yok.
 
   `sayfa` (25 Eylül 2026): bağımsız /kampusum sayfası. Profil panelinden
   AYRI bir varyant — panel (`sutun`, `akis`) sınıfları birebir aynı
@@ -68,16 +70,17 @@ type Yukleme<T> = { durum: 'yukleniyor' } | { durum: 'hazir'; veri: T } | { duru
 type Yerlesim = 'sutun' | 'akis' | 'sayfa';
 
 const KAP: Record<Yerlesim, string> = {
-  sutun: 'rounded-2xl border border-gray-200 bg-white p-4',
-  akis: 'border-b border-gray-200 bg-white px-4 py-5 sm:rounded-2xl sm:border sm:p-4',
+  sutun: 'space-y-4',
+  akis: 'space-y-4',
   sayfa: 'bg-white px-4 pb-6 pt-4 sm:rounded-2xl sm:border sm:border-gray-200 sm:p-6',
 };
 
-const BOLUM = 'mt-4 border-t border-gray-100 pt-4';
-const BOLUM_BASLIGI = 'text-sm font-extrabold text-gray-900';
-const ACIKLAMA = 'text-sm leading-relaxed text-gray-600';
+/* Panelin her bölümü kendi beyaz kartı. */
+const KART = 'rounded-2xl border border-gray-200 bg-white p-4';
+const BOLUM_BASLIGI = 'text-base font-extrabold leading-6 text-gray-900';
+const ACIKLAMA = 'text-[15px] leading-[22px] text-gray-600';
 const NOT = 'text-xs leading-relaxed text-gray-500';
-const BAGLANTI = `inline-flex min-h-11 items-center gap-1 rounded-lg text-sm font-bold text-blue-700 hover:text-blue-800 ${RENK_GECISI} ${ODAK_HALKASI}`;
+const BAGLANTI = `inline-flex min-h-11 items-center gap-1 rounded-lg text-[15px] font-bold text-blue-700 hover:text-blue-800 ${RENK_GECISI} ${ODAK_HALKASI}`;
 const DUGME = `inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-800 hover:bg-gray-50 ${RENK_GECISI} ${ODAK_HALKASI}`;
 
 /*
@@ -94,6 +97,10 @@ const DUGME = `inline-flex min-h-11 cursor-pointer items-center justify-center r
     - bölüm başlıkları 18/24, bölümler arası 24 px
 */
 interface Stil {
+  /** Bölüm başlığının yanında temsili kare görsel ve duyurularda tarih kutusu (panel). */
+  gorsel: boolean;
+  yemekBasligi: string;
+  duyuruBasligi: string;
   bolum: string;
   bolumBasligi: string;
   aciklama: string;
@@ -122,29 +129,32 @@ interface Stil {
 }
 
 const PANEL: Stil = {
-  bolum: BOLUM,
+  gorsel: true,
+  yemekBasligi: 'Bugün yemekte',
+  duyuruBasligi: 'Üniversiteden duyurular',
+  bolum: KART,
   bolumBasligi: BOLUM_BASLIGI,
   aciklama: ACIKLAMA,
-  yemekKabi: BOLUM,
+  yemekKabi: KART,
   yemekBaslikGrubu: '',
-  yemekTarihi: `mt-0.5 ${NOT}`,
-  ogunListesi: 'mt-3 space-y-3',
-  ogun: '',
-  ogunSatiri: 'flex items-baseline justify-between gap-2 text-xs font-bold text-gray-700',
-  ogunEtiketi: '',
-  kalori: 'font-medium text-gray-500',
-  yemekler: 'mt-1 space-y-0.5 text-sm leading-snug text-gray-900',
-  yemekBos: `mt-2 ${ACIKLAMA}`,
-  yemekBaglantilari: 'mt-1 flex flex-col items-start',
+  yemekTarihi: 'mt-0.5 text-[15px] leading-[22px] text-gray-700',
+  ogunListesi: 'mt-3 divide-y divide-gray-100',
+  ogun: 'py-2.5 first:pt-0 last:pb-0',
+  ogunSatiri: 'flex items-center justify-between gap-2',
+  ogunEtiketi: 'text-sm font-semibold text-gray-700',
+  kalori: 'ml-auto rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600',
+  yemekler: 'mt-1.5 space-y-1 text-[15px] leading-[22px] text-gray-900',
+  yemekBos: 'mt-3 text-[15px] leading-[22px] text-gray-800',
+  yemekBaglantilari: 'mt-2 flex flex-col items-start',
   menuBaglantisi: BAGLANTI,
   yemekhaneBaglantisi: BAGLANTI,
-  liste: 'mt-2',
-  satir: `group -mx-2 flex min-h-11 flex-col justify-center rounded-lg px-2 py-1.5 hover:bg-gray-50 ${RENK_GECISI} ${ODAK_HALKASI}`,
-  satirBasligi: 'line-clamp-2 text-sm font-semibold leading-snug text-gray-900 group-hover:text-blue-700',
-  satirTarihi: 'mt-0.5 text-xs text-gray-500',
+  liste: 'mt-3 divide-y divide-gray-100',
+  satir: `group flex min-h-11 items-start gap-3 rounded-lg py-3 ${RENK_GECISI} ${ODAK_HALKASI}`,
+  satirBasligi: 'line-clamp-3 block text-[15px] font-semibold leading-[21px] text-gray-900 group-hover:text-blue-700',
+  satirTarihi: 'mt-1 block text-[13px] leading-[18px] text-gray-500',
   satirIkonu: false,
-  bursKurum: 'mt-0.5 block truncate text-xs text-gray-600',
-  bursTarih: 'text-xs text-gray-500',
+  bursKurum: 'mt-1 block truncate text-[13px] leading-[18px] text-gray-600',
+  bursTarih: 'block text-[13px] leading-[18px] text-gray-500',
   tumuBaglantisi: 'mt-1',
   tumuEtiketi: 'Duyuruları gör',
 };
@@ -152,6 +162,9 @@ const PANEL: Stil = {
 const SAYFA_ACIKLAMA = 'text-[15px] leading-[22px] text-gray-600';
 
 const SAYFA: Stil = {
+  gorsel: false,
+  yemekBasligi: 'Bugün yemekte ne var?',
+  duyuruBasligi: 'Üniversite duyuruları',
   bolum: 'mt-6',
   bolumBasligi: 'text-lg font-bold leading-6 text-slate-900',
   aciklama: SAYFA_ACIKLAMA,
@@ -179,6 +192,77 @@ const SAYFA: Stil = {
   tumuEtiketi: 'Tüm duyurular',
 };
 
+/*
+  KART GÖRSELLERİ (27 Eylül 2026, kullanıcı tasarımı): her kartın başlığında
+  88 px köşesi yuvarlatılmış kare fotoğraf, yanında başlık ve kısa ikincil
+  bilgi. Üçü de TEMSİLİ (public/kampus-gorselleri, kaynak.json): kampüs
+  görseli okulun logosu ya da fotoğrafı değil, yemek görseli günün menüsü
+  değil — fotoğrafın altında okunur bir "Temsili görsel" notu var. Okul adı,
+  menü ve duyurular yine yalnız veriden. 192/384 px AVIF + WebP; tarayıcı
+  ekran yoğunluğuna göre seçiyor.
+*/
+const KAMPUS_GORSELLERI = {
+  kampus: 'Kampüs çalışma alanında birlikte çalışan yetişkin öğrenciler.',
+  yemekhane: 'Öğrenci yemekhanesinde temsili bir yemek tepsisi.',
+  duyurular: 'Kampüs duyuru panosunu inceleyen yetişkin öğrenciler.',
+} as const;
+
+const KampusGorseli: React.FC<{ ad: keyof typeof KAMPUS_GORSELLERI }> = ({ ad }) => {
+  const kok = `/kampus-gorselleri/${ad}`;
+  return (
+    <figure className="m-0 w-[88px] shrink-0">
+      <picture>
+        <source type="image/avif" srcSet={`${kok}-192.avif 192w, ${kok}-384.avif 384w`} sizes="88px" />
+        <img
+          decoding="async"
+          width={88}
+          height={88}
+          sizes="88px"
+          srcSet={`${kok}-192.webp 192w, ${kok}-384.webp 384w`}
+          src={`${kok}-192.webp`}
+          alt={KAMPUS_GORSELLERI[ad]}
+          className="h-[88px] w-[88px] rounded-2xl bg-gray-100 object-cover"
+        />
+      </picture>
+      <figcaption className="mt-1.5 text-center text-xs leading-4 text-gray-500">Temsili görsel</figcaption>
+    </figure>
+  );
+};
+
+/**
+ * Kart başlığı: fotoğraf solda, başlık ve ikincil bilgi yanında. Başlığın
+ * düzeyi ve kimliği çağırandan (`baslik` hazır h3 öğesi).
+ */
+const KartBasligi: React.FC<{ gorsel: keyof typeof KAMPUS_GORSELLERI; children: React.ReactNode }> = ({
+  gorsel,
+  children,
+}) => (
+  <div className="flex items-start gap-3.5">
+    <KampusGorseli ad={gorsel} />
+    <div className="min-w-0 flex-1 pt-1">{children}</div>
+  </div>
+);
+
+/**
+ * Duyurunun tarih kutusu: gün ve kısa ay ("27" / "Eyl"), veriden. Tarih
+ * okunamazsa kutu çizilmiyor — uydurma tarih yok. Tam tarih `<time>` ile
+ * satırda (ekran okuyucu ve makine için).
+ */
+const TarihKutusu: React.FC<{ tarih: string | null | undefined }> = ({ tarih }) => {
+  const kisa = kisaTarihMetni(tarih, { yil: false });
+  const [gun, ay] = kisa ? kisa.split(' ') : [];
+  if (!gun || !ay) return null;
+  return (
+    <span
+      aria-hidden
+      className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-blue-50 leading-none text-blue-800"
+    >
+      <span className="text-lg font-extrabold">{gun}</span>
+      <span className="mt-0.5 text-xs font-semibold">{ay}</span>
+    </span>
+  );
+};
+
 function solTik(olay: React.MouseEvent<HTMLAnchorElement>): boolean {
   return !(olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0);
 }
@@ -199,7 +283,7 @@ const Iskelet: React.FC<{ className: string }> = ({ className }) => (
 );
 
 /** Bölüm iskeleti — gerçek bölümle aynı kutular: başlık, üç satır, bağlantı. */
-const BolumIskeleti: React.FC<{ kap?: string }> = ({ kap = BOLUM }) => (
+const BolumIskeleti: React.FC<{ kap?: string }> = ({ kap = KART }) => (
   <div className={`${kap} space-y-2.5`}>
     <Iskelet className="h-4 w-40" />
     <Iskelet className="h-3.5 w-full" />
@@ -243,18 +327,20 @@ const YemekBolumu: React.FC<{ veri: Kampusum; kaynak: KaynakDurumu; kimlik: stri
     Boolean(kaynak.sonBasariAni) &&
     veri.sonMenuTarihi !== undefined &&
     menuUzunSuredirYok(veri.sonMenuTarihi, bugun);
-  return (
-    <section aria-labelledby={kimlik} className={stil.yemekKabi}>
-      <div className={stil.yemekBaslikGrubu}>
-        <h3 id={kimlik} className={stil.bolumBasligi}>
-          Bugün yemekte ne var?
-        </h3>
-        {bugunMetni && !uzunSuredirYok && (
-          <p className={stil.yemekTarihi}>
-            <time dateTime={bugun}>{bugunMetni}</time>
-          </p>
-        )}
-      </div>
+  const baslik = (
+    <div className={stil.yemekBaslikGrubu}>
+      <h3 id={kimlik} className={stil.bolumBasligi}>
+        {stil.yemekBasligi}
+      </h3>
+      {bugunMetni && !uzunSuredirYok && (
+        <p className={stil.yemekTarihi}>
+          <time dateTime={bugun}>{bugunMetni}</time>
+        </p>
+      )}
+    </div>
+  );
+  const menuGovdesi = (
+    <>
       {menu && menu.ogunler.length > 0 ? (
         <ul className={stil.ogunListesi}>
           {menu.ogunler.map((ogun, sira) => {
@@ -292,6 +378,13 @@ const YemekBolumu: React.FC<{ veri: Kampusum; kaynak: KaynakDurumu; kimlik: stri
         </p>
       )}
       <EskiKaynakNotu kaynak={kaynak} bugun={bugun} />
+    </>
+  );
+  return (
+    <section aria-labelledby={kimlik} className={stil.yemekKabi}>
+      {/* Panelde görsel başlığın yanında; menü kartın tam genişliğinde, veriden. */}
+      {stil.gorsel ? <KartBasligi gorsel="yemekhane">{baslik}</KartBasligi> : baslik}
+      {menuGovdesi}
       {(menuAdresi || yemekhaneAdresi) && (
         <div className={stil.yemekBaglantilari}>
           {menuAdresi && (
@@ -324,9 +417,19 @@ const DuyuruBolumu: React.FC<{ veri: Kampusum; kaynak: KaynakDurumu; kimlik: str
     .filter((d): d is typeof d & { adres: string } => d.adres !== null);
   return (
     <section aria-labelledby={kimlik} className={stil.bolum}>
-      <h3 id={kimlik} className={stil.bolumBasligi}>
-        Üniversite duyuruları
-      </h3>
+      {stil.gorsel ? (
+        /* Görsel başlıkta BİR KEZ; duyuru satırlarında tekrar yok. */
+        <KartBasligi gorsel="duyurular">
+          <h3 id={kimlik} className={stil.bolumBasligi}>
+            {stil.duyuruBasligi}
+          </h3>
+          <p className="mt-0.5 text-[15px] leading-[22px] text-gray-600">Son 30 gün</p>
+        </KartBasligi>
+      ) : (
+        <h3 id={kimlik} className={stil.bolumBasligi}>
+          {stil.duyuruBasligi}
+        </h3>
+      )}
       {duyurular.length > 0 ? (
         <ul className={stil.liste}>
           {duyurular.map((d) => {
@@ -339,10 +442,12 @@ const DuyuruBolumu: React.FC<{ veri: Kampusum; kaynak: KaynakDurumu; kimlik: str
                   metnin tamamı bağlantının erişilebilir adında.
                 */}
                 <DisBaglanti href={d.adres} className={stil.satir}>
+                  {stil.gorsel && <TarihKutusu tarih={d.tarih} />}
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className={stil.satirBasligi}>{d.baslik}</span>
                     {tarih && (
-                      <time dateTime={d.tarih} className={stil.satirTarihi}>
+                      /* Panelde tarih kutuda görünüyor; tam tarih ekran okuyucuya. */
+                      <time dateTime={d.tarih} className={stil.gorsel ? 'sr-only' : stil.satirTarihi}>
                         {tarih}
                       </time>
                     )}
@@ -530,7 +635,7 @@ export const KampusumPaneli: React.FC<{
   const sayfa = yerlesim === 'sayfa';
   const stil = sayfa ? SAYFA : PANEL;
   /* Başlığın hemen altındaki durum cümleleri (okul yok, kaynak yok, hata). */
-  const durumKabi = sayfa ? 'mt-4' : BOLUM;
+  const durumKabi = sayfa ? 'mt-4' : KART;
   const altSatir = sayfa
     ? 'mt-1 flex items-start gap-1.5 text-[15px] leading-[22px] text-slate-700'
     : 'mt-1 flex items-start gap-1.5 text-sm text-gray-600';
@@ -555,16 +660,26 @@ export const KampusumPaneli: React.FC<{
         {baskasi ? 'Kampüs' : 'Kampüsüm'}
       </h2>
       {kampus.durum === 'yukleniyor' && <Iskelet className="mt-1.5 h-4 w-48" />}
-      {okulAdi && !baskasi && (
+      {/*
+        ÜNİVERSİTEN (panel, 27 Eylül 2026): başlığın altındaki tek satır üç
+        alanın ilki oldu — temsili kampüs görseli, "Üniversiten" ve veriden
+        gelen okul adı. Görsel okulun kendisi değil ("Temsili görsel").
+      */}
+      {okulAdi && !baskasi && !sayfa && (
+        /* Okul adı kartın başlığı: belirgin ve tam, kırpılmıyor (veriden). */
+        <section aria-labelledby={`${kimlik}-okul`} className={KART}>
+          <KartBasligi gorsel="kampus">
+            <p className="text-sm font-semibold text-gray-500">Üniversiten</p>
+            <h3 id={`${kimlik}-okul`} className="mt-0.5 break-words text-[17px] font-extrabold leading-snug text-gray-900">
+              {okulAdi}
+            </h3>
+          </KartBasligi>
+        </section>
+      )}
+      {okulAdi && !baskasi && sayfa && (
         <p className={altSatir}>
           <GraduationCap aria-hidden className={altSatirIkonu} />
-          {sayfa ? (
-            <span className="min-w-0 break-words font-medium">{okulAdi}</span>
-          ) : (
-            <span className="min-w-0">
-              Senin üniversiten · <span className="font-semibold text-gray-800">{okulAdi}</span>
-            </span>
-          )}
+          <span className="min-w-0 break-words font-medium">{okulAdi}</span>
         </p>
       )}
       {okulAdi && kisiAdi && profilYolu && (
@@ -608,8 +723,8 @@ export const KampusumPaneli: React.FC<{
 
       {kampus.durum === 'yukleniyor' && (
         <>
-          <BolumIskeleti kap={sayfa ? SAYFA.yemekKabi : BOLUM} />
-          <BolumIskeleti kap={sayfa ? SAYFA.bolum : BOLUM} />
+          <BolumIskeleti kap={sayfa ? SAYFA.yemekKabi : KART} />
+          <BolumIskeleti kap={sayfa ? SAYFA.bolum : KART} />
         </>
       )}
 
