@@ -506,12 +506,13 @@ export const SirketIlanlarSekmesi: React.FC<{
         onDurum={onDurum}
         onKaldir={onKaldir}
         simdi={simdi}
-      />
-
-      {/* Öğrencinin ilanlar sayfasındaki sıra: kendi ilanının hangi şirketlerle, kaçıncı sırada durduğu. */}
-      <IlanSiralamasi
-        companyId={baglam.companyId}
-        yayindaIlanVar={ilanlar.some((i) => i.status === 'published')}
+        /* Öğrencinin ilanlar sayfasındaki sıra: kendi ilanının hangi şirketlerle, kaçıncı sırada durduğu. */
+        siralama={
+          <IlanSiralamasi
+            companyId={baglam.companyId}
+            yayindaIlanVar={ilanlar.some((i) => i.status === 'published')}
+          />
+        }
       />
     </div>
   );

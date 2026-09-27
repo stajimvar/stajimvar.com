@@ -107,7 +107,13 @@ export const GenelBakis: React.FC<{
   /** Arşivle ya da sil. Verilmezse taşma menüsü çizilmiyor. */
   onKaldir?: (id: string, arsivle: boolean) => Promise<void>;
   simdi?: Date;
-}> = ({ baglam, ilanlar, basvurular, profil, onNavigate, onDurum, onKaldir, simdi }) => {
+  /**
+   * İlanlar sayfasındaki sıra (IlanSiralamasi). İlan yokken ilk eylem
+   * satırının hemen altında, "Başlamadan önce"nin üstünde; ilan varken
+   * listenin sonunda (27 Eylül 2026, kullanıcı kararı).
+   */
+  siralama?: React.ReactNode;
+}> = ({ baglam, ilanlar, basvurular, profil, onNavigate, onDurum, onKaldir, simdi, siralama }) => {
   const kartAcik = adayGorebilir(baglam.kademe);
   const eksikler = profilEksikleri(profil);
 
@@ -134,34 +140,45 @@ export const GenelBakis: React.FC<{
         {/*
           TEK BİRİNCİL EYLEM (26 Eylül 2026): sayfada ilan oluşturan tek
           düğme bu; üstteki "+" ilan yokken çizilmiyor (SirketPaneli).
+
+          İNCE SATIR (27 Eylül 2026, kullanıcı kararı): ortalanmış büyük
+          kart yerine yatay satır — simge, başlık ve kısa açıklama yan yana,
+          düğme sm üstünde sağda, telefonda altta tam genişlik. Böylece
+          öteki şirketlerin ilanları (sıra) ilk ekrana giriyor.
         */}
-        <div className={`${KUTU} text-center`} style={kutuStil}>
-          <span
-            aria-hidden
-            className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full"
-            style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
-          >
-            <Briefcase className="h-7 w-7" />
-          </span>
-          <h2 className="text-lg font-extrabold" style={{ color: SIRKET_METIN }}>
-            İlk ilanınızı oluşturun
-          </h2>
-          <p
-            className="mx-auto mt-1 max-w-md text-sm leading-relaxed"
-            style={{ color: SIRKET_METIN_IKINCIL }}
-          >
-            Pozisyonu ve çalışma koşullarını ekleyin, öğrencilerle buluşun.
-          </p>
+        <div
+          className="flex flex-col gap-3 rounded-2xl border p-4 shadow-xs sm:flex-row sm:items-center"
+          style={kutuStil}
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <span
+              aria-hidden
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+              style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
+            >
+              <Briefcase className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-base font-extrabold leading-snug" style={{ color: SIRKET_METIN }}>
+                İlk ilanınızı oluşturun
+              </h2>
+              <p className="text-sm leading-snug" style={{ color: SIRKET_METIN_IKINCIL }}>
+                Pozisyonu ve çalışma koşullarını ekleyin, öğrencilerle buluşun.
+              </p>
+            </div>
+          </div>
           <button
             type="button"
             onClick={() => onNavigate('/sirket/ilan/yeni')}
-            className={`mt-5 w-full sm:w-auto ${BIRINCIL_DUGME}`}
+            className={`w-full shrink-0 sm:w-auto ${BIRINCIL_DUGME}`}
             style={birincilStil}
           >
             <Plus className="h-5 w-5" aria-hidden />
             İlan oluştur
           </button>
         </div>
+
+        {siralama}
 
         {/*
           BAŞLAMADAN ÖNCE — YALNIZ ÇALIŞAN YOLLAR
@@ -442,6 +459,7 @@ export const GenelBakis: React.FC<{
           </div>
         </div>
       )}
+      {siralama}
     </div>
   );
 };
