@@ -21,6 +21,7 @@ import {
 } from './renk';
 import { vknGecerli } from '../lib/sirket-kademe.mjs';
 import { AutocompleteField } from '../components/AutocompleteField';
+import { FORM_ALAN, UzayanMetin } from './form-parcalari';
 import { TR_CITIES } from '../data/turkeyData';
 import { sektorleriGetir } from '../lib/queries/sosyal';
 import {
@@ -67,14 +68,9 @@ const BOYUTLAR = ['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'];
   yanında "isteğe bağlı" yazıyor; yalnız dolu alanlar profil tamamlama
   oranını artırıyor.
 
-  Yazı 16 px (telefonda odakta iOS yakınlaştırmasın), sm üstünde 14 px.
-  Renkler şirket panelinin alan renkleriyle aynı (`alanStil`: gray-300
-  kenar, beyaz zemin, gray-900 yazı) — öneri alanı stil nesnesi almadığı
-  için sınıf olarak veriliyor.
+  Alan boyu ve uzayan metin kutusu `form-parcalari.tsx`'te: ilan formu da
+  aynılarını kullanıyor.
 */
-const FORM_ALAN =
-  'w-full min-h-11 rounded-xl border border-gray-300 bg-white px-3 text-base text-gray-900 outline-none ' +
-  'placeholder:text-gray-500 focus:outline-2 focus:outline-blue-600 sm:text-sm';
 
 /** Etiket + "isteğe bağlı" + (varsa) tek satırlık kısa not. */
 const Alan: React.FC<{ etiket: string; htmlFor: string; not?: string; children: React.ReactNode }> = ({
@@ -100,37 +96,6 @@ const Alan: React.FC<{ etiket: string; htmlFor: string; not?: string; children: 
     )}
   </div>
 );
-
-/**
- * Yazdıkça uzayan metin alanı: 3 satırla başlıyor, içerik kadar büyüyor.
- * `field-sizing: content` her tarayıcıda yok; yükseklik yazı değişince
- * ölçülüp veriliyor (kaydırma çubuğu çıkmıyor).
- */
-const UzayanMetin: React.FC<{
-  id: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder: string;
-}> = ({ id, value, onChange, placeholder }) => {
-  const ref = React.useRef<HTMLTextAreaElement>(null);
-  React.useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${el.scrollHeight + 2}px`;
-  }, [value]);
-  return (
-    <textarea
-      ref={ref}
-      id={id}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      rows={3}
-      placeholder={placeholder}
-      className="block w-full resize-none overflow-hidden rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-base leading-relaxed text-gray-900 outline-none placeholder:text-gray-500 focus:outline-2 focus:outline-blue-600 sm:text-sm"
-    />
-  );
-};
 
 export const SirketProfilFormu: React.FC<{
   baglam: SirketBaglami;
