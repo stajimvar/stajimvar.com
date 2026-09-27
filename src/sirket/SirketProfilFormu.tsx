@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, BadgeCheck, Check, ExternalLink, Upload } from 'lucide-react';
+import { AlertTriangle, BadgeCheck, Check, ChevronDown, ExternalLink, Link2, Upload } from 'lucide-react';
 import {
   ALAN,
   BIRINCIL_DUGME,
@@ -20,6 +20,9 @@ import {
   kutuStil,
 } from './renk';
 import { vknGecerli } from '../lib/sirket-kademe.mjs';
+import { AutocompleteField } from '../components/AutocompleteField';
+import { TR_CITIES } from '../data/turkeyData';
+import { sektorleriGetir } from '../lib/queries/sosyal';
 import {
   PROFIL_ALANLARI,
   profilTamamlanmaOrani,
@@ -55,18 +58,79 @@ import {
 
 const BOYUTLAR = ['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'];
 
-const Etiket: React.FC<{ children: React.ReactNode; ipucu?: string }> = ({ children, ipucu }) => (
-  <span className="mb-1 block">
-    <span className="text-xs font-bold" style={{ color: SIRKET_METIN }}>
-      {children}
-    </span>
-    {ipucu && (
-      <span className="ml-1.5 text-[11px]" style={{ color: SIRKET_METIN_IKINCIL }}>
-        {ipucu}
+/*
+  KOMPAKT FORM (27 Eylül 2026, kullanıcı isteği)
+  ----------------------------------------------
+  Üç ayrı büyük kart yerine tek form kartı, ince ayraçlı bölümler. Kısa
+  alanlar sm üstünde iki sütun, telefonda tek sütun. Kayıt hiçbir alanı
+  zorunlu tutmuyor (boş alan `null` yazılıyor) — bu yüzden her alanın
+  yanında "isteğe bağlı" yazıyor; yalnız dolu alanlar profil tamamlama
+  oranını artırıyor.
+
+  Yazı 16 px (telefonda odakta iOS yakınlaştırmasın), sm üstünde 14 px.
+  Renkler şirket panelinin alan renkleriyle aynı (`alanStil`: gray-300
+  kenar, beyaz zemin, gray-900 yazı) — öneri alanı stil nesnesi almadığı
+  için sınıf olarak veriliyor.
+*/
+const FORM_ALAN =
+  'w-full min-h-11 rounded-xl border border-gray-300 bg-white px-3 text-base text-gray-900 outline-none ' +
+  'placeholder:text-gray-500 focus:outline-2 focus:outline-blue-600 sm:text-sm';
+
+/** Etiket + "isteğe bağlı" + (varsa) tek satırlık kısa not. */
+const Alan: React.FC<{ etiket: string; htmlFor: string; not?: string; children: React.ReactNode }> = ({
+  etiket,
+  htmlFor,
+  not,
+  children,
+}) => (
+  <div className="min-w-0">
+    <label htmlFor={htmlFor} className="mb-1 flex items-baseline justify-between gap-2">
+      <span className="text-sm font-bold" style={{ color: SIRKET_METIN }}>
+        {etiket}
       </span>
+      <span className="text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+        isteğe bağlı
+      </span>
+    </label>
+    {children}
+    {not && (
+      <p className="mt-1 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+        {not}
+      </p>
     )}
-  </span>
+  </div>
 );
+
+/**
+ * Yazdıkça uzayan metin alanı: 3 satırla başlıyor, içerik kadar büyüyor.
+ * `field-sizing: content` her tarayıcıda yok; yükseklik yazı değişince
+ * ölçülüp veriliyor (kaydırma çubuğu çıkmıyor).
+ */
+const UzayanMetin: React.FC<{
+  id: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}> = ({ id, value, onChange, placeholder }) => {
+  const ref = React.useRef<HTMLTextAreaElement>(null);
+  React.useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight + 2}px`;
+  }, [value]);
+  return (
+    <textarea
+      ref={ref}
+      id={id}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      rows={3}
+      placeholder={placeholder}
+      className="block w-full resize-none overflow-hidden rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-base leading-relaxed text-gray-900 outline-none placeholder:text-gray-500 focus:outline-2 focus:outline-blue-600 sm:text-sm"
+    />
+  );
+};
 
 export const SirketProfilFormu: React.FC<{
   baglam: SirketBaglami;
@@ -94,6 +158,27 @@ export const SirketProfilFormu: React.FC<{
     yeniden kayboluyor.
   */
   const [ilkDeger, setIlkDeger] = React.useState<SirketProfilDegeri | null>(null);
+  /*
+    SEKTÖR ÖNERİLERİ GERÇEK LİSTEDEN: sitenin kendi `sectors` tablosu
+    (öğrenci alanlarıyla aynı terminoloji, aktif olanlar, sıralı). Liste
+    kapalı değil: kayıtlı ya da yazılan başka bir sektör de kaydediliyor.
+    Liste alınamazsa alan düz metin olarak çalışmaya devam ediyor.
+  */
+  const [sektorler, setSektorler] = React.useState<string[]>([]);
+  React.useEffect(() => {
+    let iptal = false;
+    sektorleriGetir()
+      .then((liste) => {
+        if (!iptal) setSektorler(liste.map((x) => x.ad));
+      })
+      .catch(() => {
+        /* Öneri yok; alan yine yazılabilir. */
+      });
+    return () => {
+      iptal = true;
+    };
+  }, []);
+  const kimlik = React.useId();
   const degisti = Boolean(deger && ilkDeger && JSON.stringify(deger) !== JSON.stringify(ilkDeger));
 
   React.useEffect(() => {
@@ -200,141 +285,135 @@ export const SirketProfilFormu: React.FC<{
         />
       )}
 
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-4">
-        <div className="space-y-4">
-          {/* --------------------------------------------- şirket kimliği */}
-          <Blok
-            baslik="Şirket kimliği"
-            aciklama="Öğrencinin ilanınızdan önce gördüğü ilk şey."
-          >
-            <LogoAlani
-              deger={deger.logoUrl}
-              sirketAdi={baglam.ad}
-              companyId={baglam.companyId}
-              userId={userId}
-              onDegis={yaz('logoUrl')}
-            />
+      {/* Masaüstünde form 640 px'i geçmiyor; önizleme yanında. */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,640px)_300px] lg:items-start lg:gap-5">
+        <div className="min-w-0 space-y-4">
+          <section className={KUTU} style={kutuStil} aria-labelledby={`${kimlik}-baslik`}>
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <h2 id={`${kimlik}-baslik`} className="text-base font-black" style={{ color: SIRKET_METIN }}>
+                Şirket bilgileri
+              </h2>
+              {/* Eksik alan sayacı: dolu alan / yedi (profilTamamlanmaOrani ile aynı liste). */}
+              <p className="text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+                Tüm alanlar isteğe bağlı ·{' '}
+                {eksikler.length === 0 ? 'hepsi dolu' : `${eksikler.length} alan boş`}
+              </p>
+            </div>
 
-            <label className="block">
-              <Etiket ipucu="Öğrenciler sizi doğru alanlarda keşfeder">Sektör</Etiket>
-              <input
-                value={deger.industry}
-                onChange={(e) => yaz('industry')(e.target.value)}
-                placeholder="Yazılım, Üretim, Perakende…"
-                className={ALAN}
-                style={alanStil}
+            {/* --------------------------------------------------- logo */}
+            <div className="mt-4">
+              <LogoAlani
+                deger={deger.logoUrl}
+                sirketAdi={baglam.ad}
+                companyId={baglam.companyId}
+                userId={userId}
+                onDegis={yaz('logoUrl')}
+                kimlik={`${kimlik}-logo`}
               />
-            </label>
-          </Blok>
+            </div>
 
-          {/* ------------------------------------------ kurumsal bilgiler */}
-          <Blok
-            baslik="Kurumsal bilgiler"
-            aciklama="Şirketin nerede ve ne büyüklükte olduğunu anlatır."
-          >
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block">
-                <Etiket>Konum</Etiket>
-                <input
-                  value={deger.location}
-                  onChange={(e) => yaz('location')(e.target.value)}
-                  placeholder="İstanbul"
-                  className={ALAN}
-                  style={alanStil}
+            {/* ------------------------------------------ kısa alanlar */}
+            <div className="mt-4 grid gap-4 border-t pt-4 sm:grid-cols-2 sm:gap-x-4 sm:gap-y-3" style={{ borderColor: SIRKET_KENAR }}>
+              <Alan etiket="Sektör" htmlFor={`${kimlik}-sektor`}>
+                <AutocompleteField
+                  id={`${kimlik}-sektor`}
+                  value={deger.industry}
+                  onChange={yaz('industry')}
+                  options={sektorler}
+                  placeholder="Ör. Bilişim ve Yazılım"
+                  className={FORM_ALAN}
+                  klavyeDuzeni
                 />
-              </label>
-              <label className="block">
-                <Etiket>Çalışan sayısı</Etiket>
+              </Alan>
+              <Alan etiket="Konum" htmlFor={`${kimlik}-konum`}>
+                <AutocompleteField
+                  id={`${kimlik}-konum`}
+                  value={deger.location}
+                  onChange={yaz('location')}
+                  options={TR_CITIES}
+                  placeholder="Ör. İstanbul"
+                  className={FORM_ALAN}
+                  klavyeDuzeni
+                />
+              </Alan>
+              <Alan etiket="Çalışan sayısı" htmlFor={`${kimlik}-boyut`}>
                 <select
+                  id={`${kimlik}-boyut`}
                   value={deger.size}
                   onChange={(e) => yaz('size')(e.target.value)}
-                  className={ALAN}
-                  style={alanStil}
+                  className={FORM_ALAN}
                 >
                   <option value="">Seçilmedi</option>
+                  {/* Kayıtlı değer listede yoksa kaybolmasın. */}
+                  {deger.size && !BOYUTLAR.includes(deger.size) && <option value={deger.size}>{deger.size}</option>}
                   {BOYUTLAR.map((b) => (
                     <option key={b} value={b}>
                       {b}
                     </option>
                   ))}
                 </select>
-              </label>
+              </Alan>
+              <Alan etiket="Web sitesi" htmlFor={`${kimlik}-site`}>
+                <input
+                  id={`${kimlik}-site`}
+                  type="url"
+                  inputMode="url"
+                  autoComplete="url"
+                  value={deger.websiteUrl}
+                  onChange={(e) => yaz('websiteUrl')(e.target.value)}
+                  placeholder="https://sirketiniz.com"
+                  className={FORM_ALAN}
+                />
+              </Alan>
+              <Alan etiket="İK e-postası" htmlFor={`${kimlik}-ik`} not="Öğrenciye gösterilmez.">
+                <input
+                  id={`${kimlik}-ik`}
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  value={deger.hrEmail}
+                  onChange={(e) => yaz('hrEmail')(e.target.value)}
+                  placeholder="ik@sirketiniz.com"
+                  className={FORM_ALAN}
+                />
+              </Alan>
             </div>
 
-            <label className="block">
-              <Etiket ipucu="Kurumsal siteniz güveni kolaylaştırır">Web sitesi</Etiket>
-              <input
-                type="url"
-                inputMode="url"
-                value={deger.websiteUrl}
-                onChange={(e) => yaz('websiteUrl')(e.target.value)}
-                placeholder="https://sirketiniz.com"
-                /*
-                  Uzun adres kutuyu taşırmasın: `truncate` yerine yazı
-                  boyutu ve `text-ellipsis` yok — girdi zaten kaydırıyor.
-                  Burada yalnızca ölçü, ipucu metniyle birlikte veriliyor.
-                */
-                className={ALAN}
-                style={alanStil}
+            {/* ---------------------------------------- şirket hakkında */}
+            <div className="mt-4 border-t pt-4" style={{ borderColor: SIRKET_KENAR }}>
+              <Alan etiket="Şirket hakkında" htmlFor={`${kimlik}-hakkinda`}>
+                <UzayanMetin
+                  id={`${kimlik}-hakkinda`}
+                  value={deger.description}
+                  onChange={yaz('description')}
+                  placeholder="Ne yapıyorsunuz, stajyer nasıl bir ekibe katılacak?"
+                />
+              </Alan>
+              <p className="mt-1 text-right text-xs tabular-nums" style={{ color: SIRKET_METIN_IKINCIL }}>
+                {deger.description.trim().length} karakter
+              </p>
+            </div>
+
+            {/*
+              KAYDET MASAÜSTÜNDE FORMUN DİBİNDE, MOBİLDE SABİT
+
+              Mobilde form uzun ve düğme en altta kalıyordu; alan doldurup
+              yukarı bakan biri kaydetmeden çıkabiliyordu. Alt çubuk yalnızca
+              DEĞİŞİKLİK VARSA çiziliyor — sürekli duran bir çubuk, alt
+              menüyle birlikte ekranın dörtte birini yiyordu. Masaüstünde
+              ayrı bir kart değil, form kartının son satırı.
+            */}
+            <div className="mt-4 hidden border-t pt-4 lg:block" style={{ borderColor: SIRKET_KENAR }}>
+              <KaydetAlani
+                durum={durum}
+                hata={hata}
+                kaydedilebilir={kaydedilebilir}
+                degisti={degisti}
+                onKaydet={() => void kaydet()}
+                kartsiz
               />
-            </label>
-
-            <label className="block">
-              <Etiket ipucu="Öğrenciye gösterilmiyor">İK e-postası</Etiket>
-              <input
-                type="email"
-                inputMode="email"
-                value={deger.hrEmail}
-                onChange={(e) => yaz('hrEmail')(e.target.value)}
-                placeholder="ik@sirketiniz.com"
-                className={ALAN}
-                style={alanStil}
-              />
-            </label>
-          </Blok>
-
-          {/* --------------------------------------------- şirket hakkında */}
-          <Blok
-            baslik="Şirket hakkında"
-            aciklama="Stajyerin nasıl bir ekibe katılacağını anlatan birkaç cümle."
-          >
-            <label className="block">
-              <span className="mb-1 flex items-baseline justify-between gap-2">
-                <span className="text-xs font-bold" style={{ color: SIRKET_METIN }}>
-                  Hakkımızda
-                </span>
-                <span className="text-[11px] tabular-nums" style={{ color: SIRKET_METIN_IKINCIL }}>
-                  {deger.description.trim().length} karakter
-                </span>
-              </span>
-              <textarea
-                value={deger.description}
-                onChange={(e) => yaz('description')(e.target.value)}
-                rows={5}
-                placeholder="Şirketinizin ne yaptığını ve stajyerin nasıl bir ekibe katılacağını birkaç cümleyle anlatın."
-                className="w-full rounded-xl border p-3 text-sm leading-relaxed outline-none placeholder:text-gray-500"
-                style={alanStil}
-              />
-            </label>
-          </Blok>
-
-          {/*
-            KAYDET MASAÜSTÜNDE AKIŞIN İÇİNDE, MOBİLDE SABİT
-
-            Mobilde form uzun ve düğme en altta kalıyordu; alan doldurup
-            yukarı bakan biri kaydetmeden çıkabiliyordu. Alt çubuk yalnızca
-            DEĞİŞİKLİK VARSA çiziliyor — sürekli duran bir çubuk, alt
-            menüyle birlikte ekranın dörtte birini yiyordu.
-          */}
-          <div className="hidden lg:block">
-            <KaydetAlani
-              durum={durum}
-              hata={hata}
-              kaydedilebilir={kaydedilebilir}
-              degisti={degisti}
-              onKaydet={() => void kaydet()}
-            />
-          </div>
+            </div>
+          </section>
 
           <Dogrulama baglam={baglam} onKaydedildi={onKaydedildi} />
         </div>
@@ -379,35 +458,6 @@ const ALAN_ADLARI: Record<keyof SirketProfilDegeri, string> = {
   description: 'hakkımızda',
   hrEmail: 'İK e-postası',
 };
-
-/* ------------------------------------------------------------- bloklar */
-
-/**
- * Form bloğu.
- *
- * Alanlar önce tek bir kartta alt alta diziliydi; ekran "doldurulacak
- * liste" gibi duruyordu. Başlıklı bloklar aynı alanları anlamlı
- * kümelere ayırıyor: kimlik, kurumsal bilgi, tanıtım.
- */
-const Blok: React.FC<{
-  baslik: string;
-  aciklama?: string;
-  children: React.ReactNode;
-}> = ({ baslik, aciklama, children }) => (
-  <section className={`${KUTU} space-y-4`} style={kutuStil}>
-    <div>
-      <h2 className="text-sm font-black" style={{ color: SIRKET_METIN }}>
-        {baslik}
-      </h2>
-      {aciklama && (
-        <p className="mt-0.5 text-xs leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
-          {aciklama}
-        </p>
-      )}
-    </div>
-    {children}
-  </section>
-);
 
 /* --------------------------------------------------------- üst özet */
 
@@ -568,8 +618,11 @@ function basHarfler(ad: string): string {
  * dosya seçimi GERÇEK — olmayan bir altyapıyı varmış gibi gösteren bir
  * düğme değil.
  *
- * Adres alanı kalıyor: logosu kendi sitesinde duran şirket onu
- * yapıştırabiliyor. İki yol da aynı sütunu yazıyor.
+ * ADRES ALANI KATLI (27 Eylül 2026): yüklenen logonun adresi çok uzun ve
+ * kullanıcıya bir şey anlatmıyor; alan varsayılan ekranda yok. Logosu
+ * kendi sitesinde duran şirket "Logo bağlantısı kullan" ile açıyor. İki
+ * yol da aynı sütunu yazıyor; kayıtlı adres katlıyken de korunuyor
+ * (değer formun durumunda, yalnız alan gizli).
  */
 const LogoAlani: React.FC<{
   deger: string;
@@ -577,9 +630,11 @@ const LogoAlani: React.FC<{
   companyId: string | null;
   userId: string | null;
   onDegis: (v: string) => void;
-}> = ({ deger, sirketAdi, companyId, userId, onDegis }) => {
+  kimlik: string;
+}> = ({ deger, sirketAdi, companyId, userId, onDegis, kimlik }) => {
   const [yukleniyor, setYukleniyor] = React.useState(false);
   const [hata, setHata] = React.useState('');
+  const [adresAcik, setAdresAcik] = React.useState(false);
   const girdiRef = React.useRef<HTMLInputElement>(null);
 
   const sec = async (dosya: File | undefined) => {
@@ -597,12 +652,19 @@ const LogoAlani: React.FC<{
 
   return (
     <div>
-      <Etiket ipucu="Öğrenciler şirketinizi bu logoyla görür">Logo</Etiket>
+      <div className="mb-1 flex items-baseline justify-between gap-2">
+        <span className="text-sm font-bold" style={{ color: SIRKET_METIN }}>
+          Logo
+        </span>
+        <span className="text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+          isteğe bağlı
+        </span>
+      </div>
 
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-3">
         <LogoGorseli url={deger} ad={sirketAdi} boyut="buyuk" />
 
-        <div className="min-w-0 flex-1 space-y-2">
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -625,35 +687,52 @@ const LogoAlani: React.FC<{
               </button>
             )}
           </div>
+          <p className="mt-1 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+            PNG, JPEG veya WEBP · en fazla 2 MB
+          </p>
+        </div>
+      </div>
 
-          <input
-            ref={girdiRef}
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            className="hidden"
-            onChange={(e) => {
-              void sec(e.target.files?.[0]);
-              /* Aynı dosya yeniden seçilebilsin. */
-              e.target.value = '';
-            }}
-          />
+      <input
+        ref={girdiRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        className="hidden"
+        onChange={(e) => {
+          void sec(e.target.files?.[0]);
+          /* Aynı dosya yeniden seçilebilsin. */
+          e.target.value = '';
+        }}
+      />
 
+      <button
+        type="button"
+        aria-expanded={adresAcik}
+        aria-controls={`${kimlik}-adres`}
+        onClick={() => setAdresAcik((a) => !a)}
+        className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg text-sm font-semibold text-blue-700 hover:text-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+      >
+        <Link2 aria-hidden className="h-4 w-4" />
+        Logo bağlantısı kullan
+        <ChevronDown aria-hidden className={`h-4 w-4 transition-transform ${adresAcik ? 'rotate-180' : ''}`} />
+      </button>
+      {adresAcik && (
+        <div id={`${kimlik}-adres`}>
+          <label htmlFor={`${kimlik}-adres-girdi`} className="sr-only">
+            Logo adresi
+          </label>
           <input
+            id={`${kimlik}-adres-girdi`}
             type="url"
             inputMode="url"
             value={deger}
             onChange={(e) => onDegis(e.target.value)}
-            placeholder="ya da logo adresini yapıştırın"
-            className={`${ALAN} text-xs`}
-            style={alanStil}
+            placeholder="https://sirketiniz.com/logo.png"
+            className={FORM_ALAN}
           />
-
-          <p className="text-[11px]" style={{ color: SIRKET_METIN_IKINCIL }}>
-            PNG, JPEG veya WEBP · en fazla 2 MB
-          </p>
-          {hata && <p className="text-xs font-semibold text-rose-700">{hata}</p>}
         </div>
-      </div>
+      )}
+      {hata && <p className="mt-1 text-xs font-semibold text-rose-700">{hata}</p>}
     </div>
   );
 };
@@ -747,8 +826,13 @@ const KaydetAlani: React.FC<{
   degisti: boolean;
   onKaydet: () => void;
   sikisik?: boolean;
-}> = ({ durum, hata, kaydedilebilir, degisti, onKaydet, sikisik }) => (
-  <div className={sikisik ? 'flex items-center gap-3' : `${KUTU} space-y-3`} style={sikisik ? undefined : kutuStil}>
+  /** Başka bir kartın içinde: kendi çerçevesi yok, düğme ve durum tek satırda. */
+  kartsiz?: boolean;
+}> = ({ durum, hata, kaydedilebilir, degisti, onKaydet, sikisik, kartsiz }) => (
+  <div
+    className={sikisik ? 'flex items-center gap-3' : kartsiz ? 'flex flex-wrap items-center gap-x-4 gap-y-2' : `${KUTU} space-y-3`}
+    style={sikisik || kartsiz ? undefined : kutuStil}
+  >
     {!sikisik && durum === 'hata' && (
       <p className="text-sm font-semibold text-rose-700">{hata}</p>
     )}

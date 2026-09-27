@@ -36,6 +36,14 @@ interface AutocompleteFieldProps {
   id?: string;
   maxSuggestions?: number;
   className?: string;
+  /**
+   * Klavye düzeni (27 Eylül 2026, şirket profil formu): öneriler Tab
+   * sırasına girmiyor (ok tuşları + Enter ile seçiliyor), alan odağı
+   * bırakınca liste kapanıyor ve seçili öneri `aria-activedescendant` ile
+   * duyuruluyor. Varsayılan kapalı: mevcut kullanımlar (CV akışı) aynen
+   * davranıyor.
+   */
+  klavyeDuzeni?: boolean;
 }
 
 export const AutocompleteField: React.FC<AutocompleteFieldProps> = ({
@@ -47,8 +55,10 @@ export const AutocompleteField: React.FC<AutocompleteFieldProps> = ({
   id,
   maxSuggestions = 8,
   className = '',
+  klavyeDuzeni = false,
 }) => {
   const [acik, setAcik] = useState(false);
+  const listeKimligi = React.useId();
   const [vurgulu, setVurgulu] = useState(-1);
   const sarmalayici = useRef<HTMLDivElement>(null);
 
@@ -120,6 +130,15 @@ export const AutocompleteField: React.FC<AutocompleteFieldProps> = ({
         role="combobox"
         aria-expanded={gosterilecek}
         aria-autocomplete="list"
+        {...(klavyeDuzeni
+          ? {
+              'aria-controls': listeKimligi,
+              'aria-activedescendant': gosterilecek && vurgulu >= 0 ? `${listeKimligi}-${vurgulu}` : undefined,
+              /* Seçim onMouseDown/onTouchStart'ta preventDefault ile yapılıyor; odak
+                 inputta kalıyor. Blur yalnız gerçekten ayrılınca (Tab, başka alan). */
+              onBlur: () => setAcik(false),
+            }
+          : {})}
         onChange={(e) => {
           onChange(e.target.value);
           setAcik(true);
@@ -135,6 +154,7 @@ export const AutocompleteField: React.FC<AutocompleteFieldProps> = ({
 
       {gosterilecek && (
         <ul
+          id={klavyeDuzeni ? listeKimligi : undefined}
           role="listbox"
           className="absolute z-30 left-0 right-0 mt-1 max-h-60 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg py-1"
         >
@@ -146,6 +166,7 @@ export const AutocompleteField: React.FC<AutocompleteFieldProps> = ({
                   type="button"
                   role="option"
                   aria-selected={secili}
+                  {...(klavyeDuzeni ? { id: `${listeKimligi}-${i}`, tabIndex: -1 } : {})}
                   /*
                     onMouseDown kullanılıyor: onClick, input blur olduktan
                     sonra tetiklendiği için liste kapanıp seçim kaçıyordu.
