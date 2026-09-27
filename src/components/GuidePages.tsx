@@ -326,7 +326,14 @@ export const RehberBaglantilari: React.FC<{
   const bu = REHBERLER.find((r) => r.slug === slug);
   const havuz = REHBERLER.filter((r) => r.slug !== slug && r.kategori === kategori);
   const ayniKonu = bu ? havuz.filter((r) => r.konu === bu.konu) : [];
-  const digerleri = [...ayniKonu, ...havuz.filter((r) => !ayniKonu.includes(r))].slice(0, 3);
+  /*
+    İşveren rehberinde DÖRT öneri (27 Eylül 2026): beş işveren yazısından
+    bulunulan hariç kalan dördü — üçle sınırlıyken biri hiç önerilmiyordu
+    ve telefonda son kart yanında boş gri hücreyle tek kalıyordu. Öğrenci
+    tarafı üçte kalıyor.
+  */
+  const oneriSayisi = kategori === 'isveren' ? 4 : 3;
+  const digerleri = [...ayniKonu, ...havuz.filter((r) => !ayniKonu.includes(r))].slice(0, oneriSayisi);
 
   // Bölüm sayfalarının tamamı değil: en çok aranan birkaçı, sonra tam liste.
   const bolumler = BOLUMLER.slice(0, 6);
@@ -357,7 +364,7 @@ export const RehberBaglantilari: React.FC<{
             {isveren ? 'Diğer işveren rehberleri' : 'Bunlar da işine yarar'}
           </h2>
           {/* Fotoğraflı kartlar: rehber merkeziyle aynı kart (RehberKarti), gerçek <a href>. */}
-          <RehberIzgarasi>
+          <RehberIzgarasi dortSutun={oneriSayisi === 4} tekKalaniYay>
             {digerleri.map((r) => (
               <RehberKarti key={r.slug} rehber={r} onNavigate={onNavigate} />
             ))}
