@@ -269,7 +269,15 @@ test('yerleşim: sol 330 yapışkan, orta 600 ve sağ 350 değişmedi; 1024–14
 });
 
 test('erişilebilirlik: section + başlıklar, listeler ul, dış bağlantı yeni sekme duyurusu, tarih <time>', () => {
-  assert.match(PANEL, /<section aria-labelledby=\{`\$\{kimlik\}-baslik`\}/);
+  /*
+    BÖLÜM ADI İKİ YOLDAN (27 Eylül 2026): bağımsız sayfada görünür
+    başlıktan (`aria-labelledby`), profil panelinde doğrudan
+    `aria-label` ile. Panelde görünür başlık kaldırıldı (kullanıcı
+    isteği) ama bölüm adsız KALMADI — kural bu, hangi öznitelikle
+    verildiği değil.
+  */
+  assert.match(PANEL, /'aria-labelledby': `\$\{kimlik\}-baslik`/);
+  assert.match(PANEL, /'aria-label': baskasi \? 'Kampüs' : 'Kampüsüm'/);
   assert.match(PANEL, /<h2\s+id=\{`\$\{kimlik\}-baslik`\}/);
   /* Yemek ve burs birer; duyuru başlığı panel (kartlı) ve sayfa dalında ikişer yazılı, biri çiziliyor. */
   assert.equal((PANEL.match(/<h3 id=\{kimlik\}/g) ?? []).length, 4);
