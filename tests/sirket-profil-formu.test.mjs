@@ -69,6 +69,7 @@ test('kaydetme, eksik sayacı, önizleme ve doğrulama korunuyor', () => {
   /* Masaüstünde kaydet formun dibinde, telefonda değişiklik varken sabit çubuk. */
   assert.match(FORM, /onKaydet=\{\(\) => void kaydet\(\)\}\s*kartsiz/);
   assert.match(FORM, /\{degisti && \(\s*<div/);
-  /* Form masaüstünde 640 px'i geçmiyor. */
-  assert.match(FORM, /lg:grid-cols-\[minmax\(0,640px\)_300px\]/);
+  /* Geniş ekranda form yataya yayılıyor: kalan genişlik + 340 px önizleme, xl'de iki panel. */
+  assert.match(FORM, /lg:grid-cols-\[minmax\(0,1fr\)_340px\]/);
+  assert.match(FORM, /xl:grid xl:grid-cols-\[minmax\(0,1fr\)_minmax\(0,1\.4fr\)\]/);
 });
