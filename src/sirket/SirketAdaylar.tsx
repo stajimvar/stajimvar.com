@@ -32,7 +32,7 @@ function tarihYaz(deger: string | null): string {
 }
 
 const Rozet: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
+  <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-800">
     {children}
   </span>
 );
@@ -67,7 +67,7 @@ const AdaySatiri: React.FC<{ ogrenci: ArayanOgrenci }> = ({ ogrenci }) => (
       {ogrenci.eposta && (
         <a
           href={`mailto:${ogrenci.eposta}`}
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 text-sm font-bold text-white hover:bg-emerald-700"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 text-sm font-bold text-white hover:bg-blue-700"
         >
           <Mail aria-hidden className="h-3.5 w-3.5" />
           E-posta gönder
@@ -84,7 +84,7 @@ const AdaySatiri: React.FC<{ ogrenci: ArayanOgrenci }> = ({ ogrenci }) => (
           href={ogrenci.linkedin}
           target="_blank"
           rel="noopener noreferrer nofollow"
-          className="inline-flex min-h-11 items-center text-sm font-semibold text-emerald-700 hover:underline"
+          className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 hover:underline"
         >
           LinkedIn
         </a>
@@ -94,7 +94,19 @@ const AdaySatiri: React.FC<{ ogrenci: ArayanOgrenci }> = ({ ogrenci }) => (
 );
 
 export const SirketAdaylar: React.FC = () => {
-  const [tur, setTur] = React.useState<'staj' | 'is'>('staj');
+  /*
+    BAŞLANGIÇ SEKMESİ ADRESTEN
+
+    Başvuranlar sayfasındaki iki kart `?tur=is` / `?tur=staj` ile
+    geliyor: şirket hangi kartı seçtiyse o liste açılıyor. Seçim
+    kartta yapılmışken burada yeniden yaptırmak, kartı anlamsız
+    kılardı. Parametre yoksa ya da tanınmıyorsa staj — sitenin
+    ağırlık merkezi orası.
+  */
+  const [tur, setTur] = React.useState<'staj' | 'is'>(() => {
+    if (typeof window === 'undefined') return 'staj';
+    return new URLSearchParams(window.location.search).get('tur') === 'is' ? 'is' : 'staj';
+  });
   const [veri, setVeri] = React.useState<ArayanListesi | null>(null);
   const [asama, setAsama] = React.useState<'yukleniyor' | 'hazir' | 'hata'>('yukleniyor');
   const [hataMetni, setHataMetni] = React.useState<string | null>(null);
@@ -148,14 +160,14 @@ export const SirketAdaylar: React.FC = () => {
               aria-pressed={etkin}
               className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold transition-colors ${
                 etkin
-                  ? 'bg-emerald-600 text-white'
+                  ? 'bg-blue-600 text-white'
                   : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
               }`}
             >
               <Ikon aria-hidden className="h-4 w-4" />
               {s.etiket}
               {s.adet !== undefined && (
-                <span className={`tabular-nums ${etkin ? 'text-emerald-100' : 'text-gray-500'}`}>
+                <span className={`tabular-nums ${etkin ? 'text-blue-100' : 'text-gray-500'}`}>
                   {s.adet}
                 </span>
               )}
