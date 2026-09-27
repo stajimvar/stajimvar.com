@@ -187,9 +187,25 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
     bloklar: [
       {
         baslik: 'Önce ayırın: zorunlu mu, gönüllü mü?',
-        ozet:
-          'Öğrenciye okuldan staj belgesi olup olmadığını sorun; sigorta ve ücret yükümlülükleri zorunlu ve ' +
-          'gönüllü stajda farklı işliyor.',
+        sade: true,
+        ozet: 'Öğrenciye "Okuldan staj belgesi var mı?" diye sorun; belge varsa staj zorunludur.',
+        /* Maddeler aşağıdaki paragraflardan ve sigorta bölümünden; yeni iddia yok. */
+        ikiSecenek: [
+          {
+            baslik: 'Zorunlu staj',
+            satirlar: [
+              'Mezuniyet için gerekli; okul belgeyle tanımlar.',
+              'Üniversitede sigortayı okul yapar, primini okul öder.',
+            ],
+          },
+          {
+            baslik: 'Gönüllü staj',
+            satirlar: [
+              'Öğrencinin isteğiyle, müfredat dışında yapılır.',
+              'Okulun sigortası otomatik devreye girmez; sigorta ve ücret işverene geçebilir.',
+            ],
+          },
+        ],
         paragraflar: [
           'Zorunlu staj, öğrencinin mezun olabilmek için yapmak zorunda olduğu ve okulun ' +
             'belgeyle tanımladığı staj. Gönüllü staj öğrencinin kendi isteğiyle yaptığı, ' +
@@ -202,17 +218,31 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         /*
-          Başlık koşulsuz yazılmıyor (27 Eylül 2026): "okul yapar, işveren
-          yapmaz" gönüllü stajda ve meslek lisesinde doğru değil; koşul
-          başlıkta, ayrıntısı aşağıda.
+          Başlık soru (27 Eylül 2026, kullanıcı kararı). Koşulsuz "okul yapar"
+          yazılmıyor: kapsam ve koşullar başlığın hemen altındaki GÖRÜNÜR
+          özette, açılır ayrıntıya saklanmıyor.
         */
-        baslik: 'Sigorta: üniversitenin zorunlu stajında okul yapar',
+        baslik: 'Sigortayı kim yapar?',
+        sade: true,
         ozet:
-          'Üniversitenin zorunlu stajında sigorta girişini okul yapıyor ve primini okul ödüyor; gönüllü stajda ' +
-          've meslek lisesi beceri eğitiminde kurallar farklı, yazılı teyit isteyin.',
+          'Üniversitenin zorunlu stajında iş kazası ve meslek hastalığı sigortasını okul yapar ve primini okul ' +
+          'öder; sizin SGK\'ya bildirim yapmanız gerekmez. Gönüllü stajda ve meslek lisesi beceri eğitiminde ' +
+          'kurallar farklı; okulun staj birimine yazılı sorun.',
         bolumGorseli: {
           dosya: '04-yukumluluk-teyit',
           alt: 'Şirket sorumlusu staj belgelerini ve tarih planını karşılaştırıyor.',
+        },
+        /* Fotoğraf süreci tek başına anlatmıyor; akış aşağıdaki paragraflardan. */
+        akis: {
+          baslik: 'Staj başlamadan önce',
+          adimlar: [
+            { ad: 'Staj türünü sorun', ayrinti: 'Zorunlu mu, gönüllü mü? Okuldan staj belgesi var mı?' },
+            { ad: 'Okulla teyit edin', ayrinti: 'Sigorta girişinin yapıldığını gösteren belgeyi isteyin.' },
+            {
+              ad: 'Kapsamı ve tarihleri kontrol edin',
+              ayrinti: 'İş kazası ve meslek hastalığı sigortası mı, tarihler stajla aynı mı?',
+            },
+          ],
         },
         paragraflar: [
           'Üniversite öğrencisinin zorunlu stajında iş kazası ve meslek hastalığı sigortasının ' +
@@ -231,6 +261,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'İmzalayacağınız belgeler',
+        sade: true,
         ozet:
           'Belgelerin adı okuldan okula değişiyor ama işlevleri aynı. Öğrenci hepsini okulundan alıp ' +
           'getiriyor; sizin işiniz doldurup imzalamak ve kaşelemek.',
@@ -267,6 +298,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Bir sorumlu atayın — tek satırlık ama en önemli iş',
+        sade: true,
         ozet:
           'Staj belgesindeki "işletme sorumlusu", stajyerin fiilen yanında çalışacağı ve ilk gün soru ' +
           'soracağı kişi olsun.',
@@ -281,6 +313,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
       },
       {
         baslik: 'Ücret: yazmadığımız şey ve neden',
+        sade: true,
         ozet:
           'Ücret yükümlülüğü stajın türüne, çalışan sayınıza ve öğrencinin okul türüne göre değişiyor; güncel ' +
           'kural için SGK, İŞKUR ve okulun staj birimini esas alın.',

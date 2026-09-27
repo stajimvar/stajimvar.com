@@ -95,11 +95,32 @@ test('bölüm kartı: başlık kartın dışında, fotoğraf gecikmeli ve ölç�
 test('sigorta başlığı koşulsuz değil; ücret ve sigorta koşulları korunuyor', () => {
   const veri = oku('src/data/rehber-yazilari/isveren.tsx');
   assert.doesNotMatch(veri, /baslik: 'Sigorta: okul yapar, işveren yapmaz'/);
-  assert.match(veri, /baslik: 'Sigorta: üniversitenin zorunlu stajında okul yapar'/);
+  assert.match(veri, /baslik: 'Sigortayı kim yapar\?'/);
+  /* Kapsam ve koşul başlığın altındaki görünür özette, yalnız açılır ayrıntıda değil. */
+  const sigorta = veri.slice(veri.indexOf("baslik: 'Sigortayı kim yapar?'"), veri.indexOf('akis: {'));
+  assert.match(sigorta, /ozet:[\s\S]*zorunlu stajında iş kazası ve meslek hastalığı[\s\S]*Gönüllü stajda ve meslek lisesi/);
   assert.match(veri, /Gönüllü stajda okulun sigortası otomatik devreye girmiyor/);
   assert.match(veri, /3308 sayılı Kanun/);
   assert.match(veri, /Bu sayfada tutar, oran ve devlet katkısı payı yazmıyoruz/);
   assert.match(veri, /ücret ve sigorta staj kuralına değil çalışma kuralına tabi/);
+});
+
+test('sade düzen yalnız zorunlu staj rehberinde; iç içe kart yok, iki seçenek telefonda alt alta', () => {
+  const veri = oku('src/data/rehber-yazilari/isveren.tsx');
+  const bas = veri.indexOf("slug: 'zorunlu-staj-isverenin-yukumlulukleri'");
+  const son = veri.indexOf("slug: 'staj-basvurularini-degerlendirme'");
+  const sade = [...veri.matchAll(/sade: true/g)].map((m) => m.index);
+  assert.equal(sade.length, 5);
+  assert.ok(sade.every((i) => i > bas && i < son), 'sade düzen başka rehbere yayılmış');
+  assert.match(veri.slice(bas, son), /baslik: 'Zorunlu staj'[\s\S]*baslik: 'Gönüllü staj'/);
+  const bolum = oku('src/components/RehberBolum.tsx');
+  assert.match(bolum, /<div className="grid gap-3 sm:grid-cols-2">/);
+  /* Sade ayrıntı satırı çerçevesiz. */
+  const satir = bolum.slice(bolum.indexOf('export const SadeAyrinti'), bolum.indexOf('export interface Secenek'));
+  assert.doesNotMatch(satir, /border/);
+  /* Küçük numara dairesi yalnız bolum-sade başlıkta. */
+  const stil = oku('src/components/RehberOkuma.tsx');
+  assert.match(stil, /\.rehber-govde--sayili > h2\.bolum-sade::before \{\s*width: 1\.75rem; height: 1\.75rem;[^}]*box-shadow: none;/);
 });
 
 test('nesne maddeli kontrol listesi bir kez sayılıyor (reklam eşiği şişmiyor)', () => {

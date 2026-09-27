@@ -5,7 +5,18 @@ import {
   KarsilastirmaTablosu,
   RehberFigur,
 } from '../components/RehberGorseller';
-import { BolumAyrintisi, BolumFotografi, IsaretListesi, type IsaretMaddesi } from '../components/RehberBolum';
+import {
+  BolumAyrintisi,
+  BolumFotografi,
+  IkiSecenek,
+  IsaretListesi,
+  IslemAkisi,
+  SadeAyrinti,
+  SadeFotograf,
+  type AkisAdimi,
+  type IsaretMaddesi,
+  type Secenek,
+} from '../components/RehberBolum';
 import type { KonuId, Rehber, RehberKategori, SoruCevap } from './rehberler';
 import { ODAK_HALKASI } from '../lib/renk-token';
 
@@ -169,10 +180,23 @@ export interface Blok {
    * `depoAnahtari` rehber ve bölüme özgü olmalı; değişirse işaretler sıfırlanır.
    */
   isaretListesi?: { depoAnahtari: string; maddeler: IsaretMaddesi[] };
+  /*
+    SADE DÜZEN (27 Eylül 2026, kullanıcı geri bildirimi): bölüm kartı yok.
+    Başlık (küçük numara), görünür kısa özet, tek görsel alan, düz
+    "Ayrıntıyı aç" satırı. Şimdilik yalnız zorunlu staj rehberinde; diğer
+    işveren rehberleri kart düzeninde kalıyor (kullanıcı onayından sonra
+    yayılacak).
+  */
+  sade?: boolean;
+  /** İki durumun karşılaştırması (görsel alan). Madde anahtarı `satirlar`. */
+  ikiSecenek?: [Secenek, Secenek];
+  /** Fotoğrafı tamamlayan kısa işlem akışı (görsel alanda fotoğrafın yanında). */
+  akis?: { baslik?: string; adimlar: AkisAdimi[] };
 }
 
-const Baslik: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <h2 className="text-lg font-bold text-gray-900 pt-4">{children}</h2>
+const Baslik: React.FC<{ children: React.ReactNode; sade?: boolean }> = ({ children, sade = false }) => (
+  /* `bolum-sade`: küçük numara dairesi ve kısa üst boşluk (REHBER_GOVDE_STILI). */
+  <h2 className={`text-lg font-bold text-gray-900 pt-4${sade ? ' bolum-sade' : ''}`}>{children}</h2>
 );
 
 const AYRINTI_LISTESI = 'list-disc space-y-1.5 pl-5';
@@ -236,10 +260,69 @@ const BolumKarti: React.FC<{ b: Blok; i: number }> = ({ b, i }) => {
   );
 };
 
+/**
+ * Sade bölüm: başlık → görünür özet → tek görsel alan → "Ayrıntıyı aç".
+ * Hepsi gövdenin DOĞRUDAN çocuğu (h2 içindekiler için; aradaki boşluk
+ * gövdenin `> * + *` kuralından). İç içe kart yok.
+ */
+const SadeBolum: React.FC<{ b: Blok; i: number }> = ({ b, i }) => {
+  const ayrintiVar = Boolean(b.paragraflar?.length || b.liste?.length || b.sirali?.length);
+  const yardimci = b.akis ? (
+    <IslemAkisi baslik={b.akis.baslik} adimlar={b.akis.adimlar} metniCiz={metniCiz} />
+  ) : b.isaretListesi ? (
+    <IsaretListesi depoAnahtari={b.isaretListesi.depoAnahtari} maddeler={b.isaretListesi.maddeler} metniCiz={metniCiz} />
+  ) : null;
+  return (
+    <>
+      {b.baslik && <Baslik sade>{b.baslik}</Baslik>}
+      {b.ozet && <p>{metniCiz(b.ozet, `${i}-o`)}</p>}
+      {b.ikiSecenek && <IkiSecenek secenekler={b.ikiSecenek} metniCiz={metniCiz} />}
+      {b.bolumGorseli ? (
+        /* Görsel alan: fotoğraf ve onu tamamlayan akış/liste; telefonda alt alta. */
+        <div className="grid items-start gap-4 sm:grid-cols-2 sm:gap-5">
+          <SadeFotograf dosya={b.bolumGorseli.dosya} alt={b.bolumGorseli.alt} />
+          {yardimci}
+        </div>
+      ) : (
+        yardimci
+      )}
+      {b.kontrol && <KontrolListesi baslik={b.kontrol.baslik} maddeler={b.kontrol.maddeler} />}
+      {ayrintiVar && (
+        <SadeAyrinti etiket={b.ayrintiEtiketi}>
+          {b.paragraflar?.map((p, j) => (
+            <p key={j}>{metniCiz(p, `${i}-${j}`)}</p>
+          ))}
+          {b.liste && (
+            <ul className={AYRINTI_LISTESI}>
+              {b.liste.map((m, j) => (
+                <li key={j}>{metniCiz(m, `${i}-l${j}`)}</li>
+              ))}
+            </ul>
+          )}
+          {b.sirali && (
+            <ol className="list-decimal space-y-1.5 pl-5">
+              {b.sirali.map((m, j) => (
+                <li key={j}>{metniCiz(m, `${i}-s${j}`)}</li>
+              ))}
+            </ol>
+          )}
+        </SadeAyrinti>
+      )}
+      {b.uyari && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-relaxed">
+          {metniCiz(b.uyari, `${i}-u`)}
+        </div>
+      )}
+    </>
+  );
+};
+
 export const GovdeCizimi: React.FC<{ bloklar: Blok[] }> = ({ bloklar }) => (
   <>
     {bloklar.map((b, i) =>
-      b.ozet ? (
+      b.sade ? (
+        <SadeBolum key={i} b={b} i={i} />
+      ) : b.ozet ? (
         <BolumKarti key={i} b={b} i={i} />
       ) : (
       <React.Fragment key={i}>

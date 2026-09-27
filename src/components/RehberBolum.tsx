@@ -70,6 +70,127 @@ export const BolumAyrintisi: React.FC<{ etiket?: string; children: React.ReactNo
   </details>
 );
 
+/* ------------------------------------------------------------------ SADE
+  SADE BÖLÜM PARÇALARI (27 Eylül 2026, kullanıcı geri bildirimi): kart içinde
+  kart yok. Bölüm = başlık, görünür kısa özet, TEK görsel alan (fotoğraf +
+  akış, fotoğraf + liste ya da iki seçenek), düz bir "Ayrıntıyı aç" satırı.
+  Çerçeve yalnız işaretlenebilir listede (dokunma alanlarını ayırıyor).
+*/
+
+/** Çerçevesiz temsili fotoğraf; oran korunuyor, gecikmeli. */
+export const SadeFotograf: React.FC<{ dosya: string; alt: string }> = ({ dosya, alt }) => (
+  <figure className="relative m-0">
+    <picture className="block overflow-hidden rounded-xl bg-gray-100">
+      <source
+        srcSet={`/rehber-gorselleri/bolumler/${dosya}.avif?v=${BOLUM_SURUMU} 1280w`}
+        sizes={SADE_BOYUTLARI}
+        type="image/avif"
+      />
+      <img
+        src={`/rehber-gorselleri/bolumler/${dosya}.webp?v=${BOLUM_SURUMU}`}
+        srcSet={`/rehber-gorselleri/bolumler/${dosya}.webp?v=${BOLUM_SURUMU} 1280w`}
+        sizes={SADE_BOYUTLARI}
+        alt={alt}
+        width={1280}
+        height={720}
+        loading="lazy"
+        decoding="async"
+        className="aspect-video h-auto w-full object-cover"
+      />
+    </picture>
+    <figcaption className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
+      Temsili görsel
+    </figcaption>
+  </figure>
+);
+
+/* Telefonda gövdenin tam genişliği; sm üstünde görsel alanın yarısı. */
+const SADE_BOYUTLARI = '(min-width: 1024px) 360px, (min-width: 640px) 45vw, calc(100vw - 66px)';
+
+/** Düz ayrıntı satırı: çerçeve yok, yalnız mavi yazı ve ok. Yerel `<details>`. */
+export const SadeAyrinti: React.FC<{ etiket?: string; children: React.ReactNode }> = ({
+  etiket = 'Ayrıntıyı aç',
+  children,
+}) => (
+  <details className="group">
+    <summary
+      className={`inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-md text-[15px] font-bold text-blue-700 hover:text-blue-900 [&::-webkit-details-marker]:hidden ${ODAK_HALKASI}`}
+    >
+      {etiket}
+      <ChevronDown aria-hidden className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+    </summary>
+    <div className="space-y-3 pt-1 text-[15px] leading-relaxed text-gray-700">{children}</div>
+  </details>
+);
+
+export interface Secenek {
+  baslik: string;
+  satirlar: string[];
+}
+
+/**
+ * İki seçeneğin karşılaştırması (ör. zorunlu / gönüllü staj). İyi-kötü
+ * değil, iki durum: aynı renk, aynı ağırlık. Telefonda alt alta (dar
+ * sütunda iki madde yan yana okunmuyor), sm üstünde yan yana.
+ */
+export const IkiSecenek: React.FC<{
+  secenekler: [Secenek, Secenek];
+  metniCiz: (metin: string, anahtar: string) => React.ReactNode;
+}> = ({ secenekler, metniCiz }) => (
+  <div className="grid gap-3 sm:grid-cols-2">
+    {secenekler.map((s, i) => (
+      <div key={s.baslik} className="rounded-xl bg-slate-50 px-4 py-3.5">
+        <p className="text-[15px] font-extrabold text-gray-900">{s.baslik}</p>
+        <ul className="mt-2 space-y-1.5">
+          {s.satirlar.map((m, j) => (
+            <li key={j} className="flex gap-2 text-[15px] leading-relaxed text-gray-700">
+              <span aria-hidden className="mt-[0.6rem] h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+              <span>{metniCiz(m, `secenek-${i}-${j}`)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </div>
+);
+
+export interface AkisAdimi {
+  ad: string;
+  ayrinti?: string;
+}
+
+/** Kısa işlem akışı: numaralı adımlar, aralarında ince çizgi. Fotoğrafı tamamlıyor. */
+export const IslemAkisi: React.FC<{
+  baslik?: string;
+  adimlar: AkisAdimi[];
+  metniCiz: (metin: string, anahtar: string) => React.ReactNode;
+}> = ({ baslik, adimlar, metniCiz }) => (
+  <div>
+    {baslik && <p className="mb-2 text-sm font-bold text-gray-500">{baslik}</p>}
+    <ol className="space-y-0">
+      {adimlar.map((a, i) => (
+        <li key={a.ad} className="relative flex gap-3 pb-3 last:pb-0">
+          {i < adimlar.length - 1 && (
+            <span aria-hidden className="absolute left-3 top-7 bottom-0 w-px -translate-x-1/2 bg-blue-200" />
+          )}
+          <span
+            aria-hidden
+            className="relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white"
+          >
+            {i + 1}
+          </span>
+          <span className="min-w-0">
+            <span className="block text-[15px] font-bold leading-6 text-gray-900">{metniCiz(a.ad, `akis-a${i}`)}</span>
+            {a.ayrinti && (
+              <span className="block text-sm leading-relaxed text-gray-600">{metniCiz(a.ayrinti, `akis-y${i}`)}</span>
+            )}
+          </span>
+        </li>
+      ))}
+    </ol>
+  </div>
+);
+
 export interface IsaretMaddesi {
   ad: string;
   ayrinti?: string;
