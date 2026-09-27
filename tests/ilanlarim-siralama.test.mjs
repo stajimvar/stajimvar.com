@@ -28,7 +28,7 @@ test('İlanlarım: ad + doğrulama satırı yok; doğrulanmamışta yalnız işl
 
 test('sıra öğrencinin ilanlar sayfasıyla aynı sorgudan: katalog, "Tümü", ilk sayfa', () => {
   assert.match(SIRA, /fetchPublishedListingsCatalog\('all'\)/);
-  assert.match(PANEL, /<IlanSiralamasi\s+companyId=\{baglam\.companyId\}\s+yayindaIlanVar=\{ilanlar\.some\(\(i\) => i\.status === 'published'\)\}/);
+  assert.match(PANEL, /siralama=\{\s*<IlanSiralamasi\s+companyId=\{baglam\.companyId\}\s+yayindaIlanVar=\{ilanlar\.some\(\(i\) => i\.status === 'published'\)\}/);
   /* Kendi ilanı şirket kimliğiyle tanınıyor; sıra numarası listedeki gerçek konum. */
   assert.match(SIRA, /companyId && companyIdi === companyId/);
   assert.match(SIRA, /listings\.map\(\(l, i\) => \(benimMi\(l\.companyId\) \? i \+ 1 : 0\)\)/);
@@ -43,6 +43,19 @@ test('uydurma sıra yok: dört durum dört cümle, toplam sunucudan', () => {
   /* Hata ve yükleniyor ayrı; yeniden dene var. */
   assert.match(SIRA, /Sıra alınamadı\./);
   assert.match(SIRA, /Yeniden dene/);
+});
+
+test('ilan yokken sıra: ince ilk eylem satırı → sıra → Başlamadan önce; ilan varken listenin sonunda', () => {
+  const GENEL = oku('src/sirket/GenelBakis.tsx');
+  const bos = GENEL.slice(GENEL.indexOf('if (ilanlar.length === 0) {'), GENEL.indexOf('id="baslamadan-once"'));
+  const olustur = bos.indexOf('İlk ilanınızı oluşturun');
+  const sira = bos.indexOf('{siralama}');
+  assert.ok(olustur > 0 && sira > olustur, 'sıra ilk eylem satırının altında, Başlamadan önce üstünde değil');
+  /* İnce satır: ortalanmış büyük kart ve 56 px simge yok. */
+  assert.match(bos, /sm:flex-row sm:items-center/);
+  assert.doesNotMatch(bos, /h-14 w-14/);
+  /* İlan varken tek sıra yuvası, dalın sonunda. */
+  assert.equal((GENEL.match(/\{siralama\}/g) ?? []).length, 2);
 });
 
 test('liste okunur ve dokunulur: 10 satır açık, tümü düğmeyle; satırlar gerçek bağlantı', () => {
