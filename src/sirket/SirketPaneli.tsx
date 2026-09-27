@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, BadgeCheck, Lock, Plus, Search, ShieldCheck, Users } from 'lucide-react';
+import { ArrowRight, BadgeCheck, BookOpen, Briefcase, Lock, Plus, ShieldCheck, Users } from 'lucide-react';
 import { listingSlug } from '../lib/slug';
 import {
   BIRINCIL_DUGME,
@@ -16,6 +16,7 @@ import {
   ikincilStil,
   kutuStil,
 } from './renk';
+import { SirketAdayProfili } from './SirketAdayProfili';
 import { SirketAdaylar } from './SirketAdaylar';
 import { IlanFormu } from './IlanFormu';
 import { AdayIzgarasi } from './AdayIzgarasi';
@@ -122,11 +123,21 @@ export type SirketGorunumu = 'ilanlar' | 'basvuranlar' | 'adaylar';
 /** Adresten görünüm; form ve profil ayrı. */
 export function sirketEkrani(
   yol: string,
-): { tur: 'form'; duzenlenenId: string | null } | { tur: 'profil' } | { tur: SirketGorunumu } {
+):
+  | { tur: 'form'; duzenlenenId: string | null }
+  | { tur: 'profil' }
+  | { tur: 'adayProfili'; adayId: string }
+  | { tur: SirketGorunumu } {
   if (yol === '/sirket/ilan/yeni') return { tur: 'form', duzenlenenId: null };
   const duzenlenenId = yol.match(/^\/sirket\/ilan\/([0-9a-f-]{36})\/duzenle$/)?.[1] ?? null;
   if (duzenlenenId) return { tur: 'form', duzenlenenId };
   if (yol.startsWith('/sirket/profil')) return { tur: 'profil' };
+  /*
+    Aday profili adayların ALTINDA: /sirket/aday/<id>. Önce bakılıyor,
+    yoksa `/sirket/adaylar` öneki onu da yutardı.
+  */
+  const adayId = yol.match(/^\/sirket\/aday\/([0-9a-f-]{36})$/)?.[1] ?? null;
+  if (adayId) return { tur: 'adayProfili', adayId };
   if (yol.startsWith('/sirket/adaylar')) return { tur: 'adaylar' };
   if (yol.startsWith('/sirket/basvuranlar')) return { tur: 'basvuranlar' };
   return { tur: 'ilanlar' };
@@ -259,6 +270,18 @@ export const SirketPaneli: React.FC<{
         onIptal={() => onNavigate('/sirket/ilanlar')}
       />
     );
+  }
+
+  if (ekran.tur === 'adayProfili') {
+    /*
+      ADAY PROFİLİ KENDİ EKRANI
+
+      Karttaki "Profili incele" buraya geliyor. Sekme çubuğunun altına
+      değil, `SirketPaneli` düzeyine konuldu: bu bir sekme değil, bir
+      sekmenin içinden açılan derin sayfa — İlan formunun durduğu yerle
+      aynı düzey.
+    */
+    return <SirketAdayProfili adayId={ekran.adayId} onNavigate={onNavigate} />;
   }
 
   if (ekran.tur === 'profil') {
@@ -417,7 +440,7 @@ export const SirketIlanlarSekmesi: React.FC<{
       genişlikleri 320 px için ölçülmüş. Altıncı öğe o ölçümü bozardı;
       giriş Başvuranlar ekranının üstünden veriliyor.
     */
-    return <SirketAdaylar />;
+    return <SirketAdaylar onNavigate={onNavigate} />;
   }
 
   if (gorunum === 'basvuranlar') {
@@ -557,60 +580,133 @@ const Basvuranlar: React.FC<{
     öteki kademede bilinmiyor ("0 başvuru" yalan olurdu). Doğrulama
     rozeti burada TEKRARLANMIYOR — profil sayfasında (Şirketim).
   */
+  /*
+    SAYFA BAŞLIĞI EKRANDA YAZMIYOR, DOM'DA DURUYOR
+
+    "Başvurular" başlığı ve altındaki açıklama kaldırıldı: alt gezinme
+    çubuğunda zaten "Başvurular" seçili duruyor ve aynı sözcüğü iki kez
+    okumak ekranın en değerli yerini harcıyordu (kullanıcı bildirdi,
+    27 Eylül 2026).
+
+    `h1` SİLİNMEDİ, GÖRÜNMEZ OLDU. Sayfanın tek başlığı buydu; tamamen
+    kaldırmak ekran okuyucuyla başlıktan başlığa gezen kullanıcıya
+    başlıksız bir sayfa bırakırdı. Alt çubuktaki etiket bir başlık değil,
+    bir gezinme bağlantısı — onun yerini tutmuyor.
+
+    ALTTAKİ AÇIKLAMA CÜMLESİ GİTTİ ama içindeki SAYI kaybolmadı:
+    "İlanlarınıza gelen 3 başvuru." satırı toplam sayıyı gösteren tek
+    yerdi. Sayı artık ızgaranın kendi satırında (`AdayIzgarasi`,
+    `basliksiz` dalı) — listenin hemen üstünde, ait olduğu yerde.
+  */
   const baslik = (
-    <div className="min-w-0">
-      <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
-        Başvurular
-      </h1>
-      <p className="mt-0.5 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-        {kartAcik && kartlar.length > 0
-          ? `İlanlarınıza gelen ${kartlar.length} başvuru.`
-          : 'İlanlarınıza gelen başvuruları buradan yönetin.'}
-      </p>
-    </div>
+    <h1 className="sr-only">Başvurular</h1>
   );
 
   /*
-    ÖĞRENCİLERİ KEŞFET — AYRI, İKİNCİL ALAN
+    ÖĞRENCİLERİ KEŞFET — BAŞLIĞIN HEMEN ALTINDA
 
     Başvuran ile aday farklı: başvuran bir ilana başvurmuş kişi, aday
-    profilini iş/staj listesine kendisi açmış kişi. Giriş başlığın
-    altındaki yeşil düğmeydi ve sayfanın birincil eylemiyle yarışıyordu;
-    artık sayfanın sonunda ayrı bir alan. Alt çubuğa altıncı sekme
-    eklenmedi (beş öğe 320 px için ölçülü). Adaylar ekranının kendi
-    yetki kapısı değişmedi (SirketAdaylar).
+    profilini iş/staj listesine kendisi açmış kişi.
+
+    YERLEŞİM İKİ KEZ DEĞİŞTİ, İKİSİ DE KULLANICI KARARI
+    ---------------------------------------------------
+    Önce başlığın altında yeşil bir düğmeydi ve sayfanın birincil
+    eylemiyle yarışıyordu; sayfanın SONUNA alındı. Ama başvurusu
+    olmayan şirkette sayfa "Henüz başvuru yok" ile başlıyor ve aday
+    aramak tam da o şirketin işine yarayan şey — en altta kalması onu
+    görünmez kılıyordu. 27 Eylül 2026'da kullanıcı kartları yukarı
+    istedi; artık başlığın hemen altında, üç dalda da.
+
+    Yarışma sorunu biçimle çözüldü: kartlar ikincil yüzey (beyaz zemin,
+    ince kenar), birincil eylem hâlâ tek ve dolu mavi düğme.
+
+    Alt çubuğa altıncı sekme eklenmedi (beş öğe 320 px için ölçülü).
+    Adaylar ekranının kendi yetki kapısı değişmedi (SirketAdaylar).
   */
   const ogrencileriKesfet = (
     <section
-      aria-labelledby="ogrencileri-kesfet"
-      className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4"
+      /*
+        BAŞLIK KALDIRILDI (27 Eylül 2026)
+
+        "Aday mı arıyorsunuz?" satırı kartların üstünde boşuna yer
+        kaplıyordu: kartların kendi başlıkları ("Staj arayanlar",
+        "İş arayanlar") ne olduklarını zaten söylüyor. Kullanıcı
+        kaldırılmasını istedi.
+
+        Bölüm adsız kalmadı: ad doğrudan `aria-label` ile veriliyor.
+        Görünür bir `h2` bırakıp `sr-only` yapmak işe yaramazdı — kap
+        `space-y-2` kullanıyor ve gizli başlık yine ilk kardeş sayılır,
+        kartlar kaldırılan başlığın boşluğunu taşımaya devam ederdi.
+      */
+      aria-label="Aday arama"
+      className="space-y-2"
     >
-      <span
-        aria-hidden
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
-        style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
-      >
-        <Search className="h-5 w-5" />
-      </span>
-      <div className="min-w-0">
-        <h2 id="ogrencileri-kesfet" className="font-extrabold" style={{ color: SIRKET_METIN }}>
-          Aday mı arıyorsunuz?
-        </h2>
-        <p className="mt-0.5 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-          İş ve staj aradığını belirten öğrencileri keşfedin.
-        </p>
-        <a
-          href="/sirket/adaylar"
-          onClick={(olay) => {
-            if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0) return;
-            olay.preventDefault();
-            onNavigate('/sirket/adaylar');
-          }}
-          className="mt-1 inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-blue-700 hover:text-blue-800"
-        >
-          Öğrencileri keşfet
-          <ArrowRight aria-hidden className="h-4 w-4" />
-        </a>
+      {/*
+        İKİ EŞİT KART, TEK BAĞLANTI DEĞİL
+
+        Önce tek bir "Öğrencileri keşfet" bağlantısı vardı ve iki listeyi
+        (iş arayan / staj arayan) ancak açtıktan sonra görüyordunuz. İki
+        arayış aynı şey değil ve şirket genelde ikisinden birini arıyor;
+        seçim sayfaya girmeden yapılabilmeli.
+
+        Kartlar EŞİT genişlikte (`grid-cols-2`): biri daha büyük olsaydı
+        ötekini ikincil bir seçenek gibi gösterirdi, oysa ikisi eşdeğer.
+
+        Renk panelin kendi vurgusundan (`SIRKET_VURGU`, mavi) geliyor;
+        bu ekran bir dönem yeşil kalmıştı ve panelin geri kalanıyla
+        uyuşmuyordu.
+      */}
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          {
+            tur: 'staj',
+            etiket: 'Staj arayanlar',
+            aciklama: 'Staj aradığını belirten öğrenciler',
+            /*
+              KEP İKONU BİLEREK KULLANILMIYOR
+
+              Mezuniyet kepi bu panelde yasaklı: kullanıcının kaldırttığı
+              bir geçiş kapısının işaretiydi ve tests/isveren-gecis-erisimi
+              onun geri gelmesini engelliyor. Test kaynağı ham metin olarak
+              tarıyor, yani yasaklı adı bir yorumda anmak bile testi
+              düşürüyor. Buradaki kullanım o kapıyla alakasız olurdu ama
+              testi gevşetmek kapının dönmesine yol açardı; ikon değişti.
+            */
+            Ikon: BookOpen,
+          },
+          {
+            tur: 'is',
+            etiket: 'İş arayanlar',
+            aciklama: 'İş aradığını belirten öğrenciler',
+            Ikon: Briefcase,
+          },
+        ].map(({ tur, etiket, aciklama, Ikon }) => (
+          <a
+            key={tur}
+            href={`/sirket/adaylar?tur=${tur}`}
+            onClick={(olay) => {
+              if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0) return;
+              olay.preventDefault();
+              onNavigate(`/sirket/adaylar?tur=${tur}`);
+            }}
+            className="flex min-h-11 flex-col gap-2 rounded-2xl border bg-white p-4 transition-colors hover:bg-blue-50"
+            style={{ borderColor: SIRKET_KENAR }}
+          >
+            <span
+              aria-hidden
+              className="flex h-10 w-10 items-center justify-center rounded-full"
+              style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
+            >
+              <Ikon className="h-5 w-5" />
+            </span>
+            <span className="text-sm font-bold" style={{ color: SIRKET_VURGU_KOYU }}>
+              {etiket}
+            </span>
+            <span className="text-xs leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+              {aciklama}
+            </span>
+          </a>
+        ))}
       </div>
     </section>
   );
@@ -624,6 +720,7 @@ const Basvuranlar: React.FC<{
     return (
       <div className="space-y-4">
         {baslik}
+        {ogrencileriKesfet}
         <div className={`${KUTU} text-center`} style={kutuStil}>
           <span
             aria-hidden
@@ -648,7 +745,6 @@ const Basvuranlar: React.FC<{
             İlan oluştur
           </button>
         </div>
-        {ogrencileriKesfet}
       </div>
     );
   }
@@ -657,6 +753,7 @@ const Basvuranlar: React.FC<{
     return (
       <div className="space-y-4">
         {baslik}
+        {ogrencileriKesfet}
         <div className={KUTU} style={kutuStil}>
           <p
             className="flex items-center gap-2 text-lg font-extrabold"
@@ -680,7 +777,6 @@ const Basvuranlar: React.FC<{
             Şirketini doğrula
           </button>
         </div>
-        {ogrencileriKesfet}
       </div>
     );
   }
@@ -720,6 +816,7 @@ const Basvuranlar: React.FC<{
     */
     <div className="space-y-4">
       {baslik}
+      {ogrencileriKesfet}
       <AdayIzgarasi
         basliksiz
         kartlar={kartlar}
@@ -735,7 +832,6 @@ const Basvuranlar: React.FC<{
         onAdayAcildi={onAdayAcildi}
         onNot={onNot}
       />
-      {ogrencileriKesfet}
     </div>
   );
 };

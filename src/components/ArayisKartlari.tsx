@@ -23,8 +23,26 @@ import { arayisiGuncelle } from '../lib/queries';
  * kodu bozardı.
  */
 
+/*
+  NE PAYLAŞILDIĞI TEK TEK SAYILIYOR
+
+  Bu metin bir süs değil, rızanın kendisi: öğrenci anahtarı açarken
+  neyin görüneceğini buradan okuyor. Şirket tarafına yeni bir alan
+  eklendiğinde ÖNCE bu cümle genişletilmeli — sırası tersine dönerse
+  öğrenciye söylenmemiş veri paylaşılmış olur.
+
+  27 Eylül 2026'da genişletildi: aday kartı ve aday profili artık
+  profil fotoğrafını, hakkında metnini, becerileri ve projeleri de
+  gösteriyor (bkz. göç 20261114010000_aday_profili).
+
+  KASITLI OLARAK DIŞARIDA: telefon, not ortalaması, CV dosyasının
+  kendisi ve çalışma tercihleri. Bunlar bu cümlede sayılmadığı için
+  şirket tarafında da dönmüyor.
+*/
 const PAYLASILAN =
-  'adın, e-postan, okul ve bölümün, sınıfın, şehrin, hedef rollerin ve CV yükleyip yüklemediğin';
+  'profil fotoğrafın, adın, e-postan, okul ve bölümün, sınıfın, şehrin, ' +
+  'hakkında yazdığın tanıtım, hedef rollerin, becerilerin, projelerin, ' +
+  'varsa portföy/LinkedIn/GitHub adreslerin ve CV yükleyip yüklemediğin';
 
 /*
   METİN SOLDA, ANAHTAR SAĞDA (mobil sadeleştirme, 25 Eylül 2026)

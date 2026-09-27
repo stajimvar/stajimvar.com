@@ -3,7 +3,9 @@ import { createPortal } from 'react-dom';
 import { Bell, Briefcase, CalendarClock, CheckCircle2, ChevronLeft, FileText, Heart, UserPlus, X } from 'lucide-react';
 import { gecenSure, type Bildirim } from '../lib/bildirim';
 import { bildirimleriGrupla } from '../lib/bildirim-grubu.mjs';
+import { SOSYAL_PAYLASIM_KOVASI } from '../lib/queries/sosyal';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
+import { useGorselAdresleri } from './sosyal/useGorselAdresleri';
 
 /**
  * BİLDİRİM MERKEZİ — İKİ DÜNYA, TEK SİSTEM
@@ -173,6 +175,16 @@ export const BildirimMerkezi: React.FC<{
    * kalıyor.
    */
   kisi?: (b: Bildirim) => { ad: string; avatarYolu: string | null } | null;
+  /**
+   * Beğenilen paylaşımın özeti ve kapak yolu. Çağıran olay anahtarından
+   * okuyup sunucudan getiriyor (`lib/bildirim-icerigi.mjs`); bilinmiyorsa
+   * `null` ve satır önizlemesiz kalıyor.
+   *
+   * NEDEN VAR: "… paylaşımını beğendi" satırları birbirinin aynısıydı;
+   * altı satır yan yana duruyordu ve hangi paylaşımın beğenildiği hiçbir
+   * yerde yazmıyordu (kullanıcı bildirdi, 27 Eylül 2026).
+   */
+  icerik?: (b: Bildirim) => { ozet: string | null; kapakYolu: string | null } | null;
 }> = ({
   bildirimler,
   okunmamis,
@@ -184,6 +196,7 @@ export const BildirimMerkezi: React.FC<{
   onBaglantiYanitla,
   istekDurumu,
   kisi,
+  icerik,
 }) => {
   const kapsayici = React.useRef<HTMLDivElement>(null);
   /* Hangi bildirimin düğmeleri işlemde: çift dokunma ikinci istek atmasın. */
@@ -294,6 +307,48 @@ export const BildirimMerkezi: React.FC<{
   const istekler = bildirimler.filter(istekSatiriMi);
   const gruplar = bildirimleriGrupla(bildirimler.filter((b) => !istekSatiriMi(b)));
 
+  /*
+    BEĞENİLEN PAYLAŞIMIN ÖNİZLEMESİ
+
+    Satırda yalnız "… paylaşımını beğendi" yazıyordu; aynı kişinin altı
+    beğenisi altı özdeş satır oluyordu ve hangisinin hangi paylaşım
+    olduğu anlaşılmıyordu.
+
+    Kapak görseli ile açıklamanın ilk satırı birlikte gösteriliyor.
+    İkisinden biri yoksa öteki tek başına yeterli; ikisi de yoksa
+    önizleme HİÇ çizilmiyor — boş bir kutu, silinmiş paylaşım izlenimi
+    verirdi ve elimizde öyle bir bilgi yok.
+
+    Görsel `useGorselAdresleri` ile kullanıcının kendi oturumundan
+    iniyor: paylaşılabilir imzalı adres üretilmiyor (bkz. o dosyadaki
+    ölçüm).
+  */
+  const IcerikOnizleme: React.FC<{
+    ozet: string | null;
+    kapakYolu: string | null;
+  }> = ({ ozet, kapakYolu }) => {
+    const yollar = React.useMemo(() => (kapakYolu ? [kapakYolu] : []), [kapakYolu]);
+    const adresler = useGorselAdresleri(SOSYAL_PAYLASIM_KOVASI, yollar);
+    const adres = kapakYolu ? adresler[kapakYolu] : null;
+    if (!ozet && !kapakYolu) return null;
+
+    return (
+      <span className="mt-1 flex min-w-0 items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5">
+        {kapakYolu && (
+          <span className="h-8 w-8 shrink-0 overflow-hidden rounded bg-gray-200">
+            {adres && (
+              /* alt boş: paylaşımın metni zaten yanında yazıyor, iki kez okutmuyoruz. */
+              <img src={adres} alt="" className="h-full w-full object-cover" />
+            )}
+          </span>
+        )}
+        <span className="min-w-0 flex-1 truncate text-xs text-gray-600">
+          {ozet || 'Görsel paylaşımı'}
+        </span>
+      </span>
+    );
+  };
+
   const satirCiz = (b: Bildirim) => (
     <li key={b.id} className="flex flex-wrap items-center gap-x-2 pr-4 transition-colors hover:bg-gray-50 sm:flex-nowrap">
       <button
@@ -317,6 +372,10 @@ export const BildirimMerkezi: React.FC<{
             {b.govde && <span className="text-gray-700"> {b.govde}</span>}
             <span className="whitespace-nowrap text-gray-500"> · {gecenSure(b.tarih)}</span>
           </span>
+          {(() => {
+            const ic = icerik?.(b) ?? null;
+            return ic ? <IcerikOnizleme ozet={ic.ozet} kapakYolu={ic.kapakYolu} /> : null;
+          })()}
           {b.tur === 'baglanti_istegi' && onBaglantiYanitla && gosterilecekSonuc(b) && (
             <span
               role="status"

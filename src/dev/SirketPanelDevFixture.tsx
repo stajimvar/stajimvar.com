@@ -521,7 +521,13 @@ export const SirketPanelDevFixture: React.FC = () => {
     ) : (
       <SirketIlanlarSekmesi
         baglam={baglam}
-        gorunum={ekran.tur}
+        /*
+          Aday profili (`/sirket/aday/<id>`) bu fikstürde denenmiyor:
+          fikstür sekme içeriklerini sahte veriyle çiziyor, aday profili
+          ise canlı RPC'ye bağlı. Sekme dışı bir değer gelirse İlanlar
+          çiziliyor — fikstürün kendi kapsamı.
+        */
+        gorunum={ekran.tur === 'adayProfili' ? 'ilanlar' : ekran.tur}
         ilanlar={ilanlar}
         basvurular={ekran.tur === 'basvuranlar' ? kartlar : ilanBasvurulari}
         profil={profil}

@@ -2778,6 +2778,51 @@ export async function akisiGetir(
 }
 
 /**
+ * BİLDİRİMDEKİ İÇERİK — beğenilen paylaşımın özeti ve kapağı
+ *
+ * Zil paneli açılınca bir kez, bildirimlerdeki paylaşım kimlikleri
+ * (`lib/bildirim-icerigi.mjs`) için tek sorgu. Kişi sorgusuyla aynı
+ * desen; okuma `posts` üzerinden ve satır düzeyi erişim kuralları
+ * geçerli.
+ *
+ * NEDEN GEREKLİ: bildirim listesinde "… paylaşımını beğendi" satırları
+ * birbirinin aynısıydı ve hangi paylaşımın beğenildiği hiçbir yerde
+ * yazmıyordu (kullanıcı bildirdi, 27 Eylül 2026).
+ *
+ * GÖRÜNMEYEN PAYLAŞIM HARİTAYA GİRMİYOR
+ * -------------------------------------
+ * Arşivlenmiş ya da erişilemeyen paylaşım dönmüyor ve o satır
+ * önizlemesiz kalıyor — "silinmiş paylaşım" gibi bir yer tutucu
+ * çizilmiyor, çünkü RLS'in satırı vermemesi ile paylaşımın silinmiş
+ * olması aynı şey değil ve ikisini ayırt edemiyoruz.
+ *
+ * KAPAK, `post_media.sira` EN KÜÇÜK OLAN: ızgaradaki kapakla aynı kare
+ * görünsün; bildirimde başka bir görsel göstermek, kullanıcıyı yanlış
+ * paylaşımı hatırlamaya iter.
+ */
+export async function bildirimIcerikleriniGetir(
+  kimlikler: string[],
+): Promise<Map<string, { ozet: string | null; kapakYolu: string | null }>> {
+  const temiz = Array.from(new Set(kimlikler.filter((k) => UUID_DESENI.test(k)))).slice(0, 50);
+  const sonuc = new Map<string, { ozet: string | null; kapakYolu: string | null }>();
+  if (temiz.length === 0) return sonuc;
+  const { data, error } = await db
+    .from('posts')
+    .select('id, aciklama, post_media ( sira, storage_path )')
+    .in('id', temiz);
+  if (error) hata('Bildirim içerikleri alınamadı', error);
+  for (const satir of (data ?? []) as any[]) {
+    const kapak = [...(satir.post_media ?? [])]
+      .sort((a: any, b: any) => Number(a.sira) - Number(b.sira))[0];
+    sonuc.set(satir.id, {
+      ozet: (satir.aciklama ?? '').trim() || null,
+      kapakYolu: kapak?.storage_path ?? null,
+    });
+  }
+  return sonuc;
+}
+
+/**
  * BİLDİRİM KİŞİLERİNİN AD VE FOTOĞRAFI
  *
  * Zil paneli açılınca bir kez, bildirimlerdeki kişi kimlikleri
