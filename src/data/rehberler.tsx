@@ -249,6 +249,14 @@ const METIN_OLMAYAN_PROPLAR = new Set([
   'loading', 'role', 'aria-hidden', 'alt', 'onError', 'onClick',
 ]);
 
+/*
+  Bölüm kartı alanları (rehber-govde, 27 Eylül 2026): düz veri nesnesinde
+  duran dosya adı ve depo anahtarı okunacak metin değil. Yalnız bu iki ad
+  atlanıyor; düz nesnelerdeki diğer alanlar eskisi gibi sayılıyor ki başka
+  rehberlerin okuma süresi değişmesin.
+*/
+const METIN_OLMAYAN_ALANLAR = new Set(['dosya', 'depoAnahtari']);
+
 function metniTopla(dugum: unknown, kova: string[] = []): string[] {
   if (dugum == null || typeof dugum === 'boolean' || typeof dugum === 'function') return kova;
   if (typeof dugum === 'string' || typeof dugum === 'number') {
@@ -269,7 +277,9 @@ function metniTopla(dugum: unknown, kova: string[] = []): string[] {
   }
   /* React öğesi değil, düz nesne: değerlerini gez (Akis adımları gibi). */
   if (Object.getPrototypeOf(dugum) === Object.prototype) {
-    for (const deger of Object.values(dugum as Record<string, unknown>)) metniTopla(deger, kova);
+    for (const [ad, deger] of Object.entries(dugum as Record<string, unknown>)) {
+      if (!METIN_OLMAYAN_ALANLAR.has(ad)) metniTopla(deger, kova);
+    }
   }
   return kova;
 }

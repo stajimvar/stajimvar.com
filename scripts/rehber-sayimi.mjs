@@ -90,6 +90,17 @@ export function listeMaddesi(govde) {
     }
     const icerik = govde.slice(m.index, son);
     /*
+      Nesne maddeli liste (bölüm kartının işaret listesi, 27 Eylül 2026):
+      her madde `{ ad: '…', ayrinti: '…' }`. Tırnak saymak bir maddeyi iki
+      kez sayıyordu (ölçüldü: üç belgelik listeye 6 dedi ve rehberi reklam
+      eşiğinin üstüne itti). Madde sayısı `ad:` alanlarının sayısı.
+    */
+    const nesneMaddesi = (icerik.match(/\bad:\s*'/g) || []).length;
+    if (nesneMaddesi > 0) {
+      veri += nesneMaddesi;
+      continue;
+    }
+    /*
       Madde sayısı: virgülle KAPANAN tırnaklar. Bir madde birden çok
       satıra bölünüp `+` ile birleştirilebildiği için açılış tırnağını
       saymak yanlış olurdu.
