@@ -330,6 +330,13 @@ export const RehberBaglantilari: React.FC<{
 
   // Bölüm sayfalarının tamamı değil: en çok aranan birkaçı, sonra tam liste.
   const bolumler = BOLUMLER.slice(0, 6);
+  /*
+    İŞVEREN REHBERİNİN ALTI (27 Eylül 2026): "Güncel staj ilanlarını gör" ve
+    "Bölümüne göre staj" öğrencinin sonraki adımı; işverene yanlış yer
+    gösteriyordu. İşveren rehberinde yalnız diğer işveren yazıları kalıyor,
+    sıradaki adım sayfadaki "Sıradaki adım" kartında.
+  */
+  const isveren = kategori === 'isveren';
 
   /*
     Tıklama yakalayıcı. `onNavigate` yoksa (ön render tarafı) hiçbir şey
@@ -347,7 +354,7 @@ export const RehberBaglantilari: React.FC<{
       {digerleri.length > 0 && (
         <section className="mt-10 space-y-2">
           <h2 className="text-2xl font-extrabold tracking-tight text-gray-900">
-            Bunlar da işine yarar
+            {isveren ? 'Diğer işveren rehberleri' : 'Bunlar da işine yarar'}
           </h2>
           {/* Fotoğraflı kartlar: rehber merkeziyle aynı kart (RehberKarti), gerçek <a href>. */}
           <RehberIzgarasi>
@@ -377,6 +384,8 @@ export const RehberBaglantilari: React.FC<{
         Tek satır ve metni doğal: bağlantı metni sayfanın gerçekten
         götürdüğü yeri söylüyor.
       */}
+      {!isveren && (
+      <>
       <section className="mt-8">
         <a
           href="/staj-ilanlari"
@@ -411,6 +420,8 @@ export const RehberBaglantilari: React.FC<{
           </a>
         </div>
       </section>
+      </>
+      )}
     </>
   );
 };
@@ -629,6 +640,15 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
     );
   }
 
+  /*
+    ADIM KARTLI DÜZEN (27 Eylül 2026, kullanıcı isteği): işveren rehberleri
+    /stajyer-nasil-alinir pilotuyla aynı sayfa dili — pilot girişi, açık
+    zeminli kısa cevap, adım kartlarının ızgarası, sağ sütun yok (içindekiler
+    işini girişteki adım şeridi görüyor), sonda beyaz "Sıradaki adım" kartı.
+    Öğrenci rehberleri eski düzende.
+  */
+  const adimli = rehber.kategori === 'isveren' && Boolean(rehber.adimlar?.length);
+
   return (
     <Kabuk onBack={onBack} genis>
       <style>{REHBER_GOVDE_STILI}</style>
@@ -643,7 +663,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
           Tüm rehberler
         </button>
 
-        {rehber.kategori === 'isveren' && rehber.adimlar?.length ? (
+        {adimli ? (
           <IsverenRehberGirisi rehber={rehber} />
         ) : (
         <>
@@ -688,8 +708,8 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
         )}
 
         {/* İKİ SÜTUN (geniş ekranda): solda yazı, sağda yapışkan içindekiler. */}
-        <div className="mt-6 lg:mt-10 lg:grid lg:grid-cols-12 lg:gap-10">
-        <div className="min-w-0 space-y-5 lg:col-span-8">
+        <div className={adimli ? 'mt-8 lg:mt-10' : 'mt-6 lg:mt-10 lg:grid lg:grid-cols-12 lg:gap-10'}>
+        <div className={adimli ? 'min-w-0 space-y-6' : 'min-w-0 space-y-5 lg:col-span-8'}>
 
         {/*
           HIZLI CEVAP
@@ -698,7 +718,19 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
           Cevabı bulmak için 1500 kelime okutmak, cevabı vermemekle aynı şey.
           Ayrıntı aşağıda duruyor; kısası burada.
         */}
-        {rehber.hizliCevap && (
+        {rehber.hizliCevap && adimli && (
+          /* Pilottaki bilgi kutusu dili: açık zemin, normal boy yazı, bağlantılar gövde renginde. */
+          <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4 sm:p-5" onClick={icBaglantiyiYakala}>
+            <p className="flex items-center gap-2 text-sm font-bold text-blue-900">
+              <Lightbulb aria-hidden className="h-4 w-4 text-blue-600" />
+              Kısa cevap
+            </p>
+            <p className="mt-1.5 max-w-5xl text-base leading-relaxed text-gray-800">
+              <MetinCizimi metin={rehber.hizliCevap} anahtar="hc" />
+            </p>
+          </div>
+        )}
+        {rehber.hizliCevap && !adimli && (
           <div
             className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 p-6 text-white shadow-sm sm:p-7"
             onClick={icBaglantiyiYakala}
@@ -726,11 +758,15 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
           </div>
         )}
 
-        <IcindekilerMobil basliklar={basliklar} kendiNumarasiVar={kendiNumarasiVar} />
+        {!adimli && <IcindekilerMobil basliklar={basliklar} kendiNumarasiVar={kendiNumarasiVar} />}
         {/* Tıklama yakalayıcının gerekçesi yukarıda, tanımının yanında. */}
         <div
           ref={icerikRef}
-          className={`rehber-govde rounded-3xl border border-gray-200 bg-white p-5 sm:p-8 lg:p-10 ${kendiNumarasiVar ? '' : 'rehber-govde--sayili'}`}
+          className={
+            adimli
+              ? 'rehber-govde rehber-govde--adimli grid items-start gap-4 lg:grid-cols-2 lg:gap-5'
+              : `rehber-govde rounded-3xl border border-gray-200 bg-white p-5 sm:p-8 lg:p-10 ${kendiNumarasiVar ? '' : 'rehber-govde--sayili'}`
+          }
           onClick={icBaglantiyiYakala}
         >
           {rehber.icerik}
@@ -887,7 +923,30 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
           var olan bir yere gidiyor; karşılığı olmayan rehberde bu blok
           hiç çizilmiyor.
         */}
-        {rehber.sonrakiAdim && (
+        {rehber.sonrakiAdim && adimli && (
+          /* Pilotun "Hazırsanız ilanınızı açın" kartı: beyaz, tek birincil düğme. */
+          <section aria-labelledby="sonraki-adim" className="mt-8 space-y-3 rounded-2xl border border-gray-200 bg-white p-5">
+            <h2 id="sonraki-adim" className="text-lg font-extrabold text-gray-900">
+              Sıradaki adım
+            </h2>
+            {rehber.sonrakiAdim.aciklama && (
+              <p className="max-w-3xl text-[15px] text-gray-600">{rehber.sonrakiAdim.aciklama}</p>
+            )}
+            <a
+              href={rehber.sonrakiAdim.yol}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                onNavigate(rehber.sonrakiAdim!.yol);
+              }}
+              className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-[15px] font-bold text-white hover:bg-blue-700 ${ODAK_HALKASI}`}
+            >
+              {rehber.sonrakiAdim.etiket}
+              <ChevronRight aria-hidden className="h-4 w-4" />
+            </a>
+          </section>
+        )}
+        {rehber.sonrakiAdim && !adimli && (
           <button
             type="button"
             onClick={() => onNavigate(rehber.sonrakiAdim!.yol)}
@@ -982,6 +1041,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
         </section>
         </div>
 
+        {!adimli && (
         <aside className="hidden lg:col-span-4 lg:block" aria-label="Yazı içinde gezin">
           <div className="sticky top-24 space-y-4">
             <IcindekilerYan basliklar={basliklar} etkin={etkin} kendiNumarasiVar={kendiNumarasiVar} />
@@ -1003,6 +1063,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
             </div>
           </div>
         </aside>
+        )}
         </div>
       </article>
 

@@ -17,17 +17,17 @@ import { ODAK_HALKASI } from '../lib/renk-token';
 /** Bölüm görsellerinin önbellek eki; dosya değişirse bu da değişmeli. */
 const BOLUM_SURUMU = 'bolum-20260927';
 
-/* Telefonda gövdenin tam genişliği; sm üstünde adımın yarısı. */
-const ADIM_BOYUTLARI = '(min-width: 1024px) 360px, (min-width: 640px) 45vw, calc(100vw - 66px)';
+/* Adım kartının genişliği: telefonda sayfa boşluğu düşülmüş tam genişlik, lg üstünde iki sütunun biri. */
+const ADIM_BOYUTLARI = '(min-width: 1024px) 50vw, calc(100vw - 34px)';
 
 /**
  * Temsili adım fotoğrafı: AVIF + WebP, 16:9 oran korunuyor (kırpma yok),
- * gecikmeli. "Temsili görsel" etiketi her zaman görünür; fotoğraftaki
+ * gecikmeli. Adım kartında kenardan kenara (köşeyi kart kırpıyor). "Temsili görsel" etiketi her zaman görünür; fotoğraftaki
  * kişi, belge ya da ekran gerçek bir kayıt değil.
  */
 export const SadeFotograf: React.FC<{ dosya: string; alt: string }> = ({ dosya, alt }) => (
   <figure className="relative m-0">
-    <picture className="block overflow-hidden rounded-xl bg-gray-100">
+    <picture className="block overflow-hidden bg-gray-100">
       <source
         srcSet={`/rehber-gorselleri/bolumler/${dosya}.avif?v=${BOLUM_SURUMU} 1280w`}
         sizes={ADIM_BOYUTLARI}

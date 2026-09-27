@@ -229,15 +229,19 @@ export const REHBER_GOVDE_STILI = `
   font-size: .95rem; font-weight: 800; box-shadow: 0 6px 16px -8px rgba(37,99,235,.7);
 }
 /*
-  SADE BÖLÜM (27 Eylül 2026): yalnız \`bolum-sade\` başlıklı rehberde küçük
-  numara dairesi, ağır gölge yok, daha kısa üst boşluk. Yazı boyu aynı.
-  Diğer rehberlerin başlıkları bu sınıfı taşımıyor, etkilenmiyor.
+  ADIM KARTLI GÖVDE (27 Eylül 2026, işveren rehberleri): gövde kart değil,
+  adım kartlarının ızgarası (GuidePages \`rehber-govde--adimli\`). Kartlar
+  arası boşluk ızgaradan; genel \`> * + *\` payı burada sıfır. Numara
+  dairesi küçük ve gölgesiz, sayaçtan: rakam başlık metnine girmiyor.
 */
-.rehber-govde > h2.bolum-sade { margin-top: 2.25rem; gap: .625rem; }
-.rehber-govde > h2.bolum-sade:first-child { margin-top: .25rem; }
-.rehber-govde--sayili > h2.bolum-sade::before {
-  width: 1.75rem; height: 1.75rem; font-size: .8125rem;
-  background: #2563eb; box-shadow: none;
+.rehber-govde--adimli > * + * { margin-top: 0; }
+.rehber-govde .adim { counter-increment: rehber-bolum; }
+.rehber-govde .adim-baslik { display: flex; align-items: center; gap: .625rem; }
+.rehber-govde .adim-baslik::before {
+  content: counter(rehber-bolum);
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 1.75rem; height: 1.75rem; border-radius: 9999px;
+  background: #2563eb; color: #fff; font-size: .8125rem; font-weight: 800;
 }
 .rehber-govde > p { font-size: 1.0625rem; line-height: 1.85; color: #374151; }
 .rehber-govde > h2 + p { font-size: 1.0625rem; }
@@ -257,9 +261,5 @@ export const REHBER_GOVDE_STILI = `
 @media (max-width: 639px) {
   .rehber-govde > h2 { font-size: 1.2rem; margin-top: 2.25rem; }
   .rehber-govde > p, .rehber-govde > ul > li, .rehber-govde > ol > li { font-size: 1rem; line-height: 1.75; }
-  /* Sade rehberde telefonda gövde kartının iç boşluğu daralıyor; görsel alan genişliyor. */
-  .rehber-govde:has(> h2.bolum-sade) { padding: 1rem; }
-  .rehber-govde > h2.bolum-sade { margin-top: 2rem; }
-  .rehber-govde > h2.bolum-sade:first-child { margin-top: .25rem; }
 }
 `;
