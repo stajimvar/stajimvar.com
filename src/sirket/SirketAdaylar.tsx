@@ -1,6 +1,7 @@
 import React from 'react';
 import { Briefcase, FileText, GraduationCap, Mail } from 'lucide-react';
 import { fetchArayanOgrenciler, type ArayanListesi, type ArayanOgrenci } from '../lib/queries';
+import { ProfilFotografi } from '../components/sosyal/ProfilFotografi';
 
 /**
  * ADAYLAR — İŞ / STAJ ARAYAN ÖĞRENCİLER
@@ -37,63 +38,125 @@ const Rozet: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   </span>
 );
 
-const AdaySatiri: React.FC<{ ogrenci: ArayanOgrenci }> = ({ ogrenci }) => (
-  <li className="rounded-2xl border border-gray-200 bg-white p-4">
-    <div className="flex flex-wrap items-baseline justify-between gap-2">
-      <p className="text-sm font-bold text-gray-900">{ogrenci.ad ?? 'ad girilmemiş'}</p>
-      {ogrenci.acildi && (
-        <span className="text-[11px] text-gray-500">{tarihYaz(ogrenci.acildi)}’den beri arıyor</span>
-      )}
-    </div>
+/** En fazla üç etiket; kalanı "+N" ile kapanıyor. */
+const ETIKET_SINIRI = 3;
 
-    <p className="mt-0.5 text-sm text-gray-600">
-      {[ogrenci.okul, ogrenci.bolum].filter(Boolean).join(' · ') || 'okul bilgisi yok'}
-    </p>
-    <p className="mt-0.5 text-[13px] text-gray-500">
-      {[ogrenci.sinif ? `${ogrenci.sinif}. sınıf` : null, ogrenci.sehir].filter(Boolean).join(' · ')}
-    </p>
+const AdaySatiri: React.FC<{
+  ogrenci: ArayanOgrenci;
+  onProfil: (id: string) => void;
+}> = ({ ogrenci, onProfil }) => {
+  const roller = ogrenci.hedefRoller ?? [];
+  const gorunen = roller.slice(0, ETIKET_SINIRI);
+  const kalan = roller.length - gorunen.length;
 
-    {ogrenci.hedefRoller && ogrenci.hedefRoller.length > 0 && (
-      <div className="mt-2 flex flex-wrap gap-1.5">
-        {ogrenci.hedefRoller.slice(0, 5).map((r) => (
-          <span key={r} className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-700">
-            {r}
-          </span>
-        ))}
+  return (
+    <li className="rounded-2xl border border-gray-200 bg-white p-4">
+      {/*
+        ÜST DÜZEN: fotoğraf + ad, altında okul · bölüm, altında sınıf · şehir.
+        Kart bir veri kaydı değil, bir kişi: fotoğraf en solda ve kimlik
+        satırları onun yanında iniyor.
+
+        Fotoğraf ORTAK kaynaktan (`ProfilFotografi`, social_profiles
+        avatar_path). Aday listesine özel bir avatar alanı açılmadı;
+        öğrenci fotoğrafını değiştirince burası da değişiyor.
+      */}
+      <div className="flex items-start gap-3">
+        <ProfilFotografi
+          ad={ogrenci.ad ?? ''}
+          yol={ogrenci.avatarYolu}
+          /* Mobilde 56 px, sm üstünde 64 px; yuvarlak. */
+          className="h-14 w-14 shrink-0 rounded-full sm:h-16 sm:w-16"
+        />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-bold text-gray-900">
+            {ogrenci.ad ?? 'ad girilmemiş'}
+          </p>
+          {(ogrenci.okul || ogrenci.bolum) && (
+            <p className="mt-0.5 truncate text-sm text-gray-600">
+              {[ogrenci.okul, ogrenci.bolum].filter(Boolean).join(' · ')}
+            </p>
+          )}
+          {(ogrenci.sinif || ogrenci.sehir) && (
+            <p className="mt-0.5 truncate text-[13px] text-gray-500">
+              {[ogrenci.sinif ? `${ogrenci.sinif}. sınıf` : null, ogrenci.sehir]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          )}
+          {/*
+            "… beri arıyor" İKİNCİL: kimliğin parçası değil, bir zaman
+            bilgisi. Daha küçük ve soluk, kimlik satırlarının altında.
+          */}
+          {ogrenci.acildi && (
+            <p className="mt-1 text-[11px] text-gray-400">
+              {tarihYaz(ogrenci.acildi)}’den beri arıyor
+            </p>
+          )}
+        </div>
       </div>
-    )}
 
-    <div className="mt-2.5 flex flex-wrap items-center gap-2">
-      {ogrenci.eposta && (
-        <a
-          href={`mailto:${ogrenci.eposta}`}
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 text-sm font-bold text-white hover:bg-blue-700"
-        >
-          <Mail aria-hidden className="h-3.5 w-3.5" />
-          E-posta gönder
-        </a>
+      {/*
+        ETİKETLER SADELEŞTİ: en fazla üç, kalanı "+N". Önce hepsi
+        yazılıyordu ve dört uzun etiket kartın yarısını kaplıyordu.
+      */}
+      {gorunen.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          {gorunen.map((r) => (
+            <span
+              key={r}
+              className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-700"
+            >
+              {r}
+            </span>
+          ))}
+          {kalan > 0 && (
+            <span
+              title={roller.slice(ETIKET_SINIRI).join(', ')}
+              className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-500"
+            >
+              +{kalan}
+            </span>
+          )}
+        </div>
       )}
+
+      {/*
+        ANA EYLEM "Profili incele": işverenin ilk işi adayı tanımak.
+        E-posta ikincil kaldı — mevcut akış değişmedi, yalnız ağırlığı
+        azaldı (dolu düğme değil, kenarlıklı).
+      */}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onProfil(ogrenci.id)}
+          className="inline-flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-3.5 text-sm font-bold text-white hover:bg-blue-700"
+        >
+          Profili incele
+        </button>
+        {ogrenci.eposta && (
+          <a
+            href={`mailto:${ogrenci.eposta}`}
+            className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3.5 text-sm font-bold text-gray-800 hover:bg-gray-50"
+          >
+            <Mail aria-hidden className="h-3.5 w-3.5" />
+            E-posta gönder
+          </a>
+        )}
+      </div>
+
       {ogrenci.cvVar && (
-        <Rozet>
-          <FileText aria-hidden className="mr-1 h-3 w-3" />
+        <p className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-gray-500">
+          <FileText aria-hidden className="h-3 w-3" />
           CV yüklü
-        </Rozet>
+        </p>
       )}
-      {ogrenci.linkedin && (
-        <a
-          href={ogrenci.linkedin}
-          target="_blank"
-          rel="noopener noreferrer nofollow"
-          className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 hover:underline"
-        >
-          LinkedIn
-        </a>
-      )}
-    </div>
-  </li>
-);
+    </li>
+  );
+};
 
-export const SirketAdaylar: React.FC = () => {
+export const SirketAdaylar: React.FC<{
+  onNavigate: (yol: string) => void;
+}> = ({ onNavigate }) => {
   /*
     BAŞLANGIÇ SEKMESİ ADRESTEN
 
@@ -201,7 +264,11 @@ export const SirketAdaylar: React.FC = () => {
         ogrenciler.length ? (
           <ul className="space-y-3">
             {ogrenciler.map((o) => (
-              <AdaySatiri key={o.id} ogrenci={o} />
+              <AdaySatiri
+                key={o.id}
+                ogrenci={o}
+                onProfil={(id) => onNavigate(`/sirket/aday/${id}`)}
+              />
             ))}
           </ul>
         ) : (
@@ -218,8 +285,7 @@ export const SirketAdaylar: React.FC = () => {
 
       {asama === 'hazir' && ogrenciler.length > 0 && (
         <p className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-[11px] leading-relaxed text-gray-500">
-          Buradaki öğrenciler profillerini kendileri bu listeye açtı ve neyin
-          paylaşılacağını okudu. Anahtarı kapattıkları anda listeden düşerler.
+          Yalnızca işverenlere görünmeyi açan öğrenciler listelenir.
         </p>
       )}
     </div>
