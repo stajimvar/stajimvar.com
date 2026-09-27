@@ -44,6 +44,13 @@ interface AutocompleteFieldProps {
    * davranıyor.
    */
   klavyeDuzeni?: boolean;
+  /**
+   * Özel eşleştirme (27 Eylül 2026, ilan formu Pozisyon alanı): verilirse
+   * öneriler bununla süzülüyor. Pozisyonda kelime başı eşleşmesi
+   * gerekiyor — içte arama "ta" yazınca her "Stajyeri"yi getirirdi.
+   * Verilmezse varsayılan davranış (baştan, sonra içten) aynen.
+   */
+  eslestir?: (aranan: string, secenekler: string[], enFazla: number) => string[];
 }
 
 export const AutocompleteField: React.FC<AutocompleteFieldProps> = ({
@@ -56,6 +63,7 @@ export const AutocompleteField: React.FC<AutocompleteFieldProps> = ({
   maxSuggestions = 8,
   className = '',
   klavyeDuzeni = false,
+  eslestir,
 }) => {
   const [acik, setAcik] = useState(false);
   const listeKimligi = React.useId();
@@ -63,6 +71,7 @@ export const AutocompleteField: React.FC<AutocompleteFieldProps> = ({
   const sarmalayici = useRef<HTMLDivElement>(null);
 
   const oneriler = useMemo(() => {
+    if (eslestir) return eslestir(value, options, maxSuggestions);
     const aranan = katla(value);
     if (!aranan) return options.slice(0, maxSuggestions);
 
@@ -76,7 +85,7 @@ export const AutocompleteField: React.FC<AutocompleteFieldProps> = ({
     }
     // Baştan eşleşenler önce: "mimar" yazınca "Mimar Sinan..." üste gelsin.
     return [...basSonuc, ...icSonuc].slice(0, maxSuggestions);
-  }, [value, options, maxSuggestions]);
+  }, [value, options, maxSuggestions, eslestir]);
 
   /* Dışarı tıklayınca kapat. Mobilde blur yerine bu daha güvenilir. */
   useEffect(() => {
@@ -175,10 +184,21 @@ export const AutocompleteField: React.FC<AutocompleteFieldProps> = ({
                     e.preventDefault();
                     sec(secenek);
                   }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    sec(secenek);
-                  }}
+                  /*
+                    KLAVYE DÜZENİNDE DOKUNMA = TIKLAMA: telefon dokunuşun
+                    ardından mousedown da gönderiyor ve seçim yukarıda
+                    yapılıyor. touchstart'ta seçmek, uzun listeyi
+                    kaydırmak için dokunan kullanıcıya yanlış seçim
+                    yaptırıyordu. Eski kullanımlar (CV) aynen kalıyor.
+                  */
+                  {...(klavyeDuzeni
+                    ? {}
+                    : {
+                        onTouchStart: (e: React.TouchEvent) => {
+                          e.preventDefault();
+                          sec(secenek);
+                        },
+                      })}
                   className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between gap-2 transition-colors ${
                     i === vurgulu
                       ?'bg-blue-50 text-blue-700'

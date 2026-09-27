@@ -4,7 +4,6 @@ import {
   ACIKLAMA_EN_AZ,
   ACIKLAMA_EN_FAZLA,
   CALISMA_SEKILLERI,
-  SABLONLAR,
   STAJ_TURLERI,
   UCRET_SECENEKLERI,
   ilanFormDegeri,
@@ -13,12 +12,14 @@ import {
   ilanSorunlari,
 } from '../lib/ilan-formu.mjs';
 import { ilanBaslangicDurumu, ilanBayraklari } from '../lib/sirket-kademe.mjs';
+import { POZISYONLAR, pozisyonAlani, pozisyonAra } from '../lib/pozisyonlar.mjs';
 import { ilanOku } from '../lib/sirket-veri';
 import { AutocompleteField } from '../components/AutocompleteField';
 import { TR_CITIES } from '../data/turkeyData';
 import { FORM_ALAN, UzayanMetin } from './form-parcalari';
 import {
   BIRINCIL_DUGME,
+  BIRINCIL_RENK,
   IKINCIL_DUGME,
   KUTU,
   SIRKET_KENAR,
@@ -163,6 +164,12 @@ export const IlanFormu: React.FC<{
   const [sonuc, setSonuc] = React.useState<{ id: string; yayinda: boolean } | null>(null);
   const [kopyalandi, setKopyalandi] = React.useState(false);
   const k = React.useId();
+  /*
+    ŞABLON DEĞİŞTİRME ONAYI: dolu bir iş tanımının üzerine şablon
+    yazılmadan önce ne olacağı söyleniyor. Pozisyon değişince bekleyen
+    onay düşüyor (öteki alanın şablonu için sorulmuş bir soru kalmasın).
+  */
+  const [onayBekleyen, setOnayBekleyen] = React.useState<{ id: string; etiket: string; metin: string } | null>(null);
 
   /* Düzenlemede kayıtlı satır forma çevriliyor (ilanFormDegeri,
      ilanSatiri'nin tersi). Okunamazsa form boş açılmıyor: hata yazıyor,
@@ -208,6 +215,31 @@ export const IlanFormu: React.FC<{
     eksiksizliğini gösteren başka yerler onları kullanıyor.
   */
   const bayraklar = ilanBayraklari(deger.aciklama);
+
+  /*
+    POZİSYONA BAĞLI ŞABLONLAR (27 Eylül 2026)
+
+    Alan pozisyon adından her yazışta yeniden bulunuyor; iş tanımı
+    metnine DOKUNULMUYOR — pozisyon değişince yalnız önerilen
+    başlangıç metinleri değişiyor, yazılmış metin olduğu gibi kalıyor.
+    Tanınmayan pozisyonda şablon yok; alan boş kalıyor ve metin
+    kutusundaki yol gösterici not duruyor.
+  */
+  const alan = pozisyonAlani(deger.unvan);
+  const alanId = alan?.id ?? null;
+  React.useEffect(() => {
+    setOnayBekleyen(null);
+  }, [alanId]);
+
+  const sablonSec = (s: { id: string; etiket: string; metin: string }) => {
+    const mevcut = deger.aciklama.trim();
+    if (mevcut === '' || mevcut === s.metin.trim()) {
+      setOnayBekleyen(null);
+      yaz('aciklama')(s.metin);
+      return;
+    }
+    setOnayBekleyen(s);
+  };
 
   const gonder = async () => {
     setGonderildi(true);
@@ -348,12 +380,21 @@ export const IlanFormu: React.FC<{
               <Etiket htmlFor={`${k}-unvan`} sorun={goster('unvan')}>
                 Pozisyon
               </Etiket>
-              <input
+              {/*
+                ÖNERİ, ZORUNLULUK DEĞİL: liste yazdıkça kelime başından
+                süzülüyor (Türkçe karakterden bağımsız); şirket listede
+                olmayan kendi başlığını da yazabiliyor. Seçim yalnız bu
+                alanı dolduruyor.
+              */}
+              <AutocompleteField
                 id={`${k}-unvan`}
                 value={deger.unvan}
-                onChange={(e) => yaz('unvan')(e.target.value)}
-                placeholder="Ör. Yazılım Stajyeri"
+                onChange={yaz('unvan')}
+                options={POZISYONLAR}
+                eslestir={pozisyonAra}
+                placeholder="Ör. Yazılım Geliştirme Stajyeri"
                 className={FORM_ALAN}
+                klavyeDuzeni
               />
             </div>
 
@@ -446,22 +487,71 @@ export const IlanFormu: React.FC<{
             <Etiket htmlFor={`${k}-aciklama`} sorun={goster('aciklama')}>
               İş tanımı
             </Etiket>
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
-                Şablonla başla:
-              </span>
-              {SABLONLAR.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => yaz('aciklama')(s.metin)}
-                  className="min-h-11 cursor-pointer rounded-xl border px-3 text-xs font-bold focus-visible:outline-2 focus-visible:outline-blue-600 sm:min-h-9"
-                  style={ikincilStil}
-                >
-                  {s.etiket} şablonu
-                </button>
-              ))}
-            </div>
+            {alan ? (
+              <div className="mb-2">
+                <p id={`${k}-sablon-baslik`} className="mb-1.5 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+                  <b style={{ color: SIRKET_METIN }}>{alan.etiket}</b> için başlangıç metinleri — seçtikten sonra
+                  dilediğiniz gibi değiştirebilirsiniz:
+                </p>
+                <div role="group" aria-labelledby={`${k}-sablon-baslik`} className="flex flex-wrap gap-2">
+                  {alan.sablonlar.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => sablonSec(s)}
+                      aria-pressed={deger.aciklama.trim() === s.metin.trim()}
+                      className="min-h-11 cursor-pointer rounded-xl border px-3 text-xs font-bold focus-visible:outline-2 focus-visible:outline-blue-600 sm:min-h-9"
+                      style={
+                        deger.aciklama.trim() === s.metin.trim()
+                          ? { borderColor: SIRKET_VURGU_KOYU, color: SIRKET_VURGU_KOYU, background: SIRKET_ROZET }
+                          : ikincilStil
+                      }
+                    >
+                      {s.etiket}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="mb-2 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+                {deger.unvan.trim()
+                  ? 'Bu pozisyon için hazır başlangıç metni yok; iş tanımını aşağıya kendiniz yazın.'
+                  : 'Pozisyonu yazınca ona uygun başlangıç metinleri burada görünür.'}
+              </p>
+            )}
+
+            {onayBekleyen && (
+              <div
+                role="alert"
+                className="mb-2 rounded-xl border px-3 py-2.5 text-xs leading-relaxed"
+                style={{ borderColor: SIRKET_VURGU_KOYU, background: SIRKET_ROZET, color: SIRKET_METIN }}
+              >
+                <p>
+                  <b>“{onayBekleyen.etiket}”</b> metni, iş tanımındaki mevcut metnin yerine geçecek. Yazdıklarınız
+                  silinir.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      yaz('aciklama')(onayBekleyen.metin);
+                      setOnayBekleyen(null);
+                    }}
+                    className={`min-h-11 cursor-pointer rounded-xl px-3 text-xs font-bold focus-visible:outline-2 focus-visible:outline-blue-600 sm:min-h-9 ${BIRINCIL_RENK}`}
+                  >
+                    Metni değiştir
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOnayBekleyen(null)}
+                    className="min-h-11 cursor-pointer rounded-xl border px-3 text-xs font-bold focus-visible:outline-2 focus-visible:outline-blue-600 sm:min-h-9"
+                    style={ikincilStil}
+                  >
+                    Mevcut metni koru
+                  </button>
+                </div>
+              </div>
+            )}
             <UzayanMetin
               id={`${k}-aciklama`}
               value={deger.aciklama}
@@ -470,7 +560,7 @@ export const IlanFormu: React.FC<{
               /* xl'de iki panel aynı boyda bitsin: kısa alanlar sütunu kadar. */
               ekSinif="xl:min-h-72"
               aria-describedby={`${k}-sayac`}
-              placeholder="Stajyerin ne yapacağını, kimden destek alacağını ve neler beklediğinizi yazın."
+              placeholder={'Stajyer hangi işlerde yer alacak ve hangi bilgi ve becerileri arıyorsunuz? Kısa maddelerle yazabilirsiniz, ör.:\n- Günlük raporların hazırlanmasına destek olmak\n- Excel kullanabilmek'}
             />
             <span
               id={`${k}-sayac`}
