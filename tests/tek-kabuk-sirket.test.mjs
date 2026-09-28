@@ -45,10 +45,16 @@ test('şirket ekranları ortak kabukta; eski kabuk ve eski portal sekmeleri yok'
   assert.match(APP, /if \(temizYol === '\/' \|\| temizYol === '\/sirket'\) navigate\('\/sirket\/ilanlar', \{ degistir: true \}\);/);
   assert.match(APP, /navigate\('\/sirket\/profil', \{ degistir: true \}\)/);
 
-  /* Header: şirket alt menüsü beş sekme, doğru adreslerle; eski portal öğeleri kalmadı. */
+  /*
+    Header: şirket alt menüsü DÖRT sekme (28 Eylül 2026, kullanıcı
+    kararı); önce beşti ve "Takipçiler" oradaydı. Liste kaybolmadı:
+    kapısı Şirketim'deki "N takipçi" sayacı ve geniş ekrandaki sekme.
+    `/agim` adresi duruyor, bu yüzden aşağıdaki masaüstü listesi
+    DEĞİŞMEDİ — paylaşılmış bağlantılar kırılmıyor.
+  */
   const altCubuk = HEADER.slice(HEADER.indexOf('aria-label="Mobil Alt Şirket Navigasyon"'));
   const hrefler = [...altCubuk.matchAll(/href="([^"]+)"/g)].map((e) => e[1]);
-  assert.deepEqual(hrefler, ['/sirket/ilanlar', '/sirket/basvuranlar', '/agim', '/rehber', '/sirket/profil']);
+  assert.deepEqual(hrefler, ['/sirket/ilanlar', '/sirket/basvuranlar', '/rehber', '/sirket/profil']);
   /* Masaüstü şirket sekmeleri de aynı dört adres (Profil sağdaki hesap bağlantısında). */
   const masaustu = HEADER.slice(HEADER.indexOf('id="nav-tab-sirket-ilanlar"'), HEADER.indexOf('id="nav-tab-sirket-rehber"'));
   assert.deepEqual([...masaustu.matchAll(/href="([^"]+)"/g)].map((e) => e[1]), ['/sirket/ilanlar', '/sirket/basvuranlar', '/agim']);
@@ -57,14 +63,12 @@ test('şirket ekranları ortak kabukta; eski kabuk ve eski portal sekmeleri yok'
   assert.ok(HEADER.includes("const sirketIlanlarindaMi = \/^\\/sirket\\/(ilanlar|ilan)(\\/|$)\/.test(bulunulanYol);"), 'İlanlar kümesi basvuranlar içermemeli');
   /* 26 Eylül 2026: "Öğrencileri keşfet" (/sirket/adaylar) Başvurular ekranından açıldığı için o kümede. */
   assert.ok(HEADER.includes("const sirketBasvuranlarindaMi = \/^\\/sirket\\/(basvuranlar|adaylar)(\\/|$)\/.test(bulunulanYol);"), 'Başvurular kendi kümesi');
-  /*
-    Adlar ve ikonlar (26 Eylül 2026): İlanlar · Başvurular · Takipçiler ·
-    Rehber · Şirketim. Başvurular ile Takipçiler ayrı ikon taşıyor.
-  */
+  /* Adlar: İlanlar · Başvurular · Rehber · Şirketim. */
   const etiketler = [...altCubuk.matchAll(/<span className=\{altMenuYazisi\([^)]*\)\}>([^<]+)<\/span>/g)].map((e) => e[1]);
-  assert.deepEqual(etiketler, ['İlanlar', 'Başvurular', 'Takipçiler', 'Rehber', 'Şirketim']);
+  assert.deepEqual(etiketler, ['İlanlar', 'Başvurular', 'Rehber', 'Şirketim']);
+  /* Her sekme ayrı ikon: aynı simge iki kez çizilirse ikisi ayırt edilemez. */
   const ikonlar = [...altCubuk.matchAll(/<span className=\{altMenuIkonu\([^)]*\)\}>\s*<(\w+) /g)].map((e) => e[1]);
-  assert.equal(new Set(ikonlar).size, 5, `alt çubukta aynı ikon iki kez: ${ikonlar}`);
+  assert.equal(new Set(ikonlar).size, 4, `alt çubukta aynı ikon iki kez: ${ikonlar}`);
   const kod = HEADER.replace(/\/\*[\s\S]*?\*\//g, '');
   for (const iz of ['nav-company-kanban', '%80+ Uyum', 'companyDropdownOpen', 'Şirket Portalından Çıkış', 'Kanban']) {
     assert.ok(!kod.includes(iz), `${iz} hâlâ Header'da`);
