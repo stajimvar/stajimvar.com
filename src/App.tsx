@@ -189,6 +189,9 @@ const TopluluklarSayfasi = React.lazy(() =>
 const AgimSayfasi = React.lazy(() =>
   import('./components/sosyal/AgimSayfasi').then((m) => ({ default: m.AgimSayfasi }))
 );
+const PaylasimSayfasi = React.lazy(() =>
+  import('./components/sosyal/PaylasimSayfasi').then((m) => ({ default: m.PaylasimSayfasi }))
+);
 const BaglantilarSayfasi = React.lazy(() =>
   import('./components/sosyal/BaglantilarSayfasi').then((m) => ({ default: m.BaglantilarSayfasi }))
 );
@@ -2812,6 +2815,35 @@ export default function App() {
     yüzden sitenin büyük üst çubuğu TELEFONDA gizleniyor (bkz. Header
     `akistaMi`) — iki başlık üst üste binerdi.
   */
+  /*
+    /paylasim/<id> — PAYLAŞIMIN KALICI ADRESİ
+
+    Beğeni bildiriminin indiği yer. Eskiden `/cv` idi ve göç bunu bir
+    ödün olarak yazıyordu ("paylaşımın kalıcı bir adresi yok"); artık
+    var. Kabuk ayrımının DIŞINDA: şirket yönlendirme listesine
+    eklenmedi, çünkü üretimde ölçülen alıcılar arasında şirket hesabı da
+    var ve `/cv` şirkette `/sirket/profil`e yönlendiği için o kişi
+    beğenilen paylaşımı hiç göremiyordu.
+
+    Kimlik bir GİRDİ, yetki değil: satırı `posts` okuma politikası
+    veriyor. Biçimi tutmayan kimlik de aynı ekrana düşüyor — uydurma ve
+    gerçek kimlik aynı yanıtı alıyor, var-yok sızdırmıyor (ara katmanda
+    da aynı gerekçe yazılı).
+  */
+  if (temizYol.startsWith('/paylasim/')) {
+    return icerikSayfasi(
+      <PaylasimSayfasi
+        paylasimId={temizYol.slice('/paylasim/'.length)}
+        kullaniciId={session?.userId ?? null}
+        oturumHazir={sessionReady}
+        onNavigate={navigate}
+        onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+        ogrenciAvatarAdresi={activeStudent?.avatarUrl ?? null}
+      />,
+      'bg-white sm:bg-[#F9FAFB]',
+    );
+  }
+
   /*
     ŞİRKET HESABINDA AĞIM: SENİ TAKİP EDENLER
 
