@@ -666,7 +666,22 @@ export const Header: React.FC<HeaderProps> = ({
     10 px biniyordu (ölçüldü); her yanda en çok iki düğme sığıyor.
   */
   const genisEkran = useGenisEkran();
-  const mesajDugmesiCizilsin = isLoggedIn && userRole === 'student' && Boolean(onNavigate);
+  /*
+    MESAJ DÜĞMESİ İŞVERENDE DE (28 Eylül 2026)
+
+    Koşul `userRole === 'student'` idi: mesajlaşma yalnız öğrenciler
+    arasındaydı. İşveren artık aday listesinden site içi mesaj
+    başlatabiliyor (20261116010000) ve girişi olmayan bir kutuya yazmak,
+    adayın yanıtını okuyamamak demekti — düğme hem kapı hem okunmamış
+    rozeti.
+
+    Alt menüye altıncı sekme EKLENMEDİ: şirket kabuğunda beş sekme dolu
+    (İlanlar · Başvurular · Takipçiler · Rehber · Şirketim) ve altıncısı
+    telefonda hepsini daraltırdı. Kapı üst çubukta, öğrencideki yerin
+    aynısında.
+  */
+  const mesajDugmesiCizilsin =
+    isLoggedIn && (userRole === 'student' || userRole === 'company') && Boolean(onNavigate);
   /*
     SOLDA EN ÇOK BİR BAĞLAMSAL AKSİYON (mobil sadeleştirme, 25 Eylül 2026)
 
@@ -684,7 +699,20 @@ export const Header: React.FC<HeaderProps> = ({
     satırı (ProfilBasligi ve ziyaretçi görünümü: okul adı `/kampusum` ya
     da `/kampusum/<ad>` bağlantısı); geniş ekranda panel profilin içinde.
   */
-  const mesajKumesindeMi = agimdaMi || /^\/mesajlar(\/|$)/.test(bulunulanYol);
+  /*
+    ŞİRKET PANELİ DE MESAJ KÜMESİNDE (28 Eylül 2026)
+
+    Telefonda sol küme tek bağlamsal aksiyon taşıyor ve mesaj yalnız Ağım
+    ailesinde + /mesajlar'da çiziliyordu. İşveren artık aday listesinden
+    mesaj başlatıyor; kapı o ekranlarda hiç görünmeseydi gönderdiği
+    mesajın yanıtına telefondan ulaşamazdı — ölçülebilir bir çıkmaz.
+
+    Şirket panelinde solda başka aksiyon YOK (süzgeç ilan listesine ait),
+    yani "en çok bir aksiyon" kuralı bozulmuyor.
+  */
+  const sirketPanelindeMi = /^\/sirket(\/|$)/.test(bulunulanYol);
+  const mesajKumesindeMi =
+    agimdaMi || /^\/mesajlar(\/|$)/.test(bulunulanYol) || (userRole === 'company' && sirketPanelindeMi);
   const solAksiyon: 'suzgec' | 'mesaj' | null =
     ilanlardaMi && sayfaAramasi?.onSuzgec
       ? 'suzgec'

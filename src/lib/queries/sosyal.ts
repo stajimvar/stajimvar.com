@@ -264,6 +264,13 @@ export interface SosyalProfil {
    * `sirket_sayfasi_kilidi` yalnız o şirketin sahibine izin veriyor.
    */
   sirketId: string | null;
+  /**
+   * `companies.logo_url` — şirket sayfasının logosu, DOĞRUDAN adres
+   * (depolama yolu değil). Şirket sosyal profillerinde `avatar_path`
+   * çoğunlukla boş ve ekranlar baş harf çiziyordu; sohbet başlığında
+   * logo yedekte (aynı çözüm `AkisKarti`de de var). Öğrencide null.
+   */
+  logoAdresi: string | null;
 }
 
 /*
@@ -288,7 +295,7 @@ export interface SosyalProfil {
   `departments ( ad )` tek yollu, ipucu gerekmiyor (ölçüldü: 200).
 */
 const PROFIL_KOLONLARI =
-  'profile_id, username, sector_id, department_id, gorunen_ad, biyografi, bolum_etiketi, sinif_etiketi, sehir, yayinda_mi, resmi_mi, sirket_id, avatar_path, kapak_path, created_at, sectors!social_profiles_sector_id_fkey ( ad ), departments ( ad )';
+  'profile_id, username, sector_id, department_id, gorunen_ad, biyografi, bolum_etiketi, sinif_etiketi, sehir, yayinda_mi, resmi_mi, sirket_id, avatar_path, kapak_path, created_at, sectors!social_profiles_sector_id_fkey ( ad ), departments ( ad ), companies!social_profiles_sirket_id_fkey ( logo_url )';
 
 function profileCevir(satir: any): SosyalProfil {
   return {
@@ -310,6 +317,7 @@ function profileCevir(satir: any): SosyalProfil {
     /* Okunamayan satırda `false`: tik, VARLIĞI kanıtlanmadıkça çizilmiyor. */
     resmiMi: satir.resmi_mi === true,
     sirketId: satir.sirket_id ?? null,
+    logoAdresi: satir.companies?.logo_url ?? null,
   };
 }
 

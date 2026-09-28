@@ -1,5 +1,5 @@
 import React from 'react';
-import { Briefcase, FileText, GraduationCap, Mail } from 'lucide-react';
+import { Briefcase, FileText, GraduationCap, MessageCircle } from 'lucide-react';
 import { fetchArayanOgrenciler, type ArayanListesi, type ArayanOgrenci } from '../lib/queries';
 import { ProfilFotografi } from '../components/sosyal/ProfilFotografi';
 
@@ -44,7 +44,8 @@ const ETIKET_SINIRI = 3;
 const AdaySatiri: React.FC<{
   ogrenci: ArayanOgrenci;
   onProfil: (id: string) => void;
-}> = ({ ogrenci, onProfil }) => {
+  onMesaj: (kullaniciAdi: string) => void;
+}> = ({ ogrenci, onProfil, onMesaj }) => {
   const roller = ogrenci.hedefRoller ?? [];
   const gorunen = roller.slice(0, ETIKET_SINIRI);
   const kalan = roller.length - gorunen.length;
@@ -125,8 +126,18 @@ const AdaySatiri: React.FC<{
 
       {/*
         ANA EYLEM "Profili incele": işverenin ilk işi adayı tanımak.
-        E-posta ikincil kaldı — mevcut akış değişmedi, yalnız ağırlığı
-        azaldı (dolu düğme değil, kenarlıklı).
+        İkincil eylem SİTE İÇİ MESAJ — eskiden `mailto:` idi ve işvereni
+        siteden çıkarıyordu: konuşma dışarıda sürüyor, aday kimin
+        yazdığını yalnız e-posta başlığından anlıyor, iki taraf da
+        yazışmayı panelinde göremiyordu.
+
+        Adres `/mesajlar/<kullaniciadi>`: aynı adayla önceden bir sohbet
+        varsa ekran onu açıyor, yoksa yenisini başlatıyor — "aynı iki
+        kişi, tek sohbet" kuralı sunucuda (çift tekil indeks).
+
+        KULLANICI ADI YOKSA DÜĞME YOK: adres kurulamaz ve çalışmayan bir
+        düğme çizmek, olmayan bir yolu varmış gibi göstermek olurdu.
+        E-postaya geri düşülmüyor — istenen şey site içi konuşma.
       */}
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button
@@ -136,14 +147,15 @@ const AdaySatiri: React.FC<{
         >
           Profili incele
         </button>
-        {ogrenci.eposta && (
-          <a
-            href={`mailto:${ogrenci.eposta}`}
-            className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3.5 text-sm font-bold text-gray-800 hover:bg-gray-50"
+        {ogrenci.kullaniciAdi && (
+          <button
+            type="button"
+            onClick={() => onMesaj(ogrenci.kullaniciAdi as string)}
+            className="inline-flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3.5 text-sm font-bold text-gray-800 hover:bg-gray-50"
           >
-            <Mail aria-hidden className="h-3.5 w-3.5" />
-            E-posta gönder
-          </a>
+            <MessageCircle aria-hidden className="h-3.5 w-3.5" />
+            Mesaj gönder
+          </button>
         )}
       </div>
 
@@ -271,6 +283,7 @@ export const SirketAdaylar: React.FC<{
                 key={o.id}
                 ogrenci={o}
                 onProfil={(id) => onNavigate(`/sirket/aday/${id}`)}
+                onMesaj={(ad) => onNavigate(`/mesajlar/${encodeURIComponent(ad)}`)}
               />
             ))}
           </ul>

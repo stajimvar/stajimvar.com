@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, ExternalLink, FileText, Github, Linkedin, Mail } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Github, Linkedin, MessageCircle } from 'lucide-react';
 import { fetchAdayProfili, type AdayProfili } from '../lib/queries';
 import { ProfilFotografi } from '../components/sosyal/ProfilFotografi';
 import { guvenliDisAdres } from '../lib/guvenli-url.mjs';
@@ -245,14 +245,25 @@ export const SirketAdayProfili: React.FC<{
           </div>
         </div>
 
-        {aday.eposta && (
-          <a
-            href={`mailto:${aday.eposta}`}
-            className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white hover:bg-blue-700 sm:w-auto"
+        {/*
+          SİTE İÇİ MESAJ — eskiden `mailto:` idi.
+
+          Aynı gerekçe aday listesindeki düğmede de yazılı: e-posta
+          işvereni siteden çıkarıyor, konuşma dışarıda sürüyor ve iki
+          taraf da yazışmayı panelinde göremiyordu.
+
+          Kullanıcı adı yoksa düğme çizilmiyor: adres kurulamaz ve
+          çalışmayan bir düğme, olmayan bir yolu varmış gibi gösterirdi.
+        */}
+        {aday.kullaniciAdi && (
+          <button
+            type="button"
+            onClick={() => onNavigate(`/mesajlar/${encodeURIComponent(aday.kullaniciAdi as string)}`)}
+            className="mt-3 inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white hover:bg-blue-700 sm:w-auto"
           >
-            <Mail aria-hidden className="h-4 w-4" />
-            E-posta gönder
-          </a>
+            <MessageCircle aria-hidden className="h-4 w-4" />
+            Mesaj gönder
+          </button>
         )}
       </section>
 

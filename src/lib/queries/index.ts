@@ -1835,6 +1835,14 @@ export interface AdayProfili {
   ad: string | null;
   eposta: string | null;
   avatarYolu: string | null;
+  /*
+    Site içi mesaj adresinin (`/mesajlar/<ad>`) parçası. Yeni bir alan
+    açılmadı: kullanıcı adı zaten herkese açık profil adresinin kendisi
+    (`/profil/<ad>`) ve liste RPC'si bunu baştan beri döndürüyordu.
+    `null` olabiliyor — sosyal profili olmayan öğrencide mesaj düğmesi
+    çizilmiyor.
+  */
+  kullaniciAdi: string | null;
   okul: string | null;
   fakulte: string | null;
   bolum: string | null;

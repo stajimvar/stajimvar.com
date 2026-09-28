@@ -133,8 +133,18 @@ test('rozet sayı bilinmiyorsa çizilmiyor; 0 uydurulmuyor', () => {
   assert.match(dugme, /<BildirimRozeti sayi=\{toplam\} renk=\{renk\} \/>/);
   assert.match(bildirim, /if \(sayi === null \|\| sayi <= 0\) return null;/);
   assert.match(dinleme, /if \(!etkin\) \{\s*setSayac\(null\);/);
-  /* Yalnız oturum açık öğrencide. */
-  assert.match(header, /const mesajDugmesiCizilsin = isLoggedIn && userRole === 'student' && Boolean\(onNavigate\);/);
+  /*
+    28 Eylül 2026: İŞVEREN DE. Koşul `userRole === 'student'` idi çünkü
+    mesajlaşma öğrenciler arasındaydı; işveren artık aday listesinden
+    site içi mesaj başlatıyor (20261116010000) ve girişi olmayan bir
+    kutuya yazmak, adayın yanıtını hiç okuyamamak demekti.
+  */
+  assert.match(
+    header,
+    /const mesajDugmesiCizilsin =\s*isLoggedIn && \(userRole === 'student' \|\| userRole === 'company'\) && Boolean\(onNavigate\);/,
+  );
+  /* Telefonda şirket paneli de mesaj kümesinde; orada solda başka aksiyon yok. */
+  assert.match(header, /userRole === 'company' && sirketPanelindeMi/);
   /*
     Tek örnek: telefonda sol kümede, geniş ekranda sağ kümede. Düğme kendi
     rozet aboneliğini açtığı için iki kopya çizilip biri gizlenmiyor;

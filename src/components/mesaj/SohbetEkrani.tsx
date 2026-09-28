@@ -56,6 +56,8 @@ interface Karsi {
   ad: string;
   kullaniciAdi: string;
   avatarYolu: string | null;
+  /** Şirket sayfasıysa logosu; avatar boşsa baş harf yerine bu çiziliyor. */
+  logoAdresi: string | null;
   resmiMi: boolean;
 }
 
@@ -160,16 +162,39 @@ export const SohbetEkrani: React.FC<{
       const profil = await sosyalProfiliGetir(id);
       if (iptal) return;
       if (!profil) return setAsama('yok');
-      if (profil.sirketId) return setAsama('sirket');
+
+      const sid = await sohbetKimligiGetir(id);
+      if (iptal) return;
+
+      /*
+        ŞİRKETLE SOHBET: YALNIZ İŞVEREN BAŞLATTIYSA (28 Eylül 2026)
+
+        Burada koşulsuz `return setAsama('sirket')` vardı — mesajlaşma
+        öğrenciler arasındaydı. İşveren artık aday listesinden site içi
+        mesaj başlatabiliyor (20261116010000) ve bu satır durduğu sürece
+        ADAY O MESAJA YANIT VEREMEZDİ: kendi kutusundaki sohbete
+        dokunduğunda "yalnız öğrenciler arasında" ekranına düşerdi.
+
+        Kapı sunucudaki kuralın AYNISI: öğrenci şirkete ancak sohbet
+        VARSA yazabiliyor, soğuk başlatamıyor. Sohbet yoksa ekran yine
+        kapalı — açık bırakmak, gönderilemeyecek bir yazma kutusu
+        çizmek olurdu.
+      */
+      if (profil.sirketId && !sid) return setAsama('sirket');
+
       setKarsi({
         id,
         ad: profil.gorunenAd ?? `@${profil.kullaniciAdi ?? kullaniciAdi}`,
         kullaniciAdi: profil.kullaniciAdi ?? kullaniciAdi,
         avatarYolu: profil.avatarYolu,
+        /*
+          Şirket sayfalarında `avatar_path` çoğunlukla boş ve baş harf
+          çiziliyordu; logo yedekte (akış kartındaki aynı çözüm).
+          Aday kimin yazdığını adla birlikte logodan da görüyor.
+        */
+        logoAdresi: profil.logoAdresi,
         resmiMi: profil.resmiMi,
       });
-      const sid = await sohbetKimligiGetir(id);
-      if (iptal) return;
       if (sid) {
         const [ilk, o] = await Promise.all([mesajlariGetir(sid, undefined, SAYFA), ozetGetir(sid)]);
         if (iptal) return;
@@ -338,7 +363,7 @@ export const SohbetEkrani: React.FC<{
       yukleniyor: '',
       yok: 'Bu profil bulunamadı ya da şu anda mesaj almıyor.',
       kendin: 'Kendine mesaj gönderemezsin.',
-      sirket: 'Mesajlaşma şimdilik yalnız öğrenciler arasında açık.',
+      sirket: 'Şirket sayfalarına buradan mesaj gönderilemiyor; yazışmayı şirket başlatıyor.',
       hata: 'Sohbet açılamadı. Bağlantını kontrol edip yeniden dene.',
     };
     return (
@@ -389,7 +414,12 @@ export const SohbetEkrani: React.FC<{
           }}
           className={`flex min-h-11 min-w-0 items-center gap-3 rounded-xl pr-2 hover:bg-gray-50 ${ODAK_HALKASI}`}
         >
-          <ProfilFotografi ad={karsi.ad} yol={karsi.avatarYolu} className="h-10 w-10 shrink-0 rounded-full text-sm" />
+          <ProfilFotografi
+            ad={karsi.ad}
+            yol={karsi.avatarYolu}
+            yedekAdres={karsi.logoAdresi}
+            className="h-10 w-10 shrink-0 rounded-full text-sm"
+          />
           <span className="min-w-0">
             <span className="flex min-w-0 items-center gap-1">
               <span className="truncate text-sm font-extrabold text-gray-900">{karsi.ad}</span>
