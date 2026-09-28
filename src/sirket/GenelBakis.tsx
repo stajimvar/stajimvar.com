@@ -264,6 +264,14 @@ export const GenelBakis: React.FC<{
               ilan={ilan}
               basvurular={kartAcik ? basvurular.filter((b) => String(b.ilanId ?? '') === id) : null}
               onNavigate={onNavigate}
+              /*
+                Ad ve logo BAĞLAMDAN: her kart aynı şirketin ilanı, yani
+                satırdan okunacak bir şey yok. `baglam.logoUrl` şirket
+                okumasının kendisinden geliyor (ikinci sorgu yok); boşsa
+                `ListingLogo` baş harfe düşüyor.
+              */
+              sirketAdi={baglam.ad}
+              logoUrl={baglam.logoUrl}
               simdi={simdi}
               /*
                 BAŞVURU YOLU ETİKETİ YALNIZCA FARKLIYSA

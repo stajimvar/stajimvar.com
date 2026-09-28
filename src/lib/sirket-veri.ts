@@ -193,7 +193,10 @@ export async function sirketIlanlari(companyId: string) {
         select verildi.
       */
       'id, title, city, status, origin, application_method, applicants_count, ' +
-        'posted_at, created_at, apply_url, application_deadline, review_note, reviewed_at'
+        /* `work_type` ilan kartındaki konum satırı için: "İstanbul · Hibrit".
+           Okunmadığı sürece kart çalışma biçimini yazamıyordu ve uydurmak
+           yerine hiç yazmıyordu. Salt okuma, tek kolon. */
+        'posted_at, created_at, apply_url, application_deadline, review_note, reviewed_at, work_type'
     )
     .eq('company_id', companyId)
     /* Arşivlenen ilan listeden kalkıyor ama veri duruyor: başvurular ve
