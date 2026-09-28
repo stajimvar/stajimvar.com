@@ -308,43 +308,70 @@ export const BildirimMerkezi: React.FC<{
   const gruplar = bildirimleriGrupla(bildirimler.filter((b) => !istekSatiriMi(b)));
 
   /*
-    BEĞENİLEN PAYLAŞIMIN ÖNİZLEMESİ
+    BEĞENİLEN PAYLAŞIMIN KÜÇÜK RESMİ
 
     Satırda yalnız "… paylaşımını beğendi" yazıyordu; aynı kişinin altı
     beğenisi altı özdeş satır oluyordu ve hangisinin hangi paylaşım
     olduğu anlaşılmıyordu.
 
-    Kapak görseli ile açıklamanın ilk satırı birlikte gösteriliyor.
-    İkisinden biri yoksa öteki tek başına yeterli; ikisi de yoksa
-    önizleme HİÇ çizilmiyor — boş bir kutu, silinmiş paylaşım izlenimi
-    verirdi ve elimizde öyle bir bilgi yok.
+    SUNUM: SATIRIN SAĞINDA KÜÇÜK KARE (kullanıcı isteği, 28 Eylül 2026)
+    ------------------------------------------------------------------
+    Önce metnin altında çerçeveli bir kutu vardı: içinde küçük resim ve
+    yanında açıklama. Kutu satırı iki kata çıkarıyordu ve açıklaması
+    olmayan paylaşımlarda "Görsel paylaşımı" diye bir ETİKET yazıyordu —
+    hiçbir şey söylemeyen, uydurulmuş bir cümle. Üretimde ölçüldü:
+    beğenilen 21 paylaşımın 4'ünde açıklama yok, yani o etiket gerçekten
+    görünüyordu.
 
-    Görsel `useGorselAdresleri` ile kullanıcının kendi oturumundan
-    iniyor: paylaşılabilir imzalı adres üretilmiyor (bkz. o dosyadaki
-    ölçüm).
+    Şimdi tek şey var ve o da gerçek: paylaşımın kapağı, satırın en
+    sağında kare bir küçük resim. Çerçeve, zemin ve etiket kalktı.
+
+    GÖRSEL GERÇEKTEN İNMİYORDU (ölçülen hata)
+    -----------------------------------------
+    `useGorselAdresleri` `{ durum, adresler }` döndürüyor ve `adresler`
+    bir `Map`. Buradaki kod ikisini de atlıyordu: nesneyi çözmeden
+    kullanıyor, sonra `Map`'e köşeli parantezle erişiyordu. Sonuç her
+    zaman `undefined`, yani `<img>` HİÇ çizilmiyordu ve ekranda kalıcı
+    olarak boş bir gri kare duruyordu (kullanıcının ekran görüntüsünde
+    görünen şey). `AkisKarti` aynı kancayı baştan beri doğru çözüyordu.
+
+    ÜÇ DURUM AYRI
+    -------------
+    İniyorken nabız atan bir kare (yer tutucu, veri değil); indiyse
+    görselin kendisi; inmediyse HİÇBİR ŞEY — kalıcı boş bir kare, var
+    olmayan ya da bozuk bir paylaşım izlenimi verirdi ve elimizde öyle
+    bir bilgi yok.
+
+    Görsel kullanıcının kendi oturumundan iniyor: paylaşılabilir imzalı
+    adres üretilmiyor (bkz. `useGorselAdresleri` içindeki ölçüm).
   */
   const IcerikOnizleme: React.FC<{
     ozet: string | null;
     kapakYolu: string | null;
   }> = ({ ozet, kapakYolu }) => {
     const yollar = React.useMemo(() => (kapakYolu ? [kapakYolu] : []), [kapakYolu]);
-    const adresler = useGorselAdresleri(SOSYAL_PAYLASIM_KOVASI, yollar);
-    const adres = kapakYolu ? adresler[kapakYolu] : null;
-    if (!ozet && !kapakYolu) return null;
+    const { durum, adresler } = useGorselAdresleri(SOSYAL_PAYLASIM_KOVASI, yollar);
+    if (!kapakYolu) return null;
+
+    const adres = adresler.get(kapakYolu) ?? null;
+    if (!adres) {
+      return durum === 'yukleniyor' ? (
+        <span aria-hidden="true" className="h-11 w-11 shrink-0 animate-pulse rounded-lg bg-gray-100" />
+      ) : null;
+    }
 
     return (
-      <span className="mt-1 flex min-w-0 items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5">
-        {kapakYolu && (
-          <span className="h-8 w-8 shrink-0 overflow-hidden rounded bg-gray-200">
-            {adres && (
-              /* alt boş: paylaşımın metni zaten yanında yazıyor, iki kez okutmuyoruz. */
-              <img src={adres} alt="" className="h-full w-full object-cover" />
-            )}
-          </span>
-        )}
-        <span className="min-w-0 flex-1 truncate text-xs text-gray-600">
-          {ozet || 'Görsel paylaşımı'}
-        </span>
+      <span className="h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+        {/*
+          `alt` AÇIKLAMA VARSA AÇIKLAMA, YOKSA BOŞ
+
+          Satırın metni zaten "… paylaşımını beğendi" diyor; küçük resim
+          o cümlede HANGİ paylaşım olduğunu gösteriyor. Açıklama varsa
+          ekran okuyucu da aynı ayrımı duyuyor. Yoksa `alt` boş kalıyor —
+          "Görsel paylaşımı" gibi bir doldurma metni, içerik hakkında
+          yanlış bir şey söylemek olurdu.
+        */}
+        <img src={adres} alt={ozet?.trim() || ''} className="h-full w-full object-cover" />
       </span>
     );
   };
@@ -372,10 +399,6 @@ export const BildirimMerkezi: React.FC<{
             {b.govde && <span className="text-gray-700"> {b.govde}</span>}
             <span className="whitespace-nowrap text-gray-500"> · {gecenSure(b.tarih)}</span>
           </span>
-          {(() => {
-            const ic = icerik?.(b) ?? null;
-            return ic ? <IcerikOnizleme ozet={ic.ozet} kapakYolu={ic.kapakYolu} /> : null;
-          })()}
           {b.tur === 'baglanti_istegi' && onBaglantiYanitla && gosterilecekSonuc(b) && (
             <span
               role="status"
@@ -398,6 +421,21 @@ export const BildirimMerkezi: React.FC<{
             <span className="sr-only">Yeni</span>
           </span>
         )}
+
+        {/*
+          KÜÇÜK RESİM SATIRIN EN SAĞINDA
+
+          Metnin altında değil: orada çerçeveli bir kutu olarak duruyordu
+          ve satırı iki kata çıkarıyordu. Sağda kare bir küçük resim,
+          okunmamış noktasından sonra — yani satırın en dış ucunda.
+
+          Yalnız kapağı olan bildirimlerde çiziliyor; bağlantı isteği ve
+          başvuru bildirimlerinde `icerik` zaten null dönüyor.
+        */}
+        {(() => {
+          const ic = icerik?.(b) ?? null;
+          return ic ? <IcerikOnizleme ozet={ic.ozet} kapakYolu={ic.kapakYolu} /> : null;
+        })()}
       </button>
 
       {/*
