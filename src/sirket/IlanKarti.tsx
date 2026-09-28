@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pencil, Plus, User, Users } from 'lucide-react';
+import { MapPin, Pencil, Plus, User, Users } from 'lucide-react';
 import {
   IKINCIL_DUGME,
   SIRKET_METIN,
@@ -10,6 +10,8 @@ import {
   ikincilStil,
   kutuStil,
 } from './renk';
+import { ListingLogo } from '../components/ListingLogo';
+import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import { monogram } from '../lib/aday-kart.mjs';
 import { ilanEylemleri } from '../lib/ilan-formu.mjs';
 import { daysUntilDeadline } from '../lib/opportunity-domain.mjs';
@@ -124,13 +126,24 @@ export const IlanKarti: React.FC<{
   ekRozet?: React.ReactNode;
   /** Sol bölümün altına düşen içerik (ör. inceleme notu). */
   altNot?: React.ReactNode;
+  /**
+   * Kartın sahibi şirketin adı ve logosu — herkese açık ilan kartındaki
+   * ile aynı sunum için. Verilmezse logo ve ad satırı hiç çizilmiyor:
+   * `ListingLogo` adsız baş harf üretemez ve boş bir daire kalırdı.
+   */
+  sirketAdi?: string | null;
+  logoUrl?: string | null;
   simdi?: Date;
-}> = ({ ilan, basvurular, onNavigate, ekEylemler, ekRozet, altNot, simdi }) => {
+}> = ({ ilan, basvurular, onNavigate, ekEylemler, ekRozet, altNot, sirketAdi, logoUrl, simdi }) => {
   const id = String(ilan.id);
   const rozet = ilanDurumRozeti(ilan, simdi);
   const eylem = ilanEylemleri(ilan);
   const taslak = ilan.status === 'draft';
   const sehir = String(ilan.city ?? '').trim();
+  /* Konum metni herkese açık kartla aynı kuraldan geçiyor: il adı
+     normalleştiriliyor, çalışma biçimi varsa ekleniyor. */
+  const calisma = calismaEtiketi(ilan.work_type as string | null | undefined);
+  const konum = [konumEtiketi(sehir), calisma].filter(Boolean).join(' · ');
 
   const yeni = basvurular ? basvurular.filter((b) => b.durum === 'submitted') : [];
   const toplam = basvurular ? basvurular.length : 0;
@@ -141,25 +154,72 @@ export const IlanKarti: React.FC<{
     <li className="rounded-2xl border p-4 shadow-xs sm:p-5" style={kutuStil}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
         {/* ------------------------------------------------------ sol */}
-        <div className="min-w-0 sm:flex-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <h3 className="min-w-0 truncate text-base font-bold" style={{ color: SIRKET_METIN }}>
-              {String(ilan.title ?? '')}
-            </h3>
-            <span
-              className="inline-flex shrink-0 items-center rounded-lg px-2 py-0.5 text-[11px] font-bold"
-              style={rozet.stil}
-            >
-              {rozet.etiket}
-            </span>
-            {ekRozet}
-          </div>
-          {sehir && (
-            <p className="mt-0.5 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-              {sehir}
-            </p>
+        {/*
+          LOGO + BİLGİ — HERKESE AÇIK İLAN KARTIYLA AYNI (kullanıcı isteği,
+          28 Eylül 2026)
+
+          Şirket kendi ilanını panelinde logosuz, çıplak bir başlık olarak
+          görüyordu; aynı ilan herkese açık listede logolu kartla
+          duruyordu. "İlan listesindeki gibi gözüksün, logom falan."
+
+          Ölçüler `InternshipCard` ile BİREBİR: 80×80 logo, `rounded-xl`,
+          aynı başlık ve şirket adı satırı, konumda aynı `MapPin`.
+          Kopyalanan şey ölçüler değil BİLEŞENİN KENDİSİ (`ListingLogo`);
+          logo standardı orada tek yerde duruyor ve iki kart birlikte
+          değişiyor.
+
+          Ad ya da logo verilmediyse blok hiç çizilmiyor: `ListingLogo`
+          adsız çağrılırsa baş harf üretemez ve boş bir daire kalırdı.
+        */}
+        <div className="flex min-w-0 items-start gap-3 sm:flex-1">
+          {sirketAdi && (
+            <div className="shrink-0" title={sirketAdi}>
+              <ListingLogo
+                name={sirketAdi}
+                logoUrl={logoUrl || undefined}
+                className="!h-20 !w-20 !rounded-xl !p-2 !text-2xl"
+              />
+            </div>
           )}
-          {altNot}
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <h3 className="min-w-0 truncate text-base font-bold" style={{ color: SIRKET_METIN }}>
+                {String(ilan.title ?? '')}
+              </h3>
+              <span
+                className="inline-flex shrink-0 items-center rounded-lg px-2 py-0.5 text-[11px] font-bold"
+                style={rozet.stil}
+              >
+                {rozet.etiket}
+              </span>
+              {ekRozet}
+            </div>
+            {sirketAdi && (
+              <p className="mt-0.5 break-words text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
+                {sirketAdi}
+              </p>
+            )}
+            {/*
+              Konum satırı herkese açık karttaki gibi: simge + il, çalışma
+              biçimi varsa nokta ile ekleniyor. Biçim BİLİNMİYORSA
+              yazılmıyor — varsayılan uydurulmuyor (aynı kural
+              `InternshipCard` içinde de yazılı).
+
+              Şehir boşsa satırın tamamı çizilmiyor; `konumEtiketi` boş
+              girdide "Konum belirtilmemiş" döndürüyor ve şirketin kendi
+              panelinde bu, girmediği bir alanı doldurulmuş göstermek olurdu.
+            */}
+            {sehir && (
+              <p
+                className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 text-sm"
+                style={{ color: SIRKET_METIN_IKINCIL }}
+              >
+                <MapPin aria-hidden className="h-4 w-4 shrink-0 text-gray-400" />
+                <span className="min-w-0 break-words">{konum}</span>
+              </p>
+            )}
+            {altNot}
+          </div>
         </div>
 
         {/* ----------------------------------------------------- orta */}

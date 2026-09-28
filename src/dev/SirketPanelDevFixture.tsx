@@ -283,6 +283,9 @@ const TEST_BAGLAMI = (kademe: number) => ({
   companyId: 'test',
   ad: 'Örnek Teknoloji A.Ş.',
   slug: 'ornek',
+  /* İlan kartındaki logo görülebilsin diye depodaki gerçek bir dosya;
+     logosuz hâli `CompanyLogo`nun baş harf dalı, o da kendi yerinde. */
+  logoUrl: '/isveren-logolari/abdi-ibrahim.png',
   siteUrl: 'https://ornek.com',
   hrEmail: 'ik@ornek.com',
   vkn: null,
