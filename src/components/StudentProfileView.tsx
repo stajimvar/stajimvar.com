@@ -59,6 +59,7 @@ import type { PortfolyoSatiri } from './sosyal/SosyalProfilSayfasi';
 import { ONERILEN_SOSYAL, POPULER_ARACLAR } from '../data/cv-secenekleri';
 import { AutocompleteField } from './AutocompleteField';
 import { PredictiveInput } from './PredictiveInput';
+import { HEDEF_POZISYONLAR } from '../lib/pozisyonlar.mjs';
 import {
   HARD_SKILLS_DICTIONARY,
   SOFT_SKILLS_DICTIONARY,
@@ -236,18 +237,7 @@ type BolumId =
 
 /* Hızlı ekleme seçenekleri CV oluşturma ekranıyla ortak: src/data/cv-secenekleri.ts */
 
-const HEDEF_POZISYONLAR = [
-  'Yazılım Geliştirme Stajyeri', 'Frontend Stajyeri', 'Backend Stajyeri',
-  'Mobil Uygulama Stajyeri', 'Veri Analisti Stajyeri', 'Yapay Zeka / ML Stajyeri',
-  'Siber Güvenlik Stajyeri', 'Test / QA Stajyeri', 'UI/UX Tasarım Stajyeri',
-  'Grafik Tasarım Stajyeri', 'Dijital Pazarlama Stajyeri', 'Sosyal Medya Stajyeri',
-  'İnsan Kaynakları Stajyeri', 'Muhasebe / Finans Stajyeri', 'Satış Stajyeri',
-  'Lojistik Stajyeri', 'Makine Mühendisliği Stajyeri', 'Elektrik-Elektronik Stajyeri',
-  'İnşaat / Şantiye Stajyeri', 'Endüstri Mühendisliği Stajyeri', 'Mimarlık Stajyeri',
-  'Kimya / Laboratuvar Stajyeri', 'Gıda Mühendisliği Stajyeri', 'Tekstil / Konfeksiyon Stajyeri',
-  'Üretim & Kalite Kontrol Stajyeri', 'Hukuk Stajyeri', 'Turizm / Otelcilik Stajyeri',
-  'Sağlık Hizmetleri Stajyeri', 'Eğitim / Öğretmenlik Stajyeri', 'Halkla İlişkiler Stajyeri',
-];
+/* Hedef pozisyonlar şirketin ilan formundaki Pozisyon önerileriyle ortak: src/lib/pozisyonlar.mjs */
 
 /* Seviye sırası: rozetteki etikete dokununca bu sırayla döner. */
 const SEVIYE_SIRASI: SkillLevel[] = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];

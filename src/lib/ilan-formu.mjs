@@ -60,48 +60,14 @@ export const UCRET_SECENEKLERI = [
   { id: 'belirtilmeyecek', etiket: 'Belirtilmeyecek' },
 ];
 
-/**
- * Üç iş tanımı şablonu.
- *
- * Boş bir metin kutusu, formu iki dakikada bitirmenin önündeki asıl
- * engel. Şablonlar doldurulacak metin veriyor ama İK'nın kendi
- * cümlelerini yazmasını engellemiyor — hepsi düzenlenebilir.
- */
-export const SABLONLAR = [
-  {
-    id: 'yazilim',
-    etiket: 'Yazılım',
-    metin:
-      'Ekibimizle birlikte ürünümüzün geliştirilmesinde yer alacaksın. Günlük işlerin arasında ' +
-      'yeni özelliklerin kodlanması, mevcut kodun gözden geçirilmesi ve test yazımı olacak. ' +
-      'Kıdemli bir geliştirici seni yönlendirecek; ilk haftadan itibaren gerçek bir görevin olacak.\n\n' +
-      'Aradıklarımız: en az bir programlama diline hâkim olmak, versiyon kontrolü (Git) kullanmış ' +
-      'olmak ve öğrenmeye açık olmak. Daha önce staj yapmış olman gerekmiyor.\n\n' +
-      'Staj süresince düzenli geri bildirim alacak, ekip toplantılarına katılacaksın.',
-  },
-  {
-    id: 'ofis',
-    etiket: 'Ofis / İdari',
-    metin:
-      'Ekibimizin günlük işleyişinde yer alacak, süreçlerin takibinde destek vereceksin. ' +
-      'Yazışmaların düzenlenmesi, raporların hazırlanması ve toplantı hazırlıkları işlerinin ' +
-      'arasında olacak.\n\n' +
-      'Aradıklarımız: düzenli çalışma alışkanlığı, temel ofis programlarına hâkimiyet ve ' +
-      'yazılı iletişimde özen. Deneyim beklemiyoruz.\n\n' +
-      'Staj boyunca birlikte çalışacağın bir sorumlun olacak ve düzenli geri bildirim alacaksın.',
-  },
-  {
-    id: 'saha',
-    etiket: 'Saha / Üretim',
-    metin:
-      'Sahadaki ekiple birlikte üretim ve uygulama süreçlerinde yer alacaksın. İşin bir kısmı ' +
-      'gözlem ve kayıt, bir kısmı ekibe doğrudan destek olacak.\n\n' +
-      'Aradıklarımız: iş güvenliği kurallarına uyum, ekip içinde çalışabilme ve düzenli devam. ' +
-      'Gerekli eğitimler tarafımızdan verilecek.\n\n' +
-      'Staj boyunca bir saha sorumlusu sana eşlik edecek; kullanılan ekipman ve süreçler ' +
-      'adım adım anlatılacak.',
-  },
-];
+/*
+  İŞ TANIMI ŞABLONLARI POZİSYONA BAĞLI (27 Eylül 2026)
+
+  Burada üç genel şablon vardı (Yazılım / Ofis / Saha). Pozisyondan
+  bağımsızdılar ve içlerinde şirketin vermediği sözler vardı ("kıdemli
+  bir geliştirici seni yönlendirecek", "eğitimler tarafımızdan
+  verilecek"). Şablonlar artık pozisyona göre: src/lib/pozisyonlar.mjs.
+*/
 
 /*
   BAŞVURU ARTIK HER ZAMAN STAJIMVAR ÜZERİNDEN

@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ACIKLAMA_EN_AZ,
-  SABLONLAR,
   ZORUNLU_ALANLAR,
   ilanGecerli,
   ilanSatiri,
@@ -65,13 +64,7 @@ test('son başvuru opsiyonel', () => {
   assert.deepEqual(ilanSorunlari({ ...GECERLI, sonBasvuru: '2026-09-30' }), {});
 });
 
-test('üç şablon var ve hepsi alt sınırı geçiyor', () => {
-  assert.equal(SABLONLAR.length, 3);
-  for (const s of SABLONLAR) {
-    assert.ok(s.metin.length >= ACIKLAMA_EN_AZ, `${s.id} şablonu çok kısa`);
-    assert.ok(s.metin.length <= 2000, `${s.id} şablonu çok uzun`);
-  }
-});
+/* İş tanımı şablonları pozisyona bağlandı: tests/ilan-pozisyon-sablonlari.test.mjs */
 
 test('satır isveren ilani olarak isaretleniyor', () => {
   const satir = ilanSatiri(GECERLI, { companyId: 'abc', durum: 'published' });
