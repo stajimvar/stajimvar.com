@@ -119,14 +119,20 @@ interface IzgaraProps {
    * ekranda üç eşit sütun. Ziyaretçi profilindeki 'sade' ızgara değişmiyor.
    */
   /*
-   * 'kare' ŞİRKET SAYFASI için: galerinin davranışı (çıplak fotoğraf,
-   * ayrıntı katmanı, çoklu görsel simgesi) ama KARE karo ve her
-   * genişlikte üç sütun. Şirket sayfası referans tasarımı (18 Eylül 2026)
-   * kare ızgara istiyor; öğrenci profilinin 3:4 karosu ve dört sütunu
-   * DEĞİŞMİYOR — iki ekran aynı bileşeni farklı ölçüde çiziyor, ikinci
-   * bir ızgara yazılmadı.
+   * 'kare' KİPİ KALKTI (28 Eylül 2026, kullanıcı kararı)
+   *
+   * Şirket sayfası için ayrı bir kip vardı: galerinin bütün davranışı
+   * ama `aspect-square` karo. Referans tasarım (18 Eylül 2026) kare
+   * istemişti; kullanıcı artık şirket paylaşımlarının da öğrenci
+   * profilindeki gibi — Instagram karosu, dikey 3:4 — görünmesini
+   * istiyor.
+   *
+   * Kip AYNI ORANA ÇEKİLİP BIRAKILMADI, SİLİNDİ. İki kip her alanında
+   * birebir aynı olsaydı ölü bir dal kalırdı ve `galeri` ileride
+   * değiştiğinde şirket sayfası sessizce geride kalırdı — bu isteğin
+   * sebebi zaten tam olarak o. Aynı görünecekse aynı kip.
    */
-  gorunum?: 'sade' | 'ayrintili' | 'galeri' | 'kare';
+  gorunum?: 'sade' | 'ayrintili' | 'galeri';
   /**
    * Listedeki gönderilerin sahibi — akış başlığında "@ad" olarak yazılıyor.
    *
@@ -162,9 +168,6 @@ export const PAYLASIM_IZGARASI = 'grid grid-cols-3 gap-px';
  */
 export const GALERI_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-0.5';
 
-/** Şirket sayfası: kare karo, her genişlikte üç sütun; aralık galeriyle aynı. */
-export const KARE_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-0.5';
-
 export const AYRINTILI_IZGARA = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3';
 
 /**
@@ -184,7 +187,6 @@ export const AYRINTILI_IZGARA = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-
  */
 const KAPAK_KABI = 'relative aspect-[3/4] w-full overflow-hidden bg-gray-100';
 const GALERI_KAPAK_KABI = 'relative aspect-[3/4] w-full overflow-hidden bg-gray-100';
-const KARE_KAPAK_KABI = 'relative aspect-square w-full overflow-hidden bg-gray-100';
 const AYRINTILI_KAPAK_KABI = 'relative aspect-square w-full overflow-hidden rounded-xl bg-gray-100';
 
 interface KartProps {
@@ -197,7 +199,6 @@ interface KartProps {
   geriYukleKilidi?: boolean;
   sade: boolean;
   galeri?: boolean;
-  kare?: boolean;
 }
 
 const GERI_YUKLE_DUGMESI = `inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2 text-[13px] font-bold text-gray-800 hover:bg-gray-50 disabled:cursor-default disabled:opacity-40 sm:text-sm ${RENK_GECISI} ${ODAK_HALKASI}`;
@@ -211,7 +212,6 @@ const PaylasimKarti: React.FC<KartProps> = ({
   geriYukleKilidi = false,
   sade,
   galeri = false,
-  kare = false,
 }) => {
   const tarih = tarihMetni(paylasim.arsivAni ?? paylasim.olusturmaAni);
 
@@ -267,7 +267,7 @@ const PaylasimKarti: React.FC<KartProps> = ({
           : `${KART_KABI} flex h-full min-w-0 flex-col gap-1.5 cursor-pointer text-left hover:border-gray-300 ${RENK_GECISI} ${ODAK_HALKASI}`
       }
     >
-      <div className={kare ? KARE_KAPAK_KABI : galeri ? GALERI_KAPAK_KABI : sade ? KAPAK_KABI : AYRINTILI_KAPAK_KABI}>
+      <div className={galeri ? GALERI_KAPAK_KABI : sade ? KAPAK_KABI : AYRINTILI_KAPAK_KABI}>
         {kapakDurumu === 'yukleniyor' && paylasim.kapakYolu && (
           <span aria-hidden className="block h-full w-full animate-pulse bg-gray-100" />
         )}
@@ -382,15 +382,14 @@ const PaylasimKarti: React.FC<KartProps> = ({
  * Sade dalda metin çizgileri de yok — onları çizmek, gelmeyecek bir
  * satırın yerini ayırıp içerik gelince ızgarayı kısaltırdı.
  */
-const Iskelet: React.FC<{ sade: boolean; galeri?: boolean; kare?: boolean }> = ({
+const Iskelet: React.FC<{ sade: boolean; galeri?: boolean }> = ({
   sade,
   galeri = false,
-  kare = false,
 }) =>
   sade ? (
     <div
       aria-hidden
-      className={`${kare ? KARE_KAPAK_KABI : galeri ? GALERI_KAPAK_KABI : KAPAK_KABI} animate-pulse`}
+      className={`${galeri ? GALERI_KAPAK_KABI : KAPAK_KABI} animate-pulse`}
     />
   ) : (
     <div aria-hidden className={`${KART_KABI} flex h-full flex-col gap-1.5`}>
@@ -412,17 +411,13 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
   gorunum = 'ayrintili',
   kullaniciAdi = null,
 }) => {
-  const kare = gorunum === 'kare';
-  /* Kare karo galerinin bütün davranışını taşıyor; yalnız oran ve sütun sayısı farklı. */
-  const galeri = gorunum === 'galeri' || kare;
+  const galeri = gorunum === 'galeri';
   const sade = gorunum === 'sade' || galeri;
-  const izgaraSinifi = kare
-    ? KARE_IZGARASI
-    : galeri
-      ? GALERI_IZGARASI
-      : sade
-        ? PAYLASIM_IZGARASI
-        : AYRINTILI_IZGARA;
+  const izgaraSinifi = galeri
+    ? GALERI_IZGARASI
+    : sade
+      ? PAYLASIM_IZGARASI
+      : AYRINTILI_IZGARA;
   /*
     Açık olan gönderinin KİMLİĞİ, nesnesi değil: katman ızgaranın güncel
     listesini alıyor (dar ekranda o listenin tamamı bir akış olarak
@@ -481,9 +476,9 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
     return (
       <>
         <div className={izgaraSinifi} aria-busy="true">
-          <Iskelet sade={sade} galeri={galeri} kare={kare} />
-          <Iskelet sade={sade} galeri={galeri} kare={kare} />
-          <Iskelet sade={sade} galeri={galeri} kare={kare} />
+          <Iskelet sade={sade} galeri={galeri} />
+          <Iskelet sade={sade} galeri={galeri} />
+          <Iskelet sade={sade} galeri={galeri} />
         </div>
         {katman}
       </>
@@ -584,7 +579,6 @@ export const PaylasimIzgarasi: React.FC<IzgaraProps> = ({
             geriYukleKilidi={geriYuklenenId === paylasim.id}
             sade={sade}
             galeri={galeri}
-            kare={kare}
           />
         ))}
       </div>

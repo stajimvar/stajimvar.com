@@ -776,9 +776,15 @@ test('sade hücre açıklama basmıyor; metin ayrıntı katmanında duruyor', ()
     kapaktan ayırt edemez.
   */
   /* 'galeri' (17 Eylül 2026): sahibin /cv galerisi; sade hücrenin davranışı, ayrık karolar. */
-  /* 'kare' (18 Eylül 2026): şirket sayfası; galerinin davranışı, kare karo, her genişlikte üç sütun. */
-  assert.match(izgara, /gorunum\?: 'sade' \| 'ayrintili' \| 'galeri' \| 'kare';/);
-  assert.match(izgara, /const galeri = gorunum === 'galeri' \|\| kare;/);
+  /*
+    'kare' KİPİ KALKTI (28 Eylül 2026): şirket sayfası için ayrı bir
+    kipti ve artık öğrenci profiliyle aynı 'galeri' kipini kullanıyor.
+    Üç kip kaldı; şirket sayfasının kipi bu listede ayrıca aranmıyor
+    çünkü kendi testi (`sirket-profil-sayfasi`) iki ekranın aynı dizeyi
+    geçtiğini doğruluyor.
+  */
+  assert.match(izgara, /gorunum\?: 'sade' \| 'ayrintili' \| 'galeri';/);
+  assert.match(izgara, /const galeri = gorunum === 'galeri';/);
   assert.match(izgara, /const sade = gorunum === 'sade' \|\| galeri;/);
   assert.match(izgara, /gorunum = 'ayrintili',/);
   assert.match(izgara, /\{!sade && \(/);
