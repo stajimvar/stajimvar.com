@@ -207,6 +207,19 @@ function uygulamaninMi(yol: string): boolean {
     `kampus_profil`in kapısından geçiyor.
   */
   if (temiz.startsWith('/kampusum/')) return true;
+  /*
+    /paylasim/<id> — paylaşımın kalıcı adresi (28 Eylül 2026). Aynı
+    gerekçe: gönderiler ön render EDİLMİYOR (kişiye ve kitleye bağlı,
+    yayında dosyaları yok), bu yüzden VERI_ONEKLERI'ne konmadı — oraya
+    konsaydı "dosya yoksa 404" kuralına düşer ve gerçek, var olan bir
+    paylaşım da 404 alırdı.
+
+    VAR-YOK SIZDIRMIYOR: geçerli, uydurma ya da görme yetkisi olmayan
+    her kimlik AYNI 200 kabuğunu alıyor. Ayrım `posts` satır
+    politikasında ve istemcideki tek ekranda kalıyor; durum kodunun
+    kendisi bir varlık kanıtı olmuyor.
+  */
+  if (temiz.startsWith('/paylasim/')) return true;
   return VERI_ONEKLERI.some((onek) => yol.startsWith(onek) && yol.length > onek.length);
 }
 

@@ -2778,6 +2778,87 @@ export async function akisiGetir(
 }
 
 /**
+ * TEK PAYLAŞIM — KALICI ADRESİN OKUMASI
+ *
+ * `/paylasim/<id>` adresinin verisi. `akisiGetir` ile aynı satırı aynı
+ * alanlarla okuyor; ayrı bir alan listesi yazılsaydı akışta görünen bir
+ * paylaşım kalıcı adresinde eksik çizilirdi.
+ *
+ * GÖRÜNÜRLÜK YİNE SUNUCUDA
+ * ------------------------
+ * Burada ikinci bir yetki kuralı YOK. Satırı `posts` okuma politikası
+ * veriyor (20260925010000): sahibinin kendi satırı, ya da arşivlenmemiş
+ * olup `paylasim_gorunur(id)` diyen satır. Satır gelmezse `null`
+ * dönüyor ve ekran dürüst bir "ulaşılamıyor" yazıyor — "silinmiş
+ * paylaşım" gibi bir yer tutucu çizilmiyor, çünkü politikanın satırı
+ * vermemesi ile paylaşımın silinmiş olması aynı şey değil ve ikisini
+ * buradan ayırt edemiyoruz.
+ *
+ * RESMÎ SESSİZLİK BURADA SÜZÜLMÜYOR
+ * ---------------------------------
+ * Akışta sessize alınmış resmî içerik çizilmiyor; kalıcı adreste
+ * çiziliyor. Sessizlik "akışımı doldurma" demek, "bu bağlantıyı açamam"
+ * demek değil — süzgeç buraya da konsaydı kullanıcının kendi tercihi,
+ * paylaşılmış bir bağlantının önünde duvara dönüşürdü (aynı gerekçe
+ * `akisiGetir` içinde de yazılı).
+ *
+ * TASLAK VE ARŞİV DIŞARIDA
+ * ------------------------
+ * `durum = 'hazir'`: taslak yarım bir satır, gönderi değil; politika
+ * onu yazarına açıyor ve süzgeç olmasaydı kalıcı adres boş bir kart
+ * çizerdi. `archived_at is null`: arşiv "silme değil gizleme" ve
+ * gizlenen şeyin kalıcı adresten açılması arşivi anlamsız kılardı —
+ * yazar kendi arşivine profilindeki arşiv ekranından ulaşıyor.
+ */
+export async function paylasimiGetir(postId: string): Promise<AkisPaylasimi | null> {
+  const { data, error } = await db
+    .from('posts')
+    .select(`author_id, ${PAYLASIM_ALANLARI}`)
+    .eq('id', postId)
+    .eq('durum', 'hazir')
+    .is('archived_at', null)
+    .maybeSingle();
+  if (error) hata('Paylaşım alınamadı', error);
+  if (!data) return null;
+
+  const satir: any = data;
+  const yazarId = String(satir.author_id);
+
+  /* Yazar alanları akıştaki liste sorgusuyla BİREBİR aynı; iki yerde
+     ayrı yazılsaydı kalıcı adreste örneğin mavi tik ya da şirket logosu
+     eksik kalırdı. */
+  const { data: profil, error: profilHatasi } = await db
+    .from('social_profiles')
+    .select(
+      'profile_id, username, gorunen_ad, avatar_path, resmi_mi, sirket_id, departments ( ad ), sectors!social_profiles_sector_id_fkey ( ad ), companies!social_profiles_sirket_id_fkey ( logo_url )',
+    )
+    .eq('profile_id', yazarId)
+    .maybeSingle();
+  if (profilHatasi) hata('Paylaşımın yazarı alınamadı', profilHatasi);
+
+  /* Satır geldi ama profil gelmediyse ad UYDURULMUYOR: akıştaki kuralın
+     aynısı — kime ait olduğunu bilmediğimiz bir gönderi çizilmiyor. */
+  if (!profil) return null;
+
+  const p: any = profil;
+  return {
+    ...paylasimSatiriCevir(satir),
+    yazarId,
+    resmiMi: satir.kitle === 'resmi',
+    yazar: {
+      kullaniciAdi: p.username ?? null,
+      gorunenAd: p.gorunen_ad ?? null,
+      sektorAdi: p.sectors?.ad ?? null,
+      bolumAdi: p.departments?.ad ?? null,
+      avatarYolu: p.avatar_path ?? null,
+      resmiMi: p.resmi_mi === true,
+      sirketId: p.sirket_id ?? null,
+      logoAdresi: p.companies?.logo_url ?? null,
+    },
+  };
+}
+
+/**
  * BİLDİRİMDEKİ İÇERİK — beğenilen paylaşımın özeti ve kapağı
  *
  * Zil paneli açılınca bir kez, bildirimlerdeki paylaşım kimlikleri

@@ -63,13 +63,63 @@ test('bağlantı: istek alıcıya, kabul isteyene gider; RED SESSİZ', () => {
 test('beğeni: kendi paylaşımını beğenen bildirim almıyor', () => {
   assert.match(goc, /if yazar is null or yazar = NEW\.user_id then\s*return NEW;/);
   assert.match(goc, /'paylasim_begeni'/);
+});
+
+/*
+  ADRES DEĞİŞTİ: `/cv` → `/paylasim/<id>` (28 Eylül 2026)
+
+  Bu test eskiden `'/cv'` yazıyor ve `'/paylasim/` geçmediğini ayrıca
+  doğruluyordu. O yasak KEYFİ DEĞİLDİ: paylaşımın kalıcı bir adresi
+  yoktu ve olmayan bir adrese götüren bildirim dokununca 404 verirdi.
+  Yani korunan şey "adres `/cv` olsun" değil, "BİLDİRİM GERÇEKTEN VAR
+  OLAN BİR ADRESE GİTSİN" idi.
+
+  Adres artık var, bu yüzden koşul yer değiştirdi ama aynı şeyi
+  koruyor — ve daha sıkı koruyor: yalnız göçün ne yazdığına değil,
+  uygulamanın o adresi gerçekten karşılayıp karşılamadığına bakıyor.
+  Üç parçadan biri eksik olsa bildirim yine 404'e giderdi.
+*/
+test('beğeni bildirimi paylaşımın KENDİSİNE gidiyor', () => {
+  const adresGocu = oku('supabase/migrations/20261115010000_begeni_bildirimi_paylasim_adresi.sql');
+  /* 1) Tetikleyici paylaşım kimliğini adrese yazıyor. */
+  assert.match(adresGocu, /'\/paylasim\/' \|\| NEW\.post_id,\s*\n\s*'begeni:'/);
+  assert.doesNotMatch(adresGocu, /'\/cv',/);
+
+  /* 2) App.tsx o öneki bir ekrana bağlıyor. */
+  const app = oku('src/App.tsx');
+  assert.match(app, /temizYol\.startsWith\('\/paylasim\/'\)/);
+  assert.match(app, /<PaylasimSayfasi/);
+
   /*
-    ADRES `/cv`: paylaşımın kalıcı adresi yok (ayrıntı bir rota değil,
-    karttan açılan katman). Olmayan bir adrese götüren bildirim
-    dokununca 404 verirdi.
+    3) Ara katman onu UYGULAMA adresi sayıyor.
+
+    Bu olmadan Cloudflare gerçek bir paylaşıma da 404 dönerdi: sayfa
+    yine açılırdı (404.html uygulamayı başlatıyor) ama durum kodu
+    yanlış olurdu — `/profil/<ad>` adreslerinde ölçülen kusurun aynısı.
   */
-  assert.match(goc, /'\/cv',\s*\n\s*'begeni:'/);
-  assert.doesNotMatch(goc, /'\/paylasim\//);
+  const araKatman = oku('functions/_middleware.ts');
+  assert.match(araKatman, /temiz\.startsWith\('\/paylasim\/'\) *\) *return true;|temiz\.startsWith\('\/paylasim\/'\)\) return true;/);
+});
+
+test('eski beğeni bildirimleri de yeni adrese taşınıyor', () => {
+  /*
+    Yalnız tetikleyici düzeltilseydi kullanıcının BUGÜN zilinde duran
+    satırlar eski davranışta kalırdı; düzeltme yeni bir beğeni gelene
+    kadar görünmezdi. Üretimde 22 satır ölçüldü (28 Eylül 2026).
+  */
+  const adresGocu = oku('supabase/migrations/20261115010000_begeni_bildirimi_paylasim_adresi.sql');
+  assert.match(adresGocu, /update public\.notifications/);
+  assert.match(adresGocu, /set target_url = '\/paylasim\/' \|\| split_part\(dedupe_key, ':', 2\)/);
+
+  /*
+    SÜZGEÇLER DAR OLMALI: yanlış türdeki satıra, elle değiştirilmiş bir
+    adrese ya da biçimsiz bir anahtara dokunulmuyor. Biçimsiz anahtar
+    `/paylasim/` + boş dize üretir ve çalışmayan bir adres bırakırdı.
+  */
+  assert.match(adresGocu, /where type = 'paylasim_begeni'/);
+  assert.match(adresGocu, /and target_url = '\/cv'/);
+  assert.match(adresGocu, /and dedupe_key like 'begeni:%'/);
+  assert.match(adresGocu, /split_part\(dedupe_key, ':', 2\) <> ''/);
 });
 
 test('bekleyen istekler geriye dönük bildirim alıyor', () => {

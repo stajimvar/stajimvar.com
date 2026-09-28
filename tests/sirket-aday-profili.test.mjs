@@ -156,7 +156,23 @@ test('goc numarasi en son gocten buyuk', () => {
   const hepsi = fs.readdirSync(dizin).filter((f) => f.endsWith('.sql')).sort();
   const benim = hepsi.filter((f) => f.includes('aday_profili'));
   assert.equal(benim.length, 1, 'tek aday_profili gocu olmali');
-  assert.equal(hepsi[hepsi.length - 1], benim[0], 'aday_profili en son goc olmali');
+
+  /*
+    "EN SON GOC OLMALI" IDDIASI KALKTI (28 Eylul 2026)
+
+    Bu satir yanlis bicimde yazilmisti: aday_profili'nin SONSUZA DEK
+    sonuncu kalmasini sart kosuyordu, yani ondan sonra kim bir goc
+    eklerse eklesin bu test kiriliyordu. Nitekim ilk yeni goc
+    (20261115010000_begeni_bildirimi_paylasim_adresi) onu kirdi --
+    oysa o gocte yanlis bir sey yoktu.
+
+    Korunmak istenen sey duruyor ve iki yere bolundu:
+      * numaranin CAKISMAMASI -- hemen asagida, burada;
+      * yeni gocun uygulanmis gecmisin ONUNE dusmemesi --
+        tests/migration-onarim-listeleri.test.mjs, "YENI GOCLER
+        UYGULANDI LISTESINE YAZILMAZ". Sira kuralinin sahibi orasi ve
+        orada her goc icin genel olarak yazili.
+  */
 
   /* Ayni surum numarasi iki dosyada olmamali. */
   const surumler = hepsi.map((f) => f.split('_')[0]);

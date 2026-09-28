@@ -54,10 +54,16 @@ test('iki profil ekranı da aynı zemini kullanıyor: telefonda beyaz, sm üstü
     profil sayfasındakiyle aynı `akis` yüzeyi (kenardan kenara, tek alt
     çizgi), geniş ekranda gri zeminde kart.
   */
+  /*
+    28 Eylül 2026: yedinci ekran `/paylasim/<id>` — paylaşımın kalıcı
+    adresi. Beğeni bildiriminin indiği yer; akışla aynı yüzey mantığı
+    (telefonda kenardan kenara beyaz, geniş ekranda gri zeminde tek
+    sütun) ve aynı dizeyi paylaşıyor.
+  */
   assert.equal(
     [...app.matchAll(zemin)].length,
-    6,
-    '/cv, ziyaretçi profili, akış, şirket profili, mesajlar ve kampüsüm aynı zemin dizesini paylaşmalı',
+    7,
+    '/cv, ziyaretçi profili, akış, şirket profili, mesajlar, kampüsüm ve tek paylaşım aynı zemin dizesini paylaşmalı',
   );
 });
 
