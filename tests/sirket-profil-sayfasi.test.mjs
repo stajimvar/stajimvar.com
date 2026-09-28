@@ -95,7 +95,7 @@ test('üç sayaç üç ayrı durum; takipçi gerçek RPC; sıfır uydurulmuyor',
   for (const e of ["etiket: 'paylaşım'", "etiket: 'aktif ilan'", "etiket: 'takipçi'"]) {
     assert.equal(GORUNUM.split(e).length - 1, 2, `${e} iki sırada da olmalı`);
   }
-  assert.match(GORUNUM, /<Sayac key=\{s\.etiket\} etiket=\{s\.etiket\} deger=\{s\.deger\} \/>/);
+  assert.match(GORUNUM, /<Sayac key=\{s\.etiket\} etiket=\{s\.etiket\} deger=\{s\.deger\} onAc=\{s\.onAc\} \/>/);
   assert.match(GORUNUM, /alınamadı/);
   /*
     Takipçi `sosyal_sayaclar`ın aynı satırından (20261015010000);
@@ -333,4 +333,66 @@ test('database.types: takipler ve iki RPC göçle birebir', () => {
   assert.match(TIPLER, /takipler: \{\s*Row: \{\s*takipci_id: string;\s*hedef_id: string;\s*created_at: string;/);
   assert.match(TIPLER, /takipci_sayisi: \{ Args: \{ hedef: string \}; Returns: number \};/);
   assert.match(TIPLER, /takip_ediyor_muyum: \{ Args: \{ hedef: string \}; Returns: boolean \};/);
+});
+
+/* ------------------------------------------- sayaçlar tıklanabilir */
+
+test('SAYAÇLAR KENDİ LİSTESİNİ AÇIYOR', () => {
+  /*
+    Sayılar ekranda duruyordu ama hiçbir yere götürmüyordu; "1 aktif
+    ilan" yazıp ilanların nerede olduğunu söylememek kullanıcıyı
+    sekmeleri denemeye bırakıyordu (kullanıcı isteği, 28 Eylül 2026).
+
+    İlan ve paylaşım SEKME değiştiriyor — liste zaten bu sayfada, ikinci
+    bir adrese gitmek gereksiz bir yükleme olurdu.
+  */
+  assert.match(GORUNUM, /etiket: 'aktif ilan', deger: sayaclar\.aktifIlan, onAc: \(\) => setSekme\('ilanlar'\)/);
+  assert.match(GORUNUM, /etiket: 'paylaşım', deger: sayaclar\.paylasim, onAc: \(\) => setSekme\('paylasimlar'\)/);
+  assert.match(GORUNUM, /etiket: 'açık ilan', deger: sayaclar\.aktifIlan, onAc: \(\) => setSekme\('ilanlar'\)/);
+});
+
+test('TAKİPÇİ SAYACI YALNIZ SAHİPTE tıklanıyor', () => {
+  /*
+    `/agim` ekranı oturum sahibinin KENDİ takipçilerini gösteriyor (RPC
+    `auth.uid()`i içeride okuyor); ziyaretçi için böyle bir liste YOK.
+    Ziyaretçide düğme çizmek, açılmayan bir yere götürmek olurdu.
+  */
+  assert.match(GORUNUM, /etiket: 'takipçi', deger: sayaclar\.takipci, onAc: \(\) => onNavigate\('\/agim'\)/);
+  /* Ziyaretçi dizisindeki takipçi satırı hedefsiz. */
+  assert.match(GORUNUM, /\{ etiket: 'takipçi', deger: sayaclar\.takipci \},/);
+});
+
+test('sayı BİLİNMİYORKEN düğme çizilmiyor', () => {
+  /*
+    Yükleniyor ya da alınamadı durumunda oraya götürmek, boş çıkabilecek
+    bir yere yönlendirmek olurdu. Durum belli olunca düğme kendiliğinden
+    geliyor.
+  */
+  assert.match(GORUNUM, /if \(!onAc \|\| deger\.durum !== 'hazir'\) \{/);
+});
+
+test('tanım listesi düğmeyle değiştirildi, ÖĞRENCİ tarafı bozulmadı', () => {
+  /*
+    `<dl>` içine düğme koymak geçerli değil (`dl > div > dt|dd` dışında
+    akış içeriği kabul etmiyor). Şirket sayaç satırı `div` oldu; öğrenci
+    profilindeki `dl` DURUYOR — orada sayaçlar tıklanmıyor.
+  */
+  assert.match(GORUNUM, /<div className=\{SAYAC_SATIRI\}>/);
+  assert.doesNotMatch(GORUNUM, /<dl className=\{SAYAC_SATIRI\}>/);
+  const ogrenci = oku('src/components/sosyal/SosyalProfilGorunumu.tsx');
+  assert.match(ogrenci, /<dl className=\{SAYAC_SATIRI\}>/);
+});
+
+test('ALT MENÜ DÖRT SEKME; takipçi listesi kaybolmadı', () => {
+  /*
+    Kullanıcı kararı (28 Eylül 2026): şirket alt menüsünde Takipçiler'e
+    gerek yok. Liste erişilebilir kalıyor — `/agim` adresi duruyor,
+    geniş ekran sekmesi duruyor ve telefondaki kapısı sayaç.
+  */
+  const header = oku('src/components/Header.tsx');
+  const altCubuk = header.slice(header.indexOf('aria-label="Mobil Alt Şirket Navigasyon"'));
+  assert.doesNotMatch(altCubuk.slice(0, 4000), /Takipçiler/);
+  /* Adres ve geniş ekran sekmesi yerinde. */
+  assert.match(header, /href="\/agim"/);
+  assert.match(header, /<span>Takipçiler<\/span>/);
 });

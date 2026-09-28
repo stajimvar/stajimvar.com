@@ -675,10 +675,11 @@ export const Header: React.FC<HeaderProps> = ({
     adayın yanıtını okuyamamak demekti — düğme hem kapı hem okunmamış
     rozeti.
 
-    Alt menüye altıncı sekme EKLENMEDİ: şirket kabuğunda beş sekme dolu
-    (İlanlar · Başvurular · Takipçiler · Rehber · Şirketim) ve altıncısı
-    telefonda hepsini daraltırdı. Kapı üst çubukta, öğrencideki yerin
-    aynısında.
+    Alt menüye sekme EKLENMEDİ. Çubuk 28 Eylül 2026'da kullanıcı
+    kararıyla DÖRDE indirildi (İlanlar · Başvurular · Rehber · Şirketim);
+    oraya Mesajlar koymak o kararı geri almak olurdu. Kapı üst çubukta,
+    öğrencideki yerin aynısında — ve telefonda şirket paneli mesaj
+    kümesinde olduğu için her panel ekranında görünüyor.
   */
   const mesajDugmesiCizilsin =
     isLoggedIn && (userRole === 'student' || userRole === 'company') && Boolean(onNavigate);
@@ -2021,17 +2022,17 @@ export const Header: React.FC<HeaderProps> = ({
       </nav>
     ) : (
       /*
-        ŞİRKET ALT MENÜSÜ — ÖĞRENCİYLE AYNI ÇUBUK, AYNI BEŞ SEKME
+        ŞİRKET ALT MENÜSÜ — DÖRT SEKME
 
-        Sıra ve adlar (kullanıcı kararı, 26 Eylül 2026): İlanlar ·
-        Başvurular · Takipçiler · Rehber · Şirketim. "Başvuranlar"
-        "Başvurular" oldu (ekranın başlığıyla aynı), "Ağım" "Takipçiler"
-        (şirket hesabında ekran yalnız takipçileri gösteriyor), "Profil"
-        "Şirketim". İki ikon artık ayırt ediliyor: Başvurular `Users`
-        (aday listesi), Takipçiler `Heart` — ikisi de `Users` iken aynı
-        çubukta yan yana aynı simge duruyordu. Adresler DEĞİŞMEDİ
-        (/sirket/basvuranlar, /agim, /sirket/profil): paylaşılmış
-        bağlantılar ve bildirimler bu adreslere gidiyor.
+        Sıra ve adlar: İlanlar · Başvurular · Rehber · Şirketim.
+        "Başvuranlar" "Başvurular" oldu (ekranın başlığıyla aynı),
+        "Profil" "Şirketim". Adresler DEĞİŞMEDİ
+        (/sirket/basvuranlar, /sirket/profil): paylaşılmış bağlantılar ve
+        bildirimler bu adreslere gidiyor.
+
+        TAKİPÇİLER ÇIKTI (28 Eylül 2026, kullanıcı kararı): beş sekmeydi.
+        Liste kaybolmadı — kapısı Şirketim'deki "N takipçi" sayacı ve
+        geniş ekranda üst çubuktaki sekme; `/agim` adresi duruyor.
       */
       <nav
         aria-label="Mobil Alt Şirket Navigasyon"
@@ -2052,10 +2053,10 @@ export const Header: React.FC<HeaderProps> = ({
         </a>
 
         {/*
-          En uzun etiketler "Başvurular" ve "Takipçiler" (10 harf; önceki
-          "Başvuranlar" 11 idi). Ölçüldü (Chromium, 26 Eylül 2026): 320
-          ve 360 px'te beş etiketin hiçbiri kesilmiyor (metin genişliği =
-          kutu genişliği, 61 / 69 px); `truncate` devreye girmiyor.
+          En uzun etiket "Başvurular" (10 harf; önceki "Başvuranlar" 11
+          idi). BEŞ sekmeyle ölçülmüştü (Chromium, 26 Eylül 2026): 320 ve
+          360 px'te hiçbiri kesilmiyordu. Sekme sayısı dörde inince her
+          hücre genişledi, yani ölçüm daha da rahat tarafta kaldı.
         */}
         <a
           href="/sirket/basvuranlar"
@@ -2070,18 +2071,19 @@ export const Header: React.FC<HeaderProps> = ({
           <span className={altMenuYazisi(sirketBasvuranlarindaMi)}>Başvurular</span>
         </a>
 
-        <a
-          href="/agim"
-          aria-label="Takipçiler"
-          aria-current={agimdaMi ? 'page' : undefined}
-          onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/agim')) : undefined}
-          className={altMenuOgesi(agimdaMi)}
-        >
-          <span className={altMenuIkonu(agimdaMi)}>
-            <Heart className="h-5 w-5" />
-          </span>
-          <span className={altMenuYazisi(agimdaMi)}>Takipçiler</span>
-        </a>
+        {/*
+          TAKİPÇİLER ALT MENÜDEN KALKTI (28 Eylül 2026, kullanıcı kararı)
+
+          Şirket çubuğu dört sekme: İlanlar · Başvurular · Rehber ·
+          Şirketim. Takipçi listesi kaybolmadı — kapısı artık Şirketim
+          sayfasındaki "N takipçi" sayacı, yani sayının kendisi. Adres
+          (`/agim`) DEĞİŞMEDİ: paylaşılmış bağlantılar ve üst çubuktaki
+          geniş ekran sekmesi çalışmayı sürdürüyor.
+
+          Gerekçe: şirket hesabında takipçi listesi günlük bir iş değil,
+          arada bakılan bir sayı; çubuktaki yeri her gün kullanılan üç
+          ekranla eşit ağırlıktaydı.
+        */}
 
         <a
           href="/rehber"

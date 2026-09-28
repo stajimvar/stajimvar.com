@@ -277,24 +277,69 @@ const SirketLogosu: React.FC<{
  * dalında; iskelet sayı genişliğinde, kutu `min-h-11` olduğu için sayı
  * gelince satır zıplamıyor.
  */
-const Sayac: React.FC<{ etiket: string; deger: SayacDurumu }> = ({ etiket, deger }) => (
-  <div className={SAYAC_OGESI} aria-busy={deger.durum === 'yukleniyor' || undefined}>
-    <dd className={`order-1 ${SAYAC_SAYISI}`}>
-      {deger.durum === 'hazir' ? (
-        deger.deger
-      ) : deger.durum === 'yukleniyor' ? (
-        <span aria-hidden className="inline-block h-4 w-5 animate-pulse rounded bg-gray-100 align-middle" />
-      ) : (
-        <span aria-hidden>—</span>
-      )}
-    </dd>
-    <dt className={`order-2 ${SAYAC_ETIKETI}`}>
-      {etiket}
-      {deger.durum === 'hata' && <span className="text-xs text-gray-500"> alınamadı</span>}
-      {deger.durum === 'yukleniyor' && <span className="sr-only">yükleniyor</span>}
-    </dt>
-  </div>
-);
+/**
+ * Sayaç — sayı + etiket, tek satır.
+ *
+ * TIKLANABİLİR OLANLAR GERÇEK DÜĞME (28 Eylül 2026, kullanıcı isteği)
+ * ------------------------------------------------------------------
+ * Sayılar ekranda duruyordu ama hiçbir yere götürmüyordu; "1 aktif ilan"
+ * yazıp ilanların nerede olduğunu söylememek, kullanıcıyı sekmeleri
+ * denemeye bırakıyordu.
+ *
+ * `onAc` verilen sayaç `<button>`, verilmeyen `<span>`. Erişilebilir ad
+ * sayıyla birlikte okunuyor ("1 aktif ilan"), ayrıca `aria-label`
+ * uydurulmuyor. Yükleniyor ya da alınamadı durumunda düğme ÇİZİLMİYOR:
+ * sayı bilinmiyorken oraya götürmek, boş çıkabilecek bir yere
+ * yönlendirmek olurdu — durum belli olunca düğme kendiliğinden geliyor.
+ *
+ * `<dl>` KALKTI: tanım listesinin içine düğme koymak geçerli değil
+ * (`dl > div > dt|dd` dışında akış içeriği kabul etmiyor). Öğrenci
+ * profilindeki sayaç satırı `dl` olarak DURUYOR — orada sayaçlar
+ * tıklanmıyor ve yapı bozulmadı.
+ */
+const Sayac: React.FC<{
+  etiket: string;
+  deger: SayacDurumu;
+  /** Verilirse sayaç düğme olur; yalnız `hazir` durumunda bağlanıyor. */
+  onAc?: () => void;
+}> = ({ etiket, deger, onAc }) => {
+  const govde = (
+    <>
+      <span className={SAYAC_SAYISI}>
+        {deger.durum === 'hazir' ? (
+          deger.deger
+        ) : deger.durum === 'yukleniyor' ? (
+          <span aria-hidden className="inline-block h-4 w-5 animate-pulse rounded bg-gray-100 align-middle" />
+        ) : (
+          <span aria-hidden>—</span>
+        )}
+      </span>
+      <span className={SAYAC_ETIKETI}>
+        {etiket}
+        {deger.durum === 'hata' && <span className="text-xs text-gray-500"> alınamadı</span>}
+        {deger.durum === 'yukleniyor' && <span className="sr-only">yükleniyor</span>}
+      </span>
+    </>
+  );
+
+  if (!onAc || deger.durum !== 'hazir') {
+    return (
+      <span className={SAYAC_OGESI} aria-busy={deger.durum === 'yukleniyor' || undefined}>
+        {govde}
+      </span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onAc}
+      className={`${SAYAC_OGESI} cursor-pointer rounded-lg hover:underline ${ODAK_HALKASI}`}
+    >
+      {govde}
+    </button>
+  );
+};
 
 /** Sekme düğmesi: seçili lacivert kalın + ince mavi alt çizgi. */
 const SEKME_TABAN = `relative flex min-h-11 flex-1 cursor-pointer items-center justify-center px-2 text-sm sm:text-base ${RENK_GECISI} ${ODAK_HALKASI}`;
@@ -374,18 +419,32 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
         { id: 'ilanlar', etiket: 'İlanlar' },
         { id: 'hakkimizda', etiket: 'Hakkımızda' },
       ];
-  /* Sahipte sayaç sırası tasarımdaki gibi: aktif ilan · takipçi · paylaşım. */
-  const sayacSirasi: { etiket: string; deger: SayacDurumu }[] = sosyalYok
-    ? [{ etiket: 'açık ilan', deger: sayaclar.aktifIlan }]
+  /*
+    Sahipte sayaç sırası tasarımdaki gibi: aktif ilan · takipçi · paylaşım.
+
+    HER SAYAÇ KENDİ LİSTESİNİ AÇIYOR (28 Eylül 2026, kullanıcı isteği).
+    İlan ve paylaşım bu sayfanın SEKMESİNİ değiştiriyor — liste zaten
+    burada, ikinci bir adrese gitmek gereksiz bir yükleme olurdu.
+
+    TAKİPÇİ YALNIZ SAHİPTE tıklanıyor: `/agim` ekranı oturum sahibinin
+    KENDİ takipçilerini gösteriyor (RPC `auth.uid()`i içeride okuyor) ve
+    ziyaretçi için böyle bir liste YOK. Ziyaretçide düğme çizmek, açılmayan
+    bir yere götürmek olurdu.
+
+    Takipçi sayacı aynı zamanda listenin TEK telefon kapısı: alt menüdeki
+    "Takipçiler" sekmesi aynı gün kaldırıldı (bkz. Header).
+  */
+  const sayacSirasi: { etiket: string; deger: SayacDurumu; onAc?: () => void }[] = sosyalYok
+    ? [{ etiket: 'açık ilan', deger: sayaclar.aktifIlan, onAc: () => setSekme('ilanlar') }]
     : sahip
     ? [
-        { etiket: 'aktif ilan', deger: sayaclar.aktifIlan },
-        { etiket: 'takipçi', deger: sayaclar.takipci },
-        { etiket: 'paylaşım', deger: sayaclar.paylasim },
+        { etiket: 'aktif ilan', deger: sayaclar.aktifIlan, onAc: () => setSekme('ilanlar') },
+        { etiket: 'takipçi', deger: sayaclar.takipci, onAc: () => onNavigate('/agim') },
+        { etiket: 'paylaşım', deger: sayaclar.paylasim, onAc: () => setSekme('paylasimlar') },
       ]
     : [
-        { etiket: 'paylaşım', deger: sayaclar.paylasim },
-        { etiket: 'aktif ilan', deger: sayaclar.aktifIlan },
+        { etiket: 'paylaşım', deger: sayaclar.paylasim, onAc: () => setSekme('paylasimlar') },
+        { etiket: 'aktif ilan', deger: sayaclar.aktifIlan, onAc: () => setSekme('ilanlar') },
         { etiket: 'takipçi', deger: sayaclar.takipci },
       ];
   /* Hakkımızda'da eksik kalan alanlar — yalnız sahibe söyleniyor, uydurulmuyor. */
@@ -673,11 +732,11 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
           )}
 
           {/* SAYAÇ SATIRI — tek satır, satır içi; dikey çizgi ve üç sütunlu ızgara yok (X). */}
-          <dl className={SAYAC_SATIRI}>
+          <div className={SAYAC_SATIRI}>
             {sayacSirasi.map((s) => (
-              <Sayac key={s.etiket} etiket={s.etiket} deger={s.deger} />
+              <Sayac key={s.etiket} etiket={s.etiket} deger={s.deger} onAc={s.onAc} />
             ))}
-          </dl>
+          </div>
           {bilgiNotu && <div className="mt-2 text-sm leading-relaxed text-gray-600">{bilgiNotu}</div>}
 
           {/*
