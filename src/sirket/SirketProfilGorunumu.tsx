@@ -782,7 +782,16 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
               )}
             </div>
           ) : (
-            /* Telefonda ızgara ekranın iki kenarına yaslı; kare karo, üç sütun. */
+            /*
+              ÖĞRENCİ PROFİLİYLE AYNI IZGARA (28 Eylül 2026, kullanıcı
+              kararı): telefonda ekranın iki kenarına yaslı, üç sütun,
+              Instagram karosu — dikey 3:4.
+
+              Burada `gorunum="kare"` vardı ve şirket karoları kare
+              çiziliyordu. Ayrı kip silindi: iki ekran aynı görünecekse
+              aynı kipi kullanmalı, yoksa `galeri` değiştiğinde şirket
+              sayfası sessizce geride kalır (bkz. PaylasimIzgarasi).
+            */
             <div>
               <PaylasimIzgarasi
                 paylasimlar={paylasimlar}
@@ -790,7 +799,7 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
                 onYenidenDene={onPaylasimlariYenile}
                 sahibiMi={Boolean(sahip)}
                 onArsivlendi={sahip?.onPaylasimArsivlendi}
-                gorunum="kare"
+                gorunum="galeri"
                 kullaniciAdi={kullaniciAdi}
               />
             </div>

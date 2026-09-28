@@ -198,9 +198,26 @@ test('sekmeler ve kare ızgara; boş durumda stok görsel yok', () => {
   assert.match(GORUNUM, /const paylasGirisi = sahip && sahip\.paylasabilirMi && \(/);
   /* Boş durumdaki düğme hâlâ aynı seçiciyi kolla açıyor, ikinci besteci yok. */
   assert.match(GORUNUM, /onClick=\{\(\) => paylasKolu\.current\?\.sec\(\)\}/);
-  assert.match(GORUNUM, /gorunum="kare"/);
-  assert.match(IZGARA, /export const KARE_IZGARASI = 'grid grid-cols-3 gap-px sm:gap-0\.5';/);
-  assert.match(IZGARA, /const KARE_KAPAK_KABI = 'relative aspect-square w-full overflow-hidden bg-gray-100';/);
+  /*
+    IZGARA ÖĞRENCİ PROFİLİYLE AYNI KİPTE (28 Eylül 2026, kullanıcı kararı)
+
+    Şirket sayfası `gorunum="kare"` ile ayrı bir kip kullanıyordu:
+    galerinin bütün davranışı ama `aspect-square` karo. Kullanıcı şirket
+    paylaşımlarının da öğrenci profilindeki gibi — Instagram karosu,
+    dikey 3:4 — görünmesini istedi.
+
+    Kip aynı orana çekilip bırakılmadı, SİLİNDİ: iki kip her alanında
+    birebir aynı olsaydı ölü bir dal kalır ve `galeri` ileride
+    değiştiğinde şirket sayfası sessizce geride kalırdı. Test bu yüzden
+    artık "kare kipi var" değil, "İKİ EKRAN AYNI KİPİ KULLANIYOR"
+    diyor — ayrışma bir daha sessizce olamaz.
+  */
+  assert.match(GORUNUM, /gorunum="galeri"/);
+  assert.doesNotMatch(kod(GORUNUM), /gorunum="kare"/);
+  assert.doesNotMatch(IZGARA, /KARE_IZGARASI|KARE_KAPAK_KABI/);
+  /* Öğrenci profilinin geçtiği kip ile birebir aynı dize. */
+  const OGRENCI = oku('src/components/sosyal/SosyalProfilGorunumu.tsx');
+  assert.match(OGRENCI, /gorunum="galeri"/);
   /*
     Öğrenci galerisi: 24 Eylül 2026'dan beri (X sayfa düzeni, 600 piksellik
     sütun) her genişlikte 3 sütun; eski `lg:grid-cols-4` kalktı. Gerekçe
