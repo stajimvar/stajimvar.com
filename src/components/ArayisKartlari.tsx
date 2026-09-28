@@ -156,7 +156,11 @@ export const ArayisKartlari: React.FC<{
       <p className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm leading-5 text-gray-700">
         {acikVar ? 'Şu an' : 'Açarsan'} yalnızca <strong>StajımVar’ın doğruladığı
         şirketler</strong> seni ilgili listede görebilir ve {PAYLASILAN} onlara
-        görünür. İstediğin an kapatabilirsin; kapattığın anda listeden düşersin.
+        görünür. Aynı şirketler sana <strong>StajımVar üzerinden mesaj</strong> da
+        gönderebilir; mesajları Mesajlar kutunda görür, yanıtlamak zorunda
+        kalmadan silebilir ya da göndereni engelleyebilirsin. İstediğin an
+        kapatabilirsin; kapattığın anda listeden düşersin ve yeni mesaj almazsın
+        (başlamış bir yazışma sürer, onu engelleyerek bitirebilirsin).
       </p>
     </section>
   );

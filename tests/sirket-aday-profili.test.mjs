@@ -17,6 +17,18 @@ const oku = (p) => fs.readFileSync(path.join(KOK, p), 'utf8');
 
 const GOC = oku('supabase/migrations/20261114010000_aday_profili.sql');
 const KART = oku('src/sirket/SirketAdaylar.tsx');
+
+/*
+  Yokluk iddialari gerekce yorumlarina takilmasin: "mailto kalmamali"
+  diyen iddia, neden kaldirildigini anlatan yorumda o sozcuk gectigi icin
+  kiriliyordu -- dosyanin kendisi dogruyken.
+*/
+const kodu = (metin) =>
+  metin
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/^\s*\/\/.*$/gm, ' ');
+const KART_KOD = kodu(KART);
 const PROFIL = oku('src/sirket/SirketAdayProfili.tsx');
 const ANAHTAR = oku('src/components/ArayisKartlari.tsx');
 
@@ -43,12 +55,21 @@ test('etiketler en fazla uc, fazlasi +N', () => {
   assert.ok(KART.includes('+{kalan}'), 'kalan +N ile kapanmali');
 });
 
-test('iki CTA: once profil, sonra e-posta', () => {
+test('iki CTA: once profil, sonra SITE ICI mesaj', () => {
+  /*
+    IKINCIL CTA ARTIK MESAJ (28 Eylul 2026, kullanici istegi)
+
+    Eskiden `mailto:` idi ve bu test onu "mevcut e-posta akisi bozulmadi"
+    diye koruyordu. Korunan sey adresin kendisi degil, ADAYA ULASAN BIR
+    IKINCIL EYLEMIN VARLIGI idi; e-posta isvereni siteden cikariyor,
+    konusma disarida suruyor ve iki taraf da yazismayi panelinde
+    goremiyordu. Yeni eylem ayni yeri tutuyor, site icinde kaliyor.
+  */
   assert.ok(KART.includes('Profili incele'), 'ana CTA olmali');
-  assert.ok(KART.includes('E-posta gönder'), 'ikincil CTA korunmali');
-  /* Mevcut e-posta akisi bozulmadi. */
-  assert.ok(KART.includes('href={`mailto:${ogrenci.eposta}`}'), 'mailto akisi ayni kalmali');
-  /* Ana eylem dolu mavi, e-posta kenarlikli. */
+  assert.ok(KART.includes('Mesaj gönder'), 'ikincil CTA mesaj olmali');
+  assert.ok(!KART_KOD.includes('mailto:'), 'site disina cikaran akis kalmamali');
+  assert.ok(KART.includes('/mesajlar/'), 'site ici konusmaya gitmeli');
+  /* Ana eylem dolu mavi, mesaj kenarlikli. */
   assert.ok(KART.includes('bg-blue-600'), 'ana CTA dolu mavi');
 });
 

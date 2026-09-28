@@ -40,6 +40,8 @@ export interface SohbetOzeti {
   karsiGorunenAd: string | null;
   /** Depolama YOLU (sosyal-avatar); `ProfilFotografi` ile çizilir. */
   karsiAvatarYolu: string | null;
+  /** Şirket sayfasıysa logosu; avatar boşken baş harf yerine bu çiziliyor. */
+  karsiLogoAdresi: string | null;
   karsiResmiMi: boolean;
   durum: SohbetDurumu;
   /** Ben mi başlattım — "istek" durumunda kimin karar vereceğini söylüyor. */
@@ -77,6 +79,7 @@ function sohbetCevir(s: any): SohbetOzeti {
     karsiKullaniciAdi: s.karsi_kullanici_adi ?? null,
     karsiGorunenAd: s.karsi_gorunen_ad ?? null,
     karsiAvatarYolu: s.karsi_avatar_path ?? null,
+    karsiLogoAdresi: s.karsi_logo_url ?? null,
     karsiResmiMi: s.karsi_resmi_mi === true,
     durum: s.durum,
     benBaslattim: s.ben_baslattim === true,

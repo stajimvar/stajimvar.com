@@ -52,7 +52,13 @@ const SohbetSatiri: React.FC<{
 
   const icerik = (
     <>
-      <ProfilFotografi ad={ad ?? '?'} yol={sohbet.karsiAvatarYolu} className="h-12 w-12 shrink-0 rounded-full text-sm" />
+      <ProfilFotografi
+        ad={ad ?? '?'}
+        yol={sohbet.karsiAvatarYolu}
+        /* Şirket sayfasında avatar boş; logo yedekte (bkz. SohbetEkrani). */
+        yedekAdres={sohbet.karsiLogoAdresi}
+        className="h-12 w-12 shrink-0 rounded-full text-sm"
+      />
       <span className="min-w-0 flex-1">
         <span className="flex min-w-0 items-center gap-1">
           <span className={`min-w-0 truncate text-sm ${okunmamis ? 'font-extrabold text-gray-900' : 'font-bold text-gray-900'}`}>
