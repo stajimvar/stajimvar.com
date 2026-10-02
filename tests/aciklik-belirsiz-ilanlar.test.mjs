@@ -49,10 +49,11 @@ test('BELİRSİZ KAYNAKLAR AYRI İŞARETLİ VE DOĞRULANMIŞLARLA KARIŞMIYOR', 
   const belirsiz = liste.filter((k) => k.aciklik_dogrulanmadi);
   const ilanSayisi = belirsiz.reduce((a, k) => a + k.urls.length, 0);
 
-  assert.equal(ilanSayisi, 12, 'açıklığı belirsiz 12 ilan');
+  /* 12 Almanya (15 Eylül 2026) + 4 Türkiye (kullanıcı kararı, 26 Eylül 2026). */
+  assert.equal(ilanSayisi, 16, 'açıklığı belirsiz 16 ilan');
   for (const k of belirsiz) {
     assert.equal(k.type, 'resmi_ilan_sayfasi', `${k.id} ayrı adaptörü kullanmalı`);
-    assert.equal(k.country, 'DE');
+    assert.ok(['DE', 'TR'].includes(k.country), `${k.id} ülkesi açık olmalı`);
     assert.ok(k.company_name, `${k.id} gerçek şirket adı taşımalı`);
     for (const u of k.urls) assert.match(u, /^https:\/\//, `${k.id} resmî bağlantı`);
   }
@@ -66,13 +67,27 @@ test('BELİRSİZ KAYNAKLAR AYRI İŞARETLİ VE DOĞRULANMIŞLARLA KARIŞMIYOR', 
   assert.equal(dogrulanmisAdet, 34);
 });
 
-test('TÜRKİYE KAYNAKLARI BU HATTA GİRMİYOR', () => {
+test('TÜRKİYE KAYNAKLARI BU HATTA YALNIZ ADIYLA ONAYLANANLAR', () => {
+  /*
+    Kural 15 Eylül 2026'da "Türkiye bu hatta girmez" idi. Kullanıcı kararı
+    (26 Eylül 2026): JSON-LD vermeyen 4 resmî Türkiye ilanı taslak olarak
+    alınıyor ve yönetici onayıyla yayına çıkıyor. Liste AÇIK: yeni bir
+    Türkiye kaynağı bu hatta ancak buraya adıyla eklenerek girebilir.
+  */
   const ham = JSON.parse(oku('automation/sources.json'));
   const liste = Array.isArray(ham) ? ham : Object.values(ham)[0];
+  const izinli = new Set([
+    'barilla-ilan-sayfasi-tr',
+    'hyundai-ilan-sayfasi-tr',
+    'hilton-ilan-sayfasi-tr',
+    'danone-ilan-sayfasi-tr',
+  ]);
   for (const k of liste) {
-    if ((k.country ?? 'TR') === 'TR') {
-      assert.ok(!k.aciklik_dogrulanmadi, `${k.id} Türkiye kaynağı işaretlenmemeli`);
-      assert.notEqual(k.type, 'resmi_ilan_sayfasi');
+    if ((k.country ?? 'TR') !== 'TR') continue;
+    if (k.aciklik_dogrulanmadi || k.type === 'resmi_ilan_sayfasi') {
+      assert.ok(izinli.has(k.id), `${k.id} Türkiye kaynağı taslak hattına adıyla onaylanmadan girmemeli`);
+      assert.equal(k.aciklik_dogrulanmadi, true, `${k.id} taslak bayrağı taşımalı`);
+      assert.ok(k.city_hint, `${k.id} sayfadaki şehri taşımalı`);
     }
   }
 });
