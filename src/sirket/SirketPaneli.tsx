@@ -165,6 +165,25 @@ export const SirketPaneli: React.FC<{
   */
   const [profil, setProfil] = React.useState<SirketProfilDegeri | null>(null);
   const [durum, setDurum] = React.useState<'yukleniyor' | 'hazir' | 'hata'>('yukleniyor');
+  /*
+    Bildirimden açılmak istenen başvuru gösterilemediğinde ekrana yazılan
+    cümle. `null` iken hiçbir şey çizilmiyor.
+  */
+  const [adayUyarisi, setAdayUyarisi] = React.useState<string | null>(null);
+  /*
+    Sessiz yeniden yüklemenin hangi başvuru kimliği için yapıldığı ve
+    bitip bitmediği. Etki `basvurular` ve `durum` değiştikçe yeniden
+    çalışıyor; bu ref olmasa aynı kimlik için her çalışmada yeni bir istek
+    atılırdı. "Bitti" ayrımı da gerekli: istek yoldayken etki yeniden
+    çalışırsa sonucu beklemeden "görüntülenemiyor" denmesin.
+  */
+  const yenidenYuklenenAday = React.useRef<{ id: string; bitti: boolean } | null>(null);
+  /*
+    Yanıt döndüğünde bekleyen kimlik hâlâ aynı mı? Arada başka bir
+    bildirime dokunulduysa eski isteğin sonucu yeni kimliği silmesin.
+  */
+  const bekleyenAday = React.useRef<string | null>(null);
+  bekleyenAday.current = acilacakAday ?? null;
 
   const yukle = React.useCallback(async () => {
     setDurum('yukleniyor');
@@ -182,15 +201,7 @@ export const SirketPaneli: React.FC<{
           demek, göremediği bir şeyi yok sanmasına yol açar.
         */
         if (adayGorebilir(b.kademe)) {
-          const ham = await sirketBasvurulari(b.companyId);
-          const kartlar = await Promise.all(
-            ham.map(async (s: Record<string, any>) => {
-              const anlikVar = Array.isArray(s.profile_snapshot?.yetenekler);
-              const yetenekler = anlikVar ? [] : await adayYetenekleri(String(s.student_id ?? ''));
-              return kartVerisi(s, { yetenekler });
-            })
-          );
-          setBasvurular(kartlar);
+          setBasvurular(await basvuruKartlari(b.companyId));
         } else {
           setBasvurular([]);
         }
@@ -204,6 +215,83 @@ export const SirketPaneli: React.FC<{
   React.useEffect(() => {
     void yukle();
   }, [yukle]);
+
+  /*
+    Yeni bir bildirim ya da başka bir ekran eski uyarıyı kaldırıyor.
+    Aşağıdaki etkiden ÖNCE tanımlı: aynı çizimde ikisi de çalışırsa
+    (doğrulanmamış şirkette uyarı eşzamanlı yazılıyor) son sözü uyarıyı
+    yazan etki söylesin, temizleyen değil.
+  */
+  React.useEffect(() => {
+    if (acilacakAday) setAdayUyarisi(null);
+  }, [acilacakAday]);
+  React.useEffect(() => {
+    setAdayUyarisi(null);
+  }, [yol]);
+
+  /*
+    BİLDİRİMDEN GELEN BAŞVURU LİSTEDE YOKSA
+
+    Başvurular yalnız panel açılırken yükleniyor. Panel açıkken yeni bir
+    başvuru gelip şirket bildirimine dokunduğunda App aynı adrese
+    (`/sirket/basvuranlar`) gidiyor; liste yenilenmiyor ve kart yüklü
+    listede olmadığı için hiç açılmıyordu.
+
+    Kimlik listede yoksa başvurular BİR KEZ sessizce yeniden okunuyor.
+    `yukle` kullanılmıyor: o bütün paneli iskelet ekranına çekiyor ve
+    şirketin baktığı ekran bir anlığına kaybolurdu. İlan ve profil de
+    yeniden okunmuyor; değişen yalnız başvuru listesi.
+
+    Yeniden okumadan sonra da yoksa döngü yok: bekleyen kimlik temizleniyor
+    ve dürüst bir cümle yazılıyor. Bu, doğrulanmamış şirkette (RLS satırı
+    vermiyor; bu kademede liste hiç istenmiyor) ya da silinmiş/erişilemeyen
+    bir kayıtta oluyor.
+  */
+  React.useEffect(() => {
+    if (!acilacakAday || durum !== 'hazir' || !baglam) return;
+    if (basvurular.some((k) => k.id === acilacakAday)) return;
+
+    const gosterilemiyor = () => {
+      setAdayUyarisi('Bu başvuru şu anda görüntülenemiyor.');
+      onAdayAcildi?.();
+    };
+
+    if (!baglam.companyId || !adayGorebilir(baglam.kademe)) {
+      gosterilemiyor();
+      return;
+    }
+    const onceki = yenidenYuklenenAday.current;
+    if (onceki?.id === acilacakAday) {
+      /* Yoldaysa bekleniyor; bittiyse ikinci istek atılmıyor. */
+      if (onceki.bitti) gosterilemiyor();
+      return;
+    }
+    const takip = { id: acilacakAday, bitti: false };
+    yenidenYuklenenAday.current = takip;
+    void basvuruKartlari(baglam.companyId)
+      .then((kartlar) => {
+        takip.bitti = true;
+        setBasvurular(kartlar);
+        if (bekleyenAday.current !== takip.id) return;
+        /*
+          Bulunduysa AdayIzgarasi kendi etkisiyle kartı açıp kimliği
+          temizliyor; burada ayrıca açmaya gerek yok.
+        */
+        if (!kartlar.some((k) => k.id === takip.id)) gosterilemiyor();
+      })
+      .catch(() => {
+        if (yenidenYuklenenAday.current === takip) yenidenYuklenenAday.current = null;
+        if (bekleyenAday.current !== takip.id) return;
+        /*
+          Okuma düştüyse kayıt hakkında bir şey bilmiyoruz; "görüntülenemiyor"
+          demek yanlış olurdu. Ref sıfırlanıyor ki kullanıcı bildirime yeniden
+          dokunduğunda bir deneme daha yapılabilsin.
+        */
+        setAdayUyarisi('Başvurular yenilenemedi. Bağlantını kontrol edip bildirime yeniden dokun.');
+        onAdayAcildi?.();
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [acilacakAday, durum, baglam, basvurular]);
 
   if (durum === 'yukleniyor' || !baglam) {
     return (
@@ -315,7 +403,35 @@ export const SirketPaneli: React.FC<{
     );
   }
 
+  /*
+    Uyarı yalnız sekme görünümlerinde çiziliyor: bildirim her zaman
+    Başvuranlar'a götürüyor ve yol değişince uyarı zaten temizleniyor.
+    `role="status"`: ekran okuyucu kullanıcısı da dokunduğu bildirimin
+    neden açılmadığını duyuyor.
+  */
+  const uyari = adayUyarisi ? (
+    <div
+      role="status"
+      className={`${KUTU} mb-4 flex flex-wrap items-center justify-between gap-2`}
+      style={kutuStil}
+    >
+      <p className="text-sm font-bold" style={{ color: SIRKET_METIN }}>
+        {adayUyarisi}
+      </p>
+      <button
+        type="button"
+        onClick={() => setAdayUyarisi(null)}
+        className={IKINCIL_DUGME}
+        style={ikincilStil}
+      >
+        Kapat
+      </button>
+    </div>
+  ) : null;
+
   return (
+    <>
+    {uyari}
     <SirketIlanlarSekmesi
       baglam={baglam}
       gorunum={ekran.tur}
@@ -367,8 +483,26 @@ export const SirketPaneli: React.FC<{
       acilacakAday={acilacakAday}
       onAdayAcildi={onAdayAcildi}
     />
+    </>
   );
 };
+
+/**
+ * Şirketin başvurularını kart verisine çevirir.
+ *
+ * `yukle` ile bildirimden gelen sessiz yeniden okuma AYNI yoldan geçiyor:
+ * kartın biçimi iki yerde ayrı kurulursa biri değişip öteki geride kalır.
+ */
+async function basvuruKartlari(companyId: string): Promise<Record<string, any>[]> {
+  const ham = await sirketBasvurulari(companyId);
+  return Promise.all(
+    ham.map(async (s: Record<string, any>) => {
+      const anlikVar = Array.isArray(s.profile_snapshot?.yetenekler);
+      const yetenekler = anlikVar ? [] : await adayYetenekleri(String(s.student_id ?? ''));
+      return kartVerisi(s, { yetenekler });
+    })
+  );
+}
 
 /* ------------------------------------------------------ İlanlar sekmesi */
 

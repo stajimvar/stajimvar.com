@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { X, ExternalLink, ShieldCheck, AlertTriangle, Loader2 } from 'lucide-react';
 import type { InternshipListing } from '../types';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
@@ -51,7 +51,23 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
   /* Odak yönetimi, ESC, focus trap ve arka plan kilidi. */
   const kutuRef = useModalErisim<HTMLDivElement>(true, onClose);
 
+  /*
+    ÇİFT GÖNDERİM KİLİDİ REF'TE
+
+    `busy` düğmeyi kapatıyor ama durum güncellemesi ancak bir sonraki
+    çizimde DOM'a yansıyor. Aynı olay döngüsüne düşen iki tıklama (çift
+    tıklama, dokunmatikte titreyen parmak) yeniden çizimden önce iki kez
+    `onSubmit` çağırabiliyor. Ref eşzamanlı okunuyor ve yazılıyor; ikinci
+    çağrı kilidi görüp dönüyor. Sunucu `(listing_id, student_id)` tekil
+    kısıtıyla ikinci kaydı zaten reddediyor; kilit, öğrencinin başarılı
+    başvurusunun ardından bir de "zaten başvurdunuz" hatası görmesini
+    önlüyor.
+  */
+  const gonderiliyorRef = useRef(false);
+
   const handleSubmit = async () => {
+    if (gonderiliyorRef.current) return;
+    gonderiliyorRef.current = true;
     setError(null);
     setBusy(true);
     try {
@@ -59,6 +75,7 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Başvuru gönderilemedi.');
     } finally {
+      gonderiliyorRef.current = false;
       setBusy(false);
     }
   };

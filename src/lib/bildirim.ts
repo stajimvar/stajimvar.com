@@ -110,6 +110,54 @@ export async function tumBildirimlerOkundu(): Promise<number> {
   return (data as number) ?? 0;
 }
 
+/**
+ * BİLDİRİMLERİ ANINDA DİNLE (göç 20261117010000)
+ *
+ * `notifications` Supabase Realtime yayınında; olaylar abonenin RLS'inden
+ * geçiyor ("kendi bildirimlerini okur"), yani başkasının bildirimi
+ * gelmiyor. `recipient_id=eq.` süzgeci yalnız trafiği azaltıyor.
+ *
+ * OLAY YÜKÜ KULLANILMIYOR, SUNUCU YENİDEN OKUNUYOR
+ * ------------------------------------------------
+ * `degisti` yalnız "bir şey değişti" diyor; çağıran sayıyı ve listeyi
+ * sunucudan tazeliyor. Olaydan sayaç artırılsaydı, aynı bildirim hem
+ * olaydan hem yeniden okumadan sayılıp ÇİFT görünebilirdi; kopma
+ * sırasında kaçan olay da sayaçta hiç görünmezdi.
+ *
+ * KOPMA VE YENİDEN BAĞLANMA
+ * -------------------------
+ * realtime-js kopan kanalı kendisi yeniden bağlıyor ve her başarılı
+ * katılımda durum `SUBSCRIBED` oluyor. Kopukken yazılan bildirimin olayı
+ * GERİ GELMİYOR (Realtime geçmişi saklamıyor); bu yüzden her `SUBSCRIBED`
+ * anında `baglandi` çağrılıyor ve çağıran tam bir yeniden okuma yapıyor.
+ * İlk bağlanma da aynı yoldan geçiyor: abonelik kurulurken yazılan bir
+ * bildirim de kaçmıyor.
+ *
+ * Kanal adı abonelik başına tekil: aynı adla ikinci kanal realtime-js'te
+ * hata veriyor ve biri kapanınca öteki de susuyor (mesajlaşmada ölçüldü).
+ *
+ * Dönen fonksiyon aboneliği kapatıyor; oturum değişince ya da bileşen
+ * sökülünce çağrılmalı.
+ */
+export function bildirimleriDinle(
+  kullaniciId: string,
+  olaylar: { degisti: () => void; baglandi: () => void },
+): () => void {
+  const kanal = supabase
+    .channel(`bildirim:${kullaniciId}:${crypto.randomUUID()}`)
+    .on(
+      'postgres_changes' as never,
+      { event: '*', schema: 'public', table: 'notifications', filter: `recipient_id=eq.${kullaniciId}` },
+      () => olaylar.degisti(),
+    )
+    .subscribe((durum: string) => {
+      if (durum === 'SUBSCRIBED') olaylar.baglandi();
+    });
+  return () => {
+    void supabase.removeChannel(kanal);
+  };
+}
+
 /*
   ZAMAN METNİ AYRI VE SAF BİR DOSYADA
 
