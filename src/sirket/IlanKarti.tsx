@@ -30,9 +30,10 @@ import { daysUntilDeadline } from '../lib/opportunity-domain.mjs';
  * ÜÇ BÖLÜM, AYNI ÖLÇÜ
  * -------------------
  * Sol: başlık, şehir, durum rozeti. Orta: yeni başvuranların avatar
- * şeridi ve sayısı. Sağ: eylemler. Orta bölüm geniş ekranda sabit
+ * şeridi ve sayısı. Sağ: eylemler. Orta bölüm geniş kapta sabit
  * genişlikte ki alt alta duran kartların sütunları hizalansın; dar
- * ekranda üç bölüm alt alta iniyor.
+ * kapta üç bölüm alt alta iniyor. "Geniş" EKRANIN değil KARTIN
+ * genişliği — gerekçesi satırın üstünde.
  *
  * SAHTE SAYI YOK
  * --------------
@@ -151,8 +152,31 @@ export const IlanKarti: React.FC<{
   const fazla = yeni.length - gosterilen.length;
 
   return (
-    <li className="rounded-2xl border p-4 shadow-xs sm:p-5" style={kutuStil}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+    <li className="@container rounded-2xl border p-4 shadow-xs sm:p-5" style={kutuStil}>
+      {/*
+        YAN YANA DÜZEN KARTIN GENİŞLİĞİNE BAĞLI, EKRANINKİNE DEĞİL
+        (container sorgusu; depoda ilk kullanım)
+
+        Satır eskiden `sm:flex-row` ile 640 px EKRANDA yan yana diziliyordu.
+        Aynı kart /sirket/profil'de üç sütunlu sayfanın ortasında ~750 px'lik
+        bir kapta duruyor; 1919 px ekranda `sm:` açık, kap dar. Logo (80 px)
+        eklenince metin sütununa hiç yer kalmadı: fikstürde 750 px kapta
+        dört eylemli kartın metin sütunu 0 px ölçüldü, başlık 0 px genişlikte,
+        şirket adı satırı 360 px yüksekliğinde harf harf alt alta (canlıdaki
+        "Ogulsize" görüntüsü). Ekran kırılımı bu kartın gerçek yerini
+        bilemiyor; kartın kendi genişliği biliyor.
+
+        Eşik 60 rem (960 px, kartın İÇ genişliği). Yan yana düzenin en kötü
+        hâli ölçüldü: logo 80 + 12 + metin 192 (12 rem alt sınır) + 16 +
+        orta 224 + 16 + dört eylem 367 (Adaylar 108, Düzenle 111, Yayınla 80,
+        menü 44, aralar 3×8) = 907 px. Eşiğin hemen üstünde metin sütunu
+        en kötü hâlde 246 px ölçüldü; yazı tipi farkına ~50 px pay.
+        Tailwind'in hazır `@4xl` (896) eşiği bu toplamın altında kalıyor,
+        `@5xl` (1024) ise İlanlar sekmesini 1100 px ekranda (kartın iç
+        genişliği 979 ölçüldü, dört eylemde metin 264 px) gereksiz yere
+        alt alta dizerdi.
+      */}
+      <div className="flex flex-col gap-3 @min-[60rem]:flex-row @min-[60rem]:items-center @min-[60rem]:gap-4">
         {/* ------------------------------------------------------ sol */}
         {/*
           LOGO + BİLGİ — HERKESE AÇIK İLAN KARTIYLA AYNI (kullanıcı isteği,
@@ -171,7 +195,16 @@ export const IlanKarti: React.FC<{
           Ad ya da logo verilmediyse blok hiç çizilmiyor: `ListingLogo`
           adsız çağrılırsa baş harf üretemez ve boş bir daire kalırdı.
         */}
-        <div className="flex min-w-0 items-start gap-3 sm:flex-1">
+        {/*
+          METİN SÜTUNU 12 REM'İN ALTINA İNMİYOR
+
+          `min-w-48` + `flex-wrap`: logo ile metin aynı satıra 80 + 12 + 192
+          = 284 px'ten azında sığmıyorsa (320 px ekranda kartın iç genişliği
+          239 ölçüldü) metin logonun ALTINA iniyor. Daralan bir metin sütunu
+          başlığı `truncate` ile görünmez kılıyor, adı harf harf kırıyordu;
+          logonun üstte tek başına durması ondan iyi.
+        */}
+        <div className="flex min-w-0 items-start gap-3 flex-wrap @min-[60rem]:flex-1">
           {sirketAdi && (
             <div className="shrink-0" title={sirketAdi}>
               <ListingLogo
@@ -181,7 +214,7 @@ export const IlanKarti: React.FC<{
               />
             </div>
           )}
-          <div className="min-w-0 flex-1">
+          <div className="min-w-48 flex-1">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <h3 className="min-w-0 truncate text-base font-bold" style={{ color: SIRKET_METIN }}>
                 {String(ilan.title ?? '')}
@@ -223,7 +256,7 @@ export const IlanKarti: React.FC<{
         </div>
 
         {/* ----------------------------------------------------- orta */}
-        <div className="min-w-0 sm:w-56 sm:shrink-0">
+        <div className="min-w-0 @min-[60rem]:w-56 @min-[60rem]:shrink-0">
           {basvurular === null ? (
             /*
               Kademe kart görmüyor. Utandırmayan tek satır: ne yapılınca
@@ -282,7 +315,7 @@ export const IlanKarti: React.FC<{
           Alt genişlik 232 px = "Adaylar" + "Düzenle" (ölçüldü 109 + 8 + 109);
           yalnız "Düzenle" kalan satırda da orta sütun aynı x'te dursun.
         */}
-        <div className="flex flex-wrap items-center gap-2 sm:min-w-[232px] sm:shrink-0 sm:justify-end">
+        <div className="flex flex-wrap items-center gap-2 @min-[60rem]:min-w-[232px] @min-[60rem]:shrink-0 @min-[60rem]:justify-end">
           {/*
             "Adaylar" yalnız gidilecek bir şey varsa: kart görülüyor ve
             en az bir başvuru var. Başvuranlar sekmesi bu ilana süzülmüş
