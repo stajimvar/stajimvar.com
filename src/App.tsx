@@ -15,6 +15,7 @@ import {
   fetchPublishedListings,
   fetchStudentProfile,
   fetchStudentApplications,
+  fetchListingByIdPrefix,
   createApplication,
   withdrawApplication,
   respondToOffer,
@@ -77,7 +78,7 @@ const FIRSAT_LISTE_YOLLARI = new Set([
   '/kaydedilen-firsatlar',
 ]);
 import { OpportunitiesHomeSection } from './components/OpportunitiesHomeSection';
-import { basvuruSonucMesaji } from './lib/basvuru-yolu.mjs';
+import { basvuruSonucMesaji, basvuruYolu } from './lib/basvuru-yolu.mjs';
 import { basvuruKopyasi } from './lib/basvuru-kopyasi.mjs';
 import { aramaTeriminiOku, aramaAdresi } from './lib/arama-url.mjs';
 /*
@@ -631,6 +632,32 @@ export default function App() {
     };
   }, [session?.userId]);
   const [applications, setApplications] = useState<ApplicationRecord[]>([]);
+  /*
+    BAŞVURU LİSTESİ KİMİN İÇİN YÜKLENDİ
+
+    `applications` boş dizi ile başlıyor; "henüz yüklenmedi" ile "hiç
+    başvurusu yok" o diziye bakarak ayrılamıyor. Girişten sonra başvuruya
+    devam eden etki "zaten başvurdun mu?" sorusunu yüklenmemiş listeye
+    sorarsa yanlış "hayır" alır ve pencereyi açardı. Burada yükleme
+    denemesinin BİTTİĞİ kullanıcının kimliği tutuluyor.
+  */
+  const [basvurularYuklenen, setBasvurularYuklenen] = useState<string | null>(null);
+  /*
+    Bekleyen bir isteğin dönüşünde oturumun hâlâ aynı kişide olup
+    olmadığına bakmak için. Durum, eşzamansız kapanışta eski değeriyle
+    okunurdu; ref her çizimde güncelleniyor.
+  */
+  const oturumKimligiRef = useRef<string | null>(null);
+  oturumKimligiRef.current = session?.userId ?? null;
+  /** Öğrencinin başvuru listesini sunucudan yeniden okur; başka kullanıcıya geçildiyse yazmaz. */
+  const basvurulariTazele = React.useCallback(async (kullaniciId: string) => {
+    try {
+      const satirlar = await fetchStudentApplications(kullaniciId);
+      if (oturumKimligiRef.current === kullaniciId) setApplications(satirlar);
+    } catch {
+      /* Okunamadıysa eldeki liste kalıyor; yanlış bir boş liste yazılmıyor. */
+    }
+  }, []);
 
   /*
     BİLDİRİMDEN GELEN BAŞVURU
@@ -1244,12 +1271,22 @@ export default function App() {
         if (!cancelled) setStudent(null);
       });
 
+    setBasvurularYuklenen(null);
     fetchStudentApplications(session.userId)
       .then((rows) => {
         if (!cancelled) setApplications(rows);
       })
       .catch(() => {
         if (!cancelled) setApplications([]);
+      })
+      .finally(() => {
+        /*
+          Hata da "bitti" sayılıyor: devam etkisi sonsuza dek beklemesin.
+          Liste okunamadıysa pencere açılabilir; ikinci başvuruyu yine
+          sunucudaki `(listing_id, student_id)` tekilliği durduruyor ve
+          pencere o hatayı gösteriyor.
+        */
+        if (!cancelled) setBasvurularYuklenen(session.userId);
       });
 
     return () => {
@@ -1296,9 +1333,8 @@ export default function App() {
     if (!niyet) return;
     if (niyet.yol !== window.location.pathname) return;
 
-    niyetSil(window.sessionStorage);
-
     if (niyet.tur === 'dis' && niyet.disAdres) {
+      niyetSil(window.sessionStorage);
       /*
         Yeni sekmede açılıyor: kullanıcıyı siteden atmadan başvuruya
         götürüyor. Açılır pencere engelleyicisi `null` döndürürse zorlamıyoruz
@@ -1315,16 +1351,78 @@ export default function App() {
     }
 
     /*
-      Platform içi ilan: başvuru formu burada açılıyor, dışarı çıkılmıyor.
-      İlan listede yoksa (henüz yüklenmediyse) sessizce geçiliyor; kullanıcı
-      zaten ilanın sayfasında ve düğme çalışır durumda.
+      Şirket hesabının öğrenci profili yok (bkz. oturum etkisi) ve
+      `submitApplication` profilsiz başvuru yazmıyor. Pencereyi açmak,
+      basılınca hiçbir şey yapmayan bir düğme göstermek olurdu.
     */
-    const ilan = allListings.find((l) => l.id === niyet.ilanId);
-    if (ilan) {
+    if (session.role === 'company') {
+      niyetSil(window.sessionStorage);
+      return;
+    }
+
+    /*
+      Platform içi ilan: karar başvuru listesi YÜKLENDİKTEN sonra veriliyor.
+      Yüklenmeden bakılsa liste boş görünür ve zaten başvurmuş öğrenciye
+      pencere yeniden açılırdı. Niyet o ana kadar silinmiyor; etki liste
+      gelince yeniden çalışıyor.
+    */
+    if (basvurularYuklenen !== session.userId) return;
+    niyetSil(window.sessionStorage);
+
+    const kullanici = session.userId;
+    const basvurulmus = applications.some((a) => a.listingId === niyet.ilanId);
+
+    void (async () => {
+      /*
+        İLAN SAYFASINDAN GELİNDİYSE İLAN LİSTEDE OLMAYABİLİR
+
+        `allListings` ana sayfanın listesi; ilan sayfası kendi kaydını ayrı
+        getiriyor (ListingPage). Eskiden ilan listede yoksa sessizce
+        geçiliyordu ve ilan sayfasındaki "StajımVar ile Başvur" yolu girişten
+        sonra hiç devam etmiyordu. Yedek olarak aynı önekle getiriliyor.
+        Önek sorgusu birden çok eşleşmede `null` dönüyor ama TEK eşleşme de
+        başka bir ilan olabilir; kimlik tam eşleşmiyorsa kullanılmıyor.
+
+        Bu iş etkinin temizliğine bağlanmadı: niyet silindikten sonra
+        `allListings` gelip etki yeniden çalışırsa temizlik bu isteği iptal
+        eder ve niyet kaybolurdu. Oturum değişimine karşı koruma ref'le.
+      */
+      let ilan: InternshipListing | null = allListings.find((l) => l.id === niyet.ilanId) ?? null;
+      if (!ilan) {
+        try {
+          const getirilen = await fetchListingByIdPrefix(niyet.ilanId.slice(0, 8));
+          ilan = getirilen && getirilen.id === niyet.ilanId ? getirilen : null;
+        } catch {
+          ilan = null;
+        }
+      }
+      if (oturumKimligiRef.current !== kullanici) return;
+      /*
+        Bulunamadıysa (yayından kalkmış, önek belirsiz) sessiz: kullanıcı
+        ilanın sayfasında ve sayfa kendi durumunu çiziyor.
+      */
+      if (!ilan) return;
+      /*
+        Şirket sitesinden alınan ilanda StajımVar penceresi kendiliğinden
+        açılmıyor: orada pencere yalnız kişisel takip kaydı tutuyor;
+        girişten sonra kendiliğinden açılması başvuru yapılıyormuş
+        izlenimi verirdi.
+      */
+      if (basvuruYolu(ilan).anaEylem !== 'platform-ici') return;
+      if (basvurulmus) {
+        showToast('Bu ilana zaten başvurdun.');
+        return;
+      }
       setApplyTarget({ listing: ilan, matchScore: 0 });
       showToast('Giriş tamam. Başvurunu tamamlayabilirsin.');
-    }
-  }, [sessionReady, session, allListings]);
+    })();
+    /*
+      `applications` bağımlılıkta değil: karar anı `basvurularYuklenen`
+      ile belirleniyor ve o anda liste zaten yüklü. Liste her değiştiğinde
+      (başvuru gönderilince) etkinin yeniden koşmasına gerek yok.
+    */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionReady, session, allListings, basvurularYuklenen]);
 
 
   /*
@@ -1432,12 +1530,25 @@ export default function App() {
   /**
    * Başvuru akışı. Giriş yoksa önce kayıt/giriş açılır — başvuruyu kime
    * yazacağımızı bilmeden kaydetmenin anlamı yok.
+   *
+   * MİSAFİRDE NİYET YAZILIYOR — İKİNCİ BİR MEKANİZMA YOK
+   *
+   * Burada yalnız kayıt penceresi açılıyordu; e-posta girişinden de Google
+   * dönüşünden de sonra başvuru penceresi bir daha açılmıyordu ve öğrenci
+   * düğmeye ikinci kez basmak zorundaydı (OAuth için dönüş yolu da
+   * verilmiyordu). Dış ilanların kullandığı niyet yolu (`handleOpenLogin` +
+   * lib/basvuru-niyeti.mjs) aynen kullanılıyor; devamı "NİYETİ SÜRDÜR"
+   * etkisinde. Oturum var ama öğrenci profili yoksa eski davranış duruyor.
    */
   const handleApplyToJob = (listing: InternshipListing, matchScore: number) => {
     if (!session || !activeStudent) {
-      setAuthModalMode('register');
-      setIsAuthModalOpen(true);
       showToast('Başvurmak için önce hesap açman gerekiyor.');
+      if (!session) {
+        handleOpenLogin({ tur: 'ic', ilanId: listing.id, yol: window.location.pathname, baslik: listing.title });
+        return;
+      }
+      setIsAuthModalOpen(true);
+      setAuthModalMode('register');
       return;
     }
     setApplyTarget({ listing, matchScore });
@@ -1504,22 +1615,38 @@ export default function App() {
       }
     }
 
-    const created = await createApplication({
-      cvSnapshotPath,
-      listingId: applyTarget.listing.id,
-      studentId: activeStudent.id,
-      matchScore: applyTarget.matchScore,
-      applicationMethod: applyTarget.listing.applicationMethod,
-      applicationChannelId: applyTarget.listing.applicationChannelId,
-      contactShareConsent: consent,
-      consentVersion: KVKK_VERSION,
+    let created: ApplicationRecord;
+    try {
+      created = await createApplication({
+        cvSnapshotPath,
+        listingId: applyTarget.listing.id,
+        studentId: activeStudent.id,
+        matchScore: applyTarget.matchScore,
+        applicationMethod: applyTarget.listing.applicationMethod,
+        applicationChannelId: applyTarget.listing.applicationChannelId,
+        contactShareConsent: consent,
+        consentVersion: KVKK_VERSION,
+        /*
+          Şirket öğrencinin `profiles` satırını okuyamıyor; başvuran
+          kartındaki ad, okul ve bölüm yalnızca bu kopyadan geliyor. Kopya
+          rıza verilmediyse queries katmanında yazılmıyor.
+        */
+        profileSnapshot: basvuruKopyasi(activeStudent),
+      });
+    } catch (hata) {
       /*
-        Şirket öğrencinin `profiles` satırını okuyamıyor; başvuran
-        kartındaki ad, okul ve bölüm yalnızca bu kopyadan geliyor. Kopya
-        rıza verilmediyse queries katmanında yazılmıyor.
+        İKİNCİ İSTEK SUNUCUDA DÖNDÜ
+
+        En sık sebep "Bu ilana zaten başvurdunuz." (tekil kısıt): başvuru
+        başka bir sekmeden ya da önceki bir çift tıklamadan yazılmış ama bu
+        ekranın listesi eski. Liste yeniden okunuyor ki pencere ve kartlar
+        `alreadyApplied` durumuna geçsin. Hata yine fırlatılıyor; pencere
+        mesajı gösteriyor. Ağ hatasında da okunuyor: başvurunun yazılıp
+        yanıtın kaybolduğu durumda liste gerçeği söylesin.
       */
-      profileSnapshot: basvuruKopyasi(activeStudent),
-    });
+      void basvurulariTazele(activeStudent.id);
+      throw hata;
+    }
 
     setApplications((prev) => [created, ...prev]);
     setApplyTarget(null);
