@@ -14,6 +14,7 @@ import {
 import {
   fetchPublishedListings,
   fetchStudentProfile,
+  ogrenciProfiliniAc,
   fetchStudentApplications,
   fetchListingByIdPrefix,
   createApplication,
@@ -41,6 +42,9 @@ import { useGlobalListingPreferences } from './components/useGlobalListingPrefer
 import { Logo } from './components/Logo';
 import { LEGAL_ROUTES } from './lib/yasal-rotalar';
 import { niyetYaz, niyetOku, niyetSil } from './lib/basvuru-niyeti.mjs';
+import { basvuruKarari, basvuruyaAcikMi } from './lib/basvuru-devam.mjs';
+import { istanbulGunBaslangici } from './lib/kontrol-nabzi.mjs';
+import { OgrenciProfiliOlustur } from './components/OgrenciProfiliOlustur';
 import { CerezBandi } from './components/CerezBandi';
 /*
   Yalnız TİP: `import type` derlemede siliniyor, yani bu satır
@@ -60,6 +64,15 @@ import { SirketAgim } from './sirket/SirketAgim';
   Panel yollari. Herkese acik sirket sayfasi (/sirket/<slug>) ile
   karismamalari icin acikca sayiliyorlar.
 */
+/* "Başvur" profil ya da başvuru listesi gelene kadar bekletildiğinde. */
+const MESAJ_PROFIL_YUKLENIYOR = 'Profilin yükleniyor…';
+/*
+  İlanın sunucudaki hâli OKUNAMADI (ağ hatası). "Artık başvuru kabul
+  etmiyor" değil: ilan açık da olabilir, kapalı da; bilmediğimizi
+  söylüyoruz ve kullanıcıyı düğmeye geri yolluyoruz.
+*/
+const MESAJ_ILAN_OKUNAMADI = 'İlanın güncel durumu okunamadı. Bağlantını kontrol edip Başvur düğmesine yeniden dokun.';
+
 const SIRKET_PANEL_YOLLARI = ['/sirket/ilanlar', '/sirket/basvuranlar', '/sirket/adaylar', '/sirket/aday', '/sirket/profil', '/sirket/ilan'];
 /*
   Fırsat listesinin adresleri — hepsi tek bileşen (OpportunitiesPage;
@@ -527,6 +540,23 @@ export default function App() {
   const [sessionReady, setSessionReady] = useState(false);
   /** Giriş yapmış öğrencinin gerçek profili. */
   const [student, setStudent] = useState<StudentProfile | null>(null);
+  /*
+    PROFİLİN DURUMU — `student` TEK BAŞINA YETMİYOR
+
+    `student === null` üç ayrı şey demekti: henüz yükleniyor, satır yok,
+    okuma hata verdi. "Başvur" bu üçünü ayıramadığı için profil daha
+    yüklenirken oturumu açık kişiye KAYIT penceresi açıyordu. Sonuç
+    hangi kullanıcı için alındıysa onunla birlikte tutuluyor
+    (`basvurularYuklenen` ile aynı kalıp): eski oturumun geç dönen
+    yanıtı yeni oturumun durumu sayılmıyor. Kayıt yoksa ya da başka
+    kullanıcıya aitse durum "yükleniyor".
+  */
+  const [profilYuklenen, setProfilYuklenen] = useState<{
+    kullanici: string;
+    durum: 'hazir' | 'yok' | 'hata';
+  } | null>(null);
+  const profilDurumu: 'yukleniyor' | 'hazir' | 'yok' | 'hata' =
+    session && profilYuklenen?.kullanici === session.userId ? profilYuklenen.durum : 'yukleniyor';
   /*
     PROFİL FOTOĞRAFI TEK KAYNAKTAN — İKİ SÜTUN, TEK OKUMA
 
@@ -1263,12 +1293,18 @@ export default function App() {
     }
     let cancelled = false;
 
-    fetchStudentProfile(session.userId)
+    const profilSahibi = session.userId;
+    fetchStudentProfile(profilSahibi)
       .then((profile) => {
-        if (!cancelled) setStudent(profile);
+        if (cancelled) return;
+        setStudent(profile);
+        setProfilYuklenen({ kullanici: profilSahibi, durum: profile ? 'hazir' : 'yok' });
       })
       .catch(() => {
-        if (!cancelled) setStudent(null);
+        if (cancelled) return;
+        setStudent(null);
+        /* Okunamadı ≠ yok: hatada "profil oluştur" denmiyor. */
+        setProfilYuklenen({ kullanici: profilSahibi, durum: 'hata' });
       });
 
     setBasvurularYuklenen(null);
@@ -1351,78 +1387,63 @@ export default function App() {
     }
 
     /*
-      Şirket hesabının öğrenci profili yok (bkz. oturum etkisi) ve
-      `submitApplication` profilsiz başvuru yazmıyor. Pencereyi açmak,
-      basılınca hiçbir şey yapmayan bir düğme göstermek olurdu.
-    */
-    if (session.role === 'company') {
-      niyetSil(window.sessionStorage);
-      return;
-    }
+      PLATFORM İÇİ NİYET: KARAR BEKLEYEN BAŞVURUYA DEVREDİLİYOR
 
-    /*
-      Platform içi ilan: karar başvuru listesi YÜKLENDİKTEN sonra veriliyor.
-      Yüklenmeden bakılsa liste boş görünür ve zaten başvurmuş öğrenciye
-      pencere yeniden açılırdı. Niyet o ana kadar silinmiyor; etki liste
-      gelince yeniden çalışıyor.
+      Burada ayrı bir `if` zinciri vardı (şirket hesabı, liste yüklendi mi,
+      platform içi mi, zaten başvurdu mu). Aynı soruları "Başvur" tıklaması
+      da soruyordu ve ikisi ayrıştı: şirket hesabının niyeti burada SESSİZCE
+      siliniyordu. Artık iki yol da `basvuruKarari`na (lib/basvuru-devam.mjs)
+      gidiyor; burada yalnız ilan sunucudan okunuyor.
+
+      Niyet hemen siliniyor, ama sonucu her dalda kullanıcıya söyleniyor
+      (şirket hesabı, kapanmış ilan, zaten başvurdun, okunamadı) — sessiz
+      düşen dal kalmadı.
+
+      İLAN HER ZAMAN SUNUCUDAN, TAZE. `allListings` girişten ÖNCE
+      yüklendi; kullanıcı Google'dayken ilan yayından kalkmış ya da son
+      başvuru günü geçmiş olabilir. Önek sorgusu yalnız yayındaki ilanı
+      veriyor ve birden çok eşleşmede `null` dönüyor; tek eşleşme de başka
+      bir ilan olabileceği için kimlik TAM eşleşmeli. `null` = bulunamadı
+      (karar: "artık başvuru kabul etmiyor"). Ağ hatası kapalı SAYILMIYOR:
+      ilanın durumunu bilmiyoruz, ayrı cümleyle söyleniyor.
+
+      İstek etkinin temizliğine bağlanmadı: niyet silindikten sonra etki
+      yeniden çalışırsa temizlik isteği iptal eder, niyet de kaybolurdu.
+      Yanıt yalnız aynı bekleyen başvuruya (anahtar) yazılıyor.
     */
-    if (basvurularYuklenen !== session.userId) return;
     niyetSil(window.sessionStorage);
-
+    const anahtar = ++bekleyenSayaci.current;
     const kullanici = session.userId;
-    const basvurulmus = applications.some((a) => a.listingId === niyet.ilanId);
-
-    void (async () => {
-      /*
-        İLAN SAYFASINDAN GELİNDİYSE İLAN LİSTEDE OLMAYABİLİR
-
-        `allListings` ana sayfanın listesi; ilan sayfası kendi kaydını ayrı
-        getiriyor (ListingPage). Eskiden ilan listede yoksa sessizce
-        geçiliyordu ve ilan sayfasındaki "StajımVar ile Başvur" yolu girişten
-        sonra hiç devam etmiyordu. Yedek olarak aynı önekle getiriliyor.
-        Önek sorgusu birden çok eşleşmede `null` dönüyor ama TEK eşleşme de
-        başka bir ilan olabilir; kimlik tam eşleşmiyorsa kullanılmıyor.
-
-        Bu iş etkinin temizliğine bağlanmadı: niyet silindikten sonra
-        `allListings` gelip etki yeniden çalışırsa temizlik bu isteği iptal
-        eder ve niyet kaybolurdu. Oturum değişimine karşı koruma ref'le.
-      */
-      let ilan: InternshipListing | null = allListings.find((l) => l.id === niyet.ilanId) ?? null;
-      if (!ilan) {
-        try {
-          const getirilen = await fetchListingByIdPrefix(niyet.ilanId.slice(0, 8));
-          ilan = getirilen && getirilen.id === niyet.ilanId ? getirilen : null;
-        } catch {
-          ilan = null;
-        }
-      }
-      if (oturumKimligiRef.current !== kullanici) return;
-      /*
-        Bulunamadıysa (yayından kalkmış, önek belirsiz) sessiz: kullanıcı
-        ilanın sayfasında ve sayfa kendi durumunu çiziyor.
-      */
-      if (!ilan) return;
-      /*
-        Şirket sitesinden alınan ilanda StajımVar penceresi kendiliğinden
-        açılmıyor: orada pencere yalnız kişisel takip kaydı tutuyor;
-        girişten sonra kendiliğinden açılması başvuru yapılıyormuş
-        izlenimi verirdi.
-      */
-      if (basvuruYolu(ilan).anaEylem !== 'platform-ici') return;
-      if (basvurulmus) {
-        showToast('Bu ilana zaten başvurdun.');
-        return;
-      }
-      setApplyTarget({ listing: ilan, matchScore: 0 });
-      showToast('Giriş tamam. Başvurunu tamamlayabilirsin.');
-    })();
-    /*
-      `applications` bağımlılıkta değil: karar anı `basvurularYuklenen`
-      ile belirleniyor ve o anda liste zaten yüklü. Liste her değiştiğinde
-      (başvuru gönderilince) etkinin yeniden koşmasına gerek yok.
-    */
+    setBekleyenBasvuru({
+      anahtar,
+      kullanici,
+      ilan: null,
+      ilanDurumu: 'yukleniyor',
+      matchScore: 0,
+      kaynak: 'niyet',
+    });
+    void fetchListingByIdPrefix(niyet.ilanId.slice(0, 8))
+      .then((getirilen) => {
+        const ilan = getirilen && getirilen.id === niyet.ilanId ? getirilen : null;
+        setBekleyenBasvuru((o) =>
+          o?.anahtar === anahtar ? { ...o, ilan, ilanDurumu: ilan ? 'bulundu' : 'bulunamadi' } : o,
+        );
+      })
+      .catch(() => {
+        /*
+          Durumdan değil ref'lerden okunuyor: yanıt, bekleyen kayıt daha
+          çizime yansımadan dönebiliyor (taklitle ölçüldü: anında dönen
+          hata mesajı yutuluyordu). Karar zaten verildiyse (ör. şirket
+          hesabı) ya da yerine daha yeni bir başvuru geldiyse susuyor.
+        */
+        if (uygulananAnahtar.current === anahtar || bekleyenSayaci.current !== anahtar) return;
+        if (oturumKimligiRef.current !== kullanici) return;
+        uygulananAnahtar.current = anahtar;
+        setBekleyenBasvuru((o) => (o?.anahtar === anahtar ? null : o));
+        showToast(MESAJ_ILAN_OKUNAMADI);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionReady, session, allListings, basvurularYuklenen]);
+  }, [sessionReady, session]);
 
 
   /*
@@ -1441,6 +1462,12 @@ export default function App() {
   const [cvAkisi, setCvAkisi] = useState<{
     baslangic: 'karsilama' | 'form';
     ilan: InternshipListing | null;
+    /*
+      Akış profil tamamlamadan açıldıysa dolu: "İlana dön" pencereyi
+      doğrudan açmıyor, kararı yeniden veriyor (ilan arada kapanmış ya
+      da başvuru başka sekmeden yapılmış olabilir).
+    */
+    yenidenKarar?: { matchScore: number };
   } | null>(null);
   React.useEffect(() => {
     if (!sessionReady || !session || !student || cvAkisi) return;
@@ -1527,31 +1554,217 @@ export default function App() {
     }
   };
 
+  /*
+    BEKLEYEN BAŞVURU — "Başvur"a basıldı ya da girişten dönüldü, ama karar
+    için gereken bilgi (profil, başvuru listesi, ilanın sunucudaki hâli)
+    henüz gelmedi. Tek seferlik: karar verilince siliniyor; oturum
+    değişince de (aşağıdaki etki) siliniyor ki başka hesabın başvurusu
+    devam etmesin. `anahtar`, geç dönen ilan yanıtının yerine yazılacağı
+    kaydı tanımlıyor.
+  */
+  const [bekleyenBasvuru, setBekleyenBasvuru] = useState<{
+    anahtar: number;
+    kullanici: string;
+    ilan: InternshipListing | null;
+    ilanDurumu: 'yukleniyor' | 'bulundu' | 'bulunamadi';
+    matchScore: number;
+    kaynak: 'tik' | 'niyet';
+  } | null>(null);
+  const bekleyenSayaci = useRef(0);
+  /* StrictMode ya da üst üste değişen bağımlılıklar aynı kararı iki kez uygulamasın. */
+  const uygulananAnahtar = useRef(0);
+  /* "Profilin yükleniyor…" hangi bekleyen kayıt için söylendi. */
+  const duyurulanBekleme = useRef(0);
+
+  /*
+    Profili olmayan kişi profil tamamlamaya gönderildiğinde başvurduğu
+    ilan burada bekliyor; profil açılınca CV adımı o ilanla açılıyor ve
+    "İlana dön" kararı yeniden veriyor.
+  */
+  const [profilBekleyenIlan, setProfilBekleyenIlan] = useState<{
+    kullanici: string;
+    ilan: InternshipListing;
+    matchScore: number;
+  } | null>(null);
+
   /**
-   * Başvuru akışı. Giriş yoksa önce kayıt/giriş açılır — başvuruyu kime
-   * yazacağımızı bilmeden kaydetmenin anlamı yok.
+   * TEK KARAR — doğrudan tıklama ve giriş sonrası devam aynı tabloyu
+   * soruyor (lib/basvuru-devam.mjs). Burada yalnız girdiler toplanıyor.
    *
-   * MİSAFİRDE NİYET YAZILIYOR — İKİNCİ BİR MEKANİZMA YOK
+   * `acik` Europe/Istanbul gününe göre: son başvuru günü TR'de bitiyor,
+   * tarayıcının saat dilimi başka olsa da gece yarısı kayması olmasın.
+   */
+  const basvuruKarariVer = (
+    ilan: InternshipListing | null,
+    ilanDurumu: 'yukleniyor' | 'bulundu' | 'bulunamadi',
+  ) =>
+    basvuruKarari({
+      oturumVar: Boolean(session),
+      rol: session?.role ?? null,
+      profil: profilDurumu,
+      basvurularHazir: Boolean(session) && basvurularYuklenen === session?.userId,
+      zatenBasvurdu: Boolean(ilan) && applications.some((a) => a.listingId === ilan?.id),
+      ilan: ilanDurumu,
+      platformIci: Boolean(ilan) && basvuruYolu(ilan ?? {}).anaEylem === 'platform-ici',
+      acik: basvuruyaAcikMi(ilan, istanbulGunBaslangici().slice(0, 10)),
+    });
+
+  /** Verilen kararın sonucu. `bekle` burada değil, çağıranda ele alınıyor. */
+  const basvuruKarariniUygula = (
+    karar: ReturnType<typeof basvuruKarari>,
+    b: { ilan: InternshipListing | null; matchScore: number; kaynak: 'tik' | 'niyet' },
+  ) => {
+    switch (karar.tur) {
+      case 'giris':
+        if (!b.ilan) return;
+        showToast('Başvurmak için önce hesap açman gerekiyor.');
+        handleOpenLogin({ tur: 'ic', ilanId: b.ilan.id, yol: window.location.pathname, baslik: b.ilan.title });
+        return;
+      case 'ac':
+        if (!b.ilan) return;
+        setApplyTarget({ listing: b.ilan, matchScore: b.matchScore });
+        if (b.kaynak === 'niyet') showToast('Giriş tamam. Başvurunu tamamlayabilirsin.');
+        return;
+      case 'profil-yok':
+        /*
+          Yeniden KAYIT istenmiyor: kişinin oturumu var, eksik olan öğrenci
+          profili satırı. `/cv` bu durumda "Öğrenci profilini oluştur"
+          adımını gösteriyor.
+        */
+        showToast(karar.mesaj ?? '');
+        if (session && b.ilan) {
+          setProfilBekleyenIlan({ kullanici: session.userId, ilan: b.ilan, matchScore: b.matchScore });
+        }
+        navigate('/cv');
+        return;
+      case 'bekle':
+        return;
+      default:
+        /* sirket-hesabi, profil-hata, kapali, zaten: pencere yok, cümle var. */
+        showToast(karar.mesaj ?? '');
+    }
+  };
+
+  /**
+   * "Başvur" tıklaması.
    *
-   * Burada yalnız kayıt penceresi açılıyordu; e-posta girişinden de Google
-   * dönüşünden de sonra başvuru penceresi bir daha açılmıyordu ve öğrenci
-   * düğmeye ikinci kez basmak zorundaydı (OAuth için dönüş yolu da
-   * verilmiyordu). Dış ilanların kullandığı niyet yolu (`handleOpenLogin` +
-   * lib/basvuru-niyeti.mjs) aynen kullanılıyor; devamı "NİYETİ SÜRDÜR"
-   * etkisinde. Oturum var ama öğrenci profili yoksa eski davranış duruyor.
+   * Eskiden `!session || !activeStudent` tek koşuldu ve profil henüz
+   * yüklenirken de kayıt penceresi açılıyordu: oturumu açık kişiden
+   * yeniden hesap isteniyordu. Artık karar `basvuruKarari`nda; profil
+   * yükleniyorsa başvuru bekletiliyor ve hazır olunca aynı karar yeniden
+   * veriliyor. Misafir yolu değişmedi: niyet yazılıyor (`handleOpenLogin`),
+   * devamı "NİYETİ SÜRDÜR" etkisinde.
+   *
+   * Ekrandaki ilan nesnesi yeterli; yine de `basvuruyaAcikMi` soruluyor ki
+   * sayfa açıkken son günü geçen ilanda pencere açılmasın.
    */
   const handleApplyToJob = (listing: InternshipListing, matchScore: number) => {
-    if (!session || !activeStudent) {
-      showToast('Başvurmak için önce hesap açman gerekiyor.');
-      if (!session) {
-        handleOpenLogin({ tur: 'ic', ilanId: listing.id, yol: window.location.pathname, baslik: listing.title });
-        return;
-      }
-      setIsAuthModalOpen(true);
-      setAuthModalMode('register');
+    const karar = basvuruKarariVer(listing, 'bulundu');
+    if (karar.tur === 'bekle' && session) {
+      setBekleyenBasvuru({
+        anahtar: ++bekleyenSayaci.current,
+        kullanici: session.userId,
+        ilan: listing,
+        ilanDurumu: 'bulundu',
+        matchScore,
+        kaynak: 'tik',
+      });
+      /* "Profilin yükleniyor…" bekleyen başvurunun etkisinde, iki yol için tek yerden. */
       return;
     }
-    setApplyTarget({ listing, matchScore });
+    basvuruKarariniUygula(karar, { ilan: listing, matchScore, kaynak: 'tik' });
+  };
+
+  /*
+    BEKLEYEN BAŞVURUNUN KARARI
+
+    Profil, başvuru listesi ya da ilanın sunucu yanıtı geldikçe karar
+    yeniden veriliyor; `bekle` dışındaki ilk sonuç uygulanıp kayıt
+    siliniyor. Oturum kapandıysa ya da başka hesaba geçildiyse kayıt
+    sessizce düşüyor — o başvuru bu kişinin değil.
+  */
+  React.useEffect(() => {
+    const b = bekleyenBasvuru;
+    if (!b) return;
+    if (!session || session.userId !== b.kullanici) {
+      setBekleyenBasvuru(null);
+      return;
+    }
+    const karar = basvuruKarariVer(b.ilan, b.ilanDurumu);
+    if (karar.tur === 'bekle') {
+      /*
+        BEKLEME BİR KEZ SÖYLENİYOR — TIKLAMADA DA, GİRİŞTEN DÖNÜŞTE DE
+
+        Cümle burada, iki yolun ortak noktasında: tıklama ve niyet devamı
+        aynı bekleyen kayda yazıyor. Aynı bekleme için bir kez (bekleyen
+        kaydın anahtarı ref'te); etki her yeni yanıtla yeniden çalıştığı
+        için işaret olmasa cümle her seferinde tekrar çıkardı.
+
+        Yalnız profil ya da başvuru listesi beklenirken söyleniyor. Tek
+        eksik ilanın sunucu yanıtıysa "profilin yükleniyor" yanlış olurdu;
+        o yanıt gelip profil hâlâ beklenirse cümle o zaman çıkıyor.
+      */
+      const profilBekleniyor = profilDurumu === 'yukleniyor' || basvurularYuklenen !== session.userId;
+      if (profilBekleniyor && duyurulanBekleme.current !== b.anahtar) {
+        duyurulanBekleme.current = b.anahtar;
+        showToast(MESAJ_PROFIL_YUKLENIYOR);
+      }
+      return;
+    }
+    setBekleyenBasvuru(null);
+    if (uygulananAnahtar.current === b.anahtar) return;
+    uygulananAnahtar.current = b.anahtar;
+    basvuruKarariniUygula(karar, b);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bekleyenBasvuru, session, profilDurumu, basvurularYuklenen, applications]);
+
+  /* Profil tamamlamada bekleyen ilan başka hesaba taşınmıyor. */
+  React.useEffect(() => {
+    if (profilBekleyenIlan && profilBekleyenIlan.kullanici !== session?.userId) setProfilBekleyenIlan(null);
+  }, [session?.userId, profilBekleyenIlan]);
+
+  /**
+   * `/cv` "Öğrenci profilini oluştur".
+   *
+   * Satır `ogrenciProfiliniAc` ile açılıyor (yalnız kendi satırı, var
+   * olana dokunmuyor) ve okunuyor; ardından mevcut düzenleme girişi (CV
+   * adımı, `baslangic: 'form'`) açılıyor. Başvuru bekliyorsa adım o
+   * ilanla açılıyor: "İlana dön" kararı yeniden veriyor. Okul ya da ad
+   * eksikken gönderilen başvuruyu sunucu reddediyor; o hata başvuru
+   * penceresinin mevcut hata yolundan geçiyor.
+   */
+  const ogrenciProfiliniOlustur = async () => {
+    if (!session) return;
+    const kullanici = session.userId;
+    const profil = await ogrenciProfiliniAc(kullanici);
+    if (oturumKimligiRef.current !== kullanici) return;
+    if (!profil) throw new Error('Profil açıldı ama okunamadı.');
+    setStudent(profil);
+    setProfilYuklenen({ kullanici, durum: 'hazir' });
+    const bekleyen = profilBekleyenIlan?.kullanici === kullanici ? profilBekleyenIlan : null;
+    setProfilBekleyenIlan(null);
+    setCvAkisi({
+      baslangic: 'form',
+      ilan: bekleyen?.ilan ?? null,
+      yenidenKarar: bekleyen ? { matchScore: bekleyen.matchScore } : undefined,
+    });
+  };
+
+  /** `/cv` profil okunamadıysa "Yeniden dene". */
+  const ogrenciProfiliniYenidenOku = () => {
+    if (!session) return;
+    const kullanici = session.userId;
+    setProfilYuklenen(null);
+    fetchStudentProfile(kullanici)
+      .then((profil) => {
+        if (oturumKimligiRef.current !== kullanici) return;
+        setStudent(profil);
+        setProfilYuklenen({ kullanici, durum: profil ? 'hazir' : 'yok' });
+      })
+      .catch(() => {
+        if (oturumKimligiRef.current !== kullanici) return;
+        setProfilYuklenen({ kullanici, durum: 'hata' });
+      });
   };
 
   /**
@@ -2211,8 +2424,20 @@ export default function App() {
           }}
           onKapat={(sebep) => {
             const ilan = cvAkisi.ilan;
+            const yenidenKarar = cvAkisi.yenidenKarar;
             setCvAkisi(null);
             if (sebep !== 'ilanlar') return;
+            if (ilan && yenidenKarar) {
+              /*
+                Akış `/cv`de açıldı ve başvuru penceresi o rotada
+                çizilmiyor (`basvuruPenceresi` yalnız ana kabukta ve
+                `/ilan/` rotasında): önce ilanın kendi sayfasına
+                dönülüyor, karar orada veriliyor.
+              */
+              navigate(`/ilan/${listingSlug(ilan)}`);
+              handleApplyToJob(ilan, yenidenKarar.matchScore);
+              return;
+            }
             if (ilan) {
               /* Geldiği ilanın başvuru penceresine geri. */
               setApplyTarget({ listing: ilan, matchScore: 0 });
@@ -2279,6 +2504,27 @@ export default function App() {
     zemin üstünde beyaz bir kart olarak durunca iki yanında gri şeritler,
     bloklar arasında gri bantlar kalıyordu.
   */
+  /*
+    BİLDİRİM ŞERİDİ (TOAST) İKİ KABUKTA DA
+
+    Şerit yalnız ana kabuğun return'ündeydi; içerik sayfaları
+    (`icerikSayfasi`) oraya hiç ulaşmıyor. İlan sayfasındaki "Başvur"un
+    bütün cümleleri ("Bu ilan artık başvuru kabul etmiyor", "Başvurmak
+    için öğrenci hesabıyla giriş yapmalısın", "Profilin yükleniyor…")
+    `showToast` ile veriliyordu ve o sayfada hiç görünmüyordu. Aynı öğe
+    iki kabuğa da giriyor. `role="status"`: ekran okuyucu da duyuyor.
+  */
+  const toastBandi = toastMessage ? (
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-gray-800 flex items-center gap-2.5 text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-200"
+    >
+      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" aria-hidden="true" />
+      <span>{toastMessage}</span>
+    </div>
+  ) : null;
+
   const icerikSayfasi = (icerik: React.ReactNode, zemin = 'bg-[#F9FAFB]') => (
     <div className={`min-h-screen flex flex-col ${zemin}`}>
       {ustCubuk}
@@ -2286,6 +2532,7 @@ export default function App() {
       {girisModali}
       {adPenceresi}
       {cerezBandi}
+      {toastBandi}
     </div>
   );
 
@@ -2820,6 +3067,33 @@ export default function App() {
     üretiliyor, başkasının CV'si buradan görüntülenemiyor.
   */
   if (temizYol === '/cv' || temizYol === '/cv/yazdir') {
+    /*
+      OTURUM VAR, PROFİL YOK — "GİRİŞ YAPIN" DENMİYOR
+
+      Aşağıdaki "Profilin için giriş yapın" yalnız oturumsuz kişi için.
+      Oturumu açık ama öğrenci profili satırı olmayan kişi zaten girişli;
+      ona profil oluşturma adımı gösteriliyor. Şirket hesabı buraya
+      gelmiyor (`/cv` → `/sirket/profil` yönlendirmesi yukarıda).
+    */
+    if (!student && session && session.role !== 'company' && profilDurumu !== 'hazir') {
+      return icerikSayfasi(
+        <main className={anaAlanSinifi}>
+          <OgrenciProfiliOlustur
+            durum={profilDurumu}
+            onOlustur={ogrenciProfiliniOlustur}
+            onYenidenDene={ogrenciProfiliniYenidenOku}
+            bekleyenIlanBasligi={
+              profilBekleyenIlan?.kullanici === session.userId ? profilBekleyenIlan.ilan.title : null
+            }
+          />
+        </main>,
+        /*
+          Varsayılan gri zemin: bu ekran profilin kendisi değil, ortada
+          tek bir kart. Profil yüzeyinin "telefonda beyaz" dizesi
+          (profil-mobil-yuzey testi) gerçek profil ekranlarına ait.
+        */
+      );
+    }
     if (!student) {
       return (
         <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center p-6">
@@ -3577,12 +3851,7 @@ export default function App() {
       {cerezBandi}
 
       {/* Toast Banner */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-gray-800 flex items-center gap-2.5 text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-200">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
+      {toastBandi}
 
       {/* Üst çubuk: içerik sayfalarıyla aynı bileşen, tek yerden. */}
       {ustCubuk}

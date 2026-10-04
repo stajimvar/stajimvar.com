@@ -444,6 +444,26 @@ export async function fetchStudentProfile(userId: string): Promise<StudentProfil
 }
 
 /**
+ * Öğrenci profili satırını AÇAR (yoksa) ve okur.
+ *
+ * Satır normalde kayıt anında tetikleyiciyle açılıyor
+ * (`handle_new_user`: `insert into student_profiles (id) ... on conflict
+ * do nothing`). Oturumu olup satırı olmayan hesap olağan dışı ama mümkün
+ * (eski hesap, yarım kalmış kayıt); o hesap "Başvur"a basınca yeniden
+ * KAYIT istenmiyor, profil tamamlama adımında bu satır açılıyor.
+ *
+ * Yalnız kendi satırı: RLS "ogrenci kendi profili" (`id = auth.uid()`).
+ * Var olan satıra dokunulmuyor (`ignoreDuplicates`).
+ */
+export async function ogrenciProfiliniAc(userId: string): Promise<StudentProfile | null> {
+  const { error } = await supabase
+    .from('student_profiles')
+    .upsert({ id: userId }, { onConflict: 'id', ignoreDuplicates: true });
+  if (error) fail('Öğrenci profili açılamadı', error);
+  return fetchStudentProfile(userId);
+}
+
+/**
  * Şirketlerin aday havuzu. RLS yalnızca `is_open_to_offers = true` olanları veriyor.
  * Öğrenci hesabıyla çağrılırsa yalnızca kendi kaydı döner.
  */

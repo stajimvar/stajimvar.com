@@ -83,11 +83,32 @@ test('internal ve email_application yolları bozulmadı', () => {
   assert.equal(eposta.teslimEdiliyor, false);
 });
 
-test('site içi başvuru hâlâ giriş istiyor — kaydı kime yazacağımız belli olmalı', () => {
+test('site içi başvuru hâlâ giriş istiyor — kaydı kime yazacağımız belli olmalı', async () => {
+  /*
+    4 Ekim 2026'DA YENİDEN YAZILDI — NİYET AYNI, BİÇİM DEĞİŞTİ
+
+    Eski şart `handleApplyToJob`un ilk satırında `if (!session ||
+    !activeStudent)` ve `setIsAuthModalOpen(true)` arıyordu. O tek koşul
+    tam olarak kaldırılması istenen hatayı taşıyordu: `activeStudent`
+    profil YÜKLENİRKEN de boş ve oturumu açık kişiye kayıt penceresi
+    açılıyordu. Karar artık `lib/basvuru-devam.mjs`te (`basvuruKarari`).
+
+    Korunan şey aynı: oturum yokken başvuru penceresi açılmıyor, giriş
+    isteniyor. Biri davranış olarak (tablo), biri bağlantı olarak (App)
+    sınanıyor. Kayıt penceresi artık `handleOpenLogin` üzerinden açılıyor
+    (niyet yazılıyor); doğrudan `setIsAuthModalOpen` çağrısı yok.
+  */
+  const { basvuruKarari } = await import('../src/lib/basvuru-devam.mjs');
+  const oturumsuz = basvuruKarari({
+    oturumVar: false, rol: null, profil: 'yukleniyor', basvurularHazir: false,
+    zatenBasvurdu: false, ilan: 'bulundu', platformIci: true, acik: true,
+  });
+  assert.equal(oturumsuz.tur, 'giris');
+
   const app = oku('src/App.tsx');
   const kapi = app.slice(app.indexOf('const handleApplyToJob'), app.indexOf('const handleApplyToJob') + 400);
-  assert.match(kapi, /if \(!session \|\| !activeStudent\)/);
-  assert.match(kapi, /setIsAuthModalOpen\(true\)/);
+  assert.match(kapi, /const karar = basvuruKarariVer\(listing, 'bulundu'\);/);
+  assert.match(app, /case 'giris':[\s\S]{0,200}?handleOpenLogin\(/);
 });
 
 /* ------------------------------------------------------------------ 2 */

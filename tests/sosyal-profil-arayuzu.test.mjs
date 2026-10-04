@@ -2064,7 +2064,13 @@ test('CV eylemi yazdırılabilir belgeye gidiyor, birleşik ekrana değil', () =
     Dördüncü çağrı CV oluşturma akışının "Proje ve dil eklemek için profilini
     aç" eylemi (17 Eylül 2026): kısa formda olmayan alanlar birleşik ekranda.
   */
-  assert.equal((app.match(/navigate\('\/cv'\)/g) ?? []).length, 4);
+  /*
+    Beşinci çağrı "Başvur" kararının `profil-yok` dalı (4 Ekim 2026):
+    oturumu açık ama öğrenci profili satırı olmayan kişi yeniden kayda
+    değil, `/cv`deki "Öğrenci profilini oluştur" adımına gidiyor
+    (lib/basvuru-devam.mjs, tests/basvuru-uc-durum.test.mjs).
+  */
+  assert.equal((app.match(/navigate\('\/cv'\)/g) ?? []).length, 5);
 });
 
 test('Başvurularım sağ sütundan kalktı ama yolu duruyor', () => {
