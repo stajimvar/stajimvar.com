@@ -1707,6 +1707,72 @@ select pg_temp.bekle(
     where recipient_id = (select c from k) and read_at is null),
   'Tumu okundu yalniz cagiranin kayitlarini etkiledi');
 
+-- ------------------------------------------------------ TEK TEK SİLME
+--
+-- 20261118010000: kullanıcı yalnız KENDİ bildirimini silebiliyor.
+-- Başkasınınkine yönelen silme hata vermiyor, sıfır satır siliyor.
+
+create temp table bildirim_sayisi on commit drop as
+select
+  (select count(*) from public.notifications where recipient_id = (select a from k)) as a_n,
+  (select count(*) from public.notifications where recipient_id = (select c from k)) as c_n,
+  (select id from public.notifications where recipient_id = (select c from k)
+    order by created_at limit 1) as c_ilk;
+grant select on bildirim_sayisi to authenticated, anon;
+
+select pg_temp.bekle(
+  (select c_ilk is not null and a_n > 0 from bildirim_sayisi),
+  'Silme testi icin A ve C bildirimi var');
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', b::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$delete from public.notifications
+      where recipient_id = '00000000-0000-4000-8000-00000000000a'$q$),
+  'B, A bildirimlerini silemez');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  format('delete from public.notifications where id = %L', (select c_ilk from bildirim_sayisi))),
+  'B, C bildirimini kimligiyle de silemez');
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+set local role anon;
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$delete from public.notifications$q$),
+  'Anonim kullanici bildirim silemez');
+
+-- C kendi tek bildirimini siliyor: yalnız o satır gidiyor.
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', c::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  format('delete from public.notifications where id = %L', (select c_ilk from bildirim_sayisi))),
+  'C, kendi bildirimini silebilir');
+
+select pg_temp.bekle(
+  (select count(*) = 0 from public.notifications where id = (select c_ilk from bildirim_sayisi)),
+  'Silinen bildirim C listesinde yok');
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+
+select pg_temp.bekle(
+  (select count(*) = (select c_n - 1 from bildirim_sayisi) from public.notifications
+    where recipient_id = (select c from k)),
+  'C bildirimlerinden yalniz biri silindi');
+
+select pg_temp.bekle(
+  (select count(*) = (select a_n from bildirim_sayisi) from public.notifications
+    where recipient_id = (select a from k)),
+  'Baskasinin silme girisimleri A bildirimlerine dokunmadi');
+
 
 -- =====================================================================
 -- ÖĞRENCİNİN KARARI NİHAİ

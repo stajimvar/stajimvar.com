@@ -111,6 +111,27 @@ export async function tumBildirimlerOkundu(): Promise<number> {
 }
 
 /**
+ * Tek bildirimi siler (göç 20261118010000).
+ *
+ * Politika `recipient_id = auth.uid()`: başkasının bildirimine yönelen
+ * silme hata vermiyor, SIFIR satır siliyor. Bu yüzden silinen satır geri
+ * istenip sayılıyor:
+ *
+ *   · `true`  → satır sunucuda silindi
+ *   · `false` → silinecek satır yoktu (başka sekmede zaten silinmiş);
+ *               çağıran listeyi sunucudan yeniden okumalı
+ *
+ * Ağ ya da yetki hatasında İSTİSNA fırlatıyor — boş liste/0 dönen öteki
+ * işlevlerin aksine. Silme kullanıcının açık isteği: başarısız olduysa
+ * bildirim listede kalmalı ve hata söylenmeli, sessizce yutulmamalı.
+ */
+export async function bildirimSil(id: string): Promise<boolean> {
+  const { data, error } = await supabase.from('notifications').delete().eq('id', id).select('id');
+  if (error) throw new Error('Bildirim silinemedi');
+  return (data ?? []).length > 0;
+}
+
+/**
  * BİLDİRİMLERİ ANINDA DİNLE (göç 20261117010000)
  *
  * `notifications` Supabase Realtime yayınında; olaylar abonenin RLS'inden

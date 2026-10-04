@@ -140,11 +140,20 @@ const SIRKET: Bildirim[] = [
 
 type Dunya = 'ogrenci' | 'sirket' | 'bos' | 'cok';
 
+/*
+  SAHTE SİLME GECİKMESİ: "Siliniyor…" durumu ve kilitli düğme gözle
+  görülebilsin diye. Gerçek yanıt süresi iddia edilmiyor.
+*/
+const SILME_GECIKMESI_MS = 900;
+
 export const BildirimDevFixture: React.FC = () => {
   const [dunya, setDunya] = React.useState<Dunya>('ogrenci');
   const [acik, setAcik] = React.useState(true);
   const [kayitlar, setKayitlar] = React.useState<Bildirim[]>(OGRENCI);
   const [sonTiklanan, setSonTiklanan] = React.useState<string>('—');
+  /* Test kolu: açıkken her silme sunucu hatası gibi reddediliyor, satır yerinde kalmalı. */
+  const [silmeBasarisiz, setSilmeBasarisiz] = React.useState(false);
+  const [silmeIstekleri, setSilmeIstekleri] = React.useState(0);
 
   React.useEffect(() => {
     setKayitlar(
@@ -179,6 +188,14 @@ export const BildirimDevFixture: React.FC = () => {
             {d}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => setSilmeBasarisiz((o) => !o)}
+          aria-pressed={silmeBasarisiz}
+          className={`rounded-lg px-2 py-1 font-bold ${silmeBasarisiz ? 'bg-red-700 text-white' : 'bg-gray-100'}`}
+        >
+          silme {silmeBasarisiz ? 'başarısız' : 'başarılı'}
+        </button>
       </div>
 
       <header
@@ -205,6 +222,9 @@ export const BildirimDevFixture: React.FC = () => {
       <main className="mx-auto max-w-2xl space-y-2 p-4 text-sm">
         <p className="text-gray-500">Son tıklanan bildirim hedefi: {sonTiklanan}</p>
         <p className="text-gray-500">Okunmamış: {okunmamis}</p>
+        <p className="text-gray-500" data-silme-istekleri={silmeIstekleri}>
+          Gönderilen silme isteği: {silmeIstekleri}
+        </p>
       </main>
 
       {acik && (
@@ -222,6 +242,16 @@ export const BildirimDevFixture: React.FC = () => {
           onTumunuOkundu={() => setKayitlar((o) => o.map((x) => ({ ...x, okunduMu: true })))}
           /* Fikstür: fotoğraf yolu yok, bileşen baş harfleri çiziyor. */
           kisi={(b) => (b.id.startsWith('s') ? { ad: 'Örnek Kullanıcı', avatarYolu: null } : null)}
+          /*
+            Gerçek kancayla aynı sözleşme: satır ancak "sunucu" onaylayınca
+            listeden çıkıyor; başarısızlıkta söz reddediliyor.
+          */
+          onSil={async (b) => {
+            setSilmeIstekleri((n) => n + 1);
+            await new Promise((coz) => setTimeout(coz, SILME_GECIKMESI_MS));
+            if (silmeBasarisiz) throw new Error('Bildirim silinemedi');
+            setKayitlar((o) => o.filter((x) => x.id !== b.id));
+          }}
           onBaglantiYanitla={async (id, karar) => {
             setKayitlar((o) => o.map((x) => (x.id === id ? { ...x, okunduMu: true } : x)));
             return karar;
