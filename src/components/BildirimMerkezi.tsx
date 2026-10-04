@@ -1,11 +1,24 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, Briefcase, CalendarClock, CheckCircle2, ChevronLeft, FileText, Heart, UserPlus, X } from 'lucide-react';
+import {
+  Bell,
+  Briefcase,
+  CalendarClock,
+  CheckCircle2,
+  ChevronLeft,
+  FileText,
+  Heart,
+  Loader2,
+  Trash2,
+  UserPlus,
+  X,
+} from 'lucide-react';
 import { gecenSure, type Bildirim } from '../lib/bildirim';
 import { bildirimleriGrupla } from '../lib/bildirim-grubu.mjs';
 import { SOSYAL_PAYLASIM_KOVASI } from '../lib/queries/sosyal';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
 import { useGorselAdresleri } from './sosyal/useGorselAdresleri';
+import { ODAK_HALKASI } from '../lib/renk-token';
 
 /**
  * BİLDİRİM MERKEZİ — İKİ DÜNYA, TEK SİSTEM
@@ -185,6 +198,15 @@ export const BildirimMerkezi: React.FC<{
    * yerde yazmıyordu (kullanıcı bildirdi, 27 Eylül 2026).
    */
   icerik?: (b: Bildirim) => { ozet: string | null; kapakYolu: string | null } | null;
+  /**
+   * Tek bildirimi sunucudan siler. Söz ancak sunucu onaylayınca çözülüyor
+   * ve satırı listeden çıkarmak ÇAĞIRANIN işi (`useBildirimler.sil`);
+   * başarısızlıkta söz reddediliyor ve satır yerinde kalıyor.
+   *
+   * Verilmezse Sil düğmesi hiç çizilmiyor: basınca hiçbir şey yapmayan
+   * bir düğme olurdu.
+   */
+  onSil?: (b: Bildirim) => Promise<void>;
 }> = ({
   bildirimler,
   okunmamis,
@@ -197,8 +219,10 @@ export const BildirimMerkezi: React.FC<{
   istekDurumu,
   kisi,
   icerik,
+  onSil,
 }) => {
   const kapsayici = React.useRef<HTMLDivElement>(null);
+  const baslikRef = React.useRef<HTMLHeadingElement>(null);
   /* Hangi bildirimin düğmeleri işlemde: çift dokunma ikinci istek atmasın. */
   const [islemdeki, setIslemdeki] = React.useState<string | null>(null);
   /*
@@ -236,6 +260,87 @@ export const BildirimMerkezi: React.FC<{
   };
 
   /*
+    SİLME DURUMU SATIR BAŞINA
+
+    `siliniyor` çizim için, `silmeKilidi` aynı olay döngüsündeki ikinci
+    dokunuş için: durum güncellemesi bir sonraki çizime kadar görünmüyor,
+    ref hemen görünüyor. Farklı satırlar aynı anda silinebiliyor; biri
+    ötekini beklemiyor.
+
+    Hata satıra bağlı ve satır yerinde kalıyor: silinemeyen bildirim
+    kaybolmuş gibi görünürse kullanıcı silindiğini sanır, sayfa
+    yenilenince geri gelir.
+  */
+  const [siliniyor, setSiliniyor] = React.useState<ReadonlySet<string>>(() => new Set());
+  const [silmeHatasi, setSilmeHatasi] = React.useState<ReadonlySet<string>>(() => new Set());
+  const silmeKilidi = React.useRef(new Set<string>());
+  /*
+    Satır silinince odaklı düğme DOM'dan çıkıyor ve odak belgenin başına
+    düşüyordu: klavyeyle silen kişi listede yerini kaybederdi. Silmeden
+    önce satırın ekrandaki komşuları kaydediliyor; liste yeniden çizilince
+    sonraki satırın Sil düğmesine, yoksa öncekine, liste boşaldıysa
+    panelin başlığına gidiliyor.
+  */
+  const [odakIstegi, setOdakIstegi] = React.useState<{
+    sonrakiler: string[];
+    oncekiler: string[];
+  } | null>(null);
+  /* Ekran okuyucuya "silindi" — satır sessizce kaybolmasın. Bölge baştan var, sonradan eklenen bölge okunmayabiliyor. */
+  const [duyuru, setDuyuru] = React.useState('');
+
+  const kumeyeEkle = (k: ReadonlySet<string>, id: string) => new Set(k).add(id);
+  const kumedenCikar = (k: ReadonlySet<string>, id: string) => {
+    const yeni = new Set(k);
+    yeni.delete(id);
+    return yeni;
+  };
+
+  const silDugmesi = (id: string) =>
+    kapsayici.current?.querySelector<HTMLButtonElement>(`[data-bildirim-sil="${CSS.escape(id)}"]`) ?? null;
+
+  const sil = async (b: Bildirim, dugme: HTMLButtonElement) => {
+    if (!onSil || silmeKilidi.current.has(b.id)) return;
+    silmeKilidi.current.add(b.id);
+    /*
+      Odak yalnız Sil düğmesindeyse taşınıyor: silme sürerken kullanıcı
+      başka bir yere geçtiyse yanıt döndüğünde odağı oradan çekmek,
+      klavye kullanıcısının elinden imleci almak olurdu.
+    */
+    const odakBuradaydi = document.activeElement === dugme;
+    const sira = ekranSirasi.map((x) => x.id);
+    const yer = sira.indexOf(b.id);
+    setSilmeHatasi((k) => kumedenCikar(k, b.id));
+    setSiliniyor((k) => kumeyeEkle(k, b.id));
+    setDuyuru('');
+    try {
+      await onSil(b);
+      setDuyuru('Bildirim silindi.');
+      if (odakBuradaydi || document.activeElement === document.body) {
+        setOdakIstegi({ sonrakiler: sira.slice(yer + 1), oncekiler: sira.slice(0, Math.max(0, yer)).reverse() });
+      }
+    } catch {
+      setSilmeHatasi((k) => kumeyeEkle(k, b.id));
+      /* Düğme `disabled` iken odak düşüyor; yeniden denemek için geri konuyor. */
+      if (odakBuradaydi) setOdakIstegi({ sonrakiler: [b.id], oncekiler: [] });
+    } finally {
+      silmeKilidi.current.delete(b.id);
+      setSiliniyor((k) => kumedenCikar(k, b.id));
+    }
+  };
+
+  React.useEffect(() => {
+    if (!odakIstegi) return;
+    /* Çağıran satırı listeden çıkarana kadar bekle: silinen düğmeye odaklanılmasın. */
+    const mevcut = new Set(bildirimler.map((x) => x.id));
+    const hedef =
+      odakIstegi.sonrakiler.find((id) => mevcut.has(id) && silDugmesi(id)) ??
+      odakIstegi.oncekiler.find((id) => mevcut.has(id) && silDugmesi(id));
+    if (hedef) silDugmesi(hedef)?.focus();
+    else baslikRef.current?.focus();
+    setOdakIstegi(null);
+  }, [odakIstegi, bildirimler]);
+
+  /*
     İKİ KAYNAK, BİRİ ÖNCELİKLİ
 
     Yerel sonuç yanıtın HEMEN ardından doğru cevabı veriyor (liste
@@ -259,15 +364,25 @@ export const BildirimMerkezi: React.FC<{
     gecersiz: 'Bu istek artık geçerli değil.',
   };
 
-  /* Escape ile kapanıyor ve açılınca odak panele giriyor. */
+  /*
+    Escape ile kapanıyor ve açılınca odak panele giriyor — YALNIZ AÇILIŞTA.
+
+    Etki önceden `[onKapat]`'a bağlıydı: çağıran her çizimde yeni bir
+    `onKapat` verince (dev fikstürü böyle) panel her yeniden çizimde odağı
+    kendine çekiyordu. Silmeden sonra sonraki satırın Sil düğmesine konan
+    odak bir an sonra panele geri sıçrıyordu (fikstürde ölçüldü). Güncel
+    `onKapat` ref'ten okunuyor.
+  */
+  const onKapatRef = React.useRef(onKapat);
+  onKapatRef.current = onKapat;
   React.useEffect(() => {
     const tus = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onKapat();
+      if (e.key === 'Escape') onKapatRef.current();
     };
     document.addEventListener('keydown', tus);
     kapsayici.current?.focus();
     return () => document.removeEventListener('keydown', tus);
-  }, [onKapat]);
+  }, []);
 
   /*
     TELEFONDA SAYFANIN ARKASI KAYMIYOR
@@ -306,6 +421,8 @@ export const BildirimMerkezi: React.FC<{
     b.tur === 'baglanti_istegi' && Boolean(onBaglantiYanitla) && (dugmeCizilsin(b) || Boolean(sonuc[b.id]));
   const istekler = bildirimler.filter(istekSatiriMi);
   const gruplar = bildirimleriGrupla(bildirimler.filter((b) => !istekSatiriMi(b)));
+  /* Satırların ekranda göründüğü sıra: silmeden sonra odağın gideceği komşu buradan. */
+  const ekranSirasi: Bildirim[] = [...istekler, ...gruplar.flatMap((g) => g.ogeler as Bildirim[])];
 
   /*
     BEĞENİLEN PAYLAŞIMIN KÜÇÜK RESMİ
@@ -376,103 +493,186 @@ export const BildirimMerkezi: React.FC<{
     );
   };
 
-  const satirCiz = (b: Bildirim) => (
-    <li key={b.id} className="flex flex-wrap items-center gap-x-2 pr-4 transition-colors hover:bg-gray-50 sm:flex-nowrap">
-      <button
-        type="button"
-        onClick={() => onAc(b)}
-        className="flex min-h-11 min-w-0 flex-1 items-center gap-3.5 py-3 pl-4 text-left sm:gap-3 sm:py-2.5 sm:pl-5"
-      >
-        <BildirimIkonu tur={b.tur} renk={renk} kisi={kisi?.(b) ?? null} />
-        <span className="min-w-0 flex-1">
-          {/*
-            Karar bekleyen istekte metin kırpılmıyor: düğmeler satırın
-            sağında yer kaplıyor ve kırpılan bir istek kimin bağlantı
-            istediğini gizliyordu (ölçüldü, 420 px).
-          */}
-          <span
-            className={`break-words text-[15px] leading-snug text-gray-900 sm:text-sm ${
-              b.tur === 'baglanti_istegi' && onBaglantiYanitla && dugmeCizilsin(b) ? '' : 'line-clamp-3'
+  const satirCiz = (b: Bildirim) => {
+    const silinmekte = siliniyor.has(b.id);
+    const silinemedi = silmeHatasi.has(b.id);
+    return (
+      <li key={b.id} className="group transition-colors hover:bg-gray-50">
+        {/*
+          SATIR VE İLETİSİ AYRI KATLAR: "Siliniyor…" ve hata cümlesi satırın
+          altında, metin sütunuyla aynı hizada duruyor. Satırın kendi flex
+          düzenine girselerdi geniş ekranda (`sm:flex-nowrap`) metnin yanına
+          sıkışırlardı.
+
+          Sil düğmesi 44 px'lik kendi kutusunu getiriyor ve simgenin iki
+          yanında 13 px boşluk zaten var: satır arası boşluk ve sağ kenar o
+          yüzden daralıyor. Daraltılmadan Sil sütunu metinden 44 px
+          alıyordu, daraltınca 36 px (420 px panel, metin 311 → 267 → 275 px;
+          simge kenardan 19 px içeride, ölçüldü).
+        */}
+        <div
+          className={`flex flex-wrap items-center ${onSil ? 'gap-x-0.5 pr-1 sm:pr-1.5' : 'gap-x-2 pr-4 sm:flex-nowrap'}`}
+        >
+          <button
+            type="button"
+            onClick={() => onAc(b)}
+            className={`flex min-h-11 min-w-0 flex-1 items-center gap-3.5 py-3 pl-4 text-left transition-opacity sm:gap-3 sm:py-2.5 sm:pl-5 ${
+              silinmekte ? 'opacity-60' : ''
             }`}
           >
-            <span className="font-bold">{b.baslik}</span>
-            {b.govde && <span className="text-gray-700"> {b.govde}</span>}
-            <span className="whitespace-nowrap text-gray-500"> · {gecenSure(b.tarih)}</span>
-          </span>
-          {b.tur === 'baglanti_istegi' && onBaglantiYanitla && gosterilecekSonuc(b) && (
-            <span
-              role="status"
-              className={`mt-0.5 block text-xs font-semibold ${
-                gosterilecekSonuc(b) === 'gecersiz'
-                  ? 'text-amber-800'
-                  : gosterilecekSonuc(b) === 'kabul'
-                    ? 'text-emerald-700'
-                    : 'text-gray-600'
+            <BildirimIkonu tur={b.tur} renk={renk} kisi={kisi?.(b) ?? null} />
+            <span className="min-w-0 flex-1">
+              {/*
+                Karar bekleyen istekte metin kırpılmıyor: düğmeler satırın
+                sağında yer kaplıyor ve kırpılan bir istek kimin bağlantı
+                istediğini gizliyordu (ölçüldü, 420 px).
+              */}
+              <span
+                className={`break-words text-[15px] leading-snug text-gray-900 sm:text-sm ${
+                  b.tur === 'baglanti_istegi' && onBaglantiYanitla && dugmeCizilsin(b) ? '' : 'line-clamp-3'
+                }`}
+              >
+                <span className="font-bold">{b.baslik}</span>
+                {b.govde && <span className="text-gray-700"> {b.govde}</span>}
+                <span className="whitespace-nowrap text-gray-500"> · {gecenSure(b.tarih)}</span>
+              </span>
+              {b.tur === 'baglanti_istegi' && onBaglantiYanitla && gosterilecekSonuc(b) && (
+                <span
+                  role="status"
+                  className={`mt-0.5 block text-xs font-semibold ${
+                    gosterilecekSonuc(b) === 'gecersiz'
+                      ? 'text-amber-800'
+                      : gosterilecekSonuc(b) === 'kabul'
+                        ? 'text-emerald-700'
+                        : 'text-gray-600'
+                  }`}
+                >
+                  {SONUC_METNI[gosterilecekSonuc(b)!]}
+                </span>
+              )}
+            </span>
+            {/* OKUNMAMIŞ YALNIZCA RENKLE ANLATILMIYOR: nokta görsel, "Yeni" ekran okuyucu için. */}
+            {!b.okunduMu && !(b.tur === 'baglanti_istegi' && onBaglantiYanitla && dugmeCizilsin(b)) && (
+              <span className="flex shrink-0 items-center">
+                <span aria-hidden="true" className="h-2 w-2 rounded-full" style={{ background: renk }} />
+                <span className="sr-only">Yeni</span>
+              </span>
+            )}
+
+            {/*
+              KÜÇÜK RESİM SATIRIN EN SAĞINDA
+
+              Metnin altında değil: orada çerçeveli bir kutu olarak duruyordu
+              ve satırı iki kata çıkarıyordu. Sağda kare bir küçük resim,
+              okunmamış noktasından sonra — yani satırın en dış ucunda.
+
+              Yalnız kapağı olan bildirimlerde çiziliyor; bağlantı isteği ve
+              başvuru bildirimlerinde `icerik` zaten null dönüyor.
+            */}
+            {(() => {
+              const ic = icerik?.(b) ?? null;
+              return ic ? <IcerikOnizleme ozet={ic.ozet} kapakYolu={ic.kapakYolu} /> : null;
+            })()}
+          </button>
+
+          {/*
+            SİL — SATIRIN KARDEŞİ, İÇİNDE DEĞİL
+
+            Satırın kendisi bir `<button>`: Sil onun içinde olsaydı iç içe
+            düğme geçersiz olur ve basmak bildirimi de açardı. Kardeş olarak
+            duruyor; satır tıklaması tetiklenmiyor.
+
+            HER ZAMAN GÖRÜNÜR: panel telefonda kullanılıyor ve orada hover yok.
+            Simge her durumda gri-500 (beyazda 4.84:1, ölçüldü; simge için gereken 3:1'in
+            üstünde); satırın üstüne gelince koyulaşıyor. Dokunma hedefi simge
+            değil kutu: 44×44.
+
+            Ad ekran okuyucuya bildirimin başlığıyla gidiyor: listede on tane
+            "Sil" duyurmak hangisinin silineceğini söylemezdi.
+          */}
+          {onSil && (
+            <button
+              type="button"
+              data-bildirim-sil={b.id}
+              onClick={(e) => void sil(b, e.currentTarget)}
+              disabled={silinmekte}
+              aria-busy={silinmekte}
+              aria-label={`"${b.baslik}" bildirimini sil`}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 group-hover:text-gray-700 disabled:cursor-wait ${ODAK_HALKASI}`}
+            >
+              {silinmekte ? (
+                <Loader2 aria-hidden="true" className="h-[18px] w-[18px] animate-spin" />
+              ) : (
+                <Trash2 aria-hidden="true" className="h-[18px] w-[18px]" strokeWidth={1.9} />
+              )}
+            </button>
+          )}
+
+          {/*
+            KARAR SATIRIN SAĞINDA, AMA BAĞLANTININ DIŞINDA
+
+            Düğmeler yukarıdaki `<button>`ın İÇİNDE olamaz — iç içe iki düğme
+            geçersiz ve tıklama hedefleri karışır. Kardeş olarak duruyorlar;
+            satıra basmak yine bildirimi açıyor.
+          */}
+          {b.tur === 'baglanti_istegi' && onBaglantiYanitla && dugmeCizilsin(b) && (
+            /*
+              Telefonda düğmeler metnin ALTINDA, metinle aynı hizada (56 px simge
+              + 14 px boşluk + 16 px kenar): yan yana durunca istek cümlesi dört
+              satıra bölünüyordu (375 px'te ölçüldü). Geniş ekranda sağda —
+              Sil düğmesi yoksa.
+
+              SİL VARKEN KARARLAR GENİŞ EKRANDA DA İKİNCİ KATTA. Kararlar ve Sil aynı katta dururken istek cümlesine 420 px
+              panelde 110 px kalıyordu ve cümle yedi satıra bölünüyordu
+              (ölçüldü; Sil'den önce 146 px, beş satır). Sil ilk katta
+              metnin yanında, kararlar altta metinle aynı hizada; sekme
+              sırası görünen sırayla aynı: satır, Sil, Kabul, Reddet.
+            */
+            <div
+              className={`flex w-full shrink-0 gap-2 pb-3 pl-[86px] ${
+                onSil ? 'pr-3 sm:gap-1.5 sm:pl-[76px] sm:pr-3.5' : 'sm:w-auto sm:gap-1.5 sm:pb-0 sm:pl-0'
               }`}
             >
-              {SONUC_METNI[gosterilecekSonuc(b)!]}
-            </span>
+              <button
+                type="button"
+                disabled={islemdeki === b.id}
+                onClick={() => void yanitla(b.id, 'kabul')}
+                className="min-h-9 flex-1 rounded-lg px-3 text-sm font-bold text-white disabled:opacity-60 sm:flex-none sm:text-xs"
+                style={{ background: renk }}
+              >
+                {islemdeki === b.id ? 'İşleniyor…' : 'Kabul et'}
+              </button>
+              <button
+                type="button"
+                disabled={islemdeki === b.id}
+                onClick={() => void yanitla(b.id, 'red')}
+                className="min-h-9 flex-1 rounded-lg bg-gray-100 px-3 text-sm font-bold text-gray-900 hover:bg-gray-200 disabled:opacity-60 sm:flex-none sm:text-xs"
+              >
+                Reddet
+              </button>
+            </div>
           )}
-        </span>
-        {/* OKUNMAMIŞ YALNIZCA RENKLE ANLATILMIYOR: nokta görsel, "Yeni" ekran okuyucu için. */}
-        {!b.okunduMu && !(b.tur === 'baglanti_istegi' && onBaglantiYanitla && dugmeCizilsin(b)) && (
-          <span className="flex shrink-0 items-center">
-            <span aria-hidden="true" className="h-2 w-2 rounded-full" style={{ background: renk }} />
-            <span className="sr-only">Yeni</span>
-          </span>
-        )}
+        </div>
 
         {/*
-          KÜÇÜK RESİM SATIRIN EN SAĞINDA
-
-          Metnin altında değil: orada çerçeveli bir kutu olarak duruyordu
-          ve satırı iki kata çıkarıyordu. Sağda kare bir küçük resim,
-          okunmamış noktasından sonra — yani satırın en dış ucunda.
-
-          Yalnız kapağı olan bildirimlerde çiziliyor; bağlantı isteği ve
-          başvuru bildirimlerinde `icerik` zaten null dönüyor.
+          İLETİ METİN SÜTUNUNDA: telefonda 16 + 56 + 14 = 86 px, geniş ekranda
+          20 + 44 + 12 = 76 px içeriden — simgenin altına değil cümlenin altına.
+          Hata `role="alert"`: silme kullanıcının açık isteğiydi ve olmadığı
+          hemen duyulmalı. Satır yerinde; Sil'e yeniden basmak yeniden dener.
         */}
-        {(() => {
-          const ic = icerik?.(b) ?? null;
-          return ic ? <IcerikOnizleme ozet={ic.ozet} kapakYolu={ic.kapakYolu} /> : null;
-        })()}
-      </button>
-
-      {/*
-        KARAR SATIRIN SAĞINDA, AMA BAĞLANTININ DIŞINDA
-
-        Düğmeler yukarıdaki `<button>`ın İÇİNDE olamaz — iç içe iki düğme
-        geçersiz ve tıklama hedefleri karışır. Kardeş olarak duruyorlar;
-        satıra basmak yine bildirimi açıyor.
-      */}
-      {b.tur === 'baglanti_istegi' && onBaglantiYanitla && dugmeCizilsin(b) && (
-        /*
-          Telefonda düğmeler metnin ALTINDA, metinle aynı hizada (56 px simge
-          + 14 px boşluk + 16 px kenar): yan yana durunca istek cümlesi dört
-          satıra bölünüyordu (375 px'te ölçüldü). Geniş ekranda sağda.
-        */
-        <div className="flex w-full shrink-0 gap-2 pb-3 pl-[86px] sm:w-auto sm:gap-1.5 sm:pb-0 sm:pl-0">
-          <button
-            type="button"
-            disabled={islemdeki === b.id}
-            onClick={() => void yanitla(b.id, 'kabul')}
-            className="min-h-9 flex-1 rounded-lg px-3 text-sm font-bold text-white disabled:opacity-60 sm:flex-none sm:text-xs"
-            style={{ background: renk }}
-          >
-            {islemdeki === b.id ? 'İşleniyor…' : 'Kabul et'}
-          </button>
-          <button
-            type="button"
-            disabled={islemdeki === b.id}
-            onClick={() => void yanitla(b.id, 'red')}
-            className="min-h-9 flex-1 rounded-lg bg-gray-100 px-3 text-sm font-bold text-gray-900 hover:bg-gray-200 disabled:opacity-60 sm:flex-none sm:text-xs"
-          >
-            Reddet
-          </button>
-        </div>
-      )}
-    </li>
-  );
+        {silinmekte && (
+          <p role="status" className="pb-2.5 pl-[86px] pr-4 text-xs font-semibold text-gray-600 sm:pl-[76px]">
+            Siliniyor…
+          </p>
+        )}
+        {!silinmekte && silinemedi && (
+          <p role="alert" className="pb-2.5 pl-[86px] pr-4 text-xs font-semibold text-red-700 sm:pl-[76px]">
+            Bildirim silinemedi. Bağlantını kontrol edip yeniden dene.
+          </p>
+        )}
+      </li>
+    );
+  };
 
   const bolumBasligi = 'px-4 pb-1 pt-4 text-lg font-bold text-gray-900 sm:px-5 sm:pt-3 sm:text-base';
 
@@ -500,7 +700,12 @@ export const BildirimMerkezi: React.FC<{
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
-        <h2 className="min-w-0 flex-1 truncate text-2xl font-extrabold tracking-tight text-gray-900 sm:text-xl">
+        {/* `tabIndex={-1}`: son bildirim silinince odak buraya iniyor, belgenin başına düşmüyor. */}
+        <h2
+          ref={baslikRef}
+          tabIndex={-1}
+          className="min-w-0 flex-1 truncate text-2xl font-extrabold tracking-tight text-gray-900 sm:text-xl"
+        >
           Bildirimler
         </h2>
         <div className="flex items-center gap-1">
@@ -561,6 +766,9 @@ export const BildirimMerkezi: React.FC<{
             ))}
           </>
         )}
+        <p role="status" className="sr-only">
+          {duyuru}
+        </p>
       </div>
     </div>
   );

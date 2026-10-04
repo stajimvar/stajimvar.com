@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   bildirimOkundu,
+  bildirimSil,
   bildirimleriDinle,
   bildirimleriGetir,
   okunmamisSayisi,
@@ -47,6 +48,14 @@ const BIRLESTIRME_MS = 300;
  * Tazelemeler üst üste binebiliyor (olay + görünürlük + panel açılışı).
  * Daha eski bir istek daha geç dönerse yeni sonucun üstüne yazmasın diye
  * her istek bir sıra numarası alıyor; yalnız sonuncunun yanıtı uygulanıyor.
+ *
+ * Silme bu sıraya ek bir süzgeç getiriyor: silme sürerken yola çıkmış bir
+ * liste okuması, sunucu satırı silmeden ÖNCE okunmuş olabilir ve geç
+ * dönünce silinen bildirimi geri getirirdi. Onaylanmış silmelerin
+ * kimlikleri oturum boyunca tutuluyor ve her liste yanıtı bu kümeden
+ * süzülüyor. Silme ayrıca bir Realtime olayı beklemiyor: süzgeçli
+ * aboneliklerde (`recipient_id=eq.`) Supabase DELETE olayını iletmiyor;
+ * öteki sekme listeyi görünür olduğunda zaten yeniden okuyor.
  * Okundu işaretlemesi SAYI sırasını da ilerletiyor: işaretlemeden önce
  * başlamış bir sayım, iyimser düşüşü eski sayıyla ezmesin. Liste sırası
  * ilerletilmiyor; ilerletilseydi panel açılırken yoldaki liste isteği
@@ -69,6 +78,21 @@ export function useBildirimler(kullaniciId: string | null) {
   const acikRef = React.useRef(false);
   const sayiSirasi = React.useRef(0);
   const listeSirasi = React.useRef(0);
+  /* Sunucunun silindiğini onayladığı kimlikler; oturum değişince boşalıyor. */
+  const silinenler = React.useRef(new Set<string>());
+  /*
+    Yoldaki silmeler. Aynı satıra ikinci dokunuş ikinci DELETE atmasın
+    diye aynı söz geri veriliyor: ikinci çağıran da ilk isteğin sonucunu
+    (başarı ya da hata) bekliyor, "0 satır silindi" diye yanlış bir ikinci
+    yanıt almıyor.
+  */
+  const yoldakiSilmeler = React.useRef(new Map<string, Promise<void>>());
+  /*
+    Silme yanıtı oturum değiştikten sonra dönerse sayaç yeni kullanıcının
+    rozetinden düşmesin diye silmenin hangi oturumda başladığına bakılıyor.
+  */
+  const oturum = React.useRef(kullaniciId);
+  oturum.current = kullaniciId;
 
   const sayiyiTazele = React.useCallback(async () => {
     if (!kullaniciId) return;
@@ -81,7 +105,7 @@ export function useBildirimler(kullaniciId: string | null) {
   const listeyiTazele = React.useCallback(async () => {
     if (!kullaniciId) return;
     const sira = ++listeSirasi.current;
-    const liste = await bildirimleriGetir();
+    const liste = (await bildirimleriGetir()).filter((b) => !silinenler.current.has(b.id));
     if (sira !== listeSirasi.current) return;
     setBildirimler(liste);
     setYukleniyor(false);
@@ -140,6 +164,8 @@ export function useBildirimler(kullaniciId: string | null) {
       window.removeEventListener('online', tazele);
       sayiSirasi.current += 1;
       listeSirasi.current += 1;
+      silinenler.current.clear();
+      yoldakiSilmeler.current.clear();
     };
   }, [kullaniciId, sayiyiTazele, listeyiTazele]);
 
@@ -181,6 +207,54 @@ export function useBildirimler(kullaniciId: string | null) {
     await tumBildirimlerOkundu();
   }, []);
 
+  /*
+    TEK BİLDİRİMİ SİL — İYİMSER DEĞİL
+
+    Satır sunucu onaylayana kadar listede kalıyor. İyimser silmede ağ
+    hatası, kullanıcının "gitti" diye gördüğü bildirimin sayfa
+    yenilenince geri gelmesi demekti; silmenin yapılıp yapılmadığını
+    ekrana bakarak bilemezdi. Hata İSTİSNA olarak çağırana geçiyor:
+    panel satırı yerinde bırakıp hatayı söylüyor.
+
+    `bildirimSil` `false` dönerse satır sunucuda zaten yoktu (başka
+    sekmede silinmiş): satır yine çıkıyor ama yerel bilgi bayat demek,
+    liste ve sayı sunucudan yeniden okunuyor.
+
+    Okunmamış bir bildirim silindiyse sayı hemen 1 düşüyor ve ardından
+    sunucudan okunuyor; sıra ilerletildiği için silmeden önce yola
+    çıkmış bir sayım bu düşüşü eski sayıyla ezemiyor (okunduYap'la aynı).
+  */
+  const sil = React.useCallback(
+    (b: Bildirim): Promise<void> => {
+      const yoldaki = yoldakiSilmeler.current.get(b.id);
+      if (yoldaki) return yoldaki;
+      const baslangic = oturum.current;
+      const istek = (async () => {
+        try {
+          const silindi = await bildirimSil(b.id);
+          if (oturum.current !== baslangic) return;
+          silinenler.current.add(b.id);
+          setBildirimler((o) => o.filter((x) => x.id !== b.id));
+          if (silindi) {
+            if (!b.okunduMu) {
+              sayiSirasi.current += 1;
+              setOkunmamis((o) => (o === null ? o : Math.max(0, o - 1)));
+            }
+            void sayiyiTazele();
+          } else {
+            void listeyiTazele();
+            void sayiyiTazele();
+          }
+        } finally {
+          yoldakiSilmeler.current.delete(b.id);
+        }
+      })();
+      yoldakiSilmeler.current.set(b.id, istek);
+      return istek;
+    },
+    [listeyiTazele, sayiyiTazele],
+  );
+
   return {
     bildirimler,
     okunmamis,
@@ -190,6 +264,7 @@ export function useBildirimler(kullaniciId: string | null) {
     kapat,
     okunduYap,
     tumunuOkunduYap,
+    sil,
     sayiyiTazele,
   };
 }

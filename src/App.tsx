@@ -2192,6 +2192,7 @@ export default function App() {
       onKapat={bildirim.kapat}
       onAc={bildirimAc}
       onTumunuOkundu={() => void bildirim.tumunuOkunduYap()}
+      onSil={bildirim.sil}
       onBaglantiYanitla={baglantiIsteginiYanitla}
       istekDurumu={istekDurumu}
       kisi={bildirimKisiBilgisi}
