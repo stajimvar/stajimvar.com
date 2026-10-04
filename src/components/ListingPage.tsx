@@ -3,12 +3,14 @@ import { SAYFA_GENISLIGI } from '../lib/duzen';
 import React, { useEffect, useState } from 'react';
 import {
   ArrowLeft, MapPin, Calendar, DollarSign, ShieldCheck, ExternalLink, RefreshCw,
-  Building2, Clock, AlertTriangle, Share2, Check,
+  Building2, Clock, AlertTriangle, Share2, Check, Lock,
 } from 'lucide-react';
 import type { InternshipListing } from '../types';
 import { fetchListingByIdPrefix } from '../lib/queries';
 import { ListingLogo } from './ListingLogo';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
+import { basvuruKapanisNedeni, ETIKET_ILAN_KAPALI, ETIKET_SURE_DOLDU } from '../lib/basvuru-devam.mjs';
+import { istanbulGunBaslangici } from '../lib/kontrol-nabzi.mjs';
 import { ilanHedefi } from '../lib/ilan-hedefi.mjs';
 import { IlanDurumEtiketleri } from './IlanDurumEtiketleri';
 import { tarihMetni } from '../lib/tarih.mjs';
@@ -158,6 +160,34 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     doğrulanmadıkça "başvur" denmiyor (kural lib/ilan-hedefi.mjs).
   */
   const hedef = ilanHedefi(listing ?? {});
+
+  /*
+    KAPANMIŞ İÇ İLANDA "BAŞVUR" DÜĞMESİ YOK
+
+    Son başvuru günü geçmiş iç ilanda "StajımVar ile Başvur" çiziliyordu;
+    basınca pencere açılmıyor, "artık başvuru kabul etmiyor" deniyordu
+    (taklitle ölçüldü, 4 Ekim 2026). Basılamayacak işi vaat eden düğme
+    yerine durum yazılıyor. Gün Europe/Istanbul'a göre: son gün TR'de
+    bitiyor, tarayıcının saat dilimi farklı olsa da kayma olmasın.
+
+    Yalnız İÇ ilan: dış ilanın düğmesi şirket sayfasına gidiyor ve oradaki
+    başvurunun açık olup olmadığını biz söyleyemiyoruz.
+
+    Düğmeyi gizlemek kapının YERİNE GEÇMİYOR: sayfa açıkken de ilan
+    kapanabilir. `handleApplyToJob`daki `basvuruKarari` kapısı, girişten
+    dönüşte ilanın sunucudan yeniden okunması ve başvuru politikası
+    yerinde duruyor.
+
+    `status` ilan nesnesinde yok: bu sayfa yalnız YAYINDAKİ ilanı
+    getiriyor (`fetchListingByIdPrefix`), yayından kalkmış ilan
+    "Bu ilan bulunamadı" ekranına düşüyor. Yani burada pratikte çalışan
+    kural son gün; "İlan başvuruya kapalı" ortak yardımcı yayın durumunu
+    da taşırsa çiziliyor.
+  */
+  const kapanis =
+    listing && yol.anaEylem === 'platform-ici'
+      ? basvuruKapanisNedeni(listing, istanbulGunBaslangici().slice(0, 10))
+      : null;
 
   /*
     GÖSTERİLECEK META DEĞERLERİ — BOŞSA null
@@ -639,6 +669,9 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                   <ExternalLink className="w-4 h-4" />
                 </a>
               )}
+              {kapanis ? (
+                <BasvuruKapaliDurumu neden={kapanis} />
+              ) : (
               <button
                 type="button"
                 onClick={() => (yol.anaEylem === 'platform-ici' ? onApply(listing) : onTrack(listing))}
@@ -650,6 +683,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
               >
                 {yol.anaEylem === 'resmi-site' ? yol.takipEtiketi : yol.anaEtiket}
               </button>
+              )}
             </div>
           </aside>
           </div>
@@ -735,6 +769,8 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                 </button>
               )}
             </div>
+          ) : kapanis ? (
+            <BasvuruKapaliDurumu neden={kapanis} />
           ) : (
             <button
               type="button"
@@ -747,5 +783,28 @@ export const ListingPage: React.FC<ListingPageProps> = ({
         </div>
       )}
     </div>
+  );
+};
+
+/**
+ * Kapanmış iç ilanda düğmenin yerine çizilen durum.
+ *
+ * Düğme DEĞİL: basılacak bir iş yok, tıklanabilir görünen bir öğe
+ * olmayan bir işi vaat ederdi. Bilgi renkte değil metinde; ikon yalnız
+ * eşlik ediyor (`aria-hidden`). Gri zemin üstünde gray-700 metin
+ * (Tailwind 4 oklch değerlerinin sRGB karşılığıyla hesaplandı: ≈9,4:1) —
+ * soluk gri "devre dışı" görünümü okunmayı zorlaştırırdı.
+ * Yükseklik düğmeyle aynı (`min-h-12`): çubuk ve sütun yer değiştirmesin.
+ */
+const BasvuruKapaliDurumu: React.FC<{ neden: 'sure-doldu' | 'kapali' }> = ({ neden }) => {
+  const Ikon = neden === 'sure-doldu' ? Clock : Lock;
+  return (
+    <p
+      role="status"
+      className="flex min-h-12 w-full flex-1 items-center justify-center gap-1.5 rounded-2xl border border-gray-200 bg-gray-100 px-5 text-sm font-bold text-gray-700"
+    >
+      <Ikon aria-hidden="true" className="h-4 w-4 shrink-0" />
+      {neden === 'sure-doldu' ? ETIKET_SURE_DOLDU : ETIKET_ILAN_KAPALI}
+    </p>
   );
 };

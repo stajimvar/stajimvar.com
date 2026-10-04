@@ -151,44 +151,50 @@ test('uyarı erişilebilir ve kapatma düğmesi 44 piksel', () => {
 
 /* --------------------------------------- 3. misafir başvurusu niyet yazıyor */
 
-test('handleApplyToJob misafirde niyet yazıyor', () => {
-  const fn = blok(app, 'const handleApplyToJob = (');
+/*
+  4 Ekim 2026: bu bölüm yeniden yazıldı. Devam etkisindeki ayrı `if`
+  zinciri (allListings → yedek getirme, liste bekleme, platform içi,
+  zaten başvurdu) `lib/basvuru-devam.mjs` karar tablosuna taşındı; tablo
+  doğrudan `tests/basvuru-devam.test.mjs` içinde, App'teki bağlantısı
+  `tests/basvuru-uc-durum.test.mjs` içinde sınanıyor. Burada #309'un
+  koruduğu dört davranışın HÂLÂ bağlı olduğu bakılıyor; ilk ikisi daha
+  sıkı hâle geldi (ilan artık her zaman sunucudan okunuyor).
+*/
+
+test('misafirin "Başvur"u niyet yazıyor', () => {
+  const uygula = app.slice(app.indexOf('const basvuruKarariniUygula = ('), app.indexOf('const handleApplyToJob = ('));
   assert.match(
-    fn,
-    /if \(!session\) \{\s*handleOpenLogin\(\{ tur: 'ic', ilanId: listing\.id, yol: window\.location\.pathname, baslik: listing\.title \}\);\s*return;/,
+    uygula,
+    /case 'giris':[\s\S]*?handleOpenLogin\(\{ tur: 'ic', ilanId: b\.ilan\.id, yol: window\.location\.pathname, baslik: b\.ilan\.title \}\);/,
   );
+  const fn = blok(app, 'const handleApplyToJob = (');
   /* İkinci bir mekanizma yok: sessionStorage'a buradan doğrudan yazılmıyor. */
-  assert.ok(!/sessionStorage/.test(fn), 'niyet handleOpenLogin dışından yazılıyor');
+  assert.ok(!/sessionStorage/.test(fn) && !/sessionStorage/.test(uygula), 'niyet handleOpenLogin dışından yazılıyor');
 });
 
-test('devam etkisi ilanı yedekten getiriyor ve kimliği tam eşleştiriyor', () => {
+test('devam etkisi ilanı sunucudan getiriyor ve kimliği tam eşleştiriyor', () => {
   const etki = app.slice(app.indexOf('const niyet = niyetOku(window.sessionStorage);'));
-  const ic = etki.slice(0, etki.indexOf('}, [sessionReady, session, allListings, basvurularYuklenen]);'));
+  const ic = etki.slice(0, etki.indexOf('}, [sessionReady, session]);'));
   assert.ok(ic.length > 0, 'devam etkisi bulunamadı');
-  assert.match(ic, /allListings\.find\(\(l\) => l\.id === niyet\.ilanId\)/);
-  assert.match(ic, /await fetchListingByIdPrefix\(niyet\.ilanId\.slice\(0, 8\)\)/);
+  assert.match(ic, /fetchListingByIdPrefix\(niyet\.ilanId\.slice\(0, 8\)\)/);
   assert.match(ic, /getirilen && getirilen\.id === niyet\.ilanId \? getirilen : null/);
+  /* Girişten önce yüklenmiş bayat kopya karar için kullanılmıyor. */
+  assert.ok(!/allListings\.find/.test(ic), 'ilan bayat listeden okunuyor');
 });
 
 test('başvuru listesi yüklenmeden karar verilmiyor', () => {
-  const ic = app.slice(app.indexOf('const niyet = niyetOku(window.sessionStorage);'));
-  /* Platform içi niyet, liste bu kullanıcı için yüklenene kadar silinmiyor. */
-  const bekle = ic.indexOf('if (basvurularYuklenen !== session.userId) return;');
-  const sil = ic.indexOf('niyetSil(window.sessionStorage);', ic.indexOf("session.role === 'company'") + 80);
-  assert.ok(bekle > 0, 'liste beklenmiyor');
-  assert.ok(sil > bekle, 'niyet liste yüklenmeden siliniyor');
-  assert.match(app, /\.finally\(\(\) => \{\s*if \(!cancelled\) setBasvurularYuklenen\(session\.userId\);/);
+  const ver = blok(app, 'const basvuruKarariVer = (');
+  assert.match(ver, /basvurularHazir: Boolean\(session\) && basvurularYuklenen === session\?\.userId/);
+  assert.match(app, /\.finally\(\(\) => \{[\s\S]{0,400}?if \(!cancelled\) setBasvurularYuklenen\(session\.userId\);/);
 });
 
-test('zaten başvurulmuşsa ya da ilan internal değilse pencere açılmıyor', () => {
-  const ic = app.slice(app.indexOf('const niyet = niyetOku(window.sessionStorage);'));
-  const govde = ic.slice(0, ic.indexOf('}, [sessionReady, session, allListings, basvurularYuklenen]);'));
-  const yol = govde.indexOf("if (basvuruYolu(ilan).anaEylem !== 'platform-ici') return;");
-  const zaten = govde.indexOf("showToast('Bu ilana zaten başvurdun.');");
-  const ac = govde.indexOf('setApplyTarget({ listing: ilan, matchScore: 0 });');
-  assert.ok(yol > 0 && zaten > 0 && ac > 0, 'koşullardan biri eksik');
-  assert.ok(yol < ac && zaten < ac, 'pencere koşullardan önce açılıyor');
-  assert.match(govde, /if \(basvurulmus\) \{\s*showToast\('Bu ilana zaten başvurdun\.'\);\s*return;/);
+test('zaten başvurulmuşsa ya da ilan platform içi değilse pencere açılmıyor', () => {
+  const ver = blok(app, 'const basvuruKarariVer = (');
+  assert.match(ver, /zatenBasvurdu: Boolean\(ilan\) && applications\.some\(\(a\) => a\.listingId === ilan\?\.id\)/);
+  assert.match(ver, /platformIci: Boolean\(ilan\) && basvuruYolu\(ilan \?\? \{\}\)\.anaEylem === 'platform-ici'/);
+  /* Pencereyi açan TEK yer `ac` kararı. */
+  const uygula = app.slice(app.indexOf('const basvuruKarariniUygula = ('), app.indexOf('const handleApplyToJob = ('));
+  assert.match(uygula, /case 'ac':\s*if \(!b\.ilan\) return;\s*setApplyTarget\(/);
 });
 
 /* ---------------------------------------------- 4. çift tıklama kilidi */
