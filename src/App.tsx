@@ -2,6 +2,12 @@ import React, { useState, useRef, Suspense } from 'react';
 import { cvVarMi, karsilamaGosterilsinMi, karsilamaIsaretle } from './lib/cv-hazirlik.mjs';
 import { bildirimIcerigi } from './lib/bildirim-icerigi.mjs';
 import { bildirimKisisi } from './lib/bildirim-kisisi.mjs';
+import {
+  ADAY_FOTOGRAFLI_TURLER,
+  OGRENCI_BASVURU_TURLERI,
+  basvuruGorseli,
+} from './lib/bildirim-basvurusu.mjs';
+import { bildirimBasvurulariniGetir, type BildirimBasvurusu } from './lib/bildirim';
 import { COGRAFYA, ilanCografyasi } from './lib/ilan-cografyasi.mjs';
 import {
   baglantiDurumu,
@@ -2172,6 +2178,57 @@ export default function App() {
     [bildirimIcerikleri],
   );
 
+  /*
+    BAŞVURU BİLDİRİMİNİN ŞİRKET LOGOSU YA DA ADAY FOTOĞRAFI
+
+    Kişi ve içerik çözümüyle aynı desen: panel açıkken, listedeki başvuru
+    bildirimlerinin `application_id`'leri için tek sorgu. Yalnız görseli
+    olabilecek türler soruluyor (öğrencinin başvuru durumu bildirimleri
+    ve işverenin "Yeni başvuru"su); öteki türler için sorgu atılmıyor.
+
+    Hangi görselin gösterileceği `basvuruGorseli`nin kararı — aday
+    fotoğrafının rıza, başvuru yolu, şirket doğrulaması ve adres kuralı
+    orada. Burada ikinci bir kural yok. Okunamayan başvuru (RLS) haritaya
+    girmiyor, sorgu hata verirse harita boşalıyor: satırlar tür simgesi
+    ve sunucu metniyle kalıyor.
+  */
+  const [bildirimBasvurulari, setBildirimBasvurulari] = useState<Map<string, BildirimBasvurusu>>(
+    () => new Map(),
+  );
+  const bildirimBasvuruAnahtari = bildirim.acik
+    ? Array.from(
+        new Set(
+          bildirim.bildirimler
+            .filter((b) => OGRENCI_BASVURU_TURLERI.has(b.tur) || ADAY_FOTOGRAFLI_TURLER.has(b.tur))
+            .map((b) => b.basvuruId)
+            .filter((k): k is string => Boolean(k)),
+        ),
+      )
+        .sort()
+        .join(',')
+    : '';
+  React.useEffect(() => {
+    if (!bildirimBasvuruAnahtari) return;
+    let iptal = false;
+    void bildirimBasvurulariniGetir(bildirimBasvuruAnahtari.split(','))
+      .then((harita) => {
+        if (!iptal) setBildirimBasvurulari(harita);
+      })
+      .catch(() => {
+        if (!iptal) setBildirimBasvurulari(new Map());
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [bildirimBasvuruAnahtari]);
+  const bildirimBasvuruBilgisi = React.useCallback(
+    (b: { tur: string; basvuruId: string | null }) =>
+      b.basvuruId
+        ? basvuruGorseli(b.tur, bildirimBasvurulari.get(b.basvuruId) ?? null, import.meta.env.VITE_SUPABASE_URL)
+        : null,
+    [bildirimBasvurulari],
+  );
+
   /* Bildirimin işaret ettiği kişi, olayın kimliğinden okunuyor. */
   const istekDurumu = React.useCallback(
     (b: { anahtar: string | null }): IstekDurumu => {
@@ -2197,6 +2254,7 @@ export default function App() {
       istekDurumu={istekDurumu}
       kisi={bildirimKisiBilgisi}
       icerik={bildirimIcerikBilgisi}
+      basvuru={bildirimBasvuruBilgisi}
     />
   ) : null;
 

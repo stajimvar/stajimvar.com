@@ -14,6 +14,8 @@ import {
   X,
 } from 'lucide-react';
 import { gecenSure, type Bildirim } from '../lib/bildirim';
+import type { AdayGorseli, SirketGorseli } from '../lib/bildirim-basvurusu.mjs';
+import { basvuruBildirimiMi } from '../lib/bildirim-turu.mjs';
 import { bildirimleriGrupla } from '../lib/bildirim-grubu.mjs';
 import { SOSYAL_PAYLASIM_KOVASI } from '../lib/queries/sosyal';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
@@ -34,30 +36,139 @@ import { ODAK_HALKASI } from '../lib/renk-token';
  * açılır kutu.
  */
 
+/** Başvuru bildiriminin görseli; kararı `lib/bildirim-basvurusu.mjs` veriyor. */
+export type BasvuruGorseli = SirketGorseli | AdayGorseli;
+
 /** Bildirim türünden ikon. Tanınmayan türde nötr bir belge ikonu. */
+function turSimgesi(tur: string) {
+  return tur === 'gorusme_daveti' || tur === 'gorusme_guncellendi' ? CalendarClock
+    : tur === 'teklif' || tur === 'teklif_kabul' ? CheckCircle2
+    : tur === 'yeni_basvuru' ? Briefcase
+    /* Takip de kişiye dair bir olay: belge simgesine düşüyordu, oysa ortada belge yok. */
+    : tur === 'baglanti_istegi' || tur === 'baglanti_kabul' || tur === 'takip' ? UserPlus
+    : tur === 'paylasim_begeni' ? Heart
+    : FileText;
+}
+
 function BildirimIkonu({
   tur,
   renk,
   kisi = null,
+  basvuru = null,
 }: {
   tur: string;
   renk: string;
   kisi?: { ad: string; avatarYolu: string | null } | null;
+  basvuru?: BasvuruGorseli | null;
 }) {
   /*
     Yuvarlak simge (telefonda 56, geniş ekranda 44 px): Instagram'da kişinin fotoğrafının durduğu yer.
     Bildirim satırı kişi bilgisi taşımadığı için türün simgesi çiziliyor;
     renk tek vurgu rengi, zemin onun açık tonu.
   */
-  const ortak = { className: 'h-5 w-5 shrink-0', style: { color: renk }, strokeWidth: 1.9 };
-  const simge =
-    tur === 'gorusme_daveti' || tur === 'gorusme_guncellendi' ? <CalendarClock {...ortak} />
-    : tur === 'teklif' || tur === 'teklif_kabul' ? <CheckCircle2 {...ortak} />
-    : tur === 'yeni_basvuru' ? <Briefcase {...ortak} />
-    /* Takip de kişiye dair bir olay: belge simgesine düşüyordu, oysa ortada belge yok. */
-    : tur === 'baglanti_istegi' || tur === 'baglanti_kabul' || tur === 'takip' ? <UserPlus {...ortak} />
-    : tur === 'paylasim_begeni' ? <Heart {...ortak} />
-    : <FileText {...ortak} />;
+  const Simge = turSimgesi(tur);
+  const simge = <Simge className="h-5 w-5 shrink-0" style={{ color: renk }} strokeWidth={1.9} />;
+
+  /*
+    BAŞVURU GÖRSELİ: ŞİRKET LOGOSU YA DA ADAY FOTOĞRAFI
+
+    Başvuru satırları belge ve çanta simgesiyle birbirinin aynısıydı;
+    öğrenci hangi şirketin, işveren hangi adayın satırı olduğunu ancak
+    metni okuyarak ayırıyordu (kullanıcının canlı ekran görüntüleri).
+    Beğeni satırlarındaki desen burada da: görsel + sağ altta tür rozeti.
+
+    Hangi görselin gösterileceğine burada KARAR VERİLMİYOR — aday
+    fotoğrafının rıza, başvuru yolu ve adres kuralı `basvuruGorseli`
+    içinde. Bu bileşen yalnız gelen adresi çiziyor.
+
+    Görsel inmezse (`onError`) kırık resim yerine tür simgesine dönülüyor:
+    adres kuralı geçmiş ama dosya silinmiş ya da şirketin sunucusu
+    kapalı olabilir. Bozulan adres saklanıyor ki aynı adres yeniden
+    denenip simge ile görsel arasında gidip gelinmesin; adres değişirse
+    yeni adres denenir.
+  */
+  const gorselAdresi = basvuru?.tip === 'sirket' ? basvuru.logo : basvuru?.tip === 'aday' ? basvuru.foto : null;
+  const [bozukAdres, setBozukAdres] = React.useState<string | null>(null);
+  const gorsel = gorselAdresi && gorselAdresi !== bozukAdres ? gorselAdresi : null;
+
+  /*
+    `alt` BOŞ (logo da fotoğraf da): şirket ve aday adı satırın metninde
+    zaten yazıyor; görsele ad vermek ekran okuyucuda adı iki kez okuturdu.
+  */
+  if (basvuru?.tip === 'sirket' && gorsel) {
+    return (
+      <span data-bildirim-logo="" className="relative flex h-14 shrink-0 sm:h-11">
+        {/*
+          LOGO KABI YUVARLAK DEĞİL, ORANI LOGODAN
+
+          Logo önce dairenin içindeydi. Dairenin içine sığan kare telefonda
+          34, geniş ekranda 26 px'ti; 3000×751'lik yatay bir logo (4:1)
+          orada 26 × 6,5 px'e iniyordu (26 / 4) ve fikstürün ekran
+          görüntüsünde okunmuyordu.
+
+          Şimdi kap yuvarlatılmış dikdörtgen: yükseklik simgeyle aynı
+          (56 / 44), genişlik GÖRSELİN KENDİ ORANINDAN — `h-full w-auto`,
+          tarayıcı genişliği doğal orandan hesaplıyor; ölçüm durumu ya da
+          `onLoad` yok. Kare ve dikey logolar `min-w` ile simgenin
+          genişliğinde kalıyor, metin sütunu öteki satırlarla aynı hizada.
+          Yatay logolar en fazla 88 px'e kadar genişliyor; ötesinde
+          `object-contain` oranı koruyup küçültüyor. 4:1 logo böylece
+          telefonda 68 × 17, geniş ekranda 72 × 18 px çiziliyor (fikstürde
+          ölçüldü). Bedeli yalnız yatay logolu satırda: metin sütunu
+          telefonda 32, geniş ekranda 44 px sağa kayıyor (ölçüldü).
+
+          Rozet kabın köşesine OTURUYOR, merkezi tam köşede: içeride kalan
+          çeyreği iç boşlukla logodan ayrılıyor. Telefonda rozet yarıçapı 12,
+          logonun köşesi kap köşesinden 10·√2 ≈ 14,1 px içeride; geniş
+          ekranda 10 ile 8·√2 ≈ 11,3. Telefonda iç boşluk önce 8 px'ti ve
+          kare logo ile rozet arasında 0,4 px kalıyordu (ölçüldü); alt piksel
+          yuvarlamasına pay bırakmak için 9 px.
+        */}
+        <span className="flex h-full min-w-14 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-white sm:min-w-11">
+          <img
+            src={gorsel}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            onError={() => setBozukAdres(gorsel)}
+            className="block h-full w-auto max-w-[86px] object-contain p-[9px] sm:p-[7px]"
+          />
+        </span>
+        <span
+          aria-hidden="true"
+          className="absolute -bottom-3 -right-3 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white sm:-bottom-2.5 sm:-right-2.5 sm:h-5 sm:w-5"
+          style={{ background: renk }}
+        >
+          <Simge className="h-3 w-3 text-white sm:h-2.5 sm:w-2.5" strokeWidth={2.5} />
+        </span>
+      </span>
+    );
+  }
+
+  /* Aday fotoğrafı yuvarlak kalıyor: kişi fotoğrafıyla (beğeni, bağlantı) aynı desen. */
+  if (basvuru?.tip === 'aday' && gorsel) {
+    return (
+      <span data-bildirim-aday="" className="relative h-14 w-14 shrink-0 sm:h-11 sm:w-11">
+        <span className="block h-full w-full overflow-hidden rounded-full border border-gray-200 bg-white">
+          <img
+            src={gorsel}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            onError={() => setBozukAdres(gorsel)}
+            className="h-full w-full object-cover"
+          />
+        </span>
+        <span
+          aria-hidden="true"
+          className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white sm:h-5 sm:w-5"
+          style={{ background: renk }}
+        >
+          <Simge className="h-3 w-3 text-white sm:h-2.5 sm:w-2.5" strokeWidth={2.5} />
+        </span>
+      </span>
+    );
+  }
   /*
     KİŞİ VARSA FOTOĞRAFI (Instagram gibi): olayı yapan kişinin profil
     fotoğrafı, sağ altında küçük tür rozeti (beğenide kırmızı kalp). Kişi
@@ -95,6 +206,39 @@ function BildirimIkonu({
       <span className="relative">{simge}</span>
     </span>
   );
+}
+
+/**
+ * SUNUCU METNİNDEKİ ADLARI VURGULAR — METNİ YENİDEN YAZMAZ
+ *
+ * Canlıda öğrenci satırı "Ogulsize · Stajyer başvurunu incelemeye aldı."
+ * diye okunuyordu: ilan adı ("Stajyer") cümlenin geri kalanına yapışıyor
+ * ve "stajyer başvurun" gibi okunuyordu (kullanıcının ekran görüntüsü).
+ * Cümle sunucunun; burada yalnız şirket ve ilan adının geçtiği yer koyu
+ * yapılıyor, sözcük eklenmiyor ya da çıkarılmıyor.
+ *
+ * Adlar sırayla aranıyor (önce şirket, ardından ondan SONRA ilan): kısa
+ * bir ilan adı şirket adının içinde yakalanmasın. Ad metinde yoksa
+ * (bildirimden sonra ilan yeniden adlandırılmış olabilir) o ad
+ * vurgulanmıyor ve metne eklenmiyor — sunucu metni olduğu gibi kalıyor.
+ */
+function adlariVurgula(metin: string, adlar: Array<string | null>): React.ReactNode[] {
+  const parcalar: React.ReactNode[] = [];
+  let imlec = 0;
+  for (const ad of adlar) {
+    if (!ad) continue;
+    const yer = metin.indexOf(ad, imlec);
+    if (yer < 0) continue;
+    if (yer > imlec) parcalar.push(<React.Fragment key={`d${imlec}`}>{metin.slice(imlec, yer)}</React.Fragment>);
+    parcalar.push(
+      <span key={`v${yer}`} className="font-semibold text-gray-900">
+        {ad}
+      </span>,
+    );
+    imlec = yer + ad.length;
+  }
+  if (imlec < metin.length) parcalar.push(<React.Fragment key={`d${imlec}`}>{metin.slice(imlec)}</React.Fragment>);
+  return parcalar;
 }
 
 /**
@@ -199,6 +343,13 @@ export const BildirimMerkezi: React.FC<{
    */
   icerik?: (b: Bildirim) => { ozet: string | null; kapakYolu: string | null } | null;
   /**
+   * Başvuru bildiriminin görseli: öğrencide şirket logosu, işverenin
+   * "Yeni başvuru" satırında aday fotoğrafı. Çağıran başvuru satırını
+   * okuyup `basvuruGorseli` kuralından geçiriyor; uygun değilse `null`
+   * ve satır bugünkü haliyle (tür simgesi, sunucu metni) kalıyor.
+   */
+  basvuru?: (b: Bildirim) => BasvuruGorseli | null;
+  /**
    * Tek bildirimi sunucudan siler. Söz ancak sunucu onaylayınca çözülüyor
    * ve satırı listeden çıkarmak ÇAĞIRANIN işi (`useBildirimler.sil`);
    * başarısızlıkta söz reddediliyor ve satır yerinde kalıyor.
@@ -219,6 +370,7 @@ export const BildirimMerkezi: React.FC<{
   istekDurumu,
   kisi,
   icerik,
+  basvuru,
   onSil,
 }) => {
   const kapsayici = React.useRef<HTMLDivElement>(null);
@@ -496,6 +648,17 @@ export const BildirimMerkezi: React.FC<{
   const satirCiz = (b: Bildirim) => {
     const silinmekte = siliniyor.has(b.id);
     const silinemedi = silmeHatasi.has(b.id);
+    const bv = basvuru?.(b) ?? null;
+    /*
+      İŞVERENİN "YENİ BAŞVURU" SATIRI İKİ PARÇA: ad başlığın yanında,
+      ilan kendi satırında. Sunucu metni "Ad · İlan" tek parça ve uzun
+      ilan adı adın arkasına yapışıp üç satırlık kırpmada kayboluyordu.
+      Yalnız iki parça da GERÇEK veriden geldiğinde kuruluyor (başvuru
+      anının kopyasındaki ad — sunucu metni de adı oradan alıyor — ve
+      ilanın başlığı); biri yoksa sunucu metni aynen kalıyor.
+    */
+    const adayParcalari = bv?.tip === 'aday' && bv.adayAdi && bv.ilanAdi ? bv : null;
+    const bekleyenIstek = b.tur === 'baglanti_istegi' && Boolean(onBaglantiYanitla) && dugmeCizilsin(b);
     return (
       <li key={b.id} className="group transition-colors hover:bg-gray-50">
         {/*
@@ -520,21 +683,50 @@ export const BildirimMerkezi: React.FC<{
               silinmekte ? 'opacity-60' : ''
             }`}
           >
-            <BildirimIkonu tur={b.tur} renk={renk} kisi={kisi?.(b) ?? null} />
+            <BildirimIkonu tur={b.tur} renk={renk} kisi={kisi?.(b) ?? null} basvuru={bv} />
             <span className="min-w-0 flex-1">
               {/*
                 Karar bekleyen istekte metin kırpılmıyor: düğmeler satırın
                 sağında yer kaplıyor ve kırpılan bir istek kimin bağlantı
                 istediğini gizliyordu (ölçüldü, 420 px).
+
+                Başvuru bildiriminde de kırpılmıyor — görseli olsun olmasın
+                (`lib/bildirim-turu.mjs`): üç satırlık kırpma uzun ilan adını
+                ortasından kesiyordu ve kesilen kısım hangi ilan olduğunu
+                söyleyen kısımdı. Metnin uzunluğu şirket ya da aday adı ve
+                ilan başlığıyla sınırlı. Sosyal bildirimler eskisi gibi
+                üç satırda kırpılıyor.
               */}
               <span
                 className={`break-words text-[15px] leading-snug text-gray-900 sm:text-sm ${
-                  b.tur === 'baglanti_istegi' && onBaglantiYanitla && dugmeCizilsin(b) ? '' : 'line-clamp-3'
+                  bekleyenIstek || basvuruBildirimiMi(b) ? '' : 'line-clamp-3'
                 }`}
               >
                 <span className="font-bold">{b.baslik}</span>
-                {b.govde && <span className="text-gray-700"> {b.govde}</span>}
-                <span className="whitespace-nowrap text-gray-500"> · {gecenSure(b.tarih)}</span>
+                {adayParcalari ? (
+                  <>
+                    {' '}
+                    <span className="font-semibold text-gray-900">{adayParcalari.adayAdi}</span>{' '}
+                    <span className="block text-gray-700">
+                      {adayParcalari.ilanAdi}
+                      <span className="whitespace-nowrap text-gray-500"> · {gecenSure(b.tarih)}</span>
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    {b.govde && (
+                      <span className="text-gray-700">
+                        {' '}
+                        {bv?.tip === 'sirket'
+                          ? adlariVurgula(b.govde, [bv.sirketAdi, bv.ilanAdi])
+                          : bv?.tip === 'aday'
+                            ? adlariVurgula(b.govde, [bv.adayAdi, bv.ilanAdi])
+                            : b.govde}
+                      </span>
+                    )}
+                    <span className="whitespace-nowrap text-gray-500"> · {gecenSure(b.tarih)}</span>
+                  </>
+                )}
               </span>
               {b.tur === 'baglanti_istegi' && onBaglantiYanitla && gosterilecekSonuc(b) && (
                 <span

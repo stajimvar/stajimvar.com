@@ -111,6 +111,71 @@ export async function tumBildirimlerOkundu(): Promise<number> {
 }
 
 /**
+ * BAŞVURU BİLDİRİMLERİNİN BAŞVURU, İLAN VE ŞİRKET SATIRLARI
+ *
+ * Zil paneli açılınca bir kez, listedeki `application_id`'ler için tek
+ * sorgu. Hangi görselin gösterileceğine `lib/bildirim-basvurusu.mjs`
+ * karar veriyor; burası yalnız okuyor.
+ *
+ * Yeni yetki yok: okuma başvuru ekranlarının RLS'inden geçiyor. Öğrenci
+ * yalnız kendi başvurusunu, işveren yalnız DOĞRULANMIŞ şirketinin
+ * başvurularını görüyor; dönmeyen satır haritaya girmiyor ve o bildirim
+ * tür simgesiyle kalıyor.
+ *
+ * Kopyanın TAMAMI çekilmiyor: yalnız ad ve fotoğraf adresi
+ * (`profile_snapshot->>…`). Aday kartının ihtiyaç duyduğu öteki alanların
+ * bildirimde işi yok.
+ */
+export type BildirimBasvurusu = {
+  yontem: string | null;
+  rizaTarihi: string | null;
+  adayAdi: string | null;
+  adayFotografi: string | null;
+  ilan: {
+    baslik: string | null;
+    sirket: { ad: string | null; logo: string | null; dogrulanmis: boolean } | null;
+  } | null;
+};
+
+const UUID_DESENI = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function bildirimBasvurulariniGetir(
+  kimlikler: string[],
+): Promise<Map<string, BildirimBasvurusu>> {
+  const temiz = Array.from(new Set(kimlikler.filter((k) => UUID_DESENI.test(k)))).slice(0, BILDIRIM_LIMITI);
+  const sonuc = new Map<string, BildirimBasvurusu>();
+  if (temiz.length === 0) return sonuc;
+  const { data, error } = await supabase
+    .from('applications')
+    .select(
+      'id, application_method, contact_share_consent_at, ' +
+        'aday_adi:profile_snapshot->>ad, aday_fotografi:profile_snapshot->>fotoUrl, ' +
+        'listings ( title, companies ( name, logo_url, verified ) )',
+    )
+    .in('id', temiz);
+  if (error) throw new Error('Bildirim başvuruları alınamadı');
+  for (const s of (data ?? []) as unknown as any[]) {
+    const ilan = Array.isArray(s.listings) ? s.listings[0] : s.listings;
+    const sirket = ilan ? (Array.isArray(ilan.companies) ? ilan.companies[0] : ilan.companies) : null;
+    sonuc.set(s.id, {
+      yontem: s.application_method ?? null,
+      rizaTarihi: s.contact_share_consent_at ?? null,
+      adayAdi: s.aday_adi ?? null,
+      adayFotografi: s.aday_fotografi ?? null,
+      ilan: ilan
+        ? {
+            baslik: ilan.title ?? null,
+            sirket: sirket
+              ? { ad: sirket.name ?? null, logo: sirket.logo_url ?? null, dogrulanmis: sirket.verified === true }
+              : null,
+          }
+        : null,
+    });
+  }
+  return sonuc;
+}
+
+/**
  * Tek bildirimi siler (göç 20261118010000).
  *
  * Politika `recipient_id = auth.uid()`: başkasının bildirimine yönelen
