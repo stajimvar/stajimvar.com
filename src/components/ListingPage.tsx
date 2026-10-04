@@ -1,10 +1,11 @@
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  ArrowLeft, MapPin, Calendar, DollarSign, ShieldCheck, ExternalLink, RefreshCw,
-  Building2, Clock, AlertTriangle, Share2, Check, Lock,
+  ArrowLeft, ArrowRight, MapPin, Calendar, DollarSign, ShieldCheck, ExternalLink, RefreshCw,
+  Building2, Clock, AlertTriangle, Share2, Check, Lock, FileText, Info,
 } from 'lucide-react';
+import { ODAK_HALKASI, RENK_GECISI } from '../lib/renk-token';
 import type { InternshipListing } from '../types';
 import { fetchListingByIdPrefix } from '../lib/queries';
 import { ListingLogo } from './ListingLogo';
@@ -12,7 +13,7 @@ import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { basvuruKapanisNedeni, ETIKET_ILAN_KAPALI, ETIKET_SURE_DOLDU } from '../lib/basvuru-devam.mjs';
 import { istanbulGunBaslangici } from '../lib/kontrol-nabzi.mjs';
 import { ilanHedefi } from '../lib/ilan-hedefi.mjs';
-import { IlanDurumEtiketleri } from './IlanDurumEtiketleri';
+import { IlanDurumEtiketleri, ilanDurumuSorunlu } from './IlanDurumEtiketleri';
 import { tarihMetni } from '../lib/tarih.mjs';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 import { sonKontrolMetni } from '../lib/zaman';
@@ -61,6 +62,17 @@ interface ListingPageProps {
    * göndermediğimiz başvuruyu göndermiş gibi kaydetmek.
    */
   onTrack: (listing: InternshipListing) => void;
+  /**
+   * Elde hazır duran ilan — verilirse sunucudan OKUNMUYOR.
+   *
+   * Yalnız geliştirme fikstürü (`src/dev/IlanDetayDevFixture.tsx`)
+   * kullanıyor: sayfanın dört başvuru durumu (iç açık, iç kapanmış,
+   * dış, adressiz) aynı anda tek bir canlı ilanda bulunmuyor ve
+   * fikstür canlı Supabase'e bağlanmadan GERÇEK bileşeni çizmeli,
+   * kopyasını değil. Uygulama (`App.tsx`) bu alanı vermiyor; üretimde
+   * davranış eskisi gibi `idPrefix` ile okuma.
+   */
+  hazirIlan?: InternshipListing;
 }
 
 const Bilgi: React.FC<{
@@ -76,20 +88,47 @@ const Bilgi: React.FC<{
 }> = ({
   ikon, etiket, deger, ek,
 }) => (
-  <div className="flex items-start gap-2.5">
-    <div className="text-gray-400 mt-0.5 shrink-0">{ikon}</div>
+  /*
+    `px-3`: ızgara kabı `-mx-3` ile iki yana taşıyor, hücrenin kendi
+    dolgusu onu geri alıyor. Böylece ilk sütunun metni kartın içerik
+    kenarıyla hizalı kalıyor ve ayırıcı (`border-l`) metne yapışmıyor.
+    Ayırıcının hangi hücrede çizileceği hücrenin değil KABIN kararı
+    (aşağıda, `BILGI_IZGARASI`): hücre kaçıncı sütunda olduğunu bilmiyor.
+  */
+  <div className="flex items-start gap-3 px-3 py-3 border-gray-100">
+    <div className="text-blue-600 mt-0.5 shrink-0" aria-hidden="true">{ikon}</div>
     <div className="min-w-0">
       <p className="text-[11px] uppercase tracking-wider text-gray-600 font-bold">
         {etiket}
       </p>
-      <p className="text-sm font-semibold text-gray-900 break-words">{deger}</p>
+      <p className="mt-0.5 text-[15px] sm:text-base font-semibold text-gray-900 break-words">{deger}</p>
       {ek}
     </div>
   </div>
 );
 
+/*
+  BİLGİ IZGARASI — AYIRICI ALAN SAYISINA GÖRE
+
+  Hücre sayısı ilana göre 1 ile 12 arasında değişiyor (veri yoksa hücre
+  hiç çizilmiyor). Dikey ayırıcı her hücrenin solunda, satırın İLK
+  sütunu hariç; satır aralığı sıfır olduğu için alt alta duran
+  ayırıcılar tek çizgi gibi birleşiyor. Son satır eksikse ayırıcı da
+  yalnız var olan hücrenin yanında çiziliyor: boş hücre ya da yetim
+  çizgi kalmıyor.
+
+  Telefonda 2, `sm` üstünde 3 sütun. Kurallar `max-sm:` ve `sm:` ile
+  ayrıldı: ikisi aynı kırılımda yazılsaydı hangi seçicinin kazanacağı
+  üretilen CSS'in sırasına kalırdı.
+*/
+const BILGI_IZGARASI = [
+  '-mx-3 grid grid-cols-2 sm:grid-cols-3',
+  'max-sm:[&>*:nth-child(even)]:border-l',
+  'sm:[&>*:not(:nth-child(3n+1))]:border-l',
+].join(' ');
+
 export const ListingPage: React.FC<ListingPageProps> = ({
-  gomulu = false, idPrefix, onBack, onNavigate, onApply, onTrack,
+  gomulu = false, idPrefix, onBack, onNavigate, onApply, onTrack, hazirIlan,
 }) => {
   const [listing, setListing] = useState<InternshipListing | null>(null);
   const [durum, setDurum] = useState<'yukleniyor' | 'hazir' | 'yok' | 'hata'>('yukleniyor');
@@ -121,6 +160,11 @@ export const ListingPage: React.FC<ListingPageProps> = ({
   };
 
   useEffect(() => {
+    if (hazirIlan) {
+      setListing(hazirIlan);
+      setDurum('hazir');
+      return;
+    }
     let iptal = false;
     setDurum('yukleniyor');
     fetchListingByIdPrefix(idPrefix)
@@ -135,7 +179,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     return () => {
       iptal = true;
     };
-  }, [idPrefix]);
+  }, [idPrefix, hazirIlan]);
 
   /*
     Sayfa üst bilgileri ilana göre ayarlanıyor.
@@ -272,6 +316,45 @@ export const ListingPage: React.FC<ListingPageProps> = ({
   const eksikBilgiNotu = !sureMetni ? 'Süre bilgisi resmî kaynakta açıklanmamış.' : null;
   const [metinAcik, setMetinAcik] = useState(false);
 
+  /*
+    "TAMAMINI GÖSTER" GERÇEK TAŞMAYA GÖRE
+
+    Düğme metin 900 karakteri geçince çıkıyordu; 12 satırlık katlama ise
+    satır sayısına bakıyor. Ölçüldü (375px, 528 karakterlik fikstür
+    metni): 476 piksellik metnin 336 pikseli görünüyor, "…" ile bitiyor ve açacak düğme
+    YOKTU — ilanın sonu okunamıyordu. Artık kesilip kesilmediği kutunun
+    kendisinden ölçülüyor; genişlik değişince (telefon döndürme) yeniden.
+  */
+  const metinRef = useRef<HTMLParagraphElement>(null);
+  const [metinTasiyor, setMetinTasiyor] = useState(false);
+  useEffect(() => {
+    const el = metinRef.current;
+    if (!el || metinAcik) return;
+    const olc = () => setMetinTasiyor(el.scrollHeight > el.clientHeight + 1);
+    olc();
+    if (typeof ResizeObserver === 'undefined') return;
+    const gozcu = new ResizeObserver(olc);
+    gozcu.observe(el);
+    return () => gozcu.disconnect();
+  }, [listing, durum, metinAcik]);
+
+  /*
+    TELEFONDA BOŞ BAŞVURU KARTI ÇİZİLMİYOR
+
+    Telefonda kartın düğme bloğu gizli (eylemler sabit çubukta). Geriye
+    son başvuru, açıklama kutusu ve durum etiketleri kalıyor. Kapanmış
+    bir iç ilanda tarih de yoksa üçü de boş düşüyor ve içeriğin altında
+    40 piksellik boş bir beyaz kutu kalırdı; o durumda kart yalnız
+    masaüstünde (düğme yerine kapanış durumu) çiziliyor.
+  */
+  const telefondaKartBos = Boolean(
+    listing
+      && yol.teslimEdiliyor
+      && kapanis
+      && !sonBasvuru
+      && !ilanDurumuSorunlu(listing),
+  );
+
   return (
     <div className={gomulu ? 'flex-1 text-gray-900' : 'min-h-screen bg-[#F9FAFB] text-gray-900'}>
       {!gomulu && (
@@ -306,10 +389,34 @@ export const ListingPage: React.FC<ListingPageProps> = ({
       <main
         className={
           gomulu
-            ? `${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-4 sm:pt-6 pb-[calc(170px+env(safe-area-inset-bottom))] lg:pb-8 space-y-6`
+            ? `${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-4 pb-[calc(170px+env(safe-area-inset-bottom))] lg:pb-8 space-y-4`
             : 'max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-[calc(96px+env(safe-area-inset-bottom))] lg:pb-8 space-y-6'
         }
       >
+        {/*
+          GERİ DÖNÜŞ — GERÇEK BAĞLANTI
+
+          Site kabuğunda üst çubuk ilan listesine dönmeyi söylemiyor;
+          kabuksuz kipte kendi başlığındaki "Tüm ilanlar" bu işi görüyor,
+          o yüzden yalnız `gomulu`. `<a href="/">`: orta tuş ve "yeni
+          sekmede aç" çalışsın. Düz tıklamada sayfa yeniden yüklenmesin
+          diye uygulamanın kendi gezinmesine (`onBack`) devrediliyor.
+        */}
+        {gomulu && (
+          <a
+            href="/"
+            onClick={(e) => {
+              if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+              e.preventDefault();
+              onBack();
+            }}
+            className={`inline-flex min-h-11 items-center gap-2 rounded-lg text-sm font-semibold text-gray-600 hover:text-blue-700 ${RENK_GECISI} ${ODAK_HALKASI}`}
+          >
+            <ArrowLeft aria-hidden="true" className="w-4 h-4" />
+            İlanlara dön
+          </a>
+        )}
+
         {durum === 'yukleniyor' && (
           <div className="space-y-4" role="status" aria-live="polite">
             <div className="h-28 rounded-3xl bg-gray-100 animate-pulse"/>
@@ -350,84 +457,107 @@ export const ListingPage: React.FC<ListingPageProps> = ({
         {durum === 'hazir' && listing && (
           /*
             İKİ SÜTUN (geniş ekranda): solda ilanın kendisi, sağda yapışkan
-            başvuru alanı. Telefonda sıra aynı: içerik, uyarı; eylemler
-            alttaki sabit çubukta.
+            başvuru kartı. Telefonda sıra aynı: içerik, sonra başvuru
+            kartının bilgi kısmı; eylemler alttaki sabit çubukta.
+
+            SAĞ KART GERİLMİYOR: `lg:items-start` ızgarada, `lg:self-start`
+            sütunun kendisinde. Izgara varsayılanı `stretch`; sağ sütun
+            sol sütunun boyuna uzar ve içi boş, uzun bir beyaz kutu
+            kalırdı. Kart yalnız içeriği kadar.
           */
-          <div className="space-y-6 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:space-y-0">
-          <div className="min-w-0 space-y-6 lg:col-span-8">
-            <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-7 space-y-4">
-              <div className="flex items-start gap-4">
+          <div className="space-y-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:space-y-0">
+          <div className="min-w-0 space-y-4 lg:space-y-6 lg:col-span-8">
+            <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-7">
+              <div className="flex items-start gap-4 sm:gap-5">
                 <ListingLogo
                   name={listing.companyName}
                   logoUrl={listing.companyLogo || undefined}
                 />
-                <div className="min-w-0 space-y-1">
+                <div className="min-w-0 flex-1">
                   <button
                     type="button"
                     onClick={() => onNavigate(`/sirket/${listing.companySlug ?? slugify(listing.companyName)}`)}
-                    className="text-sm font-bold text-blue-600 hover:underline"
+                    /*
+                      Dokunma hedefi 44 piksel (`min-h-11`), ama düzende 24
+                      piksel yer tutuyor (`-my-2.5`): yazı satırı kadar
+                      görünsün, başlığı aşağı itmesin. Ölçüldü: önce 20–24
+                      piksellik bir hedefti.
+                    */
+                    className={`-my-2.5 inline-flex min-h-11 items-center text-left text-sm sm:text-base font-bold text-blue-600 hover:underline rounded-sm break-words ${ODAK_HALKASI}`}
                   >
                     {listing.companyName}
                   </button>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h1 className="text-xl sm:text-2xl font-extrabold leading-snug">
-                        {listing.title}
-                      </h1>
-                      {/*
-                        RESMÎ İLAN ADI
+                  {/*
+                    BAŞLIK VE PAYLAŞ AYNI SATIRDA, SIĞMAZSA ALT ALTA
 
-                        Gösterdiğimiz başlık şirketin kendi başlığından
-                        farklıysa orijinali de yazıyoruz: öğrenci resmî
-                        sayfaya gittiğinde aynı ilanı bulduğundan emin
-                        olabilsin. İkisi aynıysa satır çizilmiyor —
-                        gereksiz tekrar.
-
-                        Bu değer VERİTABANINDAN geliyor; sayfa açılıp
-                        yeniden ayrıştırılmıyor.
-                      */}
-                      {listing.sourceTitle &&
-                        listing.sourceTitle.trim() !== listing.title.trim() && (
-                          <p className="mt-1 text-xs text-gray-500">
-                            Resmî ilan adı:{' '}
-                            <span className="font-semibold text-gray-700">
-                              {listing.sourceTitle}
-                            </span>
-                          </p>
-                        )}
-                    </div>
+                    `flex-wrap`: kısa başlıkta hap başlığın yanında duruyor,
+                    uzun başlıkta (ölçüldü, 375px'te başlık sütunu ~231
+                    piksel) bir alt satıra iniyor. Başlık ezilip hapa yer
+                    açmıyor, hap da başlığın üstüne binmiyor.
+                  */}
+                  <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <h1 className="min-w-0 max-w-full text-2xl sm:text-3xl lg:text-4xl font-extrabold leading-tight tracking-tight text-gray-950 break-words">
+                      {listing.title}
+                    </h1>
                     <button
                       type="button"
                       onClick={() => paylas(listing)}
                       aria-label="İlanı paylaş"
                       title="İlanı paylaş"
-                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+                      className={`shrink-0 inline-flex min-h-11 items-center gap-2 px-4 rounded-full text-sm font-semibold border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 ${RENK_GECISI} ${ODAK_HALKASI}`}
                     >
                       {paylasimDurumu === 'kopyalandi' ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <Check aria-hidden="true" className="w-4 h-4 text-emerald-600" />
                           Kopyalandı
                         </>
                       ) : (
                         <>
-                          <Share2 className="w-3.5 h-3.5" />
+                          <Share2 aria-hidden="true" className="w-4 h-4" />
                           Paylaş
                         </>
                       )}
                     </button>
                   </div>
+                  {/*
+                    RESMÎ İLAN ADI
+
+                    Gösterdiğimiz başlık şirketin kendi başlığından
+                    farklıysa orijinali de yazıyoruz: öğrenci resmî
+                    sayfaya gittiğinde aynı ilanı bulduğundan emin
+                    olabilsin. İkisi aynıysa satır çizilmiyor —
+                    gereksiz tekrar.
+
+                    Bu değer VERİTABANINDAN geliyor; sayfa açılıp
+                    yeniden ayrıştırılmıyor.
+                  */}
+                  {listing.sourceTitle &&
+                    listing.sourceTitle.trim() !== listing.title.trim() && (
+                      <p className="mt-2 text-xs text-gray-600 break-words">
+                        Resmî ilan adı:{' '}
+                        <span className="font-semibold text-gray-700">
+                          {listing.sourceTitle}
+                        </span>
+                      </p>
+                    )}
                   {listing.origin === 'scraped' && (
-                    <p className="inline-flex items-center gap-1.5 text-xs text-emerald-700 font-semibold">
-                      <ShieldCheck className="w-3.5 h-3.5" />
+                    <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-emerald-700 font-semibold">
+                      <ShieldCheck aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
                       Şirketin kendi kariyer sayfasından alındı
                     </p>
                   )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-100">
+              {/*
+                Ayırıcı çizgi ızgaranın DIŞ kabında: ızgara `-mx-3` ile
+                taştığı için çizgi onun üstünde olsaydı kart içeriğinden
+                iki yana 12'şer piksel taşıyordu (1440px'te ölçüldü).
+              */}
+              <div className="mt-5 pt-3 border-t border-gray-100">
+              <div className={BILGI_IZGARASI}>
                 <Bilgi
-                  ikon={<MapPin className="w-4 h-4" />}
+                  ikon={<MapPin className="w-5 h-5" />}
                   etiket="Konum"
                   deger={`${konumEtiketi(listing.city)} (${calismaEtiketi(listing.workType)})`}
                   /*
@@ -438,14 +568,14 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                   ek={<UlkeRozeti countryCode={listing.countryCode} className="mt-1" />}
                 />
                 {listing.department && (
-                  <Bilgi ikon={<Building2 className="w-4 h-4" />} etiket="Departman" deger={listing.department} />
+                  <Bilgi ikon={<Building2 className="w-5 h-5" />} etiket="Departman" deger={listing.department} />
                 )}
                 {sureMetni && (
-                  <Bilgi ikon={<Clock className="w-4 h-4" />} etiket="Süre" deger={sureMetni} />
+                  <Bilgi ikon={<Clock className="w-5 h-5" />} etiket="Süre" deger={sureMetni} />
                 )}
                 {sonBasvuru && (
                   <Bilgi
-                    ikon={<Calendar className="w-4 h-4" />}
+                    ikon={<Calendar className="w-5 h-5" />}
                     etiket="Son başvuru"
                     deger={sonBasvuru}
                   />
@@ -465,7 +595,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                 */}
                 {ucretMetni && (
                   <Bilgi
-                    ikon={<DollarSign className="w-4 h-4" />}
+                    ikon={<DollarSign className="w-5 h-5" />}
                     etiket="Ücret"
                     deger={ucretMetni}
                   />
@@ -473,31 +603,31 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                 {stajTuru.map((satir) => (
                   <Bilgi
                     key={satir.etiket}
-                    ikon={<ShieldCheck className="w-4 h-4" />}
+                    ikon={<ShieldCheck className="w-5 h-5" />}
                     etiket={satir.etiket}
                     deger={satir.deger}
                   />
                 ))}
                 {sigorta && (
                   <Bilgi
-                    ikon={<ShieldCheck className="w-4 h-4" />}
+                    ikon={<ShieldCheck className="w-5 h-5" />}
                     etiket="Sigorta"
                     deger={sigorta}
                   />
                 )}
                 {sigortaNotu && (
                   <Bilgi
-                    ikon={<ShieldCheck className="w-4 h-4" />}
+                    ikon={<ShieldCheck className="w-5 h-5" />}
                     etiket="Sigorta notu"
                     deger={sigortaNotu}
                   />
                 )}
                 {donemMetni && (
-                  <Bilgi ikon={<Calendar className="w-4 h-4" />} etiket="Dönem" deger={donemMetni} />
+                  <Bilgi ikon={<Calendar className="w-5 h-5" />} etiket="Dönem" deger={donemMetni} />
                 )}
                 {bicimMetni && (
                   <Bilgi
-                    ikon={<Building2 className="w-4 h-4" />}
+                    ikon={<Building2 className="w-5 h-5" />}
                     etiket="Çalışma biçimi"
                     deger={bicimMetni}
                   />
@@ -509,11 +639,12 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                 */}
                 {sonKontrolMetni(listing.lastSeenAt) && (
                   <Bilgi
-                    ikon={<RefreshCw className="w-4 h-4" />}
+                    ikon={<RefreshCw className="w-5 h-5" />}
                     etiket="Son kaynak kontrolü"
                     deger={sonKontrolMetni(listing.lastSeenAt)!.replace('Son kontrol: ', '')}
                   />
                 )}
+              </div>
               </div>
 
               {/*
@@ -526,13 +657,13 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                 yazmıyor.
               */}
               {eksikBilgiNotu && (
-                <p className="pt-3 text-[11px] leading-relaxed text-gray-600">{eksikBilgiNotu}</p>
+                <p className="pt-3 text-xs leading-relaxed text-gray-600">{eksikBilgiNotu}</p>
               )}
             </div>
 
             {listing.requiredSkills.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-3">
-                <h2 className="text-sm font-bold">İlanda geçen beceriler</h2>
+              <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-7 space-y-3">
+                <h2 className="text-base font-bold">İlanda geçen beceriler</h2>
                 <div className="flex flex-wrap gap-1.5">
                   {[...listing.requiredSkills, ...listing.preferredSkills].map((s) => (
                     <span
@@ -549,11 +680,12 @@ export const ListingPage: React.FC<ListingPageProps> = ({
               </div>
             )}
 
-            <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-sm font-bold">İlan metni</h2>
-                <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">
+            <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-7">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-950">İlan metni</h2>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-700">
                   Otomatik çeviri
+                  <Info aria-hidden="true" className="w-3.5 h-3.5 text-gray-500" />
                 </span>
               </div>
               {/*
@@ -576,7 +708,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                 yerine resmî ilana giden bağlantı veriliyor — tek doğru
                 kaynak zaten orası.
               */}
-              <p className="text-[11px] text-gray-500 leading-relaxed">
+              <p className="mt-2 text-xs text-gray-600 leading-relaxed">
                 Bu metin kaynak ilanın otomatik Türkçe çevirisi. Anlam
                 uyuşmazlığında şirketin resmî ilanı esas alınır.
                 {listing.sourceUrl && (
@@ -586,7 +718,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                       href={listing.sourceUrl}
                       target="_blank"
                       rel="noopener noreferrer nofollow"
-                      className="font-semibold text-blue-700 hover:underline"
+                      className={`font-semibold text-blue-700 hover:underline rounded-sm ${ODAK_HALKASI}`}
                     >
                       Orijinal ilanı aç
                     </a>
@@ -594,31 +726,42 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                   </>
                 )}
               </p>
+              {/*
+                OKUMA ÖLÇÜSÜ: `max-w-[75ch]` satırı ~75 karaktere kesiyor;
+                sol sütun 1440px'te bundan geniş ve tam genişlikte satırlar
+                göz için uzun. `whitespace-pre-line` kaynağın satır ve
+                paragraf sonlarını koruyor; metin yeniden biçimlenmiyor.
+              */}
               <p
-                className={`text-sm text-gray-600 leading-relaxed whitespace-pre-line ${
+                ref={metinRef}
+                className={`mt-5 max-w-[75ch] text-[15px] sm:text-base text-gray-800 leading-7 whitespace-pre-line break-words ${
                   metinAcik ? '' : 'line-clamp-[12]'
                 }`}
               >
                 {listing.description}
               </p>
-              {(listing.description || '').length > 900 && (
+              {(metinAcik || metinTasiyor) && (
                 <button
                   type="button"
                   onClick={() => setMetinAcik((a) => !a)}
-                  className="text-xs font-bold text-blue-700 hover:text-blue-800 cursor-pointer"
+                  className={`mt-2 inline-flex min-h-11 items-center text-sm font-bold text-blue-700 hover:text-blue-800 cursor-pointer rounded-sm ${ODAK_HALKASI}`}
                 >
                   {metinAcik ? 'Metni kısalt' : 'Kaynak metnin tamamını göster'}
                 </button>
               )}
               {listing.sourceUrl && (
-                <p className="text-[11px] text-gray-600 pt-2 border-t border-gray-100">
+                <p className="mt-4 text-xs text-gray-600 pt-3 border-t border-gray-100 break-words">
                   Kaynak: {new URL(listing.sourceUrl).hostname}
                 </p>
               )}
             </div>
 
           </div>
-          <aside className="min-w-0 space-y-3 lg:col-span-4 lg:sticky lg:top-6" aria-label="Başvuru seçenekleri">
+          <aside
+            className={`min-w-0 lg:col-span-4 lg:sticky lg:top-6 lg:self-start ${telefondaKartBos ? 'max-lg:hidden' : ''}`}
+            aria-label="Başvuru seçenekleri"
+          >
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 flex flex-col gap-4">
             {/*
               DURUM UYARISI BAŞVURU SEÇENEKLERİNİN BAŞINDA
 
@@ -629,24 +772,11 @@ export const ListingPage: React.FC<ListingPageProps> = ({
               başvuru düğmesine basıyordu.
 
               Kartla aynı bileşen; iki kopya er geç ayrışır ve iki ekran
-              aynı ilan için farklı şey söylerdi.
+              aynı ilan için farklı şey söylerdi. Sorun yoksa `null`
+              dönüyor ve kartta boşluk bırakmıyor (`gap` boş öğeye
+              uygulanmıyor).
             */}
             {listing && <IlanDurumEtiketleri listing={listing} />}
-
-            {/*
-              Açıklama, kart ve başvuru diyaloğuyla aynı cümleyi kuruyor:
-              karar lib/basvuru-yolu.mjs'te. Önce burada "şirkete talebi
-              bildiririz" yazıyordu; böyle çalışan bir süreç yok.
-            */}
-            {!yol.teslimEdiliyor && (
-              <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 flex gap-3">
-                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5"/>
-                <p className="text-xs text-amber-900 leading-relaxed">
-                  {yol.ozet} StajımVar kaydı yalnızca senin takip listen içindir —{' '}
-                  <strong>resmî sayfadan başvurmayı unutma</strong>.
-                </p>
-              </div>
-            )}
 
             {/*
               Bu blok MASAÜSTÜ eylem alanı. Telefonda gizleniyor: aynı
@@ -659,14 +789,14 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                   href={yol.resmiAdres}
                   target="_blank"
                   rel="noopener noreferrer nofollow"
-                  className={`flex-1 inline-flex items-center justify-center gap-1.5 px-5 py-3 rounded-2xl text-sm font-bold transition-colors shadow-xs ${
+                  className={`inline-flex min-h-12 items-center justify-center gap-2 px-5 rounded-xl text-base font-bold shadow-xs ${RENK_GECISI} ${ODAK_HALKASI} ${
                     yol.anaEylem === 'resmi-site'
                       ? 'text-white bg-blue-600 hover:bg-blue-700'
-                      : 'border border-gray-200 bg-white hover:bg-gray-50'
+                      : 'border border-gray-200 bg-white text-gray-800 hover:bg-gray-50'
                   }`}
                 >
                   {yol.anaEylem === 'resmi-site' ? hedef.etiket : 'İlana git'}
-                  <ExternalLink className="w-4 h-4" />
+                  <ExternalLink aria-hidden="true" className="w-4 h-4" />
                 </a>
               )}
               {kapanis ? (
@@ -675,15 +805,80 @@ export const ListingPage: React.FC<ListingPageProps> = ({
               <button
                 type="button"
                 onClick={() => (yol.anaEylem === 'platform-ici' ? onApply(listing) : onTrack(listing))}
-                className={`flex-1 inline-flex items-center justify-center gap-1.5 px-5 py-3 rounded-2xl text-sm font-bold transition-colors shadow-xs ${
+                className={`inline-flex min-h-12 items-center justify-center gap-2 px-5 rounded-xl font-bold shadow-xs ${RENK_GECISI} ${ODAK_HALKASI} ${
                   yol.anaEylem === 'resmi-site'
-                    ? 'border border-gray-200 bg-white hover:bg-gray-50 text-gray-800'
-                    : 'text-white bg-blue-600 hover:bg-blue-700'
+                    ? 'border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 text-sm'
+                    : 'text-white bg-blue-600 hover:bg-blue-700 text-base'
                 }`}
               >
                 {yol.anaEylem === 'resmi-site' ? yol.takipEtiketi : yol.anaEtiket}
+                {yol.anaEylem === 'platform-ici' && (
+                  <ArrowRight aria-hidden="true" className="w-5 h-5" />
+                )}
               </button>
               )}
+            </div>
+
+            {/*
+              SON BAŞVURU KARTTA DA — TELEFONDA DA GÖRÜNÜYOR
+
+              Tarih bilgi ızgarasında da var; burada karar düğmesinin
+              hemen altında tekrar ediliyor çünkü "başvurayım mı"
+              sorusunun ikinci yarısı "ne zamana kadar". Tarih yoksa satır
+              yok (uydurulmuyor). Üstteki çizgi yalnız masaüstünde: telefonda
+              üstündeki düğme bloğu gizli, çizgi boşluğu ayırırdı.
+            */}
+            {sonBasvuru && (
+              <div className="flex items-start gap-3 lg:border-t lg:border-gray-100 lg:pt-4">
+                <Calendar aria-hidden="true" className="w-6 h-6 shrink-0 text-gray-500 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-[11px] uppercase tracking-wider text-gray-600 font-bold">
+                    Son başvuru
+                  </p>
+                  <p className="mt-0.5 text-lg font-bold text-gray-900">{sonBasvuru}</p>
+                </div>
+              </div>
+            )}
+
+            {/*
+              AÇIKLAMA GERÇEK BAŞVURU YOLUNDAN
+
+              Cümle `yol.ozet` (lib/basvuru-yolu.mjs): kart, önizleme ve
+              başvuru diyaloğuyla aynı kaynak. Önce burada "şirkete talebi
+              bildiririz" yazıyordu; böyle çalışan bir süreç yok.
+
+              MAVİ KUTU YALNIZ BAŞVURU GERÇEKTEN BİZDEN GEÇİYORSA. Dış ve
+              adressiz ilanda başvuru şirkete ulaşmıyor; orada mavi bir
+              "StajımVar üzerinden" kutusu en tehlikeli yanlış olurdu.
+              Bu ilanlarda eski sarı uyarı aynen duruyor.
+
+              KAPANMIŞ İÇ İLANDA MAVİ KUTU YOK: "Başvurun şirketin
+              panelinde görünür" cümlesi, hemen üstte "Başvuru süresi
+              doldu" yazarken yapılamayacak bir başvuruyu anlatırdı.
+            */}
+            {yol.anaEylem === 'platform-ici' && yol.teslimEdiliyor && !kapanis && (
+              <div
+                className={`border-gray-100 ${sonBasvuru ? 'border-t pt-4' : 'lg:border-t lg:pt-4'}`}
+              >
+                <div className="rounded-xl bg-blue-50 p-4 flex gap-3">
+                  <FileText aria-hidden="true" className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
+                  <p className="text-sm text-gray-800 leading-relaxed">{yol.ozet}</p>
+                </div>
+              </div>
+            )}
+            {!yol.teslimEdiliyor && (
+              <div
+                className={`border-gray-100 ${sonBasvuru ? 'border-t pt-4' : 'lg:border-t lg:pt-4'}`}
+              >
+                <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 flex gap-3">
+                  <AlertTriangle aria-hidden="true" className="w-4 h-4 text-amber-600 shrink-0 mt-0.5"/>
+                  <p className="text-xs text-amber-900 leading-relaxed">
+                    {yol.ozet} StajımVar kaydı yalnızca senin takip listen içindir —{' '}
+                    <strong>resmî sayfadan başvurmayı unutma</strong>.
+                  </p>
+                </div>
+              </div>
+            )}
             </div>
           </aside>
           </div>
