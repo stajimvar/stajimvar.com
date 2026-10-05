@@ -25,7 +25,13 @@ export const ZORUNLU_ALANLAR = [
 ];
 
 export const ACIKLAMA_EN_AZ = 200;
-export const ACIKLAMA_EN_FAZLA = 2000;
+/*
+  Üst sınır 5000 (önce 2000): geçerli, ayrıntılı iş tanımları yalnız
+  uzun diye reddediliyordu. Sunucudaki otomatik kontrol aynı sınırı
+  kullanıyor (ilan_aciklama_en_fazla, 20261120010000) — biri
+  değişirse öteki de değişmeli.
+*/
+export const ACIKLAMA_EN_FAZLA = 5000;
 
 export const CALISMA_SEKILLERI = [
   { id: 'On-site', etiket: 'Ofis' },
@@ -94,12 +100,19 @@ export const UCRET_SECENEKLERI = [
  * Tek bir "form geçersiz" mesajı yerine alan başına sorun: kullanıcı
  * neyi düzelteceğini formun kendisinde görüyor.
  */
+/** İstanbul'da bugünün tarihi (YYYY-AA-GG). Testte `bugun` verilebilir. */
+function istanbulBugun(bugun) {
+  if (bugun) return String(bugun).slice(0, 10);
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(new Date());
+}
+
 export function ilanSorunlari(deger) {
   const s = {};
   const metin = (x) => String(x ?? '').trim();
 
   if (metin(deger.unvan).length < 3) s.unvan = 'Pozisyon adını yaz.';
-  if (!metin(deger.sehir)) s.sehir = 'Şehir gerekiyor.';
+  /* Tamamen uzaktan çalışılan ilanda şehir zorunlu değil (sunucu kuralıyla aynı). */
+  if (!metin(deger.sehir) && deger.calismaSekli !== 'Remote') s.sehir = 'Şehir gerekiyor.';
   if (!CALISMA_SEKILLERI.some((c) => c.id === deger.calismaSekli))
     s.calismaSekli = 'Çalışma şeklini seç.';
   if (!STAJ_TURLERI.some((t) => t.id === deger.tur)) s.tur = 'Staj türünü seç.';
@@ -115,10 +128,16 @@ export function ilanSorunlari(deger) {
   else if (aciklama.length > ACIKLAMA_EN_FAZLA)
     s.aciklama = `İş tanımı en fazla ${ACIKLAMA_EN_FAZLA} karakter (şu an ${aciklama.length}).`;
 
-  /* Son başvuru OPSİYONEL; yazıldıysa geçmişte olamaz. */
+  /*
+    Son başvuru OPSİYONEL (boş = süresiz/yıl boyu); yazıldıysa geçmişte
+    olamaz. "Bugün" İstanbul günü — sunucudaki kontrol de öyle sayıyor.
+    İleri tarih için sınır yok.
+  */
   if (metin(deger.sonBasvuru)) {
     const t = new Date(`${deger.sonBasvuru}T00:00:00`);
     if (Number.isNaN(t.getTime())) s.sonBasvuru = 'Tarihi okuyamadık.';
+    else if (String(deger.sonBasvuru).slice(0, 10) < istanbulBugun(deger.bugun))
+      s.sonBasvuru = 'Son başvuru tarihi geçmiş. Bugün ya da sonrası bir tarih seç ya da süresiz ilan için boş bırak.';
   }
 
   return s;
@@ -276,19 +295,38 @@ export function ilanFormDegeri(satir) {
  * `applications_listing_id_fkey` ON DELETE CASCADE — silmek öğrencinin
  * kendi başvuru geçmişini de siler. Kural veritabanında da duruyor
  * (`listings_guard_delete`), yani arayüzü atlayan bir istek de düşüyor.
+ *
+ * YAYINA ALMA BİR GÖNDERİM (20261120010000)
+ * -----------------------------------------
+ * Taslak ya da kapalı ilanı yayına almak artık sunucudaki otomatik
+ * kontrolden geçiyor; düğme "Yayınla" değil "Yayına gönder" / "Yeniden
+ * yayınla" — basınca yayına çıkacağı söz verilmiyor, sonuç kontrolün.
+ *
+ * Kontrolü SÜREN ya da SONUÇLANMIŞ (düzeltme, inceleme) bir ilanda düğme
+ * YOK (`durumEtiketi: null`): aynı içerik yeniden gönderilirse sunucu
+ * yeni kontrol yapmadan aynı sonucu döndürüyor (çift gönderim kuralı),
+ * yani düğme hiçbir şey değiştirmezdi. Şirketin yapacağı iş düzenlemek;
+ * içerik değişince sunucu eski kararı siliyor ve düğme geri geliyor.
  */
 export function ilanEylemleri(ilan) {
   const durum = String(ilan?.status ?? '');
   const kaynak = String(ilan?.origin ?? '');
   const basvuru = Number(ilan?.applicants_count ?? 0);
+  const kontrol = String(ilan?.kontrol_durumu ?? '');
 
   const yayinda = durum === 'published';
   const kendiIlani = kaynak === 'employer_posted' || kaynak === 'internal';
+  const kontrolAcik = kontrol === 'bekliyor' || kontrol === 'duzeltme' || kontrol === 'inceleme';
 
   return {
     duzenlenebilir: kendiIlani,
-    /* Yayındaki ilan için "Kapat", diğerlerinde "Yayınla". */
-    durumEtiketi: yayinda ? 'Kapat' : 'Yayınla',
+    durumEtiketi: yayinda
+      ? 'Kapat'
+      : kontrolAcik
+        ? null
+        : durum === 'closed'
+          ? 'Yeniden yayınla'
+          : 'Yayına gönder',
     kaldirilabilir: !yayinda,
     arsivlenecek: basvuru > 0,
   };

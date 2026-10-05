@@ -56,7 +56,17 @@ test('form yayında başlayan bir dal taşımıyor', () => {
   const kod = tsYorumsuz(FORM);
   assert.ok(!/yayindaBaslar/.test(kod), 'yayında başlama dalı kalmamalı');
   assert.ok(!/İlan canlı/.test(kod), '"İlan canlı" mesajı artık hiç çıkmıyor');
-  assert.match(kod, /İncelemeye gönder/);
+  /*
+    20261120010000: "İncelemeye gönder" kalktı — her ilan incelemeye
+    gitmiyor. Yeni ilan TASLAK yazılıyor; yayına çıkaran tek yol
+    sunucudaki kontrol (`onYayinaGonder`). Form durumu yine yalnız
+    `baslangicDurumu`ndan ('draft') yazıyor.
+  */
+  assert.ok(!/İncelemeye gönder/.test(kod), 'her ilan incelemeye gitmiyor; eski düğme kalmamalı');
+  assert.match(kod, /Yayına gönder/);
+  assert.match(kod, /Taslak olarak kaydet/);
+  assert.match(kod, /ilanSatiri\(deger, \{ companyId: '', durum: baslangicDurumu \}\)/);
+  assert.ok(!/status:\s*'published'/.test(kod), 'form yayın durumunu kendisi yazmamalı');
 });
 
 /* ---------------------------------- 2. ÜCRET VE KABUL ALANLARI NULL */
@@ -139,7 +149,7 @@ test('RLS regresyonu yeni kuralı ölçüyor', () => {
 
 /* ------------------------------------------ 6. VERİLMEYEN SÖZ YOK */
 
-test('karar e-postayla ve panelde bildiriliyor', () => {
+test('karar panelde bildiriliyor; doğrulanmamış e-posta sözü yok', () => {
   /*
     20261010010000_ilan_karar_bildirimi.sql ile `ilan_incele` kararı
     aynı çağrıda bildirim kuyruğuna yazıyor ve saatlik iş (scripts/
@@ -148,14 +158,35 @@ test('karar e-postayla ve panelde bildiriliyor', () => {
     olduğu için arayüz de bunu söylüyor olmalı — söylemezse gerçek
     kanalı gizlemiş olur.
   */
+  /*
+    İLAN FORMU ARTIK E-POSTA SÖZÜ VERMİYOR (20261120010000)
+
+    Şirket ilanları yönetici kuyruğuna yalnız otomatik kontrol "inceleme"
+    dediğinde düşüyor ve oradaki karar `yonetim_ilan_karari` ile
+    veriliyor; e-posta kuyruğuna yazan `ilan_incele`. Bu yoldan e-posta
+    gittiği doğrulanmadan formda e-posta sözü verilmiyor. Sonuç formda
+    ve ilan kartında yazıyor.
+  */
   const formKod = tsYorumsuz(oku('src/sirket/IlanFormu.tsx'));
-  assert.match(formKod, /Sonucu e-posta ile ve şirket\s+panelinde göreceksin/);
+  assert.ok(!/e-posta ile/.test(formKod), 'doğrulanmamış e-posta sözü');
+  assert.match(formKod, /Sonucu ilanlarında, bu ilanın kartında\s+görürsün/);
 
+  /*
+    İŞVEREN SAYFASI DA E-POSTA SÖZÜ VERMİYOR (20261120010000): karar
+    şirket panelinde yazıyor. Yeni akış (otomatik kontrol → yayın /
+    düzeltme / inceleme) ve "biz inceliyoruz" sözünün kalktığı ölçülüyor.
+  */
   const landingKod = tsYorumsuz(oku('src/components/IsverenLanding.tsx'));
-  assert.match(landingKod, /Sonucu hesap sahibi e-postanıza ve şirket\s+panelinize düşüyor/);
+  assert.ok(!/e-postanıza/.test(landingKod), 'doğrulanmamış e-posta sözü');
+  assert.ok(!/biz inceliyoruz/.test(landingKod), 'her ilan incelenmiyor');
+  assert.match(landingKod, /gönderdiğiniz ilan otomatik olarak kontrol edilir/);
+  assert.match(landingKod, /şüpheli bulunan ilan ekibimizin incelemesine gider/);
+  assert.match(landingKod, /Sonucu\s+şirket panelinizde görürsünüz\./);
 
-  /* Not ilan kartının altında; kart listesi GenelBakis'te (Genel + İlanlar birleşti). */
-  assert.match(tsYorumsuz(oku('src/sirket/GenelBakis.tsx')), /İnceleme notu/);
+  /* Not ilan kartının altında (IlanKarti · KontrolNotu); kart listesi
+     GenelBakis'te ve notu oradan çiziyor. */
+  assert.match(tsYorumsuz(oku('src/sirket/IlanKarti.tsx')), /İnceleme notu/);
+  assert.match(tsYorumsuz(oku('src/sirket/GenelBakis.tsx')), /<KontrolNotu ilan=\{ilan\} \/>/);
 });
 
 test('işveren sayfasında sahte sayı ya da yayın sözü yok', () => {

@@ -119,8 +119,13 @@ export function alanAdiEslesiyor(site, eposta) {
 /**
  * Yeni ilan HANGİ DURUMDA başlar?
  *
- *   İlan açabilen her kademe  → taslak, yönetici kuyruğuna
+ *   İlan açabilen her kademe  → taslak
  *   Kademe 0                  → hiç
+ *
+ * Taslak kendiliğinden hiçbir yere gitmiyor. Yayına çıkaran tek yol
+ * şirketin "Yayına gönder"i: sunucudaki otomatik kontrol
+ * (`ilan_yayina_gonder`, 20261120010000) sorunsuz ilanı yayına alıyor,
+ * eksik ilanı düzeltmeye, şüpheli ilanı yönetici kuyruğuna gönderiyor.
  *
  * İSTİSNASIZ TASLAK — İKİ BAYPAS KALDIRILDI
  * -----------------------------------------
@@ -147,7 +152,9 @@ export function alanAdiEslesiyor(site, eposta) {
  * Aynı kural veritabanında da zorlanıyor
  * (`20261008010000_ilan_yayini_yonetici_onayina_bagli.sql`): arayüz
  * 'published' göndermeye kalksa `guard_listing_publish` reddediyor.
- * Tek taraflı bir arayüz kuralı değil.
+ * Tek taraflı bir arayüz kuralı değil. 20261120010000 kapıya tek geçiş
+ * ekledi: aynı işlemde, ilanın o anki içeriği için otomatik kontrolün
+ * verdiği "yayinla" kararı. Tarayıcı o kararı yazamıyor.
  *
  * @returns {'draft'|null}
  */
@@ -157,7 +164,11 @@ export function ilanBaslangicDurumu({ kademe }) {
 }
 
 /**
- * Taslakta bekleyen ilanda yöneticinin bakacağı bayraklar.
+ * İlan formunda yazana gösterilen bayraklar.
+ *
+ * Yayın kararını VERMİYOR: karar sunucudaki kurallarda ve onlar bağlama
+ * bakıyor ("teminat istenmez" elenir). Bu liste yalnız yazarken erken
+ * bir uyarı.
  *
  * Uydurma bir puan değil, metinde GEÇEN şeyler: ücret isteme, teminat,
  * WhatsApp'tan başvuru ve zincir/MLM dili. Dördü de staj ilanı kılığında

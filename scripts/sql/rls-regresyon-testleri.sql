@@ -704,6 +704,60 @@ select pg_temp.bekle(
     where id = '22222222-aaaa-4000-8000-000000000002'::uuid),
   'Taslak taslak kaldi: reddedilen yazma satiri degistirmedi');
 
+-- ------------------------------ OTOMATİK KONTROL (20261120010000)
+--
+-- Tarayıcının yayın yetkisi hâlâ yok (yukarıdaki iki test). Tek kapı
+-- `ilan_yayina_gonder`: kontrol sunucuda çalışıyor, sorunsuz ilan
+-- yönetici beklemeden yayına çıkıyor. Kontrolün iç parçaları ve karar
+-- defteri tarayıcıya kapalı.
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$select public.ilan_kontrollerini_yeniden_dene(5)$q$),
+  'A, kontrol yeniden deneme isini cagiramaz');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$select count(*) from public.ilan_kontrolleri$q$),
+  'A, kontrol defterini okuyamaz');
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
+  $q$update public.listings set kontrol_durumu = 'gecti'
+      where id = '22222222-aaaa-4000-8000-000000000002'$q$),
+  'A, ilanin kontrol durumunu yazamaz');
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$insert into public.listings (company_id, title, city, work_type, term, duration,
+        is_paid, stipend_text, description, origin, status)
+     values ('11111111-aaaa-4000-8000-000000000001', 'Otomatik Kontrol Stajyeri', 'Izmir',
+             'On-site', 'All Year', '20 is gunu', true, 'Asgari staj ucreti',
+             repeat('Ekibimizde urun gelistirme sureclerine destek olacak bir stajyer ariyoruz. ', 4),
+             'employer_posted', 'draft')$q$),
+  'A, yayina gondermek icin taslak kaydedebilir');
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(format(
+  'select public.ilan_yayina_gonder(%L)',
+  (select id from public.listings where title = 'Otomatik Kontrol Stajyeri'))),
+  'A, kendi taslagini yayina gonderebilir');
+
+select pg_temp.bekle(
+  (select status::text = 'published' and kontrol_durumu = 'gecti'
+     from public.listings where title = 'Otomatik Kontrol Stajyeri'),
+  'Sorunsuz ilan otomatik kontrolden gecip yayina cikti');
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', b::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(pg_temp.yazma_engellendi_mi(format(
+  'select public.ilan_yayina_gonder(%L)',
+  (select id from public.listings where title = 'Otomatik Kontrol Stajyeri'))),
+  'B, A sirketinin ilanini yayina gonderemez');
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
 -- YAYINA ALAN YONETICI
 --
 -- Akisin devami (ogrenci basvurusu) yayinda bir ilan istiyor; onu artik

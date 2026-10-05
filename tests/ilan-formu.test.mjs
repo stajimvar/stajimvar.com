@@ -48,9 +48,23 @@ test('iş tanımı alt sınırı', () => {
   assert.match(s.aciklama, /en az 200/);
 });
 
-test('iş tanımı üst sınırı', () => {
-  const s = ilanSorunlari({ ...GECERLI, aciklama: 'a'.repeat(2001) });
-  assert.match(s.aciklama, /en fazla 2000/);
+test('iş tanımı üst sınırı 5000 (sunucuyla aynı); 2000 üstü geçerli', () => {
+  assert.equal(ilanSorunlari({ ...GECERLI, aciklama: 'a'.repeat(3000) }).aciklama, undefined);
+  const s = ilanSorunlari({ ...GECERLI, aciklama: 'a'.repeat(5001) });
+  assert.match(s.aciklama, /en fazla 5000/);
+});
+
+test('uzaktan çalışmada şehir zorunlu değil; ofiste zorunlu', () => {
+  assert.equal(ilanSorunlari({ ...GECERLI, sehir: '', calismaSekli: 'Remote' }).sehir, undefined);
+  assert.ok(ilanSorunlari({ ...GECERLI, sehir: '', calismaSekli: 'On-site' }).sehir);
+});
+
+test('son başvuru: geçmiş tarih hata; bugün, ileri tarih ve boş (süresiz) geçerli', () => {
+  const bugun = '2026-10-04';
+  assert.match(ilanSorunlari({ ...GECERLI, sonBasvuru: '2026-10-03', bugun }).sonBasvuru, /geçmiş/);
+  for (const t of ['2026-10-04', '2028-01-01', '']) {
+    assert.equal(ilanSorunlari({ ...GECERLI, sonBasvuru: t, bugun }).sonBasvuru, undefined, t);
+  }
 });
 
 test('net ücret seçilince tutar isteniyor', () => {
@@ -61,7 +75,8 @@ test('net ücret seçilince tutar isteniyor', () => {
 
 test('son başvuru opsiyonel', () => {
   assert.deepEqual(ilanSorunlari({ ...GECERLI, sonBasvuru: '' }), {});
-  assert.deepEqual(ilanSorunlari({ ...GECERLI, sonBasvuru: '2026-09-30' }), {});
+  /* Sabit "bugün": tarih geçince test kendiliğinden kırılmasın. */
+  assert.deepEqual(ilanSorunlari({ ...GECERLI, sonBasvuru: '2026-09-30', bugun: '2026-09-01' }), {});
 });
 
 /* İş tanımı şablonları pozisyona bağlandı: tests/ilan-pozisyon-sablonlari.test.mjs */

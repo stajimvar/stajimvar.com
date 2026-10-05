@@ -14,6 +14,16 @@ import { ListingLogo } from '../components/ListingLogo';
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
 import { monogram } from '../lib/aday-kart.mjs';
 import { ilanEylemleri } from '../lib/ilan-formu.mjs';
+import {
+  DEGISIKLIK_METNI,
+  DEGISIKLIK_ROZETI,
+  KONTROL_ETIKETI,
+  bekleyenOku,
+  gerekceSatiri,
+  gerekceleriOku,
+  kartKontrolDurumu,
+  yoneticiKarariMi,
+} from '../lib/ilan-kontrol-gorunumu.mjs';
 import { daysUntilDeadline } from '../lib/opportunity-domain.mjs';
 
 /**
@@ -55,24 +65,37 @@ export type AdayOzeti = {
 /** Şeritte en fazla bu kadar avatar; kalanı "+N". */
 const SERIT_UST_SINIR = 5;
 
-/* Durum rozeti renkleri: açık = marka, yaklaşan kapanış = uyarı (amber),
-   taslak/kapalı = sessiz gri. Semantik renkler marka mavisinden ayrı. */
+/* Durum rozeti renkleri: yayında = marka, yaklaşan kapanış ve inceleme =
+   uyarı (amber), düzeltme = hata (gül), taslak/kapalı/kontrol = sessiz
+   gri. Semantik renkler marka mavisinden ayrı. Kontrast (WCAG, hesaplandı):
+   #92400E / #FEF3C7 = 6.37:1, #9F1239 / #FFF1F2 = 7.30:1,
+   #4B5563 / #F3F4F6 = 6.87:1. */
 const ROZET_ACIK = { background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU };
 const ROZET_UYARI = { background: '#FEF3C7', color: '#92400E' };
+const ROZET_HATA = { background: '#FFF1F2', color: '#9F1239' };
 const ROZET_SESSIZ = { background: '#F3F4F6', color: '#4B5563' };
 
 /**
  * İlanın durum rozeti — etiket ve renk.
  *
  * "N gün kaldı" yalnız yayındaki VE son başvuru tarihi girilmiş ilanda,
- * 14 gün ve altında. Tarih yoksa "Açık"; uydurma bir gün sayısı yok.
+ * 14 gün ve altında. Tarih yoksa "Yayında"; uydurma bir gün sayısı yok.
+ *
+ * YAYINDA OLMAYAN İLANIN DÖRT HÂLİ (20261120010000)
+ * ------------------------------------------------
+ * Taslak artık tek bir durum değil: hiç gönderilmemiş ("Taslak"),
+ * kontrolü tamamlanamamış ("Kontrol ediliyor"), şirketin düzeltmesi
+ * gereken ("Düzeltme gerekiyor") ve ekibin incelediği ("İnceleme
+ * gerekiyor"). Dördü de öğrenciye görünmüyor ama şirketin yapacağı iş
+ * farklı; tek "Taslak" rozeti, düzeltilmesi gereken ilanı sessizce
+ * bekletirdi. Etiketler formla aynı kaynaktan (lib/ilan-kontrol-gorunumu).
  */
 export function ilanDurumRozeti(
   ilan: Record<string, unknown>,
   simdi: Date = new Date(),
 ): { etiket: string; stil: React.CSSProperties } {
-  const durum = String(ilan.status ?? '');
-  if (durum === 'published') {
+  const kontrol = kartKontrolDurumu(ilan);
+  if (kontrol === 'yayinda') {
     /*
       TARİHSİZ İLAN "BUGÜN KAPANIYOR" DEĞİL
 
@@ -89,11 +112,140 @@ export function ilanDurumRozeti(
         stil: ROZET_UYARI,
       };
     }
-    return { etiket: 'Açık', stil: ROZET_ACIK };
+    return { etiket: KONTROL_ETIKETI.yayinda, stil: ROZET_ACIK };
   }
-  if (durum === 'draft') return { etiket: 'Taslak', stil: ROZET_SESSIZ };
+  if (kontrol === 'duzeltme_gerekiyor') return { etiket: KONTROL_ETIKETI.duzeltme_gerekiyor, stil: ROZET_HATA };
+  if (kontrol === 'inceleme_gerekiyor') return { etiket: KONTROL_ETIKETI.inceleme_gerekiyor, stil: ROZET_UYARI };
+  if (kontrol === 'kontrol_ediliyor') return { etiket: KONTROL_ETIKETI.kontrol_ediliyor, stil: ROZET_SESSIZ };
+  if (kontrol === 'taslak') return { etiket: KONTROL_ETIKETI.taslak, stil: ROZET_SESSIZ };
   return { etiket: 'Kapalı', stil: ROZET_SESSIZ };
 }
+
+/**
+ * Kartın altındaki kontrol notu — ilan neden yayında değil.
+ *
+ * TELEFONDA OKUNUYOR: gerekçe bir ipucu balonunda ya da rozetin
+ * `title`ında değil, kartın içinde düz metin. `truncate` YOK: tek satıra
+ * kısaltılan gerekçe işe yaramaz.
+ *
+ * ESKİ RET NOTU KORUNUYOR: göçten önce reddedilen ilanın nedeni yalnız
+ * `review_note`ta. Yönetici reddi artık gerekçelere de yazılıyor
+ * (`kural: 'yonetici'`); o durumda aynı not iki kez çizilmiyor.
+ *
+ * YÖNETİCİ KARARI "YAYINA ÇIKMADI" DEĞİL: yayından kaldırılan ilan
+ * yayındaydı. Gerekçe yöneticiden geliyorsa (`yonetici.kaldirdi` /
+ * `yonetici.reddetti`) başlık "Ekibimizin kararı" ve yeniden gönderimin
+ * nereye gittiği söyleniyor (sunucu onu yöneticiye düşürüyor).
+ *
+ * YAYINDAKİ İLANIN BEKLEYEN DEĞİŞİKLİĞİ: ilan yayında kalıyor; not,
+ * değişikliğin neden yayına girmediğini ve önceki hâlin yayında olduğunu
+ * söylüyor (metin formla ortak: DEGISIKLIK_METNI).
+ */
+export const KontrolNotu: React.FC<{ ilan: Record<string, unknown> }> = ({ ilan }) => {
+  const kontrol = kartKontrolDurumu(ilan);
+  const gerekceler = gerekceleriOku(ilan.kontrol_gerekceleri);
+  const reviewNote = String(ilan.review_note ?? '').trim();
+  const eskiNot =
+    ilan.status === 'draft' && reviewNote && !gerekceler.some((g) => g.kural === 'yonetici') ? reviewNote : '';
+
+  const degisiklik = kontrol === 'yayinda' ? bekleyenOku(ilan.bekleyen) : null;
+  const yoneticiKarari = yoneticiKarariMi(gerekceler);
+
+  let govde: React.ReactNode = null;
+  if (degisiklik) {
+    const stil =
+      degisiklik.durum === 'duzeltme_gerekiyor'
+        ? ROZET_HATA
+        : degisiklik.durum === 'inceleme_gerekiyor'
+          ? ROZET_UYARI
+          : ROZET_SESSIZ;
+    govde = (
+      <div className="mt-2 rounded-lg px-2 py-1.5 text-xs leading-relaxed" style={stil}>
+        <p className="font-bold">
+          {degisiklik.durum === 'duzeltme_gerekiyor'
+            ? 'Değişikliklerin yayına girmedi; ilanın önceki hâli yayında. Düzeltilmesi gerekenler:'
+            : DEGISIKLIK_METNI[degisiklik.durum]}
+        </p>
+        {degisiklik.durum === 'duzeltme_gerekiyor' && degisiklik.gerekceler.length > 0 && (
+          <ul className="mt-0.5 list-disc space-y-0.5 pl-4">
+            {degisiklik.gerekceler.map((g, i) => (
+              <li key={i} className="break-words">
+                {gerekceSatiri(g)}
+              </li>
+            ))}
+          </ul>
+        )}
+        {degisiklik.durum === 'inceleme_gerekiyor' &&
+          degisiklik.gerekceler.map((g, i) => (
+            <p key={i} className="break-words">
+              {g.mesaj}
+            </p>
+          ))}
+      </div>
+    );
+  } else if (kontrol === 'duzeltme_gerekiyor') {
+    govde = (
+      <div className="mt-2 rounded-lg px-2 py-1.5 text-xs leading-relaxed" style={ROZET_HATA}>
+        <p className="font-bold">
+          {yoneticiKarari ? 'Ekibimizin kararı:' : 'Yayına çıkmadı. Düzeltilmesi gerekenler:'}
+        </p>
+        {gerekceler.length > 0 ? (
+          <ul className="mt-0.5 list-disc space-y-0.5 pl-4">
+            {gerekceler.map((g, i) => (
+              <li key={i} className="break-words">
+                {gerekceSatiri(g)}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>Gerekçe kaydı yok. İlanı düzenleyip yeniden yayına gönderebilirsin.</p>
+        )}
+        {yoneticiKarari && (
+          <p className="mt-0.5">
+            İlanı düzenleyip yeniden yayına gönderebilirsin; bu kez ekibimizin incelemesine gider.
+          </p>
+        )}
+      </div>
+    );
+  } else if (kontrol === 'inceleme_gerekiyor') {
+    govde = (
+      <div className="mt-2 space-y-0.5 rounded-lg px-2 py-1.5 text-xs leading-relaxed" style={ROZET_UYARI}>
+        {gerekceler.length > 0 ? (
+          gerekceler.map((g, i) => (
+            <p key={i} className="break-words">
+              {g.mesaj}
+            </p>
+          ))
+        ) : (
+          <p>İlan ekibimizin incelemesinde.</p>
+        )}
+        <p>İnceleme sürerken ilan öğrencilere görünmüyor.</p>
+      </div>
+    );
+  } else if (kontrol === 'kontrol_ediliyor') {
+    govde = (
+      <p className="mt-2 rounded-lg px-2 py-1.5 text-xs leading-relaxed" style={ROZET_SESSIZ}>
+        Otomatik kontrol tamamlanamadı; sunucu kontrolü kendisi yeniden deneyecek. Kontrol bitene kadar
+        ilan öğrencilere görünmüyor.
+      </p>
+    );
+  }
+
+  if (!govde && !eskiNot) return null;
+  return (
+    <>
+      {govde}
+      {eskiNot && (
+        <p
+          className="mt-2 rounded-lg px-2 py-1.5 text-xs leading-relaxed"
+          style={{ background: SIRKET_ROZET, color: SIRKET_METIN }}
+        >
+          <strong>İnceleme notu:</strong> {eskiNot}
+        </p>
+      )}
+    </>
+  );
+};
 
 const Avatar: React.FC<{ aday: AdayOzeti }> = ({ aday }) =>
   aday.fotoUrl ? (
@@ -138,6 +290,7 @@ export const IlanKarti: React.FC<{
 }> = ({ ilan, basvurular, onNavigate, ekEylemler, ekRozet, altNot, sirketAdi, logoUrl, simdi }) => {
   const id = String(ilan.id);
   const rozet = ilanDurumRozeti(ilan, simdi);
+  const degisiklik = ilan.status === 'published' ? bekleyenOku(ilan.bekleyen) : null;
   const eylem = ilanEylemleri(ilan);
   const taslak = ilan.status === 'draft';
   const sehir = String(ilan.city ?? '').trim();
@@ -225,6 +378,25 @@ export const IlanKarti: React.FC<{
               >
                 {rozet.etiket}
               </span>
+              {/*
+                YAYINDA + BEKLEYEN DEĞİŞİKLİK: ana rozet "Yayında" kalıyor
+                (ilan gerçekten yayında); değişikliğin durumu ikinci, ayrı
+                bir rozette. Tek rozet ya ilanı ya değişikliği yanlış anlatırdı.
+              */}
+              {degisiklik && (
+                <span
+                  className="inline-flex shrink-0 items-center rounded-lg px-2 py-0.5 text-[11px] font-bold"
+                  style={
+                    degisiklik.durum === 'duzeltme_gerekiyor'
+                      ? ROZET_HATA
+                      : degisiklik.durum === 'inceleme_gerekiyor'
+                        ? ROZET_UYARI
+                        : ROZET_SESSIZ
+                  }
+                >
+                  {DEGISIKLIK_ROZETI[degisiklik.durum]}
+                </span>
+              )}
               {ekRozet}
             </div>
             {sirketAdi && (

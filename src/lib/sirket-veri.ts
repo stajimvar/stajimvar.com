@@ -196,7 +196,15 @@ export async function sirketIlanlari(companyId: string) {
         /* `work_type` ilan kartındaki konum satırı için: "İstanbul · Hibrit".
            Okunmadığı sürece kart çalışma biçimini yazamıyordu ve uydurmak
            yerine hiç yazmıyordu. Salt okuma, tek kolon. */
-        'posted_at, created_at, apply_url, application_deadline, review_note, reviewed_at, work_type'
+        'posted_at, created_at, apply_url, application_deadline, review_note, reviewed_at, work_type, ' +
+        /* Otomatik kontrolün son sonucu (20261120010000). Salt okuma. */
+        'kontrol_durumu, kontrol_gerekceleri, kontrol_at, yonetici_incelemesi_gerekli, ' +
+        /*
+          Yayındaki ilanın BEKLEYEN değişikliği (20261120010000): canlı
+          sürüm yayında kalıyor, değişiklik kendi durumuyla bekliyor.
+          Tablo yalnız şirket üyesine açık.
+        */
+        'bekleyen:ilan_bekleyen_degisiklikleri(durum, gerekceler, kontrol_at)'
     )
     .eq('company_id', companyId)
     /* Arşivlenen ilan listeden kalkıyor ama veri duruyor: başvurular ve
@@ -207,14 +215,40 @@ export async function sirketIlanlari(companyId: string) {
   return data ?? [];
 }
 
-export async function ilanKaydet(satir: Record<string, unknown>, companyId: string) {
+/**
+ * Yeni ilanı TASLAK olarak kaydeder.
+ *
+ * `gonderimAnahtari` formun tek gönderim kimliği: çift tıklama ya da ağ
+ * tekrarında ikinci istek tekillik kuralına (company_id,
+ * gonderim_anahtari) takılıyor ve ilk kayıt geri okunuyor — aynı ilan
+ * ikinci kez oluşmuyor.
+ */
+export async function ilanKaydet(
+  satir: Record<string, unknown>,
+  companyId: string,
+  gonderimAnahtari?: string,
+) {
   const db = await istemci();
   const { data, error } = await db
     .from('listings')
-    .insert({ ...satir, company_id: companyId })
+    .insert({
+      ...satir,
+      company_id: companyId,
+      ...(gonderimAnahtari ? { gonderim_anahtari: gonderimAnahtari } : {}),
+    } as never)
     .select('id')
     .single();
   if (error) {
+    const kod = (error as { code?: string }).code ?? '';
+    if (kod === '23505' && gonderimAnahtari) {
+      const { data: mevcut } = await db
+        .from('listings')
+        .select('id')
+        .eq('company_id', companyId)
+        .eq('gonderim_anahtari' as never, gonderimAnahtari as never)
+        .maybeSingle();
+      if (mevcut) return mevcut as { id: string };
+    }
     const mesaj = (error as { message?: string }).message ?? '';
     throw new Error(
       /row-level security/i.test(mesaj)
@@ -225,14 +259,101 @@ export async function ilanKaydet(satir: Record<string, unknown>, companyId: stri
   return data as { id: string };
 }
 
+/** Şirketin gördüğü dört durum (+ hiç gönderilmemiş taslak). */
+export type IlanKontrolDurumu =
+  | 'yayinda'
+  | 'kontrol_ediliyor'
+  | 'duzeltme_gerekiyor'
+  | 'inceleme_gerekiyor'
+  | 'taslak';
+
+export type IlanKontrolGerekcesi = { alan: string | null; mesaj: string; kural: string };
+
+export type IlanKontrolSonucu = {
+  id: string;
+  durum: IlanKontrolDurumu;
+  gerekceler: IlanKontrolGerekcesi[];
+  kontrolZamani: string | null;
+  kuralSurumu: string | null;
+  /*
+    Yayındaki ilanın bekleyen değişikliği. Varsa canlı sürüm (son onaylı)
+    yayında; değişiklik kendi durumuyla bekliyor. Yoksa null.
+  */
+  degisiklik: {
+    durum: Exclude<IlanKontrolDurumu, 'yayinda' | 'taslak'>;
+    gerekceler: IlanKontrolGerekcesi[];
+    kontrolZamani: string | null;
+  } | null;
+};
+
+/**
+ * Bekleyen değişikliğin içeriği (sunucu kolon adlarıyla). Düzenleme
+ * formu açılırken canlı satır yerine BU değerler gösterilmeli: şirket
+ * kaydettiği ama henüz yayına girmemiş metni düzeltiyor.
+ */
+export type IlanBekleyenDegisikligi = {
+  icerik: Record<string, unknown>;
+  durum: 'bekliyor' | 'duzeltme' | 'inceleme';
+  gerekceler: IlanKontrolGerekcesi[];
+  kontrol_at: string | null;
+};
+
+/**
+ * İlanı YAYINA GÖNDERİR (20261120010000).
+ *
+ * Kontrol sunucuda, aynı istekte çalışıyor: sorunsuzsa ilan yayında;
+ * eksikse "düzeltme gerekiyor" ve alan alan ne yapılacağı; şüpheliyse
+ * "inceleme gerekiyor". Kontrol tamamlanamadıysa "kontrol ediliyor" —
+ * sunucu sınırlı sayıda yeniden deniyor. Tarayıcının yayın yetkisi yok;
+ * yayına alan sunucudaki kontrol.
+ *
+ * Aynı ilan iki kez gönderilirse sunucu yeni kontrol yazmıyor, var olan
+ * sonucu döndürüyor.
+ */
+export async function ilanYayinaGonder(id: string): Promise<IlanKontrolSonucu> {
+  const db = await istemci();
+  const { data, error } = await db.rpc('ilan_yayina_gonder' as never, { p_ilan: id } as never);
+  if (error) {
+    const mesaj = (error as { message?: string }).message ?? '';
+    throw new Error(
+      /yetkin yok/i.test(mesaj)
+        ? 'Bu şirkette ilan yayımlama yetkin yok.'
+        : /Arsivlenmis/i.test(mesaj)
+          ? 'Arşivlenmiş ilan yayına gönderilemez.'
+          : 'İlan gönderilemedi. Bağlantını kontrol edip yeniden dene.'
+    );
+  }
+  return data as unknown as IlanKontrolSonucu;
+}
+
+/** Satırdaki alanlardan şirketin gördüğü durum (liste ve kartlar için). */
+export function ilanKontrolDurumu(satir: {
+  status?: string | null;
+  kontrol_durumu?: string | null;
+}): IlanKontrolDurumu {
+  if (satir.status === 'published') return 'yayinda';
+  if (satir.kontrol_durumu === 'bekliyor') return 'kontrol_ediliyor';
+  if (satir.kontrol_durumu === 'duzeltme') return 'duzeltme_gerekiyor';
+  if (satir.kontrol_durumu === 'inceleme') return 'inceleme_gerekiyor';
+  return 'taslak';
+}
+
 export async function ilanDurumuDegistir(
   id: string,
   durum: 'published' | 'closed' | 'draft' | 'archived'
 ) {
+  /*
+    YAYINA ALMA DOĞRUDAN YAZIM DEĞİL: sunucudaki kontrolden geçiyor.
+    Kapalı ilanı yeniden açmak da aynı kapıdan.
+  */
+  if (durum === 'published') {
+    await ilanYayinaGonder(id);
+    return;
+  }
   const db = await istemci();
   const { error } = await db
     .from('listings')
-    .update({ status: durum, ...(durum === 'published' ? { posted_at: new Date().toISOString() } : {}) })
+    .update({ status: durum })
     .eq('id', id);
   if (error) throw new Error('İlan güncellenemedi.');
 }
@@ -245,7 +366,8 @@ export async function ilanOku(id: string) {
     .select(
       'id, company_id, title, city, work_type, term, duration, is_paid, stipend_text, ' +
         'description, application_deadline, status, origin, ' +
-        'mandatory_staj_accepted, voluntary_staj_accepted'
+        'mandatory_staj_accepted, voluntary_staj_accepted, kontrol_durumu, kontrol_gerekceleri, kontrol_at, ' +
+        'yonetici_incelemesi_gerekli, bekleyen:ilan_bekleyen_degisiklikleri(icerik, durum, gerekceler, kontrol_at)'
     )
     .eq('id', id)
     .maybeSingle();

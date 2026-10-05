@@ -11,10 +11,15 @@ import { ilanEylemleri } from '../src/lib/ilan-formu.mjs';
 
 const ilan = (ek) => ({ status: 'draft', origin: 'employer_posted', applicants_count: 0, ...ek });
 
-test('taslak: düzenlenir, yayınlanır, silinir', () => {
+/*
+  YAYINA ALMA BİR GÖNDERİM (20261120010000): düğme "Yayınla" değil.
+  Basınca yayına çıkacağı söz verilmiyor; sunucudaki kontrol karar
+  veriyor (yayında / düzeltme / inceleme).
+*/
+test('taslak: düzenlenir, yayına gönderilir, silinir', () => {
   const e = ilanEylemleri(ilan({ status: 'draft' }));
   assert.equal(e.duzenlenebilir, true);
-  assert.equal(e.durumEtiketi, 'Yayınla');
+  assert.equal(e.durumEtiketi, 'Yayına gönder');
   assert.equal(e.kaldirilabilir, true);
   assert.equal(e.arsivlenecek, false);
 });
@@ -22,8 +27,28 @@ test('taslak: düzenlenir, yayınlanır, silinir', () => {
 test('kapalı: düzenlenir, yeniden yayınlanır, kaldırılır', () => {
   const e = ilanEylemleri(ilan({ status: 'closed' }));
   assert.equal(e.duzenlenebilir, true);
-  assert.equal(e.durumEtiketi, 'Yayınla');
+  assert.equal(e.durumEtiketi, 'Yeniden yayınla');
   assert.equal(e.kaldirilabilir, true);
+});
+
+test('kontrolü süren ya da sonuçlanmış ilanda yayın düğmesi YOK, düzenleme VAR', () => {
+  /*
+    Aynı içerik yeniden gönderilirse sunucu aynı sonucu döndürüyor;
+    düğme bir şey değiştirmezdi. Şirketin işi düzenlemek — içerik
+    değişince sunucu eski kararı siliyor ve düğme geri geliyor.
+  */
+  for (const status of ['draft', 'closed']) {
+    for (const kontrol_durumu of ['bekliyor', 'duzeltme', 'inceleme']) {
+      const e = ilanEylemleri(ilan({ status, kontrol_durumu }));
+      assert.equal(e.durumEtiketi, null, `${status}/${kontrol_durumu}`);
+      assert.equal(e.duzenlenebilir, true, `${status}/${kontrol_durumu}`);
+      assert.equal(e.kaldirilabilir, true, `${status}/${kontrol_durumu}`);
+    }
+  }
+  /* Kontrolden geçmiş kapalı ilan yeniden açılabiliyor. */
+  assert.equal(ilanEylemleri(ilan({ status: 'closed', kontrol_durumu: 'gecti' })).durumEtiketi, 'Yeniden yayınla');
+  /* Yayındaki ilan her durumda kapatılabiliyor. */
+  assert.equal(ilanEylemleri(ilan({ status: 'published', kontrol_durumu: 'gecti' })).durumEtiketi, 'Kapat');
 });
 
 test('YAYINDAKİ İLAN KALDIRILAMAZ, önce kapatılır', () => {

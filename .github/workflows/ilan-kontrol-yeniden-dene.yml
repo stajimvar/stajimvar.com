@@ -1,0 +1,46 @@
+name: İlan kontrolü yeniden deneme
+
+# Şirket ilanının otomatik kontrolü bir hatayla tamamlanamazsa ilan
+# yayına çıkmıyor ve "bekliyor" durumunda kalıyor (20261120010000). Bu iş
+# zamanı gelenleri yeniden denetiyor; deneme sınırı aşılınca sunucu ilanı
+# yönetici kuyruğuna düşürüyor. GitHub zamanlaması kesin değil: arayüz
+# şirkete bir süre vaadi vermiyor.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ilan-kontrol-yeniden-dene
+  cancel-in-progress: false
+
+jobs:
+  yeniden-dene:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Sırları doğrula
+        run: |
+          eksik=""
+          [ -z "$SUPABASE_URL" ] && eksik="$eksik SUPABASE_URL"
+          [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] && eksik="$eksik SUPABASE_SERVICE_ROLE_KEY"
+          if [ -n "$eksik" ]; then
+            echo "::error::Depo sırları eksik:$eksik"
+            exit 1
+          fi
+          echo "Sırlar tanımlı."
+
+      - name: Bekleyen kontrolleri yeniden dene
+        run: node scripts/ilan-kontrol-yeniden-dene.mjs

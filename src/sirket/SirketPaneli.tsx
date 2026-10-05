@@ -39,10 +39,12 @@ import {
   ilanGuncelle,
   ilanSil,
   ilanKaydet,
+  ilanYayinaGonder,
   sirketBaglami,
   sirketBasvurulari,
   sirketIlanlari,
   sirketProfiliOku,
+  type IlanKontrolSonucu,
   type SirketBaglami,
   type SirketProfilDegeri,
 } from '../lib/sirket-veri';
@@ -217,6 +219,47 @@ export const SirketPaneli: React.FC<{
   }, [yukle]);
 
   /*
+    İLAN LİSTESİNİ SESSİZCE YENİLE
+
+    `yukle` bütün paneli iskelete çekiyor: ekrandaki bileşen (ilan formu,
+    ilan kartları) sökülüp yeniden takılıyor ve yerel durumu — formun
+    sonuç ekranı, kartın "yayına çıkmadı" cümlesi — kayboluyordu. Kayıt
+    ve yayına gönderme yalnız ilan listesini değiştiriyor; yalnız o
+    yeniden okunuyor. Okuma düşerse sonuç zaten ekranda (sunucunun
+    yanıtı); liste bir sonraki açılışta yenilenir.
+  */
+  const companyId = baglam?.companyId ?? null;
+  const ilanlariYenile = React.useCallback(async () => {
+    if (!companyId) return;
+    try {
+      setIlanlar((await sirketIlanlari(companyId)) as Record<string, unknown>[]);
+    } catch {
+      /* Bilinçli: yukarıdaki not. */
+    }
+  }, [companyId]);
+
+  /*
+    KAPAT / YAYINA GÖNDER — İLANLAR VE PROFİL SEKMESİ AYNI YOL
+
+    Yayına alma `ilanYayinaGonder`: sunucu kontrolü çalıştırıp sonucu
+    döndürüyor ve kart o sonucu yazıyor. `ilanDurumuDegistir('published')`
+    da aynı RPC'ye gidiyor ama sonucu atıyor; kartın "neden yayına
+    çıkmadı" diyebilmesi için sonuç burada gerekli.
+  */
+  const ilanDurumu = React.useCallback(
+    async (id: string, d: 'published' | 'closed'): Promise<IlanKontrolSonucu | void> => {
+      if (d === 'published') {
+        const sonuc = await ilanYayinaGonder(id);
+        await ilanlariYenile();
+        return sonuc;
+      }
+      await ilanDurumuDegistir(id, d);
+      await ilanlariYenile();
+    },
+    [ilanlariYenile],
+  );
+
+  /*
     Yeni bir bildirim ya da başka bir ekran eski uyarıyı kaldırıyor.
     Aşağıdaki etkiden ÖNCE tanımlı: aynı çizimde ikisi de çalışırsa
     (doğrulanmamış şirkette uyarı eşzamanlı yazılıyor) son sözü uyarıyı
@@ -345,15 +388,32 @@ export const SirketPaneli: React.FC<{
         siteUrl={baglam.siteUrl}
         eposta={baglam.hrEmail}
         duzenlenenId={duzenlenenId}
-        onKaydet={async (satir) => {
-          if (duzenlenenId) {
-            await ilanGuncelle(duzenlenenId, satir);
-            await yukle();
-            return { id: duzenlenenId };
+        /*
+          KAYIT ve YAYINA GÖNDERME AYRI İKİ ÇAĞRI
+
+          `onKaydet` yalnız kaydediyor (yeni ilan taslak; var olan ilan
+          güncelleniyor). Yayına gönderme ayrı (`onYayinaGonder`), çünkü
+          "Taslak olarak kaydet" kontrolü HİÇ çalıştırmamalı. Form, ilk
+          kayıttan sonra aynı ilanın kimliğini tutuyor; ikinci gönderim
+          yeni ilan açmıyor, o kimliği güncelliyor.
+
+          Liste sessizce yenileniyor (`ilanlariYenile`); `yukle` formu
+          söküp sonuç ekranını kaybettirirdi.
+        */
+        onKaydet={async (satir, { id, gonderimAnahtari }) => {
+          if (id) {
+            await ilanGuncelle(id, satir);
+            void ilanlariYenile();
+            return { id };
           }
-          const kayit = await ilanKaydet(satir, baglam.companyId!);
-          await yukle();
+          const kayit = await ilanKaydet(satir, baglam.companyId!, gonderimAnahtari);
+          void ilanlariYenile();
           return kayit;
+        }}
+        onYayinaGonder={async (id) => {
+          const sonuc = await ilanYayinaGonder(id);
+          void ilanlariYenile();
+          return sonuc;
         }}
         onIptal={() => onNavigate('/sirket/ilanlar')}
       />
@@ -389,10 +449,7 @@ export const SirketPaneli: React.FC<{
         userId={userId}
         onKaydedildi={yukle}
         onNavigate={onNavigate}
-        onDurum={async (id, d) => {
-          await ilanDurumuDegistir(id, d);
-          await yukle();
-        }}
+        onDurum={ilanDurumu}
         onKaldir={async (id, arsivle) => {
           if (arsivle) await ilanDurumuDegistir(id, 'archived');
           else await ilanSil(id);
@@ -439,10 +496,7 @@ export const SirketPaneli: React.FC<{
       basvurular={basvurular}
       profil={profil}
       onNavigate={onNavigate}
-      onDurum={async (id, d) => {
-        await ilanDurumuDegistir(id, d);
-        await yukle();
-      }}
+      onDurum={ilanDurumu}
       /*
         İki ayrı sonuç, tek eylem: başvurusu olan ilan arşivleniyor
         (veri duruyor), olmayan ilan siliniyor. Karar burada değil
@@ -525,7 +579,7 @@ export const SirketIlanlarSekmesi: React.FC<{
   basvurular: Record<string, any>[];
   profil: SirketProfilDegeri | null;
   onNavigate: (y: string) => void;
-  onDurum: (id: string, d: 'published' | 'closed') => Promise<void>;
+  onDurum: (id: string, d: 'published' | 'closed') => Promise<IlanKontrolSonucu | void>;
   onKaldir: (id: string, arsivle: boolean) => Promise<void>;
   onBasvuruDurumu: (id: string, d: string) => Promise<void>;
   onMulakatTarihi: (id: string, tarih: string) => Promise<void>;

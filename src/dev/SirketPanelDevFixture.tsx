@@ -5,9 +5,218 @@ import { SayfaAramaSaglayici } from '../lib/sayfa-aramasi';
 import { SirketIlanlarSekmesi, sirketEkrani } from '../sirket/SirketPaneli';
 import { SirketAgimBos, SirketProfilSekmesi } from '../sirket/SirketKimlikKarti';
 import { IlanFormu } from '../sirket/IlanFormu';
+import { OnaySayfasi } from '../components/yonetim/OnaySayfasi';
+import type { OnayKuyrugu } from '../lib/queries';
+
+/*
+  YÖNETİCİ ONAY KUYRUĞU — /yonetim/onay (fikstür adresi)
+
+  Yönetici ekranı oturumsuz açılmıyor; kuyruğun gerekçe, kanıt, kural
+  sürümü ve son kararlar bölümleri telefonda (375 px) ancak burada
+  ölçülebiliyor. Kayıtlar bilerek "Örnek …": gerçek bir şirkete benzeyen
+  ad, ekran görüntüsüne düştüğünde gerçek sanılır. Gerekçe ve hata
+  metinleri göçteki (20261120010000) kural mesajlarının aynısı. Karar
+  düğmeleri canlı RPC'ye gidiyor; fikstürde erişilemez adres yüzünden
+  "karar uygulanamadı" uyarısı çıkması beklenen davranış.
+*/
+const ORNEK_KUYRUK: OnayKuyrugu = {
+  ilanlar: [
+    {
+      id: 'a0000000-0000-4000-8000-000000000001',
+      baslik: 'Saha Satış Stajyeri',
+      sirket: 'Örnek Pazarlama Ltd.',
+      sehir: 'İstanbul',
+      ulke: 'TR',
+      kaynak: 'employer_posted',
+      calisma: 'On-site',
+      basvuruYolu: 'internal',
+      adres: null,
+      sonBasvuru: null,
+      kaynakDurumu: null,
+      aciklamaUzunluk: 412,
+      olustu: '2026-10-04T08:10:00Z',
+      guncellendi: '2026-10-04T08:12:00Z',
+      kontrolDurumu: 'inceleme',
+      kontrolZamani: '2026-10-04T08:12:00Z',
+      kuralSurumu: 'ilan-kontrol-1 (2026-10-04)',
+      kontrolGerekceleri: [
+        {
+          kural: 'icerik.odeme_talebi',
+          mesaj: 'Adaydan ücret ya da bedel istendiği izlenimi veren ifade.',
+          kanit: 'staja kabul edilen adaylardan egitim materyali icin 1500 tl egitim ucreti alinmaktadir. ucret ilk hafta yatirilir',
+        },
+        {
+          kural: 'baglanti.kisaltici',
+          mesaj: 'Metinde hedefini gizleyen kısaltılmış bağlantı var.',
+          kanit: 'https://bit.ly/ornek-basvuru-formu-2026',
+        },
+        { kural: 'sirket.dogrulanmamis', mesaj: 'Şirket henüz doğrulanmadı.' },
+      ],
+    },
+  ],
+  sahiplenmeler: [],
+  bolumler: [],
+  dogrulamalar: [],
+  kontrolBekleyenler: [
+    {
+      id: 'a0000000-0000-4000-8000-000000000002',
+      baslik: 'Veri Analisti Stajyeri',
+      sirket: 'Örnek Teknoloji A.Ş.',
+      denemeler: 2,
+      sonrakiDeneme: '2026-10-04T09:25:00Z',
+      sonHata: 'canceling statement due to statement timeout',
+      kapsam: 'ilan',
+    },
+    {
+      id: '2d7aa946-0000-4000-8000-000000000009',
+      baslik: 'Kurumsal İletişim Stajyeri',
+      sirket: 'Örnek Teknoloji A.Ş.',
+      denemeler: 1,
+      sonrakiDeneme: '2026-10-04T07:10:00Z',
+      sonHata: 'canceling statement due to statement timeout',
+      kapsam: 'degisiklik',
+    },
+  ],
+  /*
+    İŞ SAĞLIĞI UYARISI: son çalışma bekleyen kontrol varken 2 saatten eski
+    ve sunucu bir gecikmiş kontrol sayıyor → uyarı çizilmeli.
+  */
+  yenidenDenemeIsi: { sonCalisma: '2026-10-04T05:00:00Z', gecikmisKontroller: 1 },
+  degisiklikler: [
+    {
+      id: '2d7aa946-0000-4000-8000-000000000001',
+      baslik: 'Yazılım Stajyeri',
+      sirket: 'Örnek Teknoloji A.Ş.',
+      canli: {
+        title: 'Yazılım Stajyeri',
+        city: 'İstanbul',
+        work_type: 'On-site',
+        duration: '20 iş günü',
+        stipend_text: 'Asgari staj ücreti',
+        description:
+          'Ekibimizle birlikte web uygulamalarımızın geliştirilmesinde yer alacaksın. React ve TypeScript ile arayüz geliştirmeye destek olacak, kod incelemelerine katılacaksın.',
+      },
+      bekleyen: {
+        title: 'Yazılım Stajyeri',
+        city: 'İstanbul',
+        work_type: 'Hybrid',
+        duration: '20 iş günü',
+        stipend_text: 'Asgari staj ücreti',
+        description:
+          'Ekibimizle birlikte web uygulamalarımızın geliştirilmesinde yer alacaksın. Başvuru için eğitim materyali bedeli olarak 1500 TL eğitim ücreti alınmaktadır; ücret ilk hafta yatırılır. React ve TypeScript ile arayüz geliştirmeye destek olacaksın.',
+      },
+      kontrolZamani: '2026-10-04T09:30:00Z',
+      kuralSurumu: 'ilan-kontrol-1 (2026-10-04)',
+      kontrolGerekceleri: [
+        {
+          kural: 'icerik.odeme_talebi',
+          mesaj: 'Adaydan ücret ya da ödeme istendiği izlenimi veren ifade.',
+          kanit: 'basvuru icin egitim materyali bedeli olarak 1500 tl egitim ucreti alinmaktadir; ucret ilk hafta yatirilir',
+        },
+      ],
+    },
+  ],
+  sonKararlar: [
+    {
+      id: 43,
+      ilanId: '2d7aa946-0000-4000-8000-000000000001',
+      baslik: 'Yazılım Stajyeri',
+      sirket: 'Örnek Teknoloji A.Ş.',
+      ilanDurumu: 'published',
+      kaynak: 'otomatik',
+      kapsam: 'degisiklik',
+      karar: 'inceleme',
+      gerekceler: [
+        {
+          kural: 'icerik.odeme_talebi',
+          mesaj: 'Adaydan ücret ya da ödeme istendiği izlenimi veren ifade.',
+          kanit: 'basvuru icin egitim materyali bedeli olarak 1500 tl egitim ucreti alinmaktadir',
+        },
+      ],
+      kuralSurumu: 'ilan-kontrol-1 (2026-10-04)',
+      hata: null,
+      zaman: '2026-10-04T09:30:00Z',
+    },
+    {
+      id: 42,
+      ilanId: 'a0000000-0000-4000-8000-000000000005',
+      baslik: 'Saha Pazarlama Stajyeri',
+      sirket: 'Örnek Medya',
+      ilanDurumu: 'draft',
+      kaynak: 'yonetici',
+      kapsam: 'ilan',
+      karar: 'yonetici_kaldirdi',
+      gerekceler: [{ kural: 'yonetici', mesaj: 'İlan metninde adaydan kayıt ücreti isteniyor; bu kabul edilmiyor.' }],
+      kuralSurumu: 'ilan-kontrol-1 (2026-10-04)',
+      hata: null,
+      zaman: '2026-10-04T09:00:00Z',
+    },
+    {
+      id: 41,
+      ilanId: '2d7aa946-0000-4000-8000-000000000001',
+      baslik: 'Yazılım Stajyeri',
+      sirket: 'Örnek Teknoloji A.Ş.',
+      ilanDurumu: 'published',
+      kaynak: 'otomatik',
+      karar: 'yayinla',
+      gerekceler: [],
+      kuralSurumu: 'ilan-kontrol-1 (2026-10-04)',
+      hata: null,
+      zaman: '2026-10-04T08:40:00Z',
+    },
+    {
+      id: 40,
+      ilanId: 'a0000000-0000-4000-8000-000000000003',
+      baslik: 'Muhasebe Stajyeri',
+      sirket: 'Örnek Danışmanlık',
+      ilanDurumu: 'draft',
+      kaynak: 'otomatik',
+      karar: 'duzeltme',
+      gerekceler: [
+        {
+          alan: 'description',
+          kural: 'baglanti.https',
+          mesaj:
+            'Bu bağlantı güvenli değil (http). https:// ile yaz ya da kaldır: http://ornek.test/kariyer/basvuru-formu/staj-2026-donemi-uzun-adres',
+        },
+      ],
+      kuralSurumu: 'ilan-kontrol-1 (2026-10-04)',
+      hata: null,
+      zaman: '2026-10-04T08:20:00Z',
+    },
+    {
+      id: 39,
+      ilanId: 'a0000000-0000-4000-8000-000000000002',
+      baslik: 'Veri Analisti Stajyeri',
+      sirket: 'Örnek Teknoloji A.Ş.',
+      ilanDurumu: 'draft',
+      kaynak: 'otomatik',
+      karar: 'hata',
+      gerekceler: [],
+      kuralSurumu: 'ilan-kontrol-1 (2026-10-04)',
+      hata: 'canceling statement due to statement timeout',
+      zaman: '2026-10-04T08:05:00Z',
+    },
+    {
+      id: 38,
+      ilanId: 'a0000000-0000-4000-8000-000000000004',
+      baslik: 'Pazarlama Stajyeri',
+      sirket: 'Örnek Medya',
+      ilanDurumu: 'archived',
+      kaynak: 'yonetici',
+      karar: 'yonetici_ret',
+      gerekceler: [],
+      kuralSurumu: 'ilan-kontrol-1 (2026-10-04)',
+      hata: null,
+      zaman: '2026-10-03T16:00:00Z',
+    },
+  ],
+};
+/* Modül düzeyinde: her çizimde yeni işlev kuyruğu sonsuz yeniden yüklerdi. */
+const ornekKuyrukGetir = () => Promise.resolve(ORNEK_KUYRUK);
 import { KADEME } from '../lib/sirket-kademe.mjs';
 import { kartVerisi } from '../lib/aday-kart.mjs';
-import type { SirketProfilDegeri } from '../lib/sirket-veri';
+import type { IlanKontrolDurumu, IlanKontrolSonucu, SirketProfilDegeri } from '../lib/sirket-veri';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 
 /**
@@ -408,7 +617,177 @@ const ALTI_ILAN_BASVURULARI = [
   ),
 ];
 
-type Senaryo = 'sifir' | 'bir' | 'alti';
+/*
+  OTOMATİK KONTROL SENARYOSU (20261120010000)
+
+  Şirket kartının beş durumu (yayında, taslak, düzeltme, inceleme,
+  kontrol ediliyor) ve kapalı ilanın iki hâli (temiz / yeniden açılamadı)
+  yan yana. Gerekçe metinleri göçteki kural mesajlarının AYNISI
+  (ilan_kontrol_kurallari, ilan_sirkete_gorunen_gerekceler); uzun http
+  adresi 375 px'te taşma ölçmek için bilerek uzun.
+
+  "Yayına gönder" sonucu bir kolla seçiliyor (dev-yayin-sonucu): sunucu
+  yok, sonucu fikstür veriyor — amaç dört sonuç ekranını ve kart
+  rozetlerini tarayıcıda ölçmek.
+*/
+const ACIKLAMA_ORNEGI =
+  'Ekibimizle birlikte günlük işlerde yer alacak, raporların hazırlanmasına destek olacak ve ' +
+  'süreçlerimizi yakından öğreneceksin. Excel ve temel ofis programlarını kullanabilmen, ' +
+  'öğrenmeye açık olman ve haftada en az üç gün ofiste bulunabilmen bekleniyor.';
+
+const DUZELTME_GEREKCELERI = [
+  {
+    alan: 'description',
+    kural: 'zorunlu.aciklama',
+    mesaj: 'İş tanımı en az 200 karakter olmalı (şu an 142).',
+  },
+  {
+    alan: 'application_deadline',
+    kural: 'tarih.gecmis',
+    mesaj: 'Son başvuru tarihi (01.09.2026) geçmiş. Bugün ya da sonrası bir tarih seç ya da alanı boş bırak.',
+  },
+  {
+    alan: 'description',
+    kural: 'baglanti.https',
+    mesaj:
+      'Bu bağlantı güvenli değil (http). https:// ile yaz ya da kaldır: http://ornek.test/kariyer/basvuru-formu/staj-2026-donemi-uzun-adres',
+  },
+  {
+    alan: 'title',
+    kural: 'tekrar',
+    mesaj:
+      'Bu ilan zaten yayında: "Yazılım Stajyeri". Aynı pozisyon için yeni ilan açmak yerine mevcut ilanı düzenle; farklı bir pozisyonsa başlıkta ya da şehirde farkı belirt.',
+  },
+];
+const INCELEME_GEREKCELERI = [
+  {
+    alan: null,
+    kural: 'inceleme',
+    mesaj: 'İlanın ekibimizin incelemesine gönderildi. Karar verildiğinde bu sayfada görünecek.',
+  },
+];
+const YONETICI_NOTU = 'Ücret bilgisi eksik; net ya da brüt aylık tutar yazılmalı.';
+
+const KONTROL_ILANI = (n: number, alanlar: Record<string, unknown>) =>
+  ILAN(n, {
+    term: 'Summer 2026',
+    duration: '20 iş günü',
+    is_paid: true,
+    stipend_text: 'Asgari staj ücreti',
+    work_type: 'On-site',
+    description: ACIKLAMA_ORNEGI,
+    kontrol_gerekceleri: [],
+    ...alanlar,
+  });
+
+const KONTROL_ILANLARI: Record<string, unknown>[] = [
+  KONTROL_ILANI(1, {
+    title: 'Yazılım Stajyeri',
+    city: 'İstanbul',
+    status: 'published',
+    kontrol_durumu: 'gecti',
+    applicants_count: 3,
+  }),
+  KONTROL_ILANI(2, { title: 'Satış Stajyeri', city: 'Ankara', status: 'draft', kontrol_durumu: null }),
+  KONTROL_ILANI(3, {
+    title: 'Muhasebe Stajyeri',
+    city: 'İzmir',
+    status: 'draft',
+    kontrol_durumu: 'duzeltme',
+    application_deadline: '2026-09-01',
+    kontrol_gerekceleri: DUZELTME_GEREKCELERI,
+  }),
+  KONTROL_ILANI(4, {
+    title: 'Pazarlama Stajyeri',
+    city: 'Bursa',
+    status: 'draft',
+    kontrol_durumu: 'inceleme',
+    kontrol_gerekceleri: INCELEME_GEREKCELERI,
+  }),
+  KONTROL_ILANI(5, { title: 'Veri Analisti Stajyeri', city: 'Uzaktan', status: 'draft', kontrol_durumu: 'bekliyor' }),
+  KONTROL_ILANI(6, {
+    title: 'Grafik Tasarım Stajyeri',
+    city: 'İstanbul',
+    status: 'closed',
+    kontrol_durumu: 'duzeltme',
+    application_deadline: '2026-09-01',
+    applicants_count: 2,
+    kontrol_gerekceleri: [DUZELTME_GEREKCELERI[1]],
+  }),
+  KONTROL_ILANI(7, { title: 'İnsan Kaynakları Stajyeri', city: 'Ankara', status: 'closed', kontrol_durumu: 'gecti' }),
+  KONTROL_ILANI(8, {
+    title: 'Finans Stajyeri',
+    city: 'İstanbul',
+    status: 'draft',
+    kontrol_durumu: 'duzeltme',
+    review_note: YONETICI_NOTU,
+    kontrol_gerekceleri: [{ alan: null, kural: 'yonetici', mesaj: YONETICI_NOTU }],
+  }),
+  /*
+    YAYINDA + BEKLEYEN DEĞİŞİKLİK: canlı satır son onaylı sürüm; şirketin
+    kaydettiği yeni metin `bekleyen.icerik`te ve kontrolden geçemedi.
+    PostgREST gömmesi dizi olarak geliyor (bekleyenOku ikisini de okuyor).
+  */
+  KONTROL_ILANI(9, {
+    title: 'Kurumsal İletişim Stajyeri',
+    city: 'İstanbul',
+    status: 'published',
+    kontrol_durumu: 'gecti',
+    applicants_count: 1,
+    bekleyen: [
+      {
+        durum: 'duzeltme',
+        kontrol_at: '2026-10-04T09:10:00Z',
+        gerekceler: [DUZELTME_GEREKCELERI[2]],
+        icerik: {
+          title: 'Kurumsal İletişim Stajyeri',
+          city: 'İstanbul',
+          work_type: 'Hybrid',
+          term: 'Summer 2026',
+          duration: '30 iş günü',
+          is_paid: true,
+          stipend_text: 'Asgari staj ücreti',
+          description:
+            ACIKLAMA_ORNEGI +
+            ' Ayrıntılı bilgi: http://ornek.test/kariyer/basvuru-formu/staj-2026-donemi-uzun-adres',
+        },
+      },
+    ],
+  }),
+  /* YÖNETİCİNİN KALDIRDIĞI İLAN: gerekçe şirkete "düzeltme" olarak görünüyor. */
+  KONTROL_ILANI(0, {
+    title: 'Saha Pazarlama Stajyeri',
+    city: 'Bursa',
+    status: 'draft',
+    kontrol_durumu: 'duzeltme',
+    kontrol_gerekceleri: [
+      {
+        alan: null,
+        kural: 'yonetici.kaldirdi',
+        mesaj: 'İlan ekibimiz tarafından yayından kaldırıldı: İlan metninde adaydan kayıt ücreti isteniyor; bu kabul edilmiyor.',
+      },
+    ],
+  }),
+];
+
+type YayinSonucu = Exclude<IlanKontrolDurumu, 'taslak'> | 'hata';
+
+/* Sunucunun "Yayına gönder" sonrası satıra yazdığı alanlar (ilan_kontrolu_uygula). */
+const SONUC_SATIRI: Record<Exclude<YayinSonucu, 'hata'>, Record<string, unknown>> = {
+  yayinda: { status: 'published', kontrol_durumu: 'gecti', kontrol_gerekceleri: [] },
+  duzeltme_gerekiyor: { kontrol_durumu: 'duzeltme', kontrol_gerekceleri: DUZELTME_GEREKCELERI },
+  inceleme_gerekiyor: { kontrol_durumu: 'inceleme', kontrol_gerekceleri: INCELEME_GEREKCELERI },
+  kontrol_ediliyor: { kontrol_durumu: 'bekliyor', kontrol_gerekceleri: [] },
+};
+
+/* Yayındaki ilanın değişikliği kontrolden geçmezse yazılan bekleyen satır. */
+const BEKLEYEN_SONUCU: Record<Exclude<YayinSonucu, 'hata' | 'yayinda'>, Record<string, unknown>> = {
+  duzeltme_gerekiyor: { durum: 'duzeltme', gerekceler: DUZELTME_GEREKCELERI, kontrol_at: '2026-10-04T09:00:00Z' },
+  inceleme_gerekiyor: { durum: 'inceleme', gerekceler: INCELEME_GEREKCELERI, kontrol_at: '2026-10-04T09:00:00Z' },
+  kontrol_ediliyor: { durum: 'bekliyor', gerekceler: [], kontrol_at: '2026-10-04T09:00:00Z' },
+};
+
+type Senaryo = 'sifir' | 'bir' | 'alti' | 'kontrol';
 
 export const SirketPanelDevFixture: React.FC = () => {
   const [kademe, setKademe] = React.useState<number>(KADEME.DOGRULANMIS);
@@ -448,7 +827,75 @@ export const SirketPanelDevFixture: React.FC = () => {
     [satirlar]
   );
 
-  const ilanlar = senaryo === 'sifir' ? [] : senaryo === 'bir' ? TEK_ILAN : ALTI_ILAN;
+  /*
+    KONTROL SENARYOSUNUN SATIRLARI YEREL DURUMDA — ref ile aynalı: formun
+    "kaydettikten sonra yeniden oku" adımı aynı tıklamanın içinde en son
+    satırı görmeli; durum kapanışı eski değeri verirdi.
+  */
+  const [kontrolIlanlari, setKontrolIlanlariDurumu] = React.useState(KONTROL_ILANLARI);
+  const kontrolRef = React.useRef(KONTROL_ILANLARI);
+  const setKontrolIlanlari = (f: (o: Record<string, unknown>[]) => Record<string, unknown>[]) => {
+    kontrolRef.current = f(kontrolRef.current);
+    setKontrolIlanlariDurumu(kontrolRef.current);
+  };
+  const [yayinSonucu, setYayinSonucu] = React.useState<YayinSonucu>('yayinda');
+  const satiriGuncelle = (id: string, alanlar: Record<string, unknown>) =>
+    setKontrolIlanlari((o) => o.map((i) => (i.id === id ? { ...i, ...alanlar } : i)));
+
+  const sahteGonder = (id: string) =>
+    new Promise<IlanKontrolSonucu>((coz, red) => {
+      window.setTimeout(() => {
+        if (yayinSonucu === 'hata') {
+          red(new Error('İlan gönderilemedi. Bağlantını kontrol edip yeniden dene.'));
+          return;
+        }
+        const eski = kontrolRef.current.find((i) => i.id === id);
+        /* Yayındaki ilan: sunucu BEKLEYEN değişikliği kontrol ediyor. */
+        if (eski?.status === 'published') {
+          const bekleyenIcerik = (Array.isArray(eski.bekleyen) ? eski.bekleyen[0] : eski.bekleyen) as
+            | { icerik?: Record<string, unknown> }
+            | undefined;
+          if (yayinSonucu === 'yayinda') {
+            satiriGuncelle(id, { ...(bekleyenIcerik?.icerik ?? {}), bekleyen: null });
+            coz({ id, durum: 'yayinda', gerekceler: [], kontrolZamani: null, kuralSurumu: null, degisiklik: null });
+            return;
+          }
+          const d = BEKLEYEN_SONUCU[yayinSonucu];
+          satiriGuncelle(id, { bekleyen: [{ ...d, icerik: bekleyenIcerik?.icerik ?? {} }] });
+          coz({
+            id,
+            durum: 'yayinda',
+            gerekceler: [],
+            kontrolZamani: null,
+            kuralSurumu: null,
+            degisiklik: {
+              durum: yayinSonucu,
+              gerekceler: d.gerekceler as IlanKontrolSonucu['gerekceler'],
+              kontrolZamani: '2026-10-04T09:00:00Z',
+            },
+          });
+          return;
+        }
+        satiriGuncelle(id, { ...SONUC_SATIRI[yayinSonucu], kontrol_at: '2026-10-04T09:00:00Z' });
+        coz({
+          id,
+          durum: yayinSonucu,
+          gerekceler: SONUC_SATIRI[yayinSonucu].kontrol_gerekceleri as IlanKontrolSonucu['gerekceler'],
+          kontrolZamani: '2026-10-04T09:00:00Z',
+          kuralSurumu: 'ilan-kontrol-1 (2026-10-04)',
+          degisiklik: null,
+        });
+      }, 700);
+    });
+
+  const ilanlar =
+    senaryo === 'sifir'
+      ? []
+      : senaryo === 'bir'
+        ? TEK_ILAN
+        : senaryo === 'kontrol'
+          ? kontrolIlanlari
+          : ALTI_ILAN;
   const ilanBasvurulari = React.useMemo(
     () =>
       (senaryo === 'bir' ? TEK_ILAN_BASVURULARI : senaryo === 'alti' ? ALTI_ILAN_BASVURULARI : []).map(
@@ -491,7 +938,9 @@ export const SirketPanelDevFixture: React.FC = () => {
     ölçeklenmeyi ölçüyor.
   */
   const icerik =
-    yol === '/agim' ? (
+    yol === '/yonetim/onay' ? (
+      <OnaySayfasi kuyrukGetir={ornekKuyrukGetir} />
+    ) : yol === '/agim' ? (
       <SirketAgimBos />
     ) : yol === '/rehber' ? (
       <GuideHub onBack={() => git('/sirket/ilanlar')} onNavigate={git} sirketHesabi />
@@ -501,7 +950,62 @@ export const SirketPanelDevFixture: React.FC = () => {
         sirketAdi="Örnek Teknoloji A.Ş."
         siteUrl="https://ornek.com"
         eposta={kademe === KADEME.DOGRULANMIS ? 'ik@gmail.com' : 'ik@ornek.com'}
-        onKaydet={async () => ({ id: '00000000-0000-0000-0000-000000000000' })}
+        key={yol}
+        duzenlenenId={ekran.duzenlenenId}
+        /*
+          Kayıt fikstür satırına yazılıyor. Yayındaki ilanın içeriği
+          değişince sunucu tetikleyicisi aynı istekte kontrol ediyor;
+          fikstür seçili sonucu uyguluyor (geçmezse önceki hâl yayında kalıyor).
+          Gönderilmiş taslağın içeriği değişince eski karar siliniyor.
+        */
+        onKaydet={(satir, { id }) =>
+          new Promise((coz) => {
+            window.setTimeout(() => {
+              const { status: _s, posted_at: _p, company_id: _c, ...alanlar } = satir;
+              if (!id) {
+                const yeniId = 'f0000000-0000-4000-8000-000000000001';
+                setKontrolIlanlari((o) => [
+                  ...o.filter((i) => i.id !== yeniId),
+                  {
+                    ...alanlar,
+                    id: yeniId,
+                    status: 'draft',
+                    kontrol_durumu: null,
+                    kontrol_gerekceleri: [],
+                    origin: 'employer_posted',
+                  },
+                ]);
+                coz({ id: yeniId });
+                return;
+              }
+              const eski = kontrolRef.current.find((i) => i.id === id);
+              if (eski?.status === 'published') {
+                /*
+                  YAYINDAKİ İLAN DÜZENLENİNCE (sunucu tetikleyicisi): geçerse
+                  yeni içerik yayında; geçmezse canlı satır ESKİ içerikte kalıyor,
+                  yeni içerik bekleyen değişiklik olarak yazılıyor. İlan taslağa
+                  çekilmiyor.
+                */
+                const sonuc = yayinSonucu === 'hata' ? 'kontrol_ediliyor' : yayinSonucu;
+                if (sonuc === 'yayinda') satiriGuncelle(id, { ...alanlar, bekleyen: null });
+                else satiriGuncelle(id, { bekleyen: [{ ...BEKLEYEN_SONUCU[sonuc], icerik: alanlar }] });
+              } else {
+                satiriGuncelle(id, { ...alanlar, kontrol_durumu: null, kontrol_gerekceleri: [] });
+              }
+              coz({ id });
+            }, 500);
+          })
+        }
+        onYayinaGonder={sahteGonder}
+        ilanOkuyucu={(id) =>
+          new Promise((coz, red) => {
+            window.setTimeout(() => {
+              const satir = kontrolRef.current.find((i) => i.id === id);
+              if (satir) coz({ ...satir });
+              else red(new Error('İlan okunamadı.'));
+            }, 250);
+          })
+        }
         onIptal={() => git('/sirket/ilanlar')}
       />
     ) : ekran.tur === 'profil' ? (
@@ -535,7 +1039,10 @@ export const SirketPanelDevFixture: React.FC = () => {
         basvurular={ekran.tur === 'basvuranlar' ? kartlar : ilanBasvurulari}
         profil={profil}
         onNavigate={git}
-        onDurum={async () => undefined}
+        onDurum={async (id, d) => {
+          if (d === 'published') return sahteGonder(id);
+          satiriGuncelle(id, { status: 'closed' });
+        }}
         onKaldir={async () => undefined}
         onBasvuruDurumu={(id, d) => satirYaz(id, { status: d })}
         onMulakatTarihi={(id, tarih) => satirYaz(id, { interview_date: tarih || null })}
@@ -628,6 +1135,7 @@ export const SirketPanelDevFixture: React.FC = () => {
           <option value="/agim">/agim</option>
           <option value="/rehber">/rehber</option>
           <option value="/sirket/profil">/sirket/profil</option>
+          <option value="/yonetim/onay">/yonetim/onay (yönetici)</option>
         </select>
         <select
           id="dev-senaryo"
@@ -639,6 +1147,20 @@ export const SirketPanelDevFixture: React.FC = () => {
           <option value="sifir">0 ilan</option>
           <option value="bir">1 ilan · 3 yeni</option>
           <option value="alti">6 ilan</option>
+          <option value="kontrol">Kontrol durumları</option>
+        </select>
+        <select
+          id="dev-yayin-sonucu"
+          value={yayinSonucu}
+          onChange={(e) => setYayinSonucu(e.target.value as YayinSonucu)}
+          aria-label="Yayına gönder sonucu"
+          className={kolSinifi}
+        >
+          <option value="yayinda">Sonuç: yayında</option>
+          <option value="duzeltme_gerekiyor">Sonuç: düzeltme</option>
+          <option value="inceleme_gerekiyor">Sonuç: inceleme</option>
+          <option value="kontrol_ediliyor">Sonuç: kontrol ediliyor</option>
+          <option value="hata">Sonuç: ağ hatası</option>
         </select>
         <button
           type="button"

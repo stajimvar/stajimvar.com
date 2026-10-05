@@ -107,20 +107,20 @@ export const IsverenGirisi: React.FC<{
             Stajyer ilanı ver
           </h1>
           {/*
-            ONAY HER İLANDA YOK
+            YAYIN OTOMATİK KONTROLLE (20261120010000)
 
-            Burada "onaya gönderin — onaylandığında yayına çıkar" yazıyordu
-            ama kural bu değil: kurumsal e-posta alan adı şirketin site
-            adresiyle eşleşiyorsa ilan doğrudan yayına çıkıyor
-            (lib/sirket-kademe.mjs · ilanBaslangicDurumu). Onay yalnızca
-            eşleşmeyen durumda devreye giriyor. Cümle, ilk kez gelen
-            işverene gerçekte olacak şeyi söylüyor.
+            Burada önce "onaya gönderin", sonra "alan adı eşleşirse doğrudan
+            yayında, değilse bir iş günü içinde" yazıyordu. İkisi de artık
+            gerçek değil: her ilan yayına gönderilince sunucuda otomatik
+            kontrol ediliyor; sorunsuzsa hemen yayında, eksikse şirkete
+            düzeltme için dönüyor, şüpheliyse ekibin incelemesine gidiyor.
+            İnceleme bir insanın sırası; süre sözü verilmiyor.
           */}
           <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
             Staj ilanı yayınlamak ücretsiz. Akış şöyle: şirketinizin sayfasını
-            sahiplenin ve ilanı girin. Kurumsal e-posta adresiniz şirketinizin site
-            adresiyle aynıysa ilan doğrudan yayına çıkıyor; değilse önce biz
-            bakıyoruz ve genellikle bir iş günü içinde yayına alıyoruz.
+            sahiplenin, ilanı girin ve yayına gönderin. İlan otomatik olarak kontrol
+            edilir: sorunsuzsa hemen yayına çıkar, eksik bilgi varsa düzeltmeniz için
+            size döner, şüpheli bulunan ilan ekibimizin incelemesine gider.
           </p>
         </div>
 

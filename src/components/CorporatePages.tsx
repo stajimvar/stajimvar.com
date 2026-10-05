@@ -463,16 +463,22 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
             değiştirseniz bile şirketin gördüğü belge değişmiyor.
           </p>
           <p>
-            <strong>Şirketler kendi ilanlarını giriyor, ama hiçbir ilan onaysız
-            yayınlanmıyor.</strong> Şirket önce kendi sayfasını sahipleniyor; sonra ilanı
-            yazıyor ve incelemeye gönderiyor. Onaylanana kadar ilan öğrenci listesinde
-            görünmüyor. <strong>Şirketin doğrulanmış olması bu adımı atlatmıyor:</strong>{' '}
-            kurumsal e-posta alan adının şirket sitesiyle eşleşmesi o kişinin orada
-            çalıştığına dair bir sinyal, ilanın içeriği hakkında bir kanıt değil — ücret
-            ya da teminat isteyen bir ilan da kurumsal bir adresten açılabilir. Reddedilen
-            ilanda nedeni şirketin paneline yazıyoruz, şirket düzeltip yeniden
-            gönderebiliyor. Kararı şirket panelinden görüyor; bu karar için
-            ayrıca e-posta göndermiyoruz.
+            <strong>Şirketler kendi ilanlarını giriyor ve her ilan yayına çıkmadan önce
+            otomatik olarak kontrol ediliyor.</strong> Şirket önce kendi sayfasını
+            sahipleniyor; sonra ilanı yazıp yayına gönderiyor. Sorunsuz ilan hemen yayına
+            çıkıyor. Eksik ya da hatalı bilgi varsa ilan yayına çıkmıyor ve şirkete neyi
+            düzelteceği yazılıyor. Adaydan ücret, teminat ya da kişisel bilgi istendiği
+            izlenimi veren ya da başvuruyu mesajlaşma uygulamasına yönlendiren ilan
+            ekibimizin incelemesine gidiyor ve karar verilene kadar öğrenci listesinde
+            görünmüyor; doğrulanmamış şirketin ilanı da bu incelemeden geçiyor.{' '}
+            <strong>Şirketin doğrulanmış olması kontrolü atlatmıyor:</strong> kurumsal
+            e-posta alan adının şirket sitesiyle eşleşmesi o kişinin orada çalıştığına dair
+            bir sinyal, ilanın içeriği hakkında bir kanıt değil. Yayındaki bir ilan
+            değiştirilirse değişiklik de aynı kontrolden geçiyor; geçmezse ilanın önceki
+            hâli yayında kalıyor. Ekibimiz gerektiğinde yayındaki bir ilanı yayından
+            kaldırabiliyor. Reddedilen ya da kaldırılan ilanda nedeni şirketin paneline
+            yazıyoruz, şirket düzeltip yeniden gönderebiliyor. Kararı şirket panelinden
+            görüyor; bu karar için ayrıca e-posta göndermiyoruz.
           </p>
         </S>
 
@@ -655,10 +661,12 @@ export const CorporateContent: React.FC<{ slug: CorporateSlug }> = ({ slug }) =>
             İlanların bir kısmı şirketlerin kendi resmî işe alım sistemlerinden
             otomatik olarak alınır; orada başvuru şirketin kendi sayfasında
             tamamlanır. Şirketler ayrıca kendi ilanlarını girebilir: önce şirket
-            sayfasını sahiplenir, sonra ilanı girer. Kurumsal e-posta alan adı
-            şirketin site adresiyle eşleşiyorsa ilan doğrudan yayına çıkar,
-            eşleşmiyorsa önce incelenir. O ilanlarda başvuru StajımVar üzerinde
-            tamamlanır. Aşağıdaki kurallar her iki yol için de geçerlidir.
+            sayfasını sahiplenir, sonra ilanı yayına gönderir. Gönderilen ilan otomatik
+            olarak kontrol edilir: sorunsuzsa hemen yayına çıkar, eksik bilgi varsa
+            düzeltilmesi için şirkete döner, şüpheli bulunan ilan ekibimizin incelemesine
+            gider. Ekibimiz gerektiğinde yayındaki bir ilanı yayından kaldırabilir. O
+            ilanlarda başvuru StajımVar üzerinde tamamlanır. Aşağıdaki kurallar her iki
+            yol için de geçerlidir.
           </p>
         </S>
 
