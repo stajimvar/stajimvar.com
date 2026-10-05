@@ -910,3 +910,118 @@ test('veritabanı senaryosu bu dört adımı kapsıyor', () => {
     assert.ok(SQL.includes(adim), `senaryo adımı eksik: ${adim}`);
   }
 });
+
+/* ================================================================== */
+/*  AŞAMA 8 — DOĞRULANMAMIŞ ŞİRKET SINIRI                             */
+/* ================================================================== */
+/*
+  Üretimdeki `applications` politikaları doğrulamayı HEM okuma HEM
+  yazma tarafında istiyor. Bu paketteki RPC'ler `security definer`
+  olduğu için politikaları atlıyor ve sınırı yalnız üyelikle
+  kuruyordu — doğrulama koşulu düşmüştü.
+*/
+
+const SINIR_GOC = oku('supabase/migrations/20261129010000_dogrulanmis_sirket_siniri.sql');
+
+test('aday verisine dokunan RPC\'lerin hepsi doğrulama kapısından geçiyor', () => {
+  /*
+    Kapı tek yerde: aynı koşulu dört ayrı yerde elle yazmak, birinin
+    değişip ötekilerin geride kalması demekti.
+  */
+  assert.match(
+    SINIR_GOC,
+    /create or replace function public\.sirket_adaylarini_gorebilir/,
+    'okuma kapısı tanımlanmalı',
+  );
+  assert.match(
+    SINIR_GOC,
+    /select public\.is_company_member\(hedef\) and public\.sirket_dogrulandi\(hedef\)/,
+    'okuma kapısı SELECT politikasının aynısı olmalı',
+  );
+
+  /* Okuma RPC'lerinin üçü de kapıyı kullanıyor. */
+  for (const fn of ['ilan_bekleyen_adaylar', 'sirket_is_yuku', 'basvuru_degerlendirme_gecmisi']) {
+    const i = SINIR_GOC.indexOf(`function public.${fn}`);
+    assert.ok(i > 0, `${fn} bu göçte yeniden tanımlanmalı`);
+    assert.ok(
+      SINIR_GOC.slice(i, i + 1800).includes('sirket_adaylarini_gorebilir'),
+      `${fn} doğrulama kapısını kullanmalı`,
+    );
+  }
+});
+
+test('yazma kapısı şirket doğrulamasını İÇERİYOR', () => {
+  /*
+    Tek yerde kapatmak üç yazma RPC'sini birden kapatıyor
+    (atama, dağıtım, değerlendirme).
+  */
+  const i = SINIR_GOC.indexOf('function public.sirket_basvuru_yazabilir');
+  assert.ok(i > 0, 'yazma kapısı yeniden tanımlanmalı');
+  const govde = SINIR_GOC.slice(i, SINIR_GOC.indexOf('$$;', i));
+  assert.ok(govde.includes('public.sirket_dogrulandi(hedef)'), 'doğrulama sorulmalı');
+  assert.ok(govde.includes("in ('Owner', 'Recruiter')"), 'rol kuralı korunmalı');
+});
+
+test('VIEWER salt okunur erişimi daralmıyor', () => {
+  /*
+    Sınır ROL değil, ÜYELİK + DOĞRULAMA. Okuma kapısında rol
+    sorulsaydı Viewer okuma yetkisini de kaybederdi.
+  */
+  const i = SINIR_GOC.indexOf('function public.sirket_adaylarini_gorebilir');
+  const govde = SINIR_GOC.slice(i, SINIR_GOC.indexOf('$$;', i));
+  assert.ok(!govde.includes('recruiter_role'), 'okuma kapısı ROL sormamalı');
+  assert.ok(!govde.includes('is_owner'), 'okuma kapısı sahiplik sormamalı');
+});
+
+test('değerlendirme satırlarının RLS\'i de doğrulama istiyor', () => {
+  /*
+    Tabloyu doğrudan okuyan bir istemci RPC'yi atlayabilirdi.
+  */
+  const i = SINIR_GOC.indexOf('create policy "sirket degerlendirmeleri gorur"');
+  assert.ok(i > 0, 'politika yeniden yazılmalı');
+  assert.ok(
+    SINIR_GOC.slice(i, i + 500).includes('sirket_adaylarini_gorebilir'),
+    'politika doğrulama kapısını kullanmalı',
+  );
+});
+
+test('atama RPC\'si başvuru satırının TAMAMINI döndürmüyor', () => {
+  /*
+    Önce `returns public.applications` idi: ön yazı, özgeçmiş yolu,
+    profil kopyası ve öğrenci kimliği dahil her alan çağırana
+    gidiyordu. İstemci dönüşü zaten kullanmıyor.
+  */
+  /* Yorumda gerekçe olarak geçen eski imza iddiayı bozmasın. */
+  assert.ok(
+    !/returns public\.applications/.test(kodu(SINIR_GOC)),
+    'tam satır döndürülmemeli',
+  );
+  assert.match(
+    SINIR_GOC,
+    /returns table \(basvuru_id uuid, atanan_uye uuid, atanan_at timestamptz\)/,
+    'yalnız atama bilgisi dönmeli',
+  );
+  /* Dönüş tipi değiştiği için düşürülüp yeniden yazılıyor; yetki geri verilmeli. */
+  assert.match(SINIR_GOC, /drop function if exists public\.basvuru_sorumlusu_ata\(uuid, uuid, uuid\);/);
+  assert.match(
+    SINIR_GOC,
+    /grant execute on function public\.basvuru_sorumlusu_ata\(uuid, uuid, uuid\) to authenticated;/,
+  );
+  /* Eşzamanlılık koruması KORUNUYOR. */
+  assert.match(SINIR_GOC, /if satir\.atanan_uye is distinct from p_beklenen then/);
+  assert.match(SINIR_GOC, /for update/);
+});
+
+test('veritabanı senaryosu doğrulama sınırını kapsıyor', () => {
+  const SQL = oku('supabase/tests/ise-alim-merkezi.test.sql');
+  for (const adim of [
+    'DOGRULANMAMIS: okuma kapisi KAPALI',
+    'DOGRULANMAMIS: bekleyen adaylari goremiyor',
+    'DOGRULANMAMIS: sorumlu ATAYAMIYOR',
+    'DOGRULANMAMIS: degerlendirme YAZAMIYOR',
+    'VIEWER: dogrulanmis sirkette OKUYABILIYOR',
+    'VIEWER: hala yazamiyor',
+  ]) {
+    assert.ok(SQL.includes(adim), `senaryo adımı eksik: ${adim}`);
+  }
+});

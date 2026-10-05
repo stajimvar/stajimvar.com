@@ -717,4 +717,143 @@ select t.ok((select count(*) from public.notifications
             'UC AYRI DONEM, UC hatirlatma (kural tek sefere mahsus degil)');
 rollback;
 
+
+/* ================================================================== */
+/*  11) DOGRULANMAMIS SIRKET ADAY VERISINE ERISEMEZ (20261129010000)   */
+/* ================================================================== */
+--
+-- Uretimdeki applications politikalari doğrulamayi hem SELECT hem
+-- UPDATE tarafinda istiyor. Bu paketteki `security definer` RPC'ler
+-- politikalari atladigi icin o kosulu dusurmustu.
+--
+-- C sirketi DOGRULANMAMIS; sahibi Owner. Asagidakilerin HICBIRI
+-- calismamali. Ayni adimlar dogrulanmis A sirketinde CALISMALI.
+
+begin;
+select t.yonetici();
+
+insert into public.companies (id, name, slug, verified) values
+  ('cccccccc-0000-0000-0000-000000000003', 'C Sirketi', 'c-sirketi', false)
+on conflict (id) do nothing;
+
+insert into public.company_members (company_id, user_id, is_owner, recruiter_role) values
+  ('cccccccc-0000-0000-0000-000000000003', '44444444-4444-4444-4444-444444444444', true, 'Owner')
+on conflict do nothing;
+
+insert into public.listings (id, company_id, title, status) values
+  ('ccccccc3-0000-0000-0000-000000000003', 'cccccccc-0000-0000-0000-000000000003', 'C ilani', 'draft')
+on conflict (id) do nothing;
+
+insert into public.applications (id, listing_id, student_id, status, applied_at) values
+  ('ddddddd4-0000-0000-0000-000000000004', 'ccccccc3-0000-0000-0000-000000000003',
+   '66666666-6666-6666-6666-666666666666', 'submitted', now() - interval '20 days')
+on conflict (id) do nothing;
+
+/* ---- Dogrulanmamis sirketin SAHIBI olarak ---- */
+select t.kimlik('44444444-4444-4444-4444-444444444444');
+
+select t.ok(not public.sirket_adaylarini_gorebilir('cccccccc-0000-0000-0000-000000000003'),
+            'DOGRULANMAMIS: okuma kapisi KAPALI');
+select t.ok(not public.sirket_basvuru_yazabilir('cccccccc-0000-0000-0000-000000000003'),
+            'DOGRULANMAMIS: yazma kapisi KAPALI (Owner olsa bile)');
+
+/* Tabloyu dogrudan okuma: RLS zaten kapatiyordu, teyit. */
+select t.ok((select count(*) from public.applications
+              where listing_id = 'ccccccc3-0000-0000-0000-000000000003') = 0,
+            'DOGRULANMAMIS: basvuru satirini goremiyor');
+
+/* OKUMA RPC'leri */
+select t.ok((select count(*) from public.ilan_bekleyen_adaylar('ccccccc3-0000-0000-0000-000000000003')) = 0,
+            'DOGRULANMAMIS: bekleyen adaylari goremiyor');
+select t.ok((select count(*) from public.sirket_is_yuku('cccccccc-0000-0000-0000-000000000003')) = 0,
+            'DOGRULANMAMIS: is yukunu goremiyor');
+select t.ok((select count(*) from public.basvuru_degerlendirme_gecmisi('ddddddd4-0000-0000-0000-000000000004')) = 0,
+            'DOGRULANMAMIS: degerlendirme gecmisini goremiyor');
+
+/* YAZMA RPC'leri */
+do $$
+begin
+  perform public.basvuru_sorumlusu_ata(
+    'ddddddd4-0000-0000-0000-000000000004',
+    '44444444-4444-4444-4444-444444444444', null);
+  raise exception 'DUSTU  Dogrulanmamis sirket sorumlu atayabildi';
+exception when sqlstate '42501' then
+  raise notice 'GECTI  DOGRULANMAMIS: sorumlu ATAYAMIYOR';
+end $$;
+
+do $$
+begin
+  perform public.basvurulari_dagit('cccccccc-0000-0000-0000-000000000003', null);
+  raise exception 'DUSTU  Dogrulanmamis sirket dagitim yapabildi';
+exception when sqlstate '42501' then
+  raise notice 'GECTI  DOGRULANMAMIS: dagitim YAPAMIYOR';
+end $$;
+
+/* Degerlendirme yazmak icin once olcut gerekiyor; olcut de yazilamamali
+   degil -- olcut sirketin kendi politikasi. Asil kapi degerlendirme_yaz. */
+do $$
+begin
+  perform public.degerlendirme_yaz('ddddddd4-0000-0000-0000-000000000004', '{}'::jsonb, 'not');
+  raise exception 'DUSTU  Dogrulanmamis sirket degerlendirme yazdi';
+exception when sqlstate '42501' then
+  raise notice 'GECTI  DOGRULANMAMIS: degerlendirme YAZAMIYOR';
+end $$;
+
+/* Basvuru satirini dogrudan guncelleme de calismamali. */
+update public.applications set status = 'under_review'
+ where id = 'ddddddd4-0000-0000-0000-000000000004';
+select t.yonetici();
+select t.ok((select status from public.applications
+              where id = 'ddddddd4-0000-0000-0000-000000000004') = 'submitted',
+            'DOGRULANMAMIS: basvuru durumunu degistiremiyor');
+
+/* ---- AYNI ADIMLAR DOGRULANMIS SIRKETTE CALISIYOR ---- */
+select t.kimlik('11111111-1111-1111-1111-111111111111');
+select t.ok(public.sirket_adaylarini_gorebilir('aaaaaaaa-0000-0000-0000-000000000001'),
+            'DOGRULANMIS: okuma kapisi ACIK');
+select t.ok(public.sirket_basvuru_yazabilir('aaaaaaaa-0000-0000-0000-000000000001'),
+            'DOGRULANMIS: yazma kapisi ACIK');
+select t.ok((select count(*) from public.ilan_bekleyen_adaylar('ccccccc1-0000-0000-0000-000000000001')) = 2,
+            'DOGRULANMIS: bekleyen adaylari goruyor');
+
+/* ---- VIEWER SALT OKUNUR ERISIMI KORUNUYOR ---- */
+select t.kimlik('33333333-3333-3333-3333-333333333333');
+select t.ok(public.sirket_adaylarini_gorebilir('aaaaaaaa-0000-0000-0000-000000000001'),
+            'VIEWER: dogrulanmis sirkette OKUYABILIYOR');
+select t.ok(not public.sirket_basvuru_yazabilir('aaaaaaaa-0000-0000-0000-000000000001'),
+            'VIEWER: hala yazamiyor');
+select t.ok((select count(*) from public.ilan_bekleyen_adaylar('ccccccc1-0000-0000-0000-000000000001')) = 2,
+            'VIEWER: bekleyen adaylari goruyor');
+select t.ok((select count(*) from public.sirket_is_yuku('aaaaaaaa-0000-0000-0000-000000000001')) >= 1,
+            'VIEWER: is yukunu goruyor');
+select t.ok((select count(*) from public.applications
+              where listing_id = 'ccccccc1-0000-0000-0000-000000000001') = 2,
+            'VIEWER: basvurulari okumaya devam ediyor');
+
+rollback;
+
+/* ---- ATAMA RPC'Si SATIRIN TAMAMINI DONDURMUYOR ---- */
+begin;
+select t.kimlik('11111111-1111-1111-1111-111111111111');
+select t.ok(
+  (select count(*) from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'applications') > 3,
+  'on kosul: applications cok sutunlu');
+select t.ok(
+  (select count(*) from public.basvuru_sorumlusu_ata(
+      'ddddddd1-0000-0000-0000-000000000001',
+      '22222222-2222-2222-2222-222222222222', null)) = 1,
+  'Atama calisiyor');
+rollback;
+
+begin;
+select t.yonetici();
+select t.ok(
+  (select count(*) from pg_proc p
+    where p.proname = 'basvuru_sorumlusu_ata'
+      and pg_get_function_result(p.oid) = 'TABLE(basvuru_id uuid, atanan_uye uuid, atanan_at timestamp with time zone)') = 1,
+  'Atama RPC yalniz ATAMA BILGISINI donduruyor (satirin tamamini degil)');
+commit;
+
 select 'TUM SINAMALAR GECTI' as sonuc;
