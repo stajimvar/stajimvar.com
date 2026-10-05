@@ -1,6 +1,12 @@
 import React from 'react';
 import { ExternalLink } from 'lucide-react';
-import { fetchPanelIlanlari, type PanelIlani, type PanelIlanListesi } from '../../lib/queries';
+import {
+  fetchPanelIlanlari,
+  ilanYayindanKaldir,
+  type PanelIlani,
+  type PanelIlanListesi,
+} from '../../lib/queries';
+import { GerekceliKarar } from './GerekceliKarar';
 import { sayi } from '../../lib/yonetim-bicim.mjs';
 import { BosDurum, Iskelet } from './Grafikler';
 
@@ -86,7 +92,19 @@ const KAYNAK_ADI: Record<string, string> = {
   internal: 'site içi',
 };
 
-const Satir: React.FC<{ ilan: PanelIlani }> = ({ ilan }) => (
+/*
+  YAYINDAN KALDIRMA — yalnız yayındaki ŞİRKET ilanında
+
+  Şirket ilanları otomatik kontrolle yönetici beklemeden yayına çıkıyor
+  (20261120010000); acil durumda yöneticinin elinde bir fren olmalı.
+  Gerekçe zorunlu ve şirkete aynen gösteriliyor; ikinci adım onay kutusu.
+  Taranan ve elle girilen ilanlar bu yolla kaldırılmıyor: sunucudaki
+  işlem yalnız şirket ilanını kabul ediyor, olmayan bir eylem çizilmiyor.
+*/
+const Satir: React.FC<{ ilan: PanelIlani; onKaldirildi: (baslik: string) => void }> = ({ ilan, onKaldirildi }) => {
+  const [acik, setAcik] = React.useState(false);
+  const kaldirilabilir = ilan.durum === 'published' && ilan.kaynak === 'employer_posted';
+  return (
   <li className="rounded-2xl border border-gray-200 bg-white p-4">
     <div className="flex flex-wrap items-center gap-1.5">
       <span
@@ -134,8 +152,36 @@ const Satir: React.FC<{ ilan: PanelIlani }> = ({ ilan }) => (
         <ExternalLink className="h-3.5 w-3.5" aria-hidden />
       </a>
     )}
+
+    {kaldirilabilir && (
+      <div className="mt-1.5">
+        <button
+          type="button"
+          onClick={() => setAcik((a) => !a)}
+          aria-expanded={acik}
+          className="min-h-11 cursor-pointer rounded-xl border border-red-300 bg-white px-3 text-sm font-bold text-red-800 hover:bg-red-50"
+        >
+          Yayından kaldır
+        </button>
+        {acik && (
+          <GerekceliKarar
+            kimlik={`kaldir-${ilan.id}`}
+            gonderEtiketi="Yayından kaldır"
+            aciklama="İlan öğrencilerden hemen kalkar ve taslağa döner; şirket düzeltip yeniden gönderirse yayın yönetici onayına bağlı olur. Şirket bu metni kendi panelinde, ilanın altında aynen görecek. En az 10 karakter."
+            onaySorusu="İlanın şimdi yayından kalkacağını ve gerekçenin şirkete gösterileceğini anladım."
+            onGonder={async (g) => {
+              await ilanYayindanKaldir(ilan.id, g);
+              setAcik(false);
+              onKaldirildi(ilan.baslik);
+            }}
+            onVazgec={() => setAcik(false)}
+          />
+        )}
+      </div>
+    )}
   </li>
-);
+  );
+};
 
 export const IlanlarSayfasi: React.FC = () => {
   const [durum, setDurum] = React.useState<string | null>('published');
@@ -145,6 +191,9 @@ export const IlanlarSayfasi: React.FC = () => {
   const [ofset, setOfset] = React.useState(0);
   const [veri, setVeri] = React.useState<PanelIlanListesi | null>(null);
   const [asama, setAsama] = React.useState<'yukleniyor' | 'hazir' | 'hata'>('yukleniyor');
+  /* Yayından kaldırmadan sonra liste sunucudan yeniden okunuyor. */
+  const [yenile, setYenile] = React.useState(0);
+  const [bilgi, setBilgi] = React.useState<string | null>(null);
 
   /*
     Arama yazarken her tuşta istek atılmıyor; yarım saniye beklenip
@@ -173,7 +222,7 @@ export const IlanlarSayfasi: React.FC = () => {
     return () => {
       iptal = true;
     };
-  }, [durum, kaynak, sorgu, ofset]);
+  }, [durum, kaynak, sorgu, ofset, yenile]);
 
   const satirlar = veri?.satirlar ?? [];
   const toplam = veri?.toplam ?? 0;
@@ -222,6 +271,12 @@ export const IlanlarSayfasi: React.FC = () => {
         />
       </label>
 
+      {bilgi && (
+        <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+          {bilgi}
+        </p>
+      )}
+
       {asama === 'yukleniyor' && <Iskelet yukseklik="h-40" />}
 
       {asama === 'hata' && (
@@ -240,7 +295,14 @@ export const IlanlarSayfasi: React.FC = () => {
           {satirlar.length ? (
             <ul className="space-y-3">
               {satirlar.map((i) => (
-                <Satir key={i.id} ilan={i} />
+                <Satir
+                  key={i.id}
+                  ilan={i}
+                  onKaldirildi={(baslik) => {
+                    setBilgi(`"${baslik}" yayından kaldırıldı; şirket gerekçeyi panelinde görecek.`);
+                    setYenile((n) => n + 1);
+                  }}
+                />
               ))}
             </ul>
           ) : (

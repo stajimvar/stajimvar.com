@@ -28,6 +28,7 @@ import {
 } from '../lib/queries/sosyal';
 import {
   sirketAcikKimligi,
+  type IlanKontrolSonucu,
   type SirketBaglami,
   type SirketProfilDegeri,
 } from '../lib/sirket-veri';
@@ -111,7 +112,8 @@ export const SirketProfili: React.FC<{
   userId: string | null;
   onKaydedildi: () => void;
   onNavigate: (yol: string) => void;
-  onDurum: (id: string, d: 'published' | 'closed') => Promise<void>;
+  /** Yayına göndermede sunucunun kontrol sonucu dönüyor (GenelBakis yazıyor). */
+  onDurum: (id: string, d: 'published' | 'closed') => Promise<IlanKontrolSonucu | void>;
   onKaldir: (id: string, arsivle: boolean) => Promise<void>;
   onCikis?: () => void;
 }> = ({

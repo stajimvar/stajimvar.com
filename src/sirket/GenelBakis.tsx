@@ -26,10 +26,11 @@ import {
   ikincilStil,
   kutuStil,
 } from './renk';
-import { IlanKarti, type AdayOzeti } from './IlanKarti';
+import { IlanKarti, KontrolNotu, type AdayOzeti } from './IlanKarti';
 import { ilanEylemleri } from '../lib/ilan-formu.mjs';
+import { YAYIN_SONUCU_METNI } from '../lib/ilan-kontrol-gorunumu.mjs';
 import { adayGorebilir } from '../lib/sirket-kademe.mjs';
-import type { SirketBaglami, SirketProfilDegeri } from '../lib/sirket-veri';
+import type { IlanKontrolSonucu, SirketBaglami, SirketProfilDegeri } from '../lib/sirket-veri';
 
 /**
  * Şirketin İlanlar sekmesi — ilan-merkezli kart listesi.
@@ -102,8 +103,12 @@ export const GenelBakis: React.FC<{
   /** `null` = henüz okunmadı ya da okunamadı; uyarı satırı çizilmez. */
   profil: SirketProfilDegeri | null;
   onNavigate: (yol: string) => void;
-  /** Kapat / Yayınla. Verilmezse düğme çizilmiyor. */
-  onDurum?: (id: string, d: 'published' | 'closed') => Promise<void>;
+  /**
+   * Kapat / Yayına gönder / Yeniden yayınla. Verilmezse düğme çizilmiyor.
+   * Yayına göndermede sunucunun kontrol sonucunu döndürüyor; kart onu
+   * okuyup ne olduğunu yazıyor ("Yayınla"ya basmak artık yayın sözü değil).
+   */
+  onDurum?: (id: string, d: 'published' | 'closed') => Promise<IlanKontrolSonucu | void>;
   /** Arşivle ya da sil. Verilmezse taşma menüsü çizilmiyor. */
   onKaldir?: (id: string, arsivle: boolean) => Promise<void>;
   simdi?: Date;
@@ -127,6 +132,36 @@ export const GenelBakis: React.FC<{
   const [kaldiriliyor, setKaldiriliyor] = React.useState(false);
   const [acikMenu, setAcikMenu] = React.useState<string | null>(null);
   const [kaldirmaHatasi, setKaldirmaHatasi] = React.useState('');
+
+  /*
+    DURUM EYLEMİNİN SONUCU KARTTA
+
+    Eskiden `void onDurum(...)` idi: hata yutuluyor, düğmeye basan
+    şirket hiçbir şey görmüyordu. Yayına alma sunucuda kontrolden
+    geçtiği için artık sonuç üç ayrı şey olabiliyor (yayında / düzeltme /
+    inceleme); kart hangisi olduğunu yazıyor. Kilit ref'te: iki hızlı
+    dokunuş, durum güncellenmeden ikinci isteği göndermesin.
+  */
+  const [durumIslemi, setDurumIslemi] = React.useState<{ id: string; hedef: 'published' | 'closed' } | null>(null);
+  const [durumSonucu, setDurumSonucu] = React.useState<{ id: string; metin: string; hata: boolean } | null>(null);
+  const durumKilidi = React.useRef(false);
+  const durumDegistir = async (id: string, hedef: 'published' | 'closed') => {
+    if (!onDurum || durumKilidi.current) return;
+    durumKilidi.current = true;
+    setDurumIslemi({ id, hedef });
+    setDurumSonucu(null);
+    try {
+      const sonuc = await onDurum(id, hedef);
+      if (hedef === 'published' && sonuc) {
+        setDurumSonucu({ id, metin: YAYIN_SONUCU_METNI[sonuc.durum] ?? '', hata: false });
+      }
+    } catch (e) {
+      setDurumSonucu({ id, metin: e instanceof Error ? e.message : 'İşlem tamamlanamadı.', hata: true });
+    } finally {
+      durumKilidi.current = false;
+      setDurumIslemi(null);
+    }
+  };
 
   /*
     0 İLAN: TEK KART, BAŞKA HİÇBİR ŞEY
@@ -252,7 +287,6 @@ export const GenelBakis: React.FC<{
         {ilanlar.map((ilan) => {
           const id = String(ilan.id);
           const yayinda = ilan.status === 'published';
-          const taslakMi = ilan.status === 'draft';
           const platformdan = ilan.application_method === 'internal';
           const basvuruSayisi = Number(ilan.applicants_count ?? 0);
           /* Kural tek yerde ve test altında: lib/ilan-formu.mjs. */
@@ -292,32 +326,46 @@ export const GenelBakis: React.FC<{
                 ) : null
               }
               /*
-                RET NOTU — ŞİRKET NEDENİ BURADA OKUYOR
+                KONTROL NOTU — ŞİRKET NEDENİ BURADA OKUYOR
 
-                Ret ilanı taslağa düşürüyor ve notu zorunlu kılıyor.
-                `truncate` YOK: tek satıra kısaltılan gerekçe işe
-                yaramaz. Not yoksa satır hiç çizilmiyor.
+                Düzeltme / inceleme / kontrol hatası gerekçeleri ve eski
+                ret notu `KontrolNotu`nda (IlanKarti). Hemen altında son
+                durum eyleminin sonucu: `role="status"` ile ekran okuyucu
+                da duyuyor. Gerekçe yoksa ve eylem yapılmadıysa hiçbir şey
+                çizilmiyor.
               */
               altNot={
-                taslakMi && ilan.review_note ? (
-                  <p
-                    className="mt-2 rounded-lg px-2 py-1.5 text-xs leading-relaxed"
-                    style={{ background: SIRKET_ROZET, color: SIRKET_METIN }}
-                  >
-                    <strong>İnceleme notu:</strong> {String(ilan.review_note)}
-                  </p>
-                ) : null
+                <>
+                  <KontrolNotu ilan={ilan} />
+                  {durumSonucu?.id === id && durumSonucu.metin && (
+                    <p
+                      role={durumSonucu.hata ? 'alert' : 'status'}
+                      className={`mt-2 text-xs font-semibold leading-relaxed ${
+                        durumSonucu.hata ? 'text-rose-700' : ''
+                      }`}
+                      style={durumSonucu.hata ? undefined : { color: SIRKET_METIN }}
+                    >
+                      {durumSonucu.metin}
+                    </p>
+                  )}
+                </>
               }
               ekEylemler={
                 <>
-                  {onDurum && (
+                  {onDurum && eylem.durumEtiketi && (
                     <button
                       type="button"
-                      onClick={() => void onDurum(id, yayinda ? 'closed' : 'published')}
+                      onClick={() => void durumDegistir(id, yayinda ? 'closed' : 'published')}
+                      disabled={durumIslemi !== null}
+                      aria-busy={durumIslemi?.id === id}
                       className={IKINCIL_DUGME}
                       style={ikincilStil}
                     >
-                      {eylem.durumEtiketi}
+                      {durumIslemi?.id === id
+                        ? durumIslemi.hedef === 'published'
+                          ? 'Kontrol ediliyor…'
+                          : 'Kapatılıyor…'
+                        : eylem.durumEtiketi}
                     </button>
                   )}
 

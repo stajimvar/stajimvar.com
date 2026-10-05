@@ -328,19 +328,24 @@ export const IsverenLanding: React.FC<{
         {/*
           "BUGÜN YAYINLAYIN" DEMİYOR — VERMEDİĞİMİZ SÖZ
 
-          Başlık "İlanınızı bugün yayınlayın" diyordu. Yayına alma
-          yalnızca yöneticide olduğu için yayın tarihi bizim
-          elimizde; şirkete "bugün yayında olur" demek tutamayacağımız
-          bir söz. Gönderme bugün, yayın onaydan sonra.
+          Başlık "İlanınızı bugün yayınlayın" diyordu. Yayın otomatik
+          kontrolün sonucuna bağlı (20261120010000): sorunsuz ilan hemen
+          yayına çıkıyor ama eksik ya da şüpheli ilan çıkmıyor. "Bugün
+          yayında" demek, her ilan için verilemeyecek bir söz.
+
+          E-POSTA SÖZÜ YOK: sonuç şirket panelinde yazıyor. Otomatik
+          kararlar için e-posta gönderilmiyor; olmayan bir kanal
+          anılmıyor.
 
           SAYI YOK: "kaç öğrenci", "kaç başvuru" gibi bir rakam
           eklenmedi; doğrulanmadığı sürece o rakam bir vaat olur.
         */}
         <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-gray-700">
-          Hesap açmak bir dakika, ilan girmek iki dakika sürüyor. İlanı
-          gönderdikten sonra biz inceliyoruz; onaylanınca öğrenci listesinde
-          görünüyor. Sonucu hesap sahibi e-postanıza ve şirket
-          panelinize düşüyor.
+          Hesap açmak bir dakika, ilan girmek iki dakika sürüyor. Yayına
+          gönderdiğiniz ilan otomatik olarak kontrol edilir: sorunsuzsa hemen
+          öğrenci listesinde görünür, eksik bilgi varsa neyi düzelteceğiniz
+          yazılır, şüpheli bulunan ilan ekibimizin incelemesine gider. Sonucu
+          şirket panelinizde görürsünüz.
         </p>
         {/*
           İKİ EYLEM ALTTA DA YAN YANA

@@ -52,7 +52,11 @@ test('etiketler alanlara bağlı; seçim şeritleri adlı grup', () => {
 
 test('başvuru bilgisi düğmelerin yanında; doğrulama notu ve kurallar korunuyor', () => {
   const alt = FORM.slice(FORM.indexOf('GÖNDER KARTIN SON SATIRI'));
-  assert.ok(alt.indexOf('İncelemeye gönder') < alt.indexOf('Başvurular StajımVar üzerinden gelir.'));
+  /* -1 < n her zaman doğru olurdu: önce ikisinin de VAR olduğu ölçülüyor. */
+  assert.ok(alt.indexOf('Yayına gönder') > -1, 'gönder düğmesi kartın son satırında olmalı');
+  assert.ok(alt.indexOf('Başvurular StajımVar üzerinden gelir.') > -1);
+  assert.ok(alt.indexOf('Yayına gönder') < alt.indexOf('Başvurular StajımVar üzerinden gelir.'));
+  assert.ok(alt.indexOf('Taslak olarak kaydet') > -1, 'taslak eylemi de aynı satırda');
   assert.match(FORM, /\{!adayKimligiAcik && \(/);
   assert.match(FORM, /ilanSatiri\(deger, \{ companyId: '', durum: baslangicDurumu \}\)/);
   assert.match(FORM, /\{ACIKLAMA_EN_AZ\}–\{ACIKLAMA_EN_FAZLA\} karakter/);

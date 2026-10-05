@@ -1481,6 +1481,59 @@ export interface OnayIlani {
   aciklamaUzunluk: number;
   olustu: string;
   guncellendi: string | null;
+  /* Otomatik kontrol (20261120010000). Şirket dışı taslaklarda boş. */
+  kontrolDurumu?: string | null;
+  kontrolZamani?: string | null;
+  kuralSurumu?: string | null;
+  kontrolGerekceleri?: OnayKontrolGerekcesi[] | null;
+  /** Yönetici daha önce kaldırdı ya da reddetti: yeniden yayın yönetici onayına bağlı. */
+  yoneticiIncelemesiGerekli?: boolean;
+}
+
+/** Kontrol defterindeki gerekçe; şüphelerde kanıt metniyle. */
+export interface OnayKontrolGerekcesi {
+  kural: string;
+  mesaj: string;
+  alan?: string | null;
+  kanit?: string | null;
+}
+
+/** Kontrolü tamamlanamamış, sunucunun yeniden denediği ilan. */
+export interface OnayKontrolBekleyen {
+  id: string;
+  baslik: string;
+  sirket: string | null;
+  denemeler: number;
+  sonrakiDeneme: string | null;
+  sonHata: string | null;
+  /** 'ilan' ya da 'degisiklik' (yayındaki ilanın bekleyen değişikliği). */
+  kapsam?: 'ilan' | 'degisiklik';
+}
+
+/** Son otomatik ve yönetici kararları (en yeni 30). */
+export interface OnayKontrolKarari {
+  id: number;
+  ilanId: string;
+  baslik: string;
+  sirket: string | null;
+  ilanDurumu: string;
+  kaynak: 'otomatik' | 'yonetici';
+  karar:
+    | 'yayinla'
+    | 'duzeltme'
+    | 'inceleme'
+    | 'hata'
+    | 'yonetici_onay'
+    | 'yonetici_ret'
+    | 'yonetici_kaldirdi'
+    | 'degisiklik_onay'
+    | 'degisiklik_ret';
+  /** 'ilan': ilanın kendisi; 'degisiklik': yayındaki ilanın bekleyen değişikliği. */
+  kapsam?: 'ilan' | 'degisiklik';
+  gerekceler: OnayKontrolGerekcesi[];
+  kuralSurumu: string | null;
+  hata: string | null;
+  zaman: string;
 }
 
 export interface OnaySahiplenme {
@@ -1528,6 +1581,32 @@ export interface OnayKuyrugu {
   sahiplenmeler: OnaySahiplenme[];
   bolumler: OnayBolum[];
   dogrulamalar: OnayDogrulama[];
+  kontrolBekleyenler: OnayKontrolBekleyen[];
+  sonKararlar: OnayKontrolKarari[];
+  degisiklikler: OnayDegisikligi[];
+  yenidenDenemeIsi: OnayYenidenDenemeIsi;
+}
+
+/** Yayındaki ilanın incelemedeki değişikliği: canlı (son onaylı) ↔ bekleyen. */
+export interface OnayDegisikligi {
+  id: string;
+  baslik: string;
+  sirket: string | null;
+  canli: Record<string, unknown>;
+  bekleyen: Record<string, unknown>;
+  kontrolZamani: string | null;
+  kuralSurumu: string | null;
+  kontrolGerekceleri: OnayKontrolGerekcesi[] | null;
+}
+
+/**
+ * Zamanlanmış yeniden deneme işinin sağlığı. GitHub zamanlaması
+ * gecikebilir ya da hiç çalışmayabilir: `sonCalisma` eskiyse ya da
+ * `gecikmisKontroller` > 0 ise yönetici fark etmeli.
+ */
+export interface OnayYenidenDenemeIsi {
+  sonCalisma: string | null;
+  gecikmisKontroller: number;
 }
 
 export async function fetchOnayKuyrugu(): Promise<OnayKuyrugu> {
@@ -1539,7 +1618,15 @@ export async function fetchOnayKuyrugu(): Promise<OnayKuyrugu> {
     düşerdi; boş dizi o boşluğu dolduruyor.
   */
   const kuyruk = data as unknown as OnayKuyrugu;
-  return { ...kuyruk, dogrulamalar: kuyruk?.dogrulamalar ?? [] };
+  return {
+    ...kuyruk,
+    dogrulamalar: kuyruk?.dogrulamalar ?? [],
+    /* 20261120010000 ile geldi; göç öncesi sunucuda boş. */
+    kontrolBekleyenler: kuyruk?.kontrolBekleyenler ?? [],
+    sonKararlar: kuyruk?.sonKararlar ?? [],
+    degisiklikler: kuyruk?.degisiklikler ?? [],
+    yenidenDenemeIsi: kuyruk?.yenidenDenemeIsi ?? { sonCalisma: null, gecikmisKontroller: 0 },
+  };
 }
 
 /**
@@ -1572,6 +1659,45 @@ export async function sirketDogrulamasiniReddet(id: string, sebep: string): Prom
  * `beklenenGuncellendi` gönderiliyor: iki yönetici aynı kuyruğa bakarken
  * biri karar verdikten sonra ötekinin kararı sessizce üzerine yazmasın.
  */
+/*
+  YÖNETİCİ MÜDAHALESİ (20261120010000) — gerekçe zorunlu (en az 10
+  karakter), şirket gerekçeyi kendi panelinde görüyor, işlem deftere
+  yazılıyor. Kaldırılan ya da reddedilen ilan, otomatik kontrolü geçse
+  bile yeniden yayına ancak yönetici onayıyla çıkıyor.
+*/
+
+/** Yayındaki şirket ilanını gerekçeyle yayından kaldırır (acil durum). */
+export async function ilanYayindanKaldir(id: string, gerekce: string): Promise<void> {
+  const { error } = await supabase.rpc('yonetim_ilan_yayindan_kaldir' as never, {
+    p_ilan: id,
+    p_gerekce: gerekce,
+  } as never);
+  if (error) fail('İlan yayından kaldırılamadı', error);
+}
+
+/** İncelemedeki şirket ilanını gerekçeyle reddeder (arşivlemez; şirket düzeltebilir). */
+export async function ilanGerekceyleReddet(id: string, gerekce: string): Promise<void> {
+  const { error } = await supabase.rpc('yonetim_ilan_reddet' as never, {
+    p_ilan: id,
+    p_gerekce: gerekce,
+  } as never);
+  if (error) fail('İlan reddedilemedi', error);
+}
+
+/** Yayındaki ilanın incelemedeki değişikliğini onaylar ya da gerekçeyle reddeder. */
+export async function ilanDegisikligiKarari(
+  id: string,
+  karar: 'onayla' | 'reddet',
+  gerekce?: string | null,
+): Promise<void> {
+  const { error } = await supabase.rpc('yonetim_degisiklik_karari' as never, {
+    p_ilan: id,
+    p_karar: karar,
+    p_gerekce: gerekce ?? null,
+  } as never);
+  if (error) fail('Değişiklik kararı uygulanamadı', error);
+}
+
 export async function ilanKarariVer(
   id: string,
   karar: 'onayla' | 'reddet',
