@@ -1025,3 +1025,48 @@ test('veritabanı senaryosu doğrulama sınırını kapsıyor', () => {
     assert.ok(SQL.includes(adim), `senaryo adımı eksik: ${adim}`);
   }
 });
+
+/* ================================================================== */
+/*  AŞAMA 9 — POLİTİKA YARDIMCISININ EXECUTE HAKKI                    */
+/* ================================================================== */
+
+const ANON_GOC = oku('supabase/migrations/20261130010000_politika_yardimcisi_anon_execute.sql');
+
+test('politikadan çağrılan yardımcı anon tarafından da çalıştırılabiliyor', () => {
+  /*
+    Deponun kendi regresyon betiği (scripts/sql/rls-regresyon-testleri.sql)
+    şunu istiyor: bir politikanın KAPSADIĞI her rol, o politikanın
+    ifadesinde geçen her fonksiyonu çalıştırabilmeli.
+
+    "dogrulanmis sirket basvuru durumu gunceller" politikası rol kapsamı
+    belirtmediği için PUBLIC — `anon` da kapsamda. 20261122010000 ise
+    yardımcıdan `anon`un hakkını almıştı; CI bunu yakaladı.
+
+    Güvenlik kaybı yok: `anon` oturumunda auth.uid() null, fonksiyon
+    her zaman false dönüyor. Üretimde `is_company_member`,
+    `sirket_dogrulandi` ve `is_admin` de aynı şekilde `anon`a açık.
+  */
+  assert.match(
+    ANON_GOC,
+    /grant execute on function public\.sirket_basvuru_yazabilir\(uuid\) to anon;/,
+    'yardımcı anon için açılmalı',
+  );
+});
+
+test('gereksiz yetki verilmiyor: okuma kapısı anona AÇILMIYOR', () => {
+  /*
+    `sirket_adaylarini_gorebilir` yalnız `to authenticated` yazılmış bir
+    politikadan çağrılıyor, yani `anon` kapsamda değil. Gerekmeyen
+    yetkiyi vermemek, kuralı toptan uygulamaktan daha doğru.
+  */
+  assert.ok(
+    !/grant execute on function public\.sirket_adaylarini_gorebilir\(uuid\) to anon/.test(ANON_GOC),
+    'okuma kapısı anona açılmamalı',
+  );
+  const SINIR = oku('supabase/migrations/20261129010000_dogrulanmis_sirket_siniri.sql');
+  assert.match(
+    SINIR,
+    /create policy "sirket degerlendirmeleri gorur" on public\.basvuru_degerlendirmeleri\s*\n\s*for select to authenticated/,
+    'politika authenticated ile sınırlı olmalı',
+  );
+});
