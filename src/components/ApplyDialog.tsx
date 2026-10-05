@@ -37,6 +37,20 @@ interface ApplyDialogProps {
    * yazılmıyor.
    */
   onCvOlustur?: () => void;
+  /*
+    BAŞVURU ÖNCESİ İLETİŞİM KONTROLÜ (sade akış)
+
+    Öğrenci neyin paylaşılacağını GÖRMEDEN onay vermemeli. Burada
+    gösterilen değerler gerçek profil değerleri; diyalog bunları
+    uydurmuyor ve değiştirmiyor.
+  */
+  paylasilacak?: { ad: string; eposta: string; telefon: string };
+  /*
+    Telefon eksikse aynı ekranda tamamlanıyor. SMS DOĞRULAMASI YOK —
+    bu sürüme eklenmiyor; "doğrulanmış numara" iddiası da hiçbir yerde
+    yazmıyor.
+  */
+  onTelefonKaydet?: (telefon: string) => Promise<void>;
 }
 
 export const ApplyDialog: React.FC<ApplyDialogProps> = ({
@@ -44,6 +58,8 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
   alreadyApplied,
   onClose,
   onSubmit,
+  paylasilacak,
+  onTelefonKaydet,
   onCvOlustur,
 }) => {
   const [consent, setConsent] = useState(false);
@@ -56,6 +72,11 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
     olurdu. Bu yüzden ikinci, ayrı bir kutu ve başvuru onu beklemiyor.
   */
   const [paylasimIzni, setPaylasimIzni] = useState(false);
+  /* Telefon eksikse aynı ekranda tamamlanıyor; profil sayfasına gitmeye gerek yok. */
+  const [telefon, setTelefon] = useState(paylasilacak?.telefon ?? '');
+  const [telefonTaslak, setTelefonTaslak] = useState('');
+  const [telefonKaydediliyor, setTelefonKaydediliyor] = useState(false);
+  const [telefonHatasi, setTelefonHatasi] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -207,6 +228,85 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
                 </div>
               )}
 
+              {/*
+                PAYLAŞILACAK BİLGİLER — ONAYDAN ÖNCE, AÇIKÇA
+
+                Öğrenci neyin gideceğini görmeden onay vermemeli. Burada
+                yazan değerler gerçek profil değerleri; uydurulmuyor.
+              */}
+              {rizaGerekli && paylasilacak && (
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-3.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                    {listing.companyName} ile paylaşılacak bilgiler
+                  </p>
+                  <dl className="mt-2 space-y-1 text-xs text-gray-700">
+                    <div className="flex gap-2">
+                      <dt className="w-16 shrink-0 text-gray-500">Ad</dt>
+                      <dd className="font-semibold break-words">{paylasilacak.ad || '—'}</dd>
+                    </div>
+                    <div className="flex gap-2">
+                      <dt className="w-16 shrink-0 text-gray-500">E-posta</dt>
+                      <dd className="font-semibold break-all">{paylasilacak.eposta || '—'}</dd>
+                    </div>
+                    <div className="flex gap-2">
+                      <dt className="w-16 shrink-0 text-gray-500">Telefon</dt>
+                      <dd className="font-semibold break-words">
+                        {telefon ? telefon : <span className="font-normal text-gray-500">eklenmedi</span>}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  {/*
+                    TELEFON ZORUNLU DEĞİL. Eksikse burada tamamlanabiliyor
+                    ama başvuru onu beklemiyor: numarası olmayan öğrenciyi
+                    başvurudan alıkoymak, olmayan bir şartı dayatmak olurdu.
+                    Şirket de boş telefonu boş görüyor.
+                  */}
+                  {!telefon && onTelefonKaydet && (
+                    <div className="mt-2.5">
+                      <label className="block text-[11px] font-semibold text-gray-600">
+                        Telefon eklemek ister misin? (isteğe bağlı)
+                      </label>
+                      <div className="mt-1 flex gap-2">
+                        <input
+                          type="tel"
+                          inputMode="tel"
+                          autoComplete="tel"
+                          placeholder="05XX XXX XX XX"
+                          value={telefonTaslak}
+                          onChange={(e) => setTelefonTaslak(e.target.value)}
+                          className="min-h-11 flex-1 rounded-xl border border-gray-300 px-2.5 text-sm"
+                        />
+                        <button
+                          type="button"
+                          disabled={!telefonTaslak.trim() || telefonKaydediliyor}
+                          onClick={async () => {
+                            setTelefonHatasi(null);
+                            setTelefonKaydediliyor(true);
+                            try {
+                              await onTelefonKaydet(telefonTaslak.trim());
+                              setTelefon(telefonTaslak.trim());
+                            } catch {
+                              setTelefonHatasi('Numara kaydedilemedi. Yeniden dene.');
+                            } finally {
+                              setTelefonKaydediliyor(false);
+                            }
+                          }}
+                          className="min-h-11 cursor-pointer rounded-xl bg-blue-600 px-3 text-sm font-bold text-white disabled:opacity-60"
+                        >
+                          {telefonKaydediliyor ? 'Kaydediliyor…' : 'Kaydet'}
+                        </button>
+                      </div>
+                      {telefonHatasi && (
+                        <p role="alert" className="mt-1 text-[11px] font-semibold text-red-700">
+                          {telefonHatasi}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* KVKK açık rızası — yalnızca gerçekten aktarım yapılıyorsa */}
               {rizaGerekli && (
               <label className="flex gap-2.5 items-start cursor-pointer rounded-2xl border border-gray-200 p-3.5 hover:border-blue-300 transition-colors">
@@ -217,9 +317,17 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
                   className="mt-0.5 w-4 h-4 accent-blue-600 shrink-0"
                 />
                 <span className="text-xs text-gray-600 leading-relaxed">
-                  Profilimin ve iletişim bilgilerimin, <strong>yalnızca doğrulanmış</strong>{' '}
-                  başvuru kanalı üzerinden {listing.companyName} ile paylaşılmasına izin
-                  veriyorum.{' '}
+                  {/*
+                    METİN NE PAYLAŞILDIĞINI VE KİMİNLE PAYLAŞILDIĞINI
+                    AÇIKÇA SÖYLÜYOR: "iletişim bilgilerim" yerine
+                    telefon ve e-posta ayrı ayrı yazıyor, şirketin adı
+                    cümlenin içinde. Öğrenci neye onay verdiğini
+                    okumadan işaretlememeli.
+                  */}
+                  Profilimin, <strong>telefon numaramın ve e-posta adresimin</strong>{' '}
+                  <strong>{listing.companyName}</strong> ile paylaşılmasına izin veriyorum.
+                  Bu bilgiler yalnızca bu şirketin doğrulanmış yetkililerine açılır,
+                  herkese açık profilimde görünmez ve başka şirketlerle paylaşılmaz.{' '}
                   <a
                     href="/kvkk-aydinlatma-metni"
                     target="_blank"

@@ -86,7 +86,11 @@ test('şirket yalnızca yanıtı TEMİZLEYEBİLİYOR', () => {
     önerebilmeli. Yazabildiği tek yanıt değeri NULL.
   */
   assert.match(goc, /if new\.interview_response is null/);
-  assert.match(cekmece, /Yeni davet gönder/);
+  /*
+    Sade akışta şirket yeni davet GÖNDERMİYOR; veritabanı kuralı (yalnız
+    temizleyebilir) olduğu gibi duruyor. Çekmecede yeni davet düğmesi
+    olmadığı yukarıdaki testte sabit.
+  */
 });
 
 test('işlev anon kullanıcıya kapalı', () => {
@@ -103,10 +107,36 @@ test('teklif ancak görüşme onaylandıysa sıradaki adım', async () => {
   assert.equal(m.sonrakiDurum('interview_scheduled', 'accepted'), 'offer_extended');
 });
 
-test('şirket ekranı davet ve teklif düğmelerini karıştırmıyor', () => {
-  assert.match(cekmece, /Görüşmeye davet et/);
-  assert.match(cekmece, /sonraki === 'interview_scheduled' \?/);
-  assert.match(cekmece, /sonraki === 'offer_extended' \?/);
+const yorumsuz = (m) =>
+  m.replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
+
+test('şirket ekranında YENİ görüşme ve teklif başlatan denetim yok (sade akış)', () => {
+  /*
+    KURAL DEĞİŞTİ: görüşme planlama ve teklif temel akıştan çıktı.
+    Eskiden bu test iki düğmenin doğru sırada durduğunu sabitliyordu;
+    şimdi ikisinin de ÇİZİLMEDİĞİNİ sabitliyor. Yorumlar ayıklanıyor ki
+    kaldırma gerekçesindeki sözcükler iddiayı bozmasın.
+  */
+  const kod = yorumsuz(cekmece);
+  for (const yasak of [
+    'Görüşmeye davet et',
+    'Daveti gönder',
+    'Yeni davet gönder',
+    'Daveti düzenle',
+    'Teklif gönder',
+    'Teklifi düzenle',
+    'onDavet?.(',
+    'onTeklif?.(',
+  ]) {
+    assert.ok(!kod.includes(yasak), `çekmecede hâlâ var: ${yasak}`);
+  }
+  /* Değerlendirme aşamasına geçiş de seçilemiyor. */
+  const m = cekmece.match(/SADE_SIRKET_DURUMLARI/g) ?? [];
+  assert.ok(m.length >= 2, 'seçici sade durum listesini kullanmalı');
+});
+
+test('ESKİ davet geçmiş olarak OKUNUR kalıyor', () => {
+  assert.match(cekmece, /Gönderilen davet/);
 });
 
 test('öğrenci görüşme aşamasında teklif kabul/ret görmüyor', () => {

@@ -1147,9 +1147,11 @@ select pg_temp.bekle(
 -- TEKLİF → ÖĞRENCİNİN KARARI → İLETİŞİM
 -- =====================================================================
 --
--- Ürünün ana kuralı: TEKLİFİ ŞİRKET VERİR, KARARI ÖĞRENCİ VERİR,
--- İLETİŞİM KABULDEN SONRA AÇILIR. Üçü de arayüzde görünüyor ama düğme
--- gizlemek güvenlik değil; sınırların gerçekten burada olduğu ölçülüyor.
+-- Ürünün kuralı: KARARI ÖĞRENCİ VERİR. İletişim şirket tarafında artık
+-- öğrencinin ONAYINA bağlı (sade akış, 20261201010000); öğrenci tarafında
+-- şirket yetkilisi hâlâ teklif kabulünden sonra açılıyor. Eski teklif
+-- kayıtları ve yanıt yolu duruyor. Düğme gizlemek güvenlik değil;
+-- sınırların gerçekten burada olduğu ölçülüyor.
 
 -- ------------------------------------------------- A TEKLİF GÖNDERİYOR
 
@@ -1181,10 +1183,22 @@ select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
   $q$select public.teklife_yanit_ver('33333333-aaaa-4000-8000-000000000001', true)$q$),
   'A, teklif yanit islevini ogrenci adina cagiramaz');
 
--- KABUL ÖNCESİ İLETİŞİM KAPALI: teklif verildi ama yanıt yok.
+-- SADE AKIŞ (20261201010000): ŞİRKET TARAFINDA TEKLİF KABULÜ ŞART DEĞİL.
+--
+-- Bu iddia önce "kabul öncesi iletişim KAPALI" diyordu; ürün kuralı
+-- değişti. Öğrencinin başvururken verdiği onay "profilim ve iletişim
+-- bilgilerim bu şirketle paylaşılsın" diyor ve teklif kabulünden söz
+-- etmiyor. Onaylı, StajımVar üzerinden alınmış başvuruda doğrulanmış
+-- şirketin Owner'ı iletişimi teklif kabulünden ÖNCE de görüyor.
+--
+-- Sınır gevşemiyor, yer değiştiriyor: ilgisiz şirket, başka öğrenci ve
+-- doğrulanmamış şirket hâlâ hiçbir şey görmüyor (aşağıdaki iddialar);
+-- Viewer, onaysız başvuru ve paylaşımı kapatan öğrenci
+-- supabase/tests/basvuru-sadelestirme.test.sql içinde ölçülüyor.
 select pg_temp.bekle(
-  (select count(*) = 0 from public.basvuru_iletisimi('33333333-aaaa-4000-8000-000000000001')),
-  'Kabul oncesi iletisim KAPALI (sirket tarafi)');
+  (select count(*) = 1 from public.basvuru_iletisimi('33333333-aaaa-4000-8000-000000000001')
+    where taraf = 'ogrenci'),
+  'Onayli basvuruda sirket iletisimi teklif kabulu OLMADAN gorur (sade akis)');
 
 -- ------------------------------------------------ B BAŞKASININ ADAYINA
 

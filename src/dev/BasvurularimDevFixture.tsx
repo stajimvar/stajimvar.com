@@ -45,12 +45,21 @@ const temel = {
   appliedAt: '2026-08-20T09:00:00Z',
   /* StajımVar üzerinden: paylaşım izni anahtarı burada çiziliyor. */
   applicationMethod: 'internal',
+  /*
+    SADE AKIŞ: iletişim paylaşımı AÇIK başlıyor (öğrenci başvururken
+    onay verdi) ve şirket henüz bakmadı — "Görüntülenme bilgisi yok"
+    satırı böyle görülebiliyor.
+  */
+  contactShareConsentAt: '2026-08-20T09:00:00Z',
+  contactShareConsentVersion: '2026-09-v2',
 };
 
 /** Yedi durumun tamamı; ikisinde ek alan var, birinde hiç damga yok. */
 const BASVURULAR: ApplicationRecord[] = [
   /* Damga YOK: durum hiç değişmedi, "güncelleme" satırı çıkmamalı. */
-  { ...temel, id: 'b1', listingId: 'ilan-1', status: 'submitted' },
+  {
+    /* Şirket BAKTI: "Şirket başvurunu görüntüledi" satırı burada. */
+    ilkGoruntulenmeAt: '2026-08-25T11:30:00Z', ...temel, id: 'b1', listingId: 'ilan-1', status: 'submitted' },
   {
     ...temel,
     id: 'b2',
@@ -204,6 +213,15 @@ export const BasvurularimDevFixture: React.FC = () => {
               setGonderilen(`riza=${riza} paylasimIzni=${paylasimIzni}`);
               setPencere(false);
             }}
+            /*
+              BAŞVURU ÖNCESİ İLETİŞİM KONTROLÜ: telefon BOŞ başlıyor ki
+              "eksik telefonu aynı ekranda tamamla" hâli görülebilsin.
+              Değerler kurgu.
+            */
+            paylasilacak={{ ad: 'Örnek Öğrenci', eposta: 'ogrenci@ornek.test', telefon: '' }}
+            onTelefonKaydet={async () => {
+              await new Promise((r) => window.setTimeout(r, 200));
+            }}
           />
         )}
         <ApplicationsTrackerView
@@ -288,6 +306,23 @@ export const BasvurularimDevFixture: React.FC = () => {
             yalnız öğrencinin kendi `internal` başvurusu). b3 her zaman hata
             veriyor: satır içi hata ve kilitli anahtar görülebilsin.
           */
+          /*
+            İLETİŞİM PAYLAŞIMI: gerçek kapı sunucuda
+            (public.ogrenci_paylasimi_ac, yalnız öğrencinin kendisi).
+            Kapatınca şirketin erişimi sunucuda kesiliyor; fikstür
+            yalnız anahtarın davranışını gösteriyor.
+          */
+          onIletisimPaylasimi={(id, acik) =>
+            new Promise<string | null>((coz) => {
+              window.setTimeout(() => {
+                const an = acik ? new Date().toISOString() : null;
+                setKayitlar((o) =>
+                  o.map((a) => (a.id === id ? { ...a, contactShareConsentAt: an } : a)),
+                );
+                coz(an);
+              }, 180);
+            })
+          }
           onPaylasimIzni={(id, acik) =>
             new Promise<string | null>((coz, red) => {
               window.setTimeout(() => {

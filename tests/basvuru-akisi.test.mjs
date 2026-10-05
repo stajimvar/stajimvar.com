@@ -43,10 +43,15 @@ test('her durum için ayrı düğme dizisi kalmadı', () => {
 });
 
 test('sonraki adım sözlükten geliyor, çekmecede yeniden yazılmıyor', () => {
+  /*
+    SADE AKIŞ (sadeleştirme): şirketin tek ilerletme adımı yeni başvuruyu
+    incelemeye almak; o da sözlükten (`sadeSonrakiDurum`) geliyor.
+    Korunan niyet aynı: akış sırası çekmecede ikinci kez yazılmıyor.
+  */
   assert.match(
     cekmece,
-    /sonrakiDurum\(kart\.durum, kart\.gorusmeYaniti\)/,
-    'sonraki adım hesaplanmıyor ya da görüşme yanıtını yok sayıyor',
+    /sadeSonrakiDurum\(kart\.durum\)/,
+    'sonraki adım sözlükten hesaplanmıyor',
   );
   /* Akış sırası ikinci bir yerde tanımlanmamalı. */
   assert.ok(!/const\s+akis\s*=/.test(cekmece), 'çekmece kendi akış haritasını kuruyor');
@@ -140,10 +145,14 @@ test('şirket ADAYIN kararlarını yazamıyor', () => {
       `şirket aday adına ${d} yazabiliyor`,
     );
   }
-  /* Kilitli seçenek genel: şirketin listesinde olmayan her durum. */
+  /*
+    Kilitli seçenek genel: şirketin listesinde olmayan her durum. Sade
+    akışta liste `SADE_SIRKET_DURUMLARI`; eski görüşme/teklif durumları
+    da bu yolla GEÇMİŞ olarak görünüyor ama seçilemiyor.
+  */
   assert.match(
     cekmece,
-    /!SIRKET_DURUMLARI\.includes\(kart\.durum\)/,
+    /!SADE_SIRKET_DURUMLARI\.includes\(kart\.durum\)/,
     'adayın kararı seçicide görünmüyor ya da seçilebilir kalmış',
   );
 });

@@ -216,6 +216,7 @@ const ORNEK_KUYRUK: OnayKuyrugu = {
 const ornekKuyrukGetir = () => Promise.resolve(ORNEK_KUYRUK);
 import { KADEME } from '../lib/sirket-kademe.mjs';
 import { kartVerisi } from '../lib/aday-kart.mjs';
+import { PAYLASIM_SURUMU } from '../lib/basvuru-durumu.mjs';
 import type {
   AdayGuncelProfili,
   AdayPaylasimi,
@@ -292,6 +293,16 @@ const ADAY_A_KOPYASI = {
 */
 const GUN_ONCE = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
 
+/*
+  GÖRÜNTÜLENME KAYDI — modül düzeyinde ki kimliği sabit kalsın (çekmece
+  efekti ona bağlı; her çizimde yeni işlev olsaydı kayıt tekrar
+  tekrar düşerdi). Üretimde yerinde gerçek RPC var.
+*/
+function fikstürGoruntulenmeKaydi(id: string) {
+  const w = window as unknown as { __goruntulenmeler?: string[] };
+  (w.__goruntulenmeler ??= []).push(id);
+}
+
 const ORNEK_BASVURULAR = [
   {
     id: 'test-1',
@@ -304,6 +315,12 @@ const ORNEK_BASVURULAR = [
     ilanBasligi: 'Yazılım Stajyeri',
     application_method: 'internal',
     contact_share_consent_at: '2026-08-20T09:00:00Z',
+    /*
+      Gerçek veri yapısı: rıza damgası + sürümü. Eski sürüm (2026-09-v2)
+      ama StajımVar üzerinden alınmış başvuru — sade kurala göre iletişim
+      AÇIK. "Öğrenci paylaşımı kapatsın" kolu bu satırı kapatıyor.
+    */
+    contact_share_consent_version: '2026-09-v2',
     /* Paylaşım izni VAR: inceleme ekranında ızgara ve görüntüleyici. */
     paylasim_izni_at: '2026-08-20T09:00:00Z',
     cover_letter: 'Bu bir test ön yazısıdır.',
@@ -335,7 +352,12 @@ const ORNEK_BASVURULAR = [
     listing_id: 'ilan-1',
     ilanBasligi: 'Yazılım Stajyeri',
     application_method: 'internal',
-    contact_share_consent_at: '2026-08-18T09:00:00Z',
+    /*
+      ONAYSIZ başvuru: öğrenci iletişim paylaşımını seçmedi. Sade kurala
+      göre şirket telefon/e-posta GÖRMÜYOR; ekran nedenini yazıyor.
+    */
+    contact_share_consent_at: null,
+    contact_share_consent_version: null,
     profile_snapshot: {
       ad: 'Aday B',
       universite: 'Örnek Teknik Üniversitesi',
@@ -1088,7 +1110,27 @@ export const SirketPanelDevFixture: React.FC = () => {
     hiç görülmüyordu. Artık satırlar yerel durumda tutuluyor ve durum
     değişimi kartlara işliyor.
   */
-  const [satirlar, setSatirlar] = React.useState(ORNEK_BASVURULAR);
+  /*
+    `dev-cekmece-hata=1`: test-1'in kopyasına BOZUK bir proje açıklaması
+    (nesne) konuyor. Çekmece onu çizerken hata veriyor ve hata sınırı
+    devreye giriyor — "ayrıntı yüklenemedi" hâli. Kart oluşturucu
+    proje BAŞLIĞINI süzüyor ama açıklamayı süzmüyor; bozulma oradan.
+  */
+  const [satirlar, setSatirlar] = React.useState(() =>
+    new URLSearchParams(window.location.search).get('dev-cekmece-hata') === '1'
+      ? (ORNEK_BASVURULAR.map((r) =>
+          r.id === 'test-1'
+            ? {
+                ...r,
+                profile_snapshot: {
+                  ...(r.profile_snapshot as Record<string, unknown>),
+                  projeler: [{ baslik: 'Bozuk kayıt', aciklama: { bozuk: true } }],
+                },
+              }
+            : r,
+        ) as typeof ORNEK_BASVURULAR)
+      : ORNEK_BASVURULAR,
+  );
   const kartlar = React.useMemo(
     () => satirlar.map((s) => kartVerisi(s, { yetenekler: [] })),
     [satirlar]
@@ -1395,33 +1437,47 @@ export const SirketPanelDevFixture: React.FC = () => {
           })
         }
         /*
-          Gerçek kapı veritabanında; fikstür yalnızca kabul edilmiş
-          başvuruda satır döndürerek aynı davranışı taklit ediyor.
-          Bir adayda kasten hata veriyor: "yüklenemedi" hali de
-          tarayıcıda görülebilsin.
+          SUNUCU KURALININ AYNISI (basvuru_iletisimi, 20261201010000):
+            doğrulanmış şirketin Owner/Recruiter üyesi  VE
+            rıza damgası var  VE
+            (StajımVar üzerinden başvuru  YA DA  sade sürümle verilmiş rıza)
+          Teklif kabulü ARANMIYOR. Viewer'a satır DÖNMÜYOR.
+
+          Satır her çağrıda GÜNCEL fikstür verisinden okunuyor: öğrenci
+          paylaşımı kapatınca yeniden okuma boş dönüyor — sunucudaki
+          davranış bu.
+
+          Değerler KURGU (`@ornek.test`). Bir adayda kasten hata var:
+          "yüklenemedi" hali de görülebilsin.
         */
         onIletisim={(id) =>
           new Promise((coz, red) => {
             window.setTimeout(() => {
-              const satir = satirlar.find((x) => x.id === id);
+              const satir = satirlar.find((x) => x.id === id) as Record<string, any> | undefined;
               if (id === hataliId) {
                 red(new Error('Fikstür: iletişim okuma hatası.'));
                 return;
               }
-              coz(
-                satir && satir.status === 'offer_accepted'
-                  ? {
-                      ad: 'Aday F',
-                      eposta: 'aday-f@ornek.test',
-                      /* Ham biçim: ekranda okunur yazılıyor, kayıt değişmiyor. */
-                      telefon: '+905000000000',
-                      unvan: 'Aday',
-                    }
-                  : null,
-              );
+              const yazabilir = rol === 'Owner' || rol === 'Recruiter';
+              const kapsiyor =
+                Boolean(satir?.contact_share_consent_at) &&
+                (satir?.application_method === 'internal' ||
+                  satir?.contact_share_consent_version === PAYLASIM_SURUMU);
+              if (!satir || !yazabilir || !kapsiyor) {
+                coz(null);
+                return;
+              }
+              coz({
+                ad: String(satir.profile_snapshot?.ad ?? 'Aday'),
+                eposta: `${satir.id}@ornek.test`,
+                /* Ham biçim: ekranda okunur yazılıyor, kayıt değişmiyor. */
+                telefon: '+905000000000',
+                unvan: 'Aday',
+              });
             }, 250);
           })
         }
+        onGoruntulendi={fikstürGoruntulenmeKaydi}
         onNot={async () => undefined}
         onGuncelProfil={fikstürGuncelProfil}
         onPaylasimlar={fikstürPaylasimlari}
@@ -1458,6 +1514,35 @@ export const SirketPanelDevFixture: React.FC = () => {
           de Owner — ölçüldü). Viewer'ın salt okunur davranışını gerçek
           ekip verisi uydurmadan görmenin tek yolu bu.
         */}
+        {/*
+          ÖĞRENCİ PAYLAŞIMI KOLU: test-1'in rızasını kapatıp açıyor.
+          Gerçekte bunu yalnız öğrenci yapabiliyor (ogrenci_paylasimi_ac);
+          burada şirket ekranının yeniden okumada ne gördüğünü göstermek
+          için.
+        */}
+        <button
+          type="button"
+          id="dev-paylasim-kapat"
+          onClick={() =>
+            void satirYaz('test-1', { contact_share_consent_at: null, contact_share_consent_version: null })
+          }
+          className={kolSinifi}
+        >
+          Öğrenci paylaşımı kapat
+        </button>
+        <button
+          type="button"
+          id="dev-paylasim-ac"
+          onClick={() =>
+            void satirYaz('test-1', {
+              contact_share_consent_at: new Date().toISOString(),
+              contact_share_consent_version: PAYLASIM_SURUMU,
+            })
+          }
+          className={kolSinifi}
+        >
+          Öğrenci paylaşımı aç
+        </button>
         {(['Owner', 'Recruiter', 'Viewer'] as EkipRolu[]).map((r) => (
           <button
             key={r}

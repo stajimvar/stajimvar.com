@@ -48,6 +48,7 @@ import {
   ilanYayinaGonder,
   sirketBaglami,
   sirketBasvurulari,
+  basvuruGoruntulendi,
   basvurulariDagit,
   degerlendirmeOlcutleri,
   sirketEkibi,
@@ -701,6 +702,12 @@ export const SirketIlanlarSekmesi: React.FC<{
     geçirerek onay diyaloğunu ve okuma hatasını sınayabiliyor.
   */
   onBekleyenAdaylar?: (ilanId: string) => Promise<BekleyenAday[]>;
+  /*
+    Aday ayrıntısı başarıyla açıldı → görüntülenme kaydı. Üretimde
+    verilmiyor (gerçek RPC varsayılan); fikstür çağrıları kaydedip
+    "başarısız yüklemede kayıt yok" kuralını tarayıcıda gösterebiliyor.
+  */
+  onGoruntulendi?: (id: string) => void;
   onNot: (id: string, metin: string) => Promise<void>;
   acilacakAday?: string | null;
   onAdayAcildi?: () => void;
@@ -729,6 +736,7 @@ export const SirketIlanlarSekmesi: React.FC<{
   onPaylasimlar,
   yerelGorselAdresi,
   onBekleyenAdaylar,
+  onGoruntulendi = basvuruGoruntulendi,
   onNot,
   acilacakAday,
   onAdayAcildi,
@@ -755,6 +763,7 @@ export const SirketIlanlarSekmesi: React.FC<{
   if (gorunum === 'basvuranlar') {
     return (
       <Basvuranlar
+        onGoruntulendi={onGoruntulendi}
         baglam={baglam}
         kartlar={basvurular}
         ilanlar={ilanlar}
@@ -878,11 +887,14 @@ const Basvuranlar: React.FC<{
   onIletisim: (id: string) => Promise<Iletisim | null>;
   onGuncelProfil: GuncelProfilYukleyici;
   onPaylasimlar: PaylasimYukleyici;
+  /** Görüntülenme kaydı; sekmeden geliyor (fikstür kaydedebilsin). */
+  onGoruntulendi: (id: string) => void;
   yerelGorselAdresi?: (yol: string) => string | null;
   acilacakAday?: string | null;
   onAdayAcildi?: () => void;
   onNot: (id: string, metin: string) => Promise<void>;
 }> = ({
+  onGoruntulendi,
   baglam,
   kartlar,
   ilanlar,
@@ -1314,6 +1326,7 @@ const Basvuranlar: React.FC<{
             yerelGorselAdresi={yerelGorselAdresi}
             acilacakAday={acilacakAday}
             onAdayAcildi={onAdayAcildi}
+            onGoruntulendi={onGoruntulendi}
           />
         )}
       </div>
@@ -1361,7 +1374,11 @@ const Basvuranlar: React.FC<{
             ekip={ekip}
             onSorumlu={onSorumlu}
             olcutler={olcutler}
-            onDagit={onDagit}
+            /*
+              DENGELİ DAĞITIM BEKLETİLDİ (sade akış): `onDagit` verilmiyor,
+              pano düğmeyi çizmiyor. Sorumlu atama tek tek, isteğe bağlı
+              olarak duruyor; RPC yerinde.
+            */
             /*
               Çekmeceyi IZGARA açıyor: panodan seçilen aday derin
               bağlantıya yazılıyor ve görünüm listeye dönüyor. Çekmecenin
@@ -1390,6 +1407,7 @@ const Basvuranlar: React.FC<{
           yerelGorselAdresi={yerelGorselAdresi}
           acilacakAday={acilacakAday}
           onAdayAcildi={onAdayAcildi}
+          onGoruntulendi={onGoruntulendi}
           onNot={onNot}
         />
       )}

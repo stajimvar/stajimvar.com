@@ -473,16 +473,23 @@ test('EKRAN bildirime bağlı değil', () => {
   assert.match(PANO, /yalnizBekleyen/);
   assert.match(PANO, /\{BEKLEME_ESIKLERI\[0\]\} gündür bekleyenler/);
   assert.match(PANO, /bekleyenGun !== null && \(/);
-  assert.match(AKIS, /cron: "0 7 \* \* \*"/);
+  /* Sade akışta zamanlama bekletildi; ekran zaten bildirime bağlı değildi. */
 });
 
-test('zamanlama GÜNDE BİR; saatlik değil', () => {
+test('zamanlama BEKLETİLDİ: otomatik koşu yok, elle çalıştırma var', () => {
   /*
-    Bekleme süresi gün cinsinden; saatlik koşu aynı eşiği defalarca
-    sorardı ve dedupe dışında kazancı olmazdı.
+    SADE AKIŞ: şirket adayı arayıp e-postayla yürütüyor; durum değişmeden
+    geçen günler "işlem görmedi" anlamına gelmiyor. Günlük koşu açık
+    kalsaydı yayının ertesi sabahı gerçek şirket sahiplerine eski
+    başvurular için hatırlatma gidecekti.
+
+    Eski testin koruduğu şey (saatlik bildirim yağmuru olmasın) burada
+    daha sıkı: HİÇ zamanlama yok.
   */
   const cronlar = [...AKIS.matchAll(/cron: "([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(cronlar, ['0 7 * * *']);
+  assert.deepEqual(cronlar, [], 'zamanlama bekletilmiş olmalı');
+  assert.match(AKIS, /^\s*workflow_dispatch:/m, 'elle çalıştırma kalmalı');
+  assert.doesNotMatch(AKIS, /^\s*schedule:/m);
 });
 
 test('betik dış servis çağırmıyor', () => {

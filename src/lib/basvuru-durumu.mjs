@@ -109,6 +109,34 @@ export const OGRENCI_KARARLARI = ['withdrawn', 'offer_accepted', 'offer_declined
 export const SIRKET_DURUMLARI = DURUM_SIRASI.filter((d) => !OGRENCI_KARARLARI.includes(d));
 
 /**
+ * SADE AKIŞ — ŞİRKETİN SEÇEBİLECEĞİ DURUMLAR
+ *
+ * Yeni akışta şirketin işi adayın profilini, CV'sini ve izinli
+ * iletişimini incelemek; devamını telefon ya da e-postayla kendisi
+ * yürütüyor. Görüşme, değerlendirme aşaması ve teklif temel akıştan
+ * ÇIKTI: şirket bu durumlara yeni bir başvuruyu TAŞIYAMIYOR.
+ *
+ * ESKİ KAYITLAR BOZULMUYOR: o durumlardaki başvurular durumlarını
+ * koruyor ve ekranda geçmiş olarak okunuyor (seçicide devre dışı
+ * seçenek). Öğrencinin açık teklife yanıt yolu (`teklife_yanit_ver`)
+ * aynen çalışıyor.
+ *
+ * `SIRKET_DURUMLARI` ve `sonrakiDurum` SİLİNMEDİ: eski akışın
+ * sözlüğü olarak duruyorlar ve eski kayıtların cümleleri onlardan
+ * kuruluyor.
+ */
+export const SADE_SIRKET_DURUMLARI = ['submitted', 'under_review', 'rejected'];
+
+/**
+ * Sade akışta tek birincil adım: yeni başvuruyu incelemeye almak.
+ * Sonrası (arama, e-posta) site dışında; ekran şirketi bir sonraki
+ * aşamaya zorlamıyor.
+ */
+export function sadeSonrakiDurum(durum) {
+  return durum === 'submitted' ? 'under_review' : null;
+}
+
+/**
  * Akıştaki bir sonraki adım — arayüzdeki tek birincil düğme.
  *
  * Yedi düğme yerine bir sonraki adım: şirket adayı açtığında ne
@@ -230,14 +258,42 @@ export function ogrenciGeriCekebilir(durum) {
 }
 
 /**
- * İletişim bilgileri açık mı?
+ * ÖĞRENCİYE ŞİRKET YETKİLİSİ AÇIK MI?
  *
- * TEK KOŞUL: öğrenci teklifi kabul etti. Arayüz bunu yalnızca
- * GÖSTERİM için kullanıyor; asıl kapı veritabanında
- * (public.basvuru_iletisimi).
+ * TEK KOŞUL: öğrenci teklifi kabul etti. Bu kural DEĞİŞMEDİ — teklif
+ * temel akıştan çıktı ama geçmişte kabul edilmiş teklifler duruyor ve
+ * o öğrencilerin gördüğü bilgi kaybolmamalı.
+ *
+ * Arayüz bunu yalnızca GÖSTERİM için kullanıyor; asıl kapı
+ * veritabanında (public.basvuru_iletisimi).
  */
 export function iletisimAcik(durum) {
   return durum === 'offer_accepted';
+}
+
+/** Sade akışta alınan paylaşım onayının sürümü — sunucudaki `paylasim_surumu()`. */
+export const PAYLASIM_SURUMU = '2026-10-sade-v1';
+
+/**
+ * ŞİRKET ADAYIN İLETİŞİMİNİ GÖREBİLİR Mİ? (gösterim kopyası)
+ *
+ * TEKLİF KABULÜ ARTIK SORULMUYOR. Sorulan şey öğrencinin onayının bu
+ * akışı kapsayıp kapsamadığı:
+ *   - StajımVar üzerinden alınan (internal) başvuruda verdiği onay
+ *     zaten "profilim ve iletişim bilgilerim bu şirketle paylaşılsın"
+ *     diyordu; kapsıyor.
+ *   - Dışarı yönlendiren (external) başvuruda öğrenci formu şirketin
+ *     kendi sitesinde doldurmuştu; eski onay bu ekranı kapsamıyor ve
+ *     YENİ ONAY VARSAYILMIYOR. Öğrenci sonradan açarsa sade sürüm
+ *     damgası geliyor ve kapsıyor.
+ *
+ * Asıl kapı sunucuda (`basvuru_iletisimi_acik`); bu kopya yalnız
+ * ekranın ne çizeceğini bilmesi için. Rol kontrolü BURADA YOK —
+ * Viewer'ı sunucu zaten döndürmüyor.
+ */
+export function adayIletisimiAcik(kart) {
+  if (!kart?.paylasimOnayi) return false;
+  return kart.basvuruYontemi === 'internal' || kart.paylasimSurumu === PAYLASIM_SURUMU;
 }
 
 /**

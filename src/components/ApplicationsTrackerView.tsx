@@ -62,6 +62,21 @@ interface ApplicationsTrackerViewProps {
   */
   onPaylasimIzni?: (applicationId: string, acik: boolean) => Promise<string | null>;
   /*
+    İLETİŞİM PAYLAŞIMI — AÇILABİLİR VE GERİ ALINABİLİR
+
+    KAPSAM DÜRÜST YAZIYOR: tek rıza damgası hem profili hem iletişimi
+    kapsıyor (başvuru anındaki onay metni de öyle). Kapatınca telefon ve
+    e-posta SUNUCUDA kesiliyor (`basvuru_iletisimi`); profil kopyası ise
+    şirket ekranında gizleniyor (`kartVerisi`, rızasız kopya
+    gösterilmiyor). Bu yüzden anahtar yalnız "telefon ve e-posta"
+    demiyor.
+
+    Ayrı bir anahtar: paylaşım izni (sosyal gönderiler) ile iletişim
+    bilgisi aynı şey değil ve biri ötekini kapsamıyor. Kapatınca
+    şirketin erişimi SUNUCUDA kesiliyor.
+  */
+  onIletisimPaylasimi?: (applicationId: string, acik: boolean) => Promise<string | null>;
+  /*
     BİLDİRİMDEN GELEN BAŞVURU
 
     Kullanıcıyı listeye atıp aratmıyoruz: ilgili başvurunun davet ya da
@@ -103,6 +118,7 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
   onRespondToInterview,
   onFetchContact,
   onPaylasimIzni,
+  onIletisimPaylasimi,
   acilacakBasvuru,
   onBasvuruAcildi,
 }) => {
@@ -115,6 +131,7 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
     Ayrı tutuluyor: geri çekme hatası ile izin hatası aynı satırda
     karışmasın.
   */
+  const [iletisimIslemde, setIletisimIslemde] = useState<string | null>(null);
   const [izinIslemde, setIzinIslemde] = useState<string | null>(null);
   const [izinHatasi, setIzinHatasi] = useState<string | null>(null);
 
@@ -373,6 +390,45 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                       {badge.label}
                     </span>
                   </div>
+                </div>
+
+                {/*
+                  BAŞVURU TAKİBİ — İKİ OLAY, İKİSİ DE ÖLÇÜLEN
+
+                  1) Ulaştı mı: yalnız GERÇEKTEN şirkete iletilen
+                     başvuruda "ulaştı" yazıyor. Dışarı yönlendiren
+                     ilanda başvuru bizden geçmiyor; orada doğru ifade
+                     "takibine eklendi" ve bunu "ulaştı" diye yazmak
+                     öğrenciye olmayan bir şey söylemek olurdu.
+
+                  2) Görüntülendi mi: damga yalnız yetkili şirket üyesi
+                     aday ayrıntısını BAŞARIYLA açınca sunucuda yazılıyor
+                     (`basvuru_goruntulendi`). Liste görünümü, ön yükleme
+                     ve öğrencinin kendi açması sayılmıyor.
+
+                  "CV'N AÇILDI" DEMİYORUZ: CV dosyasının gerçekten
+                  açıldığını ölçmüyoruz.
+                */}
+                <div className="flex flex-wrap items-center gap-2 pt-2 text-[11px]">
+                  <span className="rounded-lg bg-gray-100 px-2 py-1 font-semibold text-gray-700">
+                    {app.applicationMethod === 'internal'
+                      ? `Başvuru ulaştı · ${tarihMetni(app.appliedAt)}`
+                      : `Takibine eklendi · ${tarihMetni(app.appliedAt)}`}
+                  </span>
+                  {app.ilkGoruntulenmeAt ? (
+                    <span className="rounded-lg bg-blue-50 px-2 py-1 font-semibold text-blue-800">
+                      Şirket başvurunu görüntüledi · {tarihMetni(app.ilkGoruntulenmeAt)}
+                    </span>
+                  ) : (
+                    /*
+                      "Görüntülenmedi" DEMİYORUZ: bu alan eklenmeden
+                      önceki bakışlar ölçülmedi ve olmayan bir bilgi
+                      olumsuz bir iddiaya çevrilmemeli.
+                    */
+                    <span className="rounded-lg bg-gray-50 px-2 py-1 text-gray-500">
+                      Görüntülenme bilgisi yok
+                    </span>
+                  )}
                 </div>
 
                 {/* Info Bar */}
@@ -759,6 +815,57 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                   hata satır içinde ve anahtar sunucunun son bildirdiği
                   durumda kalıyor.
                 */}
+                {onIletisimPaylasimi && (
+                  <div className="rounded-xl border border-gray-200 p-3.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p id={`iletisim-paylasimi-${app.id}`} className="text-xs font-bold text-gray-900">
+                          Profilim ve iletişim bilgilerim bu şirkete açık
+                        </p>
+                        <p
+                          id={`iletisim-paylasimi-aciklama-${app.id}`}
+                          className="mt-0.5 text-xs leading-relaxed text-gray-600"
+                        >
+                          {iletisimIslemde === app.id
+                            ? 'Kaydediliyor…'
+                            : app.contactShareConsentAt
+                              ? `Açık: ${listing?.companyName ?? 'Şirket'} profilini, telefonunu ve e-postanı görebilir; seni arayabilir ya da e-posta gönderebilir.`
+                              : `Kapalı: ${listing?.companyName ?? 'Şirket'} telefonunu ve e-postanı göremez; şirket ekranında profilin de gizlenir.`}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={Boolean(app.contactShareConsentAt)}
+                        aria-labelledby={`iletisim-paylasimi-${app.id}`}
+                        aria-describedby={`iletisim-paylasimi-aciklama-${app.id}`}
+                        aria-busy={iletisimIslemde === app.id}
+                        disabled={iletisimIslemde === app.id}
+                        onClick={() => {
+                          setIletisimIslemde(app.id);
+                          Promise.resolve(onIletisimPaylasimi(app.id, !app.contactShareConsentAt))
+                            .catch(() => undefined)
+                            .finally(() => setIletisimIslemde(null));
+                        }}
+                        className={`inline-flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-wait disabled:opacity-60 ${ODAK_HALKASI}`}
+                      >
+                        <span
+                          aria-hidden
+                          className={`relative inline-block h-6 w-11 rounded-full transition-colors ${
+                            app.contactShareConsentAt ? 'bg-blue-600' : 'bg-gray-300'
+                          }`}
+                        >
+                          <span
+                            className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                              app.contactShareConsentAt ? 'translate-x-[22px]' : 'translate-x-0.5'
+                            }`}
+                          />
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {onPaylasimIzni && app.applicationMethod === 'internal' && (
                   <div className="rounded-xl border border-gray-200 p-3.5">
                     <div className="flex items-start justify-between gap-3">

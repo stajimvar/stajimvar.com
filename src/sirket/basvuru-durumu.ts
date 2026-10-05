@@ -50,12 +50,15 @@ export type BasvuruDurumu =
 export {
   DURUM_SIRASI,
   SIRKET_DURUMLARI,
+  SADE_SIRKET_DURUMLARI,
+  sadeSonrakiDurum,
   durumAdi,
   sirketDurumCumlesi,
   sonrakiDurum,
   durumKapandi,
   teklifBekliyor,
   iletisimAcik,
+  adayIletisimiAcik,
   ogrencininKarari,
   surecKapandi,
 } from '../lib/basvuru-durumu.mjs';

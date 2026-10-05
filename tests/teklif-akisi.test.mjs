@@ -137,16 +137,29 @@ test('profiles tablosuna yeni okuma politikası açılmadı', () => {
   );
 });
 
-test('istemci iletişim isteğini kabul edilmemiş başvuruda göndermiyor', () => {
-  assert.match(cekmece, /iletisimAcik\(kart\.durum\)/);
+test('istemci iletişim isteğini kapsam dışında göndermiyor', () => {
+  /*
+    ŞİRKET TARAFI: koşul artık onayın kapsamı (sade akış). Kapsamıyorsa
+    istek hiç gönderilmiyor.
+    ÖĞRENCİ TARAFI: eski kural duruyor — öğrenci şirket yetkilisini
+    yalnız kabul edilmiş teklifte görüyor.
+  */
+  assert.match(cekmece, /adayIletisimiAcik\(kart\)/);
   assert.match(ogrenci, /app\.status !== 'offer_accepted'/);
 });
 
 /* ------------------------------------------------------- 4. arayüz */
 
-test('şirket teklif gönderirken içerik topluyor', () => {
-  assert.match(cekmece, /Teklif notu — öğrenci görecek/);
-  assert.match(cekmece, /not: teklifNotu,\s+baslangic: teklifBaslangici,\s+ucret: teklifUcreti,/);
+test('şirket çekmeceden YENİ teklif göndermiyor, eski teklif okunur (sade akış)', () => {
+  /*
+    KURAL DEĞİŞTİ: teklif yönetimi temel akıştan çıktı. Teklif formu ve
+    gönderme çağrısı çekmecede yok. Eski teklif kaydı "Gönderilen
+    teklif" bloğunda GEÇMİŞ olarak duruyor; öğrencinin yanıt yolu
+    (`teklife_yanit_ver`) değişmedi.
+  */
+  assert.doesNotMatch(cekmece, /Teklif notu — öğrenci görecek/);
+  assert.doesNotMatch(cekmece, /onTeklif\?\.\(/);
+  assert.match(cekmece, /Gönderilen teklif/);
 });
 
 test('teklif ve durum tek yazımda gidiyor', () => {
