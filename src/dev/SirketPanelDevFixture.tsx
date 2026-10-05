@@ -222,6 +222,7 @@ import type {
   IlanKontrolDurumu,
   IlanKontrolSonucu,
   SirketProfilDegeri,
+  EkipRolu,
 } from '../lib/sirket-veri';
 import type { PaylasimSonucu } from '../sirket/AdayPaylasimlari';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
@@ -278,9 +279,24 @@ const ADAY_A_KOPYASI = {
   projeler: [{ baslik: 'Örnek proje', aciklama: 'Test açıklaması', adres: 'https://ornek.test/proje' }],
 };
 
+/*
+  SORUMLU DAĞILIMI BİLEREK KARIŞIK: üçte biri Deniz'de (u-1), üçte biri
+  Eren'de (u-2), üçte biri boşta. Hepsi aynı olsaydı ne "sorumlusu
+  olmayanlar" süzgeci ne de iş yükü farkı ekranda görülebilirdi.
+*/
+/*
+  SON İŞLEM DAMGASI bilerek karışık: 2, 9, 20 ve 40 gün önce. Hepsi taze
+  olsaydı bekleme rozeti hiç görünmez, hepsi eski olsaydı rozetsiz kart
+  kalmaz ve ayrımın çalıştığı görülemezdi. Sabit bir "bugün"e göre değil
+  ÇALIŞMA ANINA göre hesaplanıyor; fikstür eskidikçe sayılar kaymasın.
+*/
+const GUN_ONCE = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
+
 const ORNEK_BASVURULAR = [
   {
     id: 'test-1',
+    updated_at: GUN_ONCE(2),
+    atanan_uye: 'u-1',
     status: 'submitted',
     applied_at: '2026-08-20T09:00:00Z',
     match_score: 88,
@@ -296,6 +312,8 @@ const ORNEK_BASVURULAR = [
   {
     /* Aynı öğrenci, BAŞKA ilan, uzun başlık; bu başvuruda paylaşım izni YOK. */
     id: 'test-10',
+    updated_at: GUN_ONCE(20),
+    atanan_uye: null,
     status: 'under_review',
     applied_at: '2026-09-02T09:00:00Z',
     match_score: 72,
@@ -309,6 +327,8 @@ const ORNEK_BASVURULAR = [
   },
   {
     id: 'test-2',
+    updated_at: GUN_ONCE(2),
+    atanan_uye: 'u-2',
     status: 'under_review',
     applied_at: '2026-08-18T09:00:00Z',
     match_score: 61,
@@ -330,6 +350,8 @@ const ORNEK_BASVURULAR = [
   {
     /* Rıza yok: şirketin kendi sitesinden gelen başvuru. Ad görünmemeli. */
     id: 'test-3',
+    updated_at: GUN_ONCE(20),
+    atanan_uye: 'u-1',
     status: 'submitted',
     applied_at: '2026-08-15T09:00:00Z',
     match_score: 34,
@@ -357,6 +379,8 @@ const ORNEK_BASVURULAR = [
         açılabilmeli)
     */
     id: 'test-4',
+    updated_at: GUN_ONCE(2),
+    atanan_uye: null,
     status: 'submitted',
     applied_at: '2026-08-31T08:00:00Z',
     match_score: 0,
@@ -398,6 +422,8 @@ const ORNEK_BASVURULAR = [
       düşse de ana bilgiler görünmeli.
     */
     id: 'test-5',
+    updated_at: GUN_ONCE(20),
+    atanan_uye: 'u-2',
     status: 'interview_scheduled',
     applied_at: '2026-08-29T08:00:00Z',
     match_score: null,
@@ -429,6 +455,8 @@ const ORNEK_BASVURULAR = [
   /* GÖRÜŞME ONAYLANDI: şirketin sıradaki adımı teklif. */
   {
     id: 'test-8',
+    updated_at: GUN_ONCE(2),
+    atanan_uye: 'u-1',
     status: 'interview_scheduled',
     interview_date: '2026-09-12',
     interview_time: '11:30',
@@ -455,6 +483,8 @@ const ORNEK_BASVURULAR = [
   /* ÖĞRENCİ KATILAMIYOR: şirket yeni davet gönderebilmeli. */
   {
     id: 'test-9',
+    updated_at: GUN_ONCE(20),
+    atanan_uye: null,
     status: 'interview_scheduled',
     interview_date: '2026-09-13',
     interview_time: '09:00',
@@ -479,6 +509,8 @@ const ORNEK_BASVURULAR = [
   },
   {
     id: 'test-6',
+    updated_at: GUN_ONCE(2),
+    atanan_uye: 'u-2',
     status: 'offer_accepted',
     applied_at: '2026-08-24T08:00:00Z',
     match_score: 91,
@@ -504,6 +536,8 @@ const ORNEK_BASVURULAR = [
   },
   {
     id: 'test-7',
+    updated_at: GUN_ONCE(20),
+    atanan_uye: 'u-1',
     status: 'offer_declined',
     applied_at: '2026-08-23T08:00:00Z',
     match_score: 74,
@@ -666,7 +700,26 @@ const fikstürGorselAdresi = (yol: string) => {
 };
 
 /** Fikstür boyunca aynı şirket bağlamı — üç ekranda tekrar yazılmasın. */
-const TEST_BAGLAMI = (kademe: number) => ({
+const FIKSTUR_EKIBI = [
+  { uyeId: 'u-1', ad: 'Deniz Yıldız', rol: 'Owner' as EkipRolu, yazabilir: true },
+  { uyeId: 'u-2', ad: 'Eren Kaya', rol: 'Recruiter' as EkipRolu, yazabilir: true },
+  /* Viewer listede var ama `yazabilir: false` — atama kutusuna girmiyor. */
+  { uyeId: 'u-3', ad: 'Selin Ak', rol: 'Viewer' as EkipRolu, yazabilir: false },
+];
+
+const FIKSTUR_OLCUTLER = [
+  { id: 'o-1', ad: 'Teknik yeterlilik', sira: 1 },
+  { id: 'o-2', ad: 'İletişim', sira: 2 },
+  { id: 'o-3', ad: 'Öğrenmeye açıklık', sira: 3 },
+];
+
+const FIKSTUR_IS_YUKU = [
+  { uyeId: null, ad: 'Sorumlusu yok', acik: 4 },
+  { uyeId: 'u-1', ad: 'Deniz Yıldız', acik: 3 },
+  { uyeId: 'u-2', ad: 'Eren Kaya', acik: 1 },
+];
+
+const TEST_BAGLAMI = (kademe: number, rol: EkipRolu = 'Owner') => ({
   companyId: 'test',
   ad: 'Örnek Teknoloji A.Ş.',
   slug: 'ornek',
@@ -680,6 +733,9 @@ const TEST_BAGLAMI = (kademe: number) => ({
   dogrulamaNotu: null,
   dogrulamaReddiAt: null,
   kademe,
+  rol,
+  /* Sunucudaki `sirket_basvuru_yazabilir` ile aynı kural. */
+  basvuruYazabilir: rol === 'Owner' || rol === 'Recruiter',
 });
 
 /*
@@ -770,9 +826,22 @@ const ALTI_ILAN = [
   4'e 12 yeni. Adlar bilerek "Aday X": gerçek isme benzeyen uydurma ad,
   ekran görüntüsüne düştüğünde gerçek sanılır.
 */
-const YENI_BASVURU = (id: string, ilanNo: number, ad: string, status = 'submitted') => ({
+const YENI_BASVURU = (
+  id: string,
+  ilanNo: number,
+  ad: string,
+  status = 'submitted',
+  /*
+    SORUMLU: fikstürde bilerek BAZI başvurularda dolu, bazılarında boş.
+    Hepsi boş olsaydı "sorumlusu olmayanlar" süzgeci hiçbir şeyi
+    süzmez ve çalıştığı görülemezdi; hepsi dolu olsaydı tersi.
+  */
+  atanan: string | null = null,
+) => ({
   id,
   status,
+  atanan_uye: atanan,
+  atanan_at: atanan ? '2026-10-05T08:00:00Z' : null,
   applied_at: '2026-09-16T09:00:00Z',
   match_score: null,
   listing_id: `2d7aa946-0000-4000-8000-00000000000${ilanNo}`,
@@ -784,14 +853,26 @@ const YENI_BASVURU = (id: string, ilanNo: number, ad: string, status = 'submitte
 
 const HARFLER = 'ABCDEFGHIJKLMNOP';
 const TEK_ILAN_BASVURULARI = [1, 2, 3].map((n) =>
-  YENI_BASVURU(`tek-${n}`, 1, `Aday ${HARFLER[n - 1]}`),
+  /* İlk ikisinin sorumlusu var, üçüncüsü boşta. */
+  YENI_BASVURU(`tek-${n}`, 1, `Aday ${HARFLER[n - 1]}`, 'submitted', n <= 2 ? 'u-1' : null),
 );
 const ALTI_ILAN_BASVURULARI = [
   ...TEK_ILAN_BASVURULARI,
   YENI_BASVURU('iki-1', 2, 'Aday D', 'under_review'),
   ...[1, 2, 3, 4, 5, 6, 7].map((n) => YENI_BASVURU(`uc-${n}`, 3, `Aday ${HARFLER[n + 3]}`, 'rejected')),
+  /*
+    Sorumlu dağılımı bilerek KARIŞIK: üçte biri Deniz'de, üçte biri
+    Eren'de, üçte biri boşta. Hepsi aynı olsaydı ne "sorumlusu olmayanlar"
+    süzgeci ne de iş yükü farkı ekranda görülebilirdi.
+  */
   ...Array.from({ length: 12 }, (_, i) =>
-    YENI_BASVURU(`dort-${i + 1}`, 4, `Aday ${HARFLER[i % HARFLER.length]}${i + 1}`),
+    YENI_BASVURU(
+      `dort-${i + 1}`,
+      4,
+      `Aday ${HARFLER[i % HARFLER.length]}${i + 1}`,
+      'submitted',
+      i % 3 === 0 ? 'u-1' : i % 3 === 1 ? 'u-2' : null,
+    ),
   ),
 ];
 
@@ -970,6 +1051,14 @@ type Senaryo = 'sifir' | 'bir' | 'alti' | 'kontrol';
 export const SirketPanelDevFixture: React.FC = () => {
   const [kademe, setKademe] = React.useState<number>(KADEME.DOGRULANMIS);
   /*
+    EKİP ROLÜ KOLU (5 Ekim 2026)
+
+    `recruiter_role` üretimde bugün yalnız 'Owner' değerini taşıyor
+    (ölçüldü: 2 üye, ikisi de Owner). Viewer'ın salt okunur davranışını
+    gerçek ekip verisi uydurmadan görmenin tek yolu bu kol.
+  */
+  const [rol, setRol] = React.useState<EkipRolu>('Owner');
+  /*
     ADRES YEREL DURUMDA
 
     Header, alt menü ve sekme içerikleri hep aynı `onNavigate`i alıyor;
@@ -1102,8 +1191,8 @@ export const SirketPanelDevFixture: React.FC = () => {
     });
 
   const baglam = sirketYok
-    ? { ...TEST_BAGLAMI(kademe), companyId: null, ad: '', slug: '' }
-    : TEST_BAGLAMI(kademe);
+    ? { ...TEST_BAGLAMI(kademe, rol), companyId: null, ad: '', slug: '' }
+    : TEST_BAGLAMI(kademe, rol);
   const profil = profilEksik ? PROFIL_EKSIK : PROFIL_TAM;
   const ekran = sirketEkrani(yol);
 
@@ -1213,6 +1302,67 @@ export const SirketPanelDevFixture: React.FC = () => {
           çiziliyor — fikstürün kendi kapsamı.
         */
         gorunum={ekran.tur === 'adayProfili' ? 'ilanlar' : ekran.tur}
+        /*
+          FİKSTÜR EKİBİ: üretimde bugün yalnız Owner var; Recruiter ve
+          Viewer satırları atama kutusunun ve iş yükünün davranışını
+          GERÇEK ekip verisi uydurmadan göstermek için. Üretime çıkmıyor.
+        */
+        ekip={FIKSTUR_EKIBI}
+        isYuku={FIKSTUR_IS_YUKU}
+        /*
+          FİKSTÜR ÖLÇÜTLERİ: şirketin kendi tanımladığı ölçütler gerçek
+          veride henüz yok (tablo bu pakette geliyor). Form ve geçmiş
+          ekranının davranışını göstermek için; üretime çıkmıyor.
+        */
+        olcutler={FIKSTUR_OLCUTLER}
+        onDagit={async () => {
+          (window as unknown as Record<string, unknown>).__dagitimCagrildi = true;
+        }}
+        /*
+          İLAN KAPANIŞI: SONUCU BEKLEYENLER
+
+          Üretimde bu okuma canlı RPC'ye gidiyor ve fikstürde oturum
+          yok; akış tarayıcıda hiç görülemiyordu. Burada iki senaryo da
+          sınanabiliyor:
+
+            dev-bekleyen-hata=1  → okuma HATA veriyor. Beklenen: ilan
+                                   KAPANMIYOR, hata ve "Yeniden dene"
+                                   çıkıyor.
+            (varsayılan)         → iki bekleyen aday dönüyor, onay
+                                   diyaloğu açılıyor.
+            dev-bekleyen-yok=1   → boş liste; ilan doğrudan kapanıyor.
+
+          Veri KURGU: aday adı taşımıyor, yalnız durum ve bekleme günü.
+        */
+        onBekleyenAdaylar={async () => {
+          const s = new URLSearchParams(window.location.search);
+          if (s.get('dev-bekleyen-hata') === '1') {
+            throw new Error('Bekleyen adaylar okunamadı.');
+          }
+          if (s.get('dev-bekleyen-yok') === '1') return [];
+          return [
+            {
+              basvuruId: 'f0000000-0000-4000-8000-000000000001',
+              durum: 'submitted',
+              beklemeGun: 41,
+              atananUye: null,
+            },
+            {
+              basvuruId: 'f0000000-0000-4000-8000-000000000002',
+              durum: 'interview_scheduled',
+              beklemeGun: 9,
+              atananUye: null,
+            },
+          ];
+        }}
+        /*
+          Fikstürde sunucu yok; çağrı KAYDEDİLİYOR ki hangi argümanlarla
+          gittiği (özellikle eşzamanlılık için gereken `beklenen`)
+          tarayıcıdan doğrulanabilsin. Üretime çıkmıyor.
+        */
+        onSorumlu={async (id, uyeId, beklenen) => {
+          (window as unknown as Record<string, unknown>).__sonAtama = { id, uyeId, beklenen };
+        }}
         ilanlar={ilanlar}
         basvurular={ekran.tur === 'basvuranlar' ? kartlar : ilanBasvurulari}
         profil={profil}
@@ -1303,6 +1453,23 @@ export const SirketPanelDevFixture: React.FC = () => {
         >
           Kademe 2
         </button>
+        {/*
+          EKİP ROLÜ KOLU: üretimde bugün yalnız Owner var (2 üye, ikisi
+          de Owner — ölçüldü). Viewer'ın salt okunur davranışını gerçek
+          ekip verisi uydurmadan görmenin tek yolu bu.
+        */}
+        {(['Owner', 'Recruiter', 'Viewer'] as EkipRolu[]).map((r) => (
+          <button
+            key={r}
+            type="button"
+            id={`dev-rol-${r.toLowerCase()}`}
+            onClick={() => setRol(r)}
+            aria-pressed={rol === r}
+            className={`${kolSinifi} ${rol === r ? 'bg-blue-600 text-white' : ''}`}
+          >
+            {r}
+          </button>
+        ))}
         <select
           id="dev-yol"
           value={yol}

@@ -1,0 +1,58 @@
+name: Bekleyen başvuru hatırlatması
+
+# Uzun süredir işlem görmemiş başvurular için site içi bildirim üretir
+# (20261124010000). Bütün kural sunucuda: eşikler 7/14/30 gün, alıcı
+# sorumlu (yoksa şirket sahipleri) ve her eşik için EN FAZLA BİR bildirim
+# (`dedupe_key`). Bu iş yalnız RPC'yi çağırıyor.
+#
+# GÜNDE BİR KEZ, SAATTE DEĞİL
+# ---------------------------
+# Bekleme süresi gün cinsinden; saatlik koşu aynı eşiği defalarca
+# sorardı ve `dedupe_key` dışında bir kazancı olmazdı. 07:00 UTC =
+# 10:00 Türkiye: iş gününün başında, zil sabah doluyor.
+#
+# Türkiye 2016'dan beri kalıcı UTC+3; sabit UTC saati yıl boyunca aynı
+# yerel saate denk geliyor (aynı gerekçe gunluk-ozet.yml'de de yazılı).
+#
+# ZAMANLAMA KESİN DEĞİL: GitHub cron'u gecikebiliyor. Arayüz bu yüzden
+# bildirime bağlı değil — panodaki "N gündür bekleyenler" süzgeci aynı
+# bilgiyi hatırlatma gelmeden de gösteriyor.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bekleyen-basvuru-hatirlatmasi
+  cancel-in-progress: false
+
+jobs:
+  hatirlat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Sırları doğrula
+        run: |
+          eksik=""
+          [ -z "$SUPABASE_URL" ] && eksik="$eksik SUPABASE_URL"
+          [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] && eksik="$eksik SUPABASE_SERVICE_ROLE_KEY"
+          if [ -n "$eksik" ]; then
+            echo "::error::Depo sırları eksik:$eksik"
+            exit 1
+          fi
+          echo "Sırlar tanımlı."
+
+      - name: Bekleyen başvuruları hatırlat
+        run: node scripts/bekleyen-basvuru-hatirlatmasi.mjs

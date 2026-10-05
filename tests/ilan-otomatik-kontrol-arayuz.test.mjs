@@ -233,7 +233,17 @@ test('gönderim sırasında "Kontrol ediliyor…", aria-busy ve ref kilidi', () 
   /* Karttaki eylem de kilitli ve meşgulken söylüyor. */
   assert.match(GENEL, /const durumKilidi = React\.useRef\(false\);/);
   assert.match(GENEL, /'Kontrol ediliyor…'/);
-  assert.match(GENEL, /aria-busy=\{durumIslemi\?\.id === id\}/);
+  /*
+    KOŞUL GENİŞLEDİ, GUVENCE DEĞİL (5 Ekim 2026): ilan kapatılırken önce
+    sonucu bekleyen adaylar okunuyor ve o okuma da düğmeyi meşgul
+    gösteriyor. Eski kalıp `=== id}` ile bitiyordu, yani koşulun TAM
+    metnine bağlıydı; korunması gereken şey ise "bu ilanın düğmesi,
+    bu ilanın işlemi sürerken meşgul duyurulsun".
+  */
+  assert.match(GENEL, /aria-busy=\{[^}]*durumIslemi\?\.id === id[^}]*\}/);
+  /* Bekleyen aday okuması da meşgul sayılıyor ve metinle söyleniyor. */
+  assert.match(GENEL, /aria-busy=\{[^}]*kapanisOkunuyor === id[^}]*\}/);
+  assert.match(GENEL, /'Bekleyen adaylar okunuyor…'/);
 });
 
 /* ------------------------------------------ 3. GÖNDERİM ANAHTARI */

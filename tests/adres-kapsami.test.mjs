@@ -37,12 +37,36 @@ function appRotalari() {
   return [...bulunan];
 }
 
-/* Ara katmanın uygulamaya ait saydığı adresler ve önekler. */
+/*
+  Ara katmanın uygulamaya ait saydığı adresler ve önekler.
+
+  ÜÇ BİÇİM, ÜÇÜ DE OKUNUYOR (5 Ekim 2026)
+
+  Ara katman kapsamı iki ayrı şekilde yazıyor: bir liste (`'/x',`) ve
+  elle yazılmış dallar (`if (temiz === '/x' || temiz.startsWith('/x/'))`).
+  Bu ayrıştırıcı önce yalnız LİSTEYİ okuyordu; dal biçimi görünmüyordu.
+  Sonuç yanlış alarmdı — `/mesajlar` ara katmanda KAPSANIYOR (satır 203)
+  ve canlıda 200 dönüyor, ama test onu "404 döner" diye bildiriyordu.
+  Hata bu paketten önce de vardı (taban commit 3b34471'de aynı komutla
+  görüldü).
+
+  `/yonetim` için elle konmuş bir istisna vardı; aynı kusurun daha önce
+  üstünün örtülmesiydi. Dal biçimi artık gerçekten ayrıştırıldığı için
+  o istisna KALDIRILDI — test böylece gevşemiyor, tersine sıkılaşıyor:
+  önce `/yonetim` ile başlayan her adres sorgusuz geçiyordu.
+*/
 function araKatmanKapsami(yol) {
-  const adresler = [...araKatman.matchAll(/^\s*'(\/[^']*)',$/gm)].map((e) => e[1]);
+  const adresler = [
+    /* Liste biçimi: `  '/x',` */
+    ...[...araKatman.matchAll(/^\s*'(\/[^']*)',$/gm)].map((e) => e[1]),
+    /* Dal biçimi: `temiz === '/x'` */
+    ...[...araKatman.matchAll(/temiz === '(\/[^']*)'/g)].map((e) => e[1]),
+  ];
   if (adresler.includes(yol)) return true;
-  if (yol === '/yonetim' || yol.startsWith('/yonetim/')) return true;
-  const onekler = [...araKatman.matchAll(/'(\/[a-z-]+\/)'/g)].map((e) => e[1]);
+  const onekler = [
+    ...[...araKatman.matchAll(/'(\/[a-z-]+\/)'/g)].map((e) => e[1]),
+    ...[...araKatman.matchAll(/temiz\.startsWith\('(\/[^']*)'\)/g)].map((e) => e[1]),
+  ];
   return onekler.some((o) => yol.startsWith(o) && yol.length > o.length);
 }
 

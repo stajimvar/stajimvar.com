@@ -66,15 +66,62 @@ test('aday kartlari basligin hemen altinda', () => {
     yarayan sey; en altta kalmasi onu gorunmez kiliyordu (kullanici
     bildirdi, 27 Eylul 2026). Uc dalda da basligin hemen altinda.
   */
-  const dallar = PANEL.split('{baslik}');
-  assert.equal(dallar.length, 4, 'uc dalda da baslik cizilmeli');
-  for (let i = 1; i < dallar.length; i += 1) {
-    const ilk120 = dallar[i].slice(0, 120);
+  /*
+    DAL SAYISI DEGIL, HER DALIN KENDISI (5 Ekim 2026)
+
+    Burada once `dallar.length === 4` vardi: "{baslik} tam uc kez
+    geciyor". O sayi davranisi KORUMUYORDU. Ekranin kurali "basvuranlar
+    gorunumunun HER cikisi once basligi, hemen ardindan aday kartlarini
+    cizsin"; sabit sayi ise bundan baska bir seyi, metindeki tekrar
+    adedini olcuyordu. Iki yonden de yaniltiyordu:
+
+      - Basligi HIC cizmeyen yeni bir dal eklenseydi {baslik} sayisi
+        degismezdi ve test GECERDI -- yani korudugu sanilan sey zaten
+        korunmuyordu.
+      - Kurala uyan yeni bir dal eklenince (Viewer dali) test KIRILDI,
+        oysa ortada bir gerileme yoktu.
+
+    Dogrusu dallari saymak degil, HEPSINI tek tek gezmek. Asagisi
+    gorunumun her `return (` cikisini buluyor ve her birinde sirayi
+    dogruluyor. Bu hem eski testin yakaladigi her seyi yakaliyor hem de
+    onun kacirdigi "basliksiz dal" durumunu.
+  */
+  const bas = PANEL.indexOf('const baslik = (');
+  const son = PANEL.indexOf('export { KADEME }');
+  assert.ok(bas > 0 && son > bas, 'basvuranlar gorunumu bulunmali');
+  const gorunum = PANEL.slice(bas, son);
+
+  /* Her cikis: `return (` satirindan sonraki ilk JSX. */
+  const cikislar = gorunum.split(/\n\s*return \(/).slice(1);
+  assert.ok(
+    cikislar.length >= 4,
+    'gorunumun en az dort cikisi olmali (ilan yok / kart kapali / viewer / normal)',
+  );
+
+  cikislar.forEach((c, i) => {
+    const bi = c.indexOf('{baslik}');
+    const ki = c.indexOf('{ogrencileriKesfet}');
+    assert.ok(bi >= 0, 'cikis ' + (i + 1) + ': {baslik} cizilmeli');
+    assert.ok(ki >= 0, 'cikis ' + (i + 1) + ': {ogrencileriKesfet} cizilmeli');
     assert.ok(
-      ilk120.includes('{ogrencileriKesfet}'),
-      'dal ' + i + ': kartlar basligin hemen ardinda olmali',
+      ki > bi,
+      'cikis ' + (i + 1) + ': aday kartlari BASLIKTAN SONRA gelmeli',
     );
-  }
+    /*
+      "Hemen ardindan": arada baska bir JSX dugumu olmamali. Yorum
+      satirlari serbest -- okunabilirligi kaybetmeden kurali korumak
+      icin yorumlar temizlenip bakiliyor.
+    */
+    const ara = c
+      .slice(bi + '{baslik}'.length, ki)
+      .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+      .trim();
+    assert.equal(
+      ara,
+      '',
+      'cikis ' + (i + 1) + ': baslik ile kartlar arasina baska bir sey girmis: ' + ara.slice(0, 80),
+    );
+  });
 });
 
 test('aday ekraninda iki sekme satiri dolduruyor', () => {

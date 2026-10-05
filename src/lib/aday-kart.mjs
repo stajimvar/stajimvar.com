@@ -121,7 +121,27 @@ export function kartVerisi(satir, ek = {}) {
     ilanSuresi: satir?.ilanSuresi ? String(satir.ilanSuresi) : '',
     ilanUcreti: satir?.ilanUcreti ? String(satir.ilanUcreti) : '',
     durum: satir?.status ?? 'submitted',
+    /*
+      SORUMLU (20261123010000). `null` = sorumlusu yok ve bu bir eksiklik
+      değil, ayrı bir durum: "henüz kimse üstlenmedi". Ekran onu boş
+      bırakmak yerine açıkça yazıyor.
+    */
+    atananUye: satir?.atanan_uye ? String(satir.atanan_uye) : null,
+    atananAn: satir?.atanan_at ?? null,
     tarih: satir?.applied_at ?? null,
+    /*
+      SON İŞLEM ANI. Her güncellemede tetikleyiciyle damgalanıyor (0001,
+      t5): durum değişimi, not, mülakat tarihi, sorumlu atama. Bekleme
+      süresi bundan; sunucudaki hatırlatma da aynı alanı kullanıyor.
+    */
+    guncellendi: satir?.updated_at ?? null,
+    /*
+      BEKLEME ÖLÇÜSÜ BU: adaya yönelik son gerçek ilerleme
+      (20261127010000). `guncellendi` ayrı duruyor ve bekleme hesabında
+      KULLANILMIYOR — sorumlu atamak onu tazeliyor, adayın bekleyişini
+      bitirmiyor.
+    */
+    adayIlerlemesi: satir?.aday_ilerleme_at ?? null,
     puan: Number.isFinite(Number(satir?.match_score)) ? Number(satir.match_score) : null,
     band: uyumBandi(satir?.match_score),
 

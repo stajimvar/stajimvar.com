@@ -30,7 +30,9 @@ import { IlanKarti, KontrolNotu, type AdayOzeti } from './IlanKarti';
 import { ilanEylemleri } from '../lib/ilan-formu.mjs';
 import { YAYIN_SONUCU_METNI } from '../lib/ilan-kontrol-gorunumu.mjs';
 import { adayGorebilir } from '../lib/sirket-kademe.mjs';
-import type { IlanKontrolSonucu, SirketBaglami, SirketProfilDegeri } from '../lib/sirket-veri';
+import type { BekleyenAday, IlanKontrolSonucu, SirketBaglami, SirketProfilDegeri } from '../lib/sirket-veri';
+import { ilanBekleyenAdaylar } from '../lib/sirket-veri';
+import { durumAdi } from '../lib/basvuru-durumu.mjs';
 
 /**
  * Şirketin İlanlar sekmesi — ilan-merkezli kart listesi.
@@ -118,7 +120,27 @@ export const GenelBakis: React.FC<{
    * listenin sonunda (27 Eylül 2026, kullanıcı kararı).
    */
   siralama?: React.ReactNode;
-}> = ({ baglam, ilanlar, basvurular, profil, onNavigate, onDurum, onKaldir, simdi, siralama }) => {
+  /*
+    BEKLEYEN ADAY OKUYUCUSU DIŞARIDAN VERİLEBİLİYOR
+
+    Varsayılan gerçek okuma (`ilanBekleyenAdaylar`). Geliştirme
+    fikstürü kendi okuyucusunu geçirip kapanış onayını ve okuma
+    hatasını oturum açmadan sınayabiliyor — bu akış yoksa tarayıcıda
+    hiç görülemiyordu.
+  */
+  onBekleyenAdaylar?: (ilanId: string) => Promise<BekleyenAday[]>;
+}> = ({
+  baglam,
+  ilanlar,
+  basvurular,
+  profil,
+  onNavigate,
+  onDurum,
+  onKaldir,
+  simdi,
+  siralama,
+  onBekleyenAdaylar = ilanBekleyenAdaylar,
+}) => {
   const kartAcik = adayGorebilir(baglam.kademe);
   const eksikler = profilEksikleri(profil);
 
@@ -145,6 +167,58 @@ export const GenelBakis: React.FC<{
   const [durumIslemi, setDurumIslemi] = React.useState<{ id: string; hedef: 'published' | 'closed' } | null>(null);
   const [durumSonucu, setDurumSonucu] = React.useState<{ id: string; metin: string; hata: boolean } | null>(null);
   const durumKilidi = React.useRef(false);
+  /*
+    İLAN KAPANIRKEN SONUCU BEKLEYENLER (20261126010000)
+
+    Kapatma, bekleyen başvuruları KENDİLİĞİNDEN REDDETMİYOR — red,
+    şirketin verdiği ve öğrenciye öyle görünen bir karar; sistemin
+    verdiği red, kimsenin arkasında durmadığı bir karardır.
+
+    Bu yüzden kapatmadan önce bekleyenler GÖSTERİLİYOR ve şirket
+    onaylıyor. Onaydan sonra ilan kapanıyor, başvurular olduğu gibi
+    kalıyor ve panoda sonuçlandırılmayı beklemeye devam ediyor.
+  */
+  const [kapanisOnayi, setKapanisOnayi] = React.useState<
+    { id: string; bekleyenler: BekleyenAday[] } | null
+  >(null);
+
+  /*
+    OKUMA HATASI AYRI BİR DURUM (5 Ekim 2026 düzeltmesi)
+
+    "Bekleyen aday yok" ile "adaylar okunamadı" aynı şey değil. Önce
+    ikisi de boş listeye düşüyordu ve ilan, bekleyen adaylar hiç
+    sorulmadan kapanıyordu — koruma tam da gerektiği anda sessizce
+    devre dışı kalıyordu.
+
+    Artık okuma başarısızsa KAPATMA YAPILMIYOR; hata yazılıyor ve
+    yeniden deneme sunuluyor. Kapatmak geri alınabilir bir işlem ama
+    adaya giden sonucu etkiliyor; eksik bilgiyle yapılmamalı.
+  */
+  const [kapanisHatasi, setKapanisHatasi] = React.useState<string | null>(null);
+  /* Okuma sürerken düğme bekliyor görünsün; sessiz bir duraklama olmasın. */
+  const [kapanisOkunuyor, setKapanisOkunuyor] = React.useState<string | null>(null);
+
+  const kapatmayiBaslat = async (id: string) => {
+    setKapanisHatasi(null);
+    setKapanisOkunuyor(id);
+    let bekleyenler: BekleyenAday[];
+    try {
+      bekleyenler = await onBekleyenAdaylar(id);
+    } catch {
+      /* KAPATMA DURDU: bekleyen adayları görmeden karar verilmiyor. */
+      setKapanisHatasi(id);
+      return;
+    } finally {
+      setKapanisOkunuyor(null);
+    }
+    if (bekleyenler.length === 0) {
+      /* Bekleyen GERÇEKTEN yok — okuma başarılı oldu ve boş döndü. */
+      void durumDegistir(id, 'closed');
+      return;
+    }
+    setKapanisOnayi({ id, bekleyenler });
+  };
+
   const durumDegistir = async (id: string, hedef: 'published' | 'closed') => {
     if (!onDurum || durumKilidi.current) return;
     durumKilidi.current = true;
@@ -348,6 +422,24 @@ export const GenelBakis: React.FC<{
                       {durumSonucu.metin}
                     </p>
                   )}
+                  {/*
+                    BEKLEYEN ADAYLAR OKUNAMADI: ilan KAPANMADI ve bu
+                    açıkça yazıyor. Kullanıcı ne olduğunu ve ne
+                    yapabileceğini aynı satırda görüyor.
+                  */}
+                  {kapanisHatasi === id && (
+                    <p role="alert" className="mt-2 text-xs font-semibold leading-relaxed text-rose-700">
+                      Sonucu bekleyen adaylar okunamadı, bu yüzden ilan kapatılmadı.
+                      Bağlantını kontrol edip yeniden dene.{' '}
+                      <button
+                        type="button"
+                        onClick={() => void kapatmayiBaslat(id)}
+                        className="cursor-pointer font-bold underline underline-offset-2"
+                      >
+                        Yeniden dene
+                      </button>
+                    </p>
+                  )}
                 </>
               }
               ekEylemler={
@@ -355,17 +447,21 @@ export const GenelBakis: React.FC<{
                   {onDurum && eylem.durumEtiketi && (
                     <button
                       type="button"
-                      onClick={() => void durumDegistir(id, yayinda ? 'closed' : 'published')}
-                      disabled={durumIslemi !== null}
-                      aria-busy={durumIslemi?.id === id}
+                      onClick={() =>
+                        yayinda ? void kapatmayiBaslat(id) : void durumDegistir(id, 'published')
+                      }
+                      disabled={durumIslemi !== null || kapanisOkunuyor !== null}
+                      aria-busy={durumIslemi?.id === id || kapanisOkunuyor === id}
                       className={IKINCIL_DUGME}
                       style={ikincilStil}
                     >
-                      {durumIslemi?.id === id
-                        ? durumIslemi.hedef === 'published'
-                          ? 'Kontrol ediliyor…'
-                          : 'Kapatılıyor…'
-                        : eylem.durumEtiketi}
+                      {kapanisOkunuyor === id
+                        ? 'Bekleyen adaylar okunuyor…'
+                        : durumIslemi?.id === id
+                          ? durumIslemi.hedef === 'published'
+                            ? 'Kontrol ediliyor…'
+                            : 'Kapatılıyor…'
+                          : eylem.durumEtiketi}
                     </button>
                   )}
 
@@ -516,6 +612,79 @@ export const GenelBakis: React.FC<{
         </div>
       )}
       {siralama}
+      {/*
+        KAPANIŞ ONAYI — BEKLEYENLER GÖRÜNÜYOR
+
+        "Kapat"a basınca ilan hemen kapanmıyor: sonucu bekleyen adaylar
+        listeleniyor ve şirket ne yaptığını görerek onaylıyor.
+
+        ADAYLAR KENDİLİĞİNDEN REDDEDİLMİYOR ve bu ekranda toplu red
+        düğmesi de YOK. Kapanıştan sonra başvurular panoda durmaya devam
+        ediyor; her birine ne olacağına şirket tek tek karar veriyor.
+      */}
+      {kapanisOnayi && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="İlanı kapatma onayı"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4"
+        >
+          <div className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-white p-4 sm:rounded-2xl">
+            <h2 className="text-lg font-extrabold" style={{ color: SIRKET_METIN }}>
+              {kapanisOnayi.bekleyenler.length} aday sonuç bekliyor
+            </h2>
+            <p className="mt-1 text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+              İlanı kapatmak bu başvuruları reddetmiyor. Kapandıktan sonra da
+              Başvurular ekranında durmaya devam edecekler; her birine ne
+              olacağına siz karar verirsiniz.
+            </p>
+
+            <ul className="mt-3 space-y-1.5">
+              {kapanisOnayi.bekleyenler.map((b) => (
+                <li
+                  key={b.basvuruId}
+                  className="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-sm"
+                >
+                  <span className="min-w-0 flex-1" style={{ color: SIRKET_METIN }}>
+                    {/*
+                      AD YAZILMIYOR: bu ekran şirketin kendi akışında bir
+                      ara adım ve aday kimliğini burada açmak, önyargısız
+                      inceleme tercihini dolanmak olurdu. Durum ve bekleme
+                      süresi kararı vermeye yetiyor.
+                    */}
+                    {durumAdi(b.durum)}
+                  </span>
+                  <span className="shrink-0 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+                    {b.beklemeGun} gündür
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setKapanisOnayi(null)}
+                className={`min-h-11 cursor-pointer rounded-xl border border-gray-300 bg-white px-4 text-sm font-bold hover:bg-gray-50 ${SIRKET_ODAK}`}
+                style={{ color: SIRKET_METIN }}
+              >
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const id = kapanisOnayi.id;
+                  setKapanisOnayi(null);
+                  void durumDegistir(id, 'closed');
+                }}
+                className={`min-h-11 cursor-pointer rounded-xl bg-[#2563EB] px-4 text-sm font-bold text-white hover:bg-[#1D4ED8] ${SIRKET_ODAK}`}
+              >
+                İlanı kapat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

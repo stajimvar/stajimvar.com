@@ -177,6 +177,11 @@ export const AdayCekmecesi: React.FC<{
   onPaylasimlar?: PaylasimYukleyici;
   /** Yalnız geliştirme fikstürü: paylaşım görseli için yerel dosya. */
   yerelGorselAdresi?: (yol: string) => string | null;
+  /*
+    Yazma yetkisi olmayan üye (Viewer). Çekmece AÇILIYOR, yalnız işlem
+    sütunu çizilmiyor — gerekçe o sütunun başında.
+  */
+  saltOkunur?: boolean;
 }> = ({
   kart,
   kaydediliyor,
@@ -190,6 +195,7 @@ export const AdayCekmecesi: React.FC<{
   onGuncelProfil,
   onPaylasimlar,
   yerelGorselAdresi,
+  saltOkunur,
 }) => {
   /*
     İmzalı adres tıklama anında üretiliyor, kart çizilirken değil: adresin
@@ -605,6 +611,39 @@ export const AdayCekmecesi: React.FC<{
           `withdrawn` seçenekler arasında yok: geri çekmek adayın kararı.
           Aynı kural veritabanında da duruyor.
         */}
+        {/*
+          SALT OKUNUR ÜYE: İNCELER, YAZMAZ (5 Ekim 2026)
+
+          Viewer'ın çekmecesi önce hiç açılmıyordu — yazamayan üye aday
+          ayrıntısını da göremiyordu. "Yazamaz" sessizce "inceleyemez"
+          olmuştu; oysa rolün amacı tam tersi: görsün ama karışmasın.
+
+          Çözüm yazma denetimlerini DEVRE DIŞI bırakmak değil, HİÇ
+          ÇİZMEMEK. Kapalı bir seçici ya da reddedilecek bir düğme,
+          kullanıcıya yapabileceği bir şey varmış gibi gösterirdi.
+
+          Aday gövdesi (profil, paylaşımlar, değerlendirme geçmişi)
+          aşağıda OLDUĞU GİBİ çiziliyor; kesilen yalnız bu sütun.
+        */}
+        {saltOkunur ? (
+          <section
+            aria-labelledby="aday-islemler-basligi"
+            className="border-b p-4 lg:w-[22rem] lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r"
+            style={{ background: SIRKET_YUZEY, borderColor: SIRKET_KENAR }}
+          >
+            <div className="mb-3">
+              <BolumBasligi id="aday-islemler-basligi">Durum</BolumBasligi>
+            </div>
+            <p className="text-sm font-bold" style={{ color: SIRKET_METIN }}>
+              {durum.etiket}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+              Görüntüleme yetkisiyle bakıyorsun: adayın başvurusunu ve profilini
+              inceleyebilirsin. Durum değiştirme, not yazma, görüşme daveti ve
+              teklif şirket sahibinde ve işe alım yetkililerinde.
+            </p>
+          </section>
+        ) : (
         <section
           aria-labelledby="aday-islemler-basligi"
           className="border-b p-4 lg:w-[22rem] lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r"
@@ -1234,6 +1273,7 @@ export const AdayCekmecesi: React.FC<{
             </div>
           )}
         </section>
+        )}
 
         {/* ------------------------------------------------ aday */}
         <div data-aday-govde className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4 sm:p-5">

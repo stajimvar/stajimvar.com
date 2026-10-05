@@ -16,6 +16,40 @@
 
 import { kademeHesapla } from './sirket-kademe.mjs';
 
+/* --------------------------------------------------------- ekip rolü */
+
+export type EkipRolu = 'Owner' | 'Recruiter' | 'Viewer';
+
+const TANINAN_ROLLER: EkipRolu[] = ['Owner', 'Recruiter', 'Viewer'];
+
+/**
+ * `company_members.recruiter_role` → tanınan rol.
+ *
+ * Tanınmayan ya da boş değer en DAR role düşüyor ('Viewer'):
+ * varsayılanı geniş tutmak, veri bozulduğunda yetkiyi genişletirdi.
+ * Sunucudaki `sirket_rolum` ile aynı kural (20261122010000).
+ */
+function ekipRolu(uyelik: { recruiter_role?: string | null } | undefined): EkipRolu | null {
+  if (!uyelik) return null;
+  const ham = (uyelik.recruiter_role ?? '').trim() as EkipRolu;
+  return TANINAN_ROLLER.includes(ham) ? ham : 'Viewer';
+}
+
+/**
+ * Başvuruya yazabilir mi — `sirket_basvuru_yazabilir` politikasının
+ * istemci kopyası. `is_owner` bayrağı da kabul ediliyor: sahipleri
+ * işaretleyen göçler (0011, 20260902010000) o bayrağı kuruyor ve rol
+ * metni ileride boş kalırsa sahip kilitlenmemeli.
+ */
+function basvuruYazabilirMi(
+  uyelik: { recruiter_role?: string | null; is_owner?: boolean | null } | undefined,
+): boolean {
+  if (!uyelik) return false;
+  if (uyelik.is_owner) return true;
+  const rol = ekipRolu(uyelik);
+  return rol === 'Owner' || rol === 'Recruiter';
+}
+
 async function istemci() {
   const { supabase } = await import('./supabase');
   return supabase as unknown as {
@@ -59,6 +93,10 @@ export interface SirketBaglami {
   dogrulamaNotu: string | null;
   dogrulamaReddiAt: string | null;
   kademe: number;
+  /** Ekip rolü: 'Owner' | 'Recruiter' | 'Viewer'. Üye değilse null. */
+  rol: EkipRolu | null;
+  /** Başvuruya yazabilir mi — sunucudaki kuralın istemci kopyası. */
+  basvuruYazabilir: boolean;
 }
 
 /**
@@ -84,6 +122,9 @@ export async function sirketBaglami(
     dogrulamaNotu: null,
     dogrulamaReddiAt: null,
     kademe: kademeHesapla({ yoneticiMi }),
+    /* Üye değil: rol yok, yazamaz. Panel zaten açılmıyor. */
+    rol: null,
+    basvuruYazabilir: false,
   };
   if (!userId) return bos;
 
@@ -91,7 +132,7 @@ export async function sirketBaglami(
     const db = await istemci();
     const { data: uyelik } = await db
       .from('company_members')
-      .select('company_id')
+      .select('company_id, recruiter_role, is_owner')
       .eq('user_id', userId)
       .limit(1);
 
@@ -125,6 +166,20 @@ export async function sirketBaglami(
       dogrulamaNotu: ozel?.dogrulamaNotu ?? null,
       dogrulamaReddiAt: ozel?.dogrulamaReddiAt ?? null,
       kademe: kademeHesapla({ uyeMi: true, dogrulanmisMi: Boolean(sirket.verified), yoneticiMi }),
+      /*
+        EKİP ROLÜ (5 Ekim 2026). `recruiter_role` 0001'den beri vardı ama
+        hiçbir yerde okunmuyordu. Boş/tanınmayan değer en DAR role
+        düşüyor — varsayılanı geniş tutmak, veri bozulduğunda yetkiyi
+        genişletirdi. Sunucudaki `sirket_rolum` ile AYNI kural.
+      */
+      rol: ekipRolu(uyelik?.[0]),
+      /*
+        Arayüz bu bayrakla yazma eylemlerini çiziyor. YETKİ DEĞİL, yetkinin
+        ÖNCEDEN GÖSTERİLMESİ: asıl kapı `sirket_basvuru_yazabilir`
+        politikasında (20261122010000). Burada true dönse bile sunucu
+        reddediyor.
+      */
+      basvuruYazabilir: basvuruYazabilirMi(uyelik?.[0]),
     };
   } catch {
     /* Bağlam okunamazsa kullanıcı kapıda kalıyor; panel açılmıyor. */
@@ -467,6 +522,13 @@ export async function sirketBasvurulari(companyId: string) {
         'interview_date, interview_time, interview_type, interview_location, ' +
         'interview_note, interview_response, interview_responded_at, ' +
         'status_changed_at, offer_note, offer_start_date, offer_compensation, ' +
+        /* Sorumlu atama (20261123010000). Salt okuma; yazma RPC'den. */
+        /*
+          `aday_ilerleme_at`: bekleme süresi BUNDAN hesaplanıyor
+          (20261127010000). `updated_at` de okunuyor ama yalnız
+          gösterim için — iç işlemler onu tazeliyor.
+        */
+        'atanan_uye, atanan_at, updated_at, aday_ilerleme_at, ' +
         /*
           Teklif özeti çalışma biçimini, süreyi ve ücreti İLANDAN
           okuyor: şirket teklif gönderirken bunları tekrar yazmıyor.
@@ -514,6 +576,8 @@ export type AdayGuncelProfili = {
   diller: string[];
   projeler: { baslik: string; aciklama: string | null; adres: string | null }[];
   guncellendi: string | null;
+  /** Adaya yönelik son gerçek ilerleme; bekleme bundan hesaplanıyor. */
+  adayIlerlemesi: string | null;
 };
 
 export async function basvuruAdayGuncelProfili(
@@ -912,4 +976,233 @@ export async function sirketAcikKimliginiOku(companyId: string): Promise<SirketA
     aciklama: bosNull(data.description),
     dogrulandi: data.verified === true,
   };
+}
+
+/* ------------------------------------------------- sorumlu atama */
+
+export interface EkipUyesi {
+  uyeId: string;
+  ad: string;
+  rol: EkipRolu;
+  /** Başvuruya yazabilen üye; yalnız bunlara iş atanabiliyor. */
+  yazabilir: boolean;
+}
+
+/**
+ * Şirketin ekibi — atama kutusu ve iş yükü için.
+ *
+ * `profiles` satırı yalnız kendine açık ("kendi profilini okur"), yani
+ * istemci takım arkadaşının ADINI doğrudan okuyamıyor. RPC o boşluğu
+ * yalnız üyeye ve yalnız kendi şirketi için dolduruyor; e-posta
+ * dönmüyor.
+ */
+export async function sirketEkibi(companyId: string): Promise<EkipUyesi[]> {
+  const db = await istemci();
+  const { data, error } = await db.rpc('sirket_ekibi' as never, { p_sirket: companyId } as never);
+  if (error) return [];
+  return ((data ?? []) as Record<string, unknown>[]).map((s) => ({
+    uyeId: String(s.uye_id),
+    ad: String(s.ad ?? 'Ekip üyesi'),
+    rol: (String(s.rol ?? 'Viewer') as EkipRolu),
+    yazabilir: Boolean(s.yazabilir),
+  }));
+}
+
+/**
+ * Başvuruya sorumlu atar ya da atamayı kaldırır (`uyeId = null`).
+ *
+ * EŞZAMANLI YAZMA: `beklenen` çağıranın EKRANDA GÖRDÜĞÜ sorumlu. Satır
+ * o değerde değilse sunucu yazmıyor ve `sorumlu-degisti` atıyor —
+ * ikinci kişi birincinin atamasını sessizce ezmiyor. Arayüz bu hatayı
+ * "başkası değiştirdi" diye gösteriyor.
+ */
+export async function sorumluAta(
+  basvuruId: string,
+  uyeId: string | null,
+  beklenen: string | null,
+): Promise<void> {
+  const db = await istemci();
+  const { error } = await db.rpc('basvuru_sorumlusu_ata' as never, {
+    p_basvuru: basvuruId,
+    p_uye: uyeId,
+    p_beklenen: beklenen,
+  } as never);
+  if (!error) return;
+
+  /*
+    Hata kodları cümleye burada çevriliyor; ekran ham Postgres metni
+    göstermiyor. Tanınmayan kod genel cümleye düşüyor — uydurma bir
+    açıklama yazmaktansa "olmadı" demek dürüst.
+  */
+  const kod = String((error as { message?: string }).message ?? '');
+  if (kod.includes('sorumlu-degisti')) {
+    throw new Error('Bu başvurunun sorumlusunu başka biri değiştirdi. Listeyi tazeleyip yeniden deneyin.');
+  }
+  if (kod.includes('uye-uygun-degil')) {
+    throw new Error('Yalnızca başvuruya yazabilen ekip üyelerine iş atanabilir.');
+  }
+  if (kod.includes('yetki-yok')) {
+    throw new Error('Sorumlu atama yetkiniz yok.');
+  }
+  throw new Error('Sorumlu atanamadı.');
+}
+
+export interface IsYukuSatiri {
+  uyeId: string | null;
+  ad: string;
+  acik: number;
+}
+
+/**
+ * Üye başına AÇIK başvuru sayısı.
+ *
+ * Sonuçlanmış başvurular (teklif kabul/ret, red, geri çekme) yükten
+ * düşüyor: yapılacak iş kalmıyor. Sorumlusu olmayanlar ayrı satırda
+ * (`uyeId = null`) — toplamın içinde eritmek, dağıtılmayı bekleyen işi
+ * görünmez kılardı.
+ */
+export async function sirketIsYuku(companyId: string): Promise<IsYukuSatiri[]> {
+  const db = await istemci();
+  const { data, error } = await db.rpc('sirket_is_yuku' as never, { p_sirket: companyId } as never);
+  if (error) return [];
+  return ((data ?? []) as Record<string, unknown>[]).map((s) => ({
+    uyeId: s.uye_id ? String(s.uye_id) : null,
+    ad: String(s.ad ?? ''),
+    acik: Number(s.acik ?? 0),
+  }));
+}
+
+/* --------------------------------------------- değerlendirme formu */
+
+export interface DegerlendirmeOlcutu {
+  id: string;
+  ad: string;
+  sira: number;
+}
+
+export interface DegerlendirmeKaydi {
+  id: string;
+  degerlendiren: string;
+  ad: string;
+  puanlar: Record<string, number>;
+  not: string | null;
+  an: string;
+}
+
+/** Şirketin AKTİF ölçütleri, sırasıyla. */
+export async function degerlendirmeOlcutleri(companyId: string): Promise<DegerlendirmeOlcutu[]> {
+  const db = await istemci();
+  const { data, error } = await db
+    .from('sirket_degerlendirme_olcutleri')
+    .select('id, ad, sira')
+    .eq('company_id', companyId)
+    .eq('aktif', true)
+    .order('sira', { ascending: true });
+  if (error) return [];
+  return (data ?? []).map((o: Record<string, unknown>) => ({
+    id: String(o.id),
+    ad: String(o.ad ?? ''),
+    sira: Number(o.sira ?? 0),
+  }));
+}
+
+/**
+ * Bir başvurunun değerlendirme GEÇMİŞİ — en yeni başta.
+ *
+ * Üzerine yazılmıyor; aynı kişi yeniden değerlendirirse eskisi de
+ * listede kalıyor. Fikir değiştirmek de bilgi.
+ */
+export async function degerlendirmeGecmisi(basvuruId: string): Promise<DegerlendirmeKaydi[]> {
+  const db = await istemci();
+  const { data, error } = await db.rpc('basvuru_degerlendirme_gecmisi' as never, {
+    p_basvuru: basvuruId,
+  } as never);
+  if (error) return [];
+  return ((data ?? []) as Record<string, unknown>[]).map((d) => ({
+    id: String(d.id),
+    degerlendiren: String(d.degerlendiren ?? ''),
+    ad: String(d.ad ?? 'Ekip üyesi'),
+    puanlar: (d.puanlar ?? {}) as Record<string, number>,
+    not: (d.not_metni as string | null) ?? null,
+    an: String(d.created_at ?? ''),
+  }));
+}
+
+/**
+ * Değerlendirme yaz.
+ *
+ * Puanlar 1–5 tam sayı; sunucu da aynı aralığı doğruluyor. Otomatik ya
+ * da türetilmiş puan YOK — her değer bir insanın girdiği değer.
+ */
+export async function degerlendirmeYaz(
+  basvuruId: string,
+  puanlar: Record<string, number>,
+  not: string | null,
+): Promise<void> {
+  const db = await istemci();
+  const { error } = await db.rpc('degerlendirme_yaz' as never, {
+    p_basvuru: basvuruId,
+    p_puanlar: puanlar,
+    p_not: not,
+  } as never);
+  if (!error) return;
+  const kod = String((error as { message?: string }).message ?? '');
+  if (kod.includes('puan-gecersiz')) throw new Error('Puanlar 1 ile 5 arasında tam sayı olmalı.');
+  if (kod.includes('olcut-gecersiz')) throw new Error('Ölçüt bulunamadı; listeyi tazeleyin.');
+  if (kod.includes('yetki-yok')) throw new Error('Değerlendirme yazma yetkiniz yok.');
+  throw new Error('Değerlendirme kaydedilemedi.');
+}
+
+/* ------------------------------------- ilan kapanışı ve dağıtım */
+
+export interface BekleyenAday {
+  basvuruId: string;
+  durum: string;
+  beklemeGun: number;
+  atananUye: string | null;
+}
+
+/**
+ * İlan kapatılmadan önce sonucu bekleyen adaylar.
+ *
+ * Liste yalnız GÖSTERMEK için; bu çağrı hiçbir başvuruyu
+ * sonuçlandırmıyor. Kapanışta otomatik red YOK.
+ */
+export async function ilanBekleyenAdaylar(ilanId: string): Promise<BekleyenAday[]> {
+  const db = await istemci();
+  const { data, error } = await db.rpc('ilan_bekleyen_adaylar' as never, { p_ilan: ilanId } as never);
+  /*
+    HATA YUTULMUYOR (5 Ekim 2026 düzeltmesi)
+
+    Önce `return []` vardı ve bu İKİ AYRI DURUMU tek cevaba indiriyordu:
+    "bekleyen aday yok" ile "adaylar okunamadı". Sonuç, tam kaçınmak
+    istediğimiz şeydi — okuma başarısız olduğunda ilan sessizce, kimseyi
+    sormadan kapanıyordu. Tarayıcıda görüldü: RPC 404 verdiğinde onay
+    diyaloğu hiç açılmadan ilan kapandı.
+
+    Artık hata yukarı çıkıyor; kapatma akışı onu yakalayıp DURUYOR.
+  */
+  if (error) throw new Error('Bekleyen adaylar okunamadı.');
+  return ((data ?? []) as Record<string, unknown>[]).map((s) => ({
+    basvuruId: String(s.basvuru_id),
+    durum: String(s.durum ?? ''),
+    beklemeGun: Number(s.bekleme_gun ?? 0),
+    atananUye: s.atanan_uye ? String(s.atanan_uye) : null,
+  }));
+}
+
+/**
+ * Sorumsuz başvuruları yazabilen üyelere dengeli dağıtır.
+ *
+ * ŞİRKET İSTERSE: otomatik çalışmıyor, düğmeye basınca koşuyor. Var
+ * olan atamalara dokunmuyor. Dönen sayı gerçekten atanan başvuru adedi.
+ */
+export async function basvurulariDagit(companyId: string, ilanId?: string | null): Promise<number> {
+  const db = await istemci();
+  const { data, error } = await db.rpc('basvurulari_dagit' as never, {
+    p_sirket: companyId,
+    p_ilan: ilanId ?? null,
+  } as never);
+  if (error) throw new Error('Dağıtım yapılamadı.');
+  return Number(data ?? 0);
 }
