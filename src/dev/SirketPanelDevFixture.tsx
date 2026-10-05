@@ -216,7 +216,14 @@ const ORNEK_KUYRUK: OnayKuyrugu = {
 const ornekKuyrukGetir = () => Promise.resolve(ORNEK_KUYRUK);
 import { KADEME } from '../lib/sirket-kademe.mjs';
 import { kartVerisi } from '../lib/aday-kart.mjs';
-import type { IlanKontrolDurumu, IlanKontrolSonucu, SirketProfilDegeri } from '../lib/sirket-veri';
+import type {
+  AdayGuncelProfili,
+  AdayPaylasimi,
+  IlanKontrolDurumu,
+  IlanKontrolSonucu,
+  SirketProfilDegeri,
+} from '../lib/sirket-veri';
+import type { PaylasimSonucu } from '../sirket/AdayPaylasimlari';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 
 /**
@@ -249,6 +256,28 @@ import { SAYFA_GENISLIGI } from '../lib/duzen';
  * girmiyor.
  */
 
+/*
+  ADAY A'NIN KOPYASI — İKİ BAŞVURUDA AYNI
+
+  Aynı öğrenci iki ayrı ilana başvurdu (test-1 ve test-10): iki ayrı
+  başvuru kimliği, iki ayrı kart. Kart ve inceleme ekranı hangi ilana
+  bakıldığını söylemeli; seçim başvuru kimliğiyle.
+*/
+const ADAY_A_KOPYASI = {
+  ad: 'Aday A',
+  universite: 'Örnek Üniversitesi',
+  bolum: 'Bilgisayar Mühendisliği',
+  sinif: '3. Sınıf',
+  sehir: 'İstanbul',
+  github: 'ornek',
+  linkedin: 'https://www.linkedin.com/in/ornek-aday',
+  portfolyo: 'javascript:alert(1)',
+  yetenekler: ['React', 'TypeScript', 'PostgreSQL'],
+  diller: ['İngilizce (B1)'],
+  rozetler: ['quiz-react'],
+  projeler: [{ baslik: 'Örnek proje', aciklama: 'Test açıklaması', adres: 'https://ornek.test/proje' }],
+};
+
 const ORNEK_BASVURULAR = [
   {
     id: 'test-1',
@@ -259,19 +288,24 @@ const ORNEK_BASVURULAR = [
     ilanBasligi: 'Yazılım Stajyeri',
     application_method: 'internal',
     contact_share_consent_at: '2026-08-20T09:00:00Z',
+    /* Paylaşım izni VAR: inceleme ekranında ızgara ve görüntüleyici. */
+    paylasim_izni_at: '2026-08-20T09:00:00Z',
     cover_letter: 'Bu bir test ön yazısıdır.',
-    profile_snapshot: {
-      ad: 'Aday A',
-      universite: 'Örnek Üniversitesi',
-      bolum: 'Bilgisayar Mühendisliği',
-      sinif: '3. Sınıf',
-      sehir: 'İstanbul',
-      github: 'ornek',
-      yetenekler: ['React', 'TypeScript', 'PostgreSQL'],
-      diller: ['İngilizce (B2)'],
-      rozetler: ['Test rozeti'],
-      projeler: [{ baslik: 'Örnek proje', aciklama: 'Test açıklaması', adres: null }],
-    },
+    profile_snapshot: ADAY_A_KOPYASI,
+  },
+  {
+    /* Aynı öğrenci, BAŞKA ilan, uzun başlık; bu başvuruda paylaşım izni YOK. */
+    id: 'test-10',
+    status: 'under_review',
+    applied_at: '2026-09-02T09:00:00Z',
+    match_score: 72,
+    listing_id: 'ilan-3',
+    ilanBasligi:
+      'Yazılım Geliştirme ve Veri Analitiği Yaz Dönemi Uzun Süreli Stajyer Programı (Hibrit, İstanbul ofisi, haftada üç gün)',
+    application_method: 'internal',
+    contact_share_consent_at: '2026-09-02T09:00:00Z',
+    cover_letter: 'Veri tarafındaki ilana da başvuruyorum; ön yazı ilk başvurudan farklı.',
+    profile_snapshot: ADAY_A_KOPYASI,
   },
   {
     id: 'test-2',
@@ -332,6 +366,8 @@ const ORNEK_BASVURULAR = [
     contact_share_consent_at: '2026-08-31T08:00:00Z',
     cv_path: null,
     cv_snapshot_path: '00000000-0000-4000-8000-00000000000c/basvurular/ornek.pdf',
+    /* İzin var ama sosyal profil gizli: "şu an gizli" cümlesi. */
+    paylasim_izni_at: '2026-08-31T08:00:00Z',
     profile_snapshot: {
       ad: 'Aday D',
       eposta: 'aday-d@ornek.test',
@@ -455,6 +491,8 @@ const ORNEK_BASVURULAR = [
     offer_note: 'Ekibe eylül başında bekliyoruz.',
     offer_start_date: '2026-10-01',
     offer_compensation: '18.000 TL / ay',
+    /* İzin var, profil açık, gönderi yok: tarafsız boş cümle. */
+    paylasim_izni_at: '2026-08-24T08:00:00Z',
     profile_snapshot: {
       ad: 'Aday F',
       universite: 'Örnek Üniversitesi',
@@ -486,6 +524,146 @@ const ORNEK_BASVURULAR = [
     },
   },
 ];
+
+/*
+  İNCELEME EKRANININ İKİ OKUMASI — FİKSTÜR KARŞILIĞI
+
+  Gerçekte `basvuru_aday_guncel_profili` ve `basvuru_aday_paylasimlari`
+  RPC'leri (20261121010000). Fikstürde oturum yok; aynı biçimde yerel
+  veri dönüyor. Adlar ve içerik bilerek örnek: "Aday A", ornek.test.
+
+    test-1   güncel profil DEĞİŞMİŞ (sınıf, şehir, yetenek, dil seviyesi,
+             rozet, proje) · paylaşım izni VAR, 14 gönderi
+    test-10  aynı öğrenci, başka ilan · paylaşım izni YOK
+    test-4   izin var, sosyal profil GİZLİ
+    test-6   izin var, profil açık, gönderi YOK
+    test-5   iki okuma da HATA veriyor
+    öteki    güncel profil kopyayla aynı · izin yok
+*/
+const GUNCEL_DEGISIMLERI: Record<string, Record<string, unknown>> = {
+  'test-1': {
+    sinif: '4. Sınıf',
+    sehir: 'Ankara',
+    linkedin: 'https://www.linkedin.com/in/ornek-aday-2026',
+    yetenekler: ['React', 'TypeScript', 'Python', 'Figma'],
+    diller: ['İngilizce (B2)', 'Almanca (A1)'],
+    rozetler: ['quiz-react', 'quiz-sql'],
+    projeler: [
+      { baslik: 'Örnek proje', aciklama: 'Test açıklaması, sonradan genişletildi.', adres: 'https://ornek.test/proje' },
+      { baslik: 'Yeni örnek proje', aciklama: 'Başvurudan sonra eklenen proje.', adres: null },
+    ],
+  },
+};
+
+const fikstürGuncelProfil = (id: string) =>
+  new Promise<{ riza: boolean; guncel: AdayGuncelProfili | null }>((coz, red) => {
+    window.setTimeout(() => {
+      if (id === 'test-5') {
+        red(new Error('Fikstür: güncel profil okuma hatası.'));
+        return;
+      }
+      const satir = ORNEK_BASVURULAR.find((s) => s.id === id);
+      const kopya = (satir?.profile_snapshot ?? null) as Record<string, any> | null;
+      if (!satir?.contact_share_consent_at || !kopya) {
+        coz({ riza: false, guncel: null });
+        return;
+      }
+      coz({
+        riza: true,
+        guncel: {
+          ad: kopya.ad ?? null,
+          fotoUrl: null,
+          universite: kopya.universite ?? null,
+          bolum: kopya.bolum ?? null,
+          sinif: kopya.sinif ?? null,
+          sehir: kopya.sehir ?? null,
+          github: kopya.github ?? null,
+          portfolyo: kopya.portfolyo ?? null,
+          linkedin: kopya.linkedin ?? null,
+          rozetler: Array.isArray(kopya.rozetler) ? kopya.rozetler : [],
+          yetenekler: Array.isArray(kopya.yetenekler) ? kopya.yetenekler.filter((y: unknown) => typeof y === 'string') : [],
+          diller: Array.isArray(kopya.diller) ? kopya.diller.filter((d: unknown) => typeof d === 'string' && !/undefined/.test(d)) : [],
+          projeler: Array.isArray(kopya.projeler) ? kopya.projeler.filter((p: any) => p?.baslik) : [],
+          guncellendi: '2026-09-28T10:00:00Z',
+          /* Güncel profil ÖĞRENCİNİN: test-10 aynı öğrencinin ikinci başvurusu, aynı güncel hâl. */
+          ...GUNCEL_DEGISIMLERI[id === 'test-10' ? 'test-1' : id],
+        } as AdayGuncelProfili,
+      });
+    }, 300);
+  });
+
+/*
+  Yerel örnek görseller: StajımVar'ın kendi Instagram kartları (depodaki
+  public/paylasim). Kartlarda kişi görüntüleri var; bunlar StajımVar'ın
+  kendi yayın görselleri, herhangi bir adayın fotoğrafı değil.
+*/
+const ORNEK_KLASORLER = [
+  '2026-09-15-1230-cv-guclu-madde',
+  '2026-09-15-2030-ilan-okuma',
+  '2026-09-16-1230-star-cevabi',
+  '2026-09-16-2030-basvuru-takibi',
+  '2026-09-17-1230-ilk-gun-hazirligi',
+  '2026-09-17-2030-yardim-isteme',
+  '2026-09-18-1230-linkedin-profil',
+  '2026-09-18-2030-haftalik-staj-gunlugu',
+  '2026-09-19-1230-portfoy-kaniti',
+  '2026-09-19-2030-ret-sonrasi',
+];
+
+const ORNEK_PAYLASIMLAR: AdayPaylasimi[] = Array.from({ length: 14 }, (_, i) => {
+  const klasor = ORNEK_KLASORLER[i % ORNEK_KLASORLER.length];
+  /* 0: üç görselli · 3: görselsiz · 5: görseli inmeyen · 1: uzun açıklama */
+  const medyaSayisi = i === 0 ? 3 : i === 3 ? 0 : 1;
+  return {
+    id: `paylasim-${i + 1}`,
+    aciklama:
+      i === 1
+        ? 'Uzun bir örnek açıklama: dönem projesinde veri temizleme adımlarını, kullandığım araçları ve karşılaştığım sorunları anlattığım bir paylaşım. Metin üç satırda kesilmeli, büyük görünümde tam okunmalı.'
+        : i === 4
+          ? null
+          : `Örnek paylaşım ${i + 1}`,
+    tarih: `2026-09-${String(28 - i).padStart(2, '0')}T10:00:00Z`,
+    medya: Array.from({ length: medyaSayisi }, (_, j) => ({
+      yol: i === 5 ? `fikstur/inmeyen/${i}.jpg` : `fikstur/${klasor}/0${j + 1}-v1.jpg`,
+      genislik: 1080,
+      yukseklik: 1350,
+      alt: j === 0 ? `Örnek görsel ${i + 1}` : null,
+    })),
+  };
+});
+
+const fikstürPaylasimlari = (id: string) =>
+  new Promise<PaylasimSonucu>((coz, red) => {
+    window.setTimeout(() => {
+      if (id === 'test-5') {
+        red(new Error('Fikstür: paylaşım okuma hatası.'));
+        return;
+      }
+      const izinli = ORNEK_BASVURULAR.find((s) => s.id === id && 'paylasim_izni_at' in s && s.paylasim_izni_at);
+      if (!izinli) {
+        coz({ izin: false, izinTarihi: null, profilGorunur: false, kullaniciAdi: null, paylasimlar: [] });
+        return;
+      }
+      const izinTarihi = String((izinli as { paylasim_izni_at?: string }).paylasim_izni_at);
+      if (id === 'test-4') {
+        coz({ izin: true, izinTarihi, profilGorunur: false, kullaniciAdi: null, paylasimlar: [] });
+        return;
+      }
+      coz({
+        izin: true,
+        izinTarihi,
+        profilGorunur: true,
+        kullaniciAdi: 'ornek-aday',
+        paylasimlar: id === 'test-1' ? ORNEK_PAYLASIMLAR : [],
+      });
+    }, 300);
+  });
+
+/* `fikstur/<klasör>/<dosya>` → public/paylasim altındaki dosya; "inmeyen" eşleşmiyor. */
+const fikstürGorselAdresi = (yol: string) => {
+  const m = yol.match(/^fikstur\/(\d{4}-[^/]+)\/([^/]+\.jpg)$/);
+  return m ? `/paylasim/${m[1]}/${m[2]}` : null;
+};
 
 /** Fikstür boyunca aynı şirket bağlamı — üç ekranda tekrar yazılmasın. */
 const TEST_BAGLAMI = (kademe: number) => ({
@@ -1083,10 +1261,10 @@ export const SirketPanelDevFixture: React.FC = () => {
               coz(
                 satir && satir.status === 'offer_accepted'
                   ? {
-                      ad: 'Mustafa Oğulcan Doğan',
-                      eposta: 'mustafa.ogulcan@ornek.edu.tr',
+                      ad: 'Aday F',
+                      eposta: 'aday-f@ornek.test',
                       /* Ham biçim: ekranda okunur yazılıyor, kayıt değişmiyor. */
-                      telefon: '+905323311338',
+                      telefon: '+905000000000',
                       unvan: 'Aday',
                     }
                   : null,
@@ -1095,6 +1273,9 @@ export const SirketPanelDevFixture: React.FC = () => {
           })
         }
         onNot={async () => undefined}
+        onGuncelProfil={fikstürGuncelProfil}
+        onPaylasimlar={fikstürPaylasimlari}
+        yerelGorselAdresi={fikstürGorselAdresi}
         simdi={BUGUN}
       />
     );

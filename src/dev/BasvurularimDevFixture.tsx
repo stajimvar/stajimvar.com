@@ -1,5 +1,6 @@
 import React from 'react';
 import { ApplicationsTrackerView } from '../components/ApplicationsTrackerView';
+import { ApplyDialog } from '../components/ApplyDialog';
 import type { ApplicationRecord, InternshipListing } from '../types';
 
 /**
@@ -42,6 +43,8 @@ const temel = {
   studentId: 'ogrenci-1',
   matchScore: 72,
   appliedAt: '2026-08-20T09:00:00Z',
+  /* StajımVar üzerinden: paylaşım izni anahtarı burada çiziliyor. */
+  applicationMethod: 'internal',
 };
 
 /** Yedi durumun tamamı; ikisinde ek alan var, birinde hiç damga yok. */
@@ -51,6 +54,8 @@ const BASVURULAR: ApplicationRecord[] = [
   {
     ...temel,
     id: 'b2',
+    /* İzin AÇIK başlıyor. */
+    paylasimIzniAt: '2026-08-21T09:00:00Z',
     listingId: 'ilan-2',
     status: 'under_review',
     statusChangedAt: '2026-08-25T12:00:00Z',
@@ -157,6 +162,8 @@ const BASVURULAR: ApplicationRecord[] = [
   {
     ...temel,
     id: 'b8',
+    /* Şirketin kendi sitesinden: paylaşım izni anahtarı ÇİZİLMEMELİ. */
+    applicationMethod: 'external',
     listingId: 'ilan-2',
     status: 'withdrawn',
     statusChangedAt: '2026-08-30T18:00:00Z',
@@ -166,10 +173,39 @@ const BASVURULAR: ApplicationRecord[] = [
 export const BasvurularimDevFixture: React.FC = () => {
   const [kayitlar, setKayitlar] = React.useState(BASVURULAR);
   const [altSekme, setAltSekme] = React.useState('all');
+  const [pencere, setPencere] = React.useState(false);
+  const [gonderilen, setGonderilen] = React.useState<string | null>(null);
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="mx-auto max-w-3xl">
+        {/*
+          BAŞVURU PENCERESİ — iki ayrı onay kutusu (KVKK + isteğe bağlı paylaşım
+          izni). Gönderim yerel; gönderilen iki değer aşağıda yazıyor ki
+          izin kutusunun ayrı geçtiği tarayıcıda görülebilsin.
+        */}
+        <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
+          <button
+            type="button"
+            id="dev-basvuru-penceresi"
+            onClick={() => setPencere(true)}
+            className="min-h-11 rounded-lg border border-gray-300 bg-white px-3 font-bold"
+          >
+            Başvuru penceresini aç
+          </button>
+          {gonderilen && <span id="dev-gonderilen">{gonderilen}</span>}
+        </div>
+        {pencere && (
+          <ApplyDialog
+            listing={{ ...ILANLAR[0], applicationMethod: 'internal' } as InternshipListing}
+            alreadyApplied={false}
+            onClose={() => setPencere(false)}
+            onSubmit={async (riza, paylasimIzni) => {
+              setGonderilen(`riza=${riza} paylasimIzni=${paylasimIzni}`);
+              setPencere(false);
+            }}
+          />
+        )}
         <ApplicationsTrackerView
           applications={kayitlar}
           allListings={ILANLAR}
@@ -245,6 +281,24 @@ export const BasvurularimDevFixture: React.FC = () => {
                 );
                 coz(yanit);
               }, 250);
+            })
+          }
+          /*
+            Paylaşım izni: gerçek kapı sunucuda (public.basvuru_paylasim_izni,
+            yalnız öğrencinin kendi `internal` başvurusu). b3 her zaman hata
+            veriyor: satır içi hata ve kilitli anahtar görülebilsin.
+          */
+          onPaylasimIzni={(id, acik) =>
+            new Promise<string | null>((coz, red) => {
+              window.setTimeout(() => {
+                if (id === 'b3') {
+                  red(new Error('Fikstür: izin kaydı hatası taklit ediliyor.'));
+                  return;
+                }
+                const an = acik ? new Date().toISOString() : null;
+                setKayitlar((o) => o.map((a) => (a.id === id ? { ...a, paylasimIzniAt: an ?? undefined } : a)));
+                coz(an);
+              }, 400);
             })
           }
           onWithdraw={(id) =>

@@ -152,7 +152,14 @@ test('terminal durumda ilerletme ve olumsuz düğmeleri yok', () => {
 test('final blok gövdenin başında', () => {
   const govdeBas = cekmece.indexOf('min-h-0 flex-1 space-y-5 overflow-y-auto');
   const finalBlok = cekmece.indexOf('{terminal && (');
-  const yetenekler = cekmece.indexOf('<Baslik>Yetenekler</Baslik>');
+  /*
+    4 Ekim 2026: başlık "Başvurudan sonra değişti" işaretini taşıyabiliyor
+    (`<Baslik degisti={…}>`); arama prop'lu biçimi de buluyor. Üç konum
+    da VAR olmalı — bulunamayan bir konum (-1) sırayı yanlışlıkla
+    doğrulamasın.
+  */
+  const yetenekler = cekmece.search(/<Baslik(?:\s[^>]*)?>Yetenekler<\/Baslik>/);
+  assert.ok(govdeBas > -1 && finalBlok > -1 && yetenekler > -1, 'gövde, final blok ya da yetenek başlığı bulunamadı');
   assert.ok(finalBlok > govdeBas, 'final blok gövdenin dışında');
   assert.ok(finalBlok < yetenekler, 'iletişim yetenek listesinin arkasında kalıyor');
 });

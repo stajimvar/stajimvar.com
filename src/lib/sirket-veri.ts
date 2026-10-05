@@ -463,7 +463,7 @@ export async function sirketBasvurulari(companyId: string) {
     .from('applications')
     .select(
       'id, status, applied_at, match_score, listing_id, student_id, cover_letter, cv_path, ' +
-        'cv_snapshot_path, profile_snapshot, contact_share_consent_at, application_method, ' +
+        'cv_snapshot_path, profile_snapshot, contact_share_consent_at, application_method, paylasim_izni_at, ' +
         'interview_date, interview_time, interview_type, interview_location, ' +
         'interview_note, interview_response, interview_responded_at, ' +
         'status_changed_at, offer_note, offer_start_date, offer_compensation, ' +
@@ -492,21 +492,88 @@ export async function sirketBasvurulari(companyId: string) {
 }
 
 /**
- * Bir başvuranın canlı yetenek kayıtları.
+ * BAŞVURU ANI ↔ GÜNCEL PROFİL (20261121010000)
  *
- * Başvuru kopyasında yetenek yoksa (eski başvurular) buradan
- * tamamlanıyor. Politika bu okumayı yalnızca şirkete BAŞVURMUŞ
- * öğrenciler için ve yalnızca doğrulanmış şirkete açıyor.
+ * Başvuru rızasının kapsadığı alanların (başvuru kopyasıyla aynı küme)
+ * GÜNCEL hâli. Sunucu yalnız o başvurunun ilanının sahibi doğrulanmış
+ * şirketin üyesine ve yalnız rıza varsa döndürüyor; telefon, e-posta,
+ * not ortalaması, tercihler bu yoldan gelmiyor.
  */
-export async function adayYetenekleri(studentId: string) {
+export type AdayGuncelProfili = {
+  ad: string | null;
+  fotoUrl: string | null;
+  universite: string | null;
+  bolum: string | null;
+  sinif: string | null;
+  sehir: string | null;
+  github: string | null;
+  portfolyo: string | null;
+  linkedin: string | null;
+  rozetler: string[];
+  yetenekler: string[];
+  diller: string[];
+  projeler: { baslik: string; aciklama: string | null; adres: string | null }[];
+  guncellendi: string | null;
+};
+
+export async function basvuruAdayGuncelProfili(
+  basvuruId: string,
+): Promise<{ riza: boolean; guncel: AdayGuncelProfili | null }> {
   const db = await istemci();
-  const { data, error } = await db
-    .from('student_skills')
-    .select('name, level, category')
-    .eq('student_id', studentId)
-    .order('name');
+  const { data, error } = await db.rpc('basvuru_aday_guncel_profili' as never, { p_basvuru: basvuruId } as never);
+  if (error) throw new Error('Adayın güncel profili alınamadı.');
+  const d = (data ?? {}) as { riza?: boolean; guncel?: AdayGuncelProfili | null };
+  return { riza: Boolean(d.riza), guncel: d.guncel ?? null };
+}
+
+/**
+ * ADAYIN PAYLAŞIMLARI — yalnız öğrencinin izin verdiği başvuruda
+ *
+ * `izin: false` → öğrenci bu başvuruda paylaşım izni vermedi (eski
+ * başvurular dahil). `profilGorunur: false` → izin var ama sosyal profil
+ * yayında değil; gizli profil açılmıyor. Görseller `sosyal-paylasim`
+ * kovasından şirket üyesinin oturumuyla iniyor (dar depolama izni).
+ */
+export type AdayPaylasimi = {
+  id: string;
+  aciklama: string | null;
+  tarih: string;
+  medya: { yol: string; genislik: number | null; yukseklik: number | null; alt: string | null }[];
+};
+
+export async function basvuruAdayPaylasimlari(basvuruId: string): Promise<{
+  izin: boolean;
+  izinTarihi: string | null;
+  profilGorunur: boolean;
+  kullaniciAdi: string | null;
+  paylasimlar: AdayPaylasimi[];
+}> {
+  const db = await istemci();
+  const { data, error } = await db.rpc('basvuru_aday_paylasimlari' as never, { p_basvuru: basvuruId } as never);
+  if (error) throw new Error('Adayın paylaşımları alınamadı.');
+  const d = (data ?? {}) as Record<string, unknown>;
+  return {
+    izin: Boolean(d.izin),
+    izinTarihi: (d.izinTarihi as string | null) ?? null,
+    profilGorunur: Boolean(d.profilGorunur),
+    kullaniciAdi: (d.kullaniciAdi as string | null) ?? null,
+    paylasimlar: Array.isArray(d.paylasimlar) ? (d.paylasimlar as AdayPaylasimi[]) : [],
+  };
+}
+
+/**
+ * Kopyası yetenek taşımayan (eski) başvurunun yetenekleri.
+ *
+ * Şirket öğrenci tablolarını artık DOĞRUDAN okuyamıyor (20261121010000:
+ * geniş okuma politikaları kaldırıldı). Liste sunucudan, başvuru
+ * kimliğiyle geliyor: yalnız ilanın sahibi doğrulanmış şirkete ve yalnız
+ * başvuruda bilgi paylaşımına rıza varsa; rıza yoksa boş.
+ */
+export async function basvuruAdayYetenekleri(basvuruId: string) {
+  const db = await istemci();
+  const { data, error } = await db.rpc('basvuru_aday_yetenekleri' as never, { p_basvuru: basvuruId } as never);
   if (error) return [];
-  return (data ?? []) as { name: string; level?: string; category?: string }[];
+  return ((data ?? []) as unknown as string[]).map((name) => ({ name }));
 }
 
 /** Başvuru durumunu değiştirir. RLS doğrulanmış şirket dışına kapalı. */

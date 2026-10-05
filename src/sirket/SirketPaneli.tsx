@@ -20,20 +20,24 @@ import { SirketAdayProfili } from './SirketAdayProfili';
 import { SirketAdaylar } from './SirketAdaylar';
 import { IlanFormu } from './IlanFormu';
 import { AdayIzgarasi } from './AdayIzgarasi';
-import type { Iletisim } from './AdayCekmecesi';
+import type { GuncelProfilYukleyici, Iletisim, PaylasimYukleyici } from './AdayCekmecesi';
 import { GenelBakis } from './GenelBakis';
 import { IlanSiralamasi } from './IlanSiralamasi';
 import { CikisDugmesi, SirketProfili } from './SirketProfili';
 import type { AdayOzeti } from './IlanKarti';
 import { KADEME, adayGorebilir } from '../lib/sirket-kademe.mjs';
 import { kartVerisi } from '../lib/aday-kart.mjs';
+import { BULUNAMADI_CUMLESI, derinBaglantiKarari } from '../lib/aday-derin-baglanti.mjs';
+import { adayAdresiniYaz, useAdayAdresi } from './useAdayAdresi';
 import {
-  adayYetenekleri,
+  basvuruAdayYetenekleri,
   basvuruDurumuDegistir,
   mulakatTarihiYaz,
   teklifGonder,
   gorusmeyeDavetEt,
   basvuruIletisimi,
+  basvuruAdayGuncelProfili,
+  basvuruAdayPaylasimlari,
   basvuruNotuKaydet,
   ilanDurumuDegistir,
   ilanGuncelle,
@@ -336,6 +340,30 @@ export const SirketPaneli: React.FC<{
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [acilacakAday, durum, baglam, basvurular]);
 
+  /*
+    DERİN BAĞLANTI: /sirket/basvuranlar?aday=<başvuruId>
+
+    Kimlik şirketin listesindeyse AdayIzgarasi ekranı adresten açıyor.
+    Liste yüklenmeden karar verilmiyor ('bekle'); okuma hatası da
+    "bulunamadı" sayılmıyor. Liste yüklü ve kimlik yoksa — geçersiz,
+    başka şirketin, ya da doğrulanmamış şirkette liste hiç istenmediği
+    için — TEK bir tarafsız cümle yazılıyor ve `aday` adresten yerinde
+    siliniyor. İki ayrı cümle, başka bir şirkete ait bir başvurunun var
+    olduğunu sızdırırdı.
+  */
+  const adresAday = useAdayAdresi();
+  React.useEffect(() => {
+    if (sirketEkrani(yol).tur !== 'basvuranlar' || !baglam) return;
+    const karar = derinBaglantiKarari({
+      adresId: adresAday,
+      durum,
+      kimlikler: basvurular.map((k) => String(k.id)),
+    });
+    if (karar !== 'bulunamadi') return;
+    setAdayUyarisi(BULUNAMADI_CUMLESI);
+    adayAdresiniYaz(null);
+  }, [yol, adresAday, durum, baglam, basvurular]);
+
   if (durum === 'yukleniyor' || !baglam) {
     return (
       <div className="space-y-3" aria-busy="true">
@@ -530,6 +558,8 @@ export const SirketPaneli: React.FC<{
         await yukle();
       }}
       onIletisim={(id) => basvuruIletisimi(id)}
+      onGuncelProfil={basvuruAdayGuncelProfili}
+      onPaylasimlar={basvuruAdayPaylasimlari}
       onNot={async (id, metin) => {
         await basvuruNotuKaydet(id, metin);
         await yukle();
@@ -552,7 +582,13 @@ async function basvuruKartlari(companyId: string): Promise<Record<string, any>[]
   return Promise.all(
     ham.map(async (s: Record<string, any>) => {
       const anlikVar = Array.isArray(s.profile_snapshot?.yetenekler);
-      const yetenekler = anlikVar ? [] : await adayYetenekleri(String(s.student_id ?? ''));
+      /*
+        BAŞVURU KİMLİĞİYLE, ÖĞRENCİ KİMLİĞİYLE DEĞİL (20261121010000)
+
+        Şirketin öğrenci tablolarını doğrudan okuması kapatıldı; yetenek
+        listesi artık yalnız bu başvuru üzerinden ve rıza varsa geliyor.
+      */
+      const yetenekler = anlikVar ? [] : await basvuruAdayYetenekleri(String(s.id));
       return kartVerisi(s, { yetenekler });
     })
   );
@@ -589,6 +625,15 @@ export const SirketIlanlarSekmesi: React.FC<{
     davet: { tarih: string; saat: string; tur: string; yer: string; not: string },
   ) => Promise<void>;
   onIletisim: (id: string) => Promise<Iletisim | null>;
+  /*
+    İnceleme ekranının güncel profil ve paylaşım okumaları
+    (20261121010000). Kapı sunucuda: yalnız o başvurunun ilanının sahibi
+    doğrulanmış şirketin üyesi, yalnız rıza / paylaşım izni varsa.
+  */
+  onGuncelProfil: GuncelProfilYukleyici;
+  onPaylasimlar: PaylasimYukleyici;
+  /** Yalnız geliştirme fikstürü: paylaşım görseli için yerel dosya. Üretimde verilmiyor. */
+  yerelGorselAdresi?: (yol: string) => string | null;
   onNot: (id: string, metin: string) => Promise<void>;
   acilacakAday?: string | null;
   onAdayAcildi?: () => void;
@@ -608,6 +653,9 @@ export const SirketIlanlarSekmesi: React.FC<{
   onTeklif,
   onDavet,
   onIletisim,
+  onGuncelProfil,
+  onPaylasimlar,
+  yerelGorselAdresi,
   onNot,
   acilacakAday,
   onAdayAcildi,
@@ -643,6 +691,9 @@ export const SirketIlanlarSekmesi: React.FC<{
         onTeklif={onTeklif}
         onDavet={onDavet}
         onIletisim={onIletisim}
+        onGuncelProfil={onGuncelProfil}
+        onPaylasimlar={onPaylasimlar}
+        yerelGorselAdresi={yerelGorselAdresi}
         onNot={onNot}
         acilacakAday={acilacakAday}
         onAdayAcildi={onAdayAcildi}
@@ -741,6 +792,9 @@ const Basvuranlar: React.FC<{
   onTeklif: (id: string, teklif: { not: string; baslangic: string; ucret: string }) => Promise<void>;
   onDavet: (id: string, davet: { tarih: string; saat: string; tur: string; yer: string; not: string }) => Promise<void>;
   onIletisim: (id: string) => Promise<Iletisim | null>;
+  onGuncelProfil: GuncelProfilYukleyici;
+  onPaylasimlar: PaylasimYukleyici;
+  yerelGorselAdresi?: (yol: string) => string | null;
   acilacakAday?: string | null;
   onAdayAcildi?: () => void;
   onNot: (id: string, metin: string) => Promise<void>;
@@ -754,6 +808,9 @@ const Basvuranlar: React.FC<{
   onTeklif,
   onDavet,
   onIletisim,
+  onGuncelProfil,
+  onPaylasimlar,
+  yerelGorselAdresi,
   acilacakAday,
   onAdayAcildi,
   onNot,
@@ -1016,6 +1073,9 @@ const Basvuranlar: React.FC<{
         onTeklif={onTeklif}
         onDavet={onDavet}
         onIletisim={onIletisim}
+        onGuncelProfil={onGuncelProfil}
+        onPaylasimlar={onPaylasimlar}
+        yerelGorselAdresi={yerelGorselAdresi}
         acilacakAday={acilacakAday}
         onAdayAcildi={onAdayAcildi}
         onNot={onNot}

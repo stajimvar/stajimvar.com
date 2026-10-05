@@ -24,7 +24,12 @@ interface ApplyDialogProps {
   /** Zaten başvurulmuşsa diyalog yalnızca durumu gösterir. */
   alreadyApplied: boolean;
   onClose: () => void;
-  onSubmit: (consent: boolean) => Promise<void>;
+  /**
+   * `paylasimIzni`: öğrencinin AYRI ve isteğe bağlı paylaşım izni
+   * (20261121010000). Yalnız kutu gösterildiyse ve işaretlendiyse true;
+   * başvuru oluşturulduktan sonra `basvuruPaylasimIzni` ile yazılıyor.
+   */
+  onSubmit: (consent: boolean, paylasimIzni: boolean) => Promise<void>;
   /**
    * CV'si olmayan öğrenci için ikincil seçenek. Yalnız şirket sitesinden
    * başvurulan ilanda çiziliyor; birincil eylem yine "Şirket sayfasında
@@ -42,11 +47,27 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
   onCvOlustur,
 }) => {
   const [consent, setConsent] = useState(false);
+  /*
+    PAYLAŞIM İZNİ — AYRI, İSTEĞE BAĞLI, VARSAYILANI KAPALI
+
+    KVKK rızası "profilimin ve iletişim bilgilerimin" paylaşılmasını
+    kapsıyor; sosyal paylaşımları ve görselleri SAYMIYOR. Onları rızanın
+    içine katmak, öğrencinin onaylamadığı bir şeyi onaylamış sayılması
+    olurdu. Bu yüzden ikinci, ayrı bir kutu ve başvuru onu beklemiyor.
+  */
+  const [paylasimIzni, setPaylasimIzni] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const yol = basvuruYolu(listing);
   const rizaGerekli = yol.teslimEdiliyor;
+  /*
+    Kutu yalnız StajımVar üzerinden alınan (`internal`) başvuruda. Sunucu
+    izni yalnız o yöntemde yazıyor (`basvuru_paylasim_izni`): e-postayla
+    iletilen başvuruda şirketin paneli yok, orada izin istemek olmayan bir
+    görüntülemeye onay toplamak olurdu.
+  */
+  const paylasimKutusu = rizaGerekli && listing.applicationMethod === 'internal';
 
   /* Odak yönetimi, ESC, focus trap ve arka plan kilidi. */
   const kutuRef = useModalErisim<HTMLDivElement>(true, onClose);
@@ -71,7 +92,7 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
     setError(null);
     setBusy(true);
     try {
-      await onSubmit(consent);
+      await onSubmit(consent, paylasimKutusu && paylasimIzni);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Başvuru gönderilemedi.');
     } finally {
@@ -207,6 +228,27 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
                   >
                     Aydınlatma metni
                   </a>
+                </span>
+              </label>
+              )}
+
+              {/*
+                Ayrı kutu, KVKK kutusunun ALTINDA. İşaretlenmeden de başvuru
+                gönderiliyor; gönder düğmesinin `disabled` koşulu yalnız
+                KVKK rızasına bakıyor.
+              */}
+              {paylasimKutusu && (
+              <label className="flex gap-2.5 items-start cursor-pointer rounded-2xl border border-gray-200 p-3.5 hover:border-blue-300 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={paylasimIzni}
+                  onChange={(e) => setPaylasimIzni(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 accent-blue-600 shrink-0"
+                />
+                <span className="text-xs text-gray-600 leading-relaxed">
+                  Profilimdeki paylaşımlarımın ve görsellerimin bu başvuru kapsamında{' '}
+                  {listing.companyName} tarafından görülmesine izin veriyorum (isteğe bağlı,
+                  istediğin zaman geri alabilirsin).
                 </span>
               </label>
               )}

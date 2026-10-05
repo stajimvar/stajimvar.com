@@ -8,6 +8,8 @@ import {
   SIRKET_VURGU,
   SIRKET_VURGU_KOYU,
   SIRKET_YUZEY,
+  SIRKET_ZEMIN,
+  SIRKET_ODAK,
 } from './renk';
 import { UYUM_ETIKETI, kimlikSatiri, monogram } from '../lib/aday-kart.mjs';
 import { durumAdi, durumRozeti, surecKapandi } from './basvuru-durumu';
@@ -57,6 +59,8 @@ export interface AdayKart {
      bir belgeye tıklatmak olurdu. */
   cvYolu?: string | null;
   gizli?: boolean;
+  /* Başvurulan ilanın başlığı (`listings.title`, sirketBasvurulari). */
+  ilanBasligi?: string | null;
 }
 
 export const AdayKarti: React.FC<{
@@ -81,16 +85,71 @@ export const AdayKarti: React.FC<{
   const uyumGoster = !surecKapandi(kart.durum) && kart.band !== 'bilinmiyor';
 
   const gorunenYetenek = kart.yetenekler.slice(0, 4);
+  const ilanBasligi = kart.ilanBasligi?.trim() || null;
   const kalanYetenek = kart.yetenekler.length - gorunenYetenek.length;
 
+  /*
+    İLAN BAŞLIĞI GENİŞLETİLEBİLİR (5 Ekim 2026)
+
+    Başlık iki satırda kesiliyordu ve tam metin yalnız `title`daydı —
+    telefonda fare yok, `title` hiç görünmüyor; ölçüldü: 375 pikselde 117
+    karakterlik başlık üçüncü satırda kesiliyor. Kesildiyse başlığın
+    altında "Devamını göster" düğmesi çıkıyor (kesilmediyse yok: işe
+    yaramayan düğme çizilmiyor). Kesilip kesilmediği ölçülüyor, tahmin
+    edilmiyor: genişlik değişince (döndürme, pencere) yeniden ölçülüyor.
+  */
+  const [ilanAcik, setIlanAcik] = React.useState(false);
+  const [ilanKesik, setIlanKesik] = React.useState(false);
+  const ilanRef = React.useRef<HTMLSpanElement | null>(null);
+  React.useLayoutEffect(() => {
+    const oge = ilanRef.current;
+    if (!oge || ilanAcik) return undefined;
+    const olc = () => setIlanKesik(oge.scrollHeight > oge.clientHeight + 1);
+    olc();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const gozlemci = new ResizeObserver(olc);
+    gozlemci.observe(oge);
+    return () => gozlemci.disconnect();
+  }, [ilanBasligi, ilanAcik]);
+
   return (
+    /*
+      KART BİR KAP, TIKLAMA ALTTAKİ DÜĞMEDE
+
+      Kartın tamamı bir `<button>`du; içine ikinci bir düğme ("Devamını
+      göster") konamazdı (iç içe düğme geçersiz HTML). Kart artık bir kap:
+      kabın tamamını kaplayan boş düğme incelemeyi açıyor, içerik onun
+      üstünde ama tıklamayı geçiriyor (`pointer-events-none`); bağımsız
+      tek eylem olan genişletme düğmesi `relative z-10` ve tıklamayı
+      kendisi alıyor — kartı açmıyor.
+    */
+    <div
+      className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border text-left transition-all hover:-translate-y-0.5"
+      style={{
+        background: SIRKET_YUZEY,
+        borderColor: odakli ? SIRKET_VURGU : SIRKET_KENAR,
+        boxShadow: odakli
+          ? `0 0 0 3px ${SIRKET_ROZET}`
+          : '0 1px 2px rgba(22, 33, 28, 0.04)',
+      }}
+    >
     <button
       type="button"
       onClick={onAc}
       data-aday-karti={kart.id}
-      aria-label={`${kart.ad ?? 'Aday'} — ${
-        uyumGoster ? UYUM_ETIKETI[kart.band as keyof typeof UYUM_ETIKETI] : durumAdi(kart.durum)
-      }`}
+      /*
+        İlan başlığı erişilebilir adın İÇİNDE: kartta iki satırda
+        kesilebiliyor ve `title` yalnız fareyle okunuyor. Aynı öğrencinin
+        iki ilana başvurusu iki ayrı kart; ekran okuyucu ikisini ancak
+        ilan adıyla ayırabilir.
+      */
+      aria-label={[
+        kart.gizli ? 'Aday' : (kart.ad ?? 'Aday'),
+        ilanBasligi ? `Başvurduğu ilan: ${ilanBasligi}` : null,
+        uyumGoster ? UYUM_ETIKETI[kart.band as keyof typeof UYUM_ETIKETI] : durumAdi(kart.durum),
+      ]
+        .filter(Boolean)
+        .join(' — ')}
       /*
         SABİT ORAN KALDIRILDI
 
@@ -100,16 +159,9 @@ export const AdayKarti: React.FC<{
         içerikten geliyor; ızgara hizası `items-stretch` ile korunuyor ve
         kısa kartlar da satırı bozmuyor.
       */
-      className="flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-2xl border text-left transition-all hover:-translate-y-0.5"
-      style={{
-        background: SIRKET_YUZEY,
-        borderColor: odakli ? SIRKET_VURGU : SIRKET_KENAR,
-        boxShadow: odakli
-          ? `0 0 0 3px ${SIRKET_ROZET}`
-          : '0 1px 2px rgba(22, 33, 28, 0.04)',
-      }}
-    >
-      <span className="flex min-h-0 flex-1 flex-col gap-2.5 p-3">
+      className={`absolute inset-0 cursor-pointer rounded-2xl ${SIRKET_ODAK}`}
+    />
+      <div className="pointer-events-none relative flex min-h-0 flex-1 flex-col gap-2.5 p-3">
         {/* ------------------------------------------------- üst satır */}
         <span className="flex items-start gap-2">
           {kart.fotoUrl && !kart.gizli ? (
@@ -150,6 +202,52 @@ export const AdayKarti: React.FC<{
             {durum.etiket}
           </span>
         </span>
+
+        {/*
+          BAŞVURDUĞU İLAN (4 Ekim 2026)
+
+          Şirketin birden çok ilanı olduğunda kart hangi ilana
+          başvurulduğunu söylemiyordu; aynı öğrencinin iki ilana
+          başvurusu yan yana iki eş kart gibi duruyordu. Başlık iki
+          satıra kadar okunuyor, uzunsa `line-clamp-2` ile kesiliyor ve
+          "Devamını göster" tam metni kartın içinde açıyor (dokunmatikte de).
+          Tam metin ayrıca kartın erişilebilir adında ve inceleme ekranının
+          üst şeridinde — bilgi hover'a (`title`) kalmıyor.
+        */}
+        {ilanBasligi && (
+          <span
+            className="block rounded-lg border px-2 py-1.5"
+            style={{ borderColor: SIRKET_KENAR, background: SIRKET_ZEMIN }}
+          >
+            <span className="block text-[10px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+              Başvurduğu ilan
+            </span>
+            <span
+              ref={ilanRef}
+              id={`ilan-basligi-${kart.id}`}
+              title={ilanBasligi}
+              className={`${ilanAcik ? 'block ' : 'line-clamp-2 '}break-words text-xs font-bold leading-snug`}
+              style={{ color: SIRKET_METIN }}
+            >
+              {ilanBasligi}
+            </span>
+            {(ilanKesik || ilanAcik) && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIlanAcik((a) => !a);
+                }}
+                aria-expanded={ilanAcik}
+                aria-controls={`ilan-basligi-${kart.id}`}
+                className={`pointer-events-auto relative z-10 -mx-1 mt-0.5 inline-flex min-h-11 cursor-pointer items-center rounded-lg px-1 text-[11px] font-bold underline underline-offset-2 ${SIRKET_ODAK}`}
+                style={{ color: SIRKET_VURGU_KOYU }}
+              >
+                {ilanAcik ? 'Daha az göster' : 'Devamını göster'}
+              </button>
+            )}
+          </span>
+        )}
 
         {kart.sehir && (
           <span className="block text-[11px]" style={{ color: SIRKET_METIN_IKINCIL }}>
@@ -205,7 +303,7 @@ export const AdayKarti: React.FC<{
           aynı değeri taşıyor.
 
           Kartın tamamı tıklanabilir; sağdaki "İncele" bunu görünür
-          kılıyor. İç içe düğme yok — kart zaten bir düğme.
+          kılıyor. Tıklamayı kabın altındaki tek düğme alıyor; iç içe düğme yok.
         */}
         <span
           className="mt-auto flex items-center justify-between gap-2 border-t pt-2.5 text-[11px] font-semibold"
@@ -228,7 +326,7 @@ export const AdayKarti: React.FC<{
             <ChevronRight className="h-3.5 w-3.5" />
           </span>
         </span>
-      </span>
-    </button>
+      </div>
+    </div>
   );
 };

@@ -690,6 +690,22 @@ export async function fetchStudentApplications(userId: string): Promise<Applicat
   return (data ?? []).map(toApplicationRecord);
 }
 
+/**
+ * Başvurunun şirketine paylaşımlarımı göster / gösterme (20261121010000).
+ *
+ * İsteğe bağlı ve geri alınabilir; yalnız öğrencinin kendisi verebiliyor
+ * (sunucu `student_id = auth.uid()` ve yalnız StajımVar üzerinden
+ * yapılmış başvuru). Dönen değer iznin zamanı ya da null.
+ */
+export async function basvuruPaylasimIzni(basvuruId: string, acik: boolean): Promise<string | null> {
+  const { data, error } = await supabase.rpc('basvuru_paylasim_izni' as never, {
+    p_basvuru: basvuruId,
+    p_acik: acik,
+  } as never);
+  if (error) fail('Paylaşım izni kaydedilemedi', error);
+  return (data as unknown as string | null) ?? null;
+}
+
 /** Şirketin ilanlarına gelen başvurular. RLS üyelik kontrolünü yapıyor. */
 export async function fetchCompanyApplications(companyId: string): Promise<ApplicationRecord[]> {
   const { data: listingRows, error: listingError } = await supabase

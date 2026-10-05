@@ -136,6 +136,12 @@ export function kartVerisi(satir, ek = {}) {
     github: paylasildi ? (anlik.github ?? null) : null,
     portfolyo: paylasildi ? (anlik.portfolyo ?? null) : null,
     /*
+      Kopya LinkedIn adresini başından beri taşıyordu (basvuru-kopyasi.mjs)
+      ama karta geçmiyordu; inceleme ekranı bağlantıyı ancak buradan
+      alabiliyor. `href`e yazılmadan önce `guvenliDisAdres`ten geçiyor.
+    */
+    linkedin: paylasildi ? (anlik.linkedin ?? null) : null,
+    /*
       ESKİ KOPYALARDAKİ "undefined (B1)" GÖSTERİLMİYOR
 
       Kopya üreticisi dil adını yanlış alandan okuyordu (`name`, oysa
@@ -160,6 +166,19 @@ export function kartVerisi(satir, ek = {}) {
         )
       : [],
     yetenekler,
+    /*
+      Yetenekler kopyadan mı geldi? Eski kopyalarda liste yok ve kart
+      canlı tablodan tamamlıyor; o durumda "başvurudan sonra ne değişti"
+      sorusu cevaplanamaz (aday-profil-farki.mjs karşılaştırmayı atlıyor).
+    */
+    yetenekKopyadan: anlikYetenek !== null,
+
+    /*
+      Öğrencinin bu başvuruda paylaşımlarını gösterme izni (20261121010000).
+      Yalnız bilgi: inceleme ekranı izni yine sunucuya soruyor, çünkü
+      öğrenci liste yüklendikten sonra izni açmış ya da kapatmış olabilir.
+    */
+    paylasimIzniAt: satir?.paylasim_izni_at ?? null,
 
     onYazi: satir?.cover_letter ?? null,
     /*
