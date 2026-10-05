@@ -339,6 +339,18 @@ export interface ApplicationRecord {
     Hiç durum değişmediyse NULL: uydurulmuyor.
   */
   statusChangedAt?: string;
+  /*
+    SADE AKIŞ TAKİBİ (20261202010000)
+
+    `ilkGoruntulenmeAt`: şirketin aday ayrıntısını İLK kez başarıyla
+    açtığı an. Liste görünümü ve ön yükleme sayılmıyor. NULL = kaydımız
+    yok; "görüntülenmedi" demiyoruz çünkü bu alan eklenmeden önceki
+    bakışlar ölçülmedi.
+  */
+  ilkGoruntulenmeAt?: string | null;
+  /** İletişim paylaşımı onayı — öğrenci sonradan açıp kapatabiliyor. */
+  contactShareConsentAt?: string | null;
+  contactShareConsentVersion?: string | null;
   status:
     | 'submitted'
     | 'under_review'

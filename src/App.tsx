@@ -29,6 +29,7 @@ import {
   respondToInterview,
   fetchApplicationContact,
   basvuruPaylasimIzni,
+  iletisimPaylasimi,
   saveStudentProfile,
   fetchIsAdmin,
   fetchQuizzes,
@@ -2478,6 +2479,28 @@ export default function App() {
         alreadyApplied={applications.some((a) => a.listingId === applyTarget.listing.id)}
         onClose={() => setApplyTarget(null)}
         onSubmit={submitApplication}
+        /*
+          BAŞVURU ÖNCESİ İLETİŞİM KONTROLÜ: paylaşılacak değerler gerçek
+          profilden geliyor. Telefon eksikse diyalog aynı ekranda
+          tamamlatıyor; zorunlu değil.
+        */
+        paylasilacak={
+          activeStudent
+            ? {
+                ad: activeStudent.fullName ?? '',
+                eposta: activeStudent.email ?? '',
+                telefon: activeStudent.phone ?? '',
+              }
+            : undefined
+        }
+        onTelefonKaydet={
+          activeStudent
+            ? async (telefon) => {
+                await saveStudentProfile(activeStudent.id, { phone: telefon });
+                setStudent((ö) => (ö ? { ...ö, phone: telefon } : ö));
+              }
+            : undefined
+        }
         /* Yalnız CV'si olmayan öğrenciye; dönüşte aynı ilanın penceresi yeniden açılıyor. */
         onCvOlustur={
           activeStudent && !cvVarMi(activeStudent)
@@ -2688,6 +2711,18 @@ export default function App() {
                   Paylaşım izni: dönen değer SUNUCUNUN yazdığı an (ya da
                   kapatıldıysa null). Ekran onu yazıyor, kendi tahminini değil.
                 */
+                /*
+                  İLETİŞİM PAYLAŞIMI: kararı SUNUCU veriyor, ekranın
+                  tahmini değil. Kapatıldığında şirketin erişimi
+                  sunucuda kesiliyor.
+                */
+                onIletisimPaylasimi={async (id, acik) => {
+                  const an = await iletisimPaylasimi(id, acik);
+                  setApplications((prev) =>
+                    prev.map((a) => (a.id === id ? { ...a, contactShareConsentAt: an } : a)),
+                  );
+                  return an;
+                }}
                 onPaylasimIzni={async (id, acik) => {
                   const izinAni = await basvuruPaylasimIzni(id, acik);
                   setApplications((prev) =>

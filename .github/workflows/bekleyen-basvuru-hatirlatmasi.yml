@@ -18,10 +18,20 @@ name: Bekleyen başvuru hatırlatması
 # bildirime bağlı değil — panodaki "N gündür bekleyenler" süzgeci aynı
 # bilgiyi hatırlatma gelmeden de gösteriyor.
 
+# ZAMANLAMA BEKLETİLDİ (sade başvuru akışı)
+# ------------------------------------------
+# Başvuru akışı sadeleşti: şirket adayı inceleyip devamını telefon ya da
+# e-postayla kendisi yürütüyor. Bu akışta durum değişmeden geçen günler
+# "işlem görmedi" anlamına gelmiyor — şirket adayı aramış olabilir.
+# Günlük koşu açık kalsaydı, yayının ertesi sabahı gerçek şirket
+# sahiplerine (30+ gündür bekleyen eski başvurular dahil) hatırlatma
+# gidecekti.
+#
+# Çok aşamalı süreç geliştirmeleri bekletildiği için zamanlama da
+# bekletiliyor. RPC ve elle çalıştırma (`workflow_dispatch`) duruyor;
+# geri açmak için aşağıya `schedule` bloğunu eklemek yeterli.
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 7 * * *"
 
 permissions:
   contents: read

@@ -142,6 +142,15 @@ export function kartVerisi(satir, ek = {}) {
       bitirmiyor.
     */
     adayIlerlemesi: satir?.aday_ilerleme_at ?? null,
+    /*
+      SADE AKIŞ: iletişim paylaşımının kapsamı ve şirketin ilk bakışı.
+      Paylaşım kuralı `adayIletisimiAcik` içinde, sunucudaki
+      `basvuru_iletisimi_acik` ile aynı cümle.
+    */
+    paylasimOnayi: satir?.contact_share_consent_at ?? null,
+    paylasimSurumu: satir?.contact_share_consent_version ?? null,
+    basvuruYontemi: satir?.application_method ?? null,
+    ilkGoruntulenme: satir?.ilk_goruntulenme_at ?? null,
     puan: Number.isFinite(Number(satir?.match_score)) ? Number(satir.match_score) : null,
     band: uyumBandi(satir?.match_score),
 

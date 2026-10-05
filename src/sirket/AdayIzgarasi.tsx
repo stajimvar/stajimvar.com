@@ -104,6 +104,15 @@ export const AdayIzgarasi: React.FC<{
   yerelGorselAdresi?: (yol: string) => string | null;
   /** Yazma yetkisi olmayan üye: çekmece açılır, işlem sütunu çizilmez. */
   saltOkunur?: boolean;
+  /*
+    ADAY AYRINTISI BAŞARIYLA AÇILDI.
+
+    Çekmece GERÇEKTEN çizildikten sonra çağrılıyor; liste görünümü ve
+    ön yükleme çağırmıyor. Hata sınırı devreye girip çekmece
+    çizilemezse de çağrılmıyor — öğrenciye "görüntülendi" demek için
+    gerçekten görüntülenmiş olması gerekiyor.
+  */
+  onGoruntulendi?: (id: string) => void;
 }> = ({
   kartlar,
   ilanAdresi,
@@ -122,6 +131,7 @@ export const AdayIzgarasi: React.FC<{
   onPaylasimlar,
   yerelGorselAdresi,
   saltOkunur,
+  onGoruntulendi,
 }) => {
   const [onyargisiz, setOnyargisiz] = React.useState(false);
   const [ilanSuzgeci, setIlanSuzgeci] = React.useState(baslangicIlan ?? '');
@@ -210,6 +220,7 @@ export const AdayIzgarasi: React.FC<{
 
   const acikHam = acikId ? (kartlar.find((k) => k.id === acikId) ?? null) : null;
   const acik = acikHam && onyargisiz ? onyargisizla(acikHam) : acikHam;
+
 
   const tetikleyici = React.useRef<HTMLElement | null>(null);
 
@@ -611,6 +622,14 @@ export const AdayIzgarasi: React.FC<{
           onPaylasimlar={onPaylasimlar}
           yerelGorselAdresi={yerelGorselAdresi}
           saltOkunur={saltOkunur}
+          /*
+            Görüntülenme kaydı ÇEKMECENİN KENDİ efektinde: çekmece
+            çizilirken hata verirse (hata sınırı devreye girerse) React
+            o bileşenin efektini hiç çalıştırmıyor, kayıt da yazılmıyor.
+            Ebeveynde tetiklemek, çizilemeyen bir ayrıntıyı
+            "görüntülendi" saymak olurdu.
+          */
+          onGoruntulendi={onGoruntulendi}
         />
       </AdayHataSiniri>
 

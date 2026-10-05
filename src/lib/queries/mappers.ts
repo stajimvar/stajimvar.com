@@ -590,6 +590,10 @@ export function toCompanyUpdate(patch: Partial<CompanyAccount>) {
 
 export function toApplicationRecord(row: Tables<'applications'>): ApplicationRecord {
   return {
+    /* Sade akış takibi: ilk görüntülenme ve paylaşımın kapsamı. */
+    ilkGoruntulenmeAt: (row as Record<string, unknown>).ilk_goruntulenme_at as string | null ?? null,
+    contactShareConsentAt: row.contact_share_consent_at ?? null,
+    contactShareConsentVersion: (row as Record<string, unknown>).contact_share_consent_version as string | null ?? null,
     id: row.id,
     listingId: row.listing_id,
     studentId: row.student_id,

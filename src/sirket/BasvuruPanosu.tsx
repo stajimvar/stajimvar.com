@@ -49,6 +49,17 @@ import { DegerlendirmeFormu } from './DegerlendirmeFormu';
  */
 
 /** Panodaki tek aday çipi. */
+/*
+  DEĞERLENDİRME FORMU BEKLETİLDİ (sade başvuru akışı)
+
+  Başvuru akışı sadeleşti: şirketin temel işi adayın profilini, CV'sini
+  ve izinli iletişimini incelemek. Değerlendirme formu "şimdilik
+  beklet" kapsamında ve henüz hiç yayına çıkmadı; yayına açılmadan önce
+  arayüzden kaldırıldı. Tablolar, RPC'ler ve form bileşeni DURUYOR —
+  geri açmak için bu değeri `true` yapmak yeterli.
+*/
+const DEGERLENDIRME_ETKIN = false;
+
 const AdayCipi: React.FC<{
   kart: Record<string, any>;
   /**
@@ -179,6 +190,7 @@ const AdayCipi: React.FC<{
         kapatmak akışı kesiyordu. Form kapalı başlıyor; açıkken geçmişi
         de gösteriyor, yani yazamayan üye de "kim ne demiş" görebiliyor.
       */}
+      {DEGERLENDIRME_ETKIN && (
       <div className="pl-2.5">
         <button
           type="button"
@@ -199,6 +211,7 @@ const AdayCipi: React.FC<{
           </div>
         )}
       </div>
+      )}
     </li>
   );
 };

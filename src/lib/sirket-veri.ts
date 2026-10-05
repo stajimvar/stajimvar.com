@@ -530,6 +530,12 @@ export async function sirketBasvurulari(companyId: string) {
         */
         'atanan_uye, atanan_at, updated_at, aday_ilerleme_at, ' +
         /*
+          Sade akış: paylaşımın KAPSAMI ve şirketin ilk bakışı.
+          `contact_share_consent_at` ve `application_method` yukarıda
+          zaten seçiliyor; burada yalnız eksik olan ikisi var.
+        */
+        'contact_share_consent_version, ilk_goruntulenme_at, ' +
+        /*
           Teklif özeti çalışma biçimini, süreyi ve ücreti İLANDAN
           okuyor: şirket teklif gönderirken bunları tekrar yazmıyor.
         */
@@ -1189,6 +1195,27 @@ export async function ilanBekleyenAdaylar(ilanId: string): Promise<BekleyenAday[
     beklemeGun: Number(s.bekleme_gun ?? 0),
     atananUye: s.atanan_uye ? String(s.atanan_uye) : null,
   }));
+}
+
+/**
+ * ADAY AYRINTISI BAŞARIYLA AÇILDI.
+ *
+ * YALNIZ EKRAN ÇİZİLDİKTEN SONRA çağrılıyor: liste görünümü, ön
+ * yükleme ya da yüklenemeyen bir çekmece bu çağrıyı YAPMIYOR. Yoksa
+ * öğrenciye "şirket başvurunu görüntüledi" derken aslında kimsenin
+ * bakmadığı bir anı bildirmiş olurduk.
+ *
+ * Hata YUTULUYOR: bu bir yan kayıt, incelemenin kendisi değil.
+ * Başarısız olursa şirketin ekranı bozulmamalı — ama öğrenciye de
+ * yanlış bir şey söylenmemiş oluyor, çünkü damga yazılmıyor.
+ */
+export async function basvuruGoruntulendi(basvuruId: string): Promise<void> {
+  try {
+    const db = await istemci();
+    await db.rpc('basvuru_goruntulendi' as never, { p_basvuru: basvuruId } as never);
+  } catch {
+    /* sessiz: kayıt tutulamadı, ekran etkilenmiyor */
+  }
 }
 
 /**

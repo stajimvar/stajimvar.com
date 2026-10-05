@@ -691,6 +691,25 @@ export async function fetchStudentApplications(userId: string): Promise<Applicat
 }
 
 /**
+ * İLETİŞİM PAYLAŞIMINI AÇ / KAPAT (20261201010000)
+ *
+ * Öğrenci kendi başvurusunda telefon ve e-postasının şirkete
+ * açılmasını sonradan açabiliyor ya da GERİ ALABİLİYOR. Kapatınca
+ * şirketin erişimi sunucuda kesiliyor (`basvuru_iletisimi` satır
+ * döndürmüyor) — ekranda gizlemek yetmezdi.
+ *
+ * Yalnız başvuru sahibi çağırabiliyor; şirket bu izni veremiyor.
+ */
+export async function iletisimPaylasimi(basvuruId: string, acik: boolean): Promise<string | null> {
+  const { data, error } = await supabase.rpc('ogrenci_paylasimi_ac' as never, {
+    p_basvuru: basvuruId,
+    p_acik: acik,
+  } as never);
+  if (error) fail('Paylaşım tercihi kaydedilemedi', error);
+  return (data as string | null) ?? null;
+}
+
+/**
  * Başvurunun şirketine paylaşımlarımı göster / gösterme (20261121010000).
  *
  * İsteğe bağlı ve geri alınabilir; yalnız öğrencinin kendisi verebiliyor

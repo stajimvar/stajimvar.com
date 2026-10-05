@@ -143,7 +143,8 @@ test('rejected bilerek geri alınabilir kalıyor', async () => {
 });
 
 test('terminal durumda ilerletme ve olumsuz düğmeleri yok', () => {
-  assert.match(cekmece, /\{terminal \? null : sonraki === 'interview_scheduled' \?/);
+  /* Sade akışta ilerletme düğmesi tek; terminal durumda çizilmiyor. */
+  assert.match(cekmece, /\{!terminal && sonraki && \(/);
   assert.match(cekmece, /\{!terminal && \(\s*olumsuzSoruldu/);
 });
 
@@ -185,10 +186,34 @@ test('iletişim aksiyonları anlamlı etiket taşıyor', () => {
   assert.match(cekmece, /aria-label=\{`\$\{iletisim\.ad \?\? 'Adayı'\} ara/);
 });
 
-test('iletişim kapısına dokunulmadı', () => {
-  /* Gösterim koşulu hâlâ tek: teklif kabul edildi. Kural sunucuda. */
-  assert.match(cekmece, /\{iletisimAcik\(kart\.durum\) && \(/);
-  assert.match(cekmece, /!iletisimAcik\(kart\.durum\) \|\| !onIletisim/);
+test('şirket iletişim kapısı ONAYA bağlı, teklife değil', () => {
+  /*
+    KURAL DEĞİŞTİ (sade akış, 20261201010000): şirket tarafında teklif
+    kabulü ARTIK SORULMUYOR. Sorulan şey öğrencinin onayının bu akışı
+    kapsayıp kapsamadığı. Asıl kapı sunucuda (`basvuru_iletisimi`);
+    buradaki koşul gösterim için.
+
+    Test gevşemiyor: eskiden "teklif kabul edildi mi" sabitleniyordu,
+    şimdi "onay kapsıyor mu" sabitleniyor — ikisi de tek ve açık bir
+    koşul.
+  */
+  assert.match(cekmece, /adayIletisimiAcik\(kart\)/);
+  assert.doesNotMatch(
+    cekmece,
+    /iletisimAcik\(kart\.durum\)/,
+    'şirket çekmecesi artık teklif durumuna bakmamalı',
+  );
+  /* Salt okunur üye için istek HİÇ gönderilmiyor. */
+  assert.match(cekmece, /saltOkunur \|\| !adayIletisimiAcik\(kart\)/);
+});
+
+test('öğrenciye şirket yetkilisi kuralı DEĞİŞMEDİ', () => {
+  /*
+    Teklif temel akıştan çıktı ama geçmişte kabul edilmiş teklifler
+    duruyor; o öğrencilerin gördüğü bilgi kaybolmamalı.
+  */
+  const goc = oku('supabase/migrations/20261201010000_iletisim_paylasimi_sadelesti.sql');
+  assert.match(goc, /if v_durum <> 'offer_accepted' or v_riza is null then/);
 });
 
 /* ---------------------------------------------------- 6. telefon */
