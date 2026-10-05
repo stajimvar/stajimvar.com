@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { ApplicationRecord, InternshipListing } from '../types';
 import { ListingLogo } from './ListingLogo';
+import { ODAK_HALKASI } from '../lib/renk-token';
 
 /**
  * Uyum halkasının rengi. Eşikler ilan kartıyla birebir aynı; iki ekranda
@@ -52,6 +53,14 @@ interface ApplicationsTrackerViewProps {
   onRespondToInterview?: (applicationId: string, katilacak: boolean) => Promise<string>;
   /* Kabul edilmiş teklifte şirket yetkilisinin iletişim satırı. */
   onFetchContact?: (applicationId: string) => Promise<Iletisim | null>;
+  /*
+    BU ŞİRKET PAYLAŞIMLARIMI GÖREBİLİR (20261121010000)
+
+    Başvuru başına, isteğe bağlı ve geri alınabilir izin. Dönen değer
+    sunucunun yazdığı an ya da null (kapalı). Verilmezse anahtar hiç
+    çizilmiyor.
+  */
+  onPaylasimIzni?: (applicationId: string, acik: boolean) => Promise<string | null>;
   /*
     BİLDİRİMDEN GELEN BAŞVURU
 
@@ -93,6 +102,7 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
   onRespondToOffer,
   onRespondToInterview,
   onFetchContact,
+  onPaylasimIzni,
   acilacakBasvuru,
   onBasvuruAcildi,
 }) => {
@@ -100,6 +110,13 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
   const [geriCekilen, setGeriCekilen] = useState<string | null>(null);
   const [islemdeki, setIslemdeki] = useState<string | null>(null);
   const [hata, setHata] = useState<string | null>(null);
+  /*
+    Paylaşım izninin değiştirildiği başvuru (anahtar kilitli) ve hatası.
+    Ayrı tutuluyor: geri çekme hatası ile izin hatası aynı satırda
+    karışmasın.
+  */
+  const [izinIslemde, setIzinIslemde] = useState<string | null>(null);
+  const [izinHatasi, setIzinHatasi] = useState<string | null>(null);
 
   /* Açık teklif ayrıntısı, kabul/ret onayı ve yanıt hatası. */
   const [teklifAcik, setTeklifAcik] = useState<string | null>(null);
@@ -726,6 +743,76 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                   <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                     <p className="text-xs font-bold text-gray-700">Şirketin notu</p>
                     <p className="mt-1 text-xs leading-relaxed text-gray-600">{app.companyFeedback}</p>
+                  </div>
+                )}
+
+                {/*
+                  PAYLAŞIM İZNİ — YALNIZ STAJIMVAR ÜZERİNDEN YAPILAN BAŞVURUDA
+
+                  Sunucu izni yalnız `internal` başvuruda yazıyor; dış
+                  başvuruda şirketin paneli yok, anahtar orada hiçbir şeyi
+                  açıp kapatmazdı. Eski başvurularda izin yok (null) ve
+                  anahtar KAPALI başlıyor — geriye dönük onay varsayılmıyor.
+
+                  Durum yalnız renkle anlatılmıyor: yanındaki cümle "Açık" /
+                  "Kapalı" diye başlıyor. İşlem sürerken anahtar kilitli;
+                  hata satır içinde ve anahtar sunucunun son bildirdiği
+                  durumda kalıyor.
+                */}
+                {onPaylasimIzni && app.applicationMethod === 'internal' && (
+                  <div className="rounded-xl border border-gray-200 p-3.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p id={`paylasim-izni-${app.id}`} className="text-xs font-bold text-gray-900">
+                          Paylaşımlarımı bu şirket görebilir
+                        </p>
+                        <p
+                          id={`paylasim-izni-aciklama-${app.id}`}
+                          className="mt-0.5 text-xs leading-relaxed text-gray-600"
+                        >
+                          {izinIslemde === app.id
+                            ? 'Kaydediliyor…'
+                            : app.paylasimIzniAt
+                              ? `Açık: ${listing?.companyName ?? 'Şirket'}, bu başvuru üzerinden profilindeki paylaşımları ve görselleri görebilir. Sosyal profilin gizliyse göremez.`
+                              : `Kapalı: ${listing?.companyName ?? 'Şirket'} paylaşımlarını görmüyor.`}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={Boolean(app.paylasimIzniAt)}
+                        aria-labelledby={`paylasim-izni-${app.id}`}
+                        aria-describedby={`paylasim-izni-aciklama-${app.id}`}
+                        aria-busy={izinIslemde === app.id}
+                        disabled={izinIslemde === app.id}
+                        onClick={() => {
+                          setIzinIslemde(app.id);
+                          setIzinHatasi(null);
+                          Promise.resolve(onPaylasimIzni(app.id, !app.paylasimIzniAt))
+                            .catch(() => setIzinHatasi(app.id))
+                            .finally(() => setIzinIslemde(null));
+                        }}
+                        className={`inline-flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-wait disabled:opacity-60 ${ODAK_HALKASI}`}
+                      >
+                        <span
+                          aria-hidden
+                          className={`relative inline-block h-6 w-11 rounded-full transition-colors ${
+                            app.paylasimIzniAt ? 'bg-blue-600' : 'bg-gray-300'
+                          }`}
+                        >
+                          <span
+                            className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                              app.paylasimIzniAt ? 'translate-x-[22px]' : 'translate-x-0.5'
+                            }`}
+                          />
+                        </span>
+                      </button>
+                    </div>
+                    {izinHatasi === app.id && (
+                      <p role="alert" className="mt-2 text-xs font-semibold text-red-700">
+                        Paylaşım iznin kaydedilemedi. Bağlantını kontrol edip tekrar dene.
+                      </p>
+                    )}
                   </div>
                 )}
 

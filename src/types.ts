@@ -382,6 +382,14 @@ export interface ApplicationRecord {
     okurken onu da goruyordu. Adaya gosterilecek metin company_feedback.
   */
   companyFeedback?: string;
+  /*
+    Öğrencinin bu başvurunun şirketine sosyal profil paylaşımlarını ve
+    görsellerini gösterme izni (isteğe bağlı, geri alınabilir). Yoksa
+    tanımsız: eski başvurular izinsiz.
+  */
+  paylasimIzniAt?: string;
+  /* Başvurunun yolu: yalnız 'internal' başvuru şirkete iletiliyor. */
+  applicationMethod?: string;
 }
 
 export interface QuizQuestion {

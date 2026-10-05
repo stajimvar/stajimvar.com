@@ -298,13 +298,33 @@ select pg_temp.bekle(
     where l.company_id = '11111111-aaaa-4000-8000-000000000001'::uuid),
   'A, kendi ilanina gelen basvuruyu gorebilir');
 
+-- GENİŞ PROFİL ERİŞİMİ KAPALI (20261121010000)
+--
+-- Eskiden A, başvuran öğrencinin student_profiles satırını sütun kısıtı
+-- olmadan (not ortalaması, ücret beklentisi dahil) okuyabiliyordu ve bu
+-- test bunu "meşru" diye bekliyordu. Artık şirket öğrenci tablolarını
+-- doğrudan okuyamıyor; rızanın kapsadığı alanlar başvuru kimliğiyle
+-- sunucu işlevinden geliyor.
 select pg_temp.bekle(
-  (select count(*) = 1 from public.student_profiles where id = (select c from k)),
-  'A, kendisine BASVURAN ogrencinin profilini gorebilir');
+  (select count(*) = 0 from public.student_profiles where id = (select c from k)),
+  'A, basvuran ogrencinin profil TABLOSUNU dogrudan okuyamaz (gpa, tercihler)');
 
 select pg_temp.bekle(
-  (select count(*) = 1 from public.student_projects where student_id = (select c from k)),
-  'A, basvuranin projelerini gorebilir');
+  (select count(*) = 0 from public.student_projects where student_id = (select c from k)),
+  'A, basvuranin proje tablosunu dogrudan okuyamaz');
+
+select pg_temp.bekle(
+  (select count(*) = 0 from public.student_skills where student_id = (select c from k)),
+  'A, basvuranin yetenek tablosunu dogrudan okuyamaz');
+
+select pg_temp.bekle(
+  (select (s->>'riza')::boolean and not ((s->'guncel') ? 'gpa') and not ((s->'guncel') ? 'telefon')
+     from (select public.basvuru_aday_guncel_profili('33333333-aaaa-4000-8000-000000000001') s) x),
+  'A, basvuranin riza kapsamindaki guncel profilini sunucu isleviyle gorur');
+
+select pg_temp.bekle(
+  (select coalesce(array_length(public.basvuru_aday_yetenekleri('33333333-aaaa-4000-8000-000000000001'), 1), 0) >= 1),
+  'A, basvuranin yeteneklerini sunucu isleviyle gorur');
 
 select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
   $q$update public.applications set status='under_review'

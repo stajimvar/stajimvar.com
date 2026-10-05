@@ -28,6 +28,7 @@ import {
   respondToOffer,
   respondToInterview,
   fetchApplicationContact,
+  basvuruPaylasimIzni,
   saveStudentProfile,
   fetchIsAdmin,
   fetchQuizzes,
@@ -1808,7 +1809,7 @@ export default function App() {
     }
   };
 
-  const submitApplication = async (consent: boolean) => {
+  const submitApplication = async (consent: boolean, paylasimIzni = false) => {
     if (!applyTarget || !activeStudent) return;
 
     /*
@@ -1867,7 +1868,28 @@ export default function App() {
       throw hata;
     }
 
+    /*
+      PAYLAŞIM İZNİ BAŞVURUDAN SONRA, AYRI İSTEKLE (20261121010000)
+
+      İzin kolonu yalnız `basvuru_paylasim_izni` ile yazılabiliyor (INSERT
+      onu boşaltıyor), bu yüzden başvuru oluşturulduktan sonra soruluyor.
+      Başarısız olursa başvuru YİNE geçerli — izin isteğe bağlı — ama
+      sessizce yutulmuyor: öğrenciye söyleniyor ve liste sunucudan yeniden
+      okunuyor ki Başvurularım'daki anahtar gerçeği göstersin.
+    */
+    let izinKaydedilemedi = false;
+    if (paylasimIzni) {
+      try {
+        if (!created?.id) throw new Error('Başvuru kimliği dönmedi.');
+        const izinAni = await basvuruPaylasimIzni(created.id, true);
+        created = { ...created, paylasimIzniAt: izinAni ?? undefined };
+      } catch {
+        izinKaydedilemedi = true;
+      }
+    }
+
     setApplications((prev) => [created, ...prev]);
+    if (izinKaydedilemedi) void basvurulariTazele(activeStudent.id);
     setApplyTarget(null);
 
     void konfetiAt({ particleCount: 60, spread: 60, origin: { y: 0.7 } });
@@ -1879,9 +1901,12 @@ export default function App() {
       öğrencinin resmî sayfadan başvurmasını sağlayan tek şey.
     */
     showToast(
-      cvEklenemedi
+      (cvEklenemedi
         ? 'Başvurun kaydedildi ama CV eklenemedi. Profilinden CV dosyanı kontrol edip tekrar deneyebilirsin.'
-        : basvuruSonucMesaji(applyTarget.listing, applyTarget.listing.companyName)
+        : basvuruSonucMesaji(applyTarget.listing, applyTarget.listing.companyName)) +
+        (izinKaydedilemedi
+          ? ' Paylaşım iznin kaydedilemedi; Başvurularım sayfasından yeniden açabilirsin.'
+          : '')
     );
   };
 
@@ -2658,6 +2683,17 @@ export default function App() {
                     ),
                   );
                   showToast('Başvurun geri çekildi.');
+                }}
+                /*
+                  Paylaşım izni: dönen değer SUNUCUNUN yazdığı an (ya da
+                  kapatıldıysa null). Ekran onu yazıyor, kendi tahminini değil.
+                */
+                onPaylasimIzni={async (id, acik) => {
+                  const izinAni = await basvuruPaylasimIzni(id, acik);
+                  setApplications((prev) =>
+                    prev.map((a) => (a.id === id ? { ...a, paylasimIzniAt: izinAni ?? undefined } : a)),
+                  );
+                  return izinAni;
                 }}
                 /*
                   Kararı SUNUCU veriyor: dönen durum yazılıyor, ekranın

@@ -1,7 +1,12 @@
 import React from 'react';
 import { Check, Copy, Eye, EyeOff, Search, Share2, Users } from 'lucide-react';
 import { AdayKarti } from './AdayKarti';
-import { AdayCekmecesi, type Iletisim } from './AdayCekmecesi';
+import {
+  AdayCekmecesi,
+  type GuncelProfilYukleyici,
+  type Iletisim,
+  type PaylasimYukleyici,
+} from './AdayCekmecesi';
 import {
   ALAN,
   BIRINCIL_DUGME,
@@ -21,6 +26,8 @@ import {
 import { onyargisizla } from '../lib/aday-kart.mjs';
 import { DURUM_SIRASI, durumAdi } from './basvuru-durumu';
 import { AdayHataSiniri } from './HataSiniri';
+import { adrestekiAday } from '../lib/aday-derin-baglanti.mjs';
+import { adayAdresiniYaz, adayEkraniniKapat, useAdayAdresi } from './useAdayAdresi';
 
 /**
  * Başvuran ızgarası.
@@ -38,9 +45,10 @@ import { AdayHataSiniri } from './HataSiniri';
  *
  * ÖNYARGISIZ İNCELEME
  * -------------------
- * Ad ve fotoğraf gizleniyor, kalan her şey duruyor. İlk elemede ismin
+ * Ad ve fotoğraf gizleniyor; paylaşımlar ve dış bağlantılar da. İlk elemede ismin
  * çağrıştırdığı cinsiyet, memleket ve etnik köken ipuçlarını devre dışı
- * bırakıyor.
+ * bırakıyor. Belgeler (CV, ön yazı) adayın kendi içeriği ve kimliği taşıyabilir;
+ * bant bunu açıkça söylüyor, CV açılmadan önce ayrıca soruluyor.
  */
 
 const yaziAlaninda = (h: EventTarget | null) => {
@@ -82,6 +90,11 @@ export const AdayIzgarasi: React.FC<{
     zaten sayfa başlığının altında.
   */
   basliksiz?: boolean;
+  /* İnceleme ekranının güncel profil ve paylaşım okumaları (20261121010000). */
+  onGuncelProfil: GuncelProfilYukleyici;
+  onPaylasimlar: PaylasimYukleyici;
+  /** Yalnız geliştirme fikstürü; üretimde verilmiyor. */
+  yerelGorselAdresi?: (yol: string) => string | null;
 }> = ({
   kartlar,
   ilanAdresi,
@@ -96,6 +109,9 @@ export const AdayIzgarasi: React.FC<{
   onAdayAcildi,
   onNot,
   basliksiz = false,
+  onGuncelProfil,
+  onPaylasimlar,
+  yerelGorselAdresi,
 }) => {
   const [onyargisiz, setOnyargisiz] = React.useState(false);
   const [ilanSuzgeci, setIlanSuzgeci] = React.useState(baslangicIlan ?? '');
@@ -111,12 +127,12 @@ export const AdayIzgarasi: React.FC<{
     if (adres.searchParams.get('ilan') === (ilanSuzgeci || null)) return;
     if (ilanSuzgeci) adres.searchParams.set('ilan', ilanSuzgeci);
     else adres.searchParams.delete('ilan');
-    window.history.replaceState({}, '', adres.pathname + adres.search);
+    /* Durum korunuyor: açık inceleme ekranının geçmiş işareti silinmesin. */
+    window.history.replaceState(window.history.state, '', adres.pathname + adres.search);
   }, [ilanSuzgeci]);
   const [durumSuzgeci, setDurumSuzgeci] = React.useState('');
   const [arama, setArama] = React.useState('');
   const [odak, setOdak] = React.useState(0);
-  const [acikId, setAcikId] = React.useState<string | null>(null);
   const [kaydediliyor, setKaydediliyor] = React.useState(false);
   const [kopyalandi, setKopyalandi] = React.useState(false);
 
@@ -162,16 +178,69 @@ export const AdayIzgarasi: React.FC<{
     olan adayı değil. `onyargisizla` ayrıca uygulanıyor ki önyargısız
     mod çekmecede de sürsün.
   */
+  /*
+    AÇIK BAŞVURU ADRESTEN (`?aday=<başvuruId>`)
+
+    Ekranın açık olup olmadığı yerel bir durumda değil, adreste
+    duruyor (useAdayAdresi başlığı): yeni sekmede ya da yenilemeyle
+    açılan bağlantı ekranı açık getiriyor; geri tuşu kapatıyor, ileri
+    tuşu yeniden açıyor. Kimlik ham listede yoksa açılmıyor — o durumu
+    SirketPaneli tarafsız bir cümleyle karşılıyor ve adresi temizliyor.
+
+    Liste DOM'da kalıyor (ekran bir üst katman) ve gövde kaydırması
+    kilitli; kapanınca süzgeçler ve kaydırma konumu olduğu gibi duruyor.
+    Odak açan karta dönüyor; kart süzgeçle gizlendiyse açılıştaki odağa.
+
+    Adres bir OLAYDA yazılıyor, effect'te değil: StrictMode effect'i iki
+    kez çalıştırıyor ve temizlikte geri alınan bir kayıt ikinci itmeyle
+    üst üste binerdi (PaylasimDetayi başlığındaki gerekçe).
+  */
+  const adresAday = useAdayAdresi();
+  const acikId = adresAday && kartlar.some((k) => k.id === adresAday) ? adresAday : null;
+
   const acikHam = acikId ? (kartlar.find((k) => k.id === acikId) ?? null) : null;
   const acik = acikHam && onyargisiz ? onyargisizla(acikHam) : acikHam;
 
-  /* Bildirimden gelindiyse ilgili aday açılıyor. */
+  const tetikleyici = React.useRef<HTMLElement | null>(null);
+
+  const odagiGeriVer = React.useCallback((id: string) => {
+    window.requestAnimationFrame(() => {
+      const kartOgesi = Array.from(document.querySelectorAll<HTMLElement>('[data-aday-karti]')).find(
+        (oge) => oge.dataset.adayKarti === id,
+      );
+      const hedef = kartOgesi ?? (tetikleyici.current?.isConnected ? tetikleyici.current : null);
+      hedef?.focus();
+    });
+  }, []);
+
+  /* Kapanış hangi yoldan gelirse gelsin (Kapat, Escape, geri tuşu) odak karta. */
+  const oncekiAcik = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    const onceki = oncekiAcik.current;
+    oncekiAcik.current = acikId;
+    if (onceki && !acikId) odagiGeriVer(onceki);
+  }, [acikId, odagiGeriVer]);
+
+  const adayiAc = React.useCallback((id: string) => {
+    const mevcut = adrestekiAday(window.location.search);
+    if (mevcut === id) return;
+    tetikleyici.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    /* Ekran kapalıyken yeni kayıt (geri tuşu kapatsın); açıkken yerinde. */
+    adayAdresiniYaz(id, { it: !mevcut });
+  }, []);
+
+  const adayiKapat = React.useCallback(() => adayEkraniniKapat(), []);
+
+  /*
+    Bildirimden gelindiyse ilgili aday AYNI YOLDAN açılıyor: adres
+    yazılıyor, ekran adresten açılıyor.
+  */
   React.useEffect(() => {
     if (!acilacakAday) return;
     if (!kartlar.some((k) => k.id === acilacakAday)) return;
-    setAcikId(acilacakAday);
+    adayiAc(acilacakAday);
     onAdayAcildi?.();
-  }, [acilacakAday, kartlar, onAdayAcildi]);
+  }, [acilacakAday, kartlar, onAdayAcildi, adayiAc]);
 
   const durumUygula = React.useCallback(
     async (id: string, durum: string) => {
@@ -196,6 +265,16 @@ export const AdayIzgarasi: React.FC<{
 
   React.useEffect(() => {
     const tus = (e: KeyboardEvent) => {
+      /*
+        İNCELEME AÇIKKEN KISAYOL YOK
+
+        Kısayollar listedeki ODAKLI karta işliyor, açık olan başvuruya
+        değil. Bildirimden açılan adayda `odak` güncellenmiyor; o adayı
+        okurken "x"e basmak listede odakta duran BAŞKA bir adayı olumsuz
+        kapatabilirdi (koddan okundu, tarayıcıda denenmedi). Ekran modal;
+        arkadaki liste klavyeden de kapalı.
+      */
+      if (acikId) return;
       if (yaziAlaninda(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
       const harf = e.key.toLocaleLowerCase('en-US');
       const mevcut = gosterilen[odak];
@@ -208,7 +287,7 @@ export const AdayIzgarasi: React.FC<{
         setOdak((o) => Math.max(o - 1, 0));
       } else if (harf === 'f' && mevcut) {
         e.preventDefault();
-        setAcikId(mevcut.id);
+        adayiAc(mevcut.id);
       } else if (harf === 'a' && mevcut) {
         e.preventDefault();
         void durumUygula(mevcut.id, 'under_review');
@@ -219,7 +298,7 @@ export const AdayIzgarasi: React.FC<{
     };
     document.addEventListener('keydown', tus);
     return () => document.removeEventListener('keydown', tus);
-  }, [gosterilen, odak, durumUygula]);
+  }, [gosterilen, odak, durumUygula, acikId]);
 
   if (kartlar.length === 0) {
     /*
@@ -413,7 +492,14 @@ export const AdayIzgarasi: React.FC<{
           className="rounded-xl border px-3 py-2.5 text-xs leading-relaxed"
           style={{ borderColor: SIRKET_KENAR, background: SIRKET_ROZET, color: SIRKET_METIN }}
         >
-          Ad ve fotoğraf gizli. Okul, bölüm, yetenekler ve ön yazı görünmeye devam ediyor.
+          {/*
+            DÜRÜST SINIR (5 Ekim 2026): kip ekrandaki adı ve fotoğrafı gizliyor;
+            adayın kendi yazdığı ve yüklediği belgeleri değiştirmiyor. Ön yazı
+            imzalı olabilir, CV adı ve fotoğrafı taşıyabilir — kimliğin bütünüyle
+            saklandığını söylemek doğru olmazdı. CV bu kipte açılmadan önce soruluyor.
+          */}
+          Ad ve fotoğraf gizlenir; paylaşımlar ve dış bağlantılar gösterilmez. Ancak CV ve ön
+          yazı gibi belgeler adayın adını ve kimliğini açığa çıkarabilir.
         </p>
       )}
 
@@ -455,7 +541,7 @@ export const AdayIzgarasi: React.FC<{
                 odakli={i === odak}
                 onAc={() => {
                   setOdak(i);
-                  setAcikId(k.id);
+                  adayiAc(k.id);
                 }}
               />
             </li>
@@ -464,18 +550,19 @@ export const AdayIzgarasi: React.FC<{
       )}
 
       {/*
-        Ayrıntı: dar ekranda tam ekran, geniş ekranda sağdan çekmece.
+        İnceleme ekranı: lg altında tam ekran, geniş ekranda ortada en
+        çok 1200 piksellik iki sütunlu panel (AdayCekmecesi başlığı).
 
         Hata sınırıyla sarılı: bir adayın beklenmedik bir alanı ayrıntıyı
         çizerken hata verirse kaybedilecek şey o kart olsun, panelin
         tamamı değil. Sınır kök nedeni gizlemek için değil — asıl hata
         (erken çıkıştan sonra çağrılan hook) düzeltildi.
       */}
-      <AdayHataSiniri onKapat={() => setAcikId(null)}>
+      <AdayHataSiniri onKapat={adayiKapat}>
         <AdayCekmecesi
           kart={acik}
           kaydediliyor={kaydediliyor}
-          onKapat={() => setAcikId(null)}
+          onKapat={adayiKapat}
           /*
             ÇEKMECE AÇIK KALIYOR
 
@@ -510,6 +597,9 @@ export const AdayIzgarasi: React.FC<{
             setKaydediliyor(true);
             void onNot(acik.id, metin).finally(() => setKaydediliyor(false));
           }}
+          onGuncelProfil={onGuncelProfil}
+          onPaylasimlar={onPaylasimlar}
+          yerelGorselAdresi={yerelGorselAdresi}
         />
       </AdayHataSiniri>
 

@@ -610,6 +610,12 @@ export function toApplicationRecord(row: Tables<'applications'>): ApplicationRec
     offerCompensation: row.offer_compensation ?? undefined,
     offerStartDate: row.offer_start_date ?? undefined,
     companyFeedback: row.company_feedback ?? undefined,
+    /*
+      Paylaşım izni (20261121010000). Üretilmiş tipler henüz kolonu
+      tanımıyor; satırdan doğrudan okunuyor.
+    */
+    paylasimIzniAt: ((row as unknown as { paylasim_izni_at?: string | null }).paylasim_izni_at) ?? undefined,
+    applicationMethod: (row as unknown as { application_method?: string }).application_method ?? undefined,
   };
 }
 
