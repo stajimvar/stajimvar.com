@@ -9,6 +9,7 @@ import {
   SIRKET_KENAR_VURGU,
   SIRKET_METIN,
   SIRKET_METIN_IKINCIL,
+  SIRKET_ODAK,
   SIRKET_ROZET,
   SIRKET_VURGU_KOYU,
   SIRKET_YUZEY,
@@ -20,6 +21,7 @@ import { SirketAdayProfili } from './SirketAdayProfili';
 import { SirketAdaylar } from './SirketAdaylar';
 import { IlanFormu } from './IlanFormu';
 import { AdayIzgarasi } from './AdayIzgarasi';
+import { BasvuruPanosu } from './BasvuruPanosu';
 import type { GuncelProfilYukleyici, Iletisim, PaylasimYukleyici } from './AdayCekmecesi';
 import { GenelBakis } from './GenelBakis';
 import { IlanSiralamasi } from './IlanSiralamasi';
@@ -46,8 +48,17 @@ import {
   ilanYayinaGonder,
   sirketBaglami,
   sirketBasvurulari,
+  basvurulariDagit,
+  degerlendirmeOlcutleri,
+  sirketEkibi,
+  sirketIsYuku,
+  sorumluAta,
+  type DegerlendirmeOlcutu,
+  type EkipUyesi,
+  type IsYukuSatiri,
   sirketIlanlari,
   sirketProfiliOku,
+  type BekleyenAday,
   type IlanKontrolSonucu,
   type SirketBaglami,
   type SirketProfilDegeri,
@@ -165,6 +176,16 @@ export const SirketPaneli: React.FC<{
   const [ilanlar, setIlanlar] = React.useState<Record<string, unknown>[]>([]);
   const [basvurular, setBasvurular] = React.useState<Record<string, any>[]>([]);
   /*
+    EKİP VE İŞ YÜKÜ (20261123010000). `profiles` satırı yalnız kendine
+    açık olduğu için takım arkadaşının adı ancak RPC'den geliyor.
+    Hata hâlinde boş dizi dönüyor ve atama kutusu hiç çizilmiyor —
+    isimsiz bir kutuda kime iş atandığı anlaşılmazdı.
+  */
+  const [ekip, setEkip] = React.useState<EkipUyesi[]>([]);
+  const [isYuku, setIsYuku] = React.useState<IsYukuSatiri[]>([]);
+  /* Şirketin değerlendirme ölçütleri; boşsa form yalnız not alıyor. */
+  const [olcutler, setOlcutler] = React.useState<DegerlendirmeOlcutu[]>([]);
+  /*
     Profil alanları eksik-profil satırı ve kimlik kartı için. Okunamazsa
     null kalıyor; satır çizilmiyor, kart "alınamadı" diyor. Panelin
     kendisi bu yüzden düşmüyor.
@@ -208,8 +229,20 @@ export const SirketPaneli: React.FC<{
         */
         if (adayGorebilir(b.kademe)) {
           setBasvurular(await basvuruKartlari(b.companyId));
+          /* Paralel: ekip ve iş yükü başvuru listesini bekletmiyor. */
+          const [e, y, o] = await Promise.all([
+            sirketEkibi(b.companyId),
+            sirketIsYuku(b.companyId),
+            degerlendirmeOlcutleri(b.companyId),
+          ]);
+          setEkip(e);
+          setIsYuku(y);
+          setOlcutler(o);
         } else {
           setBasvurular([]);
+          setEkip([]);
+          setIsYuku([]);
+          setOlcutler([]);
         }
       }
       setDurum('hazir');
@@ -540,6 +573,29 @@ export const SirketPaneli: React.FC<{
         await basvuruDurumuDegistir(id, d);
         await yukle();
       }}
+      ekip={ekip}
+      isYuku={isYuku}
+      olcutler={olcutler}
+      /*
+        DAĞITIM açık bir eylem: düğmeye basınca koşuyor. Sunucu yalnız
+        sorumsuzları ve yalnız yazabilen üyelere dağıtıyor; dönen sayı
+        gerçekten atanan adet.
+      */
+      onDagit={async () => {
+        if (!baglam.companyId) return;
+        await basvurulariDagit(baglam.companyId);
+        await yukle();
+      }}
+      /*
+        SORUMLU ATAMA. `beklenen` çağıranın EKRANDA GÖRDÜĞÜ değer;
+        sunucu satır o değerde değilse yazmıyor ve hata atıyor, yani
+        iki kişi aynı anda atadığında ikincisi birincisini sessizce
+        ezmiyor. Yazma başarılıysa liste sunucudan yeniden okunuyor.
+      */
+      onSorumlu={async (id, uyeId, beklenen) => {
+        await sorumluAta(id, uyeId, beklenen);
+        await yukle();
+      }}
       onMulakatTarihi={async (id, tarih) => {
         await mulakatTarihiYaz(id, tarih);
         await yukle();
@@ -618,6 +674,11 @@ export const SirketIlanlarSekmesi: React.FC<{
   onDurum: (id: string, d: 'published' | 'closed') => Promise<IlanKontrolSonucu | void>;
   onKaldir: (id: string, arsivle: boolean) => Promise<void>;
   onBasvuruDurumu: (id: string, d: string) => Promise<void>;
+  ekip: EkipUyesi[];
+  isYuku: IsYukuSatiri[];
+  olcutler: DegerlendirmeOlcutu[];
+  onDagit: () => Promise<void>;
+  onSorumlu: (id: string, uyeId: string | null, beklenen: string | null) => Promise<void>;
   onMulakatTarihi: (id: string, tarih: string) => Promise<void>;
   onTeklif: (id: string, teklif: { not: string; baslangic: string; ucret: string }) => Promise<void>;
   onDavet: (
@@ -634,6 +695,12 @@ export const SirketIlanlarSekmesi: React.FC<{
   onPaylasimlar: PaylasimYukleyici;
   /** Yalnız geliştirme fikstürü: paylaşım görseli için yerel dosya. Üretimde verilmiyor. */
   yerelGorselAdresi?: (yol: string) => string | null;
+  /*
+    İlan kapatılırken sonucu bekleyen adayları okuyan işlev. Üretimde
+    verilmiyor (gerçek okuma varsayılan); fikstür kendi okuyucusunu
+    geçirerek onay diyaloğunu ve okuma hatasını sınayabiliyor.
+  */
+  onBekleyenAdaylar?: (ilanId: string) => Promise<BekleyenAday[]>;
   onNot: (id: string, metin: string) => Promise<void>;
   acilacakAday?: string | null;
   onAdayAcildi?: () => void;
@@ -649,6 +716,11 @@ export const SirketIlanlarSekmesi: React.FC<{
   onDurum,
   onKaldir,
   onBasvuruDurumu,
+  ekip,
+  isYuku,
+  olcutler,
+  onDagit,
+  onSorumlu,
   onMulakatTarihi,
   onTeklif,
   onDavet,
@@ -656,6 +728,7 @@ export const SirketIlanlarSekmesi: React.FC<{
   onGuncelProfil,
   onPaylasimlar,
   yerelGorselAdresi,
+  onBekleyenAdaylar,
   onNot,
   acilacakAday,
   onAdayAcildi,
@@ -685,6 +758,11 @@ export const SirketIlanlarSekmesi: React.FC<{
         baglam={baglam}
         kartlar={basvurular}
         ilanlar={ilanlar}
+        ekip={ekip}
+        isYuku={isYuku}
+        olcutler={olcutler}
+        onDagit={onDagit}
+        onSorumlu={onSorumlu}
         onNavigate={onNavigate}
         onDurum={onBasvuruDurumu}
         onMulakatTarihi={onMulakatTarihi}
@@ -760,6 +838,7 @@ export const SirketIlanlarSekmesi: React.FC<{
       </div>
 
       <GenelBakis
+        onBekleyenAdaylar={onBekleyenAdaylar}
         baglam={baglam}
         ilanlar={ilanlar}
         basvurular={basvurular as AdayOzeti[]}
@@ -788,6 +867,11 @@ const Basvuranlar: React.FC<{
   ilanlar: Record<string, unknown>[];
   onNavigate: (y: string) => void;
   onDurum: (id: string, d: string) => Promise<void>;
+  ekip: EkipUyesi[];
+  isYuku: IsYukuSatiri[];
+  olcutler: DegerlendirmeOlcutu[];
+  onDagit: () => Promise<void>;
+  onSorumlu: (id: string, uyeId: string | null, beklenen: string | null) => Promise<void>;
   onMulakatTarihi: (id: string, tarih: string) => Promise<void>;
   onTeklif: (id: string, teklif: { not: string; baslangic: string; ucret: string }) => Promise<void>;
   onDavet: (id: string, davet: { tarih: string; saat: string; tur: string; yer: string; not: string }) => Promise<void>;
@@ -802,6 +886,11 @@ const Basvuranlar: React.FC<{
   baglam,
   kartlar,
   ilanlar,
+  ekip,
+  isYuku,
+  olcutler,
+  onDagit,
+  onSorumlu,
   onNavigate,
   onDurum,
   onMulakatTarihi,
@@ -1052,6 +1141,185 @@ const Basvuranlar: React.FC<{
       ? new URLSearchParams(window.location.search).get('ilan')
       : null;
 
+  /*
+    GÖRÜNÜM SEÇİCİ — LİSTE / PANO (5 Ekim 2026)
+
+    Liste (AdayIzgarasi) tek adayla çalışmanın yeri: klavye kısayolları,
+    çekmece, durum değiştirme. Pano dağılımı görmenin yeri: hangi ilanda
+    kim hangi aşamada takıldı. İkisi aynı veriyi çiziyor; biri ötekinin
+    yerine geçmiyor.
+
+    Seçim YEREL ve kalıcı değil: adres çubuğuna yazılsaydı paylaşılan
+    `?aday=` bağlantıları hangi görünümde açılacağını da taşımak zorunda
+    kalırdı ve derin bağlantı akışı ikiye bölünürdü.
+  */
+  const [gorunum, setGorunum] = React.useState<'liste' | 'pano'>('liste');
+
+  /*
+    İŞ YÜKÜ ŞERİDİ
+
+    Üye başına AÇIK başvuru sayısı; sonuçlanmış işler düşülüyor çünkü
+    yapılacak iş kalmıyor. "Sorumlusu yok" ayrı bir satır olarak duruyor
+    ve ilk sırada: dağıtılmayı bekleyen iş, kişilerin yükü arasında
+    erimemeli.
+
+    SAYILAR SUNUCUDAN, istemcide türetilmiyor: ekranın gördüğü liste
+    süzülmüş olabilir ve süzülmüş listeden hesaplanan yük yanlış olurdu.
+
+    Yalnız panoda çiziliyor — liste görünümü tek adayla çalışmanın yeri
+    ve orada ekip tablosu dikkat dağıtıyordu.
+  */
+  const isYukuSeridi = isYuku.length > 0 && (
+    <div className="rounded-2xl border p-3" style={kutuStil}>
+      <p className="mb-2 text-xs font-bold uppercase tracking-wide" style={{ color: SIRKET_METIN_IKINCIL }}>
+        Açık başvuru yükü
+      </p>
+      <ul className="flex flex-wrap gap-2">
+        {isYuku.map((y) => (
+          <li
+            key={y.uyeId ?? 'yok'}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2.5 py-1.5 text-sm"
+          >
+            <span className="truncate" style={{ color: y.uyeId ? SIRKET_METIN : SIRKET_METIN_IKINCIL }}>
+              {y.ad}
+            </span>
+            <span className="font-extrabold" style={{ color: SIRKET_METIN }}>{y.acik}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+
+  /*
+    ÖNYARGISIZ İNCELEME PANODA DA AÇIK BAŞLIYOR MU — IZGARAYLA AYNI
+    VARSAYILAN (kapalı). Anahtar ızgaranın içinde; pano o tercihi
+    okuyamıyor çünkü ızgaranın yerel durumu. Bu yüzden panonun kendi
+    anahtarı var ve ikisi AYNI işlevi (`onyargisizla`) kullanıyor.
+    İleride tercih yukarı taşınırsa tek anahtar kalacak.
+  */
+  const [panoOnyargisiz, setPanoOnyargisiz] = React.useState(false);
+
+  const gorunumDugmesi = (deger: 'liste' | 'pano', etiket: string) => (
+    <button
+      type="button"
+      onClick={() => setGorunum(deger)}
+      aria-pressed={gorunum === deger}
+      className={`min-h-11 flex-1 cursor-pointer rounded-xl px-3 text-sm font-bold ${SIRKET_ODAK} ${
+        gorunum === deger ? 'bg-[#2563EB] text-white' : 'border border-gray-300 bg-white text-gray-800 hover:bg-gray-50'
+      }`}
+    >
+      {etiket}
+    </button>
+  );
+
+  /*
+    VIEWER SALT OKUNUR (5 Ekim 2026)
+
+    `company_members.recruiter_role` 0001'den beri üç değer taşıyordu
+    ama hiçbir politika onu okumuyordu: Viewer da durum değiştirebiliyor,
+    not yazabiliyor, teklif verebiliyordu. Asıl kapı artık sunucuda
+    (`sirket_basvuru_yazabilir`, 20261122010000); buradaki dal aynı kuralı
+    ÖNCEDEN gösteriyor.
+
+    VIEWER EKRANDAN KESİLMİYOR — rolün amacı "görsün ama karışmasın".
+
+    ÖNCE FAZLA KESİLMİŞTİ (5 Ekim 2026 düzeltmesi): Viewer yalnız panoya
+    düşüyordu ve aday çipleri düğme bile değildi, yani adayın AYRINTISINI
+    hiç açamıyordu. "Yazamaz" sessizce "inceleyemez" olmuştu. Oysa Viewer
+    başvuruyu okuyabiliyor (okuma politikası değişmedi); ayrıntıyı
+    kapatmak, okuyabildiği veriyi ondan saklamak demekti.
+
+    Şimdi liste ve pano İKİSİ DE açık, çekmece açılıyor ve `saltOkunur`
+    ile işlem sütunu HİÇ ÇİZİLMİYOR. Kapalı düğme de yok: yapılamayacak
+    bir şey ekranda hiç görünmüyor.
+  */
+  if (!baglam.basvuruYazabilir) {
+    return (
+      /*
+        Aday arama kartları Viewer'da da BAŞLIĞIN HEMEN ALTINDA: o blok
+        27 Eylül 2026'da kullanıcı bildirimiyle sayfanın sonundan buraya
+        alındı ve her dalda aynı yerde duruyor. Viewer aday listesini
+        görebiliyor (liste üyelik + doğrulama istiyor, yazma yetkisi
+        değil), dalın dışında bırakmak bilgiyi gizlemek olurdu.
+      */
+      <div className="space-y-4">
+        {baslik}
+        {ogrencileriKesfet}
+        <div className="rounded-2xl border p-3 sm:p-4" style={kutuStil}>
+          <p className="text-sm font-bold" style={{ color: SIRKET_METIN }}>
+            Görüntüleme yetkisi
+          </p>
+          <p className="mt-1 text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+            Başvuruları görebilir, durumlarını izleyebilirsin. Durum değiştirme,
+            not yazma ve teklif verme şirket sahibinde ve işe alım yetkililerinde.
+          </p>
+        </div>
+        <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
+          <input
+            type="checkbox"
+            checked={panoOnyargisiz}
+            onChange={(e) => setPanoOnyargisiz(e.target.checked)}
+            className="h-4 w-4 cursor-pointer accent-[#2563EB]"
+          />
+          Önyargısız inceleme (ad ve fotoğraf gizli)
+        </label>
+        {isYukuSeridi}
+
+        {/* Viewer da iki görünüm arasında geçebiliyor; ikisi de okuma. */}
+        <div className="flex gap-2">
+          {gorunumDugmesi('liste', 'Liste')}
+          {gorunumDugmesi('pano', 'Pano')}
+        </div>
+
+        {gorunum === 'pano' ? (
+          <BasvuruPanosu
+            kartlar={kartlar}
+            ilanlar={ilanlar}
+            onyargisiz={panoOnyargisiz}
+            /*
+              Ekip VERİLİYOR ama `onSorumlu` verilmiyor: Viewer sorumlunun
+              ADINI görüyor, değiştiremiyor. Kutu salt okunur metne düşüyor.
+            */
+            ekip={ekip}
+            /* Ölçütler okunuyor: değerlendirme GEÇMİŞİ Viewer'a da açık. */
+            olcutler={olcutler}
+            /*
+              onAday VERİLİYOR: çip tıklanabilir ve ayrıntı salt okunur
+              açılıyor. Önceden verilmiyordu ve Viewer adayın ayrıntısını
+              hiç göremiyordu — gerekçe dalın başında.
+            */
+            onAday={(id) => {
+              setGorunum('liste');
+              onNavigate(`/sirket/basvuranlar?aday=${encodeURIComponent(id)}`);
+            }}
+          />
+        ) : (
+          /*
+            SALT OKUNUR IZGARA: yazma işlevlerinin HİÇBİRİ verilmiyor
+            (`onDurum`, `onNot`, `onTeklif`, `onDavet`, `onMulakatTarihi`
+            artık isteğe bağlı). `saltOkunur` çekmecedeki işlem sütununu
+            da çizdirmiyor. Okuma işlevleri duruyor: profil, paylaşımlar
+            ve kabul edilmiş teklifte iletişim — hepsinin kapısı sunucuda.
+          */
+          <AdayIzgarasi
+            basliksiz
+            saltOkunur
+            kartlar={kartlar}
+            ilanAdresi={ilanAdresi}
+            baslangicIlan={baslangicIlan}
+            onNavigate={onNavigate}
+            onIletisim={onIletisim}
+            onGuncelProfil={onGuncelProfil}
+            onPaylasimlar={onPaylasimlar}
+            yerelGorselAdresi={yerelGorselAdresi}
+            acilacakAday={acilacakAday}
+            onAdayAcildi={onAdayAcildi}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     /*
       BAŞLIK BİR KEZ: sayfanın `h1`'i yukarıda; AdayIzgarasi kendi
@@ -1062,24 +1330,69 @@ const Basvuranlar: React.FC<{
     <div className="space-y-4">
       {baslik}
       {ogrencileriKesfet}
-      <AdayIzgarasi
-        basliksiz
-        kartlar={kartlar}
-        ilanAdresi={ilanAdresi}
-        baslangicIlan={baslangicIlan}
-        onNavigate={onNavigate}
-        onDurum={onDurum}
-        onMulakatTarihi={onMulakatTarihi}
-        onTeklif={onTeklif}
-        onDavet={onDavet}
-        onIletisim={onIletisim}
-        onGuncelProfil={onGuncelProfil}
-        onPaylasimlar={onPaylasimlar}
-        yerelGorselAdresi={yerelGorselAdresi}
-        acilacakAday={acilacakAday}
-        onAdayAcildi={onAdayAcildi}
-        onNot={onNot}
-      />
+
+      {/* İki görünüm, tek veri; seçici liste ile pano arasında. */}
+      <div className="flex gap-2">
+        {gorunumDugmesi('liste', 'Liste')}
+        {gorunumDugmesi('pano', 'Pano')}
+      </div>
+
+      {gorunum === 'pano' ? (
+        <>
+          {/*
+            Panonun kendi önyargısız inceleme anahtarı — gerekçesi
+            yukarıda. Etiket ızgaradakiyle aynı sözcükleri kullanıyor ki
+            iki ekranda iki farklı şey sanılmasın.
+          */}
+          <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
+            <input
+              type="checkbox"
+              checked={panoOnyargisiz}
+              onChange={(e) => setPanoOnyargisiz(e.target.checked)}
+              className="h-4 w-4 cursor-pointer accent-[#2563EB]"
+            />
+            Önyargısız inceleme (ad ve fotoğraf gizli)
+          </label>
+          {isYukuSeridi}
+          <BasvuruPanosu
+            kartlar={kartlar}
+            ilanlar={ilanlar}
+            onyargisiz={panoOnyargisiz}
+            ekip={ekip}
+            onSorumlu={onSorumlu}
+            olcutler={olcutler}
+            onDagit={onDagit}
+            /*
+              Çekmeceyi IZGARA açıyor: panodan seçilen aday derin
+              bağlantıya yazılıyor ve görünüm listeye dönüyor. Çekmecenin
+              ikinci bir kopyası yok.
+            */
+            onAday={(id) => {
+              setGorunum('liste');
+              onNavigate(`/sirket/basvuranlar?aday=${encodeURIComponent(id)}`);
+            }}
+          />
+        </>
+      ) : (
+        <AdayIzgarasi
+          basliksiz
+          kartlar={kartlar}
+          ilanAdresi={ilanAdresi}
+          baslangicIlan={baslangicIlan}
+          onNavigate={onNavigate}
+          onDurum={onDurum}
+          onMulakatTarihi={onMulakatTarihi}
+          onTeklif={onTeklif}
+          onDavet={onDavet}
+          onIletisim={onIletisim}
+          onGuncelProfil={onGuncelProfil}
+          onPaylasimlar={onPaylasimlar}
+          yerelGorselAdresi={yerelGorselAdresi}
+          acilacakAday={acilacakAday}
+          onAdayAcildi={onAdayAcildi}
+          onNot={onNot}
+        />
+      )}
     </div>
   );
 };

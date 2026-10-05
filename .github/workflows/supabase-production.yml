@@ -118,12 +118,13 @@ jobs:
           local_db_url="$(supabase status -o env | node scripts/assert-disposable-db-url.mjs)"
           psql -v ON_ERROR_STOP=1 -f scripts/sql/disposable-security-tests.sql "$local_db_url"
           psql -v ON_ERROR_STOP=1 -f scripts/sql/rls-regresyon-testleri.sql "$local_db_url"
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/ise-alim-merkezi.test.sql "$local_db_url"
       - name: Tek kullanimlik kaplari temizle
         if: always()
         run: supabase stop --no-backup
 
   migrate_and_functions:
-    needs: changes
+    needs: [changes, validate_app, security_regression]
     if: github.repository == 'stajimvar/stajimvar.com' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.changes.outputs.supabase_changed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20

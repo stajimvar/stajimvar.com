@@ -68,10 +68,17 @@ export const AdayIzgarasi: React.FC<{
   /** Adresten gelen ilan süzgeci (`?ilan=<id>`); Genel'deki karttan. */
   baslangicIlan?: string | null;
   onNavigate: (y: string) => void;
-  onDurum: (id: string, durum: string) => Promise<void>;
-  onMulakatTarihi: (id: string, tarih: string) => Promise<void>;
-  onTeklif: (id: string, teklif: { not: string; baslangic: string; ucret: string }) => Promise<void>;
-  onDavet: (id: string, davet: { tarih: string; saat: string; tur: string; yer: string; not: string }) => Promise<void>;
+  /*
+    YAZMA İŞLEVLERİ İSTEĞE BAĞLI (5 Ekim 2026)
+
+    Viewer bu ekranı salt okunur açıyor: işlevler VERİLMİYOR, çekmece de
+    o sütunu hiç çizmiyor. İşlemsiz bir no-op geçmek, çalışmayan ama
+    dokunulabilir bir denetim bırakırdı.
+  */
+  onDurum?: (id: string, durum: string) => Promise<void>;
+  onMulakatTarihi?: (id: string, tarih: string) => Promise<void>;
+  onTeklif?: (id: string, teklif: { not: string; baslangic: string; ucret: string }) => Promise<void>;
+  onDavet?: (id: string, davet: { tarih: string; saat: string; tur: string; yer: string; not: string }) => Promise<void>;
   onIletisim: (id: string) => Promise<Iletisim | null>;
   /*
     BİLDİRİMDEN GELEN ADAY
@@ -82,7 +89,7 @@ export const AdayIzgarasi: React.FC<{
   */
   acilacakAday?: string | null;
   onAdayAcildi?: () => void;
-  onNot: (id: string, metin: string) => Promise<void>;
+  onNot?: (id: string, metin: string) => Promise<void>;
   /*
     Sayfanın başlığı dışarıda (SirketPaneli, `h1` "Başvuranlar")
     çizildiğinde ızgara kendi başlığını atlıyor; yalnız süzgeç sayısı
@@ -95,6 +102,8 @@ export const AdayIzgarasi: React.FC<{
   onPaylasimlar: PaylasimYukleyici;
   /** Yalnız geliştirme fikstürü; üretimde verilmiyor. */
   yerelGorselAdresi?: (yol: string) => string | null;
+  /** Yazma yetkisi olmayan üye: çekmece açılır, işlem sütunu çizilmez. */
+  saltOkunur?: boolean;
 }> = ({
   kartlar,
   ilanAdresi,
@@ -112,6 +121,7 @@ export const AdayIzgarasi: React.FC<{
   onGuncelProfil,
   onPaylasimlar,
   yerelGorselAdresi,
+  saltOkunur,
 }) => {
   const [onyargisiz, setOnyargisiz] = React.useState(false);
   const [ilanSuzgeci, setIlanSuzgeci] = React.useState(baslangicIlan ?? '');
@@ -246,7 +256,7 @@ export const AdayIzgarasi: React.FC<{
     async (id: string, durum: string) => {
       setKaydediliyor(true);
       try {
-        await onDurum(id, durum);
+        await onDurum?.(id, durum);
       } finally {
         setKaydediliyor(false);
       }
@@ -577,29 +587,30 @@ export const AdayIzgarasi: React.FC<{
           }}
           onMulakatTarihi={(tarih) => {
             if (!acik) return Promise.resolve();
-            return onMulakatTarihi(acik.id, tarih);
+            return onMulakatTarihi?.(acik.id, tarih) ?? Promise.resolve();
           }}
           /* Teklif de aynı yükleniyor durumunu paylaşıyor. */
           onTeklif={(teklif) => {
             if (!acik) return Promise.resolve();
             setKaydediliyor(true);
-            return onTeklif(acik.id, teklif).finally(() => setKaydediliyor(false));
+            return onTeklif?.(acik.id, teklif).finally(() => setKaydediliyor(false)) ?? Promise.resolve();
           }}
           /* Davet de aynı yükleniyor durumunu paylaşıyor. */
           onDavet={(davet) => {
             if (!acik) return Promise.resolve();
             setKaydediliyor(true);
-            return onDavet(acik.id, davet).finally(() => setKaydediliyor(false));
+            return onDavet?.(acik.id, davet).finally(() => setKaydediliyor(false)) ?? Promise.resolve();
           }}
           onIletisim={onIletisim}
           onNot={(metin) => {
             if (!acik) return;
             setKaydediliyor(true);
-            void onNot(acik.id, metin).finally(() => setKaydediliyor(false));
+            void onNot?.(acik.id, metin).finally(() => setKaydediliyor(false));
           }}
           onGuncelProfil={onGuncelProfil}
           onPaylasimlar={onPaylasimlar}
           yerelGorselAdresi={yerelGorselAdresi}
+          saltOkunur={saltOkunur}
         />
       </AdayHataSiniri>
 
