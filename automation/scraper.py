@@ -855,8 +855,21 @@ KAPANMA_ISARETLERI = re.compile(
 # imzası. İmza atılıyor, uydurma yapılmıyor.
 BASLIK_EKLERI = re.compile(r"\s*(?:stellendetails|stellenangebot|stellenanzeige|job details|job description)\s*$", re.I)
 
-def ilan_sayfasi_basligi(html: str) -> str | None:
-    """Önce h1, yoksa <title>. Hiçbiri yoksa None — başlık uydurulmuyor."""
+OG_BASLIGI = re.compile(r"""<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']*)["']""", re.I)
+
+
+def ilan_sayfasi_basligi(html: str, kaynak: str | None = None) -> str | None:
+    """Önce h1, yoksa <title>. Hiçbiri yoksa None — başlık uydurulmuyor.
+
+    `kaynak="og"`: başlık sayfanın kendi `og:title` etiketinden. Ölçüldü
+    (26 Eylül 2026): Hilton'un Oracle sayfasında <title> yalnız "Hilton",
+    Danone'da h1 bölüm adı ("Human Resources"); ilanın adı ikisinde de
+    yalnız `og:title`da. Etiket yoksa ilan alınmıyor (h1'e düşülmüyor).
+    """
+    if kaynak == "og":
+        eslesme = OG_BASLIGI.search(html)
+        baslik = clean(eslesme.group(1)) if eslesme else ""
+        return baslik or None
     okuyucu = _GorunurMetin()
     okuyucu.feed(html)
     if okuyucu.baslik:
@@ -885,6 +898,12 @@ def resmi_ilan_sayfasi(config: dict[str, Any]) -> Iterable[Job]:
 
     Bayrak zorunlu: bu adaptör yanlışlıkla doğrulanmış hatta kullanılırsa
     kanıtsız ilan yayına çıkardı.
+
+    TÜRKİYE DE (kullanıcı kararı, 26 Eylül 2026): önce yalnız Almanya
+    içindi. Kullanıcının verdiği 4 Türkiye ilanının resmî sayfası JSON-LD
+    taşımıyor (Barilla, Hyundai, Hilton, Danone); aynı kurallarla
+    taslak olarak alınıyor, yayına yönetici onayıyla çıkıyor. Şehir
+    `city_hint`: sayfanın kendi metninde yazan konum.
     """
     if config.get("aciklik_dogrulanmadi") is not True:
         raise ValueError(f"{config.get('name', 'kaynak')}: resmi_ilan_sayfasi yalnız açıklığı doğrulanmamış hatta kullanılır")
@@ -909,7 +928,7 @@ def resmi_ilan_sayfasi(config: dict[str, Any]) -> Iterable[Job]:
         if KAPANMA_ISARETLERI.search(okuyucu.metin):
             continue
 
-        baslik = ilan_sayfasi_basligi(yanit.text)
+        baslik = ilan_sayfasi_basligi(yanit.text, config.get("baslik_kaynagi"))
         if not baslik or not erken_kariyer_mi(config, baslik, ""):
             continue
 
