@@ -61,8 +61,30 @@ test('şirket ekranları ortak kabukta; eski kabuk ve eski portal sekmeleri yok'
   assert.doesNotMatch(HEADER, /nav-tab-sirket-firsatlar/);
   /* Aktiflik: Başvuranlar kendi kümesinde, İlanlar kümesinden çıktı — iki sekme birden yanmasın. */
   assert.ok(HEADER.includes("const sirketIlanlarindaMi = \/^\\/sirket\\/(ilanlar|ilan)(\\/|$)\/.test(bulunulanYol);"), 'İlanlar kümesi basvuranlar içermemeli');
-  /* 26 Eylül 2026: "Öğrencileri keşfet" (/sirket/adaylar) Başvurular ekranından açıldığı için o kümede. */
-  assert.ok(HEADER.includes("const sirketBasvuranlarindaMi = \/^\\/sirket\\/(basvuranlar|adaylar)(\\/|$)\/.test(bulunulanYol);"), 'Başvurular kendi kümesi');
+  /*
+    6 Ekim 2026: keşfin girişi Şirketim'deki "Adayları keşfet". Keşif
+    (/sirket/adaylar) ve aday profili (/sirket/aday/<id>) Şirketim'i
+    yakıyor; Başvurular yalnız kendi adresinde.
+  */
+  assert.ok(HEADER.includes("const sirketBasvuranlarindaMi = \/^\\/sirket\\/basvuranlar(\\/|$)\/.test(bulunulanYol);"), 'Başvurular kendi kümesi');
+  assert.ok(HEADER.includes("const sirketProfilindeMi = \/^\\/sirket\\/(profil|adaylar|aday)(\\/|$)\/.test(bulunulanYol);"), 'keşif Şirketim kümesinde');
+  /* Davranış: kümeler ayrık — hiçbir yolda iki sekme birden yanmıyor. */
+  const kume = (ad) => new RegExp(HEADER.match(new RegExp('const ' + ad + ' = \\/(.+)\\/\\.test\\(bulunulanYol\\);'))[1]);
+  const [ilan, basvuru, profil] = ['sirketIlanlarindaMi', 'sirketBasvuranlarindaMi', 'sirketProfilindeMi'].map(kume);
+  for (const [yol, beklenen] of [
+    ['/sirket/basvuranlar', 'basvuru'],
+    ['/sirket/basvuranlar?aday=x', 'basvuru'],
+    ['/sirket/adaylar', 'profil'],
+    ['/sirket/adaylar?tur=is', 'profil'],
+    ['/sirket/aday/123', 'profil'],
+    ['/sirket/profil', 'profil'],
+    ['/sirket/ilanlar', 'ilan'],
+  ]) {
+    const yanan = [['ilan', ilan], ['basvuru', basvuru], ['profil', profil]]
+      .filter(([, r]) => r.test(yol.split('?')[0]))
+      .map(([a]) => a);
+    assert.deepEqual(yanan, [beklenen], yol);
+  }
   /* Adlar: İlanlar · Başvurular · Rehber · Şirketim. */
   const etiketler = [...altCubuk.matchAll(/<span className=\{altMenuYazisi\([^)]*\)\}>([^<]+)<\/span>/g)].map((e) => e[1]);
   assert.deepEqual(etiketler, ['İlanlar', 'Başvurular', 'Rehber', 'Şirketim']);
@@ -104,11 +126,11 @@ test('şirket sekmeleri dürüst: Fırsatlar şirkette yok, Başvuranlar tam say
   assert.doesNotMatch(PANEL, /<Tabs/);
   assert.match(PANEL, /if \(gorunum === 'basvuranlar'\) \{\s*return \(\s*<Basvuranlar/);
   /*
-    Başlık 27 Eylül 2026'da EKRANDAN kalktı (alt gezinme zaten
-    "Başvurular" diyor) ama DOM'da duruyor: `sr-only`. Silinseydi sayfa
-    başlıksız kalır, ekran okuyucuyla başlıktan başlığa gezme kırılırdı.
+    Başlık 27 Eylül 2026'da ekrandan kaldırılıp `sr-only` yapılmıştı;
+    6 Ekim 2026 onaylı tasarımda yeniden GÖRÜNÜR: "Başvuranlar".
   */
-  assert.match(PANEL, /<h1 className="sr-only">Başvurular<\/h1>/);
+  assert.match(PANEL, /<h1[^>]*>\s*Başvuranlar\s*<\/h1>/);
+  assert.doesNotMatch(PANEL, /<h1 className="sr-only">/);
   assert.match(PANEL, /<h1[^>]*>\s*İlanlarım\s*<\/h1>/);
   assert.match(PANEL, /<AdayIzgarasi\s+basliksiz/);
   assert.match(oku('src/sirket/IlanKarti.tsx'), /onNavigate\(`\/sirket\/basvuranlar\?ilan=\$\{encodeURIComponent\(id\)\}`\)/);

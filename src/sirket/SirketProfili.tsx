@@ -89,6 +89,7 @@ const DUZENLE_YOLU = '/sirket/profil/duzenle';
 const KAPAK_YOLU = '/sirket/profil/kapak';
 const ONIZLE_YOLU = '/sirket/profil/onizle';
 const ILAN_OLUSTUR_YOLU = '/sirket/ilan/yeni';
+const ADAYLAR_YOLU = '/sirket/adaylar';
 
 const GERI_SATIRI = `inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 ${SIRKET_ODAK}`;
 
@@ -502,6 +503,8 @@ export const SirketProfili: React.FC<{
           kapakYolu: sosyal ? KAPAK_YOLU : undefined,
           paylasabilirMi,
           paylasimEngeli,
+          /* Aday keşfinin girişi (Başvuranlar ekranından buraya taşındı). */
+          adaylarYolu: ADAYLAR_YOLU,
           onPaylasimEklendi: () => {
             /* Yalnız `tamamla` döndükten sonra: liste ve sayaç sunucudan yeniden. */
             tazele();

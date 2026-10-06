@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Copy, Eye, EyeOff, Search, Share2, Users } from 'lucide-react';
+import { Check, Copy, Search, Share2, SlidersHorizontal, Users } from 'lucide-react';
 import { AdayKarti } from './AdayKarti';
 import {
   AdayCekmecesi,
@@ -91,10 +91,10 @@ export const AdayIzgarasi: React.FC<{
   onAdayAcildi?: () => void;
   onNot?: (id: string, metin: string) => Promise<void>;
   /*
-    Sayfanın başlığı dışarıda (SirketPaneli, `h1` "Başvuranlar")
-    çizildiğinde ızgara kendi başlığını atlıyor; yalnız süzgeç sayısı
-    ("3 / 12 aday") kalıyor ve o da yalnız süzgeç açıkken — toplam sayı
-    zaten sayfa başlığının altında.
+    Sayfanın başlığı ve toplam başvuru sayısı her zaman dışarıda
+    (SirketPaneli, `h1` "Başvuranlar"); ızgara başlık çizmiyor, yalnız
+    süzülünce "x / y başvuru gösteriliyor" yazıyor. Bayrak çağıranın
+    sözleşmesini belgeliyor (6 Ekim 2026'dan beri tek yerleşim).
   */
   basliksiz?: boolean;
   /* İnceleme ekranının güncel profil ve paylaşım okumaları (20261121010000). */
@@ -155,6 +155,14 @@ export const AdayIzgarasi: React.FC<{
   const [odak, setOdak] = React.useState(0);
   const [kaydediliyor, setKaydediliyor] = React.useState(false);
   const [kopyalandi, setKopyalandi] = React.useState(false);
+  /*
+    SEÇİLİ SATIR — son açılan başvuru. Mavi çerçeve yalnız onda; liste
+    hiçbir şey seçilmeden açılıyor. İncelemeden dönünce kişi nerede
+    kaldığını görüyor.
+  */
+  const [secili, setSecili] = React.useState<string | null>(null);
+  /* Filtreler alanı varsayılan kapalı; etkin filtre düğmede sayıyla belli. */
+  const [filtrelerAcik, setFiltrelerAcik] = React.useState(false);
 
   /* İlan süzgecinin seçenekleri gelen başvurulardan türüyor; boş bir
      ilan listesi göstermenin anlamı yok. */
@@ -239,6 +247,11 @@ export const AdayIzgarasi: React.FC<{
   const adresAday = useAdayAdresi();
   const acikId = adresAday && kartlar.some((k) => k.id === adresAday) ? adresAday : null;
 
+  /* Adresten (bildirim, derin bağlantı) açılan başvuru da seçili sayılıyor. */
+  React.useEffect(() => {
+    if (acikId) setSecili(acikId);
+  }, [acikId]);
+
   const acikHam = acikId ? (kartlar.find((k) => k.id === acikId) ?? null) : null;
   const acik = acikHam && onyargisiz ? onyargisizla(acikHam) : acikHam;
 
@@ -296,14 +309,20 @@ export const AdayIzgarasi: React.FC<{
     [onDurum]
   );
 
-  /* Odaktaki kart görünürde kalsın; J ile aşağı inerken ızgara kayıyor. */
-  React.useEffect(() => {
-    const k = gosterilen[odak];
-    if (!k) return;
-    document
-      .querySelector(`[data-aday-karti="${k.id}"]`)
-      ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }, [odak, gosterilen]);
+  /*
+    J/K GERÇEK ODAĞI TAŞIYOR. Eskiden yalnız görsel bir "odaklı kart"
+    çerçevesi vardı ve ilk kart hiçbir şey seçilmeden mavi duruyordu.
+    Artık satırın kendisi odak alıyor (klavye halkası); seçim ayrı.
+  */
+  const satiraOdaklan = React.useCallback(
+    (i: number) => {
+      const k = gosterilen[i];
+      if (!k) return;
+      setOdak(i);
+      document.querySelector<HTMLElement>(`[data-aday-karti="${k.id}"]`)?.focus();
+    },
+    [gosterilen],
+  );
 
   React.useEffect(() => {
     const tus = (e: KeyboardEvent) => {
@@ -323,10 +342,10 @@ export const AdayIzgarasi: React.FC<{
 
       if (harf === 'j') {
         e.preventDefault();
-        setOdak((o) => Math.min(o + 1, gosterilen.length - 1));
+        satiraOdaklan(Math.min(odak + 1, gosterilen.length - 1));
       } else if (harf === 'k') {
         e.preventDefault();
-        setOdak((o) => Math.max(o - 1, 0));
+        satiraOdaklan(Math.max(odak - 1, 0));
       } else if (harf === 'f' && mevcut) {
         e.preventDefault();
         adayiAc(mevcut.id);
@@ -340,7 +359,7 @@ export const AdayIzgarasi: React.FC<{
     };
     document.addEventListener('keydown', tus);
     return () => document.removeEventListener('keydown', tus);
-  }, [gosterilen, odak, durumUygula, acikId]);
+  }, [gosterilen, odak, durumUygula, acikId, satiraOdaklan, adayiAc]);
 
   if (kartlar.length === 0) {
     /*
@@ -414,64 +433,40 @@ export const AdayIzgarasi: React.FC<{
     );
   }
 
+  /*
+    ETKİN FİLTRE SAYISI — "Filtreler" düğmesinde. Durum süzgeci ve
+    önyargısız inceleme o alanda; ilan seçimi ve arama ana satırda,
+    kendileri görünür olduğu için sayılmıyor.
+  */
+  const etkinFiltre = (durumSuzgeci ? 1 : 0) + (onyargisiz ? 1 : 0);
+  const suzuluyor = suzulmus.length !== kartlar.length;
+  const filtreleriTemizle = () => {
+    setDurumSuzgeci('');
+    setOnyargisiz(false);
+  };
+
   return (
-    <div className="space-y-4">
-      {/* --------------------------------------------------- başlık */}
+    <div className="space-y-3">
       {/*
-        `h2`: ızgara bir sayfanın içinde bir bölüm; sayfanın `h1`'i
-        dışarıda. Aynı sayfada iki `h1` ekran okuyucuya iki sayfa gibi
-        okunurdu. `basliksiz`: /sirket/basvuranlar'da sayfa başlığı zaten
-        "Başvuranlar", burada tekrar yazılmıyor.
+        ANA KONTROLLER YALNIZ İKİ: ilan seçimi ve aday araması (onaylı
+        tasarım, 6 Ekim 2026). Durum süzgeci ve önyargısız inceleme
+        "Filtreler" alanında. Sayfa başlığı ve toplam başvuru sayısı
+        dışarıda (SirketPaneli); burada yalnız süzülünce kaç başvurunun
+        göründüğü yazıyor.
+
+        İlan seçicisi tek ilanlık listede çizilmiyor (tek seçenekli seçici
+        bir şey seçtirmiyor) — süzgeç adresten geldiyse yine görünüyor ki
+        "neden az başvuru var" sorusunun cevabı ekranda olsun.
       */}
-      {basliksiz ? (
-        /*
-          SAYI HER ZAMAN YAZIYOR, YALNIZ SÜZÜLÜNCE DEĞİL.
-
-          Eskiden sayfanın başlığı altındaki cümle toplamı söylüyordu
-          ("İlanlarınıza gelen 3 başvuru."). O cümle kalktı — alt gezinme
-          zaten "Başvurular" diyordu ve başlık ekranın en üstünü boşuna
-          harcıyordu. Sayı burada kaldı: listenin hemen üstünde, ait
-          olduğu yerde. Yalnız süzülünce yazsaydı, süzgeçsiz açan kişi
-          kaç başvurusu olduğunu hiçbir yerde göremezdi.
-        */
-        <p className="text-sm font-semibold" style={{ color: SIRKET_METIN_IKINCIL }}>
-          {suzulmus.length === kartlar.length
-            ? `${kartlar.length} aday`
-            : `${suzulmus.length} / ${kartlar.length} aday`}
-        </p>
-      ) : (
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-xl font-black" style={{ color: SIRKET_METIN }}>
-            Başvuranlar
-          </h2>
-          <p className="text-sm font-semibold" style={{ color: SIRKET_METIN_IKINCIL }}>
-            {suzulmus.length === kartlar.length
-              ? `${kartlar.length} aday`
-              : `${suzulmus.length} / ${kartlar.length} aday`}
-          </p>
-        </div>
-      )}
-
-      {/*
-        SÜZGEÇLER — TANIDIK ÜÇLÜ
-
-        İlan, durum ve arama. Hepsi görünür kontrol; öğrenmesi gereken bir
-        şey yok. Kısayol ipucu kaldırıldı: panelin ilk defa açan bir İK
-        çalışanına klavye dizilimi öğretmesi gerekmiyor.
-      */}
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Seçici, süzgeç adresten geldiyse tek ilanla da görünür: yoksa
-            "neden 3/11 aday" sorusunun cevabı ekranda olmazdı. */}
+      {/* Telefonda alt alta (onaylı tasarım); geniş ekranda tek satır. */}
+      <div className="flex flex-col gap-3 md:flex-row md:gap-2">
         {(ilanSecenekleri.length > 1 || ilanSuzgeci !== '') && (
           <select
             value={ilanSuzgeci}
             onChange={(e) => setIlanSuzgeci(e.target.value)}
             aria-label="İlana göre süz"
-            className={ALAN}
-            /* ALAN `w-full` taşıyor; süzgeç satırında genişlik satır içi
-               veriliyor, yoksa seçici tüm satırı kaplayıp aramayı alt
-               satıra itiyor. */
-            style={{ ...alanStil, width: 'auto', minWidth: 160, maxWidth: '100%' }}
+            className={`${ALAN} md:w-80 md:shrink-0`}
+            style={alanStil}
           >
             <option value="">Tüm ilanlar</option>
             {ilanSecenekleri.map((i) => (
@@ -482,51 +477,111 @@ export const AdayIzgarasi: React.FC<{
           </select>
         )}
 
-        <select
-          value={durumSuzgeci}
-          onChange={(e) => setDurumSuzgeci(e.target.value)}
-          aria-label="Duruma göre süz"
-          className={ALAN}
-          style={{ ...alanStil, width: 'auto', minWidth: 150 }}
-        >
-          {durumSecenekleri.map((s: { deger: string; etiket: string; sayi: number }) => (
-            <option key={s.deger || 'tum'} value={s.deger}>
-              {s.etiket} ({s.sayi})
-            </option>
-          ))}
-        </select>
+        <div className="flex min-w-0 items-stretch gap-2 md:flex-1">
+          <label className="relative min-w-0 flex-1">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+              style={{ color: SIRKET_METIN_IKINCIL }}
+              aria-hidden
+            />
+            <input
+              type="search"
+              value={arama}
+              onChange={(e) => setArama(e.target.value)}
+              placeholder="Aday ara"
+              aria-label="Aday ara"
+              className={`${ALAN} pl-9`}
+              style={alanStil}
+            />
+          </label>
 
-        <label className="relative min-w-48 flex-1">
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
-            style={{ color: SIRKET_METIN_IKINCIL }}
-            aria-hidden
-          />
-          <input
-            value={arama}
-            onChange={(e) => setArama(e.target.value)}
-            placeholder="Aday ara"
-            aria-label="Aday ara"
-            className={`${ALAN} pl-9`}
-            style={alanStil}
-          />
-        </label>
-
-        <button
-          type="button"
-          onClick={() => setOnyargisiz((o) => !o)}
-          aria-pressed={onyargisiz}
-          className={IKINCIL_DUGME}
-          style={
-            onyargisiz
-              ? { borderColor: SIRKET_KENAR_VURGU, background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }
-              : ikincilStil
-          }
-        >
-          {onyargisiz ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          Önyargısız incele
-        </button>
+          <button
+            type="button"
+            onClick={() => setFiltrelerAcik((a) => !a)}
+            aria-expanded={filtrelerAcik}
+            aria-controls="basvuru-filtreleri"
+            className={`${IKINCIL_DUGME} shrink-0 px-3 sm:px-4`}
+            style={
+              etkinFiltre > 0
+                ? { borderColor: SIRKET_KENAR_VURGU, background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }
+                : ikincilStil
+            }
+          >
+            <SlidersHorizontal className="h-4 w-4" aria-hidden />
+            Filtreler
+            {etkinFiltre > 0 && (
+              <span
+                className="inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-black text-white"
+                style={{ background: SIRKET_VURGU_KOYU }}
+              >
+                <span className="sr-only">, etkin filtre: </span>
+                {etkinFiltre}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
+
+      {filtrelerAcik && (
+        <div
+          id="basvuru-filtreleri"
+          role="region"
+          aria-label="Filtreler"
+          className="space-y-3 rounded-2xl border p-3 sm:p-4"
+          style={kutuStil}
+        >
+          {/*
+            DURUM — sade akış kuralı (basvuru-durumu.mjs): Yeni · İnceleniyor
+            · Olumsuz · Geri çekildi; eski süreç kayıtları varsa tek bir
+            "Eski süreç kayıtları" seçeneği. Sayılar ilan ve arama
+            uygulanmış listeden.
+          */}
+          <label className="block">
+            <span className="mb-1 block text-xs font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+              Durum
+            </span>
+            <select
+              value={durumSuzgeci}
+              onChange={(e) => setDurumSuzgeci(e.target.value)}
+              aria-label="Duruma göre süz"
+              className={`${ALAN} sm:max-w-xs`}
+              style={alanStil}
+            >
+              {durumSecenekleri.map((s: { deger: string; etiket: string; sayi: number }) => (
+                <option key={s.deger || 'tum'} value={s.deger}>
+                  {s.etiket} ({s.sayi})
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex min-h-11 cursor-pointer items-start gap-2.5 text-sm" style={{ color: SIRKET_METIN }}>
+            <input
+              type="checkbox"
+              checked={onyargisiz}
+              onChange={(e) => setOnyargisiz(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#2563EB]"
+            />
+            <span>
+              <span className="block font-bold">Önyargısız incele</span>
+              <span className="block text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+                Ad ve fotoğraf gizlenir
+              </span>
+            </span>
+          </label>
+
+          {etkinFiltre > 0 && (
+            <button
+              type="button"
+              onClick={filtreleriTemizle}
+              className={`${IKINCIL_DUGME} w-full sm:w-auto`}
+              style={ikincilStil}
+            >
+              Filtreleri temizle
+            </button>
+          )}
+        </div>
+      )}
 
       {onyargisiz && (
         <p
@@ -545,20 +600,22 @@ export const AdayIzgarasi: React.FC<{
       )}
 
       {/*
-        LİSTE EKRANI DOLDURUYOR
-
-        Önce solda kartlar, sağda kalıcı bir "Bir aday seçin" paneli
-        vardı: kimse bir adaya tıklamadan ekranın yarısı boş duruyordu.
-        Artık kartlar tüm alanı kullanıyor ve ayrıntı yalnızca bir karta
-        tıklanınca açılıyor — listeye dönünce liste yine ekranı dolduruyor.
+        SÜZÜLMÜŞ SAYI — yalnız süzülünce. Sayılan şey BAŞVURU: aynı kişinin
+        iki ilana başvurusu iki satır, "aday" demek yanlış olurdu.
       */}
+      {suzuluyor && (
+        <p className="text-sm font-semibold" role="status" style={{ color: SIRKET_METIN_IKINCIL }}>
+          {suzulmus.length} / {kartlar.length} başvuru gösteriliyor
+        </p>
+      )}
+
       {suzulmus.length === 0 ? (
         <div className={`${KUTU} text-center`} style={kutuStil}>
           <p className="font-bold" style={{ color: SIRKET_METIN }}>
-            Bu süzgeçle eşleşen aday yok
+            Bu filtrelerle eşleşen başvuru yok
           </p>
           <p className="mt-1 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-            Süzgeçleri temizleyip tüm başvuruları görebilirsiniz.
+            Filtreleri temizleyip tüm başvuruları görebilirsiniz.
           </p>
           <button
             type="button"
@@ -570,16 +627,26 @@ export const AdayIzgarasi: React.FC<{
             className={`mx-auto mt-4 ${IKINCIL_DUGME}`}
             style={ikincilStil}
           >
-            Süzgeçleri temizle
+            Filtreleri temizle
           </button>
         </div>
       ) : (
-        <ul className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        /*
+          TEK LİSTE, KOMPAKT SATIRLAR. Kart ızgarası ve Pano kalktı; satırlar
+          tek bir kabın içinde ince çizgiyle ayrılıyor. Masaüstünde de aynı
+          liste — satır genişleyince okul/bölüm ikinci sütuna geçiyor.
+        */
+        <ul
+          aria-label="Başvurular"
+          className="divide-y overflow-hidden rounded-2xl border p-1.5"
+          style={{ ...kutuStil, borderColor: SIRKET_KENAR }}
+        >
           {gosterilen.map((k, i) => (
-            <li key={k.id} className="flex">
+            <li key={k.id} className="py-0.5" style={{ borderColor: SIRKET_KENAR }}>
               <AdayKarti
                 kart={k as any}
-                odakli={i === odak}
+                secili={k.id === secili}
+                onOdak={() => setOdak(i)}
                 onAc={() => {
                   setOdak(i);
                   adayiAc(k.id);
@@ -589,7 +656,6 @@ export const AdayIzgarasi: React.FC<{
           ))}
         </ul>
       )}
-
       {/*
         İnceleme ekranı: lg altında tam ekran, geniş ekranda ortada en
         çok 1200 piksellik iki sütunlu panel (AdayCekmecesi başlığı).
@@ -653,10 +719,6 @@ export const AdayIzgarasi: React.FC<{
         />
       </AdayHataSiniri>
 
-      <p className="text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
-        Reddedilen başvurular listeden silinmiyor; kararın kaydı adayın başvuru sayfasında da
-        görünüyor.
-      </p>
     </div>
   );
 };

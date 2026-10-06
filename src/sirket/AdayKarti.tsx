@@ -1,34 +1,33 @@
 import React from 'react';
-import { ChevronRight, ExternalLink, FileText, ShieldOff } from 'lucide-react';
+import { ChevronRight, ExternalLink, ShieldOff } from 'lucide-react';
 import {
-  SIRKET_KENAR,
+  SIRKET_KENAR_VURGU,
   SIRKET_METIN,
   SIRKET_METIN_IKINCIL,
   SIRKET_ROZET,
   SIRKET_VURGU,
   SIRKET_VURGU_KOYU,
-  SIRKET_YUZEY,
-  SIRKET_ZEMIN,
   SIRKET_ODAK,
 } from './renk';
-import { UYUM_ETIKETI, kimlikSatiri, monogram } from '../lib/aday-kart.mjs';
-import { durumAdi, durumRozeti, surecKapandi } from './basvuru-durumu';
+import { monogram } from '../lib/aday-kart.mjs';
+import { durumAdi, durumRozeti } from './basvuru-durumu';
 
 /**
- * Başvuran kartı.
+ * Başvuru satırı — Başvuranlar listesinin tek öğesi.
  *
- * NE VAR: ad (ya da monogram), okul · bölüm · sınıf, şehir, 3–5 yetenek,
- * rozet, başvuru tarihi ve uyum şeridi.
+ * SADE LİSTE (6 Ekim 2026, kullanıcının onayladığı tasarım)
+ * ---------------------------------------------------------
+ * Satırda yalnız karar için ilk bakılan bilgi var: fotoğraf, ad,
+ * başvurulan ilan, okul/bölüm, durum ve başvuru tarihi. Şehir, yetenek
+ * etiketleri, uyum bilgisi ve CV işareti listeden çıktı; hepsi aday
+ * inceleme ekranında (AdayCekmecesi) duruyor.
  *
- * NE YOK: overall puanı, stat çubuğu, altın/gümüş kart, forma, stadyum,
- * TCKN, adres, yaş, zorunlu fotoğraf. Karşıdaki gerçek bir öğrenci;
- * oyuncu kartı estetiği için sayı uydurulmuyor.
+ * Bir satır BİR BAŞVURU. Aynı öğrencinin iki ilana başvurusu iki ayrı
+ * satır; onları ayıran ilan adı satırda ve erişilebilir adda.
  *
- * Kart yüksekliği İÇERİKTEN geliyor. Önce `aspect-[2/3]` ile sabitti ve
- * yeteneği az olan adayda alt yarı bomboş kalıyordu; kart "yarısı
- * doldurulmamış kutu" gibi duruyordu.
+ * NE YOK: overall puanı, stat çubuğu, TCKN, adres, yaş, zorunlu fotoğraf.
+ * Karşıdaki gerçek bir öğrenci; sayı uydurulmuyor.
  */
-
 
 const tarihYaz = (t: string | null) => {
   if (!t) return '';
@@ -54,9 +53,6 @@ export interface AdayKart {
   durum: string;
   paylasildi: boolean;
   yontem: string;
-  /* CV yolu — kartta yalnızca VAR MI diye gösteriliyor; dosya çekmecede
-     açılıyor. Yoksa hiç yazılmıyor: bozuk bir düğme bırakmak, olmayan
-     bir belgeye tıklatmak olurdu. */
   cvYolu?: string | null;
   gizli?: boolean;
   /* Başvurulan ilanın başlığı (`listings.title`, sirketBasvurulari). */
@@ -65,138 +61,82 @@ export interface AdayKart {
 
 export const AdayKarti: React.FC<{
   kart: AdayKart;
-  odakli: boolean;
+  /** Gerçekten seçili satır (son açılan aday). Mavi çerçeve yalnız burada. */
+  secili: boolean;
   onAc: () => void;
-}> = ({ kart, odakli, onAc }) => {
-  const kimlik = kimlikSatiri(kart);
+  /** Klavyeyle gezinmede (J/K) odak bu satıra taşınıyor. */
+  onOdak?: () => void;
+}> = ({ kart, secili, onAc, onOdak }) => {
   const durum = durumRozeti(kart.durum);
-  /* Dörtten fazlası kartı boğuyor; kalanı sayıyla anlatılıyor. */
-  /*
-    UYUM SKORU FİNAL DURUMLARDA GİZLİ
-
-    Teklif kabul edilmiş bir adayın yanında "Düşük uyum" yazıyordu.
-    Şirket adayı zaten seçmiş, aday da teklifi kabul etmiş: o sayı
-    artık bir karara yardım etmiyor, yalnızca kararı sorgulatıyor.
-    Aynısı olumsuz kapanmış, reddedilmiş ve geri çekilmiş
-    başvurular için de geçerli.
-
-    Yalnız GÖSTERİM: puan veritabanında duruyor.
-  */
-  const uyumGoster = !surecKapandi(kart.durum) && kart.band !== 'bilinmiyor';
-
-  const gorunenYetenek = kart.yetenekler.slice(0, 4);
   const ilanBasligi = kart.ilanBasligi?.trim() || null;
-  const kalanYetenek = kart.yetenekler.length - gorunenYetenek.length;
-
-  /*
-    İLAN BAŞLIĞI GENİŞLETİLEBİLİR (5 Ekim 2026)
-
-    Başlık iki satırda kesiliyordu ve tam metin yalnız `title`daydı —
-    telefonda fare yok, `title` hiç görünmüyor; ölçüldü: 375 pikselde 117
-    karakterlik başlık üçüncü satırda kesiliyor. Kesildiyse başlığın
-    altında "Devamını göster" düğmesi çıkıyor (kesilmediyse yok: işe
-    yaramayan düğme çizilmiyor). Kesilip kesilmediği ölçülüyor, tahmin
-    edilmiyor: genişlik değişince (döndürme, pencere) yeniden ölçülüyor.
-  */
-  const [ilanAcik, setIlanAcik] = React.useState(false);
-  const [ilanKesik, setIlanKesik] = React.useState(false);
-  const ilanRef = React.useRef<HTMLSpanElement | null>(null);
-  React.useLayoutEffect(() => {
-    const oge = ilanRef.current;
-    if (!oge || ilanAcik) return undefined;
-    const olc = () => setIlanKesik(oge.scrollHeight > oge.clientHeight + 1);
-    olc();
-    if (typeof ResizeObserver === 'undefined') return undefined;
-    const gozlemci = new ResizeObserver(olc);
-    gozlemci.observe(oge);
-    return () => gozlemci.disconnect();
-  }, [ilanBasligi, ilanAcik]);
+  const ad = kart.gizli ? 'Aday' : (kart.ad ?? 'Ad paylaşılmadı');
+  const bolumSinif = [kart.bolum, kart.sinif].filter(Boolean).join(' · ');
+  const tarih = tarihYaz(kart.tarih);
 
   return (
-    /*
-      KART BİR KAP, TIKLAMA ALTTAKİ DÜĞMEDE
-
-      Kartın tamamı bir `<button>`du; içine ikinci bir düğme ("Devamını
-      göster") konamazdı (iç içe düğme geçersiz HTML). Kart artık bir kap:
-      kabın tamamını kaplayan boş düğme incelemeyi açıyor, içerik onun
-      üstünde ama tıklamayı geçiriyor (`pointer-events-none`); bağımsız
-      tek eylem olan genişletme düğmesi `relative z-10` ve tıklamayı
-      kendisi alıyor — kartı açmıyor.
-    */
-    <div
-      className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border text-left transition-all hover:-translate-y-0.5"
-      style={{
-        background: SIRKET_YUZEY,
-        borderColor: odakli ? SIRKET_VURGU : SIRKET_KENAR,
-        boxShadow: odakli
-          ? `0 0 0 3px ${SIRKET_ROZET}`
-          : '0 1px 2px rgba(22, 33, 28, 0.04)',
-      }}
-    >
     <button
       type="button"
       onClick={onAc}
+      onFocus={onOdak}
       data-aday-karti={kart.id}
+      aria-current={secili ? 'true' : undefined}
       /*
-        İlan başlığı erişilebilir adın İÇİNDE: kartta iki satırda
-        kesilebiliyor ve `title` yalnız fareyle okunuyor. Aynı öğrencinin
-        iki ilana başvurusu iki ayrı kart; ekran okuyucu ikisini ancak
-        ilan adıyla ayırabilir.
+        Erişilebilir ad: ad — ilan — durum — tarih. İlan adı İÇİNDE: aynı
+        öğrencinin iki başvurusunu ekran okuyucu ancak ilan adıyla ayırır.
       */
       aria-label={[
-        kart.gizli ? 'Aday' : (kart.ad ?? 'Aday'),
+        ad,
         ilanBasligi ? `Başvurduğu ilan: ${ilanBasligi}` : null,
-        uyumGoster ? UYUM_ETIKETI[kart.band as keyof typeof UYUM_ETIKETI] : durumAdi(kart.durum),
+        durumAdi(kart.durum),
+        tarih ? `Başvuru tarihi: ${tarih}` : null,
       ]
         .filter(Boolean)
         .join(' — ')}
       /*
-        SABİT ORAN KALDIRILDI
+        TÜM SATIR TIKLANIYOR. Satırın içinde ikinci bir düğme yok; ilan adı
+        kesilmediği için genişletme düğmesi de gerekmiyor.
 
-        Kart `aspect-[2/3]` ile çiziliyordu: içerik ne olursa olsun aynı
-        yükseklik. Yeteneği az olan adayda alt yarı bomboş kalıyor, kart
-        "yarısı doldurulmamış kutu" gibi duruyordu. Artık yükseklik
-        içerikten geliyor; ızgara hizası `items-stretch` ile korunuyor ve
-        kısa kartlar da satırı bozmuyor.
+        Mavi çerçeve YALNIZ seçili satırda (`secili`): eskiden ilk kart
+        hiçbir şey seçilmeden mavi çerçeveyle açılıyordu. Klavye odağı ayrı
+        bir halka (SIRKET_ODAK) — seçim gibi görünmüyor.
       */
-      className={`absolute inset-0 cursor-pointer rounded-2xl ${SIRKET_ODAK}`}
-    />
-      <div className="pointer-events-none relative flex min-h-0 flex-1 flex-col gap-2.5 p-3">
-        {/* ------------------------------------------------- üst satır */}
-        <span className="flex items-start gap-2">
-          {kart.fotoUrl && !kart.gizli ? (
-            <img src={kart.fotoUrl} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
-          ) : (
-            <span
-              aria-hidden
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-black"
-              style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
-            >
-              {kart.gizli ? <ShieldOff className="h-4 w-4" /> : monogram(kart.ad)}
-            </span>
-          )}
+      className={`group flex w-full cursor-pointer items-start gap-3 rounded-xl px-3 py-3.5 text-left transition-colors hover:bg-gray-50 sm:px-4 ${SIRKET_ODAK}`}
+      style={
+        secili
+          ? { boxShadow: `inset 0 0 0 2px ${SIRKET_VURGU}`, background: SIRKET_ROZET }
+          : undefined
+      }
+    >
+      {kart.fotoUrl && !kart.gizli ? (
+        <img src={kart.fotoUrl} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover" />
+      ) : (
+        <span
+          aria-hidden
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-black"
+          style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU, boxShadow: `inset 0 0 0 1px ${SIRKET_KENAR_VURGU}` }}
+        >
+          {kart.gizli ? <ShieldOff className="h-4 w-4" /> : monogram(kart.ad)}
+        </span>
+      )}
 
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-extrabold" style={{ color: SIRKET_METIN }}>
-              {kart.gizli ? 'Aday' : (kart.ad ?? 'Ad paylaşılmadı')}
-            </span>
-            {/*
-              Okul ve bölüm adın hemen altında: karar için ilk bakılan
-              bilgi bu, uyum değil.
-            */}
-            {kimlik && (
-              <span
-                className="line-clamp-2 block text-[11px] font-semibold leading-snug"
-                style={{ color: SIRKET_METIN_IKINCIL }}
-              >
-                {kimlik}
-              </span>
-            )}
-          </span>
+      {/*
+        AYNI DOM, İKİ YERLEŞİM (grid-template-areas)
 
-          {/* Rozet her zaman var: tanınmayan durumda ham enum değil, nötr bir metin. */}
+        Telefonda: ad + durum, altında tam genişlik ilan adı, en altta
+        okul/bölüm + tarih. Geniş ekranda okul/bölüm ikinci sütuna, durum
+        ve tarih sağ sütuna geçiyor. Öğeler iki kez çizilmiyor.
+      */}
+      <span
+        className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-0.5 [grid-template-areas:'ad_durum'_'ilan_ilan'_'alt_alt'] md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_8rem] md:items-center md:gap-x-6 md:[grid-template-areas:'ad_okul_durum'_'ilan_okul_tarih']"
+      >
+        <span className="min-w-0 break-words text-[15px] font-extrabold leading-snug [grid-area:ad]" style={{ color: SIRKET_METIN }}>
+          {ad}
+        </span>
+
+        {/* Rozet gerçek durumu söylüyor; eski süreç kaydı kendi adını (ör. "Görüşme") korur. */}
+        <span className="justify-self-end [grid-area:durum]">
           <span
-            className="shrink-0 rounded-lg px-1.5 py-0.5 text-[10px] font-bold"
+            className="inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-bold"
             style={durum.stil}
           >
             {durum.etiket}
@@ -204,129 +144,57 @@ export const AdayKarti: React.FC<{
         </span>
 
         {/*
-          BAŞVURDUĞU İLAN (4 Ekim 2026)
-
-          Şirketin birden çok ilanı olduğunda kart hangi ilana
-          başvurulduğunu söylemiyordu; aynı öğrencinin iki ilana
-          başvurusu yan yana iki eş kart gibi duruyordu. Başlık iki
-          satıra kadar okunuyor, uzunsa `line-clamp-2` ile kesiliyor ve
-          "Devamını göster" tam metni kartın içinde açıyor (dokunmatikte de).
-          Tam metin ayrıca kartın erişilebilir adında ve inceleme ekranının
-          üst şeridinde — bilgi hover'a (`title`) kalmıyor.
+          İLAN ADI METİN SATIRI, KUTU DEĞİL. Kesilmiyor: uzun ad satır
+          kırarak tam okunuyor (telefonda da). Bilgi hover'a kalmıyor.
         */}
         {ilanBasligi && (
           <span
-            className="block rounded-lg border px-2 py-1.5"
-            style={{ borderColor: SIRKET_KENAR, background: SIRKET_ZEMIN }}
-          >
-            <span className="block text-[10px] font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
-              Başvurduğu ilan
-            </span>
-            <span
-              ref={ilanRef}
-              id={`ilan-basligi-${kart.id}`}
-              title={ilanBasligi}
-              className={`${ilanAcik ? 'block ' : 'line-clamp-2 '}break-words text-xs font-bold leading-snug`}
-              style={{ color: SIRKET_METIN }}
-            >
-              {ilanBasligi}
-            </span>
-            {(ilanKesik || ilanAcik) && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIlanAcik((a) => !a);
-                }}
-                aria-expanded={ilanAcik}
-                aria-controls={`ilan-basligi-${kart.id}`}
-                className={`pointer-events-auto relative z-10 -mx-1 mt-0.5 inline-flex min-h-11 cursor-pointer items-center rounded-lg px-1 text-[11px] font-bold underline underline-offset-2 ${SIRKET_ODAK}`}
-                style={{ color: SIRKET_VURGU_KOYU }}
-              >
-                {ilanAcik ? 'Daha az göster' : 'Devamını göster'}
-              </button>
-            )}
-          </span>
-        )}
-
-        {kart.sehir && (
-          <span className="block text-[11px]" style={{ color: SIRKET_METIN_IKINCIL }}>
-            {kart.sehir}
-          </span>
-        )}
-
-        {/* ------------------------------------------------ etiketler */}
-        {gorunenYetenek.length > 0 && (
-          <span className="flex flex-wrap gap-1">
-            {gorunenYetenek.map((y) => (
-              <span
-                key={y}
-                className="rounded-md px-1.5 py-0.5 text-[10px] font-bold"
-                style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
-              >
-                {y}
-              </span>
-            ))}
-            {kalanYetenek > 0 && (
-              <span
-                className="rounded-md px-1.5 py-0.5 text-[10px] font-bold"
-                style={{ color: SIRKET_METIN_IKINCIL }}
-              >
-                +{kalanYetenek}
-              </span>
-            )}
-          </span>
-        )}
-
-        {/*
-          Şirketin kendi sitesinden gelen başvuruda bizde paylaşılmış bir
-          profil yok. İsim uydurmak yerine ne olduğu yazıyor.
-        */}
-        {!kart.paylasildi && (
-          <span
-            className="flex items-start gap-1 text-[10px] font-semibold leading-snug"
-            style={{ color: SIRKET_METIN_IKINCIL }}
-          >
-            <ExternalLink className="mt-0.5 h-3 w-3 shrink-0" />
-            Şirketin kendi sitesinden başvuruldu
-          </span>
-        )}
-
-        {/* ------------------------------------------- alt meta satırı */}
-        {/*
-          ALT SATIR: TARİH + NET AKSİYON
-
-          Uyum bilgisi buraya, küçük yardımcı metne indi. Adın altında
-          duran bir "band" etiketi, algoritmanın aday hakkında verdiği
-          karar gibi okunuyordu; oysa üretimdeki puanların tamamı 0–38
-          arasında ve 0, eşleştirme motorunun "hesaplanamadı" çıktısıyla
-          aynı değeri taşıyor.
-
-          Kartın tamamı tıklanabilir; sağdaki "İncele" bunu görünür
-          kılıyor. Tıklamayı kabın altındaki tek düğme alıyor; iç içe düğme yok.
-        */}
-        <span
-          className="mt-auto flex items-center justify-between gap-2 border-t pt-2.5 text-[11px] font-semibold"
-          style={{ borderColor: SIRKET_KENAR, color: SIRKET_METIN_IKINCIL }}
-        >
-          <span className="flex min-w-0 flex-col">
-            <span className="truncate">{tarihYaz(kart.tarih)}</span>
-            {uyumGoster && (
-              <span className="truncate text-[10px] font-normal">
-                {UYUM_ETIKETI[kart.band as keyof typeof UYUM_ETIKETI]}
-              </span>
-            )}
-          </span>
-          <span
-            className="flex shrink-0 items-center gap-1 font-bold"
+            className="min-w-0 break-words text-sm font-bold leading-snug [grid-area:ilan]"
             style={{ color: SIRKET_VURGU_KOYU }}
           >
-            {kart.cvYolu && <FileText className="h-3.5 w-3.5" />}
-            İncele
-            <ChevronRight className="h-3.5 w-3.5" />
+            {ilanBasligi}
+          </span>
+        )}
+
+        {/*
+          ALT SATIR: telefonda okul/bölüm tam genişlikte, tarih sağda son
+          satırla hizalı (durum rozetinin sütununa sıkışmasın). Geniş
+          ekranda `md:contents` ile iki öğe ana ızgaranın kendi
+          sütunlarına (okul, tarih) dağılıyor.
+        */}
+        <span className="mt-1 flex min-w-0 items-end gap-3 [grid-area:alt] md:contents">
+          <span className="min-w-0 flex-1 text-[13px] leading-snug md:mt-0 md:[grid-area:okul]" style={{ color: SIRKET_METIN_IKINCIL }}>
+            {kart.paylasildi ? (
+              <>
+                {kart.universite && <span className="block break-words">{kart.universite}</span>}
+                {bolumSinif && <span className="block break-words">{bolumSinif}</span>}
+              </>
+            ) : (
+              /*
+                Şirketin kendi sitesinden gelen başvuruda bizde paylaşılmış
+                bir profil yok. Okul uydurmak yerine ne olduğu yazıyor.
+              */
+              <span className="flex items-start gap-1">
+                <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+                Şirketin kendi sitesinden başvuruldu
+              </span>
+            )}
+          </span>
+
+          <span
+            className="shrink-0 whitespace-nowrap text-xs md:self-center md:justify-self-end md:[grid-area:tarih]"
+            style={{ color: SIRKET_METIN_IKINCIL }}
+          >
+            {tarih}
           </span>
         </span>
-      </div>
-    </div>
+      </span>
+
+      <ChevronRight
+        aria-hidden
+        className="h-5 w-5 shrink-0 self-center transition-transform group-hover:translate-x-0.5"
+        style={{ color: SIRKET_METIN_IKINCIL }}
+      />
+    </button>
   );
 };

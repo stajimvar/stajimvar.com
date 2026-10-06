@@ -187,23 +187,24 @@ test('VIEWER yazma ekranına hiç girmiyor', () => {
   assert.match(PANO, /\{onAc \? \(/);
 });
 
-test('LİSTE KALDI: pano onun yerine geçmedi', () => {
+test('TEK LİSTE: Başvuranlar ekranında görünüm seçici ve Pano yok', () => {
   /*
-    Izgara tek adayla çalışmanın yeri (kısayollar, çekmece); pano
-    dağılımı görmenin yeri. Birini ötekinin yerine koymak çalışan bir
-    akışı bozardı.
+    6 Ekim 2026 (onaylı sade tasarım): Liste/Pano seçimi kalktı; ekran
+    yalnız AdayIzgarasi'nı çiziyor. BasvuruPanosu bileşeni ve ortak durum
+    kuralı yerinde duruyor (yeniden açılırsa aynı kuralla çizilir).
   */
   assert.match(PANEL, /<AdayIzgarasi/);
-  assert.match(PANEL, /<BasvuruPanosu/);
-  assert.match(PANEL, /useState<'liste' \| 'pano'>\('liste'\)/);
+  assert.doesNotMatch(kodu(PANEL), /<BasvuruPanosu|useState<'liste' \| 'pano'>/);
+  assert.match(PANO, /export const BasvuruPanosu/);
 });
 
-test('ÇEKMECE ÇOĞALTILMADI: pano derin bağlantıya devrediyor', () => {
+test('ÇEKMECE ÇOĞALTILMADI: inceleme ekranını yalnız ızgara açıyor', () => {
   /*
     1750 satırlık çekmeceyi kopyalamak, durum/not/teklif akışını iki
     yerde ayrı sürdürmek demekti.
   */
-  assert.match(PANEL, /\/sirket\/basvuranlar\?aday=\$\{encodeURIComponent\(id\)\}/);
+  assert.match(IZGARA, /<AdayCekmecesi/);
+  assert.doesNotMatch(kodu(PANEL), /<AdayCekmecesi/);
   assert.doesNotMatch(kodu(PANO), /AdayCekmecesi/);
 });
 
@@ -342,15 +343,10 @@ test('atama kutusu YALNIZ yazabilen üyeleri listeliyor', () => {
   assert.match(PANO, /ekip\.filter\(\(u\) => u\.yazabilir\)/);
 });
 
-test('VIEWER sorumluyu görüyor, değiştiremiyor', () => {
-  /*
-    Ekip veriliyor (ad görünsün) ama `onSorumlu` verilmiyor; kutu salt
-    okunur metne düşüyor. No-op bir işlev geçmek ölü kontrol bırakırdı.
-  */
-  const viewerDali = PANEL.slice(PANEL.indexOf('if (!baglam.basvuruYazabilir)'), PANEL.indexOf('BAŞLIK BİR KEZ'));
-  assert.match(viewerDali, /ekip=\{ekip\}/);
-  assert.doesNotMatch(kodu(viewerDali), /onSorumlu=/);
-  /* Kutu yerine metin: "Sorumlu: <ad>" ya da "yok". */
+test('VIEWER sorumlu değiştiremiyor', () => {
+  /* Viewer dalında yazma işlevi yok; Pano'da kutu salt okunur metne düşüyor. */
+  const viewerDali = PANEL.slice(PANEL.indexOf('if (!baglam.basvuruYazabilir)'), PANEL.indexOf('export { KADEME }'));
+  assert.doesNotMatch(kodu(viewerDali.slice(0, viewerDali.indexOf('\n  return (', viewerDali.indexOf('</div>')))), /onSorumlu=/);
   assert.match(PANO, /Sorumlu: \{sorumlu \? \(adlar\.get\(sorumlu\) \?\? 'Ekip üyesi'\) : 'yok'\}/);
 });
 
@@ -368,9 +364,10 @@ test('atama kutusu ÇİPİN İÇİNDE değil', () => {
 test('iş yükü sunucudan; istemcide türetilmiyor', () => {
   /*
     Ekranın gördüğü liste süzülmüş olabilir; süzülmüş listeden
-    hesaplanan yük yanlış olurdu.
+    hesaplanan yük yanlış olurdu. (Şerit Pano ile birlikte ekrandan
+    kalktı; okuma sunucudan sürüyor.)
   */
-  assert.match(PANEL, /isYuku\.map\(\(y\) =>/);
+  assert.match(PANEL, /sirketIsYuku\(b\.companyId\)/);
   assert.doesNotMatch(kodu(PANEL), /kartlar\.filter[^\n]*atananUye[^\n]*\.length/);
 });
 
@@ -753,7 +750,6 @@ test('Viewer dalı aday ayrıntısını AÇABİLİYOR', () => {
   assert.ok(i > 0, 'Viewer dalı bulunmalı');
   const dal = PANEL.slice(i, PANEL.indexOf('\n  return (', i));
 
-  assert.ok(dal.includes('onAday={'), 'panoda aday çipi açılabilmeli');
   assert.ok(dal.includes('<AdayIzgarasi'), 'liste görünümü de açılmalı');
   assert.ok(dal.includes('saltOkunur'), 'ızgara salt okunur olmalı');
 

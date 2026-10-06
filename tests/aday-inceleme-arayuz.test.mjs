@@ -58,52 +58,43 @@ function blok(metin, bas) {
 
 /* ------------------------------------------------------- 1. aday kartı */
 
-test('kart "Başvurduğu ilan" etiketiyle ilan başlığını yazıyor', () => {
-  assert.match(kart, />\s*Başvurduğu ilan\s*</);
+test('satır ilan adını okunur bir metin satırı olarak yazıyor; kutu ve kesme yok', () => {
   assert.match(kart, /const ilanBasligi = kart\.ilanBasligi\?\.trim\(\) \|\| null;/);
-});
-
-
-test('uzun ilan başlığı iki satırda kesiliyor, tam metin title ve erişilebilir adda', () => {
-  assert.match(kart, /title=\{ilanBasligi\}/);
-  /*
-    `block` YOK: line-clamp `display: -webkit-box` istiyor ve aynı öğedeki
-    `block` onu eziyordu — 375 pikselde başlık üç satır çiziliyordu (ölçüldü).
-  */
-  assert.match(kart, /className=\{`\$\{ilanAcik \? 'block ' : 'line-clamp-2 '\}break-words text-xs font-bold leading-snug`\}/);
-  /* Kart bir düğme ve aria-label içeriği eziyor: ilan adı etikette olmalı. */
+  /* Onaylı tasarım: büyük "Başvurduğu ilan" kutusu yerine tek metin satırı. */
+  assert.doesNotMatch(kart, />\s*Başvurduğu ilan\s*</);
+  const ilan = kart.slice(kart.indexOf('{ilanBasligi && ('), kart.lastIndexOf('{ilanBasligi}') + 20);
+  assert.match(ilan, /break-words text-sm font-bold leading-snug/);
+  /* Uzun ad telefonda da tam okunuyor: kesme, genişletme düğmesi, hover yok. */
+  assert.doesNotMatch(kart, /line-clamp|Devamını göster|title=\{ilanBasligi\}/);
+  /* Satır bir düğme ve aria-label içeriği eziyor: ilan adı etikette olmalı. */
   assert.match(kart, /ilanBasligi \? `Başvurduğu ilan: \$\{ilanBasligi\}` : null/);
 });
 
-test('kesilen ilan başlığı dokunarak genişliyor; hover\'a kalmıyor', () => {
-  /* Yalnız gerçekten kesildiyse (ölçülerek) ya da açıksa düğme var. */
-  assert.match(kart, /setIlanKesik\(oge\.scrollHeight > oge\.clientHeight \+ 1\)/);
-  assert.match(kart, /new ResizeObserver\(olc\)/);
-  assert.match(kart, /\{\(ilanKesik \|\| ilanAcik\) && \(/);
-  const dugme = kart.slice(kart.indexOf('{(ilanKesik || ilanAcik) && ('), kart.indexOf("'Devamını göster'") + 40);
-  assert.match(dugme, /aria-expanded=\{ilanAcik\}/);
-  assert.match(dugme, /aria-controls=\{`ilan-basligi-\$\{kart\.id\}`\}/);
-  assert.match(dugme, /min-h-11/);
-  /* Kartı açmıyor: ayrı düğme, olayı durduruyor, tıklamayı kendisi alıyor. */
-  assert.match(dugme, /e\.stopPropagation\(\);/);
-  assert.match(dugme, /pointer-events-auto relative z-10/);
-  assert.match(dugme, /\{ilanAcik \? 'Daha az göster' : 'Devamını göster'\}/);
-});
-
-test('kart bir kap: tek açma düğmesi, iç içe düğme yok', () => {
-  /* Açma düğmesi boş ve kabı kaplıyor; içerik tıklamayı ona geçiriyor. */
+test('tüm satır tek düğme; iç içe düğme yok', () => {
   assert.match(kart, /data-aday-karti=\{kart\.id\}/);
-  assert.match(kart, /className=\{`absolute inset-0 cursor-pointer rounded-2xl \$\{SIRKET_ODAK\}`\}\s*\/>/);
-  assert.match(kart, /<div className="pointer-events-none relative flex min-h-0 flex-1 flex-col gap-2\.5 p-3">/);
-  /* İkinci düğme açma düğmesinin İÇİNDE değil: açma düğmesi kendini kapatıyor. */
-  const ac = kart.indexOf('data-aday-karti={kart.id}');
-  const kapanis = kart.indexOf('/>', ac);
-  assert.ok(kart.indexOf("'Devamını göster'") > kapanis);
+  assert.equal((kart.match(/<button/g) ?? []).length, 1);
+  assert.match(kart, /onClick=\{onAc\}/);
 });
 
+test('satırda yalnız onaylı alanlar: şehir, yetenek ve uyum listeden çıktı', () => {
+  assert.doesNotMatch(kart, /kart\.sehir|kart\.yetenekler|UYUM_ETIKETI|uyumGoster|kart\.cvYolu/);
+  assert.match(kart, /kart\.universite/);
+  assert.match(kart, /\[kart\.bolum, kart\.sinif\]/);
+  assert.match(kart, /durumRozeti\(kart\.durum\)/);
+  assert.match(kart, /tarihYaz\(kart\.tarih\)/);
+});
 
-test('her başvuru ayrı kart; anahtar ve seçim başvuru kimliğiyle', () => {
-  assert.match(izgara, /<li key=\{k\.id\} className="flex">/);
+test('mavi çerçeve yalnız gerçekten seçili satırda', () => {
+  assert.match(kart, /secili\s*\?\s*\{ boxShadow: `inset 0 0 0 2px \$\{SIRKET_VURGU\}`/);
+  assert.doesNotMatch(kart, /odakli/);
+  /* Seçim son açılan başvuru; liste hiçbir şey seçilmeden açılıyor. */
+  assert.match(izgara, /const \[secili, setSecili\] = React\.useState<string \| null>\(null\);/);
+  assert.match(izgara, /secili=\{k\.id === secili\}/);
+  assert.match(izgara, /if \(acikId\) setSecili\(acikId\);/);
+});
+
+test('her başvuru ayrı satır; anahtar ve seçim başvuru kimliğiyle', () => {
+  assert.match(izgara, /<li key=\{k\.id\}/);
   assert.match(izgara, /adayiAc\(k\.id\)/);
   /* Açık kart ham listeden kimlikle çözülüyor; öğrenci kimliğiyle değil. */
   assert.match(izgara, /kartlar\.find\(\(k\) => k\.id === acikId\)/);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, BadgeCheck, BookOpen, Briefcase, Lock, Plus, ShieldCheck, Users } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Lock, Plus, ShieldCheck, Users } from 'lucide-react';
 import { listingSlug } from '../lib/slug';
 import {
   BIRINCIL_DUGME,
@@ -21,7 +21,6 @@ import { SirketAdayProfili } from './SirketAdayProfili';
 import { SirketAdaylar } from './SirketAdaylar';
 import { IlanFormu } from './IlanFormu';
 import { AdayIzgarasi } from './AdayIzgarasi';
-import { BasvuruPanosu } from './BasvuruPanosu';
 import type { GuncelProfilYukleyici, Iletisim, PaylasimYukleyici } from './AdayCekmecesi';
 import { GenelBakis } from './GenelBakis';
 import { IlanSiralamasi } from './IlanSiralamasi';
@@ -876,6 +875,11 @@ const Basvuranlar: React.FC<{
   ilanlar: Record<string, unknown>[];
   onNavigate: (y: string) => void;
   onDurum: (id: string, d: string) => Promise<void>;
+  /*
+    PANO KALKTI (6 Ekim 2026): ekip, iş yükü, ölçütler, dağıtım ve sorumlu
+    atama yalnız Pano'da çiziliyordu. Ekran tek liste olunca bu ekran
+    onları okumuyor; veri akışı ve BasvuruPanosu bileşeni yerinde duruyor.
+  */
   ekip: EkipUyesi[];
   isYuku: IsYukuSatiri[];
   olcutler: DegerlendirmeOlcutu[];
@@ -898,11 +902,6 @@ const Basvuranlar: React.FC<{
   baglam,
   kartlar,
   ilanlar,
-  ekip,
-  isYuku,
-  olcutler,
-  onDagit,
-  onSorumlu,
   onNavigate,
   onDurum,
   onMulakatTarihi,
@@ -919,143 +918,43 @@ const Basvuranlar: React.FC<{
   const kartAcik = adayGorebilir(baglam.kademe);
 
   /*
-    SAYFANIN KENDİ BAŞLIĞI — "BAŞVURULAR" (26 Eylül 2026)
+    SAYFA BAŞLIĞI GÖRÜNÜR: "BAŞVURANLAR" + GERÇEK BAŞVURU SAYISI
+    (6 Ekim 2026, kullanıcının onayladığı tasarım)
 
-    `h1` dört durumda da (ilan yok, kapalı kademe, boş liste, dolu liste)
-    aynı yerde. Sayı yalnız kart görebilen kademede ve liste doluyken:
-    öteki kademede bilinmiyor ("0 başvuru" yalan olurdu). Doğrulama
-    rozeti burada TEKRARLANMIYOR — profil sayfasında (Şirketim).
-  */
-  /*
-    SAYFA BAŞLIĞI EKRANDA YAZMIYOR, DOM'DA DURUYOR
+    27 Eylül'de başlık ekrandan kaldırılıp yalnız ekran okuyucuya
+    bırakılmıştı. Onaylı tasarımda başlık yeniden görünür ve sayı onun
+    yanında: listenin üstündeki ayrı "x aday" satırı kalktı.
 
-    "Başvurular" başlığı ve altındaki açıklama kaldırıldı: alt gezinme
-    çubuğunda zaten "Başvurular" seçili duruyor ve aynı sözcüğü iki kez
-    okumak ekranın en değerli yerini harcıyordu (kullanıcı bildirdi,
-    27 Eylül 2026).
-
-    `h1` SİLİNMEDİ, GÖRÜNMEZ OLDU. Sayfanın tek başlığı buydu; tamamen
-    kaldırmak ekran okuyucuyla başlıktan başlığa gezen kullanıcıya
-    başlıksız bir sayfa bırakırdı. Alt çubuktaki etiket bir başlık değil,
-    bir gezinme bağlantısı — onun yerini tutmuyor.
-
-    ALTTAKİ AÇIKLAMA CÜMLESİ GİTTİ ama içindeki SAYI kaybolmadı:
-    "İlanlarınıza gelen 3 başvuru." satırı toplam sayıyı gösteren tek
-    yerdi. Sayı artık ızgaranın kendi satırında (`AdayIzgarasi`,
-    `basliksiz` dalı) — listenin hemen üstünde, ait olduğu yerde.
+    SAYI BAŞVURU SAYISI, ADAY DEĞİL: aynı öğrencinin iki ilana başvurusu
+    iki başvuru. Yalnız kart görebilen kademede ve sıfırdan büyükse
+    yazıyor — öteki kademede sayı bilinmiyor, "0 başvuru" da bilgi değil.
   */
   const baslik = (
-    <h1 className="sr-only">Başvurular</h1>
+    <div>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl" style={{ color: SIRKET_METIN }}>
+          Başvuranlar
+        </h1>
+        {kartAcik && kartlar.length > 0 && (
+          <span
+            className="rounded-full px-3 py-1 text-sm font-bold"
+            style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
+          >
+            {kartlar.length} başvuru
+          </span>
+        )}
+      </div>
+      <p className="mt-1 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
+        İlanlarına gelen başvurular
+      </p>
+    </div>
   );
 
   /*
-    ÖĞRENCİLERİ KEŞFET — BAŞLIĞIN HEMEN ALTINDA
-
-    Başvuran ile aday farklı: başvuran bir ilana başvurmuş kişi, aday
-    profilini iş/staj listesine kendisi açmış kişi.
-
-    YERLEŞİM İKİ KEZ DEĞİŞTİ, İKİSİ DE KULLANICI KARARI
-    ---------------------------------------------------
-    Önce başlığın altında yeşil bir düğmeydi ve sayfanın birincil
-    eylemiyle yarışıyordu; sayfanın SONUNA alındı. Ama başvurusu
-    olmayan şirkette sayfa "Henüz başvuru yok" ile başlıyor ve aday
-    aramak tam da o şirketin işine yarayan şey — en altta kalması onu
-    görünmez kılıyordu. 27 Eylül 2026'da kullanıcı kartları yukarı
-    istedi; artık başlığın hemen altında, üç dalda da.
-
-    Yarışma sorunu biçimle çözüldü: kartlar ikincil yüzey (beyaz zemin,
-    ince kenar), birincil eylem hâlâ tek ve dolu mavi düğme.
-
-    Alt çubuğa altıncı sekme eklenmedi (beş öğe 320 px için ölçülü).
-    Adaylar ekranının kendi yetki kapısı değişmedi (SirketAdaylar).
+    "STAJ ARAYANLAR / İŞ ARAYANLAR" KUTULARI BU EKRANDAN KALKTI
+    (6 Ekim 2026). Keşif sayfası (/sirket/adaylar, SirketAdaylar)
+    silinmedi; bu ekran yalnız başvurularla ilgileniyor.
   */
-  const ogrencileriKesfet = (
-    <section
-      /*
-        BAŞLIK KALDIRILDI (27 Eylül 2026)
-
-        "Aday mı arıyorsunuz?" satırı kartların üstünde boşuna yer
-        kaplıyordu: kartların kendi başlıkları ("Staj arayanlar",
-        "İş arayanlar") ne olduklarını zaten söylüyor. Kullanıcı
-        kaldırılmasını istedi.
-
-        Bölüm adsız kalmadı: ad doğrudan `aria-label` ile veriliyor.
-        Görünür bir `h2` bırakıp `sr-only` yapmak işe yaramazdı — kap
-        `space-y-2` kullanıyor ve gizli başlık yine ilk kardeş sayılır,
-        kartlar kaldırılan başlığın boşluğunu taşımaya devam ederdi.
-      */
-      aria-label="Aday arama"
-      className="space-y-2"
-    >
-      {/*
-        İKİ EŞİT KART, TEK BAĞLANTI DEĞİL
-
-        Önce tek bir "Öğrencileri keşfet" bağlantısı vardı ve iki listeyi
-        (iş arayan / staj arayan) ancak açtıktan sonra görüyordunuz. İki
-        arayış aynı şey değil ve şirket genelde ikisinden birini arıyor;
-        seçim sayfaya girmeden yapılabilmeli.
-
-        Kartlar EŞİT genişlikte (`grid-cols-2`): biri daha büyük olsaydı
-        ötekini ikincil bir seçenek gibi gösterirdi, oysa ikisi eşdeğer.
-
-        Renk panelin kendi vurgusundan (`SIRKET_VURGU`, mavi) geliyor;
-        bu ekran bir dönem yeşil kalmıştı ve panelin geri kalanıyla
-        uyuşmuyordu.
-      */}
-      <div className="grid grid-cols-2 gap-2">
-        {[
-          {
-            tur: 'staj',
-            etiket: 'Staj arayanlar',
-            aciklama: 'Staj aradığını belirten öğrenciler',
-            /*
-              KEP İKONU BİLEREK KULLANILMIYOR
-
-              Mezuniyet kepi bu panelde yasaklı: kullanıcının kaldırttığı
-              bir geçiş kapısının işaretiydi ve tests/isveren-gecis-erisimi
-              onun geri gelmesini engelliyor. Test kaynağı ham metin olarak
-              tarıyor, yani yasaklı adı bir yorumda anmak bile testi
-              düşürüyor. Buradaki kullanım o kapıyla alakasız olurdu ama
-              testi gevşetmek kapının dönmesine yol açardı; ikon değişti.
-            */
-            Ikon: BookOpen,
-          },
-          {
-            tur: 'is',
-            etiket: 'İş arayanlar',
-            aciklama: 'İş aradığını belirten öğrenciler',
-            Ikon: Briefcase,
-          },
-        ].map(({ tur, etiket, aciklama, Ikon }) => (
-          <a
-            key={tur}
-            href={`/sirket/adaylar?tur=${tur}`}
-            onClick={(olay) => {
-              if (olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey || olay.button !== 0) return;
-              olay.preventDefault();
-              onNavigate(`/sirket/adaylar?tur=${tur}`);
-            }}
-            className="flex min-h-11 flex-col gap-2 rounded-2xl border bg-white p-4 transition-colors hover:bg-blue-50"
-            style={{ borderColor: SIRKET_KENAR }}
-          >
-            <span
-              aria-hidden
-              className="flex h-10 w-10 items-center justify-center rounded-full"
-              style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
-            >
-              <Ikon className="h-5 w-5" />
-            </span>
-            <span className="text-sm font-bold" style={{ color: SIRKET_VURGU_KOYU }}>
-              {etiket}
-            </span>
-            <span className="text-xs leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
-              {aciklama}
-            </span>
-          </a>
-        ))}
-      </div>
-    </section>
-  );
 
   /*
     HİÇ İLAN YOKSA: başvuru gelecek bir yer yok. Kademe ne olursa olsun
@@ -1066,7 +965,6 @@ const Basvuranlar: React.FC<{
     return (
       <div className="space-y-4">
         {baslik}
-        {ogrencileriKesfet}
         <div className={`${KUTU} text-center`} style={kutuStil}>
           <span
             aria-hidden
@@ -1099,7 +997,6 @@ const Basvuranlar: React.FC<{
     return (
       <div className="space-y-4">
         {baslik}
-        {ogrencileriKesfet}
         <div className={KUTU} style={kutuStil}>
           <p
             className="flex items-center gap-2 text-lg font-extrabold"
@@ -1154,253 +1051,35 @@ const Basvuranlar: React.FC<{
       : null;
 
   /*
-    GÖRÜNÜM SEÇİCİ — LİSTE / PANO (5 Ekim 2026)
+    TEK LİSTE (6 Ekim 2026): Liste/Pano seçimi kalktı; ekran yalnız
+    AdayIzgarasi'nı çiziyor. Sayfa başlığı yukarıda, ızgara kendi
+    başlığını çizmiyor (`basliksiz`).
 
-    Liste (AdayIzgarasi) tek adayla çalışmanın yeri: klavye kısayolları,
-    çekmece, durum değiştirme. Pano dağılımı görmenin yeri: hangi ilanda
-    kim hangi aşamada takıldı. İkisi aynı veriyi çiziyor; biri ötekinin
-    yerine geçmiyor.
-
-    Seçim YEREL ve kalıcı değil: adres çubuğuna yazılsaydı paylaşılan
-    `?aday=` bağlantıları hangi görünümde açılacağını da taşımak zorunda
-    kalırdı ve derin bağlantı akışı ikiye bölünürdü.
-  */
-  const [gorunum, setGorunum] = React.useState<'liste' | 'pano'>('liste');
-
-  /*
-    İŞ YÜKÜ ŞERİDİ
-
-    Üye başına AÇIK başvuru sayısı; sonuçlanmış işler düşülüyor çünkü
-    yapılacak iş kalmıyor. "Sorumlusu yok" ayrı bir satır olarak duruyor
-    ve ilk sırada: dağıtılmayı bekleyen iş, kişilerin yükü arasında
-    erimemeli.
-
-    SAYILAR SUNUCUDAN, istemcide türetilmiyor: ekranın gördüğü liste
-    süzülmüş olabilir ve süzülmüş listeden hesaplanan yük yanlış olurdu.
-
-    Yalnız panoda çiziliyor — liste görünümü tek adayla çalışmanın yeri
-    ve orada ekip tablosu dikkat dağıtıyordu.
-  */
-  const isYukuSeridi = isYuku.length > 0 && (
-    <div className="rounded-2xl border p-3" style={kutuStil}>
-      <p className="mb-2 text-xs font-bold uppercase tracking-wide" style={{ color: SIRKET_METIN_IKINCIL }}>
-        Açık başvuru yükü
-      </p>
-      <ul className="flex flex-wrap gap-2">
-        {isYuku.map((y) => (
-          <li
-            key={y.uyeId ?? 'yok'}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2.5 py-1.5 text-sm"
-          >
-            <span className="truncate" style={{ color: y.uyeId ? SIRKET_METIN : SIRKET_METIN_IKINCIL }}>
-              {y.ad}
-            </span>
-            <span className="font-extrabold" style={{ color: SIRKET_METIN }}>{y.acik}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-
-  /*
-    ÖNYARGISIZ İNCELEME PANODA DA AÇIK BAŞLIYOR MU — IZGARAYLA AYNI
-    VARSAYILAN (kapalı). Anahtar ızgaranın içinde; pano o tercihi
-    okuyamıyor çünkü ızgaranın yerel durumu. Bu yüzden panonun kendi
-    anahtarı var ve ikisi AYNI işlevi (`onyargisizla`) kullanıyor.
-    İleride tercih yukarı taşınırsa tek anahtar kalacak.
-  */
-  const [panoOnyargisiz, setPanoOnyargisiz] = React.useState(false);
-
-  const gorunumDugmesi = (deger: 'liste' | 'pano', etiket: string) => (
-    <button
-      type="button"
-      onClick={() => setGorunum(deger)}
-      aria-pressed={gorunum === deger}
-      className={`min-h-11 flex-1 cursor-pointer rounded-xl px-3 text-sm font-bold ${SIRKET_ODAK} ${
-        gorunum === deger ? 'bg-[#2563EB] text-white' : 'border border-gray-300 bg-white text-gray-800 hover:bg-gray-50'
-      }`}
-    >
-      {etiket}
-    </button>
-  );
-
-  /*
     VIEWER SALT OKUNUR (5 Ekim 2026)
 
-    `company_members.recruiter_role` 0001'den beri üç değer taşıyordu
-    ama hiçbir politika onu okumuyordu: Viewer da durum değiştirebiliyor,
-    not yazabiliyor, teklif verebiliyordu. Asıl kapı artık sunucuda
-    (`sirket_basvuru_yazabilir`, 20261122010000); buradaki dal aynı kuralı
-    ÖNCEDEN gösteriyor.
-
-    VIEWER EKRANDAN KESİLMİYOR — rolün amacı "görsün ama karışmasın".
-
-    ÖNCE FAZLA KESİLMİŞTİ (5 Ekim 2026 düzeltmesi): Viewer yalnız panoya
-    düşüyordu ve aday çipleri düğme bile değildi, yani adayın AYRINTISINI
-    hiç açamıyordu. "Yazamaz" sessizce "inceleyemez" olmuştu. Oysa Viewer
-    başvuruyu okuyabiliyor (okuma politikası değişmedi); ayrıntıyı
-    kapatmak, okuyabildiği veriyi ondan saklamak demekti.
-
-    Şimdi liste ve pano İKİSİ DE açık, çekmece açılıyor ve `saltOkunur`
-    ile işlem sütunu HİÇ ÇİZİLMİYOR. Kapalı düğme de yok: yapılamayacak
-    bir şey ekranda hiç görünmüyor.
+    Asıl kapı sunucuda (`sirket_basvuru_yazabilir`, 20261122010000);
+    buradaki dal aynı kuralı ÖNCEDEN gösteriyor. Viewer ekrandan
+    kesilmiyor — rolün amacı "görsün ama karışmasın": liste ve inceleme
+    ekranı açık, `saltOkunur` ile işlem sütunu HİÇ ÇİZİLMİYOR ve yazma
+    işlevlerinin hiçbiri verilmiyor. Okuma işlevleri (profil, paylaşımlar,
+    izinli iletişim) duruyor; hepsinin kapısı sunucuda.
   */
   if (!baglam.basvuruYazabilir) {
     return (
-      /*
-        Aday arama kartları Viewer'da da BAŞLIĞIN HEMEN ALTINDA: o blok
-        27 Eylül 2026'da kullanıcı bildirimiyle sayfanın sonundan buraya
-        alındı ve her dalda aynı yerde duruyor. Viewer aday listesini
-        görebiliyor (liste üyelik + doğrulama istiyor, yazma yetkisi
-        değil), dalın dışında bırakmak bilgiyi gizlemek olurdu.
-      */
       <div className="space-y-4">
         {baslik}
-        {ogrencileriKesfet}
-        <div className="rounded-2xl border p-3 sm:p-4" style={kutuStil}>
-          <p className="text-sm font-bold" style={{ color: SIRKET_METIN }}>
-            Görüntüleme yetkisi
-          </p>
-          <p className="mt-1 text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
-            Başvuruları görebilir, durumlarını izleyebilirsin. Durum değiştirme,
-            not yazma ve teklif verme şirket sahibinde ve işe alım yetkililerinde.
-          </p>
-        </div>
-        <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-          <input
-            type="checkbox"
-            checked={panoOnyargisiz}
-            onChange={(e) => setPanoOnyargisiz(e.target.checked)}
-            className="h-4 w-4 cursor-pointer accent-[#2563EB]"
-          />
-          Önyargısız inceleme (ad ve fotoğraf gizli)
-        </label>
-        {isYukuSeridi}
-
-        {/* Viewer da iki görünüm arasında geçebiliyor; ikisi de okuma. */}
-        <div className="flex gap-2">
-          {gorunumDugmesi('liste', 'Liste')}
-          {gorunumDugmesi('pano', 'Pano')}
-        </div>
-
-        {gorunum === 'pano' ? (
-          <BasvuruPanosu
-            kartlar={kartlar}
-            ilanlar={ilanlar}
-            onyargisiz={panoOnyargisiz}
-            /*
-              Ekip VERİLİYOR ama `onSorumlu` verilmiyor: Viewer sorumlunun
-              ADINI görüyor, değiştiremiyor. Kutu salt okunur metne düşüyor.
-            */
-            ekip={ekip}
-            /* Ölçütler okunuyor: değerlendirme GEÇMİŞİ Viewer'a da açık. */
-            olcutler={olcutler}
-            /*
-              onAday VERİLİYOR: çip tıklanabilir ve ayrıntı salt okunur
-              açılıyor. Önceden verilmiyordu ve Viewer adayın ayrıntısını
-              hiç göremiyordu — gerekçe dalın başında.
-            */
-            onAday={(id) => {
-              setGorunum('liste');
-              onNavigate(`/sirket/basvuranlar?aday=${encodeURIComponent(id)}`);
-            }}
-          />
-        ) : (
-          /*
-            SALT OKUNUR IZGARA: yazma işlevlerinin HİÇBİRİ verilmiyor
-            (`onDurum`, `onNot`, `onTeklif`, `onDavet`, `onMulakatTarihi`
-            artık isteğe bağlı). `saltOkunur` çekmecedeki işlem sütununu
-            da çizdirmiyor. Okuma işlevleri duruyor: profil, paylaşımlar
-            ve kabul edilmiş teklifte iletişim — hepsinin kapısı sunucuda.
-          */
-          <AdayIzgarasi
-            basliksiz
-            saltOkunur
-            kartlar={kartlar}
-            ilanAdresi={ilanAdresi}
-            baslangicIlan={baslangicIlan}
-            onNavigate={onNavigate}
-            onIletisim={onIletisim}
-            onGuncelProfil={onGuncelProfil}
-            onPaylasimlar={onPaylasimlar}
-            yerelGorselAdresi={yerelGorselAdresi}
-            acilacakAday={acilacakAday}
-            onAdayAcildi={onAdayAcildi}
-            onGoruntulendi={onGoruntulendi}
-          />
-        )}
-      </div>
-    );
-  }
-
-  return (
-    /*
-      BAŞLIK BİR KEZ: sayfanın `h1`'i yukarıda; AdayIzgarasi kendi
-      "Başvuranlar" başlığını ÇİZMİYOR (`basliksiz`), yoksa aynı sözcük
-      alt alta iki kez okunurdu. Süzülmüş sayı ("3 / 12 aday") ızgarada
-      kalıyor — o süzgecin durumu, sayfanın değil.
-    */
-    <div className="space-y-4">
-      {baslik}
-      {ogrencileriKesfet}
-
-      {/* İki görünüm, tek veri; seçici liste ile pano arasında. */}
-      <div className="flex gap-2">
-        {gorunumDugmesi('liste', 'Liste')}
-        {gorunumDugmesi('pano', 'Pano')}
-      </div>
-
-      {gorunum === 'pano' ? (
-        <>
-          {/*
-            Panonun kendi önyargısız inceleme anahtarı — gerekçesi
-            yukarıda. Etiket ızgaradakiyle aynı sözcükleri kullanıyor ki
-            iki ekranda iki farklı şey sanılmasın.
-          */}
-          <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-            <input
-              type="checkbox"
-              checked={panoOnyargisiz}
-              onChange={(e) => setPanoOnyargisiz(e.target.checked)}
-              className="h-4 w-4 cursor-pointer accent-[#2563EB]"
-            />
-            Önyargısız inceleme (ad ve fotoğraf gizli)
-          </label>
-          {isYukuSeridi}
-          <BasvuruPanosu
-            kartlar={kartlar}
-            ilanlar={ilanlar}
-            onyargisiz={panoOnyargisiz}
-            ekip={ekip}
-            onSorumlu={onSorumlu}
-            olcutler={olcutler}
-            /*
-              DENGELİ DAĞITIM BEKLETİLDİ (sade akış): `onDagit` verilmiyor,
-              pano düğmeyi çizmiyor. Sorumlu atama tek tek, isteğe bağlı
-              olarak duruyor; RPC yerinde.
-            */
-            /*
-              Çekmeceyi IZGARA açıyor: panodan seçilen aday derin
-              bağlantıya yazılıyor ve görünüm listeye dönüyor. Çekmecenin
-              ikinci bir kopyası yok.
-            */
-            onAday={(id) => {
-              setGorunum('liste');
-              onNavigate(`/sirket/basvuranlar?aday=${encodeURIComponent(id)}`);
-            }}
-          />
-        </>
-      ) : (
+        <p className="text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+          <span className="font-bold" style={{ color: SIRKET_METIN }}>Görüntüleme yetkisi: </span>
+          Başvuruları görebilir, durumlarını izleyebilirsin. Durum değiştirme ve not yazma
+          şirket sahibinde ve işe alım yetkililerinde.
+        </p>
         <AdayIzgarasi
           basliksiz
+          saltOkunur
           kartlar={kartlar}
           ilanAdresi={ilanAdresi}
           baslangicIlan={baslangicIlan}
           onNavigate={onNavigate}
-          onDurum={onDurum}
-          onMulakatTarihi={onMulakatTarihi}
-          onTeklif={onTeklif}
-          onDavet={onDavet}
           onIletisim={onIletisim}
           onGuncelProfil={onGuncelProfil}
           onPaylasimlar={onPaylasimlar}
@@ -1408,9 +1087,33 @@ const Basvuranlar: React.FC<{
           acilacakAday={acilacakAday}
           onAdayAcildi={onAdayAcildi}
           onGoruntulendi={onGoruntulendi}
-          onNot={onNot}
         />
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {baslik}
+      <AdayIzgarasi
+        basliksiz
+        kartlar={kartlar}
+        ilanAdresi={ilanAdresi}
+        baslangicIlan={baslangicIlan}
+        onNavigate={onNavigate}
+        onDurum={onDurum}
+        onMulakatTarihi={onMulakatTarihi}
+        onTeklif={onTeklif}
+        onDavet={onDavet}
+        onIletisim={onIletisim}
+        onGuncelProfil={onGuncelProfil}
+        onPaylasimlar={onPaylasimlar}
+        yerelGorselAdresi={yerelGorselAdresi}
+        acilacakAday={acilacakAday}
+        onAdayAcildi={onAdayAcildi}
+        onGoruntulendi={onGoruntulendi}
+        onNot={onNot}
+      />
     </div>
   );
 };

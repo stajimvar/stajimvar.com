@@ -743,9 +743,14 @@ export const Header: React.FC<HeaderProps> = ({
   */
   const sirketKabugu = userRole === 'company';
   const sirketIlanlarindaMi = /^\/sirket\/(ilanlar|ilan)(\/|$)/.test(bulunulanYol);
-  /* "Öğrencileri keşfet" (/sirket/adaylar) Başvurular ekranından açılıyor; sekme yanık kalıyor. */
-  const sirketBasvuranlarindaMi = /^\/sirket\/(basvuranlar|adaylar)(\/|$)/.test(bulunulanYol);
-  const sirketProfilindeMi = /^\/sirket\/profil(\/|$)/.test(bulunulanYol);
+  const sirketBasvuranlarindaMi = /^\/sirket\/basvuranlar(\/|$)/.test(bulunulanYol);
+  /*
+    ADAY KEŞFİ ŞİRKETİM'E AİT (6 Ekim 2026): keşfin girişi artık Şirketim
+    kartındaki "Adayları keşfet" bağlantısı. Keşif (/sirket/adaylar) ve
+    oradan açılan aday profili (/sirket/aday/<id>) Şirketim sekmesini
+    yakıyor; Başvurular yalnız /sirket/basvuranlar'da seçili.
+  */
+  const sirketProfilindeMi = /^\/sirket\/(profil|adaylar|aday)(\/|$)/.test(bulunulanYol);
   /* Şirket ana adresi: marka buraya götürüyor. */
   const anaAdres = sirketKabugu ? '/sirket/ilanlar' : '/';
 

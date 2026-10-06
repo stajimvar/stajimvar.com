@@ -20,15 +20,20 @@ const oku = (p) => fs.readFileSync(path.join(KOK, p), 'utf8');
 const PANEL = oku('src/sirket/SirketPaneli.tsx');
 const ADAYLAR = oku('src/sirket/SirketAdaylar.tsx');
 
-test('basvuranlar sayfasinda iki ESIT kart var', () => {
-  /* Biri buyuk olsaydi otekini ikincil secenek gibi gosterirdi. */
-  assert.ok(PANEL.includes('grid grid-cols-2 gap-2'), 'iki esit sutun olmali');
-  assert.ok(PANEL.includes('Staj arayanlar'), 'staj karti olmali');
-  assert.ok(PANEL.includes('İş arayanlar'), 'is karti olmali');
+test('kesif kutulari Basvuranlar ekranindan kalkti, kesif sayfasi duruyor', () => {
+  /*
+    6 Ekim 2026 (onayli sade tasarim): "Staj arayanlar / Is arayanlar"
+    kutulari Basvuranlar ekranindan kaldirildi. Kesif sayfasi silinmedi:
+    rota ve ekran yerinde.
+  */
+  const kod = yorumsuz(PANEL);
+  assert.ok(!kod.includes('ogrencileriKesfet'), 'kutu blogu kalmamali');
+  assert.ok(!kod.includes('Staj arayanlar') && !kod.includes('İş arayanlar'), 'kutular cizilmemeli');
+  assert.ok(PANEL.includes("if (yol.startsWith('/sirket/adaylar')) return { tur: 'adaylar' };"), 'kesif rotasi durmali');
+  assert.ok(PANEL.includes('<SirketAdaylar onNavigate={onNavigate} />'), 'kesif ekrani cizilmeli');
 });
 
-test('her kart kendi listesini aciyor', () => {
-  assert.ok(PANEL.includes('/sirket/adaylar?tur=${tur}'), 'kart turu adrese yazmali');
+test('kesif ekrani baslangic sekmesini adresten okuyor', () => {
   assert.ok(ADAYLAR.includes("get('tur') === 'is' ? 'is' : 'staj'"),
             'ekran baslangic sekmesini adresten okumali');
 });
@@ -50,77 +55,20 @@ test('aday ekrani panelin mavi temasinda', () => {
   assert.ok(ADAYLAR.includes('bg-blue-600'), 'birincil dugme mavi olmali');
 });
 
-test('kartlar panelin kendi renk belirteclerini kullaniyor', () => {
-  /* Elle hex yazmak, tema degisince bu kartlari geride birakirdi. */
-  const blok = PANEL.slice(PANEL.indexOf('const ogrencileriKesfet'));
-  const kart = blok.slice(0, blok.indexOf('</section>'));
-  assert.ok(kart.includes('SIRKET_ROZET'), 'rozet zemini belirtecten');
-  assert.ok(kart.includes('SIRKET_VURGU_KOYU'), 'vurgu rengi belirtecten');
-  assert.ok(!/#[0-9A-Fa-f]{6}/.test(kart), 'kartta elle hex renk olmamali');
-});
 
-test('aday kartlari basligin hemen altinda', () => {
+test('basvuranlar gorunumunun her cikisi once basligi ciziyor', () => {
   /*
-    Once sayfanin SONUNDAYDI. Basvurusu olmayan sirkette sayfa "Henuz
-    basvuru yok" ile basliyor ve aday aramak tam da o sirketin isine
-    yarayan sey; en altta kalmasi onu gorunmez kiliyordu (kullanici
-    bildirdi, 27 Eylul 2026). Uc dalda da basligin hemen altinda.
-  */
-  /*
-    DAL SAYISI DEGIL, HER DALIN KENDISI (5 Ekim 2026)
-
-    Burada once `dallar.length === 4` vardi: "{baslik} tam uc kez
-    geciyor". O sayi davranisi KORUMUYORDU. Ekranin kurali "basvuranlar
-    gorunumunun HER cikisi once basligi, hemen ardindan aday kartlarini
-    cizsin"; sabit sayi ise bundan baska bir seyi, metindeki tekrar
-    adedini olcuyordu. Iki yonden de yaniltiyordu:
-
-      - Basligi HIC cizmeyen yeni bir dal eklenseydi {baslik} sayisi
-        degismezdi ve test GECERDI -- yani korudugu sanilan sey zaten
-        korunmuyordu.
-      - Kurala uyan yeni bir dal eklenince (Viewer dali) test KIRILDI,
-        oysa ortada bir gerileme yoktu.
-
-    Dogrusu dallari saymak degil, HEPSINI tek tek gezmek. Asagisi
-    gorunumun her `return (` cikisini buluyor ve her birinde sirayi
-    dogruluyor. Bu hem eski testin yakaladigi her seyi yakaliyor hem de
-    onun kacirdigi "basliksiz dal" durumunu.
+    Dal SAYISI degil, HER DAL tek tek geziliyor (5 Ekim 2026 gerekcesi):
+    basligi cizmeyen yeni bir dal eklenirse test kirilmali.
   */
   const bas = PANEL.indexOf('const baslik = (');
   const son = PANEL.indexOf('export { KADEME }');
   assert.ok(bas > 0 && son > bas, 'basvuranlar gorunumu bulunmali');
-  const gorunum = PANEL.slice(bas, son);
-
-  /* Her cikis: `return (` satirindan sonraki ilk JSX. */
-  const cikislar = gorunum.split(/\n\s*return \(/).slice(1);
-  assert.ok(
-    cikislar.length >= 4,
-    'gorunumun en az dort cikisi olmali (ilan yok / kart kapali / viewer / normal)',
-  );
-
+  const cikislar = PANEL.slice(bas, son).split(/\n\s*return \(/).slice(1);
+  assert.ok(cikislar.length >= 4, 'ilan yok / kart kapali / viewer / normal');
   cikislar.forEach((c, i) => {
-    const bi = c.indexOf('{baslik}');
-    const ki = c.indexOf('{ogrencileriKesfet}');
-    assert.ok(bi >= 0, 'cikis ' + (i + 1) + ': {baslik} cizilmeli');
-    assert.ok(ki >= 0, 'cikis ' + (i + 1) + ': {ogrencileriKesfet} cizilmeli');
-    assert.ok(
-      ki > bi,
-      'cikis ' + (i + 1) + ': aday kartlari BASLIKTAN SONRA gelmeli',
-    );
-    /*
-      "Hemen ardindan": arada baska bir JSX dugumu olmamali. Yorum
-      satirlari serbest -- okunabilirligi kaybetmeden kurali korumak
-      icin yorumlar temizlenip bakiliyor.
-    */
-    const ara = c
-      .slice(bi + '{baslik}'.length, ki)
-      .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
-      .trim();
-    assert.equal(
-      ara,
-      '',
-      'cikis ' + (i + 1) + ': baslik ile kartlar arasina baska bir sey girmis: ' + ara.slice(0, 80),
-    );
+    const ilk = c.replace(/\{\/\*[\s\S]*?\*\/\}/g, '').replace(/^\s*<div className="space-y-4">\s*/, '');
+    assert.ok(ilk.startsWith('{baslik}'), 'cikis ' + (i + 1) + ': ilk dugum {baslik} olmali');
   });
 });
 
@@ -143,35 +91,29 @@ test('aday ekraninda iki sekme satiri dolduruyor', () => {
             'sekme dugmesi hucreyi doldurmali');
 });
 
-test('sayfa basligi ekranda yok ama DOM da duruyor', () => {
+test('sayfa basligi gorunur: Basvuranlar + gercek basvuru sayisi', () => {
   /*
-    Alt gezinme zaten "Basvurular" diyor; ayni sozcugu ekranin en ustunde
-    tekrar yazmak yeri harciyordu (kullanici bildirdi, 27 Eylul 2026).
-
-    Silmek yerine gorunmez yapildi: sayfanin tek basligi buydu ve tamamen
-    kaldirmak, ekran okuyucuyla baslikta gezen kullaniciya basliksiz bir
-    sayfa birakirdi. Gezinme etiketi baslik degildir.
+    27 Eylul 2026'da baslik sr-only yapilmisti. 6 Ekim 2026 onayli
+    tasarimda yeniden gorunur; yaninda gercek sayi, altinda kisa aciklama.
   */
-  assert.ok(PANEL.includes('<h1 className="sr-only">Başvurular</h1>'),
-            'baslik sr-only olarak durmali');
-  assert.ok(!PANEL.includes('İlanlarınıza gelen başvuruları buradan yönetin'),
-            'aciklama cumlesi kaldirilmali');
+  const bilesen = PANEL.slice(PANEL.indexOf('const baslik = ('));
+  assert.ok(!PANEL.includes('<h1 className="sr-only">'), 'baslik gizli kalmamali');
+  assert.ok(/<h1[^>]*>\s*Başvuranlar\s*<\/h1>/.test(bilesen), 'h1 Basvuranlar demeli');
+  assert.ok(bilesen.includes('{kartlar.length} başvuru'), 'sayi basvuru olarak yazmali');
+  assert.ok(bilesen.includes('İlanlarına gelen başvurular'), 'aciklama satiri olmali');
+  /* Sayi yalniz kart gorebilen kademede ve sifirdan buyukse. */
+  assert.ok(bilesen.includes('{kartAcik && kartlar.length > 0 && ('), 'sayi kosulu');
 });
 
-test('toplam basvuru sayisi kaybolmadi', () => {
+test('sayilan sey basvuru, aday degil', () => {
   /*
-    Kaldirilan aciklama cumlesi toplam sayiyi gosteren TEK yerdi
-    ("Ilanlariniza gelen 3 basvuru."). Sayi izgaranin kendi satirina
-    tasindi ve artik yalniz suzulunce degil HER ZAMAN yaziliyor --
-    yoksa suzgecsiz acan kisi kac basvurusu oldugunu goremezdi.
+    Ayni kisinin iki ilana basvurusu iki satir; "aday" demek yanlis olurdu.
+    Izgara toplam sayiyi tekrar yazmiyor (baslikta); yalniz suzulunce
+    "x / y basvuru gosteriliyor".
   */
-  const IZGARA = oku('src/sirket/AdayIzgarasi.tsx');
-  const i = IZGARA.indexOf('{basliksiz ? (');
-  assert.ok(i > 0, 'basliksiz dali bulunmali');
-  const dal = IZGARA.slice(i, i + 1400);
-  assert.ok(dal.includes('${kartlar.length} aday'), 'toplam sayi yazilmali');
-  assert.ok(!dal.includes('suzulmus.length !== kartlar.length &&'),
-            'sayi yalniz suzulunce degil her zaman gorunmeli');
+  const IZGARA = yorumsuz(oku('src/sirket/AdayIzgarasi.tsx'));
+  assert.ok(IZGARA.includes('{suzulmus.length} / {kartlar.length} başvuru gösteriliyor'), 'suzulmus sayi');
+  assert.ok(!/kartlar\.length\}? aday/.test(IZGARA), 'aday diye sayilmamali');
 });
 
 test('aday bolumunun basligi ekranda yok', () => {
@@ -187,13 +129,32 @@ test('aday bolumunun basligi ekranda yok', () => {
   );
 });
 
-test('aday bolumu adsiz kalmadi', () => {
+
+test('aday kesfinin girisi Sirketim sayfasinda: "Adaylari kesfet" -> /sirket/adaylar', () => {
   /*
-    Gorunur baslik yokken bolum ekran okuyucuda adsiz kalirdi.
-    sr-only bir h2 birakmak ise ise yaramazdi: kap space-y-2 kullaniyor
-    ve gizli baslik yine ilk kardes sayilir, kartlar kaldirilan basligin
-    bosluğunu tasimaya devam ederdi.
+    6 Ekim 2026: kesif kutulari Basvuranlar'dan kalkinca sayfaya giden
+    bir gezinme kalmamisti. Giris Sirketim kartinin sahip eylemlerinde;
+    gercek <a href> (yeni sekmede acilabiliyor), sol tik uygulama ici.
   */
-  assert.ok(PANEL.includes('aria-label="Aday arama"'), 'bolum adi verilmeli');
-  assert.ok(!PANEL.includes('id="ogrencileri-kesfet"'), 'olu baslik bagi kalmamali');
+  const PROFIL = oku('src/sirket/SirketProfili.tsx');
+  const GORUNUM = oku('src/sirket/SirketProfilGorunumu.tsx');
+  assert.ok(PROFIL.includes("const ADAYLAR_YOLU = '/sirket/adaylar';"), 'yol sabiti');
+  assert.ok(PROFIL.includes('adaylarYolu: ADAYLAR_YOLU,'), 'sahip eylemlerine verilmeli');
+  const blok = GORUNUM.slice(GORUNUM.indexOf('{sahip?.adaylarYolu && ('));
+  const baglanti = blok.slice(0, blok.indexOf('</a>'));
+  assert.ok(baglanti.includes('href={sahip.adaylarYolu}'), 'gercek baglanti olmali');
+  assert.ok(baglanti.includes('onClick={icTiklama(onNavigate, sahip.adaylarYolu)}'), 'uygulama ici gezinme');
+  assert.ok(baglanti.includes('Adayları keşfet'), 'etiket');
+  /* Rol ayrimi YOK: erisim kapisi kesif sayfasinin sunucu okumasinda (degismedi). */
+  assert.ok(!/recruiter_role|basvuruYazabilir|kademe/.test(baglanti), 'baglanti role gore gizlenmemeli');
+});
+
+test('Basvuranlar ekranina kesif, Pano, is yuku ve sorumlu atama geri gelmedi', () => {
+  const bilesen = yorumsuz(PANEL.slice(PANEL.indexOf('const Basvuranlar'), PANEL.indexOf('export { KADEME }')));
+  for (const yasak of ['/sirket/adaylar', '<BasvuruPanosu', 'isYuku.map', 'onSorumlu=', 'onDagit=', 'Açık başvuru yükü']) {
+    assert.ok(!bilesen.includes(yasak), 'Basvuranlar ' + yasak + ' cizmemeli');
+  }
+  /* Veriler silinmedi: is yuku ve olcutler hala sunucudan okunuyor, Pano bileseni duruyor. */
+  assert.ok(PANEL.includes('sirketIsYuku(b.companyId)'), 'is yuku okumasi durmali');
+  assert.ok(fs.existsSync(path.join(KOK, 'src/sirket/BasvuruPanosu.tsx')), 'Pano bileseni silinmemeli');
 });

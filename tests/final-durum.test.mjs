@@ -60,9 +60,9 @@ test('sayfada tek "Başvurular" başlığı var', () => {
     çiziliyor — kendi "Başvuranlar" başlığını atlıyor; aynı sözcük
     alt alta iki kez okunmuyor.
 
-    27 Eylül 2026: başlık EKRANDA görünmüyor (`sr-only`) — alt gezinme
-    zaten "Başvurular" diyor. Kural değişmedi: h1 hâlâ TEK ve hâlâ var.
-    Silinseydi sayfa başlıksız kalırdı; gezinme etiketi başlık değildir.
+    27 Eylül 2026: başlık ekrandan kaldırılıp `sr-only` yapılmıştı.
+    6 Ekim 2026 (onaylı tasarım): "Başvuranlar" yeniden GÖRÜNÜR ve
+    yanında gerçek başvuru sayısı. Kural değişmedi: h1 TEK.
   */
   const basvuranlarBileseni = panel.slice(panel.indexOf('const Basvuranlar'));
   assert.equal(
@@ -85,20 +85,20 @@ test('sayfada tek "Başvurular" başlığı var', () => {
   */
   const bosDal = izgara.slice(izgara.indexOf('if (kartlar.length === 0) {'), izgara.indexOf('İlanlarıma git'));
   assert.equal((bosDal.match(/<h2/g) ?? []).length, 1, 'boş durumda tek başlık');
-  assert.equal((izgara.match(/<h2/g) ?? []).length, 2, 'ızgarada başlık yok ya da dolu dalda birden fazla');
-  assert.match(izgara, /basliksiz \?/);
-  assert.match(izgara, /Başvuranlar/);
+  /* Dolu dalda ızgara başlık çizmiyor: sayfanın başlığı ve sayısı panelde. */
+  assert.equal((izgara.match(/<h2/g) ?? []).length, 1, 'ızgara dolu dalda başlık çizmemeli');
+  assert.doesNotMatch(basvuranlarBileseni, /<h1 className="sr-only"/, 'başlık görünür olmalı');
+  assert.match(basvuranlarBileseni, /\{kartlar\.length\} başvuru/, 'sayı başvuru olarak yazmalı');
 });
 
 /* -------------------------------------------- 2. uyum skoru gizli */
 
 test('final durumlarda uyum skoru gösterilmiyor', () => {
-  assert.match(kart, /const uyumGoster = !surecKapandi\(kart\.durum\)/);
-  /* Ham etiket doğrudan çizilmiyor; hepsi bayrağın arkasında. */
-  assert.ok(
-    !/\{UYUM_ETIKETI\[kart\.band[^}]*\}\s*<\/span>\s*\)\}\s*<\/span>\s*<span[^>]*>\s*\{kart\.band/.test(kart),
-    'uyum etiketi bayraktan bağımsız çiziliyor',
-  );
+  /*
+    6 Ekim 2026: uyum bilgisi listeden TAMAMEN çıktı (onaylı sade satır);
+    final durumda gizleme kuralı artık listede hiçbir durumda göstermemek.
+  */
+  assert.doesNotMatch(koddan(kart), /UYUM_ETIKETI|kart\.band|uyumGoster/);
 });
 
 test('süreç kapandı dört terminal durumu kapsıyor', async () => {
