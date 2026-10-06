@@ -1,5 +1,5 @@
 import React from 'react';
-import { BadgeCheck, Briefcase, Camera, Eye, ImagePlus, Link as LinkIkonu, MapPin, Pencil, Plus, Settings, Users } from 'lucide-react';
+import { BadgeCheck, Briefcase, Camera, Eye, ImagePlus, Link as LinkIkonu, MapPin, Pencil, Plus, Search, Settings, Users } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI, RENK_PRIMARY } from '../lib/renk-token';
 import { guvenliDisAdres } from '../lib/guvenli-url.mjs';
 import type { SosyalPaylasim } from '../lib/queries/sosyal';
@@ -110,6 +110,12 @@ export interface SahipEylemleri {
   onizleYolu?: string;
   /** Kapak fotoğrafı ekleme/değiştirme adresi; verilmezse bant yönlendirmesi yok. */
   kapakYolu?: string;
+  /**
+   * Aday keşfi (/sirket/adaylar). 6 Ekim 2026'dan beri Başvuranlar
+   * ekranında kutu yok; keşfin girişi burada. Erişim kuralı değişmedi:
+   * kapı keşif sayfasının kendi sunucu okumasında. Verilmezse bağlantı yok.
+   */
+  adaylarYolu?: string;
   /**
    * Hesap ayarlarını açar (çıkış orada). Öğrenci /cv kartındaki "Ayarlar"
    * hapının karşılığı; hap sırasında, fotoğraf paylaş ikonunun yanında.
@@ -683,6 +689,21 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
                 </a>
               )}
             </div>
+          )}
+          {/*
+            ADAY KEŞFİ — iki hücreli satırın altında kendi tam genişlik
+            satırı (6 Ekim 2026). Izgaraya üçüncü hücre olarak girseydi
+            telefonda tek başına yarım satır kalırdı.
+          */}
+          {sahip?.adaylarYolu && (
+            <a
+              href={sahip.adaylarYolu}
+              onClick={icTiklama(onNavigate, sahip.adaylarYolu)}
+              className={`${HAP} mt-2 w-full`}
+            >
+              <Search aria-hidden className="h-4 w-4 shrink-0" />
+              Adayları keşfet
+            </a>
           )}
 
           {/*

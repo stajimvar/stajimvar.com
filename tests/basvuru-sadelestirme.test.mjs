@@ -145,10 +145,12 @@ test('sunucu: görüntülenme tek bildirim, "CV açıldı" iddiası yok', () => 
 test('değerlendirme formu ve dengeli dağıtım arayüzde BEKLETİLDİ', () => {
   assert.match(PANO, /const DEGERLENDIRME_ETKIN = false;/);
   assert.match(PANO, /\{DEGERLENDIRME_ETKIN && \(/);
-  /* Yazabilen dalda pano `onDagit` almıyor → düğme çizilmiyor. */
-  const i = PANEL.indexOf('DENGELİ DAĞITIM BEKLETİLDİ');
-  assert.ok(i > 0);
-  assert.doesNotMatch(kodu(PANEL.slice(i - 400, i + 400)), /onDagit=\{onDagit\}/);
+  /*
+    Başvuranlar tek liste (6 Ekim 2026): Pano çizilmiyor, dağıtım düğmesi
+    de yok — `onDagit` hiçbir yere geçirilmiyor.
+  */
+  const bilesen = kodu(PANEL.slice(PANEL.indexOf('const Basvuranlar')));
+  assert.doesNotMatch(bilesen, /<BasvuruPanosu|onDagit=\{onDagit\}/);
 });
 
 /* ------------------------------------------------------ öğrenci */
