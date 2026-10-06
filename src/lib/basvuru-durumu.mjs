@@ -128,6 +128,106 @@ export const SIRKET_DURUMLARI = DURUM_SIRASI.filter((d) => !OGRENCI_KARARLARI.in
 export const SADE_SIRKET_DURUMLARI = ['submitted', 'under_review', 'rejected'];
 
 /**
+ * SADE AKIŞ — LİSTE SÜZGECİ VE PANO SÜTUNLARI İÇİN TEK KURAL
+ *
+ * Başvuranlar ekranı dört ana durumla düşünüyor: Yeni, İnceleniyor,
+ * Olumsuz, Geri çekildi. Liste süzgeci de Pano sütunları da BU listeden
+ * kuruluyor; iki ekran ayrı ayrı tanımlasaydı biri değişip öteki geride
+ * kalırdı.
+ *
+ * KALDIRILAN AŞAMALAR (değerlendirme, görüşme, teklif ve teklife verilen
+ * yanıtlar) ana seçenek DEĞİL. O durumlardaki eski kayıtlar silinmiyor ve
+ * dönüştürülmüyor; tek bir "Eski süreç kayıtları" grubunda toplanıyor ve
+ * o grup YALNIZ böyle bir kayıt varsa görünüyor. Kartlar gerçek geçmiş
+ * durumu (ör. "Görüşme", "Teklif kabul edildi") rozetinde göstermeye
+ * devam ediyor — grup yalnız nerede bulunacağını söylüyor.
+ */
+export const SADE_DURUM_GRUPLARI = [
+  { anahtar: 'submitted', etiket: 'Yeni' },
+  { anahtar: 'under_review', etiket: 'İnceleniyor' },
+  { anahtar: 'rejected', etiket: 'Olumsuz' },
+  { anahtar: 'withdrawn', etiket: 'Geri çekildi' },
+];
+
+export const ESKI_SUREC_GRUBU = { anahtar: 'eski', etiket: 'Eski süreç kayıtları' };
+
+export const ESKI_SUREC_DURUMLARI = [
+  'technical_assessment',
+  'interview_scheduled',
+  'offer_extended',
+  'offer_accepted',
+  'offer_declined',
+];
+
+/**
+ * Bir başvurunun hangi gruba düştüğü. Bilinmeyen ya da boş durum
+ * "Yeni"ye düşüyor: kart kaybolmasın (panodaki eski kuralla aynı tutum).
+ */
+export function sadeDurumGrubu(durum) {
+  const d = String(durum ?? '').trim();
+  if (ESKI_SUREC_DURUMLARI.includes(d)) return ESKI_SUREC_GRUBU.anahtar;
+  if (SADE_DURUM_GRUPLARI.some((g) => g.anahtar === d)) return d;
+  return 'submitted';
+}
+
+/**
+ * Süzgeç seçenekleri ve sayıları.
+ *
+ * Sayılar verilen kartlar üzerinden (çağıran, durum DIŞINDAKİ süzgeçleri
+ * — ilan, arama — önceden uygulamış listeyi veriyor). Böylece "Yeni (2)"
+ * seçildiğinde listede gerçekten 2 aday kalıyor.
+ *
+ * "Eski süreç kayıtları" yalnız böyle bir kayıt varsa ya da o an seçiliyse
+ * listede: seçiliyken kaybolsaydı ekran neyle süzüldüğünü söyleyemezdi.
+ */
+export function durumSuzgeciSecenekleri(kartlar, secili = '') {
+  const sayac = {};
+  for (const k of kartlar ?? []) {
+    const g = sadeDurumGrubu(k?.durum ?? k?.status);
+    sayac[g] = (sayac[g] ?? 0) + 1;
+  }
+  const secenekler = [
+    { deger: '', etiket: 'Tüm durumlar', sayi: (kartlar ?? []).length },
+    ...SADE_DURUM_GRUPLARI.map((g) => ({ deger: g.anahtar, etiket: g.etiket, sayi: sayac[g.anahtar] ?? 0 })),
+  ];
+  const eski = sayac[ESKI_SUREC_GRUBU.anahtar] ?? 0;
+  if (eski > 0 || secili === ESKI_SUREC_GRUBU.anahtar) {
+    secenekler.push({ deger: ESKI_SUREC_GRUBU.anahtar, etiket: ESKI_SUREC_GRUBU.etiket, sayi: eski });
+  }
+  return secenekler;
+}
+
+/**
+ * Pano sütunları — süzgeçle AYNI gruplar, aynı sırayla.
+ *
+ * Dört ana sütun her zaman çiziliyor (boşsa "yok" diyor); "Eski süreç
+ * kayıtları" sütunu yalnız o ilanda böyle bir kayıt varsa. Kartların
+ * sırası korunuyor; hiçbir kart iki sütuna düşmüyor ya da dışarıda
+ * kalmıyor.
+ */
+export function sadeDurumSutunlari(kartlar) {
+  const liste = kartlar ?? [];
+  const grubunKartlari = (anahtar) =>
+    liste.filter((k) => sadeDurumGrubu(k?.durum ?? k?.status) === anahtar);
+  const sutunlar = SADE_DURUM_GRUPLARI.map((g) => ({
+    anahtar: g.anahtar,
+    etiket: g.etiket,
+    kartlar: grubunKartlari(g.anahtar),
+  }));
+  const eski = grubunKartlari(ESKI_SUREC_GRUBU.anahtar);
+  if (eski.length > 0) {
+    sutunlar.push({ anahtar: ESKI_SUREC_GRUBU.anahtar, etiket: ESKI_SUREC_GRUBU.etiket, kartlar: eski });
+  }
+  return sutunlar;
+}
+
+/** Kart seçili duruma uyuyor mu? Boş seçim herkesi geçiriyor. */
+export function durumSuzgecineUyar(kart, secili) {
+  if (!secili) return true;
+  return sadeDurumGrubu(kart?.durum ?? kart?.status) === secili;
+}
+
+/**
  * Sade akışta tek birincil adım: yeni başvuruyu incelemeye almak.
  * Sonrası (arama, e-posta) site dışında; ekran şirketi bir sonraki
  * aşamaya zorlamıyor.

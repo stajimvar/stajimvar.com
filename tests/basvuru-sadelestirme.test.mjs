@@ -3,9 +3,16 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {
+  DURUM_ADI,
+  ESKI_SUREC_DURUMLARI,
   PAYLASIM_SURUMU,
+  SADE_DURUM_GRUPLARI,
   SADE_SIRKET_DURUMLARI,
   adayIletisimiAcik,
+  durumSuzgeciSecenekleri,
+  durumSuzgecineUyar,
+  sadeDurumGrubu,
+  sadeDurumSutunlari,
   sadeSonrakiDurum,
 } from '../src/lib/basvuru-durumu.mjs';
 
@@ -281,4 +288,86 @@ test('sunucu: şirket kaldırılan aşamalara geçemez ve davet/teklif yazamaz',
   assert.match(GOC_KORUMA, /if v_aktor is null or public\.is_admin\(\) then/);
   assert.match(GOC_KORUMA, /if v_aktor = new\.student_id then/);
   assert.match(GOC_KORUMA, /before update on public\.applications/);
+});
+
+/* ------------------------------------- durum süzgeci ve pano sütunları */
+
+const KARISIK = [
+  { id: 'a', durum: 'submitted' },
+  { id: 'b', durum: 'under_review' },
+  { id: 'c', durum: 'rejected' },
+  { id: 'd', durum: 'withdrawn' },
+  { id: 'e', durum: 'interview_scheduled' },
+  { id: 'f', durum: 'offer_accepted' },
+  { id: 'g', durum: 'offer_declined' },
+  { id: 'h', durum: 'technical_assessment' },
+  { id: 'i', durum: 'offer_extended' },
+  { id: 'j', durum: 'submitted' },
+];
+
+test('süzgeç: ana seçenekler yalnız Tüm durumlar + dört sade durum', () => {
+  const yalnizSade = KARISIK.filter((k) => !ESKI_SUREC_DURUMLARI.includes(k.durum));
+  const s = durumSuzgeciSecenekleri(yalnizSade);
+  assert.deepEqual(
+    s.map((x) => x.etiket),
+    ['Tüm durumlar', 'Yeni', 'İnceleniyor', 'Olumsuz', 'Geri çekildi'],
+  );
+  assert.deepEqual(s.map((x) => x.sayi), [5, 2, 1, 1, 1]);
+  /* Kaldırılan aşamaların adı hiçbir seçenekte yok. */
+  for (const d of ESKI_SUREC_DURUMLARI) {
+    assert.ok(!s.some((x) => x.etiket === DURUM_ADI[d]), `${DURUM_ADI[d]} ana seçenek olmamalı`);
+  }
+});
+
+test('süzgeç: eski kayıt varsa TEK "Eski süreç kayıtları" seçeneği, sayısı doğru', () => {
+  const s = durumSuzgeciSecenekleri(KARISIK);
+  assert.deepEqual(
+    s.map((x) => x.etiket),
+    ['Tüm durumlar', 'Yeni', 'İnceleniyor', 'Olumsuz', 'Geri çekildi', 'Eski süreç kayıtları'],
+  );
+  assert.deepEqual(s.map((x) => x.sayi), [10, 2, 1, 1, 1, 5]);
+  /* Grup sayıları toplamı = tümü: hiçbir kart kaybolmuyor ya da iki kez sayılmıyor. */
+  assert.equal(s.slice(1).reduce((t, x) => t + x.sayi, 0), s[0].sayi);
+  /* Seçiliyken kayıt kalmasa da seçenek duruyor (ekran neyle süzüldüğünü söylesin). */
+  assert.ok(durumSuzgeciSecenekleri([], 'eski').some((x) => x.deger === 'eski'));
+  assert.ok(!durumSuzgeciSecenekleri([]).some((x) => x.deger === 'eski'));
+});
+
+test('süzgeç: seçim eşleşmesi ve eski kayıtlar DÖNÜŞTÜRÜLMÜYOR', () => {
+  const eski = KARISIK.filter((k) => durumSuzgecineUyar(k, 'eski'));
+  assert.deepEqual(eski.map((k) => k.id), ['e', 'f', 'g', 'h', 'i']);
+  /* Gerçek durum aynen duruyor; rozet "Görüşme", "Teklif kabul edildi" der. */
+  assert.deepEqual(eski.map((k) => k.durum), [
+    'interview_scheduled', 'offer_accepted', 'offer_declined', 'technical_assessment', 'offer_extended',
+  ]);
+  assert.deepEqual(KARISIK.filter((k) => durumSuzgecineUyar(k, 'submitted')).map((k) => k.id), ['a', 'j']);
+  assert.equal(KARISIK.filter((k) => durumSuzgecineUyar(k, '')).length, KARISIK.length);
+  /* Bilinmeyen/boş durum kaybolmuyor: Yeni'ye düşüyor. */
+  assert.equal(sadeDurumGrubu(undefined), 'submitted');
+  assert.equal(sadeDurumGrubu('tuhaf'), 'submitted');
+  assert.deepEqual(SADE_DURUM_GRUPLARI.map((g) => g.anahtar), ['submitted', 'under_review', 'rejected', 'withdrawn']);
+});
+
+test('pano: sütunlar süzgeçle aynı; eski sütun yalnız eski kayıt varsa', () => {
+  const yeni = sadeDurumSutunlari([{ id: 'x', durum: 'submitted' }, { id: 'y', durum: 'under_review' }]);
+  assert.deepEqual(yeni.map((s) => s.etiket), ['Yeni', 'İnceleniyor', 'Olumsuz', 'Geri çekildi']);
+  const karisik = sadeDurumSutunlari(KARISIK);
+  assert.deepEqual(karisik.map((s) => s.etiket), ['Yeni', 'İnceleniyor', 'Olumsuz', 'Geri çekildi', 'Eski süreç kayıtları']);
+  assert.deepEqual(karisik.map((s) => s.kartlar.length), [2, 1, 1, 1, 5]);
+  /* Süzgeç sayılarıyla birebir. */
+  const s = durumSuzgeciSecenekleri(KARISIK).slice(1);
+  assert.deepEqual(karisik.map((x) => x.kartlar.length), s.map((x) => x.sayi));
+});
+
+test('liste ve pano aynı ortak kuralı kullanıyor; eski 9 seçenek ve 6 sütun geri gelmiyor', () => {
+  const izgara = kodu(IZGARA);
+  const pano = kodu(PANO);
+  assert.match(izgara, /durumSuzgeciSecenekleri\(durumHaricSuzulmus, durumSuzgeci\)/);
+  assert.match(izgara, /durumSuzgecineUyar\(k, durumSuzgeci\)/);
+  assert.doesNotMatch(izgara, /DURUM_SIRASI/);
+  assert.match(pano, /sadeDurumSutunlari\(b\.kartlar\)/);
+  assert.doesNotMatch(pano, /PANO_ASAMALARI|asamayaGore/);
+  assert.doesNotMatch(pano, /xl:grid-cols-6/);
+  /* Kart rozeti gerçek durumu okuyor (grup adını değil). */
+  assert.match(pano, /durumRozeti\(String\(kart\.durum \?\? ''\)\)/);
 });
