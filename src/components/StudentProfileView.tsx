@@ -1,39 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArayisKartlari } from './ArayisKartlari';
 import { profilDolulugu } from '../lib/cv-hazirlik.mjs';
-import {
-  ArrowLeft,
-  Award,
-  Camera,
-  Check,
-  CheckCircle2,
-  ChevronDown,
-  ExternalLink,
-  FileText,
-  FolderOpen,
-  GraduationCap,
-  Languages,
-  LayoutGrid,
-  Loader2,
-  LogOut,
-  Plus,
-  Settings,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  Trash2,
-  X,
-} from 'lucide-react';
 import { konfetiAt } from '../lib/konfeti';
-import {
-  StudentProfile,
-  StudentSkill,
-  StudentProject,
-  StudentLanguage,
-  SkillLevel,
-  SkillQuiz,
-  ApplicationRecord,
-} from '../types';
+import type { StudentProfile, SkillQuiz, ApplicationRecord } from '../types';
 /*
   `uploadAvatar` ÇAĞRISI KALDIRILDI
 
@@ -44,44 +13,25 @@ import {
   bir fotoğrafla görünebiliyordu. Fonksiyon `src/lib/queries`te DURUYOR —
   kolon da duruyor ve eski fotoğraflar okunmaya devam ediyor.
 */
-import { CvAlani } from './CvAlani';
+import { ProfilDuzenleme, type DuzenlemeBolumu } from './ProfilDuzenleme';
+import { ayrilmaOnayi } from '../lib/kaydedilmemis-degisiklik.mjs';
 import { fetchOpenSavedListingCount } from '../lib/opportunities';
-import { adYazimi , okulKisaltmasi} from '../lib/ad';
 import { useModalErisim } from '../lib/modal-erisim';
-import { TR_UNIVERSITIES, TR_DEPARTMENTS, TR_CITIES } from '../data/turkeyData';
-import { Card, IKON_KUTUSU } from '../ui';
-import { ODAK_HALKASI } from '../lib/renk-token';
 import { ProfilSayfaDuzeni, useKampusYerlesimi } from './sosyal/ProfilSayfaDuzeni';
 import { KampusumPaneli } from './kampus/KampusumPaneli';
 import { AgimYanSutun } from './sosyal/AgimYanSutun';
-import { ProfilBasligi, ProfilBolumListesi, type EksikAdim, type OneCikan } from './ProfilBasligi';
+import { ProfilBasligi, type EksikAdim } from './ProfilBasligi';
 import type { PortfolyoSatiri } from './sosyal/SosyalProfilSayfasi';
-import { ONERILEN_SOSYAL, POPULER_ARACLAR } from '../data/cv-secenekleri';
-import { AutocompleteField } from './AutocompleteField';
-import { PredictiveInput } from './PredictiveInput';
-import { HEDEF_POZISYONLAR } from '../lib/pozisyonlar.mjs';
-import {
-  HARD_SKILLS_DICTIONARY,
-  SOFT_SKILLS_DICTIONARY,
-  LANGUAGES_DICTIONARY,
-} from '../data/skillsDictionary';
 
-const GLOBAL_COUNTRIES = [
-  ['TR','Türkiye'],['FR','Fransa'],['DE','Almanya'],['US','Amerika Birleşik Devletleri'],
-  ['GB','Birleşik Krallık'],['NL','Hollanda'],['ES','İspanya'],['IT','İtalya'],
-] as const;
 
 /**
  * Öğrenci profili / CV alanı.
  *
- * Önceki hali tek sayfada yan yana açık 6 büyük kart, dört ayrı vurgu rengi ve
- * her başlığın altında iki satır açıklama içeriyordu; telefonda ekranı doldurup
- * göz yoruyordu. Artık:
- *
- *  - Her bölüm kapalı başlar, tek dokunuşla açılır (aynı anda bir tanesi açık).
- *  - Kapalıyken ne yazdığın özet satırında görünür, açmaya gerek kalmaz.
- *  - Tek vurgu rengi var; yeşil yalnızca "tamamlandı" demek için kullanılıyor.
- *  - Doluluk çubuğu bir sonraki adımı söyler, dokununca o bölümü açar.
+ * İki hâli var: ana görünüm (profil kartı, arayış kartları, portfolyo) ve
+ * "Profilini düzenle" ekranı. Düzenleme kendi bileşeninde
+ * (`ProfilDuzenleme`, 6 Ekim 2026): tek sütun, özet satırları, fotoğraf
+ * yalnız üstte. Bu bileşen yalnız ne zaman ve hangi bölümle açılacağına
+ * karar veriyor (`bolumeGit`).
  *
  * ÖNEMLİ: Burada hiçbir alan varsayılan örnek veriyle doldurulmaz. Eskiden dil
  * listesi boşken profile İngilizce/Almanca/Rusça yazılmış gibi görünüyordu —
@@ -167,6 +117,13 @@ interface StudentProfileViewProps {
    */
   sosyalProfilDuzenleme?: React.ReactNode;
   /**
+   * DÜZENLEME EKRANININ ÜSTÜNDEKİ FOTOĞRAF KARTI (6 Ekim 2026)
+   *
+   * Sosyal profilin fotoğraf parçası (`duzenlemeParcasi="fotograf"`):
+   * fotoğraf sayfada yalnız burada değişiyor. Verilmezse kart çizilmiyor.
+   */
+  sosyalFotografKarti?: React.ReactNode;
+  /**
    * SOSYAL SATIRDAKİ PROFİL FOTOĞRAFININ YOLU
    *
    * Kullanıcının tek fotoğrafı var ve kaynağı
@@ -210,155 +167,7 @@ interface StudentProfileViewProps {
   onOpenAdmin?: () => void;
 }
 
-type BolumId =
-  | 'kisisel'
-  | 'cv'
-  | 'teknik'
-  | 'sosyal'
-  | 'dil'
-  | 'proje'
-  | 'tercih'
-  | 'rozet';
 
-/*
-  TEK GEZİNME: ÖNE ÇIKANLAR ŞERİDİ
-
-  Bir ara hem daire şeridi hem de altında bir sekme çubuğu vardı. İkisi de
-  aynı bölümlere gidiyordu — kullanıcı aynı işi yapan iki kontrol görüyordu
-  ve hangisinin ne yaptığını anlamak için ikisini de denemesi gerekiyordu.
-
-  Şerit kaldı çünkü daha çok iş yapıyor: gezinmenin yanında her bölümün
-  ne kadar dolu olduğunu da gösteriyor ("3 tane", "ekle"). Sekme çubuğu
-  yalnızca gezindiriyordu.
-
-  Artık şerit sekiz bölümün hepsini kapsıyor ve aşağıda yalnızca seçili
-  bölüm duruyor.
-*/
-
-/* Hızlı ekleme seçenekleri CV oluşturma ekranıyla ortak: src/data/cv-secenekleri.ts */
-
-/* Hedef pozisyonlar şirketin ilan formundaki Pozisyon önerileriyle ortak: src/lib/pozisyonlar.mjs */
-
-/* Seviye sırası: rozetteki etikete dokununca bu sırayla döner. */
-const SEVIYE_SIRASI: SkillLevel[] = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
-const SEVIYE_ETIKET: Record<SkillLevel, string> = {
-  Beginner: 'Temel',
-  Intermediate: 'Orta',
-  Advanced: 'İleri',
-  Expert: 'Uzman',
-};
-
-const DIL_SEVIYELERI = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-const DIL_SEVIYE_METNI: Record<string, string> = {
-  A1: 'A1 · Başlangıç',
-  A2: 'A2 · Temel',
-  B1: 'B1 · Orta',
-  B2: 'B2 · İleri',
-  C1: 'C1 · Akıcı',
-  C2: 'C2 · Anadil düzeyi',
-};
-
-/* ------------------------------------------------------------------ */
-/* Açılır bölüm                                                        */
-/* ------------------------------------------------------------------ */
-
-interface BolumProps {
-  /** Aktif sekmede değilse hiç çizilmiyor. */
-  gorunur?: boolean;
-  id: BolumId;
-  ikon: React.ReactNode;
-  /** Tailwind zemin sınıfı; her bölümün kendi rengi var. */
-  baslik: string;
-  ozet: string;
-  tamam: boolean;
-  acik: boolean;
-  onToggle: (id: BolumId) => void;
-  children: React.ReactNode;
-}
-
-/*
-  Bileşen modül seviyesinde tanımlı: ana bileşenin içinde tanımlansaydı her
-  render'da yeni bir tip oluşur, React içerideki input'ları söküp yeniden
-  kurar ve yazarken imleç kaybolurdu.
-*/
-const Bolum: React.FC<BolumProps> = ({
-  id, ikon, baslik, ozet, tamam, acik, onToggle, children, gorunur = true,
-}) => (
-  !gorunur ? null : (
-  <section
-    id={`bolum-${id}`}
-    className="bg-white rounded-2xl border border-gray-200 overflow-hidden scroll-mt-28"
-  >
-    {/*
-      Başlık artık düğme değil.
-
-      Bölüm açıp kapatma şeride taşındı; burada bir aç/kapa düğmesi
-      bırakmak, basılınca hiçbir şey yapmayan (ya da alanı boşaltan) bir
-      kontrol olurdu. Şimdi yalnızca hangi bölümde olduğunu söylüyor.
-    */}
-    <div className="w-full flex items-center gap-3 p-4 text-left">
-      {/*
-        EMOJİ YERİNE RENKLİ İKON
-
-        Sekiz bölümün sekizi de gri kutuda emoji taşıyordu; emoji her
-        işletim sisteminde farklı çiziliyor. Emojiler çizgi ikona döndü.
-
-        SONRA SEKİZ AYRI DEGRADE OLDU, O DA GERİ ALINDI
-        -----------------------------------------------
-        Her bölüme kendi degrade rengi verilmişti: pembe, mor, mavi, cam
-        göbeği, turkuaz, amber, turuncu, yeşil. Renk sayfaya canlılık
-        veriyordu ama anlamı bozuyordu — "Başvurularım" pembe-kırmızı bir
-        daireydi ve tam üstündeki kısayolda MAVİ bir daireyle duruyordu:
-        aynı kavram, iki ayrı kimlik. Kırmızı bu üründe yalnızca hata ve
-        reddedilme demek; dekoratif kullanılınca gerçek uyarı fark
-        edilmiyor.
-
-        Artık tek biçim: 40×40 yuvarlatılmış kare, açık bölüm marka
-        mavisi, kapalılar nötr. Ölçü ve köşe src/ui/tokens.ts'ten.
-      */}
-      <span
-        aria-hidden
-        className={`${IKON_KUTUSU} ${acik ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
-      >
-        {ikon}
-      </span>
-
-      <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1.5">
-          <span className="font-bold text-gray-900 text-sm sm:text-base">
-            {baslik}
-          </span>
-          {tamam && (
-            <Check className="w-4 h-4 text-emerald-600 shrink-0"/>
-          )}
-        </span>
-        <span className="block text-xs text-gray-500 truncate">
-          {ozet}
-        </span>
-      </span>
-
-    </div>
-
-    {acik && (
-      <div className="px-4 pb-5 pt-1 space-y-4 border-t border-gray-100">
-        {children}
-      </div>
-    )}
-  </section>
-  )
-);
-
-/* Boş bölümlerde tek satırlık yönlendirme. */
-const BosDurum: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <p className="text-xs text-gray-600 py-1">{children}</p>
-);
-
-const alanClass =
-  'w-full p-3 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-800 focus:outline-none focus:border-blue-600';
-
-const etiketClass ='block text-xs font-semibold text-gray-600 mb-1.5';
-
-/* Ad yazımı yardımcısı ortak dosyada: src/lib/ad.ts */
 
 /* ------------------------------------------------------------------ */
 
@@ -374,6 +183,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   onBasvurulariAc,
   sosyalPortfolyo,
   sosyalProfilDuzenleme,
+  sosyalFotografKarti,
   sosyalAvatarYolu,
   sosyalPortfolyoSatiri,
   onKaydedilenlere,
@@ -391,28 +201,51 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     de okul ve iletişim. Koşullu bir başlangıç bırakılmadı: kaldırılan bir
     bölümün adına bakan koşul, sonradan okuyanı yanıltır.
   */
-  const [acikBolum, setAcikBolum] = useState<BolumId>('kisisel');
   /*
-    DÜZENLEME AYRI BİR EKRAN
+    DÜZENLEME AYRI BİR EKRAN — "PROFİLİNİ DÜZENLE" (6 Ekim 2026)
 
-    Doldurulacak bölümler (okul, CV, programlar, beceriler, diller,
-    projeler, tercihler, testler) ana görünümün sağ sütununda,
-    portfolyonun hemen altında duruyordu. İki farklı iş aynı ekrandaydı:
-    biri "profilim nasıl görünüyor", öteki "profilimi dolduruyorum". Sağ
-    sütun bu yüzden hem kare ızgarayı hem de bir formu taşıyordu ve
-    ızgaranın nerede bittiği belli olmuyordu.
+    Düzenleme kendi bileşeninde (`ProfilDuzenleme`): tek sütun, özet
+    satırları, fotoğraf yalnız üstte. Bu bileşen yalnız ne zaman ve hangi
+    bölümle açılacağına karar veriyor.
 
-    Bölümler SİLİNMEDİ, taşındı: aynı `Bolum` bileşenleri, aynı veri,
-    aynı `onUpdateProfile` çağrıları — yalnız düzenleme dalında
-    çiziliyorlar. Kopya bırakılmadı; bir bölüm iki ekranda birden
-    durmuyor.
-
-    Adres DEĞİŞMİYOR (`/cv`): düzenleme ekranının kendi adresi olsaydı
-    onu da ara katmana yazmak gerekirdi ve geri tuşu bu ekrandan
-    çıkarken kullanıcıyı ana görünüme değil bir önceki sayfaya
-    götürürdü.
+    GERİ TUŞU DÜZENLEMEDEN ÇIKARIYOR. Düzenlemeye girerken geçmişe
+    `#duzenle` kaydı ekleniyor; tarayıcının geri tuşu önce düzenlemeden
+    çıkıyor, sayfadan değil. Kaydedilmemiş bir değişiklik varsa soruluyor;
+    "hayır" denirse kayıt yeniden ekleniyor ve kullanıcı yerinde kalıyor.
+    Adres yenilenirse (`/cv#duzenle`) ekran düzenlemede açılıyor.
   */
-  const [duzenleme, setDuzenleme] = useState(false);
+  const [duzenleme, setDuzenleme] = useState(
+    () => typeof window !== 'undefined' && window.location.hash === '#duzenle',
+  );
+  const [acilis, setAcilis] = useState<{ bolum: DuzenlemeBolumu | null; odak: string | null }>({
+    bolum: null,
+    odak: null,
+  });
+  /* Bu ekran mı `#duzenle` kaydı ekledi: çıkarken geri mi alınacak, yerine mi yazılacak. */
+  const gecmisEklendi = useRef(false);
+  const duzenlemeRef = useRef(duzenleme);
+  duzenlemeRef.current = duzenleme;
+  const duzenlemeAdresi = () =>
+    `${window.location.pathname}${window.location.search}#duzenle`;
+
+  useEffect(() => {
+    const onPop = () => {
+      if (window.location.hash === '#duzenle') {
+        setDuzenleme(true);
+        return;
+      }
+      if (!duzenlemeRef.current) return;
+      if (!ayrilmaOnayi()) {
+        window.history.pushState(window.history.state, '', duzenlemeAdresi());
+        gecmisEklendi.current = true;
+        return;
+      }
+      gecmisEklendi.current = false;
+      setDuzenleme(false);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
   /*
     Kampüsüm sol sütunda mı, ana sütunda mı, hiç mi (`lg` altında yok:
     başlıktaki düğme açıyor) — kararı `ProfilSayfaDuzeni` veriyor.
@@ -435,51 +268,53 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     });
   }, [student.isArayan, student.stajArayan]);
   /**
-   * Bölüme git — düzenleme ekranını açıp o bölümü seçiyor.
+   * Bölüme git — düzenleme ekranını açıp o bölümü açık getiriyor.
    *
-   * Şeritteki satırlar, eksik adım rozetleri ve sol sütundaki kartlar
-   * hep buradan geçiyor: hepsinin işi aynı, doldurulacak bir alana
-   * gitmek. Ayrı ayrı `setDuzenleme` çağırsalardı biri unutulduğunda o
-   * giriş hiçbir şey yapmayan bir tıklama olurdu.
-   *
-   * MOBİLDE KAYDIRMA DA GEREKİYOR
-   * Telefonda bölümler listenin ALTINDA duruyor. Sayıya basınca
-   * yalnızca durum değişiyordu; ekranda görünen şey değişmediği için
-   * tıklama hiçbir şey yapmamış gibi oluyordu. Geniş ekranda bölüm
-   * zaten yan sütunda ve görünüyor, orada kaydırma gereksiz.
+   * Başlıktaki eksik adım rozetleri, Kampüsüm'ün "Üniversiteni ekle"si,
+   * "Profili düzenle" ve testler girişi hep buradan geçiyor: tek kapı.
    */
-  const bolumeGit = (bolum: BolumId) => {
-    setAcikBolum(bolum);
-    setDuzenleme(true);
-    if (typeof window === 'undefined' || window.innerWidth >= 1024) return;
-    /* Bölüm yalnızca seçiliyken çiziliyor; boyama bitmeden hedef yok. */
-    requestAnimationFrame(() => {
-      document
-        .getElementById(`bolum-${bolum}`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+  const bolumeGit = (bolum: DuzenlemeBolumu | null, odak: string | null = null) => {
+    setAcilis({ bolum, odak });
+    if (!duzenleme) {
+      window.history.pushState(window.history.state, '', duzenlemeAdresi());
+      gecmisEklendi.current = true;
+      setDuzenleme(true);
+      window.scrollTo(0, 0);
+    }
+  };
+
+  /* Düzenlemeden çık: soru `ProfilDuzenleme`de soruldu. */
+  const duzenlemedenCik = () => {
+    if (gecmisEklendi.current) {
+      gecmisEklendi.current = false;
+      window.history.back();
+    } else {
+      window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
+      setDuzenleme(false);
+    }
+    window.scrollTo(0, 0);
   };
 
   /*
-    GÖRÜNTÜLEYİCİDEKİ KALEM → DÜZENLEME EKRANININ FOTOĞRAF AKIŞI
+    GÖRÜNTÜLEYİCİDEKİ KALEM → ÜSTTEKİ FOTOĞRAF KARTI
 
-    Yükleme tek yerde (`ProfilFotografiYukleme`, sosyal panelin düzenleme
-    kipi); burada ikinci bir yükleme kapısı açılmıyor. Bu eylem yalnız
-    oraya GÖTÜRÜYOR: düzenlemeye geç (tek kapı `bolumeGit`, açık bölüm
-    neyse o), bir kare sonra (panel ancak o zaman ağaçta) panele
-    "fotoğraf ekranını aç" de ve sosyal bloğu görünür yere kaydır. Kare
-    zamanlayıcısı `bolumeGit` ile aynı gerekçe: hedef boyama bitmeden
-    yok; telefonda `bolumeGit`in kendi kaydırması aynı karede planlanıyor
-    ve sonra planlanan bu kaydırma onun yerine geçiyor.
+    Yükleme tek yerde (sosyal profilin fotoğraf parçası, düzenleme
+    ekranının üstündeki kart). Bu eylem yalnız oraya götürüyor ve bir kare
+    sonra (kart ancak o zaman ağaçta) yükleme ekranını açtırıyor.
   */
   const fotografDegistir = () => {
-    bolumeGit(acikBolum);
+    bolumeGit(null);
     requestAnimationFrame(() => {
       window.dispatchEvent(new Event('stajimvar:profil-fotografi-degistir'));
-      document
-        .getElementById('sosyal-profil-duzenleme')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
+  };
+
+  /* Eski bölüm kimlikleri (cv-hazirlik.mjs) → düzenleme bölümleri. */
+  const adimBolumu = (anahtar: string, bolum: string): DuzenlemeBolumu => {
+    if (bolum === 'kisisel') return anahtar === 'okul' ? 'egitim' : 'temel';
+    if (bolum === 'teknik' || bolum === 'sosyal' || bolum === 'dil') return 'yetenek';
+    if (bolum === 'cv' || bolum === 'proje' || bolum === 'tercih') return bolum;
+    return 'temel';
   };
 
   const yetenekler = student.skills ?? [];
@@ -506,7 +341,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     yüklenen PDF'ten biriyle tamamlanıyor.
   */
   const { adimlar: dolulukAdimlari, oran } = profilDolulugu(student);
-  const adimlar = dolulukAdimlari as { anahtar: string; tamam: boolean; etiket: string; bolum: BolumId }[];
+  const adimlar = dolulukAdimlari as { anahtar: string; tamam: boolean; etiket: string; bolum: string }[];
 
   /*
     EKSİKLER
@@ -522,9 +357,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
       onClick: () =>
         a.anahtar === 'cv' && onCvOlustur
           ? onCvOlustur()
-          : a.bolum === 'kisisel'
-            ? kisiselAc()
-            : bolumeGit(a.bolum),
+          : bolumeGit(adimBolumu(a.anahtar, a.bolum), a.anahtar === 'okul' ? 'universite' : null),
     }));
 
   /*
@@ -614,101 +447,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   })();
 
 
-  /*
-    ÖNE ÇIKANLAR ŞERİDİ
-
-    Instagram'da hikâye vurguları duruyor; burada profilin bölümleri.
-    Dolu olan bölüm içeriğinin özetini gösteriyor, boş olan "+" ile ekleme
-    çağrısı yapıyor — yani şerit hem gezinme hem eksik listesi.
-
-    Her öğe ilgili bölümü açıyor: ayrı bir sayfa yok, kaydırma yok.
-  */
-  /*
-    BAŞVURULAR KISAYOLLARDAN ÇIKTI
-
-    Aynı kavram ekranda üç ayrı kimlikle duruyordu: üstteki istatistikte
-    bir sayı, kısayol ızgarasında MAVİ bir daire, hemen altında da
-    PEMBE-KIRMIZI simgeli kendi bölümü. Aynı şeyin üç görüntüsü, üçünün de
-    ayrı bir anlamı varmış izlenimi veriyordu.
-
-    Kısayol kalktı: başvuru bölümü zaten bu kartın hemen altında ve
-    sayısı üstteki istatistikte duruyor.
-  */
-  const oneCikanlar: OneCikan[] = [
-    {
-      id: 'kisisel',
-      /* "Okulun" bölümün adıyla ("Okul ve iletişim") uyuşmuyordu. */
-      etiket: 'Okul & Bölüm',
-      dolu: Boolean(student.university),
-      /*
-        Satırın ikincil bilgisi boştu; ötekilerin hepsinde ("3 program",
-        "2 dil") bilgi varken burada yoktu ve satır eksik görünüyordu.
-        Uzun üniversite adı bölümle birlikte tek satıra sığmıyor, o yüzden
-        kısaltılıyor (src/lib/ad.ts) — kural dar: yalnızca üç kelimeden
-        uzun adlarda.
-      */
-      alt: [okulKisaltmasi(student.university), student.department]
-        .filter(Boolean)
-        .join(' · ') || undefined,
-      ikon: <GraduationCap className="w-5 h-5" />,
-      onClick: () => kisiselAc(),
-    },
-    {
-      /*
-        CV şeride ikinci sırada: profil dolduran öğrencinin okuldan sonra
-        yaptığı iş bu ve başvuruya giden tek belge.
-      */
-      id: 'cv',
-      etiket: 'CV',
-      dolu: Boolean(student.cvPath),
-      alt: student.cvPath ? 'PDF yüklendi' : undefined,
-      ikon: <FileText className="w-5 h-5" />,
-      onClick: () => bolumeGit('cv'),
-    },
-    {
-      id: 'teknik',
-      etiket: 'Programlar',
-      dolu: yetenekler.length > 0,
-      alt: yetenekler.length ? `${yetenekler.length} program` : undefined,
-      /*
-        İngiliz anahtarı "tamir/ayar" demek; burada kastedilen kullanılan
-        uygulamalar. Uygulama ızgarası doğru karşılığı.
-      */
-      ikon: <LayoutGrid className="w-5 h-5" />,
-      onClick: () => bolumeGit('teknik'),
-    },
-    {
-      id: 'sosyal',
-      etiket: 'Beceriler',
-      dolu: sosyal.length > 0,
-      alt: sosyal.length ? `${sosyal.length} beceri` : undefined,
-      /*
-        Konuşma balonu "mesaj" demek. Beceri bir yetkinlik; rozet/parıltı
-        anlamı taşıyor.
-      */
-      ikon: <Sparkles className="w-5 h-5" />,
-      onClick: () => bolumeGit('sosyal'),
-    },
-    {
-      id: 'dil',
-      etiket: 'Diller',
-      dolu: diller.length > 0,
-      alt: diller.length ? `${diller.length} dil` : undefined,
-      ikon: <Languages className="w-5 h-5" />,
-      onClick: () => bolumeGit('dil'),
-    },
-    {
-      id: 'proje',
-      /* Bölümün adı "Projeler ve çalışmalar"; "Çalışmalar" tek başına ne
-         kastedildiğini söylemiyordu. */
-      etiket: 'Projeler',
-      dolu: projeler.length > 0,
-      alt: projeler.length ? `${projeler.length} proje` : undefined,
-      ikon: <FolderOpen className="w-5 h-5" />,
-      onClick: () => bolumeGit('proje'),
-    },
-  ];
-
   /* %100'e ilk ulaşıldığında kutlama. Her render'da değil, geçişte. */
   const oncekiOran = useRef(oran);
   useEffect(() => {
@@ -718,93 +456,18 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     oncekiOran.current = oran;
   }, [oran]);
 
-  /*
-    Bölüm kapatma kaldırıldı.
-
-    Şerit tek gezinme olduğu için aşağıda her zaman bir bölüm duruyor.
-    Kapatılabilir bırakılsaydı kullanıcı başlığa basınca alan tamamen
-    boşalıyordu — hiçbir şeye götürmeyen bir tıklama.
-  */
-  const bolumAc = (id: BolumId) => setAcikBolum(id);
+  /* "Profili düzenle": düzenleme ekranı, hiçbir bölüm açık değil. */
+  const kisiselAc = () => bolumeGit(null);
 
   /*
-    ---- fotoğraf ----
-
-    Bu ekranda fotoğraf YÜKLENMİYOR: dosya seçici, yükleme durumu ve hata
-    satırı kaldırıldı. Tek yükleme yeri düzenleme ekranının sosyal bloğu
-    ve tek kaynak `social_profiles.avatar_path`. Görünen fotoğrafı
-    `ProfilBasligi` çiziyor; eski `avatar_url` de orada yedek olarak
-    okunuyor, yani kimse fotoğrafsız kalmıyor.
-  */
-
-  /* ---- kişisel bilgi taslağı ---- */
-  const bosTaslak = () => ({
-    fullName: student.fullName,
-    university: student.university,
-    department: student.department,
-    gradeLevel: student.gradeLevel as string,
-    gpa: student.gpa ? String(student.gpa) : '',
-    city: student.city ?? '',
-    phone: student.phone ?? '',
-    bio: student.bio ?? '',
-  });
-  const [taslak, setTaslak] = useState(bosTaslak);
-  const [kaydedildi, setKaydedildi] = useState(false);
-  /*
-    ŞEHİR KAPALI LİSTE
-
-    Kolonun biçim kısıtı (20260926130000_ogrenci_sehri) "İstanbul"u kabul
-    edip "istanbul", "ANKARA", "İstanbul (Avrupa)" yazımlarını reddediyor;
-    serbest metin gönderilse istek sunucuda düşer ve kullanıcı sebebini
-    göremezdi. Eşleştirme de birebir eşitlikle çalışıyor (fırsatın
-    `cities` listesi de aynı sözlükten) — "Izmir" yazımı hiçbir fırsata
-    uymaz, üstelik sessizce. Onun için kaydetmeden önce değerin TR_CITIES
-    içinde birebir bulunması şart.
-  */
-  const [sehirHatasi, setSehirHatasi] = useState(false);
-
-  /*
-    AD BOŞKEN UYARIYI SAYFA YAZIYOR, TARAYICI DEĞİL
-
-    Ad alanı `required` idi ve kayıt sırasında ad sorulmadığı için hesabın
-    adı boş başlıyor. Tarayıcı doğrulaması bu yüzden formu gönderilmeden
-    durduruyordu: ölçümde "Kaydet"e basınca submit olayı 0 kez tetikleniyor,
-    odak `#ad-soyad`a kaçıyor ve `student_profiles`a tek istek gitmiyordu.
-    Şehir doğrulaması da bu yüzden hiç çalışamıyordu — o kontrol
-    `kisiselKaydet`in İÇİNDE, yani form gönderilmeyince kullanıcı "Listeden
-    bir il seç" uyarısını da göremiyordu. Form artık `noValidate`: doğrulama
-    tek yerde toplandı ve uyarı sayfanın kendi diliyle yazılıyor.
-  */
-  const [adHatasi, setAdHatasi] = useState(false);
-
-  /*
-    Taslak yalnızca bölüm açılırken tazelenir; açıkken yazdıklarının üzerine
-    yazmamak için render sırasında senkronize edilmiyor.
-  */
-  const kisiselAc = () => {
-    if (acikBolum !== 'kisisel') {
-      setTaslak(bosTaslak());
-      setKaydedildi(false);
-      setSehirHatasi(false);
-      setAdHatasi(false);
-    }
-    bolumeGit('kisisel');
-  };
-
-  /*
-    "ÜNİVERSİTENİ EKLE" → OKUL BÖLÜMÜ, ÜNİVERSİTE ALANI
+    "ÜNİVERSİTENİ EKLE" → EĞİTİM BÖLÜMÜ, OKUL ALANI
 
     Kampüsüm paneli okulu olmayan öğrenciye bu kapıyı gösteriyor. Aynı
     ekrandaysa (`/cv`) düzenleme doğrudan açılıyor; başka bir profildeyse
     bağlantı `/cv#universite`e gidiyor ve ekran açılırken adresteki işaret
-    okunuyor. Tek kapı `kisiselAc` (taslak tazeleme orada). Odak alanın
-    kendisine: öğrenci neyi dolduracağını aramak zorunda kalmasın. Bölüm
-    yalnız seçiliyken çiziliyor; odak bu yüzden bir kare sonra.
+    okunuyor. Odak alanın kendisine.
   */
-  const universiteEkle = () => {
-    kisiselAc();
-    requestAnimationFrame(() => document.getElementById('universite')?.focus());
-  };
+  const universiteEkle = () => bolumeGit('egitim', 'universite');
   useEffect(() => {
     if (typeof window === 'undefined' || window.location.hash !== '#universite') return;
     /* İşaret bir kez okunuyor: yenilemede düzenleme yeniden açılmasın. */
@@ -812,169 +475,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     universiteEkle();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const kisiselKaydet = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    /* Ad zorunlu: boş kaydedilirse profil ve CV adsız kalır. */
-    if (!taslak.fullName.trim()) {
-      setAdHatasi(true);
-      return;
-    }
-    setAdHatasi(false);
-
-    /* Boş bırakmak serbest; yazıldıysa listedeki ilin kendisi olmalı. */
-    const sehir = taslak.city.trim();
-    if (sehir && !TR_CITIES.includes(sehir)) {
-      setSehirHatasi(true);
-      return;
-    }
-    setSehirHatasi(false);
-
-    onUpdateProfile({
-      fullName: taslak.fullName.trim() || student.fullName,
-      university: taslak.university.trim(),
-      department: taslak.department.trim(),
-      gradeLevel: taslak.gradeLevel as StudentProfile['gradeLevel'],
-      gpa: taslak.gpa ? parseFloat(taslak.gpa) : 0,
-      city: sehir,
-      phone: taslak.phone.trim(),
-      bio: taslak.bio.trim(),
-    });
-    setKaydedildi(true);
-    window.setTimeout(() => setKaydedildi(false), 2500);
-  };
-
-  /* ---- teknik yetenekler ---- */
-  const [yeniYetenek, setYeniYetenek] = useState('');
-
-  const yetenekEkle = (ad: string) => {
-    const temiz = ad.trim();
-    if (!temiz) return;
-    if (yetenekler.some((s) => s.name.toLocaleLowerCase('tr') === temiz.toLocaleLowerCase('tr'))) return;
-    const yeni: StudentSkill = {
-      name: temiz,
-      category: 'General',
-      level: 'Intermediate',
-      verified: false,
-    };
-    onUpdateProfile({ skills: [...yetenekler, yeni] });
-    setYeniYetenek('');
-  };
-
-  const yetenekSil = (ad: string) => {
-    onUpdateProfile({ skills: yetenekler.filter((s) => s.name !== ad) });
-  };
-
-  /* Seviye rozetine dokununca Temel → Orta → İleri → Uzman → Temel. */
-  const seviyeDondur = (ad: string) => {
-    onUpdateProfile({
-      skills: yetenekler.map((s) =>
-        s.name === ad
-          ? { ...s, level: SEVIYE_SIRASI[(SEVIYE_SIRASI.indexOf(s.level) + 1) % SEVIYE_SIRASI.length] }
-          : s
-      ),
-    });
-  };
-
-  /* ---- sosyal beceriler ---- */
-  const [yeniSosyal, setYeniSosyal] = useState('');
-
-  const sosyalEkle = (metin: string) => {
-    const temiz = metin.trim();
-    if (!temiz || sosyal.includes(temiz)) return;
-    onUpdateProfile({ softSkills: [...sosyal, temiz] });
-    setYeniSosyal('');
-  };
-
-  const sosyalSil = (metin: string) => {
-    onUpdateProfile({ softSkills: sosyal.filter((s) => s !== metin) });
-  };
-
-  /* ---- diller ---- */
-  const [dilFormu, setDilFormu] = useState(false);
-  const [yeniDil, setYeniDil] = useState('');
-  const [yeniDilSeviye, setYeniDilSeviye] = useState('B1');
-
-  const dilEkle = (e: React.FormEvent) => {
-    e.preventDefault();
-    const temiz = yeniDil.trim();
-    if (!temiz) return;
-    if (diller.some((l) => l.language.toLocaleLowerCase('tr') === temiz.toLocaleLowerCase('tr'))) return;
-    const kayit: StudentLanguage = {
-      id: `lang-${Date.now()}`,
-      language: temiz,
-      level: yeniDilSeviye,
-      proficiencyText: DIL_SEVIYE_METNI[yeniDilSeviye] ?? yeniDilSeviye,
-      verified: false,
-    };
-    onUpdateProfile({ languages: [...diller, kayit] });
-    setYeniDil('');
-    setYeniDilSeviye('B1');
-    setDilFormu(false);
-  };
-
-  const dilSil = (id: string) => {
-    onUpdateProfile({ languages: diller.filter((l) => l.id !== id) });
-  };
-
-  const dilSeviyeDegistir = (id: string, seviye: string) => {
-    onUpdateProfile({
-      languages: diller.map((l) =>
-        l.id === id ? { ...l, level: seviye, proficiencyText: DIL_SEVIYE_METNI[seviye] ?? seviye } : l
-      ),
-    });
-  };
-
-  /* ---- projeler ---- */
-  const [projeFormu, setProjeFormu] = useState(false);
-  const [projeBaslik, setProjeBaslik] = useState('');
-  const [projeAciklama, setProjeAciklama] = useState('');
-  const [projeTeknoloji, setProjeTeknoloji] = useState('');
-  const [projeLink, setProjeLink] = useState('');
-
-  const projeEkle = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!projeBaslik.trim()) return;
-    const yeni: StudentProject = {
-      id: `proj-${Date.now()}`,
-      title: projeBaslik.trim(),
-      description: projeAciklama.trim(),
-      techStack: projeTeknoloji.split(',').map((t) => t.trim()).filter(Boolean),
-      githubUrl: projeLink.trim() || undefined,
-    };
-    onUpdateProfile({ projects: [...projeler, yeni] });
-    setProjeBaslik('');
-    setProjeAciklama('');
-    setProjeTeknoloji('');
-    setProjeLink('');
-    setProjeFormu(false);
-  };
-
-  const projeSil = (id: string) => {
-    onUpdateProfile({ projects: projeler.filter((p) => p.id !== id) });
-  };
-
-  /* ---- tercihler ---- */
-  const [tumHedefler, setTumHedefler] = useState(false);
-
-  const hedefDegistir = (rol: string) => {
-    onUpdateProfile({
-      targetRoles: hedefler.includes(rol)
-        ? hedefler.filter((r) => r !== rol)
-        : [...hedefler, rol],
-    });
-  };
-
-  const tercihGuncelle = (yama: Partial<StudentProfile['preferences']>) => {
-    onUpdateProfile({ preferences: { ...student.preferences, ...yama } });
-  };
-
-  /* ---- özet satırları ---- */
-  const listeOzeti = (liste: string[], bosMetin: string, ek = 3) =>
-    liste.length === 0
-      ? bosMetin
-      : liste.slice(0, ek).join(', ') + (liste.length > ek ? ` +${liste.length - ek}` : '');
 
   const rozetler = student.earnedBadges ?? [];
 
@@ -994,6 +494,25 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         yerlesim={yerlesim}
       />
     ) : undefined;
+
+  if (duzenleme) {
+    return (
+      <div className="w-full animate-in fade-in duration-200">
+        <ProfilDuzenleme
+          student={student}
+          onUpdateProfile={onUpdateProfile}
+          onGeri={duzenlemedenCik}
+          acilisBolumu={acilis.bolum}
+          odakAlani={acilis.odak}
+          fotografKarti={sosyalFotografKarti}
+          sosyalProfilDuzenleme={sosyalProfilDuzenleme}
+          onCvOlustur={onOpenCv}
+          quizzes={quizzes}
+          onStartQuiz={onStartQuiz}
+        />
+      </div>
+    );
+  }
 
   return (
     /*
@@ -1062,7 +581,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         Satır yoksa (oturum yok ya da henüz okunmadı) yan sütun çizilmiyor.
       */}
       <ProfilSayfaDuzeni
-        devreDisi={duzenleme}
         solSutun={kampusPaneli('sutun')}
         yanSutun={
           sosyalPortfolyoSatiri?.profilId ? (
@@ -1086,44 +604,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           (solda bölüm listesi, sağda form) aynen duruyor.
         */}
         <div
-          className={
-            duzenleme
-              ? 'contents lg:block lg:col-span-4 lg:sticky lg:top-4 lg:space-y-3'
-              : 'contents lg:block lg:col-span-12'
-          }
+          className="contents lg:block lg:col-span-12"
         >
-          {/*
-            DÜZENLEMEDE SOL SÜTUN GEZİNME OLUYOR
-
-            Kimlik kartı burada çizilmiyor: düzenleme ekranında kullanıcı
-            kendi adına bakmıyor, hangi alanı doldurduğuna bakıyor. Kart
-            kalsaydı listeyi aşağı iter ve telefonda her bölüm
-            değişiminde onu yeniden geçmek gerekirdi.
-          */}
-          {/*
-            Geri satırı ve liste tek kutuda: sarmalayıcı mobilde
-            `contents` olduğundan çıplak dursalar ızgara öğesi olur, düğme
-            tam genişliğe yayılırdı.
-          */}
-          {duzenleme && (
-            <div className="space-y-3">
-              {/*
-                Geri satırı 44 piksel dokunma hedefinde ve ikon tek başına
-                bilgi taşımıyor: yanında "Profilime dön" yazıyor.
-              */}
-              <button
-                type="button"
-                onClick={() => setDuzenleme(false)}
-                /* Odak halkası tek kaynaktan: `src/lib/renk-token.ts`. */
-                className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 ${ODAK_HALKASI}`}
-              >
-                <ArrowLeft aria-hidden className="h-4 w-4 shrink-0" />
-                Profilime dön
-              </button>
-              <ProfilBolumListesi ogeler={oneCikanlar} secili={acikBolum} />
-            </div>
-          )}
-
           {/*
             KARİYER HEDEFİ VE TESTLER KARTLARI ANA GÖRÜNÜMDEN KALKTI
 
@@ -1136,7 +618,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             içine tek satır olarak indi (`rozetSayisi` / `onTestlere`).
             Sayfa artık profil kartı, gönderi alanı ve hesap eylemleri.
           */}
-          {!duzenleme && (
+          {(
           /*
             `-mx-4 sm:mx-0`: kimlik bloğu TELEFONDA ekranın iki kenarına
             yaslanıyor. Kabuğun `px-4`i yerinde bırakıldı — kaldırılsaydı
@@ -1291,11 +773,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
 
         {/* ---------------- SAĞ: portfolyo ya da açık bölüm ---------------- */}
         <div
-          className={
-            duzenleme
-              ? 'contents lg:block lg:col-span-8 min-w-0 lg:space-y-3'
-              : 'contents lg:block lg:col-span-12 min-w-0 lg:space-y-3'
-          }
+          className="contents lg:block lg:col-span-12 min-w-0 lg:space-y-3"
         >
 
       {/*
@@ -1338,7 +816,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         açılır açılmaz görünmesi gereken ve tek dokunuşla değişen bir
         tercih.
       */}
-      {!duzenleme && (
+      {(
         <div className="order-0 min-w-0 lg:order-none">
           <ArayisKartlari
             ogrenciId={student.id}
@@ -1360,926 +838,14 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
         `lg` üstünde çiziliyor, orada ızgara `contents` değil ve DOM sırası
         geçerli — arayış kartlarının altında, paylaşımların üstünde.
       */}
-      {!duzenleme && kampusYerlesimi === 'akis' && kampusPaneli('akis') && (
+      {kampusYerlesimi === 'akis' && kampusPaneli('akis') && (
         <div className="min-w-0">{kampusPaneli('akis')}</div>
       )}
 
-      {!duzenleme && sosyalPortfolyo && (
+      {sosyalPortfolyo && (
         <div className="order-1 -mx-4 min-w-0 sm:mx-0 lg:order-none">
           {sosyalPortfolyo}
         </div>
-      )}
-
-      {/*
-        ---------------- DÜZENLEME BÖLÜMLERİ ----------------
-
-        Sekiz bölümün sekizi de bu dalın içinde ve her biri ayrıca
-        `gorunur={acikBolum === ...}` ile süzülüyor: aynı anda tek bölüm
-        çiziliyor, ötekiler DOM'a hiç girmiyor. Kapalı bir bölümü
-        `hidden` ile bırakmak, doldurulmamış form alanlarını klavye
-        sırasında tutmak olurdu.
-
-        EKRAN TEK, KAYNAK İKİ. Aşağıdaki bölümler `student_profiles`a
-        yazıyor; ekranın altındaki sosyal bölüm `social_profiles`a. İki
-        başlık bu ayrımı yazıyor çünkü kaydetme ATOMİK DEĞİL: her bölümün
-        kendi kaydetme eylemi ve kendi durumu var, tek bir "Kaydet"
-        düğmesi yarısı başarılı bir gönderimde yalan söylerdi.
-      */}
-      {duzenleme && (
-      /* Tek kutu: mobilde `contents` sarmalayıcının içinde `min-w-0` ve boşluk buradan. */
-      <div className="min-w-0 space-y-3">
-
-      {/*
-        Başlık düzeyi `h2`: sayfanın `h1`i sol sütunda. Bölümlerin kendi
-        başlıkları `Bolum` içinde ve bunun altında kalıyor.
-      */}
-      <h2 className="px-1 text-base font-extrabold tracking-tight text-gray-900">
-        Öğrenci bilgilerin
-      </h2>
-
-      {/* ---------------- CV ---------------- */}
-      <Bolum
-        id="cv"
-        gorunur={acikBolum === 'cv'}
-        ikon={<FileText className="w-5 h-5" />}
-        baslik="CV"
-        ozet={
-          student.cvPath
-            ? 'Başvurularına bu belge ekleniyor'
-            : 'PDF yükle, başvurularına eklensin'
-        }
-        tamam={Boolean(student.cvPath)}
-        acik={acikBolum === 'cv'}
-        onToggle={() => bolumeGit('cv')}
-      >
-        <CvAlani
-          userId={student.id}
-          cvPath={student.cvPath}
-          onDegisti={(yeniYol) => onUpdateProfile({ cvPath: yeniYol ?? '' })}
-        />
-      </Bolum>
-
-      {/* ---------------- 1. Kişisel bilgiler ---------------- */}
-      <Bolum
-        id="kisisel"
-        gorunur={acikBolum === 'kisisel'}
-        ikon={<GraduationCap className="w-5 h-5" />}
-        baslik="Okul ve iletişim"
-        ozet={
-          student.university && student.department
-            ? `${student.university} · ${student.department}`
-            : 'Okulunu, bölümünü ve telefonunu gir'
-        }
-        tamam={Boolean(student.university && student.department && student.bio && student.phone)}
-        acik={acikBolum === 'kisisel'}
-        onToggle={kisiselAc}
-      >
-        {/*
-          `noValidate`: zorunluluk kontrolü `kisiselKaydet`te. Tarayıcıya
-          bırakıldığında gönderim olayı hiç doğmuyor, dolayısıyla şehir
-          uyarısı da çizilemiyordu.
-        */}
-        <form onSubmit={kisiselKaydet} noValidate className="space-y-3">
-          <div>
-            <label className={etiketClass} htmlFor="ad-soyad">Ad Soyad</label>
-            <input
-              id="ad-soyad"
-              type="text"
-              required
-              aria-invalid={adHatasi || undefined}
-              value={taslak.fullName}
-              onChange={(e) => {
-                setTaslak({ ...taslak, fullName: e.target.value });
-                if (adHatasi) setAdHatasi(false);
-              }}
-              className={alanClass}
-            />
-            {adHatasi && (
-              <p role="alert" className="mt-1 text-[11px] font-semibold text-rose-700">
-                Ad Soyad boş olamaz: profilinde ve CV'nde bu ad görünüyor.
-              </p>
-            )}
-            {taslak.fullName.trim() &&
-              adYazimi(taslak.fullName) !== taslak.fullName.trim() && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setTaslak({ ...taslak, fullName: adYazimi(taslak.fullName) })
-                  }
-                  className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 hover:underline cursor-pointer"
-                >
-                  <Check className="w-3.5 h-3.5" />
-                  {adYazimi(taslak.fullName)} olarak yaz
-                </button>
-              )}
-          </div>
-
-          <div>
-            <label className={etiketClass} htmlFor="universite">Üniversite</label>
-            <AutocompleteField
-              id="universite"
-              value={taslak.university}
-              onChange={(v) => setTaslak({ ...taslak, university: v })}
-              options={TR_UNIVERSITIES}
-              placeholder="Yazmaya başla, listeden seç"
-              className={alanClass}
-            />
-          </div>
-
-          <div>
-            <label className={etiketClass} htmlFor="bolum">Bölüm</label>
-            <AutocompleteField
-              id="bolum"
-              value={taslak.department}
-              onChange={(v) => setTaslak({ ...taslak, department: v })}
-              options={TR_DEPARTMENTS}
-              placeholder="Ön lisans ve lisans programları"
-              className={alanClass}
-            />
-          </div>
-
-          <div>
-            <label className={etiketClass} htmlFor="sehir">
-              Şehir <span className="font-normal text-gray-400">(isteğe bağlı)</span>
-            </label>
-            <AutocompleteField
-              id="sehir"
-              value={taslak.city}
-              onChange={(v) => {
-                setTaslak({ ...taslak, city: v });
-                if (sehirHatasi) setSehirHatasi(false);
-              }}
-              options={TR_CITIES}
-              placeholder="Yazmaya başla, listeden seç"
-              className={alanClass}
-            />
-            {sehirHatasi ? (
-              <p role="alert" className="mt-1 text-[11px] font-semibold text-rose-700">
-                Listeden bir il seç: yazdığın değer il listesinde yok, bu hâliyle kaydedilemiyor.
-              </p>
-            ) : (
-              <p className="mt-1 text-[11px] text-gray-600">
-                Nerede oturduğunu soruyoruz, nerede çalışmak istediğini değil. Şehir şartı olan
-                burslarda eşleştirme için kullanılıyor.
-              </p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={etiketClass} htmlFor="sinif">Sınıf</label>
-              <select
-                id="sinif"
-                value={taslak.gradeLevel}
-                onChange={(e) => setTaslak({ ...taslak, gradeLevel: e.target.value })}
-                className={alanClass}
-              >
-                <option value="1. Sınıf">1. Sınıf</option>
-                <option value="2. Sınıf">2. Sınıf</option>
-                <option value="3. Sınıf">3. Sınıf</option>
-                <option value="4. Sınıf">4. Sınıf</option>
-                <option value="Yüksek Lisans / Mezun">Yüksek Lisans / Mezun</option>
-              </select>
-            </div>
-            <div>
-              <label className={etiketClass} htmlFor="gpa">
-                Not ortalaması <span className="font-normal text-gray-400">(isteğe bağlı)</span>
-              </label>
-              <input
-                id="gpa"
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                min="0"
-                max="4"
-                value={taslak.gpa}
-                onChange={(e) => setTaslak({ ...taslak, gpa: e.target.value })}
-                placeholder="3.10"
-                className={alanClass}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className={etiketClass} htmlFor="telefon">Telefon</label>
-            <input
-              id="telefon"
-              type="tel"
-              inputMode="tel"
-              value={taslak.phone}
-              onChange={(e) => setTaslak({ ...taslak, phone: e.target.value })}
-              placeholder="05XX XXX XX XX"
-              className={alanClass}
-            />
-            <p className="text-[11px] text-gray-600 mt-1">
-              Telefonun yalnızca başvurduğun ilanın şirketiyle paylaşılır.
-            </p>
-          </div>
-
-          <div>
-            <label className={etiketClass} htmlFor="bio">Kendini bir iki cümleyle anlat</label>
-            <textarea
-              id="bio"
-              rows={3}
-              value={taslak.bio}
-              onChange={(e) => setTaslak({ ...taslak, bio: e.target.value })}
-              placeholder="Örn: Makine mühendisliği 3. sınıf öğrencisiyim, üretim hattı ve kalite kontrol alanında yaz stajı arıyorum."
-              className={alanClass}
-            />
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer"
-            >
-              Kaydet
-            </button>
-            {kaydedildi && (
-              <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
-                <Check className="w-4 h-4" /> Kaydedildi
-              </span>
-            )}
-          </div>
-        </form>
-      </Bolum>
-
-      {/* ---------------- 2. Teknik yetenekler ---------------- */}
-      <Bolum
-        id="teknik"
-        gorunur={acikBolum === 'teknik'}
-        ikon={<LayoutGrid className="w-5 h-5" />}
-        baslik="Kullandığın programlar"
-        ozet={listeOzeti(yetenekler.map((s) => s.name), 'Excel, AutoCAD, Python… hangilerini biliyorsun?')}
-        tamam={yetenekler.length > 0}
-        acik={acikBolum === 'teknik'}
-        onToggle={bolumAc}
-      >
-        {yetenekler.length === 0 ? (
-          <BosDurum>Aşağıdakilere dokunarak hızlıca ekleyebilirsin.</BosDurum>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {yetenekler.map((skill) => (
-              <span
-                key={skill.name}
-                className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl bg-gray-50 border border-gray-200 text-sm"
-              >
-                <span className="font-semibold text-gray-900">{skill.name}</span>
-
-                <button
-                  type="button"
-                  onClick={() => seviyeDondur(skill.name)}
-                  title="Seviyeyi değiştirmek için dokun"
-                  className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-white border border-gray-200 text-gray-600 cursor-pointer hover:border-blue-400"
-                >
-                  {SEVIYE_ETIKET[skill.level]}
-                </button>
-
-                {skill.verified ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600"/>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => onOpenQuiz(skill.name)}
-                    title="Testi çöz, rozet kazan"
-                    className="p-1 text-blue-600 cursor-pointer"
-                  >
-                    <Award className="w-4 h-4" />
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => yetenekSil(skill.name)}
-                  aria-label={`${skill.name} kaldır`}
-                  className="p-1 text-gray-300 hover:text-rose-600 cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-
-        <div className="flex flex-wrap gap-1.5">
-          {POPULER_ARACLAR
-            .filter((t) => !yetenekler.some((s) => s.name.toLocaleLowerCase('tr') === t.toLocaleLowerCase('tr')))
-            .map((tool) => (
-              <button
-                key={tool}
-                type="button"
-                onClick={() => yetenekEkle(tool)}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-dashed border-gray-300 text-xs font-semibold text-gray-600 hover:border-blue-500 hover:text-blue-700 cursor-pointer transition-colors"
-              >
-                <Plus className="w-3 h-3" />
-                {tool}
-              </button>
-            ))}
-        </div>
-
-        <PredictiveInput
-          id="teknik-yetenek"
-          value={yeniYetenek}
-          onChange={setYeniYetenek}
-          onSubmit={yetenekEkle}
-          dictionary={HARD_SKILLS_DICTIONARY}
-          excludeList={yetenekler.map((s) => s.name)}
-          placeholder="Listede olmayan bir program yaz"
-          buttonText="Ekle"
-          accentColor="blue"
-        />
-        <p className="text-[11px] text-gray-600">
-          Seviyeyi değiştirmek için rozetin üstündeki yazıya dokun.
-        </p>
-      </Bolum>
-
-      {/* ---------------- 3. Sosyal beceriler ---------------- */}
-      <Bolum
-        id="sosyal"
-        gorunur={acikBolum === 'sosyal'}
-        ikon={<Sparkles className="w-5 h-5" />}
-        baslik="Sosyal becerilerin"
-        ozet={listeOzeti(sosyal, 'Ekip çalışması, iletişim, problem çözme…')}
-        tamam={sosyal.length > 0}
-        acik={acikBolum === 'sosyal'}
-        onToggle={bolumAc}
-      >
-        {sosyal.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {sosyal.map((beceri) => (
-              <span
-                key={beceri}
-                className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl bg-blue-50 border border-blue-100 text-sm font-semibold text-blue-900"
-              >
-                {beceri}
-                <button
-                  type="button"
-                  onClick={() => sosyalSil(beceri)}
-                  aria-label={`${beceri} kaldır`}
-                  className="p-1 text-blue-300 hover:text-rose-600 cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-
-        <div className="flex flex-wrap gap-1.5">
-          {ONERILEN_SOSYAL.filter((s) => !sosyal.includes(s)).map((oneri) => (
-            <button
-              key={oneri}
-              type="button"
-              onClick={() => sosyalEkle(oneri)}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-dashed border-gray-300 text-xs font-semibold text-gray-600 hover:border-blue-500 hover:text-blue-700 cursor-pointer transition-colors"
-            >
-              <Plus className="w-3 h-3" />
-              {oneri}
-            </button>
-          ))}
-        </div>
-
-        <PredictiveInput
-          id="sosyal-beceri"
-          value={yeniSosyal}
-          onChange={setYeniSosyal}
-          onSubmit={sosyalEkle}
-          dictionary={SOFT_SKILLS_DICTIONARY}
-          excludeList={sosyal}
-          placeholder="Kendi becerini yaz"
-          buttonText="Ekle"
-          accentColor="blue"
-        />
-      </Bolum>
-
-      {/* ---------------- 4. Diller ---------------- */}
-      <Bolum
-        id="dil"
-        gorunur={acikBolum === 'dil'}
-        ikon={<Languages className="w-5 h-5" />}
-        baslik="Yabancı diller"
-        ozet={listeOzeti(diller.map((l) => `${l.language} (${l.level})`), 'Bildiğin dil varsa ekle')}
-        tamam={diller.length > 0}
-        acik={acikBolum === 'dil'}
-        onToggle={bolumAc}
-      >
-        {diller.length === 0 && !dilFormu && (
-          <BosDurum>Hiç yabancı dil eklemedin. Zorunlu değil.</BosDurum>
-        )}
-
-        <div className="space-y-2">
-          {diller.map((lang) => (
-            <div
-              key={lang.id}
-              className="p-3 rounded-xl bg-gray-50 border border-gray-200 space-y-2"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-bold text-sm text-gray-900 flex items-center gap-1.5 min-w-0">
-                  <span className="truncate">{lang.language}</span>
-                  {lang.verified && (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0"/>
-                  )}
-                </span>
-                <div className="flex items-center gap-1 shrink-0">
-                  {!lang.verified && (
-                    <button
-                      type="button"
-                      onClick={() => onOpenQuiz(lang.language)}
-                      className="text-xs font-bold text-blue-600 px-2 py-1 cursor-pointer"
-                    >
-                      Doğrula
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => dilSil(lang.id)}
-                    aria-label={`${lang.language} kaldır`}
-                    className="p-1.5 text-gray-300 hover:text-rose-600 cursor-pointer"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex gap-1">
-                {DIL_SEVIYELERI.map((sv) => (
-                  <button
-                    key={sv}
-                    type="button"
-                    onClick={() => dilSeviyeDegistir(lang.id, sv)}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                      lang.level === sv
-                        ? 'bg-blue-600 text-white'
-                        :'bg-white text-gray-500 border border-gray-200'
-                    }`}
-                  >
-                    {sv}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[11px] text-gray-500">{lang.proficiencyText}</p>
-            </div>
-          ))}
-        </div>
-
-        {dilFormu ? (
-          <form onSubmit={dilEkle} className="p-3 rounded-xl border border-blue-200 bg-blue-50/50 space-y-3">
-            <PredictiveInput
-              id="yeni-dil"
-              value={yeniDil}
-              onChange={setYeniDil}
-              onSubmit={setYeniDil}
-              dictionary={LANGUAGES_DICTIONARY.map((l) => l.name)}
-              excludeList={diller.map((l) => l.language)}
-              placeholder="Dil adı (İngilizce, Almanca…)"
-              buttonText="Seç"
-              accentColor="blue"
-            />
-
-            <div className="flex gap-1">
-              {DIL_SEVIYELERI.map((sv) => (
-                <button
-                  key={sv}
-                  type="button"
-                  onClick={() => setYeniDilSeviye(sv)}
-                  className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                    yeniDilSeviye === sv
-                      ? 'bg-blue-600 text-white'
-                      :'bg-white text-gray-500 border border-gray-200'
-                  }`}
-                >
-                  {sv}
-                </button>
-              ))}
-            </div>
-            <p className="text-[11px] text-gray-500">
-              {DIL_SEVIYE_METNI[yeniDilSeviye]}
-            </p>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="submit"
-                disabled={!yeniDil.trim()}
-                className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-40 cursor-pointer"
-              >
-                Ekle
-              </button>
-              <button
-                type="button"
-                onClick={() => setDilFormu(false)}
-                className="px-3 py-2 rounded-xl text-sm font-semibold text-gray-500 cursor-pointer"
-              >
-                Vazgeç
-              </button>
-            </div>
-          </form>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setDilFormu(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-sm font-semibold text-gray-600 hover:border-blue-500 hover:text-blue-700 cursor-pointer transition-colors"
-          >
-            <Plus className="w-4 h-4" /> Dil ekle
-          </button>
-        )}
-      </Bolum>
-
-      {/* ---------------- 5. Projeler ---------------- */}
-      <Bolum
-        id="proje"
-        gorunur={acikBolum === 'proje'}
-        ikon={<FolderOpen className="w-5 h-5" />}
-        baslik="Projeler ve çalışmalar"
-        ozet={listeOzeti(projeler.map((p) => p.title), 'Okul projesi, ödev, kişisel çalışma — hepsi sayılır')}
-        tamam={projeler.length > 0}
-        acik={acikBolum === 'proje'}
-        onToggle={bolumAc}
-      >
-        {projeler.length === 0 && !projeFormu && (
-          <BosDurum>
-            Bitirme projen, atölye çalışman ya da hobi olarak yaptığın bir iş de olur.
-          </BosDurum>
-        )}
-
-        <div className="space-y-2">
-          {projeler.map((p) => (
-            <div
-              key={p.id}
-              className="p-3 rounded-xl bg-gray-50 border border-gray-200 flex items-start justify-between gap-3"
-            >
-              <div className="min-w-0 space-y-1">
-                <div className="flex items-center gap-1.5">
-                  <h4 className="font-bold text-sm text-gray-900">{p.title}</h4>
-                  {p.githubUrl && (
-                    <a
-                      href={p.githubUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-gray-400 hover:text-blue-600"
-                      aria-label="Projeyi aç"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  )}
-                </div>
-                {p.description && (
-                  <p className="text-xs text-gray-600">{p.description}</p>
-                )}
-                {p.techStack.length > 0 && (
-                  <div className="flex flex-wrap gap-1 pt-0.5">
-                    {p.techStack.map((tech) => (
-                      <span
-                        key={tech}
-                        className="px-2 py-0.5 rounded-md bg-white border border-gray-200 text-[10px] font-semibold text-gray-600"
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => projeSil(p.id)}
-                aria-label={`${p.title} sil`}
-                className="p-1.5 shrink-0 text-gray-300 hover:text-rose-600 cursor-pointer"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {projeFormu ? (
-          <form onSubmit={projeEkle} className="p-3 rounded-xl border border-blue-200 bg-blue-50/50 space-y-3">
-            <input
-              type="text"
-              value={projeBaslik}
-              onChange={(e) => setProjeBaslik(e.target.value)}
-              placeholder="Ne yaptın? (örn: Bitirme projesi — su tasarrufu sensörü)"
-              className={alanClass}
-            />
-            <textarea
-              rows={2}
-              value={projeAciklama}
-              onChange={(e) => setProjeAciklama(e.target.value)}
-              placeholder="Kısaca anlat (isteğe bağlı)"
-              className={alanClass}
-            />
-            <input
-              type="text"
-              value={projeTeknoloji}
-              onChange={(e) => setProjeTeknoloji(e.target.value)}
-              placeholder="Kullandığın araçlar, virgülle: Arduino, SolidWorks"
-              className={alanClass}
-            />
-            <input
-              type="url"
-              value={projeLink}
-              onChange={(e) => setProjeLink(e.target.value)}
-              placeholder="Bağlantı (isteğe bağlı)"
-              className={alanClass}
-            />
-            <div className="flex items-center gap-2">
-              <button
-                type="submit"
-                disabled={!projeBaslik.trim()}
-                className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-40 cursor-pointer"
-              >
-                Ekle
-              </button>
-              <button
-                type="button"
-                onClick={() => setProjeFormu(false)}
-                className="px-3 py-2 rounded-xl text-sm font-semibold text-gray-500 cursor-pointer"
-              >
-                Vazgeç
-              </button>
-            </div>
-          </form>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setProjeFormu(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-sm font-semibold text-gray-600 hover:border-blue-500 hover:text-blue-700 cursor-pointer transition-colors"
-          >
-            <Plus className="w-4 h-4" /> Proje ekle
-          </button>
-        )}
-      </Bolum>
-
-      {/* ---------------- 6. Tercihler ---------------- */}
-      <Bolum
-        id="tercih"
-        gorunur={acikBolum === 'tercih'}
-        ikon={<Target className="w-5 h-5" />}
-        baslik="Ne arıyorsun?"
-        ozet={
-          hedefler.length > 0 || sehirler.length > 0
-            ? `${listeOzeti(hedefler, 'Pozisyon seçilmedi', 2)}${sehirler.length ? ` · ${sehirler.join(', ')}` : ''}`
-            : 'Hedef pozisyon ve şehir seç — eşleşmeler buna göre'
-        }
-        tamam={hedefler.length > 0 && sehirler.length > 0}
-        acik={acikBolum === 'tercih'}
-        onToggle={bolumAc}
-      >
-        <div>
-          <span className={etiketClass}>Aradığın pozisyon</span>
-          {hedefler.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2">
-              {hedefler.map((rol) => (
-                <span
-                  key={rol}
-                  className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl bg-blue-50 border border-blue-100 text-sm font-semibold text-blue-900"
-                >
-                  {rol}
-                  <button
-                    type="button"
-                    onClick={() => hedefDegistir(rol)}
-                    aria-label={`${rol} kaldır`}
-                    className="p-1 text-blue-300 hover:text-rose-600 cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-
-          <div className="flex flex-wrap gap-1.5">
-            {(tumHedefler ? HEDEF_POZISYONLAR : HEDEF_POZISYONLAR.slice(0, 10))
-              .filter((r) => !hedefler.includes(r))
-              .map((rol) => (
-                <button
-                  key={rol}
-                  type="button"
-                  onClick={() => hedefDegistir(rol)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-dashed border-gray-300 text-xs font-semibold text-gray-600 hover:border-blue-500 hover:text-blue-700 cursor-pointer transition-colors"
-                >
-                  <Plus className="w-3 h-3" />
-                  {rol}
-                </button>
-              ))}
-            <button
-              type="button"
-              onClick={() => setTumHedefler((v) => !v)}
-              className="px-2.5 py-1.5 text-xs font-bold text-blue-600 cursor-pointer"
-            >
-              {tumHedefler ? 'Daha az göster' : 'Tümünü göster'}
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <span className={etiketClass}>Arayüz dili</span>
-            <select value={student.interfaceLanguage ?? ''} onChange={e=>onUpdateProfile({interfaceLanguage:e.target.value||undefined})} className={alanClass} aria-label="Arayüz dili">
-              <option value="">Tarayıcı dilini kullan</option>
-              <option value="tr">Türkçe</option><option value="en">English</option><option value="fr">Français</option><option value="de">Deutsch</option>
-            </select>
-          </div>
-          <div>
-            <span className={etiketClass}>Staj aradığın ülkeler</span>
-            <select value="" onChange={e=>{const code=e.target.value;const current=student.preferredJobCountries??[];if(code&&!current.includes(code))onUpdateProfile({preferredJobCountries:[...current,code]});}} className={alanClass} aria-label="Staj ülkesi ekle">
-              <option value="">+ Ülke ekle</option>
-              {GLOBAL_COUNTRIES.filter(([code])=>!(student.preferredJobCountries??[]).includes(code)).map(([code,label])=><option key={code} value={code}>{label}</option>)}
-            </select>
-          </div>
-          {(student.preferredJobCountries??[]).length>0&&<div className="sm:col-span-2 flex flex-wrap gap-2">{(student.preferredJobCountries??[]).map((code,index)=><span key={code} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 pl-3 pr-1.5 text-sm font-semibold text-blue-900"><span>{index+1}. {GLOBAL_COUNTRIES.find(x=>x[0]===code)?.[1]??code}</span><button type="button" aria-label={`${code} tercihini kaldır`} onClick={()=>onUpdateProfile({preferredJobCountries:(student.preferredJobCountries??[]).filter(x=>x!==code)})} className="flex h-9 w-9 items-center justify-center rounded-lg text-blue-500 hover:bg-white"><X className="h-4 w-4"/></button></span>)}</div>}
-          <p className="sm:col-span-2 text-[11px] text-gray-600">İlk ülke varsayılan keşif ülken olur. İlan ekranında geçici ülke değiştirmek bu listeyi değiştirmez.</p>
-        </div>
-
-        <div>
-          <span className={etiketClass}>Çalışmak istediğin şehirler</span>
-          {sehirler.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2">
-              {sehirler.map((sehir) => (
-                <span
-                  key={sehir}
-                  className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl bg-blue-50 border border-blue-100 text-sm font-semibold text-blue-900"
-                >
-                  {sehir}
-                  <button
-                    type="button"
-                    onClick={() => tercihGuncelle({ cities: sehirler.filter((c) => c !== sehir) })}
-                    aria-label={`${sehir} kaldır`}
-                    className="p-1 text-blue-300 hover:text-rose-600 cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-          <select
-            value=""
-            onChange={(e) => {
-              const secilen = e.target.value;
-              if (!secilen || sehirler.includes(secilen)) return;
-              tercihGuncelle({ cities: [...sehirler, secilen] });
-            }}
-            className={alanClass}
-          >
-            <option value="">+ Şehir ekle</option>
-            {TR_CITIES.filter((c) => !sehirler.includes(c)).map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-          <p className="text-[11px] text-gray-600 mt-1">
-            Hiç seçmezsen tüm şehirlerdeki ilanlar eşit değerlendirilir.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <span className={etiketClass}>Çalışma şekli</span>
-            <select
-              value={student.preferences.workType}
-              onChange={(e) => tercihGuncelle({ workType: e.target.value as StudentProfile['preferences']['workType'] })}
-              className={alanClass}
-            >
-              <option value="Any">Farketmez</option>
-              <option value="On-site">Ofiste</option>
-              <option value="Hybrid">Hibrit</option>
-              <option value="Remote">Uzaktan</option>
-            </select>
-          </div>
-          <div>
-            <span className={etiketClass}>Staj türü</span>
-            <select
-              value={student.preferences.type}
-              onChange={(e) => tercihGuncelle({ type: e.target.value as StudentProfile['preferences']['type'] })}
-              className={alanClass}
-            >
-              <option value="Summer Mandatory">Yaz dönemi zorunlu staj</option>
-              <option value="Long-term">Uzun dönem (dönem içi)</option>
-              <option value="Voluntary">Gönüllü staj</option>
-            </select>
-          </div>
-        </div>
-
-        <label className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200 cursor-pointer">
-          <span className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            Sigortamı üniversite karşılıyor
-          </span>
-          <input
-            type="checkbox"
-            checked={student.preferences.mandatoryInsuranceProvidedByUni}
-            onChange={(e) => tercihGuncelle({ mandatoryInsuranceProvidedByUni: e.target.checked })}
-            className="w-5 h-5 rounded text-blue-600 shrink-0"
-          />
-        </label>
-      </Bolum>
-
-      {/* ---------------- 7. Rozetler ---------------- */}
-      {/*
-        Testler ve rozetler tek bölümde.
-
-        Ayrı bir "Yetenek Doğrulama" sekmesindeydi. Ama test çözmek profil
-        doldurmanın parçası: kişi yeteneğini yazıyor, sonra doğruluyor. İkisi
-        ayrı sekmelerdeyken kullanıcı yeteneği ekliyor, doğrulamak için başka
-        yere gidiyordu.
-      */}
-      <Bolum
-        id="rozet"
-        gorunur={acikBolum === 'rozet'}
-        ikon={<Award className="w-5 h-5" />}
-        baslik="Testler ve rozetler"
-        ozet={
-          rozetler.length > 0
-            ? `${rozetler.length} rozet · ${quizzes.length} test var`
-            : `${quizzes.length} kısa test — çözünce yeteneğinin yanında doğrulanmış işareti çıkar`
-        }
-        tamam={rozetler.length > 0}
-        acik={acikBolum === 'rozet'}
-        onToggle={bolumAc}
-      >
-        {rozetler.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {rozetler.map((b) => (
-              <span
-                key={b}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-sm font-semibold text-emerald-900"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                {b.replace(/^(badge|quiz)-/, '')}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {quizzes.length === 0 ? (
-          <BosDurum>Şu an gösterilecek test yok.</BosDurum>
-        ) : (
-          <>
-            <p className="text-xs text-gray-500">
-              5 soruluk kısa testler, yaklaşık 5 dakika. 3 doğru yeterli.
-            </p>
-            <ul className="divide-y divide-gray-100">
-              {quizzes.map((quiz) => {
-                const kazanildi = rozetler.includes(quiz.badgeName);
-                return (
-                  <li key={quiz.id}>
-                    <button
-                      type="button"
-                      onClick={() => onStartQuiz?.(quiz)}
-                      className="w-full flex items-center gap-3 py-3 text-left cursor-pointer hover:bg-blue-50/60 transition-colors rounded-xl px-2 -mx-2"
-                    >
-                      <span
-                        className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center ${
-                          kazanildi ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
-                        }`}
-                      >
-                        {kazanildi ? (
-                          <CheckCircle2 className="w-4.5 h-4.5" />
-                        ) : (
-                          <Award className="w-4.5 h-4.5" />
-                        )}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block font-semibold text-sm text-gray-900 truncate">
-                          {quiz.skillName}
-                        </span>
-                        <span className="block text-xs text-gray-500">
-                          {kazanildi
-                            ? 'Rozet kazanıldı · tekrar çözebilirsin'
-                            : `${quiz.questions.length} soru · ~5 dk`}
-                        </span>
-                      </span>
-                      <ChevronDown className="w-5 h-5 shrink-0 text-gray-300 -rotate-90" />
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </>
-        )}
-      </Bolum>
-
-      {/*
-        ---------------- SOSYAL PROFİL BÖLÜMÜ ----------------
-
-        Dişliden açılan ayrı ekran buraya TAŞINDI, kopyalanmadı: aynı
-        bileşen, aynı alanlar, aynı yazma çağrısı — yalnız yeri değişti.
-        Kullanıcı adı da içinde; güncel ad ve profil adresi orada yazılı.
-
-        Ayrı bir kaydetme düğmesi var ve olması gerekiyor: burası
-        `social_profiles`a yazıyor, yukarısı `student_profiles`a. Ortak
-        bir "Kaydet" iki yazmayı tek sonuç gibi gösterirdi.
-
-        Ayırıcı çizgi iki kaynağın sınırını gösteriyor; VERİLMEZSE çizgi
-        de çizilmiyor — boş bir ayırıcı, altında bir şey olduğunu ima
-        ederdi.
-      */}
-      {sosyalProfilDuzenleme && (
-        /* `id`: görüntüleyicideki kalem buraya kaydırıyor (`fotografDegistir`). */
-        <div id="sosyal-profil-duzenleme" className="mt-6 border-t border-gray-200 pt-5">
-          {sosyalProfilDuzenleme}
-        </div>
-      )}
-
-      </div>
       )}
 
         </div>

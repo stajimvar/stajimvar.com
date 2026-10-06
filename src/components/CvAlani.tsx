@@ -40,7 +40,15 @@ export const CvAlani: React.FC<{
   cvPath?: string;
   /** Yalnızca `cvPath` yamasını gönderir; profil kaydı çağıranın işi. */
   onDegisti: (yeniYol: string | null) => void | Promise<void>;
-}> = ({ userId, cvPath, onDegisti }) => {
+  /**
+   * KOMPAKT (6 Ekim 2026, "Profilini düzenle"): yükleme düğmesi çağıranın
+   * satırında ("PDF yükle"); bu bileşen yalnız yüklü belgenin kartını,
+   * yükleme durumunu ve hatayı çiziyor. Belge yokken boş kutu çizilmiyor.
+   */
+  kompakt?: boolean;
+  /** Gizli dosya girdisinin kimliği: çağıranın "PDF yükle" düğmesi bunu açıyor. */
+  girdiId?: string;
+}> = ({ userId, cvPath, onDegisti, kompakt = false, girdiId }) => {
   const dosyaRef = useRef<HTMLInputElement>(null);
   const [durum, setDurum] = useState<'bos' | 'yukleniyor' | 'aciliyor' | 'siliniyor'>('bos');
   const [hata, setHata] = useState<string | null>(null);
@@ -143,6 +151,7 @@ export const CvAlani: React.FC<{
     <div className="space-y-3">
       <input
         ref={dosyaRef}
+        id={girdiId}
         type="file"
         accept="application/pdf,.pdf"
         onChange={dosyaSecildi}
@@ -151,7 +160,14 @@ export const CvAlani: React.FC<{
         tabIndex={-1}
       />
 
-      {!cvPath ? (
+      {!cvPath && kompakt ? (
+        durum === 'yukleniyor' && (
+          <p role="status" className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            PDF yükleniyor
+          </p>
+        )
+      ) : !cvPath ? (
         <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-4 text-center">
           <FileText className="mx-auto h-6 w-6 text-gray-400" aria-hidden />
           <p className="mt-2 text-sm font-bold text-gray-900">Henüz CV eklemedin</p>
@@ -180,7 +196,9 @@ export const CvAlani: React.FC<{
               <FileText className="h-5 w-5" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold text-gray-900">CV yüklendi</p>
+              <p className="truncate text-sm font-bold text-gray-900">
+                {durum === 'yukleniyor' ? 'Yeni PDF yükleniyor…' : 'CV yüklendi'}
+              </p>
               {/* Yalnızca gerçekten bilinen alanlar yazılıyor. */}
               <p className="truncate text-xs text-gray-500">
                 {['PDF', baytMetni(bilgi?.bayt), tarihYaz(bilgi?.yuklenme ?? null)]
@@ -204,19 +222,22 @@ export const CvAlani: React.FC<{
               )}
               Görüntüle
             </button>
-            <button
-              type="button"
-              onClick={() => dosyaRef.current?.click()}
-              disabled={mesgul}
-              className={`${dugme} border-gray-200 bg-white text-gray-800 hover:bg-gray-50`}
-            >
-              {durum === 'yukleniyor' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="h-4 w-4" />
-              )}
-              Değiştir
-            </button>
+            {/* Kompakt kipte değiştirme çağıranın "Yeni PDF yükle" düğmesinde; aynı iş iki kez çizilmiyor. */}
+            {!kompakt && (
+              <button
+                type="button"
+                onClick={() => dosyaRef.current?.click()}
+                disabled={mesgul}
+                className={`${dugme} border-gray-200 bg-white text-gray-800 hover:bg-gray-50`}
+              >
+                {durum === 'yukleniyor' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                Değiştir
+              </button>
+            )}
             <button
               type="button"
               onClick={sil}
@@ -240,10 +261,12 @@ export const CvAlani: React.FC<{
         </p>
       )}
 
-      <p className="text-xs leading-relaxed text-gray-500">
-        StajımVar üzerinden başvurduğunda CV&apos;nin o anki hâli başvuruya eklenir. Daha sonra
-        CV&apos;ni değiştirirsen eski başvurular değişmez.
-      </p>
+      {(!kompakt || cvPath) && (
+        <p className="text-xs leading-relaxed text-gray-500">
+          StajımVar üzerinden başvurduğunda CV&apos;nin o anki hâli başvuruya eklenir. Daha sonra
+          CV&apos;ni değiştirirsen eski başvurular değişmez.
+        </p>
+      )}
     </div>
   );
 };

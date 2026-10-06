@@ -25,6 +25,7 @@
  */
 
 import { PAYLASIM_SURUMU } from './basvuru-durumu.mjs';
+import { deneyimListesi } from './deneyim.mjs';
 
 /** Uyum şeridinin üç bandı. Renk değil, ANLAM döndürüyor. */
 export function uyumBandi(puan) {
@@ -238,6 +239,13 @@ export function kartVerisi(satir, ek = {}) {
     rozetler: paylasildi ? dizeListesi(anlik.rozetler) : [],
     /* Proje alanları tek tek doğrulanıyor (bkz. projeListesi). */
     projeler: paylasildi ? projeListesi(anlik.projeler) : [],
+    /*
+      DENEYİMLER (20261205010000). Kopyada alan yoksa (eski başvuru) boş
+      liste ve `deneyimKopyadan: false`: fark hesabı o durumda "deneyim
+      eklendi" demiyor, karşılaştırmayı atlıyor.
+    */
+    deneyimler: paylasildi ? (deneyimListesi(anlik.deneyimler) ?? []) : [],
+    deneyimKopyadan: paylasildi && Array.isArray(anlik.deneyimler),
     yetenekler,
     /*
       Yetenekler kopyadan mı geldi? Eski kopyalarda liste yok ve kart

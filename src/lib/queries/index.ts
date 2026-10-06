@@ -427,7 +427,8 @@ const STUDENT_SELECT = `
   profiles ( full_name, email, phone, avatar_url, interface_language, content_language, home_country ),
   student_skills ( * ),
   student_languages ( * ),
-  student_projects ( * )
+  student_projects ( * ),
+  student_experiences ( * )
 `;
 
 /** Tek öğrenci profili. Yoksa null döner (henüz profil oluşturmamış kullanıcı). */
@@ -617,6 +618,42 @@ export async function replaceStudentProjects(
 }
 
 /**
+ * Deneyimleri yeniler — projelerle aynı kalıp (sil + sırayla yaz).
+ *
+ * Sunucu tarih sırasını ve 30 üst sınırını kendisi denetliyor
+ * (20261205010000); arayüz aynı kuralları kaydetmeden önce gösteriyor ki
+ * kullanıcı sunucu hatasıyla karşılaşmasın.
+ */
+export async function replaceStudentExperiences(
+  userId: string,
+  experiences: NonNullable<StudentProfile['experiences']>
+): Promise<void> {
+  const { error: delError } = await supabase
+    .from('student_experiences')
+    .delete()
+    .eq('student_id', userId);
+  if (delError) fail('Deneyimler temizlenemedi', delError);
+
+  if (experiences.length === 0) return;
+
+  const { error } = await supabase.from('student_experiences').insert(
+    experiences.map((d, index) => ({
+      student_id: userId,
+      position: d.position.trim(),
+      organization: d.organization.trim(),
+      start_year: d.startYear,
+      start_month: d.startMonth,
+      end_year: d.ongoing ? null : d.endYear,
+      end_month: d.ongoing ? null : d.endMonth,
+      ongoing: d.ongoing,
+      description: d.description.trim() || null,
+      sort_order: index,
+    }))
+  );
+  if (error) fail('Deneyimler kaydedilemedi', error);
+}
+
+/**
  * Profil yamasını ilgili tablolara dağıtır.
  *
  * Arayüz tek bir `Partial<StudentProfile>` gönderiyor ama veri dört tabloya
@@ -631,6 +668,7 @@ export async function saveStudentProfile(
   if (patch.skills) await replaceStudentSkills(userId, patch.skills);
   if (patch.languages) await replaceStudentLanguages(userId, patch.languages);
   if (patch.projects) await replaceStudentProjects(userId, patch.projects);
+  if (patch.experiences) await replaceStudentExperiences(userId, patch.experiences);
 }
 
 // ---------------------------------------------------------------- Şirket

@@ -14,6 +14,7 @@ import { adayProfilFarki, githubAdresi, rozetEtiketi } from '../lib/aday-profil-
 import { guvenliDisAdres } from '../lib/guvenli-url.mjs';
 import { tarihMetni } from '../lib/tarih.mjs';
 import type { AdayGuncelProfili } from '../lib/sirket-veri';
+import { tarihAraligi } from '../lib/deneyim.mjs';
 
 /**
  * BAŞVURUDAN SONRA DEĞİŞENLER
@@ -192,7 +193,7 @@ export const AdayGuncelProfil: React.FC<{
   }
 
   const guncelTarih = tarihMetni(guncellendi);
-  const { alanlar, yetenekler, diller, rozetler, projeler } = fark;
+  const { alanlar, yetenekler, diller, rozetler, projeler, deneyimler } = fark;
 
   return (
     <section aria-labelledby="aday-degisenler" className="space-y-3">
@@ -334,6 +335,46 @@ export const AdayGuncelProfil: React.FC<{
                   </Cip>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {(deneyimler.eklenen.length > 0 || deneyimler.guncellenen.length > 0 || deneyimler.cikan.length > 0) && (
+            <div className="space-y-2">
+              <AltBaslik>Deneyim</AltBaslik>
+              {[
+                { etiket: 'Yeni deneyim', liste: deneyimler.eklenen },
+                { etiket: 'Bilgisi güncellendi', liste: deneyimler.guncellenen },
+              ].map(({ etiket, liste }) =>
+                liste.map((d: { pozisyon: string; kurum: string; aciklama: string | null }) => (
+                  <article
+                    key={`${etiket}-${d.pozisyon}-${d.kurum}`}
+                    className="rounded-xl border p-3"
+                    style={{ borderColor: SIRKET_KENAR }}
+                  >
+                    <p className="text-[10px] font-bold" style={{ color: '#78350F' }}>
+                      {etiket}
+                    </p>
+                    <p className="break-words text-sm font-bold" style={{ color: SIRKET_METIN }}>
+                      {d.pozisyon}
+                    </p>
+                    <p className="break-words text-xs" style={{ color: SIRKET_METIN }}>
+                      {d.kurum}
+                      {tarihAraligi(d) && <span style={{ color: SIRKET_METIN_IKINCIL }}> · {tarihAraligi(d)}</span>}
+                    </p>
+                    {d.aciklama && (
+                      <p className="mt-0.5 whitespace-pre-line break-words text-xs leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+                        {d.aciklama}
+                      </p>
+                    )}
+                  </article>
+                )),
+              )}
+              {deneyimler.cikan.length > 0 && (
+                <p className="text-sm" style={{ color: SIRKET_METIN }}>
+                  Profilden çıkarılan:{' '}
+                  {deneyimler.cikan.map((d: { pozisyon: string; kurum: string }) => `${d.pozisyon} (${d.kurum})`).join(', ')}
+                </p>
+              )}
             </div>
           )}
 

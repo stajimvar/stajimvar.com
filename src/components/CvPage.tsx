@@ -18,6 +18,7 @@ import type { StudentProfile } from '../types';
 import { adYazimi } from '../lib/ad';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
+import { deneyimKopyasi, deneyimSirasi, tarihAraligi } from '../lib/deneyim.mjs';
 
 interface CvPageProps {
   student: StudentProfile;
@@ -123,6 +124,10 @@ export const CvBelgesi = React.forwardRef<
   const projeler = student.projects ?? [];
   const sosyal = student.softSkills ?? [];
   const hedefler = student.targetRoles ?? [];
+  /* Deneyimler kopya biçiminde (pozisyon, kurum, tarih aralığı); en yenisi üstte. */
+  const deneyimler = deneyimKopyasi([...(student.experiences ?? [])].sort(deneyimSirasi));
+  /* Eğitim bilgisi yoksa bölüm çizilmiyor: "Belirtilmemiş" yazan bir başlık CV'de boşluk demekti. */
+  const egitimVar = Boolean(student.university || student.department);
 
   /*
     KONUM OTURDUĞU İL: önce `preferences.cities` (staj yapmak istediği
@@ -276,15 +281,43 @@ export const CvBelgesi = React.forwardRef<
             </AnaBolum>
           )}
 
-          <AnaBolum baslik="Eğitim" ikon={<GraduationCap className="h-7 w-7" strokeWidth={2} />}>
-            <div className="cv-oge">
-              <p className="text-xl font-bold leading-snug" style={{ color: LACIVERT }}>
-                {student.university || 'Belirtilmemiş'}
-              </p>
-              {student.department && <p className="mt-1 text-base text-gray-700">{student.department}</p>}
-              {egitimAlt && <p className="mt-1 text-base text-gray-700">{egitimAlt}</p>}
-            </div>
-          </AnaBolum>
+          {egitimVar && (
+            <AnaBolum baslik="Eğitim" ikon={<GraduationCap className="h-7 w-7" strokeWidth={2} />}>
+              <div className="cv-oge">
+                {student.university && (
+                  <p className="text-xl font-bold leading-snug" style={{ color: LACIVERT }}>
+                    {student.university}
+                  </p>
+                )}
+                {student.department && <p className="mt-1 text-base text-gray-700">{student.department}</p>}
+                {egitimAlt && <p className="mt-1 text-base text-gray-700">{egitimAlt}</p>}
+              </div>
+            </AnaBolum>
+          )}
+
+          {/* DENEYİM (20261205010000): yalnız girilmişse; boş başlık yok. */}
+          {deneyimler.length > 0 && (
+            <AnaBolum baslik="Deneyim" ikon={<Briefcase className="h-7 w-7" strokeWidth={2} />}>
+              <ol className="space-y-5">
+                {deneyimler.map((d, i) => (
+                  <li key={`${d.pozisyon}-${d.kurum}-${i}`} className="cv-oge relative pl-11">
+                    <span aria-hidden className="absolute left-[3px] top-1.5 h-4 w-4 rounded-full border-2 border-blue-600 bg-white" />
+                    <span aria-hidden className="absolute bottom-0 left-[10px] top-6 w-px bg-blue-200" />
+                    <p className="text-xl font-bold leading-snug" style={{ color: LACIVERT }}>
+                      {d.pozisyon}
+                    </p>
+                    <p className="mt-0.5 text-base font-semibold text-blue-600">
+                      {d.kurum}
+                      {tarihAraligi(d) && <span className="font-normal text-gray-600"> · {tarihAraligi(d)}</span>}
+                    </p>
+                    {d.aciklama && (
+                      <p className="mt-1.5 whitespace-pre-line text-base leading-relaxed text-gray-700">{d.aciklama}</p>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </AnaBolum>
+          )}
 
           {projeler.length > 0 && (
             <AnaBolum baslik="Projeler" ikon={<FileText className="h-7 w-7" strokeWidth={2} />}>

@@ -101,6 +101,7 @@ const FIRSAT_LISTE_YOLLARI = new Set([
 import { OpportunitiesHomeSection } from './components/OpportunitiesHomeSection';
 import { basvuruSonucMesaji, basvuruYolu } from './lib/basvuru-yolu.mjs';
 import { basvuruKopyasi } from './lib/basvuru-kopyasi.mjs';
+import { ayrilmaOnayi } from './lib/kaydedilmemis-degisiklik.mjs';
 import { aramaTeriminiOku, aramaAdresi } from './lib/arama-url.mjs';
 /*
   ARTIK GECİKMELİ — ÖN RENDER YEDEĞİ SAYESİNDE
@@ -484,6 +485,12 @@ export default function App() {
     (yukarıda, replaceState ile).
   */
   const navigate = (to: string, secenek?: { degistir?: boolean }) => {
+    /*
+      KAYDEDİLMEMİŞ DEĞİŞİKLİK (6 Ekim 2026): "Profilini düzenle" ekranında
+      yazılmış ama kaydedilmemiş bilgi varsa geçişten önce soruluyor;
+      yönlendirmeler (`degistir`) kullanıcı eylemi olmadığı için sorulmuyor.
+    */
+    if (!secenek?.degistir && !ayrilmaOnayi()) return;
     if (secenek?.degistir) window.history.replaceState({}, '', to);
     else window.history.pushState({}, '', to);
     /*
@@ -2927,22 +2934,42 @@ export default function App() {
                   `student_profiles`a yazıyor; her birinin kendi düğmesi
                   ve kendi durumu var.
                 */
+                /*
+                  "PROFİLİNİ DÜZENLE" İKİ PARÇA (6 Ekim 2026): fotoğraf
+                  sayfanın üstündeki kartta, kapak ve sosyal alanlar
+                  kendi "Sosyal profil" satırında. İkisi de aynı bileşen
+                  ve aynı sahiplik dalı; yalnız çizdikleri parça farklı.
+                */
+                sosyalFotografKarti={
+                  <SosyalProfilSayfasi
+                    gomulu
+                    gomuluKip="duzenleme"
+                    duzenlemeParcasi="fotograf"
+                    fotografKartiAdi={activeStudent.fullName}
+                    rotaKullaniciAdi={null}
+                    kullaniciId={session?.userId ?? null}
+                    oturumHazir={sessionReady}
+                    onNavigate={navigate}
+                    onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+                    onAvatarYolu={setSosyalAvatarYolu}
+                    ogrenciAvatarAdresi={activeStudent.avatarUrl}
+                  />
+                }
                 sosyalProfilDuzenleme={
                   <SosyalProfilSayfasi
                     gomulu
                     gomuluKip="duzenleme"
+                    duzenlemeParcasi="sosyal"
                     rotaKullaniciAdi={null}
                     kullaniciId={session?.userId ?? null}
                     oturumHazir={sessionReady}
                     onNavigate={navigate}
                     onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
                     /*
-                      Fotoğraf yükleme ve kaldırma BU panelde: yeni yol
-                      buradan da bildiriliyor, yoksa düzenlemeden çıkan
-                      kullanıcı sol sütunda eski fotoğrafı görürdü.
-                    */
-                    onAvatarYolu={setSosyalAvatarYolu}
-                    /*
+                      Fotoğraf bu parçada DEĞİL (üstteki kartta); yolu o
+                      parça bildiriyor. Burada da bildirseydi eski bir
+                      okuma yeni fotoğrafın üstüne yazabilirdi.
+
                       Eski kamera düğmesiyle yüklenmiş fotoğraf YEDEK:
                       `avatar_path`i olmayan kullanıcı sosyal blokta da
                       fotoğrafsız görünmesin.

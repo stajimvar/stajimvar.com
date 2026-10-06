@@ -94,6 +94,8 @@ const olustur = oku('src/components/sosyal/PaylasimOlustur.tsx');
 /* Beş sayaçlı şeridi çizen ui parçası: bağlantı sayacı gerçek `<a>`. */
 const sayacOgesi = oku('src/ui/StatItem.tsx');
 const ogrenciProfili = oku('src/components/StudentProfileView.tsx');
+/* 6 Ekim 2026: "Profilini düzenle" kendi bileşeninde. */
+const duzenlemeEkrani = oku('src/components/ProfilDuzenleme.tsx');
 const profilBasligi = oku('src/components/ProfilBasligi.tsx');
 const sayfa = oku('src/components/sosyal/SosyalProfilSayfasi.tsx');
 const duzenleme = oku('src/components/sosyal/SosyalProfilDuzenleme.tsx');
@@ -2005,9 +2007,12 @@ test('/cv birleşik ekranı, /cv/yazdir yazdırılabilir CV', () => {
   assert.match(orta, /'\/cv',/);
   assert.match(orta, /'\/cv\/yazdir',/);
 
-  /* Birleşik ekran: sol sütun profil/CV kartı, sağ sütun portfolyo. */
-  assert.match(ogrenciProfili, /lg:col-span-4/);
-  assert.match(ogrenciProfili, /lg:col-span-8/);
+  /*
+    Birleşik ekran: ana görünüm tek sütun (kart + portfolyo); düzenleme
+    kendi tek sütunlu ekranında (ProfilDuzenleme, 6 Ekim 2026).
+  */
+  assert.match(ogrenciProfili, /lg:col-span-12/);
+  assert.match(ogrenciProfili, /<ProfilDuzenleme\b/);
   assert.match(ogrenciProfili, /\{sosyalPortfolyo\}/);
   assert.match(app, /sosyalPortfolyo=\{\n\s*<SosyalProfilSayfasi\n\s*gomulu/);
 });
@@ -2028,8 +2033,9 @@ test('mobilde gönderi alanı kimlik kartının altında; masaüstü iskeleti ay
     17 Eylül 2026: ANA GÖRÜNÜM tek sütun (kart üstte tam genişlik, galeri
     altında); DÜZENLEME iki sütun olarak kaldı. Dizeler iki dalda da literal.
   */
-  assert.match(ogrenciProfili, /\? 'contents lg:block lg:col-span-4 lg:sticky lg:top-4 lg:space-y-3'\s*: 'contents lg:block lg:col-span-12'/);
-  assert.match(ogrenciProfili, /\? 'contents lg:block lg:col-span-8 min-w-0 lg:space-y-3'\s*: 'contents lg:block lg:col-span-12 min-w-0 lg:space-y-3'/);
+  /* 6 Ekim 2026: düzenleme ayrı ekran; ana görünümün iki sarmalayıcısı sabit dize. */
+  assert.match(ogrenciProfili, /className="contents lg:block lg:col-span-12"/);
+  assert.match(ogrenciProfili, /className="contents lg:block lg:col-span-12 min-w-0 lg:space-y-3"/);
   /* Mobil sıra: kart (order yok = 0) → gönderi 1 → hesap 2. */
   const kart = ogrenciProfili.indexOf('<ProfilBasligi');
   /* `-mx-4 sm:mx-0`: ızgara telefonda ekranın iki kenarına yaslı. */
@@ -2389,35 +2395,34 @@ test('/cv ana görünümünde "Profil bilgileri" listesi ve kurulum girişi yok'
 
 test('kaldırılan bölümler silinmedi: düzenleme ekranının içindeler', () => {
   /*
-    TAŞINDI, KOPYALANMADI. Aynı `Bolum` bileşenleri, aynı veri, aynı
-    `onUpdateProfile` çağrıları — yalnız `duzenleme` dalında çiziliyorlar.
-    İki kopya olsaydı biri değiştiğinde öteki geride kalır ve aynı alan
-    iki ekranda iki farklı değer gösterirdi.
-
-    Liste de aynı diziden besleniyor (`oneCikanlar`): gezinme ile
-    bölümlerin sırası tek yerde.
+    6 Ekim 2026 ("Profilini düzenle"): bölümler ProfilDuzenleme'de, her
+    biri bir kez. Eski bölümler birleşti ama hiçbiri düşmedi: okul ve
+    iletişim → Temel bilgiler + Eğitim; programlar, beceriler, diller →
+    Yetenekler ve diller; projeler → Projeler ve bağlantılar; tercihler,
+    testler ve sosyal profil "Diğer ayarlar"da.
   */
-  /*
-    Dal artık fragment değil kutu: sütun sarmalayıcısı mobilde `contents`
-    olduğundan çıplak çocuklar ızgara öğesi olurdu (bkz. mobil sıra testi).
-  */
-  assert.match(ogrenciProfili, /\{duzenleme && \(\n\s*<div className="space-y-3">/);
-  assert.match(ogrenciProfili, /\{duzenleme && \(\n[^\n]*\n\s*<div className="min-w-0 space-y-3">/);
-  assert.match(ogrenciProfili, /<ProfilBolumListesi ogeler=\{oneCikanlar\} secili=\{acikBolum\} \/>/);
-  for (const kimlik of ['"cv"', '"kisisel"', '"teknik"', '"sosyal"', '"dil"', '"proje"']) {
+  for (const kimlik of ['temel', 'egitim', 'deneyim', 'yetenek', 'proje', 'tercih', 'rozet', 'sosyal']) {
     assert.equal(
-      (ogrenciProfili.match(new RegExp(`id=${kimlik}\n`, 'g')) ?? []).length,
+      (duzenlemeEkrani.match(new RegExp(`id="${kimlik}"\n`, 'g')) ?? []).length,
       1,
       `${kimlik} bölümü tam olarak bir kez çizilmeli`,
     );
   }
-  /* Portfolyo yalnız ana görünümde: sağ sütun aynı anda görünüm+form olmuyor. */
+  assert.equal((duzenlemeEkrani.match(/id="duzenle-cv"/g) ?? []).length, 1);
+  /* Büyük sol menü yok. */
+  assert.doesNotMatch(ogrenciProfili, /ProfilBolumListesi/);
+  assert.doesNotMatch(duzenlemeEkrani, /ProfilBolumListesi/);
+  /* Portfolyo yalnız ana görünümde. */
   assert.match(
     ogrenciProfili,
-    /\{!duzenleme && sosyalPortfolyo && \(\n\s*<div className="order-1 -mx-4 min-w-0 sm:mx-0 lg:order-none">\n\s*\{sosyalPortfolyo\}/,
+    /\{sosyalPortfolyo && \(\n\s*<div className="order-1 -mx-4 min-w-0 sm:mx-0 lg:order-none">\n\s*\{sosyalPortfolyo\}/,
   );
-  /* Düzenlemeye giden tek kapı `bolumeGit`; her giriş oradan geçiyor. */
-  assert.equal((ogrenciProfili.match(/setDuzenleme\(true\)/g) ?? []).length, 1);
+  /*
+    Düzenlemeye giden kullanıcı kapısı tek (`bolumeGit`); ikinci
+    `setDuzenleme(true)` geri/ileri tuşunun `#duzenle` kaydına dönüşü.
+  */
+  assert.equal((ogrenciProfili.match(/setDuzenleme\(true\)/g) ?? []).length, 2);
+  assert.match(ogrenciProfili, /if \(window\.location\.hash === '#duzenle'\) \{\s*setDuzenleme\(true\);/);
 });
 
 test('tek düzenleme ekranı, iki ayrı bölüm, iki ayrı kayıt', () => {
@@ -2435,14 +2440,22 @@ test('tek düzenleme ekranı, iki ayrı bölüm, iki ayrı kayıt', () => {
 
     Dişli menüsündeki giriş de kalktı: aynı işin iki kapısı olmasın.
   */
-  assert.match(ogrenciProfili, /\{sosyalProfilDuzenleme && \(/);
-  assert.match(ogrenciProfili, /Öğrenci bilgilerin/);
+  /*
+    6 Ekim 2026: sosyal alanlar kendi "Sosyal profil" satırında, fotoğraf
+    üstteki kartta — her bölümün altında tekrarlanmıyor.
+  */
+  assert.match(duzenlemeEkrani, /\{sosyalProfilDuzenleme && \(/);
+  assert.match(duzenlemeEkrani, /baslik="Sosyal profil"/);
+  assert.match(ogrenciProfili, /sosyalProfilDuzenleme=\{sosyalProfilDuzenleme\}/);
+  assert.match(app, /duzenlemeParcasi="fotograf"/);
+  assert.match(app, /duzenlemeParcasi="sosyal"/);
   assert.match(duzenleme, /Sosyal profilin/);
   assert.match(duzenleme, /'bekliyor' \| 'gonderiliyor' \| 'kaydedildi' \| 'hata'/);
   assert.match(duzenleme, /Sosyal profili kaydet/);
   /* Hata satırı bölümün kendi formunun içinde; ekran düzeyinde şerit yok. */
   assert.match(duzenleme, /\{kayitHatasi && <KayitHatasi mesaj=\{kayitHatasi\} \/>\}/);
   assert.doesNotMatch(ogrenciProfili, /KayitHatasi|SosyalHata/);
+  assert.doesNotMatch(duzenlemeEkrani, /KayitHatasi|SosyalHata/);
   /*
     Dişli artık düzenlemeye ve fotoğrafa götürmüyor: karta giden satırın
     `menu` alanı `Pick` ile yalnız portfolyo satırlarını taşıyor.
@@ -2468,11 +2481,12 @@ test('kariyer hedefi ve yetkinlik testleri kartları ana görünümde YOK; testl
   const temiz = yorumsuz(ogrenciProfili);
   assert.doesNotMatch(temiz, /Kariyer hedefin/);
   assert.doesNotMatch(temiz, /Yetkinlik testleri/);
-  /* Veri ve yol duruyor: hedef alanı `tercih` bölümünde, giriş de oraya. */
-  assert.match(temiz, /const hedefler = student\.targetRoles \?\? \[\];/);
+  /* Veri ve yol duruyor: hedef alanı düzenleme ekranının `tercih` bölümünde, giriş de oraya. */
+  const duzenlemeTemiz = yorumsuz(duzenlemeEkrani);
+  assert.match(duzenlemeTemiz, /const hedefler = student\.targetRoles \?\? \[\];/);
   assert.match(temiz, /onEtiketDuzenle=\{\(\) => bolumeGit\('tercih'\)\}/);
-  assert.match(temiz, /Aradığın pozisyon/);
-  assert.equal((ogrenciProfili.match(/id="rozet"\n/g) ?? []).length, 1);
+  assert.match(duzenlemeTemiz, /Aradığın pozisyon/);
+  assert.equal((duzenlemeEkrani.match(/id="rozet"\n/g) ?? []).length, 1);
   /* Karta giden iki prop: gerçek sayı ve mevcut eylem. */
   assert.match(temiz, /rozetSayisi=\{rozetler\.length\}/);
   assert.match(temiz, /onTestlere=\{\(\) => bolumeGit\('rozet'\)\}/);

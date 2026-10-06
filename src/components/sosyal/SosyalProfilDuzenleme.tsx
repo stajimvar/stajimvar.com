@@ -6,6 +6,7 @@ import { biyografiHatasi } from '../../lib/sosyal-kullanici-adi.mjs';
 import type { TalepKipi } from './BolumTalebi';
 import { KullaniciAdiDegistirme } from './KullaniciAdiDegistirme';
 import { BiyografiAlani, KayitHatasi, MetinAlani } from './SosyalFormAlanlari';
+import { kaydedilmemisIsaretle } from '../../lib/kaydedilmemis-degisiklik.mjs';
 
 /**
  * PROFİL DÜZENLEME
@@ -132,6 +133,29 @@ export const SosyalProfilDuzenleme: React.FC<DuzenlemeProps> = ({
 
   const bioHatasi = biyografiHatasi(biyografi);
 
+  /*
+    KAYDEDİLMEMİŞ DEĞİŞİKLİK (6 Ekim 2026): alanlardan biri kayıtlı
+    değerden farklıysa form kirli. "Profilini düzenle" ekranı bu kaydı
+    okuyup bölüm kapatmayı, gezinmeyi, geri tuşunu ve yenilemeyi
+    soruya bağlıyor; "Kaydet" uyarısı bu formu gönderiyor. Kayıtlı değer
+    yalnız sunucu kabul edince güncellendiği için başarılı kayıtta kirlilik
+    kendiliğinden düşüyor, başarısızda kalıyor.
+  */
+  const formRef = React.useRef<HTMLFormElement>(null);
+  const kirli = (
+    [
+      [gorunenAd, profil.gorunenAd],
+      [biyografi, profil.biyografi],
+      [bolum, profil.bolumEtiketi],
+      [sinif, profil.sinifEtiketi],
+      [sehir, profil.sehir],
+    ] as [string, string | null | undefined][]
+  ).some(([taslak, kayitli]) => taslak.trim() !== (kayitli ?? '').trim());
+  React.useEffect(() => {
+    kaydedilmemisIsaretle('sosyal:alanlar', kirli, () => formRef.current?.requestSubmit());
+  }, [kirli]);
+  React.useEffect(() => () => kaydedilmemisIsaretle('sosyal:alanlar', false), []);
+
   const gonder = async (olay: React.FormEvent) => {
     olay.preventDefault();
     setKayitHatasi(null);
@@ -220,7 +244,7 @@ export const SosyalProfilDuzenleme: React.FC<DuzenlemeProps> = ({
         onDegisti={onKullaniciAdiDegisti}
       />
 
-      <form onSubmit={gonder} className="space-y-4" noValidate>
+      <form ref={formRef} onSubmit={gonder} className="space-y-4" noValidate>
         <div className={`${KART} space-y-2.5`}>
           <div className="flex items-start gap-2 text-sm text-gray-600">
             <Lock aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />

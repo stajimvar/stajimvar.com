@@ -169,10 +169,15 @@ test('okulsuz öğrenciye "Üniversiteni ekle": gerçek adres, /cv içinde doğr
   assert.match(PANEL, /\{veri && !baskasi && !veri\.ogrenciOkulu && \(/);
   assert.match(PANEL, /href=\{UNIVERSITE_EKLE_YOLU\}/);
   assert.match(PANEL, /if \(onUniversiteEkle\) onUniversiteEkle\(\);\s*else onNavigate\(UNIVERSITE_EKLE_YOLU\);/);
-  /* /cv tarafı: işaret okununca okul bölümü açılıyor, odak üniversite alanına. */
+  /*
+    /cv tarafı: işaret okununca düzenleme ekranı Eğitim bölümüyle açılıyor,
+    odak okul alanına (6 Ekim 2026: alan ProfilDuzenleme'de).
+  */
   assert.match(CV, /window\.location\.hash !== '#universite'/);
-  assert.match(CV, /kisiselAc\(\);\s*requestAnimationFrame\(\(\) => document\.getElementById\('universite'\)\?\.focus\(\)\);/);
-  assert.match(CV, /<AutocompleteField\s+id="universite"/);
+  assert.match(CV, /const universiteEkle = \(\) => bolumeGit\('egitim', 'universite'\);/);
+  const DUZENLEME = oku('src/components/ProfilDuzenleme.tsx');
+  assert.match(DUZENLEME, /if \(odakAlani\) document\.getElementById\(odakAlani\)\?\.focus\(\);/);
+  assert.match(DUZENLEME, /<AutocompleteField\s+id="universite"/);
 });
 
 test('panel BAKAN öğrencinin verisiyle: okul prop olarak girmiyor, bakılan profilin okulu kullanılmıyor', () => {
@@ -194,7 +199,9 @@ test('görünmeyen yerleşimde DOM\'a girmiyor: sol sütun kancayla, ana sütund
   assert.match(DUZEN, /const sol = solAcik && solSutun \? solSutun : null;/);
   assert.match(DUZEN, /\{sol && <SolSutun>\{sol\}<\/SolSutun>\}/);
   assert.match(SAYFA, /kampusPaneli=\{kampusYerlesimi === 'akis' \? bakanKampusu\('akis'\) : undefined\}/);
-  assert.match(CV, /\{!duzenleme && kampusYerlesimi === 'akis' && kampusPaneli\('akis'\) && \(/);
+  /* Düzenleme ayrı bir erken dönüş (ProfilDuzenleme); ana görünümde koşul yalnız yerleşim. */
+  assert.match(CV, /\{kampusYerlesimi === 'akis' && kampusPaneli\('akis'\) && \(/);
+  assert.match(CV, /if \(duzenleme\) \{\s*return \(/);
   /* CSS ile gizleme yok: gizli kopya kendi isteğini atardı. */
   for (const kaynak of [DUZEN, SAYFA, CV, PANEL]) {
     assert.doesNotMatch(kod(kaynak), /hidden min-\[1440px\]:block|hidden 2xl:block|min-\[1440px\]:hidden/);
@@ -262,10 +269,12 @@ test('yerleşim: sol 330 yapışkan, orta 600 ve sağ 350 değişmedi; 1024–14
   assert.ok(baslikSonu > 0 && panelYeri > baslikSonu && paylasimlar > panelYeri);
   /* /cv: arayış kartlarından sonra, portfolyodan (paylaşımlar) önce. */
   const cvPanel = CV.indexOf("kampusPaneli('akis') && (");
-  assert.ok(cvPanel > CV.indexOf('<ArayisKartlari') && cvPanel < CV.indexOf('{!duzenleme && sosyalPortfolyo && ('));
+  assert.ok(cvPanel > CV.indexOf('<ArayisKartlari') && cvPanel < CV.indexOf('{sosyalPortfolyo && ('));
   /* Şirket sayfası ve düzenleme kipi değişmedi. */
   assert.match(SAYFA, /<ProfilSayfaDuzeni yanSutun=\{bakaninYanSutunu\}>\s*<React\.Suspense/);
-  assert.match(CV, /<ProfilSayfaDuzeni\s+devreDisi=\{duzenleme\}/);
+  /* Düzenleme kipi kabın DIŞINDA kendi tek sütununda (ProfilDuzenleme, 6 Ekim 2026). */
+  assert.match(CV, /<ProfilSayfaDuzeni\s+solSutun=/);
+  assert.doesNotMatch(CV, /devreDisi=\{duzenleme\}/);
 });
 
 test('erişilebilirlik: section + başlıklar, listeler ul, dış bağlantı yeni sekme duyurusu, tarih <time>', () => {

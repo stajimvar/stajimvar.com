@@ -50,8 +50,13 @@ test('yan sütun yalnız xl ve üstünde ve yalnız verildiğinde DOM\'a giriyor
   assert.match(duzen, /if \(devreDisi\) return <>\{children\}<\/>;/);
 });
 
-test('/cv ana görünümü kapta; düzenleme kipi değişmiyor; yan sütun sahibin satırından', () => {
-  assert.match(cv, /<ProfilSayfaDuzeni\s+devreDisi=\{duzenleme\}/);
+test('/cv ana görünümü kapta; düzenleme kendi tek sütununda; yan sütun sahibin satırından', () => {
+  /*
+    6 Ekim 2026: düzenleme ("Profilini düzenle") kabın DIŞINDA, erken
+    dönüşle kendi tek sütununda çiziliyor (ProfilDuzenleme, en çok 768 px).
+  */
+  assert.match(cv, /if \(duzenleme\) \{\s*return \(\s*<div className="w-full animate-in fade-in duration-200">\s*<ProfilDuzenleme/);
+  assert.match(cv, /<ProfilSayfaDuzeni\s+solSutun=/);
   assert.match(
     cv,
     /sosyalPortfolyoSatiri\?\.profilId \? \(\s*<AgimYanSutun\s+kullaniciId=\{sosyalPortfolyoSatiri\.profilId\}\s+sektorId=\{sosyalPortfolyoSatiri\.sektorId\}\s+onNavigate=\{sosyalPortfolyoSatiri\.onNavigate\}/,

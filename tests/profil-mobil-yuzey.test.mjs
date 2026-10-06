@@ -160,7 +160,7 @@ test('iki ekran aynı düzende: üstte yatay kart, altında galeri', () => {
     /cv ana görünümü tek sütun (sütunlar lg:col-span-12), ziyaretçi
     görünümü de kart + "Paylaşımlar" + aynı galeri ızgarası.
   */
-  assert.ok(ogrenciProfili.includes("'contents lg:block lg:col-span-12'"));
+  assert.ok(ogrenciProfili.includes('className="contents lg:block lg:col-span-12"'));
   assert.match(sosyalGorunum, /<div className="space-y-0 sm:space-y-6">/);
   assert.match(sosyalGorunum, /gorunum="galeri"/);
 });

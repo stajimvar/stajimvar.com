@@ -33,6 +33,7 @@ import {
 import { kimlikSatiri, monogram } from '../lib/aday-kart.mjs';
 import { adayBaglantilari, adayProfilFarki, rozetEtiketi } from '../lib/aday-profil-farki.mjs';
 import { guvenliDisAdres } from '../lib/guvenli-url.mjs';
+import { tarihAraligi } from '../lib/deneyim.mjs';
 import { tarihMetni as ortakTarihMetni } from '../lib/tarih.mjs';
 import { telefonBaglantisi, telefonYaz } from '../lib/telefon.mjs';
 import {
@@ -501,6 +502,8 @@ export const AdayCekmecesi: React.FC<{
   const diller = dizeListesi(kart.diller);
   const rozetler = dizeListesi(kart.rozetler);
   const projeler = Array.isArray(kart.projeler) ? kart.projeler : [];
+  /* Başvuru anındaki deneyimler (kartVerisi doğruladı); boşsa bölüm hiç çizilmiyor. */
+  const deneyimler = Array.isArray(kart.deneyimler) ? kart.deneyimler : [];
   /*
     Dış bağlantılar yalnız güvenli HTTPS adrese çevrilebiliyorsa.
 
@@ -1382,6 +1385,39 @@ export const AdayCekmecesi: React.FC<{
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
                         {rozetEtiketi(r)}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+              {deneyimler.length > 0 && (
+                <section>
+                  <Baslik degisti={bolumDegisti('deneyimler')}>Deneyim</Baslik>
+                  <ul className="space-y-2">
+                    {deneyimler.map((d: any, i: number) => (
+                      <li
+                        key={`${d?.pozisyon ?? ''}-${d?.kurum ?? ''}-${i}`}
+                        className="min-w-0 rounded-2xl border p-3"
+                        style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY }}
+                      >
+                        <p className="break-words text-sm font-bold" style={{ color: SIRKET_METIN }}>
+                          {d?.pozisyon}
+                        </p>
+                        <p className="break-words text-xs font-semibold" style={{ color: SIRKET_METIN }}>
+                          {d?.kurum}
+                          {tarihAraligi(d) && (
+                            <span className="font-normal" style={{ color: SIRKET_METIN_IKINCIL }}>
+                              {' · '}
+                              {tarihAraligi(d)}
+                            </span>
+                          )}
+                        </p>
+                        {d?.aciklama && (
+                          <p className="mt-1 whitespace-pre-line break-words text-xs leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+                            {d.aciklama}
+                          </p>
+                        )}
                       </li>
                     ))}
                   </ul>
