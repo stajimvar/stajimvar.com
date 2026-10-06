@@ -2,6 +2,7 @@ import React from 'react';
 import { ApplicationsTrackerView } from '../components/ApplicationsTrackerView';
 import { ApplyDialog } from '../components/ApplyDialog';
 import type { ApplicationRecord, InternshipListing } from '../types';
+import { PAYLASIM_SURUMU } from '../lib/basvuru-durumu.mjs';
 
 /**
  * Öğrencinin "Başvurularım" ekranının bütün süreç durumları.
@@ -317,7 +318,11 @@ export const BasvurularimDevFixture: React.FC = () => {
               window.setTimeout(() => {
                 const an = acik ? new Date().toISOString() : null;
                 setKayitlar((o) =>
-                  o.map((a) => (a.id === id ? { ...a, contactShareConsentAt: an } : a)),
+                  o.map((a) =>
+                    a.id === id
+                      ? { ...a, contactShareConsentAt: an, contactShareConsentVersion: an ? PAYLASIM_SURUMU : null }
+                      : a,
+                  ),
                 );
                 coz(an);
               }, 180);

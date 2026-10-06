@@ -24,6 +24,8 @@
  * göstermek olurdu.
  */
 
+import { PAYLASIM_SURUMU } from './basvuru-durumu.mjs';
+
 /** Uyum şeridinin üç bandı. Renk değil, ANLAM döndürüyor. */
 export function uyumBandi(puan) {
   /*
@@ -99,9 +101,55 @@ function dizeListesi(deger) {
     : [];
 }
 
+/*
+  TEK DEĞER DE VERİ SINIRINDA DOĞRULANIYOR
+
+  Diziler süzülüyordu ama tekil alanlar (ad, okul, bölüm, şehir,
+  bağlantılar) ve proje alanları HAM geçiyordu. Kopyada bir proje
+  açıklaması nesne olarak geldiğinde çekmece çizilirken düşüyor ve aday
+  ekranı hiç açılmıyordu. Artık her alan burada bir kez kontrol
+  ediliyor: metinse kırpılıp alınıyor, sayıysa metne çevriliyor, başka
+  her şey (nesne, dizi, boolean, boş metin) null. Bozuk bir alan yalnız
+  KENDİSİNİ düşürüyor; adayın geçerli öteki bilgileri gösteriliyor.
+*/
+function metin(deger) {
+  if (typeof deger === 'string') {
+    const t = deger.trim();
+    return t ? t : null;
+  }
+  if (typeof deger === 'number' && Number.isFinite(deger)) return String(deger);
+  return null;
+}
+
+/*
+  Proje: başlık ZORUNLU (başlıksız kart boş kutu olurdu), açıklama ve
+  adres isteğe bağlı. Ham nesne geçirilmiyor; yalnız bilinen üç alan,
+  doğrulanmış hâlleriyle yeni bir nesnede.
+*/
+function projeListesi(deger) {
+  if (!Array.isArray(deger)) return [];
+  return deger
+    .filter((p) => p && typeof p === 'object' && !Array.isArray(p))
+    .map((p) => ({ baslik: metin(p.baslik), aciklama: metin(p.aciklama), adres: metin(p.adres) }))
+    .filter((p) => p.baslik);
+}
+
+/*
+  PAYLAŞIM ETKİN Mİ — sunucudaki `basvuru_iletisimi_acik` ile AYNI cümle
+  (20261201010000): rıza damgası var VE (StajımVar üzerinden başvuru YA
+  DA sade sürümle verilmiş rıza). Profil kopyası da artık bu kurala bağlı
+  (20261203010000): eski dış başvuru rızası kopyayı da açmıyor.
+*/
+function paylasimEtkin(satir) {
+  if (!satir?.contact_share_consent_at) return false;
+  return satir.application_method === 'internal' || satir.contact_share_consent_version === PAYLASIM_SURUMU;
+}
+
 export function kartVerisi(satir, ek = {}) {
-  const anlik = satir?.profile_snapshot ?? null;
-  const paylasildi = Boolean(satir?.contact_share_consent_at) && anlik !== null;
+  /* Kopya yalnız NESNE ise kopya; dizi, metin ya da başka bir şey değil. */
+  const hamKopya = satir?.profile_snapshot ?? null;
+  const anlik = hamKopya && typeof hamKopya === 'object' && !Array.isArray(hamKopya) ? hamKopya : null;
+  const paylasildi = paylasimEtkin(satir) && anlik !== null;
 
   /*
     Yetenek listesi önce başvuru anındaki kopyadan; yoksa canlı tablodan.
@@ -156,20 +204,20 @@ export function kartVerisi(satir, ek = {}) {
 
     /* Rıza yoksa hiçbiri dolu değil. */
     paylasildi,
-    ad: paylasildi ? (anlik.ad ?? null) : null,
-    fotoUrl: paylasildi ? (anlik.fotoUrl ?? null) : null,
-    universite: paylasildi ? (anlik.universite ?? null) : null,
-    bolum: paylasildi ? (anlik.bolum ?? null) : null,
-    sinif: paylasildi ? (anlik.sinif ?? null) : null,
-    sehir: paylasildi ? (anlik.sehir ?? null) : null,
-    github: paylasildi ? (anlik.github ?? null) : null,
-    portfolyo: paylasildi ? (anlik.portfolyo ?? null) : null,
+    ad: paylasildi ? metin(anlik.ad) : null,
+    fotoUrl: paylasildi ? metin(anlik.fotoUrl) : null,
+    universite: paylasildi ? metin(anlik.universite) : null,
+    bolum: paylasildi ? metin(anlik.bolum) : null,
+    sinif: paylasildi ? metin(anlik.sinif) : null,
+    sehir: paylasildi ? metin(anlik.sehir) : null,
+    github: paylasildi ? metin(anlik.github) : null,
+    portfolyo: paylasildi ? metin(anlik.portfolyo) : null,
     /*
       Kopya LinkedIn adresini başından beri taşıyordu (basvuru-kopyasi.mjs)
       ama karta geçmiyordu; inceleme ekranı bağlantıyı ancak buradan
       alabiliyor. `href`e yazılmadan önce `guvenliDisAdres`ten geçiyor.
     */
-    linkedin: paylasildi ? (anlik.linkedin ?? null) : null,
+    linkedin: paylasildi ? metin(anlik.linkedin) : null,
     /*
       ESKİ KOPYALARDAKİ "undefined (B1)" GÖSTERİLMİYOR
 
@@ -188,12 +236,8 @@ export function kartVerisi(satir, ek = {}) {
       ? dizeListesi(anlik.diller).filter((d) => !BOZUK_DIL.test(d))
       : [],
     rozetler: paylasildi ? dizeListesi(anlik.rozetler) : [],
-    /* Yalnızca nesne olan ve başlığı bulunan projeler: başlıksız kart boş kutu olurdu. */
-    projeler: paylasildi && Array.isArray(anlik.projeler)
-      ? anlik.projeler.filter(
-          (p) => p && typeof p === 'object' && typeof p.baslik === 'string' && p.baslik.trim(),
-        )
-      : [],
+    /* Proje alanları tek tek doğrulanıyor (bkz. projeListesi). */
+    projeler: paylasildi ? projeListesi(anlik.projeler) : [],
     yetenekler,
     /*
       Yetenekler kopyadan mı geldi? Eski kopyalarda liste yok ve kart

@@ -52,6 +52,24 @@ exception when others then
 end;
 $$;
 
+/*
+  SADE AKIŞ ENGELİ — YALNIZ O KURALIN HATASI SAYILIYOR
+
+  `yazma_engellendi_mi` HER hatayı "engellendi" sayıyor; ilgisiz bir
+  hata (yazım yanlışı, kısıt) da testi geçirirdi. Kaldırılan işlemler
+  (20261204010000) için yalnız sade akış korumasının kendi mesajı
+  kabul ediliyor. Sorgu hatasız çalışırsa (0 satır dahil) engel YOK.
+*/
+create or replace function pg_temp.sade_akis_engeli_mi(sorgu text)
+returns boolean language plpgsql as $$
+begin
+  execute sorgu;
+  return false;
+exception when others then
+  return sqlerrm like '%sade başvuru akışında kaldırıldı%';
+end;
+$$;
+
 -- ------------------------------------------------------------- kurulum
 
 create temp table k on commit drop as
@@ -365,12 +383,25 @@ select pg_temp.bekle(
      from public.applications where id='33333333-aaaa-4000-8000-000000000001'::uuid),
   'Durum degisince status_changed_at damgalaniyor');
 
--- Mülakat tarihi opsiyonel bir alan; durumdan bagimsiz yazilabiliyor.
-select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+-- SADE AKIŞ (20261204010000): görüşme aşaması ve davet alanları şirket
+-- tarafında KALDIRILDI. Bu iddia önce "A, mülakat aşamasında tarih
+-- yazabilir" diyordu; artık sunucu reddediyor. Aşama ve tarih ayrı ayrı
+-- sınanıyor ki biri açık kalırsa yakalansın.
+select pg_temp.bekle(pg_temp.sade_akis_engeli_mi(
   $q$update public.applications set status='interview_scheduled',
         interview_date='2026-09-15'
       where id='33333333-aaaa-4000-8000-000000000001'$q$),
-  'A, mulakat asamasinda tarih yazabilir');
+  'A, gorusme asamasina gecemez (sade akis, sunucuda)');
+
+select pg_temp.bekle(pg_temp.sade_akis_engeli_mi(
+  $q$update public.applications set interview_date='2026-09-15'
+      where id='33333333-aaaa-4000-8000-000000000001'$q$),
+  'A, gorusme tarihi yazamaz (sade akis, sunucuda)');
+
+select pg_temp.bekle(pg_temp.sade_akis_engeli_mi(
+  $q$update public.applications set status='technical_assessment'
+      where id='33333333-aaaa-4000-8000-000000000001'$q$),
+  'A, degerlendirme asamasina gecemez (sade akis, sunucuda)');
 
 /*
   SIRA ARTIĞI BIRAKILMIYOR
@@ -1160,12 +1191,44 @@ select set_config('request.jwt.claims',
   (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
 set local role authenticated;
 
-select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+-- SADE AKIŞ (20261204010000): şirket YENİ teklif gönderemez. Bu iddia
+-- önce "A, adaya teklif gönderebilir" diyordu.
+select pg_temp.bekle(pg_temp.sade_akis_engeli_mi(
   $q$update public.applications
         set status='offer_extended', offer_note='Ekibe bekliyoruz.',
             offer_start_date='2026-10-01'
       where id='33333333-aaaa-4000-8000-000000000001'$q$),
-  'A, adaya teklif gonderebilir');
+  'A, adaya YENI teklif gonderemez (sade akis, sunucuda)');
+
+select pg_temp.bekle(pg_temp.sade_akis_engeli_mi(
+  $q$update public.applications set offer_note='Sizdirilmis teklif'
+      where id='33333333-aaaa-4000-8000-000000000001'$q$),
+  'A, teklif alanlarini yazamaz (sade akis, sunucuda)');
+
+/*
+  ESKİ AÇIK TEKLİF KURULUMU
+
+  Aşağıdaki testlerin ölçtüğü şey ÖĞRENCİNİN yanıt yolu: sade akıştan
+  önce açılmış ve hâlâ yanıt bekleyen bir teklif. Üretimde böyle bir
+  kayıt var (6 Ekim 2026'da ölçüldü: 1 `offer_extended`). Kayıt artık
+  şirket tarafından oluşturulamadığı için servis rolüyle kuruluyor —
+  "eski kayıt" tam olarak bu.
+*/
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+update public.applications
+   set status='offer_extended', offer_note='Ekibe bekliyoruz.', offer_start_date='2026-10-01'
+ where id='33333333-aaaa-4000-8000-000000000001'::uuid;
+
+select pg_temp.bekle(
+  (select status::text = 'offer_extended' from public.applications
+    where id='33333333-aaaa-4000-8000-000000000001'::uuid),
+  'Eski acik teklif kuruldu (servis rolu)');
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
 
 -- Şirket öğrencinin KARARINI veremez: iki değer de politikada reddediliyor.
 select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
@@ -1407,7 +1470,9 @@ select set_config('request.jwt.claims',
   (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
 set local role authenticated;
 
-select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+-- SADE AKIŞ (20261204010000): şirket YENİ görüşme daveti gönderemez.
+-- Bu iddia önce "A, kendi adayını görüşmeye davet edebilir" diyordu.
+select pg_temp.bekle(pg_temp.sade_akis_engeli_mi(
   $q$update public.applications
         set status='interview_scheduled',
             interview_date='2026-09-10', interview_time='14:00',
@@ -1415,7 +1480,28 @@ select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
             interview_note='Pozisyonu ve calisma kosullarini gorusmek uzere davet ediyoruz.',
             interview_response=null
       where id='33333333-6666-4000-8000-000000000006'$q$),
-  'A, kendi adayini gorusmeye davet edebilir');
+  'A, kendi adayini YENI gorusmeye davet edemez (sade akis, sunucuda)');
+
+/*
+  ESKİ AÇIK DAVET KURULUMU: aşağıdaki testler ÖĞRENCİNİN yanıt yolunu
+  ölçüyor. Davet artık şirket tarafından oluşturulamadığı için servis
+  rolüyle kuruluyor (eski kayıt). Kurulum kopyayı da kasten e-postalı
+  yazmıştı; aşağıdaki "kopyada e-posta yok" iddiası onu ölçüyor.
+*/
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+update public.applications
+   set status='interview_scheduled',
+       interview_date='2026-09-10', interview_time='14:00',
+       interview_type='in_person', interview_location='Ornek Plaza, Kat 4',
+       interview_note='Pozisyonu ve calisma kosullarini gorusmek uzere davet ediyoruz.',
+       interview_response=null
+ where id='33333333-6666-4000-8000-000000000006'::uuid;
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
 
 -- Şirket öğrencinin YANITINI yazamaz: tetikleyici reddediyor.
 select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
@@ -1448,6 +1534,29 @@ select pg_temp.bekle(
                           where company_id = '11111111-aaaa-4000-8000-000000000001'::uuid)
       and profile_snapshot ? 'eposta'),
   'Sirket kopyada e-posta goremez');
+
+/*
+  KOPYA ARTIK KORUMALI TABLODA (20261203010000): başvuru satırındaki
+  sütun hep boş, yani yukarıdaki iddia tek başına artık bir şey
+  ölçmüyor. Asıl kopyanın durduğu yerde de e-posta yok — ve şirket o
+  kopyayı GERÇEKTEN görüyor (boş sonuç "göremiyor" yüzünden olmasın).
+*/
+select pg_temp.bekle(
+  (select count(*) = 1 from public.basvuru_profil_kopyalari
+    where basvuru_id = '33333333-6666-4000-8000-000000000006'::uuid),
+  'Sirket paylasim etkin basvurunun kopyasini korumali tablodan gorur');
+
+select pg_temp.bekle(
+  (select count(*) = 0 from public.basvuru_profil_kopyalari
+    where basvuru_id = '33333333-6666-4000-8000-000000000006'::uuid
+      and kopya ? 'eposta'),
+  'Korumali tablodaki kopyada da e-posta yok');
+
+select pg_temp.bekle(
+  (select count(*) = 0 from public.applications
+    where id = '33333333-6666-4000-8000-000000000006'::uuid
+      and profile_snapshot is not null),
+  'Basvuru satirindaki kopya sutunu bos (tasindi)');
 
 -- ------------------------------------------------- YANITI ÖĞRENCİ VERİR
 
@@ -1550,22 +1659,31 @@ select pg_temp.bekle(
   (select public.gorusmeye_yanit_ver('33333333-6666-4000-8000-000000000006', false) = 'declined'),
   'C, katilamayacagini bildirebilir');
 
--- Şirket YENİ DAVET gönderebiliyor: yanıtı yalnızca BOŞALTABİLİYOR.
+-- SADE AKIŞ (20261204010000): şirket YENİ DAVET gönderemez, öğrencinin
+-- yanıtını da sıfırlayamaz. Bu iddia önce "A, yeni davet gönderip
+-- yanıtı sıfırlayabilir" diyordu.
 reset role;
 select set_config('request.jwt.claims',
   (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
 set local role authenticated;
 
-select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+select pg_temp.bekle(pg_temp.sade_akis_engeli_mi(
   $q$update public.applications
         set interview_date='2026-09-17', interview_time='11:00', interview_response=null
       where id='33333333-6666-4000-8000-000000000006'$q$),
-  'A, yeni davet gonderip yaniti sifirlayabilir');
+  'A, yeni davet gonderip yaniti sifirlayamaz (sade akis, sunucuda)');
 
+-- Öğrencinin verdiği yanıt KORUNUYOR.
 select pg_temp.bekle(
-  (select interview_response is null
+  (select interview_response = 'declined'
      from public.applications where id='33333333-6666-4000-8000-000000000006'::uuid),
-  'Yeni davet sonrasi yanit bos');
+  'Ogrencinin gorusme yaniti korunuyor');
+
+-- Eski aşamadan ÇIKIŞ serbest: şirket eski görüşmeyi olumsuz kapatabilir.
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$update public.applications set status='rejected'
+      where id='33333333-6666-4000-8000-000000000006'$q$),
+  'A, eski gorusme asamasindaki adayi olumsuz kapatabilir (cikis serbest)');
 
 
 -- =====================================================================
@@ -1637,12 +1755,28 @@ select set_config('request.jwt.claims',
   (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
 set local role authenticated;
 
-select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+-- SADE AKIŞ: şirket yeni davet gönderemez. Bildirim üretimi yine de
+-- sınanıyor: eski davet kaydı servis rolüyle kuruluyor (aktör yok →
+-- öğrenciye bildirim gidiyor) ve şirket ardından AYNI durumu tekrar
+-- yazıyor — o tekrar yazım yeni bir aşama değil, serbest.
+select pg_temp.bekle(pg_temp.sade_akis_engeli_mi(
   $q$update public.applications
         set status='interview_scheduled', interview_date='2026-09-20',
             interview_time='10:00', interview_type='online'
       where id='33333333-8888-4000-8000-000000000008'$q$),
-  'A, bildirim testinde gorusmeye davet edebilir');
+  'A, bildirim testinde YENI davet gonderemez (sade akis)');
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+update public.applications
+   set status='interview_scheduled', interview_date='2026-09-20',
+       interview_time='10:00', interview_type='online'
+ where id='33333333-8888-4000-8000-000000000008'::uuid;
+
+reset role;
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
 
 -- AYNI DURUM TEKRAR YAZILIYOR: ikinci bildirim doğmamalı.
 select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
@@ -1692,14 +1826,19 @@ select set_config('request.jwt.claims',
   (select json_build_object('sub', a::text, 'role', 'authenticated')::text from k), true);
 set local role authenticated;
 
-select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+select pg_temp.bekle(pg_temp.sade_akis_engeli_mi(
   $q$update public.applications
         set status='offer_extended', offer_note='Bekliyoruz.', offer_compensation='18.000 TL / ay'
       where id='33333333-8888-4000-8000-000000000008'$q$),
-  'A, bildirim testinde teklif gonderebilir');
+  'A, bildirim testinde YENI teklif gonderemez (sade akis)');
 
+-- Eski açık teklif servis rolüyle: öğrencinin yanıtı ve bildirimleri
+-- ölçülmeye devam ediyor.
 reset role;
 select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+update public.applications
+   set status='offer_extended', offer_note='Bekliyoruz.', offer_compensation='18.000 TL / ay'
+ where id='33333333-8888-4000-8000-000000000008'::uuid;
 
 select pg_temp.bekle(
   (select count(*) = 1 from public.notifications
