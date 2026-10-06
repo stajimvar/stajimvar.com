@@ -1,10 +1,10 @@
 import React from 'react';
 import { ChevronDown } from 'lucide-react';
 import { SIRKET_METIN, SIRKET_METIN_IKINCIL, SIRKET_ODAK, kutuStil } from './renk';
-import { durumRozeti } from './basvuru-durumu';
+import { durumRozeti, sadeDurumSutunlari } from './basvuru-durumu';
 import { onyargisizla } from '../lib/aday-kart.mjs';
 import { ProfilFotografi } from '../components/sosyal/ProfilFotografi';
-import { PANO_ASAMALARI, asamayaGore, panoyaDiz } from '../lib/basvuru-panosu.mjs';
+import { panoyaDiz } from '../lib/basvuru-panosu.mjs';
 import { BEKLEME_ESIKLERI, beklemeGunu, bekliyorMu } from '../lib/bekleyen-basvuru.mjs';
 import type { DegerlendirmeOlcutu, EkipUyesi } from '../lib/sirket-veri';
 import { DegerlendirmeFormu } from './DegerlendirmeFormu';
@@ -259,7 +259,9 @@ const IlanBlogu: React.FC<{
         kaydırmak zorunda kalıyordu. Alt alta liste her aşamayı ve
         sayısını görünür tutuyor.
       */
-      <div className="mt-3 grid gap-3 lg:grid-cols-3 xl:grid-cols-6">
+      <div
+        className={`mt-3 grid gap-3 sm:grid-cols-2 ${asamalar.length > 4 ? 'xl:grid-cols-5' : 'xl:grid-cols-4'}`}
+      >
         {asamalar.map((a) => (
           <div key={a.anahtar} className="min-w-0">
             <p
@@ -442,19 +444,20 @@ export const BasvuruPanosu: React.FC<{
           toplam={b.toplam}
           acik={acikIlan === b.ilanId}
           onAcKapa={() => setAcikIlan(acikIlan === b.ilanId ? null : b.ilanId)}
-          asamalar={PANO_ASAMALARI.map((a) => ({
-            anahtar: a.anahtar,
-            etiket: a.etiket,
-            /*
-              KARTLAR ZATEN ÇEVRİLMİŞ GELİYOR (SirketPaneli, `kartVerisi`).
-              Burada ikinci kez çevirmek `profile_snapshot`/`listing_id`
-              gibi HAM alanları arıyor, bulamıyor ve adı null'a düşürüyordu
-              — fikstürde "Aday" diye görünen her satır buydu. `AdayIzgarasi`
-              de çevirmiyor; iki ekran aynı sözleşmeyi kullanıyor.
-            */
-            kartlar: b.kartlar
-              .filter((k) => asamayaGore(String(k.durum ?? '')) === a.anahtar)
-              .map((k) => (onyargisiz ? onyargisizla(k) : k)),
+          /*
+            SÜTUNLAR LİSTE SÜZGECİYLE AYNI KURALDAN (sadeDurumSutunlari):
+            Yeni · İnceleniyor · Olumsuz · Geri çekildi, eski süreç
+            kaydı varsa beşinci sütun. Kaldırılan aşamalar sütun değil.
+
+            KARTLAR ZATEN ÇEVRİLMİŞ GELİYOR (SirketPaneli, `kartVerisi`).
+            Burada ikinci kez çevirmek `profile_snapshot`/`listing_id`
+            gibi HAM alanları arıyor, bulamıyor ve adı null'a düşürüyordu
+            — fikstürde "Aday" diye görünen her satır buydu. `AdayIzgarasi`
+            de çevirmiyor; iki ekran aynı sözleşmeyi kullanıyor.
+          */
+          asamalar={sadeDurumSutunlari(b.kartlar).map((s) => ({
+            ...s,
+            kartlar: s.kartlar.map((k) => (onyargisiz ? onyargisizla(k) : k)),
           }))}
           onAday={onAday}
           atanabilir={atanabilir}

@@ -24,7 +24,7 @@ import {
   kutuStil,
 } from './renk';
 import { onyargisizla } from '../lib/aday-kart.mjs';
-import { DURUM_SIRASI, durumAdi } from './basvuru-durumu';
+import { durumSuzgeciSecenekleri, durumSuzgecineUyar } from './basvuru-durumu';
 import { AdayHataSiniri } from './HataSiniri';
 import { adrestekiAday } from '../lib/aday-derin-baglanti.mjs';
 import { adayAdresiniYaz, adayEkraniniKapat, useAdayAdresi } from './useAdayAdresi';
@@ -166,11 +166,17 @@ export const AdayIzgarasi: React.FC<{
     return [...harita].map(([id, baslik]) => ({ id, baslik }));
   }, [kartlar]);
 
-  const suzulmus = React.useMemo(() => {
+  /*
+    DURUM DIŞINDAKİ SÜZGEÇLER ÖNCE
+
+    Durum seçeneklerinin yanındaki sayılar bu listeden sayılıyor: ilan ve
+    arama uygulanmış, durum uygulanmamış. "Yeni (2)" seçilince listede
+    gerçekten 2 aday kalsın.
+  */
+  const durumHaricSuzulmus = React.useMemo(() => {
     const terim = arama.trim().toLocaleLowerCase('tr-TR');
     return kartlar.filter((k) => {
       if (ilanSuzgeci && String(k.ilanId ?? '') !== ilanSuzgeci) return false;
-      if (durumSuzgeci && String(k.durum ?? '') !== durumSuzgeci) return false;
       if (!terim) return true;
       /* Ad, okul, bölüm ve yetenekler aranıyor — İK'nın aklında kalan
          şeyler bunlar. */
@@ -180,7 +186,22 @@ export const AdayIzgarasi: React.FC<{
         .toLocaleLowerCase('tr-TR');
       return havuz.includes(terim);
     });
-  }, [kartlar, ilanSuzgeci, durumSuzgeci, arama]);
+  }, [kartlar, ilanSuzgeci, arama]);
+
+  /*
+    SADE AKIŞ DURUM SÜZGECİ: Yeni · İnceleniyor · Olumsuz · Geri çekildi.
+    Kaldırılan aşamalardaki eski kayıtlar tek bir "Eski süreç kayıtları"
+    grubunda; grup yalnız böyle kayıt varsa listede. Kural Pano ile ORTAK
+    (basvuru-durumu.mjs `sadeDurumGrubu`).
+  */
+  const suzulmus = React.useMemo(
+    () => durumHaricSuzulmus.filter((k) => durumSuzgecineUyar(k, durumSuzgeci)),
+    [durumHaricSuzulmus, durumSuzgeci],
+  );
+  const durumSecenekleri = React.useMemo(
+    () => durumSuzgeciSecenekleri(durumHaricSuzulmus, durumSuzgeci),
+    [durumHaricSuzulmus, durumSuzgeci],
+  );
 
   const gosterilen = React.useMemo(
     () => (onyargisiz ? suzulmus.map((k) => onyargisizla(k)) : suzulmus),
@@ -468,10 +489,9 @@ export const AdayIzgarasi: React.FC<{
           className={ALAN}
           style={{ ...alanStil, width: 'auto', minWidth: 150 }}
         >
-          <option value="">Tüm durumlar</option>
-          {DURUM_SIRASI.map((d) => (
-            <option key={d} value={d}>
-              {durumAdi(d)}
+          {durumSecenekleri.map((s: { deger: string; etiket: string; sayi: number }) => (
+            <option key={s.deger || 'tum'} value={s.deger}>
+              {s.etiket} ({s.sayi})
             </option>
           ))}
         </select>
