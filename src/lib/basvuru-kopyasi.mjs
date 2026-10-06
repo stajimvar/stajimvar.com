@@ -31,6 +31,8 @@
  * alıyor; kopyadaki adres zaten eskimiş olabilirdi.
  */
 
+import { deneyimKopyasi } from './deneyim.mjs';
+
 const dizi = (x) => (Array.isArray(x) ? x : []);
 const metin = (x) => {
   const t = String(x ?? '').trim();
@@ -95,6 +97,14 @@ export function basvuruKopyasi(ogrenci) {
         adres: metin(p?.liveUrl) ?? metin(p?.githubUrl),
       }))
       .filter((p) => p.baslik),
+
+    /*
+      DENEYİMLER (20261205010000) — başvuru ANINDAKİ hâli. Öğrenci sonradan
+      düzenlerse bu kopya değişmiyor; şirket farkı güncel profilden görüyor.
+      Liste boşsa da anahtar YAZILIYOR: "deneyimi yoktu" ile "kopya deneyim
+      alanından önce yazıldı" (eski başvuru) ayrı tutulsun.
+    */
+    deneyimler: deneyimKopyasi(ogrenci.experiences),
   };
 
   /*
@@ -115,7 +125,8 @@ export function basvuruKopyasi(ogrenci) {
     Boolean(kopya.universite) ||
     Boolean(kopya.bolum) ||
     kopya.yetenekler.length > 0 ||
-    kopya.projeler.length > 0;
+    kopya.projeler.length > 0 ||
+    kopya.deneyimler.length > 0;
 
   return doluMu ? kopya : null;
 }

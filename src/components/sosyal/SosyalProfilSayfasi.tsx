@@ -181,6 +181,21 @@ interface SayfaProps {
    */
   gomuluKip?: 'portfolyo' | 'duzenleme';
   /**
+   * DÜZENLEME KİPİNİN HANGİ PARÇASI (6 Ekim 2026, sade "Profilini düzenle")
+   *
+   *   'tumu'     fotoğraf + kapak + sosyal alanlar (önceki davranış)
+   *   'fotograf' yalnız üstteki fotoğraf kartı: fotoğraf, ad, "Fotoğrafı
+   *              değiştir"; yükleme ekranı aynı kartın yerinde açılıyor
+   *   'sosyal'   kapak + kullanıcı adı, görünen ad, biyografi — fotoğraf YOK
+   *
+   * Fotoğraf sayfada yalnız BİR KEZ düzenleniyor (üstteki kart); kapak ve
+   * sosyal alanlar kendi "Sosyal profil" satırında, her bölümün altında
+   * tekrarlanmıyor. İki parça aynı sahiplik ve yükleme dallarından geçiyor.
+   */
+  duzenlemeParcasi?: 'tumu' | 'fotograf' | 'sosyal';
+  /** 'fotograf' parçasında kartta yazan ad (öğrencinin adı). Verilmezse sosyal görünen ad. */
+  fotografKartiAdi?: string;
+  /**
    * ÖĞRENCİ KAYDINDAKİ ESKİ FOTOĞRAF — YALNIZ YEDEK
    *
    * Kullanıcının tek fotoğrafı var ve kaynağı `social_profiles.avatar_path`.
@@ -511,6 +526,8 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   onGirisGerekli,
   gomulu = false,
   gomuluKip = 'portfolyo',
+  duzenlemeParcasi = 'tumu',
+  fotografKartiAdi,
   ogrenciAvatarAdresi = null,
   onAvatarYolu,
   onPortfolyoSatiri,
@@ -800,11 +817,12 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     satırından SONRA çiziliyor; olay o kapıyı aşmıyor.
   */
   React.useEffect(() => {
-    if (!duzenlemeKipi) return;
+    /* Fotoğraf yalnız fotoğrafı çizen parçada açılıyor; 'sosyal' parçası dinlemiyor. */
+    if (!duzenlemeKipi || duzenlemeParcasi === 'sosyal') return;
     const fotografEkraniniAc = () => setGorunum('fotograf');
     window.addEventListener('stajimvar:profil-fotografi-degistir', fotografEkraniniAc);
     return () => window.removeEventListener('stajimvar:profil-fotografi-degistir', fotografEkraniniAc);
-  }, [duzenlemeKipi]);
+  }, [duzenlemeKipi, duzenlemeParcasi]);
 
   /*
     ZİYARETÇİ PROFİLİ — İKİ ADIM, İKİSİ DE RLS'E TABİ
@@ -1304,6 +1322,30 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
       <SayfaKabugu onBack={onBack}>{icerik}</SayfaKabugu>
     );
 
+  /*
+    FOTOĞRAF PARÇASI KÜÇÜK BİR KART: form iskeleti ya da hata kutusu kartın
+    boyunu aşardı. Yüklenirken kart iskeleti, okunamazsa tek satır.
+  */
+  const fotografParcasi = duzenlemeKipi && duzenlemeParcasi === 'fotograf';
+  if (fotografParcasi && (!oturumHazir || profilDurumu === 'yukleniyor')) {
+    return (
+      <div aria-hidden className={`${KART} flex items-center gap-3`}>
+        <span className="h-14 w-14 shrink-0 animate-pulse rounded-full bg-gray-100" />
+        <span className="h-4 w-40 animate-pulse rounded bg-gray-100" />
+      </div>
+    );
+  }
+  if (fotografParcasi && (profilDurumu === 'hata' || !kullaniciId)) {
+    return (
+      <div className={`${KART} flex flex-wrap items-center justify-between gap-2`} role="alert">
+        <p className="text-sm text-gray-700">Fotoğraf bilgin alınamadı.</p>
+        <button type="button" onClick={() => setProfilDeneme((sayi) => sayi + 1)} className={IKINCIL}>
+          Yeniden dene
+        </button>
+      </div>
+    );
+  }
+
   if (!oturumHazir) {
     return kabuk(<ProfilIskeleti kip={iskeletKipi} />);
   }
@@ -1559,6 +1601,24 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     `h1`i sol sütundaki ada ait.
   */
   if (!profilTamMi) {
+    /*
+      Fotoğraf parçası: sosyal satır yokken yükleme yapılamıyor (yol
+      sosyal satıra yazılıyor). Kart yedek fotoğrafla ve adla duruyor;
+      arıza kutusunu 'sosyal' parçası zaten gösteriyor, iki kez değil.
+    */
+    if (fotografParcasi) {
+      return (
+        <div className={`${KART} flex items-center gap-3`}>
+          <ProfilFotografi
+            ad={fotografKartiAdi || 'Profil'}
+            yol={null}
+            yedekAdres={ogrenciAvatarAdresi}
+            className="h-14 w-14 shrink-0 rounded-full"
+          />
+          <p className="min-w-0 break-words text-base font-bold text-gray-900">{fotografKartiAdi}</p>
+        </div>
+      );
+    }
     if (gomulu) {
       return kabuk(
         <SosyalProfilHazirDegil
@@ -1721,8 +1781,64 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
       );
     }
 
+    /*
+      FOTOĞRAF PARÇASI — "Profilini düzenle" sayfasının üstündeki kart.
+      Fotoğraf sayfada yalnız burada düzenleniyor; yükleme yukarıdaki
+      `gorunum === 'fotograf'` dalında, bu kartın yerinde açılıyor.
+    */
+    if (duzenlemeParcasi === 'fotograf') {
+      const kartAdi = fotografKartiAdi || profil!.gorunenAd || `@${profil!.kullaniciAdi}`;
+      const fotografYok = profilFotografi(profil!.avatarYolu, ogrenciAvatarAdresi).tur === 'yok';
+      return (
+        <section aria-label="Profil fotoğrafın" className={`${KART} space-y-2`}>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <ProfilFotografi
+              ad={kartAdi}
+              yol={profil!.avatarYolu}
+              yedekAdres={ogrenciAvatarAdresi}
+              className="h-14 w-14 shrink-0 rounded-full sm:h-16 sm:w-16"
+            />
+            <div className="min-w-0">
+              <p className="break-words text-base font-bold text-gray-900">{kartAdi}</p>
+              <div className="flex flex-wrap gap-x-4">
+                <button
+                  type="button"
+                  onClick={() => setGorunum('fotograf')}
+                  className={`inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-blue-700 hover:underline ${ODAK_HALKASI}`}
+                >
+                  {fotografYok ? 'Fotoğraf ekle' : 'Fotoğrafı değiştir'}
+                </button>
+                {/* Kaldırma yalnız `avatar_path` varken; yedek adres kaldırılamaz (aşağıdaki gerekçe). */}
+                {profil!.avatarYolu && (
+                  <button
+                    type="button"
+                    onClick={fotografiKaldir}
+                    disabled={fotografKaldirmaDurumu === 'gonderiliyor'}
+                    className={`inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-gray-600 hover:underline disabled:opacity-40 ${ODAK_HALKASI}`}
+                  >
+                    {fotografKaldirmaDurumu === 'gonderiliyor' ? 'Kaldırılıyor…' : 'Kaldır'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+          {fotografKaldirmaDurumu === 'hata' && (
+            <p role="alert" className="text-xs font-semibold leading-relaxed text-rose-700">
+              Profil fotoğrafın kaldırılamadı; fotoğrafın duruyor. Yeniden deneyebilirsin.
+            </p>
+          )}
+          {bildirim && (
+            <p role="status" className="text-sm font-semibold text-gray-700">
+              {bildirim}
+            </p>
+          )}
+        </section>
+      );
+    }
+
     return (
       <div className="min-w-0 space-y-4">
+        {duzenlemeParcasi !== 'sosyal' && (
         <section aria-labelledby="sosyal-fotograf-basligi" className={`${KART} space-y-3`}>
           {/* Sayfanın `h1`i `/cv` ekranında; bölüm başlıkları `h2`. */}
           <h2
@@ -1799,6 +1915,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
             </p>
           )}
         </section>
+        )}
 
         {/*
           KAPAK FOTOĞRAFIN — "Profil fotoğrafın" bölümünün kalıbı

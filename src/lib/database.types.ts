@@ -1462,6 +1462,59 @@ export type Database = {
           },
         ];
       };
+      student_experiences: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          end_month: number | null;
+          end_year: number | null;
+          id: string;
+          ongoing: boolean;
+          organization: string;
+          position: string;
+          sort_order: number;
+          start_month: number;
+          start_year: number;
+          student_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          end_month?: number | null;
+          end_year?: number | null;
+          id?: string;
+          ongoing?: boolean;
+          organization: string;
+          position: string;
+          sort_order?: number;
+          start_month: number;
+          start_year: number;
+          student_id: string;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          end_month?: number | null;
+          end_year?: number | null;
+          id?: string;
+          ongoing?: boolean;
+          organization?: string;
+          position?: string;
+          sort_order?: number;
+          start_month?: number;
+          start_year?: number;
+          student_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'student_experiences_student_id_fkey';
+            columns: ['student_id'];
+            isOneToOne: false;
+            referencedRelation: 'student_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       student_projects: {
         Row: {
           created_at: string;

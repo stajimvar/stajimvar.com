@@ -246,7 +246,8 @@ test('github alanı başka konağa çıkmıyor', () => {
 test('rozet etiketi öğrenci profilindeki gösterimle aynı', () => {
   assert.equal(rozetEtiketi('quiz-react'), 'react');
   assert.equal(rozetEtiketi('badge-sql'), 'sql');
-  assert.match(oku('src/components/StudentProfileView.tsx'), /b\.replace\(\/\^\(badge\|quiz\)-\/, ''\)/);
+  /* 6 Ekim 2026: rozetler düzenleme ekranının "Testler" satırında (ProfilDuzenleme). */
+  assert.match(oku('src/components/ProfilDuzenleme.tsx'), /b\.replace\(\/\^\(badge\|quiz\)-\/, ''\)/);
 });
 
 test('kart verisi LinkedIn ve paylaşım iznini taşıyor', () => {

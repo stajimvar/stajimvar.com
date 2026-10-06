@@ -34,6 +34,7 @@
  */
 
 import { guvenliDisAdres } from './guvenli-url.mjs';
+import { KOPYA_DENEYIM_SINIRI, deneyimListesi } from './deneyim.mjs';
 
 /** Kopyanın yetenek ve projede tuttuğu üst sınır — basvuru-kopyasi.mjs ile aynı. */
 export const KOPYA_SINIRI = 5;
@@ -137,6 +138,35 @@ function projeFarki(once, simdi) {
   return { eklenen, cikan, guncellenen };
 }
 
+/*
+  DENEYİM: kimlik pozisyon + kurum. Tarih, devam ve açıklama değiştiyse
+  "güncellendi". Kopyada alan yoksa (eski başvuru) karşılaştırma yok.
+*/
+function deneyimAnahtari(d) {
+  return `${anahtar(d.pozisyon)}|${anahtar(d.kurum)}`;
+}
+
+function deneyimFarki(once, simdi) {
+  const onceAnahtarla = new Map(once.map((d) => [deneyimAnahtari(d), d]));
+  const simdiAnahtarla = new Map(simdi.map((d) => [deneyimAnahtari(d), d]));
+  const eklenen = [];
+  const guncellenen = [];
+  for (const [k, d] of simdiAnahtarla) {
+    const eski = onceAnahtarla.get(k);
+    if (!eski) eklenen.push(d);
+    else if (
+      eski.baslangic !== d.baslangic ||
+      eski.bitis !== d.bitis ||
+      eski.devam !== d.devam ||
+      anahtar(eski.aciklama) !== anahtar(d.aciklama)
+    ) {
+      guncellenen.push(d);
+    }
+  }
+  const cikan = once.filter((d) => !simdiAnahtarla.has(deneyimAnahtari(d)));
+  return { eklenen, cikan, guncellenen };
+}
+
 /**
  * Başvuru anı ile güncel profil arasındaki fark.
  *
@@ -151,6 +181,7 @@ function projeFarki(once, simdi) {
  *   diller: { eklenen: string[], cikan: string[], seviyesiDegisen: { ad: string, once: string, simdi: string }[] },
  *   rozetler: { eklenen: string[], cikan: string[] },
  *   projeler: { eklenen: object[], cikan: object[], guncellenen: object[], kopyaSinirli: boolean },
+ *   deneyimler: { eklenen: object[], cikan: object[], guncellenen: object[], kopyaSinirli: boolean, karsilastirilamadi: boolean },
  *   bolumler: Record<string, boolean>,
  * }}
  */
@@ -204,6 +235,20 @@ export function adayProfilFarki(anlik, guncel, secenek = {}) {
   };
   const proje = { ...projeSonucu, kopyaSinirli: onceProje.length >= KOPYA_SINIRI };
 
+  const deneyimKarsilastirilamadi = anlik.deneyimKopyadan === false;
+  const onceDeneyim = deneyimListesi(anlik.deneyimler) ?? [];
+  const deneyim = {
+    ...(deneyimKarsilastirilamadi
+      ? { eklenen: [], cikan: [], guncellenen: [] }
+      : deneyimFarki(onceDeneyim, deneyimListesi(guncel.deneyimler) ?? [])),
+    /*
+      Kopya izin verilen bütün deneyimleri taşıyor (KOPYA_DENEYIM_SINIRI =
+      sunucu sınırı); kopyaya sığmayan deneyim olamaz, "eklendi" kesin.
+    */
+    kopyaSinirli: onceDeneyim.length > KOPYA_DENEYIM_SINIRI,
+    karsilastirilamadi: deneyimKarsilastirilamadi,
+  };
+
   const bolumler = {
     kimlik: alanlar.some((a) => a.bolum === 'kimlik'),
     egitim: alanlar.some((a) => a.bolum === 'egitim'),
@@ -213,6 +258,7 @@ export function adayProfilFarki(anlik, guncel, secenek = {}) {
     diller: diller.eklenen.length + diller.cikan.length + diller.seviyesiDegisen.length > 0,
     rozetler: rozetler.eklenen.length + rozetler.cikan.length > 0,
     projeler: proje.eklenen.length + proje.cikan.length + proje.guncellenen.length > 0,
+    deneyimler: deneyim.eklenen.length + deneyim.cikan.length + deneyim.guncellenen.length > 0,
   };
 
   return {
@@ -222,6 +268,7 @@ export function adayProfilFarki(anlik, guncel, secenek = {}) {
     diller,
     rozetler,
     projeler: proje,
+    deneyimler: deneyim,
     bolumler,
   };
 }

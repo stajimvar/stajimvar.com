@@ -20,10 +20,13 @@ const A = '11111111-1111-4111-8111-111111111111';
 const B = '22222222-2222-4222-8222-222222222222';
 const yeni = new Date(KARSILAMA_YAYIN_ANI + 3600_000).toISOString();
 
-test('platform CV: okul, bölüm ve en az bir program/beceri', () => {
-  assert.equal(platformCvHazirMi({ university: 'X', department: 'Y', skills: [], softSkills: [] }), false);
+test('platform CV: okul ve bölüm yeterli; yetenek, dil, proje ve deneyim isteğe bağlı', () => {
+  /* 6 Ekim 2026: boş isteğe bağlı bölümler CV oluşturmayı engellemiyor. */
+  assert.equal(platformCvHazirMi({ university: 'X', department: 'Y', skills: [], softSkills: [] }), true);
+  assert.equal(platformCvHazirMi({ university: 'X', department: 'Y' }), true);
   assert.equal(platformCvHazirMi({ university: 'X', department: 'Y', skills: [{ name: 'Canva' }], softSkills: [] }), true);
   assert.equal(platformCvHazirMi({ university: 'X', department: '', skills: [{ name: 'Canva' }] }), false);
+  assert.equal(platformCvHazirMi({ university: '  ', department: 'Y' }), false);
 });
 
 test('CV adımı: oluşturulmuş CV ya da yüklenmiş PDF birbirinin alternatifi', () => {
@@ -80,8 +83,15 @@ test('profildeki "CV oluştur" adımı kısa CV akışını açıyor; PDF yükle
   const fs = await import('node:fs');
   const profil = fs.readFileSync('src/components/StudentProfileView.tsx', 'utf8');
   assert.match(profil, /a\.anahtar === 'cv' && onCvOlustur\s*\?\s*onCvOlustur\(\)/);
-  /* PDF yükleme bölümü (id="cv", CvAlani) yerinde. */
-  assert.match(profil, /id="cv"[\s\S]{0,600}<CvAlani/);
+  /*
+    PDF yükleme ve "Profilimden CV oluştur" düzenleme ekranının CV satırında
+    (6 Ekim 2026, ProfilDuzenleme): ikisi ayrı ve net seçenek.
+  */
+  const duzenleme = fs.readFileSync('src/components/ProfilDuzenleme.tsx', 'utf8');
+  const cvSatiri = duzenleme.slice(duzenleme.indexOf('id="duzenle-cv"'));
+  assert.match(cvSatiri, /PDF yükle/);
+  assert.match(cvSatiri, /Profilimden CV oluştur/);
+  assert.match(cvSatiri, /<CvAlani\s+kompakt/);
   const app = fs.readFileSync('src/App.tsx', 'utf8');
   assert.match(app, /onCvOlustur=\{\(\) => setCvAkisi\(\{ baslangic: 'form', ilan: null \}\)\}/);
 });

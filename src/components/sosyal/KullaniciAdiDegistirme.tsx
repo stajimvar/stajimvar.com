@@ -8,6 +8,7 @@ import {
   profilAdresi,
 } from '../../lib/sosyal-kullanici-adi.mjs';
 import { KayitHatasi, MetinAlani } from './SosyalFormAlanlari';
+import { kaydedilmemisIsaretle } from '../../lib/kaydedilmemis-degisiklik.mjs';
 
 /**
  * KULLANICI ADI — GÖSTERME VE DEĞİŞTİRME
@@ -75,6 +76,17 @@ export const KullaniciAdiDegistirme: React.FC<Props> = ({ kullaniciAdi, onDegist
   /* Aynı adı yeniden göndermek boş bir istek olurdu; sunucu da satırı değiştirmiyor. */
   const degisiyorMu = taslak !== '' && taslak !== kullaniciAdi;
 
+  /*
+    KAYDEDİLMEMİŞ DEĞİŞİKLİK (6 Ekim 2026): yazılmış ama gönderilmemiş bir
+    ad varken bölüm kapatma, gezinme, geri tuşu ve yenileme soruyor.
+    "Kaydet" uyarısı bu formu gönderiyor. Bileşen sökülünce kayıt siliniyor.
+  */
+  const formRef = React.useRef<HTMLFormElement>(null);
+  React.useEffect(() => {
+    kaydedilmemisIsaretle('sosyal:kullanici-adi', degisiyorMu, () => formRef.current?.requestSubmit());
+  }, [degisiyorMu]);
+  React.useEffect(() => () => kaydedilmemisIsaretle('sosyal:kullanici-adi', false), []);
+
   const gonder = async (olay: React.FormEvent) => {
     olay.preventDefault();
     if (!degisiyorMu || bicimHatasi || gonderiliyor) return;
@@ -140,7 +152,7 @@ export const KullaniciAdiDegistirme: React.FC<Props> = ({ kullaniciAdi, onDegist
         <p className="break-all text-sm text-gray-600">{profilAdresi(kullaniciAdi)}</p>
       </div>
 
-      <form onSubmit={gonder} className="space-y-3" noValidate>
+      <form ref={formRef} onSubmit={gonder} className="space-y-3" noValidate>
         <MetinAlani
           kimlik="sosyal-kullanici-adi"
           etiket="Yeni kullanıcı adı"

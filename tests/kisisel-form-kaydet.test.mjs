@@ -23,17 +23,23 @@ import path from 'node:path';
 */
 
 const KOK = path.resolve(import.meta.dirname, '..');
+/*
+  6 Ekim 2026: form "Profilini düzenle" ekranının "Temel bilgiler" bölümünde
+  (ProfilDuzenleme). Aynı güvence: düğme formun içinde, form işleyiciye
+  bağlı, tarayıcı doğrulaması formu ele geçirmiyor.
+*/
 const kaynak = readFileSync(
-  path.join(KOK, 'src/components/StudentProfileView.tsx'),
+  path.join(KOK, 'src/components/ProfilDuzenleme.tsx'),
   'utf8',
 ).replace(/\r\n/g, '\n');
 
-/* Şehir alanını taşıyan form: sayfadaki üç formdan yalnız bu ölçülüyor. */
-const formBasi = kaynak.indexOf('<form onSubmit={kisiselKaydet}');
+const bolumBasi = kaynak.indexOf('id="temel"');
+const formBasi = kaynak.indexOf('<form', bolumBasi);
 const kisiselForm = kaynak.slice(formBasi, kaynak.indexOf('</form>', formBasi));
 
-test('şehir alanı kişisel formun içinde ve form kisiselKaydet e bağlı', () => {
-  assert.ok(formBasi > -1, 'kişisel form `onSubmit={kisiselKaydet}` ile bağlanmalı');
+test('şehir alanı temel bilgiler formunun içinde ve form temelKaydet e bağlı', () => {
+  assert.ok(bolumBasi > -1 && formBasi > bolumBasi, 'Temel bilgiler bölümünde bir form olmalı');
+  assert.match(kisiselForm, /void temelKaydet\(\);/);
   assert.match(kisiselForm, /id="sehir"/);
   assert.match(kisiselForm, /id="ad-soyad"/);
 });
@@ -44,25 +50,18 @@ test('gönderim düğmesi aynı formun içinde ve type="submit"', () => {
   assert.match(dugme, /Kaydet/);
 });
 
-test('tarayıcı doğrulaması formu ele geçirmiyor: karar kisiselKaydet te', () => {
-  /*
-    `noValidate` olmadan boş `required` alan submit olayını doğmadan
-    öldürüyor; handler'ın ilk satırı bile çalışmıyordu.
-  */
-  assert.match(kaynak, /<form onSubmit=\{kisiselKaydet\} noValidate/);
-
-  /* Zorunluluk artık handler'da ve uyarısı sayfada yazılı. */
-  const handler = kaynak.slice(
-    kaynak.indexOf('const kisiselKaydet'),
-    kaynak.indexOf('/* ---- teknik yetenekler ---- */'),
-  );
-  assert.match(handler, /if \(!taslak\.fullName\.trim\(\)\) \{\n\s*setAdHatasi\(true\);\n\s*return;/);
-  assert.match(handler, /setSehirHatasi\(true\);/);
-  assert.match(kisiselForm, /Ad Soyad boş olamaz/);
-  assert.match(kisiselForm, /Listeden bir il seç/);
+test('tarayıcı doğrulaması formu ele geçirmiyor: karar temelKaydet te', () => {
+  assert.match(kisiselForm, /^<form\s+noValidate/);
+  assert.doesNotMatch(kisiselForm, /\srequired\b/);
+  const handler = kaynak.slice(kaynak.indexOf('const temelKaydet'), kaynak.indexOf('/* ============================== EĞİTİM'));
+  assert.match(handler, /if \(!temel\.fullName\.trim\(\)\) \{/);
+  assert.match(handler, /Adını yaz: profilinde ve CV’nde bu ad görünüyor\./);
+  assert.match(handler, /if \(sehir && !TR_CITIES\.includes\(sehir\)\) \{/);
+  assert.match(handler, /Listeden bir il seç\./);
+  /* Hata metni formun içinde, alanın altında çiziliyor. */
+  assert.match(kisiselForm, /\{temelHata\.mesaj\}/);
 });
 
 test('iç içe form yok: submit olayı başka bir forma kaçamaz', () => {
-  /* Açılış etiketinin kendisi dilimin başında: ondan sonrası aranıyor. */
   assert.equal(kisiselForm.slice('<form'.length).includes('<form'), false);
 });

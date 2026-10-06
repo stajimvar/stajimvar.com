@@ -66,7 +66,8 @@ test('liste kaynaklı: hedef pozisyonlar + yayındaki ilan başlıkları + iki g
   for (const p of [...HEDEF_POZISYONLAR, ...EK_POZISYONLAR, ...ILAN_BASLIKLARI]) assert.ok(POZISYONLAR.includes(p) || POZISYONLAR.some((x) => katla(x) === katla(p)));
   assert.equal(new Set(POZISYONLAR.map(katla)).size, POZISYONLAR.length);
   /* Öğrenci profili aynı listeyi kullanıyor; ikinci kopya yok. */
-  const PROFIL = oku('src/components/StudentProfileView.tsx');
+  /* 6 Ekim 2026: hedef pozisyonlar düzenleme ekranında (ProfilDuzenleme). */
+  const PROFIL = oku('src/components/ProfilDuzenleme.tsx');
   assert.match(PROFIL, /import \{ HEDEF_POZISYONLAR \} from '\.\.\/lib\/pozisyonlar\.mjs';/);
   assert.doesNotMatch(PROFIL, /const HEDEF_POZISYONLAR = \[/);
 });

@@ -16,6 +16,7 @@ import type {
   SkillQuiz,
   StudentLanguage,
   StudentProfile,
+  StudentExperience,
   StudentProject,
   StudentSkill,
 } from '../../types';
@@ -356,6 +357,8 @@ export type StudentRowBundle = Tables<'student_profiles'> & {
   student_skills: Tables<'student_skills'>[];
   student_languages: Tables<'student_languages'>[];
   student_projects: Tables<'student_projects'>[];
+  /* İsteğe bağlı: deneyimler sorguya eklenmeden önce yazılmış çağrılar da derlensin. */
+  student_experiences?: Tables<'student_experiences'>[];
   /*
     ARAYIŞ SÜTUNLARI — ÜRETİLMİŞ TİPLER HENÜZ BİLMİYOR
 
@@ -407,6 +410,9 @@ export function toStudentProfile(row: StudentRowBundle): StudentProfile {
       minMonthlyStipend: row.pref_min_stipend ?? undefined,
     },
     projects: (row.student_projects ?? []).map(toStudentProject),
+    experiences: [...(row.student_experiences ?? [])]
+      .sort((a, b) => a.sort_order - b.sort_order || a.created_at.localeCompare(b.created_at))
+      .map(toStudentExperience),
     earnedBadges: row.earned_badges,
     interfaceLanguage: p?.interface_language ?? undefined,
     contentLanguage: p?.content_language ?? undefined,
@@ -433,6 +439,20 @@ export function toStudentLanguage(row: Tables<'student_languages'>): StudentLang
     level: row.level,
     proficiencyText: row.proficiency_text ?? row.level,
     verified: row.verified,
+  };
+}
+
+export function toStudentExperience(row: Tables<'student_experiences'>): StudentExperience {
+  return {
+    id: row.id,
+    position: row.position,
+    organization: row.organization,
+    startYear: row.start_year,
+    startMonth: row.start_month,
+    endYear: row.ongoing ? null : row.end_year,
+    endMonth: row.ongoing ? null : row.end_month,
+    ongoing: row.ongoing,
+    description: row.description ?? '',
   };
 }
 

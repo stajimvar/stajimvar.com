@@ -9,17 +9,18 @@
  * KURALLAR
  *   - Fotoğraf İSTEĞE BAĞLI: yüzdeye girmiyor, eksikliği başarısızlık gibi
  *     sayılmıyor.
- *   - CV adımı iki yoldan tamamlanıyor: platformda oluşturulan CV (okul,
- *     bölüm ve en az bir beceri/program) YA DA yüklenmiş PDF. CV oluşturmuş
- *     öğrenciden ayrıca PDF istenmiyor.
+ *   - CV adımı iki yoldan tamamlanıyor: platformda oluşturulan CV (okul ve
+ *     bölüm) YA DA yüklenmiş PDF. CV oluşturmuş öğrenciden ayrıca PDF
+ *     istenmiyor.
+ *   - Yetenek, dil, proje ve deneyim İSTEĞE BAĞLI (6 Ekim 2026): boş
+ *     olmaları CV oluşturmayı engellemiyor; CV'de o başlıklar çizilmiyor.
  *   - Not ortalaması isteğe bağlı (formda da öyle yazıyor); adım değil.
  */
 
 /** Platform CV'si okunur bir belge üretecek kadar dolu mu. */
 export function platformCvHazirMi(ogrenci) {
   if (!ogrenci) return false;
-  const beceri = (ogrenci.skills?.length ?? 0) + (ogrenci.softSkills?.length ?? 0);
-  return Boolean(metin(ogrenci.university) && metin(ogrenci.department) && beceri > 0);
+  return Boolean(metin(ogrenci.university) && metin(ogrenci.department));
 }
 
 /** Başvuruda kullanılabilecek bir CV var mı: oluşturulmuş ya da yüklenmiş. */

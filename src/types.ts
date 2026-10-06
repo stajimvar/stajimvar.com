@@ -48,6 +48,25 @@ export interface StudentProject {
   liveUrl?: string;
 }
 
+/**
+ * DENEYİM — iş, staj, yarı zamanlı çalışma ya da gönüllülük.
+ *
+ * Tür ayrı bir alan değil; pozisyonun kendisinde yazılıyor ("Tasarım
+ * stajyeri", "Gönüllü eğitmen"). Ay 1–12. Devam eden deneyimin bitişi
+ * yok; sunucu da aynı kuralı uyguluyor (20261205010000).
+ */
+export interface StudentExperience {
+  id: string;
+  position: string;
+  organization: string;
+  startYear: number;
+  startMonth: number;
+  endYear: number | null;
+  endMonth: number | null;
+  ongoing: boolean;
+  description: string;
+}
+
 export interface StudentPreferences {
   workType: 'Remote' | 'Hybrid' | 'On-site' | 'Any';
   cities: string[];
@@ -98,6 +117,8 @@ export interface StudentProfile {
   targetRoles: string[];
   preferences: StudentPreferences;
   projects: StudentProject[];
+  /** İsteğe bağlı; boş liste profili, CV'yi ve başvuruyu engellemiyor. */
+  experiences?: StudentExperience[];
   earnedBadges: string[];
   interfaceLanguage?: string;
   contentLanguage?: string;

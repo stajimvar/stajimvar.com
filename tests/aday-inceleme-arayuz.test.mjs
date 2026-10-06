@@ -262,9 +262,15 @@ test('dış bağlantılar güvenli adresle; ham href yok', () => {
   assert.doesNotMatch(cekmece, /github\.com\/\$\{kart\.github\}/);
 });
 
-test('olmayan "deneyim" verisi için başlık açılmıyor', () => {
-  /* Çizilen metin olarak: başlık, etiket ya da dize. Yorumdaki gerekçe sayılmıyor. */
-  for (const kaynak of [cekmece, guncel]) assert.doesNotMatch(kaynak, />\s*Deneyim|['`]Deneyim/);
+test('deneyim başlığı yalnız deneyim varken açılıyor', () => {
+  /*
+    6 Ekim 2026: deneyim verisi geldi (20261205010000). Başlık artık var ama
+    yalnız liste doluyken; boş bölüm başlığı çizilmiyor.
+  */
+  assert.match(cekmece, /\{deneyimler\.length > 0 && \(\s*<section>\s*<Baslik degisti=\{bolumDegisti\('deneyimler'\)\}>Deneyim<\/Baslik>/);
+  assert.match(guncel, /\{\(deneyimler\.eklenen\.length > 0 \|\| deneyimler\.guncellenen\.length > 0 \|\| deneyimler\.cikan\.length > 0\) && \(/);
+  /* Kaynak yalnız başvuru kopyası; ham kart alanı doğrulanmış listeden. */
+  assert.match(cekmece, /const deneyimler = Array\.isArray\(kart\.deneyimler\) \? kart\.deneyimler : \[\];/);
 });
 
 test('başvuru anı ile güncel arasındaki fark işaretleniyor', () => {

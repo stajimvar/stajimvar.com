@@ -199,7 +199,7 @@ export const CvOlusturucu: React.FC<Props> = ({
     const aday = { ...student, ...taslak, university: taslak.university.trim(), department: taslak.department.trim() };
     if (!platformCvHazirMi(aday)) {
       setEksikNotu(true);
-      const ilkEksik = !aday.university ? 'cv-universite' : !aday.department ? 'cv-bolum' : 'cv-programlar';
+      const ilkEksik = !aday.university ? 'cv-universite' : 'cv-bolum';
       document.getElementById(ilkEksik)?.focus();
       return;
     }
@@ -471,7 +471,7 @@ export const CvOlusturucu: React.FC<Props> = ({
 
             {eksikNotu && (
               <p role="status" className="rounded-xl bg-blue-50 px-4 py-3 text-sm leading-relaxed text-blue-900">
-                CV’ni oluşturmak için okulun, bölümün ve en az bir program ya da beceri yeterli.
+                CV’ni oluşturmak için okulun ve bölümün yeterli; programlar ve beceriler isteğe bağlı.
               </p>
             )}
             {kayitDurumu === 'hata' && (
